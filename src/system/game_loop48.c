@@ -8,37 +8,37 @@
  * "Phase 1" appendix for the confirmed dispatch map both
  * sub_0800D18C/sub_800E08C, src/system/game_loop47.c, dispatch into).
  * `self` throughout is the same "collision box" object every other
- * function in this subsystem operates on (`struct phys_obj`,
+ * function in this subsystem operates on (`struct crate`,
  * include/phys_obj.h). Compiled with old_agbcc (the Makefile's
  * OLD_AGBCC_OBJS) - see docs/matching/issue-12-physics-collision.md's
  * NAKED-retry section. */
 
-extern void sub_8009150(struct phys_obj_list *list, struct phys_obj *obj);
+extern void sub_8009150(struct phys_obj_list *list, struct crate *obj);
 extern struct phys_obj_list *gCrateList;
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void *gAudioContext;
 extern void *gEntitySpawner;
 extern u8 gCrateKindCounted[];
-extern u8 gStaticData_0816BBDA[];
-extern u8 gStaticData_0816BBC4[];
+extern u8 gCrateKindUnbreakable[];
+extern u8 gCrateKindExplosive[];
 extern u16 rand(void);
 extern void AddBrokenCrate(void *self);
 extern void SetCheckpointAtPlayer(void *self, u8 arg1);
 extern void FreezeLevelClock(void *arg, s32 n);
 extern void sub_80259D4(void *self, s32 n);
 extern s32 sub_802599C(void *self, s32 n);
-extern struct phys_obj *sub_8010708(struct phys_obj *obj);
-extern struct phys_obj *sub_801070C(struct phys_obj *obj);
-extern void sub_801085C(struct phys_obj *self);
-extern void sub_801089C(struct phys_obj *self, u32 arg1);
-extern void sub_800E7A8(struct phys_obj *self, u32 arg1, u32 arg2, u32 arg3);
-extern void BreakCrate(struct phys_obj *self, u32 arg1);
-extern void sub_800EAFC(struct phys_obj *self, u32 arg1);
-extern void sub_800ED08(struct phys_obj *self, u32 arg1);
-extern void sub_800EDBC(struct phys_obj *self);
-extern void sub_800EEF0(struct phys_obj *self, u8 arg1);
-extern void sub_800F368(struct phys_obj *self);
-extern void sub_800F2BC(struct phys_obj *self);
+extern struct crate *GetCrateBelow(struct crate *obj);
+extern struct crate *GetCrateAbove(struct crate *obj);
+extern void OpenAkuAkuCrate(struct crate *self);
+extern void OpenLifeCrate(struct crate *self, u32 arg1);
+extern void BreakCrateInStack(struct crate *self, u32 arg1, u32 arg2, u32 arg3);
+extern void BreakCrate(struct crate *self, u32 arg1);
+extern void OpenMysteryCrate(struct crate *self, u32 arg1);
+extern void sub_800ED08(struct crate *self, u32 arg1);
+extern void DropCratesAbove(struct crate *self);
+extern void ExplodeCrate(struct crate *self, u8 arg1);
+extern void ActivateIronSwitchCrate(struct crate *self);
+extern void ActivateNitroSwitchCrate(struct crate *self);
 
 /* The effect object sub_8025BAC spawns (only the fields set here). */
 struct phys_puff
@@ -60,25 +60,25 @@ struct phys_puff
 };
 
 extern struct phys_puff *sub_8025BAC(void *pool, s32 arg1, s32 kind, s32 x, s32 y, s32 arg5);
-extern void *sub_8025CA4(void *pool, u16 x, u16 y, u8 p3, u8 p4, u8 p5);
-extern void *sub_8025A64(void *pool, u16 x, u16 y, u8 p3, u32 p4, u8 p5);
+extern void *DropWumpa(void *pool, u16 x, u16 y, u8 p3, u8 p4, u8 p5);
+extern void *DropExtraLife(void *pool, u16 x, u16 y, u8 p3, u32 p4, u8 p5);
 
-/* sub_8025CA4/sub_8025A64 take a stack-passed word (p4) and byte (p5).
+/* DropWumpa/DropExtraLife take a stack-passed word (p4) and byte (p5).
  * The ROM stores the byte with `add rX, sp, #4; strb`, but this compiler
  * widens a stack-passed u8 to a word `str` (see mover_new.h), so callers
  * store both by hand into two locals declared first in the function
  * (`s32 argP4; u32 argP5;`, landing at sp+0/sp+4) and call through a
  * 4-argument view of the function. */
 typedef void *(*SpawnCall4)(void *pool, s32 x, s32 y, u8 p3);
-#define SPAWN_CALL(pool, x, y, p3) ((SpawnCall4)sub_8025CA4)((pool), (x), (y), (p3))
-#define BONUS_CALL(pool, x, y, p3) ((SpawnCall4)sub_8025A64)((pool), (x), (y), (p3))
+#define SPAWN_CALL(pool, x, y, p3) ((SpawnCall4)DropWumpa)((pool), (x), (y), (p3))
+#define BONUS_CALL(pool, x, y, p3) ((SpawnCall4)DropExtraLife)((pool), (x), (y), (p3))
 
 static inline void PhysArgByte(u8 *p, u8 v)
 {
     *(volatile u8 *)p = v;
 }
 
-/* sub_8025CA4(gEntitySpawner, x, y, p3, p4, p5), x/y evaluated
+/* DropWumpa(gEntitySpawner, x, y, p3, p4, p5), x/y evaluated
  * before the pool pointer as in the ROM. */
 #define PHYS_SPAWN(x, y, p3, p4, p5)                                           \
     {                                                                          \
@@ -89,7 +89,7 @@ static inline void PhysArgByte(u8 *p, u8 v)
                     PhysArgByte((u8 *)&argP5, (p5)), (p3)));                   \
     }
 
-/* The same for sub_8025A64. */
+/* The same for DropExtraLife. */
 #define PHYS_BONUS(x, y, p3, p4, p5)                                           \
     {                                                                          \
         s32 _x = (x);                                                          \
@@ -101,26 +101,26 @@ static inline void PhysArgByte(u8 *p, u8 v)
 
 /* Dispatch-id-5 handler. Both `sub_0800D18C`'s and `sub_800E08C`'s
  * per-edge jump tables' case 3 eventually reach this handler
- * transitively (via `sub_800E7A8`), see
+ * transitively (via `BreakCrateInStack`), see
  * docs/matching/issue-12-physics-collision.md's dispatch map.
  *
  * Arms `self`'s `+0x48` frame-countdown timer to `0x168` (360) the
  * first time it's seen at its sentinel value (`-0x2a`), clearing
  * `+0x51`'s retry counter alongside it. While that countdown is
  * still running and `self`'s own `+0x50` byte is zero, bumps `+0x51`
- * each call; once it passes 4, calls `sub_800E7A8(self, 0, 0, 0)`
+ * each call; once it passes 4, calls `BreakCrateInStack(self, 0, 0, 0)`
  * (the "give up, hand off" case). Otherwise (still under the retry
  * cap), sets `self+0x4d` bit `0x80`, marks
  * `gPlayer+0x80 = 1`, arms a fresh `+0x4f = 6` sub-timer,
- * and spawns a pair of particle effects (`sub_8025CA4`, effect kind
+ * and spawns a pair of particle effects (`DropWumpa`, effect kind
  * `0xe`) at `self`'s position, offset `-6`/`+3` pixels on Y/X. Once
  * the `+0x48` countdown itself expires (`<= 0`), calls
- * `sub_800E7A8(self, 0, 0, 0)` unconditionally instead.
+ * `BreakCrateInStack(self, 0, 0, 0)` unconditionally instead.
  *
  * The two spawns' stack byte argument is stored by hand (see
  * SPAWN_CALL above); the ROM keeps its slot address in r5 and the
  * constant 1 in r4 across both calls, pinned here. */
-void sub_800E560(struct phys_obj *self)
+void BounceWumpaCrate(struct crate *self)
 {
     s32 argP4;
     u32 argP5;
@@ -132,7 +132,7 @@ void sub_800E560(struct phys_obj *self)
     if (self->u48.n > 0) {
         if (self->unk_50 == 0) {
             if (++self->unk_51 > 4) {
-                sub_800E7A8(self, 0, 0, 0);
+                BreakCrateInStack(self, 0, 0, 0);
             } else {
                 self->state |= 0x80;
                 {
@@ -171,7 +171,7 @@ void sub_800E560(struct phys_obj *self)
             }
         }
     } else {
-        sub_800E7A8(self, 0, 0, 0);
+        BreakCrateInStack(self, 0, 0, 0);
     }
 }
 
@@ -186,7 +186,7 @@ void sub_800E560(struct phys_obj *self)
  * the freshly selected hitbox record's `+0x14` byte via
  * `GetPaletteSlot`'s tile-asset-cache lookup, plays SFX `0x11`, and
  * arms a `+0x4f` countdown of `0x3c` (60) frames. */
-void sub_800E620(void *selfArg)
+void LightTntCrate(void *selfArg)
 {
     u8 *self = selfArg;
     u8 *entry;
@@ -234,7 +234,7 @@ void sub_800E620(void *selfArg)
                 : "r1", "cc", "memory"
             );
         }
-        sub_8009150(gCrateList, (struct phys_obj *)self);
+        sub_8009150(gCrateList, (struct crate *)self);
 
         {
             register u8 **p2 asm("r0") = *(u8 ***)(self + 0x20);
@@ -318,7 +318,7 @@ static inline void PuffSetMotion(struct phys_puff *puff, s32 vel, s32 ax, s32 ay
     puff->accelY = ay;
 }
 
-void sub_800E6B0(struct phys_obj *self)
+void OpenCheckpointCrate(struct crate *self)
 {
     struct phys_puff *puff;
     u8 one;
@@ -359,17 +359,17 @@ void sub_800E6B0(struct phys_obj *self)
  * `+0x4d & 0x7f` state is already `1`, stopping at the first node
  * that isn't (or the last reachable node if the whole chain is state
  * `1`). Neither `arg3` value falls back to `self` itself as the
- * target. Finally, unless `gStaticData_0816BBDA[target+0x4e]` is
+ * target. Finally, unless `gCrateKindUnbreakable[target+0x4e]` is
  * nonzero, dispatches to `BreakCrate(target, arg1)` - the shared
  * tail every one of this handler's paths converges on.
  *
  * The walk is written as the ROM's goto loops: the natural `for`
  * loops get rotated and their exit blocks laid out differently. */
-void sub_800E7A8(struct phys_obj *self, u32 arg1, u32 arg2, u32 dir)
+void BreakCrateInStack(struct crate *self, u32 arg1, u32 arg2, u32 dir)
 {
     u8 flag = arg1;
-    struct phys_obj *p;
-    struct phys_obj *q;
+    struct crate *p;
+    struct crate *q;
 
     if ((u8)arg2) {
         if (PHYS_PLAYER->handled != 0)
@@ -378,11 +378,11 @@ void sub_800E7A8(struct phys_obj *self, u32 arg1, u32 arg2, u32 dir)
         PHYS_PLAYER->handled++;
     }
     if (dir == 4) {
-        p = sub_8010708(self);
+        p = GetCrateBelow(self);
         if (p == NULL || (p->state & 0x7f) == 1)
             goto none;
     prev:
-        q = sub_8010708(p);
+        q = GetCrateBelow(p);
         if (q == NULL || (q->state & 0x7f) == 1)
             goto last;
         p = q;
@@ -390,7 +390,7 @@ void sub_800E7A8(struct phys_obj *self, u32 arg1, u32 arg2, u32 dir)
     }
     if (dir != 8)
         goto other;
-    p = sub_801070C(self);
+    p = GetCrateAbove(self);
     if (p != NULL && (p->state & 0x7f) != 1)
         goto next;
 none:
@@ -400,20 +400,20 @@ last:
     q = p;
     goto found;
 next:
-    q = sub_801070C(p);
+    q = GetCrateAbove(p);
     if (q == NULL || (q->state & 0x7f) == 1)
         goto last;
     p = q;
     goto next;
 found:
-    if (gStaticData_0816BBDA[q->kind] == 0)
+    if (gCrateKindUnbreakable[q->kind] == 0)
         BreakCrate(q, flag);
     return;
 other:
     BreakCrate(self, flag);
 }
 
-/* `sub_800E7A8`'s (and, transitively, both of the subsystem's
+/* `BreakCrateInStack`'s (and, transitively, both of the subsystem's
  * top-level dispatchers') shared "actually apply the collision
  * response" landing point - see
  * docs/matching/issue-12-physics-collision.md's dispatch map. Early-
@@ -423,16 +423,16 @@ other:
  * `gPlayer+0x80`, switches `self` into hitbox tag `0x1d`
  * and rebuilds its hitbox record, re-derives its `+0x29` low-nibble
  * sub-animation value (same `GetPaletteSlot` tile-asset-cache lookup
- * `sub_800E620` uses) and clamps `self+0x30`'s index to the newly
+ * `LightTntCrate` uses) and clamps `self+0x30`'s index to the newly
  * selected hitbox record's own `+0x16` count, conditionally
  * reactivates the viewport (`AddBrokenCrate`, gated on
  * `gCrateKindCounted[self+0x4e]`), flips one bit of
  * `gEntityFlags`'s bit-grid keyed by `self+8`, calls
- * `sub_800EDBC` (neighbor "impact spread" propagation), then
+ * `DropCratesAbove` (neighbor "impact spread" propagation), then
  * dispatches a 23-case jump table on `self`'s freshly-cached
  * `+0x4e` state id to one of this subsystem's other per-state leaf
- * handlers (`sub_801085C`/`sub_801089C`/`sub_800F368`/`sub_800F2BC`/
- * `sub_800EAFC`/`sub_800ED08`/`sub_800EEF0`/`FreezeLevelClock`, or a
+ * handlers (`OpenAkuAkuCrate`/`OpenLifeCrate`/`ActivateIronSwitchCrate`/`ActivateNitroSwitchCrate`/
+ * `OpenMysteryCrate`/`sub_800ED08`/`ExplodeCrate`/`FreezeLevelClock`, or a
  * SFX-3-plus-particle-spawn fallback) before converging on a shared
  * epilogue.
  *
@@ -444,7 +444,7 @@ other:
  * with the `busy` store), the constant 1 of the state store is a local
  * `one` that the bitmap shift reuses (the ROM's r8), and the switch
  * cases are in the ROM's block order with an explicit empty case 22. */
-void BreakCrate(struct phys_obj *self, u32 arg1)
+void BreakCrate(struct crate *self, u32 arg1)
 {
     s32 argP4;
     u32 argP5;
@@ -455,7 +455,7 @@ void BreakCrate(struct phys_obj *self, u32 arg1)
     if ((self->state & 0x7f) == 1)
         return;
     chained = 0;
-    if (sub_801070C(self) != NULL && flag == 0)
+    if (GetCrateAbove(self) != NULL && flag == 0)
         chained = 1;
     PHYS_FLAG4(self) = 1;
     sub_8009150(gCrateList, self);
@@ -483,26 +483,26 @@ void BreakCrate(struct phys_obj *self, u32 arg1)
         slot = (u32 *)((u8 *)slot + off);
         *slot |= one << (id - word * 32);
     }
-    sub_800EDBC(self);
+    DropCratesAbove(self);
     switch (self->kind)
     {
     case 2:
         if (flag == 0)
-            sub_801085C(self);
+            OpenAkuAkuCrate(self);
         break;
     case 9:
         if (flag == 0)
-            sub_801089C(self, chained);
+            OpenLifeCrate(self, chained);
         break;
     case 3:
-        sub_800F368(self);
+        ActivateIronSwitchCrate(self);
         break;
     case 6:
-        sub_800F2BC(self);
+        ActivateNitroSwitchCrate(self);
         break;
     case 11:
         if (flag == 0)
-            sub_800EAFC(self, chained);
+            OpenMysteryCrate(self, chained);
         break;
     case 4:
     case 12:
@@ -514,7 +514,7 @@ void BreakCrate(struct phys_obj *self, u32 arg1)
     case 19:
     case 20:
     case 21:
-        sub_800EEF0(self, 0);
+        ExplodeCrate(self, 0);
         break;
     case 15:
         if (flag == 0)
@@ -548,15 +548,15 @@ void BreakCrate(struct phys_obj *self, u32 arg1)
  * `(self+0x51 - 1)` (clamped, values above 10 fall to the same
  * "final" case as 0): cases 5 down through 0 deliberately
  * *fall through* into each other without their own return, cascading
- * multiple `sub_8025CA4` particle spawns at slightly different
+ * multiple `DropWumpa` particle spawns at slightly different
  * offsets around `self` the further the level counted down (a
  * escalating "more debris" burst); case 6 fires a screen-shake
  * (`_call_via_r4`, effect `0x1a`) plus SFX; case 7 spawns a
- * `sub_8025A64` bonus object and notifies `sub_80259D4`; case 9 spawns
- * one final small `sub_8025CA4` puff. All paths converge on a shared
+ * `DropExtraLife` bonus object and notifies `sub_80259D4`; case 9 spawns
+ * one final small `DropWumpa` puff. All paths converge on a shared
  * epilogue.
  *
- * Cases 7 and 8 are sub_801085C/sub_801089C inlined; their SFX calls
+ * Cases 7 and 8 are OpenAkuAkuCrate/OpenLifeCrate inlined; their SFX calls
  * go through a static inline wrapper so the id is loaded before the
  * volume, as in the ROM. */
 static inline void PhysSfx(s32 id)
@@ -564,7 +564,7 @@ static inline void PhysSfx(s32 id)
     PlaySfx(gAudioContext, id, 0x100);
 }
 
-void sub_800EAFC(struct phys_obj *self, u32 arg1)
+void OpenMysteryCrate(struct crate *self, u32 arg1)
 {
     s32 argP4;
     u32 argP5;
@@ -641,10 +641,10 @@ void sub_800EAFC(struct phys_obj *self, u32 arg1)
  * dispatch map. Plays SFX 3, then switches on `self+0x48 & 7`: `1`
  * plays SFX 3 again, notifies `sub_80259D4` unless `self`'s `+8` id
  * is the sentinel `0xffff` (or is already scheduled per
- * `sub_802599C`), and spawns a `sub_8025A64` bonus object 3 pixels
- * below `self`; `2` forwards to `sub_800EAFC` (the escalating-debris
+ * `sub_802599C`), and spawns a `DropExtraLife` bonus object 3 pixels
+ * below `self`; `2` forwards to `OpenMysteryCrate` (the escalating-debris
  * handler above); `3` clears `self+0x4d` bit `0x7f` and calls
- * `sub_800EEF0(self, 1)`; any other value (including `0`) does
+ * `ExplodeCrate(self, 1)`; any other value (including `0`) does
  * nothing further.
  *
  * The empty `case 0` gives the ROM's `==1`/`<=1`/`==2`/`==3` compare
@@ -655,7 +655,7 @@ static inline void PhysBonus(s32 *p4, u8 *p5, s32 x, s32 y, u8 flag)
                (*(volatile s32 *)p4 = 3, *(volatile u8 *)p5 = flag, 0));
 }
 
-void sub_800ED08(struct phys_obj *self, u32 arg1)
+void sub_800ED08(struct crate *self, u32 arg1)
 {
     s32 argP4;
     u32 argP5;
@@ -678,11 +678,11 @@ void sub_800ED08(struct phys_obj *self, u32 arg1)
         PhysBonus(&argP4, (u8 *)&argP5, self->x >> 8, (self->y >> 8) + 3, flag);
         break;
     case 2:
-        sub_800EAFC(self, flag);
+        OpenMysteryCrate(self, flag);
         break;
     case 3:
         self->state &= 0x80;
-        sub_800EEF0(self, 1);
+        ExplodeCrate(self, 1);
         break;
     }
 }
@@ -692,35 +692,35 @@ void sub_800ED08(struct phys_obj *self, u32 arg1)
  * docs/matching/issue-12-physics-collision.md's dispatch map. Derives
  * a base spread budget from `self`'s hitbox record's own `+9` byte
  * (`+1`, scaled by 256), then walks `self`'s "get next" neighbor
- * chain (`sub_801070C`), redistributing that budget across each
+ * chain (`GetCrateAbove`), redistributing that budget across each
  * visited node's `+0x40`/`+0x44` "remaining spread" fields (first
  * node gets the whole thing computed from `self`'s own `+4`/`+0x44`
  * state, every node after that gets a running remainder carried
  * forward via `sb`), nudging each node's `+0x4c` byte toward 0 by the
  * caller-supplied `arg1`-derived step, re-registering it with the
- * object-pool grid, and - for any node whose `gStaticData_0816BBC4`
+ * object-pool grid, and - for any node whose `gCrateKindExplosive`
  * row is set, `self`'s own `+0x48` is clear, and its accumulated
  * `+0x44` spread exceeds `0x1600` - "graduating" it into state `0x48
  * = 1` (unless a neighbor-adjacency/`+0x4d` gate blocks it). Stops
  * when the walk runs out of neighbors.
  *
- * Matching notes (old_agbcc): the gStaticData_0816BBC4 pointer is a
+ * Matching notes (old_agbcc): the gCrateKindExplosive pointer is a
  * local set before the loop (only then does the ROM's reload-register
  * choice come out), the record lookup takes the anim table
  * first and the byte offset second, `spread` is built in two steps, the
  * step delta is widened into its own int before the add, and
  * `n->unk_40` is written in both arms of an if/else. */
-void sub_800EDBC(struct phys_obj *self)
+void DropCratesAbove(struct crate *self)
 {
     s8 delta = -2;
     struct anim_table *anim = self->anim;
     u32 off = self->tag * sizeof(struct anim_rec);
     struct anim_rec *rec = (struct anim_rec *)((u8 *)anim->records + off);
     s32 base = (rec->padY + 1) << 8;
-    struct phys_obj *n = sub_801070C(self);
+    struct crate *n = GetCrateAbove(self);
     s32 spread;
     s32 carry;
-    u8 *tbl = gStaticData_0816BBC4;
+    u8 *tbl = gCrateKindExplosive;
 
     if (self->unk_44 != 0)
         delta = -4;
@@ -761,8 +761,8 @@ void sub_800EDBC(struct phys_obj *self)
         sub_8009150(gCrateList, n);
         if (tbl[n->kind] && self->u48.n == 0 && n->unk_44 > 0x1600)
         {
-            struct phys_obj *next = sub_801070C(n);
-            struct phys_obj *prev = sub_8010708(n);
+            struct crate *next = GetCrateAbove(n);
+            struct crate *prev = GetCrateBelow(n);
 
             if (next == NULL && prev != NULL)
             {
@@ -775,7 +775,7 @@ void sub_800EDBC(struct phys_obj *self)
             n->u48.n = 1;
         }
     advance:
-        n = sub_801070C(n);
+        n = GetCrateAbove(n);
         if (carry == 0)
             carry = base;
     }

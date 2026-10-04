@@ -22,9 +22,9 @@ real C.
 | `sub_8014B54` (actor_part_14674.c) | Unchanged: 3 halfwords. The 0x600 constant is a reload (insn `set r0 (plus r0 1536)`), and reload gives it r2 where the ROM has r3. Tried: alternative spellings of the add, inline helpers, do/while vs if/else call macros, explicit trio stores, and a preceding dummy function (reload rotation doesn't carry across functions). A register pin plus barrier gets r3 but shifts every later reload. |
 | `sub_8012AF4` (actor_part83.c) | Not reworked. The ROM computes `&self->flag2F` in both state paths, keeps the loaded flag in `ip`, keeps the +0x27 slot in r8 and loads the record-table address late. The draft's layout differs in several places. |
 | `sub_8012420` (actor_part84.c) | Not reworked. Besides the PMF stack slot, the draft reads `part->y` after the camera value (the ROM reads it first), treats `unk_94` as unsigned (the ROM uses a signed `bgt`), and the timer block's registers differ. |
-| `sub_801173C` (game_loop53.c) | Unchanged. The ROM puts `id`/`special` in r8/sb and `mode` in r7. Its +0x4B store reuses the clamp's zero and +0x49 gets a fresh `movs`. The draft has these the other way round. |
-| `sub_8010F8C` (game_loop54.c) | Unchanged. Mode 1 in the ROM recomputes `x + velX` from the two loaded registers for the bound check. That suggests the source compares an expression CSE did not merge with the store. Not pursued. |
-| `sub_8011548` (game_loop53.c) | Not attempted: no draft, and it shares `sub_8010F8C`'s mode blocks. |
+| `CreateWumpa` (game_loop53.c) | Unchanged. The ROM puts `id`/`special` in r8/sb and `mode` in r7. Its +0x4B store reuses the clamp's zero and +0x49 gets a fresh `movs`. The draft has these the other way round. |
+| `UpdateExtraLife` (game_loop54.c) | Unchanged. Mode 1 in the ROM recomputes `x + velX` from the two loaded registers for the bound check. That suggests the source compares an expression CSE did not merge with the store. Not pursued. |
+| `UpdateWumpa` (game_loop53.c) | Not attempted: no draft, and it shares `UpdateExtraLife`'s mode blocks. |
 | `sub_8011BD4` (actor_part82.c) | Not attempted: no draft, 1420 bytes with nested jump tables. |
 
 ## Techniques worth reusing

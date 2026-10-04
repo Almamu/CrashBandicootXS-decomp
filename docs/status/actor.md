@@ -503,10 +503,10 @@ from "core" graphics.
   `sub_803B46C` (fixed-position OAM setup for one sprite frame) - see
   [docs/matching/issue-71-0x0803b060-actor.md](../matching/issue-71-0x0803b060-actor.md).
 - `src/graphics/actor_part39.c` (new file, GitHub issue #16, ROM
-  0x080119A8-0x08011BD4): `sub_80119A8`, `sub_80119D4`, `sub_80119D8`,
-  `sub_80119EC`, `sub_80119FC`, `sub_8011A1C`, `sub_8011A50`,
-  `sub_8011A64`, `sub_8011A84`, `sub_8011A8C`, `sub_8011B0C`,
-  `nullsub_16`, `sub_8011B5C`, `sub_8011B70`, `sub_8011B90` - a run of
+  0x080119A8-0x08011BD4): `DrawWumpa`, `sub_80119D4`, `DestroyWumpa`,
+  `sub_80119EC`, `InitWumpa`, `sub_8011A1C`, `sub_8011A50`,
+  `sub_8011A64`, `sub_8011A84`, `sub_8011A8C`, `CreateStopwatch`,
+  `nullsub_16`, `DestroyStopwatch`, `InitStopwatch`, `sub_8011B90` - a run of
   `struct actor` vtable-swap constructor helpers (same
   `sub_80084A4`/`sub_8008484`/`nullsub` shape as `actor_part6.c`), a
   handful of small setters/getters on offsets beyond `struct actor`'s

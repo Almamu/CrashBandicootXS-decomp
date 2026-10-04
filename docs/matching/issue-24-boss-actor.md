@@ -92,7 +92,7 @@ Thumb pointers:
 | table | ctor | dtor | other methods |
 |---|---|---|---|
 | `gStaticData_087E4704` | `sub_80196F8` | `sub_80196E4` | `sub_80196B8` (position/delta setter, `gStaticData_0816C358` byte lookup) |
-| `gStaticData_087E476C` | `sub_8019758` | `sub_8019744` | `sub_8019730` (update), `sub_8019770` (set-state wrapper; state 3 also pokes its part's controller and `sub_8021D80`) |
+| `gStaticData_087E476C` | `sub_8019758` | `sub_8019744` | `sub_8019730` (update), `sub_8019770` (set-state wrapper; state 3 also pokes its part's controller and `SpawnBodySlamPower`) |
 | `gStaticData_087E47D4` | `sub_80197DC` | `sub_80197C8` | - |
 | `gStaticData_087E483C` | `sub_801A724` | `sub_801A73C` | `sub_801A64C` (update: sets the part's velocity from `gStaticData_0816C3B8`, removes it past either level edge) |
 | `gStaticData_087E48A4` | `sub_801A768` | `sub_801A750` | `sub_801A2A8` (update) |

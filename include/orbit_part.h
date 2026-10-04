@@ -5,8 +5,8 @@
 #include "action_obj.h"
 
 /* The 0x54-byte "orbiting hazard / collectible" part object spawned by
- * sub_8011114 (game_loop54.c) and sub_801173C (game_loop53.c) and driven
- * by the per-frame updaters sub_8010F8C/sub_8011548 and the orbit helpers
+ * CreateExtraLife (game_loop54.c) and CreateWumpa (game_loop53.c) and driven
+ * by the per-frame updaters UpdateExtraLife/UpdateWumpa and the orbit helpers
  * sub_8011248/sub_801192C (GitHub issues #14/#15). It starts with the
  * shared `struct actor` header; `bank` is the same animation-record bank
  * `struct act_part` (action_obj.h) points at (records are 0x1C bytes,
@@ -25,7 +25,7 @@ struct orbit_part
     u8 unk_24;
     u8 unk_25;                  // 0x25 - set to 1 when the part starts moving
     u8 unk_26[2];
-    u32 unk_28_0:4;             // 0x28 (same bit layout as struct phys_obj)
+    u32 unk_28_0:4;             // 0x28 (same bit layout as struct crate)
     s32 flipX:1;                //      bit 4: X mirrored
     s32 flipY:1;                //      bit 5: Y mirrored
     u32 unk_28_6:2;

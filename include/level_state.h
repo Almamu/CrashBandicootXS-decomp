@@ -73,7 +73,7 @@ struct level_state
     void *savedBitmap;              // 0x1B4
     s32 bonusPlatform;              // 0x1B8 - the bonus-round platform object (SetBonusPlatform)
     s32 gemPlatform;                // 0x1BC - the gem-path platform object (SetGemPlatform)
-    s32 crateGemX;                  // 0x1C0 - where the crate gem appears (SetCrateGemPos); low halves go to sub_801EB04
+    s32 crateGemX;                  // 0x1C0 - where the crate gem appears (SetCrateGemPos); low halves go to SpawnCrateGem
     s32 crateGemY;                  // 0x1C4
     struct level_state_1c8 *unk_1c8; // 0x1C8 - sub_8023318
 };

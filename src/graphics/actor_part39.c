@@ -13,7 +13,7 @@ extern void *gSpriteRenderer;
  * negative-constant bit-clear idiom, see `matching.md`'s `& -5`/`& -2`/
  * `& -3` entries) to reproduce the ROM's runtime `movs`+`rsbs` instead
  * of a folded immediate AND. */
-void sub_80119A8(struct actor *part)
+void DrawWumpa(struct actor *part)
 {
     DrawSprite(gSpriteRenderer, part);
     if (*((u8 *)part + 0x38) != 0) {
@@ -33,7 +33,7 @@ s32 sub_80119D4(void)
 }
 
 extern void sub_8008484(struct actor *self, u32 arg1);
-extern u8 gStaticData_087E414C[];
+extern u8 gWumpaVtable[];
 
 /* Sets `self->table` then tail-calls `sub_8008484` (already matched in
  * `actor_part6.c`), which unconditionally overwrites `table` again
@@ -41,14 +41,14 @@ extern u8 gStaticData_087E414C[];
  * immediately clobbered by the callee. Kept faithfully anyway; the
  * compiler can't see through the opaque call to know the store is
  * dead. */
-void sub_80119D8(struct actor *self, u32 arg1)
+void DestroyWumpa(struct actor *self, u32 arg1)
 {
-    self->table = gStaticData_087E414C;
+    self->table = gWumpaVtable;
     sub_8008484(self, arg1);
 }
 
 /* Sets flag bit 6, clears `self+0x48` (a field not yet characterized
- * in this ROM region - see the neighboring `sub_80119A8`'s `+0x38`). */
+ * in this ROM region - see the neighboring `DrawWumpa`'s `+0x38`). */
 void sub_80119EC(struct actor *self)
 {
     register u8 mask asm("r1") = 0x40;
@@ -62,11 +62,11 @@ extern struct actor *sub_80084A4(struct actor *self);
 
 /* Re-initializes `self` via `sub_80084A4` (already matched in
  * `actor_part6.c`), then overwrites its table with
- * `gStaticData_087E414C` and runs `sub_80119EC` on it. */
-struct actor *sub_80119FC(struct actor *self)
+ * `gWumpaVtable` and runs `sub_80119EC` on it. */
+struct actor *InitWumpa(struct actor *self)
 {
     sub_80084A4(self);
-    self->table = gStaticData_087E414C;
+    self->table = gWumpaVtable;
     sub_80119EC(self);
     return self;
 }
@@ -210,19 +210,19 @@ inRange:
 
 extern void *sub_8026EDC(s32 size);
 extern void nullsub_16(void *self);
-extern u8 gStaticData_087E41BC[];
+extern u8 gStopwatchVtable[];
 
 /* Allocates a new `struct actor`-shaped object (`sub_8026EDC(0x40)`,
  * same size as `sub_8008434`'s constructor in `actor_part6.c`),
  * re-initializes it via `sub_80084A4`, overwrites its table with
- * `gStaticData_087E41BC`, and runs the empty `nullsub_16` on it before
+ * `gStopwatchVtable`, and runs the empty `nullsub_16` on it before
  * setting `field_08`/`x`/`y` from the raw pixel arguments. */
-struct actor *sub_8011B0C(u16 arg0, u16 arg1, u16 arg2)
+struct actor *CreateStopwatch(u16 arg0, u16 arg1, u16 arg2)
 {
     struct actor *self = sub_8026EDC(0x40);
 
     sub_80084A4(self);
-    self->table = gStaticData_087E41BC;
+    self->table = gStopwatchVtable;
     nullsub_16(self);
     self->field_08 = arg0;
     self->x = (s32)arg1 << 8;
@@ -235,22 +235,22 @@ void nullsub_16(void *self)
 {
 }
 
-/* Same `table`-set/tail-call-`sub_8008484` shape as `sub_80119D8`
+/* Same `table`-set/tail-call-`sub_8008484` shape as `DestroyWumpa`
  * above, with a different vtable. */
-void sub_8011B5C(struct actor *self, u32 arg1)
+void DestroyStopwatch(struct actor *self, u32 arg1)
 {
-    self->table = gStaticData_087E41BC;
+    self->table = gStopwatchVtable;
     sub_8008484(self, arg1);
 }
 
-/* Same re-init/table-set/`nullsub_16` shape as `sub_8011B0C` above,
+/* Same re-init/table-set/`nullsub_16` shape as `CreateStopwatch` above,
  * but re-initializing an existing `self` instead of allocating a new
  * one - the same relationship `sub_80084A4` itself has to
  * `sub_8008434` (see `actor_part6.c`'s note on that pair). */
-struct actor *sub_8011B70(struct actor *self)
+struct actor *InitStopwatch(struct actor *self)
 {
     sub_80084A4(self);
-    self->table = gStaticData_087E41BC;
+    self->table = gStopwatchVtable;
     nullsub_16(self);
     return self;
 }

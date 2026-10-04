@@ -18,7 +18,7 @@
  * `game_loop6.c`'s own `sub_800D040` header comment: `+0x20` is a
  * pointer-to-table, indexed by a `+0x2d` tag byte at 28-byte stride
  * (`docs/rom_map.md`'s own cross-reference from this exact function:
- * "matching `gStaticData_0816BC98`'s stride exactly, but clearly a
+ * "matching `gCrateHitResponse`'s stride exactly, but clearly a
  * different table instance" - reinforcing the project's established
  * "shared convention, not shared struct" reading, since `self` here is
  * a plain `gCrateList` list entry, not the physics subsystem's

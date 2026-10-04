@@ -2,11 +2,11 @@
 #include "phys_obj.h"
 
 extern u8 gUnknown_030012B0;
-extern u8 gStaticData_0816BBC4[];
-extern struct phys_obj *sub_8010708(struct phys_obj *obj);
-extern struct phys_obj *sub_801070C(struct phys_obj *obj);
-extern void sub_800EEF0(struct phys_obj *self, u8 arg1);
-extern void sub_800E620(struct phys_obj *self);
+extern u8 gCrateKindExplosive[];
+extern struct crate *GetCrateBelow(struct crate *obj);
+extern struct crate *GetCrateAbove(struct crate *obj);
+extern void ExplodeCrate(struct crate *self, u8 arg1);
+extern void LightTntCrate(struct crate *self);
 
 /* GitHub issue #13: 0x0800FC70-0x08010A0C, continuing the physics/
  * collision subsystem (see game_loop17.c's header comment and
@@ -21,10 +21,10 @@ extern void sub_800E620(struct phys_obj *self);
  * `gPlayer`-relative `+0x88` byte reads 1 - a "half speed"
  * mode) while accumulating the matching step into `self+0x4`; each
  * time `remaining` crosses to <=0 it re-derives the wrap via the
- * `gStaticData_0816BBC4[self+0x4e]` per-state table and, depending on
+ * `gCrateKindExplosive[self+0x4e]` per-state table and, depending on
  * that table's value and `self+0x48`/`self+0x4d`'s state, dispatches
- * `sub_800EEF0`/`sub_800E620` on `self` and its whole `sub_8010708`
- * "get next" neighbor-list chain (the same list `sub_800FEB0`/
+ * `ExplodeCrate`/`LightTntCrate` on `self` and its whole `GetCrateBelow`
+ * "get next" neighbor-list chain (the same list `ResetCrate`/
  * `sub_80106DC`, game_loop22.c/game_loop23.c, already establish). At
  * the end, `self+0x4`'s accumulated step is folded into `self`'s own
  * position (`self+0`/`self+4`), and `self+0x4c`'s "speed" byte is
@@ -40,7 +40,7 @@ extern void sub_800E620(struct phys_obj *self);
  * neighbour walk skips the first neighbour, and one temporary `t` both
  * carries `unk_40` into `y` and re-reads `x` at the bottom of the loop
  * (the ROM's r1). */
-void sub_800FC70(struct phys_obj *self)
+void UpdateCrateFall(struct crate *self)
 {
     s32 remaining = self->unk_44;
     s32 speed;
@@ -85,7 +85,7 @@ void sub_800FC70(struct phys_obj *self)
             }
             else
             {
-                struct phys_obj *n;
+                struct crate *n;
                 u8 kind;
 
                 speed = 1;
@@ -93,32 +93,32 @@ void sub_800FC70(struct phys_obj *self)
                 self->y = t;
                 acc = 0;
                 self->unk_44 = remaining;
-                if (gStaticData_0816BBC4[kind = self->kind])
+                if (gCrateKindExplosive[kind = self->kind])
                 {
                     if (self->u48.n != 0 || kind == 10)
                     {
                         if ((self->state & 0x7f) == 0)
-                            sub_800EEF0(self, 0);
+                            ExplodeCrate(self, 0);
                     }
                     else if (kind == 0xe)
                     {
-                        struct phys_obj *next = sub_801070C(self);
-                        struct phys_obj *prev = sub_8010708(self);
+                        struct crate *next = GetCrateAbove(self);
+                        struct crate *prev = GetCrateBelow(self);
 
                         if (next != NULL || prev == NULL)
-                            sub_800E620(self);
+                            LightTntCrate(self);
                     }
                 }
-                n = sub_8010708(self);
+                n = GetCrateBelow(self);
                 speed--;
                 if (n != NULL)
                 {
-                    n = sub_8010708(n);
+                    n = GetCrateBelow(n);
                     while (n != NULL)
                     {
                         if (n->kind == 0xe)
-                            sub_800E620(n);
-                        n = sub_8010708(n);
+                            LightTntCrate(n);
+                        n = GetCrateBelow(n);
                     }
                 }
             }

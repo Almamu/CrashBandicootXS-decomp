@@ -122,9 +122,9 @@ called out by name as still open - `RunRoom`'s (`game_loop56.c`)
 `AddBrokenCrate`/`PressSwitchCrate`-shaped tail (if the `self+0xdc`-linked
 level-state record's `+8` widget-kind field is `3`, OR a bit into the
 `GetCurrentLevelFlags`-resolved slot; otherwise forward `self+0x1c0`/`0x1c4` to
-`sub_801EB04`), gated by one extra counter/threshold check up front.
+`SpawnCrateGem`), gated by one extra counter/threshold check up front.
 
-Reproducing the ROM's exact register map for the `sub_801EB04` tail
+Reproducing the ROM's exact register map for the `SpawnCrateGem` tail
 needed three separate register pins (`magic` for the `0xffff` first
 argument, loaded early into `r0` rather than right before the call;
 `off` pinned to `r3`, incremented in place rather than recomputed from

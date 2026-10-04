@@ -8,7 +8,7 @@ the callee-saved set.
 
 Like the text popups right after it (docs/matching/issue-31-old-agbcc.md),
 this region was built with `tools/agbcc/bin/old_agbcc` (as #435 also
-found for `sub_801EA5C`-`sub_801EE3C` in between). Under it all four
+found for `SpawnCrystal`-`SpawnYellowGem` in between). Under it all four
 are plain C: no register pins, no inline asm in
 a function body and no NAKED.
 

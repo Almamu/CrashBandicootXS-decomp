@@ -37,14 +37,14 @@ entity's own behavior.
 - **`sub_0800D18C`** (~1960 B, one of the largest functions in the
   entire `game_loop` zone) is the subsystem's **collision-response
   commit**: walks a linked list of nearby objects
-  (`sub_8010708`/`sub_801070C`, "get next"/"get prev"), accumulates an
+  (`GetCrateBelow`/`GetCrateAbove`, "get next"/"get prev"), accumulates an
   edge-code value (left/right/top/bottom, presumably from
   `sub_801AB98`), then dispatches a 6-case jump table to per-edge
-  handlers (`sub_800F2BC`, `sub_800F368`, `sub_800E7A8`, `sub_800EEF0`,
-  `sub_800E6B0`, and a 6th case). Along the way it maintains a 5-slot
+  handlers (`ActivateNitroSwitchCrate`, `ActivateIronSwitchCrate`, `BreakCrateInStack`, `ExplodeCrate`,
+  `OpenCheckpointCrate`, and a 6th case). Along the way it maintains a 5-slot
   "recently touched" object ring buffer *inside* `gPlayer`
   itself (`+0x94` counter, `+0x98`+ array), reads the
-  `gStaticData_0816BC98` 22-row/28-byte-stride per-state table, and
+  `gCrateHitResponse` 22-row/28-byte-stride per-state table, and
   ends by handing an ~8-argument packed position/rect off to
   `sub_8010D54` (the apply/commit step).
 - **`sub_800D040`** (matched to this issue's understanding, parked
@@ -55,18 +55,18 @@ entity's own behavior.
   `{s16 xOff, s16 yOff, u8 w, u8 h}` quad at record `+4`/`+6`/`+8`/`+9`
   instead of `+0xc`/`+0xe`/`+0x10`/`+0x11` - the same "differently laid
   out" variance those two functions' own doc comments already flag).
-  On overlap it looks up `self`'s state id in `gStaticData_0816BBC4`
-  and dispatches to either `sub_800EEF0(self, 1)` or
-  `sub_800E7A8(self, 0, 0, 0)`.
+  On overlap it looks up `self`'s state id in `gCrateKindExplosive`
+  and dispatches to either `ExplodeCrate(self, 1)` or
+  `BreakCrateInStack(self, 0, 0, 0)`.
 - **`sub_800E494`/`sub_800E4E4`** (matched to this issue's
   understanding, parked under `NON_MATCHING`) are **bidirectional
-  neighbor-list walkers** built on the same `sub_801070C`/
-  `sub_8010708` "get next"/"get prev" pair `sub_0800D18C` itself uses,
+  neighbor-list walkers** built on the same `GetCrateAbove`/
+  `GetCrateBelow` "get next"/"get prev" pair `sub_0800D18C` itself uses,
   clearing (`sub_800E494`) or setting (`sub_800E4E4`, plus a
   budget-redistribution side effect on a caller-supplied `ctx`
   pointer's `+4`/`+0xc` fields) each visited neighbor's `+0x58` flag
   byte whenever its own `+0x4d & 0x7f` state byte reads 0.
-- **`sub_800E08C`** (1032 B) and the 18 functions from `sub_800E560`
+- **`sub_800E08C`** (1032 B) and the 18 functions from `BounceWumpaCrate`
   through `sub_800F990` are the rest of `sub_0800D18C`'s jump-table
   targets and their own further sub-dispatches - moderately-sized
   (80-750 B) state-machine functions, each reading/writing several of
@@ -129,11 +129,11 @@ byte-identical output from `tools/agbcc`.
   27 other functions in this same still-raw neighborhood and was
   already flagged there as needing "a dedicated pass" of its own,
   larger in scope than this single chunk issue.
-- **`sub_800E560`, `sub_800E620`, `sub_800E6B0`, `sub_800E7A8`,
-  `BreakCrate`, `sub_800EAFC`, `sub_800ED08`, `sub_800EDBC`,
-  `sub_800EEF0`, `sub_800F06C`, `sub_800F1B8`, `sub_800F258`,
-  `sub_800F2BC`, `sub_800F368`, `sub_800F4F4`, `sub_800F5B8`,
-  `sub_800F6B8`, `sub_800F798`, `sub_800F8E0`, `sub_800F990`**
+- **`BounceWumpaCrate`, `LightTntCrate`, `OpenCheckpointCrate`, `BreakCrateInStack`,
+  `BreakCrate`, `OpenMysteryCrate`, `sub_800ED08`, `DropCratesAbove`,
+  `ExplodeCrate`, `BlastNearbyCrates`, `UpdateCrates`, `DetonateNitroCrates`,
+  `ActivateNitroSwitchCrate`, `ActivateIronSwitchCrate`, `SolidifyOutlineCrates`, `SolidifyOutlineCrate`,
+  `BreakCratesInArea`, `FinishBrokenCrate`, `UpdateTntCountdown`, `sub_800F990`**
   (`asm/code_3_2_17_e560.s`, ROM `0x0800E560`-`0x0800FC70`) - the rest
   of `sub_0800D18C`'s jump-table targets and their own further
   sub-dispatches (see "What this cluster turned out to be" above);
@@ -273,30 +273,30 @@ three):
    return before either of the other two tables is reached.
 2. **Per-edge handler dispatch**, ROM `0x0800D454`, 6 cases (0-5),
    keyed by an accumulated edge-code value (`r6`, built from
-   `self+0x28`/hitbox-record comparisons and `gStaticData_0816BC98`
+   `self+0x28`/hitbox-record comparisons and `gCrateHitResponse`
    lookups above) - **this is the 6-case table the original read-only
    pass already described**, now confirmed byte-for-byte:
    - **Case 0** (`0800D46C`): reads a dispatch-id byte from
-     `gStaticData_0816BC98` (cached in `sb`/`r8+0x4e`'s row); if it's
-     `6`, calls **`sub_800F2BC(self)`**; if `3`, calls
-     **`sub_800F368(self)`**; otherwise no call.
+     `gCrateHitResponse` (cached in `sb`/`r8+0x4e`'s row); if it's
+     `6`, calls **`ActivateNitroSwitchCrate(self)`**; if `3`, calls
+     **`ActivateIronSwitchCrate(self)`**; otherwise no call.
    - **Case 1** (`0800D46C`): identical target to case 0 (shared code).
    - **Case 2** (`0800D48A`): no callee - just sets `self+0x4d` bit
      `0x80` and `gPlayer+0x80 = 1`.
    - **Case 3** (`0800D4A8`): the most complex case - calls
-     **`sub_800E7A8(self, 0, 0, 0)`**, then (unless
+     **`BreakCrateInStack(self, 0, 0, 0)`**, then (unless
      `gPlayer+0x94 != 0`) rebuilds `self`'s hitbox pointer,
      and if the dispatch id (`sp+0x78`) isn't 3, calls
      **`sub_800CEAC`** (already matched, `game_loop42.c`) to test a
      player-sized box at that spot; on overlap, walks to the "prev"
-     neighbor (`sub_801070C`) and, if that neighbor's own `+0x4d&0x7f`
-     isn't 1, looks up *its* dispatch id in `gStaticData_0816BC98` and
-     calls **`sub_800E7A8(neighbor, 0, 0, 0)`** again (id 3),
-     `strb`-sets a flag and **`sub_800EEF0(neighbor, 1)`** (id 4), or
+     neighbor (`GetCrateAbove`) and, if that neighbor's own `+0x4d&0x7f`
+     isn't 1, looks up *its* dispatch id in `gCrateHitResponse` and
+     calls **`BreakCrateInStack(neighbor, 0, 0, 0)`** again (id 3),
+     `strb`-sets a flag and **`ExplodeCrate(neighbor, 1)`** (id 4), or
      nothing (other ids).
    - **Case 4** (`0800D684`): if `self+0x4d & 0x7f == 0`, calls
-     **`sub_800EEF0(self, 1)`**.
-   - **Case 5** (`0800D6A2`): calls **`sub_800E6B0(self)`**.
+     **`ExplodeCrate(self, 1)`**.
+   - **Case 5** (`0800D6A2`): calls **`OpenCheckpointCrate(self)`**.
    All six cases converge on a shared tail (`0800D6AC`) that adjusts
    the dispatch id (`sp+0x78`) for two special cases (id 5 + a
    `gPlayer+0x24==4` gate rewrites to id 2; id 3 rewrites to
@@ -317,20 +317,20 @@ three):
      calls **`sub_800B324`** (external, unread) and/or
      **`sub_800FDC8`** (already matched, `game_loop33.c`, the
      Bresenham line-stepper) to decide a final offset direction.
-   - **Case 4** (`0800DD94`): calls **`sub_801095C`** (already matched,
+   - **Case 4** (`0800DD94`): calls **`GetBottomCrate`** (already matched,
      `game_loop30.c`) to reselect `self`, re-reads its
-     `gStaticData_0816BC98` row, and - if not filtered out - calls
+     `gCrateHitResponse` row, and - if not filtered out - calls
      **`_call_via_r4`** (the `bx r4` trampoline; a sound/particle-effect
      function pointer loaded from `self+0x18+0x68`/`+4`) with a fixed
      arg pattern (`0, 0xc, 4`).
-   - **Case 8** (`0800DE14`): calls **`sub_8010914`** (already matched,
+   - **Case 8** (`0800DE14`): calls **`GetTopCrate`** (already matched,
      `game_loop30.c`) to reselect `self`, similarly re-reads its
-     `gStaticData_0816BC98` row, optionally resets
+     `gCrateHitResponse` row, optionally resets
      `gPlayer`'s `+0x64`/`+0x54`/`+0x58`/`+0x5c` fields, and
      calls **`sub_8007398`** (already matched, `graphics.c` - applies
      the computed position offset).
    All paths converge on the shared tail at `0800E00C`, which
-   conditionally calls **`sub_800E620`** (already-matched-elsewhere
+   conditionally calls **`LightTntCrate`** (already-matched-elsewhere
    leaf; gated on `gPlayer+0x88==1`, `self+0x4e==0xe`, and a
    re-overlap test), then **`sub_8007398`** (apply the final offset)
    and, if a sound/effect id was set, **`_call_via_r4`** again, then
@@ -341,27 +341,27 @@ three):
 
 `sub_800E08C(void *self, u32 arg1, u32 arg2, u32 arg3, u8 arg4, u8 arg5, u8 arg6)`
 runs a **single** 6-case jump table, ROM `0x0800E27C`, keyed by `r7`
-(itself derived from `arg1`/`arg2` plus a `gStaticData_0816BC98`-driven
+(itself derived from `arg1`/`arg2` plus a `gCrateHitResponse`-driven
 special-case rewrite for id 1, and a `gPlayer+0x92`-gated
 rewrite to id 1 that also mutates `self+0x48`/state byte `+0x4e`):
 
 - **Case 0, 1** (`0800E294`): identical to `sub_0800D18C`'s own case
-  0/1 - reads `self+0x4e`; `6` => **`sub_800F2BC(self)`**, `3` =>
-  **`sub_800F368(self)`**, else nothing.
+  0/1 - reads `self+0x4e`; `6` => **`ActivateNitroSwitchCrate(self)`**, `3` =>
+  **`ActivateIronSwitchCrate(self)`**, else nothing.
 - **Case 2** (`0800E342`): reads `self+0x4e`; `0xe` =>
-  **`sub_800E620(self)`**, `0xc` => **`sub_800E560(self)`**, else no
+  **`LightTntCrate(self)`**, `0xc` => **`BounceWumpaCrate(self)`**, else no
   callee - just sets `self+0x4d` bit `0x80` and
   `gPlayer+0x80 = 1` (same as `sub_0800D18C`'s own case 2,
-  `sub_800E620`/`sub_800E560` are new here).
+  `LightTntCrate`/`BounceWumpaCrate` are new here).
 - **Case 3** (`0800E37C`): a multi-way gate on `arg1`/`self+0x44`/
-  `arg2`/`arg3` that always ends in one **`sub_800E7A8(self, 0, ...)`**
+  `arg2`/`arg3` that always ends in one **`BreakCrateInStack(self, 0, ...)`**
   call with a different 3rd/4th argument per branch (`0`, `4`,
   `byte[sp]`+`arg3`, or `0`+`arg3`), optionally also recording `self`
   into `gPlayer`'s ring buffer and bumping its `+0x94`
   counter.
 - **Case 4** (`0800E41C`): if `self+0x4d & 0x7f == 0`, calls
-  **`sub_800EEF0(self, 1)`**.
-- **Case 5** (`0800E434`): calls **`sub_800E6B0(self)`**.
+  **`ExplodeCrate(self, 1)`**.
+- **Case 5** (`0800E434`): calls **`OpenCheckpointCrate(self)`**.
 - Shared tail (`0800E43C`): calls `sub_8007398` (apply the accumulated
   offset, gated on `gPlayer+0x1084`'s `+4` byte) and, if a
   sound/effect id was set (`sp+0x38`), `_call_via_r4`.
@@ -369,7 +369,7 @@ rewrite to id 1 that also mutates `self+0x48`/state byte `+0x4e`):
 This confirms `sub_0800D18C`'s and `sub_800E08C`'s per-edge dispatch
 tables really are the same shared handler family (identical case
 ordering, identical targets for cases 0/1/4/5, case 3 always landing on
-`sub_800E7A8`) - `sub_800E08C` is a second, narrower entry point into
+`BreakCrateInStack`) - `sub_800E08C` is a second, narrower entry point into
 the same six leaf handlers, called only from `sub_0800D18C`'s own
 9-case table (cases 1/2/4, per that table's targets `0800DEAC`/
 `0800DD94`/`0800DE14` above - none of those actually call
@@ -380,13 +380,13 @@ function's own understanding).
 ### Phase 2 grouping hint
 
 Of this issue's remaining 18-20-function tail
-(`sub_800E560`-`sub_800F990`), exactly **7 are direct callees** of the
-two now-matched dispatchers: `sub_800E560`, `sub_800E620`,
-`sub_800E6B0`, `sub_800E7A8`, `sub_800EEF0`, `sub_800F2BC`,
-`sub_800F368`. The other ~12 (`BreakCrate`, `sub_800EAFC`,
-`sub_800ED08`, `sub_800EDBC`, `sub_800F06C`, `sub_800F1B8`,
-`sub_800F258`, `sub_800F4F4`, `sub_800F5B8`, `sub_800F6B8`,
-`sub_800F798`, `sub_800F8E0`, `sub_800F990`) were not seen called from
+(`BounceWumpaCrate`-`sub_800F990`), exactly **7 are direct callees** of the
+two now-matched dispatchers: `BounceWumpaCrate`, `LightTntCrate`,
+`OpenCheckpointCrate`, `BreakCrateInStack`, `ExplodeCrate`, `ActivateNitroSwitchCrate`,
+`ActivateIronSwitchCrate`. The other ~12 (`BreakCrate`, `OpenMysteryCrate`,
+`sub_800ED08`, `DropCratesAbove`, `BlastNearbyCrates`, `UpdateCrates`,
+`DetonateNitroCrates`, `SolidifyOutlineCrates`, `SolidifyOutlineCrate`, `BreakCratesInArea`,
+`FinishBrokenCrate`, `UpdateTntCountdown`, `sub_800F990`) were not seen called from
 either dispatcher directly in this pass - they're presumably called
 transitively by one or more of the 7 direct entry points (each
 individually still unread). A reasonable parallel-safe split: one
@@ -394,47 +394,47 @@ group per direct entry point (7 groups), each agent reading its entry
 point first to discover which of the ~12 remaining leaves it pulls in,
 rather than guessing the sub-call graph up front from this doc alone.
 
-## Phase 2 (lower-address half): sub_800E560-sub_800EDBC closed
+## Phase 2 (lower-address half): BounceWumpaCrate-DropCratesAbove closed
 
 Closes 8 of the ~18-20 remaining leaf functions from Phase 1's grouping
 hint: the lower-address group of direct dispatch targets
-(`sub_800E560`, `sub_800E620`, `sub_800E6B0`, `sub_800E7A8`) and their
+(`BounceWumpaCrate`, `LightTntCrate`, `OpenCheckpointCrate`, `BreakCrateInStack`) and their
 own transitive callees, everything up to but not including
-`sub_800EEF0` (a sibling parallel pass's own territory, covering
-`sub_800EEF0`-`sub_800F990`). All 8 verified byte-exact by a full clean
+`ExplodeCrate` (a sibling parallel pass's own territory, covering
+`ExplodeCrate`-`sub_800F990`). All 8 verified byte-exact by a full clean
 `make compare` ("La suma coincide"). New file `src/system/game_loop48.c`,
 inserted in `ldscript.txt` between `game_loop7.o` and (the now-trimmed)
 `code_3_2_17_e560.o`. `asm/code_3_2_17_e560.s` trimmed to begin at
-`sub_800EEF0` (its own header directives kept, since the sibling pass
+`ExplodeCrate` (its own header directives kept, since the sibling pass
 still needs the rest of the file).
 
 **Transitive closure derivation**: reading each of the four direct
 targets' own bodies (not just the dispatch map) found the actual
 sub-call graph is narrower than "each dispatcher owns one of the 7
-direct-callee groups" - `sub_800E560`/`sub_800E620`/`sub_800E6B0` call
+direct-callee groups" - `BounceWumpaCrate`/`LightTntCrate`/`OpenCheckpointCrate` call
 nothing else in this still-raw neighborhood (only already-matched
 siblings, `PlaySfx`, `rand`, or each other within the direct-target
-set), while `sub_800E7A8` calls `BreakCrate` (both times it needs a
-"dispatch id" leaf handler, cases 3/22 of `sub_800E7A8`'s own logic),
-and `BreakCrate` in turn calls `sub_800EDBC`, `sub_800EAFC`, and
+set), while `BreakCrateInStack` calls `BreakCrate` (both times it needs a
+"dispatch id" leaf handler, cases 3/22 of `BreakCrateInStack`'s own logic),
+and `BreakCrate` in turn calls `DropCratesAbove`, `OpenMysteryCrate`, and
 `sub_800ED08` (the latter two also reachable directly from
-`BreakCrate`'s own 23-case jump table) - plus `sub_800EEF0`, left for
+`BreakCrate`'s own 23-case jump table) - plus `ExplodeCrate`, left for
 the sibling pass since it's out of this range. That's exactly 8
 functions, no more, no fewer, in this half.
 
 ### What each function does
 
-- **`sub_800E560`** - dispatch-id-5 handler (both dispatchers' case 5).
+- **`BounceWumpaCrate`** - dispatch-id-5 handler (both dispatchers' case 5).
   Arms `self`'s `+0x48` frame-countdown to `0x168` the first time it's
   seen at its sentinel value, clearing a `+0x51` retry counter
   alongside it. While that countdown runs and `self+0x50` is zero,
   bumps `+0x51` each call; past 4 retries (or once `+0x48` itself
-  expires), hands off to `sub_800E7A8(self, 0, 0, 0)`. Otherwise arms
+  expires), hands off to `BreakCrateInStack(self, 0, 0, 0)`. Otherwise arms
   `self+0x4d` bit `0x80`, `gPlayer+0x80 = 1`, a fresh
-  `+0x4f = 6` sub-timer, and spawns a pair of `sub_8025CA4` particle
+  `+0x4f = 6` sub-timer, and spawns a pair of `DropWumpa` particle
   effects (kind `0xe`) at `self`'s position, offset `-6`/`+3` pixels on
   Y/X.
-- **`sub_800E620`** - case-2 handler (dispatch id `0xe`, both
+- **`LightTntCrate`** - case-2 handler (dispatch id `0xe`, both
   dispatchers). Switches `self` into hitbox tag `0x14`, rebuilds its
   hitbox record (the `sub_80087C0`/`sub_80087B4`/`sub_800872C` trio
   every hitbox-rebuild call in this subsystem uses), registers it with
@@ -442,8 +442,8 @@ functions, no more, no fewer, in this half.
   sub-animation value from the freshly selected hitbox record's `+0x14`
   byte via `GetPaletteSlot`'s tile-asset-cache lookup, plays SFX `0x11`,
   arms a `+0x4f = 0x3c` (60-frame) countdown.
-- **`sub_800E6B0`** - dispatch-id-5's own sibling case (both
-  dispatchers' case 5, same table slot `sub_800E560` covers on the
+- **`OpenCheckpointCrate`** - dispatch-id-5's own sibling case (both
+  dispatchers' case 5, same table slot `BounceWumpaCrate` covers on the
   *other* dispatcher; the two are not actually the same handler despite
   sharing a case index - each dispatcher's 6-case table independently
   selects its own target per row). Spawns a particle-effect object
@@ -453,63 +453,63 @@ functions, no more, no fewer, in this half.
   notifies `sub_80259D4` unless `self+8` is the sentinel `0xffff`,
   conditionally reactivates the viewport, tells `SetCheckpointAtPlayer` whether
   `self+0x50` is nonzero, and resets `self+0x4d` to `1`.
-- **`sub_800E7A8(self, edgeFlag, walkFlag, dir)`** - case-3 handler
+- **`BreakCrateInStack(self, edgeFlag, walkFlag, dir)`** - case-3 handler
   (both dispatchers). Counts `self` into `gPlayer+0x91`'s
   "objects handled this frame" tally (gated on `walkFlag`), then walks
   `self`'s neighbor chain (`dir==4` "get prev", `dir==8` "get next")
   past every node whose `+0x4d & 0x7f` state is already `1`, stopping
   at the first node that isn't (or the last reachable node if the
   whole chain is state `1`; neither `dir` value falls back to `self`
-  itself). Unless `gStaticData_0816BBDA[target+0x4e]` is nonzero,
+  itself). Unless `gCrateKindUnbreakable[target+0x4e]` is nonzero,
   dispatches to `BreakCrate(target, edgeFlag)`.
-- **`BreakCrate(self, edgeFlag)`** - `sub_800E7A8`'s shared tail.
+- **`BreakCrate(self, edgeFlag)`** - `BreakCrateInStack`'s shared tail.
   Early-outs if `self+0x4d & 0x7f == 1`. Otherwise registers `self`
   with the object-pool grid, resets `self+0x4d` to `0x81`, switches
   `self` into hitbox tag `0x1d` and rebuilds its record, re-derives its
   `+0x29` sub-animation value and clamps `+0x30`'s index to the newly
   selected record's own `+0x16` count, conditionally reactivates the
   viewport, flips one bit of `gEntityFlags`'s bit-grid keyed by
-  `self+8`, calls `sub_800EDBC` (neighbor "impact spread"
+  `self+8`, calls `DropCratesAbove` (neighbor "impact spread"
   propagation), then dispatches its own 23-case jump table on `self`'s
   freshly-cached `+0x4e` state id to one of
-  `sub_801085C`/`sub_801089C`/`sub_800F368`/`sub_800F2BC`/
-  `sub_800EAFC`/`sub_800ED08`/`sub_800EEF0`/`FreezeLevelClock`/a
-  SFX-3-plus-particle-spawn fallback (`sub_8025CA4`) - the largest
+  `OpenAkuAkuCrate`/`OpenLifeCrate`/`ActivateIronSwitchCrate`/`ActivateNitroSwitchCrate`/
+  `OpenMysteryCrate`/`sub_800ED08`/`ExplodeCrate`/`FreezeLevelClock`/a
+  SFX-3-plus-particle-spawn fallback (`DropWumpa`) - the largest
   jump table in this subsystem after `sub_0800D18C`'s own three.
-- **`sub_800EAFC(self, walkFlag)`** - case-11 handler of
+- **`OpenMysteryCrate(self, walkFlag)`** - case-11 handler of
   `BreakCrate`'s table (dispatch id `0xb`). Plays SFX 3, then (the
   first time `self+0x51` is exactly `9`) rolls a random "escalation
   level" (`1`/`4`/`7`/`8`) into that byte. Dispatches its own 10-case
   jump table on `(self+0x51 - 1)`: cases 5 down through 0 deliberately
   cascade-fall-through into each other (an escalating "more debris"
-  particle burst, `sub_8025CA4`, at slightly different offsets the
+  particle burst, `DropWumpa`, at slightly different offsets the
   further the level counted down); case 6 fires a screen-shake
-  (`_call_via_r4`) plus SFX; case 7 spawns a `sub_8025A64` bonus object;
+  (`_call_via_r4`) plus SFX; case 7 spawns a `DropExtraLife` bonus object;
   case 9 spawns one final small puff.
 - **`sub_800ED08(self, walkFlag)`** - case-15 handler of
   `BreakCrate`'s table (dispatch id `0xf`). Plays SFX 3, then
   switches on `self+0x48 & 7`: `1` plays SFX 3 again, notifies
-  `sub_80259D4`, and spawns a `sub_8025A64` bonus object 3 pixels below
-  `self`; `2` forwards to `sub_800EAFC`; `3` clears `self+0x4d` bit
-  `0x80` and calls `sub_800EEF0(self, 1)`; any other value does
+  `sub_80259D4`, and spawns a `DropExtraLife` bonus object 3 pixels below
+  `self`; `2` forwards to `OpenMysteryCrate`; `3` clears `self+0x4d` bit
+  `0x80` and calls `ExplodeCrate(self, 1)`; any other value does
   nothing further.
-- **`sub_800EDBC(self, walkFlag)`** - neighbor "impact spread"
+- **`DropCratesAbove(self, walkFlag)`** - neighbor "impact spread"
   propagation, called once from `BreakCrate`'s own body (not through
   its jump table). Derives a base spread budget from `self`'s hitbox
   record's own `+9` byte, then walks `self`'s "get next" neighbor chain
   redistributing that budget across each visited node's `+0x40`/`+0x44`
   "remaining spread" fields, nudging each node's `+0x4c` byte toward 0,
   re-registering it with the object-pool grid, and - for any node past
-  a `gStaticData_0816BBC4`/`+0x48`/`+0x44` threshold gate - "graduating"
+  a `gCrateKindExplosive`/`+0x48`/`+0x44` threshold gate - "graduating"
   it into state `+0x48 = 1`.
 
 ### Matching notes
 
-- **`sub_800E620`/`sub_800ED08` matched as real C** - both are fairly
+- **`LightTntCrate`/`sub_800ED08` matched as real C** - both are fairly
   linear (no loops, `sub_800ED08` a small `switch` rather than a
   computed jump table), unlike this half's other 6 functions. Three
   distinct gcc-2.9 gaps needed register-pinned/inline-asm anchoring in
-  `sub_800E620` alone, all confirmed by direct byte comparison against
+  `LightTntCrate` alone, all confirmed by direct byte comparison against
   a fresh `objdump` disassembly of `baserom.gba` (not just the
   isolated-compile eyeball check, which this pass got wrong twice
   before catching it against the real linked ROM bytes - see
@@ -538,13 +538,13 @@ functions, no more, no fewer, in this half.
      AND immediate. Anchored as one inline-asm block covering the whole
      sequence, taking the freshly-extracted `lo` value as an in-out
      operand.
-- **The other 6 (`sub_800E560`/`sub_800E6B0`/`sub_800E7A8`/
-  `BreakCrate`/`sub_800EAFC`/`sub_800EDBC`) closed as NAKED
+- **The other 6 (`BounceWumpaCrate`/`OpenCheckpointCrate`/`BreakCrateInStack`/
+  `BreakCrate`/`OpenMysteryCrate`/`DropCratesAbove`) closed as NAKED
   transcriptions**, the same escape hatch Phase 1's two dispatchers
-  used - jump-table density (`BreakCrate`'s 23 cases, `sub_800EAFC`'s
+  used - jump-table density (`BreakCrate`'s 23 cases, `OpenMysteryCrate`'s
   10, both with cascading-fallthrough or heavily-reused pool constants)
   and/or this subsystem's confirmed `r8`/`sb`/`sl`-triple-accumulator
-  shape (`sub_800EDBC`, matching `sub_0800D18C`'s own AABB-build
+  shape (`DropCratesAbove`, matching `sub_0800D18C`'s own AABB-build
   register reuse) made a plain-C attempt not worth chasing given this
   project's established precedent for the same shapes elsewhere in
   this subsystem.
@@ -557,7 +557,7 @@ functions, no more, no fewer, in this half.
    reconstruction and its NAKED transcriptions against the raw text
    already read out of `asm/code_3_2_17_e560.s` earlier in the same
    session - and still shipped two real bugs anyway:
-   - `sub_800E620`'s `self[0x29]` mask-then-address vs.
+   - `LightTntCrate`'s `self[0x29]` mask-then-address vs.
      address-then-mask ordering (see "Matching notes" above) - a
      misreading of which operation the ROM actually does first,
      caught only once the *first* full clean `make compare` attempt
@@ -566,7 +566,7 @@ functions, no more, no fewer, in this half.
      -M force-thumb baserom.gba` disassembly of `baserom.gba` itself
      (not the project's own pre-split `asm/*.s`, and not the isolated
      `agbcc` output) at that precise address.
-   - `sub_800E6B0`'s constant-pool placement - all 8 of this function's
+   - `OpenCheckpointCrate`'s constant-pool placement - all 8 of this function's
      pool words genuinely sit together at the very end of the function
      (right after its own `bx r0`) in the ROM, since nothing forces
      earlier emission in a function this short with only one internal
@@ -601,17 +601,17 @@ functions, no more, no fewer, in this half.
    filters to the right address range for pulling out one function's
    real linked bytes/disassembly for inspection.
 
-## Phase 2, higher-address half: `sub_800EEF0`-`sub_800F990` closed
+## Phase 2, higher-address half: `ExplodeCrate`-`sub_800F990` closed
 
 One of two parallel Phase 2 passes over this cluster's remaining
 18-20-function tail, split by address range (see Phase 1's "grouping
 hint" above). This pass covers the **higher-address half**: the twelve
-functions from `sub_800EEF0` up through the end of the whole cluster,
-`sub_800F990` (`0x0800EEF0`-`0x0800FC70`) - `sub_800EEF0`, `sub_800F06C`,
-`sub_800F1B8`, `sub_800F258`, `sub_800F2BC`, `sub_800F368`,
-`sub_800F4F4`, `sub_800F5B8`, `sub_800F6B8`, `sub_800F798`,
-`sub_800F8E0`, `sub_800F990`. A sibling pass covers the lower-address
-half (`sub_800E560` through `sub_800EDBC`) separately.
+functions from `ExplodeCrate` up through the end of the whole cluster,
+`sub_800F990` (`0x0800EEF0`-`0x0800FC70`) - `ExplodeCrate`, `BlastNearbyCrates`,
+`UpdateCrates`, `DetonateNitroCrates`, `ActivateNitroSwitchCrate`, `ActivateIronSwitchCrate`,
+`SolidifyOutlineCrates`, `SolidifyOutlineCrate`, `BreakCratesInArea`, `FinishBrokenCrate`,
+`UpdateTntCountdown`, `sub_800F990`. A sibling pass covers the lower-address
+half (`BounceWumpaCrate` through `DropCratesAbove`) separately.
 
 All twelve are now **matched via NAKED transcription**, confirmed by a
 full clean `make compare` ("La suma coincide"), the same escape hatch
@@ -622,8 +622,8 @@ cross-block reuse under `-O2` this compiler's allocator doesn't
 reproduce - and given this batch's size (12 functions, ~1730 lines of
 disassembly), transcription was the reliable path to a byte-exact result
 for all of them at once. New file `src/system/game_loop49.c`; real bytes
-formerly the tail of `asm/code_3_2_17_e560.s` (from `sub_800EEF0`
-onward - that file now ends right after `sub_800EDBC`, the sibling
+formerly the tail of `asm/code_3_2_17_e560.s` (from `ExplodeCrate`
+onward - that file now ends right after `DropCratesAbove`, the sibling
 pass's own territory).
 
 **Mechanics note for future NAKED-transcription passes**: this pass's
@@ -634,7 +634,7 @@ batch this size. One real bug surfaced and fixed while writing it: a
 `.4byte` literal-pool entry whose *value* is itself a same-function local
 label (a jump-table base address referenced via `ldr rX, =tableLabel`
 immediately followed by `tableLabel: @ jump table`, hit once in
-`sub_800F5B8`) needs its value resolved to an `Nf`/`Nb` local reference
+`SolidifyOutlineCrate`) needs its value resolved to an `Nf`/`Nb` local reference
 too, not just the pool entry's own defining label - naively emitting the
 raw ROM label name there produces an undefined-symbol assembler error.
 A second near-miss: a naive `_[0-9A-F]{8}` regex for "is this operand a
@@ -655,7 +655,7 @@ check is the full clean `make compare`, which passed outright.
 
 ### Per-function roles
 
-- **`sub_800EEF0(self, u8 arg1)`** - the per-edge dispatch's shared
+- **`ExplodeCrate(self, u8 arg1)`** - the per-edge dispatch's shared
   **case 4 target** (both `sub_0800D18C`'s and `sub_800E08C`'s own case
   4: `self+0x4d & 0x7f == 0` gates a call with `arg1=1`). Also called
   directly by several siblings below (`arg1=0`) whenever their own
@@ -668,76 +668,76 @@ check is the full clean `make compare`, which passed outright.
   `sub_800872C` "set tag, refresh sprite/animation" triplet every
   state-transition function in this cluster shares. Marks a cell in
   `gEntityFlags`'s 32x32 collision bitmap, plays a fixed sound
-  (id 4), calls `sub_800EDBC(self)` (sibling pass's territory), and -
+  (id 4), calls `DropCratesAbove(self)` (sibling pass's territory), and -
   gated on a combo/proximity check against `gRoomFrameCount`/
   `gPlayer+0x8c` - `_call_via_r4(self, 0, 4, 0)`. Forces
-  `self+0x4e = 0x13` in the common case (see `sub_800F8E0` below).
-- **`sub_800F06C(self, u32 arg1)`** - called only by `sub_800F798`
+  `self+0x4e = 0x13` in the common case (see `UpdateTntCountdown` below).
+- **`BlastNearbyCrates(self, u32 arg1)`** - called only by `FinishBrokenCrate`
   below (`arg1` = `0x14` or `0x28`, a proximity radius). Two
   `gCrateList` list-scan passes: settles every nearby object via
-  `gStaticData_0816BBC4`/`gStaticData_0816BBAE`-driven dispatch to
-  `sub_800E7A8`/`sub_800F368`/`sub_800F2BC`/`sub_800EEF0`, then a second
-  pass over `gUnknown_030012EC` calling `sub_8011448`. Resets
+  `gCrateKindExplosive`/`gCrateKindBreakable`-driven dispatch to
+  `BreakCrateInStack`/`ActivateIronSwitchCrate`/`ActivateNitroSwitchCrate`/`ExplodeCrate`, then a second
+  pass over `gUnknown_030012EC` calling `PickUpWumpa`. Resets
   `self+0x48` to the `-1` sentinel at the end.
-- **`sub_800F1B8(void)`** - no arguments. Calls `sub_800F258` first
+- **`UpdateCrates(void)`** - no arguments. Calls `DetonateNitroCrates` first
   (flush pending case-`0xa` commits), then an up-to-twice
   `gCrateList` list scan removing/re-classifying objects via
   `sub_8009AA0`/`_call_via_r2`/`_call_via_r1`, driven by a
   `gUnknown_030012B0` one-shot re-scan flag.
-- **`sub_800F258(void)`** - no arguments. Settles every
+- **`DetonateNitroCrates(void)`** - no arguments. Settles every
   `gCrateList` object stuck at `+0x4e==0xa`/`+0x4d&0x7f==0` via
-  `sub_800EEF0(other, 0)`. Called by both `sub_800F1B8` and
-  `sub_800F2BC` as a "flush leftovers from last frame" first step.
-- **`sub_800F2BC(self)`** - per-edge dispatch id-row-`6` target (shared
+  `ExplodeCrate(other, 0)`. Called by both `UpdateCrates` and
+  `ActivateNitroSwitchCrate` as a "flush leftovers from last frame" first step.
+- **`ActivateNitroSwitchCrate(self)`** - per-edge dispatch id-row-`6` target (shared
   by `sub_0800D18C`'s/`sub_800E08C`'s case 0/1). Tags `self+0x2d=0x23`,
   runs the tag/refresh triplet plus a `GetPaletteSlot`-driven `self+0x29`
-  nibble update, flushes via `sub_800F258`, bumps a combo counter
+  nibble update, flushes via `DetonateNitroCrates`, bumps a combo counter
   (`sub_8028474`), plays sound id 4, arms `self+0x48=1`.
-- **`sub_800F368(self)`** - per-edge dispatch id-row-`3` target (sibling
-  of `sub_800F2BC`, same case). Tags `self+0x2d=0x22`, same triplet +
+- **`ActivateIronSwitchCrate(self)`** - per-edge dispatch id-row-`3` target (sibling
+  of `ActivateNitroSwitchCrate`, same case). Tags `self+0x2d=0x22`, same triplet +
   nibble update, marks the collision bitmap (`sub_8025A0C`), then scans
   `gCrateList` for up to 0x20 simultaneously-triggered
   same-`+0x50`-group neighbors, allocating (`sub_8026EC0`) a linked
   group list at `self+0x48` when any are found (`-1` sentinel
   otherwise). Seeds `self+0x4f` from `self+0x4c`.
-- **`sub_800F4F4(self)`** - bumps `self+0x50` against a `self+0x51`
+- **`SolidifyOutlineCrates(self)`** - bumps `self+0x50` against a `self+0x51`
   cap; once reached, frees `self+0x48`'s group (`sub_8026EB4`) and
   resets to the `0x13`/`0x14`/`0x15` "settle" family via `self+0x4e=7`.
   While under the cap, recursively settles every other member of
-  `self+0x48`'s triggered group via `sub_800F5B8`, playing one shared
+  `self+0x48`'s triggered group via `SolidifyOutlineCrate`, playing one shared
   sound (id `0xf`) for the batch.
-- **`sub_800F5B8(self)`** - the group-settle worker `sub_800F4F4`
+- **`SolidifyOutlineCrate(self)`** - the group-settle worker `SolidifyOutlineCrates`
   calls. Reinterprets `self+0x48` as a byte offset subtracted into
   `self+0x4e`, then a 0x13-entry jump table mapping each resulting
   sub-case to one of a small set of `self+0x2d` tag constants, each
   through the same tag/refresh triplet, converging on a
   `sub_800815C`-driven nibble update.
-- **`sub_800F6B8(s32 x, s32 y, s32 arg2, s32 arg3)`** - the one function
+- **`BreakCratesInArea(s32 x, s32 y, s32 arg2, s32 arg3)`** - the one function
   here taking a raw probe box instead of `self` (existing extern in
-  `actor_part.c`: `sub_800F6B8(part->x>>8, part->y>>8, 0x40, 0x12)`).
+  `actor_part.c`: `BreakCratesInArea(part->x>>8, part->y>>8, 0x40, 0x12)`).
   Scans `gCrateList` for objects within `(arg2,arg3)` of the box,
-  dispatching via `gStaticData_0816BBC4`/`gStaticData_0816BBAE` to
-  `sub_800E6B0`/`sub_800E7A8`/`sub_800EEF0` - the same "settle nearby
-  objects" shape as `sub_800F06C`/`sub_800F798`, box-driven instead of
+  dispatching via `gCrateKindExplosive`/`gCrateKindBreakable` to
+  `OpenCheckpointCrate`/`BreakCrateInStack`/`ExplodeCrate` - the same "settle nearby
+  objects" shape as `BlastNearbyCrates`/`FinishBrokenCrate`, box-driven instead of
   `self`-driven.
-- **`sub_800F798(self)`** - the per-edge dispatch's re-entry point once
+- **`FinishBrokenCrate(self)`** - the per-edge dispatch's re-entry point once
   `self+0x4d&0x7f==1` (commit already underway; called from the
   still-raw `0x080104E4` continuation, outside this issue's scope).
-  Dispatches to `sub_800F06C` per `self+0x30`/`gStaticData_0816BBC4`,
+  Dispatches to `BlastNearbyCrates` per `self+0x30`/`gCrateKindExplosive`,
   unlinks `self` from its neighbor list when `self+0x38` is set
-  (`sub_8010710`/`sub_8010714`), and marks/clears
+  (`SetCrateBelow`/`SetCrateAbove`), and marks/clears
   `gUnknown_030012B0`/`gPlayer+0x94`'s ring-buffer re-visit
   bookkeeping.
-- **`sub_800F8E0(self)`** - the `0x13`/`0x14`/`0x15` "settle" family's
+- **`UpdateTntCountdown(self)`** - the `0x13`/`0x14`/`0x15` "settle" family's
   own small state cycle, guarded by `self+0x4f`'s cooldown throttle.
   `0x14`->`0x13` and `0x15`->`0x14` each retag/replay the triplet, play
   a sound (id `0x11`), and set a ~1s cooldown; `0x13` (once
-  `self+0x4d&0x7f==0`) calls `sub_800EEF0(self, 0)`, closing the loop
+  `self+0x4d&0x7f==0`) calls `ExplodeCrate(self, 0)`, closing the loop
   back to the top of this list.
 - **`sub_800F990(self)`** - the cluster's last and largest function
   (~736 B), called for `self+0x4e==0xf`. A per-frame position-wrap/
   edge-scan advance structurally similar to the already-parked
-  `sub_800FC70` that immediately follows this whole cluster (see
+  `UpdateCrateFall` that immediately follows this whole cluster (see
   `docs/matching/issue-13-fc70-continuation.md`): clamps `self` within
   0x4f/0x3f px of the player into a packed `self+0x48` byte, then (only
   when `self+0x2d==8`) runs a 4-phase `self+0x48&7` state rotation
@@ -755,9 +755,9 @@ This cluster was built with the **older compiler**
 the `ldrb`" gap documented above is that compiler's usual instruction
 order, not a scheduling quirk. `game_loop7.c`, `game_loop48.c` and
 `game_loop49.c` now sit on the Makefile's `OLD_AGBCC_OBJS`.
-`sub_800E620`, the one function already in C, matches under both
+`LightTntCrate`, the one function already in C, matches under both
 compilers. The object layout is named in `include/phys_obj.h`
-(`struct phys_obj`, `phys_obj_list`, `phys_player`, the
+(`struct crate`, `phys_obj_list`, `phys_player`, the
 `PHYS_CALL`/`PhysSetTag`/`PHYS_SET_ID_BIT` helpers).
 
 **Closed (18):**
@@ -766,33 +766,33 @@ compilers. The object layout is named in `include/phys_obj.h`
   first function needs a goto-into-`do` loop so the loop enters at the
   call. The second needs a per-loop `u8 one = 1` local, which makes gcc
   hoist the constant into r7/r6.
-- `sub_800F258`/`sub_800F1B8`/`sub_800F6B8`/`sub_800F06C`/`sub_800F368`:
+- `DetonateNitroCrates`/`UpdateCrates`/`BreakCratesInArea`/`BlastNearbyCrates`/`ActivateIronSwitchCrate`:
   these are list scans. The vtable `+0x48` class query is written as
   `PHYS_CALL` (`_call_via_r1`). Two things were needed:
   - Byte tests written with `&&` got combined into one word compare
     (`ldr [o,#0x4c]` masked against `0x7fff00`). Nested `if`s split
     them.
-  - Where the ROM hoists `gStaticData_0816BBC4` into a register, a
+  - Where the ROM hoists `gCrateKindExplosive` into a register, a
     `u32 commit = (u32)table` local indexed as `*(u8 *)(kind + commit)`
     reproduces it, including the `kind + table` operand order.
-- `sub_800F368`: `n++; n &= 0x1f;` (not `n = (n + 1) & 0x1f`) keeps
+- `ActivateIronSwitchCrate`: `n++; n &= 0x1f;` (not `n = (n + 1) & 0x1f`) keeps
   the ROM's signed `ble` loop pre-test. The copy loop is
-  `((struct phys_obj **)g)[i + 1] = found[i]`.
-- `sub_800F2BC`/`sub_800EEF0`/`sub_800E6B0`/`sub_800F4F4`: a small `u8`
+  `((struct crate **)g)[i + 1] = found[i]`.
+- `ActivateNitroSwitchCrate`/`ExplodeCrate`/`OpenCheckpointCrate`/`SolidifyOutlineCrates`: a small `u8`
   local holding a constant (`one`, `kind = 7`) gives the ROM's order
   and its reuse of that register. Tag changes go through the
   `PhysSetTag` inline, whose parameter puts the constant first.
-- `sub_800EEF0`/`sub_800F798`: the bitmap setter is the
+- `ExplodeCrate`/`FinishBrokenCrate`: the bitmap setter is the
   do/while(0) `PHYS_SET_ID_BIT`, the same as actor_part_16048.c. The
   "gone" flag is a `u8 gone:1` bitfield view.
-- `sub_800F5B8`/`sub_800F8E0`: plain switches over `PhysSetTag`.
+- `SolidifyOutlineCrate`/`UpdateTntCountdown`: plain switches over `PhysSetTag`.
   `sub_800815C` returns `s32`.
-- `sub_800E7A8`: the neighbor walks are written as the ROM's goto loops.
+- `BreakCrateInStack`: the neighbor walks are written as the ROM's goto loops.
   One variable (`q`) holds both the walk candidate and the final
   target.
 - `sub_800ED08`: an empty `case 0:` gives the ROM's compare order.
-- `sub_800E560`/`sub_800EAFC`/`sub_800ED08`: these call
-  `sub_8025CA4`/`sub_8025A64`. Both take a stack word plus a stack
+- `BounceWumpaCrate`/`OpenMysteryCrate`/`sub_800ED08`: these call
+  `DropWumpa`/`DropExtraLife`. Both take a stack word plus a stack
   *byte* that the ROM stores with `strb`, and this compiler widens a
   stack byte to `str`. The workaround:
   - The caller declares two locals first (`s32 argP4; u32 argP5;`, at
@@ -802,7 +802,7 @@ compilers. The object layout is named in `include/phys_obj.h`
   - Where the byte is a constant, the ROM computes the slot address
     before the constant. That needs `register ... asm("r4"/"r5")`
     pins, never r7.
-  - In `sub_800EAFC`, the inlined `sub_801085C`/`sub_801089C` SFX calls
+  - In `OpenMysteryCrate`, the inlined `OpenAkuAkuCrate`/`OpenLifeCrate` SFX calls
     go through a `PhysSfx(id)` inline so the id loads before the volume.
 
 **Not closed (6):**
@@ -814,7 +814,7 @@ compilers. The object layout is named in `include/phys_obj.h`
   result.
 - `BreakCrate`: every block is right, but `self`/`chained` land in
   r5/r8 instead of r4/r7 (~120 halfwords).
-- `sub_800EDBC`: register allocation, with `self` in r8 and the delta
+- `DropCratesAbove`: register allocation, with `self` in r8 and the delta
   byte spilled to `[sp]` in the ROM.
 - `sub_800F990`: the `+0x48` phase/count/direction byte is updated with
   word loads and stores and 8-bit masks. Neither u8/u32 bitfield views
@@ -830,8 +830,8 @@ compilers. The object layout is named in `include/phys_obj.h`
 - `docs/status/game_loop.md` - matched/parked/raw lists updated,
   including the `graphics` -> `game_loop` recategorization for this
   address span, Phase 1's `sub_0800D18C`/`sub_800E08C` closure, and
-  Phase 2's lower-address-half (`sub_800E560`-`sub_800EDBC`) and
-  higher-address-half (`sub_800EEF0`-`sub_800F990`) closures.
+  Phase 2's lower-address-half (`BounceWumpaCrate`-`DropCratesAbove`) and
+  higher-address-half (`ExplodeCrate`-`sub_800F990`) closures.
 - `tools/report_units.py` - `UNITS` list split/recategorized for
   `0x0800D040`-`0x0800FC70`, Phase 1's entry updated to point at the
   new `src/system/game_loop47.o`, and Phase 2's `0x0800E560` entry
@@ -846,7 +846,7 @@ compilers. The object layout is named in `include/phys_obj.h`
 
 ## Later pass (issue #12/#24/#26 NAKED retry)
 
-`sub_800EDBC` is real C under old_agbcc. The "triple accumulator" shape
+`DropCratesAbove` is real C under old_agbcc. The "triple accumulator" shape
 was not the blocker; `spread = n->unk_40; spread -= n->y;` (two steps)
 puts `self`/`spread`/`carry`/`base` in r8/r7/r9/r10 like the ROM. See
 [issue-24-26-12-naked-retry.md](issue-24-26-12-naked-retry.md) for the
@@ -895,7 +895,7 @@ halfwords off, was 968) and `sub_800E08C` (49) stay NAKED. See
 
 `sub_800E08C` is now real C under old_agbcc (`game_loop47.o` joined
 `OLD_AGBCC_OBJS`). The first flag byte is a register union of a u32 and
-a one-byte struct, passed to `sub_800E7A8` as that struct (QImode), which
+a one-byte struct, passed to `BreakCrateInStack` as that struct (QImode), which
 gives the ROM's `mov r5, sp; ldrb` reload. `sub_0800D18C` stays NAKED;
 see [last5-naked-retry.md](last5-naked-retry.md) for what the pass found.
 

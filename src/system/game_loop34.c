@@ -3,8 +3,8 @@
 
 /* GitHub issue #13: 0x0800FC70-0x08010A0C, continuing the physics/
  * collision subsystem (see game_loop17.c's header comment and
- * docs/matching/issue-13-graphics-fc70.md). `sub_8010914`/
- * `sub_801095C`/`sub_80109A4` right after this function are matched in
+ * docs/matching/issue-13-graphics-fc70.md). `GetTopCrate`/
+ * `GetBottomCrate`/`sub_80109A4` right after this function are matched in
  * game_loop30.c. */
 
 extern void *gAudioContext;
@@ -13,19 +13,19 @@ extern void *gEntitySpawner;
 extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
 extern s32 sub_802599C(void *self, s32 n);
 extern void sub_80259D4(void *self, s32 n);
-/* sub_8025A64 is parked (NON_MATCHING) as of game_loop14.c. This call
+/* DropExtraLife is parked (NON_MATCHING) as of game_loop14.c. This call
  * site's own arguments are spelled out entirely in inline asm below -
  * see the comment right above that block for why. */
-extern struct actor *sub_8025A64(void *unused0, s32 x, s32 y, u8 p3, u32 p5, u8 flag6);
+extern struct actor *DropExtraLife(void *unused0, s32 x, s32 y, u8 p3, u32 p5, u8 flag6);
 
 /* Plays cue-3 SFX, then - unless `self->field_08` is the sentinel
  * `0xffff` - consumes a slot from the per-record bit-grid
  * (`gEntityFlags`, the same `sub_802599C`/`sub_80259D4` accessor
  * pair game_loop12.c/game_loop13.c already establish) keyed by
  * `self->field_08`, setting the bit only if it wasn't already set.
- * Finally spawns a part object (`sub_8025A64`) three tiles below
+ * Finally spawns a part object (`DropExtraLife`) three tiles below
  * `self`'s own position, tagged with the caller's own byte argument. */
-void sub_801089C(struct actor *self, u32 arg1)
+void OpenLifeCrate(struct actor *self, u32 arg1)
 {
     u8 flag6 = (u8)arg1;
 
@@ -65,7 +65,7 @@ void sub_801089C(struct actor *self, u32 arg1)
             "add r3, sp, #4\n"
             "strb %1, [r3]\n"
             "mov r3, #0\n"
-            "bl sub_8025A64\n"
+            "bl DropExtraLife\n"
             :
             : "r" (self), "r" (flag6), "r" (dummy)
             : "r0", "r1", "r2", "r3", "r12", "lr", "cc", "memory"

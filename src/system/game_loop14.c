@@ -185,10 +185,10 @@ struct fx_part *sub_8025BAC(void *unused0, s32 anim, s32 tag, s32 x, s32 y, s32 
 }
 
 /* Same early-out and `+0x49`/`+0x4a`/`+0x4b` tagging shape as
- * `sub_8025A64` (game_loop29.c), but spawns via `sub_801173C` with a
+ * `DropExtraLife` (game_loop29.c), but spawns via `CreateWumpa` with a
  * "special" 4th argument (`0xFFFF` when `p5` is set or `p4 == 0xff`,
- * `0` otherwise) and fires `sub_801191C`/`sub_8011870` instead of
- * `sub_80111B8`.
+ * `0` otherwise) and fires `sub_801191C`/`SendWumpaToHud` instead of
+ * `SendExtraLifeToHud`.
  *
  * `p5` is read as the low byte of its stack word (the ROM's ldrb), and
  * `p4` as the full word (its `cmp r5,#0xff` has no truncation).
@@ -197,11 +197,11 @@ struct fx_part *sub_8025BAC(void *unused0, s32 anim, s32 tag, s32 x, s32 y, s32 
  * `t`, and the +0x4B zero is an opaque `zero`, so the `movs r0,#0` lands
  * after the +0x49 address instead of being hoisted above it. */
 extern struct level_state14 { u8 unk_00[0x8C]; u8 timeTrial; } *gLevelState;
-extern struct orbit_part *sub_801173C(u16 id, u16 x, u16 y, u16 special);
+extern struct orbit_part *CreateWumpa(u16 id, u16 x, u16 y, u16 special);
 extern void sub_801191C(struct orbit_part *self);
-extern void sub_8011870(struct orbit_part *self);
+extern void SendWumpaToHud(struct orbit_part *self);
 
-struct orbit_part *sub_8025CA4(void *unused0, u32 x, u32 y, u32 p3, u32 p4, u32 flag5)
+struct orbit_part *DropWumpa(void *unused0, u32 x, u32 y, u32 p3, u32 p4, u32 flag5)
 {
     u8 p5 = *(u8 *)&flag5;
     struct orbit_part *part = NULL;
@@ -209,9 +209,9 @@ struct orbit_part *sub_8025CA4(void *unused0, u32 x, u32 y, u32 p3, u32 p4, u32 
     if (gLevelState->timeTrial == 0)
     {
         if (p5 || p4 == 0xff)
-            part = sub_801173C(0xffff, x, y, 0xffff);
+            part = CreateWumpa(0xffff, x, y, 0xffff);
         else
-            part = sub_801173C(0xffff, x, y, 0);
+            part = CreateWumpa(0xffff, x, y, 0);
         part->base.flags |= 0x10;
         {
             u8 *t = &part->counter;
@@ -227,7 +227,7 @@ struct orbit_part *sub_8025CA4(void *unused0, u32 x, u32 y, u32 p3, u32 p4, u32 
         if (p4 == 0xff)
             sub_801191C(part);
         if (p5)
-            sub_8011870(part);
+            SendWumpaToHud(part);
     }
     return part;
 }

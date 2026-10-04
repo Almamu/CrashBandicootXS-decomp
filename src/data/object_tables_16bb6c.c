@@ -36,13 +36,13 @@ const u8 gStaticData_0816BB94[4] = {
 const u8 gCrateKindCounted[22] = {
     1, 1, 1, 0, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 };
-const u8 gStaticData_0816BBAE[22] = {
+const u8 gCrateKindBreakable[22] = {
     1, 1, 1, 0, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 };
-const u8 gStaticData_0816BBC4[22] = {
+const u8 gCrateKindExplosive[22] = {
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 1,
 };
-const u8 gStaticData_0816BBDA[22] = {
+const u8 gCrateKindUnbreakable[22] = {
     0, 0, 0, 1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0,
 };
 
@@ -55,7 +55,7 @@ const s32 gStaticData_0816BBF0[42] = {
 
 /* sub_0800D18C and sub_800E08C (game_loop47.c): the collision response
  * code of each pair of kinds, [22][7]. */
-const s32 gStaticData_0816BC98[22][7] = {
+const s32 gCrateHitResponse[22][7] = {
     { 0, 1, 3, 3, 3, 3, 3 },
     { 0, 0, 5, 5, 5, 5, 5 },
     { 0, 1, 3, 3, 3, 3, 3 },

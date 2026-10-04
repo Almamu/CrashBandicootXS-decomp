@@ -157,7 +157,7 @@ running id (its bit in the `gEntityFlags` bitmaps, and the id the
 links use), and unless that bit is set calls the spawn function `type`
 of the table at `gEntitySpawner` (`SpawnEntity`) with the id, x, y and
 `param`. `param` indexes the parameter records: a flags word (bits 1 and
-2 go to the spawned object's `+0x28` flags: `sub_8021D04`, `sub_801E990`,
+2 go to the spawned object's `+0x28` flags: `SpawnBasicCrate`, `sub_801E990`,
 `actor_part_1967c.c`) and per-type words, e.g. `struct spawn_rec` of
 `sub_801A878` (mover kind and distances); type 0x1A takes its effective
 type from the record's `+8` (`CountCrateEntities`).
@@ -174,6 +174,27 @@ In the ROM:
 
 `struct level_link_list` is `{s32 count; {s32 from, to} links[count]}`:
 `SpawnRoomEntities` chains entity `from` to entity `to` after spawning.
+The links stack crates: `from` is the lower crate and `to` the one on
+top of it (`SetCrateAbove`/`SetCrateBelow`).
+
+### Entity types
+
+The spawn functions in `gEntitySpawnFuncs`, identified from the sprite
+bank and animation each one sets up (`graphics/sprites/`), the pickup
+code it gives the object and where the levels place it:
+
+| Type | Spawner | What |
+|---|---|---|
+| 0x06 | `SpawnWumpa` | a wumpa fruit (bank 35) |
+| 0x07 | `SpawnCrystal` | the level's crystal (bank 37) |
+| 0x09, 0x0A, 0x0B, 0x0C | `SpawnBlueGem`, `SpawnRedGem`, `SpawnGreenGem`, `SpawnYellowGem` | the coloured gems (bank 32) |
+| 0x10 | `SpawnStopwatch` | the time-trial stopwatch (bank 36) |
+| 0x12, 0x13, 0x14, 0x4A | `SpawnTurboRunPower`, `SpawnDoubleJumpPower`, `SpawnBodySlamPower`, `SpawnTornadoSpinPower` | the four power pictures (bank 38); no level places them |
+| 0x15-0x27 | `SpawnBasicCrate` .. `SpawnTimeCrate3` | crates: `CreateCrate` types 0-18 (bank 31), see `include/phys_obj.h` |
+| 0x51-0x54 | `SpawnRedGemPlatform`, `SpawnYellowGemPlatform`, `SpawnGreenGemPlatform`, `SpawnBlueGemPlatform` | a gem outline over a platform (bank 32) |
+
+In time trial (`gLevelState->timeTrial`) a crate whose parameter record
+says so becomes the time crate its record's `+4` names (`CreateCrate`).
 
 ## ROM layout
 

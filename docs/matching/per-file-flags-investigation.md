@@ -162,7 +162,7 @@ old_agbcc files:
 - `hud_digit_array.c` (`InitHud`)
 - `level_graphics.c` (`LoadTitleScreenBg`)
 - `settings_menu22.c` (`DrawPauseRelicsPage`)
-- `game_loop49.c` (`sub_800F4F4`)
+- `game_loop49.c` (`SolidifyOutlineCrates`)
 
 Those are all byte-exact today, so each change is a break. Among the
 current-agbcc objects, 8 files change (`sfx_ambient.c`,

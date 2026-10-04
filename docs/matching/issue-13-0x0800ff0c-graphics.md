@@ -18,18 +18,18 @@ Two entire files exist purely to call `CreateCrate` with a fixed
 constant `type` (the 5th, stack-passed argument) and nothing else:
 
 - `src/graphics/graphics_loading_21bfc.c` (GitHub issue #33) - `type`
-  `0` through `7`. `type == 0`'s caller (`sub_8021D04`) does extra
+  `0` through `7`. `type == 0`'s caller (`SpawnBasicCrate`) does extra
   post-processing: it re-derives the same `gEntityFlags -> *P ->
   {+8 array, +0xc base}` placement-record lookup `CreateCrate` itself
   uses internally (indexed by `arg3<<1`), and folds two of the
   record's own flags-byte bits (`0x2`/`0x4`) into the constructed
   object's `+0x28` bitfield *after* `CreateCrate` returns - overriding
   the bits `CreateCrate`'s own common tail had just cleared.
-  `sub_8021BFC` picks `type` `7` or `6` depending on
+  `SpawnNitroSwitchCrate` picks `type` `7` or `6` depending on
   `IsSwitchPressed(gLevelState)`.
 - `src/graphics/graphics_loading_21668.c` (GitHub issue #31) - `type`
   `0x12` down to `7` (overlapping `graphics_loading_21bfc.c` at `7`
-  through a second, independent trampoline `sub_8021BD8`).
+  through a second, independent trampoline `SpawnIronCrate`).
 
 Together every `type` from `0` to `0x12` (18) - all 19 values - is
 externally confirmed by a real caller. This matches `CreateCrate`'s own
@@ -44,7 +44,7 @@ overrides described below).
 
 1. Allocates a `0x64` (100)-byte object via `sub_8026EDC(0x64)`
    (`self`), zero-initializes `self+0x59`, then calls
-   `sub_800FEB0(self)` (already matched, game_loop22.c - clears the
+   `ResetCrate(self)` (already matched, game_loop22.c - clears the
    collision-response state/countdown/neighbor-list-pointer block).
    Sets `self+0x18 = &gCrateVtable` - a real address inside the
    documented 93-entry `gStaticData_087Exxx` vtable family, but at a
@@ -65,7 +65,7 @@ overrides described below).
    kind currently exist" vs. some capacity/threshold, i.e. the pool is
    already at or over capacity), `type == 0xb` or `type == 0xf` gets
    demoted via the placement record's own flags byte (indexed by
-   `arg3<<1`, same convention `sub_8021D04` above uses): flag `0x40`
+   `arg3<<1`, same convention `SpawnBasicCrate` above uses): flag `0x40`
    forces `type = 2`, flag `0x80` forces `type = 1`, and - `0xf` path
    only - placement-record byte `+1` bit `0x1` forces `type = 9`.
 4. Sets `self+0x20 = ***gUnknown_030012D0 + 0x174` - the
@@ -99,7 +99,7 @@ overrides described below).
    table's own `+0x16` count minus one; also folds `type`'s low bit
    into `self+0x4d` bit 0 (keeping bit 7). Writes `self+0x4e = type`
    unconditionally. If `type == 5` and the placement record confirms
-   presence, calls `sub_800F5B8(self)` - see below. Finally registers
+   presence, calls `SolidifyOutlineCrate(self)` - see below. Finally registers
    `self` via `sub_8009B70(*gCrateList, self)` and returns
    `self`.
 
@@ -107,25 +107,25 @@ overrides described below).
 
 | `type` | caller(s) | `self+0x2d` tag | notes |
 |---|---|---|---|
-| `0` | `sub_8021D04` (21bfc.c) | `0x1f` (31) | caller does extra `+0x28` flag post-processing |
-| `1` | `sub_8021CE0` | `0x1a` (26) | `self+0x50` = bit 6 of placement-record flags; table-1 `special` |
-| `2` | `sub_8021CBC` | `0x17` (23) | |
-| `3` | `sub_8021C98` | `3` (or escalates to `7`) | `self+0x50/0x51/0x4c` = record `[6]/[7]/[8]`; escalates to `type 7` if record present |
-| `4` | `sub_8021C74` | `0x18` (24) | |
-| `5` | `sub_8021C50` | `0x15` (21) | `self+0x50/0x51` = record `[6]/[7]`, `self+0x48` = signed record `[8:9]`; post-tail calls `sub_800F5B8(self)` (game_loop49.c, issue #12) if record confirmed |
-| `6` | `sub_8021BFC` (else branch) | `4` | |
-| `7` | `sub_8021BFC` (if branch), `sub_8021BD8` | `0x20` (32) | also the `type 3` escalation target |
-| `8` | `sub_8021BB4` | `2` | |
-| `9` | `sub_8021B90`, also the `type 9` early-case and the `0xb`/`0xf` demotion targets | `0x1c` (28) | table-1 `special`; if not `flagged`, `self->0x54 = 0x15` and (if busy-flag set) `type` bookkeeping resets to `0` post-dispatch |
-| `0xa` | `sub_8021B6C` | `5` | |
-| `0xb` | `sub_8021B48` | `0` | `self+0x51` = record `[6]`; table-1 `special`; also a demotion source (step 3) |
-| `0xc` | `sub_8021B24` | `0x19` (25) | `self+0x48 = -42`; table-1 `special` |
+| `0` | `SpawnBasicCrate` (21bfc.c) | `0x1f` (31) | caller does extra `+0x28` flag post-processing |
+| `1` | `SpawnCheckpointCrate` | `0x1a` (26) | `self+0x50` = bit 6 of placement-record flags; table-1 `special` |
+| `2` | `SpawnAkuAkuCrate` | `0x17` (23) | |
+| `3` | `SpawnIronSwitchCrate` | `3` (or escalates to `7`) | `self+0x50/0x51/0x4c` = record `[6]/[7]/[8]`; escalates to `type 7` if record present |
+| `4` | `SpawnArrowCrate` | `0x18` (24) | |
+| `5` | `SpawnOutlineCrate` | `0x15` (21) | `self+0x50/0x51` = record `[6]/[7]`, `self+0x48` = signed record `[8:9]`; post-tail calls `SolidifyOutlineCrate(self)` (game_loop49.c, issue #12) if record confirmed |
+| `6` | `SpawnNitroSwitchCrate` (else branch) | `4` | |
+| `7` | `SpawnNitroSwitchCrate` (if branch), `SpawnIronCrate` | `0x20` (32) | also the `type 3` escalation target |
+| `8` | `SpawnIronArrowCrate` | `2` | |
+| `9` | `SpawnLifeCrate`, also the `type 9` early-case and the `0xb`/`0xf` demotion targets | `0x1c` (28) | table-1 `special`; if not `flagged`, `self->0x54 = 0x15` and (if busy-flag set) `type` bookkeeping resets to `0` post-dispatch |
+| `0xa` | `SpawnNitroCrate` | `5` | |
+| `0xb` | `SpawnMysteryCrate` | `0` | `self+0x51` = record `[6]`; table-1 `special`; also a demotion source (step 3) |
+| `0xc` | `SpawnBouncyWumpaCrate` | `0x19` (25) | `self+0x48 = -42`; table-1 `special` |
 | `0xd` | `sub_8021B00` | `6` | |
-| `0xe` | `sub_8021ADC` | `0x11` (17) | |
+| `0xe` | `SpawnTntCrate` | `0x11` (17) | |
 | `0xf` | `sub_8021AB8` | `7` | largest single case - see below; table-1 `special`; also a demotion source (step 3) |
-| `0x10` | `sub_8021A94` | `0xe` (14) | |
-| `0x11` | `sub_8021A70` | `0xf` (15) | |
-| `0x12` | `sub_8021A4C` | `0x10` (16) | only case whose tag-write isn't reached via the shared jump-to-`0x2d`-write tail (falls straight through - already-optimal in the ROM's own codegen) |
+| `0x10` | `SpawnTimeCrate1` | `0xe` (14) | |
+| `0x11` | `SpawnTimeCrate2` | `0xf` (15) | |
+| `0x12` | `SpawnTimeCrate3` | `0x10` (16) | only case whose tag-write isn't reached via the shared jump-to-`0x2d`-write tail (falls straight through - already-optimal in the ROM's own codegen) |
 
 `type == 0xf`'s case (`_0801028E` in the original disassembly, the
 largest of the 19) also: looks up a tile/graphics asset via
@@ -135,11 +135,11 @@ for `self+0x4f`, writes `self+0x51` from the placement record's `[6]`
 byte, and folds three placement-record `+1` flag bits
 (`0x2`/`0x4`/`0x8`) into `self+0x50`.
 
-## The `sub_800F5B8` cross-tie
+## The `SolidifyOutlineCrate` cross-tie
 
-`type == 5`'s post-tail call to `sub_800F5B8(self)` is a direct,
+`type == 5`'s post-tail call to `SolidifyOutlineCrate(self)` is a direct,
 concrete link between this constructor family and the issue #12
-physics/collision cluster: `sub_800F5B8` is matched as `NAKED` in
+physics/collision cluster: `SolidifyOutlineCrate` is matched as `NAKED` in
 `src/system/game_loop49.c` (issue #12 Phase 2). This confirms `type 5`
 spawns an entity that immediately participates in that cluster's own
 collision-response state machine.

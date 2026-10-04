@@ -4,7 +4,7 @@
 /* 0x08020E84-0x08021280 (GitHub issue #31): four of the "trigger effect
  * type N" spawners reached through the 15-slot dispatch table at
  * gStaticData_0816C7D8 (docs/rom_map.md, "A family of 'trigger effect
- * type N' functions") - the same family as sub_801EA5C-sub_801EE3C
+ * type N' functions") - the same family as SpawnCrystal-SpawnYellowGem
  * (src/graphics/graphics_loading_1ea5c.c).
  *
  * Each one tests one "collected" bit of the level progress record
@@ -17,10 +17,10 @@
  * registered with the gUnknown_030012EC manager.
  *
  *   function     bit  sound  tag
- *   sub_8020E84   1    0xB    7
- *   sub_8020F7C   2    0x3    5
- *   sub_802107C   4    0xA    6
- *   sub_802117C   8    0x9    8
+ *   SpawnRedGemPlatform   1    0xB    7
+ *   SpawnYellowGemPlatform   2    0x3    5
+ *   SpawnGreenGemPlatform   4    0xA    6
+ *   SpawnBlueGemPlatform   8    0x9    8
  *
  * Built with old_agbcc (Makefile OLD_AGBCC_OBJS): the ROM materializes
  * the bit mask before loading the byte it is ANDed with, old_agbcc's
@@ -58,7 +58,7 @@ extern void sub_8008E94(void *manager, struct gfx_part *part);
 /* The `tag` locals are set before the sub_8008434 call on purpose: the
  * ROM loads the constant into a callee-saved register up front and
  * stores it from there afterwards. */
-void sub_8020E84(u32 a0, u16 a1, u16 a2, u16 a3)
+void SpawnRedGemPlatform(u32 a0, u16 a1, u16 a2, u16 a3)
 {
     u8 bit = gLevelState->collected & 1;
 
@@ -89,7 +89,7 @@ void sub_8020E84(u32 a0, u16 a1, u16 a2, u16 a3)
     }
 }
 
-void sub_8020F7C(u32 a0, u16 a1, u16 a2, u16 a3)
+void SpawnYellowGemPlatform(u32 a0, u16 a1, u16 a2, u16 a3)
 {
     u8 bit = gLevelState->collected & 2;
 
@@ -120,7 +120,7 @@ void sub_8020F7C(u32 a0, u16 a1, u16 a2, u16 a3)
     }
 }
 
-void sub_802107C(u32 a0, u16 a1, u16 a2, u16 a3)
+void SpawnGreenGemPlatform(u32 a0, u16 a1, u16 a2, u16 a3)
 {
     u8 bit = gLevelState->collected & 4;
 
@@ -153,7 +153,7 @@ void sub_802107C(u32 a0, u16 a1, u16 a2, u16 a3)
 
 /* Mask and tag are the same constant here, so the ROM keeps one copy of
  * it in a callee-saved register for both uses. */
-void sub_802117C(u32 a0, u16 a1, u16 a2, u16 a3)
+void SpawnBlueGemPlatform(u32 a0, u16 a1, u16 a2, u16 a3)
 {
     u8 bit = gLevelState->collected & 8;
 

@@ -224,19 +224,19 @@ void sub_8021A00(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 /* Plain `CreateCrate` entity-constructor trampoline (docs/rom_map.md;
  * same dispatch family as src/graphics/graphics_loading_21bfc.c's
  * types 1-7), type `0x12`. */
-void sub_8021A4C(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnTimeCrate3(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     CreateCrate(arg0, arg1, arg2, arg3, 0x12);
 }
 
 /* Plain `CreateCrate` trampoline, type `0x11`. */
-void sub_8021A70(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnTimeCrate2(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     CreateCrate(arg0, arg1, arg2, arg3, 0x11);
 }
 
 /* Plain `CreateCrate` trampoline, type `0x10`. */
-void sub_8021A94(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnTimeCrate1(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     CreateCrate(arg0, arg1, arg2, arg3, 0x10);
 }
@@ -248,7 +248,7 @@ void sub_8021AB8(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 }
 
 /* Plain `CreateCrate` trampoline, type `0xe`. */
-void sub_8021ADC(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnTntCrate(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     CreateCrate(arg0, arg1, arg2, arg3, 0xe);
 }
@@ -260,31 +260,31 @@ void sub_8021B00(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 }
 
 /* Plain `CreateCrate` trampoline, type `0xc`. */
-void sub_8021B24(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnBouncyWumpaCrate(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     CreateCrate(arg0, arg1, arg2, arg3, 0xc);
 }
 
 /* Plain `CreateCrate` trampoline, type `0xb`. */
-void sub_8021B48(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnMysteryCrate(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     CreateCrate(arg0, arg1, arg2, arg3, 0xb);
 }
 
 /* Plain `CreateCrate` trampoline, type `0xa`. */
-void sub_8021B6C(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnNitroCrate(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     CreateCrate(arg0, arg1, arg2, arg3, 0xa);
 }
 
 /* Plain `CreateCrate` trampoline, type `9`. */
-void sub_8021B90(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnLifeCrate(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     CreateCrate(arg0, arg1, arg2, arg3, 9);
 }
 
 /* Plain `CreateCrate` trampoline, type `8`. */
-void sub_8021BB4(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnIronArrowCrate(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     CreateCrate(arg0, arg1, arg2, arg3, 8);
 }
@@ -293,7 +293,7 @@ void sub_8021BB4(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
  * region - `asm/code_3_2_17_21280.s` (still-raw text past this point
  * used to continue here) now ends right before this file's span, at
  * `sub_802155C`'s literal pool. */
-void sub_8021BD8(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnIronCrate(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     CreateCrate(arg0, arg1, arg2, arg3, 7);
 }

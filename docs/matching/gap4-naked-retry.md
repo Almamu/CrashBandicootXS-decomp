@@ -5,12 +5,12 @@ This pass took the four drafts that the mix-6 pass
 
 | Function | File | Start | Result |
 |---|---|---|---|
-| sub_801173C (#15) | `src/system/game_loop53.c` | 95 hw, 312 vs 308 B | **Closed**, real C, old_agbcc (the file already builds with it). |
+| CreateWumpa (#15) | `src/system/game_loop53.c` | 95 hw, 312 vs 308 B | **Closed**, real C, old_agbcc (the file already builds with it). |
 | sub_801AB98 (#25) | `src/graphics/actor_part_1ab98.c` | 644 hw, 1608 vs 1648 B | Not closed. The draft is now 1640 B. What's left is register copies and reload phase. |
 | CreateCrate (#13) | `src/system/game_loop36.c` | 508 hw, 1416 vs 1396 B | Not closed. The type/slot*2 swap is fixed and the draft is 1388 B. Placement-record pointer copies are still missing. |
 | sub_801A114 (#24) | `src/graphics/actor_part_1967c.c` | 159 hw, 392 vs 404 B | Not closed. Only the note changed. |
 
-## sub_801173C
+## CreateWumpa
 
 The last draft had `x`/`y`/`id`/`special` in r4-r6/r8 (local-alloc) and
 `self` in r7. The ROM's layout is `self` r4, x r5, y r6, `id` r8,

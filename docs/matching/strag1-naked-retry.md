@@ -6,7 +6,7 @@ None of them needs a register pin.
 
 | Function | File | Size | Before | Result |
 |---|---|---|---|---|
-| `sub_8025CA4` | `src/system/game_loop14.c` | 132 B | 5 hw (note) | **Closed** |
+| `DropWumpa` | `src/system/game_loop14.c` | 132 B | 5 hw (note) | **Closed** |
 | `sub_8025B0C` | `src/system/game_loop14.c` | 160 B | 61 hw (note), no draft | **Closed** |
 | `DecodeLayerChunk` | `src/system/game_loop57.c` | 320 B | 13 hw (note), no draft | **Closed** |
 | `RunCutscenePlayer` | `src/system/game_loop57.c` | 284 B | 77 hw (note), no draft | **Closed** |
@@ -20,18 +20,18 @@ with, which is the old_agbcc tell. It now lives in its own
 and `ldscript.txt` places the file between `graphics.o` and
 `graphics_7634.o`.
 
-## sub_8025CA4
+## DropWumpa
 
 A plain C draft was 11 halfwords off. There were two parts to fix:
 
 - **Stack parameters.** `p5` is read as the low byte of a word
   parameter (`*(u8 *)&flag5`), which gives the ROM's `add r0,sp,#N;
   ldrb`. `p4` is a full word, since the ROM compares it with 0xff and
-  never truncates it. This is the same approach as `sub_8025A64`.
+  never truncates it. This is the same approach as `DropExtraLife`.
 - **The +0x4B zero.** Two changes together put the `movs r0,#0` after
   the +0x49 address: the three tag bytes are written through `u8 *t`,
   and the zero goes through a local with `asm("" : "+r"(zero))`. This
-  is `sub_801173C`'s `phase` trick. Either change alone leaves 3
+  is `CreateWumpa`'s `phase` trick. Either change alone leaves 3
   halfwords off.
 
 ## sub_8025B0C

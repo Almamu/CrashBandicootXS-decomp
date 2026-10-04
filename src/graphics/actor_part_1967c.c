@@ -284,8 +284,8 @@ extern void sub_800CA60(void *self, s32 flags);
 extern void sub_800CA74(void *self);
 extern u8 HasSuperBodySlam(void *arg0);
 extern u8 HasTurboRun(void *arg0);
-extern void sub_8021D80(u32 arg0, s32 arg1, s32 arg2, s32 arg3);
-extern void sub_8021EF4(u32 arg0, s32 arg1, s32 arg2, s32 arg3);
+extern void SpawnBodySlamPower(u32 arg0, s32 arg1, s32 arg2, s32 arg3);
+extern void SpawnTurboRunPower(u32 arg0, s32 arg1, s32 arg2, s32 arg3);
 /* These three return their box by value (gcc passes the hidden result
  * pointer in r0 and returns it). */
 extern struct box sub_8007C30(struct part *obj);
@@ -480,7 +480,7 @@ void sub_8019770(struct obj_476c *self, s32 unused, s32 arg)
     {
         VCALL1(self->part->ctl, m20, 9);
         if (!HasTurboRun(gLevelState))
-            sub_8021D80(0xFFFF, 0x8C, 0x98, 0);
+            SpawnBodySlamPower(0xFFFF, 0x8C, 0x98, 0);
     }
     VCALL1(self, m20, arg);
 }
@@ -785,7 +785,7 @@ void sub_8019CE4(struct boss *self, struct part *other, s32 next)
     {
     case 16:
         if (!HasSuperBodySlam(gLevelState))
-            sub_8021EF4(0xFFFF, 0xA0, 0xA9, 0);
+            SpawnTurboRunPower(0xFFFF, 0xA0, 0xA9, 0);
         sub_801A7AC(self, other, 3);
         break;
     case 12:

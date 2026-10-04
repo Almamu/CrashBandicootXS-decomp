@@ -24,7 +24,7 @@ extern void PlaySfx(void *bank, s32 arg1, s32 sfxId);
  *    is set: looks up a per-`z` flags byte via the same
  *    `gEntityFlags -> *rec` entity parameter table
  *    (`paramOffsets[]`/`params`, the room's `struct level_entity_list`)
- *    `sub_8021D04` (graphics_loading_21bfc.c) already reads, folds
+ *    `SpawnBasicCrate` (graphics_loading_21bfc.c) already reads, folds
  *    its bit 1 into the player's `+0x28` bitfield's bit 4, then
  *    unconditionally writes the incoming `x`/`y` (Q8.8, shifted from
  *    the raw `u16` args) into the player's own `x`/`y` fields - the

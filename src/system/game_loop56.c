@@ -107,7 +107,7 @@
  * failure); falling through both, loops `gCrateList` counting
  * entries whose `_call_via_r1` trampoline probe returns `3` *and* whose
  * own `+0x4e` tag is `0xa` (the same physics-subsystem state tag
- * `gStaticData_0816BC98` indexes, `docs/matching/
+ * `gCrateHitResponse` indexes, `docs/matching/
  * issue-12-physics-collision.md`), then calls `sub_8023140(gUnknown_
  * 030012C0, count)`. **Final tail** (`_08023F92`, also every early-out
  * above): flushes all five hot IWRAM widget-manager globals
@@ -280,7 +280,7 @@ extern void sub_800A810(void *player);
 extern void LoadRoom(void *box, void *widget);
 extern void CheckAllCratesBroken(void *level);
 extern u8 IsSwitchPressed(void *level);
-extern void sub_800F1B8(void);
+extern void UpdateCrates(void);
 extern void SetMaskAssistDeaths(void *level, s32 value);
 extern void sub_8023110(void *level, s32 value);
 extern void ClearPaletteCycles(void *queue);
@@ -401,7 +401,7 @@ s32 RunRoom(struct gl_self *self)
     if (!gLevelTable[self->level].initialized)
         CheckAllCratesBroken(gLevelState);
     if (IsSwitchPressed(gLevelState))
-        sub_800F1B8();
+        UpdateCrates();
     SetMaskAssistDeaths(gLevelState, gLevelTable[self->level].unk_14);
     sub_8023110(gLevelState, gLevelTable[self->level].unk_18);
 

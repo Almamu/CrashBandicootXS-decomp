@@ -274,7 +274,7 @@ fade (`FadePaletteToBlack`).
 failure); falling through both, loops `gCrateList` counting
 entries whose `_call_via_r1` trampoline probe returns `3` *and* whose
 own `+0x4e` tag is `0xa` (the physics-subsystem state tag
-`gStaticData_0816BC98` indexes,
+`gCrateHitResponse` indexes,
 [docs/matching/issue-12-physics-collision.md](issue-12-physics-collision.md)),
 then calls `sub_8023140(gLevelState, count)`.
 

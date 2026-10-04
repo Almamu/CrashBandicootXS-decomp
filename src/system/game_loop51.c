@@ -3,11 +3,11 @@
 
 extern u8 gUnknown_030012B0;
 extern void *gPaletteCache;
-extern void sub_800F8E0(struct phys_obj *self);
-extern void sub_800F990(struct phys_obj *self);
-extern void sub_800F4F4(struct phys_obj *self);
-extern void sub_800F798(struct phys_obj *self);
-extern void sub_800FC70(struct phys_obj *self);
+extern void UpdateTntCountdown(struct crate *self);
+extern void sub_800F990(struct crate *self);
+extern void SolidifyOutlineCrates(struct crate *self);
+extern void FinishBrokenCrate(struct crate *self);
+extern void UpdateCrateFall(struct crate *self);
 
 /* GitHub issue #13: 0x0800FC70-0x08010A0C, continuing the physics/
  * collision subsystem (see game_loop17.c's header comment and
@@ -15,24 +15,24 @@ extern void sub_800FC70(struct phys_obj *self);
  * `DrawCrate` (game_loop35.c) and `sub_8010674` (game_loop23.c) in
  * ROM, so it needs its own file - see docs/workflow.md's "one file
  * per contiguous ROM region" rule. `self` throughout is the same
- * "collision box" object (`struct phys_obj`, include/phys_obj.h) every
+ * "collision box" object (`struct crate`, include/phys_obj.h) every
  * other function in this subsystem operates on.
  *
  * A per-frame state-machine tick. While `self+0x4f` (a per-object
  * throttle counter several siblings in this family also drive) is
  * nonzero, decrements it and, only for the frame it does so,
  * dispatches once more on `self+0x4e` (the settle-state byte):
- * - `0x13`-`0x15`: re-enters the edge-settle chain (`sub_800F8E0`),
+ * - `0x13`-`0x15`: re-enters the edge-settle chain (`UpdateTntCountdown`),
  *   also arming the global one-shot rescan flag `gUnknown_030012B0`
- *   (the same flag `sub_800FC70`, game_loop32.c, reads).
+ *   (the same flag `UpdateCrateFall`, game_loop32.c, reads).
  * - `0xf`: re-triggers `sub_800F990` when `self+0x4d`'s low 7 bits
  *   are already 0.
  * - `0xc`: once `self+0x4f` has reached 0 this frame, clears
  *   `self+0x50`.
- * - `3`: re-triggers `sub_800F4F4`.
+ * - `3`: re-triggers `SolidifyOutlineCrates`.
  *
  * Unconditionally afterwards: while `self+0x4e == 0xc`, counts
- * `self+0x48` down toward 0; always calls `sub_800FC70` (the
+ * `self+0x48` down toward 0; always calls `UpdateCrateFall` (the
  * position-wrap advance). Then, if `self+0x4d`'s bit 7 is set and
  * `self+0x38` is nonzero, re-derives `self+0x30`'s index via the same
  * `self+0x20`-pointer-to-manager/`self+0x2d`-tag/0x1c-stride hitbox-
@@ -45,7 +45,7 @@ extern void sub_800FC70(struct phys_obj *self);
  * the freshly-retagged hitbox record's own `+0x14`) into `self+0x29`;
  * state 3 just tags `0x20` and runs the same triplet. If bit 7 was
  * clear instead, `self+0x4d`'s low 7 bits == 1 triggers
- * `sub_800F798`. Finally, unconditionally, calls `sub_8008044` and
+ * `FinishBrokenCrate`. Finally, unconditionally, calls `sub_8008044` and
  * hands `self+0x18`'s table's own `+0x60`/`+0x64` offset/function-
  * pointer pair off to the `_call_via_r1` table-trampoline (the same
  * convention `sub_8007048`/`sub_80070D4`, graphics.c, establish).
@@ -63,7 +63,7 @@ extern void sub_800FC70(struct phys_obj *self);
  *   the later `unk_38`/`busy` stores;
  * - the tile-cache key's record is indexed from a local copy of the
  *   records pointer, which loads the table before the tag. */
-void sub_80104E4(struct phys_obj *self)
+void UpdateCrate(struct crate *self)
 {
     if (self->timer != 0)
     {
@@ -75,7 +75,7 @@ void sub_80104E4(struct phys_obj *self)
             {
                 if (kind <= 0x15)
                 {
-                    sub_800F8E0(self);
+                    UpdateTntCountdown(self);
                     gUnknown_030012B0 = 1;
                     goto done;
                 }
@@ -95,12 +95,12 @@ void sub_80104E4(struct phys_obj *self)
                 self->unk_50 = 0;
         }
         else if (self->kind == 3)
-            sub_800F4F4(self);
+            SolidifyOutlineCrates(self);
     done:;
     }
     if (self->kind == 0xc && self->u48.n > 0)
         self->u48.n--;
-    sub_800FC70(self);
+    UpdateCrateFall(self);
     if (self->state & 0x80)
     {
         if (self->unk_38 != 0)
@@ -133,7 +133,7 @@ void sub_80104E4(struct phys_obj *self)
         }
     }
     else if ((self->state & 0x7f) == 1)
-        sub_800F798(self);
+        FinishBrokenCrate(self);
     sub_8008044((struct gobj *)self);
     PHYS_CALL(self, m60);
 }

@@ -180,7 +180,7 @@ issue is where they got turned into (attempted) byte-exact C.
   OBJ palette RAM and a BG window register, then walks a small
   count-prefixed array touching `gEntitySpawner`/`gCrateList`,
   calling several still-unread functions (`sub_8025968`, `SpawnEntity`,
-  `sub_8010714`, `sub_8010710`, `sub_8007398`, `sub_801070C`). Not
+  `SetCrateAbove`, `SetCrateBelow`, `sub_8007398`, `GetCrateAbove`). Not
   understood precisely enough (which fields of the visited records mean
   what, why two lookups happen per entry) to commit a byte-exact-attempt
   reconstruction with confidence - left completely raw rather than guess.

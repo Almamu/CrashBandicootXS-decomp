@@ -56,8 +56,8 @@ or `0xa`. Otherwise builds **three** AABBs via the shared
 aabb` from `actor_part.c`/`game_loop6.c`), all from the same
 `self+0x20`-table-at-28-byte-stride convention `sub_800AAEC` above
 also uses (confirming `docs/rom_map.md`'s own cross-reference: "the
-exact field `gStaticData_0816BC98`, the physics subsystem's 22-row
-table, indexes by ... matching `gStaticData_0816BC98`'s stride
+exact field `gCrateHitResponse`, the physics subsystem's 22-row
+table, indexes by ... matching `gCrateHitResponse`'s stride
 exactly, but clearly a different table instance" - reinforcing the
 project's established "shared convention, not shared struct" reading),
 with the record's own `{s16 offX, s16 offY, u8 w, u8 h}` quad at

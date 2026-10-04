@@ -57,13 +57,13 @@ family. Filed under `src/graphics/` on disk, tracked as its own
   previously-parked semantically-faithful reconstruction - see
   [issue-65-graphics-loading.md](../matching/issue-65-graphics-loading.md)'s
   "Third pass".
-- **`sub_8021BFC`**-**`sub_8021D04`** (`src/graphics/graphics_loading_21bfc.c`)
+- **`SpawnNitroSwitchCrate`**-**`SpawnBasicCrate`** (`src/graphics/graphics_loading_21bfc.c`)
   - the `CreateCrate` entity-constructor trampoline family, types `0`-`7`,
-  all matched (`sub_8021D04`, type `0`, closed via register-pinning the
+  all matched (`SpawnBasicCrate`, type `0`, closed via register-pinning the
   table-resolution chain to the ROM's own registers) - see
   [issue-33-0x08021bfc-graphics-loading.md](../matching/issue-33-0x08021bfc-graphics-loading.md).
-- **`sub_801EA5C`**, **`sub_801EB04`**, **`sub_801EBF0`**,
-  **`sub_801EC9C`**, **`sub_801ED6C`**, **`sub_801EE3C`**
+- **`SpawnCrystal`**, **`SpawnCrateGem`**, **`sub_801EBF0`**,
+  **`SpawnRedGem`**, **`SpawnGreenGem`**, **`SpawnYellowGem`**
   (`src/graphics/graphics_loading_1ea5c.c`) - issue #30: six "trigger
   effect type N" spawners (a `GetCurrentLevelFlags`/`gLevelState+2`
   collected-bit test, then a `sub_8008434` part with a fixed bank
@@ -76,8 +76,8 @@ family. Filed under `src/graphics/` on disk, tracked as its own
   `include/gfx_part.h` (moved out of `actor_part_188d0.c`). See
   [issue-30-graphics-loading.md](../matching/issue-30-graphics-loading.md)'s
   "Tenth pass".
-- **`sub_8020E84`**, **`sub_8020F7C`**, **`sub_802107C`**,
-  **`sub_802117C`** (`src/graphics/trigger_effect.c`) - issue #31: the
+- **`SpawnRedGemPlatform`**, **`SpawnYellowGemPlatform`**, **`SpawnGreenGemPlatform`**,
+  **`SpawnBlueGemPlatform`** (`src/graphics/trigger_effect.c`) - issue #31: the
   "trigger effect type N" spawners (4 of the 15-slot
   `gStaticData_0816C7D8` dispatch table's slots): sound-only-or-
   full-spawn effect triggers gated by a `gLevelState+2` flag bit.
@@ -98,7 +98,7 @@ family. Filed under `src/graphics/` on disk, tracked as its own
   **`sub_8020D4C`** (`graphics_loading_1feec.c`; `sub_802062C` closed in
   [last-eleven-naked-retry.md](../matching/last-eleven-naked-retry.md)),
   **`sub_8021280`**-**`sub_802155C`** (`graphics_loading_21280.c`) and
-  **`sub_8021668`**-**`sub_8021BD8`** (`graphics_loading_21668.c`) - the
+  **`sub_8021668`**-**`SpawnIronCrate`** (`graphics_loading_21668.c`) - the
   "two-line text popup" spawners (issue #31) and the spawner-table
   entries that follow them. All five files are built with old_agbcc and
   share `include/text_popup.h`. 33 functions were rewritten as plain C with no pins or
@@ -109,9 +109,9 @@ family. Filed under `src/graphics/` on disk, tracked as its own
   register pins and an empty `asm` nudge (see
   [naked-retry-mid45.md](../matching/naked-retry-mid45.md)). See
   [issue-31-old-agbcc.md](../matching/issue-31-old-agbcc.md).
-- **`sub_8021D80`**, **`sub_8021DFC`**, **`sub_8021E78`**, **`sub_8021EF4`**,
-  **`sub_8021F70`**, **`sub_802200C`**, **`sub_80220C4`**, **`sub_802209C`**,
-  **`sub_8022158`**, **`nullsub_22`**, **`sub_802218C`**, **`sub_80221A4`**,
+- **`SpawnBodySlamPower`**, **`SpawnTornadoSpinPower`**, **`SpawnDoubleJumpPower`**, **`SpawnTurboRunPower`**,
+  **`SpawnStopwatch`**, **`SpawnBlueGem`**, **`sub_80220C4`**, **`sub_802209C`**,
+  **`SpawnWumpa`**, **`nullsub_22`**, **`sub_802218C`**, **`sub_80221A4`**,
   **`sub_80221BC`**, **`sub_80221D4`**, **`nullsub_23`**, **`DestroyEntitySpawner`**,
   **`CreateEntitySpawner`**, **`InitLevelState`** (`src/graphics/graphics_loading_21d80.c`)
   - the `gSpriteBankTable` record-indexed OAM-trio spawner family, the

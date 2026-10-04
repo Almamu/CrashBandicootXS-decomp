@@ -10,8 +10,8 @@ away from matching.
 
 | Function | File | Technique |
 |---|---|---|
-| `sub_800FC70` (#13) | `game_loop32.c` (now in `OLD_AGBCC_OBJS`) | Every use of the speed byte goes through `self->unk_4C` (the ROM's `sb` is the GCSE copy of that address). `speed--` is written in both step arms. The neighbour walk skips the first neighbour: `n = next(self); if (n) { n = next(n); while (n) {...} }`. One temporary `t` carries `unk_40` into `y` and re-reads `x` at the bottom of the loop, which is the ROM's r1. |
-| `sub_80104E4` (#13) | `game_loop51.c` (now in `OLD_AGBCC_OBJS`) | The 0x13-0x15 range test is two nested `if`s on an `s32` copy of `kind`. A single `&&` gets folded into an unsigned subtract-and-compare, and testing the u8 field gives unsigned branches. The `kind == 0xf` test and its `state` test are nested for the same reason: one `&&` makes gcc merge the two adjacent byte compares into one word compare. The frame clamp is the new `PhysSetFrame(self, 0)` inline, whose parameter keeps the constant 0 in r3 for the later `unk_38`/`busy` stores. The tile-cache key's record is indexed from a local copy of `anim->records`, which loads the table before the tag. Needs `_call_via_r1` aliased to `_call_via_r1` for the `m60` method call. |
+| `UpdateCrateFall` (#13) | `game_loop32.c` (now in `OLD_AGBCC_OBJS`) | Every use of the speed byte goes through `self->unk_4C` (the ROM's `sb` is the GCSE copy of that address). `speed--` is written in both step arms. The neighbour walk skips the first neighbour: `n = next(self); if (n) { n = next(n); while (n) {...} }`. One temporary `t` carries `unk_40` into `y` and re-reads `x` at the bottom of the loop, which is the ROM's r1. |
+| `UpdateCrate` (#13) | `game_loop51.c` (now in `OLD_AGBCC_OBJS`) | The 0x13-0x15 range test is two nested `if`s on an `s32` copy of `kind`. A single `&&` gets folded into an unsigned subtract-and-compare, and testing the u8 field gives unsigned branches. The `kind == 0xf` test and its `state` test are nested for the same reason: one `&&` makes gcc merge the two adjacent byte compares into one word compare. The frame clamp is the new `PhysSetFrame(self, 0)` inline, whose parameter keeps the constant 0 in r3 for the later `unk_38`/`busy` stores. The tile-cache key's record is indexed from a local copy of `anim->records`, which loads the table before the tag. Needs `_call_via_r1` aliased to `_call_via_r1` for the `m60` method call. |
 | `BreakCrate` (#12) | `game_loop48.c` | The tag goes through the `PhysSetTag` inline (the constant is loaded before the tag address). The frame clamp is `PhysSetFrame(self, 3)`. Bit 4 of `flags` is set as a bitfield (`PHYS_FLAG4`). A plain `|= 0x10` leaves a zero pseudo that CSE shares with the later `busy = 0` store, which moves `self` from r4 to r5. The state store's constant 1 is a local `one` that the bitmap shift reuses (the ROM's r8). The switch cases are written in the ROM's block order, with an explicit empty `case 22`. |
 
 All three were found with the brute-force variant runner (scratchpad
@@ -39,7 +39,7 @@ touches (`x`/`y`, `vtable`, `dir`, the velocity words, `standMode`,
   landing block writes `pos` through a pointer; with direct writes, gcc
   doesn't reload the player pointer after the stack stores. Tried
   without success: u8/s8/s16/u16/s32/u32 locals, casts, u8 prototypes
-  for `sub_800E7A8`, K&R parameters, struct copies, and an
+  for `BreakCrateInStack`, K&R parameters, struct copies, and an
   address-taken local (which gives the `ldrb` but loads it too early).
   The file is still built with agbcc. If the draft closes, the whole
   file (whose other function is the NAKED `sub_0800D18C`) can move to

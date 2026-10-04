@@ -24,7 +24,7 @@ No register pins, no asm in a function body and no NAKED.
 | `StreamBgRow`, `StreamBgColumn`, `FillBgStreamer` | `game_loop57.c` |
 | `GetCollisionChunk`, `GetTerrainHeights`, `GetSolidTerrainHeights`, `sub_8025228` | `game_loop3.c` |
 | `GetTerrainType` | `game_loop4.c` |
-| `sub_8025A64` | `game_loop29.c` |
+| `DropExtraLife` | `game_loop29.c` |
 | `sub_8025BAC` | `game_loop14.c` |
 | `ScrollBgLayer`, `DrawBgLayerColumn` | `game_loop16.c` |
 | `sub_8026A18`, `sub_8026AE8` | `game_loop46.c` |
@@ -36,7 +36,7 @@ Still NAKED, with the remaining gap under old_agbcc:
 
 | function | gap |
 |---|---|
-| `sub_8025CA4` | 5 halfwords: one `movs r0, #0` scheduled after the wrong address |
+| `DropWumpa` | 5 halfwords: one `movs r0, #0` scheduled after the wrong address |
 | `DecodeLayerChunk` | 13 halfwords: sign-extension order around the delta byte, and the copy loop's index order |
 | `DecodeCollisionChunk` | 30 halfwords: the accumulator and the pair loop's pointer swap r4/r5 |
 | `sub_802732C` | 32 bytes: the ROM keeps three copies of one nibble insert |
@@ -53,7 +53,7 @@ Still NAKED, with the remaining gap under old_agbcc:
   kept live across the call. `DecodeCollisionChunk`'s r7 "shadow pointer" is
   gcc's strength-reduced `&dest[written]`.
 - **Inline-helper parameters.** Stores whose value comes before the
-  address (`part->tag` in `sub_8025A64` and `StartTimeTrial`) go through an
+  address (`part->tag` in `DropExtraLife` and `StartTimeTrial`) go through an
   `s32` setter; `DrawBgLayerColumn` uses `bg_scroll_layer_25fc8.c`'s `Mod32`.
 - **The tile cache's `GetCell`.** A shared inline returning `u16` gives
   the ROM's extra `lsl`/`lsr 16`, with the index written as
@@ -62,7 +62,7 @@ Still NAKED, with the remaining gap under old_agbcc:
 - **Stepwise index arithmetic.** `StreamBgRow`/`StreamBgColumn` build the
   map index in separate statements; `FillBgStreamer` keeps the row stride
   and block height in `s32` locals so they stay in `sl`/`sb`.
-- **Parameter widths.** `sub_8025A64` takes its arguments as words and
+- **Parameter widths.** `DropExtraLife` takes its arguments as words and
   reads the sixth as the stack slot's low byte, as the ROM does.
 - **Existing types.** `SetupRoomBlend` uses `level_menu.h`'s
   `union blend`; `ScrollBgLayer`/`DrawBgLayerColumn` use `bg_scroll_layer.h`.
@@ -89,6 +89,6 @@ nibble-insert copies survive when the two inner stores go through a
 
 ## Later pass (strag1)
 
-`sub_8025CA4`, `sub_8025B0C`, `DecodeLayerChunk` and `RunCutscenePlayer` from the
+`DropWumpa`, `sub_8025B0C`, `DecodeLayerChunk` and `RunCutscenePlayer` from the
 "still NAKED" table above are now real C, all under old_agbcc with no
 register pins. See [strag1-naked-retry.md](strag1-naked-retry.md).

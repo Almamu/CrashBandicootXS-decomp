@@ -26,8 +26,8 @@ extern void SetAabbPos(void *buf, s32 arg1, s32 arg2);
 extern void SetAabbSize(void *buf, s32 arg1, s32 arg2);
 extern u8 sub_8001688(void *buf1, void *buf2);
 extern void *gPlayer;
-extern void *sub_801070C(void *obj); /* "get next" */
-extern void *sub_8010708(void *obj); /* "get prev" */
+extern void *GetCrateAbove(void *obj); /* "get next" */
+extern void *GetCrateBelow(void *obj); /* "get prev" */
 
 struct aabb {
     s32 field_0;
@@ -93,7 +93,7 @@ struct ceac_player {
  * player-shaped hitbox at `self`'s position overlap `self`'s own
  * actual hitbox" - used by `sub_0800D18C` to decide whether to treat
  * `self` as blocking/pushing a player-sized object at that spot (its
- * caller follows a `1` result with a `sub_801070C`(self) "get next"
+ * caller follows a `1` result with a `GetCrateAbove`(self) "get next"
  * list-walk step, consistent with a "can something occupy this slot"
  * gate feeding further list traversal).
  *
@@ -149,7 +149,7 @@ u8 sub_800CEAC(void *self, struct hitbox_quad *quad, struct aabb *box,
  * entirely and uses `self` directly instead).
  *
  * Reads `self`'s doubly-linked neighbor pointers both ways
- * (`sub_801070C` = "get next", `sub_8010708` = "get prev" - the
+ * (`GetCrateAbove` = "get next", `GetCrateBelow` = "get prev" - the
  * established pair, see `src/system/game_loop7.c`). If *neither*
  * exists, returns `self` unchanged with no other side effect - `self`
  * is isolated in the list.
@@ -191,8 +191,8 @@ u8 sub_800CEAC(void *self, struct hitbox_quad *quad, struct aabb *box,
 struct box_part *sub_800CF70(struct box_part *selfArg, struct aabb *box, u8 *foundFlag)
 {
     struct box_part *self = selfArg;
-    struct box_part *next = sub_801070C(self);
-    struct box_part *prev = sub_8010708(self);
+    struct box_part *next = GetCrateAbove(self);
+    struct box_part *prev = GetCrateBelow(self);
 
     if (next == NULL && prev == NULL)
         return self;

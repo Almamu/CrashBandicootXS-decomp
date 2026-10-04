@@ -27,9 +27,9 @@ shared tail instead of the ROM's two (one solo copy for the
 X-major-increasing case, one shared by the other three) - 4 bytes
 short.
 
-This is the same gap *class* as `sub_8010914`/`sub_801095C`
+This is the same gap *class* as `GetTopCrate`/`GetBottomCrate`
 (game_loop30.c, see
-[naked-sub_8010914-matched.md](./naked-sub_8010914-matched.md)), but
+[naked-GetTopCrate-matched.md](./naked-GetTopCrate-matched.md)), but
 notably harder: that function's two `return cur;` sites were *both*
 meant to collapse into a single shared copy in the ROM too, so the fix
 there was pure block *placement* (moving an already-correctly-merged
@@ -41,7 +41,7 @@ one - a real anti-merge problem, not just a placement problem.
 
 ### Gap 1: keeping the solo return un-merged
 
-A `goto`-based restructuring alone (matching `sub_8010914`'s
+A `goto`-based restructuring alone (matching `GetTopCrate`'s
 technique: place the X-major-increasing case's own return target
 physically right after that case's own loop, before case 2's code,
 mirroring the ROM's block order) was **not sufficient on its own** -
@@ -69,7 +69,7 @@ returnSolo:
 ```
 
 placed physically right after that case's own loop (matching the
-ROM's block order, same as the `sub_8010914` technique), while the
+ROM's block order, same as the `GetTopCrate` technique), while the
 other three cases keep plain `return count;` statements, which this
 compiler's own cross-jump pass still merges into a single shared tail
 on its own (correctly, since that's what the ROM does too). An inline

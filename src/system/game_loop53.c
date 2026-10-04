@@ -7,15 +7,15 @@
  * (asm/code_3_2_17_e560_10d54.s) - see
  * docs/matching/issue-14-0x08010d54-physics-apply.md's Phase 2 planning
  * section for the full function/size list. This file carves out only
- * sub_8011448-sub_801192C (the chunk's last 6 functions, contiguous
+ * PickUpWumpa-sub_801192C (the chunk's last 6 functions, contiguous
  * through to the already-matched src/graphics/actor_part39.c at
  * 0x080119A8) - a clean single trim point at the tail of the asm file,
- * chosen specifically because sub_8011114 and the sub_8011248-
- * sub_8011390 "no cross-reference" accessor cluster in between this
+ * chosen specifically because CreateExtraLife and the sub_8011248-
+ * CheckWumpaPickup "no cross-reference" accessor cluster in between this
  * file's own functions and the ones a sibling parallel session is
  * working on are interleaved with several *other* individually-
- * characterized functions (sub_8010E34/sub_8010EAC/sub_8010F8C/
- * sub_80111B8) this pass also read and verified in isolation but did
+ * characterized functions (CheckExtraLifePickup/PickUpExtraLife/UpdateExtraLife/
+ * SendExtraLifeToHud) this pass also read and verified in isolation but did
  * NOT integrate here - splitting the asm file at more than one point to
  * reach them would need a second new C file, which this session's
  * parallel-agent convention reserves collision-avoidance for a single
@@ -33,7 +33,7 @@ extern s16 gSineTable[];
 extern s32 rand(void);
 
 /* Built with old_agbcc (Makefile OLD_AGBCC_OBJS) since the issue #15
- * NAKED retry: sub_8011448 and sub_801192C match only under it, and the
+ * NAKED retry: PickUpWumpa and sub_801192C match only under it, and the
  * rest of the file compiles identically under either compiler. */
 
 /* `frame = min(0, frameCount - 1)` against the part's current animation
@@ -48,8 +48,8 @@ static inline void OrbitClampFrame(struct orbit_part *self)
     self->frame = frame;
 }
 
-/* sub_8011448: "randomized-position spawn/despawn picker" (docs/rom_map.md),
- * called as `sub_8011448(entry, 1)`/`(other, 1)` from game_loop40.c/
+/* PickUpWumpa: "randomized-position spawn/despawn picker" (docs/rom_map.md),
+ * called as `PickUpWumpa(entry, 1)`/`(other, 1)` from game_loop40.c/
  * game_loop49.c for despawn. PlaySfx(gAudioContext, 8, 0x100), then
  * either derives a randomized (dx,dy) offset pair from rand() (arg1
  * nonzero - self->0x48 = 2, self->0x49 tags which of three rand()-driven
@@ -57,18 +57,18 @@ static inline void OrbitClampFrame(struct orbit_part *self)
  * ShowHudWumpa(gHud) (self->0x48 = 1). Either way: self->0x3c
  * = 0xa0, self->0x30 clamped from a self->0x20 table lookup at
  * self->0x2d*0x1c+0x16 (same "table[tag]->field 0x16, clamp against a
- * zero floor" idiom sub_8010F8C/sub_8011870 also use), self->0x25 = 1,
+ * zero floor" idiom UpdateExtraLife/SendWumpaToHud also use), self->0x25 = 1,
  * self->0xc |= 0x10, then calls sub_8007174(self, self->x>>8, self->y>>8,
  * &outX, &outY) and re-derives self->x/self->y plus self->0x40/self->0x44
  * (a "distance to travel" pair, via -FixedDiv(newPos<<8 - offset,
- * 0x1400)) from the results - the exact same tail shape sub_8010EAC/
- * sub_80111B8/sub_8011870 all share in this subsystem.
+ * 0x1400)) from the results - the exact same tail shape PickUpExtraLife/
+ * SendExtraLifeToHud/SendWumpaToHud all share in this subsystem.
  *
  * The `self->0x25 = 1` store goes through a `u8` local so old_agbcc
  * materializes the 1 before the field address, as the ROM does. (Earlier
  * notes blamed an r7 allocation gap; under old_agbcc the tag lands in r7
  * on its own.) */
-void sub_8011448(struct orbit_part *self, u8 randomize)
+void PickUpWumpa(struct orbit_part *self, u8 randomize)
 {
     s32 dx, dy;
     s32 outX, outY;
@@ -114,10 +114,10 @@ void sub_8011448(struct orbit_part *self, u8 randomize)
     self->velY = -FixedDiv(newY - dy, 0x1400);
 }
 
-/* sub_8011548: "entity-vtable-dispatched velocity integrator" (docs/
+/* UpdateWumpa: "entity-vtable-dispatched velocity integrator" (docs/
  * rom_map.md). Dispatches on self->0x48 (0-3):
  *  - mode 1: integrates self->x/self->y by self->0x40/self->0x44 (the
- *    "distance to travel" pair sub_8011448/sub_8010EAC/etc. compute),
+ *    "distance to travel" pair PickUpWumpa/PickUpExtraLife/etc. compute),
  *    wraps self->0x3c by +/-4 (mode-gated by self->0x49) each frame in
  *    [0,0x140], and once self->x>>8/self->y>>8 both fall within a small
  *    box (|x|<=0x10, |y|<=0x10) fires PlaySfx(gAudioContext,0xe,
@@ -125,13 +125,13 @@ void sub_8011448(struct orbit_part *self, u8 randomize)
  *    candidate per docs/rom_map.md), sets self->0xc bit 0, and - unless
  *    self->8 == 0xffff - sets self->8's bit in the gEntityFlags+
  *    0x108 collision bitmap (the same inline idiom sub_80072D8/
- *    sub_8025A64 use on a struct actor).
+ *    DropExtraLife use on a struct actor).
  *  - mode 2: same integrate step, then wraps self->0x3c similarly but
  *    with different thresholds/direction, and on wrap-triggered falls
  *    into the same "set self->0xc bit 0 + collision-bitmap" tail as
  *    mode 1.
  *  - mode 3: increments self->0x49 each frame; every 11th frame resets
- *    it and calls sub_8025CA4(gEntitySpawner, self->x>>8, self->y>>8,
+ *    it and calls DropWumpa(gEntitySpawner, self->x>>8, self->y>>8,
  *    0, 1, 0) (a NAKED part-object spawner already matched in
  *    game_loop14.c) - then increments self->0x4b every frame too; every
  *    10th frame falls into the same collision-bitmap tail as modes 1/2.
@@ -143,7 +143,7 @@ void sub_8011448(struct orbit_part *self, u8 randomize)
  * gSineTable[self->0x49 & 0x7f] and FixedMul, added to
  * self->0x50 and stored into self->y (a "rotate self->y around a fixed
  * center by a table-driven step" idiom, same table/shape as
- * sub_8010F8C's own default-mode branch); if set, calls sub_801192C
+ * UpdateExtraLife's own default-mode branch); if set, calls sub_801192C
  * (the small self->0x4b/self->0x4a-driven table helper above) instead.
  * If self->0x48 == 3 specifically, self->x/self->y are instead reset to
  * gPlayer's own position minus a small fixed offset
@@ -166,7 +166,7 @@ extern void *gEntityFlags;
 extern void *gEntitySpawner;
 extern struct orbit_part *gPlayer;
 extern void CollectWumpa(void *state);
-extern struct actor *sub_8025CA4(void *unused0, u16 x, u16 y, u8 p3, u8 p4, u8 p5);
+extern struct actor *DropWumpa(void *unused0, u16 x, u16 y, u8 p3, u8 p4, u8 p5);
 typedef struct actor *(*OrbitSpawn4)(void *pool, s32 x, s32 y, u8 p3);
 
 extern void sub_801192C(struct orbit_part *self);
@@ -216,7 +216,7 @@ static inline s32 OrbitTimer(struct orbit_part *self)
         (pos) = _p + _v;                                                       \
     }
 
-void sub_8011548(struct orbit_part *self)
+void UpdateWumpa(struct orbit_part *self)
 {
     s32 argP4;
     u32 argP5;
@@ -266,7 +266,7 @@ void sub_8011548(struct orbit_part *self)
                 /* The empty asm takes `&argP5` into a register as its own
                  * insn, so its `add r3, sp, #4` comes before the `movs r5,
                  * #1` (as an address reload of the store, it came after). */
-                ((OrbitSpawn4)sub_8025CA4)(gEntitySpawner, sx, sy,
+                ((OrbitSpawn4)DropWumpa)(gEntitySpawner, sx, sy,
                     (*(volatile s32 *)&argP4 = 0,
                      ({ asm("" : "=r"(q) : "0"(&argP5)); 0; }),
                      *q = 1, 0));
@@ -307,32 +307,32 @@ void sub_8011548(struct orbit_part *self)
     sub_8008364(&self->base);
 }
 
-/* sub_801173C: the achievement/unlock-icon spawn helper (docs/rom_map.md),
- * extern-declared as `void sub_801173C(u16 arg0)` in
+/* CreateWumpa: the achievement/unlock-icon spawn helper (docs/rom_map.md),
+ * extern-declared as `void CreateWumpa(u16 arg0)` in
  * src/graphics/graphics_loading_21d80.c (that call site only ever reads
  * `arg0`, per its own doc comment - the other three args below are real
  * per this function's own body, just unused/garbage at that particular
  * call site) and called with all four real arguments from
- * sub_8025CA4 (game_loop14.c, NAKED, already matched): `sub_801173C(id,
+ * DropWumpa (game_loop14.c, NAKED, already matched): `CreateWumpa(id,
  * x, y, special)` where `special` is `0xFFFF` or `0` selecting which of
  * two dual_array_manager lists (`gUnknown_030012F4` vs `gUnknown_030012EC`)
  * the newly spawned part joins. Allocates a new 0x54-byte object
  * (`sub_8026EDC`), re-initializes it (`sub_80084A4`), points its vtable
- * at `gStaticData_087E414C`, re-initializes via `sub_80119EC` (actor_part39.c,
+ * at `gWumpaVtable`, re-initializes via `sub_80119EC` (actor_part39.c,
  * already matched), stores `id` at `+8` and `x`/`y` (Q8-shifted) at `+0`/
  * `+4` - mirrored into `+0x4c`/`+0x50` as a "home position" pair the same
- * way sub_8011548's mode-3 branch reads it back - joins the
+ * way UpdateWumpa's mode-3 branch reads it back - joins the
  * `special`-selected list, points `+0x20` at `gUnknown_030012D0`'s shared
- * resource table (fixed slot `0xd2*2`, per the same `sub_8025A64`/
- * `sub_8025CA4` convention), tags `+0x2d = 1`, builds the OAM/keyframe
+ * resource table (fixed slot `0xd2*2`, per the same `DropExtraLife`/
+ * `DropWumpa` convention), tags `+0x2d = 1`, builds the OAM/keyframe
  * trio (`sub_80087C0`/`sub_80087B4`/`sub_800872C`), derives `+0x30` from
- * the same `table[tag]->+0x16` clamp idiom as sub_8011448/sub_8011870,
+ * the same `table[tag]->+0x16` clamp idiom as PickUpWumpa/SendWumpaToHud,
  * clears bits 0/5 of `+0x28`, clears `+0x49`, tags `+0x4a`/`+0x4b` both 0
  * (always - `r7`/`r6` are hardcoded 0 locals, not passed through from any
  * argument), and - since that tag is always 0, never 0xff - never fires
  * the `sub_801191C` special-case call the ROM's own dead `cmp r7,#0xff`
  * still checks for. Finishes with the same `+0x29` nibble-from-
- * `GetPaletteSlot` bitfield combine `sub_8025A64`/`sub_8025CA4` already use,
+ * `GetPaletteSlot` bitfield combine `DropExtraLife`/`DropWumpa` already use,
  * then returns the new part.
  *
  * Matched (old_agbcc) with three nudges:
@@ -354,7 +354,7 @@ extern void *gUnknown_030012EC;
 extern void *gUnknown_030012F4;
 extern void ***gUnknown_030012D0;
 extern void *gPaletteCache;
-extern u8 gStaticData_087E414C[];
+extern u8 gWumpaVtable[];
 extern void *sub_8026EDC(s32 size);
 extern struct actor *sub_80084A4(struct actor *self);
 extern void sub_8008E94(void *manager, void *value);
@@ -365,7 +365,7 @@ extern void sub_80087B4(struct orbit_part *part);
 extern void sub_800872C(struct orbit_part *part, u8 val);
 extern u8 GetPaletteSlot(void *cache, u8 record);
 
-struct orbit_part *sub_801173C(u16 id, u16 x, u16 y, u16 special)
+struct orbit_part *CreateWumpa(u16 id, u16 x, u16 y, u16 special)
 {
     register struct orbit_part *self asm("r4");
     struct orbit_part *p;
@@ -374,7 +374,7 @@ struct orbit_part *sub_801173C(u16 id, u16 x, u16 y, u16 special)
 
     self = sub_8026EDC(0x54);
     sub_80084A4(&self->base);
-    self->base.table = gStaticData_087E414C;
+    self->base.table = gWumpaVtable;
     sub_80119EC(self);
     self->base.field_08 = id;
     self->base.x = x << 8;
@@ -418,16 +418,16 @@ struct orbit_part *sub_801173C(u16 id, u16 x, u16 y, u16 special)
     return p;
 }
 
-/* sub_8011870: alternative to sub_80111B8 (game_loop29.c), called from
- * game_loop14.c "instead of sub_80111B8" per that file's own doc
- * comment. Same shape as sub_80111B8/sub_8011448's tail: PlaySfx(
+/* SendWumpaToHud: alternative to SendExtraLifeToHud (game_loop29.c), called from
+ * game_loop14.c "instead of SendExtraLifeToHud" per that file's own doc
+ * comment. Same shape as SendExtraLifeToHud/PickUpWumpa's tail: PlaySfx(
  * gAudioContext, 8, 0x100), self->0x48 = 1, self->x -= self->0x4a<<8
  * (a fixed-offset nudge), self->0x3c = 0xa0, self->0x30 clamped from the
  * same self->0x20/self->0x2d table-lookup idiom, self->0x25 = 1, calls
  * sub_8007174(self, x>>8, y>>8, &outX, &outY) and re-derives self->x/
  * self->y plus self->0x40/self->0x44 the same way, with a fixed
  * 0xFFFFF000 (-0x1000) offset on both axes instead of a randomized one -
- * then, unlike sub_8011448/sub_80111B8, finishes with
+ * then, unlike PickUpWumpa/SendExtraLifeToHud, finishes with
  * ShowHudWumpa(gHud) instead of ShowHudLives.
  *
  * The fixed -0x1000 offsets go through `OrbitOffset` (an inline taking
@@ -440,7 +440,7 @@ static inline s32 OrbitOffset(s32 pos, s32 off)
     return pos - off;
 }
 
-void sub_8011870(struct orbit_part *self)
+void SendWumpaToHud(struct orbit_part *self)
 {
     s32 outX, outY;
     s32 newX, newY;
@@ -463,7 +463,7 @@ void sub_8011870(struct orbit_part *self)
     ShowHudWumpa(gHud);
 }
 
-/* sub_801191C: sibling of sub_8011870 above - sets self->0x48 = 3 (mode)
+/* sub_801191C: sibling of SendWumpaToHud above - sets self->0x48 = 3 (mode)
  * and self->0x49 = 0xa (a fixed countdown), no other side effects.
  * Already extern-declared as `void sub_801191C(struct actor *self)` in
  * src/graphics/actor_part39.c. Matched: trivial leaf, no push/pop, plain
@@ -477,14 +477,14 @@ void sub_801191C(struct actor *self)
 /* sub_801192C: address-adjacent to sub_801191C, a small self->0x4b/
  * self->0x4a-driven table helper - copies a fixed 3-word table
  * (gStaticData_0816BF14) onto the stack, computes self->y from a
- * gSineTable (shared trig-ish table, see sub_8010F8C's own doc
+ * gSineTable (shared trig-ish table, see UpdateExtraLife's own doc
  * comment) lookup at self->0x4b*4 scaled by FixedMul(...,0x3000)
- * against self->0x50 (the "home Y" sub_801173C/sub_8011548 both write),
+ * against self->0x50 (the "home Y" CreateWumpa/UpdateWumpa both write),
  * then computes self->x from a second gSineTable lookup at
  * self->0x4b*2 scaled by FixedMul against the stack copy indexed by
  * self->0x4a-1, added to or subtracted from self->0x4c (the "home X")
  * depending on whether self->0x4a is 1, 2, or anything else (unchanged).
- * Called from sub_8011548's own default-mode tail above when
+ * Called from UpdateWumpa's own default-mode tail above when
  * self->0x4a is nonzero.
  *
  * Same shape as sub_8011248 (game_loop52.c) with a 0x3000 y-scale: the

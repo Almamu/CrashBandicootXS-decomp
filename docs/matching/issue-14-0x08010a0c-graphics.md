@@ -11,7 +11,7 @@ issue #9.
 
 Every function in this chunk operates on the same `self` type
 `sub_8010A00` (game_loop26.c, matched under GitHub issue #13) and
-`sub_800FEB0` (game_loop22.c, issue #13) already do - a "collision box"
+`ResetCrate` (game_loop22.c, issue #13) already do - a "collision box"
 record embedded inside the player at `gPlayer+0x108`,
 confirmed directly: `sub_80106DC` (game_loop23.c) already calls
 `sub_8010B6C(gPlayer + 0x108)`. `tools/report_units.py`'s

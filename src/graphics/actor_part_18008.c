@@ -189,7 +189,7 @@ extern u8 HasTornadoSpin(void *self);
 extern void RequestRoomExit(void);
 extern void sub_8018978(struct hopper *self, struct hop_part *part);
 extern void nullsub_19(struct hopper *self, struct hop_part *part);
-extern void sub_8021DFC(u32 arg0, u16 x, u16 y, u16 arg3);
+extern void SpawnTornadoSpinPower(u32 arg0, u16 x, u16 y, u16 arg3);
 extern struct hop_part *sub_8009ED0(u16 arg0, u16 arg1, u16 arg2, u16 arg3);
 extern void sub_80087C0(struct hop_part *p);
 extern void sub_80087B4(struct hop_part *p);
@@ -526,7 +526,7 @@ void sub_8018400(struct hopper *self, struct hop_part *part, s32 next)
         s32 y = anchor->y - 0x1800;
 
         if (!HasTornadoSpin(gLevelState))
-            sub_8021DFC(0xFFFF, x >> 8, y >> 8, 0);
+            SpawnTornadoSpinPower(0xFFFF, x >> 8, y >> 8, 0);
         break;
     }
     case 15:

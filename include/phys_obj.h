@@ -3,24 +3,28 @@
 
 #include "gobj_1a794.h"
 
-/* The "collision box" object the issue #12 physics/collision cluster
- * (ROM 0x0800D040-0x0800FC70, src/system/game_loop6.c/7.c/47.c/48.c/
- * 49.c) operates on. Only the fields those functions touch are named;
+/* The crate (CreateCrate, gCrateVtable): the object the issue #12
+ * "physics/collision" cluster (ROM 0x0800D040-0x0800FC70,
+ * src/system/game_loop6.c/7.c/47.c/48.c/49.c) turned out to be. `kind`
+ * is the crate type CreateCrate picks (0 plain, 1 checkpoint, 2 Aku Aku,
+ * 3 iron "!", 4 arrow, 5 outline, 6 nitro switch, 7 iron, 8 iron arrow,
+ * 9 life, 10 nitro, 11 "?", 12 bouncy wumpa, 14 TNT, 16-18 time crates,
+ * 19-21 lit TNT). Only the fields those functions touch are named;
  * the head (position, flags, anim table/tag, mirror bits) has the same
  * layout as `struct gobj`. See docs/matching/issue-12-physics-collision.md. */
-struct phys_obj_vtable
+struct crate_vtable
 {
     u8 unk_00[0x18];
-    struct method m18; // 0x18
+    struct method m18; // 0x18 - slot 3, the per-frame update (UpdateCrate)
     u8 unk_20[0x28];
     struct method m48; // 0x48 - returns the object's class id (3: box)
     struct method m50; // 0x50
     u8 unk_58[8];
-    struct method m60; // 0x60 - per-frame update tail (sub_80104E4)
+    struct method m60; // 0x60
     struct method m68; // 0x68
 };
 
-struct phys_obj;
+struct crate;
 
 /* sub_800F990's view of phys_obj.u48: this compiler pads the struct to a
  * word, so a copy of it lives in one register and its bitfields are
@@ -46,17 +50,17 @@ struct phys_flag_bits
 #define PHYS_GONE(obj) (((struct phys_flag_bits *)&(obj)->flags)->gone)
 #define PHYS_FLAG4(obj) (((struct phys_flag_bits *)&(obj)->flags)->bit4)
 
-/* A group of objects that trigger together (sub_800F368 builds it). */
-struct phys_group
+/* A group of objects that trigger together (ActivateIronSwitchCrate builds it). */
+struct crate_group
 {
     s32 count;
-    struct phys_obj *items[0];
+    struct crate *items[0];
 };
 
-#define PHYS_NO_GROUP ((struct phys_group *)-1)
+#define PHYS_NO_GROUP ((struct crate_group *)-1)
 #define PHYS_HAS_GROUP(g) ((u32)(g) + 1 > 1)
 
-struct phys_obj
+struct crate
 {
     s32 x;              // 0x00
     s32 y;              // 0x04
@@ -64,7 +68,7 @@ struct phys_obj
     u8 unk_0A[2];
     u8 flags;           // 0x0C - bit 0: removed, see PHYS_GONE
     u8 unk_0D[0xB];
-    struct phys_obj_vtable *vtable; // 0x18
+    struct crate_vtable *vtable; // 0x18
     u8 unk_1C[4];
     struct anim_table *anim; // 0x20
     u8 unk_24[4];
@@ -86,7 +90,7 @@ struct phys_obj
     s32 unk_44;         // 0x44
     union {
         s32 n;
-        struct phys_group *group; // NULL or PHYS_NO_GROUP: none
+        struct crate_group *group; // NULL or PHYS_NO_GROUP: none
         struct phys_b48 b;
     } u48;              // 0x48
     s8 unk_4C;          // 0x4C
@@ -130,8 +134,8 @@ struct phys_player
     u8 unk_93;
     u8 ringCount;       // 0x94
     u8 unk_95[3];
-    struct phys_obj *ring[5]; // 0x98
-    struct phys_obj *carried; // 0xAC
+    struct crate *ring[5]; // 0x98
+    struct crate *carried; // 0xAC
     u8 unk_B0[0x5C];
     u8 unk_10C;         // 0x10C - nonzero: sub_800E08C leaves the position alone
 };
@@ -143,16 +147,16 @@ struct phys_obj_list
 {
     s32 count;
     s32 capacity;
-    struct phys_obj **items;
+    struct crate **items;
 };
 
-/* gUnknown_030012EC, the second object list sub_800F06C scans. */
+/* gUnknown_030012EC, the second object list BlastNearbyCrates scans. */
 struct phys_obj_list2
 {
     s32 unk_00;
     s32 count;
     s32 unk_08;
-    struct phys_obj **items;
+    struct crate **items;
 };
 
 typedef s32 (*phys_method_fn)(void *self);
@@ -181,7 +185,7 @@ static inline void PhysCall3(void *obj, struct method *m, s32 a, s32 b, s32 c)
 
 /* Switches `self` to animation tag `tag` and refreshes its sprite - the
  * three-call idiom every state change in this cluster uses. */
-static inline void PhysSetTag(struct phys_obj *self, u8 tag)
+static inline void PhysSetTag(struct crate *self, u8 tag)
 {
     self->tag = tag;
     sub_80087C0(self);
@@ -192,8 +196,8 @@ static inline void PhysSetTag(struct phys_obj *self, u8 tag)
 /* Sets `frame` to `idx`, clamped to the current tag's frame count. `idx`
  * being a parameter matters: the inlined copy keeps the constant
  * argument in its own register, which the callers' later zero/constant
- * stores reuse (BreakCrate, sub_80104E4). */
-static inline void PhysSetFrame(struct phys_obj *obj, s32 idx)
+ * stores reuse (BreakCrate, UpdateCrate). */
+static inline void PhysSetFrame(struct crate *obj, s32 idx)
 {
     u8 n = obj->anim->records[obj->tag].frames;
 

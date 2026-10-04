@@ -18,7 +18,7 @@ Five now match as real C:
 | `sub_800F990` | `src/system/game_loop49.c` | old_agbcc | 7 | count update split into in-place steps on a fresh local; one earlier `"+r"` barrier dropped |
 | `sub_8014084` | `src/graphics/actor_part_13c60.c` | old_agbcc | 1 insn | scoped `volatile u8 *` for the facing block's second read-modify-write |
 | `sub_801C608` | `src/graphics/actor_part_1b85c.c` | old_agbcc | spill | a second local for the record pointer (the ROM's spilled copy) |
-| `sub_8010F8C` | `src/system/game_loop54.c` | old_agbcc | 22 | plain re-reads instead of `volatile` ones; two extra references per velocity |
+| `UpdateExtraLife` | `src/system/game_loop54.c` | old_agbcc | 22 | plain re-reads instead of `volatile` ones; two extra references per velocity |
 | `sub_80336CC` | `src/graphics/actor_part130.c` | both | 29 | opaque 0xf mask (`asm("" : "=r"(m) : "0"(0xf))`) ANDed as `m & b`; own counter for the second loop; row header in ROM order |
 
 All four files were already on their compiler (`actor_part130.c` matches
@@ -52,7 +52,7 @@ few uses, so it loses its register and is spilled. An `asm` copy in
 either direction gives `entry` a register (or computes into the wrong
 one); the plain copy doesn't.
 
-**Plain re-reads instead of `volatile` ones (`sub_8010F8C`).** The draft
+**Plain re-reads instead of `volatile` ones (`UpdateExtraLife`).** The draft
 read the timer and the id through `vu16` to get the ROM's loads after
 the stores. The ROM's loads come after the constant (`movs r0, #216;
 lsls; ldrh r2, [r4, #60]; cmp r2, r0`): a pseudo set once from memory

@@ -347,9 +347,9 @@
     "sub_800C8F8",
     "sub_800C940",
     "sub_800C97C",
-    "sub_8010F8C",
+    "UpdateExtraLife",
     "sub_8011248",
-    "sub_8011548",
+    "UpdateWumpa",
     "sub_801192C",
     "UpdateZoomBg",
     "sub_802D3A8",
@@ -1518,9 +1518,9 @@
    "size": 22,
    "name": "gCrateKindCounted",
    "consumers": [
-    "sub_800E6B0",
+    "OpenCheckpointCrate",
     "BreakCrate",
-    "sub_800EEF0"
+    "ExplodeCrate"
    ],
    "consumer_files": [
     "system/game_loop48.c",
@@ -1540,10 +1540,10 @@
   {
    "address": "0x0816BBAE",
    "size": 22,
-   "name": "gStaticData_0816BBAE",
+   "name": "gCrateKindBreakable",
    "consumers": [
-    "sub_800F06C",
-    "sub_800F6B8",
+    "BlastNearbyCrates",
+    "BreakCratesInArea",
     "sub_8010908"
    ],
    "consumer_files": [
@@ -1564,14 +1564,14 @@
   {
    "address": "0x0816BBC4",
    "size": 22,
-   "name": "gStaticData_0816BBC4",
+   "name": "gCrateKindExplosive",
    "consumers": [
     "sub_800D040",
-    "sub_800EDBC",
-    "sub_800F06C",
-    "sub_800F6B8",
-    "sub_800F798",
-    "sub_800FC70"
+    "DropCratesAbove",
+    "BlastNearbyCrates",
+    "BreakCratesInArea",
+    "FinishBrokenCrate",
+    "UpdateCrateFall"
    ],
    "consumer_files": [
     "system/game_loop32.c",
@@ -1593,10 +1593,10 @@
   {
    "address": "0x0816BBDA",
    "size": 22,
-   "name": "gStaticData_0816BBDA",
+   "name": "gCrateKindUnbreakable",
    "consumers": [
     "sub_0800D18C",
-    "sub_800E7A8"
+    "BreakCrateInStack"
    ],
    "consumer_files": [
     "system/game_loop47.c",
@@ -1640,7 +1640,7 @@
   {
    "address": "0x0816BC98",
    "size": 616,
-   "name": "gStaticData_0816BC98",
+   "name": "gCrateHitResponse",
    "consumers": [
     "sub_0800D18C",
     "sub_800E08C"
@@ -7426,8 +7426,8 @@
    "name": "gCrateVtable",
    "consumers": [
     "CreateCrate",
-    "sub_801071C",
-    "sub_801075C"
+    "DestroyCrate",
+    "InitCrate"
    ],
    "consumer_files": [
     "system/game_loop31.c",
@@ -7437,7 +7437,7 @@
    "ptr_words_data": 0,
    "incoming_data_ptrs": 0,
    "c_decls": [
-    "struct phys_obj_vtable X",
+    "struct crate_vtable X",
     "u8 X[]"
    ],
    "element_type": "struct { s16 delta; s16 index; void *fn; }",
@@ -7451,11 +7451,11 @@
   {
    "address": "0x087E40DC",
    "size": 112,
-   "name": "gStaticData_087E40DC",
+   "name": "gExtraLifeVtable",
    "consumers": [
-    "sub_8011114",
-    "sub_80112F4",
-    "sub_8011310"
+    "CreateExtraLife",
+    "DestroyExtraLife",
+    "InitExtraLife"
    ],
    "consumer_files": [
     "system/game_loop52.c",
@@ -7478,11 +7478,11 @@
   {
    "address": "0x087E414C",
    "size": 112,
-   "name": "gStaticData_087E414C",
+   "name": "gWumpaVtable",
    "consumers": [
-    "sub_801173C",
-    "sub_80119D8",
-    "sub_80119FC"
+    "CreateWumpa",
+    "DestroyWumpa",
+    "InitWumpa"
    ],
    "consumer_files": [
     "graphics/actor_part39.c",
@@ -7505,11 +7505,11 @@
   {
    "address": "0x087E41BC",
    "size": 104,
-   "name": "gStaticData_087E41BC",
+   "name": "gStopwatchVtable",
    "consumers": [
-    "sub_8011B0C",
-    "sub_8011B5C",
-    "sub_8011B70"
+    "CreateStopwatch",
+    "DestroyStopwatch",
+    "InitStopwatch"
    ],
    "consumer_files": [
     "graphics/actor_part39.c"
