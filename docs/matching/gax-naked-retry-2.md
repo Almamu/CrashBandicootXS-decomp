@@ -9,10 +9,10 @@ both under current agbcc with the normal flags.
 
 | Function | File | Before | Now |
 |---|---|---|---|
-| `sub_8037FC0` | gax_work_size.c | 228 hw off | **real C** |
-| `sub_8038240` | gax_channel_table_alloc.c | 289 hw off | **real C** |
-| `sub_8038538` | gax_playstart.c | 422 hw off (seq 364) | NAKED, better draft (seq 294) |
-| `sub_8039B44` | gax_note_trigger.c | 438 hw off | NAKED, draft unchanged |
+| `GAX2_estimate` | gax_work_size.c | 228 hw off | **real C** |
+| `GaxCreateHandlers` | gax_channel_table_alloc.c | 289 hw off | **real C** |
+| `GAX2_init` | gax_playstart.c | 422 hw off (seq 364) | NAKED, better draft (seq 294) |
+| `GaxChannelMix` | gax_note_trigger.c | 438 hw off | NAKED, draft unchanged |
 
 "hw off" is `triage_naked.py`'s position-by-position count. "seq" counts
 both sides after a sequence alignment of the halfwords. The seq count
@@ -64,7 +64,7 @@ comes close to "clearly closes or dramatically improves". GAX2 was built
 with the same agbcc and flags as the game code, so the Makefile is
 unchanged. The drafts were wrong in the source, not in the toolchain.
 Both closures below confirm it: both are plain `-O2` agbcc. For
-`sub_8038240` the flag sweep was repeated on the 2-halfword near-miss
+`GaxCreateHandlers` the flag sweep was repeated on the 2-halfword near-miss
 (`-fmove-all-movables`, `-fno-strength-reduce`, `-fno-rerun-loop-opt`,
 `-freduce-all-givs`, `-fno-gcse`, `-fno-rerun-cse-after-loop`). Every
 flag took it back above 200 halfwords.
@@ -82,21 +82,21 @@ of the register choices.
    a libcall. gcc treats a libcall as a const call, which does not
    clobber memory. An explicit `sub_8037E54(a, b)` call does clobber
    it. That difference decides what GCSE may carry across the division.
-   In `sub_8038240`, the spilled `gUnknown_03001630` address then
+   In `GaxCreateHandlers`, the spilled `gGaxPlayerState` address then
    reaches into the DSP-rate loop, and reload rematerializes it into r1
-   (`ldr r1, =gUnknown_03001630`). This was the last 2 halfwords.
-   `sub_8037FC0` needs it too.
+   (`ldr r1, =gGaxPlayerState`). This was the last 2 halfwords.
+   `GAX2_estimate` needs it too.
 2. **Re-read fields instead of caching them in locals** (the #463 GCSE
-   hint also holds for current agbcc). In `sub_8037FC0`, `p->layout`
+   hint also holds for current agbcc). In `GAX2_estimate`, `p->layout`
    and `p->flags` are read at every use. GCSE's reaching registers
    become the ROM's spilled copies (`[sp, #0x10]` for the layout and a
    *halfword* `strh`/`ldrh [sp, #0x18]` for the flags, because the
    reaching register is HImode). Loop invariant motion stores them in
    the carving loop's preheader. The same GCSE copies keep the carving
    loop re-reading `layout->count` without strength reduction. In
-   `sub_8038240`, the linking loop compares against
+   `GaxCreateHandlers`, the linking loop compares against
    `t->childTypes[j]` directly (the ROM loads it twice). In
-   `sub_8037FC0`'s second alternative-layout scan, the condition reads
+   `GAX2_estimate`'s second alternative-layout scan, the condition reads
    `types[2]` itself, and the list pointer is read again inside. The ROM
    copies it (`adds r3, r0, #0`) after the null test.
 3. **Index-first addressing** (`*(i + p->layout->types)`,
@@ -105,17 +105,17 @@ of the register choices.
    `(i + taps)->rate` form also gives `ldr [rX, #4]` addressing where
    `taps[i].rate` produces `adds #4` first.
 4. **Priority and conflict engineering for the allocator:**
-   - `sub_8038240`: `cnt = t->childCount; if (i == 0) cnt += numSfx;
+   - `GaxCreateHandlers`: `cnt = t->childCount; if (i == 0) cnt += numSfx;
      n = cnt * 4;` (a separate local) puts `n` in r8.
      `need = n + (sizeof(struct GaxHandler) + t->instanceSize)` puts
      `need` in ip and keeps the ROM's `(n + 12) + inst` order.
-   - `sub_8037FC0`: one counter `i` shared by the carving loop, the
+   - `GAX2_estimate`: one counter `i` shared by the carving loop, the
      alternative layouts' inner loop and both tap scans. That makes `i`
      conflict with the inner loop's walking pointer, which is allocated
      first and takes r3, so `i` lands in r4 as in the ROM.
    - `next = k + 1` in a block-scoped `next` (both functions) numbers
      the pseudo so that its stack slot or register matches.
-5. **GCSE's hash table size** (`sub_8037FC0`, the last 12 halfwords).
+5. **GCSE's hash table size** (`GAX2_estimate`, the last 12 halfwords).
    GCSE creates its reaching registers in hash-bucket order. Their
    pseudo numbers set the order of their stack slots. The table size
    comes from the function's insn count. Everything else matched, but
@@ -132,24 +132,24 @@ of the register choices.
 
 ## What's left
 
-- **`sub_8038538`** (play start): the r8/r9 swap of `maxRate`/`fmt`
+- **`GAX2_init`** (play start): the r8/r9 swap of `maxRate`/`fmt`
   that the earlier retry described is fixed in the draft. The fix is a
   no-code `asm("" : : "r"(maxRate))` inside the first tap scan, where
   refs are loop-weighted. The draft also has `/` for the echo length, an
   s32 copy counter, and the tap and alternative-layout scans in
-  `sub_8037FC0`'s matched shape. Remaining differences, each local:
+  `GAX2_estimate`'s matched shape. Remaining differences, each local:
   - the ALIGN4 after `field_1c` (the new size lands in r3 in the ROM);
   - the first tap scan's `layout` copy (`adds r4, r0, #0` after the
     `types[0]` load);
   - the order of the constants hoisted before the ARM-code copy loops.
-    The ROM materializes the `gUnknown_03001630` address into sl before
+    The ROM materializes the `gGaxPlayerState` address into sl before
     `layout = p->layout`, and loads `types[1]` late;
   - the tail (`flags & 2` and the mixer-DSP test).
   The draft is ~294 halfwords off by the alignment-insensitive count.
-- **`sub_8039B44`** (per-channel mixer): only probed briefly this pass;
+- **`GaxChannelMix`** (per-channel mixer): only probed briefly this pass;
   the draft is unchanged. The ROM puts `self`/`info`/`flag` in r6/r4/r5
   and `row` in sb, spills the wave pointer, and holds `(s32)period` in a
-  DImode r4:r5 pair across the `gUnknown_03001618` loads. Changing the
+  DImode r4:r5 pair across the `gGaxMixRateReciprocal` loads. Changing the
   row/period types and the wave/row statement order had no effect. The
   next retry should start from the tricks above: `/`-style libcalls,
   re-read fields, and loop-counter sharing.

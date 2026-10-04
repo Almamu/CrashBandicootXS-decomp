@@ -4,15 +4,15 @@
 /* sub_803AD7C is libgcc's `_call_via_r1` (the `ops->init` calls). */
 asm(".set _call_via_r1, sub_803AD7C\n");
 
-/* Q32 reciprocal of the current mix rate, read by sub_8039B44. */
-extern u64 gUnknown_03001618;
+/* Q32 reciprocal of the current mix rate, read by GaxChannelMix. */
+extern u64 gGaxMixRateReciprocal;
 /* `__udivdi3` - see src/util/math_div64_util.c. */
 extern u64 sub_8037A7C(u64 n, u64 d);
 
 /* Stores `2^32 / self->format->mixRate`. An inline helper taking the
  * destination pointer first is what makes the ROM load
- * `&gUnknown_03001618` into a callee-saved register *before* reading
- * the mix rate - plain `gUnknown_03001618 = ...` (or any struct/array
+ * `&gGaxMixRateReciprocal` into a callee-saved register *before* reading
+ * the mix rate - plain `gGaxMixRateReciprocal = ...` (or any struct/array
  * spelling of it) loads the address after the call instead. */
 static inline void SetMixRateReciprocal(u64 *dst, struct GaxChannelState *self)
 {
@@ -28,7 +28,7 @@ static inline void SetMixRateReciprocal(u64 *dst, struct GaxChannelState *self)
  * Was NAKED (the division call's register choreography "resisted every
  * plain-C form"); the inline destination-pointer helper above closes it
  * - see docs/matching/gax-toolchain-retry.md. */
-void sub_8039518(struct GaxChannelState *self)
+void GaxChannelInit(struct GaxChannelState *self)
 {
     u32 i;
 
@@ -38,19 +38,19 @@ void sub_8039518(struct GaxChannelState *self)
     self->note = 0x8ad0;
     self->field_11 = 1;
     self->vol15 = 0xff;
-    self->field_18 = -1;
+    self->volume = -1;
     self->field_0c = 0;
     self->sweepOn = 0;
     self->field_0d = 0;
     self->rowSkip = 0;
     self->emptyPattern = 0;
-    self->field_24 = 0;
-    self->field_25 = 0;
+    self->pendingNote = 0;
+    self->pendingInstrument = 0;
     self->retriggerDelay = 0;
     self->slideRate = 0;
     self->slideTarget = 0;
     self->field_52 = 1;
-    SetMixRateReciprocal(&gUnknown_03001618, self);
+    SetMixRateReciprocal(&gGaxMixRateReciprocal, self);
     for (i = 0; i < self->type->childCount; i++)
         self->children[i]->type->init(self->children[i]);
 }

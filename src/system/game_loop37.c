@@ -22,7 +22,7 @@ struct SoundChannelItem {
     u8 field_11;              /* +0x11: nonzero triggers a duck-out via
                                 * sub_8001AC4 */
     u8 field_12;                /* +0x12: nonzero (and field_18 != 0x63)
-                                  * triggers a re-arm via sub_80019A8 */
+                                  * triggers a re-arm via StopSfx */
     u8 unused_13;
     u32 field_14;                  /* +0x14: sound cue id, sub_8001B54/
                                      * sub_8001AB8 */
@@ -43,7 +43,7 @@ extern struct AudioContext *gUnknown_030012BC;
 extern u32 sub_8001AB8(struct AudioContext *self);
 extern void sub_8001B54(struct AudioContext *self, u32 id);
 extern void sub_8001AC4(struct AudioContext *self, u32 value);
-extern void sub_80019A8(struct AudioContext *self, u32 id);
+extern void StopSfx(struct AudioContext *self, u32 id);
 extern void sub_800132C(u8 flags, s32 frameDelay, u8 sync);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern s32 sub_80010E0(s32 count, u8 checkButtons, s32 mask);
@@ -124,7 +124,7 @@ void sub_8024640(struct SoundChannelList *self0)
             struct SoundChannelItem *item2 = self->items[i];
 
             if (item2->field_12 != 0 && item2->field_18 != 0x63) {
-                sub_80019A8(gUnknown_030012BC, item2->field_18);
+                StopSfx(gUnknown_030012BC, item2->field_18);
             }
         }
 

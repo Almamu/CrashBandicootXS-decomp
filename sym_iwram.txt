@@ -211,13 +211,13 @@
 . = 0x00001604; gUnknown_03001604 = .;
 . = 0x00001608; gUnknown_03001608 = .;
 . = 0x0000160C; gUnknown_0300160C = .;
-. = 0x00001618; gUnknown_03001618 = .;
+. = 0x00001618; gGaxMixRateReciprocal = .;
 . = 0x00001620; gUnknown_03001620 = .;
 . = 0x00001622; gUnknown_03001622 = .;
 . = 0x00001624; gUnknown_03001624 = .;
 . = 0x00001628; gUnknown_03001628 = .;
 . = 0x0000162C; gUnknown_0300162C = .;
-. = 0x00001630; gUnknown_03001630 = .;
+. = 0x00001630; gGaxPlayerState = .;
 . = 0x00001634; gUnknown_03001634 = .;
 . = 0x00001638; gUnknown_03001638 = .;
 . = 0x00007E00; iwram_end = .;

@@ -41,7 +41,7 @@ Both gaps the original parking noted are closed:
   all, register-pinned or otherwise) let the natural argument-shuffle
   order match the ROM's without any pin - the same class of "explicit
   pin changes an *unrelated* instruction's order" sensitivity
-  documented elsewhere in this project (e.g. `sub_8039AA4`'s doc), but
+  documented elsewhere in this project (e.g. `GaxChannelTick`'s doc), but
   fixed here by removing a pin rather than adding one.
 
 ## What's still open (1 cosmetic residual, zero semantic impact)

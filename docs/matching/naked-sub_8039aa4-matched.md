@@ -1,6 +1,6 @@
-# `sub_8039AA4` progress: 99.7% instruction match, still NAKED
+# `GaxChannelTick` progress: 99.7% instruction match, still NAKED
 
-`sub_8039AA4` (`src/audio/gax_channel_envelope_tick.c`, per-tick
+`GaxChannelTick` (`src/audio/gax_channel_envelope_tick.c`, per-tick
 envelope/portamento-pitch update) is still a byte-correct NAKED asm
 transcription for the default build - see
 [issue-68-channel-bind-envelope-note.md](./issue-68-channel-bind-envelope-note.md)
@@ -108,7 +108,7 @@ these two.
 The `#if NON_MATCHING` reconstruction: `rm -rf build && make
 NON_MATCHING=1 report` succeeds; instruction match against
 `build/expected/units/gax_channel_envelope_tick_target.o` via
-`objdiff-cli diff` sits at 99.7% for `sub_8039AA4`.
+`objdiff-cli diff` sits at 99.7% for `GaxChannelTick`.
 
 The default (NAKED) build: full clean `rm -rf build
 crashbandicootxs.elf crashbandicootxs.gba crashbandicootxs.map && make
@@ -118,4 +118,4 @@ before this investigation; `tools/report_units.py`'s entry for
 
 ## Later pass: GAX toolchain retry
 
-Closed: written plainly against `struct GaxChannelState` with no pins or asm, `sub_8039AA4` matches outright. See [gax-toolchain-retry.md](./gax-toolchain-retry.md).
+Closed: written plainly against `struct GaxChannelState` with no pins or asm, `GaxChannelTick` matches outright. See [gax-toolchain-retry.md](./gax-toolchain-retry.md).

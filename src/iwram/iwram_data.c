@@ -48,7 +48,7 @@ u32 gUnknown_030007D8 = 0;
 u8 gUnknown_030007DC = 0;
 /* Set while the music player's per-frame update is installed
  * (music_player.c, audio_context.c). */
-u8 gUnknown_030007DD = 0;
+u8 gGaxIrqEnabled = 0;
 
 /* Held keys and newly pressed keys (irq.c's sub_80007AC; the users
  * declare it as a pair of u16s or a struct of two). */
@@ -69,7 +69,7 @@ struct {
 
 s32 gUnknown_030007F4 = 0;
 s32 gUnknown_030007F8 = 0;
-u32 gUnknown_030007FC = 0;
+u32 gSfxVoiceToggle = 0;
 
 /* Link cable (link_cable*.c, settings_menu*.c). */
 u8 gUnknown_03000800 = 1;
@@ -156,7 +156,7 @@ void *gUnknown_030008CC = NULL; /* struct counter_widget * */
 /* GAX2's fatal-error screen font (gax_fatal_error.c), Huffman-compressed
  * for the BIOS HuffUnComp: 8-bit symbols, 0x4A0 bytes (37 4bpp tiles)
  * once unpacked. */
-u32 gUnknown_030008D0[70] = {
+u32 gGaxHaltFont[70] = {
     0x0004A028, 0x80008011, 0x01804010, 0x42804011, 0x804080FF, 0x00000002,
     0x00000000, 0x00000000, 0xC0000000, 0x0000F600, 0x34D0D835, 0x0D66C01B,
     0x0CE9262A, 0x5E48CE04, 0x30421086, 0x7033A422, 0xE7216601, 0x9D2119C4,

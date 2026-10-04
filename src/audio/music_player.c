@@ -10,15 +10,15 @@
  * (the very next function in ROM order) stays raw here - see
  * src/audio/sfx_ambient.c's doc comment. */
 
-extern void sub_800190C(struct AudioContext *self);
-extern void sub_8039064(s32 channel, u32 volume);
-extern void sub_8038C88(void);
-extern void sub_8039198(void);
-extern u8 gUnknown_030007DD;
-extern void sub_80381FC(void *gaxState);
-extern u8 sub_8038538(void *gaxState);
-extern void *gStaticData_0816AA20[19];
-extern u8 gStaticData_0855BCB4[];
+extern void TickAmbientSfx(struct AudioContext *self);
+extern void GAX_set_music_volume(s32 channel, u32 volume);
+extern void GAX_play(void);
+extern void GAX_stop(void);
+extern u8 gGaxIrqEnabled;
+extern void GAX2_new(void *gaxState);
+extern u8 GAX2_init(void *gaxState);
+extern void *gSongTable[19];
+extern u8 gGaxMusicData[];
 extern void sub_8001AD8(struct AudioContext *self);
 void sub_80017BC(struct AudioContext *self, u32 songIndex);
 
@@ -61,7 +61,7 @@ void sub_80016EC(struct AudioContext *self)
                 *(vu16 *)((u8 *)self + 0x68) = v;
             }
         }
-        sub_800190C(self);
+        TickAmbientSfx(self);
         if (self->duckVolFadeUpArmed != 0) {
             if (self->duckVolCurrent >= self->duckVolTarget) {
                 self->duckVolCurrent = self->duckVolTarget;
@@ -69,7 +69,7 @@ void sub_80016EC(struct AudioContext *self)
             } else {
                 self->duckVolCurrent += 0x10;
             }
-            sub_8039064(-1, self->duckVolCurrent);
+            GAX_set_music_volume(-1, self->duckVolCurrent);
         }
         if (self->duckVolFadeDownArmed != 0) {
             if (self->duckVolCurrent <= self->duckVolTarget) {
@@ -82,22 +82,22 @@ void sub_80016EC(struct AudioContext *self)
             } else {
                 self->duckVolCurrent -= 0x10;
             }
-            sub_8039064(-1, self->duckVolCurrent);
+            GAX_set_music_volume(-1, self->duckVolCurrent);
         }
-        sub_8038C88();
+        GAX_play();
     }
 }
 asm(".align 2, 0");
 
 /* Starts playing song `songIndex` (index into the 19-entry
- * `gStaticData_0816AA20` song-pointer table). First-time-only resets
+ * `gSongTable` song-pointer table). First-time-only resets
  * the player state if it wasn't already stopped, then (re)initializes
  * the embedded GAX2 runtime player-state object at `self+0x58` -
- * genuinely nested engine-internal state `sub_80381FC`/`sub_8038538`
+ * genuinely nested engine-internal state `GAX2_new`/`GAX2_init`
  * own, not independently reverse-engineered, so those writes stay raw
  * offset casts (see docs/audio.md). On success, ducks the music back
  * in (`sub_8001AD8`) and arms the per-tick GAX2 IRQ update
- * (`gUnknown_030007DD`). */
+ * (`gGaxIrqEnabled`). */
 void sub_80017BC(struct AudioContext *self, u32 songIndex)
 {
     {
@@ -113,30 +113,30 @@ void sub_80017BC(struct AudioContext *self, u32 songIndex)
             self->pendingSong = 0x13;
             self->currentSong = 0x13;
             self->state = zero;
-            sub_8039198();
-            gUnknown_030007DD = zero;
+            GAX_stop();
+            gGaxIrqEnabled = zero;
         }
     }
     {
         u8 *gaxState = (u8 *)self + 0x58;
 
-        sub_80381FC(gaxState);
+        GAX2_new(gaxState);
         *(void **)((u8 *)self + 0x58) = (u8 *)self + 0x94;
         *(u32 *)((u8 *)self + 0x5c) = 0x2000;
-        *(void **)((u8 *)self + 0x88) = gStaticData_0816AA20[songIndex];
+        *(void **)((u8 *)self + 0x88) = gSongTable[songIndex];
         {
             u16 *p = (u16 *)((u8 *)self + 0x66);
             u8 zero2 = 0;
 
             *p = 3;
-            *(void **)((u8 *)self + 0x84) = gStaticData_0855BCB4;
+            *(void **)((u8 *)self + 0x84) = gGaxMusicData;
             *((u8 *)self + 0x90) = zero2;
         }
-        if (sub_8038538(gaxState)) {
+        if (GAX2_init(gaxState)) {
             self->currentSong = songIndex;
             *((u8 *)self + 0x54) = 0;
             sub_8001AD8(self);
-            gUnknown_030007DD = 1;
+            gGaxIrqEnabled = 1;
             self->state = 1;
         }
     }

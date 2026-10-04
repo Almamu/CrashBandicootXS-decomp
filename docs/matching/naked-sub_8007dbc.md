@@ -36,7 +36,7 @@ a `NAKED` function with its body written as a single `asm()` block
 transcribing the real ROM disassembly (`asm/code_3_2_3.s`)
 instruction-for-instruction, the same technique already used for
 several functions in `src/system/link_cable.c` and
-`src/audio/gax_swi.c`'s `sub_80392C4`. The transcription:
+`src/audio/gax_swi.c`'s `GaxHuffUnComp`. The transcription:
 
 - Uses GNU-as local numeric labels (`1:`/`1f`/`1b`, ...) in the exact
   order the ROM's own branch targets and literal-pool entries appear,

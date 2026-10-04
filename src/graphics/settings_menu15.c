@@ -6,7 +6,7 @@
 #include "pause_screen_results.h"
 #include "memory.h"
 
-extern void sub_80019E8(struct AudioContext *self);
+extern void StopAmbientSfx(struct AudioContext *self);
 extern void sub_80006A8(void);
 extern struct tile_asset_cache *gUnknown_030012B8;
 extern struct AudioContext *gUnknown_030012BC;
@@ -98,7 +98,7 @@ s32 sub_8004D74(void)
     s32 result;
 
     mem_free_bytes(MEM_HEAP_BOTH);
-    sub_80019E8(gUnknown_030012BC);
+    StopAmbientSfx(gUnknown_030012BC);
     sub_80006A8();
     *(vu16 *)PLTT = 0;
     *(vu16 *)REG_ADDR_DISPCNT = 0;

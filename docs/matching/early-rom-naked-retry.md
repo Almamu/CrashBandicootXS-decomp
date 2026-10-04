@@ -9,18 +9,18 @@ function that had no draft now has one.
 
 | Function | File | Compiler | What it took |
 |---|---|---|---|
-| `sub_80019F8` | `src/audio/audio_context.c` | both | Written fresh as C, it matched on the first compile. The fifth argument is a one-byte struct passed by value, which gives the `add rX, sp, #0x14; ldrb` read. The volume is read as `gStaticData_0816AA6C[id].baseVolume`. The old note said the ROM "recomputes" this address where C would CSE it. In fact `base + 8 + offset` is simply how gcc computes a non-zero field offset, so there was no CSE gap. |
+| `PlayAmbientSfx` | `src/audio/audio_context.c` | both | Written fresh as C, it matched on the first compile. The fifth argument is a one-byte struct passed by value, which gives the `add rX, sp, #0x14; ldrb` read. The volume is read as `gSfxTable[id].baseVolume`. The old note said the ROM "recomputes" this address where C would CSE it. In fact `base + 8 + offset` is simply how gcc computes a non-zero field offset, so there was no CSE gap. |
 | `sub_8003D3C` | `src/graphics/settings_menu.c` (old_agbcc object) | both | The r8/sb swap is a global-alloc priority tie. The 0x87 constant ranks 8/112 = 0.0714 and the 0x130 offset ranks 14/200 = 0.070, so the constant gets r8 first. `y` is now pinned to r9. It is set inside a block, after `x = 0xa0 - w` and after the manager pointer is loaded into a local, which keeps the ROM's `ldr r4, [r7]` ahead of `mov sb, r2`. The unpinned allocator then gives 0x130 r8. |
 
 A pre-existing `initialization makes pointer from integer` warning in
-`sub_8001C64` (same file as `sub_80019F8`) is fixed with a `(vu8 *)`
+`sub_8001C64` (same file as `PlayAmbientSfx`) is fixed with a `(vu8 *)`
 cast. The code is unchanged.
 
 ## Not closed (12)
 
 | Function | Before | Now | What's left |
 |---|---|---|---|
-| `PlaySfx` (raw, draft in `sfx_ambient.c`) | 4 | 4 (unchanged) | Without the `self` pin, and passing `gUnknown_030007FC` directly, every register matches. The only difference then is that the toggle is loaded after `chanArg`. Loading it first (a `toggle` local) permutes r8/r9/sl: the address pseudo ranks 12/88 against `self` at 8/57 and `id` at 8/58. No spelling of the retry or tail changed that. |
+| `PlaySfx` (raw, draft in `sfx_ambient.c`) | 4 | 4 (unchanged) | Without the `self` pin, and passing `gSfxVoiceToggle` directly, every register matches. The only difference then is that the toggle is loaded after `chanArg`. Loading it first (a `toggle` local) permutes r8/r9/sl: the address pseudo ranks 12/88 against `self` at 8/57 and `id` at 8/58. No spelling of the retry or tail changed that. |
 | `sub_8001CB8` | 49 | 11 (old) | The fill loop is written over an integer address. That gives the ROM's signed `cmp; bge`, which the ROM got from strength-reducing `self[i]`; gcc here declines with "giv not worth while". A `c = 0xec` local ahead of it puts the constant load first. The hash loop is `tbl[idx] ^ (hash << 8)`. In the tail, the high nibble is read before `(hi << 8) \| self[6]` is formed. Left: after the loop, CSE folds `hash >> 8` into `(x << 16) >> 24` of the zero-extend temporary, and -16 comes out as `mov #16; neg` instead of the ROM's post-reload `sub r0, #31`. |
 | `sub_8001DB4` | 136 | 136 | Not re-attempted beyond triage. |
 | `sub_8001F50` | 37 | 37 | The ROM holds two separate constant-1 registers: sb for the test, `field_8` and IME, and r1 for the arm3 `eor`/`and`. One `one` local gives `bic`. Not converged. |

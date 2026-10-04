@@ -74,7 +74,7 @@ the appendix.
 | `082BF120`-`084A4660` | 1,987,904 | sprite tile pool for the 56 sprite banks | `graphics_7634.c`/`graphics_73dc.c` (`sub_80083A8` + frame offset) | high | **done** (grit) |
 | `084A4660`-`084A5600` | 4,000 | 125 fixed 4bpp tiles | `sub_8004D74` pool, `sub_8006DF8` | high | **done** (grit) |
 | `084A5600`-`084C0006` | 109,062 | sprite-bank table ("master asset table"): header, 56 banks, 2,429 frames | `sub_8004D74`, `sub_8022230`, every `**gUnknown_030012D0` user | high | **converted** (C) |
-| `084C0006`-`0855BCB4` | 638,126 | GAX2 sound-effect data set: 88 instruments, 87 8-bit samples, sample table, the SFX voice handler type | `PlaySfx`/`sub_8038E74` voices via `GaxSongHeader.sfxTypes` (`sub_80017BC`) | high | **converted** (`gax_audio.py --sfx`) |
+| `084C0006`-`0855BCB4` | 638,126 | GAX2 sound-effect data set: 88 instruments, 87 8-bit samples, sample table, the SFX voice handler type | `PlaySfx`/`GAX_fx_ex` voices via `GaxSongHeader.sfxTypes` (`sub_80017BC`) | high | **converted** (`gax_audio.py --sfx`) |
 | `085A4C5C`-`086ECCD2` | 28,979 | 111 labels between the built intro/tileset1 LZ77 blobs: GAX2 tables and strings, libgcc `__clz_tab` x2, EEPROM tables, 23 intro palettes, 67 alignment pads | direct / slide packages | high | easy (the pads and palettes **done**) |
 | `086C127C`-`086D9CAC` | 100,912 | raw level asset (room `0825E7DC`) | `sub_80266BC` -> `sub_80254F8`/`sub_8024CF0` | high | **done** (decoded tilemaps) |
 | `086ECCD2`-`087E3BEC` | 1,011,482 | 2 B pad + 6 raw level assets | same | high | **done** (the pad is gbagfx's padding) |
@@ -392,7 +392,7 @@ formats docs/audio.md describes for music:
 | `084C3B28` | 0x160 | instrument pointer table (88 entries) |
 | `084C3C88` | 0x97D30 | 87 signed 8-bit PCM samples, byte-aligned (+3 B pad) |
 | `0855B9B8` | 0x2C0 | sample table: 88 x `{u8 *data, u32 length}`, entry 0 empty |
-| `0855BC78` | 0x3C | song header (0x1C: volume 0x100, the instrument and sample tables), a 1-entry NULL child-type array, and the handler type (`init`/`unknown`/`play` = `sub_803A104`/`sub_803A228`/`sub_803A158`, 0x48-byte instances) |
+| `0855BC78` | 0x3C | song header (0x1C: volume 0x100, the instrument and sample tables), a 1-entry NULL child-type array, and the handler type (`init`/`unknown`/`play` = `GaxFxChannelInit`/`sub_803A228`/`GaxFxChannelPlay`, 0x48-byte instances) |
 
 The first reading (the "2 B pad + 0x20 B not yet modelled" and the
 "8-byte header" after the instruments) was off by one record: the 0x20
@@ -401,9 +401,9 @@ instrument is laid out that way, exactly as in the music block.
 
 **Role: the sound effects.** The built music block starts with a 36-byte
 prefix that pointed at `0x0855BC98` nine times. It is
-`GaxSongHeader.sfxTypes`: `sub_80017BC` passes `gStaticData_0855BCB4` there
+`GaxSongHeader.sfxTypes`: `sub_80017BC` passes `gGaxMusicData` there
 with `numSfx` = 3, so the engine's sound-effect voices are instances of the
-handler type at `0x0855BC98`, and its play function `sub_803A158` plays
+handler type at `0x0855BC98`, and its play function `GaxFxChannelPlay` plays
 instruments from this set's tables. `PlaySfx`'s table ids (1-87) are
 instrument numbers in this set. docs/audio.md, "Sound effects", has the
 whole path.
@@ -414,7 +414,7 @@ format) and `sound/sfx_samples/01`-`87.wav`, and the music block's
 prefix is generated from the set's layout instead of the old verbatim
 `gax_header_prefix.bin`. `data/data.s` incbins the built
 `build/crashbandicootxs/sound/gax_sfx_data.bin` as
-`gStaticData_084C0006`. The samples are not deduplicated here (84 and 87
+`gGaxSfxData`. The samples are not deduplicated here (84 and 87
 are the same bytes, stored twice), unlike the music's.
 
 ### `gStaticData_086C127C` (100,912 B) and `gStaticData_086ECCD2` (1,011,482 B): raw level assets
@@ -640,7 +640,7 @@ vtable shapes).
 | `08169CE8` | 0xB28 | Cortex's hovercraft picture: {cols 16, rows 10}, 1 frame (graphics/boss_pictures/). **Converted** (`src/data/boss_pictures_167ad4.c`) | `sub_80331BC` | medium | done |
 | `0816A810` | 0x10 | u8[16] d-pad direction lookup. **Converted** (`src/data/boss_pictures_167ad4.c`) | `sub_8000760` | medium | done |
 | `0816A820` | 0x200 | s16[256] sine/direction table (`s16` x 256). **Converted** (`src/data/boss_pictures_167ad4.c`) | `sub_800AFF4`, `sub_800C8F8`, `sub_800C940` +16 | high | done |
-| `0816AA20` | 0x4C | song table: 19 pointers into the music block, `gStaticData_0855BCB4 + GAX_SONG_<NAME>` from the generated `gax_songs.h`. **Converted** (`src/data/song_table_16aa20.c`) | `sub_80017BC` | high | done |
+| `0816AA20` | 0x4C | song table: 19 pointers into the music block, `gGaxMusicData + GAX_SONG_<NAME>` from the generated `gax_songs.h`. **Converted** (`src/data/song_table_16aa20.c`) | `sub_80017BC` | high | done |
 | `0816AF10` | 0x228 | CRC-16/CCITT lookup table (poly 0x1021, u16[256]) + the two link-cable pairing names "crash 1 <-> crash 2"/"crash 1 <-> crash 3" (`gStaticData_0816B110`/`0816B124`, which the IWRAM data `gUnknown_03000810`/`0814` points at). **Converted** (`src/data/link_crc_16af10.c`) | `sub_8001CB8`, `sub_8002114` | high | done |
 | `0816B138` | 0x2 | the text ">". **Converted** (`src/data/menu_tables_16b138.c`) | `sub_8003D3C` | medium | done |
 | `0816B13A` | 0x20 | table of u16; 1 word(s) look like ROM pointers (`u16` x 16). **Converted** (`src/data/menu_tables_16b138.c`) | `sub_800450C` | high | done |
@@ -836,25 +836,25 @@ vtable shapes).
 | `0817E76C` | 0x20 | table of u16 (`u16` x 16). **Converted** (`src/data/palettes_17e72c.c`) | `sub_8037388` | high | done |
 | `0817E78C` | 0x326E74 | composite: level BG tile sets (raw tag-0x00 assets), per-room level data, sprite-bank tile pool | `sub_8037388` | high | medium |
 | `084A5600` | 0xB66B4 | composite: sprite-bank (animation) table (**converted**, C) + GAX2 sound-effect bank (**converted**, `gax_audio.py --sfx`) | `sub_8004D74`, `sub_8022230` | high | medium |
-| `085A4C5C` | 0x14 | the default song's GAX2_Song struct `{4, unknownc, info, unk_ptr, channel}` (the engine's default handler layout). **Built** by `tools/gax_audio.py` (`gax_default_layout.bin`) | `sub_8037FC0`, `sub_8038538` | high | done |
+| `085A4C5C` | 0x14 | the default song's GAX2_Song struct `{4, unknownc, info, unk_ptr, channel}` (the engine's default handler layout). **Built** by `tools/gax_audio.py` (`gax_default_layout.bin`) | `GAX2_estimate`, `GAX2_init` | high | done |
 | `085A4C70` | 0x100 | u8[256] count-leading-zeros table (libgcc `__clz_tab` of `__divdi3`). **Converted** (`src/data/clz_tab_5a4c70.c`) | `sub_8037648` | high | done |
 | `085A4D70` | 0x100 | u8[256] count-leading-zeros table (the second copy, `__udivdi3`'s). **Converted** (`src/data/clz_tab_5a4c70.c`) | `sub_8037A7C` | high | done |
 | `085A5519` | 0x3 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
-| `085A60FF` | 0x4D | 1 B pad (gbagfx's padding of the `.lz` stream before it, now built) + GAX2 version string "GAX Sound Engine 2.01D (Sep 28 2001) (c) Shin'en Multimedia. Code: B.Wodok". **Converted** (`gGaxVersionString`, `src/data/gax_tables_5a6100.c`) | `sub_8038538 (via gStaticData_085A614C)` | high | done |
-| `085A614C` | 0x4 | pointer to the GAX2 version string. **Converted** (`gStaticData_085A614C = gGaxVersionString`) | `sub_8038538` | high | done |
-| `085A6150` | 0x60 | 12 `struct RateEntry` `{rate in Hz, timer reload}`. **Converted** | `sub_8037FA0`, `sub_8037FC0`, `sub_8038538` | high | done |
-| `085A61B0` | 0xC | GAX2 error string "GAX2_NEW". **Converted** | `sub_80381FC` | medium | done |
-| `085A61BC` | 0x14 | GAX2 error string "PARAMS ARG IS NULL". **Converted** | `sub_80381FC` | medium | done |
-| `085A61D0` | 0xC | GAX2 error/tag string "GAX2_INIT". **Converted** | `sub_8038538`, `sub_8038A1C` | high | done |
-| `085A61DC` | 0x10 | GAX2 error/tag string "OUT OF MEMORY". **Converted** | `sub_8038538`, `sub_8038A1C` | high | done |
-| `085A61EC` | 0xC | GAX2 error/tag string "GAX2_JINGLE". **Converted** | `sub_8038A1C` | high | done |
-| `085A61F8` | 0x1C | GAX2 error/tag string "GAX_NO_JINGLE FLAG IS SET". **Converted** | `sub_8038A1C` | high | done |
-| `085A6214` | 0x8 | GAX2 error/tag string "GAX_IRQ". **Converted** | `sub_8038B68` | high | done |
-| `085A621C` | 0xAC | GAX2 error string "GAX_PLAY HAS NOT FINISHED BEFORE GAX_IRQ. ...", then the halt banner "GAX ENGINE V2.01D Sep 28 2001\n\nEXCEPTION. PROGRAM HALT." (`gGaxHaltBanner`, `+0x74`). **Converted** | `sub_8038B68` | high | done |
-| `085A62C8` | 0x4 | pointer to the halt banner. **Converted** (`gStaticData_085A62C8 = gGaxHaltBanner`) | `sub_80392E0` | high | done |
-| `085A62CC` | 0x10 | GAX2 halt-screen string "FUNCTION NAME:". **Converted** | `sub_80392E0` | medium | done |
-| `085A62DC` | 0x3BD0 | GAX2 u32 note period table (`u32` x 3828; its 0x08xxxxxx values are a smooth ramp, not pointers). **Converted** | `sub_8039B44` | high | done |
-| `085A9EAC` | 0x4C | s8[64] vibrato sine wave, then the SDK's "EEPROM_V122" id string (`gEepromLibraryVersion`, `+0x40`). **Converted** (`gax_tables_5a6100.c`, `eeprom_5a9eec.c`) | `sub_8039FFC` | high | done |
+| `085A60FF` | 0x4D | 1 B pad (gbagfx's padding of the `.lz` stream before it, now built) + GAX2 version string "GAX Sound Engine 2.01D (Sep 28 2001) (c) Shin'en Multimedia. Code: B.Wodok". **Converted** (`gGaxVersionString`, `src/data/gax_tables_5a6100.c`) | `GAX2_init (via gGaxVersionStringPtr)` | high | done |
+| `085A614C` | 0x4 | pointer to the GAX2 version string. **Converted** (`gGaxVersionStringPtr = gGaxVersionString`) | `GAX2_init` | high | done |
+| `085A6150` | 0x60 | 12 `struct RateEntry` `{rate in Hz, timer reload}`. **Converted** | `GaxFindMixRate`, `GAX2_estimate`, `GAX2_init` | high | done |
+| `085A61B0` | 0xC | GAX2 error string "GAX2_NEW". **Converted** | `GAX2_new` | medium | done |
+| `085A61BC` | 0x14 | GAX2 error string "PARAMS ARG IS NULL". **Converted** | `GAX2_new` | medium | done |
+| `085A61D0` | 0xC | GAX2 error/tag string "GAX2_INIT". **Converted** | `GAX2_init`, `GAX2_jingle` | high | done |
+| `085A61DC` | 0x10 | GAX2 error/tag string "OUT OF MEMORY". **Converted** | `GAX2_init`, `GAX2_jingle` | high | done |
+| `085A61EC` | 0xC | GAX2 error/tag string "GAX2_JINGLE". **Converted** | `GAX2_jingle` | high | done |
+| `085A61F8` | 0x1C | GAX2 error/tag string "GAX_NO_JINGLE FLAG IS SET". **Converted** | `GAX2_jingle` | high | done |
+| `085A6214` | 0x8 | GAX2 error/tag string "GAX_IRQ". **Converted** | `GAX_irq` | high | done |
+| `085A621C` | 0xAC | GAX2 error string "GAX_PLAY HAS NOT FINISHED BEFORE GAX_IRQ. ...", then the halt banner "GAX ENGINE V2.01D Sep 28 2001\n\nEXCEPTION. PROGRAM HALT." (`gGaxHaltBanner`, `+0x74`). **Converted** | `GAX_irq` | high | done |
+| `085A62C8` | 0x4 | pointer to the halt banner. **Converted** (`gGaxHaltBannerPtr = gGaxHaltBanner`) | `GaxFatalError` | high | done |
+| `085A62CC` | 0x10 | GAX2 halt-screen string "FUNCTION NAME:". **Converted** | `GaxFatalError` | medium | done |
+| `085A62DC` | 0x3BD0 | GAX2 u32 note period table (`u32` x 3828; its 0x08xxxxxx values are a smooth ramp, not pointers). **Converted** | `GaxChannelMix` | high | done |
+| `085A9EAC` | 0x4C | s8[64] vibrato sine wave, then the SDK's "EEPROM_V122" id string (`gEepromLibraryVersion`, `+0x40`). **Converted** (`gax_tables_5a6100.c`, `eeprom_5a9eec.c`) | `GaxChannelTickVibrato` | high | done |
 | `085A9EF8` | 0xC | `struct EepromConfig` of the 4 Kbit chip. **Converted** (`src/data/eeprom_5a9eec.c`) | `sub_803A968` | high | done |
 | `085A9F04` | 0xC | `struct EepromConfig` of the 64 Kbit chip. **Converted** | `sub_803A968` | high | done |
 | `085A9F10` | 0x260 | EEPROM write timeout `u16[3]` + pad, then the library's 22 address constants (`gEepromLibraryAddresses`, no reader), then the palette of cutscene picture 00. **Converted** (`eeprom_5a9eec.c`, `cutscene_pictures_5a9f70.c`) | `sub_803AC04` | high | done |

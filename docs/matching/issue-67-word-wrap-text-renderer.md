@@ -1,7 +1,7 @@
 # `0x08039214` - word-wrap text/console-tile renderer (issue #67)
 
-`sub_8039214` (`src/audio/gax_text_render.c`) is the fatal-error screen's
-(`sub_80392E0`) text renderer: it writes a NUL-terminated ASCII string as
+`GaxDrawText` (`src/audio/gax_text_render.c`) is the fatal-error screen's
+(`GaxFatalError`) text renderer: it writes a NUL-terminated ASCII string as
 tile indices into BG screen block 0's tilemap, starting at a given
 `(col, row)` in 8x8-tile units, word-wrapping to the next tile row
 whenever the current word would run past column 29 without hitting a
@@ -23,7 +23,7 @@ values (`0x5b`/`0x5c`/`0x5d`) so they fall through the same
 general-purpose bucket as everything else; `'\n'` re-aligns the cursor
 to the current row's start plus one odd byte (kept exactly as the ROM
 computes it - not "fixed" - since this renderer's two real callers,
-both from `sub_80392E0`, never actually feed it a literal newline).
+both from `GaxFatalError`, never actually feed it a literal newline).
 The general bucket then maps `' '` -> tile 0, `'0'`-`'9'` -> tiles
 1-10, `'A'`-`'Z'` -> tiles 11-36 (anything `-0x20` of that, i.e.
 lowercase, folds onto the same range - this font has no separate
@@ -94,7 +94,7 @@ spots needed extra work to land byte-exact:
    semantically identical but swaps which instruction comes first in
    the assembled output.
 
-5. **Trailing alignment padding.** `sub_8039214`'s body ends on a
+5. **Trailing alignment padding.** `GaxDrawText`'s body ends on a
    2-byte boundary just short of 4-byte alignment; gcc's default
    `.align` fill (an actual `mov r8, r8` "nop" instruction) doesn't
    match the ROM's zero-byte padding there - fixed with the

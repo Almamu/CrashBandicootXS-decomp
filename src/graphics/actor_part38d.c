@@ -64,14 +64,14 @@ void sub_8015780(void *selfArg, s32 a, s32 b, s32 c, s32 d)
 extern void *gUnknown_030012BC;
 extern void *gUnknown_030012D8;
 extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
-extern void sub_80019A8(void *self, u32 id);
+extern void StopSfx(void *self, u32 id);
 extern u8 sub_800B86C(void *unused, void *partArg, s32 newVal);
 
 /* If the player's `+0x100` flag is set: picks a replacement `mode` for
  * a handful of special values (`0x12` when the player's `+0x60` is
  * nonzero -> `0x25`; `0xd`/`0x18` -> `0x26`, both playing a fixed cue
- * via `sub_80019A8`/`PlaySfx`) and otherwise just re-arms the cue via
- * `sub_80019A8` with the original `mode`. Always tail-calls
+ * via `StopSfx`/`PlaySfx`) and otherwise just re-arms the cue via
+ * `StopSfx` with the original `mode`. Always tail-calls
  * `sub_800B86C(arg0, arg1, mode)`.
  *
  * The control flow below is written as explicit `goto`s matching the
@@ -132,12 +132,12 @@ case12:
 setC26:
     mode = 0x26;
 playCue:
-    sub_80019A8(gUnknown_030012BC, 0x36);
+    StopSfx(gUnknown_030012BC, 0x36);
     PlaySfx(gUnknown_030012BC, 0x36, 0x100);
     goto tail;
 
 rearm:
-    sub_80019A8(gUnknown_030012BC, 0x36);
+    StopSfx(gUnknown_030012BC, 0x36);
 
 tail:
     return ((s32 (*)(void *, void *, s32))sub_800B86C)(arg0, other, mode);

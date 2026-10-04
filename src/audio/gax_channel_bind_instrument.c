@@ -1,7 +1,7 @@
 #include "core.h"
 #include "audio.h"
 
-extern struct GaxPlayerState *gUnknown_03001630;
+extern struct GaxPlayerState *gGaxPlayerState;
 
 /* Binds a new instrument/entry to a per-channel voice object (`self`) from
  * `table->0x10[cmd]` and resets most of the voice's envelope/state fields
@@ -38,7 +38,7 @@ extern struct GaxPlayerState *gUnknown_03001630;
  * opaque `asm volatile("str %1, [%0, #0x3c]" ...)` anchor, spelling out
  * the exact instruction with both already-pinned operands, was needed to
  * stop that. */
-void sub_803985C(void *self, void *unused, s32 cmd, void *table)
+void GaxChannelSetInstrument(void *self, void *unused, s32 cmd, void *table)
 {
     register void *selfIP asm("ip");
     register s32 n asm("r4");
@@ -105,7 +105,7 @@ void sub_803985C(void *self, void *unused, s32 cmd, void *table)
             register u8 *s1c asm("r1") = (u8 *)selfIP;
             void *bound = *(void **)(s1c + 0x3c);
             if (bound != 0) {
-                void *songPtr = gUnknown_03001630->songPtr;
+                void *songPtr = gGaxPlayerState->songPtr;
                 u8 *slotTable = *(u8 **)((u8 *)songPtr + 0x34);
                 if (slotTable != 0) {
                     register u8 *s0d asm("r0") = (u8 *)selfIP + 0x53;

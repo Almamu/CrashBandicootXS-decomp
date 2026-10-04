@@ -67,7 +67,7 @@ extern void *sub_800CBD4(void *mem); /* constructor: resets the fresh object and
 extern void *sub_8026EDC(s32 size);
 extern void *sub_803AD7C(void *arg0, void *fn);
 extern s32 sub_803AD80(void *arg0, s32 arg1, void *arg2);
-extern void sub_80019F8(void *ctx, s32 id, s32 frame, s32 vol, struct byte_arg force);
+extern void PlayAmbientSfx(void *ctx, s32 id, s32 frame, s32 vol, struct byte_arg force);
 extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
 extern s32 sub_8000E1C(s32 max);
 extern void *sub_8025BAC(void *pool, s32 arg1, s32 kind, s32 x, s32 y, s32 arg5);
@@ -235,7 +235,7 @@ void sub_800B8DC(struct part_ctrl *self)
             if (d > 0xa0)
                 d = 0xa0;
             vol = 0x100 - (d - 0x20) * 2;
-            sub_80019F8(gUnknown_030012BC, 0x2b, 8, vol, zero);
+            PlayAmbientSfx(gUnknown_030012BC, 0x2b, 8, vol, zero);
         }
         if (self->target->animDone && self->mode == 3) {
             struct ctrl_target *pop = sub_800C9C8(0x1d, 0, 0, 0x2b, 0, self->target);

@@ -1,20 +1,20 @@
-# Issues #66/#67: `sub_8038240`/`sub_80384DC`/`sub_8038538`/`sub_8038A1C`/`sub_8038B68` (audio)
+# Issues #66/#67: `GaxCreateHandlers`/`GaxResetSoundHardware`/`GAX2_init`/`GAX2_jingle`/`GAX_irq` (audio)
 
 Closes the two remaining raw regions `docs/matching.md`'s `0x08037110`-
 `0x08038538` entry and `docs/matching/issue-67-0x08038538-audio.md` left
-open: `sub_8037FC0`/`sub_8038240`/`sub_80384DC` (issue #66) and
-`sub_8038538`/`sub_8038A1C`/`sub_8038B68` (issue #67's leftover
-play-start/init cluster). `sub_8037FC0` was read but not attempted this
+open: `GAX2_estimate`/`GaxCreateHandlers`/`GaxResetSoundHardware` (issue #66) and
+`GAX2_init`/`GAX2_jingle`/`GAX_irq` (issue #67's leftover
+play-start/init cluster). `GAX2_estimate` was read but not attempted this
 pass - see "Left raw" below. Of the other four:
 
-- **`sub_80384DC`** (`src/audio/gax_hw_reset.c`) and **`sub_8038B68`**
+- **`GaxResetSoundHardware`** (`src/audio/gax_hw_reset.c`) and **`GAX_irq`**
   (`src/audio/gax_playback_ticker.c`) - genuinely matched as real C.
-- **`sub_8038240`** (`src/audio/gax_channel_table_alloc.c`),
-  **`sub_8038538`** (`src/audio/gax_playstart.c`), and **`sub_8038A1C`**
+- **`GaxCreateHandlers`** (`src/audio/gax_channel_table_alloc.c`),
+  **`GAX2_init`** (`src/audio/gax_playstart.c`), and **`GAX2_jingle`**
   (`src/audio/gax_channel_pool_alloc.c`) - NAKED transcriptions, byte-
   correct but not real decompiled C, tracked as parked.
 
-## Matched: `sub_80384DC` - hardware sound-register reset
+## Matched: `GaxResetSoundHardware` - hardware sound-register reset
 
 Re-arms then disarms `DMA1CNT_H` (a real hardware settle delay between
 the two writes - not padding, see below), resets `DMA1CNT`'s word count/
@@ -41,7 +41,7 @@ Two things needed real iteration to land byte-exact:
    inventing a new one.
 2. The `FIFO_A`-flush loop (`for (i = 7; i >= 0; i--) *fifo = zero;`)
    needed a separate `zero` local variable initialized *before* the loop
-   (mirroring `sub_8038C50`'s existing idiom in `gax_dma_control.c`
+   (mirroring `GAX_resume`'s existing idiom in `gax_dma_control.c`
    exactly) rather than a bare `*fifo = 0;` literal store - with the
    literal written inline, gcc materializes the loop-counter constant
    (`movs r0, #7`) before the store-value constant (`movs r1, #0`); with
@@ -53,26 +53,26 @@ Two things needed real iteration to land byte-exact:
    isolated-compile verification needs an automated byte-diff, not a
    visual scan of two long hex strings.
 
-## Matched: `sub_8038B68` - per-frame DMA1/Timer0 direct-sound-output follow-up
+## Matched: `GAX_irq` - per-frame DMA1/Timer0 direct-sound-output follow-up
 
 Once a song is loaded (`magic == "GAX2"`) and `state` is non-zero: a
 fresh `state == 1` (just-started) primes `SOUNDCNT_X`, advances `state`
 to 2, and reloads Timer0 from a per-song sample-rate-divisor field
 (`+0x34`); if the song's own data flags a fatal condition (`songPtr+0x38`)
 and it hasn't already been reported (`+0x43`), shows GAX2's fatal-error
-screen (`sub_80392E0`); finally, when `+0x2c == 1`, re-arms DMA1 for
+screen (`GaxFatalError`); finally, when `+0x2c == 1`, re-arms DMA1 for
 Direct Sound A output from `+0x18` (the same `DMA1CNT_H` settle-delay
-quirk as `sub_80384DC` above) and clears the `+0x43` flag.
+quirk as `GaxResetSoundHardware` above) and clears the `+0x43` flag.
 
 Two gotchas, both about matching which register the ROM keeps the
-address of `gUnknown_03001630` in across the whole function (`r4`, never
+address of `gGaxPlayerState` in across the whole function (`r4`, never
 reloaded) versus the *dereferenced* pointer value (reloaded fresh via
 `r4` every time it's needed, never cached across a call):
 
-1. Referencing `gUnknown_03001630->field` directly at each use site
-   (rather than caching `struct GaxPlayerState *p = gUnknown_03001630;`
+1. Referencing `gGaxPlayerState->field` directly at each use site
+   (rather than caching `struct GaxPlayerState *p = gGaxPlayerState;`
    once at the top and reusing `p` throughout) is what makes gcc's own
-   address-of-global CSE put `&gUnknown_03001630` in `r4` for the whole
+   address-of-global CSE put `&gGaxPlayerState` in `r4` for the whole
    function and re-dereference through it at each use - exactly the
    ROM's pattern. A `p` local is still useful *within* one basic block
    that reads several fields without an intervening call (e.g. inside
@@ -81,7 +81,7 @@ reloaded) versus the *dereferenced* pointer value (reloaded fresh via
 2. The `state == 0` and `state == 1` checks read the same field twice in
    the ROM (`ldr r0, [r3, #0x30]` appears twice, once per comparison)
    instead of once with the result reused - gcc's own CSE collapses this
-   to a single load unless forced. A scoped `*(vu32 *)&gUnknown_03001630->state`
+   to a single load unless forced. A scoped `*(vu32 *)&gGaxPlayerState->state`
    volatile-cast re-read for the second check only (not marking the
    field volatile project-wide, which would perturb every other already-
    matched GAX2 function reading `state`) reproduces the ROM's second
@@ -89,17 +89,17 @@ reloaded) versus the *dereferenced* pointer value (reloaded fresh via
    `matching_decomp_register_pinning` memory's "scoped-volatile casts"
    technique.
 
-## Parked (NAKED): `sub_8038240`, `sub_8038538`, `sub_8038A1C`
+## Parked (NAKED): `GaxCreateHandlers`, `GAX2_init`, `GAX2_jingle`
 
 All three share the same many-register (`r8`/`sb`/`sl`) gcc-2.9
 allocation ceiling already established for this exact ROM region across
 three prior passes (`sub_8006600`/`sub_80372BC`, and this cluster's own
-`sub_80395A4`/`sub_8039658` - see `docs/status/audio.md`) - `sub_8038240`
-and `sub_8038538` both use all three of `r8`/`sb`/`sl` as genuine scratch
+`GaxChannelPlay`/`GaxChannelDecodeRow` - see `docs/status/audio.md`) - `GaxCreateHandlers`
+and `GAX2_init` both use all three of `r8`/`sb`/`sl` as genuine scratch
 throughout deeply nested loops (a running priority-maximum accumulator
-spanning two nested voice-scan loops in `sub_8038538`, several bank/table
-index computations reusing `sl` across loop iterations in `sub_8038240`);
-`sub_8038A1C` uses `r8`/`sb` (arg0 preserved in `sb`, a constant `1`
+spanning two nested voice-scan loops in `GAX2_init`, several bank/table
+index computations reusing `sl` across loop iterations in `GaxCreateHandlers`);
+`GAX2_jingle` uses `r8`/`sb` (arg0 preserved in `sb`, a constant `1`
 reused across two calls in `r8`) across a multi-level pointer-chase and
 two calls. Given this pattern's established, repeated resistance to every
 C-level technique documented in `docs/matching.md` across this project
@@ -107,8 +107,8 @@ C-level technique documented in `docs/matching.md` across this project
 these were transcribed directly as NAKED asm rather than spending another
 multi-hour cycle re-confirming the same ceiling a fourth time.
 
-`sub_8038240` (core GAX2 channel-table allocator/wiring over
-`gUnknown_03001630`, called by both `sub_8038538` and `sub_8038A1C`) is
+`GaxCreateHandlers` (core GAX2 channel-table allocator/wiring over
+`gGaxPlayerState`, called by both `GAX2_init` and `GAX2_jingle`) is
 also notable for its `arg4` (bufSize): the ROM's own `ldr r2, [sp, #0x48]`
 read - initially mistaken for the callee reaching backward into its
 caller's frame at a hand-tuned fixed offset - is exactly what a normal
@@ -140,13 +140,13 @@ relocation that the real link fixes), then again via the full clean
 
 ## Object shapes
 
-`gUnknown_03001630` (`struct GaxPlayerState *`, `include/audio.h`) still
+`gGaxPlayerState` (`struct GaxPlayerState *`, `include/audio.h`) still
 only names `magic`/`songPtr`/`channels`/`curChannelIdx`/`state` - all
 five functions here touch many more fields (`+0x10`/`+0x14`/`+0x18`/
 `+0x1c`/`+0x24`/`+0x2c`/`+0x30`/`+0x34`/`+0x40`-`+0x44`/`+0x48`+/`+0x9c`+/
 `+0x184`/`+0x188`, and more) that clearly belong to the same object (cross-
-referenced by `sub_8038538` writing them and `sub_8038240`/`sub_8038A1C`/
-`sub_8038B68` reading them back) but add up to a struct far larger than
+referenced by `GAX2_init` writing them and `GaxCreateHandlers`/`GAX2_jingle`/
+`GAX_irq` reading them back) but add up to a struct far larger than
 what's currently modeled (at least ~0x18C bytes, based on the highest
 offset seen). Extending the shared struct correctly would need auditing
 every field across all four functions at once - out of scope for this
@@ -156,9 +156,9 @@ GAX2_SoundHandler function in this cluster (`gax_channel_init.c`,
 
 ## Left raw
 
-`sub_8037FC0` (issue #66's other function) - read in full ("a large,
+`GAX2_estimate` (issue #66's other function) - read in full ("a large,
 genuinely hard-to-follow GAX2 mixer/timing computation over
-`gStaticData_085A6150` and several SoundHandler-shaped structures" per
+`gGaxMixRates` and several SoundHandler-shaped structures" per
 `docs/status/audio.md`) but not attempted this pass; still genuinely
 GAX2 mixer-state internals, not a false-positive generic helper.
 
@@ -175,11 +175,11 @@ NON_MATCHING=1 report` also verified clean (356 units, 9 categories).
 
 ## Later pass: GAX toolchain retry
 
-`sub_8038A1C` now matches as plain C against the structs in `include/audio.h`. `sub_8038240` and `sub_8038538` stay NAKED with drafts under `#if NON_MATCHING` (register-assignment gaps, not an allocation "ceiling"). See [gax-toolchain-retry.md](./gax-toolchain-retry.md).
+`GAX2_jingle` now matches as plain C against the structs in `include/audio.h`. `GaxCreateHandlers` and `GAX2_init` stay NAKED with drafts under `#if NON_MATCHING` (register-assignment gaps, not an allocation "ceiling"). See [gax-toolchain-retry.md](./gax-toolchain-retry.md).
 
 ## Later pass: GAX NAKED retry 2
 
-`sub_8038240` is now real C, under current agbcc with the normal flags.
+`GaxCreateHandlers` is now real C, under current agbcc with the normal flags.
 What closed it:
 - `/` for the rate division (sub_8037E54 is `__udivsi3`, so the call
   is a const libcall);
@@ -188,13 +188,13 @@ What closed it:
 - a block-scoped `next`;
 - index-first addressing.
 
-`sub_8038538`'s draft is improved: `maxRate`/`fmt` are now in the ROM's
+`GAX2_init`'s draft is improved: `maxRate`/`fmt` are now in the ROM's
 r8/r9, and it is ~294 halfwords off by alignment-insensitive count (was
 ~364). It stays NAKED. See [gax-naked-retry-2.md](./gax-naked-retry-2.md).
 
 ## Later pass: GAX NAKED retry 5
 
-`sub_8038538` is now real C, under current agbcc with the normal flags.
+`GAX2_init` is now real C, under current agbcc with the normal flags.
 The closing changes were indexed copies of the constant ARM-code tables,
 a separate counter for the dspFn17c copy, a block-local `layout` read, and
 three documented no-code nudges. See

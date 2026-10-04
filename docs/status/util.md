@@ -35,7 +35,7 @@ helpers.
   combined `pop {r4-r7, pc}` returns are just agbcc's non-interworking
   epilogue, and with the flag dropped these are libgcc2.c's own source,
   verbatim (`include/libgcc2_udivmoddi4.h` holds `__udivmoddi4`). See
-  `docs/matching/gax-toolchain-retry.md`. (`sub_8037F3C`, the zero-fill
+  `docs/matching/gax-toolchain-retry.md`. (`GaxZeroFill`, the zero-fill
   helper that used to share this file, moved to
   `src/audio/gax_zero_fill.c` - it's GAX2 engine code with a normal
   interworking return.)

@@ -18,7 +18,7 @@ the established pattern for this class of gap (see
 this project's `tools/report_units.py`/`docs/status/*.md` tracking -
 only real decompiled C counts, even when the NAKED transcription is
 provably byte-correct against the ROM. All six functions below (and
-their siblings converted the same pass - `sub_80019F8` in
+their siblings converted the same pass - `PlayAmbientSfx` in
 `src/audio/audio_context.c`, and the eight
 `src/graphics/settings_menu.c`/`settings_menu23.c` functions) are
 tracked as **parked**, not matched, in those files. The functions
@@ -109,7 +109,7 @@ real ROM address as a label.
 
 Full clean `rm -rf build crashbandicootxs.elf crashbandicootxs.gba
 crashbandicootxs.map && make compare` passes (`La suma coincide`) with
-all six converted at once, alongside `sub_80019F8`
+all six converted at once, alongside `PlayAmbientSfx`
 (`src/audio/audio_context.c` - see
 `docs/matching/issue-3-overlay-ui-audio-wrapper.md`) and the eight
 `src/graphics/settings_menu.c`/`settings_menu23.c` functions (see

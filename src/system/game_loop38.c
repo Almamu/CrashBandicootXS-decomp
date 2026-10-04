@@ -32,7 +32,7 @@ struct SoundChannelList {
 extern struct AudioContext *gUnknown_030012BC;
 extern void sub_8001AC4(struct AudioContext *self, u32 value);
 extern void sub_800132C(u8 flags, s32 frameDelay, u8 sync);
-extern void sub_80019A8(struct AudioContext *self, u32 id);
+extern void StopSfx(struct AudioContext *self, u32 id);
 
 /* Tail half of sub_8024640's per-item body (game_loop37.c) - duck-out
  * (`field_11`), fade-start (`field_0c`), and re-arm (`field_12`/
@@ -60,7 +60,7 @@ void sub_8024790(struct SoundChannelList *self0, s32 idx)
         struct SoundChannelItem *item = self->items[idx];
 
         if (item->field_12 != 0 && item->field_18 != 0x63) {
-            sub_80019A8(gUnknown_030012BC, item->field_18);
+            StopSfx(gUnknown_030012BC, item->field_18);
         }
     }
 }

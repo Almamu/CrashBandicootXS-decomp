@@ -1,14 +1,14 @@
 #include "core.h"
 #include "audio.h"
 
-extern u8 sub_8039F30(struct GaxChannelState *self, struct GaxEnvelope *env, u16 *pos);
-extern void sub_8039FFC(struct GaxChannelState *self);
-extern void sub_803A03C(struct GaxChannelState *self);
+extern u8 GaxEnvelopeTick(struct GaxChannelState *self, struct GaxEnvelope *env, u16 *pos);
+extern void GaxChannelTickVibrato(struct GaxChannelState *self);
+extern void GaxChannelTickSweep(struct GaxChannelState *self);
 
 /* Per-tick per-channel envelope/portamento update: if an instrument is
- * bound, advances the envelope (`sub_8039F30`, result into `envOut`),
- * then the effect-table tick (`sub_8039FFC`) and the position sweep
- * (`sub_803A03C`). Independently of that, ramps the two 8-bit volume
+ * bound, advances the envelope (`GaxEnvelopeTick`, result into `envOut`),
+ * then the effect-table tick (`GaxChannelTickVibrato`) and the position sweep
+ * (`GaxChannelTickSweep`). Independently of that, ramps the two 8-bit volume
  * fields by their signed per-tick steps (clamped to 0-0xff), advances
  * `pitch`/`note` by their steps, and applies an armed portamento
  * (`slideRate`) to `pitch` - snapping to `slideTarget` and disarming
@@ -17,14 +17,14 @@ extern void sub_803A03C(struct GaxChannelState *self);
  * Was NAKED behind a heavily register-pinned 99.7% draft; written
  * plainly against a struct (fields accessed directly, no cached
  * locals) it matches outright - see docs/matching/gax-toolchain-retry.md. */
-void sub_8039AA4(struct GaxChannelState *self)
+void GaxChannelTick(struct GaxChannelState *self)
 {
     s32 v;
 
     if (self->instrument != NULL) {
-        self->envOut = sub_8039F30(self, self->instrument->envelope, &self->envPos);
-        sub_8039FFC(self);
-        sub_803A03C(self);
+        self->envOut = GaxEnvelopeTick(self, self->instrument->envelope, &self->envPos);
+        GaxChannelTickVibrato(self);
+        GaxChannelTickSweep(self);
     }
 
     v = self->volStep15 + self->vol15;

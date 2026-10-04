@@ -2,18 +2,18 @@
 #include "gba/io_reg.h"
 #include "gba/defines.h"
 
-extern void sub_80391E8(u32 idx);
-extern void sub_8037F3C(void *arg0, s32 size);
-extern void sub_80392C4(void *src, void *dst);
-extern void sub_8039214(u32 col, u32 row, const u8 *str);
-extern u8 gUnknown_030008D0[];
-extern u8 *gStaticData_085A62C8;
-extern u8 gStaticData_085A62CC[];
+extern void GaxStopDma(u32 idx);
+extern void GaxZeroFill(void *arg0, s32 size);
+extern void GaxHuffUnComp(void *src, void *dst);
+extern void GaxDrawText(u32 col, u32 row, const u8 *str);
+extern u8 gGaxHaltFont[];
+extern u8 *gGaxHaltBannerPtr;
+extern u8 gGaxHaltFunctionLabel[];
 
 /* GAX2's fatal-error screen: disables Timer0/1/2/3 direct-sound-output
- * ticking (sub_80391E8, still raw, has the same hardware-register
- * NOP-delay compiler quirk documented for sub_80384DC), zeroes the
- * whole BG VRAM, decompresses a font tileset (gUnknown_030008D0, the
+ * ticking (GaxStopDma, still raw, has the same hardware-register
+ * NOP-delay compiler quirk documented for GaxResetSoundHardware), zeroes the
+ * whole BG VRAM, decompresses a font tileset (gGaxHaltFont, the
  * Huffman-compressed font in the IWRAM image - src/iwram/iwram_data.c)
  * via the HuffUnComp
  * SWI wrapper into BG char block 1, blanks its first tile (the "space"
@@ -21,11 +21,11 @@ extern u8 gStaticData_085A62CC[];
  * 0x060044C8/0x060044FC - not modeled as named screen-block macros
  * since they don't fall on a screen-block boundary), draws a fixed
  * header string plus the two caller-supplied message lines via
- * sub_8039214 (still raw - a word-wrap text/console-tile renderer),
+ * GaxDrawText (still raw - a word-wrap text/console-tile renderer),
  * resets the BG0/backdrop palette to black-on-white, enables BG0 only,
  * and finally spins forever - this is the end of the road, nothing
  * ever returns from here. */
-void sub_80392E0(const u8 *msg1, const u8 *msg2)
+void GaxFatalError(const u8 *msg1, const u8 *msg2)
 {
     vu16 *dst;
     u16 zero;
@@ -33,14 +33,14 @@ void sub_80392E0(const u8 *msg1, const u8 *msg2)
 
     REG_IME = 0;
 
-    sub_80391E8(0);
-    sub_80391E8(1);
-    sub_80391E8(2);
-    sub_80391E8(3);
+    GaxStopDma(0);
+    GaxStopDma(1);
+    GaxStopDma(2);
+    GaxStopDma(3);
 
-    sub_8037F3C((void *)BG_VRAM, 0x10000);
+    GaxZeroFill((void *)BG_VRAM, 0x10000);
 
-    sub_80392C4(gUnknown_030008D0, (void *)BG_CHAR_ADDR(1));
+    GaxHuffUnComp(gGaxHaltFont, (void *)BG_CHAR_ADDR(1));
 
     dst = (vu16 *)BG_CHAR_ADDR(1);
     zero = 0;
@@ -54,10 +54,10 @@ void sub_80392E0(const u8 *msg1, const u8 *msg2)
     *(vu32 *)0x060044D4 = 0x10000;
     *(vu32 *)0x060044FC = 0x01111110;
 
-    sub_8039214(0, 0, gStaticData_085A62C8);
-    sub_8039214(0, 5, gStaticData_085A62CC);
-    sub_8039214(0xf, 5, msg1);
-    sub_8039214(0, 7, msg2);
+    GaxDrawText(0, 0, gGaxHaltBannerPtr);
+    GaxDrawText(0, 5, gGaxHaltFunctionLabel);
+    GaxDrawText(0xf, 5, msg1);
+    GaxDrawText(0, 7, msg2);
 
     *(vu16 *)0x05000002 = 0;
     *(vu16 *)0x05000000 = 0x7FFF;

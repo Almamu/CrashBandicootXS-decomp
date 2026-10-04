@@ -153,7 +153,7 @@ extern s32 sub_802375C(s32 *progress);
 extern s32 InitActorCategory(u16 category);
 extern s32 sub_8029730(void);
 extern void sub_8023140(struct level_state *self, s32 arg1);
-extern void sub_80019CC(void *arg0);
+extern void ResetAmbientSfx(void *arg0);
 extern void sub_80231EC(struct level_state *self, s32 tier);
 extern u8 sub_8024404(s32 *progress);
 extern u8 sub_80243E0(s32 *progress);
@@ -330,7 +330,7 @@ void UpdateGameFrame(struct level_state *self)
                 }
                 break;
             }
-            sub_80019CC(gUnknown_030012BC);
+            ResetAmbientSfx(gUnknown_030012BC);
             {
                 s32 tier = self->bestTier;
                 s32 arg = 2;

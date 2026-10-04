@@ -7,22 +7,22 @@
  */
 
 /* The version string. The engine checks that it still starts with "GAX"
- * through the pointer below (sub_8038538, gax_playstart.c). */
+ * through the pointer below (GAX2_init, gax_playstart.c). */
 const char gGaxVersionString[] = "GAX Sound Engine 2.01D (Sep 28 2001) \xa9 Shin'en Multimedia. Code: B.Wodok";
 
-const char *const gStaticData_085A614C = gGaxVersionString;
+const char *const gGaxVersionStringPtr = gGaxVersionString;
 
 /* gax_playstart.c's `struct RateEntry`: a mixing rate in Hz and the
- * timer reload for it (16.78 MHz / rate). sub_8037FA0
+ * timer reload for it (16.78 MHz / rate). GaxFindMixRate
  * (song_slot_lookup.c) picks the first entry whose rate is >= the
- * requested one; sub_8038538 (gax_playstart.c) and sub_8037FC0
+ * requested one; GAX2_init (gax_playstart.c) and GAX2_estimate
  * (gax_work_size.c) read the chosen entry. */
 struct RateEntry {
     u32 rate;
     u32 timer;
 };
 
-const struct RateEntry gStaticData_085A6150[12] = {
+const struct RateEntry gGaxMixRates[12] = {
     { 5735, 2926 },
     { 10513, 1596 },
     { 11469, 1463 },
@@ -37,31 +37,31 @@ const struct RateEntry gStaticData_085A6150[12] = {
     { 42049, 399 },
 };
 
-/* The engine's error reports: sub_80392E0(where, what) prints the pair
+/* The engine's error reports: GaxFatalError(where, what) prints the pair
  * and halts (gax_fatal_error.c). */
-const char gStaticData_085A61B0[] = "GAX2_NEW";   /* sub_80381FC (sound_object_init.c) */
-const char gStaticData_085A61BC[] = "PARAMS ARG IS NULL";
-const char gStaticData_085A61D0[] = "GAX2_INIT";  /* sub_8038538, sub_8038A1C */
-const char gStaticData_085A61DC[] = "OUT OF MEMORY";
-const char gStaticData_085A61EC[] = "GAX2_JINGLE"; /* sub_8038A1C (gax_channel_pool_alloc.c) */
-const char gStaticData_085A61F8[] = "GAX_NO_JINGLE FLAG IS SET";
-const char gStaticData_085A6214[] = "GAX_IRQ";   /* sub_8038B68 (gax_playback_ticker.c) */
-const char gStaticData_085A621C[] = "GAX_PLAY HAS NOT FINISHED BEFORE GAX_IRQ. USE LOWER MIXING RATE OR LESS FX CHANNELS OR PUT GAX_PLAY IN VBLANK IRQ.";
+const char gGaxErrNameNew[] = "GAX2_NEW";   /* GAX2_new (sound_object_init.c) */
+const char gGaxErrParamsNull[] = "PARAMS ARG IS NULL";
+const char gGaxErrNameInit[] = "GAX2_INIT";  /* GAX2_init, GAX2_jingle */
+const char gGaxErrOutOfMemory[] = "OUT OF MEMORY";
+const char gGaxErrNameJingle[] = "GAX2_JINGLE"; /* GAX2_jingle (gax_channel_pool_alloc.c) */
+const char gGaxErrNoJingle[] = "GAX_NO_JINGLE FLAG IS SET";
+const char gGaxErrNameIrq[] = "GAX_IRQ";   /* GAX_irq (gax_playback_ticker.c) */
+const char gGaxErrPlayNotFinished[] = "GAX_PLAY HAS NOT FINISHED BEFORE GAX_IRQ. USE LOWER MIXING RATE OR LESS FX CHANNELS OR PUT GAX_PLAY IN VBLANK IRQ.";
 
-/* The halt screen of sub_80392E0 (gax_fatal_error.c): this banner, then
+/* The halt screen of GaxFatalError (gax_fatal_error.c): this banner, then
  * "FUNCTION NAME:" and the two strings it was given. */
 const char gGaxHaltBanner[] = "GAX ENGINE V2.01D Sep 28 2001\n\nEXCEPTION. PROGRAM HALT.";
 
-const char *const gStaticData_085A62C8 = gGaxHaltBanner;
+const char *const gGaxHaltBannerPtr = gGaxHaltBanner;
 
-const char gStaticData_085A62CC[] = "FUNCTION NAME:";
+const char gGaxHaltFunctionLabel[] = "FUNCTION NAME:";
 
-/* The period table of sub_8039B44 (gax_note_trigger.c): the sample step
+/* The period table of GaxChannelMix (gax_note_trigger.c): the sample step
  * for each pitch (note, transpose and tune combined, capped at 0xEF3),
  * before it is scaled by the mixing rate. Plain unsigned values - the
  * `U` suffix just keeps entries like 0x040013EF from reading as (and
  * being flagged as) hardware addresses. */
-const u32 gStaticData_085A62DC[0xEF4] = {
+const u32 gGaxPeriodTable[0xEF4] = {
     0x00105A02U, 0x00106192U, 0x00106926U, 0x001070BDU, 0x00107857U, 0x00107FF5U,
     0x00108797U, 0x00108F3CU, 0x001096E5U, 0x00109E91U, 0x0010A641U, 0x0010ADF4U,
     0x0010B5ABU, 0x0010BD66U, 0x0010C524U, 0x0010CCE5U, 0x0010D4ABU, 0x0010DC73U,
@@ -702,9 +702,9 @@ const u32 gStaticData_085A62DC[0xEF4] = {
     0x3F50BE8EU, 0x3F6E0759U, 0x3F8B5DB0U, 0x3FA8C198U, 0x3FC63319U, 0x3FE3B237U,
 };
 
-/* The vibrato/tremolo waveform of sub_8039FFC (gax_channel_effect_table.c):
+/* The vibrato/tremolo waveform of GaxChannelTickVibrato (gax_channel_effect_table.c):
  * one sine period in 64 signed steps. */
-const s8 gStaticData_085A9EAC[64] = {
+const s8 gGaxVibratoTable[64] = {
     0, 12, 24, 37, 48, 60, 70, 80, 90, 98, 106, 112, 117, 122, 125, 126,
     127, 126, 125, 122, 117, 112, 106, 98, 90, 80, 70, 60, 48, 37, 24, 12,
     0, -12, -24, -37, -48, -60, -70, -80, -90, -98, -106, -112, -117, -122, -125, -126,

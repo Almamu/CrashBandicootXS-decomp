@@ -31,7 +31,7 @@ extern struct act_part *gUnknown_030012D8;
 extern void *gUnknown_03001304;
 extern struct anim_rec gStaticData_0816B304[];
 extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
-extern void sub_80019A8(void *ctx, u32 id);
+extern void StopSfx(void *ctx, u32 id);
 extern s32 sub_80008FC(s32 a, s32 b);
 extern u8 sub_8000760(void *pad);
 extern void sub_8009EA8(struct act_part *p, s32 x, s32 y);
@@ -114,7 +114,7 @@ skip:
     if (self->state == 0) {
         struct act_part *p = gUnknown_030012D8;
         if (p->unk_60 == 0 && p->bank->unk_0A != 0x12 && self->unk_33 == 0) {
-            sub_80019A8(gUnknown_030012BC, 0x36);
+            StopSfx(gUnknown_030012BC, 0x36);
             ACT_CALL2(self, m50, gUnknown_030012D8, 0x12);
         }
     }

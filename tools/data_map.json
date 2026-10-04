@@ -395,7 +395,7 @@
   {
    "address": "0x0816AA20",
    "size": 76,
-   "name": "gStaticData_0816AA20",
+   "name": "gSongTable",
    "consumers": [
     "sub_80017BC"
    ],
@@ -414,7 +414,7 @@
    "format": "song table: 19 pointers to GAX2 song structs in the built music block",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Written as gStaticData_0855BCB4 + GAX_SONG_<NAME>; tools/gax_audio.py generates the offsets (build/crashbandicootxs/sound/gax_songs.h).",
+   "notes": "Written as gGaxMusicData + GAX_SONG_<NAME>; tools/gax_audio.py generates the offsets (build/crashbandicootxs/sound/gax_songs.h).",
    "status": "converted: src/data/song_table_16aa20.c"
   },
   {
@@ -5101,7 +5101,7 @@
     "sub_800815C",
     "sub_8008734",
     "sub_8006DF8",
-    "GAX2 engine (the audio part: SFX voices created from GaxSongHeader.sfxTypes by sub_8038538, played by sub_803A158)"
+    "GAX2 engine (the audio part: SFX voices created from GaxSongHeader.sfxTypes by GAX2_init, played by GaxFxChannelPlay)"
    ],
    "regions": [
     {
@@ -5170,7 +5170,7 @@
     {
      "address": "0x0855BC78",
      "size": 60,
-     "format": "GAX2 SFX song header (0x1C), a 1-entry NULL child-type array, and the SFX voice handler type (sub_803A104/sub_803A228/sub_803A158, 0x48-byte instances); GaxSongHeader.sfxTypes (gStaticData_0855BCB4, the start of the music block) points at the type 9 times",
+     "format": "GAX2 SFX song header (0x1C), a 1-entry NULL child-type array, and the SFX voice handler type (GaxFxChannelInit/sub_803A228/GaxFxChannelPlay, 0x48-byte instances); GaxSongHeader.sfxTypes (gGaxMusicData, the start of the music block) points at the type 9 times",
      "effort": "easy",
      "status": "converted: tools/gax_audio.py --sfx"
     }
@@ -5179,10 +5179,10 @@
   {
    "address": "0x085A4C5C",
    "size": 20,
-   "name": "gStaticData_085A4C5C",
+   "name": "gGaxDefaultSong",
    "consumers": [
-    "sub_8037FC0",
-    "sub_8038538"
+    "GAX2_estimate",
+    "GAX2_init"
    ],
    "consumer_files": [
     "audio/gax_playstart.c",
@@ -5197,7 +5197,7 @@
    "element_type": "struct GaxHandlerLayout",
    "element_size": null,
    "element_count": null,
-   "format": "GAX2_Song struct of the engine's default (silent, one-channel) song: the default handler layout of sub_8038538/sub_8037FC0",
+   "format": "GAX2_Song struct of the engine's default (silent, one-channel) song: the default handler layout of GAX2_init/GAX2_estimate",
    "effort": "easy",
    "confidence": "high",
    "notes": "The rest of that song (formerly the verbatim sound/gax_footer.bin) ends the music block; tools/gax_audio.py builds both (manifest default_song).",
@@ -5279,18 +5279,18 @@
    "format": "1 B pad + GAX2 version string \"GAX Sound Engine 2.01D (Sep 28 2001) (c) Shin'en Multimedia. Code: B.Wodok\" + NUL padding",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Pointed to by gStaticData_085A614C (read by sub_8038538).",
+   "notes": "Pointed to by gGaxVersionStringPtr (read by GAX2_init).",
    "consumers_indirect": [
-    "sub_8038538 (via gStaticData_085A614C)"
+    "GAX2_init (via gGaxVersionStringPtr)"
    ],
    "status": "converted: src/data/gax_tables_5a6100.c (gGaxVersionString; the 1-byte pad is gbagfx padding of the .lz before it)"
   },
   {
    "address": "0x085A614C",
    "size": 4,
-   "name": "gStaticData_085A614C",
+   "name": "gGaxVersionStringPtr",
    "consumers": [
-    "sub_8038538"
+    "GAX2_init"
    ],
    "consumer_files": [
     "audio/gax_playstart.c"
@@ -5312,11 +5312,11 @@
   {
    "address": "0x085A6150",
    "size": 96,
-   "name": "gStaticData_085A6150",
+   "name": "gGaxMixRates",
    "consumers": [
-    "sub_8037FA0",
-    "sub_8037FC0",
-    "sub_8038538"
+    "GaxFindMixRate",
+    "GAX2_estimate",
+    "GAX2_init"
    ],
    "consumer_files": [
     "audio/gax_playstart.c",
@@ -5341,9 +5341,9 @@
   {
    "address": "0x085A61B0",
    "size": 12,
-   "name": "gStaticData_085A61B0",
+   "name": "gGaxErrNameNew",
    "consumers": [
-    "sub_80381FC"
+    "GAX2_new"
    ],
    "consumer_files": [
     "audio/sound_object_init.c"
@@ -5362,9 +5362,9 @@
   {
    "address": "0x085A61BC",
    "size": 20,
-   "name": "gStaticData_085A61BC",
+   "name": "gGaxErrParamsNull",
    "consumers": [
-    "sub_80381FC"
+    "GAX2_new"
    ],
    "consumer_files": [
     "audio/sound_object_init.c"
@@ -5383,10 +5383,10 @@
   {
    "address": "0x085A61D0",
    "size": 12,
-   "name": "gStaticData_085A61D0",
+   "name": "gGaxErrNameInit",
    "consumers": [
-    "sub_8038538",
-    "sub_8038A1C"
+    "GAX2_init",
+    "GAX2_jingle"
    ],
    "consumer_files": [
     "audio/gax_channel_pool_alloc.c",
@@ -5410,10 +5410,10 @@
   {
    "address": "0x085A61DC",
    "size": 16,
-   "name": "gStaticData_085A61DC",
+   "name": "gGaxErrOutOfMemory",
    "consumers": [
-    "sub_8038538",
-    "sub_8038A1C"
+    "GAX2_init",
+    "GAX2_jingle"
    ],
    "consumer_files": [
     "audio/gax_channel_pool_alloc.c",
@@ -5437,9 +5437,9 @@
   {
    "address": "0x085A61EC",
    "size": 12,
-   "name": "gStaticData_085A61EC",
+   "name": "gGaxErrNameJingle",
    "consumers": [
-    "sub_8038A1C"
+    "GAX2_jingle"
    ],
    "consumer_files": [
     "audio/gax_channel_pool_alloc.c"
@@ -5462,9 +5462,9 @@
   {
    "address": "0x085A61F8",
    "size": 28,
-   "name": "gStaticData_085A61F8",
+   "name": "gGaxErrNoJingle",
    "consumers": [
-    "sub_8038A1C"
+    "GAX2_jingle"
    ],
    "consumer_files": [
     "audio/gax_channel_pool_alloc.c"
@@ -5487,9 +5487,9 @@
   {
    "address": "0x085A6214",
    "size": 8,
-   "name": "gStaticData_085A6214",
+   "name": "gGaxErrNameIrq",
    "consumers": [
-    "sub_8038B68"
+    "GAX_irq"
    ],
    "consumer_files": [
     "audio/gax_playback_ticker.c"
@@ -5509,9 +5509,9 @@
   {
    "address": "0x085A621C",
    "size": 172,
-   "name": "gStaticData_085A621C",
+   "name": "gGaxErrPlayNotFinished",
    "consumers": [
-    "sub_8038B68"
+    "GAX_irq"
    ],
    "consumer_files": [
     "audio/gax_playback_ticker.c"
@@ -5531,9 +5531,9 @@
   {
    "address": "0x085A62C8",
    "size": 4,
-   "name": "gStaticData_085A62C8",
+   "name": "gGaxHaltBannerPtr",
    "consumers": [
-    "sub_80392E0"
+    "GaxFatalError"
    ],
    "consumer_files": [
     "audio/gax_fatal_error.c"
@@ -5555,9 +5555,9 @@
   {
    "address": "0x085A62CC",
    "size": 16,
-   "name": "gStaticData_085A62CC",
+   "name": "gGaxHaltFunctionLabel",
    "consumers": [
-    "sub_80392E0"
+    "GaxFatalError"
    ],
    "consumer_files": [
     "audio/gax_fatal_error.c"
@@ -5576,9 +5576,9 @@
   {
    "address": "0x085A62DC",
    "size": 15312,
-   "name": "gStaticData_085A62DC",
+   "name": "gGaxPeriodTable",
    "consumers": [
-    "sub_8039B44"
+    "GaxChannelMix"
    ],
    "consumer_files": [
     "audio/gax_note_trigger.c"
@@ -5601,9 +5601,9 @@
   {
    "address": "0x085A9EAC",
    "size": 76,
-   "name": "gStaticData_085A9EAC",
+   "name": "gGaxVibratoTable",
    "consumers": [
-    "sub_8039FFC"
+    "GaxChannelTickVibrato"
    ],
    "consumer_files": [
     "audio/gax_channel_effect_table.c"

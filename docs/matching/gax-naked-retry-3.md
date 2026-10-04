@@ -1,4 +1,4 @@
-# GAX NAKED retry 3: `sub_8039B44` and `sub_8038538` (issues #67/#68)
+# GAX NAKED retry 3: `GaxChannelMix` and `GAX2_init` (issues #67/#68)
 
 Third pass on the last two GAX2 functions, after
 [gax-naked-retry-2.md](./gax-naked-retry-2.md) and
@@ -7,26 +7,26 @@ stay NAKED, and both `#if NON_MATCHING` drafts are much closer now.
 
 | Function | File | Before | Now |
 |---|---|---|---|
-| `sub_8039B44` | gax_note_trigger.c | 202 | **46** |
-| `sub_8038538` | gax_playstart.c | 123 | 100 |
+| `GaxChannelMix` | gax_note_trigger.c | 202 | **46** |
+| `GAX2_init` | gax_playstart.c | 123 | 100 |
 
 Both columns use `brute2.py`'s sequence score (difflib over normalized
 disassembly, so branch targets and literal pools count). For
-`sub_8039B44` the ROM side is cut at the real size `0x3EC`, not at the
-`sub_8039E50` map label. Retry 2 gave "~294" for `sub_8038538`, but
+`GaxChannelMix` the ROM side is cut at the real size `0x3EC`, not at the
+`sub_8039E50` map label. Retry 2 gave "~294" for `GAX2_init`, but
 that was a different count. Both numbers in this table come from the
 same tool.
 
 Everything below is plain agbcc with the normal flags. No draft needed
 old_agbcc or per-file flags.
 
-## `sub_8039B44` (per-channel mixer): what moved it
+## `GaxChannelMix` (per-channel mixer): what moved it
 
 1. **The 64-bit product in a DImode user variable** (202 → 135):
 
    ```c
    s64 prod = (s32)period;
-   prod = prod * gUnknown_03001618 >> 32;
+   prod = prod * gGaxMixRateReciprocal >> 32;
    step = prod;
    ```
 
@@ -56,7 +56,7 @@ old_agbcc or per-file flags.
    `self->format` and `item.done` in registers across the loop
    (PRE copies at the loop tail), where the ROM reloads them.
 5. **`?:` for the tune clamp and the envelope default** (65 → 59).
-   `gStaticData_085A62DC[idx > 0xef3 ? 0xef3 : idx]` loads the table
+   `gGaxPeriodTable[idx > 0xef3 ? 0xef3 : idx]` loads the table
    address before the add, as the ROM does. `vol = envOut != 0xff ?
    envOut : 0x100` loads `envOut` before the 0x100.
 6. **The call's argument in a register before the routine** (59 → 55),
@@ -70,7 +70,7 @@ old_agbcc or per-file flags.
    every use: the loop test, the post-call test, and twice in the
    end-of-sample clear.
 
-### What's left in `sub_8039B44` (all register or reload choice)
+### What's left in `GaxChannelMix` (all register or reload choice)
 
 - **The tune's row.** The ROM copies sb into r3 right at the tune
   (`mov r3, sb`). The draft copies it at the top of the pitch block
@@ -94,7 +94,7 @@ old_agbcc or per-file flags.
 - The rest of the diff is literal-pool placement that follows from the
   above.
 
-## `sub_8038538` (play start)
+## `GAX2_init` (play start)
 
 - **Tail fixed** (123 → 100). `if ((u16)(flags & 2)) { if (dsp[1]) ... =
   1; else ... = 0; } else ... = 0;` keeps the ROM's `lsl/lsr #16` test,
@@ -102,14 +102,14 @@ old_agbcc or per-file flags.
   form folds the u16 cast away.
 - **Left:**
   - The ARM-code copy setup. The ROM materializes the
-    `gUnknown_03001630` address (into sl) before `layout`, `a73c` and
+    `gGaxPlayerState` address (into sl) before `layout`, `a73c` and
     `a818`, and `a818` goes to r8. All 5! orders of the setup statements
     were tried, crossed with indexed or pointer copies: 96-98 at best.
     The ROM's order looks like loop-invariant hoisting out of a
     differently shaped first loop.
   - The ALIGN4 after `field_1c`: reload puts the new size in r4 where
     the ROM uses r3 (reload rotation).
-  - The `sub_8038240` argument registers (`layout`/`sfx`/`&size` in
+  - The `GaxCreateHandlers` argument registers (`layout`/`sfx`/`&size` in
     r4/sb/r6 in the ROM, r9/r8/r4 in the draft), and the zero kept in r8.
 
 ## Tools

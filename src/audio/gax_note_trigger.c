@@ -2,18 +2,18 @@
 #include "audio.h"
 
 /* GAX2 per-channel mixer (issue #68): renders channel `self` into
- * `buf` through the ARM resampling routine `gUnknown_03001630->field_44`
+ * `buf` through the ARM resampling routine `gGaxPlayerState->mixCode`
  * points at (an IWRAM copy of the raw ARM code at
- * `gStaticData_0803A818`, gax_unknownc_play.c). Called by the Channel
- * play_fns `sub_80395A4`/`sub_803A158` as `sub_8039B44(self, info, buf,
+ * `gGaxArmResample`, gax_unknownc_play.c). Called by the Channel
+ * play_fns `GaxChannelPlay`/`GaxFxChannelPlay` as `GaxChannelMix(self, info, buf,
  * arg, type data, flag)`.
  *
  * Bails out (returns 0) when no instrument is bound, no note is playing
  * (`0x8AD0`), `row` is out of range or the row's wave is empty.
  * Otherwise it looks up the sample step for `note + field_2e` (+ pitch
  * slide and, for pattern channels, the order's transpose) + the row's
- * tune in the period table `gStaticData_085A62DC` (capped at 0xEF3),
- * scaled by the mix-rate reciprocal `gUnknown_03001618` (`__muldi3`),
+ * tune in the period table `gGaxPeriodTable` (capped at 0xEF3),
+ * scaled by the mix-rate reciprocal `gGaxMixRateReciprocal` (`__muldi3`),
  * chains the envelope/volume/Info/song volumes, builds a 10-word work
  * item on the stack, then loops calling the ARM routine - patching two
  * of its instructions first to pick forward/backward stepping - and
@@ -48,20 +48,20 @@ struct GaxMixItem {
     s32 loopLen; /* Q11 sweep loop length, 0 = none */
 };
 
-extern u64 gUnknown_03001618;
-extern const u32 gStaticData_085A62DC[];
-extern u8 gStaticData_0803A818[];
+extern u64 gGaxMixRateReciprocal;
+extern const u32 gGaxPeriodTable[];
+extern u8 gGaxArmResample[];
 extern u8 gStaticData_0803A874[];
 extern u8 gStaticData_0803A884[];
 extern u8 gStaticData_0803A8B4[];
 extern u8 gStaticData_0803A8C4[];
-extern void sub_8037F3C(void *dest, s32 count);
+extern void GaxZeroFill(void *dest, s32 count);
 
 /* Rewrites the halfword at `label` in the IWRAM copy of the ARM mixer. */
 #define GAX_PATCH_MIXER(label, value) \
-    (((u16 *)gUnknown_03001630->field_44)[((label) - gStaticData_0803A818 + 2) / 2] = (value))
+    (((u16 *)gGaxPlayerState->mixCode)[((label) - gGaxArmResample + 2) / 2] = (value))
 
-u32 sub_8039B44(struct GaxChannelState *self, struct GaxInfoHandler *info, void *buf, u32 arg,
+u32 GaxChannelMix(struct GaxChannelState *self, struct GaxInfoHandler *info, void *buf, u32 arg,
                 struct GaxSongData *song, u8 flag)
 {
     struct GaxChannelInstrument *inst;
@@ -96,7 +96,7 @@ u32 sub_8039B44(struct GaxChannelState *self, struct GaxInfoHandler *info, void 
         u32 m;
 
         t = ip->rows[self->row].tune;
-        tab = gStaticData_085A62DC;
+        tab = gGaxPeriodTable;
         idx = pitch + t;
         m = 0xef3;
         inst = ip;
@@ -118,10 +118,10 @@ u32 sub_8039B44(struct GaxChannelState *self, struct GaxInfoHandler *info, void 
         vol = vol * self->vol17 >> 8;
     if (self->vol15 != 0xff)
         vol = vol * self->vol15 >> 8;
-    if ((u8)self->field_18 != 0xff)
-        vol = vol * (u8)self->field_18 >> 8;
-    if (info->field_1f != 0xff)
-        vol = vol * info->field_1f >> 8;
+    if ((u8)self->volume != 0xff)
+        vol = vol * (u8)self->volume >> 8;
+    if (info->volume != 0xff)
+        vol = vol * info->volume >> 8;
     if (flag == 0)
         vol = vol * info->type->data.song->volume >> 8;
     {
@@ -130,7 +130,7 @@ u32 sub_8039B44(struct GaxChannelState *self, struct GaxInfoHandler *info, void 
          * order) and keeps `self` out of them, as in the ROM */
         s64 prod = (s32)period;
 
-        prod = prod * gUnknown_03001618 >> 32;
+        prod = prod * gGaxMixRateReciprocal >> 32;
         step = prod;
     }
     len = wave->length;
@@ -186,7 +186,7 @@ u32 sub_8039B44(struct GaxChannelState *self, struct GaxInfoHandler *info, void 
                     GAX_PATCH_MIXER(gStaticData_0803A8C4, 0xcaff);
                 }
             }
-            GAX_CALL_ARM_R(gUnknown_03001630, &item);
+            GAX_CALL_ARM_R(gGaxPlayerState, &item);
             if (item.done == self->format->frames)
                 break;
             if (pingpong) {
@@ -204,7 +204,7 @@ u32 sub_8039B44(struct GaxChannelState *self, struct GaxInfoHandler *info, void 
                 item.pos -= self->instrument->rows[self->row].sweepLen << 11;
             } else {
                 if (self->field_0d)
-                    sub_8037F3C((u16 *)buf + item.done, (self->format->frames - item.done + 1) * 2);
+                    GaxZeroFill((u16 *)buf + item.done, (self->format->frames - item.done + 1) * 2);
                 self->note = 0x8ad0;
                 self->noteStep = 0;
                 self->priority = 0x80000000;

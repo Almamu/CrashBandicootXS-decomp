@@ -1,8 +1,8 @@
 #include "core.h"
 #include "audio.h"
 
-/* GAX2's handler instantiation/linking for one player (`sub_8038538`
- * play start, `sub_8038A1C` per-channel pool): carves a `struct
+/* GAX2's handler instantiation/linking for one player (`GAX2_init`
+ * play start, `GAX2_jingle` per-channel pool): carves a `struct
  * GaxHandler` header, the type's instance and its child-pointer array
  * out of `*bufp`/`*sizep` for every handler type of `layout` (and, for
  * player 0, the SFX voice types in `sfx`) - slot 2 holds the list of
@@ -17,7 +17,7 @@
  * - the division is a plain `/`: sub_8037E54 is lib1funcs' `__udivsi3`
  *   (see gax-toolchain-retry.md), so the call is a libcall, not an
  *   ordinary call - which is what lets GCSE carry the spilled
- *   `gUnknown_03001630` address into the rate loop (`ldr r1, =...`);
+ *   `gGaxPlayerState` address into the rate loop (`ldr r1, =...`);
  * - the carving loop's child count goes through its own local (`cnt`)
  *   and `need` is one expression, so `n` lands in r8 and `need` in ip;
  * - the linking loop compares against `t->childTypes[j]` directly (the
@@ -33,15 +33,15 @@ struct GaxDspRate {
 asm(".set __udivsi3, sub_8037E54");
 
 /* Player 0's mixer handler (the SFX voices' owner). */
-#define GAX_PLAYER0_MIXER() (((struct GaxMixerHandler **)gUnknown_03001630->channels[0])[0])
+#define GAX_PLAYER0_MIXER() (((struct GaxMixerHandler **)gGaxPlayerState->channels[0])[0])
 
-u8 sub_8038240(struct GaxHandlerLayout *layout, struct GaxHandlerType **sfx, u32 numSfx, u8 **bufp,
+u8 GaxCreateHandlers(struct GaxHandlerLayout *layout, struct GaxHandlerType **sfx, u32 numSfx, u8 **bufp,
                u32 *sizep)
 {
     u32 total = layout->count;
     s32 i;
 
-    if (sfx != NULL && gUnknown_03001630->curChannelIdx == 0)
+    if (sfx != NULL && gGaxPlayerState->curChannelIdx == 0)
         total += numSfx;
     for (i = 0; i < total; i++) {
         struct GaxHandlerType *t;
@@ -64,7 +64,7 @@ u8 sub_8038240(struct GaxHandlerLayout *layout, struct GaxHandlerType **sfx, u32
                 return 0;
             GAX_PLAYER()[i] = h;
             h->type = t;
-            h->format = gUnknown_03001630->format;
+            h->format = gGaxPlayerState->format;
             h->children = (struct GaxHandler **)(*bufp + sizeof(struct GaxHandler) + t->instanceSize);
             *bufp = (u8 *)h->children + n;
             *sizep = size - need;
@@ -99,7 +99,7 @@ u8 sub_8038240(struct GaxHandlerLayout *layout, struct GaxHandlerType **sfx, u32
             }
         }
     }
-    if (gUnknown_03001630->curChannelIdx == 1) {
+    if (gGaxPlayerState->curChannelIdx == 1) {
         if (sfx == NULL)
             goto done;
         for (i = 0; i < (s32)numSfx; i++)
@@ -114,17 +114,17 @@ u8 sub_8038240(struct GaxHandlerLayout *layout, struct GaxHandlerType **sfx, u32
 done:
     for (i = 0; i < (s32)(layout->count - 3); i++)
         ((struct GaxChannelState *)GAX_PLAYER()[i + 3])->index = i;
-    if (gUnknown_03001630->field_24 != 0) {
+    if (gGaxPlayerState->echoTaps != 0) {
         struct GaxHandlerType *t;
 
         i = 0;
         t = layout->types[0];
         for (; i <= 2; i++) {
             struct GaxDspRate *r;
-            u32 base = gUnknown_03001630->field_24;
+            u32 base = gGaxPlayerState->echoTaps;
 
             r = (struct GaxDspRate *)(i * 8 + base);
-            r->step = (i + t->data.dsp->taps)->rate * gUnknown_03001630->format->mixRate / 1000 * 2;
+            r->step = (i + t->data.dsp->taps)->rate * gGaxPlayerState->format->mixRate / 1000 * 2;
             /* taps[i + 1].value, addressed off taps[i] like the ROM */
             r->value = ((u32 *)t->data.dsp)[i * 2 + 2];
         }

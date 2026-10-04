@@ -70,7 +70,7 @@ extern void InitActorPart(void *self, void *part, s32 b, s32 c, s32 d);
 extern s32 GetAnimFrameBaseOffset(void *self);
 extern u32 GetSpriteShapeSizeBits(u8 *frame);
 extern void QueueSpriteFrameOam(u32 attr01, u16 attr2, s32 priority);
-extern void sub_80019F8(void *ctx, s32 id, s32 frame, s32 vol, struct byte_arg force);
+extern void PlayAmbientSfx(void *ctx, s32 id, s32 frame, s32 vol, struct byte_arg force);
 extern u8 sub_8023418(void *self);
 extern void sub_8023234(void *self);
 extern u8 sub_8029794(void);
@@ -648,7 +648,7 @@ void sub_802EDBC(struct actor_hp *self)
 
             gUnknown_03001500 = 0x12;
             one.v = 1;
-            sub_80019F8(gUnknown_030012BC, 0x24, 1000, 0xa0, one);
+            PlayAmbientSfx(gUnknown_030012BC, 0x24, 1000, 0xa0, one);
             x = self->base.x + 0x1200;
             y = self->base.y - 0x1800;
             sub_802E6CC(x, y, self->base.z + 10, (x * 0x199) >> 12, (y * 0x199) >> 12);

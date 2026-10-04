@@ -34,6 +34,20 @@ snake_case is appropriate; a function merely reminiscent of a libc one
 (e.g. a case-insensitive `strstr` with a different signature) doesn't
 automatically qualify - see "When to actually rename" below.
 
+## Exception: GAX2's own API names
+
+The Shin'en GAX2 sound engine's public entry points keep Shin'en's own
+`GAX2_xxx`/`GAX_xxx` names (`GAX2_new`, `GAX2_init`, `GAX2_jingle`,
+`GAX_irq`, `GAX_play`, `GAX_fx_ex`, `GAX_stop`, ...) instead of PascalCase.
+The ROM itself names several of them - its error reports pass the
+function name ("GAX2_NEW", "GAX2_INIT", "GAX2_JINGLE", "GAX_IRQ", "GAX_PLAY
+HAS NOT FINISHED BEFORE GAX_IRQ") to the fatal-error screen's "FUNCTION
+NAME:" line - and the rest follow the engine's published API. Like the
+memory allocator, this is a **deliberate exception for this one
+library**: the engine's internal helpers (`GaxCreateHandlers`,
+`GaxChannelMix`, ...) and its data (`gGaxPeriodTable`, ...) use the
+normal conventions. See [`docs/audio.md`](./audio.md#engine-api-names).
+
 ## Reserved fallback names - never invent new ones that look like these
 
 - **`sub_XXXXXXXX`** (`X` = the function's ROM address, uppercase hex, no

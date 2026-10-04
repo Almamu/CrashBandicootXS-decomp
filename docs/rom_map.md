@@ -775,8 +775,8 @@ function itself opens a **third RAM-struct family**:
 `gUnknown_030012xx` struct tracked all session and the
 `gUnknown_030015xx` family found in `actor` earlier this round. It
 accumulates a clamped position delta, then dispatches on threshold
-values to call **`sub_80019F8`** - a genuinely new sibling to
-`PlaySfx`/`sub_80019A8`, sharing the same `gUnknown_030012BC`
+values to call **`PlayAmbientSfx`** - a genuinely new sibling to
+`PlaySfx`/`StopSfx`, sharing the same `gUnknown_030012BC`
 first-argument convention and an SFX-trigger call shape (id `0x3E8`,
 volume `0x100`). Three audio-trigger-shaped functions confirmed now,
 not just `PlaySfx` and its mute companion.
@@ -2216,7 +2216,7 @@ allocated struct, very plausibly `gUnknown_030012BC` itself (the
 8340-byte `PlaySfx` channel-state object `sub_8022230` allocates,
 given the offset comfortably fits inside that allocation). Reads as
 "given a sound/channel ID, find its slot" - plausibly infrastructure
-`PlaySfx`/`sub_80019A8` build on.
+`PlaySfx`/`StopSfx` build on.
 
 **`sub_8022BF0`/`sub_8022CA0`** (a linked pair - the first calls the
 second) configure **GBA hardware window registers** (`REG_WIN0H`,
@@ -2450,8 +2450,8 @@ new ones: **`sub_8025B0C`** wraps the already-documented `sub_8025BAC`
 already confirmed five other places - a sixth instance.
 **`sub_8024590`**/**`sub_8024640`** (a linked pair) manage
 `gUnknown_030012BC` sound-channel lifecycle via
-`sub_8001B54`/`sub_80019A8`/`PlaySfx` - extends the `PlaySfx`/
-`sub_80019A8` channel-handle toolkit, unrelated to the medal-tally
+`sub_8001B54`/`StopSfx`/`PlaySfx` - extends the `PlaySfx`/
+`StopSfx` channel-handle toolkit, unrelated to the medal-tally
 chain despite address proximity. **`sub_80264F8`** is a generic
 ID->cache-slot mapper with reference counting, same *shape* as
 `sub_8024F24`'s pattern but a distinct instance. **`sub_802680C`**
@@ -3187,7 +3187,7 @@ handling" figure**). Of those 118, **22 functions
 signature (`sub_803AD80`/`84`/`7C`/`88`) as `sub_8006600` above.
 `PlaySfx` itself sits *inside* this same dominant component (it does
 call genuinely audio-shaped functions in the GAX2 range,
-`sub_8038E74`/`sub_80390F8` - it's real, legitimate SFX-triggering code)
+`GAX_fx_ex`/`GAX_set_fx_volume` - it's real, legitimate SFX-triggering code)
 but accounts for only 184 of the component's 19.2 KB.
 
 **Read as: a self-contained UI/overlay screen** (text labels laid out
@@ -3827,17 +3827,17 @@ fits the established `+0x18`-pointer convention exactly, no anomalies.
 **`sub_802364C`** (8 B): a trivial wrapper, `sub_8022468(self, 2)` -
 confirms `sub_8022468`'s second parameter is a context/mode selector, as
 suspected. **`sub_8023658`**: calls `sub_8022468(self, 1)` then
-**`sub_80019A8(gUnknown_030012BC, 0x5D)`** - a *second*, distinct
+**`StopSfx(gUnknown_030012BC, 0x5D)`** - a *second*, distinct
 audio-triggering function alongside `PlaySfx`, sharing `PlaySfx`'s own
 first argument global (`gUnknown_030012BC`). Confirms the same "screen
 transition + paired sound cue" combo the fade-to-black investigation
 found, for a different context ID.
 
-**Resolved `sub_80019A8` (a fourth parallel fork): it's a stop/mute
+**Resolved `StopSfx` (a fourth parallel fork): it's a stop/mute
 companion to `PlaySfx`, not a second way to start sounds.**
-`sub_80019A8(handle_ptr, id)` loops over exactly two tracked slots
+`StopSfx(handle_ptr, id)` loops over exactly two tracked slots
 (`self+0x10`/`+0x14`); on a match against `id`, it calls
-**`sub_8038FD0(slot_index)`** - a function inside the confirmed GAX2
+**`GAX_stop_fx(slot_index)`** - a function inside the confirmed GAX2
 range that walks a `GAX2_Song`/`SoundHandler` structure (matching the
 layout `docs/audio.md` already documents) and sets a per-channel mute
 byte (`handler+0x24 = 1`), with a special-case for parameter `-1`
@@ -4032,8 +4032,8 @@ noting: `0x0803B074` (`GetAnimFrameData`, confirmed actor-system) falls
 that bound was never tight to begin with.
 
 **Follow-up pins the end boundary down to 12 bytes of slack.**
-`sub_803A5A8` is confirmed genuine GAX2 code (touches
-`gUnknown_03001630`, the GAX2 player-state object `sub_8038538`
+`GaxMixFrame` is confirmed genuine GAX2 code (touches
+`gGaxPlayerState`, the GAX2 player-state object `GAX2_init`
 initializes, and dispatches through the same `self->[0]->+8`
 `play_fn`-style vtable convention `docs/audio.md` documents), running
 uninterrupted right up to the ARM-mode blob's prologue. That blob

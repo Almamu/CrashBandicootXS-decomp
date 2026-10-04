@@ -225,7 +225,7 @@ void sub_8027018(struct hud_fx_queue *self, u16 *targets_arg, u16 *lists, s32 an
      * Plain `u8` parameter access here instead reads the full stack
      * word and narrows it with two shifts, scheduled later - the same
      * gcc-2.9 stack-argument codegen gap documented in
-     * docs/matching/issue-3-overlay-ui-audio-wrapper.md's `sub_80019F8`
+     * docs/matching/issue-3-overlay-ui-audio-wrapper.md's `PlayAmbientSfx`
      * entry. Same fix: bypass the parameter read with a literal
      * inline-asm anchor reproducing the ROM's exact instruction pair. */
     u32 direction;

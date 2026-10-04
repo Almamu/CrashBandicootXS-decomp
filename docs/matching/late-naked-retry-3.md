@@ -2,7 +2,7 @@
 
 This pass retried six drafts outside the #4/#9 zones: `sub_8014B54`
 (#17), `sub_800BD48` (#10), `sub_80352AC` (#64), `sub_803686C` (#65),
-and the GAX functions `sub_8038538` (#67) and `sub_8039B44` (#68). Two
+and the GAX functions `GAX2_init` (#67) and `GaxChannelMix` (#68). Two
 closed, both with one new technique. Issues #10 and #17 have no NAKED
 functions left.
 
@@ -54,8 +54,8 @@ shifts.
 |---|---|---|---|
 | `sub_80352AC` (#64) | 114 hw, 4 bytes long | 114 (unchanged draft) | GCSE's PRE still hoists `slot << 5` to the y loop's pre-test, next to `slot + 1` and `i + 1`, and spills it. A `"+r"` escape on `slot` after the palette `LoadTaggedAsset` stops the hoist (right size, 82 hw) but also stops `slot + 1` being hoisted, and puts `slot` in r9. A `"+r"` copy of `slot` used only for the palette address gets its copy hoisted instead (424 bytes). An `r0` register variable for `slot << 5` changes nothing, because expand computes it in a pseudo first. `gcse.c` only enters sets of pseudos in its table (`hash_scan_set`), so the ROM's `slot << 5` probably isn't a plain pseudo set at that point. The source form that does this wasn't found. |
 | `sub_803686C` (#65) | 329 hw | 329 (unchanged draft) | New finding: six or more bare `asm("")` statements in the row-copy loop body push `insn_count` past loop.c's `threshold * savings * lifetime` limit, so the 0x100 step stays in the loop as in the ROM (327 hw, 1152 bytes). But `buf + 0x60` is still not reduced to its own giv, and the self/`i` register roles are still swapped. A per-row `d = buf + 0x60` local with padding before and after it, and a `d + 0x7a0` second destination, did not reduce it either (about 100 variants). |
-| `sub_8038538` (#67, GAX) | ~294 hw | not retried | Too far from the ROM for this pass (register choice after `field_1c`, the tap scans, the constant order before the copy loops, the tail). |
-| `sub_8039B44` (#68, GAX) | ~202 hw | not retried | Same: `self`/`info`/`flag` land in r5/r7/r9 instead of r6/r4/r5, and that difference spreads through the function. The hard-register hold can't fix it, since the three values are live for the whole function. |
+| `GAX2_init` (#67, GAX) | ~294 hw | not retried | Too far from the ROM for this pass (register choice after `field_1c`, the tap scans, the constant order before the copy loops, the tail). |
+| `GaxChannelMix` (#68, GAX) | ~202 hw | not retried | Same: `self`/`info`/`flag` land in r5/r7/r9 instead of r6/r4/r5, and that difference spreads through the function. The hard-register hold can't fix it, since the three values are live for the whole function. |
 
 Helper scripts (not committed) are in the scratchpad's `late3/`: `d.py`
 (one-function diff against the ROM, with a register-normalized count),

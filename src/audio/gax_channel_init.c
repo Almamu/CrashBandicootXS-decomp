@@ -1,17 +1,17 @@
 #include "core.h"
 #include "audio.h"
 
-extern struct GaxPlayerState *gUnknown_03001630;
+extern struct GaxPlayerState *gGaxPlayerState;
 
 /* Resets a per-channel voice object to its default state (clears the
  * accumulator/instrument-pointer fields, arms the `0x8AD0` "no note"
  * sentinel envelope, sets a default "unmuted" priority (`0xff`) and
  * portamento speed (`-1`, i.e. "off")), then picks a starting value for
- * `+0x52` from a single flag byte at `gUnknown_03001630`'s own `+0x42`
+ * `+0x52` from a single flag byte at `gGaxPlayerState`'s own `+0x42`
  * (two settings, 1 or 2) whose meaning isn't confirmed yet. Voice object
  * shape not modeled - same situation as the neighboring channel
  * functions in this file's ROM region. */
-void sub_803A104(void *self)
+void GaxFxChannelInit(void *self)
 {
     u8 *p = self;
     u32 zeroA = 0;
@@ -38,7 +38,7 @@ void sub_803A104(void *self)
     *(u8 *)(p + 0x24) = zeroB;
     *(u8 *)(p + 0x25) = zeroB;
     *(u32 *)(p + 0x4c) = 0x80000000;
-    b = *((u8 *)gUnknown_03001630 + 0x42);
+    b = *((u8 *)gGaxPlayerState + 0x42);
     {
         u32 v = 1;
         if (b != 0) {

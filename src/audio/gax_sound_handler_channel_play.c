@@ -6,52 +6,52 @@
 asm(".set _call_via_r3, sub_803AD84\n"
     ".set __divsi3, sub_803ADB4\n");
 
-extern void sub_8039818(struct GaxChannelState *self, u32 note);
-extern void sub_803985C(struct GaxChannelState *self, struct GaxInfoHandler *info, u32 instrument,
+extern void GaxChannelSetNote(struct GaxChannelState *self, u32 note);
+extern void GaxChannelSetInstrument(struct GaxChannelState *self, struct GaxInfoHandler *info, u32 instrument,
                         struct GaxSongData *song);
-extern void sub_80398DC(struct GaxChannelState *self, struct GaxInfoHandler *info);
-extern void sub_8039AA4(struct GaxChannelState *self, struct GaxInfoHandler *info);
-extern u32 sub_8039B44(struct GaxChannelState *self, struct GaxInfoHandler *info, void *buf, u32 arg,
+extern void GaxChannelStepInstrumentSeq(struct GaxChannelState *self, struct GaxInfoHandler *info);
+extern void GaxChannelTick(struct GaxChannelState *self, struct GaxInfoHandler *info);
+extern u32 GaxChannelMix(struct GaxChannelState *self, struct GaxInfoHandler *info, void *buf, u32 arg,
                        struct GaxSongData *song, u32 flag);
 
-void sub_8039658(struct GaxChannelState *self, struct GaxInfoHandler *info, u8 retrigger);
+void GaxChannelDecodeRow(struct GaxChannelState *self, struct GaxInfoHandler *info, u8 retrigger);
 
 /* GAX2_SoundHandler "Channel" type's play_fn (ROM 0x080395A5, see
  * docs/audio.md's per-type function-pointer table). Runs the shared
  * Info handler (`children[0]`) first, then - on a new row - decodes
- * this channel's next pattern row (`sub_8039658`, also re-fired with
+ * this channel's next pattern row (`GaxChannelDecodeRow`, also re-fired with
  * `retrigger` once an E-Dx note delay runs out), ticks the note-cut
- * countdown (`sub_80398DC`), the envelope/portamento
- * (`sub_8039AA4`), and finally mixes the channel (`sub_8039B44`)
+ * countdown (`GaxChannelStepInstrumentSeq`), the envelope/portamento
+ * (`GaxChannelTick`), and finally mixes the channel (`GaxChannelMix`)
  * unless it's disabled (`field_0c`).
  *
  * Both functions in this file were NAKED ("parameter-homing order",
  * "r8/sb allocation ceiling"); written plainly against the handler
  * structs in include/audio.h they match outright - see
  * docs/matching/gax-toolchain-retry.md. */
-u8 sub_80395A4(struct GaxChannelState *self, void *buf, u32 arg)
+u8 GaxChannelPlay(struct GaxChannelState *self, void *buf, u32 arg)
 {
     struct GaxInfoHandler *info = (struct GaxInfoHandler *)self->children[0];
 
     info->type->play(info, buf, arg);
     if (info->field_1b != 0)
         self->instrument = NULL;
-    if (info->field_1a != 0) {
+    if (info->playing != 0) {
         if (self->retriggerDelay != 0 && --self->retriggerDelay == 0)
-            sub_8039658(self, info, 1);
-        if (info->speed != 0 && info->field_1d != 0)
-            sub_8039658(self, info, 0);
+            GaxChannelDecodeRow(self, info, 1);
+        if (info->speed != 0 && info->newRow != 0)
+            GaxChannelDecodeRow(self, info, 0);
     }
     if (self->instrument != NULL && self->cutTimer == 0) {
         if (self->cutDelay != 0) {
-            sub_80398DC(self, info);
+            GaxChannelStepInstrumentSeq(self, info);
             self->cutTimer = self->cutDelay - 1;
         }
     } else {
         self->cutTimer--;
     }
-    sub_8039AA4(self, info);
-    return self->field_0c == 0 ? (u8)sub_8039B44(self, info, buf, arg, info->type->data.song, 0) : 0;
+    GaxChannelTick(self, info);
+    return self->field_0c == 0 ? (u8)GaxChannelMix(self, info, buf, arg, info->type->data.song, 0) : 0;
 }
 
 /* Decodes one row of this channel's packed pattern stream and applies
@@ -61,10 +61,10 @@ u8 sub_80395A4(struct GaxChannelState *self, void *buf, u32 arg)
  * command/parameter record. An E-Dx effect (`cmd 14`, parameter `0xDx`)
  * only stores the note/instrument and arms `retriggerDelay` - the
  * caller re-enters with `retrigger` set once it runs out, replaying
- * them. Otherwise the note is started (`sub_8039818`, except for
- * tone-portamento `cmd 3`), the instrument bound (`sub_803985C`), and
+ * them. Otherwise the note is started (`GaxChannelSetNote`, except for
+ * tone-portamento `cmd 3`), the instrument bound (`GaxChannelSetInstrument`), and
  * the effect command applied. */
-void sub_8039658(struct GaxChannelState *self, struct GaxInfoHandler *info, u8 retrigger)
+void GaxChannelDecodeRow(struct GaxChannelState *self, struct GaxInfoHandler *info, u8 retrigger)
 {
     u32 note, instrument, cmd, param;
     u8 *p, *next;
@@ -133,8 +133,8 @@ void sub_8039658(struct GaxChannelState *self, struct GaxInfoHandler *info, u8 r
     }
 
     if (cmd != 3)
-        sub_8039818(self, note);
-    sub_803985C(self, info, instrument, info->type->data.song);
+        GaxChannelSetNote(self, note);
+    GaxChannelSetInstrument(self, info, instrument, info->type->data.song);
     switch (cmd) {
     case 1:
         self->pitchStep = param;
@@ -162,7 +162,7 @@ void sub_8039658(struct GaxChannelState *self, struct GaxInfoHandler *info, u8 r
         self->vol15 = param;
         break;
     case 13:
-        info->field_22 = 1;
+        info->patternBreak = 1;
         info->field_24 = param;
         break;
     case 15:

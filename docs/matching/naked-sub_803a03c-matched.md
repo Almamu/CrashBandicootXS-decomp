@@ -1,6 +1,6 @@
-# `sub_803A03C` progress: 81.3% instruction match, still NAKED
+# `GaxChannelTickSweep` progress: 81.3% instruction match, still NAKED
 
-`sub_803A03C` (`src/audio/gax_channel_pos_sweep.c`, per-tick ping-pong
+`GaxChannelTickSweep` (`src/audio/gax_channel_pos_sweep.c`, per-tick ping-pong
 position sweep) is still a byte-correct NAKED asm transcription for the
 default build - see
 [issue-68-0x08039818-audio.md](./issue-68-0x08039818-audio.md) for the
@@ -31,7 +31,7 @@ byte-exact match:
   extra `lsl/lsr` truncation pair before the store that ROM doesn't
   have).
 - **The `self+0x13` OR-with-0xff idiom and the `r8` pin**: identical
-  techniques to `sub_8039AA4` (`docs/matching/naked-sub_8039aa4-matched.md`)
+  techniques to `GaxChannelTick` (`docs/matching/naked-sub_8039aa4-matched.md`)
   - `register s32 zero8 asm("r8") = 0xff;` set once early, and
     `s[0x13] = (u8)(zero8 | oldDir);` instead of a bare `= 0xff`, which
     this compiler would otherwise constant-fold away.
@@ -147,7 +147,7 @@ The `#if NON_MATCHING` reconstruction: `rm -rf build && make
 NON_MATCHING=1 report` succeeds (including the `arm-none-eabi-as`
 assemble step); instruction match against
 `build/expected/units/raw_0803A03C_target.o` via `objdiff-cli diff`
-sits at 81.3% for `sub_803A03C`.
+sits at 81.3% for `GaxChannelTickSweep`.
 
 The default (NAKED) build: full clean `rm -rf build
 crashbandicootxs.elf crashbandicootxs.gba crashbandicootxs.map && make
@@ -157,4 +157,4 @@ before this investigation; `tools/report_units.py`'s entry for
 
 ## Later pass: GAX toolchain retry
 
-Closed: written plainly against the instrument-row struct, `sub_803A03C` matches outright. See [gax-toolchain-retry.md](./gax-toolchain-retry.md).
+Closed: written plainly against the instrument-row struct, `GaxChannelTickSweep` matches outright. See [gax-toolchain-retry.md](./gax-toolchain-retry.md).

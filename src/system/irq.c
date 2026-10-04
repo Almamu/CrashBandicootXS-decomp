@@ -162,8 +162,8 @@ void sub_80006F8(u32 arg0)
     gUnknown_030007DC = 1;
 }
 
-extern u8 gUnknown_030007DD;
-extern void sub_8038B68(void);
+extern u8 gGaxIrqEnabled;
+extern void GAX_irq(void);
 extern void sub_803AD78(void);
 
 void sub_8000720(void)
@@ -171,8 +171,8 @@ void sub_8000720(void)
     s32 *p;
     s32 i;
 
-    if (gUnknown_030007DD != 0) {
-        sub_8038B68();
+    if (gGaxIrqEnabled != 0) {
+        GAX_irq();
     }
     p = gUnknown_03000A60.unknown;
     i = 7;

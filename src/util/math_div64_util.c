@@ -27,7 +27,7 @@
  *
  * `sub_8037648` (`__divdi3`) is UNUSED - nothing in the ROM calls it;
  * it rode along with the GAX2 library. `sub_8037A7C` is called from
- * `sub_8039518`. */
+ * `GaxChannelInit`. */
 
 typedef unsigned int USItype;
 typedef int SItype;
