@@ -119,8 +119,8 @@ void sub_801F170(u32 arg0, u32 arg1, u32 arg2, u32 arg3)
     register s32 oneR8 asm("r8");
     void *p2;
     void *p3;
-    register void *hdr asm("r6");
-    u8 *table;
+    register struct popup_hdr *hdr asm("r6");
+    struct popup_vtable *table;
 
   {
     register s32 idx asm("r5");
@@ -160,14 +160,14 @@ void sub_801F170(u32 arg0, u32 arg1, u32 arg2, u32 arg3)
     sub_8026EDC(0x8c);
 
     hdr = sub_800CA74();
-    table = *(u8 **)((u8 *)hdr + 0xc);
-    sub_803AD80((u8 *)hdr + *(s16 *)(table + 0x18), part, *(void **)(table + 0x1c));
+    table = hdr->vtable;
+    sub_803AD80((u8 *)hdr + table->attach.thisOffset, part, table->attach.fn);
     {
         register s32 tagVal asm("r0") = 0xa;
-        *(s32 *)((u8 *)hdr + 0x6c) = tagVal;
+        hdr->tag = tagVal;
     }
-    *(void **)((u8 *)part + 0x44) = hdr;
-    table = *(u8 **)((u8 *)hdr + 0xc);
+    part->hdr = hdr;
+    table = hdr->vtable;
     {
         /* A bare `register s32 off asm("r3") = 0x18;` pin is silently
          * ignored by this compiler for a simple constant initializer

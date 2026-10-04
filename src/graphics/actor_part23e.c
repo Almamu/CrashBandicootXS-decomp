@@ -110,5 +110,5 @@ void sub_8031040(s32 kind, s32 x, s32 y, s32 z)
     REG_DISPCNT |= 0x400;
     sub_80312C4();
     gUnknown_03001578 = 0;
-    QueueVramDmaTransfer(gStaticData_0817C378, (void *)0x05000020, 0x20, 0x10);
+    QueueVramDmaTransfer(gStaticData_0817C378, (void *)(BG_PLTT + 0x20), 0x20, 0x10);
 }

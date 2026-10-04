@@ -74,7 +74,7 @@ static inline void InitIconManager(struct icon_manager *self)
     self->field_118 = 0;
     self->field_12c = 0;
     zero = 0;
-    sub_803A94C(&zero, self, 0x05000002);
+    sub_803A94C(&zero, self, CPU_SET_32BIT | CPU_SET_SRC_FIXED | 2);
 }
 
 /* Constructs the "A" widget: 9-pixel lines, 4-pixel spaces, glyph

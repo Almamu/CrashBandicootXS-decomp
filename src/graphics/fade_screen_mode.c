@@ -12,7 +12,7 @@ extern void sub_80006A8(void);
 extern u16 gUnknown_03000A80[512];
 extern u16 gUnknown_03000E80[512];
 
-/* Backs the real palette (0x05000000) up into `gUnknown_03000A80`,
+/* Backs the real palette (`PLTT`) up into `gUnknown_03000A80`,
  * then, for each factor 0/2/4/.../16, blends it toward black via the
  * already-matched `sub_80013FC` into `gUnknown_03000E80` and DMAs
  * that result into the real palette, waiting one VBlank between each
@@ -48,7 +48,7 @@ void sub_80014A4(void)
     register u32 cntVal asm("r2");
 
     dma = (struct dma_regs *)REG_ADDR_DMA3SAD;
-    dma->src = 0x05000000;
+    dma->src = PLTT;
     dma->dst = (u32)gUnknown_03000A80;
     dma->cnt = 0x80000200;
     val = dma->cnt;

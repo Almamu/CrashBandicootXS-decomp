@@ -1,26 +1,39 @@
 #include "core.h"
+#include "level_state.h"
 
 /* A small 3-slot icon "blink" animation timer, shared with `sub_8028568`/
  * `sub_802856C` (src/system/game_loop.c, still raw asm here) via the
  * `gUnknown_03001318` instance - each slot is a `{state, timer}` s32
  * pair: state 0 idle, 1 counting up to a threshold then -> 2, 2 counting
  * down 0x14 frames then -> 3, 3 counting down its own timer then back to
- * 0. Kept as raw offsets (matching the existing `void *state` convention
- * already used for `gUnknown_03001318` in src/system/game_loop.c/
- * game_loop2.c) rather than a named struct, since the object extends
- * past this file's own fields (at least to +0x28, per `sub_8028568`). */
+ * 0. Slot 0 blinks with the lives counter and slot 1 with the wumpa
+ * counter (`sub_8023430`); slot 2 is triggered whenever the level
+ * state's `unk_70` counter advances (`sub_8022FEC`). `unk_28` receives
+ * the level state's `unk_bc` target (`sub_8022BF0`). */
+struct blink_slot
+{
+    s32 state;
+    s32 timer;
+};
 
-extern void *gUnknown_030012C0;
+struct hud_blink
+{
+    struct blink_slot slots[3];     // 0x00
+    u8 unk_18[0x10];
+    s32 unk_28;                     // 0x28
+};
+
+extern struct level_state *gUnknown_030012C0;
 
 extern void sub_8028520(void *self, s32 *state, s32 *timer, s32 threshold);
 
-/* Per-frame tick, gated on the central state object's `+0x8c` flag:
+/* Per-frame tick, gated on the level state's `timeTrial` flag:
  * force-advances slots 0 and 1 out of a stuck 1/2 state (state 1 -> 3
  * directly; state 2 -> 3, refreshing its timer to 0x14 first), then
  * runs the generic `sub_8028520` advance on all three slots
- * unconditionally. Slot 2 (self+0x10/+0x14) doesn't get the manual
- * force-advance the other two do - reproduced as-is. */
-void sub_8028400(void *state)
+ * unconditionally. Slot 2 doesn't get the manual force-advance the
+ * other two do - reproduced as-is. */
+void sub_8028400(struct hud_blink *state)
 {
     /* Pointer arithmetic is kept inline (not cached into locals) at each
      * use site, matching the ROM's own redundant recomputation - a
@@ -32,10 +45,10 @@ void sub_8028400(void *state)
      * comment) to reproduce the ROM's exact compare chain - a plain
      * `if (v==1) {...} else if (v==2) {...}` collapses that redundant
      * middle branch away. */
-    if (*(u8 *)((u8 *)gUnknown_030012C0 + 0x8c) != 0) {
+    if (gUnknown_030012C0->timeTrial != 0) {
         s32 v;
 
-        v = *(s32 *)state;
+        v = state->slots[0].state;
         if (v == 1) {
             goto set0;
         }
@@ -45,12 +58,12 @@ void sub_8028400(void *state)
         if (v != 2) {
             goto skip0;
         }
-        *(s32 *)((u8 *)state + 4) = 0x14;
+        state->slots[0].timer = 0x14;
     set0:
-        *(s32 *)state = 3;
+        state->slots[0].state = 3;
     skip0:
 
-        v = *(s32 *)((u8 *)state + 8);
+        v = state->slots[1].state;
         if (v == 1) {
             goto set1;
         }
@@ -60,72 +73,72 @@ void sub_8028400(void *state)
         if (v != 2) {
             goto skip1;
         }
-        *(s32 *)((u8 *)state + 0xc) = 0x14;
+        state->slots[1].timer = 0x14;
     set1:
-        *(s32 *)((u8 *)state + 8) = 3;
+        state->slots[1].state = 3;
     skip1:
         ;
     }
 
-    sub_8028520(state, (s32 *)((u8 *)state + 0x10), (s32 *)((u8 *)state + 0x14), 0x78);
-    sub_8028520(state, (s32 *)state, (s32 *)((u8 *)state + 4), 0x78);
-    sub_8028520(state, (s32 *)((u8 *)state + 8), (s32 *)((u8 *)state + 0xc), 0x78);
+    sub_8028520(state, &state->slots[2].state, &state->slots[2].timer, 0x78);
+    sub_8028520(state, &state->slots[0].state, &state->slots[0].timer, 0x78);
+    sub_8028520(state, &state->slots[1].state, &state->slots[1].timer, 0x78);
 }
 
-/* Trigger for slot 2 (self+0x10/+0x14): only runs while the central
- * state object's `+0x8c` flag is clear. Idle (0) or finished (3) starts
+/* Trigger for slot 2: only runs while the level state's `timeTrial`
+ * flag is clear. Idle (0) or finished (3) starts
  * a fresh blink (state -> 1); already counting down the "on" phase (2)
  * instead just refreshes its timer back to the full 0x78-frame hold.
  * Already counting up (1) is left alone. */
-void sub_8028474(void *state)
+void sub_8028474(struct hud_blink *state)
 {
     s32 slotState;
 
-    if (*(u8 *)((u8 *)gUnknown_030012C0 + 0x8c) == 0) {
-        slotState = *(s32 *)((u8 *)state + 0x10);
+    if (gUnknown_030012C0->timeTrial == 0) {
+        slotState = state->slots[2].state;
 
         if (slotState == 0 || slotState == 3) {
-            *(s32 *)((u8 *)state + 0x10) = 1;
+            state->slots[2].state = 1;
         } else if (slotState == 2) {
-            *(s32 *)((u8 *)state + 0x14) = 0x78;
+            state->slots[2].timer = 0x78;
         }
     }
 }
 
-/* Same trigger as `sub_8028474`, for slot 0 (self+0/+4). */
-void sub_80284A4(void *state)
+/* Same trigger as `sub_8028474`, for slot 0. */
+void sub_80284A4(struct hud_blink *state)
 {
     s32 slotState;
 
-    if (*(u8 *)((u8 *)gUnknown_030012C0 + 0x8c) == 0) {
-        slotState = *(s32 *)state;
+    if (gUnknown_030012C0->timeTrial == 0) {
+        slotState = state->slots[0].state;
 
         if (slotState == 0 || slotState == 3) {
-            *(s32 *)state = 1;
+            state->slots[0].state = 1;
         } else if (slotState == 2) {
-            *(s32 *)((u8 *)state + 4) = 0x78;
+            state->slots[0].timer = 0x78;
         }
     }
 }
 
-/* Same trigger as `sub_8028474`, for slot 1 (self+8/+0xc). */
-void sub_80284D4(void *state)
+/* Same trigger as `sub_8028474`, for slot 1. */
+void sub_80284D4(struct hud_blink *state)
 {
     s32 slotState;
 
-    if (*(u8 *)((u8 *)gUnknown_030012C0 + 0x8c) == 0) {
-        slotState = *(s32 *)((u8 *)state + 8);
+    if (gUnknown_030012C0->timeTrial == 0) {
+        slotState = state->slots[1].state;
 
         if (slotState == 0 || slotState == 3) {
-            *(s32 *)((u8 *)state + 8) = 1;
+            state->slots[1].state = 1;
         } else if (slotState == 2) {
-            *(s32 *)((u8 *)state + 0xc) = 0x78;
+            state->slots[1].timer = 0x78;
         }
     }
 }
 
 /* Fires all three slots' triggers at once. */
-void sub_8028504(void *state)
+void sub_8028504(struct hud_blink *state)
 {
     sub_8028474(state);
     sub_80284A4(state);
@@ -170,16 +183,14 @@ void sub_8028520(void *self, s32 *state, s32 *timer, s32 threshold)
     }
 }
 
-/* Setter/increment pair for the same central state object's `+0x28`
- * field (see the file doc comment above) - GitHub issue #46. Neither
- * has a confirmed name for the field yet (no other reader of it has
- * been matched in this chunk), so it stays a raw offset. */
-void sub_8028568(void *state, s32 val)
+/* Setter/increment pair for `unk_28` (see the file doc comment
+ * above) - GitHub issue #46. */
+void sub_8028568(struct hud_blink *state, s32 val)
 {
-    *(s32 *)((u8 *)state + 0x28) = val;
+    state->unk_28 = val;
 }
 
-void sub_802856C(void *state)
+void sub_802856C(struct hud_blink *state)
 {
-    *(s32 *)((u8 *)state + 0x28) += 1;
+    state->unk_28 += 1;
 }
