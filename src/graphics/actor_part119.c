@@ -28,7 +28,7 @@
 #include "part_ctrl.h"
 
 extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
-extern void *gUnknown_030012BC;
+extern void *gAudioContext;
 
 /* Real C (issue #9-#11 NAKED retry): the only gap in the old draft was
  * the post-call `target->y = baseY` store - `baseY` pinned to r1 gives the
@@ -64,12 +64,12 @@ void sub_800C244(struct part_ctrl *self)
         case 0:
             sub_800C8BC(self, 3);
             sub_800C8AC(self, 3);
-            PlaySfx(gUnknown_030012BC, 0x14, 0x100);
+            PlaySfx(gAudioContext, 0x14, 0x100);
             break;
         case 1:
             sub_800C8BC(self, 0);
             sub_800C8AC(self, 3);
-            PlaySfx(gUnknown_030012BC, 0x14, 0x100);
+            PlaySfx(gAudioContext, 0x14, 0x100);
             break;
         }
     }

@@ -13,7 +13,7 @@ struct aabb {
 };
 
 /* Set-size primitive - already referenced by name from several other
- * files (actor_part.c/actor_part2.c/oam_count.c's sub_8006600) as the
+ * files (actor_part.c/actor_part2.c/oam_count.c's DrawPowerDialog) as the
  * shared `sub_803AFE4`(set-position)/`sub_803AFDC`(set-size) pair. */
 void sub_803AFDC(struct aabb *dest, s32 w, s32 h)
 {
@@ -38,17 +38,17 @@ s32 sub_803AFEC(struct level_state *self)
     return self->lives;
 }
 
-extern u8 gStaticData_087E4D1C[];
-extern u8 gStaticData_087E4D64[];
-extern u8 gStaticData_087E4DAC[];
+extern u8 gLargeFontVtable[];
+extern u8 gSmallFontVtable[];
+extern u8 gFontVtable[];
 extern void sub_8026ED0(void *self);
 
-/* Both sub_803AFF0/sub_803B024 below are per-type descriptor
+/* Both DestroyLargeFont/DestroySmallFont below are per-type descriptor
  * constructors - the same "set one field of a passed-in struct to a
  * ROM data pointer, then conditionally call sub_8026ED0 based on a bit
  * in the second argument" shape documented at length in docs/rom_map.md
  * for the ~93-entry gStaticData_087E3BEC-family table (these three
- * entries - gStaticData_087E4D1C/4D64/4DAC, each 0x48 bytes - are
+ * entries - gLargeFontVtable/4D64/4DAC, each 0x48 bytes - are
  * further members of that same family). Unusually, each writes to
  * `self+0x130` TWICE in a row with two DIFFERENT table pointers, the
  * second immediately clobbering the first - a genuinely dead first
@@ -61,28 +61,28 @@ extern void sub_8026ED0(void *self);
  * decompilation") - plain double `struct` field assignment collapses
  * to a single store no matter how it's phrased, tried first and
  * confirmed to regress before reaching for inline asm. */
-void sub_803AFF0(void *self, u32 flags)
+void DestroyLargeFont(void *self, u32 flags)
 {
     void **addr;
 
     asm volatile("mov r0, #0x98\n\tlsl r0, r0, #1\n\tadd %0, %1, r0" : "=r"(addr) : "r"(self) : "r0");
-    *addr = gStaticData_087E4D1C;
+    *addr = gLargeFontVtable;
     asm volatile("mov r0, #0x98\n\tlsl r0, r0, #1\n\tadd %0, %1, r0" : "=r"(addr) : "r"(self) : "r0");
-    *addr = gStaticData_087E4DAC;
+    *addr = gFontVtable;
     if (flags & 1) {
         sub_8026ED0(self);
     }
 }
 
-/* Same shape as sub_803AFF0 above, different first table pointer. */
-void sub_803B024(void *self, u32 flags)
+/* Same shape as DestroyLargeFont above, different first table pointer. */
+void DestroySmallFont(void *self, u32 flags)
 {
     void **addr;
 
     asm volatile("mov r0, #0x98\n\tlsl r0, r0, #1\n\tadd %0, %1, r0" : "=r"(addr) : "r"(self) : "r0");
-    *addr = gStaticData_087E4D64;
+    *addr = gSmallFontVtable;
     asm volatile("mov r0, #0x98\n\tlsl r0, r0, #1\n\tadd %0, %1, r0" : "=r"(addr) : "r"(self) : "r0");
-    *addr = gStaticData_087E4DAC;
+    *addr = gFontVtable;
     if (flags & 1) {
         sub_8026ED0(self);
     }

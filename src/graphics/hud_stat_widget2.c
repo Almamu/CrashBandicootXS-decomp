@@ -20,10 +20,10 @@ struct hud_pos
     s32 y;
 };
 
-extern s32 gUnknown_0300086C;
+extern s32 gHudSlideOffset;
 extern void *gLevelState;
-extern struct hud_pos gStaticData_08174C6C[];
-extern void sub_80270E0(struct hud_digit_part *part, s32 x, s32 y);
+extern struct hud_pos gHudPartPositions[];
+extern void DrawHudPart(struct hud_digit_part *part, s32 x, s32 y);
 extern s32 sub_8023378(void *state);
 extern s32 GetClockMinutes(void *state);
 extern s32 GetClockSeconds(void *state);
@@ -53,19 +53,19 @@ void sub_802757C(struct hud_counter *self)
     struct hud_digit_part *part;
     s32 count;
 
-    gUnknown_0300086C = 0;
-    SetPartPos(gStaticData_08174C6C[22].x, gStaticData_08174C6C[22].y, (part = &self->parts[22]));
+    gHudSlideOffset = 0;
+    SetPartPos(gHudPartPositions[22].x, gHudPartPositions[22].y, (part = &self->parts[22]));
     CLAMP_FRAME(part, self->parts[22].anim_index, 0);
-    sub_80270E0(part, 0, 0);
+    DrawHudPart(part, 0, 0);
 
     count = sub_8023378(gLevelState);
     if (count > 0)
     {
         struct hud_digit_part *second = &self->parts[23];
 
-        SetPartPos(gStaticData_08174C6C[23].x, gStaticData_08174C6C[23].y, second);
+        SetPartPos(gHudPartPositions[23].x, gHudPartPositions[23].y, second);
         CLAMP_FRAME(second, self->parts[23].anim_index, count - 1);
-        sub_80270E0(second, 0, 0);
+        DrawHudPart(second, 0, 0);
     }
 }
 
@@ -77,54 +77,54 @@ void sub_802757C(struct hud_counter *self)
  * at all - slot 20 gets the raw value as its desired frame, slot 21
  * always gets a fixed desired frame of 0 (a single-frame icon, not a
  * digit). All six slots get redrawn unconditionally afterward via
- * `sub_80270E0` - slot 21 appears twice in that list, matching the ROM
+ * `DrawHudPart` - slot 21 appears twice in that list, matching the ROM
  * exactly. Old_agbcc, like `sub_802757C`; `CLAMP_FRAME` binds the
  * part pointer before the frame value, which is the order the ROM
  * computes them in. */
-void sub_802763C(struct hud_counter *self)
+void UpdateHudClock(struct hud_counter *self)
 {
     struct hud_digit_part *parts;
 
-    gUnknown_0300086C = 0;
-    if (self->sync_value_a != GetClockMinutes(gLevelState))
+    gHudSlideOffset = 0;
+    if (self->shownMinutes != GetClockMinutes(gLevelState))
     {
         s32 f;
 
-        self->sync_value_a = GetClockMinutes(gLevelState);
-        f = __udivsi3(self->sync_value_a, 10);
+        self->shownMinutes = GetClockMinutes(gLevelState);
+        f = __udivsi3(self->shownMinutes, 10);
         parts = self->parts;
         CLAMP_FRAME(&parts[14], parts[14].anim_index, f);
-        f = __umodsi3(self->sync_value_a, 10);
+        f = __umodsi3(self->shownMinutes, 10);
         CLAMP_FRAME(&parts[15], parts[15].anim_index, f);
     }
-    if (self->sync_value_b != GetClockSeconds(gLevelState))
+    if (self->shownSeconds != GetClockSeconds(gLevelState))
     {
         s32 f;
 
-        self->sync_value_b = GetClockSeconds(gLevelState);
-        f = __udivsi3(self->sync_value_b, 10);
+        self->shownSeconds = GetClockSeconds(gLevelState);
+        f = __udivsi3(self->shownSeconds, 10);
         parts = self->parts;
         CLAMP_FRAME(&parts[17], parts[17].anim_index, f);
-        f = __umodsi3(self->sync_value_b, 10);
+        f = __umodsi3(self->shownSeconds, 10);
         CLAMP_FRAME(&parts[18], parts[18].anim_index, f);
     }
-    if (self->sync_value_c != GetClockTenths(gLevelState))
+    if (self->shownTenths != GetClockTenths(gLevelState))
     {
         s32 f;
 
-        self->sync_value_c = f = GetClockTenths(gLevelState);
+        self->shownTenths = f = GetClockTenths(gLevelState);
         parts = self->parts;
         CLAMP_FRAME(&parts[20], parts[20].anim_index, f);
         CLAMP_FRAME(&parts[21], parts[21].anim_index, 0);
     }
-    sub_80270E0(&self->parts[14], 0, 0);
-    sub_80270E0(&self->parts[15], 0, 0);
-    sub_80270E0(&self->parts[17], 0, 0);
-    sub_80270E0(&self->parts[18], 0, 0);
-    sub_80270E0(&self->parts[20], 0, 0);
-    sub_80270E0(&self->parts[21], 0, 0);
-    sub_80270E0(&self->parts[16], 0, 0);
-    sub_80270E0(&self->parts[19], 0, 0);
-    sub_80270E0(&self->parts[21], 0, 0);
+    DrawHudPart(&self->parts[14], 0, 0);
+    DrawHudPart(&self->parts[15], 0, 0);
+    DrawHudPart(&self->parts[17], 0, 0);
+    DrawHudPart(&self->parts[18], 0, 0);
+    DrawHudPart(&self->parts[20], 0, 0);
+    DrawHudPart(&self->parts[21], 0, 0);
+    DrawHudPart(&self->parts[16], 0, 0);
+    DrawHudPart(&self->parts[19], 0, 0);
+    DrawHudPart(&self->parts[21], 0, 0);
 }
 asm(".align 2, 0");

@@ -5,20 +5,20 @@
  * sections by ldscript.txt - see docs/data.md.
  */
 
-extern const u8 gStaticData_0817E6D8[];
-extern const u8 gStaticData_0817E6E0[];
-extern const u8 gStaticData_0817E6EC[];
-extern const u8 gStaticData_0817E6F4[];
-extern const u8 gStaticData_0817E6FC[];
-extern const u8 gStaticData_0817E708[];
+extern const u8 gLanguageNameEnglish[];
+extern const u8 gLanguageNameFrench[];
+extern const u8 gLanguageNameGerman[];
+extern const u8 gLanguageNameSpanish[];
+extern const u8 gLanguageNameItalian[];
+extern const u8 gLanguageNameDutch[];
 
-/* The six language names the counter selector draws (sub_80372BC,
+/* The six language names the language menu draws (DrawLanguageSelect,
  * counter_selector_icons.c), in countdown_17d7a4.c. */
-const u8 *const gStaticData_0817E714[6] = {
-    gStaticData_0817E6D8,
-    gStaticData_0817E6E0,
-    gStaticData_0817E6EC,
-    gStaticData_0817E6F4,
-    gStaticData_0817E6FC,
-    gStaticData_0817E708,
+const u8 *const gLanguageNames[6] = {
+    gLanguageNameEnglish,
+    gLanguageNameFrench,
+    gLanguageNameGerman,
+    gLanguageNameSpanish,
+    gLanguageNameItalian,
+    gLanguageNameDutch,
 };

@@ -65,7 +65,7 @@
 
 extern void *gUnknown_030012D8;
 extern void *gUnknown_030012CC;
-extern void *gUnknown_030012BC;
+extern void *gAudioContext;
 
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void sub_8007A84(void *self, void *part);
@@ -266,7 +266,7 @@ void sub_8011388(void *selfArg, u8 val)
  * *primary* AABB (`sub_8007C30`) and tests it against `self`'s own via
  * `sub_8001688`; on overlap, sets flags bit 3, tail-calls
  * `sub_8011448(self, 1)`, and plays a hit SFX
- * (`PlaySfx(gUnknown_030012BC, 6, 0x80)`). Otherwise builds the
+ * (`PlaySfx(gAudioContext, 6, 0x80)`). Otherwise builds the
  * player's *secondary* AABB (`sub_8007B98`, the same helper used for
  * `self`'s own box) and tests it the same way; on overlap, sets flags
  * bit 3 and tail-calls `sub_8011448(self, 0)` (no SFX on this path). */
@@ -306,7 +306,7 @@ void sub_8011390(void *selfArg)
             bit |= self[0xc];
             self[0xc] = bit;
             sub_8011448(self, 1);
-            PlaySfx(gUnknown_030012BC, 6, 0x80);
+            PlaySfx(gAudioContext, 6, 0x80);
         }
     } else {
         sub_8007B98(playerBox, player);

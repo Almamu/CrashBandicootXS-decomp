@@ -151,7 +151,7 @@ eventual return value) and, per Gap 2, `err`/`diff` were pinned to
 `limit` and picked `r7` on its own - exactly matching the ROM. This is
 the same "starve the allocator of alternatives and let it find `r7`
 naturally" pattern already documented extensively in `docs/matching.md`
-(e.g. the `itoa`/`len` case, and the `sub_8006600` "raises the
+(e.g. the `itoa`/`len` case, and the `DrawPowerDialog` "raises the
 register pressure enough that gcc's own allocator reaches for r7"
 finding) and in `matching_decomp_register_pinning` memory point 10.
 **`r7` itself is never pinned explicitly anywhere in this function** -

@@ -18,7 +18,7 @@ most of the work was loop shape:
   is gcc's `expand_end_loop` rotation: it moves everything from the loop
   top down to the last exit jump (within 30 insns of the first one) to
   the bottom and jumps to it. For the level loop, the moved part ends
-  with `if (sub_8034CB0()) ResetLives(self); else break;`. The part
+  with `if (RunContinuePrompt()) ResetLives(self); else break;`. The part
   after it (the special-level `switch`, the best-time record and the
   `snap14C` save) becomes the loop head at `0x0802268C`. The attempt
   loop's `if (A || B) {...} else if (!sub_802455C(...)) break;` is
@@ -48,7 +48,7 @@ most of the work was loop shape:
     first.
   - The `SetMaskLevel` argument is `arg = 2; if (tier <= 1) arg = tier;`.
     A `?:` gave a `min` shape.
-  - `sub_8027138` returns a typed pointer. The store into the `void *`
+  - `InitHud` returns a typed pointer. The store into the `void *`
     global then has a conversion, so `expand_assignment` computes the
     global's address before the call instead of after it.
 

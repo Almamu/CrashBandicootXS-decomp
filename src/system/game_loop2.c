@@ -2,8 +2,8 @@
 #include "vram_pool.h"
 #include "level_state.h"
 
-extern void *gUnknown_03001318;
-extern void *gUnknown_030012BC;
+extern void *gHud;
+extern void *gAudioContext;
 extern void *gUnknown_030012D0;
 extern struct tile_asset_cache *gUnknown_030012B8;
 
@@ -55,7 +55,7 @@ void FreezeLevelClock(struct level_state *self, s32 seconds)
     u8 recordId, slot;
     struct level_category *level;
 
-    PlaySfx(gUnknown_030012BC, 0x18, 0x100);
+    PlaySfx(gAudioContext, 0x18, 0x100);
 
     self->countdown += seconds * 60;
 
@@ -219,7 +219,7 @@ void sub_8022FEC(struct level_state *self)
     }
 
     if (self->timeTrial == 0) {
-        sub_8028474(gUnknown_03001318);
+        sub_8028474(gHud);
     }
 }
 
@@ -413,12 +413,12 @@ void ResetLives(struct level_state *self)
 }
 
 struct AudioContext;
-extern void sub_80017BC(struct AudioContext *self, u32 songIndex);
+extern void StartSong(struct AudioContext *self, u32 songIndex);
 extern void sub_8024498(void *self);
 
 /* Sets the Aku Aku mask level (`maskLevel`, +0x78, 0-3): level `3` (the
- * invincibility mask) always fires a jingle (`sub_80017BC(
- * gUnknown_030012BC, 0x12)`) and skips the rest; leaving level 3 re-fires
+ * invincibility mask) always fires a jingle (`StartSong(
+ * gAudioContext, 0x12)`) and skips the rest; leaving level 3 re-fires
  * `sub_8024498(&self->level)` once. Either way `maskLevel` ends up
  * holding `state`. */
 void SetMaskLevel(void *selfArg, s32 stateArg)
@@ -431,7 +431,7 @@ void SetMaskLevel(void *selfArg, s32 stateArg)
     register s32 state asm("r5") = stateArg;
 
     if (state == 3) {
-        sub_80017BC(gUnknown_030012BC, 0x12);
+        StartSong(gAudioContext, 0x12);
     } else if (self->maskLevel == 3) {
         self->maskLevel = state;
         sub_8024498(&self->level);
@@ -453,11 +453,11 @@ void RaiseMaskLevel(struct level_state *self)
     SetMaskLevel(self, next);
 }
 
-extern void sub_80284A4(void *state);
+extern void ShowHudLives(void *state);
 
 /* Outside time trials (`timeTrial`, +0x8c): loses a life (`lives`,
- * +0x74) and, while any are left, pings `gUnknown_03001318`
- * (`sub_80284A4`). */
+ * +0x74) and, while any are left, pings `gHud`
+ * (`ShowHudLives`). */
 void LoseLife(struct level_state *self)
 {
     if (self->timeTrial == 0) {
@@ -465,7 +465,7 @@ void LoseLife(struct level_state *self)
         self->lives = v;
 
         if (v >= 0) {
-            sub_80284A4(gUnknown_03001318);
+            ShowHudLives(gHud);
         }
     }
 }
@@ -755,12 +755,12 @@ s32 sub_8023418(struct level_state *self)
     return (u32)(*addr << 31) >> 31;
 }
 
-extern void sub_80284D4(void *state);
+extern void ShowHudWumpa(void *state);
 
 /* Collects one wumpa fruit (`wumpa`, +0x6c): at 100 it wraps to 0 and
  * adds a life (`lives`, +0x74, capped at 99) with a ping to
- * `gUnknown_03001318` via `sub_80284A4`; either way, always pings it
- * again via `sub_80284D4`. */
+ * `gHud` via `ShowHudLives`; either way, always pings it
+ * again via `ShowHudWumpa`. */
 void CollectWumpa(struct level_state *self)
 {
     s32 v = self->wumpa + 1;
@@ -771,19 +771,19 @@ void CollectWumpa(struct level_state *self)
         if (self->lives <= 0x62) {
             self->lives += 1;
         }
-        sub_80284A4(gUnknown_03001318);
+        ShowHudLives(gHud);
     }
-    sub_80284D4(gUnknown_03001318);
+    ShowHudWumpa(gHud);
 }
 
-/* Just the "add a life (`lives`), ping `sub_80284A4`" half of
+/* Just the "add a life (`lives`), ping `ShowHudLives`" half of
  * `CollectWumpa` above, standalone. */
 void AddLife(struct level_state *self)
 {
     if (self->lives <= 0x62) {
         self->lives += 1;
     }
-    sub_80284A4(gUnknown_03001318);
+    ShowHudLives(gHud);
 }
 
 /* GitHub issue #37: closes the loop on the `self+0x1c0`/`0x1c4`

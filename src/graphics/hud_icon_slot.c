@@ -2,34 +2,37 @@
 #include "actor.h"
 #include "hud.h"
 
-/* Fixed 3-entry queue object for a particle/projectile-trajectory
- * effect - docs/rom_map.md's "fx" investigation (the "Correcting `hud`"
- * section) documents how the consumer (`sub_8026F54`) and producer
- * (`sub_8027018`) use these fields. Allocated at `gUnknown_030012C8` via
- * `sub_8026EDC(0x48)`, matching this struct's size.
+/* Up to three palette colour cycles, at `gPaletteCycles`
+ * (`sub_8026EDC(0x48)`, matching this struct's size). game_loop56.c
+ * adds them with `targets` = BG palette RAM and `lists` = the palette
+ * indices to cycle; every `periods[i]` = 60 / rate frames,
+ * `TickPaletteCycles` shifts the colours at those indices by one
+ * place. (docs/rom_map.md's "fx" investigation first read the pair as a
+ * particle/projectile-trajectory queue and its `rate` argument as an
+ * angle; `__divsi3` is plain division.)
  *
  * Reading both functions in full (docs/matching/
  * issue-45-hud-stat-widget-dispatcher.md's "Third pass" section) settled
  * the remaining fields: each of the 3 slots pairs a `targets`/`lists`
- * pointer pair with a `periods`/`counts` scalar pair, and `sub_8026F54`
+ * pointer pair with a `periods`/`counts` scalar pair, and `TickPaletteCycles`
  * (the per-frame consumer) rotates `targets[i]` by one position, once
  * every `periods[i]` frames (`gUnknown_0300082C % periods[i] == 0`),
  * walking the permutation order given by `lists[i]` - forwards or
- * backwards depending on `direction`. `sub_8027018` (the producer) only
+ * backwards depending on `direction`. `AddPaletteCycle` (the producer) only
  * ever appends at `count` (no wraparound seen in either function - the
- * caller resets the queue via `sub_8027088`/`sub_80270C0` between
+ * caller resets the queue via `ClearPaletteCycles`/`InitPaletteCycles` between
  * bursts rather than this pair enforcing the 3-slot cap itself). */
 struct hud_fx_queue {
     u8 active;              /* +0x00 */
     u8 unknown_01[3];       /* +0x01 */
     s32 fields_e[3];        /* +0x04 - only ever written (to 0) by
-                              * sub_8027018; never read by either function
+                              * AddPaletteCycle; never read by either function
                               * matched here. Purpose unconfirmed. */
-    u16 *targets[3];        /* +0x10 - array sub_8026F54 rotates. */
+    u16 *targets[3];        /* +0x10 - array TickPaletteCycles rotates. */
     u16 *lists[3];           /* +0x1c - permutation order (as u16 indices
                                * into `targets[i]`), `counts[i]` long. */
-    s32 periods[3];           /* +0x28 - sub_8027018 sets this from
-                                * __divsi3(0x3C, angle_arg); sub_8026F54
+    s32 periods[3];           /* +0x28 - AddPaletteCycle sets this from
+                                * __divsi3(0x3C, rate); TickPaletteCycles
                                 * rotates slot i once every `periods[i]`
                                 * frames. */
     s32 counts[3];             /* +0x34 - `lists[i]`'s element count. */
@@ -42,7 +45,7 @@ struct hud_fx_queue {
 COMPILE_TIME_ASSERT(sizeof(struct hud_fx_queue) == 0x48);
 
 extern void sub_8026ED0(void *ptr);
-extern s32 gUnknown_0300086C;
+extern s32 gHudSlideOffset;
 extern void sub_8008890(struct actor *part, s32 arg1, s32 arg2);
 extern void sub_80088F0(struct actor *part, u32 arg1);
 extern struct actor *sub_8008904(struct actor *part);
@@ -55,7 +58,7 @@ extern u32 __umodsi3(u32 a, u32 b);
 /* Per-frame consumer: for each active slot whose period has elapsed
  * this frame, rotates `targets[i]` by one position along the order
  * `lists[i]` gives - see the struct's doc comment above. */
-void sub_8026F54(struct hud_fx_queue *self)
+void TickPaletteCycles(struct hud_fx_queue *self)
 {
     register s32 i asm("r4");
     s32 count;
@@ -216,9 +219,8 @@ void sub_8026F54(struct hud_fx_queue *self)
 }
 
 /* Producer: appends a new slot at `count` (no wraparound - see the
- * struct's doc comment), computing `periods[count]` from `angle` via the
- * atan2-style `__divsi3` helper. */
-void sub_8027018(struct hud_fx_queue *self, u16 *targets_arg, u16 *lists, s32 angle, s32 list_count, u8 direction_arg)
+ * struct's doc comment), computing `periods[count]` as 60 / `rate` (`__divsi3`). */
+void AddPaletteCycle(struct hud_fx_queue *self, u16 *targets_arg, u16 *lists, s32 rate, s32 list_count, u8 direction_arg)
 {
     /* ROM reads this 6th (stack-passed) `u8` argument as a genuine
      * `ldrb` off a computed stack address, right at function entry.
@@ -252,7 +254,7 @@ void sub_8027018(struct hud_fx_queue *self, u16 *targets_arg, u16 *lists, s32 an
     {
         /* Likewise pinned to r1: the ROM computes `idx*4` once here,
          * uses it to place `targets`/`lists`, then lets r1 die (reused
-         * for `angle` right before the call) once `&self->periods[idx]`
+         * for `rate` right before the call) once `&self->periods[idx]`
          * has been computed from it into r4. */
         register s32 offset asm("r1") = self->count << 2;
 
@@ -274,7 +276,7 @@ void sub_8027018(struct hud_fx_queue *self, u16 *targets_arg, u16 *lists, s32 an
             p += 0x28;
             p += offset;
             periods_addr = (s32 *)p;
-            *periods_addr = __divsi3(0x3c, angle);
+            *periods_addr = __divsi3(0x3c, rate);
         }
     }
     self->active = 1;
@@ -286,10 +288,10 @@ void sub_8027018(struct hud_fx_queue *self, u16 *targets_arg, u16 *lists, s32 an
 
 /* Resets an `hud_fx_queue` to empty - clears the "active" flag, the
  * first three slots of its two touched parallel arrays, and the entry
- * count. Called right before `sub_8027018` (the raw producer) queues a
+ * count. Called right before `AddPaletteCycle` (the raw producer) queues a
  * fresh entry - see the call sites in the still-raw game_loop chunk
  * (e.g. `asm/code_3_2_17_231cc.s` around `_08023AF4`). */
-void sub_8027088(struct hud_fx_queue *self)
+void ClearPaletteCycles(struct hud_fx_queue *self)
 {
     s32 i;
 
@@ -301,20 +303,20 @@ void sub_8027088(struct hud_fx_queue *self)
     self->count = 0;
 }
 
-/* Teardown counterpart to `sub_80270C0` below: frees `self` via
+/* Teardown counterpart to `InitPaletteCycles` below: frees `self` via
  * `sub_8026ED0` when bit 0 of `flags` is set. */
-void sub_80270A8(void *self, s32 flags)
+void DestroyPaletteCycles(void *self, s32 flags)
 {
     if (flags & 1) {
         sub_8026ED0(self);
     }
 }
 
-/* Same reset as `sub_8027088` (minus the entry-count clear - freshly
+/* Same reset as `ClearPaletteCycles` (minus the entry-count clear - freshly
  * `mem_alloc`'d memory doesn't need it) but returns `self` - this is
  * the queue's constructor, called right after its `sub_8026EDC(0x48)`
  * allocation. */
-struct hud_fx_queue *sub_80270C0(struct hud_fx_queue *self)
+struct hud_fx_queue *InitPaletteCycles(struct hud_fx_queue *self)
 {
     s32 i;
 
@@ -327,20 +329,20 @@ struct hud_fx_queue *sub_80270C0(struct hud_fx_queue *self)
 }
 
 /* Draws one HUD digit/icon slot's current frame, unless it's been
- * hidden (`frame_index == -1`, the single-digit case `sub_8027838`
- * sets on the second digit). `gUnknown_0300086C` is the shared HUD
- * layout offset `sub_8027838` derives from a counter's `layout_value`,
+ * hidden (`frame_index == -1`, the single-digit case `UpdateHudLives`
+ * sets on the second digit). `gHudSlideOffset` is the shared HUD
+ * layout offset `UpdateHudLives` derives from a counter's `layout_value`,
  * folded into the vertical position here. */
-void sub_80270E0(struct hud_digit_part *part, s32 arg1, s32 arg2)
+void DrawHudPart(struct hud_digit_part *part, s32 arg1, s32 arg2)
 {
     if (part->frame_index != -1) {
-        sub_8008890((struct actor *)part, arg1, arg2 + gUnknown_0300086C);
+        sub_8008890((struct actor *)part, arg1, arg2 + gHudSlideOffset);
     }
 }
 
 /* UNUSED - no caller anywhere in the ROM (checked asm/*.s,
  * expected/*.s, every src/*.c file). A `struct actor`-table-swap constructor
- * variant of `sub_8027120` below: sets `table` directly instead of
+ * variant of `InitHudPart` below: sets `table` directly instead of
  * going through `sub_8008904`, then forwards to `sub_80088F0` (which
  * immediately overwrites `table` again as part of its own two-step
  * table swap - see actor_part7.c). */
@@ -355,7 +357,7 @@ void sub_802710C(struct actor *part, u32 arg1)
  * include/hud.h): re-initializes it via `sub_8008904`, then overwrites
  * `table` with this widget family's own `gStaticData_087E4CB4` in
  * place of whatever `sub_8008904` set it to. */
-struct actor *sub_8027120(struct actor *part)
+struct actor *InitHudPart(struct actor *part)
 {
     sub_8008904(part);
     part->table = gStaticData_087E4CB4;

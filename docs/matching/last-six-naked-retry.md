@@ -9,7 +9,7 @@ in place.
 | `sub_8002114` (#4) | `src/system/link_cable.c` | 16 | 6 (old_agbcc) | Draft updated |
 | `sub_8002E20` (#5) | `src/graphics/settings_menu8a2.c` | 104 | 97 (4 bytes long) | Draft updated, both loops now match |
 | `sub_802062C` (#31) | `src/graphics/graphics_loading_1feec.c` | 62 | 62 | Draft unchanged, note added |
-| `sub_8005E5C` (#7) | `src/graphics/settings_menu16.c` | 73 | 73 | Draft unchanged, note added |
+| `DrawPauseFraction` (#7) | `src/graphics/settings_menu16.c` | 73 | 73 | Draft unchanged, note added |
 
 ## `sub_8002114`: nibble test closed (16 to 6)
 
@@ -97,7 +97,7 @@ differently (fewer part+0x28 refs, or arg3/`arg3 * 2` as one
 longer-lived pseudo). An escaped `&gEntityFlags` local gets that
 address into sl but is 88 halfwords.
 
-## `sub_8005E5C` (73)
+## `DrawPauseFraction` (73)
 
 `asm volatile` escapes on the second half's source manager,
 destination manager or both, an escaped 0x110 offset (and 0x110/0x114
@@ -113,4 +113,4 @@ uses into one pseudo.
 These are in the scratchpad's `last6/`: `d.py`, `var.py`, `rtl.sh` and
 `fnrtl.py` (copies of `last4/` pointed at this worktree), and the
 variant specs `s1`-`s11` (`sub_8002114`), `e1`-`e9` (`sub_8002E20`),
-`g1` (`sub_802062C`) and `m1` (`sub_8005E5C`).
+`g1` (`sub_802062C`) and `m1` (`DrawPauseFraction`).

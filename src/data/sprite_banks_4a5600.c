@@ -136,7 +136,7 @@ extern const struct sprite_frame *const gSpriteBank09Frames[14];
 
 /* The root of the system: sub_8022230 (graphics_loading_21d80.c) points
  * *gUnknown_030012D0 here. sub_80083A8 returns tileBase;
- * sub_8022230 and sub_8004D74 (settings_menu15.c) build the tile-asset
+ * sub_8022230 and RunPauseMenu (settings_menu15.c) build the tile-asset
  * cache from tilePool/tilePoolCount. */
 const struct sprite_bank_table gStaticData_084A5600 = {
     .banks = gSpriteBanks,

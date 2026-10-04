@@ -26,12 +26,12 @@ struct follow_state {
 
 extern u32 gKeys;
 extern void *gUnknown_030012B8;
-extern void *gUnknown_030012BC;
+extern void *gAudioContext;
 extern struct follow_state *gUnknown_030012D4;
 extern struct act_part *gUnknown_030012D8;
 extern u8 gStaticData_0816B300[];
 extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
-extern void sub_8001AC4(void *ctx, u32 value);
+extern void FadeOutMusic(void *ctx, u32 value);
 extern void sub_8006D08(void *cache, s32 slot, s32 kind);
 extern void *sub_80083B8(struct act_part *part);
 extern u8 sub_800AAEC(struct act_part *part, s32 action);
@@ -269,7 +269,7 @@ void sub_8011BD4(struct act *self, s32 arg1, s32 arg2, s32 arg3)
             s32 fire;
             s32 one;
 
-            PlaySfx(gUnknown_030012BC, 0xa, 0x100);
+            PlaySfx(gAudioContext, 0xa, 0x100);
             /* one = 1, kept apart from the fire test's 1 (see above). */
             asm("" : "=r"(one) : "0"(1));
             fire = in & 1;
@@ -295,11 +295,11 @@ void sub_8011BD4(struct act *self, s32 arg1, s32 arg2, s32 arg3)
         self->frame = 0;
         break;
     case 15:
-        sub_8001AC4(gUnknown_030012BC, 0);
+        FadeOutMusic(gAudioContext, 0);
         /* fallthrough */
     case 16:
     case 17:
-        PlaySfx(gUnknown_030012BC, 0x2c, 0x100);
+        PlaySfx(gAudioContext, 0x2c, 0x100);
         {
             u8 *f = &gUnknown_030012D8->flags0C;
 

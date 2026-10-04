@@ -1,13 +1,13 @@
 #include "core.h"
 #include "actor.h"
 
-/* GitHub issue #8's last two functions - docs/rom_map.md's "`sub_80063D8`
+/* GitHub issue #8's last two functions - docs/rom_map.md's "`InitPowerDialog`
  * builds a two-string dialog/message box" section already traced both to
- * high confidence. This file holds `sub_80063D8` itself (matched
- * byte-exact); its caller `sub_80062A8` (the higher-level constructor -
+ * high confidence. This file holds `InitPowerDialog` itself (matched
+ * byte-exact); its caller `ShowPowerDialog` (the higher-level constructor -
  * resets palette color 0 and DISPCNT, re-initializes the popup-text
- * system's `gUnknown_030012DC`/`030012E0` icon managers, calls this
- * function then `sub_8006518` to run the dialog's lifecycle) is parked
+ * system's `gSmallFont`/`030012E0` icon managers, calls this
+ * function then `PowerDialogLoop` to run the dialog's lifecycle) is parked
  * as `NON_MATCHING` in `src/graphics/settings_menu14.c` - see that
  * file's header comment. */
 
@@ -15,9 +15,9 @@
  * `src/graphics/settings_menu10.c` already name `struct
  * sub_8006700_actor` (redeclared locally per this project's minimal-
  * local-type convention) - allocated here via `sub_8026EDC(0x2c)`,
- * exactly the struct's own size, and returned by `sub_80063D8` to feed
- * straight into `sub_8006518`'s (the fade/confirm driver) and
- * `sub_8006770`'s (the on-hit teardown/sound helper) existing
+ * exactly the struct's own size, and returned by `InitPowerDialog` to feed
+ * straight into `PowerDialogLoop`'s (the fade/confirm driver) and
+ * `DestroyPowerDialog`'s (the on-hit teardown/sound helper) existing
  * signatures. */
 struct sub_8006700_actor {
     u8 unused_00[0x10];
@@ -54,16 +54,16 @@ extern s32 sub_800815C(struct actor *part);
 extern void *sub_801E644(void *buf, s32 arg1, s32 arg2, s32 arg3, s32 arg4);
 extern void LoadGraphicsPackage(void *buf, void *asset);
 extern s32 sub_801E640(void *buf);
-extern void sub_8001B54(void *self, s32 id);
+extern void PlaySong(void *self, s32 id);
 
 extern void ***gUnknown_030012D0;
 extern u8 gStaticData_0816C484[];
-extern void *gUnknown_030012BC;
+extern void *gAudioContext;
 
 /* Builds the actual two-string dialog/message box object: a small
  * `struct sub_8006700_actor` (`self`, allocated by the caller) plus one
  * `struct settings_icon_actor`-shaped background icon it owns via
- * `field_18`. Sets `field_20`/`field_24` (the `sub_8006714`-shape
+ * `field_18`. Sets `field_20`/`field_24` (the `CommitPowerDialogFrame`-shape
  * BLDCNT+BLDALPHA/BLDY blend-register pair, forced to a fixed "fully
  * blended" value here rather than read from a caller-supplied source)
  * and `field_28` (a fixed priority/flags pair), stashes the two label
@@ -78,7 +78,7 @@ extern void *gUnknown_030012BC;
  * point, `field_29`'s low nibble from `sub_800815C`). Finally sets
  * `REG_BG0CNT` from `sub_801E640(self)`, clears `REG_BG0HOFS`/
  * `REG_BG0VOFS` (one 32-bit write), and restores the last-played song
- * via `sub_8001B54(gUnknown_030012BC, 0xf)`.
+ * via `PlaySong(gAudioContext, 0xf)`.
  *
  * Matched byte-exact, but only after heavy register pinning (mirroring
  * `oam_count.c`'s `SUB_8006600_*` macros and `settings_menu6.c`'s
@@ -108,7 +108,7 @@ extern void *gUnknown_030012BC;
  *   requested register, matching the ROM's own reuse of whichever
  *   register happened to be free at that point in its own allocation
  *   (typically `r3`, left over from an unrelated adjacent OR-chain). */
-struct sub_8006700_actor *sub_80063D8(struct sub_8006700_actor *selfArg, s32 label1Arg, s32 label2Arg, s32 typeArg)
+struct sub_8006700_actor *InitPowerDialog(struct sub_8006700_actor *selfArg, s32 label1Arg, s32 label2Arg, s32 typeArg)
 {
     register struct sub_8006700_actor *self asm("r5") = selfArg;
     register s32 label1 asm("r8") = label1Arg;
@@ -247,7 +247,7 @@ struct sub_8006700_actor *sub_80063D8(struct sub_8006700_actor *selfArg, s32 lab
 
     REG_BG0CNT = sub_801E640(self);
     *(vu32 *)REG_ADDR_BG0HOFS = 0;
-    sub_8001B54(gUnknown_030012BC, 0xf);
+    PlaySong(gAudioContext, 0xf);
 
     return self;
 }

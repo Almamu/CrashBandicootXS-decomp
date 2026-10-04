@@ -8,7 +8,7 @@
  * docs/matching/issue-58-0x08030334-actor.md and docs/status/actor.md. */
 
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
-extern void *gUnknown_030012BC;
+extern void *gAudioContext;
 
 struct actor_timed {
     struct actor_self base;
@@ -28,7 +28,7 @@ void sub_8030530(void *selfArg, s32 delta)
     self->timer -= delta;
     if (self->timer <= 0) {
         self->base.unk_18 = 4;
-        PlaySfx(gUnknown_030012BC, 4, 0x100);
+        PlaySfx(gAudioContext, 4, 0x100);
         {
             register s32 stateVal asm("r0") = 2;
             register s32 idxVal asm("r1") = 1;

@@ -25,7 +25,7 @@ extern s32 __divsi3(s32 dividend, s32 divisor);
  * matching_decomp_register_pinning memory - whereas the natural
  * allocator gets the push/pop list right on its own once it reaches
  * for r7 by itself). */
-s32 sub_80060AC(s32 value, u8 *dest)
+s32 FormatDecimal(s32 value, u8 *dest)
 {
     register s32 val asm("r5") = value;
     u8 buf[0xc];
@@ -52,25 +52,25 @@ s32 sub_80060AC(s32 value, u8 *dest)
 }
 
 /* Formats a `" <NN%>"`-shaped scratch string (space, `<`, decimal
- * digits of `arg1 * 5`, `%`, `>`, NUL) into `out` via sub_80060AC
+ * digits of `arg1 * 5`, `%`, `>`, NUL) into `out` via FormatDecimal
  * above. `arg0` is read by nothing in this function - a genuinely
  * unused parameter (the ROM's own r0 -> r0 first instruction discards
  * it before ever reading it). */
-void sub_80060F8(s32 arg0, s32 arg1, u8 *out)
+void FormatVolumePercent(s32 arg0, s32 arg1, u8 *out)
 {
     s32 value = arg1 * 5;
     s32 count;
 
     out[0] = ' ';
     out[1] = '<';
-    count = sub_80060AC(value, out + 2);
+    count = FormatDecimal(value, out + 2);
     out[count + 2] = '%';
     out[count + 3] = '>';
     out[count + 4] = 0;
 }
 /* Trailing byte-padding gotcha (see docs/matching.md/
  * matching_decomp_alignment_fix memory): the ROM pads the gap before
- * the next function (sub_8006124, still-raw at this point) with zero
+ * the next function (DrawPauseTimeTrialPage, still-raw at this point) with zero
  * bytes (an explicit `.align 2, 0` in the original assembly), but this
  * compiler's own default inter-function padding is a `mov r8, r8`
  * NOP-equivalent instead. */

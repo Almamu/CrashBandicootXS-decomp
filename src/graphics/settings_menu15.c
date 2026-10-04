@@ -9,9 +9,9 @@
 extern void StopAmbientSfx(struct AudioContext *self);
 extern void WaitForVBlank(void);
 extern struct tile_asset_cache *gUnknown_030012B8;
-extern struct AudioContext *gUnknown_030012BC;
-extern struct icon_manager *gUnknown_030012DC;
-extern struct icon_manager *gUnknown_030012E0;
+extern struct AudioContext *gAudioContext;
+extern struct icon_manager *gSmallFont;
+extern struct icon_manager *gLargeFont;
 extern struct vram_upload_cursor *gUnknown_030012FC;
 extern u8 gStaticData_084A5600[];
 extern u8 gStaticData_0816B2C0[];
@@ -19,13 +19,13 @@ extern void sub_8006EF0(struct tile_asset_cache *self, u16 count, const u8 *reco
 extern s32 sub_8006D50(struct tile_asset_cache *self, s32 index);
 extern void sub_8006F94(struct tile_asset_cache *self, u32 flags);
 extern void CpuSet(const void *src, void *dst, u32 cnt);
-extern void sub_8028A40(struct icon_manager *self);
+extern void FontResetPalette(struct icon_manager *self);
 extern void *_call_via_r1(void *arg0, void *fn);
 extern void sub_8006C4C(struct vram_upload_cursor *self);
 extern void *sub_8026EDC(s32 size);
-extern struct pause_screen_results *sub_8004EC0(struct pause_screen_results *self);
-extern s32 sub_8005100(struct pause_screen_results *self);
-extern void sub_8005004(struct pause_screen_results *self, u32 flags);
+extern struct pause_screen_results *InitPauseMenu(struct pause_screen_results *self);
+extern s32 PauseMenuLoop(struct pause_screen_results *self);
+extern void DestroyPauseMenu(struct pause_screen_results *self, u32 flags);
 
 /* The composite pause/options screen's own constructor/driver
  * (docs/rom_map.md's "overlay_ui" section, "one composite pause/options
@@ -34,21 +34,21 @@ extern void sub_8005004(struct pause_screen_results *self, u32 flags);
  * and DISPCNT, swaps `gUnknown_030012B8` for a fresh 16-slot tile cache
  * sized for this screen's icon graphics (seeding slot 15 from
  * `gStaticData_0816B2C0`), re-inits both icon managers (copying
- * `field_12c` between them and firing each one's slot-6 trampoline, the
+ * `tileCount` between them and firing each one's slot-6 trampoline, the
  * same `_call_via_r1` pattern documented throughout `icon_manager.h`),
- * builds the screen object (`sub_8004EC0`) and hands it to the blocking
- * cursor/confirm/cancel driver (`sub_8005100`), then tears the screen
- * down (`sub_8005004`, flags=3) and restores the original tile cache
- * before returning `sub_8005100`'s result.
+ * builds the screen object (`InitPauseMenu`) and hands it to the blocking
+ * cursor/confirm/cancel driver (`PauseMenuLoop`), then tears the screen
+ * down (`DestroyPauseMenu`, flags=3) and restores the original tile cache
+ * before returning `PauseMenuLoop`'s result.
  *
  * Matched in the second near-miss sweep (the old draft was 54 halfwords
  * off). The ROM never shares the 0x12c offset constant between the
- * `field_12c` reads; it rebuilds it for each one. Reading `field_12c`
+ * `tileCount` reads; it rebuilds it for each one. Reading `tileCount`
  * through the `static inline` accessor `mgr_12c` stops CSE from sharing
  * it, which frees the register the draft spent on it and lets
- * &gUnknown_030012B8/&gUnknown_030012DC/&gUnknown_030012E0/
+ * &gUnknown_030012B8/&gSmallFont/&gLargeFont/
  * &gUnknown_030012FC land in r6/r4/r5/r7 as in the ROM. The two
- * `field_12c` reads for the VRAM reservation are taken into locals
+ * `tileCount` reads for the VRAM reservation are taken into locals
  * before `gUnknown_030012FC` is loaded, and the tile cache's base is
  * read into a local before `gStaticData_0816B2C0`'s address, both to
  * match the ROM's load order. The two `0`s still come from
@@ -72,7 +72,7 @@ struct pause_gfx_pkg {
 
 static inline void init_icon_mgr(struct icon_manager *mgr, u32 base)
 {
-    mgr->field_108 = base;
+    mgr->tileBase = base;
     ICON_SLOT6_CALL(mgr);
 }
 
@@ -85,17 +85,17 @@ static inline void reserve_icon_vram(u32 n)
 /* Keeps CSE from sharing the 0x12c offset between reads (see above). */
 static inline u32 mgr_12c(struct icon_manager *m)
 {
-    return m->field_12c;
+    return m->tileCount;
 }
 
-s32 sub_8004D74(void)
+s32 RunPauseMenu(void)
 {
     struct tile_asset_cache *oldCache;
     struct pause_screen_results *screen;
     s32 result;
 
     mem_free_bytes(MEM_HEAP_BOTH);
-    StopAmbientSfx(gUnknown_030012BC);
+    StopAmbientSfx(gAudioContext);
     WaitForVBlank();
     *(vu16 *)PLTT = 0;
     *(vu16 *)REG_ADDR_DISPCNT = 0;
@@ -111,22 +111,22 @@ s32 sub_8004D74(void)
         CpuSet(gStaticData_0816B2C0, dst + (0x83 << 2), 0x10);
     }
 
-    sub_8028A40(gUnknown_030012DC);
-    sub_8028A40(gUnknown_030012E0);
-    init_icon_mgr(gUnknown_030012DC, 0);
-    init_icon_mgr(gUnknown_030012E0, mgr_12c(gUnknown_030012DC));
+    FontResetPalette(gSmallFont);
+    FontResetPalette(gLargeFont);
+    init_icon_mgr(gSmallFont, 0);
+    init_icon_mgr(gLargeFont, mgr_12c(gSmallFont));
     {
-        u32 a = mgr_12c(gUnknown_030012DC);
-        u32 b = mgr_12c(gUnknown_030012E0);
+        u32 a = mgr_12c(gSmallFont);
+        u32 b = mgr_12c(gLargeFont);
 
         gUnknown_030012FC->field_08 = a + b;
         sub_8006C4C(gUnknown_030012FC);
     }
 
-    screen = sub_8004EC0(sub_8026EDC(0xd4));
-    result = sub_8005100(screen);
+    screen = InitPauseMenu(sub_8026EDC(0xd4));
+    result = PauseMenuLoop(screen);
     if (screen != NULL)
-        sub_8005004(screen, 3);
+        DestroyPauseMenu(screen, 3);
 
     reserve_icon_vram(0);
     if (gUnknown_030012B8 != NULL)
@@ -142,25 +142,25 @@ extern s32 sub_801E640(void *buf);
 extern void *gLevelState;
 extern void ***gUnknown_030012D0;
 extern void *sub_80236EC(void *arg0);
-extern void sub_800599C(struct pause_screen_results *self);
+extern void InitPauseMenuInfo(struct pause_screen_results *self);
 extern struct actor *sub_8008904(struct actor *part);
 extern s32 RandRange(s32 max);
 extern u8 gStaticData_0816B284[];
-extern u8 gStaticData_0816B298[];
+extern u8 gPauseMenuRows[];
 
 /* Same "recurring screen-constructor shape" docs/rom_map.md's overlay_ui
- * section documents for sub_8004EC0/sub_80063D8/sub_8005D44: `self`
- * (allocated by the caller, `sub_8004D74`, as a fresh 0xd4-byte
+ * section documents for InitPauseMenu/InitPowerDialog/InitPauseTimeTrialPage: `self`
+ * (allocated by the caller, `RunPauseMenu`, as a fresh 0xd4-byte
  * `struct pause_screen_results`) gets `sub_801E644` init, a local
  * BLDCNT/BLDY/DISPCNT setup (`field_c8`/`field_cc`/`field_d0`, the same
- * fields `sub_8006250` applies), `LoadGraphicsPackage`, a row-stats
- * handle from `gLevelState`, then hands off to `sub_800599C` to
+ * fields `CommitPauseMenuFrame` applies), `LoadGraphicsPackage`, a row-stats
+ * handle from `gLevelState`, then hands off to `InitPauseMenuInfo` to
  * build the results sub-widgets. Afterwards builds one more icon (the
  * row-cursor/highlight icon at `field_c0`) directly, seeds the settings-
  * row bookkeeping fields (`field_14`/`field_18`/`field_1c`/`field_20`/
  * `field_24`/`field_28`), and applies BG0CNT/BG0HOFS before returning
  * `self` unchanged. */
-struct pause_screen_results *sub_8004EC0(struct pause_screen_results *self)
+struct pause_screen_results *InitPauseMenu(struct pause_screen_results *self)
 {
     register s32 zero asm("r6");
 
@@ -232,7 +232,7 @@ struct pause_screen_results *sub_8004EC0(struct pause_screen_results *self)
 
         LoadGraphicsPackage(self, gStaticData_0816B284);
         self->field_10 = sub_80236EC(gLevelState);
-        sub_800599C(self);
+        InitPauseMenuInfo(self);
 
         {
             register struct settings_icon_actor **field_c0_addr asm("r4") = (struct settings_icon_actor **)((u8 *)c8Addr - 8);
@@ -267,7 +267,7 @@ struct pause_screen_results *sub_8004EC0(struct pause_screen_results *self)
 
     self->field_c4 = (u16)RandRange(0x78) + 0x78;
 
-    self->field_14 = gStaticData_0816B298;
+    self->field_14 = gPauseMenuRows;
     self->field_18 = zero;
     {
         s32 v;
@@ -293,11 +293,11 @@ extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern void sub_8026ED0(void *arg0);
 
 /* Same "re-probe an actor's own category-table slot 0x50/0x54" shape
- * already established by sub_8006770 (src/graphics/oam_count.c) -
+ * already established by DestroyPowerDialog (src/graphics/oam_count.c) -
  * width-re-measures a single icon's currently-drawn text in place
  * (the return value is discarded), skipping a NULL slot entirely. A
  * `#define`, not a helper function, so it inlines identically at each
- * of the six call sites below - matching sub_8006770's own inlined
+ * of the six call sites below - matching DestroyPowerDialog's own inlined
  * shape rather than adding a real call the ROM doesn't make. */
 #define REFRESH_ICON_WIDGET(iconExpr) \
     do { \
@@ -311,9 +311,9 @@ extern void sub_8026ED0(void *arg0);
 /* Refreshes every icon field/array the results screen owns (field_c0,
  * field_bc, iconsB0[3], icons9c[5], icons8c[4], field_88 - in that
  * order) via `REFRESH_ICON_WIDGET` above, then frees `self` if bit 0 of
- * `flags` is set - the same trailing shape sub_8006770 uses for its
+ * `flags` is set - the same trailing shape DestroyPowerDialog uses for its
  * own single-icon `arg0`. */
-void sub_8005004(struct pause_screen_results *selfArg, u32 flagsArg)
+void DestroyPauseMenu(struct pause_screen_results *selfArg, u32 flagsArg)
 {
     register struct pause_screen_results *self asm("r6") = selfArg;
     register u32 flags asm("sl") = flagsArg;
@@ -354,7 +354,7 @@ void sub_8005004(struct pause_screen_results *selfArg, u32 flagsArg)
 }
 /* Trailing byte-padding gotcha (see docs/matching.md/
  * matching_decomp_alignment_fix memory): the ROM pads the gap before
- * the next function (sub_8005100) with zero bytes (an explicit
+ * the next function (PauseMenuLoop) with zero bytes (an explicit
  * `.align 2, 0` in the original assembly), but this compiler's own
  * default inter-function padding is a `mov r8, r8` NOP-equivalent
  * instead. */

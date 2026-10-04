@@ -307,7 +307,7 @@ def main():
             out.append("")
             out.append("/* The root of the system: sub_8022230 (graphics_loading_21d80.c) points")
             out.append(" * *gUnknown_030012D0 here. sub_80083A8 returns tileBase;")
-            out.append(" * sub_8022230 and sub_8004D74 (settings_menu15.c) build the tile-asset")
+            out.append(" * sub_8022230 and RunPauseMenu (settings_menu15.c) build the tile-asset")
             out.append(" * cache from tilePool/tilePoolCount. */")
             out.append("const struct sprite_bank_table gStaticData_084A5600 = {")
             out.append("    .banks = gSpriteBanks,")

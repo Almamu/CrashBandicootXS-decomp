@@ -4,9 +4,9 @@
 /* The first matched code in the Shin'en GAX2 wrapper layer (the engine
  * itself is still raw in asm/code_3.s - see docs/audio.md). These two
  * functions drive music playback on the shared `AudioContext` object
- * (`*gUnknown_030012BC` in the ROM - see include/audio.h and
- * docs/rom_map.md's "Found the origin point" section): `sub_80016EC`
- * is the per-tick fade update, `sub_80017BC` starts a song. `PlaySfx`
+ * (`*gAudioContext` in the ROM - see include/audio.h and
+ * docs/rom_map.md's "Found the origin point" section): `UpdateAudio`
+ * is the per-tick fade update, `StartSong` starts a song. `PlaySfx`
  * (the very next function in ROM order) stays raw here - see
  * src/audio/sfx_ambient.c's doc comment. */
 
@@ -19,16 +19,16 @@ extern void GAX2_new(void *gaxState);
 extern u8 GAX2_init(void *gaxState);
 extern void *gSongTable[19];
 extern u8 gGaxMusicData[];
-extern void sub_8001AD8(struct AudioContext *self);
-void sub_80017BC(struct AudioContext *self, u32 songIndex);
+extern void FadeInMusic(struct AudioContext *self);
+void StartSong(struct AudioContext *self, u32 songIndex);
 
-/* Per-tick (called off `sub_8001C80`'s installed callback, a few
+/* Per-tick (called off `EnableMusicVCountIrq`'s installed callback, a few
  * functions after this chunk) update of both fade-envelope pairs:
  * `musicVolCurrent`/`Target` (independent background-volume ramp) and
  * `duckVolCurrent`/`Target` (the ducking ramp that also kicks off a
  * queued `pendingSong` once it finishes fading all the way down). Both
  * ramp by a fixed 0x10 (Q8.8) per call. */
-void sub_80016EC(struct AudioContext *self)
+void UpdateAudio(struct AudioContext *self)
 {
     s32 isPlaying;
 
@@ -76,7 +76,7 @@ void sub_80016EC(struct AudioContext *self)
                 self->duckVolCurrent = self->duckVolTarget;
                 self->duckVolFadeDownArmed = 0;
                 if (self->pendingSong != 0x13) {
-                    sub_80017BC(self, self->pendingSong);
+                    StartSong(self, self->pendingSong);
                     self->pendingSong = 0x13;
                 }
             } else {
@@ -96,9 +96,9 @@ asm(".align 2, 0");
  * genuinely nested engine-internal state `GAX2_new`/`GAX2_init`
  * own, not independently reverse-engineered, so those writes stay raw
  * offset casts (see docs/audio.md). On success, ducks the music back
- * in (`sub_8001AD8`) and arms the per-tick GAX2 IRQ update
+ * in (`FadeInMusic`) and arms the per-tick GAX2 IRQ update
  * (`gGaxIrqEnabled`). */
-void sub_80017BC(struct AudioContext *self, u32 songIndex)
+void StartSong(struct AudioContext *self, u32 songIndex)
 {
     {
         register s32 wasStopped asm("r1");
@@ -135,7 +135,7 @@ void sub_80017BC(struct AudioContext *self, u32 songIndex)
         if (GAX2_init(gaxState)) {
             self->currentSong = songIndex;
             *((u8 *)self + 0x54) = 0;
-            sub_8001AD8(self);
+            FadeInMusic(self);
             gGaxIrqEnabled = 1;
             self->state = 1;
         }

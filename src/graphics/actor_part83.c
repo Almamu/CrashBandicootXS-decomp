@@ -22,7 +22,7 @@ struct anim_rec
 };
 
 extern u32 gKeys;
-extern void *gUnknown_030012BC;
+extern void *gAudioContext;
 extern void *gLevelState;
 extern struct act_part *gUnknown_030012D8;
 extern void *gUnknown_03001304;
@@ -111,7 +111,7 @@ skip:
     if (self->state == 0) {
         struct act_part *p = gUnknown_030012D8;
         if (p->unk_60 == 0 && p->bank->unk_0A != 0x12 && self->unk_33 == 0) {
-            StopSfx(gUnknown_030012BC, 0x36);
+            StopSfx(gAudioContext, 0x36);
             ACT_CALL2(self, m50, gUnknown_030012D8, 0x12);
         }
     }
@@ -234,7 +234,7 @@ skip:
         if (busy)
             return;
         if (INPUT_PRESSED(in) & 1) {
-            PlaySfx(gUnknown_030012BC, 0xD, 0x100);
+            PlaySfx(gAudioContext, 0xD, 0x100);
             ACT_CALL1(self, m20, 5);
             ACT_CALL2(self, m50, self->part, 0x13);
             self->frame = busy;

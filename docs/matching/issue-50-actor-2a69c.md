@@ -37,7 +37,7 @@ palette-cycle DMA cluster (`sub_802AB08`/`sub_802AB34`/`sub_802AB58`/
 `sub_802AA80`/`sub_802AAB4`/`sub_802AAFC`) round out the chunk.
 
 The raw source file `asm/code_3_2_20_8b7c.s` (6522 lines, spanning far
-beyond this chunk - InitHudTextWidget through past ConstructActorPart)
+beyond this chunk - DestroyFont through past ConstructActorPart)
 was originally split around each matched/parked function, following
 this project's "cut at the boundary" convention (new fragments named by
 the lower 5 hex digits of their first function's address); the three
@@ -157,7 +157,7 @@ only the tail continuation `..._ac28.s` remains.
   register, branch to it" step *because* `r0` is still live; declaring
   the return value real instead of `void` gets gcc to do the same, the
   same return-type-shapes-epilogue-register-choice gotcha already
-  documented for `sub_800697C`/`sub_8001214` in docs/matching.md. No
+  documented for `GetCompletionPercent`/`sub_8001214` in docs/matching.md. No
   caller of this function has been matched yet to confirm whether the
   return value is actually used.
 - **`sub_802AB58`** (`src/graphics/actor_part53.c`) - the palette-cycle
@@ -173,8 +173,8 @@ only the tail continuation `..._ac28.s` remains.
   tail's unconditional `b`, mid-function, while this compiler's own
   plain-C-driven pool placement always dumps everything at the
   function's very end - and completely ignores an `asm(".pool")` marker
-  placed around it, unlike the precedent documented for `sub_8004EC0`/
-  `sub_8003A60` in docs/matching/issue-7-0x08004d74-overlay-ui.md and
+  placed around it, unlike the precedent documented for `InitPauseMenu`/
+  `DrawSaveMenuMain` in docs/matching/issue-7-0x08004d74-overlay-ui.md and
   issue-5-overlay-ui-sync.md. The difference: a `.pool` split is only
   respected for symbols whose literal load is itself written in
   inline-asm text using the assembler's own `=symbol` pseudo-op (real

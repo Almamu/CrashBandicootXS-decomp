@@ -18,7 +18,7 @@ extern s32 RandRange(s32 max);
  * while it's ticking down, just decrement it; once it hits 0, either
  * re-show the icon with a fresh random countdown (0x78-0xef) if it's
  * currently "armed" (`field_38`), or hide it otherwise. */
-void sub_8005304(struct pause_screen_results *self)
+void AnimatePauseMenu(struct pause_screen_results *self)
 {
     switch (self->field_24) {
     case 0:
@@ -94,7 +94,7 @@ void sub_8005304(struct pause_screen_results *self)
 }
 /* Trailing byte-padding gotcha (see docs/matching.md/
  * matching_decomp_alignment_fix memory): the ROM pads the gap before
- * the next function (sub_80053F4) with zero bytes (an explicit
+ * the next function (DrawPauseMenu) with zero bytes (an explicit
  * `.align 2, 0` in the original assembly), but this compiler's own
  * default inter-function padding is a `mov r8, r8` NOP-equivalent
  * instead. */

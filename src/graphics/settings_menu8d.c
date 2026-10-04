@@ -151,21 +151,21 @@ fail_restore:
     return -1;
 }
 
-extern struct AudioContext *gUnknown_030012BC;
-extern u32 sub_8001AB8(struct AudioContext *self);
-extern void sub_8001BD4(struct AudioContext *self);
-extern void sub_8001B54(struct AudioContext *self, u32 id);
+extern struct AudioContext *gAudioContext;
+extern u32 GetCurrentSong(struct AudioContext *self);
+extern void StopSong(struct AudioContext *self);
+extern void PlaySong(struct AudioContext *self, u32 id);
 extern s32 ReadSaveData(void *self, s32 len);
-extern u32 sub_8002B44(struct settings_sync_record *self);
+extern u32 CheckSaveChecksum(struct settings_sync_record *self);
 
 /* Loads the settings record from EEPROM (`ReadSaveData`, retried up to
  * 3 times), muting the music player across the transfer (stop before,
  * resume after, matching `src/audio/audio_context.c`'s established
  * `AudioContext` helpers), then validates the loaded record's two
  * marker bytes and checksum. Returns 4 (EEPROM read failed after
- * retries), 2 (bad `field_1f8` marker), 1 (bad `versionNibble`
+ * retries), 2 (bad `magic` marker), 1 (bad `versionNibble`
  * marker), 3 (checksum mismatch) or 0 (fully valid). */
-s32 sub_8002A08(struct settings_sync_record *self)
+s32 LoadSaveData(struct settings_sync_record *self)
 {
     struct AudioContext *audio;
     s32 flag;
@@ -174,16 +174,16 @@ s32 sub_8002A08(struct settings_sync_record *self)
     s32 i;
     s32 result;
 
-    audio = gUnknown_030012BC;
+    audio = gAudioContext;
     flag = 0;
     if (audio->state == 1) {
         flag = 1;
     }
     wasPlaying = flag;
 
-    savedSong = sub_8001AB8(audio);
+    savedSong = GetCurrentSong(audio);
     if (wasPlaying) {
-        sub_8001BD4(gUnknown_030012BC);
+        StopSong(gAudioContext);
     }
 
     i = 0;
@@ -193,19 +193,19 @@ s32 sub_8002A08(struct settings_sync_record *self)
     } while (i <= 2 && result != 0);
 
     if (wasPlaying) {
-        sub_8001B54(gUnknown_030012BC, savedSong);
+        PlaySong(gAudioContext, savedSong);
     }
 
     if (result != 0) {
         return 4;
     }
-    if (self->field_1f8 != 0x43) {
+    if (self->magic != 0x43) {
         return 2;
     }
     if (self->versionNibble != 0x12) {
         return 1;
     }
-    if ((u8)sub_8002B44(self) == 0) {
+    if ((u8)CheckSaveChecksum(self) == 0) {
         return 3;
     }
     return 0;

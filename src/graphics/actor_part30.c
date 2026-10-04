@@ -4,7 +4,7 @@
 /* Same "self" object family as actor_part28.c - see that file's header
  * comment and docs/matching/issue-62-0x08033804-actor.md. */
 
-extern void *gUnknown_030012BC;
+extern void *gAudioContext;
 
 /* A spawner object of the singleton system (actor_part28.c):
  * `actor_self` plus a hit-point word, its spawn cooldown/count and a
@@ -58,8 +58,8 @@ void sub_8033AE0(struct spawner *self, s32 dmg)
             }
             self->base.animTime = zero;
         }
-        PlaySfx(gUnknown_030012BC, 4, 0x100);
+        PlaySfx(gAudioContext, 4, 0x100);
     } else {
-        PlaySfx(gUnknown_030012BC, 0x45, 0x100);
+        PlaySfx(gAudioContext, 0x45, 0x100);
     }
 }

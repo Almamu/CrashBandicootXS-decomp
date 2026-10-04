@@ -26,14 +26,14 @@ extern u16 gUnknown_03001288;
 extern void *gUnknown_03001300;
 extern void *gUnknown_030012FC;
 extern void *gUnknown_03001304;
-extern void *gUnknown_030012BC;
-extern struct icon_manager *gUnknown_030012E0;
-extern struct icon_manager *gUnknown_030012DC;
+extern void *gAudioContext;
+extern struct icon_manager *gLargeFont;
+extern struct icon_manager *gSmallFont;
 extern void *gUnknown_030012CC;
 extern void *gUnknown_030012D0;
 extern void *gUnknown_030012B8;
 extern void *gEntityFlags;
-extern void *gUnknown_030012C8;
+extern void *gPaletteCycles;
 extern u32 *gCutsceneTexts[];
 extern s32 gLanguage;
 
@@ -53,13 +53,13 @@ extern void sub_8006CD0(void *self, u32 flags);
 extern void sub_8026ED0(void *p);
 /* Takes no argument (audio_context.c), but the ROM loads the audio
  * context into r0 before calling it anyway. */
-extern void sub_8001C64(void *audio);
-extern void sub_8001C04(void *audio, u32 flags);
+extern void DisableMusicVCountIrq(void *audio);
+extern void DestroyAudioContext(void *audio, u32 flags);
 extern void sub_8007A98(void *self, u32 flags);
 extern void sub_8006FC8(void *self, u32 flags);
 extern void sub_8006F94(void *self, u32 flags);
 extern void sub_8025A44(void *self, s32 flags);
-extern void sub_80270A8(void *self, s32 flags);
+extern void DestroyPaletteCycles(void *self, s32 flags);
 
 typedef void (*destroy_fn)(void *self, s32 flags);
 
@@ -90,13 +90,13 @@ void sub_8022354(void *self, s32 flags)
         sub_8006CD0(gUnknown_030012FC, 3);
     if (gUnknown_03001304 != NULL)
         sub_8026ED0(gUnknown_03001304);
-    sub_8001C64(gUnknown_030012BC);
-    if (gUnknown_030012BC != NULL)
-        sub_8001C04(gUnknown_030012BC, 3);
-    if (gUnknown_030012E0 != NULL)
-        DESTROY_ICON_MANAGER(gUnknown_030012E0);
-    if (gUnknown_030012DC != NULL)
-        DESTROY_ICON_MANAGER(gUnknown_030012DC);
+    DisableMusicVCountIrq(gAudioContext);
+    if (gAudioContext != NULL)
+        DestroyAudioContext(gAudioContext, 3);
+    if (gLargeFont != NULL)
+        DESTROY_ICON_MANAGER(gLargeFont);
+    if (gSmallFont != NULL)
+        DESTROY_ICON_MANAGER(gSmallFont);
     if (gUnknown_030012CC != NULL)
         sub_8007A98(gUnknown_030012CC, 3);
     if (gUnknown_030012D0 != NULL)
@@ -105,8 +105,8 @@ void sub_8022354(void *self, s32 flags)
         sub_8006F94(gUnknown_030012B8, 3);
     if (gEntityFlags != NULL)
         sub_8025A44(gEntityFlags, 3);
-    if (gUnknown_030012C8 != NULL)
-        sub_80270A8(gUnknown_030012C8, 3);
+    if (gPaletteCycles != NULL)
+        DestroyPaletteCycles(gPaletteCycles, 3);
     gUnknown_03000828 = NULL;
     if (flags & 1)
         sub_8026ED0(self);
@@ -143,7 +143,7 @@ extern void sub_80015E0(void);
 extern void sub_8001614(void);
 extern void sub_8006EA8(void *cache);
 extern void sub_8006DC8(void *cache);
-extern void sub_8028A40(struct icon_manager *self);
+extern void FontResetPalette(struct icon_manager *self);
 extern void InitCutscenePlayer(struct text_pager *self);
 extern void sub_8024784(u32 value);
 extern void RunCutscenePlayer(struct text_pager *self);
@@ -199,18 +199,18 @@ void PlayCutscene(void *self, s32 idx)
     REG_BG2Y = zero;
     sub_8006EA8(gUnknown_030012B8);
     {
-        struct icon_manager *m = gUnknown_030012DC;
+        struct icon_manager *m = gSmallFont;
         u32 tileBase = 0x200;
         struct icon_slot *slot;
 
-        m->field_108 = tileBase;
+        m->tileBase = tileBase;
         slot = &m->record->slots[6];
         ((method_fn)slot->ptr)((u8 *)m + slot->offset);
     }
-    sub_8028A40(gUnknown_030012DC);
+    FontResetPalette(gSmallFont);
     sub_8006DC8(gUnknown_030012B8);
     InitCutscenePlayer(&f.pager);
-    f.pager.font = gUnknown_030012DC;
+    f.pager.font = gSmallFont;
     {
         /* f.pager.box = f.box, spelled out: the ROM stores the two x
          * words sp-relative and the two y words through one pointer

@@ -56,8 +56,8 @@ function at the very end:
 - **`sub_8022230`** (292 B, the "origin point" - docs/rom_map.md,
   "Found the origin point"): the function `GetLevelState` calls once at
   the top of the game loop to construct essentially every hot IWRAM
-  global this whole ROM region references - `gUnknown_030012BC` (an
-  8340-byte `AudioContext` allocation, `sub_80016DC`+`sub_8001C2C`),
+  global this whole ROM region references - `gAudioContext` (an
+  8340-byte `AudioContext` allocation, `sub_80016DC`+`InitAudioContext`),
   `030012CC`/`D0`/`B8`/`DC`/`E0`/`03001300`/`FC`/`03001304`/`030012B4`/
   `C8`, clears `gUnknown_03001288`'s mode byte, and zeroes `self+0xc0`
   before returning `self` unchanged. `gUnknown_030012D0` gets pointed
@@ -128,7 +128,7 @@ fns): the `sub_800FF0C` trampoline family, types `1`-`7`.
   `docs/matching/issue-37-game-loop-234e8.md`).
 - **`gUnknown_030012D0`'s triple pointer-to-pointer-to-pointer
   dereference**: declaring it `void ***gUnknown_030012D0;` (matching
-  `settings_menu6.c`'s already-confirmed-matching `sub_8005A78`) and
+  `settings_menu6.c`'s already-confirmed-matching `InitPauseCrystalsPage`) and
   writing `**gUnknown_030012D0` reproduces the ROM's exact 4-load
   chain (address load, then three register-indirect dereferences) in
   one expression, cleaner than the two-step `void *`-typed alias used

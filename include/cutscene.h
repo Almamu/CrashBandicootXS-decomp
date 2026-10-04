@@ -24,9 +24,9 @@ struct cutscene_slide
     s32 fadeAfter;          // 0x0C - sub_800132C flags after it, -1 = none
     u8 buttons;             // 0x10 - WaitForKeyPress's checkButtons; 1 = the
                             //        slide is skipped past (SkipSlides)
-    u8 duckMusic;           // 0x11 - sub_8001AC4 after the slide
+    u8 duckMusic;           // 0x11 - FadeOutMusic after the slide
     u8 rearmSfx;            // 0x12 - replay `sfx` after the slide
-    u32 cue;                // 0x14 - music cue (sub_8001B54)
+    u32 cue;                // 0x14 - music cue (PlaySong)
     u32 sfx;                // 0x18 - sound effect, 99 = none
 };
 

@@ -156,7 +156,7 @@ struct pmf
     } u;
 };
 
-extern void *gUnknown_030012BC;
+extern void *gAudioContext;
 extern void *gLevelState;
 extern void *gUnknown_030012B8;
 extern void *gEntityFlags;
@@ -275,7 +275,7 @@ void sub_8017554(struct flag_pair_owner *self, u8 value)
 
 void sub_8017564(struct input_ctrl *self, void *arg)
 {
-    PlaySfx(gUnknown_030012BC, 0x1B, 0x100);
+    PlaySfx(gAudioContext, 0x1B, 0x100);
     CTRL_CALL2(self, method_20, 3);
     CTRL_CALL3(self, method_50, self->target, arg);
     self->target->flag7 = 0;

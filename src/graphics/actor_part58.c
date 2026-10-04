@@ -19,7 +19,7 @@
  * sibling object (`sub_802D490`). See docs/matching/issue-54-actor-d3a8.md. */
 
 extern struct level_state *gLevelState;
-extern void *gUnknown_030012BC;
+extern void *gAudioContext;
 extern s32 SetMaskLevel(struct level_state *arg0, s32 arg1);
 extern void sub_802D204(void *self, s32 arg1);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
@@ -70,7 +70,7 @@ s32 sub_802D4B0(void *self)
 {
     s32 count;
 
-    PlaySfx(gUnknown_030012BC, 0, 0x100);
+    PlaySfx(gAudioContext, 0, 0x100);
     count = gLevelState->maskLevel;
     if (count != 0) {
         count -= 1;
@@ -86,7 +86,7 @@ s32 sub_802D4EC(void *self)
 {
     s32 count;
 
-    PlaySfx(gUnknown_030012BC, 1, 0x100);
+    PlaySfx(gAudioContext, 1, 0x100);
     count = gLevelState->maskLevel;
     if (count != 3) {
         count += 1;
@@ -173,7 +173,7 @@ void sub_802D600(void *selfArg)
             u8 *flag = &self->once;
 
             if (*flag == 0) {
-                PlaySfx(gUnknown_030012BC, 0x28, 0x100);
+                PlaySfx(gAudioContext, 0x28, 0x100);
                 *flag = 1;
             }
         }
@@ -255,7 +255,7 @@ void sub_802D6A0(void *selfArg)
             }
             self->animTime = kind;
 
-            PlaySfx(gUnknown_030012BC, 0x17, 0x100);
+            PlaySfx(gAudioContext, 0x17, 0x100);
             sub_8022FEC(gLevelState);
             sub_8029748(self->z);
             sub_802B12C(self->x, self->y - 0xF00, self->z);
@@ -275,7 +275,7 @@ void sub_802D6A0(void *selfArg)
             self->animTime = kind;
             self->unk_18 = 1;
 
-            PlaySfx(gUnknown_030012BC, 3, 0x100);
+            PlaySfx(gAudioContext, 3, 0x100);
             sub_8022FEC(gLevelState);
         }
     }
@@ -317,7 +317,7 @@ void *sub_802D764(struct actor_self *self, void *part, s32 b, s32 c, s32 d)
             self->animTime = zero2;
         }
 
-        PlaySfx(gUnknown_030012BC, 0x17, 0x100);
+        PlaySfx(gAudioContext, 0x17, 0x100);
     }
 
     return self;

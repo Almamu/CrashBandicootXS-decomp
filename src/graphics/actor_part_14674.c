@@ -11,7 +11,7 @@
 extern u32 gKeys;
 extern void *gEntityFlags;
 extern void *gUnknown_030012B8;
-extern void *gUnknown_030012BC;
+extern void *gAudioContext;
 extern struct act_part *gUnknown_030012D8;
 extern void *gUnknown_03001304;
 extern u8 gStaticData_0816B300[];
@@ -240,7 +240,7 @@ void sub_8014940(struct act *self)
     struct act_part *part = self->part;
 
     if (part->tag == 0x2F && part->frame == 3 && part->unk_34 == 0)
-        PlaySfx(gUnknown_030012BC, 0x2E, 0x100);
+        PlaySfx(gAudioContext, 0x2E, 0x100);
     part = self->part;
     if (part->animDone)
     {
@@ -306,7 +306,7 @@ void sub_8014A3C(struct act *self)
     }
     if (INPUT_PRESSED(in) & 1)
     {
-        PlaySfx(gUnknown_030012BC, 0xD, 0x100);
+        PlaySfx(gAudioContext, 0xD, 0x100);
         sub_8014B54(self);
         return;
     }
@@ -328,7 +328,7 @@ void sub_8014AEC(struct act *self)
 
     if (fire)
     {
-        PlaySfx(gUnknown_030012BC, 0xD, 0x100);
+        PlaySfx(gAudioContext, 0xD, 0x100);
         sub_8014B54(self);
         return;
     }
@@ -387,7 +387,7 @@ void sub_8014BCC(struct act *self)
 
     if (v)
     {
-        PlaySfx(gUnknown_030012BC, 0xD, 0x100);
+        PlaySfx(gAudioContext, 0xD, 0x100);
         ActQueue27(self, 0, 0);
         sub_8014B54(self);
         return;
@@ -470,7 +470,7 @@ void sub_8014D18(struct act *self)
     fire = INPUT_PRESSED(in) & 1;
     if (fire)
     {
-        PlaySfx(gUnknown_030012BC, 0xD, 0x100);
+        PlaySfx(gAudioContext, 0xD, 0x100);
         ActQueue27(self, 0, 0);
         sub_8014B54(self);
         return;
@@ -582,7 +582,7 @@ void sub_8014EE0(struct act *self)
 
     if (fire)
     {
-        PlaySfx(gUnknown_030012BC, 0xD, 0x100);
+        PlaySfx(gAudioContext, 0xD, 0x100);
         ActSetNext27(self, 0);
         sub_8014B54(self);
         return;

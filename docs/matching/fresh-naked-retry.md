@@ -1,7 +1,7 @@
 # Fresh NAKED retry (issues #4, #7, #9, #10, #15, #16)
 
 This pass covered NAKED functions that earlier passes had skipped or barely
-touched: `sub_8001DB4` and `sub_8002114` (#4), `sub_8005E5C` (#7),
+touched: `sub_8001DB4` and `sub_8002114` (#4), `DrawPauseFraction` (#7),
 `sub_8009008` and `sub_80091D4` (#9), `sub_800B8DC` (#10), `sub_8010F8C`,
 `sub_8011548` and `sub_801173C` (#15), and `sub_8012420` and `sub_8012AF4`
 (#16).
@@ -32,7 +32,7 @@ touched: `sub_8001DB4` and `sub_8002114` (#4), `sub_8005E5C` (#7),
 
 ## Not closed
 
-- `sub_8005E5C` (settings_menu16.c): tried reading/writing the position
+- `DrawPauseFraction` (settings_menu16.c): tried reading/writing the position
   through a pointer, reordering the x/y reads, and direct stores, under both
   compilers. The best was 57 hw off with the size fixed, so the draft was not
   updated. The ROM holds 0x110 in r7, re-materializes 0x114 in the first

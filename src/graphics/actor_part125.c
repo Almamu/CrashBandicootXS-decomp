@@ -24,7 +24,7 @@ extern void *gUnknown_03001568;
 extern void *gUnknown_03001534;
 extern s32 gUnknown_030013C0;
 extern void sub_8031A08(struct actor_self *self);
-extern void *gUnknown_030012BC;
+extern void *gAudioContext;
 extern u8 gStaticData_087E5294[];
 extern struct actor_pmf gStaticData_0817C414[];
 
@@ -131,7 +131,7 @@ void sub_8031858(struct actor_5294 *self, s32 damage)
         ((void (*)(void *))vt->m38.fn)((u8 *)pending + vt->m38.thisOffset);
         self->pending = NULL;
     }
-    PlaySfx(gUnknown_030012BC, 0x2E, 0x100);
+    PlaySfx(gAudioContext, 0x2E, 0x100);
     ACTOR_SET_STATE(&self->base, 2, 1);
 }
 

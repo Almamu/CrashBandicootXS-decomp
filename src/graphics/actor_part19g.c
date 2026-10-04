@@ -23,7 +23,7 @@ struct listed_actor {
     void *unk_54;               // 0x54
 };
 
-extern void *gUnknown_030012BC;
+extern void *gAudioContext;
 extern void *gLevelState;
 extern void *gUnknown_03000884;
 
@@ -92,7 +92,7 @@ void sub_802C4C8(void *selfArg)
 
     if (self->animIndex != 0x12) {
         if (sub_802DD9C(self)) {
-            PlaySfx(gUnknown_030012BC, 3, 0x100);
+            PlaySfx(gAudioContext, 3, 0x100);
             sub_8022FEC(gLevelState);
             self->animIndex = 0x12;
             {
@@ -156,17 +156,17 @@ void sub_802C540(void *selfArg)
         goto state_block;
 
     case_1c:
-        PlaySfx(gUnknown_030012BC, 3, 0x100);
+        PlaySfx(gAudioContext, 3, 0x100);
         sub_802C078(gUnknown_03000884, 1);
         goto state_block;
 
     case_1d:
-        PlaySfx(gUnknown_030012BC, 3, 0x100);
+        PlaySfx(gAudioContext, 3, 0x100);
         sub_802C078(gUnknown_03000884, 3);
         goto state_block;
 
     case_1e:
-        PlaySfx(gUnknown_030012BC, 3, 0x100);
+        PlaySfx(gAudioContext, 3, 0x100);
         sub_802C078(gUnknown_03000884, 5);
         goto state_block;
 
@@ -202,7 +202,7 @@ void sub_802C614(void *selfArg)
 
     if (self->animIndex != 0x12) {
         if (sub_802A6EC(self)) {
-            PlaySfx(gUnknown_030012BC, 7, 0x100);
+            PlaySfx(gAudioContext, 7, 0x100);
             sub_8022FEC(gLevelState);
             sub_802C0A8(gUnknown_03000884);
             sub_802AAB4(((struct listed_actor *)self)->unk_54);
@@ -220,7 +220,7 @@ void sub_802C614(void *selfArg)
         }
 
         if (self->animIndex != 0x12 && sub_802DD9C(self)) {
-            PlaySfx(gUnknown_030012BC, 3, 0x100);
+            PlaySfx(gAudioContext, 3, 0x100);
             sub_8022FEC(gLevelState);
             self->animIndex = 0x12;
             {
@@ -270,7 +270,7 @@ void sub_802C6C0(void *selfArg)
         found = raw >> 24;
 
         if (found) {
-            PlaySfx(gUnknown_030012BC, 4, 0x100);
+            PlaySfx(gAudioContext, 4, 0x100);
             sub_8022FEC(gLevelState);
             sub_802B730(gUnknown_03000884);
             {
@@ -288,7 +288,7 @@ void sub_802C6C0(void *selfArg)
                 *(s32 *)&self->animTime = zero2;
             }
         } else if (sub_802DD9C(self)) {
-            PlaySfx(gUnknown_030012BC, 4, 0x100);
+            PlaySfx(gAudioContext, 4, 0x100);
             sub_8022FEC(gLevelState);
             {
                 register s32 zero2 asm("r5") = found;

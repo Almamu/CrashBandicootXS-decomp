@@ -1,9 +1,9 @@
 #include "core.h"
 #include "settings_sync.h"
 
-extern void sub_8002B70(void *arg0);
+extern void UpdateSaveChecksum(void *arg0);
 
-void sub_8002D28(struct settings_sync_record *self, u8 flags)
+void SetSaveFlags(struct settings_sync_record *self, u8 flags)
 {
     register u8 loaded asm("r3");
     register u8 v asm("r1");
@@ -11,7 +11,7 @@ void sub_8002D28(struct settings_sync_record *self, u8 flags)
     loaded = self->flags;
     v = loaded | flags;
     self->flags = v;
-    sub_8002B70(self);
+    UpdateSaveChecksum(self);
 }
 /* Trailing byte-padding mismatch fix: GAS's default Thumb code
  * alignment filler is the `mov r8, r8` NOP (0x46c0), but the ROM pads

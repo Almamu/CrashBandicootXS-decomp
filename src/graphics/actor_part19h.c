@@ -12,7 +12,7 @@
  * reset). */
 
 extern struct actor_self *gUnknown_03000884;
-extern void *gUnknown_030012BC;
+extern void *gAudioContext;
 extern void *gLevelState;
 extern void *MemCopy32(void *dst, const void *src, u32 byteCount);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
@@ -104,7 +104,7 @@ void sub_802C7A8(struct actor_self *self)
     do {
         if (ACTOR_TYPE(n) == 4 && n != self && ActorsOverlap(self, n)
             && n->animIndex != 0x12) {
-            PlaySfx(gUnknown_030012BC, 4, 0x100);
+            PlaySfx(gAudioContext, 4, 0x100);
             sub_8022FEC(gLevelState);
             n->stateTime = 0;
             n->animIndex = 0x12;

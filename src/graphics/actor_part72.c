@@ -31,7 +31,7 @@ struct particle_slot {
  * destination register before the `muls`, so which source expression is
  * written first decides which value gets that copy - matching the ROM's
  * choice here needed no register pins or opaque asm at all. */
-void sub_80345B0(void *mgrArg, s32 idx)
+void SpawnStar(void *mgrArg, s32 idx)
 {
     u8 *mgr = mgrArg;
     struct particle_slot *slot;
@@ -99,7 +99,7 @@ void sub_80345B0(void *mgrArg, s32 idx)
  * verbatim, taking `shift` and `tileMapEntry` (itself pinned to `r2` via a
  * nested `register` local, matching the ROM's own choice) as inputs and
  * `val` (already pinned to `r3`) as an in/out operand. */
-void sub_8034634(void *mgrArg, u32 x, s32 y, s32 valArg)
+void PlotStarfieldPixel(void *mgrArg, u32 x, s32 y, s32 valArg)
 {
     u8 *mgr = mgrArg;
     register s32 val asm("r3") = valArg;

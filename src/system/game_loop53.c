@@ -21,14 +21,14 @@
  * parallel-agent convention reserves collision-avoidance for a single
  * name (game_loop53.c) - see the issue doc's own follow-up note. */
 
-extern void *gUnknown_030012BC;
-extern void *gUnknown_03001318;
+extern void *gAudioContext;
+extern void *gHud;
 extern void *gLevelState;
 extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
 extern void sub_8007174(void *arg0, s32 arg1, s32 arg2, s32 *arg3, s32 *arg4);
 extern s32 FixedDiv(s32 arg0, s32 arg1);
 extern s32 FixedMul(s32 a, s32 b);
-extern void sub_80284D4(void *state);
+extern void ShowHudWumpa(void *state);
 extern s16 gStaticData_0816A820[];
 extern s32 rand(void);
 
@@ -50,11 +50,11 @@ static inline void OrbitClampFrame(struct orbit_part *self)
 
 /* sub_8011448: "randomized-position spawn/despawn picker" (docs/rom_map.md),
  * called as `sub_8011448(entry, 1)`/`(other, 1)` from game_loop40.c/
- * game_loop49.c for despawn. PlaySfx(gUnknown_030012BC, 8, 0x100), then
+ * game_loop49.c for despawn. PlaySfx(gAudioContext, 8, 0x100), then
  * either derives a randomized (dx,dy) offset pair from rand() (arg1
  * nonzero - self->0x48 = 2, self->0x49 tags which of three rand()-driven
  * bands was picked) or uses a fixed (0x1000,0x1000) offset and fires
- * sub_80284D4(gUnknown_03001318) (self->0x48 = 1). Either way: self->0x3c
+ * ShowHudWumpa(gHud) (self->0x48 = 1). Either way: self->0x3c
  * = 0xa0, self->0x30 clamped from a self->0x20 table lookup at
  * self->0x2d*0x1c+0x16 (same "table[tag]->field 0x16, clamp against a
  * zero floor" idiom sub_8010F8C/sub_8011870 also use), self->0x25 = 1,
@@ -74,7 +74,7 @@ void sub_8011448(struct orbit_part *self, u8 randomize)
     s32 outX, outY;
     s32 newX, newY;
 
-    PlaySfx(gUnknown_030012BC, 8, 0x100);
+    PlaySfx(gAudioContext, 8, 0x100);
     if (randomize) {
         u32 rv = (u16)rand();
         u8 lowbit = rv & 1;
@@ -93,7 +93,7 @@ void sub_8011448(struct orbit_part *self, u8 randomize)
     } else {
         dx = dy = 0x1000;
         self->state = 1;
-        sub_80284D4(gUnknown_03001318);
+        ShowHudWumpa(gHud);
     }
     self->timer = 0xa0;
     OrbitClampFrame(self);
@@ -120,7 +120,7 @@ void sub_8011448(struct orbit_part *self, u8 randomize)
  *    "distance to travel" pair sub_8011448/sub_8010EAC/etc. compute),
  *    wraps self->0x3c by +/-4 (mode-gated by self->0x49) each frame in
  *    [0,0x140], and once self->x>>8/self->y>>8 both fall within a small
- *    box (|x|<=0x10, |y|<=0x10) fires PlaySfx(gUnknown_030012BC,0xe,
+ *    box (|x|<=0x10, |y|<=0x10) fires PlaySfx(gAudioContext,0xe,
  *    0x100), calls CollectWumpa(gLevelState) (a scoring/counter
  *    candidate per docs/rom_map.md), sets self->0xc bit 0, and - unless
  *    self->8 == 0xffff - sets self->8's bit in the gEntityFlags+
@@ -230,7 +230,7 @@ void sub_8011548(struct orbit_part *self)
                 self->timer = 0;
         }
         if (self->base.x >> 8 <= 0x10 && self->base.y >> 8 <= 0x10) {
-            PlaySfx(gUnknown_030012BC, 0xe, 0x100);
+            PlaySfx(gAudioContext, 0xe, 0x100);
             CollectWumpa(gLevelState);
             ORBIT_MARK_GONE(self, 1);
         }
@@ -421,14 +421,14 @@ struct orbit_part *sub_801173C(u16 id, u16 x, u16 y, u16 special)
 /* sub_8011870: alternative to sub_80111B8 (game_loop29.c), called from
  * game_loop14.c "instead of sub_80111B8" per that file's own doc
  * comment. Same shape as sub_80111B8/sub_8011448's tail: PlaySfx(
- * gUnknown_030012BC, 8, 0x100), self->0x48 = 1, self->x -= self->0x4a<<8
+ * gAudioContext, 8, 0x100), self->0x48 = 1, self->x -= self->0x4a<<8
  * (a fixed-offset nudge), self->0x3c = 0xa0, self->0x30 clamped from the
  * same self->0x20/self->0x2d table-lookup idiom, self->0x25 = 1, calls
  * sub_8007174(self, x>>8, y>>8, &outX, &outY) and re-derives self->x/
  * self->y plus self->0x40/self->0x44 the same way, with a fixed
  * 0xFFFFF000 (-0x1000) offset on both axes instead of a randomized one -
  * then, unlike sub_8011448/sub_80111B8, finishes with
- * sub_80284D4(gUnknown_03001318) instead of sub_80284A4.
+ * ShowHudWumpa(gHud) instead of ShowHudLives.
  *
  * The fixed -0x1000 offsets go through `OrbitOffset` (an inline taking
  * the offset as a parameter): that is what makes old_agbcc reload the
@@ -445,7 +445,7 @@ void sub_8011870(struct orbit_part *self)
     s32 outX, outY;
     s32 newX, newY;
 
-    PlaySfx(gUnknown_030012BC, 8, 0x100);
+    PlaySfx(gAudioContext, 8, 0x100);
     self->state = 1;
     self->base.x -= self->mode << 8;
     self->timer = 0xa0;
@@ -460,7 +460,7 @@ void sub_8011870(struct orbit_part *self)
     newY = outY << 8;
     self->base.y = newY;
     self->velY = -FixedDiv(OrbitOffset(newY, 0x1000), 0x1400);
-    sub_80284D4(gUnknown_03001318);
+    ShowHudWumpa(gHud);
 }
 
 /* sub_801191C: sibling of sub_8011870 above - sets self->0x48 = 3 (mode)

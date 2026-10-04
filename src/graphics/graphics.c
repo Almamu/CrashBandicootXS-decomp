@@ -40,18 +40,18 @@ extern struct dma_queue gUnknown_03001290;
 /* Allocated capacity of gUnknown_03001290.entries. */
 #define DMA_QUEUE_MAX_ENTRIES 0x300
 
-extern s32 sub_800695C(void *arg0);
-extern s32 sub_80068CC(void *arg0);
-extern s32 sub_8006864(void *arg0);
-extern s32 sub_8006820(void *arg0);
-extern s32 sub_80067EC(void *arg0);
+extern s32 CountCrystals(void *arg0);
+extern s32 CountGems(void *arg0);
+extern s32 CountSapphireRelics(void *arg0);
+extern s32 CountGoldRelics(void *arg0);
+extern s32 CountPlatinumRelics(void *arg0);
 extern s32 __divsi3(s32 arg0, s32 arg1);
 
 /* The register pins below (and in several functions further down) match
  * the ROM's own register allocation exactly - required for a byte-exact
  * build, not stylistic. See docs/matching.md, "Matching decompilation"
  * for why plain C alone doesn't reproduce them. */
-s32 sub_800697C(void *arg0)
+s32 GetCompletionPercent(void *arg0)
 {
     register void *self asm("r6");
     register s32 total asm("r4");
@@ -62,11 +62,11 @@ s32 sub_800697C(void *arg0)
     u8 flags;
 
     self = arg0;
-    total = sub_800695C(self);
-    b = sub_80068CC(self);
-    c = sub_8006864(self);
-    d = sub_8006820(self);
-    e = sub_80067EC(self);
+    total = CountCrystals(self);
+    b = CountGems(self);
+    c = CountSapphireRelics(self);
+    d = CountGoldRelics(self);
+    e = CountPlatinumRelics(self);
     total += b;
     c = (c + (s32)((u32)c >> 31)) >> 1;
     total += c;

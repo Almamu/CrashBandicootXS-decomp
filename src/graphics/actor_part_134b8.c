@@ -24,7 +24,7 @@ struct spark
 };
 
 extern u32 gKeys;
-extern void *gUnknown_030012BC;
+extern void *gAudioContext;
 extern struct act_part *gUnknown_030012D8;
 extern void *gEntitySpawner;
 extern void *gUnknown_03001304;
@@ -112,7 +112,7 @@ void sub_80134B8(struct act *self)
         {
             s32 frames;
 
-            PlaySfx(gUnknown_030012BC, 0xA, 0x100);
+            PlaySfx(gAudioContext, 0xA, 0x100);
             frames = 0x18;
             ACT_VCALL1(self, m20, 0xE);
             ACT_VCALL2(self, m50, self->part, 0x10);
@@ -239,7 +239,7 @@ void sub_80134B8(struct act *self)
                     sub_8014F8C(self);
                 if (self->state != 0x1D)
                 {
-                    PlaySfx(gUnknown_030012BC, 0x19, 0x100);
+                    PlaySfx(gAudioContext, 0x19, 0x100);
                     ACT_VCALL1(self, m20, 0x16);
                     ACT_VCALL2(self, m50, self->part, 0x11);
                     self->next32 = bit4;

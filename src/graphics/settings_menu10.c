@@ -6,7 +6,7 @@
  * in another translation unit - see e.g. settings_menu6.c's own
  * `struct threshold_table_entry` comment). Steps `field_24`'s low 5
  * bits down to 0 (redrawing/committing every step via
- * sub_8006600/sub_8006714/sub_8006700), then polls input
+ * DrawPowerDialog/CommitPowerDialogFrame/AnimatePowerDialog), then polls input
  * (`UpdateKeys`/`gKeys.pressed`) redrawing every frame
  * until the confirm button is newly pressed, then steps `field_24`
  * back up to 0x10 the same way, and finally forces `field_28` to
@@ -39,9 +39,9 @@ struct sub_8006700_actor {
     } field_28;
 };
 
-extern void sub_8006600(struct sub_8006700_actor *arg0);
-extern void sub_8006714(struct sub_8006700_actor *arg0);
-extern void sub_8006700(struct sub_8006700_actor *arg0);
+extern void DrawPowerDialog(struct sub_8006700_actor *arg0);
+extern void CommitPowerDialogFrame(struct sub_8006700_actor *arg0);
+extern void AnimatePowerDialog(struct sub_8006700_actor *arg0);
 extern void UpdateKeys(void *arg0);
 extern void *gUnknown_03001304;
 
@@ -51,27 +51,27 @@ struct held_pressed_pair {
 };
 extern struct held_pressed_pair gKeys;
 
-void sub_8006518(struct sub_8006700_actor *self)
+void PowerDialogLoop(struct sub_8006700_actor *self)
 {
     while (self->field_24.level != 0) {
         self->field_24.level--;
-        sub_8006600(self);
-        sub_8006714(self);
-        sub_8006700(self);
+        DrawPowerDialog(self);
+        CommitPowerDialogFrame(self);
+        AnimatePowerDialog(self);
     }
     do {
-        sub_8006600(self);
-        sub_8006714(self);
-        sub_8006700(self);
+        DrawPowerDialog(self);
+        CommitPowerDialogFrame(self);
+        AnimatePowerDialog(self);
         UpdateKeys(gUnknown_03001304);
     } while (!(gKeys.pressed & 8));
     while (self->field_24.level != 0x10) {
         self->field_24.level++;
-        sub_8006600(self);
-        sub_8006714(self);
-        sub_8006700(self);
+        DrawPowerDialog(self);
+        CommitPowerDialogFrame(self);
+        AnimatePowerDialog(self);
     }
     self->field_28.all = 0;
     self->field_28.b.flags |= 0x40;
-    sub_8006714(self);
+    CommitPowerDialogFrame(self);
 }

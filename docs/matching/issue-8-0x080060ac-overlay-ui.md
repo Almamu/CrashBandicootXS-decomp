@@ -1,15 +1,15 @@
 # Issue #8: 0x080060AC-0x08006600 (overlay_ui, 9 functions)
 
 The tail end of the composite pause/options screen's `asm/code_3_1_10.s`
-region, continuing directly from GitHub issue #7's `sub_8006084`/
-`sub_800609C` (`src/graphics/settings_menu5.o`) up to the pre-existing
-parked `sub_8006600` guard (`src/graphics/oam_count.c`) that already
+region, continuing directly from GitHub issue #7's `PauseMenuCursorDown`/
+`PauseMenuCursorUp` (`src/graphics/settings_menu5.o`) up to the pre-existing
+parked `DrawPowerDialog` guard (`src/graphics/oam_count.c`) that already
 marks this file's end. 3 of the 9 functions matched, 4 parked
 (`NON_MATCHING`, semantics understood), 2 left completely untouched.
 
 ## Matched (3)
 
-- **`sub_80060AC`** (`src/graphics/settings_menu9.c`) - decimal `itoa`:
+- **`FormatDecimal`** (`src/graphics/settings_menu9.c`) - decimal `itoa`:
   writes `value`'s digits (unsigned, most significant first) into
   `dest`, NUL-terminated, returning the digit count. Builds digits
   least-significant-first into a small stack buffer via the existing
@@ -37,21 +37,21 @@ marks this file's end. 3 of the 9 functions matched, 4 parked
   r7 unprompted, which is what happens here once `value`'s copy is
   deferred.
 
-- **`sub_80060F8`** (`src/graphics/settings_menu9.c`) - formats a
+- **`FormatVolumePercent`** (`src/graphics/settings_menu9.c`) - formats a
   `" <NN%>"`-shaped scratch string (space, `<`, decimal digits of
-  `arg1 * 5` via `sub_80060AC` above, `%`, `>`, NUL) into `out`. Its
+  `arg1 * 5` via `FormatDecimal` above, `%`, `>`, NUL) into `out`. Its
   first parameter is read by nothing in the ROM - a genuinely unused
   argument (confirmed: the very first real instruction overwrites r0
   before ever reading it).
 
-- **`sub_8006250`** (`src/graphics/settings_menu12.c`) - the composite
+- **`CommitPauseMenuFrame`** (`src/graphics/settings_menu12.c`) - the composite
   screen's own top-level object's "apply display registers" step:
   flushes VRAM DMA, clears `PLTT`, and writes `field_c8`/`field_cc`/
   `field_d0` to `REG_BLDCNT`/`REG_BLDY`/`REG_DISPCNT` - the same shape
-  `src/graphics/oam_count.c`'s already-matched `sub_8006714` uses for a
+  `src/graphics/oam_count.c`'s already-matched `CommitPowerDialogFrame` uses for a
   *different*, smaller per-widget object (`struct sub_8006700_actor`),
   confirming this is a second, larger "self" object still not fully
-  reconciled (built by the still-raw `sub_8004D74`/`sub_8004EC0`,
+  reconciled (built by the still-raw `RunPauseMenu`/`InitPauseMenu`,
   GitHub issue #7). The final `field_d0` read+store needed an
   inline-asm-computed address pinned to `r0` rather than a plain field
   access: with plain `self->field_d0`, this compiler notices `self`
@@ -61,7 +61,7 @@ marks this file's end. 3 of the 9 functions matched, 4 parked
   accesses just above, which get the ROM's exact shape for free from
   plain field access).
 
-  `sub_80060F8` also needed a trailing `asm(".align 2, 0")` - the
+  `FormatVolumePercent` also needed a trailing `asm(".align 2, 0")` - the
   classic alignment-padding gotcha (`matching_decomp_alignment_fix`
   memory): the ROM pads the gap before the next function with zero
   bytes (an explicit `.align 2, 0` in the original assembly, since the
@@ -73,52 +73,52 @@ marks this file's end. 3 of the 9 functions matched, 4 parked
 ## Parked (`NON_MATCHING`, 4)
 
 All four hit the same class of gcc-2.9 register-allocation difficulty
-already documented at length for `sub_8006600` (`src/graphics/
-oam_count.c`) and `sub_8005AE8`/`sub_8005B80`/`sub_8005C58`/`sub_8005D44`
+already documented at length for `DrawPowerDialog` (`src/graphics/
+oam_count.c`) and `InitPausePowersPage`/`InitPauseGemsPage`/`InitPauseRelicsPage`/`InitPauseTimeTrialPage`
 (`src/graphics/settings_menu6.c`, GitHub issue #7): every load, store,
 branch, and call is semantically confirmed, but the loop/self pointer
 and the icon-manager position-store's scratch registers never land
 exactly where the ROM's own allocator puts them, no matter how the
 source is rephrased. Closing that gap would need the same kind of heavy
-per-call-site register-pin macro work already invested in `sub_8006600`
+per-call-site register-pin macro work already invested in `DrawPowerDialog`
 - more than this pass had budget for across four more functions on top
 of it.
 
-- **`sub_8006124`**, **`sub_800619C`**, **`sub_80061E8`**
+- **`DrawPauseTimeTrialPage`**, **`DrawPauseCrystalsPage`**, **`DrawPauseMenuPageTitle`**
   (`src/graphics/settings_menu11.c`, real bytes wrapped `.if
   NON_MATCHING == 0` in `asm/code_3_1_10_14.s`) - three icon-manager
   centered-label draws, each the companion "draw a number/label
   centered on an icon widget" step for one of GitHub issue #7's
   icon-widget constructors:
-  - `sub_8006124` draws `self->timeBuf` (a `FormatCentiseconds`
-    result) centered on the medal-icon widget `sub_8005D44` builds,
+  - `DrawPauseTimeTrialPage` draws `self->timeBuf` (a `FormatCentiseconds`
+    result) centered on the medal-icon widget `InitPauseTimeTrialPage` builds,
     using the same fixed `gStaticData_0816B27C` position pair that
     icon itself is positioned with. `self` is the same `struct
     pause_screen_results` `settings_menu6.c` already documents
     (`field_6c`/`field_bc`/`timeBuf` all line up at their existing
     offsets).
-  - `sub_800619C` positions the icon manager at `gStaticData_0816B1E4`
-    (the same fixed point `sub_8005A78`'s `field_88` icon uses) and
-    hands off to the still-raw `sub_8005E5C` (GitHub issue #7) to
-    actually draw the two small result-count strings `sub_8005A78`
+  - `DrawPauseCrystalsPage` positions the icon manager at `gStaticData_0816B1E4`
+    (the same fixed point `InitPauseCrystalsPage`'s `field_88` icon uses) and
+    hands off to the still-raw `DrawPauseFraction` (GitHub issue #7) to
+    actually draw the two small result-count strings `InitPauseCrystalsPage`
     already formatted into `buf2c`/`buf46`.
-  - `sub_80061E8` draws a fixed-position (0xc2, 0x2c) category/header
+  - `DrawPauseMenuPageTitle` draws a fixed-position (0xc2, 0x2c) category/header
     label, picking its source character from
-    `gStaticData_0816B1D0[self->field_24]` fed through `GetUiText`
+    `gPauseMenuPageTitles[self->field_24]` fed through `GetUiText`
     (the same "char code -> something `_call_via_r2` can draw"
-    conversion `sub_8006600`/`sub_8005A78` already use for fixed digits
+    conversion `DrawPowerDialog`/`InitPauseCrystalsPage` already use for fixed digits
     like `0x2e`/`0x14`). This `self` is a different, not-yet-reconciled
     object from the other two (only `field_24`, a plain `s32` category
     index, is touched here).
 
-- **`sub_8006518`** (`src/graphics/settings_menu10.c`, real bytes
+- **`PowerDialogLoop`** (`src/graphics/settings_menu10.c`, real bytes
   wrapped `.if NON_MATCHING == 0` in `asm/code_3_1_10_13.s`) - the
   settings-row confirm-cursor stepper on the small per-widget object
   `src/graphics/oam_count.c` already names `struct sub_8006700_actor`
   (redeclared locally here per this project's minimal-local-type
   convention for a type already anchored in another translation unit).
   Steps `field_24`'s low 5 bits down to 0 one at a time (redrawing/
-  committing every step via `sub_8006600`/`sub_8006714`/`sub_8006700`),
+  committing every step via `DrawPowerDialog`/`CommitPowerDialogFrame`/`AnimatePowerDialog`),
   then polls input (`UpdateKeys`/`gKeys.pressed`,
   redrawing every frame) until the confirm button is newly pressed,
   then steps `field_24` back up to `0x10` the same way, and finally
@@ -126,33 +126,33 @@ of it.
 
 ## Left completely untouched (2)
 
-- **`sub_80062A8`**, **`sub_80063D8`** (`asm/code_3_1_10_12.s`) - a
+- **`ShowPowerDialog`**, **`InitPowerDialog`** (`asm/code_3_1_10_12.s`) - a
   large pair of functions (the second taking 5 register arguments via
   `sb`/`sl`/`r8`) that allocate/construct another icon widget and wire
   it into the composite screen via `LoadGraphicsPackage`/
   `sub_801E644`/`sub_8026EDC`. The overall shape is visible (another
   `settings_icon_actor`-style construction plus a
   `mem_free_bytes(MEM_HEAP_BOTH)` pair bracketing the whole thing,
-  mirroring `sub_80062A8`'s own bracket), but several field offsets and
-  the exact call graph through `sub_80063D8`'s five-register argument
+  mirroring `ShowPowerDialog`'s own bracket), but several field offsets and
+  the exact call graph through `InitPowerDialog`'s five-register argument
   list weren't traced to full confidence in the time available - left
   raw per docs/workflow.md's "leave it completely untouched" step
   rather than force a low-confidence reconstruction.
 
 ## File structure
 
-`asm/code_3_1_10_11.s` (originally `sub_80060AC` through the
-pre-existing parked `sub_8006600` guard) split into:
-`src/graphics/settings_menu9.c` (`sub_80060AC`/`sub_80060F8`, matched),
-the new raw `asm/code_3_1_10_14.s` (`sub_8006124`/`sub_800619C`/
-`sub_80061E8`'s real bytes, wrapped), `src/graphics/settings_menu11.c`
+`asm/code_3_1_10_11.s` (originally `FormatDecimal` through the
+pre-existing parked `DrawPowerDialog` guard) split into:
+`src/graphics/settings_menu9.c` (`FormatDecimal`/`FormatVolumePercent`, matched),
+the new raw `asm/code_3_1_10_14.s` (`DrawPauseTimeTrialPage`/`DrawPauseCrystalsPage`/
+`DrawPauseMenuPageTitle`'s real bytes, wrapped), `src/graphics/settings_menu11.c`
 (their `NON_MATCHING` C reconstructions), `src/graphics/settings_menu12.c`
-(`sub_8006250`, matched), the new raw `asm/code_3_1_10_12.s`
-(`sub_80062A8`/`sub_80063D8`, left untouched), `src/graphics/
-settings_menu10.c` (`sub_8006518`'s `NON_MATCHING` C reconstruction),
+(`CommitPauseMenuFrame`, matched), the new raw `asm/code_3_1_10_12.s`
+(`ShowPowerDialog`/`InitPowerDialog`, left untouched), `src/graphics/
+settings_menu10.c` (`PowerDialogLoop`'s `NON_MATCHING` C reconstruction),
 the new raw `asm/code_3_1_10_13.s` (its real bytes, wrapped), and
 finally the trimmed `asm/code_3_1_10_11.s` (just the original file's
-unchanged `sub_8006600` guard). `ldscript.txt` and `tools/
+unchanged `DrawPowerDialog` guard). `ldscript.txt` and `tools/
 report_units.py`'s `overlay_ui` entries both updated to match this
 finer split, keeping every function's own address unchanged.
 
@@ -160,14 +160,14 @@ Verified via a full clean `rm -rf build && make NON_MATCHING=1 report`
 and `rm -rf build crashbandicootxs.elf crashbandicootxs.gba
 crashbandicootxs.map && make compare` (`La suma coincide`). The first
 attempt at this split briefly broke `make compare` two different ways,
-both worth recording: (1) putting `sub_8006250` in the same object file
-as `sub_80060AC`/`sub_80060F8` reordered it *before* the parked
-`sub_8006124`/`sub_800619C`/`sub_80061E8` trio in the final link (since
+both worth recording: (1) putting `CommitPauseMenuFrame` in the same object file
+as `FormatDecimal`/`FormatVolumePercent` reordered it *before* the parked
+`DrawPauseTimeTrialPage`/`DrawPauseCrystalsPage`/`DrawPauseMenuPageTitle` trio in the final link (since
 whole object files link as contiguous units in `ldscript.txt` order,
 regardless of which functions within them are matched vs. parked) -
-fixed by giving `sub_8006250` its own object file
+fixed by giving `CommitPauseMenuFrame` its own object file
 (`settings_menu12.o`) positioned after the trio's; (2) the
-`sub_80060F8`/`sub_8006124` boundary needed the trailing
+`FormatVolumePercent`/`DrawPauseTimeTrialPage` boundary needed the trailing
 `asm(".align 2, 0")` described above. Neither was visible from an
 isolated per-function compile - both are exactly the kind of
 link-context-only bug docs/workflow.md's step 2/3 warning describes.
@@ -190,17 +190,17 @@ confirm/cancel driver, and their icon-manager-heavy sub-widgets) were
 not attempted this pass either; docs/rom_map.md's "Correction:
 `overlay_ui` is a small family of screens" section already gives high-
 confidence semantics for several of them
-(`sub_8004D74`/`sub_8004EC0`/`sub_8005004`/`sub_8005100`/`sub_800599C`)
+(`RunPauseMenu`/`InitPauseMenu`/`DestroyPauseMenu`/`PauseMenuLoop`/`InitPauseMenuInfo`)
 and would be a reasonable next chunk to pick up. Both issues are left
 open with this comment.
 
-## Second pass: `sub_80063D8` matched, `sub_80062A8` parked
+## Second pass: `InitPowerDialog` matched, `ShowPowerDialog` parked
 
 A follow-up pass tackled this issue's final two "left completely
-untouched" functions, `sub_80062A8`/`sub_80063D8` (previously raw in
+untouched" functions, `ShowPowerDialog`/`InitPowerDialog` (previously raw in
 `asm/code_3_1_10_12.s`).
 
-- **`sub_80063D8`** (`src/graphics/settings_menu13.c`) - the two-string
+- **`InitPowerDialog`** (`src/graphics/settings_menu13.c`) - the two-string
   dialog/message-box object constructor docs/rom_map.md's "Correction"
   section already traced: builds a small `struct sub_8006700_actor`
   (the same object `src/graphics/oam_count.c`/`settings_menu10.c`
@@ -233,39 +233,39 @@ untouched" functions, `sub_80062A8`/`sub_80063D8` (previously raw in
   diffing it directly against the ROM's own disassembly, not by trusting
   the isolated `.s` output a second time.
 
-- **`sub_80062A8`** (`src/graphics/settings_menu14.c`) - the higher-
+- **`ShowPowerDialog`** (`src/graphics/settings_menu14.c`) - the higher-
   level dialog spawner docs/rom_map.md already traced (palette/DISPCNT
   reset, re-init the two icon managers, reset the VRAM upload cursor,
   fire each manager's `record->slots[6]` trampoline, allocate and build
-  the dialog via `sub_80063D8` above, then run it via `sub_8006518`).
+  the dialog via `InitPowerDialog` above, then run it via `PowerDialogLoop`).
   Every load/store/call is confirmed against the ROM. **Parked**
   (`NON_MATCHING`) - hits the same "last mile" gcc-2.9 register/
   constant-reuse nondeterminism this issue's other parked functions
   document, specifically around the two cached-global-address locals
-  (`gUnknown_030012DC`/`030012E0`, `r5`/`r8` in the ROM) and the exact
-  constant-reuse trick the ROM uses to derive `gUnknown_030012E0`'s
+  (`gSmallFont`/`030012E0`, `r5`/`r8` in the ROM) and the exact
+  constant-reuse trick the ROM uses to derive `gLargeFont`'s
   `field_108` offset by subtracting `0x24` from the already-loaded
   `field_12c` offset constant rather than loading a fresh literal. An
   explicit `asm("r7")` pin for the `type` parameter was tried and
   discarded - it produced a genuine **correctness bug**, not just a
   mismatch: the natural allocator reused r7 for an unrelated cached
   address partway through the function, silently clobbering the pinned
-  value before its one remaining use at the `sub_80063D8` call site.
+  value before its one remaining use at the `InitPowerDialog` call site.
   This is the project's documented categorical r7-pin limitation
   (`docs/matching/naked-sub_8007dbc.md`) showing up in a new function;
   not worth continuing to push on for a single call site. Real bytes
   wrapped `.if NON_MATCHING == 0` in the new `asm/code_3_1_10_15.s`.
 
-Since `sub_80062A8` is still parked, **issue #8 is not fully closed by
+Since `ShowPowerDialog` is still parked, **issue #8 is not fully closed by
 this pass** - one function's worth of register-allocation work remains.
 
 ## File structure (second pass)
 
-`asm/code_3_1_10_12.s` (previously holding both `sub_80062A8` and
-`sub_80063D8` raw) is gone - split into the new `src/graphics/
-settings_menu14.c` (`sub_80062A8`'s `NON_MATCHING` C reconstruction),
-the new `asm/code_3_1_10_15.s` (`sub_80062A8`'s real bytes, wrapped),
-and the new `src/graphics/settings_menu13.c` (`sub_80063D8`, matched,
+`asm/code_3_1_10_12.s` (previously holding both `ShowPowerDialog` and
+`InitPowerDialog` raw) is gone - split into the new `src/graphics/
+settings_menu14.c` (`ShowPowerDialog`'s `NON_MATCHING` C reconstruction),
+the new `asm/code_3_1_10_15.s` (`ShowPowerDialog`'s real bytes, wrapped),
+and the new `src/graphics/settings_menu13.c` (`InitPowerDialog`, matched,
 unconditional). `ldscript.txt` updated to link them in that order
 (`settings_menu12.o`, `settings_menu14.o`, `code_3_1_10_15.o`,
 `settings_menu13.o`, `settings_menu10.o`, ...), keeping every
@@ -276,11 +276,11 @@ Verified via a full clean `rm -rf build && make NON_MATCHING=1 report`
 and `rm -rf build crashbandicootxs.elf crashbandicootxs.gba
 crashbandicootxs.map && make compare` (`La suma coincide`).
 
-## Third pass: the remaining parked quartet + `sub_80062A8` matched via NAKED transcription
+## Third pass: the remaining parked quartet + `ShowPowerDialog` matched via NAKED transcription
 
-Closed out this issue's last 4 parked functions (`sub_8006124`,
-`sub_800619C`, `sub_80061E8` in `src/graphics/settings_menu11.c`,
-`sub_8006518` in `src/graphics/settings_menu10.c`) plus `sub_80062A8`
+Closed out this issue's last 4 parked functions (`DrawPauseTimeTrialPage`,
+`DrawPauseCrystalsPage`, `DrawPauseMenuPageTitle` in `src/graphics/settings_menu11.c`,
+`PowerDialogLoop` in `src/graphics/settings_menu10.c`) plus `ShowPowerDialog`
 (`src/graphics/settings_menu14.c`), the second pass's remaining parked
 function - all 5 now byte-exact matched, confirmed by a full clean
 `make compare` (`La suma coincide`).
@@ -293,20 +293,20 @@ well-documented gcc-2.9 register-allocation nondeterminism, so each was
 converted to `NAKED` asm - a mechanical, byte-verified transcription of
 the ROM's own instructions (translated to divided syntax, GNU numeric
 local labels) rather than continuing to fight the compiler over
-individual register choices. `sub_80062A8` in particular is the same
+individual register choices. `ShowPowerDialog` in particular is the same
 function whose doc comment above records a genuine correctness bug from
 an `asm("r7")` pin attempt in the second pass - the NAKED rewrite
 sidesteps that whole class of bug by not pinning anything, just
 reproducing the ROM's own register choices verbatim.
 
-`sub_8006124`/`sub_800619C`/`sub_80061E8` and `sub_8006518` needed no
+`DrawPauseTimeTrialPage`/`DrawPauseCrystalsPage`/`DrawPauseMenuPageTitle` and `PowerDialogLoop` needed no
 `ldscript.txt`/file restructuring - each already had its own dedicated
 object file position reserved (`settings_menu11.o`/`settings_menu10.o`),
 just contributing zero bytes to the real build while entirely parked;
 removing their `#if NON_MATCHING` guards (and the corresponding raw
 `.if NON_MATCHING == 0` bytes from `asm/code_3_1_10_14.s`/
 `code_3_1_10_13.s`, now-empty files deleted outright) was a pure
-in-place change. `sub_80062A8` likewise needed no restructuring beyond
+in-place change. `ShowPowerDialog` likewise needed no restructuring beyond
 deleting its now-empty `asm/code_3_1_10_15.s`.
 
 Verified via the same full clean `rm -rf build && make NON_MATCHING=1
@@ -317,7 +317,7 @@ session's combined batch (across both issue #7 and issue #8) required.
 ### Closing this issue
 
 Every function in GitHub issue #8's original 9-function range
-(`sub_80060AC`-`sub_8006518`, including `sub_80062A8`/`sub_80063D8`
+(`FormatDecimal`-`PowerDialogLoop`, including `ShowPowerDialog`/`InitPowerDialog`
 which that issue's own checklist hadn't been marked complete for) is
 now byte-exact matched. This PR closes issue #8.
 
@@ -326,12 +326,12 @@ now byte-exact matched. This PR closes issue #8.
 The issue #4/#6/#8 retry ([issue-4-6-8-naked-retry.md](issue-4-6-8-naked-retry.md)) replaced all five NAKED transcriptions
 from the third pass with plain C:
 
-- `sub_8006124`, `sub_800619C` and `sub_80061E8` match under both
+- `DrawPauseTimeTrialPage`, `DrawPauseCrystalsPage` and `DrawPauseMenuPageTitle` match under both
   compilers once the draws are written as `record->slots[n]` virtual
   calls.
-- `sub_80062A8` matches under both with the `IconSetup`/`IconReserve`
-  helpers and a one-argument `sub_8028A40`.
-- `sub_8006518` matches under old_agbcc with a packed `level:5`
+- `ShowPowerDialog` matches under both with the `IconSetup`/`IconReserve`
+  helpers and a one-argument `FontResetPalette`.
+- `PowerDialogLoop` matches under old_agbcc with a packed `level:5`
   bitfield. `settings_menu10.c` is now on `OLD_AGBCC_OBJS`.
 
 The issue's range now has no NAKED, raw or NON_MATCHING functions.

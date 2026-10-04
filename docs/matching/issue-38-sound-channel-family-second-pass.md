@@ -49,9 +49,9 @@ Full clean `make compare` confirms byte-exact.
 
 ## Parked as NAKED: `BeginSlide`
 
-Starts/re-selects a sound cue via `sub_8001B54`, then either plays its
+Starts/re-selects a sound cue via `PlaySong`, then either plays its
 secondary sfx immediately (if the channel already reports the requested
-id) or busy-polls `sub_8001AB8` until it does, and either way ORs bit 7
+id) or busy-polls `GetCurrentSong` until it does, and either way ORs bit 7
 into `field_08`'s low byte for a `sub_800132C` fade-start call.
 
 Re-diffing the whole function against the ROM (not just the one branch
@@ -68,10 +68,10 @@ one:
    asm volatile("" : "=r"(val) : "0"(mask));` forces the actual `mov`
    into r1 the ROM's own reuse of a free register produces.
 2. **Fixed for real**: the very first `self->items[idx]` pointer load
-   (fed straight to `sub_8001B54` as `item->field_14`) landed in r2 in
+   (fed straight to `PlaySong` as `item->field_14`) landed in r2 in
    this reconstruction but r1 in the ROM. The prior pass's write-up never
    flagged this because it never re-diffed this part of the function.
-   Fixed by not naming it - `sub_8001B54(audio, self->items[idx]->field_14);`
+   Fixed by not naming it - `PlaySong(audio, self->items[idx]->field_14);`
    inline, instead of assigning through the same `item` local the rest of
    the function reloads - the "differently-named pointer variable avoids
    reuse" gotcha `settings_menu13.c` also documents (a shared register
@@ -80,7 +80,7 @@ one:
 3. **Unfixable, confirmed toolchain bug**: the ROM's busy-poll loop
    (`playing != item->field_14`, entered when the channel doesn't
    already report the requested id) needs `push {r4, r5, r6, r7, lr}` -
-   it caches `&gUnknown_030012BC` in r7 and a copy of the item
+   it caches `&gAudioContext` in r7 and a copy of the item
    byte-offset in r6 across the loop. But this compiler's
    `register T x asm("r7")` never adds an inline-asm-clobbered - or even
    a genuinely written-and-read - r7 to the function's own push/pop list.

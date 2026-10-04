@@ -18,7 +18,7 @@ extern void FreezeLevelClock(void *arg0, s32 arg1);
 extern s32 sub_802A4D4(void);
 extern s32 __divsi3(s32 arg0, s32 arg1);
 extern s32 AddLife(void *self);
-extern void *gUnknown_030012BC;
+extern void *gAudioContext;
 extern void *gLevelState;
 extern u8 gUnknown_03001504;
 extern u8 gUnknown_03001506;
@@ -68,7 +68,7 @@ void sub_802F0DC(void *selfArg)
             *(u8 *)&self->animDone = zero2;
         }
         self->animTime = zero;
-        PlaySfx(gUnknown_030012BC, 0x3b, 0x100);
+        PlaySfx(gAudioContext, 0x3b, 0x100);
         if (*((u8 *)gLevelState + 0x8c) != 0) {
             FreezeLevelClock(gLevelState, 0x2710);
         }
@@ -191,7 +191,7 @@ void sub_802F164(void *selfArg, s32 xArg, s32 yArg)
     case 4:
         if (*((u8 *)gLevelState + 0x8c) == 0) {
             AddLife(gLevelState);
-            PlaySfx(gUnknown_030012BC, 7, 0x100);
+            PlaySfx(gAudioContext, 7, 0x100);
         }
         break;
     }

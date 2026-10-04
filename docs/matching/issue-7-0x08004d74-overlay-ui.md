@@ -14,8 +14,8 @@ screen's top-level constructor/driver pair, its per-row list renderer
 and draw step, its five icon-row-group draw handlers, and the results
 sub-region constructor. All 12 live in what was `asm/code_3_1_10_7.s`
 (0x08004D74-0x08005A78, contiguous up to the already-matched
-`sub_8005A78` in `src/graphics/settings_menu6.c`) plus the single
-isolated `sub_8005E5C` (0x08005E5C-0x08005EF4, between
+`InitPauseCrystalsPage` in `src/graphics/settings_menu6.c`) plus the single
+isolated `DrawPauseFraction` (0x08005E5C-0x08005EF4, between
 `settings_menu6.o` and `settings_menu7.o`).
 
 5 of the 12 are now matched; 7 stay parked under `NON_MATCHING`. Issue
@@ -28,10 +28,10 @@ three independent, non-overlapping partial views: `struct
 pause_screen_results` (settings_menu6.c), `struct
 pause_screen_row_counts` (settings_menu7.c), and `struct
 pause_screen_apply_state` (settings_menu12.c). Tracing the real call
-chain this pass (`sub_8004D74` allocates the object and hands it to
-`sub_8004EC0`, which hands the *same pointer* to `sub_800599C`, which
-hands it to `sub_8005A78`/`AE8`/`B80`/`C58`/`D44`; `sub_8004EC0`
-separately hands it to `sub_8006250`/`sub_8005100`) confirms these
+chain this pass (`RunPauseMenu` allocates the object and hands it to
+`InitPauseMenu`, which hands the *same pointer* to `InitPauseMenuInfo`, which
+hands it to `InitPauseCrystalsPage`/`AE8`/`B80`/`C58`/`D44`; `InitPauseMenu`
+separately hands it to `CommitPauseMenuFrame`/`PauseMenuLoop`) confirms these
 three views are genuinely the same allocation - merging them into one
 struct in `include/pause_screen_results.h`, with all three previously-
 separate field sets agreeing at zero-overlap boundaries once combined
@@ -52,39 +52,39 @@ some byte offsets by coincidence, per that header's own comment.
 
 ## Matched (5 of 12)
 
-- **`sub_8004EC0`** - the composite screen's per-instance constructor:
+- **`InitPauseMenu`** - the composite screen's per-instance constructor:
   `sub_801E644` init, a local BLDCNT/BLDY/DISPCNT setup
-  (`field_c8`/`field_cc`/`field_d0`, the same fields `sub_8006250`
+  (`field_c8`/`field_cc`/`field_d0`, the same fields `CommitPauseMenuFrame`
   applies), `LoadGraphicsPackage`, a row-stats handle from
-  `gLevelState`, hands off to `sub_800599C` to build the results
+  `gLevelState`, hands off to `InitPauseMenuInfo` to build the results
   sub-widgets, builds one more icon directly (the row-cursor/highlight
   icon at `field_c0`), seeds the settings-row bookkeeping fields
   (`field_14`/`field_18`/`field_1c`/`field_20`/`field_24`/`field_28`),
   and applies BG0CNT/BG0HOFS before returning `self` unchanged.
-- **`sub_8005004`** - re-probes every icon field/array the results
+- **`DestroyPauseMenu`** - re-probes every icon field/array the results
   screen owns (`field_c0`, `field_bc`, `iconsB0[3]`, `icons9c[5]`,
   `icons8c[4]`, `field_88`, in that order) via the same "re-probe an
-  actor's own category-table slot 0x50/0x54" shape `sub_8006770`
+  actor's own category-table slot 0x50/0x54" shape `DestroyPowerDialog`
   (`src/graphics/oam_count.c`) already established, then frees `self`
   if bit 0 of `flags` is set.
-- **`sub_8005304`** - the icon-group reveal/cycle animation
+- **`AnimatePauseMenu`** - the icon-group reveal/cycle animation
   (`field_24`/`field_28` cycle through hiding one icon group per call,
   advancing every 180 calls) plus the row-cursor icon's independent
   blink countdown (`field_c4`/`field_c0`/`field_38`).
-- **`sub_800570C`** - shows whichever of `icons8c[0..3]` has a matching
+- **`DrawPausePowersPage`** - shows whichever of `icons8c[0..3]` has a matching
   bit set in the row-stats handle's flag byte (bits
   0x20/0x80/0x40/0x10), or draws a fallback centered label (text id
   0x3a) if none did.
-- **`sub_800599C`** - the results sub-region constructor: resolves the
+- **`InitPauseMenuInfo`** - the results sub-region constructor: resolves the
   current level's name/index label, formats the completion percentage,
   formats two BG-scroll-speed settings via a `(v+0xc)*20/256` scale,
   then builds the five icon-widget sub-groups in order (delegating to
-  `sub_8005A78`/`AE8`/`B80`/`C58`/`D44`).
+  `InitPauseCrystalsPage`/`AE8`/`B80`/`C58`/`D44`).
 
-New files: `src/graphics/settings_menu15.c` (`sub_8004EC0`,
-`sub_8005004`, plus the parked functions below), `settings_menu17.c`
-(`sub_8005304`), `settings_menu18.c` (`sub_800570C`), `settings_menu19.c`
-(`sub_800599C`).
+New files: `src/graphics/settings_menu15.c` (`InitPauseMenu`,
+`DestroyPauseMenu`, plus the parked functions below), `settings_menu17.c`
+(`AnimatePauseMenu`), `settings_menu18.c` (`DrawPausePowersPage`), `settings_menu19.c`
+(`InitPauseMenuInfo`).
 
 ### Real codegen gotchas hit and fixed (all five functions)
 
@@ -96,11 +96,11 @@ instruction-for-instruction, not a guess:
   + 0x78` (a random-range countdown) compiles shorter than the ROM
   unless the return value is explicitly truncated first: `(u16)
   RandRange(0x78) + 0x78` forces the ROM's `lsls r0,r0,#0x10 / lsrs
-  r0,r0,#0x10` pair back in (hit identically in both `sub_8004EC0` and
-  `sub_8005304`).
+  r0,r0,#0x10` pair back in (hit identically in both `InitPauseMenu` and
+  `AnimatePauseMenu`).
 - **Mid-function literal pool split via `asm volatile(".pool")`** (the
   same technique documented in `docs/matching/issue-5-overlay-ui-sync.md`
-  for `sub_8003A60`): the ROM splits `sub_8004EC0`'s literal pool into
+  for `DrawSaveMenuMain`): the ROM splits `InitPauseMenu`'s literal pool into
   an early 5-word group (right after an unconditional branch mid-
   function) and a late 2-word group at the tail; this compiler defaults
   to dumping everything at the tail unless told otherwise. Needed a
@@ -115,7 +115,7 @@ instruction-for-instruction, not a guess:
   get the ROM's exact register/constant scheduling instead of an
   equally-valid but differently-ordered one.
 - **A register-pinned local without an initializer can silently break
-  the automatic callee-save push/pop list.** `sub_8005004` needs four
+  the automatic callee-save push/pop list.** `DestroyPauseMenu` needs four
   pointers (`icons9c`/`icons8c`/`field_88`/`iconsB0` bases) set up in a
   specific order across `r7`/`r8`/`r9`(`sb`)/`r4` before four back-to-
   back loops. Pinning all four the same way self/flags were pinned
@@ -129,7 +129,7 @@ instruction-for-instruction, not a guess:
   natural allocator picks `r4`/`r7` correctly and includes them in the
   standard `push {r4,r5,r6,r7,lr}` prologue on its own.
 - **`goto`-based control flow to force branch polarity**
-  (`sub_8005304`'s `field_c4` blink-countdown check): a plain `if
+  (`AnimatePauseMenu`'s `field_c4` blink-countdown check): a plain `if
   (*countAddr != 0) { decrement } else { <big icon block> }` compiles
   to the *opposite* branch sense from the ROM (a short `beq` skipping
   the decrement, vs. the ROM's `bne` skipping the icon block) - same
@@ -137,12 +137,12 @@ instruction-for-instruction, not a guess:
   `goto decrement; ...icon block...; goto store; decrement: ...; store:
   ...;` to pin the ROM's exact branch target layout.
 - **Trailing byte-padding** (`matching_decomp_alignment_fix`): both
-  `sub_8005004` and `sub_8005304` needed a trailing `asm(".align 2,
+  `DestroyPauseMenu` and `AnimatePauseMenu` needed a trailing `asm(".align 2,
   0");` right after their closing brace - the ROM pads the gap to the
   next function with zero bytes, this compiler's default inter-
   function padding is a `mov r8, r8` NOP-equivalent.
 - **A dereference's destination register vs. the address holding
-  it**: several `X & *(u8 *)addr`-shaped bit tests (e.g. `sub_800570C`'s
+  it**: several `X & *(u8 *)addr`-shaped bit tests (e.g. `DrawPausePowersPage`'s
   four `field_10`-byte checks) need the mask constant and the
   dereferenced byte pinned to specific opposite registers
   (`register s32 mask asm("r0"); register u8 *p asm("r1"); ... byte =
@@ -157,15 +157,15 @@ matched functions above and `docs/rom_map.md`'s `overlay_ui`
 investigation; none were guessed. Real bytes stay in the asm fragments
 below (each wrapped `.if NON_MATCHING == 0`); the NON_MATCHING C
 reconstructions live alongside the matched functions in
-`src/graphics/settings_menu15.c` (`sub_8004D74`, `sub_8005100`,
-`sub_80053F4`, `sub_800556C`, `sub_80057E0`, `sub_80058C0`) and
-`src/graphics/settings_menu16.c` (`sub_8005E5C`).
+`src/graphics/settings_menu15.c` (`RunPauseMenu`, `PauseMenuLoop`,
+`DrawPauseMenu`, `DrawPauseMenuRows`, `DrawPauseGemsPage`, `DrawPauseRelicsPage`) and
+`src/graphics/settings_menu16.c` (`DrawPauseFraction`).
 
-- **`sub_8004D74`** (`asm/code_3_1_10_7.s`) - the composite screen's
+- **`RunPauseMenu`** (`asm/code_3_1_10_7.s`) - the composite screen's
   top-level orchestrator: frees pending heap bytes, resets the audio
   channel, swaps `gUnknown_030012B8` for a fresh tile cache sized for
   this screen, re-inits both icon managers, builds the screen object
-  (`sub_8004EC0`) and hands it to the blocking driver (`sub_8005100`),
+  (`InitPauseMenu`) and hands it to the blocking driver (`PauseMenuLoop`),
   tears it down, and restores the original cache. By far the longest
   function in this chunk (~150 instructions). Got the instruction
   *order* and *count* extremely close via heavy register pinning
@@ -176,7 +176,7 @@ reconstructions live alongside the matched functions in
   shifted-constant computations between otherwise-separate statements
   - scheduling decisions this compiler doesn't reach for from plain C
   at this call depth.
-- **`sub_8005100`** (`asm/code_3_1_10_7_5100.s`) - the blocking cursor/
+- **`PauseMenuLoop`** (`asm/code_3_1_10_7_5100.s`) - the blocking cursor/
   confirm/cancel driver: ramps a blend/fade level down then up
   (`field_cc`'s low 5 bits), an input loop with L/R slider-adjust,
   D-pad value bump with initial-press-vs-held-repeat distinction, and
@@ -185,7 +185,7 @@ reconstructions live alongside the matched functions in
   chunk - parked without attempting the same register-pressure fight
   documented at length for the others; the effort-to-payoff ratio for
   hand-tuning a function this size wasn't worth it this pass.
-- **`sub_80053F4`** (`asm/code_3_1_10_7_53f4.s`) - the per-frame "draw
+- **`DrawPauseMenu`** (`asm/code_3_1_10_7_53f4.s`) - the per-frame "draw
   the current settings row" step: draws the current level's name label,
   conditionally draws a "LEVEL N"-shaped composite label, right-aligns
   the completion percentage, calls the per-row list renderer and an
@@ -195,8 +195,8 @@ reconstructions live alongside the matched functions in
   sequential `_call_via_r2` draws with hand-scheduled constant/offset
   register reuse (including an `ip`-register spill in one branch) this
   compiler doesn't reach for from plain C.
-- **`sub_800556C`** (`asm/code_3_1_10_7_53f4.s`, same fragment as
-  `sub_80053F4`) - the per-row list renderer: draws each row (from
+- **`DrawPauseMenuRows`** (`asm/code_3_1_10_7_53f4.s`, same fragment as
+  `DrawPauseMenu`) - the per-row list renderer: draws each row (from
   `field_14`'s 8-byte-stride record array), highlighting the selected
   index, in three layout variants keyed by the record's type tag (a
   plain centered label, or - for tags 4/5 - offset left by half of a
@@ -205,19 +205,19 @@ reconstructions live alongside the matched functions in
   additionally keeps the running row-Y coordinate in a stack slot
   (not a register) across the whole loop, a scheduling choice this
   compiler doesn't reach for from a plain loop-local.
-- **`sub_80057E0`**, **`sub_80058C0`** (`asm/code_3_1_10_7_57e0.s`) -
+- **`DrawPauseGemsPage`**, **`DrawPauseRelicsPage`** (`asm/code_3_1_10_7_57e0.s`) -
   the `icons9c`/`iconsB0` per-row-group draw handlers: per-bit icon
-  show/hide (only `sub_80057E0`) plus one or three fixed "N/M"-shaped
-  fraction readouts via `sub_8005E5C`. Same register-pressure class as
+  show/hide (only `DrawPauseGemsPage`) plus one or three fixed "N/M"-shaped
+  fraction readouts via `DrawPauseFraction`. Same register-pressure class as
   above - the ROM keeps `self` in a specific register and evolves a
   single other register through three different offset meanings via
   incremental arithmetic on its own prior value; every restructuring
   tried (direct field stores, hoisted x/y locals, an explicit register
   pin on `self`) always needs one register more than the ROM does.
-- **`sub_8005E5C`** (`asm/code_3_1_10_9.s`, its own file - not
+- **`DrawPauseFraction`** (`asm/code_3_1_10_9.s`, its own file - not
   contiguous with the rest of this chunk) - draws a numerator/`/`/
-  denominator fraction stack across `gUnknown_030012DC`/
-  `gUnknown_030012E0`. Same register-pressure class: the two icon-
+  denominator fraction stack across `gSmallFont`/
+  `gLargeFont`. Same register-pressure class: the two icon-
   manager addresses and the second label argument (all three genuinely
   live across three separate draw calls) always land in `r8`/`r9`/`sl`
   here regardless of how the source is restructured, never the ROM's
@@ -228,16 +228,16 @@ See `docs/status/overlay_ui.md` for the updated matched/parked lists.
 ## Second pass: all 7 remaining functions matched via NAKED transcription
 
 Closed out every function this issue still had parked
-(`sub_8004D74`/`sub_8005100`/`sub_80053F4`/`sub_800556C`/`sub_80057E0`/
-`sub_80058C0`/`sub_8005E5C`) plus the four already-cross-referenced
+(`RunPauseMenu`/`PauseMenuLoop`/`DrawPauseMenu`/`DrawPauseMenuRows`/`DrawPauseGemsPage`/
+`DrawPauseRelicsPage`/`DrawPauseFraction`) plus the four already-cross-referenced
 siblings in `src/graphics/settings_menu6.c`
-(`sub_8005AE8`/`sub_8005B80`/`sub_8005C58`/`sub_8005D44`) that hit the
+(`InitPausePowersPage`/`InitPauseGemsPage`/`InitPauseRelicsPage`/`InitPauseTimeTrialPage`) that hit the
 same difficulty class - all 11 now byte-exact matched, confirmed by a
 full clean `make compare` (`La suma coincide`).
 
 Rather than continue the per-register archaeology the first pass's
 write-up above documents at length (heavy pinning got several of these
-extremely close - `sub_8004D74` in particular - but never all the way),
+extremely close - `RunPauseMenu` in particular - but never all the way),
 every one of these was instead converted to `NAKED` asm: mechanically
 transcribed from the ROM's own disassembly (already present, byte for
 byte, in the `.if NON_MATCHING == 0` asm fragments these functions were
@@ -252,14 +252,14 @@ examples). This pass's translation was scripted (a small Python helper,
 scratch-only, not committed) rather than done by hand, to avoid
 transcription-typo risk at this scale (11 functions, ~1000 real
 instructions total) - it also had to handle one wrinkle the prior NAKED
-conversions in this project hadn't hit yet: `sub_80053F4`'s
+conversions in this project hadn't hit yet: `DrawPauseMenu`'s
 `self->field_24` dispatch compiles to a real ROM jump table (`mov pc,
 r0` indexed through a `.4byte`-array of case labels sitting inline in
 the literal pool), which needed the *same* label-renumbering treatment
 applied to the table's own entries, not just to branch targets.
 
 Every isolated per-function compile was diagnostic only, as always
-(`docs/workflow.md`'s warning) - the actual proof is `sub_8004D74`'s own
+(`docs/workflow.md`'s warning) - the actual proof is `RunPauseMenu`'s own
 `.text` bytes, and every other NAKED function's, matching the ROM
 exactly once fully linked (spot-checked directly against
 `arm-none-eabi-objcopy`'d `.o` output and the base ROM before ever
@@ -267,14 +267,14 @@ touching `ldscript.txt`, the same methodology `sub_8002114`'s NAKED
 conversion used).
 
 **File/link-order restructuring required.** Six of these eleven
-functions (`sub_8004D74`, `sub_80053F4`/`sub_800556C`,
-`sub_80057E0`/`sub_80058C0`, `sub_8005AE8`-`sub_8005D44`, `sub_8005E5C`)
+functions (`RunPauseMenu`, `DrawPauseMenu`/`DrawPauseMenuRows`,
+`DrawPauseGemsPage`/`DrawPauseRelicsPage`, `InitPausePowersPage`-`InitPauseTimeTrialPage`, `DrawPauseFraction`)
 were previously all textually grouped for convenience into a small
 number of `.c` files (`settings_menu15.c`/`settings_menu6.c`/
 `settings_menu16.c`) even though their *real* ROM addresses were
 interleaved with several already-matched functions living in
-*different* object files (`sub_8005304` in `settings_menu17.c`,
-`sub_800570C` in `settings_menu18.c`, `sub_800599C` in
+*different* object files (`AnimatePauseMenu` in `settings_menu17.c`,
+`DrawPausePowersPage` in `settings_menu18.c`, `InitPauseMenuInfo` in
 `settings_menu19.c`) - this was harmless while they were `#if
 NON_MATCHING`-guarded (invisible to the real build, only compiled
 together for the `NON_MATCHING=1` diagnostic build where interleaving
@@ -284,20 +284,20 @@ shifting every address after them and breaking `make compare` in a way
 an isolated per-function compile can't catch (exactly the class of bug
 `docs/workflow.md`'s step 2/3 warning describes). Fixed per
 `docs/workflow.md` step 4's "one `.c` file per contiguous ROM region"
-rule: `sub_8005100` (address-adjacent to `settings_menu15.o` on one
+rule: `PauseMenuLoop` (address-adjacent to `settings_menu15.o` on one
 side and `settings_menu17.o` on the other) and
-`sub_80053F4`/`sub_800556C` (adjacent to each other, but bracketed by
+`DrawPauseMenu`/`DrawPauseMenuRows` (adjacent to each other, but bracketed by
 `settings_menu17.o` and `settings_menu18.o`) and
-`sub_80057E0`/`sub_80058C0` (bracketed by `settings_menu18.o` and
+`DrawPauseGemsPage`/`DrawPauseRelicsPage` (bracketed by `settings_menu18.o` and
 `settings_menu19.o`) each got their own new object file
 (`settings_menu20.c`/`settings_menu21.c`/`settings_menu22.c`
 respectively), inserted into `ldscript.txt` at exactly the position the
-now-empty raw asm fragment used to occupy. `sub_8004D74` stayed merged
+now-empty raw asm fragment used to occupy. `RunPauseMenu` stayed merged
 into `settings_menu15.c` (it's genuinely address-adjacent to that
-file's `sub_8004EC0`, no gap). The four `settings_menu6.c` siblings and
-`sub_8005E5C` (`settings_menu16.c`) needed no restructuring -
+file's `InitPauseMenu`, no gap). The four `settings_menu6.c` siblings and
+`DrawPauseFraction` (`settings_menu16.c`) needed no restructuring -
 `settings_menu6.c`'s new functions are address-adjacent to its own
-already-matched `sub_8005A78`, and `settings_menu16.c` simply got its
+already-matched `InitPauseCrystalsPage`, and `settings_menu16.c` simply got its
 first-ever real content plus a brand new `ldscript.txt` entry (it had
 none before, since it contributed zero bytes to the real build while
 entirely parked).
@@ -320,9 +320,9 @@ crashbandicootxs.map && make compare` (`La suma coincide`).
 The 12-function 0x08004D74-0x08005E5C sub-range this write-up focuses
 on is now fully matched (the 5 from the first pass plus all 7 parked
 ones from this pass). GitHub issue #7 itself tracks a wider 25-function
-range (`0x08004CB4`-`0x080060AC`) that also includes `sub_8005AE8`/
-`sub_8005B80`/`sub_8005C58`/`sub_8005D44` (`src/graphics/
-settings_menu6.c`) and `sub_8005EF4`/`sub_8005FBC` (`src/graphics/
+range (`0x08004CB4`-`0x080060AC`) that also includes `InitPausePowersPage`/
+`InitPauseGemsPage`/`InitPauseRelicsPage`/`InitPauseTimeTrialPage` (`src/graphics/
+settings_menu6.c`) and `PauseMenuVolumeDown`/`PauseMenuVolumeUp` (`src/graphics/
 settings_menu7.c`) - four settings-row icon-widget constructors and a
 per-row percentage inc/dec pair that were already checked off as
 "parked" on that issue's own checklist, and this same session's pass
@@ -335,10 +335,10 @@ byte-exact matched. This PR closes issue #7.
 
 The issue #7 NAKED retry ([issue-7-naked-retry.md](issue-7-naked-retry.md))
 turned 9 of the 13 NAKED functions above back into real C:
-`sub_8005AE8`, `sub_8005B80`, `sub_8005C58`, `sub_8005D44` and
-`sub_80057E0`/`sub_80058C0` (old_agbcc), and `sub_8005EF4`/`sub_8005FBC`
-and `sub_800556C` (either compiler). `sub_8004D74`, `sub_8005100`,
-`sub_80053F4` and `sub_8005E5C` are still NAKED, each with a near-miss C
+`InitPausePowersPage`, `InitPauseGemsPage`, `InitPauseRelicsPage`, `InitPauseTimeTrialPage` and
+`DrawPauseGemsPage`/`DrawPauseRelicsPage` (old_agbcc), and `PauseMenuVolumeDown`/`PauseMenuVolumeUp`
+and `DrawPauseMenuRows` (either compiler). `RunPauseMenu`, `PauseMenuLoop`,
+`DrawPauseMenu` and `DrawPauseFraction` are still NAKED, each with a near-miss C
 draft under `NON_MATCHING`. The "register-pressure" explanations given
 above were mostly wrong. The real causes were an argument the old
 drafts dropped (`count * 5`), `_call_via_r1`/`_call_via_r2` being
@@ -347,7 +347,7 @@ Issue #7 therefore still has NAKED functions.
 
 ## Later pass: second near-miss sweep
 
-`sub_8004D74` is real C. The draft was 54 halfwords off because CSE
+`RunPauseMenu` is real C. The draft was 54 halfwords off because CSE
 shared the 0x12c offset between the `field_12c` reads, and holding it
 used up the register the ROM gives &gUnknown_030012FC. Reading the
 field through a `static inline` accessor stops the sharing. Loading the
@@ -355,9 +355,9 @@ two VRAM-reservation operands into locals before `gUnknown_030012FC`,
 and the tile cache base into a local before the `CpuSet` source
 address, fixes the last two load-order differences. See [near-miss-polish-2.md](near-miss-polish-2.md).
 
-## Later pass: `sub_8005100` matched
+## Later pass: `PauseMenuLoop` matched
 
-`sub_8005100` is plain C under old_agbcc now, and `settings_menu20.o`
+`PauseMenuLoop` is plain C under old_agbcc now, and `settings_menu20.o`
 is on `OLD_AGBCC_OBJS`. The input loop is a plain `for (;;)` with the
 B test at the bottom, which old_agbcc rotates to the ROM's layout.
 `disp` is taken only after the fade-in loop, so GCSE's copy of the fade

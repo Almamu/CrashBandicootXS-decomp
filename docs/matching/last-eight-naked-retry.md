@@ -7,7 +7,7 @@ This pass retried four NAKED functions with C drafts under
 |---|---|---|---|---|
 | `sub_8002E20` (#5) | `src/graphics/settings_menu8a2.c` | 14 | match (both compilers) | Real C |
 | `sub_802062C` (#31) | `src/graphics/graphics_loading_1feec.c` | 62 | 12 (same size, old_agbcc) | Draft updated |
-| `sub_8005E5C` (#7) | `src/graphics/settings_menu16.c` | 73 (16 bytes long) | 45 (same size, both compilers) | Draft updated |
+| `DrawPauseFraction` (#7) | `src/graphics/settings_menu16.c` | 73 (16 bytes long) | 45 (same size, both compilers) | Draft updated |
 | `sub_8001DB4` (#4) | `src/system/link_cable.c` | 136 | 136 (122 found, not adopted) | Note added |
 
 ## `sub_8002E20`: closed
@@ -87,7 +87,7 @@ Left (12 halfwords):
   r9/sl. A `tb = &gEntityFlags` local with extra references was
   84+.
 
-## `sub_8005E5C`: 73 to 45
+## `DrawPauseFraction`: 73 to 45
 
 The ROM's second half builds its offsets from r7 during reload
 (`adds r6, r7, #0` from reload_cse, `adds r7, #4` from move2add), so its
@@ -102,7 +102,7 @@ constant:
 
 The posY stores keep plain constants, which reload rebuilds. `AT` goes
 through a one-field struct. With a plain `*(u32 *)` store, it counts as
-a non-struct access that may alias the `gUnknown_030012DC` pointer, so
+a non-struct access that may alias the `gSmallFont` pointer, so
 the pointer gets re-read. `x`/`y` are block-local in each half and the
 manager pointers are locals (`pdc`/`pe0`). This gives the ROM's size
 and prologue, and 10 instruction lines differ after register
@@ -110,7 +110,7 @@ normalisation.
 
 Left:
 
-- the `&gUnknown_030012E0` load is hoisted to the top;
+- the `&gLargeFont` load is hoisted to the top;
 - the first half's 0x110 goes to r2 instead of r7;
 - the second half rematerialises 0x110 instead of copying it from r7.
 
@@ -146,7 +146,7 @@ These are in the scratchpad's `last8/`:
 
 - `d.py`, `var.py`, `rtl.sh` and `fnrtl.py`, pointed at this worktree;
 - the variant specs `e1`-`e4` (`sub_8002E20`), `l1`-`l5`
-  (`sub_8001DB4`), `m1`-`m9` (`sub_8005E5C`) and `g1`-`g6`
+  (`sub_8001DB4`), `m1`-`m9` (`DrawPauseFraction`) and `g1`-`g6`
   (`sub_802062C`).
 
 ## Verification

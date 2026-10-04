@@ -12,10 +12,10 @@
  * data/data.s sections by ldscript.txt - see docs/data.md.
  */
 
-extern void InitHudTextWidget();
-extern void MeasureText();
+extern void DestroyFont();
+extern void FontMeasureText();
 extern void UpdateAnimatedActorPart();
-extern void UploadHudTile();
+extern void FontUploadTiles();
 extern void nullsub_11();
 extern void nullsub_13();
 extern void nullsub_15();
@@ -190,11 +190,11 @@ extern void ResetPooledBgLayer();
 extern void LoadPooledBgLayerTiles();
 extern void DestroyPooledBgLayer();
 extern void sub_802710C();
-extern void sub_80285C4();
-extern void sub_8028808();
-extern void sub_8028860();
-extern void sub_8028890();
-extern void sub_8028900();
+extern void FontDrawGlyph();
+extern void FontPutChar();
+extern void FontDrawChars();
+extern void FontDrawText();
+extern void FontMeasureChars();
 extern void sub_802A7B8();
 extern void sub_802AA54();
 extern void sub_802B364();
@@ -282,8 +282,8 @@ extern void sub_803436C();
 extern void sub_8036EC4();
 extern void sub_8036FBC();
 extern void sub_803716C();
-extern void sub_803AFF0();
-extern void sub_803B024();
+extern void DestroyLargeFont();
+extern void DestroySmallFont();
 extern void sub_803B0C4();
 extern void sub_803B0F0();
 extern void sub_803B128();
@@ -1068,44 +1068,44 @@ const struct vtable_slot gStaticData_087E4CB4[13] = {
     VTABLE_SLOT(sub_800834C),
 };
 
-/* Used by actor_aabb_setup.c, hud_icon_widget_85c4.c (sub_80285C4). */
-const struct vtable_slot gStaticData_087E4D1C[9] = {
+/* Used by actor_aabb_setup.c, hud_icon_widget_85c4.c (FontDrawGlyph). */
+const struct vtable_slot gLargeFontVtable[9] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_803AFF0),
-    VTABLE_SLOT(MeasureText),
-    VTABLE_SLOT(sub_8028900),
-    VTABLE_SLOT(sub_8028890),
-    VTABLE_SLOT(sub_8028860),
-    VTABLE_SLOT(sub_80285C4),
-    VTABLE_SLOT(sub_8028808),
-    VTABLE_SLOT(UploadHudTile),
+    VTABLE_SLOT(DestroyLargeFont),
+    VTABLE_SLOT(FontMeasureText),
+    VTABLE_SLOT(FontMeasureChars),
+    VTABLE_SLOT(FontDrawText),
+    VTABLE_SLOT(FontDrawChars),
+    VTABLE_SLOT(FontDrawGlyph),
+    VTABLE_SLOT(FontPutChar),
+    VTABLE_SLOT(FontUploadTiles),
 };
 
-/* Used by actor_aabb_setup.c, hud_icon_widget_85c4.c (sub_80285C4). */
-const struct vtable_slot gStaticData_087E4D64[9] = {
+/* Used by actor_aabb_setup.c, hud_icon_widget_85c4.c (FontDrawGlyph). */
+const struct vtable_slot gSmallFontVtable[9] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_803B024),
-    VTABLE_SLOT(MeasureText),
-    VTABLE_SLOT(sub_8028900),
-    VTABLE_SLOT(sub_8028890),
-    VTABLE_SLOT(sub_8028860),
-    VTABLE_SLOT(sub_80285C4),
-    VTABLE_SLOT(sub_8028808),
-    VTABLE_SLOT(UploadHudTile),
+    VTABLE_SLOT(DestroySmallFont),
+    VTABLE_SLOT(FontMeasureText),
+    VTABLE_SLOT(FontMeasureChars),
+    VTABLE_SLOT(FontDrawText),
+    VTABLE_SLOT(FontDrawChars),
+    VTABLE_SLOT(FontDrawGlyph),
+    VTABLE_SLOT(FontPutChar),
+    VTABLE_SLOT(FontUploadTiles),
 };
 
-/* Used by actor_aabb_setup.c, hud_icon_widget5.c (InitHudTextWidget),
- * hud_icon_widget_85c4.c (sub_80285C4), hud_icon_widget_8a78.c. */
-const struct vtable_slot gStaticData_087E4DAC[9] = {
+/* Used by actor_aabb_setup.c, hud_icon_widget5.c (DestroyFont),
+ * hud_icon_widget_85c4.c (FontDrawGlyph), hud_icon_widget_8a78.c. */
+const struct vtable_slot gFontVtable[9] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(InitHudTextWidget),
-    VTABLE_SLOT(MeasureText),
-    VTABLE_SLOT(sub_8028900),
-    VTABLE_SLOT(sub_8028890),
-    VTABLE_SLOT(sub_8028860),
-    VTABLE_SLOT(sub_80285C4),
-    VTABLE_SLOT(sub_8028808),
-    VTABLE_SLOT(UploadHudTile),
+    VTABLE_SLOT(DestroyFont),
+    VTABLE_SLOT(FontMeasureText),
+    VTABLE_SLOT(FontMeasureChars),
+    VTABLE_SLOT(FontDrawText),
+    VTABLE_SLOT(FontDrawChars),
+    VTABLE_SLOT(FontDrawGlyph),
+    VTABLE_SLOT(FontPutChar),
+    VTABLE_SLOT(FontUploadTiles),
 };
 
 /* Used by counter_selector.c (sub_803716C), actor_anim.c (sub_803B0C4,

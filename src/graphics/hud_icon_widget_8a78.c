@@ -2,27 +2,27 @@
 #include "icon_manager.h"
 
 extern void CpuSet(void *src, void *dst, s32 control);
-extern u8 gStaticData_087E4DAC[];
+extern u8 gFontVtable[];
 
 /* Constructor variant used for a widget that's never assigned its own
  * data tables past `record` (the line-height/space-width/glyph fields
  * stay whatever the caller already set) - just the OAM-scratch zero and
- * cursor/margin reset shared with InitHudIconWidgetA/B
+ * cursor/margin reset shared with InitSmallFont/B
  * (src/graphics/hud_icon_widget_85c4.c).
  *
- * The `posX`/`posY`/`field_118`/`field_12c` zero-init needed the same
- * inline-asm address anchor as InitHudIconWidgetA/B - see that
+ * The `posX`/`posY`/`marginX`/`tileCount` zero-init needed the same
+ * inline-asm address anchor as InitSmallFont/B - see that
  * function's own comment for the full account of why. Unlike A/B, there
  * is no charLookup-building loop here, so this one reaches a full
  * byte-exact match. */
-struct icon_manager *sub_8028A78(struct icon_manager *selfArg)
+struct icon_manager *InitFont(struct icon_manager *selfArg)
 {
     register struct icon_manager *self asm("r4") = selfArg;
     s32 zero;
     struct icon_record **recordAddr;
 
     asm volatile("mov r0, #0x98\n\tlsl r0, r0, #1\n\tadd %0, %1, r0" : "=r"(recordAddr) : "r"(self) : "r0");
-    *recordAddr = (struct icon_record *)gStaticData_087E4DAC;
+    *recordAddr = (struct icon_record *)gFontVtable;
 
     /* `zero`'s own store (`str r1, [sp]` right before the call) reuses
      * this same zeroed r1 too, instead of materializing a fresh 0 -

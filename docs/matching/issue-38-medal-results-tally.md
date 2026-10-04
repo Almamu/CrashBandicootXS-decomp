@@ -23,7 +23,7 @@ Two loosely related families sharing the same ROM neighborhood:
    feeding both of those.
 2. **A sound-channel-handle helper family** (`BeginSlide`-
    `EndSlide`, plus the `sub_802425C`/`DestroySlideshow` teardown wrapper
-   pair and the `ResetSlideshow` constructor) managing `gUnknown_030012BC`
+   pair and the `ResetSlideshow` constructor) managing `gAudioContext`
    playback state for a small per-screen item list, alongside a
    VRAM-bank-toggling asset streamer + palette DMA + a second `DISPCNT`
    writer (`ShowSlidePicture`, alongside the already-documented
@@ -137,8 +137,8 @@ left as a clear target for a future pass instead.
 - **`BeginSlide`/`RunSlideshow`/`SkipSlides`/`ShowSlidePicture`**
   (`asm/code_3_2_17_24590.s`) - a linked group managing a small
   per-screen item list's sound-channel handles (`BeginSlide`: start/
-  re-select a cue via `sub_8001B54`, then either play a secondary sfx
-  immediately or busy-poll `sub_8001AB8` until the channel reports the
+  re-select a cue via `PlaySong`, then either play a secondary sfx
+  immediately or busy-poll `GetCurrentSong` until the channel reports the
   requested id before playing it), its driver loop (`RunSlideshow`:
   calls `ShowSlidePicture`/`BeginSlide` per index, polls input via
   `WaitForKeyPress`, ducks music, nudges a delay value, plays a completion

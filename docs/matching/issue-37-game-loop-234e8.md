@@ -149,14 +149,14 @@ vram-upload-cursor/OAM-shadow flush tail both `sub_802400C` and
   setting a state flag and jumping into the middle of a *different*
   branch's cleanup code, `_08023E72`). The overall shape (spawn a HUD
   widget set, run a per-frame update loop gated on `sub_80241B0`,
-  react to a completion signal from `sub_8004D74`) is legible, but
+  react to a completion signal from `RunPauseMenu`) is legible, but
   several callees (the `gStaticData_0816C8xx` tables' exact record
-  shape, `sub_8027018`'s 6-argument signature, `LoadRoom`,
-  `sub_800B3F0`, `sub_8026F54`) aren't characterized precisely enough
+  shape, `AddPaletteCycle`'s 6-argument signature, `LoadRoom`,
+  `sub_800B3F0`, `TickPaletteCycles`) aren't characterized precisely enough
   yet to commit to a byte-exact reconstruction of this size with
   confidence - left untouched rather than force a low-confidence
   match. A good next target once the HUD-effect-queue family
-  (`sub_8027018`/`sub_8026F54`, currently left raw per
+  (`AddPaletteCycle`/`TickPaletteCycles`, currently left raw per
   `tools/report_units.py`'s `hud` entries) is better understood.
 
 See [docs/status/game_loop.md](../status/game_loop.md) for the running
@@ -225,7 +225,7 @@ bytes) is deleted; its `ldscript.txt` line is removed.
   already: `settings_menu15.c`/`settings_menu8b.c` both declare
   `extern void *sub_80236EC(void *arg0);` and use the result as a
   pointer (`self->field_10 = sub_80236EC(...)`, and as the `src`
-  argument to `sub_80048E0`), so those call sites were already correct
+  argument to `SummarizeProgress`), so those call sites were already correct
   and needed no changes. Because that pointer is already sitting in r0
   at the end of the function, the epilogue's LR-restore register
   naturally lands on r1 instead of r0 - reproducing the ROM's
@@ -295,7 +295,7 @@ compiler silently dropped it from both the push and pop list
 (confirmed with a minimal isolated-compile repro:
 `push {r4, r5, r6, lr}` / `pop {r4, r5, r6}`, r7 missing from both).
 This is the same "gcc-2.9 r7-pin bug" already documented project-wide
-(`src/graphics/oam_count.c`'s `sub_8006600`,
+(`src/graphics/oam_count.c`'s `DrawPowerDialog`,
 `src/graphics/graphics_loading_21280.c`'s `sub_8021280`, among
 others) - an explicit `register T x asm("r7")` pin doesn't reliably
 survive here either. The fix was the same project-wide escape hatch

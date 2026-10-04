@@ -3,7 +3,7 @@
 
 /* A small "load my background" sub-widget - the same field_c/field_d
  * bit-flags-pair idiom as `struct counter_widget`
- * (src/audio/counter_selector_setup.c's sub_80374D0), just at offsets
+ * (src/audio/counter_selector_setup.c's LoadLanguageSelectBg), just at offsets
  * 0x1c/0x1d here - this chunk doesn't include whatever embeds it in a
  * bigger object, so it gets its own minimal type. */
 struct bg_widget {
@@ -18,9 +18,9 @@ extern void LoadGraphicsPackage(void *buf, void *asset);
 extern s32 sub_801E640(void *buf);
 extern u8 gStaticData_0816C484[];
 
-/* Same shape as sub_80374D0 (src/audio/counter_selector_setup.c) - reset
+/* Same shape as LoadLanguageSelectBg (src/audio/counter_selector_setup.c) - reset
  * two bit-flag bytes, request a BG tile/map graphics package, set BG0's
- * control register from it - plus zeroing `field_0`, which sub_80374D0's
+ * control register from it - plus zeroing `field_0`, which LoadLanguageSelectBg's
  * counter_widget doesn't have. */
 void sub_80047F8(struct bg_widget *self)
 {
@@ -48,17 +48,17 @@ void sub_80047F8(struct bg_widget *self)
     *(vu32 *)REG_ADDR_BG0HOFS = zero;
 }
 
-extern s32 sub_8006920(void *arg0);
-extern s32 sub_80068A8(void *arg0);
-extern s32 sub_80067E4(void *arg0);
-extern s32 sub_800695C(void *arg0);
-extern s32 sub_800697C(void *arg0);
-extern u8 sub_8002CE8(void *handle, s32 rowIndex);
-extern void sub_8002C14(void *handle, s32 rowIndex, void *buf);
+extern s32 CountClearGems(void *arg0);
+extern s32 CountRelics(void *arg0);
+extern s32 GetProgressLives(void *arg0);
+extern s32 CountCrystals(void *arg0);
+extern s32 GetCompletionPercent(void *arg0);
+extern u8 IsSaveSlotEmpty(void *handle, s32 rowIndex);
+extern void ReadSaveSlot(void *handle, s32 rowIndex, void *buf);
 
 /* Refreshes each of the 4 settings rows' aggregate stats from `handle`,
- * skipping any row sub_8002CE8 reports as inactive/hidden. */
-void sub_8004860(struct pause_options_screen *self, void *handle)
+ * skipping any row IsSaveSlotEmpty reports as inactive/hidden. */
+void RefreshSaveSlotSummaries(struct pause_options_screen *self, void *handle)
 {
     struct settings_row_stats *row;
     u8 buf[0x70];
@@ -67,40 +67,40 @@ void sub_8004860(struct pause_options_screen *self, void *handle)
     i = 0;
     row = &self->rowStats[0];
     do {
-        if (!sub_8002CE8(handle, i)) {
-            sub_8002C14(handle, i, buf);
-            row->field_4 = sub_8006920(buf);
-            row->field_8 = sub_80068A8(buf);
-            row->field_c = sub_80067E4(buf);
-            row->field_10 = sub_800695C(buf);
-            row->field_0 = sub_800697C(buf);
+        if (!IsSaveSlotEmpty(handle, i)) {
+            ReadSaveSlot(handle, i, buf);
+            row->gems = CountClearGems(buf);
+            row->relics = CountRelics(buf);
+            row->lives = GetProgressLives(buf);
+            row->crystals = CountCrystals(buf);
+            row->percent = GetCompletionPercent(buf);
         }
         row++;
         i++;
     } while (i <= 3);
 }
 
-extern s32 sub_8002A08(void *arg0);
-extern s32 sub_8002BA4(void *arg0);
-extern void sub_8002C84(void *arg0);
+extern s32 LoadSaveData(void *arg0);
+extern s32 StoreSaveData(void *arg0);
+extern void ResetSaveData(void *arg0);
 
-void sub_80048BC(struct pause_options_screen *self)
+void LoadSaveMenuData(struct pause_options_screen *self)
 {
-    s32 v = sub_8002A08(self->field_8c);
+    s32 v = LoadSaveData(self->field_8c);
     if ((u32)(v - 1) <= 3) {
-        sub_8002C84(self->field_8c);
-        sub_8002BA4(self->field_8c);
+        ResetSaveData(self->field_8c);
+        StoreSaveData(self->field_8c);
     }
 }
 
 /* Fills `dest` from `src` using the same five-function battery as the
- * loop in sub_8004860 above - `self` (the screen widget) is passed but
+ * loop in RefreshSaveSlotSummaries above - `self` (the screen widget) is passed but
  * never used, matching the ROM exactly. */
-void sub_80048E0(void *self, struct settings_row_stats *dest, void *src)
+void SummarizeProgress(void *self, struct settings_row_stats *dest, void *src)
 {
-    dest->field_4 = sub_8006920(src);
-    dest->field_8 = sub_80068A8(src);
-    dest->field_c = sub_80067E4(src);
-    dest->field_10 = sub_800695C(src);
-    dest->field_0 = sub_800697C(src);
+    dest->gems = CountClearGems(src);
+    dest->relics = CountRelics(src);
+    dest->lives = GetProgressLives(src);
+    dest->crystals = CountCrystals(src);
+    dest->percent = GetCompletionPercent(src);
 }

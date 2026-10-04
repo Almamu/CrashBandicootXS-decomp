@@ -16,7 +16,7 @@
  * at each parked function's raw-asm gap - see docs/matching/
  * issue-18-0x08014f8c-actor.md for the full write-up. */
 
-extern void *gUnknown_030012BC;
+extern void *gAudioContext;
 extern void *gUnknown_030012F0;
 extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
 extern s32 _call_via_r1(void *addr, void *fn);
@@ -66,7 +66,7 @@ loop_body:
          * let gcc reuse the register value the loop condition below
          * just loaded, across the branch - the ROM reloads it again
          * from scratch inside the body instead (see matching.md's
-         * `sub_8006864`/`sub_8006820` entry for the general technique).
+         * `CountSapphireRelics`/`CountGoldRelics` entry for the general technique).
          * Both this and the condition's read go through the same
          * hand-placed literal-pool word (`.Lgu12f0_8014f8c`, emitted
          * once right after this function) via a real two-instruction
@@ -148,7 +148,7 @@ loop_cond:
 asm(".align 2, 0\n\t.Lgu12f0_8014f8c: .word gUnknown_030012F0");
 
 
-extern void *gUnknown_030012BC;
+extern void *gAudioContext;
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern s32 _call_via_r3(void *arg0, void *arg1, void *arg2, void *arg3);
 
@@ -200,7 +200,7 @@ void sub_8015038(u8 *self, s32 id, s32 param2)
                     *(void **)(off + 4));
         *(s32 *)(self + 0x18) = zero;
         *(s32 *)(self + 0x1c) = wait;
-        PlaySfx(gUnknown_030012BC, self[0x21] + 0x57, 0x100);
+        PlaySfx(gAudioContext, self[0x21] + 0x57, 0x100);
         if (++self[0x22] >= self[0x20]) {
             self[0x24] = 1;
             if (self[0x22] > 1)
@@ -239,7 +239,7 @@ void sub_8015038(u8 *self, s32 id, s32 param2)
                         *(void **)(off + 4));
             *(s32 *)(self + 0x18) = zero;
             *(s32 *)(self + 0x1c) = wait;
-            PlaySfx(gUnknown_030012BC, self[0x21] + 0x57, 0x100);
+            PlaySfx(gAudioContext, self[0x21] + 0x57, 0x100);
         } else {
             u8 *p21 = self + 0x21;
             s32 zero = 0;
@@ -256,7 +256,7 @@ void sub_8015038(u8 *self, s32 id, s32 param2)
                         *(void **)(off + 4));
             *(s32 *)(self + 0x18) = zero;
             *(s32 *)(self + 0x1c) = wait;
-            PlaySfx(gUnknown_030012BC, 0xa, 0x100);
+            PlaySfx(gAudioContext, 0xa, 0x100);
             self[0x26] = 0x63;
         }
         self[0x22]--;

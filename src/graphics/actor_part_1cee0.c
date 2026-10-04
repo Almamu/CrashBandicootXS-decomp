@@ -28,7 +28,7 @@
  * so the bitfield stores here are plain C. */
 
 extern void *gUnknown_030012B8;
-extern void *gUnknown_030012BC;
+extern void *gAudioContext;
 extern void ***gUnknown_030012D0;
 extern void *gUnknown_03001300;
 extern void *gUnknown_03001304;
@@ -217,7 +217,7 @@ void sub_801D110(struct level_menu *self)
 {
     s32 t;
 
-    PlaySfx(gUnknown_030012BC, 0x52, 0x100);
+    PlaySfx(gAudioContext, 0x52, 0x100);
     sub_801DEA0(self->items[self->index], 0);
     sub_801E480(self->panel, 0x78, 0x35);
     sub_801E3F4(self->panel);
@@ -253,7 +253,7 @@ void sub_801D300(struct level_menu *self)
 {
     s32 t;
 
-    PlaySfx(gUnknown_030012BC, 0x49, 0x100);
+    PlaySfx(gAudioContext, 0x49, 0x100);
     self->blend.bits.effect = 3;
     self->blend.bits.bdFirst = 1;
     self->blend.bits.bg0First = 1;
@@ -340,7 +340,7 @@ void sub_801D4C4(struct level_menu *self)
     if (sub_801D428(self))
     {
         sub_801CCF8(self);
-        PlaySfx(gUnknown_030012BC, 0x56, 0x100);
+        PlaySfx(gAudioContext, 0x56, 0x100);
         goto check;
     loop:
         self->world--;
@@ -357,7 +357,7 @@ void sub_801D4C4(struct level_menu *self)
     }
     else
     {
-        PlaySfx(gUnknown_030012BC, 0x48, 0x100);
+        PlaySfx(gAudioContext, 0x48, 0x100);
     }
 }
 
@@ -368,7 +368,7 @@ void sub_801D548(struct level_menu *self)
     if (sub_801D434(self))
     {
         sub_801CCF8(self);
-        PlaySfx(gUnknown_030012BC, 0x55, 0x100);
+        PlaySfx(gAudioContext, 0x55, 0x100);
         goto check;
     loop:
         self->world++;
@@ -385,7 +385,7 @@ void sub_801D548(struct level_menu *self)
     }
     else
     {
-        PlaySfx(gUnknown_030012BC, 0x48, 0x100);
+        PlaySfx(gAudioContext, 0x48, 0x100);
     }
 }
 

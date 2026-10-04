@@ -17,8 +17,8 @@ each with flags 3 when it is non-NULL:
 - `gUnknown_03001300` (`sub_8006AF4`)
 - `gUnknown_030012FC` (`sub_8006CD0`)
 - `gUnknown_03001304` (freed directly)
-- the audio context `gUnknown_030012BC` (`sub_8001C64`, then `sub_8001C04`)
-- the two icon managers `gUnknown_030012E0`/`gUnknown_030012DC`, through
+- the audio context `gAudioContext` (`DisableMusicVCountIrq`, then `DestroyAudioContext`)
+- the two icon managers `gLargeFont`/`gSmallFont`, through
   their method table
 - `gUnknown_030012CC`/`D0`/`B8`/`B4`/`C8`
 
@@ -34,7 +34,7 @@ it `destroy`, taken out of the leading `unused_00` padding. The call goes
 through `_call_via_r2`, linked with the usual `.set`
 alias.
 
-`sub_8001C64` takes no argument in `audio_context.c`, but the ROM loads
+`DisableMusicVCountIrq` takes no argument in `audio_context.c`, but the ROM loads
 the audio context into r0 before calling it, so the local prototype
 passes it.
 
@@ -46,7 +46,7 @@ shadow `gUnknown_03001288` to 0x40 and calls the
 `sub_8001524`/`sub_80015B0`/`sub_80015E0` mode setters. It then zero-fills
 the 0x200-byte BG palette with DMA3 and resets the BG2 affine registers
 to identity. Next it reloads the tile cache (`sub_8006EA8`) and resets
-the font icon manager `gUnknown_030012DC` (tile base 0x200, then its
+the font icon manager `gSmallFont` (tile base 0x200, then its
 slot-6 method). Finally it runs a stack-allocated `InitCutscenePlayer` text
 pager (`game_loop57.c`) over list `gCutscenes[idx]`, with the
 per-level page table `gCutsceneTexts[gLanguage][idx]` and a

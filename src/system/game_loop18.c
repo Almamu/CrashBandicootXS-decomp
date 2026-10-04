@@ -204,8 +204,8 @@ s32 sub_8024464(struct MedalListItem *item)
 }
 
 extern struct level_state *gLevelState;
-extern void *gUnknown_030012BC;
-extern void sub_8001B54(struct AudioContext *self, u32 id);
+extern void *gAudioContext;
+extern void PlaySong(struct AudioContext *self, u32 id);
 extern u8 gThemeMusicCues[];
 
 /* Resolves which sound cue to play for a medal-results screen event:
@@ -215,7 +215,7 @@ extern u8 gThemeMusicCues[];
  * byte looked up from the per-level sound-cue-ID table
  * `gThemeMusicCues` at `gLevelTable[self->level]`'s `+0x04`
  * field (a byte offset into that table) - then plays it via
- * `sub_8001B54`. The `sub_8024404` call's result is truncated to `u8`
+ * `PlaySong`. The `sub_8024404` call's result is truncated to `u8`
  * before the nonzero test, matching this codebase's established
  * `(u8)funcCall(...) != 0` idiom for a callee whose real return value
  * is only byte-wide (see e.g. src/graphics/actor_part38c.c). */
@@ -234,7 +234,7 @@ void sub_8024498(struct level_progress *self)
         id = gThemeMusicCues[offset];
     }
 
-    sub_8001B54(gUnknown_030012BC, id);
+    PlaySong(gAudioContext, id);
 }
 
 /* Advances `self->itemIndex` (a cursor into `gLevelTable[self->level]`'s

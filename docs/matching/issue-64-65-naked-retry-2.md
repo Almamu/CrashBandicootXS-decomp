@@ -9,7 +9,7 @@ now real C, all under old_agbcc. Two are still NAKED.
 | `sub_80360DC` | graphics_loading_35d1c.c | matched |
 | `sub_8035E14` | graphics_loading_35d1c.c | matched |
 | `sub_80358A8` | graphics_loading_35780.c | matched (needs strength reduction on) |
-| `sub_80352AC` | actor_part131.c | still NAKED, draft note updated |
+| `LoadCreditsLogos` | actor_part131.c | still NAKED, draft note updated |
 | `sub_803686C` | graphics_loading_35d1c.c | not attempted |
 
 ## File split
@@ -56,7 +56,7 @@ left was global-alloc priority:
   right, and two `i` references let `i` take r3 before `slot`/`stride`.
   The `-1` store is `base + off` with `off` computed first.
 - The menu loop is a real `for (;;)`, because the ROM hoists
-  `&gUnknown_030012BC` into r6. Leaving it with `goto fadeLoop` instead
+  `&gAudioContext` into r6. Leaving it with `goto fadeLoop` instead
   of `break` stops jump.c rotating the loop around the `pressed & 9`
   exit.
 - The fade loop is a `goto` loop (nothing hoisted) with its own counter.
@@ -89,7 +89,7 @@ Brute-forced piece by piece with the variant runner:
   building with strength reduction on reproduces it exactly, hence the
   split.
 
-## `sub_80352AC` (not closed)
+## `LoadCreditsLogos` (not closed)
 
 The extra spilled `slot << 5` is not from loop.c. The `-dG` dump shows
 GCSE's PRE inserting `slot << 5`, `slot + 1` and `i + 1` at the end of
@@ -130,7 +130,7 @@ on. Still NAKED; see [big-naked-retry.md](big-naked-retry.md).
 - `rm -rf build crashbandicootxs.elf crashbandicootxs.gba crashbandicootxs.map && make compare`:
   `crashbandicootxs.gba: OK`.
 
-*Later pass (size2 NAKED retry):* `sub_80352AC` is matched; see
+*Later pass (size2 NAKED retry):* `LoadCreditsLogos` is matched; see
 [size2-naked-retry.md](size2-naked-retry.md).
 
 *Later pass (#65 strength-reduction retry):* `sub_803686C` is matched and

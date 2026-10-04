@@ -11,10 +11,10 @@ struct oam_shadow_buffer;
 
 extern void *gUnknown_030012D8;
 extern void *gUnknown_030012D4;
-extern void *gUnknown_030012C8;
+extern void *gPaletteCycles;
 extern void *gUnknown_03001300;
 extern u8 *gLevelLayers;
-extern void *gUnknown_03001318;
+extern void *gHud;
 extern void *gUnknown_030012F0;
 extern void *gUnknown_030012F4;
 extern void *gUnknown_030012F8;
@@ -26,8 +26,8 @@ extern struct tile_asset_cache *gUnknown_030012B8;
 extern void sub_8006DC8(struct tile_asset_cache *self);
 extern void sub_8026E6C(void *self);
 extern void ScrollLevelLayers(void *self);
-extern void sub_8026F54(void *self);
-extern void sub_80274EC(void *self);
+extern void TickPaletteCycles(void *self);
+extern void UpdateHud(void *self);
 extern void sub_8008DC0(struct dual_array_manager *manager);
 extern void *_call_via_r1(void *arg0, void *arg1);
 extern void sub_800944C(void *managerArg);
@@ -46,10 +46,10 @@ void sub_802400C(void *self)
     sub_8006DC8(gUnknown_030012B8);
     sub_8026E6C(gUnknown_030012D4);
     ScrollLevelLayers(gLevelLayers);
-    sub_8026F54(gUnknown_030012C8);
+    TickPaletteCycles(gPaletteCycles);
 
     if (*(s32 *)self <= 0x1000) {
-        sub_80274EC(gUnknown_03001318);
+        UpdateHud(gHud);
         sub_8008DC0(gUnknown_030012F4);
 
         {

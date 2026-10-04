@@ -13,9 +13,9 @@ compare` ("La suma coincide").
 
 ## Three systems, one address range
 
-- **`sub_8001C80`/`sub_8001CA4`** (audio) - installs a VCount-IRQ
+- **`EnableMusicVCountIrq`/`MusicVCountIrqHandler`** (audio) - installs a VCount-IRQ
   handler that forwards into the music player's existing per-tick fade
-  update (`sub_80016EC`, `src/audio/music_player.c`). That file's
+  update (`UpdateAudio`, `src/audio/music_player.c`). That file's
   header comment already anticipated this pair by name. Matched.
 - **`sub_8001CB8`-`ReadSaveData`ish** (system) - the genuine GBA
   multiplayer link-cable/SIO transport this document's `rom_map.md`
@@ -32,22 +32,22 @@ compare` ("La suma coincide").
   `EepromConfig`/`EEPROMConfigure`/`EEPROMRead`/`EEPROMWrite1_check` - confirmed
   by `gEepromConfig->maxCount` (an `EepromConfig` field) driving
   their loop bound, not anything SIO-shaped.
-- **`sub_8002A08`-`sub_8002C6C`** (overlay_ui) - the settings_sync_record
+- **`LoadSaveData`-`EraseSaveSlot`** (overlay_ui) - the settings_sync_record
   persistence layer: EEPROM load/save orchestrators with retry and
-  music-mute guards (`sub_8002A08`/`sub_8002BA4`), checksum
-  compare/store (`sub_8002B44`/`sub_8002B70`), the `versionNibble`
+  music-mute guards (`LoadSaveData`/`StoreSaveData`), checksum
+  compare/store (`CheckSaveChecksum`/`UpdateSaveChecksum`), the `versionNibble`
   accessor (`sub_8002B94`), the checksum validate/DMA-repair function
-  (`sub_8002AA4`), and three per-row helpers
-  (`sub_8002C14`/`sub_8002C40`/`sub_8002C6C`) that directly extend
+  (`ValidateSaveData`), and three per-row helpers
+  (`ReadSaveSlot`/`WriteSaveSlot`/`EraseSaveSlot`) that directly extend
   `struct settings_sync_record` from `include/settings_sync.h`
-  (issue #5). `sub_8002C6C` in particular was already referenced by
+  (issue #5). `EraseSaveSlot` in particular was already referenced by
   name in that header's `rowSelected` field comment and in
   `src/graphics/settings_menu8.c`'s extern declaration, both written
   before this chunk landed.
 
 ## Matched (16)
 
-- `sub_8001C80`, `sub_8001CA4` (`src/audio/music_irq.c`) - VCount-IRQ
+- `EnableMusicVCountIrq`, `MusicVCountIrqHandler` (`src/audio/music_irq.c`) - VCount-IRQ
   registration and handler for the music player's per-tick update.
 - `LinkStop` (`src/system/link_cable.c`) - link-session "stop":
   IME-guarded Serial/Timer3 IRQ disable, RCNT/SIOCNT/TM3CNT reset,
@@ -60,20 +60,20 @@ compare` ("La suma coincide").
   dead-address-computation loop that has no observable effect - kept
   byte-faithful since it's genuinely present in the ROM), the session
   object constructor, and the Serial/Timer3 IRQ handlers.
-- `sub_8002A08` (`src/graphics/settings_menu8d.c`) - EEPROM-load-with-
+- `LoadSaveData` (`src/graphics/settings_menu8d.c`) - EEPROM-load-with-
   retry (up to 3 tries) plus marker/checksum validation, muting the
   music player across the transfer.
-- `sub_8002B44`, `sub_8002B70`, `sub_8002B94`, `sub_8002BA4`,
-  `sub_8002C14`, `sub_8002C40`, `sub_8002C6C` (`src/graphics/settings_menu8e.c`)
+- `CheckSaveChecksum`, `UpdateSaveChecksum`, `sub_8002B94`, `StoreSaveData`,
+  `ReadSaveSlot`, `WriteSaveSlot`, `EraseSaveSlot` (`src/graphics/settings_menu8e.c`)
   - checksum compare/store, `versionNibble` accessor, EEPROM-save-with-
-  retry (up to 5 tries, same music-mute pattern as `sub_8002A08`), and
+  retry (up to 5 tries, same music-mute pattern as `LoadSaveData`), and
   the three per-row default-refresh/force-set/mark-selected helpers.
 
 ## Compiler-codegen gotchas found (new entries, no prior art in this
 project for most of these)
 
 - **The "flag variable, then copy" idiom for a boolean derived from a
-  struct-field comparison.** Both `sub_8002A08` and `sub_8002BA4` need
+  struct-field comparison.** Both `LoadSaveData` and `StoreSaveData` need
   `wasPlaying` computed into a *different* register than the one it's
   ultimately stored in (`r2` then copied to `r7`), even though a plain
   `s32 wasPlaying = 0; if (cond) wasPlaying = 1;` sometimes reproduces
@@ -83,7 +83,7 @@ project for most of these)
   producing a 4-byte-shorter function - caught by the full `make
   compare`, not the isolated compile, exactly per `docs/workflow.md`'s
   warning). Fixed by declaring the pointer dereference as its own local
-  (`struct AudioContext *audio = gUnknown_030012BC;`) and the flag as
+  (`struct AudioContext *audio = gAudioContext;`) and the flag as
   a genuinely separate local assigned before the branch, matching the
   ROM's own `ldr r4,=ptr; ldr r1,[r4]; movs r2,#0; ldr r0,[r1,#4]; ...`
   instruction order.
@@ -96,9 +96,9 @@ project for most of these)
   the offset into a plain `register s32` variable and adding the
   pointer to it as ordinary integer arithmetic
   (`offset = offset + (s32)self;`), which respects the statement's
-  literal operand order. Affects `sub_8002C14`/`sub_8002C40`.
+  literal operand order. Affects `ReadSaveSlot`/`WriteSaveSlot`.
 - **Trailing byte-padding mismatch** (already documented, see
-  `matching_decomp_alignment_fix`): `sub_8002C6C` needed an explicit
+  `matching_decomp_alignment_fix`): `EraseSaveSlot` needed an explicit
   `asm(".align 2, 0")` since the ROM pads its tail with a zero halfword
   instead of GAS's default `mov r8, r8` NOP.
 - **A large-offset scratch-register choice**: `sub_80027E8`'s
@@ -115,7 +115,7 @@ project for most of these)
 
 All five are fully understood; each hit a distinct flavor of this
 project's well-documented gcc-2.9 scratch-register/callee-saved-
-register-choice nondeterminism (see `sub_8006600`/`sub_80049CC` for
+register-choice nondeterminism (see `DrawPowerDialog`/`sub_80049CC` for
 the established pattern this project has hit many times before):
 
 - **`sub_8001CB8`** (`asm/code_3_1_10_3_1cb8.s`, C in
@@ -144,7 +144,7 @@ the established pattern this project has hit many times before):
   doesn't, most likely due to this function's higher local-variable
   count (buffer/self/len/p/i) versus the near-identical snippet that
   matched cleanly in the much smaller `LinkStop`.
-- **`sub_8002AA4`** (`asm/code_3_1_10_3_2aa4.s`, C in
+- **`ValidateSaveData`** (`asm/code_3_1_10_3_2aa4.s`, C in
   `src/graphics/settings_menu8e.c`) - checksum validate + DMA-repair.
   The ROM caches four field addresses (`self+0x1f8/0x1f9/0x1fa/0x1fb`)
   into `r6`/`sb`/`r7`/`r8` ahead of the row loop; explicit register
@@ -152,7 +152,7 @@ the established pattern this project has hit many times before):
   field writes to match exactly, but the function's *prologue* still
   settles on a different (smaller) push list than the ROM's, since this
   compiler apparently decides `r7` doesn't need protecting across
-  `sub_8002C6C`'s calls here, unlike the ROM's own compile.
+  `EraseSaveSlot`'s calls here, unlike the ROM's own compile.
 
 ## Left untouched (2, raw `.s`, not parked)
 
@@ -189,7 +189,7 @@ See `docs/status/system.md`, `docs/status/audio.md` and
 Closed out all 7 functions this issue still had open (the 5 parked
 above plus the 2 left raw) - `sub_8001CB8`, `sub_8001DB4`,
 `sub_8001F50`, `sub_8002114`, `ReadSaveData`, `WriteSaveData`,
-`sub_8002AA4` - all now byte-exact matched, confirmed by a full clean
+`ValidateSaveData` - all now byte-exact matched, confirmed by a full clean
 `make compare` ("La suma coincide"). All 25 functions in this issue's
 original range are now matched; see "Closing this issue" below.
 
@@ -228,7 +228,7 @@ fight the compiler over one instruction's register.
 
 ### The general strategy for the rest: NAKED transcription, byte-verified
 
-`sub_8001DB4`, `ReadSaveData`/`WriteSaveData`, and `sub_8002AA4` were all
+`sub_8001DB4`, `ReadSaveData`/`WriteSaveData`, and `ValidateSaveData` were all
 already fully understood (their parked-pass doc comments walk every
 field/branch/call), just blocked by this same class of gcc-2.9
 register/stack-plan nondeterminism the project has hit many times
@@ -320,7 +320,7 @@ The issue #4/#6/#8 retry ([issue-4-6-8-naked-retry.md](issue-4-6-8-naked-retry.m
 | `sub_8001CB8` | 49 (old_agbcc) |
 | `sub_8001DB4` | 136 (old_agbcc, same size as the ROM) |
 | `sub_8001F50` | 37 (same size as the ROM) |
-| `sub_8002AA4` | 18 |
+| `ValidateSaveData` | 18 |
 
 The link-cable drafts establish `struct link_session`,
 `struct link_player` and `struct link_ring`. `link_cable.c` is now on
@@ -331,7 +331,7 @@ issue stays open.
 
 ## Later pass: near-miss polish
 
-`sub_8002AA4` is real C. The draft's only remaining gap was the r7/r8
+`ValidateSaveData` is real C. The draft's only remaining gap was the r7/r8
 swap between `flags` and `field_1fb`. An empty `asm("" : : "r"(flags))`
 adds one reference to `flags`, which puts it ahead of `field_1fb` in
 global-alloc's priority order. See [near-miss-polish.md](near-miss-polish.md).

@@ -6,7 +6,7 @@
  * a pointer to a per-category data table (offset/text record pairs read
  * at several different fixed offsets by src/graphics/graphics.c's
  * sub_8006FE4/sub_8007048/sub_8007114/sub_80070D4/sub_8007230/etc. and
- * by oam_count.c's sub_8006770 - none of that table's own shape is
+ * by oam_count.c's DestroyPowerDialog - none of that table's own shape is
  * understood yet, so it stays a raw `void *` here). Exactly 0x1c bytes -
  * confirmed by sub_80071E4's `sub_8026EDC(0x1c)` allocation. Several
  * fields (0x0A, 0x0B, 0x0D-0x0F, 0x16-0x17) are read/written but not

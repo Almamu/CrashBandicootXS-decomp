@@ -3,9 +3,9 @@
 #include "pause_options_screen.h"
 #include "box_part.h"
 
-extern void sub_8002C14(void *handle, s32 rowIndex, void *buf);
-extern void sub_8002C40(void *handle, s32 rowIndex, void *buf);
-extern void sub_8002C6C(void *handle, s32 rowIndex);
+extern void ReadSaveSlot(void *handle, s32 rowIndex, void *buf);
+extern void WriteSaveSlot(void *handle, s32 rowIndex, void *buf);
+extern void EraseSaveSlot(void *handle, s32 rowIndex);
 
 void sub_8002FCC(struct settings_sync_pump *self, struct settings_sync_record *tmpl)
 {
@@ -43,22 +43,22 @@ struct held_pressed_pair {
 };
 extern struct held_pressed_pair gKeys;
 extern void UpdateKeys(void *arg0);
-extern void sub_8004BD0(struct pause_options_screen *self);
+extern void DrawSaveMenu(struct pause_options_screen *self);
 extern void WaitForVBlank(void);
-extern void sub_8004CE8(struct pause_options_screen *self);
-extern void *gUnknown_0300080C;
-extern void sub_80031E4(struct pause_options_screen *self, u32 keys);
+extern void CommitSaveMenuFrame(struct pause_options_screen *self);
+extern void *gSaveMenu;
+extern void SaveMenuInput(struct pause_options_screen *self, u32 keys);
 
 /* The "connecting..." spinner dialog's blocking modal loop: sets up
- * `gUnknown_0300080C`'s `state`/`field_10`/`flags`/`field_8`/`field_20`,
- * then repeatedly dispatches input (sub_80031E4) through
- * sub_8004BD0's state machine, VBlank-waits, and restores display
- * registers (sub_8004CE8) until `field_8` (set by one of the state
+ * `gSaveMenu`'s `state`/`field_10`/`flags`/`field_8`/`field_20`,
+ * then repeatedly dispatches input (SaveMenuInput) through
+ * DrawSaveMenu's state machine, VBlank-waits, and restores display
+ * registers (CommitSaveMenuFrame) until `field_8` (set by one of the state
  * handlers below) requests an exit. Returns `field_20`, the handlers'
  * "result ready" flag. */
-u8 sub_800300C(u32 state, u32 field10)
+u8 RunSaveMenu(u32 state, u32 field10)
 {
-    struct pause_options_screen **selfAddr = (struct pause_options_screen **)&gUnknown_0300080C;
+    struct pause_options_screen **selfAddr = (struct pause_options_screen **)&gSaveMenu;
     struct pause_options_screen *self;
 
     self = *selfAddr;
@@ -74,47 +74,47 @@ u8 sub_800300C(u32 state, u32 field10)
 
         UpdateKeys(gUnknown_03001304);
         keys = gKeys.pressed;
-        sub_80031E4(*selfAddr, keys);
+        SaveMenuInput(*selfAddr, keys);
     dispatch:
-        sub_8004BD0(*selfAddr);
+        DrawSaveMenu(*selfAddr);
         WaitForVBlank();
-        sub_8004CE8(*selfAddr);
+        CommitSaveMenuFrame(*selfAddr);
         if ((*selfAddr)->field_8 != 0) {
             break;
         }
     }
-    return ((struct pause_options_screen *)gUnknown_0300080C)->field_20;
+    return ((struct pause_options_screen *)gSaveMenu)->field_20;
 }
 
 extern void *sub_8026EDC(s32 size);
-extern void *gUnknown_030012BC;
+extern void *gAudioContext;
 extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
-extern u8 sub_8002B44(void *arg0);
+extern u8 CheckSaveChecksum(void *arg0);
 extern struct tile_asset_cache *gUnknown_030012B8;
 extern void sub_8006EA8(struct tile_asset_cache *self);
 extern void sub_800450C(struct pause_options_screen *self);
 extern void sub_80047F8(struct pause_options_screen *self);
-extern void sub_8001B54(void *arg0, s32 arg1);
-extern void sub_80048BC(struct pause_options_screen *self);
+extern void PlaySong(void *arg0, s32 arg1);
+extern void LoadSaveMenuData(struct pause_options_screen *self);
 extern void *gLevelState;
 extern void *sub_80236EC(void *arg0);
-extern void sub_80048E0(void *self, struct settings_row_stats *dest, void *src);
-extern void sub_8004860(struct pause_options_screen *self, void *handle);
+extern void SummarizeProgress(void *self, struct settings_row_stats *dest, void *src);
+extern void RefreshSaveSlotSummaries(struct pause_options_screen *self, void *handle);
 extern void *sub_80016DC(s32 size);
 extern void *sub_80027E8(void *arg0);
 extern void sub_800132C(u8 flags, s32 frameDelay, u8 sync);
-extern void sub_8002C84(struct settings_sync_record *self);
+extern void ResetSaveData(struct settings_sync_record *self);
 
 /* The composite pause/options screen's (and the spinner dialog's, via
- * sub_800306C above) `field_8c`/`field_90` constructor: allocates and
- * initialises both settings_sync_record instances (sub_8002C84), does
+ * InitSaveMenu above) `field_8c`/`field_90` constructor: allocates and
+ * initialises both settings_sync_record instances (ResetSaveData), does
  * the screen's tile/BG/list setup (sub_800450C/sub_80047F8/
- * sub_80048BC, still raw), fills `currentStats` and the first
+ * LoadSaveMenuData, still raw), fills `currentStats` and the first
  * `rowStats` entry, then allocates and stashes the global SIO session
  * object (`gLinkSession`, still uncharacterized - see
  * sub_8002D44/sub_8002E20, src/graphics/settings_menu8.c) and kicks off
  * a VBlank IRQ request. */
-struct pause_options_screen *sub_800306C(struct pause_options_screen *arg0)
+struct pause_options_screen *InitSaveMenu(struct pause_options_screen *arg0)
 {
     register struct pause_options_screen *self asm("r5") = arg0;
     register void **field8cAddr asm("r9") = &self->field_8c;
@@ -124,21 +124,21 @@ struct pause_options_screen *sub_800306C(struct pause_options_screen *arg0)
     extern void *gLinkSession;
 
     obj = sub_8026EDC(size);
-    sub_8002C84(obj);
+    ResetSaveData(obj);
     *field8cAddr = obj;
 
     field90Addr = &self->field_90;
     obj = sub_8026EDC(size);
-    sub_8002C84(obj);
+    ResetSaveData(obj);
     *field90Addr = obj;
 
     sub_8006EA8(gUnknown_030012B8);
     sub_800450C(self);
     sub_80047F8(self);
-    sub_8001B54(gUnknown_030012BC, 0x10);
-    sub_80048BC(self);
-    sub_80048E0(self, &self->currentStats, sub_80236EC(gLevelState));
-    sub_8004860(self, *field8cAddr);
+    PlaySong(gAudioContext, 0x10);
+    LoadSaveMenuData(self);
+    SummarizeProgress(self, &self->currentStats, sub_80236EC(gLevelState));
+    RefreshSaveSlotSummaries(self, *field8cAddr);
 
     {
         register void **sessionAddr asm("r4") = &gLinkSession;
@@ -158,7 +158,7 @@ extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
  * active, erases each of the five settings-row icon widgets
  * (rowObjA/B/C, drawing a "blank" glyph via _call_via_r2's arg1=3), and
  * - only when `flags` bit 0 is set - destroys `self` itself. */
-void sub_800312C(struct pause_options_screen *self, u32 flags)
+void DestroySaveMenu(struct pause_options_screen *self, u32 flags)
 {
     register void **c asm("r6");
     register void **b asm("r5");
@@ -214,23 +214,23 @@ void sub_800312C(struct pause_options_screen *self, u32 flags)
 }
 
 extern void _call_via_r1(void *arg0, void *fn);
-extern void sub_80032E8(struct pause_options_screen *self, u32 keys);
-extern void sub_80034BC(struct pause_options_screen *self, u32 keys, void *handle);
-extern void sub_80035C0(struct pause_options_screen *self);
-extern void sub_8004CB4(struct pause_options_screen *self, u32 keys);
-extern void sub_8003824(struct pause_options_screen *self, u32 keys);
-extern void sub_80038D0(struct pause_options_screen *self, u32 keys);
-extern void sub_800376C(struct pause_options_screen *self, u32 keys);
-extern void sub_800397C(struct pause_options_screen *self, u32 keys);
+extern void SaveMenuMainInput(struct pause_options_screen *self, u32 keys);
+extern void SaveMenuLoadInput(struct pause_options_screen *self, u32 keys, void *handle);
+extern void SaveMenuLinkInput(struct pause_options_screen *self);
+extern void SaveMenuMessageInput(struct pause_options_screen *self, u32 keys);
+extern void SaveMenuSaveInput(struct pause_options_screen *self, u32 keys);
+extern void SaveMenuDeleteInput(struct pause_options_screen *self, u32 keys);
+extern void SaveMenuOverwriteInput(struct pause_options_screen *self, u32 keys);
+extern void SaveMenuConfirmDeleteInput(struct pause_options_screen *self, u32 keys);
 
 /* Per-frame input dispatch for the composite screen (or, via
- * sub_800300C above, the spinner dialog sharing the same struct shape):
+ * RunSaveMenu above, the spinner dialog sharing the same struct shape):
  * redraws all 15 settings-row icon widgets (rowObjA/B/C[0..4] - same
- * still-uncharacterized descriptor shape as sub_800312C above), then
+ * still-uncharacterized descriptor shape as DestroySaveMenu above), then
  * dispatches `keys` to whichever per-`state` handler is active, and
  * finally advances `flags` (as a wrapping 0-0xff per-frame counter) and
  * `field_0` (as a plain per-frame tick). */
-void sub_80031E4(struct pause_options_screen *self, u32 keys)
+void SaveMenuInput(struct pause_options_screen *self, u32 keys)
 {
     s32 i;
 
@@ -254,33 +254,33 @@ void sub_80031E4(struct pause_options_screen *self, u32 keys)
     if ((u32)self->state <= 0xa) {
         switch (self->state) {
         case 0:
-            sub_80032E8(self, keys);
+            SaveMenuMainInput(self, keys);
             break;
         case 1:
-            sub_80034BC(self, keys, self->field_8c);
+            SaveMenuLoadInput(self, keys, self->field_8c);
             break;
         case 2:
-            sub_80034BC(self, keys, self->field_90);
+            SaveMenuLoadInput(self, keys, self->field_90);
             break;
         case 3:
-            sub_80035C0(self);
+            SaveMenuLinkInput(self);
             break;
         case 4:
-            sub_8004CB4(self, keys);
+            SaveMenuMessageInput(self, keys);
             break;
         case 5:
-            sub_8003824(self, keys);
+            SaveMenuSaveInput(self, keys);
             break;
         case 6:
-            sub_80038D0(self, keys);
+            SaveMenuDeleteInput(self, keys);
             break;
         case 9:
-            sub_800376C(self, keys);
+            SaveMenuOverwriteInput(self, keys);
             break;
         case 8:
             break;
         case 7:
-            sub_800397C(self, keys);
+            SaveMenuConfirmDeleteInput(self, keys);
             break;
         case 10:
             break;
@@ -296,22 +296,22 @@ extern void sub_8004A80(struct pause_options_screen *self);
 
 /* State 0's input handler: cancel/confirm-combo (bits 1/3) requests an
  * exit; confirm (bit 0) advances through this state's own little
- * sub-menu (`field_10` 0-4, mirroring the sub_8004BD0 states each
+ * sub-menu (`field_10` 0-4, mirroring the DrawSaveMenu states each
  * selects); L/R (bits 6/7) move the `field_10` cursor with wraparound. */
-void sub_80032E8(struct pause_options_screen *self, u32 flags)
+void SaveMenuMainInput(struct pause_options_screen *self, u32 flags)
 {
     if (flags & 0xa) {
-        PlaySfx(gUnknown_030012BC, 0x47, 0x100);
+        PlaySfx(gAudioContext, 0x47, 0x100);
         self->field_8 = 1;
         return;
     }
     if (flags & 1) {
-        PlaySfx(gUnknown_030012BC, 0x49, 0x100);
+        PlaySfx(gAudioContext, 0x49, 0x100);
         switch (self->field_10) {
         case 0:
             self->state = 1;
             self->field_10 = 0;
-            sub_8004860(self, self->field_8c);
+            RefreshSaveSlotSummaries(self, self->field_8c);
             break;
         case 1:
             self->state = 3;
@@ -323,12 +323,12 @@ void sub_80032E8(struct pause_options_screen *self, u32 flags)
         case 2:
             self->state = 5;
             self->field_10 = 0;
-            sub_8004860(self, self->field_8c);
+            RefreshSaveSlotSummaries(self, self->field_8c);
             break;
         case 3:
             self->state = 6;
             self->field_10 = 0;
-            sub_8004860(self, self->field_8c);
+            RefreshSaveSlotSummaries(self, self->field_8c);
             break;
         case 4:
             self->field_8 = 1;
@@ -337,13 +337,13 @@ void sub_80032E8(struct pause_options_screen *self, u32 flags)
         return;
     }
     if (flags & 0x40) {
-        PlaySfx(gUnknown_030012BC, 0x46, 0x100);
+        PlaySfx(gAudioContext, 0x46, 0x100);
         self->field_10 -= 1;
         if (self->field_10 < 0) {
             self->field_10 = 4;
         }
     } else if (flags & 0x80) {
-        PlaySfx(gUnknown_030012BC, 0x46, 0x100);
+        PlaySfx(gAudioContext, 0x46, 0x100);
         self->field_10 += 1;
         if (self->field_10 > 4) {
             self->field_10 = 0;
@@ -354,10 +354,10 @@ void sub_80032E8(struct pause_options_screen *self, u32 flags)
 /* L/R-only row-cursor mover shared by several of this screen's other
  * states (called directly by several handlers below when their own
  * confirm/cancel bits are clear). */
-void sub_80033E8(struct pause_options_screen *self, u32 flags)
+void SaveMenuMoveCursor(struct pause_options_screen *self, u32 flags)
 {
     if (flags & 0x40) {
-        PlaySfx(gUnknown_030012BC, 0x46, 0x100);
+        PlaySfx(gAudioContext, 0x46, 0x100);
         if ((u32)self->field_10 <= 4) {
             switch (self->field_10) {
             case 0:
@@ -376,7 +376,7 @@ void sub_80033E8(struct pause_options_screen *self, u32 flags)
         return;
     }
     if (flags & 0x80) {
-        PlaySfx(gUnknown_030012BC, 0x46, 0x100);
+        PlaySfx(gAudioContext, 0x46, 0x100);
         if ((u32)self->field_10 <= 4) {
             switch (self->field_10) {
             case 0:
@@ -396,7 +396,7 @@ void sub_80033E8(struct pause_options_screen *self, u32 flags)
     }
     if (flags & 0x30) {
         if (self->field_10 != 4) {
-            PlaySfx(gUnknown_030012BC, 0x46, 0x100);
+            PlaySfx(gAudioContext, 0x46, 0x100);
             self->field_10 ^= 2;
         }
     }
@@ -404,19 +404,19 @@ void sub_80033E8(struct pause_options_screen *self, u32 flags)
 
 extern void sub_80236AC(void *cache, void *buf);
 extern void SetCurrentLevel(void *cache, u8 arg1);
-extern void sub_8001B50(void *arg0, u16 arg1);
-extern void sub_8001B30(void *arg0, u16 arg1);
+extern void SetSfxVolume(void *arg0, u16 arg1);
+extern void SetMusicVolume(void *arg0, u16 arg1);
 
 /* States 1/2's input handler (the two icon slider rows, `handle` =
  * field_8c/field_90 respectively): confirm/cancel-combo either resets
  * to state 0 (if maxed out) or, if the currently-highlighted row isn't
- * already selected (sub_8002CE8), toggles it on and pulls its stats
+ * already selected (IsSaveSlotEmpty), toggles it on and pulls its stats
  * into the current-selection scratch fields; cancel (bit 1) resets to
  * state 0; otherwise falls through to the shared L/R cursor mover. */
-void sub_80034BC(struct pause_options_screen *self, u32 flags, void *handle)
+void SaveMenuLoadInput(struct pause_options_screen *self, u32 flags, void *handle)
 {
     u8 buf[0x70];
-    extern u8 sub_8002CE8(void *handle, s32 rowIndex);
+    extern u8 IsSaveSlotEmpty(void *handle, s32 rowIndex);
 
     if (flags & 1) {
         goto confirm;
@@ -424,33 +424,33 @@ void sub_80034BC(struct pause_options_screen *self, u32 flags, void *handle)
     if (flags & 8) {
     confirm:
         if (self->field_10 == 4) {
-            PlaySfx(gUnknown_030012BC, 0x49, 0x100);
+            PlaySfx(gAudioContext, 0x49, 0x100);
             self->state = 0;
             self->field_10 = 0;
             return;
         }
-        if (sub_8002CE8(handle, self->field_10)) {
-            PlaySfx(gUnknown_030012BC, 0x48, 0x100);
+        if (IsSaveSlotEmpty(handle, self->field_10)) {
+            PlaySfx(gAudioContext, 0x48, 0x100);
             return;
         }
-        PlaySfx(gUnknown_030012BC, 0x49, 0x100);
-        sub_8002C14(handle, self->field_10, buf);
+        PlaySfx(gAudioContext, 0x49, 0x100);
+        ReadSaveSlot(handle, self->field_10, buf);
         sub_80236AC(gLevelState, buf);
         SetCurrentLevel(gLevelState, buf[0x68]);
-        sub_8001B50(gUnknown_030012BC, *(u16 *)&buf[0x6a]);
-        sub_8001B30(gUnknown_030012BC, *(u16 *)&buf[0x6c]);
-        sub_80048E0(self, &self->currentStats, sub_80236EC(gLevelState));
+        SetSfxVolume(gAudioContext, *(u16 *)&buf[0x6a]);
+        SetMusicVolume(gAudioContext, *(u16 *)&buf[0x6c]);
+        SummarizeProgress(self, &self->currentStats, sub_80236EC(gLevelState));
         self->field_20 = 1;
         self->field_8 = 1;
         return;
     }
     if (flags & 2) {
-        PlaySfx(gUnknown_030012BC, 0x47, 0x100);
+        PlaySfx(gAudioContext, 0x47, 0x100);
         self->state = 0;
         self->field_10 = 0;
         return;
     }
-    sub_80033E8(self, flags);
+    SaveMenuMoveCursor(self, flags);
 }
 
 extern s32 sub_8003B40(struct pause_options_screen *self);
@@ -470,11 +470,11 @@ extern s32 gUnknown_03000814;
  * (sub_8002B94's version nibble), accept it (state 2); if they don't,
  * inspect the remote's nibble to merge either flag 2 or flag 4 into our
  * own record and show a matching "conflict" message. */
-void sub_80035C0(struct pause_options_screen *self)
+void SaveMenuLinkInput(struct pause_options_screen *self)
 {
     extern u32 sub_8002B94(void *arg0);
-    extern s32 sub_8002BA4(void *arg0);
-    extern void sub_8002D28(void *handle, u8 flags);
+    extern s32 StoreSaveData(void *arg0);
+    extern void SetSaveFlags(void *handle, u8 flags);
     s32 state = sub_8003B40(self);
 
     sub_8004A64(self);
@@ -482,11 +482,11 @@ void sub_80035C0(struct pause_options_screen *self)
     if (state == 3) {
         self->state = 0;
         self->field_10 = 1;
-        PlaySfx(gUnknown_030012BC, 0x47, 0x100);
+        PlaySfx(gAudioContext, 0x47, 0x100);
         return;
     }
 
-    if (state == 2 || !sub_8002B44(self->field_90)) {
+    if (state == 2 || !CheckSaveChecksum(self->field_90)) {
         self->state = 4;
         self->field_14 = GetUiText(0x2c);
         self->field_18 = GetUiText(0x2e);
@@ -496,20 +496,20 @@ void sub_80035C0(struct pause_options_screen *self)
     if (sub_8002B94(self->field_8c) == sub_8002B94(self->field_90)) {
         self->state = 2;
         self->field_10 = 0;
-        sub_8004860(self, self->field_90);
+        RefreshSaveSlotSummaries(self, self->field_90);
         return;
     }
 
     switch (sub_8002B94(self->field_90)) {
     case 2:
-        sub_8002D28(self->field_8c, 2);
-        sub_8002BA4(self->field_8c);
+        SetSaveFlags(self->field_8c, 2);
+        StoreSaveData(self->field_8c);
         self->state = 4;
         self->field_14 = gUnknown_03000810;
         break;
     case 3:
-        sub_8002D28(self->field_8c, 4);
-        sub_8002BA4(self->field_8c);
+        SetSaveFlags(self->field_8c, 4);
+        StoreSaveData(self->field_8c);
         self->state = 4;
         self->field_14 = gUnknown_03000814;
         break;
@@ -521,19 +521,19 @@ void sub_80035C0(struct pause_options_screen *self)
     self->field_18 = GetUiText(0x2e);
 }
 
-extern u8 sub_8002CE8(void *handle, s32 rowIndex);
+extern u8 IsSaveSlotEmpty(void *handle, s32 rowIndex);
 extern void MemCopy32(void *dst, const void *src, s32 size);
 extern s32 GetCurrentLevel(void *arg0);
-extern s32 sub_8001ABC(void *arg0);
-extern s32 sub_8001AC0(void *arg0);
-extern s32 sub_8002BA4(void *arg0);
+extern s32 GetSfxVolume(void *arg0);
+extern s32 GetMusicVolume(void *arg0);
+extern s32 StoreSaveData(void *arg0);
 
 /* Shared "commit or refresh row `rowIndex`" step used by states 5-9
  * below: pulls the row's stats/name/icon scratch data, feeds it through
  * `field_8c`'s pending-edit slot, and either finalises the edit
- * (sub_8002C6C, when it wasn't already selected) or just refreshes the
+ * (EraseSaveSlot, when it wasn't already selected) or just refreshes the
  * row's aggregate stats. */
-void sub_8003698(struct pause_options_screen *self, s32 rowIndex)
+void SaveGameToSlot(struct pause_options_screen *self, s32 rowIndex)
 {
     u8 buf[0xe0];
     void **handleAddr = &self->field_8c;
@@ -542,8 +542,8 @@ void sub_8003698(struct pause_options_screen *self, s32 rowIndex)
     void **c0Addr;
     void **bcAddr;
 
-    if (!sub_8002CE8(*handleAddr, rowIndex)) {
-        sub_8002C14(*handleAddr, rowIndex, buf);
+    if (!IsSaveSlotEmpty(*handleAddr, rowIndex)) {
+        ReadSaveSlot(*handleAddr, rowIndex, buf);
         wasSelected = 0;
     } else {
         wasSelected = 1;
@@ -561,9 +561,9 @@ void sub_8003698(struct pause_options_screen *self, s32 rowIndex)
     }
     *(u8 *)(buf + 0xd8) = (u8)GetCurrentLevel(*c0Addr);
 
-    bcAddr = &gUnknown_030012BC;
-    *(u16 *)(buf + 0xda) = (u16)sub_8001ABC(*bcAddr);
-    *(u16 *)(buf + 0xdc) = (u16)sub_8001AC0(*bcAddr);
+    bcAddr = &gAudioContext;
+    *(u16 *)(buf + 0xda) = (u16)GetSfxVolume(*bcAddr);
+    *(u16 *)(buf + 0xdc) = (u16)GetMusicVolume(*bcAddr);
 
     /* The ROM recomputes `self->field_8c`'s address a second time here
      * (a fresh `adds r4, r7, #0` / `adds r4, #0x8c` pair) rather than
@@ -572,15 +572,15 @@ void sub_8003698(struct pause_options_screen *self, s32 rowIndex)
      * matching the technique noted in docs/matching.md for this class
      * of gap. */
     handleAddr2 = &self->field_8c;
-    sub_8002C40(*handleAddr2, rowIndex, buf + 0x70);
-    if (sub_8002BA4(*handleAddr2)) {
+    WriteSaveSlot(*handleAddr2, rowIndex, buf + 0x70);
+    if (StoreSaveData(*handleAddr2)) {
         if (wasSelected) {
-            sub_8002C6C(*handleAddr2, rowIndex);
+            EraseSaveSlot(*handleAddr2, rowIndex);
         } else {
-            sub_8002C40(*handleAddr2, rowIndex, buf);
+            WriteSaveSlot(*handleAddr2, rowIndex, buf);
         }
     } else {
-        sub_80048E0(self, &self->rowStats[rowIndex], sub_80236EC(*c0Addr));
+        SummarizeProgress(self, &self->rowStats[rowIndex], sub_80236EC(*c0Addr));
     }
 }
 /* Trailing byte-padding mismatch fix: GAS's default Thumb code

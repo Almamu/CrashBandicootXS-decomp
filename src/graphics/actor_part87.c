@@ -40,11 +40,11 @@ extern void LoadGraphicsPackage(u8 *selfArg, struct bg_package *pkgArg);
 extern u8 gStaticData_0817C5BC[];
 extern u8 gStaticData_0817C594[];
 extern u8 gStaticData_0817C5A8[];
-extern struct AudioContext *gUnknown_030012BC;
-extern void sub_8001AC4(struct AudioContext *self, u32 value);
+extern struct AudioContext *gAudioContext;
+extern void FadeOutMusic(struct AudioContext *self, u32 value);
 extern struct fade_overlay *sub_803487C(struct fade_overlay *self);
 
-/* Allocates and initializes the fade overlay's three BG scratch buffers
+/* Allocates and initializes the continue prompt's three BG scratch buffers
  * (BG1 priority 3/bgcnt 0x1e, BG0 bgcnt 0x1f/slot 3, BG2 priority
  * 1/bgcnt 0x1d/slot 2 - see `sub_801E644`), loads their graphics
  * packages, clears palette entry 0, builds a DISPCNT value enabling
@@ -53,7 +53,7 @@ extern struct fade_overlay *sub_803487C(struct fade_overlay *self);
  * setup half, then builds a fixed BLDCNT/BLDALPHA alpha-blend value
  * (BG2 -> BG0, mode 1, EVA=8/16 EVB=16/16), applies every register,
  * zeroes two more fields, and finally ducks the audio context out via
- * `sub_8001AC4`. Returns `self`.
+ * `FadeOutMusic`. Returns `self`.
  *
  * Matched, byte-exact real C. The remaining BLDCNT/BLDALPHA byte-packing
  * gap this function was previously parked over (see
@@ -81,7 +81,7 @@ extern struct fade_overlay *sub_803487C(struct fade_overlay *self);
  *    `asm/code_3_2_20_28568_c99c_31784_33ef4_3472c.s` under a
  *    `.if NON_MATCHING == 0` guard; that block is now removed since
  *    this function always compiles to the ROM's exact bytes. */
-void *sub_803472C(void *selfArg)
+void *InitContinuePrompt(void *selfArg)
 {
     /* Register-pinned to match the ROM's own allocation
      * (matching_decomp_register_pinning memory): `self` occupies r5 for
@@ -249,7 +249,7 @@ void *sub_803472C(void *selfArg)
         }
     }
 
-    sub_8001AC4(gUnknown_030012BC, 0);
+    FadeOutMusic(gAudioContext, 0);
 
     return self;
 }

@@ -45,7 +45,7 @@ extern void sub_802A4EC(void);
 extern s32 gUnknown_03001538;
 extern struct actor_self *gUnknown_03001534;
 extern s32 GetAnimFrameBaseOffset(void *self);
-extern void *gUnknown_030012BC;
+extern void *gAudioContext;
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern u8 *gLevelState;
 extern s32 gUnknown_0300157C;
@@ -106,7 +106,7 @@ void sub_80309B4(void)
     } else if (gUnknown_0300153C == 0xaa) {
         sub_802A4EC();
         BossSetState(5, 1);
-        PlaySfx(gUnknown_030012BC, 0x42, 0x100);
+        PlaySfx(gAudioContext, 0x42, 0x100);
         gUnknown_03001560 = 0x9d;
         if (gLevelState[0x8c] == 0 && gUnknown_0300157C <= 1) {
             void **pl = &gUnknown_03000884;

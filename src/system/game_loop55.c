@@ -11,7 +11,7 @@
  * `self+0x80`-`0xc4`/`+2` accessor family, game_loop2.c) also shares.
  *
  * Shape: a level-load loop (`LoadLevelGraphics` / `sub_8035E14`, the
- * map screen `sub_80354BC` on result 2), then the level loop. Each pass
+ * map screen `RunCredits` on result 2), then the level loop. Each pass
  * restores the per-attempt block from `snap14C` (repeating while
  * `sub_801BAF0` asks to), runs the attempt loop (`sub_802375C` or
  * `InitActorCategory` per frame, the two bitmap ping-pongs through
@@ -32,8 +32,8 @@
  * - `self->unk_1b8 = self->unk_1bc = 0` computes the 0x1b8 address
  *   first, and the `SetMaskLevel` argument starts at 2 and takes the
  *   tier only when it is <= 1.
- * - `sub_8027138` returns a typed pointer, so the store into
- *   `gUnknown_03001318` loads the global's address before the call.
+ * - `InitHud` returns a typed pointer, so the store into
+ *   `gHud` loads the global's address before the call.
  */
 /* The per-level state object (`gLevelState`) as UpdateGameFrame
  * uses it. The first 0x68 bytes are the per-attempt block that the
@@ -95,10 +95,10 @@ struct level_state
 
 extern void *gEntityFlags;
 extern void *gUnknown_030012B8;
-extern void *gUnknown_030012BC;
+extern void *gAudioContext;
 extern struct level_state *gLevelState;
 extern struct level_state *gUnknown_030012C4;
-extern void *gUnknown_03001318;
+extern void *gHud;
 extern s32 gUnknown_0300082C;
 
 extern void ResetLives(struct level_state *self);
@@ -112,10 +112,10 @@ extern void *sub_8026EDC(u32 size);
 extern void *LoadLevelGraphics(void *mem);
 extern s32 sub_8035E14(void *gfx);
 extern void sub_8036154(void *gfx, u32 flag);
-extern void sub_80354BC(void);
-extern void sub_8004D4C(void);
-extern s32 sub_800300C(s32 a, s32 b);
-extern void sub_8004D20(void);
+extern void RunCredits(void);
+extern void OpenSaveMenu(void);
+extern s32 RunSaveMenu(s32 a, s32 b);
+extern void CloseSaveMenu(void);
 extern void PlayCutscene(struct level_state *self, s32 screen);
 extern u8 sub_80231BC(struct level_state *self);
 extern u8 sub_80231CC(struct level_state *self);
@@ -126,16 +126,16 @@ extern void sub_8023190(struct level_state *self);
 extern void sub_80231A8(struct level_state *self);
 extern void sub_8023184(struct level_state *self);
 extern void sub_802319C(struct level_state *self);
-extern void sub_80067D4(void);
-extern void sub_80067C4(void);
-extern void sub_80067B4(void);
-extern void sub_80067A4(void);
-extern s32 sub_800697C(struct level_state *self);
+extern void ShowSuperBodySlamDialog(void);
+extern void ShowDoubleJumpDialog(void);
+extern void ShowTornadoSpinDialog(void);
+extern void ShowTurboRunDialog(void);
+extern s32 GetCompletionPercent(struct level_state *self);
 extern union level_best_time *GetCurrentLevelFlags(struct level_state *self);
 extern s32 sub_801BAF0(s32 *progress);
 extern void ClearTimeTrial(struct level_state *self);
 extern s32 sub_8024278(s32 level);
-extern struct hud_stat_widget *sub_8027138(void *mem);
+extern struct hud_stat_widget *InitHud(void *mem);
 extern void sub_8028568(void *cache, s32 arg1);
 extern void sub_80232A8(struct level_state *self);
 extern void sub_80232C0(struct level_state *self);
@@ -172,8 +172,8 @@ extern void RestoreCheckpoint(struct level_state *self);
 extern s32 GetWumpa(struct level_state *self);
 extern s32 sub_8023414(struct level_state *self);
 extern s32 sub_8024464(struct level_category *cat);
-extern void sub_8028574(void *cache, s32 arg1);
-extern u8 sub_8034CB0(void);
+extern void DestroyHud(void *cache, s32 arg1);
+extern u8 RunContinuePrompt(void);
 
 void UpdateGameFrame(struct level_state *self)
 {
@@ -215,14 +215,14 @@ void UpdateGameFrame(struct level_state *self)
             sub_8036154(gfx, 3);
         if (result == 2)
         {
-            sub_80354BC();
+            RunCredits();
             goto load;
         }
         if (result != 0)
         {
-            sub_8004D4C();
-            sub_800300C(1, 0);
-            sub_8004D20();
+            OpenSaveMenu();
+            RunSaveMenu(1, 0);
+            CloseSaveMenu();
         }
         else
         {
@@ -247,9 +247,9 @@ void UpdateGameFrame(struct level_state *self)
             MemCopy32(self->snapE4, self, 0x68);
             if (quit)
             {
-                sub_8004D4C();
-                quit = sub_800300C(0, 0);
-                sub_8004D20();
+                OpenSaveMenu();
+                quit = RunSaveMenu(0, 0);
+                CloseSaveMenu();
                 if (quit)
                     self->unk_e0 = 0;
                 goto restore;
@@ -263,8 +263,8 @@ void UpdateGameFrame(struct level_state *self)
         self->unk_e0 = 0;
         status = 1;
         self->unk_bc = sub_8024278(self->level);
-        gUnknown_03001318 = sub_8027138(sub_8026EDC(0x68));
-        sub_8028568(gUnknown_03001318, self->unk_bc);
+        gHud = InitHud(sub_8026EDC(0x68));
+        sub_8028568(gHud, self->unk_bc);
         sub_80232A8(self);
         sub_80232C0(self);
         sub_8023280(self);
@@ -293,14 +293,14 @@ void UpdateGameFrame(struct level_state *self)
                     self->unk_74 = 0;
                     sub_80231D4(self);
                     sub_8024540(&self->level);
-                    sub_8028568(gUnknown_03001318, sub_8024464(self->cat));
+                    sub_8028568(gHud, sub_8024464(self->cat));
                 }
                 else
                 {
                     self->unk_b4 = sub_8023414(self);
                     sub_80231D4(self);
                     sub_8024524(&self->level);
-                    sub_8028568(gUnknown_03001318, sub_8024464(self->cat));
+                    sub_8028568(gHud, sub_8024464(self->cat));
                 }
                 sub_8023304(self);
             }
@@ -309,7 +309,7 @@ void UpdateGameFrame(struct level_state *self)
                 break;
             }
             sub_8006EA8(gUnknown_030012B8);
-            sub_802732C(gUnknown_03001318, 0);
+            sub_802732C(gHud, 0);
             gUnknown_0300082C = 0;
             sub_8023318(self, 0);
             sub_8024498(&self->level);
@@ -330,7 +330,7 @@ void UpdateGameFrame(struct level_state *self)
                 }
                 break;
             }
-            ResetAmbientSfx(gUnknown_030012BC);
+            ResetAmbientSfx(gAudioContext);
             {
                 s32 tier = self->bestTier;
                 s32 arg = 2;
@@ -385,11 +385,11 @@ void UpdateGameFrame(struct level_state *self)
                 RestoreCheckpoint(self);
             }
         }
-        if (gUnknown_03001318 != NULL)
-            sub_8028574(gUnknown_03001318, 3);
+        if (gHud != NULL)
+            DestroyHud(gHud, 3);
         if (sub_803AFEC(self) < 0)
         {
-            if (sub_8034CB0())
+            if (RunContinuePrompt())
                 ResetLives(self);
             else
                 break;
@@ -412,7 +412,7 @@ void UpdateGameFrame(struct level_state *self)
                 {
                     sub_801D41C();
                     sub_8023190(self);
-                    sub_80067D4();
+                    ShowSuperBodySlamDialog();
                     PlayCutscene(self, 4);
                 }
                 break;
@@ -421,7 +421,7 @@ void UpdateGameFrame(struct level_state *self)
                 {
                     sub_801D41C();
                     sub_80231A8(self);
-                    sub_80067C4();
+                    ShowDoubleJumpDialog();
                     PlayCutscene(self, 5);
                 }
                 break;
@@ -430,7 +430,7 @@ void UpdateGameFrame(struct level_state *self)
                 {
                     sub_801D41C();
                     sub_8023184(self);
-                    sub_80067B4();
+                    ShowTornadoSpinDialog();
                     PlayCutscene(self, 6);
                 }
                 break;
@@ -439,9 +439,9 @@ void UpdateGameFrame(struct level_state *self)
                 {
                     sub_801D41C();
                     sub_802319C(self);
-                    sub_80067A4();
+                    ShowTurboRunDialog();
                 }
-                if (sub_800697C(self) > 99)
+                if (GetCompletionPercent(self) > 99)
                 {
                     PlayCutscene(self, 8);
                     self->level++;
@@ -449,11 +449,11 @@ void UpdateGameFrame(struct level_state *self)
                     goto start;
                 }
                 PlayCutscene(self, 10);
-                sub_80354BC();
+                RunCredits();
                 break;
             case 24:
                 PlayCutscene(self, 9);
-                sub_80354BC();
+                RunCredits();
                 break;
             default:
                 if (self->cat->kind == 3)

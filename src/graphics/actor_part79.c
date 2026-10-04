@@ -35,7 +35,7 @@ extern void StopSfx(struct AudioContext *self, u32 id);
 extern void sub_8015780(void *self, s32 a, s32 b, s32 c, s32 d);
 extern u8 GetDpadDirection(void *dummy);
 
-extern struct AudioContext *gUnknown_030012BC;
+extern struct AudioContext *gAudioContext;
 extern void *gLevelState;
 extern struct tile_asset_cache *gUnknown_030012B8;
 extern void *gUnknown_030012D8;
@@ -56,7 +56,7 @@ void sub_8012160(void *selfArg, void *arg1)
     u8 *self = selfArg;
 
     {
-        register void *a0 asm("r0") = gUnknown_030012BC;
+        register void *a0 asm("r0") = gAudioContext;
         register s32 a2 asm("r2") = 0x100;
         register s32 a1 asm("r1") = 0x1b;
         PlaySfx(a0, a1, a2);
@@ -202,7 +202,7 @@ flag_zero:
         if (type2 != 0x26)
             goto end;
     do_call:
-        StopSfx(gUnknown_030012BC, 0x36);
+        StopSfx(gAudioContext, 0x36);
         sub_8015780(self, 0, 0x12, 0, flag);
     }
 end:

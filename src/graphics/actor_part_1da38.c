@@ -92,7 +92,7 @@ struct image_pair
     void *tiles;
 };
 
-extern void *gUnknown_030012BC;
+extern void *gAudioContext;
 extern s16 gStaticData_0816A820[];
 extern struct image_pair gStaticData_0816C5A0[];
 extern u32 gStaticData_0816C610[];
@@ -162,7 +162,7 @@ void sub_801DAD8(struct zoom_bg *self)
     case 2:
         if (self->image == 11)
             break;
-        PlaySfx(gUnknown_030012BC, 0x53, 0x100);
+        PlaySfx(gAudioContext, 0x53, 0x100);
         LoadTaggedAsset(gStaticData_0816C5A0[self->image].palette, buf);
         DmaCopy16(3, buf, BG_PLTT, 0x40);
         LoadTaggedAsset(gStaticData_0816C5A0[self->image].tiles,
@@ -269,7 +269,7 @@ void sub_801DD48(struct zoom_bg *self)
 /* Zooms the picture out with no follow-up picture (page turn). */
 void sub_801DD5C(struct zoom_bg *self)
 {
-    PlaySfx(gUnknown_030012BC, 0x54, 0x100);
+    PlaySfx(gAudioContext, 0x54, 0x100);
     self->state = 1;
     self->image = 11;
 }

@@ -12,19 +12,19 @@ struct hud_score
 {
     s32 mode;                       /* +0x00 */
     s32 layout_value;               /* +0x04 */
-    s32 mode_b;                     /* +0x08 - sub_8027D5C's mode */
-    s32 layout_b;                   /* +0x0C */
+    s32 wumpaSlide;                     /* +0x08 - UpdateHudWumpa's mode */
+    s32 wumpaSlideTimer;                   /* +0x0C */
     s32 mode_a;                     /* +0x10 - sub_8027940's mode */
     s32 layout_a;                   /* +0x14 */
     u8 unk_18[8];
-    s32 value_c;                    /* +0x20 */
+    s32 wumpa;                    /* +0x20 */
     s32 value_a;                    /* +0x24 */
     s32 value_b;                    /* +0x28 */
     u8 unk_2C[0xC];
     s32 value_d;                    /* +0x38 */
     s32 value_e;                    /* +0x3C */
     u8 unk_40[4];
-    s32 shown_c;                    /* +0x44 */
+    s32 shownWumpa;                    /* +0x44 */
     s32 shown_a;                    /* +0x48 */
     s32 shown_b;                    /* +0x4C */
     u8 unk_50[0xC];
@@ -49,15 +49,15 @@ struct pct_source
     struct pct_vtable *vtable;      /* +0x50 */
 };
 
-extern s32 gUnknown_0300086C;
+extern s32 gHudSlideOffset;
 extern struct pct_source *gUnknown_03000884;
 extern s32 _call_via_r1(void *self, void *fn);
 extern s32 sub_80233B4(void *state);
 extern s32 sub_8031784(void);
 extern void sub_8008044(struct hud_digit_part *part);
 extern void *gLevelState;
-extern struct hud_pos gStaticData_08174C6C[];
-extern void sub_80270E0(struct hud_digit_part *part, s32 x, s32 y);
+extern struct hud_pos gHudPartPositions[];
+extern void DrawHudPart(struct hud_digit_part *part, s32 x, s32 y);
 extern s32 sub_8023414(void *state);
 extern s32 GetWumpa(void *state);
 extern s32 __divsi3(s32 a, s32 b);
@@ -81,7 +81,7 @@ static inline void SetPartPos(s32 x, s32 y, struct hud_digit_part *part)
     }
 
 /* The remaining three callees of the HUD stat-widget dispatcher
- * (`sub_80274EC`, `hud_stat_widget.c`) - see `docs/matching/
+ * (`UpdateHud`, `hud_stat_widget.c`) - see `docs/matching/
  * issue-45-hud-stat-widget-dispatcher.md` for the family's full
  * background. Built with old_agbcc, like `hud_stat_widget2.c`.
  *
@@ -102,8 +102,8 @@ static inline void SetPartPos(s32 x, s32 y, struct hud_digit_part *part)
  * 0xc0/0x80/0xa0, `self->field_28`/`self->field_4c` pair at slots
  * 0xc0*2/0xe0/0x80*4), each branching 3-digit vs. 2-digit vs. 1-digit
  * (hiding the unused leading slot(s) via a desired frame of -1, exactly
- * like `sub_8027838`'s own single-digit case), plus one more icon
- * (`gStaticData_08174C6C`-positioned, slot at `self->parts + 0xa0*4`)
+ * like `UpdateHudLives`'s own single-digit case), plus one more icon
+ * (`gHudPartPositions`-positioned, slot at `self->parts + 0xa0*4`)
  * whose x/y table index is picked from a 3-way digit-count check on the
  * first counter's value. */
 void sub_8027940(struct hud_counter *selfArg)
@@ -119,9 +119,9 @@ void sub_8027940(struct hud_counter *selfArg)
         return;
     self->value_a = sub_8023414(gLevelState);
     if (self->mode_a == 1 || self->mode_a == 3)
-        gUnknown_0300086C = self->layout_a * 2 - 0x28;
+        gHudSlideOffset = self->layout_a * 2 - 0x28;
     else
-        gUnknown_0300086C = 0;
+        gHudSlideOffset = 0;
 
     v = self->value_a;
     if (v != self->shown_a)
@@ -158,9 +158,9 @@ void sub_8027940(struct hud_counter *selfArg)
             CLAMP_FRAME(&parts[5], parts[5].anim_index, f);
         }
     }
-    sub_80270E0(&self->parts[3], 0, 0);
-    sub_80270E0(&self->parts[4], 0, 0);
-    sub_80270E0(&self->parts[5], 0, 0);
+    DrawHudPart(&self->parts[3], 0, 0);
+    DrawHudPart(&self->parts[4], 0, 0);
+    DrawHudPart(&self->parts[5], 0, 0);
 
     if (self->value_a > 99)
         digits = 2;
@@ -204,18 +204,18 @@ void sub_8027940(struct hud_counter *selfArg)
             CLAMP_FRAME(&parts[8], parts[8].anim_index, f);
         }
     }
-    sub_80270E0(&parts[6], off, 0);
-    sub_80270E0(&self->parts[7], off, 0);
-    sub_80270E0(&self->parts[8], off, 0);
+    DrawHudPart(&parts[6], off, 0);
+    DrawHudPart(&self->parts[7], off, 0);
+    DrawHudPart(&self->parts[8], off, 0);
 
     {
         struct hud_digit_part *part;
 
-        SetPartPos(gStaticData_08174C6C[10].x + off, gStaticData_08174C6C[10].y, (part = &self->parts[10]));
+        SetPartPos(gHudPartPositions[10].x + off, gHudPartPositions[10].y, (part = &self->parts[10]));
         CLAMP_FRAME(part, self->parts[10].anim_index, 0);
-        sub_80270E0(part, 0, 0);
+        DrawHudPart(part, 0, 0);
     }
-    sub_80270E0(&self->parts[9], 0, 0);
+    DrawHudPart(&self->parts[9], 0, 0);
     self->shown_b = self->value_b;
     self->shown_a = self->value_a;
 }
@@ -226,25 +226,25 @@ void sub_8027940(struct hud_counter *selfArg)
  * `sub_8023414` for its own primary counter) rather than a mode/layout
  * pair like the dispatcher's other callees - always refreshes one more
  * slot (`self->parts + 0xd0*4`) up front via `sub_8008044`/
- * `sub_80270E0` regardless of whether the value changed. */
-void sub_8027D5C(struct hud_counter *selfArg)
+ * `DrawHudPart` regardless of whether the value changed. */
+void UpdateHudWumpa(struct hud_counter *selfArg)
 {
     struct hud_score *self = (struct hud_score *)selfArg;
     struct hud_digit_part *parts;
     s32 v;
 
-    if (self->mode_b == 0)
+    if (self->wumpaSlide == 0)
         return;
-    if (self->mode_b == 1 || self->mode_b == 3)
-        gUnknown_0300086C = self->layout_b * 2 - 0x28;
+    if (self->wumpaSlide == 1 || self->wumpaSlide == 3)
+        gHudSlideOffset = self->wumpaSlideTimer * 2 - 0x28;
     else
-        gUnknown_0300086C = 0;
-    self->value_c = GetWumpa(gLevelState);
+        gHudSlideOffset = 0;
+    self->wumpa = GetWumpa(gLevelState);
     sub_8008044(&self->parts[13]);
-    sub_80270E0(&self->parts[13], 0, 0);
+    DrawHudPart(&self->parts[13], 0, 0);
 
-    v = self->value_c;
-    if (v != self->shown_c)
+    v = self->wumpa;
+    if (v != self->shownWumpa)
     {
         if (v > 9)
         {
@@ -252,7 +252,7 @@ void sub_8027D5C(struct hud_counter *selfArg)
 
             parts = self->parts;
             CLAMP_FRAME(&parts[11], parts[11].anim_index, f);
-            f = __modsi3(self->value_c, 10);
+            f = __modsi3(self->wumpa, 10);
             CLAMP_FRAME(&parts[12], parts[12].anim_index, f);
         }
         else
@@ -262,9 +262,9 @@ void sub_8027D5C(struct hud_counter *selfArg)
             CLAMP_FRAME(&parts[12], parts[12].anim_index, -1);
         }
     }
-    sub_80270E0(&self->parts[11], 0, 0);
-    sub_80270E0(&self->parts[12], 0, 0);
-    self->shown_c = self->value_c;
+    DrawHudPart(&self->parts[11], 0, 0);
+    DrawHudPart(&self->parts[12], 0, 0);
+    self->shownWumpa = self->wumpa;
 }
 
 /* The percentage-counter widget (`docs/rom_map.md`'s "fx" investigation
@@ -293,10 +293,10 @@ void sub_8027E88(struct hud_counter *selfArg)
     struct hud_digit_part *part;
     s32 v;
 
-    gUnknown_0300086C = 0;
-    SetPartPos(gStaticData_08174C6C[24].x, gStaticData_08174C6C[24].y, (part = &self->parts[24]));
+    gHudSlideOffset = 0;
+    SetPartPos(gHudPartPositions[24].x, gHudPartPositions[24].y, (part = &self->parts[24]));
     CLAMP_FRAME(part, self->parts[24].anim_index, 0);
-    sub_80270E0(part, 0, 0);
+    DrawHudPart(part, 0, 0);
 
     {
         struct pct_source *src = gUnknown_03000884;
@@ -339,10 +339,10 @@ void sub_8027E88(struct hud_counter *selfArg)
             CLAMP_FRAME(&parts[28], parts[28].anim_index, f);
         }
     }
-    sub_80270E0(&self->parts[25], 0, 0);
-    sub_80270E0(&self->parts[26], 0, 0);
-    sub_80270E0(&self->parts[27], 0, 0);
-    sub_80270E0(&self->parts[28], 0, 0);
+    DrawHudPart(&self->parts[25], 0, 0);
+    DrawHudPart(&self->parts[26], 0, 0);
+    DrawHudPart(&self->parts[27], 0, 0);
+    DrawHudPart(&self->parts[28], 0, 0);
     self->shown_d = self->value_d;
 
     if (sub_80233B4(gLevelState) != -1)
@@ -350,9 +350,9 @@ void sub_8027E88(struct hud_counter *selfArg)
     if ((self->value_e = sub_8031784()) == -1)
         return;
 
-    SetPartPos(gStaticData_08174C6C[29].x, gStaticData_08174C6C[29].y, (part = &self->parts[29]));
+    SetPartPos(gHudPartPositions[29].x, gHudPartPositions[29].y, (part = &self->parts[29]));
     CLAMP_FRAME(part, self->parts[29].anim_index, 0);
-    sub_80270E0(part, 0, 0);
+    DrawHudPart(part, 0, 0);
 
     v = self->value_e;
     if (v != self->shown_e)
@@ -390,9 +390,9 @@ void sub_8027E88(struct hud_counter *selfArg)
             CLAMP_FRAME(&parts[33], parts[33].anim_index, f);
         }
     }
-    sub_80270E0(&self->parts[30], 0, 0);
-    sub_80270E0(&self->parts[31], 0, 0);
-    sub_80270E0(&self->parts[32], 0, 0);
-    sub_80270E0(&self->parts[33], 0, 0);
+    DrawHudPart(&self->parts[30], 0, 0);
+    DrawHudPart(&self->parts[31], 0, 0);
+    DrawHudPart(&self->parts[32], 0, 0);
+    DrawHudPart(&self->parts[33], 0, 0);
     self->shown_e = self->value_e;
 }

@@ -8,7 +8,7 @@
 
 extern s32 GetAnimFrameBaseOffset(void *self);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
-extern void *gUnknown_030012BC;
+extern void *gAudioContext;
 extern s32 gUnknown_0300156C;
 extern s32 gUnknown_03001578;
 extern s32 gUnknown_03001558;
@@ -74,6 +74,6 @@ void sub_803146C(s32 delta)
             }
         }
     } else {
-        PlaySfx(gUnknown_030012BC, 0x43, 0x100);
+        PlaySfx(gAudioContext, 0x43, 0x100);
     }
 }

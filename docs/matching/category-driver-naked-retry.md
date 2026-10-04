@@ -40,7 +40,7 @@ most instructions already right. What closed it:
    order with the 0 case at the end: `if (status != 0) { chain } else {
    option screen; continue; } break;`. Ending the option-screen branch
    in `continue` keeps the inner loop from being rotated.
-2. **The `sub_8004D74()` result tests stay ifs** (a `switch` there also
+2. **The `RunPauseMenu()` result tests stay ifs** (a `switch` there also
    builds a tree).
 3. **`-sub_802A5AC() < 0`** gives the ROM's `neg; lsr #31`; `!= 0`
    adds an `orr`.

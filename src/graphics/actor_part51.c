@@ -20,7 +20,7 @@
  * compiler used that still-live value to pick `r1` (not `r0`) for its
  * "pop a register, branch to it" epilogue step - the same
  * return-type-shapes-epilogue-register-choice gotcha already documented
- * for `sub_800697C`/`sub_8001214` in docs/matching.md. No caller of
+ * for `GetCompletionPercent`/`sub_8001214` in docs/matching.md. No caller of
  * this function has been matched yet to say whether the return value is
  * actually used. */
 void *sub_802AA0C(void *outArg, void *selfArg)

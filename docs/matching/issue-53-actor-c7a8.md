@@ -54,7 +54,7 @@ On overlap, and only while the candidate node isn't already in the used
 state (`node+0xc != 0x12`), fires the same shared "used"-state
 transition idiom seen throughout this ROM region
 (`sub_802C4C8`/`sub_802C540`/`sub_802C614` in `actor_part19g.c`): a
-sound cue (`PlaySfx(gUnknown_030012BC, 4, 0x100)` - the same sound id 4
+sound cue (`PlaySfx(gAudioContext, 4, 0x100)` - the same sound id 4
 `sub_802C6C0`'s own proximity-pickup branch uses), the lap-counter tie
 `sub_8022FEC(gLevelState)`, `node+0x44`/`node+0x12`/`node+8`
 cleared, `node+0xc = 0x12`, and the node's own anim-frame base reloaded

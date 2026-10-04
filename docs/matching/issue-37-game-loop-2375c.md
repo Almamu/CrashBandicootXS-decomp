@@ -147,7 +147,7 @@ Its real bytes now live in `asm/code_3_2_17_23a1c.s` (renamed from
 `docs/rom_map.md`'s "Traced the fade-to-black's trigger" and "Resolved:
 `sub_80241B0`'s gate" sections for what's already understood about its
 6-case jump table, the `gLevelTable` per-level table it indexes,
-and its wait-loop/fade/post-fade structure. `sub_8027018`'s exact
+and its wait-loop/fade/post-fade structure. `AddPaletteCycle`'s exact
 6-argument call shape (self, targets, lists, angle, list_count,
 direction - matched in `hud_icon_slot.c`) is now confirmed against all
 four of this function's own call sites, closing one of the previously
@@ -183,30 +183,30 @@ still clear), feed its `+0x14`/`+0x18` fields straight through to
 | 4 | 5 | `_08023B8C` |
 | 5 | 6 | `_08023B20` (shared with index 0) |
 
-Every non-default case resets `gUnknown_030012C8` (the `hud_fx_queue`
-`hud_icon_slot.c` documents) via `sub_8027088`, then fires
-`sub_8027018(queue, targets, lists, angle, list_count, direction)`:
+Every non-default case resets `gPaletteCycles` (the `hud_fx_queue`
+`hud_icon_slot.c` documents) via `ClearPaletteCycles`, then fires
+`AddPaletteCycle(queue, targets, lists, angle, list_count, direction)`:
 
 - **state 1 or 6**: *two* calls -
-  `sub_8027018(queue, (u16 *)0x05000000, gThemePaletteCycle1A, 0x10, 9, 0)`
-  then `sub_8027018(queue, (u16 *)0x05000000, gThemePaletteCycle1B, 0x14, 9, 0)`.
-- **state 2**: `sub_8027018(queue, (u16 *)0x05000000, gThemePaletteCycle2, 6, 5, 1)`
+  `AddPaletteCycle(queue, (u16 *)0x05000000, gThemePaletteCycle1A, 0x10, 9, 0)`
+  then `AddPaletteCycle(queue, (u16 *)0x05000000, gThemePaletteCycle1B, 0x14, 9, 0)`.
+- **state 2**: `AddPaletteCycle(queue, (u16 *)0x05000000, gThemePaletteCycle2, 6, 5, 1)`
   (the only case with `direction=1`).
-- **state 3**: `sub_8027018(queue, (u16 *)0x05000000, gThemePaletteCycle3, 0xa, 0x10, 0)`.
-- **state 5**: `sub_8027018(queue, (u16 *)0x05000000, gThemePaletteCycle5, 0x14, 5, 0)`.
-- **default** (state 0/4/`>6`): no reset, no `sub_8027018` call - just
+- **state 3**: `AddPaletteCycle(queue, (u16 *)0x05000000, gThemePaletteCycle3, 0xa, 0x10, 0)`.
+- **state 5**: `AddPaletteCycle(queue, (u16 *)0x05000000, gThemePaletteCycle5, 0x14, 5, 0)`.
+- **default** (state 0/4/`>6`): no reset, no `AddPaletteCycle` call - just
   clears the queue's own `active` byte directly.
 
 `(u16 *)0x05000000` is GBA palette RAM itself, passed straight through
 as the queue's `targets` argument - this is a **palette color-cycle
 animation**, reusing the exact same generic rotate-by-index-list engine
-`sub_8026F54`/`sub_8027018`'s other (HUD-digit) call sites drive, not a
+`TickPaletteCycles`/`AddPaletteCycle`'s other (HUD-digit) call sites drive, not a
 new mechanism.
 
 **Resolves the open table-shape question**: `gThemePaletteCycle2`
 (5 entries), `0816C81E` (9), `0816C830` (9), `0816C842` (0x10), and
 `0816C862` (5) are not per-level records - they're plain, tightly
-packed `u16[]` "permutation index list" arguments to `sub_8027018`'s
+packed `u16[]` "permutation index list" arguments to `AddPaletteCycle`'s
 own `lists` parameter. Confirmed via address deltas exactly matching
 each call site's own `list_count` argument (`0816C814`->`0816C81E`:
 0xA = 5*2; `0816C81E`->`0816C830`: 0x12 = 9*2; `0816C830`->`0816C842`:
@@ -215,8 +215,8 @@ padding, no further struct needed.
 
 **A genuine compiler-internal code-sharing quirk, not a modeling
 error**: state 5's setup falls straight into label `_08023BA6`
-(`mov r3, #0x14; bl sub_8027018; b _08023BCC`), and state 1/6's *second*
-`sub_8027018` call (after its first call has already completed and its
+(`mov r3, #0x14; bl AddPaletteCycle; b _08023BCC`), and state 1/6's *second*
+`AddPaletteCycle` call (after its first call has already completed and its
 second call's `targets`/`list_count` args are already loaded into
 `sb`/`r8`) jumps into that *same* physical label mid-setup, rather than
 having its own separate `angle=0x14`/`bl`/`b` copy. Both calls share
@@ -246,10 +246,10 @@ If the widget kind is `0`: probes `sub_80232B8`/`sub_8024404` or
 `sub_8023290`/`sub_80243E0` (level-object and self readiness checks);
 on success, clears the player's busy bit 7, re-stamps `+0x2d` to
 `0x29`, refreshes the OAM entry again, plays a sound effect
-(`gUnknown_030012BC` as sample id, priority `0x2c`, via `PlaySfx`),
+(`gAudioContext` as sample id, priority `0x2c`, via `PlaySfx`),
 fires the `player+0x44`-table's `_call_via_r2` trampoline (mode
 `0x29`), repeats the same `sub_8006D08` tile-cache call, and pings
-`gUnknown_03001318` (`sub_8028504`).
+`gHud` (`ShowHudCounters`).
 
 Either way: flushes the four HUD ring-buffer managers (`sub_8008C80`
 on `030012F4`/`EC`/`F0`/`F8`), a `sub_802400C(self)` refresh, and the
@@ -257,13 +257,13 @@ fade-cluster `sub_8001524(0)`/`sub_80015E0`/`sub_8001614`/`sub_8001624`
 reset quartet, landing at the **wait loop** (confirming and completing
 `docs/rom_map.md`'s earlier trace): poll `sub_80241B0` each iteration;
 while not ready and the player's `+0xc` bit 0 is clear, run one more
-pass (`sub_802423C`/`sub_802400C`, a `sub_8004D74` input-driven mini-
+pass (`sub_802423C`/`sub_802400C`, a `RunPauseMenu` input-driven mini-
 dispatch that can early-exit the whole function with return value `1`
 or `2` after firing `sub_80241BC`'s level-end teardown, a
-`gKeys` input-flag-gated `sub_8028504` ping, `sub_800891C`
+`gKeys` input-flag-gated `ShowHudCounters` ping, `sub_800891C`
 on three ring-buffer managers, two `_call_via_r1` trampoline probes
 against the player's own `+0x18`/`+0x38`/`+0x18` tables, `sub_80091D4`
-on `gUnknown_0300130C`, `sub_8028400`, and a `gLevelState+0x8c`-
+on `gUnknown_0300130C`, `UpdateHudSlides`, and a `gLevelState+0x8c`-
 gated `TickLevelClock` call) before looping back. Once ready: fires the
 fade (`sub_80014A4`).
 
@@ -283,7 +283,7 @@ widget-manager globals (`sub_8008CEC` on `030012E8`/`EC`/`F0`/`F8`/`F4`,
 `sub_8009914` on `0300130C`), resets the fade cluster's own bitfield
 accessors (`sub_8001578`/`sub_8001564`/`sub_8001550`/`sub_800153C`/
 `sub_800158C`/`WaitForVBlank`/`sub_8001614`), and returns `sl` - `1` by
-default, `2` from the wait-loop's `sub_8004D74`-driven early exit, or
+default, `2` from the wait-loop's `RunPauseMenu`-driven early exit, or
 `0` once the post-fade branch was reached. `sub_802375C` itself stashes
 and returns this value unmodified.
 

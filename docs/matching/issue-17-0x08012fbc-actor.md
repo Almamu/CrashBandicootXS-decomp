@@ -28,13 +28,13 @@ accurate by this pass's own full transcription.
 (address-suffixed) rather than the next sequential `actor_partNN`
 (`actor_part85.c`/`86.c`/...) - `actor_part85.c` turned out to already
 be claimed by unrelated, non-ROM-adjacent issue #63 work
-(`sub_8034374`/`sub_8034480`, the particle-trail BG0 object at
+(`InitStarfield`/`DrawStarfield`, the particle-trail BG0 object at
 0x08034374). **This was discovered the hard way**: an early draft of
 this pass's own `actor_part85.c` silently overwrote that file via the
 Write tool before its pre-existing content had been read, destroying
 377 lines of already-matched real C. Caught by an unrelated-looking
 symptom - a full clean `make compare` failing with undefined references
-to `sub_8034374`/`sub_8034480` from three completely different,
+to `InitStarfield`/`DrawStarfield` from three completely different,
 untouched files (`level_graphics.c`, `counter_selector_setup.c`,
 `actor_part73.c`) far away in ROM address space - which made no sense
 as a "pre-existing repo bug" once `git diff --stat HEAD -- ...` was

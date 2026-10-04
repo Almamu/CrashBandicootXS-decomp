@@ -42,7 +42,7 @@ functions):
   paged level-select screen docs/rom_map.md found from the other side
   ("a paged menu/screen with a smooth horizontal page-turn animation").
   `sub_801BAF0` (called from `game_loop55.c`) is the modal entry point:
-  display/icon-manager setup (the same sequence as `sub_80062A8`),
+  display/icon-manager setup (the same sequence as `ShowPowerDialog`),
   construct (`sub_801BC28`), run (`sub_801C96C`), return the selected
   level through `*arg`. Five entries per page (`arg / 5`, `arg % 5`;
   `arg >= 20` is the last page). The loop dispatches the newly-pressed
@@ -90,9 +90,9 @@ their method tables.
   the stores), `AnimTable`/`SetAnim` (the inlined `sub_80087D0`), and
   `CommitDisplay`. `sub_801BAF0` also needed the global's address taken
   first (`struct level_menu **menuAddr = &gUnknown_03000820;`, the same
-  idiom as `settings_menu8b.c`'s `sub_800300C`) and was previously the
+  idiom as `settings_menu8b.c`'s `RunSaveMenu`) and was previously the
   kind of function this project would have NAKED'd (its sibling
-  `sub_80062A8` is).
+  `ShowPowerDialog` is).
 - **Operand order of an indexed address.** `&recs[idx]` with a 28-byte
   stride and `&items[i]` with a 4-byte stride come out with opposite
   `adds` operand orders; where the ROM wanted the other one, the index

@@ -4,28 +4,28 @@
 #include "core.h"
 
 /* The music/SFX-trigger "context" object `PlaySfx` and its neighbors take
- * as their first argument - `*gUnknown_030012BC` in the ROM, an
+ * as their first argument - `*gAudioContext` in the ROM, an
  * 8340-byte allocation made by `sub_8022230` (see docs/rom_map.md's
  * "Found the origin point" section). Only the leading 0x58 bytes this
  * cluster of functions models by field are covered here; starting at
  * +0x58 sits an embedded GAX2 runtime player-state object (initialized by
  * `GAX2_new`/`GAX2_init`, both still raw engine internals) that
- * `sub_80017BC` pokes directly - genuinely nested, not-yet-reverse-
+ * `StartSong` pokes directly - genuinely nested, not-yet-reverse-
  * engineered state, so those writes stay raw offset casts (see
  * docs/audio.md) rather than guessed struct fields. `sub_8001B14` also
  * pokes one more field (+0x62) inside that same embedded region for the
  * same reason.
  *
  * Two independent fade-envelope pairs are tracked, each ramping by a
- * fixed +-0x10 (Q8.8, ~0.06) per `sub_80016EC` tick once its direction
+ * fixed +-0x10 (Q8.8, ~0.06) per `UpdateAudio` tick once its direction
  * flag is armed:
  *   - `musicVolCurrent`/`musicVolTarget` (+0x18/+0x1c, hardware-mirrored
  *     as a u16 at +0x68 - just past this struct) - independent of the
  *     ducking pair below.
  *   - `duckVolCurrent`/`duckVolTarget` (+0x24/+0x28) - the music-ducking
- *     ramp `sub_8001AC4` (duck out, explicit target)/`sub_8001AD8` (duck
+ *     ramp `FadeOutMusic` (duck out, explicit target)/`FadeInMusic` (duck
  *     back in, restores `duckVolDefault`) drive; `duckVolDefault` (+0x20)
- *     is the last value explicitly set via `sub_8001B30`.
+ *     is the last value explicitly set via `SetMusicVolume`.
  *
  * A second pair of 3-word records tracks a currently-playing/queued
  * "ambient" sound effect (distinct from the one-shot `PlaySfx` calls):
@@ -47,7 +47,7 @@ struct AudioContext {
     u32 currentSong;        // 0x08 - index into gSongTable (19 songs); 0x13 = none
     u32 pendingSong;         // 0x0c - queued song index, started once the duck-out fade completes
     u32 lastSfxId[2];         // 0x10/0x14 - round-robin record of the last 2 PlaySfx ids (StopSfx stop-if-playing scan)
-    s32 musicVolCurrent;       // 0x18 - signed: sub_80016EC compares it with blt/bgt, not an unsigned bcc/bcs
+    s32 musicVolCurrent;       // 0x18 - signed: UpdateAudio compares it with blt/bgt, not an unsigned bcc/bcs
     s32 musicVolTarget;         // 0x1c
     s32 duckVolDefault;          // 0x20
     s32 duckVolCurrent;           // 0x24
@@ -61,7 +61,7 @@ struct AudioContext {
     u8 musicVolFadeDownArmed;                      // 0x51
     u8 duckVolFadeUpArmed;                           // 0x52
     u8 duckVolFadeDownArmed;                          // 0x53
-    u8 field_54;                                        // 0x54 - only ever cleared in this cluster (sub_80017BC, on a successful song start)
+    u8 field_54;                                        // 0x54 - only ever cleared in this cluster (StartSong, on a successful song start)
     u8 pad_55[3];                                         // 0x55-0x57
 };
 

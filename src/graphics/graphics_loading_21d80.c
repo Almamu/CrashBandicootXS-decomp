@@ -18,7 +18,7 @@ extern void sub_8008E94(void *manager, void *value);
 
 /* Sets `part->field_29`'s low nibble to `sub_800815C(part)`'s result,
  * keeping the high nibble - same idiom as `UPDATE_ICON_FRAME_NIBBLE`
- * (src/graphics/settings_menu6.c, confirmed matching for `sub_8005A78`),
+ * (src/graphics/settings_menu6.c, confirmed matching for `InitPauseCrystalsPage`),
  * adapted for a raw-offset `struct actor *` instead of a named
  * `field_29`, since this object's tail past `struct actor`'s 0x1c
  * bytes isn't its own named struct here (see `trigger_effect.c`'s same
@@ -42,7 +42,7 @@ extern void sub_8008E94(void *manager, void *value);
 /* Spawns a full visual effect via `sub_8008434`: points its `+0x20`
  * table pointer at `gStaticData_084A5600`'s master 12-byte record 38
  * (`table_base + 0x1c8` - the same record `overlay_ui`'s
- * `sub_80063D8` dialog-box spawner uses, see docs/rom_map.md's
+ * `InitPowerDialog` dialog-box spawner uses, see docs/rom_map.md's
  * "`gStaticData_084A5600` record-indexed" writeup), tags it (`+0x2d =
  * 1`), builds it via the standard `sub_80087C0`/`sub_80087B4`/
  * `sub_800872C` OAM trio, sets its `+0x29` bitfield via
@@ -339,26 +339,26 @@ void CreateEntitySpawner(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 }
 
 extern void *sub_80016DC(u32 size);
-extern struct AudioContext *sub_8001C2C(struct AudioContext *self);
-extern void sub_8001C80(void);
-extern void sub_8001B50(void *arg0, u16 arg1);
-extern void sub_8001B30(void *arg0, u16 arg1);
-extern void *gUnknown_030012BC;
+extern struct AudioContext *InitAudioContext(struct AudioContext *self);
+extern void EnableMusicVCountIrq(void);
+extern void SetSfxVolume(void *arg0, u16 arg1);
+extern void SetMusicVolume(void *arg0, u16 arg1);
+extern void *gAudioContext;
 extern void *gUnknown_030012CC;
-extern void *gUnknown_030012C8;
+extern void *gPaletteCycles;
 extern struct tile_asset_cache *gUnknown_030012B8;
 extern void sub_8006EF0(struct tile_asset_cache *self, u16 count, const u8 *records);
-extern struct icon_manager *gUnknown_030012DC;
-extern struct icon_manager *gUnknown_030012E0;
-extern struct icon_manager *InitHudIconWidgetA(struct icon_manager *self);
-extern struct icon_manager *InitHudIconWidgetB(struct icon_manager *self);
+extern struct icon_manager *gSmallFont;
+extern struct icon_manager *gLargeFont;
+extern struct icon_manager *InitSmallFont(struct icon_manager *self);
+extern struct icon_manager *InitLargeFont(struct icon_manager *self);
 extern s32 AllocVramDmaQueue(void);
 extern struct oam_shadow_buffer *gUnknown_03001300;
 extern struct oam_shadow_buffer *sub_8006B0C(struct oam_shadow_buffer *arg0);
 extern struct vram_upload_cursor *gUnknown_030012FC;
 extern struct vram_upload_cursor *sub_8006CE8(struct vram_upload_cursor *self, s32 count);
 extern void *gUnknown_03001304;
-extern struct hud_fx_queue *sub_80270C0(struct hud_fx_queue *self);
+extern struct hud_fx_queue *InitPaletteCycles(struct hud_fx_queue *self);
 extern u8 gUnknown_03001288[2];
 extern void sub_8001604(void);
 extern void sub_8001614(void);
@@ -367,7 +367,7 @@ extern u8 gStaticData_084A5600[];
 /* `sub_8022230` (docs/rom_map.md, "Found the origin point"): the
  * function `GetLevelState` calls once at the top of the game loop to
  * construct essentially every hot IWRAM global this whole ROM region
- * references - `gUnknown_030012BC` (an 8340-byte `AudioContext`
+ * references - `gAudioContext` (an 8340-byte `AudioContext`
  * allocation), `030012CC`/`D0`/`B8`/`DC`/`E0`/`03001300`/`FC`/
  * `03001304`/`030012B4`/`C8`, clears `gUnknown_03001288`'s mode byte,
  * and zeroes `self+0xc0` before returning `self` unchanged. `gUnknown_
@@ -388,15 +388,15 @@ extern u8 gStaticData_084A5600[];
 void *sub_8022230(void *self)
 {
     {
-        void **addr = (void **)&gUnknown_030012BC;
+        void **addr = (void **)&gAudioContext;
         register void *audio asm("r0") = sub_80016DC(0x2094);
 
-        asm volatile("bl sub_8001C2C" : "+r" (audio) :: "r1", "r2", "r3", "lr", "cc");
+        asm volatile("bl InitAudioContext" : "+r" (audio) :: "r1", "r2", "r3", "lr", "cc");
         *addr = audio;
     }
-    sub_8001C80();
-    sub_8001B50(gUnknown_030012BC, 0xc0);
-    sub_8001B30(gUnknown_030012BC, 0xc0);
+    EnableMusicVCountIrq();
+    SetSfxVolume(gAudioContext, 0xc0);
+    SetMusicVolume(gAudioContext, 0xc0);
 
     {
         void **addr = (void **)&gUnknown_030012CC;
@@ -429,12 +429,12 @@ void *sub_8022230(void *self)
         }
     }
     {
-        struct icon_manager **addr = &gUnknown_030012DC;
+        struct icon_manager **addr = &gSmallFont;
         s32 size = 0x9a << 1;
 
-        *addr = InitHudIconWidgetA(sub_8026EDC(size));
-        addr = &gUnknown_030012E0;
-        *addr = InitHudIconWidgetB(sub_8026EDC(size));
+        *addr = InitSmallFont(sub_8026EDC(size));
+        addr = &gLargeFont;
+        *addr = InitLargeFont(sub_8026EDC(size));
     }
     AllocVramDmaQueue();
     {
@@ -462,9 +462,9 @@ void *sub_8022230(void *self)
         *addr = tmp;
     }
     {
-        void **addr = (void **)&gUnknown_030012C8;
+        void **addr = (void **)&gPaletteCycles;
 
-        *addr = sub_80270C0(sub_8026EDC(0x48));
+        *addr = InitPaletteCycles(sub_8026EDC(0x48));
     }
     {
         register u8 *addr asm("r0") = gUnknown_03001288;

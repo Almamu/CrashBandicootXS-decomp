@@ -17,11 +17,11 @@
  * (`sub_80119A8`) is now matched. */
 
 extern void *gUnknown_030012D8;
-extern void *gUnknown_030012BC;
+extern void *gAudioContext;
 extern void *gLevelState;
 extern void *gEntityFlags;
 extern void *gUnknown_030012EC;
-extern void *gUnknown_03001318;
+extern void *gHud;
 
 extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
 extern void *sub_8007B98(void *dest, void *pt);
@@ -30,7 +30,7 @@ extern void sub_8007174(void *arg0, s32 arg1, s32 arg2, s32 *arg3, s32 *arg4);
 extern s32 FixedDiv(s32 arg0, s32 arg1);
 extern s32 FixedMul(s32 a, s32 b);
 extern s32 AddLife(void *self);
-extern void sub_80284A4(void *state);
+extern void ShowHudLives(void *state);
 extern void *sub_8026EDC(s32 size);
 extern struct actor *sub_80084A4(struct actor *self);
 extern void sub_8008E94(void *manager, void *value);
@@ -116,7 +116,7 @@ void sub_8010E34(void *selfArg)
  * `(dx,dy)` offset pair from `rand()` (`randomize` nonzero -
  * `self->0x49` tags which of three `rand()`-driven bands the x-offset
  * came from, `self->0x48 = 2`) or uses a fixed `(0xb400,0xc00)` offset
- * and fires `sub_80284A4(gUnknown_03001318)` (`self->0x48 = 1`). Either
+ * and fires `ShowHudLives(gHud)` (`self->0x48 = 1`). Either
  * way: `self->0xc |= 0x10`, `self->0x25 = 1`, then calls
  * `sub_8007174(self, self->x>>8, self->y>>8, &outX, &outY)` and
  * re-derives `self->x`/`self->y` plus `self->0x40`/`self->0x44` (a
@@ -132,7 +132,7 @@ void sub_8010EAC(void *selfArg, u8 randomize)
 
     asm volatile("" : "+r"(self));
 
-    PlaySfx(gUnknown_030012BC, 7, 0x100);
+    PlaySfx(gAudioContext, 7, 0x100);
     *(u16 *)(self + 0x3c) = 0xa0;
 
     if (randomize) {
@@ -155,7 +155,7 @@ void sub_8010EAC(void *selfArg, u8 randomize)
         dx = 0xb400;
         dy = 0xc00;
         self[0x48] = 1;
-        sub_80284A4(gUnknown_03001318);
+        ShowHudLives(gHud);
     }
 
     {
@@ -239,7 +239,7 @@ void sub_8010F8C(struct orbit_part *self)
             /* Extra reference: puts velX in r3 and y in r2, as in the
              * ROM. */
             asm("" : : "r"(vx));
-            PlaySfx(gUnknown_030012BC, 0xe, 0x100);
+            PlaySfx(gAudioContext, 0xe, 0x100);
             AddLife(gLevelState);
             self->base.flags |= 1;
             if (self->base.field_08 != 0xffff)
@@ -359,8 +359,8 @@ struct orbit_part *sub_8011114(u16 id, u16 x, u16 y, s32 unused)
  * (the same `-FixedDiv(newPos<<8 - offset, 0x1400)` "distance to
  * travel" idiom `sub_8010EAC`/`sub_8011448`/`sub_8011870` all share),
  * with fixed `0xb400`/`0xc00` offsets on x/y respectively, then fires
- * `sub_80284A4(gUnknown_03001318)` - unlike `sub_8011870`'s
- * `sub_80284D4`. Notably simpler than its `sub_8011870` sibling: no
+ * `ShowHudLives(gHud)` - unlike `sub_8011870`'s
+ * `ShowHudWumpa`. Notably simpler than its `sub_8011870` sibling: no
  * `self->0x3c`/`self->0x30` table-lookup-clamp setup here at all. */
 void sub_80111B8(void *selfArg)
 {
@@ -368,7 +368,7 @@ void sub_80111B8(void *selfArg)
     s32 outX, outY;
     s32 newX, newY;
 
-    PlaySfx(gUnknown_030012BC, 7, 0x100);
+    PlaySfx(gAudioContext, 7, 0x100);
     self[0x48] = 1;
     {
         register s32 off asm("r0") = self[0x4a];
@@ -388,5 +388,5 @@ void sub_80111B8(void *selfArg)
     *(s32 *)(self + 4) = newY;
     *(s32 *)(self + 0x44) = -FixedDiv(newY - 0xc00, 0x1400);
 
-    sub_80284A4(gUnknown_03001318);
+    ShowHudLives(gHud);
 }

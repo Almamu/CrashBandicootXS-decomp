@@ -25,7 +25,7 @@ extern s32 gUnknown_03001488;
 extern u8 gUnknown_030014A0;
 extern s32 gUnknown_03001484;
 extern void *gLevelState;
-extern void *gUnknown_030012BC;
+extern void *gAudioContext;
 
 extern s32 CollectWumpa(void *self);
 extern void sub_802B174(s32 a, s32 b, s32 c);
@@ -79,7 +79,7 @@ void sub_802BC68(void *selfArg)
         gUnknown_03001488 -= 8;
     }
 
-    PlaySfx(gUnknown_030012BC, 8, 0x100);
+    PlaySfx(gAudioContext, 8, 0x100);
 }
 
 extern u8 gUnknown_03001480;

@@ -7,7 +7,7 @@
  * `sub_801095C`/`sub_80109A4` right after this function are matched in
  * game_loop30.c. */
 
-extern void *gUnknown_030012BC;
+extern void *gAudioContext;
 extern void *gEntityFlags;
 extern void *gEntitySpawner;
 extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
@@ -29,7 +29,7 @@ void sub_801089C(struct actor *self, u32 arg1)
 {
     u8 flag6 = (u8)arg1;
 
-    PlaySfx(gUnknown_030012BC, 3, 0x100);
+    PlaySfx(gAudioContext, 3, 0x100);
 
     if (self->field_08 != 0xFFFF) {
         if ((u8)sub_802599C(gEntityFlags, self->field_08) == 0) {
@@ -43,7 +43,7 @@ void sub_801089C(struct actor *self, u32 arg1)
      * byte has to go through a register base - whereas this compiler
      * always emits a direct word-sized `str` for a stack argument
      * regardless of the parameter's declared width (same gap already
-     * closed for `sub_8003A60`'s own `sub_8003F30` call in
+     * closed for `DrawSaveMenuMain`'s own `sub_8003F30` call in
      * settings_menu8c.c - see docs/matching/issue-5-overlay-ui-sync.md).
      * The whole call is spelled out in asm to match; a dummy 2-word
      * local's address is taken as an unused input operand purely to

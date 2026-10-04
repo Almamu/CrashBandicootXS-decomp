@@ -210,11 +210,11 @@ ordering was slightly off against the real per-case targets):
 
 | case | gate (skip transition if true) | transition callee | extra work | `PlayCutscene` mode |
 |---|---|---|---|---|
-| 0 | `sub_80231BC` | `sub_8023190` | `sub_801D41C`, `sub_80067D4` | 4 |
-| 1 | `sub_80231CC` | `sub_80231A8` | `sub_801D41C`, `sub_80067C4` | 5 |
-| 2 | `sub_80231B4` | `sub_8023184` | `sub_801D41C`, `sub_80067B4` | 6 |
-| 3 | `sub_80231C4` | `sub_802319C` | `sub_801D41C`, `sub_80067A4`, then unconditionally: `sub_800697C(self) > 0x63` frames increments `self->0xc4` (advances to the next state) and zeroes `*(self+0xc8)`, mode 8, `goto` the post-category-reset block directly; otherwise mode 0xa | 8 or 0xa |
-| 4 | (none - unconditional) | (none) | `sub_80354BC` | 9 |
+| 0 | `sub_80231BC` | `sub_8023190` | `sub_801D41C`, `ShowSuperBodySlamDialog` | 4 |
+| 1 | `sub_80231CC` | `sub_80231A8` | `sub_801D41C`, `ShowDoubleJumpDialog` | 5 |
+| 2 | `sub_80231B4` | `sub_8023184` | `sub_801D41C`, `ShowTornadoSpinDialog` | 6 |
+| 3 | `sub_80231C4` | `sub_802319C` | `sub_801D41C`, `ShowTurboRunDialog`, then unconditionally: `GetCompletionPercent(self) > 0x63` frames increments `self->0xc4` (advances to the next state) and zeroes `*(self+0xc8)`, mode 8, `goto` the post-category-reset block directly; otherwise mode 0xa | 8 or 0xa |
+| 4 | (none - unconditional) | (none) | `RunCredits` | 9 |
 
 Values >4 (i.e. `self->0xc4` outside `0x14`-`0x18`) instead check
 `self->0xdc`'s level object's `+8` state field; if it's `3`,
@@ -228,10 +228,10 @@ allocates a `0x220`-byte scratch buffer (`sub_8026EDC`, matches
 `src/graphics/level_graphics.c`'s own doc comment for this exact
 allocation) and hands it straight to `LoadLevelGraphics`, then polls
 `sub_8035E14`; while it returns `2` ("still loading") the loop calls
-`sub_80354BC` (map/progress-screen trigger) and repeats. Once
+`RunCredits` (map/progress-screen trigger) and repeats. Once
 `sub_8035E14` returns something else: `0` triggers
 `PlayCutscene(*gLevelState, 2)`, anything nonzero triggers a
-`sub_8004D4C`/`sub_800300C(1,0)`/`sub_8004D20` input-poll bracket
+`OpenSaveMenu`/`RunSaveMenu(1,0)`/`CloseSaveMenu` input-poll bracket
 (purpose not chased further, out of scope for this pass).
 
 **End-of-frame stack-slot semantics** (the doc's "8 still-
@@ -288,10 +288,10 @@ branches that both refresh the HUD icon via `sub_8024464` +
 "false" branch only refills `self+0xb4` via `sub_8024524`. Either way
 the loop re-enters at its own top unless `sub_802455C(&self->0xc4)`
 says otherwise, at which point control falls to the end-of-frame block
-that (if `gUnknown_03001318`, the HUD object, is non-null) calls
-`sub_8028574(hud, 3)`, then decides whether to loop all the way back to
+that (if `gHud`, the HUD object, is non-null) calls
+`DestroyHud(hud, 3)`, then decides whether to loop all the way back to
 the outer state-dispatch entry (`sub_803AFEC(self) >= 0`, or
-`sub_8034CB0()` true after also re-running `ResetLives(self)`) or
+`RunContinuePrompt()` true after also re-running `ResetLives(self)`) or
 finally return to `MainLoop` - meaning a single `UpdateGameFrame` call
 from `MainLoop` can internally re-run its entire state-dispatch +
 category-loop body multiple times before actually returning.

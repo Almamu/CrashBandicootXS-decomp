@@ -1,22 +1,22 @@
 #include "core.h"
 #include "pause_options_screen.h"
 
-extern void *gUnknown_030012BC;
+extern void *gAudioContext;
 extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
-extern void sub_8003698(struct pause_options_screen *self, s32 rowIndex);
-extern void sub_80033E8(struct pause_options_screen *self, u32 flags);
-extern u8 sub_8002CE8(void *handle, s32 rowIndex);
-extern void sub_8002C14(void *handle, s32 rowIndex, void *buf);
-extern void sub_8002C40(void *handle, s32 rowIndex, void *buf);
-extern void sub_8002C6C(void *handle, s32 rowIndex);
-extern s32 sub_8002BA4(void *arg0);
+extern void SaveGameToSlot(struct pause_options_screen *self, s32 rowIndex);
+extern void SaveMenuMoveCursor(struct pause_options_screen *self, u32 flags);
+extern u8 IsSaveSlotEmpty(void *handle, s32 rowIndex);
+extern void ReadSaveSlot(void *handle, s32 rowIndex, void *buf);
+extern void WriteSaveSlot(void *handle, s32 rowIndex, void *buf);
+extern void EraseSaveSlot(void *handle, s32 rowIndex);
+extern s32 StoreSaveData(void *arg0);
 
 /* State 7's input handler: confirm/cancel-combo commits row `field_24`
- * (sub_8003698, src/graphics/settings_menu8b.c) and returns to state 0
+ * (SaveGameToSlot, src/graphics/settings_menu8b.c) and returns to state 0
  * if it was already the "current" row (`field_10==0`), else re-enters
  * state 5 to reselect; cancel (bit 1) re-enters state 5 too; L/R toggle
  * `field_10` between 0/1. */
-void sub_800376C(struct pause_options_screen *self, u32 flags)
+void SaveMenuOverwriteInput(struct pause_options_screen *self, u32 flags)
 {
     if (flags & 1) {
         goto confirm;
@@ -24,43 +24,43 @@ void sub_800376C(struct pause_options_screen *self, u32 flags)
     if (flags & 8) {
     confirm:
         if (self->field_10 == 0) {
-            sub_8003698(self, self->field_24);
+            SaveGameToSlot(self, self->field_24);
             self->state = 0;
             self->field_10 = 4;
         } else {
             self->state = 5;
             self->field_10 = self->field_24;
-            PlaySfx(gUnknown_030012BC, 0x49, 0x100);
+            PlaySfx(gAudioContext, 0x49, 0x100);
         }
         return;
     }
     if (flags & 2) {
         self->state = 5;
         self->field_10 = self->field_24;
-        PlaySfx(gUnknown_030012BC, 0x47, 0x100);
+        PlaySfx(gAudioContext, 0x47, 0x100);
         return;
     }
     if (flags & 0x40) {
         if (self->field_10 == 1) {
             self->field_10 = 0;
-            PlaySfx(gUnknown_030012BC, 0x46, 0x100);
+            PlaySfx(gAudioContext, 0x46, 0x100);
         }
         return;
     }
     if (flags & 0x80) {
         if (self->field_10 == 0) {
             self->field_10 = 1;
-            PlaySfx(gUnknown_030012BC, 0x46, 0x100);
+            PlaySfx(gAudioContext, 0x46, 0x100);
         }
     }
 }
 
 /* State 5's input handler: confirm/cancel-combo either resets to state
  * 0 (maxed out) or, if row `field_10` isn't already selected
- * (sub_8002CE8), enters state 9 to edit it, else commits it directly
- * (sub_8003698) and returns to state 0; cancel (bit 1) resets to state
+ * (IsSaveSlotEmpty), enters state 9 to edit it, else commits it directly
+ * (SaveGameToSlot) and returns to state 0; cancel (bit 1) resets to state
  * 0; otherwise falls through to the shared L/R cursor mover. */
-void sub_8003824(struct pause_options_screen *self, u32 flags)
+void SaveMenuSaveInput(struct pause_options_screen *self, u32 flags)
 {
     if (flags & 1) {
         goto confirm;
@@ -68,36 +68,36 @@ void sub_8003824(struct pause_options_screen *self, u32 flags)
     if (flags & 8) {
     confirm:
         if (self->field_10 == 4) {
-            PlaySfx(gUnknown_030012BC, 0x49, 0x100);
+            PlaySfx(gAudioContext, 0x49, 0x100);
             self->state = 0;
             self->field_10 = 2;
             return;
         }
-        PlaySfx(gUnknown_030012BC, 0x49, 0x100);
-        if (!sub_8002CE8(self->field_8c, self->field_10)) {
+        PlaySfx(gAudioContext, 0x49, 0x100);
+        if (!IsSaveSlotEmpty(self->field_8c, self->field_10)) {
             self->state = 9;
             self->field_24 = self->field_10;
             self->field_10 = 0;
         } else {
-            sub_8003698(self, self->field_10);
+            SaveGameToSlot(self, self->field_10);
             self->state = 0;
             self->field_10 = 4;
         }
         return;
     }
     if (flags & 2) {
-        PlaySfx(gUnknown_030012BC, 0x47, 0x100);
+        PlaySfx(gAudioContext, 0x47, 0x100);
         self->state = 0;
         self->field_10 = 2;
         return;
     }
-    sub_80033E8(self, flags);
+    SaveMenuMoveCursor(self, flags);
 }
 
-/* State 6's input handler - same shape as sub_8003824 above, a
+/* State 6's input handler - same shape as SaveMenuSaveInput above, a
  * different row-selection sub-menu (state 7 on confirm-when-unselected,
  * field_10 target value 3 rather than 2). */
-void sub_80038D0(struct pause_options_screen *self, u32 flags)
+void SaveMenuDeleteInput(struct pause_options_screen *self, u32 flags)
 {
     if (flags & 1) {
         goto confirm;
@@ -105,35 +105,35 @@ void sub_80038D0(struct pause_options_screen *self, u32 flags)
     if (flags & 8) {
     confirm:
         if (self->field_10 == 4) {
-            PlaySfx(gUnknown_030012BC, 0x49, 0x100);
+            PlaySfx(gAudioContext, 0x49, 0x100);
             self->state = 0;
             self->field_10 = 3;
             return;
         }
-        if (sub_8002CE8(self->field_8c, self->field_10)) {
-            PlaySfx(gUnknown_030012BC, 0x48, 0x100);
+        if (IsSaveSlotEmpty(self->field_8c, self->field_10)) {
+            PlaySfx(gAudioContext, 0x48, 0x100);
             return;
         }
-        PlaySfx(gUnknown_030012BC, 0x49, 0x100);
+        PlaySfx(gAudioContext, 0x49, 0x100);
         self->state = 7;
         self->field_24 = self->field_10;
         self->field_10 = 0;
         return;
     }
     if (flags & 2) {
-        PlaySfx(gUnknown_030012BC, 0x47, 0x100);
+        PlaySfx(gAudioContext, 0x47, 0x100);
         self->state = 0;
         self->field_10 = 3;
         return;
     }
-    sub_80033E8(self, flags);
+    SaveMenuMoveCursor(self, flags);
 }
 
 /* State 9's input handler: confirm/cancel-combo commits row `field_24`
- * unconditionally (sub_8002C14+sub_8002C6C+optional sub_8002C40) then
+ * unconditionally (ReadSaveSlot+EraseSaveSlot+optional WriteSaveSlot) then
  * settles at state 0; cancel (bit 1) re-enters state 6; L/R toggle
  * `field_10` between 0/1. */
-void sub_800397C(struct pause_options_screen *self, u32 flags)
+void SaveMenuConfirmDeleteInput(struct pause_options_screen *self, u32 flags)
 {
     u8 buf[0x70];
 
@@ -146,57 +146,57 @@ void sub_800397C(struct pause_options_screen *self, u32 flags)
             s32 rowIndex = self->field_24;
             void *handle = self->field_8c;
 
-            sub_8002C14(handle, rowIndex, buf);
+            ReadSaveSlot(handle, rowIndex, buf);
             handle = self->field_8c;
-            sub_8002C6C(handle, rowIndex);
+            EraseSaveSlot(handle, rowIndex);
             handle = self->field_8c;
-            if (sub_8002BA4(handle)) {
+            if (StoreSaveData(handle)) {
                 handle = self->field_8c;
-                sub_8002C40(handle, rowIndex, buf);
+                WriteSaveSlot(handle, rowIndex, buf);
             }
             self->state = 0;
             self->field_10 = 4;
         } else {
             self->state = 6;
             self->field_10 = self->field_24;
-            PlaySfx(gUnknown_030012BC, 0x49, 0x100);
+            PlaySfx(gAudioContext, 0x49, 0x100);
         }
         return;
     }
     if (flags & 2) {
         self->state = 6;
         self->field_10 = self->field_24;
-        PlaySfx(gUnknown_030012BC, 0x47, 0x100);
+        PlaySfx(gAudioContext, 0x47, 0x100);
         return;
     }
     if (flags & 0x40) {
         if (self->field_10 == 1) {
             self->field_10 = 0;
-            PlaySfx(gUnknown_030012BC, 0x46, 0x100);
+            PlaySfx(gAudioContext, 0x46, 0x100);
         }
         return;
     }
     if (flags & 0x80) {
         if (self->field_10 == 0) {
             self->field_10 = 1;
-            PlaySfx(gUnknown_030012BC, 0x46, 0x100);
+            PlaySfx(gAudioContext, 0x46, 0x100);
         }
     }
 }
 
 #include "icon_manager.h"
 
-extern struct icon_manager *gUnknown_030012DC;
-extern s32 sub_8028A30(void *mgr, s32 arg1);
+extern struct icon_manager *gSmallFont;
+extern s32 FontSetPalette(void *mgr, s32 arg1);
 extern s32 sub_8004A50(struct pause_options_screen *self);
 extern s32 GetUiText(s32 arg0);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern void sub_8003F30(struct pause_options_screen *self, s32 label1, s32 label2, s32 rowIdx, u8 flag);
-extern s32 gStaticData_0816B1BC[];
+extern s32 gSaveMenuOptions[];
 
-/* Draws the 5-entry state-select sub-menu label list (sub_80032E8's
- * `field_10` states, gStaticData_0816B1BC's label table) into
- * gUnknown_030012DC, highlighting whichever row matches `field_10`,
+/* Draws the 5-entry state-select sub-menu label list (SaveMenuMainInput's
+ * `field_10` states, gSaveMenuOptions's label table) into
+ * gSmallFont, highlighting whichever row matches `field_10`,
  * then draws a final fixed label via the still-raw sub_8003F30. Same
  * measure-then-draw icon shape as sub_80049CC
  * (src/graphics/settings_menu.c, parked) - see that function's doc
@@ -204,9 +204,9 @@ extern s32 gStaticData_0816B1BC[];
  * too. */
 /* This compiler's automatic register allocation cannot reproduce the
  * ROM's exact shape here even with the individual-variable register
- * pins that work elsewhere in this chunk (sub_800306C/sub_800312C/
- * sub_80031E4): a loop-invariant constant (`mgr->record`'s 0x130 field
- * offset, and separately `&gStaticData_0816B1BC[0]`) repeatedly gets
+ * pins that work elsewhere in this chunk (InitSaveMenu/DestroySaveMenu/
+ * SaveMenuInput): a loop-invariant constant (`mgr->record`'s 0x130 field
+ * offset, and separately `&gSaveMenuOptions[0]`) repeatedly gets
  * hoisted out of the loop into whichever register looks free at that
  * program point, which lands on r7 - the pinned loop counter itself,
  * silently corrupting it - because nothing textually mentions `i` in
@@ -219,7 +219,7 @@ extern s32 gStaticData_0816B1BC[];
  * same pinned C locals (`self`/`mgrAddr`/`y`/`i`/`label`/`mgr`) the rest
  * of this file's register-pinned functions use - see
  * docs/matching/issue-5-overlay-ui-sync.md for the write-up. */
-void sub_8003A60(struct pause_options_screen *self)
+void DrawSaveMenuMain(struct pause_options_screen *self)
 {
     register struct pause_options_screen *selfReg asm("r9") = self;
     register s32 y asm("sl") = 0x64;
@@ -240,7 +240,7 @@ void sub_8003A60(struct pause_options_screen *self)
     register struct icon_manager *mgr asm("r4");
 
     asm volatile(
-        "ldr r1, =gUnknown_030012DC\n"
+        "ldr r1, =gSmallFont\n"
         "mov %0, r1\n"
         : "=r" (mgrAddr)
         :
@@ -272,14 +272,14 @@ void sub_8003A60(struct pause_options_screen *self)
             "lsl r1, r1, #0x18\n"
             "lsr r1, r1, #0x18\n"
             "add r0, %0, #0\n"
-            "bl sub_8028A30\n"
+            "bl FontSetPalette\n"
             "b 2f\n"
             ".pool\n"
             "1:\n"
             "mov r1, %3\n"
             "ldr r0, [r1]\n"
             "movs r1, #0\n"
-            "bl sub_8028A30\n"
+            "bl FontSetPalette\n"
             "2:\n"
             : "=r" (mgr)
             : "r" (i), "r" (selfReg), "r" (mgrAddr)
@@ -299,7 +299,7 @@ void sub_8003A60(struct pause_options_screen *self)
             "movs r2, #0x10\n"
             "ldrsh r0, [r0, r2]\n"
             "add %0, %0, r0\n"
-            "ldr r1, =gStaticData_0816B1BC\n"
+            "ldr r1, =gSaveMenuOptions\n"
             "lsl r0, %3, #2\n"
             "add r0, r0, r1\n"
             "ldr %1, [r0]\n"

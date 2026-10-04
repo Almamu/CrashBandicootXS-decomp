@@ -6,8 +6,8 @@
 #include "pause_screen_results.h"
 #include "memory.h"
 
-/* sub_8005100 alone: ROM-address-adjacent to settings_menu15.c's
- * sub_8005004 on one side and the already-matched sub_8005304
+/* PauseMenuLoop alone: ROM-address-adjacent to settings_menu15.c's
+ * DestroyPauseMenu on one side and the already-matched AnimatePauseMenu
  * (settings_menu17.c) on the other, so it needs its own object file
  * to keep both neighbors' link-order positions intact (docs/workflow.md
  * step 4's "one .c file per contiguous ROM region" rule) - see
@@ -16,27 +16,27 @@
 extern void UpdateKeys(void *arg0);
 extern void *gUnknown_03001304;
 extern u32 gKeys;
-extern void sub_8006084(struct pause_screen_results *self);
-extern s32 sub_800609C(struct pause_screen_results *self);
-extern void sub_8005EF4(struct pause_screen_results *self);
-extern void sub_8005FBC(struct pause_screen_results *self);
-extern void sub_8006250(struct pause_screen_results *self);
-extern void sub_8005304(struct pause_screen_results *self);
+extern void PauseMenuCursorDown(struct pause_screen_results *self);
+extern s32 PauseMenuCursorUp(struct pause_screen_results *self);
+extern void PauseMenuVolumeDown(struct pause_screen_results *self);
+extern void PauseMenuVolumeUp(struct pause_screen_results *self);
+extern void CommitPauseMenuFrame(struct pause_screen_results *self);
+extern void AnimatePauseMenu(struct pause_screen_results *self);
 extern void PlaySfx(struct AudioContext *self, u32 id, u32 volumeParam);
 
 /* The composite pause/options screen's blocking cursor/confirm/cancel
  * driver (docs/rom_map.md's overlay_ui section) - runs until the user
- * confirms or cancels, redrawing every frame via sub_80053F4/
- * sub_8006250/sub_8005304 (the same per-row draw/apply-registers/
+ * confirms or cancels, redrawing every frame via DrawPauseMenu/
+ * CommitPauseMenuFrame/AnimatePauseMenu (the same per-row draw/apply-registers/
  * icon-cycle trio every settings row already uses).
  *
- * `field_cc`'s low 5 bits are a blend/fade level (see sub_8004EC0 and
- * sub_8006250): first ramps it down to 0 one frame at a time (the
+ * `field_cc`'s low 5 bits are a blend/fade level (see InitPauseMenu and
+ * CommitPauseMenuFrame): first ramps it down to 0 one frame at a time (the
  * screen's fade-in), then the main input loop - L/R adjust the
- * currently-selected row's slider (sub_800609C/sub_8006084, playing a
+ * currently-selected row's slider (PauseMenuCursorUp/PauseMenuCursorDown, playing a
  * confirm-ish SFX and arming a short flash via field_68), the D-pad
  * bumps the selected row's value up/down with an initial-press vs
- * held-repeat distinction (sub_8005EF4/FBC), and A confirms the
+ * held-repeat distinction (PauseMenuVolumeDown/PauseMenuVolumeUp), and A confirms the
  * selected row unless its type tag is 4 or 5 (the editable-percentage
  * rows just play SFX 0x48 and keep looping); B cancels (result 0).
  * Either way, ramps the fade level back up to 0x10, resets the DISPCNT
@@ -55,8 +55,8 @@ extern void PlaySfx(struct AudioContext *self, u32 id, u32 volumeParam);
  * fade-out loop, so `disp` is only taken after the fade-in loop; taken
  * before the input loop it lands ahead of that insertion
  * (docs/matching/early-rom-naked-retry-2.md). */
-extern struct AudioContext *gUnknown_030012BC;
-extern void sub_80053F4(struct pause_screen_results *self);
+extern struct AudioContext *gAudioContext;
+extern void DrawPauseMenu(struct pause_screen_results *self);
 
 /* gKeys as the {held, newly pressed} key-state pair. */
 struct pause_keys {
@@ -86,12 +86,12 @@ struct pause_row {
 
 static inline void draw_frame(struct pause_screen_results *self)
 {
-    sub_80053F4(self);
-    sub_8006250(self);
-    sub_8005304(self);
+    DrawPauseMenu(self);
+    CommitPauseMenuFrame(self);
+    AnimatePauseMenu(self);
 }
 
-s32 sub_8005100(struct pause_screen_results *self)
+s32 PauseMenuLoop(struct pause_screen_results *self)
 {
     s32 result;
     u16 *disp;
@@ -109,24 +109,24 @@ s32 sub_8005100(struct pause_screen_results *self)
         draw_frame(self);
         UpdateKeys(gUnknown_03001304);
         if (KEYS.pressed & 0x40) {
-            sub_800609C(self);
+            PauseMenuCursorUp(self);
             self->field_68 = 0x1e;
-            PlaySfx(gUnknown_030012BC, 0x46, 0x100);
+            PlaySfx(gAudioContext, 0x46, 0x100);
         }
         if (KEYS.pressed & 0x80) {
-            sub_8006084(self);
+            PauseMenuCursorDown(self);
             self->field_68 = 0x1e;
-            PlaySfx(gUnknown_030012BC, 0x46, 0x100);
+            PlaySfx(gAudioContext, 0x46, 0x100);
         }
         in = gKeys;
         pressed = in >> 16;
         key = 0x20;
         if (pressed & 0x20) {
-            sub_8005EF4(self);
+            PauseMenuVolumeDown(self);
             self->field_68 = 0x1e;
         } else if (in & key) {
             if (self->field_68 == 0) {
-                sub_8005EF4(self);
+                PauseMenuVolumeDown(self);
                 self->field_68 = 5;
             } else {
                 self->field_68--;
@@ -136,11 +136,11 @@ s32 sub_8005100(struct pause_screen_results *self)
         pressed = in >> 16;
         key = 0x10;
         if (pressed & 0x10) {
-            sub_8005FBC(self);
+            PauseMenuVolumeUp(self);
             self->field_68 = 0x1e;
         } else if (in & key) {
             if (self->field_68 == 0) {
-                sub_8005FBC(self);
+                PauseMenuVolumeUp(self);
                 self->field_68 = 5;
             } else {
                 self->field_68--;
@@ -149,14 +149,14 @@ s32 sub_8005100(struct pause_screen_results *self)
         if (KEYS.pressed & 1) {
             result = ((struct pause_row *)self->field_14)[self->field_18].type;
             if ((u32)(result - 4) <= 1) {
-                PlaySfx(gUnknown_030012BC, 0x48, 0x100);
+                PlaySfx(gAudioContext, 0x48, 0x100);
             } else {
-                PlaySfx(gUnknown_030012BC, 0x49, 0x100);
+                PlaySfx(gAudioContext, 0x49, 0x100);
                 break;
             }
         }
         if (KEYS.pressed & 8) {
-            PlaySfx(gUnknown_030012BC, 0x49, 0x100);
+            PlaySfx(gAudioContext, 0x49, 0x100);
             result = 0;
             break;
         }
@@ -168,6 +168,6 @@ s32 sub_8005100(struct pause_screen_results *self)
     disp = &self->field_d0;
     *disp = 0;
     ((struct pause_dispcnt *)disp)->bit6 = 1;
-    sub_8006250(self);
+    CommitPauseMenuFrame(self);
     return result;
 }

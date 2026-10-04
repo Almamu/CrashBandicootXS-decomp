@@ -5,8 +5,8 @@
  * sections by ldscript.txt - see docs/data.md.
  */
 
-/* The credits (sub_8034CEC/sub_80350A4, actor_part131.c): a stream of
- * lines of text and three opcodes. sub_80350A4 draws one line at a time
+/* The credits (InitCredits/UpdateCreditsText, actor_part131.c): a stream of
+ * lines of text and three opcodes. UpdateCreditsText draws one line at a time
  * as floating glyph popups and starts over at the terminating zero. */
 /* 1, n: popup glyph picture n (the logos of popup_glyphs_17cf40.c) */
 #define CREDITS_PICTURE_0 "\001\000"
@@ -14,10 +14,10 @@
 #define CREDITS_PICTURE_2 "\001\002"
 #define CREDITS_PICTURE_3 "\001\003"
 #define CREDITS_PICTURE_4 "\001\004"
-#define CREDITS_SMALL "\002" /* the following text in the small font (gUnknown_030012DC) */
-#define CREDITS_LARGE "\003" /* ... in the large font (gUnknown_030012E0) */
+#define CREDITS_SMALL "\002" /* the following text in the small font (gSmallFont) */
+#define CREDITS_LARGE "\003" /* ... in the large font (gLargeFont) */
 
-const u8 gStaticData_0817C5D0[] =
+const u8 gCreditsText[] =
     CREDITS_LARGE "developed by\n"
     "\n"
     CREDITS_PICTURE_4 "\n"
@@ -239,5 +239,5 @@ const u8 gStaticData_0817C5D0[] =
     "\n"
     "\n";
 
-/* An empty string: sub_80350A4 measures the fonts' line heights with it. */
+/* An empty string: UpdateCreditsText measures the fonts' line heights with it. */
 const u8 gStaticData_0817CF3C[4] = "";

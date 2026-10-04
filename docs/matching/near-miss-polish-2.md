@@ -8,7 +8,7 @@ the first near-miss pass ([near-miss-polish.md](near-miss-polish.md)),
 | Function | File | Compiler | Was | Technique |
 |---|---|---|---|---|
 | `sub_8001F50` | `src/system/link_cable.c` | old_agbcc (both match) | 37 | `asm("" : "+r"(one1))` keeps a second 1; `asm("" : "+r"(arm3))` between `^` and `&` blocks the `bic` fold |
-| `sub_8004D74` | `src/graphics/settings_menu15.c` | agbcc | 54 (4 bytes short) | `static inline` accessor for `field_12c` so CSE doesn't share the 0x12c offset; two locals fix load order |
+| `RunPauseMenu` | `src/graphics/settings_menu15.c` | agbcc | 54 (4 bytes short) | `static inline` accessor for `field_12c` so CSE doesn't share the 0x12c offset; two locals fix load order |
 | `DecodeCollisionChunk` | `src/system/game_loop3.c` | old_agbcc | 33 | explicit `<< 24 >> 24` sign extensions through `s32` locals; `asm("" : : "r"(n))` fixes the r4/r5 swap |
 | `sub_8029890` | `src/graphics/actor_part95.c` | agbcc (both match) | 37 | `asm("" : "=r"(reload) : "0"(a4))` copies the address used for the reload; evaluation-order tweaks |
 | `SelectActorCategory` | `src/graphics/actor_part102.c` | agbcc (both match) | 125 (4 bytes long) | local pointer to `gUnknown_03001404` plus one `asm("" : : "r"(idx))` so it outranks `base` |
@@ -41,7 +41,7 @@ disappear.
 store and one for the reload. Here the `asm` has an output operand tied
 to its input: `asm("" : "=r"(reload) : "0"(a4))`.
 
-**`static inline` accessors to break CSE (`sub_8004D74`).** The ROM
+**`static inline` accessors to break CSE (`RunPauseMenu`).** The ROM
 rebuilds the 0x12c offset (`movs r1, #150; lsls r1, #1`) for every
 `field_12c` read, even twice within one expression. Reading through
 `static inline u32 mgr_12c(struct icon_manager *m)` stops CSE from
@@ -72,7 +72,7 @@ shift.
 
 | Function | Was | Best | What was observed |
 |---|---|---|---|
-| `sub_80053F4` | 20 | 15 | x/y locals with `"+r"`/`"r"` on `y` fix the first `set_icon_mgr_pos`. Extra references inside the inline helper have no effect at all. Putting the stores in the caller lets CSE share the 0x110/0x114 offsets between the two calls, which costs more than it saves. |
+| `DrawPauseMenu` | 20 | 15 | x/y locals with `"+r"`/`"r"` on `y` fix the first `set_icon_mgr_pos`. Extra references inside the inline helper have no effect at all. Putting the stores in the caller lets CSE share the 0x110/0x114 offsets between the two calls, which costs more than it saves. |
 | `sub_800BD48` | 21 | 21 | The remaining differences are reload registers. reload rotates through its spill registers (ROM r3, r3, r3, r4, r6, r2; draft r6, r4, r4, r6, r2), so they depend on how many reloads come earlier. Nudges and `do`/`if (1)`/block forms of `MarkGone` changed nothing. |
 | `sub_800CD00` | 42 | 39 | `asm("" : "+r"(q))` on the player record's box pointer fixes 3 halfwords around it. The rest is the known sub_800D040 gap: `&f.b` gets a callee-saved register (r6) across the two builder calls, and the ROM recomputes `add r0, sp, #16` for each. Separate locals, an array, `(u8 *)&f + 16`, an opaque `pb` and moving `pb` earlier all left it the same. |
 | `sub_800E08C` | 49 | 49 | The ROM's case 3 reads the byte flag from its spill slot with `mov r5, sp; ldrb`. Reading `*(u8 *)&f20` gives that `ldrb`, but the prologue then changes because `f20` lives in memory. `(u8)f20` after an `asm("" : "+r"(f20))` reloads a word and masks it (`lsl`/`lsr`). Prototype widths, struct/u8/s32 parameters and local types didn't produce the ROM's reload. |

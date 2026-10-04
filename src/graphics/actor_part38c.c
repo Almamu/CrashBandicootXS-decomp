@@ -7,7 +7,7 @@
  * `sub_8015350` through `sub_80156EC`. Same "self" object family
  * documented at the top of actor_part18.c/actor_part28.c. */
 
-extern void *gUnknown_030012BC;
+extern void *gAudioContext;
 extern void *gUnknown_030012D8;
 extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
@@ -60,7 +60,7 @@ void sub_8015398(void *selfArg)
         struct vtable_slot *mgr;
         u8 *off;
 
-        PlaySfx(gUnknown_030012BC, 0xa, 0x100);
+        PlaySfx(gAudioContext, 0xa, 0x100);
         *(s32 *)(self + 0x18) = 0;
         *(s32 *)(self + 0x1c) = 0x18;
 
@@ -89,7 +89,7 @@ void sub_80153FC(void *selfArg)
         struct vtable_slot *mgr;
         u8 *off;
 
-        PlaySfx(gUnknown_030012BC, 0xa, 0x100);
+        PlaySfx(gAudioContext, 0xa, 0x100);
         *(s32 *)(self + 0x18) = 0;
         *(s32 *)(self + 0x1c) = 0x18;
 

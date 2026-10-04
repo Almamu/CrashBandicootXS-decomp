@@ -42,7 +42,7 @@ void sub_8010804(void)
     }
 }
 
-extern void *gUnknown_030012BC;
+extern void *gAudioContext;
 extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
 extern void _call_via_r4(void *arg0, s32 arg1, s32 arg2, s32 arg3);
 
@@ -70,6 +70,6 @@ void sub_801085C(void)
 
         _call_via_r4(addr, 0, 0x1a, 0);
         (void)fn;
-        PlaySfx(gUnknown_030012BC, 1, 0x100);
+        PlaySfx(gAudioContext, 1, 0x100);
     }
 }

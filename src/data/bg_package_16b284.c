@@ -10,7 +10,7 @@ extern const u8 gStaticData_0861BB04[];
 extern const u8 gStaticData_0861E5F8[];
 extern const u8 gStaticData_0862FFF4[];
 
-/* BG graphics package loaded by sub_8004D74 (settings_menu15.c). */
+/* BG graphics package loaded by RunPauseMenu (settings_menu15.c). */
 const struct bg_package gStaticData_0816B284 = {
     0x1e,
     0x14,

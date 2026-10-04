@@ -1,7 +1,7 @@
 # Early-ROM NAKED retry 2
 
 This pass retried the five early-ROM functions still left: the raw
-`sub_800450C` (issue #6), `sub_8005100` (#7), and `sub_8001CB8`,
+`sub_800450C` (issue #6), `PauseMenuLoop` (#7), and `sub_8001CB8`,
 `sub_8001DB4` and `sub_8002114` (#4). Two closed. Two drafts moved
 closer, and one did not.
 
@@ -9,7 +9,7 @@ closer, and one did not.
 
 | Function | File | Compiler | What it took |
 |---|---|---|---|
-| `sub_8005100` | `src/graphics/settings_menu20.c` (object added to `OLD_AGBCC_OBJS`) | old_agbcc only (agbcc is 4 bytes longer) | The input loop is a plain `for (;;)`. It confirms or plays SFX 0x48 on A, and breaks on B at the bottom. old_agbcc's loop rotation moves the B test to the loop top and enters at the body, which is the ROM's `b body; top: B test; body: ...` layout. The old goto form got that layout but not the pre-header. GCSE carries the fade pointer (`self + 0xcc`) from the fade-out loop into the fade-in loop. It inserts it at the end of the block after the fade-out loop. With `disp = &self->field_d0` in the same block, `disp` came first. Taking `disp` only after the fade-in loop puts the fade pointer first, as in the ROM. The two register pins from the earlier draft (`pressed` in r1, `key` in r3) are still needed. |
+| `PauseMenuLoop` | `src/graphics/settings_menu20.c` (object added to `OLD_AGBCC_OBJS`) | old_agbcc only (agbcc is 4 bytes longer) | The input loop is a plain `for (;;)`. It confirms or plays SFX 0x48 on A, and breaks on B at the bottom. old_agbcc's loop rotation moves the B test to the loop top and enters at the body, which is the ROM's `b body; top: B test; body: ...` layout. The old goto form got that layout but not the pre-header. GCSE carries the fade pointer (`self + 0xcc`) from the fade-out loop into the fade-in loop. It inserts it at the end of the block after the fade-out loop. With `disp = &self->field_d0` in the same block, `disp` came first. Taking `disp` only after the fade-in loop puts the fade pointer first, as in the ROM. The two register pins from the earlier draft (`pressed` in r1, `key` in r3) are still needed. |
 | `sub_8001CB8` | `src/system/link_cable.c` (already old_agbcc) | old_agbcc | No pins or `asm`. `hash` is a u32, truncated with a `(u16)` cast each step and read back as `(u16)hash >> 8` into a u32 `hi`. With a u16 `hash`, CSE folded `hash >> 8` into `(x << 16) >> 24` of the loop's zero-extend temporary. The ROM's `sub r0, #0x1f` is reload's move2add building -16 from the 15 already in r0. It only fires when the 15 is in a mode at least as wide as the -16. The bitfield store of `n + v` masks it with a QImode 15, so the fix is to mask in SImode first (`w = (n + v) & 0xf`) and store `w`. |
 
 ## Not closed (3)

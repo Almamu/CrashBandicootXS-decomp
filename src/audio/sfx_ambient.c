@@ -1,7 +1,7 @@
 #include "core.h"
 #include "audio.h"
 
-/* `PlaySfx` sits right after the matched `sub_80017BC` (src/audio/
+/* `PlaySfx` sits right after the matched `StartSong` (src/audio/
  * music_player.c) and before the other functions this file holds. */
 
 extern u32 gSfxVoiceToggle;

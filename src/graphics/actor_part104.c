@@ -10,7 +10,7 @@ extern struct tile_asset_cache *gUnknown_030012B8;
 extern void sub_8006EA8(struct tile_asset_cache *self);
 extern void sub_8006D40(struct tile_asset_cache *self, s32 slot, s32 index);
 extern s32 gUnknown_03001380;
-extern void *gUnknown_03001318;
+extern void *gHud;
 extern void sub_802732C(void *arr, s32 flag);
 
 /* Pins the current category's tile-cache slots that every actor part
@@ -77,7 +77,7 @@ void SetupActorVramPool(void)
     }
 
     {
-        void *iconArray = gUnknown_03001318;
+        void *iconArray = gHud;
         u8 *arr = (u8 *)gStaticData_08175558;
         s32 idx = gUnknown_03001380;
 

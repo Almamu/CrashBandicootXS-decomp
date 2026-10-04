@@ -159,9 +159,9 @@ old_agbcc files:
 - `actor_part_1cee0.c` (`sub_801CEE0`, `sub_801D5CC`, `sub_801D828`)
 - `graphics_package_1e578.c` (`LoadGraphicsPackage`)
 - `graphics_package_1e688.c` (`sub_801E688`)
-- `hud_digit_array.c` (`sub_8027138`)
+- `hud_digit_array.c` (`InitHud`)
 - `level_graphics.c` (`LoadBg2Background`)
-- `settings_menu22.c` (`sub_80058C0`)
+- `settings_menu22.c` (`DrawPauseRelicsPage`)
 - `game_loop49.c` (`sub_800F4F4`)
 
 Those are all byte-exact today, so each change is a break. Among the

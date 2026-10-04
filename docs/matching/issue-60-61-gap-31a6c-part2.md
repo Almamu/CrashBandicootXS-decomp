@@ -193,8 +193,8 @@ elsewhere in this project, re-confirmed rather than re-derived here:
   `sub_8031A08` (issue #59)/`sub_8033B44`/`sub_8033C84`/`sub_8033E80`
   (issue #62).
 - **`sub_80327A4`** - a bounding-box-culled sprite draw with an
-  `r8`-flag-across-calls shape, the same class of gap `sub_8006600`/
-  `sub_80372BC`/`GAX2_init` and the hard-won `UpdateAnimatedActorPart`
+  `r8`-flag-across-calls shape, the same class of gap `DrawPowerDialog`/
+  `DrawLanguageSelect`/`GAX2_init` and the hard-won `UpdateAnimatedActorPart`
   (issue #50, `actor_part55.c`) already needed elaborate register-pin/
   stack-spill workarounds for.
 - **`sub_8032B6C`** - fully inlines `sub_8033828`'s own P1/P2
@@ -210,7 +210,7 @@ elsewhere in this project, re-confirmed rather than re-derived here:
 - **`sub_8032C0C`/`sub_8032EA0`/`sub_80330FC`/`sub_8033264`/
   `sub_80336CC`** - many-high-register (`ip`/`sb`/`sl`/`r8`)
   allocation, the same gcc-2.9 difficulty already documented
-  project-wide for `sub_8031604`/`sub_80372BC`/`GAX2_init` and
+  project-wide for `sub_8031604`/`DrawLanguageSelect`/`GAX2_init` and
   others. `sub_80336CC` in particular is a near-identical twin of the
   already-NAKED `sub_8031604` (issue #58) - same shape, different
   per-level table/row array.

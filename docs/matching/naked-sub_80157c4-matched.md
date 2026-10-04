@@ -77,9 +77,9 @@ before this investigation; `tools/report_units.py`'s entry for
 The one remaining residual (the `pop`/`bx` scratch-register choice,
 `r0` here vs. the ROM's `r1`) is closed. The prior write-up's own
 precedent for this exact class of gap - `docs/matching.md`'s
-`sub_800697C` entry, "a function's own return type/value can shape its
+`GetCompletionPercent` entry, "a function's own return type/value can shape its
 *own* epilogue register choice" - applies here too, but with an extra
-wrinkle: `sub_800697C`'s callee (`__divsi3`) already returned the
+wrinkle: `GetCompletionPercent`'s callee (`__divsi3`) already returned the
 same type the wrapper wanted to return, so a plain `return
 __divsi3(...)` was enough. Here the callee, `sub_800B86C`, returns
 `u8`, and this compiler (confirmed via isolated `cpp`+`agbcc` A/B
@@ -105,7 +105,7 @@ tail:
 `sub_80157C4` itself is declared `s32`-returning (not `void`) purely so
 the call's result is considered live in `r0` up to the `return`,
 freeing `r0` for the epilogue's `pop`/`bx` scratch role and forcing
-`r1` - the same live-value mechanism `sub_800697C` used, just applied
+`r1` - the same live-value mechanism `GetCompletionPercent` used, just applied
 through a cast instead of a same-typed passthrough. `sub_800B86C`'s own
 extern declaration (`src/graphics/actor_part17.c`, where it's already
 matched) is untouched - the cast is scoped to this one call site, and

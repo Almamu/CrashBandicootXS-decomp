@@ -6,11 +6,11 @@ closed and one draft got much closer.
 
 | Function | File | Before | Now | Status |
 |---|---|---|---|---|
-| `sub_8005E5C` (#7) | `src/graphics/settings_menu16.c` | 14 | match (both compilers) | **Closed** |
+| `DrawPauseFraction` (#7) | `src/graphics/settings_menu16.c` | 14 | match (both compilers) | **Closed** |
 | `sub_8001DB4` (#4) | `src/system/link_cable_01db4.c` (split) | 136 | 51 (same size, old_agbcc + `-fno-rerun-loop-opt`) | Draft updated |
 | `sub_802062C` (#31) | `src/graphics/graphics_loading_1feec.c` | 4 | 4 | Note added |
 
-## `sub_8005E5C`: closed
+## `DrawPauseFraction`: closed
 
 Last-nine kept the second half's posX offset in an opaque `OFF(0x110)`
 pseudo. That pseudo was the problem. The ROM's second half has no 0x110
@@ -133,7 +133,7 @@ These are in the scratchpad's `last10/`:
 - `l3.py`: the composable sub_8001DB4 variant generator. Filter it with
   `FLT='key=a|b,...'`.
 - `w.c` and `w1.py`: the 51-hw sub_8001DB4 base and later experiments.
-- `h5.py`/`h6.py`: the sub_8005E5C spellings that matched.
+- `h5.py`/`h6.py`: the DrawPauseFraction spellings that matched.
 
 ## Verification
 

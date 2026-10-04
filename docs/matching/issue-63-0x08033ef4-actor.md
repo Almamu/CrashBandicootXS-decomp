@@ -75,9 +75,9 @@ anim-frame halfword/byte, `self+8` accumulator, `self+0x28` state,
   `sub_8033EF4`.
 - **`sub_803436C`** (`src/graphics/actor_part71.c`) - trivial Kind 3
   one-shot-flag getter (`self+0x58`).
-- **`sub_8034688`/`sub_80346C8`/`sub_80346FC`** (`src/graphics/actor_part73.c`)
-  - a particle-spawn-budget driver (calls `sub_8034480`, then spawns up
-  to 8 particles via `sub_80345B0`; needed the incoming-`idx`-value
+- **`UpdateStarfield`/`StarfieldWaitForButton`/`DestroyStarfield`** (`src/graphics/actor_part73.c`)
+  - a particle-spawn-budget driver (calls `DrawStarfield`, then spawns up
+  to 8 particles via `SpawnStar`; needed the incoming-`idx`-value
   register pinned through `r0` then copied to `r1` for the call,
   matching the ROM's own redundant-looking but real two-step move), an
   input-poll busy-wait built from a `goto`-based `while`-with-shared-
@@ -134,7 +134,7 @@ diffing it byte-for-byte against `baserom.gba`, and cross-referencing
 every differing byte range against `crashbandicootxs.map`'s function
 boundaries - not by re-reading the isolated compiles more carefully.
 
-- **`sub_8034374`** (`src/graphics/actor_part85.c`) - constructs the
+- **`InitStarfield`** (`src/graphics/actor_part85.c`) - constructs the
   particle-trail BG0 object (see that file's header comment for the
   full `struct particle_bg` field layout: a `tileVramBase`/`mapVramBase`
   pair of fixed VRAM constants, a 128-slot particle array, an active
@@ -167,14 +167,14 @@ boundaries - not by re-reading the isolated compiles more carefully.
   position, once that block acts as a hard scheduling barrier. Retired
   the multi-function raw `asm/code_3_2_20_28568_c99c_31784_33ef4_34374.s`,
   split at the time into `asm/code_3_2_20_28568_c99c_31784_33ef4_34480.s`
-  (real bytes for the twin `sub_8034480`) - that fragment is also retired
-  now that `sub_8034480` itself is matched (see below), so
+  (real bytes for the twin `DrawStarfield`) - that fragment is also retired
+  now that `DrawStarfield` itself is matched (see below), so
   `actor_part85.c` is fully matched, closing the whole file.
 - **`sub_8034058`** (`src/graphics/actor_part66.c`) - Kind 2's
   constructor. Now fully matched as real C, closing two gaps: the 6th
   (stack-passed, byte-sized) constructor argument needs the same
   stack-slot-address-then-`ldrb` `asm volatile` anchor already
-  established for other trailing byte arguments (see `sub_8003A60` in
+  established for other trailing byte arguments (see `DrawSaveMenuMain` in
   `issue-5-overlay-ui-sync.md`), materialized into a `register u32
   asm("r9")` pin mirroring the ROM's own `sb` cache (needed since it
   survives the following `sub_80338DC()` call) - the same
@@ -208,14 +208,14 @@ boundaries - not by re-reading the isolated compiles more carefully.
   for `sub_802AB58` in `actor_part53.c`. Retires the raw
   `asm/code_3_2_20_28568_c99c_31784_33ef4_34058.s`.
 
-- **`sub_80345B0`/`sub_8034634`** (`src/graphics/actor_part72.c`) - a
+- **`SpawnStar`/`PlotStarfieldPixel`** (`src/graphics/actor_part72.c`) - a
   128-slot particle spawner (rolls two `RandRange` random values
   against the 256-entry `gStaticData_0816A820` direction table to seed a
   position/velocity record) and a 4-bit-per-cell tilemap nibble writer;
   both now fully matched as real C, retiring
   `asm/code_3_2_20_28568_c99c_31784_33ef4_345b0.s` entirely.
 
-  `sub_80345B0`'s previously-parked register-allocation gap for the
+  `SpawnStar`'s previously-parked register-allocation gap for the
   final multiply/shift needed no register pins or opaque asm at all,
   once properly diagnosed: this compiler's codegen for `dest = a * b`
   always materializes/copies the *left* operand into the destination
@@ -226,7 +226,7 @@ boundaries - not by re-reading the isolated compiles more carefully.
   `table[...] * speed` - mathematically identical, since multiplication
   is commutative - matched immediately.
 
-  `sub_8034634`'s residual `addr`/`blockY` register-role gap turned out
+  `PlotStarfieldPixel`'s residual `addr`/`blockY` register-role gap turned out
   to be three separate, independently-found issues, not one:
   1. `x`'s bounds check (`x <= 0xef`) wants an unsigned comparison (the
      ROM's `bhi`), but `x >> 3` wants a *signed* arithmetic shift
@@ -265,15 +265,15 @@ boundaries - not by re-reading the isolated compiles more carefully.
   address) as inputs, and `val` (already pinned to `r3` for the leaf-
   function register-spill fix) as an in/out operand.
 
-- **`sub_8034480`** (`src/graphics/actor_part85.c`) - the particle-trail
-  BG0 object's per-frame updater (`sub_8034374`'s companion, same file);
+- **`DrawStarfield`** (`src/graphics/actor_part85.c`) - the particle-trail
+  BG0 object's per-frame updater (`InitStarfield`'s companion, same file);
   now fully matched as real C, closing the file entirely. Commits last
   frame's `tileBuffer` to tile VRAM, clears it back to zero, then for
   each active particle inlines the same nibble-address formula as
-  `sub_8034634` above *twice* (nibble `1` at the pre-move position,
+  `PlotStarfieldPixel` above *twice* (nibble `1` at the pre-move position,
   nibble `2` at the post-move position), applying `dx`/`dy` and
-  respawning via `sub_80345B0` in between. Needed a mix of
-  `sub_8034634`'s own three fixes plus two more ordering fixes this
+  respawning via `SpawnStar` in between. Needed a mix of
+  `PlotStarfieldPixel`'s own three fixes plus two more ordering fixes this
   larger, twice-inlined function surfaces on its own:
   1. Both bounds checks that compare a pixel/position value against a
      hex constant (`x <= 0xef`, and separately `newX > 0xEFFF` after
@@ -281,10 +281,10 @@ boundaries - not by re-reading the isolated compiles more carefully.
      with `(u32)` casts, while the `>> 11` block-index shifts stay plain
      signed arithmetic shifts on the already-`s32` raw values.
   2. `addr`'s two halves need computing as separate statements, not one
-     combined `a + b` expression - same as `sub_8034634`.
+     combined `a + b` expression - same as `PlotStarfieldPixel`.
   3. The tail - `cell &= ~mask; cell |= val << shift; *entry = cell;` -
      closes with one opaque `asm volatile` reproducing the ROM's exact
-     sequence, simpler here than `sub_8034634`'s own tail since this
+     sequence, simpler here than `PlotStarfieldPixel`'s own tail since this
      function's ROM build never needs the extra `r4`-materialize-then-
      copy-back step: `mask` computed straight into `r0`, `cell` loaded
      straight into `r2` and `bic`'d in place, then `r0` reused to shift
@@ -304,7 +304,7 @@ boundaries - not by re-reading the isolated compiles more carefully.
      pair too early, ahead of the ROM's own position.
 
   Retires `asm/code_3_2_20_28568_c99c_31784_33ef4_34480.s` entirely,
-  closing `actor_part85.c` (both `sub_8034374` and `sub_8034480`, its
+  closing `actor_part85.c` (both `InitStarfield` and `DrawStarfield`, its
   only two functions) as fully matched.
 
 ## NAKED transcription (byte-correct, not counted as matched)
@@ -345,7 +345,7 @@ boundaries - not by re-reading the isolated compiles more carefully.
 
 ## Left raw (3 of 25 functions, not attempted)
 
-- **`sub_803472C`/`sub_803487C`/`sub_8034994`**
+- **`InitContinuePrompt`/`sub_803487C`/`ContinuePromptLoop`**
   (`asm/code_3_2_20_28568_c99c_31784_33ef4_3472c.s`) - a graphics-package
   loading setup (BG/window register packing, three `LoadGraphicsPackage`
   calls, heavy `sb`/`r8` register pressure), a larger orchestration
@@ -353,9 +353,9 @@ boundaries - not by re-reading the isolated compiles more carefully.
   machine/input-poll loop with `sb`/`sl`/`r8` all live simultaneously;
   left raw, out of scope for this pass. Picked up in a later pass - see
   [docs/matching/issue-63-final-raw-actor.md](issue-63-final-raw-actor.md),
-  which matched `sub_803472C` as real C (the `asm/..._3472c.s` file
+  which matched `InitContinuePrompt` as real C (the `asm/..._3472c.s` file
   referenced above is now gone), parked `sub_803487C`, and NAKED-
-  transcribed `sub_8034994`.
+  transcribed `ContinuePromptLoop`.
 
 See [docs/status/actor.md](../status/actor.md) for the running
 matched/parked list this entry feeds into.

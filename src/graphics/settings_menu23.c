@@ -2,11 +2,11 @@
 #include "icon_manager.h"
 #include "pause_options_screen.h"
 
-extern s32 sub_8028A30(void *mgr, s32 arg1);
+extern s32 FontSetPalette(void *mgr, s32 arg1);
 extern s32 GetUiText(s32 arg0);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
-extern struct icon_manager *gUnknown_030012E0;
-extern struct icon_manager *gUnknown_030012DC;
+extern struct icon_manager *gLargeFont;
+extern struct icon_manager *gSmallFont;
 
 static inline void set_icon_mgr_pos(struct icon_manager *m, u32 x, u32 y)
 {
@@ -36,7 +36,7 @@ static inline void set_icon_mgr_pos(struct icon_manager *m, u32 x, u32 y)
 /* `arg1`/`arg2` are plain coordinate values here (not pointers - the
  * ROM does raw integer arithmetic on them, `arg1+0x1d`/`arg2+0xc`),
  * used as the on-screen anchor for a centered numeric glyph (label
- * 0x25) into gUnknown_030012DC.
+ * 0x25) into gSmallFont.
  *
  * Once a NAKED transcription; it matches as plain C under both
  * compilers, the draws written as `record->slots[n]` virtual calls
@@ -48,17 +48,17 @@ void sub_8004914(struct pause_options_screen *self, s32 arg1, s32 arg2, u8 arg3)
     s32 w;
 
     if (arg3)
-        sub_8028A30(gUnknown_030012DC, ((self->flags >> 2) & 1) ? 1 : 2);
+        FontSetPalette(gSmallFont, ((self->flags >> 2) & 1) ? 1 : 2);
     else
-        sub_8028A30(gUnknown_030012DC, 0);
-    w = ICON_TEXT_CALL(gUnknown_030012DC, 0, GetUiText(0x25));
-    set_icon_mgr_pos(gUnknown_030012DC, x - w / 2, y);
-    ICON_TEXT_CALL(gUnknown_030012DC, 2, GetUiText(0x25));
+        FontSetPalette(gSmallFont, 0);
+    w = ICON_TEXT_CALL(gSmallFont, 0, GetUiText(0x25));
+    set_icon_mgr_pos(gSmallFont, x - w / 2, y);
+    ICON_TEXT_CALL(gSmallFont, 2, GetUiText(0x25));
 }
 
 /* Draws a centered label (from the runtime string table via
- * GetUiText) into gUnknown_030012E0's icon pair - `self` is unused.
- * Matches sub_8006600's (src/graphics/oam_count.c) centered-icon shape
+ * GetUiText) into gLargeFont's icon pair - `self` is unused.
+ * Matches DrawPowerDialog's (src/graphics/oam_count.c) centered-icon shape
  * exactly, just for a single label rather than flanking a number.
  *
  * Once a NAKED transcription; it matches as plain C under both
@@ -68,8 +68,8 @@ void sub_80049CC(struct pause_options_screen *self, s32 labelIndex)
 {
     s32 w;
 
-    sub_8028A30(gUnknown_030012E0, 0);
-    w = ICON_TEXT_CALL(gUnknown_030012E0, 0, GetUiText(labelIndex));
-    set_icon_mgr_pos(gUnknown_030012E0, (0xf0 - w) >> 1, 6);
-    ICON_TEXT_CALL(gUnknown_030012E0, 2, GetUiText(labelIndex));
+    FontSetPalette(gLargeFont, 0);
+    w = ICON_TEXT_CALL(gLargeFont, 0, GetUiText(labelIndex));
+    set_icon_mgr_pos(gLargeFont, (0xf0 - w) >> 1, 6);
+    ICON_TEXT_CALL(gLargeFont, 2, GetUiText(labelIndex));
 }

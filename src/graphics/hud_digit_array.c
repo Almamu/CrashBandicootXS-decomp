@@ -38,11 +38,11 @@ struct hud_pos
 extern void ***gUnknown_030012D0;
 extern void *gLevelState;
 extern u8 *gUnknown_030012B8;
-extern u32 gStaticData_08174BE0[];
-extern struct hud_pos gStaticData_08174C6C[];
+extern u32 gHudPartAnims[];
+extern struct hud_pos gHudPartPositions[];
 
 extern void *sub_8026EC0(s32 size);
-extern void sub_8027120(struct hud_slot *slot);
+extern void InitHudPart(struct hud_slot *slot);
 extern void sub_80088D8(struct hud_slot *slot, s32 value);
 extern s32 sub_80233B4(void *self);
 extern void sub_80087C0(struct hud_slot *slot);
@@ -84,7 +84,7 @@ static inline void SetSlotPos(struct hud_slot *slot, struct hud_pos *pos)
  * life icon) and its position. Slot 13 gets the second table plus its
  * tile record's palette, slots 16/19/21 their starting frames, and
  * sub_802732C does the rest. */
-struct hud_counter *sub_8027138(struct hud_counter *self)
+struct hud_counter *InitHud(struct hud_counter *self)
 {
     s32 i;
 
@@ -97,13 +97,13 @@ struct hud_counter *sub_8027138(struct hud_counter *self)
         *mem++ = 0x23;
         slots = (struct hud_slot *)mem;
         for (slot = slots, n = 0x22; n != -1; slot++, n--)
-            sub_8027120(slot);
+            InitHudPart(slot);
         self->parts = (struct hud_digit_part *)slots;
     }
-    self->mode = 0;
+    self->livesSlide = 0;
     *(s32 *)&self->unknown_0c[4] = 0;
-    self->field_08 = 0;
-    self->layout_value = 0;
+    self->wumpaSlide = 0;
+    self->livesSlideTimer = 0;
     *(s32 *)&self->unknown_0c[8] = 0;
     *(s32 *)&self->unknown_0c[0] = 0;
 
@@ -128,10 +128,10 @@ struct hud_counter *sub_8027138(struct hud_counter *self)
         }
         else
         {
-            slot->anim_index = gStaticData_08174BE0[i];
+            slot->anim_index = gHudPartAnims[i];
             RestartSlot(slot);
         }
-        SetSlotPos(&SLOTS(self)[i], &gStaticData_08174C6C[i]);
+        SetSlotPos(&SLOTS(self)[i], &gHudPartPositions[i]);
     }
 
     {
@@ -142,7 +142,7 @@ struct hud_counter *sub_8027138(struct hud_counter *self)
         anim = HUD_ANIM(0x1A4);
         slot = &SLOTS(self)[i];
         slot->anim_data = anim;
-        SLOTS(self)[13].anim_index = gStaticData_08174BE0[13];
+        SLOTS(self)[13].anim_index = gHudPartAnims[13];
         RestartSlot(slot);
     }
     {
@@ -160,8 +160,8 @@ struct hud_counter *sub_8027138(struct hud_counter *self)
     return self;
 }
 
-/* `sub_8027138`'s own tail: stores `iconFlag` into `self->icon_flag`,
- * finishes the two slots `sub_8027138` set up part of already (a
+/* `InitHud`'s own tail: stores `iconFlag` into `self->icon_flag`,
+ * finishes the two slots `InitHud` set up part of already (a
  * position/frame-index pair from a shared table, then the same
  * `field_29`-low-nibble update `settings_menu6.c`'s
  * `UPDATE_ICON_FRAME_NIBBLE` macro names for the unrelated
@@ -172,7 +172,7 @@ struct hud_counter *sub_8027138(struct hud_counter *self)
  * `0x740` off `self->parts`) depending on the current level/game-mode
  * (`sub_80233B4`) and `self->icon_flag`, before DMA-filling nine words
  * at `self+0x40` with `-1` (a raw `REG_DMA3SAD`/`DAD`/`CNT` poke, the
- * same low-level idiom `settings_menu8e.c`'s `sub_8002AA4` and
+ * same low-level idiom `settings_menu8e.c`'s `ValidateSaveData` and
  * `link_cable.c` already document for this ROM).
  *
  * Matching notes (old_agbcc): the two inner palette stores go through
@@ -200,7 +200,7 @@ void sub_802732C(struct hud_counter *self, u8 iconFlag)
         slot = &SLOTS(self)[k];
 
         slot->anim_data = anim;
-        SLOTS(self)[13].anim_index = gStaticData_08174BE0[13];
+        SLOTS(self)[13].anim_index = gHudPartAnims[13];
         RestartSlot(slot);
     }
     base = sub_800815C(&SLOTS(self)[13]);
@@ -243,7 +243,7 @@ void sub_802732C(struct hud_counter *self, u8 iconFlag)
             {
             case 0xE ... 0x15:
             {
-                struct hud_pos *tbl = gStaticData_08174C6C;
+                struct hud_pos *tbl = gHudPartPositions;
                 struct hud_pos *pos = tbl + i;
 
                 SLOTS(self)[i].x = pos->x << 8;
@@ -262,5 +262,5 @@ void sub_802732C(struct hud_counter *self, u8 iconFlag)
         else
             SLOTS(self)[i].palette = frame;
     }
-    DmaFill32(3, -1, &self->previous_value, 9 * 4);
+    DmaFill32(3, -1, &self->shownLives, 9 * 4);
 }

@@ -73,7 +73,7 @@ s32 sub_8002798(u8 *self)
  * than anything with an observable effect), then - only if `flags` bit
  * 0 is set - tears the session down (`sub_80016D0`, matched in
  * src/graphics/aabb_util.c, also used by src/audio/audio_context.c's
- * `sub_8001C04` on an unrelated object - a generic free/release call).
+ * `DestroyAudioContext` on an unrelated object - a generic free/release call).
  */
 void sub_80027B0(u8 *self, u32 flags)
 {

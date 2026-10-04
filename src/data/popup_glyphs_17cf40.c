@@ -34,9 +34,9 @@ struct slot_seed
 };
 
 /* Five popup glyph sources, each a {w, h, palette, tiles, 0}
- * package (sub_80352AC, actor_part131.c, reads them as its
+ * package (LoadCreditsLogos, actor_part131.c, reads them as its
  * `struct popup_glyph_src`). */
-const struct bg_package gStaticData_0817CF40[5] = {
+const struct bg_package gCreditsLogos[5] = {
     { 0x10, 0x4, (void *)gStaticData_086319F0, (void *)gStaticData_08632820, NULL },
     { 0x10, 0x9, (void *)gStaticData_086319A0, (void *)gStaticData_08631ACC, NULL },
     { 0x10, 0x4, (void *)gStaticData_086319C8, (void *)gStaticData_086324B4, NULL },

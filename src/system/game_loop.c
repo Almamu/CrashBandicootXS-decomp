@@ -5,7 +5,7 @@
 
 extern void *gUnknown_030012D8;
 extern void *gEntityFlags;
-extern void *gUnknown_03001318;
+extern void *gHud;
 extern struct tile_asset_cache *gUnknown_030012B8;
 
 extern s32 sub_8023414(void *self);
@@ -26,7 +26,7 @@ extern void sub_8022CA0(struct level_state *self, u8 arg1);
  * three fields back from their `unk_b4`/`unk_b0`/`unk_b8` "level start"
  * snapshot. Either way it re-syncs the player's stored position
  * (`checkpointX`/`checkpointY` -> `sub_8007398`) and re-runs
- * `sub_8022CA0`, then flushes `unk_bc` into the `gUnknown_03001318`
+ * `sub_8022CA0`, then flushes `unk_bc` into the `gHud`
  * cache and clears the `+0xa4` busy flag.
  *
  * `wumpa`/`unk_70`/`lives` are accessed directly off `self` throughout
@@ -93,7 +93,7 @@ void sub_8022BF0(struct level_state *self, u8 arg1)
         fieldbc = &self->unk_bc;
     }
 
-    sub_8028568(gUnknown_03001318, *fieldbc);
+    sub_8028568(gHud, *fieldbc);
     sub_80232C0(self);
 }
 

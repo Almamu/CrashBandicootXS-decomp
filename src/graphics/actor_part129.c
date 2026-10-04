@@ -33,7 +33,7 @@
  * include/actor_self.h) - once parked NAKED as an "r7 table-base-pin"
  * hazard, see docs/matching/pmf-dispatch-retry.md. */
 
-extern void *gUnknown_030012BC;
+extern void *gAudioContext;
 extern void *gLevelState;
 extern void *gUnknown_03000884;
 
@@ -200,22 +200,22 @@ void sub_8031B0C(void *selfArg)
         goto after_dispatch;
 
     case_14:
-        PlaySfx(gUnknown_030012BC, 3, 0x100);
+        PlaySfx(gAudioContext, 3, 0x100);
         sub_802F540(gUnknown_03000884, 1);
         goto after_dispatch;
 
     case_15:
-        PlaySfx(gUnknown_030012BC, 3, 0x100);
+        PlaySfx(gAudioContext, 3, 0x100);
         sub_802F540(gUnknown_03000884, 3);
         goto after_dispatch;
 
     case_16:
-        PlaySfx(gUnknown_030012BC, 3, 0x100);
+        PlaySfx(gAudioContext, 3, 0x100);
         sub_802F540(gUnknown_03000884, 5);
         goto after_dispatch;
 
     case_17:
-        PlaySfx(gUnknown_030012BC, 7, 0x100);
+        PlaySfx(gAudioContext, 7, 0x100);
         sub_802AAB4(self->unk_70);
         AddLife(gLevelState);
 
@@ -289,22 +289,22 @@ gt_15:
     goto after_dispatch;
 
 case_14:
-    PlaySfx(gUnknown_030012BC, 3, 0x100);
+    PlaySfx(gAudioContext, 3, 0x100);
     sub_802F540(gUnknown_03000884, 1);
     goto after_dispatch;
 
 case_15:
-    PlaySfx(gUnknown_030012BC, 3, 0x100);
+    PlaySfx(gAudioContext, 3, 0x100);
     sub_802F540(gUnknown_03000884, 3);
     goto after_dispatch;
 
 case_16:
-    PlaySfx(gUnknown_030012BC, 3, 0x100);
+    PlaySfx(gAudioContext, 3, 0x100);
     sub_802F540(gUnknown_03000884, 5);
     goto after_dispatch;
 
 case_17:
-    PlaySfx(gUnknown_030012BC, 7, 0x100);
+    PlaySfx(gAudioContext, 7, 0x100);
     sub_802AAB4(self->unk_70);
     AddLife(gLevelState);
 
@@ -342,7 +342,7 @@ void sub_8031D04(void *selfArg)
         self->base.animTime = kind;
 
         sub_802F50C(gUnknown_03000884, 0x14);
-        PlaySfx(gUnknown_030012BC, 3, 0x100);
+        PlaySfx(gAudioContext, 3, 0x100);
 
         if (self->child != NULL) {
             sub_8022FEC(gLevelState);
@@ -406,22 +406,22 @@ void sub_8031D7C(void *selfArg)
         goto after_dispatch;
 
     case_18:
-        PlaySfx(gUnknown_030012BC, 3, 0x100);
+        PlaySfx(gAudioContext, 3, 0x100);
         FreezeLevelClock(gLevelState, 1);
         goto after_dispatch;
 
     case_19:
-        PlaySfx(gUnknown_030012BC, 3, 0x100);
+        PlaySfx(gAudioContext, 3, 0x100);
         FreezeLevelClock(gLevelState, 2);
         goto after_dispatch;
 
     case_1a:
-        PlaySfx(gUnknown_030012BC, 3, 0x100);
+        PlaySfx(gAudioContext, 3, 0x100);
         FreezeLevelClock(gLevelState, 3);
         goto after_dispatch;
 
     case_1d:
-        PlaySfx(gUnknown_030012BC, 0x18, 0x100);
+        PlaySfx(gAudioContext, 0x18, 0x100);
         sub_8022D50(gLevelState);
 
     after_dispatch:
@@ -495,22 +495,22 @@ gt_19:
     goto after_dispatch;
 
 case_18:
-    PlaySfx(gUnknown_030012BC, 3, 0x100);
+    PlaySfx(gAudioContext, 3, 0x100);
     FreezeLevelClock(gLevelState, 1);
     goto after_dispatch;
 
 case_19:
-    PlaySfx(gUnknown_030012BC, 3, 0x100);
+    PlaySfx(gAudioContext, 3, 0x100);
     FreezeLevelClock(gLevelState, 2);
     goto after_dispatch;
 
 case_1a:
-    PlaySfx(gUnknown_030012BC, 3, 0x100);
+    PlaySfx(gAudioContext, 3, 0x100);
     FreezeLevelClock(gLevelState, 3);
     goto after_dispatch;
 
 case_1d:
-    PlaySfx(gUnknown_030012BC, 0x18, 0x100);
+    PlaySfx(gAudioContext, 0x18, 0x100);
     sub_8022D50(gLevelState);
 
 after_dispatch:
@@ -581,7 +581,7 @@ void sub_8031FE8(void *selfArg, s32 delta)
             *(s32 *)&self->base.animTime = zero2;
 
             sub_802F50C(gUnknown_03000884, 0x14);
-            PlaySfx(gUnknown_030012BC, 3, 0x100);
+            PlaySfx(gAudioContext, 3, 0x100);
 
             if (self->child != NULL) {
                 sub_8022FEC(gLevelState);
@@ -702,7 +702,7 @@ void sub_8032170(void *selfArg, s32 delta)
             *(s32 *)&self->base.animTime = zero2;
 
             if (self->child != NULL) {
-                PlaySfx(gUnknown_030012BC, 3, 0x100);
+                PlaySfx(gAudioContext, 3, 0x100);
                 sub_8022FEC(gLevelState);
                 sub_80318B4(self->child);
                 self->child = (void *)zero2;
@@ -865,7 +865,7 @@ void sub_8032358(void *selfArg)
 
         _call_via_r2((u8 *)player + ptable->m20.thisOffset, 0x14, ptable->m20.fn);
         sub_8022FEC(gLevelState);
-        PlaySfx(gUnknown_030012BC, 4, 0x100);
+        PlaySfx(gAudioContext, 4, 0x100);
         self->base.animIndex = 1;
         {
             register u16 anim asm("r0") = *(u16 *)&self->base.anims[1].duration;
@@ -905,7 +905,7 @@ void sub_80323F4(void *selfArg, s32 delta)
         register s32 one asm("r4") = 1;
 
         *deathPtr = one;
-        PlaySfx(gUnknown_030012BC, 4, 0x100);
+        PlaySfx(gAudioContext, 4, 0x100);
         self->base.animIndex = one;
         {
             register u16 anim asm("r0") = *(u16 *)&self->base.anims[1].duration;
@@ -1081,7 +1081,7 @@ void sub_803256C(void *selfArg)
     register s32 one asm("r5") = 1;
 
     *statePtr = one;
-    PlaySfx(gUnknown_030012BC, 4, 0x100);
+    PlaySfx(gAudioContext, 4, 0x100);
     self->base.unk_18 = 7;
     self->base.animIndex = one;
     {
@@ -1115,7 +1115,7 @@ void sub_80325A4(void *selfArg, s32 delta)
         *statePtr = one;
         asm volatile("add %0, %0, #1" : "+r"(statePtr));
         *statePtr = one;
-        PlaySfx(gUnknown_030012BC, 4, 0x100);
+        PlaySfx(gAudioContext, 4, 0x100);
         self->base.unk_18 = 4;
         self->base.animIndex = 2;
         {
@@ -1168,7 +1168,7 @@ void *sub_80325EC(void *selfArg, s32 a, s32 b, s32 c, s32 d)
     self->stepY = __divsi3(self->limitY - 0xfa00, 0xc6);
     self->hit = 0;
     self->triggered = 0;
-    PlaySfx(gUnknown_030012BC, 0x2d, 0x100);
+    PlaySfx(gAudioContext, 0x2d, 0x100);
 
     return self;
 }
@@ -1199,7 +1199,7 @@ void sub_8032688(void *selfArg)
 
         if (self->cued == 0) {
             self->cued = 1;
-            PlaySfx(gUnknown_030012BC, 0x3e, 0x100);
+            PlaySfx(gAudioContext, 0x3e, 0x100);
         }
     }
 

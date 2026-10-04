@@ -8,7 +8,7 @@ Issues #34, #37, #38, #39, #40, #41 and #45 left 26 functions in
 Like the neighbouring regions (docs/matching/old-agbcc-retry.md,
 issue-42-bg-scroll-layer.md), this part of the ROM was built with
 `tools/agbcc/bin/old_agbcc`. Several of these functions only match under
-it (for example `sub_80240E4`, `sub_8022D50`, `sub_8027138`, and four of
+it (for example `sub_80240E4`, `sub_8022D50`, `InitHud`, and four of
 the terrain tile cache's lookups), and every other function in the
 touched files matches under it unchanged.
 
@@ -28,7 +28,7 @@ No register pins, no asm in a function body and no NAKED.
 | `sub_8025BAC` | `game_loop14.c` |
 | `ScrollBgLayer`, `DrawBgLayerColumn` | `game_loop16.c` |
 | `sub_8026A18`, `sub_8026AE8` | `game_loop46.c` |
-| `sub_8027138` | `hud_digit_array.c` |
+| `InitHud` | `hud_digit_array.c` |
 
 All eleven files move to `OLD_AGBCC_OBJS` whole.
 
