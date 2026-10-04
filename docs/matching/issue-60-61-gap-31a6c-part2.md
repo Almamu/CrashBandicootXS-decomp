@@ -150,7 +150,7 @@ real `.c` file and linking:
   order (sum first, delta second) and explicitly pin `self` itself to
   `r4` for the whole function, matching the ROM's single `adds r4, r0,
   #0` exactly.
-- **`sub_8032A24`'s `sub_803AD80` call** - pre-computing the third
+- **`sub_8032A24`'s `_call_via_r2` call** - pre-computing the third
   argument (`table+0x24`) into a named local before the call made this
   compiler evaluate it *before* the first argument's own dependent read
   (`table+0x20`); inlining both reads directly as call-argument

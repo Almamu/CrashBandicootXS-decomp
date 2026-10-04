@@ -107,7 +107,7 @@ extern void sub_80231D4(struct level_state *self);
 extern void sub_8023120(struct level_state *self, s32 n);
 extern void sub_8023118(struct level_state *self, s32 n);
 extern void sub_8023110(struct level_state *self, s32 n);
-extern void *sub_800014C(void *dest, void *src, s32 size);
+extern void *MemCopy32(void *dest, void *src, s32 size);
 extern void *sub_8026EDC(u32 size);
 extern void *LoadLevelGraphics(void *mem);
 extern s32 sub_8035E14(void *gfx);
@@ -201,7 +201,7 @@ void UpdateGameFrame(struct level_state *self)
         dma->cnt = 0x81000034;
         dma->cnt;
     }
-    sub_800014C(self->snap14C, self, 0x68);
+    MemCopy32(self->snap14C, self, 0x68);
     gUnknown_030012C4 = self;
     self->bestTier = 0;
     {
@@ -243,8 +243,8 @@ void UpdateGameFrame(struct level_state *self)
                 self->level = level;
             }
             quit = sub_801BAF0(&self->level);
-            sub_800014C(self, self->snap14C, 0x68);
-            sub_800014C(self->snapE4, self, 0x68);
+            MemCopy32(self, self->snap14C, 0x68);
+            MemCopy32(self->snapE4, self, 0x68);
             if (quit)
             {
                 sub_8004D4C();
@@ -469,7 +469,7 @@ void UpdateGameFrame(struct level_state *self)
                 if (t < GetCurrentLevelFlags(self)->f.time || (GetCurrentLevelFlags(self)->raw & 0xfff8) == 0)
                     GetCurrentLevelFlags(self)->f.time = t;
             }
-            sub_800014C(self->snap14C, self, 0x68);
+            MemCopy32(self->snap14C, self, 0x68);
         }
     }
 }

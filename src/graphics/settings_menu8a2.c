@@ -32,7 +32,7 @@ struct sio_channel
     u8 unk_90[0x38];
 };
 
-/* The SIO session object gUnknown_03000804 points at: the outgoing
+/* The SIO session object gLinkSession points at: the outgoing
  * channel at +0x40 and one incoming channel per player from +0x108. */
 struct sio_session
 {
@@ -41,7 +41,7 @@ struct sio_session
     struct sio_channel rx[4];   /* 0x108 */
 };
 
-extern struct sio_session *gUnknown_03000804;
+extern struct sio_session *gLinkSession;
 
 /* Drains up to 0x60 bytes per call from `self->cursor` (streaming a
  * settings_sync_record out of `self->tmpl`) into the SIO session's
@@ -54,7 +54,7 @@ void sub_8002D44(struct settings_sync_pump *self)
 {
     if (self->remaining != 0)
     {
-        struct sio_session *s = gUnknown_03000804;
+        struct sio_session *s = gLinkSession;
         struct sio_channel *ch = &s->tx;
 
         if (ch->count == 0)
@@ -90,14 +90,14 @@ void sub_8002D44(struct settings_sync_pump *self)
             self->remaining -= n;
         }
     }
-    else if (gUnknown_03000804->tx.count == 0)
+    else if (gLinkSession->tx.count == 0)
     {
         self->field_214 = 1;
     }
 }
 
 /* Counterpart to sub_8002D44 above: drains whatever's available from
- * `playerIndex`'s incoming channel (`gUnknown_03000804->rx[playerIndex]`)
+ * `playerIndex`'s incoming channel (`gLinkSession->rx[playerIndex]`)
  * into `self->data` via `self->writePtr`, and marks `field_218` once
  * `totalReceived` reaches a full record's worth.
  *
@@ -112,7 +112,7 @@ void sub_8002D44(struct settings_sync_pump *self)
  * `if` + `do`/`while` so the pin is set after the zero-trip test. */
 void sub_8002E20(struct settings_sync_pump *self, s32 playerIndex)
 {
-    struct sio_session *s = gUnknown_03000804;
+    struct sio_session *s = gLinkSession;
     s32 pi = playerIndex;
     /* One 0xc8 register for both products: the second multiplies
      * straight into it (`muls r2, r1`), and it then becomes the channel

@@ -93,7 +93,7 @@ extern void sub_80087B4(struct slot_part *part);
 extern void sub_800872C(struct slot_part *part, s32 arg);
 extern void sub_8006D08(void *cache, s32 palette, u8 record);
 extern void sub_8010804(void);
-extern s32 sub_803AD7C(void *self, void *fn);
+extern s32 _call_via_r1(void *self, void *fn);
 extern void sub_8011448(struct actor *self, s32 arg1);
 
 static inline void SetPartTag(struct slot_part *part, s32 tag)
@@ -102,7 +102,7 @@ static inline void SetPartTag(struct slot_part *part, s32 tag)
 }
 
 #define ACTOR_METHOD(a, m) \
-    sub_803AD7C((u8 *)(a) + ((struct entity_vtable *)(a)->table)->m.thisOffset, \
+    _call_via_r1((u8 *)(a) + ((struct entity_vtable *)(a)->table)->m.thisOffset, \
                 ((struct entity_vtable *)(a)->table)->m.fn)
 
 /* Level restart: resets the level state's +0x8c/+0x90 fields, then
@@ -155,7 +155,7 @@ void sub_8022D50(struct level_state *self)
             struct actor *a = e;
             struct vmethod *m = &((struct entity_vtable *)e->table)->m48;
 
-            if (sub_803AD7C((u8 *)e + m->thisOffset, m->fn) == 2)
+            if (_call_via_r1((u8 *)e + m->thisOffset, m->fn) == 2)
             {
                 if ((u8)ACTOR_METHOD(e, m28))
                     sub_8011448(e, 1);

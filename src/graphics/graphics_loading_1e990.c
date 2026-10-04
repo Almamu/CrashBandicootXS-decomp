@@ -13,7 +13,7 @@ extern s32 sub_80232E0(void *self);
 extern s32 sub_8023130(void *self);
 extern s32 sub_803AFEC(void *self);
 extern u8 sub_80232B8(void *self);
-extern void sub_803AD88(void *arg0, s32 arg1, s32 arg2, s32 arg3);
+extern void _call_via_r4(void *arg0, s32 arg1, s32 arg2, s32 arg3);
 extern void PlaySfx(void *bank, s32 arg1, s32 sfxId);
 
 /* Sound-trigger dispatch/position writer - the last of the
@@ -32,7 +32,7 @@ extern void PlaySfx(void *bank, s32 arg1, s32 sfxId);
  *    (graphics_loading_21d80.c) already do elsewhere in this cluster.
  *
  * 2. Unless the level state's `timeTrial` flag is set: fires the
- *    player's `table+0x68` trampoline (via `sub_803AD88`, action
+ *    player's `table+0x68` trampoline (via `_call_via_r4`, action
  *    `0x1a`) and plays SFX `0x100` through `gUnknown_030012BC`,
  *    unless a budget/reentrancy guard trips first - either the
  *    player's spawn counter (`sub_80232E0`, `+0x7c`) has room against
@@ -132,7 +132,7 @@ fire:
         fn = d8obj + fnOffset;
         dead = *(u32 volatile *)(entry + 4);
         (void)dead;
-        sub_803AD88(fn, 0, 0x1a, 0);
+        _call_via_r4(fn, 0, 0x1a, 0);
         PlaySfx(gUnknown_030012BC, 1, 0x100);
     }
 end:;

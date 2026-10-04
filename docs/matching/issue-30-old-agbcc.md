@@ -44,7 +44,7 @@ that were already matched (`graphics_package_1e8f8.c`, `_1e964.c` and
   at the top and assigns it at the bottom. That puts the next-row
   pointer in the ROM's stack slot.
 - **`sub_801E688` divides with plain `/`.** It must not call
-  `sub_803ADB4` directly: as a libcall, `__divsi3` doesn't clobber
+  `__divsi3` directly: as a libcall, `__divsi3` doesn't clobber
   memory, so the `+0x11` byte stays in a register across both divides.
 
 ## Worth retrying

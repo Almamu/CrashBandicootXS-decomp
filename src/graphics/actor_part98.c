@@ -3,10 +3,10 @@
 
 extern s32 gUnknown_030013B4;
 
-extern s32 sub_803ADB4(s32 a, s32 b);
+extern s32 __divsi3(s32 a, s32 b);
 
 /* `dest` is materialized (and pinned to the callee-saved `r4`) before
- * the `sub_803ADB4` call, not after - the ROM loads the store
+ * the `__divsi3` call, not after - the ROM loads the store
  * destination's address ahead of the call so it survives across it in
  * a register `bl` doesn't clobber, rather than recomputing it from the
  * return value's position afterward (see docs/workflow.md step 3). */
@@ -14,7 +14,7 @@ void sub_8029BAC(s32 arg0)
 {
     register s32 *dest asm("r4") = &gUnknown_030013B4;
 
-    *dest = sub_803ADB4(arg0 << 8, 0x3c);
+    *dest = __divsi3(arg0 << 8, 0x3c);
 }
 
 /* Fills screen block 28 from row 16 on (block 30 when `arg0` is set,
@@ -151,7 +151,7 @@ void sub_8029D8C(s32 arg0, s32 arg1)
     s32 shift;
 
     target = gUnknown_030013EC;
-    delta = sub_803ADB4(arg0 * (target >> 8), gUnknown_030013E4);
+    delta = __divsi3(arg0 * (target >> 8), gUnknown_030013E4);
     delta += target / 2;
     cur = gUnknown_030013D0;
     delta -= cur;
@@ -172,7 +172,7 @@ void sub_8029D8C(s32 arg0, s32 arg1)
     gUnknown_030013D0 = cur;
 
     target = gUnknown_030013F0;
-    delta = sub_803ADB4(arg1 * (target >> 8), gUnknown_030013E8);
+    delta = __divsi3(arg1 * (target >> 8), gUnknown_030013E8);
     delta += target / 2;
     cur = gUnknown_030013CC;
     delta -= cur;

@@ -29,7 +29,7 @@ close via the same technique in one pass.
   entry through its own `freeListArray` wrapper slot.
 - **`sub_8009914`** - resets a pool manager to empty: tears down every
   active object (`slotArray[0..activeCount)`, firing each one's
-  `table+0x50/0x54` "destroy" trampoline via `sub_803AD80` if
+  `table+0x50/0x54` "destroy" trampoline via `_call_via_r2` if
   non-`NULL`, then clearing the slot), resets `activeCount` to 0, zeros
   the grid tables, and rebuilds the free list from scratch over the
   existing `nodeArray` - identical tail logic to `sub_8008F20`.

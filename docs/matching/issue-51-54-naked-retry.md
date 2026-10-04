@@ -73,7 +73,7 @@ no caller).
   into a callee-saved register before the player box is built, where
   the ROM recomputes `add rX, sp, #0xc` after the copy. That costs a
   register, and r5/r6 roles shift for the rest of the function. Passing
-  the box by value, wrapping the `sub_800014C` call in an inline and
+  the box by value, wrapping the `MemCopy32` call in an inline and
   using pointer locals all failed to fix it.
 - **`sub_802DD9C`** (actor_part75.c): the same box code as a standalone
   function, with the same `&b` hoist (about 51 halfwords off, plus an
@@ -85,7 +85,7 @@ no caller).
   `sub_802E058`'s body. The clear loop is written as an `s32` address
   walk (`p >= base`, signed, with a separate `zero` local). Only the
   high-register assignment is wrong: the three hoisted addresses
-  (`&gUnknown_030014C0`, `&gUnknown_03000898`, `&gUnknown_030014BC`)
+  (`&gUnknown_030014C0`, `&gUnpackNibbleTilesFunc`, `&gUnknown_030014BC`)
   land in r8/sb/sl in that order, where the ROM gives `...14BC` r8.
   Pinning sb/sl moves the loads to the declaration point, and pointer
   locals let gcc hoist the dereferences as well, so neither helps.

@@ -18,7 +18,7 @@
 extern void sub_8008890(void *arg0, s32 arg1, s32 arg2);
 extern struct icon_pos gStaticData_0816B21C[];
 extern void sub_8005E5C(struct pause_screen_results *self, void *label1, void *label2);
-extern s32 sub_803AD80(void *arg0, void *arg1, void *arg2);
+extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern struct icon_manager *gUnknown_030012DC;
 
 static inline void set_icon_mgr_pos(struct icon_manager *m, u32 x, u32 y)
@@ -28,7 +28,7 @@ static inline void set_icon_mgr_pos(struct icon_manager *m, u32 x, u32 y)
 }
 
 /* Draws `label` at the icon manager's current position through its
- * `record->slots[2]` method (a gcc 2.x virtual call; sub_803AD80 is
+ * `record->slots[2]` method (a gcc 2.x virtual call; _call_via_r2 is
  * `_call_via_r2`). Kept as a block macro rather than an inline
  * function: the method's `this` must be computed before the label
  * argument, as in the ROM. */
@@ -36,7 +36,7 @@ static inline void set_icon_mgr_pos(struct icon_manager *m, u32 x, u32 y)
     {                                                                           \
         struct icon_manager *_m = (mgrExpr);                                    \
         struct icon_record *_r = _m->record;                                    \
-        sub_803AD80((u8 *)_m + _r->slots[2].offset, (label), _r->slots[2].ptr); \
+        _call_via_r2((u8 *)_m + _r->slots[2].offset, (label), _r->slots[2].ptr); \
     }
 
 /* Shows whichever of `icons9c[1..4]` has a matching bit set in

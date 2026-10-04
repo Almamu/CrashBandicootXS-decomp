@@ -106,8 +106,8 @@ pixel data resident in VRAM, so repeated frames within a level don't
 re-DMA the same tiles every call.
 
 - **`LoadSpriteFrameTiles`** (0x08028F58) - matched. First tries an
-  optional override hook (`gUnknown_03000870`, called through the
-  `sub_803AD7C` register-trampoline convention); on a genuine cache miss,
+  optional override hook (`gLookupSpriteFrameCacheFunc`, called through the
+  `_call_via_r1` register-trampoline convention); on a genuine cache miss,
   inserts a fresh node at the head of the "this frame" MRU list and
   `AllocVramTileBlock`s the frame's payload, evicting the tail of the
   "last frame" list (freeing its VRAM block, recycling its node) and

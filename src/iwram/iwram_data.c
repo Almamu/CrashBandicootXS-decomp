@@ -37,28 +37,29 @@ extern void DrawMirroredTilemap(u8 *pal, s32 lowBlock, s32 w, s32 h);
 extern void HeapSortActorsByKey(s32 n, void **list);
 extern void UnpackNibbleTiles(void *src, s32 lowBlock);
 
-/* src/system/memory.c's heaps. */
+/* src/system/memory.c's heaps, and their free space right after
+ * mem_heap_init (checked by mem_heap_shutdown). */
 struct mem_heap *mem_iwram_heap_pointer = NULL;
 struct mem_heap *mem_ewram_heap_pointer = NULL;
-int *gUnknown_030007D4 = NULL;
+int *mem_initial_free_bytes = NULL;
 
 /* irq.c: the frame counter the VBlank handler increments, and the
  * frame-rate limiter's enable flag. */
-u32 gUnknown_030007D8 = 0;
-u8 gUnknown_030007DC = 0;
+u32 gVBlankCounter = 0;
+u8 gFrameLimitEnabled = 0;
 /* Set while the music player's per-frame update is installed
  * (music_player.c, audio_context.c). */
 u8 gGaxIrqEnabled = 0;
 
-/* Held keys and newly pressed keys (irq.c's sub_80007AC; the users
+/* Held keys and newly pressed keys (irq.c's UpdateKeys; the users
  * declare it as a pair of u16s or a struct of two). */
 struct {
     u16 held;
     u16 pressed;
-} gUnknown_030007E0 = { 0, 0 };
+} gKeys = { 0, 0 };
 
 /* rand_util.c's seed. */
-u32 gUnknown_030007E4 = 1;
+u32 gRandSeed = 1;
 
 /* fade_util.c's `struct unk_030007E8`: the brightness fade state. */
 struct {
@@ -71,10 +72,12 @@ s32 gUnknown_030007F4 = 0;
 s32 gUnknown_030007F8 = 0;
 u32 gSfxVoiceToggle = 0;
 
-/* Link cable (link_cable*.c, settings_menu*.c). */
+/* Link cable (link_cable*.c, settings_menu*.c): gLinkSession is the
+ * session object the link IRQ handlers work on. gEepromNeedsInit is the
+ * save code's (settings_menu8d.c): set until its first EEPROMConfigure. */
 u8 gUnknown_03000800 = 1;
-void *gUnknown_03000804 = NULL;
-u8 gUnknown_03000808 = 1;
+void *gLinkSession = NULL;
+u8 gEepromNeedsInit = 1;
 void *gUnknown_0300080C = NULL;
 /* The two link compatibility messages, stored after the CRC table
  * (src/data/link_crc_16af10.c): "crash 1 <-> crash 2", "crash 1 <-> crash 3". */
@@ -89,7 +92,7 @@ void *gUnknown_03000828 = NULL;
 u32 gUnknown_0300082C = 0;
 u8 gUnknown_03000830 = 0;
 
-/* The cutscene text of each language, indexed by gUnknown_03000868
+/* The cutscene text of each language, indexed by gLanguage
  * (src/data/cutscenes_16d1c8.c, graphics_loading_22354.c). */
 extern const struct cutscene_page *const gCutsceneTextEnglish[11];
 extern const struct cutscene_page *const gCutsceneTextFrench[11];
@@ -109,8 +112,8 @@ const struct cutscene_page *const *gCutsceneTexts[6] = {
 void *gLevelLayersSingleton = NULL; /* struct level_layers * */
 
 /* Per-language string tables (main_loop.c indexes them by
- * gUnknown_03000868), src/data/ui_text_172cd4.c. */
-const u8 *const *gUnknown_03000850[6] = {
+ * gLanguage), src/data/ui_text_172cd4.c. */
+const u8 *const *gUiTextTables[6] = {
     gUiTextEnglish,
     gUiTextFrench,
     gUiTextGerman,
@@ -121,20 +124,20 @@ const u8 *const *gUnknown_03000850[6] = {
 
 /* The language, 0-5 (English, French, German, Spanish, Italian, Dutch);
  * main_loop.c sets it at boot. */
-s32 gUnknown_03000868 = 3;
+s32 gLanguage = 3;
 s32 gUnknown_0300086C = 0;
 
 /* Hooks into the ARM code (see sprite_arm.c). */
-s32 (*gUnknown_03000870)(u8 *frame) = LookupSpriteFrameCache;
-void (*gUnknown_03000874)(void *dst, u8 *frame) = UnpackRleSpriteFrame;
+s32 (*gLookupSpriteFrameCacheFunc)(u8 *frame) = LookupSpriteFrameCache;
+void (*gUnpackRleSpriteFrameFunc)(void *dst, u8 *frame) = UnpackRleSpriteFrame;
 s32 gUnknown_03000878 = 0;
-void (*gUnknown_0300087C)(u8 *pal, s32 lowBlock, s32 w, s32 h) = DrawMirroredTilemap;
-void (*gUnknown_03000880)(s32 n, void **list) = HeapSortActorsByKey;
+void (*gDrawMirroredTilemapFunc)(u8 *pal, s32 lowBlock, s32 w, s32 h) = DrawMirroredTilemap;
+void (*gHeapSortActorsByKeyFunc)(s32 n, void **list) = HeapSortActorsByKey;
 void *gUnknown_03000884 = NULL;
 s32 gUnknown_03000888 = 0;
 /* Speeds, indexed by sub_802A570 (actor_part126.c). */
 s32 gUnknown_0300088C[3] = { 0x40, 0x62, 0x95 };
-void (*gUnknown_03000898)(void *src, s32 lowBlock) = UnpackNibbleTiles;
+void (*gUnpackNibbleTilesFunc)(void *src, s32 lowBlock) = UnpackNibbleTiles;
 /* Speeds, indexed by sub_802A570 (actor_part_2fbf0.c). */
 s32 gUnknown_0300089C[6] = { 0x1555, 0x1155, 0xD55, 0x955, 0x555, 0x155 };
 

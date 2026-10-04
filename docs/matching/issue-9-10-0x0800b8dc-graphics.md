@@ -87,10 +87,10 @@ floating-text/popup child object, set/cleared by state 18 - same
 **`self+0xC`** is a pointer to a *third* record - a "directional-target
 anchor" struct with **multiple** `{s16 offset, void *table}` pairs at
 different byte offsets, each apparently feeding a different call to
-`sub_803AD80`/`sub_803AD88` depending on which direction/event is being
+`_call_via_r2`/`_call_via_r4` depending on which direction/event is being
 triggered: `sub_800B8DC`'s own state 11 reads the pair at `+0x10`/`+0x14`
-(`sub_803AD88`); `sub_800BD48`'s "spawn/launch" handler (states 19-20)
-reads the pair at `+0x48`/`+0x4C` (`sub_803AD80`). This is the same
+(`_call_via_r4`); `sub_800BD48`'s "spawn/launch" handler (states 19-20)
+reads the pair at `+0x48`/`+0x4C` (`_call_via_r2`). This is the same
 per-record convention as `owner`'s own `0x48`-`0x5C` velocity-target
 triple, just on a separate/shared object rather than `owner` itself -
 not resolved further here (a good next-phase target: nail down how many
@@ -144,13 +144,13 @@ those.
 | 8 | `0x0800BC7C` | `sub_800C244(self)` |
 | 9 | `0x0800BC84` | **Inline.** First-time-only caches `owner->0`/`owner->4` into globals `gUnknown_030012A0`/`gUnknown_030012A8` (guarded by one-shot flags `gUnknown_030012A4`/`gUnknown_030012AC`), calls `sub_800C18C`+`sub_800C8F8`, then **unconditionally** re-syncs `gUnknown_030012A0`/`A8` from `owner`'s *current* position regardless of the guard - the guard only affects the *first* write, every call after still updates the globals at the end. Reads as caching an "original anchor position" once, then continuously publishing the live position too - possibly a camera-anchor/save-restore pair (same "guard only matters once, real work happens every call" shape `docs/rom_map.md` flagged as a possible dead-store oddity in `sub_800CA60`). |
 | 10 | `0x0800BD26` | `sub_800C1E8(self)` |
-| 11 | `0x0800BCD8` | **Inline.** `sub_800C18C(self)` + `sub_800C1E8(self)`, then only if `owner->0xC` bit 3 is set **and** `self->0x6C == 6`: reads `self+0xC`'s anchor record's `+0x10`/`+0x14` pair, calls `sub_803AD88(self + offset, 0, 1, 0)`, then `PlaySfx(ctx, 4, 0x100)`. |
+| 11 | `0x0800BCD8` | **Inline.** `sub_800C18C(self)` + `sub_800C1E8(self)`, then only if `owner->0xC` bit 3 is set **and** `self->0x6C == 6`: reads `self+0xC`'s anchor record's `+0x10`/`+0x14` pair, calls `_call_via_r4(self + offset, 0, 1, 0)`, then `PlaySfx(ctx, 4, 0x100)`. |
 | 12 | `0x0800BD3A` (epilogue) | **No-op**, same as state 1. |
 | 13 | `0x0800BC50` -> falls into state 4's own code | `sub_800C074(self)`; `sub_800C40C(self)` |
 | 14 | `0x0800BC5E` | `sub_800C40C(self)`; `sub_800C97C(self)` |
 | 15 | `0x0800BD20` -> falls into state 10's own code | `sub_800C074(self)`; `sub_800C1E8(self)` |
 | 16 | `0x0800BD2E` | `sub_800C40C(self)`; `sub_800BFA8(self)` |
-| 17 | `0x0800B948` | **Inline, largest block (~200 B).** A "landing/hit" handler: if `owner->4 >= self->0x64`, either nudges via `sub_800C8AC(self,0)`, falls back to `sub_800C5D4(self)`, or - when `owner->0x60 < 0` and a collision probe via `sub_803AD7C(owner + hitboxOffsetY, hitbox->0x2C)` reports no hit - applies a **fixed upward Q8.8 impulse**: `owner->0 = self->0x60`, `owner->4 = self->0x64 - 25600` (i.e. `self->0x64 - 100.0` in Q8.8 - a jump-impulse shape), then sets `owner`'s `0x64`/`0x54`/`0x5C` to `0x80` and `0x58` to the probe result, plus `owner->0xC` bit 4. Every path then falls into a **shared tail** (`0x0800B9D2`-`0x0800BA0C`, exclusive to this state): if `owner->0x30` or `owner->0x34` is non-zero, return; otherwise run a second `sub_803AD7C` probe on the same hitbox and, if it reports a hit, `PlaySfx(ctx, 0x13, 0x100)`. |
+| 17 | `0x0800B948` | **Inline, largest block (~200 B).** A "landing/hit" handler: if `owner->4 >= self->0x64`, either nudges via `sub_800C8AC(self,0)`, falls back to `sub_800C5D4(self)`, or - when `owner->0x60 < 0` and a collision probe via `_call_via_r1(owner + hitboxOffsetY, hitbox->0x2C)` reports no hit - applies a **fixed upward Q8.8 impulse**: `owner->0 = self->0x60`, `owner->4 = self->0x64 - 25600` (i.e. `self->0x64 - 100.0` in Q8.8 - a jump-impulse shape), then sets `owner`'s `0x64`/`0x54`/`0x5C` to `0x80` and `0x58` to the probe result, plus `owner->0xC` bit 4. Every path then falls into a **shared tail** (`0x0800B9D2`-`0x0800BA0C`, exclusive to this state): if `owner->0x30` or `owner->0x34` is non-zero, return; otherwise run a second `_call_via_r1` probe on the same hitbox and, if it reports a hit, `PlaySfx(ctx, 0x13, 0x100)`. |
 | 18 | `0x0800BAB2` | **Inline, 2nd-largest block (~400 B).** Computes `max(|ownerX - cameraX|, |ownerY - cameraY|)` against `gUnknown_030012D8` (the player/camera pointer), clamps to `[0x20, 0xA0]`, and derives a volume (`0x100 - (clamped-0x20)*2`) for a **distance-scaled ambient sound**: `PlayAmbientSfx(ctx, 0x2B, 8, volume)`. If `owner->0x38` and `self->0x68 == 3`: spawns/updates a floating popup object via `sub_800C9C8(0x1D, 0, 0, 0x2B, 0, owner)` into `self->0x88`, tags it, and `PlaySfx(ctx, 0x12, 0x100)`. Else if `owner->0x38` and `self->0x68 == 5`: runs the "flag active + bitmap-set" idiom on `self->0x88`'s object (if set) then clears `self->0x88`. Always calls `sub_800C074(self)`+`sub_800C40C(self)`. Then, on `self->0x68 == 1` or `== 6`, sets `owner->0x28`'s mirror-flag bit from `owner`'s own X-sign-flag test and calls a `sub_800C8CC`/`sub_800C8BC` pair (state 6's variant additionally re-derives `owner->0x30` from a keyframe-record byte). Tail: if `self->0x88` is non-null, copies `owner->0` into it. Reads overall as a **"proximity growl/warning + optional floating hint text"** state. |
 
 **No-op states worth flagging for the next phase**: states 1 and 12
@@ -212,17 +212,17 @@ allocates a `0x10`-byte object (`sub_8026EDC`), passes it straight
 through to `sub_800CBD4()` (no other args set - the allocation's own
 pointer is still live in `r0`), stores the result into `owner->0x44`,
 then reads that new child's own `+0xC`-pointed record's `+0x18`/`+0x1C`
-pair and calls `sub_803AD80` with it (the directional-target-table
+pair and calls `_call_via_r2` with it (the directional-target-table
 trigger convention again). Clears `owner->0xC` bit 7. Compares
 `owner->0` against `gUnknown_030012D8`'s own X position and picks one
 of two **opposite-signed** velocity-target constant sets for
 `owner->0x60`/`0x48`/`0x4C`/`0x50` (`+0x1000`/`0`/`+0x1800` vs.
 `-0x1000`/`0`/`-0x800`) - reads as **launching the child away from the
 player**, direction chosen by which side the player is on. Adds a small
-`sub_8000E1C(3)`-derived randomized offset into `owner`'s Y
+`RandRange(3)`-derived randomized offset into `owner`'s Y
 velocity-target triple, clears `owner->0xC` bit 2, `PlaySfx(ctx, 5,
 0x80)`, then (unconditionally, since `self` is never actually null in
-practice) fires a *second* `sub_803AD80` using `self+0xC`'s anchor
+practice) fires a *second* `_call_via_r2` using `self+0xC`'s anchor
 record's `+0x48`/`+0x4C` pair with submode `3`. Reads overall as a
 **"detach and launch a fragment/projectile away from the player"**
 event - a strong candidate for "object breaks/explodes, spawn debris"
@@ -234,7 +234,7 @@ variants).
 **Grouping for the next phase**: `sub_800BD48` is much shallower than
 `sub_800B8DC` - only two real code paths (`0x0800BF2C`,
 `0x0800BE80`) plus the shared prelude and a 17-state no-op majority.
-`sub_800CBD4`, `sub_803AD80`'s exact record layout, and
+`sub_800CBD4`, `_call_via_r2`'s exact record layout, and
 `gEntitySpawner`'s own object shape are the best next targets to
 fully resolve this function's remaining ambiguity (`sub_800CBD4`'s
 own argument count in particular is unconfirmed - the call site sets no
@@ -249,7 +249,7 @@ All `(self, ...)`-shaped, still fully raw in `asm/code_3_2_17_bfa8.s`:
   **`sub_800C244`** - each independently dispatches on `self+0x68`
   (3-7 cases apiece) with its own further calls to
   `sub_800C8AC`/`sub_800C8BC`/`sub_800C8CC` and occasional
-  `PlaySfx`/`sub_803AE4C` (a "close enough" scalar-distance check, used
+  `PlaySfx`/`__modsi3` (a "close enough" scalar-distance check, used
   repeatedly). `sub_800C40C` is the specific function
   `docs/rom_map.md` already flagged as sharing `sub_800B8DC`'s own
   `self+0x68` field.
@@ -400,7 +400,7 @@ trigger" primitive.** The delegate differs per function:
   `gStaticData_0816B304` table, then reads `self->0xc`'s "anchor"
   pointer (called `part` in `sub_800B704`'s own existing comment) and
   its **`+0x30`/`+0x34`** `{s16 offset, void *fn}` pair, and fires
-  `sub_803AD84(self + offset, owner, tableEntry, fn)`.
+  `_call_via_r3(self + offset, owner, tableEntry, fn)`.
 - **`sub_800C8BC(self, mode)`**: identical shape, `self->0x78 = mode;`
   then `sub_800B838(self, owner, mode)` - the sibling accessor that
   reads the record's **first** word (`+0`) as the type index and the
@@ -410,7 +410,7 @@ trigger" primitive.** The delegate differs per function:
   anchor's **`+0x50`/`+0x54`** pair for the offset/fn, and gets its
   table-entry argument by indexing **`self->0x84`'s own pointer array
   directly by `mode`** (`((void **)self->0x84)[mode]`), then fires the
-  same `sub_803AD84(self + offset, owner, entry, fn)`.
+  same `_call_via_r3(self + offset, owner, entry, fn)`.
 
 ### What this resolves from the Phase 1 doc
 
@@ -477,7 +477,7 @@ object file's own leading alignment.
 Confirmed byte-identical to `baserom.gba` at `0x0800C8AC`-`0x0800C8F8`
 (76 bytes) via the isolated `cpp`/`agbcc`/`as`+`objcopy` pipeline (the
 only differences from a direct ROM slice were exactly the three `bl`
-relocation sites - `sub_800B704`, `sub_800B838`, `sub_803AD84`), plus a
+relocation sites - `sub_800B704`, `sub_800B838`, `_call_via_r3`), plus a
 full clean `rm -rf build && make NON_MATCHING=1 report` (no warnings)
 and `rm -rf build crashbandicootxs.elf crashbandicootxs.gba
 crashbandicootxs.map && make compare` (`crashbandicootxs.gba: La suma
@@ -580,7 +580,7 @@ neighborhood.
   function `docs/rom_map.md` already flagged as sharing `sub_800B8DC`'s
   own `self+0x68` field): the largest and most complex of the four, a
   6-case dispatcher (modes 0, 3, 4, 5; 1/2/anything-else a no-op). Modes
-  0/4 share an "impact distance" gate via `sub_803AE4C` (the
+  0/4 share an "impact distance" gate via `__modsi3` (the
   divide/modulo-style "close enough" scalar primitive) against a
   `gUnknown_0300082C`-relative table indexed by `self->0x30`/`0x34`/
   `0x38`, then consult `self->0x84`'s pointed record (`+0xc` for mode 0,
@@ -953,7 +953,7 @@ it isn't merely convention-sharing, it's the *literal same*
 ("owner"), `self+0xc` ("anchor" record with the same `{s16 offset,
 void *fn}` pairs), `self+0x84` (the per-instance pointer table
 `sub_800C8CC` indexes by mode) - and its case bodies' `bl` targets are
-the *exact same* `sub_800B704`/`sub_800B838`/`sub_803AD84` primitives
+the *exact same* `sub_800B704`/`sub_800B838`/`_call_via_r3` primitives
 already matched for `sub_800C8AC`/`sub_800C8BC`/`sub_800C8CC`
 (`actor_part113.c`, Phase 2). `menu_ui`'s dialog widgets are literal
 instances of the same object type the physics-actor cluster's own
@@ -1143,7 +1143,7 @@ this doc.
   `0xFFFF`, sets bit `other->8 & 0x1f` of word `other->8 >> 5` in the
   `gEntityFlags+0x108` bitmap - the exact idiom `actor_part27c.c`'s
   `sub_8018884` already matches as real C) **three times**, each
-  independently gated: once when a `sub_803AD7C(other + offset, fn)`
+  independently gated: once when a `_call_via_r1(other + offset, fn)`
   hit-probe - reading its `{s16 offset, void *fn}` pair from
   `other->table+0x28`/`+0x2c`, the exact shape
   `src/system/game_loop8.c`'s `sub_802400C` already matches as real C -
@@ -1203,7 +1203,7 @@ constructor templates named above exactly.
 Confirmed byte-identical to `baserom.gba` at `0x0800CBF4`-`0x0800CD00`
 (268 bytes, all five) via the isolated `cpp`/`agbcc`/`as` +
 `objcopy`/`cmp` pipeline (the only differences from a direct ROM slice
-were the `bl sub_803AD7C`/`bl sub_800B8A8`/`bl sub_800B8C8`/
+were the `bl _call_via_r1`/`bl sub_800B8A8`/`bl sub_800B8C8`/
 `bl nullsub_3` relocation sites and the `gEntityFlags`/
 `gStaticData_087E400C` literal-pool addresses - both expected, resolving
 correctly once linked), plus a full clean `rm -rf build && make
@@ -1243,10 +1243,10 @@ not yet examined." It's called exactly once, from `sub_800B8DC` state
 
 ### Shape
 
-A small `self+0x68`-keyed dispatcher, gated by a `sub_803AE4C` "close
+A small `self+0x68`-keyed dispatcher, gated by a `__modsi3` "close
 enough" scalar check - the same primitive `sub_800C40C`'s own case 3/4
 use, but here against `gUnknown_0300082C` read as a **plain word**
-(`sub_803AE4C(gUnknown_0300082C + self->0x48 - self->0x4c,
+(`__modsi3(gUnknown_0300082C + self->0x48 - self->0x4c,
 self->0x48)`), not the table-base-pointer role `sub_800C40C` uses that
 same still-unexplained global in. This is a fourth confirmed
 "multi-shaped" site for `gUnknown_0300082C` (joining the "plain word"
@@ -1376,7 +1376,7 @@ idiom already matched elsewhere in this cluster:
   `sub_800C8F8`/`sub_800C940`/`sub_800C97C` (`actor_part116.c`) already
   consume.
 - **`sub_800CA9C(self, a, b)`**: `self->0x48/0x4c` setter - the exact
-  fields `sub_800BFA8`'s (`actor_part121.c`) own `sub_803AE4C` "close
+  fields `sub_800BFA8`'s (`actor_part121.c`) own `__modsi3` "close
   enough" gate reads.
 - **`sub_800CAA4(self, a, b, c)`**: `self->0x30/0x34/0x38` setter - the
   "blocking condition" pair plus "enabled" byte the Phase 1 doc's field
@@ -1392,10 +1392,10 @@ idiom already matched elsewhere in this cluster:
   already names.
 - **`sub_800CACC(self)`**: if `self`'s own X position is within
   `[0xa1,0x18f]` tiles of `gUnknown_030012D8`'s (the player/camera)
-  own X position, runs the same `sub_803AE4C` "close enough" gate
+  own X position, runs the same `__modsi3` "close enough" gate
   `sub_800BFA8` already uses (here against `self->0x20`/`self->0x24`,
   the AABB corners `sub_800CAAC` sets), and on a pass fires
-  `sub_803AD88((void*)0xffff, (u16)selfX, (u16)(self->4>>8), 0)` - the
+  `_call_via_r4((void*)0xffff, (u16)selfX, (u16)(self->4>>8), 0)` - the
   same "directional-target table trigger" primitive `sub_800B8DC`
   state 11 and `sub_800BD48` states 19-20 already call directly. Also
   reads `self->0x1c` (the Y-axis homing bound `sub_800CB60` below
@@ -1415,7 +1415,7 @@ idiom already matched elsewhere in this cluster:
   bound `sub_800C87C`/`sub_800C898` (`actor_part122.c`) already write.
 - **`sub_800CB64(self, other)`**: `self` (the first argument) is never
   read - only `other` matters. Reads `other+0x18`'s own table pointer,
-  fires a `sub_803AD7C` hit-probe against its `+0x28`/`+0x2c`
+  fires a `_call_via_r1` hit-probe against its `+0x28`/`+0x2c`
   `{s16 offset, void *fn}` pair (the same convention
   `src/system/game_loop8.c`'s `sub_802400C` and `actor_part123.c`'s
   `sub_800CBF4` both already read from their own `table+0x28`/`+0x2c`),

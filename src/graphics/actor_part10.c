@@ -16,8 +16,8 @@
  * rigor as any other change here - not attempted opportunistically. */
 
 extern void *gLevelLayers;
-extern s32 sub_803AD80(void *arg0, void *arg1, void *fn);
-extern void *sub_803AD7C(void *arg0, void *fn);
+extern s32 _call_via_r2(void *arg0, void *arg1, void *fn);
+extern void *_call_via_r1(void *arg0, void *fn);
 
 /* Same "extended screen box" filter shape as `sub_800891C`'s own
  * `boxB` pass above (the plain 240x160 GBA screen region, in Q8, at
@@ -65,7 +65,7 @@ void sub_8008C80(void *manager)
             addr = (u8 *)part + offset;
             fn = tbl[6].fn;
 
-            if ((u8)sub_803AD80(addr, box, fn)) {
+            if ((u8)_call_via_r2(addr, box, fn)) {
                 s32 outCount = *(s32 *)((u8 *)manager + 8);
                 void **outArr = *(void ***)((u8 *)manager + 0x10);
 
@@ -77,7 +77,7 @@ void sub_8008C80(void *manager)
 }
 
 /* Fires a `part->table+0x50/0x54`-driven trampoline (constant arg 3)
- * via `sub_803AD80` for every entry in `manager`'s array
+ * via `_call_via_r2` for every entry in `manager`'s array
  * (`manager+0xc` base, `manager+4` count) that isn't already `NULL`,
  * then clears every slot and resets both the count (`manager+4`) and
  * the second array's count (`manager+8`) to 0 - a full teardown of
@@ -99,7 +99,7 @@ void sub_8008CEC(void *manager)
 
             addr = (u8 *)part + offset;
             fn = *(void **)(rec + 4);
-            sub_803AD80(addr, (void *)3, fn);
+            _call_via_r2(addr, (void *)3, fn);
         }
         arrBase = *(void ***)((u8 *)manager + 0xc);
         arrBase[idx] = 0;
@@ -110,7 +110,7 @@ void sub_8008CEC(void *manager)
 
 /* Iterates `manager`'s array (`manager+0x10` base, `manager+8`
  * count): for each `part`, fires a `table+0x48/0x4c`-driven
- * trampoline via `sub_803AD7C` and skips unless the result equals
+ * trampoline via `_call_via_r1` and skips unless the result equals
  * `arg1` (a caller-supplied selector); skips unless `part->flags`
  * bit 2 is set; then fires a *second*, unconditional `table+8/0xc`
  * trampoline (return value discarded). */
@@ -129,7 +129,7 @@ void sub_8008D30(void *manager, s32 arg1)
 
         addr = (u8 *)part + offset;
         fn = *(void **)(rec + 4);
-        result = (s32)sub_803AD7C(addr, fn);
+        result = (s32)_call_via_r1(addr, fn);
 
         if (result != arg1) {
             continue;
@@ -153,7 +153,7 @@ void sub_8008D30(void *manager, s32 arg1)
 
             addr2 = (u8 *)part + offset2;
             fn2 = *(void **)(tbl2 + 0xc);
-            sub_803AD7C(addr2, fn2);
+            _call_via_r1(addr2, fn2);
         }
     }
 }

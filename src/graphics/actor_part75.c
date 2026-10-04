@@ -10,14 +10,14 @@
 extern u8 gStaticData_0817AA8C[];
 extern s32 gUnknown_030014C4;
 extern s32 gUnknown_030014C8;
-extern void *sub_800014C(void *dest, void *src, s32 size);
+extern void *MemCopy32(void *dest, void *src, s32 size);
 
 /* `sub_802D7B0`'s (actor_part74.c) shared AABB-overlap-test tail,
  * factored out as its own function taking `self` explicitly instead of
  * always reading the player global - used by `sub_802D6A0`
  * (actor_part58.c, already matched, called as `sub_802DD9C(self)`)
  * among others. Same 12-byte `{s16 x, y, z, sizeX, sizeY, sizeZ}` record
- * shape and same self-copy-through-`sub_800014C` idiom as `sub_802D7B0`
+ * shape and same self-copy-through-`MemCopy32` idiom as `sub_802D7B0`
  * - see that function's doc comment for the full record-layout writeup.
  * Box A: `gStaticData_0817AA8C` (a record adjacent to `sub_802D7B0`'s
  * own `gStaticData_0817AA98` - literal-pool-verified 0xC bytes apart)
@@ -31,7 +31,7 @@ extern void *sub_800014C(void *dest, void *src, s32 size);
  * Same frame-struct shape as `sub_802D7B0`: A, B and the self box are
  * members of one stack struct so their addresses are rematerialized
  * from sp instead of being kept in callee-saved registers, and only
- * `&f.b` goes through a pointer local across the `sub_800014C` call.
+ * `&f.b` goes through a pointer local across the `MemCopy32` call.
  * Needs old_agbcc (docs/matching/issue-51-54-naked-retry.md). */
 struct box16 {
     s16 x, y, z;
@@ -69,19 +69,16 @@ u8 sub_802DD9C(struct actor_self *self)
     BoxMove(&f.t, self->x >> 8, self->y >> 8, self->z >> 8);
     f.b = f.t;
     b = &f.b;
-    sub_800014C(b, b, sizeof(*b));
+    MemCopy32(b, b, sizeof(*b));
     return BoxOverlap(&f.a, b);
 }
 
 extern u8 gUnknown_030014C0;
-extern void (*gUnknown_03000898)(void *frame, s32 arg);
+extern void (*gUnpackNibbleTilesFunc)(void *frame, s32 arg);
 extern struct actor_self *gUnknown_030014BC;
 extern u8 gUnknown_030014C1;
 extern void sub_802DA68(void);
 extern void sub_802D9A8(void);
-
-/* libgcc's `_call_via_r2` lives at `sub_803AD80` in this ROM. */
-asm(".set _call_via_r2, sub_803AD80\n");
 
 /* The `gUnknown_030014BC` object's own initial VRAM-pattern/DMA setup
  * (called once from `sub_802DFDC`'s constructor, actor_part60.c): sets
@@ -94,7 +91,7 @@ asm(".set _call_via_r2, sub_803AD80\n");
  * 0x80 words, 32-bit transfers). Then clears a third tile
  * (`0x0600BFC0`-`0x0600BFFC`) word-by-word, arms the object
  * (`gUnknown_030014C0 = 1`), passes the object's current frame data
- * (past its 4-byte header) to the `gUnknown_03000898` hook, latches
+ * (past its 4-byte header) to the `gUnpackNibbleTilesFunc` hook, latches
  * `gUnknown_030014C1`, and
  * finally calls `sub_802DA68`/`sub_802D9A8` (actor_part74.c) to prime
  * the gauge's sound/palette state immediately.
@@ -142,7 +139,7 @@ void sub_802DE70(void)
             *(u32 *)p = zero;
     }
     gUnknown_030014C0 = 1;
-    gUnknown_03000898(CurFrame(gUnknown_030014BC) + 4, 1);
+    gUnpackNibbleTilesFunc(CurFrame(gUnknown_030014BC) + 4, 1);
     gUnknown_030014C1 = 1;
     sub_802DA68();
     sub_802D9A8();

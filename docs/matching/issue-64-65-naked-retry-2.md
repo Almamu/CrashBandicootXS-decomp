@@ -61,7 +61,7 @@ left was global-alloc priority:
   exit.
 - The fade loop is a `goto` loop (nothing hoisted) with its own counter.
   Reusing `i` made `i` cross calls and pushed it out of r3.
-- `pressed = gUnknown_030007E0.pressed;` as its own statement gives the
+- `pressed = gKeys.pressed;` as its own statement gives the
   ROM's `ldrh r5` / `add r1, r5, #0`. The `0x210` zero is a local, so it
   is loaded before the `1`.
 - The `register ... asm("r4")` pin on `self` turned out unnecessary.

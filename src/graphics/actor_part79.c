@@ -9,7 +9,7 @@
  * hold pointers to further sub-records, distinct from `struct actor`).
  * `self+0xc` is a per-category table of `{s16 offset; void *fn}` pairs
  * (at least `+0x20`/`+0x24` and `+0x50`/`+0x54` entries known so far)
- * fed through the `sub_803AD80`/`sub_803AD84` trampolines together
+ * fed through the `_call_via_r2`/`_call_via_r3` trampolines together
  * with `self+offset` and `self+0x10` (a "part" sub-object) - the same
  * convention already named in actor_part18.c's doc comments, which
  * this file's functions are siblings of (not ROM-adjacent to them,
@@ -23,8 +23,8 @@ struct AudioContext;
 struct tile_asset_cache;
 
 extern void PlaySfx(struct AudioContext *arg0, s32 sfxId, s32 arg2);
-extern s32 sub_803AD80(void *arg0, void *arg1, void *arg2);
-extern s32 sub_803AD84(void *arg0, void *arg1, void *arg2, void *arg3);
+extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
+extern s32 _call_via_r3(void *arg0, void *arg1, void *arg2, void *arg3);
 extern void sub_8012AF4(void *self);
 extern void LoseLife(void *arg0);
 extern void sub_8006D08(struct tile_asset_cache *self, s32 slot, s32 recordId);
@@ -33,7 +33,7 @@ extern void sub_80087B4(void *part);
 extern void sub_800872C(void *part, u8 val);
 extern void StopSfx(struct AudioContext *self, u32 id);
 extern void sub_8015780(void *self, s32 a, s32 b, s32 c, s32 d);
-extern u8 sub_8000760(void *dummy);
+extern u8 GetDpadDirection(void *dummy);
 
 extern struct AudioContext *gUnknown_030012BC;
 extern void *gLevelState;
@@ -64,11 +64,11 @@ void sub_8012160(void *selfArg, void *arg1)
 
     {
         u8 *off = *(u8 **)(self + 0xc) + 0x50;
-        sub_803AD84(self + *(s16 *)off, *(void **)(self + 0x10), arg1, *(void **)(off + 4));
+        _call_via_r3(self + *(s16 *)off, *(void **)(self + 0x10), arg1, *(void **)(off + 4));
     }
     {
         struct vtable_slot *mgr = *(struct vtable_slot **)(self + 0xc);
-        sub_803AD80(self + mgr[4].delta, (void *)0x1d, mgr[4].fn);
+        _call_via_r2(self + mgr[4].delta, (void *)0x1d, mgr[4].fn);
     }
 
     {
@@ -221,7 +221,7 @@ end:
 s32 sub_80122CC(void *selfArg)
 {
     u8 *self = selfArg;
-    register s32 dpad asm("r3") = sub_8000760(gUnknown_03001304);
+    register s32 dpad asm("r3") = GetDpadDirection(gUnknown_03001304);
     register s32 result asm("r2") = 0;
     s32 type = *(s32 *)(self + 8);
 

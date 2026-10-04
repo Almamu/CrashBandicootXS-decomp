@@ -2,8 +2,6 @@
 #include "actor_self.h"
 #include "box_part.h"
 
-ACTOR_CALL_VIA_ALIASES
-
 typedef void (*part_method3_fn)(void *self, s32 a, s32 b, s32 c);
 
 struct game_state {

@@ -400,13 +400,13 @@ extern struct sprite_frame_cache_node gUnknown_03001364; /* "last frame" evictio
 extern struct sprite_frame_cache_node *gUnknown_03001374; /* spare-record stack head */
 extern struct sprite_frame_cache_node *gUnknown_03001378; /* pool base */
 
-extern void *gUnknown_03000870; /* optional frame-source override hook (called via sub_803AD7C) */
-extern void *sub_803AD7C(void *arg0, void *fn);
+extern void *gLookupSpriteFrameCacheFunc; /* optional frame-source override hook (called via _call_via_r1) */
+extern void *_call_via_r1(void *arg0, void *fn);
 
 /* ROM 0x08028F58 - resolves one animation frame's tile data into VRAM,
  * returning its OBJ tile index (`GET_TILE_NUM`-shaped, ready to OR
  * into an OAM attr2). First tries an optional override hook
- * (`gUnknown_03000870`, called through the `sub_803AD7C` trampoline
+ * (`gLookupSpriteFrameCacheFunc`, called through the `_call_via_r1` trampoline
  * convention - see src/system/reg_trampolines.c); if that returns
  * anything other than -1, that's used directly. Otherwise inserts a
  * fresh cache node at the head of the "this frame" MRU list
@@ -425,7 +425,7 @@ s32 LoadSpriteFrameTiles(u8 *frame)
     s32 byteCount;
     s32 result;
 
-    result = (s32)sub_803AD7C(frame, gUnknown_03000870);
+    result = (s32)_call_via_r1(frame, gLookupSpriteFrameCacheFunc);
     if (result != -1) {
         return result;
     }

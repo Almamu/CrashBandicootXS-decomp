@@ -91,15 +91,8 @@ extern void sub_8008890(struct sprite *part, s32 dx, s32 dy);
 extern void sub_8008044(struct sprite *part);
 extern void sub_8006D68(void *cache, u8 record);
 extern void sub_8006D84(void *cache, u8 record);
-extern s32 sub_8000E1C(s32 max);
+extern s32 RandRange(s32 max);
 extern void LoadTaggedAsset(void *asset, void *dest);
-
-/* C++ virtual calls: an indirect call through the method table, which
- * Thumb gcc emits as `bl _call_via_rN`; sub_803AD80 is this ROM's
- * `_call_via_r2` (src/system/reg_trampolines.c). sub_803ADB4 is libgcc's
- * `__divsi3`, reached from plain `/`. */
-asm(".set _call_via_r2, sub_803AD80\n"
-    ".set __divsi3, sub_803ADB4\n");
 
 typedef void (*dtor_fn)(void *self, s32 flags);
 

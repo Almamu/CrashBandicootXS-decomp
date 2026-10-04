@@ -44,9 +44,9 @@ extern u8 *GetAnimFrameData(void *self);
 extern s32 sub_803B060(void *self);
 extern void SetupSpriteFrameOam(u8 *frame, u32 arg1, u32 arg2, s32 priority);
 extern void sub_803B0A8(void *self, s32 idx);
-extern s32 sub_803AD80(void *arg0, s32 arg1, void *arg2);
+extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
 extern void sub_802A7B8(void *self);
-extern s32 sub_803ADB4(s32 dividend, s32 divisor);
+extern s32 __divsi3(s32 dividend, s32 divisor);
 extern s32 sub_8029E98(void);
 extern s32 sub_8029EB4(void);
 extern void sub_8029E34(s32 arg0);
@@ -61,7 +61,7 @@ extern struct actor_pmf gStaticData_0817C450[];
 extern void mem_free(void *ptr);
 extern void sub_8032AF8(void);
 extern void sub_8032B6C(void);
-extern void sub_803AD78(void *fn);
+extern void _call_via_r0(void *fn);
 extern void sub_80330FC(void *tileRow);
 extern void sub_8033550(void);
 extern void sub_8033604(void);
@@ -132,8 +132,6 @@ struct singleton_kind {
 extern struct singleton_kind gStaticData_0817C460[];
 extern s16 gStaticData_0816A820[];
 extern void *gStaticData_0817C4C8[];
-
-ACTOR_CALL_VIA_ALIASES
 
 /* Shared inlines of the singleton system (see sub_80331BC). */
 static inline struct actor_self *AllocActor(u32 size)
@@ -380,8 +378,8 @@ void *sub_8032890(void *selfArg, s32 a, s32 b, s32 c, s32 spawnParam)
         }
         q = sum >> 0xb;
 
-        self->velX = sub_803ADB4(0x1000 - dy, q);
-        self->velY = sub_803ADB4(0x1000 - dx, q);
+        self->velX = __divsi3(0x1000 - dy, q);
+        self->velY = __divsi3(0x1000 - dx, q);
     }
 
     return self;
@@ -514,7 +512,7 @@ void sub_8032A24(void *selfArg)
         struct actor_self *player = gUnknown_03000884;
         struct actor_vtable *table = player->vtable;
 
-        sub_803AD80((u8 *)player + table->m20.thisOffset, 6, table->m20.fn);
+        _call_via_r2((u8 *)player + table->m20.thisOffset, 6, table->m20.fn);
 
         self->base.unk_18 = 4;
         PlaySfx(gUnknown_030012BC, 4, 0x100);
@@ -677,7 +675,7 @@ void sub_8032B6C(void)
     }
 
     sub_8032AF8();
-    sub_803AD78(gStaticData_0817C4C8[gUnknown_030015B0]);
+    _call_via_r0(gStaticData_0817C4C8[gUnknown_030015B0]);
 }
 
 /* Opens the singleton's own camera-follow/scroll-velocity smoothing
@@ -975,7 +973,7 @@ void sub_80331BC(s32 level)
  * around the singleton - the "burst spawn... clustered around the
  * singleton" `docs/rom_map.md` documents. Plain C: the "six live
  * scratch values" blocker wasn't real; the zoom divide is an explicit
- * `sub_803ADB4` call and the record lookup needs the `- -` form below. */
+ * `__divsi3` call and the record lookup needs the `- -` form below. */
 void sub_8033264(s32 kind, s32 x, s32 y, s32 z)
 {
     s32 scale;
@@ -1002,7 +1000,7 @@ void sub_8033264(s32 kind, s32 x, s32 y, s32 z)
     gUnknown_030015FC = 0;
     gUnknown_030015FE = 0;
     gUnknown_030015C8 = gUnknown_030015BC - (sub_8029B2C() << 8);
-    scale = sub_803ADB4(0x1C00000, gUnknown_030015C8);
+    scale = __divsi3(0x1C00000, gUnknown_030015C8);
     gUnknown_030015C0 = (gUnknown_030015B4 * scale) >> 12;
     gUnknown_030015C4 = (scale * gUnknown_030015B8) >> 12;
     sub_8029E34(gUnknown_030015C8);
@@ -1030,7 +1028,7 @@ void sub_8033264(s32 kind, s32 x, s32 y, s32 z)
  * finally, if the (Q8.8-truncated) frame index changed this tick,
  * streams the new tile row through `sub_80330FC` and arms the "apply
  * now" BG2 latch (`gUnknown_0300159C`). The divide is an explicit call
- * to `sub_803ADB4` (the ROM reloads `gUnknown_030015C8` after it, which
+ * to `__divsi3` (the ROM reloads `gUnknown_030015C8` after it, which
  * `/`'s const libcall wouldn't), and the tail reads the singleton
  * through a fresh local - the "4 extra bytes" of the earlier attempt. */
 void sub_8033470(void)
@@ -1050,7 +1048,7 @@ void sub_8033470(void)
             self->animDone = 1;
         }
         gUnknown_030015C8 = gUnknown_030015BC - (sub_8029B2C() << 8);
-        scale = sub_803ADB4(0x1C00000, gUnknown_030015C8);
+        scale = __divsi3(0x1C00000, gUnknown_030015C8);
         gUnknown_030015C0 = (gUnknown_030015B4 * scale) >> 12;
         gUnknown_030015C4 = (scale * gUnknown_030015B8) >> 12;
         sub_8029E34(gUnknown_030015C8);
@@ -1086,7 +1084,7 @@ void sub_8033550(void)
         gUnknown_03001598 ^= 1;
     }
 
-    scale = sub_803ADB4(gUnknown_030015C8 << 8, 0x3c00);
+    scale = __divsi3(gUnknown_030015C8 << 8, 0x3c00);
     dy = gUnknown_030015C0 + sub_8029EB4();
     dx = gUnknown_030015C4 + sub_8029E98();
 

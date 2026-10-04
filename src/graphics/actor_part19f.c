@@ -18,7 +18,7 @@ extern void *gUnknown_030012BC;
 
 extern s32 GetAnimFrameBaseOffset(void *self);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
-extern s32 sub_803AD80(void *arg0, void *arg1, void *arg2);
+extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 
 /* Constant getter - returns `gUnknown_030014A0`. */
 u8 sub_802C264(void)
@@ -52,7 +52,7 @@ void sub_802C270(void *selfArg)
     PlaySfx(gUnknown_030012BC, 0xe, 0x100);
     if (self != 0) {
         struct actor_vtable *table = self->base.vtable;
-        sub_803AD80((u8 *)self + table->m08.thisOffset, (void *)3, table->m08.fn);
+        _call_via_r2((u8 *)self + table->m08.thisOffset, (void *)3, table->m08.fn);
     }
     return;
 

@@ -23,7 +23,7 @@
  *   the halfword `strh`/`ldrh [sp, #0x18]` for the flags), stored in the
  *   first loop's preheader, and keeps the carving loop re-reading
  *   `layout->count` without strength reduction;
- * - both divisions are plain `/` (sub_8037E54 is lib1funcs' `__udivsi3`);
+ * - both divisions are plain `/` (lib1funcs' `__udivsi3`);
  * - index-first `*(i + p->layout->types)` / `*(k + list->layouts)` for
  *   the ROM's `adds rX, rIdx, rBase` operand order;
  * - one counter `i` for the carving loop, the alternative layouts' inner
@@ -45,8 +45,6 @@ struct GaxLayoutList {
 extern struct GaxHandlerLayout gGaxDefaultSong;
 extern struct RateEntry gGaxMixRates[];
 extern s32 GaxFindMixRate(u32 rate);
-
-asm(".set __udivsi3, sub_8037E54");
 
 void GAX2_estimate(struct GaxSongHeader *p)
 {

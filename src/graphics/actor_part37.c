@@ -7,8 +7,6 @@
 extern struct actor_pmf gStaticData_0817C4F8[];
 extern void sub_802A7B8(void *self);
 
-ACTOR_CALL_VIA_ALIASES
-
 /* Per-state member-pointer dispatch, `(this->*gStaticData_0817C4F8
  * [this->state])()` (see `ACTOR_PMF_CALL`), then the standard
  * sub_802A7B8 step unless the state-2 animation has played through. */

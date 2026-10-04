@@ -24,12 +24,12 @@ behavior. This pass worked those three:
   already established by GitHub issue #46's chunk, `include/icon_manager.h`)
   into the scratch object's `+0xc` field; resets the OAM shadow buffer
   (`gUnknown_03001300`, `struct oam_shadow_buffer *`) via
-  `sub_8006A90`/`sub_8006A48`/`sub_80006A8`/`sub_8006AAC`; clears
+  `sub_8006A90`/`sub_8006A48`/`WaitForVBlank`/`sub_8006AAC`; clears
   `REG_BLDCNT`/`REG_BLDALPHA` (one 32-bit store), sets `REG_BLDY` to
   `0x10`, and clears `REG_DISPCNT`; calls `sub_8028A30` (the icon-manager
   accessor from issue #46, `src/graphics/hud_icon_widget4.c`) with `0xe`;
   sets the icon manager's `field_108` to `0x200` and fires its
-  `record->slots[6]` trampoline via `sub_803AD7C` (the same
+  `record->slots[6]` trampoline via `_call_via_r1` (the same
   `(u8 *)obj + slot->offset, slot->ptr` pattern already established
   throughout `src/graphics/actor_part*.c`); DMA3-copies three 0x20-byte
   palette banks (`gStaticData_0817D034`/`_054`/`_074`) into palette RAM
@@ -380,7 +380,7 @@ locals" technique documented for `sub_8006600`'s prologue fix (rather
 than an explicit dummy-register pin, already ruled out for this
 function in the second pass above) and the "explicit pin gets silently
 dropped, but the natural allocator's own choice survives" pattern from
-`sub_803AA08` (`docs/matching/issue-69-eeprom-timer.md`). All work this
+`StartEepromTimer` (`docs/matching/issue-69-eeprom-timer.md`). All work this
 pass was isolated-compile only (`cpp`+`agbcc`+`arm-none-eabi-as`,
 diffed byte-for-byte against a raw `baserom.gba` extract at
 `0x080355E0` via `objdump -d -M force-thumb`); nothing was integrated
@@ -406,7 +406,7 @@ results came out of this:
    Restructuring the remap loop into the ROM's actual instruction shape
    (a `mask` copy into a fresh scratch *before* each raw halfword load,
    not an in-place `mask & src[n]`, matching the operand-order
-   principle from `sub_803AA08`/`sub_803AA90`) plus explicit
+   principle from `StartEepromTimer`/`StopEepromTimer`) plus explicit
    (non-`r7`) pins for `i`→`r3` and the walk pointer `src`→`r2`
    (matching the ROM's own choice for those, confirmed safe since
    neither survives a call) reproduces the ROM's prologue/epilogue
@@ -504,7 +504,7 @@ at once - each fix for one side consistently regressed the other, via
 mechanisms (the `r9`-promotion pathology, the asm-clobber/push-pop
 blind spot) that aren't fully understood. This is the same flavor of
 stubborn, non-monotonic register-letter permutation already documented
-as unresolved for `sub_8006600`'s second half and `sub_803AAD4`
+as unresolved for `sub_8006600`'s second half and `DMA3Transfer`
 (`docs/matching/issue-69-eeprom-timer.md`) - manual C-level
 restructuring hit a wall in the same way. **Left as-is**: `LoadBg2Background`
 remains the `NAKED` transcription from the second pass (byte-correct,

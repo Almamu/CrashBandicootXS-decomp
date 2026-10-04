@@ -26,11 +26,11 @@ extern void *gUnknown_03001304;
 extern void *gUnknown_0300160C[2];
 extern s32 gUnknown_03001604;
 extern void *gUnknown_03001608;
-extern void (*gUnknown_03000874)(void *dst, u8 *frame);
+extern void (*gUnpackRleSpriteFrameFunc)(void *dst, u8 *frame);
 extern struct held_pressed_pair {
     u16 held;
     u16 pressed;
-} gUnknown_030007E0;
+} gKeys;
 
 extern u8 gStaticData_0817CFA4[];
 extern u8 gStaticData_0817CFF4[];
@@ -45,21 +45,21 @@ extern u8 gStaticData_087E55C4[];
 
 extern void sub_8006A90(struct oam_shadow_buffer *arg0);
 extern void sub_8006A48(struct oam_shadow_buffer *arg0);
-extern void sub_80006A8(void);
+extern void WaitForVBlank(void);
 extern void sub_8006AAC(struct oam_shadow_buffer *arg0);
 extern void sub_8006AC8(struct oam_shadow_buffer *self, void *record);
 extern void sub_8006A78(struct oam_shadow_buffer *arg0);
-extern s32 sub_803ADB4(s32 arg0, s32 arg1);
+extern s32 __divsi3(s32 arg0, s32 arg1);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void sub_8001614(void);
 extern void sub_8001B54(struct AudioContext *self, u32 id);
 extern void sub_8028A30(struct icon_manager *self, u8 val);
-extern s32 sub_8026F38(s32 arg0);
+extern s32 GetUiText(s32 arg0);
 extern void sub_8034688(s32 arg0);
-extern void *sub_803AD7C(void *arg0, void *fn);
-extern s32 sub_803AD80(void *arg0, void *arg1, void *arg2);
+extern void *_call_via_r1(void *arg0, void *fn);
+extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern void sub_80015B0(void);
-extern s32 sub_8000E1C(s32 arg0);
+extern s32 RandRange(s32 arg0);
 extern void *sub_8026EC0(u32 size);
 extern void sub_8026EB4(void *ptr);
 extern void *sub_8026EDC(s32 size);
@@ -79,19 +79,14 @@ extern void AgeSpriteFrameCache(void);
 extern void FreeCategorySpriteSheet(void);
 extern void FlushVramDmaQueue(void);
 extern s32 QueueVramDmaTransfer(void *src, void *dest, u16 size, u16 unit);
-extern void sub_80007AC(void *arg0);
+extern void UpdateKeys(void *arg0);
 extern void sub_8026ED0(void *self);
-extern s32 sub_803AE4C(void *self, s32 arg1);
+extern s32 __modsi3(void *self, s32 arg1);
 extern void sub_80346FC(void *self, s32 arg1);
 extern void InitActorPart(void *self, s32 a, s32 b, s32 c, s32 d);
 extern s32 GetAnimFrameBaseOffset(void *self);
 extern s32 GetSpriteShapeSizeBits(void *self);
 extern void QueueSpriteFrameOam(u32 attr01, u16 attr2, s32 scale);
-
-/* libgcc helpers under this ROM's names: `sub_803ADB4` is `__divsi3`,
- * `sub_803AD80` is `_call_via_r2` (the Thumb indirect-call thunk). */
-asm(".set __divsi3, sub_803ADB4");
-asm(".set _call_via_r2, sub_803AD80");
 
 /* The camera-ish object an actor part reads through `self+0x30`
  * (same shape as actor_part128.c's). */
@@ -146,9 +141,6 @@ struct slot_seed
     struct delta_record *record;
     s32 hold;
 };
-
-/* `sub_803AE4C` is libgcc's `__modsi3`. */
-asm(".set __modsi3, sub_803AE4C");
 
 void sub_8035780(u32 *self);
 void sub_80358A8(u32 *self);
@@ -266,7 +258,7 @@ static inline s32 *DeltaBAt(u32 *self, s32 stride)
 }
 
 /* A 7-branch "cheat code" style detector: gated on
- * `gUnknown_030007E0.held`'s bit 0x100 (R shoulder) - if not held,
+ * `gKeys.held`'s bit 0x100 (R shoulder) - if not held,
  * resets the rolling-hash slot at `self+0x210` to 0 and returns
  * `pressed` unmodified (so the caller can still act on ordinary button
  * presses). If held, folds one of 7 fixed "signature" constants
@@ -307,7 +299,7 @@ static inline void HashInput(u32 *self, u32 val)
 
 u32 sub_8035D1C(u32 *self, u32 pressed)
 {
-    struct held_pressed_pair input = gUnknown_030007E0;
+    struct held_pressed_pair input = gKeys;
 
     if (!(input.held & 0x100))
     {
@@ -341,7 +333,7 @@ u32 sub_8035D1C(u32 *self, u32 pressed)
  * and `self+0x14+i*0x34` countdowns from `gStaticData_0817CFA4`
  * (mirroring `sub_80360DC`'s init shape), then loops `sub_8035780`
  * (slot decay) + `sub_8036068` (per-frame OAM/icon flush) +
- * `sub_8034688` + `sub_80006A8` + `sub_8035F9C` (BG2 affine flush)
+ * `sub_8034688` + `WaitForVBlank` + `sub_8035F9C` (BG2 affine flush)
  * until `self+0x14` (the header's own hold record) drains to 0. Then
  * runs a second phase gated by `sub_8035D1C`'s cheat-detector return
  * value (bits 9/0x40/0x80 firing `PlaySfx` 0x49/0x46/0x46 and
@@ -412,7 +404,7 @@ seedLoop:
         sub_8035780(self);
         sub_8036068(self);
         sub_8034688(self[0x82]);
-        sub_80006A8();
+        WaitForVBlank();
         *(vu32 *)REG_ADDR_BLDCNT = 0;
         sub_8035F9C(self);
     }
@@ -425,8 +417,8 @@ seedLoop:
     {
         sub_8036068(self);
         sub_8034688(self[0x82]);
-        sub_80007AC(gUnknown_03001304);
-        pressed = gUnknown_030007E0.pressed;
+        UpdateKeys(gUnknown_03001304);
+        pressed = gKeys.pressed;
         pressed = sub_8035D1C(self, pressed);
         if (pressed & 9)
         {
@@ -448,13 +440,13 @@ seedLoop:
             self[0]++;
             self[0] = (s32)self[0] % 3;
         }
-        sub_80006A8();
+        WaitForVBlank();
         sub_8035F9C(self);
     }
 fadeLoop:
     sub_8036068(self);
     sub_8034688(self[0x82]);
-    sub_80006A8();
+    WaitForVBlank();
     REG_BLDY = fade;
     REG_BLDCNT = 0xff;
     sub_8035F9C(self);
@@ -497,10 +489,10 @@ void sub_8035F9C(u32 *self)
  * between 0xe/0xf every other call; for `variant != 0` (only ever
  * called with 1/2 by `sub_8036068`), always uses id 0xd. Either way,
  * feeds the resulting icon-manager slot's own position fields (looked
- * up at `self+0xc` + a fixed table offset) through `sub_803AD80` twice
+ * up at `self+0xc` + a fixed table offset) through `_call_via_r2` twice
  * (once for the icon at its own position, once for a second icon
  * `0xf0` px to its right), positioning them from the icon-manager's own
- * anchor record. The two `sub_803AD80` calls are `_call_via_r2`
+ * anchor record. The two `_call_via_r2` calls are
  * virtual calls through the icon manager's `record->slots[0]`/`[2]`
  * entries (same shape as `actor_part_1b85c.c`). */
 
@@ -521,11 +513,11 @@ void sub_8035FEC(u32 *self, s32 text, s32 variant)
         sub_8028A30((struct icon_manager *)self[3], 0xd);
     }
     slot = &((struct icon_manager *)self[3])->record->slots[0];
-    x = (0xf0 - sub_803AD80((u8 *)self[3] + slot->offset, (void *)text, slot->ptr)) >> 1;
+    x = (0xf0 - _call_via_r2((u8 *)self[3] + slot->offset, (void *)text, slot->ptr)) >> 1;
     im = (struct icon_manager *)self[3];
     SetIconPos(im, x, variant * 10 + 0x80);
     slot = &im->record->slots[2];
-    sub_803AD80((u8 *)im + slot->offset, (void *)text, slot->ptr);
+    _call_via_r2((u8 *)im + slot->offset, (void *)text, slot->ptr);
 }
 
 /* Per-frame flush helper: resets the shadow-OAM buffer
@@ -540,9 +532,9 @@ void sub_8036068(u32 *self)
     sub_80358A8(self);
     if (((u8 *)self)[8] != 0)
     {
-        sub_8035FEC(self, sub_8026F38(0x1a), 0);
-        sub_8035FEC(self, sub_8026F38(0x1b), 1);
-        sub_8035FEC(self, sub_8026F38(0x3b), 2);
+        sub_8035FEC(self, GetUiText(0x1a), 0);
+        sub_8035FEC(self, GetUiText(0x1b), 1);
+        sub_8035FEC(self, GetUiText(0x3b), 2);
     }
     sub_8006A48(gUnknown_03001300);
 }
@@ -665,9 +657,6 @@ void sub_8036154(u32 *self, u32 flag)
         sub_8026ED0(self);
 }
 
-/* `sub_803AD7C` is the Thumb `_call_via_r1` thunk. */
-asm(".set _call_via_r1, sub_803AD7C");
-
 /* The part's method table as `sub_80361B0` uses it (gcc 2.x C++
  * {this-adjust, fn} records). */
 struct part_vtable
@@ -745,7 +734,7 @@ void sub_80361B0(u32 *self)
         {
             *(vu32 *)REG_ADDR_BLDCNT = 0;
         }
-        sub_80006A8();
+        WaitForVBlank();
         sub_8034688((s32)bgObj);
     }
     PlaySfx(gUnknown_030012BC, 0x4b, 0x100);
@@ -757,13 +746,13 @@ void sub_80361B0(u32 *self)
         s32 v;
         s32 q;
 
-        sub_80007AC(gUnknown_03001304);
-        if (gUnknown_030007E0.pressed & 9)
+        UpdateKeys(gUnknown_03001304);
+        if (gKeys.pressed & 9)
         {
             if (SLOT_SYSTEM(self)->fade > 0x40)
                 SLOT_SYSTEM(self)->fade = 0x40;
         }
-        sub_80006A8();
+        WaitForVBlank();
         sub_8001614();
         fade = &SLOT_SYSTEM(self)->fade;
         if (*fade != -1)
@@ -817,8 +806,8 @@ void sub_80361B0(u32 *self)
         s32 *fade;
         register s32 v asm("r1");
 
-        sub_80007AC(gUnknown_03001304);
-        if (gUnknown_030007E0.pressed & 9)
+        UpdateKeys(gUnknown_03001304);
+        if (gKeys.pressed & 9)
         {
             if (SLOT_SYSTEM(self)->timer > 0)
                 SLOT_SYSTEM(self)->timer = 1;
@@ -836,7 +825,7 @@ void sub_80361B0(u32 *self)
         sub_8036668(self);
         sub_803686C(SLOT_SYSTEM(self));
         sub_8034688((s32)bgObj);
-        sub_80006A8();
+        WaitForVBlank();
         fade = &SLOT_SYSTEM(self)->fade;
         v = *fade;
         if (v > 0x10)

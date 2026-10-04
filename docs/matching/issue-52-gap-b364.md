@@ -79,19 +79,19 @@ at `self+0xc`, an anim-frame halfword/byte pair at `self+0x10`/
   the whole function's epilogue: explicit `goto tail;`/`goto gated;`/
   `goto join;` labels reproduce the ROM's exact three-way branch order
   (skip-reset fallthrough / `self+0xc != 0` reset inlined then jumping
-  past / `sub_8000E1C`-gated pair sharing one physical anim-frame-
+  past / `RandRange`-gated pair sharing one physical anim-frame-
   refresh tail) instead of a nested if/else-if this compiler reordered
-  differently. The two `gUnknown_030007E0`-gated one-shot transitions
+  differently. The two `gKeys`-gated one-shot transitions
   in the shared tail needed one more fix beyond the established
-  "materialize sibling constants" idiom: `gUnknown_030007E0.pressed`'s
+  "materialize sibling constants" idiom: `gKeys.pressed`'s
   bit-0 test had to read the struct's base address into its own local
   *before* materializing the `1` test-mask constant (`register struct
-  held_pressed_pair *addr asm("r5") = &gUnknown_030007E0;` declared
+  held_pressed_pair *addr asm("r5") = &gKeys;` declared
   before `register s32 bit1 asm("r0") = 1;`), matching the ROM's
-  `ldr r5, =gUnknown_030007E0` / `movs r0, #1` order - the reverse
+  `ldr r5, =gKeys` / `movs r0, #1` order - the reverse
   order compiles fine but swaps those two instructions. That same `r5`
   address local is then reused (as a plain `u32` read through it) for
-  the second transition's `gUnknown_030007E0` bit-1 test, matching the
+  the second transition's `gKeys` bit-1 test, matching the
   ROM's own reload-free reuse of `r5` there.
 
 ## Parked - NAKED transcription (byte-correct, not decompiled)
@@ -112,13 +112,13 @@ same approach this project has used for other large NAKED batches.
   `docs/rom_map.md` already flagged. Tail-calls `sub_802BC68` first,
   then drives a `gStaticData_0817A6B8` stride-8 keyframe-table lookup
   (the same categorical r7-hazard shape already NAKED-parked elsewhere,
-  e.g. `sub_802C208`) feeding a `sub_803AD84` trampoline dispatch,
-  followed by a `gUnknown_030007E0` input-gated position-easing block.
+  e.g. `sub_802C208`) feeding a `_call_via_r3` trampoline dispatch,
+  followed by a `gKeys` input-gated position-easing block.
   `r5`/`r6`/`r7` each switch roles repeatedly across the whole function.
 - **`sub_802B5B4`** - sprite-frame OAM queuing: computes a keyframe-
   table-driven position offset (with a per-frame interpolation variant
   on a fresh animation transition), applies a shape/priority/palette
-  bitmask, arms a `sub_803AD80` trampoline the first time a new part-
+  bitmask, arms a `_call_via_r2` trampoline the first time a new part-
   table instance is seen, and queues the final OAM entry via
   `QueueSpriteFrameOam`. `r8`/`sb`/`sl` are all simultaneously live
   across the whole function - the same three-high-register shape this
@@ -144,7 +144,7 @@ same approach this project has used for other large NAKED batches.
   its own ROM-chosen register (`r0`) across several stores rather than
   being copied to a fresh one, which this compiler did unprompted.
 - **`sub_802BA5C`**/**`sub_802BAD0`** - camera catch-up accumulate/
-  threshold-reset pair and a `gUnknown_030007E0`-gated one-shot
+  threshold-reset pair and a `gKeys`-gated one-shot
   transition pair, both sharing the same reset idiom as
   `sub_802B730`/`sub_802BB4C`.
 - **`sub_802BBE4`** - on the `self+0x12` edge, resets

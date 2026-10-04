@@ -30,7 +30,7 @@ Still NAKED: `InitActorCategory`, `sub_8029890`, `SelectActorCategory`,
 
 `sub_802A018`, `sub_802A110`, `sub_802A3AC` and `sub_802C7A8` all run
 the same test: copy actor A's `+0x38` box to a stack slot, translate it
-by A's position, copy it to a second slot and run the `sub_800014C`
+by A's position, copy it to a second slot and run the `MemCopy32`
 self-copy, then do the same for actor B, and compare. In the source this
 is one `static inline` (`ActorsOverlap`, in `actor_part103.c` and again
 in `actor_part19h.c`):
@@ -49,11 +49,11 @@ z = pl->z >> 8;
 t = &f.t;
 BoxMove(t, x, y, z);
 f.a = *t;
-sub_800014C(&f.a, &f.a, sizeof(f.a));
+MemCopy32(&f.a, &f.a, sizeof(f.a));
 f.s = *(struct box16 *)self->unk_38;
 BoxMove(&f.s, self->x >> 8, self->y >> 8, self->z >> 8);
 *t = f.s;
-sub_800014C(t, t, sizeof(*t));
+MemCopy32(t, t, sizeof(*t));
 return BoxOverlap(&f.a, t);
 ```
 
@@ -112,7 +112,7 @@ hand-written pointer loop each give a different shape.
 
 ## `sub_80297C8`
 
-`gUnknown_0300087C` is a function pointer, called through
+`gDrawMirroredTilemapFunc` is a function pointer, called through
 `_call_via_r4`. Three changes each fixed one piece of the instruction
 order:
 

@@ -37,7 +37,7 @@ neighborhood - the same fields `actor_part16.c`/`actor_part79.c`/
 
 - `self+0xc` - flags byte (bit 3 cleared at the very end).
 - `self+0x18` - a per-category `{s16 offset; void *fn}` trampoline
-  table pointer, the `sub_803AD7C` convention `actor_part108.c`
+  table pointer, the `_call_via_r1` convention `actor_part108.c`
   documents (`self + *(s16*)(table+N), *(void**)(table+N+4)`).
 - `self+0x20` - a per-tag 28-byte-record table pointer:
   `*(self+0x20) + tag*0x1c`, the exact convention `actor_part79.c`
@@ -79,7 +79,7 @@ chain):
 1. **`mode == 3`** ("just got hit" / stun-entry) - runs a whole block
    skipped entirely for any other mode:
    - Every ~8 frames (`gUnknown_0300082C & 7 == 0`), re-rolls
-     `gUnknown_03000818 = (u16)sub_8000E1C(2) + 2 - (mirrored ? 2 : 0)`
+     `gUnknown_03000818 = (u16)RandRange(2) + 2 - (mirrored ? 2 : 0)`
      - `0`/`1` if `self` is mirrored, `2`/`3` otherwise: which side the
        effect "starts" from, tied to facing.
    - Clamps `gUnknown_03000818` against the **child's own** hitbox/
@@ -98,7 +98,7 @@ chain):
    - Toggles the child's own `+0x2d` tag between `1`/`2` on a 4-frame
      parity of `gUnknown_0300082C` (`&4`) - a flicker - then fires the
      child's own `+0x18`-table `+0x20`/`+0x24` trampoline via
-     `sub_803AD7C` (a "refresh/notify" call, same convention
+     `_call_via_r1` (a "refresh/notify" call, same convention
      `sub_800AAEC` uses at its own `+0x18`-table `+0x48` slot - a
      *different* vtable slot here, `+0x20`/`+0x24`).
 2. **Unconditionally** (any mode, using `self`'s own `self+0x8c`
@@ -127,7 +127,7 @@ chain):
    since only one mode value is active at a time, but structurally
    independent gates):
    - Every ~8 frames (`gUnknown_0300082C & 7 == 0`), random-walks
-     `gUnknown_0300081C += sub_8000E1C(3) - 1` (so `-1`/`0`/`+1`),
+     `gUnknown_0300081C += RandRange(3) - 1` (so `-1`/`0`/`+1`),
      clamped to `[0, 3]`.
    - Clamps `gUnknown_0300081C` against the **same child record's**
      `+0x16` byte (identical clamp-and-store idiom as block 1, just a
@@ -233,7 +233,7 @@ Verified byte-exact via the isolated `cpp`/`agbcc`/`as` +
 `0x0800AFF4`-`0x0800B270` (636 bytes): the standalone-compiled output
 is exactly 636 bytes, and every differing byte (49 of 636) falls
 inside one of the function's `bl` call-site half-word pairs (6 calls:
-`sub_8000E1C` x2, `sub_803AD7C` x2, `sub_8007A84` x1, `SetMaskLevel`
+`RandRange` x2, `_call_via_r1` x2, `sub_8007A84` x1, `SetMaskLevel`
 x1) or a symbol-relocated `.4byte` literal-pool entry (8 of the 11
 pool entries reference RAM-address symbols; the remaining 3 are plain
 numeric constants - `0xFFFFFA00`/`0xFFFFED00`/`0xFFFFE800` - and those

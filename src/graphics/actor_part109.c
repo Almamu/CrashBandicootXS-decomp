@@ -3,7 +3,7 @@
 /* GitHub issue #9/#10: 0x0800CD00, `sub_800AAEC`'s (`actor_part108.c`)
  * only caller/callee companion - `sub_800AAEC` calls this once per
  * `gUnknown_0300130C` list entry whose own `+0x18`-table `+0x48`
- * trampoline (`sub_803AD7C`) reports state `3`, passing that entry as
+ * trampoline (`_call_via_r1`) reports state `3`, passing that entry as
  * `self` and its own `x` (the target "action" index) straight through.
  *
  * Early-outs (returns `0`) when `self+0x4e` (a state/type byte, the

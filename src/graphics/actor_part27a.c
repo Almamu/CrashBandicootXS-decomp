@@ -7,13 +7,13 @@
  * `self` (r4) is the same large per-level "player/action" object this
  * whole object family shares (`self+0xc` per-category table pointer,
  * pairs of `{s16 offset; u8 pad[2]; void *fn}` records read at fixed
- * offsets - 0x20, 0x50, 0x58 here - and fired through `sub_803AD80`/
- * `sub_803AD84`); `other` (r5) is the "part" object passed alongside
+ * offsets - 0x20, 0x50, 0x58 here - and fired through `_call_via_r2`/
+ * `_call_via_r3`); `other` (r5) is the "part" object passed alongside
  * it, with its own analogous table at `other+0x18`. `gUnknown_030012D8`
  * is the player/camera-viewport object (see docs/rom_map.md) - its
  * `+0x104` byte is the "player busy" gate this function's state 0/2
  * paths both check, and its `+0x18`-table feeds two more trampoline
- * calls (a `sub_803AD7C` busy check at STATE1 entry, a `sub_803AD88`
+ * calls (a `_call_via_r1` busy check at STATE1 entry, a `_call_via_r4`
  * call at STATE2's tail).
  *
  * **3-state dispatch on `self+8`** (anything outside 0/1/2 returns
@@ -29,7 +29,7 @@
  *   (skipped - reaching the trampoline pairs directly - unless the
  *   player's `+0x104` gate is set AND its `+0x44`-object's `+8` field
  *   is `!=0x1e`), fires the `0x50`/`0x20`/`0x58`-indexed trampoline
- *   trio, then runs a `sub_803AD7C` "occupied" probe (twice, toggling
+ *   trio, then runs a `_call_via_r1` "occupied" probe (twice, toggling
  *   `self+0x20`'s latch and re-stamping `self+0x1c` from the tick
  *   counter `gUnknown_0300082C` on a transition), a timeout check
  *   (`gUnknown_0300082C - self+0x1c > 0x3c` ticks re-fires
@@ -49,7 +49,7 @@
  *   `0x14`/`0x15`/`0xa` calls `sub_800EEF0(entry, 0)`, otherwise
  *   `sub_8010908(entry, tag)` gates a `sub_800E888(entry, 1)`.
  * - **State 2**: if `other+0x30==8` and `other+0x34==0` and the same
- *   in-bounds Q8 check passes, fires `sub_803AD88` against the
+ *   in-bounds Q8 check passes, fires `_call_via_r4` against the
  *   player's own `+0x18`-table (offset `0x68`) and returns; otherwise
  *   falls through to the shared "activate/deactivate table entry 3"
  *   tail state 0 also reaches.
@@ -69,11 +69,6 @@
  * reload is a guarded do-while, and the sub_8008A40 stack-argument order
  * comes from passing the box by value. See
  * docs/matching/issue-22-0x08018008-hopper.md. */
-
-asm(".set _call_via_r1, sub_803AD7C\n"
-    ".set _call_via_r2, sub_803AD80\n"
-    ".set _call_via_r3, sub_803AD84\n"
-    ".set _call_via_r4, sub_803AD88\n");
 
 struct ab_method
 {

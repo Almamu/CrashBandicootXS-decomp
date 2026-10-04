@@ -1,6 +1,6 @@
-# `sub_8000CBC` converted from NAKED transcription to real matched C
+# `FindSubstring` converted from NAKED transcription to real matched C
 
-`sub_8000CBC` (`src/util/printf_util.c`) had been parked as a
+`FindSubstring` (`src/util/printf_util.c`) had been parked as a
 byte-correct NAKED asm transcription since an early pass - see
 [naked-transcription-parked-functions.md](./naked-transcription-parked-functions.md)
 for the original parking rationale. It's now genuinely matched as real
@@ -128,7 +128,7 @@ sequence with no extra branch - both matching the ROM one-for-one.
 Full clean `rm -rf build && make NON_MATCHING=1 report`, `objdiff-cli
 report generate` (no symbol-pairing errors), then full clean `rm -rf
 build crashbandicootxs.elf crashbandicootxs.gba crashbandicootxs.map &&
-make compare` - `crashbandicootxs.gba: La suma coincide`. `sub_8000CBC`
+make compare` - `crashbandicootxs.gba: La suma coincide`. `FindSubstring`
 is folded into the same `src/util/printf_util.o` unit as the
-already-matched `sub_8000AA8`/`sub_8000CA8` in `tools/report_units.py`,
+already-matched `vsprintf`/`sprintf` in `tools/report_units.py`,
 since it's the same object file.

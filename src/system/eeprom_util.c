@@ -1,7 +1,7 @@
 #include "core.h"
 
 /* A DMA3 bit-serial GBA EEPROM save-chip read/write pair, sitting
- * right after the DMA3 transfer helper `sub_803AAD4`
+ * right after the DMA3 transfer helper `DMA3Transfer`
  * (src/system/timer_util_aa90.c) and before the matched verify/retry
  * pair in src/system/eeprom_verify.c. See
  * docs/matching/issue-69-eeprom-timer.md and
@@ -23,20 +23,20 @@
  * slot matters to the hardware. */
 
 struct EepromConfig {
-    u32 unk0;
+    u32 size;
     u16 maxCount;
     u16 waitcntBits;
     u8 addrBitCount;
     u8 pad[3];
 };
 
-extern struct EepromConfig *gUnknown_03001634;
-extern u8 gUnknown_03001624;
-extern u16 gStaticData_085A9F10[];
+extern struct EepromConfig *gEepromConfig;
+extern u8 gEepromTimeoutFlag;
+extern u16 gEepromMaxTime[];
 
-extern void sub_803AA08(u16 *arg0);
-extern void sub_803AA90(void);
-extern void sub_803AAD4(const void *src, void *dst, u16 count);
+extern void StartEepromTimer(u16 *arg0);
+extern void StopEepromTimer(void);
+extern void DMA3Transfer(const void *src, void *dst, u16 count);
 
 /* The EEPROM's memory window; reading it returns the chip's ready bit. */
 #define EEPROM_PORT ((u16 *)0x0D000000)
@@ -45,29 +45,29 @@ extern void sub_803AAD4(const void *src, void *dst, u16 count);
 /* SDK EEPROMRead: reads one 8-byte (64-bit) block at `address` into
  * `data[0..3]`. Returns 0x80FF if `address` is out of range for the
  * selected chip. */
-s32 sub_803AB54(u16 address, u16 *data)
+s32 EEPROMRead(u16 address, u16 *data)
 {
     u16 buffer[0x44];
     u16 *ptr;
     u8 t1, t2;
     u16 value;
 
-    if (address >= gUnknown_03001634->maxCount) {
+    if (address >= gEepromConfig->maxCount) {
         return 0x80FF;
     } else {
         /* The byte-offset spelling (address bits + 1, then + 1) is what
          * reproduces the ROM's `lsl; add sp; add #2` order;
          * `&buffer[n + 1]` is 1-3 halfwords off. */
-        ptr = (u16 *)((u8 *)buffer + ((gUnknown_03001634->addrBitCount << 1) + 1) + 1);
-        for (t1 = 0; t1 < gUnknown_03001634->addrBitCount; t1++) {
+        ptr = (u16 *)((u8 *)buffer + ((gEepromConfig->addrBitCount << 1) + 1) + 1);
+        for (t1 = 0; t1 < gEepromConfig->addrBitCount; t1++) {
             *(ptr--) = address;
             address >>= 1;
         }
         /* read request "11" */
         *(ptr--) = 1;
         *ptr = 1;
-        sub_803AAD4(buffer, EEPROM_PORT, gUnknown_03001634->addrBitCount + 3);
-        sub_803AAD4(EEPROM_PORT, buffer, 0x44);
+        DMA3Transfer(buffer, EEPROM_PORT, gEepromConfig->addrBitCount + 3);
+        DMA3Transfer(EEPROM_PORT, buffer, 0x44);
         /* skip the 4 dummy bits, unpack 4 words MSB first */
         ptr = buffer + 4;
         data += 3;
@@ -85,13 +85,13 @@ s32 sub_803AB54(u16 address, u16 *data)
 
 /* SDK EEPROMWrite (V122, timer-watchdog version): writes one 8-byte
  * block `data[0..3]` to EEPROM at `address`, then arms the watchdog
- * timer (`sub_803AA08` = StartEepromTimer with the
- * `gStaticData_085A9F10` timeout table) and busy-waits for the chip's
+ * timer (`StartEepromTimer` with the
+ * `gEepromMaxTime` timeout table) and busy-waits for the chip's
  * ready bit until either it goes ready or the timer's IRQ handler sets
- * the timeout flag `gUnknown_03001624`, stopping the timer
- * (`sub_803AA90`) either way. Returns 0x80FF if `address` is out of
+ * the timeout flag `gEepromTimeoutFlag`, stopping the timer
+ * (`StopEepromTimer`) either way. Returns 0x80FF if `address` is out of
  * range, 0xC001 on a timeout. */
-s32 sub_803AC04(u16 address, u16 *data)
+s32 EEPROMWrite(u16 address, u16 *data)
 {
     u16 buffer[0x52];
     u16 ret;
@@ -99,12 +99,12 @@ s32 sub_803AC04(u16 address, u16 *data)
     u8 i, j;
     u16 *ptr;
 
-    if (address >= gUnknown_03001634->maxCount)
+    if (address >= gEepromConfig->maxCount)
         return 0x80FF;
 
     /* Same byte-offset spelling as TMC's reconstruction: it gives the
      * ROM's `lsl; add sp; add #0x84` order. */
-    ptr = (u16 *)(0x42 + (u32)buffer + (u32)(gUnknown_03001634->addrBitCount * 2) + 0x42);
+    ptr = (u16 *)(0x42 + (u32)buffer + (u32)(gEepromConfig->addrBitCount * 2) + 0x42);
     /* stop bit */
     *ptr-- = 0;
     for (i = 0; i < 4; i++) {
@@ -115,7 +115,7 @@ s32 sub_803AC04(u16 address, u16 *data)
             bits = bits >> 1;
         }
     }
-    for (i = 0; i < gUnknown_03001634->addrBitCount; i++) {
+    for (i = 0; i < gEepromConfig->addrBitCount; i++) {
         *ptr = address;
         ptr--;
         address = address >> 1;
@@ -123,19 +123,19 @@ s32 sub_803AC04(u16 address, u16 *data)
     /* write request "10" */
     *ptr-- = 0;
     *ptr-- = 1;
-    sub_803AAD4(buffer, EEPROM_PORT, gUnknown_03001634->addrBitCount + 0x43);
-    sub_803AA08(gStaticData_085A9F10);
+    DMA3Transfer(buffer, EEPROM_PORT, gEepromConfig->addrBitCount + 0x43);
+    StartEepromTimer(gEepromMaxTime);
     ret = 0;
     while (1) {
         if (REG_EEPROM & 1)
             break;
-        if (gUnknown_03001624) {
+        if (gEepromTimeoutFlag) {
             if (REG_EEPROM & 1)
                 break;
             ret = 0xC001;
             break;
         }
     }
-    sub_803AA90();
+    StopEepromTimer();
     return ret;
 }

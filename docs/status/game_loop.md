@@ -25,7 +25,7 @@ system from "core" system startup/init code.
   `game_loop`): `MainLoop` - the game's actual top-level loop (called
   once from `AgbMain`, sets up the central per-level state object and
   the on-screen counter widget, then runs `UpdateGameFrame` forever) -
-  and `sub_8026F38`, a two-level per-counter-widget-mode table lookup
+  and `GetUiText`, the UI string lookup in the current language
 - `src/system/game_loop2.c`: `sub_8022FEC`, `sub_802306C`, `sub_8023104`,
   `sub_8023110`, `sub_8023118`, `sub_8023120`, `sub_8023128`,
   `sub_8023130`, `sub_8023138`, `sub_8023140`, `sub_802314C`,
@@ -673,7 +673,7 @@ plain C didn't converge.
   `sub_800C8BC` cache `mode` into `self+0x7c`/`self+0x78` and delegate
   to the already-matched `sub_800B704`/`sub_800B838`
   (`actor_part17.c`); `sub_800C8CC` caches into `self+0x68` and fires
-  `sub_803AD84` directly, indexing `self+0x84`'s own pointer array by
+  `_call_via_r3` directly, indexing `self+0x84`'s own pointer array by
   `mode` rather than going through the shared `gStaticData_0816B304`
   table the other two use. See
   [docs/matching/issue-9-10-0x0800b8dc-graphics.md](../matching/issue-9-10-0x0800b8dc-graphics.md)'s
@@ -733,7 +733,7 @@ plain C didn't converge.
   final piece of the `0x0800B8DC`-cluster investigation, closing out
   the entire 43-function cluster). `sub_800CBF4` (NAKED) inlines the
   "flag active + bitmap-set" idiom (`actor_part27c.c`'s `sub_8018884`)
-  three times over, each independently gated (a `sub_803AD7C` hit-probe
+  three times over, each independently gated (a `_call_via_r1` hit-probe
   reporting no hit, a flags-bit-3 test, and a `+0x38` byte test).
   `nullsub_15`/`nullsub_3` are genuine empty stubs, matched as real C.
   `sub_800CCCC`/`sub_800CCE0` (both real C) are two more constructors in
@@ -750,7 +750,7 @@ plain C didn't converge.
   issue #9/#10) - the last raw function in the cluster's own
   `asm/code_3_2_17_bfa8.s` chunk, called only from `sub_800B8DC` state
   15. A small `self+0x68`-keyed 2-way dispatcher gated by a
-  `sub_803AE4C` "close enough" check against `gUnknown_0300082C` (here
+  `__modsi3` "close enough" check against `gUnknown_0300082C` (here
   read as a plain word, not the table-base-pointer role `sub_800C40C`
   uses it in) plus `self->0x48`/`self->0x4c`; on pass, triggers
   `sub_800C8CC(self,2)`/`sub_800C8CC(self,7)` for `self->0x68==0`/`4`.
@@ -830,7 +830,7 @@ plain C didn't converge.
   `self+0x30`'s index via the same `self+0x20`/`self+0x2d`-tag/
   0x1c-stride hitbox-record clamp `sub_8010480` (`game_loop35.c`)
   uses and settles state 6/3, or otherwise re-triggers `sub_800F798`;
-  finally hands off to the `sub_803AD7C` table-trampoline convention
+  finally hands off to the `_call_via_r1` table-trampoline convention
   `sub_8007048`/`sub_80070D4` (`graphics.c`) establish. A plain-C
   attempt (the same register-pin-per-nested-scope technique that
   matched `sub_8010480`'s near-identical hitbox-record clamp) matched
@@ -897,7 +897,7 @@ plain C didn't converge.
   `sub_8011388` sets an adjacent still-unexamined byte, `sub_8011248` is
   the per-frame orbit-position update (two lookups into the shared sine
   table `gStaticData_0816A820` at different strides, combined via the
-  overflow-avoiding fixed-point multiply `sub_80008FC`), `sub_8011330`
+  overflow-avoiding fixed-point multiply `FixedMul`), `sub_8011330`
   fires a `self->table`-driven hit trampoline once "spawned"
   (`self+0x48 == 0`) and a player flag is set, `sub_80112C4` re-derives
   visibility from a `sub_8007A84`/`self+0x38` gate, `sub_80112F4`/
@@ -964,7 +964,7 @@ plain C didn't converge.
   bit-test idiom verbatim with `sub_8011390` (`game_loop52.c`).
   `sub_8010EAC`/`sub_80111B8` (both real C) are two more members of the
   "randomized/fixed `(dx,dy)` offset, `PlaySfx`, `sub_8007174`,
-  `-sub_80008F0(...)` distance-pair" tail shape already documented for
+  `-FixedDiv(...)` distance-pair" tail shape already documented for
   `sub_8011448`/`sub_8011870` (`game_loop53.c`) - unlike those two,
   both closed as real C this time, needing a handful of register-pinned/
   opaque-materialization fixes (forced constant-first evaluation order

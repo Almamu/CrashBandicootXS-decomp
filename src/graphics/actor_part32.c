@@ -23,7 +23,7 @@ extern u8 gStaticData_087E54E4[];
 
 extern void InitActorPart(void *self, s32 a, s32 b, s32 c, s32 d);
 extern void sub_8029E28(s32 arg0);
-extern s32 sub_803AD80(void *arg0, void *arg1, void *fn);
+extern s32 _call_via_r2(void *arg0, void *arg1, void *fn);
 extern s32 sub_8033900(void);
 extern s32 sub_80338F4(void);
 extern s32 sub_80338E8(void);
@@ -74,7 +74,7 @@ void sub_8033BFC(void *selfArg)
         }
         fn = *(void **)(table + 0xc);
 
-        sub_803AD80(addr, (void *)3, fn);
+        _call_via_r2(addr, (void *)3, fn);
     }
 }
 

@@ -1,6 +1,6 @@
-# `sub_80010E0` converted from NAKED transcription to real matched C
+# `WaitForKeyPress` converted from NAKED transcription to real matched C
 
-`sub_80010E0` (`src/system/input_util.c`) had been parked as a
+`WaitForKeyPress` (`src/system/input_util.c`) had been parked as a
 byte-correct NAKED asm transcription - see
 [naked-transcription-parked-functions.md](./naked-transcription-parked-functions.md)
 for the original parking rationale. It's now genuinely matched as real
@@ -72,9 +72,9 @@ checkCount:
     if (i >= count) {
         goto done;
     }
-    sub_80006A8();
-    sub_80007AC(gUnknown_03001304);
-    addr = &gUnknown_030007E0;
+    WaitForVBlank();
+    UpdateKeys(gUnknown_03001304);
+    addr = &gKeys;
     asm volatile("add %0, %1, #0" : "=r"(keys) : "r"(mask));
     keys &= *(u16 *)((u8 *)addr + 2);
     if (flagR == 0) {

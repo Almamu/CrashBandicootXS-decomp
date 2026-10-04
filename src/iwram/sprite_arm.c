@@ -4,8 +4,9 @@
  * IWRAM 0x0300024C-0x030007CC (stored in ROM at 0x087E5830): the ARM
  * graphics routines of the IWRAM image crt0 copies to 0x03000000 at boot.
  * The Thumb code calls them through the function pointers in
- * src/iwram/iwram_data.c (gUnknown_03000898, gUnknown_0300087C,
- * gUnknown_03000880, gUnknown_03000874 and gUnknown_03000870).
+ * src/iwram/iwram_data.c (gUnpackNibbleTilesFunc,
+ * gDrawMirroredTilemapFunc, gHeapSortActorsByKeyFunc,
+ * gUnpackRleSpriteFrameFunc and gLookupSpriteFrameCacheFunc).
  *
  * Built as ARM code with agbcc_arm (Makefile ARM_OBJS). UnpackNibbleTiles,
  * DrawMirroredTilemap and UnpackRleSpriteFrame match as plain C.
@@ -21,7 +22,7 @@ static inline u32 ExpandNibble(u32 nibble)
     return nibble ? nibble | 0xF0 : 0;
 }
 
-/* gUnknown_03000898(src, lowBlock): decodes a zero-run-compressed 4bpp
+/* gUnpackNibbleTilesFunc(src, lowBlock): decodes a zero-run-compressed 4bpp
  * picture into 8bpp tiles in BG VRAM (0x06008000 when `lowBlock`, else
  * 0x0600A000; 0x1900 bytes). The stream alternates a u16 count of zero
  * words, filled by DMA3, and a u16 count of literal halfwords, each
@@ -53,7 +54,7 @@ void UnpackNibbleTiles(u16 *src, s32 lowBlock)
     }
 }
 
-/* gUnknown_0300087C(pal, lowBlock, w, h): fills a w x h block of tilemap
+/* gDrawMirroredTilemapFunc(pal, lowBlock, w, h): fills a w x h block of tilemap
  * entries in screen block 30 (`lowBlock`, tiles from 0) or 31 (tiles
  * from 0x100) and mirrors it three times: flipped vertically below it,
  * horizontally to its right (running into the next screen block past
@@ -127,7 +128,7 @@ static inline void SiftDown(struct sort_entry **a, s32 root, s32 n)
     }
 }
 
-/* gUnknown_03000880(n, list): heapsorts `n` actor pointers into
+/* gHeapSortActorsByKeyFunc(n, list): heapsorts `n` actor pointers into
  * ascending order of the u32 at +0x14. Called by actor_part103.c.
  *
  * Parked. Same control flow and the same loads, but the ROM tests each
@@ -304,7 +305,7 @@ struct rle_frame {
     u16 data[0];
 };
 
-/* gUnknown_03000874(dst, frame): unpacks a frame's w*h tiles into `dst`,
+/* gUnpackRleSpriteFrameFunc(dst, frame): unpacks a frame's w*h tiles into `dst`,
  * zero runs with a DMA3 fill and literal runs with a DMA3 copy. Called
  * by actor_part127.c, actor_part128.c and graphics_loading_3686c.c. */
 void UnpackRleSpriteFrame(u16 *dst, struct rle_frame *frame)
@@ -339,7 +340,7 @@ extern struct sprite_frame_cache_node gUnknown_03001364;
 #define OBJ_TILE_INDEX(addr) (((u32)(addr) - (u32)OBJ_VRAM0) >> 5)
 
 #if NON_MATCHING
-/* gUnknown_03000870(frame), LoadSpriteFrameTiles's override hook (see
+/* gLookupSpriteFrameCacheFunc(frame), LoadSpriteFrameTiles's override hook (see
  * sprite_frame_queue.c): returns the OBJ tile index of `frame` if it is
  * already in VRAM, or -1. Hits in this frame's list are returned as they
  * are; a hit in last frame's list is moved to the head of this frame's

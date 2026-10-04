@@ -25,12 +25,12 @@ struct counter_widget {
 extern void *sub_8026EC0(u32 size);
 extern void sub_8026EB4(void *ptr);
 extern void sub_8026ED0(void *self);
-extern void sub_80006A8(void);
+extern void WaitForVBlank(void);
 extern void *gUnknown_03001304;
-extern u16 gUnknown_030007E0;
+extern u16 gKeys;
 extern void *gUnknown_030012BC;
 extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
-extern s32 sub_80007AC(void *arg0);
+extern s32 UpdateKeys(void *arg0);
 extern void sub_8037548(struct counter_widget *self);
 extern void sub_80372BC(struct counter_widget *self);
 extern void sub_8034688(void *arg0);
@@ -117,19 +117,19 @@ s32 sub_80371B4(void)
     gUnknown_030008CC->field_0 = 0;
     gUnknown_030008CC->field_4 = 0;
     sub_80372BC(gUnknown_030008CC);
-    sub_80006A8();
+    WaitForVBlank();
     sub_8037548(gUnknown_030008CC);
 
     while (gUnknown_030008CC->field_4 == 0) {
         u16 keys;
         u16 *addr;
 
-        sub_80007AC(gUnknown_03001304);
-        addr = &gUnknown_030007E0;
+        UpdateKeys(gUnknown_03001304);
+        addr = &gKeys;
         keys = *(u16 *)((u8 *)addr + 2);
         sub_8037224(gUnknown_030008CC, keys);
         sub_80372BC(gUnknown_030008CC);
-        sub_80006A8();
+        WaitForVBlank();
         sub_8037548(gUnknown_030008CC);
         sub_8034688(gUnknown_030008CC->field_10);
     }

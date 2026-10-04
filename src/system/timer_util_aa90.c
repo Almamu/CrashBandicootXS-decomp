@@ -8,38 +8,38 @@
  * -O2 (see the Makefile's O1_OBJS comment and
  * docs/matching/eeprom-sdk-o1.md): both functions below are the SDK's
  * plain C, byte-identical at -O1 with no register pins or volatile
- * tricks. At -O2 `sub_803AAD4`'s duplicated DMA-wait test gets
+ * tricks. At -O2 `DMA3Transfer`'s duplicated DMA-wait test gets
  * cross-jumped into the loop (43 halfwords off), which is what kept it
  * NAKED before.
  *
- * Sits at its own real ROM address (0x0803AA90) after `sub_803AA08`
+ * Sits at its own real ROM address (0x0803AA90) after `StartEepromTimer`
  * (src/system/timer_util.c), so it needs its own translation unit - see
  * docs/workflow.md step 4's "needs its own new .c file" case. */
 
 struct EepromConfig {
-    u32 unk0;
+    u32 size;
     u16 maxCount;
     u16 waitcntBits;
     u8 addrBitCount;
     u8 pad[3];
 };
 
-extern u8 gUnknown_03001620;
-extern vu16 *gUnknown_03001628;
-extern u16 gUnknown_0300162C;
-extern struct EepromConfig *gUnknown_03001634;
+extern u8 gEepromTimerNum;
+extern vu16 *gEepromTimerReg;
+extern u16 gEepromSavedIme;
+extern struct EepromConfig *gEepromConfig;
 
-/* SDK StopEepromTimer: the exact inverse of `sub_803AA08` - stops the
+/* SDK StopEepromTimer: the exact inverse of `StartEepromTimer` - stops the
  * claimed timer (CNT_L then CNT_H through the saved register pointer),
  * disables its IRQ, restores IME. Same shape as pokeemerald's
  * agb_flash `StopFlashTimer`. */
-void sub_803AA90(void)
+void StopEepromTimer(void)
 {
     REG_IME = 0;
-    *gUnknown_03001628++ = 0;
-    *gUnknown_03001628-- = 0;
-    REG_IE &= ~(INTR_FLAG_TIMER0 << gUnknown_03001620);
-    REG_IME = gUnknown_0300162C;
+    *gEepromTimerReg++ = 0;
+    *gEepromTimerReg-- = 0;
+    REG_IE &= ~(INTR_FLAG_TIMER0 << gEepromTimerNum);
+    REG_IME = gEepromSavedIme;
 }
 
 /* SDK DMA3Transfer (static in the SDK): saves and clears IME, merges
@@ -50,13 +50,13 @@ void sub_803AA90(void)
  * zeldaret/tmc's src/eeprom.c `DMA3Transfer` (EEPROM_V124). The ROM's
  * test-before-loop plus separate in-loop test is gcc's duplicated
  * `while` exit test, which -O1 keeps apart. */
-void sub_803AAD4(const void *src, void *dst, u16 count)
+void DMA3Transfer(const void *src, void *dst, u16 count)
 {
     u16 ime;
 
     ime = REG_IME;
     REG_IME = 0;
-    REG_WAITCNT = (REG_WAITCNT & 0xF8FF) | gUnknown_03001634->waitcntBits;
+    REG_WAITCNT = (REG_WAITCNT & 0xF8FF) | gEepromConfig->waitcntBits;
     REG_DMA3SAD = (u32)src;
     REG_DMA3DAD = (u32)dst;
     REG_DMA3CNT = count | 0x80000000;

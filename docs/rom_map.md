@@ -21,11 +21,11 @@ will drift as ground truth improves. Nothing here is confirmed until
 someone actually reads the functions in question - treat every category
 below as a hypothesis with its supporting evidence attached, not a fact.
 
-**Read this before trusting any count involving `sub_803AD78`-`sub_803AD94`**:
+**Read this before trusting any count involving `_call_via_r0`-`_call_via_r7`**:
 those addresses are a register-indirect-call trampoline table (`bx r0`
 through `bx sp`, one instruction each), not real functions - see
-"Correction: `sub_803AD78`-`sub_803AD94`..." below. Several earlier
-findings cite "calls `sub_803AD80`" as a text-layout signature; those
+"Correction: `_call_via_r0`-`_call_via_r7`..." below. Several earlier
+findings cite "calls `_call_via_r2`" as a text-layout signature; those
 counts are upper bounds, not precise figures.
 
 ## Totals
@@ -168,14 +168,14 @@ first-pass category table: the 5.9 KB gap between `MainLoop` and
 `hud` purely because of *where it sits* - immediately before the real
 HUD widget landmarks - never because anything in it was actually read.
 
-Reading two of its functions shows that guess was wrong. **`sub_803AE4C`**
+Reading two of its functions shows that guess was wrong. **`__modsi3`**
 (called from this gap 4 times) is a plain software integer-division
 routine (bit-shift-and-subtract long division) with no HUD connection
 at all - one of the ROM's generic math primitives, unrelated to what
 calls it. More telling: **`sub_8027018`**, one of the gap's own
 functions, takes a self-pointer with an internal counter at `+0x40` and
 appends an entry to what looks like a small ring buffer - storing two
-input values plus a third computed via `sub_803ADB4(0x3C, arg3)` (the
+input values plus a third computed via `__divsi3(0x3C, arg3)` (the
 same atan2-style angle helper `math_util.c` already documents as
 "looks like an atan2-style angle lookup"). Fixed first argument, varying
 second, stored as one of three fields per queue entry - this reads far
@@ -207,8 +207,8 @@ real evidence behind it this time instead of ROM proximity:
 
 - **`sub_8027940`** (1052 B, the biggest function in the gap): reads a
   value via `sub_8023414`, compares it to 99, and - when over two
-  digits - calls `sub_803ADB4(value, 100)` then `sub_803ADB4(value, 10)`
-  + `sub_803AE4C(_, 10)` (the "atan2 helper" and the "generic division
+  digits - calls `__divsi3(value, 100)` then `__divsi3(value, 10)`
+  + `__modsi3(_, 10)` (the "atan2 helper" and the "generic division
   routine" from the correction above, both reused here for something
   much more mundane: **splitting an integer into hundreds/tens/ones
   digits**), storing each digit's glyph index into a small OAM-shaped
@@ -216,8 +216,8 @@ real evidence behind it this time instead of ROM proximity:
   table). This is a textbook **numeric counter widget update** - almost
   certainly a score display.
 - **`sub_8027E88`** (1400 B, the largest function in the whole zone):
-  calls `sub_803AD7C` (immediately next to the matched `sub_803AD80`/
-  `sub_803AD84` text-drawing helpers), computes a value, and branches
+  calls `_call_via_r1` (immediately next to the matched `_call_via_r2`/
+  `_call_via_r3` text-drawing helpers), computes a value, and branches
   specially on `cmp r1, #0x64` (100) before writing per-digit glyph
   indices the same way as above. Reads as a **percentage counter**
   (a "XX% complete" style display, cmp-100 handling the 3-digit special
@@ -385,7 +385,7 @@ different systems, not one:
   viewport alignment** - genuinely graphics/level-layout work, no
   correction needed here.
 - **`sub_801F8DC`** (352 B): allocates an object (`sub_8009ED0`), pulls
-  a shared style/font object (`sub_800CA74`), calls `sub_803AD80` (the
+  a shared style/font object (`sub_800CA74`), calls `_call_via_r2` (the
   matched text-width helper) **twice**, and writes through the same
   low-level OAM setter trio (`sub_80087C0`/`sub_80087B4`/`sub_800872C`)
   every other widget system in this document has used. Not a graphics
@@ -394,7 +394,7 @@ different systems, not one:
   label plus a value).
 
 Checked how far the second pattern extends: **31 of the cluster's 102
-functions** call `sub_803AD80` and/or `sub_8009ED0` together, totaling
+functions** call `_call_via_r2` and/or `sub_8009ED0` together, totaling
 **9.1 KB - 56% of the whole 16.2 KB cluster**. That's a bigger single
 correction than either the `hud`/`fx` split or anything else found this
 session. Split out as its own `menu_ui` category.
@@ -447,7 +447,7 @@ one sample read.
 | `0x08029ED0`-`0x0802B348`ish | ~5.6 KB | actor system | high | `SelectActorCategory`, `InitActorPart`, `UpdateAnimatedActorPart`, `ConstructAnimTableState`, `ConstructActorPart` - the vtable/animation system documented in `docs/graphics.md` |
 | `0x080354E0`-`0x08035780`ish | ~0.7 KB | graphics loading | high | `LoadLevelGraphics`, `LoadBg2Background`, `LoadObjSpriteTiles` |
 | `0x08037110`-~`0x0803A950` | ~14 KB | audio (GAX2) | medium, **narrowed this pass** | see "Narrowing the GAX2 boundary" below |
-| `0x0803A950`-`0x0803B058` | ~1.5 KB | `system` (asset loading) | high | `LZ77UnCompWrapper`/`RLUnCompWrapper`, confirmed called from the already-matched `src/system/asset_util.c` |
+| `0x0803A950`-`0x0803B058` | ~1.5 KB | `system` (asset loading) | high | `LZ77UnCompVram`/`RLUnCompVram`, confirmed called from the already-matched `src/system/asset_util.c` |
 | `0x0803B058`-`0x0803B060` | 8 B | `graphics` | **matched** | `src/graphics/actor_anim.c` |
 | `0x0803B060`-`0x0803B8B0` | ~2.1 KB | actor system | medium | `GetAnimFrameData`, 43 other still-unnamed neighbors in `code_3_3.s` |
 
@@ -540,7 +540,7 @@ same display-commit sequence as `sub_801CCF8` (`FlushVramDmaQueue`, then
 `DISPCNT`), then checks a couple of completion conditions
 (`sub_801D780`, `sub_801E464`) to decide whether to keep looping. Once a
 completion condition trips, it reads the upper 16 bits of a global,
-**`gUnknown_030007E0`** (word-sized; only the low byte of that same word
+**`gKeys`** (word-sized; only the low byte of that same word
 has a separate, already-inferred role in `sym_iwram.txt`'s neighboring
 layout), and dispatches on individual bits to one of **four** small
 handler functions, in two same-sized pairs:
@@ -639,10 +639,10 @@ them directly:
   than the ones already traced - strong evidence the leftover runs are
   still actor code, not something else that happens to share the
   neighborhood.
-- **New finding: several of these runs also call `sub_803AD80`/
-  `sub_803AD84`** - the text-drawing helpers already matched in
-  `src/graphics/text_layout.c`/`oam_count.c` (`sub_803AD80` measures a
-  string's pixel width, `sub_803AD84` draws one). Meaning: at least some
+- **New finding: several of these runs also call `_call_via_r2`/
+  `_call_via_r3`** - the text-drawing helpers already matched in
+  `src/graphics/text_layout.c`/`oam_count.c` (`_call_via_r2` measures a
+  string's pixel width, `_call_via_r3` draws one). Meaning: at least some
   actor types render text as part of their behavior - a floating score,
   a countdown, a crate-contents readout, something along those lines.
   Not confirmed which, but a genuinely new, specific behavioral clue
@@ -652,7 +652,7 @@ them directly:
   passed as the `struct oam_shadow_buffer *` argument to `sub_8006A48`
   (matched, `src/graphics/graphics.c`) - and `sub_8006A48` shows up
   repeatedly as an outgoing call from these leftover actor runs too, as
-  does `sub_80006A8` (matched, `src/system/irq.c`'s region). So the same
+  does `WaitForVBlank` (matched, `src/system/irq.c`'s region). So the same
   OAM-shadow-buffer singleton and the same low-level sync helper get
   used by text layout, the 94 KB zone's frame-end display commit
   function, and these actor-behavior functions alike - one shared piece
@@ -812,7 +812,7 @@ in `game_loop` and `sub_8032C0C` in `actor`. These addresses sit only
 ~0xAC bytes before the `gUnknown_030015B4`-`030015EC` family
 `sub_8032C0C` uses - very plausibly the **same larger struct at
 different field offsets**, not a fourth separate RAM family as the
-address alone might suggest. Also calls `sub_8000E1C`, the same input-
+address alone might suggest. Also calls `RandRange`, the same input-
 check function `sub_8015DF8` used back in `game_loop`'s core.
 
 ### Three more reads, zero new table families - the known structures are absorbing the remainder
@@ -851,14 +851,14 @@ are the real consumers of the `gUnknown_03001540`/`03001544`
 accumulator pair flagged as a guess last round, clamping toward a
 camera-relative target via a new table `gStaticData_0817C3D8`; a new
 detail that `sub_802E170`'s effect variant depends on current input
-state via `sub_8000E1C`, not just proximity) - but three are genuinely
+state via `RandRange`, not just proximity) - but three are genuinely
 new mechanisms not previously catalogued in this zone:
 
 - **A floating-text/glyph popup system.** `sub_80350A4` (520 B)
   processes a linked list of timed nodes (alloc/free via the standard
   `sub_8026EDC`/`sub_8026ED0`), parsing a byte-opcode stream
   (0/1/2/3/0xA=terminator) at `self+8` and drawing text via
-  `sub_803AD84` positioned relative to `gUnknown_030012DC`/
+  `_call_via_r3` positioned relative to `gUnknown_030012DC`/
   `gUnknown_030012E0` (likely P1/P2 structs), indexed into a new table
   `gStaticData_0817CF3C` (stride 8, 3 entries/state). `sub_80352AC`
   (416 B) is its asset loader: iterates a 5-entry table
@@ -870,7 +870,7 @@ new mechanisms not previously catalogued in this zone:
   `030014A8`/`AC`/`B0` - plausibly a per-player pair). Both project a
   record's position to screen space (new helpers `sub_8029E98`/
   `sub_8029EB4`), pack an OAM attribute word via a new call
-  `sub_8028DD8`, and only re-measure/redraw text (`sub_803AD80`) when
+  `sub_8028DD8`, and only re-measure/redraw text (`_call_via_r2`) when
   the referenced source object has changed since last frame - a
   caching optimization on top of the already-documented text-drawing
   helpers.
@@ -924,10 +924,10 @@ the `gUnknown_030014BC`-rooted animation-linked family (call
 `GetAnimFrameBaseOffset`, index the documented `gStaticData_0817A840`,
 draw text). `sub_802D7B0` additionally runs a full 3-axis AABB overlap
 test against `gUnknown_03000884` (a player-shaped struct) before
-calling **`sub_800014C`** - one of `UpdateGameFrame`'s own direct
+calling **`MemCopy32`** - one of `UpdateGameFrame`'s own direct
 top-level callees, the same cross-tie already noted for
 `sub_8022CA0`. **`sub_802C7A8`** (not vtable-dispatched) is a
-*second*, independent actor function calling `sub_800014C` directly -
+*second*, independent actor function calling `MemCopy32` directly -
 confirming this actor->game_loop-dispatch tie as a real, repeated
 pattern, not a one-off. Three more vtable hits land in already-
 documented families (two in the 93-entry `gStaticData_087Exxx` family,
@@ -1017,7 +1017,7 @@ confirmation-dialog driver**: reads input, cancel (bit `0x1`/`0x8`)
 plays `PlaySfx(0x49)` and exits immediately, confirm/toggle (bit
 `0x40`/`0x80`) plays `PlaySfx(0x46)` and records the selected option;
 draws two text labels from a small 2-entry table via
-`sub_8026F38`/`sub_803AD80` (a "Yes"/"No" menu), each frame also
+`GetUiText`/`_call_via_r2` (a "Yes"/"No" menu), each frame also
 writing a bitfield to hardware register `0x04000050` (the same window
 register family used elsewhere in this document); returns which
 option was selected. **`sub_8034C84(obj, mode)`** is teardown (frees
@@ -1062,7 +1062,7 @@ forming a coherent input-driven state machine on the object
 `sub_802E740` constructs: mirror-image left/right accumulators
 (`±0x100`/frame, clamped `±0x500`, plus a secondary modular
 rotation/angle counter), and a button-press handler
-(`gUnknown_030007E0 & 0x200`) playing `PlaySfx(0xa, 0x100)` and
+(`gKeys & 0x200`) playing `PlaySfx(0xa, 0x100)` and
 resetting animation-part fields - reads as a player-controllable
 movable object (crate, platform, or similar) layered on the
 tier-threshold sound-cue base. `sub_8033CF8`'s already-known
@@ -1083,7 +1083,7 @@ already tagged by the icon+cached-label renderer - ties `sub_802E740`'s
 object directly into that renderer's infrastructure, not a one-off.
 **Correction**: `sub_8029BAC` isn't a "sound-id-gated init path
 selector" as first guessed - it's a trivial one-liner,
-`gUnknown_030013B4 = sub_803ADB4(x<<8, 0x3c)` (a confirmed real Q8.8
+`gUnknown_030013B4 = __divsi3(x<<8, 0x3c)` (a confirmed real Q8.8
 division, not a trampoline) - a generic ratio/scale computation
 (plausibly frames-to-seconds at 60 fps) with no sound-ID logic in its
 own body; whatever sound-ID branching happens must live in
@@ -1149,7 +1149,7 @@ unread - a natural next target).
 **Follow-up read `sub_802B7E0`, with a correction to how `sub_802A6EC`
 itself was being characterized.** `sub_802A6EC` isn't a proximity-
 trigger function in its own right - it's a trivial one-line indirect-
-call wrapper (`return sub_803AD7C(gUnknown_03001418->+0x24)`, a
+call wrapper (`return _call_via_r1(gUnknown_03001418->+0x24)`, a
 BLX-trampoline call through a per-context function pointer); whatever
 proximity/trigger logic exists lives behind that dynamically-
 configured pointer, not in `sub_802A6EC`'s own body. **`sub_802B7E0`**
@@ -1219,7 +1219,7 @@ position, and - when the projected tile position changes - **calls
 confirming that function is this object's own on-demand tile
 renderer, not a separate system. `sub_8031378` (gated on the object's
 own state field being 2 or 3) loads a 3D vector from
-`gStaticData_0817C3D8` and calls **`sub_800014C`** - a **fifth+
+`gStaticData_0817C3D8` and calls **`MemCopy32`** - a **fifth+
 confirmed site** of the actor->`UpdateGameFrame` dispatch tie already
 noted for `sub_8022CA0`/`sub_802D7B0`/`sub_802C7A8`/`SetCheckpoint`.
 `sub_802F540` is a running-total accumulator/tally, not a check.
@@ -1445,7 +1445,7 @@ concrete payoff tying the singleton system to a reward event.
 `sub_8032890` (the last two unread spawn-effect-family per-type
 constructors) turn out to be byte-for-byte twins: both compute a
 velocity vector aiming toward a fixed offset point via the
-screen-projection helpers plus `sub_803ADB4` division - a homing/
+screen-projection helpers plus `__divsi3` division - a homing/
 seek-toward-point effect, parameterized per spawn type. **`sub_8033550`**
 is the **singleton's own BG2 affine-matrix committer**, structurally
 parallel to the boss cluster's `sub_80312C4` - but pure scale (no
@@ -1696,10 +1696,10 @@ Kept reading the biggest still-unexplained functions in the 48.2 KB core
 past the vtable cross-reference. **`sub_80134B8`** (1072 B): watches a
 state field (`self+8`) for a specific transition (out of a range that
 includes state `0x18`/`0x19`), gated by a flag bit in
-`gUnknown_030007E0` (the same upper-16-bits flags word `sub_801C96C`'s
+`gKeys` (the same upper-16-bits flags word `sub_801C96C`'s
 dispatch already reads) and a per-instance cooldown byte. When the
 gate passes: calls **`PlaySfx`** directly (sound id `0xA`), then lays
-out and draws a short text label via `sub_803AD80`/`sub_803AD84`, and
+out and draws a short text label via `_call_via_r2`/`_call_via_r3`, and
 writes the result into a field on `gUnknown_030012D8` - the same
 struct `sub_801AB98`'s collision-edge test reads, reinforcing the
 camera/viewport-rectangle read on that global. Sound plus a text label
@@ -1731,7 +1731,7 @@ document's "biggest still-unexplained" list independently - this one
 table explains a large fraction of them in a single stroke.
 
 Read one of the twin-sized entries, **`sub_8013994`** (716 B, tied with
-`sub_8014674` for size): checks individual bits of `gUnknown_030007E0`'s
+`sub_8014674` for size): checks individual bits of `gKeys`'s
 *lower* half this time (a different half of the same flags word
 `sub_801C96C`'s dispatch reads from the upper half) against specific
 action codes (`0xB`, `0x10`) via `sub_800AAEC`, and on a match plays a
@@ -1797,7 +1797,7 @@ dispatched (all reached via `bl`); the two concrete new leads:
 - **`sub_8016288`/`sub_8011BD4` share a type-ID gate (`0x1d`)**,
   suggesting they're sibling state machines on the same object-type
   family. `sub_8016288` (2088 B) is a per-frame input/state-machine
-  handler: reads D-pad input via the already-matched `sub_8000760`
+  handler: reads D-pad input via the already-matched `GetDpadDirection`
   (`src/system/irq.c`), gates on a child object's `+0x2D` type field
   against `0x1d`/`0x1f`/`0x20`, then dispatches a 34-case jump table on
   `self+0x22` - strong evidence of core **player movement/action
@@ -1857,8 +1857,8 @@ byte `+0x104` - the same field `sub_8017AB0` already gates on.
 
 Smaller reads, same known shapes: **`sub_800A884`** (616 B) wraps
 `sub_800A0FC` with a reentrancy-guard-shaped flag at
-`gLevelLayers+0x2a`, and separately calls `sub_803AD7C` - another
-member of the BLX-trampoline family (`sub_803AD78`-`94`), so this call
+`gLevelLayers+0x2a`, and separately calls `_call_via_r1` - another
+member of the BLX-trampoline family (`_call_via_r0`-`94`), so this call
 proves only "makes one indirect call," not real work there.
 **`sub_80159F8`** (628 B) and **`sub_8016DDC`** (616 B) extend the
 directional-table/timed-state-machine shapes already found in this
@@ -1886,7 +1886,7 @@ object, draw floating text, and write the **exact same
 `sub_801B304` (actor) and `sub_80159F8` (game_loop core) already
 write - a real synthesis point tying together the window-register
 bitset, the directional-target field convention, the shared
-`sub_8000E1C` input-check, and floating-text feedback in one function.
+`RandRange` input-check, and floating-text feedback in one function.
 
 Genuine new coverage (~1.75 KB): **`sub_8018400`** (636 B) and
 `sub_8018E4C` are a linked pair driving large jump tables (15/11
@@ -1944,7 +1944,7 @@ inside the 42-slot action dispatch table's own ROM span* (`0x0816BFAC`,
 and also folds into the already-counted action-table bucket. It
 strongly resembles the `sub_8016288`/`sub_8011BD4` type-`0x1d`
 player-control family's shape (D-pad input via the same
-`sub_8000760`, direction-value branching), though the type-ID field
+`GetDpadDirection`, direction-value branching), though the type-ID field
 wasn't cross-checked.
 
 Genuine new coverage (~1 KB): **`sub_800EAFC`** (524 B, not
@@ -2015,7 +2015,7 @@ zone, not the `UpdateGameFrame`-`MainLoop` cluster). Runs the same
 OAM-commit sequence seen elsewhere, then writes several BG-scroll/
 window-shaped hardware registers via three unread helpers
 (`sub_801D7D0`/`sub_801E640`/`sub_801DE24`), zeroes VRAM at
-`0x0600A000`, then loops drawing 6 text items via `sub_803AD84` -
+`0x0600A000`, then loops drawing 6 text items via `_call_via_r3` -
 reads as a second-screen/overlay commit function (debug overlay,
 second BG-layer content, or similar), not yet folded into any
 documented bucket.
@@ -2220,7 +2220,7 @@ given the offset comfortably fits inside that allocation). Reads as
 
 **`sub_8022BF0`/`sub_8022CA0`** (a linked pair - the first calls the
 second) configure **GBA hardware window registers** (`REG_WIN0H`,
-`0x04000040`, written twice via `sub_803A94C` with source data from
+`0x04000040`, written twice via `CpuSet` with source data from
 `gEntityFlags`) - a genuinely new hardware system not seen
 elsewhere this session (window masking/spotlight-style visual
 effects). `sub_8022BF0` itself maintains a **modulo-100 wraparound
@@ -2232,7 +2232,7 @@ recurring "mode 3" check seen throughout this session in multiple
 unrelated functions), and in both branches calls **`sub_8023414`** -
 the same field-`+0x70` getter already characterized as feeding the
 score-style HUD counter - storing its result into `self+0xCC`, then
-calling `sub_800014C` (one of `UpdateGameFrame`'s own direct top-level
+calling `MemCopy32` (one of `UpdateGameFrame`'s own direct top-level
 callees). Reads as: per-frame update of a wrapping counter/lap value,
 paired with a hardware window effect and a score-getter tie-in -
 plausibly a "distance traveled" or timer-adjacent HUD+visual element.
@@ -2283,7 +2283,7 @@ palette ramps, or some other 16-bit-per-sample data).
 Also read in the same pass: **`RunCutscenePlayer`** (~284 B), a per-frame
 display loop that iterates `[self+4]` items and, per item, drives the
 already-documented OAM-shadow-buffer cluster in sequence
-(`sub_8006A90` reset, `sub_8006A48` hide-unused, `sub_80006A8` VBlank
+(`sub_8006A90` reset, `sub_8006A48` hide-unused, `WaitForVBlank` VBlank
 poll, `sub_8006AAC` flush) - the same "HUD-icon-plus-number renderer"
 OAM pacing pattern already noted in `docs/matching.md`. Confirms known
 infra (render-one-item-per-VBlank list display) rather than adding
@@ -2332,7 +2332,7 @@ sequence it touches `gUnknown_030012B8`, `gUnknown_030012D4`,
 `gLevelLayers`, `gUnknown_030012C8`, conditionally
 `gUnknown_03001318`, four separate hot-IWRAM-global calls
 (`gUnknown_030012F4`/`F0`/`EC`/`F8`), `gUnknown_0300130C`, and finally
-the full OAM-shadow commit trio (`sub_8006A48`→`sub_80006A8`→
+the full OAM-shadow commit trio (`sub_8006A48`→`WaitForVBlank`→
 `sub_8006AAC` on `gUnknown_03001300`) plus `FlushVramDmaQueue` - nearly
 every hot IWRAM global this document has separately traced, in one
 place. **`sub_8025228(self, x, y, mode)`** (268 B) re-derives the same
@@ -2536,7 +2536,7 @@ confirmed a genuine blend-effect setter.
 **`SetCheckpoint`** is a fourth entry point into the hardware-window-
 register/lap-counter system, writing to the same `0x04000040`
 register as `sub_8022BF0`/`sub_8022CA0` and calling the same
-`sub_800014C` cross-tie into `UpdateGameFrame`. **`DrawPooledBgLayerRow`** is a
+`MemCopy32` cross-tie into `UpdateGameFrame`. **`DrawPooledBgLayerRow`** is a
 third entity behavior (vtable-dispatched) directly driving the
 decoded-tile-chunk system via `AcquireTileSlot`, alongside last round's
 `DrawBgLayerColumn`/`DrawPooledBgLayerColumn`/`ScrollBgLayer`. **`ResetTileSlotPool`** is the
@@ -2624,7 +2624,7 @@ already-investigated functions from an earlier round's report were
 never individually named in this document's prose.** For completeness:
 `ScrollLevelLayers`/`ResetLevelLayers` (a P1/P2 HUD value-plus-alternates
 display), `sub_80236AC`/`sub_80236EC` (a getter/setter pair for a
-packed state round-tripping through `sub_800014C`), `sub_8024E24`
+packed state round-tripping through `MemCopy32`), `sub_8024E24`
 (a two-line text draw, same family as the icon-renderer shapes), and
 `sub_8026108`/`sub_802613E` (tile-alignment modulo-32 helpers; `sub_802613E` really starts at `0x0802613C` and a third, `sub_802612C`, sits between them - see docs/matching/issue-42-bg-scroll-layer.md). Two
 functions are genuinely new to this pass: **`ClipPooledBgLayerColumns`/`ClipPooledBgLayerRows`**
@@ -2653,7 +2653,7 @@ above. Two smaller but real threads, neither a full resolution:
   writes" above). A second confirmed write site for that field, this
   time a reset rather than an initial assignment - consistent with
   "total for this level" being cleared and presumably recomputed under
-  some condition, not fully traced here. Also references `sub_803AD7C`
+  some condition, not fully traced here. Also references `_call_via_r1`
   (one of the trampoline stubs) with a calling shape matching the
   established width-measurement pattern, but per the trampoline
   correction above this is not confirmed as text work without checking
@@ -2753,20 +2753,20 @@ tables:
   "type" field (values `7`/`9`/`0xB`/`0xE` seen) with **per-type
   distance thresholds** checked against a sub-object's position
   (`self+0x64`, the same field offset seen in `sub_800A178`). On a
-  proximity match, sets a flag and calls the `sub_803AD80` trampoline
+  proximity match, sets a flag and calls the `_call_via_r2` trampoline
   with a fixed value `0x1A`. Reads as a **proximity-triggered indicator**
   - show a hint icon when near a specific object type, distance varying
   by type.
 - **`sub_8015DF8`** (484 B): dispatches on a `self+8` type (`2`/`3`/
-  default), calls the matched `sub_8000760` (`src/system/irq.c`), gates
+  default), calls the matched `GetDpadDirection` (`src/system/irq.c`), gates
   on `gUnknown_0300082C`'s low 7 bits `==0` (a periodic ~128-frame
   check - `gUnknown_0300082C` is the same counter the post-fade
   investigation above also touches) **and** an input check
-  (`sub_8000E1C(2)`), then queues something via
+  (`RandRange(2)`), then queues something via
   `sub_8025BAC(gEntitySpawner, 28, 4, ...)`. Reads as a periodic,
   input-gated trigger - every ~128 frames, only while a specific button
   state holds.
-- **`sub_8019CE4`** (472 B): calls the `sub_803AD80` trampoline once,
+- **`sub_8019CE4`** (472 B): calls the `_call_via_r2` trampoline once,
   then **dispatches through a 16-case jump table** on its own third
   parameter (clamped `1`-`16`) - a message/hint-ID selector. Case 15
   checks `gLevelState` state before calling
@@ -2853,7 +2853,7 @@ a genuinely promising new lead:
   different code entirely (calls `sub_8009FF4`, reads a *byte* field,
   no position write). And the rest of the function, when that bit is
   clear, is an **event/message dispatcher** - multiple branches invoke
-  the `sub_803AD88` trampoline with small message/direction codes, one
+  the `_call_via_r4` trampoline with small message/direction codes, one
   ending in `PlaySfx(id=0x21)` - boundary/threshold-crossing
   notifications, unrelated to the camera step. Net: `sub_8008AD8` is a
   **multi-purpose per-object update function** where "step the camera
@@ -2862,7 +2862,7 @@ a genuinely promising new lead:
   incomplete.
 - **`sub_8009528`** (408 B): iterates a spatial bucket-style array
   within a viewport-sized box (`0xF0`×`0xA0` in Q8.8 - screen
-  dimensions) via the `sub_803AD80` trampoline. Reads as a **broad-phase
+  dimensions) via the `_call_via_r2` trampoline. Reads as a **broad-phase
   visibility/proximity query** over nearby objects.
 - **`sub_8012694`** (424 B, a helper of the already-documented
   `sub_801283C`): sets/checks a type-tag value of `6` at a sub-object's
@@ -2878,7 +2878,7 @@ a genuinely promising new lead:
   counter glyph.
 - **`sub_8015C6C`** (396 B, read by the same fork that corrected
   `sub_8008AD8` above): checks a self-flag, plays `PlaySfx(id=9)`, calls
-  the matched `sub_8000760`, and on state `self+8==4` writes a signed
+  the matched `GetDpadDirection`, and on state `self+8==4` writes a signed
   velocity constant (`±0x3C0`) into `self+0x10→+0x60`, direction chosen
   by a `self+0x22==7` check. Another per-object state/physics function
   using the by-now-familiar `+0x10→+0x68`/`+0x60` field-offset
@@ -2908,7 +2908,7 @@ concretely ties back into the master table rather than a per-level
 table. **`sub_8019094`** dispatches on a mode parameter touching
 `gLevelLayers` (a hot global referenced elsewhere but not yet
 individually characterized) in a cursor/menu-position-style pattern -
-calls the `sub_803AD84` trampoline with position arguments matching the
+calls the `_call_via_r3` trampoline with position arguments matching the
 draw-text shape.
 
 ### `gLevelLayers` resolved: a lazy-singleton text-positioning box, cached under two names
@@ -2929,7 +2929,7 @@ lazily-created singleton, not its own independent piece of state.
 
 Every read site dereferences twice, then reads `+0x10` as a pointer to
 a Q8.8 `{x,y}` pair offset by fixed negative constants (≈`-100`/`-60`),
-built into a rect and passed to the `sub_803AD80` trampoline. Reads as
+built into a rect and passed to the `_call_via_r2` trampoline. Reads as
 a **text/label positioning-box singleton** - a margin-adjusted bounding
 rect for UI text, built once and reused for the rest of the session via
 two aliased slots. Consistent with `sub_8019094`'s "cursor/menu-position
@@ -3091,31 +3091,31 @@ characterized. Not one monolithic "level config" struct as the early
 worth of level-related tables that happen to sit next to each other in
 ROM, several of which turned out to be dispatch tables themselves.
 
-## Correction: `sub_803AD78`-`sub_803AD94` are a register-indirect-call trampoline table, not real functions
+## Correction: `_call_via_r0`-`_call_via_r7` are a register-indirect-call trampoline table, not real functions
 
 Reading further into `sub_0800D18C` past the table above hit something
 that changes how several earlier findings in this document need to be
-read. `sub_803AD84` - the function this document has been calling "the
+read. `_call_via_r3` - the function this document has been calling "the
 matched text-drawing helper" since the `hud` investigation, cited as
 evidence in `hud`, `menu_ui`, and the `audio_sfx`→`overlay_ui`
 correction - is one instruction: **`bx r3`**. Reading its neighbors
-confirms this isn't an isolated stub: `sub_803AD78`=`bx r0`,
-`sub_803AD7C`=`bx r1`, `sub_803AD80`=`bx r2`, `sub_803AD84`=`bx r3`,
-`sub_803AD88`=`bx r4`, `sub_803AD8C`=`bx r5`, `sub_803AD90`=`bx r6`,
-continuing through every register up to `sp` before `nullsub_43`
-(`bx lr`) and then real code resumes at `sub_803ADB4`. This is the
+confirms this isn't an isolated stub: `_call_via_r0`=`bx r0`,
+`_call_via_r1`=`bx r1`, `_call_via_r2`=`bx r2`, `_call_via_r3`=`bx r3`,
+`_call_via_r4`=`bx r4`, `_call_via_r5`=`bx r5`, `_call_via_r6`=`bx r6`,
+continuing through every register up to `sp` before `_call_via_lr`
+(`bx lr`) and then real code resumes at `__divsi3`. This is the
 standard **Thumb `BLX`-emulation pattern** - the ARM7TDMI's Thumb mode
 has no register-indirect call instruction, so `bl <trampoline for rN>`
 plus a `bx rN` stub is how the compiler simulates "call the function
 pointer in register N" while still getting a return address pushed.
 
 **What this means for earlier findings**: "a function calls
-`sub_803AD80`" only ever meant "this function makes an indirect call
+`_call_via_r2`" only ever meant "this function makes an indirect call
 through r2" - not "this function measures text width." The actual
 target is whatever the caller loaded into r2 at that specific call
 site, and nothing stops unrelated code anywhere in the ROM from reusing
 the *same* trampoline address for a completely different r2 target.
-Every count in this document built by grepping for `sub_803AD80`/`84`/
+Every count in this document built by grepping for `_call_via_r2`/`84`/
 `7C`/`88` as a bare text-layout *signature* (the 31 `menu_ui` functions,
 the 22-function `overlay_ui` sub-cluster, the "several `actor` runs also
 call the text helpers" finding, the `hud` widgets' shared calls) is
@@ -3160,7 +3160,7 @@ bigger than `hud`, bigger than `graphics_loading`/`menu_ui`.
 
 **Read the two largest functions first.** `sub_8006600` (1536 B, the
 file's biggest function) doesn't touch a single sound register - it
-calls `sub_803AD80` (text width) **four times**, computing
+calls `_call_via_r2` (text width) **four times**, computing
 `(240 - width) / 2` (screen-width centering math) for two separate
 labels, and writes the results into OAM-shaped position fields via three
 more of the "hot IWRAM globals" already tied to `game_loop`/`hud`
@@ -3184,7 +3184,7 @@ a concrete third+ member of this file's SIO/link-cable cluster,
 worth folding into the `system` category's "1.5 KB SIO/link-cable
 handling" figure**). Of those 118, **22 functions
 (8.1 KB, ~42% of the component's bytes)** carry the same text-layout
-signature (`sub_803AD80`/`84`/`7C`/`88`) as `sub_8006600` above.
+signature (`_call_via_r2`/`84`/`7C`/`88`) as `sub_8006600` above.
 `PlaySfx` itself sits *inside* this same dominant component (it does
 call genuinely audio-shaped functions in the GAX2 range,
 `GAX_fx_ex`/`GAX_set_fx_volume` - it's real, legitimate SFX-triggering code)
@@ -3229,7 +3229,7 @@ indices**, two of which are each used by *two* wrappers. That's **4
 real settings, not 6** - the "6 callers" were paired rows (one wrapper
 draws a row's fixed label, its pair draws the row's live value), not 6
 independent items. Each label index resolves through
-**`sub_8026F38`** - the exact `gUnknown_03000850[gUnknown_03000868]`
+**`GetUiText`** - the exact `gUiTextTables[gLanguage]`
 runtime string-table lookup this document already characterized, all
 the way back in the very first `game_loop`/DARK1 investigation - so the
 row titles are real text, just RAM-resident and populated from ROM
@@ -3256,7 +3256,7 @@ rather than contradicting it: it's the screen's **cursor/navigation
 driver**, not another settings row. Loops a bounded counter while
 calling the same three-function update triple
 (`sub_80053F4`/`sub_8006250`/`sub_8005304`) each individual settings
-row already uses, then checks `gUnknown_030007E0`'s flags (the input
+row already uses, then checks `gKeys`'s flags (the input
 global tracked throughout this session) for two distinct actions - one
 plays `PlaySfx(id=0x49)` and exits early (plausibly cancel/back), the
 other plays `PlaySfx(id=0x46)` and starts a 30-frame timer (plausibly
@@ -3268,8 +3268,8 @@ consistent with, not a correction to, the settings-menu reading.
 `sub_8003D3C` (500 B) and `sub_800556C` (416 B, list-iterating over a
 `self+0x1c`-counted, `self+0x14`-based `*8`-stride array) both fit the
 documented settings-row text-layout pattern exactly (label lookup via
-`sub_8026F38`, the `gUnknown_03000850[gUnknown_03000868]` runtime
-string table; width measurement via `sub_803AD80`; centered-x math
+`GetUiText`, the `gUiTextTables[gLanguage]` runtime
+string table; width measurement via `_call_via_r2`; centered-x math
 into `gUnknown_030012DC`-relative OAM fields). `sub_800556C` branches
 on a per-row type tag (`==4`/`==5`/else) into three distinct layout
 variants - reads as the umbrella per-row list renderer the individual
@@ -3277,7 +3277,7 @@ row wrappers sit inside, extending the "four sliders, one breaks the
 pattern" finding. **New, not yet characterized: `sub_80031E4`** (260 B)
 is a *different* object entirely - not a settings row. It loops 5
 times over `self+0xA8`/`0xBC`/`0xD0` arrays (3 fields/iteration),
-drawing via `sub_803AD7C` (a sibling of the text-draw family), then
+drawing via `_call_via_r1` (a sibling of the text-draw family), then
 dispatches an **11-case jump table** on `self+0xC` to a family of
 similarly-sized (150-260 B) unread siblings: `sub_80032E8`,
 `sub_80034BC`, `sub_80035C0`, `sub_8004CB4`, `sub_8003824`,
@@ -3290,8 +3290,8 @@ Confidence: high on "distinct state machine, not a settings row," low
 on specific purpose. None of the four are entity-vtable-dispatched.
 
 **Follow-up, with one correction: `sub_80031E4` doesn't "draw via
-`sub_803AD7C`"** - that's a `bx r1` BLX-emulation trampoline (part of
-the documented `sub_803AD78`-`94` family), so the call proves only
+`_call_via_r1`"** - that's a `bx r1` BLX-emulation trampoline (part of
+the documented `_call_via_r0`-`94` family), so the call proves only
 "makes one indirect call." The pre-loop (5 iterations over
 `self+0xA8`/`0xBC`/`0xD0`) actually calls a **per-slot function
 pointer** stored at each entry's `+0x18`, not a literal draw.
@@ -3300,7 +3300,7 @@ state machine that reuses settings-menu infrastructure**: case 3
 (`sub_80035C0`) plays `PlaySfx(0x47)` on a state transition - the same
 "confirm" SFX ID `sub_8005100` (the settings screen's confirm/cancel
 driver) already uses - and another case transition calls
-`sub_8026F38`, the same settings-row label-lookup function. Its only
+`GetUiText`, the same settings-row label-lookup function. Its only
 caller, **`sub_800300C(self, mode)`**, is a VBlank-paced wait loop with
 exactly two call sites, both **inside `UpdateGameFrame`** - one sits in
 the *same level-load state machine* as the between-level map screen
@@ -3411,7 +3411,7 @@ screen plus a separate one-shot achievement-notification sequence.**
   per-frame driver with its own state**, correcting the earlier
   framing. It initializes a 9-entry sub-table rooted at
   `gStaticData_0817CFA4` and, when a condition holds, calls
-  `sub_8034688` (the minimap-reveal driver) and `sub_80006A8` directly
+  `sub_8034688` (the minimap-reveal driver) and `WaitForVBlank` directly
   inside its own loop - it's actively driving the map-screen
   transition, not just reporting a code. Its return value still gates
   the caller: `==2` -> `sub_80354BC` (map/popup screen, loops back);
@@ -3435,7 +3435,7 @@ loops calling **`sub_80013FC`** at increasing factors (`0, 2, 4, ...,
 0x10`) - and `sub_80013FC` is not raw asm at all, it's **already matched**
 (`src/graphics/palette_blend.c`), documented there as blending the whole
 512-entry palette toward black by `factor/16` per channel. Between each
-step, `sub_80014A4` calls `sub_80006A8` (matched, `src/system/irq.c`'s
+step, `sub_80014A4` calls `WaitForVBlank` (matched, `src/system/irq.c`'s
 region - a VBlank-wait/commit helper used throughout this document) and
 DMAs the result out - the textbook shape of a **fade-to-black effect**,
 one step per frame. `palette_blend.c`'s own header comment already
@@ -3479,7 +3479,7 @@ called repeatedly (once per frame) until the link is established or
 times out: configures `SIOCNT`/`SIODATA32_H` for multiplayer mode,
 checks status bits, sets up interrupts (`IE`/`IME`, two registered
 ISR handlers), programs hardware **Timer 3** as a handshake timeout,
-and on timeout calls `sub_8001D30` then **`sub_8001DB4`** to reset the
+and on timeout calls `LinkStop` then **`sub_8001DB4`** to reset the
 session and retry. `sub_8001DB4` is the **link-session reset/init
 function**: sets `gUnknown_03000800 = 1` (a "link active" flag,
 referenced from only two sites in the whole codebase, both in this
@@ -3645,7 +3645,7 @@ confirmed.
 `gStaticData_0816C674` pair (12 entries each) completely differently -
 it iterates all 12 looking for the **smallest-area candidate that still
 fits** a given width/height, tracking the best index, then computes
-fixed-point scale factors via `sub_803ADB4` (confirmed real division
+fixed-point scale factors via `__divsi3` (confirmed real division
 function, not a trampoline call this time) for both axes. So this
 table pair isn't purely "per-level centering reference points" as
 first characterized - it reads more like a **shared table of available
@@ -3659,7 +3659,7 @@ a plain array, no `{0,ptr}` pairing):
 
 | Slot | Function | Behavior |
 |---|---|---|
-| 0 | `sub_8020D4C` (312 B) | New shape: a richer spawn with a **two-line text popup** (two `sub_803AD80` calls), `self+0x20` = header base **`+0xd8`** (a much smaller `gStaticData_084A5600` offset than the `0x18C`+ family), picks between two more tables (`gStaticData_0816B98C`/`0816BB2C`) via a `gEntityFlags` bit - not the sound/effect toggle shape. |
+| 0 | `sub_8020D4C` (312 B) | New shape: a richer spawn with a **two-line text popup** (two `_call_via_r2` calls), `self+0x20` = header base **`+0xd8`** (a much smaller `gStaticData_084A5600` offset than the `0x18C`+ family), picks between two more tables (`gStaticData_0816B98C`/`0816BB2C`) via a `gEntityFlags` bit - not the sound/effect toggle shape. |
 | 1-3 | `sub_80219BC`/`8021998`/`8021974` (36 B each) | Trivial `sub_801A878(x,y,w,h,id)` trampolines, ids 0/1/2 - sound-cue-only. |
 | 4-5 | `sub_8020E84`/`sub_8020F7C` | Confirmed twin-shape siblings (prior round). |
 | 6-7 | `sub_802107C`/`sub_802117C` | Confirmed twin family, sounds `0xA`/`9`, fallback `0xC`, full OAM spawn on the "no bit set" path. |
@@ -3693,7 +3693,7 @@ sprite/effect spawner (`sub_801EA5C`, record index 37, spawns via
 OAM trio) and, more strikingly, **several more near-identical
 siblings of the two-line-text-popup spawner** (the 15-slot table's
 slot 0, `sub_8020D4C`) - `sub_802062C` (record 23) and `sub_8020788`
-(record 22) share its exact shape (`sub_8009ED0` → two `sub_803AD80`
+(record 22) share its exact shape (`sub_8009ED0` → two `_call_via_r2`
 calls via `sub_800CA74`, a `gEntityFlags`-bit-selected pair of
 tables) but each with its own distinct record index and table pair -
 a **family of many near-identical popup spawners**, not one instance.
@@ -3948,7 +3948,7 @@ points into the preceding graphics blob (the one actually used, count
 index - both just read the same fixed header fields. Whether the
 remaining ~729 KB past this header is itself a repeating-record array
 is still open - not established either way. One live lead left
-unexplored: `sub_8004D74` calls `sub_803A94C`/`sub_8006D50`
+unexplored: `sub_8004D74` calls `CpuSet`/`sub_8006D50`
 immediately after, with `gStaticData_0816B2C0` (an already-documented
 per-level symbol) - a real, concrete tie between this table and the
 per-level data region, worth following if anyone continues this
@@ -4018,7 +4018,7 @@ byte pattern is unambiguous across ~54 sampled records.
 [`docs/audio.md`](./audio.md) documented the Shin'en GAX2 engine as
 roughly `0x08037110`-`0x0803B0C4`, with an explicit caveat that the
 boundary was imprecise. This pass narrows the *end* of that range with
-concrete evidence: `LZ77UnCompWrapper`/`RLUnCompWrapper` sit at
+concrete evidence: `LZ77UnCompVram`/`RLUnCompVram` sit at
 `0x0803A950`, only ~630 bytes after the last address `docs/audio.md`
 names as GAX2-internal (`0x0803A325`) - and those two wrapper functions
 are **confirmed non-audio**, directly referenced by
@@ -4043,16 +4043,16 @@ continuously from `0x0803A630` to `0x0803A944`, and is itself genuine
 GAX2 code, not a documentation gap: it contains at least 4 separate
 ARM function prologues, two preceded by embedded ASCII tags (`"FILT"`,
 `"BART"`) reading like named-routine markers inside a hand-written
-ARM-mode DSP/mixer block. After the blob, `sub_803A944`/`948`/`94C`
+ARM-mode DSP/mixer block. After the blob, `BgAffineSet`/`948`/`94C`
 are raw BIOS `svc` wrapper stubs (`svc #0xe`/`#0xc`/`#0xb` -
 `CpuSet`), 4 bytes of real code each, confirming `docs/audio.md`'s own
 "BIOS svc wrapper stubs interleaved with genuine GAX2 code" caveat
 with concrete identities. **Net: real GAX2 code runs essentially
 uninterrupted through `0x0803A944`, with only 12 bytes of generic
-BIOS-wrapper code before `LZ77UnCompWrapper` at `0x0803A950`** - the
+BIOS-wrapper code before `LZ77UnCompVram` at `0x0803A950`** - the
 true end boundary is effectively `0x0803A944`, far tighter than the
 "~630 bytes, likely more" framing above suggested. One correction this
-implies elsewhere in this document: `sub_803A94C` (cited in the
+implies elsewhere in this document: `CpuSet` (cited in the
 `sub_8022BF0`/`sub_8022CA0` hardware-window-register finding as a
 register-write helper) is functionally accurate as described, but
 mechanically it's a raw BIOS `CpuSet` SWI wrapper, not a hand-written

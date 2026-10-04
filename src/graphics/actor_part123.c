@@ -13,13 +13,13 @@
  * `sub_800BD48`. */
 
 extern void *gEntityFlags;
-extern void *sub_803AD7C(void *arg0, void *fn);
+extern void *_call_via_r1(void *arg0, void *fn);
 
 /* `other` (the second argument - `self`, the first, is never read)
  * shares `struct actor`'s leading header layout (id @8, flags @0xc,
  * table @0x18, same `other->table`-relative `{s16 offset, void *fn}`
  * pair at +0x28/+0x2c that `src/system/game_loop8.c`'s `sub_802400C`
- * already reads via an identical `sub_803AD7C` hit-probe call), but
+ * already reads via an identical `_call_via_r1` hit-probe call), but
  * is read at +0x38 too - bigger than the 0x1c-byte `struct actor`, so
  * it gets its own `struct cbf4_other` below.
  *
@@ -27,7 +27,7 @@ extern void *sub_803AD7C(void *arg0, void *fn);
  * unless `other`'s id sentinel-checks as `0xFFFF`, sets bit
  * `other->8 & 0x1f` of word `other->8 >> 5` in the
  * `gEntityFlags+0x108` bitmap) up to three times, independently
- * gated: once when the `sub_803AD7C` hit-probe against `other->table`'s
+ * gated: once when the `_call_via_r1` hit-probe against `other->table`'s
  * own +0x28/+0x2c pair reports *no* hit, once when `other->0xc` bit 3
  * is already set, and once when `other->0x38` is nonzero. This is the
  * exact idiom `actor_part27c.c`'s `sub_8018884` already matches as
@@ -83,7 +83,7 @@ static inline void MarkGone(struct cbf4_other *t)
 
 void sub_800CBF4(void *self, struct cbf4_other *other)
 {
-    if (!(u8)(s32)sub_803AD7C((u8 *)other + other->table[5].delta, other->table[5].fn))
+    if (!(u8)(s32)_call_via_r1((u8 *)other + other->table[5].delta, other->table[5].fn))
         MarkGone(other);
     if ((other->f.flags >> 3) & 1)
         MarkGone(other);

@@ -4,17 +4,17 @@
 
 /* The GBA multiplayer link-cable/SIO transport - see docs/rom_map.md's
  * SIO/link-cable section. `sub_8001DB4` resets a per-session object at
- * `gUnknown_03000804` (still uncharacterized beyond the offsets touched
+ * `gLinkSession` (still uncharacterized beyond the offsets touched
  * here and in src/graphics/settings_menu8a2.c/settings_menu.c); 4
  * per-player 0xc8-byte sub-records live at session+playerIndex*0xc8. */
 
-extern void sub_8000544(s32 interruptIndex);
+extern void IrqClearHandler(s32 interruptIndex);
 extern u16 gStaticData_0816AF10[];
 extern void sub_8001CB8(u8 *self);
 extern u8 gUnknown_03000800;
-extern void sub_80005A0(s32 interruptIndex, irq_handler_t *fn);
-extern void sub_8002830(void);
-extern void sub_8002848(void);
+extern void IrqSetHandler(s32 interruptIndex, irq_handler_t *fn);
+extern void LinkSerialIntr(void);
+extern void LinkTimer3Intr(void);
 
 /* Fills `self`'s first 8 bytes with a fixed 0xEC pattern (byte 0 masked
  * to its low nibble, byte 1 zeroed), then hashes bytes 1-5 with a
@@ -85,7 +85,7 @@ void sub_8001CB8(u8 *self)
  * and acknowledges both IRQ flags in IF. Always returns 0. Its callers
  * in this file pass the session in r0 (`self` is unused), which the
  * NON_MATCHING drafts below reproduce by passing it. */
-s32 sub_8001D30(struct link_session *self)
+s32 LinkStop(struct link_session *self)
 {
     u16 savedIme;
 
@@ -100,8 +100,8 @@ s32 sub_8001D30(struct link_session *self)
     REG_IE &= ~0x40;
     REG_IME = savedIme;
 
-    sub_8000544(INTR_INDEX_SERIAL);
-    sub_8000544(INTR_INDEX_TIMER3);
+    IrqClearHandler(INTR_INDEX_SERIAL);
+    IrqClearHandler(INTR_INDEX_TIMER3);
 
     REG_IME = 1;
 

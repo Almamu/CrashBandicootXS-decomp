@@ -31,7 +31,7 @@ symbol reference in `asm/`/`src/`. That fits: the game never returns from
 The icon managers' destructor entry is the method record at +0x08 of
 their `record`. `struct icon_record` (`include/icon_manager.h`) now names
 it `destroy`, taken out of the leading `unused_00` padding. The call goes
-through `sub_803AD80` (`_call_via_r2`), linked with the usual `.set`
+through `_call_via_r2`, linked with the usual `.set`
 alias.
 
 `sub_8001C64` takes no argument in `audio_context.c`, but the ROM loads
@@ -49,7 +49,7 @@ to identity. Next it reloads the tile cache (`sub_8006EA8`) and resets
 the font icon manager `gUnknown_030012DC` (tile base 0x200, then its
 slot-6 method). Finally it runs a stack-allocated `InitCutscenePlayer` text
 pager (`game_loop57.c`) over list `gCutscenes[idx]`, with the
-per-level page table `gCutsceneTexts[gUnknown_03000868][idx]` and a
+per-level page table `gCutsceneTexts[gLanguage][idx]` and a
 fixed box (7, 0x7E) + (0xE4, 0x1E), until `RunCutscenePlayer` returns. It
 restores the shadow and destroys the pager.
 

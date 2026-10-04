@@ -8,7 +8,7 @@
  * `sub_80107C4` right before `sub_8010804` are left untouched raw. */
 
 extern struct phys_obj_list *gUnknown_0300130C;
-extern s32 sub_803AD7C(void *addr, void *fn);
+extern s32 _call_via_r1(void *addr, void *fn);
 extern void sub_800F5B8(void *self);
 
 /* Walks the `gUnknown_0300130C` object list (the same list/table
@@ -30,7 +30,7 @@ void sub_8010804(void)
             void *addr = (u8 *)e + offset;
             void *fn = rec->fn;
 
-            if (sub_803AD7C(addr, fn) == 3) {
+            if (_call_via_r1(addr, fn) == 3) {
                 s32 v = e->unk_54;
                 if (v != -1) {
                     e->u48.n = (u8)v;
@@ -44,10 +44,10 @@ void sub_8010804(void)
 
 extern void *gUnknown_030012BC;
 extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
-extern void sub_803AD88(void *arg0, s32 arg1, s32 arg2, s32 arg3);
+extern void _call_via_r4(void *arg0, s32 arg1, s32 arg2, s32 arg3);
 
 /* If the viewport's `+0xc` bit 7 flag is set, fires its own `+0x18`
- * table's `+0x68` trampoline pair (`sub_803AD88`, action `0x1a`) and
+ * table's `+0x68` trampoline pair (`_call_via_r4`, action `0x1a`) and
  * plays cue 1 - the same `+0x18`-table/trampoline-pair convention
  * `sub_801085C`'s sibling functions in this subsystem use throughout. */
 void sub_801085C(void)
@@ -68,7 +68,7 @@ void sub_801085C(void)
         void *addr = self + offset;
         register void *fn asm("r4") = *(void *volatile *)(rec + 4);
 
-        sub_803AD88(addr, 0, 0x1a, 0);
+        _call_via_r4(addr, 0, 0x1a, 0);
         (void)fn;
         PlaySfx(gUnknown_030012BC, 1, 0x100);
     }

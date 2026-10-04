@@ -10,7 +10,7 @@
  * `sub_800C5D4` already key off (docs/rom_map.md's "generic state-
  * machine selector" family, now 8+ confirmed sites).
  *
- * Prelude: `sub_803AE4C(gUnknown_0300082C + self->0x48 - self->0x4c,
+ * Prelude: `__modsi3(gUnknown_0300082C + self->0x48 - self->0x4c,
  * self->0x48)` - the same "close enough" scalar-check primitive used
  * throughout this cluster, here against the still-unexplained global
  * `gUnknown_0300082C` read as a plain word (not the table-base-pointer
@@ -53,7 +53,7 @@
  * `asm/code_3_2_17_bfa8.s` entirely - retired from `ldscript.txt`. */
 
 extern void sub_800C8CC(void *self, s32 mode);
-extern s32 sub_803AE4C(s32 a, s32 b);
+extern s32 __modsi3(s32 a, s32 b);
 extern void *sub_800C9C8(s32 a, s32 b, s32 c, s32 d, s32 e, void *f);
 
 /* The fields of this cluster's controller object (the class of
@@ -78,7 +78,7 @@ void sub_800BFA8(void *selfArg)
     u8 *record;
     s32 base = (s32)gUnknown_0300082C;
     s32 period = self->period;
-    s32 divCheck = sub_803AE4C(base + period - self->phase, period);
+    s32 divCheck = __modsi3(base + period - self->phase, period);
 
     if (divCheck == 0) {
         switch (self->mode) {

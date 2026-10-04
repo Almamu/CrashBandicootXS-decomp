@@ -117,7 +117,7 @@ the rest of what's understood without committing it to the struct.
   D-pad-down+L is pressed; then a fixed 17-frame wipe/transition effect
   poking the window-blend hardware registers directly; then frees every
   remaining popup-text list node. Two gaps closed:
-  - The confirm/D-pad-down+L check (`gUnknown_030007E0.pressed & 9`)
+  - The confirm/D-pad-down+L check (`gKeys.pressed & 9`)
     needed an explicit `register ... asm("r0")`/`asm("r1")` pin pair
     (the mask constant and the struct pointer) plus writing it as a
     `mask &= p->pressed;` compound assignment rather than a plain `if

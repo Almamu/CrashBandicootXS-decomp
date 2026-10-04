@@ -46,7 +46,7 @@ extern void *gUnknown_03000884;
  * per-type behavior entries (docs/rom_map.md) - slots past that
  * (byte offsets 0x10/0x14/0x18/0x2c/0x30, i.e. indices 4/5/6/11/12)
  * are read here as plain data values passed straight into
- * `sub_803AD78`, never called, and their real role/type isn't pinned
+ * `_call_via_r0`, never called, and their real role/type isn't pinned
  * down yet - kept as raw-offset `void *` accesses rather than forcing
  * them into the `fn[13]` function-pointer typing, per docs/workflow.md
  * step 7 (don't force a struct/field guess where the shape isn't
@@ -54,8 +54,8 @@ extern void *gUnknown_03000884;
 extern void *gUnknown_03001418;
 extern void **gUnknown_03001408;
 
-extern s32 sub_803AD78(void *arg);
-extern void sub_803AD80(s32 self, s32 arg, s32 fn);
+extern s32 _call_via_r0(void *arg);
+extern void _call_via_r2(s32 self, s32 arg, s32 fn);
 extern s32 sub_802F4C0(void *arg);
 extern s32 sub_802BD18(void *arg);
 
@@ -146,7 +146,7 @@ s32 sub_802A570(s32 idx)
     return v - 0x20;
 }
 
-/* The natural `sub_803AD78(...) ^ 1` C phrasing has this compiler
+/* The natural `_call_via_r0(...) ^ 1` C phrasing has this compiler
  * materialize the constant `1` into the destination register and the
  * call's result into a second register (an extra `adds r1, r0, #0`
  * copy the ROM doesn't have) - the ROM instead reuses r0 (the call
@@ -155,19 +155,19 @@ s32 sub_802A570(s32 idx)
  * step 3. */
 s32 sub_802A5AC(void)
 {
-    s32 result = sub_803AD78(*(void **)((u8 *)gUnknown_03001418 + 0x30));
+    s32 result = _call_via_r0(*(void **)((u8 *)gUnknown_03001418 + 0x30));
     asm volatile("movs r1, #1\n\teor r0, r1" : "+r"(result) :: "r1");
     return result;
 }
 
 void sub_802A5C4(void)
 {
-    sub_803AD78(*(void **)((u8 *)gUnknown_03001418 + 0x18));
-    sub_803AD78(*(void **)((u8 *)gUnknown_03001418 + 0x2c));
+    _call_via_r0(*(void **)((u8 *)gUnknown_03001418 + 0x18));
+    _call_via_r0(*(void **)((u8 *)gUnknown_03001418 + 0x2c));
 }
 
 /* Calls every actor's `m08` virtual method with 3 (the "destroy" call,
- * through the sub_803AD80 call-via-r2 thunk), walking the
+ * through the _call_via_r2 call-via-r2 thunk), walking the
  * gUnknown_03000884 circular list along its +0x4C links starting after
  * the head and handling the head itself last, then releases the
  * temporary pointer array this category's loading loop built
@@ -192,7 +192,7 @@ void sub_802A5E4(void)
     struct actor_self *next;
 
     if (*(void **)((u8 *)gUnknown_03001418 + 0x14) != NULL) {
-        sub_803AD78(*(void **)((u8 *)gUnknown_03001418 + 0x14));
+        _call_via_r0(*(void **)((u8 *)gUnknown_03001418 + 0x14));
     }
 
     {
@@ -228,7 +228,7 @@ void sub_802A5E4(void)
                 struct actor_vtable *rec = cur->vtable;
                 s32 x = (s32)cur + rec->m08.thisOffset;
                 s32 fn = (s32)rec->m08.fn;
-                sub_803AD80(x, 3, fn);
+                _call_via_r2(x, 3, fn);
             }
             cur = next;
         } while (cur != gUnknown_03000884);
@@ -239,7 +239,7 @@ void sub_802A5E4(void)
         struct actor_vtable *rec = cur->vtable;
         s32 x = (s32)cur + rec->m08.thisOffset;
         s32 fn = (s32)rec->m08.fn;
-        sub_803AD80(x, 3, fn);
+        _call_via_r2(x, 3, fn);
     }
 
     mem_free((u8 *)gUnknown_03001408);
@@ -248,7 +248,7 @@ void sub_802A5E4(void)
 void sub_802A650(void)
 {
     if (*(void **)((u8 *)gUnknown_03001418 + 0x10) != NULL) {
-        sub_803AD78(*(void **)((u8 *)gUnknown_03001418 + 0x10));
+        _call_via_r0(*(void **)((u8 *)gUnknown_03001418 + 0x10));
     }
 }
 

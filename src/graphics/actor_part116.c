@@ -13,17 +13,17 @@
  * derivation, and the base field differ:
  *
  * - `sub_800C8F8`: X axis (`owner+0`), base `self->0x60`, phase index
- *   via `sub_8037E54(gUnknown_0300082C << 8, self->0x3c) -
+ *   via `__udivsi3(gUnknown_0300082C << 8, self->0x3c) -
  *   (self->0x40 - 0x100)`.
  * - `sub_800C940`: Y axis (`owner+4`), base `self->0x64`, phase index
  *   via `(gUnknown_0300082C >> 1) - (self->0x40 - 0x100)` - *no*
- *   `sub_8037E54` call, a plain half-rate frame-counter phase
+ *   `__udivsi3` call, a plain half-rate frame-counter phase
  *   instead.
  * - `sub_800C97C`: Y axis (`owner+4`), base `self->0x64`, same
- *   `sub_8037E54`-based phase index as `sub_800C8F8`.
+ *   `__udivsi3`-based phase index as `sub_800C8F8`.
  *
- * `sub_8037E54` (already matched, `src/util/time_util.c`/
- * `src/graphics/hud_icon_widget5.c`) is `s32 sub_8037E54(s32 value,
+ * `__udivsi3` (already matched, `src/util/time_util.c`/
+ * `src/graphics/hud_icon_widget5.c`) is `s32 __udivsi3(s32 value,
  * s32 divisor)` elsewhere - here it's re-used with `self->0x3c` as
  * the "divisor" slot, most plausibly for some angle/period-wrapping
  * role given the caller context, not resolved further in this pass.
@@ -52,7 +52,7 @@
  * instruction from the ROM disassembly instead. Confirmed byte-
  * identical to `baserom.gba` at `0x0800C8F8`-`0x0800C9C8` (208 bytes,
  * all three functions) via the isolated cpp/agbcc/as + objcopy/cmp
- * pipeline (only `bl sub_8037E54` and literal-pool relocation sites
+ * pipeline (only `bl __udivsi3` and literal-pool relocation sites
  * differ) plus a full clean `rm -rf build && make NON_MATCHING=1
  * report` (no warnings) and `rm -rf build crashbandicootxs.elf
  * crashbandicootxs.gba crashbandicootxs.map && make compare`
@@ -67,7 +67,7 @@
 
 extern s16 gStaticData_0816A820[];
 extern u32 gUnknown_0300082C;
-extern s32 sub_8037E54(s32 value, s32 divisor);
+extern s32 __udivsi3(s32 value, s32 divisor);
 
 static inline s16 Wave(s16 *table, s32 t, s32 phase)
 {
@@ -77,7 +77,7 @@ static inline s16 Wave(s16 *table, s32 t, s32 phase)
 void sub_800C8F8(struct part_ctrl *self)
 {
     s16 *table = gStaticData_0816A820;
-    s32 t = sub_8037E54(gUnknown_0300082C << 8, self->period);
+    s32 t = __udivsi3(gUnknown_0300082C << 8, self->period);
     register s32 v asm("r2");
     s32 w;
     struct ctrl_target *target;
@@ -119,7 +119,7 @@ void sub_800C97C(struct part_ctrl *self)
 {
     struct ctrl_target *target = self->target;
     register s16 *table asm("r6") = gStaticData_0816A820;
-    s32 t = sub_8037E54(gUnknown_0300082C << 8, self->period);
+    s32 t = __udivsi3(gUnknown_0300082C << 8, self->period);
 
     /* Empty: marks r8 as used so the prologue saves it, as in the ROM. */
     asm("" : : : "r8");

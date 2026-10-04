@@ -21,7 +21,7 @@
  *   `RunCutscenePlayer` is a second per-frame driver loop over the same
  *   `+0/+4` items/count pair `RunSlideshow` (game_loop37.c) already
  *   drives, but interleaved with an explicit OAM-shadow-buffer flush
- *   (`sub_8006A90`/`sub_8006A48`/`sub_80006A8`/`sub_8006AAC` on
+ *   (`sub_8006A90`/`sub_8006A48`/`WaitForVBlank`/`sub_8006AAC` on
  *   `gUnknown_03001300`, the same "HUD-icon-plus-number renderer" OAM
  *   pacing pattern docs/matching.md documents elsewhere) and a nested
  *   text-paging loop through a second per-item record array at `+0x10`
@@ -29,7 +29,7 @@
  *   via `sub_8000EE4` (text_layout.c) against an `icon_manager *` at
  *   `+0x14` and a 2-word "box" at `+0x18`/`+0x1c`, continuing to the
  *   next string in the current record while a held-input mask (9,
- *   versus `RunSlideshow`'s 8) stays set. `+0x24` feeds `sub_8037E54`
+ *   versus `RunSlideshow`'s 8) stays set. `+0x24` feeds `__udivsi3`
  *   (value/divisor) to compute the per-call text-wrap `limit`.
  *   `DestroyCutscenePlayer` is a plain two-argument forwarding trampoline to
  *   `DestroySlideshow` (game_loop20.c).
@@ -57,7 +57,7 @@
  *   `InitBgLayerBase`/`sub_8024DCC`/`sub_8024DE0`/`ScaleBgLayerScroll`/
  *   `sub_8024E24` round out the streamer object's own construction
  *   (allocates the 0x1000-byte ring buffer, wires up two
- *   `sub_803AD80`-style interworking-trampoline tables -
+ *   `_call_via_r2`-style interworking-trampoline tables -
  *   `gBgStreamerVtable`/`gBgLayerBaseVtable` - for notifying a
  *   parent object of size/position changes), plain position/clamp
  *   accessors, and the Q8 scale/accumulate step
@@ -132,9 +132,9 @@ void *InitSlideshow(void *self)
 struct pager_item
 {
     u8 unk_00[4];
-    s32 count;                  // 0x04 - sub_80010E0's count
+    s32 count;                  // 0x04 - WaitForKeyPress's count
     u8 unk_08[8];
-    u8 buttons;                 // 0x10 - sub_80010E0's checkButtons
+    u8 buttons;                 // 0x10 - WaitForKeyPress's checkButtons
 };
 
 struct pager_text
@@ -161,7 +161,7 @@ struct pager
 };
 
 extern void *gUnknown_03001300;
-extern s32 sub_8037E54(s32 value, s32 divisor);
+extern s32 __udivsi3(s32 value, s32 divisor);
 extern void ShowSlidePicture(struct pager *self, s32 idx);
 extern void BeginSlide(struct pager *self, s32 idx);
 extern void EndSlide(struct pager *self, s32 idx);
@@ -169,8 +169,8 @@ extern s32 SkipSlides(struct pager *self, s32 startIdx, u8 condFlag);
 extern void sub_8006A90(void *oam);
 extern void sub_8006A48(void *oam);
 extern void sub_8006AAC(void *oam);
-extern void sub_80006A8(void);
-extern s32 sub_80010E0(s32 count, u8 checkButtons, s32 mask);
+extern void WaitForVBlank(void);
+extern s32 WaitForKeyPress(s32 count, u8 checkButtons, s32 mask);
 extern s32 sub_8000EE4(u8 *text, void *target, s32 *box, s32 limit, s32 mode);
 
 void RunCutscenePlayer(struct pager *self)
@@ -184,7 +184,7 @@ void RunCutscenePlayer(struct pager *self)
         struct pager_target *t = self->target;
 
         t->box0 = b;
-        limit = sub_8037E54(self->box[3], t->divisor);
+        limit = __udivsi3(self->box[3], t->divisor);
     }
     for (i = 0; i < self->count; i++)
     {
@@ -193,12 +193,12 @@ void RunCutscenePlayer(struct pager *self)
         ShowSlidePicture(self, i);
         sub_8006A90(*oamp);
         sub_8006A48(*oamp);
-        sub_80006A8();
+        WaitForVBlank();
         sub_8006AAC(*oamp);
         BeginSlide(self, i);
         if (self->texts[i].count == 0)
         {
-            res = sub_80010E0(self->items[i]->count, self->items[i]->buttons, 9);
+            res = WaitForKeyPress(self->items[i]->count, self->items[i]->buttons, 9);
         }
         else
         {
@@ -212,7 +212,7 @@ void RunCutscenePlayer(struct pager *self)
                 while (str[pos] != 0 && res == 1)
                 {
                     pos += sub_8000EE4(str + pos, self->target, self->box, limit, 1);
-                    res = sub_80010E0(self->items[i]->count, self->items[i]->buttons, 9);
+                    res = WaitForKeyPress(self->items[i]->count, self->items[i]->buttons, 9);
                 }
             }
         }
@@ -610,11 +610,11 @@ extern void sub_8026EB4(void *ptr);
 extern void sub_8026ED0(void *self);
 extern void *sub_8026EC0(u32 size);
 extern void *sub_8026EDC(s32 size);
-extern s32 sub_803AD80(void *arg0, void *arg1, void *arg2);
+extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern u8 gBgStreamerVtable[];
 extern u8 gBgLayerBaseVtable[];
 
-/* Wires up `self+0x20`'s `sub_803AD80`-style interworking-trampoline
+/* Wires up `self+0x20`'s `_call_via_r2`-style interworking-trampoline
  * table (a fixed `gBgStreamerVtable`), then tears down `self+8`'s
  * ring buffer (if already allocated - `InitBgStreamer` below is the
  * matching constructor) and/or notifies via `sub_8026ED0` if bit 0 of
@@ -681,7 +681,7 @@ void sub_8024D6C(void *self0, s32 x, s32 y)
     self->heightTiles = y;
 }
 
-/* Wires up `self+0x30`'s second `sub_803AD80`-style trampoline table
+/* Wires up `self+0x30`'s second `_call_via_r2`-style trampoline table
  * (`gBgLayerBaseVtable`, a different fixed table from
  * `DestroyBgStreamer`'s), then - if `self+0x2c`'s child object is already
  * set (per `InitBgLayerBase` below) - notifies it via its own `+0x20`
@@ -698,7 +698,7 @@ void DestroyBgLayerBase(void *self0, s32 flags)
     if (child != NULL) {
         struct streamer_vtable *mgr = child->vtable;
 
-        sub_803AD80((u8 *)child + mgr->destroy.thisOffset, (void *)3, mgr->destroy.fn);
+        _call_via_r2((u8 *)child + mgr->destroy.thisOffset, (void *)3, mgr->destroy.fn);
     }
 
     if (flags & 1) {
@@ -788,7 +788,7 @@ void ScaleBgLayerScroll(void *self0, void *vec20)
  * text draw, same family as the icon-renderer shapes"): for each axis,
  * forwards `delta - self`'s own position through `self+0x30`'s
  * trampoline table (action = the position delta itself, per the same
- * `sub_803AD80`-style convention `DestroyBgLayerBase`/`InitBgLayerBase` wire up),
+ * `_call_via_r2`-style convention `DestroyBgLayerBase`/`InitBgLayerBase` wire up),
  * then accumulates both trampoline results back into `self`'s own
  * position. */
 void sub_8024E24(void *self0, void *delta0)
@@ -799,12 +799,12 @@ void sub_8024E24(void *self0, void *delta0)
     s32 dx, dy;
 
     mgr = self->vtable;
-    dx = sub_803AD80((u8 *)self + mgr->method_20.thisOffset,
+    dx = _call_via_r2((u8 *)self + mgr->method_20.thisOffset,
                       (void *)(delta[0] - self->x),
                       mgr->method_20.fn);
 
     mgr = self->vtable;
-    dy = sub_803AD80((u8 *)self + mgr->method_20.thisOffset,
+    dy = _call_via_r2((u8 *)self + mgr->method_20.thisOffset,
                       (void *)(delta[1] - self->y),
                       mgr->method_20.fn);
 

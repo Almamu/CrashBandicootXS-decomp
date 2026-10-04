@@ -2,12 +2,12 @@
 #include "actor.h"
 #include "actor_self.h"
 
-extern void *sub_803AD7C(void *arg0, void *fn);
-extern void sub_803A94C(void *src, void *dst, s32 control);
+extern void *_call_via_r1(void *arg0, void *fn);
+extern void CpuSet(void *src, void *dst, s32 control);
 extern void sub_8026EB4(void *ptr);
 extern void sub_8026ED0(void *manager);
 extern void *sub_8026EC0(u32 size);
-extern s32 sub_803AD80(void *arg0, void *arg1, void *fn);
+extern s32 _call_via_r2(void *arg0, void *arg1, void *fn);
 extern void *gLevelLayers;
 
 /* The "filter into a second array" manager struct also used by
@@ -38,7 +38,7 @@ struct listed_obj {
     struct listed_obj_vtable *vtable; // 0x18
 };
 
-/* Calls the `m20` virtual method (via the `sub_803AD7C` call thunk) of
+/* Calls the `m20` virtual method (via the `_call_via_r1` call thunk) of
  * every object in `manager->array2` (bounded by `count2`). */
 void sub_8008DC0(struct dual_array_manager *manager)
 {
@@ -51,14 +51,14 @@ void sub_8008DC0(struct dual_array_manager *manager)
         void *addr = (u8 *)part + offset;
         void *fn = tbl->m20.fn;
 
-        sub_803AD7C(addr, fn);
+        _call_via_r1(addr, fn);
     }
 }
 
 /* Searches `manager->array1` (bounded by `capacity`) for an entry
  * equal to `target`; if found, compacts the array by shifting every
  * following entry down by one slot via the BIOS `CpuSet` wrapper
- * `sub_803A94C`, decrements `count1`, and clears the now-unused
+ * `CpuSet`, decrements `count1`, and clears the now-unused
  * trailing slot. Same removal logic as `sub_8008E50` below, but
  * locates the index by value instead of taking it directly as an
  * argument. */
@@ -96,7 +96,7 @@ void sub_8008DEC(struct dual_array_manager *manager, void *target)
         s32 newCount;
 
         control |= 0x4000000;
-        sub_803A94C(src, dst, control);
+        CpuSet(src, dst, control);
 
         newCount = manager->count1 - 1;
         manager->count1 = newCount;
@@ -107,7 +107,7 @@ done:
 }
 
 /* Removes the entry at `index` from `manager->array1`, compacting via
- * `sub_803A94C` the same way `sub_8008DEC` does after its own
+ * `CpuSet` the same way `sub_8008DEC` does after its own
  * search. */
 void sub_8008E50(struct dual_array_manager *manager, s32 index)
 {
@@ -124,7 +124,7 @@ void sub_8008E50(struct dual_array_manager *manager, s32 index)
         dst = base + off;
         control = (manager->count1 - index) & 0x1FFFFF;
         control |= 0x4000000;
-        sub_803A94C(src, dst, control);
+        CpuSet(src, dst, control);
 
         newCount = manager->count1 - 1;
         manager->count1 = newCount;

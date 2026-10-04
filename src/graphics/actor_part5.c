@@ -63,11 +63,11 @@ void sub_8008350(void *part)
 }
 
 extern void sub_8008044(struct actor *part);
-extern void *sub_803AD7C(void *arg0, void *arg1);
+extern void *_call_via_r1(void *arg0, void *arg1);
 
 /* Advances `part`'s animation timer (`sub_8008044`), then resolves two
  * `table+N`/`table+N+4` offset/pointer slot pairs (the same convention
- * documented for `sub_8006FE4`/`sub_8007F78`) into `sub_803AD7C` calls
+ * documented for `sub_8006FE4`/`sub_8007F78`) into `_call_via_r1` calls
  * - table+0x60/+0x64 first, then table+8/+0xc. */
 void sub_8008364(struct actor *part)
 {
@@ -80,7 +80,7 @@ void sub_8008364(struct actor *part)
         void *addr = (u8 *)part + offset;
         void *ptr = *(void **)((u8 *)slot + 4);
 
-        sub_803AD7C(addr, ptr);
+        _call_via_r1(addr, ptr);
     }
     {
         void *table = part->table;
@@ -88,7 +88,7 @@ void sub_8008364(struct actor *part)
         void *addr = (u8 *)part + offset;
         void *ptr = *(void **)((u8 *)table + 0xc);
 
-        sub_803AD7C(addr, ptr);
+        _call_via_r1(addr, ptr);
     }
 }
 

@@ -36,7 +36,7 @@ only in a handful of embedded constants:
    result, via the same "compute address, then mask, then reload-AND-OR"
    idiom used throughout this ROM region.
 4. Calls `sub_800CA74()` for a header/context pointer, then fires a
-   `sub_803AD80` animation-table trampoline (`header + table->offset`,
+   `_call_via_r2` animation-table trampoline (`header + table->offset`,
    `part`, `table->fn`, where `table = header->0xc`) *twice*, tagging
    `header->0x6c = 7` and wiring `part->0x44 = header` in between - the
    table pointer is reloaded fresh from `header->0xc` for the second
@@ -251,7 +251,7 @@ its own just-stored `+0x20` table pointer (`*(*(part->0x20)) + 0x14`,
 not `sub_800815C`) plus `gUnknown_030012B8`'s tile-asset cache via
 `sub_8006DF8`, unconditionally clears bits 4/5 of `part->0x28` (no OR -
 simpler than the twin family's lookup-table pack), fires a single
-`sub_803AD80` trampoline (not twice), and finishes with a three-step
+`_call_via_r2` trampoline (not twice), and finishes with a three-step
 flags mask (`(((flags & 0x7f) & -5) & -0x41) | 0x10`). Two real bugs
 surfaced and got fixed during this pass, both only visible after a full
 clean `make compare` (an isolated compile alone hid both - see
@@ -392,7 +392,7 @@ pass's writeup carried forward:
 - **`sub_8021388`**, **`sub_8021480`**, **`sub_802155C`** genuinely
   *are* 3 more popup-family instances (same `sub_8009ED0` constructor,
   `+0x20` table offset, `sub_800815C`/`UPDATE_PART_FRAME_NIBBLE` nibble
-  update, `gEntityFlags` two-bit collected pack, `sub_803AD80`
+  update, `gEntityFlags` two-bit collected pack, `_call_via_r2`
   trampoline via an allocated header, tag/manager-register tail -
   `sub_8021480`/`sub_802155C` skip the flags-mask step `sub_8021388`
   has and use a plain `flags |= 0x10` instead, and `sub_802155C` adds
@@ -606,7 +606,7 @@ fix, confirmed by isolated-compile diff against the ROM disassembly:
   `sub_8021388` gotcha this document's fourth/fifth passes already
   flagged (`register s32 off asm("r3") = 0x18;` lands the two-step
   mov/lsl synthesis in whatever register this compiler likes, not the
-  pinned one) recurred for `sub_801F170`'s second `sub_803AD80`
+  pinned one) recurred for `sub_801F170`'s second `_call_via_r2`
   trampoline call, whose `+0x18` offset constant needs `r3` specifically
   (the *first* trampoline call in the same function reuses `r2` instead -
   the classic "no CSE across a call" scheduling gap this whole cluster's
@@ -701,7 +701,7 @@ skeleton as documented at the top of this file: a `sub_8009ED0`-built
 part object, a `gUnknown_030012D0`-rooted `+0x20` table offset, a
 `sub_800815C` frame-nibble update, a `gEntityFlags` two-bit
 "collected" pack into `+0x28`, a `gUnknown_030012F0` manager
-registration, and a header (`sub_800CA74`) with one or two `sub_803AD80`
+registration, and a header (`sub_800CA74`) with one or two `_call_via_r2`
 trampoline calls - varying only the embedded offsets/constants and tail
 shape (a header->0x84 double-rewrite plus a record-field/struct-field
 copy; the standard OAM trio; a plain record-relookup feeding

@@ -3,8 +3,8 @@
 Category label was `graphics`, but this chunk turned out to be the same
 "self" action-table object family already established in
 `actor_part18.c`/`actor_part18b.c` (self+0xc a per-category
-`{s16 offset; void *fn}` table fed through the `sub_803AD80`/
-`sub_803AD84` trampolines together with `self+0x10`, a `struct actor *`
+`{s16 offset; void *fn}` table fed through the `_call_via_r2`/
+`_call_via_r3` trampolines together with `self+0x10`, a `struct actor *`
 sub-object; self+0x27-0x32 a shared state/flag/table-index trio) - filed
 under `docs/status/actor.md`, not `graphics.md`, matching the note in
 `docs/status/README.md` that several graphics-labeled chunks are
@@ -40,11 +40,11 @@ original `asm/code_3_2_17_14674.s` is truncated to end right before
 
 - **`sub_8014F8C`**: scans the `gUnknown_030012F0` list of
   `struct actor *`; skips entries whose `+0x48` trampoline
-  (`sub_803AD7C`) reports a width of 4 or less, entries further than
+  (`_call_via_r1`) reports a width of 4 or less, entries further than
   0x40 (Manhattan distance) from `self`'s own part, entries without
   their `+0xc` bit 6 flag set, and entries more than 0x11 away
   vertically - then fires the `+0x68` trampoline pair via
-  `sub_803AD88` with action 0x16 on whatever survives. Needed two real
+  `_call_via_r4` with action 0x16 on whatever survives. Needed two real
   compiler-codegen fights:
   - **Anti-CSE across a loop back-edge**: the ROM reloads
     `gUnknown_030012F0` completely fresh (both the literal-pool address
@@ -156,7 +156,7 @@ original `asm/code_3_2_17_14674.s` is truncated to end right before
 - **`sub_8015774`**: trivial tail-call to `sub_8012D24`.
 - **`sub_8015780`**: fires the mgr trampoline pair with `a`/`b` as the
   two action arguments (note: `a` is a real, *used* parameter here,
-  passed straight through as `sub_803AD80`'s action index - not the
+  passed straight through as `_call_via_r2`'s action index - not the
   "unused" parameter it looked like from `actor_part18.c`'s call
   sites alone), then conditionally latches `self+0x18`/`self+0x1c`
   from `c`/`d` unless either equals the `0x7FFFFFFF` sentinel. Matched

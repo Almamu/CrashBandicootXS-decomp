@@ -118,7 +118,7 @@ fns): the `sub_800FF0C` trampoline family, types `1`-`7`.
   in C gets constant-folded into a single-instruction bitwise-complement
   immediate, one off from the ROM's actual two's-complement value.
 - **`sub_8022230`'s five "void helper leaves the pointer in r0" calls**
-  (`nullsub_2`, `nullsub_1`, `sub_8006FB4`, `sub_80007DC`,
+  (`nullsub_2`, `nullsub_1`, `sub_8006FB4`, `ClearKeys`,
   `sub_8025A5C`, and `CreateEntitySpawner`'s own `sub_8025D6C`): each is called
   immediately after an allocation, and the ROM leaves the fresh
   pointer in `r0` across the call (valid only because each real callee

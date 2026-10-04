@@ -19,7 +19,7 @@ function in the file under old_agbcc:
 - `SetAnim` takes `s32` (the ROM loads the full word from index tables).
 - `struct level_info`'s `time0`-`time2` are `u32` (the ROM compares them unsigned).
 - `struct level_save` uses `u16` bitfields, which makes gcc narrow the `time != 0` test to `ldrh`+mask.
-- The pinned `PressedBits` helper was removed. Plain `gUnknown_030007E0.half.pressed & N` gives the same code.
+- The pinned `PressedBits` helper was removed. Plain `gKeys.half.pressed & N` gives the same code.
 
 ## Not closed
 

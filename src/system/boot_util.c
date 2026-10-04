@@ -13,7 +13,7 @@
  * spill it through a callee-saved register (r4) with a normal
  * push/pop-list prologue instead, which is a real but differently-
  * shaped save. */
-s32 sub_8000140(s32 number, s32 denom, s32 *remainderOut)
+s32 DivMod(s32 number, s32 denom, s32 *remainderOut)
 {
     register s32 quotient asm("r0") = number;
     register s32 remainder asm("r1") = denom;
@@ -29,16 +29,19 @@ s32 sub_8000140(s32 number, s32 denom, s32 *remainderOut)
     return quotient;
 }
 
-extern void sub_803A94C(const void *src, void *dst, u32 cnt);
+extern void CpuSet(const void *src, void *dst, u32 cnt);
 
-/* `sub_803A94C` (the BIOS `CpuSet` wrapper) with swapped src/dst
+/* `CpuSet` (the BIOS SWI wrapper) with swapped src/dst
  * argument order and `byteCount` converted to CpuSet's 32-bit-word
  * count field: masked to the low 23 bits, then divided by 4 (the
  * `<<9`/`>>11` pair nets exactly that), with the 32-bit-transfer flag
- * (`CPU_SET_32BIT`) set. Returns `dst`. */
-void *sub_800014C(void *dst, const void *src, u32 byteCount)
+ * (`CPU_SET_32BIT`) set. Returns `dst`. This is the ROM's `memcpy`
+ * (the GAX code aliases the compiler's `memcpy` calls to it), but only
+ * for word-aligned, whole-word copies, so it doesn't take the libc name
+ * (which agbcc would also treat as its builtin). */
+void *MemCopy32(void *dst, const void *src, u32 byteCount)
 {
-    sub_803A94C(src, dst, ((byteCount << 9) >> 11) | CPU_SET_32BIT);
+    CpuSet(src, dst, ((byteCount << 9) >> 11) | CPU_SET_32BIT);
     return dst;
 }
 

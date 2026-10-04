@@ -17,11 +17,6 @@
  * are real C (see docs/matching/issue-12-physics-collision.md's
  * NAKED-retry sections). */
 
-asm(".set _call_via_r1, sub_803AD7C\n"
-    ".set _call_via_r2, sub_803AD80\n"
-    ".set _call_via_r3, sub_803AD84\n"
-    ".set _call_via_r4, sub_803AD88\n");
-
 extern struct phys_obj_list *gUnknown_0300130C;
 extern u8 gUnknown_030012B0;
 extern void sub_800EEF0(struct phys_obj *self, u8 arg1);
@@ -99,7 +94,7 @@ extern u8 gStaticData_0816BB94[];
  * `gUnknown_030012D8+0x8c` (a running counter) hasn't exceeded
  * `gUnknown_0300082C`'s threshold, and `self`'s position is within 0x1d
  * px of `gUnknown_030012D8`'s (the player) on both axes (or `arg1`
- * itself is 0), calls `sub_803AD88` (the `bx r4` sound/particle
+ * itself is 0), calls `_call_via_r4` (the `bx r4` sound/particle
  * trampoline from `self+0x18+0x68`) with args `(0, 4, 0)`. Finally, if
  * `self+0x4e != 0xa`, forces `self+0x4e = 0x13` (a shared "settle"
  * state most of this cluster's state machines converge on - see
@@ -168,7 +163,7 @@ void sub_800EEF0(struct phys_obj *self, u8 near)
  * `arg1` a small proximity-radius constant (0x14 or 0x28 px). Walks
  * `gUnknown_0300130C`'s whole object list twice:
  *
- * - First pass: for every other object whose `sub_803AD7C`
+ * - First pass: for every other object whose `_call_via_r1`
  *   overlap-classification against `self` returns `3` (a "close enough
  *   to interact" code shared with several siblings below) and whose
  *   Chebyshev-ish `|dx|+|dy|` distance to `self` is within `arg1`,
@@ -183,7 +178,7 @@ void sub_800EEF0(struct phys_obj *self, u8 near)
  *   when `gUnknown_030012EC[other+0x4e]` is nonzero, before falling
  *   into that dispatch.)
  * - Second pass over `gUnknown_030012EC`'s smaller secondary list:
- *   objects with `sub_803AD7C == 2` and the same distance gate get
+ *   objects with `_call_via_r1 == 2` and the same distance gate get
  *   `sub_8011448(other, 1)` (already matched elsewhere) and an
  *   `other+0xc` bit-`0x10` set (same render/update flag `sub_800EEF0`
  *   sets above).
@@ -255,15 +250,15 @@ void sub_800F06C(struct phys_obj *self, s32 dist)
  * settle any pending case-`0xa` collisions, then loops
  * `gUnknown_0300130C` up to twice (an outer `do { ... } while
  * (gUnknown_030012B0)` driven by a one-shot re-scan flag stored at
- * `gUnknown_030012B0`): for every object whose `sub_803AD7C`
+ * `gUnknown_030012B0`): for every object whose `_call_via_r1`
  * classification against `self` is `3` and whose `+0xc` bit `1` is set,
  * calls `sub_8009AA0(list, index)` (an already-elsewhere-matched
  * list-removal helper) and, if that object is still non-NULL
- * afterward, `sub_803AD80(other, 3, ...)` (a variant of the
- * `sub_803AD7C` overlap-classifier that also *mutates* state, per the
+ * afterward, `_call_via_r2(other, 3, ...)` (a variant of the
+ * `_call_via_r1` overlap-classifier that also *mutates* state, per the
  * `3` id) - decrementing the loop index to re-visit the same slot next
  * iteration since the list just shrank. Objects that overlap but don't
- * have that `+0xc` flag instead get a plain `sub_803AD7C` call against
+ * have that `+0xc` flag instead get a plain `_call_via_r1` call against
  * a *different* box (`other+0x18+0x18`/`+0x1c`, not `+0x48`/`+4`) with
  * no further action - just a classification side effect. */
 
@@ -292,7 +287,7 @@ void sub_800F1B8(void)
 }
 
 /* Takes no arguments. A short `gUnknown_0300130C` list-scan: for every
- * object whose `sub_803AD7C` overlap-classification against `self` is
+ * object whose `_call_via_r1` overlap-classification against `self` is
  * `3`, whose `+0x4e` state is `0xa`, and whose `+0x4d & 0x7f` is clear,
  * calls `sub_800EEF0(other, 0)` - i.e. settles any object still parked
  * in the "pending edge-4 commit, state 0xa" condition `sub_800EEF0`
@@ -388,8 +383,8 @@ void sub_800F2BC(struct phys_obj *self)
  * touches).
  *
  * Then walks `gUnknown_0300130C`'s whole list a *second* time (distinct
- * from the `sub_803AD7C`-classification passes above): collects up to
- * 0x20 other objects whose `sub_803AD7C` result is `3`, `+0x4d & 0x7f
+ * from the `_call_via_r1`-classification passes above): collects up to
+ * 0x20 other objects whose `_call_via_r1` result is `3`, `+0x4d & 0x7f
  * == 0`, `+0x4e == 5`, and `+0x50` matches `self+0x50`, into a local
  * stack array, calling `sub_8025A0C` on each of *their* positions too.
  * If any were collected, allocates a heap block sized for the count
@@ -600,7 +595,7 @@ void sub_800F5B8(struct phys_obj *self)
  * `sub_800F6B8(part->x >> 8, part->y >> 8, 0x40, 0x12)`, a fixed
  * 0x40x0x12 probe box around an actor-part's own position). Walks
  * `gUnknown_0300130C`'s whole list: for every object whose
- * `sub_803AD7C` classification against the probe box is `3`, whose
+ * `_call_via_r1` classification against the probe box is `3`, whose
  * Chebyshev distance is within `(arg2, arg3)` on X/Y respectively, and
  * whose `+0x4d & 0x7f == 0`, looks up
  * `gStaticData_0816BBC4[other+0x4e]`: if that row's

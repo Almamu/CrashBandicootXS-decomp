@@ -53,9 +53,6 @@ extern void sub_8006AC8(struct oam_shadow_buffer *buf, struct oam_attrs *oam);
 extern s32 gStaticData_0816C644[12];
 extern s32 gStaticData_0816C674[12];
 
-/* sub_803ADB4 is libgcc's `__divsi3`, reached from plain `/`. */
-asm(".set __divsi3, sub_803ADB4\n");
-
 /* Picks the smallest-area box preset (gStaticData_0816C644/674) that a
  * width x height box fits in at 50% zoom or better, puts its shape/size
  * and an area-derived tile number into the OAM template, and stores the

@@ -19,7 +19,7 @@ original agbcc pass; where a workaround has since gone, it is marked.
 The same C++-style object family as `actor_part_17524.c` and
 `actor_part27*.c`: small classes with a method table ("vtable") at
 `self+0xc`, gcc 2.x `{s16 this-adjust, pad, fn}` method entries called
-through the `sub_803AD80`/`AD84`/`AD88` call-via-register trampolines.
+through the `_call_via_r2`/`AD84`/`AD88` call-via-register trampolines.
 Every class has a constructor (base constructor `sub_800B8C8`,
 `sub_8017A8C` or `sub_801B7D8`, then its own table pointer, returns
 `self`) and a destructor (table pointer, then the base destructor).
@@ -125,7 +125,7 @@ Fixes, all plain C plus pins/barriers unless noted:
   order; `self->squares[i]` indexing instead of a walking pointer
   (`sub_80189EC`); an explicit empty `case 10` to keep `sub_8018E4C`'s
   11-entry jump table; `if (stepsLeft) break; goto next;` for its
-  branch-trampoline shape; the `sub_803AD88` call's function pointer
+  branch-trampoline shape; the `_call_via_r4` call's function pointer
   loaded into r4 through a volatile read (the `actor_part78.c` idiom);
   `part` pinned to `ip` in `sub_8018978`.
 

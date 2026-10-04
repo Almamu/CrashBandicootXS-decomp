@@ -189,8 +189,8 @@ void sub_800397C(struct pause_options_screen *self, u32 flags)
 extern struct icon_manager *gUnknown_030012DC;
 extern s32 sub_8028A30(void *mgr, s32 arg1);
 extern s32 sub_8004A50(struct pause_options_screen *self);
-extern s32 sub_8026F38(s32 arg0);
-extern s32 sub_803AD80(void *arg0, void *arg1, void *arg2);
+extern s32 GetUiText(s32 arg0);
+extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern void sub_8003F30(struct pause_options_screen *self, s32 label1, s32 label2, s32 rowIdx, u8 flag);
 extern s32 gStaticData_0816B1BC[];
 
@@ -304,11 +304,11 @@ void sub_8003A60(struct pause_options_screen *self)
             "add r0, r0, r1\n"
             "ldr %1, [r0]\n"
             "add r0, %1, #0\n"
-            "bl sub_8026F38\n"
+            "bl GetUiText\n"
             "add r1, r0, #0\n"
             "ldr r2, [r5, #4]\n"
             "add r0, %0, #0\n"
-            "bl sub_803AD80\n"
+            "bl _call_via_r2\n"
             "movs r1, #0xf0\n"
             "sub r1, r1, r0\n"
             "asr r1, r1, #1\n"
@@ -332,11 +332,11 @@ void sub_8003A60(struct pause_options_screen *self)
             "ldrsh r0, [r0, r2]\n"
             "add %0, %0, r0\n"
             "add r0, %1, #0\n"
-            "bl sub_8026F38\n"
+            "bl GetUiText\n"
             "add r1, r0, #0\n"
             "ldr r2, [r5, #4]\n"
             "add r0, %0, #0\n"
-            "bl sub_803AD80\n"
+            "bl _call_via_r2\n"
             : "+r" (mgr), "+r" (label)
             : "r" (y), "r" (i), "r" (mgrAddr)
             : "r0", "r1", "r2", "r3", "r5", "r12", "lr", "cc", "memory"

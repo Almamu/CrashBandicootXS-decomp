@@ -35,11 +35,11 @@ extern void *gUnknown_03001304;
 extern void *gUnknown_0300160C[2];
 extern s32 gUnknown_03001604;
 extern void *gUnknown_03001608;
-extern void (*gUnknown_03000874)(void *dst, u8 *frame);
+extern void (*gUnpackRleSpriteFrameFunc)(void *dst, u8 *frame);
 extern struct held_pressed_pair {
     u16 held;
     u16 pressed;
-} gUnknown_030007E0;
+} gKeys;
 
 extern u8 gStaticData_0817CFA4[];
 extern u8 gStaticData_0817CFF4[];
@@ -54,21 +54,21 @@ extern u8 gStaticData_087E55C4[];
 
 extern void sub_8006A90(struct oam_shadow_buffer *arg0);
 extern void sub_8006A48(struct oam_shadow_buffer *arg0);
-extern void sub_80006A8(void);
+extern void WaitForVBlank(void);
 extern void sub_8006AAC(struct oam_shadow_buffer *arg0);
 extern void sub_8006AC8(struct oam_shadow_buffer *self, void *record);
 extern void sub_8006A78(struct oam_shadow_buffer *arg0);
-extern s32 sub_803ADB4(s32 arg0, s32 arg1);
+extern s32 __divsi3(s32 arg0, s32 arg1);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void sub_8001614(void);
 extern void sub_8001B54(struct AudioContext *self, u32 id);
 extern void sub_8028A30(struct icon_manager *self, u8 val);
-extern s32 sub_8026F38(s32 arg0);
+extern s32 GetUiText(s32 arg0);
 extern void sub_8034688(s32 arg0);
-extern void *sub_803AD7C(void *arg0, void *fn);
-extern s32 sub_803AD80(void *arg0, void *arg1, void *arg2);
+extern void *_call_via_r1(void *arg0, void *fn);
+extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern void sub_80015B0(void);
-extern s32 sub_8000E1C(s32 arg0);
+extern s32 RandRange(s32 arg0);
 extern void *sub_8026EC0(u32 size);
 extern void sub_8026EB4(void *ptr);
 extern void *sub_8026EDC(s32 size);
@@ -88,19 +88,14 @@ extern void AgeSpriteFrameCache(void);
 extern void FreeCategorySpriteSheet(void);
 extern void FlushVramDmaQueue(void);
 extern s32 QueueVramDmaTransfer(void *src, void *dest, u16 size, u16 unit);
-extern void sub_80007AC(void *arg0);
+extern void UpdateKeys(void *arg0);
 extern void sub_8026ED0(void *self);
-extern s32 sub_803AE4C(void *self, s32 arg1);
+extern s32 __modsi3(void *self, s32 arg1);
 extern void sub_80346FC(void *self, s32 arg1);
 extern void InitActorPart(void *self, s32 a, s32 b, s32 c, s32 d);
 extern s32 GetAnimFrameBaseOffset(void *self);
 extern s32 GetSpriteShapeSizeBits(void *self);
 extern void QueueSpriteFrameOam(u32 attr01, u16 attr2, s32 scale);
-
-/* libgcc helpers under this ROM's names: `sub_803ADB4` is `__divsi3`,
- * `sub_803AD80` is `_call_via_r2` (the Thumb indirect-call thunk). */
-asm(".set __divsi3, sub_803ADB4");
-asm(".set _call_via_r2, sub_803AD80");
 
 /* The camera-ish object an actor part reads through `self+0x30`
  * (same shape as actor_part128.c's). */
@@ -155,9 +150,6 @@ struct slot_seed
     struct delta_record *record;
     s32 hold;
 };
-
-/* `sub_803AE4C` is libgcc's `__modsi3`. */
-asm(".set __modsi3, sub_803AE4C");
 
 void sub_80358A8(u32 *self);
 void sub_8036068(u32 *self);
@@ -386,7 +378,7 @@ void sub_8035780(u32 *self_arg)
     }
 }
 
-/* Builds an OAM affine-sprite entry (via `sub_803ADB4`'s Q8 sine/cosine
+/* Builds an OAM affine-sprite entry (via `__divsi3`'s Q8 sine/cosine
  * lookup and `sub_8006AC8`'s shadow-OAM insert) for the scratch
  * object's header record (`self+0x1b0`), then walks the same 9-slot
  * array `sub_8035780` updates: for each active slot (`self+0x14+i*0x34`
@@ -660,12 +652,12 @@ void sub_80358A8(u32 *self)
             {
                 --*shake;
                 {
-                    s32 r = sub_8000E1C(10);
+                    s32 r = RandRange(10);
                     s32 t = a - 5;
                     a = t + (u16)r;
                 }
                 {
-                    s32 r = sub_8000E1C(10);
+                    s32 r = RandRange(10);
                     s32 t = b - 5;
                     b = t + (u16)r;
                 }

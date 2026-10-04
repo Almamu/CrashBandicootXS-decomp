@@ -8,10 +8,7 @@
  * More gStaticData_0816BF20 action-table handlers for the player/action
  * object (include/action_obj.h). Built with old_agbcc. */
 
-asm(".set _call_via_r2, sub_803AD80\n"
-    ".set _call_via_r3, sub_803AD84\n");
-
-extern u32 gUnknown_030007E0;
+extern u32 gKeys;
 extern void *gEntityFlags;
 extern void *gUnknown_030012B8;
 extern void *gUnknown_030012BC;
@@ -19,7 +16,7 @@ extern struct act_part *gUnknown_030012D8;
 extern void *gUnknown_03001304;
 extern u8 gStaticData_0816B300[];
 extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
-extern u8 sub_8000760(void *pad);
+extern u8 GetDpadDirection(void *pad);
 extern void sub_8015398(struct act *self);
 extern void sub_8015780(struct act *self, s32 a, s32 b, s32 c, s32 d);
 extern void sub_8006D08(void *cache, s32 slot, s32 kind);
@@ -137,7 +134,7 @@ void sub_8014674(struct act *self)
         default:
             if (self->state == 0xE)
             {
-                if (gUnknown_030007E0 & 0x30)
+                if (gKeys & 0x30)
                 {
                     ActQueue27(self, 0, 1);
                 }
@@ -164,7 +161,7 @@ void sub_8014674(struct act *self)
         return;
     }
     {
-        u32 in = gUnknown_030007E0;
+        u32 in = gKeys;
         s32 fire;
         s32 one;
         u16 p;
@@ -196,7 +193,7 @@ void sub_8014674(struct act *self)
             {
                 ActOrFlags0D(self->part, 1);
                 self->unk_34 = fire;
-                if (gUnknown_030007E0 & 0x30)
+                if (gKeys & 0x30)
                 {
                     self->next31 = fire;
                     self->flag2F = one;
@@ -227,7 +224,7 @@ void sub_8014674(struct act *self)
         }
     }
     {
-        u8 dir = sub_8000760(gUnknown_03001304);
+        u8 dir = GetDpadDirection(gUnknown_03001304);
 
         if (dir == 0)
         {
@@ -295,8 +292,8 @@ void sub_80149BC(struct act *self)
 
 void sub_8014A3C(struct act *self)
 {
-    u8 dir = sub_8000760(gUnknown_03001304);
-    u32 in = gUnknown_030007E0;
+    u8 dir = GetDpadDirection(gUnknown_03001304);
+    u32 in = gKeys;
 
     if (dir != 0)
         switch (dir)
@@ -326,7 +323,7 @@ void sub_8014A3C(struct act *self)
 
 void sub_8014AEC(struct act *self)
 {
-    u32 in = gUnknown_030007E0;
+    u32 in = gKeys;
     s32 fire = INPUT_PRESSED(in) & 1;
 
     if (fire)
@@ -385,7 +382,7 @@ void sub_8014B54(struct act *self)
 void sub_8014BCC(struct act *self)
 {
     void *pad = gUnknown_03001304;
-    u32 in = gUnknown_030007E0;
+    u32 in = gKeys;
     s32 v = INPUT_PRESSED(in) & 1;
 
     if (v)
@@ -404,7 +401,7 @@ void sub_8014BCC(struct act *self)
         self->next27 = 0;
         return;
     }
-    v = sub_8000760(pad);
+    v = GetDpadDirection(pad);
     if (v == 0)
     {
         ACT_CALL1(self, m20, 0x28);
@@ -454,7 +451,7 @@ void sub_8014BCC(struct act *self)
  * mirrored by part+0x28 bit 4.
  *
  * The idle dispatch is written out per case: the ROM's one shared
- * sub_803AD84 call and trio are gcc's cross-jumping of the identical
+ * _call_via_r3 call and trio are gcc's cross-jumping of the identical
  * tails, and the 1 the trios store comes from the fire test's constant in
  * r7, which CSE only carries into single-predecessor blocks. The method
  * calls use ACT_CALL (see include/action_obj.h). The record kind is
@@ -462,8 +459,8 @@ void sub_8014BCC(struct act *self)
  * emit the ROM's jump table. */
 void sub_8014D18(struct act *self)
 {
-    u8 dir = sub_8000760(gUnknown_03001304);
-    u32 in = gUnknown_030007E0;
+    u8 dir = GetDpadDirection(gUnknown_03001304);
+    u32 in = gKeys;
     struct act_part *part = self->part;
     s32 fire;
     u16 alt;
@@ -579,7 +576,7 @@ void sub_8014D18(struct act *self)
 
 void sub_8014EE0(struct act *self)
 {
-    u32 in = gUnknown_030007E0;
+    u32 in = gKeys;
     s32 fire = INPUT_PRESSED(in) & 1;
     u16 alt;
 

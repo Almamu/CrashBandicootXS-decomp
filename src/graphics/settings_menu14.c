@@ -9,7 +9,7 @@
  * `sub_8028A40` init call the between-level map screen's `sub_8034CEC`
  * uses), resets the shared VRAM upload cursor `gUnknown_030012FC`,
  * fires each icon manager's `record->slots[6]` trampoline via
- * `sub_803AD7C` and reserves its `field_12c<<5` bytes of VRAM via
+ * `_call_via_r1` and reserves its `field_12c<<5` bytes of VRAM via
  * `sub_8006C58` (copying `gUnknown_030012DC`'s `field_12c` into
  * `gUnknown_030012E0`'s `field_108` in between - meaning not otherwise
  * established), then allocates the dialog object (`sub_8026EDC(0x2c)`,
@@ -45,15 +45,15 @@ struct sub_8006700_actor {
 };
 
 extern void *sub_8026EDC(s32 size);
-extern s32 sub_8026F38(s32 arg0);
-extern void sub_80006A8(void);
+extern s32 GetUiText(s32 arg0);
+extern void WaitForVBlank(void);
 extern s32 mem_free_bytes(s32 flags);
 extern void sub_8006EA8(struct tile_asset_cache *self);
 extern void sub_8028A40(struct icon_manager *self);
 extern void sub_8006C4C(struct vram_upload_cursor *self);
 extern s32 sub_8006C58(struct vram_upload_cursor *self, s32 size);
 extern void sub_8006C30(struct vram_upload_cursor *self);
-extern void sub_803AD7C(void *addr, void *fn);
+extern void _call_via_r1(void *addr, void *fn);
 extern void sub_8006770(struct sub_8006700_actor *self, u32 flags);
 extern void sub_8006518(struct sub_8006700_actor *self);
 extern struct sub_8006700_actor *sub_80063D8(struct sub_8006700_actor *self, s32 label1, s32 label2, s32 type);
@@ -69,7 +69,7 @@ static inline void IconSetup(struct icon_manager *m, u32 v)
 
     m->field_108 = v;
     slot = &m->record->slots[6];
-    sub_803AD7C((u8 *)m + slot->offset, slot->ptr);
+    _call_via_r1((u8 *)m + slot->offset, slot->ptr);
 }
 
 static inline void IconReserve(struct icon_manager **m)
@@ -84,7 +84,7 @@ void sub_80062A8(s32 label1, s32 label2, s32 type)
     struct sub_8006700_actor *dialog;
 
     mem_free_bytes(0xC0000000);
-    sub_80006A8();
+    WaitForVBlank();
     *(vu16 *)PLTT = 0;
     *(vu16 *)REG_ADDR_DISPCNT = 0;
     sub_8006EA8(gUnknown_030012B8);
@@ -102,7 +102,7 @@ void sub_80062A8(s32 label1, s32 label2, s32 type)
     }
     IconReserve(&gUnknown_030012E0);
     sub_8006C30(gUnknown_030012FC);
-    dialog = sub_80063D8(sub_8026EDC(0x2c), sub_8026F38(label1), sub_8026F38(label2), type);
+    dialog = sub_80063D8(sub_8026EDC(0x2c), GetUiText(label1), GetUiText(label2), type);
     sub_8006518(dialog);
     if (dialog != NULL)
         sub_8006770(dialog, 3);

@@ -4,7 +4,7 @@
  * actor_part20.c's header comment and
  * docs/matching/issue-58-0x08030334-actor.md. */
 
-extern s32 sub_803ADB4(s32 arg0, s32 arg1);
+extern s32 __divsi3(s32 arg0, s32 arg1);
 extern s32 sub_8029EB4(void);
 extern s32 sub_8029E98(void);
 extern u8 gUnknown_03001524;
@@ -17,7 +17,7 @@ extern s32 gUnknown_03001550;
  * `BG2CNT` between two palette/priority presets (tracked by
  * `gUnknown_03001520`) and clears the latch. Either way, recomputes the
  * BG2 affine matrix (a uniform `scale` from `gUnknown_03001554` via
- * `sub_803ADB4`, offset by the screen-projection helpers
+ * `__divsi3`, offset by the screen-projection helpers
  * `sub_8029EB4`/`sub_8029E98`) so the effect stays centered while
  * zooming. */
 void sub_80312C4(void)
@@ -33,7 +33,7 @@ void sub_80312C4(void)
     }
 
     {
-        s32 scale = sub_803ADB4(gUnknown_03001554 << 8, 0x3c00);
+        s32 scale = __divsi3(gUnknown_03001554 << 8, 0x3c00);
         s32 dy = gUnknown_0300154C + sub_8029EB4();
         s32 dx = gUnknown_03001550 + sub_8029E98();
 

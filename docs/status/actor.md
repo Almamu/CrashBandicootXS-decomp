@@ -332,7 +332,7 @@ from "core" graphics.
   and its seven thin forwarding wrappers (`sub_802CB9C`, `sub_802CBC0`,
   `sub_802CBE4`, `sub_802CC08`, `sub_802CC2C`, `sub_802CC54`,
   `sub_802CC78`) - an `InitActorPart`-based constructor family
-  classifying a "kind" from a `sub_803ADB4`-scaled/clamped value plus a
+  classifying a "kind" from a `__divsi3`-scaled/clamped value plus a
   range-keyed offset. See
   [docs/matching/issue-53-actor-c7a8.md](../matching/issue-53-actor-c7a8.md).
 
@@ -803,14 +803,14 @@ from "core" graphics.
   real address order - the compiler places case bodies in source order,
   not case-value order) and an explicit `r0` register pin on `mode0`'s
   `player` local (this compiler otherwise picks `r2` there, since
-  `mode1or2`'s own `sub_803AD88` call already forces the same value
+  `mode1or2`'s own `_call_via_r4` call already forces the same value
   into `r0` via the ABI, but `mode0` has no such call to hint it).
   Retires the old raw `asm/code_3_2_15.o` guard entirely.
 
 - `src/graphics/actor_part125.c` (new file, ROM 0x08031784-0x08031A6C,
   Phase 1 of the boss-weapon/singleton cluster's gap between issue #58
   and issue #62): `sub_8031784` (tracker "ready" check scaling the
-  countdown via `sub_803ADB4`), `sub_80317C4` (tracker destructor,
+  countdown via `__divsi3`), `sub_80317C4` (tracker destructor,
   `sub_8030F88`'s counterpart), `nullsub_30`/`nullsub_31`/`nullsub_32`
   (no-op stubs), `sub_8031850` (trivial `self+0x58` setter),
   `sub_80318B4` (full state/accumulator/anim-frame reset idiom),
@@ -1439,7 +1439,7 @@ embedded as asm instead. They're tracked as parked, not matched.
   Retires `asm/code_3_2_20_28568_c99c_31784_33ef4_34480.s` entirely.
   GitHub issue #63, see `docs/matching/issue-63-0x08033ef4-actor.md`.
 - **`sub_80345B0`/`sub_8034634`** (`src/graphics/actor_part72.c`) - a
-  128-slot particle-slot spawner (rolls two `sub_8000E1C` random values
+  128-slot particle-slot spawner (rolls two `RandRange` random values
   against the 256-entry `gStaticData_0816A820` direction table to seed a
   position/velocity record) and a 4-bit-per-cell tilemap nibble writer;
   now fully matched as real C. `sub_80345B0`'s previously-parked
@@ -1534,7 +1534,7 @@ embedded as asm instead. They're tracked as parked, not matched.
   `gStaticData_0816BF20` action-dispatch table's entries call: gates a
   `sub_8026628` proximity probe against the player, then walks
   `gUnknown_0300130C`'s object list, testing each entry via
-  `sub_803AD7C` and calling `sub_800CD00` (now examined and closed,
+  `_call_via_r1` and calling `sub_800CD00` (now examined and closed,
   `actor_part109.c`) on a hit. Every instruction matches except one
   5-instruction pair (the `gUnknown_0300130C` list-walk's loop-
   condition-check/loop-entry register roles - the ROM re-loads

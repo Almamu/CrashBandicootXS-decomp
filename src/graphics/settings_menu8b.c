@@ -30,21 +30,21 @@ void sub_8002FD8(struct settings_sync_pump *self)
 }
 
 extern void *gUnknown_03001304;
-/* gUnknown_030007E0 is a plain u32 elsewhere (e.g.
+/* gKeys is a plain u32 elsewhere (e.g.
  * src/graphics/settings_menu.c's sub_8003B40) but this call site reads
  * only its upper 16 bits (the "newly pressed" half of a held/pressed
  * input pair) - matching the ROM's own `ldrh r1,[r0,#2]` (a runtime
  * +2 byte offset on the reloaded base address) requires a real field
- * access here rather than `(u8*)&gUnknown_030007E0 + 2`, which the
+ * access here rather than `(u8*)&gKeys + 2`, which the
  * compiler folds into the linker-relocated constant instead. */
 struct held_pressed_pair {
     u16 held;
     u16 pressed;
 };
-extern struct held_pressed_pair gUnknown_030007E0;
-extern void sub_80007AC(void *arg0);
+extern struct held_pressed_pair gKeys;
+extern void UpdateKeys(void *arg0);
 extern void sub_8004BD0(struct pause_options_screen *self);
-extern void sub_80006A8(void);
+extern void WaitForVBlank(void);
 extern void sub_8004CE8(struct pause_options_screen *self);
 extern void *gUnknown_0300080C;
 extern void sub_80031E4(struct pause_options_screen *self, u32 keys);
@@ -72,12 +72,12 @@ u8 sub_800300C(u32 state, u32 field10)
     for (;;) {
         u16 keys;
 
-        sub_80007AC(gUnknown_03001304);
-        keys = gUnknown_030007E0.pressed;
+        UpdateKeys(gUnknown_03001304);
+        keys = gKeys.pressed;
         sub_80031E4(*selfAddr, keys);
     dispatch:
         sub_8004BD0(*selfAddr);
-        sub_80006A8();
+        WaitForVBlank();
         sub_8004CE8(*selfAddr);
         if ((*selfAddr)->field_8 != 0) {
             break;
@@ -111,7 +111,7 @@ extern void sub_8002C84(struct settings_sync_record *self);
  * the screen's tile/BG/list setup (sub_800450C/sub_80047F8/
  * sub_80048BC, still raw), fills `currentStats` and the first
  * `rowStats` entry, then allocates and stashes the global SIO session
- * object (`gUnknown_03000804`, still uncharacterized - see
+ * object (`gLinkSession`, still uncharacterized - see
  * sub_8002D44/sub_8002E20, src/graphics/settings_menu8.c) and kicks off
  * a VBlank IRQ request. */
 struct pause_options_screen *sub_800306C(struct pause_options_screen *arg0)
@@ -121,7 +121,7 @@ struct pause_options_screen *sub_800306C(struct pause_options_screen *arg0)
     register void **field90Addr asm("r8");
     register s32 size asm("r6") = 0x200;
     register void *obj asm("r4");
-    extern void *gUnknown_03000804;
+    extern void *gLinkSession;
 
     obj = sub_8026EDC(size);
     sub_8002C84(obj);
@@ -141,7 +141,7 @@ struct pause_options_screen *sub_800306C(struct pause_options_screen *arg0)
     sub_8004860(self, *field8cAddr);
 
     {
-        register void **sessionAddr asm("r4") = &gUnknown_03000804;
+        register void **sessionAddr asm("r4") = &gLinkSession;
         *sessionAddr = sub_80027E8(sub_80016DC(0x408));
     }
     sub_800132C(0x80, 1, 0);
@@ -151,12 +151,12 @@ struct pause_options_screen *sub_800306C(struct pause_options_screen *arg0)
 
 extern void sub_80027B0(void *arg0, s32 arg1);
 extern void sub_8026ED0(void *arg0);
-extern s32 sub_803AD80(void *arg0, void *arg1, void *arg2);
+extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 
 /* Tears down the composite screen's (or spinner dialog's) field_8c/
  * field_90 pair, cancels the global SIO session object if one's still
  * active, erases each of the five settings-row icon widgets
- * (rowObjA/B/C, drawing a "blank" glyph via sub_803AD80's arg1=3), and
+ * (rowObjA/B/C, drawing a "blank" glyph via _call_via_r2's arg1=3), and
  * - only when `flags` bit 0 is set - destroys `self` itself. */
 void sub_800312C(struct pause_options_screen *self, u32 flags)
 {
@@ -164,10 +164,10 @@ void sub_800312C(struct pause_options_screen *self, u32 flags)
     register void **b asm("r5");
     register void **a asm("r4");
     register s32 n asm("r8");
-    extern void *gUnknown_03000804;
+    extern void *gLinkSession;
 
-    if (gUnknown_03000804 != NULL) {
-        sub_80027B0(gUnknown_03000804, 3);
+    if (gLinkSession != NULL) {
+        sub_80027B0(gLinkSession, 3);
     }
 
     sub_8026ED0(*(void **)((u8 *)self + 0x90));
@@ -190,17 +190,17 @@ void sub_800312C(struct pause_options_screen *self, u32 flags)
         obj = *a;
         if (obj != NULL) {
             p = PART_METHOD((struct box_part *)obj, 0x50);
-            sub_803AD80((u8 *)obj + p->thisOffset, (void *)3, p->fn);
+            _call_via_r2((u8 *)obj + p->thisOffset, (void *)3, p->fn);
         }
         obj = *b;
         if (obj != NULL) {
             p = PART_METHOD((struct box_part *)obj, 0x50);
-            sub_803AD80((u8 *)obj + p->thisOffset, (void *)3, p->fn);
+            _call_via_r2((u8 *)obj + p->thisOffset, (void *)3, p->fn);
         }
         obj = *c;
         if (obj != NULL) {
             p = PART_METHOD((struct box_part *)obj, 0x50);
-            sub_803AD80((u8 *)obj + p->thisOffset, (void *)3, p->fn);
+            _call_via_r2((u8 *)obj + p->thisOffset, (void *)3, p->fn);
         }
         c++;
         b++;
@@ -213,7 +213,7 @@ void sub_800312C(struct pause_options_screen *self, u32 flags)
     }
 }
 
-extern void sub_803AD7C(void *arg0, void *fn);
+extern void _call_via_r1(void *arg0, void *fn);
 extern void sub_80032E8(struct pause_options_screen *self, u32 keys);
 extern void sub_80034BC(struct pause_options_screen *self, u32 keys, void *handle);
 extern void sub_80035C0(struct pause_options_screen *self);
@@ -240,15 +240,15 @@ void sub_80031E4(struct pause_options_screen *self, u32 keys)
 
         p = PART_METHOD((struct box_part *)self->rowObjA[i], 0x18);
         off = p->thisOffset;
-        sub_803AD7C((u8 *)self->rowObjA[i] + off, p->fn);
+        _call_via_r1((u8 *)self->rowObjA[i] + off, p->fn);
 
         p = PART_METHOD((struct box_part *)self->rowObjB[i], 0x18);
         off = p->thisOffset;
-        sub_803AD7C((u8 *)self->rowObjB[i] + off, p->fn);
+        _call_via_r1((u8 *)self->rowObjB[i] + off, p->fn);
 
         p = PART_METHOD((struct box_part *)self->rowObjC[i], 0x18);
         off = p->thisOffset;
-        sub_803AD7C((u8 *)self->rowObjC[i] + off, p->fn);
+        _call_via_r1((u8 *)self->rowObjC[i] + off, p->fn);
     }
 
     if ((u32)self->state <= 0xa) {
@@ -291,7 +291,7 @@ void sub_80031E4(struct pause_options_screen *self, u32 keys)
     self->field_0 += 1;
 }
 
-extern s32 sub_8026F38(s32 arg0);
+extern s32 GetUiText(s32 arg0);
 extern void sub_8004A80(struct pause_options_screen *self);
 
 /* State 0's input handler: cancel/confirm-combo (bits 1/3) requests an
@@ -316,8 +316,8 @@ void sub_80032E8(struct pause_options_screen *self, u32 flags)
         case 1:
             self->state = 3;
             self->field_10 = 0;
-            self->field_14 = sub_8026F38(0x2b);
-            self->field_18 = sub_8026F38(0x2d);
+            self->field_14 = GetUiText(0x2b);
+            self->field_18 = GetUiText(0x2d);
             sub_8004A80(self);
             break;
         case 2:
@@ -488,8 +488,8 @@ void sub_80035C0(struct pause_options_screen *self)
 
     if (state == 2 || !sub_8002B44(self->field_90)) {
         self->state = 4;
-        self->field_14 = sub_8026F38(0x2c);
-        self->field_18 = sub_8026F38(0x2e);
+        self->field_14 = GetUiText(0x2c);
+        self->field_18 = GetUiText(0x2e);
         return;
     }
 
@@ -518,11 +518,11 @@ void sub_80035C0(struct pause_options_screen *self)
         self->field_10 = 1;
         return;
     }
-    self->field_18 = sub_8026F38(0x2e);
+    self->field_18 = GetUiText(0x2e);
 }
 
 extern u8 sub_8002CE8(void *handle, s32 rowIndex);
-extern void sub_800014C(void *dst, const void *src, s32 size);
+extern void MemCopy32(void *dst, const void *src, s32 size);
 extern s32 GetCurrentLevel(void *arg0);
 extern s32 sub_8001ABC(void *arg0);
 extern s32 sub_8001AC0(void *arg0);
@@ -553,11 +553,11 @@ void sub_8003698(struct pause_options_screen *self, s32 rowIndex)
     {
         /* The ROM evaluates sub_80236EC()'s result before computing
          * `buf + 0x70` (the ROM's own callee-arg setup order for
-         * sub_800014C, not the other way around) - a plain nested call
+         * MemCopy32, not the other way around) - a plain nested call
          * expression here lets this compiler compute the pointer
          * argument first instead. */
         void *result = sub_80236EC(*c0Addr);
-        sub_800014C(buf + 0x70, result, 0x68);
+        MemCopy32(buf + 0x70, result, 0x68);
     }
     *(u8 *)(buf + 0xd8) = (u8)GetCurrentLevel(*c0Addr);
 

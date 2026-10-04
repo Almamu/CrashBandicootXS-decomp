@@ -34,7 +34,7 @@ slots this code calls through (+0x24 ... +0x54) are all base-class
 `sub_800B6xx`/`sub_800B8xx` functions, and `sub_8017A00` (constructor,
 called from `game_loop39.c`) chains to the base constructor `sub_800B8C8`.
 
-`sub_8017650` reads the held keys (`gUnknown_030007E0`): up/down pick
+`sub_8017650` reads the held keys (`gKeys`): up/down pick
 channel B's pair (3/5, back to 0 when neither is held), left/right channel
 A's (7 with speed 0x3200 while the left-hold flag lasts - it expires after
 30 frames held, then re-arms once a 10-frame countdown has run out with
@@ -49,7 +49,7 @@ The state dispatch at the end of `sub_8017650` goes through
 (`{s16 delta; s16 index; union {fn, s16 vtable offset}}`): state 0
 `sub_8017600` (reset the pairs, spawn the child), 1 `sub_801796C`,
 2 `sub_801793C`, 3 `sub_80178EC` (mark the target gone). That call
-sequence, and the `sub_803AD7C`/`AD80`/`AD84` trampolines every virtual
+sequence, and the `_call_via_r1`/`AD80`/`AD84` trampolines every virtual
 call goes through (`bx r1`/`r2`/`r3` - gcc's `_call_via_rN` interworking
 thunks), are what gcc's C++ front end emits, so this object was very
 likely written in C++. The C here models the vtable/PMF layouts as

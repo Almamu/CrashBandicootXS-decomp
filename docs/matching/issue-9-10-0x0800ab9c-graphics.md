@@ -27,7 +27,7 @@ as of
 
   `self+0xc` bit 1: relocates `self`'s primary AABB (`sub_8007C30`,
   `actor_part9.c`'s own copy of the same helper) onto a second stack
-  slot (`sub_800014C`, a plain `memcpy`) before unpacking it back out
+  slot (`MemCopy32`, a plain `memcpy`) before unpacking it back out
   into scalars for `sub_8008A40` (already NAKED-parked, `actor_part7.c`)
   - the exact "relocate then unpack" idiom `sub_8008A40`'s own doc
   comment already documents from its callers' side, done here
@@ -66,7 +66,7 @@ as of
      `self`'s own `r5` in place for the address (since `self` isn't
      read again afterward) instead of computing a fresh `r0`, matching
      the ROM's `adds r0, r5, r1` (a new register, `self` left intact).
-  3. **The leading `sub_8007C30`/`sub_800014C` relocate-then-unpack
+  3. **The leading `sub_8007C30`/`MemCopy32` relocate-then-unpack
      pair** needed the relocated box read back via a raw `u8
      boxCopy[0x10]` buffer and pointer casts (`*(s32 *)(boxCopy + N)`),
      not a `struct aabb boxCopy` with `.field_N` member access. A
@@ -169,7 +169,7 @@ as of
 - **`sub_800AAEC`** (`asm/code_3_2_16.s`, ROM `0x0800AAEC`) - unchanged
   from the prior session's write-up: iterates `gUnknown_0300130C`
   (a count-prefixed pointer array), testing each entry via
-  `sub_803AD7C` (matched) and, on a hit (return code 3), calling
+  `_call_via_r1` (matched) and, on a hit (return code 3), calling
   `sub_800CD00` (still fully unexamined) with the entry and this
   function's own second argument. Mechanically clear, but
   `sub_800CD00` itself wasn't examined this session either.
@@ -242,7 +242,7 @@ function had to be rechecked.
   6th, 7th, then the box's last word. The "gap" was never a scheduling
   quirk.
 - **The copy.** The ROM builds the AABB at `sp+0xC` (`sub_8007C30` with
-  a destination pointer) and `sub_800014C`-copies it to `sp+0x1C`. The
+  a destination pointer) and `MemCopy32`-copies it to `sp+0x1C`. The
   copy is what gets passed. A separate `struct aabb` local at a nonzero
   frame offset fails, because its address counts as invalid for a
   BLKmode operand before reload. gcc then keeps `sp+0x1C` in a

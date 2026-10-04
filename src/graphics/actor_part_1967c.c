@@ -24,8 +24,8 @@
  * docs/matching/issue-24-boss-actor.md): the old compiler reproduces
  * this region's "constant before the byte it's combined with" ordering
  * without register pins. The code was C++: virtual calls are indirect
- * calls through libgcc's `_call_via_rN` helpers (aliased below to this
- * ROM's copies), and the AABB builders return their box by value.
+ * calls through libgcc's `_call_via_rN` helpers
+ * (src/system/reg_trampolines.c), and the AABB builders return their box by value.
  *
  * UNUSED - no `bl`/`.4byte` reference in asm/, data/ or src/, and no
  * Thumb pointer anywhere in the ROM: sub_8019718, sub_80197F4. Matched
@@ -310,16 +310,6 @@ void sub_801A584(struct obj_48a4 *self, u16 x, u16 y);
 struct obj_490c *sub_801A794(void *mem);
 struct vobj *sub_801A724(void *mem);
 struct obj_48a4 *sub_801A768(void *mem);
-
-/* C++ virtual calls: gcc 2.x reads the method-table entry's `this`
- * adjustment and function pointer, then makes an indirect call - which
- * Thumb code emits as `bl _call_via_rN` (N = the register holding the
- * function pointer). This ROM's copies of those libgcc helpers are the
- * sub_803AD78..sub_803AD94 trampolines (src/system/reg_trampolines.c). */
-asm(".set _call_via_r1, sub_803AD7C\n"
-    ".set _call_via_r2, sub_803AD80\n"
-    ".set _call_via_r3, sub_803AD84\n"
-    ".set _call_via_r4, sub_803AD88\n");
 
 typedef void (*method1_fn)(void *self, s32 a);
 typedef void (*method2_fn)(void *self, void *a, s32 b);

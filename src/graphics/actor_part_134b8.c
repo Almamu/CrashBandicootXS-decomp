@@ -5,9 +5,6 @@
  * docs/matching/issue-17-0x08012fbc-actor.md, "Third pass"). Built with
  * old_agbcc. */
 
-asm(".set _call_via_r2, sub_803AD80\n"
-    ".set _call_via_r3, sub_803AD84\n");
-
 /* The spark object sub_8025BAC spawns, as far as it is used. */
 struct spark
 {
@@ -26,13 +23,13 @@ struct spark
     s32 frame;             // 0x30
 };
 
-extern u32 gUnknown_030007E0;
+extern u32 gKeys;
 extern void *gUnknown_030012BC;
 extern struct act_part *gUnknown_030012D8;
 extern void *gEntitySpawner;
 extern void *gUnknown_03001304;
 extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
-extern u8 sub_8000760(void *pad);
+extern u8 GetDpadDirection(void *pad);
 extern void sub_80122CC(struct act *self);
 extern void sub_801283C(struct act *self);
 extern void sub_800B334(struct act_part *part);
@@ -102,9 +99,9 @@ static inline void ActSetContact(struct act_part *p, s32 v)
 void sub_80134B8(struct act *self)
 {
     void *pad = gUnknown_03001304;
-    u32 in = gUnknown_030007E0;
+    u32 in = gKeys;
     u8 contact = self->part->contact;
-    u8 dir = sub_8000760(pad);
+    u8 dir = GetDpadDirection(pad);
     s32 state = self->state;
 
     if (state != 0xE)

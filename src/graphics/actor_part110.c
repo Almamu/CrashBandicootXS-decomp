@@ -34,7 +34,7 @@
  * ## What `sub_800A178`/`sub_800A420` actually do
  *
  * Both operate on the same "hitbox quad" pointer - `self->table[0x10]`/
- * `[0x14]`'s own `sub_803AD7C(self + addr, fn)` trampoline result,
+ * `[0x14]`'s own `_call_via_r1(self + addr, fn)` trampoline result,
  * i.e. a `{s16 xOff, s16 yOff, u8 w, u8 h}` record straight from this
  * ROM region's already-established convention (`game_loop42.c`'s
  * `struct hitbox_quad`, `actor_part109.c`'s AABB builds) - and share
@@ -56,7 +56,7 @@
  *   all-miss path. Returns whichever probe's hit boolean was last
  *   computed.
  * - **`sub_800A178(self)`**: the larger orchestrator. Gated on two
- *   guard checks (a `sub_803AD7C(self->table[0x38]/[0x3c])`
+ *   guard checks (a `_call_via_r1(self->table[0x38]/[0x3c])`
  *   trampoline truthiness test, then `self+0xc` bit 7) - either
  *   failing returns `0` immediately with no other effect. Once past
  *   both gates: unconditionally zeroes `self+0x74` (the `rom_map.md`
@@ -201,7 +201,7 @@
  * negs`) instead of a folded QImode `0xDF`. The mask clears bit 5 only
  * (`~0x20`), not `~0x21` as the older notes had it. */
 
-extern s32 sub_803AD7C(void *addr, void *fn);
+extern s32 _call_via_r1(void *addr, void *fn);
 extern s32 sub_800A178(struct box_part *self);
 extern s32 sub_800A050(void *self);
 extern u8 sub_8009BE0(void *self, s32 mode, void *quad);
@@ -223,7 +223,7 @@ u8 sub_800A0FC(struct box_part *self)
             }
             if (!((self->flags2 >> 1) & 1)) {
                 struct part_method *m = PART_METHOD(self, 0x10);
-                void *quad = (void *)sub_803AD7C((u8 *)self + m->thisOffset, m->fn);
+                void *quad = (void *)_call_via_r1((u8 *)self + m->thisOffset, m->fn);
 
                 if (!sub_8009BE0(self, 8, quad)) {
                     self->flags |= 0x20;
@@ -235,7 +235,7 @@ u8 sub_800A0FC(struct box_part *self)
     return self->hitAxes;
 }
 
-extern s32 sub_803AD7C(void *addr, void *fn);
+extern s32 _call_via_r1(void *addr, void *fn);
 extern s32 sub_8008200(void *dest, s32 kind, void *rec);
 extern s32 sub_8008278(void *dest, s32 kind, void *rec);
 extern s32 sub_8026628(void *player, s32 mode, void *pos, s32 span, void *outValue);
@@ -281,7 +281,7 @@ s32 sub_800A178(struct box_part *self)
     floorMiss = result;
     hit = 0;
     m = PART_METHOD(self, 0x38);
-    if (!(u8)sub_803AD7C((u8 *)self + m->thisOffset, m->fn))
+    if (!(u8)_call_via_r1((u8 *)self + m->thisOffset, m->fn))
         goto done;
     if (!(self->flags >> 7))
         goto done;
@@ -294,7 +294,7 @@ s32 sub_800A178(struct box_part *self)
     }
     self->hitMask = 0;
     m = PART_METHOD(self, 0x10);
-    quad = (struct part_box *)sub_803AD7C((u8 *)self + m->thisOffset, m->fn);
+    quad = (struct part_box *)_call_via_r1((u8 *)self + m->thisOffset, m->fn);
     if (self->flags2 & 1)
         hit = sub_800A420(self, quad, &floorMiss);
     if (hit && result == 0)

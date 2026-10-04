@@ -5,8 +5,8 @@ extern void *gLevelState;
 extern s32 gUnknown_0300086C;
 
 extern void sub_80270E0(struct hud_digit_part *part, s32 x, s32 y);
-extern s32 sub_803ADB4(s32 dividend, s32 divisor);
-extern s32 sub_803AE4C(s32 dividend, s32 divisor);
+extern s32 __divsi3(s32 dividend, s32 divisor);
+extern s32 __modsi3(s32 dividend, s32 divisor);
 extern s32 sub_803AFEC(void *state);
 
 void sub_8027838(struct hud_counter *counter)
@@ -50,7 +50,7 @@ void sub_8027838(struct hud_counter *counter)
         if (current != previous) {
             if (current > 9) {
                 {
-                    register s32 frame asm("r3") = sub_803ADB4(current, 10);
+                    register s32 frame asm("r3") = __divsi3(current, 10);
                     register struct hud_anim_data *anim_data asm("r0");
                     register u8 *index_addr asm("r2");
                     register struct hud_anim_record *records asm("r1");
@@ -75,7 +75,7 @@ void sub_8027838(struct hud_counter *counter)
                 }
 
                 {
-                    register s32 result asm("r0") = sub_803AE4C(self->value, 10);
+                    register s32 result asm("r0") = __modsi3(self->value, 10);
                     register struct hud_digit_part *part asm("r6") = &parts[1];
                     register s32 frame asm("r3") = result;
                     register struct hud_anim_data *anim_data asm("r0");

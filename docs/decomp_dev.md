@@ -221,7 +221,7 @@ with a separate run address (VMA) and load address (LMA):
 `AT(LOADADDR(ROM) + SIZEOF(ROM))`, so its bytes follow the ROM data and
 every symbol in it has its IWRAM address. `__iwram_lma` (its load
 address) is crt0's copy source, the length is still
-`gUnknown_030009E8 - IntrMain_Buffer`. The `rom_fill` section after it
+`gIntrTable - IntrMain_Buffer`. The `rom_fill` section after it
 fills the rest of the 8 MB with `0xFF`. `sym_iwram.txt` only names the
 uninitialised IWRAM from `0x030009E8` on (its `IWRAM (NOLOAD)` section
 still starts at `0x03000000` and overlaps `iwram`; ld allows that for a
@@ -292,10 +292,11 @@ where each is handled:
   doesn't have (the `GAX_CALL_ARM` return points `sub_8039E50`,
   `sub_803A318`, `sub_803A608`; `sub_802613E`, which starts
   mid-instruction; the padding stub `sub_8016046`), `code`/`data` for
-  `sub_800039C` and `sub_803A9AC`, which the frozen sources only have as
-  `.byte` blobs, and `resolve` for math_div64_util.c, whose base calls
-  `sub_8037E54` through a local `.set` alias and so has no relocation on
-  those `bl`s.
+  `sub_800039C` and `EepromTimerIntr`, which the frozen sources only have as
+  `.byte` blobs, and `resolve` for a base object that calls a function
+  through a local `.set` alias and so has no relocation on those `bl`s
+  (math_div64_util.c's calls to `__udivsi3` were the one case, until the
+  function got its libgcc name and the alias went away).
 
 After these fixes, every function in a matched unit scores 100%. Every
 compiled Thumb function in the ROM is matched. Code progress is below
@@ -331,7 +332,7 @@ since both patterns will likely recur:
 
 - **`irq.c` turned out to be a mixed file**: some of its functions came from
   the old `code_1.s`/`code_2.s` lineage (2025), but seven others
-  (`sub_80006A8` onward) were actually matched much later, from `code_3.s`
+  (`WaitForVBlank` onward) were actually matched much later, from `code_3.s`
   (Sept 2026) - and were being silently dropped from the report because an
   earlier version of this integration excluded `irq.o` from
   `base_combined.o` *entirely* on the assumption the whole file predated

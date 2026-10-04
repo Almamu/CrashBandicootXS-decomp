@@ -21,14 +21,14 @@
  *
  * Method-table and member-pointer calls are real indirect calls
  * (ACTOR_VCALL/ACTOR_PMF_CALL), which Thumb gcc emits as
- * `bl _call_via_rN` - aliased to this ROM's sub_803AD7C..sub_803AD88. */
+ * `bl _call_via_rN` (src/system/reg_trampolines.c). */
 
 extern s32 sub_802A504(s32 idx);
 extern s32 sub_802A51C(s32 idx);
 extern s32 sub_802A540(s32 idx);
 extern s32 sub_802A558(s32 idx);
 extern s32 sub_802A570(s32 idx);
-extern s32 sub_803ADB4(s32 a, s32 b);
+extern s32 __divsi3(s32 a, s32 b);
 extern s32 GetAnimFrameBaseOffset(void *self);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void InitActorPart(void *self, void *part, s32 b, s32 c, s32 d);
@@ -47,8 +47,6 @@ extern struct actor_pmf gStaticData_0817C280[];
 extern u8 gStaticData_087E51B4[];
 extern u8 gStaticData_087E51EC[];
 extern u8 gStaticData_087E5224[];
-
-ACTOR_CALL_VIA_ALIASES
 
 struct actor_51b4 {
     struct actor_self base;
@@ -115,13 +113,13 @@ void sub_802FBF0(struct actor_51b4 *self, s32 target)
         s32 scale2;
 
         self->speed = gUnknown_0300089C[sub_802A570(target)];
-        self->steps = sub_803ADB4((sub_802A51C(target) - self->base.z) << 8, self->speed) >> 4;
+        self->steps = __divsi3((sub_802A51C(target) - self->base.z) << 8, self->speed) >> 4;
         if (self->steps == 0) {
             self->steps = 1;
         }
         {
             s32 steps = self->steps;
-            scale = sub_803ADB4(0x8000, steps);
+            scale = __divsi3(0x8000, steps);
         }
         self->accX = ((((sub_802A558(target) - self->base.x) - ((self->velX * self->steps) >> 4)) * scale >> 13) * (scale2 = scale * 2)) >> 13;
         self->accY = ((((sub_802A540(target) - self->base.y) - ((self->velY * self->steps) >> 4)) * scale >> 13) * scale2) >> 13;

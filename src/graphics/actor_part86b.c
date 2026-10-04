@@ -21,14 +21,14 @@ struct spawned
 extern void *gUnknown_03001304;
 extern u32 gUnknown_0300082C;
 extern void *gEntitySpawner;
-extern u8 sub_8000760(void *arg);
-extern s32 sub_8000E1C(s32 max);
+extern u8 GetDpadDirection(void *arg);
+extern s32 RandRange(s32 max);
 extern struct spawned *sub_8025BAC(void *pool, s32 arg1, s32 kind, s32 x, s32 y, s32 arg5);
 extern void sub_80172D0(s32 a, s32 b, s32 c);
 extern void sub_8015FDC(s32 a, s32 b, s32 c);
 
 /* Picks three tuning values by `state` - `mag` (always 300), `valB` and
- * `valA` - reads the D-pad direction (sub_8000760), on a 1-in-128 frame
+ * `valA` - reads the D-pad direction (GetDpadDirection), on a 1-in-128 frame
  * tick and a coin flip spawns a kind-4 object at the target's position via
  * sub_8025BAC (clearing its +0x0C bit 2), then feeds the direction's
  * (valB/valA, +-mag) pair, 3/4-scaled on the diagonals, to sub_80172D0 and
@@ -60,8 +60,8 @@ void sub_8015DF8(struct player_ctrl *self)
         valA = 5;
     }
 
-    dir = sub_8000760(gUnknown_03001304);
-    if ((gUnknown_0300082C & 0x7F) == 0 && (u16)sub_8000E1C(2) == 0)
+    dir = GetDpadDirection(gUnknown_03001304);
+    if ((gUnknown_0300082C & 0x7F) == 0 && (u16)RandRange(2) == 0)
     {
         struct pctrl_target *t = self->target;
         s32 x = t->x >> 8;

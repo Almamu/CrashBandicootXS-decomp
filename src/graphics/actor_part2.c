@@ -159,7 +159,7 @@ void *sub_8007CF8(void *dest, void *pt)
 
 extern void *sub_8007B98(void *dest, void *part);
 extern u8 sub_8001688(void *buf1, void *buf2);
-extern void sub_803AD88(void *arg0, s32 arg1, s32 arg2, s32 arg3);
+extern void _call_via_r4(void *arg0, s32 arg1, s32 arg2, s32 arg3);
 extern void *sub_8025BAC(void *pool, s32 arg1, s32 kind, s32 x, s32 y, s32 arg5);
 extern struct actor *gUnknown_030012D8;
 extern void *gEntitySpawner;
@@ -169,7 +169,7 @@ extern void *gEntityFlags;
  * region) collides with the player (`gUnknown_030012D8`, tested via
  * two `sub_8007B98` AABBs and `sub_8001688`) and, if so, plays a sound
  * at the player's position (the `table+0x68` offset/dead-read idiom
- * matches sub_8007048's `sub_803AD88` call exactly, just keyed off
+ * matches sub_8007048's `_call_via_r4` call exactly, just keyed off
  * `part->field_0A` instead of `self->field_0A`) and marks itself
  * "collected" (`gEntityFlags` bitmap, same convention as
  * sub_80072D8). `part->field_0A - 0x1b` (0-7) then selects a "kind" to
@@ -186,9 +186,6 @@ extern void *gEntityFlags;
  * r6`) - as a plain constant CSE rematerializes it; and the spawned
  * part's `mode = 1` goes through a `u32` local, which materializes the
  * 1 before the `-4` mask as the ROM does. */
-/* The player's +0x68 method call goes through libgcc's `_call_via_r4`,
- * which is sub_803AD88 in this ROM. */
-asm(".set _call_via_r4, sub_803AD88\n");
 
 struct collect_method {
     s16 thisOffset;

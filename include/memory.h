@@ -31,11 +31,11 @@ struct mem_heap {
 COMPILE_TIME_ASSERT(sizeof (struct mem_block) == 0x10);
 COMPILE_TIME_ASSERT(sizeof (struct mem_heap_header) == 0x14);
 
-extern struct mem_heap gUnknown_02000000;
-extern struct mem_heap gUnknown_03001638;
+extern struct mem_heap mem_ewram_heap;
+extern struct mem_heap mem_iwram_heap;
 extern struct mem_heap* mem_iwram_heap_pointer;
 extern struct mem_heap* mem_ewram_heap_pointer;
-extern int* gUnknown_030007D4;
+extern int* mem_initial_free_bytes;
 extern int iwram_end;
 
 // TODO: THIS SHOULD NOT BE PUBLIC, BUT UNTIL THE WHOLE MEMORY.C CONTENT IS REVERSED

@@ -14,7 +14,7 @@
  * same field-offset conventions as the rest of this cluster's
  * `self`/`owner` object shape (`self+0x70` "owner", `self+0xc`
  * "anchor" record, `self+0x84` per-instance table) and calls the
- * exact same helpers `sub_800B704`/`sub_800B838`/`sub_803AD84`
+ * exact same helpers `sub_800B704`/`sub_800B838`/`_call_via_r3`
  * already matched for `sub_800C8AC`/`sub_800C8BC`/`sub_800C8CC`
  * (`actor_part113.c`) - not merely the same *convention* reused on a
  * different struct, but the *identical* struct/helper set, just
@@ -51,7 +51,7 @@
 
 extern void sub_800B704(struct part_ctrl *self, struct ctrl_target *target, s32 mode);
 extern void sub_800B838(struct part_ctrl *self, struct ctrl_target *target, s32 mode);
-extern s32 sub_803AD84(void *self, struct ctrl_target *target, s32 arg, void *fn);
+extern s32 _call_via_r3(void *self, struct ctrl_target *target, s32 arg, void *fn);
 
 static inline void SetModeA(struct part_ctrl *self, s32 mode)
 {
@@ -71,7 +71,7 @@ static inline void SetMode(struct part_ctrl *self, s32 mode)
 
     self->mode = mode;
     m = &self->anchor->trigger;
-    sub_803AD84((u8 *)self + m->thisOffset, self->target, self->anims[mode], m->fn);
+    _call_via_r3((u8 *)self + m->thisOffset, self->target, self->anims[mode], m->fn);
 }
 
 static inline void SetVelX(struct ctrl_target *t, s32 v, s32 w)

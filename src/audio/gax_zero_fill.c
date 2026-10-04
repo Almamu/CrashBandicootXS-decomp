@@ -6,11 +6,11 @@
  * engine code, called from GAX2_init/GaxChannelMix) uses the ordinary
  * interworking `pop {reg}; bx reg` return like the rest of the ROM. */
 
-extern void sub_803A948(const void *src, void *dst, u32 control);
+extern void CpuFastSet(const void *src, void *dst, u32 control);
 
 /* Zero-fills `count` bytes at `dest` - a plain memset helper. Byte-fills up to 3 leading bytes one at a time to
  * reach 4-byte alignment, zero-fills the largest 32-byte-aligned chunk
- * of what's left via the BIOS `CpuFastSet` SWI (`sub_803A948`, fixed
+ * of what's left via the BIOS `CpuFastSet` SWI (fixed
  * source address so the same zero word is repeated - `FIXED_SRC`,
  * `0x01000000`), then finishes any trailing remainder one byte at a
  * time. The word count passed to `CpuFastSet` is computed as a signed
@@ -42,7 +42,7 @@ void GaxZeroFill(u8 *dest, s32 count)
         if (corrected < 0) {
             corrected += 3;
         }
-        sub_803A948(&zero, dest, 0x01000000 | (((u32)corrected >> 2) & 0x1FFFFF));
+        CpuFastSet(&zero, dest, 0x01000000 | (((u32)corrected >> 2) & 0x1FFFFF));
     }
 
     {

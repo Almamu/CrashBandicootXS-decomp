@@ -12,7 +12,7 @@ respelling, reordering, or register-pinning the C source could close.
 Each was converted to a byte-verified NAKED asm transcription instead,
 the established pattern for this class of gap (see
 `src/system/link_cable.c`'s `sub_8001CB8`/`sub_8001DB4` and
-`src/util/math_div_util.c`'s `nullsub_8` for the earliest examples).
+`src/util/math_div_util.c`'s `__div0` for the earliest examples).
 
 **Tracking note**: byte-exact NAKED asm is not treated as "matched" in
 this project's `tools/report_units.py`/`docs/status/*.md` tracking -
@@ -27,7 +27,7 @@ progress-tracking classification differs from an ordinary match.
 
 ## Parked - byte-correct NAKED transcriptions
 
-- **`sub_8000CBC`** (`src/util/printf_util.c`) - a case-insensitive
+- **`FindSubstring`** (`src/util/printf_util.c`) - a case-insensitive
   `strstr`. The C reconstruction's only gap was one branch shape inside
   the "normalize a char to lowercase" logic: the ROM routes the
   *untaken* branch of the range check through a redundant copy-into-r0
@@ -48,7 +48,7 @@ progress-tracking classification differs from an ordinary match.
   has a redundant two-instruction "correct-sense compare, branch on
   true, fall to an unconditional far branch" pair (likely a Thumb
   conditional-branch-range artifact from the ROM's original build).
-- **`sub_80010E0`** (`src/system/input_util.c`) - polls input until a
+- **`WaitForKeyPress`** (`src/system/input_util.c`) - polls input until a
   button match or a poll-count timeout. The C reconstruction matched
   everywhere except one 4-byte residual: the count-limited loop's
   `if (keys & 1)` bit-test compiled with the opposite branch sense from

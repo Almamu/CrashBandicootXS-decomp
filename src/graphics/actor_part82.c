@@ -24,7 +24,7 @@ struct follow_state {
     s32 unk_14;         // 0x14
 };
 
-extern u32 gUnknown_030007E0;
+extern u32 gKeys;
 extern void *gUnknown_030012B8;
 extern void *gUnknown_030012BC;
 extern struct follow_state *gUnknown_030012D4;
@@ -121,7 +121,7 @@ static inline void PartSetVelY(struct act_part *p, s32 a, s32 b, s32 c)
  *   +0x2C); in state 0xC with the player mid-keyframe it rewinds the
  *   player's step counter instead;
  * - 13/14/25 queue the next action from the fire button
- *   (`gUnknown_030007E0` bit 0); 15-17 play a sound and re-select the
+ *   (`gKeys` bit 0); 15-17 play a sound and re-select the
  *   part's palette; 23/24 queue actions 0x1D/0x1B, 23 also moving the
  *   part by the change in its keyframe Y offset (`PART_OFFSET`).
  * 5 and 18-22 do nothing.
@@ -217,7 +217,7 @@ void sub_8011BD4(struct act *self, s32 arg1, s32 arg2, s32 arg3)
         break;
     case 13:
         {
-            u32 in = gUnknown_030007E0;
+            u32 in = gKeys;
             u32 held = in;
             s32 fire;
             s32 one;
@@ -241,7 +241,7 @@ void sub_8011BD4(struct act *self, s32 arg1, s32 arg2, s32 arg3)
         break;
     case 14:
         {
-            u32 in = gUnknown_030007E0;
+            u32 in = gKeys;
             u32 held = in;
             s32 fire;
             s32 one;
@@ -265,7 +265,7 @@ void sub_8011BD4(struct act *self, s32 arg1, s32 arg2, s32 arg3)
         break;
     case 25:
         {
-            u32 in = gUnknown_030007E0;
+            u32 in = gKeys;
             s32 fire;
             s32 one;
 

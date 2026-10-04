@@ -7,7 +7,7 @@
  * an anim-frame halfword/byte pair at `self+0x10`/`self+0x12`, an
  * accumulator at `self+8`, state at `self+0x28`, a frame counter at
  * `self+0x44`, and a `+0x50`-rooted event/trampoline table fed through
- * `sub_803AD80`. This particular object kind (constructed here by
+ * `_call_via_r2`. This particular object kind (constructed here by
  * `sub_8033EF4`, vtable `gStaticData_087E551C`) additionally caches its
  * own constructor `b`/`c` arguments at `self+0x58`/`self+0x5c` and has a
  * death/"dead" byte flag at `self+0x6c` - see
@@ -75,7 +75,7 @@ void *sub_8033EF4(void *selfArg, void *part, s32 b, s32 cParam, s32 d)
 }
 
 extern void sub_8029E28(s32 arg0);
-extern s32 sub_803AD80(void *arg0, void *arg1, void *fn);
+extern s32 _call_via_r2(void *arg0, void *arg1, void *fn);
 
 /* Plays a fixed sound cue (`sub_8029E28(0x400)`), then - if `self` is
  * non-NULL and its `+0x12` flag is set - fires the `self+0x50` event
@@ -100,7 +100,7 @@ void sub_8033F48(void *selfArg)
         }
         fn = table->m08.fn;
 
-        sub_803AD80(addr, (void *)3, fn);
+        _call_via_r2(addr, (void *)3, fn);
     }
 }
 

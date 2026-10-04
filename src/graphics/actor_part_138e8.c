@@ -6,15 +6,12 @@
  * gStaticData_0816BF20 action-table handlers for the player/action object
  * (include/action_obj.h). Built with old_agbcc. */
 
-asm(".set _call_via_r2, sub_803AD80\n"
-    ".set _call_via_r3, sub_803AD84\n");
-
-extern u32 gUnknown_030007E0;
+extern u32 gKeys;
 extern void *gUnknown_030012BC;
 extern void *gLevelState;
 extern void *gUnknown_03001304;
 extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
-extern u8 sub_8000760(void *pad);
+extern u8 GetDpadDirection(void *pad);
 extern u8 sub_800AAEC(struct act_part *part, s32 action);
 extern u8 sub_80231BC(void *self);
 extern u8 sub_80231C4(void *self);
@@ -84,7 +81,7 @@ void sub_80138E8(struct act *self)
  * from the method call on. */
 void sub_8013994(struct act *self)
 {
-    u32 in = gUnknown_030007E0;
+    u32 in = gKeys;
 
     {
         struct act_part *part = self->part;
@@ -159,7 +156,7 @@ void sub_8013994(struct act *self)
             return;
         }
         {
-            u8 dir = sub_8000760(gUnknown_03001304);
+            u8 dir = GetDpadDirection(gUnknown_03001304);
 
             if (dir != 0 && sub_800AAEC(self->part, 2))
             {

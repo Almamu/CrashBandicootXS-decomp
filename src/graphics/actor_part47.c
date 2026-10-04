@@ -66,7 +66,7 @@ void sub_800A528(struct gobj *self)
     off = tbl->m10.thisOffset;
     addr = (u8 *)self + off;
     fn = tbl->m10.fn;
-    rec = (void *)sub_803AD7C(addr, fn);
+    rec = (void *)_call_via_r1(addr, fn);
     prev = self->platform;
 
     if (prev == rec) goto skip;
@@ -131,7 +131,7 @@ void sub_800A590(struct gobj *self)
     s16 off = tbl->m10.thisOffset;
     void *addr = (u8 *)self + off;
     void *fn = tbl->m10.fn;
-    register void *rec asm("r3") = (void *)sub_803AD7C(addr, fn);
+    register void *rec asm("r3") = (void *)_call_via_r1(addr, fn);
     register void *prev asm("r1") = self->platform;
     register s32 delta asm("r1");
 

@@ -32,7 +32,7 @@
  *    `continue` so the inner loop is not rotated.
  *  - `-sub_802A5AC() < 0` gives the ROM's `neg; lsr #31` (`!= 0` adds
  *    an `orr`), and the new-press test is `(keys >> 16) & 8` so it shares
- *    the gUnknown_030007E0 literal with the `& 4` word test.
+ *    the gKeys literal with the `& 4` word test.
  *  - `zero` is volatile, as in the DmaFill16 idiom (address before the
  *    `strh`).
  */
@@ -48,7 +48,7 @@ extern void *gUnknown_03001300;
 extern void *gUnknown_03001304;
 extern void *gUnknown_030012FC;
 extern void *gUnknown_03001318;
-extern u32 gUnknown_030007E0;
+extern u32 gKeys;
 
 extern void sub_8022CA0(void *arg0);
 extern void DecompressCategorySpriteSheet(const u8 *sheet);
@@ -63,7 +63,7 @@ extern void sub_8029890(s32 arg0, void *arg1, u32 arg2, s32 arg3);
 extern void sub_802F7B0(void);
 extern void sub_802AB08(void);
 extern void SelectActorCategory(s32 type, void *subEffectTable, void *animTable, s32 activeFlag, s32 variant, s32 tick);
-extern void sub_80007AC(void *arg0);
+extern void UpdateKeys(void *arg0);
 extern void sub_8029B38(void);
 extern s32 sub_802A208(void);
 extern void TickLevelClock(void *arg0);
@@ -72,7 +72,7 @@ extern void sub_8006A78(void *arg0);
 extern void sub_8028400(void *state);
 extern void sub_80274EC(void *self);
 extern void FlushSpriteFrameOamQueue(void);
-extern void sub_80006A8(void);
+extern void WaitForVBlank(void);
 extern void sub_8029E50(void);
 extern void sub_8006AAC(void *arg0);
 extern void FlushVramDmaQueue(void);
@@ -153,7 +153,7 @@ s32 InitActorCategory(s32 category)
 
         state = &gLevelState;
         for (;;) {
-            sub_80007AC(gUnknown_03001304);
+            UpdateKeys(gUnknown_03001304);
             sub_8029B38();
             status = sub_802A208();
             if ((*state)[0x8c] != 0)
@@ -163,7 +163,7 @@ s32 InitActorCategory(s32 category)
             sub_8028400(gUnknown_03001318);
             sub_80274EC(gUnknown_03001318);
             FlushSpriteFrameOamQueue();
-            sub_80006A8();
+            WaitForVBlank();
             sub_8029E50();
             sub_8006AAC(gUnknown_03001300);
             FlushVramDmaQueue();
@@ -191,7 +191,7 @@ s32 InitActorCategory(s32 category)
                 }
             } else {
                 open = 0;
-                if (sub_8001510() == 0 && ((gUnknown_030007E0 >> 16) & 8))
+                if (sub_8001510() == 0 && ((gKeys >> 16) & 8))
                     open = -sub_802A5AC() < 0;
                 if (open) {
                     buf = mem_alloc(0x200, 0x80000000);
@@ -227,7 +227,7 @@ s32 InitActorCategory(s32 category)
                         goto done;
                     }
                 }
-                if (gUnknown_030007E0 & 4)
+                if (gKeys & 4)
                     sub_8028504(gUnknown_03001318);
                 continue;
             }

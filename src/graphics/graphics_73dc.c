@@ -82,7 +82,7 @@ extern s32 sub_80083A8(void *part);
 extern s32 sub_8006C44(void *cursor);
 extern s32 sub_8006C84(void *cursor, s32 src, s32 size);
 extern void sub_8006AC8(void *buffer, void *record);
-extern s32 sub_803AD7C(void *self, void *fn);
+extern s32 _call_via_r1(void *self, void *fn);
 extern void *gUnknown_030012FC;
 extern void *gUnknown_03001300;
 extern u8 gStaticData_0816B2E0[];
@@ -113,7 +113,7 @@ void sub_80073DC(void *unused, struct oam_part *part, s32 *pos)
     {
         struct part_method73dc *m = (struct part_method73dc *)(part->vtable + 0x58);
 
-        oam.b.priority = (u16)sub_803AD7C((u8 *)part + m->thisOffset, m->fn);
+        oam.b.priority = (u16)_call_via_r1((u8 *)part + m->thisOffset, m->fn);
     }
     oam.b.palette = part->palette;
     if (PART_FLAG_SET(part, 27))

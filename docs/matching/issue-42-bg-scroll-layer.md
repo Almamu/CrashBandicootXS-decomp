@@ -40,7 +40,7 @@ haven't tested it; it's out of scope here.
 `struct pooled_bg_layer` (0x60 bytes, adds the tile-slot pool at `+0x5C`,
 constructor `InitPooledBgLayer`). It also has the method table, whose entries are
 `{s16 this-adjustment, pad, fn}` and are called through
-`sub_803AD7C`/`sub_803AD80`.
+`_call_via_r1`/`_call_via_r2`.
 
 | offset | field |
 |---|---|

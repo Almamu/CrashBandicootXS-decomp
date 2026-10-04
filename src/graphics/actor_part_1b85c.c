@@ -4,7 +4,7 @@
 /* GitHub issue #26: 0x0801B85C-0x0801CEE0, the whole of the former
  * asm/code_3_2_17_188d0_1b85c.s. Three objects, all gcc 2.x C++ classes
  * (a method table at +0x18/+0x10, virtual calls through the
- * sub_803AD7C/AD80/AD88 call-via-register thunks, inlined member
+ * _call_via_r1/AD80/AD88 call-via-register thunks, inlined member
  * functions):
  *
  * - sub_801B85C-sub_801B980: `struct follow_child`, the 0x80-byte
@@ -151,7 +151,7 @@ struct hit_box
  * indexed by level id). */
 struct level_info
 {
-    s32 nameText;           // 0x00 - text id (sub_8026F38)
+    s32 nameText;           // 0x00 - text id (GetUiText)
     s32 unk_04;             // 0x04 - passed to sub_801DD80
     u32 time0;              // 0x08 - time-trial thresholds, centiseconds,
     u32 time1;              // 0x0C   loosest first
@@ -338,7 +338,7 @@ extern void *gUnknown_03001300;
 extern void *gUnknown_03001304;
 extern struct level_menu *gUnknown_03000820;
 extern u8 gUnknown_03000824;
-extern union key_state gUnknown_030007E0;
+extern union key_state gKeys;
 extern u8 gStaticData_087E4ABC[];
 extern u8 gStaticData_087E4B34[];
 extern struct level_info gLevelTable[];
@@ -361,13 +361,13 @@ extern void sub_8009F1C(void *self, s32 flags);
 extern void sub_8009FB0(void *self);
 extern void *sub_8026EDC(u32 size);
 extern void sub_8026ED0(void *p);
-extern s32 sub_803ADB4(s32 a, s32 b);
-extern s32 sub_803AE4C(s32 a, s32 b);
-extern void sub_803AD7C(void *self, void *fn);
-extern s32 sub_803AD80(void *self, s32 arg, void *fn);
+extern s32 __divsi3(s32 a, s32 b);
+extern s32 __modsi3(s32 a, s32 b);
+extern void _call_via_r1(void *self, void *fn);
+extern s32 _call_via_r2(void *self, s32 arg, void *fn);
 /* Calls the function in r4 with r0-r3 (see the `register ... asm("r4")`
  * pin at the call site). */
-extern void sub_803AD88(void *self, s32 a, s32 b, s32 c);
+extern void _call_via_r4(void *self, s32 a, s32 b, s32 c);
 extern s32 mem_free_bytes(s32 flags);
 
 /* Sprite parts. */
@@ -388,15 +388,15 @@ extern void sub_8007B98(struct hit_box *dest, void *part);
 extern u8 sub_800B37C(void *actor, struct hit_box *box);
 
 /* Display, VRAM and sound. */
-extern void sub_80006A8(void);
-extern void sub_80007AC(void *p);
+extern void WaitForVBlank(void);
+extern void UpdateKeys(void *p);
 extern void sub_8006EA8(void *cache);
 extern void sub_8006D50(void *cache, s32 arg);
 extern void sub_8006DC8(void *p);
 extern void sub_8006AAC(void *p);
 extern void sub_8006A90(void *p);
 extern void sub_8006A48(void *p);
-extern void sub_803A94C(void *src, void *dst, s32 size);
+extern void CpuSet(void *src, void *dst, s32 size);
 extern void sub_8006C4C(struct vram_cursor *self);
 extern s32 sub_8006C58(struct vram_cursor *self, s32 size);
 extern void sub_8006C30(struct vram_cursor *self);
@@ -406,7 +406,7 @@ extern void sub_801E644(void *dst, s32 a, s32 b, s32 c, s32 d);
 extern void LoadGraphicsPackage(void *dst, void *pkg);
 extern void sub_8001B54(void *arg0, s32 arg1);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
-extern s32 sub_8026F38(s32 id);
+extern s32 GetUiText(s32 id);
 extern void sub_8028A30(struct icon_manager *m, u8 v);
 extern void sub_8028A40(struct icon_manager *m);
 extern void FormatCentiseconds(s32 value, char *buf);
@@ -535,7 +535,7 @@ static inline void CommitDisplay(struct level_menu *self)
     do                                                                         \
     {                                                                          \
         struct method *_m = &(obj)->vtable[idx];                               \
-        sub_803AD80((u8 *)(obj) + _m->thisOffset, (a), _m->fn);                \
+        _call_via_r2((u8 *)(obj) + _m->thisOffset, (a), _m->fn);                \
     } while (0)
 
 /* UNUSED - no caller anywhere in the ROM (checked asm/, data/, src/ and a
@@ -725,7 +725,7 @@ void sub_801BA60(void *self)
             void *addr = (u8 *)p + m->thisOffset;
             register void *fn asm("r4") = *(void *volatile *)&m->fn;
 
-            sub_803AD88(addr, 0, 0x19, 0);
+            _call_via_r4(addr, 0, 0x19, 0);
             (void)fn;
         }
     }
@@ -768,7 +768,7 @@ static inline void IconSetup(struct icon_manager *m, u32 v)
 
     m->field_108 = v;
     slot = &m->record->slots[6];
-    sub_803AD7C((u8 *)m + slot->offset, slot->ptr);
+    _call_via_r1((u8 *)m + slot->offset, slot->ptr);
 }
 
 static inline void IconReserve(struct icon_manager **m)
@@ -780,7 +780,7 @@ static inline void IconReserve(struct icon_manager **m)
 
 static inline void LoadMenuPalette(struct tile_cache *cache)
 {
-    sub_803A94C(gStaticData_0816C56C, cache->palette, 0x10);
+    CpuSet(gStaticData_0816C56C, cache->palette, 0x10);
 }
 
 u8 sub_801BAF0(s32 *arg)
@@ -790,7 +790,7 @@ u8 sub_801BAF0(s32 *arg)
     s32 heaps = 0xC0000000;
 
     mem_free_bytes(heaps);
-    sub_80006A8();
+    WaitForVBlank();
     *(vu16 *)PLTT = 0;
     *(vu16 *)REG_ADDR_DISPCNT = 0;
     sub_8006EA8(gUnknown_030012B8);
@@ -860,8 +860,8 @@ struct level_menu *sub_801BC28(struct level_menu *self, s32 arg)
     self->dispcnt.bits.obj = 1;
     if (arg <= 0x13)
     {
-        self->world = sub_803ADB4(arg, 5);
-        self->index = sub_803AE4C(arg, 5);
+        self->world = __divsi3(arg, 5);
+        self->index = __modsi3(arg, 5);
     }
     else
     {
@@ -973,7 +973,7 @@ void sub_801C040(struct level_menu *self, s32 flags)
         struct item *it = self->items[i];
 
         if (it != NULL)
-            sub_803AD80((u8 *)it + it->vtable->m28.thisOffset, 3, it->vtable->m28.fn);
+            _call_via_r2((u8 *)it + it->vtable->m28.thisOffset, 3, it->vtable->m28.fn);
     }
     if (self->bg1 != NULL)
         sub_801D7E0(self->bg1, 3);
@@ -996,11 +996,11 @@ void sub_801C104(struct level_menu *self)
     if (sub_801DD18(self->bg2) && sub_801DE28(self->items[self->index]))
     {
         struct icon_slot *slot = &gUnknown_030012E0->record->slots[0];
-        u32 x = (u32)(0xF0 - sub_803AD80((u8 *)gUnknown_030012E0 + slot->offset, self->nameText, slot->ptr)) >> 1;
+        u32 x = (u32)(0xF0 - _call_via_r2((u8 *)gUnknown_030012E0 + slot->offset, self->nameText, slot->ptr)) >> 1;
 
         SetIconPos(gUnknown_030012E0, x, -self->unk_80 + 2);
         slot = &gUnknown_030012E0->record->slots[2];
-        sub_803AD80((u8 *)gUnknown_030012E0 + slot->offset, self->nameText, slot->ptr);
+        _call_via_r2((u8 *)gUnknown_030012E0 + slot->offset, self->nameText, slot->ptr);
         if (self->index <= 4)
             sub_801C364(self);
     }
@@ -1010,20 +1010,20 @@ void sub_801C104(struct level_menu *self)
         struct item *it = self->items[i];
         struct method *m = &it->vtable->m08;
 
-        sub_803AD80((u8 *)it + m->thisOffset, sub_801D77C(self->bg1), m->fn);
+        _call_via_r2((u8 *)it + m->thisOffset, sub_801D77C(self->bg1), m->fn);
     }
     if (sub_801D780(self->bg1))
     {
         if (!sub_801DCF8(self->bg2))
         {
-            s32 text = sub_8026F38(0x2F);
+            s32 text = GetUiText(0x2F);
             struct icon_slot *slot = &gUnknown_030012DC->record->slots[0];
-            u32 x = (u32)(0xF0 - sub_803AD80((u8 *)gUnknown_030012DC + slot->offset, text, slot->ptr)) >> 1;
+            u32 x = (u32)(0xF0 - _call_via_r2((u8 *)gUnknown_030012DC + slot->offset, text, slot->ptr)) >> 1;
 
             SetIconPos(gUnknown_030012DC, x, 0x96);
             sub_8028A30(gUnknown_030012DC, 0xF);
             slot = &gUnknown_030012DC->record->slots[2];
-            sub_803AD80((u8 *)gUnknown_030012DC + slot->offset, text, slot->ptr);
+            _call_via_r2((u8 *)gUnknown_030012DC + slot->offset, text, slot->ptr);
             sub_801C2B0(self);
         }
         sub_801DC28(self->bg2);
@@ -1168,7 +1168,7 @@ void sub_801C3E8(struct level_menu *self, u32 time)
 
         SetIconPos(gUnknown_030012E0, self->unk_80 + gStaticData_0816C4C0.x + 10, gStaticData_0816C4C0.y - 8);
         slot = &gUnknown_030012E0->record->slots[2];
-        sub_803AD80((u8 *)gUnknown_030012E0 + slot->offset, (s32)self->timeText, slot->ptr);
+        _call_via_r2((u8 *)gUnknown_030012E0 + slot->offset, (s32)self->timeText, slot->ptr);
     }
     else
     {
@@ -1178,11 +1178,11 @@ void sub_801C3E8(struct level_menu *self, u32 time)
         sub_8028A30(gUnknown_030012E0, self->sprites[7]->palette);
         SetIconPos(gUnknown_030012E0, self->unk_80 + gStaticData_0816C4C0.x + 10, gStaticData_0816C4C0.y - 8);
         slot = &gUnknown_030012E0->record->slots[2];
-        sub_803AD80((u8 *)gUnknown_030012E0 + slot->offset, (s32)self->recordText, slot->ptr);
+        _call_via_r2((u8 *)gUnknown_030012E0 + slot->offset, (s32)self->recordText, slot->ptr);
         sub_8028A40(gUnknown_030012E0);
         SetIconPos(gUnknown_030012E0, self->unk_80 + gStaticData_0816C4C0.x + 10, gStaticData_0816C4C0.y + 8);
         slot = &gUnknown_030012E0->record->slots[2];
-        sub_803AD80((u8 *)gUnknown_030012E0 + slot->offset, (s32)self->timeText, slot->ptr);
+        _call_via_r2((u8 *)gUnknown_030012E0 + slot->offset, (s32)self->timeText, slot->ptr);
     }
 }
 
@@ -1219,7 +1219,7 @@ void sub_801C51C(struct level_menu *self)
                 self->levelId = sub_801DE2C(it);
                 info = &gLevelTable[self->levelId];
                 sub_801DD80(self->bg2, info->unk_04);
-                self->nameText = sub_8026F38(info->nameText);
+                self->nameText = GetUiText(info->nameText);
             }
             self->unk_80 = 0;
             if (self->index <= 4)
@@ -1238,7 +1238,7 @@ draw:
         struct item *it = *items++;
         struct item_vtable *vt = it->vtable;
 
-        sub_803AD7C((u8 *)it + vt->m20.thisOffset, vt->m20.fn);
+        _call_via_r1((u8 *)it + vt->m20.thisOffset, vt->m20.fn);
     }
     sub_801DAD8(self->bg2);
     {
@@ -1376,7 +1376,7 @@ s32 sub_801C96C(struct level_menu *self)
     self->levelId = sub_801DE2C(self->items[self->index]);
     info = &gLevelTable[self->levelId];
     sub_801DD80(self->bg2, info->unk_04);
-    self->nameText = sub_8026F38(info->nameText);
+    self->nameText = GetUiText(info->nameText);
     while (!sub_801DD18(self->bg2))
     {
         {
@@ -1386,7 +1386,7 @@ s32 sub_801C96C(struct level_menu *self)
                 f->evy--;
         }
         sub_801C104(self);
-        sub_80006A8();
+        WaitForVBlank();
         sub_8006DC8(gUnknown_030012B8);
         sub_8006AAC(gUnknown_03001300);
         CommitDisplay(self);
@@ -1410,14 +1410,14 @@ s32 sub_801C96C(struct level_menu *self)
     goto loop;
 
 check_exit:
-    if (gUnknown_030007E0.half.pressed & 8)
+    if (gKeys.half.pressed & 8)
     {
         sub_801D300(self);
         goto end;
     }
 loop:
     sub_801C104(self);
-    sub_80006A8();
+    WaitForVBlank();
     sub_8006DC8(gUnknown_030012B8);
     sub_8006AAC(gUnknown_03001300);
     CommitDisplay(self);
@@ -1426,9 +1426,9 @@ loop:
         goto loop;
     if (!(u8)sub_801E464(self->panel))
         goto loop;
-    sub_80007AC(gUnknown_03001304);
+    UpdateKeys(gUnknown_03001304);
     {
-        union key_state keys = gUnknown_030007E0;
+        union key_state keys = gKeys;
         union key_state k;
 
         if (keys.half.pressed & 0x40)
@@ -1452,7 +1452,7 @@ loop:
                 sub_801CE60(self);
         }
     }
-    if (!(gUnknown_030007E0.half.pressed & 1))
+    if (!(gKeys.half.pressed & 1))
         goto check_exit;
     if (!sub_801DE28(self->items[self->index]))
         goto check_exit;
@@ -1462,7 +1462,7 @@ loop:
 end:
     self->dispcnt.raw = 0;
     self->dispcnt.bits.obj1d = 1;
-    sub_80006A8();
+    WaitForVBlank();
     sub_8006DC8(gUnknown_030012B8);
     sub_8006AAC(gUnknown_03001300);
     CommitDisplay(self);
@@ -1479,7 +1479,7 @@ void sub_801CCF8(struct level_menu *self)
     while (sub_801DD38(self->bg2) || !(u8)sub_801E464(self->panel))
     {
         sub_801C104(self);
-        sub_80006A8();
+        WaitForVBlank();
         sub_8006DC8(gUnknown_030012B8);
         sub_8006AAC(gUnknown_03001300);
         CommitDisplay(self);
@@ -1508,8 +1508,8 @@ void sub_801CDE0(struct level_menu *self)
         pos = &self->positions[self->index];
         sub_801E480(self->panel, pos->x, pos->y - 0x18);
         sub_801D05C(self);
-        sub_80007AC(gUnknown_03001304);
-        if (!(gUnknown_030007E0.all & 0x20))
+        UpdateKeys(gUnknown_03001304);
+        if (!(gKeys.all & 0x20))
             return;
     }
 }
@@ -1533,8 +1533,8 @@ void sub_801CE60(struct level_menu *self)
         pos = &self->positions[self->index];
         sub_801E480(self->panel, pos->x, pos->y - 0x18);
         sub_801D05C(self);
-        sub_80007AC(gUnknown_03001304);
-        if (!(gUnknown_030007E0.all & 0x10))
+        UpdateKeys(gUnknown_03001304);
+        if (!(gKeys.all & 0x10))
             return;
     }
 }

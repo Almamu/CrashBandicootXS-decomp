@@ -2,16 +2,16 @@
 
 /* Sits right after src/system/irq.c's matched functions and before
  * src/util/math_util.c - the only function in this address range,
- * non-adjacent to boot_util.c's sub_800014C/nullsub_9 since
+ * non-adjacent to boot_util.c's MemCopy32/nullsub_9 since
  * main.c/memory.c/irq.c sit between them. Replaced the raw
  * asm/code_3_1.s (now deleted - this was its only function). */
 
-extern s32 sub_800090C(s32 arg0);
+extern s32 FixedInverse16(s32 arg0);
 extern void LoadTaggedAsset(void *asset, void *dest);
 
 /* Sets up BG2 for an affine full-screen image (mode 1, BG2 as an
  * affine background), computes a scale-only (no-rotation - `PB`/`PC`
- * stay 0) affine matrix from `sub_800090C(0x100)` called twice, and
+ * stay 0) affine matrix from `FixedInverse16(0x100)` called twice, and
  * the matching `BG2X`/`BG2Y` reference point centering the image on
  * screen, then DMAs `palette` into palette RAM and loads `asset`'s
  * tile/tilemap data into VRAM via the already-matched
@@ -19,12 +19,12 @@ extern void LoadTaggedAsset(void *asset, void *dest);
  * intro sequence's individual frames, per the `graphics/intro/`
  * assets this ties into).
  *
- * The two `sub_800090C` results each need a genuinely separate
+ * The two `FixedInverse16` results each need a genuinely separate
  * unsigned-truncate (for the raw `BG2PA`/`BG2PD` halfword store) and
  * signed-truncate (for the offset arithmetic). The second result's
  * left-shift-by-16 (the first step of splitting it into its unsigned
  * and signed halves) has to be emitted as its own statement
- * (`shiftedD`) right after the second `sub_800090C` call - before the
+ * (`shiftedD`) right after the second `FixedInverse16` call - before the
  * first result's sign-extension/offset math runs - to match the ROM's
  * instruction order; deriving `rawD`/`scaleD` straight from
  * `rawDFull` instead defers that shift until first use and puts it in
@@ -37,7 +37,7 @@ extern void LoadTaggedAsset(void *asset, void *dest);
  * Separately, keeping `zero` (for the always-zero `BG2PB`/`BG2PC`
  * writes) as a plain local variable assigned right after the first
  * call - rather than two fresh `0` literals - is what keeps it alive
- * across the second `sub_800090C` call, which in turn is what pushes
+ * across the second `FixedInverse16` call, which in turn is what pushes
  * `asset`/`palette` into `r9`/`r8` instead of `r8`/`r6`.
  *
  * `BG2X_H`/`BG2Y_H` are computed inline in their own assignment
@@ -62,9 +62,9 @@ void sub_80007EC(void *asset, void *palette)
     REG_BG2CNT = 0x088F;
     REG_DISPCNT = 0x1F44;
 
-    rawA = sub_800090C(0x100);
+    rawA = FixedInverse16(0x100);
     zero = 0;
-    rawDFull = sub_800090C(0x100);
+    rawDFull = FixedInverse16(0x100);
     shiftedD = rawDFull << 16;
     scaleA = (s16)rawA;
     xLow = 0x7788 - scaleA * 120;

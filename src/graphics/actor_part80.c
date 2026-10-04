@@ -8,8 +8,8 @@
  * (raw `sub_8012420`/`sub_8012694`/`sub_801283C` sit in between, see
  * asm/code_3_2_17_12420.s), hence its own file. */
 
-extern s32 sub_803AD80(void *arg0, void *arg1, void *arg2);
-extern s32 sub_803AD84(void *arg0, void *arg1, void *arg2, void *arg3);
+extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
+extern s32 _call_via_r3(void *arg0, void *arg1, void *arg2, void *arg3);
 
 /* If `part+0x68` bit 3 is set, returns 0 (busy). Otherwise, on
  * `part+0x69 > 2`, fires the `+0x20`/`+0x24` trampoline pair (id
@@ -29,14 +29,14 @@ u8 sub_8012A7C(void *selfArg)
     if (mask == 0) {
         if (part[0x69] > 2) {
             struct act_vtable *mgr = self->vt;
-            sub_803AD80((u8 *)self + mgr->m20.thisOffset, (void *)0x1a, mgr->m20.fn);
+            _call_via_r2((u8 *)self + mgr->m20.thisOffset, (void *)0x1a, mgr->m20.fn);
             {
                 struct act_method *off = &self->vt->m50;
-                sub_803AD84((u8 *)self + off->thisOffset, self->part, (void *)0x1b, off->fn);
+                _call_via_r3((u8 *)self + off->thisOffset, self->part, (void *)0x1b, off->fn);
             }
         } else {
             struct act_vtable *mgr = self->vt;
-            sub_803AD80((u8 *)self + mgr->m20.thisOffset, (void *)0x1c, mgr->m20.fn);
+            _call_via_r2((u8 *)self + mgr->m20.thisOffset, (void *)0x1c, mgr->m20.fn);
         }
 
         {

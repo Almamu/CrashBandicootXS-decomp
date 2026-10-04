@@ -5,7 +5,7 @@
 @ excluded from progress like crt0 (tools/report_units.py HANDWRITTEN).
 @
 @ It acknowledges the lowest pending, enabled interrupt in REG_IF and jumps
-@ to its handler in gUnknown_030009E8 (irq.c's handler table, one word per
+@ to its handler in gIntrTable (irq.c's handler table, one word per
 @ IRQ bit). A VBlank also sets bit 0 of the BIOS IntrCheck flags at
 @ 0x03FFFFF8 (0x04000000 - 8) for VBlankIntrWait. A Game Pak interrupt
 @ (cartridge pulled) hangs on the last test instead of being dispatched.
@@ -75,5 +75,5 @@ IntrMain_Buffer:
 	add r1, r1, r2
 	ldr r0, [r1]
 	bx r0
-.Lhandlers: .4byte gUnknown_030009E8
+.Lhandlers: .4byte gIntrTable
 	arm_func_end IntrMain

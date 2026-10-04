@@ -65,17 +65,14 @@ extern void *sub_800C9C8(s32 a, s32 b, s32 c, s32 d, s32 e, void *f);
 extern void sub_800BFA8(void *self);
 extern void *sub_800CBD4(void *mem); /* constructor: resets the fresh object and points its +0xC table at gStaticData_087E3FA4 (actor_part117.c) */
 extern void *sub_8026EDC(s32 size);
-extern void *sub_803AD7C(void *arg0, void *fn);
-extern s32 sub_803AD80(void *arg0, s32 arg1, void *arg2);
+extern void *_call_via_r1(void *arg0, void *fn);
+extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
 extern void PlayAmbientSfx(void *ctx, s32 id, s32 frame, s32 vol, struct byte_arg force);
 extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
-extern s32 sub_8000E1C(s32 max);
+extern s32 RandRange(s32 max);
 extern void *sub_8025BAC(void *pool, s32 arg1, s32 kind, s32 x, s32 y, s32 arg5);
 
 typedef void (*ctrl_bounce_fn)(void *self, s32 a, s32 b, s32 c);
-
-/* sub_803AD88 is libgcc's `_call_via_r4` (the `bounce` method call). */
-asm(".set _call_via_r4, sub_803AD88\n");
 
 /* Sets `t`'s `gone` bit and, if it has an id, its bit in the "gone"
  * bitmap at gEntityFlags+0x108. */
@@ -123,7 +120,7 @@ static inline u8 AnimQuery(struct ctrl_target *t)
 {
     struct part_method *m = PART_METHOD(t, 0x28);
 
-    return (u32)sub_803AD7C((u8 *)t + m->thisOffset, m->fn);
+    return (u32)_call_via_r1((u8 *)t + m->thisOffset, m->fn);
 }
 
 /* Branchless `abs()` (`asrs`/`eors`/`subs`), as the ROM computes it. */
@@ -389,8 +386,6 @@ struct launch_obj {
 typedef void (*bd48_method_fn)(void *self, void *arg);
 typedef void (*bd48_method_i_fn)(void *self, s32 arg);
 
-asm(".set _call_via_r2, sub_803AD80\n");
-
 static inline struct ctrl_target *SpawnAt(s32 kind, s32 x, s32 y)
 {
     return sub_8025BAC(gEntitySpawner, kind, 2, x, y, 0);
@@ -472,7 +467,7 @@ void sub_800BD48(struct part_ctrl *self, s32 unused, s32 state)
                 SetVelX(t, 0x1000, 0, 0x1800);
             else
                 SetVelX(t, -0x1000, 0, -0x1800);
-            v = ((u16)sub_8000E1C(3) << 9) - 0x200;
+            v = ((u16)RandRange(3) << 9) - 0x200;
             SetVelY(self->target, v, 0, v);
             self->target->visible = 0;
             PlaySfx(gUnknown_030012BC, 5, 0x80);

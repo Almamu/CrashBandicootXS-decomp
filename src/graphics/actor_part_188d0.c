@@ -13,7 +13,7 @@
  * "part" - a sub_8009ED0-built on-screen object (struct gfx_part below)
  * whose animation tag/frame, mirror bit and flags they set
  * (include/gfx_part.h). Virtual calls
- * go through the sub_803AD80/AD84/AD88 call-via-register trampolines with
+ * go through the _call_via_r2/AD84/AD88 call-via-register trampolines with
  * gcc 2.x's {this-adjust, fn} method entries.
  *
  * - sub_8018A30/sub_8018BDC/sub_8018CB0: a two-part effect that spawns two
@@ -214,11 +214,11 @@ extern void sub_80087B4(void *part);
 extern void sub_800872C(void *part, u8 val);
 extern s32 sub_800815C(void *part);
 extern void sub_8008E94(void *manager, void *value);
-extern s32 sub_803AD80(void *self, s32 arg, void *fn);
-extern s32 sub_803AD84(void *self, void *arg1, s32 arg2, void *fn);
-extern void sub_803AD88(void *arg0, s32 arg1, s32 arg2, s32 arg3);
-extern s32 sub_803ADB4(s32 dividend, s32 divisor);
-extern s32 sub_8037E54(s32 value, s32 divisor);
+extern s32 _call_via_r2(void *self, s32 arg, void *fn);
+extern s32 _call_via_r3(void *self, void *arg1, s32 arg2, void *fn);
+extern void _call_via_r4(void *arg0, s32 arg1, s32 arg2, s32 arg3);
+extern s32 __divsi3(s32 dividend, s32 divisor);
+extern s32 __udivsi3(s32 value, s32 divisor);
 extern u8 sub_80231C4(void *self);
 extern void sub_80241A4(void);
 extern void *sub_8007CF8(void *dest, void *pt);
@@ -243,13 +243,13 @@ void *sub_8019660(void *self, void *cfg);
     do                                                                         \
     {                                                                          \
         struct gfx_method *_m = &(obj)->vtable->m;                             \
-        sub_803AD80((u8 *)(obj) + _m->thisOffset, (a), _m->fn);                \
+        _call_via_r2((u8 *)(obj) + _m->thisOffset, (a), _m->fn);                \
     } while (0)
 #define CALL3(obj, m, a, b)                                                    \
     do                                                                         \
     {                                                                          \
         struct gfx_method *_m = &(obj)->vtable->m;                             \
-        sub_803AD84((u8 *)(obj) + _m->thisOffset, (a), (b), _m->fn);           \
+        _call_via_r3((u8 *)(obj) + _m->thisOffset, (a), (b), _m->fn);           \
     } while (0)
 
 static inline void SetTag(struct gfx_part *part, s32 tag)
@@ -550,7 +550,7 @@ void sub_8018A30(struct gfx_pair_ctrl *self, struct gfx_part *part)
         {
             s32 w = gLevelLayers->layer0->width << 8;
 
-            n = sub_8037E54(Abs(n) * 12, w);
+            n = __udivsi3(Abs(n) * 12, w);
         }
         if (n > 5)
             n = 5;
@@ -594,7 +594,7 @@ void sub_8018BDC(struct gfx_pair_ctrl *self, struct gfx_part *part)
     ctrl = sub_8019758(sub_8026EDC(0x10));
     SetFrameNibble(c, sub_800815C(c));
     c->ctrl = ctrl;
-    sub_803AD80((u8 *)ctrl + ctrl->vtable->method_18.thisOffset, (s32)c, ctrl->vtable->method_18.fn);
+    _call_via_r2((u8 *)ctrl + ctrl->vtable->method_18.thisOffset, (s32)c, ctrl->vtable->method_18.fn);
     c->pos = part->pos;
     CopyFlipX(c, part);
     OrFlags(c, 0x10);
@@ -630,7 +630,7 @@ void sub_8018CB0(struct gfx_pair_ctrl *self, struct gfx_part *part)
     }
     ctrl = sub_80196F8(sub_8026EDC(0x40), self);
     c->ctrl = ctrl;
-    sub_803AD80((u8 *)ctrl + ctrl->vtable->method_18.thisOffset, (s32)c, ctrl->vtable->method_18.fn);
+    _call_via_r2((u8 *)ctrl + ctrl->vtable->method_18.thisOffset, (s32)c, ctrl->vtable->method_18.fn);
     x = part->pos.x;
     y = part->pos.y;
     x += 0x2000;
@@ -668,7 +668,7 @@ void sub_8018D70(u32 a0, u16 a1, u16 a2, u16 a3, s32 kind)
     SetFrameNibble(c, sub_800815C(c));
     ctrl = sub_80195EC(sub_8026EDC(0x14), kind);
     c->ctrl = ctrl;
-    sub_803AD80((u8 *)ctrl + ctrl->vtable->method_18.thisOffset, (s32)c, ctrl->vtable->method_18.fn);
+    _call_via_r2((u8 *)ctrl + ctrl->vtable->method_18.thisOffset, (s32)c, ctrl->vtable->method_18.fn);
     c->unk_0A = 0;
     {
         s32 m = -5;
@@ -693,8 +693,8 @@ void sub_8018E4C(struct gfx_mover *self, struct gfx_part *partArg)
         self->stepsLeft = --n;
         t = self->deltaX * n;
         steps = self->steps;
-        x = self->targetX - sub_803ADB4(t, steps);
-        y = self->targetY - sub_803ADB4(self->deltaY * n, steps);
+        x = self->targetX - __divsi3(t, steps);
+        y = self->targetY - __divsi3(self->deltaY * n, steps);
         part->pos.x = x;
         part->pos.y = y;
     }
@@ -940,7 +940,7 @@ void sub_8019214(struct gfx_mover *self, struct gfx_part *partArg, s32 kindArg)
     ctrl = sub_8019660(sub_8026EDC(0x18), self->cfg);
     ctrl->fast = kind == 1;
     c->ctrl = ctrl;
-    sub_803AD80((u8 *)ctrl + ctrl->vtable->method_18.thisOffset, (s32)c, ctrl->vtable->method_18.fn);
+    _call_via_r2((u8 *)ctrl + ctrl->vtable->method_18.thisOffset, (s32)c, ctrl->vtable->method_18.fn);
     c->pos = part->pos;
     {
         register s32 m asm("r0") = -5;
@@ -982,15 +982,15 @@ void sub_8019324(struct gfx_hit_ctrl *self, struct gfx_part *partArg)
 
             if (p->unk_104 == 0)
             {
-                /* sub_803AD88 calls through r4: the method's function
+                /* _call_via_r4 calls through r4: the method's function
                  * pointer is loaded there but never passed in r0-r3 (same
-                 * idiom as actor_part78.c's sub_803AD88 calls) */
+                 * idiom as actor_part78.c's _call_via_r4 calls) */
                 u8 *tbl = p->vtable + 0x68;
                 void *thisp = (u8 *)p + *(s16 *)tbl;
                 register void *fn asm("r4") = *(void *volatile *)(tbl + 4);
 
                 (void)fn;
-                sub_803AD88(thisp, 0, 9, 0);
+                _call_via_r4(thisp, 0, 9, 0);
             }
             {
                 register s32 zero asm("r0") = 0;

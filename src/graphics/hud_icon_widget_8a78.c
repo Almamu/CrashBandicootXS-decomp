@@ -1,7 +1,7 @@
 #include "core.h"
 #include "icon_manager.h"
 
-extern void sub_803A94C(void *src, void *dst, s32 control);
+extern void CpuSet(void *src, void *dst, s32 control);
 extern u8 gStaticData_087E4DAC[];
 
 /* Constructor variant used for a widget that's never assigned its own
@@ -42,6 +42,6 @@ struct icon_manager *sub_8028A78(struct icon_manager *selfArg)
         : "r0", "r1", "r2", "memory"
     );
 
-    sub_803A94C(&zero, self, CPU_SET_SRC_FIXED | CPU_SET_32BIT | 2);
+    CpuSet(&zero, self, CPU_SET_SRC_FIXED | CPU_SET_32BIT | 2);
     return self;
 }

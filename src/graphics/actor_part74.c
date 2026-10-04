@@ -21,9 +21,9 @@ extern struct actor_self *gUnknown_03000884;
 extern struct actor_self *gUnknown_030014BC;
 extern s32 GetAnimFrameBaseOffset(void *self);
 extern void (*gStaticData_0817A840[])(void);
-extern void sub_803AD78(void *fn);
-extern void (*gUnknown_03000898)(void *frame, s32 arg);
-extern void sub_803AD80(void *arg0, s32 arg1, void *fn);
+extern void _call_via_r0(void *fn);
+extern void (*gUnpackNibbleTilesFunc)(void *frame, s32 arg);
+extern void _call_via_r2(void *arg0, s32 arg1, void *fn);
 extern u8 gUnknown_030014C0;
 extern u8 gUnknown_030014C1;
 extern s32 gUnknown_030014CC;
@@ -32,16 +32,12 @@ extern void sub_802D9A8(void);
 extern u8 gStaticData_0817AA98[];
 extern s32 gUnknown_030014C8;
 extern u8 gUnknown_030014A0;
-extern void *sub_800014C(void *dest, void *src, s32 size);
+extern void *MemCopy32(void *dest, void *src, s32 size);
 extern void sub_802C018(void *self);
 extern void sub_8029BAC(s32 arg0);
 extern u16 gStaticData_0817AA6C[];
 extern s32 sub_8029E98(void);
 extern s32 sub_8029EB4(void);
-
-asm(".set __divsi3, sub_803ADB4\n"
-    ".set _call_via_r0, sub_803AD78");
-ACTOR_CALL_VIA_ALIASES
 
 /* One of two confirmed slots (index 3, dispatched via
  * `gStaticData_0817A840[gUnknown_030014D0]`) of the type-0
@@ -58,8 +54,8 @@ ACTOR_CALL_VIA_ALIASES
  * `+4`/`+6` timing fields, latching the `+0x12` done flag and correcting
  * the accumulator on overrun), fires the current
  * `gStaticData_0817A840[gUnknown_030014D0]` vtable slot via
- * `sub_803AD78`, and - only when the accumulator's `>>8` value actually
- * changed this frame - fires a `sub_803AD80` trampoline from the part
+ * `_call_via_r0`, and - only when the accumulator's `>>8` value actually
+ * changed this frame - fires a `_call_via_r2` trampoline from the part
  * table's own `+2`-offset record (latching `gUnknown_030014C1`).
  *
  * Finally, while `gUnknown_030014D0 <= 1`, runs a 3-axis AABB overlap
@@ -71,8 +67,8 @@ ACTOR_CALL_VIA_ALIASES
  * object tracks no Y), against the player's own `+0x38` 12-byte vector
  * with the player's `+0x1c`/`0x20`/`0x24` position (all `>>8`) added
  * into all three of `x`/`y`/`z`. The second record is then run through
- * `sub_800014C` - a real, byte-verified `memcpy(box, box, 0xc)`
- * self-copy (`sub_800014C`'s own definition, `src/system/boot_util.c`,
+ * `MemCopy32` - a real, byte-verified `memcpy(box, box, 0xc)`
+ * self-copy (`MemCopy32`'s own definition, `src/system/boot_util.c`,
  * confirmed a plain `memcpy`-style `CpuSet` wrapper) - a genuine no-op
  * kept byte-faithful since a shared "copy src into a working buffer,
  * then test" helper is being called here with a buffer that already
@@ -86,7 +82,7 @@ ACTOR_CALL_VIA_ALIASES
  * box built at sp+0x18) are members of one frame struct, so each of
  * their addresses is a fresh `add rX, sp, #off` rather than a pseudo
  * kept in a callee-saved register; `&f.b` goes through a pointer local
- * right before the `sub_800014C` call so it (alone) stays live across
+ * right before the `MemCopy32` call so it (alone) stays live across
  * it, and A's address is taken again after the call. The hit block
  * uses its own `g` local for the gauge object (the function-wide `obj`
  * would be allocated a callee-saved register). Built with old_agbcc
@@ -137,7 +133,7 @@ void sub_802D7B0(void)
     obj = gUnknown_030014BC;
     cur = obj->animTime >> 8;
     if (old != cur) {
-        gUnknown_03000898((u8 *)obj->frameOffsets[obj->anims[obj->animIndex].frameIndex + cur] + 4,
+        gUnpackNibbleTilesFunc((u8 *)obj->frameOffsets[obj->anims[obj->animIndex].frameIndex + cur] + 4,
                           gUnknown_030014C0);
         gUnknown_030014C1 = 1;
     }
@@ -157,7 +153,7 @@ void sub_802D7B0(void)
         BoxMove(&f.t, pl->x >> 8, pl->y >> 8, pl->z >> 8);
         f.b = f.t;
         b = &f.b;
-        sub_800014C(b, b, sizeof(*b));
+        MemCopy32(b, b, sizeof(*b));
         if (BoxOverlap(b, &f.a)) {
             struct actor_self *g;
 
@@ -177,7 +173,7 @@ void sub_802D7B0(void)
  * Below `0x5000`, DMAs a fixed 16-color gradient (`gStaticData_0817AA6C`)
  * straight into BG palette RAM at `0x050001E0` (`REG_DMA3` at
  * `0x040000D4`). Above `0xBE00`, DMAs a single zeroed halfword instead
- * (blanking the gradient). In between, computes a `sub_803ADB4`-scaled
+ * (blanking the gradient). In between, computes a `__divsi3`-scaled
  * factor from how far `gUnknown_030014CC` sits into that `[0x5000,
  * 0xBE00]` range, then directly writes 16 colors: for each
  * `gStaticData_0817AA6C` source halfword (a packed BGR555 color), its

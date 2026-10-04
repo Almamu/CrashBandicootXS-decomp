@@ -2,8 +2,8 @@
 #include "actor.h"
 #include "box_part.h"
 
-extern void *sub_803AD7C(void *arg0, void *fn);
-extern s32 sub_803AD80(void *arg0, void *arg1, void *fn);
+extern void *_call_via_r1(void *arg0, void *fn);
+extern s32 _call_via_r2(void *arg0, void *arg1, void *fn);
 extern void *gLevelLayers;
 
 /* The spatial-hash-grid pool manager struct `sub_8008F20` initializes
@@ -51,7 +51,7 @@ struct pool_manager {
  * land at the same point in the instruction stream as the ROM's; (3)
  * each grid-bucket dereference (`table+0x30/0x34` for the box test,
  * then `table+0x20/0x24` for the fire) re-reads `part = *node` fresh
- * rather than reusing a cached value across the `sub_803AD80` call,
+ * rather than reusing a cached value across the `_call_via_r2` call,
  * matching the ROM's own redundant reload. The one genuine compiler
  * gap that's left, even after all of the above: computing the grid
  * slot's address (`(u8 *)gridHeadBase + bucket*4`) as
@@ -114,14 +114,14 @@ void sub_800944C(void *managerArg)
                     void *addr = (u8 *)part + offset;
                     void *fn = tbl->fn;
 
-                    if ((u8)sub_803AD80(addr, box, fn)) {
+                    if ((u8)_call_via_r2(addr, box, fn)) {
                         struct box_part *part2 = *(struct box_part **)node;
                         struct part_method *tbl2 = PART_METHOD(part2, 0x20);
                         s16 offset2 = tbl2->thisOffset;
                         void *addr2 = (u8 *)part2 + offset2;
                         void *fn2 = tbl2->fn;
 
-                        sub_803AD7C(addr2, fn2);
+                        _call_via_r1(addr2, fn2);
                         *((u8 *)node + 0x11) = 1;
                     }
 
@@ -145,14 +145,14 @@ void sub_800944C(void *managerArg)
                     void *addr = (u8 *)part + offset;
                     void *fn = tbl->fn;
 
-                    if ((u8)sub_803AD80(addr, box, fn)) {
+                    if ((u8)_call_via_r2(addr, box, fn)) {
                         struct box_part *part2 = *(struct box_part **)node;
                         struct part_method *tbl2 = PART_METHOD(part2, 0x20);
                         s16 offset2 = tbl2->thisOffset;
                         void *addr2 = (u8 *)part2 + offset2;
                         void *fn2 = tbl2->fn;
 
-                        sub_803AD7C(addr2, fn2);
+                        _call_via_r1(addr2, fn2);
                     }
                 } else {
                     *((u8 *)node2 + 0x11) = 0;

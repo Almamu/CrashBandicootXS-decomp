@@ -2,8 +2,6 @@
 #include "actor_anim.h"
 #include "gba/io_reg.h"
 
-asm(".set _call_via_r4, sub_803AD88");
-
 extern s32 gUnknown_03001384;
 extern s32 gUnknown_03001388;
 extern s32 gUnknown_0300138C;
@@ -49,7 +47,7 @@ extern void *gUnknown_03001394;
 extern u8 gUnknown_030013B8;
 extern u8 gUnknown_030013B9;
 extern s32 gUnknown_030013A0;
-extern void (*gUnknown_0300087C)(void *src, s32 arg1, s32 arg2, s32 arg3);
+extern void (*gDrawMirroredTilemapFunc)(void *src, s32 arg1, s32 arg2, s32 arg3);
 extern s32 gUnknown_03001398;
 extern s32 gUnknown_0300139C;
 extern u8 gUnknown_030013BA;
@@ -58,7 +56,7 @@ extern u8 gUnknown_030013BA;
  * "console"/text-plane cursor cell into VRAM (one of three fixed
  * destination strategies depending on the `gUnknown_030013B8`/
  * `gUnknown_030013B9` mode bytes), then arms `gUnknown_030013BA` so a
- * caller can poll for completion. `gUnknown_0300087C` is a function
+ * caller can poll for completion. `gDrawMirroredTilemapFunc` is a function
  * pointer (called through `_call_via_r4`).
  *
  * The `0x204` header offset is added to the row product before the
@@ -75,7 +73,7 @@ void sub_80297C8(void)
 
         dst = gUnknown_030013B9 != 0 ? VRAM : VRAM + 0x2000;
         next = src + gUnknown_030013A0;
-        gUnknown_0300087C(next, gUnknown_030013B9, gUnknown_03001398, gUnknown_0300139C);
+        gDrawMirroredTilemapFunc(next, gUnknown_030013B9, gUnknown_03001398, gUnknown_0300139C);
     } else if (gUnknown_030013B9 != 0) {
         dst = VRAM + 0x20;
     } else {
@@ -91,7 +89,7 @@ extern s32 gUnknown_030013A8;
 extern s32 gUnknown_030013B4;
 extern s32 gUnknown_030013BC;
 extern void sub_802996C(void);
-extern s32 sub_803ADB4(s32 a, s32 b);
+extern s32 __divsi3(s32 a, s32 b);
 
 /* (Re)configures the console/text-plane cell geometry from a fresh
  * cell record at `arg1` (a `struct cell_anim_header`: its `cols`/`rows`) - cell pixel area, its DMA-scroll-wrap threshold, and the
@@ -132,7 +130,7 @@ void sub_8029890(s32 arg0, s32 arg1, s32 arg2, s32 arg3)
         if (flag)
             size += (area + 7) / 8 * 4;
         *a4 = size;
-        gUnknown_030013AC = sub_803ADB4(arg2 - 0x204, *reload) << 8;
+        gUnknown_030013AC = __divsi3(arg2 - 0x204, *reload) << 8;
     }
     gUnknown_030013B0 = 0;
     sub_802996C();

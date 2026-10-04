@@ -1,6 +1,6 @@
 #include "core.h"
 
-/* Sits right after sub_8000CBC (ROM 0x08000CBC), which is not yet
+/* Sits right after FindSubstring (ROM 0x08000CBC), which is not yet
  * byte-matching and is still parked in asm/code_3_1_2.s - kept in its
  * own translation unit (rather than string_util.c, thematically the
  * better fit) purely so ldscript.txt can place this one function's
@@ -65,7 +65,7 @@ asm(".align 2, 0");
  * src's NUL terminator; NUL-terminates dst only if fewer than n bytes
  * were actually copied from src (real strncpy always pads dst to n
  * bytes - this doesn't). */
-void sub_8000DAC(u8 *dst, u8 *src, s32 n)
+void strncpy(u8 *dst, u8 *src, s32 n)
 {
     u8 c = *src;
     if (c != 0) {

@@ -6,7 +6,7 @@
  * comment and docs/matching/issue-50-actor-2a69c.md. */
 
 extern s32 gUnknown_030013C8;
-extern s32 sub_803ADB4(s32 arg0, s32 arg1);
+extern s32 __divsi3(s32 arg0, s32 arg1);
 extern s32 sub_8029E98(void);
 extern s32 sub_8029EB4(void);
 extern u8 *GetAnimFrameData(void *self);
@@ -14,7 +14,7 @@ extern s32 sub_803B060(void *self);
 extern void SetupSpriteFrameOam(u8 *frame, u32 arg1, u32 arg2, s32 priority);
 
 /* Computes an OBJ scale factor from `self->depth` and its animation
- * record's `baseDepth` (via `sub_803ADB4`), then a second
+ * record's `baseDepth` (via `__divsi3`), then a second
  * scale from `gUnknown_030013C8` (via the same helper) used to project
  * `self`'s x/y position through `sub_8029E98`/`sub_8029EB4`'s
  * screen-space offsets into on-screen X/Y. Fetches the current anim
@@ -53,8 +53,8 @@ void UpdateAnimatedActorPart(void *selfArg)
     register s32 delta0 asm("r1");
     s32 delta1;
 
-    scale = sub_803ADB4(dist << 8, ACTOR_RECORD(self)->baseDepth);
-    scaleY = sub_803ADB4(gUnknown_030013C8 << 0xc, dist);
+    scale = __divsi3(dist << 8, ACTOR_RECORD(self)->baseDepth);
+    scaleY = __divsi3(gUnknown_030013C8 << 0xc, dist);
 
     {
         s32 off = sub_8029E98();
@@ -130,7 +130,7 @@ void UpdateAnimatedActorPart(void *selfArg)
          * needed r2 preserved here (no free callee-saved register left -
          * r4-r8 are already dist/scaleY/self/frame/scale) and spilled it
          * to a dedicated stack word around this one call; reproduce that
-         * explicitly (same technique as sub_8000140's r2-across-SWI
+         * explicitly (same technique as DivMod's r2-across-SWI
          * save/restore, see docs/matching.md) rather than relying on the
          * compiler to notice on its own. */
         u32 flagStack[1];

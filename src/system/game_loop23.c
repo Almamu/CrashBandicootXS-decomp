@@ -29,11 +29,11 @@ struct aabb {
  * docs/matching/issue-13-fc70-second-continuation.md for the
  * register-pinning/toolchain-bug notes this one needed. */
 
-extern void *sub_803AD7C(void *arg0, void *arg1);
+extern void *_call_via_r1(void *arg0, void *arg1);
 
 /* AABB-overlap test between `self`'s own table-driven half-width/
  * half-height box (centered on `self`'s own position, via the same
- * `sub_803AD7C` table-trampoline convention `sub_8007048`/
+ * `_call_via_r1` table-trampoline convention `sub_8007048`/
  * `sub_80070D4`, graphics.c, already establish - here at the table's
  * own `+0x10`/`+0x14` offset pair) and a caller-supplied `struct aabb
  * *`. Short-circuits true (skipping the real test) when `flags` bit 4
@@ -64,7 +64,7 @@ u32 sub_8010674(void *selfArg, struct aabb *boxArg)
     if (!skip) {
         register struct vtable_slot *table asm("r1") = self->vtable;
         register u8 *rec asm("r0") =
-            sub_803AD7C((u8 *)self + table[2].delta, table[2].fn);
+            _call_via_r1((u8 *)self + table[2].delta, table[2].fn);
         register s32 left asm("r4");
         register s32 right asm("r1");
         register s32 top asm("r5");
@@ -72,7 +72,7 @@ u32 sub_8010674(void *selfArg, struct aabb *boxArg)
         u8 success;
 
         /* Anchored: builds `self`'s AABB (half-extents from the
-         * `sub_803AD7C` record's `+4`/`+5` raw w/h bytes, shifted by
+         * `_call_via_r1` record's `+4`/`+5` raw w/h bytes, shifted by
          * 7 rather than 8) directly into the ROM's own register
          * choices. Plain C here always let this compiler's scheduler
          * hoist the `self->y` load ahead of the still-pending

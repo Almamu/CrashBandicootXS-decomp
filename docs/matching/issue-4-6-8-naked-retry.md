@@ -22,7 +22,7 @@ closed 12 of the 19.
   old_agbcc and 23 under agbcc. The ROM loads that function's nibble
   mask before the byte it combines with, which is old_agbcc's tell.
 - `src/system/link_cable.c` is on `OLD_AGBCC_OBJS` for the same
-  reason. Its one matched function, `sub_8001D30`, compiles the same
+  reason. Its one matched function, `LinkStop`, compiles the same
   under both. The `sub_8001CB8` and `sub_8001DB4` drafts are closer
   under old_agbcc, and the ROM's `sub_8001CB8` has the
   mask-before-`ldrb` order.
@@ -35,13 +35,13 @@ NON_MATCHING build, where the C draft replaces them.
 
 ## The techniques that closed them
 
-- **Icon-manager draws are virtual calls.** `sub_803AD80` is
+- **Icon-manager draws are virtual calls.** `_call_via_r2` is
   `_call_via_r2`, so `record->slots[0]` (measure) and
   `record->slots[2]` (draw) are gcc 2.x virtual calls. The call is a
   statement-expression macro, `ICON_TEXT_CALL(mgr, n, label)`, with
   `_m`/`_s` locals, so `this` is computed before the label argument.
   The ROM does the same, even when the label is itself a
-  `sub_8026F38(...)` call. `set_icon_mgr_pos(m, u32 x, u32 y)` is a
+  `GetUiText(...)` call. `set_icon_mgr_pos(m, u32 x, u32 y)` is a
   plain inline setter. This closed `sub_8006124`, `sub_800619C`,
   `sub_80061E8`, `sub_8003C90`, `sub_8004914` and `sub_80049CC` on the
   first compile. Their old notes described a "last mile" register gap
@@ -142,7 +142,7 @@ NON_MATCHING build, where the C draft replaces them.
 - **`sub_8001F50`** (`link_cable.c`, NAKED): 37 halfwords off under
   both compilers, same size as the ROM. Everything from the timeout
   counter on matches. The IRQ indices are `TIMER3` (6) and
-  `SERIAL` (7). `sub_8001D30` is called with the session in r0, so it
+  `SERIAL` (7). `LinkStop` is called with the session in r0, so it
   now takes an unused `struct link_session *` parameter; that doesn't
   change its code. What's left:
   - The ROM holds the constant 1 in sb for the ready-bit test,

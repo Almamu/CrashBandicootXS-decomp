@@ -124,7 +124,7 @@ struct level_room_list
  */
 struct level_info
 {
-    s32 nameText;       // 0x00 - text id of the level's name (sub_8026F38)
+    s32 nameText;       // 0x00 - text id of the level's name (GetUiText)
     u32 theme;          // 0x04 - picks the level-start colour cycle
                         //        (sub_8023A1C) and indexes the music cues
                         //        gThemeMusicCues (sub_8024498)

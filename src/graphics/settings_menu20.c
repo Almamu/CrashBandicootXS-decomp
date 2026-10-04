@@ -13,9 +13,9 @@
  * step 4's "one .c file per contiguous ROM region" rule) - see
  * docs/matching/issue-7-0x08004d74-overlay-ui.md. */
 
-extern void sub_80007AC(void *arg0);
+extern void UpdateKeys(void *arg0);
 extern void *gUnknown_03001304;
-extern u32 gUnknown_030007E0;
+extern u32 gKeys;
 extern void sub_8006084(struct pause_screen_results *self);
 extern s32 sub_800609C(struct pause_screen_results *self);
 extern void sub_8005EF4(struct pause_screen_results *self);
@@ -58,12 +58,12 @@ extern void PlaySfx(struct AudioContext *self, u32 id, u32 volumeParam);
 extern struct AudioContext *gUnknown_030012BC;
 extern void sub_80053F4(struct pause_screen_results *self);
 
-/* gUnknown_030007E0 as the {held, newly pressed} key-state pair. */
+/* gKeys as the {held, newly pressed} key-state pair. */
 struct pause_keys {
     u16 held;
     u16 pressed;
 };
-#define KEYS (*(struct pause_keys *)&gUnknown_030007E0)
+#define KEYS (*(struct pause_keys *)&gKeys)
 
 /* field_cc: REG_BLDY fade level in the low 5 bits. */
 struct pause_fade {
@@ -107,7 +107,7 @@ s32 sub_8005100(struct pause_screen_results *self)
         register u32 pressed asm("r1");
 
         draw_frame(self);
-        sub_80007AC(gUnknown_03001304);
+        UpdateKeys(gUnknown_03001304);
         if (KEYS.pressed & 0x40) {
             sub_800609C(self);
             self->field_68 = 0x1e;
@@ -118,7 +118,7 @@ s32 sub_8005100(struct pause_screen_results *self)
             self->field_68 = 0x1e;
             PlaySfx(gUnknown_030012BC, 0x46, 0x100);
         }
-        in = gUnknown_030007E0;
+        in = gKeys;
         pressed = in >> 16;
         key = 0x20;
         if (pressed & 0x20) {
@@ -132,7 +132,7 @@ s32 sub_8005100(struct pause_screen_results *self)
                 self->field_68--;
             }
         }
-        in = gUnknown_030007E0;
+        in = gKeys;
         pressed = in >> 16;
         key = 0x10;
         if (pressed & 0x10) {

@@ -105,8 +105,8 @@ extern void sub_8030300(void *obj, struct kind_entry *rec, s32 a, s32 b, s32 c, 
 extern void sub_802FA04(void *obj, struct kind_entry *rec, s32 a, s32 b, s32 c, s32 d, s32 e);
 
 extern struct actor_self *gUnknown_03000884;
-extern void (*gUnknown_03000874)(void *dst, u8 *frame);
-extern struct keys_pair gUnknown_030007E0;
+extern void (*gUnpackRleSpriteFrameFunc)(void *dst, u8 *frame);
+extern struct keys_pair gKeys;
 extern void *gUnknown_030012BC;
 extern u8 *gLevelState;
 extern void *gUnknown_030014BC;
@@ -134,9 +134,6 @@ extern struct actor_pmf gStaticData_0817C1C0[];
 extern u8 gStaticData_087E50D4[];
 extern u8 gStaticData_087E510C[];
 extern u8 gStaticData_087E5144[];
-
-ACTOR_CALL_VIA_ALIASES
-asm(".set __divsi3, sub_803ADB4");
 
 /* `operator new`: the ROM materializes the size before the heap flags. */
 static inline void *AllocActor(u32 size)
@@ -533,7 +530,7 @@ void sub_802E9FC(struct actor_hp *self)
         attr1 |= (sy & 0xff) | ((sx & 0x1ff) << 16) | attr | GetSpriteShapeSizeBits(frame);
         if (frame != gUnknown_03001514) {
             gUnknown_03001510 ^= 1;
-            gUnknown_03000874(gUnknown_03001518[gUnknown_03001510], frame);
+            gUnpackRleSpriteFrameFunc(gUnknown_03001518[gUnknown_03001510], frame);
             gUnknown_03001514 = frame;
         }
         {
@@ -575,7 +572,7 @@ void sub_802EB78(struct actor_hp *self, s32 dmg)
 /* The key word read as a whole (the ROM does a 32-bit load). */
 static inline struct keys_pair ReadKeys(void)
 {
-    return gUnknown_030007E0;
+    return gKeys;
 }
 
 /* Moves a steering speed 0x40 toward zero. */
@@ -632,7 +629,7 @@ void sub_802EDBC(struct actor_hp *self)
     sub_802EC64(self);
     sub_802ED10(self);
     if (gUnknown_03001507) {
-        struct keys_pair keys = gUnknown_030007E0;
+        struct keys_pair keys = gKeys;
 
         if (keys.held & 0x200) {
             gUnknown_030014F4 = 0x12;
@@ -675,7 +672,7 @@ void sub_802EED0(struct actor_hp *self)
         struct keys_pair keys;
 
         sub_802ED10(self);
-        keys = gUnknown_030007E0;
+        keys = gKeys;
         if (keys.held & 0x200) {
             gUnknown_030014F4 = 0x12;
             PlaySfx(gUnknown_030012BC, 0xa, 0x100);
@@ -708,7 +705,7 @@ void sub_802EFD8(struct actor_hp *self)
         struct keys_pair keys;
 
         sub_802ED10(self);
-        keys = gUnknown_030007E0;
+        keys = gKeys;
         if (keys.held & 0x200) {
             gUnknown_030014F4 = 0x12;
             PlaySfx(gUnknown_030012BC, 0xa, 0x100);

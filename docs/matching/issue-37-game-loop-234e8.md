@@ -77,7 +77,7 @@ vram-upload-cursor/OAM-shadow flush tail both `sub_802400C` and
   and indexing `dst[0]`/`dst[1]` instead of re-deriving the address
   each time (see also the pre-load-both-then-store-both ordering below,
   needed when the *source* is also a two-word read).
-- **`SetCheckpoint`'s repeated `0x04000040` `sub_803A94C` control word**:
+- **`SetCheckpoint`'s repeated `0x04000040` `CpuSet` control word**:
   a plain literal used identically in two nearby calls gets CSE'd into
   one shared register held live across both calls, unlike the ROM
   (which reloads it from its literal pool each time). Fixed with a
@@ -129,12 +129,12 @@ vram-upload-cursor/OAM-shadow flush tail both `sub_802400C` and
   pins for the raw value (r1) and the shifted result (r0), reusing r5
   (the snapshot pointer) for the halfword load too, matching the ROM's
   register reuse exactly.
-- **`sub_802400C`'s `sub_803AD7C` reload pattern**: computing
+- **`sub_802400C`'s `_call_via_r1` reload pattern**: computing
   `gUnknown_030012D8` and its `->table` field into plainly-named
   locals both times let the compiler pick whichever register was
   convenient rather than reloading through r0 the way the ROM does at
   both call sites (needed since the global's value can change as a
-  side effect of the first `sub_803AD7C` call). Fixed by pinning the
+  side effect of the first `_call_via_r1` call). Fixed by pinning the
   reloaded `struct actor *` to r0 at each of the two call sites.
 
 ## Left raw - 2 functions
@@ -142,7 +142,7 @@ vram-upload-cursor/OAM-shadow flush tail both `sub_802400C` and
 - **`sub_802375C`/`sub_8023A1C`** (`asm/code_3_2_17_2375c.s`, ROM
   `0x0802375C`-`0x08024007`) - a ~300-instruction level-start
   dispatcher (allocates and initializes several HUD/counter widget
-  objects via `sub_8026EDC`+`sub_800B69C`/`sub_803AD80`, dispatches on
+  objects via `sub_8026EDC`+`sub_800B69C`/`_call_via_r2`, dispatches on
   a 3-way record-type switch) feeding into a ~650-instruction
   continuation (`sub_8023A1C`) built around a 6-case jump table with
   cross-branch jumps into a shared tail (`_08023BB8`/`_08023BBE`

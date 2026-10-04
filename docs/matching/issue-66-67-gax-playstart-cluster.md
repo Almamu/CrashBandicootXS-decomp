@@ -181,7 +181,7 @@ NON_MATCHING=1 report` also verified clean (356 units, 9 categories).
 
 `GaxCreateHandlers` is now real C, under current agbcc with the normal flags.
 What closed it:
-- `/` for the rate division (sub_8037E54 is `__udivsi3`, so the call
+- `/` for the rate division (`__udivsi3` is lib1funcs' routine, so the call
   is a const libcall);
 - a separate child-count local;
 - `t->childTypes[j]` re-read in the linking loop;

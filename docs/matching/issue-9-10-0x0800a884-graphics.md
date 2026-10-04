@@ -50,7 +50,7 @@ family already covered at length by
 
 - **`sub_800A884`** (`src/graphics/actor_part78.c`) - a per-frame
   "reentrancy guard"-shaped wrapper (only runs while `self+0xc` bit 7
-  is set): fires `self->table+0x70`'s trampoline via `sub_803AD7C`
+  is set): fires `self->table+0x70`'s trampoline via `_call_via_r1`
   (matched), then calls `sub_800A0FC` (still raw, its own return value
   discarded) with the global `gLevelLayers+0x2a` flag held set
   for the call's duration. If `self+0xac` (a pointer, cleared here)
@@ -86,10 +86,10 @@ family already covered at length by
   reproduce the ROM's own tables exactly as a plain dense C `switch`
   (no case-scattering trick needed, unlike `sub_80084C4`'s own - this
   switch's case set is already dense enough on its own). The three
-  `sub_803AD88` calls each also perform a "dead read" of the trampoline
+  `_call_via_r4` calls each also perform a "dead read" of the trampoline
   table's `+4` function-pointer field that's never actually passed
   through `r0`-`r3` - the same established idiom as `sub_80096C0`'s own
-  `sub_803AD88` calls in `actor_part11.c`
+  `_call_via_r4` calls in `actor_part11.c`
   (`register void *deadRead asm("r4") = *(void *volatile *)(...)`).
 
   **Not yet byte-exact, but far closer after two follow-up sessions.**
@@ -221,7 +221,7 @@ family already covered at length by
    it's actually needed and pulls in extra high registers.** An early
    draft computed `gLevelLayers+0x29`'s address once, up front,
    into a plain (unpinned) `u8 *kindAddr` local kept alive across the
-   `sub_803AD7C`/`sub_800A0FC` calls purely so it could be reused much
+   `_call_via_r1`/`sub_800A0FC` calls purely so it could be reused much
    later in the function - this compiler's allocator responded by
    spilling it (and a second similarly-early-computed value) into
    `r8`/`r9`, needing a `push {r8, r9}`-equivalent prologue the ROM's
@@ -252,14 +252,14 @@ family already covered at length by
 
 - **`sub_800AAEC`** (`asm/code_3_2_16.s`, ROM `0x0800AAEC`) - iterates
   `gUnknown_0300130C` (a count-prefixed pointer array), testing each
-  entry via `sub_803AD7C` (matched) and, on a hit (return code 3),
+  entry via `_call_via_r1` (matched) and, on a hit (return code 3),
   calling `sub_800CD00` (still fully unexamined) with the entry and
   this function's own second argument; a `<= 1` return from that call
   short-circuits the whole loop. Mechanically clear, but `sub_800CD00`
   itself is genuinely unexamined - not attempted further this session.
 - **`sub_800AB9C`** (`asm/code_3_2_16.s`, ROM `0x0800AB9C`) - mostly
   built from already-matched/understood pieces
-  (`sub_8007C30`/`sub_800014C`/`sub_8008A40`/`sub_8009868`
+  (`sub_8007C30`/`MemCopy32`/`sub_8008A40`/`sub_8009868`
   [NAKED-parked]/`sub_8008D30`/`sub_80106DC`, all matched or
   understood elsewhere in this codebase now), gated on `self+0x105`/
   `self+0xc` flag bits. The most tractable of the four left-raw
@@ -289,7 +289,7 @@ family already covered at length by
   `sub_800C1E8`, `sub_800C8F8`, `sub_800C97C`, `sub_800C940`,
   `sub_800C5D4`, `sub_800C8AC`, `sub_800C8BC`, `sub_800C8CC`,
   `sub_800C9C8`, `sub_800BFA8`, plus already-matched
-  `sub_803AD7C`/`sub_803AD88`/`PlaySfx`) none of which have any
+  `_call_via_r1`/`_call_via_r4`/`PlaySfx`) none of which have any
   existing write-up anywhere in this project. This function sits
   immediately before the already-flagged-out-of-scope physics/
   collision subsystem (`sub_800D040` onward, GitHub issues #12/#13 -

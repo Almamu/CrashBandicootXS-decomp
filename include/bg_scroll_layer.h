@@ -17,7 +17,7 @@
 struct bg_scroll_layer;
 
 /* A method-table entry: `this` adjustment plus a function pointer, called
- * through the `sub_803AD7C`/`sub_803AD80` `_call_via_rN` veneers. */
+ * through the `_call_via_r1`/`_call_via_r2` `_call_via_rN` veneers. */
 struct bg_layer_method
 {
     s16 thisOffset; // 0x0

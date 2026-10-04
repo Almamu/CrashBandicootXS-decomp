@@ -311,13 +311,13 @@ object (distinct from `struct actor`'s own 0x1c bytes and from
 
 | Function | Size | Role |
 |---|---|---|
-| `sub_8011248` | 124B | Per-frame orbit-position update: two lookups into the shared sine table `gStaticData_0816A820` (`self+0x4b`'s phase, at strides `*4` and `*2`), combined via the overflow-avoiding fixed-point multiply `sub_80008FC` (already matched, `math_util.c`) - `self+4` (`y`) is always anchor-y minus the y-offset; `self` (`x`) is anchor-x minus/plus the x-offset depending on `self+0x4a` (mode 1/2), or just the anchor x unchanged for any other mode value. |
+| `sub_8011248` | 124B | Per-frame orbit-position update: two lookups into the shared sine table `gStaticData_0816A820` (`self+0x4b`'s phase, at strides `*4` and `*2`), combined via the overflow-avoiding fixed-point multiply `FixedMul` (already matched, `math_util.c`) - `self+4` (`y`) is always anchor-y minus the y-offset; `self` (`x`) is anchor-x minus/plus the x-offset depending on `self+0x4a` (mode 1/2), or just the anchor x unchanged for any other mode value. |
 | `sub_80112C4` | 44B | Re-derives visibility via `sub_8007A84(gUnknown_030012CC, self)` (already matched), clears flags bit 3 when `self+0x38` is nonzero. |
 | `sub_80112F0` | 4B | Trivial - always returns 2. |
 | `sub_80112F4` | 20B | Repoints `self->table` at `gStaticData_087E40DC`, tail-calls `sub_8008484` (already matched) with `self`+its own 2nd argument passed through. |
 | `sub_8011308` | 8B | Clears the "spawned/active" gate byte `self+0x48`. |
 | `sub_8011310` | 32B | `sub_80084A4(self)` (already matched, return discarded) + table repoint (`gStaticData_087E40DC`) + `sub_8011308(self)`; returns `self`. Same init/reset/table-repoint trio shape as `actor_part8.c`. |
-| `sub_8011330` | 52B | If `self+0x48 == 0` and the player's `+0xc` bit 7 is set, fires `self->table+0x68/0x6c`'s trampoline (`sub_803AD7C`, already matched) - the usual "offset + fn pointer" pair convention. Always returns 0. |
+| `sub_8011330` | 52B | If `self+0x48 == 0` and the player's `+0xc` bit 7 is set, fires `self->table+0x68/0x6c`'s trampoline (`_call_via_r1`, already matched) - the usual "offset + fn pointer" pair convention. Always returns 0. |
 | `sub_8011364` | 20B | Seeds `self`/`self+4` (Q8 x/y) from raw `x`/`y` arguments (`<<8`), mirrors both into `self+0x4c`/`self+0x50` (the orbit anchor). |
 | `sub_8011378` | 16B | Sets orbit mode (`self+0x4a`), resets orbit phase (`self+0x4b`) to 0. |
 | `sub_8011388` | 8B | Unexamined byte setter, `self+0x49` - address-adjacent to the mode/phase pair but not read by anything else in this group. |
@@ -420,7 +420,7 @@ coincide").
   `self->0x20` table lookup at `self->0x2d*0x1c+0x16`, `self->0x25 = 1`,
   `self->0xc |= 0x10`, then calls `sub_8007174` and re-derives
   `self->x`/`self->y` plus `self->0x40`/`self->0x44` (a "distance to
-  travel" pair, `-sub_80008F0(newPos<<8 - offset, 0x1400)`) from the
+  travel" pair, `-FixedDiv(newPos<<8 - offset, 0x1400)`) from the
   results - the exact same tail shape `sub_8010EAC`/`sub_80111B8`/
   `sub_8011870` all share (see "Not integrated" below).
 - **`sub_8011548`** (500B) - an entity-vtable-dispatched velocity
@@ -443,7 +443,7 @@ coincide").
   `self->0x4b`, wrapping `self->0x4a`'s own gate off after 32
   `self->0x4b` ticks; then, still under `self->0x48 == 0`, either
   computes a step via `gStaticData_0816A820[(self->0x49 & 0x7f)*2]` and
-  `sub_80008FC` added into `self->0x50` (stored to `self->y` - a
+  `FixedMul` added into `self->0x50` (stored to `self->y` - a
   "rotate around a fixed center by a table-driven step" idiom, same
   table/shape as `sub_8010F8C`'s own default-mode branch) when
   `self->0x4a` is clear, or calls `sub_801192C` (below) when set. If
@@ -495,10 +495,10 @@ coincide").
   direct byte read) - address-adjacent to `sub_801191C`, a small
   `self->0x4b`/`self->0x4a`-driven table helper. Copies a fixed 3-word
   table (`gStaticData_0816BF14`) onto the stack, computes `self->y` from
-  a `gStaticData_0816A820[self->0x4b*4]` lookup scaled by `sub_80008FC`
+  a `gStaticData_0816A820[self->0x4b*4]` lookup scaled by `FixedMul`
   against `self->0x50` (the "home Y" `sub_801173C`/`sub_8011548` both
   write), then computes `self->x` from a second
-  `gStaticData_0816A820[self->0x4b*2]` lookup scaled by `sub_80008FC`
+  `gStaticData_0816A820[self->0x4b*2]` lookup scaled by `FixedMul`
   against the stack copy indexed by `self->0x4a-1`, added to or
   subtracted from `self->0x4c` (the "home X") depending on whether
   `self->0x4a` is 1, 2, or anything else. Called from `sub_8011548`'s
@@ -548,7 +548,7 @@ make compare`, which passed outright ("La suma coincide"):
   ROM's own three separately-kept inlined copies.
 - `sub_801192C`'s register picks (which scratch register holds the
   reloaded `self->0x4b`/`self->0x4a` byte, and whether the ROM's own
-  extra register-to-register `mov` before each `sub_80008FC` call
+  extra register-to-register `mov` before each `FixedMul` call
   argument survives) resisted both named-temporary and pointer-cached-
   field-address rephrasing - the same class of "close but gcc's own
   choice differs" gap this subsystem has hit repeatedly, not resolved by
@@ -598,7 +598,7 @@ drafted as C reconstructions this same pass (`sub_8010EAC`/
 `sub_8011870`/`sub_8011448`/`sub_80111B8` share one obvious near-
 identical tail shape worth noting for whoever picks these up: fixed or
 randomized `(dx,dy)`, `self->0x3c`/`self->0x30`/`self->0x25`/`self->0xc`
-setup, `sub_8007174`, then the `-sub_80008F0(...)` distance-pair
+setup, `sub_8007174`, then the `-FixedDiv(...)` distance-pair
 derivation). None were integrated into `ldscript.txt`/
 `tools/report_units.py` this pass: `sub_8011114` (a fifth member of the
 same address-contiguous group, called from `game_loop29.c`, already
@@ -666,7 +666,7 @@ position).
   fixed `(0xb400, 0xc00)` offset and fires
   `sub_80284A4(gUnknown_03001318)` (`self->0x48 = 1`); either way,
   `self->0xc |= 0x10`, `self->0x25 = 1`, `sub_8007174(...)`, then
-  `self->0x40`/`self->0x44` become `-sub_80008F0(newPos<<8 - offset,
+  `self->0x40`/`self->0x44` become `-FixedDiv(newPos<<8 - offset,
   0x1400)`.
 - **`sub_8010F8C`** (392B) - the bounds-checked, mode-selected
   rotating/orbiting hazard state machine `docs/rom_map.md` already
@@ -681,7 +681,7 @@ position).
   3+): gated by `self->0x4a`, advances `self->0x49`/`self->0x4b`
   (wrapping the gate off after 32 ticks). Shared tail: unless
   `self->0x48 != 0`, computes an orbit step via
-  `gStaticData_0816A820[self->0x49 & 0x7f]` and `sub_80008FC` added into
+  `gStaticData_0816A820[self->0x49 & 0x7f]` and `FixedMul` added into
   `self->0x50`, stored to `self->y`, when `self->0x4a` is clear, or
   calls `sub_8011248` (`game_loop52.c`'s orbit-position updater) when
   set - then always tail-calls `sub_8008364`.

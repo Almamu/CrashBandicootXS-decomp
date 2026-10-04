@@ -1,13 +1,12 @@
 #include "core.h"
 #include "gba/defines.h"
 
-extern void nullsub_8(void);
+extern void __div0(void);
 
-/* Signed integer division (a / b), truncating toward zero - the
- * generic "atan2-style" math primitive referenced throughout
- * docs/rom_map.md/matching.md (see math_util.c's sub_800090C/
- * sub_8000924/sub_80008F0 wrappers, and sub_8027940's digit-splitting
- * use). Classic shift-and-subtract binary long division, 4 bits at a
+/* libgcc's `__divsi3` (lib1funcs.asm): signed integer division (a / b),
+ * truncating toward zero - what plain `/` compiles to, and called
+ * directly in many places (math_util.c's FixedInverse16/FixedDiv16/
+ * FixedDiv wrappers, sub_8027940's digit splitting). Classic shift-and-subtract binary long division, 4 bits at a
  * time: normalizes `divisor`/`bit` up to the dividend's magnitude, then
  * repeatedly tests the top 4 candidate bit positions before shrinking
  * by another nibble.
@@ -20,7 +19,7 @@ extern void nullsub_8(void);
  * genuinely different prologue/epilogue sequences depending on path
  * (`push {r4}` only, ending in a bare `mov pc, lr`, on the fallthrough
  * `b != 0` path that never calls anything; a separate, minimal
- * `push {lr} ... bl nullsub_8 ... pop {pc}` only on the `b == 0` path)
+ * `push {lr} ... bl __div0 ... pop {pc}` only on the `b == 0` path)
  * - real per-path register-save minimization (shrink-wrapping) that
  * agbcc, built on gcc 2.9 long before shrink-wrapping existed in
  * mainline gcc, cannot produce from plain C no matter how the `if` is
@@ -32,7 +31,7 @@ extern void nullsub_8(void);
  * `adds`->`add`/`movs`->`mov`/`rsbs rX,rX,#0`->`neg rX,rX`/etc, local
  * labels renumbered per docs/matching/issue-4-sio-settings-sync.md's
  * convention), not an inferred control-flow guess. */
-NAKED s32 sub_803ADB4(s32 a, s32 b)
+NAKED s32 __divsi3(s32 a, s32 b)
 {
     asm(
         "cmp r1, #0\n\t"
@@ -117,26 +116,26 @@ NAKED s32 sub_803ADB4(s32 a, s32 b)
         "mov pc, lr\n\t"
     "13:\n\t"
         "push {lr}\n\t"
-        "bl nullsub_8\n\t"
+        "bl __div0\n\t"
         "mov r0, #0\n\t"
         "pop {pc}\n\t"
     );
 }
 asm(".align 2, 0");
 
-/* Shared divide-by-zero handler for all three division/modulo routines
- * below. ROM bytes are `mov pc, lr` (not `bx lr`, which is what
+/* libgcc's `__div0`: the shared divide-by-zero handler for all three
+ * division/modulo routines below. ROM bytes are `mov pc, lr` (not `bx lr`, which is what
  * agbcc's plain-C codegen picks for a genuinely empty function body) -
  * written via NAKED + `asm("mov pc, lr")` instead, the same technique
- * `sub_803ADB4` above now uses for its own body. */
-NAKED void nullsub_8(void)
+ * `__divsi3` above now uses for its own body. */
+NAKED void __div0(void)
 {
     asm("mov pc, lr");
 }
 asm(".align 2, 0");
 
-/* Signed modulo (a % b), result takes the sign of the dividend (C's
- * '%'). Same nibble-at-a-time shift-and-subtract shape as sub_803ADB4,
+/* libgcc's `__modsi3`: signed modulo (a % b), result takes the sign of
+ * the dividend (C's '%'). Same nibble-at-a-time shift-and-subtract shape as __divsi3,
  * but tracks a *rotated* copy of the bit weight (`ror`, not a plain
  * shift) in a correction mask, so a quotient-bit weight too small to
  * shift meaningfully still leaves a nonzero marker up near bit 31 -
@@ -145,17 +144,17 @@ asm(".align 2, 0");
  * survived, since only the top-level (whole-`divisor`) subtraction is
  * a genuine remainder step.
  *
- * Written as NAKED asm for the same reason as sub_803ADB4: a prior
+ * Written as NAKED asm for the same reason as __divsi3: a prior
  * pass's plain-C reconstruction was verified semantically correct
  * (7 % 3 == 1 traced by hand) and structurally mirrored the ROM's
  * register roles, but a plain-C `(v >> n) | (v << (32 - n))` rotate
  * compiles to a shift/shift/or triple instead of the ROM's single
  * `ror` instruction, on top of the same shrink-wrapping-shaped
- * prologue/epilogue gap sub_803ADB4 had. Mechanical, byte-verified
- * transcription of the ROM's own instructions - see sub_803ADB4's
+ * prologue/epilogue gap __divsi3 had. Mechanical, byte-verified
+ * transcription of the ROM's own instructions - see __divsi3's
  * comment above for the syntax-translation/label-renumbering
  * convention used. */
-NAKED s32 sub_803AE4C(s32 a, s32 b)
+NAKED s32 __modsi3(s32 a, s32 b)
 {
     asm(
         "mov r3, #1\n\t"
@@ -273,21 +272,21 @@ NAKED s32 sub_803AE4C(s32 a, s32 b)
         "mov pc, lr\n\t"
     "16:\n\t"
         "push {lr}\n\t"
-        "bl nullsub_8\n\t"
+        "bl __div0\n\t"
         "mov r0, #0\n\t"
         "pop {pc}\n\t"
         ".align 2, 0\n"
     );
 }
 
-/* Unsigned modulo (a % b) - same shape as sub_803AE4C but with no sign
- * handling at all (used where the caller already knows both operands
+/* libgcc's `__umodsi3`: unsigned modulo (a % b) - same shape as
+ * __modsi3 but with no sign handling at all (used where the caller already knows both operands
  * are non-negative), plus a `dividend < divisor` fast-return path (no
  * `push` at all - the ROM's own per-path register-save minimization,
- * same class of gap that forced sub_803ADB4/sub_803AE4C to NAKED too)
- * the signed version doesn't have. See sub_803AE4C for the correction-
+ * same class of gap that forced __divsi3/__modsi3 to NAKED too)
+ * the signed version doesn't have. See __modsi3 for the correction-
  * mask/rotate technique and the NAKED-transcription rationale. */
-NAKED u32 sub_803AF1C(u32 a, u32 b)
+NAKED u32 __umodsi3(u32 a, u32 b)
 {
     asm(
         "cmp r1, #0\n\t"
@@ -397,7 +396,7 @@ NAKED u32 sub_803AF1C(u32 a, u32 b)
         "mov pc, lr\n\t"
     "15:\n\t"
         "push {lr}\n\t"
-        "bl nullsub_8\n\t"
+        "bl __div0\n\t"
         "mov r0, #0\n\t"
         "pop {pc}\n\t"
     );

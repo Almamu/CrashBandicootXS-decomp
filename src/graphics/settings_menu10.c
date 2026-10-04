@@ -7,7 +7,7 @@
  * `struct threshold_table_entry` comment). Steps `field_24`'s low 5
  * bits down to 0 (redrawing/committing every step via
  * sub_8006600/sub_8006714/sub_8006700), then polls input
- * (`sub_80007AC`/`gUnknown_030007E0.pressed`) redrawing every frame
+ * (`UpdateKeys`/`gKeys.pressed`) redrawing every frame
  * until the confirm button is newly pressed, then steps `field_24`
  * back up to 0x10 the same way, and finally forces `field_28` to
  * `0x40` and re-applies.
@@ -42,14 +42,14 @@ struct sub_8006700_actor {
 extern void sub_8006600(struct sub_8006700_actor *arg0);
 extern void sub_8006714(struct sub_8006700_actor *arg0);
 extern void sub_8006700(struct sub_8006700_actor *arg0);
-extern void sub_80007AC(void *arg0);
+extern void UpdateKeys(void *arg0);
 extern void *gUnknown_03001304;
 
 struct held_pressed_pair {
     u16 held;
     u16 pressed;
 };
-extern struct held_pressed_pair gUnknown_030007E0;
+extern struct held_pressed_pair gKeys;
 
 void sub_8006518(struct sub_8006700_actor *self)
 {
@@ -63,8 +63,8 @@ void sub_8006518(struct sub_8006700_actor *self)
         sub_8006600(self);
         sub_8006714(self);
         sub_8006700(self);
-        sub_80007AC(gUnknown_03001304);
-    } while (!(gUnknown_030007E0.pressed & 8));
+        UpdateKeys(gUnknown_03001304);
+    } while (!(gKeys.pressed & 8));
     while (self->field_24.level != 0x10) {
         self->field_24.level++;
         sub_8006600(self);

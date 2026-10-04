@@ -1,12 +1,12 @@
 #include "core.h"
 #include "settings_sync.h"
 
-extern void *gUnknown_03000804;
+extern void *gLinkSession;
 extern void sub_8002E20(struct settings_sync_pump *self, s32 playerIndex);
 extern void sub_8002D44(struct settings_sync_pump *self);
 
 /* Polls the SIO-handshake spinner's transfer state once per frame: if
- * the session (*gUnknown_03000804, byte +7 = "connected") isn't
+ * the session (*gLinkSession, byte +7 = "connected") isn't
  * connected, just tracks completion/reset of `self` and returns
  * 1 (reset)/0 (still finishing). If connected, picks a player slot from
  * the session's +0x3fc negotiation value, pumps RX (sub_8002E20) and TX
@@ -30,7 +30,7 @@ s32 sub_8002EFC(struct settings_sync_pump *self)
 
     asm volatile(
         "add r4, %1, #0\n"
-        "ldr r0, =gUnknown_03000804\n"
+        "ldr r0, =gLinkSession\n"
         "ldr r1, [r0]\n"
         "ldrb r0, [r1, #7]\n"
         "cmp r0, #0\n"

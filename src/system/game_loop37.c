@@ -11,13 +11,13 @@ struct AudioContext;
 
 struct SoundChannelItem {
     void *asset;    /* +0x00: tile/gfx asset pointer, ShowSlidePicture only */
-    s32 field_04;     /* +0x04: sub_80010E0's "count" arg */
+    s32 field_04;     /* +0x04: WaitForKeyPress's "count" arg */
     s32 field_08;       /* +0x08: OR'd with -0x80 then truncated to a byte
                          * (bit 7 set), BeginSlide's sub_800132C arg */
     s32 field_0c;         /* +0x0c: sentinel -1 means "none"; else
                             * truncated to a byte and passed to
                             * sub_800132C, RunSlideshow/EndSlide */
-    u8 field_10;            /* +0x10: sub_80010E0's checkButtons arg;
+    u8 field_10;            /* +0x10: WaitForKeyPress's checkButtons arg;
                               * also SkipSlides's scan target (==1) */
     u8 field_11;              /* +0x11: nonzero triggers a duck-out via
                                 * sub_8001AC4 */
@@ -46,9 +46,9 @@ extern void sub_8001AC4(struct AudioContext *self, u32 value);
 extern void StopSfx(struct AudioContext *self, u32 id);
 extern void sub_800132C(u8 flags, s32 frameDelay, u8 sync);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
-extern s32 sub_80010E0(s32 count, u8 checkButtons, s32 mask);
+extern s32 WaitForKeyPress(s32 count, u8 checkButtons, s32 mask);
 extern void LoadTaggedAsset(void *asset, void *dest);
-extern void sub_80006A8(void);
+extern void WaitForVBlank(void);
 extern void *gUnknown_03001314;
 
 /* Forward declaration: ShowSlidePicture is defined further down (after
@@ -88,7 +88,7 @@ void BeginSlide(struct SoundChannelList *self, s32 idx)
 
 /* Per-frame driver loop over `self`'s item list: for each index, streams
  * the item's VRAM tile bank and refreshes its sound-channel handle
- * (`ShowSlidePicture`/`BeginSlide`), polls input (`sub_80010E0`) to get a
+ * (`ShowSlidePicture`/`BeginSlide`), polls input (`WaitForKeyPress`) to get a
  * confirm/cancel result, applies the item's duck-out (`field_11`) and
  * fade-start (`field_0c`, sentinel -1) side effects, re-arms the item's
  * cue if needed (`field_12`/`field_18`), then advances to the next
@@ -111,7 +111,7 @@ void RunSlideshow(struct SoundChannelList *self0)
         BeginSlide(self, i);
 
         item = self->items[i];
-        checkButtons = (u8)sub_80010E0(item->field_04, item->field_10, 8);
+        checkButtons = (u8)WaitForKeyPress(item->field_04, item->field_10, 8);
 
         if (self->items[i]->field_11 != 0) {
             sub_8001AC4(gUnknown_030012BC, 0);
@@ -244,7 +244,7 @@ void ShowSlidePicture(struct SoundChannelList *self0, s32 idx)
         }
     }
 
-    sub_80006A8();
+    WaitForVBlank();
 
     DmaSet(3, asset, (void *)PLTT, (u32)((DMA_ENABLE | DMA_START_NOW | DMA_16BIT | DMA_SRC_INC | DMA_DEST_INC) << 16 | 0x100));
     REG_DISPCNT = *(u16 *)&gUnknown_03001314;

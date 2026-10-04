@@ -23,7 +23,7 @@ extern u32 gUnknown_0300082C;
 extern void *sub_8007C30(void *dest, void *pt);
 extern void *sub_8007CF8(void *dest, void *pt);
 extern u8 sub_800B37C(void *arg0, void *buf);
-extern void sub_803AD88(void *arg0, s32 arg1, s32 arg2, s32 arg3);
+extern void _call_via_r4(void *arg0, s32 arg1, s32 arg2, s32 arg3);
 extern void sub_8009D5C(void *partArg);
 
 /* Tests `part` for a collision-grid hit against the player
@@ -138,7 +138,7 @@ doCheck:
  * an explicit `r0` register pin in the `mode0` block specifically -
  * without it, this compiler picks `r2` for the reused player pointer
  * there (it doesn't need the same hint in `mode1or2`, where the ABI
- * call to `sub_803AD88` already forces player's address into `r0`).
+ * call to `_call_via_r4` already forces player's address into `r0`).
  * Matched. */
 void sub_8009D5C(void *partArg)
 {
@@ -193,7 +193,7 @@ mode1or2:
         register void *deadRead0 asm("r4") = *(void *volatile *)(rec + 4);
         (void)deadRead0;
 
-        sub_803AD88(addr0, 0, someByte, 0);
+        _call_via_r4(addr0, 0, someByte, 0);
 
         {
             u8 *rec2 = (u8 *)part->table + 0x68;
@@ -209,7 +209,7 @@ mode1or2:
 tail:
     {
         register s32 arg3 asm("r3") = 0;
-        sub_803AD88(addr, arg1, arg2, arg3);
+        _call_via_r4(addr, arg1, arg2, arg3);
     }
     return;
 
@@ -220,7 +220,7 @@ checkMode3:
         void *addr3 = (u8 *)part + offset;
         register void *deadRead3 asm("r4") = *(void *volatile *)(rec + 4);
         (void)deadRead3;
-        sub_803AD88(addr3, 1, 1, 0);
+        _call_via_r4(addr3, 1, 1, 0);
     }
 }
 asm(".align 2, 0");

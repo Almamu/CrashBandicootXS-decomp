@@ -19,7 +19,7 @@ struct fade_overlay {
 extern struct vram_upload_cursor *gUnknown_030012FC;
 extern void sub_8006C4C(struct vram_upload_cursor *self);
 extern struct icon_manager *gUnknown_030012DC;
-extern void *sub_803AD7C(void *arg0, void *arg1);
+extern void *_call_via_r1(void *arg0, void *arg1);
 extern s32 sub_8006C58(struct vram_upload_cursor *self, s32 size);
 extern void sub_8006C30(struct vram_upload_cursor *self);
 extern struct tile_asset_cache *gUnknown_030012B8;
@@ -29,7 +29,7 @@ extern void sub_8006DC8(struct tile_asset_cache *self);
 extern struct oam_shadow_buffer *gUnknown_03001300;
 extern void sub_8006A90(struct oam_shadow_buffer *arg0);
 extern void sub_8006A48(struct oam_shadow_buffer *arg0);
-extern void sub_80006A8(void);
+extern void WaitForVBlank(void);
 extern void sub_8006AAC(struct oam_shadow_buffer *arg0);
 extern u16 gStaticData_0817C512[];
 extern u16 gStaticData_0817C532[];
@@ -66,7 +66,7 @@ void sub_803487C(struct fade_overlay *self)
     icons->field_108 = 0;
     {
         u8 *rec = (u8 *)icons->record + 0x40;
-        sub_803AD7C((u8 *)icons + *(s16 *)rec, *(void **)(rec + 4));
+        _call_via_r1((u8 *)icons + *(s16 *)rec, *(void **)(rec + 4));
     }
     self->icons->field_118 = 0;
     sub_8006C58(gUnknown_030012FC, self->icons->field_12c << 5);
@@ -96,6 +96,6 @@ void sub_803487C(struct fade_overlay *self)
 
     sub_8006A90(gUnknown_03001300);
     sub_8006A48(gUnknown_03001300);
-    sub_80006A8();
+    WaitForVBlank();
     sub_8006AAC(gUnknown_03001300);
 }

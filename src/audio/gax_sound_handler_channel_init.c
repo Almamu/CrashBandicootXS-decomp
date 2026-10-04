@@ -1,13 +1,10 @@
 #include "core.h"
 #include "audio.h"
 
-/* sub_803AD7C is libgcc's `_call_via_r1` (the `ops->init` calls). */
-asm(".set _call_via_r1, sub_803AD7C\n");
-
 /* Q32 reciprocal of the current mix rate, read by GaxChannelMix. */
 extern u64 gGaxMixRateReciprocal;
 /* `__udivdi3` - see src/util/math_div64_util.c. */
-extern u64 sub_8037A7C(u64 n, u64 d);
+extern u64 __udivdi3(u64 n, u64 d);
 
 /* Stores `2^32 / self->format->mixRate`. An inline helper taking the
  * destination pointer first is what makes the ROM load
@@ -16,7 +13,7 @@ extern u64 sub_8037A7C(u64 n, u64 d);
  * spelling of it) loads the address after the call instead. */
 static inline void SetMixRateReciprocal(u64 *dst, struct GaxChannelState *self)
 {
-    *dst = sub_8037A7C((u64)1 << 32, self->format->mixRate);
+    *dst = __udivdi3((u64)1 << 32, self->format->mixRate);
 }
 
 /* GAX2_SoundHandler "Channel" type's init_fn (ROM 0x08039519, see

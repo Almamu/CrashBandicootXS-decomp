@@ -21,7 +21,7 @@ match under old_agbcc (see "Parked" below) and are unchanged.
 ## What the code is
 
 Three gcc 2.x C++ classes (method tables, virtual calls through the
-`sub_803AD7C`/`AD80`/`AD88` call-via-register thunks, inlined member
+`_call_via_r1`/`AD80`/`AD88` call-via-register thunks, inlined member
 functions):
 
 - **`struct follow_child`** (`sub_801B85C`-`sub_801B980`, method table
@@ -98,7 +98,7 @@ their method tables.
   `adds` operand orders; where the ROM wanted the other one, the index
   is written as `idx * sizeof + (u32)base` (`sub_801C2B0`) or through a
   pinned offset (`ItemAt`, `sub_801C51C`).
-- **Keys.** `gUnknown_030007E0` is declared as a union of the whole word
+- **Keys.** `gKeys` is declared as a union of the whole word
   and a `{held, pressed}` halfword pair (as in `settings_menu8b.c`) so
   `pressed` reads as `ldrh [base, #2]` instead of a folded `sym+2`
   literal.

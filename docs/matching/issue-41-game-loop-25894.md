@@ -58,19 +58,19 @@ cycle, not just isolated compiles.
 function-pointer dispatch (`fn(self, p1, p2, p3)`), and on real
 hardware an indirect call through a stored function pointer has to go
 through one of this ROM's fixed per-register interworking trampolines
-(`src/system/reg_trampolines.c`, `sub_803AD78`-`sub_803AD94` - "bx
+(`src/system/reg_trampolines.c`, `_call_via_r0`-`_call_via_r7` - "bx
 r0" through "bx sp"). *Which* trampoline gets used is not something
 the C source picks - it falls out purely of which register this
 compiler's allocator happens to land the function pointer in for that
-particular call, matching `sub_803AD80`'s existing use in
+particular call, matching `_call_via_r2`'s existing use in
 `actor_part8.c`'s `sub_8009F1C` (there, naturally in `r2`, the 3rd
 AAPCS argument register). For `SpawnEntity`'s case the ROM picked
-`r5`/`sub_803AD8C`, which required:
+`r5`/`_call_via_r5`, which required:
 
 - `register void *fn asm("r5") = ...;` to force the fn-pointer local
   into `r5`.
 - An empty `asm("" :: "r"(fn));` barrier right before the call - since
-  the target (`sub_803AD8C`) takes no C parameters, without this the
+  the target (`_call_via_r5`) takes no C parameters, without this the
   compiler saw no use of `fn` and optimized the whole load away.
 - Matching the ROM's own read order for the table-index/shift
   computation needed one more explicit register pin

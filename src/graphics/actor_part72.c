@@ -6,7 +6,7 @@
  * `self+8` (16-byte stride: `{s32 x; s32 y; s32 dx; s32 dy;}`) and a
  * 4-bit-per-cell tilemap at `self+0x10`. */
 
-extern s32 sub_8000E1C(s32 max);
+extern s32 RandRange(s32 max);
 extern s16 gStaticData_0816A820[];
 
 struct particle_slot {
@@ -17,7 +17,7 @@ struct particle_slot {
 };
 
 /* Seeds particle slot `idx` at a fixed starting position, then rolls two
- * random values (`sub_8000E1C`) to pick a direction out of the 256-entry
+ * random values (`RandRange`) to pick a direction out of the 256-entry
  * `gStaticData_0816A820` sin-ish table and a speed, and applies the
  * resulting `dx`/`dy` to the slot's position (including the `idx > 0x7f`
  * infinite-loop trap the ROM itself has). Closed the previous
@@ -47,8 +47,8 @@ void sub_80345B0(void *mgrArg, s32 idx)
     slot->x = 0x7800;
     slot->y = 0x5000;
 
-    rng1 = (u16)sub_8000E1C(0x100);
-    speed = (u16)sub_8000E1C(0x200) + 0x100;
+    rng1 = (u16)RandRange(0x100);
+    speed = (u16)RandRange(0x200) + 0x100;
 
     slot->dx = (gStaticData_0816A820[(rng1 + 0x40) & 0xff] * speed) >> 8;
     slot->dy = (gStaticData_0816A820[rng1 & 0xff] * speed) >> 8;

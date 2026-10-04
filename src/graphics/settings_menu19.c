@@ -4,7 +4,7 @@
 #include "icon_manager.h"
 #include "pause_screen_results.h"
 
-extern s32 sub_8026F38(s32 arg0);
+extern s32 GetUiText(s32 arg0);
 extern s32 GetCurrentLevel(void *arg0);
 extern void *gLevelState;
 extern u8 gLevelTable[];
@@ -35,10 +35,10 @@ void sub_800599C(struct pause_screen_results *self)
     s32 levelIdx = GetCurrentLevel(gLevelState);
     u32 labelId = *(u32 *)(gLevelTable + levelIdx * 0x24);
 
-    self->field_70 = (void *)sub_8026F38(labelId);
+    self->field_70 = (void *)GetUiText(labelId);
 
     if (levelIdx <= 0x13) {
-        self->field_74 = (void *)sub_8026F38(0);
+        self->field_74 = (void *)GetUiText(0);
         self->buf78[0] = ' ';
         sub_80060AC(levelIdx + 1, &self->buf78[1]);
     } else {

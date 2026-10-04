@@ -40,7 +40,10 @@
 #     calls it with no relocation (through a local alias of a function it
 #     defines itself). A local label for NAME at the end of the target's
 #     slice makes the target's calls resolve the same way (see
-#     tools/slice_expected.py).
+#     tools/slice_expected.py). No entry needs it at the moment: its one
+#     user, math_div64_util.c's calls to sub_8037E54, went away when that
+#     function was named `__udivsi3` and the `.set` alias was dropped
+#     (the calls now carry relocations, which the `rename` below pairs).
 #
 # Add a line here whenever a newly-matched function doesn't show up in
 # the report, or reports an unexpectedly low match percentage - see
@@ -153,15 +156,10 @@ data 0x080003CA
 code 0x080003D0
 data 0x080003DA
 
-# src/util/math_div64_util.c calls sub_8037E54 (right after its first
-# range) through a local `.set __udivsi3, sub_8037E54` alias of a function
-# the same object defines, so the base object's bl's carry no relocation.
-resolve sub_8037E54
-
 # src/system/timer_util.c: sub_803A9AC (SDK EepromTimerIntr) is an unlabelled
 # .byte blob right after sub_803A968's pool in expected/code_3.s, with a
 # stray gStaticData_0803A9AD label one byte in. Code, then its two pool words.
-split 0x0803A9AC sub_803A9AC
+split 0x0803A9AC EepromTimerIntr
 unlabel gStaticData_0803A9AD
 code 0x0803A9AC
 data 0x0803A9C8
@@ -354,3 +352,109 @@ rename sub_8023464 AddLife
 rename sub_8023548 RestoreCheckpoint
 rename sub_802356C SetCheckpoint
 rename sub_8023738 GetLevelState
+
+# System layer naming pass (#558): the BIOS SWI wrappers, the AgbEeprom
+# SDK, libgcc, irq/input/memory/rand/printf/string/math helpers, the
+# IWRAM hooks and the link/save entry points. Globals the frozen code
+# references need an entry too: objdiff compares relocation targets
+# by name.
+rename sub_803A944 BgAffineSet
+rename sub_803A948 CpuFastSet
+rename sub_803A94C CpuSet
+rename LZ77UnCompWrapper LZ77UnCompVram
+rename sub_803A954 ObjAffineSet
+rename RLUnCompWrapper RLUnCompVram
+rename sub_803A95C Sqrt
+rename sub_0803A960 VBlankIntrWait
+rename sub_803A968 EEPROMConfigure
+rename sub_803A9D0 SetEepromTimerIntr
+rename sub_803AA08 StartEepromTimer
+rename sub_803AA90 StopEepromTimer
+rename sub_803AAD4 DMA3Transfer
+rename sub_803AB54 EEPROMRead
+rename sub_803AC04 EEPROMWrite
+rename sub_803ACE0 EEPROMCompare
+rename sub_803AD38 EEPROMWrite1_check
+rename gUnknown_03001620 gEepromTimerNum
+rename gUnknown_03001622 gEepromTimerCount
+rename gUnknown_03001624 gEepromTimeoutFlag
+rename gUnknown_03001628 gEepromTimerReg
+rename gUnknown_0300162C gEepromSavedIme
+rename gUnknown_03001634 gEepromConfig
+rename gStaticData_085A9EF8 gEepromConfig512
+rename gStaticData_085A9F04 gEepromConfig8k
+rename gStaticData_085A9F10 gEepromMaxTime
+rename sub_803AD78 _call_via_r0
+rename sub_803AD7C _call_via_r1
+rename sub_803AD80 _call_via_r2
+rename sub_803AD84 _call_via_r3
+rename sub_803AD88 _call_via_r4
+rename sub_803AD8C _call_via_r5
+rename sub_803AD90 _call_via_r6
+rename sub_803AD94 _call_via_r7
+rename nullsub_43 _call_via_lr
+rename sub_803ADB4 __divsi3
+rename nullsub_8 __div0
+rename sub_803AE4C __modsi3
+rename sub_803AF1C __umodsi3
+rename sub_8037648 __divdi3
+rename sub_8037A7C __udivdi3
+rename sub_8037E54 __udivsi3
+rename sub_8037ECC __muldi3
+rename sub_8000140 DivMod
+rename sub_800014C MemCopy32
+rename sub_8000544 IrqClearHandler
+rename sub_8000558 IrqRestoreHandler
+rename sub_80005A0 IrqSetHandler
+rename sub_8000620 EnableVBlankHandler
+rename sub_8000654 DisableVBlankHandler
+rename sub_8000670 RemoveVBlankCallback
+rename sub_8000680 AddVBlankCallback
+rename sub_80006A8 WaitForVBlank
+rename sub_80006EC DisableFrameLimit
+rename sub_80006F8 SetFrameLimit
+rename sub_8000720 VBlankHandler
+rename sub_8000760 GetDpadDirection
+rename sub_80007AC UpdateKeys
+rename sub_80007DC ClearKeys
+rename gUnknown_030009E8 gIntrTable
+rename gUnknown_030009FC gIntrTableTimer2
+rename gUnknown_030007D8 gVBlankCounter
+rename gUnknown_030007DC gFrameLimitEnabled
+rename gUnknown_03000A58 gFrameLimitTarget
+rename gUnknown_03000A5C gFrameLimitInterval
+rename gUnknown_03000A60 gVBlankCallbacks
+rename gUnknown_030007E0 gKeys
+rename gStaticData_0816A810 gDpadDirectionTable
+rename sub_8000518 mem_heap_shutdown
+rename sub_80010E0 WaitForKeyPress
+rename sub_8026F38 GetUiText
+rename gUnknown_03000868 gLanguage
+rename gUnknown_03000850 gUiTextTables
+rename sub_80008B4 FixedDistSq
+rename sub_80008CC FixedDist
+rename sub_80008F0 FixedDiv
+rename sub_80008FC FixedMul
+rename sub_800090C FixedInverse16
+rename sub_8000924 FixedDiv16
+rename sub_800093C FixedMul16
+rename sub_80009F4 FormatPaddedNumber
+rename sub_8000AA8 vsprintf
+rename sub_8000CA8 sprintf
+rename sub_8000CBC FindSubstring
+rename sub_8000DAC strncpy
+rename sub_8000E1C RandRange
+rename gUnknown_030007E4 gRandSeed
+rename gUnknown_03000870 gLookupSpriteFrameCacheFunc
+rename gUnknown_03000874 gUnpackRleSpriteFrameFunc
+rename gUnknown_0300087C gDrawMirroredTilemapFunc
+rename gUnknown_03000880 gHeapSortActorsByKeyFunc
+rename gUnknown_03000898 gUnpackNibbleTilesFunc
+rename sub_8001D30 LinkStop
+rename sub_80026E4 LinkStart
+rename sub_8002830 LinkSerialIntr
+rename sub_8002848 LinkTimer3Intr
+rename gUnknown_03000804 gLinkSession
+rename sub_8002868 ReadSaveData
+rename sub_8002938 WriteSaveData
+rename gUnknown_03000808 gEepromNeedsInit

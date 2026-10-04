@@ -20,7 +20,7 @@ extern void sub_8032274();
 extern void sub_8032290();
 
 /* Per-state step functions of the weapon-kind tracker, called through
- * sub_803AD78 as `gStaticData_0817C3FC[gUnknown_03001538]` by
+ * _call_via_r0 as `gStaticData_0817C3FC[gUnknown_03001538]` by
  * sub_80311C4 (actor_part23f.c). */
 void (*const gStaticData_0817C3FC[6])() = {
     nullsub_31,

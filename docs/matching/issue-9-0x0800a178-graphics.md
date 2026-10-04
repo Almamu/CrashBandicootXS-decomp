@@ -102,7 +102,7 @@ not a compiler artifact.)
 ### `sub_800A178(void *self)`
 
 The larger orchestrator, gated on two checks - a
-`sub_803AD7C(self->table[0x38]/[0x3c])` trampoline truthiness test,
+`_call_via_r1(self->table[0x38]/[0x3c])` trampoline truthiness test,
 then `self+0xc` bit 7 - either failing returns `0` immediately with no
 other effect. Once past both:
 
@@ -207,7 +207,7 @@ Verified byte-exact via the isolated `cpp`/`agbcc`/`as` +
 `objcopy`/`cmp` pipeline against `baserom.gba`'s own bytes at
 `0x0800A178`-`0x0800A528` (944 bytes, both functions together): the
 only differing bytes fell into exactly the expected relocation-site
-set - 16 `bl` calls (`sub_803AD7C` x2, `sub_800A420` x3, `sub_8008200`
+set - 16 `bl` calls (`_call_via_r1` x2, `sub_800A420` x3, `sub_8008200`
 x2, `sub_8026C3C` x1, `sub_8026628` x3, `sub_8008278` x3, `sub_8026BF8`
 x2) plus 3 `.4byte gLevelLayers` literal-pool words, all of which
 resolve correctly once linked.
@@ -316,7 +316,7 @@ movs r2, #0x10
 ldrsh r0, [r1, r2]
 adds r0, r4, r0
 ldr r1, [r1, #0x14]
-bl sub_803AD7C
+bl _call_via_r1
 adds r2, r0, #0
 adds r0, r4, #0
 movs r1, #8
@@ -371,7 +371,7 @@ re-checks internally as its own second gate. Once past it:
    above) - fires the *same* `self->table+0x10/0x14` "hitbox quad"
    trampoline `sub_800A178` itself uses (confirmed identical: table
    pointer read, signed-halfword offset at `+0x10`, function pointer at
-   `+0x14`, `sub_803AD7C(self+offset, fn)`), and runs a `mode == 8`
+   `+0x14`, `_call_via_r1(self+offset, fn)`), and runs a `mode == 8`
    (Y-axis/floor, confirmed by `game_loop43.c`'s own `sub_8026628` mode
    table) step-probe via `sub_8009BE0(self, 8, quad)`. If that
    step-probe does *not* report immediate success (either a full miss,

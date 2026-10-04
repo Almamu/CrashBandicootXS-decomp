@@ -55,7 +55,7 @@ Combines register-pinned locals matching the ROM's own register roles
 (including the "rename" copy) with inline-asm-materialized DMA-field
 writes for the two fields the ROM keeps fresh - the same "opaque to
 the optimizer" technique used on `sub_8001524`/`sub_8001624`/
-`sub_8000CBC` - but threading the asm's own computed values back out as
+`FindSubstring` - but threading the asm's own computed values back out as
 real C operands (`dstVal`/`cntVal`, pinned to r3/r2 matching the ROM)
 so the post-loop block can reuse them as genuine inputs instead of
 recomputing:
@@ -83,7 +83,7 @@ void sub_80014A4(void)
 
     do {
         sub_80013FC(factor);
-        sub_80006A8();
+        WaitForVBlank();
         dma2->src = (u32)bufAddr;
         asm volatile(
             "mov %0, #0xa0\n\t"

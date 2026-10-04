@@ -86,8 +86,8 @@ address entries), and then again via this pass's full clean
   instruction), the same entangled-function idiom already left raw for
   `GaxMixerApplyEcho`/`sub_803A318` in the first `0x08039818` pass. Beyond the
   trampoline itself, `GaxChannelMix` builds a large stack-resident struct
-  (a `sp+0x28`-based, 0x28-byte argument block) passed to `sub_800014C`
-  and calls into `sub_8037ECC` (both callees still raw/unnamed
+  (a `sp+0x28`-based, 0x28-byte argument block) passed to `MemCopy32`
+  and calls into `__muldi3` (both callees still raw/unnamed
   elsewhere), and reads several parallel per-song-slot tables
   (`gStaticData_0803A874`/`gGaxArmResample`/`gStaticData_0803A884`/
   `gStaticData_0803A8B4`/`gStaticData_0803A8C4`) whose shapes aren't

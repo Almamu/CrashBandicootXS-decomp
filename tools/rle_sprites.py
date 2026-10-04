@@ -5,7 +5,7 @@ gStaticData_0815A050, see docs/data.md "Compressed sprite frames").
 
 Every frame is a 4-byte header {w, h, 0x30, 0} (w x h 8x8 tiles), then a
 stream of u16 counts. The IWRAM decoder at 0x03000634 (the
-gUnknown_03000874 hook) fills w*h*32 bytes of VRAM from it, one halfword
+gUnpackRleSpriteFrameFunc hook) fills w*h*32 bytes of VRAM from it, one halfword
 at a time: a first count of zero halfwords, then alternately a literal
 count followed by that many halfwords of 4bpp tile data, and a zero count,
 until the frame is full. The frames of a set are stored back to back.

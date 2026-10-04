@@ -161,7 +161,7 @@ void sub_801F170(u32 arg0, u32 arg1, u32 arg2, u32 arg3)
 
     hdr = sub_800CA74();
     table = hdr->vtable;
-    sub_803AD80((u8 *)hdr + table->attach.thisOffset, part, table->attach.fn);
+    _call_via_r2((u8 *)hdr + table->attach.thisOffset, part, table->attach.fn);
     {
         register s32 tagVal asm("r0") = 0xa;
         hdr->tag = tagVal;
@@ -183,7 +183,7 @@ void sub_801F170(u32 arg0, u32 arg1, u32 arg2, u32 arg3)
             "add r0, r6, r0\n\t"
             "ldr r2, [r1, #0x1c]\n\t"
             "add r1, r4, #0\n\t"
-            "bl sub_803AD80\n\t"
+            "bl _call_via_r2\n\t"
             :
             : "r" (tbl), "r" (hdr), "r" (part)
             : "r0", "r1", "r2", "r3", "lr", "memory");

@@ -4,14 +4,14 @@
 /* Built with old_agbcc - see docs/matching/game-loop-old-agbcc.md. */
 
 extern void ScrollBgLayerBase(struct bg_scroll_layer *self, void *vec2);
-extern void sub_803AD84(void *self, s32 lo, s32 hi, void *fn);
+extern void _call_via_r3(void *self, s32 lo, s32 hi, void *fn);
 extern void ScrollBgStreamer(void *streamer, struct bg_scroll_layer *self);
 extern void GrowBgLayerColumns(struct bg_scroll_layer *self, s32 lo, s32 hi);
 extern void GrowBgLayerRows(struct bg_scroll_layer *self, s32 lo, s32 hi);
 
 static inline void CallClip(struct bg_scroll_layer *self, struct bg_layer_method *m, s32 lo, s32 hi)
 {
-    sub_803AD84((u8 *)self + m->thisOffset, lo, hi, m->fn);
+    _call_via_r3((u8 *)self + m->thisOffset, lo, hi, m->fn);
 }
 
 extern u16 *GetBgStreamerColumn(void *streamer, s32 col, s32 row, s32 *rowOut);

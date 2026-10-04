@@ -29,7 +29,7 @@ struct hud_fx_queue {
     u16 *lists[3];           /* +0x1c - permutation order (as u16 indices
                                * into `targets[i]`), `counts[i]` long. */
     s32 periods[3];           /* +0x28 - sub_8027018 sets this from
-                                * sub_803ADB4(0x3C, angle_arg); sub_8026F54
+                                * __divsi3(0x3C, angle_arg); sub_8026F54
                                 * rotates slot i once every `periods[i]`
                                 * frames. */
     s32 counts[3];             /* +0x34 - `lists[i]`'s element count. */
@@ -49,8 +49,8 @@ extern struct actor *sub_8008904(struct actor *part);
 extern u8 gStaticData_087E4CB4[];
 
 extern u32 gUnknown_0300082C;
-extern s32 sub_803ADB4(s32 arg0, s32 arg1);
-extern u32 sub_803AF1C(u32 a, u32 b);
+extern s32 __divsi3(s32 arg0, s32 arg1);
+extern u32 __umodsi3(u32 a, u32 b);
 
 /* Per-frame consumer: for each active slot whose period has elapsed
  * this frame, rotates `targets[i]` by one position along the order
@@ -59,7 +59,7 @@ void sub_8026F54(struct hud_fx_queue *self)
 {
     register s32 i asm("r4");
     s32 count;
-    /* `next_i` is computed right after the `sub_803AF1C` call below
+    /* `next_i` is computed right after the `__umodsi3` call below
      * (regardless of its result) and stashed in `ip` - a register with
      * no other role in this loop - freeing r4 (which still holds the
      * *old* `i`, since r4 is callee-saved and survives the call) for
@@ -78,7 +78,7 @@ void sub_8026F54(struct hud_fx_queue *self)
     count = self->count;
     for (; i < count; i = next_i) {
         /* `offset` is `i*4`, computed once here and kept live (in r5, a
-         * callee-saved register) across the `sub_803AF1C` call below, so
+         * callee-saved register) across the `__umodsi3` call below, so
          * every per-slot field access this iteration reuses it instead
          * of recomputing `i*4` fresh. Plain `self->arr[i]` struct access
          * recomputes `i*4` after the call instead (its register gets
@@ -106,7 +106,7 @@ void sub_8026F54(struct hud_fx_queue *self)
             p = (u8 *)self;
             p += 0x28;
             p += offset;
-            mod_result = sub_803AF1C(*global_addr, *(s32 *)p);
+            mod_result = __umodsi3(*global_addr, *(s32 *)p);
         }
         next_i = i + 1;
         if (mod_result != 0) {
@@ -217,7 +217,7 @@ void sub_8026F54(struct hud_fx_queue *self)
 
 /* Producer: appends a new slot at `count` (no wraparound - see the
  * struct's doc comment), computing `periods[count]` from `angle` via the
- * atan2-style `sub_803ADB4` helper. */
+ * atan2-style `__divsi3` helper. */
 void sub_8027018(struct hud_fx_queue *self, u16 *targets_arg, u16 *lists, s32 angle, s32 list_count, u8 direction_arg)
 {
     /* ROM reads this 6th (stack-passed) `u8` argument as a genuine
@@ -232,7 +232,7 @@ void sub_8027018(struct hud_fx_queue *self, u16 *targets_arg, u16 *lists, s32 an
     /* ROM copies `targets` out of its natural r1 parameter register
      * into r4 immediately (used for the null check), later reusing r4
      * (once `targets` has been stored through) for `&self->periods[idx]`
-     * - the address that stays live across the `sub_803ADB4` call below.
+     * - the address that stays live across the `__divsi3` call below.
      * Plain `u16 *targets = targets_arg;` leaves it in r1 instead and
      * picks a different register for the periods address - tried and
      * confirmed to change the generated code, so this stays a register
@@ -274,7 +274,7 @@ void sub_8027018(struct hud_fx_queue *self, u16 *targets_arg, u16 *lists, s32 an
             p += 0x28;
             p += offset;
             periods_addr = (s32 *)p;
-            *periods_addr = sub_803ADB4(0x3c, angle);
+            *periods_addr = __divsi3(0x3c, angle);
         }
     }
     self->active = 1;

@@ -9,9 +9,6 @@ extern void sub_800F4F4(struct phys_obj *self);
 extern void sub_800F798(struct phys_obj *self);
 extern void sub_800FC70(struct phys_obj *self);
 
-/* sub_803AD7C is libgcc's `_call_via_r1` (the PHYS_CALL below). */
-asm(".set _call_via_r1, sub_803AD7C\n");
-
 /* GitHub issue #13: 0x0800FC70-0x08010A0C, continuing the physics/
  * collision subsystem (see game_loop17.c's header comment and
  * docs/matching/issue-13-graphics-fc70.md). Sits between the matched
@@ -50,7 +47,7 @@ asm(".set _call_via_r1, sub_803AD7C\n");
  * clear instead, `self+0x4d`'s low 7 bits == 1 triggers
  * `sub_800F798`. Finally, unconditionally, calls `sub_8008044` and
  * hands `self+0x18`'s table's own `+0x60`/`+0x64` offset/function-
- * pointer pair off to the `sub_803AD7C` table-trampoline (the same
+ * pointer pair off to the `_call_via_r1` table-trampoline (the same
  * convention `sub_8007048`/`sub_80070D4`, graphics.c, establish).
  *
  * Matches under old_agbcc. The old NAKED note blamed register pressure

@@ -48,14 +48,14 @@ void sub_8034688(void *mgrArg)
     }
 }
 
-extern void sub_80006A8(void);
+extern void WaitForVBlank(void);
 extern void *gUnknown_03001304;
-extern void sub_80007AC(void *arg);
-extern u16 gUnknown_030007E0[];
+extern void UpdateKeys(void *arg);
+extern u16 gKeys[];
 
-/* Busy-waits (yielding a frame via `sub_80006A8`/`sub_8034688` each
- * time) until the input-poll result from `sub_80007AC(gUnknown_03001304)`
- * has either of bits 0/3 set in `gUnknown_030007E0`'s `+2` halfword. */
+/* Busy-waits (yielding a frame via `WaitForVBlank`/`sub_8034688` each
+ * time) until the input-poll result from `UpdateKeys(gUnknown_03001304)`
+ * has either of bits 0/3 set in `gKeys`'s `+2` halfword. */
 void sub_80346C8(void *mgrArg)
 {
     u8 *mgr = mgrArg;
@@ -63,12 +63,12 @@ void sub_80346C8(void *mgrArg)
 
     goto check;
 body:
-    sub_80006A8();
+    WaitForVBlank();
     sub_8034688(mgr);
 check:
-    sub_80007AC(gUnknown_03001304);
+    UpdateKeys(gUnknown_03001304);
     {
-        register u8 *addr asm("r1") = (u8 *)gUnknown_030007E0;
+        register u8 *addr asm("r1") = (u8 *)gKeys;
         register s32 nine asm("r0") = 9;
         register s32 flag asm("r1");
         register s32 r asm("r0");

@@ -8,7 +8,7 @@
  * renderer as hud_icon_widget.c/hud_icon_widget3.c/hud_icon_widget4.c/
  * hud_icon_widget5.c. */
 
-extern s32 sub_803AD80(void *arg0, s32 arg1, void *arg2);
+extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
 
 /* Draws `count` characters from `str` via `record`'s slot-5 trampoline
  * (`sub_8028808`, parked in asm/code_3_2_20_85c4.s, per the widget's own
@@ -20,7 +20,7 @@ void sub_8028860(struct icon_manager *self, u8 *str, s32 count)
 
         do {
             struct icon_slot *slot = &self->record->slots[5];
-            sub_803AD80((u8 *)self + slot->offset, *str, slot->ptr);
+            _call_via_r2((u8 *)self + slot->offset, *str, slot->ptr);
             str++;
             remaining--;
         } while (remaining != 0);

@@ -12,7 +12,7 @@
  * already-matched `sub_8006714` uses for the same job at different
  * offsets. */
 
-extern void sub_80006A8(void *arg0);
+extern void WaitForVBlank(void *arg0);
 extern void sub_8006DC8(void *arg0);
 extern void sub_8006AAC(void *arg0);
 extern void FlushVramDmaQueue(void);
@@ -30,7 +30,7 @@ extern void *gUnknown_03001300;
  * gets for free from plain field access). */
 void sub_8006250(struct pause_screen_results *self)
 {
-    sub_80006A8(self);
+    WaitForVBlank(self);
     sub_8006DC8(gUnknown_030012B8);
     sub_8006AAC(gUnknown_03001300);
     FlushVramDmaQueue();

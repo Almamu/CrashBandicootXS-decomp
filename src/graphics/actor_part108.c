@@ -7,7 +7,7 @@
  * docs/rom_map.md). Iterates the `gUnknown_0300130C` object list (the
  * same count-prefixed `{count, unused_4, items}` layout already
  * established in `src/system/game_loop24.c`'s `sub_8010804`), testing
- * each entry's own `+0x18`-table `+0x48` trampoline via `sub_803AD7C`
+ * each entry's own `+0x18`-table `+0x48` trampoline via `_call_via_r1`
  * (matched elsewhere) and, on a hit (state `3`), calling `sub_800CD00`
  * (this function's own companion, see `actor_part109.c`) with that
  * entry and `x`.
@@ -42,7 +42,7 @@ struct pos {
 
 extern struct actor_list *gUnknown_0300130C;
 extern void *gLevelLayers;
-extern s32 sub_803AD7C(void *addr, void *fn);
+extern s32 _call_via_r1(void *addr, void *fn);
 extern u8 sub_800CD00(void *entry, s32 x);
 extern u8 sub_8026628(void *player, s32 dir, struct pos *pos, s32 h, s32 *outY);
 
@@ -77,7 +77,7 @@ u8 sub_800AAEC(struct box_part *self, s32 x)
         u8 *entry = gUnknown_0300130C->items[i];
         u8 *method = *(u8 **)(entry + 0x18) + 0x48;
 
-        if (sub_803AD7C(entry + *(s16 *)method, *(void **)(method + 4)) == 3) {
+        if (_call_via_r1(entry + *(s16 *)method, *(void **)(method + 4)) == 3) {
             if (sub_800CD00(entry, x) == 1)
                 return 0;
         }

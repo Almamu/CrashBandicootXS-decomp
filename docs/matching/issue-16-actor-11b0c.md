@@ -65,7 +65,7 @@ updated to place all three pieces (`code_3_2_17_e560.o`,
 - **`sub_8011A1C`**: if `self+0x48` is zero and the player
   (`gUnknown_030012D8`)'s flags top bit is set, fires a
   `self->table+0x68`-driven trampoline (same idiom documented in
-  `actor_part12.c`/`actor_part13.c`) on `self` via `sub_803AD7C`.
+  `actor_part12.c`/`actor_part13.c`) on `self` via `_call_via_r1`.
   Matched directly, no register-pinning needed - the natural ABI
   register choice already matched the ROM.
 - **`sub_8011A50`**: sets `self->x`/`self->y` (Q8) from raw pixel

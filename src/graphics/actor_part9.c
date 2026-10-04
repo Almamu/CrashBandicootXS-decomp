@@ -3,12 +3,12 @@
 
 /* Same `record->table+0x10/0x14`-driven trampoline shape as
  * `sub_8009F1C`/`sub_8009FB0`, but forwarding `arg1`/`arg2`/`arg3`
- * straight through as `sub_803AD88`'s own arg1-arg3 instead of
+ * straight through as `_call_via_r4`'s own arg1-arg3 instead of
  * building them locally. The `table+0x14` function pointer read is a
  * genuine "dead read" - loaded into `r4` but never actually passed to
- * `sub_803AD88` (a plain 4-argument function, not itself a trampoline)
+ * `_call_via_r4` (a plain 4-argument function, not itself a trampoline)
  * - the same idiom already confirmed and documented for
- * `sub_8007DBC`'s own `sub_803AD88` call in `actor_part2.c`. */
+ * `sub_8007DBC`'s own `_call_via_r4` call in `actor_part2.c`. */
 void sub_8009FD4(struct gobj *self, s32 arg1, s32 arg2, s32 arg3)
 {
     struct mover *rec = self->mover;
@@ -19,7 +19,7 @@ void sub_8009FD4(struct gobj *self, s32 arg1, s32 arg2, s32 arg3)
         register void *deadRead asm("r4") = *(void *volatile *)&tbl->m10.fn;
         (void)deadRead;
 
-        sub_803AD88(addr, arg1, arg2, arg3);
+        _call_via_r4(addr, arg1, arg2, arg3);
     }
 }
 
@@ -76,7 +76,7 @@ end:
 }
 
 
-/* Fires a `self->table+0x70/0x74`-driven trampoline via `sub_803AD7C`
+/* Fires a `self->table+0x70/0x74`-driven trampoline via `_call_via_r1`
  * (same `table+N`/`table+N+4` convention used throughout this ROM
  * region) and always returns 0. Needed the trampoline's `addr = self
  * + offset` computed before the `fn` load (reusing the adjusted table
@@ -91,7 +91,7 @@ s32 sub_800A050(struct gobj *self)
 
     addr = (u8 *)self + offset;
     fn = *(void **)(tblAdj + 4);
-    sub_803AD7C(addr, fn);
+    _call_via_r1(addr, fn);
     return 0;
 }
 
@@ -159,10 +159,10 @@ struct mover *sub_800A0A8(struct gobj *self)
     return self->mover;
 }
 
-extern s32 sub_803AD80(void *arg0, void *arg1, void *fn);
+extern s32 _call_via_r2(void *arg0, void *arg1, void *fn);
 
 /* Sets `self+0x44` to `rec`, then fires `rec->table+0x18/0x1c`'s
- * trampoline via `sub_803AD80` with `self` as the second argument.
+ * trampoline via `_call_via_r2` with `self` as the second argument.
  * Same `addr`-before-`fn` fix as `sub_8009F1C`/`sub_8009FB0`. */
 void sub_800A0AC(struct gobj *self, struct mover *rec)
 {
@@ -176,7 +176,7 @@ void sub_800A0AC(struct gobj *self, struct mover *rec)
 
         addr = (u8 *)rec + offset;
         fn = tbl->m18.fn;
-        sub_803AD80(addr, self, fn);
+        _call_via_r2(addr, self, fn);
     }
 }
 

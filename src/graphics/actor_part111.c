@@ -20,7 +20,7 @@
  * neighborhood (`actor_part16.c`/`actor_part79.c`/`actor_part108.c`
  * etc.) - `self+0xc` (flags byte), `self+0x18` (per-category
  * `{s16 offset; void *fn}` trampoline table pointer, the
- * `sub_803AD7C` convention `actor_part108.c` already established),
+ * `_call_via_r1` convention `actor_part108.c` already established),
  * `self+0x20` (per-tag 28-byte-record table pointer,
  * `*(self+0x20) + tag*0x1c`, the exact convention `actor_part79.c`
  * documents from a sibling call site), `self+0x28` bit 4 (the
@@ -43,7 +43,7 @@
  *
  * - **mode == 3** ("just got hit" / stun-entry): every ~8 frames
  *   (`gUnknown_0300082C & 7 == 0`) re-rolls `gUnknown_03000818` to
- *   `(u16)sub_8000E1C(2) + 2 - (mirrored ? 2 : 0)` (0/1 if mirrored,
+ *   `(u16)RandRange(2) + 2 - (mirrored ? 2 : 0)` (0/1 if mirrored,
  *   2/3 otherwise - which side the effect "starts" from, based on
  *   facing). Clamps that value against the child's own hitbox/variant
  *   record's `+0x16` byte (via the child's own `+0x20`-table,
@@ -53,7 +53,7 @@
  *   flag, `self.y - 0x1300`, both Q8 - a fixed offset near the head).
  *   Toggles the child's own `+0x2d` tag between `1`/`2` on a 4-frame
  *   parity of `gUnknown_0300082C` (a flicker), then fires the child's
- *   own `+0x18`-table `+0x20`/`+0x24` trampoline (the `sub_803AD7C`
+ *   own `+0x18`-table `+0x20`/`+0x24` trampoline (the `_call_via_r1`
  *   refresh/notify convention). Also (regardless of the mode-3 gate,
  *   using `self`'s own blink deadline at `self+0x8c`) draws `self`
  *   itself via `sub_8007A84(gUnknown_030012CC, self)` (matched,
@@ -71,7 +71,7 @@
  *   `self+0xb4`, advancing the index mod 8.
  *
  * - **mode == 1 or mode == 2** (ongoing idle-orbit): every ~8 frames,
- *   random-walks `gUnknown_0300081C` by `sub_8000E1C(3) - 1` (-1/0/+1),
+ *   random-walks `gUnknown_0300081C` by `RandRange(3) - 1` (-1/0/+1),
  *   clamped to `[0, 3]`. Clamps that value against the same child
  *   record's `+0x16` byte and stores it into the child's own `+0x30`
  *   (same clamp-and-store idiom as the mode-3 branch, different source
@@ -112,8 +112,6 @@
  * for the full write-up. */
 
 #include "actor_self.h"
-
-ACTOR_CALL_VIA_ALIASES
 
 struct ac2c_pos {
     s32 x;
@@ -398,9 +396,9 @@ extern s32 gUnknown_03000818;
 extern s32 gUnknown_0300081C;
 extern void *gUnknown_030012CC;
 extern s16 gStaticData_0816A820[];
-extern s32 sub_8000E1C(s32 max);
+extern s32 RandRange(s32 max);
 extern void sub_8007A84(void *self, void *part);
-extern s32 sub_803AD7C(void *addr, void *fn);
+extern s32 _call_via_r1(void *addr, void *fn);
 
 static inline s32 BlinkArmed(struct orbit_self *self)
 {
@@ -450,7 +448,7 @@ static inline void RefreshChild(struct box_part *child)
 {
     struct part_method *m = PART_METHOD(child, 0x20);
 
-    sub_803AD7C((u8 *)child + m->thisOffset, m->fn);
+    _call_via_r1((u8 *)child + m->thisOffset, m->fn);
 }
 
 void sub_800AFF4(struct orbit_self *self)
@@ -464,7 +462,7 @@ void sub_800AFF4(struct orbit_self *self)
              * the mirror term and load the mirror bit before the u16
              * mask, as in the ROM. */
             gUnknown_03000818 = ({
-                s32 r = sub_8000E1C(2);
+                s32 r = RandRange(2);
                 s32 m = self->mirrorX;
                 s32 v = (u16)r + 2;
 
@@ -512,7 +510,7 @@ void sub_800AFF4(struct orbit_self *self)
             if (!(gUnknown_0300082C & 7)) {
                 s32 v;
 
-                gUnknown_0300081C = gUnknown_0300081C + (u16)sub_8000E1C(3) - 1;
+                gUnknown_0300081C = gUnknown_0300081C + (u16)RandRange(3) - 1;
                 v = gUnknown_0300081C;
                 if (v > 3)
                     v = 3;

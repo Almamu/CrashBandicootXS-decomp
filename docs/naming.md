@@ -9,11 +9,15 @@ follows: `AgbMain`, `LoadTaggedAsset`, `QueueVramDmaTransfer`,
 `PlaySfx`, `LoadLevelGraphics`, `LoadBg2Background`, `LoadObjSpriteTiles`,
 `IrqDisable`, `IrqSetup`, `IrqEmptyHandler`.
 
-`LZ77UnCompWrapper`/`RLUnCompWrapper` look like they break this (`UnComp`,
-not `Uncomp`) but don't - they intentionally mirror the real GBA BIOS `swi`
-names (`LZ77UnCompVram`, `RLUnCompVram`). When a function is a thin wrapper
-around a real, documented BIOS/hardware call, match *that* name's casing
-over generic PascalCase rules.
+`LZ77UnCompVram`/`RLUnCompVram`/`VBlankIntrWait` look like they break
+this (`UnComp`, not `Uncomp`) but don't - the BIOS `swi` wrappers in
+`src/system/timer_util.c` are named exactly after the BIOS calls they make
+(the libagbsyscall names other GBA decomps use). Library code we can
+identify keeps its library's names the same way: the AgbEeprom SDK's
+`EEPROMRead`/`EEPROMWrite1_check` (TMC's and pokeemerald's spelling) and
+libgcc's `__divsi3`/`_call_via_r0`. When a function is a thin wrapper
+around a real, documented BIOS/hardware call, or is a known library
+function, match *that* name's casing over generic PascalCase rules.
 
 ## Exception: snake_case for the memory allocator
 

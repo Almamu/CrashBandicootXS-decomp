@@ -13,7 +13,7 @@ marks this file's end. 3 of the 9 functions matched, 4 parked
   writes `value`'s digits (unsigned, most significant first) into
   `dest`, NUL-terminated, returning the digit count. Builds digits
   least-significant-first into a small stack buffer via the existing
-  `sub_803AE4C`/`sub_803ADB4` div/mod primitives
+  `__modsi3`/`__divsi3` div/mod primitives
   (`src/util/math_div_util.c`), then reverses them into `dest`. Shared
   by every settings-row/results-widget number label already matched in
   `src/graphics/settings_menu6.c`/`settings_menu7.c` (both already call
@@ -104,8 +104,8 @@ of it.
     already formatted into `buf2c`/`buf46`.
   - `sub_80061E8` draws a fixed-position (0xc2, 0x2c) category/header
     label, picking its source character from
-    `gStaticData_0816B1D0[self->field_24]` fed through `sub_8026F38`
-    (the same "char code -> something `sub_803AD80` can draw"
+    `gStaticData_0816B1D0[self->field_24]` fed through `GetUiText`
+    (the same "char code -> something `_call_via_r2` can draw"
     conversion `sub_8006600`/`sub_8005A78` already use for fixed digits
     like `0x2e`/`0x14`). This `self` is a different, not-yet-reconciled
     object from the other two (only `field_24`, a plain `s32` category
@@ -119,7 +119,7 @@ of it.
   convention for a type already anchored in another translation unit).
   Steps `field_24`'s low 5 bits down to 0 one at a time (redrawing/
   committing every step via `sub_8006600`/`sub_8006714`/`sub_8006700`),
-  then polls input (`sub_80007AC`/`gUnknown_030007E0.pressed`,
+  then polls input (`UpdateKeys`/`gKeys.pressed`,
   redrawing every frame) until the confirm button is newly pressed,
   then steps `field_24` back up to `0x10` the same way, and finally
   forces `field_28` to `0x40` and re-applies.

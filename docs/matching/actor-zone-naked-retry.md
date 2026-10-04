@@ -25,7 +25,7 @@ assembles identically either way).
 
 `sub_802D7B0`, `sub_802DD9C` and `sub_8031378` all build a static box,
 build a second box from an actor's `+0x38` vector plus its position,
-copy it into a third slot, run that slot through the `sub_800014C`
+copy it into a third slot, run that slot through the `MemCopy32`
 self-copy, and compare. The ROM recomputes `add rX, sp, #0xc` after the
 block copy and takes box A's address (`mov r1, sp`) again after the
 call. As three separate locals, gcc computed `&b` once and kept it (and
@@ -43,7 +43,7 @@ f.t = *(struct box16 *)self->unk_38;
 BoxMove(&f.t, self->x >> 8, self->y >> 8, self->z >> 8);
 f.b = f.t;
 b = &f.b;
-sub_800014C(b, b, sizeof(*b));
+MemCopy32(b, b, sizeof(*b));
 return BoxOverlap(&f.a, b);
 ```
 
@@ -71,8 +71,8 @@ local, `&gUnknown_030014BC` came last. Passing the global straight into
 the usual `CurFrame()` inline (`t = animTime >> 8` first, then
 `frameOffsets[anims[animIndex].frameIndex + t]`) gives the ROM's
 assignment under both compilers. The call through the
-`gUnknown_03000898` pointer needs `_call_via_r2` aliased to
-`sub_803AD80`.
+`gUnpackNibbleTilesFunc` pointer needs `_call_via_r2` aliased to
+`_call_via_r2`.
 
 ## `sub_8030D48` / `sub_80330FC`: bias narrowing and declaration order
 

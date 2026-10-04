@@ -198,7 +198,7 @@ leaving 4 of 30 still parked.
   `1`, `InitActorPart`'s own 4th argument forced to `0xfa00`): clamps
   the caller's `c` into `self+0x5c` (±`0x3f00`), mirrors a clamped
   `self+0x1c` into `self+0x58` (±`0x8000`), and derives `self+0x60`
-  from `sub_803ADB4`. The ROM keeps the `d` argument transiently in
+  from `__divsi3`. The ROM keeps the `d` argument transiently in
   `r0` (loaded from the stack, immediately pushed to the outgoing call
   frame), then reuses `r0` for `self` right after, *simultaneous* with
   the health literal `1` needing to survive in `r4` across the same

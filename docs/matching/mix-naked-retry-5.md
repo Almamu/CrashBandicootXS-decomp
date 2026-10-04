@@ -88,8 +88,8 @@ differences left. Each one had its own fix:
   `ActSetNext` 4, inline `MoveY`/`Lift` helpers, a `u8`/`s32` zero for
   `unk_101`, and pointer spellings of the `y` update. Adding references
   to the records pointer moves its load instead (6 halfwords).
-- **`GaxChannelMix`** (GAX mixer). `sub_8037ECC` is `__muldi3`. With
-  `asm(".set __muldi3, sub_8037ECC")` and a plain 64-bit `*` (the libcall
+- **`GaxChannelMix`** (GAX mixer). The ROM has its own `__muldi3`. With
+  a plain 64-bit `*` (the libcall
   lesson from #481), and with the ping-pong test re-reading
   `self->instrument->rows[self->row]`, the draft went from ~237 to ~202
   seq. The main gap is unchanged: `self`/`info`/`flag` get r5/r7/r9

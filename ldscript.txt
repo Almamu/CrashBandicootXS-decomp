@@ -517,7 +517,7 @@ SECTIONS
      * IWRAM globals, linked to run at 0x03000000 (IntrMain_Buffer) and
      * stored in ROM right after the data above (0x087E55E4). crt0 copies
      * it from __iwram_lma to 0x03000000 at boot; its length is
-     * gUnknown_030009E8 - IntrMain_Buffer. See docs/decomp_dev.md. */
+     * gIntrTable - IntrMain_Buffer. See docs/decomp_dev.md. */
     iwram 0x03000000 : AT(LOADADDR(ROM) + SIZEOF(ROM))
     {
         build/crashbandicootxs/asm/intr_main.o(.text);

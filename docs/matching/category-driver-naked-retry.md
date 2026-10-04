@@ -44,7 +44,7 @@ most instructions already right. What closed it:
    builds a tree).
 3. **`-sub_802A5AC() < 0`** gives the ROM's `neg; lsr #31`; `!= 0`
    adds an `orr`.
-4. **`(gUnknown_030007E0 >> 16) & 8`** (u32 global) loads with
+4. **`(gKeys >> 16) & 8`** (u32 global) loads with
    `ldrh [rX, #2]` from the same literal as the later `& 4` word test.
    `((u16 *)&g)[1]` gets its own `g+2` literal.
 5. **Pointer locals for gUnknown_03001384/gUnknown_03001388** (19 -> 4

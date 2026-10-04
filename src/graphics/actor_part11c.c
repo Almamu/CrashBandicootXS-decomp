@@ -3,9 +3,9 @@
 #include "box_part.h"
 
 extern void sub_8009008(void *manager, void *item);
-extern void sub_803A94C(void *src, void *dst, s32 control);
-extern s32 sub_803AD80(void *arg0, void *arg1, void *fn);
-extern void *sub_803AD7C(void *arg0, void *fn);
+extern void CpuSet(void *src, void *dst, s32 control);
+extern s32 _call_via_r2(void *arg0, void *arg1, void *fn);
+extern void *_call_via_r1(void *arg0, void *fn);
 extern void *gLevelLayers;
 
 /* A per-frame spatial-hash-grid maintenance pass over `manager`'s
@@ -25,9 +25,9 @@ extern void *gLevelLayers;
  *  - Otherwise, if `part->flags` bit 0 is set (a "pending removal"
  *    flag), removes `part` from `manager`'s active-object array the
  *    same way `sub_8009A30` does (linear search, `sub_8009008` to
- *    unlink the grid node(s), `sub_803A94C`-based compaction), then
+ *    unlink the grid node(s), `CpuSet`-based compaction), then
  *    fires a `part->table+0x50/0x54`-driven trampoline via
- *    `sub_803AD80` with constant arg `3` - the exact same "destroy"
+ *    `_call_via_r2` with constant arg `3` - the exact same "destroy"
  *    trampoline `sub_8009914`'s teardown loop fires.
  *  - Otherwise, tests `part` against a computed box (the tracked
  *    sub-object's position, offset by fixed constants `-0x6400`/
@@ -131,7 +131,7 @@ static inline void pool_remove(struct pool_manager *manager, struct box_part *ta
             struct box_part **base3;
 
             control |= 0x4000000;
-            sub_803A94C(src, dst, control);
+            CpuSet(src, dst, control);
 
             cnt = manager->activeCount;
             base3 = manager->slotArray;
@@ -149,7 +149,7 @@ static inline void part_destroy(struct box_part *part)
     if (part != NULL) {
         struct part_method *m = PART_METHOD(part, 0x50);
 
-        sub_803AD80((u8 *)part + m->thisOffset, (void *)3, m->fn);
+        _call_via_r2((u8 *)part + m->thisOffset, (void *)3, m->fn);
     }
 }
 
@@ -225,11 +225,11 @@ void sub_80091D4(struct pool_manager *manager)
             } else {
                 struct part_method *m = PART_METHOD(part, 0x40);
 
-                if ((u8)sub_803AD80((u8 *)part + m->thisOffset, box, m->fn)) {
+                if ((u8)_call_via_r2((u8 *)part + m->thisOffset, box, m->fn)) {
                     struct box_part *p2 = node->data;
                     struct part_method *m2 = PART_METHOD(p2, 0x18);
 
-                    sub_803AD7C((u8 *)p2 + m2->thisOffset, m2->fn);
+                    _call_via_r1((u8 *)p2 + m2->thisOffset, m2->fn);
                     node->mark = 1;
                 }
             }
@@ -246,7 +246,7 @@ void sub_80091D4(struct pool_manager *manager)
         } else if (node->link->mark == 0) {
             struct part_method *m = PART_METHOD(part, 0x18);
 
-            sub_803AD7C((u8 *)part + m->thisOffset, m->fn);
+            _call_via_r1((u8 *)part + m->thisOffset, m->fn);
         } else {
             node->link->mark = 0;
         }

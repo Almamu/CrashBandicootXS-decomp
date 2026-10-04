@@ -6,8 +6,8 @@
 #include "vram_pool.h"
 
 extern s32 sub_8028A30(void *mgr, s32 arg1);
-extern s32 sub_8026F38(s32 arg0);
-extern s32 sub_803AD80(void *arg0, void *arg1, void *arg2);
+extern s32 GetUiText(s32 arg0);
+extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern struct icon_manager *gUnknown_030012E0;
 extern struct icon_manager *gUnknown_030012DC;
 
@@ -19,13 +19,13 @@ static inline void set_icon_mgr_pos(struct icon_manager *m, u32 x, u32 y)
 
 /* Calls `record->slots[n]` on an icon manager with `label` (slot 0
  * measures and returns the pixel width, slot 2 draws) - a gcc 2.x
- * virtual call; sub_803AD80 is `_call_via_r2`. A statement macro so
+ * virtual call through libgcc's `_call_via_r2`. A statement macro so
  * `this` is computed before the label argument, as in the ROM. */
 #define ICON_TEXT_CALL(mgrExpr, n, label)                                       \
     ({                                                                          \
         struct icon_manager *_m = (mgrExpr);                                    \
         struct icon_slot *_s = &_m->record->slots[n];                           \
-        sub_803AD80((u8 *)_m + _s->offset, (void *)(label), _s->ptr);           \
+        _call_via_r2((u8 *)_m + _s->offset, (void *)(label), _s->ptr);           \
     })
 
 /* The functions below (0x08003B40-0x080041BC) were NAKED
@@ -42,16 +42,16 @@ static inline void set_icon_mgr_pos(struct icon_manager *m, u32 x, u32 y)
 extern void *sub_8026EDC(s32 size);
 extern void sub_8002FCC(void *newObj, void *tmpl);
 extern void sub_8002FD8(void *newObj);
-extern void sub_80006A8(void);
-extern void sub_80007AC(void *arg0);
+extern void WaitForVBlank(void);
+extern void UpdateKeys(void *arg0);
 extern void *gUnknown_03001304;
-extern u32 gUnknown_030007E0;
+extern u32 gKeys;
 extern u8 gUnknown_03000800;
-extern void *gUnknown_03000804;
+extern void *gLinkSession;
 extern s32 sub_8001F50(void *arg0);
 extern s32 sub_8002EFC(void *newObj);
 extern s32 sub_8002FD4(void *newObj);
-extern void sub_800014C(void *arg0, s32 arg1, s32 arg2);
+extern void MemCopy32(void *arg0, s32 arg1, s32 arg2);
 extern void sub_8026ED0(void *newObj);
 
 /* A "connecting..." SIO-handshake spinner dialog: allocates a small
@@ -61,7 +61,7 @@ extern void sub_8026ED0(void *newObj);
  * handshake driver documented in docs/rom_map.md's SIO/link-cable
  * section) until the spinner object's own state (sub_8002EFC) settles.
  * Returns that state; when it settles at 0, also feeds a result value
- * through self->field_90 via sub_800014C.
+ * through self->field_90 via MemCopy32.
  *
  * Once a NAKED transcription; it matches as plain C under both
  * compilers. The cancel test is `(u16)(keys & 2)`, whose known-zero
@@ -75,23 +75,23 @@ s32 sub_8003B40(struct pause_options_screen *self)
     sub_8002FCC(spinner, self->field_8c);
     sub_8002FD8(spinner);
     do {
-        sub_80006A8();
-        sub_80007AC(gUnknown_03001304);
-        if ((u16)(gUnknown_030007E0 & 2)) {
+        WaitForVBlank();
+        UpdateKeys(gUnknown_03001304);
+        if ((u16)(gKeys & 2)) {
             state = 3;
         } else {
             if (gUnknown_03000800) {
                 gUnknown_03000800 = 0;
                 sub_8002FD8(spinner);
             }
-            sub_8001F50(gUnknown_03000804);
+            sub_8001F50(gLinkSession);
             state = sub_8002EFC(spinner);
         }
     } while (state == 1);
     if (state == 0) {
         s32 result = sub_8002FD4(spinner);
 
-        sub_800014C(self->field_90, result, 0x200);
+        MemCopy32(self->field_90, result, 0x200);
     }
     sub_8026ED0(spinner);
     return state;
@@ -136,9 +136,9 @@ void sub_8003C90(struct pause_options_screen *self, u8 highlight)
         sub_8028A30(gUnknown_030012DC, ((self->flags >> 2) & 1) ? 1 : 2);
     else
         sub_8028A30(gUnknown_030012DC, 0);
-    w = ICON_TEXT_CALL(gUnknown_030012DC, 0, sub_8026F38(0x23));
+    w = ICON_TEXT_CALL(gUnknown_030012DC, 0, GetUiText(0x23));
     set_icon_mgr_pos(gUnknown_030012DC, (0xf0 - w) >> 1, 0x87);
-    ICON_TEXT_CALL(gUnknown_030012DC, 2, sub_8026F38(0x23));
+    ICON_TEXT_CALL(gUnknown_030012DC, 2, GetUiText(0x23));
 }
 
 extern u8 gStaticData_0816B138[];
@@ -163,33 +163,33 @@ void sub_8003D3C(struct pause_options_screen *self, s32 value)
     register s32 y asm("r9");
 
     sub_8028A30(gUnknown_030012DC, 0);
-    w = ICON_TEXT_CALL(gUnknown_030012DC, 0, sub_8026F38(value));
+    w = ICON_TEXT_CALL(gUnknown_030012DC, 0, GetUiText(value));
     {
         s32 x = 0xa0 - w;
         struct icon_manager *m = gUnknown_030012DC;
         y = 0x87;
         set_icon_mgr_pos(m, x, y);
     }
-    ICON_TEXT_CALL(gUnknown_030012DC, 2, sub_8026F38(value));
+    ICON_TEXT_CALL(gUnknown_030012DC, 2, GetUiText(value));
     sub_8028A30(gUnknown_030012DC, ((self->flags >> 2) & 1) ? 1 : 2);
     if (!self->field_10) {
         set_icon_mgr_pos(gUnknown_030012DC, 0xa8, y);
         ICON_TEXT_CALL(gUnknown_030012DC, 2, gStaticData_0816B138);
         set_icon_mgr_pos(gUnknown_030012DC, 0xb0, y);
-        ICON_TEXT_CALL(gUnknown_030012DC, 2, sub_8026F38(0x29));
+        ICON_TEXT_CALL(gUnknown_030012DC, 2, GetUiText(0x29));
     } else {
         set_icon_mgr_pos(gUnknown_030012DC, 0xa8, 0x91);
         ICON_TEXT_CALL(gUnknown_030012DC, 2, gStaticData_0816B138);
         set_icon_mgr_pos(gUnknown_030012DC, 0xb0, 0x91);
-        ICON_TEXT_CALL(gUnknown_030012DC, 2, sub_8026F38(0x2a));
+        ICON_TEXT_CALL(gUnknown_030012DC, 2, GetUiText(0x2a));
     }
     sub_8028A30(gUnknown_030012DC, 0);
     if (!self->field_10) {
         set_icon_mgr_pos(gUnknown_030012DC, 0xb0, 0x91);
-        ICON_TEXT_CALL(gUnknown_030012DC, 2, sub_8026F38(0x2a));
+        ICON_TEXT_CALL(gUnknown_030012DC, 2, GetUiText(0x2a));
     } else {
         set_icon_mgr_pos(gUnknown_030012DC, 0xb0, 0x87);
-        ICON_TEXT_CALL(gUnknown_030012DC, 2, sub_8026F38(0x29));
+        ICON_TEXT_CALL(gUnknown_030012DC, 2, GetUiText(0x29));
     }
 }
 
@@ -324,9 +324,9 @@ static inline void draw_row_mark(struct pause_options_screen *self, s32 arg1, s3
         sub_8028A30(gUnknown_030012DC, ((self->flags >> 2) & 1) ? 1 : 2);
     else
         sub_8028A30(gUnknown_030012DC, 0);
-    w = ICON_TEXT_CALL(gUnknown_030012DC, 0, sub_8026F38(0x25));
+    w = ICON_TEXT_CALL(gUnknown_030012DC, 0, GetUiText(0x25));
     set_icon_mgr_pos(gUnknown_030012DC, x - w / 2, y);
-    ICON_TEXT_CALL(gUnknown_030012DC, 2, sub_8026F38(0x25));
+    ICON_TEXT_CALL(gUnknown_030012DC, 2, GetUiText(0x25));
 }
 
 #define DRAW_ROW(i, labelX, labelY)                                             \
@@ -373,7 +373,7 @@ extern struct vram_upload_cursor *gUnknown_030012FC;
 extern void sub_8006C4C(struct vram_upload_cursor *self);
 extern s32 sub_8006C58(struct vram_upload_cursor *self, s32 size);
 extern void sub_8006C30(struct vram_upload_cursor *self);
-extern void sub_803AD7C(void *addr, void *fn);
+extern void _call_via_r1(void *addr, void *fn);
 extern struct actor *sub_8008904(struct actor *part);
 extern void sub_80087C0(struct actor *part);
 extern void sub_80087B4(struct actor *part);
@@ -398,7 +398,7 @@ static inline void IconSetup(struct icon_manager *m, u32 v)
 
     m->field_108 = v;
     slot = &m->record->slots[6];
-    sub_803AD7C((u8 *)m + slot->offset, slot->ptr);
+    _call_via_r1((u8 *)m + slot->offset, slot->ptr);
 }
 
 static inline void IconReserve(struct icon_manager **m)
@@ -489,7 +489,7 @@ void sub_800450C(struct pause_options_screen *self)
     asm("");
     sub_8006A90(gUnknown_03001300);
     sub_8006A48(gUnknown_03001300);
-    sub_80006A8();
+    WaitForVBlank();
     sub_8006AAC(gUnknown_03001300);
     sub_8006EA8(gUnknown_030012B8);
     sub_8006D50(gUnknown_030012B8, 0);

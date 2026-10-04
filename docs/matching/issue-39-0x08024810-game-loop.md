@@ -30,7 +30,7 @@ and setting `toggle` to 1. This chunk adds:
 - **`RunCutscenePlayer`**: a *second* per-frame driver loop over the same
   `self+0/self+4` items/count pair `RunSlideshow` (`game_loop37.c`)
   already drives, but interleaved with an explicit OAM-shadow-buffer
-  flush (`sub_8006A90`/`sub_8006A48`/`sub_80006A8`/`sub_8006AAC` on
+  flush (`sub_8006A90`/`sub_8006A48`/`WaitForVBlank`/`sub_8006AAC` on
   `gUnknown_03001300` - the same "HUD-icon-plus-number renderer" OAM
   pacing pattern `docs/matching.md` documents elsewhere) and a nested
   text-paging walk through the new `self+0x10` record array (each
@@ -38,7 +38,7 @@ and setting `toggle` to 1. This chunk adds:
   `sub_8000EE4` (`text_layout.c`) against an `icon_manager *` at
   `self+0x14` and a 2-word "box" at `self+0x18`/`self+0x1c`, continuing
   to the next string in the current record while a held-input mask (9,
-  versus `RunSlideshow`'s 8) stays set. `self+0x24` feeds `sub_8037E54`
+  versus `RunSlideshow`'s 8) stays set. `self+0x24` feeds `__udivsi3`
   (value/divisor) to compute the per-call text-wrap `limit`.
 
 ### The "visual scrolling background streamer" (`DecodeLayerChunk`-`sub_8024E24`)
@@ -87,7 +87,7 @@ flat one:
   field, the same "camera offset + source field" shape as the
   terrain-tile cache's `decodeBase`; `DestroyBgStreamer`/`InitBgStreamer`/
   `DestroyBgLayerBase`/`InitBgLayerBase` wire up two different
-  `sub_803AD80`-style interworking-trampoline tables
+  `_call_via_r2`-style interworking-trampoline tables
   (`gBgStreamerVtable`/`gBgLayerBaseVtable`) for notifying a parent
   object of size/position changes, following the exact
   `self + *(s16 *)(mgr + N)`/`*(void **)(mgr + N + 4)` idiom

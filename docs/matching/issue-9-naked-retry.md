@@ -24,12 +24,12 @@ were really caused by building with the wrong compiler.
 | `sub_8007B00` | actor_part.c | old_agbcc; box **returned by value** (the hidden return pointer is the ROM's `r8`/`r0`); mirror bits as `u32` bitfields (`lsl #27` + sign test - a `u8` container gives `movs #0x10; ands`) |
 | `sub_8007B98` | actor_part.c | same C as `sub_8007B00` with the box at record+4 |
 | `sub_8008044` | actor_part3.c | old_agbcc; `part` in `ip` falls out of the plain shape; second half reads `tick` then `*keyframes` into a local; `animDone` stored from a `u8` local (constant before the address) |
-| `sub_8008A40` | actor_part7.c | old_agbcc; box **by value** in and out; the ROM copies it into one shared temporary with `sub_800014C` (memcpy) before each call - an explicit `sub_800014C(&tmp, &box, 16)` reproduces it (struct assignment copies inline with ldm/stm; calling `memcpy` by name gets inlined as a builtin) |
+| `sub_8008A40` | actor_part7.c | old_agbcc; box **by value** in and out; the ROM copies it into one shared temporary with `MemCopy32` (memcpy) before each call - an explicit `MemCopy32(&tmp, &box, 16)` reproduces it (struct assignment copies inline with ldm/stm; calling `memcpy` by name gets inlined as a builtin) |
 | `sub_8008AD8` | actor_part7.c | old_agbcc; box by value; empty `case 0:` for the `cmp #1; beq; cmp #1; ble; cmp #2` switch; player hit-flag OR through a `u8 *`; push-out reads `part->x` into a local first |
 | `sub_8008D80` | actor_part7b.c | old_agbcc; box by value (the "boxH left in its incoming stack slot" blocker is just the by-value ABI) |
 | `sub_80099F0` | actor_part12.c | `sub_8008D80`'s twin, same C |
 | `sub_80096C0` | actor_part11e.c | `sub_8008AD8`'s twin, same C |
-| `sub_8009528` | actor_part11f.c | old_agbcc; box by value + `sub_800014C` copy as in `sub_8008A40`; the duplicated per-node test as a `static inline` helper; `heads = m->gridHead` then `last = &m->gridHead[255]` computed up front |
+| `sub_8009528` | actor_part11f.c | old_agbcc; box by value + `MemCopy32` copy as in `sub_8008A40`; the duplicated per-node test as a `static inline` helper; `heads = m->gridHead` then `last = &m->gridHead[255]` computed up front |
 | `sub_8009868` | actor_part11d.c | old_agbcc; plain C, camera x read before the `>> 8` |
 | `sub_800AAEC` | actor_part108.c | guarded do-while list walk (the "per-iteration literal reload"); position read as a struct copy; `rec += 4` as its own statement (the ROM's `adds r1, #4; adds r4, r1, #0`) |
 

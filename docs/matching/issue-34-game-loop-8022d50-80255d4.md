@@ -25,7 +25,7 @@ slot loader) - `self+0x29`'s low nibble is the cache slot, and the
 record's own `+0x14` byte is the asset id. Finally `gUnknown_030012EC`
 (a `dual_array_manager`, per `actor_part11.c`'s canonical definition) is
 walked: each entry fires its own `+0x18`-table's `+0x48`/`0x4c`
-`sub_803AD7C` trampoline, and a result of `2` fires the `+0x28`/`0x2c`
+`_call_via_r1` trampoline, and a result of `2` fires the `+0x28`/`0x2c`
 trampoline too - a nonzero low byte there flags the entry for despawn
 (`sub_8011448(entry, 1)`), otherwise the entry is marked "seen" (`+0xc`
 bit 0) and, unless its `+8` id is the `0xFFFF` sentinel, its bit gets set
@@ -43,7 +43,7 @@ ahead of their address computation (the ROM materializes constants
 before addresses; a plain C store evaluates the address first), the
 `part->table+0x48` record pointer anchored so it's advanced in place and
 reused for `fn` (a plain rewrite either keeps `table` live across the
-first `sub_803AD7C` call, which the ROM never does, or re-derives
+first `_call_via_r1` call, which the ROM never does, or re-derives
 `part->table` a second time for `fn`, which the ROM also never does),
 the `flags |= 1` store anchored to match `sub_80072D8`'s own
 constant-first idiom, and `self+8` read twice - once for the sentinel
@@ -88,7 +88,7 @@ collision-bitmap arrays that family already documents) get
 DMA-zero-filled (64 bytes each, matching a plain `DmaFill32(3, 0, dest,
 64)`), then unconditionally `self+8`→`self+0x108` and
 `self+0x208`→`self+0x308` get `CpuSet`-copied (the same
-`sub_803A94C(src, dst, 0x04000040)` idiom `sub_8022CA0`, game_loop.c,
+`CpuSet(src, dst, 0x04000040)` idiom `sub_8022CA0`, game_loop.c,
 already documents in the opposite direction). `self+4` is set from
 `posArg >> 8`. Then `list` itself is walked as a `{count:u16@2,
 groups:ptr@4}` header (the same shape `sub_8025894`'s own matched
@@ -124,7 +124,7 @@ transcribed as-is rather than "cleaned up" to one consistent width) up
 in `gUnknown_0300130C` directly (forward this time); on a miss it
 chases the same kind of `u16`-width id→id redirect chain through the
 array until a match is found or the chain runs out. Once a match is
-found (either pass), its `+0x18`-table's `+0x10`/`+0x14` `sub_803AD7C`
+found (either pass), its `+0x18`-table's `+0x10`/`+0x14` `_call_via_r1`
 trampoline record's returned `+5` byte becomes a `(byte+1)<<8` Q8 delta
 added to the matched entry's own `+4` field, then every entry in its
 `sub_801070C` ("get next") neighbor chain has

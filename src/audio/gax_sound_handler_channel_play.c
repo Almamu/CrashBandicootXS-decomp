@@ -1,11 +1,6 @@
 #include "core.h"
 #include "audio.h"
 
-/* sub_803AD84 is libgcc's `_call_via_r3` (the `type->play` call);
- * sub_803ADB4 is `__divsi3`. */
-asm(".set _call_via_r3, sub_803AD84\n"
-    ".set __divsi3, sub_803ADB4\n");
-
 extern void GaxChannelSetNote(struct GaxChannelState *self, u32 note);
 extern void GaxChannelSetInstrument(struct GaxChannelState *self, struct GaxInfoHandler *info, u32 instrument,
                         struct GaxSongData *song);

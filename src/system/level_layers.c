@@ -33,7 +33,7 @@
  *   `*arg2` and `arg3` are all nonzero, else 1. `sub_8026A14` returns 0.
  *
  * The method-table entries are a 16-bit `this` adjustment plus a function
- * pointer, called through `sub_803AD80`. Function names stay
+ * pointer, called through `_call_via_r2`. Function names stay
  * `sub_XXXXXXXX` (docs/naming.md). Only `SetLevelScroll` needed a matching
  * tweak (separate temps per axis). See
  * docs/matching/issue-43-level-layers.md.
@@ -122,7 +122,7 @@ extern void SpawnRoomEntities(void *self, void *arg1, void *arg2, s32 arg3, s32 
 extern struct layer *InitPooledBgLayer(void *mem, s32 arg1);
 extern struct tile_cache *nullsub_4(void *mem);
 extern struct layer *InitBgLayer(void *mem, s32 bgIndex);
-extern s32 sub_803AD80(void *self, void *arg1, void *fn);
+extern s32 _call_via_r2(void *self, void *arg1, void *fn);
 extern void sub_8025444(struct tile_cache *self, u32 flags);
 extern void CommitBgLayerScroll(struct layer *layer);
 
@@ -188,7 +188,7 @@ struct level_layers *InitLevelLayers(struct level_layers *self)
 
 #define DESTROY_LAYER(layer) \
     if ((layer) != NULL) \
-        sub_803AD80((u8 *)(layer) + (layer)->vtable->destroy.thisOffset, (void *)3, (layer)->vtable->destroy.fn)
+        _call_via_r2((u8 *)(layer) + (layer)->vtable->destroy.thisOffset, (void *)3, (layer)->vtable->destroy.fn)
 
 void DestroyLevelLayers(struct level_layers *self, u32 flags)
 {
@@ -254,7 +254,7 @@ void ScrollLevelLayers(struct level_layers *self)
     s32 pos[2];
     s32 i;
 
-    sub_803AD80((u8 *)self->layer0 + self->layer0->vtable->method_18.thisOffset, &self->scrollX,
+    _call_via_r2((u8 *)self->layer0 + self->layer0->vtable->method_18.thisOffset, &self->scrollX,
                 self->layer0->vtable->method_18.fn);
     pos[0] = self->layer0->x;
     pos[1] = self->layer0->y;
@@ -262,7 +262,7 @@ void ScrollLevelLayers(struct level_layers *self)
     {
         struct layer *layer = self->layers[i];
         if (layer->enabled)
-            sub_803AD80((u8 *)layer + layer->vtable->method_18.thisOffset, pos, layer->vtable->method_18.fn);
+            _call_via_r2((u8 *)layer + layer->vtable->method_18.thisOffset, pos, layer->vtable->method_18.fn);
     }
 }
 
@@ -271,7 +271,7 @@ void ResetLevelLayers(struct level_layers *self)
     s32 pos[2];
     s32 i;
 
-    sub_803AD80((u8 *)self->layer0 + self->layer0->vtable->method_10.thisOffset, &self->scrollX,
+    _call_via_r2((u8 *)self->layer0 + self->layer0->vtable->method_10.thisOffset, &self->scrollX,
                 self->layer0->vtable->method_10.fn);
     pos[0] = self->layer0->x;
     pos[1] = self->layer0->y;
@@ -279,7 +279,7 @@ void ResetLevelLayers(struct level_layers *self)
     {
         struct layer *layer = self->layers[i];
         if (layer->enabled)
-            sub_803AD80((u8 *)layer + layer->vtable->method_10.thisOffset, pos, layer->vtable->method_10.fn);
+            _call_via_r2((u8 *)layer + layer->vtable->method_10.thisOffset, pos, layer->vtable->method_10.fn);
     }
 }
 

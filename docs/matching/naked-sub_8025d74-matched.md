@@ -103,7 +103,7 @@ this function fully owns, avoids that class of mistake structurally.)
 Since the pool is emitted via a *separate* top-level `asm()` statement
 after the function's closing brace (not inside the function body,
 where an unreachable trailing block would be dead-code-eliminated -
-see the `sub_8000CBC` derivation doc for that failure mode), it falls
+see the `FindSubstring` derivation doc for that failure mode), it falls
 outside the compiler's own `.size InitBgLayer, ...` calculation for
 the function symbol - purely a symbol-table/metadata detail with no
 effect on the actual emitted bytes (confirmed by the full clean

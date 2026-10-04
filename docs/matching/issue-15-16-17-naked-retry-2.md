@@ -10,7 +10,7 @@ real C.
 | Function | File | Compiler | Technique |
 |---|---|---|---|
 | `sub_801434C` | actor_part18.c | old | Plain C on `struct act` (`include/action_obj.h`). The case 0/2 trio goes through a local `ActQueue27(self, 0, 0)` inline, so its 0 is materialized before the stores. In case 1 the trio is written out in both branches and the method calls use the do/while `ACT_VCALL*` form, so gcc cross-jumps the shared `bl` of the second call as the ROM does. With the if/else `ACT_CALL*` form there the whole block changes. The whole file matches under old_agbcc, so `actor_part18.o` moved to `OLD_AGBCC_OBJS`. |
-| `sub_80145E4` | actor_part18b.c | both | Plain C. The old gap was the masked bit going into a scratch register and then being copied to the register `flag` lives in. It goes away when the assignment is inside the test: `if ((flag = gUnknown_030007E0 & 0x100) != 0)`. No compiler change. |
+| `sub_80145E4` | actor_part18b.c | both | Plain C. The old gap was the masked bit going into a scratch register and then being copied to the register `flag` lives in. It goes away when the assignment is inside the test: `if ((flag = gKeys & 0x100) != 0)`. No compiler change. |
 | `sub_8012694` | actor_part84.c | old | The tag tests read `self->part->tag` / `self->part->frame` each time instead of going through a `part` local. old_agbcc's GCSE turns the reloads into the ROM's copy of the pointer in r2, and recomputes the +0x2D address for each test. `pressed & 1` is folded into the assignment (`pressed = INPUT_PRESSED(in) & 1; one = 1; if (pressed)`), which puts the AND's constant after `one` into a fresh register, as in the ROM. |
 
 ## Not closed (9)

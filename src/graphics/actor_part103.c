@@ -2,15 +2,13 @@
 #include "actor_self.h"
 #include "actor_anim.h"
 
-ACTOR_CALL_VIA_ALIASES
-
 /* This cluster (`sub_802A018`, `sub_802A110`, `sub_802A208`, `sub_802A3AC`,
  * ROM 0x0802A018-0x0802A4D4) sits inside the "actor" chunk starting at
  * `SetupActorVramPool` (0x080291A4). `sub_802A018`/`sub_802A110` are
  * near-identical: translate `gUnknown_03000884` (the player/list-sentinel
  * object)'s and `self`'s own 12-byte `{s16 x,y,z,sizeX,sizeY,sizeZ}` AABB
  * record (`self+0x38`, world-translated by `self+0x1c/0x20/0x24 >>8`) into
- * two stack scratch boxes via `sub_800014C` (a real, byte-verified
+ * two stack scratch boxes via `MemCopy32` (a real, byte-verified
  * `memcpy(dst,dst,0xc)` self-copy - see src/graphics/actor_part74.c's own
  * definition/doc comment), then run the same 3-axis (Z,Y,X order) overlap
  * test already established throughout this ROM
@@ -18,13 +16,13 @@ ACTOR_CALL_VIA_ALIASES
  * docs/matching/issue-53-actor-c7a8.md, issue-54-actor-d3a8.md,
  * issue-58-0x08030574-actor.md). `sub_802A3AC` is the same test wrapped in
  * an outer walk of the whole `gUnknown_03000884`-rooted circular list
- * (`self+0x4c`), gated by a `sub_803AD7C` per-node visibility check first
+ * (`self+0x4c`), gated by a `_call_via_r1` per-node visibility check first
  * (same shape as `sub_802C7A8`, actor_part19h.c).
  *
  * All three share the `ActorsOverlap` inline below. Its three boxes are
  * members of one frame struct (the actor_part74.c/actor_part81.c
  * pattern), so every box address is a fresh `add rX, sp, #off`; only
- * the pointer to the middle box stays live across both `sub_800014C`
+ * the pointer to the middle box stays live across both `MemCopy32`
  * calls (that is the ROM's `r4`, or `r7` once `sub_802A3AC`'s loop
  * hoists it). The first actor's position is read into locals before
  * that pointer is taken, which puts its `add r4, sp, #0xc` after the
@@ -37,7 +35,7 @@ extern struct actor_self *gUnknown_03000884;
 extern u8 gUnknown_030014A0;
 extern u8 gUnknown_03001506;
 
-extern void *sub_800014C(void *dst, const void *src, u32 byteCount);
+extern void *MemCopy32(void *dst, const void *src, u32 byteCount);
 
 /* Method slot 0x28 of the actor method table (`self+0x50`), which
  * `struct actor_vtable` still lumps into padding. */
@@ -90,11 +88,11 @@ static inline u8 ActorsOverlap(struct actor_self *pl, struct actor_self *self)
     t = &f.t;
     BoxMove(t, x, y, z);
     f.a = *t;
-    sub_800014C(&f.a, &f.a, sizeof(f.a));
+    MemCopy32(&f.a, &f.a, sizeof(f.a));
     f.s = *(struct box16 *)self->unk_38;
     BoxMove(&f.s, self->x >> 8, self->y >> 8, self->z >> 8);
     *t = f.s;
-    sub_800014C(t, t, sizeof(*t));
+    MemCopy32(t, t, sizeof(*t));
     return BoxOverlap(&f.a, t);
 }
 
@@ -119,13 +117,13 @@ s32 sub_802A110(struct actor_self *self)
 /* `sub_802A208`: fires a "scroll enter/exit" trampoline pair off
  * `gUnknown_03001418->fn[3]`/`fn[0xa]` (the selected category's vtable,
  * `struct category_vtable`), drives a `gUnknown_03001400`-rooted
- * sub-effect-table draw loop (`sub_803AD84`, same record family as
+ * sub-effect-table draw loop (`_call_via_r3`, same record family as
  * `sub_802A504`/`sub_802A51C`/`sub_802A540`/`sub_802A558`/`sub_802A570`),
  * then walks the whole `gUnknown_03000884`-rooted circular actor list
  * twice: once unconditionally (drawing each node's own `self+0x50`
- * trampoline-record icon via `sub_803AD7C`), once collecting every node
+ * trampoline-record icon via `_call_via_r1`), once collecting every node
  * with `self+0x2c` set into `gUnknown_03001408` (drawing that filtered
- * set through `sub_803AD80` then a second `sub_803AD7C` pass on a
+ * set through `_call_via_r2` then a second `_call_via_r1` pass on a
  * different trampoline-record offset).
  *
  * The old note blamed a missing high register (a C draft needed `r9`).
@@ -147,10 +145,10 @@ extern s32 gUnknown_03001404;
 extern u8 gUnknown_03001414;
 extern struct actor_self **gUnknown_03001408;
 extern s32 gUnknown_0300140C;
-extern void (*gUnknown_03000880)(s32 count, struct actor_self **list);
+extern void (*gHeapSortActorsByKeyFunc)(s32 count, struct actor_self **list);
 extern s32 gUnknown_03001424;
 
-extern void sub_803AD78(void *fn);
+extern void _call_via_r0(void *fn);
 extern s32 sub_8029B2C(void);
 extern s32 sub_8029B8C(void);
 
@@ -182,11 +180,11 @@ s32 sub_802A208(void)
     s32 off;
 
     if (gUnknown_03001418->fn[3] != NULL)
-        sub_803AD78(gUnknown_03001418->fn[3]);
+        _call_via_r0(gUnknown_03001418->fn[3]);
     gUnknown_03001410 = 0;
     scroll = sub_8029B2C();
     if (scroll - gUnknown_03001420 > gUnknown_03001400->field_00)
-        sub_803AD78(gUnknown_03001418->fn[10]);
+        _call_via_r0(gUnknown_03001418->fn[10]);
     if (gUnknown_0300141C != 0) {
         gUnknown_03001420 += sub_8029B8C();
     } else {
@@ -214,7 +212,7 @@ s32 sub_802A208(void)
             gUnknown_03001408[gUnknown_0300140C++] = n;
         n = ACTOR_NEXT(n);
     } while (n != gUnknown_03000884);
-    gUnknown_03000880(gUnknown_0300140C, gUnknown_03001408);
+    gHeapSortActorsByKeyFunc(gUnknown_0300140C, gUnknown_03001408);
 
     for (i = 0; i < gUnknown_0300140C; i++) {
         struct actor_self *a = gUnknown_03001408[i];

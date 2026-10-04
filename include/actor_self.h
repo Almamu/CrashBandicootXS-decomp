@@ -6,7 +6,7 @@
  * actor zone (issues #54-#62 - see docs/matching/issue-58-*.md and
  * issue-57-0x0802fbf0-actor.md): a gcc 2.x C++ object built by
  * `InitActorPart`, whose method table pointer sits at +0x50. Methods are
- * called through the `sub_803AD7C`..`sub_803AD88` libgcc `_call_via_rN`
+ * called through the `_call_via_r1`..`_call_via_r4` libgcc `_call_via_rN`
  * thunks with the `this` pointer pre-adjusted by the method record's
  * own `thisOffset`.
  *
@@ -158,15 +158,5 @@ typedef void (*actor_method_fn)(void *self, s32 arg);
             _fn((u8 *)(self) + _d);                                            \
         }                                                                      \
     } else (void)0
-
-/* Thumb code makes indirect calls with `bl _call_via_rN`; this ROM's
- * copies of those libgcc helpers are the sub_803AD78..sub_803AD94
- * trampolines (src/system/reg_trampolines.c). Expand once per
- * translation unit that uses ACTOR_VCALL/ACTOR_PMF_CALL. */
-#define ACTOR_CALL_VIA_ALIASES                                                 \
-    asm(".set _call_via_r1, sub_803AD7C\n"                                     \
-        ".set _call_via_r2, sub_803AD80\n"                                     \
-        ".set _call_via_r3, sub_803AD84\n"                                     \
-        ".set _call_via_r4, sub_803AD88\n");
 
 #endif /* !GUARD_ACTOR_SELF_H */

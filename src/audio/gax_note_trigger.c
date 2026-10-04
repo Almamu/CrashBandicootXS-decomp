@@ -30,10 +30,10 @@
  * after five register-allocation passes (docs/matching/gax-toolchain-retry.md,
  * mix-naked-retry-5.md, gax-naked-retry-3.md to -5.md). */
 
-/* sub_800014C is this ROM's memcpy (the work item's initializer) and
- * sub_8037ECC is `__muldi3`: as a libcall the 64-bit multiply does not
- * clobber memory (see docs/matching/gax-naked-retry-2.md). */
-asm(".set memcpy, sub_800014C\n.set __muldi3, sub_8037ECC\n");
+/* MemCopy32 is this ROM's memcpy (the work item's initializer). The
+ * 64-bit multiply is a `__muldi3` libcall, which does not clobber
+ * memory (see docs/matching/gax-naked-retry-2.md). */
+asm(".set memcpy, MemCopy32");
 
 struct GaxMixItem {
     u8 *src;

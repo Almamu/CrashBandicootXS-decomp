@@ -79,9 +79,9 @@ The one remaining residual (the `pop`/`bx` scratch-register choice,
 precedent for this exact class of gap - `docs/matching.md`'s
 `sub_800697C` entry, "a function's own return type/value can shape its
 *own* epilogue register choice" - applies here too, but with an extra
-wrinkle: `sub_800697C`'s callee (`sub_803ADB4`) already returned the
+wrinkle: `sub_800697C`'s callee (`__divsi3`) already returned the
 same type the wrapper wanted to return, so a plain `return
-sub_803ADB4(...)` was enough. Here the callee, `sub_800B86C`, returns
+__divsi3(...)` was enough. Here the callee, `sub_800B86C`, returns
 `u8`, and this compiler (confirmed via isolated `cpp`+`agbcc` A/B
 tests, not guessed) *always* inserts a zero-extension pair (`lsl
 r0,r0,#0x18` / `lsr r0,r0,#0x18`) immediately after a call whose result

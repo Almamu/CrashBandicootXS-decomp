@@ -6,8 +6,6 @@
 
 extern struct actor_pmf gStaticData_0817C1C0[];
 
-ACTOR_CALL_VIA_ALIASES
-
 /* Per-state member-pointer dispatch, `(this->*gStaticData_0817C1C0
  * [this->state])()` (see `ACTOR_PMF_CALL`). */
 void sub_802F748(struct actor_self *self)

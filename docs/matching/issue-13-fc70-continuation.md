@@ -206,7 +206,7 @@ removed in favor of a matched-list entry.
 time this pass picked it up, every callee it flagged as a "still-raw
 sibling" (`sub_800F8E0`/`sub_800F990`/`sub_800F4F4`/`sub_800F798`,
 `sub_800FC70`, `sub_80087C0`/`sub_80087B4`/`sub_800872C`,
-`sub_8006DF8`, `sub_8008044`, `sub_803AD7C`) had already been matched
+`sub_8006DF8`, `sub_8008044`, `_call_via_r1`) had already been matched
 by earlier passes in this same session (issue #12's cluster and this
 issue's own `sub_800FC70`/`game_loop32.c`), which is what made this
 function tractable at all - it's a pure dispatcher/glue function over
@@ -239,7 +239,7 @@ record's own `+0x14`) into `self+0x29`; state 3 just tags `0x20` and
 runs the same triplet. If bit 7 was clear instead, `self+0x4d`'s low 7
 bits == 1 triggers `sub_800F798`. Finally, unconditionally, calls
 `sub_8008044` and hands `self+0x18`'s table's own `+0x60`/`+0x64`
-offset/function-pointer pair off to the `sub_803AD7C` table-trampoline
+offset/function-pointer pair off to the `_call_via_r1` table-trampoline
 - the same convention `sub_8007048`/`sub_80070D4` (`graphics.c`)
 establish, confirming `self+0x18` is this object's `struct actor.table`
 field even though the rest of `self` is far larger than `struct

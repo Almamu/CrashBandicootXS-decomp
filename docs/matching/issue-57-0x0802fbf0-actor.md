@@ -63,9 +63,9 @@ header.
   reproduces it byte for byte, with the table base in r7 and no
   register pins. Four things were needed:
   1. A real indirect call `fn(self + d)` rather than an explicit
-     `sub_803AD84(...)` call. Thumb gcc emits it as
-     `bl _call_via_r3`, aliased to `sub_803AD84` with `.set` (the
-     `actor_part_1967c.c` technique). The explicit-call form forces
+     `_call_via_r3(...)` call. Thumb gcc emits it as
+     `bl _call_via_r3`, which resolves to the ROM's trampoline (then
+     through a `.set` alias, the `actor_part_1967c.c` technique). The explicit-call form forces
      values into r1/r2 that the ROM leaves as garbage.
   2. Load the `index` field once into a local, but re-index
      `table[self->state]` for every other field.
@@ -81,7 +81,7 @@ header.
   functions listed above are worth retrying with this macro.**
 - **Virtual calls** go through `ACTOR_VCALL(obj, m20/m08, arg)`, a real
   indirect call through the method record, not an explicit
-  `sub_803AD80`.
+  `_call_via_r2`.
 - **State resets** (`ACTOR_SET_STATE`) put state and animation index
   in locals first. The ROM then materializes a constant pair
   (`movs r0,#K1; movs r1,#K2`) before the stores. This removed the

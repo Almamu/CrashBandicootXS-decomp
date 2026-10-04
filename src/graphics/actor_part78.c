@@ -54,7 +54,7 @@ struct a884_method {
 
 /* A per-frame "reentrancy guard"-shaped wrapper (only runs if
  * `self+0xc` bit 7 is set): fires `self->table+0x70`'s trampoline via
- * `sub_803AD7C`, then calls `sub_800A0FC` (still raw) with the global
+ * `_call_via_r1`, then calls `sub_800A0FC` (still raw) with the global
  * `gLevelLayers+0x2a` flag held set for the duration. If
  * `self+0xac` (a pointer, cleared here) was non-null, sets `self+0x68`
  * bit 3 and clears the `+0x100`/`+0x102`/`+0x103` flag bytes. Then
@@ -87,7 +87,6 @@ struct a884_method {
  * ROM's "walking" flag offsets (`adds r1, #3`, `subs r2, #3`) are
  * reload's move2add reusing a reload register; they come from r3 holds
  * (no code) that keep reload rotating through r0-r2 only. */
-ACTOR_CALL_VIA_ALIASES
 
 #define A884_METHOD(obj, off) ((struct a884_method *)((obj)->vtable + (off)))
 typedef void (*a884_fn0)(void *self);

@@ -20,7 +20,7 @@ widget's free-running frame counter) when the loop index equals
 0 via the same `sub_8028A30` call) otherwise. It then always draws
 that slot's own fixed digit glyph - one of six `struct icon_manager *`
 looked up from `gStaticData_0817E714[i]` - positioned via
-`sub_803AD80` at a fixed X (centered from the rendered pixel width,
+`_call_via_r2` at a fixed X (centered from the rendered pixel width,
 the same `(240-w)>>1` idiom `sub_8006600`/`src/graphics/oam_count.c`
 uses) and a Y that steps by `0xa` per slot from a `0x32` base, reading
 and writing `gUnknown_030012DC->record->slots[0]`/`slots[2]` (see
@@ -34,7 +34,7 @@ shape `sub_8006600` uses on the same two globals.
 `gStaticData_0817E72C`/`_74C`/`_76C`/`_78C` (two tiles filled per loop
 iteration via a doubled offset, 16 iterations), and finally threads
 `gUnknown_030012DC`'s/`gUnknown_030012E0`'s `record->slots[6]`
-trampoline (`sub_803AD7C`) and VRAM-reserve (`sub_8006C58`) pair -
+trampoline (`_call_via_r1`) and VRAM-reserve (`sub_8006C58`) pair -
 copying `field_12c` from one `icon_manager` into the other's
 `field_108` via the ROM's own "subtract `0x24` from the already-loaded
 `0x12c` offset constant" trick rather than a fresh `0x108` literal.
@@ -53,7 +53,7 @@ length for two other functions in this codebase:
   two-icon centering/draw loop this pair's `sub_80372BC` extends to
   six slots, itself parked NAKED for exactly this reason.
 - `sub_80062A8` (`src/graphics/settings_menu14.c`) - already NAKED,
-  and its tail is *this same* `sub_803AD7C`/`sub_8006C58`/
+  and its tail is *this same* `_call_via_r1`/`sub_8006C58`/
   constant-reuse idiom `sub_8037388`'s tail uses, hitting the identical
   register-choreography wall around the cached
   `gUnknown_030012DC`/`gUnknown_030012E0` addresses (there documented
@@ -88,7 +88,7 @@ prints "La suma coincide").
 
 ## Later pass: GAX toolchain retry
 
-`sub_80372BC` now matches as real C (calling the `sub_803AD80` method trampoline directly, glyph assigned inside the first call's arguments). `sub_8037388` stays NAKED with a draft that matches through the tile-copy loop. See [gax-toolchain-retry.md](./gax-toolchain-retry.md).
+`sub_80372BC` now matches as real C (calling the `_call_via_r2` method trampoline directly, glyph assigned inside the first call's arguments). `sub_8037388` stays NAKED with a draft that matches through the tile-copy loop. See [gax-toolchain-retry.md](./gax-toolchain-retry.md).
 
 ## Later pass: late-ROM NAKED retry
 

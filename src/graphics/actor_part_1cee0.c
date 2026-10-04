@@ -33,7 +33,7 @@ extern void ***gUnknown_030012D0;
 extern void *gUnknown_03001300;
 extern void *gUnknown_03001304;
 extern u8 gUnknown_03000824;
-extern u32 gUnknown_030007E0;     // held keys (low half), newly pressed (high half)
+extern u32 gKeys;     // held keys (low half), newly pressed (high half)
 extern struct xy_pair gStaticData_0816C4D8[];
 extern struct xy_pair gStaticData_0816C508[];
 extern u32 gStaticData_0816C538[];
@@ -41,8 +41,8 @@ extern u32 gStaticData_0816C548[];
 extern u8 gStaticData_0816C58C[];
 extern struct xy_pair gStaticData_0816C5F0[];
 
-extern void sub_80006A8(void);
-extern void sub_80007AC(void *p);
+extern void WaitForVBlank(void);
+extern void UpdateKeys(void *p);
 extern void sub_8006DC8(void *p);
 extern void sub_8006AAC(void *p);
 extern void sub_8006D50(void *cache, s32 arg);
@@ -90,10 +90,6 @@ u8 sub_801D428(struct level_menu *self);
 u8 sub_801D434(struct level_menu *self);
 void sub_801D470(struct level_menu *self);
 
-/* libgcc's call-via-register helpers are this ROM's sub_803AD7C..AD88. */
-asm(".set _call_via_r2, sub_803AD80\n"
-    ".set _call_via_r3, sub_803AD84\n");
-
 typedef void (*item_load_fn)(void *self, s32 world, s32 slot);
 typedef void (*item_place_fn)(void *self, struct xy_pair *pos);
 
@@ -117,7 +113,7 @@ static inline void CommitDisplay(struct level_menu *self)
 static inline void BeginFrame(struct level_menu *self)
 {
     sub_801C104(self);
-    sub_80006A8();
+    WaitForVBlank();
     sub_8006DC8(gUnknown_030012B8);
     sub_8006AAC(gUnknown_03001300);
     CommitDisplay(self);
@@ -350,8 +346,8 @@ void sub_801D4C4(struct level_menu *self)
         self->world--;
         sub_801D790(self->bg1);
         sub_801CEE0(self);
-        sub_80007AC(gUnknown_03001304);
-        if (!(gUnknown_030007E0 & DPAD_DOWN))
+        UpdateKeys(gUnknown_03001304);
+        if (!(gKeys & DPAD_DOWN))
             goto done;
     check:
         if (sub_801D428(self))
@@ -378,8 +374,8 @@ void sub_801D548(struct level_menu *self)
         self->world++;
         sub_801D79C(self->bg1);
         sub_801CEE0(self);
-        sub_80007AC(gUnknown_03001304);
-        if (!(gUnknown_030007E0 & DPAD_UP))
+        UpdateKeys(gUnknown_03001304);
+        if (!(gKeys & DPAD_UP))
             goto done;
     check:
         if (sub_801D434(self))
@@ -412,7 +408,7 @@ void sub_801D668(struct level_menu *self)
  * without the menu's own update. */
 void sub_801D698(struct level_menu *self)
 {
-    sub_80006A8();
+    WaitForVBlank();
     sub_8006DC8(gUnknown_030012B8);
     sub_8006AAC(gUnknown_03001300);
     CommitDisplay(self);

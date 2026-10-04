@@ -28,9 +28,9 @@ extern void sub_802A980(void *self);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void InitActorPart(void *self, s32 a, s32 b, s32 c, s32 d);
 extern s32 GetAnimFrameBaseOffset(void *self);
-extern s32 sub_803AD80(void *arg0, s32 arg1, void *arg2);
-extern s32 sub_803ADB4(s32 a, s32 b);
-extern s32 sub_8000E1C(s32 max);
+extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
+extern s32 __divsi3(s32 a, s32 b);
+extern s32 RandRange(s32 max);
 extern s32 SetMaskLevel(void *arg0, s32 arg1);
 extern s32 QueueVramDmaTransfer(void *src, void *dest, u16 size, u16 unit);
 extern s32 sub_802A570(s32 idx);
@@ -110,8 +110,6 @@ struct hazard {
     u8 unk_48[8];
     struct actor_vtable *vtable; // 0x50
 };
-
-ACTOR_CALL_VIA_ALIASES
 
 /* Plays the pickup sound and restarts animation sequence 1 ("used").
  * Wrapped in `if (1)` rather than `do { } while (0)` or an inline: both
@@ -270,7 +268,7 @@ case1:
     if (self->animDone != 0) {
         if (self != 0) {
             struct actor_vtable *table = self->vtable;
-            sub_803AD80((u8 *)self + table->m08.thisOffset, 3, table->m08.fn);
+            _call_via_r2((u8 *)self + table->m08.thisOffset, 3, table->m08.fn);
         }
         return;
     }
@@ -327,7 +325,7 @@ void sub_802CF30(void *selfArg)
                     s32 velX = (self->base.x > 0) ? 0x600 : 0xFFFFFA00;
 
                     self->velX = velX;
-                    self->velY = -(s32)(u16)sub_8000E1C(0x300);
+                    self->velY = -(s32)(u16)RandRange(0x300);
                     self->velZ += 0x200;
                     PlaySfx(gUnknown_030012BC, 5, 0x100);
                     self->base.state = 1;
@@ -346,7 +344,7 @@ void sub_802CF30(void *selfArg)
                 s32 velX = (self->base.x > 0) ? 0x600 : 0xFFFFFA00;
 
                 self->velX = velX;
-                self->velY = -(s32)(u16)sub_8000E1C(0x300);
+                self->velY = -(s32)(u16)RandRange(0x300);
                 self->velZ += 0x200;
                 PlaySfx(gUnknown_030012BC, 5, 0x100);
                 self->base.state = 1;
@@ -370,7 +368,7 @@ void sub_802CF30(void *selfArg)
 /* Homing-velocity (re)initializer: with a negative `target` index,
  * arms a fixed slow downward drift (`self+0x54/0x58/0x5c/0x60` set to
  * constants). Otherwise derives a per-frame speed factor
- * (`sub_803ADB4` of `target`'s own "speed" record,
+ * (`__divsi3` of `target`'s own "speed" record,
  * `gUnknown_0300088C[sub_802A570(target)]`, against the remaining
  * distance in Z) and scales the X/Y deltas toward `target`'s own
  * tracked position (`sub_802A558`/`sub_802A540`) by that factor,
@@ -392,7 +390,7 @@ void sub_802D044(void *selfArg, s32 target)
         s32 countdown;
 
         self->velZ = speed;
-        countdown = sub_803ADB4(sub_802A51C(target) - self->base.z, self->velZ);
+        countdown = __divsi3(sub_802A51C(target) - self->base.z, self->velZ);
         self->countdown = countdown;
         if (countdown == 0) {
             self->countdown = 1;
@@ -402,7 +400,7 @@ void sub_802D044(void *selfArg, s32 target)
             register s32 countdown2 asm("r1") = self->countdown;
             register s32 lit asm("r0") = 0x1000;
 
-            factor = sub_803ADB4(lit, countdown2);
+            factor = __divsi3(lit, countdown2);
         }
         self->velX = factor * (sub_802A558(target) - self->base.x) >> 0xc;
         self->velY = factor * (sub_802A540(target) - self->base.y) >> 0xc;

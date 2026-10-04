@@ -17,7 +17,7 @@
  * expanding to the exact same `REG_DMA3`-field-by-field store sequence
  * seen here); either way `self+8`->`self+0x108` and
  * `self+0x208`->`self+0x308` get unconditionally `CpuSet`-copied via
- * `sub_803A94C(src, dst, 0x04000040)` (the same idiom `sub_8022CA0`,
+ * `CpuSet(src, dst, 0x04000040)` (the same idiom `sub_8022CA0`,
  * game_loop.c, already documents in the opposite direction), and
  * `self+4` is set from `posArg >> 8` (a Q8-to-int truncation). `list`
  * is then walked as a `{count:u16 @2, groups:ptr @4}` header over
@@ -143,14 +143,14 @@ struct lk_actor_list
 
 extern void *gEntitySpawner;
 extern struct lk_actor_list *gUnknown_0300130C;
-extern void sub_803A94C(void *src, void *dst, s32 control);
+extern void CpuSet(void *src, void *dst, s32 control);
 extern u8 sub_8025968(struct lk_self *self, s32 n);
 extern void SpawnEntity(void *table, s32 n, struct lk_item *item);
 extern void sub_8010714(struct lk_actor *a, struct lk_actor *b);
 extern void sub_8010710(struct lk_actor *a, struct lk_actor *b);
 extern struct lk_actor *sub_801070C(struct lk_actor *a);
 extern void sub_8007398(struct lk_actor *a, s32 x, s32 y);
-extern u8 *sub_803AD7C(void *self, void *fn);
+extern u8 *_call_via_r1(void *self, void *fn);
 
 void SpawnRoomEntities(struct lk_self *self, struct lk_list *list, struct lk_links *links, s32 posArg)
 {
@@ -167,8 +167,8 @@ void SpawnRoomEntities(struct lk_self *self, struct lk_list *list, struct lk_lin
         DmaFill32(3, zero, self->bits0, 64);
         DmaFill32(3, zero, self->bits1, 64);
     }
-    sub_803A94C(self->bits0, self->bits0Copy, CPU_SET_32BIT | 0x40);
-    sub_803A94C(self->bits1, self->bits1Copy, CPU_SET_32BIT | 0x40);
+    CpuSet(self->bits0, self->bits0Copy, CPU_SET_32BIT | 0x40);
+    CpuSet(self->bits1, self->bits1Copy, CPU_SET_32BIT | 0x40);
     self->pos = posArg >> 8;
 
     counter = 0;
@@ -334,7 +334,7 @@ void SpawnRoomEntities(struct lk_self *self, struct lk_list *list, struct lk_lin
             if (got && actor != NULL)
             {
                 struct lk_method *hm = &actor->vtable->height;
-                s32 lift = (sub_803AD7C((u8 *)actor + hm->delta, hm->fn)[5] + 1) << 8;
+                s32 lift = (_call_via_r1((u8 *)actor + hm->delta, hm->fn)[5] + 1) << 8;
                 struct lk_point p;
                 struct lk_point *pp = &p;
 

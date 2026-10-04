@@ -41,7 +41,7 @@ struct held_pressed_pair {
     u16 held;
     u16 pressed;
 };
-extern struct held_pressed_pair gUnknown_030007E0;
+extern struct held_pressed_pair gKeys;
 
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern s32 QueueVramDmaTransfer(void *src, void *dest, u16 size, u16 unit);
@@ -51,10 +51,10 @@ extern void sub_802DFBC(void);
 extern s32 sub_802D4B0(void *self);
 extern void *sub_802AC28(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4);
 extern void *AllocVramTileBlock(s32 size);
-extern s32 sub_8000E1C(s32 max);
+extern s32 RandRange(s32 max);
 extern s32 SetMaskLevel(void *arg0, s32 arg1);
 extern void sub_802BC68(void *selfArg);
-extern s32 sub_803AD80(void *arg0, s32 arg1, void *arg2);
+extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
 
 extern u8 gStaticData_0817A728[];
 extern u8 gStaticData_0817A748[];
@@ -63,7 +63,7 @@ extern s32 gUnknown_0300148C;
 extern s32 gUnknown_03001498;
 extern u8 gUnknown_030014A1;
 extern struct actor_pmf gStaticData_0817A6B8[];
-extern void (*gUnknown_03000874)(void *dst, u8 *frame);
+extern void (*gUnpackRleSpriteFrameFunc)(void *dst, u8 *frame);
 extern void *gUnknown_030014B0[2];     // the two VRAM tile buffers
 extern s32 gUnknown_030014A8;          // which buffer holds the current frame
 extern u8 *gUnknown_030014AC;          // the frame last uploaded
@@ -85,9 +85,6 @@ extern s32 sub_8029EB4(void);
 extern void *sub_802B1A8(s32 x, s32 y, s32 z, s32 tier);
 extern void sub_802D3A8(void *obj, s32 x, s32 y, s32 z);
 extern s32 sub_802D4EC(void *obj);
-
-ACTOR_CALL_VIA_ALIASES
-asm(".set __divsi3, sub_803ADB4");
 
 static inline s32 Abs(s32 x)
 {
@@ -138,7 +135,7 @@ void sub_802B364(struct actor_self *self)
     sub_8029D8C(self->x, self->y);
     ACTOR_PMF_CALL(self, gStaticData_0817A6B8);
     if (gUnknown_030014A3 != 0) {
-        struct held_pressed_pair keys = gUnknown_030007E0;
+        struct held_pressed_pair keys = gKeys;
 
         if (keys.held & 0x20) {
             if (gUnknown_03001498++ > 12)
@@ -236,7 +233,7 @@ void sub_802B5B4(struct actor_self *self)
         attr1 |= (sy & 0xff) | ((sx & 0x1ff) << 16) | attr | GetSpriteShapeSizeBits(frame);
         if (frame != gUnknown_030014AC) {
             gUnknown_030014A8 ^= 1;
-            gUnknown_03000874(gUnknown_030014B0[gUnknown_030014A8], frame);
+            gUnpackRleSpriteFrameFunc(gUnknown_030014B0[gUnknown_030014A8], frame);
             gUnknown_030014AC = frame;
         }
         {
@@ -462,16 +459,16 @@ void sub_802B8E8(struct actor_self *self)
 /* On the state-0x12 anim-frame edge, plays a "confirm" cue
  * (`sub_8029BAC(0x24)`) then either resets `self` to the idle
  * table-index 0 (`self+0xc == 0` case) or, gated on
- * `sub_8000E1C(3)`'s own result, either restores `self+0xc` or
+ * `RandRange(3)`'s own result, either restores `self+0xc` or
  * transitions it to 1 - both cases refreshing the anim frame from the
  * (possibly restored) table index. Independently, on the
- * `gUnknown_030014A3` edge, fires up to two more `gUnknown_030007E0`
+ * `gUnknown_030014A3` edge, fires up to two more `gKeys`
  * input-gated one-shot transitions (state 4/table-index 3 with a cue
  * and a `gUnknown_030014A4` reset, and state 2/table-index 0 with
  * `sub_8029BAC(0x38)`).
  *
  * The ROM keeps the "self+0xc == 0" reset case and the
- * `sub_8000E1C`-gated case's two outcomes sharing one physical tail
+ * `RandRange`-gated case's two outcomes sharing one physical tail
  * (the anim-frame refresh) rather than each duplicating it - a plain
  * nested if/else here reproduces the checks but not that exact tail
  * sharing (this compiler inlines the tail into each arm on its own
@@ -510,7 +507,7 @@ void sub_802B990(void *selfArg)
     goto tail;
 
 gated:
-    if ((u16)sub_8000E1C(3) != 0)
+    if ((u16)RandRange(3) != 0)
         goto restore;
 
     self->animIndex = 1;
@@ -532,7 +529,7 @@ join:
 
 tail:
     if (gUnknown_030014A3 != 0) {
-        register struct held_pressed_pair *addr asm("r5") = &gUnknown_030007E0;
+        register struct held_pressed_pair *addr asm("r5") = &gKeys;
         register s32 bit1 asm("r0") = 1;
         u16 pressed = addr->pressed;
 
@@ -596,7 +593,7 @@ void sub_802BA5C(struct actor_self *self)
     *budget += 0x60;
     if (*budget > 0x780)
         *budget = 0x780;
-    if (self->stateTime <= 10 && !(*(u32 *)&gUnknown_030007E0 & 1) && *budget < (s32)0xFFFFFC00)
+    if (self->stateTime <= 10 && !(*(u32 *)&gKeys & 1) && *budget < (s32)0xFFFFFC00)
         *budget = 0xFFFFFC00;
     if (self->y > 0x2800) {
         self->y = 0x2800;
@@ -605,14 +602,14 @@ void sub_802BA5C(struct actor_self *self)
     }
 }
 
-/* Two independent `gUnknown_030007E0` input-gated one-shot
+/* Two independent `gKeys` input-gated one-shot
  * transitions on `self`: bit 1 resets to state 1/table-index 0 (plain
  * anim-frame idle reset, `sub_8029BAC(0x24)`); bit 0 (of the high
  * halfword) transitions to state 4/table-index 3 with a cue and the
  * `gUnknown_030014A4` stall reset - same pair `sub_802B990` fires. */
 void sub_802BAD0(struct actor_self *self)
 {
-    struct held_pressed_pair *input = &gUnknown_030007E0;
+    struct held_pressed_pair *input = &gKeys;
     u16 bit = *(u32 *)input & 2;
 
     if (bit == 0) {

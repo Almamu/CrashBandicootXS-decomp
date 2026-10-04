@@ -39,7 +39,7 @@ struct link_id_word {
     u16 hi:12;
 } __attribute__((packed));
 
-/* The link session object (`*gUnknown_03000804`). */
+/* The link session object (`*gLinkSession`). */
 struct link_session {
     u8 unused_00[4];
     u8 field_4;

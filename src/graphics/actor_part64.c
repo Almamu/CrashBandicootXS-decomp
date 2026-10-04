@@ -6,8 +6,6 @@
 
 extern struct actor_pmf gStaticData_0817C4F8[];
 
-ACTOR_CALL_VIA_ALIASES
-
 /* Per-state member-pointer dispatch, `(this->*gStaticData_0817C4F8
  * [this->state])()` (see `ACTOR_PMF_CALL`); returns 0 once the
  * state-2 animation has played through, 1 otherwise. */

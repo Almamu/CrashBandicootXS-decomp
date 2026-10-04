@@ -46,7 +46,7 @@
 extern void *sub_802A3AC(void *selfArg);
 extern u8 sub_8031378(void *selfArg);
 extern void sub_803146C(s32 delta);
-extern s32 sub_803AD80(void *pos, s32 arg1, void *table);
+extern s32 _call_via_r2(void *pos, s32 arg1, void *table);
 extern void sub_802A7B8(void *selfArg);
 
 struct actor_falling {
@@ -71,7 +71,7 @@ void sub_802F97C(struct actor_falling *self)
         if (hit != 0) {
             struct actor_vtable *hitTable = hit->vtable;
 
-            sub_803AD80((u8 *)hit + hitTable->m20.thisOffset, 2, hitTable->m20.fn);
+            _call_via_r2((u8 *)hit + hitTable->m20.thisOffset, 2, hitTable->m20.fn);
             goto merge;
         } else if (sub_8031378(self)) {
             sub_803146C(2);
@@ -89,7 +89,7 @@ merge:
             table = self->base.vtable;
             asm volatile("mov r2, #8\n\tldrsh %0, [%1, r2]" : "=r"(off) : "r"(table));
 tail:
-            sub_803AD80((u8 *)self + off, 3, table->m08.fn);
+            _call_via_r2((u8 *)self + off, 3, table->m08.fn);
         } else {
             sub_802A7B8(self);
         }

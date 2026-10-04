@@ -20,7 +20,7 @@ extern void sub_802C078(void *arg0, s32 delta);
 extern void sub_802C4C8(void *selfArg);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void InitActorPart(void *self, s32 a, s32 b, s32 c, s32 d);
-extern s32 sub_803ADB4(s32 arg0, s32 arg1);
+extern s32 __divsi3(s32 arg0, s32 arg1);
 
 extern u8 gStaticData_087E4F94[];
 extern u8 gStaticData_087E4EB4[];
@@ -159,7 +159,7 @@ void sub_802CAD0(void *selfArg)
 
 /* `InitActorPart`-based constructor: forwards `a`/`b`/`c`/`lastArg`
  * straight through, installs `self+0x50 = gStaticData_087E4F94`, then
- * classifies a "kind" (`animIndex`) from a `sub_803ADB4`-scaled
+ * classifies a "kind" (`animIndex`) from a `__divsi3`-scaled
  * function of `b` (clamped to `[0, 5]`) plus up to two `+6` bumps keyed
  * off `c`'s own range - selecting one of up to 18 per-kind anim
  * records from the part table (`self[0]`, stride `0xc`) to seed
@@ -173,7 +173,7 @@ void *sub_802CB34(void *selfArg, s32 a, s32 b, s32 c, s32 lastArg)
     InitActorPart(self, a, b, c, lastArg);
     self->vtable = (struct actor_vtable *)gStaticData_087E4F94;
 
-    idx = sub_803ADB4((b >> 8) + 0x3c, 0x14);
+    idx = __divsi3((b >> 8) + 0x3c, 0x14);
 
     if (idx < 0) {
         idx = 0;

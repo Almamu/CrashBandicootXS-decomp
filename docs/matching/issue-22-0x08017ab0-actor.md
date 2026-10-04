@@ -22,7 +22,7 @@ this large action-table family.
 `self` (r4) is the large per-level "player/action" object this whole
 region shares (`self+0xc` the per-category table pointer, records
 `{s16 offset; u8 pad[2]; void *fn}` at fixed offsets 0x20/0x50/0x58,
-fired through `sub_803AD80`/`sub_803AD84`); `other` (r5) is the "part"
+fired through `_call_via_r2`/`_call_via_r3`); `other` (r5) is the "part"
 object passed alongside it, with an *analogous* table of its own at
 `other+0x18` (different record offsets: 0x28, 0x48, 0x68 are all seen
 in this one function, each presumably a different logical "slot").
@@ -46,7 +46,7 @@ Dispatches on `self+8` (0/1/2; anything else returns immediately):
      `+0x104` gate is set *and* its `+0x44`-object's own `+8` field is
      `!=0x1e`, fires the `0x50`-indexed trampoline (mode 2), the
      `0x20`-indexed one (mode 0), then the `0x58`-indexed one (mode 0).
-  2. **Busy-toggle latch**: runs a `sub_803AD7C` "occupied" probe
+  2. **Busy-toggle latch**: runs a `_call_via_r1` "occupied" probe
      against `other+0x18`'s own table (offset 0x28) up to twice - the
      ROM calls it, and only if the result is "free" *and*
      `self+0x20`'s own latch was already `0` does it stamp
@@ -77,14 +77,14 @@ Dispatches on `self+8` (0/1/2; anything else returns immediately):
      `sub_8008A40(gUnknown_030012F0, box.x, box.y, box.w, box.h, 0,
      other)`, then walks the entire `gUnknown_0300130C` object list. For
      each `entry` whose own table (`entry+0x18`, offset 0x48) probes
-     `==3` via `sub_803AD7C`, and whose Q8>>8 position is within a
+     `==3` via `_call_via_r1`, and whose Q8>>8 position is within a
      `0x27`/`0x3b` box of `other`, and whose `entry+0x4d` byte has bit
      `0x7f` clear: a `entry+0x4e` tag of `0xe`/`0x13`/`0x14`/`0x15`/`0xa`
      calls `sub_800EEF0(entry, 0)`; any other tag instead gates
      `sub_800E888(entry, 1)` behind `sub_8010908(entry, tag)`.
 - **State 2** (`self+8==2`): if `other+0x30==8` and `other+0x34==0` and
   the same in-bounds Q8 check as state 1 step 5 passes, fires
-  `sub_803AD88(player + player's-own-0x18-table[0x68].offset, 0, 1, 0)`
+  `_call_via_r4(player + player's-own-0x18-table[0x68].offset, 0, 1, 0)`
   and returns. Otherwise (either gate fails, or the in-bounds check
   fails) falls into the **shared tail**.
 
@@ -147,8 +147,8 @@ keeping the ROM's own `_0XXXXXXX` hex-address labels verbatim as plain,
 file-local asm symbols (safe since each is a unique ROM address) - the
 same approach `actor_part82.c`'s `sub_8011BD4`, `actor_part_12fbc.c`'s
 five functions, and `actor_part18.c`'s `sub_801434C` all already use.
-Register/argument roles for every external call (`sub_803AD80`/
-`sub_803AD84`/`sub_803AD7C`/`sub_803AD88`'s base+offset+fn-pointer
+Register/argument roles for every external call (`_call_via_r2`/
+`_call_via_r3`/`_call_via_r1`/`_call_via_r4`'s base+offset+fn-pointer
 trampoline convention, `sub_8007B98`/`sub_8008A40`'s AABB-relocate-then-
 unpack idiom) were cross-checked against their existing signatures in
 `actor_part18.c`/`actor_part81.c`/`actor_part.c` before transcription,

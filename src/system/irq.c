@@ -1,28 +1,32 @@
 #include "core.h"
 #include "irq.h"
 
-struct irq_unknown1 {
-    s32 unknown[8];
+/* The VBlank callback slots: AddVBlankCallback() fills a free one,
+ * VBlankHandler() calls every non-zero one each VBlank. */
+struct vblank_callbacks {
+    s32 funcs[8];
     char pad2[48];
 }; // 0x80
 
-extern irq_handler_t* gUnknown_030009E8[5];
-extern irq_handler_t* gUnknown_03000A20[5];
-extern struct irq_unknown1 gUnknown_03000A60;
-void sub_8000720(void); // vblank handler?
+/* gIntrTable is the per-IRQ handler table IntrMain (asm/intr_main.s)
+ * dispatches through, one entry per REG_IF bit; gPrevIntrTable holds the
+ * handler each IrqSetHandler() call replaced, for IrqRestoreHandler(). */
+extern irq_handler_t* gIntrTable[5];
+extern irq_handler_t* gPrevIntrTable[5];
+extern struct vblank_callbacks gVBlankCallbacks;
+void VBlankHandler(void);
 void IrqEmptyHandler();
 extern u32 IntrMain_Buffer;
 
-// TODO: PROPERLY UNDERSTAND WHAT THIS FUNCTION IS USED FOR, MIGHT BE A CALLBACK INIT FUNCTION FOR SOME TYPE OF MESSAGE
-// irq_handler_clear_index maybe?
-void sub_8000544(s32 interruptIndex) {
-    gUnknown_030009E8[interruptIndex] = &IrqEmptyHandler;
+/* Points an IRQ's handler at IrqEmptyHandler (its IE bit is left alone). */
+void IrqClearHandler(s32 interruptIndex) {
+    gIntrTable[interruptIndex] = &IrqEmptyHandler;
 }
 
-// TODO: PROPERLY NAME THIS FUNCTION, SEEMS TO BE DISABLING SPECIFIC INTERRUPT HANDLING
-// irq_disable_index maybe?
-void sub_8000558(s32 interruptIndex) {
-    irq_handler_t* tmp = gUnknown_030009E8[interruptIndex] = gUnknown_03000A20[interruptIndex];
+/* Undoes IrqSetHandler(): reinstalls the handler it replaced (and masks
+ * the IRQ in IE if there was none), then forgets the saved one. */
+void IrqRestoreHandler(s32 interruptIndex) {
+    irq_handler_t* tmp = gIntrTable[interruptIndex] = gPrevIntrTable[interruptIndex];
     
     if (tmp == NULL) {
         u16 previousIMEvalue = REG_IME;
@@ -31,14 +35,14 @@ void sub_8000558(s32 interruptIndex) {
         REG_IME = previousIMEvalue; // bring back previous IME status
     }
     
-    gUnknown_03000A20[interruptIndex] = &IrqEmptyHandler;
+    gPrevIntrTable[interruptIndex] = &IrqEmptyHandler;
 }
 
-// TODO: PROPERLY NAME THIS FUNCTION
-// irq_enable_index or maybe irq_set_index
-void sub_80005A0(s32 interruptIndex, irq_handler_t* fn) {
-    gUnknown_03000A20[interruptIndex] = gUnknown_030009E8[interruptIndex];
-    gUnknown_030009E8[interruptIndex] = fn;
+/* Installs `fn` as an IRQ's handler, saving the old one for
+ * IrqRestoreHandler(), and enables the IRQ in IE. */
+void IrqSetHandler(s32 interruptIndex, irq_handler_t* fn) {
+    gPrevIntrTable[interruptIndex] = gIntrTable[interruptIndex];
+    gIntrTable[interruptIndex] = fn;
     REG_IE |= 1 << interruptIndex;
 }
 
@@ -50,8 +54,8 @@ void IrqDisable(void) {
 u32 IrqSetup() {
     u32* intrbuffer = &IntrMain_Buffer;
     irq_handler_t* fn = &IrqEmptyHandler;
-    irq_handler_t** dst1 = &gUnknown_03000A20;
-    irq_handler_t** dst2 = &gUnknown_030009E8;
+    irq_handler_t** dst1 = &gPrevIntrTable;
+    irq_handler_t** dst2 = &gIntrTable;
     s32 count;
 
     for (count = 0xD; count >= 0; count --) {
@@ -69,46 +73,52 @@ void IrqEmptyHandler() {}
 
 __asm__(".align 2,0");
 
-void sub_8000620(void) {
-    irq_handler_t* fn = &sub_8000720;
-    struct irq_unknown1* base = &gUnknown_03000A60;
+/* Clears the VBlank callbacks, installs VBlankHandler and enables the
+ * VBlank IRQ in DISPSTAT. Called once from AgbMain. */
+void EnableVBlankHandler(void) {
+    irq_handler_t* fn = &VBlankHandler;
+    struct vblank_callbacks* base = &gVBlankCallbacks;
     s32 unknown = 0;
-    s32* current = &base->unknown[7];
+    s32* current = &base->funcs[7];
     // this does not look right, but matches generated assembly
     u8 tmp;
     register u8* value asm("r1");
     
     do {
         *current-- = unknown;
-    } while ((s32) current >= (s32) &base->unknown[0]);
+    } while ((s32) current >= (s32) &base->funcs[0]);
     
-    sub_80005A0(INTR_INDEX_VBLANK, fn);
+    IrqSetHandler(INTR_INDEX_VBLANK, fn);
 
     value = (vu8* )REG_ADDR_DISPSTAT;
     tmp = DISPSTAT_VBLANK_INTR;
     *value = tmp | *value;
 }
 
-// lcd_deactivate or something like that?
-void sub_8000654(void) {
+/* The inverse of EnableVBlankHandler: disables the VBlank IRQ in
+ * DISPSTAT and reinstalls the previous VBlank handler. */
+void DisableVBlankHandler(void) {
     register vu8* dispstat asm("r1") = REG_ADDR_DISPSTAT;
     u8 tmp = DISPSTAT_VBLANK_INTR;
     
     *dispstat &= ~tmp;
     
-    sub_8000558(INTR_INDEX_VBLANK);
+    IrqRestoreHandler(INTR_INDEX_VBLANK);
 }
 
-void sub_8000670(s32 arg0) {
-    gUnknown_03000A60.unknown[arg0] = 0;
+/* Frees the callback slot AddVBlankCallback() returned. */
+void RemoveVBlankCallback(s32 arg0) {
+    gVBlankCallbacks.funcs[arg0] = 0;
 }
 
-s32 sub_8000680(s32 arg0) {
+/* Puts `arg0` (a function pointer) in the first free VBlank callback
+ * slot and returns the slot, or -1 if all eight are taken. */
+s32 AddVBlankCallback(s32 arg0) {
     s32 index = 0;
 
     while (index <= 7) {
-        if (gUnknown_03000A60.unknown[index] == 0) {
-            gUnknown_03000A60.unknown[index] = arg0;
+        if (gVBlankCallbacks.funcs[index] == 0) {
+            gVBlankCallbacks.funcs[index] = arg0;
             return index;
         }
 
@@ -118,14 +128,17 @@ s32 sub_8000680(s32 arg0) {
     return -1;
 }
 
-extern u8 gUnknown_030007DC;
-extern u32 gUnknown_030007D8;
-extern u32 gUnknown_03000A58;
-extern u32 gUnknown_03000A5C;
-extern void sub_0803A960(void);
+extern u8 gFrameLimitEnabled;
+extern u32 gVBlankCounter;
+extern u32 gFrameLimitTarget;
+extern u32 gFrameLimitInterval;
+extern void VBlankIntrWait(void);
 
-/* arg0 is unused - the ROM never reads r0 past the prologue. */
-void sub_80006A8(void *arg0)
+/* Waits for the next VBlank (BIOS VBlankIntrWait). With the frame limit
+ * on (SetFrameLimit), keeps waiting until gVBlankCounter reaches
+ * gFrameLimitTarget, then moves the target on by gFrameLimitInterval.
+ * arg0 is unused - the ROM never reads r0 past the prologue. */
+void WaitForVBlank(void *arg0)
 {
     u32 *p1;
     u32 *p2;
@@ -133,40 +146,49 @@ void sub_80006A8(void *arg0)
     u32 v1;
     u32 v2;
 
-    if (gUnknown_030007DC != 0) {
-        p1 = &gUnknown_030007D8;
-        p2 = &gUnknown_03000A58;
-        p3 = &gUnknown_03000A5C;
+    if (gFrameLimitEnabled != 0) {
+        p1 = &gVBlankCounter;
+        p2 = &gFrameLimitTarget;
+        p3 = &gFrameLimitInterval;
         v1 = *p1;
         v2 = *p2;
         while (v1 < v2) {
-            sub_0803A960();
+            VBlankIntrWait();
             v1 = *p1;
             v2 = *p2;
         }
         *p2 = v2 + *p3;
     } else {
-        sub_0803A960();
+        VBlankIntrWait();
     }
 }
 
-void sub_80006EC(void)
+/* UNUSED - no caller anywhere in the ROM (checked every asm/*.s,
+ * expected/*.s and src/ file for a bl/.4byte reference). Turns
+ * WaitForVBlank's frame limit off. */
+void DisableFrameLimit(void)
 {
-    gUnknown_030007DC = 0;
+    gFrameLimitEnabled = 0;
 }
 
-void sub_80006F8(u32 arg0)
+/* UNUSED - no caller anywhere in the ROM (checked as for
+ * DisableFrameLimit). Makes WaitForVBlank return at most once every
+ * `arg0` VBlanks. */
+void SetFrameLimit(u32 arg0)
 {
-    gUnknown_03000A5C = arg0;
-    gUnknown_03000A58 = gUnknown_030007D8 + arg0;
-    gUnknown_030007DC = 1;
+    gFrameLimitInterval = arg0;
+    gFrameLimitTarget = gVBlankCounter + arg0;
+    gFrameLimitEnabled = 1;
 }
 
 extern u8 gGaxIrqEnabled;
 extern void GAX_irq(void);
-extern void sub_803AD78(void);
+extern void _call_via_r0(void);
 
-void sub_8000720(void)
+/* The VBlank IRQ handler: calls GAX_irq while gGaxIrqEnabled is set, calls every VBlank callback (through
+ * _call_via_r0, with the pointer left in r0 by the test) and counts the
+ * frame in gVBlankCounter. */
+void VBlankHandler(void)
 {
     s32 *p;
     s32 i;
@@ -174,38 +196,40 @@ void sub_8000720(void)
     if (gGaxIrqEnabled != 0) {
         GAX_irq();
     }
-    p = gUnknown_03000A60.unknown;
+    p = gVBlankCallbacks.funcs;
     i = 7;
     do {
         if (*p != 0) {
-            sub_803AD78();
+            _call_via_r0();
         }
         p++;
         i--;
     } while (i >= 0);
-    gUnknown_030007D8++;
+    gVBlankCounter++;
 }
 
-extern u16 gUnknown_030007E0;
-extern u8 gStaticData_0816A810[];
+extern u16 gKeys;
+extern u8 gDpadDirectionTable[];
 
-u8 sub_8000760(void)
+/* The held d-pad bits as a direction 0-8 (0 = none), through
+ * gDpadDirectionTable. */
+u8 GetDpadDirection(void)
 {
     u8 idx = 0;
-    if (gUnknown_030007E0 & 0x10) idx |= 8;
-    if (gUnknown_030007E0 & 0x20) idx |= 4;
-    if (gUnknown_030007E0 & 0x80) idx |= 2;
-    if (gUnknown_030007E0 & 0x40) idx |= 1;
-    return gStaticData_0816A810[idx];
+    if (gKeys & 0x10) idx |= 8;
+    if (gKeys & 0x20) idx |= 4;
+    if (gKeys & 0x80) idx |= 2;
+    if (gKeys & 0x40) idx |= 1;
+    return gDpadDirectionTable[idx];
 }
 
 /* Reads the raw (active-low) hardware key register, inverts it to
- * active-high, records newly-pressed bits into gUnknown_030007E2 (the
- * u16 right after gUnknown_030007E0 - read/written through pointer
- * arithmetic off gUnknown_030007E0 rather than its own extern: agbcc
+ * active-high, records newly-pressed bits into gKeys' second halfword
+ * (`pressed`, read/written through pointer
+ * arithmetic off gKeys rather than its own extern: agbcc
  * doesn't know the two globals are adjacent and emits a second,
  * non-matching literal-pool load/store pair otherwise), updates
- * gUnknown_030007E0 to the new state, then returns 1 if the low 4 bits
+ * gKeys to the new state, then returns 1 if the low 4 bits
  * (A/B/Select/Start) are all held - a "soft reset" combo check. All
  * four register pins below are plain caller-saved scratch (r0-r3), so
  * none of them carry the r4-r7 save/restore hazard: `addr`/`prevKeys`
@@ -217,7 +241,7 @@ u8 sub_8000760(void)
  * inline `add %0,%1,#0` anchors a copy of `keys` into a scratch value
  * gcc would otherwise schedule after the `prevKeys` reload instead of
  * before it, despite neither having a data dependency on the other. */
-s32 sub_80007AC(void)
+s32 UpdateKeys(void)
 {
     u16 keys;
     u16 keysCopy;
@@ -227,7 +251,7 @@ s32 sub_80007AC(void)
     register s32 mask asm("r0");
 
     keys = (u16)~REG_KEYINPUT;
-    addr = &gUnknown_030007E0;
+    addr = &gKeys;
     asm volatile("add %0, %1, #0" : "=r"(keysCopy) : "r"(keys));
     prevKeys = *addr;
     *(u16 *)((u8 *)addr + 2) = keysCopy & ~prevKeys;
@@ -241,12 +265,13 @@ s32 sub_80007AC(void)
     return 0;
 }
 
-void sub_80007DC(void)
+/* Clears gKeys (held and newly pressed). */
+void ClearKeys(void)
 {
     register u16 *addr asm("r2");
     register u16 zero asm("r1");
 
-    addr = &gUnknown_030007E0;
+    addr = &gKeys;
     zero = 0;
     *addr = zero;
     *(u16 *)((u8 *)addr + 2) = zero;

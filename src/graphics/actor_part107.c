@@ -203,12 +203,12 @@ void sub_802BE34(void *selfArg)
     }
 }
 
-extern u32 gUnknown_030007E0;
+extern u32 gKeys;
 
 /* Frame-counter-threshold state-transition idiom, structural twin of
  * `sub_802BD24` above: once `stateTime` reaches 0x1e, latches
  * `gUnknown_030014A3`, then either (if input bit 1 of
- * `gUnknown_030007E0` is clear) resets `self` to state 1/table-index 0
+ * `gKeys` is clear) resets `self` to state 1/table-index 0
  * via the same reset idiom and fires `sub_8029BAC(0x24)`, or (bit set)
  * transitions to state 2 and fires `sub_8029BAC(0x38)` instead. */
 void sub_802BE80(void *selfArg)
@@ -219,7 +219,7 @@ void sub_802BE80(void *selfArg)
         gUnknown_030014A3 = 1;
 
         {
-            u16 bit = gUnknown_030007E0 & 2;
+            u16 bit = gKeys & 2;
 
             if (bit == 0) {
                 register s32 state asm("r0") = 1;

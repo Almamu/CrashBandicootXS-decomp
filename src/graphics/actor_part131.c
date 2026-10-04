@@ -82,7 +82,7 @@ COMPILE_TIME_ASSERT(sizeof(struct map_screen) == 0x98);
 
 extern struct oam_shadow_buffer *gUnknown_03001300;
 extern void sub_8006AAC(struct oam_shadow_buffer *arg0);
-extern void sub_80006A8(void);
+extern void WaitForVBlank(void);
 extern void FlushVramDmaQueue(void);
 
 /* Another instance of the by-now-familiar "refresh OAM + center text"
@@ -98,7 +98,7 @@ extern void FlushVramDmaQueue(void);
  *
  * Was a NAKED transcription until the issue #64/#65 NAKED retry: each
  * label draw is a gcc 2.x virtual call through the icon manager's
- * method record (`record->slots[n]`, `_call_via_r2` = `sub_803AD80`),
+ * method record (`record->slots[n]`, `_call_via_r2`),
  * the same `ICON_TEXT_CALL` shape settings_menu.c already matches, and
  * with that the "many live values across calls" allocation falls out
  * of plain C. */
@@ -108,8 +108,8 @@ extern void sub_8006A90(struct oam_shadow_buffer *arg0);
 extern void sub_8006A48(struct oam_shadow_buffer *arg0);
 extern void sub_8006C28(struct vram_upload_cursor *arg0);
 extern s32 sub_8028A30(void *mgr, u8 arg1);
-extern s32 sub_8026F38(s32 arg0);
-extern s32 sub_803AD80(void *arg0, void *arg1, void *arg2);
+extern s32 GetUiText(s32 arg0);
+extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 s32 sub_8034C40(struct fade_overlay *self, s32 mode);
 
 /* `record->slots[n]` on an icon manager, called with `label` (slot 0
@@ -118,7 +118,7 @@ s32 sub_8034C40(struct fade_overlay *self, s32 mode);
     ({                                                                          \
         struct icon_manager *_m = (mgrExpr);                                    \
         struct icon_slot *_s = &_m->record->slots[n];                           \
-        sub_803AD80((u8 *)_m + _s->offset, (void *)(label), _s->ptr);           \
+        _call_via_r2((u8 *)_m + _s->offset, (void *)(label), _s->ptr);           \
     })
 
 static inline void set_icon_mgr_pos(struct icon_manager *m, u32 x, u32 y)
@@ -133,10 +133,10 @@ void sub_8034AA4(struct fade_overlay *self)
 
     sub_8006A90(gUnknown_03001300);
     sub_8006C28(gUnknown_030012FC);
-    w = ICON_TEXT_CALL(self->icons, 0, sub_8026F38(0x28));
+    w = ICON_TEXT_CALL(self->icons, 0, GetUiText(0x28));
     sub_8028A30(self->icons, 0);
     set_icon_mgr_pos(self->icons, 0x88 - w, 0x87);
-    ICON_TEXT_CALL(self->icons, 2, sub_8026F38(0x28));
+    ICON_TEXT_CALL(self->icons, 2, GetUiText(0x28));
     sub_8028A30(self->icons, sub_8034C40(self, 0));
     if (self->selection == 0)
     {
@@ -144,7 +144,7 @@ void sub_8034AA4(struct fade_overlay *self)
         ICON_TEXT_CALL(self->icons, 2, gStaticData_0817C510);
     }
     set_icon_mgr_pos(self->icons, 0x98, 0x87);
-    ICON_TEXT_CALL(self->icons, 2, sub_8026F38(0x29));
+    ICON_TEXT_CALL(self->icons, 2, GetUiText(0x29));
     sub_8028A30(self->icons, sub_8034C40(self, 1));
     if (self->selection == 1)
     {
@@ -152,7 +152,7 @@ void sub_8034AA4(struct fade_overlay *self)
         ICON_TEXT_CALL(self->icons, 2, gStaticData_0817C510);
     }
     set_icon_mgr_pos(self->icons, 0x98, 0x91);
-    ICON_TEXT_CALL(self->icons, 2, sub_8026F38(0x2a));
+    ICON_TEXT_CALL(self->icons, 2, GetUiText(0x2a));
     sub_8006A48(gUnknown_03001300);
 }
 
@@ -187,7 +187,7 @@ s32 sub_8034C40(struct fade_overlay *self, s32 mode)
  * ------------------------------------------------------------------ */
 void sub_8034C5C(struct fade_overlay *self)
 {
-    sub_80006A8();
+    WaitForVBlank();
     sub_8006AAC(gUnknown_03001300);
     FlushVramDmaQueue();
     REG_DISPCNT = self->dispcnt;
@@ -242,7 +242,7 @@ asm(".align 2, 0");
  * (`sub_8034374(sub_8026EDC(0x14))` -> `self->mapObj`), syncs the OAM
  * shadow buffer, hooks both text-icon managers
  * (`gUnknown_030012DC`/`gUnknown_030012E0`) up for this screen (firing
- * each one's slot-6 OAM trampoline via `sub_803AD7C`, and copying
+ * each one's slot-6 OAM trampoline via `_call_via_r1`, and copying
  * `gUnknown_030012DC->field_12c` into `gUnknown_030012E0->field_108` -
  * a new, previously-unexplained cross-wiring between the two icon
  * managers), loads the popup-text glyph assets (`sub_80352AC`), resets
@@ -273,7 +273,7 @@ extern void sub_8006DC8(struct tile_asset_cache *arg0);
 extern void sub_8006C4C(struct vram_upload_cursor *self);
 extern s32 sub_8006C58(struct vram_upload_cursor *self, s32 size);
 extern void sub_8006C30(struct vram_upload_cursor *self);
-extern void sub_803AD7C(void *self, void *fn);
+extern void _call_via_r1(void *self, void *fn);
 extern void sub_8001614(void);
 extern void sub_8001B54(struct AudioContext *self, u32 id);
 extern struct tile_asset_cache *gUnknown_030012B8;
@@ -291,7 +291,7 @@ static inline void IconSetBase(struct icon_manager *m, u32 base)
 
     m->field_108 = base;
     slot = &m->record->slots[6];
-    sub_803AD7C((u8 *)m + slot->offset, slot->ptr);
+    _call_via_r1((u8 *)m + slot->offset, slot->ptr);
 }
 
 /* Reserves `m`'s glyph tiles (`field_12c` tiles) from the VRAM upload
@@ -306,7 +306,7 @@ struct map_screen *sub_8034CEC(struct map_screen *self)
     self->mapObj = sub_8034374(sub_8026EDC(0x14));
     sub_8006A90(gUnknown_03001300);
     sub_8006A48(gUnknown_03001300);
-    sub_80006A8();
+    WaitForVBlank();
     sub_8006AAC(gUnknown_03001300);
     sub_8006EA8(gUnknown_030012B8);
     sub_8028A40(gUnknown_030012DC);
@@ -340,7 +340,7 @@ struct map_screen *sub_8034CEC(struct map_screen *self)
 
 asm(".align 2, 0");
 
-extern void sub_80007AC(void *arg0);
+extern void UpdateKeys(void *arg0);
 extern void sub_80350A4(struct map_screen *self);
 extern void sub_8034EF0(struct map_screen *self);
 extern void sub_803544C(void *unused);
@@ -353,7 +353,7 @@ struct held_pressed_pair {
     u16 held;
     u16 pressed;
 };
-extern struct held_pressed_pair gUnknown_030007E0;
+extern struct held_pressed_pair gKeys;
 
 /* --------------------------------------------------------------------
  * sub_8034E2C - the map screen's per-frame driver: an input-gated busy
@@ -369,9 +369,9 @@ void sub_8034E2C(struct map_screen *self)
     s32 i;
 
     while (1) {
-        sub_80007AC(gUnknown_03001304);
+        UpdateKeys(gUnknown_03001304);
         {
-            register struct held_pressed_pair *p asm("r1") = &gUnknown_030007E0;
+            register struct held_pressed_pair *p asm("r1") = &gKeys;
             register s32 mask asm("r0") = 9;
 
             mask &= p->pressed;
@@ -384,7 +384,7 @@ void sub_8034E2C(struct map_screen *self)
             sub_80350A4(self);
 
         sub_8034EF0(self);
-        sub_80006A8();
+        WaitForVBlank();
         sub_803544C(self);
         sub_8034688(self->mapObj);
     }
@@ -397,7 +397,7 @@ void sub_8034E2C(struct map_screen *self)
             sub_80350A4(self);
 
         sub_8034EF0(self);
-        sub_80006A8();
+        WaitForVBlank();
         REG_BLDY = i;
         REG_BLDCNT = 0xff;
         sub_803544C(self);
@@ -420,7 +420,7 @@ asm(".align 2, 0");
 /* The map screen's per-frame OAM-icon draw dispatcher for the minimap
  * object (`self->mapObj`, the `sp[0xc]`-cached argument throughout):
  * for `mapObj->drawMode` (see `struct map_screen` above) 0/1/2 draws a
- * single centered label via `sub_803AD80` against
+ * single centered label via `_call_via_r2` against
  * `gUnknown_030012DC`/`gUnknown_030012E0`; for any other drawMode value
  * (docs/rom_map.md's minimap/radar-dot description) DMA3-transfers a
  * procedurally-built tile buffer and iterates a per-tile record array,
@@ -447,9 +447,9 @@ struct popup_oam {
 
 extern s32 sub_8006C44(struct vram_upload_cursor *self);
 extern s32 sub_8006C84(struct vram_upload_cursor *self, void *src, s32 size);
-extern void sub_803A94C(void *src, void *dst, s32 control);
+extern void CpuSet(void *src, void *dst, s32 control);
 extern void sub_8006AC8(struct oam_shadow_buffer *self, void *record);
-extern s32 sub_803AD80(void *arg0, void *arg1, void *arg2);
+extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 
 void sub_8034EF0(struct map_screen *self)
 {
@@ -470,7 +470,7 @@ void sub_8034EF0(struct map_screen *self)
             m = gUnknown_030012E0;
         draw:
             set_icon_mgr_pos(m, node->x, node->y);
-            sub_803AD80((u8 *)m + m->record->slots[4].offset, (void *)(u32)node->index, m->record->slots[4].ptr);
+            _call_via_r2((u8 *)m + m->record->slots[4].offset, (void *)(u32)node->index, m->record->slots[4].ptr);
             break;
         case 2:
         {
@@ -485,7 +485,7 @@ void sub_8034EF0(struct map_screen *self)
             tile = sub_8006C44(gUnknown_030012FC);
             sub_8006C84(gUnknown_030012FC, glyph->tiles, (glyph->rows * glyph->cols) << 9);
             zero = 0;
-            sub_803A94C(&zero, &oam, CPU_SET_SRC_FIXED | CPU_SET_32BIT | 2);
+            CpuSet(&zero, &oam, CPU_SET_SRC_FIXED | CPU_SET_32BIT | 2);
             oam.size = 2;
             oam.palette = glyph->palette;
             y = node->y;
@@ -528,7 +528,7 @@ asm(".align 2, 0");
  * allocate and link a new 0x18-byte popup node (mode 0/1 respectively),
  * 2/3 set `self->drawMode`, 0xA terminates a line (measuring both
  * `gUnknown_030012DC`/`030012E0`'s text width via `sub_8028968` first)
- * - drawing the assembled line centered via `sub_803AD84` once `self`'s
+ * - drawing the assembled line centered via `_call_via_r3` once `self`'s
  * `drawMode` is known, then finally re-derives `self->suppressCounter`
  * from the measured line width and walks the popup list one more time
  * shifting each node horizontally into position.
@@ -544,7 +544,7 @@ asm(".align 2, 0");
  * their own temporaries so the old/new cursor and the `y + 0xa0` term are
  * formed in the ROM's order. */
 extern s32 sub_8028968(struct icon_manager *mgr, const u8 *text);
-extern s32 sub_803AD84(void *self, const void *a, s32 b, void *fn);
+extern s32 _call_via_r3(void *self, const void *a, s32 b, void *fn);
 extern void *sub_8026EDC(s32 size);
 extern u8 gStaticData_0817CF3C[];
 
@@ -552,7 +552,7 @@ extern u8 gStaticData_0817CF3C[];
     ({                                                                          \
         struct icon_manager *_m = (mgrExpr);                                    \
         struct icon_slot *_s = &_m->record->slots[n];                           \
-        sub_803AD84((u8 *)_m + _s->offset, (a), (b), _s->ptr);                  \
+        _call_via_r3((u8 *)_m + _s->offset, (a), (b), _s->ptr);                  \
     })
 
 static inline s32 *GlyphHeightAt(struct map_screen *self, s32 off)

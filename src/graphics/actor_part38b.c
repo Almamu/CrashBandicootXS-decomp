@@ -104,8 +104,8 @@ void sub_80151C8(void *selfArg)
 asm(".align 2, 0");
 
 extern void *gLevelState;
-extern s32 sub_803AD80(void *arg0, void *arg1, void *arg2);
-extern s32 sub_803AD84(void *arg0, void *arg1, void *arg2, void *arg3);
+extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
+extern s32 _call_via_r3(void *arg0, void *arg1, void *arg2, void *arg3);
 extern void sub_8015460(void *selfArg);
 extern void sub_8015780(void *selfArg, s32 a, s32 b, s32 c, s32 d);
 extern s32 sub_80231C4(void *self);
@@ -149,9 +149,9 @@ void sub_8015238(struct act *self, u8 mode, s32 flags)
             one = 1;
             *p = one;
             mgr = self->vt;
-            sub_803AD80((u8 *)self + mgr->m20.thisOffset, (void *)4, mgr->m20.fn);
+            _call_via_r2((u8 *)self + mgr->m20.thisOffset, (void *)4, mgr->m20.fn);
             off = &self->vt->m50;
-            sub_803AD84((u8 *)self + off->thisOffset, self->part, (void *)0x18,
+            _call_via_r3((u8 *)self + off->thisOffset, self->part, (void *)0x18,
                         off->fn);
             {
                 u8 idx = 0x1b;

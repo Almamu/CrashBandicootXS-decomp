@@ -20,7 +20,7 @@ families live in this chunk:
   `self+8`, state at `self+0x28`, a frame counter at `self+0x44`, the
   movement-threshold-cached position triple at `self+0x1c`/`self+0x20`/
   `self+0x24`, and a `+0x50`-rooted event/trampoline table fed through
-  `sub_803AD80`. Most of `sub_802D490`-`sub_802D6A0` are constructor
+  `_call_via_r2`. Most of `sub_802D490`-`sub_802D6A0` are constructor
   variants and small state-machine steps on this object.
 - `docs/rom_map.md`'s documented `gUnknown_030014BC`-rooted "position-
   tracking object with tier-threshold sound cues" (see "A fourth
@@ -156,17 +156,17 @@ function's address (`..._d3a8.s`, `..._d7b0.s`, `..._dd9c.s`,
   confirmed slots (index 3) of the type-0 `category_vtable`
   (`gStaticData_081756C4[0]`, `include/actor_anim.h`); also runs a full
   3-axis AABB overlap test against the player (`gUnknown_03000884`)
-  before calling `sub_800014C`, one of `UpdateGameFrame`'s own direct
+  before calling `MemCopy32`, one of `UpdateGameFrame`'s own direct
   top-level callees (see `docs/rom_map.md`'s "Two new type-0 vtable
   slots confirmed" section). Not confidently understood well enough for
   a byte-exact reconstruction attempt without real risk of a wrong
   guess about the 12-byte AABB-record layouts involved (two different
   shapes are read: a `gStaticData_0817AA98`-rooted static record and
-  `self+0x38`'s own vector, combined via a `sub_800014C`-copied self-
+  `self+0x38`'s own vector, combined via a `MemCopy32`-copied self-
   overlap check whose purpose isn't fully clear) - left raw.
 - **`sub_802D9A8`/`sub_802DA68`** (`asm/code_3_2_20_28568_c99c_d7b0.s`)
   - a palette-gradient cursor pair for the `gUnknown_030014BC` object:
-  `sub_802D9A8` computes a scale factor via `sub_803ADB4` from
+  `sub_802D9A8` computes a scale factor via `__divsi3` from
   `gUnknown_030014CC` against two threshold constants (`0x4FFF`/
   `0xBDFF`) and DMAs (or directly writes, in the third branch) a 16-
   color gradient derived from `gStaticData_0817AA6C` into BG palette RAM
@@ -188,7 +188,7 @@ function's address (`..._d3a8.s`, `..._d7b0.s`, `..._dd9c.s`,
   pattern into a stack buffer, DMA3-transferring it to two VRAM tile
   slots (`0x0600D000`/`0x0600D800`), clears a third tile
   (`0x0600BFC0`-`0x0600BFFC`), then arms the object and fires a
-  `sub_803AD80` trampoline call. Semantics are legible (this is the
+  `_call_via_r2` trampoline call. Semantics are legible (this is the
   same shape `sub_802E058` below implements half of, parameterized) but
   the full function's register pressure and DMA-timing interplay wasn't
   attempted for a byte-exact reconstruction here - left raw.
@@ -279,8 +279,8 @@ or `self`'s own `+0x38` vector (`sub_802DD9C`, offset by `self`'s own
 position at the same field offsets) - `self` being whatever
 `sub_802D6A0` (actor_part58.c) passes when it calls `sub_802DD9C`.
 
-Both functions then run box B through `sub_800014C` before comparing -
-which turned out to be a real, confirmed `memcpy` (`sub_800014C`'s own
+Both functions then run box B through `MemCopy32` before comparing -
+which turned out to be a real, confirmed `memcpy` (`MemCopy32`'s own
 definition in `src/system/boot_util.c`, already matched: a `CpuSet`
 SWI wrapper) called with `dst == src`, i.e. a genuine no-op self-copy,
 not a disassembly artifact or a sign of some hidden second buffer. Kept

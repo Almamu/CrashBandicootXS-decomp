@@ -3,11 +3,9 @@
 
 extern struct GaxPlayerState *gGaxPlayerState;
 
-/* sub_800014C is this ROM's memcpy (reached from the non-constant
- * aggregate initializers below); sub_803AD84 is libgcc's
- * `_call_via_r3` (the function-pointer calls through `ops->play`). */
-asm(".set memcpy, sub_800014C\n"
-    ".set _call_via_r3, sub_803AD84\n");
+/* MemCopy32 is this ROM's memcpy (reached from the non-constant
+ * aggregate initializers below). */
+asm(".set memcpy, MemCopy32");
 
 /* This file's functions (issue #68's remainder past
  * `gax_sound_handler_unknownc.c`) finish out the GAX2_SoundHandler

@@ -40,7 +40,7 @@ their action codes `0xB`/`0x10` (`docs/rom_map.md` line 1713).
    { s32 count; s32 unused_4; void **items; }`, the exact layout
    `src/system/game_loop24.c`'s `sub_8010804` already established) -
    for each `entry = items[i]`, tests `entry`'s own `+0x18`-table
-   `+0x48` trampoline via `sub_803AD7C(entry + *(s16*)(table+0x48),
+   `+0x48` trampoline via `_call_via_r1(entry + *(s16*)(table+0x48),
    *(void**)(table+0x48+4))` (matched elsewhere). On state `3`, calls
    `sub_800CD00(entry, x)`; if that returns `1`, returns `0`
    immediately. If the loop runs to completion, returns `1`.
@@ -101,7 +101,7 @@ The `#if NON_MATCHING` branch gets every instruction byte-exact except
 one 5-instruction pair: the `gUnknown_0300130C` list-walk's loop-
 condition-check/loop-entry transition. The ROM re-loads
 `&gUnknown_0300130C` from the literal pool fresh on *every* iteration
-(a conservative reload, since the intervening `sub_803AD7C`/
+(a conservative reload, since the intervening `_call_via_r1`/
 `sub_800CD00` calls alias-escape the global) and lands it in `r0`,
 then the loop body's own first instruction (`ldr r0, [r0]`) turns that
 same register from "address" into "value" in place, reusing it rather

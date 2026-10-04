@@ -14,7 +14,7 @@
  *
  * Matched in the GAX NAKED retry (docs/matching/gax-naked-retry-2.md).
  * What it took:
- * - the division is a plain `/`: sub_8037E54 is lib1funcs' `__udivsi3`
+ * - the division is a plain `/`, which calls lib1funcs' `__udivsi3`
  *   (see gax-toolchain-retry.md), so the call is a libcall, not an
  *   ordinary call - which is what lets GCSE carry the spilled
  *   `gGaxPlayerState` address into the rate loop (`ldr r1, =...`);
@@ -29,8 +29,6 @@ struct GaxDspRate {
     u32 step;
     u32 value;
 };
-
-asm(".set __udivsi3, sub_8037E54");
 
 /* Player 0's mixer handler (the SFX voices' owner). */
 #define GAX_PLAYER0_MIXER() (((struct GaxMixerHandler **)gGaxPlayerState->channels[0])[0])

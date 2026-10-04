@@ -8,7 +8,7 @@
  * index in the current language's `struct cutscene_page` array. The six
  * language tables (English first, then French, German, Spanish, Italian,
  * Dutch) are listed by the IWRAM pointer table gCutsceneTexts, indexed
- * by the language setting gUnknown_03000868.
+ * by the language setting gLanguage.
  *
  * In ROM order: the English table, the slide lists, the English pages,
  * the other five tables, the slide arrays, then per language its text
