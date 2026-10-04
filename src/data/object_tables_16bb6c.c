@@ -11,7 +11,7 @@ struct entry_set
     u32 unk_04;
 };
 
-/* sub_800CA48's (actor_part124.c) entry set and its entries. */
+/* ResetEnemyCtrl's (actor_part124.c) entry set and its entries. */
 extern const u32 gStaticData_0816BB74[4][2];
 
 const struct entry_set gStaticData_0816BB6C = {

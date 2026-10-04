@@ -13,8 +13,8 @@ compared it against the ROM.
 | function | file | result |
 |---|---|---|
 | `sub_8018A30` | `actor_part_188d0.c` (#23) | **matched**, NON_MATCHING C unchanged |
-| `sub_801961C` | `actor_part_188d0.c` (#23) | **matched**, rewritten with the `sub_801A878` stack-argument idiom |
-| `sub_801A878` | `actor_part_1a878.c` (#25) | **matched**, after removing every register pin |
+| `sub_801961C` | `actor_part_188d0.c` (#23) | **matched**, rewritten with the `CreatePlatform` stack-argument idiom |
+| `CreatePlatform` | `actor_part_1a878.c` (#25) | **matched**, after removing every register pin |
 | `sub_801AB98` | `actor_part_1ab98.c` (#25) | still NAKED |
 | `InitLevelSelect` | `actor_part_1b85c.c` (#26) | still NAKED here; real C since the #12/#24/#26 retry |
 | `sub_801C608` | `actor_part_1b85c.c` (#26) | still NAKED |
@@ -51,7 +51,7 @@ files moved to old_agbcc whole:
 Each was checked by stripping it and recompiling. The ones listed here
 are removed from the tree.
 
-- **All register pins in `sub_801A878`** (12 of them) and its
+- **All register pins in `CreatePlatform`** (12 of them) and its
   `asm("" : "+r"(rec))` barrier. With them in, old_agbcc is still off.
   Without them, reload's rotation lands exactly on the ROM's. The
   spawn-record lookup became `*(u8 **)(lvl + 0xC) + offsets[index]`, and
@@ -72,22 +72,22 @@ are removed from the tree.
 Still needed under old_agbcc: `SetFrameNibble`/`CopyFlipX`'s pinned
 `mov/neg` helpers, `MARK_GONE`'s per-site registers, `SET_FRAME_R`,
 `StepHeight`'s copy asm, `sub_801B984`'s `mov/neg` masks, the
-`sub_801A878` palette-nibble `0xF` barrier, and the `s32` mask local in
+`CreatePlatform` palette-nibble `0xF` barrier, and the `s32` mask local in
 the same spot (a `~0xF & u8` narrows to `movs #0xF0`). Removing any of
 them breaks the match.
 
 ## The stack-passed byte (`sub_801961C`)
 
 Both compilers widen a `u8` argument passed on the stack to a word `str`.
-The ROM `strb`s `sub_801B7D8`'s fifth argument. `sub_801961C`'s packed
+The ROM `strb`s `CreatePlatformMover`'s fifth argument. `sub_801961C`'s packed
 one-byte struct argument gives the `strb`, but under either compiler it
 materializes the 0 before `mov r1, sp`, the reverse of the ROM. What
-matches is the idiom `sub_801A878` already used: `volatile` stores of both
+matches is the idiom `CreatePlatform` already used: `volatile` stores of both
 stack slots into a `struct mover_stack_args` local (the whole frame, so
 it is the outgoing-argument area), then a call through a 4-argument
 function-pointer view. A constant QImode store to a stack slot
 legitimizes the `sp` address first, which gives the ROM's order. The
-struct, the `sub_801B7D8` prototype and `MOVER_NEW` moved from
+struct, the `CreatePlatformMover` prototype and `MOVER_NEW` moved from
 `include/gobj_1a794.h` into a new `include/mover_new.h`, which both files
 include. This form matches under the current agbcc too.
 

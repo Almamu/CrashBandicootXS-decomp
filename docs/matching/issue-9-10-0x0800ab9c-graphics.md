@@ -184,7 +184,7 @@ as of
   `gLevelState+0x78` state values and an unconfirmed per-state
   table. Left raw for the same reason the issue-9 write-up originally
   gave.
-- **`sub_800B8DC`** (`asm/code_3_2_17.s`, ROM `0x0800B8DC`, 546 lines)
+- **`UpdateEnemyCtrl`** (`asm/code_3_2_17.s`, ROM `0x0800B8DC`, 546 lines)
   - not attempted this session either; still the 18-case jump-table
   state dispatcher over 18 entirely unexamined helper functions the
   prior write-up already described in full. Confirmed unchanged: still

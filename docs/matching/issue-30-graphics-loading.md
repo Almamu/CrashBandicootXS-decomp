@@ -14,7 +14,7 @@ the work done against that list.
 
 `docs/rom_map.md` had already read `LoadGraphicsPackage` itself (a
 palette/tiles/tilemap loader) and two of the cluster's other members
-(`DrawScaledSprite`'s background-centering math, `sub_801F8DC`'s text-label
+(`DrawScaledSprite`'s background-centering math, `SpawnPufferfish`'s text-label
 constructor), without carrying either through to C. This pass instead
 went after the small, self-contained functions immediately after
 `LoadGraphicsPackage` - all six turned out to be accessors on the same
@@ -48,7 +48,7 @@ centering helpers `docs/rom_map.md` already read) and the rest of the
 chunk - a sound-trigger dispatcher (`sub_801E990`) plus two more large
 families (a "trigger effect type N" twin family shaped just like the
 already-parked `SpawnRedGemPlatform`-`SpawnBlueGemPlatform` in `trigger_effect.c`, and
-the "text label as sprite tiles" family `sub_801F8DC` anchors) - were
+the "text label as sprite tiles" family `SpawnPufferfish` anchors) - were
 not attempted this pass; see "Left raw" below.
 
 ## Matched (4 functions, full clean `make compare` passing)
@@ -115,17 +115,17 @@ characterized in `docs/rom_map.md`, real bytes now in
 `asm/code_3_2_17_188d0.s` and the new `asm/code_3_2_17_1e644.s`) plus
 `sub_801E990`, `SpawnCrystal`, `SpawnCrateGem`, `sub_801EBF0`,
 `SpawnRedGem`, `SpawnGreenGem`, `SpawnYellowGem`, `sub_801EF0C`,
-`sub_801F050`, `sub_801F170`, `sub_801F2BC`, `sub_801F3DC`,
-`sub_801F528`, `sub_801F680`, `sub_801F7B8`, `sub_801F8DC` (real bytes
+`SpawnVulture`, `SpawnVenusFlytrap`, `sub_801F2BC`, `SpawnBlowgunTribesman`,
+`SpawnPenguin`, `SpawnSeal`, `SpawnPolarBear`, `SpawnPufferfish` (real bytes
 now in the new `asm/code_3_2_17_1e990.s`) - not attempted this pass,
 left untouched rather than force a low-confidence match. Two families
 worth flagging for whoever picks this up next: `SpawnCrystal` through
 `SpawnYellowGem` share the exact bit-test/`sub_8008434`-spawn shape already
 parked as `SpawnRedGemPlatform`-`SpawnBlueGemPlatform` in `trigger_effect.c` (issue #31)
 - the same register-rotation gap that resisted parking there is likely
-to resist here too; `sub_801EF0C` through `sub_801F8DC` are all "text
-label as sprite tiles" constructors sharing `sub_801F8DC`'s already-read
-shape (`sub_8009ED0` allocation, `sub_800CA74` style lookup, two
+to resist here too; `sub_801EF0C` through `SpawnPufferfish` are all "text
+label as sprite tiles" constructors sharing `SpawnPufferfish`'s already-read
+shape (`sub_8009ED0` allocation, `CreateEnemyCtrl` style lookup, two
 `_call_via_r2` calls).
 
 Verified via a full clean `rm -rf build && make compare` (`La suma
@@ -399,7 +399,7 @@ NON_MATCHING` toggle described above have been removed from
 `graphics_loading_1e990.c`.
 
 **The rest of this issue's raw region** (`SpawnCrystal` through
-`sub_801FCB4`, ending at the already-matched `sub_801FDEC`) splits into
+`SpawnElectricEel`, ending at the already-matched `SpawnSquid`) splits into
 two families, both worth flagging precisely for whoever picks this up
 next:
 
@@ -410,16 +410,16 @@ next:
   rotation gap that resisted plain C there is likely to resist here
   too, so NAKED transcription is the expected outcome, not another
   fresh matching attempt.
-- **`sub_801EF0C`-`sub_801F8DC`** (through `sub_801FA3C`/`sub_801FB74`/
-  `sub_801FCB4`, ~10 functions): further instances of the "text label
-  as sprite tiles" spawner family whose shape `sub_801FDEC`
+- **`sub_801EF0C`-`SpawnPufferfish`** (through `SpawnShark`/`SpawnMorayEel`/
+  `SpawnElectricEel`, ~10 functions): further instances of the "text label
+  as sprite tiles" spawner family whose shape `SpawnSquid`
   (`graphics_loading_1fdec.c`, issue #31) already matched as **real,
-  byte-exact C** - `sub_8009ED0` allocation, `sub_800CA74` style
+  byte-exact C** - `sub_8009ED0` allocation, `CreateEnemyCtrl` style
   lookup, two `_call_via_r2` trampoline calls, and the same
   `gEntityFlags`-rooted "collected bits" pack this pass's
   `sub_801E990` write-up above also resolves the table shape for. This
   is the more promising real-C target of the two remaining families -
-  `sub_801FDEC`'s own matched C is the template to start from.
+  `SpawnSquid`'s own matched C is the template to start from.
 
 Left raw for whoever picks this up next; `report_units.py`'s entry for
 this address range now points at `SpawnCrystal` (the new start of
@@ -652,7 +652,7 @@ This closes out every function this issue's original 25-function list
 named in `asm/code_3_2_17_188d0.s`/`asm/code_3_2_17_1e644.s` except the
 two families already flagged as left raw for a future pass
 (`SpawnCrystal`-`SpawnYellowGem`'s "trigger effect type N" siblings and
-`sub_801EF0C`-`sub_801F8DC`'s "text label as sprite tiles" siblings, per
+`sub_801EF0C`-`SpawnPufferfish`'s "text label as sprite tiles" siblings, per
 the fifth pass above) - `asm/code_3_2_17_1e644.s` no longer exists, and
 the only object left un-real-C'd immediately around this cluster is
 `asm/code_3_2_17_1e990.s`, starting at `SpawnCrystal`.

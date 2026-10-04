@@ -1112,33 +1112,33 @@
   {
    "address": "0x0816B98C",
    "size": 32,
-   "name": "gStaticData_0816B98C",
+   "name": "gEnemyDefaultAnimMap",
    "consumers": [
     "sub_801EF0C",
-    "sub_801F050",
-    "sub_801F170",
+    "SpawnVulture",
+    "SpawnVenusFlytrap",
     "sub_801F2BC",
-    "sub_801F3DC",
-    "sub_801F528",
-    "sub_801F680",
-    "sub_801F7B8",
-    "sub_801F8DC",
-    "sub_801FA3C",
-    "sub_801FB74",
-    "sub_801FCB4",
-    "sub_801FEEC",
-    "sub_8020010",
+    "SpawnBlowgunTribesman",
+    "SpawnPenguin",
+    "SpawnSeal",
+    "SpawnPolarBear",
+    "SpawnPufferfish",
+    "SpawnShark",
+    "SpawnMorayEel",
+    "SpawnElectricEel",
+    "SpawnJellyfish",
+    "SpawnLaserBarrier",
     "sub_8020138",
     "sub_802026C",
-    "sub_80203A8",
-    "sub_80204EC",
-    "sub_802062C",
+    "SpawnSaucerLabAssistant",
+    "SpawnPistonCrusher",
+    "SpawnFlamethrowerLabAssistant",
     "sub_8020788",
     "sub_80208C4",
-    "sub_80209EC",
-    "sub_8020B0C",
-    "sub_8020C18",
-    "sub_8020D4C"
+    "SpawnRat",
+    "SpawnFrog",
+    "SpawnSeaMine",
+    "SpawnWoodenCrusher"
    ],
    "consumer_files": [
     "graphics/graphics_loading_1ef0c.c",
@@ -1158,9 +1158,9 @@
   {
    "address": "0x0816B9AC",
    "size": 32,
-   "name": "gStaticData_0816B9AC",
+   "name": "gPenguinAnimMap",
    "consumers": [
-    "sub_801F528"
+    "SpawnPenguin"
    ],
    "consumer_files": [
     "graphics/graphics_loading_1ef0c.c"
@@ -1182,9 +1182,9 @@
   {
    "address": "0x0816B9CC",
    "size": 32,
-   "name": "gStaticData_0816B9CC",
+   "name": "gPufferfishAnimMap",
    "consumers": [
-    "sub_801F8DC"
+    "SpawnPufferfish"
    ],
    "consumer_files": [
     "graphics/graphics_loading_1ef0c.c"
@@ -1206,9 +1206,9 @@
   {
    "address": "0x0816B9EC",
    "size": 32,
-   "name": "gStaticData_0816B9EC",
+   "name": "gBlowgunTribesmanAnimMap",
    "consumers": [
-    "sub_801F3DC"
+    "SpawnBlowgunTribesman"
    ],
    "consumer_files": [
     "graphics/graphics_loading_1ef0c.c"
@@ -1230,9 +1230,9 @@
   {
    "address": "0x0816BA0C",
    "size": 32,
-   "name": "gStaticData_0816BA0C",
+   "name": "gVenusFlytrapAnimMap",
    "consumers": [
-    "sub_801F170"
+    "SpawnVenusFlytrap"
    ],
    "consumer_files": [
     "graphics/graphics_loading_1ef0c.c"
@@ -1251,9 +1251,9 @@
   {
    "address": "0x0816BA2C",
    "size": 32,
-   "name": "gStaticData_0816BA2C",
+   "name": "gVultureAnimMap",
    "consumers": [
-    "sub_801F050"
+    "SpawnVulture"
    ],
    "consumer_files": [
     "graphics/graphics_loading_1ef0c.c"
@@ -1272,9 +1272,9 @@
   {
    "address": "0x0816BA4C",
    "size": 32,
-   "name": "gStaticData_0816BA4C",
+   "name": "gSharkAnimMap",
    "consumers": [
-    "sub_801FA3C"
+    "SpawnShark"
    ],
    "consumer_files": [
     "graphics/graphics_loading_1ef0c.c"
@@ -1293,9 +1293,9 @@
   {
    "address": "0x0816BA6C",
    "size": 32,
-   "name": "gStaticData_0816BA6C",
+   "name": "gSquidAnimMap",
    "consumers": [
-    "sub_801FDEC"
+    "SpawnSquid"
    ],
    "consumer_files": [
     "graphics/graphics_loading_1fdec.c"
@@ -1314,9 +1314,9 @@
   {
    "address": "0x0816BA8C",
    "size": 32,
-   "name": "gStaticData_0816BA8C",
+   "name": "gElectricEelAnimMap",
    "consumers": [
-    "sub_801FCB4"
+    "SpawnElectricEel"
    ],
    "consumer_files": [
     "graphics/graphics_loading_1ef0c.c"
@@ -1335,9 +1335,9 @@
   {
    "address": "0x0816BAAC",
    "size": 32,
-   "name": "gStaticData_0816BAAC",
+   "name": "gFlamethrowerLabAssistantAnimMap",
    "consumers": [
-    "sub_802062C"
+    "SpawnFlamethrowerLabAssistant"
    ],
    "consumer_files": [
     "graphics/graphics_loading_1feec.c"
@@ -1407,7 +1407,7 @@
    "name": "gStaticData_0816BB0C",
    "consumers": [
     "sub_80208C4",
-    "sub_8020B0C"
+    "SpawnFrog"
    ],
    "consumer_files": [
     "graphics/graphics_loading_1feec.c"
@@ -1426,10 +1426,10 @@
   {
    "address": "0x0816BB2C",
    "size": 32,
-   "name": "gStaticData_0816BB2C",
+   "name": "gCrusherAnimMap",
    "consumers": [
-    "sub_80204EC",
-    "sub_8020D4C"
+    "SpawnPistonCrusher",
+    "SpawnWoodenCrusher"
    ],
    "consumer_files": [
     "graphics/graphics_loading_1feec.c"
@@ -1448,9 +1448,9 @@
   {
    "address": "0x0816BB4C",
    "size": 32,
-   "name": "gStaticData_0816BB4C",
+   "name": "gSaucerLabAssistantAnimMap",
    "consumers": [
-    "sub_80203A8"
+    "SpawnSaucerLabAssistant"
    ],
    "consumer_files": [
     "graphics/graphics_loading_1feec.c"
@@ -1474,7 +1474,7 @@
    "size": 40,
    "name": "gStaticData_0816BB6C",
    "consumers": [
-    "sub_800CA48"
+    "ResetEnemyCtrl"
    ],
    "consumer_files": [
     "graphics/actor_part124.c"
@@ -2217,7 +2217,7 @@
    "size": 8,
    "name": "gStaticData_0816C458",
    "consumers": [
-    "sub_801B7D8"
+    "CreatePlatformMover"
    ],
    "consumer_files": [
     "graphics/actor_part_1b208.c"
@@ -2237,7 +2237,7 @@
    "size": 36,
    "name": "gStaticData_0816C460",
    "consumers": [
-    "sub_801B304",
+    "UpdatePlatformMover",
     "sub_801B6EC",
     "sub_801B734",
     "sub_801B77C",
@@ -7146,7 +7146,7 @@
     "sub_800725C",
     "sub_80073BC",
     "sub_8008484",
-    "sub_800CB20"
+    "DestroyPeriodicSpawner"
    ],
    "consumer_files": [
     "graphics/actor_part124.c",
@@ -7323,10 +7323,10 @@
   {
    "address": "0x087E3EE4",
    "size": 104,
-   "name": "gStaticData_087E3EE4",
+   "name": "gEnemyCtrlVtable",
    "consumers": [
-    "sub_800CA60",
-    "sub_800CA74"
+    "DestroyEnemyCtrl",
+    "CreateEnemyCtrl"
    ],
    "consumer_files": [
     "graphics/actor_part124.c"
@@ -7348,9 +7348,9 @@
   {
    "address": "0x087E3F4C",
    "size": 88,
-   "name": "gStaticData_087E3F4C",
+   "name": "gPeriodicSpawnerVtable",
    "consumers": [
-    "sub_800CB40"
+    "CreatePeriodicSpawner"
    ],
    "consumer_files": [
     "graphics/actor_part124.c"
@@ -7372,10 +7372,10 @@
   {
    "address": "0x087E3FA4",
    "size": 104,
-   "name": "gStaticData_087E3FA4",
+   "name": "gKnockedEnemyCtrlVtable",
    "consumers": [
-    "sub_800CBC0",
-    "sub_800CBD4"
+    "DestroyKnockedEnemyCtrl",
+    "CreateKnockedEnemyCtrl"
    ],
    "consumer_files": [
     "graphics/actor_part117.c",
@@ -8008,10 +8008,10 @@
   {
    "address": "0x087E49DC",
    "size": 120,
-   "name": "gStaticData_087E49DC",
+   "name": "gPlatformVtable",
    "consumers": [
-    "sub_801A878",
-    "sub_801B2C4",
+    "CreatePlatform",
+    "DestroyPlatform",
     "sub_801B2E4"
    ],
    "consumer_files": [
@@ -8035,10 +8035,10 @@
   {
    "address": "0x087E4A54",
    "size": 104,
-   "name": "gStaticData_087E4A54",
+   "name": "gPlatformMoverVtable",
    "consumers": [
-    "sub_801B7C4",
-    "sub_801B7D8"
+    "DestroyPlatformMover",
+    "CreatePlatformMover"
    ],
    "consumer_files": [
     "graphics/actor_part_1b208.c"

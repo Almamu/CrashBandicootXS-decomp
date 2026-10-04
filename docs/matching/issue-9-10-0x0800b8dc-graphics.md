@@ -1,4 +1,4 @@
-# `sub_800B8DC`/`sub_800BD48`: foundational semantic map for the 0x0800B8DC-0x0800D040 cluster (issue #9/#10)
+# `UpdateEnemyCtrl`/`HitEnemy`: foundational semantic map for the 0x0800B8DC-0x0800D040 cluster (issue #9/#10)
 
 Dedicated deep-investigation session against the two functions opening
 the large, fully-raw `0x0800B8DC`-`0x0800D040` cluster (43 functions,
@@ -6,7 +6,7 @@ the large, fully-raw `0x0800B8DC`-`0x0800D040` cluster (43 functions,
 the already-documented physics/collision subsystem's own boundary,
 `sub_800D040`/`game_loop6.c`). No existing doc described what any of
 this cluster's functions do; `docs/rom_map.md`'s only prior note on
-`sub_800B8DC` was a one-paragraph "18-entry jump table, `self+0x74` as
+`UpdateEnemyCtrl` was a one-paragraph "18-entry jump table, `self+0x74` as
 the state selector, cases 0-17" sketch from an earlier connectivity
 pass. This session cracks both functions open in full and produces the
 case-by-case map the cluster's remaining ~41 functions can be scoped
@@ -14,9 +14,9 @@ against.
 
 ## Bounds and vtable status
 
-- **`sub_800B8DC`**: ROM `0x0800B8DC`-`0x0800BD48`, 1132 bytes.
-- **`sub_800BD48`**: ROM `0x0800BD48`-`0x0800BFA8`, 608 bytes (starts
-  the instant `sub_800B8DC` ends - no gap, no alignment padding between
+- **`UpdateEnemyCtrl`**: ROM `0x0800B8DC`-`0x0800BD48`, 1132 bytes.
+- **`HitEnemy`**: ROM `0x0800BD48`-`0x0800BFA8`, 608 bytes (starts
+  the instant `UpdateEnemyCtrl` ends - no gap, no alignment padding between
   them).
 
 Both are found (by searching `baserom.gba` for their own thumb-bit-set
@@ -26,24 +26,24 @@ addresses as raw `.4byte` pointer values) inside the already-documented
 section) - each record is a `{0, ptr}`-pair vtable, one per
 placeable-object type, with up to 15 behavior slots. Specifically:
 
-- `sub_800B8DC`'s address appears **once**, at `gStaticData_087E3EE4+0xC`.
-- `sub_800BD48`'s address appears **twice**: at
-  `gStaticData_087E3EE4+0x14` (the *same* vtable record as
-  `sub_800B8DC`, two slots later - `+0x10` is a null/unused slot in
+- `UpdateEnemyCtrl`'s address appears **once**, at `gEnemyCtrlVtable+0xC`.
+- `HitEnemy`'s address appears **twice**: at
+  `gEnemyCtrlVtable+0x14` (the *same* vtable record as
+  `UpdateEnemyCtrl`, two slots later - `+0x10` is a null/unused slot in
   between) and again at `0x087E4850` (a different vtable record,
   reusing the function the same way the whole 93-vtable family reuses
   its ~319 distinct implementations across records).
 
 **This sharpens `docs/rom_map.md`'s existing "both vtable-dispatched"
-note**: `sub_800B8DC` and `sub_800BD48` aren't just two unrelated
+note**: `UpdateEnemyCtrl` and `HitEnemy` aren't just two unrelated
 slots that happen to sit next to each other in ROM address order -
 they're two *different behavior-slot indices of the same object
-type's vtable* (`gStaticData_087E3EE4`), i.e. two callback hooks
+type's vtable* (`gEnemyCtrlVtable`), i.e. two callback hooks
 (`update`-shaped vs. an event/message hook, see below) for the *same*
 placeable-object type. They are **not** caller/callee of one another
-though - confirmed by reading `sub_800B8DC`'s full body: there is no
-`bl sub_800BD48` anywhere in it, nor does `sub_800BD48` call
-`sub_800B8DC`. `sub_800B8DC`'s own vtable-owning type is very likely
+though - confirmed by reading `UpdateEnemyCtrl`'s full body: there is no
+`bl HitEnemy` anywhere in it, nor does `HitEnemy` call
+`UpdateEnemyCtrl`. `UpdateEnemyCtrl`'s own vtable-owning type is very likely
 the same "player (or generic dynamic-actor) state machine" candidate
 `docs/rom_map.md`'s original one-paragraph note already guessed from
 the shape alone (jump velocity impulse in state 17, chase/homing
@@ -68,18 +68,18 @@ identical apparent roles:
 | `0x2D` | table row index, paired with a `+0x20` table pointer at 28-byte stride (`sub_800D040`'s own "keyframe/hitbox record" convention) |
 | `0x30`/`0x34` | a "blocking condition" pair - compared against small magic constants (`8`, `9`, `0xA`) and `0`; non-zero gates several states off entirely |
 | `0x38` | an "enabled"/"active" byte gating most `self+0x68`-dispatch siblings' real work |
-| `0x48`/`0x4C`/`0x50` and `0x54`/`0x58`/`0x5C` | X-axis and Y-axis "velocity-target" triples respectively - written by `sub_800C18C` (X) / `sub_800C1E8` (Y), the same `self+0x60`/`+0x48`/`+0x4C`/`+0x50` "directional-target field" layout `docs/rom_map.md` already ties to `sub_801B304`/`sub_80159F8`/`sub_800BD48` |
+| `0x48`/`0x4C`/`0x50` and `0x54`/`0x58`/`0x5C` | X-axis and Y-axis "velocity-target" triples respectively - written by `sub_800C18C` (X) / `sub_800C1E8` (Y), the same `self+0x60`/`+0x48`/`+0x4C`/`+0x50` "directional-target field" layout `docs/rom_map.md` already ties to `UpdatePlatformMover`/`sub_80159F8`/`HitEnemy` |
 | `0x60`/`0x64` | current velocity/position-delta pair |
-| `0x68` | a small-integer sub-state byte - the *exact* field `sub_800C40C`'s own independent 6-case dispatcher already uses (`docs/rom_map.md`: "the *exact* field offset `sub_800B8DC`'s 18-state... machine also uses") |
+| `0x68` | a small-integer sub-state byte - the *exact* field `UpdateEnemyAttackCycle`'s own independent 6-case dispatcher already uses (`docs/rom_map.md`: "the *exact* field offset `UpdateEnemyCtrl`'s 18-state... machine also uses") |
 | `0x6C` | a second, larger-range state/anim-id byte (values seen: `0xF`, `0x12`, `0x17`, `0x1A`, `0x1E`, `0x21`...) |
 
 `self` additionally has its own `0x74` (this function's own 18-state
 selector), `0x10`/`0x14`/`0x18`/`0x1C` (X/Y homing bounds consumed by
-`sub_800C18C`/`sub_800C1E8`, not read directly by `sub_800B8DC` itself),
+`sub_800C18C`/`sub_800C1E8`, not read directly by `UpdateEnemyCtrl` itself),
 `0xC` (a pointer to a *third* struct - see below), `0x80` (a frame/lock
 flag, bit 0 tested by `sub_800C314`), `0x84` (a pointer to a small
 record with `+0xC`/`+0x14` bytes compared to `8`, read by
-`sub_800C40C` - looks like a surface/material-type lookup feeding
+`UpdateEnemyAttackCycle` - looks like a surface/material-type lookup feeding
 footstep/impact SFX selection) and `0x88` (a pointer to a spawned
 floating-text/popup child object, set/cleared by state 18 - same
 `+0xC` flags-byte / `+8` bitmap-id idiom as `owner`).
@@ -88,8 +88,8 @@ floating-text/popup child object, set/cleared by state 18 - same
 anchor" struct with **multiple** `{s16 offset, void *table}` pairs at
 different byte offsets, each apparently feeding a different call to
 `_call_via_r2`/`_call_via_r4` depending on which direction/event is being
-triggered: `sub_800B8DC`'s own state 11 reads the pair at `+0x10`/`+0x14`
-(`_call_via_r4`); `sub_800BD48`'s "spawn/launch" handler (states 19-20)
+triggered: `UpdateEnemyCtrl`'s own state 11 reads the pair at `+0x10`/`+0x14`
+(`_call_via_r4`); `HitEnemy`'s "spawn/launch" handler (states 19-20)
 reads the pair at `+0x48`/`+0x4C` (`_call_via_r2`). This is the same
 per-record convention as `owner`'s own `0x48`-`0x5C` velocity-target
 triple, just on a separate/shared object rather than `owner` itself -
@@ -108,7 +108,7 @@ should build any struct definitions from.
 
 ### A widely-reused "flag active + bitmap-set" idiom
 
-Both functions (and `sub_800B8DC`'s own state 5, and several already-
+Both functions (and `UpdateEnemyCtrl`'s own state 5, and several already-
 matched siblings elsewhere in the ROM) repeat the exact same four-step
 idiom on some object `X`: `X->0xC |= 1`; if `X->8` (a `u16`, `0xFFFF` =
 "none" sentinel) `!= 0xFFFF`, then treat `X->8` as a bit index into the
@@ -119,13 +119,13 @@ the same bitmap several other matched functions in this ROM region
 already tie to the hardware window-register system
 (`EndBonusRound`/`SetCheckpointAtPlayer`, `docs/rom_map.md`).
 
-## `sub_800B8DC`: the 18-case dispatch map
+## `UpdateEnemyCtrl`: the 18-case dispatch map
 
 `self+0x74` is the state selector - **1-18 are real states, `0` or
 `> 18` is a silent no-op** (the ROM computes `state - 1`, range-checks
 it `<= 17` unsigned, and jumps through an 18-entry table; out-of-range
 falls straight to the function epilogue). This is the *same*
-comparison/field shape `sub_800C6A8` (a `menu_ui` dialog-widget update,
+comparison/field shape `SetEnemyState` (a `menu_ui` dialog-widget update,
 called by all 31 of that system's own dispatch-table entries) and
 `sub_800CD00` (`actor_part109.c`, `docs/rom_map.md`) already use - a
 general-purpose "18-state stateful widget" convention reused across
@@ -135,23 +135,23 @@ those.
 | State | Target (ROM addr) | Behavior |
 |---|---|---|
 | 1 | `0x0800BD3A` (epilogue) | **No-op.** Falls straight through to the shared return - identical to the out-of-range default. |
-| 2 | `0x0800BC48` | `sub_800C074(self)` |
+| 2 | `0x0800BC48` | `UpdateEnemyPatrol(self)` |
 | 3 | `0x0800BC40` | `sub_800C5D4(self)` |
-| 4 | `0x0800BC56` | `sub_800C40C(self)` |
+| 4 | `0x0800BC56` | `UpdateEnemyAttackCycle(self)` |
 | 5 | `0x0800BA10` | **Inline.** Distance-band gate: compares `owner->4` (Y) against two thresholds derived from `gLevelLayers`'s own nested `+0x10`/`+0x14` value (a "lazy singleton" object `docs/rom_map.md` ties to a text-box/dialog system elsewhere - plausibly reused here just for its numeric value, not its text-box role). Near band: zeroes or sets `owner`'s `0x48`-`0x5C`/`0x64` velocity-target fields depending on `owner+0x68 == 8`. Far band: flips `owner->0xC` bits 0/1 and, if past the second threshold, runs the "flag active + bitmap-set" idiom on `owner`. |
 | 6 | `0x0800BC6C` | `sub_800C940(self)` |
 | 7 | `0x0800BC74` | `sub_800C314(self)` |
 | 8 | `0x0800BC7C` | `sub_800C244(self)` |
-| 9 | `0x0800BC84` | **Inline.** First-time-only caches `owner->0`/`owner->4` into globals `gUnknown_030012A0`/`gUnknown_030012A8` (guarded by one-shot flags `gUnknown_030012A4`/`gUnknown_030012AC`), calls `sub_800C18C`+`sub_800C8F8`, then **unconditionally** re-syncs `gUnknown_030012A0`/`A8` from `owner`'s *current* position regardless of the guard - the guard only affects the *first* write, every call after still updates the globals at the end. Reads as caching an "original anchor position" once, then continuously publishing the live position too - possibly a camera-anchor/save-restore pair (same "guard only matters once, real work happens every call" shape `docs/rom_map.md` flagged as a possible dead-store oddity in `sub_800CA60`). |
+| 9 | `0x0800BC84` | **Inline.** First-time-only caches `owner->0`/`owner->4` into globals `gUnknown_030012A0`/`gUnknown_030012A8` (guarded by one-shot flags `gUnknown_030012A4`/`gUnknown_030012AC`), calls `sub_800C18C`+`sub_800C8F8`, then **unconditionally** re-syncs `gUnknown_030012A0`/`A8` from `owner`'s *current* position regardless of the guard - the guard only affects the *first* write, every call after still updates the globals at the end. Reads as caching an "original anchor position" once, then continuously publishing the live position too - possibly a camera-anchor/save-restore pair (same "guard only matters once, real work happens every call" shape `docs/rom_map.md` flagged as a possible dead-store oddity in `DestroyEnemyCtrl`). |
 | 10 | `0x0800BD26` | `sub_800C1E8(self)` |
 | 11 | `0x0800BCD8` | **Inline.** `sub_800C18C(self)` + `sub_800C1E8(self)`, then only if `owner->0xC` bit 3 is set **and** `self->0x6C == 6`: reads `self+0xC`'s anchor record's `+0x10`/`+0x14` pair, calls `_call_via_r4(self + offset, 0, 1, 0)`, then `PlaySfx(ctx, 4, 0x100)`. |
 | 12 | `0x0800BD3A` (epilogue) | **No-op**, same as state 1. |
-| 13 | `0x0800BC50` -> falls into state 4's own code | `sub_800C074(self)`; `sub_800C40C(self)` |
-| 14 | `0x0800BC5E` | `sub_800C40C(self)`; `sub_800C97C(self)` |
-| 15 | `0x0800BD20` -> falls into state 10's own code | `sub_800C074(self)`; `sub_800C1E8(self)` |
-| 16 | `0x0800BD2E` | `sub_800C40C(self)`; `sub_800BFA8(self)` |
+| 13 | `0x0800BC50` -> falls into state 4's own code | `UpdateEnemyPatrol(self)`; `UpdateEnemyAttackCycle(self)` |
+| 14 | `0x0800BC5E` | `UpdateEnemyAttackCycle(self)`; `sub_800C97C(self)` |
+| 15 | `0x0800BD20` -> falls into state 10's own code | `UpdateEnemyPatrol(self)`; `sub_800C1E8(self)` |
+| 16 | `0x0800BD2E` | `UpdateEnemyAttackCycle(self)`; `sub_800BFA8(self)` |
 | 17 | `0x0800B948` | **Inline, largest block (~200 B).** A "landing/hit" handler: if `owner->4 >= self->0x64`, either nudges via `sub_800C8AC(self,0)`, falls back to `sub_800C5D4(self)`, or - when `owner->0x60 < 0` and a collision probe via `_call_via_r1(owner + hitboxOffsetY, hitbox->0x2C)` reports no hit - applies a **fixed upward Q8.8 impulse**: `owner->0 = self->0x60`, `owner->4 = self->0x64 - 25600` (i.e. `self->0x64 - 100.0` in Q8.8 - a jump-impulse shape), then sets `owner`'s `0x64`/`0x54`/`0x5C` to `0x80` and `0x58` to the probe result, plus `owner->0xC` bit 4. Every path then falls into a **shared tail** (`0x0800B9D2`-`0x0800BA0C`, exclusive to this state): if `owner->0x30` or `owner->0x34` is non-zero, return; otherwise run a second `_call_via_r1` probe on the same hitbox and, if it reports a hit, `PlaySfx(ctx, 0x13, 0x100)`. |
-| 18 | `0x0800BAB2` | **Inline, 2nd-largest block (~400 B).** Computes `max(|ownerX - cameraX|, |ownerY - cameraY|)` against `gPlayer` (the player/camera pointer), clamps to `[0x20, 0xA0]`, and derives a volume (`0x100 - (clamped-0x20)*2`) for a **distance-scaled ambient sound**: `PlayAmbientSfx(ctx, 0x2B, 8, volume)`. If `owner->0x38` and `self->0x68 == 3`: spawns/updates a floating popup object via `sub_800C9C8(0x1D, 0, 0, 0x2B, 0, owner)` into `self->0x88`, tags it, and `PlaySfx(ctx, 0x12, 0x100)`. Else if `owner->0x38` and `self->0x68 == 5`: runs the "flag active + bitmap-set" idiom on `self->0x88`'s object (if set) then clears `self->0x88`. Always calls `sub_800C074(self)`+`sub_800C40C(self)`. Then, on `self->0x68 == 1` or `== 6`, sets `owner->0x28`'s mirror-flag bit from `owner`'s own X-sign-flag test and calls a `sub_800C8CC`/`sub_800C8BC` pair (state 6's variant additionally re-derives `owner->0x30` from a keyframe-record byte). Tail: if `self->0x88` is non-null, copies `owner->0` into it. Reads overall as a **"proximity growl/warning + optional floating hint text"** state. |
+| 18 | `0x0800BAB2` | **Inline, 2nd-largest block (~400 B).** Computes `max(|ownerX - cameraX|, |ownerY - cameraY|)` against `gPlayer` (the player/camera pointer), clamps to `[0x20, 0xA0]`, and derives a volume (`0x100 - (clamped-0x20)*2`) for a **distance-scaled ambient sound**: `PlayAmbientSfx(ctx, 0x2B, 8, volume)`. If `owner->0x38` and `self->0x68 == 3`: spawns/updates a floating popup object via `sub_800C9C8(0x1D, 0, 0, 0x2B, 0, owner)` into `self->0x88`, tags it, and `PlaySfx(ctx, 0x12, 0x100)`. Else if `owner->0x38` and `self->0x68 == 5`: runs the "flag active + bitmap-set" idiom on `self->0x88`'s object (if set) then clears `self->0x88`. Always calls `UpdateEnemyPatrol(self)`+`UpdateEnemyAttackCycle(self)`. Then, on `self->0x68 == 1` or `== 6`, sets `owner->0x28`'s mirror-flag bit from `owner`'s own X-sign-flag test and calls a `SetEnemyAnimMode`/`sub_800C8BC` pair (state 6's variant additionally re-derives `owner->0x30` from a keyframe-record byte). Tail: if `self->0x88` is non-null, copies `owner->0` into it. Reads overall as a **"proximity growl/warning + optional floating hint text"** state. |
 
 **No-op states worth flagging for the next phase**: states 1 and 12
 both compile to literally nothing (they share the exact same jump-table
@@ -161,23 +161,23 @@ values are meaningful *elsewhere* (e.g. "idle, waiting to be
 retriggered") even though this function itself does nothing for them.
 
 **Grouping for the next phase**: states {2,3,4,6,7,8,10} are pure
-single-callee delegations (`sub_800C074`/`sub_800C5D4`/`sub_800C40C`/
+single-callee delegations (`UpdateEnemyPatrol`/`sub_800C5D4`/`UpdateEnemyAttackCycle`/
 `sub_800C940`/`sub_800C314`/`sub_800C244`/`sub_800C1E8`) - understanding
 any one of those callees fully explains that state. States {13,14,15,16}
 are two-callee combos of the same seven functions. States {5,9,11,17,18}
-are the only ones with real inline logic in `sub_800B8DC` itself (already
-captured above) - `sub_800C8AC`/`sub_800C8BC`/`sub_800C8CC` (all
+are the only ones with real inline logic in `UpdateEnemyCtrl` itself (already
+captured above) - `sub_800C8AC`/`sub_800C8BC`/`SetEnemyAnimMode` (all
 `(self, mode)` shaped, modes seen: 0,1,2,3,4,6,7) are the most-called
 opaque callees across those five states and are the single best next
 target to unlock the rest of this state machine's meaning.
 
-## `sub_800BD48`: a second, independent 22-case dispatch
+## `HitEnemy`: a second, independent 22-case dispatch
 
-Signature: `sub_800BD48(void *self, s32 unused, s32 state)` - `arg1`
+Signature: `HitEnemy(void *self, s32 unused, s32 state)` - `arg1`
 (`r1`) is never touched by the function at all (dead parameter, or an
 argument some *other* vtable slot with the same call-site shape uses
 and this one ignores). `state` (`r2`/`arg2`, **not** the same field as
-`sub_800B8DC`'s `self+0x74`) selects 1-22 through the function's own
+`UpdateEnemyCtrl`'s `self+0x74`) selects 1-22 through the function's own
 independent jump table.
 
 **Unconditional prelude** (runs before the switch, every call): if
@@ -209,7 +209,7 @@ bitmap-set" idiom on `owner` again.
 
 **`0x0800BE80` ("spawn and launch a child object", states 19-20):**
 allocates a `0x10`-byte object (`sub_8026EDC`), passes it straight
-through to `sub_800CBD4()` (no other args set - the allocation's own
+through to `CreateKnockedEnemyCtrl()` (no other args set - the allocation's own
 pointer is still live in `r0`), stores the result into `owner->0x44`,
 then reads that new child's own `+0xC`-pointed record's `+0x18`/`+0x1C`
 pair and calls `_call_via_r2` with it (the directional-target-table
@@ -228,15 +228,15 @@ record's `+0x48`/`+0x4C` pair with submode `3`. Reads overall as a
 event - a strong candidate for "object breaks/explodes, spawn debris"
 given the crate-and-barrel-heavy object roster this ROM region's
 93-vtable family covers (`docs/rom_map.md`'s dump of
-`gStaticData_087E3EE4` and neighbors shows crate/barrel/creature
+`gEnemyCtrlVtable` and neighbors shows crate/barrel/creature
 variants).
 
-**Grouping for the next phase**: `sub_800BD48` is much shallower than
-`sub_800B8DC` - only two real code paths (`0x0800BF2C`,
+**Grouping for the next phase**: `HitEnemy` is much shallower than
+`UpdateEnemyCtrl` - only two real code paths (`0x0800BF2C`,
 `0x0800BE80`) plus the shared prelude and a 17-state no-op majority.
-`sub_800CBD4`, `_call_via_r2`'s exact record layout, and
+`CreateKnockedEnemyCtrl`, `_call_via_r2`'s exact record layout, and
 `gEntitySpawner`'s own object shape are the best next targets to
-fully resolve this function's remaining ambiguity (`sub_800CBD4`'s
+fully resolve this function's remaining ambiguity (`CreateKnockedEnemyCtrl`'s
 own argument count in particular is unconfirmed - the call site sets no
 registers explicitly, relying on `sub_8026EDC`'s leftover return value
 in `r0`, so it may take 0 or 1 arguments; not resolved here).
@@ -245,15 +245,15 @@ in `r0`, so it may take 0 or 1 arguments; not resolved here).
 
 All `(self, ...)`-shaped, still fully raw in `asm/code_3_2_17_bfa8.s`:
 
-- **`sub_800C074`**, **`sub_800C40C`**, **`sub_800C5D4`**,
+- **`UpdateEnemyPatrol`**, **`UpdateEnemyAttackCycle`**, **`sub_800C5D4`**,
   **`sub_800C244`** - each independently dispatches on `self+0x68`
   (3-7 cases apiece) with its own further calls to
-  `sub_800C8AC`/`sub_800C8BC`/`sub_800C8CC` and occasional
+  `sub_800C8AC`/`sub_800C8BC`/`SetEnemyAnimMode` and occasional
   `PlaySfx`/`__modsi3` (a "close enough" scalar-distance check, used
-  repeatedly). `sub_800C40C` is the specific function
-  `docs/rom_map.md` already flagged as sharing `sub_800B8DC`'s own
+  repeatedly). `UpdateEnemyAttackCycle` is the specific function
+  `docs/rom_map.md` already flagged as sharing `UpdateEnemyCtrl`'s own
   `self+0x68` field.
-- **`sub_800C8AC`/`sub_800C8BC`/`sub_800C8CC`** - `(self, mode)`
+- **`sub_800C8AC`/`sub_800C8BC`/`SetEnemyAnimMode`** - `(self, mode)`
   shaped, modes 0-7 seen; called from nearly every state's inline logic
   and from all four `self+0x68` dispatchers above. The single highest-
   value next target - understanding these three unlocks most of the
@@ -271,7 +271,7 @@ All `(self, ...)`-shaped, still fully raw in `asm/code_3_2_17_bfa8.s`:
   *f`), called with `(0x1D, 0, 0, 0x2B, 0, owner)` from state 18 and
   with similar shapes elsewhere in this file's raw remainder - likely
   the floating-text/popup constructor `self->0x88` points at.
-- **`sub_800CBD4`** - argument count unconfirmed (see above).
+- **`CreateKnockedEnemyCtrl`** - argument count unconfirmed (see above).
 
 ## Matching
 
@@ -283,7 +283,7 @@ register allocator: `GetCollisionChunk`, `GetSolidTerrainHeights`/`sub_8025228`/
 `GetTerrainType` (`game_loop3.c`), `sub_800D040` (`game_loop6.c`),
 `sub_800CD00` (`actor_part109.c`), `sub_800CEAC`/`sub_800CF70`
 (`game_loop42.c`) are all NAKED in this same ROM neighborhood for the
-same underlying reason. Given `sub_800B8DC`'s size (1132 B, 18 branches,
+same underlying reason. Given `UpdateEnemyCtrl`'s size (1132 B, 18 branches,
 several inline blocks juggling `self`+`owner`+3-5 more live
 locals/temporaries across `bl` calls - worse than any of the functions
 above) and this investigation's own explicit brief not to over-invest
@@ -298,17 +298,17 @@ conventions: unified-syntax mnemonics to the divided/suffix-less form
 labels in place of the ROM disassembly's own `_080xxxxx` global labels
 (uniquely numbered, one definition per number, to keep the large jump
 table's many far-forward references unambiguous), and the ROM's own
-mid-function `.pool` splits reproduced exactly - `sub_800B8DC` has 6
-internal `.pool` points, `sub_800BD48` has 5 (plus a genuine trailing
-one after `sub_800BD48`'s own final `bx r0`, since its last case still
+mid-function `.pool` splits reproduced exactly - `UpdateEnemyCtrl` has 6
+internal `.pool` points, `HitEnemy` has 5 (plus a genuine trailing
+one after `HitEnemy`'s own final `bx r0`, since its last case still
 has three pending literals at that point) - each placed at exactly the
 ROM's own `.align 2, 0` + literal-run position, confirmed by checking
 every literal's *first-use order* within its pool group matches the
 ROM's own literal-label order (GNU-as pools flush in first-referenced
 order, so this was verifiable statically before ever compiling).
-`sub_800B8DC`'s own trailing byte count (1132) and `sub_800BD48`'s
+`UpdateEnemyCtrl`'s own trailing byte count (1132) and `HitEnemy`'s
 (608) are both already 4-byte aligned with no genuine ROM padding gap
-between them or after `sub_800BD48`, so neither needed the
+between them or after `HitEnemy`, so neither needed the
 `matching_decomp_alignment_fix` trailing `asm(".align 2, 0")` idiom.
 
 Confirmed byte-identical to `baserom.gba`'s own raw bytes at
@@ -341,8 +341,8 @@ coincide`).
 
 ## Build layout
 
-`asm/code_3_2_17.s` (which held this whole cluster, `sub_800B8DC`
-through `sub_800CCE0`) is removed entirely. `sub_800B8DC`/`sub_800BD48`
+`asm/code_3_2_17.s` (which held this whole cluster, `UpdateEnemyCtrl`
+through `sub_800CCE0`) is removed entirely. `UpdateEnemyCtrl`/`HitEnemy`
 now live in the new `src/graphics/actor_part112.c`; the unchanged
 remainder (`sub_800BFA8` onward - the cluster's other ~41 functions,
 still fully raw and unexamined) moved to the new
@@ -365,26 +365,26 @@ The other ~41 functions in `asm/code_3_2_17_bfa8.s` (`sub_800BFA8`
 through the end of the old `code_3_2_17.s`, i.e. up to but not
 including `sub_800D040`) remain completely raw. The "Opaque callees
 referenced" section above names the highest-value subset (everything
-`sub_800B8DC`/`sub_800BD48` themselves call) with a concrete priority
-order: `sub_800C8AC`/`sub_800C8BC`/`sub_800C8CC` first (shared by
+`UpdateEnemyCtrl`/`HitEnemy` themselves call) with a concrete priority
+order: `sub_800C8AC`/`sub_800C8BC`/`SetEnemyAnimMode` first (shared by
 nearly everything), then the four `self+0x68` dispatchers
-(`sub_800C074`/`sub_800C40C`/`sub_800C5D4`/`sub_800C244`), then
+(`UpdateEnemyPatrol`/`UpdateEnemyAttackCycle`/`sub_800C5D4`/`sub_800C244`), then
 `sub_800C18C`/`sub_800C1E8`'s own already-fully-understood shape (a
 quick, likely-real-C match - notably *simpler* register pressure than
 either function this pass closed), then the remaining single-purpose
 leaves (`sub_800C314`, `sub_800C940`, `sub_800C97C`, `sub_800C8F8`,
-`sub_800BFA8`, `sub_800C9C8`, `sub_800CBD4`).
+`sub_800BFA8`, `sub_800C9C8`, `CreateKnockedEnemyCtrl`).
 
-## Phase 2 (this pass): `sub_800C8AC`/`sub_800C8BC`/`sub_800C8CC` solved
+## Phase 2 (this pass): `sub_800C8AC`/`sub_800C8BC`/`SetEnemyAnimMode` solved
 
 Follow-up session, tackling exactly the three functions the Phase 1
 pass above flagged as the single best next target. All three matched
 as **real C**, first attempt clean - much smaller and, unlike
-`sub_800B8DC`/`sub_800BD48`, entirely free of the `self`/`owner`
+`UpdateEnemyCtrl`/`HitEnemy`, entirely free of the `self`/`owner`
 register-allocation resistance documented above (no branches, only a
 handful of straight-line loads/stores per function). Sizes confirmed
 from the raw ROM bytes: `sub_800C8AC` 16 B, `sub_800C8BC` 16 B,
-`sub_800C8CC` 44 B (76 B total, `0x0800C8AC`-`0x0800C8F8`).
+`SetEnemyAnimMode` 44 B (76 B total, `0x0800C8AC`-`0x0800C8F8`).
 
 ### What they actually do
 
@@ -405,7 +405,7 @@ trigger" primitive.** The delegate differs per function:
   then `sub_800B838(self, owner, mode)` - the sibling accessor that
   reads the record's **first** word (`+0`) as the type index and the
   anchor's **`+0x28`/`+0x2c`** pair instead.
-- **`sub_800C8CC(self, mode)`**: `self->0x68 = mode;` then triggers
+- **`SetEnemyAnimMode(self, mode)`**: `self->0x68 = mode;` then triggers
   *directly*, with no `gStaticData_0816B304` lookup at all: reads the
   anchor's **`+0x50`/`+0x54`** pair for the offset/fn, and gets its
   table-entry argument by indexing **`self->0x84`'s own pointer array
@@ -416,11 +416,11 @@ trigger" primitive.** The delegate differs per function:
 
 - **`self+0xc`'s anchor record** now has *four* of its `{s16 offset,
   void *fn}` pairs identified by offset: `+0x10`/`+0x14` (read directly
-  by `sub_800B8DC` state 11, per the table above), `+0x28`/`+0x2c`
+  by `UpdateEnemyCtrl` state 11, per the table above), `+0x28`/`+0x2c`
   (`sub_800C8BC`/`sub_800B838`), `+0x30`/`+0x34`
   (`sub_800C8AC`/`sub_800B704`), `+0x48`/`+0x4c` (read directly by
-  `sub_800BD48`'s states 19-20), and now also `+0x50`/`+0x54`
-  (`sub_800C8CC`). Strongly suggests a small, densely-packed array of
+  `HitEnemy`'s states 19-20), and now also `+0x50`/`+0x54`
+  (`SetEnemyAnimMode`). Strongly suggests a small, densely-packed array of
   these pairs (stride looks like 8 bytes: `0x10`, `0x28`... no - `0x28`
   to `0x30` to `0x48` to `0x50` isn't a fixed stride, so it's more
   likely a handful of individually-named slots for different
@@ -430,7 +430,7 @@ trigger" primitive.** The delegate differs per function:
 - **`self+0x84`** - the Phase 1 doc's guess ("pointer to a small record
   with `+0xC`/`+0x14` bytes ... looks like a surface/material-type
   lookup") was based on a *different*, unrelated caller elsewhere in
-  the cluster and doesn't describe what `sub_800C8CC` does with it:
+  the cluster and doesn't describe what `SetEnemyAnimMode` does with it:
   here it's read as `*(void ***)(self+0x84)` and direct-indexed by
   `mode` (`table[mode]`, 4-byte stride) - i.e. a **per-instance array
   of pointers**, playing the exact same "table entry" role
@@ -458,7 +458,7 @@ immediately-neighboring already-matched `sub_800B704`/`sub_800B838` in
 `src/graphics/actor_part17.c` - no named structs committed yet, same
 reasoning as the Phase 1 pass: several of the object's fields are still
 not fully reconciled across all its callers). `sub_800C8AC`/
-`sub_800C8BC` compiled byte-exact immediately. `sub_800C8CC` needed one
+`sub_800C8BC` compiled byte-exact immediately. `SetEnemyAnimMode` needed one
 iteration: writing the anchor-pointer arithmetic as `self->0xc` read
 once into a temporary, then `rec += 0x50`, then dereferencing that
 *same* incremented pointer at `+0` and `+4` (rather than computing
@@ -466,10 +466,10 @@ once into a temporary, then `rec += 0x50`, then dereferencing that
 gcc 2.9's own register reuse for `part+0x54`'s `ldr r3, [r3, #4]` - the
 independent-expressions version instead computed a fresh base in `r2`
 for the `+0x50` read and cost one extra 2-byte instruction. Also needed
-a trailing `asm(".align 2, 0")` after `sub_800C8CC` (following the
+a trailing `asm(".align 2, 0")` after `SetEnemyAnimMode` (following the
 `matching_decomp_alignment_fix` convention, same idiom already used
 after `nullsub_13` in `actor_part17.c`): the ROM zero-pads
-`sub_800C8CC`'s trailing 2 bytes to the next 4-byte boundary, but
+`SetEnemyAnimMode`'s trailing 2 bytes to the next 4-byte boundary, but
 without an explicit trailing align directive the linker instead filled
 that gap with its default NOP-fill (`0xc046`) when placing the next
 object file's own leading alignment.
@@ -487,7 +487,7 @@ coincide`).
 
 The three functions now live in the new `src/graphics/actor_part113.c`.
 `asm/code_3_2_17_bfa8.s` is trimmed to end right before `sub_800C8AC`
-(unchanged otherwise - still holds `sub_800BFA8` through `sub_800C898`,
+(unchanged otherwise - still holds `sub_800BFA8` through `SetEnemyRangeX`,
 raw); the remainder from `sub_800C8F8` onward (`sub_800C940` through
 `sub_800CCE0`, still fully raw, unchanged bytes) moved verbatim to the
 new `asm/code_3_2_17_c8f8.s`. `ldscript.txt` now reads, in this
@@ -503,17 +503,17 @@ build/crashbandicootxs/src/graphics/actor_part109.o(.text);
 
 `tools/report_units.py`'s single `(0x0800BFA8, None, "graphics")`
 placeholder is replaced with: the same placeholder (now only covering
-`sub_800BFA8`-`sub_800C898`), a matched entry for `actor_part113.o`,
+`sub_800BFA8`-`SetEnemyRangeX`), a matched entry for `actor_part113.o`,
 and a new `(0x0800C8F8, None, "graphics")` placeholder for the
 still-raw remainder in `asm/code_3_2_17_c8f8.s`.
 
 ### Still open (superseded by Phase 3 below for the four `self+0x68`
 dispatchers)
 
-`sub_800C074`/`sub_800C40C`/`sub_800C5D4`/`sub_800C244` (the four
+`UpdateEnemyPatrol`/`UpdateEnemyAttackCycle`/`sub_800C5D4`/`sub_800C244` (the four
 `self+0x68` dispatchers) remain the next highest-value target per the
 Phase 1 doc's own priority order - all four now have one *fewer*
-opaque callee each, since `sub_800C8AC`/`sub_800C8BC`/`sub_800C8CC`'s
+opaque callee each, since `sub_800C8AC`/`sub_800C8BC`/`SetEnemyAnimMode`'s
 own semantics are fully known. The anchor record's own full field
 layout (four pairs identified, exact total size/count still unknown)
 and `self+4`'s "manager" object (pointer chain + 8-byte record array,
@@ -523,14 +523,14 @@ commit a named struct for this object shape.
 ## Phase 3 (this pass): the four `self+0x68` dispatchers closed
 
 Follow-up session, tackling exactly the four functions Phase 1/2 flagged
-as the next highest-value target: `sub_800C074` (280 B), `sub_800C244`
-(208 B), `sub_800C40C` (456 B), `sub_800C5D4` (212 B). All four closed
+as the next highest-value target: `UpdateEnemyPatrol` (280 B), `sub_800C244`
+(208 B), `UpdateEnemyAttackCycle` (456 B), `sub_800C5D4` (212 B). All four closed
 as hand-transcribed **NAKED** asm, not real C - each one independently
 hit the same `self`/`owner` multi-field-liveness register-pressure gap
-this ROM neighborhood's other dispatchers (`sub_800B8DC`/`sub_800BD48`)
+this ROM neighborhood's other dispatchers (`UpdateEnemyCtrl`/`HitEnemy`)
 already document, plus a specific extra wrinkle worth recording for
 whoever next attempts a real-C reconstruction in this cluster: **a
-"shared-retest" CFG diamond** appears in `sub_800C074`'s mode 0/4 gate
+"shared-retest" CFG diamond** appears in `UpdateEnemyPatrol`'s mode 0/4 gate
 blocks (and the structurally identical gate in `sub_800C314`, still
 raw) - the ROM computes a mirror-flag sign test once, branches on it,
 and then *re-tests the exact same cached value* on the fallthrough edge
@@ -547,18 +547,18 @@ neighborhood.
 
 ### What each one does
 
-- **`sub_800C074`** (called from `sub_800B8DC` states 2/13/15/18): a
+- **`UpdateEnemyPatrol`** (called from `UpdateEnemyCtrl` states 2/13/15/18): a
   4-case dispatcher on `self+0x68` (modes 0, 1, 4, 6; anything else is a
   silent no-op). Modes 0/4 share the mirror-aware position gate described
   above (`owner`'s X position against `self+0x10`/`self+0x14`, direction
-  picked by `owner+0x28` bit 4) before triggering `sub_800C8CC` with mode
+  picked by `owner+0x28` bit 4) before triggering `SetEnemyAnimMode` with mode
   1 or 6 respectively and always `sub_800C8BC(self, 0)`. Modes 1/6 both
   toggle `owner+0x28` bit 4 (via the `-0x11`-materialized mask-and-or
   idiom already established in `actor_part6.c`'s `sub_80086F4`/
   `sub_8008710` - `mask = -0x11; result = mask & flags; result |=
   bit << 4;`, **not** a plain XOR, which gcc would compile to a
   shorter/different instruction sequence) when `owner+0x38` is set, then
-  trigger `sub_800C8CC`/`sub_800C8BC` with different constants (0/1 vs
+  trigger `SetEnemyAnimMode`/`sub_800C8BC` with different constants (0/1 vs
   4/1). Mode 1 additionally clamps `owner+0x30` to
   `min(8, keyframeRecord->0x16 - 1)` when `self+0x6c == 0xf`, reusing the
   `owner+0x20`-table[`owner+0x2d`]-at-28-byte-stride keyframe-record
@@ -568,16 +568,16 @@ neighborhood.
   self->0x64` and fires `sub_800C8BC(self,0)` + `sub_800C8AC(self,0)`
   every single call after that point (same "guard only matters once,
   real work happens every call" shape the Phase 1 doc already flagged
-  for `sub_800B8DC` state 9). Two further `self+0x68`-keyed sub-cases
-  split on `owner->0x38`: clear -> modes 0/1 trigger `sub_800C8CC(self,1)`
+  for `UpdateEnemyCtrl` state 9). Two further `self+0x68`-keyed sub-cases
+  split on `owner->0x38`: clear -> modes 0/1 trigger `SetEnemyAnimMode(self,1)`
   or toggle `owner->0x28` bit 4 then trigger mode 0; set (further gated
   by `owner->0x30==8 && owner->0x34==0`, the established "blocking
   condition" pair) -> modes 0/1 both trigger `sub_800C8BC`/
   `sub_800C8AC(self,3)` and play SFX `0x14`, mode 1 additionally forcing
   `owner->0x28`'s mirror bit clear first (`sub_800C8BC(self,0)` instead
   of `sub_800C8BC(self,3)`).
-- **`sub_800C40C`** (called from states 4/13/14/16 - the specific
-  function `docs/rom_map.md` already flagged as sharing `sub_800B8DC`'s
+- **`UpdateEnemyAttackCycle`** (called from states 4/13/14/16 - the specific
+  function `docs/rom_map.md` already flagged as sharing `UpdateEnemyCtrl`'s
   own `self+0x68` field): the largest and most complex of the four, a
   6-case dispatcher (modes 0, 3, 4, 5; 1/2/anything-else a no-op). Modes
   0/4 share an "impact distance" gate via `__modsi3` (the
@@ -585,10 +585,10 @@ neighborhood.
   `gRoomFrameCount`-relative table indexed by `self->0x30`/`0x34`/
   `0x38`, then consult `self->0x84`'s pointed record (`+0xc` for mode 0,
   `+0x14` for mode 4) against the constant `8` to pick between two
-  `sub_800C8CC` trigger constants; mode 0 also clears `owner->0xd` bit 3
+  `SetEnemyAnimMode` trigger constants; mode 0 also clears `owner->0xd` bit 3
   and re-triggers `sub_800C8BC(self,0)` when `self->0x6c==0xf`, or when
   `self->0x6c` is `0x12`/`0x1a`. Mode 3 is the largest single case: when
-  `owner->0x38` is set, triggers `sub_800C8CC(self,4)`, then on
+  `owner->0x38` is set, triggers `SetEnemyAnimMode(self,4)`, then on
   `self->0x6c` `0x12`/`0x1a` sets `owner->0xd` bit 3 and plays SFX
   `0x26`, or on `self->0x6c==0xf` plays SFX `9`; then *unconditionally*
   (regardless of the `owner->0x38` gate), if `self->0x6c==0x17` and
@@ -599,7 +599,7 @@ neighborhood.
   `z`, `-0x2d` as `margin`), tags the new part's `+0xc` flags/`+0xa`
   bitmap-id fields (same idiom family as the "flag active + bitmap-set"
   idiom elsewhere in this cluster), and plays SFX `0x1e`. Mode 5 mirrors
-  mode 3's `owner->0x38` gate into `sub_800C8CC(self,0)` (plus, only for
+  mode 3's `owner->0x38` gate into `SetEnemyAnimMode(self,0)` (plus, only for
   `self->0x6c==0xf`, `sub_800C8BC(self,1)`); a shared tail (also reached
   directly when `owner->0x38` was already clear) plays SFX `0x23` when
   `self->0x6c==0xf` and `owner->0x30==8`/`owner->0x34==0`.
@@ -617,11 +617,11 @@ neighborhood.
   identical-layout instances at every offset) - mirrors it per
   `owner->0x28` bit 4, and tests it against the player
   (`gPlayer`) via `sub_800B37C`. On overlap: triggers
-  `sub_800C8CC(self,2)` and, only when `self->0x6c==0xb`, seeds
+  `SetEnemyAnimMode(self,2)` and, only when `self->0x6c==0xb`, seeds
   `owner`'s `0x48`-`0x64` velocity-target fields with a fixed knockback
   impulse (`0x300`/`0x20`/`0`/`-0x200` pattern - same family as
-  `sub_800B8DC` state 17's own fixed jump impulse). Mode 2 triggers
-  `sub_800C8CC(self,0)` only when `owner->0x38` is set.
+  `UpdateEnemyCtrl` state 17's own fixed jump impulse). Mode 2 triggers
+  `SetEnemyAnimMode(self,0)` only when `owner->0x38` is set.
 
 ### Matching
 
@@ -631,8 +631,8 @@ local labels, `.pool` directives placed at the ROM's own literal-flush
 points). `sub_800C5D4` additionally needed the
 `matching_decomp_alignment_fix` trailing `asm(".align 2, 0")` idiom (its
 own trailing 2 bytes zero-pad to the next 4-byte boundary, same as
-`nullsub_13`/`sub_800C8CC`). Two multi-word `.pool` placement bugs were
-caught and fixed during this pass (both in `sub_800C40C`): the ROM
+`nullsub_13`/`SetEnemyAnimMode`). Two multi-word `.pool` placement bugs were
+caught and fixed during this pass (both in `UpdateEnemyAttackCycle`): the ROM
 places each `.pool` *after* the full conditional block that follows the
 literal's use (not immediately after the `ldr =`/`bl` pair that
 references it) - getting this wrong changes where the assembler inserts
@@ -654,7 +654,7 @@ crashbandicootxs.gba crashbandicootxs.map && make compare`
 (`crashbandicootxs.gba: La suma coincide`).
 
 A real-C reconstruction was attempted first for all four (this pass's
-initial approach, not skipped) - `sub_800C074`'s dispatch-chain shape,
+initial approach, not skipped) - `UpdateEnemyPatrol`'s dispatch-chain shape,
 case-body ordering, and the mask-and-or bit-toggle idiom were all
 successfully coaxed to match byte-for-byte using register-pinned locals
 and an `asm volatile` block for the boolean materialization (see
@@ -674,12 +674,12 @@ the same wall four times.
   convention from `actor_part112.c`.
 - `-al` assembler listing cross-checked against the ROM's own literal
   label offsets to place every `.pool` directive correctly on the
-  (eventual) first try, after two placement bugs in `sub_800C40C`
+  (eventual) first try, after two placement bugs in `UpdateEnemyAttackCycle`
   surfaced the failure mode.
 - `matching_decomp_alignment_fix` trailing `asm(".align 2, 0")` for
   `sub_800C5D4`'s own non-4-aligned trailing byte count.
 - Verified each function byte-exact in isolation *and* as physically
-  combined into a shared object file (`sub_800C40C`+`sub_800C5D4` in one
+  combined into a shared object file (`UpdateEnemyAttackCycle`+`sub_800C5D4` in one
   `actor_part116.c`) - the combined-file build caught a real bug
   (duplicate/misplaced `.pool` directives reintroduced by hand-copying
   from the isolated scratch files into the production file) that the
@@ -690,30 +690,30 @@ the same wall four times.
 ### Build layout
 
 The four functions now live in three new files: `src/graphics/
-actor_part114.c` (`sub_800C074`), `src/graphics/actor_part115.c`
-(`sub_800C244`), and `src/graphics/actor_part116.c` (`sub_800C40C` +
+actor_part114.c` (`UpdateEnemyPatrol`), `src/graphics/actor_part115.c`
+(`sub_800C244`), and `src/graphics/actor_part116.c` (`UpdateEnemyAttackCycle` +
 `sub_800C5D4`, contiguous in ROM with no gap). The single raw
 `asm/code_3_2_17_bfa8.s` (which held `sub_800BFA8` through
-`sub_800C898`) is split into four pieces around the newly-matched
+`SetEnemyRangeX`) is split into four pieces around the newly-matched
 functions: `asm/code_3_2_17_bfa8.s` (trimmed to just `sub_800BFA8`),
 `asm/code_3_2_17_c18c.s` (`sub_800C18C`/`sub_800C1E8`, still raw),
 `asm/code_3_2_17_c314.s` (`sub_800C314`, still raw), and
-`asm/code_3_2_17_c6a8.s` (`sub_800C6A8`/`sub_800C860`/`sub_800C87C`/
-`sub_800C898`, still raw). `ldscript.txt` now reads, in this stretch:
+`asm/code_3_2_17_c6a8.s` (`SetEnemyState`/`SetEnemyRangeXSpeed`/`SetEnemyRangeYSpeed`/
+`SetEnemyRangeX`, still raw). `ldscript.txt` now reads, in this stretch:
 ## Phase 3 (parallel pass): the remaining single-purpose leaves
 
 A second parallel session, tackling exactly the "remaining leaves" the
 Phase 1 doc's own priority list named
 (`sub_800C18C`/`sub_800C1E8`/`sub_800C314`/`sub_800C940`/`sub_800C97C`/
-`sub_800C8F8`/`sub_800BFA8`/`sub_800C9C8`/`sub_800CBD4`/the function
-formerly guessed as `sub_800CBD4` but actually `sub_800CBF4`), working
+`sub_800C8F8`/`sub_800BFA8`/`sub_800C9C8`/`CreateKnockedEnemyCtrl`/the function
+formerly guessed as `CreateKnockedEnemyCtrl` but actually `sub_800CBF4`), working
 non-overlapping byte ranges from the four `self+0x68` dispatchers
-another parallel session was assigned (`sub_800C074`/`sub_800C40C`/
+another parallel session was assigned (`UpdateEnemyPatrol`/`UpdateEnemyAttackCycle`/
 `sub_800C5D4`/`sub_800C244`, all left completely untouched, still raw).
 
 **Closed, real C**: `sub_800C9C8` (the floating-popup spawner, state
 18's `sub_800C9C8(0x1D, 0, 0, 0x2B, 0, owner)` callee - a thin
-`sub_8025B0C` wrapper, `src/graphics/actor_part116.c`) and `sub_800CBD4`
+`sub_8025B0C` wrapper, `src/graphics/actor_part116.c`) and `CreateKnockedEnemyCtrl`
 (`src/graphics/actor_part117.c`, see below).
 
 **Closed, NAKED**: `sub_800C18C`/`sub_800C1E8` (`actor_part114.c`),
@@ -799,14 +799,14 @@ bit 4, not bits 0 and 4. Caught by cross-checking against
 its real-C match) before committing any wrong semantics to a doc or a
 struct.
 
-**`sub_800CBD4` resolves two Phase 1 open questions**: it takes
-exactly **one** argument (`self`) - `sub_800BD48`'s own states 19-20
+**`CreateKnockedEnemyCtrl` resolves two Phase 1 open questions**: it takes
+exactly **one** argument (`self`) - `HitEnemy`'s own states 19-20
 call it immediately after `sub_8026EDC(0x10)` with no registers set
 explicitly, relying entirely on that allocator's leftover return value
 in `r0`, confirming the Phase 1 doc's "may take 0 or 1 arguments"
 question in favor of 1. And `self+0xc` (the "anchor" record every
-`sub_800C8AC`/`sub_800C8BC`/`sub_800C8CC` call reads) is set here to a
-**fixed global table**, `gStaticData_087E3FA4` - every object
+`sub_800C8AC`/`sub_800C8BC`/`SetEnemyAnimMode` call reads) is set here to a
+**fixed global table**, `gKnockedEnemyCtrlVtable` - every object
 constructed through this path shares the same anchor record, not a
 per-instance one. Matches the exact "reset via `sub_800B8C8`, re-point
 `self+0xc`, return `self`" shape already established for sibling
@@ -820,29 +820,29 @@ the same idiom `sub_8018884`'s doc comment already documents as
 needing heavy register pinning, here appearing three times over) -
 both left raw for time-budget reasons, not because they were found
 resistant. Good next targets given `sub_800C8AC`/`sub_800C8BC`/
-`sub_800C8CC` and the mirror-flag idiom are now both fully understood.
+`SetEnemyAnimMode` and the mirror-flag idiom are now both fully understood.
 
 ### Build layout
 
 `asm/code_3_2_17_bfa8.s` is trimmed further to end right after
-`sub_800C074` (still raw, `sub_800C074` is one of the other parallel
+`UpdateEnemyPatrol` (still raw, `UpdateEnemyPatrol` is one of the other parallel
 session's four `self+0x68` targets). The removed
 `sub_800C18C`/`sub_800C1E8` now live in the new
 `src/graphics/actor_part114.c`. `sub_800C244` (untouched, another
 `self+0x68` target) was carved into its own new `asm/code_3_2_17_c244.s`
 so it wouldn't need to move again once its own session closes it. The
 removed `sub_800C314` now lives in the new
-`src/graphics/actor_part115.c`. `sub_800C40C` onward (through
-`sub_800C898` - `sub_800C40C`/`sub_800C5D4` untouched `self+0x68`
-targets, plus `sub_800C6A8`/`sub_800C860`/`sub_800C87C`/`sub_800C898`,
+`src/graphics/actor_part115.c`. `UpdateEnemyAttackCycle` onward (through
+`SetEnemyRangeX` - `UpdateEnemyAttackCycle`/`sub_800C5D4` untouched `self+0x68`
+targets, plus `SetEnemyState`/`SetEnemyRangeXSpeed`/`SetEnemyRangeYSpeed`/`SetEnemyRangeX`,
 none of this pass's or the parallel session's concern) moved to the new
 `asm/code_3_2_17_c40c.s`.
 
 Likewise, `asm/code_3_2_17_c8f8.s` is fully consumed: the removed
 `sub_800C8F8`/`sub_800C940`/`sub_800C97C`/`sub_800C9C8` now live in the
 new `src/graphics/actor_part116.c`; the untouched, still-raw
-`sub_800CA04`-`sub_800CBC0` remainder moved to the new
-`asm/code_3_2_17_ca04.s`; the removed `sub_800CBD4` now lives in the
+`AttachEnemyCtrl`-`DestroyKnockedEnemyCtrl` remainder moved to the new
+`asm/code_3_2_17_ca04.s`; the removed `CreateKnockedEnemyCtrl` now lives in the
 new `src/graphics/actor_part117.c`; the untouched, still-raw
 `sub_800CBF4` onward (through `sub_800CCE0`) moved to the new
 `asm/code_3_2_17_cbf4.s`.
@@ -876,11 +876,11 @@ pair, already fully traced in the Phase 1 doc's own field notes - "self
 +0x10-0x1c bounds, gPlayer's position, writes owner's
 0x48-0x5c triples", flagged there as "notably simpler register pressure"
 than the dispatchers) remain the single best next target - both are
-called directly from several of `sub_800B8DC`'s own states (10, 11, 15)
+called directly from several of `UpdateEnemyCtrl`'s own states (10, 11, 15)
 and from `sub_800C5D4` itself. `sub_800C314` (self+0x80 bit-0/parity
 idiom, two different owner+0x28 mirror-bit-toggle bit positions,
-sub_800C8AC/sub_800C8BC/sub_800C8CC triggers) and the `sub_800C6A8`/
-`sub_800C860`/`sub_800C87C`/`sub_800C898` group (the `menu_ui` 31-slot
+sub_800C8AC/sub_800C8BC/SetEnemyAnimMode triggers) and the `SetEnemyState`/
+`SetEnemyRangeXSpeed`/`SetEnemyRangeYSpeed`/`SetEnemyRangeX` group (the `menu_ui` 31-slot
 dialog dispatcher plus three small `self+0x70`-relative accessor
 triples) round out the rest of this now much-smaller raw remainder
 between `sub_800BFA8` and `sub_800C8AC`.
@@ -917,7 +917,7 @@ per-function byte-compare already looked clean.
 
 All seven closed functions (`sub_800C18C`, `sub_800C1E8`,
 `sub_800C314`, `sub_800C8F8`, `sub_800C940`, `sub_800C97C`,
-`sub_800C9C8`, `sub_800CBD4` - eight total) confirmed byte-identical to
+`sub_800C9C8`, `CreateKnockedEnemyCtrl` - eight total) confirmed byte-identical to
 `baserom.gba` via the isolated cpp/agbcc/as + objcopy/cmp pipeline
 (only `bl`/literal-pool relocation sites differ in every case) plus a
 full clean `rm -rf build && make NON_MATCHING=1 report` (no warnings)
@@ -925,14 +925,14 @@ and `rm -rf build crashbandicootxs.elf crashbandicootxs.gba
 crashbandicootxs.map && make compare` (`crashbandicootxs.gba: La suma
 coincide`).
 
-## Phase 4 (this pass): `sub_800C6A8`/`sub_800C860`/`sub_800C87C`/`sub_800C898` closed - the `menu_ui` connection resolved
+## Phase 4 (this pass): `SetEnemyState`/`SetEnemyRangeXSpeed`/`SetEnemyRangeYSpeed`/`SetEnemyRangeX` closed - the `menu_ui` connection resolved
 
 Follow-up session, tackling the last four functions of the old
-`asm/code_3_2_17_c6a8.s` (now fully retired): `sub_800C6A8` (440 B,
+`asm/code_3_2_17_c6a8.s` (now fully retired): `SetEnemyState` (440 B,
 `docs/rom_map.md`'s "menu_ui's own 31-callsite 18-state dialog-widget
 update"), and the three small `self+0x70`-relative accessor triples
-the existing tracking comment already flagged, `sub_800C860`/
-`sub_800C87C`/`sub_800C898` (28 B/28 B/20 B, 76 B total). This is the
+the existing tracking comment already flagged, `SetEnemyRangeXSpeed`/
+`SetEnemyRangeYSpeed`/`SetEnemyRangeX` (28 B/28 B/20 B, 76 B total). This is the
 last raw remainder of the original 43-function `0x0800B8DC`-`0x0800D040`
 cluster's `asm/code_3_2_17_c6a8.s` slice (other still-raw asm files
 split off by earlier phases are unaffected by this session - see "What's
@@ -942,29 +942,29 @@ still open" below).
 
 `docs/rom_map.md`'s existing note ("A parallel fork then found a
 genuine surprise connecting two previously-separate categories")
-already established that `sub_800C6A8` is called from all 31 confirmed
+already established that `SetEnemyState` is called from all 31 confirmed
 `menu_ui` dispatch-table entries and reads that as "the `+0x74`/
 18-state shape isn't only a player-physics pattern, it's a
 general-purpose stateful-widget convention reused for dialog boxes
 too" - explicitly *not* claiming the same struct, just the same
-convention. Reading `sub_800C6A8`'s full body this pass sharpens that:
+convention. Reading `SetEnemyState`'s full body this pass sharpens that:
 it isn't merely convention-sharing, it's the *literal same*
 `self`/`owner` object shape as the rest of this cluster - `self+0x70`
 ("owner"), `self+0xc` ("anchor" record with the same `{s16 offset,
 void *fn}` pairs), `self+0x84` (the per-instance pointer table
-`sub_800C8CC` indexes by mode) - and its case bodies' `bl` targets are
+`SetEnemyAnimMode` indexes by mode) - and its case bodies' `bl` targets are
 the *exact same* `sub_800B704`/`sub_800B838`/`_call_via_r3` primitives
-already matched for `sub_800C8AC`/`sub_800C8BC`/`sub_800C8CC`
+already matched for `sub_800C8AC`/`sub_800C8BC`/`SetEnemyAnimMode`
 (`actor_part113.c`, Phase 2). `menu_ui`'s dialog widgets are literal
 instances of the same object type the physics-actor cluster's own
-`sub_800B8DC` operates on (or at minimum, share 100% of the field
+`UpdateEnemyCtrl` operates on (or at minimum, share 100% of the field
 layout and helper functions this function touches) - not a
 structurally-similar sibling type as the "convention, not struct"
 phrasing left open.
 
 One consequence worth flagging for whoever eventually commits a named
-struct: `sub_800C6A8`'s case bodies never call `sub_800C8AC`/
-`sub_800C8BC`/`sub_800C8CC` as functions. Each case that needs their
+struct: `SetEnemyState`'s case bodies never call `sub_800C8AC`/
+`sub_800C8BC`/`SetEnemyAnimMode` as functions. Each case that needs their
 behavior *manually re-inlines* those three helpers' own instruction
 sequences instead (confirmed by the raw `bl` targets: `sub_800B838`/
 `sub_800B704` directly, never the three wrapper functions themselves) -
@@ -972,12 +972,12 @@ i.e. this particular translation unit's source didn't factor the
 `(self,mode)` triggers out into the shared helpers the rest of the
 cluster uses, even though it performs the exact same operations.
 
-### `sub_800C6A8`'s 18-state dispatch map
+### `SetEnemyState`'s 18-state dispatch map
 
 `self+0x74` is the state selector, same 1-18 range-check shape as
-`sub_800B8DC`. Every state ultimately funnels into one of two
+`UpdateEnemyCtrl`. Every state ultimately funnels into one of two
 building blocks: an inlined "fire the anchor's `+0x50`/`+0x54` pair via
-`self->0x84[mode]`" trigger (the exact operations `sub_800C8CC`
+`self->0x84[mode]`" trigger (the exact operations `SetEnemyAnimMode`
 performs, just not through a call to it) and/or an inlined
 `sub_800C8BC`/`sub_800C8AC`-equivalent call to `sub_800B838`/
 `sub_800B704` (mode cached into `self->0x78`/`self->0x7c` first, same
@@ -987,7 +987,7 @@ as the real wrappers).
 |---|---|
 | 1, 3, 17 | Inlined trigger, mode 0. |
 | 2, 15 | `self->0x78=1; sub_800B838(self,owner,1)` (i.e. `sub_800C8BC(self,1)`-equivalent), then inlined trigger mode 0. |
-| 4, 14, 16 | If `self->0x38 < self->0x30`: inlined trigger mode 0, then if `self->0x6c != 0x1b` return immediately (skip the tail below). Else (`self->0x38 >= self->0x30`): inlined trigger mode 4 (`self->0x84[4]` instead of `[0]`). Either way (except the early return above), falls into a shared tail: `owner->0x30 = keyframeTable[owner->0x2d].0x16 - 1` (`owner->0x20`'s own first field is the actual 28-byte-stride table base - the same "`+0x20` table pointer, `+0x2d` row index, 28-byte stride" convention `sub_800D040`/`sub_800C40C` already establish, here read directly by `sub_800C6A8` rather than through those functions). |
+| 4, 14, 16 | If `self->0x38 < self->0x30`: inlined trigger mode 0, then if `self->0x6c != 0x1b` return immediately (skip the tail below). Else (`self->0x38 >= self->0x30`): inlined trigger mode 4 (`self->0x84[4]` instead of `[0]`). Either way (except the early return above), falls into a shared tail: `owner->0x30 = keyframeTable[owner->0x2d].0x16 - 1` (`owner->0x20`'s own first field is the actual 28-byte-stride table base - the same "`+0x20` table pointer, `+0x2d` row index, 28-byte stride" convention `sub_800D040`/`UpdateEnemyAttackCycle` already establish, here read directly by `SetEnemyState` rather than through those functions). |
 | 5 | Inline-only, no trigger call: seeds `owner`'s full `0x48`-`0x5c`/`0x64` velocity-target sextet with a fixed Q8.8 impulse (`-1.5` X, `4.0` Y - `owner->0x60=owner->0x48=owner->0x50=-0x180`, `owner->0x4c=0`, `owner->0x64=owner->0x54=owner->0x5c=0x400`, `owner->0x58=0`) and sets `owner->0xc` bit 7 (`|= 0x80`). |
 | 6, 9, 10, 11 | Inlined trigger, mode 0 - a *second*, separately-compiled copy of the exact same instruction sequence as states {1,3,17}, at a different jump-table address (see "Matching" below for why this matters). |
 | 7 | `self->0x78=2; sub_800B838(self,owner,2)`, inlined trigger mode 0, then `self->0x80=0`. |
@@ -1000,35 +1000,35 @@ no-op default)**: `self->0x60 = owner->0; self->0x64 = owner->4` -
 caches `owner`'s current position into `self`'s own `0x60`/`0x64`
 fields every single call, regardless of which state ran.
 
-### `sub_800C860`/`sub_800C87C`/`sub_800C898`: the accessor triple
+### `SetEnemyRangeXSpeed`/`SetEnemyRangeYSpeed`/`SetEnemyRangeX`: the accessor triple
 
 All three read `owner` (`self+0x70`) and derive an X- or Y-axis
 homing-bound pair on `self`, the same `self+0x10`/`0x14` (X) and
 `self+0x18`/`0x1c` (Y) fields `sub_800C18C`/`sub_800C1E8` (Phase 3)
 already consume as their own bounds:
 
-- **`sub_800C860(self, radius, p2, p3)`**: `self->0x10 = owner->0 -
+- **`SetEnemyRangeXSpeed(self, radius, p2, p3)`**: `self->0x10 = owner->0 -
   (radius<<8)`, `self->0x14 = owner->0 + (radius<<8)` (X bounds,
   `radius` in tiles, converted to Q8.8), plus `self->0x5c = p3;
   self->0x58 = p2` (two more `self`-local fields, not resolved further
   this pass - not the same role as `owner`'s own `0x58`/`0x5c` velocity-
   target slots, since these are `self`'s fields, and the two accessors
   below overwrite them identically regardless of axis).
-- **`sub_800C87C(self, radius, p2, p3)`**: same shape, Y axis - note the
+- **`SetEnemyRangeYSpeed(self, radius, p2, p3)`**: same shape, Y axis - note the
   field order is reversed relative to X: `self->0x1c` (the *lower*
   bound) is `owner->4 - (radius<<8)` and `self->0x18` (the *upper*
   bound) is `owner->4 + (radius<<8)`, i.e. `0x18` before `0x1c` in
   offset order but *after* it in "low/high" role order - confirmed
   directly from the ROM's own store order, not assumed.
-- **`sub_800C898(self, radius)`**: `sub_800C860`'s X-bounds half only,
+- **`SetEnemyRangeX(self, radius)`**: `SetEnemyRangeXSpeed`'s X-bounds half only,
   no `p2`/`p3` cache, no `owner` field beyond `+0`.
 
 ### Matching
 
-**`sub_800C6A8`**: NAKED, not real C - the size/branch-count and
+**`SetEnemyState`**: NAKED, not real C - the size/branch-count and
 `self`/`owner` multi-field-liveness shape already established as
-resistant throughout this cluster (`sub_800B8DC`/`sub_800BD48`/
-`sub_800C074`/`sub_800C244`/`sub_800C40C`/`sub_800C5D4`, all NAKED for
+resistant throughout this cluster (`UpdateEnemyCtrl`/`HitEnemy`/
+`UpdateEnemyPatrol`/`sub_800C244`/`UpdateEnemyAttackCycle`/`sub_800C5D4`, all NAKED for
 the same underlying reason), plus a second, independent hazard unique
 to this function: states {1,3,17} and {6,9,10,11} compile the
 *textually identical* inlined trigger sequence at *two different*,
@@ -1052,7 +1052,7 @@ ROM's own two internal literal-flush points, matching
 `actor_part112.c`'s own established style for this exact family of
 dispatcher).
 
-**`sub_800C860`/`sub_800C87C`/`sub_800C898`**: matched as real C,
+**`SetEnemyRangeXSpeed`/`SetEnemyRangeYSpeed`/`SetEnemyRangeX`**: matched as real C,
 needing one iteration each. The naive direct translation
 (`self->field = *(s32*)owner - (radius<<8); self->otherField =
 *(s32*)owner + (radius<<8);`) got every field and the reload-not-cache
@@ -1066,9 +1066,9 @@ immediately after each load (the established
 `matching_decomp_register_pinning` idiom) - forcing the load to
 materialize before the shift can be scheduled, without changing which
 physical register either the compiler or the ROM already agreed on
-(`r4` for `sub_800C860`/`sub_800C87C`, `r2` for the leaf-function
-`sub_800C898`, matching each function's own natural register choice
-exactly). `sub_800C898` additionally needed the
+(`r4` for `SetEnemyRangeXSpeed`/`SetEnemyRangeYSpeed`, `r2` for the leaf-function
+`SetEnemyRangeX`, matching each function's own natural register choice
+exactly). `SetEnemyRangeX` additionally needed the
 `matching_decomp_alignment_fix` trailing `asm(".align 2, 0")` idiom
 (its own 20-byte body isn't 4-byte-aligned against the next function's
 start, `sub_800C8AC` at the cluster's already-matched
@@ -1086,17 +1086,17 @@ coincide`).
 
 ### Techniques used
 
-- Hand-transcribed NAKED asm for `sub_800C6A8` (established escape
+- Hand-transcribed NAKED asm for `SetEnemyState` (established escape
   hatch for this ROM region), all-forward-reference GNU-as local
   numeric labels (this function has no backward branches at all, every
   jump-table entry and every internal `b`/`bne`/`blt` targets a label
   physically later in the function).
 - `matching_decomp_register_pinning`: a register-pinned local plus an
   empty `asm volatile` compiler barrier, forcing the ROM's own
-  "load-then-shift" instruction order in `sub_800C860`/`sub_800C87C`/
-  `sub_800C898` without otherwise changing the generated code.
+  "load-then-shift" instruction order in `SetEnemyRangeXSpeed`/`SetEnemyRangeYSpeed`/
+  `SetEnemyRangeX` without otherwise changing the generated code.
 - `matching_decomp_alignment_fix`: trailing `asm(".align 2, 0")` for
-  `sub_800C898`'s own non-4-aligned trailing byte count.
+  `SetEnemyRangeX`'s own non-4-aligned trailing byte count.
 
 ### Build layout
 
@@ -1113,7 +1113,7 @@ This closes the entire old `asm/code_3_2_17_c6a8.s` slice. As of this
 pass, the cluster's remaining raw asm files are `asm/code_3_2_17_bfa8.s`
 (just `sub_800BFA8` itself, ~204 B, a further `self+0x68`/`0x74`-style
 dispatcher per `docs/rom_map.md`), `asm/code_3_2_17_ca04.s`
-(`sub_800CA04`-`sub_800CBC0`, unexamined this pass), and
+(`AttachEnemyCtrl`-`DestroyKnockedEnemyCtrl`, unexamined this pass), and
 `asm/code_3_2_17_cbf4.s` (`sub_800CBF4` onward through `sub_800CCE0` -
 includes `sub_800CBF4` itself, already flagged in the Phase 3 leaves
 section as "three repetitions of the flag-active-plus-bitmap-set idiom
@@ -1129,10 +1129,10 @@ Phase 4 pass, closing out the entire 43-function cluster.
 Follow-up session, closing the last raw file in the cluster,
 `asm/code_3_2_17_cbf4.s` (ROM `0x0800CBF4`-`0x0800CD00`, 268 bytes,
 5 functions/stubs) - contiguous, no gap on either side: it starts
-exactly where `actor_part117.c`'s `sub_800CBD4` ends and ends exactly
+exactly where `actor_part117.c`'s `CreateKnockedEnemyCtrl` ends and ends exactly
 where the already-matched `sub_800CD00` (`actor_part109.c`) begins.
 This closes the entire 43-function `0x0800B8DC`-`0x0800D040` cluster
-investigation that began with `sub_800B8DC`/`sub_800BD48` at the top of
+investigation that began with `UpdateEnemyCtrl`/`HitEnemy` at the top of
 this doc.
 
 ### What each one does
@@ -1163,8 +1163,8 @@ this doc.
   re-points `self+0xc` at the same `gStaticData_087E400C` table, calls
   `nullsub_3(self)`, returns `self` - the exact same "reset, re-point,
   return self" constructor shape as `sub_801886C`/`sub_8018858`/
-  `sub_800CBD4`, with `nullsub_3` playing the same tail-call-hook role
-  `nullsub_14` plays for `sub_800CBD4`.
+  `CreateKnockedEnemyCtrl`, with `nullsub_3` playing the same tail-call-hook role
+  `nullsub_14` plays for `CreateKnockedEnemyCtrl`.
 
 ### `sub_800CCE0` confirmed to stay in this cluster, not the physics subsystem
 
@@ -1176,7 +1176,7 @@ Reading its body settles this: it is a plain entity-object constructor
 (reset + table re-point + `nullsub_3` hook + return `self`), structurally
 identical to three other constructors already confirmed part of this
 same 93-vtable entity-object family (`sub_801886C`, `sub_8018858`,
-`sub_800CBD4`) and with none of the physics subsystem's own
+`CreateKnockedEnemyCtrl`) and with none of the physics subsystem's own
 characteristic shapes (no AABB build, no neighbor-list walk, no
 `self+0x4d`/`+0x4e`/`+0x50` field access `sub_800D040`'s own doc
 comment documents). It is immediately followed in ROM, with no gap, by
@@ -1237,29 +1237,29 @@ Closing pass on `sub_800BFA8` (ROM `0x0800BFA8`-`0x0800C074`, 204
 bytes), the sole remaining function in `asm/code_3_2_17_bfa8.s` -
 `tools/report_units.py`'s own placeholder comment for it called it "a
 further `self+0x68`/`0x74`-selector dispatcher per docs/rom_map.md,
-not yet examined." It's called exactly once, from `sub_800B8DC` state
+not yet examined." It's called exactly once, from `UpdateEnemyCtrl` state
 15 (case 42 in that function's own jump table, right after
-`sub_800C40C`).
+`UpdateEnemyAttackCycle`).
 
 ### Shape
 
 A small `self+0x68`-keyed dispatcher, gated by a `__modsi3` "close
-enough" scalar check - the same primitive `sub_800C40C`'s own case 3/4
+enough" scalar check - the same primitive `UpdateEnemyAttackCycle`'s own case 3/4
 use, but here against `gRoomFrameCount` read as a **plain word**
 (`__modsi3(gRoomFrameCount + self->0x48 - self->0x4c,
-self->0x48)`), not the table-base-pointer role `sub_800C40C` uses that
+self->0x48)`), not the table-base-pointer role `UpdateEnemyAttackCycle` uses that
 same still-unexplained global in. This is a fourth confirmed
 "multi-shaped" site for `gRoomFrameCount` (joining the "plain word"
-sites `sub_8016C94`/`sub_801B624` and the "table base pointer" site
-`sub_800C40C` already flagged in `docs/rom_map.md`).
+sites `sub_8016C94`/`MovePlayerWithPlatform` and the "table base pointer" site
+`UpdateEnemyAttackCycle` already flagged in `docs/rom_map.md`).
 
 - **Check passes (result `0`)**: `self->0x68 == 0` triggers
-  `sub_800C8CC(self, 2)`; `self->0x68 == 4` triggers
-  `sub_800C8CC(self, 7)`; anything else is a no-op. Function returns.
+  `SetEnemyAnimMode(self, 2)`; `self->0x68 == 4` triggers
+  `SetEnemyAnimMode(self, 7)`; anything else is a no-op. Function returns.
 - **Check fails**: re-dispatch moves to `owner` (`self->0x70`).
   - `owner->0x38` (the cluster's established "enabled" byte) set:
-    `self->0x68 == 2` triggers `sub_800C8CC(self, 0)`; `== 7` triggers
-    `sub_800C8CC(self, 4)`; anything else a no-op. Returns.
+    `self->0x68 == 2` triggers `SetEnemyAnimMode(self, 0)`; `== 7` triggers
+    `SetEnemyAnimMode(self, 4)`; anything else a no-op. Returns.
   - `owner->0x38` clear: `self->0x68 == 2`/`7` each gate a
     `sub_800C9C8(0xc, 6, 0, d, 0x400, owner)` call behind an
     `owner->0x30`/`owner->0x34` magic-constant check (`d = -0xa` when
@@ -1274,7 +1274,7 @@ sites `sub_8016C94`/`sub_801B624` and the "table base pointer" site
 Small enough (no nested loops, only 2-deep dispatch) to avoid this
 cluster's usual `self`/`owner` multi-field-liveness register-pressure
 trap that forced every `self+0x68`-dispatching sibling
-(`sub_800C074`/`sub_800C244`/`sub_800C40C`/`sub_800C5D4`) to NAKED.
+(`UpdateEnemyPatrol`/`sub_800C244`/`UpdateEnemyAttackCycle`/`sub_800C5D4`) to NAKED.
 Straightforward pointer-offset-cast C (this neighborhood's established
 convention - `u8 *self = selfArg;` plus `*(s32 *)(self + off)`, per
 `actor_part113.c`/`actor_part117.c`) got every branch, constant, and
@@ -1326,11 +1326,11 @@ sessions above (Phase 4, the `sub_800BFA8` pass, and the final
 `0x0800CA04`-`0x0800CBD4` (464 bytes, 19 functions/stubs), sitting
 directly between two already-matched neighbors from this same overall
 cluster investigation - `sub_800C9C8` (`actor_part116.c`) just before
-it, and `sub_800CBD4` (`actor_part117.c`) - which calls this file's own
+it, and `CreateKnockedEnemyCtrl` (`actor_part117.c`) - which calls this file's own
 `nullsub_14` as its own tail-call hook - immediately after.
 `tools/report_units.py` still carried a `(0x0800CA04, None, "graphics")`
 placeholder for it ("remainder of the cluster past sub_800C9C8 up to
-sub_800CBD4 - not yet examined").
+CreateKnockedEnemyCtrl - not yet examined").
 
 ### What each one does
 
@@ -1340,36 +1340,36 @@ accessors on this cluster's already-well-characterized `self`/`owner`
 object shape, plus two slightly larger helpers and one instance of an
 idiom already matched elsewhere in this cluster:
 
-- **`sub_800CA04(self, owner)`**: `self->0x70 = owner;` - the first
+- **`AttachEnemyCtrl(self, owner)`**: `self->0x70 = owner;` - the first
   confirmed *writer* of the `owner` pointer field anywhere in this
   cluster (every other function across the whole 43-function
   investigation only ever reads `self+0x70`).
 - **`sub_800CA08(x, y)`**: the exact "distance-scaled ambient sound
-  volume" calculation `sub_800B8DC` state 18 (`actor_part112.c`)
+  volume" calculation `UpdateEnemyCtrl` state 18 (`actor_part112.c`)
   already documents inline - `max(|x-cameraX|, |y-cameraY|)` against
   `gPlayer` (the player/camera object), clamped to
   `[0x20,0xa0]`, converted to `0x100 - (clamped-0x20)*2`. Whether this
   is literally the function that inline block compiles from, or an
   independently-written sibling with identical logic, isn't resolved
   here.
-- **`sub_800CA48(self)`**: resets `self->0x70` (owner), `self->0x84`
+- **`ResetEnemyCtrl(self)`**: resets `self->0x70` (owner), `self->0x84`
   (the per-instance mode-indexed pointer table Phase 2 already
   identified) and `self->0x88` (the floating-popup child pointer) to
   null, and re-points `self->4` (the "manager" pointer Phase 2 already
   identified) at the fixed `gStaticData_0816BB6C` table.
-- **`sub_800CA60(self, flags)`** / **`sub_800CBC0(self, flags)`**: both
+- **`DestroyEnemyCtrl(self, flags)`** / **`DestroyKnockedEnemyCtrl(self, flags)`**: both
   the same "double-set" shape as `sub_800CCCC` (`actor_part123.c`) -
-  set `self+0xc`'s table pointer (to `gStaticData_087E3EE4` and
-  `gStaticData_087E3FA4` respectively - the same two anchor tables
-  `sub_800B8DC`/`sub_800BD48` and `sub_800CBD4` themselves already use)
+  set `self+0xc`'s table pointer (to `gEnemyCtrlVtable` and
+  `gKnockedEnemyCtrlVtable` respectively - the same two anchor tables
+  `UpdateEnemyCtrl`/`HitEnemy` and `CreateKnockedEnemyCtrl` themselves already use)
   then tail-call `sub_800B8A8`, which unconditionally resets
   `self+0xc` right back to `gStaticData_087E3E7C` regardless - the same
   harmless dead-store double-set pattern already established for
   `sub_8018858`/`sub_8017A78`/`sub_8017FD4`/`sub_800CCCC`.
-- **`sub_800CA74(self)`**: the "reset, re-point, hook, return self"
+- **`CreateEnemyCtrl(self)`**: the "reset, re-point, hook, return self"
   constructor shape already matched for `sub_801886C`/`sub_8018858`/
-  `sub_800CBD4`/`sub_800CCE0` - resets via `sub_800B8C8`, re-points
-  `self+0xc` at `gStaticData_087E3EE4`, calls `sub_800CA48` above (its
+  `CreateKnockedEnemyCtrl`/`sub_800CCE0` - resets via `sub_800B8C8`, re-points
+  `self+0xc` at `gEnemyCtrlVtable`, calls `ResetEnemyCtrl` above (its
   own hook), returns `self`.
 - **`sub_800CA94(self, a, b, c)`**: `self->0x3c/0x40/0x44` setter - the
   sine-oscillator parameters (divisor, phase offset, amplitude)
@@ -1385,35 +1385,35 @@ idiom already matched elsewhere in this cluster:
   `self->0x20/0x24/0x28/0x2c` setter - the per-instance AABB trigger
   box `sub_800C5D4` (`actor_part116.c`) already builds from.
 - **`sub_800CAC0(self, a)`**: `self->0x84` setter - the per-instance
-  mode-indexed pointer table `sub_800C8CC`/`sub_800C6A8`
+  mode-indexed pointer table `SetEnemyAnimMode`/`SetEnemyState`
   (`actor_part113.c`/`actor_part122.c`) both trigger through.
 - **`sub_800CAC8(self, a)`**: `self->0x6c` setter - the "second,
   larger-range state/anim-id byte" the Phase 1 doc's field table
   already names.
-- **`sub_800CACC(self)`**: if `self`'s own X position is within
+- **`UpdatePeriodicSpawner(self)`**: if `self`'s own X position is within
   `[0xa1,0x18f]` tiles of `gPlayer`'s (the player/camera)
   own X position, runs the same `__modsi3` "close enough" gate
   `sub_800BFA8` already uses (here against `self->0x20`/`self->0x24`,
   the AABB corners `sub_800CAAC` sets), and on a pass fires
   `_call_via_r4((void*)0xffff, (u16)selfX, (u16)(self->4>>8), 0)` - the
-  same "directional-target table trigger" primitive `sub_800B8DC`
-  state 11 and `sub_800BD48` states 19-20 already call directly. Also
+  same "directional-target table trigger" primitive `UpdateEnemyCtrl`
+  state 11 and `HitEnemy` states 19-20 already call directly. Also
   reads `self->0x1c` (the Y-axis homing bound `sub_800CB60` below
   sets) into a value that's never used for anything - a genuine dead
   read the ROM's own compiled output still performs.
-- **`sub_800CB20(self, flags)`**: sets `self->0x18`'s table pointer
+- **`DestroyPeriodicSpawner(self, flags)`**: sets `self->0x18`'s table pointer
   (the struct-actor-shaped "table" field role) to `gStaticData_087E3BEC`
   - the same table `graphics.c`'s own constructors use - then, only if
   `flags` bit 0 is set, fires `sub_8026ED0(self)`.
-- **`sub_800CB40(self)`**: calls `sub_800725C(self)` (already matched,
+- **`CreatePeriodicSpawner(self)`**: calls `sub_800725C(self)` (already matched,
   `graphics.c`, return value discarded), sets `self->0x18` to
-  `gStaticData_087E3F4C`, returns `self`.
+  `gPeriodicSpawnerVtable`, returns `self`.
 - **`sub_800CB58(self, a, b)`**: `self->0x20/0x24` partial (position-
   only) setter - the same AABB fields `sub_800CAAC` sets all four
   corners of.
 - **`sub_800CB60(self, a)`**: `self->0x1c` setter - the Y-axis homing
-  bound `sub_800C87C`/`sub_800C898` (`actor_part122.c`) already write.
-- **`sub_800CB64(self, other)`**: `self` (the first argument) is never
+  bound `SetEnemyRangeYSpeed`/`SetEnemyRangeX` (`actor_part122.c`) already write.
+- **`UpdateKnockedEnemyCtrl(self, other)`**: `self` (the first argument) is never
   read - only `other` matters. Reads `other+0x18`'s own table pointer,
   fires a `_call_via_r1` hit-probe against its `+0x28`/`+0x2c`
   `{s16 offset, void *fn}` pair (the same convention
@@ -1424,7 +1424,7 @@ idiom already matched elsewhere in this cluster:
   id sentinel-checks as `0xffff`, also sets its bit in the
   `gEntityFlags+0x108` bitmap) - the exact idiom
   `actor_part27c.c`'s `sub_8018884` already matches as real C.
-- **`nullsub_14(self)`**: genuine empty stub (`bx lr`) - `sub_800CBD4`'s
+- **`nullsub_14(self)`**: genuine empty stub (`bx lr`) - `CreateKnockedEnemyCtrl`'s
   own tail-call hook, per that function's own doc comment.
 
 ### Matching
@@ -1451,12 +1451,12 @@ established `[[matching_decomp_register_pinning]]` toolbox:
   `if (d < 0x20) d = 0x20;`, to stop gcc canonicalizing the negated
   branch condition from `cmp r1,#0x20; bge` into `cmp r1,#0x1f; bgt` -
   functionally identical, but byte-different from the ROM.
-- **`sub_800CACC`**: needed one pin - the dead `self+0x1c` read had to
+- **`UpdatePeriodicSpawner`**: needed one pin - the dead `self+0x1c` read had to
   be pinned to `r4` explicitly (the register `self` itself was already
   using, and free again by the point of that read) - unpinned, gcc
   picked a spare `r3` for it instead, a harmless but byte-different
   register choice from the ROM's own `ldr r4, [r4, #0x1c]`.
-- **`sub_800CB64`**: needed the same register-pinning chain
+- **`UpdateKnockedEnemyCtrl`**: needed the same register-pinning chain
   `actor_part27c.c`'s `sub_8018884` doc comment already documents for
   this exact "flag active + bitmap-set" idiom - `other` pinned to
   `r4` (matching the ROM's own choice, freed up again by the time the
@@ -1500,22 +1500,22 @@ no raw bytes remaining anywhere in the span.
 
 ## Later pass: issue #10 NAKED retry
 
-`sub_800C18C`, `sub_800C1E8`, `sub_800C314`, `sub_800C074`,
-`sub_800C40C` and `sub_800C6A8` are now real C. The last three need
+`sub_800C18C`, `sub_800C1E8`, `sub_800C314`, `UpdateEnemyPatrol`,
+`UpdateEnemyAttackCycle` and `SetEnemyState` are now real C. The last three need
 old_agbcc, so `actor_part118.o`, `actor_part120.o` and
 `actor_part122.o` build with it. The earlier notes above about
 cross-jumping, bit-toggle sequencing and the gate's CFG diamond all
-turned out to be source shape or compiler choice. `sub_800B8DC`,
-`sub_800BD48`, `sub_800C244`, `sub_800C5D4` and the oscillator trio
-are still NAKED. All but `sub_800B8DC` have C drafts under
+turned out to be source shape or compiler choice. `UpdateEnemyCtrl`,
+`HitEnemy`, `sub_800C244`, `sub_800C5D4` and the oscillator trio
+are still NAKED. All but `UpdateEnemyCtrl` have C drafts under
 `NON_MATCHING`. The `self`/owner layout is now `include/part_ctrl.h`.
 See [issue-10-naked-retry.md](issue-10-naked-retry.md).
 
 ## Later pass (issue #9-#11 NAKED retry)
 
-`sub_800C244`, `sub_800C5D4`, `sub_800C8F8` and `sub_800CBF4` are real C now. `sub_800B8DC`, `sub_800BD48`, `sub_800C940` and `sub_800C97C` are still NAKED. See [issue-9-11-box-naked-retry.md](issue-9-11-box-naked-retry.md).
+`sub_800C244`, `sub_800C5D4`, `sub_800C8F8` and `sub_800CBF4` are real C now. `UpdateEnemyCtrl`, `HitEnemy`, `sub_800C940` and `sub_800C97C` are still NAKED. See [issue-9-11-box-naked-retry.md](issue-9-11-box-naked-retry.md).
 
 ## Later pass (second big NAKED retry)
 
-`sub_800B8DC` is real C now (old_agbcc). See
+`UpdateEnemyCtrl` is real C now (old_agbcc). See
 [big-naked-retry-2.md](big-naked-retry-2.md).

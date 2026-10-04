@@ -7,11 +7,11 @@ drafts under `#if NON_MATCHING`.
 
 | Function | File | Before | Now | Status |
 |---|---|---|---|---|
-| `sub_802062C` (#31) | `src/graphics/graphics_loading_1feec.c` | 12 | 4 (same size, old_agbcc) | Draft updated |
+| `SpawnFlamethrowerLabAssistant` (#31) | `src/graphics/graphics_loading_1feec.c` | 12 | 4 (same size, old_agbcc) | Draft updated |
 | `DrawPauseFraction` (#7) | `src/graphics/settings_menu16.c` | 45 | 14 (same size, both compilers) | Draft updated |
 | `sub_8001DB4` (#4) | `src/system/link_cable.c` | 136 | 136 | Note added |
 
-## `sub_802062C`: 12 to 4
+## `SpawnFlamethrowerLabAssistant`: 12 to 4
 
 The greg dump explains the sl/r9 swap:
 
@@ -131,7 +131,7 @@ These are in the scratchpad's `last9/`, pointed at this worktree:
 - `pri.sh` (call-crossing pseudos and their hard registers from the
   lreg dump);
 - `fcheck.sh` (a whole file with and without a flag);
-- the variant specs `a1`-`a5` (`sub_802062C`), `m1`-`m9`/`n1`-`n6`
+- the variant specs `a1`-`a5` (`SpawnFlamethrowerLabAssistant`), `m1`-`m9`/`n1`-`n6`
   (`DrawPauseFraction`) and `l1` (`sub_8001DB4`).
 
 ## Verification

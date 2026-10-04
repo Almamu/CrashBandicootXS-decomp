@@ -48,7 +48,7 @@ struct names the code's own local views of the same record.
 | 0x10 | `collision`: the collision layer | `SetCollisionSource` (terrain cache) |
 | 0x14 | `asset`: the level asset | `LoadRoom` |
 | 0x18 | `u8 assetPacked`: 1 = LZ77 stream (unpacked to the heap), 0 = used in place | same |
-| 0x1C | `entities`: `struct level_entity_list` | `SpawnRoomEntities`, `CountCrateEntities`, `sub_801A878`, ... |
+| 0x1C | `entities`: `struct level_entity_list` | `SpawnRoomEntities`, `CountCrateEntities`, `CreatePlatform`, ... |
 | 0x20 | `links`: `struct level_link_list` or NULL | `SpawnRoomEntities` |
 | 0x24 | 12 zero bytes in every room | - |
 
@@ -159,7 +159,7 @@ of the table at `gEntitySpawner` (`SpawnEntity`) with the id, x, y and
 `param`. `param` indexes the parameter records: a flags word (bits 1 and
 2 go to the spawned object's `+0x28` flags: `SpawnBasicCrate`, `sub_801E990`,
 `actor_part_1967c.c`) and per-type words, e.g. `struct spawn_rec` of
-`sub_801A878` (mover kind and distances); type 0x1A takes its effective
+`CreatePlatform` (mover kind and distances); type 0x1A takes its effective
 type from the record's `+8` (`CountCrateEntities`).
 
 In the ROM:
@@ -192,6 +192,34 @@ code it gives the object and where the levels place it:
 | 0x12, 0x13, 0x14, 0x4A | `SpawnTurboRunPower`, `SpawnDoubleJumpPower`, `SpawnBodySlamPower`, `SpawnTornadoSpinPower` | the four power pictures (bank 38); no level places them |
 | 0x15-0x27 | `SpawnBasicCrate` .. `SpawnTimeCrate3` | crates: `CreateCrate` types 0-18 (bank 31), see `include/phys_obj.h` |
 | 0x51-0x54 | `SpawnRedGemPlatform`, `SpawnYellowGemPlatform`, `SpawnGreenGemPlatform`, `SpawnBlueGemPlatform` | a gem outline over a platform (bank 32) |
+| 0x29 | `SpawnVulture` | enemy, bank 11 |
+| 0x2A | `SpawnVenusFlytrap` | enemy, bank 10 |
+| 0x2C | `SpawnBlowgunTribesman` | enemy, bank 12 |
+| 0x2D | `SpawnPenguin` | enemy, bank 15 |
+| 0x2E | `SpawnSealSpawner` | sends a seal (`SpawnSeal`, bank 17) every 0x78 frames |
+| 0x2F | `SpawnPolarBear` | enemy, bank 16 |
+| 0x30 | `SpawnPufferfish` | enemy, bank 5 |
+| 0x31 | `SpawnShark` | enemy, bank 4 |
+| 0x32 | `SpawnMorayEel` | enemy, bank 3 |
+| 0x33 | `SpawnElectricEel` | enemy, bank 8 |
+| 0x34 | `SpawnSquid` | enemy, bank 7 |
+| 0x35 | `SpawnJellyfish` | enemy, bank 9 |
+| 0x37 | `SpawnLaserBarrier` | hazard, bank 25 |
+| 0x3A, 0x3F | `SpawnSaucerLabAssistant` | enemy, bank 29 |
+| 0x3B | `SpawnPistonCrusher` | hazard, bank 26 |
+| 0x40 | `SpawnFlamethrowerLabAssistant` | enemy, bank 23 |
+| 0x43 | `SpawnRat` | enemy, bank 21 |
+| 0x44 | `SpawnFrog` | enemy, bank 19 |
+| 0x4B, 0x4C | `SpawnSeaMine` | hazard, bank 6 |
+| 0x4D | `SpawnWoodenCrusher` | hazard, bank 18 |
+| 0x4E, 0x4F, 0x50 | `SpawnLargePlatform`, `SpawnSmallPlatform`, `SpawnMediumPlatform` | `CreatePlatform` kinds 0-2 (bank 39) |
+| 0x56 | `SpawnBonusPlatform` | the "?" platform (bank 39 anim 5) |
+| 0x58 | `SpawnRockPlatform` | `CreatePlatform` kind 8 (bank 39) |
+| 0x5A | `SpawnFlame` | a flame (bank 44) |
+| 0x5B | `SpawnSeaweed` | seaweed (bank 45) |
+
+Every enemy is a sprite part on its bank driven by one shared controller
+(`CreateEnemyCtrl`, `UpdateEnemyCtrl`), whose `kind` is the bank number.
 
 In time trial (`gLevelState->timeTrial`) a crate whose parameter record
 says so becomes the time crate its record's `+4` names (`CreateCrate`).

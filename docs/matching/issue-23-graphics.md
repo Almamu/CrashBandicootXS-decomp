@@ -21,7 +21,7 @@ The same C++-style object family as `actor_part_17524.c` and
 `self+0xc`, gcc 2.x `{s16 this-adjust, pad, fn}` method entries called
 through the `_call_via_r2`/`AD84`/`AD88` call-via-register trampolines.
 Every class has a constructor (base constructor `sub_800B8C8`,
-`sub_8017A8C` or `sub_801B7D8`, then its own table pointer, returns
+`sub_8017A8C` or `CreatePlatformMover`, then its own table pointer, returns
 `self`) and a destructor (table pointer, then the base destructor).
 
 The objects drive a "part": an on-screen object built by `sub_8009ED0`
@@ -137,12 +137,12 @@ Fixes, all plain C plus pins/barriers unless noted:
   the first frame clamp's tag, the `0x4000` constant), which agbcc never
   did. The unchanged NON_MATCHING C matches byte-for-byte under
   old_agbcc; only `AndFlags`'s barrier was dropped afterwards.
-- **`sub_801961C`**: `sub_801B7D8`'s fifth argument is a byte the caller
+- **`sub_801961C`**: `CreatePlatformMover`'s fifth argument is a byte the caller
   `strb`s into the outgoing stack slot. Both compilers widen a `u8`
   stack argument to a word `str`, and a packed one-byte struct always
   materializes the 0 before the `mov r1, sp` slot address (the reverse
   of the ROM) under either compiler. What matches is the idiom
-  `sub_801A878` uses (`include/mover_new.h`): write both stack slots
+  `CreatePlatform` uses (`include/mover_new.h`): write both stack slots
   through `volatile` stores into a `struct mover_stack_args` local (the
   only thing in the frame, so it *is* the outgoing-argument area) and
   call through a 4-argument function-pointer view (`MOVER_NEW`). A

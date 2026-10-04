@@ -105,7 +105,7 @@ and [graphics_loading.md](./graphics_loading.md).
   all 25 functions in `sub_80188D0`-`sub_8019660` as real C -
   method-table ("vtable" at `self+0xc`) constructor/destructor pairs
   (`sub_8018948` is UNUSED; `sub_801961C` base-constructs through
-  `sub_801B7D8`), a part-gone bitmap setter, the squares-table
+  `CreatePlatformMover`), a part-gone bitmap setter, the squares-table
   constructor `sub_80189EC`, the two-part effect (state machine
   `sub_8018A30`, child spawners `sub_8018BDC`/`sub_8018CB0`), the "mover"
   object (`sub_8018D70` spawner, `sub_8018E4C` per-frame update,
@@ -149,11 +149,11 @@ and [graphics_loading.md](./graphics_loading.md).
 - GitHub issue #25 (0x0801A794-0x0801B85C, shared structs in
   `include/gobj_1a794.h`): `src/graphics/actor_part_1a794.c`
   (`sub_801A794`-`sub_801A874`), `src/graphics/actor_part_1ab34.c`
-  (`sub_801AB34`) and `src/graphics/actor_part_1b208.c`
-  (`sub_801B208`-`sub_801B854`) - 23 functions: the level-object class
-  (`gStaticData_087E49DC`) and its oscillating-platform mover
-  (`gStaticData_087E4A54`) - plus `src/graphics/actor_part_1a878.c`
-  (`sub_801A878`, the level-object spawner, built with
+  (`CheckPlatformContact`) and `src/graphics/actor_part_1b208.c`
+  (`UpdatePlatform`-`sub_801B854`) - 23 functions: the level-object class
+  (`gPlatformVtable`) and its oscillating-platform mover
+  (`gPlatformMoverVtable`) - plus `src/graphics/actor_part_1a878.c`
+  (`CreatePlatform`, the level-object spawner, built with
   `tools/agbcc/bin/old_agbcc`; NAKED under agbcc, see
   [docs/matching/old-agbcc-retry.md](../matching/old-agbcc-retry.md)).
   `sub_801AB98` from the same range was parked, now matched (last-five

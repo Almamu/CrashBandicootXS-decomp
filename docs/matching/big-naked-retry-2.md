@@ -1,16 +1,16 @@
-# Second big NAKED retry: `sub_800B8DC` and `sub_8011BD4`
+# Second big NAKED retry: `UpdateEnemyCtrl` and `sub_8011BD4`
 
 Two large NAKED functions that had never had a C draft kept in the
 tree. Both closed as real C under old_agbcc.
 
 | Function | File | Issue | Size | Compiler | Result |
 |---|---|---|---|---|---|
-| `sub_800B8DC` | `src/graphics/actor_part112.c` | #10 | 1132 bytes | old_agbcc (object added to `OLD_AGBCC_OBJS`) | matched |
+| `UpdateEnemyCtrl` | `src/graphics/actor_part112.c` | #10 | 1132 bytes | old_agbcc (object added to `OLD_AGBCC_OBJS`) | matched |
 | `sub_8011BD4` | `src/graphics/actor_part82.c` | #16 | 1420 bytes | old_agbcc (object added to `OLD_AGBCC_OBJS`) | matched |
 
 Under the current agbcc the final C is 43 halfwords off for
-`sub_800B8DC` and 36 for `sub_8011BD4`. The other function in
-`actor_part112.c`, `sub_800BD48`, is still NAKED, so the whole file
+`UpdateEnemyCtrl` and 36 for `sub_8011BD4`. The other function in
+`actor_part112.c`, `HitEnemy`, is still NAKED, so the whole file
 builds the same under old_agbcc. `actor_part82.c` holds only
 `sub_8011BD4`.
 
@@ -22,7 +22,7 @@ already had most instructions right. The rest was found with the
 `brute2.py` variant runner, a few options per run, mostly one statement
 at a time.
 
-## `sub_800B8DC` (313 -> 0 halfwords)
+## `UpdateEnemyCtrl` (313 -> 0 halfwords)
 
 The first draft was 16 bytes short and 313 halfwords off.
 
@@ -55,7 +55,7 @@ The first draft was 16 bytes short and 313 halfwords off.
 
 States 1 and 12 are explicit empty cases (the table is indexed by
 `state - 1`). `MarkGone`/`SetVelX`/`SetVelY` moved to the top of the
-file, and `sub_800BD48`'s kept draft now uses the shared copies. That
+file, and `HitEnemy`'s kept draft now uses the shared copies. That
 draft is still 21 halfwords off.
 
 ## `sub_8011BD4` (516 -> 0 halfwords)

@@ -14,30 +14,30 @@ extern void SpawnRedGem();
 extern void SpawnGreenGem();
 extern void SpawnYellowGem();
 extern void sub_801EF0C();
-extern void sub_801F050();
-extern void sub_801F170();
+extern void SpawnVulture();
+extern void SpawnVenusFlytrap();
 extern void sub_801F2BC();
-extern void sub_801F3DC();
-extern void sub_801F528();
-extern void sub_801F7B8();
-extern void sub_801F8DC();
-extern void sub_801FA3C();
-extern void sub_801FB74();
-extern void sub_801FCB4();
-extern void sub_801FDEC();
-extern void sub_801FEEC();
-extern void sub_8020010();
+extern void SpawnBlowgunTribesman();
+extern void SpawnPenguin();
+extern void SpawnPolarBear();
+extern void SpawnPufferfish();
+extern void SpawnShark();
+extern void SpawnMorayEel();
+extern void SpawnElectricEel();
+extern void SpawnSquid();
+extern void SpawnJellyfish();
+extern void SpawnLaserBarrier();
 extern void sub_8020138();
 extern void sub_802026C();
-extern void sub_80203A8();
-extern void sub_80204EC();
-extern void sub_802062C();
+extern void SpawnSaucerLabAssistant();
+extern void SpawnPistonCrusher();
+extern void SpawnFlamethrowerLabAssistant();
 extern void sub_8020788();
 extern void sub_80208C4();
-extern void sub_80209EC();
-extern void sub_8020B0C();
-extern void sub_8020C18();
-extern void sub_8020D4C();
+extern void SpawnRat();
+extern void SpawnFrog();
+extern void SpawnSeaMine();
+extern void SpawnWoodenCrusher();
 extern void SpawnRedGemPlatform();
 extern void SpawnYellowGemPlatform();
 extern void SpawnGreenGemPlatform();
@@ -47,16 +47,16 @@ extern void sub_8021388();
 extern void sub_8021480();
 extern void sub_802155C();
 extern void sub_8021668();
-extern void sub_8021748();
-extern void sub_802183C();
-extern void sub_80218C4();
+extern void SpawnSeaweed();
+extern void SpawnFlame();
+extern void SpawnRockPlatform();
 extern void sub_80218E8();
-extern void sub_802190C();
-extern void sub_8021974();
-extern void sub_8021998();
-extern void sub_80219BC();
+extern void SpawnBonusPlatform();
+extern void SpawnMediumPlatform();
+extern void SpawnSmallPlatform();
+extern void SpawnLargePlatform();
 extern void sub_80219E0();
-extern void sub_8021A00();
+extern void SpawnSealSpawner();
 extern void SpawnTimeCrate3();
 extern void SpawnTimeCrate2();
 extern void SpawnTimeCrate1();
@@ -137,55 +137,55 @@ void (*const gEntitySpawnFuncs[92])() = {
     SpawnTimeCrate2,
     SpawnTimeCrate3,
     sub_801EF0C,
-    sub_801F050,
-    sub_801F170,
+    SpawnVulture,
+    SpawnVenusFlytrap,
     sub_801F2BC,
-    sub_801F3DC,
-    sub_801F528,
-    sub_8021A00,
-    sub_801F7B8,
-    sub_801F8DC,
-    sub_801FA3C,
-    sub_801FB74,
-    sub_801FCB4,
-    sub_801FDEC,
-    sub_801FEEC,
+    SpawnBlowgunTribesman,
+    SpawnPenguin,
+    SpawnSealSpawner,
+    SpawnPolarBear,
+    SpawnPufferfish,
+    SpawnShark,
+    SpawnMorayEel,
+    SpawnElectricEel,
+    SpawnSquid,
+    SpawnJellyfish,
     nullsub_21,
-    sub_8020010,
+    SpawnLaserBarrier,
     sub_8020138,
     sub_802026C,
-    sub_80203A8,
-    sub_80204EC,
+    SpawnSaucerLabAssistant,
+    SpawnPistonCrusher,
     nullsub_21,
     sub_80219E0,
     nullsub_21,
-    sub_80203A8,
-    sub_802062C,
+    SpawnSaucerLabAssistant,
+    SpawnFlamethrowerLabAssistant,
     sub_8020788,
     sub_80208C4,
-    sub_80209EC,
-    sub_8020B0C,
+    SpawnRat,
+    SpawnFrog,
     sub_8021388,
     nullsub_21,
     sub_8021480,
     sub_802155C,
     sub_8021668,
     SpawnTornadoSpinPower,
-    sub_8020C18,
-    sub_8020C18,
-    sub_8020D4C,
-    sub_80219BC,
-    sub_8021998,
-    sub_8021974,
+    SpawnSeaMine,
+    SpawnSeaMine,
+    SpawnWoodenCrusher,
+    SpawnLargePlatform,
+    SpawnSmallPlatform,
+    SpawnMediumPlatform,
     SpawnRedGemPlatform,
     SpawnYellowGemPlatform,
     SpawnGreenGemPlatform,
     SpawnBlueGemPlatform,
     sub_8021280,
-    sub_802190C,
+    SpawnBonusPlatform,
     sub_80218E8,
-    sub_80218C4,
+    SpawnRockPlatform,
     sub_802209C,
-    sub_802183C,
-    sub_8021748,
+    SpawnFlame,
+    SpawnSeaweed,
 };

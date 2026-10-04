@@ -10,13 +10,13 @@ extern void *gUnknown_030012E8;
 extern void *gUnknown_030012F8;
 
 extern struct popup_part *sub_8008434(u16 arg0, u16 arg1, u16 arg2, u16 arg3);
-extern struct popup_hdr *sub_8017FE8(void *mem);
+extern struct enemy_ctrl *sub_8017FE8(void *mem);
 extern u8 GetPaletteSlot(void *cache, s32 recordId);
 extern u8 IsBonusRoundDone(void *self);
-extern s32 sub_801A878(u16 x, u16 y, u16 w, u16 h, s32 id);
+extern s32 CreatePlatform(u16 x, u16 y, u16 w, u16 h, s32 id);
 extern void SetBonusPlatform(void *self, s32 value);
 extern s32 sub_801B984(u16 arg0, u16 arg1, u16 arg2, u16 arg3);
-extern void sub_801F680(void);
+extern void SpawnSeal(void);
 extern void *CreateCrate(u16 arg0, u16 arg1, u16 arg2, u16 arg3, u8 type);
 
 /* Same shape as level_select_parts.h's anim_table/anim_record. */
@@ -45,8 +45,8 @@ struct part_flags_21668
 
 #define PART_FLAGS(part) ((struct part_flags_21668 *)&(part)->base.flags)
 
-/* sub_8021A00's object: an actor with a per-frame callback. */
-struct timed_callback
+/* SpawnSealSpawner's object: an actor with a per-frame callback. */
+struct periodic_spawner
 {
     struct actor base;          // 0x00
     void (*callback)(void);     // 0x1C
@@ -54,7 +54,7 @@ struct timed_callback
     s32 unk_24;
 };
 
-extern struct timed_callback *sub_800CB40(void *mem);
+extern struct periodic_spawner *CreatePeriodicSpawner(void *mem);
 
 /* Inline so old_agbcc re-truncates GetPaletteSlot's u8 result before the
  * nibble insert, as the ROM does. */
@@ -71,7 +71,7 @@ static inline void SetFrameNibble(struct popup_part *part, s32 frame)
 void sub_8021668(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = sub_8009ED0(arg0, arg1, arg2, arg3);
-    struct popup_hdr *hdr;
+    struct enemy_ctrl *hdr;
 
     part->anim = POPUP_ANIM(0x168);
     part->base.x = arg1 << 8;
@@ -98,7 +98,7 @@ void sub_8021668(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 /* Builds a sub_8008434 sprite part on animation table +0x21c, resets
  * its OAM state and frame nibble, clears flags bits 7 and 2 and
  * registers it with gUnknown_030012F8's manager. */
-void sub_8021748(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnSeaweed(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = sub_8008434(arg0, arg1, arg2, arg3);
 
@@ -114,7 +114,7 @@ void sub_8021748(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     sub_8008E94(gUnknown_030012F8, part);
 }
 
-/* sub_8021748 without the animation reset. */
+/* SpawnSeaweed without the animation reset. */
 void sub_80217D0(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = sub_8008434(arg0, arg1, arg2, arg3);
@@ -130,7 +130,7 @@ void sub_80217D0(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 /* Builds a sub_8008434 sprite part on animation table +0x210, resets
  * its OAM state and frame nibble, clears flags bits 7 and 2 and
  * registers it with gUnknown_030012F8's manager. */
-void sub_802183C(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnFlame(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = sub_8008434(arg0, arg1, arg2, arg3);
 
@@ -146,49 +146,49 @@ void sub_802183C(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     sub_8008E94(gUnknown_030012F8, part);
 }
 
-/* Plain `sub_801A878` trampoline (docs/rom_map.md; same callee as
+/* Plain `CreatePlatform` trampoline (docs/rom_map.md; same callee as
  * trigger_effect.c's twin family), id `8`. */
-void sub_80218C4(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnRockPlatform(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    sub_801A878(arg0, arg1, arg2, arg3, 8);
+    CreatePlatform(arg0, arg1, arg2, arg3, 8);
 }
 
-/* Plain `sub_801A878` trampoline, id `6`. */
+/* Plain `CreatePlatform` trampoline, id `6`. */
 void sub_80218E8(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    sub_801A878(arg0, arg1, arg2, arg3, 6);
+    CreatePlatform(arg0, arg1, arg2, arg3, 6);
 }
 
-/* Spawns a sub_801A878 part with id 7 if IsBonusRoundDone(gLevelState)
+/* Spawns a CreatePlatform part with id 7 if IsBonusRoundDone(gLevelState)
  * is set or gLevelState+0x8C is nonzero, else id 5, and hands the
  * result to SetBonusPlatform. */
-void sub_802190C(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnBonusPlatform(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     s32 result;
 
     if (IsBonusRoundDone(gLevelState) || gLevelState[0x8c])
-        result = sub_801A878(arg0, arg1, arg2, arg3, 7);
+        result = CreatePlatform(arg0, arg1, arg2, arg3, 7);
     else
-        result = sub_801A878(arg0, arg1, arg2, arg3, 5);
+        result = CreatePlatform(arg0, arg1, arg2, arg3, 5);
     SetBonusPlatform(gLevelState, result);
 }
 
-/* Plain `sub_801A878` trampoline, id `2`. */
-void sub_8021974(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+/* Plain `CreatePlatform` trampoline, id `2`. */
+void SpawnMediumPlatform(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    sub_801A878(arg0, arg1, arg2, arg3, 2);
+    CreatePlatform(arg0, arg1, arg2, arg3, 2);
 }
 
-/* Plain `sub_801A878` trampoline, id `1`. */
-void sub_8021998(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+/* Plain `CreatePlatform` trampoline, id `1`. */
+void SpawnSmallPlatform(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    sub_801A878(arg0, arg1, arg2, arg3, 1);
+    CreatePlatform(arg0, arg1, arg2, arg3, 1);
 }
 
-/* Plain `sub_801A878` trampoline, id `0`. */
-void sub_80219BC(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+/* Plain `CreatePlatform` trampoline, id `0`. */
+void SpawnLargePlatform(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    sub_801A878(arg0, arg1, arg2, arg3, 0);
+    CreatePlatform(arg0, arg1, arg2, arg3, 0);
 }
 
 /* Plain tail-call trampoline to `sub_801B984` (still raw). */
@@ -202,17 +202,17 @@ void nullsub_21(void)
 {
 }
 
-/* `new`s a 0x28-byte sub_800CB40 object, installs sub_801F680 as its
+/* `new`s a 0x28-byte CreatePeriodicSpawner object, installs SpawnSeal as its
  * callback with +0x20 = 0x78, places it at (arg1, arg2) in Q8, sets
  * flags bit 4 and registers it with gUnknown_030012E8's manager. */
-void sub_8021A00(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnSealSpawner(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    struct timed_callback *obj;
+    struct periodic_spawner *obj;
     s32 zero;
 
-    obj = sub_800CB40(sub_8026EDC(0x28));
+    obj = CreatePeriodicSpawner(sub_8026EDC(0x28));
     zero = 0;
-    obj->callback = sub_801F680;
+    obj->callback = SpawnSeal;
     obj->unk_20 = 0x78;
     obj->unk_24 = zero;
     obj->base.x = arg1 << 8;

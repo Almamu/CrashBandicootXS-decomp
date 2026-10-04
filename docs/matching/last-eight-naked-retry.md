@@ -6,7 +6,7 @@ This pass retried four NAKED functions with C drafts under
 | Function | File | Before | Now | Status |
 |---|---|---|---|---|
 | `sub_8002E20` (#5) | `src/graphics/settings_menu8a2.c` | 14 | match (both compilers) | Real C |
-| `sub_802062C` (#31) | `src/graphics/graphics_loading_1feec.c` | 62 | 12 (same size, old_agbcc) | Draft updated |
+| `SpawnFlamethrowerLabAssistant` (#31) | `src/graphics/graphics_loading_1feec.c` | 62 | 12 (same size, old_agbcc) | Draft updated |
 | `DrawPauseFraction` (#7) | `src/graphics/settings_menu16.c` | 73 (16 bytes long) | 45 (same size, both compilers) | Draft updated |
 | `sub_8001DB4` (#4) | `src/system/link_cable.c` | 136 | 136 (122 found, not adopted) | Note added |
 
@@ -53,7 +53,7 @@ if (i != -1)
 Neither change alone was enough: 20 halfwords (pin only) and 37 (asm
 only).
 
-## `sub_802062C`: 62 to 12
+## `SpawnFlamethrowerLabAssistant`: 62 to 12
 
 The ROM's `str r3, [sp]` / `ldr r3, [sp]` around `sub_8008E94` isn't
 one long-lived part+0x28 pseudo. It can be two:
@@ -147,7 +147,7 @@ These are in the scratchpad's `last8/`:
 - `d.py`, `var.py`, `rtl.sh` and `fnrtl.py`, pointed at this worktree;
 - the variant specs `e1`-`e4` (`sub_8002E20`), `l1`-`l5`
   (`sub_8001DB4`), `m1`-`m9` (`DrawPauseFraction`) and `g1`-`g6`
-  (`sub_802062C`).
+  (`SpawnFlamethrowerLabAssistant`).
 
 ## Verification
 

@@ -49,7 +49,7 @@ struct level_entity_group
 };
 
 /* `struct lk_list` in game_loop41.c, `struct collect_info` in
- * actor_part_1967c.c, the level header of sub_801A878. */
+ * actor_part_1967c.c, the level header of CreatePlatform. */
 struct level_entity_list
 {
     u16 count;              // 0x00 - all entities

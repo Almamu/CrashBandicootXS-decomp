@@ -7,10 +7,10 @@
 extern void *gLevelState;
 extern void *gUnknown_030012F4;
 
-extern struct popup_hdr *sub_801A838(void *block, u16 arg1, u16 arg2);
-extern void sub_8023318(void *self, struct popup_hdr *hdr);
-extern struct popup_hdr *sub_80189EC(void);
-extern struct popup_hdr *sub_80197DC(void);
+extern struct enemy_ctrl *sub_801A838(void *block, u16 arg1, u16 arg2);
+extern void sub_8023318(void *self, struct enemy_ctrl *hdr);
+extern struct enemy_ctrl *sub_80189EC(void);
+extern struct enemy_ctrl *sub_80197DC(void);
 
 struct level_guard
 {
@@ -34,14 +34,14 @@ extern s32 sub_8023324(void *self);
 extern s32 GetCurrentLevel(void *self);
 extern struct spawn_part *sub_80071E4(u16 arg0, u16 arg1, u16 arg2, u16 arg3);
 extern void sub_80070EC(struct spawn_part *part, s32 w, s32 h);
-extern s32 *sub_801A878(u16 x, u16 y, u16 w, u16 h, s32 id);
+extern s32 *CreatePlatform(u16 x, u16 y, u16 w, u16 h, s32 id);
 extern void SetCrateGemPos(void *self, s32 *point);
 
 /* Three-way spawner. While the level controller reports nothing pending
  * and the current level's table entry has no guard, spawns a 0x64x0x64
  * sub_80071E4 part tagged 0x12. Otherwise, unless gPlayer's
  * +0x88 flag is set, hands SetCrateGemPos a point just above-left of a
- * sub_801A878 probe; with the flag set it spawns a 0x28x0x28 part.
+ * CreatePlatform probe; with the flag set it spawns a 0x28x0x28 part.
  * The ROM computes the point's x/y into fresh registers
  * (`subs r2, r1, #2`; `adds r3, r0, #0; subs r3, #30`) where plain C
  * reuses their inputs (9 halfwords off), the same gap as sub_802209C
@@ -62,7 +62,7 @@ void sub_8021280(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     }
     else if (gPlayer[0x88] == 0)
     {
-        s32 *pos = sub_801A878(arg0, arg1, arg2, arg3, 4);
+        s32 *pos = CreatePlatform(arg0, arg1, arg2, arg3, 4);
         register s32 px asm("r1") = pos[0] >> 8;
         register s32 x asm("r2") = px - 2;
         register s32 py asm("r0");
@@ -87,13 +87,13 @@ void sub_8021280(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 }
 
 /* "Two-line text popup" variant with its own header: instead of
- * sub_800CA74 it builds one with sub_801A838 in a fresh 0x30-byte block
+ * CreateEnemyCtrl it builds one with sub_801A838 in a fresh 0x30-byte block
  * (from arg1/arg2), attaches the part to it once, and registers the
  * header with the level controller via sub_8023318. */
 void sub_8021388(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = sub_8009ED0(arg0, arg1, arg2, arg3);
-    struct popup_hdr *hdr;
+    struct enemy_ctrl *hdr;
     struct level_record *rec;
 
     part->anim = POPUP_ANIM(0x288);
@@ -117,7 +117,7 @@ void sub_8021388(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 void sub_8021480(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = sub_8009ED0(arg0, arg1, arg2, arg3);
-    struct popup_hdr *hdr;
+    struct enemy_ctrl *hdr;
     struct level_record *rec;
 
     part->anim = POPUP_ANIM(0x294);
@@ -141,7 +141,7 @@ void sub_8021480(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 void sub_802155C(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = sub_8009ED0(arg0, arg1, arg2, arg3);
-    struct popup_hdr *hdr;
+    struct enemy_ctrl *hdr;
     struct level_record *rec;
 
     part->anim = POPUP_ANIM(0x27c);

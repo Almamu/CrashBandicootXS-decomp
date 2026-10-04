@@ -422,13 +422,13 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   old_agbcc" - 17 former `NAKED` transcriptions in 0x08022D50-0x08026BC0,
   now plain C. This ROM region was built with old_agbcc; see [game-loop-old-agbcc.md](../matching/game-loop-old-agbcc.md).
 - **Issue #10 NAKED retry**: `sub_800C18C`/`sub_800C1E8`
-  (`actor_part114.c`), `sub_800C314` (`actor_part115.c`), `sub_800C074`
-  (`actor_part118.c`, old_agbcc), `sub_800C40C` (`actor_part120.c`,
-  old_agbcc) and `sub_800C6A8` (`actor_part122.c`, old_agbcc) promoted
+  (`actor_part114.c`), `sub_800C314` (`actor_part115.c`), `UpdateEnemyPatrol`
+  (`actor_part118.c`, old_agbcc), `UpdateEnemyAttackCycle` (`actor_part120.c`,
+  old_agbcc) and `SetEnemyState` (`actor_part122.c`, old_agbcc) promoted
   from NAKED to real C. `actor_part118.o`, `actor_part120.o` and
   `actor_part122.o` moved to `OLD_AGBCC_OBJS`; under old_agbcc
-  `actor_part122.c`'s bounds setters (`sub_800C860`/`sub_800C87C`/
-  `sub_800C898`) no longer need register pins. The controller/target
+  `actor_part122.c`'s bounds setters (`SetEnemyRangeXSpeed`/`SetEnemyRangeYSpeed`/
+  `SetEnemyRangeX`) no longer need register pins. The controller/target
   layout is in the new `include/part_ctrl.h`. See
   [docs/matching/issue-10-naked-retry.md](../matching/issue-10-naked-retry.md).
 - **Issue #12 NAKED retry:** `DropCratesAbove` (`game_loop48.c`, old_agbcc,
@@ -456,7 +456,7 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   under old_agbcc (the files' compiler). See
   [docs/matching/near-miss-polish-3.md](../matching/near-miss-polish-3.md).
 
-- **Second big NAKED retry:** `sub_800B8DC` (`actor_part112.c`, GitHub
+- **Second big NAKED retry:** `UpdateEnemyCtrl` (`actor_part112.c`, GitHub
   issue #10, 1132 bytes, the 18-state controller update) promoted from
   NAKED to real C under old_agbcc (`actor_part112.o` joined
   `OLD_AGBCC_OBJS`). State 18's second `animDone` test reads the byte
@@ -464,7 +464,7 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   was statement order and locals. See
   [docs/matching/big-naked-retry-2.md](../matching/big-naked-retry-2.md).
 
-- **Late NAKED retry 3:** `sub_800BD48` (`actor_part112.c`, GitHub
+- **Late NAKED retry 3:** `HitEnemy` (`actor_part112.c`, GitHub
   issue #10, 608 bytes, the 22-state dispatcher) promoted from NAKED to
   real C under old_agbcc. An r2 register variable held live (by empty
   asms only) across the first MarkGone's id compare puts r3 in reload's
@@ -649,11 +649,11 @@ plain C didn't converge.
   live as two extra callee-saved accumulators throughout, the same gap
   as `sub_800D040` above. See
   [docs/matching/issue-13-fc70-continuation.md](../matching/issue-13-fc70-continuation.md).
-- **Now matched as real C (late NAKED retry 3, see docs/matching/late-naked-retry-3.md); entry kept for history.** **`sub_800BD48`** (`src/graphics/actor_part112.c`, new file - GitHub
+- **Now matched as real C (late NAKED retry 3, see docs/matching/late-naked-retry-3.md); entry kept for history.** **`HitEnemy`** (`src/graphics/actor_part112.c`, new file - GitHub
   issue #9/#10, foundational investigation of the large still-raw
   `0x0800B8DC`-`0x0800D040` cluster). An entity-vtable slot of the same
-  object type (`gStaticData_087E3EE4`) as its ROM neighbour
-  `sub_800B8DC` (now real C, see Matched), never called by it. A
+  object type (`gEnemyCtrlVtable`) as its ROM neighbour
+  `UpdateEnemyCtrl` (now real C, see Matched), never called by it. A
   22-case dispatcher on its own third argument - 17 of the 22 states
   are no-ops, the other two distinct paths are an
   ambient-sound-spawn-plus-reflag tail and a
@@ -663,16 +663,16 @@ plain C didn't converge.
   [issue-10-naked-retry.md](../matching/issue-10-naked-retry.md).) See
   [docs/matching/issue-9-10-0x0800b8dc-graphics.md](../matching/issue-9-10-0x0800b8dc-graphics.md)
   for the 22-case dispatch map.
-- **`sub_800C8AC`/`sub_800C8BC`/`sub_800C8CC`** (`src/graphics/actor_part113.c`,
+- **`sub_800C8AC`/`sub_800C8BC`/`SetEnemyAnimMode`** (`src/graphics/actor_part113.c`,
   new file - GitHub issue #9/#10, Phase 2 of the `0x0800B8DC`-cluster
   investigation above, tackling the three `(self, mode)`-shaped trigger
   primitives that pass's own doc flagged as shared by nearly every
   dispatch state). All three real C, matched clean - much smaller and,
-  unlike `sub_800B8DC`/`sub_800BD48`, free of the `self`/`owner`
+  unlike `UpdateEnemyCtrl`/`HitEnemy`, free of the `self`/`owner`
   register-allocation gap (straight-line, no branches). `sub_800C8AC`/
   `sub_800C8BC` cache `mode` into `self+0x7c`/`self+0x78` and delegate
   to the already-matched `sub_800B704`/`sub_800B838`
-  (`actor_part17.c`); `sub_800C8CC` caches into `self+0x68` and fires
+  (`actor_part17.c`); `SetEnemyAnimMode` caches into `self+0x68` and fires
   `_call_via_r3` directly, indexing `self+0x84`'s own pointer array by
   `mode` rather than going through the shared `gStaticData_0816B304`
   table the other two use. See
@@ -682,7 +682,7 @@ plain C didn't converge.
   issue #10 NAKED retry, drafts under `NON_MATCHING`; `sub_800C18C`/
   `sub_800C1E8`/`sub_800C314` are now real C, see Matched) - originally
   **`sub_800C18C`/`sub_800C1E8`/`sub_800C314`/`sub_800C8F8`/
-  `sub_800C940`/`sub_800C97C`/`sub_800C9C8`/`sub_800CBD4`**
+  `sub_800C940`/`sub_800C97C`/`sub_800C9C8`/`CreateKnockedEnemyCtrl`**
   (`src/graphics/actor_part114.c`-`actor_part117.c`, new files - GitHub
   issue #9/#10, Phase 3 of the `0x0800B8DC`-cluster investigation, the
   "remaining leaves" the Phase 1 doc's priority list named). `sub_800C18C`/
@@ -699,30 +699,30 @@ plain C didn't converge.
   and even established idioms like the `(s32)(x<<27)<0` mirror-flag
   test right - see the doc's own "Phase 3" section for the full
   per-function breakdown. `sub_800C9C8` (a thin `sub_8025B0C` wrapper,
-  state 18's floating-popup spawner) and `sub_800CBD4` (`sub_800BD48`
+  state 18's floating-popup spawner) and `CreateKnockedEnemyCtrl` (`HitEnemy`
   states 19-20's child-object allocator, resolving `self+0xc` to the
-  fixed `gStaticData_087E3FA4` table) both matched as real C. See
+  fixed `gKnockedEnemyCtrlVtable` table) both matched as real C. See
   [docs/matching/issue-9-10-0x0800b8dc-graphics.md](../matching/issue-9-10-0x0800b8dc-graphics.md)'s
   "Phase 3" section for the full writeup.
-- **`sub_800C6A8`/`sub_800C860`/`sub_800C87C`/`sub_800C898`** (all
+- **`SetEnemyState`/`SetEnemyRangeXSpeed`/`SetEnemyRangeYSpeed`/`SetEnemyRangeX`** (all
   real C since the issue #10 NAKED retry, see Matched; kept here for
   the history) (`src/graphics/actor_part122.c`, new file - GitHub issue #9/#10, the
   last four functions of the old `asm/code_3_2_17_c6a8.s`, now fully
-  retired). `sub_800C6A8` is the `menu_ui` dialog-widget system's own
+  retired). `SetEnemyState` is the `menu_ui` dialog-widget system's own
   18-state `self+0x74` update, called from all 31 confirmed `menu_ui`
   dispatch-table entries - despite the "menu_ui" framing it turns out to
   run on the exact same `self`/`owner`/`self+0xc`-anchor/`self+0x84`-table
   object shape as the rest of this cluster, and its case bodies manually
-  re-inline `sub_800C8AC`/`sub_800C8BC`/`sub_800C8CC`'s own `bl` targets
+  re-inline `sub_800C8AC`/`sub_800C8BC`/`SetEnemyAnimMode`'s own `bl` targets
   rather than calling those three wrapper functions - confirming these
   are literal instances of the same object type, not merely a
   structurally-similar sibling. NAKED: several case groups compile the
-  identical inlined `sub_800C8CC(self,0)` sequence at deliberately
+  identical inlined `SetEnemyAnimMode(self,0)` sequence at deliberately
   separate, unmerged jump-table addresses, the exact tail-merging trap
   the Phase 3 entry above already documents this agbcc build hitting,
   combined with the same `self`/`owner` register-pressure shape the rest
-  of this cluster's dispatchers share. `sub_800C860`/`sub_800C87C`/
-  `sub_800C898` (the `self+0x70`-relative X/Y homing-bound accessor
+  of this cluster's dispatchers share. `SetEnemyRangeXSpeed`/`SetEnemyRangeYSpeed`/
+  `SetEnemyRangeX` (the `self+0x70`-relative X/Y homing-bound accessor
   triple) matched as real C on the first attempt, using a register-pinned
   local plus an empty `asm volatile` barrier to force the ROM's own
   "load owner field, then shift the radius" instruction order. See
@@ -737,7 +737,7 @@ plain C didn't converge.
   reporting no hit, a flags-bit-3 test, and a `+0x38` byte test).
   `nullsub_15`/`nullsub_3` are genuine empty stubs, matched as real C.
   `sub_800CCCC`/`sub_800CCE0` (both real C) are two more constructors in
-  the `sub_801886C`/`sub_8018858`/`sub_800CBD4` family, both re-pointing
+  the `sub_801886C`/`sub_8018858`/`CreateKnockedEnemyCtrl` family, both re-pointing
   `self+0xc` at `gStaticData_087E400C`. `sub_800CCE0` sits right at the
   physics/collision subsystem's own boundary
   ([docs/matching/issue-12-physics-collision.md](../matching/issue-12-physics-collision.md))
@@ -748,14 +748,14 @@ plain C didn't converge.
   final section for the full writeup.
 - **`sub_800BFA8`** (`src/graphics/actor_part121.c`, new file - GitHub
   issue #9/#10) - the last raw function in the cluster's own
-  `asm/code_3_2_17_bfa8.s` chunk, called only from `sub_800B8DC` state
+  `asm/code_3_2_17_bfa8.s` chunk, called only from `UpdateEnemyCtrl` state
   15. A small `self+0x68`-keyed 2-way dispatcher gated by a
   `__modsi3` "close enough" check against `gRoomFrameCount` (here
-  read as a plain word, not the table-base-pointer role `sub_800C40C`
+  read as a plain word, not the table-base-pointer role `UpdateEnemyAttackCycle`
   uses it in) plus `self->0x48`/`self->0x4c`; on pass, triggers
-  `sub_800C8CC(self,2)`/`sub_800C8CC(self,7)` for `self->0x68==0`/`4`.
+  `SetEnemyAnimMode(self,2)`/`SetEnemyAnimMode(self,7)` for `self->0x68==0`/`4`.
   On failure, re-dispatches through `owner` (`self->0x70`):
-  `owner->0x38` set triggers `sub_800C8CC(self,0)`/`sub_800C8CC(self,4)`
+  `owner->0x38` set triggers `SetEnemyAnimMode(self,0)`/`SetEnemyAnimMode(self,4)`
   for `self->0x68==2`/`7`; `owner->0x38` clear instead gates a
   `sub_800C9C8(0xc,6,0,d,0x400,owner)` call (`d=-0xa` for mode 2,
   `d=8` for mode 7) behind an `owner->0x30`/`owner->0x34` magic-constant

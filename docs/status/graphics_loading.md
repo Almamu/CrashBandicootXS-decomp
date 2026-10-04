@@ -93,9 +93,9 @@ family. Filed under `src/graphics/` on disk, tracked as its own
   Real C, current agbcc (both compilers match). Retires
   `asm/code_3_2_17_22354.s`. See
   [gap-22354-game-context.md](../matching/gap-22354-game-context.md).
-- **`sub_801EF0C`**-**`sub_801FCB4`** (`src/graphics/graphics_loading_1ef0c.c`),
-  **`sub_801FDEC`** (`graphics_loading_1fdec.c`), **`sub_801FEEC`**-
-  **`sub_8020D4C`** (`graphics_loading_1feec.c`; `sub_802062C` closed in
+- **`sub_801EF0C`**-**`SpawnElectricEel`** (`src/graphics/graphics_loading_1ef0c.c`),
+  **`SpawnSquid`** (`graphics_loading_1fdec.c`), **`SpawnJellyfish`**-
+  **`SpawnWoodenCrusher`** (`graphics_loading_1feec.c`; `SpawnFlamethrowerLabAssistant` closed in
   [last-eleven-naked-retry.md](../matching/last-eleven-naked-retry.md)),
   **`sub_8021280`**-**`sub_802155C`** (`graphics_loading_21280.c`) and
   **`sub_8021668`**-**`SpawnIronCrate`** (`graphics_loading_21668.c`) - the
@@ -104,7 +104,7 @@ family. Filed under `src/graphics/` on disk, tracked as its own
   share `include/text_popup.h`. 33 functions were rewritten as plain C with no pins or
   asm; 22 of them were NAKED under agbcc, parked on the "r7 in the
   callee-saved set" gap, which was really a compiler mismatch.
-  `sub_801F170` keeps its agbcc-era pinned C (plain C is 5 halfwords
+  `SpawnVenusFlytrap` keeps its agbcc-era pinned C (plain C is 5 halfwords
   off). `sub_8021280` was NAKED until the NAKED retry pass; it needs four
   register pins and an empty `asm` nudge (see
   [naked-retry-mid45.md](../matching/naked-retry-mid45.md)). See

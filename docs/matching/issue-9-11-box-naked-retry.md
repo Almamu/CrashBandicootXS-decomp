@@ -1,7 +1,7 @@
 # Issues #9-#11: NAKED retry (0x08007634-0x0800D040, box builders / collision)
 
 This pass retried the NAKED functions left in issues #9, #10 and #11
-(21 of them) - the part-list/AABB/collision core, the `sub_800B8DC`
+(21 of them) - the part-list/AABB/collision core, the `UpdateEnemyCtrl`
 controller cluster and the physics subsystem's first functions. 13 are
 real C now.
 
@@ -74,8 +74,8 @@ the older notes said.
 | `sub_8009008` (actor_part11b.c) | not retried. After an unlink it sets the bucket index to `0x100` before the `count > 1` test, so the outer loop restarts at 255 - that has to be in the source somehow, not found. |
 | `sub_80091D4` (actor_part11c.c) | not retried this pass. |
 | `DrawPlayer` (actor_part111.c) | new old_agbcc draft under `NON_MATCHING`, not converged (624 bytes vs 636): `self` in r6 instead of r7 and one spill slot too many. The child repositioning goes through an inline whose argument order (x, y, child) gives the ROM's load order. |
-| `sub_800B8DC` (actor_part112.c) | not retried (1132 bytes). |
-| `sub_800BD48` (actor_part112.c) | draft unchanged, 21 hw (old). In states 1/21/22 the ROM loads the layer's 1 before the `-4` mask and reuses that register as the `gone` OR's operand and destination; a `u32` local gets the order but costs a copy (4 bytes over). The rest is reload scratch registers. |
+| `UpdateEnemyCtrl` (actor_part112.c) | not retried (1132 bytes). |
+| `HitEnemy` (actor_part112.c) | draft unchanged, 21 hw (old). In states 1/21/22 the ROM loads the layer's 1 before the `-4` mask and reuses that register as the `gone` OR's operand and destination; a `u32` local gets the order but costs a copy (4 bytes over). The rest is reload scratch registers. |
 | `sub_800C940` / `sub_800C97C` (actor_part116.c) | drafts unchanged (10 / 27 hw). The ROM saves a callee-saved register it never uses (r5, and r8 with r7 skipped). |
 | `sub_800CD00` (actor_part109.c) | new old_agbcc draft under `NON_MATCHING`, 42 hw: the player box's address is held in r6 from its first build (CSE, including through `-fno-cse-follow-jumps`/`-fno-cse-skip-blocks`) where the ROM rematerializes it from sp until the first overlap test. |
 

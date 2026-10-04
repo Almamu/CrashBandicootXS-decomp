@@ -280,8 +280,8 @@ extern void sub_800B8A8(void *self, s32 flags);
 extern void sub_800B8C8(void *self);
 extern void sub_8017A78(void *self, s32 flags);
 extern void sub_8017A8C(void *self);
-extern void sub_800CA60(void *self, s32 flags);
-extern void sub_800CA74(void *self);
+extern void DestroyEnemyCtrl(void *self, s32 flags);
+extern void CreateEnemyCtrl(void *self);
 extern u8 HasSuperBodySlam(void *arg0);
 extern u8 HasTurboRun(void *arg0);
 extern void SpawnBodySlamPower(u32 arg0, s32 arg1, s32 arg2, s32 arg3);
@@ -1194,7 +1194,7 @@ struct vobj *sub_801A724(void *mem)
 {
     struct vobj *self = mem;
 
-    sub_800CA74(self);
+    CreateEnemyCtrl(self);
     self->vt = (struct vtable *)gStaticData_087E483C;
     return self;
 }
@@ -1202,7 +1202,7 @@ struct vobj *sub_801A724(void *mem)
 void sub_801A73C(struct vobj *self, s32 flags)
 {
     self->vt = (struct vtable *)gStaticData_087E483C;
-    sub_800CA60(self, flags);
+    DestroyEnemyCtrl(self, flags);
 }
 
 void sub_801A750(struct obj_48a4 *self, s32 flags)

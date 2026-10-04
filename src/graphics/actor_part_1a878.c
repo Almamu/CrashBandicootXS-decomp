@@ -1,7 +1,7 @@
 #include "core.h"
 #include "gobj_1a794.h"
 
-/* GitHub issue #25, ROM 0x0801A878-0x0801AB34: sub_801A878, the level
+/* GitHub issue #25, ROM 0x0801A878-0x0801AB34: CreatePlatform, the level
  * object spawner (`new` + inlined constructor sub_801B2E4, spawn-record
  * lookup through the level header at *gEntityFlags, per-type mover
  * attachment). See include/gobj_1a794.h and
@@ -12,10 +12,10 @@
  * scratch-register rotation never matched and the function was parked as
  * NAKED; under old_agbcc it matches with every register pin removed. Two
  * workarounds remain: the hand-written outgoing-argument block for
- * sub_801B7D8's stack-passed byte (old_agbcc also widens a stack-passed
+ * CreatePlatformMover's stack-passed byte (old_agbcc also widens a stack-passed
  * `u8` argument to a word `str`), and the barrier on the palette
  * nibble's 0xF. */
-struct gobj *sub_801A878(u16 id, u16 x, u16 y, u16 index, s32 kind)
+struct gobj *CreatePlatform(u16 id, u16 x, u16 y, u16 index, s32 kind)
 {
     struct gobj *obj;
     struct spawn_rec *rec;

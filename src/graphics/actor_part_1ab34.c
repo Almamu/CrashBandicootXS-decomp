@@ -1,12 +1,12 @@
 #include "core.h"
 #include "gobj_1a794.h"
 
-/* GitHub issue #25, ROM 0x0801AB34-0x0801AB98: sub_801AB34, struct
+/* GitHub issue #25, ROM 0x0801AB34-0x0801AB98: CheckPlatformContact, struct
  * gobj's method-table +0x0C entry - if the player (gPlayer) is
  * active and within 0x7FFF (Q8) on both axes, run the collision test
  * sub_801AB98. See include/gobj_1a794.h. */
 
-s32 sub_801AB34(struct gobj *self)
+s32 CheckPlatformContact(struct gobj *self)
 {
     if (self->type != 6 || self->frame <= 0x12)
     {

@@ -4696,7 +4696,7 @@ not writing order" mistake - `sub_800B838` was initially written
 right after `sub_800B704` (their shared shape made that the natural
 writing order) instead of after `sub_800B7B0` (its real ROM position),
 producing a 48-byte map-address shift starting at `sub_800B734`;
-fixed by reordering. `sub_800B8DC` onward (a 546+-line function) is
+fixed by reordering. `UpdateEnemyCtrl` onward (a 546+-line function) is
 left for a future pass - a background pass on it read the whole
 jump-table dispatcher and worked out most of its shape, but found a
 real structural contradiction (case 17 stores a pointer through
@@ -6282,7 +6282,7 @@ that table), and worked them through the real matching loop.
 
 **Semantics** (all four, differing only in the bit tested/sound ids/tag
 value): tests one bit of `gLevelState+2` (bit 0/1/2/3
-respectively). If set, plays a sound only via `sub_801A878` +
+respectively). If set, plays a sound only via `CreatePlatform` +
 `SetGemPlatform` - the sound id is `0xB`/`3`/`0xA`/`9` normally, or the
 shared fallback `0xC` if either `IsGemPathDone(gLevelState)` is
 true or `gLevelState+0x8c` is nonzero. If clear, spawns a full
@@ -6304,13 +6304,13 @@ documents).
 they're genuinely correct, not guesses:
 - `arg0` (the spawn-position x argument) has to stay `u32` in the
   signature, not `u16` like the other three - the ROM never truncates
-  it at function entry, only at each of its two call sites (`sub_801A878`/
+  it at function entry, only at each of its two call sites (`CreatePlatform`/
   `sub_8008434`), which only happens when the *caller's* declared
   parameter type is narrower than the value being forwarded. Declaring
   it `u16` (matching its siblings) makes gcc truncate it once at entry
   instead, a real structural mismatch, not just a register-numbering one.
 - The functions have to be `void`, not `s32`, even though the ROM's
-  `sub_801A878`/`SetGemPlatform` results flow through `r0`. Writing `return
+  `CreatePlatform`/`SetGemPlatform` results flow through `r0`. Writing `return
   SetGemPlatform(...)` makes the result "live" for the epilogue's final
   `pop {reg}; bx reg` trick, which then avoids `r0` and uses `r1` -
   the ROM's epilogue uses `r0`, meaning the original source discards
@@ -6367,13 +6367,13 @@ whoever picks up register-pinning technique on this specific compiler
 quirk next.
 
 **Left completely raw (21, not attempted this pass):** the rest of the
-chunk - `sub_801FA3C`/`sub_801FB74`/`sub_801FCB4`/`sub_801FDEC`/
-`sub_801FEEC`/`sub_8020010`/`sub_8020138`/`sub_802026C`/`sub_80203A8`/
-`sub_80204EC`/`sub_802062C`/`sub_8020788`/`sub_80208C4`/`sub_80209EC`/
-`sub_8020B0C`/`sub_8020C18`/`sub_8020D4C`/`sub_8021280`/`sub_8021388`/
+chunk - `SpawnShark`/`SpawnMorayEel`/`SpawnElectricEel`/`SpawnSquid`/
+`SpawnJellyfish`/`SpawnLaserBarrier`/`sub_8020138`/`sub_802026C`/`SpawnSaucerLabAssistant`/
+`SpawnPistonCrusher`/`SpawnFlamethrowerLabAssistant`/`sub_8020788`/`sub_80208C4`/`SpawnRat`/
+`SpawnFrog`/`SpawnSeaMine`/`SpawnWoodenCrusher`/`sub_8021280`/`sub_8021388`/
 `sub_8021480`/`sub_802155C`. `docs/rom_map.md` already has real
-characterization for several of these (`sub_8020D4C` as the 15-slot
-table's richer "two-line text popup" slot 0; `sub_802062C`/
+characterization for several of these (`SpawnWoodenCrusher` as the 15-slot
+table's richer "two-line text popup" slot 0; `SpawnFlamethrowerLabAssistant`/
 `sub_8020788` as more instances of that same popup-spawner shape;
 `sub_8021280` as a confirmed bonus/reward-object spawner distinct from
 the twin family) but none were carried through to C this pass - left
