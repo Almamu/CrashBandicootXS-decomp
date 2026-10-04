@@ -91,7 +91,7 @@ Thumb pointer scan): the six byte accessors and `sub_8017A20`-
 - **`sub_8017808`** needs pins on the animation-set base (r1), the index
   (r2, behind an empty `asm("" : "+r")`), and the entry pointer (r0,
   computed as `(idx << 3) + base` for the ROM's operand order).
-- **`InputCtrlKillPlayer`** loads `gUnknown_030012B8` and computes the tag byte's
+- **`InputCtrlKillPlayer`** loads `gPaletteCache` and computes the tag byte's
   address before loading the record table - done with explicit
   statements; `+0x29`'s slot is a 4-bit bitfield (`lsl #28/lsr #28`).
 - **`sub_8017650`'s PMF dispatch** re-indexes `gStaticData_0816C290[state]`
@@ -110,9 +110,9 @@ All 25 functions still match. What became unnecessary:
 - **`InputCtrlKillPlayer`**: all four pinned blocks. The two flag clears are
   bitfield stores (`target->flag7 = 0; target->flag6 = 0;`, new 1-bit
   fields at `+0x0C`), `+0x104` is a plain `unk_104 = 1`, and the
-  `sub_8006D08` call reads `t->table->records[t->tag * 28 + 0x14]`
+  `LoadPaletteSlot` call reads `t->table->records[t->tag * 28 + 0x14]`
   directly. The two `asm("" : "+r")` barriers are gone. What remains is
-  the ordering `cache = gUnknown_030012B8;` before `t = self->target;`.
+  the ordering `cache = gPaletteCache;` before `t = self->target;`.
 - **The "mark gone" sequence** (`sub_80178EC` and `sub_8017650`): no pins
   and no `volatile` id re-read. It is `MARK_GONE(t)` - `t->gone = 1`, then
   `SET_ID_BIT(t->field_08)` unless the id is `0xFFFF` - the same

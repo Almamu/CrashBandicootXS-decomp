@@ -13,10 +13,10 @@ struct SoundChannelItem {
     void *asset;    /* +0x00: tile/gfx asset pointer, ShowSlidePicture only */
     s32 field_04;     /* +0x04: WaitForKeyPress's "count" arg */
     s32 field_08;       /* +0x08: OR'd with -0x80 then truncated to a byte
-                         * (bit 7 set), BeginSlide's sub_800132C arg */
+                         * (bit 7 set), BeginSlide's FadeBrightness arg */
     s32 field_0c;         /* +0x0c: sentinel -1 means "none"; else
                             * truncated to a byte and passed to
-                            * sub_800132C, RunSlideshow/EndSlide */
+                            * FadeBrightness, RunSlideshow/EndSlide */
     u8 field_10;            /* +0x10: WaitForKeyPress's checkButtons arg;
                               * also SkipSlides's scan target (==1) */
     u8 field_11;              /* +0x11: nonzero triggers a duck-out via
@@ -44,7 +44,7 @@ extern u32 GetCurrentSong(struct AudioContext *self);
 extern void PlaySong(struct AudioContext *self, u32 id);
 extern void FadeOutMusic(struct AudioContext *self, u32 value);
 extern void StopSfx(struct AudioContext *self, u32 id);
-extern void sub_800132C(u8 flags, s32 frameDelay, u8 sync);
+extern void FadeBrightness(u8 flags, s32 frameDelay, u8 sync);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern s32 WaitForKeyPress(s32 count, u8 checkButtons, s32 mask);
 extern void LoadTaggedAsset(void *asset, void *dest);
@@ -72,11 +72,11 @@ void BeginSlide(struct SoundChannelList *self, s32 idx)
     {
         if (item->field_18 != 0x63)
             PlaySfx(gAudioContext, item->field_18, 0x100);
-        sub_800132C(self->items[idx]->field_08 | -0x80, 1, 0);
+        FadeBrightness(self->items[idx]->field_08 | -0x80, 1, 0);
     }
     else
     {
-        sub_800132C(item->field_08 | -0x80, 1, 0);
+        FadeBrightness(item->field_08 | -0x80, 1, 0);
         if (self->items[idx]->field_18 != 0x63)
         {
             while (GetCurrentSong(gAudioContext) != self->items[idx]->field_14)
@@ -121,7 +121,7 @@ void RunSlideshow(struct SoundChannelList *self0)
             s32 v = self->items[i]->field_0c;
 
             if (v != -1) {
-                sub_800132C((u8)v, 1, 0);
+                FadeBrightness((u8)v, 1, 0);
             }
         }
 
@@ -179,7 +179,7 @@ s32 SkipSlides(struct SoundChannelList *self, s32 startIdx, u8 condFlag)
  * as `ShowSlidePicture`'s cousin in game_loop18.c, but for a different
  * global), DMA3-copies the asset's first half into `BG_PLTT` (a second,
  * independent palette-DMA-plus-DISPCNT-write path alongside the
- * already-documented `sub_8001614`/`gUnknown_03001288` one - see
+ * already-documented `CommitDispcnt`/`gDispcnt` one - see
  * docs/rom_map.md), and finally commits `gUnknown_03001314`'s low
  * halfword straight to `REG_DISPCNT`.
  *

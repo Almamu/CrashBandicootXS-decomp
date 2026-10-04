@@ -5,7 +5,7 @@
 extern void *gHud;
 extern void *gAudioContext;
 extern void *gUnknown_030012D0;
-extern struct tile_asset_cache *gUnknown_030012B8;
+extern struct palette_cache *gPaletteCache;
 
 extern u8 IsInBonusRound(struct level_state *self);
 extern u8 IsInGemPath(struct level_state *self);
@@ -13,29 +13,29 @@ extern u8 *GetCurrentLevelFlags(struct level_state *self);
 extern void sub_801EB04(s32 a, u16 b, u16 c, u16 d);
 extern void sub_8028474(void *state);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
-extern u8 sub_8006DF8(struct tile_asset_cache *self, s32 recordId);
-extern void sub_8006D08(struct tile_asset_cache *self, s32 slot, s32 recordId);
-extern void sub_8006DA0(struct tile_asset_cache *self, s32 index);
+extern u8 GetPaletteSlot(struct palette_cache *self, s32 recordId);
+extern void LoadPaletteSlot(struct palette_cache *self, s32 slot, s32 recordId);
+extern void UploadPaletteSlot(struct palette_cache *self, s32 index);
 
 /* Record 47's periodic-trigger setter (docs/rom_map.md, "An
  * achievement/unlock-icon spawner family, tied to gSpriteBankTable
  * record 47") - `TickLevelClock` is its decrementer/consumer.
  *
- * The ROM keeps `&gUnknown_030012D0` and `&gUnknown_030012B8` alive
- * across the `sub_8006DF8` call in `r4`/`r7` (only 4 low registers
+ * The ROM keeps `&gUnknown_030012D0` and `&gPaletteCache` alive
+ * across the `GetPaletteSlot` call in `r4`/`r7` (only 4 low registers
  * total, `r4`'s slot reused from the now-dead `seconds` parameter).
  * Blanket register pins for all of `self`/`seconds`/the two cached
  * globals/`slot` (mirroring the ROM's map directly) made things worse
  * - a pinned `slot` picked up a spurious truncate-and-remask on every
  * read, and a stray stack spill appeared for the `0x234` offset
  * constant. What actually closes it: 1) a `base` local snapshotting
- * `gUnknown_030012B8`'s value *before* the first chase (not inline in
+ * `gPaletteCache`'s value *before* the first chase (not inline in
  * the call), so its evaluation lands in `r0` early exactly like the
  * ROM's `ldr r0,[r7]` and the chase is forced into `r1`; 2) a single
  * `register s32 off asm("r2")` pin for the `0x8d << 2` (`0x234`) field
  * offset in the *first* chase only, matching the ROM's `movs
  * r2,#0x8d; lsls r2,r2,#2` - this also stops gcc from caching that
- * constant in a register across the `sub_8006DF8` call, which is what
+ * constant in a register across the `GetPaletteSlot` call, which is what
  * was pushing something else into `r8`; 3) fresh, differently-named
  * locals (`p3b`/`headerb`/`recordb`) for the *second* chase instead of
  * reusing `p3`/`header`/`record` - reusing the same C variable names
@@ -43,13 +43,13 @@ extern void sub_8006DA0(struct tile_asset_cache *self, s32 index);
  * the first's choice instead of letting `r0`/`r1` fall out naturally
  * (`r0` is free again there since the first call's result is already
  * in `slot`/r6). No explicit pin is needed for `self`, `cache1`
- * (`&gUnknown_030012B8`), or `slot` - they land in `r5`/`r7`/`r6`
+ * (`&gPaletteCache`), or `slot` - they land in `r5`/`r7`/`r6`
  * purely from the resulting register pressure, matching the ROM
  * exactly. */
 void FreezeLevelClock(struct level_state *self, s32 seconds)
 {
     register s32 off asm("r2");
-    struct tile_asset_cache *base;
+    struct palette_cache *base;
     void *p3, *header, *record;
     void *p3b, *headerb, *recordb;
     u8 recordId, slot;
@@ -59,23 +59,23 @@ void FreezeLevelClock(struct level_state *self, s32 seconds)
 
     self->countdown += seconds * 60;
 
-    base = gUnknown_030012B8;
+    base = gPaletteCache;
     p3 = *(void **)gUnknown_030012D0;
     header = *(void **)p3;
     off = 0x8d << 2;
     record = *(void **)((u8 *)header + off);
     recordId = *((u8 *)record + 0x30);
-    slot = sub_8006DF8(base, recordId);
+    slot = GetPaletteSlot(base, recordId);
 
     p3b = *(void **)gUnknown_030012D0;
     headerb = *(void **)p3b;
     recordb = *(void **)((u8 *)headerb + 0x234);
     recordId = *((u8 *)recordb + 0x84);
-    sub_8006D08(gUnknown_030012B8, slot, recordId);
+    LoadPaletteSlot(gPaletteCache, slot, recordId);
 
     level = self->cat;
     if (level->kind == 3) {
-        sub_8006DA0(gUnknown_030012B8, slot);
+        UploadPaletteSlot(gPaletteCache, slot);
     }
 }
 
@@ -89,7 +89,7 @@ void FreezeLevelClock(struct level_state *self, s32 seconds)
  * odometer, saturating (not wrapping) once the top field hits its cap.
  *
  * The trigger half uses the same `FreezeLevelClock` register-pinning recipe
- * (see its comment above) for the `sub_8006DF8`/`sub_8006D08` cross-
+ * (see its comment above) for the `GetPaletteSlot`/`LoadPaletteSlot` cross-
  * call pair. Two more pins close the rest: `addr`/`countdown` pinned
  * to `r1`/`r3` reproduce the ROM's exact front-of-function map (the
  * countdown pointer and its loaded value), and that same `addr`
@@ -123,29 +123,29 @@ void TickLevelClock(struct level_state *self)
 
         if (newCountdown == 0) {
             register s32 off asm("r2");
-            struct tile_asset_cache *base;
+            struct palette_cache *base;
             void *p3, *header, *record;
             void *p3b, *headerb, *recordb;
             u8 recordId, slot;
             struct level_category *level;
 
-            base = gUnknown_030012B8;
+            base = gPaletteCache;
             p3 = *(void **)gUnknown_030012D0;
             header = *(void **)p3;
             off = 0x8d << 2;
             record = *(void **)((u8 *)header + off);
             recordId = *((u8 *)record + 0x30);
-            slot = sub_8006DF8(base, recordId);
+            slot = GetPaletteSlot(base, recordId);
 
             p3b = *(void **)gUnknown_030012D0;
             headerb = *(void **)p3b;
             recordb = *(void **)((u8 *)headerb + 0x234);
             recordId = *((u8 *)recordb + 0x30);
-            sub_8006D08(gUnknown_030012B8, slot, recordId);
+            LoadPaletteSlot(gPaletteCache, slot, recordId);
 
             level = self->cat;
             if (level->kind == 3) {
-                sub_8006DA0(gUnknown_030012B8, slot);
+                UploadPaletteSlot(gPaletteCache, slot);
             }
         }
     } else {

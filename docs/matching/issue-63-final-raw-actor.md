@@ -40,12 +40,12 @@ It's a full-screen alpha-blend overlay controller: three small BG
 scratch buffers feeding `LoadGraphicsPackage`, a combined
 BLDCNT/BLDALPHA mirror re-applied every frame to drive a flicker/pulse
 effect, and a hookup to the shared text icon manager
-(`gSmallFont`) and tile cache (`gUnknown_030012B8`).
+(`gSmallFont`) and tile cache (`gPaletteCache`).
 
 ## `InitContinuePrompt` (`src/graphics/actor_part87.c`) - matched, real C
 
 The constructor half: allocates and initializes the three BG scratch
-buffers (`sub_8026EDC`/`sub_801E644`), loads their graphics packages,
+buffers (`sub_8026EDC`/`InitBgSetup`), loads their graphics packages,
 clears palette entry 0, builds the DISPCNT value (mode 0, 1D OBJ
 mapping, BG0/BG1/BG2 enabled), calls `sub_803487C` for the other setup
 half, then builds the BLDCNT/BLDALPHA alpha-blend value (BG2 -> BG0,
@@ -55,7 +55,7 @@ fields, and ducks the audio context out via `FadeOutMusic`.
 This one came *extremely* close to a real match on the first pass -
 every field, struct offset, and the overwhelming majority of individual
 register choices were reproduced exactly through heavy register pinning
-(`self`->r5, a `buf` pin->r0 relying on `sub_801E644` not clobbering
+(`self`->r5, a `buf` pin->r0 relying on `InitBgSetup` not clobbering
 r0 across the call, `zero`->r8, `c0x40`->sb, `one`->r6, `four`->r4) plus
 several inline-asm anchors for spots where this compiler's own optimizer
 takes a shortcut the ROM's build didn't (reusing a still-valid
@@ -120,31 +120,31 @@ supplies the real bytes at that link position on its own).
 ## `sub_803487C` (`src/graphics/actor_part88.c`) - parked, NON_MATCHING
 
 The other setup half, called from `InitContinuePrompt`: flushes/double-flushes
-the shared VRAM upload cursor (`gUnknown_030012FC`, `struct
+the shared VRAM upload cursor (`gObjVramCursor`, `struct
 vram_upload_cursor`), hooks `self->icons` up to the global text icon
 manager (`gSmallFont`, `struct icon_manager` - already fully
 described in `include/icon_manager.h`), fires its 7th (index 6) OAM
 trampoline slot via `_call_via_r1` (the same `icon_slot` shape
 `sub_8011A1C`/`actor_part39.c` already established), clears
 `icons->field_118` and re-derives the cursor's limit from
-`icons->field_12c << 5` (`sub_8006C58`), resets the shared tile cache
-(`gUnknown_030012B8`, `struct tile_asset_cache`) and pins its first four
-slots (`sub_8006D50`), hand-seeds those same four slots with four fixed
+`icons->field_12c << 5` (`ReserveObjVram`), resets the shared tile cache
+(`gPaletteCache`, `struct palette_cache`) and pins its first four
+slots (`ClaimPaletteSlot`), hand-seeds those same four slots with four fixed
 32-byte tile patterns straight from ROM data
 (`gStaticData_0817C512`/`532`/`552`/`572`) via a 16-iteration loop with
 six independent running pointers, flushes the cache, sets the fade
 overlay's `dispcnt`'s OBJ-enable bit, and finally flushes/double-syncs
-the OAM shadow buffer (`gUnknown_03001300`).
+the OAM shadow buffer (`gOamBuffer`).
 
 Two structural findings worth recording since they recur throughout
 this codebase but were freshly re-confirmed here:
 
-- `gUnknown_030012FC`/`gUnknown_030012B8` are re-read fresh from their
+- `gObjVramCursor`/`gPaletteCache` are re-read fresh from their
   global pointer at every single use, never cached in a local across a
   call - the ROM's own build only ever caches the *address of the
   global* in a register (one `ldr rX, =gUnknown_...`), re-dereferencing
   through it after every `bl`. A plain `struct vram_upload_cursor
-  *cursor = gUnknown_030012FC;` local compiles noticeably shorter/wrong
+  *cursor = gObjVramCursor;` local compiles noticeably shorter/wrong
   here.
 - `self->icons` is likewise re-read from `self` (not kept in a
   register, and not re-fetched from `gSmallFont` again) after the
@@ -160,7 +160,7 @@ project's **confirmed categorical gcc-2.9 r7-pin bug** (see
 instructions but this compiler's own push/pop-list computation never
 includes r7 for it, regardless of how the source is phrased. Tried and
 failed here: a barrier extending the pin's live range across the
-`sub_8006DC8` call immediately after the loop, hoisting the declaration
+`UploadPaletteCache` call immediately after the loop, hoisting the declaration
 to function scope (matching how `self`'s own r8 pin *does* get
 protected), and narrowing every other pinned local's scope so r7 isn't
 "crowded". All six of the loop's *other* running-pointer registers

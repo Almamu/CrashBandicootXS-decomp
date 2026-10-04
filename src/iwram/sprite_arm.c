@@ -334,8 +334,8 @@ struct sprite_frame_cache_node {
     void *vramAddr;
 };
 
-extern struct sprite_frame_cache_node gUnknown_03001354;
-extern struct sprite_frame_cache_node gUnknown_03001364;
+extern struct sprite_frame_cache_node gSpriteFrameCacheCurrent;
+extern struct sprite_frame_cache_node gSpriteFrameCachePrevious;
 
 #define OBJ_TILE_INDEX(addr) (((u32)(addr) - (u32)OBJ_VRAM0) >> 5)
 
@@ -363,18 +363,18 @@ s32 LookupSpriteFrameCache(u8 *frame)
 {
     struct sprite_frame_cache_node *node;
 
-    for (node = gUnknown_03001354.next; node != &gUnknown_03001354; node = node->next) {
+    for (node = gSpriteFrameCacheCurrent.next; node != &gSpriteFrameCacheCurrent; node = node->next) {
         if (node->frame == frame)
             return OBJ_TILE_INDEX(node->vramAddr);
     }
-    for (node = gUnknown_03001364.next; node != &gUnknown_03001364; node = node->next) {
+    for (node = gSpriteFrameCachePrevious.next; node != &gSpriteFrameCachePrevious; node = node->next) {
         if (node->frame == frame) {
             node->prev->next = node->next;
             node->next->prev = node->prev;
-            node->prev = &gUnknown_03001354;
-            node->next = gUnknown_03001354.next;
-            gUnknown_03001354.next->prev = node;
-            gUnknown_03001354.next = node;
+            node->prev = &gSpriteFrameCacheCurrent;
+            node->next = gSpriteFrameCacheCurrent.next;
+            gSpriteFrameCacheCurrent.next->prev = node;
+            gSpriteFrameCacheCurrent.next = node;
             return OBJ_TILE_INDEX(node->vramAddr);
         }
     }
@@ -385,7 +385,7 @@ NAKED s32 LookupSpriteFrameCache(u8 *frame)
 {
     asm(".syntax unified\n"
         "\tstmfd sp!, {lr}\n"
-        "\tldr r3, .L030007C4 @ =gUnknown_03001354\n"
+        "\tldr r3, .L030007C4 @ =gSpriteFrameCacheCurrent\n"
         "\tldr r12, [r3]\n"
         "\tcmp r12, r3\n"
         "\tbeq .L03000744\n"
@@ -405,12 +405,12 @@ NAKED s32 LookupSpriteFrameCache(u8 *frame)
         "\tcmp r12, r2\n"
         "\tbne .L03000714\n"
         ".L03000744:\n"
-        "\tldr r3, .L030007C8 @ =gUnknown_03001364\n"
+        "\tldr r3, .L030007C8 @ =gSpriteFrameCachePrevious\n"
         "\tldr r12, [r3]\n"
         "\tcmp r12, r3\n"
         "\tbeq .L030007B8\n"
         "\tmov r2, r3\n"
-        "\tldr lr, .L030007C4 @ =gUnknown_03001354\n"
+        "\tldr lr, .L030007C4 @ =gSpriteFrameCacheCurrent\n"
         ".L0300075C:\n"
         "\tldr r3, [r12, #8]\n"
         "\tcmp r3, r0\n"
@@ -440,8 +440,8 @@ NAKED s32 LookupSpriteFrameCache(u8 *frame)
         "\tmvn r0, #0\n"
         "\tldmfd sp!, {lr}\n"
         "\tbx lr\n"
-        ".L030007C4: .4byte gUnknown_03001354\n"
-        ".L030007C8: .4byte gUnknown_03001364\n"
+        ".L030007C4: .4byte gSpriteFrameCacheCurrent\n"
+        ".L030007C8: .4byte gSpriteFrameCachePrevious\n"
         ".syntax divided\n");
 }
 #endif

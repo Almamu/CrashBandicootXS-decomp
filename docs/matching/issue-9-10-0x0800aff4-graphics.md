@@ -65,8 +65,8 @@ neighborhood - the same fields `actor_part16.c`/`actor_part79.c`/
 Two file-scope globals not previously declared anywhere in `src/`:
 `gUnknown_03000818`/`gUnknown_0300081C` (both plain `u32`, alongside
 the already-`extern`'d `gRoomFrameCount` frame counter and
-`gUnknown_030012CC`, a plain `void *` OAM-manager-style global several
-other files already pass to `sub_8007A84`).
+`gSpriteRenderer`, a plain `void *` OAM-manager-style global several
+other files already pass to `DrawSprite`).
 
 ### Block by block
 
@@ -103,7 +103,7 @@ chain):
      *different* vtable slot here, `+0x20`/`+0x24`).
 2. **Unconditionally** (any mode, using `self`'s own `self+0x8c`
    deadline): draws `self` itself via
-   `sub_8007A84(gUnknown_030012CC, self)` (matched, `actor_part.c` -
+   `DrawSprite(gSpriteRenderer, self)` (matched, `actor_part.c` -
    queues `self`'s own OAM using its own Q8 position, truncated to
    int) - unconditionally if `mode == 3` **or** the deadline has
    expired (`self+0x8c <= gRoomFrameCount`); while the deadline is
@@ -137,8 +137,8 @@ chain):
      buffer - specifically `self+0xb8[nextWriteIndex]`, the slot about
      to be overwritten *next* frame, i.e. `self`'s own position from
      (up to) 8 frames ago - and adds a rotating offset built from the
-     shared 256-entry sine-ish table `gStaticData_0816A820` (already
-     `extern s16 gStaticData_0816A820[];`-declared and confirmed real
+     shared 256-entry sine-ish table `gSineTable` (already
+     `extern s16 gSineTable[];`-declared and confirmed real
      in `actor_part72.c`, itself tied by `docs/rom_map.md` to the
      minimap and an "orbiting-companion actor"):
      `child.x = oldX + (table[frame & 0xff] << 4)`,
@@ -158,7 +158,7 @@ This is the per-frame update for a **"stars orbiting a dizzy head"
 companion effect** attached to `self` (almost certainly the player,
 given `gLevelState+0x78`'s "mode" values `1`/`2`/`3` read as an
 idle/orbit-active/just-stunned state progression, and given
-`actor_part.c`'s `sub_8007A84` - already established as an OAM-queue
+`actor_part.c`'s `DrawSprite` - already established as an OAM-queue
 call, not a hitbox commit): while `mode == 3` (just took a hit), the
 single child effect object snaps to a fixed spot near `self`'s head and
 both `self` and the child flicker together on the same 4-frame parity
@@ -233,7 +233,7 @@ Verified byte-exact via the isolated `cpp`/`agbcc`/`as` +
 `0x0800AFF4`-`0x0800B270` (636 bytes): the standalone-compiled output
 is exactly 636 bytes, and every differing byte (49 of 636) falls
 inside one of the function's `bl` call-site half-word pairs (6 calls:
-`RandRange` x2, `_call_via_r1` x2, `sub_8007A84` x1, `SetMaskLevel`
+`RandRange` x2, `_call_via_r1` x2, `DrawSprite` x1, `SetMaskLevel`
 x1) or a symbol-relocated `.4byte` literal-pool entry (8 of the 11
 pool entries reference RAM-address symbols; the remaining 3 are plain
 numeric constants - `0xFFFFFA00`/`0xFFFFED00`/`0xFFFFE800` - and those
@@ -267,7 +267,7 @@ coincide` (checksum matches).
 ## Cross-references
 
 - `docs/rom_map.md` - "eight more core reads" (the original partial
-  `+0x16`-byte-clamp flag) and the `gStaticData_0816A820`/
+  `+0x16`-byte-clamp flag) and the `gSineTable`/
   `gLevelState+0x78` mentions this session reconciled against.
 - `docs/matching/issue-9-10-0x0800aaec-graphics.md` - the
   `self+0x20`/`+0x2d`/28-byte-record convention worked out in detail
@@ -278,10 +278,10 @@ coincide` (checksum matches).
 - `src/graphics/actor_part16.c` - the `self+0x8c`
   `IsTimerArmed`/`SetTimer` convention and the mirror-flag-bit
   convention, both reused here.
-- `src/graphics/actor_part72.c` - `gStaticData_0816A820`'s own
+- `src/graphics/actor_part72.c` - `gSineTable`'s own
   `extern s16 [];` declaration and confirmed 256-entry sine-table
   shape.
-- `src/graphics/actor_part.c` - `sub_8007A84`'s own matched definition
+- `src/graphics/actor_part.c` - `DrawSprite`'s own matched definition
   (confirms it's an OAM-queue/draw call, not a hitbox operation).
 
 ## Later pass (issue #9 NAKED retry)

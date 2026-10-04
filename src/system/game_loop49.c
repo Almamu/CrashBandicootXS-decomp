@@ -329,7 +329,7 @@ void sub_800F258(void)
  * sprite/animation" triplet every state-transition function in this
  * cluster shares. Looks up `self`'s hitbox-record row
  * (`self+0x20`-table/`self+0x2d`-tag/28-byte-stride, this subsystem's
- * standard AABB convention) and calls `sub_8006DF8` with its `+0x14`
+ * standard AABB convention) and calls `GetPaletteSlot` with its `+0x14`
  * byte to compute a direction/animation nibble, folded into `self+0x29`
  * (low nibble replaced, high nibble kept - `(x & 0xf) | (old & ~0xf)`).
  * Calls `sub_800F258` (flush any pending case-0xa commits), then
@@ -355,7 +355,7 @@ void sub_800F2BC(struct phys_obj *self)
         PhysSetTag(self, 0x23);
         recs = self->anim->records;
         rec = &recs[self->tag];
-        self->slot = sub_8006DF8(gUnknown_030012B8, rec->unk_14);
+        self->slot = GetPaletteSlot(gPaletteCache, rec->unk_14);
         sub_800F258();
         sub_8028474(gHud);
         PlaySfx(gAudioContext, 4, 0x100);
@@ -377,7 +377,7 @@ void sub_800F2BC(struct phys_obj *self)
  * makes), sets `self+0x4d` bit `0x80` and `gPlayer+0x80 = 1`,
  * tags `self+0x2d = 0x22` (this case's own state constant), and runs
  * the same `sub_80087C0`/`sub_80087B4`/`sub_800872C` triplet plus the
- * `sub_8006DF8`-driven `self+0x29` nibble update `sub_800F2BC` uses.
+ * `GetPaletteSlot`-driven `self+0x29` nibble update `sub_800F2BC` uses.
  * Calls `sub_8025A0C(gEntityFlags, self+8)` (marks `self`'s
  * position in the same 32x32 collision-cell bitmap `sub_800EEF0`
  * touches).
@@ -420,7 +420,7 @@ void sub_800F368(struct phys_obj *self)
         struct anim_rec *recs = self->anim->records;
         struct anim_rec *rec = &recs[self->tag];
 
-        self->slot = sub_8006DF8(gUnknown_030012B8, rec->unk_14);
+        self->slot = GetPaletteSlot(gPaletteCache, rec->unk_14);
     }
     sub_8025A0C(gEntityFlags, self->id);
 
@@ -535,7 +535,7 @@ void sub_800F4F4(struct phys_obj *self)
  * to the tail instead. Tail (`self+0x29` nibble update via
  * `sub_800815C(self)`) matches the same `(x & 0xf) | (old & ~0xf)` fold
  * `sub_800F2BC`/`sub_800F368` use, just via a different lookup helper
- * (`sub_800815C` instead of `sub_8006DF8` directly - presumably an
+ * (`sub_800815C` instead of `GetPaletteSlot` directly - presumably an
  * already-classified variant). */
 
 void sub_800F5B8(struct phys_obj *self)
@@ -921,7 +921,7 @@ void sub_800F990(struct phys_obj *self)
             struct anim_rec *recs = self->anim->records;
             struct anim_rec *rec = &recs[self->tag];
 
-            self->slot = sub_8006DF8(gUnknown_030012B8, rec->unk_14);
+            self->slot = GetPaletteSlot(gPaletteCache, rec->unk_14);
         }
         {
             s32 d = (s32)((u32)(self->u48.n & 0xc0) >> 6);
@@ -962,7 +962,7 @@ void sub_800F990(struct phys_obj *self)
             struct anim_rec *recs = self->anim->records;
             struct anim_rec *rec = &recs[self->tag];
 
-            self->slot = sub_8006DF8(gUnknown_030012B8, rec->unk_14);
+            self->slot = GetPaletteSlot(gPaletteCache, rec->unk_14);
         }
         if (self->u48.n & 0xc0)
             PlaySfx(gAudioContext, 0x10, 0x100);

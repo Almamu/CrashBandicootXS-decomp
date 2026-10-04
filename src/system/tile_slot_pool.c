@@ -17,7 +17,7 @@
  *   non-resident, all counts zero.
  * - `AcquireTileSlot(pool, tile)` - acquire: if source tile `tile & 0x3FFF`
  *   isn't resident, pops a free slot and queues a 64-byte (8bpp tile)
- *   VRAM DMA of it via `sub_80265FC`; bumps the slot's count and returns
+ *   VRAM DMA of it via `UploadTileSlot`; bumps the slot's count and returns
  *   a BG map entry: the slot number with `tile`'s top two bits moved to
  *   bits 10-11 (the map entry's flip bits). Upper bits of the returned
  *   entry are never set.
@@ -95,7 +95,7 @@ extern s32 QueueVramDmaTransfer(void *src, void *dest, u16 size, u16 unit);
 extern u8 gPooledBgLayerVtable[];
 extern u8 gBgLayerVtable[];
 
-void sub_80265FC(struct tile_slot_pool *pool, s32 tileId, s32 slot);
+void UploadTileSlot(struct tile_slot_pool *pool, s32 tileId, s32 slot);
 
 static inline void PushFreeSlot(struct tile_slot_pool *pool, s32 slot)
 {
@@ -199,7 +199,7 @@ u16 AcquireTileSlot(struct tile_slot_pool *pool, u16 tile)
         {
             slot = PopFreeSlot(pool);
             SetTileSlot(pool, id, slot);
-            sub_80265FC(pool, id, slot);
+            UploadTileSlot(pool, id, slot);
         }
     }
     {
@@ -230,7 +230,7 @@ void ReleaseTileSlot(struct tile_slot_pool *pool, u32 tile)
     }
 }
 
-void sub_80265FC(struct tile_slot_pool *pool, s32 tileId, s32 slot)
+void UploadTileSlot(struct tile_slot_pool *pool, s32 tileId, s32 slot)
 {
     QueueVramDmaTransfer((void *)(pool->srcBase + tileId * 64), (void *)(pool->vramBase + slot * 64), 0x40, 0x10);
 }

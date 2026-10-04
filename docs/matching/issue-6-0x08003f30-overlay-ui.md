@@ -58,9 +58,9 @@ record that these two were reviewed but not attempted.
 
 - **`sub_800450C`** (`asm/code_3_1_10_4.s`) - the screen's own init
   routine: resets the OAM shadow buffer and two tile caches
-  (`sub_8006A90`/`sub_8006A48`/`WaitForVBlank`/`sub_8006AAC` on
-  `gUnknown_03001300`, `sub_8006EA8`/four `sub_8006D50` calls on
-  `gUnknown_030012B8`), copies the first four per-level
+  (`ResetOamBuffer`/`HideUnusedOamEntries`/`WaitForVBlank`/`CommitOamBuffer` on
+  `gOamBuffer`, `FreeUnlockedPaletteSlots`/four `ClaimPaletteSlot` calls on
+  `gPaletteCache`), copies the first four per-level
   `gStaticData_0816Bxxx` tables (`gStaticData_0816B13A`/`15A`/`17A`/
   `19A` - the same tables `docs/rom_map.md`'s settings-menu
   investigation already links to this screen) into a 16-row loop
@@ -72,7 +72,7 @@ record that these two were reviewed but not attempted.
   block** `src/graphics/settings_menu14.c`'s parked `ShowPowerDialog`
   already transcribes byte-for-byte identically (zero `gSmallFont`/
   `030012E0`'s posX/posY, fire each one's `record->slots[6]` trampoline,
-  reserve `field_12c<<5` bytes of VRAM via `sub_8006C58`, copying
+  reserve `field_12c<<5` bytes of VRAM via `ReserveObjVram`, copying
   `gSmallFont`'s `field_12c` into `gLargeFont`'s
   `field_108` in between), and finally allocates 15 objects (5 each
   across `rowObjA`/`rowObjB`/`rowObjC`, the exact arrays `sub_8003F30`

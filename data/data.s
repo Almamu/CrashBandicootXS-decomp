@@ -1,6 +1,6 @@
 .section .rodata
 
-@ gStaticData_0803B8B0..gCategory0SpawnTable: src/data/cell_anim_03b8b0.c
+@ gCategoryFamily0CellAnim..gCategory0SpawnTable: src/data/cell_anim_03b8b0.c
 
 .section .rodata.080B2120
 
@@ -13,7 +13,7 @@ gStaticData_080B2120:
 
 @ gStaticData_080C2758..gStaticData_080DA1D8: src/data/rle_sprites_0c2758.c
 
-@ gStaticData_080FF1B0..gCategory3SpawnTable: src/data/cell_anim_0ff1b0.c
+@ gCategoryFamily1CellAnim..gCategory3SpawnTable: src/data/cell_anim_0ff1b0.c
 
 .section .rodata.0814174C
 
@@ -22,11 +22,11 @@ gStaticData_0814174C:
 	@ LZ77 compressed data (unidentified) (207124 bytes decompressed)
 	.incbin "build/crashbandicootxs/graphics/unknown/01_14174c.bin.lz"
 
-@ gStaticData_08151AC4..gCategory6SpawnTable: src/data/bg_picture_151ac4.c
+@ gCategory4BgPicture..gCategory6SpawnTable: src/data/bg_picture_151ac4.c
 
 @ gStaticData_0815A050: src/data/rle_sprites_15a050.c
 
-@ gStaticData_08167AD4..gStaticData_0816A820: src/data/boss_pictures_167ad4.c
+@ gStaticData_08167AD4..gSineTable: src/data/boss_pictures_167ad4.c
 
 @ gSongTable: src/data/song_table_16aa20.c
 
@@ -50,7 +50,7 @@ gSfxTable:
 
 @ gPauseMenuRows..gStaticData_0816B2C0: src/data/pause_rows_16b298.c
 
-@ gStaticData_0816B2E0..gStaticData_0816B300: src/data/obj_sizes_16b2e0.c
+@ gObjPieceWidths..gStaticData_0816B300: src/data/obj_sizes_16b2e0.c
 
 @ gStaticData_0816B304..gStaticData_0816B8C0: src/data/motion_records_16b304.c
 
@@ -80,7 +80,7 @@ gSfxTable:
 
 @ gStaticData_0816C58C: src/data/bg_package_16c58c.c
 
-@ gStaticData_0816C5F0..gStaticData_0816C674: src/data/map_tables_16c5f0.c
+@ gStaticData_0816C5F0..gObjSizeHeights: src/data/map_tables_16c5f0.c
 
 @ gEntitySpawnFuncs: src/data/dispatch_table_16c6a4.c
 
@@ -136,13 +136,13 @@ gSfxTable:
 
 @ gCreditsText..gStaticData_0817CF3C: src/data/credits_17c5d0.c
 
-@ gCreditsLogos..gStaticData_0817CFA4: src/data/popup_glyphs_17cf40.c
+@ gCreditsLogos..gTitleLogoPieceSeeds: src/data/popup_glyphs_17cf40.c
 
-@ gStaticData_0817CFF4..gStaticData_0817D698: src/data/level_gfx_17cff4.c
+@ gTitleArrowPieceOffsets..gLogoActorAnim: src/data/level_gfx_17cff4.c
 
-@ gStaticData_0817D6C0..gStaticData_0817D790: src/data/slot_seeds_17d6c0.c
+@ gVvLogoPieceSeeds..gStaticData_0817D790: src/data/slot_seeds_17d6c0.c
 
-@ gStaticData_0817D7A4..0x0817E714: src/data/countdown_17d7a4.c
+@ gUniversalLogoBg..0x0817E714: src/data/countdown_17d7a4.c
 
 @ gLanguageNames: src/data/digit_glyphs_17e714.c
 
@@ -301,7 +301,7 @@ gStaticData_0861C1D4:
 .global gStaticData_0861C1FC
 gStaticData_0861C1FC:
 	@ LZ77 palette (16 colors) (32 bytes decompressed). This is
-	@ gStaticData_0817D7A4's (the legal/credits text screen) palette - see
+	@ gUniversalLogoBg's (the legal/credits text screen) palette - see
 	@ gStaticData_0862D0CC below.
 	.incbin "build/crashbandicootxs/graphics/intro/34_61c1fc.gbapal.lz", 0, 0x28
 
@@ -310,7 +310,7 @@ gStaticData_0861C224:
 	@ LZ77 compressed data (512 bytes decompressed) - a 256-color RGB555
 	@ palette, CONFIRMED: this is the palette for gStaticData_0862E3B0 (the
 	@ "Crash Bandicoot XS" title/logo tile graphics), referenced together
-	@ via the graphics package struct at gStaticData_0817D0E4. Kept as raw
+	@ via the graphics package struct at gTitleScreenBg. Kept as raw
 	@ binary rather than .pal: some entries have a stray set bit 15 that a
 	@ standard .pal round-trip through gbagfx can't reproduce (RGB555 only
 	@ uses bits 0-14), which broke byte-exact rebuilding when tried as .pal
@@ -401,7 +401,7 @@ gStaticData_0862D0CC:
 	@ LZ77 tile graphics (4bpp) (14976 bytes decompressed, 468 tiles). This
 	@ is the legal/credits text screen: referenced (with palette
 	@ gStaticData_0861C1FC and tilemap gStaticData_086315BC) from a graphics
-	@ package struct at gStaticData_0817D7A4. Originally misclassified as
+	@ package struct at gUniversalLogoBg. Originally misclassified as
 	@ 8bpp - 14976 divides evenly by both 32 and 64, and this only decodes
 	@ as a coherent image (not noise) once composited with its real
 	@ palette+tilemap as 4bpp.
@@ -412,7 +412,7 @@ gStaticData_0862E3B0:
 	@ LZ77 tile graphics (8bpp) (9152 bytes decompressed, 143 tiles). This is
 	@ the "Crash Bandicoot XS" title/logo art: referenced (with palette
 	@ gStaticData_0861C224 and tilemap gStaticData_0863183C) from a graphics
-	@ package struct at gStaticData_0817D0E4, loaded onto BG2 by LoadBg2Background.
+	@ package struct at gTitleScreenBg, loaded onto BG2 by LoadTitleScreenBg.
 	.incbin "build/crashbandicootxs/graphics/intro/47_62e3b0_8bpp_tiles.8bpp.lz", 0, 0x1774
 
 .global gStaticData_0862FB24
@@ -957,7 +957,7 @@ gRoom33Asset:
 	@ raw level asset of room33_25233c (docs/levels.md)
 	.incbin "build/crashbandicootxs/data/levels/room33_25233c/asset.bin"
 
-@ gStaticData_087E3BEC..gStaticData_087E55C4: src/data/entity_vtables_7e3bec.c
+@ gStaticData_087E3BEC..gLogoActorVtable: src/data/entity_vtables_7e3bec.c
 
 @ 0x087E55E4..0x087E5FCC: the IWRAM image (asm/intr_main.s, src/iwram/),
 @ linked to run at 0x03000000 - the `iwram` section in ldscript.txt.

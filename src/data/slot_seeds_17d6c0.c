@@ -40,10 +40,10 @@ struct slot_seed
     s32 hold;
 };
 
-/* Twenty {record, hold} seeds read by sub_8036600
+/* Twenty {record, hold} seeds read by InitVvLogoPieces
  * (graphics_loading_35d1c.c): the motion sequences in
  * countdown_17d7a4.c, then a {NULL, 0} terminator. */
-const struct slot_seed gStaticData_0817D6C0[21] = {
+const struct slot_seed gVvLogoPieceSeeds[21] = {
     { gStaticData_0817D7B8, 0 },
     { gStaticData_0817D918, 0x5a },
     { gStaticData_0817D9D8, 0x60 },
@@ -67,7 +67,7 @@ const struct slot_seed gStaticData_0817D6C0[21] = {
     { NULL, 0 },
 };
 
-/* The three BG banks' packages sub_80361B0 (graphics_loading_35d1c.c)
+/* The three BG banks' packages RunCompanyLogos (graphics_loading_35d1c.c)
  * loads as PKG_A/PKG_B/PKG_C: only the tiles and map are set. */
 const struct bg_package gStaticData_0817D768 = {
     0,

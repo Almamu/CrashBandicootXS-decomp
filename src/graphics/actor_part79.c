@@ -20,14 +20,14 @@
  * rather than a guessed struct, same as that file. */
 
 struct AudioContext;
-struct tile_asset_cache;
+struct palette_cache;
 
 extern void PlaySfx(struct AudioContext *arg0, s32 sfxId, s32 arg2);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern s32 _call_via_r3(void *arg0, void *arg1, void *arg2, void *arg3);
 extern void sub_8012AF4(void *self);
 extern void LoseLife(void *arg0);
-extern void sub_8006D08(struct tile_asset_cache *self, s32 slot, s32 recordId);
+extern void LoadPaletteSlot(struct palette_cache *self, s32 slot, s32 recordId);
 extern void sub_80087C0(void *part);
 extern void sub_80087B4(void *part);
 extern void sub_800872C(void *part, u8 val);
@@ -37,7 +37,7 @@ extern u8 GetDpadDirection(void *dummy);
 
 extern struct AudioContext *gAudioContext;
 extern void *gLevelState;
-extern struct tile_asset_cache *gUnknown_030012B8;
+extern struct palette_cache *gPaletteCache;
 extern void *gPlayer;
 extern void *gUnknown_03001304;
 
@@ -50,7 +50,7 @@ extern void *gUnknown_03001304;
  * of `part+0xc`), then calls `LoseLife` and looks up a byte from the
  * per-tag 28-byte-record table (`part+0x20 -> *ptr + tag*0x1C`, the
  * same dereference chain docs/rom_map.md's "eight more core reads"
- * documented from three other call sites) to feed `sub_8006D08`. */
+ * documented from three other call sites) to feed `LoadPaletteSlot`. */
 void KillPlayer(void *selfArg, void *arg1)
 {
     u8 *self = selfArg;
@@ -124,7 +124,7 @@ void KillPlayer(void *selfArg, void *arg1)
     LoseLife(gLevelState);
 
     {
-        register struct tile_asset_cache *cache asm("r0") = gUnknown_030012B8;
+        register struct palette_cache *cache asm("r0") = gPaletteCache;
         register u8 *p asm("r3") = *(u8 **)(self + 0x10);
         register u32 nibble asm("r1") = (u32)(p[0x29] << 28) >> 28;
         register u8 **xptr asm("r2") = *(u8 ***)(p + 0x20);
@@ -135,7 +135,7 @@ void KillPlayer(void *selfArg, void *arg1)
             register u8 tag asm("r5") = *p;
             register s32 record asm("r2") = tag * 0x1c;
             record += (s32)base;
-            sub_8006D08(cache, nibble, ((u8 *)record)[0x14]);
+            LoadPaletteSlot(cache, nibble, ((u8 *)record)[0x14]);
         }
     }
 }

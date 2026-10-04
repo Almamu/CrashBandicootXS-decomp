@@ -68,7 +68,7 @@ embedded as asm instead. They're tracked as parked, not matched.
 
 ## Other notes
 
-- `sub_80007EC` (ROM `0x080007EC`, not yet converted to C at all) is
+- `ShowBitmapScreen` (ROM `0x080007EC`, not yet converted to C at all) is
   understood but not yet byte-matching - an instruction-scheduling detail.
   `asm/code_3_1.s` was split into itself (just this one function) plus
   `asm/code_3_1_2.s` (everything after it) so the functions around it

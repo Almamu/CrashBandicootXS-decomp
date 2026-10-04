@@ -27,7 +27,7 @@ object family:
   real shape:
   - `oam_scratch[8]` (was `unused_00`'s first 8 bytes) - a 6-byte
     OAM-shaped draw-request scratch buffer `FontDrawGlyph` rebuilds fresh
-    per glyph and hands to `sub_8006AC8`.
+    per glyph and hands to `AddOamEntry`.
   - `charLookup[0x100]` (the rest of `unused_00`) - a reverse
     char-byte -> glyph-index lookup table, built once by
     `InitSmallFont`/`InitLargeFont` from a small font-glyph
@@ -107,7 +107,7 @@ difficulty in this codebase:
    once.
 2. **`FontDrawGlyph`**: `self` sits in `ip`/`r12` here instead of the
    ROM's `r3` - too many simultaneously-live values (the glyph index,
-   three re-derived `rec` pointers reloaded around the `sub_8006AC8`
+   three re-derived `rec` pointers reloaded around the `AddOamEntry`
    call, `self` itself) for this compiler to fit into `r4`-`r7` the way
    the ROM does. Tried explicit `&self->posX`/`&self->glyphRecords`
    locals matching the ROM's own address-caching shape, and plain
@@ -123,7 +123,7 @@ difficulty in this codebase:
    reproduced the exact block layout.
 4. **`FontMeasureChars`/`FontMeasureText`**: the ROM pins `str`/`&glyphRecords`
    (or `self`/`&spaceWidth` for `FontMeasureText`) into `r8`/`sb`/`ip`,
-   spilling them across the loop's own `bl _call_via_r3`/`sub_8006DF8`-
+   spilling them across the loop's own `bl _call_via_r3`/`GetPaletteSlot`-
    style calls - the same class of gap already documented for
    `DrawPowerDialog`/`InitLanguageSelectGraphics` elsewhere in this codebase (see
    `src/audio/counter_selector_setup.c`'s comment on the latter).

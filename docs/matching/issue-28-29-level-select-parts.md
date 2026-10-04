@@ -4,7 +4,7 @@ All 41 functions of the former `asm/code_3_2_17_188d0_1da38.s` (issue #28,
 25 functions) and `asm/code_3_2_17_188d0_1dfec.s` (issue #29, 16
 functions) are now **real C**, with no NAKED or NON_MATCHING code:
 
-- `src/graphics/actor_part_1da38.c`: `sub_801DA38`-`sub_801DF98`
+- `src/graphics/actor_part_1da38.c`: `DestroyZoomBg`-`sub_801DF98`
 - `src/graphics/actor_part_1dfec.c`: `sub_801DFEC`-`sub_801E524`
 - `include/level_select_parts.h`: the structs, macros and inlines the two
   files share
@@ -24,22 +24,22 @@ These are the three sub-objects of `struct level_menu`, the level-select
 screen in `actor_part_1b85c.c` (issue #26):
 
 - **`struct zoom_bg`** (`level_menu.bg2`, 0x8C bytes, constructor
-  `sub_801D828` in the issue #27 range): the selected level's picture on
-  the affine BG2 layer. `sub_801DAD8` runs this state machine:
+  `InitZoomBg` in the issue #27 range): the selected level's picture on
+  the affine BG2 layer. `UpdateZoomBg` runs this state machine:
   - 1: zoom out, then go to 2.
   - 2: load the requested picture (palette through a stack buffer and
     DMA3, 8bpp tiles to the BG2 char base), then go to 0.
   - 0: zoom in, then go to 3.
-  - 3: shown. The picture wobbles on the sine table `gStaticData_0816A820`.
+  - 3: shown. The picture wobbles on the sine table `gSineTable`.
   - 4: zoom away while rotating, then go to 5 (gone).
 
-  `sub_801DC28` builds the `BgAffineSet` source and
-  `sub_801DCBC` commits the result to BG2PA-BG2Y. `sub_801DCF8`-
-  `sub_801DD38` are the state queries. `sub_801DD48`, `sub_801DD5C` and
-  `sub_801DD80` start the exit, start a page turn and request a picture.
+  `DrawZoomBg` builds the `BgAffineSet` source and
+  `CommitZoomBg` commits the result to BG2PA-BG2Y. `IsZoomBgExiting`-
+  `IsZoomBgZoomingOut` are the state queries. `StartZoomBgExit`, `ClearZoomBgPicture` and
+  `SetZoomBgPicture` start the exit, start a page turn and request a picture.
   Four "twinkle" sprites (`+0x5C`, 12 bytes each) show a random frame for
   a random time. They move with the wobble during their blink window
-  (`sub_801DD90`, `sub_801DDB4`, `sub_801DE04`).
+  (`MoveZoomBgTwinkle`, `RandomizeZoomBgTwinkle`, `TickZoomBgTwinkle`).
 - **`struct level_item`** (0x14 bytes, `level_menu.items[]`): one entry
   on the page. Its constructor is `sub_801DFEC`, its method table is
   `gStaticData_087E4BAC`, and its methods are:
@@ -61,9 +61,9 @@ screen in `actor_part_1b85c.c` (issue #26):
   (`sub_801E504`), plus the grow-in and shrink-away states 4 and 5. While
   growing or shrinking, `sub_801E2BC` draws the cursor itself as an affine
   OBJ. It takes the next matrix slot from the OAM shadow buffer
-  (`gUnknown_03001300->field_08`), writes the ObjAffineSet result
+  (`gOamBuffer->field_08`), writes the ObjAffineSet result
   (`sub_801E3A4`) into the four entries' affine words, and queues the
-  panel's own OAM attributes (`+0x34`) with `sub_8006AC8`.
+  panel's own OAM attributes (`+0x34`) with `AddOamEntry`.
 
 UNUSED: `sub_801E3D4`, `sub_801E3E4` and `sub_801E4E4` have no
 `bl`/`.4byte` reference in `asm/`, `data/` or `src/`, and no Thumb pointer
@@ -72,7 +72,7 @@ anywhere in the ROM. `sub_801E408` contains an inlined copy of
 
 ## Matching notes
 
-- **Division is libgcc's `__divsi3`.** `0x10000 / self->scale` (`sub_801DC28`,
+- **Division is libgcc's `__divsi3`.** `0x10000 / self->scale` (`DrawZoomBg`,
   `sub_801E3A4`) and `0xF8 / d` (`sub_801E480`) load the divisor before
   the constant. A direct `__divsi3(0x10000, scale)` call does the
   reverse. The libcall resolves to the ROM's own `__divsi3` (at the time
@@ -94,8 +94,8 @@ anywhere in the ROM. `sub_801E408` contains an inlined copy of
   takes an `s32`, because a `u8` parameter narrows the ROM's word table
   loads to `ldrb`.
 - **Range `case`s** reproduce the ROM's two-compare range tests:
-  `case 0 ... 3:`/`case 4 ... 5:` in `sub_801DC28`, `case 1 ... 2:` in
-  `sub_801DD80`, and `case 4 ... 5:` with a `default` in `sub_801E2BC`.
+  `case 0 ... 3:`/`case 4 ... 5:` in `DrawZoomBg`, `case 1 ... 2:` in
+  `SetZoomBgPicture`, and `case 4 ... 5:` with a `default` in `sub_801E2BC`.
   An `if (s >= 1 && s <= 2)` gives `subs; cmp; bhi`.
 - **Packed bitfield unions.** `union bgcnt` (BG2CNT at `+0x34`) needs
   `__attribute__((packed))`. Without it, this ABI rounds the union to 4
@@ -108,7 +108,7 @@ anywhere in the ROM. `sub_801E408` contains an inlined copy of
 - **Value before address: an inline setter.** `sub_801E2BC` loads each
   matrix word before it computes the destination address. A plain
   `buf->entries[n].affineParam = m[k]` computes the address first.
-  `SetAffineParam(gUnknown_03001300, idx * 4 + k, self->matrix[k])`
+  `SetAffineParam(gOamBuffer, idx * 4 + k, self->matrix[k])`
   evaluates the inline arguments right to left, which gives exactly the
   ROM's order. That includes a single load of the buffer pointer and
   `idx * 4` kept in a register. The value parameter must be `u16`: with

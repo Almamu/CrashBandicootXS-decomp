@@ -6,17 +6,17 @@
  *
  * Two BG1 picture loaders (issue #56) sharing one repack loop: for each
  * of `rows` rows of `cols` map entries, add the tile base
- * (`sub_8029AC4() - 0x200`) to the entry, OR in a 4-bit palette bank
+ * (`GetCellAnimFreeTile() - 0x200`) to the entry, OR in a 4-bit palette bank
  * taken alternately from the low and high nibble of the next byte, and
  * store it at `BG_SCREEN_ADDR(26) + row * 0x40` (columns 0x20 and up go
  * to the second screen block, +0x7C0).
  *
- * - `sub_802F7B0(pic)`: DMA3-copies `pic`'s 0x200-byte palette to
+ * - `LoadBgPicture(pic)`: DMA3-copies `pic`'s 0x200-byte palette to
  *   PLTT, reads cols/rows and the tile count (a `struct
  *   bg_picture_header`), runs the loop over the map at +0x208 with the
  *   nibbles after the tiles, then enables BG1 (DISPCNT |= 0x200, BG1CNT =
- *   0x5A07) and DMA3-copies the tiles to VRAM + sub_8029AC4() * 32.
- * - `sub_802F8E8(nibbles, map, cols, rows)`: the same loop on explicit
+ *   0x5A07) and DMA3-copies the tiles to VRAM + GetCellAnimFreeTile() * 32.
+ * - `FillBgPictureMap(nibbles, map, cols, rows)`: the same loop on explicit
  *   arguments.
  *
  * Both are real C, built with old_agbcc (the whole object is).
@@ -41,7 +41,7 @@
  *    itself declared `inline`.
  *  - two `asm("" : : "r"(cols))` before the call: `cols` and row+1 tie
  *    for r8/sl otherwise. */
-extern s32 sub_8029AC4(void);
+extern s32 GetCellAnimFreeTile(void);
 
 static inline void MapFill(u8 *nib, u16 *map, s32 cols, s32 rows)
 {
@@ -52,7 +52,7 @@ static inline void MapFill(u8 *nib, u16 *map, s32 cols, s32 rows)
     s32 c;
 
     dest = (u16 *)BG_SCREEN_ADDR(26);
-    base = sub_8029AC4() - 0x200;
+    base = GetCellAnimFreeTile() - 0x200;
     odd = 0;
     for (r = 0; r < rows; r++) {
         for (c = 0; c < cols; c++) {
@@ -79,7 +79,7 @@ static inline void MapFill(u8 *nib, u16 *map, s32 cols, s32 rows)
     asm("" : : "r"(dest)); /* extra reference: dest outranks nib for r5 */
 }
 
-void sub_802F7B0(u8 *pic)
+void LoadBgPicture(u8 *pic)
 {
     s32 cols, rows;
     u32 tiles;
@@ -98,13 +98,15 @@ void sub_802F7B0(u8 *pic)
     REG_DISPCNT |= 0x200;
     REG_BG1CNT = 0x5A07;
     {
-        void *vd = (void *)(VRAM + sub_8029AC4() * 32);
+        void *vd = (void *)(VRAM + GetCellAnimFreeTile() * 32);
 
         DmaCopy16(3, tileData, vd, tiles * 32);
     }
 }
 
-void sub_802F8E8(u8 *nib, u16 *map, s32 cols, s32 rows)
+/* UNUSED - no caller anywhere in the ROM (no Thumb `bl` to it and no
+ * pointer to it in baserom.gba, nor any reference in asm/ or src/). */
+void FillBgPictureMap(u8 *nib, u16 *map, s32 cols, s32 rows)
 {
     u16 *dest;
     s32 base;
@@ -113,7 +115,7 @@ void sub_802F8E8(u8 *nib, u16 *map, s32 cols, s32 rows)
     s32 c;
 
     dest = (u16 *)BG_SCREEN_ADDR(26);
-    base = sub_8029AC4() - 0x200;
+    base = GetCellAnimFreeTile() - 0x200;
     odd = 0;
     for (r = 0; r < rows; r++) {
         for (c = 0; c < cols; c++) {

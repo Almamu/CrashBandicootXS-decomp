@@ -33,7 +33,7 @@ previously documented as blocked by exactly this class of compiler
 behavior. Two closed; one didn't (a related but distinct blocker - see
 below).
 
-## Closed: `sub_8035780` (`src/graphics/graphics_loading_35780.c`)
+## Closed: `UpdateTitleLogoPieces` (`src/graphics/graphics_loading_35780.c`)
 
 The highest-confidence candidate - its own file's header comment already
 described the blocker in almost these exact words: "any plain-C phrasing
@@ -112,8 +112,8 @@ Lower initial confidence (flagged as "fully inlines `sub_8033828`'s own
 P1/P2 speed-toggle shape twice... the same cross-jump-merging register-
 pin hazard that function's own writeup documents, doubled"), but this
 one turned out to respond well to the same family of fixes, since its
-actual blocker was address-recompute/copy-ordering (like `sub_8035780`),
-not branch-body cross-jump merging (like `sub_8035D1C` below).
+actual blocker was address-recompute/copy-ordering (like `UpdateTitleLogoPieces`),
+not branch-body cross-jump merging (like `TitleScreenCheatInput` below).
 
 The function is a frame-counter-gated dispatcher: every 16th frame it
 forces max speed (0x7FFF) on a P1/P2 object pair; every 8th-but-not-16th
@@ -141,7 +141,7 @@ own `ldr r2,=0x7FFF; add r1,r2,#0` pair - whereas declaring `u16 val =
 0x7FFF;` fresh lets the compiler just load the literal straight into
 whatever register it likes, one instruction, wrong bytes.
 
-The other piece: the pointer reload (`p = gUnknown_030008B4;`, needed by
+The other piece: the pointer reload (`p = gFlashBgPalette;`, needed by
 both branches right before the shared two-`strh` tail) kept getting
 hoisted into that shared tail as a single physical copy, dropping the ROM's
 own per-branch duplicate reload (the ROM reloads it independently in
@@ -156,11 +156,11 @@ Final shape (both branches use the identical idiom):
 static inline void CommitSpeed(u8 *p, u16 val)
 {
     *(u16 *)(p + 0x1e) = val;
-    *(u16 *)((u8 *)gUnknown_030008B8 + 0x1e) = val;
+    *(u16 *)((u8 *)gFlashObjPalette + 0x1e) = val;
 }
 ...
 {
-    register u8 *p asm("r0") = gUnknown_030008B4;
+    register u8 *p asm("r0") = gFlashBgPalette;
     register u16 val asm("r1");
 
     asm("" : "+r"(p));
@@ -181,14 +181,14 @@ now points at `actor_part130.o` (matched), `0x08032C0C` keeps `None`
 (`sub_8032C0C`/`sub_8032EA0` remain parked - unrelated many-high-register
 gap, untouched by this pass).
 
-## Did not close: `sub_8035D1C` (`src/graphics/graphics_loading_35780.c`)
+## Did not close: `TitleScreenCheatInput` (`src/graphics/graphics_loading_35780.c`)
 
 Given a real attempt per the task, but this one's blocker is a genuinely
 different shape than the other two, exactly as this project's own prior
 triage predicted: a 7-way bit-tested dispatch, each arm folding one of 7
 fixed "signature" constants into a shared rolling-hash update
 (`self+0x210`, the same rotate-then-multiply-by-521 primitive
-`sub_80360C0` already implements standalone). The ROM's own build merges
+`HashTitleCheatInput` already implements standalone). The ROM's own build merges
 4 of the 7 arms into one shared "compute the hash-slot address, fall
 into the hash body" tail (using `r0` as the address scratch register),
 while the other 3 arms inline their own copy of the same address
@@ -200,7 +200,7 @@ ROM.
 
 Two structurally different C attempts were tried, each verified via the
 same isolated-compile assemble + byte-diff method used for
-`sub_8035780`:
+`UpdateTitleLogoPieces`:
 
 1. **A natural `if / else if` chain**, one arm per bit, each calling a
    `static inline HashUpdate(self, signature)` helper (the same
@@ -237,7 +237,7 @@ tail-merging collapses the ROM's own duplicated address computation"
 class of gap already catalogued in
 [issue-65-0x08035780-graphics-loading.md](issue-65-0x08035780-graphics-loading.md),
 not the "shared-base-pointer CSE" class the static-inline technique
-targets. `sub_8035D1C` is left exactly as it was (NAKED, byte-verified,
+targets. `TitleScreenCheatInput` is left exactly as it was (NAKED, byte-verified,
 untouched) - no changes were made to it or reverted, since none were
 committed to the real file in the first place.
 

@@ -20,10 +20,10 @@ void SaveMenuMessageInput(struct pause_options_screen *self, u32 flags)
     }
 }
 
-extern struct tile_asset_cache *gUnknown_030012B8;
-extern struct oam_shadow_buffer *gUnknown_03001300;
-extern void sub_8006DC8(struct tile_asset_cache *arg0);
-extern void sub_8006AAC(struct oam_shadow_buffer *arg0);
+extern struct palette_cache *gPaletteCache;
+extern struct oam_shadow_buffer *gOamBuffer;
+extern void UploadPaletteCache(struct palette_cache *arg0);
+extern void CommitOamBuffer(struct oam_shadow_buffer *arg0);
 extern void FlushVramDmaQueue(void);
 
 /* Restores the saved BG0HOFS/DISPCNT pair (see field_0/field_1c's doc
@@ -34,14 +34,14 @@ void CommitSaveMenuFrame(struct pause_options_screen *self)
 {
     REG_DISPCNT = self->field_1c;
     REG_BG0HOFS = self->field_0 >> 3;
-    sub_8006DC8(gUnknown_030012B8);
-    sub_8006AAC(gUnknown_03001300);
+    UploadPaletteCache(gPaletteCache);
+    CommitOamBuffer(gOamBuffer);
     FlushVramDmaQueue();
 }
 
 extern void *gSaveMenu;
 extern void DestroySaveMenu(void *self, u32 flags);
-extern void sub_8006EA8(struct tile_asset_cache *self);
+extern void FreeUnlockedPaletteSlots(struct palette_cache *self);
 
 /* Tears down the "connecting..." SIO-handshake spinner object (see
  * sub_8003B40, src/graphics/settings_menu3.c, for the object this
@@ -53,7 +53,7 @@ void CloseSaveMenu(void)
         DestroySaveMenu(gSaveMenu, 3);
     }
     gSaveMenu = NULL;
-    sub_8006EA8(gUnknown_030012B8);
+    FreeUnlockedPaletteSlots(gPaletteCache);
 }
 
 extern void *sub_8026EDC(s32 size);
@@ -66,7 +66,7 @@ void OpenSaveMenu(void)
 {
     void **dest;
 
-    sub_8006EA8(gUnknown_030012B8);
+    FreeUnlockedPaletteSlots(gPaletteCache);
     dest = &gSaveMenu;
     *dest = InitSaveMenu(sub_8026EDC(0xe4));
 }

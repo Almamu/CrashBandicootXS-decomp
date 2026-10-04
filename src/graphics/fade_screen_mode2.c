@@ -2,13 +2,13 @@
 
 /* Continuation of the fade_screen_mode.c cluster - see docs/matching.md
  * for why this cluster needed splitting into this many pieces.
- * `gUnknown_03001288` is a 2-byte packed mode/flags shadow copy of
+ * `gDispcnt` is a 2-byte packed mode/flags shadow copy of
  * `REG_DISPCNT`, committed to the real hardware register by
- * `sub_8001614`. */
+ * `CommitDispcnt`. */
 
-extern u8 gUnknown_03001288[2];
+extern u8 gDispcnt[2];
 
-/* Sets `gUnknown_03001288`'s low 3 bits (the DISPCNT background-mode
+/* Sets `gDispcnt`'s low 3 bits (the DISPCNT background-mode
  * field) to `val & 7`, preserving the rest.
  *
  * The ROM materializes `-8` fresh via `movs r1,#8; rsbs r1,r1,#0`
@@ -20,9 +20,9 @@ extern u8 gUnknown_03001288[2];
  * block computes it via the exact two-instruction ROM sequence, opaque
  * to the optimizer, which reproduces the ROM's own choice instead of
  * outsmarting it. */
-void sub_8001524(s32 val)
+void SetDispcntMode(s32 val)
 {
-    register u8 *addr asm("r2") = gUnknown_03001288;
+    register u8 *addr asm("r2") = gDispcnt;
     register s32 lowBits asm("r0") = val & 7;
     s32 mask;
 
@@ -30,11 +30,11 @@ void sub_8001524(s32 val)
     addr[0] = (mask & addr[0]) | lowBits;
 }
 
-/* `gUnknown_03001288[1]` bit 3 clear/set pair (part of the packed
+/* `gDispcnt[1]` bit 3 clear/set pair (part of the packed
  * DISPCNT-mode shadow's second byte). */
-void sub_800153C(void)
+void HideBg3(void)
 {
-    register u8 *addr asm("r1") = gUnknown_03001288;
+    register u8 *addr asm("r1") = gDispcnt;
     register s32 mask asm("r0") = -9;
     register s32 byte asm("r2") = addr[1];
     register s32 result asm("r0");
@@ -43,10 +43,10 @@ void sub_800153C(void)
     addr[1] = result;
 }
 
-/* `gUnknown_03001288[1]` bit 2 clear. */
-void sub_8001550(void)
+/* `gDispcnt[1]` bit 2 clear. */
+void HideBg2(void)
 {
-    register u8 *addr asm("r1") = gUnknown_03001288;
+    register u8 *addr asm("r1") = gDispcnt;
     register s32 mask asm("r0") = -5;
     register s32 byte asm("r2") = addr[1];
     register s32 result asm("r0");
@@ -55,10 +55,10 @@ void sub_8001550(void)
     addr[1] = result;
 }
 
-/* `gUnknown_03001288[1]` bit 1 clear. */
-void sub_8001564(void)
+/* `gDispcnt[1]` bit 1 clear. */
+void HideBg1(void)
 {
-    register u8 *addr asm("r1") = gUnknown_03001288;
+    register u8 *addr asm("r1") = gDispcnt;
     register s32 mask asm("r0") = -3;
     register s32 byte asm("r2") = addr[1];
     register s32 result asm("r0");
@@ -67,10 +67,10 @@ void sub_8001564(void)
     addr[1] = result;
 }
 
-/* `gUnknown_03001288[1]` bit 0 clear. */
-void sub_8001578(void)
+/* `gDispcnt[1]` bit 0 clear. */
+void HideBg0(void)
 {
-    register u8 *addr asm("r1") = gUnknown_03001288;
+    register u8 *addr asm("r1") = gDispcnt;
     register s32 mask asm("r0") = -2;
     register s32 byte asm("r2") = addr[1];
     register s32 result asm("r0");
@@ -79,10 +79,10 @@ void sub_8001578(void)
     addr[1] = result;
 }
 
-/* `gUnknown_03001288[1]` bit 4 clear. */
-void sub_800158C(void)
+/* `gDispcnt[1]` bit 4 clear. */
+void HideObj(void)
 {
-    register u8 *addr asm("r1") = gUnknown_03001288;
+    register u8 *addr asm("r1") = gDispcnt;
     register s32 mask asm("r0") = -0x11;
     register s32 byte asm("r2") = addr[1];
     register s32 result asm("r0");
@@ -91,10 +91,10 @@ void sub_800158C(void)
     addr[1] = result;
 }
 
-/* `gUnknown_03001288[1]` bit 3 set. */
-void sub_80015A0(void)
+/* `gDispcnt[1]` bit 3 set. */
+void ShowBg3(void)
 {
-    register u8 *addr asm("r1") = gUnknown_03001288;
+    register u8 *addr asm("r1") = gDispcnt;
     register s32 mask asm("r0") = 8;
     register s32 byte asm("r2") = addr[1];
     register s32 result asm("r0");
@@ -103,10 +103,10 @@ void sub_80015A0(void)
     addr[1] = result;
 }
 
-/* `gUnknown_03001288[1]` bit 2 set. */
-void sub_80015B0(void)
+/* `gDispcnt[1]` bit 2 set. */
+void ShowBg2(void)
 {
-    register u8 *addr asm("r1") = gUnknown_03001288;
+    register u8 *addr asm("r1") = gDispcnt;
     register s32 mask asm("r0") = 4;
     register s32 byte asm("r2") = addr[1];
     register s32 result asm("r0");
@@ -115,10 +115,10 @@ void sub_80015B0(void)
     addr[1] = result;
 }
 
-/* `gUnknown_03001288[1]` bit 1 set. */
-void sub_80015C0(void)
+/* `gDispcnt[1]` bit 1 set. */
+void ShowBg1(void)
 {
-    register u8 *addr asm("r1") = gUnknown_03001288;
+    register u8 *addr asm("r1") = gDispcnt;
     register s32 mask asm("r0") = 2;
     register s32 byte asm("r2") = addr[1];
     register s32 result asm("r0");
@@ -127,10 +127,10 @@ void sub_80015C0(void)
     addr[1] = result;
 }
 
-/* `gUnknown_03001288[1]` bit 0 set. */
-void sub_80015D0(void)
+/* `gDispcnt[1]` bit 0 set. */
+void ShowBg0(void)
 {
-    register u8 *addr asm("r1") = gUnknown_03001288;
+    register u8 *addr asm("r1") = gDispcnt;
     register s32 mask asm("r0") = 1;
     register s32 byte asm("r2") = addr[1];
     register s32 result asm("r0");
@@ -139,10 +139,10 @@ void sub_80015D0(void)
     addr[1] = result;
 }
 
-/* `gUnknown_03001288[1]` bit 4 set. */
-void sub_80015E0(void)
+/* `gDispcnt[1]` bit 4 set. */
+void ShowObj(void)
 {
-    register u8 *addr asm("r1") = gUnknown_03001288;
+    register u8 *addr asm("r1") = gDispcnt;
     register s32 mask asm("r0") = 0x10;
     register s32 byte asm("r2") = addr[1];
     register s32 result asm("r0");
@@ -151,10 +151,12 @@ void sub_80015E0(void)
     addr[1] = result;
 }
 
-/* `gUnknown_03001288[0]` bit 6 clear (DISPCNT's own top mode bit). */
-void sub_80015F0(void)
+/* `gDispcnt[0]` bit 6 clear (DISPCNT's own top mode bit). */
+/* UNUSED - no caller anywhere in the ROM (no Thumb `bl` to it and no
+ * pointer to it in baserom.gba, nor any reference in asm/ or src/). */
+void SetObjMapping2D(void)
 {
-    register u8 *addr asm("r1") = gUnknown_03001288;
+    register u8 *addr asm("r1") = gDispcnt;
     register s32 mask asm("r0") = -0x41;
     register s32 byte asm("r2") = addr[0];
     register s32 result asm("r0");
@@ -163,10 +165,10 @@ void sub_80015F0(void)
     addr[0] = result;
 }
 
-/* `gUnknown_03001288[0]` bit 6 set. */
-void sub_8001604(void)
+/* `gDispcnt[0]` bit 6 set. */
+void SetObjMapping1D(void)
 {
-    register u8 *addr asm("r1") = gUnknown_03001288;
+    register u8 *addr asm("r1") = gDispcnt;
     register s32 mask asm("r0") = 0x40;
     register s32 byte asm("r2") = addr[0];
     register s32 result asm("r0");
@@ -175,9 +177,9 @@ void sub_8001604(void)
     addr[0] = result;
 }
 
-/* Commits the packed `gUnknown_03001288` shadow (both bytes, as one
+/* Commits the packed `gDispcnt` shadow (both bytes, as one
  * halfword) straight to `REG_DISPCNT`. */
-void sub_8001614(void)
+void CommitDispcnt(void)
 {
-    *(vu16 *)REG_ADDR_DISPCNT = *(u16 *)gUnknown_03001288;
+    *(vu16 *)REG_ADDR_DISPCNT = *(u16 *)gDispcnt;
 }

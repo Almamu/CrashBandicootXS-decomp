@@ -17,7 +17,7 @@
  * per-line budget (`box->field_8`). When the running width would
  * overflow, it advances to a new line (`slots[5]` with a '\n', then
  * re-draws the just-measured token at the line's start) and optionally
- * flushes (`WaitForVBlank` then `sub_8006AAC(gUnknown_03001300)`)
+ * flushes (`WaitForVBlank` then `CommitOamBuffer(gOamBuffer)`)
  * depending on `mode` (0 = never flush per-token, 1 = flush after every
  * token, 2 = only flush after a line wrap) - and flushes once more
  * after the whole string is consumed if `mode != 0`. Recognizes two
@@ -30,14 +30,14 @@ struct sub_8000EE4_box {
     s32 field_8;
 };
 
-extern void sub_8006A90(void *arg0);
-extern void sub_8006A48(void *arg0);
+extern void ResetOamBuffer(void *arg0);
+extern void HideUnusedOamEntries(void *arg0);
 extern s32 GetWordLength(u8 *cursor);
 extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
 extern s32 _call_via_r3(void *arg0, u8 *arg1, s32 arg2, void *arg3);
 extern void WaitForVBlank(void);
-extern void sub_8006AAC(void *arg0);
-extern void *gUnknown_03001300;
+extern void CommitOamBuffer(void *arg0);
+extern void *gOamBuffer;
 
 static inline void set_pos(struct icon_manager *m, u32 x, u32 y)
 {
@@ -65,8 +65,8 @@ s32 sub_8000EE4(u8 *text, struct icon_manager *self, struct sub_8000EE4_box *box
 
     posAccum = 0;
     if (mode != 0) {
-        sub_8006A90(gUnknown_03001300);
-        sub_8006A48(gUnknown_03001300);
+        ResetOamBuffer(gOamBuffer);
+        HideUnusedOamEntries(gOamBuffer);
     }
     set_pos(self, box->field_0, box->field_4);
     widthAccum = 0;
@@ -125,7 +125,7 @@ s32 sub_8000EE4(u8 *text, struct icon_manager *self, struct sub_8000EE4_box *box
                 if (mode == 1 || mode == 2) {
                 flush:
                     WaitForVBlank();
-                    sub_8006AAC(gUnknown_03001300);
+                    CommitOamBuffer(gOamBuffer);
                 }
             }
         skip:
@@ -134,7 +134,7 @@ s32 sub_8000EE4(u8 *text, struct icon_manager *self, struct sub_8000EE4_box *box
     }
     if (mode != 0) {
         WaitForVBlank();
-        sub_8006AAC(gUnknown_03001300);
+        CommitOamBuffer(gOamBuffer);
     }
     return posAccum;
 }

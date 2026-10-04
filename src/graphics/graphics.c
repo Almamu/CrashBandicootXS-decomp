@@ -23,10 +23,10 @@ struct aabb
 };
 
 struct dma_queue_entry {
-    void *field_00;
-    void *field_04;
-    u16 field_08;
-    u16 field_0A;
+    void *dest;
+    void *src;
+    u16 size;
+    u16 unit;
 };
 
 struct dma_queue {
@@ -34,10 +34,10 @@ struct dma_queue {
     s32 count;
 };
 
-extern struct dma_queue gUnknown_03001290;
+extern struct dma_queue gVramDmaQueue;
 #define DMA3 (*(struct dma_regs *)REG_ADDR_DMA3SAD)
-#define QUEUE_COUNT (((volatile struct dma_queue *)&gUnknown_03001290)->count)
-/* Allocated capacity of gUnknown_03001290.entries. */
+#define QUEUE_COUNT (((volatile struct dma_queue *)&gVramDmaQueue)->count)
+/* Allocated capacity of gVramDmaQueue.entries. */
 #define DMA_QUEUE_MAX_ENTRIES 0x300
 
 extern s32 CountCrystals(void *arg0);
@@ -80,7 +80,7 @@ s32 GetCompletionPercent(void *arg0)
     return __divsi3(total * 100, 0x48);
 }
 
-void sub_80069E8(void *arg0, u16 *arg1, s32 arg2)
+void SetOamAffineScales(void *arg0, u16 *arg1, s32 arg2)
 {
     u8 *entry;
     u16 zero;
@@ -105,7 +105,9 @@ void sub_80069E8(void *arg0, u16 *arg1, s32 arg2)
 }
 
 /* Manages a shadow copy of a chunk of the 128-entry hardware OAM table:
- * a count of active entries, two unidentified fields, then the
+ * a count of active entries, the `base` count RewindOamBuffer goes
+ * back to (entries kept from frame to frame, set by MarkOamBufferBase),
+ * the number of affine matrices handed out this frame, then the
  * 1024-byte shadow table itself (128 entries * 8 bytes) starting right
  * after. Functions below that need volatile or register-pinned access
  * to `count`/the table still use raw pointer casts on purpose (see
@@ -120,13 +122,13 @@ union oam_shadow_entry {
 
 struct oam_shadow_buffer {
     s32 count;
-    s32 field_04;
-    s32 field_08;
+    s32 base;
+    s32 matrixCount;
     union oam_shadow_entry table[0x80];
 };
 COMPILE_TIME_ASSERT(sizeof(struct oam_shadow_buffer) == 0x40C);
 
-void sub_8006A14(struct oam_shadow_buffer *arg0, void *arg1, s32 arg2)
+void AppendOamEntries(struct oam_shadow_buffer *arg0, void *arg1, s32 arg2)
 {
     if (arg2 == 0) {
         return;
@@ -142,7 +144,7 @@ void sub_8006A14(struct oam_shadow_buffer *arg0, void *arg1, s32 arg2)
  * reorder or canonicalize differently than the ROM (see docs/matching.md,
  * "Matching decompilation") - not obfuscation, just pinning byte-exact
  * order. */
-void sub_8006A48(struct oam_shadow_buffer *arg0)
+void HideUnusedOamEntries(struct oam_shadow_buffer *arg0)
 {
     register u8 *self asm("r1");
     register s32 i asm("r2");
@@ -171,27 +173,27 @@ void sub_8006A48(struct oam_shadow_buffer *arg0)
     } while (i <= OAM_ENTRY_COUNT - 1);
 }
 
-void sub_8006A78(struct oam_shadow_buffer *arg0)
+void RewindOamBuffer(struct oam_shadow_buffer *arg0)
 {
-    arg0->count = arg0->field_04;
-    arg0->field_08 = 0;
+    arg0->count = arg0->base;
+    arg0->matrixCount = 0;
 }
 
-void sub_8006A84(struct oam_shadow_buffer *arg0)
+void MarkOamBufferBase(struct oam_shadow_buffer *arg0)
 {
-    arg0->field_04 = arg0->count;
-    arg0->field_08 = 0;
+    arg0->base = arg0->count;
+    arg0->matrixCount = 0;
 }
 
-void sub_8006A90(struct oam_shadow_buffer *arg0)
+void ResetOamBuffer(struct oam_shadow_buffer *arg0)
 {
     arg0->count = 0;
-    arg0->field_08 = 0;
-    sub_8006A84(arg0);
-    sub_8006A78(arg0);
+    arg0->matrixCount = 0;
+    MarkOamBufferBase(arg0);
+    RewindOamBuffer(arg0);
 }
 
-void sub_8006AAC(struct oam_shadow_buffer *arg0)
+void CommitOamBuffer(struct oam_shadow_buffer *arg0)
 {
     DMA3.src = (u8 *)arg0 + 0xC;
     DMA3.dst = (void *)OAM;
@@ -202,7 +204,7 @@ void sub_8006AAC(struct oam_shadow_buffer *arg0)
 /* Inserts one record (arg1[0]/arg1[1]) into the shadow OAM table at the
  * current count, preserving the padding halfword at +0x12 that overlaps
  * the tail of arg1[1] on real hardware (see docs/matching.md). */
-void sub_8006AC8(struct oam_shadow_buffer *arg0, u32 *arg1)
+void AddOamEntry(struct oam_shadow_buffer *arg0, u32 *arg1)
 {
     register s32 n1 asm("r2");
     register u16 saved asm("r3");
@@ -232,16 +234,16 @@ void sub_8006AC8(struct oam_shadow_buffer *arg0, u32 *arg1)
 
 extern void sub_8026ED0(void *arg0);
 
-void sub_8006AF4(void *arg0, u32 arg1)
+void DestroyOamBuffer(void *arg0, u32 arg1)
 {
     if (arg1 & 1) {
         sub_8026ED0(arg0);
     }
 }
 
-struct oam_shadow_buffer *sub_8006B0C(struct oam_shadow_buffer *arg0)
+struct oam_shadow_buffer *InitOamBuffer(struct oam_shadow_buffer *arg0)
 {
-    sub_8006A90(arg0);
+    ResetOamBuffer(arg0);
     return arg0;
 }
 
@@ -256,24 +258,24 @@ void FlushVramDmaQueue(void)
     register u32 shifted asm("r0");
 
     for (i = 0; i < QUEUE_COUNT; i++) {
-        entry = &gUnknown_03001290.entries[i];
-        if (entry->field_0A == 0x20) {
-            DMA3.src = entry->field_04;
-            DMA3.dst = entry->field_00;
-            raw = entry->field_08;
+        entry = &gVramDmaQueue.entries[i];
+        if (entry->unit == 0x20) {
+            DMA3.src = entry->src;
+            DMA3.dst = entry->dest;
+            raw = entry->size;
             shifted = raw >> 2;
             shifted |= (DMA_ENABLE | DMA_32BIT) << 16;
         } else {
-            DMA3.src = entry->field_04;
-            DMA3.dst = entry->field_00;
-            raw = entry->field_08;
+            DMA3.src = entry->src;
+            DMA3.dst = entry->dest;
+            raw = entry->size;
             shifted = raw >> 1;
             shifted |= (DMA_ENABLE | DMA_16BIT) << 16;
         }
         DMA3.cnt = shifted;
         (void)DMA3.cnt;
     }
-    gUnknown_03001290.count = 0;
+    gVramDmaQueue.count = 0;
 
     while (DMA3.cnt & (DMA_ENABLE << 16)) {
     }
@@ -286,88 +288,88 @@ s32 QueueVramDmaTransfer(void *arg0, void *arg1, u16 arg2, u16 arg3)
     if (arg2 == 0) {
         return 0;
     }
-    if (gUnknown_03001290.count > DMA_QUEUE_MAX_ENTRIES - 1) {
+    if (gVramDmaQueue.count > DMA_QUEUE_MAX_ENTRIES - 1) {
         return -1;
     }
-    entry = &gUnknown_03001290.entries[gUnknown_03001290.count];
-    gUnknown_03001290.count++;
-    entry->field_00 = arg1;
-    entry->field_04 = arg0;
-    entry->field_08 = arg2;
-    entry->field_0A = arg3;
+    entry = &gVramDmaQueue.entries[gVramDmaQueue.count];
+    gVramDmaQueue.count++;
+    entry->dest = arg1;
+    entry->src = arg0;
+    entry->size = arg2;
+    entry->unit = arg3;
     return 0;
 }
 
 void FreeVramDmaQueue(void)
 {
-    if (gUnknown_03001290.entries != NULL) {
-        mem_free((u8 *)gUnknown_03001290.entries);
-        gUnknown_03001290.entries = NULL;
+    if (gVramDmaQueue.entries != NULL) {
+        mem_free((u8 *)gVramDmaQueue.entries);
+        gVramDmaQueue.entries = NULL;
     }
 }
 
 s32 AllocVramDmaQueue(void)
 {
-    gUnknown_03001290.entries = (struct dma_queue_entry *)mem_alloc(
+    gVramDmaQueue.entries = (struct dma_queue_entry *)mem_alloc(
         sizeof(struct dma_queue_entry) * DMA_QUEUE_MAX_ENTRIES, MEM_HEAP_EWRAM);
-    if (gUnknown_03001290.entries == NULL) {
+    if (gVramDmaQueue.entries == NULL) {
         return -1;
     }
-    gUnknown_03001290.count = 0;
+    gVramDmaQueue.count = 0;
     return 0;
 }
 
-extern void sub_8001604(void);
+extern void SetObjMapping1D(void);
 extern void *sub_8026EC0(u32 size);
 
-void sub_8006C28(struct vram_upload_cursor *self)
+void RewindObjVram(struct vram_upload_cursor *self)
 {
-    self->field_04 = self->field_00;
+    self->offset = self->mark;
 }
 
-void sub_8006C30(struct vram_upload_cursor *self)
+void MarkObjVram(struct vram_upload_cursor *self)
 {
-    self->field_00 = self->field_04;
+    self->mark = self->offset;
 }
 
 /* No callers anywhere in the codebase - genuinely unreachable, matched
  * anyway to keep the ROM's byte layout intact (see docs/decomp_dev.md's
  * mem_collect entry for the established pattern). */
-s32 sub_8006C38(struct vram_upload_cursor *self)
+s32 GetObjVramFreeBytes(struct vram_upload_cursor *self)
 {
-    return OBJ_VRAM0_SIZE - self->field_04;
+    return OBJ_VRAM0_SIZE - self->offset;
 }
 
-s32 sub_8006C44(struct vram_upload_cursor *self)
+s32 GetObjVramTile(struct vram_upload_cursor *self)
 {
-    return self->field_04 >> 5;
+    return self->offset >> 5;
 }
 
-void sub_8006C4C(struct vram_upload_cursor *self)
+void ResetObjVram(struct vram_upload_cursor *self)
 {
-    self->field_04 = self->field_00 = self->field_08 << 5;
+    self->offset = self->mark = self->baseTile << 5;
 }
 
-s32 sub_8006C58(struct vram_upload_cursor *self, s32 size)
+s32 ReserveObjVram(struct vram_upload_cursor *self, s32 size)
 {
     s32 result;
 
-    if (self->field_04 + size <= OBJ_VRAM0_SIZE) {
-        result = sub_8006C44(self);
-        self->field_04 += size;
+    if (self->offset + size <= OBJ_VRAM0_SIZE) {
+        result = GetObjVramTile(self);
+        self->offset += size;
         return result;
     }
     return -1;
 }
 
-s32 sub_8006C84(struct vram_upload_cursor *self, void *src, s32 size)
+s32 UploadObjVram(struct vram_upload_cursor *self, void *src, s32 size)
 {
     s32 result;
 
-    if (self->field_04 + size <= OBJ_VRAM0_SIZE) {
-        if (QueueVramDmaTransfer(src, OBJ_VRAM0 + self->field_04, (u16)size, 0x20) == 0) {
-            result = sub_8006C44(self);
-            self->field_04 += size;
+    if (self->offset + size <= OBJ_VRAM0_SIZE) {
+        if (QueueVramDmaTransfer(src, OBJ_VRAM0 + self->offset, (u16)size, 0x20) == 0) {
+            result = GetObjVramTile(self);
+            self->offset += size;
             return result;
         }
         return -2;
@@ -375,19 +377,19 @@ s32 sub_8006C84(struct vram_upload_cursor *self, void *src, s32 size)
     return -1;
 }
 
-void sub_8006CD0(struct vram_upload_cursor *self, u32 flags)
+void DestroyObjVramCursor(struct vram_upload_cursor *self, u32 flags)
 {
     if (flags & 1) {
         sub_8026ED0(self);
     }
 }
 
-struct vram_upload_cursor *sub_8006CE8(struct vram_upload_cursor *self, s32 count)
+struct vram_upload_cursor *InitObjVramCursor(struct vram_upload_cursor *self, s32 count)
 {
-    sub_8001604();
-    self->field_08 = count;
-    sub_8006C4C(self);
-    sub_8006C4C(self);
+    SetObjMapping1D();
+    self->baseTile = count;
+    ResetObjVram(self);
+    ResetObjVram(self);
     return self;
 }
 
@@ -396,14 +398,14 @@ struct vram_upload_cursor *sub_8006CE8(struct vram_upload_cursor *self, s32 coun
  * access compiles to a different instruction order/operand choice
  * than the ROM here (tried, rebuilt, confirmed different - see
  * docs/matching.md, "Matching decompilation"). */
-void sub_8006D08(struct tile_asset_cache *self, s32 slot, s32 recordId)
+void LoadPaletteSlot(struct palette_cache *self, s32 slot, s32 recordId)
 {
     const u8 *src;
     u8 *dst;
 
-    self->remap[recordId] = slot;
+    self->slotOf[recordId] = slot;
     self->dirty = 1;
-    src = self->records;
+    src = self->palettes;
     dst = (u8 *)self + 0x2c;
     src += recordId << 5;
     dst += slot << 5;
@@ -413,18 +415,18 @@ void sub_8006D08(struct tile_asset_cache *self, s32 slot, s32 recordId)
     (void)DMA3.cnt;
 }
 
-void sub_8006D40(struct tile_asset_cache *self, s32 slot, s32 index)
+void BindPaletteSlot(struct palette_cache *self, s32 slot, s32 index)
 {
-    self->remap[index] = slot;
-    self->reserved[slot] = 0;
+    self->slotOf[index] = slot;
+    self->isFree[slot] = 0;
 }
 
-s32 sub_8006D50(struct tile_asset_cache *self, s32 index)
+s32 ClaimPaletteSlot(struct palette_cache *self, s32 index)
 {
-    if (self->reserved[index] == 0) {
+    if (self->isFree[index] == 0) {
         return 0;
     }
-    self->reserved[index] = 0;
+    self->isFree[index] = 0;
     return 1;
 }
 
@@ -433,35 +435,35 @@ s32 sub_8006D50(struct tile_asset_cache *self, s32 index)
  * or `slot + base` expression both lowered to the opposite operand
  * order regardless of how the addition was phrased (see docs/matching.md,
  * "Matching decompilation"). */
-void sub_8006D68(struct tile_asset_cache *self, s32 index)
+void UnlockPalette(struct palette_cache *self, s32 index)
 {
     u8 *base;
     s32 slot;
     u8 *addr;
 
-    if (self->remap[index] != 0xFF) {
-        base = self->pending;
-        slot = self->remap[index];
+    if (self->slotOf[index] != 0xFF) {
+        base = self->locked;
+        slot = self->slotOf[index];
         asm volatile("add %0, %1, %2" : "=r"(addr) : "r"(slot), "r"(base));
         *addr = 0;
     }
 }
 
-void sub_8006D84(struct tile_asset_cache *self, s32 index)
+void LockPalette(struct palette_cache *self, s32 index)
 {
     u8 *base;
     s32 slot;
     u8 *addr;
 
-    if (self->remap[index] != 0xFF) {
-        base = self->pending;
-        slot = self->remap[index];
+    if (self->slotOf[index] != 0xFF) {
+        base = self->locked;
+        slot = self->slotOf[index];
         asm volatile("add %0, %1, %2" : "=r"(addr) : "r"(slot), "r"(base));
         *addr = 1;
     }
 }
 
-void sub_8006DA0(struct tile_asset_cache *self, s32 index)
+void UploadPaletteSlot(struct palette_cache *self, s32 index)
 {
     DMA3.src = self->slots[index];
     DMA3.dst = OBJ_PLTT + (index << 5);
@@ -469,7 +471,7 @@ void sub_8006DA0(struct tile_asset_cache *self, s32 index)
     (void)DMA3.cnt;
 }
 
-void sub_8006DC8(struct tile_asset_cache *self)
+void UploadPaletteCache(struct palette_cache *self)
 {
     if (self->dirty) {
         DMA3.src = self->slots;
@@ -484,11 +486,11 @@ void sub_8006DC8(struct tile_asset_cache *self)
  * lands on a different (equally valid) allocation than the ROM's own -
  * pinned to match byte-exactly (see docs/matching.md, "Matching
  * decompilation"). */
-u8 sub_8006DF8(struct tile_asset_cache *self, s32 recordId)
+u8 GetPaletteSlot(struct palette_cache *self, s32 recordId)
 {
-    register struct tile_asset_cache *pSelf asm("r2") = self;
+    register struct palette_cache *pSelf asm("r2") = self;
     register s32 pRecordId asm("r5") = recordId;
-    register u8 *remap asm("r0") = pSelf->remap;
+    register u8 *remap asm("r0") = pSelf->slotOf;
     register u8 *addr asm("r1");
     u8 slot;
     s32 i;
@@ -505,12 +507,12 @@ u8 sub_8006DF8(struct tile_asset_cache *self, s32 recordId)
     }
     pSelf->dirty = 1;
     i = 0;
-    reservedBase = pSelf->reserved;
+    reservedBase = pSelf->isFree;
     for (; i <= 15; i++) {
         if (reservedBase[i] != 0) {
             reservedBase[i] = 0;
-            pSelf->remap[pRecordId] = i;
-            src = pSelf->records;
+            pSelf->slotOf[pRecordId] = i;
+            src = pSelf->palettes;
             dst = (u8 *)pSelf + 0x2c;
             shiftedId = pRecordId << 5;
             src += shiftedId;
@@ -528,16 +530,16 @@ u8 sub_8006DF8(struct tile_asset_cache *self, s32 recordId)
 /* No callers anywhere in the codebase - genuinely unreachable, matched
  * anyway to keep the ROM's byte layout intact (see docs/decomp_dev.md's
  * mem_collect entry for the established pattern). */
-s32 sub_8006E64(struct tile_asset_cache *self, s32 slot)
+s32 FreePaletteSlot(struct palette_cache *self, s32 slot)
 {
     s32 i;
     s32 result;
 
-    if (self->pending[slot] == 0) {
-        self->reserved[slot] = 1;
+    if (self->locked[slot] == 0) {
+        self->isFree[slot] = 1;
         for (i = 0; i < self->count; i++) {
-            if (self->remap[i] == slot) {
-                self->remap[i] = 0xFF;
+            if (self->slotOf[i] == slot) {
+                self->slotOf[i] = 0xFF;
             }
         }
         result = 1;
@@ -547,64 +549,64 @@ s32 sub_8006E64(struct tile_asset_cache *self, s32 slot)
     return result;
 }
 
-void sub_8006EA8(struct tile_asset_cache *self)
+void FreeUnlockedPaletteSlots(struct palette_cache *self)
 {
     s32 slot;
     s32 i;
 
     for (slot = 0; slot <= 15; slot++) {
-        if (self->pending[slot] == 0) {
-            self->reserved[slot] = 1;
+        if (self->locked[slot] == 0) {
+            self->isFree[slot] = 1;
             for (i = 0; i < self->count; i++) {
-                if (self->remap[i] == slot) {
-                    self->remap[i] = 0xFF;
+                if (self->slotOf[i] == slot) {
+                    self->slotOf[i] = 0xFF;
                 }
             }
         }
     }
 }
 
-void sub_8006EF0(struct tile_asset_cache *self, u16 count, const u8 *records)
+void SetPaletteCacheSource(struct palette_cache *self, u16 count, const u8 *records)
 {
     s32 i;
 
-    if (self->remap != NULL) {
-        sub_8026ED0(self->remap);
+    if (self->slotOf != NULL) {
+        sub_8026ED0(self->slotOf);
     }
-    self->remap = NULL;
+    self->slotOf = NULL;
     self->count = 0;
-    self->records = NULL;
+    self->palettes = NULL;
     for (i = 0; i <= 15; i++) {
-        self->reserved[i] = 1;
-        self->pending[i] = 0;
+        self->isFree[i] = 1;
+        self->locked[i] = 0;
     }
     self->count = count;
-    self->records = records;
-    self->remap = (u8 *)sub_8026EC0(self->count);
+    self->palettes = records;
+    self->slotOf = (u8 *)sub_8026EC0(self->count);
     for (i = 0; i < self->count; i++) {
-        self->remap[i] = 0xFF;
+        self->slotOf[i] = 0xFF;
     }
 }
 
-void sub_8006F5C(struct tile_asset_cache *self)
+void ClearPaletteCache(struct palette_cache *self)
 {
     s32 i;
 
-    if (self->remap != NULL) {
-        sub_8026ED0(self->remap);
+    if (self->slotOf != NULL) {
+        sub_8026ED0(self->slotOf);
     }
-    self->remap = NULL;
+    self->slotOf = NULL;
     self->count = 0;
-    self->records = NULL;
+    self->palettes = NULL;
     for (i = 0; i <= 15; i++) {
-        self->reserved[i] = 1;
-        self->pending[i] = 0;
+        self->isFree[i] = 1;
+        self->locked[i] = 0;
     }
 }
 
-void sub_8006F94(struct tile_asset_cache *self, u32 flags)
+void DestroyPaletteCache(struct palette_cache *self, u32 flags)
 {
-    sub_8006F5C(self);
+    ClearPaletteCache(self);
     if (flags & 1) {
         sub_8026ED0(self);
     }
@@ -613,14 +615,14 @@ void sub_8006F94(struct tile_asset_cache *self, u32 flags)
 /* The inline asm pins the ROM's `add r1, r0, r3` (self-plus-constant,
  * not in-place) operand order/register choice - see docs/matching.md,
  * "Matching decompilation". */
-void sub_8006FB4(struct tile_asset_cache *self)
+void InitPaletteCache(struct palette_cache *self)
 {
     register s32 offset asm("r3");
     register u8 *dirtyAddr asm("r1");
 
     self->count = 0;
-    self->remap = NULL;
-    self->records = NULL;
+    self->slotOf = NULL;
+    self->palettes = NULL;
     offset = 0x8b << 2;
     asm volatile("add %0, %1, %2" : "=r"(dirtyAddr) : "r"(self), "r"(offset));
     *dirtyAddr = 0;

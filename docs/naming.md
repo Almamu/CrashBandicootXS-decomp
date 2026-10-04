@@ -6,7 +6,7 @@ Most functions get a PascalCase name once they're understood well enough to
 name, matching the wider pret/GBA-decomp convention this project otherwise
 follows: `AgbMain`, `LoadTaggedAsset`, `QueueVramDmaTransfer`,
 `FreeVramDmaQueue`, `FlushVramDmaQueue`, `GetAnimFrameBaseOffset`,
-`PlaySfx`, `LoadLevelGraphics`, `LoadBg2Background`, `LoadObjSpriteTiles`,
+`PlaySfx`, `InitTitleScreen`, `LoadTitleScreenBg`, `LoadTitleScreenObjTiles`,
 `IrqDisable`, `IrqSetup`, `IrqEmptyHandler`.
 
 `LZ77UnCompVram`/`RLUnCompVram`/`VBlankIntrWait` look like they break

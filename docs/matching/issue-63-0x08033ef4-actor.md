@@ -20,7 +20,7 @@ around each matched/parked/left-raw run, following this project's
 filename (`..._33fe4.s`, `..._34058.s`, `..._34270.s`, `..._34314.s`,
 `..._34374.s`, `..._345b0.s`, `..._3472c.s`, and the tail continuation
 `..._34aa4.s`, which keeps the remaining still-raw span up to
-`LoadLevelGraphics` at `0x080354E0`).
+`InitTitleScreen` at `0x080354E0`).
 
 Three distinct `InitActorPart`-rooted per-instance "self" object kinds
 are constructed in this chunk, all sharing the family's usual layout
@@ -141,7 +141,7 @@ boundaries - not by re-reading the isolated compiles more carefully.
   count, and a 240x160 4-bit-per-pixel shadow `tileBuffer`). The
   apparent "read of an uninitialized local" this function was
   previously left raw over turned out to be the same negative-constant
-  bit-clear idiom already established for `LoadBg2Background`'s
+  bit-clear idiom already established for `LoadTitleScreenBg`'s
   `bg2cnt` (`src/graphics/level_graphics.c`, issue #65) - an
   intentionally uninitialized `u32` ANDed against `0xFFFF0000` before
   every bit the final halfword write actually reads gets ORed in, not a
@@ -210,7 +210,7 @@ boundaries - not by re-reading the isolated compiles more carefully.
 
 - **`SpawnStar`/`PlotStarfieldPixel`** (`src/graphics/actor_part72.c`) - a
   128-slot particle spawner (rolls two `RandRange` random values
-  against the 256-entry `gStaticData_0816A820` direction table to seed a
+  against the 256-entry `gSineTable` direction table to seed a
   position/velocity record) and a 4-bit-per-cell tilemap nibble writer;
   both now fully matched as real C, retiring
   `asm/code_3_2_20_28568_c99c_31784_33ef4_345b0.s` entirely.

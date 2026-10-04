@@ -10,10 +10,10 @@ None of them needs a register pin.
 | `sub_8025B0C` | `src/system/game_loop14.c` | 160 B | 61 hw (note), no draft | **Closed** |
 | `DecodeLayerChunk` | `src/system/game_loop57.c` | 320 B | 13 hw (note), no draft | **Closed** |
 | `RunCutscenePlayer` | `src/system/game_loop57.c` | 284 B | 77 hw (note), no draft | **Closed** |
-| `sub_80073DC` | `src/graphics/graphics_73dc.c` (new, split from `graphics.c`) | 600 B | draft removed long ago | **Closed** |
+| `DrawSpritePieces` | `src/graphics/graphics_73dc.c` (new, split from `graphics.c`) | 600 B | draft removed long ago | **Closed** |
 
 `game_loop14.c` and `game_loop57.c` were already on `OLD_AGBCC_OBJS`.
-`sub_80073DC` was the last function in `graphics.c`, which is built with
+`DrawSpritePieces` was the last function in `graphics.c`, which is built with
 agbcc. Its loop loads the `0xf` mask before the `ldrb` it is combined
 with, which is the old_agbcc tell. It now lives in its own
 `graphics_73dc.c` on `OLD_AGBCC_OBJS`. `0x080073DC` is 4-byte aligned,
@@ -72,10 +72,10 @@ them an r4/r5 swap plus two local spots. Two changes closed it:
 ## RunCutscenePlayer
 
 This is the text pager driver. The first draft was 110 halfwords off.
-The old note said "the ROM reloads `&gUnknown_03001300` at each OAM
+The old note said "the ROM reloads `&gOamBuffer` at each OAM
 flush", and that was the key. The three reloads rotate r1/r2/r3, which
 is reload rematerializing a spilled constant-equivalent pseudo. The
-source has a function-scope `void **oamp = &gUnknown_03001300;` that is
+source has a function-scope `void **oamp = &gOamBuffer;` that is
 set before the loop (#505). Its live range spans the loop, so
 global-alloc gives it no register. That frees r4 for `self` and puts
 every other value in the ROM's register. After that:
@@ -86,12 +86,12 @@ every other value in the ROM's register. After that:
 - **Page loop.** It is a plain `for (j = 0; j < count && res == 1; j++)`.
   A manual `j++` at the top of the body splits `j` differently.
 
-## sub_80073DC
+## DrawSpritePieces
 
-The non-affine sibling of `sub_8007634` (#509). The draft was written
+The non-affine sibling of `DrawAffineSpritePieces` (#509). The draft was written
 directly in `graphics_7634.c`'s matched shape and matched on the first
 compile under old_agbcc. Under agbcc it is 37 halfwords off. It uses the
-same structures and techniques as `sub_8007634`:
+same structures and techniques as `DrawAffineSpritePieces`:
 
 - `oam_attr2` has `u16` fields;
 - `PART_FLAG_SET` sign tests on the `+0x28` byte;

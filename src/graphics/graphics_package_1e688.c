@@ -13,7 +13,7 @@ struct oam_attrs {
     u16 mosaic:1;
     u16 bpp:1;
     u16 shape:2;
-    u32 x:9;            // 0x02 - u32: with u16, sub_801E788's stores schedule differently
+    u32 x:9;            // 0x02 - u32: with u16, DrawScaledSprite's stores schedule differently
     u16 matrixNumLo:3;
     u16 hFlip:1;
     u16 vFlip:1;
@@ -28,7 +28,7 @@ struct oam_attrs {
  * names `struct oam_shadow_buffer`. */
 struct oam_shadow_buffer {
     s32 count;
-    s32 field_04;
+    s32 base;
     s32 matrixCount;        // 0x08
     struct oam_attrs oam[0x80];
 };
@@ -47,17 +47,19 @@ struct gfx_box_obj {
     s32 scaleY;             // 0x24 - Q8
 };
 
-extern struct oam_shadow_buffer *gUnknown_03001300;
-extern void sub_8006AC8(struct oam_shadow_buffer *buf, struct oam_attrs *oam);
+extern struct oam_shadow_buffer *gOamBuffer;
+extern void AddOamEntry(struct oam_shadow_buffer *buf, struct oam_attrs *oam);
 
-extern s32 gStaticData_0816C644[12];
-extern s32 gStaticData_0816C674[12];
+extern s32 gObjSizeWidths[12];
+extern s32 gObjSizeHeights[12];
 
-/* Picks the smallest-area box preset (gStaticData_0816C644/674) that a
+/* Picks the smallest-area box preset (gObjSizeWidths/674) that a
  * width x height box fits in at 50% zoom or better, puts its shape/size
  * and an area-derived tile number into the OAM template, and stores the
  * Q8 scale factors plus the affine mode (3 shrunk, 1 enlarged, 0 1:1). */
-void sub_801E688(struct gfx_box_obj *self, s32 width, s32 height)
+/* UNUSED - no caller anywhere in the ROM (no Thumb `bl` to it and no
+ * pointer to it in baserom.gba, nor any reference in asm/ or src/). */
+void FitScaledSprite(struct gfx_box_obj *self, s32 width, s32 height)
 {
     s32 *widths;
     s32 *heights;
@@ -68,7 +70,7 @@ void sub_801E688(struct gfx_box_obj *self, s32 width, s32 height)
     self->width = width;
     self->height = height;
     best = 0x1000;
-    for (i = 0, widths = gStaticData_0816C644, heights = gStaticData_0816C674; i < 12; i++)
+    for (i = 0, widths = gObjSizeWidths, heights = gObjSizeHeights; i < 12; i++)
     {
         if (width <= widths[i] * 2 && height <= heights[i] * 2 && widths[i] * heights[i] < best)
         {
@@ -94,7 +96,9 @@ void sub_801E688(struct gfx_box_obj *self, s32 width, s32 height)
  * preset box when scaled, or on the double-size area), allocates an
  * affine matrix holding the scale factors when affine, and queues the
  * entry into the shadow OAM buffer. */
-void sub_801E788(struct gfx_box_obj *self)
+/* UNUSED - no caller anywhere in the ROM (no Thumb `bl` to it and no
+ * pointer to it in baserom.gba, nor any reference in asm/ or src/). */
+void DrawScaledSprite(struct gfx_box_obj *self)
 {
     struct oam_shadow_buffer *buf;
     s32 n;
@@ -106,12 +110,12 @@ void sub_801E788(struct gfx_box_obj *self)
         self->oam.y = self->y;
         break;
     case 1:
-        self->oam.x = self->x - (gStaticData_0816C644[self->sizeIndex] - self->width) / 2;
-        self->oam.y = self->y - (gStaticData_0816C674[self->sizeIndex] - self->height) / 2;
+        self->oam.x = self->x - (gObjSizeWidths[self->sizeIndex] - self->width) / 2;
+        self->oam.y = self->y - (gObjSizeHeights[self->sizeIndex] - self->height) / 2;
         break;
     case 3:
-        self->oam.x = self->x + self->width / 2 - gStaticData_0816C644[self->sizeIndex];
-        self->oam.y = self->y + self->height / 2 - gStaticData_0816C674[self->sizeIndex];
+        self->oam.x = self->x + self->width / 2 - gObjSizeWidths[self->sizeIndex];
+        self->oam.y = self->y + self->height / 2 - gObjSizeHeights[self->sizeIndex];
         break;
     }
     if (self->oam.affineMode == 0)
@@ -121,7 +125,7 @@ void sub_801E788(struct gfx_box_obj *self)
     }
     else
     {
-        buf = gUnknown_03001300;
+        buf = gOamBuffer;
         n = buf->matrixCount++;
         self->oam.matrixNumLo = n;
         self->oam.hFlip = n >> 3;
@@ -138,5 +142,5 @@ void sub_801E788(struct gfx_box_obj *self)
             buf->oam[i + 3].affineParam = param;
         }
     }
-    sub_8006AC8(gUnknown_03001300, &self->oam);
+    AddOamEntry(gOamBuffer, &self->oam);
 }

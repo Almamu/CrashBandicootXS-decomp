@@ -62,7 +62,7 @@ struct box_part {
     s32 timer;          // 0x34 - ticks spent on the current step
     u8 animDone;        // 0x38
     u8 unk_39[3];
-    u16 unk_3C;         // 0x3C - nonzero: sub_8008890 resolves through sub_8007634
+    u16 unk_3C;         // 0x3C - nonzero: sub_8008890 resolves through DrawAffineSpritePieces
     u8 unk_3E[0xf];
     u8 physMode;        // 0x4D - low 7 bits 1: skipped by the physics AABB tests
     u8 state;           // 0x4E - sub_800CD00 skips 5 and 0xA

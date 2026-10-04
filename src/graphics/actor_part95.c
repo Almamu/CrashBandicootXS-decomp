@@ -41,21 +41,21 @@ s32 sub_8029794(void)
     return gUnknown_03001384 >= (s32)gActorCategories[gActorCategory].unknown_20;
 }
 
-extern s32 gUnknown_030013B0;
-extern s32 gUnknown_030013A4;
-extern void *gUnknown_03001394;
-extern u8 gUnknown_030013B8;
-extern u8 gUnknown_030013B9;
-extern s32 gUnknown_030013A0;
+extern s32 gCellAnimTime;
+extern s32 gCellAnimFrameSize;
+extern void *gCellAnim;
+extern u8 gCellAnimHasBanks;
+extern u8 gCellAnimPage;
+extern s32 gCellAnimTileBytes;
 extern void (*gDrawMirroredTilemapFunc)(void *src, s32 arg1, s32 arg2, s32 arg3);
-extern s32 gUnknown_03001398;
-extern s32 gUnknown_0300139C;
-extern u8 gUnknown_030013BA;
+extern s32 gCellAnimCols;
+extern s32 gCellAnimRows;
+extern u8 gCellAnimUploaded;
 
-/* Kicks off a DMA copy of `gUnknown_030013A0` bytes from the current
+/* Kicks off a DMA copy of `gCellAnimTileBytes` bytes from the current
  * "console"/text-plane cursor cell into VRAM (one of three fixed
- * destination strategies depending on the `gUnknown_030013B8`/
- * `gUnknown_030013B9` mode bytes), then arms `gUnknown_030013BA` so a
+ * destination strategies depending on the `gCellAnimHasBanks`/
+ * `gCellAnimPage` mode bytes), then arms `gCellAnimUploaded` so a
  * caller can poll for completion. `gDrawMirroredTilemapFunc` is a function
  * pointer (called through `_call_via_r4`).
  *
@@ -63,86 +63,86 @@ extern u8 gUnknown_030013BA;
  * base pointer, the destination is a ternary, and the callback's first
  * argument goes through its own local; each of those fixes one piece of
  * the ROM's instruction order. Matches under both compilers. */
-void sub_80297C8(void)
+void UploadCellAnimFrame(void)
 {
-    u8 *src = (u8 *)gUnknown_03001394 + ((gUnknown_030013B0 >> 8) * gUnknown_030013A4 + 0x204);
+    u8 *src = (u8 *)gCellAnim + ((gCellAnimTime >> 8) * gCellAnimFrameSize + 0x204);
     u32 dst;
 
-    if (gUnknown_030013B8 != 0) {
+    if (gCellAnimHasBanks != 0) {
         u8 *next;
 
-        dst = gUnknown_030013B9 != 0 ? VRAM : VRAM + 0x2000;
-        next = src + gUnknown_030013A0;
-        gDrawMirroredTilemapFunc(next, gUnknown_030013B9, gUnknown_03001398, gUnknown_0300139C);
-    } else if (gUnknown_030013B9 != 0) {
+        dst = gCellAnimPage != 0 ? VRAM : VRAM + 0x2000;
+        next = src + gCellAnimTileBytes;
+        gDrawMirroredTilemapFunc(next, gCellAnimPage, gCellAnimCols, gCellAnimRows);
+    } else if (gCellAnimPage != 0) {
         dst = VRAM + 0x20;
     } else {
-        dst = gUnknown_030013A0 + (VRAM + 0x20);
+        dst = gCellAnimTileBytes + (VRAM + 0x20);
     }
-    DmaSet(3, src, dst, 0x80000000 | (gUnknown_030013A0 / 2));
-    gUnknown_030013BA = 1;
+    DmaSet(3, src, dst, 0x80000000 | (gCellAnimTileBytes / 2));
+    gCellAnimUploaded = 1;
 }
 
-extern s32 gUnknown_030013AC;
+extern s32 gCellAnimLength;
 extern s32 gUnknown_030013C8;
 extern s32 gUnknown_030013A8;
-extern s32 gUnknown_030013B4;
-extern s32 gUnknown_030013BC;
-extern void sub_802996C(void);
+extern s32 gCellAnimSpeed;
+extern s32 gCellAnimFrameStep;
+extern void ResetCellAnimBg(void);
 extern s32 __divsi3(s32 a, s32 b);
 
 /* (Re)configures the console/text-plane cell geometry from a fresh
  * cell record at `arg1` (a `struct cell_anim_header`: its `cols`/`rows`) - cell pixel area, its DMA-scroll-wrap threshold, and the
  * initial X/Y scroll accumulators - then rebuilds both VRAM screen
- * blocks via `sub_802996C`.
+ * blocks via `ResetCellAnimBg`.
  *
  * Matched in the second near-miss sweep. The ROM stores
- * `gUnknown_030013A4` once, after the `if`, then reloads it for the
+ * `gCellAnimFrameSize` once, after the `if`, then reloads it for the
  * division through a *copy* of its address taken before the branch
  * (`ldr r4, =A4; ...; add r1, r4, #0`). The copy is
  * `asm("" : "=r"(reload) : "0"(a4))`, which emits no code but gives
  * gcc a second pointer it can't merge back into `a4`. Evaluation order
  * fixes the rest: the flag goes through a pointer to
- * `gUnknown_030013B8` loaded first, `area` is assigned inside the
- * `gUnknown_030013A0` store so that global's address loads before the
- * multiply, and `size` is read back from `gUnknown_030013A0` between
+ * `gCellAnimHasBanks` loaded first, `area` is assigned inside the
+ * `gCellAnimTileBytes` store so that global's address loads before the
+ * multiply, and `size` is read back from `gCellAnimTileBytes` between
  * taking the address and copying it. Matches under both compilers. */
-void sub_8029890(s32 arg0, s32 arg1, s32 arg2, s32 arg3)
+void InitCellAnim(s32 arg0, s32 arg1, s32 arg2, s32 arg3)
 {
     struct cell_anim_header *cell = (struct cell_anim_header *)arg1;
     s32 area;
     s32 flag;
     s32 size;
-    u8 *pFlag = &gUnknown_030013B8;
+    u8 *pFlag = &gCellAnimHasBanks;
 
     flag = (arg0 == 0);
     *pFlag = flag;
-    gUnknown_03001394 = cell;
-    gUnknown_03001398 = cell->cols;
-    gUnknown_0300139C = cell->rows;
-    gUnknown_030013A0 = (area = gUnknown_03001398 * gUnknown_0300139C) << 5;
+    gCellAnim = cell;
+    gCellAnimCols = cell->cols;
+    gCellAnimRows = cell->rows;
+    gCellAnimTileBytes = (area = gCellAnimCols * gCellAnimRows) << 5;
     {
-        s32 *a4 = &gUnknown_030013A4;
+        s32 *a4 = &gCellAnimFrameSize;
         s32 *reload;
 
-        size = gUnknown_030013A0;
+        size = gCellAnimTileBytes;
         asm("" : "=r"(reload) : "0"(a4));
         if (flag)
             size += (area + 7) / 8 * 4;
         *a4 = size;
-        gUnknown_030013AC = __divsi3(arg2 - 0x204, *reload) << 8;
+        gCellAnimLength = __divsi3(arg2 - 0x204, *reload) << 8;
     }
-    gUnknown_030013B0 = 0;
-    sub_802996C();
-    gUnknown_030013B4 = 0;
-    if (gUnknown_030013B8 == 0)
+    gCellAnimTime = 0;
+    ResetCellAnimBg();
+    gCellAnimSpeed = 0;
+    if (gCellAnimHasBanks == 0)
         gUnknown_030013A8 = (arg3 - gUnknown_030013C8) >> 8;
     else
         gUnknown_030013A8 = (arg3 + gUnknown_030013C8) >> 8;
-    gUnknown_030013BC = 0;
+    gCellAnimFrameStep = 0;
 }
 
-/* `sub_8029BC4` (actor_part98.c), inlined here twice: fills screen
+/* `FillCellAnimTilemap` (actor_part98.c), inlined here twice: fills screen
  * block 0x0600E400 (or 0x0600F400 when `arg0` is set, numbering on
  * from `w * h + 1`) with consecutive tile numbers for a `w` x `h` cell
  * grid; columns past 31 go to the next screen block (+0x7c0 bytes).
@@ -175,26 +175,26 @@ static inline void FillTileMap(s32 arg0, s32 w, s32 h)
 }
 
 /* Resets the console/text plane: display mode, BG0 control, palette
- * DMA from the cell record, and (unless `gUnknown_030013B8` is set)
+ * DMA from the cell record, and (unless `gCellAnimHasBanks` is set)
  * clears the first tile and the 0x0600E000 screen block and fills both
  * tile maps. The clear loop needs `vram` as a local and an upward `i`
  * (gcc reverses it into the ROM's pointer loop). Matches under both
  * compilers. */
-void sub_802996C(void)
+void ResetCellAnimBg(void)
 {
     REG_DISPCNT = 0x1141;
     REG_BG0CNT = 0x5c02;
-    DmaSet(3, gUnknown_03001394, PLTT, 0x80000100);
-    if (gUnknown_030013B8 == 0) {
+    DmaSet(3, gCellAnim, PLTT, 0x80000100);
+    if (gCellAnimHasBanks == 0) {
         u32 *vram = (u32 *)VRAM;
         s32 i;
 
         for (i = 0; i < 8; i++)
             vram[i] = 0;
         DmaFill16(3, 0, VRAM + 0xE000, 0x2000);
-        FillTileMap(0, gUnknown_03001398, gUnknown_0300139C);
-        FillTileMap(1, gUnknown_03001398, gUnknown_0300139C);
+        FillTileMap(0, gCellAnimCols, gCellAnimRows);
+        FillTileMap(1, gCellAnimCols, gCellAnimRows);
     }
-    gUnknown_030013B9 = 1;
-    sub_80297C8();
+    gCellAnimPage = 1;
+    UploadCellAnimFrame();
 }

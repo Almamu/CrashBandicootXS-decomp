@@ -17,7 +17,7 @@ kept in an external, fixed-size pool of `struct vram_tile_block` records
 (16 bytes: `addr`, `size`, `status`, `next`, `prev`) instead of an
 embedded-in-buffer header, since the memory being managed is real OBJ tile
 VRAM (0x06010000-0x06018000) that can't hold a software header mixed in
-with pixel data. A 1024-byte lookup table (`gUnknown_03001340`, one byte
+with pixel data. A 1024-byte lookup table (`gVramTileBlockIndex`, one byte
 per possible 32-byte tile slot) maps a bare VRAM address back to its
 owning record's pool index for `FreeVramTileBlock`.
 
@@ -56,7 +56,7 @@ owning record's pool index for `FreeVramTileBlock`.
   for the two ROM-shared merge points a plain C `if`/`return` can't be
   aimed at a chosen physical address: the "not found" early return, and
   the free-list-split/no-split rejoin. The same asm island also had to
-  swallow the free-list-split logic and a `gUnknown_0300133C` literal
+  swallow the free-list-split logic and a `gVramTileBlockSpares` literal
   pool right after the "not found" trampoline - both cases of this
   compiler's own CSE/pool-placement choices (reusing an already-loaded
   register instead of ROM's redundant reload; deferring the pool to the
@@ -70,12 +70,12 @@ owning record's pool index for `FreeVramTileBlock`.
   then the free-block list all the way around, discarding both results -
   the same "list-walk with the result never stored" optimizer-leftover
   shape already documented for `sub_800039C` in `src/system/memory.c`.
-- **`sub_8028D94`** - matched, **UNUSED**. The original disassembly never
+- **`GetFreeVramTileBytes`** - matched, **UNUSED**. The original disassembly never
   gave this address its own `thumb_func_start`; it's a genuinely separate
   function starting right where `sub_8028D6C`'s real body ends (confirmed
   by there being no caller for the combined "one function" reading and by
   this half being a clean, self-contained "sum every free block's size"
-  routine). Added a `split 0x08028D94 sub_8028D94` correction, the same
+  routine). Added a `split 0x08028D94 GetFreeVramTileBytes` correction, the same
   pattern `sub_800039C` already established.
 
 ## The overflow OAM/affine queue (`src/graphics/sprite_frame_queue.c`)
@@ -162,7 +162,7 @@ re-DMA the same tiles every call.
   of which operand is written first. An `asm volatile("add %0, %0, %1" :
   "+r"(x) : "r"(y))`-style single-instruction island pinned exactly on the
   two operands is the reliable fix when plain reordering doesn't stick
-  (confirmed needed in both `sub_8028D94`'s sum and one of
+  (confirmed needed in both `GetFreeVramTileBytes`'s sum and one of
   `QueueSpriteFrameOam`'s pointer-arithmetic adds; a few other spots that
   looked identical happened to already match with plain C, so try the
   cheap fix first).

@@ -4,7 +4,7 @@
  * (`src/graphics/actor_part78.c`, still `NON_MATCHING`/parked) flags
  * this as "still raw, only its return code's meaning as an opaque
  * 'hit' test against the constant 6 is used" from its own camera-
- * probe tail; `sub_8007634`'s original write-up
+ * probe tail; `DrawAffineSpritePieces`'s original write-up
  * (`docs/matching/issue-9-0x08007634-actor.md`, line ~214) separately
  * flags it as "the unexamined `sub_8026BC0`" from a jump-table
  * dispatch context. Neither caller needed anything more than the

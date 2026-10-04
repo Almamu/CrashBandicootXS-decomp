@@ -248,7 +248,7 @@ system from "core" system startup/init code.
   `self+0x4d`-gated reset of `self+0x30`/`self+0x38` via the
   `self+0x20`-pointer-to-manager/`self+0x2d`-tag/0x1c-stride
   hitbox-record convention `sub_800D040` (game_loop6.c) also uses,
-  then a tail call to `sub_8007A84`. See
+  then a tail call to `DrawSprite`. See
   [docs/matching/issue-13-fc70-second-continuation.md](../matching/issue-13-fc70-second-continuation.md).
 - `src/system/game_loop18.c` (GitHub issue #38, follow-up pass): `LevelHasEntityType`
   (medal item-list per-flag nonzero scan) - prepended ahead of
@@ -322,7 +322,7 @@ system from "core" system startup/init code.
   mislabelled (it starts at `0x0802613C`). `asm/code_3_2_17_25fc8.s`
   removed. See
   [docs/matching/issue-42-bg-scroll-layer.md](../matching/issue-42-bg-scroll-layer.md).
-- **`DestroyPooledBgLayer`/`InitPooledBgLayer`/`sub_8026480`/`ResetTileSlotPool`/`AcquireTileSlot`/`ReleaseTileSlot`/`sub_80265FC`/`SetTileSlotPoolSource`**
+- **`DestroyPooledBgLayer`/`InitPooledBgLayer`/`sub_8026480`/`ResetTileSlotPool`/`AcquireTileSlot`/`ReleaseTileSlot`/`UploadTileSlot`/`SetTileSlotPoolSource`**
   (`src/system/tile_slot_pool.c`, new file - GitHub issue #43) - BG
   layer 0 of the level-layers singleton (constructor/destructor chaining
   to the `InitBgLayer` BG-scroll-layer base) and its reference-counted
@@ -343,7 +343,7 @@ system from "core" system startup/init code.
 - **`sub_8026BC0`** (`src/system/game_loop44.c`, new file - dedicated
   deep investigation) - independently flagged "still raw" by two
   already-documented callers (`sub_800A884`'s camera-probe tail and a
-  jump-table dispatch context in `sub_8007634`'s own write-up). A
+  jump-table dispatch context in `DrawAffineSpritePieces`'s own write-up). A
   56-byte wrapper around the already-matched terrain-tile-cache lookup
   `GetTerrainType` (`game_loop4.c`, GitHub issue #40): converts `(x, y)`
   to that cache's lookup units via a plain `>>3` clamped to `>= 0` on
@@ -400,7 +400,7 @@ system from "core" system startup/init code.
   targets, matched as real C: `sub_800E620` (dispatch id `0xe`)
   switches `self` into hitbox tag `0x14`, rebuilds its hitbox record,
   and re-derives a low-nibble sub-animation value via the shared
-  `+0x20`-table/`+0x2d`-tag convention's own `sub_8006DF8` tile-asset-
+  `+0x20`-table/`+0x2d`-tag convention's own `GetPaletteSlot` tile-asset-
   cache lookup - needing several register-pinned/inline-asm-anchored
   blocks for this compiler's usual operand-materialization-order and
   register-choice gaps in this shape (a field-store's immediate loaded
@@ -537,7 +537,7 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   question. Past the dispatch, a shared tail rebuilds the player's OAM
   entry and re-derives its `+0x29` low nibble, then a wait loop polls
   `IsRoomExitRequested` (`gRoomExitRequested`, `game_loop9.c`) until ready before
-  firing the fade (`sub_80014A4`), and a post-fade tail counts
+  firing the fade (`FadePaletteToBlack`), and a post-fade tail counts
   `gCrateList` entries in physics state `0xA`
   (`gStaticData_0816BC98`'s own convention,
   [docs/matching/issue-12-physics-collision.md](../matching/issue-12-physics-collision.md))
@@ -689,7 +689,7 @@ plain C didn't converge.
   `sub_800C1E8` are the X-axis/Y-axis "homing velocity-target setter"
   pair; `sub_800C314` is state 7's `self+0x68`-dispatched callee (a
   mirror-flag toggle plus a wrapping 0-3 counter advance);
-  `sub_800C8F8`/`sub_800C940`/`sub_800C97C` are a `gStaticData_0816A820`
+  `sub_800C8F8`/`sub_800C940`/`sub_800C97C` are a `gSineTable`
   sine-wave-oscillator family. All six matched as NAKED - each hit a
   *different* gcc-2.9/this-agbcc-build code-selection gap (branch-
   polarity/cross-jump-merging differences for the first pair, bit-
@@ -788,7 +788,7 @@ plain C didn't converge.
   ROM `0x080225A0`-`0x08022BF0`) - the main per-frame game-loop driver,
   called once a frame from `MainLoop` with `self` =
   `gLevelState`. Traced branch-by-branch: a level-load loop
-  (`LoadLevelGraphics`/`sub_8035E14`/`RunCredits`) that spins until the
+  (`InitTitleScreen`/`RunTitleScreen`/`RunCredits`) that spins until the
   level finishes loading; a confirmed 5-case jump table on
   `self->0xc4` (doubling as both the literal player-state enum value
   *and* the retry-loop's `RunLevelSelect` seed) - gates
@@ -874,7 +874,7 @@ plain C didn't converge.
   compare` ("La suma coincide"). Phase 2's own "quick win" group later
   folded `sub_8010E14`/`sub_8010E2C` into this same file (both real C):
   `sub_8010E14` is byte-identical in shape to `graphics.c`'s already-
-  matched `sub_8006AF4` (`if (arg1 & 1) sub_8026ED0(arg0);`) - a VRAM-
+  matched `DestroyOamBuffer` (`if (arg1 & 1) sub_8026ED0(arg0);`) - a VRAM-
   manager-refresh gate that happens to be called from `actor_part15.c`
   with `arg1 = 2` (bit 0 clear), so that particular call site is itself
   a no-op; `sub_8010E2C` is a trivial two-field queue reset
@@ -896,11 +896,11 @@ plain C didn't converge.
   position, `sub_8011378` (re)starts the orbit at a given mode/phase 0,
   `sub_8011388` sets an adjacent still-unexamined byte, `sub_8011248` is
   the per-frame orbit-position update (two lookups into the shared sine
-  table `gStaticData_0816A820` at different strides, combined via the
+  table `gSineTable` at different strides, combined via the
   overflow-avoiding fixed-point multiply `FixedMul`), `sub_8011330`
   fires a `self->table`-driven hit trampoline once "spawned"
   (`self+0x48 == 0`) and a player flag is set, `sub_80112C4` re-derives
-  visibility from a `sub_8007A84`/`self+0x38` gate, `sub_80112F4`/
+  visibility from a `DrawSprite`/`self+0x38` gate, `sub_80112F4`/
   `sub_8011310`/`sub_8011308` are a small init/reset/table-repoint trio
   (same `sub_80084A4`/table-swap shape as `actor_part8.c`), and
   `sub_8011390` is the per-frame player-proximity/hit-resolve step
@@ -929,7 +929,7 @@ plain C didn't converge.
   collision-bitmap arrival tail and a `sub_8025CA4` mode-3 spawn);
   `sub_801173C` is the achievement/unlock-icon spawn helper;
   `sub_8011870` is `sub_80111B8`'s alternative; `sub_801191C`/
-  `sub_801192C` are a tiny mode setter and a `gStaticData_0816A820`
+  `sub_801192C` are a tiny mode setter and a `gSineTable`
   table helper. All but `sub_801191C` (trivial, real C) closed as NAKED
   transcription - this neighborhood reconfirms the same gcc-2.9
   register-pressure hazards (r7/r8/sb) already documented at length for

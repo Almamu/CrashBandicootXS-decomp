@@ -69,7 +69,7 @@ expression is not enough either.
 | `PauseMenuLoop` | fade pointer computed after `disp` | fade local at top, before or after `disp`, in either or both loops; for/break/goto loop forms; late `disp`. `asm("" : : "r"(FADE(self)))` before `disp` gets the order right but computes the pointer into r0 and copies it to r4 afterwards. A fade local used in the second loop only gets the order but is 8 bytes short. |
 | `sub_8001CB8` | `hash >> 8` folded into `(x << 16) >> 24`; -16 as `mov; neg` instead of `sub r0,#31` | u32/s32 hash with casts or masks, temporaries, `+r`/`r` barriers, manual nibble insert (7 halfwords, but 0xF0 replaces the -16) |
 | `RunRoom` | `add rN, sp, #4` should come before the direction-byte constant | struct spellings: packed, plain, array, s8, bitfield, nested; locals; compound literals. Only the packed one-byte struct keeps `strb`. |
-| `sub_80360DC` | seedBase/counter/zero and stride/slot register rotation | 0-2 extra `asm` references on each of the five variables, before the loop or inside it (3^5 combinations): the gap never dropped below 18 halfwords |
+| `ResetTitleLogoPieces` | seedBase/counter/zero and stride/slot register rotation | 0-2 extra `asm` references on each of the five variables, before the loop or inside it (3^5 combinations): the gap never dropped below 18 halfwords |
 
 Helpers: the brute-force variant runner (`brute2.py`, adapted from the
 scratchpad's `mix12b/`), specs `s*.py`.

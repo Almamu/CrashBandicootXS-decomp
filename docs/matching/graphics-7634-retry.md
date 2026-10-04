@@ -1,13 +1,13 @@
-# sub_8007634 retry (issue #9)
+# DrawAffineSpritePieces retry (issue #9)
 
-`sub_8007634` (`src/graphics/graphics_7634.c`, 1044 bytes) was the last
+`DrawAffineSpritePieces` (`src/graphics/graphics_7634.c`, 1044 bytes) was the last
 NAKED function in issue #9's range. Its old `NON_MATCHING` draft was 468
 halfwords off (1032 bytes under agbcc, 1024 under old_agbcc). It is now
 matched as real C, with no pins and one extra-reference nudge.
 
 | Function | File | Compiler | Before | Now |
 |---|---|---|---|---|
-| `sub_8007634` | `src/graphics/graphics_7634.c` (added to `OLD_AGBCC_OBJS`; the only function in the file) | old_agbcc | 468 | MATCH |
+| `DrawAffineSpritePieces` | `src/graphics/graphics_7634.c` (added to `OLD_AGBCC_OBJS`; the only function in the file) | old_agbcc | 468 | MATCH |
 
 ## Compiler
 

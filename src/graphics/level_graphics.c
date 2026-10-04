@@ -5,56 +5,56 @@
 
 /* GitHub issue #65's chunk (0x080354E0-0x08037110) starts here, right at
  * the 40.4 KB actor-per-type-behavior zone's own end (docs/rom_map.md's
- * `0x0802B348`-`0x080354E0` entry) - `LoadLevelGraphics`/
- * `LoadBg2Background`/`LoadObjSpriteTiles` are already named and were
+ * `0x0802B348`-`0x080354E0` entry) - `InitTitleScreen`/
+ * `LoadTitleScreenBg`/`LoadTitleScreenObjTiles` are already named and were
  * already high-confidence `graphics_loading` per docs/rom_map.md's own
  * table before this chunk (`0x080354E0`-`0x08035780`ish). */
 
 extern struct icon_manager *gSmallFont;
-extern struct oam_shadow_buffer *gUnknown_03001300;
+extern struct oam_shadow_buffer *gOamBuffer;
 extern struct AudioContext *gAudioContext;
 
-extern void sub_8006A90(struct oam_shadow_buffer *arg0);
-extern void sub_8006A48(struct oam_shadow_buffer *arg0);
+extern void ResetOamBuffer(struct oam_shadow_buffer *arg0);
+extern void HideUnusedOamEntries(struct oam_shadow_buffer *arg0);
 extern void WaitForVBlank(void);
-extern void sub_8006AAC(struct oam_shadow_buffer *arg0);
+extern void CommitOamBuffer(struct oam_shadow_buffer *arg0);
 extern void FontSetPalette(struct icon_manager *self, u8 val);
 extern void *_call_via_r1(void *arg0, void *fn);
 extern void *sub_8026EDC(s32 size);
 extern void *InitStarfield(void *arg0);
-extern void sub_8001604(void);
-extern void sub_80015E0(void);
-extern void sub_8001524(s32 val);
-extern void sub_8001614(void);
+extern void SetObjMapping1D(void);
+extern void ShowObj(void);
+extern void SetDispcntMode(s32 val);
+extern void CommitDispcnt(void);
 extern void StartSong(struct AudioContext *self, u32 songIndex);
 
-extern u8 gStaticData_0817D034[0x20];
-extern u8 gStaticData_0817D054[0x20];
-extern u8 gStaticData_0817D074[0x70];
+extern u8 gTitleMenuPalette[0x20];
+extern u8 gTitleMenuSelectedPalette[0x20];
+extern u8 gTitleMenuBlinkPalette[0x70];
 
-/* Loaded onto BG2, via the 5-field package struct at `gStaticData_0817D0E4`
+/* Loaded onto BG2, via the 5-field package struct at `gTitleScreenBg`
  * - see `struct bg_package` (include/graphics_package.h), shared with
- * `LoadObjSpriteTiles` below and with `LoadGraphicsPackage`
+ * `LoadTitleScreenObjTiles` below and with `LoadGraphicsPackage`
  * (src/graphics/graphics_package_1e578.c). */
-extern struct bg_package gStaticData_0817D0E4;
-extern void *gUnknown_030008BC[4];
+extern struct bg_package gTitleScreenBg;
+extern void *gTitleObjPackages[4];
 
 extern void *sub_8026EC0(u32 size);
 extern void sub_8026EB4(void *ptr);
 extern void LoadTaggedAsset(void *asset, void *dest);
 
-void LoadBg2Background(u32 *self);
-void LoadObjSpriteTiles(u32 *self);
+void LoadTitleScreenBg(u32 *self);
+void LoadTitleScreenObjTiles(u32 *self);
 
-/* The 0x220-byte per-level scratch object `UpdateGameFrame` allocates
+/* The 0x220-byte title-screen object `UpdateGameFrame` allocates
  * (`sub_8026EDC(0x220)`) and passes here - most of its fields are still
  * touched only by this chunk's not-yet-matched neighbors
- * (`sub_8035780`/`sub_8035E14`/`sub_8036154`/...), so it stays a raw
+ * (`UpdateTitleLogoPieces`/`RunTitleScreen`/`DestroyTitleScreen`/...), so it stays a raw
  * `u32 *` scratch buffer here rather than a named struct (see
  * `matching_decomp_prefer_structs`: fine to fall back to raw offsets
  * when the full shape isn't known yet) - only the three fields this
  * function itself touches (offsets 0/4/0xc/0x208) are given meaning. */
-void *LoadLevelGraphics(u32 *self)
+void *InitTitleScreen(u32 *self)
 {
     struct dma_regs *dma;
     struct icon_manager *iconManager;
@@ -62,10 +62,10 @@ void *LoadLevelGraphics(u32 *self)
     u32 fieldValue;
 
     self[3] = (u32)gSmallFont;
-    sub_8006A90(gUnknown_03001300);
-    sub_8006A48(gUnknown_03001300);
+    ResetOamBuffer(gOamBuffer);
+    HideUnusedOamEntries(gOamBuffer);
     WaitForVBlank();
-    sub_8006AAC(gUnknown_03001300);
+    CommitOamBuffer(gOamBuffer);
 
     *(vu32 *)REG_ADDR_BLDCNT = 0xff;
     REG_BLDY = 0x10;
@@ -80,31 +80,31 @@ void *LoadLevelGraphics(u32 *self)
     _call_via_r1((u8 *)iconManager + slot->offset, slot->ptr);
 
     dma = (struct dma_regs *)REG_ADDR_DMA3SAD;
-    dma->src = (u32)gStaticData_0817D034;
+    dma->src = (u32)gTitleMenuPalette;
     dma->dst = OBJ_PLTT + 13 * 0x20;
     dma->cnt = 0x80000010;
     dma->cnt;
-    dma->src = (u32)gStaticData_0817D054;
+    dma->src = (u32)gTitleMenuSelectedPalette;
     dma->dst = OBJ_PLTT + 14 * 0x20;
     dma->cnt = 0x80000010;
     dma->cnt;
-    dma->src = (u32)gStaticData_0817D074;
+    dma->src = (u32)gTitleMenuBlinkPalette;
     dma->dst = OBJ_PLTT + 15 * 0x20;
     dma->cnt = 0x80000010;
     dma->cnt;
 
-    LoadBg2Background(self);
-    LoadObjSpriteTiles(self);
+    LoadTitleScreenBg(self);
+    LoadTitleScreenObjTiles(self);
 
     {
         u32 *dest = &self[0x82];
         *dest = (u32)InitStarfield(sub_8026EDC(0x14));
     }
 
-    sub_8001604();
-    sub_80015E0();
-    sub_8001524(1);
-    sub_8001614();
+    SetObjMapping1D();
+    ShowObj();
+    SetDispcntMode(1);
+    CommitDispcnt();
 
     self[0] = 0;
     self[1] = 0;
@@ -114,7 +114,7 @@ void *LoadLevelGraphics(u32 *self)
     return self;
 }
 
-/* Loads BG2's tileset/palette/tilemap from `gStaticData_0817D0E4`'s
+/* Loads BG2's tileset/palette/tilemap from `gTitleScreenBg`'s
  * package (see `struct bg_package` above), remapping the tilemap's
  * per-tile palette-select nibble (bits 8-15 of each source halfword)
  * into a straight palette-index byte pair as it copies it to
@@ -130,9 +130,9 @@ void *LoadLevelGraphics(u32 *self)
  * the ROM's separate `r2` walk pointer while `mapBuf` itself stays in
  * `r8` for the final free (r7 is the loop's second halfword temp). See
  * docs/matching/issue-65-graphics-loading.md. */
-void LoadBg2Background(u32 *self)
+void LoadTitleScreenBg(u32 *self)
 {
-    struct bg_package *pkg = &gStaticData_0817D0E4;
+    struct bg_package *pkg = &gTitleScreenBg;
     u16 *mapBuf;
     u16 *dest;
     s32 i;
@@ -159,11 +159,11 @@ void LoadBg2Background(u32 *self)
 }
 
 /* Uploads the 4 obj-sprite `struct bg_package` entries in
- * `gUnknown_030008BC` (each package's `width`/`height` describe the
+ * `gTitleObjPackages` (each package's `width`/`height` describe the
  * tilemap, not the object's own screen size) into OBJ VRAM
  * (`0x06010000` on) and OBJ palette RAM (`0x05000200` on, one 16-color
  * bank - 0x20 bytes - per package), remapping each package's tilemap
- * into a straight tile copy the same way `LoadBg2Background` remaps
+ * into a straight tile copy the same way `LoadTitleScreenBg` remaps
  * BG2's (here: DMA-copying each referenced tile out of the raw tileset
  * buffer, tile-index byte selecting which 0x20-byte 4bpp tile).
  *
@@ -196,11 +196,11 @@ void LoadBg2Background(u32 *self)
  * the ROM via a direct `arm-none-eabi-objcopy --only-section=.text` +
  * byte comparison against `baserom.gba` before integrating (every byte
  * matched except the nine `bl` call-site offsets and the
- * `gUnknown_030008BC` literal-pool word, both inherent relocation
+ * `gTitleObjPackages` literal-pool word, both inherent relocation
  * artifacts of comparing an unlinked, standalone isolated object). */
-void LoadObjSpriteTiles(u32 *self)
+void LoadTitleScreenObjTiles(u32 *self)
 {
-    register struct bg_package **pkgPtr asm("r7") = (struct bg_package **)gUnknown_030008BC;
+    register struct bg_package **pkgPtr asm("r7") = (struct bg_package **)gTitleObjPackages;
     void *tileDest = (void *)0x06010000;
     void *paletteDest = (void *)OBJ_PLTT;
     void *paletteBuf;

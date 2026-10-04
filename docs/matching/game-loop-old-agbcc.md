@@ -41,7 +41,7 @@ Still NAKED, with the remaining gap under old_agbcc:
 | `DecodeCollisionChunk` | 30 halfwords: the accumulator and the pair loop's pointer swap r4/r5 |
 | `sub_802732C` | 32 bytes: the ROM keeps three copies of one nibble insert |
 | `sub_8025B0C` | 61 halfwords: `&srcBox` held in a callee-saved register across a call |
-| `RunCutscenePlayer` | 77 halfwords: the ROM reloads `&gUnknown_03001300` at each OAM flush |
+| `RunCutscenePlayer` | 77 halfwords: the ROM reloads `&gOamBuffer` at each OAM flush |
 | `SpawnRoomEntities` | 153 halfwords: the second pass's list searches are peeled and index-based |
 | `RunRoom` | not attempted |
 

@@ -13,10 +13,10 @@
  * settings_menu20.c documents. See
  * docs/matching/issue-7-0x08004d74-overlay-ui.md. */
 
-extern void sub_8006A90(void *arg0);
-extern void sub_8006C28(struct vram_upload_cursor *self);
-extern struct oam_shadow_buffer *gUnknown_03001300;
-extern void sub_8006A48(struct oam_shadow_buffer *arg0);
+extern void ResetOamBuffer(void *arg0);
+extern void RewindObjVram(struct vram_upload_cursor *self);
+extern struct oam_shadow_buffer *gOamBuffer;
+extern void HideUnusedOamEntries(struct oam_shadow_buffer *arg0);
 extern void DrawPauseMenuRows(struct pause_screen_results *self);
 extern void DrawPauseMenuPageTitle(struct pause_screen_results *self);
 extern void DrawPauseCrystalsPage(struct pause_screen_results *self);
@@ -26,7 +26,7 @@ extern void DrawPauseGemsPage(struct pause_screen_results *self);
 extern void DrawPauseRelicsPage(struct pause_screen_results *self);
 extern void sub_8008890(void *icon, s32 dx, s32 dy);
 extern u32 _call_via_r2(void *arg0, void *arg1, void *arg2);
-extern struct vram_upload_cursor *gUnknown_030012FC;
+extern struct vram_upload_cursor *gObjVramCursor;
 extern struct icon_manager *gSmallFont;
 extern struct icon_manager *gLargeFont;
 extern void *GetUiText(s32 id);
@@ -74,8 +74,8 @@ void DrawPauseMenu(struct pause_screen_results *self)
     void *label;
     u32 width;
 
-    sub_8006A90(gUnknown_03001300);
-    sub_8006C28(gUnknown_030012FC);
+    ResetOamBuffer(gOamBuffer);
+    RewindObjVram(gObjVramCursor);
     {
         u32 w = ICON_SLOT_CALL(gLargeFont, 0, self->field_70);
         u32 x, t;
@@ -138,7 +138,7 @@ void DrawPauseMenu(struct pause_screen_results *self)
     }
     if (self->field_c4 == 0)
         sub_8008890(self->field_c0, 0, 0);
-    sub_8006A48(gUnknown_03001300);
+    HideUnusedOamEntries(gOamBuffer);
 }
 
 extern s32 FontSetPalette(struct icon_manager *self, s32 val);

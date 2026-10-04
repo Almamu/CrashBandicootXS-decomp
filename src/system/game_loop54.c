@@ -37,7 +37,7 @@ extern void sub_8008E94(void *manager, void *value);
 extern void sub_8011308(void *self);
 extern void sub_8011248(void *self);
 extern void sub_8008364(struct actor *part);
-extern s16 gStaticData_0816A820[];
+extern s16 gSineTable[];
 extern u8 gStaticData_087E40DC[];
 
 /* Built with old_agbcc (Makefile OLD_AGBCC_OBJS) since the issue #15
@@ -184,7 +184,7 @@ void sub_8010EAC(void *selfArg, u8 randomize)
 /* `docs/rom_map.md`: "a bounds-checked, mode-selected object state
  * machine that self-destructs off-screen" - a rotating/orbiting
  * hazard/projectile behavior, uses the shared sine table
- * `gStaticData_0816A820` this whole neighborhood references. Modes
+ * `gSineTable` this whole neighborhood references. Modes
  * 1/2 integrate `self->x`/`self->y` by `self->0x40`/`self->0x44` and,
  * on reaching an on-screen "arrival" bound (mode 1) or a wrapping
  * `self->0x3c` timer threshold (mode 2), fire a hit SFX,
@@ -195,7 +195,7 @@ void sub_8010EAC(void *selfArg, u8 randomize)
  * mode (0, or 3+): gated by `self->0x4a`, increments `self->0x49` or
  * `self->0x4b` (wrapping the gate off after 32 ticks). The shared tail:
  * unless `self->0x48 != 0`, either computes an orbit step via
- * `gStaticData_0816A820[(self->0x49 & 0x7f)]` and `FixedMul` added
+ * `gSineTable[(self->0x49 & 0x7f)]` and `FixedMul` added
  * into `self->0x50`, storing to `self->y` (when `self->0x4a` is clear),
  * or calls `sub_8011248` (`game_loop52.c`'s own orbit-position updater)
  * when `self->0x4a` is set - then always tail-calls `sub_8008364`
@@ -295,7 +295,7 @@ void sub_8010F8C(struct orbit_part *self)
 
     if (self->state == 0) {
         if (self->mode == 0) {
-            s32 sn = gStaticData_0816A820[(self->counter & 0x7f) * 2];
+            s32 sn = gSineTable[(self->counter & 0x7f) * 2];
             sn = FixedMul(sn, 0x280);
             self->base.y = self->anchor.y + sn;
         } else {

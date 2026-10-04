@@ -4,7 +4,7 @@
  * docs/matching/issue-9-10-0x0800b8dc-graphics.md): `sub_800C8F8`/
  * `sub_800C940`/`sub_800C97C`, a family of three "sine-wave
  * oscillator" writers sharing the same 256-entry sine-ish table
- * `gStaticData_0816A820` (already established elsewhere in this ROM,
+ * `gSineTable` (already established elsewhere in this ROM,
  * `src/graphics/actor_part72.c`/`actor_part111.c`) and the global
  * frame counter `gRoomFrameCount`. All three read `owner`
  * (`self+0x70`) and write a single Q8.8 coordinate on it, derived as
@@ -65,7 +65,7 @@
  */
 #include "part_ctrl.h"
 
-extern s16 gStaticData_0816A820[];
+extern s16 gSineTable[];
 extern u32 gRoomFrameCount;
 extern s32 __udivsi3(s32 value, s32 divisor);
 
@@ -76,7 +76,7 @@ static inline s16 Wave(s16 *table, s32 t, s32 phase)
 
 void sub_800C8F8(struct part_ctrl *self)
 {
-    s16 *table = gStaticData_0816A820;
+    s16 *table = gSineTable;
     s32 t = __udivsi3(gRoomFrameCount << 8, self->period);
     register s32 v asm("r2");
     s32 w;
@@ -101,7 +101,7 @@ void sub_800C8F8(struct part_ctrl *self)
 void sub_800C940(struct part_ctrl *self)
 {
     register struct ctrl_target *target asm("r3") = self->target;
-    s16 *table = gStaticData_0816A820;
+    s16 *table = gSineTable;
     u32 t;
     s32 ph;
     register s32 k asm("r6");
@@ -118,7 +118,7 @@ void sub_800C940(struct part_ctrl *self)
 void sub_800C97C(struct part_ctrl *self)
 {
     struct ctrl_target *target = self->target;
-    register s16 *table asm("r6") = gStaticData_0816A820;
+    register s16 *table asm("r6") = gSineTable;
     s32 t = __udivsi3(gRoomFrameCount << 8, self->period);
 
     /* Empty: marks r8 as used so the prologue saves it, as in the ROM. */

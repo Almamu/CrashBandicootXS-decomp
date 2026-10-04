@@ -11,14 +11,14 @@ and [graphics_loading.md](./graphics_loading.md).
 ## Matched
 
 - `src/graphics/graphics.c`: `AllocVramDmaQueue`, `QueueVramDmaTransfer`,
-  `FreeVramDmaQueue`, `FlushVramDmaQueue`, `sub_8006B0C`, `sub_8006AF4`,
-  `sub_8006AC8`, `sub_8006AAC`, `sub_8006A78`, `sub_8006A84`, `sub_8006A90`,
-  `sub_8006A48`, `sub_8006A14`, `sub_80069E8`, `GetCompletionPercent`,
-  `sub_8006C28`, `sub_8006C30`, `sub_8006C38`, `sub_8006C44`, `sub_8006C4C`,
-  `sub_8006C58`, `sub_8006C84`, `sub_8006CD0`, `sub_8006CE8`, `sub_8006D08`,
-  `sub_8006D40`, `sub_8006D50`, `sub_8006D68`, `sub_8006D84`, `sub_8006DA0`,
-  `sub_8006DC8`, `sub_8006DF8`, `sub_8006E64`, `sub_8006EA8`, `sub_8006EF0`,
-  `sub_8006F5C`, `sub_8006F94`, `sub_8006FB4`, `sub_8006FC8`, `nullsub_1`,
+  `FreeVramDmaQueue`, `FlushVramDmaQueue`, `InitOamBuffer`, `DestroyOamBuffer`,
+  `AddOamEntry`, `CommitOamBuffer`, `RewindOamBuffer`, `MarkOamBufferBase`, `ResetOamBuffer`,
+  `HideUnusedOamEntries`, `AppendOamEntries`, `SetOamAffineScales`, `GetCompletionPercent`,
+  `RewindObjVram`, `MarkObjVram`, `GetObjVramFreeBytes`, `GetObjVramTile`, `ResetObjVram`,
+  `ReserveObjVram`, `UploadObjVram`, `DestroyObjVramCursor`, `InitObjVramCursor`, `LoadPaletteSlot`,
+  `BindPaletteSlot`, `ClaimPaletteSlot`, `UnlockPalette`, `LockPalette`, `UploadPaletteSlot`,
+  `UploadPaletteCache`, `GetPaletteSlot`, `FreePaletteSlot`, `FreeUnlockedPaletteSlots`, `SetPaletteCacheSource`,
+  `ClearPaletteCache`, `DestroyPaletteCache`, `InitPaletteCache`, `sub_8006FC8`, `nullsub_1`,
   `sub_8006FE4`, `sub_8007048`, `nullsub_11`, `sub_80070D4`, `sub_80070E8`,
   `sub_80070EC`, `sub_800710C`, `sub_8007110`, `sub_8007114`,
   `sub_8007174`, `sub_800719C`, `nullsub_12`, `sub_80071E4`,
@@ -34,22 +34,22 @@ and [graphics_loading.md](./graphics_loading.md).
   `ShowTurboRunDialog`, `ShowTornadoSpinDialog`, `ShowDoubleJumpDialog`, `ShowSuperBodySlamDialog`, `GetProgressLives`,
   `CountPlatinumRelics`, `CountGoldRelics`, `CountSapphireRelics`, `CountRelics`, `CountGems`,
   `CountClearGems`, `CountCrystals`
-- `src/graphics/fade_util.c`: `sub_80012AC`, `sub_800132C`
-- `src/graphics/palette_blend.c`: `sub_80013FC`
+- `src/graphics/fade_util.c`: `StepBrightnessFade`, `FadeBrightness`
+- `src/graphics/palette_blend.c`: `DarkenPalette`
 - `src/graphics/actor_anim.c`: `GetAnimFrameBaseOffset`
-- `src/graphics/fade_screen_mode.c` (new file - `sub_80014A4`,
-  `sub_8001510`) and
-  `src/graphics/fade_screen_mode2.c` (new file - `sub_8001524`,
-  `sub_800153C`,
-  `sub_8001550`, `sub_8001564`, `sub_8001578`, `sub_800158C`,
-  `sub_80015A0`, `sub_80015B0`, `sub_80015C0`, `sub_80015D0`,
-  `sub_80015E0`, `sub_80015F0`, `sub_8001604`, `sub_8001614`): the
+- `src/graphics/fade_screen_mode.c` (new file - `FadePaletteToBlack`,
+  `IsBrightnessFadeActive`) and
+  `src/graphics/fade_screen_mode2.c` (new file - `SetDispcntMode`,
+  `HideBg3`,
+  `HideBg2`, `HideBg1`, `HideBg0`, `HideObj`,
+  `ShowBg3`, `ShowBg2`, `ShowBg1`, `ShowBg0`,
+  `ShowObj`, `SetObjMapping2D`, `SetObjMapping1D`, `CommitDispcnt`): the
   fade/screen-mode utility cluster documented in `docs/rom_map.md` - see
-  `docs/matching.md`. `sub_8001524` was previously NAKED, now matched
+  `docs/matching.md`. `SetDispcntMode` was previously NAKED, now matched
   as real C via an inline-asm-materialized mask constant opaque to the
   compiler's value-propagation fold - see
-  [naked-sub_8001524-matched.md](../matching/naked-sub_8001524-matched.md).
-  `sub_80014A4` (also in this cluster) was previously NAKED, now
+  [naked-SetDispcntMode-matched.md](../matching/naked-SetDispcntMode-matched.md).
+  `FadePaletteToBlack` (also in this cluster) was previously NAKED, now
   matched as real C via register-pinned locals matching the ROM's own
   register roles plus inline-asm-materialized DMA-field writes for the
   fields the ROM recomputes fresh every loop iteration - see
@@ -59,12 +59,12 @@ and [graphics_loading.md](./graphics_loading.md).
   object joined `OLD_AGBCC_OBJS`); see
   [strag3-naked-retry.md](../matching/strag3-naked-retry.md).
 
-- `src/graphics/aabb_util.c` (new file): `sub_8001624` (BLDCNT/
+- `src/graphics/aabb_util.c` (new file): `CommitBlendRegs` (BLDCNT/
   BLDALPHA/BLDY shadow commit - was previously NAKED, now matched as
   real C via an inline-asm-materialized store-and-increment pair
   opaque to the peephole fusion that otherwise always combines it into
   a `stmia` writeback, plus the ROM's own shift-based mask idiom - see
-  [naked-sub_8001624-matched.md](../matching/naked-sub_8001624-matched.md)),
+  [naked-CommitBlendRegs-matched.md](../matching/naked-CommitBlendRegs-matched.md)),
   `sub_8001640`, `sub_8001688`, `sub_80016D0`, `sub_80016DC` - two AABB
   overlap tests (one already referenced by name from `actor.md`'s
   `actor_part15.c`) plus `mem_free`/`mem_alloc` wrappers.
@@ -72,7 +72,7 @@ and [graphics_loading.md](./graphics_loading.md).
 - `src/graphics/intro_screen.c` (new file, replacing `asm/code_3_1.s` -
   boot-adjacent but not part of `src/system/boot_util.c` since
   `main.c`/`memory.c`/`irq.c` sit between them in ROM order):
-  `sub_80007EC` - BG2 affine setup for a full-screen intro image; see
+  `ShowBitmapScreen` - BG2 affine setup for a full-screen intro image; see
   `docs/matching.md` for the statement-ordering gotchas.
 
 - `src/graphics/actor_part_16048.c` (new file - GitHub issue #20, plus
@@ -127,12 +127,12 @@ and [graphics_loading.md](./graphics_loading.md).
   [docs/matching/issue-26-level-select-menu.md](../matching/issue-26-level-select-menu.md).
 - `src/graphics/actor_part_1cee0.c` (new file - GitHub issue #27, shared
   structs in `include/level_menu.h`): all 25 functions of
-  `LevelSelectTurnPage`-`sub_801D828` as plain C - the rest of the level-select
+  `LevelSelectTurnPage`-`InitZoomBg` as plain C - the rest of the level-select
   screen: the page-turn animation `LevelSelectTurnPage` and its Down/Up handlers
   `LevelSelectPrevWorld`/`LevelSelectNextWorld`, the A/Start exit loops `LevelSelectConfirm`/
   `LevelSelectExit`, the page-entry refresh (`sub_801D5CC`/`sub_801D638`/
   `sub_801D668`), the BG1 page strip (`sub_801D77C`-`sub_801D7F8`) and
-  the BG2 icon layer's constructor `sub_801D828`. `sub_801D698` is
+  the BG2 icon layer's constructor `InitZoomBg`. `sub_801D698` is
   UNUSED. Compiled with `old_agbcc`. See
   [docs/matching/issue-27-level-select-pages.md](../matching/issue-27-level-select-pages.md).
 - `src/graphics/actor_part_1967c.c` (new file - GitHub issue #24):
@@ -161,7 +161,7 @@ and [graphics_loading.md](./graphics_loading.md).
   [docs/matching/issue-25-level-objects.md](../matching/issue-25-level-objects.md).
 - GitHub issues #28/#29 (0x0801DA38-0x0801E578, shared structs in
   `include/level_select_parts.h`, both files built with `old_agbcc`):
-  `src/graphics/actor_part_1da38.c` (`sub_801DA38`-`sub_801DF98`, all
+  `src/graphics/actor_part_1da38.c` (`DestroyZoomBg`-`sub_801DF98`, all
   25) - the level-select screen's zooming BG2 picture (`struct
   zoom_bg`: destructor, state machine, affine draw/commit, state
   queries, twinkle sprites) and the level entry's methods (`struct
@@ -218,7 +218,7 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
 
 This is byte-exact against the ROM but is a NAKED asm transcription,
 not decompiled C, so it's tracked here as parked rather than matched
-(`sub_8001524`/`sub_8001624`/`sub_80014A4`, formerly also in this
+(`SetDispcntMode`/`CommitBlendRegs`/`FadePaletteToBlack`, formerly also in this
 list, are now matched as real C - see the Matched section above) -
 see
 `docs/matching/naked-transcription-parked-functions.md` for the full
@@ -226,7 +226,7 @@ derivation of each, and `docs/matching.md`'s original entries ("The
 `0x080014A4`-`0x08001624` fade/screen-mode cluster" and "Parked, not
 matched: `sub_8000EE4`") for the pre-NAKED gap analysis.
 
-- **`sub_80073DC` is now matched as real C (split into `src/graphics/graphics_73dc.c`, old_agbcc; see docs/matching/strag1-naked-retry.md); `DrawPowerDialog` is now matched as real C too (see docs/matching/strag3-naked-retry.md); entry kept for history.** **`DrawPowerDialog`** (`src/graphics/oam_count.c`) and **`sub_80073DC`**
+- **`DrawSpritePieces` is now matched as real C (split into `src/graphics/graphics_73dc.c`, old_agbcc; see docs/matching/strag1-naked-retry.md); `DrawPowerDialog` is now matched as real C too (see docs/matching/strag3-naked-retry.md); entry kept for history.** **`DrawPowerDialog`** (`src/graphics/oam_count.c`) and **`DrawSpritePieces`**
   (`src/graphics/graphics.c`) - this project's original reference cases
   for the register-allocation-gap class documented above (several
   `overlay_ui`/`actor` functions elsewhere still hit the same class,

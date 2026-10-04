@@ -39,7 +39,7 @@ header.
   the starting state. `sub_802FFB8` is the per-frame update: it handles
   player contact, then the state dispatch, then death. The per-state
   movers `sub_80300E0`/`sub_803013C`/`sub_8030188` circle a home point
-  on the shared sine table `gStaticData_0816A820`, or fall back to
+  on the shared sine table `gSineTable`, or fall back to
   `sub_80300B0` (ease toward the player). `sub_80301EC` is the damage
   handler.
 - **`gStaticData_087E5224`** (`struct actor_5224`): a straight-line
@@ -104,7 +104,7 @@ header.
 - Smaller fixes: an explicit `if/else` for a two-way constant choice.
   The ROM loads the tested field before the constant, while
   `idx = K; if (..) idx = K2;` loads the constant first. Also, a
-  hoisted `s16 *sine = gStaticData_0816A820;` in `sub_80300E0`, and a
+  hoisted `s16 *sine = gSineTable;` in `sub_80300E0`, and a
   scoped `steps` local plus an in-expression `scale2 = scale * 2` in
   `sub_802FBF0` to get the ROM's evaluation order.
 

@@ -83,7 +83,7 @@ struct collision_map
     u32 seen[1];                // 0x108
 };
 
-extern void *gUnknown_030012B8;
+extern void *gPaletteCache;
 extern struct entity_list *gUnknown_030012EC;
 extern struct collision_map *gEntityFlags;
 
@@ -91,7 +91,7 @@ extern void SetMaskLevel(struct level_state *self, s32 arg1);
 extern void sub_80087C0(struct slot_part *part);
 extern void sub_80087B4(struct slot_part *part);
 extern void sub_800872C(struct slot_part *part, s32 arg);
-extern void sub_8006D08(void *cache, s32 palette, u8 record);
+extern void LoadPaletteSlot(void *cache, s32 palette, u8 record);
 extern void sub_8010804(void);
 extern s32 _call_via_r1(void *self, void *fn);
 extern void sub_8011448(struct actor *self, s32 arg1);
@@ -141,7 +141,7 @@ void StartTimeTrial(struct level_state *self)
         sub_80087C0(part);
         sub_80087B4(part);
         sub_800872C(part, 0);
-        sub_8006D08(gUnknown_030012B8, self->gemPlatform->frameNibble,
+        LoadPaletteSlot(gPaletteCache, self->gemPlatform->frameNibble,
                     self->gemPlatform->anim->records[self->gemPlatform->tag].tileRecord);
     }
     sub_8010804();

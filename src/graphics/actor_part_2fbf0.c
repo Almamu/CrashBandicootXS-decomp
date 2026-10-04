@@ -15,7 +15,7 @@
  * - gStaticData_087E51EC (`struct actor_51ec`, sub_802FF08-sub_8030290):
  *   a 2-hit-point object whose spawn kind (4-9) picks its initial
  *   state; its per-state movers circle a home point on the shared
- *   sine table gStaticData_0816A820 or drift toward the player.
+ *   sine table gSineTable or drift toward the player.
  * - gStaticData_087E5224 (`struct actor_5224`, sub_8030298-sub_8030330):
  *   a straight-line projectile that damages the player on contact.
  *
@@ -41,7 +41,7 @@ extern s32 sub_802F46C(void *player);
 extern s32 gUnknown_0300089C[];
 extern void *gAudioContext;
 extern struct actor_self *gActorList;
-extern s16 gStaticData_0816A820[];
+extern s16 gSineTable[];
 extern struct actor_pmf gStaticData_0817C260[];
 extern struct actor_pmf gStaticData_0817C280[];
 extern u8 gStaticData_087E51B4[];
@@ -351,7 +351,7 @@ void sub_80300D8(struct actor_51ec *self)
 void sub_80300E0(struct actor_51ec *self)
 {
     if (self->base.depth > 0x35ff) {
-        s16 *sine = gStaticData_0816A820;
+        s16 *sine = gSineTable;
         s32 angle = ((self->base.stateTime << 4) >> 4) & 0xff;
 
         self->base.x = self->homeX + sine[(angle + 0x40) & 0xff] * 60;
@@ -365,7 +365,7 @@ void sub_80300E0(struct actor_51ec *self)
 void sub_803013C(struct actor_51ec *self)
 {
     if (self->base.depth > 0x35ff) {
-        self->base.x = self->homeX + gStaticData_0816A820[((((self->base.stateTime * 10) >> 4) & 0xff) + 0x40) & 0xff] * 80;
+        self->base.x = self->homeX + gSineTable[((((self->base.stateTime * 10) >> 4) & 0xff) + 0x40) & 0xff] * 80;
     } else {
         sub_80300B0(self);
     }
@@ -375,7 +375,7 @@ void sub_803013C(struct actor_51ec *self)
 void sub_8030188(struct actor_51ec *self)
 {
     if (self->base.depth > 0x35ff) {
-        self->base.y = self->homeY + gStaticData_0816A820[((self->base.stateTime << 4) >> 4) & 0xff] * 60;
+        self->base.y = self->homeY + gSineTable[((self->base.stateTime << 4) >> 4) & 0xff] * 60;
     } else {
         sub_80300B0(self);
     }
@@ -496,7 +496,7 @@ void sub_8030334(struct actor_orbit *self)
         ty = cy + 0x800;
         cy += (py - ty) >> 5;
         self->centerY = cy;
-        sine = gStaticData_0816A820;
+        sine = gSineTable;
         t = self->base.stateTime;
         angle = ((t << 5) >> 4) & 0xff;
         self->base.x = cx + ((sine[(angle + 0x40) & 0xff] * self->radius) >> 8);
@@ -545,7 +545,7 @@ void sub_803044C(struct actor_orbit *self)
         ty = cy + 0x800;
         cy += (py - ty) >> 4;
         self->centerY = cy;
-        sine = gStaticData_0816A820;
+        sine = gSineTable;
         angle = ((self->base.stateTime << 5) >> 4) & 0xff;
         self->base.x = cx + ((sine[(angle + 0x40) & 0xff] * self->radius) >> 8);
         self->base.y = cy + ((sine[angle] * self->radius) >> 8);

@@ -47,16 +47,16 @@ This is the rest of issue #26's level-select screen (`struct level_menu`,
   `result = 1`. `sub_801D05C` is the "wait for the panel" loop.
   `sub_801D730` reloads palette 0xF and re-applies it to the eight
   sprites.
-- **`struct page_bg`** (BG1, `sub_801D7F8`): the `sub_801E644`
+- **`struct page_bg`** (BG1, `sub_801D7F8`): the `InitBgSetup`
   background descriptor, then `scroll`/`target` (Q8, starting at
   0x300) and the BG1HOFS/VOFS pair (`sub_801D7D0` returns both as one
   word, `sub_801D7D4` resets them). `sub_801D7E0` is its destructor
   body.
-- **`struct icon_bg`** (BG2, `sub_801D828`, 0x8C bytes): the BG2CNT
+- **`struct icon_bg`** (BG2, `InitZoomBg`, 0x8C bytes): the BG2CNT
   shadow (priority 1, 256 colours), a cleared screen block with an 8x4
   block of tile entries, and four corner sprites (bank `+0x258`,
   positions `gStaticData_0816C5F0` around (0x78, 0x35), mirrored X/Y
-  per corner) registered through `sub_801DDB4`. The rest of this class
+  per corner) registered through `RandomizeZoomBgTwinkle`. The rest of this class
   is in issue #28's range.
 - `SetNewWorldOpened` sets `gNewWorldOpened` (called from `game_loop55.c`).
 
@@ -92,13 +92,13 @@ types the save block (`struct menu_save`) and the two background layers.
   gets strength-reduced and the loop reversed.
 - **`LevelSelectTurnPage`**: `(x & 0xFF) == 0xA0` for the ROM's
   `movs #0xff; ands` (a `(u8)` cast gives `lsl/lsr`).
-- **`sub_801D828`** needed five things:
+- **`InitZoomBg`** needed five things:
   - The tile block is written `dst[j] = v` in the inner loop with
     `dst += 8` after it. With that form, gcc's loop pass hoists the
     later field addresses into the same `sl`/`r8`/`ip`/`sb` registers
     as the ROM.
   - The slot loop indexes `self->slots[i]` directly. It passes
-    `&self->slots[i]` to `sub_801DDB4` instead of using a slot pointer
+    `&self->slots[i]` to `RandomizeZoomBgTwinkle` instead of using a slot pointer
     local. This fixes the order of the three induction-variable
     increments and the two stack spills.
   - Field stores go through inline setters (`SetMode`/`SetFlipX`/

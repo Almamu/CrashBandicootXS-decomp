@@ -59,7 +59,7 @@ function at the very end:
   global this whole ROM region references - `gAudioContext` (an
   8340-byte `AudioContext` allocation, `sub_80016DC`+`InitAudioContext`),
   `030012CC`/`D0`/`B8`/`DC`/`E0`/`03001300`/`FC`/`03001304`/`030012B4`/
-  `C8`, clears `gUnknown_03001288`'s mode byte, and zeroes `self+0xc0`
+  `C8`, clears `gDispcnt`'s mode byte, and zeroes `self+0xc0`
   before returning `self` unchanged. `gUnknown_030012D0` gets pointed
   at a freshly-allocated 4-byte pointer cell which itself is set to
   `&gSpriteBankTable` (the 729 KB master asset index).
@@ -118,7 +118,7 @@ fns): the `CreateCrate` trampoline family, types `1`-`7`.
   in C gets constant-folded into a single-instruction bitwise-complement
   immediate, one off from the ROM's actual two's-complement value.
 - **`InitLevelState`'s five "void helper leaves the pointer in r0" calls**
-  (`nullsub_2`, `nullsub_1`, `sub_8006FB4`, `ClearKeys`,
+  (`nullsub_2`, `nullsub_1`, `InitPaletteCache`, `ClearKeys`,
   `sub_8025A5C`, and `CreateEntitySpawner`'s own `sub_8025D6C`): each is called
   immediately after an allocation, and the ROM leaves the fresh
   pointer in `r0` across the call (valid only because each real callee
@@ -143,7 +143,7 @@ fns): the `CreateCrate` trampoline family, types `1`-`7`.
   expression that uses it.
 - **A single-use two-operand computation's operand-evaluation order is
   a genuine source-order dependency, not just an expression-tree
-  question**: `InitLevelState`'s tail (`gUnknown_03001288` halfword store,
+  question**: `InitLevelState`'s tail (`gDispcnt` halfword store,
   then the `self+0xc0` word store, both writing the same zero constant)
   needed the *address* local declared before the *constant* local (not
   the reverse) to match the ROM's `ldr r0,=addr` / `movs r4,#0` order -

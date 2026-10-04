@@ -10,7 +10,7 @@
  * cluster (`EndBonusRound`/`SetCheckpointAtPlayer`, game_loop.c; the
  * `self+0x80`-`0xc4`/`+2` accessor family, game_loop2.c) also shares.
  *
- * Shape: a level-load loop (`LoadLevelGraphics` / `sub_8035E14`, the
+ * Shape: a level-load loop (`InitTitleScreen` / `RunTitleScreen`, the
  * map screen `RunCredits` on result 2), then the level loop. Each pass
  * restores the per-attempt block from `saveData` (repeating while
  * `RunLevelSelect` asks to), runs the attempt loop (`PlayRoom` or
@@ -94,7 +94,7 @@ struct level_state
 };
 
 extern void *gEntityFlags;
-extern void *gUnknown_030012B8;
+extern void *gPaletteCache;
 extern void *gAudioContext;
 extern struct level_state *gLevelState;
 extern struct level_state *gUnknown_030012C4;
@@ -109,9 +109,9 @@ extern void SetMaskAssistDeaths(struct level_state *self, s32 n);
 extern void sub_8023110(struct level_state *self, s32 n);
 extern void *MemCopy32(void *dest, void *src, s32 size);
 extern void *sub_8026EDC(u32 size);
-extern void *LoadLevelGraphics(void *mem);
-extern s32 sub_8035E14(void *gfx);
-extern void sub_8036154(void *gfx, u32 flag);
+extern void *InitTitleScreen(void *mem);
+extern s32 RunTitleScreen(void *gfx);
+extern void DestroyTitleScreen(void *gfx, u32 flag);
 extern void RunCredits(void);
 extern void OpenSaveMenu(void);
 extern s32 RunSaveMenu(s32 a, s32 b);
@@ -144,7 +144,7 @@ extern void ClearInGemPath(struct level_state *self);
 extern void ClearSwitchPressed(struct level_state *self);
 extern void SetCheckpointAtPlayer(struct level_state *self, u8 arg1);
 extern void ArmStartSpawn(struct level_state *self);
-extern void sub_8006EA8(void *cache);
+extern void FreeUnlockedPaletteSlots(void *cache);
 extern void sub_802732C(void *cache, s32 arg1);
 extern void sub_8023318(struct level_state *self, s32 arg1);
 extern void PlayRoomMusic(s32 *progress);
@@ -209,10 +209,10 @@ void UpdateGameFrame(struct level_state *self)
         s32 result;
 
     load:
-        gfx = LoadLevelGraphics(sub_8026EDC(0x220));
-        result = sub_8035E14(gfx);
+        gfx = InitTitleScreen(sub_8026EDC(0x220));
+        result = RunTitleScreen(gfx);
         if (gfx != NULL)
-            sub_8036154(gfx, 3);
+            DestroyTitleScreen(gfx, 3);
         if (result == 2)
         {
             RunCredits();
@@ -308,7 +308,7 @@ void UpdateGameFrame(struct level_state *self)
             {
                 break;
             }
-            sub_8006EA8(gUnknown_030012B8);
+            FreeUnlockedPaletteSlots(gPaletteCache);
             sub_802732C(gHud, 0);
             gRoomFrameCount = 0;
             sub_8023318(self, 0);

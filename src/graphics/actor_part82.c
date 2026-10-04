@@ -25,14 +25,14 @@ struct follow_state {
 };
 
 extern u32 gKeys;
-extern void *gUnknown_030012B8;
+extern void *gPaletteCache;
 extern void *gAudioContext;
 extern struct follow_state *gCamera;
 extern struct act_part *gPlayer;
 extern u8 gStaticData_0816B300[];
 extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
 extern void FadeOutMusic(void *ctx, u32 value);
-extern void sub_8006D08(void *cache, s32 slot, s32 kind);
+extern void LoadPaletteSlot(void *cache, s32 slot, s32 kind);
 extern void *GetSpriteFrame(struct act_part *part);
 extern u8 sub_800AAEC(struct act_part *part, s32 action);
 extern void KillPlayer(struct act *self, s32 id);
@@ -306,7 +306,7 @@ void sub_8011BD4(struct act *self, s32 arg1, s32 arg2, s32 arg3)
             *f &= 0x7f;
         }
         sub_8015780(self, 0x1e, 0x24, 0x7FFFFFFF, 0x7FFFFFFF);
-        sub_8006D08(gUnknown_030012B8, self->part->slotNibble,
+        LoadPaletteSlot(gPaletteCache, self->part->slotNibble,
                     self->part->bank->records[self->part->tag].unk_14);
         ActSetNext27(self, 0);
         ActSetNext(self, 0);

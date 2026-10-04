@@ -45,7 +45,7 @@ order.
   looks up a byte through the 28-byte-record-array dereference chain
   `docs/rom_map.md`'s "eight more core reads" section already
   documented from three other call sites (`part+0x20 -> *ptr +
-  tag*0x1C`, reading byte `+0x14`) to feed `sub_8006D08`. Needed the
+  tag*0x1C`, reading byte `+0x14`) to feed `LoadPaletteSlot`. Needed the
   most register-pinning of the four: the `0x104` field-write's offset
   is small enough (0x104 = `0x82<<1`) that the compiler always
   constant-folds it into whichever scratch register it likes (r2)

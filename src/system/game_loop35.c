@@ -15,15 +15,15 @@
  * docs/matching/issue-13-fc70-second-continuation.md for the
  * register-pinning technique this needed. */
 
-extern void *gUnknown_030012CC;
-extern void sub_8007A84(void *self, void *part);
+extern void *gSpriteRenderer;
+extern void DrawSprite(void *self, void *part);
 
 /* Unless `self`'s own `+0x4d` state byte has bit 7 set or its low 7
  * bits are already nonzero, resets `self+0x38` to 0 and clamps
  * `self+0x30`'s index to the `self+0x20`-pointer-to-manager/
  * `self+0x2d`-tag/0x1c-stride hitbox-record's own `+0x16` count
  * (the same table-lookup convention `sub_800D040`, game_loop6.c,
- * establishes). Always tail-fires `sub_8007A84(gUnknown_030012CC,
+ * establishes). Always tail-fires `DrawSprite(gSpriteRenderer,
  * self)`, then - only if `self+0x38` ended up nonzero - clears
  * `self+0xc` bit 3. */
 void DrawCrate(void *selfArg)
@@ -72,7 +72,7 @@ void DrawCrate(void *selfArg)
         }
     }
 
-    sub_8007A84(gUnknown_030012CC, self);
+    DrawSprite(gSpriteRenderer, self);
 
     if (self[0x38] != 0) {
         /* Anchored: the ROM computes the `~8` clear-mask at runtime

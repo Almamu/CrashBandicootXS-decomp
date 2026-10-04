@@ -34,8 +34,8 @@ struct fade_overlay {
 };
 
 extern void *sub_8026EDC(s32 size);
-extern void sub_801E644(u8 *self, u32 arg1, u32 arg2, u32 arg3, u32 arg5);
-extern u16 sub_801E640(u8 *self);
+extern void InitBgSetup(u8 *self, u32 arg1, u32 arg2, u32 arg3, u32 arg5);
+extern u16 GetBgSetupControl(u8 *self);
 extern void LoadGraphicsPackage(u8 *selfArg, struct bg_package *pkgArg);
 extern u8 gStaticData_0817C5BC[];
 extern u8 gStaticData_0817C594[];
@@ -46,7 +46,7 @@ extern struct fade_overlay *sub_803487C(struct fade_overlay *self);
 
 /* Allocates and initializes the continue prompt's three BG scratch buffers
  * (BG1 priority 3/bgcnt 0x1e, BG0 bgcnt 0x1f/slot 3, BG2 priority
- * 1/bgcnt 0x1d/slot 2 - see `sub_801E644`), loads their graphics
+ * 1/bgcnt 0x1d/slot 2 - see `InitBgSetup`), loads their graphics
  * packages, clears palette entry 0, builds a DISPCNT value enabling
  * BG0/BG1/BG2 in BG2-priority-preserving mode 0 (dropping the "forced
  * blank" bit), hands off to `sub_803487C` for the HUD/level-object
@@ -94,15 +94,15 @@ void *InitContinuePrompt(void *selfArg)
     register u8 *buf asm("r0");
 
     buf = sub_8026EDC(0x10);
-    sub_801E644(buf, 0, 0x1f, 0, 3);
+    InitBgSetup(buf, 0, 0x1f, 0, 3);
     self->bg0Buf = buf;
 
     buf = sub_8026EDC(0x10);
-    sub_801E644(buf, 3, 0x1e, 0, 1);
+    InitBgSetup(buf, 3, 0x1e, 0, 1);
     self->bg1Buf = buf;
 
     buf = sub_8026EDC(0x10);
-    sub_801E644(buf, 2, 0x1d, 1, 2);
+    InitBgSetup(buf, 2, 0x1d, 1, 2);
     self->bg2Buf = buf;
 
     buf = self->bg1Buf;
@@ -168,7 +168,7 @@ void *InitContinuePrompt(void *selfArg)
                     /* Each of these zero-stores gets its own fresh
                      * low-register copy-down from r8 (matching_decomp_
                      * register_pinning memory) rather than one kept alive
-                     * across the `sub_801E640` calls below - the ROM's
+                     * across the `GetBgSetupControl` calls below - the ROM's
                      * own build re-derives it every time except where two
                      * stores sit back-to-back with no call between them
                      * (BG2HOFS and the two field zeros at the very end,
@@ -220,19 +220,19 @@ void *InitContinuePrompt(void *selfArg)
                         :: "r" (c0x40), "r" (four) : "r1"
                     );
 
-                    REG_BG0CNT = sub_801E640(self->bg0Buf);
+                    REG_BG0CNT = GetBgSetupControl(self->bg0Buf);
                     {
                         vu32 *addr = (vu32 *)REG_ADDR_BG0HOFS;
                         register u32 z2 asm("r2") = zero;
                         *addr = z2;
                     }
-                    REG_BG1CNT = sub_801E640(self->bg1Buf);
+                    REG_BG1CNT = GetBgSetupControl(self->bg1Buf);
                     {
                         vu32 *addr = (vu32 *)REG_ADDR_BG1HOFS;
                         register u32 z1 asm("r1") = zero;
                         *addr = z1;
                     }
-                    REG_BG2CNT = sub_801E640(self->bg2Buf);
+                    REG_BG2CNT = GetBgSetupControl(self->bg2Buf);
                     {
                         vu32 *addr = (vu32 *)REG_ADDR_BG2HOFS;
                         register u32 z2 asm("r2") = zero;

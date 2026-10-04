@@ -1,14 +1,14 @@
 #include "core.h"
 #include "actor_self.h"
 
-extern s16 gStaticData_0816A820[];
+extern s16 gSineTable[];
 
 /* Eases `self`'s cached position (`self+0x1c`/`0x20`/`0x24`, the same
  * fields `InitActorPart` caches its `b`/`c`/`d` constructor arguments
  * into, per actor_part50.c) toward a caller-supplied target, with the
  * exact target/mode selected by `self+0x28` ("state"):
  *   - state 0: eases toward `posX`/`posY` offset by a per-frame-counter
- *     (`self+0x44`) lookup into `gStaticData_0816A820` (two different
+ *     (`self+0x44`) lookup into `gSineTable` (two different
  *     index strides for the X/Y offsets, producing a scatter/orbit-style
  *     curve), and toward `posZ-0x200`.
  *   - state 1: snaps (no easing) directly to `posX` for the X axis, to
@@ -31,11 +31,11 @@ void sub_802D3A8(struct actor_self *self, s32 posX, s32 posY, s32 posZ)
     s32 cur, d;
 
     if (self->state == 0) {
-        s32 ox = gStaticData_0816A820[(self->stateTime * 4) & 0xff] * 24 - 0x1000;
+        s32 ox = gSineTable[(self->stateTime * 4) & 0xff] * 24 - 0x1000;
         s32 oy;
 
         tx = posX + ox;
-        oy = gStaticData_0816A820[(self->stateTime * 2) & 0xff] * 10 - 0x1e00;
+        oy = gSineTable[(self->stateTime * 2) & 0xff] * 10 - 0x1e00;
         ty = posY + oy;
         tz = posZ - 0x200;
         self->x += (tx - self->x) / 16;
@@ -46,7 +46,7 @@ void sub_802D3A8(struct actor_self *self, s32 posX, s32 posY, s32 posZ)
         s32 oy;
 
         self->x = posX;
-        oy = gStaticData_0816A820[(self->stateTime * 9) & 0xff] * 4 - 0xa00;
+        oy = gSineTable[(self->stateTime * 9) & 0xff] * 4 - 0xa00;
         self->y = oy + posY;
         self->z = posZ + 0x200;
         return;

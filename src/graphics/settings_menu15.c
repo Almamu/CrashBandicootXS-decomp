@@ -8,20 +8,20 @@
 
 extern void StopAmbientSfx(struct AudioContext *self);
 extern void WaitForVBlank(void);
-extern struct tile_asset_cache *gUnknown_030012B8;
+extern struct palette_cache *gPaletteCache;
 extern struct AudioContext *gAudioContext;
 extern struct icon_manager *gSmallFont;
 extern struct icon_manager *gLargeFont;
-extern struct vram_upload_cursor *gUnknown_030012FC;
+extern struct vram_upload_cursor *gObjVramCursor;
 extern u8 gSpriteBankTable[];
 extern u8 gStaticData_0816B2C0[];
-extern void sub_8006EF0(struct tile_asset_cache *self, u16 count, const u8 *records);
-extern s32 sub_8006D50(struct tile_asset_cache *self, s32 index);
-extern void sub_8006F94(struct tile_asset_cache *self, u32 flags);
+extern void SetPaletteCacheSource(struct palette_cache *self, u16 count, const u8 *records);
+extern s32 ClaimPaletteSlot(struct palette_cache *self, s32 index);
+extern void DestroyPaletteCache(struct palette_cache *self, u32 flags);
 extern void CpuSet(const void *src, void *dst, u32 cnt);
 extern void FontResetPalette(struct icon_manager *self);
 extern void *_call_via_r1(void *arg0, void *fn);
-extern void sub_8006C4C(struct vram_upload_cursor *self);
+extern void ResetObjVram(struct vram_upload_cursor *self);
 extern void *sub_8026EDC(s32 size);
 extern struct pause_screen_results *InitPauseMenu(struct pause_screen_results *self);
 extern s32 PauseMenuLoop(struct pause_screen_results *self);
@@ -31,7 +31,7 @@ extern void DestroyPauseMenu(struct pause_screen_results *self, u32 flags);
  * (docs/rom_map.md's "overlay_ui" section, "one composite pause/options
  * screen"). Runs the whole screen synchronously to completion: frees
  * pending heap bytes, resets the audio channel, clears palette color 0
- * and DISPCNT, swaps `gUnknown_030012B8` for a fresh 16-slot tile cache
+ * and DISPCNT, swaps `gPaletteCache` for a fresh 16-slot tile cache
  * sized for this screen's icon graphics (seeding slot 15 from
  * `gStaticData_0816B2C0`), re-inits both icon managers (copying
  * `tileCount` between them and firing each one's slot-6 trampoline, the
@@ -46,14 +46,14 @@ extern void DestroyPauseMenu(struct pause_screen_results *self, u32 flags);
  * `tileCount` reads; it rebuilds it for each one. Reading `tileCount`
  * through the `static inline` accessor `mgr_12c` stops CSE from sharing
  * it, which frees the register the draft spent on it and lets
- * &gUnknown_030012B8/&gSmallFont/&gLargeFont/
- * &gUnknown_030012FC land in r6/r4/r5/r7 as in the ROM. The two
+ * &gPaletteCache/&gSmallFont/&gLargeFont/
+ * &gObjVramCursor land in r6/r4/r5/r7 as in the ROM. The two
  * `tileCount` reads for the VRAM reservation are taken into locals
- * before `gUnknown_030012FC` is loaded, and the tile cache's base is
+ * before `gObjVramCursor` is loaded, and the tile cache's base is
  * read into a local before `gStaticData_0816B2C0`'s address, both to
  * match the ROM's load order. The two `0`s still come from
  * inline-function parameters, which CSE shares into r8. */
-extern struct tile_asset_cache *sub_8006FB4(void *mem);
+extern struct palette_cache *InitPaletteCache(void *mem);
 
 /* Fires an icon manager's slot-6 method (a gcc 2.x virtual call). */
 #define ICON_SLOT6_CALL(mgr)                                                   \
@@ -78,8 +78,8 @@ static inline void init_icon_mgr(struct icon_manager *mgr, u32 base)
 
 static inline void reserve_icon_vram(u32 n)
 {
-    gUnknown_030012FC->field_08 = n;
-    sub_8006C4C(gUnknown_030012FC);
+    gObjVramCursor->baseTile = n;
+    ResetObjVram(gObjVramCursor);
 }
 
 /* Keeps CSE from sharing the 0x12c offset between reads (see above). */
@@ -90,7 +90,7 @@ static inline u32 mgr_12c(struct icon_manager *m)
 
 s32 RunPauseMenu(void)
 {
-    struct tile_asset_cache *oldCache;
+    struct palette_cache *oldCache;
     struct pause_screen_results *screen;
     s32 result;
 
@@ -100,13 +100,13 @@ s32 RunPauseMenu(void)
     *(vu16 *)PLTT = 0;
     *(vu16 *)REG_ADDR_DISPCNT = 0;
 
-    oldCache = gUnknown_030012B8;
-    gUnknown_030012B8 = sub_8006FB4(sub_8026EDC(sizeof(struct tile_asset_cache)));
-    sub_8006EF0(gUnknown_030012B8, ((struct pause_gfx_pkg *)gSpriteBankTable)->count,
+    oldCache = gPaletteCache;
+    gPaletteCache = InitPaletteCache(sub_8026EDC(sizeof(struct palette_cache)));
+    SetPaletteCacheSource(gPaletteCache, ((struct pause_gfx_pkg *)gSpriteBankTable)->count,
                 ((struct pause_gfx_pkg *)gSpriteBankTable)->records);
-    sub_8006D50(gUnknown_030012B8, 0xf);
+    ClaimPaletteSlot(gPaletteCache, 0xf);
     {
-        u8 *dst = (u8 *)gUnknown_030012B8;
+        u8 *dst = (u8 *)gPaletteCache;
 
         CpuSet(gStaticData_0816B2C0, dst + (0x83 << 2), 0x10);
     }
@@ -119,8 +119,8 @@ s32 RunPauseMenu(void)
         u32 a = mgr_12c(gSmallFont);
         u32 b = mgr_12c(gLargeFont);
 
-        gUnknown_030012FC->field_08 = a + b;
-        sub_8006C4C(gUnknown_030012FC);
+        gObjVramCursor->baseTile = a + b;
+        ResetObjVram(gObjVramCursor);
     }
 
     screen = InitPauseMenu(sub_8026EDC(0xd4));
@@ -129,16 +129,16 @@ s32 RunPauseMenu(void)
         DestroyPauseMenu(screen, 3);
 
     reserve_icon_vram(0);
-    if (gUnknown_030012B8 != NULL)
-        sub_8006F94(gUnknown_030012B8, 3);
-    gUnknown_030012B8 = oldCache;
+    if (gPaletteCache != NULL)
+        DestroyPaletteCache(gPaletteCache, 3);
+    gPaletteCache = oldCache;
     mem_free_bytes(MEM_HEAP_BOTH);
     return result;
 }
 
-extern void *sub_801E644(void *buf, s32 arg1, s32 arg2, s32 arg3, s32 arg4);
+extern void *InitBgSetup(void *buf, s32 arg1, s32 arg2, s32 arg3, s32 arg4);
 extern void LoadGraphicsPackage(void *buf, void *asset);
-extern s32 sub_801E640(void *buf);
+extern s32 GetBgSetupControl(void *buf);
 extern void *gLevelState;
 extern void ***gUnknown_030012D0;
 extern void *PackSaveData(void *arg0);
@@ -151,7 +151,7 @@ extern u8 gPauseMenuRows[];
 /* Same "recurring screen-constructor shape" docs/rom_map.md's overlay_ui
  * section documents for InitPauseMenu/InitPowerDialog/InitPauseTimeTrialPage: `self`
  * (allocated by the caller, `RunPauseMenu`, as a fresh 0xd4-byte
- * `struct pause_screen_results`) gets `sub_801E644` init, a local
+ * `struct pause_screen_results`) gets `InitBgSetup` init, a local
  * BLDCNT/BLDY/DISPCNT setup (`field_c8`/`field_cc`/`field_d0`, the same
  * fields `CommitPauseMenuFrame` applies), `LoadGraphicsPackage`, a row-stats
  * handle from `gLevelState`, then hands off to `InitPauseMenuInfo` to
@@ -164,7 +164,7 @@ struct pause_screen_results *InitPauseMenu(struct pause_screen_results *self)
 {
     register s32 zero asm("r6");
 
-    sub_801E644(self, 0, 0x1f, 0, 3);
+    InitBgSetup(self, 0, 0x1f, 0, 3);
 
     {
         register u32 *c8Addr asm("r4") = &self->field_c8;
@@ -283,7 +283,7 @@ struct pause_screen_results *InitPauseMenu(struct pause_screen_results *self)
     self->field_24 = 0;
     self->field_28 = 0xb4;
 
-    REG_BG0CNT = sub_801E640(self);
+    REG_BG0CNT = GetBgSetupControl(self);
     *(vu32 *)REG_ADDR_BG0HOFS = 0;
 
     return self;

@@ -767,7 +767,7 @@ tempted to re-attempt them:
   an earlier unrelated computation (`self->0x80 & 1`'s leftover
   literal `1`) instead of the ROM's fresh literal load for the mask.
 - **`sub_800C8F8`/`sub_800C940`/`sub_800C97C`** (the sine-wave
-  oscillator family, `gStaticData_0816A820` + `gRoomFrameCount`):
+  oscillator family, `gSineTable` + `gRoomFrameCount`):
   fully traced semantically (see `actor_part116.c`'s own doc comment
   for the per-function field/phase-derivation breakdown), and an
   isolated attempt got every field access and the table lookup itself

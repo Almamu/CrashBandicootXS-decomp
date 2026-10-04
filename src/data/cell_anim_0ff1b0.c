@@ -8,10 +8,10 @@
  * ("Category backgrounds").
  */
 
-/* BG0 cell animation B, gActorCategories[3..6].family_shared_04
- * (family_shared_08 = its size, 0x3E784), played by sub_8029890/
- * sub_80297C8 (actor_part95.c): 38x10 cells, 21 frames. Not a type-0
- * category, so there are no per-cell banks: sub_802996C maps the cells to
+/* BG0 cell animation B, gActorCategories[3..6].cellAnim
+ * (cellAnimSize = its size, 0x3E784), played by InitCellAnim/
+ * UploadCellAnimFrame (actor_part95.c): 38x10 cells, 21 frames. Not a type-0
+ * category, so there are no per-cell banks: ResetCellAnimBg maps the cells to
  * consecutive tiles in palette bank 0. Built from
  * graphics/category_bg/0ff1b0_cell_anim.png, all 21 frames stacked top to
  * bottom. */
@@ -23,7 +23,7 @@ struct cell_anim_0ff1b0 {
 };
 COMPILE_TIME_ASSERT(sizeof(struct cell_anim_0ff1b0) == 0x3E784);
 
-const struct cell_anim_0ff1b0 gStaticData_080FF1B0 = {
+const struct cell_anim_0ff1b0 gCategoryFamily1CellAnim = {
     {
         {
 #include "category_bg/0ff1b0_cell_anim.pal.inc"
@@ -35,8 +35,8 @@ const struct cell_anim_0ff1b0 gStaticData_080FF1B0 = {
     },
 };
 
-/* Category 3's BG1 picture (gActorCategories[3].conditional_ptr_0C,
- * loaded by sub_802F7B0 in actor_part45d.c): 38x16 map, 357 tiles. Built from
+/* Category 3's BG1 picture (gActorCategories[3].bgPicture,
+ * loaded by LoadBgPicture in actor_part45d.c): 38x16 map, 357 tiles. Built from
  * graphics/category_bg/13d934_picture.png (palette and map) and
  * 13d934_picture_tiles.png (the tile set, grit's -fx external tileset). */
 struct bg_picture_13d934 {
@@ -47,7 +47,7 @@ struct bg_picture_13d934 {
 };
 COMPILE_TIME_ASSERT(sizeof(struct bg_picture_13d934) == 0x208 + 608 * 2 + 357 * 32 + 608 / 2);
 
-const struct bg_picture_13d934 gStaticData_0813D934 = {
+const struct bg_picture_13d934 gCategory3BgPicture = {
     {
         {
 #include "category_bg/13d934_picture.pal.inc"

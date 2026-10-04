@@ -8,9 +8,9 @@
  * hud_icon_widget5.c. */
 
 extern void LoadTaggedAsset(void *asset, void *dest);
-extern u8 *gUnknown_030012B8;
+extern u8 *gPaletteCache;
 extern void ***gUnknown_030012D0;
-extern s32 sub_8006DF8(u8 *cache, s32 recordId);
+extern s32 GetPaletteSlot(u8 *cache, s32 recordId);
 
 /* Uploads `tiles`'s referenced tile data to the OBJ VRAM slot
  * selected by `tileBase`, recording the resulting tile-count-derived
@@ -43,14 +43,14 @@ void FontSetPalette(struct icon_manager *self, u8 val)
 /* Looks up a tile-cache slot for the byte at
  * `(**gUnknown_030012D0)[0x1A4]`'s own `+0x14` field (see
  * docs/rom_map.md's `gSpriteBankTable` investigation) via
- * `sub_8006DF8`, and folds the result into the same `oam_scratch[5]`
+ * `GetPaletteSlot`, and folds the result into the same `oam_scratch[5]`
  * nibble FontSetPalette sets above. */
 void FontResetPalette(struct icon_manager *self, u32 unused)
 {
-    u8 *cache = gUnknown_030012B8;
+    u8 *cache = gPaletteCache;
     void *rec = *(void **)((u8 *)(**gUnknown_030012D0) + (0xD2 << 1));
     u8 field = ((u8 *)rec)[0x14];
-    s32 slot = sub_8006DF8(cache, field);
+    s32 slot = GetPaletteSlot(cache, field);
     u32 shifted = slot << 4;
     register u8 mask asm("r1");
     register u8 b asm("r2");

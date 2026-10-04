@@ -49,7 +49,7 @@ No file needed splitting.
   compilers. `init_icon_mgr(mgr, base)` and `reserve_icon_vram(n)`
   inline helpers now reproduce the ROM's `0` held in r8. The slot-6
   calls are `_call_via_r1` virtual calls. Register allocation is still
-  wrong: the ROM keeps `&gUnknown_030012B8` in r6 and the two icon
+  wrong: the ROM keeps `&gPaletteCache` in r6 and the two icon
   managers in r4/r5, so it has no register left for `0x12c` and
   re-materializes it. Pinning those registers causes a stack spill.
 - **`DrawPauseFraction`** (fraction draw): 73 halfwords off (the draft is 16

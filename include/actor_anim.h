@@ -153,21 +153,21 @@ COMPILE_TIME_ASSERT(sizeof(struct sub_effect_table_end) == 0xC);
 /* A whole spawnTable as the ROM stores it (src/data/). */
 #define SUB_EFFECT_TABLE(n) struct { struct sub_effect_record records[n]; struct sub_effect_table_end end; }
 
-/* The start of a BG0 cell animation (category_descriptor.family_shared_04,
- * read by sub_8029890/sub_802996C/sub_80297C8 in actor_part95.c): a
+/* The start of a BG0 cell animation (category_descriptor.cellAnim,
+ * read by InitCellAnim/ResetCellAnimBg/UploadCellAnimFrame in actor_part95.c): a
  * 256-colour palette DMA'd whole to BG palette RAM, the grid size in 8x8
  * cells, then the frames, each `cols * rows` 4bpp tiles in row-major cell
  * order (plus, for type-0 categories, one 4-bit palette bank per cell
  * padded to a multiple of 4 bytes, handed to the gDrawMirroredTilemapFunc map
- * callback). family_shared_08 is the whole record's size. */
+ * callback). cellAnimSize is the whole record's size. */
 struct cell_anim_header {
     u16 palette[256];   // 0x000
     s16 cols;           // 0x200
     s16 rows;           // 0x202
 }; // 0x204, the frames follow
 
-/* The start of a BG1 picture (category_descriptor.conditional_ptr_0C,
- * read by sub_802F7B0 in actor_part45d.c): a 256-colour palette, the map
+/* The start of a BG1 picture (category_descriptor.bgPicture,
+ * read by LoadBgPicture in actor_part45d.c): a 256-colour palette, the map
  * size, the tile count, then `u16 map[cols * rows]` (padded to a multiple
  * of 4 bytes), `tileCount` 4bpp tiles, and one 4-bit palette bank per map
  * entry, low nibble first. */
@@ -180,9 +180,9 @@ struct bg_picture_header {
 
 struct category_descriptor {
     u32 type;                       // 0x00 - 0 for categories 0-2, 1 for 3-5, 2 for 6 - selects the shared vtable, see above
-    void *family_shared_04;         // 0x04 - constant across all categories in one family; pointer-shaped, role unknown
-    u32 family_shared_08;           // 0x08 - constant across all categories in one family; role unknown
-    void *conditional_ptr_0C;       // 0x0C - NULL for categories 0-2 (type 0); a real pointer for every category in the 3-6 family (5 and 6 alias the exact same pointer) - a family-2-only extra graphics blob, not a per-category flag. When non-NULL, sub_802F7B0 (not reversed) DMAs a small header-prefixed tile blob from it to VRAM once during category init - see docs/graphics.md
+    void *cellAnim;                 // 0x04 - the BG0 cell animation (gCategoryFamily0CellAnim/gCategoryFamily1CellAnim), played by InitCellAnim
+    u32 cellAnimSize;               // 0x08 - its size in bytes
+    void *bgPicture;                // 0x0C - the BG1 picture LoadBgPicture shows (gCategoryNBgPicture); NULL for type-0 categories (0-2), 5 and 6 share one
     const u16 *palette;             // 0x10 - raw 16-color RGB555 palette, DMA'd to OBJ palette RAM (InitActorCategory)
     struct sub_effect_record *spawnTable; // 0x14 - the stage's actor spawn list (gCategoryNSpawnTable), see struct sub_effect_record above
     struct anim_table_record *anim_table; // 0x18 - this category's animation table base (gCategoryFamily0AnimTable or gCategoryFamily1AnimTable)

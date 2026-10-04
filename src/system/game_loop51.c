@@ -2,7 +2,7 @@
 #include "phys_obj.h"
 
 extern u8 gUnknown_030012B0;
-extern void *gUnknown_030012B8;
+extern void *gPaletteCache;
 extern void sub_800F8E0(struct phys_obj *self);
 extern void sub_800F990(struct phys_obj *self);
 extern void sub_800F4F4(struct phys_obj *self);
@@ -41,7 +41,7 @@ extern void sub_800FC70(struct phys_obj *self);
  * (`gPlayer`) own `+0x80` byte - then, depending on
  * `self+0x4e`: state 6 settles to state 7, tags `self+0x2d = 0x20`,
  * runs the `sub_80087C0`/`sub_80087B4`/`sub_800872C` triplet, then
- * folds the low nibble of a `sub_8006DF8` tile-cache lookup (keyed by
+ * folds the low nibble of a `GetPaletteSlot` tile-cache lookup (keyed by
  * the freshly-retagged hitbox record's own `+0x14`) into `self+0x29`;
  * state 3 just tags `0x20` and runs the same triplet. If bit 7 was
  * clear instead, `self+0x4d`'s low 7 bits == 1 triggers
@@ -121,7 +121,7 @@ void sub_80104E4(struct phys_obj *self)
                 sub_800872C(self, 0);
                 recs = self->anim->records;
                 rec = &recs[self->tag];
-                self->slot = sub_8006DF8(gUnknown_030012B8, rec->unk_14);
+                self->slot = GetPaletteSlot(gPaletteCache, rec->unk_14);
             }
             else if (self->kind == 3)
             {

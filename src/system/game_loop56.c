@@ -66,7 +66,7 @@
  * `sub_800872C`), and sets the 0x18-byte scratch block's `+0x14` to
  * `2`. Either way, recomputes the player's `+0x29` low nibble from
  * `sub_800815C(player)` (the "negative-constant bit-clear idiom",
- * `docs/matching.md`) and fires `sub_8006D08` against the tile-asset
+ * `docs/matching.md`) and fires `LoadPaletteSlot` against the tile-asset
  * cache using a `player+0x20`-table lookup indexed by `player+0x2d*7`
  * (0x1c-byte stride), flushes the scratch block (`SnapCamera`) and
  * text-box singleton (`ResetLevelLayers`).
@@ -77,13 +77,13 @@
  * 0x7f`), re-stamps `+0x2d` to `0x29`, refreshes the OAM entry again,
  * plays a sound effect (`gAudioContext` as the sample id, priority
  * `0x2c`) via `PlaySfx`, fires the `player+0x44`-table's trampoline
- * (`_call_via_r2`, mode `0x29`), repeats the same `sub_8006D08` tile-
+ * (`_call_via_r2`, mode `0x29`), repeats the same `LoadPaletteSlot` tile-
  * cache call, and pings `gHud` (`ShowHudCounters`).
  *
  * Either way, this converges on flushing the four HUD ring-buffer
  * managers (`sub_8008C80` on `030012F4`/`EC`/`F0`/`F8`), a
  * `UpdateRoomFrame(self)` VRAM/OAM refresh, and the fade-cluster
- * `sub_8001524(0)`/`sub_80015E0`/`sub_8001614`/`sub_8001624` reset
+ * `SetDispcntMode(0)`/`ShowObj`/`CommitDispcnt`/`CommitBlendRegs` reset
  * quartet, landing at the **wait loop** (`_08023E5A`/`_08023D7C`,
  * `docs/rom_map.md`'s "Traced the fade-to-black's trigger" section):
  * poll `IsRoomExitRequested` (the `gRoomExitRequested` readiness flag,
@@ -97,7 +97,7 @@
  * the player's own `+0x18`/`+0x38`-`/+0x18` tables, `sub_80091D4` on
  * `gCrateList`, `UpdateHudSlides`, and a `gLevelState+0x8c`-
  * gated `TickLevelClock` call) before looping back. Once ready, fires the
- * fade (`sub_80014A4`) - the concrete trigger `rom_map.md` originally
+ * fade (`FadePaletteToBlack`) - the concrete trigger `rom_map.md` originally
  * traced this function down to find.
  *
  * **Post-fade** (`_08023E82` onward, converging at `_08023F92`): sets
@@ -113,8 +113,8 @@
  * above): flushes all five hot IWRAM widget-manager globals
  * (`sub_8008CEC` on `030012E8`/`EC`/`F0`/`F8`/`F4`, `sub_8009914` on
  * `0300130C`), resets the fade cluster's own bitfield accessors
- * (`sub_8001578`/`sub_8001564`/`sub_8001550`/`sub_800153C`/
- * `sub_800158C`/`WaitForVBlank`/`sub_8001614`), and returns whatever
+ * (`HideBg0`/`HideBg1`/`HideBg2`/`HideBg3`/
+ * `HideObj`/`WaitForVBlank`/`CommitDispcnt`), and returns whatever
  * `sl` was left holding (`1` by default, `2` from the wait-loop's
  * `RunPauseMenu`-driven early exit, or `0` once the post-fade branch
  * was reached) - the value `PlayRoom` itself stashes and returns.
@@ -257,7 +257,7 @@ extern struct gl_scratch *gCamera;
 extern void *gLevelLayers;
 extern struct gl_level *gLevelState;
 extern u8 *gPaletteCycles;
-extern void *gUnknown_030012B8;
+extern void *gPaletteCache;
 extern void *gAudioContext;
 extern void *gHud;
 extern void *gUnknown_030012F4;
@@ -307,7 +307,7 @@ extern void sub_80087C0(void *part);
 extern void sub_80087B4(void *part);
 extern void sub_800872C(void *part, s32 arg);
 extern s32 sub_800815C(void *part);
-extern void sub_8006D08(void *cache, s32 slot, s32 recordId);
+extern void LoadPaletteSlot(void *cache, s32 slot, s32 recordId);
 extern void SnapCamera(void *scratch);
 extern void ResetLevelLayers(void *box);
 extern u8 IsInBonusRound(void *level);
@@ -320,11 +320,11 @@ extern s32 _call_via_r1(void *self, void *fn);
 extern void ShowHudCounters(void *arg);
 extern void sub_8008C80(void *mgr);
 extern void UpdateRoomFrame(struct gl_self *self);
-extern void sub_8001524(s32 arg);
-extern void sub_8001604(void);
-extern void sub_80015E0(void);
-extern void sub_8001614(void);
-extern void sub_8001624(void);
+extern void SetDispcntMode(s32 arg);
+extern void SetObjMapping1D(void);
+extern void ShowObj(void);
+extern void CommitDispcnt(void);
+extern void CommitBlendRegs(void);
 extern void UpdateKeys(void *arg);
 extern s32 RunPauseMenu(void);
 extern void ResumeRoomAfterPause(struct gl_self *self);
@@ -333,18 +333,18 @@ extern void sub_80091D4(void *list);
 extern void UpdateHudSlides(void *arg);
 extern void TickLevelClock(struct gl_level *level);
 extern u8 IsRoomExitRequested(void);
-extern void sub_80014A4(void);
+extern void FadePaletteToBlack(void);
 extern s32 *GetBonusPlatform(void *level);
 extern s32 sub_801B29C(s32 *arg);
 extern void SetCheckpoint(void *level, s32 arg, s32 *point);
 extern void sub_8023140(void *level, s32 count);
 extern void sub_8008CEC(void *mgr);
 extern void sub_8009914(void *list);
-extern void sub_8001578(void);
-extern void sub_8001564(void);
-extern void sub_8001550(void);
-extern void sub_800153C(void);
-extern void sub_800158C(void);
+extern void HideBg0(void);
+extern void HideBg1(void);
+extern void HideBg2(void);
+extern void HideBg3(void);
+extern void HideObj(void);
 extern void WaitForVBlank(void);
 
 #define PAL_RAM ((u16 *)PLTT)
@@ -383,10 +383,10 @@ static inline void RestartPlayerAnim(struct gl_player *p, s32 anim)
 
 static inline void RefreshPlayerTiles(void)
 {
-    void *cache = gUnknown_030012B8;
+    void *cache = gPaletteCache;
     struct gl_player *p = gPlayer;
 
-    sub_8006D08(cache, p->frameNibble, (*p->anim)[p->animIndex].tileRecord);
+    LoadPaletteSlot(cache, p->frameNibble, (*p->anim)[p->animIndex].tileRecord);
 }
 
 s32 RunRoom(struct gl_self *self)
@@ -463,11 +463,11 @@ s32 RunRoom(struct gl_self *self)
     sub_8008C80(gUnknown_030012F0);
     sub_8008C80(gUnknown_030012F8);
     UpdateRoomFrame(self);
-    sub_8001524(0);
-    sub_8001604();
-    sub_80015E0();
-    sub_8001614();
-    sub_8001624();
+    SetDispcntMode(0);
+    SetObjMapping1D();
+    ShowObj();
+    CommitDispcnt();
+    CommitBlendRegs();
 
     while (!IsRoomExitRequested() && !(gPlayer->flags & 1))
     {
@@ -512,7 +512,7 @@ s32 RunRoom(struct gl_self *self)
         gRoomFrameCount++;
     }
 fade:
-    sub_80014A4();
+    FadePaletteToBlack();
     if (IsRoomExitRequested())
     {
         ret = 0;
@@ -574,12 +574,12 @@ fade:
     sub_8008CEC(gUnknown_030012F0);
     sub_8008CEC(gUnknown_030012F8);
     sub_8008CEC(gUnknown_030012F4);
-    sub_8001578();
-    sub_8001564();
-    sub_8001550();
-    sub_800153C();
-    sub_800158C();
+    HideBg0();
+    HideBg1();
+    HideBg2();
+    HideBg3();
+    HideObj();
     WaitForVBlank();
-    sub_8001614();
+    CommitDispcnt();
     return ret;
 }

@@ -7,14 +7,14 @@
  * parked functions interleave with the matched ones - see
  * docs/matching.md for the full split. */
 
-extern void sub_80013FC(s32 factor);
+extern void DarkenPalette(s32 factor);
 extern void WaitForVBlank(void);
-extern u16 gUnknown_03000A80[512];
-extern u16 gUnknown_03000E80[512];
+extern u16 gPaletteBackup[512];
+extern u16 gPaletteFadeBuffer[512];
 
-/* Backs the real palette (`PLTT`) up into `gUnknown_03000A80`,
+/* Backs the real palette (`PLTT`) up into `gPaletteBackup`,
  * then, for each factor 0/2/4/.../16, blends it toward black via the
- * already-matched `sub_80013FC` into `gUnknown_03000E80` and DMAs
+ * already-matched `DarkenPalette` into `gPaletteFadeBuffer` and DMAs
  * that result into the real palette, waiting one VBlank between each
  * step - a textbook fade-to-black animation. Once fully faded, sets
  * up the hardware blend registers (`REG_BLDCNT`/`REG_BLDY`) and
@@ -23,7 +23,7 @@ extern u16 gUnknown_03000E80[512];
  * Was NAKED asm, not plain C - see
  * docs/matching/naked-sub_80014a4-matched.md for the derivation of how
  * this was finally matched as real C. The gap: the ROM caches the
- * blended-buffer address (`gUnknown_03000E80`) in a register across
+ * blended-buffer address (`gPaletteFadeBuffer`) in a register across
  * the loop while recomputing the other two DMA fields (the 0x05000000
  * destination and the 0x80000200 control word) fresh every iteration,
  * plus an extra "rename" copy of the DMA register pointer right before
@@ -37,7 +37,7 @@ extern u16 gUnknown_03000E80[512];
  * asm-computed values threaded through as real operands so the
  * post-loop block reuses them exactly like the ROM does instead of
  * recomputing. */
-void sub_80014A4(void)
+void FadePaletteToBlack(void)
 {
     register struct dma_regs *dma asm("r1");
     register struct dma_regs *dma2 asm("r4");
@@ -49,13 +49,13 @@ void sub_80014A4(void)
 
     dma = (struct dma_regs *)REG_ADDR_DMA3SAD;
     dma->src = PLTT;
-    dma->dst = (u32)gUnknown_03000A80;
+    dma->dst = (u32)gPaletteBackup;
     dma->cnt = 0x80000200;
     val = dma->cnt;
 
     factor = 0;
     dma2 = dma;
-    bufAddr = (u32 *)gUnknown_03000E80;
+    bufAddr = (u32 *)gPaletteFadeBuffer;
 
     /* The 0x80000200 reload below deliberately references the literal
      * pool slot (`.L8+0x8`) this function's own compiler-generated
@@ -72,7 +72,7 @@ void sub_80014A4(void)
      * `make NON_MATCHING=1` build's generated .s), update every
      * `.L8+`-prefixed reference in this function to match. */
     do {
-        sub_80013FC(factor);
+        DarkenPalette(factor);
         WaitForVBlank();
         dma2->src = (u32)bufAddr;
         asm volatile(
@@ -108,13 +108,13 @@ void sub_80014A4(void)
     }
 }
 
-/* `gUnknown_030007E8.field_0 != -1` - the same "idle" sentinel
+/* `gBrightnessFade.field_0 != -1` - the same "idle" sentinel
  * documented on the struct in fade_util.c, exposed here as a plain
  * s32 read (this file doesn't share that struct definition, per this
  * project's per-file raw-offset convention). */
-extern s32 gUnknown_030007E8;
+extern s32 gBrightnessFade;
 
-s32 sub_8001510(void)
+s32 IsBrightnessFadeActive(void)
 {
-    return gUnknown_030007E8 != -1;
+    return gBrightnessFade != -1;
 }

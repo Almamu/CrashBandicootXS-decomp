@@ -29,7 +29,7 @@ extern void sub_8007174(void *arg0, s32 arg1, s32 arg2, s32 *arg3, s32 *arg4);
 extern s32 FixedDiv(s32 arg0, s32 arg1);
 extern s32 FixedMul(s32 a, s32 b);
 extern void ShowHudWumpa(void *state);
-extern s16 gStaticData_0816A820[];
+extern s16 gSineTable[];
 extern s32 rand(void);
 
 /* Built with old_agbcc (Makefile OLD_AGBCC_OBJS) since the issue #15
@@ -140,7 +140,7 @@ void sub_8011448(struct orbit_part *self, u8 randomize)
  *    gate off after 32 self->0x4b ticks.
  * All four modes converge on a shared tail: if self->0x48 == 0, reads
  * self->0x4a again - if clear, computes a velocity step via
- * gStaticData_0816A820[self->0x49 & 0x7f] and FixedMul, added to
+ * gSineTable[self->0x49 & 0x7f] and FixedMul, added to
  * self->0x50 and stored into self->y (a "rotate self->y around a fixed
  * center by a table-driven step" idiom, same table/shape as
  * sub_8010F8C's own default-mode branch); if set, calls sub_801192C
@@ -289,7 +289,7 @@ void sub_8011548(struct orbit_part *self)
 
     if (self->state == 0) {
         if (self->mode == 0) {
-            s32 sn = gStaticData_0816A820[(self->counter & 0x7f) * 2];
+            s32 sn = gSineTable[(self->counter & 0x7f) * 2];
 
             sn = FixedMul(sn, 0x280);
             self->base.y = self->anchor.y + sn;
@@ -332,7 +332,7 @@ void sub_8011548(struct orbit_part *self)
  * argument), and - since that tag is always 0, never 0xff - never fires
  * the `sub_801191C` special-case call the ROM's own dead `cmp r7,#0xff`
  * still checks for. Finishes with the same `+0x29` nibble-from-
- * `sub_8006DF8` bitfield combine `sub_8025A64`/`sub_8025CA4` already use,
+ * `GetPaletteSlot` bitfield combine `sub_8025A64`/`sub_8025CA4` already use,
  * then returns the new part.
  *
  * Matched (old_agbcc) with three nudges:
@@ -353,7 +353,7 @@ void sub_8011548(struct orbit_part *self)
 extern void *gUnknown_030012EC;
 extern void *gUnknown_030012F4;
 extern void ***gUnknown_030012D0;
-extern void *gUnknown_030012B8;
+extern void *gPaletteCache;
 extern u8 gStaticData_087E414C[];
 extern void *sub_8026EDC(s32 size);
 extern struct actor *sub_80084A4(struct actor *self);
@@ -363,7 +363,7 @@ extern void sub_801191C(struct actor *self);
 extern void sub_80087C0(struct orbit_part *part);
 extern void sub_80087B4(struct orbit_part *part);
 extern void sub_800872C(struct orbit_part *part, u8 val);
-extern u8 sub_8006DF8(void *cache, u8 record);
+extern u8 GetPaletteSlot(void *cache, u8 record);
 
 struct orbit_part *sub_801173C(u16 id, u16 x, u16 y, u16 special)
 {
@@ -414,7 +414,7 @@ struct orbit_part *sub_801173C(u16 id, u16 x, u16 y, u16 special)
     p->phase = phase;
     if (mode == 0xff)
         sub_801191C(&p->base);
-    p->slotNibble = sub_8006DF8(gUnknown_030012B8, p->bank->records->unk_14);
+    p->slotNibble = GetPaletteSlot(gPaletteCache, p->bank->records->unk_14);
     return p;
 }
 
@@ -477,10 +477,10 @@ void sub_801191C(struct actor *self)
 /* sub_801192C: address-adjacent to sub_801191C, a small self->0x4b/
  * self->0x4a-driven table helper - copies a fixed 3-word table
  * (gStaticData_0816BF14) onto the stack, computes self->y from a
- * gStaticData_0816A820 (shared trig-ish table, see sub_8010F8C's own doc
+ * gSineTable (shared trig-ish table, see sub_8010F8C's own doc
  * comment) lookup at self->0x4b*4 scaled by FixedMul(...,0x3000)
  * against self->0x50 (the "home Y" sub_801173C/sub_8011548 both write),
- * then computes self->x from a second gStaticData_0816A820 lookup at
+ * then computes self->x from a second gSineTable lookup at
  * self->0x4b*2 scaled by FixedMul against the stack copy indexed by
  * self->0x4a-1, added to or subtracted from self->0x4c (the "home X")
  * depending on whether self->0x4a is 1, 2, or anything else (unchanged).
@@ -502,10 +502,10 @@ void sub_801192C(struct orbit_part *self)
     s32 dy;
     s32 sn;
 
-    sn = gStaticData_0816A820[self->phase * 4];
+    sn = gSineTable[self->phase * 4];
     dy = FixedMul(sn, 0x3000);
     self->base.y = self->anchor.y - dy;
-    sn = gStaticData_0816A820[self->phase * 2];
+    sn = gSineTable[self->phase * 2];
     sn = FixedMul(sn, scales.a[self->mode - 1]);
     if (self->mode == 1)
         self->base.x = self->anchor.x - sn;

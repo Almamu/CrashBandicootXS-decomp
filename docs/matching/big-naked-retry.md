@@ -1,11 +1,11 @@
-# Big NAKED retry: `UpdateGameFrame` and `sub_803686C`
+# Big NAKED retry: `UpdateGameFrame` and `DrawVvLogoPieces`
 
 This pass took on two of the largest parked NAKED functions. One closed.
 
 | Function | File | Size | Result |
 |---|---|---|---|
 | `UpdateGameFrame` (#34) | `src/system/game_loop55.c` | ~730 insns | matched, old_agbcc |
-| `sub_803686C` (#65) | `src/graphics/graphics_loading_35d1c.c` | 1160 bytes | still NAKED, draft 329 halfwords off |
+| `DrawVvLogoPieces` (#65) | `src/graphics/graphics_loading_35d1c.c` | 1160 bytes | still NAKED, draft 329 halfwords off |
 
 ## `UpdateGameFrame` (never attempted before, now real C)
 
@@ -64,7 +64,7 @@ code differences elsewhere before blaming the slots.
 `game_loop55.o` joined `OLD_AGBCC_OBJS`. Under agbcc the same C is 168
 halfwords off. The file holds only this function.
 
-## `sub_803686C` (still NAKED)
+## `DrawVvLogoPieces` (still NAKED)
 
 The draft under `#if NON_MATCHING` is structurally complete.
 `triage_naked.py` reports 329 halfwords off under old_agbcc and 345
@@ -74,12 +74,12 @@ under agbcc (4 bytes short). Findings:
   `adds r4, r3, #0; movs r5, #3` in the ROM: the hoisted `&oamA` comes
   before the reversed counter. Only check_dbra_loop emits it in that
   order. So the loop is written up-counting and built with strength
-  reduction on, like `sub_80358A8`'s inner loop. Closing it therefore
+  reduction on, like `DrawTitleLogoPieces`'s inner loop. Closing it therefore
   also means splitting `graphics_loading_35d1c.c` at `0x0803686C` into
   an address-keyed file without `-fno-strength-reduce`. A whole-file
-  compile with strength reduction on differs only in `sub_8036600` (16
-  halfwords), so everything from `sub_803686C` on would match in the new
-  file. `sub_8036668` matches either way.
+  compile with strength reduction on differs only in `InitVvLogoPieces` (16
+  halfwords), so everything from `DrawVvLogoPieces` on would match in the new
+  file. `UpdateVvLogoPieces` matches either way.
 - The slot loop keeps `i` counting up when the flag address is written
   `flags = self + 0x410; flag = flags + i`. `self + 0x410 + i` gets
   strength-reduced into its own pointer, and then the loop is reversed.
@@ -121,5 +121,5 @@ under agbcc (4 bytes short). Findings:
 - `rm -rf build crashbandicootxs.elf crashbandicootxs.gba crashbandicootxs.map && make compare`:
   `crashbandicootxs.gba: OK`.
 
-*Later pass (#65 strength-reduction retry):* `sub_803686C` is matched; see
+*Later pass (#65 strength-reduction retry):* `DrawVvLogoPieces` is matched; see
 [sr65-naked-retry.md](sr65-naked-retry.md).

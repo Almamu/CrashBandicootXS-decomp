@@ -751,17 +751,17 @@ the code starts over there.
 
 ### Motion sequences
 
-`gStaticData_0817D0E4` and `gStaticData_0817D7A4` are each a BG2
+`gTitleScreenBg` and `gUniversalLogoBg` are each a BG2
 picture (`struct bg_package`) followed by the motion scripts of the
 countdown slots of `graphics_loading_35d1c.c`: `struct delta_record`s
 (a hold count, positions, velocities, per-frame deltas), in sequences
 that end with a zero hold. The seed tables (`popup_glyphs_17cf40.c`'s
-`gStaticData_0817CFA4`, `slot_seeds_17d6c0.c`'s `gStaticData_0817D6C0`)
+`gTitleLogoPieceSeeds`, `slot_seeds_17d6c0.c`'s `gVvLogoPieceSeeds`)
 point at each sequence by name now (`gStaticData_0817D0F8`, ...), not at
-`gStaticData_0817D7A4 + 0x174`-style offsets. The six language names
+`gUniversalLogoBg + 0x174`-style offsets. The six language names
 after the second set are the strings `digit_glyphs_17e714.c` points at
 (they aren't digit glyphs). The four OBJ sprite packages in front of
-the first set are listed by the IWRAM table `gUnknown_030008BC`, which
+the first set are listed by the IWRAM table `gTitleObjPackages`, which
 points at them by name too.
 
 ### Category backgrounds
@@ -770,17 +770,17 @@ The actor categories (`struct category_descriptor`, `actor_anim.h`) point
 at two kinds of uncompressed background, both now built from
 `graphics/category_bg/` PNGs:
 
-- **BG0 cell animations** (`family_shared_04`, played by `sub_8029890`/
-  `sub_80297C8`): `struct cell_anim_header` (256-colour palette, `cols`,
+- **BG0 cell animations** (`cellAnim`, played by `InitCellAnim`/
+  `UploadCellAnimFrame`): `struct cell_anim_header` (256-colour palette, `cols`,
   `rows`), then per frame `cols * rows` 4bpp tiles in row-major cell
   order. Type-0 categories (0-2) add one 4-bit palette bank per cell,
   padded to `(cells + 7) / 8 * 4` bytes, after each frame's tiles.
-  `gStaticData_0803B8B0` (19x13, 60 frames, with banks) and
-  `gStaticData_080FF1B0` (38x10, 21 frames, bank 0).
-- **BG1 pictures** (`conditional_ptr_0C`, loaded by `sub_802F7B0`):
+  `gCategoryFamily0CellAnim` (19x13, 60 frames, with banks) and
+  `gCategoryFamily1CellAnim` (38x10, 21 frames, bank 0).
+- **BG1 pictures** (`bgPicture`, loaded by `LoadBgPicture`):
   `struct bg_picture_header` (palette, `cols`, `rows`, `tileCount`), the
   `u16` map, the tiles, then one bank nibble per map entry.
-  `gStaticData_0813D934`, `gStaticData_08151AC4`, `gStaticData_08155260`
+  `gCategory3BgPicture`, `gCategory4BgPicture`, `gCategory5BgPicture`
   (all 38x16).
 
 The 4bpp data uses all 16 palette banks, so each PNG is 8bpp indexed

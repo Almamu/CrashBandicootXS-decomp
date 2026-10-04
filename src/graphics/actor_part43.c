@@ -12,7 +12,7 @@
  * `gUnknown_030015AC` one. See docs/matching/issue-56-0x0802f0dc-actor.md
  * and docs/status/actor.md. */
 
-extern void sub_8029BAC(s32 arg0);
+extern void SetCellAnimSpeed(s32 arg0);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void FreezeLevelClock(void *arg0, s32 arg1);
 extern s32 sub_802A4D4(void);
@@ -49,7 +49,7 @@ void sub_802F0DC(void *selfArg)
         gUnknown_03001507 = zero;
         gUnknown_03001504 = 1;
         gUnknown_03001506 = 1;
-        sub_8029BAC(0x3c);
+        SetCellAnimSpeed(0x3c);
         gUnknown_03001508 = zero;
         gUnknown_0300150C = zero;
         {
@@ -119,7 +119,7 @@ void sub_802F164(void *selfArg, s32 xArg, s32 yArg)
     self->base.y = y;
 
     if (self->base.state != 6) {
-        sub_8029BAC(0x50);
+        SetCellAnimSpeed(0x50);
     }
     self->base.state = 6;
 

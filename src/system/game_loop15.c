@@ -15,7 +15,7 @@ extern u8 gBgLayerVtable[];
  * docs/matching/naked-sub_8025d74-matched.md for the derivation. The
  * `& -0x20`/`& -0xd` masks always fold to their positive
  * byte-immediate equivalent instead of the ROM's runtime `movs`+`rsbs`
- * negation, closed the same way as `sub_8001524`/`sub_80109A4`:
+ * negation, closed the same way as `SetDispcntMode`/`sub_80109A4`:
  * materializing each fold as an opaque inline-asm block. A second gap
  * (the three pointer-sized constants this function loads all need to
  * land in one shared literal pool, in the ROM's own order, for the

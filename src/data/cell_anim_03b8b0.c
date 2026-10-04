@@ -7,9 +7,9 @@
  * sections by ldscript.txt - see docs/data.md ("Category backgrounds").
  */
 
-/* BG0 cell animation A, gActorCategories[0..2].family_shared_04
- * (family_shared_08 = its size, 0x75B94), played by sub_8029890/
- * sub_80297C8 (actor_part95.c): 19x13 cells, 60 frames. These are type-0
+/* BG0 cell animation A, gActorCategories[0..2].cellAnim
+ * (cellAnimSize = its size, 0x75B94), played by InitCellAnim/
+ * UploadCellAnimFrame (actor_part95.c): 19x13 cells, 60 frames. These are type-0
  * categories, so each frame carries its cells' palette banks after the
  * tiles. Built from graphics/category_bg/03b8b0_cell_anim.png, all 60
  * frames stacked top to bottom (tools/grit_bg.py interleaves grit's tiles
@@ -23,7 +23,7 @@ struct cell_anim_03b8b0 {
 };
 COMPILE_TIME_ASSERT(sizeof(struct cell_anim_03b8b0) == 0x75B94);
 
-const struct cell_anim_03b8b0 gStaticData_0803B8B0 = {
+const struct cell_anim_03b8b0 gCategoryFamily0CellAnim = {
     {
         {
 #include "category_bg/03b8b0_cell_anim.pal.inc"

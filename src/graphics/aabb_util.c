@@ -1,7 +1,7 @@
 #include "core.h"
 #include "memory.h"
 
-/* Sits right after the parked sub_8001624 (asm/code_3_1_9.s) and
+/* Sits right after the parked CommitBlendRegs (asm/code_3_1_9.s) and
  * before the still-raw pause-menu/SIO cluster. */
 
 struct unk_03001280 {
@@ -9,9 +9,9 @@ struct unk_03001280 {
     u8 bldy;
 };
 
-extern struct unk_03001280 gUnknown_03001280;
+extern struct unk_03001280 gBlendRegs;
 
-/* Commits the `gUnknown_03001280` shadow to the real blend registers:
+/* Commits the `gBlendRegs` shadow to the real blend registers:
  * the word at `+0` covers both `REG_BLDCNT` and `REG_BLDALPHA` (a
  * single 32-bit write spanning the adjacent halfwords), and the low
  * 5 bits of the byte at `+4` become `REG_BLDY`.
@@ -21,16 +21,16 @@ extern struct unk_03001280 gUnknown_03001280;
  * fuses a normal C-level store-then-increment-same-register pair into
  * a single `stmia r2!,{r0}` instead (an unavoidable peephole
  * optimization, regardless of how the increment is expressed in C).
- * The fix is the same one used for `sub_8001524`'s value-propagation
+ * The fix is the same one used for `SetDispcntMode`'s value-propagation
  * fold: emit the store-and-increment pair as one inline-asm block,
  * opaque to the peephole pass, so it can't recognize and fuse it. The
  * `bldy` mask is written as the ROM's own `(x << 27) >> 27` shift
  * pair rather than a plain `& 0x1f`, which this compiler would
  * otherwise encode as a direct AND-immediate instead. */
-void sub_8001624(void)
+void CommitBlendRegs(void)
 {
     register vu32 *bldReg asm("r2") = (vu32 *)REG_ADDR_BLDCNT;
-    register struct unk_03001280 *src asm("r1") = &gUnknown_03001280;
+    register struct unk_03001280 *src asm("r1") = &gBlendRegs;
     register u32 word asm("r0") = src->bldcntAlpha;
     register u32 bldy asm("r1");
     register u32 masked asm("r0");

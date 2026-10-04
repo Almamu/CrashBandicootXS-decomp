@@ -70,15 +70,15 @@ s32 sub_80080C0(struct actor *part, void *region)
     return (u8)sub_8001688(&buf_, region);
 }
 
-extern u8 sub_8006DF8(struct tile_asset_cache *self, s32 recordId);
-extern struct tile_asset_cache *gUnknown_030012B8;
+extern u8 GetPaletteSlot(struct palette_cache *self, s32 recordId);
+extern struct palette_cache *gPaletteCache;
 
 /* Reads `part`'s current keyframe record's `+0x14` byte as a
- * `sub_8006DF8` record id, looked up against the global tile-asset
- * cache `gUnknown_030012B8`. */
+ * `GetPaletteSlot` record id, looked up against the global tile-asset
+ * cache `gPaletteCache`. */
 s32 sub_800815C(struct actor *part)
 {
-    struct tile_asset_cache *cache = gUnknown_030012B8;
+    struct palette_cache *cache = gPaletteCache;
     void **tablePtr;
     void *table;
     register u8 idx asm("r4");
@@ -92,7 +92,7 @@ s32 sub_800815C(struct actor *part)
     rec = rec + (s32)table;
     rec = *((u8 *)rec + 0x14);
 
-    return (u8)sub_8006DF8(cache, rec);
+    return (u8)GetPaletteSlot(cache, rec);
 }
 
 /* Adjusts `dest`'s `{s32 field_0, field_4}` (a position, working

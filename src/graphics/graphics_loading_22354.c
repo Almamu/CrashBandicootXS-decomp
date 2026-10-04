@@ -22,16 +22,16 @@
  * their neighbours. */
 
 extern void *gLevelStateSingleton;
-extern u16 gUnknown_03001288;
-extern void *gUnknown_03001300;
-extern void *gUnknown_030012FC;
+extern u16 gDispcnt;
+extern void *gOamBuffer;
+extern void *gObjVramCursor;
 extern void *gUnknown_03001304;
 extern void *gAudioContext;
 extern struct icon_manager *gLargeFont;
 extern struct icon_manager *gSmallFont;
-extern void *gUnknown_030012CC;
+extern void *gSpriteRenderer;
 extern void *gUnknown_030012D0;
-extern void *gUnknown_030012B8;
+extern void *gPaletteCache;
 extern void *gEntityFlags;
 extern void *gPaletteCycles;
 extern u32 *gCutsceneTexts[];
@@ -48,16 +48,16 @@ struct text_list
 extern struct text_list gCutscenes[];
 
 extern void FreeVramDmaQueue(void);
-extern void sub_8006AF4(void *self, u32 flags);
-extern void sub_8006CD0(void *self, u32 flags);
+extern void DestroyOamBuffer(void *self, u32 flags);
+extern void DestroyObjVramCursor(void *self, u32 flags);
 extern void sub_8026ED0(void *p);
 /* Takes no argument (audio_context.c), but the ROM loads the audio
  * context into r0 before calling it anyway. */
 extern void DisableMusicVCountIrq(void *audio);
 extern void DestroyAudioContext(void *audio, u32 flags);
-extern void sub_8007A98(void *self, u32 flags);
+extern void DestroySpriteRenderer(void *self, u32 flags);
 extern void sub_8006FC8(void *self, u32 flags);
-extern void sub_8006F94(void *self, u32 flags);
+extern void DestroyPaletteCache(void *self, u32 flags);
 extern void sub_8025A44(void *self, s32 flags);
 extern void DestroyPaletteCycles(void *self, s32 flags);
 
@@ -84,10 +84,10 @@ typedef void (*destroy_fn)(void *self, s32 flags);
 void sub_8022354(void *self, s32 flags)
 {
     FreeVramDmaQueue();
-    if (gUnknown_03001300 != NULL)
-        sub_8006AF4(gUnknown_03001300, 3);
-    if (gUnknown_030012FC != NULL)
-        sub_8006CD0(gUnknown_030012FC, 3);
+    if (gOamBuffer != NULL)
+        DestroyOamBuffer(gOamBuffer, 3);
+    if (gObjVramCursor != NULL)
+        DestroyObjVramCursor(gObjVramCursor, 3);
     if (gUnknown_03001304 != NULL)
         sub_8026ED0(gUnknown_03001304);
     DisableMusicVCountIrq(gAudioContext);
@@ -97,12 +97,12 @@ void sub_8022354(void *self, s32 flags)
         DESTROY_ICON_MANAGER(gLargeFont);
     if (gSmallFont != NULL)
         DESTROY_ICON_MANAGER(gSmallFont);
-    if (gUnknown_030012CC != NULL)
-        sub_8007A98(gUnknown_030012CC, 3);
+    if (gSpriteRenderer != NULL)
+        DestroySpriteRenderer(gSpriteRenderer, 3);
     if (gUnknown_030012D0 != NULL)
         sub_8006FC8(gUnknown_030012D0, 3);
-    if (gUnknown_030012B8 != NULL)
-        sub_8006F94(gUnknown_030012B8, 3);
+    if (gPaletteCache != NULL)
+        DestroyPaletteCache(gPaletteCache, 3);
     if (gEntityFlags != NULL)
         sub_8025A44(gEntityFlags, 3);
     if (gPaletteCycles != NULL)
@@ -137,12 +137,12 @@ struct text_pager
     struct text_rect box;           // 0x18
 };
 
-extern void sub_8001524(s32 val);
-extern void sub_80015B0(void);
-extern void sub_80015E0(void);
-extern void sub_8001614(void);
-extern void sub_8006EA8(void *cache);
-extern void sub_8006DC8(void *cache);
+extern void SetDispcntMode(s32 val);
+extern void ShowBg2(void);
+extern void ShowObj(void);
+extern void CommitDispcnt(void);
+extern void FreeUnlockedPaletteSlots(void *cache);
+extern void UploadPaletteCache(void *cache);
 extern void FontResetPalette(struct icon_manager *self);
 extern void InitCutscenePlayer(struct text_pager *self);
 extern void sub_8024784(u32 value);
@@ -178,13 +178,13 @@ void PlayCutscene(void *self, s32 idx)
 
     f.box.pos = MakeVec(7, 0x7E);
     f.box.size = MakeVec(0xE4, 0x1E);
-    dispcnt = &gUnknown_03001288;
+    dispcnt = &gDispcnt;
     zero = 0;
     mode = 0x40;
     *dispcnt = mode;
-    sub_8001524(4);
-    sub_80015B0();
-    sub_80015E0();
+    SetDispcntMode(4);
+    ShowBg2();
+    ShowObj();
     {
         u16 *src = &f.fill;
 
@@ -197,7 +197,7 @@ void PlayCutscene(void *self, s32 idx)
     REG_BG2PD = 0x100;
     REG_BG2X = zero;
     REG_BG2Y = zero;
-    sub_8006EA8(gUnknown_030012B8);
+    FreeUnlockedPaletteSlots(gPaletteCache);
     {
         struct icon_manager *m = gSmallFont;
         u32 tileBase = 0x200;
@@ -208,7 +208,7 @@ void PlayCutscene(void *self, s32 idx)
         ((method_fn)slot->ptr)((u8 *)m + slot->offset);
     }
     FontResetPalette(gSmallFont);
-    sub_8006DC8(gUnknown_030012B8);
+    UploadPaletteCache(gPaletteCache);
     InitCutscenePlayer(&f.pager);
     f.pager.font = gSmallFont;
     {
@@ -233,6 +233,6 @@ void PlayCutscene(void *self, s32 idx)
     f.pager.pages = (u32 *)gCutsceneTexts[gLanguage][idx];
     RunCutscenePlayer(&f.pager);
     *dispcnt = mode;
-    sub_8001614();
+    CommitDispcnt();
     DestroyCutscenePlayer(&f.pager, 2);
 }

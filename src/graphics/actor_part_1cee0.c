@@ -15,7 +15,7 @@
  * - sub_801D77C-sub_801D7F8: `struct page_bg`, BG1 - the page strip whose
  *   vertical scroll eases 8 per frame toward a Q8 target (0x100 = one
  *   page).
- * - sub_801D828: `struct icon_bg`'s constructor, BG2 - clears its screen
+ * - InitZoomBg: `struct icon_bg`'s constructor, BG2 - clears its screen
  *   block, writes an 8x4 tile block and spawns four corner sprites
  *   (mirrored per corner).
  *
@@ -27,10 +27,10 @@
  * operand of a byte read-modify-write before the load, as the ROM does,
  * so the bitfield stores here are plain C. */
 
-extern void *gUnknown_030012B8;
+extern void *gPaletteCache;
 extern void *gAudioContext;
 extern void ***gUnknown_030012D0;
-extern void *gUnknown_03001300;
+extern void *gOamBuffer;
 extern void *gUnknown_03001304;
 extern u8 gNewWorldOpened;
 extern u32 gKeys;     // held keys (low half), newly pressed (high half)
@@ -43,10 +43,10 @@ extern struct xy_pair gStaticData_0816C5F0[];
 
 extern void WaitForVBlank(void);
 extern void UpdateKeys(void *p);
-extern void sub_8006DC8(void *p);
-extern void sub_8006AAC(void *p);
-extern void sub_8006D50(void *cache, s32 arg);
-extern void sub_8006D84(void *cache, s32 record);
+extern void UploadPaletteCache(void *p);
+extern void CommitOamBuffer(void *p);
+extern void ClaimPaletteSlot(void *cache, s32 arg);
+extern void LockPalette(void *cache, s32 record);
 extern void FlushVramDmaQueue(void);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void LoadGraphicsPackage(void *dst, void *pkg);
@@ -58,26 +58,26 @@ extern void sub_80087B4(void *part);
 extern void sub_800872C(void *part, s32 arg);
 extern void sub_80088D8(void *part, s32 value);
 extern s32 sub_800815C(void *part);
-extern void sub_801E644(void *self, s32 a, s32 b, s32 c, s32 d);
+extern void InitBgSetup(void *self, s32 a, s32 b, s32 c, s32 d);
 
 extern void UpdateLevelSelect(struct level_menu *self);
 extern void sub_801CCF8(struct level_menu *self);
-extern void sub_801DAD8(struct icon_bg *p);
-extern void sub_801DCBC(struct icon_bg *p);
-extern u8 sub_801DD08(struct icon_bg *p);
-extern u8 sub_801DD18(struct icon_bg *p);
-extern u8 sub_801DD28(struct icon_bg *p);
-extern void sub_801DD48(struct icon_bg *p);
-extern void sub_801DD5C(struct icon_bg *p);
-extern void sub_801DDB4(struct icon_bg *p, struct icon_slot *slot);
-extern u16 sub_801DE24(struct icon_bg *p);
+extern void UpdateZoomBg(struct icon_bg *p);
+extern void CommitZoomBg(struct icon_bg *p);
+extern u8 IsZoomBgGone(struct icon_bg *p);
+extern u8 IsZoomBgShown(struct icon_bg *p);
+extern u8 IsZoomBgWaiting(struct icon_bg *p);
+extern void StartZoomBgExit(struct icon_bg *p);
+extern void ClearZoomBgPicture(struct icon_bg *p);
+extern void RandomizeZoomBgTwinkle(struct icon_bg *p, struct icon_slot *slot);
+extern u16 GetZoomBgControl(struct icon_bg *p);
 extern void sub_801DEA0(struct item *it, s32 arg);
 extern void sub_801DF0C(struct item *it, u32 arg);
 extern void sub_801E190(void *panel);
 extern void sub_801E3F4(void *panel);
 extern u8 sub_801E464(void *panel);
 extern void sub_801E480(void *panel, s32 x, s32 y);
-extern u16 sub_801E640(void *p);
+extern u16 GetBgSetupControl(void *p);
 
 s32 sub_801D77C(struct page_bg *p);
 u8 sub_801D780(struct page_bg *p);
@@ -98,12 +98,12 @@ typedef void (*item_place_fn)(void *self, struct xy_pair *pos);
 static inline void CommitDisplay(struct level_menu *self)
 {
     FlushVramDmaQueue();
-    sub_801DCBC(self->bg2);
+    CommitZoomBg(self->bg2);
     self->scroll++;
     *(vu16 *)REG_ADDR_BG0HOFS = self->scroll >> 3;
     *(vu32 *)REG_ADDR_BG1HOFS = sub_801D7D0(self->bg1);
-    *(vu16 *)REG_ADDR_BG1CNT = sub_801E640(self->bg1);
-    *(vu16 *)REG_ADDR_BG2CNT = sub_801DE24(self->bg2);
+    *(vu16 *)REG_ADDR_BG1CNT = GetBgSetupControl(self->bg1);
+    *(vu16 *)REG_ADDR_BG2CNT = GetZoomBgControl(self->bg2);
     *(vu16 *)PLTT = 0;
     *(vu32 *)REG_ADDR_BLDCNT = self->blend.raw;
     *(vu16 *)REG_ADDR_BLDY = self->bldy.evy;
@@ -114,8 +114,8 @@ static inline void BeginFrame(struct level_menu *self)
 {
     UpdateLevelSelect(self);
     WaitForVBlank();
-    sub_8006DC8(gUnknown_030012B8);
-    sub_8006AAC(gUnknown_03001300);
+    UploadPaletteCache(gPaletteCache);
+    CommitOamBuffer(gOamBuffer);
     CommitDisplay(self);
 }
 
@@ -207,7 +207,7 @@ void sub_801D05C(struct level_menu *self)
     {
         BeginFrame(self);
         sub_801E190(self->panel);
-        sub_801DAD8(self->bg2);
+        UpdateZoomBg(self->bg2);
     }
 }
 
@@ -222,11 +222,11 @@ void LevelSelectConfirm(struct level_menu *self)
     sub_801E480(self->panel, 0x78, 0x35);
     sub_801E3F4(self->panel);
     sub_801D05C(self);
-    while (!sub_801DD18(self->bg2))
+    while (!IsZoomBgShown(self->bg2))
     {
         BeginFrame(self);
         sub_801E190(self->panel);
-        sub_801DAD8(self->bg2);
+        UpdateZoomBg(self->bg2);
     }
     self->blend.bits.effect = 3;
     self->blend.bits.bdFirst = 1;
@@ -237,12 +237,12 @@ void LevelSelectConfirm(struct level_menu *self)
     self->blend.bits.objFirst = 1;
     self->bldy.evy = 0;
     t = 0;
-    sub_801DD48(self->bg2);
-    while (!sub_801DD08(self->bg2))
+    StartZoomBgExit(self->bg2);
+    while (!IsZoomBgGone(self->bg2))
     {
         BeginFrame(self);
         sub_801E190(self->panel);
-        sub_801DAD8(self->bg2);
+        UpdateZoomBg(self->bg2);
         t++;
         self->bldy.evy = t / 2;
     }
@@ -263,12 +263,12 @@ void LevelSelectExit(struct level_menu *self)
     self->blend.bits.objFirst = 1;
     self->bldy.evy = 0;
     t = 0;
-    sub_801DD5C(self->bg2);
-    while (!sub_801DD28(self->bg2))
+    ClearZoomBgPicture(self->bg2);
+    while (!IsZoomBgWaiting(self->bg2))
     {
         BeginFrame(self);
         sub_801E190(self->panel);
-        sub_801DAD8(self->bg2);
+        UpdateZoomBg(self->bg2);
         t++;
         self->bldy.evy = t / 2;
     }
@@ -409,8 +409,8 @@ void sub_801D668(struct level_menu *self)
 void sub_801D698(struct level_menu *self)
 {
     WaitForVBlank();
-    sub_8006DC8(gUnknown_030012B8);
-    sub_8006AAC(gUnknown_03001300);
+    UploadPaletteCache(gPaletteCache);
+    CommitOamBuffer(gOamBuffer);
     CommitDisplay(self);
 }
 
@@ -420,7 +420,7 @@ void sub_801D730(struct level_menu *self)
 {
     s32 i;
 
-    sub_8006D50(gUnknown_030012B8, 0xF);
+    ClaimPaletteSlot(gPaletteCache, 0xF);
     for (i = 0; i <= 7; i++)
         self->sprites[i]->palette = sub_800815C(self->sprites[i]);
     sub_801D668(self);
@@ -480,7 +480,7 @@ void sub_801D7E0(struct page_bg *p, s32 flags)
 
 struct page_bg *sub_801D7F8(struct page_bg *self, s32 charBlock, s32 screenBlock)
 {
-    sub_801E644(self, charBlock, screenBlock, 0, 2);
+    InitBgSetup(self, charBlock, screenBlock, 0, 2);
     self->scroll = self->target = 0x300;
     LoadGraphicsPackage(self, gStaticData_0816C58C);
     return self;
@@ -521,7 +521,7 @@ static inline void SetPos(struct sprite *s, s32 x, s32 y)
  * left, and four corner sprites (animation bank `+0x258` of the level
  * graphics, mirrored per corner) positioned around (x, y) = (0x78, 0x35)
  * by gStaticData_0816C5F0. */
-struct icon_bg *sub_801D828(struct icon_bg *self, s32 charBlock, s32 screenBlock)
+struct icon_bg *InitZoomBg(struct icon_bg *self, s32 charBlock, s32 screenBlock)
 {
     s32 i;
 
@@ -570,9 +570,9 @@ struct icon_bg *sub_801D828(struct icon_bg *self, s32 charBlock, s32 screenBlock
         SetPos(self->slots[i].sprite, self->x + gStaticData_0816C5F0[i].x, self->y + gStaticData_0816C5F0[i].y);
         sub_80088D8(self->slots[i].sprite, 1);
         SetPalette(self->slots[i].sprite, sub_800815C(self->slots[0].sprite));
-        sub_801DDB4(self, &self->slots[i]);
+        RandomizeZoomBgTwinkle(self, &self->slots[i]);
     }
-    sub_8006D84(gUnknown_030012B8, self->slots[0].sprite->anim->records[self->slots[0].sprite->animIndex].tileRecord);
+    LockPalette(gPaletteCache, self->slots[0].sprite->anim->records[self->slots[0].sprite->animIndex].tileRecord);
     SetFlipX(self->slots[1].sprite, 1);
     SetFlipY(self->slots[2].sprite, 1);
     SetFlipX(self->slots[3].sprite, 1);

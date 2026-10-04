@@ -8,7 +8,7 @@ under `#if NON_MATCHING`. Two closed and two did not.
 | `sub_800E08C` (`game_loop47.c`) | #12 | 49 hw | **matched**, old_agbcc |
 | `sub_801AB98` (`actor_part_1ab98.c`) | #25 | 565 hw, 8 bytes short | **matched**, old_agbcc |
 | `sub_0800D18C` (`game_loop47.c`) | #12 | 938 hw | still NAKED |
-| `sub_803686C` (`graphics_loading_35d1c.c`) | #65 | 329 hw | still NAKED |
+| `DrawVvLogoPieces` (`graphics_loading_35d1c.c`) | #65 | 329 hw | still NAKED |
 
 `actor_part_1ab98.o` and `game_loop47.o` joined `OLD_AGBCC_OBJS`. Both
 address ranges are inside the span already confirmed to be old_agbcc
@@ -108,7 +108,7 @@ was. What's left is spread across the function:
   alone didn't help);
 - the placement of the hit-flag `orr`/`str`.
 
-## sub_803686C: not closed
+## DrawVvLogoPieces: not closed
 
 The row-copy loop still doesn't reduce `buf + 0x60` to its own giv.
 

@@ -27,7 +27,7 @@ Two loosely related families sharing the same ROM neighborhood:
    playback state for a small per-screen item list, alongside a
    VRAM-bank-toggling asset streamer + palette DMA + a second `DISPCNT`
    writer (`ShowSlidePicture`, alongside the already-documented
-   `sub_8001614`/`gUnknown_03001288` one).
+   `CommitDispcnt`/`gDispcnt` one).
 
 ## Matched (19 functions, full clean `make compare` passing)
 

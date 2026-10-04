@@ -1,7 +1,7 @@
 #include "core.h"
 #include "memory.h"
 
-extern void *gUnknown_0300137C; /* decompressed category sprite sheet buffer */
+extern void *gCategorySpriteSheet; /* decompressed category sprite sheet buffer */
 extern void LoadTaggedAsset(void *asset, void *dest);
 extern s32 QueueVramDmaTransfer(void *src, void *dest, u16 size, u16 unit);
 
@@ -10,7 +10,7 @@ extern s32 QueueVramDmaTransfer(void *src, void *dest, u16 size, u16 unit);
  * OBJ_VRAM0_SIZE bytes) InitObjTileFreeList sets up. Metadata lives in
  * a separate fixed pool of these structs (never embedded in VRAM
  * itself, since VRAM holds real tile pixel data), looked up via a
- * byte-per-tile index table (`gUnknown_03001340`) - see
+ * byte-per-tile index table (`gVramTileBlockIndex`) - see
  * InitObjTileFreeList/AllocVramTileBlock/FreeVramTileBlock below.
  * `status` mirrors `struct mem_block`'s same-shaped field (0 = free),
  * but this allocator's own "in use" value (2) doesn't match
@@ -28,18 +28,18 @@ struct vram_tile_block {
 #define VRAM_TILE_BLOCK_USED 2
 
 /* 128 preallocated `vram_tile_block` records; InitObjTileFreeList seeds
- * `gUnknown_0300133C` with a singly-linked (via `next`) LIFO stack of
+ * `gVramTileBlockSpares` with a singly-linked (via `next`) LIFO stack of
  * 127 of them (indices 0-126) as "spare" records available whenever
  * AllocVramTileBlock/FreeVramTileBlock need to split or merge a block,
  * and uses the 128th (index 127) as the pool's initial single free
  * block, spanning the whole range. */
 #define VRAM_TILE_BLOCK_POOL_COUNT 128
 
-extern struct vram_tile_block *gUnknown_03001320; /* pool base */
-extern struct vram_tile_block gUnknown_03001328;  /* address-sorted free-block list sentinel */
-extern struct vram_tile_block *gUnknown_03001338; /* next-fit search cursor ("rover") */
-extern struct vram_tile_block *gUnknown_0300133C; /* spare-record stack head */
-extern u8 *gUnknown_03001340;                     /* tile-index -> pool-record-index lookup table, TOTAL_OBJ_TILE_COUNT bytes */
+extern struct vram_tile_block *gVramTileBlockPool; /* pool base */
+extern struct vram_tile_block gVramTileBlockList;  /* address-sorted free-block list sentinel */
+extern struct vram_tile_block *gVramTileBlockRover; /* next-fit search cursor ("rover") */
+extern struct vram_tile_block *gVramTileBlockSpares; /* spare-record stack head */
+extern u8 *gVramTileBlockIndex;                     /* tile-index -> pool-record-index lookup table, TOTAL_OBJ_TILE_COUNT bytes */
 
 #define DMA3 (*(struct dma_regs *)REG_ADDR_DMA3SAD)
 
@@ -59,9 +59,9 @@ void InitObjTileFreeList(void *base)
     s32 i;
     u16 zero;
 
-    gUnknown_03001320 = (struct vram_tile_block *)mem_alloc(
+    gVramTileBlockPool = (struct vram_tile_block *)mem_alloc(
         sizeof(struct vram_tile_block) * VRAM_TILE_BLOCK_POOL_COUNT, MEM_HEAP_EWRAM);
-    lookupSlot = &gUnknown_03001340;
+    lookupSlot = &gVramTileBlockIndex;
     *lookupSlot = (u8 *)mem_alloc(TOTAL_OBJ_TILE_COUNT, MEM_HEAP_EWRAM);
 
     len = (s32)((u8 *)OBJ_VRAM0 + OBJ_VRAM0_SIZE - (u8 *)base);
@@ -79,8 +79,8 @@ void InitObjTileFreeList(void *base)
     DMA3.cnt = (len / 2) | ((DMA_ENABLE | DMA_SRC_FIXED) << 16);
     (void)DMA3.cnt;
 
-    gUnknown_0300133C = gUnknown_03001320;
-    node = gUnknown_03001320;
+    gVramTileBlockSpares = gVramTileBlockPool;
+    node = gVramTileBlockPool;
     i = VRAM_TILE_BLOCK_POOL_COUNT - 3;
     do {
         struct vram_tile_block *next = node + 1;
@@ -90,18 +90,18 @@ void InitObjTileFreeList(void *base)
     node->next = NULL;
     node++;
 
-    gUnknown_03001328.next = node;
-    gUnknown_03001328.prev = node;
-    gUnknown_03001328.status = 1;
-    gUnknown_03001328.size = 0;
-    gUnknown_03001328.addr = (u8 *)OBJ_VRAM0 + OBJ_VRAM0_SIZE;
+    gVramTileBlockList.next = node;
+    gVramTileBlockList.prev = node;
+    gVramTileBlockList.status = 1;
+    gVramTileBlockList.size = 0;
+    gVramTileBlockList.addr = (u8 *)OBJ_VRAM0 + OBJ_VRAM0_SIZE;
 
     node->status = VRAM_TILE_BLOCK_FREE;
-    node->prev = &gUnknown_03001328;
-    node->next = &gUnknown_03001328;
+    node->prev = &gVramTileBlockList;
+    node->next = &gVramTileBlockList;
     node->size = (u16)len;
     node->addr = base;
-    gUnknown_03001338 = node;
+    gVramTileBlockRover = node;
 }
 
 /* ROM 0x08028C48 - frees a block previously returned by
@@ -110,7 +110,7 @@ void InitObjTileFreeList(void *base)
  * src/system/memory.c does, but against this allocator's own external
  * node pool instead of an embedded-in-buffer header - see the struct's
  * comment above). Reclaimed node records go back onto the
- * `gUnknown_0300133C` spare stack. */
+ * `gVramTileBlockSpares` spare stack. */
 void FreeVramTileBlock(void *addr)
 {
     struct vram_tile_block *node;
@@ -128,8 +128,8 @@ void FreeVramTileBlock(void *addr)
     }
 
     index = GET_TILE_NUM(addr);
-    poolSlot = &gUnknown_03001320;
-    byteVal = gUnknown_03001340[index];
+    poolSlot = &gVramTileBlockPool;
+    byteVal = gVramTileBlockIndex[index];
     shifted = byteVal << 4;
     node = (struct vram_tile_block *)((u8 *)*poolSlot + shifted);
     node->status = VRAM_TILE_BLOCK_FREE;
@@ -145,11 +145,11 @@ void FreeVramTileBlock(void *addr)
         tmp = node->next;
         adj->next = tmp;
         tmp->prev = adj;
-        if (node == gUnknown_03001338) {
-            gUnknown_03001338 = adj;
+        if (node == gVramTileBlockRover) {
+            gVramTileBlockRover = adj;
         }
-        node->next = gUnknown_0300133C;
-        gUnknown_0300133C = node;
+        node->next = gVramTileBlockSpares;
+        gVramTileBlockSpares = node;
         node = adj;
     }
 
@@ -164,10 +164,10 @@ void FreeVramTileBlock(void *addr)
         tmp = adj->next;
         node->next = tmp;
         tmp->prev = node;
-        if (adj == gUnknown_03001338) {
-            gUnknown_03001338 = node;
+        if (adj == gVramTileBlockRover) {
+            gVramTileBlockRover = node;
         }
-        adj->next = gUnknown_0300133C;
-        gUnknown_0300133C = adj;
+        adj->next = gVramTileBlockSpares;
+        gVramTileBlockSpares = adj;
     }
 }

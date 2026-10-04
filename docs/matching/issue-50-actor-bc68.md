@@ -59,14 +59,14 @@ real matched C.
   `gUnknown_030014A0`, and resets `self` to state 1/table-index 0 via
   the same state/table-index/anim-frame reset idiom already documented
   for the boss cluster's `sub_8030530`/`sub_8030C98` and this family's
-  own `sub_802C14C` (`actor_part19.c`), then fires `sub_8029BAC(0x24)`.
+  own `sub_802C14C` (`actor_part19.c`), then fires `SetCellAnimSpeed(0x24)`.
 - **`sub_802BD64`**/**`sub_802BDD0`** - a per-axis hazard-threshold pair:
   drains a shared "camera catch-up" budget (`gUnknown_030014A4`) into
   `self+0x20`, advances `self+0x24` by a fixed step, and derives a
   camera-relative depth (`self+0x34`, via `sub_8029B2C`) - the same
   shape as `actor_part44.c`'s `sub_802F5E4`/`sub_802F640`. Once that
   depth drops to/below a far threshold (`0x16FF`), triggers a one-shot
-  screen-flash (`sub_800132C(0, 2, 1)`, latched via `gUnknown_030014A2`)
+  screen-flash (`FadeBrightness(0, 2, 1)`, latched via `gUnknown_030014A2`)
   - `sub_802BD64` additionally latches its own one-shot flag
     (`gUnknown_03001480`, the same global `sub_802BD18` reads);
     `sub_802BDD0` doesn't touch it. Once the depth drops to/below a near
@@ -80,8 +80,8 @@ real matched C.
   state-transition, structural twin of `sub_802BD24`: latches
   `gUnknown_030014A3`, then either (input bit 1 of `gKeys`
   clear) resets `self` to state 1/table-index 0 via the same reset
-  idiom and fires `sub_8029BAC(0x24)`, or (bit set) transitions to
-  state 2 and fires `sub_8029BAC(0x38)` instead.
+  idiom and fires `SetCellAnimSpeed(0x24)`, or (bit set) transitions to
+  state 2 and fires `SetCellAnimSpeed(0x38)` instead.
 
 ## Compiler-quirk notes
 

@@ -1,14 +1,14 @@
 #include "core.h"
 
-/* Sits right after sub_800132C (ROM 0x0800132C, in src/graphics/fade_util.c)
+/* Sits right after FadeBrightness (ROM 0x0800132C, in src/graphics/fade_util.c)
  * and before whatever's still raw in asm/code_3_1_7.s. */
 
-extern u16 gUnknown_03000A80[512];
-extern u16 gUnknown_03000E80[512];
+extern u16 gPaletteBackup[512];
+extern u16 gPaletteFadeBuffer[512];
 
-/* Blends the whole 512-entry palette at `gUnknown_03000A80` toward
+/* Blends the whole 512-entry palette at `gPaletteBackup` toward
  * black by `factor`/16 per channel (5 bits each, GBA BGR555), writing
- * the result to `gUnknown_03000E80`. Each channel is extracted via an
+ * the result to `gPaletteFadeBuffer`. Each channel is extracted via an
  * explicit shift-left-then-shift-right pair (not a plain `&`/`>>`) and
  * re-inserted via a "clear those bits, then OR the new value in"
  * sequence - matching the ROM's own instruction shapes, which use this
@@ -24,7 +24,7 @@ extern u16 gUnknown_03000E80[512];
  * 16-bit truncate first); and the channel-2/3 insert's mask-then-shift
  * vs shift-then-mask ordering matters for exact instruction order even
  * though both compute the same value. */
-void sub_80013FC(s32 factor)
+void DarkenPalette(s32 factor)
 {
     s32 i;
 
@@ -35,7 +35,7 @@ void sub_80013FC(s32 factor)
         register s32 raw asm("r1");
         register u16 *addr asm("r1");
 
-        addr = &gUnknown_03000A80[i];
+        addr = &gPaletteBackup[i];
         color &= ~0xFFFF;
         raw = *addr;
         color |= raw;
@@ -90,6 +90,6 @@ void sub_80013FC(s32 factor)
             color = (color & ~(0x1F << 10)) | diff;
         }
 
-        gUnknown_03000E80[i] = color;
+        gPaletteFadeBuffer[i] = color;
     }
 }

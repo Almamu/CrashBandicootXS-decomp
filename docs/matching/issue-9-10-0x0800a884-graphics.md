@@ -279,7 +279,7 @@ family already covered at length by
   hitbox-record lookup/commit logic referencing the `+0x20`/`+0x2d`
   convention from `docs/rom_map.md`'s physics/collision write-up, but
   gated on `gLevelState+0x78` state values and
-  `gStaticData_0816A820` (a per-state table not independently
+  `gSineTable` (a per-state table not independently
   confirmed). Left raw for the same reason the issue-9 write-up
   originally gave.
 - **`sub_800B8DC`** (`asm/code_3_2_17.s`, ROM `0x0800B8DC`, 546 lines)

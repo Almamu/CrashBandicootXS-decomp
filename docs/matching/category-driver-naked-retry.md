@@ -58,7 +58,7 @@ most instructions already right. What closed it:
    outer loop; initialized at declaration they do not match.
 6. **`state = &gLevelState` right before the inner loop** (4 -> 0).
    Loop.c's first pass hoists `gLevelState`, the category base and
-   the palette constant; `gUnknown_03001300` only gets hoisted by the
+   the palette constant; `gOamBuffer` only gets hoisted by the
    second loop pass, so it landed after the base copy. Assigning the
    pointer as a statement before the loop puts it ahead of the movables,
    which gives the ROM's preheader order.

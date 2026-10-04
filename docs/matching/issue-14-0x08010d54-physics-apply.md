@@ -187,7 +187,7 @@ branch-by-branch this pass, per Phase 1's scope).
 | `sub_8010E2C` | 8 B | `void sub_8010E2C(void *arg0)` - called as `sub_8010E2C(self+0x108)` from `actor_part77.c`, "clears its trailing `+0x108`/`+0x10c` fields" - queue reset (`count`+`unk4`). |
 | `sub_8010E34` | 120 B | No existing cross-reference found. |
 | `sub_8010EAC` | 224 B | `docs/rom_map.md`: part of "the randomized-behavior... famil[y]" alongside `sub_8016048`. |
-| `sub_8010F8C` | 392 B | `docs/rom_map.md`: "a bounds-checked, mode-selected object state machine that self-destructs off-screen" - default mode reads `gStaticData_0816A820` (shared trig table), a rotating/orbiting projectile-or-hazard behavior. |
+| `sub_8010F8C` | 392 B | `docs/rom_map.md`: "a bounds-checked, mode-selected object state machine that self-destructs off-screen" - default mode reads `gSineTable` (shared trig table), a rotating/orbiting projectile-or-hazard behavior. |
 | `sub_8011114` | 164 B | `struct actor *sub_8011114(u16 arg0, u16 arg1, u16 arg2, s32 arg3)` - spawns a part-object; extern in `game_loop29.c`. |
 | `sub_80111B8` | 144 B | `void sub_80111B8(void *part)` - extern in `game_loop29.c`; `game_loop14.c` notes a sibling call site uses `sub_8011870` "instead of `sub_80111B8`" (mutually-exclusive alternative behavior). |
 | `sub_8011248` | 124 B | No existing cross-reference found. |
@@ -276,7 +276,7 @@ Phase 1's own pass (see above). Reading the raw bytes confirmed:
   ```
   This is **byte-identical in shape** to an already-matched function
   elsewhere in the codebase - `src/graphics/graphics.c`'s own
-  `sub_8006AF4(void *arg0, u32 arg1) { if (arg1 & 1) { sub_8026ED0(arg0); } }`.
+  `DestroyOamBuffer(void *arg0, u32 arg1) { if (arg1 & 1) { sub_8026ED0(arg0); } }`.
   Not a "mode-parameterized insert" after all (Phase 1's own guess,
   written before this function was read branch-by-branch) - `arg1`
   gates a VRAM-upload-manager refresh (`sub_8026ED0`, matched
@@ -311,8 +311,8 @@ object (distinct from `struct actor`'s own 0x1c bytes and from
 
 | Function | Size | Role |
 |---|---|---|
-| `sub_8011248` | 124B | Per-frame orbit-position update: two lookups into the shared sine table `gStaticData_0816A820` (`self+0x4b`'s phase, at strides `*4` and `*2`), combined via the overflow-avoiding fixed-point multiply `FixedMul` (already matched, `math_util.c`) - `self+4` (`y`) is always anchor-y minus the y-offset; `self` (`x`) is anchor-x minus/plus the x-offset depending on `self+0x4a` (mode 1/2), or just the anchor x unchanged for any other mode value. |
-| `sub_80112C4` | 44B | Re-derives visibility via `sub_8007A84(gUnknown_030012CC, self)` (already matched), clears flags bit 3 when `self+0x38` is nonzero. |
+| `sub_8011248` | 124B | Per-frame orbit-position update: two lookups into the shared sine table `gSineTable` (`self+0x4b`'s phase, at strides `*4` and `*2`), combined via the overflow-avoiding fixed-point multiply `FixedMul` (already matched, `math_util.c`) - `self+4` (`y`) is always anchor-y minus the y-offset; `self` (`x`) is anchor-x minus/plus the x-offset depending on `self+0x4a` (mode 1/2), or just the anchor x unchanged for any other mode value. |
+| `sub_80112C4` | 44B | Re-derives visibility via `DrawSprite(gSpriteRenderer, self)` (already matched), clears flags bit 3 when `self+0x38` is nonzero. |
 | `sub_80112F0` | 4B | Trivial - always returns 2. |
 | `sub_80112F4` | 20B | Repoints `self->table` at `gStaticData_087E40DC`, tail-calls `sub_8008484` (already matched) with `self`+its own 2nd argument passed through. |
 | `sub_8011308` | 8B | Clears the "spawned/active" gate byte `self+0x48`. |
@@ -326,7 +326,7 @@ object (distinct from `struct actor`'s own 0x1c bytes and from
 All matched as real C except `sub_8011248`, closed as a NAKED
 transcription: a plain-C reconstruction reproduces the ROM's exact
 *shape* (same struct-copy local via `ldm`/`stm`, same two
-`gStaticData_0816A820` lookups at the right strides and program-order
+`gSineTable` lookups at the right strides and program-order
 position, same mode-1/mode-2/else branch structure) but gcc 2.9 -O2
 persistently picks the opposite register/operand order for the two
 `table + phase*stride` pointer adds (`adds r0, r4, r0` instead of the
@@ -394,7 +394,7 @@ the `sub_0800D18C`/`sub_800E08C` dispatch chain.
   external call-site confirmation for `sub_8010E14`/`sub_8010E2C`
   already used in Phase 1, re-verified against the actual instruction
   bytes this pass.
-- `src/graphics/graphics.c` - `sub_8006AF4`, the already-matched twin
+- `src/graphics/graphics.c` - `DestroyOamBuffer`, the already-matched twin
   shape that confirmed `sub_8010E14`'s own semantics.
 
 ## Phase 2, second parallel slice: `sub_8011448`-`sub_801192C` (the chunk's tail 6)
@@ -442,7 +442,7 @@ coincide").
   (default): gated by `self->0x4a`, increments `self->0x49` or
   `self->0x4b`, wrapping `self->0x4a`'s own gate off after 32
   `self->0x4b` ticks; then, still under `self->0x48 == 0`, either
-  computes a step via `gStaticData_0816A820[(self->0x49 & 0x7f)*2]` and
+  computes a step via `gSineTable[(self->0x49 & 0x7f)*2]` and
   `FixedMul` added into `self->0x50` (stored to `self->y` - a
   "rotate around a fixed center by a table-driven step" idiom, same
   table/shape as `sub_8010F8C`'s own default-mode branch) when
@@ -474,7 +474,7 @@ coincide").
   (the ROM's own `cmp r7,#0xff` dead-code check for a
   `sub_801191C` special case is unreachable - `r7` is a hardcoded `0`
   local here, not an argument). Finishes with the same `+0x29`
-  nibble-from-`sub_8006DF8` bitfield combine `sub_8025A64`/`sub_8025CA4`
+  nibble-from-`GetPaletteSlot` bitfield combine `sub_8025A64`/`sub_8025CA4`
   already use, returning the new part.
 - **`sub_8011870`** (172B) - the alternative to `sub_80111B8`
   (`game_loop29.c`), called from `game_loop14.c` "instead of
@@ -495,10 +495,10 @@ coincide").
   direct byte read) - address-adjacent to `sub_801191C`, a small
   `self->0x4b`/`self->0x4a`-driven table helper. Copies a fixed 3-word
   table (`gStaticData_0816BF14`) onto the stack, computes `self->y` from
-  a `gStaticData_0816A820[self->0x4b*4]` lookup scaled by `FixedMul`
+  a `gSineTable[self->0x4b*4]` lookup scaled by `FixedMul`
   against `self->0x50` (the "home Y" `sub_801173C`/`sub_8011548` both
   write), then computes `self->x` from a second
-  `gStaticData_0816A820[self->0x4b*2]` lookup scaled by `FixedMul`
+  `gSineTable[self->0x4b*2]` lookup scaled by `FixedMul`
   against the stack copy indexed by `self->0x4a-1`, added to or
   subtracted from `self->0x4c` (the "home X") depending on whether
   `self->0x4a` is 1, 2, or anything else. Called from `sub_8011548`'s
@@ -552,7 +552,7 @@ make compare`, which passed outright ("La suma coincide"):
   argument survives) resisted both named-temporary and pointer-cached-
   field-address rephrasing - the same class of "close but gcc's own
   choice differs" gap this subsystem has hit repeatedly, not resolved by
-  the techniques that worked for `sub_8006A48`/similar elsewhere in this
+  the techniques that worked for `HideUnusedOamEntries`/similar elsewhere in this
   project (an explicit two-register pin plus a compiler barrier), tried
   and discarded here for time.
 
@@ -681,7 +681,7 @@ position).
   3+): gated by `self->0x4a`, advances `self->0x49`/`self->0x4b`
   (wrapping the gate off after 32 ticks). Shared tail: unless
   `self->0x48 != 0`, computes an orbit step via
-  `gStaticData_0816A820[self->0x49 & 0x7f]` and `FixedMul` added into
+  `gSineTable[self->0x49 & 0x7f]` and `FixedMul` added into
   `self->0x50`, stored to `self->y`, when `self->0x4a` is clear, or
   calls `sub_8011248` (`game_loop52.c`'s orbit-position updater) when
   set - then always tail-calls `sub_8008364`.

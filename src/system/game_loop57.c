@@ -21,8 +21,8 @@
  *   `RunCutscenePlayer` is a second per-frame driver loop over the same
  *   `+0/+4` items/count pair `RunSlideshow` (game_loop37.c) already
  *   drives, but interleaved with an explicit OAM-shadow-buffer flush
- *   (`sub_8006A90`/`sub_8006A48`/`WaitForVBlank`/`sub_8006AAC` on
- *   `gUnknown_03001300`, the same "HUD-icon-plus-number renderer" OAM
+ *   (`ResetOamBuffer`/`HideUnusedOamEntries`/`WaitForVBlank`/`CommitOamBuffer` on
+ *   `gOamBuffer`, the same "HUD-icon-plus-number renderer" OAM
  *   pacing pattern docs/matching.md documents elsewhere) and a nested
  *   text-paging loop through a second per-item record array at `+0x10`
  *   (each record `{void **strings; s32 count;}`), rendering each string
@@ -122,7 +122,7 @@ void *InitSlideshow(void *self)
  * text-paging walk through a second per-item record array at `+0x10`.
  * See this file's header comment for the full shape.
  *
- * Matched (old_agbcc). The ROM reloads `&gUnknown_03001300` from the
+ * Matched (old_agbcc). The ROM reloads `&gOamBuffer` from the
  * literal pool at each of the three OAM flushes (rotating r1/r2/r3):
  * that is a function-scope local `oamp` set to the address before the
  * loop, which global-alloc leaves without a register, so reload
@@ -160,22 +160,22 @@ struct pager
     s32 box[4];                 // 0x18 - text rect {x, y, w, h}
 };
 
-extern void *gUnknown_03001300;
+extern void *gOamBuffer;
 extern s32 __udivsi3(s32 value, s32 divisor);
 extern void ShowSlidePicture(struct pager *self, s32 idx);
 extern void BeginSlide(struct pager *self, s32 idx);
 extern void EndSlide(struct pager *self, s32 idx);
 extern s32 SkipSlides(struct pager *self, s32 startIdx, u8 condFlag);
-extern void sub_8006A90(void *oam);
-extern void sub_8006A48(void *oam);
-extern void sub_8006AAC(void *oam);
+extern void ResetOamBuffer(void *oam);
+extern void HideUnusedOamEntries(void *oam);
+extern void CommitOamBuffer(void *oam);
 extern void WaitForVBlank(void);
 extern s32 WaitForKeyPress(s32 count, u8 checkButtons, s32 mask);
 extern s32 sub_8000EE4(u8 *text, void *target, s32 *box, s32 limit, s32 mode);
 
 void RunCutscenePlayer(struct pager *self)
 {
-    void **oamp = &gUnknown_03001300;
+    void **oamp = &gOamBuffer;
     s32 limit;
     s32 i;
 
@@ -191,10 +191,10 @@ void RunCutscenePlayer(struct pager *self)
         u8 res = 1;
 
         ShowSlidePicture(self, i);
-        sub_8006A90(*oamp);
-        sub_8006A48(*oamp);
+        ResetOamBuffer(*oamp);
+        HideUnusedOamEntries(*oamp);
         WaitForVBlank();
-        sub_8006AAC(*oamp);
+        CommitOamBuffer(*oamp);
         BeginSlide(self, i);
         if (self->texts[i].count == 0)
         {

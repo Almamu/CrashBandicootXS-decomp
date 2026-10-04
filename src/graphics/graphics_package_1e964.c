@@ -1,7 +1,7 @@
 #include "core.h"
 
 /* Writes the graphics-package "self" scratch buffer's +0x00/+0x04 pair
- * verbatim (a second, narrower constructor alongside `sub_801E644`'s
+ * verbatim (a second, narrower constructor alongside `InitBgSetup`'s
  * five-argument one - same buffer, different subset of fields). */
 void sub_801E964(u8 *self, u32 arg1, u32 arg2)
 {

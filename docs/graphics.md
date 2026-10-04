@@ -268,30 +268,39 @@ into the (still unidentified) region beyond it
 
 ### Found the real sprite-loading path (not through the HUD vtable system)
 
+**Correction (naming pass):** this section misread the title screen as
+the level loader. `InitTitleScreen` (formerly `LoadLevelGraphics`) is
+called once before the game loop's level loop, sets up the title screen
+(the XS shield on BG2 via `LoadTitleScreenBg`, the "CRASH" letters,
+"BANDICOOT" and two arrows as OBJ tiles via `LoadTitleScreenObjTiles`,
+the three menu-text palettes on OBJ banks 13-15), and `RunTitleScreen`
+is its menu loop ("new game" / "load game" / "credits"). The notes below
+are kept as written, with the functions' current names.
+
 Traced from the other direction as planned: `AgbMain` (`src/system/main.c`) calls
 `MainLoop`, which contains the game's true main loop (an unconditional
 `b` back to itself, calling `UpdateGameFrame` every iteration - this never
 returns during normal play, which is why `AgbMain`'s post-loop cleanup
 code is dead in practice). `UpdateGameFrame` has its own inner loop that reads
-level data and, per iteration, calls `LoadLevelGraphics` - and **that** is where
+level data and, per iteration, calls `InitTitleScreen` - and **that** is where
 real sprite/tile loading happens:
 
-- `LoadLevelGraphics` DMAs three **16-color palettes** directly into **OBJ
+- `InitTitleScreen` DMAs three **16-color palettes** directly into **OBJ
   palette RAM banks 13-15** (`0x050003A0`-`0x050003FF`) from
-  `gStaticData_0817D034`, `_0817D054`, `_0817D074` (32/32/112 bytes -
+  `gTitleMenuPalette`, `_0817D054`, `_0817D074` (32/32/112 bytes -
   uncompressed, no tag+size header, straight RGB555 arrays). **The first
   two are a clear match for Crash's color scheme** - transparent green at
   index 0, then a run of oranges/tans/reds/browns (`rgb(248,168,64)`,
   `rgb(248,80,56)`, `rgb(216,32,24)`, etc.) exactly like his fur/shorts.
   The third bank is black/white and is presumably a UI or flash-effect
   palette rather than part of his normal look.
-- It then calls `LoadBg2Background` (loads a background onto BG2 via the same
+- It then calls `LoadTitleScreenBg` (loads a background onto BG2 via the same
   tag+size `LoadTaggedAsset` dispatcher, from a package struct
-  `gStaticData_0817D0E4` with fields `{width, height, palette_ptr,
+  `gTitleScreenBg` with fields `{width, height, palette_ptr,
   tile_ptr, tilemap_ptr}` at offsets `0, 4, 8, 0xC, 0x10`) and then
-  `LoadObjSpriteTiles`.
-- `LoadObjSpriteTiles` is the real **OBJ sprite tile loader**: it walks an array
-  of 4 pointers (`gUnknown_030008BC`, confirmed 16 bytes = 4 pointers via
+  `LoadTitleScreenObjTiles`.
+- `LoadTitleScreenObjTiles` is the real **OBJ sprite tile loader**: it walks an array
+  of 4 pointers (`gTitleObjPackages`, confirmed 16 bytes = 4 pointers via
   the linked ELF's symbol table) to package structs of that same
   `{w, h, palette_ptr, tile_ptr, remap_ptr}` shape. For each of the 4: DMA
   the palette into sequential OBJ palette banks (`0x05000200 + 0x20*i`),
@@ -304,19 +313,19 @@ real sprite/tile loading happens:
   tiles" routine, structurally nothing like the HUD vtable system.
 
 This is almost certainly the real player/enemy/object sprite loading
-mechanism. What's still missing: **where `gUnknown_030008BC`'s 4 entries
+mechanism. What's still missing: **where `gTitleObjPackages`'s 4 entries
 get populated**. It's never written anywhere else in the disassembled
-code (checked exhaustively by text search) - `LoadObjSpriteTiles` is the only
+code (checked exhaustively by text search) - `LoadTitleScreenObjTiles` is the only
 place that even reads it. Likely explanations, in rough order of
 likelihood: it's filled in from a still-undisassembled code pocket (see
 the two we already found - there may be more `.byte`-dumped fragments
 among the ~179 remaining); it's filled from level data read earlier in
-`UpdateGameFrame`'s loop (the `RunCredits`/`sub_8035E14`/`sub_8036154`
+`UpdateGameFrame`'s loop (the `RunCredits`/`RunTitleScreen`/`DestroyTitleScreen`
 "stream reader" functions glimpsed there haven't been traced yet); or it's
 written through a raw computed address rather than the symbol textually
 (harder to grep for).
 
-**Next step:** find what writes `gUnknown_030008BC` (and its 4 individual
+**Next step:** find what writes `gTitleObjPackages` (and its 4 individual
 struct-pointer values) - that will either directly hand us a ROM address
 holding a real animation-frame tile sheet, or point at the level-data
 parser that ultimately supplies one.
@@ -325,7 +334,7 @@ Progress on that, now conclusive enough to stop and report rather than
 keep guessing: this has been checked about as thoroughly as static
 analysis allows, and the write site still can't be found.
 
-- Ruled out `sub_8035E14` (called right alongside `LoadLevelGraphics` in the
+- Ruled out `RunTitleScreen` (called right alongside `InitTitleScreen` in the
   main loop) - it's player input/collision/SFX handling (calls
   `PlaySfx`, the confirmed `PlaySfx` function, with real SFX IDs like
   `0x49`/`0x46` gated on input bitflags), not graphics setup.
@@ -334,16 +343,16 @@ analysis allows, and the write site still can't be found.
   fade effects and a level-title-card display, not sprite-package setup
   either.
 - Checked the IWRAM linker symbol map (`sym_iwram.txt`) - confirms
-  `gUnknown_030008BC` is a genuine standalone 16-byte variable, and that
+  `gTitleObjPackages` is a genuine standalone 16-byte variable, and that
   the whole IWRAM/EWRAM region is linked `(NOLOAD)` - i.e. **there is no
   ROM-side initializer copied in at boot**; every byte of it must be
   written by executed code, not preset data.
 - Searched the *entire 8MB ROM* for the raw 4-byte value `0x030008BC` -
-  **exactly one hit**: the literal pool entry inside `LoadObjSpriteTiles` itself
+  **exactly one hit**: the literal pool entry inside `LoadTitleScreenObjTiles` itself
   (the reader). No other instruction anywhere in the ROM - disassembled
   or not - loads this address as a constant.
 - Checked the two nearby variables that do get directly referenced
-  elsewhere (`gUnknown_030008B4`, `_030008B8`, used by an unrelated
+  elsewhere (`gFlashBgPalette`, `_030008B8`, used by an unrelated
   screen-shake/camera function) for any write loop that might overflow
   into `_BC` - both are pure reads there, not part of a sequential write.
 
@@ -403,7 +412,7 @@ needed real verification, not just "did it fail to decode cleanly":
 
 Verified after every single change (not just at the end) via a full clean
 `make compare`, including rebuilding `gbagfx` from scratch each time - all
-27 integrations are byte-exact. `gUnknown_030008BC` is still referenced
+27 integrations are byte-exact. `gTitleObjPackages` is still referenced
 nowhere but its own reader even after this exhaustive pass, so the
 negative result from the previous section stands: it is not written
 anywhere in `code_3.s`, `crt0.s`, or the compiled C sources. Making
@@ -413,8 +422,8 @@ environment.
 
 ### Found and fixed: some "unclear" graphics were actually 8bpp, not 4bpp
 
-The background-loading trace above (`LoadBg2Background`) led to a graphics
-package struct, `gStaticData_0817D0E4`, whose tile pointer turned out to be
+The background-loading trace above (`LoadTitleScreenBg`) led to a graphics
+package struct, `gTitleScreenBg`, whose tile pointer turned out to be
 `gStaticData_0862E3B0` - one of the blocks from the original "garbled
 mess" pass that got reclassified as raw binary because it looked like
 noise as 4bpp tile data at every width tried. Decompressing it, its
@@ -460,7 +469,7 @@ candidates; rendered all 25 as a contact sheet to review at once. Result:
   verified byte-exact.
   - **Correction (fixed):** rendering all 10 with the single shared
     `gStaticData_0863CF98` palette was wrong for 9 of them. An array at
-    `gStaticData_0816C5A0` (10 `{palette_ptr, tile_ptr}` 8-byte pairs, read
+    `gLevelSelectPictures` (10 `{palette_ptr, tile_ptr}` 8-byte pairs, read
     by `sub_801DB6C`) gives each icon its own dedicated 256-color palette -
     only icon `01_637a70`'s pairing with `0863CF98` was actually correct;
     icons `02`-`10` each pair with one of the `tileset1/12`-`20` blocks
@@ -489,7 +498,7 @@ candidates; rendered all 25 as a contact sheet to review at once. Result:
   confirmed (not just "plausible") - see "Swept `LoadGraphicsPackage`'s package
   structs" below.
 - **One more, `graphics/intro/35_61c224`, is a confirmed palette** - it's
-  `gStaticData_0817D0E4`'s (the XS logo package's) own palette pointer,
+  `gTitleScreenBg`'s (the XS logo package's) own palette pointer,
   found while tracing that struct. Same bit-15 issue prevents converting it
   to `.pal`, so it stays raw `.bin` too, but the comment now states this
   with confidence instead of "unidentified".
@@ -508,7 +517,7 @@ straightforward 8bpp tile data - not swept further here.
 
 `LoadGraphicsPackage` (ROM `0x0801E578`) is a generic "load a `{w, h, palette_ptr,
 tile_ptr, tilemap_ptr}` graphics package" helper (the same 5-word package
-shape used elsewhere in this doc, e.g. `gStaticData_0817D0E4` for the XS
+shape used elsewhere in this doc, e.g. `gTitleScreenBg` for the XS
 logo) - found from 9 call sites, resolving to 6 distinct package structs.
 All 6 already had their tile graphics extracted from earlier passes, but
 several were misclassified, and none had their real palette/tilemap
@@ -612,7 +621,7 @@ separate, much more elaborate chain:
   happens to follow the 3rd entry as a 4th - verified directly against
   the raw bytes (a repeating 32-byte-strided pattern, not this struct's
   `0x34` stride at all) that there's nothing there to find.
-- **`+0x0C` (`conditional_ptr_0C`)** - dumped this field for all 7
+- **`+0x0C` (`bgPicture`, `conditional_ptr_0C` in entities.json)** - dumped this field for all 7
   categories directly from `baserom.gba`: it's `0` for categories 0-2
   (type 0, the `gCategoryFamily0AnimTable` family) and a real pointer for
   every category in the `gCategoryFamily1AnimTable` family (3: `0x813d934`,
@@ -621,14 +630,14 @@ separate, much more elaborate chain:
   not a bug). So this isn't really "conditional" per category so much as
   "family-2 categories carry one extra graphics blob that family-1
   categories don't have at all". When non-null, `InitActorCategory` calls
-  `sub_802F7B0(ptr)` once, during category init (right after the
-  `sub_8029890` call and before `SelectActorCategory`) - not reversed to
+  `LoadBgPicture(ptr)` once, during category init (right after the
+  `InitCellAnim` call and before `SelectActorCategory`) - not reversed to
   C yet, but its shape is clear from disassembly: it treats `ptr` as a
   small header (`+0x200`/`+0x202` signed halfwords, both `38`/`16` across
   all three distinct blobs sampled; `+0x204` word, varying per blob -
   `0x165`/`0xed`/`0x176`) followed by tile data, decodes an OBJ tile
   count/size from the header, and DMAs the result to VRAM at a fixed OBJ
-  tile base (`0x0600D000`-relative) via a helper (`sub_8029AC4`) shared
+  tile base (`0x0600D000`-relative) via a helper (`GetCellAnimFreeTile`) shared
   with the main sprite-frame upload path. Reads as a one-time upload of a
   fixed-size supplemental tile sheet (a shine/sparkle/shadow overlay
   sprite is the leading guess, given it's uploaded once per category
@@ -665,7 +674,7 @@ separate, much more elaborate chain:
 - The actual VRAM upload is a **queued DMA**, not an inline copy:
   `LoadSpriteFrameTiles` computes the byte count and calls `QueueVramDmaTransfer`, which just
   appends `{dest, src, size}` into a ring buffer
-  (`gUnknown_03001290`, up to 768 entries) rather than copying immediately.
+  (`gVramDmaQueue`, up to 768 entries) rather than copying immediately.
   The flush happens in `FlushVramDmaQueue`, confirmed by disassembly to write
   directly to **`0x040000D4`/`0x040000D8`** - the GBA's real DMA3
   source/destination registers - and start the transfer. **No
@@ -710,7 +719,7 @@ against.
 
 **Important correction/clarification:** this whole `table_A`/`table_B`
 system reads its frame data directly from fixed ROM addresses (confirmed:
-`GetAnimFrameData` does add a RAM-buffer-base global, `gUnknown_0300137C`, but
+`GetAnimFrameData` does add a RAM-buffer-base global, `gCategorySpriteSheet`, but
 it reads back as `0` along this path, making the add a no-op) - it is
 **raw, uncompressed data sitting in ROM**, physically near but *not inside*
 the two giant LZ77 sheets (`0x080B2120`/`0x0814174C`) referenced by the
@@ -730,7 +739,7 @@ Found the reader: `InitActorCategory` (per-category init, called with the
 category number, stored in `gActorCategory`) reads the descriptor's
 `+0x1C` sheet pointer and calls `DecompressCategorySpriteSheet(sheet_ptr)`, which reads the
 tag+size header, `mem_alloc`s a buffer of the declared decompressed size,
-stores it in **`gUnknown_0300137C`**, and decompresses into it via
+stores it in **`gCategorySpriteSheet`**, and decompresses into it via
 `LoadTaggedAsset` - **this is the same global `GetAnimFrameData` adds to a
 `table_B` value** (see above). So there are genuinely two different
 addressing modes in play for animation-table records, both already
@@ -741,7 +750,7 @@ records against it:
 
 - **Category 0-2's record 0** (the "mask", `table_B = gStaticData_0817941C`)
   holds full absolute ROM addresses (`0x080Cxxxx`) and reads real
-  uncompressed ROM data directly - `gUnknown_0300137C` is unset/0 for
+  uncompressed ROM data directly - `gCategorySpriteSheet` is unset/0 for
   this path, making the add in `GetAnimFrameData` a no-op. This is the
   overlapping/deduplicated "rotation strip" scheme described above.
 - **Records 1, 2, 4** (`table_B` at `0x0817a130`, `0x081796a4`,

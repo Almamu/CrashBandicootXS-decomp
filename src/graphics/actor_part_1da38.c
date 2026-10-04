@@ -5,14 +5,14 @@
  * asm/code_3_2_17_188d0_1da38.s. Two of the level-select screen's
  * (actor_part_1b85c.c) sub-objects:
  *
- * - sub_801DA38-sub_801DE04: `struct zoom_bg`, the level picture on the
- *   affine BG2 layer (`level_menu.bg2`, constructor sub_801D828 in the
+ * - DestroyZoomBg-TickZoomBgTwinkle: `struct zoom_bg`, the level picture on the
+ *   affine BG2 layer (`level_menu.bg2`, constructor InitZoomBg in the
  *   issue #27 range). It zooms out to swap in the selected level's
  *   picture (states 1 -> 2 -> 0), wobbles on the sine table while shown
  *   (state 3) and zooms away on exit (states 4 -> 5). Four sprite parts
  *   ("twinkles") sit on top of it, each showing a random frame for a
  *   random time and blinking along with the wobble.
- * - sub_801DE24-sub_801DF98: `struct level_item`'s methods (method table
+ * - GetZoomBgControl-sub_801DF98: `struct level_item`'s methods (method table
  *   gStaticData_087E4BAC: +0x08 sub_801DE30 bob, +0x10 sub_801DEA4
  *   set level, +0x18 sub_801DF70 set position, +0x20 nullsub_20, +0x28
  *   sub_801DF98 destructor; the constructor sub_801DFEC starts issue #29).
@@ -48,12 +48,12 @@ union bgcnt
     struct bgcnt_bits bits;
 } __attribute__((packed));
 
-/* The level-select screen's BG2 picture (sub_801D828, 0x8C bytes). */
+/* The level-select screen's BG2 picture (InitZoomBg, 0x8C bytes). */
 struct zoom_bg
 {
     u8 unk_00[0x0C];
-    s32 state;             // 0x0C - see sub_801DAD8
-    s32 image;             // 0x10 - gStaticData_0816C5A0 index, 11 = none
+    s32 state;             // 0x0C - see UpdateZoomBg
+    s32 image;             // 0x10 - gLevelSelectPictures index, 11 = none
     s32 scale;             // 0x14 - zoom, 0x100 = 1:1, 8 = smallest
     s32 charBase;          // 0x18
     s32 screenBase;        // 0x1C
@@ -62,7 +62,7 @@ struct zoom_bg
     s32 dx;                // 0x28 - wobble offset
     s32 dy;                // 0x2C
     u32 phase;             // 0x30 - wobble phase, 0-0xFF
-    union bgcnt bgcnt;     // 0x34 - REG_BG2CNT value (sub_801DE24)
+    union bgcnt bgcnt;     // 0x34 - REG_BG2CNT value (GetZoomBgControl)
     u8 unk_36[2];
     /* BgAffineSet source, 0x38-0x49 */
     s32 texX;              // 0x38
@@ -73,7 +73,7 @@ struct zoom_bg
     s16 sy;                // 0x46
     u16 alpha;             // 0x48 - rotation
     u8 unk_4A[2];
-    /* BgAffineSet destination, committed by sub_801DCBC */
+    /* BgAffineSet destination, committed by CommitZoomBg */
     s16 pa;                // 0x4C
     s16 pb;                // 0x4E
     s16 pc;                // 0x50
@@ -93,18 +93,18 @@ struct image_pair
 };
 
 extern void *gAudioContext;
-extern s16 gStaticData_0816A820[];
-extern struct image_pair gStaticData_0816C5A0[];
+extern s16 gSineTable[];
+extern struct image_pair gLevelSelectPictures[];
 extern u32 gStaticData_0816C610[];
 extern u32 gStaticData_0816C624[];
 
 extern void PlaySfx(void *ctx, s32 sfx, s32 volume);
 extern void BgAffineSet(void *src, void *dst, s32 count);
 
-void sub_801DE04(struct zoom_bg *self, struct twinkle *t);
-u8 sub_801DD18(struct zoom_bg *self);
-void sub_801DD90(struct zoom_bg *self, struct twinkle *t);
-void sub_801DDB4(struct zoom_bg *self, struct twinkle *t);
+void TickZoomBgTwinkle(struct zoom_bg *self, struct twinkle *t);
+u8 IsZoomBgShown(struct zoom_bg *self);
+void MoveZoomBgTwinkle(struct zoom_bg *self, struct twinkle *t);
+void RandomizeZoomBgTwinkle(struct zoom_bg *self, struct twinkle *t);
 
 static inline void SetPosQ8(struct sprite *p, s32 x, s32 y)
 {
@@ -113,9 +113,9 @@ static inline void SetPosQ8(struct sprite *p, s32 x, s32 y)
 }
 
 /* Destructor (`level_menu.bg2`, called from DestroyLevelSelect). */
-void sub_801DA38(struct zoom_bg *self, s32 flags)
+void DestroyZoomBg(struct zoom_bg *self, s32 flags)
 {
-    sub_8006D68(gUnknown_030012B8, PART_RECORD(self->twinkles[0].part).tileRecord);
+    UnlockPalette(gPaletteCache, PART_RECORD(self->twinkles[0].part).tileRecord);
     DELETE_PART(self->twinkles[3].part);
     DELETE_PART(self->twinkles[2].part);
     DELETE_PART(self->twinkles[1].part);
@@ -128,7 +128,7 @@ void sub_801DA38(struct zoom_bg *self, s32 flags)
  * 0 zoom in to 1:1, then 3; 1 zoom out, then 2; 2 load the requested
  * picture (if any) and go to 0; 3 shown, wobbling; 4 zoom out while
  * rotating, then 5 (gone). The twinkles advance in every state. */
-void sub_801DAD8(struct zoom_bg *self)
+void UpdateZoomBg(struct zoom_bg *self)
 {
     u8 buf[0x200];
 
@@ -156,16 +156,16 @@ void sub_801DAD8(struct zoom_bg *self)
         self->phase = (self->phase + 1) & 0xFF;
         /* `* 4 >> 8`, not `>> 6`: gcc's combiner turns the latter into
          * ldrh+lsl+asr instead of the ROM's ldrsh+asr. */
-        self->dx = (gStaticData_0816A820[self->phase & 0xFF] * 4) >> 8;
-        self->dy = (gStaticData_0816A820[(self->phase << 1) & 0xFF] * 4) >> 8;
+        self->dx = (gSineTable[self->phase & 0xFF] * 4) >> 8;
+        self->dy = (gSineTable[(self->phase << 1) & 0xFF] * 4) >> 8;
         break;
     case 2:
         if (self->image == 11)
             break;
         PlaySfx(gAudioContext, 0x53, 0x100);
-        LoadTaggedAsset(gStaticData_0816C5A0[self->image].palette, buf);
+        LoadTaggedAsset(gLevelSelectPictures[self->image].palette, buf);
         DmaCopy16(3, buf, BG_PLTT, 0x40);
-        LoadTaggedAsset(gStaticData_0816C5A0[self->image].tiles,
+        LoadTaggedAsset(gLevelSelectPictures[self->image].tiles,
                         (void *)(BG_VRAM + (self->charBase << 14)));
         self->state = 0;
         break;
@@ -180,22 +180,22 @@ void sub_801DAD8(struct zoom_bg *self)
         self->state = 5;
         break;
     }
-    sub_801DE04(self, &self->twinkles[0]);
-    sub_801DE04(self, &self->twinkles[1]);
-    sub_801DE04(self, &self->twinkles[2]);
-    sub_801DE04(self, &self->twinkles[3]);
+    TickZoomBgTwinkle(self, &self->twinkles[0]);
+    TickZoomBgTwinkle(self, &self->twinkles[1]);
+    TickZoomBgTwinkle(self, &self->twinkles[2]);
+    TickZoomBgTwinkle(self, &self->twinkles[3]);
 }
 
 /* Draw step: moves the twinkles with the wobble, then rebuilds the BG2
  * affine matrix from the current zoom (rotation only in states 4-5). */
-void sub_801DC28(struct zoom_bg *self)
+void DrawZoomBg(struct zoom_bg *self)
 {
-    if (sub_801DD18(self))
+    if (IsZoomBgShown(self))
     {
-        sub_801DD90(self, &self->twinkles[0]);
-        sub_801DD90(self, &self->twinkles[1]);
-        sub_801DD90(self, &self->twinkles[2]);
-        sub_801DD90(self, &self->twinkles[3]);
+        MoveZoomBgTwinkle(self, &self->twinkles[0]);
+        MoveZoomBgTwinkle(self, &self->twinkles[1]);
+        MoveZoomBgTwinkle(self, &self->twinkles[2]);
+        MoveZoomBgTwinkle(self, &self->twinkles[3]);
     }
     switch (self->state)
     {
@@ -219,7 +219,7 @@ void sub_801DC28(struct zoom_bg *self)
 }
 
 /* Commits the affine matrix to BG2PA-BG2Y. */
-void sub_801DCBC(struct zoom_bg *self)
+void CommitZoomBg(struct zoom_bg *self)
 {
     REG_BG2PA = self->pa;
     REG_BG2PB = self->pb;
@@ -230,44 +230,44 @@ void sub_801DCBC(struct zoom_bg *self)
 }
 
 /* Zooming away (state 4). */
-u8 sub_801DCF8(struct zoom_bg *self)
+u8 IsZoomBgExiting(struct zoom_bg *self)
 {
     return self->state == 4;
 }
 
 /* Gone (state 5). */
-u8 sub_801DD08(struct zoom_bg *self)
+u8 IsZoomBgGone(struct zoom_bg *self)
 {
     return self->state == 5;
 }
 
 /* Shown (state 3). */
-u8 sub_801DD18(struct zoom_bg *self)
+u8 IsZoomBgShown(struct zoom_bg *self)
 {
     return self->state == 3;
 }
 
 /* Waiting for a picture (state 2). */
-u8 sub_801DD28(struct zoom_bg *self)
+u8 IsZoomBgWaiting(struct zoom_bg *self)
 {
     return self->state == 2;
 }
 
 /* Zooming out (state 1). */
-u8 sub_801DD38(struct zoom_bg *self)
+u8 IsZoomBgZoomingOut(struct zoom_bg *self)
 {
     return self->state == 1;
 }
 
 /* Starts the exit zoom, with BG2 at the front. */
-void sub_801DD48(struct zoom_bg *self)
+void StartZoomBgExit(struct zoom_bg *self)
 {
     self->bgcnt.bits.priority = 0;
     self->state = 4;
 }
 
 /* Zooms the picture out with no follow-up picture (page turn). */
-void sub_801DD5C(struct zoom_bg *self)
+void ClearZoomBgPicture(struct zoom_bg *self)
 {
     PlaySfx(gAudioContext, 0x54, 0x100);
     self->state = 1;
@@ -275,7 +275,7 @@ void sub_801DD5C(struct zoom_bg *self)
 }
 
 /* Requests picture `image`, taken once the zoom-out finishes. */
-void sub_801DD80(struct zoom_bg *self, s32 image)
+void SetZoomBgPicture(struct zoom_bg *self, s32 image)
 {
     switch (self->state)
     {
@@ -286,14 +286,14 @@ void sub_801DD80(struct zoom_bg *self, s32 image)
 }
 
 /* Moves a blinking twinkle by the wobble offset. */
-void sub_801DD90(struct zoom_bg *self, struct twinkle *t)
+void MoveZoomBgTwinkle(struct zoom_bg *self, struct twinkle *t)
 {
     if (t->blink > 0 && (t->timer & 4))
         sub_8008890(t->part, self->dx, self->dy);
 }
 
 /* Picks a new random frame, duration and blink window for a twinkle. */
-void sub_801DDB4(struct zoom_bg *self, struct twinkle *t)
+void RandomizeZoomBgTwinkle(struct zoom_bg *self, struct twinkle *t)
 {
     SetFrame(t->part, (u16)RandRange(8));
     t->timer = (u16)RandRange(0x3C);
@@ -301,7 +301,7 @@ void sub_801DDB4(struct zoom_bg *self, struct twinkle *t)
         t->blink = (u16)RandRange(t->timer / 2 + 1);
 }
 
-void sub_801DE04(struct zoom_bg *self, struct twinkle *t)
+void TickZoomBgTwinkle(struct zoom_bg *self, struct twinkle *t)
 {
     if (t->timer != 0)
     {
@@ -310,11 +310,11 @@ void sub_801DE04(struct zoom_bg *self, struct twinkle *t)
     }
     else
     {
-        sub_801DDB4(self, t);
+        RandomizeZoomBgTwinkle(self, t);
     }
 }
 
-u16 sub_801DE24(struct zoom_bg *self)
+u16 GetZoomBgControl(struct zoom_bg *self)
 {
     return self->bgcnt.raw;
 }

@@ -3,12 +3,12 @@
 Question: besides the old_agbcc/agbcc split, did the original build
 also use different `-O2` sub-flags for some translation units? The lead
 came from issue #65's retry pass (`issue-65-naked-retry.md`): three NAKED
-functions in `src/graphics/graphics_loading_35780.c` (`sub_8036600`,
-`sub_80360DC`, `sub_8035E14`) were all stuck on the same "seed loop".
+functions in `src/graphics/graphics_loading_35780.c` (`InitVvLogoPieces`,
+`ResetTitleLogoPieces`, `RunTitleScreen`) were all stuck on the same "seed loop".
 The ROM keeps an up-counting loop counter, leaves some address
 arithmetic unsimplified and does not hoist 0/-1 out of the loop. Both
 compilers at plain `-O2` reverse or strength-reduce that loop, and
-`-fno-strength-reduce` was seen to stop the reversal in `sub_8036600`.
+`-fno-strength-reduce` was seen to stop the reversal in `InitVvLogoPieces`.
 
 The rule used here: a flag only counts if it explains the whole file.
 Every real-C function already matched in the file has to stay
@@ -16,7 +16,7 @@ byte-exact with it, the way old_agbcc did for its files.
 
 **Result:** `-fno-strength-reduce` meets that bar for
 `graphics_loading_35780.o`, so it is now applied to that object alone
-(the Makefile's `NO_STRENGTH_REDUCE_OBJS`), and `sub_8036600` is real C.
+(the Makefile's `NO_STRENGTH_REDUCE_OBJS`), and `InitVvLogoPieces` is real C.
 It is **not** a global property of the old_agbcc objects. The other two
 seed loops need a source-level explanation instead (see below).
 
@@ -35,26 +35,26 @@ produced the same code as `-O2` on the probe.
 ## Whole-file sweep (graphics_loading_35780.c, old_agbcc, NON_MATCHING drafts)
 
 "Matched" means the file's 11 real-C functions at the start of this
-work (`sub_8035780`, `sub_8035F9C`, `sub_8035FEC`, `sub_8036068`,
-`sub_80360C0`, `sub_8036154`, `sub_80361B0`, `sub_8036528`,
-`sub_8036E20`, `sub_8036EC4`, `sub_8036FBC`). The last three columns are
+work (`UpdateTitleLogoPieces`, `CommitTitleScreenFrame`, `DrawTitleMenuItem`, `DrawTitleScreen`,
+`HashTitleCheatInput`, `DestroyTitleScreen`, `RunCompanyLogos`, `LoadVvLogoGraphics`,
+`InitLogoActor`, `UpdateLogoActor`, `DrawLogoActor`). The last three columns are
 the three blocked drafts **as they stood before this investigation**,
 in halfwords off (ROM size in brackets when the size differs).
 
-| flag(s) added to `-O2` | matched still exact | `sub_8036600` | `sub_80360DC` | `sub_8035E14` | other drafts |
+| flag(s) added to `-O2` | matched still exact | `InitVvLogoPieces` | `ResetTitleLogoPieces` | `RunTitleScreen` | other drafts |
 |---|---|---|---|---|---|
-| (baseline) | 11/11 | 36 [96 vs 104] | 38 [84 vs 120] | 136 [364 vs 392] | `sub_8036668` 20 |
-| `-fno-strength-reduce` | **11/11 (byte-identical .s)** | 35 | 43 | 139 | `sub_8036668` 46 |
+| (baseline) | 11/11 | 36 [96 vs 104] | 38 [84 vs 120] | 136 [364 vs 392] | `UpdateVvLogoPieces` 20 |
+| `-fno-strength-reduce` | **11/11 (byte-identical .s)** | 35 | 43 | 139 | `UpdateVvLogoPieces` 46 |
 | `-fno-rerun-loop-opt` | 11/11 | 36 | 37 | 138 | - |
 | `-fno-caller-saves` | 11/11 | no change | no change | no change | - |
 | `-fno-peephole` | 11/11 | no change | no change | no change | - |
-| `-fno-gcse` | 11/11 | 36 | 38 | 136 | `sub_8036668` 238, `sub_8036CF4` 124 |
-| `-fno-thread-jumps` | 10/11 (`sub_80361B0`) | | | | |
-| `-fno-regmove` | 10/11 (`sub_8036FBC`) | | | | |
-| `-freduce-all-givs` | 10/11 (`sub_8036154`) | | | | |
-| `-fno-rerun-cse-after-loop` | 9/11 (`sub_80361B0`, `sub_8036FBC`) | | | | |
-| `-fno-cse-follow-jumps` | 9/11 (`sub_80361B0`, `sub_8036EC4`) | | | | |
-| `-fmove-all-movables` | 9/11 (`sub_8035780`, `sub_80361B0`) | | | | |
+| `-fno-gcse` | 11/11 | 36 | 38 | 136 | `UpdateVvLogoPieces` 238, `LoadUniversalLogoBg` 124 |
+| `-fno-thread-jumps` | 10/11 (`RunCompanyLogos`) | | | | |
+| `-fno-regmove` | 10/11 (`DrawLogoActor`) | | | | |
+| `-freduce-all-givs` | 10/11 (`DestroyTitleScreen`) | | | | |
+| `-fno-rerun-cse-after-loop` | 9/11 (`RunCompanyLogos`, `DrawLogoActor`) | | | | |
+| `-fno-cse-follow-jumps` | 9/11 (`RunCompanyLogos`, `UpdateLogoActor`) | | | | |
+| `-fmove-all-movables` | 9/11 (`UpdateTitleLogoPieces`, `RunCompanyLogos`) | | | | |
 | `-funroll-loops` | 9/11 | | | | |
 | `-fno-cse-skip-blocks` | 8/11 | | | | |
 | `-fno-force-mem` | 7/11 | | | | |
@@ -69,7 +69,7 @@ functions is byte-identical with and without it (only local label
 numbers change). That means none of them can tell the two builds apart:
 the flag is *consistent* with them, but they are not evidence *for* it.
 Most of their loops contain calls or branches that gcc would not
-strength-reduce anyway. `sub_8035780`'s `i * 0x34` stays a `mul` either
+strength-reduce anyway. `UpdateTitleLogoPieces`'s `i * 0x34` stays a `mul` either
 way.
 
 The old drafts did not improve under any flag, because they were
@@ -77,7 +77,7 @@ written against the `-O2` optimizer. The real question was whether the
 ROM's loop shape becomes *reachable* from source with a flag. That was
 tested per function below.
 
-## sub_8036600 - matched with `-fno-strength-reduce`
+## InitVvLogoPieces - matched with `-fno-strength-reduce`
 
 With `-fno-strength-reduce` the first loop keeps `i` counting up, `cmp
 r6, #0x13; ble`, like the ROM. With strength reduction on, gcc's
@@ -101,7 +101,7 @@ best over all 720 statement orders: the loop shape is right but the
 register allocation is not. So the flag is the only explanation found
 that closes this function.
 
-## sub_80360DC / sub_8035E14 - the flag does not explain them
+## ResetTitleLogoPieces / RunTitleScreen - the flag does not explain them
 
 These two seed loops do more than keep their counter. They **hoist
 nothing**: `mov r0, #0` and `mov r0, #1; neg r0, r0` sit inside the
@@ -109,7 +109,7 @@ loop, and `self+0x14`, `self+0x40` and `seedBase+4` are recomputed every
 iteration. `-fno-strength-reduce` only disables `strength_reduce()`.
 Loop-invariant motion still runs, and every for-loop phrasing tried
 hoists those invariants under every flag in the sweep.
-`sub_8035E14`'s later `while` loop *does* hoist its `REG_BLDCNT`
+`RunTitleScreen`'s later `while` loop *does* hoist its `REG_BLDCNT`
 address (`ldr r5, =0x04000050` before the loop). So the optimizer was
 on for that function, and the seed loop itself was simply never seen as
 a loop.
@@ -123,15 +123,15 @@ the flag:
 
 | function | before | goto draft | what is left |
 |---|---|---|---|
-| `sub_80360DC` | 38 [84 vs 120] | **18**, right size | register choice only: ROM `seedBase`/`counter`/`zero` = r8/sb/ip and `stride`/`slot` = r4/r5; the draft gets sb/ip/r8 and r5/r4. Declaration order (5040 orders) and statement order make no difference. |
-| `sub_8035E14` | 136 [364 vs 392] | **100**, right size | `i`/`slot` swapped between r3 and r5 in the seed loop, which shifts the rest of the function. |
+| `ResetTitleLogoPieces` | 38 [84 vs 120] | **18**, right size | register choice only: ROM `seedBase`/`counter`/`zero` = r8/sb/ip and `stride`/`slot` = r4/r5; the draft gets sb/ip/r8 and r5/r4. Declaration order (5040 orders) and statement order make no difference. |
+| `RunTitleScreen` | 136 [364 vs 392] | **100**, right size | `i`/`slot` swapped between r3 and r5 in the seed loop, which shifts the rest of the function. |
 
 Both drafts are updated in-tree under `#if NON_MATCHING`. This is a
 source-level lead, not a flag. The next person should work on the
 global-allocator priority of those goto-loop locals, not on compiler
 flags.
 
-## sub_8036668 - no contradiction
+## UpdateVvLogoPieces - no contradiction
 
 The ROM's drain loop looks like classic strength reduction plus biv
 elimination: a reduced slot pointer compared **signed** (`ble`) against
@@ -156,11 +156,11 @@ old_agbcc files:
 - `actor_part_18008.c` (`sub_801865C`)
 - `actor_part_188d0.c` (`sub_80189EC`)
 - `actor_part_1b85c.c` (`DestroyLevelSelect`)
-- `actor_part_1cee0.c` (`LevelSelectTurnPage`, `sub_801D5CC`, `sub_801D828`)
+- `actor_part_1cee0.c` (`LevelSelectTurnPage`, `sub_801D5CC`, `InitZoomBg`)
 - `graphics_package_1e578.c` (`LoadGraphicsPackage`)
-- `graphics_package_1e688.c` (`sub_801E688`)
+- `graphics_package_1e688.c` (`FitScaledSprite`)
 - `hud_digit_array.c` (`InitHud`)
-- `level_graphics.c` (`LoadBg2Background`)
+- `level_graphics.c` (`LoadTitleScreenBg`)
 - `settings_menu22.c` (`DrawPauseRelicsPage`)
 - `game_loop49.c` (`sub_800F4F4`)
 
@@ -179,7 +179,7 @@ function in the file is indifferent to it. That is weaker than the
 old_agbcc discovery, where the old compiler was *required* by several
 already-matched functions. Treat `NO_STRENGTH_REDUCE_OBJS` as the
 simplest build that matches, not as proof of the original makefile. If
-someone later finds a source phrasing of `sub_8036600` that matches at
+someone later finds a source phrasing of `InitVvLogoPieces` that matches at
 plain `-O2`, drop the list. The helper scripts for this investigation
 (flag probe, whole-file sweep, statement-order searches, global scan)
 were kept out of the tree.

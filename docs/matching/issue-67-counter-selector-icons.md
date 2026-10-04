@@ -28,13 +28,13 @@ and writing `gSmallFont->record->slots[0]`/`slots[2]` (see
 shape `DrawPowerDialog` uses on the same two globals.
 
 `InitLanguageSelectGraphics` resets several OAM-manager globals
-(`gUnknown_03001300`/`gUnknown_030012B8`), then hand-fills
-`gUnknown_030012B8`'s (`struct tile_asset_cache`, `include/vram_pool.h`)
+(`gOamBuffer`/`gPaletteCache`), then hand-fills
+`gPaletteCache`'s (`struct palette_cache`, `include/vram_pool.h`)
 `slots[0]`-`slots[3]` with 4 fixed 32-byte OBJ tiles copied from
 `gStaticData_0817E72C`/`_74C`/`_76C`/`_78C` (two tiles filled per loop
 iteration via a doubled offset, 16 iterations), and finally threads
 `gSmallFont`'s/`gLargeFont`'s `record->slots[6]`
-trampoline (`_call_via_r1`) and VRAM-reserve (`sub_8006C58`) pair -
+trampoline (`_call_via_r1`) and VRAM-reserve (`ReserveObjVram`) pair -
 copying `field_12c` from one `icon_manager` into the other's
 `field_108` via the ROM's own "subtract `0x24` from the already-loaded
 `0x12c` offset constant" trick rather than a fresh `0x108` literal.
@@ -43,7 +43,7 @@ copying `field_12c` from one `icon_manager` into the other's
 
 Real C was attempted for both functions - an indexed loop and a
 pointer-increment loop for the 4-tile copy, caching
-`&gSmallFont`/`&gLargeFont`/`&gUnknown_030012FC` in a
+`&gSmallFont`/`&gLargeFont`/`&gObjVramCursor` in a
 local versus re-deriving them at each use, and the digit-slot loop's
 centering-math rewritten several ways - but every attempt fell to the
 same many-register gcc-2.9 allocation ceiling already documented at
@@ -53,7 +53,7 @@ length for two other functions in this codebase:
   two-icon centering/draw loop this pair's `DrawLanguageSelect` extends to
   six slots, itself parked NAKED for exactly this reason.
 - `ShowPowerDialog` (`src/graphics/settings_menu14.c`) - already NAKED,
-  and its tail is *this same* `_call_via_r1`/`sub_8006C58`/
+  and its tail is *this same* `_call_via_r1`/`ReserveObjVram`/
   constant-reuse idiom `InitLanguageSelectGraphics`'s tail uses, hitting the identical
   register-choreography wall around the cached
   `gSmallFont`/`gLargeFont` addresses (there documented

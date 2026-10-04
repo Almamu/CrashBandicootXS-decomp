@@ -1,11 +1,11 @@
 #include "core.h"
 #include "actor.h"
 
-extern void sub_8007A84(void *self, void *part);
-extern void *gUnknown_030012CC;
+extern void DrawSprite(void *self, void *part);
+extern void *gSpriteRenderer;
 
-/* Calls `sub_8007A84` (already matched in `actor_part.c`) with the
- * global `gUnknown_030012CC` as `self` - same tail-call shape as
+/* Calls `DrawSprite` (already matched in `actor_part.c`) with the
+ * global `gSpriteRenderer` as `self` - same tail-call shape as
  * `sub_8008350` (`actor_part5.c`), but here as a leading step rather
  * than the whole body. If `part+0x38` (a field not otherwise
  * characterized yet in this ROM region) is nonzero, also clears
@@ -15,7 +15,7 @@ extern void *gUnknown_030012CC;
  * of a folded immediate AND. */
 void sub_80119A8(struct actor *part)
 {
-    sub_8007A84(gUnknown_030012CC, part);
+    DrawSprite(gSpriteRenderer, part);
     if (*((u8 *)part + 0x38) != 0) {
         register s32 mask asm("r0") = -9;
         register u8 flags asm("r1") = part->flags;

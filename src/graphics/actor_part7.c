@@ -206,13 +206,13 @@ void sub_800888C(struct box_part *part, u16 val)
     part->unk_3C = val;
 }
 
-extern void *gUnknown_030012CC;
-extern void sub_8007634(void *unused, void *part, s32 *posPtr);
-extern void sub_80073DC(void *unused, void *part, s32 *posPtr);
+extern void *gSpriteRenderer;
+extern void DrawAffineSpritePieces(void *unused, void *part, s32 *posPtr);
+extern void DrawSpritePieces(void *unused, void *part, s32 *posPtr);
 
 /* Resolves `part`'s Q8 position plus a caller-supplied offset into a
- * stack `{x, y}` pair, then dispatches to `sub_8007634` or
- * `sub_80073DC` (both already matched/parked elsewhere in this ROM
+ * stack `{x, y}` pair, then dispatches to `DrawAffineSpritePieces` or
+ * `DrawSpritePieces` (both already matched/parked elsewhere in this ROM
  * region) depending on whether `unk_3C` is set. */
 void sub_8008890(struct actor *part, s32 arg1, s32 arg2)
 {
@@ -222,9 +222,9 @@ void sub_8008890(struct actor *part, s32 arg1, s32 arg2)
     pos[1] = (part->y >> 8) + arg2;
 
     if (((struct box_part *)part)->unk_3C != 0) {
-        sub_8007634(gUnknown_030012CC, part, pos);
+        DrawAffineSpritePieces(gSpriteRenderer, part, pos);
     } else {
-        sub_80073DC(gUnknown_030012CC, part, pos);
+        DrawSpritePieces(gSpriteRenderer, part, pos);
     }
 }
 

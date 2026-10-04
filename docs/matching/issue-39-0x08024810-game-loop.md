@@ -30,8 +30,8 @@ and setting `toggle` to 1. This chunk adds:
 - **`RunCutscenePlayer`**: a *second* per-frame driver loop over the same
   `self+0/self+4` items/count pair `RunSlideshow` (`game_loop37.c`)
   already drives, but interleaved with an explicit OAM-shadow-buffer
-  flush (`sub_8006A90`/`sub_8006A48`/`WaitForVBlank`/`sub_8006AAC` on
-  `gUnknown_03001300` - the same "HUD-icon-plus-number renderer" OAM
+  flush (`ResetOamBuffer`/`HideUnusedOamEntries`/`WaitForVBlank`/`CommitOamBuffer` on
+  `gOamBuffer` - the same "HUD-icon-plus-number renderer" OAM
   pacing pattern `docs/matching.md` documents elsewhere) and a nested
   text-paging walk through the new `self+0x10` record array (each
   record `{void **strings; s32 count;}`), rendering each string via
@@ -239,7 +239,7 @@ now points there directly.
 
 `RunCutscenePlayer` and `DecodeLayerChunk` are now real C (old_agbcc), so the whole
 `0x08024810`-`0x08024E68` range is decompiled. `RunCutscenePlayer`'s
-`&gUnknown_03001300` reloads come from a function-scope pointer local
+`&gOamBuffer` reloads come from a function-scope pointer local
 that global-alloc leaves unallocated; `DecodeLayerChunk` is `DecodeCollisionChunk`'s
 matched shape with a 2D cell index. See
 [strag1-naked-retry.md](strag1-naked-retry.md).

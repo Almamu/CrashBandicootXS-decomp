@@ -90,8 +90,8 @@ extern void *sub_8026EDC(s32 size);
 extern void *gAudioContext;
 extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
 extern u8 CheckSaveChecksum(void *arg0);
-extern struct tile_asset_cache *gUnknown_030012B8;
-extern void sub_8006EA8(struct tile_asset_cache *self);
+extern struct palette_cache *gPaletteCache;
+extern void FreeUnlockedPaletteSlots(struct palette_cache *self);
 extern void sub_800450C(struct pause_options_screen *self);
 extern void sub_80047F8(struct pause_options_screen *self);
 extern void PlaySong(void *arg0, s32 arg1);
@@ -102,7 +102,7 @@ extern void SummarizeProgress(void *self, struct settings_row_stats *dest, void 
 extern void RefreshSaveSlotSummaries(struct pause_options_screen *self, void *handle);
 extern void *sub_80016DC(s32 size);
 extern void *sub_80027E8(void *arg0);
-extern void sub_800132C(u8 flags, s32 frameDelay, u8 sync);
+extern void FadeBrightness(u8 flags, s32 frameDelay, u8 sync);
 extern void ResetSaveData(struct settings_sync_record *self);
 
 /* The composite pause/options screen's (and the spinner dialog's, via
@@ -132,7 +132,7 @@ struct pause_options_screen *InitSaveMenu(struct pause_options_screen *arg0)
     ResetSaveData(obj);
     *field90Addr = obj;
 
-    sub_8006EA8(gUnknown_030012B8);
+    FreeUnlockedPaletteSlots(gPaletteCache);
     sub_800450C(self);
     sub_80047F8(self);
     PlaySong(gAudioContext, 0x10);
@@ -144,7 +144,7 @@ struct pause_options_screen *InitSaveMenu(struct pause_options_screen *arg0)
         register void **sessionAddr asm("r4") = &gLinkSession;
         *sessionAddr = sub_80027E8(sub_80016DC(0x408));
     }
-    sub_800132C(0x80, 1, 0);
+    FadeBrightness(0x80, 1, 0);
     self->field_20 = 0;
     return self;
 }

@@ -254,7 +254,7 @@ are named by the lower 5 hex digits of their first function's address
   local-copy barriers, splitting into helper calls) reached this exact
   allocation without either losing the ROM's registers or
   reintroducing the r7 hazard.
-- **`sub_802F7B0`**/**`sub_802F8E8`** (`src/graphics/actor_part45d.c`)
+- **`LoadBgPicture`**/**`FillBgPictureMap`** (`src/graphics/actor_part45d.c`)
   - a pair of ~130-170-instruction VRAM tile-remap loops (4-bit
   palette-index repacking into a `0x0600D000`-based tile buffer via
   raw `REG_DMA3SAD`/`DAD`/`CNT` pokes at `0x040000D4`), each with three
@@ -268,7 +268,7 @@ are named by the lower 5 hex digits of their first function's address
   NAKED too - this compiler's register allocator never reproduces the
   ROM's specific three-high-register nested-loop allocation for this
   shape, and the two calls this project's usual register-pin idioms
-  rely on (`sub_8029AC4`, called mid-loop-setup) leave no slack to pin
+  rely on (`GetCellAnimFreeTile`, called mid-loop-setup) leave no slack to pin
   three high registers across the loop body without the compiler
   spilling or reordering something else.
 
@@ -290,19 +290,19 @@ shape was gcc 2.x's pointer-to-member-function call
 
 ## Later pass: late-ROM NAKED retry
 
-`sub_802F8E8` is real C (old_agbcc; `actor_part45d.o` joined
+`FillBgPictureMap` is real C (old_agbcc; `actor_part45d.o` joined
 `OLD_AGBCC_OBJS`). It is the shared loop: declared `inline` ahead of
-`sub_802F7B0`, which inlines it - the inlined copy is what gives 7B0 its
+`LoadBgPicture`, which inlines it - the inlined copy is what gives 7B0 its
 separately strength-reduced `dest[c]`/`dest[c + 0x3e0]` pointers, and
 gcc's deferred output of inlinable functions is why 8E8 follows 7B0 in
 the ROM. The old notes' two register swaps were spelling: reading the map
 entry as `v = *map; v += base;` fixes map/`dest` (r5/r6), and masking
 the high nibble, `(*nib >> 4) & 0xf`, fixes the next-row pointer/row+1
-(ip/r9). `sub_802F7B0` stays NAKED; its draft (the inlining version) is
+(ip/r9). `LoadBgPicture` stays NAKED; its draft (the inlining version) is
 off by two register-priority swaps. See
 [late-rom-naked-retry.md](late-rom-naked-retry.md).
 
-A second late-ROM pass closed `sub_802F7B0` (old_agbcc). The draft's
+A second late-ROM pass closed `LoadBgPicture` (old_agbcc). The draft's
 palette copy had the wrong DMA width (`DmaCopy16(3, pic, PLTT, 0x200)`,
 control word 0x80000100). The two register ties fell to empty
 `asm("" : : "r"(x))` extra references: one to `dest` after the loop

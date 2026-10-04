@@ -25,10 +25,10 @@ extern const u8 *const gUiTextGerman[70];
 extern const u8 *const gUiTextSpanish[70];
 extern const u8 *const gUiTextItalian[70];
 extern const u8 *const gUiTextDutch[70];
-extern const u8 gStaticData_0817D094[];
-extern const u8 gStaticData_0817D0A8[];
-extern const u8 gStaticData_0817D0BC[];
-extern const u8 gStaticData_0817D0D0[];
+extern const u8 gTitleBandicootObj[];
+extern const u8 gTitleCrashObj[];
+extern const u8 gTitleArrow1Obj[];
+extern const u8 gTitleArrow2Obj[];
 
 /* The ARM routines the Thumb code calls through the pointers below. */
 extern s32 LookupSpriteFrameCache(u8 *frame);
@@ -66,10 +66,10 @@ struct {
     s32 field_0;
     s32 field_4;
     u8 field_8;
-} gUnknown_030007E8 = { -1, -1, 0 };
+} gBrightnessFade = { -1, -1, 0 };
 
-s32 gUnknown_030007F4 = 0;
-s32 gUnknown_030007F8 = 0;
+s32 gBrightnessFadeStep = 0;
+s32 gBrightnessFadeTimer = 0;
 u32 gSfxVoiceToggle = 0;
 
 /* Link cable (link_cable*.c, settings_menu*.c): gLinkSession is the
@@ -142,16 +142,16 @@ void (*gUnpackNibbleTilesFunc)(void *src, s32 lowBlock) = UnpackNibbleTiles;
 s32 gUnknown_0300089C[6] = { 0x1555, 0x1155, 0xD55, 0x955, 0x555, 0x155 };
 
 /* Palette RAM addresses (actor_part130.c, actor_part28.c). */
-void *gUnknown_030008B4 = (void *)(PLTT + 0x20);
-void *gUnknown_030008B8 = (void *)(PLTT + 0x340);
+void *gFlashBgPalette = (void *)(PLTT + 0x20);
+void *gFlashObjPalette = (void *)(PLTT + 0x340);
 
 /* level_graphics.c: the four OBJ sprite packages of
  * src/data/level_gfx_17cff4.c. */
-const void *gUnknown_030008BC[4] = {
-    gStaticData_0817D0A8,
-    gStaticData_0817D0D0,
-    gStaticData_0817D0BC,
-    gStaticData_0817D094,
+const void *gTitleObjPackages[4] = {
+    gTitleCrashObj,
+    gTitleArrow2Obj,
+    gTitleArrow1Obj,
+    gTitleBandicootObj,
 };
 
 void *gLanguageSelect = NULL; /* struct counter_widget * */

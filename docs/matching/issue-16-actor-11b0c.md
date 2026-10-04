@@ -36,8 +36,8 @@ updated to place all three pieces (`code_3_2_17_e560.o`,
 
 ## Matched (15/25)
 
-- **`sub_80119A8`**: tail-calls `sub_8007A84` (already matched,
-  `actor_part.c`) with `gUnknown_030012CC` as `self`, then clears
+- **`sub_80119A8`**: tail-calls `DrawSprite` (already matched,
+  `actor_part.c`) with `gSpriteRenderer` as `self`, then clears
   `part->flags` bit 3 if `part+0x38` is nonzero. Needed the
   negative-constant bit-clear idiom (`& -9` computed via a genuine
   runtime `movs`+`rsbs`, not folded to a positive immediate AND) with

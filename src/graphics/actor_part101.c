@@ -25,7 +25,7 @@
  *    With plain globals the reload rotation shifts by one and jump2
  *    cross-jumps the two `ret = 1` exits together.
  *  - `state` (&gLevelState) is assigned right before the inner
- *    loop, so its load precedes the hoisted gUnknown_03001300 load in the
+ *    loop, so its load precedes the hoisted gOamBuffer load in the
  *    preheader, as in the ROM (sb before the sl/r8 copies).
  *  - The exit-state tests are an if/else chain (a switch builds a
  *    balanced compare tree); the "option screen" branch ends in
@@ -44,9 +44,9 @@ extern s32 gUnknown_03001384;
 extern s32 gUnknown_03001388;
 extern s32 gUnknown_0300138C;
 extern u8 *gLevelState;
-extern void *gUnknown_03001300;
+extern void *gOamBuffer;
 extern void *gUnknown_03001304;
-extern void *gUnknown_030012FC;
+extern void *gObjVramCursor;
 extern void *gHud;
 extern u32 gKeys;
 
@@ -58,34 +58,34 @@ extern void sub_802ABFC(s32 flag);
 extern void sub_8029C30(s32 kind);
 extern s32 GetLives(void *state);
 extern void RestoreCheckpoint(void *arg0);
-extern void sub_800132C(s32 a, s32 b, s32 c);
-extern void sub_8029890(s32 arg0, void *arg1, u32 arg2, s32 arg3);
-extern void sub_802F7B0(void);
+extern void FadeBrightness(s32 a, s32 b, s32 c);
+extern void InitCellAnim(s32 arg0, void *arg1, u32 arg2, s32 arg3);
+extern void LoadBgPicture(void);
 extern void sub_802AB08(void);
 extern void SelectActorCategory(s32 type, void *subEffectTable, void *animTable, s32 activeFlag, s32 variant, s32 tick);
 extern void UpdateKeys(void *arg0);
-extern void sub_8029B38(void);
+extern void AdvanceCellAnim(void);
 extern s32 RunActorCategoryFrame(void);
 extern void TickLevelClock(void *arg0);
-extern void sub_8006C4C(void *self);
-extern void sub_8006A78(void *arg0);
+extern void ResetObjVram(void *self);
+extern void RewindOamBuffer(void *arg0);
 extern void UpdateHudSlides(void *state);
 extern void UpdateHud(void *self);
 extern void FlushSpriteFrameOamQueue(void);
 extern void WaitForVBlank(void);
 extern void sub_8029E50(void);
-extern void sub_8006AAC(void *arg0);
+extern void CommitOamBuffer(void *arg0);
 extern void FlushVramDmaQueue(void);
-extern void sub_8029ADC(void);
+extern void FlipCellAnimPage(void);
 extern void sub_802A650(void);
 extern void AgeSpriteFrameCache(void);
-extern u8 sub_8001510(void);
+extern u8 IsBrightnessFadeActive(void);
 extern u8 sub_802A5AC(void);
 extern void FreeSpriteFrameCache(void);
 extern void FreeSpriteFrameOamQueue(void);
 extern void FreeObjTileFreeList(void);
 extern s32 RunPauseMenu(void);
-extern void sub_802996C(void);
+extern void ResetCellAnimBg(void);
 extern void sub_802A5C4(void);
 extern void ShowHudCounters(void *arg0);
 extern void FreeCategorySpriteSheet(void);
@@ -137,11 +137,11 @@ s32 InitActorCategory(s32 category)
         dma->dst = PLTT;
         dma->cnt = 0x81000200;
         dma->cnt;
-        sub_800132C(0x80, 2, 1);
-        sub_8029890(CUR_CATEGORY.type, CUR_CATEGORY.family_shared_04, CUR_CATEGORY.family_shared_08,
+        FadeBrightness(0x80, 2, 1);
+        InitCellAnim(CUR_CATEGORY.type, CUR_CATEGORY.cellAnim, CUR_CATEGORY.cellAnimSize,
                     gUnknown_03000878);
-        if (CUR_CATEGORY.conditional_ptr_0C != NULL)
-            sub_802F7B0();
+        if (CUR_CATEGORY.bgPicture != NULL)
+            LoadBgPicture();
         sub_802AB08();
         SelectActorCategory(CUR_CATEGORY.type, CUR_CATEGORY.spawnTable, CUR_CATEGORY.anim_table,
                             *activeCount >= (s32)CUR_CATEGORY.active_count_threshold, variant,
@@ -154,20 +154,20 @@ s32 InitActorCategory(s32 category)
         state = &gLevelState;
         for (;;) {
             UpdateKeys(gUnknown_03001304);
-            sub_8029B38();
+            AdvanceCellAnim();
             status = RunActorCategoryFrame();
             if ((*state)[0x8c] != 0)
                 TickLevelClock(*state);
-            sub_8006C4C(gUnknown_030012FC);
-            sub_8006A78(gUnknown_03001300);
+            ResetObjVram(gObjVramCursor);
+            RewindOamBuffer(gOamBuffer);
             UpdateHudSlides(gHud);
             UpdateHud(gHud);
             FlushSpriteFrameOamQueue();
             WaitForVBlank();
             sub_8029E50();
-            sub_8006AAC(gUnknown_03001300);
+            CommitOamBuffer(gOamBuffer);
             FlushVramDmaQueue();
-            sub_8029ADC();
+            FlipCellAnimPage();
             sub_802A650();
             AgeSpriteFrameCache();
 
@@ -191,7 +191,7 @@ s32 InitActorCategory(s32 category)
                 }
             } else {
                 open = 0;
-                if (sub_8001510() == 0 && ((gKeys >> 16) & 8))
+                if (IsBrightnessFadeActive() == 0 && ((gKeys >> 16) & 8))
                     open = -sub_802A5AC() < 0;
                 if (open) {
                     buf = mem_alloc(0x200, 0x80000000);
@@ -204,15 +204,15 @@ s32 InitActorCategory(s32 category)
                     FreeObjTileFreeList();
                     result = RunPauseMenu();
                     SetupActorVramPool();
-                    sub_800132C(0x80, 1, 1);
+                    FadeBrightness(0x80, 1, 1);
                     dma->src = (u32)buf;
                     dma->dst = OBJ_PLTT;
                     dma->cnt = 0x80000100;
                     dma->cnt;
                     mem_free(buf);
-                    sub_802996C();
-                    if (CUR_CATEGORY.conditional_ptr_0C != NULL)
-                        sub_802F7B0();
+                    ResetCellAnimBg();
+                    if (CUR_CATEGORY.bgPicture != NULL)
+                        LoadBgPicture();
                     sub_802A5C4();
                     if (result == 2) {
                         ret = 2;

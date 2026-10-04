@@ -21,10 +21,10 @@ same ROM region rather than being part of the category system itself.
   frame-tick counter accessors.
 - `sub_8029748`/`sub_8029794` (`actor_part95.c`) - category tick
   re-basing and an active-instance-count threshold test.
-- `nullsub_5`/`sub_8029AC4` (`actor_part106.c`), `sub_8029ADC`
-  (`actor_part96.c`), `sub_8029B2C` (`actor_part90.c`), `sub_8029B38`
+- `nullsub_5`/`GetCellAnimFreeTile` (`actor_part106.c`), `FlipCellAnimPage`
+  (`actor_part96.c`), `sub_8029B2C` (`actor_part90.c`), `AdvanceCellAnim`
   (`actor_part97.c`), `sub_8029B8C`/`sub_8029B98` (`actor_part91.c`),
-  `sub_8029BAC`/`sub_8029C30`/`sub_8029D8C` (`actor_part98.c`),
+  `SetCellAnimSpeed`/`sub_8029C30`/`sub_8029D8C` (`actor_part98.c`),
   `sub_8029E28`/`sub_8029E34`/`sub_8029E40` (`actor_part92.c`) - the
   rest of the BG-tilemap scroll-effect subsystem's small accessors,
   accumulator-advance, and BG2-affine scroll/zoom setup functions.
@@ -52,7 +52,7 @@ patterns hit repeatedly across this whole chunk.
   `sub_8009868`). Verified byte-for-byte identical to the original raw
   disassembly by assembling both independently and comparing the raw
   `.text` bytes directly (not just against `baserom.gba`).
-- **`sub_80297C8`/`sub_8029890`/`sub_802996C`** (`actor_part95.c`) - a
+- **`UploadCellAnimFrame`/`InitCellAnim`/`ResetCellAnimBg`** (`actor_part95.c`) - a
   DMA copy trigger for the "console"/text-plane cursor cell, the cell
   geometry (re)configuration entry point, and the VRAM tilemap
   double-buffer fill pair it calls. All three reproduce the ROM's exact
@@ -63,8 +63,8 @@ patterns hit repeatedly across this whole chunk.
   against `baserom.gba` directly (relocation-aware: every differing
   byte in the isolated compile falls inside a `bl`/`ABS32` relocation
   range).
-- **`sub_8029BC4`** (`actor_part98.c`) - a VRAM tilemap-fill nested loop
-  sharing `sub_802996C`'s shape; same register-pressure wall.
+- **`FillCellAnimTilemap`** (`actor_part98.c`) - a VRAM tilemap-fill nested loop
+  sharing `ResetCellAnimBg`'s shape; same register-pressure wall.
 
 ## Debugging notes: recurring gcc-2.9 patterns hit across this whole chunk
 
@@ -88,7 +88,7 @@ turned up the same handful of gcc-2.9 quirks over and over:
    `ldr rX, =symbol` between the pool's real position and its assumed
    one encodes a different PC-relative offset - shifting every
    subsequent instruction's *content* without changing the function's
-   total size. Hit this in both `sub_802996C` and `sub_8029BC4`.
+   total size. Hit this in both `ResetCellAnimBg` and `FillCellAnimTilemap`.
 2. **"Materialize the destination address before computing the value"**
    shows up constantly. For a plain `REG_X = expr;`/`global = expr;`
    assignment, this compiler's natural order is address-of-`REG_X`
@@ -98,7 +98,7 @@ turned up the same handful of gcc-2.9 quirks over and over:
    register gets reused for an unrelated purpose afterward. Fixed by
    materializing an explicit pointer local (optionally register-pinned)
    ahead of the value computation, then storing through it. Hit
-   repeatedly: `sub_8029ADC`, `sub_8029B38`, `sub_8029BAC`, `sub_8029C30`
+   repeatedly: `FlipCellAnimPage`, `AdvanceCellAnim`, `SetCellAnimSpeed`, `sub_8029C30`
    (three separate times within the same function), `sub_8029E50`.
 3. **Fresh-register vs. in-place reuse for a "new" value.** When a
    local's old value is dead after producing a new one (e.g. `pos =
@@ -106,7 +106,7 @@ turned up the same handful of gcc-2.9 quirks over and over:
    defaults to overwriting `prev`'s own register in place. The ROM's
    build sometimes keeps the new value in a genuinely different
    register instead. Fixed with register-pinned locals for both the old
-   and new values. Hit in `sub_8029B38` (twice) and `sub_8029C30`.
+   and new values. Hit in `AdvanceCellAnim` (twice) and `sub_8029C30`.
 4. **Signed vs. unsigned shift-by-31 idiom.** `v >> 31` on a signed
    `s32` produces an implementation-defined result this compiler
    resolves as an arithmetic shift (`asrs`); the ROM's own
@@ -128,22 +128,22 @@ confirmed against the raw disassembly bytes directly.
 
 ## Later pass: NAKED retry
 
-`sub_80297C8`, `sub_802996C` and `sub_8029BC4` are now plain C, matching
-under both compilers. `sub_8029BC4` needed `tile++` in each branch of
-the column test, and `sub_802996C` inlines the same body twice.
-`sub_8029890` is still NAKED, with a 37-halfword draft under
+`UploadCellAnimFrame`, `ResetCellAnimBg` and `FillCellAnimTilemap` are now plain C, matching
+under both compilers. `FillCellAnimTilemap` needed `tile++` in each branch of
+the column test, and `ResetCellAnimBg` inlines the same body twice.
+`InitCellAnim` is still NAKED, with a 37-halfword draft under
 `NON_MATCHING`. `InitActorCategory` was not attempted. See
 [issue-48-49-52-aabb-naked-retry.md](issue-48-49-52-aabb-naked-retry.md).
 
 ## Later pass: second near-miss sweep
 
-`sub_8029890` is real C (both compilers). The ROM stores
-`gUnknown_030013A4` once and reloads it for the division through a copy
+`InitCellAnim` is real C (both compilers). The ROM stores
+`gCellAnimFrameSize` once and reloads it for the division through a copy
 of its address taken before the `if`. `asm("" : "=r"(reload) : "0"(a4))`
 makes that copy. Evaluation order does the rest: the flag goes through a
-pointer to `gUnknown_030013B8` loaded first, `area` is assigned inside
-the `gUnknown_030013A0` store, and `size` is read back from
-`gUnknown_030013A0` between taking the address and copying it. See
+pointer to `gCellAnimHasBanks` loaded first, `area` is assigned inside
+the `gCellAnimTileBytes` store, and `size` is read back from
+`gCellAnimTileBytes` between taking the address and copying it. See
 [near-miss-polish-2.md](near-miss-polish-2.md).
 
 ## Later pass: category driver retry

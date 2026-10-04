@@ -140,7 +140,7 @@ asm(".align 2, 0");
  * another ldscript.txt split.
  *
  * Two compiler gaps, both closed with the techniques already used
- * elsewhere in this file's neighbors (see naked-sub_8001524-matched.md
+ * elsewhere in this file's neighbors (see naked-SetDispcntMode-matched.md
  * and naked-sub_80010e0-matched.md):
  *
  * 1. The "normalize a char to lowercase, on the unchanged path" branch
@@ -149,7 +149,7 @@ asm(".align 2, 0");
  *    a plain `if (cond) x += 0x20;` just branches straight past it,
  *    and gcc folds an equivalent ternary back into the same shape once
  *    it proves the truncate redundant. Fixed the same way as
- *    `sub_8001524`/`sub_8001624`: each fold is materialized as an
+ *    `SetDispcntMode`/`CommitBlendRegs`: each fold is materialized as an
  *    opaque inline-asm block the optimizer can't see into.
  * 2. The inner verify loop's "needle exhausted, match found" check
  *    compiled with the opposite branch sense from the ROM (`bne` to a

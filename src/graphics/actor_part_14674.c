@@ -10,7 +10,7 @@
 
 extern u32 gKeys;
 extern void *gEntityFlags;
-extern void *gUnknown_030012B8;
+extern void *gPaletteCache;
 extern void *gAudioContext;
 extern struct act_part *gPlayer;
 extern void *gUnknown_03001304;
@@ -19,7 +19,7 @@ extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
 extern u8 GetDpadDirection(void *pad);
 extern void sub_8015398(struct act *self);
 extern void sub_8015780(struct act *self, s32 a, s32 b, s32 c, s32 d);
-extern void sub_8006D08(void *cache, s32 slot, s32 kind);
+extern void LoadPaletteSlot(void *cache, s32 slot, s32 kind);
 extern void sub_80153FC(struct act *self);
 extern u8 sub_80122CC(struct act *self);
 extern void *GetSpriteFrame(struct act_part *part);
@@ -285,7 +285,7 @@ void sub_80149BC(struct act *self)
         self->next32 = 0;
         self->flag30 = 1;
         self->next28 = 0;
-        sub_8006D08(gUnknown_030012B8, self->part->slotNibble,
+        LoadPaletteSlot(gPaletteCache, self->part->slotNibble,
                     self->part->bank->records[self->part->tag].unk_14);
     }
 }

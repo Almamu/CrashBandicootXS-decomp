@@ -24,7 +24,7 @@ matches both.
   `self+0x20`-pointer-to-manager/`self+0x2d`-tag/0x1c-stride
   hitbox-record's own `+0x16` count (the same table-lookup convention
   `sub_800D040`, game_loop6.c, establishes). Always tail-fires
-  `sub_8007A84(gUnknown_030012CC, self)`, then - only if `self+0x38`
+  `DrawSprite(gSpriteRenderer, self)`, then - only if `self+0x38`
   ended up nonzero - clears `self+0xc` bit 3. Two gotchas, both
   register-pinning:
   - The `self+0x20`-pointer-to-manager/`self+0x2d`-tag record lookup

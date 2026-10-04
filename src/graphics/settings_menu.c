@@ -362,17 +362,17 @@ void sub_80041BC(struct pause_options_screen *self, void *handle, s32 selectedIn
 }
 asm(".align 2, 0");
 
-extern struct oam_shadow_buffer *gUnknown_03001300;
-extern void sub_8006A90(struct oam_shadow_buffer *arg0);
-extern void sub_8006A48(struct oam_shadow_buffer *arg0);
-extern void sub_8006AAC(struct oam_shadow_buffer *arg0);
-extern struct tile_asset_cache *gUnknown_030012B8;
-extern void sub_8006EA8(struct tile_asset_cache *self);
-extern s32 sub_8006D50(struct tile_asset_cache *self, s32 index);
-extern struct vram_upload_cursor *gUnknown_030012FC;
-extern void sub_8006C4C(struct vram_upload_cursor *self);
-extern s32 sub_8006C58(struct vram_upload_cursor *self, s32 size);
-extern void sub_8006C30(struct vram_upload_cursor *self);
+extern struct oam_shadow_buffer *gOamBuffer;
+extern void ResetOamBuffer(struct oam_shadow_buffer *arg0);
+extern void HideUnusedOamEntries(struct oam_shadow_buffer *arg0);
+extern void CommitOamBuffer(struct oam_shadow_buffer *arg0);
+extern struct palette_cache *gPaletteCache;
+extern void FreeUnlockedPaletteSlots(struct palette_cache *self);
+extern s32 ClaimPaletteSlot(struct palette_cache *self, s32 index);
+extern struct vram_upload_cursor *gObjVramCursor;
+extern void ResetObjVram(struct vram_upload_cursor *self);
+extern s32 ReserveObjVram(struct vram_upload_cursor *self, s32 size);
+extern void MarkObjVram(struct vram_upload_cursor *self);
 extern void _call_via_r1(void *addr, void *fn);
 extern struct actor *sub_8008904(struct actor *part);
 extern void sub_80087C0(struct actor *part);
@@ -403,9 +403,9 @@ static inline void IconSetup(struct icon_manager *m, u32 v)
 
 static inline void IconReserve(struct icon_manager **m)
 {
-    struct vram_upload_cursor *c = gUnknown_030012FC;
+    struct vram_upload_cursor *c = gObjVramCursor;
 
-    sub_8006C58(c, (*m)->tileCount << 5);
+    ReserveObjVram(c, (*m)->tileCount << 5);
 }
 
 #define SET_ROW_OBJ_POS(objExpr, px, py)                                        \
@@ -487,16 +487,16 @@ void sub_800450C(struct pause_options_screen *self)
     asm("");
     asm("");
     asm("");
-    sub_8006A90(gUnknown_03001300);
-    sub_8006A48(gUnknown_03001300);
+    ResetOamBuffer(gOamBuffer);
+    HideUnusedOamEntries(gOamBuffer);
     WaitForVBlank();
-    sub_8006AAC(gUnknown_03001300);
-    sub_8006EA8(gUnknown_030012B8);
-    sub_8006D50(gUnknown_030012B8, 0);
-    sub_8006D50(gUnknown_030012B8, 1);
-    sub_8006D50(gUnknown_030012B8, 2);
-    sub_8006D50(gUnknown_030012B8, 3);
-    pal = (u16 (*)[16])gUnknown_030012B8->slots;
+    CommitOamBuffer(gOamBuffer);
+    FreeUnlockedPaletteSlots(gPaletteCache);
+    ClaimPaletteSlot(gPaletteCache, 0);
+    ClaimPaletteSlot(gPaletteCache, 1);
+    ClaimPaletteSlot(gPaletteCache, 2);
+    ClaimPaletteSlot(gPaletteCache, 3);
+    pal = (u16 (*)[16])gPaletteCache->slots;
     for (i = 0; i < 16; i++) {
         pal[0][i] = gStaticData_0816B13A[i];
         pal[1][i] = gStaticData_0816B15A[i];
@@ -505,9 +505,9 @@ void sub_800450C(struct pause_options_screen *self)
     }
     FontSetPalette(gSmallFont, 0);
     FontSetPalette(gLargeFont, 0);
-    gUnknown_030012FC->field_08 = 0;
-    sub_8006C4C(gUnknown_030012FC);
-    sub_8006C4C(gUnknown_030012FC);
+    gObjVramCursor->baseTile = 0;
+    ResetObjVram(gObjVramCursor);
+    ResetObjVram(gObjVramCursor);
     IconSetup(gSmallFont, 0);
     IconReserve(&gSmallFont);
     {
@@ -516,7 +516,7 @@ void sub_800450C(struct pause_options_screen *self)
         IconSetup(gLargeFont, v);
     }
     IconReserve(&gLargeFont);
-    sub_8006C30(gUnknown_030012FC);
+    MarkObjVram(gObjVramCursor);
 
     a = (struct settings_icon_actor **)self->rowObjA;
     b = (struct settings_icon_actor **)self->rowObjB;

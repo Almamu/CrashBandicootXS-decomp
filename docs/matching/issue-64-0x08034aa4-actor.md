@@ -185,7 +185,7 @@ the rest of what's understood without committing it to the struct.
   dispatcher for the minimap object: for `drawMode` 0/1/2 draws a single
   centered label; for any other value DMA3-transfers a procedurally-built
   tile buffer and iterates a per-tile record array, building each dot's
-  OAM attribute halfwords in place and applying them via `sub_8006AC8`,
+  OAM attribute halfwords in place and applying them via `AddOamEntry`,
   before advancing to the next linked object and repeating. The inner
   tile loop keeps six independent running values live simultaneously
   across a `bl` inside a nested loop (sl/sb/r8 plus r4-r7) - NAKED.

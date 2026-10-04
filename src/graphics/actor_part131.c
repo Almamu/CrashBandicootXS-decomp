@@ -80,8 +80,8 @@ struct map_screen {
 
 COMPILE_TIME_ASSERT(sizeof(struct map_screen) == 0x98);
 
-extern struct oam_shadow_buffer *gUnknown_03001300;
-extern void sub_8006AAC(struct oam_shadow_buffer *arg0);
+extern struct oam_shadow_buffer *gOamBuffer;
+extern void CommitOamBuffer(struct oam_shadow_buffer *arg0);
 extern void WaitForVBlank(void);
 extern void FlushVramDmaQueue(void);
 
@@ -102,11 +102,11 @@ extern void FlushVramDmaQueue(void);
  * the same `ICON_TEXT_CALL` shape settings_menu.c already matches, and
  * with that the "many live values across calls" allocation falls out
  * of plain C. */
-extern struct vram_upload_cursor *gUnknown_030012FC;
+extern struct vram_upload_cursor *gObjVramCursor;
 extern u8 gStaticData_0817C510[];
-extern void sub_8006A90(struct oam_shadow_buffer *arg0);
-extern void sub_8006A48(struct oam_shadow_buffer *arg0);
-extern void sub_8006C28(struct vram_upload_cursor *arg0);
+extern void ResetOamBuffer(struct oam_shadow_buffer *arg0);
+extern void HideUnusedOamEntries(struct oam_shadow_buffer *arg0);
+extern void RewindObjVram(struct vram_upload_cursor *arg0);
 extern s32 FontSetPalette(void *mgr, u8 arg1);
 extern s32 GetUiText(s32 arg0);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
@@ -131,8 +131,8 @@ void DrawContinuePrompt(struct fade_overlay *self)
 {
     s32 w;
 
-    sub_8006A90(gUnknown_03001300);
-    sub_8006C28(gUnknown_030012FC);
+    ResetOamBuffer(gOamBuffer);
+    RewindObjVram(gObjVramCursor);
     w = ICON_TEXT_CALL(self->icons, 0, GetUiText(0x28));
     FontSetPalette(self->icons, 0);
     set_icon_mgr_pos(self->icons, 0x88 - w, 0x87);
@@ -153,7 +153,7 @@ void DrawContinuePrompt(struct fade_overlay *self)
     }
     set_icon_mgr_pos(self->icons, 0x98, 0x91);
     ICON_TEXT_CALL(self->icons, 2, GetUiText(0x2a));
-    sub_8006A48(gUnknown_03001300);
+    HideUnusedOamEntries(gOamBuffer);
 }
 
 asm(".align 2, 0");
@@ -188,7 +188,7 @@ s32 sub_8034C40(struct fade_overlay *self, s32 mode)
 void CommitContinuePromptFrame(struct fade_overlay *self)
 {
     WaitForVBlank();
-    sub_8006AAC(gUnknown_03001300);
+    CommitOamBuffer(gOamBuffer);
     FlushVramDmaQueue();
     REG_DISPCNT = self->dispcnt;
 }
@@ -248,7 +248,7 @@ asm(".align 2, 0");
  * managers), loads the popup-text glyph assets (`LoadCreditsLogos`), resets
  * the shared tile cache and VRAM upload cursor, initializes the
  * popup-text opcode-stream fields to `gCreditsText`, sets the
- * DISPCNT "OBJ enable"-adjacent bit in `gUnknown_03001288`, and ducks
+ * DISPCNT "OBJ enable"-adjacent bit in `gDispcnt`, and ducks
  * the audio context (`PlaySong(gAudioContext, 0x11)`). Returns
  * `self`.
  *
@@ -263,23 +263,23 @@ asm(".align 2, 0");
  * under old_agbcc, so it moved to the Makefile's OLD_AGBCC_OBJS). The
  * empty `asm("")` after the E0 reset produces no code; it only
  * lengthens the live ranges crossing it by one insn, which is what tips
- * the allocator into giving `&gUnknown_030012B8`/`&gUnknown_030012FC`
+ * the allocator into giving `&gPaletteCache`/`&gObjVramCursor`
  * r4 and `&gSmallFont` r6 as the ROM does. */
 extern void *InitStarfield(void *arg0);
-extern void sub_8006EA8(struct tile_asset_cache *cache);
+extern void FreeUnlockedPaletteSlots(struct palette_cache *cache);
 extern void FontResetPalette(struct icon_manager *mgr);
 extern void LoadCreditsLogos(struct map_screen *self);
-extern void sub_8006DC8(struct tile_asset_cache *arg0);
-extern void sub_8006C4C(struct vram_upload_cursor *self);
-extern s32 sub_8006C58(struct vram_upload_cursor *self, s32 size);
-extern void sub_8006C30(struct vram_upload_cursor *self);
+extern void UploadPaletteCache(struct palette_cache *arg0);
+extern void ResetObjVram(struct vram_upload_cursor *self);
+extern s32 ReserveObjVram(struct vram_upload_cursor *self, s32 size);
+extern void MarkObjVram(struct vram_upload_cursor *self);
 extern void _call_via_r1(void *self, void *fn);
-extern void sub_8001614(void);
+extern void CommitDispcnt(void);
 extern void PlaySong(struct AudioContext *self, u32 id);
-extern struct tile_asset_cache *gUnknown_030012B8;
+extern struct palette_cache *gPaletteCache;
 extern struct icon_manager *gSmallFont;
 extern struct icon_manager *gLargeFont;
-extern u8 gUnknown_03001288[2];
+extern u8 gDispcnt[2];
 extern struct AudioContext *gAudioContext;
 extern u8 gCreditsText[];
 extern void *sub_8026EDC(s32 size);
@@ -298,41 +298,41 @@ static inline void IconSetBase(struct icon_manager *m, u32 base)
  * cursor `c`. */
 static inline void IconReserveVram(struct vram_upload_cursor *c, struct icon_manager *m)
 {
-    sub_8006C58(c, m->tileCount << 5);
+    ReserveObjVram(c, m->tileCount << 5);
 }
 
 struct map_screen *InitCredits(struct map_screen *self)
 {
     self->starfield = InitStarfield(sub_8026EDC(0x14));
-    sub_8006A90(gUnknown_03001300);
-    sub_8006A48(gUnknown_03001300);
+    ResetOamBuffer(gOamBuffer);
+    HideUnusedOamEntries(gOamBuffer);
     WaitForVBlank();
-    sub_8006AAC(gUnknown_03001300);
-    sub_8006EA8(gUnknown_030012B8);
+    CommitOamBuffer(gOamBuffer);
+    FreeUnlockedPaletteSlots(gPaletteCache);
     FontResetPalette(gSmallFont);
     FontSetPalette(gLargeFont, 0);
     asm("");
     LoadCreditsLogos(self);
-    sub_8006DC8(gUnknown_030012B8);
-    gUnknown_030012FC->field_08 = 0;
-    sub_8006C4C(gUnknown_030012FC);
-    sub_8006C4C(gUnknown_030012FC);
+    UploadPaletteCache(gPaletteCache);
+    gObjVramCursor->baseTile = 0;
+    ResetObjVram(gObjVramCursor);
+    ResetObjVram(gObjVramCursor);
     IconSetBase(gSmallFont, 0);
-    IconReserveVram(gUnknown_030012FC, gSmallFont);
+    IconReserveVram(gObjVramCursor, gSmallFont);
     {
         u32 base = gSmallFont->tileCount;
 
         IconSetBase(gLargeFont, base);
     }
-    IconReserveVram(gUnknown_030012FC, gLargeFont);
-    sub_8006C30(gUnknown_030012FC);
+    IconReserveVram(gObjVramCursor, gLargeFont);
+    MarkObjVram(gObjVramCursor);
     self->popupListHead = NULL;
     self->drawMode = 0;
     self->streamBase = gCreditsText;
     self->streamCursor = gCreditsText;
     self->suppressCounter = 0;
-    gUnknown_03001288[1] |= 0x10;
-    sub_8001614();
+    gDispcnt[1] |= 0x10;
+    CommitDispcnt();
     self->frameParity = 0;
     PlaySong(gAudioContext, 0x11);
     return self;
@@ -425,7 +425,7 @@ asm(".align 2, 0");
  * (docs/rom_map.md's starfield/radar-dot description) DMA3-transfers a
  * procedurally-built tile buffer and iterates a per-tile record array,
  * building each dot's OAM attribute halfwords in place and applying
- * them via `sub_8006AC8`, before advancing to the next linked object in
+ * them via `AddOamEntry`, before advancing to the next linked object in
  * `starfield`'s list and repeating.
  *
  * Was a NAKED transcription until the issue #64/#65 NAKED retry: the
@@ -445,18 +445,18 @@ struct popup_oam {
     u16 palette:4;
 };
 
-extern s32 sub_8006C44(struct vram_upload_cursor *self);
-extern s32 sub_8006C84(struct vram_upload_cursor *self, void *src, s32 size);
+extern s32 GetObjVramTile(struct vram_upload_cursor *self);
+extern s32 UploadObjVram(struct vram_upload_cursor *self, void *src, s32 size);
 extern void CpuSet(void *src, void *dst, s32 control);
-extern void sub_8006AC8(struct oam_shadow_buffer *self, void *record);
+extern void AddOamEntry(struct oam_shadow_buffer *self, void *record);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 
 void DrawCreditsText(struct map_screen *self)
 {
     struct popup_node *node;
 
-    sub_8006A90(gUnknown_03001300);
-    sub_8006C28(gUnknown_030012FC);
+    ResetOamBuffer(gOamBuffer);
+    RewindObjVram(gObjVramCursor);
     for (node = self->popupListHead; node != NULL; node = node->next)
     {
         struct icon_manager *m;
@@ -482,8 +482,8 @@ void DrawCreditsText(struct map_screen *self)
             s32 y;
             s32 i;
 
-            tile = sub_8006C44(gUnknown_030012FC);
-            sub_8006C84(gUnknown_030012FC, glyph->tiles, (glyph->rows * glyph->cols) << 9);
+            tile = GetObjVramTile(gObjVramCursor);
+            UploadObjVram(gObjVramCursor, glyph->tiles, (glyph->rows * glyph->cols) << 9);
             zero = 0;
             CpuSet(&zero, &oam, CPU_SET_SRC_FIXED | CPU_SET_32BIT | 2);
             oam.size = 2;
@@ -502,7 +502,7 @@ void DrawCreditsText(struct map_screen *self)
                     {
                         oam.x = x;
                         oam.tile = tile;
-                        sub_8006AC8(gUnknown_03001300, &oam);
+                        AddOamEntry(gOamBuffer, &oam);
                     }
                     tile += 0x10;
                     x += 0x20;
@@ -513,7 +513,7 @@ void DrawCreditsText(struct map_screen *self)
         }
         }
     }
-    sub_8006A48(gUnknown_03001300);
+    HideUnusedOamEntries(gOamBuffer);
 }
 
 asm(".align 2, 0");
@@ -731,8 +731,8 @@ asm(".align 2, 0");
  * (`sub_8026EC0`/`LoadTaggedAsset`) into a freshly-decoded buffer and
  * building each glyph cell's OAM tile index via a nested nibble/row
  * loop, then loading the shared 15-color palette tail
- * (`gUnknown_030012B8+0x2c`) the same way and pinning the freshly-built
- * asset into the shared tile cache (`sub_8006D50`).
+ * (`gPaletteCache+0x2c`) the same way and pinning the freshly-built
+ * asset into the shared tile cache (`ClaimPaletteSlot`).
  *
  * Built with old_agbcc. GCSE's PRE hoists any `slot << 5` (and even a
  * plain `asm("" : "+r")` copy, since a non-volatile asm with outputs is
@@ -758,11 +758,11 @@ extern struct popup_glyph_src gCreditsLogos[];
 extern void *sub_8026EC0(u32 size);
 extern void sub_8026EB4(void *ptr);
 extern void LoadTaggedAsset(const void *asset, void *dest);
-extern s32 sub_8006D50(struct tile_asset_cache *cache, s32 index);
+extern s32 ClaimPaletteSlot(struct palette_cache *cache, s32 index);
 
 void LoadCreditsLogos(struct map_screen *self)
 {
-    u8 (*palSlots)[TILE_SIZE_4BPP] = gUnknown_030012B8->slots;
+    u8 (*palSlots)[TILE_SIZE_4BPP] = gPaletteCache->slots;
     s32 slot = 1;
     s32 i;
 
@@ -835,7 +835,7 @@ void LoadCreditsLogos(struct map_screen *self)
         }
         if (pal != NULL)
             sub_8026EB4(pal);
-        sub_8006D50(gUnknown_030012B8, slot);
+        ClaimPaletteSlot(gPaletteCache, slot);
         *(s32 *)&glyph->palette = slot;
         slot++;
     }
@@ -843,9 +843,9 @@ void LoadCreditsLogos(struct map_screen *self)
 
 asm(".align 2, 0");
 
-extern void sub_8001614(void);
-extern void sub_8006DC8(struct tile_asset_cache *arg0);
-extern struct tile_asset_cache *gUnknown_030012B8;
+extern void CommitDispcnt(void);
+extern void UploadPaletteCache(struct palette_cache *arg0);
+extern struct palette_cache *gPaletteCache;
 
 /* --------------------------------------------------------------------
  * CommitCreditsFrame - end-of-frame commit for the credits screen: resets BG0's
@@ -857,10 +857,10 @@ extern struct tile_asset_cache *gUnknown_030012B8;
  * ROM's own call sites byte-for-byte. */
 void CommitCreditsFrame(void *unused)
 {
-    sub_8001614();
+    CommitDispcnt();
     *(vu32 *)REG_ADDR_BG0HOFS = 0;
-    sub_8006DC8(gUnknown_030012B8);
-    sub_8006AAC(gUnknown_03001300);
+    UploadPaletteCache(gPaletteCache);
+    CommitOamBuffer(gOamBuffer);
     FlushVramDmaQueue();
 }
 

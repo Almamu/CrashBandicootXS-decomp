@@ -57,13 +57,13 @@ Each empty asm has a comment in the source.
 
 ## Moved to C as NAKED + draft (not matched)
 
-- **`sub_8007634`** is in the new `src/graphics/graphics_7634.c`, which
+- **`DrawAffineSpritePieces`** is in the new `src/graphics/graphics_7634.c`, which
   replaces `asm/code_3_2.o` in `ldscript.txt`. It is the affine sibling of
-  `sub_80073DC`. The draft follows the ROM block for block, with bitfield
+  `DrawSpritePieces`. The draft follows the ROM block for block, with bitfield
   OAM words and the affine-matrix slot allocation. It is 468 halfwords off
   (1032 bytes under agbcc and 1024 under old_agbcc, against the ROM's
   1044). The ROM spills nearly every local into a 0x48-byte frame, the
-  same obstacle that parks `sub_80073DC`.
+  same obstacle that parks `DrawSpritePieces`.
 - **`sub_800A884`**'s NAKED body moved into `src/graphics/actor_part78.c`,
   and `asm/code_3_2_16_a884.s` is gone. The old draft used register pins
   and two asm islands and was 137 halfwords off under both compilers,
@@ -95,7 +95,7 @@ Each empty asm has a comment in the source.
 ## Later pass: the four holdouts again (nothing closed)
 
 A second pass retried `sub_80091D4`, `DrawPlayer`, `sub_800A884` and
-`sub_8007634`. None closed. Two drafts got closer and were updated in
+`DrawAffineSpritePieces`. None closed. Two drafts got closer and were updated in
 place; the NAKED bodies are unchanged.
 
 - **`sub_80091D4`: 215 → 7 halfwords** (old_agbcc; agbcc 35). The r8/sb
@@ -151,7 +151,7 @@ place; the NAKED bodies are unchanged.
   `f100..f103`, and a value-first `one` local were tried. The
   value-first local does reproduce the ROM's `movs rX, #1` before the
   offset, but the registers still differ.
-- **`sub_8007634`: not attempted past reading.** It is 1044 bytes, and
+- **`DrawAffineSpritePieces`: not attempted past reading.** It is 1044 bytes, and
   the ROM spills nearly every local, including both parameters at
   `[sp, #8]`/`[sp, #0xc]`. Each value is stored as soon as it is
   produced and reloaded at every use, which looks like reload spilling
@@ -185,7 +185,7 @@ asm("" : : "r"(hold));`) to the two drafts above.
     second loop, as the earlier nudges did.
 - **`DrawPlayer`: 246 → 40 halfwords, same size** (636 bytes). Not
   closed; the draft under `#if NON_MATCHING` was updated.
-  - An r6 hold across the `sub_8007A84` blink call puts `self` in r7.
+  - An r6 hold across the `DrawSprite` blink call puts `self` in r7.
     With `self` in r6, r7 had been the reload register.
   - A value-first history store (`s32 x = self->x;` before
     `self->hist[self->histIdx].x = x;`) matches the ROM's load order.
@@ -216,8 +216,8 @@ passes its two sums straight in as arguments to a small inline setter:
 
 ```c
 SetChildPos(self->child,
-            self->hist[idx].x + gStaticData_0816A820[gRoomFrameCount & 0xff] * 16,
-            self->hist[idx].y + gStaticData_0816A820[(gRoomFrameCount >> 1) & 0xff] * 8 - 0x1800);
+            self->hist[idx].x + gSineTable[gRoomFrameCount & 0xff] * 16,
+            self->hist[idx].y + gSineTable[(gRoomFrameCount >> 1) & 0xff] * 8 - 0x1800);
 ```
 
 gcc 2.x expands all of an inline call's arguments before it copies them

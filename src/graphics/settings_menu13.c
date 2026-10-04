@@ -51,9 +51,9 @@ extern void sub_80087C0(struct actor *part);
 extern void sub_80087B4(struct actor *part);
 extern void sub_800872C(struct actor *part, u8 val);
 extern s32 sub_800815C(struct actor *part);
-extern void *sub_801E644(void *buf, s32 arg1, s32 arg2, s32 arg3, s32 arg4);
+extern void *InitBgSetup(void *buf, s32 arg1, s32 arg2, s32 arg3, s32 arg4);
 extern void LoadGraphicsPackage(void *buf, void *asset);
-extern s32 sub_801E640(void *buf);
+extern s32 GetBgSetupControl(void *buf);
 extern void PlaySong(void *self, s32 id);
 
 extern void ***gUnknown_030012D0;
@@ -76,7 +76,7 @@ extern void *gAudioContext;
  * frame index from `type`, the standard `sub_80087C0`/`sub_80087B4`/
  * `sub_800872C` OAM trio, positioned at a fixed (0xf0<<7, 0xa0<<7)
  * point, `field_29`'s low nibble from `sub_800815C`). Finally sets
- * `REG_BG0CNT` from `sub_801E640(self)`, clears `REG_BG0HOFS`/
+ * `REG_BG0CNT` from `GetBgSetupControl(self)`, clears `REG_BG0HOFS`/
  * `REG_BG0VOFS` (one 32-bit write), and restores the last-played song
  * via `PlaySong(gAudioContext, 0xf)`.
  *
@@ -118,7 +118,7 @@ struct sub_8006700_actor *InitPowerDialog(struct sub_8006700_actor *selfArg, s32
     register s32 sixteen asm("r4");
     struct settings_icon_actor *icon;
 
-    sub_801E644(self, 0, 0x1f, 0, 3);
+    InitBgSetup(self, 0, 0x1f, 0, 3);
 
     self->field_20 = 0;
     {
@@ -245,7 +245,7 @@ struct sub_8006700_actor *InitPowerDialog(struct sub_8006700_actor *selfArg, s32
         }
     }
 
-    REG_BG0CNT = sub_801E640(self);
+    REG_BG0CNT = GetBgSetupControl(self);
     *(vu32 *)REG_ADDR_BG0HOFS = 0;
     PlaySong(gAudioContext, 0xf);
 
