@@ -19,36 +19,31 @@ void nullsub_41(void)
 asm(".align 2, 0");
 
 /* GAX2_SoundHandler "UnknownC" type's `init_fn` (ROM `0x0803A22D`, see
- * docs/audio.md). Loops the "songPtr" object's per-item array (`self+8`,
- * count `self->0xc`, itself set to a fixed `1` first) calling each
- * item's own function pointer (`item->0->0`) through the `sub_803AD7C`
- * trampoline - a generic "run an init/reset callback on every child"
- * pattern matching the "UnknownC children array" docs/audio.md already
- * documents (channel handler addresses, logical index order). The loop
- * bound is `self->0->0xc`, extended by `self->0x14` unless the engine's
- * current channel-index field (`gUnknown_03001630->curChannelIdx`) is
- * non-zero - not confidently understood beyond that, so every field
- * stays a raw offset. */
+ * docs/audio.md) - `self` is the mixer handler. Sets `pos` to 1, then
+ * runs every child's `init` callback (`child->type->init`) through the
+ * `sub_803AD7C` trampoline. The children are the song's channels
+ * (`type->childCount`), plus the `extraChildren` sound-effect voices
+ * when this is the music player (`curChannelIdx == 0`). */
 void sub_803A22C(void *self)
 {
-    u8 *p = self;
+    struct GaxMixerHandler *p = self;
     u32 i;
     register u32 limit asm("r0");
 
-    *(u32 *)(p + 0xc) = 1;
+    p->pos = 1;
     for (i = 0; ; i++) {
         if (gUnknown_03001630->curChannelIdx == 0) {
-            limit = *(u32 *)(*(u32 *)p + 0xc);
-            limit = limit + *(u32 *)(p + 0x14);
+            limit = p->type->childCount;
+            limit = limit + p->extraChildren;
         } else {
-            limit = *(u32 *)(*(u32 *)p + 0xc);
+            limit = p->type->childCount;
         }
         if (i >= limit) {
             break;
         }
         {
-            void *elem = *(void **)(*(u32 *)(p + 8) + i * 4);
-            void *fn = *(void **)(*(void **)elem);
+            struct GaxHandler *elem = p->children[i];
+            void *fn = elem->type->init;
             sub_803AD7C(elem, fn);
         }
     }

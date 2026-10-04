@@ -184,7 +184,10 @@ struct GaxWave {
 };
 
 struct GaxSongData {
-    u8 pad_00[8];
+    u8 pad_00[2];
+    u16 patternRows;             /* 0x02 - rows per pattern */
+    u16 orderCount;              /* 0x04 - entries in each channel's order list */
+    u16 loopOrder;               /* 0x06 - order position the song loops back to */
     u16 volume;                  /* 0x08 - Q8 master volume */
     u8 pad_0a[2];
     u8 *patterns;                /* 0x0c - base of the packed pattern streams */
@@ -238,10 +241,14 @@ struct GaxHandler {
 /* The shared "Info" handler every Channel handler's children[0] is. */
 struct GaxInfoHandler {
     struct GaxHandlerType *type; /* 0x00 */
-    u8 pad_04[0x10];
+    struct GaxChannelFormat *format; /* 0x04 */
+    struct GaxHandler **children; /* 0x08 */
+    u32 lastTick;                /* 0x0c - the play_fn argument of the last tick run */
+    u32 firstTick;               /* 0x10 - the first one, 0 = none yet */
     s16 orderPos;                /* 0x14 */
-    u8 pad_16[2];
-    u16 speed;                   /* 0x18 - ticks per row */
+    s16 row;                     /* 0x16 - row in the current pattern */
+    u16 speed;                   /* 0x18 - ticks per row; a nonzero high byte
+                                  * alternates with the low byte every row */
     u8 field_1a;                 /* 0x1a */
     u8 field_1b;                 /* 0x1b */
     u8 tickCounter;              /* 0x1c */

@@ -1,5 +1,6 @@
 #include "core.h"
 #include "actor.h"
+#include "vtable.h"
 #include "level_menu.h"
 
 /* Built with old_agbcc - see docs/matching/game-loop-old-agbcc.md. */
@@ -53,13 +54,11 @@ void sub_802400C(void *self)
 
         {
             struct actor *p = (struct actor *)gUnknown_030012D8;
-            void *tbl = p->table;
-            if ((u8)(s32)sub_803AD7C((u8 *)p + *(s16 *)((u8 *)tbl + 0x28),
-                                      *(void **)((u8 *)tbl + 0x2c)) != 0) {
+            struct vtable_slot *tbl = p->table;
+            if ((u8)(s32)sub_803AD7C((u8 *)p + tbl[5].delta, tbl[5].fn) != 0) {
                 struct actor *p2 = (struct actor *)gUnknown_030012D8;
-                void *tbl2 = p2->table;
-                sub_803AD7C((u8 *)p2 + *(s16 *)((u8 *)tbl2 + 0x20),
-                            *(void **)((u8 *)tbl2 + 0x24));
+                struct vtable_slot *tbl2 = p2->table;
+                sub_803AD7C((u8 *)p2 + tbl2[4].delta, tbl2[4].fn);
             }
         }
 

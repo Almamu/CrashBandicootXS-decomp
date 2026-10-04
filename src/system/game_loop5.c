@@ -1,4 +1,5 @@
 #include "core.h"
+#include "level_data.h"
 
 extern void *gUnknown_03001308;
 
@@ -40,11 +41,11 @@ u16 sub_80254C0(struct tile_cache *self, s32 x, s32 y)
 
 /* Constructs `self` from `source` (see the `tile_cache` comment above):
  * caches the tile-grid pointer, the decode-table base
- * (`gUnknown_03001308`'s camera offset + `source->4`), the tile-grid
+ * (`gUnknown_03001308`'s camera offset + `source->assetOffset`), the tile-grid
  * dimensions, and the pixel-dimension fields nothing in this cluster
  * reads back - then resets every cache slot's resident id to -1 and the
  * eviction cursor to 0. Does nothing when `source` is NULL. */
-void sub_80254F8(struct tile_cache *self, void *source)
+void sub_80254F8(struct tile_cache *self, struct level_layer_desc *source)
 {
     s32 i;
 
@@ -53,13 +54,13 @@ void sub_80254F8(struct tile_cache *self, void *source)
     }
 
     self->source = source;
-    self->decodeBase = (u8 *)*(void **)((u8 *)gUnknown_03001308 + 0x24) + *(s32 *)((u8 *)source + 4);
-    self->unk010 = *(u16 *)((u8 *)source + 0x1a);
-    self->unk014 = *(u16 *)((u8 *)source + 0x1c);
+    self->decodeBase = (u8 *)*(void **)((u8 *)gUnknown_03001308 + 0x24) + (s32)source->assetOffset;
+    self->unk010 = source->widthTiles;
+    self->unk014 = source->heightTiles;
     self->unk008 = self->unk010 << 3;
     self->unk00c = self->unk014 << 3;
-    self->width = *(u16 *)((u8 *)source + 0x16);
-    self->height = *(u16 *)((u8 *)source + 0x18);
+    self->width = source->gridWidth;
+    self->height = source->gridHeight;
 
     for (i = 0; i < 16; i++) {
         self->id[i] = -1;
@@ -113,13 +114,13 @@ void sub_8025588(void *self, s32 n)
 
 extern void sub_803A94C(void *src, void *dst, s32 control);
 
-/* Zero-fills 32 halfwords (64 bytes, one OBJ/BG palette bank) at `dst`
- * via the BIOS `CpuSet` wrapper, fixed-source mode. */
+/* Zero-fills 32 words (128 bytes) at `dst` via the BIOS `CpuSet`
+ * wrapper, 32-bit fixed-source mode. */
 void sub_80255A8(void *dst)
 {
     s32 zero = 0;
 
-    sub_803A94C(&zero, dst, 0x05000020);
+    sub_803A94C(&zero, dst, CPU_SET_32BIT | CPU_SET_SRC_FIXED | 0x20);
 }
 
 /* `sub_80255A8` wrapper that returns the same pointer it clears. */

@@ -1,4 +1,16 @@
 #include "core.h"
+#include "vtable.h"
+
+/* The fields of a level object (`struct gobj`, gobj_1a794.h) that
+ * `sub_8010674` reads. */
+struct gobj_view {
+    u8 unk_00[0xc];
+    u8 flags;                       // 0x0c
+    u8 unk_0d[0xb];
+    struct vtable_slot *vtable;     // 0x18
+    u8 unk_1c[0x28];
+    void *mover;                    // 0x44
+};
 
 struct aabb {
     s32 field_0;
@@ -24,8 +36,8 @@ extern void *sub_803AD7C(void *arg0, void *arg1);
  * `sub_803AD7C` table-trampoline convention `sub_8007048`/
  * `sub_80070D4`, graphics.c, already establish - here at the table's
  * own `+0x10`/`+0x14` offset pair) and a caller-supplied `struct aabb
- * *`. Short-circuits true (skipping the real test) when `self+0xc`
- * bit 4 is set, or when `self+0x44` is nonzero. */
+ * *`. Short-circuits true (skipping the real test) when `flags` bit 4
+ * is set, or when the object has a `mover`. */
 u32 sub_8010674(void *selfArg, struct aabb *boxArg)
 {
     /* self/box pinned to r5/r6: the ROM keeps both live across the
@@ -40,20 +52,19 @@ u32 sub_8010674(void *selfArg, struct aabb *boxArg)
      * r0,r0,#24` a `u8`-typed register return always adds, that the
      * ROM never has - callers here still only read the low byte, so
      * the wider C return type changes nothing observable). */
-    register u8 *self asm("r5") = selfArg;
+    register struct gobj_view *self asm("r5") = selfArg;
     register struct aabb *box asm("r6") = boxArg;
-    u8 skip = (self[0xc] >> 4) & 1;
+    u8 skip = (self->flags >> 4) & 1;
     register u32 result asm("r1");
 
-    if (*(s32 *)(self + 0x44) != 0) {
+    if (self->mover != NULL) {
         skip = 1;
     }
 
     if (!skip) {
-        register void *table asm("r1") = *(void **)(self + 0x18);
+        register struct vtable_slot *table asm("r1") = self->vtable;
         register u8 *rec asm("r0") =
-            sub_803AD7C(self + *(s16 *)((u8 *)table + 0x10),
-                        *(void **)((u8 *)table + 0x14));
+            sub_803AD7C((u8 *)self + table[2].delta, table[2].fn);
         register s32 left asm("r4");
         register s32 right asm("r1");
         register s32 top asm("r5");

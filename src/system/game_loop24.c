@@ -1,4 +1,5 @@
 #include "core.h"
+#include "phys_obj.h"
 
 /* GitHub issue #13: 0x0800FC70-0x08010A0C, continuing the physics/
  * collision subsystem (see game_loop17.c's header comment and
@@ -6,39 +7,33 @@
  * `sub_801075C`/the two Bresenham-line helpers `sub_8010784`/
  * `sub_80107C4` right before `sub_8010804` are left untouched raw. */
 
-struct actor_list {
-    s32 count;
-    s32 unused_4;
-    void **items;
-};
-
-extern struct actor_list *gUnknown_0300130C;
+extern struct phys_obj_list *gUnknown_0300130C;
 extern s32 sub_803AD7C(void *addr, void *fn);
 extern void sub_800F5B8(void *self);
 
 /* Walks the `gUnknown_0300130C` object list (the same list/table
  * layout `sub_800F1B8`/`sub_800F258` elsewhere in this raw region
- * read); for each entry whose own `+0x18`-table `+0x48` trampoline
- * (`sub_803AD7C`) reports state `3` and whose `+0x54` countdown isn't
- * disabled (`-1`), truncates that countdown into `+0x48` and fires
- * `sub_800F5B8` on it - a "state-3 countdown expiry" sweep. */
+ * read); for each box (vtable `m48`, the class id, reports `3`) whose
+ * `unk_54` countdown isn't disabled (`-1`), truncates that countdown
+ * into `u48` and fires `sub_800F5B8` on it - a "box countdown expiry"
+ * sweep. */
 void sub_8010804(void)
 {
     s32 i = 0;
 
     if (i < gUnknown_0300130C->count) {
-        struct actor_list **listAddr = &gUnknown_0300130C;
+        struct phys_obj_list **listAddr = &gUnknown_0300130C;
         do {
-            u8 *e = (*listAddr)->items[i];
-            u8 *rec = *(u8 **)(e + 0x18) + 0x48;
-            s16 offset = *(s16 *)rec;
-            void *addr = e + offset;
-            void *fn = *(void **)(rec + 4);
+            struct phys_obj *e = (*listAddr)->items[i];
+            struct method *rec = &e->vtable->m48;
+            s16 offset = rec->thisOffset;
+            void *addr = (u8 *)e + offset;
+            void *fn = rec->fn;
 
             if (sub_803AD7C(addr, fn) == 3) {
-                s32 v = *(s32 *)(e + 0x54);
+                s32 v = e->unk_54;
                 if (v != -1) {
-                    *(u32 *)(e + 0x48) = (u8)v;
+                    e->u48.n = (u8)v;
                     sub_800F5B8(e);
                 }
             }
@@ -47,7 +42,6 @@ void sub_8010804(void)
     }
 }
 
-extern void *gUnknown_030012D8;
 extern void *gUnknown_030012BC;
 extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
 extern void sub_803AD88(void *arg0, s32 arg1, s32 arg2, s32 arg3);

@@ -144,7 +144,7 @@ extern void *gUnknown_03000804;
  * session object and SIODATA32's low half register address. */
 void sub_8002830(void)
 {
-    sub_8002114(gUnknown_03000804, 0x04000120);
+    sub_8002114(gUnknown_03000804, REG_ADDR_SIODATA32);
 }
 
 /* The Timer3-IRQ handler installed by `sub_80026E4` above (the
