@@ -10,7 +10,7 @@
  * Was NAKED behind an 81%-matching register-pinned draft; written
  * plainly against the instrument-row struct it matches outright - see
  * docs/matching/gax-toolchain-retry.md. */
-void sub_803A03C(struct GaxChannelState *self)
+void GaxChannelTickSweep(struct GaxChannelState *self)
 {
     s32 old;
     struct GaxChannelInstrument *inst;

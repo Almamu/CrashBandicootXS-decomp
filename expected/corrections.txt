@@ -165,3 +165,83 @@ split 0x0803A9AC sub_803A9AC
 unlabel gStaticData_0803A9AD
 code 0x0803A9AC
 data 0x0803A9C8
+
+# GAX2 sound engine naming pass (#558): GAX2's own API names (its ROM
+# error strings and Shin'en's public API), the engine internals, the
+# sound-effect helpers, and the engine's RAM globals and ROM data. The
+# globals/data are renamed too so relocations keep pairing by name.
+rename sub_80381FC GAX2_new
+rename sub_8037FC0 GAX2_estimate
+rename sub_8038538 GAX2_init
+rename sub_8038A1C GAX2_jingle
+rename sub_8038B68 GAX_irq
+rename sub_8038C88 GAX_play
+rename sub_8038C28 GAX_pause
+rename sub_8038C50 GAX_resume
+rename sub_8039198 GAX_stop
+rename sub_8038DC0 GAX_fx
+rename sub_8038E74 GAX_fx_ex
+rename sub_8038F94 GAX_fx_note
+rename sub_8038FD0 GAX_stop_fx
+rename sub_8039064 GAX_set_music_volume
+rename sub_80390F8 GAX_set_fx_volume
+rename sub_8037F3C GaxZeroFill
+rename sub_8037FA0 GaxFindMixRate
+rename sub_8038240 GaxCreateHandlers
+rename sub_80384DC GaxResetSoundHardware
+rename sub_80391E8 GaxStopDma
+rename sub_80392E0 GaxFatalError
+rename sub_80392C4 GaxHuffUnComp
+rename sub_8039214 GaxDrawText
+rename sub_80393D0 GaxInfoResetPosition
+rename sub_80393FC GaxInfoInit
+rename sub_803943C GaxInfoPlay
+rename sub_8039518 GaxChannelInit
+rename sub_80395A4 GaxChannelPlay
+rename sub_8039658 GaxChannelDecodeRow
+rename sub_8039818 GaxChannelSetNote
+rename sub_803985C GaxChannelSetInstrument
+rename sub_80398DC GaxChannelStepInstrumentSeq
+rename sub_8039AA4 GaxChannelTick
+rename sub_8039B44 GaxChannelMix
+rename sub_8039F30 GaxEnvelopeTick
+rename sub_8039FFC GaxChannelTickVibrato
+rename sub_803A03C GaxChannelTickSweep
+rename sub_803A104 GaxFxChannelInit
+rename sub_803A158 GaxFxChannelPlay
+rename sub_803A22C GaxMixerInit
+rename sub_803A324 GaxMixerPlay
+rename sub_803A278 GaxMixerApplyEcho
+rename sub_803A5A8 GaxMixFrame
+rename sub_800190C TickAmbientSfx
+rename sub_80019A8 StopSfx
+rename sub_80019CC ResetAmbientSfx
+rename sub_80019E8 StopAmbientSfx
+rename sub_80019F8 PlayAmbientSfx
+rename gUnknown_03001630 gGaxPlayerState
+rename gUnknown_03001618 gGaxMixRateReciprocal
+rename gUnknown_030008D0 gGaxHaltFont
+rename gUnknown_030007DD gGaxIrqEnabled
+rename gUnknown_030007FC gSfxVoiceToggle
+rename gStaticData_085A614C gGaxVersionStringPtr
+rename gStaticData_085A6150 gGaxMixRates
+rename gStaticData_085A61B0 gGaxErrNameNew
+rename gStaticData_085A61BC gGaxErrParamsNull
+rename gStaticData_085A61D0 gGaxErrNameInit
+rename gStaticData_085A61DC gGaxErrOutOfMemory
+rename gStaticData_085A61EC gGaxErrNameJingle
+rename gStaticData_085A61F8 gGaxErrNoJingle
+rename gStaticData_085A6214 gGaxErrNameIrq
+rename gStaticData_085A621C gGaxErrPlayNotFinished
+rename gStaticData_085A62C8 gGaxHaltBannerPtr
+rename gStaticData_085A62CC gGaxHaltFunctionLabel
+rename gStaticData_085A62DC gGaxPeriodTable
+rename gStaticData_085A9EAC gGaxVibratoTable
+rename gStaticData_0803A630 gGaxArmDownmix
+rename gStaticData_0803A73C gGaxArmEcho
+rename gStaticData_0803A818 gGaxArmResample
+rename gStaticData_085A4C5C gGaxDefaultSong
+rename gStaticData_0855BCB4 gGaxMusicData
+rename gStaticData_084C0006 gGaxSfxData
+rename gStaticData_0816AA20 gSongTable
+rename gStaticData_0816AA6C gSfxTable

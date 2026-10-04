@@ -7,7 +7,7 @@
  * accumulate-then-clamp-at-0xA000 pair on `gUnknown_030014C8`/`030014CC`
  * driven from `gStaticData_0817A7F8` (a table of `{s32,s32,s32}`,
  * stride 0xc, indexed by `gUnknown_030014D4`), branching to different
- * `PlaySfx`/`sub_80019F8` tier cues depending on the current "tier"
+ * `PlaySfx`/`PlayAmbientSfx` tier cues depending on the current "tier"
  * value read from the object's own `+8` field, and a shared
  * kind/anim-reset "transition" tail gated on the object's `+0x12` done
  * flag. `sub_802DB2C` and `sub_802DCC0` are two of `gStaticData_0817A840`'s
@@ -20,7 +20,7 @@ extern s32 gUnknown_030014CC;
 extern s32 gUnknown_030014C8;
 extern void *gUnknown_030014BC;
 extern void *gUnknown_030012BC;
-extern s32 sub_80019F8(void *arg0, s32 arg1, s32 arg2, s32 arg3);
+extern s32 PlayAmbientSfx(void *arg0, s32 arg1, s32 arg2, s32 arg3);
 extern void sub_8029E28(s32 arg0);
 extern s32 gUnknown_030014D4;
 extern u8 gStaticData_0817A7F8[];
@@ -33,7 +33,7 @@ extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
  * "already settled" branch), clamps `030014CC` to `0xA000`, then - only
  * while `030014CC <= 0x4FFF` - fires a tier-keyed cue off the object's
  * own `+8`-field-derived "tier": tiers `0xc`/`0x1c` call the
- * `PlaySfx`-sibling `sub_80019F8` (id `0x3E8`, volume `0x100`, plus a
+ * `PlaySfx`-sibling `PlayAmbientSfx` (id `0x3E8`, volume `0x100`, plus a
  * byte flag passed via the stack) followed by `sub_8029E28(0x200)`;
  * tiers `0xd`/`0x1d` call `sub_8029E28(0x100)` alone. Finally, while the
  * object's `+0x12` done flag is set, runs a two-stage
@@ -69,7 +69,7 @@ void sub_802DB2C(void)
                 register u8 one asm("r1") = 1;
 
                 *stackPtr = one;
-                sub_80019F8(a0, 0x3f, a2, a3);
+                PlayAmbientSfx(a0, 0x3f, a2, a3);
                 sub_8029E28(0x200);
             } else if (tier == 0x1c) {
                 void *a0 = gUnknown_030012BC;
@@ -79,7 +79,7 @@ void sub_802DB2C(void)
                 register u8 one asm("r1") = 1;
 
                 *stackPtr = one;
-                sub_80019F8(a0, 0x40, a2, a3);
+                PlayAmbientSfx(a0, 0x40, a2, a3);
                 sub_8029E28(0x200);
             } else if (tier == 0xd || tier == 0x1d) {
                 sub_8029E28(0x100);
@@ -150,7 +150,7 @@ void sub_802DB2C(void)
  * ease/settle pair, directly nudges `gUnknown_030014C8` by
  * `gStaticData_0817A7F8[gUnknown_030014D4]`'s own `+0` field before
  * re-deriving `030014CC`/clamping. The tier cues use plain `PlaySfx`
- * (ids `0x3f`/`0x40`) instead of `sub_80019F8`, keyed off tiers
+ * (ids `0x3f`/`0x40`) instead of `PlayAmbientSfx`, keyed off tiers
  * `0xb`/`0x1b` (with `0xc`/`0x1c` sharing the `sub_8029E28(0x100)`-only
  * branch this time). The done-flag tail is a plain unconditional
  * kind-0/anim-reset (no threshold gate, no sound cue) - the counterpart

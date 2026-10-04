@@ -28,12 +28,12 @@ gStaticData_0814174C:
 
 @ gStaticData_08167AD4..gStaticData_0816A820: src/data/boss_pictures_167ad4.c
 
-@ gStaticData_0816AA20: src/data/song_table_16aa20.c
+@ gSongTable: src/data/song_table_16aa20.c
 
 .section .rodata.0816AA6C
 
-.global gStaticData_0816AA6C
-gStaticData_0816AA6C:
+.global gSfxTable
+gSfxTable:
 	@ GAX2 sound-effect trigger table: 99 entries of {slot_id, pitch_offset,
 	@ volume}, indexed by the sound effect IDs passed to PlaySfx. Reuses
 	@ the same instrument/sample pool as the music (sound/gax_manifest.json)
@@ -160,8 +160,8 @@ gStaticData_0816AA6C:
 
 .section .rodata.084C0006
 
-.global gStaticData_084C0006
-gStaticData_084C0006:
+.global gGaxSfxData
+gGaxSfxData:
 	@ Shin'en GAX2 sound-effect data set: 2 bytes of alignment, 88
 	@ instruments, 87 8-bit samples, the sample table, and the one handler
 	@ type every sound-effect voice uses (its song data points at the
@@ -171,8 +171,8 @@ gStaticData_084C0006:
 	@ tools/gax_audio.py --sfx; see docs/audio.md.
 	.incbin "build/crashbandicootxs/sound/gax_sfx_data.bin"
 
-.global gStaticData_0855BCB4
-gStaticData_0855BCB4:
+.global gGaxMusicData
+gGaxMusicData:
 	@ Starts with GaxSongHeader.sfxTypes (sub_80017BC): 9 pointers to the
 	@ sound-effect voice type above. Then the music data: instrument/sample pool plus all
 	@ 19 songs (jungle, underwater, arctic, sewers, future, rocket crash,
@@ -190,9 +190,9 @@ gStaticData_0855BCB4:
 	@ actually need to differ.
 	.incbin "build/crashbandicootxs/sound/gax_audio_data.bin"
 
-.global gStaticData_085A4C5C
-gStaticData_085A4C5C:
-	@ The engine's default handler layout (sub_8038538, sub_8037FC0): the
+.global gGaxDefaultSong
+gGaxDefaultSong:
+	@ The engine's default handler layout (GAX2_init, GAX2_estimate): the
 	@ song struct of a silent one-channel song whose other objects end the
 	@ music block. Built with it by tools/gax_audio.py (manifest
 	@ `default_song`); see docs/audio.md.
@@ -212,7 +212,7 @@ gStaticData_085A551C:
 	@ LZ77 tile graphics (4bpp) (9600 bytes decompressed)
 	.incbin "build/crashbandicootxs/graphics/intro/00_5a551c_tiles.4bpp.lz"
 
-@ 0x085A6100..gStaticData_085A9EAC (GAX2 strings and tables): src/data/gax_tables_5a6100.c
+@ 0x085A6100..gGaxVibratoTable (GAX2 strings and tables): src/data/gax_tables_5a6100.c
 
 @ 0x085A9EEC..0x085A9F70 (EEPROM library data): src/data/eeprom_5a9eec.c
 

@@ -9,8 +9,8 @@ as real C**, both under old_agbcc. Their files were already on
 | `sub_8014674` | `actor_part_14674.c` | #17 | 1 hw (branch target) | **real C** |
 | `sub_8011548` | `game_loop53.c` | #15 | 21 hw | **real C** |
 | `sub_8014B54` | `actor_part_14674.c` | #17 | 3 hw | NAKED, unchanged |
-| `sub_8039B44` | `gax_note_trigger.c` | #68 | ~237 seq | NAKED, draft ~202 seq |
-| `sub_8038538` | `gax_playstart.c` | #66 | ~294 seq | NAKED, not retried |
+| `GaxChannelMix` | `gax_note_trigger.c` | #68 | ~237 seq | NAKED, draft ~202 seq |
+| `GAX2_init` | `gax_playstart.c` | #66 | ~294 seq | NAKED, not retried |
 
 "seq" is the alignment-insensitive count from
 [gax-naked-retry-2.md](gax-naked-retry-2.md).
@@ -88,7 +88,7 @@ differences left. Each one had its own fix:
   `ActSetNext` 4, inline `MoveY`/`Lift` helpers, a `u8`/`s32` zero for
   `unk_101`, and pointer spellings of the `y` update. Adding references
   to the records pointer moves its load instead (6 halfwords).
-- **`sub_8039B44`** (GAX mixer). `sub_8037ECC` is `__muldi3`. With
+- **`GaxChannelMix`** (GAX mixer). `sub_8037ECC` is `__muldi3`. With
   `asm(".set __muldi3, sub_8037ECC")` and a plain 64-bit `*` (the libcall
   lesson from #481), and with the ping-pong test re-reading
   `self->instrument->rows[self->row]`, the draft went from ~237 to ~202
@@ -98,7 +98,7 @@ differences left. Each one had its own fix:
   (neutral or worse). Note that `triage_naked.py` takes this function's
   ROM size from the map, where the `sub_8039E50` label cuts it at 780
   bytes. The real size is 0x3EC.
-- **`sub_8038538`** (GAX play start). Not retried beyond re-measuring
+- **`GAX2_init`** (GAX play start). Not retried beyond re-measuring
   it (398 positional halfwords, sizes 1248 vs 1252). The differences are
   spread over the whole function: register choice, and the order of
   the constants hoisted before the ARM-code copy loops. None of it

@@ -328,7 +328,7 @@ workarounds around a confirmed compiler bug, this pass transcribed all
 five directly as `NAKED` asm functions instead - the same technique this
 project already uses elsewhere for this exact class of problem
 (`src/util/math_div_util.c`'s `nullsub_8`, `src/audio/gax_swi.c`'s
-`sub_80392C4`, `src/system/link_cable.c`'s `sub_8001CB8`/`sub_8001F50`).
+`GaxHuffUnComp`, `src/system/link_cable.c`'s `sub_8001CB8`/`sub_8001F50`).
 A NAKED function has no compiler-generated prologue/epilogue or
 register allocation at all, so the r7 bug (and any other codegen
 mismatch) is moot - the instructions are typed in verbatim, checked

@@ -1,15 +1,15 @@
 #include "core.h"
 #include "audio.h"
 
-/* `sub_80019F8` sits right after the matched `sub_80019E8`
+/* `PlayAmbientSfx` sits right after the matched `StopAmbientSfx`
  * (src/audio/sfx_ambient.c) and before the matched functions this
  * file holds - the rest of the `AudioContext` accessor/state-machine
  * cluster (play/pause/stop, the two fade-envelope arm/setter pairs,
  * the constructor). */
 
 extern u32 gUnknown_0300082C;
-extern s32 sub_8038E74(u32 handle, s32 channel, s32 pitchOffset, s32 priority);
-extern void sub_80390F8(s32 channel, u32 volume);
+extern s32 GAX_fx_ex(u32 handle, s32 channel, s32 pitchOffset, s32 priority);
+extern void GAX_set_fx_volume(s32 channel, u32 volume);
 
 /* Requests the ambient-sfx channel play `id` for `frameOffset` frames
  * (relative to `gUnknown_0300082C`) at a volume derived from
@@ -24,25 +24,25 @@ extern void sub_80390F8(s32 channel, u32 volume);
  * Once a NAKED transcription; it matches as plain C under both
  * compilers. The fifth argument is a one-byte struct passed by value
  * (the ROM's `add rX,sp,#0x14; ldrb` read), and the volume read is
- * `gStaticData_0816AA6C[id].baseVolume`, whose `base+8+offset` address
+ * `gSfxTable[id].baseVolume`, whose `base+8+offset` address
  * is simply what gcc emits for a non-zero field offset - the earlier
  * note blamed a CSE decision that is not there. */
 struct sfx_byte_arg {
     u8 v;
 } __attribute__((packed));
 
-void sub_80019F8(struct AudioContext *self, u32 id, u32 frameOffset, s32 volumeMul, struct sfx_byte_arg force)
+void PlayAmbientSfx(struct AudioContext *self, u32 id, u32 frameOffset, s32 volumeMul, struct sfx_byte_arg force)
 {
     u8 forceFlag = force.v;
-    u32 handle = gStaticData_0816AA6C[id].slotId;
+    u32 handle = gSfxTable[id].slotId;
 
     if (handle != 0 && volumeMul > 0) {
-        s32 volume = (gStaticData_0816AA6C[id].baseVolume * volumeMul) * self->sfxVolume >> 16;
+        s32 volume = (gSfxTable[id].baseVolume * volumeMul) * self->sfxVolume >> 16;
         u32 cur = self->activeSfx.id;
 
         if (cur == 0x63) {
-            sub_8038E74(handle, 2, 0, -1);
-            sub_80390F8(2, self->field_34);
+            GAX_fx_ex(handle, 2, 0, -1);
+            GAX_set_fx_volume(2, self->ambientSfxVolume);
             self->activeSfx.id = id;
             self->activeSfx.deadline = gUnknown_0300082C + frameOffset;
             self->activeSfx.volume = volume;
@@ -51,8 +51,8 @@ void sub_80019F8(struct AudioContext *self, u32 id, u32 frameOffset, s32 volumeM
                 self->activeSfx.deadline = gUnknown_0300082C + frameOffset;
                 self->activeSfx.volume = volume;
                 if (forceFlag) {
-                    sub_8038E74(handle, 2, 0, -1);
-                    sub_80390F8(2, self->field_34);
+                    GAX_fx_ex(handle, 2, 0, -1);
+                    GAX_set_fx_volume(2, self->ambientSfxVolume);
                 }
                 self->pendingSfx.id = 0x63;
                 self->pendingSfx.volume = 0;
@@ -69,12 +69,12 @@ void sub_80019F8(struct AudioContext *self, u32 id, u32 frameOffset, s32 volumeM
     }
 }
 
-extern void sub_8039064(s32 channel, u32 volume);
-extern void sub_8039198(void);
-extern u8 gUnknown_030007DD;
-extern void sub_8038C50(void);
-extern void sub_8038C88(void);
-extern void sub_8038C28(void);
+extern void GAX_set_music_volume(s32 channel, u32 volume);
+extern void GAX_stop(void);
+extern u8 gGaxIrqEnabled;
+extern void GAX_resume(void);
+extern void GAX_play(void);
+extern void GAX_pause(void);
 extern void sub_80006A8(void);
 extern void sub_80016D0(u8 *address);
 extern void sub_8000558(s32 interruptIndex);
@@ -162,7 +162,7 @@ void sub_8001B30(struct AudioContext *self, u32 value)
         isPlaying = 1;
     }
     if (isPlaying) {
-        sub_8039064(-1, value);
+        GAX_set_music_volume(-1, value);
     }
 }
 
@@ -209,7 +209,7 @@ void sub_8001B88(struct AudioContext *self)
     }
     if (isPaused) {
         sub_80006A8();
-        sub_8038C50();
+        GAX_resume();
         self->state = 1;
     }
 }
@@ -226,8 +226,8 @@ void sub_8001BAC(struct AudioContext *self)
     if (isPlaying) {
         self->state = 2;
         sub_80006A8();
-        sub_8038C88();
-        sub_8038C28();
+        GAX_play();
+        GAX_pause();
     }
 }
 
@@ -247,8 +247,8 @@ void sub_8001BD4(struct AudioContext *self)
         self->pendingSong = 0x13;
         self->currentSong = 0x13;
         self->state = zero;
-        sub_8039198();
-        gUnknown_030007DD = zero;
+        GAX_stop();
+        gGaxIrqEnabled = zero;
     }
 }
 
@@ -256,7 +256,7 @@ void sub_8001BD4(struct AudioContext *self)
 void sub_8001C04(struct AudioContext *self, u32 flags)
 {
     sub_8001BD4(self);
-    gUnknown_030007DD = 0;
+    gGaxIrqEnabled = 0;
     if (flags & 1) {
         sub_80016D0((u8 *)self);
     }
@@ -274,7 +274,7 @@ struct AudioContext *sub_8001C2C(struct AudioContext *self)
     self->duckVolCurrent = 0x100;
     self->duckVolDefault = 0x100;
     self->sfxVolume = 0x100;
-    self->field_34 = 0;
+    self->ambientSfxVolume = 0;
     self->activeSfx.id = 0x63;
     self->musicVolFadeDownArmed = 0;
     self->musicVolFadeUpArmed = 0;

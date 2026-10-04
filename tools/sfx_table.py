@@ -10,8 +10,8 @@ docs/audio.md, "Sound effects").
 
 Each entry is 3 little-endian signed 32-bit words:
   slot_id      - the sound-effect instrument to play (1-87; written into the
-                 voice at offset 0x25 by sub_8038E74)
-  pitch_offset - really sub_8038E74's priority argument (struct
+                 voice at offset 0x25 by GAX_fx_ex)
+  pitch_offset - really GAX_fx_ex's priority argument (struct
                  SfxTableEntry.chanArg), the voice-steal threshold
   volume       - 8.8 fixed-point volume scale (0x100 == 1.0)
 

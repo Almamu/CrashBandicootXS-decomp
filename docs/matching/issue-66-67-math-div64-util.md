@@ -1,6 +1,6 @@
 # Issue #66: `0x08037648`-`0x08037FA0` (5 functions, `math_div64_util.c`)
 
-`sub_8037648`/`sub_8037A7C`/`sub_8037E54`/`sub_8037ECC`/`sub_8037F3C` sit
+`sub_8037648`/`sub_8037A7C`/`sub_8037E54`/`sub_8037ECC`/`GaxZeroFill` sit
 inside issue #66's nominally-`audio` chunk (`asm/code_3_2_20b.s`,
 `0x08037648`-`0x08037FA0`), but - per `docs/audio.md`'s own existing
 `sub_8037648`/`sub_8037A7C` entries, which already flagged this address
@@ -26,7 +26,7 @@ happens to ship in").
   64-bit quotient at the end. **UNUSED** - confirmed no caller anywhere
   in the ROM (every `asm/*.s`, `expected/code_3.s`, `expected/
   legacy.s`, and every matched `src/*.c` file checked). Its unsigned
-  sibling `sub_8037A7C` *is* called (from `sub_8039518`'s NAKED body) -
+  sibling `sub_8037A7C` *is* called (from `GaxChannelInit`'s NAKED body) -
   plausibly both symbols shipped in the same compiled library object
   (a common `libgcc`-style shape), so pulling in the used one dragged
   this one along at link time.
@@ -44,7 +44,7 @@ happens to ship in").
 - **`sub_8037ECC`** - 64x64->64 truncating multiply: this ROM's
   compiled copy of libgcc2.c's classic `__muldi3` with `__umulsidi3`'s
   16-bit-half `umul_ppmm` decomposition fully inlined.
-- **`sub_8037F3C`** - a plain zero-fill memset helper via the BIOS
+- **`GaxZeroFill`** - a plain zero-fill memset helper via the BIOS
   `CpuFastSet` SWI, *not* part of the division/multiply family (it's
   simply the next function in ROM order) - see "What actually
   matched" below.
@@ -74,9 +74,9 @@ combined `pop {r4-r7, pc}`, with no C-level phrasing able to change
 that (this project's `-mthumb-interwork` build flag is global). All
 four are byte-verified NAKED transcriptions.
 
-## What actually matched: `sub_8037F3C`
+## What actually matched: `GaxZeroFill`
 
-`sub_8037F3C` is a plain memset-via-`CpuFastSet` helper (byte-fills up
+`GaxZeroFill` is a plain memset-via-`CpuFastSet` helper (byte-fills up
 to 3 leading bytes to reach 4-byte alignment, zero-fills the largest
 32-byte-aligned chunk via `sub_803A948`/`CpuFastSet` with the
 `FIXED_SRC` flag, then finishes any remainder one byte at a time) - and
@@ -113,4 +113,4 @@ crashbandicootxs.map && make compare` - `La suma coincide`.
 
 ## Later pass: GAX toolchain retry
 
-The non-interworking return was a build flag, not a C gap: built without `-mthumb-interwork` (Makefile `NO_INTERWORK_OBJS`), `sub_8037648`/`sub_8037A7C`/`sub_8037ECC` are gcc 2.x `libgcc2.c`'s own `__divdi3`/`__udivdi3`/`__muldi3` and now match as real C. `sub_8037E54` (`__udivsi3`) is lib1funcs.asm hand-written asm and stays NAKED for good. `sub_8037F3C` moved to `src/audio/gax_zero_fill.c`. See [gax-toolchain-retry.md](./gax-toolchain-retry.md).
+The non-interworking return was a build flag, not a C gap: built without `-mthumb-interwork` (Makefile `NO_INTERWORK_OBJS`), `sub_8037648`/`sub_8037A7C`/`sub_8037ECC` are gcc 2.x `libgcc2.c`'s own `__divdi3`/`__udivdi3`/`__muldi3` and now match as real C. `sub_8037E54` (`__udivsi3`) is lib1funcs.asm hand-written asm and stays NAKED for good. `GaxZeroFill` moved to `src/audio/gax_zero_fill.c`. See [gax-toolchain-retry.md](./gax-toolchain-retry.md).

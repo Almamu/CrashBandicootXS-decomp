@@ -268,7 +268,7 @@ documented for this same function family:
   actual register need instead of a single "the value called `n`" pin.
 - **A `u8` 6th-argument (stack-passed) parameter**: same gcc-2.9 gap
   documented in `docs/matching/issue-3-overlay-ui-audio-wrapper.md`'s
-  `sub_80019F8` entry - plain `u8` parameter access reads the full
+  `PlayAmbientSfx` entry - plain `u8` parameter access reads the full
   stack word and narrows it with two shifts instead of a genuine
   `ldrb`. Here the ROM additionally keeps the address computation and
   the final byte value in *two different* registers (`add r0, sp,
@@ -417,7 +417,7 @@ parked above. Both are now byte-exact matched, converted from their
 whose bodies are a direct instruction-for-instruction transcription of
 the ROM's own disassembly, following this project's established escape
 hatch for this exact class of problem (`src/system/link_cable.c`'s
-several `NAKED` functions, `src/audio/gax_swi.c`'s `sub_80392C4`,
+several `NAKED` functions, `src/audio/gax_swi.c`'s `GaxHuffUnComp`,
 `docs/matching/issue-4-sio-settings-sync.md`'s "NAKED transcription,
 byte-verified" section for the worked-out general method).
 

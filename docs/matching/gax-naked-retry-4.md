@@ -1,25 +1,25 @@
-# GAX NAKED retry 4: `sub_8039B44` and `sub_8038538` (issues #68/#67)
+# GAX NAKED retry 4: `GaxChannelMix` and `GAX2_init` (issues #68/#67)
 
 Fourth pass, after [gax-naked-retry-3.md](./gax-naked-retry-3.md).
-**Neither function closed.** Both stay NAKED. The `sub_8039B44` draft
-moved closer; `sub_8038538` is unchanged.
+**Neither function closed.** Both stay NAKED. The `GaxChannelMix` draft
+moved closer; `GAX2_init` is unchanged.
 
 | Function | File | Before | Now |
 |---|---|---|---|
-| `sub_8039B44` | gax_note_trigger.c | 46 | **43** |
-| `sub_8038538` | gax_playstart.c | 100 | 100 |
+| `GaxChannelMix` | gax_note_trigger.c | 46 | **43** |
+| `GAX2_init` | gax_playstart.c | 100 | 100 |
 
 Scores are `brute2.py`'s sequence score, as in retry 3, with the
-`sub_8039B44` ROM side cut at `0x3EC`. That score includes the literal
+`GaxChannelMix` ROM side cut at `0x3EC`. That score includes the literal
 pools, whose words are relocations (zero) in the object and addresses
 in the ROM. Checking the relocations shows every pool of the
-`sub_8039B44` draft already sits at the ROM's offset with the ROM's
+`GaxChannelMix` draft already sits at the ROM's offset with the ROM's
 entries. Most of the remaining 43 is that noise. The real differences
 are about a dozen instructions, listed below.
 
 Everything is plain agbcc with the normal flags.
 
-## `sub_8039B44`: what moved
+## `GaxChannelMix`: what moved
 
 1. **The row copy at the tune.** `row = self->row;` moved from after the
    empty-wave test to the tune, followed by `asm volatile("" :
@@ -34,7 +34,7 @@ Everything is plain agbcc with the normal flags.
    initializer gives the ROM's `ldr r1, [r6, #60]; ldrb r2, [r6, #16]`.
    Without it, GCSE reuses the `inst` copy in r8.
 
-## `sub_8039B44`: what's left
+## `GaxChannelMix`: what's left
 
 - **The tune's instrument pointer.** The ROM loads `self->instrument`
   into r0, uses r0 for the tune, and copies it to r8 (`inst`, which the
@@ -65,19 +65,19 @@ Everything is plain agbcc with the normal flags.
   rotation lands on r3). That needs its set and use in different basic
   blocks, which the ROM's straight-line code doesn't show.
 
-## `sub_8038538`: tried, no gain
+## `GAX2_init`: tried, no gain
 
-- A `struct GaxPlayerState **pg = &gUnknown_03001630` local (before or
+- A `struct GaxPlayerState **pg = &gGaxPlayerState` local (before or
   after `k = 0`) for one or both copy loops. The global's address does
   move into sl first, but `*pg` becomes loop-invariant, so the copy
   loops get strength-reduced (`ldmia/stmia` countdown). Worse (103-113).
 - The zero stored to `field_180`/`field_39`/`field_3a` as one variable,
   plain or through the constant-init asm (volatile or not). The asm form
   puts the zero in a high register (sl, not r8) but reshuffles the
-  `sub_8038240` argument registers (128). The plain form is CSE'd back
+  `GaxCreateHandlers` argument registers (128). The plain form is CSE'd back
   to constants (101).
 
-The copy-loop setup order and the `sub_8038240` argument registers
+The copy-loop setup order and the `GaxCreateHandlers` argument registers
 (`layout`/`sfx`/`&size`/`&g` copy in r4/sb/r6/r5 in the ROM, sb/r8/r5/r4
 in the draft) look like one global-alloc priority problem. It was not
 pursued further.
@@ -88,5 +88,5 @@ Scratch area `gax4/` (not checked in): `showall.py` prints only the
 differing rows per variant and drops pool-relocation noise.
 `pools.py`/`objpools.sh` list the ROM's and the object's literal-pool
 words and offsets. `tos.sh` prints one function's agbcc assembly. The
-variant specs are `b1`-`b10` (sub_8039B44) and `p1`/`p2` (sub_8038538),
+variant specs are `b1`-`b10` (GaxChannelMix) and `p1`/`p2` (GAX2_init),
 run with retry 3's `gax3/brute2.py` and `sbs.py`.

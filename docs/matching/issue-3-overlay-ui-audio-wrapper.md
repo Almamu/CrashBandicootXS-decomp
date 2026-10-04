@@ -10,7 +10,7 @@ already matched in the first pass (PR #194, GitHub issue #2, written up
 in `docs/matching.md`'s "`0x080016EC`-`0x08001C80`: the `AudioContext`
 wrapper layer" entry before that file was frozen). This second pass
 (issue #3) revisits the two still-parked functions, `PlaySfx` and
-`sub_80019F8`, with fresh attempts at closing their documented gaps.
+`PlayAmbientSfx`, with fresh attempts at closing their documented gaps.
 
 ## `PlaySfx` - no progress
 
@@ -42,7 +42,7 @@ gcc 2.9's own instruction scheduler picks a fixed policy for *when* to
 materialize a cached register that doesn't appear to be steerable from
 C source at all, only from the RTL passes themselves.
 
-## `sub_80019F8` - one of two gaps closed
+## `PlayAmbientSfx` - one of two gaps closed
 
 Previously parked with two gaps (see the old entry in
 `docs/status/audio.md` and the original `docs/matching.md` writeup).
@@ -72,7 +72,7 @@ s32 volume;
 
 asm volatile ("add %0, sp, #0x14\n\tldrb %0, [%0]" : "=r" (t));
 force = t;
-tableBase = gStaticData_0816AA6C;
+tableBase = gSfxTable;
 handle = tableBase[id].slotId;
 ```
 
@@ -88,7 +88,7 @@ Verified with an isolated per-function compile against the real
 identical.
 
 **Gap 2, STILL OPEN**: the ROM recomputes
-`&gStaticData_0816AA6C[id].baseVolume` fully from `tableBase`+offset+8
+`&gSfxTable[id].baseVolume` fully from `tableBase`+offset+8
 (`adds r0, r5, #0; adds r0, #8; adds r0, r1, r0; ldr r0, [r0]` - 4
 instructions), even though the identical address was already computed
 for the `slotId` read a few instructions earlier and its offset
@@ -143,7 +143,7 @@ this project (`sub_80014A4`, `sub_8030574`/`sub_8030648` in
 `docs/matching/issue-58-0x08030334-actor.md`): register-allocation and
 CSE decisions this specific gcc 2.9 build makes internally, that don't
 appear to be reachable from C source no matter how the expressions or
-register pins are phrased. `sub_80019F8` stays parked under
+register pins are phrased. `PlayAmbientSfx` stays parked under
 `NON_MATCHING` in `asm/code_3_1_10_2.s`, with the understood
 reconstruction (now closer, one gap down) in `src/audio/audio_context.c`.
 
@@ -158,14 +158,14 @@ already matched, and that both remain correctly guarded by
 
 ## Outcome
 
-No functions closed this pass (both `PlaySfx` and `sub_80019F8` stay
+No functions closed this pass (both `PlaySfx` and `PlayAmbientSfx` stay
 parked), so issue #3 stays open - a parked function doesn't count
 toward `Closes #3` even when it's demonstrably closer than before.
-`sub_80019F8`'s reconstruction is measurably closer to byte-exact (one
+`PlayAmbientSfx`'s reconstruction is measurably closer to byte-exact (one
 of its two gaps closed); `PlaySfx` is unchanged from the prior pass
 after a genuine fresh attempt that didn't pan out.
 
-## Later pass: `sub_80019F8` converted to NAKED transcription (still tracked as parked)
+## Later pass: `PlayAmbientSfx` converted to NAKED transcription (still tracked as parked)
 
 The remaining base-volume field-address CSE gap documented above never
 had a plain-C fix - this compiler always reuses the live address
@@ -176,21 +176,21 @@ document's own derivation), the function was converted to a
 byte-verified NAKED asm transcription instead - the established pattern
 for this class of gap (see `src/util/printf_util.c`'s `sub_8000CBC`).
 Every instruction now matches the ROM exactly; verified via a full
-clean `make compare` (`La suma coincide`). `sub_80019F8` no longer sits
+clean `make compare` (`La suma coincide`). `PlayAmbientSfx` no longer sits
 under `asm/code_3_1_10_2.s` (deleted) - its NAKED definition lives
 directly in `src/audio/audio_context.c`. Per this project's tracking
 policy, byte-exact NAKED asm doesn't count as "matched" - only real
-decompiled C does - so `sub_80019F8` is tracked as **parked** in
+decompiled C does - so `PlayAmbientSfx` is tracked as **parked** in
 `tools/report_units.py`/`docs/status/audio.md`, not matched, even
 though its bytes are provably correct. `PlaySfx` was not attempted this
 pass and remains parked for its own, separate reason (a prologue
 register-save-scheduling gap).
 
-## Later pass: `sub_80019F8` matched
+## Later pass: `PlayAmbientSfx` matched
 
 The early-ROM NAKED retry
 ([early-rom-naked-retry.md](early-rom-naked-retry.md)) rewrote
-`sub_80019F8` as C and it matched on the first compile, under both
+`PlayAmbientSfx` as C and it matched on the first compile, under both
 compilers. The fifth argument is a one-byte struct passed by value. The
 `base + 8 + offset` address of the `baseVolume` read is just how gcc
 computes a non-zero field offset from the table base. The CSE gap
@@ -200,6 +200,6 @@ described above is not real.
 
 `PlaySfx` is real C, and `asm/code_3_1_10.s` is gone. Without the r9 pin
 on `self`, the instruction stream matches and only the r8/r9/sl
-assignment differs. One empty `asm("" : : "r"(&gUnknown_030007FC))`
+assignment differs. One empty `asm("" : : "r"(&gSfxVoiceToggle))`
 raises that address's global-alloc priority to the ROM's. See
 [near-miss-polish.md](near-miss-polish.md).

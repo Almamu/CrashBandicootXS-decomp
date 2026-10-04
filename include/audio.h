@@ -9,7 +9,7 @@
  * "Found the origin point" section). Only the leading 0x58 bytes this
  * cluster of functions models by field are covered here; starting at
  * +0x58 sits an embedded GAX2 runtime player-state object (initialized by
- * `sub_80381FC`/`sub_8038538`, both still raw engine internals) that
+ * `GAX2_new`/`GAX2_init`, both still raw engine internals) that
  * `sub_80017BC` pokes directly - genuinely nested, not-yet-reverse-
  * engineered state, so those writes stay raw offset casts (see
  * docs/audio.md) rather than guessed struct fields. `sub_8001B14` also
@@ -30,23 +30,23 @@
  * A second pair of 3-word records tracks a currently-playing/queued
  * "ambient" sound effect (distinct from the one-shot `PlaySfx` calls):
  * `activeSfx`/`pendingSfx`, each `{id, gUnknown_0300082C-relative
- * deadline, volume}` - see `sub_800190C`/`sub_80019CC`/`sub_80019E8`/
- * `sub_80019F8`. `0x63` (99) is the "none" sentinel for both ids.
- * `sub_800190C` copies `pendingSfx` over `activeSfx` as a single 12-byte
+ * deadline, volume}` - see `TickAmbientSfx`/`ResetAmbientSfx`/`StopAmbientSfx`/
+ * `PlayAmbientSfx`. `0x63` (99) is the "none" sentinel for both ids.
+ * `TickAmbientSfx` copies `pendingSfx` over `activeSfx` as a single 12-byte
  * struct assignment (not 3 separate field copies) - that's what gets it
  * to reproduce the ROM's `ldm/stm {r2,r3,r5}` block-move codegen. */
 struct SfxRecord {
     u32 id;              // 0x63 (99) = none
     u32 deadline;          // gUnknown_0300082C-relative
-    s32 volume;              // target the owning field_34 fade-timer ramps toward
+    s32 volume;              // target the owning ambientSfxVolume fade ramps toward
 };
 
 struct AudioContext {
     u32 field_00;         // 0x00 - not touched by this function cluster
     u32 state;             // 0x04 - 0 = stopped, 1 = playing, 2 = paused
-    u32 currentSong;        // 0x08 - index into gStaticData_0816AA20 (19 songs); 0x13 = none
+    u32 currentSong;        // 0x08 - index into gSongTable (19 songs); 0x13 = none
     u32 pendingSong;         // 0x0c - queued song index, started once the duck-out fade completes
-    u32 lastSfxId[2];         // 0x10/0x14 - round-robin record of the last 2 PlaySfx ids (sub_80019A8 stop-if-playing scan)
+    u32 lastSfxId[2];         // 0x10/0x14 - round-robin record of the last 2 PlaySfx ids (StopSfx stop-if-playing scan)
     s32 musicVolCurrent;       // 0x18 - signed: sub_80016EC compares it with blt/bgt, not an unsigned bcc/bcs
     s32 musicVolTarget;         // 0x1c
     s32 duckVolDefault;          // 0x20
@@ -54,7 +54,7 @@ struct AudioContext {
     s32 duckVolTarget;             // 0x28
     s32 sfxVolume;                  // 0x2c - PlaySfx's own volume multiplier
     u32 field_30;                    // 0x30 - mirrored (truncated) into the embedded GAX object's +0xA (self+0x62) while playing
-    s32 field_34;                     // 0x34 - the ambient-sfx channel's own current fade volume (ramps toward activeSfx.volume, sub_800190C - signed, compared with bgt/bge/ble)
+    s32 ambientSfxVolume;             // 0x34 - the ambient-sfx channel's own current fade volume (ramps toward activeSfx.volume, TickAmbientSfx - signed, compared with bgt/bge/ble)
     struct SfxRecord activeSfx;         // 0x38
     struct SfxRecord pendingSfx;          // 0x44
     u8 musicVolFadeUpArmed;                       // 0x50
@@ -69,46 +69,46 @@ COMPILE_TIME_ASSERT(sizeof(struct AudioContext) == 0x58);
 
 /* One record of the 99-entry sound-effect trigger table at ROM
  * `0x0816AA6C` (`sound/sfx_table.json`) - see docs/audio.md's "Sound
- * effects" section. Indexed by the id `PlaySfx`/`sub_80019F8` take. */
+ * effects" section. Indexed by the id `PlaySfx`/`PlayAmbientSfx` take. */
 struct SfxTableEntry {
-    u32 slotId;      /* instrument index into the sound-effect data set (gStaticData_084C0006, docs/audio.md) - 0 = unused slot */
-    u32 chanArg;       /* passed through as sub_8038E74's priority arg (only PlaySfx reads this; sub_80019F8 hardcodes 0) */
+    u32 slotId;      /* instrument index into the sound-effect data set (gGaxSfxData, docs/audio.md) - 0 = unused slot */
+    u32 chanArg;       /* passed through as GAX_fx_ex's priority arg (only PlaySfx reads this; PlayAmbientSfx hardcodes 0) */
     u32 baseVolume;      /* multiplied by the caller's volume param and AudioContext.sfxVolume, then >>16 */
 };
 
-extern struct SfxTableEntry gStaticData_0816AA6C[99];
+extern struct SfxTableEntry gSfxTable[99];
 
-/* The GAX2 engine's own runtime player-state object - `gUnknown_03001630`
+/* The GAX2 engine's own runtime player-state object - `gGaxPlayerState`
  * is an IWRAM *pointer variable* holding this struct's address (carved
- * out of the caller's work RAM by `sub_8038538`, the play-start/init
+ * out of the caller's work RAM by `GAX2_init`, the play-start/init
  * entry point - see docs/audio.md). Field layout is only partly
  * understood; only the fields matched functions touch are named.
  * `channels[]` holds the two players' handler arrays (0 = music, 1 =
- * sound effects - see GAX_PLAYER() below), selected by
- * `curChannelIdx`. */
+ * the jingle player `GAX2_jingle` builds - see GAX_PLAYER() below),
+ * selected by `curChannelIdx`. */
 struct GaxPlayerState {
     u32 magic;             /* 0x00 - 0x47415832 ("GAX2") once a song is loaded */
-    void *songPtr;          /* 0x04 - the struct passed as sub_8038538's arg0 */
+    void *songPtr;          /* 0x04 - the struct passed as GAX2_init's arg0 */
     void *channels[2];        /* 0x08 */
     u32 curChannelIdx;          /* 0x10 */
-    struct GaxChannelFormat *format; /* 0x14 - the output format (sub_8038538) */
-    u32 field_18;                    /* 0x18 - base of the mix output buffer pair */
-    u32 field_1c;                    /* 0x1c */
-    u32 field_20;                    /* 0x20 - copied into every DSP work item (gax_unknownc_play.c) */
-    u32 field_24;                    /* 0x24 - ditto */
-    u32 field_28;                    /* 0x28 - ditto */
-    u32 field_2c;                    /* 0x2c */
+    struct GaxChannelFormat *format; /* 0x14 - the output format (GAX2_init) */
+    u32 outBuf;                      /* 0x18 - the 8-bit output double buffer (2 x frames), DMA1's source */
+    u32 mixBuf;                      /* 0x1c - the 16-bit mix buffer ((frames + 4) halfwords) the mixer renders into */
+    u32 echoBuf;                     /* 0x20 - the echo delay line, sized for the longest DSP tap delay */
+    u32 echoTaps;                    /* 0x24 - the 3 echo taps' {step, value} pairs (GaxCreateHandlers), 0 = no echo */
+    u32 echoLen;                     /* 0x28 - echoBuf's size in bytes */
+    u32 outHalf;                     /* 0x2c - which half of outBuf GAX_play mixes into next (0/1) */
     u32 state;                       /* 0x30 - 0 = stopped, 1 = starting, 2 = playing */
-    u32 field_34;                    /* 0x34 - from the mix-rate table */
+    u32 timerReload;                 /* 0x34 - Timer0 reload for the mix rate (gGaxMixRates) */
     u8 pad_38[8];                    /* 0x38-0x3f - not modeled yet */
-    u8 field_40;                     /* 0x40 */
-    u8 field_41;                     /* 0x41 */
+    u8 fxEcho;                       /* 0x40 - mix the SFX voices before the echo pass, so they get echo too */
+    u8 field_41;                     /* 0x41 - set by GAX2_jingle; skips the song's channels for one mixer tick */
     u8 field_42;                     /* 0x42 */
-    u8 field_43;                     /* 0x43 - set once a mixer tick ran */
-    void *field_44;                  /* 0x44 - ARM callback, entered via GAX_CALL_ARM */
-    /* 0x48/0x9c - IWRAM copies of the ARM DSP routines raw at
-     * 0x0803A628/0x0803A67C (see gax_unknownc_play.c), entered in place
-     * via GAX_CALL_ARM. */
+    u8 playDone;                     /* 0x43 - GAX_play ran since the last GAX_irq ("GAX_PLAY HAS NOT FINISHED" check) */
+    void *mixCode;                   /* 0x44 - IWRAM copy of the ARM resampler gGaxArmResample (GaxChannelMix) */
+    /* 0x48/0x9c - IWRAM copies of the ARM routines gGaxArmDownmix and
+     * gGaxArmEcho (see gax_unknownc_play.c), entered in place via
+     * GAX_CALL_ARM. */
     u32 dspCode48[21];               /* 0x48 */
     u32 dspCode9c[56];               /* 0x9c */
     void *dspFn17c;                  /* 0x17c - optional ARM routine, entered via GAX_CALL_ARM */
@@ -151,7 +151,7 @@ struct GaxInstrumentRow {
     s16 tune;                    /* 0x1a */
 };
 
-/* One step of an instrument's sequence (sub_80398DC): an optional note
+/* One step of an instrument's sequence (GaxChannelStepInstrumentSeq): an optional note
  * and wave-row change plus two effect commands (`cmd << 8 | param`). */
 struct GaxInstrumentSeqEntry {
     u8 note;                     /* 0 = none */
@@ -165,7 +165,7 @@ struct GaxChannelInstrument {
     u8 pad_00;
     u8 waveIdx[4];               /* 0x01 - per-row wave index */
     u8 pad_05[4];
-    u8 vibratoDepth;             /* 0x09 - Q8 scale of the vibrato table value, 0 = off (sub_8039FFC) */
+    u8 vibratoDepth;             /* 0x09 - Q8 scale of the vibrato table value, 0 = off (GaxChannelTickVibrato) */
     u8 vibratoSpeed;             /* 0x0a - phase step per tick */
     u8 pad_0b;
     struct GaxInstrumentRow rows[4]; /* 0x0c */
@@ -230,7 +230,7 @@ struct GaxHandlerType {
     } data;                                              /* 0x18 */
 };
 
-/* Every handler starts with this 12-byte header (sub_8038240 carves
+/* Every handler starts with this 12-byte header (GaxCreateHandlers carves
  * `instanceSize` more bytes, then the children array, after it). */
 struct GaxHandler {
     struct GaxHandlerType *type;       /* 0x00 */
@@ -249,15 +249,15 @@ struct GaxInfoHandler {
     s16 row;                     /* 0x16 - row in the current pattern */
     u16 speed;                   /* 0x18 - ticks per row; a nonzero high byte
                                   * alternates with the low byte every row */
-    u8 field_1a;                 /* 0x1a */
+    u8 playing;                  /* 0x1a - 0 = the song is stopped (no rows advance) */
     u8 field_1b;                 /* 0x1b */
     u8 tickCounter;              /* 0x1c */
-    u8 field_1d;                 /* 0x1d */
+    u8 newRow;                   /* 0x1d - set on the tick a new row starts */
     u8 newOrder;                 /* 0x1e - set when the order position changed */
-    u8 field_1f;                 /* 0x1f */
-    u8 field_20;                 /* 0x20 */
-    u8 field_21;                 /* 0x21 */
-    u8 field_22;                 /* 0x22 */
+    u8 volume;                   /* 0x1f - master volume, from GaxSongHeader.volume each GAX_play (0xff = full) */
+    u8 stopAtEnd;                /* 0x20 - stop instead of looping after the last order (jingles; GAX2_init flag bit 3) */
+    u8 songEnded;                /* 0x21 - set once the song has played past its last order (or stopped) */
+    u8 patternBreak;             /* 0x22 - pattern-break effect (cmd 13): jump to the pattern's end on the next row */
     u8 pad_23;
     u16 field_24;                /* 0x24 */
 };
@@ -277,36 +277,36 @@ struct GaxMixerHandler {
     struct GaxMixerFormat *format; /* 0x04 */
     struct GaxHandler **children; /* 0x08 */
     u32 pos;                      /* 0x0c */
-    u32 field_10;                 /* 0x10 */
+    u32 mixBuf;                   /* 0x10 - GaxPlayerState.mixBuf, the buffer the mix renders into */
     u32 extraChildren;            /* 0x14 - number of SFX voices after the song's channels */
 };
 
-/* The object `gUnknown_03001630->songPtr` points at. */
+/* The object `gGaxPlayerState->songPtr` points at. */
 struct GaxSongHeader {
     u8 *workBuf;                 /* 0x00 - caller-supplied work RAM */
-    u32 workSize;                /* 0x04 - its size (sub_8037FC0 computes the requirement) */
+    u32 workSize;                /* 0x04 - its size (GAX2_estimate computes the requirement) */
     u16 mixRate;                 /* 0x08 - 0xffff = the song's default */
     u16 field_0a;              /* 0x0a - copied to GaxPlayerState.field_180 each tick */
     u16 flags;                   /* 0x0c */
     u16 numSfx;                  /* 0x0e - number of SFX voices, 0xffff = the song's default */
-    u16 field_10;                /* 0x10 - clamped to 0xff; 0xffff = 0xff */
+    u16 volume;                  /* 0x10 - master volume, clamped to 0xff; 0xffff = 0xff */
     u8 pad_12[0x1a];
     struct GaxHandlerType **sfxTypes; /* 0x2c - handler types of the SFX voices, or NULL */
     struct GaxHandlerLayout *layout; /* 0x30 - the music player's handler layout; SFX voices follow its `count` handlers */
     void *scratch;               /* 0x34 - 0x40-byte buffer cleared every tick */
     u8 showErrors;               /* 0x38 - show GAX2's fatal-error screen on failure */
-    u8 field_39;                 /* 0x39 */
-    u8 field_3a;                 /* 0x3a */
+    u8 songEnded;                /* 0x39 - the current player's song has ended (GaxInfoHandler.songEnded) */
+    u8 jingleEnded;              /* 0x3a - set when a finished jingle hands back to the music player */
 };
 
 /* A player's handler layout: `count` handler types, instantiated in
- * order into the player's handler array (sub_8038240). */
+ * order into the player's handler array (GaxCreateHandlers). */
 struct GaxHandlerLayout {
     u32 count;
     struct GaxHandlerType *types[1]; /* really `count` long */
 };
 
-extern struct GaxPlayerState *gUnknown_03001630;
+extern struct GaxPlayerState *gGaxPlayerState;
 
 /* Typed views of the current player: its handler array (`[0]` = mixer,
  * `[1]` = the shared Info handler, then the song's channels) and song
@@ -314,13 +314,13 @@ extern struct GaxPlayerState *gUnknown_03001630;
  * every access re-derives the chain, as the ROM does; the element types
  * matter - they're what lets gcc's type-based alias analysis keep a
  * loaded `songPtr` in a register across `children[]` stores. */
-#define GAX_PLAYER() ((struct GaxHandler **)gUnknown_03001630->channels[gUnknown_03001630->curChannelIdx])
-#define GAX_SONG() ((struct GaxSongHeader *)gUnknown_03001630->songPtr)
+#define GAX_PLAYER() ((struct GaxHandler **)gGaxPlayerState->channels[gGaxPlayerState->curChannelIdx])
+#define GAX_SONG() ((struct GaxSongHeader *)gGaxPlayerState->songPtr)
 #define GAX_MIXER() ((struct GaxMixerHandler *)GAX_PLAYER()[0])
 #define GAX_INFO() ((struct GaxInfoHandler *)GAX_PLAYER()[1])
 
 /* The output format every handler's `format` points at (built by
- * sub_8038538 right after the player's handler array). */
+ * GAX2_init right after the player's handler array). */
 struct GaxChannelFormat {
     u8 field_00;                 /* 0x00 - 8 */
     u8 channels;                 /* 0x01 - 1 */
@@ -329,8 +329,8 @@ struct GaxChannelFormat {
 };
 
 /* A "Channel" handler: one tracker channel's playback state (the `self`
- * of sub_8039518/sub_80395A4/sub_8039658/sub_8039AA4/sub_8039F30/
- * sub_803A03C, ...). */
+ * of GaxChannelInit/GaxChannelPlay/GaxChannelDecodeRow/GaxChannelTick/GaxEnvelopeTick/
+ * GaxChannelTickSweep, ...). */
 struct GaxChannelState {
     struct GaxHandlerType *type; /* 0x00 */
     struct GaxChannelFormat *format; /* 0x04 */
@@ -345,9 +345,9 @@ struct GaxChannelState {
     s8 sweepDir;                 /* 0x13 - +1/-1 */
     u8 sweepTimer;               /* 0x14 */
     u8 vol15;                    /* 0x15 - 0-0xff, ramped by volStep15 */
-    u8 envOut;                   /* 0x16 - sub_8039F30's result */
+    u8 envOut;                   /* 0x16 - GaxEnvelopeTick's result */
     u8 vol17;                    /* 0x17 - 0-0xff, ramped by volStep17 */
-    s8 field_18;                 /* 0x18 - volume set by sub_8039064/sub_80390F8 (-1 = default) */
+    s8 volume;                   /* 0x18 - volume set by GAX_set_music_volume/GAX_set_fx_volume (-1 = default) */
     u8 pad_19;
     s16 volStep15;               /* 0x1a */
     s16 volStep17;               /* 0x1c */
@@ -357,19 +357,19 @@ struct GaxChannelState {
     u8 field_21;                 /* 0x21 */
     u8 released;                /* 0x22 - nonzero once the note is released (envelope leaves sustain/loop) */
     u8 vibratoDelay;             /* 0x23 - ticks left before the vibrato phase starts advancing */
-    u8 field_24;                 /* 0x24 - muted flag (sub_8038FD0) */
-    u8 field_25;                 /* 0x25 */
+    u8 pendingNote;              /* 0x24 - SFX voices: note queued by GAX_fx_ex (1 = key off, GAX_stop_fx) */
+    u8 pendingInstrument;        /* 0x25 - SFX voices: instrument (sound effect id) queued by GAX_fx_ex */
     s16 pitch;                   /* 0x26 */
     s16 pitchStep;               /* 0x28 */
     s16 note;                    /* 0x2a - 0x8AD0 = no note */
     s16 noteStep;                /* 0x2c */
-    s16 field_2e;                /* 0x2e - added to the note when mixing (sub_8039FFC's vibrato offset) */
+    s16 field_2e;                /* 0x2e - added to the note when mixing (GaxChannelTickVibrato's vibrato offset) */
     s16 slideTarget;             /* 0x30 */
     s16 slideRate;               /* 0x32 - 0 = no portamento */
     s16 retriggerDelay;          /* 0x34 - E-Dx note delay countdown */
     u16 seqPos;                  /* 0x36 - position in instrument->seq */
-    u16 envPos;                 /* 0x38 - sub_8039F30's position */
-    u16 vibratoPhase;            /* 0x3a - 0-0x3f index into gStaticData_085A9EAC */
+    u16 envPos;                 /* 0x38 - GaxEnvelopeTick's position */
+    u16 vibratoPhase;            /* 0x3a - 0-0x3f index into gGaxVibratoTable */
     struct GaxChannelInstrument *instrument; /* 0x3c */
     u8 *patternPtr;              /* 0x40 - read position in the packed pattern stream */
     s32 samplePos;               /* 0x44 - Q11 */
@@ -378,7 +378,7 @@ struct GaxChannelState {
     u8 delayedNote;              /* 0x50 - note/instrument held for a delayed retrigger */
     u8 delayedInstrument;        /* 0x51 */
     u8 field_52;                 /* 0x52 */
-    u8 index;                    /* 0x53 - channel number (sub_8038240) */
+    u8 index;                    /* 0x53 - channel number (GaxCreateHandlers) */
 };
 
 /* GAX2's own "call an ARM routine from Thumb" idiom (ARMv4T Thumb has
@@ -394,8 +394,8 @@ struct GaxChannelState {
                  : : "m"(arg), "r"(fn) : "r0", "r1", "r2", "lr")
 
 /* The same call with the argument already in a register (`mov r0, rX`
- * instead of a stack reload) - sub_8039B44's form, taking the player
- * state whose `field_44` holds the routine. What reproduces the ROM
+ * instead of a stack reload) - GaxChannelMix's form, taking the player
+ * state whose `mixCode` holds the routine. What reproduces the ROM
  * (docs/matching/gax-naked-retry-3.md):
  * - the "memory" clobber: the ARM routine writes the work item `arg`
  *   points at, and without it GCSE carries loads across the call;
@@ -407,7 +407,7 @@ struct GaxChannelState {
     {                                                                            \
         void *_arg = (void *)(arg);                                              \
         void *_fn = (state);                                                     \
-        _fn = ((struct GaxPlayerState *)_fn)->field_44;                          \
+        _fn = ((struct GaxPlayerState *)_fn)->mixCode;                          \
         asm volatile("mov r1, %1\n\tmov r0, %0\n\tmov r2, pc\n\tadd r2, #5\n\t" \
                      "mov lr, r2\n\tbx r1\n\tnop"                               \
                      : : "r"(_arg), "r"(_fn) : "r0", "r1", "r2", "lr", "memory"); \

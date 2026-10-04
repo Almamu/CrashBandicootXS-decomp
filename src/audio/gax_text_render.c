@@ -2,7 +2,7 @@
 #include "gba/defines.h"
 
 /* Word-wrap text/console-tile renderer used by the fatal-error screen
- * (sub_80392E0): writes `str`'s characters as tile indices into BG
+ * (GaxFatalError): writes `str`'s characters as tile indices into BG
  * screen block 0's tilemap, starting at (col, row) in 8x8-tile units
  * (`BG_SCREEN_ADDR(0) + col*2 + row*64`, 64 bytes/row = 32 tiles *
  * 2 bytes each).
@@ -44,7 +44,7 @@
  * the ROM has it rather than simplified to a plain `else`, since that
  * changes gcc's cross-jump merging of the three arithmetic branches'
  * shared `(u8)`-truncation tail. */
-void sub_8039214(u32 col, u32 row, const u8 *str)
+void GaxDrawText(u32 col, u32 row, const u8 *str)
 {
     register u8 *dst asm("r3");
     register s32 colIdx asm("r1");

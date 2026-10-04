@@ -1,15 +1,15 @@
-# GAX NAKED retry 6: `sub_8039B44` (issue #68)
+# GAX NAKED retry 6: `GaxChannelMix` (issue #68)
 
 Sixth pass on the per-channel mixer, after
 [gax-naked-retry-5.md](./gax-naked-retry-5.md). **It closed.**
-`sub_8039B44` is real C in `src/audio/gax_note_trigger.c`, built with
+`GaxChannelMix` is real C in `src/audio/gax_note_trigger.c`, built with
 plain agbcc and the normal flags, and verified with a clean
 `make compare`. It was the last GAX function and the last NAKED function
 in issue #68's range.
 
 | Function | File | Before | Now |
 |---|---|---|---|
-| `sub_8039B44` | gax_note_trigger.c | 43 | **matched** |
+| `GaxChannelMix` | gax_note_trigger.c | 43 | **matched** |
 
 (Retry 3's `brute2.py` sequence score, ROM cut at `0x3EC`.)
 

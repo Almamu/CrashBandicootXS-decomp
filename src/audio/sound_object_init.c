@@ -1,26 +1,26 @@
 #include "core.h"
 
-extern void sub_80392E0(void *arg0, void *arg1);
-extern void sub_8037F3C(void *arg0, s32 size);
-extern u8 gStaticData_085A61B0[];
-extern u8 gStaticData_085A61BC[];
+extern void GaxFatalError(void *arg0, void *arg1);
+extern void GaxZeroFill(void *arg0, s32 size);
+extern u8 gGaxErrNameNew[];
+extern u8 gGaxErrParamsNull[];
 
-/* `self == NULL` takes a completely different path (a 2-arg call into
- * still-unread GAX2 engine internals) - otherwise clears/zero-fills
- * `self` (via sub_8037F3C, a memset-like helper) and resets a handful of
- * fields to their "empty" sentinel values. Meaning of the individual
- * fields isn't understood yet; looks like a SoundHandler/channel-object
- * constructor (see docs/audio.md's GAX2_SoundHandler notes) given the
- * neighboring GAX2 code, but not confirmed. */
-void sub_80381FC(void *self)
+/* GAX2's `GAX2_new(params)` (named by its own "GAX2_NEW" / "PARAMS ARG
+ * IS NULL" error report): fills a `struct GaxSongHeader` (the GAX2
+ * params block GAX2_estimate/GAX2_init take) with defaults - zeroes it
+ * (GaxZeroFill), then mix rate and SFX-voice count 0xffff ("the song's
+ * default"), `field_0a` 0, volume 0xffff and `showErrors` 1. A NULL
+ * `self` shows the fatal-error screen instead. Kept on raw offsets
+ * here (byte-exact as written). */
+void GAX2_new(void *self)
 {
     u16 val;
 
     if (self == NULL) {
-        sub_80392E0(gStaticData_085A61B0, gStaticData_085A61BC);
+        GaxFatalError(gGaxErrNameNew, gGaxErrParamsNull);
         return;
     }
-    sub_8037F3C(self, 0x3c);
+    GaxZeroFill(self, 0x3c);
     val = 0xFFFF;
     *(u16 *)((u8 *)self + 8) = val;
     val = 0;

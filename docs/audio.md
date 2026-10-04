@@ -4,7 +4,7 @@ The game's music and sound effects are driven by [Shin'en Multimedia's GAX Sound
 Engine](https://www.shinen.com/) (GAX2 specifically), a third-party GBA audio
 driver — not Nintendo's M4A/Sappy engine. It was identified via the `"GAX2"`
 magic constant (`0x47415832`) embedded in the engine's own init code
-(`asm/code_3.s`, around `sub_8038538`, ROM `0x08038538`).
+(`asm/code_3.s`, around `GAX2_init`, ROM `0x08038538`).
 
 The whole engine (mixer, timer IRQ handler, replay logic) lives in
 `asm/code_3.s` roughly between `0x08037110` and `0x0803A950` (narrowed
@@ -23,10 +23,10 @@ The engine data is two contiguous blocks, both **built from editable
 sources**, not extracted verbatim from `baserom.gba` (see "Build pipeline"
 below):
 
-- the **sound-effect set** at `0x084C0006` (`gStaticData_084C0006`, 638,126
+- the **sound-effect set** at `0x084C0006` (`gGaxSfxData`, 638,126
   bytes): its own 88 instruments and 87 samples, and the handler type the
   sound-effect voices run (see "Sound effects" below);
-- the **music block** at `0x0855BCB4` (`gStaticData_0855BCB4`): the shared
+- the **music block** at `0x0855BCB4` (`gGaxMusicData`): the shared
   instrument/sample pool of the music and all 19 songs.
 
 High level structure of the music block (base = `0x0855BCB4`):
@@ -56,11 +56,11 @@ per song (in ROM address order, NOT alphabetical - see gax_manifest.json "song_o
 the default song (manifest "default_song"), laid out the same way: one empty
     pattern, 7 title bytes, one pattern header, SongInfo (no instrument set,
     its sample-set pointer = its own sequence data), the handlers, and its
-    GAX2_Song struct, which is gStaticData_085A4C5C (built as a separate file)
+    GAX2_Song struct, which is gGaxDefaultSong (built as a separate file)
 ```
 
-The default song is the engine's default handler layout: `sub_8038538`
-and `sub_8037FC0` use `gStaticData_085A4C5C` when no layout is given. It
+The default song is the engine's default handler layout: `GAX2_init`
+and `GAX2_estimate` use `gGaxDefaultSong` when no layout is given. It
 was the verbatim 160-byte `gax_footer.bin` before; its 20-byte song
 struct sat right after it as a raw label.
 
@@ -140,6 +140,43 @@ like the Japanese commercial cue that reuses sample 25); those got a real
 derived rate instead (see the "Fix preview sample rates" commit for the
 full list).
 
+## Engine API names
+
+The engine's entry points carry Shin'en's own GAX2 API names (an exception
+to the PascalCase rule, see [`docs/naming.md`](./naming.md)). Five are named
+by the ROM itself: the engine's error reports hand the function name to
+the fatal-error screen (`GaxFatalError`, "FUNCTION NAME:"), so
+`gGaxErrNameNew`/`Init`/`Jingle`/`Irq` ("GAX2_NEW", "GAX2_INIT",
+"GAX2_JINGLE", "GAX_IRQ") identify their callers, and "GAX_PLAY HAS NOT
+FINISHED BEFORE GAX_IRQ" names `GAX_play` (it sets the `playDone` flag
+`GAX_irq` checks). The rest match the published GAX API by signature and
+behaviour:
+
+| Function | Address | What it does |
+|---|---|---|
+| `GAX2_new(params)` | `0x080381FC` | fills a params block (`struct GaxSongHeader`) with defaults |
+| `GAX2_estimate(params)` | `0x08037FC0` | stores the work-RAM size `GAX2_init` will need in `params->workSize` |
+| `GAX2_init(params)` | `0x08038538` | builds the player in the work RAM and starts the song |
+| `GAX2_jingle(song)` | `0x08038A1C` | plays a song as a jingle (player 1), handing back to the music when it ends |
+| `GAX_irq()` | `0x08038B68` | the Timer IRQ half: re-arms the output DMA for the next buffer half |
+| `GAX_play()` | `0x08038C88` | the per-frame half: mixes the next buffer half |
+| `GAX_pause()` / `GAX_resume()` | `0x08038C28` / `0x08038C50` | stop / restart the Direct Sound output |
+| `GAX_stop()` | `0x08039198` | stops the engine (output, DMA1, Timer0) |
+| `GAX_fx(fxid)` | `0x08038DC0` | plays a sound effect on the lowest-priority voice (UNUSED) |
+| `GAX_fx_ex(fxid, fxch, prio, note)` | `0x08038E74` | plays a sound effect on a given voice (or `-1` = any), with priority and note |
+| `GAX_fx_note(fxch, note)` | `0x08038F94` | changes a playing sound effect's pitch (no caller found) |
+| `GAX_stop_fx(fxch)` | `0x08038FD0` | key-off on one SFX voice (`-1` = all) |
+| `GAX_set_music_volume(ch, vol)` | `0x08039064` | per-channel music volume (`-1` = all) |
+| `GAX_set_fx_volume(fxch, vol)` | `0x080390F8` | per-voice SFX volume (`-1` = all) |
+
+The handler types' callbacks are `GaxInfoInit`/`GaxInfoPlay` (the "Info"
+type, the song position), `GaxChannelInit`/`GaxChannelPlay` (a tracker
+channel), `GaxFxChannelInit`/`GaxFxChannelPlay` (a sound-effect voice) and
+`GaxMixerInit`/`GaxMixerPlay` (the "UnknownC" type: the mixer). The three
+named ARM routines are `gGaxArmDownmix` (16-bit mix to 8-bit output),
+`gGaxArmEcho` (the echo/delay pass) and `gGaxArmResample` (a channel's
+sample resampler, patched in place by `GaxChannelMix`).
+
 ## A few engine internals read directly (not part of the build pipeline)
 
 Everything above the "Build pipeline" section was reverse-engineered
@@ -148,16 +185,16 @@ closely. A few of its functions have since been read directly (see
 [`docs/rom_map.md`](./rom_map.md) for how this fits into the whole-ROM
 picture):
 
-- **`sub_8038538`** (ROM `0x08038538`, the function already cited above
+- **`GAX2_init`** (ROM `0x08038538`, the function already cited above
   for the `"GAX2"` magic constant) is the engine's **play-start/init
   entry point**: initializes a runtime player-state object at
-  `gUnknown_03001630` (writes the magic, stores the song/sound struct
+  `gGaxPlayerState` (writes the magic, stores the song/sound struct
   pointer, resets counters), validates an item count against a `0x18B`
   (395) sanity maximum, and fills in default fields - an instrument-bank
-  pointer (`gStaticData_085A4C5C`) and a default volume (`0xFF`) - when
+  pointer (`gGaxDefaultSong`) and a default volume (`0xFF`) - when
   the caller left them zero.
-- **`gStaticData_085A4C5C`** (20 bytes) turns out to sit **immediately
-  after** the documented `gStaticData_0855BCB4` audio block, not
+- **`gGaxDefaultSong`** (20 bytes) turns out to sit **immediately
+  after** the documented `gGaxMusicData` audio block, not
   embedded within it - confirmed exactly: `gax_audio_data.bin` (the
   built block) is `0x48FA8` bytes, and `0x0855BCB4 + 0x48FA8 =
   0x085A4C5C` precisely. Decodes as `{count=4, ptr, ptr, ptr, ptr}` -
@@ -165,9 +202,9 @@ picture):
   It turned out to be the song struct of a silent default song whose
   other objects end the block (see "Data layout" above); it is now built
   with the block.
-- **`sub_8038E74`** (one of `PlaySfx`'s two direct callees) is the
+- **`GAX_fx_ex`** (one of `PlaySfx`'s two direct callees) is the
   **voice-stealing mixer allocator**: loops the current song's active
-  channel handlers via `gUnknown_03001630`'s child-pointer chain, and
+  channel handlers via `gGaxPlayerState`'s child-pointer chain, and
   either resolves a specific requested channel index, or - when the
   caller passes `-1` - scans for the channel with the lowest priority
   value at `+0x4C` to reuse. Textbook voice stealing.
@@ -188,7 +225,7 @@ picture):
   085A4C5C` instrument-selector data above) before doing long division
   via `sub_803AF1C`/`sub_8037E54`. Worth noting explicitly: the small
   data cluster right after the audio block is itself mixed -
-  `gStaticData_085A4C5C` plausibly audio-related,
+  `gGaxDefaultSong` plausibly audio-related,
   `gStaticData_085A4D70` confirmed unrelated - so proximity to
   known-audio data doesn't settle the question either, only reading
   the consuming function does.
@@ -200,8 +237,8 @@ picture):
   BIOS `svc` wrapper stubs below begin) of genuine **ARM-mode (32-bit)
   machine code that the disassembler never actually disassembled as
   code**. The labels right after it
-  (`gStaticData_0803A630`, `gStaticData_0803A67C`, `gStaticData_
-  0803A73C`, `gStaticData_0803A818`) mark raw bytes that decode cleanly
+  (`gGaxArmDownmix`, `gStaticData_0803A67C`, `gStaticData_
+  0803A73C`, `gGaxArmResample`) mark raw bytes that decode cleanly
   as ARM instruction encodings (e.g. `60 00 2D E9` = ARM `STMFD
   sp!,{...}`, a classic ARM function prologue) - this codebase is
   otherwise entirely Thumb, so whatever raw-asm-extraction pass
@@ -228,7 +265,7 @@ picture):
   and the true end of the GAX2 engine: only 12 bytes separate them
   from `LZ77UnCompWrapper` at `0x0803A950` (see `docs/rom_map.md`'s
   "Narrowing the GAX2 boundary" for the full boundary resolution).
-- **`sub_8039B44`** (780 B): reads a pattern/sequence pointer
+- **`GaxChannelMix`** (780 B): reads a pattern/sequence pointer
   (`self+0x3C`), a note value checked against sentinel `0xFFFF8AD0`
   ("empty/no note", `self+0x2A`), and a small 0-3 index (`self+0x10`,
   plausibly a channel number) to step through pattern data and index a
@@ -247,10 +284,10 @@ gameplay code), is the sound-effect trigger:
 chan_arg, volume}` (volume as 8.8 fixed point; the JSON still calls the
 middle field `pitch_offset`) - the matching pass corrected the middle
 field's guessed name from "pitch_offset" to `chan_arg`: `PlaySfx` passes
-it straight through to `sub_8038E74` (as its priority argument, see
-below), and the ambient-sfx sibling `sub_80019F8` never reads it at all
+it straight through to `GAX_fx_ex` (as its priority argument, see
+below), and the ambient-sfx sibling `PlayAmbientSfx` never reads it at all
 (always passes a hardcoded `0` there instead) - and uses it to steal a
-mixing voice (`sub_8038E74`) and play a note.
+mixing voice (`GAX_fx_ex`) and play a note.
 
 That note does **not** come from the music's instrument pool: an earlier
 version of this section said there was no separate sound-effect sample
@@ -259,21 +296,21 @@ block at `0x084C0006` right before the music. The engine path, all in
 matched C:
 
 - `sub_80017BC` (`music_player.c`) fills the `GaxSongHeader` it hands to
-  `sub_8038538`: `numSfx` (`+0x0E`) = 3 sound-effect voices, and
-  `sfxTypes` (`+0x2C`) = `gStaticData_0855BCB4`, the 9-pointer array at
+  `GAX2_init`: `numSfx` (`+0x0E`) = 3 sound-effect voices, and
+  `sfxTypes` (`+0x2C`) = `gGaxMusicData`, the 9-pointer array at
   the start of the music block. Every pointer is the same handler type,
   `0x0855BC98`, the last thing in the sound-effect set.
-- `sub_8038538` instantiates `numSfx` voices from `sfxTypes` after the
+- `GAX2_init` instantiates `numSfx` voices from `sfxTypes` after the
   song's own handlers, and the mixer (`GaxMixerHandler.extraChildren`)
   mixes them after the song's channels.
-- `PlaySfx`/`sub_80019F8` call `sub_8038E74(instrument, voice, priority,
+- `PlaySfx`/`PlayAmbientSfx` call `GAX_fx_ex(instrument, voice, priority,
   -1)`, which queues `instrument` (the table's `slot_id`) on a voice at
   note 8. `PlaySfx` alternates voices 0 and 1; the ambient channel of
-  `sub_80019F8`/`sub_800190C` uses voice 2. The table's middle field is
-  `sub_8038E74`'s *priority* argument (the voice-steal threshold), not a
+  `PlayAmbientSfx`/`TickAmbientSfx` uses voice 2. The table's middle field is
+  `GAX_fx_ex`'s *priority* argument (the voice-steal threshold), not a
   channel: the channel is the round-robin toggle.
-- The voice type's play function `sub_803A158` starts the queued
-  instrument with `sub_803985C(self, info, instrument,
+- The voice type's play function `GaxFxChannelPlay` starts the queued
+  instrument with `GaxChannelSetInstrument(self, info, instrument,
   self->type->data.song)`, and that type data is the sound-effect set's
   song header (`0x0855BC78`), whose instrument and sample tables are the
   set's own. So `slot_id` N (1-87) is sound-effect instrument N, and
@@ -291,7 +328,7 @@ sample pool with a one-type tail instead of songs:
 [sample table: {data, length} x 88, entry 0 empty]
 [song header (GAX_SongInfo, 0x1C): no channels or patterns, volume 0x100, the two tables]
 [the handler type's 1-entry child-type array: NULL]
-[the sound-effect voice handler type: sub_803A104/sub_803A228/sub_803A158, 1 child, 0x48-byte instances, data = the song header]
+[the sound-effect voice handler type: GaxFxChannelInit/sub_803A228/GaxFxChannelPlay, 1 child, 0x48-byte instances, data = the song header]
 ```
 
 All 87 instruments (0 is an empty placeholder) have one row with a
@@ -319,7 +356,7 @@ Everything is generated from editable sources, never read from
 - `tools/gax_audio.py` — a from-scratch GAX2 encoder (no external tool or
   `.NET` dependency) that links all of the above back into the original
   binary layout: `tools/gax_audio.py OUT LAYOUT SONGS.h` the music block,
-  the default song's layout struct (`gStaticData_085A4C5C`) and a header
+  the default song's layout struct (`gGaxDefaultSong`) and a header
   of each song's offset in the block (`GAX_SONG_<NAME>`),
   `tools/gax_audio.py --sfx OUT` the sound-effect set. The music block's
   leading `sfxTypes` array is generated from the sound-effect set's
@@ -329,8 +366,8 @@ Everything is generated from editable sources, never read from
   `make compare`). Editing a `.xm` or `.wav` changes only the bytes that
   actually need to differ.
 - Nothing outside the audio build points into the music block by a fixed
-  address any more: the song table `gStaticData_0816AA20`
-  (`src/data/song_table_16aa20.c`) is written as `gStaticData_0855BCB4 +
+  address any more: the song table `gSongTable`
+  (`src/data/song_table_16aa20.c`) is written as `gGaxMusicData +
   GAX_SONG_<NAME>` from the generated `gax_songs.h`, and the default layout
   is built with the block. So a song can change size. The block itself is
   linked at the fixed `BASE_ADDR` (its pointers are absolute), which is

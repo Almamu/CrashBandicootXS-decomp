@@ -1,4 +1,4 @@
-# `sub_8039518`/`sub_80395A4`/`sub_8039658`: the Channel type's init_fn/play_fn (audio, issues #67/#68)
+# `GaxChannelInit`/`GaxChannelPlay`/`GaxChannelDecodeRow`: the Channel type's init_fn/play_fn (audio, issues #67/#68)
 
 Closes the two remaining raw gaps `docs/matching/issue-67-0x08038538-audio.md`
 left open for the GAX2_SoundHandler "Channel" type's function-pointer trio
@@ -8,18 +8,18 @@ already matched in `gax_sound_handler_channel.c`). Both are NAKED asm
 transcriptions - byte-correct but not real decompiled C, tracked as parked,
 not matched - so issue #67/#68 stay open regardless of this pass.
 
-## `sub_8039518` (Channel type's init_fn) - `src/audio/gax_sound_handler_channel_init.c`
+## `GaxChannelInit` (Channel type's init_fn) - `src/audio/gax_sound_handler_channel_init.c`
 
-Resets the same kind of field set `sub_803A104`'s per-channel voice
+Resets the same kind of field set `GaxFxChannelInit`'s per-channel voice
 constructor does (accumulator/envelope/priority/portamento defaults, plus
 two extra pointer-walked byte zeroes at `+0x24`/`+0x25` that don't fit a
 Thumb `strb` immediate offset), computes a fixed-point reciprocal
 (`sub_8037A7C((s64)1 << 32, (s64)self->field_4's 0x2 halfword)` - a generic
 64-bit software division helper, not GAX2-specific, see `docs/audio.md`)
-into the 8-byte global `gUnknown_03001618`, then loops `self->8`'s
+into the 8-byte global `gGaxMixRateReciprocal`, then loops `self->8`'s
 child-pointer array (count `self->0->0xc`) firing each child's own function
 pointer through the `sub_803AD7C` trampoline - the same pattern
-`sub_803A22C` (UnknownC type's init_fn) uses.
+`GaxMixerInit` (UnknownC type's init_fn) uses.
 
 A real C reconstruction got every field-reset store byte-identical on its
 own, including reproducing the ROM's `ldr rX,=0`/`ldr rX,=1` literal-pool
@@ -41,7 +41,7 @@ that was fixed:
    confirmed by trying every combination of pinned/unpinned intermediates
    for both the temporary field-pointer and the halfword result.
 2. The ROM groups all 4 of this function's literal-pool words (`0x8AD0`,
-   `gUnknown_03001618`'s address, and the division call's `0` and `1`) into
+   `gGaxMixRateReciprocal`'s address, and the division call's `0` and `1`) into
    one pool sitting right after the `b` that skips over it - gcc's own
    pooling naturally reproduces this (it flushes every compiler-visible
    constant used by a function at the same point), but as soon as any
@@ -56,9 +56,9 @@ byte-verified transcription of the ROM's own instructions, not an inferred
 control-flow guess (every field offset and the loop bound were independently
 understood first, the same as this project's other NAKED transcriptions).
 
-## `sub_80395A4`/`sub_8039658` (Channel type's play_fn and its direct callee) - `src/audio/gax_sound_handler_channel_play.c`
+## `GaxChannelPlay`/`GaxChannelDecodeRow` (Channel type's play_fn and its direct callee) - `src/audio/gax_sound_handler_channel_play.c`
 
-`sub_80395A4` (`self` = this channel's own handler, `info` =
+`GaxChannelPlay` (`self` = this channel's own handler, `info` =
 `*(void**)(self+8)`, the shared Info handler every channel's `children_ptr`
 points at per `docs/audio.md`) first forwards its own `(arg1, chanArg)`
 straight into `info`'s own play_fn slot (`info->0->0x8`, the same
@@ -70,12 +70,12 @@ function-pointer argument in `r3` with zero extra effort, and this part of
 the reconstruction was byte-exact immediately. Then: if `info` armed a
 "retrigger" flag (`info->0x1b`), clears this channel's own `field_0x3c`; if
 `info` is armed at all (`info->0x1a`), advances this channel's own countdown
-(`field_0x34`, a signed halfword) and fires `sub_8039658(self, info, 1)`
-once it hits zero, or fires `sub_8039658(self, info, 0)` whenever
+(`field_0x34`, a signed halfword) and fires `GaxChannelDecodeRow(self, info, 1)`
+once it hits zero, or fires `GaxChannelDecodeRow(self, info, 0)` whenever
 `info->0x18` is set and `info->0x1d` is set; drives a
-`field_0x1f`/`field_0x1e` "note-cut countdown" pair (calling `sub_80398DC`
-each time it's re-armed from `field_0x1e`); always runs `sub_8039AA4`; and
-finally, only when `self->0xc == 0`, forwards into `sub_8039B44(self, info,
+`field_0x1f`/`field_0x1e` "note-cut countdown" pair (calling `GaxChannelStepInstrumentSeq`
+each time it's re-armed from `field_0x1e`); always runs `GaxChannelTick`; and
+finally, only when `self->0xc == 0`, forwards into `GaxChannelMix(self, info,
 arg1, chanArg, info->0->0x18, 0)` and returns its low byte.
 
 Every load/store/branch/call in the body above landed byte-identical in
@@ -94,7 +94,7 @@ conclusion on an unrelated function), so only fully-unpinned allocation can
 safely put a value in `r7` at all, and that path's own ordering choice never
 matches the ROM's. Transcribed instruction-for-instruction instead.
 
-`sub_8039658` is `sub_80395A4`'s direct callee - a per-note-event command
+`GaxChannelDecodeRow` is `GaxChannelPlay`'s direct callee - a per-note-event command
 dispatcher. `self+0x40` is a rolling cursor into the current pattern-row
 byte stream (`docs/audio.md`'s per-song pattern data); this decodes one
 "packed row" record (a leading control byte whose top two bits select how
@@ -104,7 +104,7 @@ dispatches the decoded command byte (an effect-command index) through a
 15-entry jump table (most cases just store a nibble into a channel field;
 cases 6/14 also poke the shared `info` handler's own state), and always
 re-primes `self+0x1a`/`0x28`/`0x34` to 0 up front and calls
-`sub_8039818`/`sub_803985C` (per-channel note-cut dispatch and voice
+`GaxChannelSetNote`/`GaxChannelSetInstrument` (per-channel note-cut dispatch and voice
 trigger) unless the decoded effect index is exactly 3. `flag` (the caller's
 `1`/`0`) selects between reading a *new* record from the pattern stream
 (`flag == 0`) or replaying the *same* `self+0x50`/`0x51` "last command"
@@ -112,7 +112,7 @@ bytes again (`flag != 0`, the retrigger case). This one was never
 attempted as plain C: its prologue alone (`push {r4-r7,lr}; mov r7,sb; mov
 r6,r8; push {r6,r7}`) needs both `r8`/`sb` as genuine scratch across the
 packed-row decode - the same many-register gcc-2.9 allocation ceiling
-already documented throughout this ROM region for `sub_8038538`'s cluster
+already documented throughout this ROM region for `GAX2_init`'s cluster
 (`docs/status/audio.md`). Its 15-entry jump table is hand-placed with named
 local labels (the same "hand-placed local labels shared across a single
 literal pool" idea as `actor_part38b.c`'s `sub_80151C8` jump table) rather
@@ -138,4 +138,4 @@ place.
 
 ## Later pass: GAX toolchain retry
 
-`sub_8039518` (via an inline destination-pointer helper), `sub_80395A4` (no pins - the parameter homing comes out right on its own) and `sub_8039658` now match as real C. See [gax-toolchain-retry.md](./gax-toolchain-retry.md).
+`GaxChannelInit` (via an inline destination-pointer helper), `GaxChannelPlay` (no pins - the parameter homing comes out right on its own) and `GaxChannelDecodeRow` now match as real C. See [gax-toolchain-retry.md](./gax-toolchain-retry.md).

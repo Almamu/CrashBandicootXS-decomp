@@ -223,7 +223,7 @@ prologue `r7`/push-list interaction - at that point, converting the
 whole function to `NAKED` (this project's established escape hatch for
 exactly this class of problem, already used for
 `src/util/math_div_util.c`'s `nullsub_8` and `src/audio/gax_swi.c`'s
-`sub_80392C4`) was both simpler and more honest than continuing to
+`GaxHuffUnComp`) was both simpler and more honest than continuing to
 fight the compiler over one instruction's register.
 
 ### The general strategy for the rest: NAKED transcription, byte-verified

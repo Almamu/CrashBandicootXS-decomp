@@ -777,7 +777,7 @@ Next four matched functions, all in `src/system/irq.c` immediately after
   placeholder for its address before this session; changed to a plain
   forward declaration `void sub_8000720(void);` now that it's a real
   function, matching how `IrqEmptyHandler` is declared/referenced
-  elsewhere in this file). Conditionally calls `sub_8038B68()`, then
+  elsewhere in this file). Conditionally calls `GAX_irq()`, then
   calls `sub_803AD78()` for every nonzero slot in
   `gUnknown_03000A60.unknown[8]` (iterated via a pointer walking forward
   while a separate counter counts `7` down to `0`, matching this file's
@@ -4894,19 +4894,19 @@ song, two independent fade-envelope pairs, an ambient-sfx `id`/
 `deadline`/`volume` record pair, and the round-robin `PlaySfx`
 history). `sub_80017BC`'s embedded GAX2 runtime player-state object at
 `self+0x58` stays raw offset casts - genuinely nested engine-internal
-state (`sub_80381FC`/`sub_8038538` own it), not independently
+state (`GAX2_new`/`GAX2_init` own it), not independently
 reverse-engineered. This is the **first matched code anywhere in the
 GAX2 wrapper/engine address family** - `docs/status/audio.md` no
 longer says "not started."
 
 New files: `src/audio/music_player.c` (`sub_80016EC` per-tick fade
 update, `sub_80017BC` start-song), `src/audio/sfx_ambient.c`
-(`sub_800190C`/`sub_80019A8`/`sub_80019CC`/`sub_80019E8`, the
+(`TickAmbientSfx`/`StopSfx`/`ResetAmbientSfx`/`StopAmbientSfx`, the
 ambient/looping-sfx-channel tick/stop/reset/force-expire cluster), and
 `src/audio/audio_context.c` (the remaining 17-function accessor/
 state-machine cluster: play/pause/stop, both fade-envelope arm/setter
 pairs, the constructor). Three separate files, not one, because the
-two parked functions below (`PlaySfx` and `sub_80019F8`) sit physically
+two parked functions below (`PlaySfx` and `PlayAmbientSfx`) sit physically
 between them in ROM order and stay raw - each `.c` file is one
 contiguous matched region, per the usual convention.
 
@@ -4924,7 +4924,7 @@ this. `sub_8001BD4` additionally needed the materialized flag and the
 "reused as the zero constant for later stores" value pinned to two
 *different* registers (`register s32 isStopped asm("r2")` for the
 materialization, `register s32 zero asm("r4")` for the copy that
-survives across the `sub_8039198()` call) - a plain single local
+survives across the `GAX_stop()` call) - a plain single local
 collapses the two into one register and drops an instruction, since
 gcc's own CSE proves they're redundant when nothing forces them apart.
 `sub_80017BC` needed the identical `r1`/`r4` split for its own
@@ -4950,7 +4950,7 @@ arm is branched-to) - `sub_80016EC`'s four fade blocks all needed
 reading `if (cur < target) { ramp } else { clamp }`, to get `blt`
 (not `bge`) as the actual encoded branch.
 
-**A 12-byte struct-copy idiom**: `sub_800190C` promotes a queued
+**A 12-byte struct-copy idiom**: `TickAmbientSfx` promotes a queued
 `pendingSfx` record into `activeSfx` via `self->activeSfx =
 self->pendingSfx;` (a whole-struct assignment) rather than three
 separate field copies - only the whole-struct form reproduces the
@@ -4960,12 +4960,12 @@ is why `AudioContext.activeSfx`/`pendingSfx` are modeled as a
 `struct SfxRecord` in `include/audio.h` instead of six flat fields.
 
 **Register-pinning highlights** (see `matching_decomp_register_pinning`
-memory for the general technique): `sub_800190C`'s expired-sfx path
+memory for the general technique): `TickAmbientSfx`'s expired-sfx path
 needed both a `register s32 v asm("r0")` pin *and* a
-`*(volatile s32 *)&self->field_34` re-read at the `sub_80390F8` call
+`*(volatile s32 *)&self->field_34` re-read at the `GAX_set_fx_volume` call
 site specifically to defeat this compiler's own CSE, which otherwise
 reuses the cached register value instead of reloading from memory
-(closing what would otherwise look like the same gap `sub_80019F8`
+(closing what would otherwise look like the same gap `PlayAmbientSfx`
 below couldn't close) - once the register was pinned to hold the
 computed value, a plain reference to `self->field_34` at the call site
 started getting reused via CSE instead of reloaded, which the ROM
@@ -4975,10 +4975,10 @@ needed `self` pinned to `r9` and a *second*, separately-pinned copy at
 one field access, to match the ROM's specific choice of scratch
 register for that one dereference.
 
-### Parked: `PlaySfx` and `sub_80019F8`
+### Parked: `PlaySfx` and `PlayAmbientSfx`
 
 > Later: `PlaySfx` is matched as real C (docs/matching/near-miss-polish.md),
-> and `sub_80019F8` too (docs/matching/early-rom-naked-retry.md).
+> and `PlayAmbientSfx` too (docs/matching/early-rom-naked-retry.md).
 
 Both fully understood, both extensively iterated on (many register-
 pinning permutations tried, verified against the real ROM
@@ -5000,7 +5000,7 @@ gap this compiler wouldn't close:
   early, and a different permutation of them besides). Every
   combination reproduces the ROM's exact instruction stream except
   this one prologue-ordering difference.
-- **`sub_80019F8`** (a sibling to `PlaySfx` driving the ambient-sfx
+- **`PlayAmbientSfx`** (a sibling to `PlaySfx` driving the ambient-sfx
   channel with an explicit deadline/force-retrigger flag - see its
   doc comment in `src/audio/audio_context.c`): two gaps. (1) The ROM
   reads its 5th (stack) parameter, `forceFlag`, via
@@ -5008,7 +5008,7 @@ gap this compiler wouldn't close:
   then a genuine byte load; this compiler instead reads the full word
   and masks it with `lsls #24; lsrs #24` - both are valid ways to read
   a `u8` stack argument, but a different instruction count. (2) the
-  ROM recomputes `&gStaticData_0816AA6C[id].baseVolume` fully from
+  ROM recomputes `&gSfxTable[id].baseVolume` fully from
   `tableBase`+offset+`8` for the volume read, even though the
   identical address was already computed for the `slotId` read a few
   instructions earlier and is still live in a register; this
@@ -5020,7 +5020,7 @@ gap this compiler wouldn't close:
   warning); neither changed the outcome.
 
 Both stay raw in `asm/code_3_1_10.s` (`PlaySfx`) and
-`asm/code_3_1_10_2.s` (`sub_80019F8`) respectively, guarded by
+`asm/code_3_1_10_2.s` (`PlayAmbientSfx`) respectively, guarded by
 `.if NON_MATCHING == 0`, with the understood-but-not-matching C
 reconstruction living in the *following* file in ROM order
 (`src/audio/sfx_ambient.c` and `src/audio/audio_context.c`
@@ -5034,7 +5034,7 @@ functions sit physically between the three new matched `.c` files.
 Verified via both an isolated per-function compile *and* a full clean
 `make compare` on the fully integrated tree (per workflow.md's own
 warning that isolated compiles aren't proof) - both `PlaySfx` and
-`sub_80019F8` show the identical two gaps in the real linked context
+`PlayAmbientSfx` show the identical two gaps in the real linked context
 as in isolation, confirming these are genuine compiler-behavior gaps
 and not link-context artifacts.
 ## `0x08037110`-`0x08038538`: first pass into the "audio" range
@@ -5133,8 +5133,8 @@ project's "one `.c` file per contiguous ROM region" rule):
     `self` argument - confirmed by the caller's `adds r0,r4,#0` before
     the `bl`) but left un-matched; see below.
 
-- **`src/audio/song_slot_lookup.c`** (`sub_8037FA0`) - a 12-entry,
-  8-byte-stride threshold-table lookup over `gStaticData_085A6150`
+- **`src/audio/song_slot_lookup.c`** (`GaxFindMixRate`) - a 12-entry,
+  8-byte-stride threshold-table lookup over `gGaxMixRates`
   (table contents/meaning not understood). The loop bound compare
   needed an explicitly `u32 i`, not `s32` - a signed loop variable
   compiles the trailing `cmp r1,#0xb` check as `ble` (signed), while
@@ -5142,11 +5142,11 @@ project's "one `.c` file per contiguous ROM region" rule):
   substitution that reads identically in this compiler's own `-fhex-asm`
   dump mnemonics unless the actual opcode bytes are checked.
 
-- **`src/audio/sound_object_init.c`** (`sub_80381FC`) - a
+- **`src/audio/sound_object_init.c`** (`GAX2_new`) - a
   SoundHandler/channel-object-shaped constructor: `self == NULL` takes
   a completely different 2-argument-call path into still-unread GAX2
-  internals (`sub_80392E0`); otherwise zero-fills `self` (via
-  `sub_8037F3C`, a memset-like helper) and resets a handful of fields to
+  internals (`GaxFatalError`); otherwise zero-fills `self` (via
+  `GaxZeroFill`, a memset-like helper) and resets a handful of fields to
   "empty" sentinel values. The `0xFFFFFFFF`-style constant for `+8` had
   to go through its own named `u16` temp (`val = 0xFFFF; *addr = val;`)
   - assigning the literal directly to the dereferenced address loads it
@@ -5161,10 +5161,10 @@ loop and its supporting tile-cache-init/field-copy helper - but they
 hit the exact same many-register (`r8`/`r9`/`sl`) gcc-2.9 allocation
 difficulty already documented for `sub_8006600` in
 `src/graphics/oam_count.c`, no matter how the source was rephrased);
-`sub_8037648`/`sub_8037A7C`/`sub_8037E54`/`sub_8037ECC`/`sub_8037F3C`
+`sub_8037648`/`sub_8037A7C`/`sub_8037E54`/`sub_8037ECC`/`GaxZeroFill`
 (generic 64-bit software division/multiply helpers interleaved in the
 GAX2 range, per `docs/audio.md`'s existing false-positive notes);
-`sub_8037FC0`/`sub_8038240`/`sub_80384DC` (real GAX2 mixer-state/
+`GAX2_estimate`/`GaxCreateHandlers`/`GaxResetSoundHardware` (real GAX2 mixer-state/
 hardware-register internals, including one function with an existing
 in-source comment flagging a compiler-quirk raw-byte workaround) - none
 of these were modified from their existing raw `asm/` form.
@@ -5173,7 +5173,7 @@ All 10 matched functions were verified via a full clean `make compare`
 after splitting `asm/code_3_2_20.s` into `code_3_2_20.s` (before) plus
 four new raw fragments (`code_3_2_20a.s` through `code_3_2_20d.s`,
 holding the left-raw functions above in ROM order) and a renamed tail
-(`code_3_2_20e.s`, everything from `sub_8038538` on, unchanged) around
+(`code_3_2_20e.s`, everything from `GAX2_init` on, unchanged) around
 the four new matched `.c` files, each inserted into `ldscript.txt` at
 its real ROM position.
 ## GitHub issue #34: `0x080225A0`-`0x080231C4` (`UpdateGameFrame`-`MainLoop` cluster, part)
@@ -5747,39 +5747,39 @@ focused pass rather than a rushed low-confidence match.
 Continues straight on from issue #66's pass (the
 "`0x08037110`-`0x08038538`" entry above), still inside the address range
 [docs/audio.md](./audio.md) calls the GAX2 engine. This chunk sits right
-at `sub_8038538` itself - the engine's play-start/init entry point
+at `GAX2_init` itself - the engine's play-start/init entry point
 docs/audio.md already characterizes in prose - plus the handful of small
 GAX2_SoundHandler "Info"/"Channel" vtable functions just past it. 6 of
 the 25 functions matched, across five small new files (non-contiguous,
 since the remaining 19 either resist matching or aren't understood well
 enough yet):
 
-- **`src/audio/gax_dma_control.c`** (`sub_8038C28`, `sub_8038C50`) - a
+- **`src/audio/gax_dma_control.c`** (`GAX_pause`, `GAX_resume`) - a
   Direct Sound A output stop/start pair, gated on a shared `state` field
   (0 = stopped, 1 = starting, 2 = playing) on the runtime player-state
-  object `gUnknown_03001630` points at - modeled as a new
+  object `gGaxPlayerState` points at - modeled as a new
   `struct GaxPlayerState` in `include/audio.h` (only the handful of
   fields this pass's functions actually touch are named; `channels[2]`
   at `+8` is a fixed-size embedded pointer array, its length pinned by
   `curChannelIdx` always sitting at `+0x10` right after it).
-  `sub_8038C28` clears `state` and disables SOUNDCNT_H's DMA1-sound-A
-  bits; `sub_8038C50` flushes 8 zero halfwords into FIFO_A first, then
-  enables them. `sub_8038C50`'s flush loop needed the FIFO_A pointer and
+  `GAX_pause` clears `state` and disables SOUNDCNT_H's DMA1-sound-A
+  bits; `GAX_resume` flushes 8 zero halfwords into FIFO_A first, then
+  enables them. `GAX_resume`'s flush loop needed the FIFO_A pointer and
   the zero value pulled into their own named locals, assigned *before*
   the loop counter - writing the loop as
   `for (i = 7; i >= 0; i--) *(vu16 *)REG_ADDR_FIFO_A = 0;` directly
   compiles the counter's `movs r0,#7` first, but the ROM loads the FIFO
   address and the zero value into r2/r1 before touching r0 at all.
-- **`src/audio/gax_note_param.c`** (`sub_8038F94`) - conditionally
+- **`src/audio/gax_note_param.c`** (`GAX_fx_note`) - conditionally
   updates a currently-active channel voice's note-period-looking field
-  (`+0x26`) by walking `gUnknown_03001630`'s current-channel chain two
+  (`+0x26`) by walking `gGaxPlayerState`'s current-channel chain two
   levels deep (`cur->0->0xc` gives a count added to the `channel`
   argument, indexed into `cur->0->8`'s array to land on the target
   voice), gated on that voice's `+0x3c` field being non-zero. The
   chained objects past `GaxPlayerState` itself aren't understood yet -
-  kept as raw offsets, same as `sub_80381FC`'s constructor
+  kept as raw offsets, same as `GAX2_new`'s constructor
   (`sound_object_init.c`).
-- **`src/audio/gax_swi.c`** (`sub_80392C4`) - a HuffUnComp (SWI 0x13)
+- **`src/audio/gax_swi.c`** (`GaxHuffUnComp`) - a HuffUnComp (SWI 0x13)
   wrapper. Unlike this project's other bare SWI wrappers
   (`src/system/timer_util.c`, a straight `svc`+`bx lr`), this one
   explicitly preserves r0/r1 across the call via r7/r8, plus a
@@ -5792,12 +5792,12 @@ enough yet):
   block, even though the exact same mnemonic assembles fine in a raw
   `asm/*.s` file - had to drop the `s` suffix (`add r7, r0, #0`) to get
   through `as`, same encoded bytes either way.
-- **`src/audio/gax_sound_handler_info.c`** (`sub_80393D0`, `sub_80393FC`,
+- **`src/audio/gax_sound_handler_info.c`** (`GaxInfoResetPosition`, `GaxInfoInit`,
   `sub_803941C`, `nullsub_39`) - the GAX2_SoundHandler "Info" type's
   init_fn/unknown_fn, resolving two more entries in docs/audio.md's
-  per-type function-pointer table (`sub_80393FC` = `0x080393FD`,
-  `nullsub_39` = `0x08039439`; play_fn `sub_803943C` stays raw).
-  `sub_80393D0` is the shared field-reset core both init variants fall
+  per-type function-pointer table (`GaxInfoInit` = `0x080393FD`,
+  `nullsub_39` = `0x08039439`; play_fn `GaxInfoPlay` stays raw).
+  `GaxInfoResetPosition` is the shared field-reset core both init variants fall
   through to after their own field subsets - its two 16-bit constants
   (`0xFFFF`/`0x4E20`, too big for a `movs` immediate) each needed a named
   temp assigned right before the store, and the two zero-fill temps
@@ -5812,43 +5812,43 @@ enough yet):
   separately pre-staged r1).
 - **`src/audio/gax_sound_handler_channel.c`** (`nullsub_40`) - the
   "Channel" type's unknown_fn (`0x080395A1`), a no-op stub like
-  `nullsub_39` above; init_fn (`sub_8039518`) and play_fn
-  (`sub_80395A4`) stay raw.
+  `nullsub_39` above; init_fn (`GaxChannelInit`) and play_fn
+  (`GaxChannelPlay`) stay raw.
 
 **Left raw, not matched this pass** (all described in
 `tools/report_units.py`'s `UNITS` table and `docs/status/audio.md`):
-`sub_8038538`/`sub_8038A1C`/`sub_8038B68` (the play-start/init entry
+`GAX2_init`/`GAX2_jingle`/`GAX_irq` (the play-start/init entry
 point and its DMA1/Timer0 direct-sound follow-ups - genuinely understood
 at the prose level per docs/audio.md, but hits the same many-register
 `r8`/`sb`/`sl` gcc-2.9 allocation difficulty already documented for
-`sub_8006600`/`sub_80372BC`); `sub_8038C88`/`sub_8038DC0`/`sub_8038E74`
-(more mixer-tick/voice-stealing internals); `sub_8038FD0`/`sub_8039064`/
-`sub_80390F8` (a per-channel mute/volume-set family - confirmed via
+`sub_8006600`/`sub_80372BC`); `GAX_play`/`GAX_fx`/`GAX_fx_ex`
+(more mixer-tick/voice-stealing internals); `GAX_stop_fx`/`GAX_set_music_volume`/
+`GAX_set_fx_volume` (a per-channel mute/volume-set family - confirmed via
 isolated compile that the ROM's own codegen for this exact loop shape
 fits in r0-r3 with no callee-saved registers at all, while every C
 rephrasing tried needs at least 3 more; the same difficulty as the
-`sub_8038538` cluster, just in loop rather than straight-line form);
-`sub_8039198`/`sub_80391E8` (contain the same hardware-register
-NOP-delay compiler quirk already flagged in-source at `sub_80384DC` -
+`GAX2_init` cluster, just in loop rather than straight-line form);
+`GAX_stop`/`GaxStopDma` (contain the same hardware-register
+NOP-delay compiler quirk already flagged in-source at `GaxResetSoundHardware` -
 `.byte 0x1b, 0x1c` / `mov r8, r8` x3 - not chased further here);
-`sub_8039214` (a text/console-tile state machine, word-wrap-looking
-character remapping - not attempted); `sub_80392E0` (fatal-error
-display: renders a message via `sub_8039214` then loops forever);
-`sub_803943C` (Info type's play_fn); `sub_8039518` (Channel type's
-init_fn); `sub_80395A4` (Channel type's play_fn) - none of these were
+`GaxDrawText` (a text/console-tile state machine, word-wrap-looking
+character remapping - not attempted); `GaxFatalError` (fatal-error
+display: renders a message via `GaxDrawText` then loops forever);
+`GaxInfoPlay` (Info type's play_fn); `GaxChannelInit` (Channel type's
+init_fn); `GaxChannelPlay` (Channel type's play_fn) - none of these were
 modified from their existing raw `asm/` form.
 
 All 6 matched functions were verified via a full clean `make compare`
 after splitting `asm/code_3_2_20e.s` into its unchanged head (now just
-`sub_8038538`/`sub_8038A1C`/`sub_8038B68`) plus four new raw fragments
+`GAX2_init`/`GAX2_jingle`/`GAX_irq`) plus four new raw fragments
 (`code_3_2_20e_8c88.s`, `code_3_2_20e_8fd0.s`, `code_3_2_20e_92e0.s`,
 `code_3_2_20e_943c.s`) and a renamed tail (`code_3_2_20e_95a4.s`,
-everything from `sub_80395A4` on, unchanged) around the five new matched
+everything from `GaxChannelPlay` on, unchanged) around the five new matched
 `.c` files, each inserted into `ldscript.txt` at its real ROM position.
-One non-obvious fixup the split needed: `gStaticData_0803A630`/
+One non-obvious fixup the split needed: `gGaxArmDownmix`/
 `_0803A67C`/`_0803A73C`/`_0803A818` (the ARM-mode-blob data labels
 docs/audio.md's `sub_803A608` entry describes) are referenced from
-`sub_8038538` in the head fragment but *defined* down in the new
+`GAX2_init` in the head fragment but *defined* down in the new
 `code_3_2_20e_95a4.s` tail fragment - harmless while both lived in one
 object file, but needs an explicit `.global` on each definition once
 they're split across separate `.o`s, or the link fails with "undefined

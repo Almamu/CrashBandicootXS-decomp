@@ -381,7 +381,7 @@ had ever pointed at before).
 
 **11 were confirmed to be genuine data, correctly left alone** - this
 needed real verification, not just "did it fail to decode cleanly":
-- A cluster of 8 blocks (`gStaticData_0803A630` through `_0803A8C4`,
+- A cluster of 8 blocks (`gGaxArmDownmix` through `_0803A8C4`,
   ~720 bytes total, sitting between GAX2 audio functions) decode as
   syntactically valid Thumb *by coincidence*, but every actual use of
   them is either a `ldm`-based bulk-copy loop (`memcpy`-style, copying

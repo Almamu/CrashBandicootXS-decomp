@@ -2,14 +2,14 @@
 #include "audio.h"
 
 /* GAX2's work-RAM size estimator (GitHub issue #66's range, formerly the
- * raw asm/code_3_2_20c.s): computes how many bytes `sub_8038538`
+ * raw asm/code_3_2_20c.s): computes how many bytes `GAX2_init`
  * (gax_playstart.c) will carve out of the caller's work buffer for song
  * header `p` and stores the requirement in `p->workSize`. It resolves the
- * same defaults `sub_8038538` does (default handler layout, the song's
+ * same defaults `GAX2_init` does (default handler layout, the song's
  * default mix rate and SFX-voice count, no SFX voices without SFX types),
  * then adds up the player state (0x18c, +0xf0 with flags bit 2), the
  * handler array and format, every layout handler's header, instance and
- * children (`sub_8038240`'s carving, skipping slot 2, which holds the
+ * children (`GaxCreateHandlers`'s carving, skipping slot 2, which holds the
  * list of alternative layouts), the largest alternative layout (unless
  * flags bit 4), 0x58 per SFX voice, the echo buffer for the highest DSP
  * tap rate across the layouts (`rate * mixRate / 1000` samples), the
@@ -42,13 +42,13 @@ struct GaxLayoutList {
     struct GaxHandlerLayout *layouts[1];
 };
 
-extern struct GaxHandlerLayout gStaticData_085A4C5C;
-extern struct RateEntry gStaticData_085A6150[];
-extern s32 sub_8037FA0(u32 rate);
+extern struct GaxHandlerLayout gGaxDefaultSong;
+extern struct RateEntry gGaxMixRates[];
+extern s32 GaxFindMixRate(u32 rate);
 
 asm(".set __udivsi3, sub_8037E54");
 
-void sub_8037FC0(struct GaxSongHeader *p)
+void GAX2_estimate(struct GaxSongHeader *p)
 {
     u32 size = 0;
     u32 rate;
@@ -70,7 +70,7 @@ void sub_8037FC0(struct GaxSongHeader *p)
     asm("");
     asm("");
     if (p->layout == NULL)
-        p->layout = &gStaticData_085A4C5C;
+        p->layout = &gGaxDefaultSong;
     if (p->mixRate == 0xffff)
         mixRate = p->layout->types[1]->data.song->mixRate;
     else
@@ -81,7 +81,7 @@ void sub_8037FC0(struct GaxSongHeader *p)
         numSfx = p->numSfx;
     if (p->sfxTypes == NULL)
         p->numSfx = numSfx = 0;
-    rate = gStaticData_085A6150[sub_8037FA0(mixRate)].rate;
+    rate = gGaxMixRates[GaxFindMixRate(mixRate)].rate;
     if (p->flags & 4)
         size += 0xf0;
     size += 0x18c;

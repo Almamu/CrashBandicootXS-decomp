@@ -1,17 +1,17 @@
 #include "core.h"
 #include "audio.h"
 
-extern s8 gStaticData_085A9EAC[];
+extern s8 gGaxVibratoTable[];
 
 /* Per-tick vibrato update of a channel's `field_2e` (the pitch offset
  * added to the note when mixing) from a signed waveform table
- * (`gStaticData_085A9EAC`), gated on the bound instrument's `vibratoDepth`
+ * (`gGaxVibratoTable`), gated on the bound instrument's `vibratoDepth`
  * being non-zero: `vibratoDelay` is a delay counter that ticks down once
  * per call, and once it expires `vibratoPhase` advances by the
  * instrument's `vibratoSpeed`, wrapped to 0-0x3f, before indexing the
  * table again. The result is scaled by `vibratoDepth` (>> 8, a standard
  * Q8 multiply-down). */
-void sub_8039FFC(struct GaxChannelState *self)
+void GaxChannelTickVibrato(struct GaxChannelState *self)
 {
     register struct GaxChannelState *p asm("r2") = self;
     struct GaxChannelInstrument *inst = p->instrument;
@@ -26,7 +26,7 @@ void sub_8039FFC(struct GaxChannelState *self)
             *flagPtr -= 1;
         }
         {
-            u8 *table = (u8 *)gStaticData_085A9EAC;
+            u8 *table = (u8 *)gGaxVibratoTable;
             u16 phase = p->vibratoPhase;
             u32 zero = 0;
             u8 *addr = table + phase;

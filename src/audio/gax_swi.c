@@ -12,7 +12,7 @@
  * empty `"m"` asm stands in for whatever forced both args into stack
  * slots (the dead stores), and the final pinned r0/r1 inputs reproduce
  * the ROM's `add r0, r7, #0; mov r1, r8` restore after the SWI. */
-void sub_80392C4(void *src, void *dst)
+void GaxHuffUnComp(void *src, void *dst)
 {
     register void *savedSrc asm("r7") = src;
     register void *savedDst asm("r8") = dst;

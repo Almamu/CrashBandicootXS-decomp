@@ -1,31 +1,31 @@
-# Issue #68: `sub_8039B44`/`sub_8039E50` (audio)
+# Issue #68: `GaxChannelMix`/`sub_8039E50` (audio)
 
 The last raw pair from issue #68's `0x08039818`-`0x0803A944` chunk
 (`docs/matching/issue-68-0x08039818-audio.md`'s "Left raw" section) -
 one logical GAX2 per-channel note-trigger routine that the ROM's own
 compiler split across two disassembly labels, glued together by the
 same manual return-address-trampoline idiom already documented for
-`sub_803A278`/`sub_803A2C8`/`sub_803A324`/`sub_803A5A8`
+`GaxMixerApplyEcho`/`sub_803A2C8`/`GaxMixerPlay`/`GaxMixFrame`
 (`src/audio/gax_unknownc_play.c`, see
 `docs/matching/issue-68-0x08039818-audio.md`).
 
 ## What it does
 
 `self` (r6) is the channel object shared with the rest of this cluster
-(`sub_8039818`/`sub_8039FFC`/`sub_803A104`/...) - `self+0x2a` is the
-same signed-halfword "current note" field `sub_803A104` arms with the
+(`GaxChannelSetNote`/`GaxChannelTickVibrato`/`GaxFxChannelInit`/...) - `self+0x2a` is the
+same signed-halfword "current note" field `GaxFxChannelInit` arms with the
 `0x8AD0` "no note" sentinel. `info` (r4) is the shared handler object.
-Called from the matched-but-NAKED `sub_80395A4`/`sub_803A158` (both
-only when `self+0xc == 0`) as `sub_8039B44(self, info, arg1, arg2,
+Called from the matched-but-NAKED `GaxChannelPlay`/`GaxFxChannelPlay` (both
+only when `self+0xc == 0`) as `GaxChannelMix(self, info, arg1, arg2,
 info->0->0x18, flag)`.
 
-`sub_8039B44`'s half bails out early (returns 0) when `self+0x3c` (the
+`GaxChannelMix`'s half bails out early (returns 0) when `self+0x3c` (the
 bound instrument table pointer) is NULL, when `self+0x2a` still holds
 the `0x8AD0` sentinel, when `self+0x10` (voice-table row index) is out
 of the 0-3 range, or when the instrument row's own flag byte is 0.
 Otherwise it derives a base pitch from `self+0x2a`/`+0x2e`/`+0x21`/
 `+0x26`/`+0x11` plus the instrument row's signed transpose byte, clamps
-it into `gStaticData_085A62DC`'s period-lookup table (capped at
+it into `gGaxPeriodTable`'s period-lookup table (capped at
 `0xEF3`), derives a per-voice volume by chaining `self+0x16`/`+0x17`/
 `+0x15`/`+0x18`/`info->0->0x18->8` multiplies (each `0xff`-sentineled
 to "skip"), calls `sub_8037ECC` (the 64-bit-division-backed pitch/
@@ -34,10 +34,10 @@ a stack work-item and forwards it through `sub_800014C`.
 
 The remainder (from ROM label `0x08039CDE` onward, i.e. `sub_8039E50`'s
 half) loops the instrument's per-row envelope/pan table
-(`gStaticData_0803A818`-relative row math against `self+0x3c`) while
-`self+0x11` stays positive, updating `gUnknown_03001630->0x44`'s pan/
+(`gGaxArmResample`-relative row math against `self+0x3c`) while
+`self+0x11` stays positive, updating `gGaxPlayerState->0x44`'s pan/
 volume output halfword each iteration via one of several `self+0xd`/
-`self+0x12`/`self+0x13`-gated paths, calling `sub_8037F3C` once per row
+`self+0x12`/`self+0x13`-gated paths, calling `GaxZeroFill` once per row
 when `self+0xd` is set, and finally re-arms the `0x8AD0` "no note"
 sentinel into `self+0x2a` (clearing `self+0x2c`) once the loop's row
 count (`self->4->4`, a halfword) is exhausted, returning 1.
@@ -51,11 +51,11 @@ the neighboring functions in this directory.
 This is a structural reason, not a register-allocation one (unlike most
 of this cluster's other parked entries): the ROM's own compiler split
 this single logical function into two disassembly labels,
-`sub_8039B44`/`sub_8039E50`, using the same manual
+`GaxChannelMix`/`sub_8039E50`, using the same manual
 return-address-trampoline idiom already documented for
-`sub_803A278`/`sub_803A2C8`/`sub_803A324`/`sub_803A5A8` - `mov r2, pc;
+`GaxMixerApplyEcho`/`sub_803A2C8`/`GaxMixerPlay`/`GaxMixFrame` - `mov r2, pc;
 adds r2, #5; mov lr, r2; bx r1` computes a Thumb-tagged return address
-by hand and jumps through `r1` (`gUnknown_03001630`'s own `+0x44`
+by hand and jumps through `r1` (`gGaxPlayerState`'s own `+0x44`
 function-pointer slot, an interworked callback) instead of a normal
 `bl`, since ARMv4T Thumb has no `blx reg`. That trampoline's return
 address lands exactly at `sub_8039E50`'s first instruction - a `nop`
@@ -120,11 +120,11 @@ parked breakdown.
 
 ## Later pass: GAX toolchain retry
 
-The trampoline is expressible after all (`GAX_CALL_ARM_R`, `include/audio.h`) and `sub_8039E50` is just its return point. `sub_8039B44` stays NAKED, but a complete draft is now kept under `#if NON_MATCHING`; its remaining gap is register allocation. See [gax-toolchain-retry.md](./gax-toolchain-retry.md).
+The trampoline is expressible after all (`GAX_CALL_ARM_R`, `include/audio.h`) and `sub_8039E50` is just its return point. `GaxChannelMix` stays NAKED, but a complete draft is now kept under `#if NON_MATCHING`; its remaining gap is register allocation. See [gax-toolchain-retry.md](./gax-toolchain-retry.md).
 
 ## Later pass: GAX retry 6 (matched)
 
-`sub_8039B44` is now real C (plain agbcc). A two-armed tune clamp breaks
+`GaxChannelMix` is now real C (plain agbcc). A two-armed tune clamp breaks
 cse1's path so the ping-pong test recomputes `row * 28`, and the
 backward end reuses the `len` variable so its `sweepMin` load gets r3.
 `sub_8039E50` no longer has a label. See

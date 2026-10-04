@@ -1,7 +1,7 @@
 # Late-ROM NAKED retry (0x0802F7B0-0x08039B44, issues #56/#58/#61/#63/#66/#67/#68)
 
 A retry pass over the NAKED functions left in the late ROM, plus the one
-function there still linked from raw asm (`sub_8037FC0`). Every
+function there still linked from raw asm (`GAX2_estimate`). Every
 function was tried under both agbcc and old_agbcc.
 
 ## Closed (2)
@@ -82,7 +82,7 @@ down to spelling:
 - **`sub_8037E54`** (`__udivsi3`, math_div64_util.c, #66). This is
   lib1funcs.asm's hand-written routine, not compiler output. It stays a
   NAKED transcription (a final state, as already recorded).
-- **`sub_8037FC0`** (#66). It was raw `asm/code_3_2_20c.s`. It is now
+- **`GAX2_estimate`** (#66). It was raw `asm/code_3_2_20c.s`. It is now
   `src/audio/gax_work_size.c`, a NAKED transcription with a documented C
   draft under `#if NON_MATCHING`: the ROM's control flow and most
   blocks, about 240 halfwords off. Reaching even that needed:
@@ -99,10 +99,10 @@ down to spelling:
     loop, but then `size` loses r7;
   - it re-derives `layout->types[0]` for the tap scan, where the draft
     hoists it.
-- **`sub_8038240`**, **`sub_8038538`**, **`sub_8039B44`** (#66/#67/#68).
+- **`GaxCreateHandlers`**, **`GAX2_init`**, **`GaxChannelMix`** (#66/#67/#68).
   These are large GAX2 functions. The existing drafts stay 289/422/438
   halfwords off, which is register allocation throughout. One finding
-  for `sub_8038538`: its copy loops compare signed (`ble`), so they use
+  for `GAX2_init`: its copy loops compare signed (`ble`), so they use
   an `s32` counter separate from the unsigned tap-scan index. That
   alone doesn't change the count; the r8/r9 swap of the max tap rate
   and the format pointer still cascades (the max rate's initial 0 is
@@ -179,8 +179,8 @@ Both drafts improved (95 to 56, and 105 to 29 halfwords):
 
 ## Later pass: GAX NAKED retry 2
 
-`sub_8037FC0` and `sub_8038240` are now real C. Every open point listed
-above for `sub_8037FC0` came down to source shape:
+`GAX2_estimate` and `GaxCreateHandlers` are now real C. Every open point listed
+above for `GAX2_estimate` came down to source shape:
 - `p->layout`/`p->flags` re-read at every use, so GCSE makes the halfword
   flags slot and the unreduced carving loop;
 - `/` for both divisions;

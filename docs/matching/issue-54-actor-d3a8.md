@@ -28,7 +28,7 @@ families live in this chunk:
   clamp-at-`0xA000` pair on `gUnknown_030014C8`/`030014CC`, driven from
   `gStaticData_0817A7F8` (a `{s32,s32,s32}` table, stride `0xc`, indexed
   by `gUnknown_030014D4`), branching to tier-keyed `PlaySfx`/
-  `sub_80019F8` sound cues, and a VRAM gauge-tile bitmap generator/DMA
+  `PlayAmbientSfx` sound cues, and a VRAM gauge-tile bitmap generator/DMA
   setup (`sub_802DE70`/`sub_802E058`) plus a palette-gradient cursor
   (`sub_802D9A8`/`sub_802DA68`). `sub_802DB2C`/`sub_802DCC0` are two of
   `gStaticData_0817A840`'s four vtable slots operating on this object
@@ -81,9 +81,9 @@ function's address (`..._d3a8.s`, `..._d7b0.s`, `..._dd9c.s`,
   pair (see the chunk header above). Both needed the `dummyStack`/
   `stackPtr`-style local (a real `u8` whose address is taken and pinned
   to `r4`, matching a genuine `sub sp,#4` stack reservation) so the
-  `sub_80019F8` calls' implicit stack-passed byte argument came out as
+  `PlayAmbientSfx` calls' implicit stack-passed byte argument came out as
   a `strb` rather than a promoted `str`; both needed their two tier
-  branches' `PlaySfx`+`sub_8029E28`/`sub_80019F8`+`sub_8029E28` call
+  branches' `PlaySfx`+`sub_8029E28`/`PlayAmbientSfx`+`sub_8029E28` call
   pairs written out as genuinely separate call sites (an
   `asm volatile("" ::: "memory")` barrier after the first, or just not
   sharing them via an if/else-if with identical tails) since this

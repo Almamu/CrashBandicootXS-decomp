@@ -1,14 +1,14 @@
 #include "core.h"
 #include "audio.h"
 
-extern struct GaxPlayerState *gUnknown_03001630;
+extern struct GaxPlayerState *gGaxPlayerState;
 extern void *sub_803AD7C(void *arg0, void *fn);
 
 /* `nullsub_41` (ROM `0x0803A228`) sits immediately before the GAX2_
  * SoundHandler "UnknownC" type's function-pointer trio (see
  * docs/audio.md's per-type table: `init_fn`/`unknown_fn`/`play_fn` =
- * `0x0803A22D`/`0x0803A275`/`0x0803A325`, i.e. `sub_803A22C`+1/
- * `nullsub_42`+1/`sub_803A324`+1, the Thumb bit). Unlike its two
+ * `0x0803A22D`/`0x0803A275`/`0x0803A325`, i.e. `GaxMixerInit`+1/
+ * `nullsub_42`+1/`GaxMixerPlay`+1, the Thumb bit). Unlike its two
  * neighbors it isn't one of that trio itself - no caller found for it
  * anywhere in the ROM (checked every `asm/*.s`, `expected/*.s`, and every
  * `src/` source file for a `bl nullsub_41`/raw `0x0803A229` reference) - kept
@@ -24,7 +24,7 @@ asm(".align 2, 0");
  * `sub_803AD7C` trampoline. The children are the song's channels
  * (`type->childCount`), plus the `extraChildren` sound-effect voices
  * when this is the music player (`curChannelIdx == 0`). */
-void sub_803A22C(void *self)
+void GaxMixerInit(void *self)
 {
     struct GaxMixerHandler *p = self;
     u32 i;
@@ -32,7 +32,7 @@ void sub_803A22C(void *self)
 
     p->pos = 1;
     for (i = 0; ; i++) {
-        if (gUnknown_03001630->curChannelIdx == 0) {
+        if (gGaxPlayerState->curChannelIdx == 0) {
             limit = p->type->childCount;
             limit = limit + p->extraChildren;
         } else {
@@ -51,7 +51,7 @@ void sub_803A22C(void *self)
 
 /* GAX2_SoundHandler "UnknownC" type's `unknown_fn` (ROM `0x0803A275`,
  * see docs/audio.md) - a no-op stub, same as the "Info"/"Channel" types'
- * `unknown_fn`s (`nullsub_39`/`nullsub_40`). `play_fn` (`sub_803A324`)
+ * `unknown_fn`s (`nullsub_39`/`nullsub_40`). `play_fn` (`GaxMixerPlay`)
  * is still raw. */
 void nullsub_42(void)
 {

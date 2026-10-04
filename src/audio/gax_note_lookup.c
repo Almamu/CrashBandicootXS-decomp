@@ -14,7 +14,7 @@
  * Was NAKED behind a register-pinned draft with a one-register
  * residual; written plainly against the envelope struct it matches
  * outright - see docs/matching/gax-toolchain-retry.md. */
-u8 sub_8039F30(struct GaxChannelState *self, struct GaxEnvelope *env, u16 *posp)
+u8 GaxEnvelopeTick(struct GaxChannelState *self, struct GaxEnvelope *env, u16 *posp)
 {
     u16 pos = (*posp)++;
     s32 last;

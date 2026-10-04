@@ -161,8 +161,8 @@ Checked by compiling test tables and by the conversions themselves:
   itself built from an editable source (the GAX2 audio, a sprite sheet)
   must not hard-code an offset into it, since editing the source moves
   things. Have the build export the offsets instead:
-  `gStaticData_0816AA20`, the 19-entry song table
-  (`song_table_16aa20.c`), is `gStaticData_0855BCB4 + GAX_SONG_<NAME>`,
+  `gSongTable`, the 19-entry song table
+  (`song_table_16aa20.c`), is `gGaxMusicData + GAX_SONG_<NAME>`,
   with the offsets from the `gax_songs.h` that `tools/gax_audio.py`
   writes next to the blob (`-iquote build/crashbandicootxs/sound` for
   that object), and the RLE sprite tables use `rle_sprites.py`'s frame
@@ -270,9 +270,9 @@ backgrounds" below):
 
 The GAX2 audio isn't C: `tools/gax_audio.py` builds it from `sound/`
 into two blobs that `data/data.s` incbins from `build/`, the
-sound-effect set (`gStaticData_084C0006`, `--sfx`: 88 instruments and 87
+sound-effect set (`gGaxSfxData`, `--sfx`: 88 instruments and 87
 samples, `sound/gax_sfx_manifest.json` + `sound/sfx_samples/*.wav`) and
-the music block (`gStaticData_0855BCB4`). See docs/audio.md.
+the music block (`gGaxMusicData`). See docs/audio.md.
 
 ### Sprite banks (`gStaticData_084A5600`)
 
@@ -664,8 +664,8 @@ music block and the cutscene pictures, are C in three files:
   each read their own. The values are written the way libgcc2.c writes
   them.
 - `gax_tables_5a6100.c`: the GAX2 engine's version string (and the
-  pointer to it, which `sub_8038538` checks for "GAX"), the 12 mixing
-  rates (`struct RateEntry`), the error strings `sub_80392E0` prints,
+  pointer to it, which `GAX2_init` checks for "GAX"), the 12 mixing
+  rates (`struct RateEntry`), the error strings `GaxFatalError` prints,
   its halt banner and the pointer to it, the 3,828-entry period table
   and the 64-step vibrato wave. The two pointers are symbol references
   now, so the music block before them can change size.

@@ -668,7 +668,7 @@ from "core" graphics.
   [docs/matching/issue-54-actor-d3a8.md](../matching/issue-54-actor-d3a8.md)):
   `sub_802DB2C`, `sub_802DCC0` - the `gUnknown_030014BC` position-
   tracking object's two `gStaticData_0817A840` vtable-slot update
-  functions (accumulate/clamp, tier-keyed `PlaySfx`/`sub_80019F8`
+  functions (accumulate/clamp, tier-keyed `PlaySfx`/`PlayAmbientSfx`
   cues, and a shared kind/anim-reset transition tail).
 - `src/graphics/actor_part60.c` (new file, GitHub issue #54, non-
   adjacent since `actor_part75.c` sits between it and `actor_part59.c`;

@@ -1,29 +1,29 @@
-# GAX NAKED retry 5: `sub_8038538` and `sub_8039B44` (issues #67/#68)
+# GAX NAKED retry 5: `GAX2_init` and `GaxChannelMix` (issues #67/#68)
 
 Fifth pass on the last two GAX2 functions, after
 [gax-naked-retry-4.md](./gax-naked-retry-4.md).
 
 | Function | File | Before | Now |
 |---|---|---|---|
-| `sub_8038538` | gax_playstart.c | 100 | **matched** (real C) |
-| `sub_8039B44` | gax_note_trigger.c | 43 | 43 (still NAKED) |
+| `GAX2_init` | gax_playstart.c | 100 | **matched** (real C) |
+| `GaxChannelMix` | gax_note_trigger.c | 43 | 43 (still NAKED) |
 
 Scores are `brute2.py`'s sequence score, as in retries 3 and 4.
-`sub_8038538` builds with plain agbcc and the normal flags. It was
+`GAX2_init` builds with plain agbcc and the normal flags. It was
 verified with a clean `make compare`.
 
-## `sub_8038538` (play start): what closed it
+## `GAX2_init` (play start): what closed it
 
 The work was done in this order. Each step used
 `gax4/prio2.py`/`gorder.py` (global.c's priority list with final
 registers) to find which pseudo took the wrong register and why.
 
-1. **The `sub_8038240` arguments** (100 → 69). GCSE's PRE hoists the
+1. **The `GaxCreateHandlers` arguments** (100 → 69). GCSE's PRE hoists the
    `p->layout`, `p->sfxTypes` and `&size` loads into both predecessors of
    the call block. Those are the two copies of the argument setup in the
    ROM. Global alloc then takes them in priority order. The ROM gives
    `p->layout` r4, which means it comes first, ahead of the
-   post-call `&gUnknown_03001630` copy (8 refs over 188 insns). A local
+   post-call `&gGaxPlayerState` copy (8 refs over 188 insns). A local
    `l = p->layout` passed to the call, plus one no-code
    `asm("" : : "r"(l))`, raises it to the top. Then the whole group
    (layout/sfx/&size/loop copy of &g/a67c source/zero) lands on
@@ -34,9 +34,9 @@ registers) to find which pseudo took the wrong register and why.
    loses r2 in the first three loops. The ROM uses r2 there and r3 in the
    fourth loop, so they are two variables.
 3. **Indexed copies of the constant tables** (46 → 34). Write
-   `dspCode48[k] = gStaticData_0803A630[k]`,
-   `dspCode9c[k] = src[k]` with `src = gStaticData_0803A73C`, then
-   `src = gStaticData_0803A818` right after that loop, and
+   `dspCode48[k] = gGaxArmDownmix[k]`,
+   `dspCode9c[k] = src[k]` with `src = gGaxArmEcho`, then
+   `src = gGaxArmResample` right after that loop, and
    `field_44[k] = src[k]`. Drop the `a73c`/`a818`/`layout` locals and
    let the `field_1b` test read `p->layout` again. The ROM's setup order
    (`&g` into sl, `p->layout` into r4, 0803A73C into r6, 0803A818 into
@@ -65,7 +65,7 @@ registers) to find which pseudo took the wrong register and why.
 All three `asm` statements and the hold emit no code and are commented
 in the source.
 
-## `sub_8039B44` (mixer): tried, no gain
+## `GaxChannelMix` (mixer): tried, no gain
 
 The draft is unchanged. Findings for the next pass:
 
@@ -73,7 +73,7 @@ The draft is unchanged. Findings for the next pass:
   table load, `pitch + tune`, 0xEF3 load, `mov r8, r0`, `cmp`. This comes
   out instruction for instruction from a block-local
   `ip = self->instrument`, `t = ip->rows[row].tune`,
-  `tab = gStaticData_085A62DC`, `idx = pitch + t`, the constant through
+  `tab = gGaxPeriodTable`, `idx = pitch + t`, the constant through
   `asm("" : "=r"(m) : "0"(0xef3))`, an opaque copy
   `asm("" : "=r"(inst) : "0"(ip))`, then `if (idx > m) idx = m;
   period = tab[idx]` (scratch `gax5/b8.py`, variant `o|k|if|t`).
@@ -111,7 +111,7 @@ The draft is unchanged. Findings for the next pass:
 ## Tools
 
 Scratch area `gax5/` (not checked in): `p1`-`p9.py` are the
-`sub_8038538` steps above, and `b1`-`b12.py` are the `sub_8039B44`
+`GAX2_init` steps above, and `b1`-`b12.py` are the `GaxChannelMix`
 attempts, all run with `gax3/brute2.py`/`sbs.py`. `prio2.py`/`gorder.py`
 are copies that write to `gax5/rtl/`, and `locs.py` lists
 local-allocated pseudos by block and register.

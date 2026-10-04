@@ -22,7 +22,7 @@ extern void sub_8028568(void *state, s32 arg1);
 extern void sub_8022CA0(void *self, u8 arg1);
 extern void sub_8022468(void *self, s32 mode);
 struct AudioContext;
-extern void sub_80019A8(struct AudioContext *self, u32 id);
+extern void StopSfx(struct AudioContext *self, u32 id);
 extern void *sub_8026EDC(s32 size);
 extern void nullsub_7(void);
 extern s32 sub_80361B0(void);
@@ -157,7 +157,7 @@ void sub_802364C(void *self)
 void sub_8023658(void *self)
 {
     sub_8022468(self, 1);
-    sub_80019A8(gUnknown_030012BC, 0x5d);
+    StopSfx(gUnknown_030012BC, 0x5d);
 }
 
 /* Allocates a `0x44c`-byte block, fires an (empty) `nullsub_7` hook and

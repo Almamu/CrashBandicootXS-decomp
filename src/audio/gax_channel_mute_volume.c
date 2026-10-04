@@ -1,9 +1,9 @@
 #include "core.h"
 #include "audio.h"
 
-extern struct GaxPlayerState *gUnknown_03001630;
+extern struct GaxPlayerState *gGaxPlayerState;
 
-/* This whole file re-derives `gUnknown_03001630->channels[gUnknown_03001630
+/* This whole file re-derives `gGaxPlayerState->channels[gGaxPlayerState
  * ->curChannelIdx]` fresh at every single use, never through a cached local
  * pointer - that's not a style choice, it's load-bearing: the ROM's own
  * codegen for these three functions never spills anything into a callee-
@@ -18,13 +18,13 @@ extern struct GaxPlayerState *gUnknown_03001630;
  * occurrence as this same macro instead - textually re-expanded, so gcc
  * never gets the chance to treat it as one shared value - reproduces the
  * ROM's redundant-reload byte pattern exactly. */
-#define GAX_CHAN() (gUnknown_03001630->channels[gUnknown_03001630->curChannelIdx])
+#define GAX_CHAN() (gGaxPlayerState->channels[gGaxPlayerState->curChannelIdx])
 
-/* Sets the "muted" flag (`field_24`) on one sound-effect voice of the
+/* Queues a key-off (`pendingNote = 1`) on one sound-effect voice of the
  * current player, or on every one (`idx == -1`). The voices are the
  * mixer handler's (`handlers[0]`) children after the song's own
  * channels: `children[type->childCount + idx]`, `extraChildren` of them. */
-void sub_8038FD0(s32 idx)
+void GAX_stop_fx(s32 idx)
 {
     if (idx == -1) {
         s32 i;
@@ -34,7 +34,7 @@ void sub_8038FD0(s32 idx)
             u32 base = obj->type->childCount + i;
             struct GaxChannelState **children = (struct GaxChannelState **)obj->children;
 
-            children[base]->field_24 = 1;
+            children[base]->pendingNote = 1;
         }
     } else {
         struct GaxMixerHandler *obj = GAX_MIXER();
@@ -43,20 +43,20 @@ void sub_8038FD0(s32 idx)
             u32 base = obj->type->childCount + idx;
             struct GaxChannelState **children = (struct GaxChannelState **)obj->children;
 
-            children[base]->field_24 = 1;
+            children[base]->pendingNote = 1;
         }
     }
 }
 
-/* Sets a volume byte (`field_18`, clamped to 0xff) on one of the
+/* Sets a volume byte (`volume`, clamped to 0xff) on one of the
  * player's song channels - `handlers[idx + 3]`, reached directly as
  * `chan[idx*4 + 0xc]` rather than through the mixer's children like
- * sub_8038FD0 above - bounds-checked against the mixer type's
+ * GAX_stop_fx above - bounds-checked against the mixer type's
  * `childCount` (the number of song channels). `idx == -1` sets every
  * entry; any `idx > -2` (i.e. `idx >= 0`, written this way to match the
  * ROM's own signed compare against -2 byte for byte) sets just that one,
  * bounds-checked; `idx <= -2` is a no-op. */
-void sub_8039064(s32 idx, u32 vol)
+void GAX_set_music_volume(s32 idx, u32 vol)
 {
     if (vol > 0xff) {
         vol = 0xff;
@@ -82,7 +82,7 @@ void sub_8039064(s32 idx, u32 vol)
              * treating `chan`/`off`'s defining loads as dead. */
             asm("add %0, %0, %1" : "=r"(entryAddr) : "r"(chan), "0"(off));
             entry = ((struct GaxChannelState **)entryAddr)[3];
-            entry->field_18 = vol;
+            entry->volume = vol;
         }
     } else if (idx > -2) {
         register u8 *chan asm("r1") = GAX_CHAN();
@@ -97,18 +97,18 @@ void sub_8039064(s32 idx, u32 vol)
              * above. */
             asm("add %0, %0, %1" : "=r"(entryAddr) : "r"(chan), "0"(off));
             entry = ((struct GaxChannelState **)entryAddr)[3];
-            entry->field_18 = vol;
+            entry->volume = vol;
         }
     }
 }
 
-/* The same "volume byte" shape as sub_8039064 above, but on the mixer's
- * sound-effect voices (sub_8038FD0's `children[type->childCount + idx]`)
+/* The same "volume byte" shape as GAX_set_music_volume above, but on the mixer's
+ * sound-effect voices (GAX_stop_fx's `children[type->childCount + idx]`)
  * instead of the player's channel handlers, and its single-index bounds
  * check is a signed compare against `extraChildren` directly (`bge`,
- * matching sub_8038FD0's `idx`/`limit` field) rather than sub_8039064's
+ * matching GAX_stop_fx's `idx`/`limit` field) rather than GAX_set_music_volume's
  * unsigned one against `type->childCount`. */
-void sub_80390F8(s32 idx, u32 vol)
+void GAX_set_fx_volume(s32 idx, u32 vol)
 {
     if (vol > 0xff) {
         vol = 0xff;
@@ -122,7 +122,7 @@ void sub_80390F8(s32 idx, u32 vol)
             u32 base = obj->type->childCount + i;
             struct GaxChannelState **children = (struct GaxChannelState **)obj->children;
 
-            children[base]->field_18 = vol;
+            children[base]->volume = vol;
         }
     } else if (idx > -2) {
         struct GaxMixerHandler *obj = GAX_MIXER();
@@ -132,7 +132,7 @@ void sub_80390F8(s32 idx, u32 vol)
             u32 base = obj->type->childCount + idx;
             struct GaxChannelState **children = (struct GaxChannelState **)obj->children;
 
-            children[base]->field_18 = vol;
+            children[base]->volume = vol;
         }
     }
 }

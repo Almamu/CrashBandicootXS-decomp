@@ -1,7 +1,7 @@
 #include "core.h"
 
 /* Called with a small command value (`cmd`, 0-3 seen at the call site in
- * `sub_8039658`, gax_sound_handler_channel_play.c, a NAKED transcription)
+ * `GaxChannelDecodeRow`, gax_sound_handler_channel_play.c, a NAKED transcription)
  * against a per-channel voice object
  * (`self`). `cmd == 1` is the "note cut" case: if the voice's currently
  * bound instrument (`+0x3c`) has its second byte (`+0x7d`) set to the
@@ -14,7 +14,7 @@
  * situation as the neighboring GAX2 engine internals in
  * gax_note_param.c/gax_sound_handler_info.c), so every field stays a raw
  * offset rather than a guessed struct. */
-void sub_8039818(void *self, u32 cmd)
+void GaxChannelSetNote(void *self, u32 cmd)
 {
     register u32 v asm("r3") = cmd;
 

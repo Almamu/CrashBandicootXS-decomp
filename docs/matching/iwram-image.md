@@ -160,7 +160,7 @@ point at the ARM functions by name, the cutscene language table
 `gUnknown_03000834` at `src/data/cutscenes_16d1c8.c`'s six tables, and
 the pointers into still-raw blobs (`gStaticData_0816AF10`,
 `gStaticData_081725C4`, `gStaticData_0817D074`) are the blob plus an
-offset. `gUnknown_030008D0` is GAX2's Huffman-compressed fatal-error
+offset. `gGaxHaltFont` is GAX2's Huffman-compressed fatal-error
 font. `sym_iwram.txt` lost the 46 entries below `0x9E8`, which are now
 defined by these objects.
 

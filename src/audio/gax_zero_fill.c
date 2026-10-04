@@ -3,7 +3,7 @@
 
 /* Split out of src/util/math_div64_util.c: that object is GAX2's bundled
  * libgcc code, built without -mthumb-interwork, while this helper (GAX2
- * engine code, called from sub_8038538/sub_8039B44) uses the ordinary
+ * engine code, called from GAX2_init/GaxChannelMix) uses the ordinary
  * interworking `pop {reg}; bx reg` return like the rest of the ROM. */
 
 extern void sub_803A948(const void *src, void *dst, u32 control);
@@ -24,7 +24,7 @@ extern void sub_803A948(const void *src, void *dst, u32 control);
  * `r6`/`r1` (`matching_decomp_register_pinning`) to reproduce the ROM's
  * own register choices - left unpinned, this compiler picks the same
  * logic in `r5`/`r6` instead. */
-void sub_8037F3C(u8 *dest, s32 count)
+void GaxZeroFill(u8 *dest, s32 count)
 {
     register s32 cnt asm("r6") = count;
     s32 aligned;

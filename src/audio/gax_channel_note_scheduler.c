@@ -4,7 +4,7 @@
 /* Steps a channel's instrument sequence (`instrument->seq`, one entry
  * per call while `cutDelay` keeps it armed): an entry can set a new
  * note, and with it a new wave row - resetting the sample position and,
- * if that row has a valid ping-pong sweep, arming `sub_803A03C`'s sweep
+ * if that row has a valid ping-pong sweep, arming `GaxChannelTickSweep`'s sweep
  * state - then applies its two effect commands (note slide, sequence
  * jump/loop, volume slide/set, sequence speed). Past the end of the
  * sequence it disarms itself (`cutDelay = 0`).
@@ -14,7 +14,7 @@
  * matches outright, see docs/matching/gax-toolchain-retry.md. (Caching
  * `self->instrument` in a local drops the ROM's one `mov` between the
  * load and its callee-saved copy.) */
-void sub_80398DC(struct GaxChannelState *self)
+void GaxChannelStepInstrumentSeq(struct GaxChannelState *self)
 {
     struct GaxInstrumentSeqEntry *e = &self->instrument->seq[self->seqPos];
     u32 i;

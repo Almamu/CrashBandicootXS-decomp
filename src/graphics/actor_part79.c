@@ -31,7 +31,7 @@ extern void sub_8006D08(struct tile_asset_cache *self, s32 slot, s32 recordId);
 extern void sub_80087C0(void *part);
 extern void sub_80087B4(void *part);
 extern void sub_800872C(void *part, u8 val);
-extern void sub_80019A8(struct AudioContext *self, u32 id);
+extern void StopSfx(struct AudioContext *self, u32 id);
 extern void sub_8015780(void *self, s32 a, s32 b, s32 c, s32 d);
 extern u8 sub_8000760(void *dummy);
 
@@ -202,7 +202,7 @@ flag_zero:
         if (type2 != 0x26)
             goto end;
     do_call:
-        sub_80019A8(gUnknown_030012BC, 0x36);
+        StopSfx(gUnknown_030012BC, 0x36);
         sub_8015780(self, 0, 0x12, 0, flag);
     }
 end:

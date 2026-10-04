@@ -5,7 +5,7 @@ within a few instructions of the ROM. Three of them now match as real C:
 
 | Function | File | Compiler | Was | Technique |
 |---|---|---|---|---|
-| `PlaySfx` (`sub_8001854`) | `src/audio/sfx_ambient.c` | agbcc | raw asm, 4 halfwords | unpin `self`, then one empty `asm("" : : "r"(&gUnknown_030007FC))` |
+| `PlaySfx` (`sub_8001854`) | `src/audio/sfx_ambient.c` | agbcc | raw asm, 4 halfwords | unpin `self`, then one empty `asm("" : : "r"(&gSfxVoiceToggle))` |
 | `sub_8002AA4` | `src/graphics/settings_menu8e.c` | agbcc | NAKED, 6 halfwords | one empty `asm("" : : "r"(flags))` |
 | `sub_801C96C` | `src/graphics/actor_part_1b85c.c` | old_agbcc | NAKED, 1 instruction | statement expression plus an empty `asm("" : "+r"(k.all))` |
 
@@ -29,9 +29,9 @@ code, but it adds a reference to `x` and raises its priority:
 - `PlaySfx`: the old draft pinned `self` to r9. The pin made the save of
   `self` an ordinary body statement, placed after the parameter copies
   of `id`/`volumeParam` (the 4-halfword prologue gap). Without the pin
-  the stream matches except that `self`/`id`/`&gUnknown_030007FC` rotate
-  through r8/r9/sl. One reference to `&gUnknown_030007FC`, anywhere
-  after the first `sub_8038E74` call, puts it first as in the ROM.
+  the stream matches except that `self`/`id`/`&gSfxVoiceToggle` rotate
+  through r8/r9/sl. One reference to `&gSfxVoiceToggle`, anywhere
+  after the first `GAX_fx_ex` call, puts it first as in the ROM.
   Two references overshoot.
 
 Try this whenever a draft is instruction-identical to the ROM but has a
