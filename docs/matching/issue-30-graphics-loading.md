@@ -47,7 +47,7 @@ REG_BG0CNT = GetBgSetupControl(buf);
 centering helpers `docs/rom_map.md` already read) and the rest of the
 chunk - a sound-trigger dispatcher (`sub_801E990`) plus two more large
 families (a "trigger effect type N" twin family shaped just like the
-already-parked `sub_8020E84`-`sub_802117C` in `trigger_effect.c`, and
+already-parked `SpawnRedGemPlatform`-`SpawnBlueGemPlatform` in `trigger_effect.c`, and
 the "text label as sprite tiles" family `sub_801F8DC` anchors) - were
 not attempted this pass; see "Left raw" below.
 
@@ -113,15 +113,15 @@ are visible in `sub_801E8F8`/`sub_801E96C`'s final C.
 `LoadGraphicsPackage`, `FitScaledSprite`, `DrawScaledSprite` (all three already
 characterized in `docs/rom_map.md`, real bytes now in
 `asm/code_3_2_17_188d0.s` and the new `asm/code_3_2_17_1e644.s`) plus
-`sub_801E990`, `sub_801EA5C`, `sub_801EB04`, `sub_801EBF0`,
-`sub_801EC9C`, `sub_801ED6C`, `sub_801EE3C`, `sub_801EF0C`,
+`sub_801E990`, `SpawnCrystal`, `SpawnCrateGem`, `sub_801EBF0`,
+`SpawnRedGem`, `SpawnGreenGem`, `SpawnYellowGem`, `sub_801EF0C`,
 `sub_801F050`, `sub_801F170`, `sub_801F2BC`, `sub_801F3DC`,
 `sub_801F528`, `sub_801F680`, `sub_801F7B8`, `sub_801F8DC` (real bytes
 now in the new `asm/code_3_2_17_1e990.s`) - not attempted this pass,
 left untouched rather than force a low-confidence match. Two families
-worth flagging for whoever picks this up next: `sub_801EA5C` through
-`sub_801EE3C` share the exact bit-test/`sub_8008434`-spawn shape already
-parked as `sub_8020E84`-`sub_802117C` in `trigger_effect.c` (issue #31)
+worth flagging for whoever picks this up next: `SpawnCrystal` through
+`SpawnYellowGem` share the exact bit-test/`sub_8008434`-spawn shape already
+parked as `SpawnRedGemPlatform`-`SpawnBlueGemPlatform` in `trigger_effect.c` (issue #31)
 - the same register-rotation gap that resisted parking there is likely
 to resist here too; `sub_801EF0C` through `sub_801F8DC` are all "text
 label as sprite tiles" constructors sharing `sub_801F8DC`'s already-read
@@ -318,7 +318,7 @@ sub-struct they read from aren't pinned down yet - a confident
 reconstruction would mean chasing all of those first, which this pass's
 remaining time didn't cover. Left raw, along with the rest of this
 issue's "sound-trigger dispatch plus the trigger-effect/text-popup-
-spawner families" remainder (`sub_801EA5C` onward, unchanged from the
+spawner families" remainder (`SpawnCrystal` onward, unchanged from the
 third pass's characterization), for whoever picks this up next.
 
 ## Fifth pass: `sub_801E990` - matched semantics, parked (NAKED transcription)
@@ -346,7 +346,7 @@ With every operand pinned down, the function's full semantics are:
 1. If the player's `+0xa8` flag (`GetSpawnAtStart`) is set: looks up a
    per-`z` flags byte via the `gEntityFlags -> *rec -> {+8
    offsets[], +0xc base}` table - the exact same table
-   `sub_8021D04` (`graphics_loading_21bfc.c`, issue #33) already reads,
+   `SpawnBasicCrate` (`graphics_loading_21bfc.c`, issue #33) already reads,
    indexed the same way (`offsets[z]`, then `base[offsets[z]]`) - folds
    bit 1 of that byte into the player's `+0x28` bitfield's bit 4, then
    unconditionally writes the incoming `x`/`y` args (shifted to Q8.8)
@@ -374,7 +374,7 @@ explicit intermediate variables, or the negative-constant idiom used
 elsewhere in this project - every restructuring tried shuffled the
 register assignment without landing on the ROM's exact one. This is
 the identical `gEntityFlags -> *rec -> {+8, +0xc}` resolution
-shape already documented as unmatchable via plain C for `sub_8021D04`
+shape already documented as unmatchable via plain C for `SpawnBasicCrate`
 (issue #33) for the same underlying reason, strongly suggesting this
 specific table-lookup-into-bitfield-pack shape is a recurring gcc-2.9
 register-allocation dead end for this codebase rather than something
@@ -387,7 +387,7 @@ compile and the raw ROM disassembly reassembled standalone) before
 integrating. Cut out of `asm/code_3_2_17_1e990.s` (was the first
 function in that file) into the new `src/graphics/graphics_loading_1e990.c`,
 with `ldscript.txt` updated to place the new object immediately before
-the now-trimmed raw file (which starts at `sub_801EA5C` instead).
+the now-trimmed raw file (which starts at `SpawnCrystal` instead).
 
 **Update (later session):** the `+0x28` bitfield-pack block's
 remaining register-choice gap closed - see
@@ -398,15 +398,15 @@ is now real, fully matched C; the `NAKED` wrapper and `#if
 NON_MATCHING` toggle described above have been removed from
 `graphics_loading_1e990.c`.
 
-**The rest of this issue's raw region** (`sub_801EA5C` through
+**The rest of this issue's raw region** (`SpawnCrystal` through
 `sub_801FCB4`, ending at the already-matched `sub_801FDEC`) splits into
 two families, both worth flagging precisely for whoever picks this up
 next:
 
-- **`sub_801EA5C`-`sub_801EE3C`** (5 functions): the same "trigger
+- **`SpawnCrystal`-`SpawnYellowGem`** (5 functions): the same "trigger
   effect type N" bit-test (`GetCurrentLevelFlags`)/`sub_8008434`-spawn shape
   already parked as `NAKED` in `trigger_effect.c`
-  (`sub_8020E84`-`sub_802117C`, issue #31/#33) - the same register-
+  (`SpawnRedGemPlatform`-`SpawnBlueGemPlatform`, issue #31/#33) - the same register-
   rotation gap that resisted plain C there is likely to resist here
   too, so NAKED transcription is the expected outcome, not another
   fresh matching attempt.
@@ -422,7 +422,7 @@ next:
   `sub_801FDEC`'s own matched C is the template to start from.
 
 Left raw for whoever picks this up next; `report_units.py`'s entry for
-this address range now points at `sub_801EA5C` (the new start of
+this address range now points at `SpawnCrystal` (the new start of
 `asm/code_3_2_17_1e990.s`) instead of `sub_801E990` and calls out both
 families explicitly.
 
@@ -651,18 +651,18 @@ convention) instead of the `.o` file.
 This closes out every function this issue's original 25-function list
 named in `asm/code_3_2_17_188d0.s`/`asm/code_3_2_17_1e644.s` except the
 two families already flagged as left raw for a future pass
-(`sub_801EA5C`-`sub_801EE3C`'s "trigger effect type N" siblings and
+(`SpawnCrystal`-`SpawnYellowGem`'s "trigger effect type N" siblings and
 `sub_801EF0C`-`sub_801F8DC`'s "text label as sprite tiles" siblings, per
 the fifth pass above) - `asm/code_3_2_17_1e644.s` no longer exists, and
 the only object left un-real-C'd immediately around this cluster is
-`asm/code_3_2_17_1e990.s`, starting at `sub_801EA5C`.
+`asm/code_3_2_17_1e990.s`, starting at `SpawnCrystal`.
 
 Verified via a full clean `rm -rf build && make NON_MATCHING=1 report`
 (clean compile, no warnings) + `objdiff-cli report generate` and a full
 clean `rm -rf build crashbandicootxs.elf crashbandicootxs.gba
 crashbandicootxs.map && make compare` (`La suma coincide`).
 
-## Tenth pass: `sub_801EA5C`-`sub_801EE3C` matched as real C under old_agbcc
+## Tenth pass: `SpawnCrystal`-`SpawnYellowGem` matched as real C under old_agbcc
 
 The last raw stretch of this issue, `asm/code_3_2_17_1e990.s`
 (`0x0801EA5C`-`0x0801EF0C`, six functions), is now real C in
@@ -670,7 +670,7 @@ The last raw stretch of this issue, `asm/code_3_2_17_1e990.s`
 
 These are the "trigger effect type N" spawners the fifth pass flagged
 as likely to hit the same register-rotation gap that parked
-`sub_8020E84`-`sub_802117C` (`trigger_effect.c`) as NAKED. That gap was
+`SpawnRedGemPlatform`-`SpawnBlueGemPlatform` (`trigger_effect.c`) as NAKED. That gap was
 the compiler. The ROM's bit tests read `movs rA, #mask; ldrb rB, [..];
 ands rA, rB` - the constant is materialized before the byte it is ANDed
 with - which is old_agbcc's tell (docs/matching/issue-24-boss-actor.md).
@@ -681,20 +681,20 @@ differs in all six (20-34 changed instructions each).
 
 What the six do (all four-argument `(u32 a0, u16 a1, u16 a2, u16 a3)`
 spawners reached through the trigger dispatch table at
-`gStaticData_0816C6C0`; `sub_801EB04` is also called directly from
+`gStaticData_0816C6C0`; `SpawnCrateGem` is also called directly from
 `game_loop2.c`):
 
-- `sub_801EA5C`/`sub_801EB04`/`sub_801EBF0` test bit 0/1/2 of the byte
+- `SpawnCrystal`/`SpawnCrateGem`/`sub_801EBF0` test bit 0/1/2 of the byte
   `GetCurrentLevelFlags(gLevelState)` returns a pointer to. If it is clear
   they spawn a `sub_8008434` part, point its animation bank at
-  `**gUnknown_030012D0 + 0x1BC` (`sub_801EA5C`) or `+ 0x180`, set its
+  `**gUnknown_030012D0 + 0x1BC` (`SpawnCrystal`) or `+ 0x180`, set its
   tag (+0x2D) and type byte (+0x0A: 0x1B/0x1D/0x1E), run the
   `sub_80087C0`/`sub_80087B4`/`sub_800872C` trio, store `sub_800815C`'s
   frame nibble and register the part with the `gUnknown_030012EC`
-  manager. `sub_801EB04` additionally spawns effect 0x2B through
+  manager. `SpawnCrateGem` additionally spawns effect 0x2B through
   `sub_8025BAC(gEntitySpawner, ...)` and sets bits 0-1 of its +0x28
   to 1 and clears its "hidden" flag bit.
-- `sub_801EC9C`/`sub_801ED6C`/`sub_801EE3C` first call
+- `SpawnRedGem`/`SpawnGreenGem`/`SpawnYellowGem` first call
   `sub_80233B4(gLevelState)`; if that returns 1 they hand the
   spawn to `sub_8018D70` (`actor_part_188d0.c`) with kind 0/1/2.
   Otherwise they test bit 0/2/1 of `gLevelState+2` and spawn the
@@ -707,9 +707,9 @@ The only things the C has to get right:
   stores them from there afterwards. That is how this compiler treats a
   variable assigned before the call; a literal at the store site is
   loaded at the store instead.
-- **The bit's type.** `sub_801EB04`/`sub_801EE3C` keep the tested bit
+- **The bit's type.** `SpawnCrateGem`/`SpawnYellowGem` keep the tested bit
   (it is stored as the tag, or passed on to `sub_8025BAC`) and the ROM
-  narrows it with `lsls #24; lsrs #24`, so it is `u8`; `sub_801EA5C`
+  narrows it with `lsls #24; lsrs #24`, so it is `u8`; `SpawnCrystal`
   keeps it unnarrowed, so it is `s32` there.
 - **Branch layout of the mode-1 hand-off.** The ROM tests
   `sub_80233B4(...) == 1` with a `beq` to the `sub_8018D70` call placed
@@ -718,11 +718,11 @@ The only things the C has to get right:
 
 The part object is `struct gfx_part`, moved out of
 `actor_part_188d0.c` into the new shared `include/gfx_part.h` (bits 0-3
-of +0x28 split into two 2-bit fields for `sub_801EB04`'s write; nothing
+of +0x28 split into two 2-bit fields for `SpawnCrateGem`'s write; nothing
 in `actor_part_188d0.c` used them, and it still matches).
 
-The four `trigger_effect.c` siblings (`sub_8020E84`, `sub_8020F7C`,
-`sub_802107C`, `sub_802117C`, NAKED with `#if NON_MATCHING` near-misses
+The four `trigger_effect.c` siblings (`SpawnRedGemPlatform`, `SpawnYellowGemPlatform`,
+`SpawnGreenGemPlatform`, `SpawnBlueGemPlatform`, NAKED with `#if NON_MATCHING` near-misses
 written against the current agbcc) have the same mask-first tell and
 very likely fall to the same switch. They were outside this pass's
 scope and are unchanged.

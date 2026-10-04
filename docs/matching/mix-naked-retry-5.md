@@ -1,4 +1,4 @@
-# Mix NAKED retry 5: `sub_8014674`, `sub_8014B54`, `sub_8011548`, GAX
+# Mix NAKED retry 5: `sub_8014674`, `sub_8014B54`, `UpdateWumpa`, GAX
 
 A retry of five parked NAKED functions with C drafts. **2 of 5 closed
 as real C**, both under old_agbcc. Their files were already on
@@ -7,7 +7,7 @@ as real C**, both under old_agbcc. Their files were already on
 | Function | File | Issue | Before | Now |
 |---|---|---|---|---|
 | `sub_8014674` | `actor_part_14674.c` | #17 | 1 hw (branch target) | **real C** |
-| `sub_8011548` | `game_loop53.c` | #15 | 21 hw | **real C** |
+| `UpdateWumpa` | `game_loop53.c` | #15 | 21 hw | **real C** |
 | `sub_8014B54` | `actor_part_14674.c` | #17 | 3 hw | NAKED, unchanged |
 | `GaxChannelMix` | `gax_note_trigger.c` | #68 | ~237 seq | NAKED, draft ~202 seq |
 | `GAX2_init` | `gax_playstart.c` | #66 | ~294 seq | NAKED, not retried |
@@ -54,7 +54,7 @@ into it, and the re-test stays. The assignment has to be inside the
 `switch` expression. `tag = ...; switch (tag)` and
 `switch (self->part->tag)` with re-reads are still 1 halfword off.
 
-## `sub_8011548`: three local fixes
+## `UpdateWumpa`: three local fixes
 
 The draft from [big-naked-retry-3.md](big-naked-retry-3.md) had three
 differences left. Each one had its own fix:
@@ -64,7 +64,7 @@ differences left. Each one had its own fix:
   and adds two no-code `asm("" : : "r"(_v))` references to the
   velocity (brief item 8). One reference isn't enough. With two, the
   velocity outranks the position/sum quantity for r0. The same fix
-  closed `sub_8010F8C`.
+  closed `UpdateExtraLife`.
 - **Spawn byte argument.** The ROM computes `add r3, sp, #4` before
   `movs r5, #1`. With a plain `*(volatile u8 *)&argP5 = 1`, the address
   is a reload of the store, so it is emitted after the constant. Taking

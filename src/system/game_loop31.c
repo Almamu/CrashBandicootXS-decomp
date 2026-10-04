@@ -13,8 +13,8 @@ extern void sub_8008484(struct actor *self, u32 arg1);
  * frees `self+0x48` (a heap pointer, unless it's the sentinel `-1` or
  * already `NULL`) and clears `self+0x59`, before tail-calling
  * `sub_8008484` (already matched, `actor_part6.c`) - same table-set/
- * tail-call shape as `sub_80119D8` (`actor_part39.c`). */
-void sub_801071C(struct actor *self, u32 arg1)
+ * tail-call shape as `DestroyWumpa` (`actor_part39.c`). */
+void DestroyCrate(struct actor *self, u32 arg1)
 {
     self->table = gCrateVtable;
 
@@ -32,18 +32,18 @@ void sub_801071C(struct actor *self, u32 arg1)
 }
 
 extern struct actor *sub_80084A4(struct actor *self);
-extern void sub_800FEB0(void *selfArg);
+extern void ResetCrate(void *selfArg);
 
 /* Re-initializes `self` via `sub_80084A4` (already matched,
  * `actor_part6.c`), sets `self->table`, clears `self+0x59`, then
- * resets `self`'s own collision-response state via `sub_800FEB0`
+ * resets `self`'s own collision-response state via `ResetCrate`
  * (`game_loop22.c`). */
-struct actor *sub_801075C(struct actor *self)
+struct actor *InitCrate(struct actor *self)
 {
     sub_80084A4(self);
     self->table = gCrateVtable;
     *((u8 *)self + 0x59) = 0;
-    sub_800FEB0(self);
+    ResetCrate(self);
     return self;
 }
 

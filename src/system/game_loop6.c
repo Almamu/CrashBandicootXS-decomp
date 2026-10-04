@@ -16,9 +16,9 @@ extern void SetAabbSize(void *buf, s32 arg1, s32 arg2);
 extern u8 sub_8001688(void *buf1, void *buf2);
 extern void *gPlayer;
 #define gPlayerPart (*(struct box_part **)&gPlayer)
-extern u8 gStaticData_0816BBC4[];
-extern void sub_800EEF0(void *self, u8 arg1);
-extern void sub_800E7A8(void *self, u8 arg1, u8 arg2, u8 arg3);
+extern u8 gCrateKindExplosive[];
+extern void ExplodeCrate(void *self, u8 arg1);
+extern void BreakCrateInStack(void *self, u8 arg1, u8 arg2, u8 arg3);
 
 /* Builds two AABBs - one for `self`, one for the player
  * (`gPlayer`) - from the shared "keyframe/hitbox record"
@@ -30,9 +30,9 @@ extern void sub_800E7A8(void *self, u8 arg1, u8 arg2, u8 arg3);
  * variance `sub_8007B98`'s doc comment already flags). `self+0x28`
  * bits 4/5 mirror each box horizontally/vertically around its own
  * object's position, exactly like the `actor_part.c` pair. If the two
- * boxes overlap (`sub_8001688`), dispatches to `sub_800EEF0` or
- * `sub_800E7A8` depending on a per-state-id lookup in
- * `gStaticData_0816BBC4`.
+ * boxes overlap (`sub_8001688`), dispatches to `ExplodeCrate` or
+ * `BreakCrateInStack` depending on a per-state-id lookup in
+ * `gCrateKindExplosive`.
  *
  * Early-outs entirely when `self+0x4d & 0x7f == 1`.
  *
@@ -117,10 +117,10 @@ void sub_800D040(struct box_part *self)
     }
     if (sub_8001688(&f.a, BOX_ADDR(&f.b)))
     {
-        if (gStaticData_0816BBC4[self->state] == 1)
-            sub_800EEF0(self, 1);
+        if (gCrateKindExplosive[self->state] == 1)
+            ExplodeCrate(self, 1);
         else
-            sub_800E7A8(self, 0, 0, 0);
+            BreakCrateInStack(self, 0, 0, 0);
     }
 }
 

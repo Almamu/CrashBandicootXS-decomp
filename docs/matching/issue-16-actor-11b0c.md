@@ -3,7 +3,7 @@
 Category label was `graphics`, but the chunk splits cleanly into two
 different systems by content, not by address contiguity:
 
-- **The leading 15 functions (`sub_80119A8`-`sub_8011B90`, matched
+- **The leading 15 functions (`DrawWumpa`-`sub_8011B90`, matched
   here)** all operate on plain `struct actor` (`table@0x18`,
   `flags@0xc`, `field_08@8`, `x@0`, `y@4` - the exact layout
   `include/actor.h`/`actor_part*.c` already established), extended
@@ -22,7 +22,7 @@ different systems by content, not by address contiguity:
 
 ## New files
 
-`asm/code_3_2_17_e560.s` is truncated to end right before `sub_80119A8`
+`asm/code_3_2_17_e560.s` is truncated to end right before `DrawWumpa`
 (0x080119A8, unchanged start address). The 15 matched functions move to
 a new `src/graphics/actor_part39.c` (numbered `39` - the next free
 number after `actor_part38d.c`, this repo's highest existing
@@ -36,7 +36,7 @@ updated to place all three pieces (`code_3_2_17_e560.o`,
 
 ## Matched (15/25)
 
-- **`sub_80119A8`**: tail-calls `DrawSprite` (already matched,
+- **`DrawWumpa`**: tail-calls `DrawSprite` (already matched,
   `actor_part.c`) with `gSpriteRenderer` as `self`, then clears
   `part->flags` bit 3 if `part+0x38` is nonzero. Needed the
   negative-constant bit-clear idiom (`& -9` computed via a genuine
@@ -47,7 +47,7 @@ updated to place all three pieces (`code_3_2_17_e560.o`,
   the compiler would otherwise pick as destination.
 - **`sub_80119D4`**: always-2 stub, same shape as `sub_8008480`'s
   always-true stub.
-- **`sub_80119D8`**: sets `self->table = gStaticData_087E414C` then
+- **`DestroyWumpa`**: sets `self->table = gWumpaVtable` then
   tail-calls `sub_8008484` (already matched, `actor_part6.c`), which
   unconditionally overwrites `table` again with `gStaticData_087E3BEC`
   - this function's own store is immediately clobbered by its callee,
@@ -60,8 +60,8 @@ updated to place all three pieces (`code_3_2_17_e560.o`,
   constant into the same store's dead window - a plain sequential
   statement pair let it reorder the loads across the two independent
   stores.
-- **`sub_80119FC`**: re-inits `self` via `sub_80084A4`, overwrites
-  `table` with `gStaticData_087E414C`, runs `sub_80119EC` on it.
+- **`InitWumpa`**: re-inits `self` via `sub_80084A4`, overwrites
+  `table` with `gWumpaVtable`, runs `sub_80119EC` on it.
 - **`sub_8011A1C`**: if `self+0x48` is zero and the player
   (`gPlayer`)'s flags top bit is set, fires a
   `self->table+0x68`-driven trampoline (same idiom documented in
@@ -103,16 +103,16 @@ updated to place all three pieces (`code_3_2_17_e560.o`,
   falls straight through; the in-range call sits past a forward jump)
   rather than a nested `if`, which the compiler would otherwise invert
   into the opposite branch-target/condition-code pairing.
-- **`sub_8011B0C`**: constructor - allocates a `struct actor`-shaped
+- **`CreateStopwatch`**: constructor - allocates a `struct actor`-shaped
   object (`sub_8026EDC(0x40)`, same size as `sub_8008434`'s constructor
-  in `actor_part6.c`), re-inits it, sets `table = gStaticData_087E41BC`,
+  in `actor_part6.c`), re-inits it, sets `table = gStopwatchVtable`,
   runs the empty `nullsub_16` on it, then sets `field_08`/`x`/`y` from
   the raw pixel arguments.
 - **`nullsub_16`**: empty stub.
-- **`sub_8011B5C`**: same `table`-set/tail-call-`sub_8008484` shape as
-  `sub_80119D8`, different vtable (`gStaticData_087E41BC`).
-- **`sub_8011B70`**: same re-init/table-set/`nullsub_16` shape as
-  `sub_8011B0C`, but re-initializing an existing `self` rather than
+- **`DestroyStopwatch`**: same `table`-set/tail-call-`sub_8008484` shape as
+  `DestroyWumpa`, different vtable (`gStopwatchVtable`).
+- **`InitStopwatch`**: same re-init/table-set/`nullsub_16` shape as
+  `CreateStopwatch`, but re-initializing an existing `self` rather than
   allocating a new one.
 - **`sub_8011B90`**: zeroes/initializes a run of fields from
   `self+0x25` through `+0x34`, plus `self+8`/`+0x10`/`+0x14`/`+0x18`/

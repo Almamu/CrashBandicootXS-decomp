@@ -3,8 +3,8 @@
 
 /* GitHub issue #13: 0x0800FC70-0x08010A0C, continuing the physics/
  * collision subsystem (see game_loop17.c's header comment and
- * docs/matching/issue-13-graphics-fc70.md). `sub_8010914`/
- * `sub_801095C`/`sub_80109A4` right before this function are left
+ * docs/matching/issue-13-graphics-fc70.md). `GetTopCrate`/
+ * `GetBottomCrate`/`sub_80109A4` right before this function are left
  * untouched raw; `sub_8010A0C` right after it is outside this issue's
  * range and also stays raw. */
 
@@ -13,7 +13,7 @@
  * `& 7`). */
 u32 sub_8010A00(void *selfArg)
 {
-    struct phys_obj *self = selfArg;
+    struct crate *self = selfArg;
     return ((u32)self->u48.n & 0xc0) >> 6;
 }
 /* Trailing byte-padding mismatch fix: the function body is 10 bytes

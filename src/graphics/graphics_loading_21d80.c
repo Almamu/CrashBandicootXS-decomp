@@ -49,9 +49,9 @@ extern void sub_8008E94(void *manager, void *value);
  * `sub_800815C`/`UPDATE_PART_FRAME_NIBBLE`, sets `+0xa` to the fixed
  * `0x25`, then registers it into `gUnknown_030012EC`'s manager via
  * `sub_8008E94`. One of four near-identical siblings in this chunk
- * (`sub_8021DFC`/`sub_8021E78`/`sub_8021EF4`), differing only in the
+ * (`SpawnTornadoSpinPower`/`SpawnDoubleJumpPower`/`SpawnTurboRunPower`), differing only in the
  * `+0x2d`/`+0xa` constants. */
-void sub_8021D80(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnBodySlamPower(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     register u8 tag asm("r5") = 1;
     register u8 field0A asm("r6") = 0x25;
@@ -67,8 +67,8 @@ void sub_8021D80(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     sub_8008E94(gUnknown_030012EC, part);
 }
 
-/* Same shape as `sub_8021D80` above, tag `0`, `+0xa = 0x24`. */
-void sub_8021DFC(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+/* Same shape as `SpawnBodySlamPower` above, tag `0`, `+0xa = 0x24`. */
+void SpawnTornadoSpinPower(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     register u8 tag asm("r5") = 0;
     register u8 field0A asm("r6") = 0x24;
@@ -84,8 +84,8 @@ void sub_8021DFC(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     sub_8008E94(gUnknown_030012EC, part);
 }
 
-/* Same shape as `sub_8021D80` above, tag `2`, `+0xa = 0x23`. */
-void sub_8021E78(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+/* Same shape as `SpawnBodySlamPower` above, tag `2`, `+0xa = 0x23`. */
+void SpawnDoubleJumpPower(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     register u8 tag asm("r5") = 2;
     register u8 field0A asm("r6") = 0x23;
@@ -101,8 +101,8 @@ void sub_8021E78(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     sub_8008E94(gUnknown_030012EC, part);
 }
 
-/* Same shape as `sub_8021D80` above, tag `3`, `+0xa = 0x26`. */
-void sub_8021EF4(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+/* Same shape as `SpawnBodySlamPower` above, tag `3`, `+0xa = 0x26`. */
+void SpawnTurboRunPower(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     register u8 tag asm("r5") = 3;
     register u8 field0A asm("r6") = 0x26;
@@ -119,18 +119,18 @@ void sub_8021EF4(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 }
 
 extern u8 IsCrystalSaved(void *self);
-extern struct actor *sub_8011B0C(u16 arg0, u16 arg1, u16 arg2, u16 arg3);
+extern struct actor *CreateStopwatch(u16 arg0, u16 arg1, u16 arg2, u16 arg3);
 
-/* Gated spawn (see `sub_802200C` below for the sibling shape), but
- * built via `sub_8011B0C` instead of `sub_8008434`, gated by
+/* Gated spawn (see `SpawnBlueGem` below for the sibling shape), but
+ * built via `CreateStopwatch` instead of `sub_8008434`, gated by
  * `IsCrystalSaved(gLevelState)` being true instead of a flag-bit
  * test, table offset `table_base + 0x1b0`, tag `0`, `+0xa = 0x1c`, and
  * an extra `flags |= 0x10` on the constructed object before
  * registering it. */
-void sub_8021F70(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnStopwatch(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     if (IsCrystalSaved(gLevelState)) {
-        register struct actor *part asm("r4") = sub_8011B0C(arg0, arg1, arg2, arg3);
+        register struct actor *part asm("r4") = CreateStopwatch(arg0, arg1, arg2, arg3);
 
         *(void **)((u8 *)part + 0x20) = (u8 *)(**gUnknown_030012D0) + 0x1b0;
         {
@@ -154,13 +154,13 @@ void sub_8021F70(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     }
 }
 
-/* Same spawn shape as `sub_8021D80`'s family above (record 32 -
+/* Same spawn shape as `SpawnBodySlamPower`'s family above (record 32 -
  * `table_base + 0x180`, tag `4`, `+0xa = 0x21`), but gated: does
  * nothing at all unless bit 3 of `gLevelState+2` is clear. Does
  * not return the spawned object (the ROM's shared exit pops straight
  * into `r0` from the stack, discarding whatever was last computed
  * there - matches a `void` return exactly). */
-void sub_802200C(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnBlueGem(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     register u8 tag asm("r5");
     register u8 field0A asm("r6");
@@ -222,7 +222,7 @@ void sub_802209C(u32 arg0, u32 arg1, u32 arg2, u16 arg3)
     SetCrateGemPos(gLevelState, point);
 }
 
-/* Same overall spawn shape as `sub_8021D80`'s family above, but with
+/* Same overall spawn shape as `SpawnBodySlamPower`'s family above, but with
  * the master-table record index (`index`), tag (`+0x2d`) and `+0xa`
  * field all taken as *runtime* parameters instead of fixed constants
  * (matches `sub_8025BAC`'s already-documented `param1*12` runtime-
@@ -243,18 +243,18 @@ void *sub_80220C4(u32 index, u32 tag, u32 field0A, u32 cx, u16 cy, u16 cw, u16 c
     return part;
 }
 
-extern void sub_801173C(u16 arg0);
+extern void CreateWumpa(u16 arg0);
 
-/* Only conditionally calls `sub_801173C(arg0)` (the achievement/
+/* Only conditionally calls `CreateWumpa(arg0)` (the achievement/
  * unlock-icon family spawner, docs/rom_map.md) when
  * `gLevelState+0x8c` is clear - `arg1`/`arg2`/`arg3` are
  * truncated (matching every other 4-arg dispatch-table slot in this
  * chunk) but never read. */
-void sub_8022158(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnWumpa(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     asm volatile("" :: "r" (arg1), "r" (arg2), "r" (arg3));
     if (*((u8 *)gLevelState + 0x8c) == 0) {
-        sub_801173C(arg0);
+        CreateWumpa(arg0);
     }
 }
 

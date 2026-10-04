@@ -1,6 +1,6 @@
-# `sub_8010914`/`sub_801095C` converted from NAKED transcription to real matched C
+# `GetTopCrate`/`GetBottomCrate` converted from NAKED transcription to real matched C
 
-`sub_8010914` and `sub_801095C` (`src/system/game_loop30.c`, the
+`GetTopCrate` and `GetBottomCrate` (`src/system/game_loop30.c`, the
 "get prev"/"get next" neighbor-list-walk-and-filter helpers) had been
 parked as byte-correct NAKED asm transcriptions - see
 [issue-13-fc70-continuation.md](./issue-13-fc70-continuation.md) for
@@ -9,16 +9,16 @@ decompiled C.
 
 ## The original gaps
 
-Each function walks its own list direction (`sub_801070C`/
-`sub_8010708`), returning the furthest node reachable while every node
+Each function walks its own list direction (`GetCrateAbove`/
+`GetCrateBelow`), returning the furthest node reachable while every node
 visited (other than `self`) has a `+0x4d & 0x7f` state != 1:
 
 ```c
-cur = sub_801070C(self);
+cur = GetCrateAbove(self);
 if (cur == NULL) return self;
 if ((cur[0x4d] & 0x7f) == 1) return self;
 for (;;) {
-    next = sub_801070C(cur);
+    next = GetCrateAbove(cur);
     if (next == NULL) return cur;
     if ((next[0x4d] & 0x7f) == 1) return cur;
     cur = next;
@@ -44,7 +44,7 @@ elsewhere in this project:
    two backward `beq`s the ROM has become one that jumps 4 bytes
    forward instead of back.
 2. **Mask-check instruction order** (same class of gap as
-   `sub_800FEB0`/`sub_801085C`, game_loop22.c/game_loop24.c). A plain
+   `ResetCrate`/`OpenAkuAkuCrate`, game_loop22.c/game_loop24.c). A plain
    `(node[0x4d] & 0x7f) == 1` compiles as load-byte-then-mask; the ROM
    computes the field address first, loads the `0x7f` mask constant
    *before* the byte load, then loads the byte into the same register
@@ -74,14 +74,14 @@ there either, matching the ROM's own "no trailing branch, straight
 into the pop" shape:
 
 ```c
-void *sub_8010914(void *selfArg)
+void *GetTopCrate(void *selfArg)
 {
     void *self = selfArg;
     void *cur;
     void *next;
     register u32 masked asm("r0");
 
-    cur = sub_801070C(self);
+    cur = GetCrateAbove(self);
     if (cur == NULL) {
         goto returnSelf;
     }
@@ -97,7 +97,7 @@ returnCur:
     return cur;
 
 loop:
-    next = sub_801070C(cur);
+    next = GetCrateAbove(cur);
     if (next == NULL) {
         goto returnCur;
     }
@@ -149,14 +149,14 @@ same file - `sub_80109A4` (already matched, further down
 `game_loop30.c`) uses the equivalent materialization for its own
 `self+0x4d & 0x7f` check.
 
-`sub_801095C` is the "get next" twin, identical structure, using
-`sub_8010708` in place of `sub_801070C`.
+`GetBottomCrate` is the "get next" twin, identical structure, using
+`GetCrateBelow` in place of `GetCrateAbove`.
 
 ## Verification
 
 Full clean `rm -rf build && make NON_MATCHING=1 report`, `objdiff-cli
 diff` against `build/expected/units/game_loop30_target.o`: 100% match
-for both `sub_8010914` and `sub_801095C`. `objdiff-cli report
+for both `GetTopCrate` and `GetBottomCrate`. `objdiff-cli report
 generate` succeeds (no symbol-pairing errors). Full clean `rm -rf
 build crashbandicootxs.elf crashbandicootxs.gba crashbandicootxs.map
 && make compare` - `crashbandicootxs.gba: La suma coincide`. Both

@@ -18,23 +18,23 @@ ands r0, r2`), which points to old_agbcc. `game_loop47.o` is not on
 ## What the function does
 
 The draft names the fields through a local `struct d18c_player` view of
-`gPlayer` and `struct phys_obj`. In outline:
+`gPlayer` and `struct crate`. In outline:
 
 1. It builds `self`'s box and the player's box. The player's hitbox quad
    comes from the inlined `sub_8008518` switch. If the boxes overlap, it
    picks the object that was hit: `self`, or the neighbour
    `sub_800CF70` finds. It then reads a response code from
-   `gStaticData_0816BC98[obj->kind][kind]`.
+   `gCrateHitResponse[obj->kind][kind]`.
 2. The code is cleared if `obj` is already in the player's 5-slot ring,
    or is chained to an object in it. It is then dispatched through a
-   6-entry table to `sub_800F2BC`/`sub_800F368`, the "busy" flag,
-   `sub_800E7A8` plus the ring push, `sub_800EEF0` or `sub_800E6B0`.
+   6-entry table to `ActivateNitroSwitchCrate`/`ActivateIronSwitchCrate`, the "busy" flag,
+   `BreakCrateInStack` plus the ring push, `ExplodeCrate` or `OpenCheckpointCrate`.
 3. The rest runs after that dispatch and after every early out. It
    rebuilds the player's box and works out which side the player touches:
    `edge` is 1, 2, 4 or 8. This uses two paths, one for `self->unk_44`
    set and one for it clear, and `sub_800FDC8` for slopes. It then
    corrects the position through a 9-entry table (edges 1/2, 4 and 8,
-   with `sub_801095C`/`sub_8010914` picking the neighbour for 4/8). It
+   with `GetBottomCrate`/`GetTopCrate` picking the neighbour for 4/8). It
    ends by queueing the result with `sub_8010D54`.
 
 ## What fixed the structure

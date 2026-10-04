@@ -23,7 +23,7 @@ extern s32 _call_via_r1(void *addr, void *fn);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern s32 _call_via_r3(void *arg0, void *arg1, void *arg2, void *arg3);
 extern void _call_via_r4(void *arg0, s32 arg1, s32 arg2, s32 arg3);
-extern void sub_800F6B8(s32 x, s32 y, s32 arg2, s32 arg3);
+extern void BreakCratesInArea(s32 x, s32 y, s32 arg2, s32 arg3);
 
 /* For each `struct actor *` in the `gUnknown_030012F0` list: skips
  * entries whose `+0x48` trampoline (`_call_via_r1`) reports a width of 4
@@ -41,7 +41,7 @@ void sub_8014F8C(void *selfArg)
     s32 i;
 
     part = *(struct actor **)(self + 0x10);
-    sub_800F6B8(part->x >> 8, part->y >> 8, 0x40, 0x12);
+    BreakCratesInArea(part->x >> 8, part->y >> 8, 0x40, 0x12);
     threshold = 0x40;
 
     part = *(struct actor **)(self + 0x10);

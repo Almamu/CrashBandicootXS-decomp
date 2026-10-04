@@ -46,7 +46,7 @@ were branch targets that asmdiff never showed.
    fall-through path, after the branch.
 
 2. **Table address before `&obj->kind` (29 -> 26).** The first lookup
-   goes through `D18C_CodeIn(gStaticData_0816BC98, &obj->kind, kind)`,
+   goes through `D18C_CodeIn(gCrateHitResponse, &obj->kind, kind)`,
    which returns `*(s32 *)((u8 *)t + (*row * 28 + k * 4))`. All of an
    inline call's arguments are expanded first, so the table is loaded
    first. The sum order gives the ROM's `(k * 4 + row * 28) + table`.

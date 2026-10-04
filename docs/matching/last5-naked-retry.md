@@ -29,7 +29,7 @@ That happens when the argument itself is QImode. A one-byte struct
 argument is not promoted, so it is passed in QImode:
 
 ```c
-extern void sub_800E7A8_flag(struct phys_obj *self, u32 a, struct flag8 b, u32 c) asm("sub_800E7A8");
+extern void sub_800E7A8_flag(struct crate *self, u32 a, struct flag8 b, u32 c) asm("BreakCrateInStack");
 
 union { u32 w; struct flag8 s; } f20;   /* in a register: SImode */
 f20.w = p20.value;                       /* ldrb + str (word) */

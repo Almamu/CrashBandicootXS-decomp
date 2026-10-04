@@ -26,7 +26,7 @@
  * copy separate (its own early-return is never reached from any other
  * case) while still sharing the other three. Closed with the same
  * `goto`-to-a-physically-earlier-label technique already proven for
- * `sub_8010914`/`sub_801095C` (docs/matching/naked-sub_8010914-matched.md):
+ * `GetTopCrate`/`GetBottomCrate` (docs/matching/naked-GetTopCrate-matched.md):
  * the X-major-increasing case's own return is written as a `goto
  * returnSolo;` whose target is placed immediately after that case's
  * own loop (before case 2's code, matching the ROM's own block

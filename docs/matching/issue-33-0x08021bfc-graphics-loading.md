@@ -12,22 +12,22 @@ More slots of the unified ~92-slot function-pointer dispatch array
 docs/rom_map.md documents (`gEntitySpawnFuncs`), plus one landmark
 function at the very end:
 
-- **`sub_8021BFC`/`sub_8021C50`-`sub_8021CE0`/`sub_8021D04`**: more
+- **`SpawnNitroSwitchCrate`/`SpawnOutlineCrate`-`SpawnCheckpointCrate`/`SpawnBasicCrate`**: more
   instances of the already-documented `CreateCrate` entity-constructor
   trampoline family, feeding the 93-entry `gStaticData_087Exxx` family
-  with type constants `1`-`7`. `sub_8021D04` additionally indexes a
+  with type constants `1`-`7`. `SpawnBasicCrate` additionally indexes a
   small per-record flags byte via `gEntityFlags`'s own table (same
   shape as `sub_80187FC`'s table read in `actor_part27c.c`) and folds
   two of its bits into the constructed object's `+0x28` bitfield.
-- **`sub_8021D80`/`sub_8021DFC`/`sub_8021E78`/`sub_8021EF4`/
-  `sub_802200C`/`sub_8021F70`/`sub_80220C4`**: the `gSpriteBankTable`
+- **`SpawnBodySlamPower`/`SpawnTornadoSpinPower`/`SpawnDoubleJumpPower`/`SpawnTurboRunPower`/
+  `SpawnBlueGem`/`SpawnStopwatch`/`sub_80220C4`**: the `gSpriteBankTable`
   record-indexed OAM-trio spawner shape (docs/rom_map.md's "master
-  12-byte record array") - allocate via `sub_8008434` (or `sub_8011B0C`
-  for `sub_8021F70`), point `+0x20` at `table_base + record*12`, tag
+  12-byte record array") - allocate via `sub_8008434` (or `CreateStopwatch`
+  for `SpawnStopwatch`), point `+0x20` at `table_base + record*12`, tag
   `+0x2d`, build via the standard `sub_80087C0`/`sub_80087B4`/
   `sub_800872C` OAM trio, update the `+0x29` bitfield via
   `sub_800815C`, set `+0xa`, and register into `gUnknown_030012EC`'s
-  manager via `sub_8008E94`. `sub_802200C` and `sub_8021F70` are gated
+  manager via `sub_8008E94`. `SpawnBlueGem` and `SpawnStopwatch` are gated
   (only spawn under a flag-bit/accessor test); `sub_80220C4` takes its
   record index, tag, and `+0xa` value as runtime parameters instead of
   fixed constants (matches `sub_8025BAC`'s already-documented
@@ -36,7 +36,7 @@ function at the very end:
   stack `{x, y}` pair and calls `SetCrateGemPos` (already matched in
   `game_loop10.c`), storing them into `gLevelState->0x1c0`/
   `->0x1c4`.
-- **`sub_8022158`**: conditionally calls `sub_801173C` (the
+- **`SpawnWumpa`**: conditionally calls `CreateWumpa` (the
   achievement/unlock-icon family spawner) when `gLevelState+0x8c`
   is clear.
 - **`nullsub_22`/`nullsub_23`**: empty stubs, the same "shared no-op
@@ -66,12 +66,12 @@ function at the very end:
 
 ## Matched (24 functions, full clean `make compare` passing)
 
-`src/graphics/graphics_loading_21bfc.c` (`sub_8021BFC`-`sub_8021CE0`, 6
+`src/graphics/graphics_loading_21bfc.c` (`SpawnNitroSwitchCrate`-`SpawnCheckpointCrate`, 6
 fns): the `CreateCrate` trampoline family, types `1`-`7`.
 
-`src/graphics/graphics_loading_21d80.c` (`sub_8021D80`-`InitLevelState`,
+`src/graphics/graphics_loading_21d80.c` (`SpawnBodySlamPower`-`InitLevelState`,
 18 fns): the `gSpriteBankTable` spawner family, `sub_802209C`,
-`sub_8022158`, both `nullsub`s, the `sub_801E990` trampolines, the
+`SpawnWumpa`, both `nullsub`s, the `sub_801E990` trampolines, the
 `gPlayer` position writers, the descriptor pair, and
 `InitLevelState` itself.
 
@@ -99,7 +99,7 @@ fns): the `CreateCrate` trampoline family, types `1`-`7`.
   equivalent, `if (cond) { f(...,A); return; } f(...,B);`) gets
   cross-jump-merged by this compiler into one shared call site with the
   constant hoisted before the branch - the ROM instead has two fully
-  duplicated call sites (`sub_8021BFC`'s two `bl CreateCrate`s, one per
+  duplicated call sites (`SpawnNitroSwitchCrate`'s two `bl CreateCrate`s, one per
   branch). Assigning each branch's result to a `void *result;` local
   (even though the value is never read afterward) is what defeats the
   merge - the same "assign-then-fall-through" shape used elsewhere in
@@ -111,7 +111,7 @@ fns): the `CreateCrate` trampoline family, types `1`-`7`.
   own parameter, deferred to point of use), but the call *itself* still
   truncates before passing, which only happens if `CreateCrate`'s
   extern prototype types that parameter `u16`.
-- **The negative-mask idiom, again**: `sub_8021D04`'s (parked) and
+- **The negative-mask idiom, again**: `SpawnBasicCrate`'s (parked) and
   every OAM-trio spawner's `+0x29` bitfield update need the explicit
   `asm("mov %0, #0x10\n\tneg %0, %0")` register-pin trick (see
   `UPDATE_ICON_FRAME_NIBBLE` in `settings_menu6.c`) - a bare `& -0x10`
@@ -152,7 +152,7 @@ fns): the `CreateCrate` trampoline family, types `1`-`7`.
 
 ## Parked (`NON_MATCHING`) - 1 function
 
-- **`sub_8021D04`** (`src/graphics/graphics_loading_21bfc.c`, real bytes
+- **`SpawnBasicCrate`** (`src/graphics/graphics_loading_21bfc.c`, real bytes
   in `asm/code_3_2_17_21d04.s`) - every field/mask/branch is confirmed
   correct and the bit-test/mask-write tail matches the ROM
   byte-for-byte, but the middle "resolve the per-record flags byte"
@@ -164,13 +164,13 @@ fns): the `CreateCrate` trampoline family, types `1`-`7`.
   how the reads/locals are ordered. A 4-byte gap in an otherwise fully
   understood 120-byte function - parked rather than keep fighting gcc's
   CSE for it. Splitting this function out of the otherwise-contiguous
-  `sub_8021D80`+ block required a second `.c` file
+  `SpawnBodySlamPower`+ block required a second `.c` file
   (`graphics_loading_21d80.c`) plus the small raw
   `asm/code_3_2_17_21d04.s`, following the established "matched
   functions on both sides of a parked one need to live in different
   translation units" pattern.
 
-## Second pass: `sub_8021D04` matched via NAKED transcription
+## Second pass: `SpawnBasicCrate` matched via NAKED transcription
 
 Now byte-exact matched, confirmed by a full clean `make compare` ("La
 suma coincide"). Every field, mask and branch was already confirmed
@@ -185,7 +185,7 @@ for the rest" section).
 **Pre-existing bug found and fixed along the way**: `asm/code_3_2_17_21d04.s`
 was missing the `.if NON_MATCHING == 0` / `.endif` guard this project's
 other parked functions' raw `.s` fragments use - it assembled
-`sub_8021D04`'s real bytes unconditionally, regardless of the
+`SpawnBasicCrate`'s real bytes unconditionally, regardless of the
 `NON_MATCHING` flag. This didn't affect the normal `make compare` build
 (which never compiles the `#if NON_MATCHING`-guarded C version and so
 never conflicted with it), but would have produced a duplicate-symbol
@@ -198,7 +198,7 @@ always-compiled `NAKED` C.
 See [docs/status/graphics_loading.md](../status/graphics_loading.md)
 for the running matched/parked list this updates.
 
-## Third pass: `sub_8021D04` closed as real C
+## Third pass: `SpawnBasicCrate` closed as real C
 
 The 4-byte gap above (the ROM's `adds r3,r0,#0` copy at the very end
 of the table-resolution chain, which a plain C statement always got

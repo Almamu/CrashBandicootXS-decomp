@@ -117,7 +117,7 @@ u32 sub_8010674(void *selfArg, struct aabb *boxArg)
          * local: pinning it to r7 (matching the ROM's own accumulator
          * choice) hits a confirmed toolchain bug where this compiler
          * never adds an inline-asm-clobbered r7 to the function's own
-         * push/pop list (see docs/status/game_loop.md's `sub_8025A64`
+         * push/pop list (see docs/status/game_loop.md's `DropExtraLife`
          * entry for the same bug elsewhere) - left natural, the
          * ordinary if/else control flow below happens to allocate
          * `success` to r7 anyway, and the compiler *does* then track
@@ -184,29 +184,29 @@ void sub_80106DC(void)
 }
 
 /* Neighbor-list "get prev" accessor - reads `self+0x60`, the field
- * `sub_800FEB0` (game_loop17.c) zeroes on reset. */
-void *sub_8010708(void *selfArg)
+ * `ResetCrate` (game_loop17.c) zeroes on reset. */
+void *GetCrateBelow(void *selfArg)
 {
     u8 *self = selfArg;
     return *(void **)(self + 0x60);
 }
 
 /* Neighbor-list "get next" accessor - reads `self+0x5c`. */
-void *sub_801070C(void *selfArg)
+void *GetCrateAbove(void *selfArg)
 {
     u8 *self = selfArg;
     return *(void **)(self + 0x5c);
 }
 
 /* Neighbor-list "set prev" mutator - writes `self+0x60`. */
-void sub_8010710(void *selfArg, void *val)
+void SetCrateBelow(void *selfArg, void *val)
 {
     u8 *self = selfArg;
     *(void **)(self + 0x60) = val;
 }
 
 /* Neighbor-list "set next" mutator - writes `self+0x5c`. */
-void sub_8010714(void *selfArg, void *val)
+void SetCrateAbove(void *selfArg, void *val)
 {
     u8 *self = selfArg;
     *(void **)(self + 0x5c) = val;
@@ -215,7 +215,7 @@ void sub_8010714(void *selfArg, void *val)
 /* UNUSED - no caller anywhere in the ROM (checked every asm/*.s,
  * expected/*.s and src/*.c file) - trivial constant accessor, always
  * returns 3. */
-u32 sub_8010718(void)
+u32 GetCrateClassId(void)
 {
     return 3;
 }

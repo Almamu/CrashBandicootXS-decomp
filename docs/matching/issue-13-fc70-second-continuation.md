@@ -6,7 +6,7 @@ GitHub issue #13 (`0x0800FC70-0x08010A0C`, physics/collision subsystem,
 the first pass and
 [docs/matching/issue-13-fc70-continuation.md](issue-13-fc70-continuation.md)
 for the second) had one raw cluster left:
-`CreateCrate`/`DrawCrate`/`sub_80104E4`/`sub_8010674`
+`CreateCrate`/`DrawCrate`/`UpdateCrate`/`sub_8010674`
 (`asm/code_3_2_17_e560_ff0c.s`, `0x0800FF0C`-`0x080106DC`). The second
 pass's write-up already notes `DrawCrate`/`sub_8010674` were read and
 understood, but a plain-C attempt spread more live values across r0-r7
@@ -17,7 +17,7 @@ matches both.
 ## Matched (2 of 4 remaining functions)
 
 - **`DrawCrate`** (`src/system/game_loop35.c`, new file - it sits
-  between the still-raw `CreateCrate` and `sub_80104E4`, so it can't
+  between the still-raw `CreateCrate` and `UpdateCrate`, so it can't
   join either neighbor's file) - unless `self`'s own `+0x4d` state byte
   has bit 7 set or its low 7 bits are already nonzero, resets
   `self+0x38` to 0 and clamps `self+0x30`'s index to the
@@ -70,7 +70,7 @@ matches both.
     `adds r1,r7,#0`). Pinning it as a `register u32 success asm("r7")`
     - or even just listing `"r7"` in an inline asm's clobber list -
     never gets added to this function's own push/pop list, the same
-    confirmed bug already parking `sub_8025A64` NAKED (see
+    confirmed bug already parking `DropExtraLife` NAKED (see
     docs/status/game_loop.md, GitHub issue #41). The fix: leave
     `success` a **plain**, unpinned local. Ordinary if/else control
     flow (`success = 0; ...; success = 1;`) happens to let this
@@ -103,7 +103,7 @@ matches both.
   this one function) - a large (~660-instruction) projectile/
   hazard-spawn dispatcher with two big jump tables and packed bitfield
   arguments; still out of scope for a single pass.
-- **`sub_80104E4`** (new `asm/code_3_2_17_e560_104e4.s`) - a large
+- **`UpdateCrate`** (new `asm/code_3_2_17_e560_104e4.s`) - a large
   (~195-instruction) state dispatcher calling several still-raw
   siblings; not attempted.
 

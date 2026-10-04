@@ -4,13 +4,13 @@
 /* GitHub issue #12: 0x0800D040-0x0800FC70, the physics/collision
  * subsystem (see game_loop6.c's header comment and
  * docs/matching/issue-12-physics-collision.md). Phase 2, higher-address
- * half: the twelve functions from `sub_800EEF0` through `sub_800F990`
+ * half: the twelve functions from `ExplodeCrate` through `sub_800F990`
  * (0x0800EEF0-0x0800FC70, the end of this whole cluster), all direct or
  * transitive callees of `sub_0800D18C`'s and `sub_800E08C`'s per-edge
  * jump table (game_loop47.c) - see that issue doc's "Phase 2 grouping
  * hint" for the confirmed dispatch map this group is built from. Real
  * bytes formerly the tail of asm/code_3_2_17_e560.s (from
- * `sub_800EEF0` onward - the head, `sub_800E560` through `sub_800EDBC`,
+ * `ExplodeCrate` onward - the head, `BounceWumpaCrate` through `DropCratesAbove`,
  * is a sibling pass's territory and untouched here).
  *
  * Compiled with old_agbcc (the Makefile's OLD_AGBCC_OBJS): all twelve
@@ -19,44 +19,44 @@
 
 extern struct phys_obj_list *gCrateList;
 extern u8 gUnknown_030012B0;
-extern void sub_800EEF0(struct phys_obj *self, u8 arg1);
+extern void ExplodeCrate(struct crate *self, u8 arg1);
 extern void sub_8009AA0(struct phys_obj_list *list, s32 index);
 extern void *gAudioContext;
 extern void *gHud;
 extern void PlaySfx(void *ctx, s32 id, s32 volume);
 extern void sub_8028474(void *arg);
 extern void PressSwitchCrate(void *arg);
-extern void sub_800F258(void);
-extern void sub_800F5B8(struct phys_obj *self);
+extern void DetonateNitroCrates(void);
+extern void SolidifyOutlineCrate(struct crate *self);
 extern s32 sub_800815C(void *self);
 extern void sub_8026EB4(void *p);
-extern u8 gStaticData_0816BBC4[];
-extern u8 gStaticData_0816BBAE[];
-extern void sub_800E6B0(void *self);
-extern void sub_8011448(struct phys_obj *obj, s32 arg);
-extern void sub_800F368(struct phys_obj *self);
-extern void sub_800F2BC(struct phys_obj *self);
-extern void sub_8009150(struct phys_obj_list *list, struct phys_obj *obj);
+extern u8 gCrateKindExplosive[];
+extern u8 gCrateKindBreakable[];
+extern void OpenCheckpointCrate(void *self);
+extern void PickUpWumpa(struct crate *obj, s32 arg);
+extern void ActivateIronSwitchCrate(struct crate *self);
+extern void ActivateNitroSwitchCrate(struct crate *self);
+extern void sub_8009150(struct phys_obj_list *list, struct crate *obj);
 extern void sub_8025A0C(u8 *bitmap, u16 id);
 extern void *sub_8026EC0(u32 size);
-extern void *sub_8010708(void *obj);
-extern void *sub_801070C(void *obj);
-extern void sub_8010710(void *obj, void *prev);
-extern void sub_8010714(void *obj, void *next);
-extern void sub_800F06C(struct phys_obj *self, s32 dist);
+extern void *GetCrateBelow(void *obj);
+extern void *GetCrateAbove(void *obj);
+extern void SetCrateBelow(void *obj, void *prev);
+extern void SetCrateAbove(void *obj, void *next);
+extern void BlastNearbyCrates(struct crate *self, s32 dist);
 extern u8 gCrateKindCounted[];
 extern void AddBrokenCrate(void *arg);
-extern void sub_800EDBC(struct phys_obj *self);
-extern void sub_800E7A8(void *self, u32 arg1, u32 arg2, u32 arg3);
-extern u32 sub_8010A50(struct phys_obj *self);
+extern void DropCratesAbove(struct crate *self);
+extern void BreakCrateInStack(void *self, u32 arg1, u32 arg2, u32 arg3);
+extern u32 sub_8010A50(struct crate *self);
 extern u8 gStaticData_0816BB94[];
 
 
 /* Per-edge jump table's **case 4 handler**
- * (`sub_0800D18C(self+0x4d & 0x7f == 0) -> sub_800EEF0(self, 1)`, and
+ * (`sub_0800D18C(self+0x4d & 0x7f == 0) -> ExplodeCrate(self, 1)`, and
  * `sub_800E08C`'s own case 4, per game_loop47.c's confirmed dispatch
  * map). Also called by several of this file's own sibling functions
- * (`sub_800F06C`, `sub_800F258`, `sub_800F6B8`, `sub_800F8E0`) whenever
+ * (`BlastNearbyCrates`, `DetonateNitroCrates`, `BreakCratesInArea`, `UpdateTntCountdown`) whenever
  * their own overlap/state checks land on the same "commit an edge
  * collision" outcome, always with `arg1` (a `u8`) as either 0 or 1.
  *
@@ -76,7 +76,7 @@ extern u8 gStaticData_0816BB94[];
  * either case calls the `sub_80087C0`/`sub_80087B4`/`sub_800872C`
  * triplet (the "set tag, refresh sprite/animation" idiom shared by
  * every state-transition function in this cluster - see
- * `sub_800F2BC`/`sub_800F368`/`sub_800F5B8`/`sub_800F8E0` below for the
+ * `ActivateNitroSwitchCrate`/`ActivateIronSwitchCrate`/`SolidifyOutlineCrate`/`UpdateTntCountdown` below for the
  * same three-call pattern).
  *
  * Looks up `gCrateKindCounted[self+0x4e]` and, if nonzero, calls
@@ -86,7 +86,7 @@ extern u8 gStaticData_0816BB94[];
  * position (`>>5` row, `&0x1f` column - the same cell-grid convention
  * `sub_0800D18C` itself uses for `gPlayer`'s own state), then
  * plays a fixed sound (`gAudioContext`, id 4). Calls
- * `sub_800EDBC(self)` (already matched elsewhere in this cluster - a
+ * `DropCratesAbove(self)` (already matched elsewhere in this cluster - a
  * sibling's territory).
  *
  * Tail: reads `gRoomFrameCount`'s `+0xc` byte bit `0x40` (a "combo
@@ -98,7 +98,7 @@ extern u8 gStaticData_0816BB94[];
  * trampoline from `self+0x18+0x68`) with args `(0, 4, 0)`. Finally, if
  * `self+0x4e != 0xa`, forces `self+0x4e = 0x13` (a shared "settle"
  * state most of this cluster's state machines converge on - see
- * `sub_800F8E0` below). */
+ * `UpdateTntCountdown` below). */
 
 static inline s32 PhysComboMaxed(struct gobj *player)
 {
@@ -109,7 +109,7 @@ static inline s32 PhysComboMaxed(struct gobj *player)
     return maxed;
 }
 
-void sub_800EEF0(struct phys_obj *self, u8 near)
+void ExplodeCrate(struct crate *self, u8 near)
 {
     u8 one;
 
@@ -134,7 +134,7 @@ void sub_800EEF0(struct phys_obj *self, u8 near)
         AddBrokenCrate(gLevelState);
     PHYS_SET_ID_BIT(self->id);
     PlaySfx(gAudioContext, 4, 0x100);
-    sub_800EDBC(self);
+    DropCratesAbove(self);
 
     if ((gPlayer->flags >> 6) & 1 && !PhysComboMaxed(gPlayer)) {
         struct gobj *p;
@@ -158,8 +158,8 @@ void sub_800EEF0(struct phys_obj *self, u8 near)
         self->kind = 0x13;
 }
 
-/* Called from `sub_800F798` (`sub_800F06C(self, 0x14)` /
- * `sub_800F06C(self, 0x28)`, gated on `self+0x30 == 3` / `== 6`) with
+/* Called from `FinishBrokenCrate` (`BlastNearbyCrates(self, 0x14)` /
+ * `BlastNearbyCrates(self, 0x28)`, gated on `self+0x30 == 3` / `== 6`) with
  * `arg1` a small proximity-radius constant (0x14 or 0x28 px). Walks
  * `gCrateList`'s whole object list twice:
  *
@@ -167,34 +167,34 @@ void sub_800EEF0(struct phys_obj *self, u8 near)
  *   overlap-classification against `self` returns `3` (a "close enough
  *   to interact" code shared with several siblings below) and whose
  *   Chebyshev-ish `|dx|+|dy|` distance to `self` is within `arg1`,
- *   looks up `gStaticData_0816BBC4[other+0x4e]`: if nonzero, calls
- *   `sub_800E7A8(other, 1, 0, 0)`; else if the *other* object's own
- *   `gStaticData_0816BBAE` byte (keyed by that lookup's result) is set,
- *   calls `sub_800E7A8(other, 1, 0, 0)`; else dispatches on that byte's
- *   value (`3` -> `sub_800F368(other)`, `6` -> `sub_800F2BC(other)`) -
+ *   looks up `gCrateKindExplosive[other+0x4e]`: if nonzero, calls
+ *   `BreakCrateInStack(other, 1, 0, 0)`; else if the *other* object's own
+ *   `gCrateKindBreakable` byte (keyed by that lookup's result) is set,
+ *   calls `BreakCrateInStack(other, 1, 0, 0)`; else dispatches on that byte's
+ *   value (`3` -> `ActivateIronSwitchCrate(other)`, `6` -> `ActivateNitroSwitchCrate(other)`) -
  *   but only when `other+0x4d & 0x7f == 0` and it's not already flagged
  *   via `gUnknown_030012EC`. (Every object that passes the overlap
- *   check but isn't otherwise routed still gets `sub_800EEF0(other, 0)`
+ *   check but isn't otherwise routed still gets `ExplodeCrate(other, 0)`
  *   when `gUnknown_030012EC[other+0x4e]` is nonzero, before falling
  *   into that dispatch.)
  * - Second pass over `gUnknown_030012EC`'s smaller secondary list:
  *   objects with `_call_via_r1 == 2` and the same distance gate get
- *   `sub_8011448(other, 1)` (already matched elsewhere) and an
- *   `other+0xc` bit-`0x10` set (same render/update flag `sub_800EEF0`
+ *   `PickUpWumpa(other, 1)` (already matched elsewhere) and an
+ *   `other+0xc` bit-`0x10` set (same render/update flag `ExplodeCrate`
  *   sets above).
  *
  * Ends by resetting `self+0x48` to `-1` (0xFFFFFFFF), a sentinel this
  * whole cluster uses for "no pending sub-state timer". */
 
-void sub_800F06C(struct phys_obj *self, s32 dist)
+void BlastNearbyCrates(struct crate *self, s32 dist)
 {
     s32 i = 0;
 
     if (i < gCrateList->count) {
-        u32 commit = (u32)gStaticData_0816BBC4;
+        u32 commit = (u32)gCrateKindExplosive;
 
         do {
-            struct phys_obj *o = gCrateList->items[i];
+            struct crate *o = gCrateList->items[i];
 
             if (PHYS_CALL(o, m48) == 3) {
                 s32 t1 = (o->x >> 8) - (self->x >> 8);
@@ -206,13 +206,13 @@ void sub_800F06C(struct phys_obj *self, s32 dist)
                     u32 kind = o->kind;
 
                     if (*(u8 *)(kind + commit))
-                        sub_800EEF0(o, 0);
-                    else if (gStaticData_0816BBAE[kind])
-                        sub_800E7A8(o, 1, 0, 0);
+                        ExplodeCrate(o, 0);
+                    else if (gCrateKindBreakable[kind])
+                        BreakCrateInStack(o, 1, 0, 0);
                     else if (kind == 3)
-                        sub_800F368(o);
+                        ActivateIronSwitchCrate(o);
                     else if (kind == 6)
-                        sub_800F2BC(o);
+                        ActivateNitroSwitchCrate(o);
 
                 }
             }
@@ -225,7 +225,7 @@ void sub_800F06C(struct phys_obj *self, s32 dist)
         struct phys_obj_list2 **list = (struct phys_obj_list2 **)&gUnknown_030012EC;
 
         do {
-            struct phys_obj *o = (*list)->items[i];
+            struct crate *o = (*list)->items[i];
 
             if (PHYS_CALL(o, m48) == 2) {
                 s32 t1 = (o->x >> 8) - (self->x >> 8);
@@ -234,7 +234,7 @@ void sub_800F06C(struct phys_obj *self, s32 dist)
                 s32 dy = (t2 ^ (t2 >> 31)) - (t2 >> 31);
 
                 if (dx + dy <= dist) {
-                    sub_8011448(o, 1);
+                    PickUpWumpa(o, 1);
                     o->flags |= 0x10;
                 }
             }
@@ -246,7 +246,7 @@ void sub_800F06C(struct phys_obj *self, s32 dist)
 
 /* Takes no arguments - a pure `gCrateList` list-scan helper,
  * called from the still-raw `IsSwitchPressed`/`0x08023A1C` caller elsewhere
- * (outside this issue's scope). First calls `sub_800F258` (below) to
+ * (outside this issue's scope). First calls `DetonateNitroCrates` (below) to
  * settle any pending case-`0xa` collisions, then loops
  * `gCrateList` up to twice (an outer `do { ... } while
  * (gUnknown_030012B0)` driven by a one-shot re-scan flag stored at
@@ -262,15 +262,15 @@ void sub_800F06C(struct phys_obj *self, s32 dist)
  * a *different* box (`other+0x18+0x18`/`+0x1c`, not `+0x48`/`+4`) with
  * no further action - just a classification side effect. */
 
-void sub_800F1B8(void)
+void UpdateCrates(void)
 {
     s32 i;
 
-    sub_800F258();
+    DetonateNitroCrates();
     do {
         gUnknown_030012B0 = 0;
         for (i = 0; i < gCrateList->count; i++) {
-            struct phys_obj *o = gCrateList->items[i];
+            struct crate *o = gCrateList->items[i];
 
             if (PHYS_CALL(o, m48) == 3) {
                 if (o->flags & 1) {
@@ -289,14 +289,14 @@ void sub_800F1B8(void)
 /* Takes no arguments. A short `gCrateList` list-scan: for every
  * object whose `_call_via_r1` overlap-classification against `self` is
  * `3`, whose `+0x4e` state is `0xa`, and whose `+0x4d & 0x7f` is clear,
- * calls `sub_800EEF0(other, 0)` - i.e. settles any object still parked
- * in the "pending edge-4 commit, state 0xa" condition `sub_800EEF0`
+ * calls `ExplodeCrate(other, 0)` - i.e. settles any object still parked
+ * in the "pending edge-4 commit, state 0xa" condition `ExplodeCrate`
  * itself creates (see that function's own doc comment above). Called
- * as the first step of both `sub_800F1B8` (above) and `sub_800F2BC`
+ * as the first step of both `UpdateCrates` (above) and `ActivateNitroSwitchCrate`
  * (below), always as a "flush anything left over from a previous
  * frame" pass before running this frame's own dispatch. */
 
-void sub_800F258(void)
+void DetonateNitroCrates(void)
 {
     s32 i = 0;
 
@@ -304,11 +304,11 @@ void sub_800F258(void)
         struct phys_obj_list **list = &gCrateList;
 
         do {
-            struct phys_obj *o = (*list)->items[i];
+            struct crate *o = (*list)->items[i];
 
             if (PHYS_CALL(o, m48) == 3 && o->kind == 0xa) {
                 if ((o->state & 0x7f) == 0)
-                    sub_800EEF0(o, 0);
+                    ExplodeCrate(o, 0);
             }
             i++;
         } while (i < (*list)->count);
@@ -319,11 +319,11 @@ void sub_800F258(void)
  * 6** (`sub_0800D18C`'s/`sub_800E08C`'s shared case 0/1 target - see
  * game_loop47.c's confirmed dispatch map). Early-outs when `self+0x48`
  * is already nonzero (a pending sub-state timer, same field
- * `sub_800F06C` resets to `-1`).
+ * `BlastNearbyCrates` resets to `-1`).
  *
  * Sets `self+0x4d` bit `0x80`, `gPlayer+0x80 = 1`, tags
  * `self+0x2d = 0x23` (a "bounced/deflected" state constant, matching
- * this cluster's numbering - `sub_800F368` below uses `0x22` for a
+ * this cluster's numbering - `ActivateIronSwitchCrate` below uses `0x22` for a
  * closely related case), then runs the
  * `sub_80087C0`/`sub_80087B4`/`sub_800872C` "set tag, refresh
  * sprite/animation" triplet every state-transition function in this
@@ -332,14 +332,14 @@ void sub_800F258(void)
  * standard AABB convention) and calls `GetPaletteSlot` with its `+0x14`
  * byte to compute a direction/animation nibble, folded into `self+0x29`
  * (low nibble replaced, high nibble kept - `(x & 0xf) | (old & ~0xf)`).
- * Calls `sub_800F258` (flush any pending case-0xa commits), then
+ * Calls `DetonateNitroCrates` (flush any pending case-0xa commits), then
  * `sub_8028474(gHud)` (external, unread - likely a score
  * or combo-counter bump) and plays a fixed sound
  * (`gAudioContext`, id 4). Sets `self+0x48 = 1` (arms the sub-state
- * timer `sub_800F06C` later drains back to `-1`) and calls
+ * timer `BlastNearbyCrates` later drains back to `-1`) and calls
  * `PressSwitchCrate(gLevelState)` (external, unread). */
 
-void sub_800F2BC(struct phys_obj *self)
+void ActivateNitroSwitchCrate(struct crate *self)
 {
     if (self->u48.n == 0) {
         s32 one;
@@ -356,7 +356,7 @@ void sub_800F2BC(struct phys_obj *self)
         recs = self->anim->records;
         rec = &recs[self->tag];
         self->slot = GetPaletteSlot(gPaletteCache, rec->unk_14);
-        sub_800F258();
+        DetonateNitroCrates();
         sub_8028474(gHud);
         PlaySfx(gAudioContext, 4, 0x100);
         self->u48.n = one;
@@ -365,21 +365,21 @@ void sub_800F2BC(struct phys_obj *self)
 }
 
 /* Per-edge jump table's **case 0/1 handler when the dispatch-id row is
- * 3** (the sibling of `sub_800F2BC` above, same dispatch-map entry, and
- * also called directly by `sub_800F06C`'s/`sub_800F6B8`'s/
+ * 3** (the sibling of `ActivateNitroSwitchCrate` above, same dispatch-map entry, and
+ * also called directly by `BlastNearbyCrates`'s/`BreakCratesInArea`'s/
  * `sub_800D040`'s own dispatch). Early-outs when `self+0x48` is already
  * `-1` or `0` cleared to the "already handled" sentinels (i.e. only
  * proceeds while it's some other in-progress value) - the inverse
- * early-out shape from `sub_800F2BC`'s simple "nonzero" check.
+ * early-out shape from `ActivateNitroSwitchCrate`'s simple "nonzero" check.
  *
  * Sets `self+0xc` bit `0x10`, calls `sub_8009150(gCrateList,
- * self)` (re-adds `self` to the active list, same call `sub_800EEF0`
+ * self)` (re-adds `self` to the active list, same call `ExplodeCrate`
  * makes), sets `self+0x4d` bit `0x80` and `gPlayer+0x80 = 1`,
  * tags `self+0x2d = 0x22` (this case's own state constant), and runs
  * the same `sub_80087C0`/`sub_80087B4`/`sub_800872C` triplet plus the
- * `GetPaletteSlot`-driven `self+0x29` nibble update `sub_800F2BC` uses.
+ * `GetPaletteSlot`-driven `self+0x29` nibble update `ActivateNitroSwitchCrate` uses.
  * Calls `sub_8025A0C(gEntityFlags, self+8)` (marks `self`'s
- * position in the same 32x32 collision-cell bitmap `sub_800EEF0`
+ * position in the same 32x32 collision-cell bitmap `ExplodeCrate`
  * touches).
  *
  * Then walks `gCrateList`'s whole list a *second* time (distinct
@@ -394,11 +394,11 @@ void sub_800F2BC(struct phys_obj *self)
  * If none were collected, `self+0x48` gets the `-1` sentinel instead.
  * Tail: clears `self+0x4f` and copies `self+0x4c`'s byte into
  * `self+0x4f` (per-object throttle fields also touched by
- * `sub_800F4F4`/`sub_800F5B8` below). */
+ * `SolidifyOutlineCrates`/`SolidifyOutlineCrate` below). */
 
-void sub_800F368(struct phys_obj *self)
+void ActivateIronSwitchCrate(struct crate *self)
 {
-    struct phys_obj *found[32];
+    struct crate *found[32];
     s32 n = 0;
     s32 i;
 
@@ -427,7 +427,7 @@ void sub_800F368(struct phys_obj *self)
     i = 0;
     if (i < gCrateList->count) {
         do {
-            struct phys_obj *o = gCrateList->items[i];
+            struct crate *o = gCrateList->items[i];
 
             if (PHYS_CALL(o, m48) == 3 && (o->state & 0x7f) == 0) {
                 if (o->kind == 5 && o->unk_50 == self->unk_50) {
@@ -442,12 +442,12 @@ void sub_800F368(struct phys_obj *self)
     }
 
     if (n != 0) {
-        struct phys_group *g = sub_8026EC0((n + 1) * 4);
+        struct crate_group *g = sub_8026EC0((n + 1) * 4);
 
         self->unk_59 = 1;
         g->count = n;
         for (i = 0; i < n; i++)
-            ((struct phys_obj **)g)[i + 1] = found[i];
+            ((struct crate **)g)[i + 1] = found[i];
         self->u48.group = g;
     } else {
         self->u48.group = PHYS_NO_GROUP;
@@ -456,33 +456,33 @@ void sub_800F368(struct phys_obj *self)
     self->timer = self->unk_4C;
 }
 
-/* Called from `sub_800F5B8`'s own jump-table-driven state machine
+/* Called from `SolidifyOutlineCrate`'s own jump-table-driven state machine
  * indirectly via re-entry (see below) and from the still-raw
  * `0x080104E4` continuation (outside this issue's scope) whenever
  * `self+0x4e` is in `0x13`-`0x15`. Bumps `self+0x50` (a per-object
  * "successive triggers" counter) and compares it against `self+0x51`
  * (a per-object cap). Once the cap is reached: if `self+0x48` (the
- * linked-group pointer `sub_800F368` builds) holds more than one
+ * linked-group pointer `ActivateIronSwitchCrate` builds) holds more than one
  * element, calls `sub_8026EB4` (frees it, already-elsewhere-matched);
  * resets `self+0x48` to `-1` and `self+0x4e = 7` (a distinct "group
  * exhausted" state).
  *
  * While still under the cap: if `self+0x48`'s group has more than one
  * member, walks every member whose own `+0x4e == 5` and `+0x51 <=
- * self`'s own cached `+0x4c` throttle byte, calling `sub_800F5B8`
+ * self`'s own cached `+0x4c` throttle byte, calling `SolidifyOutlineCrate`
  * (below) on each - recursively settling every other object in the
  * same triggered group - and plays a single shared sound
  * (`gAudioContext`, id 0xf) the first time any member is actually
  * settled this call (a `once`-flag local keeps it from repeating per
  * member). */
 
-void sub_800F4F4(struct phys_obj *self)
+void SolidifyOutlineCrates(struct crate *self)
 {
     if (self->timer != 0)
         return;
 
     if (++self->unk_50 >= self->unk_51) {
-        struct phys_group *g = self->u48.group;
+        struct crate_group *g = self->u48.group;
 
         if (PHYS_HAS_GROUP(g)) {
             if (g != NULL)
@@ -495,19 +495,19 @@ void sub_800F4F4(struct phys_obj *self)
             self->kind = kind;
         }
     } else {
-        struct phys_group *g = self->u48.group;
+        struct crate_group *g = self->u48.group;
 
         if (PHYS_HAS_GROUP(g)) {
             s32 i;
             s32 n = g->count;
-            struct phys_obj **items = g->items;
+            struct crate **items = g->items;
             s32 played = FALSE;
 
             for (i = 0; i < n; i++) {
-                struct phys_obj *o = items[i];
+                struct crate *o = items[i];
 
                 if (o->kind == 5 && self->unk_50 >= o->unk_51) {
-                    sub_800F5B8(o);
+                    SolidifyOutlineCrate(o);
                     if (!played) {
                         PlaySfx(gAudioContext, 0xf, 0x100);
                         played = TRUE;
@@ -519,7 +519,7 @@ void sub_800F4F4(struct phys_obj *self)
     }
 }
 
-/* Called by `sub_800F4F4` above (settling every member of a triggered
+/* Called by `SolidifyOutlineCrates` above (settling every member of a triggered
  * group) and directly from the still-raw `0x080104E4` continuation for
  * `self+0x4e` in `0x13`-`0x15` (outside this issue's scope). Decrements
  * `self+0x48` by `0x15` into `self+0x4e` (reusing the incoming state id
@@ -534,11 +534,11 @@ void sub_800F4F4(struct phys_obj *self)
  * (`3, 5, 9, 11`, per the raw table's own indices) that skip straight
  * to the tail instead. Tail (`self+0x29` nibble update via
  * `sub_800815C(self)`) matches the same `(x & 0xf) | (old & ~0xf)` fold
- * `sub_800F2BC`/`sub_800F368` use, just via a different lookup helper
+ * `ActivateNitroSwitchCrate`/`ActivateIronSwitchCrate` use, just via a different lookup helper
  * (`sub_800815C` instead of `GetPaletteSlot` directly - presumably an
  * already-classified variant). */
 
-void sub_800F5B8(struct phys_obj *self)
+void SolidifyOutlineCrate(struct crate *self)
 {
     self->kind = self->u48.n - 0x15;
     switch (self->kind) {
@@ -589,32 +589,32 @@ void sub_800F5B8(struct phys_obj *self)
     self->slot = sub_800815C(self);
 }
 
-/* `sub_800F6B8(s32 x, s32 y, s32 arg2, s32 arg3)` - the one function in
+/* `BreakCratesInArea(s32 x, s32 y, s32 arg2, s32 arg3)` - the one function in
  * this group taking a raw position/box instead of a `self` pointer (see
  * `src/graphics/actor_part38.c`'s existing extern: called as
- * `sub_800F6B8(part->x >> 8, part->y >> 8, 0x40, 0x12)`, a fixed
+ * `BreakCratesInArea(part->x >> 8, part->y >> 8, 0x40, 0x12)`, a fixed
  * 0x40x0x12 probe box around an actor-part's own position). Walks
  * `gCrateList`'s whole list: for every object whose
  * `_call_via_r1` classification against the probe box is `3`, whose
  * Chebyshev distance is within `(arg2, arg3)` on X/Y respectively, and
  * whose `+0x4d & 0x7f == 0`, looks up
- * `gStaticData_0816BBC4[other+0x4e]`: if that row's
- * `gStaticData_0816BBAE` byte is set, dispatches `1` ->
- * `sub_800E6B0(other)`, else `sub_800E7A8(other, 0, 0, 0)`; if the row
- * itself is `0`, calls `sub_800EEF0(other, 0)` instead. The same
+ * `gCrateKindExplosive[other+0x4e]`: if that row's
+ * `gCrateKindBreakable` byte is set, dispatches `1` ->
+ * `OpenCheckpointCrate(other)`, else `BreakCrateInStack(other, 0, 0, 0)`; if the row
+ * itself is `0`, calls `ExplodeCrate(other, 0)` instead. The same
  * "settle nearby objects against a probe box" shape as
- * `sub_800F06C`/`sub_800F798`, just driven by an explicit box rather
+ * `BlastNearbyCrates`/`FinishBrokenCrate`, just driven by an explicit box rather
  * than `self`'s own hitbox record. */
 
-void sub_800F6B8(s32 x, s32 y, s32 dist, s32 height)
+void BreakCratesInArea(s32 x, s32 y, s32 dist, s32 height)
 {
     s32 i = 0;
 
     if (i < gCrateList->count) {
-        u8 *commit = gStaticData_0816BBC4;
+        u8 *commit = gCrateKindExplosive;
 
         do {
-            struct phys_obj *o = gCrateList->items[i];
+            struct crate *o = gCrateList->items[i];
 
             if (PHYS_CALL(o, m48) == 3) {
                 s32 t1 = (o->x >> 8) - x;
@@ -624,12 +624,12 @@ void sub_800F6B8(s32 x, s32 y, s32 dist, s32 height)
 
                 if (dx + dy <= dist && dy < height && (o->state & 0x7f) == 0) {
                     if (*(u8 *)(o->kind + (u32)commit))
-                        sub_800EEF0(o, 0);
-                    else if (gStaticData_0816BBAE[o->kind]) {
+                        ExplodeCrate(o, 0);
+                    else if (gCrateKindBreakable[o->kind]) {
                         if (o->kind == 1)
-                            sub_800E6B0(o);
+                            OpenCheckpointCrate(o);
                         else
-                            sub_800E7A8(o, 0, 0, 0);
+                            BreakCrateInStack(o, 0, 0, 0);
                     }
                 }
             }
@@ -641,17 +641,17 @@ void sub_800F6B8(s32 x, s32 y, s32 dist, s32 height)
 /* Called from the still-raw `0x080104E4` continuation
  * (`self+0x4d & 0x7f == 1` case, outside this issue's scope) - the
  * per-edge jump table's shared entry point once `self`'s own commit is
- * already underway. Looks up `gStaticData_0816BBC4[self+0x4e]`: if
+ * already underway. Looks up `gCrateKindExplosive[self+0x4e]`: if
  * nonzero and `self+0x34 == 0` (no pending sub-effect), dispatches on
- * `self+0x30` (`3` -> `sub_800F06C(self, 0x14)`, `6` ->
- * `sub_800F06C(self, 0x28)` - see that function's own doc comment).
+ * `self+0x30` (`3` -> `BlastNearbyCrates(self, 0x14)`, `6` ->
+ * `BlastNearbyCrates(self, 0x28)` - see that function's own doc comment).
  *
  * If `self+0x38` is set (a "linked to neighbors" flag), re-links
- * `self`'s `sub_8010708`/`sub_801070C` neighbor-list pointers
- * (`sub_8010710`/`sub_8010714`, already-elsewhere-matched splice
+ * `self`'s `GetCrateBelow`/`GetCrateAbove` neighbor-list pointers
+ * (`SetCrateBelow`/`SetCrateAbove`, already-elsewhere-matched splice
  * helpers) to remove `self` from the list. Unless `self+0x4e == 1`,
  * marks `self` "visited this frame" in `gUnknown_030012B0`'s per-cell
- * bitmap (the same 32x32-grid convention `sub_800EEF0`/`sub_800F368`
+ * bitmap (the same 32x32-grid convention `ExplodeCrate`/`ActivateIronSwitchCrate`
  * use, here against `gEntityFlags`) and walks
  * `gPlayer+0x94`'s "recently touched" ring buffer
  * (`sub_0800D18C`'s own 5-slot buffer, per game_loop47.c's doc comment)
@@ -659,36 +659,36 @@ void sub_800F6B8(s32 x, s32 y, s32 dist, s32 height)
  *
  * If `self+0x38` was clear instead, and `self+0x4e != 1`, sets
  * `gUnknown_030012B0 = 1` (a one-shot "re-scan next pass" flag -
- * `sub_800F1B8`'s own outer loop condition above) unconditionally. */
+ * `UpdateCrates`'s own outer loop condition above) unconditionally. */
 
-static inline struct phys_obj *PhysRingAt(struct phys_player *p, s32 i)
+static inline struct crate *PhysRingAt(struct phys_player *p, s32 i)
 {
     if (p->ringLocked == 0 && (i <= 4 || i < p->ringCount))
         return p->ring[i];
     return NULL;
 }
 
-void sub_800F798(struct phys_obj *self)
+void FinishBrokenCrate(struct crate *self)
 {
-    if (gStaticData_0816BBC4[self->kind] && self->unk_34 == 0) {
+    if (gCrateKindExplosive[self->kind] && self->unk_34 == 0) {
         if (self->frame == 3)
-            sub_800F06C(self, 0x14);
+            BlastNearbyCrates(self, 0x14);
         else if (self->frame == 6)
-            sub_800F06C(self, 0x28);
+            BlastNearbyCrates(self, 0x28);
     }
 
     if (self->unk_38) {
-        struct phys_obj *prev = sub_8010708(self);
-        struct phys_obj *next = sub_801070C(self);
+        struct crate *prev = GetCrateBelow(self);
+        struct crate *next = GetCrateAbove(self);
         s32 i;
 
         if (prev != NULL && next != NULL) {
-            sub_8010710(next, prev);
-            sub_8010714(prev, next);
+            SetCrateBelow(next, prev);
+            SetCrateAbove(prev, next);
         } else if (next != NULL) {
-            sub_8010710(next, NULL);
+            SetCrateBelow(next, NULL);
         } else if (prev != NULL) {
-            sub_8010714(prev, NULL);
+            SetCrateAbove(prev, NULL);
         }
 
         if (self->kind == 1)
@@ -712,11 +712,11 @@ void sub_800F798(struct phys_obj *self)
     }
 }
 
-/* Called from `sub_800EEF0` indirectly (both converge on
+/* Called from `ExplodeCrate` indirectly (both converge on
  * `self+0x4e` settling to `0x13`) and reachable from the per-edge
  * dispatch whenever a settled object's state lands in `0x13`-`0x15`.
  * Early-outs when `self+0x4f` (the per-object throttle byte
- * `sub_800F368` seeds from `self+0x4c`) is already nonzero. Otherwise
+ * `ActivateIronSwitchCrate` seeds from `self+0x4c`) is already nonzero. Otherwise
  * dispatches on `self+0x4e`:
  *
  * - `0x14`: tags `self+0x2d = 0x12`, runs the
@@ -728,12 +728,12 @@ void sub_800F798(struct phys_obj *self)
  *   same triplet + sound + tail, but tags `0x13` first and re-enters
  *   with `self+0x4e = 0x14` instead - a one-step state regression
  *   rather than the terminal settle the `0x14` case takes.
- * - `0x13`: if `self+0x4d & 0x7f == 0`, calls `sub_800EEF0(self, 0)` -
+ * - `0x13`: if `self+0x4d & 0x7f == 0`, calls `ExplodeCrate(self, 0)` -
  *   the same "commit the edge collision" call the per-edge dispatch
- *   itself makes, closing the loop back into `sub_800EEF0` above.
+ *   itself makes, closing the loop back into `ExplodeCrate` above.
  * - anything else: no-op. */
 
-void sub_800F8E0(struct phys_obj *self)
+void UpdateTntCountdown(struct crate *self)
 {
     u8 kind;
 
@@ -756,7 +756,7 @@ void sub_800F8E0(struct phys_obj *self)
         break;
     case 0x13:
         if ((self->state & 0x7f) == 0)
-            sub_800EEF0(self, 0);
+            ExplodeCrate(self, 0);
         break;
     }
 }
@@ -765,7 +765,7 @@ void sub_800F8E0(struct phys_obj *self)
  * (0x0800F990-0x0800FC70, ~736 B). Called from the still-raw
  * `0x080104E4` continuation (`self+0x4e == 0xf`, outside this issue's
  * scope) - a **per-frame position-wrap/edge-scan advance**, structurally
- * similar to the already-parked `sub_800FC70`
+ * similar to the already-parked `UpdateCrateFall`
  * (docs/matching/issue-13-fc70-continuation.md) that immediately
  * follows this whole cluster.
  *
@@ -800,7 +800,7 @@ void sub_800F8E0(struct phys_obj *self)
  * cw |= t`), which ties the `& 0xc7` to the reloaded word's register and
  * the shift to `t`'s, as the ROM does; a single `(w & 0xc7) | (t << 3)`
  * expression left 7 halfwords off. */
-void sub_800F990(struct phys_obj *self)
+void sub_800F990(struct crate *self)
 {
     s32 w;
     s32 ph0;

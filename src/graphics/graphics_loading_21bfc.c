@@ -11,7 +11,7 @@ extern void *CreateCrate(u16 arg0, u16 arg1, u16 arg2, u16 arg3, u8 type);
  * (docs/rom_map.md, "already-documented `CreateCrate` entity-constructor
  * trampoline family") with type `7` or `6` depending on
  * `IsSwitchPressed(gLevelState)`. */
-void sub_8021BFC(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnNitroSwitchCrate(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     void *result;
 
@@ -24,31 +24,31 @@ void sub_8021BFC(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 }
 
 /* Plain `CreateCrate` trampoline, type `5`. */
-void sub_8021C50(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnOutlineCrate(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     CreateCrate(arg0, arg1, arg2, arg3, 5);
 }
 
 /* Plain `CreateCrate` trampoline, type `4`. */
-void sub_8021C74(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnArrowCrate(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     CreateCrate(arg0, arg1, arg2, arg3, 4);
 }
 
 /* Plain `CreateCrate` trampoline, type `3`. */
-void sub_8021C98(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnIronSwitchCrate(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     CreateCrate(arg0, arg1, arg2, arg3, 3);
 }
 
 /* Plain `CreateCrate` trampoline, type `2`. */
-void sub_8021CBC(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnAkuAkuCrate(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     CreateCrate(arg0, arg1, arg2, arg3, 2);
 }
 
 /* Plain `CreateCrate` trampoline, type `1`. */
-void sub_8021CE0(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnCheckpointCrate(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     CreateCrate(arg0, arg1, arg2, arg3, 1);
 }
@@ -67,7 +67,7 @@ void sub_8021CE0(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
  * here) and using the same `mov #N; neg` negative-mask idiom as
  * `UPDATE_ICON_FRAME_NIBBLE` (src/graphics/settings_menu6.c) for both
  * bitfield writes closes the whole function. */
-void sub_8021D04(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnBasicCrate(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     register void *obj asm("r5");
     register struct level_record_table *rec asm("r1");

@@ -27,7 +27,7 @@ the ROM one region at a time and kept the exact size, except where noted.
    `p3` does both: it writes y through `D18C_PosPtr` and then sets
    `pp = &f.p3`. `pp` must stay shared between `p1` and `p3`, or `p1`
    loses r2.
-4. **`for (e = sub_8010708(self); e; e = sub_8010708(e))`** for the
+4. **`for (e = GetCrateBelow(self); e; e = GetCrateBelow(e))`** for the
    neighbour walk. The first call is cross-jumped into the loop's call, so
    the ROM enters the loop with `mov r0, sl`.
 5. **`sub_800FDC8` called in each `dirX` arm** of both slope checks. In

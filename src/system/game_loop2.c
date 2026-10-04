@@ -10,7 +10,7 @@ extern struct palette_cache *gPaletteCache;
 extern u8 IsInBonusRound(struct level_state *self);
 extern u8 IsInGemPath(struct level_state *self);
 extern u8 *GetCurrentLevelFlags(struct level_state *self);
-extern void sub_801EB04(s32 a, u16 b, u16 c, u16 d);
+extern void SpawnCrateGem(s32 a, u16 b, u16 c, u16 d);
 extern void sub_8028474(void *state);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
 extern u8 GetPaletteSlot(struct palette_cache *self, s32 recordId);
@@ -213,7 +213,7 @@ void AddBrokenCrate(struct level_state *self)
             } else {
                 u16 b = *(u16 *)&self->crateGemX;
                 u16 c = *(u16 *)&self->crateGemY;
-                sub_801EB04(0xffff, b, c, 0);
+                SpawnCrateGem(0xffff, b, c, 0);
             }
         }
     }
@@ -250,7 +250,7 @@ void PressSwitchCrate(struct level_state *self)
         } else {
             u16 b = *(u16 *)&self->crateGemX;
             u16 c = *(u16 *)&self->crateGemY;
-            sub_801EB04(0xffff, b, c, 0);
+            SpawnCrateGem(0xffff, b, c, 0);
         }
     }
 }
@@ -793,12 +793,12 @@ void AddLife(struct level_state *self)
 /* GitHub issue #37: closes the loop on the `self+0x1c0`/`0x1c4`
  * counter-notification chain (`docs/rom_map.md`'s "Coverage check and
  * eight more small reads" section) - the consumer/trigger side of the
- * 15-slot table's `sub_802209C` writer, forwarding into `sub_801EB04`
+ * 15-slot table's `sub_802209C` writer, forwarding into `SpawnCrateGem`
  * alongside `PressSwitchCrate`/`AddBrokenCrate`'s own threshold-cross paths
  * above (identical shape: gated by the same `self+0x70 == self+0xbc`
  * counter/threshold pair, `IsInBonusRound`/`IsInGemPath` readiness checks,
  * then either OR a bit into `GetCurrentLevelFlags`'s slot or forward
- * `self+0x1c0`/`0x1c4` to `sub_801EB04`). Only caller is
+ * `self+0x1c0`/`0x1c4` to `SpawnCrateGem`). Only caller is
  * `RunRoom`'s dispatch opener (`game_loop56.c`), which passes
  * `*gLevelState` as `self`. */
 void CheckAllCratesBroken(void *selfArg)
@@ -817,7 +817,7 @@ void CheckAllCratesBroken(void *selfArg)
             *flags = mask;
         } else {
             /* Register-pinned to reproduce the ROM's exact map: `magic`
-             * (the 3rd `sub_801EB04` argument's true value) loaded into
+             * (the 3rd `SpawnCrateGem` argument's true value) loaded into
              * r0 early rather than right before the call, and `off`
              * kept in r3 across its own +4 increment instead of being
              * recomputed from scratch for the second field - see
@@ -834,7 +834,7 @@ void CheckAllCratesBroken(void *selfArg)
             asm volatile("" : "+r"(off));
             addr2 = (u16 *)((u8 *)self + off); /* &self->crateGemY */
             c = *addr2;
-            sub_801EB04(magic, b, c, 0);
+            SpawnCrateGem(magic, b, c, 0);
         }
     }
 }

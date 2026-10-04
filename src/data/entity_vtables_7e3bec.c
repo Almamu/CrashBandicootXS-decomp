@@ -86,24 +86,24 @@ extern void sub_800CBC0();
 extern void sub_800CBF4();
 extern void sub_800CCCC();
 extern void DrawCrate();
-extern void sub_80104E4();
+extern void UpdateCrate();
 extern void sub_8010674();
-extern void sub_8010718();
-extern void sub_801071C();
-extern void sub_8010E34();
-extern void sub_8010F8C();
-extern void sub_80112C4();
+extern void GetCrateClassId();
+extern void DestroyCrate();
+extern void CheckExtraLifePickup();
+extern void UpdateExtraLife();
+extern void DrawExtraLife();
 extern void sub_80112F0();
-extern void sub_80112F4();
+extern void DestroyExtraLife();
 extern void sub_8011330();
-extern void sub_8011390();
-extern void sub_8011548();
-extern void sub_80119A8();
+extern void CheckWumpaPickup();
+extern void UpdateWumpa();
+extern void DrawWumpa();
 extern void sub_80119D4();
-extern void sub_80119D8();
+extern void DestroyWumpa();
 extern void sub_8011A1C();
 extern void sub_8011A8C();
-extern void sub_8011B5C();
+extern void DestroyStopwatch();
 extern void sub_8011BD4();
 extern void sub_8012420();
 extern void sub_8015350();
@@ -524,62 +524,62 @@ const struct vtable_slot gStaticData_087E400C[13] = {
     VTABLE_SLOT(sub_800B704),
 };
 
-/* Used by game_loop31.c (sub_801071C), game_loop36.c (CreateCrate). */
+/* Used by game_loop31.c (DestroyCrate), game_loop36.c (CreateCrate). */
 const struct vtable_slot gCrateVtable[13] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(sub_8007DBC),
     VTABLE_SLOT(sub_8008394),
-    VTABLE_SLOT(sub_80104E4),
+    VTABLE_SLOT(UpdateCrate),
     VTABLE_SLOT(DrawCrate),
     VTABLE_SLOT(sub_8007F78),
     VTABLE_SLOT(sub_8007FD8),
     VTABLE_SLOT(sub_8008328),
     VTABLE_SLOT(sub_8010674),
-    VTABLE_SLOT(sub_8010718),
-    VTABLE_SLOT(sub_801071C),
+    VTABLE_SLOT(GetCrateClassId),
+    VTABLE_SLOT(DestroyCrate),
     VTABLE_SLOT(sub_8008408),
     VTABLE_SLOT(sub_800834C),
 };
 
-/* Used by game_loop52.c, game_loop54.c (sub_8010F8C). */
-const struct vtable_slot gStaticData_087E40DC[14] = {
+/* Used by game_loop52.c, game_loop54.c (UpdateExtraLife). */
+const struct vtable_slot gExtraLifeVtable[14] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(sub_8011330),
     VTABLE_SLOT(sub_8008394),
-    VTABLE_SLOT(sub_8010F8C),
-    VTABLE_SLOT(sub_80112C4),
+    VTABLE_SLOT(UpdateExtraLife),
+    VTABLE_SLOT(DrawExtraLife),
     VTABLE_SLOT(sub_8007F78),
     VTABLE_SLOT(sub_8007FD8),
     VTABLE_SLOT(sub_8008328),
     VTABLE_SLOT(sub_8008304),
     VTABLE_SLOT(sub_80112F0),
-    VTABLE_SLOT(sub_80112F4),
+    VTABLE_SLOT(DestroyExtraLife),
     VTABLE_SLOT(sub_8008408),
     VTABLE_SLOT(sub_800834C),
-    VTABLE_SLOT(sub_8010E34),
+    VTABLE_SLOT(CheckExtraLifePickup),
 };
 
-/* Used by actor_part39.c (sub_80119D8, sub_80119EC), game_loop53.c
- * (sub_8011548). */
-const struct vtable_slot gStaticData_087E414C[14] = {
+/* Used by actor_part39.c (DestroyWumpa, sub_80119EC), game_loop53.c
+ * (UpdateWumpa). */
+const struct vtable_slot gWumpaVtable[14] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(sub_8011A1C),
     VTABLE_SLOT(sub_8008394),
-    VTABLE_SLOT(sub_8011548),
-    VTABLE_SLOT(sub_80119A8),
+    VTABLE_SLOT(UpdateWumpa),
+    VTABLE_SLOT(DrawWumpa),
     VTABLE_SLOT(sub_8007F78),
     VTABLE_SLOT(sub_8007FD8),
     VTABLE_SLOT(sub_8008328),
     VTABLE_SLOT(sub_8008304),
     VTABLE_SLOT(sub_80119D4),
-    VTABLE_SLOT(sub_80119D8),
+    VTABLE_SLOT(DestroyWumpa),
     VTABLE_SLOT(sub_8008408),
     VTABLE_SLOT(sub_800834C),
-    VTABLE_SLOT(sub_8011390),
+    VTABLE_SLOT(CheckWumpaPickup),
 };
 
-/* Used by actor_part39.c (sub_8011A8C, sub_8011B5C). */
-const struct vtable_slot gStaticData_087E41BC[13] = {
+/* Used by actor_part39.c (sub_8011A8C, DestroyStopwatch). */
+const struct vtable_slot gStopwatchVtable[13] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(sub_8007DBC),
     VTABLE_SLOT(sub_8008394),
@@ -590,7 +590,7 @@ const struct vtable_slot gStaticData_087E41BC[13] = {
     VTABLE_SLOT(sub_8008328),
     VTABLE_SLOT(sub_8008304),
     VTABLE_SLOT(sub_8008480),
-    VTABLE_SLOT(sub_8011B5C),
+    VTABLE_SLOT(DestroyStopwatch),
     VTABLE_SLOT(sub_8008408),
     VTABLE_SLOT(sub_800834C),
 };

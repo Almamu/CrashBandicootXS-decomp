@@ -79,7 +79,7 @@ Body:
 Read together: "would a player-shaped hitbox, standing where `self`
 currently is (optionally in its wider variant), overlap `self`'s own
 actual hitbox". The caller (`sub_0800D18C`) uses a `1` result to trigger
-a further `sub_801070C` ("get next") list-walk step - consistent with a
+a further `GetCrateAbove` ("get next") list-walk step - consistent with a
 "can something player-sized occupy this spot" gate feeding further
 traversal, e.g. deciding whether `self` currently blocks the space a
 player-sized object would need there.
@@ -94,7 +94,7 @@ AABB the caller built just before the call, `foundFlag` = a byte buffer
 the caller pre-loads with its own current edge-code value.
 
 Body:
-1. `next = sub_801070C(self)` ("get next"), `prev = sub_8010708(self)`
+1. `next = GetCrateAbove(self)` ("get next"), `prev = GetCrateBelow(self)`
    ("get prev") - the established doubly-linked neighbor-list accessor
    pair (`src/system/game_loop7.c`'s own header comment; also used by
    `sub_0800D18C` itself and `sub_800E494`/`sub_800E4E4`).
@@ -150,7 +150,7 @@ rather than simplifying it:
   layered on top of a build primitive already known not to survive gcc
   2.9 register allocation in its plain form.
 - `sub_800CF70` stacks the AABB-build primitive on top of a
-  `sub_801070C`/`sub_8010708` neighbor-list read - and that *simpler*
+  `GetCrateAbove`/`GetCrateBelow` neighbor-list read - and that *simpler*
   shape (list read with no AABB build at all) is itself independently
   documented as resistant for `sub_800E494`/`sub_800E4E4`
   (`issue-12-physics-collision.md`: a `0x7f`-mask-before-`ldrb`-load

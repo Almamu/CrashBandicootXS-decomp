@@ -1250,7 +1250,7 @@ confirming the dispatch slot. **The shared trig table
 orbital/circular motion (phase-shifted pairs, lerped toward the
 result) - now **3 confirmed actor consumers** (`sub_8030334`,
 `sub_8032480`, `sub_802D3A8`) plus the minimap and the
-`sub_8010F8C` projectile/hazard found in the parallel `game_loop`
+`UpdateExtraLife` projectile/hazard found in the parallel `game_loop`
 pass - a genuinely general-purpose circular/orbital-motion convention
 used throughout the ROM, not unique to one actor. `sub_802C6C0` ties
 an actor behavior directly to the wraparound-lap-counter system
@@ -1932,7 +1932,7 @@ into an existing bucket - net new coverage ~988 B, leaving the core at
 **roughly ~6.7 KB genuinely unexplained**.
 
 **A further pass read four more functions, two of which fold into
-already-counted buckets.** **`sub_8011548`** (500 B) is entity-
+already-counted buckets.** **`UpdateWumpa`** (500 B) is entity-
 vtable-dispatched (inside the documented `gStaticData_087Exxx` 93-entry
 family) - not new core coverage, but mechanically interesting: it
 integrates position from velocity fields, manages a wrapping counter
@@ -1947,7 +1947,7 @@ player-control family's shape (D-pad input via the same
 `GetDpadDirection`, direction-value branching), though the type-ID field
 wasn't cross-checked.
 
-Genuine new coverage (~1 KB): **`sub_800EAFC`** (524 B, not
+Genuine new coverage (~1 KB): **`OpenMysteryCrate`** (524 B, not
 vtable-dispatched) is a **randomized-behavior state machine** - rolls
 a `rand()`-based state on entry, then dispatches a 10-case jump table;
 one case conditionally calls `sub_802599C(gEntityFlags)`, the
@@ -2047,11 +2047,11 @@ The other genuinely-unread outside-any-bucket
 function sampled, `sub_8017348`, fits already-known conventions
 closely (the type-`0x1d`/28-byte-record family).
 
-**Follow-up resolved `sub_8010F8C`/`UpdateZoomBg`, and found the "mostly
+**Follow-up resolved `UpdateExtraLife`/`UpdateZoomBg`, and found the "mostly
 already-bucketed" framing above was too optimistic for this specific
 slice: a full re-scan found 65 functions over 150 B genuinely absent
 from this document's prose, outside the physics/collision subsystem's
-address range** - a real, if modest, remaining gap. `sub_8010F8C`
+address range** - a real, if modest, remaining gap. `UpdateExtraLife`
 (378 B) is a bounds-checked, mode-selected object state machine that
 self-destructs off-screen, and its default mode reads
 **`gSineTable`** (the shared trig table already tied to the
@@ -2113,8 +2113,8 @@ behavior, though built entirely from known toolkit pieces (OAM trio,
 per-level table lookup). **`sub_800C074`**/**`sub_800C314`** are a
 5th+ instance of the recurring `self+0x68`/`self+0x74` generic
 state-machine selector pattern already noted across unrelated object
-types. **`sub_8011448`** is a randomized-position spawn picker, same
-flavor as the documented `sub_800EAFC` randomized-behavior selector
+types. **`PickUpWumpa`** is a randomized-position spawn picker, same
+flavor as the documented `OpenMysteryCrate` randomized-behavior selector
 but for position rather than behavior choice. **`sub_8016B1C`** is a
 timed input-driven state machine, a close cousin of the player-
 input-control family but with its own field-offset triple. None of
@@ -2135,7 +2135,7 @@ guessed. The rest all fit already-documented conventions -
 per call), `sub_800A734` (a reset/init function for the directional-
 target field octet, its 5th+ confirmed site), `sub_800944C` (a
 per-object list updater tied to the text-box singleton's camera
-anchor), `sub_8010EAC`/`sub_8016048` (the randomized-behavior and
+anchor), `PickUpExtraLife`/`sub_8016048` (the randomized-behavior and
 player-input-control families respectively), `sub_8008F20`/
 `sub_801E2BC`/`sub_8009914` (asset-loading/OAM/text-rendering toolkit
 shapes, not fully characterized in detail but no anomalies). Nothing
@@ -2478,11 +2478,11 @@ periodic trigger (the already-documented `TickLevelClock` is its
 decrementer): it reads **two different byte offsets from record 47's
 data span** (`+0x30` and `+0x84`) - direct confirmation that a
 record's `ptr_A`/`ptr_B` point to variable-length data blobs indexed
-differently by different consumers, not a fixed struct. **`sub_8025A64`**
+differently by different consumers, not a fixed struct. **`DropExtraLife`**
 also reads record 47 and spawns an object tagging it with 3 packed
 byte fields (`self+0x49`/`+0x4a`/`+0x4b`) - reads as an achievement/
-unlock-icon spawner. **`sub_8025CA4`** - the function
-`sub_800EAFC`'s randomized AI-behavior selector calls in case 9 - is a
+unlock-icon spawner. **`DropWumpa`** - the function
+`OpenMysteryCrate`'s randomized AI-behavior selector calls in case 9 - is a
 sibling spawner in the same family (same tag-field shape, same
 `gLevelState+0x8c` gate), tying the AI-behavior selector
 directly into this spawner family.
@@ -2504,7 +2504,7 @@ a further pass closed `sub_8026AE8`/`sub_8026A18` themselves too, as
 hand-transcribed NAKED functions - same doc).
 **`PressSwitchCrate`/`AddBrokenCrate`** are two more entry points into the
 `EndBonusRound` wraparound lap-counter system (same `self+0x70`/`0xbc`
-field pair), and on threshold-cross call `sub_801EB04` with the same
+field pair), and on threshold-cross call `SpawnCrateGem` with the same
 `self+0x1c0`/`0x1c4` fields the 15-slot table's `sub_802209C` writes -
 a concrete new tie between that table slot and this counter system.
 
@@ -2578,7 +2578,7 @@ fills in `GetBgStreamerRow`'s role (the background streamer's "get source
 pointer" helper, previously called but never characterized).
 **`CheckAllCratesBroken`** closes the loop on the `self+0x1c0`/`0x1c4`
 counter-notification chain - the consumer/trigger side of the 15-slot
-table's `sub_802209C` writer, forwarding into `sub_801EB04` alongside
+table's `sub_802209C` writer, forwarding into `SpawnCrateGem` alongside
 `PressSwitchCrate`/`AddBrokenCrate`'s threshold-cross paths. **`RedrawBgLayer`**
 is a generalized multi-line sibling of `ScrollBgLayer`. **`GetTerrainType`**
 extends the `CheckTerrainFlag` characterization (`sub_8025228` above)
@@ -2714,7 +2714,7 @@ everyone to be ready" barrier.
 `_08023F92`): loops over a count-prefixed collection at
 `gCrateList`, and for each entry checks an indirect-call result
 `==3` *and* `entry+0x4E==0xA` - the **exact same field offset**
-`gStaticData_0816BC98` indexes by, tying this directly back to the
+`gCrateHitResponse` indexes by, tying this directly back to the
 physics-subsystem investigation. Counts the matches and calls
 `sub_8023140(gLevelState, count)` - reads as **"count how many
 objects are currently in state `0xA`"**, plausibly a
@@ -2770,7 +2770,7 @@ tables:
   then **dispatches through a 16-case jump table** on its own third
   parameter (clamped `1`-`16`) - a message/hint-ID selector. Case 15
   checks `gLevelState` state before calling
-  `sub_8021EF4(0xFFFF, 0xA0, 0xA9, 0)`. Reads as a **"show message type
+  `SpawnTurboRunPower(0xFFFF, 0xA0, 0xA9, 0)`. Reads as a **"show message type
   N" dispatcher**, 16 distinct message types.
 
 A follow-up fork read two more: **`UpdateLevelSelect`** (428 B, called
@@ -2811,10 +2811,10 @@ convention** reused for dialog boxes too.
 
 A companion function, `sub_800CD00` (436 B), reinforces the "shared
 convention, not shared struct" reading from above: it checks `self+0x4E`
-(the exact field `gStaticData_0816BC98`, the physics subsystem's 22-row
+(the exact field `gCrateHitResponse`, the physics subsystem's 22-row
 table, indexes by) and, when not early-exiting, indexes its *own*
 `self+0x20` sub-table using **stride 28** - matching
-`gStaticData_0816BC98`'s stride exactly, but clearly a different table
+`gCrateHitResponse`'s stride exactly, but clearly a different table
 instance. Its only caller is `sub_800AAEC` - the same input-action-check
 function the 42-slot action dispatch table's own entries
 (`sub_8013994` etc.) call. Three previously-separate threads
@@ -3010,7 +3010,7 @@ with being a **shared resource several `menu_ui` records reuse** (a
 common font/layout constant), not a distinct new table of its own.
 
 **Resolved a second table's structure while reading the function that
-uses it most.** `gStaticData_0816BC98` (616 B, 19 references) is indexed
+uses it most.** `gCrateHitResponse` (616 B, 19 references) is indexed
 by an object's own state byte (`self+0x4E`) times **28**, plus a small
 secondary frame/counter index times 4 - `616 / 28 = 22` exactly, so
 **22 rows of up to 7 four-byte values each**, a clean, different shape
@@ -3024,18 +3024,18 @@ special-cased for value `3`), and *this* table in one place.
 **Read the rest of it.** `sub_0800D18C` is the **collision-response
 commit** that presumably consumes `sub_801AB98`'s edge codes (`1`/`2`/
 `4`/`8`, left/right/top/bottom): it walks a linked list of nearby
-objects (`sub_8010708`/`sub_801070C`, "get next"-style calls) accumulating
+objects (`GetCrateBelow`/`GetCrateAbove`, "get next"-style calls) accumulating
 an edge-code value, then **dispatches through a 6-case jump table** on
 that accumulated value - separate handlers per edge direction/combo
-(`sub_800F2BC`, `sub_800F368`, `sub_800E7A8`, `sub_800EEF0`,
-`sub_800E6B0`), each gated by additional state checks (an animation
+(`ActivateNitroSwitchCrate`, `ActivateIronSwitchCrate`, `BreakCrateInStack`, `ExplodeCrate`,
+`OpenCheckpointCrate`), each gated by additional state checks (an animation
 "state 6" special-case appears twice, matching a state also checked in
 `sub_800B8DC`'s 18-state machine). Along the way it maintains a small
 5-slot ring buffer of "recently touched" object pointers *inside*
 `gPlayer` itself (`+0x94` counter, `+0x98`+ array) - the
 camera/viewport struct isn't just position data, it's also tracking
 recent collision events. Ends by computing a final corrected
-position/rect (again via `gStaticData_0816BC98`) and handing everything
+position/rect (again via `gCrateHitResponse`) and handing everything
 off to **`sub_8010D54`** with ~8 packed arguments - the actual
 apply/commit step.
 
@@ -3596,7 +3596,7 @@ A third parallel fork picked up the rest of `graphics_loading`'s
 remainder (68 still-unread functions) and `PlayCutscene`'s two requested
 siblings.
 
-**`sub_802107C`/`sub_802117C`** (256 B/260 B, consecutive in ROM) are
+**`SpawnGreenGemPlatform`/`SpawnBlueGemPlatform`** (256 B/260 B, consecutive in ROM) are
 **near-identical twins**. **Correction**: `sub_8021280` (264 B, right
 after them in ROM - originally guessed as a likely third twin on size/
 address grounds alone) is **not** part of this family - checked
@@ -3618,7 +3618,7 @@ settings/accessibility-style bit - sound-only, full particle effect, or
 a shared fallback sound, depending on per-type flags.
 
 **Confirmed by a follow-up fork: this family is a real dispatch table,
-not a size/address guess.** Checking `sub_8020E84`/`sub_8020F7C` (two
+not a size/address guess.** Checking `SpawnRedGemPlatform`/`SpawnYellowGemPlatform` (two
 more of `graphics_loading`'s unread functions) against the raw-pointer
 search placed them at `0x0816C7E8`/`0x0816C7EC` - *inside the same
 `gEntitySpawnFuncs` block* the `menu_ui` dispatch table already
@@ -3627,15 +3627,15 @@ densely-packed array of 15 raw function pointers** (no `{0,ptr}`
 pairing this time - a fourth table shape in this ROM's toolkit,
 alongside the paired vtables, the 42-slot action table, and the
 per-level header-of-lists), running right up to the already-known
-`gThemePaletteCycle2` label. This table includes `sub_802107C`,
-`sub_802117C`, **and `sub_8021280`** - so the earlier correction needs
+`gThemePaletteCycle2` label. This table includes `SpawnGreenGemPlatform`,
+`SpawnBlueGemPlatform`, **and `sub_8021280`** - so the earlier correction needs
 its own footnote: `sub_8021280` isn't part of the twins' *behavioral*
 pattern (it's a distinct bonus/reward spawner, correctly identified as
 such), but it **is** one of this same 15-slot table's entries - the
 table mixes genuinely different response types (sound+effect twins,
 a reward spawner) under one dispatch mechanism, the same way the
 42-slot action table mixed real handlers with a shared no-op fallback.
-`sub_8020E84`, read in full, matches the twins' exact shape (a
+`SpawnRedGemPlatform`, read in full, matches the twins' exact shape (a
 different bit of `gLevelState+2`, sound `0xB` this time,
 fallback `0xC`) - at least 4 of the 15 slots are now individually
 confirmed.
@@ -3661,8 +3661,8 @@ a plain array, no `{0,ptr}` pairing):
 |---|---|---|
 | 0 | `sub_8020D4C` (312 B) | New shape: a richer spawn with a **two-line text popup** (two `_call_via_r2` calls), `self+0x20` = header base **`+0xd8`** (a much smaller `gSpriteBankTable` offset than the `0x18C`+ family), picks between two more tables (`gStaticData_0816B98C`/`0816BB2C`) via a `gEntityFlags` bit - not the sound/effect toggle shape. |
 | 1-3 | `sub_80219BC`/`8021998`/`8021974` (36 B each) | Trivial `sub_801A878(x,y,w,h,id)` trampolines, ids 0/1/2 - sound-cue-only. |
-| 4-5 | `sub_8020E84`/`sub_8020F7C` | Confirmed twin-shape siblings (prior round). |
-| 6-7 | `sub_802107C`/`sub_802117C` | Confirmed twin family, sounds `0xA`/`9`, fallback `0xC`, full OAM spawn on the "no bit set" path. |
+| 4-5 | `SpawnRedGemPlatform`/`SpawnYellowGemPlatform` | Confirmed twin-shape siblings (prior round). |
+| 6-7 | `SpawnGreenGemPlatform`/`SpawnBlueGemPlatform` | Confirmed twin family, sounds `0xA`/`9`, fallback `0xC`, full OAM spawn on the "no bit set" path. |
 | 8 | `sub_8021280` | Confirmed distinct bonus/reward spawner - a real slot, not part of the twins' behavioral pattern. |
 | 9 | `sub_802190C` (~104 B) | Sound-only variant with its own gate (`IsBonusRoundDone(gLevelState)` OR `gLevelState+0x8c`, the twins' own field) picking sound `7`/`5`, closing via a *different* accessor (`SetBonusPlatform` vs. the twins' `SetGemPlatform`). |
 | 10-11 | `sub_80218E8`/`sub_80218C4` (36 B) | More `sub_801A878` trampolines, ids 6/8. |
@@ -3688,7 +3688,7 @@ function remainder actually is. **~50 of the 71 reference
 `gSpriteBankTable`'s confirmed 12-byte-record array) - essentially
 the whole remainder, not a grab-bag of independent unknowns. Five
 samples read in full confirm two known shapes recur widely: a
-sprite/effect spawner (`sub_801EA5C`, record index 37, spawns via
+sprite/effect spawner (`SpawnCrystal`, record index 37, spawns via
 `sub_8008434` instead of the usual `sub_8009ED0`, then the standard
 OAM trio) and, more strikingly, **several more near-identical
 siblings of the two-line-text-popup spawner** (the 15-slot table's
@@ -3761,12 +3761,12 @@ segments, not evidence of yet another distinct table elsewhere.
 **Follow-up confirmed the prediction directly: this segment isn't a
 new dispatch category, it's more instances of two already-documented
 conventions.** Read 10 of the ~40 slots. A tight, evenly-spaced
-(`0x24`/36 B) run of four (`sub_8021A94`/`AB8`/`ADC`/`CE0`) are more
+(`0x24`/36 B) run of four (`SpawnTimeCrate1`/`AB8`/`ADC`/`CE0`) are more
 instances of the already-documented `CreateCrate` entity-constructor
 trampoline family, feeding the 93-entry `gStaticData_087Exxx` family
 with new type constants (`0x10`, `0xf`, `1`). Five more
-(`sub_8021D04`, `sub_8021D80`, `sub_8021DFC`, `sub_801EBF0`,
-`sub_802200C`) are all the already-documented `gSpriteBankTable`
+(`SpawnBasicCrate`, `SpawnBodySlamPower`, `SpawnTornadoSpinPower`, `sub_801EBF0`,
+`SpawnBlueGem`) are all the already-documented `gSpriteBankTable`
 record-indexed OAM-trio spawner shape, each gated by a different
 settings/state bit - and two new record indices came out of it:
 **record 38** (`0x1C8`) - the *same* record `overlay_ui`'s
@@ -3792,7 +3792,7 @@ shape registering into a different list (`gUnknown_030012E8`, not the
 already-documented `EC`/`F0`/`F4`/`F8`), a setter extending
 `gPlayer`'s accessor family, a trampoline, a conditional
 `CreateCrate` type-selector, and a spawn call tying into the
-achievement/unlock-icon family (`sub_801173C`).
+achievement/unlock-icon family (`CreateWumpa`).
 
 **4 are genuinely standalone.** `sub_801E8F8` is a **DMA3 tilemap-row-
 fill helper** - packs a repeated 4-bit pattern across a 16-bit tile-
@@ -3854,7 +3854,7 @@ silencing a specific sound, not starting a new one.
 
 The same fork that resolved the twin family kept going and found
 something bigger than any individual function read this session:
-**`sub_8021280` is not a third twin** of `sub_802107C`/`sub_802117C`
+**`sub_8021280` is not a third twin** of `SpawnGreenGemPlatform`/`SpawnBlueGemPlatform`
 (corrected above) - it's a **conditional bonus/reward-object spawner**,
 checking three accessors on `gLevelState` and the 36-slot
 per-level table's `+0x4` field before spawning a 100×100 or 40×40
@@ -4067,7 +4067,7 @@ and its immediately-preceding, previously entirely-unremarked sibling
 `sub_800CF70` isn't just "functionally part of" the physics/collision
 subsystem in a loose sense - its entire body is one AABB-build-and-
 overlap-test cycle using that subsystem's own `+0x20`-table convention
-and `self+0x4d&0x7f==1` exclusion gate, operating on the `sub_8010708`
+and `self+0x4d&0x7f==1` exclusion gate, operating on the `GetCrateBelow`
 ("get prev") neighbor. `sub_800CEAC` turned out to be a related but
 distinct hybrid-AABB overlap test (player's hitbox quad positioned at
 `self`'s location, optionally widened via an unconfirmed player state

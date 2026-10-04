@@ -8,11 +8,11 @@
 extern void nullsub_21();
 extern void nullsub_22();
 extern void sub_801E990();
-extern void sub_801EA5C();
+extern void SpawnCrystal();
 extern void sub_801EBF0();
-extern void sub_801EC9C();
-extern void sub_801ED6C();
-extern void sub_801EE3C();
+extern void SpawnRedGem();
+extern void SpawnGreenGem();
+extern void SpawnYellowGem();
 extern void sub_801EF0C();
 extern void sub_801F050();
 extern void sub_801F170();
@@ -38,10 +38,10 @@ extern void sub_80209EC();
 extern void sub_8020B0C();
 extern void sub_8020C18();
 extern void sub_8020D4C();
-extern void sub_8020E84();
-extern void sub_8020F7C();
-extern void sub_802107C();
-extern void sub_802117C();
+extern void SpawnRedGemPlatform();
+extern void SpawnYellowGemPlatform();
+extern void SpawnGreenGemPlatform();
+extern void SpawnBlueGemPlatform();
 extern void sub_8021280();
 extern void sub_8021388();
 extern void sub_8021480();
@@ -57,33 +57,33 @@ extern void sub_8021998();
 extern void sub_80219BC();
 extern void sub_80219E0();
 extern void sub_8021A00();
-extern void sub_8021A4C();
-extern void sub_8021A70();
-extern void sub_8021A94();
+extern void SpawnTimeCrate3();
+extern void SpawnTimeCrate2();
+extern void SpawnTimeCrate1();
 extern void sub_8021AB8();
-extern void sub_8021ADC();
+extern void SpawnTntCrate();
 extern void sub_8021B00();
-extern void sub_8021B24();
-extern void sub_8021B48();
-extern void sub_8021B6C();
-extern void sub_8021B90();
-extern void sub_8021BB4();
-extern void sub_8021BD8();
-extern void sub_8021BFC();
-extern void sub_8021C50();
-extern void sub_8021C74();
-extern void sub_8021C98();
-extern void sub_8021CBC();
-extern void sub_8021CE0();
-extern void sub_8021D04();
-extern void sub_8021D80();
-extern void sub_8021DFC();
-extern void sub_8021E78();
-extern void sub_8021EF4();
-extern void sub_8021F70();
-extern void sub_802200C();
+extern void SpawnBouncyWumpaCrate();
+extern void SpawnMysteryCrate();
+extern void SpawnNitroCrate();
+extern void SpawnLifeCrate();
+extern void SpawnIronArrowCrate();
+extern void SpawnIronCrate();
+extern void SpawnNitroSwitchCrate();
+extern void SpawnOutlineCrate();
+extern void SpawnArrowCrate();
+extern void SpawnIronSwitchCrate();
+extern void SpawnAkuAkuCrate();
+extern void SpawnCheckpointCrate();
+extern void SpawnBasicCrate();
+extern void SpawnBodySlamPower();
+extern void SpawnTornadoSpinPower();
+extern void SpawnDoubleJumpPower();
+extern void SpawnTurboRunPower();
+extern void SpawnStopwatch();
+extern void SpawnBlueGem();
 extern void sub_802209C();
-extern void sub_8022158();
+extern void SpawnWumpa();
 extern void sub_802218C();
 extern void sub_80221A4();
 extern void sub_80221BC();
@@ -102,40 +102,40 @@ void (*const gEntitySpawnFuncs[92])() = {
     sub_80221A4,
     sub_802218C,
     nullsub_22,
-    sub_8022158,
-    sub_801EA5C,
+    SpawnWumpa,
+    SpawnCrystal,
     sub_801EBF0,
-    sub_802200C,
-    sub_801EC9C,
-    sub_801ED6C,
-    sub_801EE3C,
+    SpawnBlueGem,
+    SpawnRedGem,
+    SpawnGreenGem,
+    SpawnYellowGem,
     nullsub_21,
     nullsub_21,
     nullsub_21,
-    sub_8021F70,
+    SpawnStopwatch,
     nullsub_21,
-    sub_8021EF4,
-    sub_8021E78,
-    sub_8021D80,
-    sub_8021D04,
-    sub_8021CE0,
-    sub_8021CBC,
-    sub_8021C98,
-    sub_8021C74,
-    sub_8021C50,
-    sub_8021BFC,
-    sub_8021BD8,
-    sub_8021BB4,
-    sub_8021B90,
-    sub_8021B6C,
-    sub_8021B48,
-    sub_8021B24,
+    SpawnTurboRunPower,
+    SpawnDoubleJumpPower,
+    SpawnBodySlamPower,
+    SpawnBasicCrate,
+    SpawnCheckpointCrate,
+    SpawnAkuAkuCrate,
+    SpawnIronSwitchCrate,
+    SpawnArrowCrate,
+    SpawnOutlineCrate,
+    SpawnNitroSwitchCrate,
+    SpawnIronCrate,
+    SpawnIronArrowCrate,
+    SpawnLifeCrate,
+    SpawnNitroCrate,
+    SpawnMysteryCrate,
+    SpawnBouncyWumpaCrate,
     sub_8021B00,
-    sub_8021ADC,
+    SpawnTntCrate,
     sub_8021AB8,
-    sub_8021A94,
-    sub_8021A70,
-    sub_8021A4C,
+    SpawnTimeCrate1,
+    SpawnTimeCrate2,
+    SpawnTimeCrate3,
     sub_801EF0C,
     sub_801F050,
     sub_801F170,
@@ -170,17 +170,17 @@ void (*const gEntitySpawnFuncs[92])() = {
     sub_8021480,
     sub_802155C,
     sub_8021668,
-    sub_8021DFC,
+    SpawnTornadoSpinPower,
     sub_8020C18,
     sub_8020C18,
     sub_8020D4C,
     sub_80219BC,
     sub_8021998,
     sub_8021974,
-    sub_8020E84,
-    sub_8020F7C,
-    sub_802107C,
-    sub_802117C,
+    SpawnRedGemPlatform,
+    SpawnYellowGemPlatform,
+    SpawnGreenGemPlatform,
+    SpawnBlueGemPlatform,
     sub_8021280,
     sub_802190C,
     sub_80218E8,

@@ -9,20 +9,20 @@ second pass against those five.
 
 ## Matched (7 of 12 remaining functions)
 
-- **`sub_801089C`** (`src/system/game_loop34.c`, new file) - plays
+- **`OpenLifeCrate`** (`src/system/game_loop34.c`, new file) - plays
   cue-3 SFX, then - unless `self->field_08` is the sentinel `0xffff` -
   consumes a slot from the per-record bit-grid (`gEntityFlags`,
   the same `sub_802599C`/`sub_80259D4` accessor pair game_loop12.c/
   game_loop13.c already establish) keyed by `self->field_08`, setting
   the bit only if it wasn't already set. Finally spawns a part object
-  (`sub_8025A64`, itself still parked as of game_loop14.c) three tiles
+  (`DropExtraLife`, itself still parked as of game_loop14.c) three tiles
   below `self`'s own position, tagged with the caller's own byte
   argument. `self` here is a `struct actor *` - `self->x`/`self->y`/
   `self->field_08` (include/actor.h) match the record's `+0`/`+4`/`+8`
   fields exactly, and `field_08`'s own doc comment already calls out
   its use "as a 32-bit-word bitmap index", confirmed here by the
   `sub_802599C`/`sub_80259D4` calls. Two gotchas:
-  - `sub_8025A64`'s `x`/`y` arguments need wider `s32` types in this
+  - `DropExtraLife`'s `x`/`y` arguments need wider `s32` types in this
     call site's own local extern declaration than the `u16 x, u16 y`
     prototype game_loop14.c's (still-parked) definition uses - this
     call site's own ROM bytes never truncate the computed Q8-to-tile
@@ -40,14 +40,14 @@ second pass against those five.
     purely to make this compiler reserve the same 8-byte outgoing-
     argument stack slot pair the ROM's own `sub sp, #8`/`add sp, #8`
     frame does.
-- **`sub_801071C`/`sub_801075C`** (`src/system/game_loop31.c`, new
+- **`DestroyCrate`/`InitCrate`** (`src/system/game_loop31.c`, new
   file) - a part-object table-set/tail-call-`sub_8008484` helper (same
-  shape as `sub_80119D8`, `actor_part39.c`) that additionally frees
+  shape as `DestroyWumpa`, `actor_part39.c`) that additionally frees
   `self+0x48` (unless it's the sentinel `-1` or already `NULL`) and
   clears `self+0x59` when `self`'s own `+0x4e` state byte is 3, and a
   second helper that re-initializes `self` via `sub_80084A4`, resets
   its table/`+0x59` flag, then resets its own collision-response state
-  via `sub_800FEB0` (`game_loop22.c`). Both take/return `struct actor *`
+  via `ResetCrate` (`game_loop22.c`). Both take/return `struct actor *`
   (matching `sub_8008484`/`sub_80084A4`'s own already-matched
   prototypes in `actor_part6.c`).
 - **`sub_8010784`/`sub_80107C4`** (`src/system/game_loop31.c`) - two
@@ -94,7 +94,7 @@ second pass against those five.
 
 ## Parked (NAKED transcription) - 4 functions
 
-- **`sub_800FC70`** (`src/system/game_loop32.c`, new file) - a
+- **`UpdateCrateFall`** (`src/system/game_loop32.c`, new file) - a
   per-frame position-wrap advance keeping `sb`/`r8` live as two extra
   callee-saved accumulators throughout - the same "two extra
   high-register accumulators live throughout" gap already parked (and
@@ -125,7 +125,7 @@ second pass against those five.
   elsewhere, so it's transcribed instead; the full octant-by-octant C
   reconstruction (verified matching in isolation before this gap
   surfaced) is preserved in the function's doc comment for reference.
-- **`sub_8010914`/`sub_801095C`** (`src/system/game_loop30.c`) - two
+- **`GetTopCrate`/`GetBottomCrate`** (`src/system/game_loop30.c`) - two
   "get prev"/"get next" neighbor-list-walk-and-filter helpers: each
   walks its own list direction, returning the furthest node reachable
   while every node visited has a `+0x4d & 0x7f` state != 1, falling
@@ -135,7 +135,7 @@ second pass against those five.
   <exit>`) and the ROM keeps them as separate physical copies, this
   compiler merges them into one (4 bytes short each). Transcribed for
   the same reason. **Since matched as real C** - see
-  [naked-sub_8010914-matched.md](./naked-sub_8010914-matched.md); this
+  [naked-GetTopCrate-matched.md](./naked-GetTopCrate-matched.md); this
   entry is left as-is since it's a frozen historical record of why the
   function was originally parked.
 
@@ -145,7 +145,7 @@ second pass against those five.
   (~660-instruction) projectile/hazard-spawn dispatcher with two big
   jump tables and packed bitfield arguments; still out of scope for a
   single pass.
-- **`sub_80104E4`** (`asm/code_3_2_17_e560_ff0c.s`) - a large
+- **`UpdateCrate`** (`asm/code_3_2_17_e560_ff0c.s`) - a large
   (~195-instruction) state dispatcher calling several still-raw
   siblings; not attempted.
 - **`DrawCrate`/`sub_8010674`** (`asm/code_3_2_17_e560_ff0c.s`) -
@@ -185,10 +185,10 @@ second pass against those five.
 as real decompiled C - see
 [naked-sub_800fdc8-matched.md](./naked-sub_800fdc8-matched.md). The
 `goto`-to-a-physically-earlier-label technique that closed
-`sub_8010914`/`sub_801095C` above was necessary but not sufficient
+`GetTopCrate`/`GetBottomCrate` above was necessary but not sufficient
 here: this function's ROM layout keeps *two* genuinely separate
 physical copies of the shared-tail-shaped return (one solo, one shared
-by three), where `sub_8010914`'s gap was a single shared copy in the
+by three), where `GetTopCrate`'s gap was a single shared copy in the
 *wrong position*. Closing the anti-merge (not just placement) needed
 the solo copy's return materialized as an opaque `asm volatile` block
 - gcc's cross-jump pass still unified plain-C-goto-placed identical
@@ -200,31 +200,31 @@ function was originally parked); `tools/report_units.py`'s
 `None`, and `docs/status/game_loop.md`'s parked-list entry for it was
 removed in favor of a matched-list entry.
 
-## Update: `sub_80104E4` matched (NAKED transcription)
+## Update: `UpdateCrate` matched (NAKED transcription)
 
-`sub_80104E4`, parked above as "not attempted", is now matched. By the
+`UpdateCrate`, parked above as "not attempted", is now matched. By the
 time this pass picked it up, every callee it flagged as a "still-raw
-sibling" (`sub_800F8E0`/`sub_800F990`/`sub_800F4F4`/`sub_800F798`,
-`sub_800FC70`, `sub_80087C0`/`sub_80087B4`/`sub_800872C`,
+sibling" (`UpdateTntCountdown`/`sub_800F990`/`SolidifyOutlineCrates`/`FinishBrokenCrate`,
+`UpdateCrateFall`, `sub_80087C0`/`sub_80087B4`/`sub_800872C`,
 `GetPaletteSlot`, `sub_8008044`, `_call_via_r1`) had already been matched
 by earlier passes in this same session (issue #12's cluster and this
-issue's own `sub_800FC70`/`game_loop32.c`), which is what made this
+issue's own `UpdateCrateFall`/`game_loop32.c`), which is what made this
 function tractable at all - it's a pure dispatcher/glue function over
 already-understood pieces, not new semantic territory.
 
 **What it does**: a per-frame state-machine tick on the same
 "collision box" `self` object this whole file family operates on.
 While `self+0x4f` (a per-object throttle counter, matching the
-`sub_800F368`-seeded throttle byte game_loop49.c's own header comments
+`ActivateIronSwitchCrate`-seeded throttle byte game_loop49.c's own header comments
 describe) is nonzero, decrements it and, only for the frame it reaches
 zero-triggering, dispatches once more on `self+0x4e` (the settle-state
-byte): `0x13`-`0x15` re-enters the edge-settle chain (`sub_800F8E0`)
+byte): `0x13`-`0x15` re-enters the edge-settle chain (`UpdateTntCountdown`)
 and arms the global one-shot rescan flag `gUnknown_030012B0`; `0xf`
 re-triggers `sub_800F990` when `self+0x4d`'s low 7 bits are already 0;
 `0xc`, once the throttle has reached 0 this frame, clears `self+0x50`;
-`3` re-triggers `sub_800F4F4`. Unconditionally afterwards: while
+`3` re-triggers `SolidifyOutlineCrates`. Unconditionally afterwards: while
 `self+0x4e == 0xc`, counts `self+0x48` down toward 0; always calls
-`sub_800FC70` (the position-wrap advance, `game_loop32.c`). Then, if
+`UpdateCrateFall` (the position-wrap advance, `game_loop32.c`). Then, if
 `self+0x4d`'s bit 7 is set and `self+0x38` is nonzero, re-derives
 `self+0x30`'s index via the exact same `self+0x20`-pointer-to-manager/
 `self+0x2d`-tag/0x1c-stride hitbox-record clamp `DrawCrate`
@@ -233,11 +233,11 @@ clears the "recently touched" object's (`gPlayer`) own
 `+0x80` byte - then, depending on `self+0x4e`: state 6 settles to
 state 7, tags `self+0x2d = 0x20`, runs the
 `sub_80087C0`/`sub_80087B4`/`sub_800872C` triplet (the same one
-`sub_800F8E0`'s own settle paths use), then folds the low nibble of a
+`UpdateTntCountdown`'s own settle paths use), then folds the low nibble of a
 `GetPaletteSlot` tile-cache lookup (keyed by the freshly-retagged hitbox
 record's own `+0x14`) into `self+0x29`; state 3 just tags `0x20` and
 runs the same triplet. If bit 7 was clear instead, `self+0x4d`'s low 7
-bits == 1 triggers `sub_800F798`. Finally, unconditionally, calls
+bits == 1 triggers `FinishBrokenCrate`. Finally, unconditionally, calls
 `sub_8008044` and hands `self+0x18`'s table's own `+0x60`/`+0x64`
 offset/function-pointer pair off to the `_call_via_r1` table-trampoline
 - the same convention `sub_8007048`/`sub_80070D4` (`graphics.c`)
@@ -288,7 +288,7 @@ either neighbor).
 
 ## Later pass: issue #12/#13/#25 NAKED retry
 
-`sub_800FC70` and `sub_80104E4` are real C under old_agbcc
+`UpdateCrateFall` and `UpdateCrate` are real C under old_agbcc
 (`game_loop32.o` and `game_loop51.o` joined `OLD_AGBCC_OBJS`). Neither
 needed a register pin: the "accumulators" and "threaded field addresses"
 come from GCSE copies of fields the source re-reads, nested `if`s that

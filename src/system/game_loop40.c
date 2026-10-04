@@ -94,7 +94,7 @@ extern void sub_800872C(struct slot_part *part, s32 arg);
 extern void LoadPaletteSlot(void *cache, s32 palette, u8 record);
 extern void sub_8010804(void);
 extern s32 _call_via_r1(void *self, void *fn);
-extern void sub_8011448(struct actor *self, s32 arg1);
+extern void PickUpWumpa(struct actor *self, s32 arg1);
 
 static inline void SetPartTag(struct slot_part *part, s32 tag)
 {
@@ -158,7 +158,7 @@ void StartTimeTrial(struct level_state *self)
             if (_call_via_r1((u8 *)e + m->thisOffset, m->fn) == 2)
             {
                 if ((u8)ACTOR_METHOD(e, m28))
-                    sub_8011448(e, 1);
+                    PickUpWumpa(e, 1);
                 else
                 {
                     a->flags |= 1;

@@ -11,11 +11,11 @@
  * to stay consistent with every already-matched sibling in this file
  * family (game_loop22.c-game_loop29.c), which do the same. */
 
-extern void *sub_8010708(void *selfArg);
-extern void *sub_801070C(void *selfArg);
+extern void *GetCrateBelow(void *selfArg);
+extern void *GetCrateAbove(void *selfArg);
 extern void sub_0800D18C(void *selfArg);
 
-/* Walks the "get prev" neighbor-list chain (`sub_801070C`) starting at
+/* Walks the "get prev" neighbor-list chain (`GetCrateAbove`) starting at
  * `self`, returning the furthest node reachable while every node
  * visited (other than `self` itself) has a `+0x4d & 0x7f` state != 1 -
  * the walk stops (returning the last accepted node) as soon as it
@@ -23,18 +23,18 @@ extern void sub_0800D18C(void *selfArg);
  * `self` has no "prev" neighbor at all, or that first neighbor is
  * already in state 1, falls back to returning `self` itself:
  *
- *   cur = sub_801070C(self);
+ *   cur = GetCrateAbove(self);
  *   if (cur == NULL) return self;
  *   if ((cur[0x4d] & 0x7f) == 1) return self;
  *   for (;;) {
- *       next = sub_801070C(cur);
+ *       next = GetCrateAbove(cur);
  *       if (next == NULL) return cur;
  *       if ((next[0x4d] & 0x7f) == 1) return cur;
  *       cur = next;
  *   }
  *
  * Was NAKED asm, not plain C - see
- * docs/matching/naked-sub_8010914-matched.md for the derivation. Two
+ * docs/matching/naked-GetTopCrate-matched.md for the derivation. Two
  * gaps: this compiler's cross-jump pass merges the loop's two
  * `return cur;` sites into a single shared tail positioned right
  * before the epilogue (saving a branch the ROM's own, separately-kept
@@ -47,14 +47,14 @@ extern void sub_0800D18C(void *selfArg);
  * count), and an inline-asm-materialized mask check matching the
  * ROM's own instruction order (address-then-mask-then-load, not
  * load-then-mask). */
-void *sub_8010914(void *selfArg)
+void *GetTopCrate(void *selfArg)
 {
     void *self = selfArg;
     void *cur;
     void *next;
     register u32 masked asm("r0");
 
-    cur = sub_801070C(self);
+    cur = GetCrateAbove(self);
     if (cur == NULL) {
         goto returnSelf;
     }
@@ -79,7 +79,7 @@ returnCur:
     return cur;
 
 loop:
-    next = sub_801070C(cur);
+    next = GetCrateAbove(cur);
     if (next == NULL) {
         goto returnCur;
     }
@@ -100,17 +100,17 @@ loop:
     goto loop;
 }
 
-/* Same walk as `sub_8010914`, but over the "get next" chain
- * (`sub_8010708`) instead of "get prev". Same matching technique as
- * that function - see docs/matching/naked-sub_8010914-matched.md. */
-void *sub_801095C(void *selfArg)
+/* Same walk as `GetTopCrate`, but over the "get next" chain
+ * (`GetCrateBelow`) instead of "get prev". Same matching technique as
+ * that function - see docs/matching/naked-GetTopCrate-matched.md. */
+void *GetBottomCrate(void *selfArg)
 {
     void *self = selfArg;
     void *cur;
     void *next;
     register u32 masked asm("r0");
 
-    cur = sub_8010708(self);
+    cur = GetCrateBelow(self);
     if (cur == NULL) {
         goto returnSelf;
     }
@@ -135,7 +135,7 @@ returnCur:
     return cur;
 
 loop:
-    next = sub_8010708(cur);
+    next = GetCrateBelow(cur);
     if (next == NULL) {
         goto returnCur;
     }

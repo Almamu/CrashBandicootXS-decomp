@@ -27,7 +27,7 @@ record's own `+0x14` byte is the asset id. Finally `gUnknown_030012EC`
 walked: each entry fires its own `+0x18`-table's `+0x48`/`0x4c`
 `_call_via_r1` trampoline, and a result of `2` fires the `+0x28`/`0x2c`
 trampoline too - a nonzero low byte there flags the entry for despawn
-(`sub_8011448(entry, 1)`), otherwise the entry is marked "seen" (`+0xc`
+(`PickUpWumpa(entry, 1)`), otherwise the entry is marked "seen" (`+0xc`
 bit 0) and, unless its `+8` id is the `0xFFFF` sentinel, its bit gets set
 in the `gEntityFlags+0x108` collision bitmap - the exact same
 inline idiom `sub_80072D8` (graphics.c) uses on a `struct actor`.
@@ -55,7 +55,7 @@ to live in r7 for the *entire* array walk. A `register s32 sentinel
 asm("r7")` pin hits a confirmed toolchain bug - this compiler never adds
 an inline-asm-clobbered r7 to the function's own push/pop list (the same
 gap already parked for `sub_8010674`'s `success` local, game_loop23.c,
-and `sub_8025A64`, game_loop29.c - see `docs/status/game_loop.md`). A
+and `DropExtraLife`, game_loop29.c - see `docs/status/game_loop.md`). A
 *plain* (non-pinned) `s32 sentinel = 0xffff;` local dodges the bug and
 gets tracked correctly, but only in isolation - once every other quirk
 above is also anchored (needed to get the rest of the loop byte-exact),
@@ -107,7 +107,7 @@ is the count and the array starts right after): for each
 is looked up in `redirectInfo`'s array (`.a` field, read as a full
 `u32`); a match's paired `.b` value is used to search
 `gCrateList` *again*, in reverse, for an entry with that id,
-linking the two via `sub_8010714`/`sub_8010710` (the neighbor-list
+linking the two via `SetCrateAbove`/`SetCrateBelow` (the neighbor-list
 set-next/set-prev pair, game_loop23.c) on success. On failure the code
 chases a *second* lookup back into `redirectInfo`'s array itself
 (treating it as an id→id redirect table, `.a`→`.b` again) and retries
@@ -127,7 +127,7 @@ array until a match is found or the chain runs out. Once a match is
 found (either pass), its `+0x18`-table's `+0x10`/`+0x14` `_call_via_r1`
 trampoline record's returned `+5` byte becomes a `(byte+1)<<8` Q8 delta
 added to the matched entry's own `+4` field, then every entry in its
-`sub_801070C` ("get next") neighbor chain has
+`GetCrateAbove` ("get next") neighbor chain has
 `sub_8007398(entry, entry+0, entry+4+delta)` fired on it in turn - a
 position-resync pass over whatever got linked.
 
@@ -165,7 +165,7 @@ reconstruction in any meaningful sense, just NAKED asm wearing a C
 function signature. This is the same family of gcc-2.9
 high-register/3-operand-add materialization gap already parked
 elsewhere in this ROM region for similarly register-heavy functions
-(`sub_8025B0C`/`sub_8025BAC`/`sub_8025CA4`, `ScrollBgLayer`/`DrawBgLayerColumn`
+(`sub_8025B0C`/`sub_8025BAC`/`DropWumpa`, `ScrollBgLayer`/`DrawBgLayerColumn`
 above, both keeping `r8` live across most of their bodies). Transcribed
 straight from the confirmed-correct ROM disassembly instead - every
 label, branch and literal-pool placement (including the ROM's four

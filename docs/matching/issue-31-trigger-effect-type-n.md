@@ -1,4 +1,4 @@
-# `sub_8020E84`/`sub_8020F7C`/`sub_802107C`/`sub_802117C` (issue #31) - a near-miss pass
+# `SpawnRedGemPlatform`/`SpawnYellowGemPlatform`/`SpawnGreenGemPlatform`/`SpawnBlueGemPlatform` (issue #31) - a near-miss pass
 
 > **Superseded:** all four functions are now matched as plain C under
 > old_agbcc - see "Old-compiler pass" at the end. The sections below
@@ -9,7 +9,7 @@ Follow-up to the third pass recorded in
 'trigger effect type N' twin family matched via NAKED transcription"),
 which converted all four `src/graphics/trigger_effect.c` functions to
 `NAKED` after concluding plain-C restructuring couldn't reproduce two
-register-allocation spots. This pass revisits `sub_8020E84` with
+register-allocation spots. This pass revisits `SpawnRedGemPlatform` with
 techniques established by *later* passes in this same document (the
 `asm volatile`-anchored idioms, the `goto`-based branch/fallthrough
 restructuring, the r7-pin categorical bug write-up) that postdate the
@@ -18,7 +18,7 @@ function before.
 
 ## Result: 11 bytes short of byte-exact, kept in-tree via `#if NON_MATCHING`
 
-`sub_8020E84` got extremely close - every load/store, branch and call
+`SpawnRedGemPlatform` got extremely close - every load/store, branch and call
 is confirmed correct, and the reconstruction is 237 of 248 bytes
 byte-identical to the ROM - but a handful of pure register-choice/
 scheduling details resisted every technique tried this pass. Per this
@@ -30,9 +30,9 @@ original byte-correct `NAKED` transcription (`#else` branch, unchanged
 from the third pass), verified via a full clean `make compare` ("La
 suma coincide"). `make NON_MATCHING=1 report` also builds clean with no
 warnings for this file. The other three siblings
-(`sub_8020F7C`/`sub_802107C`/`sub_802117C`) are untouched - still plain
+(`SpawnYellowGemPlatform`/`SpawnGreenGemPlatform`/`SpawnBlueGemPlatform`) are untouched - still plain
 `NAKED`, no `#if` toggle - since this pass only worked through
-`sub_8020E84` itself; the same techniques should transfer directly
+`SpawnRedGemPlatform` itself; the same techniques should transfer directly
 (same shape, different bit-test mask/sound ids/tag value) to whoever
 picks up the other three next.
 
@@ -172,35 +172,35 @@ pass.
 ## Round 4: the three remaining siblings, also near-misses
 
 Follow-up pass working through the three siblings the previous pass
-left untouched: `sub_8020F7C`, `sub_802107C`, `sub_802117C`. All three
+left untouched: `SpawnYellowGemPlatform`, `SpawnGreenGemPlatform`, `SpawnBlueGemPlatform`. All three
 now also have a `#if NON_MATCHING` real-C reconstruction in-tree,
 alongside the original byte-correct `NAKED` `#else` transcription
 (unchanged, still what the default build uses). None of the three
 closed either - all three landed as near-misses, same as
-`sub_8020E84`. `tools/report_units.py` is unchanged (all four functions
+`SpawnRedGemPlatform`. `tools/report_units.py` is unchanged (all four functions
 still tracked exactly as before: `NAKED`, parked). Verification: full
 clean `rm -rf build && make NON_MATCHING=1 report` builds with no new
 warnings, and full clean `rm -rf build crashbandicootxs.elf
 crashbandicootxs.gba crashbandicootxs.map && make compare` confirms `La
 suma coincide` (default build fully unaffected).
 
-### `sub_8020F7C`/`sub_802107C`: the exact same two blockers, transferring unchanged
+### `SpawnYellowGemPlatform`/`SpawnGreenGemPlatform`: the exact same two blockers, transferring unchanged
 
-These two share one register shape, distinct from `sub_8020E84`'s own:
+These two share one register shape, distinct from `SpawnRedGemPlatform`'s own:
 `self` lives in r1 (not r0), the address-of `gLevelState` stays
 pinned to r8 (not r9) as `pAddr`, and the bit-test result lives in r9
 (not r8). The mask constant is still materialized *before* the byte
-load (same gotcha as `sub_8020E84`), but here the AND's destination is
+load (same gotcha as `SpawnRedGemPlatform`), but here the AND's destination is
 the mask register itself, needing an extra explicit byte truncation
-afterward that `sub_8020E84`'s narrower mask (`1`) didn't need. Once
+afterward that `SpawnRedGemPlatform`'s narrower mask (`1`) didn't need. Once
 this shape is spelled out via one `asm volatile` island (mirroring
-`sub_8020E84`'s own bit-test island, just with the register roles
-swapped) and the rest of the function follows `sub_8020E84`'s template
+`SpawnRedGemPlatform`'s own bit-test island, just with the register roles
+swapped) and the rest of the function follows `SpawnRedGemPlatform`'s template
 verbatim (address-of via plain C `&global` initializer, `goto`-based
 `id_c`/`id_b` branch restructuring, the `+0x8c` re-check through
 `pAddr`, the two `mov #imm`/`neg` idioms for the flags/bitfield
 clears), **every single instruction matches the ROM except the exact
-same two residual gaps `sub_8020E84` documented**, reproducing
+same two residual gaps `SpawnRedGemPlatform` documented**, reproducing
 identically in both functions (confirmed via isolated-compile
 `objdump` diff against each function's own `NAKED` block, which is
 already the byte-correct ground truth disassembly - direct raw-byte
@@ -211,7 +211,7 @@ bytes regardless of correctness, matching this project's own documented
 caveat):
 
 1. **Argument-marshalling order** for *both* call sites now
-   (`sub_801A878` **and** `sub_8008434` - `sub_8020E84` only has the one
+   (`sub_801A878` **and** `sub_8008434` - `SpawnRedGemPlatform` only has the one
    `sub_801A878` call site affected, since its spawn branch doesn't pass
    a `a3`-shaped hard-pinned register through the same marshal pattern
    in a way that exposes it... actually it does, structurally identical
@@ -219,20 +219,20 @@ caveat):
    call sites instead of one for these two siblings). The pinned `a3`
    (r5) always gets moved into the call's r3 slot first, ahead of the
    stack-arg store and the unpinned `arg1`/`arg2` moves - unresolved,
-   exact same root cause `sub_8020E84` already ruled out every attempted
+   exact same root cause `SpawnRedGemPlatform` already ruled out every attempted
    fix for.
 2. **The `+0x2d` tag store's source register** - `r1` in this
    reconstruction vs. the ROM's `r2`, still a single-instruction
-   cosmetic register choice, same as `sub_8020E84`'s own residual.
+   cosmetic register choice, same as `SpawnRedGemPlatform`'s own residual.
 
 Confirms the doc's own prediction that "the same techniques should
 transfer directly" - they do, byte-for-byte identically, including the
 *unresolved* parts. No new technique was needed or found for these two;
-this is a straight, mechanical reapplication of `sub_8020E84`'s
+this is a straight, mechanical reapplication of `SpawnRedGemPlatform`'s
 template with the mask/self/pAddr/bit register roles and the sound
 id/tag constants substituted in.
 
-### `sub_802117C`: a genuinely harder case, worse near-miss than the other three
+### `SpawnBlueGemPlatform`: a genuinely harder case, worse near-miss than the other three
 
 This sibling's bit-test mask (`8`) and tag value (`8`) are the *same*
 literal, and the ROM exploits this: it materializes `8` once into a
@@ -244,7 +244,7 @@ other three siblings, which each re-derive the tag as a fresh constant
 inside the spawn branch. Reproducing this exactly (`register u8 maskTag
 asm("r10")`, materialized inside the same `asm volatile` island as the
 address-of/self-deref/bit-test, not as a separate plain-C initializer -
-same "wrong scheduling position" gotcha `sub_8020E84`'s doc comment
+same "wrong scheduling position" gotcha `SpawnRedGemPlatform`'s doc comment
 already flags for a naive `register T x asm(reg) = value;` at the top
 of the function) works cleanly on its own.
 
@@ -336,7 +336,7 @@ pinned) was kept as the best of these: correct control flow, correct
 calls, correct field offsets and struct writes throughout, matching
 every single instruction outside of the argument-marshal-order blocker
 (shared with all three siblings), the `+0x2d` register blocker (shared
-with `sub_8020F7C`/`sub_802107C`), and this sibling's own unique 4-byte
+with `SpawnYellowGemPlatform`/`SpawnGreenGemPlatform`), and this sibling's own unique 4-byte
 stack-spill/truncation-batching gap - genuinely harder to close than
 the other three, consistent with this sibling's register shape having
 already been flagged as unreproduced before this pass even started.
@@ -348,7 +348,7 @@ with no register pins, inline asm or `goto`s. The object is on the
 Makefile's `OLD_AGBCC_OBJS` list. The earlier passes above all used the
 current agbcc. The ROM's `mov rA, #mask` before `ldrb rB` is old_agbcc's
 tell, the same one that closed the neighbouring spawners
-`sub_801EA5C`-`sub_801EE3C` (`graphics_loading_1ea5c.c`, issue #30).
+`SpawnCrystal`-`SpawnYellowGem` (`graphics_loading_1ea5c.c`, issue #30).
 Under old_agbcc the pinned drafts that were kept under `#if NON_MATCHING`
 were further off, not closer, so they were thrown away. The file was
 rewritten as the obvious C. It follows `graphics_loading_1ea5c.c`'s
@@ -376,15 +376,15 @@ loads `gLevelState` for the `SetGemPlatform` call early and pushes
 The "`self` in r1 vs r0" and "mask in `sl`" register differences between
 siblings that the notes above describe come out of old_agbcc on its own.
 The register differences come from the one-line changes between siblings
-(mask, sound id, tag). In `sub_802117C` the mask and the tag are the same
+(mask, sound id, tag). In `SpawnBlueGemPlatform` the mask and the tag are the same
 constant, `8`, so they share one register.
 
 | function | bit | sound | tag | current agbcc | old_agbcc |
 |---|---|---|---|---|---|
-| `sub_8020E84` | 1 | 0xB | 7 | 85 halfwords off | match |
-| `sub_8020F7C` | 2 | 0x3 | 5 | 19 halfwords off | match |
-| `sub_802107C` | 4 | 0xA | 6 | 19 halfwords off | match |
-| `sub_802117C` | 8 | 0x9 | 8 | 40 halfwords off | match |
+| `SpawnRedGemPlatform` | 1 | 0xB | 7 | 85 halfwords off | match |
+| `SpawnYellowGemPlatform` | 2 | 0x3 | 5 | 19 halfwords off | match |
+| `SpawnGreenGemPlatform` | 4 | 0xA | 6 | 19 halfwords off | match |
+| `SpawnBlueGemPlatform` | 8 | 0x9 | 8 | 40 halfwords off | match |
 
 `gLevelState` is typed with a file-local `struct level_progress`
 (`collected` at +2, `unk_8C` at +0x8C) instead of raw byte offsets.

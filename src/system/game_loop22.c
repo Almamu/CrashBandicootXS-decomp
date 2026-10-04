@@ -9,7 +9,7 @@
  * reason issue #12 recategorized the previous span: this whole
  * neighborhood (~0x0800D000-0x08010D54) is `docs/rom_map.md`'s
  * confirmed shared physics/collision subsystem, not per-entity
- * behavior. `sub_800FC70`/`sub_800FDC8` immediately before this
+ * behavior. `UpdateCrateFall`/`sub_800FDC8` immediately before this
  * function are left untouched raw - see the write-up doc. */
 
 extern void *gPlayer;
@@ -20,9 +20,9 @@ extern void *gPlayer;
  * zeroes the timer/list-link block `+0x44`-`+0x51`/`+0x58` and the two
  * neighbor-list pointers `+0x5c`/`+0x60`, and sets the `+0x54`
  * countdown to -1 (disabled). Matches the "get next"/"get prev" field
- * pair (`+0x5c`/`+0x60`) `sub_8010708`/`sub_801070C` in game_loop18.c
+ * pair (`+0x5c`/`+0x60`) `GetCrateBelow`/`GetCrateAbove` in game_loop18.c
  * read/write. */
-void sub_800FEB0(void *selfArg)
+void ResetCrate(void *selfArg)
 {
     register u8 *self asm("r2") = selfArg;
     u8 v = 4;

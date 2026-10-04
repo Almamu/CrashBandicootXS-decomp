@@ -38,7 +38,7 @@ This chunk turned out to be two interleaved families:
    register write (`CommitBgLayerScroll`).
 
 3. A **part-object spawn family**
-   (`sub_8025A64`/`sub_8025B0C`/`sub_8025BAC`/`sub_8025CA4`) and one
+   (`DropExtraLife`/`sub_8025B0C`/`sub_8025BAC`/`DropWumpa`) and one
    **table-indexed function-pointer dispatcher** (`SpawnEntity`) and a
    **jump-table list counter** (`CountCrateEntities`) - these reuse the
    `struct actor` + `gUnknown_030012D0` triple-indirection convention
@@ -98,11 +98,11 @@ BYTE-MATCHING` doc comment at the definition explaining what was tried:
   gets every operand right but this compiler still inserts an
   unnecessary `push {r4, lr}`/`pop {r4}` pair around the two address
   computations.
-- **`sub_8025A64`/`sub_8025B0C`/`sub_8025BAC`/`sub_8025CA4`**
+- **`DropExtraLife`/`sub_8025B0C`/`sub_8025BAC`/`DropWumpa`**
   (game_loop14.c) - four part-object spawn helpers, sharing the
   `struct actor` + `gUnknown_030012D0`-table + OAM/keyframe-trio
   construction idiom already established in `trigger_effect.c`'s
-  parked `sub_8020E84` family. Large, register-heavy functions; not
+  parked `SpawnRedGemPlatform` family. Large, register-heavy functions; not
   iterated to an exact allocation within this chunk's scope.
   `sub_8025BAC`'s two stack-passed parameters (`testY`/`mirrorFlag`)
   are worth a follow-up look: `sub_8025B0C`'s own call site to it
@@ -131,7 +131,7 @@ everything after" rule:
 
 - `asm/code_3_2_17_255d4.s` (truncated) - `SpawnRoomEntities`, `CountCrateEntities`
 - `asm/code_3_2_17_259d4.s` (new) - `sub_80259D4`
-- `asm/code_3_2_17_25a64.s` (new) - `sub_8025A64`-`sub_8025CA4`
+- `asm/code_3_2_17_25a64.s` (new) - `DropExtraLife`-`DropWumpa`
 - `asm/code_3_2_17_25d74.s` (new) - `InitBgLayer`
 - `asm/code_3_2_17_25e98.s` (new) - `ScrollBgLayer`
 - `asm/code_3_2_17_25f3c.s` (new) - `DrawBgLayerColumn` onward (everything
@@ -217,9 +217,9 @@ C has no way to work around on this toolchain:
   [naked-sub_80259d4-matched.md](./naked-sub_80259d4-matched.md); this
   entry is left as-is since it's a frozen historical record of why the
   function was originally parked.
-- **`sub_8025A64`** (moved to its own new file, `game_loop29.c`, since
+- **`DropExtraLife`** (moved to its own new file, `game_loop29.c`, since
   its address isn't adjacent to any other matched run once
-  `sub_8025B0C`/`sub_8025BAC`/`sub_8025CA4` stayed parked) - a real C
+  `sub_8025B0C`/`sub_8025BAC`/`DropWumpa` stayed parked) - a real C
   reconstruction (declaring `x`/`y`/`p3`/`p5`/`flag6` as plain
   untruncated words so their narrowing happens at the call/field-store
   sites instead of the prologue, matching the ROM's own instruction
@@ -235,15 +235,15 @@ C has no way to work around on this toolchain:
   constant-folded into a cheaper derived `sub`, one instruction shorter
   than the ROM's genuine two-instruction `movs`/`rsbs` pair. Now
   `NAKED`.
-- **`sub_8025B0C`/`sub_8025BAC`/`sub_8025CA4`** (game_loop14.c, prepended
+- **`sub_8025B0C`/`sub_8025BAC`/`DropWumpa`** (game_loop14.c, prepended
   ahead of the already-matched `SpawnEntity` run - their real addresses
   turned out to be exactly contiguous with it once split out of
   `asm/code_3_2_17_25b0c.s`, so no new file was needed) - `sub_8025BAC`
   alone repeats the exact same `& -0x10 | (result & 0xf)` unfixable
-  fold from `sub_8025A64` above, plus two more instances of the same
+  fold from `DropExtraLife` above, plus two more instances of the same
   family (`& ~0x11`, `& -5 & -3`) - strong enough a signal, combined
-  with `sub_8025B0C`'s `r8`-spanning size and `sub_8025CA4`'s
-  `flag6`-in-`r7` shape (identical to `sub_8025A64`'s), that this pass
+  with `sub_8025B0C`'s `r8`-spanning size and `DropWumpa`'s
+  `flag6`-in-`r7` shape (identical to `DropExtraLife`'s), that this pass
   transcribed all three directly rather than re-discovering the same
   wall three more times. Now `NAKED`.
 - **`InitBgLayer`** (game_loop15.c) - unchanged from the "Update:
@@ -288,8 +288,8 @@ address):
 
 - `asm/code_3_2_17_259d4.s` - deleted (`sub_80259D4` is now `NAKED` in
   `game_loop13.c`)
-- `asm/code_3_2_17_25a64.s` - deleted; `sub_8025A64` is now `NAKED` in
-  the new `game_loop29.c`, `sub_8025B0C`/`sub_8025BAC`/`sub_8025CA4` are
+- `asm/code_3_2_17_25a64.s` - deleted; `DropExtraLife` is now `NAKED` in
+  the new `game_loop29.c`, `sub_8025B0C`/`sub_8025BAC`/`DropWumpa` are
   now `NAKED` in `game_loop14.c` (prepended ahead of the already-matched
   `SpawnEntity` run, since the addresses turned out contiguous)
 - `asm/code_3_2_17_25d74.s` - deleted (`InitBgLayer` is now `NAKED` in
@@ -388,12 +388,12 @@ crashbandicootxs.map && make compare` confirms
 `CountCrateEntities` was the only function in this issue's range that had
 stayed genuinely `NON_MATCHING` (never even converted to `NAKED`) - it
 is now matched. GitHub issue #41 itself stays open: six of the
-NAKED-transcribed functions from the earlier pass (`sub_8025A64`,
-`sub_8025B0C`/`sub_8025BAC`/`sub_8025CA4`, `ScrollBgLayer`/`DrawBgLayerColumn`)
+NAKED-transcribed functions from the earlier pass (`DropExtraLife`,
+`sub_8025B0C`/`sub_8025BAC`/`DropWumpa`, `ScrollBgLayer`/`DrawBgLayerColumn`)
 still owe a real C match; `sub_80259D4` and `InitBgLayer` have already
 been closed (see their own linked write-ups above).
 
 ## Later pass (strag1)
 
-`sub_8025B0C` and `sub_8025CA4` (`src/system/game_loop14.c`) are now real
+`sub_8025B0C` and `DropWumpa` (`src/system/game_loop14.c`) are now real
 C (old_agbcc). See [strag1-naked-retry.md](strag1-naked-retry.md).

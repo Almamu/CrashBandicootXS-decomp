@@ -46,7 +46,7 @@
  *   for each entry whose own table (`+0x18`, offset `0x48`) probes
  *   `==3` and is within a `0x27`/`0x3b` Q8>>8 box of `other` with
  *   `entry+0x4d` bit-`0x7f`-clear: a `entry+0x4e` tag of `0xe`/`0x13`/
- *   `0x14`/`0x15`/`0xa` calls `sub_800EEF0(entry, 0)`, otherwise
+ *   `0x14`/`0x15`/`0xa` calls `ExplodeCrate(entry, 0)`, otherwise
  *   `sub_8010908(entry, tag)` gates a `BreakCrate(entry, 1)`.
  * - **State 2**: if `other+0x30==8` and `other+0x34==0` and the same
  *   in-bounds Q8 check passes, fires `_call_via_r4` against the
@@ -212,7 +212,7 @@ extern struct ab_list *gCrateList;
 extern void sub_8017F14(void *self, void *part, s32 index);
 extern struct ab_box sub_8007B98(void *obj);
 extern void sub_8008A40(void *manager, struct ab_box box, s32 unused, void *compareViewport);
-extern void sub_800EEF0(struct ab_part *p, s32 arg);
+extern void ExplodeCrate(struct ab_part *p, s32 arg);
 extern u8 sub_8010908(struct ab_part *p, s32 kind);
 extern void BreakCrate(struct ab_part *p, s32 arg);
 
@@ -330,7 +330,7 @@ void sub_8017AB0(struct ab_self *self, struct ab_part *other)
 
                 if (Probe48(e) == 3)
                 {
-                    /* the ROM passes sub_800EEF0 a copy of `e` made here,
+                    /* the ROM passes ExplodeCrate a copy of `e` made here,
                      * and loads `kind` straight into r1 (sub_8010908's
                      * second argument) */
                     struct ab_part *t = e;
@@ -344,7 +344,7 @@ void sub_8017AB0(struct ab_self *self, struct ab_part *other)
 
                         if (kind == 0xE || kind == 0x13 || kind == 0x14
                             || kind == 0x15 || kind == 0xA)
-                            sub_800EEF0(t, 0);
+                            ExplodeCrate(t, 0);
                         else if (sub_8010908(e, kind))
                             BreakCrate(e, 1);
                     }

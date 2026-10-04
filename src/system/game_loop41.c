@@ -31,10 +31,10 @@
  *
  * Second half (skipped when `links` is NULL): each actor in
  * `gCrateList` whose id is a link's `from` is chained
- * (`sub_8010714`/`sub_8010710`) to the actor with the link's `to` id,
+ * (`SetCrateAbove`/`SetCrateBelow`) to the actor with the link's `to` id,
  * following further links while `to` isn't spawned. Then each link whose
  * `from` actor doesn't exist resolves its `to` chain to a spawned actor
- * and moves that actor's neighbour chain (`sub_801070C`/`sub_8007398`)
+ * and moves that actor's neighbour chain (`GetCrateAbove`/`sub_8007398`)
  * up by its `+0x10` method's height.
  *
  * Built with old_agbcc (game_loop41.o is on OLD_AGBCC_OBJS; this file
@@ -146,9 +146,9 @@ extern struct lk_actor_list *gCrateList;
 extern void CpuSet(void *src, void *dst, s32 control);
 extern u8 sub_8025968(struct lk_self *self, s32 n);
 extern void SpawnEntity(void *table, s32 n, struct lk_item *item);
-extern void sub_8010714(struct lk_actor *a, struct lk_actor *b);
-extern void sub_8010710(struct lk_actor *a, struct lk_actor *b);
-extern struct lk_actor *sub_801070C(struct lk_actor *a);
+extern void SetCrateAbove(struct lk_actor *a, struct lk_actor *b);
+extern void SetCrateBelow(struct lk_actor *a, struct lk_actor *b);
+extern struct lk_actor *GetCrateAbove(struct lk_actor *a);
 extern void sub_8007398(struct lk_actor *a, s32 x, s32 y);
 extern u8 *_call_via_r1(void *self, void *fn);
 
@@ -216,8 +216,8 @@ void SpawnRoomEntities(struct lk_self *self, struct lk_list *list, struct lk_lin
 
                             if (to == other->id)
                             {
-                                sub_8010714(actor, other);
-                                sub_8010710(other, actor);
+                                SetCrateAbove(actor, other);
+                                SetCrateBelow(other, actor);
                                 done = 1;
                                 break;
                             }
@@ -343,7 +343,7 @@ void SpawnRoomEntities(struct lk_self *self, struct lk_list *list, struct lk_lin
                     p.x = actor->pos.x;
                     pp->y = actor->pos.y + lift;
                     sub_8007398(actor, p.x, pp->y);
-                    actor = sub_801070C(actor);
+                    actor = GetCrateAbove(actor);
                 } while (actor != NULL);
             }
         }

@@ -6,15 +6,15 @@
  * (`asm/code_3_2_17_e560_10d54.s`) - see
  * docs/matching/issue-14-0x08010d54-physics-apply.md's "Not integrated
  * this pass" section for the individual draft characterizations this
- * file finishes integrating: `sub_8010E34`, `sub_8010EAC`, `sub_8010F8C`,
- * `sub_8011114`, `sub_80111B8`. All 5 operate on the same still-unnamed
+ * file finishes integrating: `CheckExtraLifePickup`, `PickUpExtraLife`, `UpdateExtraLife`,
+ * `CreateExtraLife`, `SendExtraLifeToHud`. All 5 operate on the same still-unnamed
  * "part" object `src/system/game_loop52.c`/`game_loop53.c` already
  * document (the older functions use raw `u8 *` offsets; the ones
  * turned into C by the issue #15 NAKED retry use `struct orbit_part`,
  * include/orbit_part.h). This closes out
  * the entire `0x08010D54` chunk (issue #12/#14): every function between
  * `sub_8010D54` and the already-matched `src/graphics/actor_part39.c`
- * (`sub_80119A8`) is now matched. */
+ * (`DrawWumpa`) is now matched. */
 
 extern void *gPlayer;
 extern void *gAudioContext;
@@ -38,10 +38,10 @@ extern void sub_8011308(void *self);
 extern void sub_8011248(void *self);
 extern void sub_8008364(struct actor *part);
 extern s16 gSineTable[];
-extern u8 gStaticData_087E40DC[];
+extern u8 gExtraLifeVtable[];
 
 /* Built with old_agbcc (Makefile OLD_AGBCC_OBJS) since the issue #15
- * NAKED retry: sub_8011114 matches only under it, and the rest of the
+ * NAKED retry: CreateExtraLife matches only under it, and the rest of the
  * file compiles identically under either compiler. */
 
 /* `frame = min(0, frameCount - 1)` against the part's current animation
@@ -57,22 +57,22 @@ static inline void OrbitClampFrame(struct orbit_part *self)
 }
 extern s32 rand(void);
 
-void sub_8010EAC(void *selfArg, u8 randomize);
+void PickUpExtraLife(void *selfArg, u8 randomize);
 
-/* Called from `sub_8010EAC` below only (the "randomized-behavior"
+/* Called from `PickUpExtraLife` below only (the "randomized-behavior"
  * family's own bounds-check gate). No existing cross-reference
  * elsewhere in the codebase. Gated: does nothing unless the orbit is
  * active (`self+0x4a != 0`) and either its phase hasn't wrapped past
  * `0x16` yet or the player (`gPlayer`) is in state
- * `+0x88 == 3` - the exact same opening gate `sub_8011390`
+ * `+0x88 == 3` - the exact same opening gate `CheckWumpaPickup`
  * (`game_loop52.c`) already uses. Once past that gate, proceeds only
  * when flags bit 3 is clear and flags bit 2 is set (same bit-test idiom
- * as `sub_8011390`), builds both `self`'s and the player's AABB via
- * `sub_8007B98` (unlike `sub_8011390`, always the "secondary" AABB
+ * as `CheckWumpaPickup`), builds both `self`'s and the player's AABB via
+ * `sub_8007B98` (unlike `CheckWumpaPickup`, always the "secondary" AABB
  * build for both sides - no `player+0xa == 0x13` branch here), and on
- * overlap sets flags bit 3 and calls `sub_8010EAC(self, 0)` (the fixed,
+ * overlap sets flags bit 3 and calls `PickUpExtraLife(self, 0)` (the fixed,
  * non-randomized despawn-offset path). */
-void sub_8010E34(void *selfArg)
+void CheckExtraLifePickup(void *selfArg)
 {
     u8 *self = selfArg;
     u8 selfBox[16];
@@ -106,7 +106,7 @@ void sub_8010E34(void *selfArg)
 
         bit |= self[0xc];
         self[0xc] = bit;
-        sub_8010EAC(self, 0);
+        PickUpExtraLife(self, 0);
     }
 }
 
@@ -121,9 +121,9 @@ void sub_8010E34(void *selfArg)
  * `sub_8007174(self, self->x>>8, self->y>>8, &outX, &outY)` and
  * re-derives `self->x`/`self->y` plus `self->0x40`/`self->0x44` (a
  * "distance to travel" pair, `-FixedDiv(newPos<<8 - offset, 0x1400)`)
- * from the results - the exact same tail shape `sub_8011448`/
- * `sub_80111B8`/`sub_8011870` (`game_loop53.c`) all share. */
-void sub_8010EAC(void *selfArg, u8 randomize)
+ * from the results - the exact same tail shape `PickUpWumpa`/
+ * `SendExtraLifeToHud`/`SendWumpaToHud` (`game_loop53.c`) all share. */
+void PickUpExtraLife(void *selfArg, u8 randomize)
 {
     u8 *self = selfArg;
     s32 dx, dy;
@@ -191,7 +191,7 @@ void sub_8010EAC(void *selfArg, u8 randomize)
  * `AddLife(gLevelState)`, set flags bit 0, and (unless
  * `self->8 == 0xffff`) set `self->8`'s bit in the
  * `gEntityFlags+0x108` collision bitmap - the same inline idiom
- * `sub_8011548` (`game_loop53.c`) also duplicates per mode. Any other
+ * `UpdateWumpa` (`game_loop53.c`) also duplicates per mode. Any other
  * mode (0, or 3+): gated by `self->0x4a`, increments `self->0x49` or
  * `self->0x4b` (wrapping the gate off after 32 ticks). The shared tail:
  * unless `self->0x48 != 0`, either computes an orbit step via
@@ -221,7 +221,7 @@ void sub_8010EAC(void *selfArg, u8 randomize)
         *_slot |= one << (_id - _word * 32);                                     \
     } while (0)
 
-void sub_8010F8C(struct orbit_part *self)
+void UpdateExtraLife(struct orbit_part *self)
 {
     u8 state = self->state;
 
@@ -305,35 +305,35 @@ void sub_8010F8C(struct orbit_part *self)
     sub_8008364(&self->base);
 }
 
-/* `struct actor *sub_8011114(u16 arg0, u16 arg1, u16 arg2, s32 arg3)` -
+/* `struct actor *CreateExtraLife(u16 arg0, u16 arg1, u16 arg2, s32 arg3)` -
  * spawns a part-object; extern already declared in `game_loop29.c`.
  * `arg3` is never actually read (the ROM hardcodes the field it would
  * feed - `self+0x29`/`+0x2a`/`+0x2b` - to a compile-time `0`
  * regardless), matching the extern's own always-`0` call sites.
  * Allocates a `0x54`-byte object (`sub_8026EDC`), re-initializes it
  * (`sub_80084A4`), repoints `self->table` (`self+0x18`) at
- * `gStaticData_087E40DC`, clears the "spawned/active" gate byte via
+ * `gExtraLifeVtable`, clears the "spawned/active" gate byte via
  * `sub_8011308` (`game_loop52.c`), stores `arg0` at `self+8` and
  * `arg1`/`arg2` (Q8-scaled) at `self+0`/`self+4`, mirrored into
  * `self+0x4c`/`self+0x50` (the orbit anchor `sub_8011364`/
  * `sub_8011248` also use), joins the `gUnknown_030012EC`
  * `dual_array_manager` list (`sub_8008E94`), derives `self+0x30` from
- * the same `table[self->0x2d]->+0x16` clamp idiom `sub_8011448`/
- * `sub_8011870` (`game_loop53.c`) use, clears bits 0/5 of `self+0x28`,
+ * the same `table[self->0x2d]->+0x16` clamp idiom `PickUpWumpa`/
+ * `SendWumpaToHud` (`game_loop53.c`) use, clears bits 0/5 of `self+0x28`,
  * and always tags `self+0x29`/`+0x2a`/`+0x2b` all `0`, returning the
  * new part.
  *
  * Under old_agbcc this is plain C: the `0` sentinel held in `r8` across
  * sub_8008E94 is just the `zero` local below, and the anchor copy is a
  * struct copy of the head x/y pair (`ORBIT_POS`). */
-struct orbit_part *sub_8011114(u16 id, u16 x, u16 y, s32 unused)
+struct orbit_part *CreateExtraLife(u16 id, u16 x, u16 y, s32 unused)
 {
     struct orbit_part *self;
     u8 zero;
 
     self = sub_8026EDC(0x54);
     sub_80084A4(&self->base);
-    self->base.table = gStaticData_087E40DC;
+    self->base.table = gExtraLifeVtable;
     sub_8011308(self);
     zero = 0;
     self->base.field_08 = id;
@@ -350,19 +350,19 @@ struct orbit_part *sub_8011114(u16 id, u16 x, u16 y, s32 unused)
     return self;
 }
 
-/* `void sub_80111B8(void *part)` - extern already declared in
+/* `void SendExtraLifeToHud(void *part)` - extern already declared in
  * `game_loop29.c`; the documented "mutually exclusive alternative" is
- * `sub_8011870` (`game_loop53.c`, already matched). Plays a hit SFX,
+ * `SendWumpaToHud` (`game_loop53.c`, already matched). Plays a hit SFX,
  * sets `self->0x48 = 1`, nudges `self->x -= self->0x4a<<8`, sets
  * `self->0x25 = 1`, calls `sub_8007174(self, x>>8, y>>8, &outX, &outY)`
  * and re-derives `self->x`/`self->y` plus `self->0x40`/`self->0x44`
  * (the same `-FixedDiv(newPos<<8 - offset, 0x1400)` "distance to
- * travel" idiom `sub_8010EAC`/`sub_8011448`/`sub_8011870` all share),
+ * travel" idiom `PickUpExtraLife`/`PickUpWumpa`/`SendWumpaToHud` all share),
  * with fixed `0xb400`/`0xc00` offsets on x/y respectively, then fires
- * `ShowHudLives(gHud)` - unlike `sub_8011870`'s
- * `ShowHudWumpa`. Notably simpler than its `sub_8011870` sibling: no
+ * `ShowHudLives(gHud)` - unlike `SendWumpaToHud`'s
+ * `ShowHudWumpa`. Notably simpler than its `SendWumpaToHud` sibling: no
  * `self->0x3c`/`self->0x30` table-lookup-clamp setup here at all. */
-void sub_80111B8(void *selfArg)
+void SendExtraLifeToHud(void *selfArg)
 {
     u8 *self = selfArg;
     s32 outX, outY;

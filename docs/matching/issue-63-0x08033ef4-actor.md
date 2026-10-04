@@ -179,7 +179,7 @@ boundaries - not by re-reading the isolated compiles more carefully.
   asm("r9")` pin mirroring the ROM's own `sb` cache (needed since it
   survives the following `sub_80338DC()` call) - the same
   trailing-byte-stack-argument gap already closed elsewhere, not the
-  unrelated `sub_8025A64` mask-constant-folding gap this entry used to
+  unrelated `DropExtraLife` mask-constant-folding gap this entry used to
   be compared against. The `self+0x5c` spawn-record ternary
   (`(self[0x59] != 0) ? 0xFFFFBF00 : 0x8400`) needed a second, separate
   fix: the ROM computes it as a genuine two-way branch diamond (a

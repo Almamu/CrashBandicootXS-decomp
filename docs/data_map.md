@@ -687,10 +687,10 @@ vtable shapes).
 | `0816BB4C` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16). **Converted** (`src/data/popup_tables_16b98c.c`) | `sub_80203A8` | high | done |
 | `0816BB6C` | 0x28 | entry set {entries, 0x100} + its 4 {a, b} entries (`gStaticData_0816BB74`). **Converted** (`src/data/object_tables_16bb6c.c`) | `sub_800CA48` | medium | done |
 | `0816BB94` | 0x4 | small constant (281e140a). **Converted** (`src/data/object_tables_16bb6c.c`) | `sub_800F990`, `CreateCrate` | medium | done |
-| `0816BB98` | 0x16 | table (element layout: see consumers). **Converted** (`src/data/object_tables_16bb6c.c`) | `sub_800E6B0`, `BreakCrate`, `sub_800EEF0` | medium | done |
-| `0816BBAE` | 0x16 | table (element layout: see consumers). **Converted** (`src/data/object_tables_16bb6c.c`) | `sub_800F06C`, `sub_800F6B8`, `sub_8010908` | medium | done |
-| `0816BBC4` | 0x16 | table (element layout: see consumers). **Converted** (`src/data/object_tables_16bb6c.c`) | `sub_800D040`, `sub_800EDBC`, `sub_800F06C` +3 | medium | done |
-| `0816BBDA` | 0x16 | table (element layout: see consumers). **Converted** (`src/data/object_tables_16bb6c.c`) | `sub_0800D18C`, `sub_800E7A8` | medium | done |
+| `0816BB98` | 0x16 | table (element layout: see consumers). **Converted** (`src/data/object_tables_16bb6c.c`) | `OpenCheckpointCrate`, `BreakCrate`, `ExplodeCrate` | medium | done |
+| `0816BBAE` | 0x16 | table (element layout: see consumers). **Converted** (`src/data/object_tables_16bb6c.c`) | `BlastNearbyCrates`, `BreakCratesInArea`, `sub_8010908` | medium | done |
+| `0816BBC4` | 0x16 | table (element layout: see consumers). **Converted** (`src/data/object_tables_16bb6c.c`) | `sub_800D040`, `DropCratesAbove`, `BlastNearbyCrates` +3 | medium | done |
+| `0816BBDA` | 0x16 | table (element layout: see consumers). **Converted** (`src/data/object_tables_16bb6c.c`) | `sub_0800D18C`, `BreakCrateInStack` | medium | done |
 | `0816BBF0` | 0xA8 | table of s32 (`s32` x 42). **Converted** (`src/data/object_tables_16bb6c.c`) | `sub_0800D18C` | high | done |
 | `0816BC98` | 0x268 | table of s32[7] (`s32[7]` x 22). **Converted** (`src/data/object_tables_16bb6c.c`) | `sub_0800D18C`, `sub_800E08C` | high | done |
 | `0816BF00` | 0x8 | small constant (0000010000000000). **Converted** (`src/data/object_tables_16bb6c.c`) | `sub_0800D18C` | medium | done |
@@ -960,10 +960,10 @@ vtable shapes).
 | `087E3F4C` | 0x58 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_800CB40` | high | easy |
 | `087E3FA4` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_800CBC0`, `sub_800CBD4` | high | easy |
 | `087E400C` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_800CCCC`, `sub_800CCE0` | high | easy |
-| `087E4074` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateCrate`, `sub_801071C`, `sub_801075C` | high | easy |
-| `087E40DC` | 0x70 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_8011114`, `sub_80112F4`, `sub_8011310` | high | easy |
-| `087E414C` | 0x70 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_801173C`, `sub_80119D8`, `sub_80119FC` | high | easy |
-| `087E41BC` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_8011B0C`, `sub_8011B5C`, `sub_8011B70` | high | easy |
+| `087E4074` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateCrate`, `DestroyCrate`, `InitCrate` | high | easy |
+| `087E40DC` | 0x70 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateExtraLife`, `DestroyExtraLife`, `InitExtraLife` | high | easy |
+| `087E414C` | 0x70 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateWumpa`, `DestroyWumpa`, `InitWumpa` | high | easy |
+| `087E41BC` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateStopwatch`, `DestroyStopwatch`, `InitStopwatch` | high | easy |
 | `087E4224` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_8015878`, `sub_801588C` | high | easy |
 | `087E428C` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_80174D8`, `sub_80174EC` | high | easy |
 | `087E42F4` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_80179EC`, `sub_8017A00` | high | easy |

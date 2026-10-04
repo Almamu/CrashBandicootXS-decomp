@@ -3,19 +3,19 @@
 
 /* GitHub issue #13: 0x0800FC70-0x08010A0C, continuing the physics/
  * collision subsystem (see game_loop17.c's header comment and
- * docs/matching/issue-13-graphics-fc70.md). `sub_801071C`/
- * `sub_801075C`/the two Bresenham-line helpers `sub_8010784`/
+ * docs/matching/issue-13-graphics-fc70.md). `DestroyCrate`/
+ * `InitCrate`/the two Bresenham-line helpers `sub_8010784`/
  * `sub_80107C4` right before `sub_8010804` are left untouched raw. */
 
 extern struct phys_obj_list *gCrateList;
 extern s32 _call_via_r1(void *addr, void *fn);
-extern void sub_800F5B8(void *self);
+extern void SolidifyOutlineCrate(void *self);
 
 /* Walks the `gCrateList` object list (the same list/table
- * layout `sub_800F1B8`/`sub_800F258` elsewhere in this raw region
+ * layout `UpdateCrates`/`DetonateNitroCrates` elsewhere in this raw region
  * read); for each box (vtable `m48`, the class id, reports `3`) whose
  * `unk_54` countdown isn't disabled (`-1`), truncates that countdown
- * into `u48` and fires `sub_800F5B8` on it - a "box countdown expiry"
+ * into `u48` and fires `SolidifyOutlineCrate` on it - a "box countdown expiry"
  * sweep. */
 void sub_8010804(void)
 {
@@ -24,7 +24,7 @@ void sub_8010804(void)
     if (i < gCrateList->count) {
         struct phys_obj_list **listAddr = &gCrateList;
         do {
-            struct phys_obj *e = (*listAddr)->items[i];
+            struct crate *e = (*listAddr)->items[i];
             struct method *rec = &e->vtable->m48;
             s16 offset = rec->thisOffset;
             void *addr = (u8 *)e + offset;
@@ -34,7 +34,7 @@ void sub_8010804(void)
                 s32 v = e->unk_54;
                 if (v != -1) {
                     e->u48.n = (u8)v;
-                    sub_800F5B8(e);
+                    SolidifyOutlineCrate(e);
                 }
             }
             i++;
@@ -49,8 +49,8 @@ extern void _call_via_r4(void *arg0, s32 arg1, s32 arg2, s32 arg3);
 /* If the viewport's `+0xc` bit 7 flag is set, fires its own `+0x18`
  * table's `+0x68` trampoline pair (`_call_via_r4`, action `0x1a`) and
  * plays cue 1 - the same `+0x18`-table/trampoline-pair convention
- * `sub_801085C`'s sibling functions in this subsystem use throughout. */
-void sub_801085C(void)
+ * `OpenAkuAkuCrate`'s sibling functions in this subsystem use throughout. */
+void OpenAkuAkuCrate(void)
 {
     u8 *self = (u8 *)gPlayer;
     register u8 flags asm("r1") = self[0xc];
@@ -59,7 +59,7 @@ void sub_801085C(void)
     /* Inline-asm-anchored: this compiler always shifts in place
      * (`lsrs r1,r1,#7`) regardless of C phrasing, while the ROM keeps
      * the loaded byte in r1 and the shifted bit in a separate r0 -
-     * see the same gap in sub_800FEB0 (game_loop17.c). */
+     * see the same gap in ResetCrate (game_loop17.c). */
     asm volatile("lsr r0, r1, #7" : "=r"(bit) : "r"(flags));
 
     if (bit != 0) {

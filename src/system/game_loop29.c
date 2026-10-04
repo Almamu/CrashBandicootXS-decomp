@@ -28,23 +28,23 @@ struct level_state
 extern struct level_state *gLevelState;
 extern void ***gUnknown_030012D0;
 
-extern struct spawn_part *sub_8011114(u16 arg0, u16 arg1, u16 arg2, s32 arg3);
+extern struct spawn_part *CreateExtraLife(u16 arg0, u16 arg1, u16 arg2, s32 arg3);
 extern void sub_80087C0(struct spawn_part *part);
 extern void sub_80087B4(struct spawn_part *part);
 extern void sub_800872C(struct spawn_part *part, u8 val);
 extern s32 sub_800815C(struct spawn_part *part);
-extern void sub_80111B8(struct spawn_part *part);
+extern void SendExtraLifeToHud(struct spawn_part *part);
 
 static inline void SetPartTag(struct spawn_part *part, s32 tag)
 {
     part->tag = tag;
 }
 
-/* Spawns a sub_8011114 part at (x, y) unless gLevelState's +0x8c
+/* Spawns a CreateExtraLife part at (x, y) unless gLevelState's +0x8c
  * flag is set (then returns NULL). Tags it with p3/p5/the flag, gives it
- * animation slot 0x8d and tag 0xa, and runs sub_80111B8 on it when
+ * animation slot 0x8d and tag 0xa, and runs SendExtraLifeToHud on it when
  * `flag6` is set. */
-struct spawn_part *sub_8025A64(void *unused0, u32 x, u32 y, u32 p3, u32 p5, u32 flag6)
+struct spawn_part *DropExtraLife(void *unused0, u32 x, u32 y, u32 p3, u32 p5, u32 flag6)
 {
     /* The ROM reads the flag as the stack word's low byte (ldrb). */
     u8 f = *(u8 *)&flag6;
@@ -53,7 +53,7 @@ struct spawn_part *sub_8025A64(void *unused0, u32 x, u32 y, u32 p3, u32 p5, u32 
 
     if (state == 0)
     {
-        part = sub_8011114(0xffff, x, y, 0);
+        part = CreateExtraLife(0xffff, x, y, 0);
         part->base.flags |= 0x10;
         part->unk_49 = p3;
         part->unk_4A = p5;
@@ -65,7 +65,7 @@ struct spawn_part *sub_8025A64(void *unused0, u32 x, u32 y, u32 p3, u32 p5, u32 
         sub_800872C(part, 0);
         part->frameNibble = sub_800815C(part);
         if (f)
-            sub_80111B8(part);
+            SendExtraLifeToHud(part);
     }
     return part;
 }

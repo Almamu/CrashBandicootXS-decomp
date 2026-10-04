@@ -4,15 +4,15 @@
 /* 0x0801EA5C-0x0801EF0C (GitHub issue #30), formerly
  * asm/code_3_2_17_1e990.s: six of the "trigger effect type N" spawners
  * reached through the trigger dispatch table at gStaticData_0816C6C0
- * (sub_801EB04 is also called directly by game_loop2.c). Each one
+ * (SpawnCrateGem is also called directly by game_loop2.c). Each one
  * spawns a sub_8008434 part with a fixed bank offset, tag and type byte
  * (+0x0A) and registers it with the gUnknown_030012EC manager, unless
  * the level's "already collected" bit for it is set:
  *
- * - sub_801EA5C/sub_801EB04/sub_801EBF0 test bits 0/1/2 of the byte
- *   GetCurrentLevelFlags(gLevelState) points at; sub_801EB04 also spawns a
+ * - SpawnCrystal/SpawnCrateGem/sub_801EBF0 test bits 0/1/2 of the byte
+ *   GetCurrentLevelFlags(gLevelState) points at; SpawnCrateGem also spawns a
  *   second (0x2B) effect through sub_8025BAC.
- * - sub_801EC9C/sub_801ED6C/sub_801EE3C first ask sub_80233B4 whether
+ * - SpawnRedGem/SpawnGreenGem/SpawnYellowGem first ask sub_80233B4 whether
  *   the level is in mode 1, and if so hand over to sub_8018D70
  *   (actor_part_188d0.c) with kind 0/1/2 instead; otherwise they test
  *   bits 0/2/1 of gLevelState+2.
@@ -44,7 +44,7 @@ extern void sub_8018D70(u32 a0, u16 a1, u16 a2, u16 a3, s32 kind);
  * constants into callee-saved registers before the sub_8008434 call and
  * stores them from there afterwards, which is how this compiler treats a
  * variable set before the call (a literal would be loaded at the store). */
-void sub_801EA5C(u32 a0, u16 a1, u16 a2, u16 a3)
+void SpawnCrystal(u32 a0, u16 a1, u16 a2, u16 a3)
 {
     s32 bit = *GetCurrentLevelFlags(gLevelState) & 1;
 
@@ -64,7 +64,7 @@ void sub_801EA5C(u32 a0, u16 a1, u16 a2, u16 a3)
     }
 }
 
-void sub_801EB04(u32 a0, u16 a1, u16 a2, u16 a3)
+void SpawnCrateGem(u32 a0, u16 a1, u16 a2, u16 a3)
 {
     u8 bit = *GetCurrentLevelFlags(gLevelState) & 2;
 
@@ -110,7 +110,7 @@ void sub_801EBF0(u32 a0, u16 a1, u16 a2, u16 a3)
     }
 }
 
-void sub_801EC9C(u32 a0, u16 a1, u16 a2, u16 a3)
+void SpawnRedGem(u32 a0, u16 a1, u16 a2, u16 a3)
 {
     if (sub_80233B4(gLevelState) != 1)
     {
@@ -136,7 +136,7 @@ void sub_801EC9C(u32 a0, u16 a1, u16 a2, u16 a3)
     }
 }
 
-void sub_801ED6C(u32 a0, u16 a1, u16 a2, u16 a3)
+void SpawnGreenGem(u32 a0, u16 a1, u16 a2, u16 a3)
 {
     if (sub_80233B4(gLevelState) != 1)
     {
@@ -162,7 +162,7 @@ void sub_801ED6C(u32 a0, u16 a1, u16 a2, u16 a3)
     }
 }
 
-void sub_801EE3C(u32 a0, u16 a1, u16 a2, u16 a3)
+void SpawnYellowGem(u32 a0, u16 a1, u16 a2, u16 a3)
 {
     if (sub_80233B4(gLevelState) != 1)
     {

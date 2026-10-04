@@ -16,7 +16,7 @@ section gated on `GetSpawnAtStart`, and a budget-gated trampoline-fire
 section) both compile to fully correct, byte-exact C:
 
 - **The `movs r0,#1`/`subs r0,#0x12` negative-mask idiom** - the exact
-  same technique as `sub_8021D04`'s (`graphics_loading_21bfc.c`) and
+  same technique as `SpawnBasicCrate`'s (`graphics_loading_21bfc.c`) and
   `UPDATE_ICON_FRAME_NIBBLE`'s (`src/graphics/settings_menu6.c`): an
   `asm volatile("sub %0, %0, #0x12" : "+r"(one))` materializes the
   mask instead of a plain C `-0x11`/`~...` expression this compiler

@@ -1,4 +1,4 @@
-# Third big NAKED retry: `SpawnRoomEntities`, `sub_8011548`, `sub_8002114`
+# Third big NAKED retry: `SpawnRoomEntities`, `UpdateWumpa`, `sub_8002114`
 
 Three large NAKED functions. One closed. The other two now have C
 drafts that are the same size as the ROM.
@@ -6,7 +6,7 @@ drafts that are the same size as the ROM.
 | Function | File | Issue | Size | Result |
 |---|---|---|---|---|
 | `SpawnRoomEntities` | `src/system/game_loop41.c` | #40 | 704 bytes | matched, old_agbcc (object added to `OLD_AGBCC_OBJS`) |
-| `sub_8011548` | `src/system/game_loop53.c` | #15 | 500 bytes | still NAKED; draft size-exact, 21 halfwords off (was 84 bytes too long) |
+| `UpdateWumpa` | `src/system/game_loop53.c` | #15 | 500 bytes | still NAKED; draft size-exact, 21 halfwords off (was 84 bytes too long) |
 | `sub_8002114` | `src/system/link_cable.c` | #4 | 1488 bytes | still NAKED; first draft, size-exact, 514 halfwords off |
 
 All three are measured under old_agbcc. `game_loop53.o` and
@@ -74,7 +74,7 @@ loop points above. The rest:
   gives the ROM's allocation. Declaration order, nudges, loop forms and
   `(*pl)` did not.
 
-## `sub_8011548` (84 bytes long -> size-exact, 21 halfwords)
+## `UpdateWumpa` (84 bytes long -> size-exact, 21 halfwords)
 
 The three "flags |= 1, set the id bit" tails now merge the way the ROM
 does (cross-jumping in jump2, which runs after reload, so the copies

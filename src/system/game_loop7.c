@@ -5,11 +5,11 @@
  * docs/matching/issue-12-physics-collision.md). Compiled with
  * old_agbcc (see the Makefile's OLD_AGBCC_OBJS). */
 
-extern void *sub_801070C(void *obj);
-extern void *sub_8010708(void *obj);
+extern void *GetCrateAbove(void *obj);
+extern void *GetCrateBelow(void *obj);
 
-/* Walks `obj`'s doubly-linked neighbor list both ways (`sub_801070C`
- * = next, `sub_8010708` = prev), clearing each visited neighbor's
+/* Walks `obj`'s doubly-linked neighbor list both ways (`GetCrateAbove`
+ * = next, `GetCrateBelow` = prev), clearing each visited neighbor's
  * `+0x58` byte whenever its own `+0x4d & 0x7f` state byte is 0.
  *
  * Built with old_agbcc (Makefile OLD_AGBCC_OBJS): its scheduler is what
@@ -28,7 +28,7 @@ void sub_800E494(void *obj)
             cur[0x58] = 0;
         arg = cur;
     next:
-        cur = sub_801070C(arg);
+        cur = GetCrateAbove(arg);
     } while (cur != NULL);
     arg = obj;
     goto prev;
@@ -37,12 +37,12 @@ void sub_800E494(void *obj)
             cur[0x58] = 0;
         arg = cur;
     prev:
-        cur = sub_8010708(arg);
+        cur = GetCrateBelow(arg);
     } while (cur != NULL);
 }
 
 /* Same bidirectional-neighbor walk as `sub_800E494` above, but sets
- * `+0x58` to 1 and, for the forward (`sub_801070C`) direction only,
+ * `+0x58` to 1 and, for the forward (`GetCrateAbove`) direction only,
  * also debits `ctx+4` and credits `ctx+0xc` by `ctx+0xc`'s *original*
  * value (`step`, cached once before the loops); the reverse direction
  * only credits `ctx+0xc`. The per-loop `one` local is what makes gcc
@@ -55,7 +55,7 @@ void sub_800E4E4(void *obj, void *ctxArg)
     s32 step = ctx[3];
     u8 *cur;
 
-    cur = sub_801070C(obj);
+    cur = GetCrateAbove(obj);
     if (cur != NULL) {
         u8 one = 1;
         do {
@@ -64,10 +64,10 @@ void sub_800E4E4(void *obj, void *ctxArg)
                 ctx[1] -= step;
                 ctx[3] += step;
             }
-            cur = sub_801070C(cur);
+            cur = GetCrateAbove(cur);
         } while (cur != NULL);
     }
-    cur = sub_8010708(obj);
+    cur = GetCrateBelow(obj);
     if (cur != NULL) {
         u8 one = 1;
         do {
@@ -75,7 +75,7 @@ void sub_800E4E4(void *obj, void *ctxArg)
                 cur[0x58] = one;
                 ctx[3] += step;
             }
-            cur = sub_8010708(cur);
+            cur = GetCrateBelow(cur);
         } while (cur != NULL);
     }
 }

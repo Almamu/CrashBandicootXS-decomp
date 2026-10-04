@@ -2,7 +2,7 @@
 #include "orbit_part.h"
 
 /* GitHub issue #12/#14 Phase 2, "accessor cluster" group: `sub_8011248`
- * through `sub_8011390` (11 functions, `0x08011248`-`0x08011448`),
+ * through `CheckWumpaPickup` (11 functions, `0x08011248`-`0x08011448`),
  * carved out of the middle of the still-unexamined 24-function tail
  * documented in docs/matching/issue-14-0x08010d54-physics-apply.md.
  * `self` here is a further, still-unnamed "part"-shaped object -
@@ -15,11 +15,11 @@
  * clustered at `self+0xc`/`+0x18`/`+0x38`/`+0x48`-`+0x50`:
  *
  * - `self+0xc`  (u8)  - flags byte (bit 2/bit 3 tested/set by
- *                       `sub_80112C4`/`sub_8011390`)
+ *                       `DrawExtraLife`/`CheckWumpaPickup`)
  * - `self+0x18` (void*) - the usual per-category data table pointer
  *                       (same convention as `struct actor.table`)
  * - `self+0x38` (u8)  - an externally-driven gate byte read (not
- *                       written) by `sub_80112C4`
+ *                       written) by `DrawExtraLife`
  * - `self+0x48` (u8)  - a "spawned/active" gate byte, cleared by
  *                       `sub_8011308`, tested by `sub_8011330`
  * - `self+0x49` (u8)  - unexamined byte setter (`sub_8011388`)
@@ -27,11 +27,11 @@
  *                       orbit offset is applied to the anchor x; other
  *                       values leave x at the anchor) - set by
  *                       `sub_8011378`, tested by `sub_8011248`'s output
- *                       branch and `sub_8011390`'s activity gate
+ *                       branch and `CheckWumpaPickup`'s activity gate
  * - `self+0x4b` (u8)  - orbit phase/angle index into the shared sine
  *                       table `gSineTable`, reset to 0 by
  *                       `sub_8011378`, advanced elsewhere (not in this
- *                       group), read by `sub_8011248`/`sub_8011390`
+ *                       group), read by `sub_8011248`/`CheckWumpaPickup`
  * - `self+0x4c` (s32) - orbit anchor x (Q8)
  * - `self+0x50` (s32) - orbit anchor y (Q8)
  * - `self+0x0`  (s32) - current x (Q8) - `sub_8011364` seeds it from
@@ -42,23 +42,23 @@
  *                       `sub_8011248`
  *
  * Confirms this is a small "orbiting hazard" behavior mixed into the
- * same object type `sub_8011114`/`sub_80111B8` (game_loop29.c,
+ * same object type `CreateExtraLife`/`SendExtraLifeToHud` (game_loop29.c,
  * Phase 2's neighboring group) spawn/manage - `sub_8011364` seeds an
  * orbit anchor+start position, `sub_8011378` (re)starts the orbit at a
  * given mode/phase 0, `sub_8011388` sets an adjacent still-unexamined
  * byte, `sub_8011248` is the per-frame orbit-position update,
  * `sub_8011330` fires a `self->table`-driven hit trampoline once the
  * object is "spawned" (`self+0x48 == 0`) and the player has a specific
- * flag set, `sub_80112C4` re-derives visibility from a
+ * flag set, `DrawExtraLife` re-derives visibility from a
  * `DrawSprite`/`self+0x38` gate and clears flags bit 3 when gated off,
- * `sub_80112F4`/`sub_8011310`/`sub_8011308` are a small
+ * `DestroyExtraLife`/`InitExtraLife`/`sub_8011308` are a small
  * init/reset/table-repoint trio (same `sub_80084A4`/table-swap shape
- * documented throughout `actor_part8.c`), and `sub_8011390` is the
+ * documented throughout `actor_part8.c`), and `CheckWumpaPickup` is the
  * per-frame player-proximity/hit-resolve step: gated by the same
  * orbit-mode/phase fields, it AABB-tests against the player (choosing
  * primary vs. secondary AABB build depending on the player's own
  * current state, `player+0xa == 0x13`), and on overlap sets flags bit
- * 3, tail-calls the despawn picker `sub_8011448` (Phase 2's own
+ * 3, tail-calls the despawn picker `PickUpWumpa` (Phase 2's own
  * neighboring group, not read this pass - only extern'd here) with a
  * mode that differs per AABB path, and (primary-AABB path only) plays
  * a hit SFX. */
@@ -78,13 +78,13 @@ extern void sub_8008484(struct actor *self, u32 arg1);
 extern s32 FixedMul(s32 a, s32 b);
 extern s16 gSineTable[];
 extern s32 gStaticData_0816BF08[3];
-extern u8 gStaticData_087E40DC[];
+extern u8 gExtraLifeVtable[];
 
 /* Phase 2's neighboring group (not read/matched this pass) - the
  * randomized-position despawn picker `docs/rom_map.md` already
- * documents, called as `sub_8011448(entry, 1)`/`(other, 1)` elsewhere
+ * documents, called as `PickUpWumpa(entry, 1)`/`(other, 1)` elsewhere
  * (`game_loop40.c`/`game_loop49.c`). */
-extern void sub_8011448(void *self, s32 mode);
+extern void PickUpWumpa(void *self, s32 mode);
 
 /* Per-frame orbit-position update. Reads the current orbit phase
  * (`self+0x4b`) twice, at two different scales into the shared sine
@@ -134,8 +134,8 @@ void sub_8011248(struct orbit_part *self)
 /* Re-derives visibility via `DrawSprite(gSpriteRenderer, self)`
  * (already matched, `actor_part.c`), then clears flags bit 3
  * (`self+0xc`) when `self+0x38` is nonzero - the same "consumed/hit"
- * flag bit `sub_8011390` below sets. */
-void sub_80112C4(void *selfArg)
+ * flag bit `CheckWumpaPickup` below sets. */
+void DrawExtraLife(void *selfArg)
 {
     u8 *self = selfArg;
 
@@ -154,15 +154,15 @@ s32 sub_80112F0(void)
     return 2;
 }
 
-/* Repoints `self->table` (`self+0x18`) at `gStaticData_087E40DC`, then
+/* Repoints `self->table` (`self+0x18`) at `gExtraLifeVtable`, then
  * tail-calls `sub_8008484` (already matched, `actor_part8.c`) with
  * `self` and this function's own second argument passed straight
  * through. */
-void sub_80112F4(void *selfArg, u32 arg1)
+void DestroyExtraLife(void *selfArg, u32 arg1)
 {
     u8 *self = selfArg;
 
-    *(void **)(self + 0x18) = gStaticData_087E40DC;
+    *(void **)(self + 0x18) = gExtraLifeVtable;
     sub_8008484((struct actor *)self, arg1);
 }
 
@@ -177,14 +177,14 @@ void sub_8011308(void *selfArg)
 /* Re-initializes `self` via `sub_80084A4` (already matched,
  * `actor_part8.c`; its return value is discarded - same "call for
  * side effect only" shape used elsewhere in this object family),
- * repoints `self->table` at `gStaticData_087E40DC`, clears the
+ * repoints `self->table` at `gExtraLifeVtable`, clears the
  * "spawned/active" gate byte via `sub_8011308`, and returns `self`. */
-void *sub_8011310(void *selfArg)
+void *InitExtraLife(void *selfArg)
 {
     u8 *self = selfArg;
 
     sub_80084A4((struct actor *)self);
-    *(void **)(self + 0x18) = gStaticData_087E40DC;
+    *(void **)(self + 0x18) = gExtraLifeVtable;
     sub_8011308(self);
     return self;
 }
@@ -260,17 +260,17 @@ void sub_8011388(void *selfArg, u8 val)
  * wrapped, and the player isn't in that state, returns immediately.
  *
  * Once past that gate, proceeds only when flags bit 3
- * (the "already hit" latch `sub_80112C4` clears) is clear and flags
+ * (the "already hit" latch `DrawExtraLife` clears) is clear and flags
  * bit 2 is set. Builds `self`'s own AABB via `sub_8007B98`, then reads
  * the player's own `+0xa` state: if it's `0x13`, builds the player's
  * *primary* AABB (`sub_8007C30`) and tests it against `self`'s own via
  * `sub_8001688`; on overlap, sets flags bit 3, tail-calls
- * `sub_8011448(self, 1)`, and plays a hit SFX
+ * `PickUpWumpa(self, 1)`, and plays a hit SFX
  * (`PlaySfx(gAudioContext, 6, 0x80)`). Otherwise builds the
  * player's *secondary* AABB (`sub_8007B98`, the same helper used for
  * `self`'s own box) and tests it the same way; on overlap, sets flags
- * bit 3 and tail-calls `sub_8011448(self, 0)` (no SFX on this path). */
-void sub_8011390(void *selfArg)
+ * bit 3 and tail-calls `PickUpWumpa(self, 0)` (no SFX on this path). */
+void CheckWumpaPickup(void *selfArg)
 {
     u8 *self = selfArg;
     u8 selfBox[16];
@@ -305,7 +305,7 @@ void sub_8011390(void *selfArg)
 
             bit |= self[0xc];
             self[0xc] = bit;
-            sub_8011448(self, 1);
+            PickUpWumpa(self, 1);
             PlaySfx(gAudioContext, 6, 0x80);
         }
     } else {
@@ -315,7 +315,7 @@ void sub_8011390(void *selfArg)
 
             bit |= self[0xc];
             self[0xc] = bit;
-            sub_8011448(self, 0);
+            PickUpWumpa(self, 0);
         }
     }
 }

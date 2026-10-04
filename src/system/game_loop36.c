@@ -26,7 +26,7 @@
  * `+0x18` offset - every other constructor this project has matched so
  * far uses `+0xC` for this same table-pointer convention; this function
  * is the first confirmed `+0x18` outlier), then runs
- * `sub_800FEB0(self)` and stores `arg0` at `self+8`.
+ * `ResetCrate(self)` and stores `arg0` at `self+8`.
  *
  * `type == 9` gets one early special-case: if `arg0 != 0xFFFF` and
  * `sub_802599C(*gEntityFlags, arg0)` is true, `type` is forced to
@@ -38,7 +38,7 @@
  * isn't already at/over capacity, `type == 0xb` or `type == 0xf` gets
  * demoted via a placement-record flags byte (the `gEntityFlags ->
  * *P -> {+8 array, +0xc base}` indexed-by-`arg3<<1` convention
- * `sub_8021D04`, graphics_loading_21bfc.c, already established): flag
+ * `SpawnBasicCrate`, graphics_loading_21bfc.c, already established): flag
  * `0x40` forces `type = 2`, flag `0x80` forces `type = 1`, and (for the
  * `0xf` path only) placement-record byte `+1` bit `0x1` forces
  * `type = 9`.
@@ -70,7 +70,7 @@
  * fields each initializes); a couple of cases worth calling out here:
  * - `type == 5`: sets `self+0x50`/`+0x51`/`+0x48` from the placement
  *   record, tags `self+0x2d = 0x15`; later, if the placement record
- *   confirms the entity is present, calls `sub_800F5B8(self)` (matched
+ *   confirms the entity is present, calls `SolidifyOutlineCrate(self)` (matched
  *   as `NAKED` in game_loop49.c, issue #12) - a direct, concrete tie
  *   between this constructor family and that subsystem.
  * - `type == 0xf` (case `_0801028E`): the largest single case - looks
@@ -91,7 +91,7 @@
  * game_loop35.c, already established) minus one; also folds `type`'s
  * low bit into `self+0x4d` bit 0 (keeping bit 7). Writes
  * `self+0x4e = type` unconditionally. If `type == 5` and the placement
- * record confirms presence, calls `sub_800F5B8(self)` (see above).
+ * record confirms presence, calls `SolidifyOutlineCrate(self)` (see above).
  * Finally registers `self` via `sub_8009B70(gCrateList, self)`
  * and returns `self`.
  *
@@ -115,14 +115,14 @@
 #include "phys_obj.h"
 extern void *sub_8026EDC(u32 size);
 extern void sub_80084A4(void *self);
-extern void sub_800FEB0(struct phys_obj *self);
+extern void ResetCrate(struct crate *self);
 extern u8 sub_802599C(void *level, s32 id);
 extern s32 GetDeaths(void *self);
 extern s32 sub_8023128(void *self);
-extern s32 sub_800815C(struct phys_obj *self);
-extern void sub_8009B70(void *list, struct phys_obj *self);
-extern void sub_800F5B8(struct phys_obj *self);
-extern struct phys_obj_vtable gCrateVtable;
+extern s32 sub_800815C(struct crate *self);
+extern void sub_8009B70(void *list, struct crate *self);
+extern void SolidifyOutlineCrate(struct crate *self);
+extern struct crate_vtable gCrateVtable;
 extern u8 gStaticData_0816BB94[];
 extern void *gCrateList;
 
@@ -143,7 +143,7 @@ static inline u8 *Placement(u16 i)
 }
 void *CreateCrate(u16 id, u16 x, u16 y, u16 slot, u8 type)
 {
-    struct phys_obj *self;
+    struct crate *self;
     s32 special;
     s32 flagged;
 
@@ -151,9 +151,9 @@ void *CreateCrate(u16 id, u16 x, u16 y, u16 slot, u8 type)
         void *obj = sub_8026EDC(0x64);
 
         sub_80084A4(obj);
-        ((struct phys_obj *)obj)->vtable = &gCrateVtable;
-        ((struct phys_obj *)obj)->unk_59 = 0;
-        sub_800FEB0(obj);
+        ((struct crate *)obj)->vtable = &gCrateVtable;
+        ((struct crate *)obj)->unk_59 = 0;
+        ResetCrate(obj);
         self = obj;
     }
     self->id = id;
@@ -355,7 +355,7 @@ void *CreateCrate(u16 id, u16 x, u16 y, u16 slot, u8 type)
     asm("" : : "r"(type));
     asm("" : : "r"(type));
     if (type == 5 && sub_802599C(gEntityFlags, id))
-        sub_800F5B8(self);
+        SolidifyOutlineCrate(self);
     sub_8009B70(gCrateList, self);
     return self;
 }

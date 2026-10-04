@@ -5239,7 +5239,7 @@ register-allocation gap each), and 2 (`UpdateGameFrame` itself and
 - **`AddBrokenCrate`/`PressSwitchCrate`**: two near-identical "tick a frame
   counter, and when it reaches `self+0xbc`'s limit, either flag the
   level as done (`self->levelPtr->mode == 3`) or fire an out-of-time
-  animation (`sub_801EB04(0xffff, self+0x1c0, self+0x1c4, 0)`" - both
+  animation (`SpawnCrateGem(0xffff, self+0x1c0, self+0x1c4, 0)`" - both
   needed `GetCurrentLevelFlags` (a `self+0xc4`-record accessor) re-derived as a
   **one-argument** function; the ROM's caller sets no second argument
   before `bl GetCurrentLevelFlags` at all - reading `GetCurrentLevelFlags`'s own body
@@ -5329,7 +5329,7 @@ register-allocation gap each), and 2 (`UpdateGameFrame` itself and
   `sub_80087C0`/`sub_80087B4`/`sub_800872C` when non-null, then walks
   `gUnknown_030012EC`'s array firing `_call_via_r1` table trampolines
   and setting bits in the `gEntityFlags` collision bitmap. Several
-  callees (`SetMaskLevel`, `sub_8010804`, `_call_via_r1`, `sub_8011448`)
+  callees (`SetMaskLevel`, `sub_8010804`, `_call_via_r1`, `PickUpWumpa`)
   aren't characterized precisely enough yet to commit a confident
   reconstruction.
 
@@ -6277,7 +6277,7 @@ already characterized 8 of them in earlier investigation rounds (the
 15-slot `gStaticData_0816C7D8` "trigger effect type N" dispatch table
 and its neighbors) without ever writing C for any of them - this pass
 picked the most tractable-looking four, the confirmed twin family
-`sub_8020E84`/`sub_8020F7C`/`sub_802107C`/`sub_802117C` (slots 4-7 of
+`SpawnRedGemPlatform`/`SpawnYellowGemPlatform`/`SpawnGreenGemPlatform`/`SpawnBlueGemPlatform` (slots 4-7 of
 that table), and worked them through the real matching loop.
 
 **Semantics** (all four, differing only in the bit tested/sound ids/tag
@@ -6334,8 +6334,8 @@ they're genuinely correct, not guesses:
   `counter_selector_setup.c` - a plain `s32` local, not the narrower
   field type, is what makes the idiom reproduce.
 
-**Parked (`NON_MATCHING`, 4): `sub_8020E84`/`sub_8020F7C`/
-`sub_802107C`/`sub_802117C`** (`src/graphics/trigger_effect.c`, real
+**Parked (`NON_MATCHING`, 4): `SpawnRedGemPlatform`/`SpawnYellowGemPlatform`/
+`SpawnGreenGemPlatform`/`SpawnBlueGemPlatform`** (`src/graphics/trigger_effect.c`, real
 bytes staying in place in `asm/code_3_2_17_14674.s` under a new `.if
 NON_MATCHING == 0` guard - no file split needed since all four
 functions are parked together as one contiguous block, not mixed with

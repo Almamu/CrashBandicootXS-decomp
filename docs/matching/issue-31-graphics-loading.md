@@ -8,7 +8,7 @@
 Continues the first pass (PR #202, recorded in `docs/matching.md` under
 "`graphics_loading` chunk `0x0801FA3C`-`0x08021668` (issue #31)"), which
 matched/parked the 4-function "trigger effect type N" twin family
-(`sub_8020E84`/`sub_8020F7C`/`sub_802107C`/`sub_802117C`,
+(`SpawnRedGemPlatform`/`SpawnYellowGemPlatform`/`SpawnGreenGemPlatform`/`SpawnBlueGemPlatform`,
 `src/graphics/trigger_effect.c`) and left the other 21 functions raw.
 This pass picks one of those 21 back up: `sub_801FDEC`.
 
@@ -169,7 +169,7 @@ Verified via a full clean `make compare` (`La suma coincide`) and
 
 ## Third pass: the "trigger effect type N" twin family matched via NAKED transcription
 
-`sub_8020E84`/`sub_8020F7C`/`sub_802107C`/`sub_802117C`
+`SpawnRedGemPlatform`/`SpawnYellowGemPlatform`/`SpawnGreenGemPlatform`/`SpawnBlueGemPlatform`
 (`src/graphics/trigger_effect.c`), parked since the first pass
 referenced above, are now all byte-exact matched, confirmed by a full
 clean `make compare` ("La suma coincide"). Semantics were already fully
@@ -185,7 +185,7 @@ hatch this project already established for `sub_8001CB8`/`sub_8001DB4`
 for the rest" section). All four share the exact same shape (confirmed
 by the transcription itself matching one-for-one once the twin family
 was first identified) - only the bit-test mask, sound ids and tag value
-differ between them, plus `sub_802117C` needing a third extra
+differ between them, plus `SpawnBlueGemPlatform` needing a third extra
 callee-saved register (`sl`/r10) since its tag constant (`8`) doesn't
 fit the same immediate-AND idiom the other three use.
 
@@ -196,13 +196,13 @@ at all - nothing needed it there. Once the functions became real,
 always-compiled `NAKED` C, the file needed an actual `ldscript.txt`
 entry at the exact point in `asm/code_3_2_17_1feec.s` where the raw
 bytes used to sit. Since that raw block sat in the *middle* of a much
-larger still-raw file (`sub_801FEEC`-`sub_8021BD8`, most of it still
+larger still-raw file (`sub_801FEEC`-`SpawnIronCrate`, most of it still
 raw per "Left raw" above), removing it left a single object with a gap
 that needed filling, not just a line to delete - so
 `code_3_2_17_1feec.s` was split into two files at that point (the
-existing name keeps everything before `sub_8020E84`; the new
+existing name keeps everything before `SpawnRedGemPlatform`; the new
 `code_3_2_17_21280.s` picks up at `sub_8021280` and keeps everything
-after `sub_802117C`, unchanged), with `trigger_effect.o` inserted
+after `SpawnBlueGemPlatform`, unchanged), with `trigger_effect.o` inserted
 between them in `ldscript.txt`. A first attempt that only deleted the
 guarded block in place (without this split) still built and linked
 without error, but silently shifted every ROM address from
@@ -211,7 +211,7 @@ post-build `arm-none-eabi-nm`/map-file address check against each
 function's own `sub_XXXXXXXX` name before ever diffing bytes, per
 `docs/workflow.md`'s warning about exactly this mistake.
 
-## Fourth pass: the whole tail of `asm/code_3_2_17_21280.s` (`sub_8021668`-`sub_8021BD8`)
+## Fourth pass: the whole tail of `asm/code_3_2_17_21280.s` (`sub_8021668`-`SpawnIronCrate`)
 
 Picked back up the remaining ~20 raw "two-line text popup" siblings the
 second pass identified but didn't attempt. Rather than working through
@@ -221,14 +221,14 @@ needed), this pass started from the *other* end of
 `asm/code_3_2_17_21280.s` (`sub_8021668` onward), which turned out to
 be a much easier mix: one more popup-family instance with a different
 tail shape, a small `gSpriteBankTable`-record spawner family
-(registering into a manager global `sub_8021D80`'s family in
+(registering into a manager global `SpawnBodySlamPower`'s family in
 `graphics_loading_21d80.c` doesn't use), a run of plain
 `sub_801A878`/`sub_801B984` trampolines, one `sub_800CB40`-based
 constructor, and - closing out the file - 12 more plain `CreateCrate`
 entity-constructor trampolines (types `0x12` down to `7`) continuing
 the family `graphics_loading_21bfc.c` already covers for types `1`-`7`
 at a different address. Every one of these 24 functions from
-`sub_8021668` through `sub_8021BD8` (the literal last function in the
+`sub_8021668` through `SpawnIronCrate` (the literal last function in the
 old `asm/code_3_2_17_21280.s`) is now real, matched C, plus one more
 (`sub_802190C`) as a NAKED transcription - see below. This retires
 `asm/code_3_2_17_21280.s` down to just its first 470 lines
@@ -287,7 +287,7 @@ reload, in ways the ROM's own codegen never does.
 
 ### The `gSpriteBankTable`-record family: `sub_8021748`/`sub_80217D0`/`sub_802183C`
 
-Same overall shape as `graphics_loading_21d80.c`'s `sub_8021D80` family
+Same overall shape as `graphics_loading_21d80.c`'s `SpawnBodySlamPower` family
 (`sub_8008434` constructor, `+0x20` table offset, `sub_800815C`
 frame-nibble update), but two differences: they register into
 `gUnknown_030012F8`'s manager instead of `EC`, and (except
@@ -305,7 +305,7 @@ instruction order matching the ROM's, the same declaration-vs-statement
 timing gotcha the fourth pass's `sub_8021668` bug above is another
 instance of.
 
-### Plain trampolines: `sub_80218C4`/`sub_80218E8`/`sub_8021974`/`sub_8021998`/`sub_80219BC`/`sub_80219E0`/`sub_8021A4C`-`sub_8021BD8`
+### Plain trampolines: `sub_80218C4`/`sub_80218E8`/`sub_8021974`/`sub_8021998`/`sub_80219BC`/`sub_80219E0`/`SpawnTimeCrate3`-`SpawnIronCrate`
 
 18 functions, no iteration needed beyond the established call-signature
 patterns: 5 plain `sub_801A878(arg0, arg1, arg2, arg3, id)` calls (ids
@@ -575,7 +575,7 @@ struct-field or record-field copy", an OAM trio, a bit-27 re-test, or -
 for `sub_801F680` alone - a `PlaySfx` call). New file:
 `src/graphics/graphics_loading_1ef0c.c`, replacing
 `asm/code_3_2_17_1e990.o` at that point in `ldscript.txt` (the raw file
-itself shrinks to just `sub_801EA5C`-`sub_801EE3C`, the still-raw
+itself shrinks to just `SpawnCrystal`-`SpawnYellowGem`, the still-raw
 "trigger effect type N" twin-family shape noted at the top of this
 document - genuinely out of scope for this pass, a separate already-
 parked wall per issue #31's own scope note).
@@ -682,7 +682,7 @@ already catalogued by earlier passes in this document):
 
 Full clean `make compare` (`La suma coincide`) and `make NON_MATCHING=1
 report`, both passing. This retires `asm/code_3_2_17_1e990.s` down to
-just `sub_801EA5C`-`sub_801EE3C` (the still-raw "trigger effect type N"
+just `SpawnCrystal`-`SpawnYellowGem` (the still-raw "trigger effect type N"
 twin-family shape, a separate already-parked wall per this issue's own
 scope note at the top of this document) - the whole `sub_801EF0C`-
 `sub_801FCB4` stretch is now real, always-compiled code (3 matched, 9
@@ -802,13 +802,13 @@ at the same point in `ldscript.txt`. 1 of the 13 functions in this file is
 real C, the other 12 are NAKED, tracked in `docs/status/graphics_loading.md`
 and `tools/report_units.py`. Issue #31 stays open - the remaining raw/parked
 scope (the "trigger effect type N" twin-family shape at
-`sub_801EA5C`-`sub_801EE3C`, plus every NAKED/`NON_MATCHING` entry this
+`SpawnCrystal`-`SpawnYellowGem`, plus every NAKED/`NON_MATCHING` entry this
 issue has accumulated across all seven passes) is unchanged by this pass
 beyond adding twelve more already-parked NAKED entries.
 
 ## Later pass: `trigger_effect.c` under old_agbcc
 
-`sub_8020E84`/`sub_8020F7C`/`sub_802107C`/`sub_802117C`, NAKED since the
+`SpawnRedGemPlatform`/`SpawnYellowGemPlatform`/`SpawnGreenGemPlatform`/`SpawnBlueGemPlatform`, NAKED since the
 third pass, are now plain C built with old_agbcc (`OLD_AGBCC_OBJS`). There
 are no pins. The only non-obvious part is writing the sound arm as two
 `sub_801A878` calls, which gcc cross-jumps into the ROM's shape. See

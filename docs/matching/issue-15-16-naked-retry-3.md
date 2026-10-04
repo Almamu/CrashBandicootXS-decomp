@@ -7,8 +7,8 @@ closed; two got new or better drafts; three were not attempted.
 | --- | --- | --- |
 | `sub_8012AF4` | `actor_part83.c` | **Real C**, old_agbcc |
 | `sub_8012420` | `actor_part84.c` | **Real C**, old_agbcc |
-| `sub_801173C` | `game_loop53.c` | Still NAKED, analysis added to the draft's note |
-| `sub_8011548` | `game_loop53.c` | Still NAKED, first C draft under `NON_MATCHING` |
+| `CreateWumpa` | `game_loop53.c` | Still NAKED, analysis added to the draft's note |
+| `UpdateWumpa` | `game_loop53.c` | Still NAKED, first C draft under `NON_MATCHING` |
 | `sub_8001DB4` | `link_cable.c` | Still NAKED, note on the draft extended |
 | `sub_8002114` | `link_cable.c` | Not attempted (1488 B, no draft) |
 | `sub_800B8DC` | `actor_part112.c` | Not attempted (1132 B, no draft) |
@@ -58,7 +58,7 @@ themselves. So did the first draft's "temporaries in r6".
 
 ## Not closed
 
-- **`sub_801173C`.** In the draft, `x`/`y`/`id`/`special` are live
+- **`CreateWumpa`.** In the draft, `x`/`y`/`id`/`special` are live
   only in the first basic block, so local-alloc gives them r4-r6/r8
   before global-alloc places `self` (r7) and `mode` (sb). The ROM's
   layout (`self` r4, `mode` r7, `id` r8, `special` sb) is what global
@@ -74,7 +74,7 @@ themselves. So did the first draft's "temporaries in r6".
   `if`/`else` keeps local-alloc off r4, which gives the ROM's parameter
   registers and leaves r7 for `mode`. An unpinned copy is used after the
   join. See [gap4-naked-retry.md](gap4-naked-retry.md).
-- **`sub_8011548`.** New draft, modelled on `sub_8010F8C`'s
+- **`UpdateWumpa`.** New draft, modelled on `UpdateExtraLife`'s
   (`game_loop54.c`). The mode-3 spawn uses `game_loop48.c`'s
   argP4/argP5 stack-argument trick. Control flow and calls are right,
   but the draft is 84 bytes long. In the ROM, cross-jumping merged the

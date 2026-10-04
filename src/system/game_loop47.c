@@ -20,23 +20,23 @@
  *   7-case table selecting either the just-built self AABB or a
  *   fallback `gStaticData_0816B2F8` box), tests it for overlap with the
  *   player's own hitbox-record box (`sub_8001688`), and if it overlaps,
- *   dispatches to one of `sub_800F2BC`/`sub_800F368`/`sub_800E7A8`/
- *   `sub_800EEF0`/`sub_800E6B0`/a flag-only case, keyed by an edge-code
- *   value looked up from `gStaticData_0816BC98` (`self+0x4e` row,
+ *   dispatches to one of `ActivateNitroSwitchCrate`/`ActivateIronSwitchCrate`/`BreakCrateInStack`/
+ *   `ExplodeCrate`/`OpenCheckpointCrate`/a flag-only case, keyed by an edge-code
+ *   value looked up from `gCrateHitResponse` (`self+0x4e` row,
  *   dispatch-id column) - the 6-case jump table
  *   docs/matching/issue-12-physics-collision.md already documented from
  *   `docs/rom_map.md`'s read-only pass, now confirmed byte-for-byte
  *   (see this issue doc's dispatch-map appendix for the exact
  *   case-to-target mapping).
  * - Walks `self`'s neighbor list both directions
- *   (`sub_8010708`/`sub_801070C`) maintaining `gPlayer`'s
+ *   (`GetCrateBelow`/`GetCrateAbove`) maintaining `gPlayer`'s
  *   5-slot "recently touched" object ring buffer (`+0x94` counter,
  *   `+0x98`+ array).
  * - Runs a second, larger 9-case jump table (case ids 0-8, most cases
  *   falling through to a shared tail at old ROM offset `0x0800E00C`)
- *   that further classifies the collision via `sub_801095C`/
- *   `sub_8010914` ("get next"/"get prev" neighbor-list-walk-and-filter
- *   helpers, matched in game_loop30.c) and `gStaticData_0816BC98`,
+ *   that further classifies the collision via `GetBottomCrate`/
+ *   `GetTopCrate` ("get next"/"get prev" neighbor-list-walk-and-filter
+ *   helpers, matched in game_loop30.c) and `gCrateHitResponse`,
  *   computing a final corrected offset and calling `sub_8007398`
  *   (apply the offset) plus `_call_via_r4` (a `bx r4`
  *   register-indirect-call trampoline - see docs/rom_map.md's
@@ -64,7 +64,7 @@ struct d18c_player
     u8 unk_08[4];
     u8 flags;           // 0x0C - bit 6
     u8 unk_0D[0xB];
-    struct phys_obj_vtable *vtable; // 0x18
+    struct crate_vtable *vtable; // 0x18
     u8 unk_1C[4];
     struct anim_table *anim; // 0x20
     u8 dir;             // 0x24
@@ -96,7 +96,7 @@ struct d18c_player
     u8 unk_93;
     u8 ringCount;       // 0x94
     u8 unk_95[3];
-    struct phys_obj *ring[5]; // 0x98
+    struct crate *ring[5]; // 0x98
 };
 
 #define D18C_P ((struct d18c_player *)gPlayer)
@@ -140,29 +140,29 @@ struct d18c_flag8
 extern void SetAabbPos(void *buf, s32 x, s32 y);
 extern void SetAabbSize(void *buf, s32 w, s32 h);
 extern s32 gStaticData_0816BBF0[];
-extern u8 gStaticData_0816BBDA[];
+extern u8 gCrateKindUnbreakable[];
 extern u8 gStaticData_0816BF00[];
 extern u8 gStaticData_0816B2F8[];
-extern s32 gStaticData_0816BC98[][7];
+extern s32 gCrateHitResponse[][7];
 extern void *GetSpriteFrame(void *part);
 extern u8 sub_8001640(struct aabb *a, struct aabb *b);
 extern u8 sub_800CEAC(void *self, struct d18c_quad *quad, struct aabb *box, s32 x, s32 y);
-extern struct phys_obj *sub_800CF70(struct phys_obj *self, struct aabb *box, u8 *found);
-extern struct phys_obj *sub_8010708(struct phys_obj *obj);
-extern struct phys_obj *sub_801070C(struct phys_obj *obj);
-extern struct phys_obj *sub_801095C(struct phys_obj *obj);
-extern struct phys_obj *sub_8010914(struct phys_obj *obj);
+extern struct crate *sub_800CF70(struct crate *self, struct aabb *box, u8 *found);
+extern struct crate *GetCrateBelow(struct crate *obj);
+extern struct crate *GetCrateAbove(struct crate *obj);
+extern struct crate *GetBottomCrate(struct crate *obj);
+extern struct crate *GetTopCrate(struct crate *obj);
 extern u8 sub_800B324(void *self);
 extern void SetMaskLevel(void *self, s32 arg);
-extern void sub_800E494(struct phys_obj *self);
-extern void sub_800E4E4(struct phys_obj *self, struct aabb *box);
-extern void sub_800F2BC(struct phys_obj *self);
-extern void sub_800F368(struct phys_obj *self);
-extern void sub_800E620(struct phys_obj *self);
-extern void sub_800E7A8(struct phys_obj *self, u32 a, u32 b, u32 c);
-extern void sub_800EEF0(struct phys_obj *self, u8 a);
-extern void sub_800E6B0(struct phys_obj *self);
-extern void sub_8010D54(void *queue, struct phys_obj *obj, s32 kind, s32 code,
+extern void sub_800E494(struct crate *self);
+extern void sub_800E4E4(struct crate *self, struct aabb *box);
+extern void ActivateNitroSwitchCrate(struct crate *self);
+extern void ActivateIronSwitchCrate(struct crate *self);
+extern void LightTntCrate(struct crate *self);
+extern void BreakCrateInStack(struct crate *self, u32 a, u32 b, u32 c);
+extern void ExplodeCrate(struct crate *self, u8 a);
+extern void OpenCheckpointCrate(struct crate *self);
+extern void sub_8010D54(void *queue, struct crate *obj, s32 kind, s32 code,
                         s32 edge, s32 depth, struct d18c_pos pos, s32 hit,
                         struct d18c_flag8 f20, struct d18c_flag8 f21);
 
@@ -224,7 +224,7 @@ static inline struct d18c_pos *D18C_PosPtr(struct d18c_pos *p)
  * `tgt->kind` is loaded before the table address, as in the ROM. */
 static inline s32 D18C_Code(s32 row, s32 k)
 {
-    return gStaticData_0816BC98[row][k];
+    return gCrateHitResponse[row][k];
 }
 
 /* The response code at the first lookup. There the ROM loads the table
@@ -279,7 +279,7 @@ static inline s32 D18C_TimerOver(void)
  * is its own pseudo instead of one held across calls. */
 #define BOX_ADDR(a) ({ struct aabb *_p = (a); asm("" : "+r"(_p)); _p; })
 
-void sub_0800D18C(struct phys_obj *self, s32 idx)
+void sub_0800D18C(struct crate *self, s32 idx)
 {
     struct
     {
@@ -301,8 +301,8 @@ void sub_0800D18C(struct phys_obj *self, s32 idx)
     s32 f21;
     s32 hit;
     s32 f20;
-    struct phys_obj *obj;
-    struct phys_obj *tgt;
+    struct crate *obj;
+    struct crate *tgt;
     s32 code;
     s32 dx;
     s32 dy;
@@ -402,7 +402,7 @@ void sub_0800D18C(struct phys_obj *self, s32 idx)
         obj = sub_800CF70(self, bb, &f.found);
     else
         obj = self;
-    code = D18C_CodeIn(gStaticData_0816BC98, &obj->kind, kind);
+    code = D18C_CodeIn(gCrateHitResponse, &obj->kind, kind);
     {
         s32 bnc = D18C_P->bounce;
 
@@ -415,7 +415,7 @@ void sub_0800D18C(struct phys_obj *self, s32 idx)
 
         for (i = 0; i < D18C_P->ringCount; i++)
         {
-            struct phys_obj *e;
+            struct crate *e;
 
             if (D18C_P->ringLocked == 0 && (i <= 4 || i < D18C_P->ringCount))
                 e = D18C_P->ring[i];
@@ -423,16 +423,16 @@ void sub_0800D18C(struct phys_obj *self, s32 idx)
                 e = NULL;
             if (e != NULL)
             {
-                struct phys_obj *h = sub_8010708(e);
+                struct crate *h = GetCrateBelow(e);
 
                 if (h != NULL)
                 {
-                    while (sub_8010708(h) != NULL)
-                        h = sub_8010708(h);
+                    while (GetCrateBelow(h) != NULL)
+                        h = GetCrateBelow(h);
                 }
                 else
                     h = e;
-                for (; h != NULL; h = sub_801070C(h))
+                for (; h != NULL; h = GetCrateAbove(h))
                 {
                     if (self == h)
                     {
@@ -449,37 +449,37 @@ void sub_0800D18C(struct phys_obj *self, s32 idx)
     case 0:
     case 1:
         if (obj->kind == 6)
-            sub_800F2BC(obj);
+            ActivateNitroSwitchCrate(obj);
         else if (obj->kind == 3)
-            sub_800F368(obj);
+            ActivateIronSwitchCrate(obj);
         break;
     case 2:
         obj->state |= 0x80;
         D18C_SetBusy(D18C_P, 1);
         break;
     case 3:
-        sub_800E7A8(obj, 0, 0, 0);
+        BreakCrateInStack(obj, 0, 0, 0);
         if (D18C_P->ringCount == 0)
         {
             u8 *rec = (u8 *)&D18C_P->anim->records[D18C_P->tag];
 
             if (kind != 3 && sub_800CEAC(self, (struct d18c_quad *)(rec + 4), &f.a, px, py))
             {
-                struct phys_obj *e = sub_801070C(obj);
+                struct crate *e = GetCrateAbove(obj);
 
                 if (e != NULL && (e->state & 0x7f) != 1)
                 {
-                    s32 c2 = gStaticData_0816BC98[e->kind][kind];
+                    s32 c2 = gCrateHitResponse[e->kind][kind];
 
                     if (c2 == 3)
-                        sub_800E7A8(e, 0, 0, 0);
+                        BreakCrateInStack(e, 0, 0, 0);
                     else if (c2 == 2)
                     {
                         e->state |= 0x80;
                         D18C_SetBusy(D18C_P, 1);
                     }
                     else if (c2 == 4)
-                        sub_800EEF0(e, 1);
+                        ExplodeCrate(e, 1);
                 }
             }
             else if (D18C_P->dir != 0)
@@ -489,13 +489,13 @@ void sub_0800D18C(struct phys_obj *self, s32 idx)
             return;
         if ((D18C_P->x >> 8) < (self->x >> 8))
         {
-            if (kind != 3 || sub_801070C(obj) != NULL)
+            if (kind != 3 || GetCrateAbove(obj) != NULL)
             {
                 D18C_CALL68(0, 0xc, 1);
                 D18C_Hit(D18C_P, 1);
             }
         }
-        else if (kind != 3 || sub_801070C(obj) != NULL)
+        else if (kind != 3 || GetCrateAbove(obj) != NULL)
         {
             D18C_CALL68(0, 0xc, 2);
             D18C_Hit(D18C_P, 2);
@@ -508,10 +508,10 @@ void sub_0800D18C(struct phys_obj *self, s32 idx)
         return;
     case 4:
         if ((obj->state & 0x7f) == 0)
-            sub_800EEF0(obj, 1);
+            ExplodeCrate(obj, 1);
         return;
     case 5:
-        sub_800E6B0(obj);
+        OpenCheckpointCrate(obj);
         return;
     }
 tail:
@@ -571,7 +571,7 @@ tail:
     {
         if (!sub_8001640(&f.c, &f.b))
             return;
-        if (gStaticData_0816BBDA[self->kind] != 0)
+        if (gCrateKindUnbreakable[self->kind] != 0)
         {
             /* `ax` (and the other path's `side`) is dead here, but the ROM
              * keeps a reload of px (`ldr r1, [sp, #0x70]`) right after the
@@ -614,7 +614,7 @@ tail:
                 }
                 else
                 {
-                    sub_800E7A8(self, 0, 0, 0);
+                    BreakCrateInStack(self, 0, 0, 0);
                     D18C_CALL68(0, 1, 0);
                 }
                 return;
@@ -673,17 +673,17 @@ tail:
         }
         else
         {
-            struct phys_obj *e;
+            struct crate *e;
 
             /* A `for` with the first call on `self`: its copy is
              * cross-jumped into the loop's call, so the ROM enters with
              * `mov r0, sl`. */
-            for (e = sub_8010708(self); e != NULL; e = sub_8010708(e))
+            for (e = GetCrateBelow(self); e != NULL; e = GetCrateBelow(e))
             {
-                if (gStaticData_0816BBDA[e->kind] != 0 && (e->state & 0x7f) == 0)
+                if (gCrateKindUnbreakable[e->kind] != 0 && (e->state & 0x7f) == 0)
                     return;
             }
-            code = gStaticData_0816BC98[self->kind][5];
+            code = gCrateHitResponse[self->kind][5];
             dx = 0;
             dy = 0;
             dirX = 0;
@@ -873,8 +873,8 @@ tail:
     case 7:
         break;
     case 4:
-        tgt = sub_801095C(self);
-        code = gStaticData_0816BC98[tgt->kind][kind];
+        tgt = GetBottomCrate(self);
+        code = gCrateHitResponse[tgt->kind][kind];
         if (tgt->kind == 4 && kind == 2)
             code = 3;
         if (kind <= 3 || kind == 6 || (kind == 4 && code <= 2))
@@ -886,7 +886,7 @@ tail:
         }
         break;
     case 8:
-        tgt = sub_8010914(self);
+        tgt = GetTopCrate(self);
         code = D18C_Code(tgt->kind, kind);
         if (kind == 4 && tgt->kind != 0xa && D18C_P->ringCount != 0)
         {
@@ -927,7 +927,7 @@ tail:
             }
             if (kind > 2)
             {
-                code = gStaticData_0816BC98[self->kind][kind];
+                code = gCrateHitResponse[self->kind][kind];
                 if (kind == 4 && code == 2)
                     code = 0;
                 if (kind == 5 && code == 3)
@@ -935,21 +935,21 @@ tail:
             }
             else if (dy <= 4 && dx > 3 && f21 != 0)
             {
-                code = gStaticData_0816BC98[self->kind][kind];
+                code = gCrateHitResponse[self->kind][kind];
                 if (code > 1)
                     code = 0;
             }
-            else if (gStaticData_0816BC98[self->kind][kind] == 4)
+            else if (gCrateHitResponse[self->kind][kind] == 4)
             {
                 f.pos.x = D18C_P->x;
-                code = gStaticData_0816BC98[self->kind][kind];
+                code = gCrateHitResponse[self->kind][kind];
             }
         }
         if (code != 1 && hit != 0)
         {
             s32 ok = 1;
-            struct phys_obj *next = sub_801070C(self);
-            struct phys_obj *prev = sub_8010708(self);
+            struct crate *next = GetCrateAbove(self);
+            struct crate *prev = GetCrateBelow(self);
             s32 vy = D18C_P->speedY >> 8;
 
             if (dirY == 8 && next == NULL && (vy >= dy - 1 || dy <= 2))
@@ -966,7 +966,7 @@ tail:
     }
     if (D18C_P->ringLocked == 1 && self->kind == 0xe && code <= 1
         && sub_8001640(&f.c, &f.b) == 1)
-        sub_800E620(tgt);
+        LightTntCrate(tgt);
     sub_8010D54(D18C_QUEUE(D18C_P), tgt, kind, code, edge, dy, f.pos, hit,
                 (struct d18c_flag8){f20}, (struct d18c_flag8){f21});
 }
@@ -980,8 +980,8 @@ tail:
  * fields not otherwise touched outside this subsystem, and its own
  * 6-case jump table (case ids 0-5) dispatches to the exact same
  * handler family `sub_0800D18C` itself uses -
- * `sub_800F2BC`/`sub_800F368`/`sub_800E620`/`sub_800E560`/
- * `sub_800E7A8`/`sub_800EEF0`/`sub_800E6B0` - confirming these really
+ * `ActivateNitroSwitchCrate`/`ActivateIronSwitchCrate`/`LightTntCrate`/`BounceWumpaCrate`/
+ * `BreakCrateInStack`/`ExplodeCrate`/`OpenCheckpointCrate` - confirming these really
  * are the subsystem's shared per-edge collision-response leaves, not
  * distinct per-caller logic.
  *
@@ -990,20 +990,20 @@ tail:
  * NAKED retry (docs/matching/last5-naked-retry.md): the first flag byte
  * is a register union of a u32 and a one-byte struct, stored whole
  * (`str`) in the prologue, and passed as that one-byte struct to
- * sub_800E7A8 in case 3. A one-byte struct argument goes in QImode, so
+ * BreakCrateInStack in case 3. A one-byte struct argument goes in QImode, so
  * the spilled union's low byte is reloaded with `mov r5, sp; ldrb` in
  * argument order, as in the ROM. */
 #include "phys_obj.h"
 extern void PlaySfx(void *ctx, s32 id, s32 volume);
 extern void *gAudioContext;
-extern s32 gStaticData_0816BC98[][7];
-extern void sub_800F2BC(struct phys_obj *self);
-extern void sub_800F368(struct phys_obj *self);
-extern void sub_800E620(struct phys_obj *self);
-extern void sub_800E560(struct phys_obj *self);
-extern void sub_800E7A8(struct phys_obj *self, u32 a, u32 b, u32 c);
-extern void sub_800EEF0(struct phys_obj *self, u8 a);
-extern void sub_800E6B0(struct phys_obj *self);
+extern s32 gCrateHitResponse[][7];
+extern void ActivateNitroSwitchCrate(struct crate *self);
+extern void ActivateIronSwitchCrate(struct crate *self);
+extern void LightTntCrate(struct crate *self);
+extern void BounceWumpaCrate(struct crate *self);
+extern void BreakCrateInStack(struct crate *self, u32 a, u32 b, u32 c);
+extern void ExplodeCrate(struct crate *self, u8 a);
+extern void OpenCheckpointCrate(struct crate *self);
 
 struct e08c_pos
 {
@@ -1019,11 +1019,11 @@ struct flag8
 #define E08C_CALL68(a, b) \
     PhysCall3(PHYS_PLAYER, (struct method *)&PHYS_PLAYER->vtable->m68, 0, (a), (b))
 
-/* sub_800E7A8 as this caller sees it: the flag argument is a one-byte
+/* BreakCrateInStack as this caller sees it: the flag argument is a one-byte
  * struct, passed in QImode. */
-extern void sub_800E7A8_flag(struct phys_obj *self, u32 a, struct flag8 b, u32 c) asm("sub_800E7A8");
+extern void sub_800E7A8_flag(struct crate *self, u32 a, struct flag8 b, u32 c) asm("BreakCrateInStack");
 
-void sub_800E08C(struct phys_obj *self, s32 kind, s32 code, s32 edge, s32 depth,
+void sub_800E08C(struct crate *self, s32 kind, s32 code, s32 edge, s32 depth,
                  struct e08c_pos pos, s32 hit, struct flag8 p20, struct flag8 p21,
                  struct flag8 pforced)
 {
@@ -1096,12 +1096,12 @@ void sub_800E08C(struct phys_obj *self, s32 kind, s32 code, s32 edge, s32 depth,
             self->kind = e;
             self->u48.n = 0;
         }
-        code = gStaticData_0816BC98[self->kind][kind];
+        code = gCrateHitResponse[self->kind][kind];
     }
     forced = forcedIn;
     if (code == 1 && kind == 4 && PHYS_PLAYER->bounce == 1 && !(PHYS_PLAYER->dir & 0xc))
     {
-        code = gStaticData_0816BC98[self->kind][kind];
+        code = gCrateHitResponse[self->kind][kind];
         PHYS_PLAYER->bounce = 2;
         PHYS_PLAYER->bounce++;
         PHYS_PLAYER->bounce++;
@@ -1140,15 +1140,15 @@ void sub_800E08C(struct phys_obj *self, s32 kind, s32 code, s32 edge, s32 depth,
             pos.x = PHYS_PLAYER->x;
         }
         if (self->kind == 6)
-            sub_800F2BC(self);
+            ActivateNitroSwitchCrate(self);
         else if (self->kind == 3)
-            sub_800F368(self);
+            ActivateIronSwitchCrate(self);
         goto commit;
     case 2:
         if (self->kind == 0xe)
-            sub_800E620(self);
+            LightTntCrate(self);
         else if (self->kind == 0xc)
-            sub_800E560(self);
+            BounceWumpaCrate(self);
         else
         {
             self->state |= 0x80;
@@ -1162,9 +1162,9 @@ void sub_800E08C(struct phys_obj *self, s32 kind, s32 code, s32 edge, s32 depth,
         goto commit;
     case 3:
         if ((u32)(kind - 5) <= 1)
-            sub_800E7A8(self, 0, 0, 0);
+            BreakCrateInStack(self, 0, 0, 0);
         else if (self->unk_44 != 0)
-            sub_800E7A8(self, 0, 0, 4);
+            BreakCrateInStack(self, 0, 0, 4);
         else if (kind == 2)
             sub_800E7A8_flag(self, 0, f20.s, edge);
         else
@@ -1175,7 +1175,7 @@ void sub_800E08C(struct phys_obj *self, s32 kind, s32 code, s32 edge, s32 depth,
                 return;
             if (edge == 8 || edge == 4)
             {
-                sub_800E7A8(self, 0, 0, edge);
+                BreakCrateInStack(self, 0, 0, edge);
                 if ((*pp)->ringLocked == 0 && (*pp)->ringCount <= 4)
                     (*pp)->ring[(*pp)->ringCount] = self;
                 if (PHYS_PLAYER->ringLocked == 0)
@@ -1185,10 +1185,10 @@ void sub_800E08C(struct phys_obj *self, s32 kind, s32 code, s32 edge, s32 depth,
         return;
     case 4:
         if ((self->state & 0x7f) == 0)
-            sub_800EEF0(self, 1);
+            ExplodeCrate(self, 1);
         return;
     case 5:
-        sub_800E6B0(self);
+        OpenCheckpointCrate(self);
         return;
     }
 commit:
