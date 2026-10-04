@@ -98,7 +98,7 @@ made the draft exactly 3840 bytes.
 ## What is left (968 halfwords)
 
 - **`&f.b` is held in a register.** cse merges the box pointer of the
-  two builder calls (`sub_803AFE4`/`sub_803AFDC`) into one pseudo. That
+  two builder calls (`SetAabbPos`/`SetAabbSize`) into one pseudo. That
   pseudo lives across the first call and gets r6 or r4. The ROM
   recomputes `add r0, sp, #0x3c` before each call and only holds the
   pointer (in r4) from `sub_8001688` to `sub_800CF70`. In the rebuild

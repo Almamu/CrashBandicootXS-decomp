@@ -11,16 +11,16 @@
  * object if any (then falling into the same "own trampoline" tail as
  * below), else checking `sub_8031378` (an AABB overlap test) and a
  * `depth` threshold before firing `self`'s own method-table
- * `m08` ("hit/destroy") trampoline ( no `self` NULL-guard on this
+ * `destroy` ("hit/destroy") trampoline ( no `self` NULL-guard on this
  * specific call - unlike the other paths here) or, once past the
- * threshold, falling back to `sub_802A7B8` unconditionally (also no
+ * threshold, falling back to `UpdateActor` unconditionally (also no
  * NULL-guard). Two gaps were fixed to get this byte-exact:
  * (1) the `depth` threshold check and its two arms had to be
- * written as `if (cond) {...} else {sub_802A7B8(...);}` with the
+ * written as `if (cond) {...} else {UpdateActor(...);}` with the
  * *shared* tail code as a `merge:` label the `goto`s land on, not as
  * an early-return `else if` - this compiler places an `if`'s `else`
  * body last in program order but an early-returning `else if` chain's
- * next statement first, which put `sub_802A7B8`'s call block in the
+ * next statement first, which put `UpdateActor`'s call block in the
  * wrong place relative to the shared tail even though every
  * individual instruction already matched; (2) the ROM makes an
  * inconsistent (`r2` vs `r3`) scratch-register choice for the `8`
@@ -47,7 +47,7 @@ extern void *sub_802A3AC(void *selfArg);
 extern u8 sub_8031378(void *selfArg);
 extern void sub_803146C(s32 delta);
 extern s32 _call_via_r2(void *pos, s32 arg1, void *table);
-extern void sub_802A7B8(void *selfArg);
+extern void UpdateActor(void *selfArg);
 
 struct actor_falling {
     struct actor_self base;
@@ -89,9 +89,9 @@ merge:
             table = self->base.vtable;
             asm volatile("mov r2, #8\n\tldrsh %0, [%1, r2]" : "=r"(off) : "r"(table));
 tail:
-            _call_via_r2((u8 *)self + off, 3, table->m08.fn);
+            _call_via_r2((u8 *)self + off, 3, table->destroy.fn);
         } else {
-            sub_802A7B8(self);
+            UpdateActor(self);
         }
     }
 }

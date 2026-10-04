@@ -31,7 +31,7 @@ function both change the block layout. `sub_802B7E0` returns `u8`.
 
 ## `sub_80327A4` (actor_part130.c, issue #60)
 
-A bounding-box-culled sprite draw with `UpdateAnimatedActorPart`'s shape.
+A bounding-box-culled sprite draw with `DrawActor`'s shape.
 The doubling code stays in with the scale flag fixed at 0, followed by
 `scaled |= 0x100` after culling. Both position loads go into block
 locals before shifting, and `highBit`/`oamPriority` are early constant

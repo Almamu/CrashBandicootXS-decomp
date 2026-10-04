@@ -23,10 +23,10 @@ was added to `OLD_AGBCC_OBJS`.
 | `sub_8031A08` | `actor_part125.c` | none |
 | `sub_80322F4` | `actor_part129.c` | none |
 | `sub_8032A94` | `actor_part130.c` | none |
-| `sub_8030574` | `actor_part20b.c` | state-2 destroy (`m08`) or `sub_802A7B8` |
-| `sub_8032950` | `actor_part130.c` | state-1 destroy or `sub_802A7B8` |
-| `sub_8031A6C` | `actor_part129.c` | two destroy conditions or `sub_802A7B8` |
-| `sub_8033B44` | `actor_part31.c` | `sub_802A7B8` unless state 2 has finished |
+| `sub_8030574` | `actor_part20b.c` | state-2 destroy (`m08`) or `UpdateActor` |
+| `sub_8032950` | `actor_part130.c` | state-1 destroy or `UpdateActor` |
+| `sub_8031A6C` | `actor_part129.c` | two destroy conditions or `UpdateActor` |
+| `sub_8033B44` | `actor_part31.c` | `UpdateActor` unless state 2 has finished |
 | `sub_8033E80` | `actor_part37.c` | same, on `gStaticData_0817C4F8` |
 | `sub_8033C84` | `actor_part33.c` | returns 0 once state 2 has finished, else 1 |
 | `sub_8033FE4` | `actor_part64.c` | same, on `gStaticData_0817C4F8` |

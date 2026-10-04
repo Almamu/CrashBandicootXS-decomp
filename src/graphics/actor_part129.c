@@ -35,10 +35,10 @@
 
 extern void *gAudioContext;
 extern void *gLevelState;
-extern void *gUnknown_03000884;
+extern void *gActorList;
 
 extern u8 sub_802A6EC(void *self);
-extern void sub_802A7B8(void *self);
+extern void UpdateActor(void *self);
 extern void sub_8022FEC(void *self);
 extern void FreezeLevelClock(void *arg0, s32 arg1);
 extern void sub_8022D50(void *arg0);
@@ -60,7 +60,7 @@ extern void mem_free(void *ptr);
 extern u8 gStaticData_0816A820[];
 extern struct actor_pmf gStaticData_0817C42C[];
 extern u8 gStaticData_0817C444[];
-extern u8 gStaticData_087E4DF4[];
+extern u8 gActorVtable[];
 extern u8 gStaticData_087E52CC[];
 extern u8 gStaticData_087E530C[];
 extern u8 gStaticData_087E534C[];
@@ -128,7 +128,7 @@ void sub_803256C(void *selfArg);
 /* Per-state member-pointer dispatch, `(this->*gStaticData_0817C42C
  * [this->state])()` (see `ACTOR_PMF_CALL`), then "destroy" once state 1
  * has risen past a height or the state-2 animation has played through,
- * else the standard sub_802A7B8 step. */
+ * else the standard UpdateActor step. */
 void sub_8031A6C(void *selfArg)
 {
     struct actor_self *self = selfArg;
@@ -137,14 +137,14 @@ void sub_8031A6C(void *selfArg)
 
     if (self->state == 1 && self->y > 0xE100) {
         if (self != NULL) {
-            ACTOR_VCALL(self, m08, 3);
+            ACTOR_VCALL(self, destroy, 3);
         }
     } else if (self->state == 2 && self->animDone != 0) {
         if (self != NULL) {
-            ACTOR_VCALL(self, m08, 3);
+            ACTOR_VCALL(self, destroy, 3);
         }
     } else {
-        sub_802A7B8(self);
+        UpdateActor(self);
     }
 }
 
@@ -201,17 +201,17 @@ void sub_8031B0C(void *selfArg)
 
     case_14:
         PlaySfx(gAudioContext, 3, 0x100);
-        sub_802F540(gUnknown_03000884, 1);
+        sub_802F540(gActorList, 1);
         goto after_dispatch;
 
     case_15:
         PlaySfx(gAudioContext, 3, 0x100);
-        sub_802F540(gUnknown_03000884, 3);
+        sub_802F540(gActorList, 3);
         goto after_dispatch;
 
     case_16:
         PlaySfx(gAudioContext, 3, 0x100);
-        sub_802F540(gUnknown_03000884, 5);
+        sub_802F540(gActorList, 5);
         goto after_dispatch;
 
     case_17:
@@ -290,17 +290,17 @@ gt_15:
 
 case_14:
     PlaySfx(gAudioContext, 3, 0x100);
-    sub_802F540(gUnknown_03000884, 1);
+    sub_802F540(gActorList, 1);
     goto after_dispatch;
 
 case_15:
     PlaySfx(gAudioContext, 3, 0x100);
-    sub_802F540(gUnknown_03000884, 3);
+    sub_802F540(gActorList, 3);
     goto after_dispatch;
 
 case_16:
     PlaySfx(gAudioContext, 3, 0x100);
-    sub_802F540(gUnknown_03000884, 5);
+    sub_802F540(gActorList, 5);
     goto after_dispatch;
 
 case_17:
@@ -341,7 +341,7 @@ void sub_8031D04(void *selfArg)
         }
         self->base.animTime = kind;
 
-        sub_802F50C(gUnknown_03000884, 0x14);
+        sub_802F50C(gActorList, 0x14);
         PlaySfx(gAudioContext, 3, 0x100);
 
         if (self->child != NULL) {
@@ -580,7 +580,7 @@ void sub_8031FE8(void *selfArg, s32 delta)
             }
             *(s32 *)&self->base.animTime = zero2;
 
-            sub_802F50C(gUnknown_03000884, 0x14);
+            sub_802F50C(gActorList, 0x14);
             PlaySfx(gAudioContext, 3, 0x100);
 
             if (self->child != NULL) {
@@ -714,7 +714,7 @@ void sub_8032170(void *selfArg, s32 delta)
 
 /* Doubly-linked-list unlink (`self+0x48`=prev, `self+0x4c`=next, cross-
  * links `next->prev`/`prev->next` around `self`), resets `vtable`'s
- * event table to `gStaticData_087E4DF4`, then conditionally `mem_free`s
+ * event table to `gActorVtable`, then conditionally `mem_free`s
  * `self` if the caller's flag bit 0 is set - a destructor/detach helper
  * for this object family. */
 void sub_80321D0(void *selfArg, s32 flags)
@@ -723,7 +723,7 @@ void sub_80321D0(void *selfArg, s32 flags)
     u8 *next;
     u8 *prev;
 
-    self->base.vtable = (struct actor_vtable *)gStaticData_087E4DF4;
+    self->base.vtable = (struct actor_vtable *)gActorVtable;
 
     {
         register u8 *nextReg asm("r2") = *(u8 **)((u8 *)self + 0x4c);
@@ -841,9 +841,9 @@ u8 sub_8032350(void *selfArg)
 
 /* State-1 trampoline flush, or (otherwise) a proximity-triggered
  * transition that fires an event-table call on the *player* object
- * (`gUnknown_03000884`) before its own state-1/table-index-1
+ * (`gActorList`) before its own state-1/table-index-1
  * transition; either way clamps `y` forward by `0x140` once it
- * falls behind `self+0x5c`, then tail-calls `sub_802A7B8`. */
+ * falls behind `self+0x5c`, then tail-calls `UpdateActor`. */
 void sub_8032358(void *selfArg)
 {
     struct rising_actor *self = selfArg;
@@ -854,13 +854,13 @@ void sub_8032358(void *selfArg)
         }
         if (self != 0) {
             struct actor_vtable *table = self->base.vtable;
-            _call_via_r2((u8 *)self + table->m08.thisOffset, 3, table->m08.fn);
+            _call_via_r2((u8 *)self + table->destroy.thisOffset, 3, table->destroy.fn);
         }
         return;
     }
 
     if (sub_802A6EC(self)) {
-        struct actor_self *player = gUnknown_03000884;
+        struct actor_self *player = gActorList;
         struct actor_vtable *ptable = player->vtable;
 
         _call_via_r2((u8 *)player + ptable->m20.thisOffset, 0x14, ptable->m20.fn);
@@ -884,7 +884,7 @@ void sub_8032358(void *selfArg)
     }
 
 tail:
-    sub_802A7B8(self);
+    UpdateActor(self);
 }
 
 /* Countdown-gated `self+0x58` byte transition into state 1 (anim frame
@@ -1003,7 +1003,7 @@ u8 sub_8032478(void *selfArg)
  * `sub_803256C`. Once no longer idle, either flushes a pending
  * `vtable` trampoline call (state-1/table-index-1 shape) or repeats
  * the same player-proximity event once (latched via `self+0x65`).
- * Falls back to `sub_802A7B8` in both non-idle paths. */
+ * Falls back to `UpdateActor` in both non-idle paths. */
 void sub_8032480(void *selfArg)
 {
     struct swing_actor *self = selfArg;
@@ -1013,7 +1013,7 @@ void sub_8032480(void *selfArg)
     }
 
     if (sub_802A6EC(self)) {
-        struct actor_self *player = gUnknown_03000884;
+        struct actor_self *player = gActorList;
         struct actor_vtable *ptable = player->vtable;
 
         _call_via_r2((u8 *)player + ptable->m20.thisOffset, 0xe, ptable->m20.fn);
@@ -1053,13 +1053,13 @@ state_nonzero:
     if (self->base.animDone != 0) {
         if (self != 0) {
             struct actor_vtable *table = self->base.vtable;
-            _call_via_r2((u8 *)self + table->m08.thisOffset, 3, table->m08.fn);
+            _call_via_r2((u8 *)self + table->destroy.thisOffset, 3, table->destroy.fn);
         }
         return;
     }
 
     if (self->hit == 0 && sub_802A6EC(self)) {
-        struct actor_self *player = gUnknown_03000884;
+        struct actor_self *player = gActorList;
         struct actor_vtable *ptable = player->vtable;
 
         _call_via_r2((u8 *)player + ptable->m20.thisOffset, 0xe, ptable->m20.fn);
@@ -1067,7 +1067,7 @@ state_nonzero:
     }
 
 tail:
-    sub_802A7B8(self);
+    UpdateActor(self);
 }
 
 /* State transition setter: marks `self+0x64`, plays a fixed cue, sets
@@ -1082,7 +1082,7 @@ void sub_803256C(void *selfArg)
 
     *statePtr = one;
     PlaySfx(gAudioContext, 4, 0x100);
-    self->base.unk_18 = 7;
+    self->base.palette = 7;
     self->base.animIndex = one;
     {
         register u16 anim asm("r0") = *(u16 *)&self->base.anims[1].duration;
@@ -1116,7 +1116,7 @@ void sub_80325A4(void *selfArg, s32 delta)
         asm volatile("add %0, %0, #1" : "+r"(statePtr));
         *statePtr = one;
         PlaySfx(gAudioContext, 4, 0x100);
-        self->base.unk_18 = 4;
+        self->base.palette = 4;
         self->base.animIndex = 2;
         {
             register u16 anim asm("r0") = *(u16 *)&self->base.anims[2].duration;
@@ -1183,14 +1183,14 @@ u8 sub_8032680(void *selfArg)
 /* Type-byte-gated (`self+0x30`'s type byte `== 0x1f`) proximity check:
  * on trigger, feeds the offset between `x` and the type-byte
  * table's own `+0x20` field, plus `y`, into `sub_802F164`, then
- * latches a one-shot cue via `self+0x58`. Tail-calls `sub_802A7B8`
+ * latches a one-shot cue via `self+0x58`. Tail-calls `UpdateActor`
  * unconditionally. */
 void sub_8032688(void *selfArg)
 {
     struct trigger_actor *self = selfArg;
 
     if (*(u8 *)(*(u8 **)((u8 *)self + 0x30)) == 0x1f && sub_802A6EC(self)) {
-        struct actor_self *player = gUnknown_03000884;
+        struct actor_self *player = gActorList;
         s32 *params = *(s32 **)((u8 *)self + 0x30);
         s32 x = self->base.x - params[8];
         s32 y = self->base.y;
@@ -1203,5 +1203,5 @@ void sub_8032688(void *selfArg)
         }
     }
 
-    sub_802A7B8(self);
+    UpdateActor(self);
 }

@@ -30,7 +30,7 @@ COMPILE_TIME_ASSERT(sizeof(struct anim_box) == 0xC);
 
 struct anim_frame_record; /* actor_self.h */
 
-/* gStaticData_081796CC (categories 0-2, 41 slots) and gStaticData_0817B2A4
+/* gCategoryFamily0AnimTable (categories 0-2, 41 slots) and gCategoryFamily1AnimTable
  * (categories 3-6, 47 slots) - one record per animation clip, defined in
  * src/data/anim_family_178f80.c / anim_family_17aa6c.c. Several slots
  * share another slot's table_A/table_B arrays (see "duplicate_of_slot"
@@ -39,12 +39,12 @@ struct anim_table_record {
     u32 index;                 // 0x00 - equals the record's own slot number in every valid record observed
     struct anim_frame_record *table_A; // 0x04 - the clip's keyframes (struct anim_frame_record, actor_self.h), no count stored
     u32 *table_B;               // 0x08 - frame address/offset array, see the comment above struct sprite_frame
-    u8 header_byte;              // 0x0C - copied into the runtime per-part instance at offset +0x18 by InitActorPart; role beyond that not traced
+    u8 palette;                  // 0x0C - OBJ palette bank; InitActorPart copies it to actor_self.palette (+0x18), which DrawActor puts in OAM attr 2 (<< 12)
     u8 pad_0D[3];
-    s32 baseDepth;               // 0x10 - 0 or 0x260C-0x36D5: the depth at which the part draws unscaled (UpdateAnimatedActorPart divides by it)
+    s32 baseDepth;               // 0x10 - 0 or 0x260C-0x36D5: the depth at which the part draws unscaled (DrawActor divides by it)
     struct anim_box box_14;      // 0x14 - copied into the runtime per-part instance at +0x38 by InitActorPart; zero in some records
-    s32 spawnX;                  // 0x20 - added to the spawn X by sub_802AC28 (the per-kind actor factory)
-    s32 spawnY;                  // 0x24 - added to the spawn Y by sub_802AC28
+    s32 spawnX;                  // 0x20 - added to the spawn X by CreateActor (the per-kind actor factory)
+    s32 spawnY;                  // 0x24 - added to the spawn Y by CreateActor
 }; // 0x28
 COMPILE_TIME_ASSERT(sizeof(struct anim_table_record) == 0x28);
 
@@ -92,27 +92,32 @@ struct sprite_frame {
     u8 tile_data[0];  // 0x04 - width_tiles*height_tiles*32 bytes, standard swizzled 4bpp tile data
 };
 
-/* gStaticData_08175558 - 7 entries (categories 0-2 use the family rooted
- * at gStaticData_081796CC, 3-6 the one at gStaticData_0817B2A4). Each
+/* gActorCategories - 7 entries (categories 0-2 use the family rooted
+ * at gCategoryFamily0AnimTable, 3-6 the one at gCategoryFamily1AnimTable). Each
  * category's `type` field (0/1/2, see below) - NOT the category index
  * itself - selects a shared vtable: traced the one real call site, and
- * the caller reads gStaticData_08175558[category].type into the
+ * the caller reads gActorCategories[category].type into the
  * register it passes as SelectActorCategory's first argument, which
- * then computes gStaticData_081756C4 + type*0x34 (confirmed against
+ * then computes gActorCategoryVtables + type*0x34 (confirmed against
  * SelectActorCategory's own disassembly). Categories 0/1/2 all have
  * type 0 and share one vtable; 3/4/5 all have type 1 and share another;
  * 6 is type 2, on its own - three real vtables total, not seven, so
- * gStaticData_081756C4 below is declared [3]. Whatever data actually
- * follows those three at gStaticData_081756C4+0x9C (ROM 0x08175760) is
+ * gActorCategoryVtables below is declared [3]. Whatever data actually
+ * follows those three at gActorCategoryVtables+0x9C (ROM 0x08175760) is
  * unrelated - it doesn't decode as a 4th/5th/6th/7th vtable no matter
  * how it's sliced (verified directly against the raw bytes), so
  * there's no "categories 3-6 vtable" to go looking for. */
-/* category_descriptor.sub_effect_table's record layout - resolved from
- * `sub_802968C` (counts matching `variantA` entries), `SelectActorCategory`
- * (which stores this pointer directly into `gUnknown_03001400`, indexing
+/* category_descriptor.spawnTable's record layout: the stage's actor spawn
+ * list, ordered by `field_00` (the depth at which the next record is due).
+ * RunActorCategoryFrame hands `&record.kind` of each due record to the
+ * category vtable's slot 1 (SpawnActor for type 0), which reads it as
+ * `{kind, altKind, bonusKind, pad, x, y, z}` - so a spawn's own depth is
+ * the following record's `field_00`. Resolved from
+ * `sub_802968C` (counts matching `kind` entries), `SelectActorCategory`
+ * (which stores this pointer directly into `gActorSpawnTable`, indexing
  * with `idx*0x14`), and the `sub_802A504`/`51C`/`540`/`558`/`570`
  * per-index accessor family (see docs/rom_map.md's "The sub_802A5xx
- * siblings pin down sub_effect_table's runtime shape"). Record 0 doubles
+ * siblings pin down spawnTable's runtime shape"). Record 0 doubles
  * as a combined header+entry: `field_04` there is the table's real entry
  * count (read by `sub_802968C`/`SelectActorCategory`), while every
  * record's own `field_00`/`field_04` otherwise serve as the *next*
@@ -122,9 +127,9 @@ struct sprite_frame {
 struct sub_effect_record {
     s32 field_00;   // 0x00 - selection threshold value (record 0: unused as a threshold, see above)
     s32 field_04;   // 0x04 - record 0 only: the table's real entry count
-    u8 variantA;    // 0x08 - "kind"/kind byte, gated by category type in sub_802968C
-    u8 variantB;    // 0x09 - alternate kind byte, selected by sub_802A570 when gLevelState+0x8c is set
-    u8 variantC;    // 0x0a - alternate kind byte, selected by sub_802A570 when gUnknown_03001414 is set
+    u8 kind;        // 0x08 - the actor kind CreateActor builds; counted by sub_802968C
+    u8 altKind;     // 0x09 - the kind used instead when gLevelState+0x8c is set (SpawnActor, sub_802A570)
+    u8 bonusKind;   // 0x0a - the kind used instead when gUnknown_03001414 is set (SpawnActor's useBonus, sub_802A570)
     u8 pad_0b;
     s32 offsetX;    // 0x0c - Q8.8 after sub_802A558's <<8
     s32 offsetY;    // 0x10 - Q8.8 after sub_802A540's <<8
@@ -138,14 +143,14 @@ COMPILE_TIME_ASSERT(sizeof(struct sub_effect_record) == 0x14);
 struct sub_effect_table_end {
     s32 field_00;   // 0x00 - the final threshold
     s32 field_04;   // 0x04 - always -1
-    u8 variantA;    // 0x08 - no real record's bytes: zero in three of the seven tables, arbitrary in the rest
-    u8 variantB;
-    u8 variantC;
+    u8 kind;    // 0x08 - no real record's bytes: zero in three of the seven tables, arbitrary in the rest
+    u8 altKind;
+    u8 bonusKind;
     u8 pad_0b;
 }; // 0xC
 COMPILE_TIME_ASSERT(sizeof(struct sub_effect_table_end) == 0xC);
 
-/* A whole sub_effect_table as the ROM stores it (src/data/). */
+/* A whole spawnTable as the ROM stores it (src/data/). */
 #define SUB_EFFECT_TABLE(n) struct { struct sub_effect_record records[n]; struct sub_effect_table_end end; }
 
 /* The start of a BG0 cell animation (category_descriptor.family_shared_04,
@@ -179,8 +184,8 @@ struct category_descriptor {
     u32 family_shared_08;           // 0x08 - constant across all categories in one family; role unknown
     void *conditional_ptr_0C;       // 0x0C - NULL for categories 0-2 (type 0); a real pointer for every category in the 3-6 family (5 and 6 alias the exact same pointer) - a family-2-only extra graphics blob, not a per-category flag. When non-NULL, sub_802F7B0 (not reversed) DMAs a small header-prefixed tile blob from it to VRAM once during category init - see docs/graphics.md
     const u16 *palette;             // 0x10 - raw 16-color RGB555 palette, DMA'd to OBJ palette RAM (InitActorCategory)
-    struct sub_effect_record *sub_effect_table; // 0x14 - a second per-category table (threshold-triggered sub-effects/spawns via vtable slot 1); see struct sub_effect_record above
-    struct anim_table_record *anim_table; // 0x18 - this category's animation table base (gStaticData_081796CC or gStaticData_0817B2A4)
+    struct sub_effect_record *spawnTable; // 0x14 - the stage's actor spawn list (gCategoryNSpawnTable), see struct sub_effect_record above
+    struct anim_table_record *anim_table; // 0x18 - this category's animation table base (gCategoryFamily0AnimTable or gCategoryFamily1AnimTable)
     const u8 *sprite_sheet;         // 0x1C - this category family's LZ77-compressed sprite sheet
     u32 unknown_20;                 // 0x20
     u32 active_count_threshold;     // 0x24 - compared against a running "how many of this category are active" counter (gUnknown_03001384) to gate spawning an extra sub-effect instance
@@ -190,7 +195,7 @@ struct category_descriptor {
 }; // 0x34
 COMPILE_TIME_ASSERT(sizeof(struct category_descriptor) == 0x34);
 
-/* gStaticData_081756C4 - 3 entries, type-indexed (see category_descriptor
+/* gActorCategoryVtables - 3 entries, type-indexed (see category_descriptor
  * above), not category-indexed - categories that share a type share one
  * of these. Exact signatures unknown (none of these functions have been
  * reversed to C yet); slot 0 is confirmed to be the constructor,
@@ -212,17 +217,17 @@ struct category_vtable {
 COMPILE_TIME_ASSERT(sizeof(struct category_vtable) == 0x34);
 
 /* Both tables are defined in src/data/actor_category_175558.c (7*0x34 =
- * 0x16C bytes of descriptors, then gStaticData_081756C4). The latter
+ * 0x16C bytes of descriptors, then gActorCategoryVtables). The latter
  * has 3 entries, which is also all of it - there is no 4th/5th/6th/7th
  * vtable to find,
  * see the comment on category_descriptor.type above. What follows it at
- * gStaticData_081756C4+0x9C (ROM 0x08175760) is unrelated: the BG
+ * gActorCategoryVtables+0x9C (ROM 0x08175760) is unrelated: the BG
  * palette-cycle frames of src/data/palette_cycle_175760.c. */
-extern const struct category_descriptor gStaticData_08175558[7];
-extern const struct category_vtable gStaticData_081756C4[3];
+extern const struct category_descriptor gActorCategories[7];
+extern const struct category_vtable gActorCategoryVtables[3];
 
 /* Defined in src/data/anim_family_178f80.c and anim_family_17aa6c.c. */
-extern const struct anim_table_record gStaticData_081796CC[41]; // 0x081796CC, categories 0-2
-extern const struct anim_table_record gStaticData_0817B2A4[47]; // 0x0817B2A4, categories 3-6
+extern const struct anim_table_record gCategoryFamily0AnimTable[41]; // 0x081796CC, categories 0-2
+extern const struct anim_table_record gCategoryFamily1AnimTable[47]; // 0x0817B2A4, categories 3-6
 
 #endif /* !__ACTOR_ANIM_H__ */

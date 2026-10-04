@@ -12,7 +12,7 @@ literally collided) to keep it visually contiguous.
 `sub_802D3A8`-`sub_802E058`/`nullsub_27` range. Two distinct object
 families live in this chunk:
 
-- The `InitActorPart`/`gUnknown_03000884`-rooted "self" object family
+- The `InitActorPart`/`gActorList`-rooted "self" object family
   already documented for `actor_part17.c`/`actor_part18.c`/
   `actor_part19.c`/`actor_part50.c` and others: a "part table" pointer
   at `self+0`, a table-index/"kind" field at `self+0xc`, an anim-frame
@@ -68,7 +68,7 @@ function's address (`..._d3a8.s`, `..._d7b0.s`, `..._dd9c.s`,
 - **`sub_802D59C`/`sub_802D600`/`sub_802D6A0`**
   (`src/graphics/actor_part58.c`) - small state-machine steps gated on
   `sub_802A6EC`'s trampoline-fire edge and/or `sub_802DD9C`'s AABB
-  overlap test, each ending in `sub_802A7B8`'s frame-advance.
+  overlap test, each ending in `UpdateActor`'s frame-advance.
   `sub_802D6A0` needed a fresh, separately-pinned zero register
   (`register u8 zero asm("r1") = 0;`) for its `self[0x12] = 0` stores -
   writing a plain `0` literal let this compiler reuse the already-zero
@@ -154,8 +154,8 @@ function's address (`..._d3a8.s`, `..._d7b0.s`, `..._dd9c.s`,
 
 - **`sub_802D7B0`** (`asm/code_3_2_20_28568_c99c_d7b0.s`) - one of two
   confirmed slots (index 3) of the type-0 `category_vtable`
-  (`gStaticData_081756C4[0]`, `include/actor_anim.h`); also runs a full
-  3-axis AABB overlap test against the player (`gUnknown_03000884`)
+  (`gActorCategoryVtables[0]`, `include/actor_anim.h`); also runs a full
+  3-axis AABB overlap test against the player (`gActorList`)
   before calling `MemCopy32`, one of `UpdateGameFrame`'s own direct
   top-level callees (see `docs/rom_map.md`'s "Two new type-0 vtable
   slots confirmed" section). Not confidently understood well enough for

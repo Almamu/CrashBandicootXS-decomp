@@ -4,7 +4,7 @@ from baserom.gba as indexed PNGs, the editable sources that graphics.mk
 rebuilds with grit (see docs/data.md, "Resources (grit-style)"):
 
 - graphics/sprites/bankNN_<addr>.png: the 56 sprite banks' OBJ tiles (4bpp).
-  The gStaticData_084A5600 header's tileBase (0x082BF120) is the start of one
+  The gSpriteBankTable header's tileBase (0x082BF120) is the start of one
   headerless pool; each bank's frames address it as tileBase +
   (frame.packed & 0xFFFFFF), and the banks own disjoint, back-to-back ranges
   in bank order (banks 42 and 47 also reuse one frame of bank 0's). A bank's

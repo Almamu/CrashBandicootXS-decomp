@@ -28,7 +28,7 @@ asm(".align 2, 0");
 /* Reads the current keyframe record's `attr` halfword and returns it
  * pre-shifted into the high 16 bits - `sub_803B46C` ORs this straight
  * into an OAM attribute word it builds itself. */
-s32 sub_803B060(struct anim_part_instance *self)
+s32 GetAnimFrameAttr(struct anim_part_instance *self)
 {
     s32 idx = self->frameIndex;
     struct anim_frame_record *table = self->frameTable;
@@ -69,7 +69,7 @@ asm(".align 2, 0");
 /* Selects a new keyframe: sets `frameIndex` to `idx`, copies that
  * record's `duration` into `self+0x10`, and resets the `+0x12` flag
  * byte and the `field_08` playback accumulator. */
-void sub_803B0A8(struct anim_part_instance *self, s32 idx)
+void SetActorAnim(struct anim_part_instance *self, s32 idx)
 {
     struct anim_frame_record *table;
     u16 duration;
@@ -101,20 +101,20 @@ struct linked_node {
     void *field_50;
 };
 
-extern u8 gStaticData_087E4DF4[];
+extern u8 gActorVtable[];
 
 /* Twenty near-identical "kind" teardown handlers: set `self+0x50`'s
- * state/vtable pointer to the shared "dead" table `gStaticData_087E4DF4`,
+ * state/vtable pointer to the shared "dead" table `gActorVtable`,
  * unlink `self` from its `+0x48`(prev)/`+0x4c`(next) circular list, and
  * free `self` when `flags & 1`. All twenty compile to byte-identical
  * bodies in the ROM (confirmed - every one of their embedded literal
- * pointers resolves to the same `gStaticData_087E4DF4` symbol) - almost
+ * pointers resolves to the same `gActorVtable` symbol) - almost
  * certainly one shared per-"kind" destructor template that just wasn't
  * deduplicated by the original build, the same way this project's other
  * per-"kind"/per-slot dispatch tables aren't. */
 void sub_803B0C4(struct linked_node *self, u32 flags)
 {
-    self->field_50 = gStaticData_087E4DF4;
+    self->field_50 = gActorVtable;
     self->next->prev = self->prev;
     self->prev->next = self->next;
     if (flags & 1) {
@@ -125,12 +125,12 @@ void sub_803B0C4(struct linked_node *self, u32 flags)
 asm(".align 2, 0");
 
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
-extern void sub_802A7B8(void *self);
+extern void UpdateActor(void *self);
 
 /* Advances `self+0x20` (a Q8 fixed-point accumulator, likely a
  * fall/scroll speed) by a fixed `-0x180`/256 per call, then either
  * fires the `self+0x50` trampoline record (arg `3`) if `self+0x12` is
- * set, or tail-calls `sub_802A7B8(self)` otherwise - the same
+ * set, or tail-calls `UpdateActor(self)` otherwise - the same
  * `+0x50`-rooted `{s16 offset; void *fn}` trampoline convention
  * documented in actor_part19.c. */
 void sub_803B0F0(void *selfArg)
@@ -145,7 +145,7 @@ void sub_803B0F0(void *selfArg)
             _call_via_r2(self + *(s16 *)(mgr + 8), (void *)3, *(void **)(mgr + 0xc));
         }
     } else {
-        sub_802A7B8(self);
+        UpdateActor(self);
     }
 }
 
@@ -153,7 +153,7 @@ asm(".align 2, 0");
 
 void sub_803B128(struct linked_node *self, u32 flags)
 {
-    self->field_50 = gStaticData_087E4DF4;
+    self->field_50 = gActorVtable;
     self->next->prev = self->prev;
     self->prev->next = self->next;
     if (flags & 1) {
@@ -165,7 +165,7 @@ asm(".align 2, 0");
 
 void sub_803B154(struct linked_node *self, u32 flags)
 {
-    self->field_50 = gStaticData_087E4DF4;
+    self->field_50 = gActorVtable;
     self->next->prev = self->prev;
     self->prev->next = self->next;
     if (flags & 1) {
@@ -177,7 +177,7 @@ asm(".align 2, 0");
 
 void sub_803B180(struct linked_node *self, u32 flags)
 {
-    self->field_50 = gStaticData_087E4DF4;
+    self->field_50 = gActorVtable;
     self->next->prev = self->prev;
     self->prev->next = self->next;
     if (flags & 1) {
@@ -189,7 +189,7 @@ asm(".align 2, 0");
 
 void sub_803B1AC(struct linked_node *self, u32 flags)
 {
-    self->field_50 = gStaticData_087E4DF4;
+    self->field_50 = gActorVtable;
     self->next->prev = self->prev;
     self->prev->next = self->next;
     if (flags & 1) {
@@ -201,7 +201,7 @@ asm(".align 2, 0");
 
 void sub_803B1D8(struct linked_node *self, u32 flags)
 {
-    self->field_50 = gStaticData_087E4DF4;
+    self->field_50 = gActorVtable;
     self->next->prev = self->prev;
     self->prev->next = self->next;
     if (flags & 1) {
@@ -213,7 +213,7 @@ asm(".align 2, 0");
 
 void sub_803B204(struct linked_node *self, u32 flags)
 {
-    self->field_50 = gStaticData_087E4DF4;
+    self->field_50 = gActorVtable;
     self->next->prev = self->prev;
     self->prev->next = self->next;
     if (flags & 1) {
@@ -225,7 +225,7 @@ asm(".align 2, 0");
 
 void sub_803B230(struct linked_node *self, u32 flags)
 {
-    self->field_50 = gStaticData_087E4DF4;
+    self->field_50 = gActorVtable;
     self->next->prev = self->prev;
     self->prev->next = self->next;
     if (flags & 1) {
@@ -237,7 +237,7 @@ asm(".align 2, 0");
 
 void sub_803B25C(struct linked_node *self, u32 flags)
 {
-    self->field_50 = gStaticData_087E4DF4;
+    self->field_50 = gActorVtable;
     self->next->prev = self->prev;
     self->prev->next = self->next;
     if (flags & 1) {
@@ -249,7 +249,7 @@ asm(".align 2, 0");
 
 void sub_803B288(struct linked_node *self, u32 flags)
 {
-    self->field_50 = gStaticData_087E4DF4;
+    self->field_50 = gActorVtable;
     self->next->prev = self->prev;
     self->prev->next = self->next;
     if (flags & 1) {
@@ -261,7 +261,7 @@ asm(".align 2, 0");
 
 void sub_803B2B4(struct linked_node *self, u32 flags)
 {
-    self->field_50 = gStaticData_087E4DF4;
+    self->field_50 = gActorVtable;
     self->next->prev = self->prev;
     self->prev->next = self->next;
     if (flags & 1) {
@@ -273,7 +273,7 @@ asm(".align 2, 0");
 
 void sub_803B2E0(struct linked_node *self, u32 flags)
 {
-    self->field_50 = gStaticData_087E4DF4;
+    self->field_50 = gActorVtable;
     self->next->prev = self->prev;
     self->prev->next = self->next;
     if (flags & 1) {
@@ -285,7 +285,7 @@ asm(".align 2, 0");
 
 void sub_803B30C(struct linked_node *self, u32 flags)
 {
-    self->field_50 = gStaticData_087E4DF4;
+    self->field_50 = gActorVtable;
     self->next->prev = self->prev;
     self->prev->next = self->next;
     if (flags & 1) {
@@ -297,7 +297,7 @@ asm(".align 2, 0");
 
 void sub_803B338(struct linked_node *self, u32 flags)
 {
-    self->field_50 = gStaticData_087E4DF4;
+    self->field_50 = gActorVtable;
     self->next->prev = self->prev;
     self->prev->next = self->next;
     if (flags & 1) {
@@ -309,7 +309,7 @@ asm(".align 2, 0");
 
 void sub_803B364(struct linked_node *self, u32 flags)
 {
-    self->field_50 = gStaticData_087E4DF4;
+    self->field_50 = gActorVtable;
     self->next->prev = self->prev;
     self->prev->next = self->next;
     if (flags & 1) {
@@ -321,7 +321,7 @@ asm(".align 2, 0");
 
 void sub_803B390(struct linked_node *self, u32 flags)
 {
-    self->field_50 = gStaticData_087E4DF4;
+    self->field_50 = gActorVtable;
     self->next->prev = self->prev;
     self->prev->next = self->next;
     if (flags & 1) {
@@ -333,7 +333,7 @@ asm(".align 2, 0");
 
 void sub_803B3BC(struct linked_node *self, u32 flags)
 {
-    self->field_50 = gStaticData_087E4DF4;
+    self->field_50 = gActorVtable;
     self->next->prev = self->prev;
     self->prev->next = self->next;
     if (flags & 1) {
@@ -345,7 +345,7 @@ asm(".align 2, 0");
 
 void sub_803B3E8(struct linked_node *self, u32 flags)
 {
-    self->field_50 = gStaticData_087E4DF4;
+    self->field_50 = gActorVtable;
     self->next->prev = self->prev;
     self->prev->next = self->next;
     if (flags & 1) {
@@ -357,7 +357,7 @@ asm(".align 2, 0");
 
 void sub_803B414(struct linked_node *self, u32 flags)
 {
-    self->field_50 = gStaticData_087E4DF4;
+    self->field_50 = gActorVtable;
     self->next->prev = self->prev;
     self->prev->next = self->next;
     if (flags & 1) {
@@ -369,7 +369,7 @@ asm(".align 2, 0");
 
 void sub_803B440(struct linked_node *self, u32 flags)
 {
-    self->field_50 = gStaticData_087E4DF4;
+    self->field_50 = gActorVtable;
     self->next->prev = self->prev;
     self->prev->next = self->next;
     if (flags & 1) {
@@ -383,7 +383,7 @@ extern void SetupSpriteFrameOam(u8 *frame, u32 arg1, u32 arg2, s32 priority);
 
 /* Screen-space visibility test and OAM setup for one sprite frame drawn
  * at the fixed screen position (120, 106): builds the OAM attribute
- * words (masked position, `sub_803B060`'s attr flag, and a priority/
+ * words (masked position, `GetAnimFrameAttr`'s attr flag, and a priority/
  * palette nibble from `self+0x18`/`self+0x14`) and calls
  * `SetupSpriteFrameOam`. See docs/matching/issue-71-0x0803b060-actor.md
  * for the full semantic account.
@@ -436,7 +436,7 @@ void sub_803B46C(void *selfArg)
     }
 
     {
-        register s32 attrFlag asm("r0") = sub_803B060((struct anim_part_instance *)self);
+        register s32 attrFlag asm("r0") = GetAnimFrameAttr((struct anim_part_instance *)self);
         register s32 a0 asm("r3") = 0xff;
         register s32 xm asm("r4") = x;
 
@@ -494,7 +494,7 @@ asm(".align 2, 0");
  * previously an opaque `unknown_04[4]`) implement a loop-back: once the
  * frame base offset reaches `loopThreshold`, `field_08` is stepped back
  * by `(loopThreshold - loopBase) << 8` and the `+0x12` "held" flag is
- * set (mirroring `sub_803B0A8`'s use of the same halfword/byte pair). */
+ * set (mirroring `SetActorAnim`'s use of the same halfword/byte pair). */
 void sub_803B4EC(void *selfArg)
 {
     /* A single `self` pointer, not also a `struct anim_part_instance *`
@@ -509,12 +509,12 @@ void sub_803B4EC(void *selfArg)
      * branches uniformly instead of branch-locally optimizing. */
     register struct actor_self *self asm("r4") = selfArg;
 
-    self->visible = 1;
+    self->sortKey = 1;
 
     if (self->animDone != 0) {
         if (self != NULL) {
             struct actor_vtable *mgr = self->vtable;
-            _call_via_r2((u8 *)self + mgr->m08.thisOffset, (void *)3, mgr->m08.fn);
+            _call_via_r2((u8 *)self + mgr->destroy.thisOffset, (void *)3, mgr->destroy.fn);
         }
     } else {
         s32 base;
@@ -573,7 +573,7 @@ asm(".align 2, 0");
  * circular list, and free `self` when `flags & 1`. */
 void sub_803B550(struct linked_node *self, u32 flags)
 {
-    self->field_50 = gStaticData_087E4DF4;
+    self->field_50 = gActorVtable;
     self->next->prev = self->prev;
     self->prev->next = self->next;
     if (flags & 1) {
@@ -587,7 +587,7 @@ asm(".align 2, 0");
  * `sub_803B0F0`'s near-twin: advances `self+0x24` (a Q8 fixed-point
  * accumulator, `+170`/256 per call this time instead of `-0x180`/256)
  * and either fires the `+0x50` trampoline record if `self+0x12` is set,
- * or tail-calls `sub_802A7B8(self)` otherwise. */
+ * or tail-calls `UpdateActor(self)` otherwise. */
 void sub_803B57C(void *selfArg)
 {
     u8 *self = selfArg;
@@ -600,7 +600,7 @@ void sub_803B57C(void *selfArg)
             _call_via_r2(self + *(s16 *)(mgr + 8), (void *)3, *(void **)(mgr + 0xc));
         }
     } else {
-        sub_802A7B8(self);
+        UpdateActor(self);
     }
 }
 
@@ -619,7 +619,7 @@ asm(".align 2, 0");
 
 void sub_803B5B0(struct linked_node *self, u32 flags)
 {
-    self->field_50 = gStaticData_087E4DF4;
+    self->field_50 = gActorVtable;
     self->next->prev = self->prev;
     self->prev->next = self->next;
     if (flags & 1) {
@@ -664,7 +664,7 @@ asm(".align 2, 0");
 
 void sub_803B5E8(struct linked_node *self, u32 flags)
 {
-    self->field_50 = gStaticData_087E4DF4;
+    self->field_50 = gActorVtable;
     self->next->prev = self->prev;
     self->prev->next = self->next;
     if (flags & 1) {
@@ -676,7 +676,7 @@ asm(".align 2, 0");
 
 void sub_803B614(struct linked_node *self, u32 flags)
 {
-    self->field_50 = gStaticData_087E4DF4;
+    self->field_50 = gActorVtable;
     self->next->prev = self->prev;
     self->prev->next = self->next;
     if (flags & 1) {
@@ -688,7 +688,7 @@ asm(".align 2, 0");
 
 void sub_803B640(struct linked_node *self, u32 flags)
 {
-    self->field_50 = gStaticData_087E4DF4;
+    self->field_50 = gActorVtable;
     self->next->prev = self->prev;
     self->prev->next = self->next;
     if (flags & 1) {
@@ -700,7 +700,7 @@ asm(".align 2, 0");
 
 void sub_803B66C(struct linked_node *self, u32 flags)
 {
-    self->field_50 = gStaticData_087E4DF4;
+    self->field_50 = gActorVtable;
     self->next->prev = self->prev;
     self->prev->next = self->next;
     if (flags & 1) {
@@ -712,7 +712,7 @@ asm(".align 2, 0");
 
 void sub_803B698(struct linked_node *self, u32 flags)
 {
-    self->field_50 = gStaticData_087E4DF4;
+    self->field_50 = gActorVtable;
     self->next->prev = self->prev;
     self->prev->next = self->next;
     if (flags & 1) {
@@ -724,7 +724,7 @@ asm(".align 2, 0");
 
 void sub_803B6C4(struct linked_node *self, u32 flags)
 {
-    self->field_50 = gStaticData_087E4DF4;
+    self->field_50 = gActorVtable;
     self->next->prev = self->prev;
     self->prev->next = self->next;
     if (flags & 1) {
@@ -772,7 +772,7 @@ asm(".align 2, 0");
 
 void sub_803B750(struct linked_node *self, u32 flags)
 {
-    self->field_50 = gStaticData_087E4DF4;
+    self->field_50 = gActorVtable;
     self->next->prev = self->prev;
     self->prev->next = self->next;
     if (flags & 1) {
@@ -784,7 +784,7 @@ asm(".align 2, 0");
 
 void sub_803B77C(struct linked_node *self, u32 flags)
 {
-    self->field_50 = gStaticData_087E4DF4;
+    self->field_50 = gActorVtable;
     self->next->prev = self->prev;
     self->prev->next = self->next;
     if (flags & 1) {
@@ -796,7 +796,7 @@ asm(".align 2, 0");
 
 void sub_803B7A8(struct linked_node *self, u32 flags)
 {
-    self->field_50 = gStaticData_087E4DF4;
+    self->field_50 = gActorVtable;
     self->next->prev = self->prev;
     self->prev->next = self->next;
     if (flags & 1) {
@@ -808,7 +808,7 @@ asm(".align 2, 0");
 
 void sub_803B7D4(struct linked_node *self, u32 flags)
 {
-    self->field_50 = gStaticData_087E4DF4;
+    self->field_50 = gActorVtable;
     self->next->prev = self->prev;
     self->prev->next = self->next;
     if (flags & 1) {
@@ -820,7 +820,7 @@ asm(".align 2, 0");
 
 void sub_803B800(struct linked_node *self, u32 flags)
 {
-    self->field_50 = gStaticData_087E4DF4;
+    self->field_50 = gActorVtable;
     self->next->prev = self->prev;
     self->prev->next = self->next;
     if (flags & 1) {
@@ -832,7 +832,7 @@ asm(".align 2, 0");
 
 void sub_803B82C(struct linked_node *self, u32 flags)
 {
-    self->field_50 = gStaticData_087E4DF4;
+    self->field_50 = gActorVtable;
     self->next->prev = self->prev;
     self->prev->next = self->next;
     if (flags & 1) {
@@ -844,7 +844,7 @@ asm(".align 2, 0");
 
 void sub_803B858(struct linked_node *self, u32 flags)
 {
-    self->field_50 = gStaticData_087E4DF4;
+    self->field_50 = gActorVtable;
     self->next->prev = self->prev;
     self->prev->next = self->next;
     if (flags & 1) {
@@ -856,7 +856,7 @@ asm(".align 2, 0");
 
 void sub_803B884(struct linked_node *self, u32 flags)
 {
-    self->field_50 = gStaticData_087E4DF4;
+    self->field_50 = gActorVtable;
     self->next->prev = self->prev;
     self->prev->next = self->next;
     if (flags & 1) {

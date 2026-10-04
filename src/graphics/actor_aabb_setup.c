@@ -14,16 +14,16 @@ struct aabb {
 
 /* Set-size primitive - already referenced by name from several other
  * files (actor_part.c/actor_part2.c/oam_count.c's DrawPowerDialog) as the
- * shared `sub_803AFE4`(set-position)/`sub_803AFDC`(set-size) pair. */
-void sub_803AFDC(struct aabb *dest, s32 w, s32 h)
+ * shared `SetAabbPos`(set-position)/`SetAabbSize`(set-size) pair. */
+void SetAabbSize(struct aabb *dest, s32 w, s32 h)
 {
     dest->field_8 = w;
     dest->field_c = h;
 }
 asm(".align 2, 0");
 
-/* Set-position primitive, see sub_803AFDC above. */
-void sub_803AFE4(struct aabb *dest, s32 x, s32 y)
+/* Set-position primitive, see SetAabbSize above. */
+void SetAabbPos(struct aabb *dest, s32 x, s32 y)
 {
     dest->field_0 = x;
     dest->field_4 = y;
@@ -33,7 +33,7 @@ asm(".align 2, 0");
 /* Lives getter of the level state (`gLevelState`; read by
  * game_loop55.c, hud_counter.c, actor_part101.c and
  * graphics_loading_1e990.c). */
-s32 sub_803AFEC(struct level_state *self)
+s32 GetLives(struct level_state *self)
 {
     return self->lives;
 }

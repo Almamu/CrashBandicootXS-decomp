@@ -209,7 +209,7 @@ as of
   remaining raw tail.
 - `docs/matching/issue-9-10-0x0800a884-graphics.md` - this session's
   starting point, including the exact function this write-up closes
-  (as far as it could be closed) and the `sub_80083B8`/`sub_80084C4`
+  (as far as it could be closed) and the `GetSpriteFrame`/`sub_80084C4`
   keyframe-lookup convention referenced above.
 - `src/graphics/actor_part7.c` - `sub_8008A40`'s own doc comment
   (the "relocate then unpack" idiom this function's first branch

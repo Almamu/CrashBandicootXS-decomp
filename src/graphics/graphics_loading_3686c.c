@@ -645,7 +645,7 @@ void sub_8036FBC(struct actor_self *self)
                 /* the ROM computes the tile number in r0 */
                 register u32 tile asm("r0") = GET_TILE_NUM(gUnknown_0300160C[gUnknown_03001604]);
 
-                QueueSpriteFrameOam(attr1, tile | (self->unk_18 << 12), scale);
+                QueueSpriteFrameOam(attr1, tile | (self->palette << 12), scale);
             }
         }
     }

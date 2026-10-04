@@ -6,9 +6,9 @@ kept C draft. Both closed as real C under old_agbcc.
 | Function | File | Issue | Compiler | Result |
 | --- | --- | --- | --- | --- |
 | `InitActorCategory` | `actor_part101.c` | #48 | old_agbcc (object added to `OLD_AGBCC_OBJS`) | matched |
-| `sub_802A208` | `actor_part103.c` | #49 | old_agbcc (file already on it) | matched |
+| `RunActorCategoryFrame` | `actor_part103.c` | #49 | old_agbcc (file already on it) | matched |
 
-## `sub_802A208`
+## `RunActorCategoryFrame`
 
 The first full draft came out 150 halfwords off with an extra `r9`,
 the same result as the old note. The cause was not register pressure:
@@ -17,7 +17,7 @@ the same result as the old note. The cause was not register pressure:
   (`duplicate_loop_exit_test`) copies the exit test ahead of the loop,
   so the ROM has the test twice and the body starts at a label. CSE
   cannot carry the test's loads into the body, which is why the ROM
-  re-reads `gUnknown_03001404`/`gUnknown_03001420`/the vtable in the
+  re-reads `gActorSpawnIndex`/`gUnknown_03001420`/the vtable in the
   body.
 - The copy is refused if the test contains block notes, so the test
   cannot call an inline function (the `NextThreshold` helper that

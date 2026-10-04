@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Extracts the sprite-bank animation tables (gStaticData_084A5600,
+"""Extracts the sprite-bank animation tables (gSpriteBankTable,
 0x084A5600-0x084C0006) from baserom.gba as typed C, the src/data/
 sprite_banks_*.c files (see docs/data.md and docs/data_map.md).
 
@@ -248,9 +248,9 @@ def emit_bank(rom, ranges, i, em, out, decls):
 FILE_COMMENT = """\
 /*
  * ROM {start:#010x}-{end:#010x}: sprite banks {first}-{last} of the sprite-bank
- * animation system (gStaticData_084A5600, include/sprite_bank.h). Linked in
+ * animation system (gSpriteBankTable, include/sprite_bank.h). Linked in
  * ROM order between data/data.s sections by ldscript.txt - see
- * docs/data.md and docs/data_map.md ("gStaticData_084A5600").
+ * docs/data.md and docs/data_map.md ("gSpriteBankTable").
  *
  * Extracted once from baserom.gba by tools/sprite_banks.py; this file is
  * the source now. Per bank: the animations (a frame-index sequence each),
@@ -294,8 +294,8 @@ def main():
         out.append("")
         out.append(FILE_COMMENT.format(start=start, end=end, first=lo, last=hi))
         if lo == 0:
-            out.append("extern const u8 gStaticData_082BF120[];  /* sprite_tiles_2bf120.c, bank 0's tiles */")
-            out.append("extern const u8 gStaticData_084A4660[0xfa0];")
+            out.append("extern const u8 gSpriteBank00Tiles[];  /* sprite_tiles_2bf120.c, bank 0's tiles */")
+            out.append("extern const u8 gFixedObjTiles[0xfa0];")
             out.append("extern const struct sprite_bank gSpriteBanks[56];")
             for i in range(nbanks):
                 if not (lo <= i <= hi):
@@ -306,15 +306,15 @@ def main():
             out.extend(decls)
             out.append("")
             out.append("/* The root of the system: sub_8022230 (graphics_loading_21d80.c) points")
-            out.append(" * *gUnknown_030012D0 here. sub_80083A8 returns tileBase;")
+            out.append(" * *gUnknown_030012D0 here. GetSpriteTileBase returns tileBase;")
             out.append(" * sub_8022230 and RunPauseMenu (settings_menu15.c) build the tile-asset")
             out.append(" * cache from tilePool/tilePoolCount. */")
-            out.append("const struct sprite_bank_table gStaticData_084A5600 = {")
+            out.append("const struct sprite_bank_table gSpriteBankTable = {")
             out.append("    .banks = gSpriteBanks,")
-            out.append("    .tileBase = gStaticData_082BF120,")
-            out.append("    .tilePool = gStaticData_084A4660,")
+            out.append("    .tileBase = gSpriteBank00Tiles,")
+            out.append("    .tilePool = gFixedObjTiles,")
             out.append("    .bankCount = ARRAY_COUNT(gSpriteBanks),")
-            out.append("    .tilePoolCount = sizeof(gStaticData_084A4660) / 32,")
+            out.append("    .tilePoolCount = sizeof(gFixedObjTiles) / 32,")
             out.append("};")
             out.append("")
             out.append("/* Bank N is `**gUnknown_030012D0 + 12 * N` in the code (a part's +0x20). */")

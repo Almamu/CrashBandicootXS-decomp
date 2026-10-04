@@ -16,7 +16,7 @@ struct actor_timed {
 };
 
 /* Countdown `timer`: once it reaches zero, plays a sound, sets the
- * "table-index 4" tag at `unk_18`, and fires the state-2/anim-1
+ * "table-index 4" tag at `palette`, and fires the state-2/anim-1
  * transition (ACTOR_SET_STATE's stores, with the ROM's registers
  * pinned). The `animTimer`/`animDone` stores go through a cast of the
  * field's address: a plain member store is marked as a struct access,
@@ -27,7 +27,7 @@ void sub_8030530(void *selfArg, s32 delta)
 
     self->timer -= delta;
     if (self->timer <= 0) {
-        self->base.unk_18 = 4;
+        self->base.palette = 4;
         PlaySfx(gAudioContext, 4, 0x100);
         {
             register s32 stateVal asm("r0") = 2;

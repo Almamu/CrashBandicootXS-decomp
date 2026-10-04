@@ -14,7 +14,7 @@
  * `gStaticData_08167CD4`'s first two halfwords, allocates the 0x1c-byte
  * tracker object, wires its event table (`gStaticData_0817C3E4`) and
  * part table (`gUnknown_03001580`) pointers plus a fixed `+0x18` flag,
- * registers it via `sub_803B0A8`, and stores it into
+ * registers it via `SetActorAnim`, and stores it into
  * `gUnknown_03001534`. Resets both boss-weapon state globals
  * (`gUnknown_03001538`/`gUnknown_0300153C`) and fires the tracker's own
  * state-0/table-index-0 transition (anim frame from its own part-table
@@ -37,7 +37,7 @@ extern s32 gUnknown_0300153C;
 extern u8 gUnknown_03001524;
 extern s32 gUnknown_03001564;
 extern s32 sub_802973C(void);
-extern void sub_803B0A8(void *self, s32 idx);
+extern void SetActorAnim(void *self, s32 idx);
 extern s32 GetAnimFrameBaseOffset(void *self);
 extern void sub_8031504(void);
 extern const s16 gStaticData_08167CD4[];
@@ -66,8 +66,8 @@ static inline void InitAnimPart(struct actor_self *self, struct anim_frame_recor
 {
     self->anims = anims;
     self->frameOffsets = offsets;
-    self->unk_18 = flag;
-    sub_803B0A8(self, 0);
+    self->palette = flag;
+    SetActorAnim(self, 0);
 }
 
 void sub_8030F88(s32 level)

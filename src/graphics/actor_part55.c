@@ -10,7 +10,7 @@ extern s32 __divsi3(s32 arg0, s32 arg1);
 extern s32 sub_8029E98(void);
 extern s32 sub_8029EB4(void);
 extern u8 *GetAnimFrameData(void *self);
-extern s32 sub_803B060(void *self);
+extern s32 GetAnimFrameAttr(void *self);
 extern void SetupSpriteFrameOam(u8 *frame, u32 arg1, u32 arg2, s32 priority);
 
 /* Computes an OBJ scale factor from `self->depth` and its animation
@@ -21,16 +21,16 @@ extern void SetupSpriteFrameOam(u8 *frame, u32 arg1, u32 arg2, s32 priority);
  * frame (`GetAnimFrameData`), centers it (frame's own width/height
  * bytes, doubled if the first scale factor exceeds `0xff`), culls if
  * fully off-screen, and - if visible - builds the OAM attribute word
- * (position, `sub_803B060`'s flag byte, an oversize-scale bit, and a
- * priority/palette nibble from `self->unk_18`/`self->visible`) and calls
+ * (position, `GetAnimFrameAttr`'s flag byte, an oversize-scale bit, and a
+ * priority/palette nibble from `self->palette`/`self->sortKey`) and calls
  * `SetupSpriteFrameOam` with the first scale factor as its OBJ-affine
  * "priority" argument. See docs/matching/issue-50-actor-2a69c.md for
  * the two register-pinning gaps this needed to close (the `frame[1]`
  * read reusing GetAnimFrameData's still-live `r0` return instead of the
  * `r7` copy used for `frame[0]`, and the `flag` spill-across-call
- * around `sub_803B060` needing to be written out explicitly since it's
+ * around `GetAnimFrameAttr` needing to be written out explicitly since it's
  * pinned to a caller-saved register). */
-void UpdateAnimatedActorPart(void *selfArg)
+void DrawActor(void *selfArg)
 {
     register struct actor_self *self asm("r6") = selfArg;
     register s32 scale asm("r8");
@@ -138,7 +138,7 @@ void UpdateAnimatedActorPart(void *selfArg)
         register void *callArg asm("r0") = self;
 
         asm volatile("str %1, %0" : "=m" (flagStack[0]) : "r" (flag));
-        attr = sub_803B060(callArg);
+        attr = GetAnimFrameAttr(callArg);
 
         {
             u32 packed;
@@ -157,10 +157,10 @@ void UpdateAnimatedActorPart(void *selfArg)
             asm volatile("ldr %0, %1" : "=r" (flag) : "m" (flagStack[0]));
             packed |= flag;
 
-            v = self->unk_18;
+            v = self->palette;
             pre = v << 0xc;
 
-            if (self->visible & 0x8000) {
+            if (self->sortKey & 0x8000) {
                 shifted = (pre | 0x800) << 0x10;
             } else {
                 shifted = v << 0x1c;

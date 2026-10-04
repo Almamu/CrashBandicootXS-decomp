@@ -11,7 +11,7 @@
  * whole sequence instead of materializing a fresh temporary. */
 #define ABS32(x, sign) do { (sign) = (x) >> 0x1f; (x) ^= (sign); (x) -= (sign); } while (0)
 
-/* The `InitActorPart`/`gUnknown_03000884`-rooted "self" object family
+/* The `InitActorPart`/`gActorList`-rooted "self" object family
  * already documented in actor_part17.c/actor_part18.c/actor_part19.c/
  * actor_part28.c/actor_part32.c: a "part table" pointer at `self+0`
  * (copied from the constructor's `part` argument's own `+4` field), a
@@ -20,7 +20,7 @@
  * `self+0x28`, a frame counter at `self+0x44`, a `+0x50`-rooted event/
  * trampoline table fed through `_call_via_r2`, and the `+0x48`(next)/
  * `+0x4c`(prev) circular doubly-linked list rooted at the player-pointer
- * global `gUnknown_03000884`. This file additionally pins down
+ * global `gActorList`. This file additionally pins down
  * `InitActorPart` itself (the constructor every other actor_part*.c file
  * already forward-declares and calls) plus a handful of new fields it
  * introduces: the constructor's raw `part`/`b`/`c`/`d` arguments cached
@@ -31,22 +31,22 @@
  * table's slot-3 trampoline instead of animating), a one-shot byte flag
  * at `self+0x2c`, and a 12-byte little vector block at `self+0x38`
  * (copied from `part+0x14..0x20`) whose first three `s16` slots are a
- * position `UpdateAnimatedActorPart`'s sibling `sub_802AA0C` integrates
+ * position `DrawActor`'s sibling `sub_802AA0C` integrates
  * a per-axis velocity into. The object is `struct actor_self`
  * (actor_self.h: `x`/`y`/`z` are the cached `b`/`c`/`d`, `depth` and
- * `visible` the threshold pair) and the constructor's `part` a `struct
+ * `sortKey` the threshold pair) and the constructor's `part` a `struct
  * anim_table_record` (actor_anim.h). See
  * docs/matching/issue-50-actor-2a69c.md. */
 
-extern struct actor_self *gUnknown_03000884;
+extern struct actor_self *gActorList;
 extern void sub_802F338(void *arg0);
 
 /* Trivial forwarder - ignores its own argument and calls
- * `sub_802F338(gUnknown_03000884)` (the player object), discarding its
+ * `sub_802F338(gActorList)` (the player object), discarding its
  * return value. Same shape as `sub_802C0A8` in actor_part19.c. */
 void sub_802A69C(void *arg0)
 {
-    sub_802F338(gUnknown_03000884);
+    sub_802F338(gActorList);
 }
 
 extern void sub_802B864(void *arg0);
@@ -54,7 +54,7 @@ extern void sub_802B864(void *arg0);
 /* Same forwarder shape as `sub_802A69C`, calling `sub_802B864` instead. */
 void sub_802A6B0(void *arg0)
 {
-    sub_802B864(gUnknown_03000884);
+    sub_802B864(gActorList);
 }
 
 extern void sub_802F0DC(void *arg0);
@@ -62,7 +62,7 @@ extern void sub_802F0DC(void *arg0);
 /* Same forwarder shape as `sub_802A69C`, calling `sub_802F0DC` instead. */
 void sub_802A6C4(void *arg0)
 {
-    sub_802F0DC(gUnknown_03000884);
+    sub_802F0DC(gActorList);
 }
 
 extern void sub_802BFD4(void *arg0);
@@ -72,38 +72,38 @@ extern void sub_802BFD4(void *arg0);
  * pointer anyway - the callee simply ignores it. */
 void sub_802A6D8(void *arg0)
 {
-    sub_802BFD4(gUnknown_03000884);
+    sub_802BFD4(gActorList);
 }
 
-extern void *gUnknown_03001418;
+extern void *gActorCategoryVtable;
 extern s32 _call_via_r1(void *arg0, void *fn);
 
 /* Passes its own `self` argument through to `_call_via_r1`, alongside a
- * function pointer read from `gUnknown_03001418`'s own `+0x24` field
- * (`gUnknown_03001418` is itself a pointer to some shared record). */
+ * function pointer read from `gActorCategoryVtable`'s own `+0x24` field
+ * (`gActorCategoryVtable` is itself a pointer to some shared record). */
 s32 sub_802A6EC(void *self)
 {
-    void *tab = gUnknown_03001418;
+    void *tab = gActorCategoryVtable;
 
     return _call_via_r1(self, *(void **)((u8 *)tab + 0x24));
 }
 
-extern u8 gStaticData_087E4DF4[];
-extern void sub_803B0A8(void *self, s32 arg1);
+extern u8 gActorVtable[];
+extern void SetActorAnim(void *self, s32 arg1);
 extern s32 sub_8029B2C(void);
 extern s32 sub_8029E40(void);
 
 /* The constructor every other `actor_part*.c` file already forward-
  * declares: seeds `self`'s part-table pointer (`+0`/`+4`, copied from
  * `part+4`/`part+8`) and header byte (`+0x18`, from `part+0xc`), resets
- * it via `sub_803B0A8`, marks it "dead" (`+0x50 = gStaticData_087E4DF4`)
+ * it via `SetActorAnim`, marks it "dead" (`+0x50 = gActorVtable`)
  * until a real event table is assigned later, caches the constructor's
  * own `part`/`b`/`c`/`d` arguments (`+0x30`/`+0x1c`/`+0x20`/`+0x24`),
  * copies a 12-byte vector block from `part+0x14..0x20` to `self+0x38`,
  * resets state/counter (`+0x28`/`+0x44 = 0`) and the one-shot flag
  * (`+0x2c = 1`), computes the movement-threshold pair (`+0x34`/`+0x14`,
  * see this file's header comment), and links `self` into the circular
- * `+0x48`/`+0x4c` list rooted at the player pointer `gUnknown_03000884`
+ * `+0x48`/`+0x4c` list rooted at the player pointer `gActorList`
  * (or self-links it if that list is still empty). Returns `self`. */
 void *InitActorPart(void *selfArg, void *partArg, s32 b, s32 c, s32 d)
 {
@@ -113,18 +113,18 @@ void *InitActorPart(void *selfArg, void *partArg, s32 b, s32 c, s32 d)
     register s32 cReg asm("r6") = c;
 
     {
-        u8 vC = part->header_byte;
+        u8 vC = part->palette;
         struct anim_frame_record *v4 = part->table_A;
         u32 *v8 = part->table_B;
 
         self->anims = v4;
         self->frameOffsets = v8;
-        self->unk_18 = vC;
+        self->palette = vC;
     }
 
-    sub_803B0A8(self, 0);
+    SetActorAnim(self, 0);
 
-    self->vtable = (struct actor_vtable *)gStaticData_087E4DF4;
+    self->vtable = (struct actor_vtable *)gActorVtable;
     self->x = bReg;
     self->y = cReg;
     self->z = d;
@@ -157,15 +157,15 @@ void *InitActorPart(void *selfArg, void *partArg, s32 b, s32 c, s32 d)
             value |= c;
         }
 
-        self->visible = value;
+        self->sortKey = value;
 
         if (self->depth > sub_8029E40()) {
-            self->visible |= 0x8000;
+            self->sortKey |= 0x8000;
         }
     }
 
     {
-        struct actor_self *head = gUnknown_03000884;
+        struct actor_self *head = gActorList;
 
         if (head != NULL) {
             ACTOR_LINK_PREV(self) = head;
@@ -196,7 +196,7 @@ extern s32 GetAnimFrameBaseOffset(void *self);
  * once the animation's base offset reaches the current keyframe's `+4`
  * threshold - rewinds `+8` by the keyframe's `+4`/`+6` delta and marks
  * `+0x12` "done". */
-void sub_802A7B8(void *selfArg)
+void UpdateActor(void *selfArg)
 {
     struct actor_self *self = selfArg;
 
@@ -222,10 +222,10 @@ void sub_802A7B8(void *selfArg)
             value |= c;
         }
 
-        self->visible = value;
+        self->sortKey = value;
 
         if (self->depth > sub_8029E40()) {
-            self->visible |= 0x8000;
+            self->sortKey |= 0x8000;
         }
     }
 
@@ -233,9 +233,9 @@ void sub_802A7B8(void *selfArg)
         self->depth < gUnknown_030013C0 - 0x200) {
         if (self != NULL) {
             struct actor_vtable *table = self->vtable;
-            s32 offset = table->m08.thisOffset;
+            s32 offset = table->destroy.thisOffset;
             u8 *addr = (u8 *)self + offset;
-            void *fn = table->m08.fn;
+            void *fn = table->destroy.fn;
 
             _call_via_r2(addr, 3, fn);
         }

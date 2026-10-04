@@ -48,7 +48,7 @@ extern s32 gUnknown_03001508;
 extern void *gUnknown_03001518[2];
 extern u8 gStaticData_0817C200[];
 extern u8 gStaticData_087E5144[];
-extern u8 gStaticData_087E4DF4[];
+extern u8 gActorVtable[];
 
 /* Accumulator-drain/reward-dispenser for the `gUnknown_030014FC`
  * accumulator `sub_802F540` fills: while the singleton flag
@@ -329,7 +329,7 @@ void sub_802F69C(void *selfArg)
  * table), fully drains the `gUnknown_030014FC` reward accumulator,
  * frees the two keyframe-size tile allocations `sub_802F338` made
  * (`gUnknown_03001518`), marks `self` fully "dead"
- * (`gStaticData_087E4DF4`), unlinks it from its doubly-linked list,
+ * (`gActorVtable`), unlinks it from its doubly-linked list,
  * and optionally frees it. */
 void sub_802F6DC(void *selfArg, s32 flags)
 {
@@ -348,7 +348,7 @@ void sub_802F6DC(void *selfArg, s32 flags)
     FreeVramTileBlock(gUnknown_03001518[0]);
     FreeVramTileBlock(gUnknown_03001518[1]);
 
-    *(void **)(self + 0x50) = gStaticData_087E4DF4;
+    *(void **)(self + 0x50) = gActorVtable;
 
     *(u8 **)(*(u8 **)(self + 0x4c) + 0x48) = *(u8 **)(self + 0x48);
     *(u8 **)(*(u8 **)(self + 0x48) + 0x4c) = *(u8 **)(self + 0x4c);

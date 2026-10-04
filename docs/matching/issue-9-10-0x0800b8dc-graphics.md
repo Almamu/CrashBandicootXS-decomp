@@ -608,8 +608,8 @@ neighborhood.
   Unconditional prelude: if `self->0x6c==0xb` and `owner->4 <
   self->0x64`, latches `owner->4 = self->0x64` and fires
   `sub_800C8AC(self,0)`. Mode 0 builds a `struct aabb` (the same shape
-  `actor_part4.c`/`actor_part15.c` already use, via `sub_803AFE4`/
-  `sub_803AFDC`) at `owner`'s position offset by `self->0x20`/`0x24`,
+  `actor_part4.c`/`actor_part15.c` already use, via `SetAabbPos`/
+  `SetAabbSize`) at `owner`'s position offset by `self->0x20`/`0x24`,
   sized by `self->0x28-0x20`/`self->0x2c-0x24` - a per-instance trigger
   box distinct from `owner`'s own smaller flags-byte field layout at the
   same nominal offsets (confirming `self` and `owner`, while sharing

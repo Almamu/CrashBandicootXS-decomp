@@ -18,7 +18,7 @@ extern void sub_8006D08(struct tile_asset_cache *self, s32 slot, s32 recordId);
 extern void sub_8006DA0(struct tile_asset_cache *self, s32 index);
 
 /* Record 47's periodic-trigger setter (docs/rom_map.md, "An
- * achievement/unlock-icon spawner family, tied to gStaticData_084A5600
+ * achievement/unlock-icon spawner family, tied to gSpriteBankTable
  * record 47") - `TickLevelClock` is its decrementer/consumer.
  *
  * The ROM keeps `&gUnknown_030012D0` and `&gUnknown_030012B8` alive

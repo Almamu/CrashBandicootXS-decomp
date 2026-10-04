@@ -167,7 +167,7 @@ extern void sub_8025A44(void *bitmap, s32 arg1);
 extern void *sub_8025A5C(void *mem);
 extern void sub_8022BF0(struct level_state *self, u8 arg1);
 extern void sub_80235E4(struct level_state *self, u8 arg1);
-extern s32 sub_803AFEC(struct level_state *self);
+extern s32 GetLives(struct level_state *self);
 extern void RestoreCheckpoint(struct level_state *self);
 extern s32 GetWumpa(struct level_state *self);
 extern s32 sub_8023414(struct level_state *self);
@@ -287,7 +287,7 @@ void UpdateGameFrame(struct level_state *self)
                 if (sub_80232B8(self))
                 {
                     self->unk_b0 = GetWumpa(self);
-                    self->unk_b8 = sub_803AFEC(self);
+                    self->unk_b8 = GetLives(self);
                     self->unk_b4 = sub_8023414(self);
                     ResetWumpa(self);
                     self->unk_74 = 0;
@@ -356,7 +356,7 @@ void UpdateGameFrame(struct level_state *self)
             }
             if (status == 2)
                 break;
-            if (status == 1 && sub_803AFEC(self) < 0)
+            if (status == 1 && GetLives(self) < 0)
                 break;
             if (self->timeTrial && status == 1)
             {
@@ -387,7 +387,7 @@ void UpdateGameFrame(struct level_state *self)
         }
         if (gHud != NULL)
             DestroyHud(gHud, 3);
-        if (sub_803AFEC(self) < 0)
+        if (GetLives(self) < 0)
         {
             if (RunContinuePrompt())
                 ResetLives(self);

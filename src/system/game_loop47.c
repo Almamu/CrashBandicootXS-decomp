@@ -137,14 +137,14 @@ struct d18c_flag8
     u8 value;
 } __attribute__((packed));
 
-extern void sub_803AFE4(void *buf, s32 x, s32 y);
-extern void sub_803AFDC(void *buf, s32 w, s32 h);
+extern void SetAabbPos(void *buf, s32 x, s32 y);
+extern void SetAabbSize(void *buf, s32 w, s32 h);
 extern s32 gStaticData_0816BBF0[];
 extern u8 gStaticData_0816BBDA[];
 extern u8 gStaticData_0816BF00[];
 extern u8 gStaticData_0816B2F8[];
 extern s32 gStaticData_0816BC98[][7];
-extern void *sub_80083B8(void *part);
+extern void *GetSpriteFrame(void *part);
 extern u8 sub_8001640(struct aabb *a, struct aabb *b);
 extern u8 sub_800CEAC(void *self, struct d18c_quad *quad, struct aabb *box, s32 x, s32 y);
 extern struct phys_obj *sub_800CF70(struct phys_obj *self, struct aabb *box, u8 *found);
@@ -173,7 +173,7 @@ extern void sub_8010D54(void *queue, struct phys_obj *obj, s32 kind, s32 code,
 #define D18C_HITBOX(dst, part)                                                 \
     if (1)                                                                     \
     {                                                                          \
-        u8 *_info = sub_80083B8(part);                                         \
+        u8 *_info = GetSpriteFrame(part);                                         \
                                                                                \
         switch (**(u8 **)(_info + 4) >> 4)                                     \
         {                                                                      \
@@ -333,8 +333,8 @@ void sub_0800D18C(struct phys_obj *self, s32 idx)
         offY = pb->yOff;
         w = pb->w;
         h = pb->h;
-        sub_803AFE4(&f.a, offX + px, offY + py);
-        sub_803AFDC(&f.a, w, h);
+        SetAabbPos(&f.a, offX + px, offY + py);
+        SetAabbSize(&f.a, w, h);
         if (self->flipX)
             f.a.x = px * 2 - (f.a.x + f.a.w);
         if (self->flipY)
@@ -386,9 +386,9 @@ void sub_0800D18C(struct phys_obj *self, s32 idx)
         {
             s32 x = offX + px, y = offY + py;
 
-            sub_803AFE4(BOX_ADDR(&f.b), x, y);
+            SetAabbPos(BOX_ADDR(&f.b), x, y);
         }
-        sub_803AFDC(BOX_ADDR(&f.b), w, h);
+        SetAabbSize(BOX_ADDR(&f.b), w, h);
         if (D18C_P->flipX)
             f.b.x = px * 2 - (f.b.x + f.b.w);
         if (D18C_P->flipY)
@@ -552,9 +552,9 @@ tail:
         {
             s32 x = offX + px, y = offY + py;
 
-            sub_803AFE4(BOX_ADDR(&f.b), x, y);
+            SetAabbPos(BOX_ADDR(&f.b), x, y);
         }
-        sub_803AFDC(BOX_ADDR(&f.b), w, h);
+        SetAabbSize(BOX_ADDR(&f.b), w, h);
         if (D18C_P->flipX)
             f.b.x = px * 2 - (f.b.x + f.b.w);
         if (D18C_P->flipY)

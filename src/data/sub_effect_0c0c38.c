@@ -7,9 +7,9 @@
  * docs/data.md.
  */
 
-/* Category 1's sub_effect_table (gStaticData_08175558[1].sub_effect_table,
+/* Category 1's spawnTable (gActorCategories[1].spawnTable,
  * read by SelectActorCategory (actor_part102.c) and the sub_802A5xx accessors). Record 0's field_04 is the record count. */
-const SUB_EFFECT_TABLE(175) gStaticData_080C0C38 = {
+const SUB_EFFECT_TABLE(175) gCategory1SpawnTable = {
     {
         { 4000, 175, 3, 3, 3, 0, 0, 54 },
         { 18, -1, 1, 1, 1, 0, 30, 54 },
@@ -190,9 +190,9 @@ const SUB_EFFECT_TABLE(175) gStaticData_080C0C38 = {
     { 2556, -1, 0, 0, 0, 0 },
 };
 
-/* Category 2's sub_effect_table (gStaticData_08175558[2].sub_effect_table,
+/* Category 2's spawnTable (gActorCategories[2].spawnTable,
  * read by SelectActorCategory (actor_part102.c) and the sub_802A5xx accessors). Record 0's field_04 is the record count. */
-const SUB_EFFECT_TABLE(171) gStaticData_080C19F0 = {
+const SUB_EFFECT_TABLE(171) gCategory2SpawnTable = {
     {
         { 4000, 171, 3, 3, 3, 0, 0, 54 },
         { 18, -1, 30, 7, 30, 0, 30, 54 },

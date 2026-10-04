@@ -93,14 +93,14 @@ struct linked_node {
 extern void FreeVramTileBlock(void *arg0);
 extern void *gUnknown_0300160C[2];
 extern u8 gStaticData_087E55C4[];
-extern u8 gStaticData_087E4DF4[];
+extern u8 gActorVtable[];
 
 void sub_803716C(struct linked_node *self, u32 flags)
 {
     self->field_50 = gStaticData_087E55C4;
     FreeVramTileBlock(gUnknown_0300160C[0]);
     FreeVramTileBlock(gUnknown_0300160C[1]);
-    self->field_50 = gStaticData_087E4DF4;
+    self->field_50 = gActorVtable;
     self->next->prev = self->prev;
     self->prev->next = self->next;
     if (flags & 1) {

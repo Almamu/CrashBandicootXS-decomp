@@ -5,7 +5,7 @@
 /*
  * ROM 0x08178F80-0x0817A6B8: the data of actor categories 0-2 (the family
  * whose frames are the gStaticData_080B2120 sheet): their OBJ palette,
- * the 41-record animation table gStaticData_081796CC
+ * the 41-record animation table gCategoryFamily0AnimTable
  * (include/actor_anim.h) and the keyframe (table_A) and frame (table_B)
  * arrays its records point at. Linked in ROM order between data/data.s
  * sections by ldscript.txt - see docs/data.md, "Category families".
@@ -291,7 +291,7 @@ const u32 gStaticData_081796A4[10] = {
     FRAMED_0B2120_SMALL_CREATURE_09,
 };
 
-const struct anim_table_record gStaticData_081796CC[41] = {
+const struct anim_table_record gCategoryFamily0AnimTable[41] = {
     { 0, (struct anim_frame_record *)gStaticData_08179380, (u32 *)gStaticData_0817941C, 0, { 0 }, 0x2F00, { -10, -20, -1, 20, 44, 3 }, 0, 0 },
     { 1, (struct anim_frame_record *)gStaticData_0817A04C, (u32 *)gStaticData_0817A130, 1, { 0 }, 0x313C, { -10, -10, -1, 20, 20, 3 }, 0, 0 },
     { 2, (struct anim_frame_record *)gStaticData_0817968C, (u32 *)gStaticData_081796A4, 0, { 0 }, 0x2F00, { 0, 0, 0, 0, 0, 0 }, 0, 0 },

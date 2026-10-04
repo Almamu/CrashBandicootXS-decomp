@@ -5,7 +5,7 @@ the tail of `asm/code_3_2_20_8b7c_ac28.s` right before its own already-
 matched literal tail (`sub_802BC68` onward, `src/graphics/
 actor_part107.c`, `docs/matching/issue-50-actor-bc68.md`) - still
 completely raw. `tools/report_units.py`'s `(0x0802AC28, None, "actor")`
-entry covers the still-raw `sub_802AC28`-`sub_802B218` run before this
+entry covers the still-raw `CreateActor`-`SpawnActor` run before this
 gap; `docs/rom_map.md` had already flagged `sub_802B364` itself (740 B,
 vtable-dispatched at an untraced slot of `gStaticData_087E4E54`) from
 disassembly alone.
@@ -135,7 +135,7 @@ same approach this project has used for other large NAKED batches.
   multiply result into one register, copy it to a second, then shift"
   idiom; transcribed directly here instead of re-chased at the C level.
 - **`sub_802B8E8`** - spawn-once trigger for a secondary effect object
-  (`gUnknown_03001490`, via `sub_802AC28`), then drains the camera
+  (`gUnknown_03001490`, via `CreateActor`), then drains the camera
   catch-up budget into `self+0x20` until it crosses `0x2800`, at which
   point it plays a cue, clamps `self+0x20`, resets `self` to state 9/
   table-index 9, clears `gUnknown_030014A0`, fires the spawned object's

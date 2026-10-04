@@ -64,7 +64,7 @@ family already covered at length by
   (still raw) and fires the `self->table+0x68` trampoline with code
   `1`; kinds `5`/`7`/`10` each set one of the `+0x100`/`+0x102`/`+0x103`
   flags; the rest are no-ops beyond the shared kind-reset. Finally
-  looks up the current keyframe record via `sub_80083B8` (already
+  looks up the current keyframe record via `GetSpriteFrame` (already
   parked as `NAKED` in `actor_part5.c`) and picks a `{s16 x, s16 y}`
   offset table off its `+4` byte's upper nibble - **the exact same
   case-to-block mapping `sub_80084C4` (`actor_part6.c`, already
@@ -417,7 +417,7 @@ body moved from opaque raw bytes to matched, documented C.
   `actor_part77.o`.
 - `docs/matching/issue-9-0x08007634-actor.md` - the original write-up
   for this whole neighborhood's prior pass, including the
-  `sub_80083B8`/`sub_80084C4` keyframe-lookup convention this session
+  `GetSpriteFrame`/`sub_80084C4` keyframe-lookup convention this session
   reused directly.
 - `docs/matching/issue-12-physics-collision.md` - the physics/collision
   subsystem `sub_800B8DC` leads into, already flagged out of scope for

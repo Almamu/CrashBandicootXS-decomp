@@ -11,7 +11,7 @@ the first near-miss pass ([near-miss-polish.md](near-miss-polish.md)),
 | `RunPauseMenu` | `src/graphics/settings_menu15.c` | agbcc | 54 (4 bytes short) | `static inline` accessor for `field_12c` so CSE doesn't share the 0x12c offset; two locals fix load order |
 | `DecodeCollisionChunk` | `src/system/game_loop3.c` | old_agbcc | 33 | explicit `<< 24 >> 24` sign extensions through `s32` locals; `asm("" : : "r"(n))` fixes the r4/r5 swap |
 | `sub_8029890` | `src/graphics/actor_part95.c` | agbcc (both match) | 37 | `asm("" : "=r"(reload) : "0"(a4))` copies the address used for the reload; evaluation-order tweaks |
-| `SelectActorCategory` | `src/graphics/actor_part102.c` | agbcc (both match) | 125 (4 bytes long) | local pointer to `gUnknown_03001404` plus one `asm("" : : "r"(idx))` so it outranks `base` |
+| `SelectActorCategory` | `src/graphics/actor_part102.c` | agbcc (both match) | 125 (4 bytes long) | local pointer to `gActorSpawnIndex` plus one `asm("" : : "r"(idx))` so it outranks `base` |
 
 All of the `asm` statements emit no code. Each one has a comment at its
 use.
@@ -21,7 +21,7 @@ use.
 **Extra references, as in the first pass.** `SelectActorCategory` and
 `DecodeCollisionChunk` were plain priority swaps. A global's address can't take
 an `asm` operand directly, so `SelectActorCategory` stores through a
-local `s32 *idx = &gUnknown_03001404`, and the reference goes on `idx`.
+local `s32 *idx = &gActorSpawnIndex`, and the reference goes on `idx`.
 Its scan loops still have to use the global by name. With `idx` in the
 loops too, the ROM's loop-local copies of the address (`adds r3, r7, #0`)
 disappear.

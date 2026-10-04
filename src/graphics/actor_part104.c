@@ -9,7 +9,7 @@ extern void ***gUnknown_030012D0;
 extern struct tile_asset_cache *gUnknown_030012B8;
 extern void sub_8006EA8(struct tile_asset_cache *self);
 extern void sub_8006D40(struct tile_asset_cache *self, s32 slot, s32 index);
-extern s32 gUnknown_03001380;
+extern s32 gActorCategory;
 extern void *gHud;
 extern void sub_802732C(void *arr, s32 flag);
 
@@ -21,7 +21,7 @@ extern void sub_802732C(void *arr, s32 flag);
  * building the category's status-icon OAM row via sub_802732C, gated on
  * whether the category's type is nonzero.
  *
- * `gStaticData_08175558[category]`'s address is deliberately computed
+ * `gActorCategories[category]`'s address is deliberately computed
  * without a named `struct category_descriptor *` local - keeping it in
  * an unnamed rolling register (matching this compiler's own choice for
  * an expression it never has to keep alive past one immediate use)
@@ -49,8 +49,8 @@ void SetupActorVramPool(void)
     sub_8006EA8(cache);
 
     {
-        u8 *arr = (u8 *)gStaticData_08175558;
-        s32 idx = gUnknown_03001380;
+        u8 *arr = (u8 *)gActorCategories;
+        s32 idx = gActorCategory;
 
         if (*(s32 *)(arr + idx * 0x34) == 0) {
             p = *(void **)entityTable;
@@ -78,8 +78,8 @@ void SetupActorVramPool(void)
 
     {
         void *iconArray = gHud;
-        u8 *arr = (u8 *)gStaticData_08175558;
-        s32 idx = gUnknown_03001380;
+        u8 *arr = (u8 *)gActorCategories;
+        s32 idx = gActorCategory;
 
         sub_802732C(iconArray, *(s32 *)(arr + idx * 0x34) != 0);
     }

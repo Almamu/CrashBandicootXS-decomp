@@ -24,7 +24,7 @@ Nine closed as plain C, with no register pins:
 same file and parked for the same reason.
 
 Still NAKED: `InitActorCategory`, `sub_8029890`, `SelectActorCategory`,
-`sub_802A208`.
+`RunActorCategoryFrame`.
 
 ## The AABB group: one inline, one frame struct
 
@@ -74,7 +74,7 @@ called through `_call_via_r1`.
 
 All four need old_agbcc. Current agbcc schedules the `asr`s in the box
 translation differently, which puts them 24-26 halfwords off.
-`actor_part103.c` also holds the NAKED `sub_802A208`, which assembles
+`actor_part103.c` also holds the NAKED `RunActorCategoryFrame`, which assembles
 the same under either compiler. `actor_part19h.c` holds only
 `sub_802C7A8`. Both files moved to `OLD_AGBCC_OBJS`.
 
@@ -142,13 +142,13 @@ TU-wide allocator quirk.
   takes six arguments. The 5th goes to vtable slot 2, the 6th is `y`.
   The draft produces the ROM's instruction sequence, including the
   `table + 0x14 + i*0x14` address shape (an inline returning a pointer,
-  so the load comes after the limit) and `&gUnknown_03001408` loaded
-  before `mem_alloc`. But the `&gUnknown_03001404` pseudo and the cached
+  so the load comes after the limit) and `&gActorDrawList` loaded
+  before `mem_alloc`. But the `&gActorSpawnIndex` pseudo and the cached
   `sub_8029B2C()` value swap `r7`/`r8`, which adds two `mov`s. In the
   `-dg` dump the cached value (refs 7, live 105) outranks the address
   (refs 4, live 84). Goto and `for (;;)` forms of the first loop did not
   change that.
-- **`sub_802A208`** (about 150 halfwords). A first full draft had the
+- **`RunActorCategoryFrame`** (about 150 halfwords). A first full draft had the
   right structure but needed `r9` on top of the ROM's `r8`, as the old
   note says. Not pursued further. No draft kept.
 - **`InitActorCategory`**: not attempted. About 230 instructions and

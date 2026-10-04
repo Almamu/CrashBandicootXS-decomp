@@ -22,8 +22,8 @@
  * exactly (see its own doc comment below) and additionally reveals its
  * sibling `sub_800CEAC`, entirely unremarked anywhere until now. */
 
-extern void sub_803AFE4(void *buf, s32 arg1, s32 arg2);
-extern void sub_803AFDC(void *buf, s32 arg1, s32 arg2);
+extern void SetAabbPos(void *buf, s32 arg1, s32 arg2);
+extern void SetAabbSize(void *buf, s32 arg1, s32 arg2);
 extern u8 sub_8001688(void *buf1, void *buf2);
 extern void *gUnknown_030012D8;
 extern void *sub_801070C(void *obj); /* "get next" */
@@ -122,16 +122,16 @@ u8 sub_800CEAC(void *self, struct hitbox_quad *quad, struct aabb *box,
         x -= 2;
         y += yOffset;
         w = quad->w + 4;
-        sub_803AFE4(&b, x, y);
-        sub_803AFDC(&b, w, h);
+        SetAabbPos(&b, x, y);
+        SetAabbSize(&b, w, h);
     } else {
         s32 x = quad->xOff;
         s32 y = quad->yOff;
         u8 w = quad->w;
         u8 h = quad->h;
 
-        sub_803AFE4(&b, x + xOffset, y + yOffset);
-        sub_803AFDC(&b, w, h);
+        SetAabbPos(&b, x + xOffset, y + yOffset);
+        SetAabbSize(&b, w, h);
     }
     if (((struct ceac_player *)gUnknown_030012D8)->mirrorX)
         b.field_0 = xOffset * 2 - (b.field_0 + b.field_8);
@@ -210,8 +210,8 @@ struct box_part *sub_800CF70(struct box_part *selfArg, struct aabb *box, u8 *fou
         u8 w = q->w;
         u8 h = q->h;
 
-        sub_803AFE4(&b, x + px, y + py);
-        sub_803AFDC(&b, w, h);
+        SetAabbPos(&b, x + px, y + py);
+        SetAabbSize(&b, w, h);
         if (self->mirrorX)
             b.field_0 = px * 2 - (b.field_0 + b.field_8);
         if (self->mirrorY)

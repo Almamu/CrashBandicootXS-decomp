@@ -6,11 +6,11 @@
 /* Syncs `self`'s position fields from the singleton's own position plus
  * a fixed offset, sets the one-shot flag (`+0x58=1`), and - if
  * `self+0x12` is set and `self` is non-NULL - fires the `self+0x50`
- * event table's slot-3 trampoline; otherwise calls `sub_802A7B8(self)`.
+ * event table's slot-3 trampoline; otherwise calls `UpdateActor(self)`.
  *
  * The ROM computes a "should animate" 0/1 value into a register and
  * then re-checks it against zero before deciding whether to call
- * `sub_802A7B8`, even though the value is a compile-time constant on
+ * `UpdateActor`, even though the value is a compile-time constant on
  * each path - this compiler's dead-store/dead-branch elimination
  * always collapses that redundant compute-then-recheck step for a
  * plain `s32 doAnim`. An empty `asm volatile("" : "+r"(doAnim))`
@@ -22,7 +22,7 @@ extern s32 sub_80338E8(void);
 extern s32 sub_8033900(void);
 extern s32 sub_80338F4(void);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *fn);
-extern void sub_802A7B8(void *self);
+extern void UpdateActor(void *self);
 
 void sub_8034270(void *selfArg)
 {
@@ -49,7 +49,7 @@ void sub_8034270(void *selfArg)
 
     asm volatile("" : "+r"(doAnim));
     if (doAnim != 0) {
-        sub_802A7B8(self);
+        UpdateActor(self);
     }
 }
 

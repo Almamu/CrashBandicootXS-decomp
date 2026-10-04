@@ -56,7 +56,7 @@ LANDMARK_DOMAINS = {
     'InitSmallFont': 'hud', 'InitLargeFont': 'hud', 'FontMeasureText': 'hud',
     'FontUploadTiles': 'hud', 'DestroyFont': 'hud',
     'InitActorCategory': 'actor_system', 'SelectActorCategory': 'actor_system',
-    'InitActorPart': 'actor_system', 'UpdateAnimatedActorPart': 'actor_system',
+    'InitActorPart': 'actor_system', 'DrawActor': 'actor_system',
     'ConstructAnimTableState': 'actor_system', 'ConstructActorPart': 'actor_system',
     'GetAnimFrameData': 'actor_system',
 }

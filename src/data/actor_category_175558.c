@@ -17,7 +17,7 @@ extern void sub_802A69C();
 extern void sub_802A6B0();
 extern void sub_802A6C4();
 extern void sub_802A6D8();
-extern void sub_802B218();
+extern void SpawnActor();
 extern void sub_802D7B0();
 extern void sub_802DA68();
 extern void sub_802DE70();
@@ -37,19 +37,19 @@ extern void sub_8033604();
 extern void sub_80337E4();
 
 extern const u8 gStaticData_0803B8B0[];
-extern const u8 gStaticData_080B1444[];
+extern const u8 gCategory0SpawnTable[];
 extern const u8 gStaticData_080B2120[];
-extern const u8 gStaticData_080C0C38[];
-extern const u8 gStaticData_080C19F0[];
+extern const u8 gCategory1SpawnTable[];
+extern const u8 gCategory2SpawnTable[];
 extern const u8 gStaticData_080FF1B0[];
 extern const u8 gStaticData_0813D934[];
-extern const u8 gStaticData_08140DCC[];
+extern const u8 gCategory3SpawnTable[];
 extern const u8 gStaticData_0814174C[];
 extern const u8 gStaticData_08151AC4[];
-extern const u8 gStaticData_0815405C[];
+extern const u8 gCategory4SpawnTable[];
 extern const u8 gStaticData_08155260[];
-extern const u8 gStaticData_08158918[];
-extern const u8 gStaticData_0815A030[];
+extern const u8 gCategory5SpawnTable[];
+extern const u8 gCategory6SpawnTable[];
 extern const u16 gStaticData_08178F80[];
 extern const u16 gStaticData_0817AAA4[];
 extern const u16 gStaticData_0817AEA4[];
@@ -57,15 +57,15 @@ extern const u16 gStaticData_0817AEA4[];
 /* One descriptor per actor category 0-6 (type 0: categories 0-2,
  * type 1: 3-5, type 2: 6). data.s used to split this table at
  * 0x08175564 and 0x08175584; nothing referenced those labels. */
-const struct category_descriptor gStaticData_08175558[7] = {
+const struct category_descriptor gActorCategories[7] = {
     /* 0 */ {
         0,
         (void *)gStaticData_0803B8B0,
         0x75b94,
         NULL,
         gStaticData_08178F80,
-        (struct sub_effect_record *)gStaticData_080B1444,
-        (struct anim_table_record *)gStaticData_081796CC,
+        (struct sub_effect_record *)gCategory0SpawnTable,
+        (struct anim_table_record *)gCategoryFamily0AnimTable,
         gStaticData_080B2120,
         4,
         3,
@@ -79,8 +79,8 @@ const struct category_descriptor gStaticData_08175558[7] = {
         0x75b94,
         NULL,
         gStaticData_08178F80,
-        (struct sub_effect_record *)gStaticData_080C0C38,
-        (struct anim_table_record *)gStaticData_081796CC,
+        (struct sub_effect_record *)gCategory1SpawnTable,
+        (struct anim_table_record *)gCategoryFamily0AnimTable,
         gStaticData_080B2120,
         4,
         3,
@@ -94,8 +94,8 @@ const struct category_descriptor gStaticData_08175558[7] = {
         0x75b94,
         NULL,
         gStaticData_08178F80,
-        (struct sub_effect_record *)gStaticData_080C19F0,
-        (struct anim_table_record *)gStaticData_081796CC,
+        (struct sub_effect_record *)gCategory2SpawnTable,
+        (struct anim_table_record *)gCategoryFamily0AnimTable,
         gStaticData_080B2120,
         4,
         3,
@@ -109,8 +109,8 @@ const struct category_descriptor gStaticData_08175558[7] = {
         0x3e784,
         (void *)gStaticData_0813D934,
         gStaticData_0817AAA4,
-        (struct sub_effect_record *)gStaticData_08140DCC,
-        (struct anim_table_record *)gStaticData_0817B2A4,
+        (struct sub_effect_record *)gCategory3SpawnTable,
+        (struct anim_table_record *)gCategoryFamily1AnimTable,
         gStaticData_0814174C,
         7,
         4,
@@ -124,8 +124,8 @@ const struct category_descriptor gStaticData_08175558[7] = {
         0x3e784,
         (void *)gStaticData_08151AC4,
         gStaticData_0817AAA4,
-        (struct sub_effect_record *)gStaticData_0815405C,
-        (struct anim_table_record *)gStaticData_0817B2A4,
+        (struct sub_effect_record *)gCategory4SpawnTable,
+        (struct anim_table_record *)gCategoryFamily1AnimTable,
         gStaticData_0814174C,
         7,
         4,
@@ -139,8 +139,8 @@ const struct category_descriptor gStaticData_08175558[7] = {
         0x3e784,
         (void *)gStaticData_08155260,
         gStaticData_0817AAA4,
-        (struct sub_effect_record *)gStaticData_08158918,
-        (struct anim_table_record *)gStaticData_0817B2A4,
+        (struct sub_effect_record *)gCategory5SpawnTable,
+        (struct anim_table_record *)gCategoryFamily1AnimTable,
         gStaticData_0814174C,
         7,
         4,
@@ -154,8 +154,8 @@ const struct category_descriptor gStaticData_08175558[7] = {
         0x3e784,
         (void *)gStaticData_08155260,
         gStaticData_0817AEA4,
-        (struct sub_effect_record *)gStaticData_0815A030,
-        (struct anim_table_record *)gStaticData_0817B2A4,
+        (struct sub_effect_record *)gCategory6SpawnTable,
+        (struct anim_table_record *)gCategoryFamily1AnimTable,
         gStaticData_0814174C,
         4,
         3,
@@ -165,13 +165,13 @@ const struct category_descriptor gStaticData_08175558[7] = {
     },
 };
 
-/* The three per-type category vtables, `gUnknown_03001418 =
- * &gStaticData_081756C4[type]` in SelectActorCategory
+/* The three per-type category vtables, `gActorCategoryVtable =
+ * &gActorCategoryVtables[type]` in SelectActorCategory
  * (actor_part102.c). Slots 7 and 8 are not code addresses. */
-const struct category_vtable gStaticData_081756C4[3] = {
+const struct category_vtable gActorCategoryVtables[3] = {
     /* 0 */ { {
         ConstructAnimTableState,
-        sub_802B218,
+        SpawnActor,
         sub_802DFDC,
         sub_802D7B0,
         sub_802DA68,

@@ -77,8 +77,8 @@ struct oam_part {
 /* The 0x28 flag bits tested as sign tests (`lsl #N; cmp #0; bge`). */
 #define PART_FLAG_SET(part, shift) ((s32)(*((u8 *)(part) + 0x28) << (shift)) < 0)
 
-extern struct piece_info *sub_80083B8(void *part);
-extern s32 sub_80083A8(void *part);
+extern struct piece_info *GetSpriteFrame(void *part);
+extern s32 GetSpriteTileBase(void *part);
 extern s32 sub_8006C44(void *cursor);
 extern s32 sub_8006C84(void *cursor, s32 src, s32 size);
 extern void sub_8006AC8(void *buffer, void *record);
@@ -102,7 +102,7 @@ void sub_80073DC(void *unused, struct oam_part *part, s32 *pos)
 {
     struct oam_pair oam;
     s32 total = 0;
-    struct piece_info *info = sub_80083B8(part);
+    struct piece_info *info = GetSpriteFrame(part);
     s32 tile = sub_8006C44(gUnknown_030012FC);
     s32 i;
 
@@ -156,5 +156,5 @@ void sub_80073DC(void *unused, struct oam_part *part, s32 *pos)
         tile += tiles;
         total += tiles << 5;
     }
-    sub_8006C84(gUnknown_030012FC, sub_80083A8(part) + (info->u.packed & 0xffffff), total);
+    sub_8006C84(gUnknown_030012FC, GetSpriteTileBase(part) + (info->u.packed & 0xffffff), total);
 }

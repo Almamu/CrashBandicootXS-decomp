@@ -11,8 +11,8 @@
  * already reads as an object's own state byte elsewhere in this ROM
  * region) is `5` or `0xa`.
  *
- * Otherwise builds THREE AABBs via the shared `sub_803AFE4`(set-pos)/
- * `sub_803AFDC`(set-size) primitive (`struct aabb` from
+ * Otherwise builds THREE AABBs via the shared `SetAabbPos`(set-pos)/
+ * `SetAabbSize`(set-size) primitive (`struct aabb` from
  * `actor_part.c`/`src/system/game_loop6.c`), all from the same
  * "keyframe/hitbox record" table convention documented at length in
  * `game_loop6.c`'s own `sub_800D040` header comment: `+0x20` is a
@@ -71,8 +71,8 @@
  * lands in r1 as in the ROM. See docs/matching/sp-box-retry.md. */
 #include "box_part.h"
 
-extern void sub_803AFE4(struct part_aabb *buf, s32 x, s32 y);
-extern void sub_803AFDC(struct part_aabb *buf, s32 w, s32 h);
+extern void SetAabbPos(struct part_aabb *buf, s32 x, s32 y);
+extern void SetAabbSize(struct part_aabb *buf, s32 w, s32 h);
 extern u8 sub_8001640(struct part_aabb *a, struct part_aabb *b);
 extern struct box_part *gUnknown_030012D8;
 
@@ -108,8 +108,8 @@ u8 sub_800CD00(struct box_part *self, s32 action)
         offY = q->offY;
         w = q->w;
         h = q->h;
-        sub_803AFE4(&f.a, offX + px, offY + py);
-        sub_803AFDC(&f.a, w, h);
+        SetAabbPos(&f.a, offX + px, offY + py);
+        SetAabbSize(&f.a, w, h);
         if (self->mirrorX)
             f.a.x = px * 2 - (f.a.x + f.a.w);
         if (self->mirrorY)
@@ -131,9 +131,9 @@ u8 sub_800CD00(struct box_part *self, s32 action)
         h = q->h;
         {
             s32 x = offX + px, y = offY + py;
-            sub_803AFE4(BOX_ADDR(&f.b), x, y);
+            SetAabbPos(BOX_ADDR(&f.b), x, y);
         }
-        sub_803AFDC(BOX_ADDR(&f.b), w, h);
+        SetAabbSize(BOX_ADDR(&f.b), w, h);
         if (gUnknown_030012D8->mirrorX)
             f.b.x = px * 2 - (f.b.x + f.b.w);
         if (gUnknown_030012D8->mirrorY)
@@ -152,8 +152,8 @@ u8 sub_800CD00(struct box_part *self, s32 action)
         offY = q->offY;
         w = q->w;
         h = q->h;
-        sub_803AFE4(pb, offX + px, offY + py);
-        sub_803AFDC(pb, w, h);
+        SetAabbPos(pb, offX + px, offY + py);
+        SetAabbSize(pb, w, h);
         if (gUnknown_030012D8->mirrorX)
             f.b.x = px * 2 - (f.b.x + f.b.w);
         if (gUnknown_030012D8->mirrorY)

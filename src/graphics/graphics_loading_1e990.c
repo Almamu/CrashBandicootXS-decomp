@@ -11,7 +11,7 @@ extern void *gAudioContext;
 extern u8 sub_80232F4(void *self);
 extern s32 sub_80232E0(void *self);
 extern s32 sub_8023130(void *self);
-extern s32 sub_803AFEC(void *self);
+extern s32 GetLives(void *self);
 extern u8 sub_80232B8(void *self);
 extern void _call_via_r4(void *arg0, s32 arg1, s32 arg2, s32 arg3);
 extern void PlaySfx(void *bank, s32 arg1, s32 sfxId);
@@ -37,7 +37,7 @@ extern void PlaySfx(void *bank, s32 arg1, s32 sfxId);
  *    unless a budget/reentrancy guard trips first - either the
  *    player's spawn counter (`sub_80232E0`, `+0x7c`) has room against
  *    its cap (`sub_8023130`, `+0x84`), or (when it doesn't) all three
- *    of `sub_803AFEC` (`+0x74`), `sub_80232B8` (`+0xa4`) and the
+ *    of `GetLives` (`+0x74`), `sub_80232B8` (`+0xa4`) and the
  *    level state's `maskLevel` field agree it's still safe to fire.
  *
  * Was a NAKED asm transcription for a long time - see
@@ -107,7 +107,7 @@ void sub_801E990(u32 arg0, u16 x, u16 y, u16 z)
         if (spawnCount >= cap) {
             goto fire;
         }
-        if (sub_803AFEC(gLevelState) != 0) {
+        if (GetLives(gLevelState) != 0) {
             goto end;
         }
         if (sub_80232B8(gLevelState) != 0) {

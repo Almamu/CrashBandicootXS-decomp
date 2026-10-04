@@ -8,14 +8,14 @@ struct aabb {
     s32 field_c;
 };
 
-extern void sub_803AFE4(void *buf, s32 arg1, s32 arg2);
-extern void sub_803AFDC(void *buf, s32 arg1, s32 arg2);
-extern void *sub_80083B8(void *part);
+extern void SetAabbPos(void *buf, s32 arg1, s32 arg2);
+extern void SetAabbSize(void *buf, s32 arg1, s32 arg2);
+extern void *GetSpriteFrame(void *part);
 extern u8 gStaticData_0816B2F8[];
 
 /* A third AABB-for-keyframe builder (see sub_8007B00/sub_8007B98 in
  * src/graphics/actor_part.c), this time selecting its 6-byte
- * `{s16 x, s16 y, u8 w, u8 h}` record via a `sub_80083B8(part)`-derived
+ * `{s16 x, s16 y, u8 w, u8 h}` record via a `GetSpriteFrame(part)`-derived
  * "info" struct rather than `part`'s own keyframe table pointer:
  * `info+4` points to a byte whose upper nibble (0-15, but only 0-6
  * handled - anything above 6 and unhandled 1/2/6 fall through to the
@@ -32,7 +32,7 @@ void *sub_8007C30(void *dest, void *pt)
     s32 x, y;
     u8 type;
 
-    info = sub_80083B8(part);
+    info = GetSpriteFrame(part);
     type = *(u8 *)(*(void **)((u8 *)info + 4)) >> 4;
     switch (type) {
     case 0:
@@ -62,8 +62,8 @@ void *sub_8007C30(void *dest, void *pt)
 
     offX = offX + x;
     offY = offY + y;
-    sub_803AFE4(&buf_, offX, offY);
-    sub_803AFDC(&buf_, w, h);
+    SetAabbPos(&buf_, offX, offY);
+    SetAabbSize(&buf_, w, h);
 
     {
         u8 *flagsAddr = (u8 *)part + 0x28;
@@ -103,7 +103,7 @@ void *sub_8007CF8(void *dest, void *pt)
     s32 x, y;
     u8 type;
 
-    info = sub_80083B8(part);
+    info = GetSpriteFrame(part);
     type = *(u8 *)(*(void **)((u8 *)info + 4)) >> 4;
     switch (type) {
     case 0:
@@ -131,8 +131,8 @@ void *sub_8007CF8(void *dest, void *pt)
 
     offX = offX + x;
     offY = offY + y;
-    sub_803AFE4(&buf_, offX, offY);
-    sub_803AFDC(&buf_, w, h);
+    SetAabbPos(&buf_, offX, offY);
+    SetAabbSize(&buf_, w, h);
 
     {
         u8 *flagsAddr = (u8 *)part + 0x28;

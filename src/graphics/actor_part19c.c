@@ -16,7 +16,7 @@ struct fruit_actor {
 
 extern void *gLevelState;
 
-extern u8 gStaticData_087E4DF4[];
+extern u8 gActorVtable[];
 extern u8 gStaticData_087E4E74[];
 
 extern void CollectWumpa(void *self);
@@ -38,7 +38,7 @@ void sub_802C394(void *selfArg, u32 arg1)
         CollectWumpa(gLevelState);
     }
 
-    *(u8 **)(self + 0x50) = gStaticData_087E4DF4;
+    *(u8 **)(self + 0x50) = gActorVtable;
 
     {
         u8 *prev = *(u8 **)(self + 0x4c);

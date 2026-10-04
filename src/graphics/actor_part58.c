@@ -3,7 +3,7 @@
 #include "level_state.h"
 #include "actor_self.h"
 
-/* Continues the `InitActorPart`/`gUnknown_03000884`-rooted "self" object
+/* Continues the `InitActorPart`/`gActorList`-rooted "self" object
  * family documented in actor_part50.c/actor_part19.c: a "part table"
  * pointer at `self+0`, a table-index/"kind" field at `self+0xc`, an
  * anim-frame halfword/byte pair at `self+0x10`/`self+0x12`, an
@@ -25,8 +25,8 @@ extern void sub_802D204(void *self, s32 arg1);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void *InitActorPart(void *self, void *part, s32 b, s32 c, s32 d);
 extern u8 sub_802A6EC(void *self);
-extern void sub_802A7B8(void *self);
-extern void *gUnknown_03000884;
+extern void UpdateActor(void *self);
+extern void *gActorList;
 extern void sub_802BFD4(void *arg0);
 extern void sub_802C0BC(void *selfArg, s32 arg1);
 extern u8 sub_802DD9C(void *self);
@@ -130,8 +130,8 @@ s32 sub_802D590(void)
 
 /* Once `self`'s frame counter (`+0x44`) exceeds 5, latches the one-shot
  * flag at `+0x2c`. Then, on `sub_802A6EC`'s trampoline-fire edge, calls
- * `sub_802BFD4(gUnknown_03000884)` (the player object), and always
- * advances via `sub_802A7B8`. */
+ * `sub_802BFD4(gActorList)` (the player object), and always
+ * advances via `UpdateActor`. */
 void sub_802D59C(void *selfArg)
 {
     register struct actor_self *self asm("r4") = selfArg;
@@ -141,10 +141,10 @@ void sub_802D59C(void *selfArg)
     }
 
     if (sub_802A6EC(self)) {
-        sub_802BFD4(gUnknown_03000884);
+        sub_802BFD4(gActorList);
     }
 
-    sub_802A7B8(self);
+    UpdateActor(self);
 }
 
 /* Plain `InitActorPart` passthrough constructor (no offset applied)
@@ -160,15 +160,15 @@ void *sub_802D5D4(struct actor_self *self, void *part, s32 b, s32 c, s32 d)
 }
 
 /* On `sub_802A6EC`'s trampoline-fire edge, forwards `self+0x1c` to
- * `sub_802C0BC(gUnknown_03000884, ...)` (the player object) and, the
+ * `sub_802C0BC(gActorList, ...)` (the player object) and, the
  * first time through (guarded by a one-shot byte flag at `self+0x54`),
- * plays a sound. Always advances via `sub_802A7B8`. */
+ * plays a sound. Always advances via `UpdateActor`. */
 void sub_802D600(void *selfArg)
 {
     register struct actor_once *self asm("r4") = selfArg;
 
     if (sub_802A6EC(self)) {
-        sub_802C0BC(gUnknown_03000884, self->base.x);
+        sub_802C0BC(gActorList, self->base.x);
         {
             u8 *flag = &self->once;
 
@@ -179,7 +179,7 @@ void sub_802D600(void *selfArg)
         }
     }
 
-    sub_802A7B8(self);
+    UpdateActor(self);
 }
 
 /* Constructor: `InitActorPart` passthrough (`b`==own `posY` argument,
@@ -236,7 +236,7 @@ void *sub_802D648(struct actor_once *self, void *part, s32 posY, s32 c, s32 d)
  * and refreshes the player again). Finally, once kind==3 and the
  * anim-done flag (`+0x12`) is set, fires the `+0x50` table's slot-3
  * trampoline (guarded by a redundant `self != NULL` check matching the
- * ROM); otherwise advances via `sub_802A7B8`. */
+ * ROM); otherwise advances via `UpdateActor`. */
 void sub_802D6A0(void *selfArg)
 {
     register struct actor_self *self asm("r4") = selfArg;
@@ -273,7 +273,7 @@ void sub_802D6A0(void *selfArg)
                 *(u8 *)&self->animDone = zero;
             }
             self->animTime = kind;
-            self->unk_18 = 1;
+            self->palette = 1;
 
             PlaySfx(gAudioContext, 3, 0x100);
             sub_8022FEC(gLevelState);
@@ -283,14 +283,14 @@ void sub_802D6A0(void *selfArg)
     if (self->animIndex == 3 && self->animDone != 0) {
         if (self != NULL) {
             struct actor_vtable *table = self->vtable;
-            s32 offset = table->m08.thisOffset;
+            s32 offset = table->destroy.thisOffset;
             u8 *addr = (u8 *)self + offset;
-            void *fn = table->m08.fn;
+            void *fn = table->destroy.fn;
 
             _call_via_r2(addr, 3, fn);
         }
     } else {
-        sub_802A7B8(self);
+        UpdateActor(self);
     }
 }
 

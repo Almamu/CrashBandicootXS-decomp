@@ -7,7 +7,7 @@
 
 extern void *gAudioContext;
 extern void *gLevelState;
-extern void *gUnknown_03000884;
+extern void *gActorList;
 
 extern u8 sub_802A6EC(void *self);
 extern u8 sub_802DD9C(void *self);
@@ -21,7 +21,7 @@ extern void sub_802C4C8(void *selfArg);
  * animation sequence 0x12. Whether or
  * not that fired, on `sub_802DD9C`'s overlap test transitions a second
  * time with its own sound cue - both share the same state-0x12
- * transition block (plus `self->unk_18 = 1`) before tail-calling the
+ * transition block (plus `self->palette = 1`) before tail-calling the
  * shared cleanup `sub_802C4C8`.
  *
  * The `*(T *)&self->...` stores are deliberate: through a pointer they aren't
@@ -32,7 +32,7 @@ void sub_802C904(struct actor_self *self)
 {
     if (self->animIndex != 0x12 && sub_802A6EC(self)) {
         sub_8022FEC(gLevelState);
-        sub_802C128(gUnknown_03000884);
+        sub_802C128(gActorList);
         self->animIndex = 0x12;
         {
             register u16 anim asm("r0") = self->anims[0x12].duration;
@@ -43,7 +43,7 @@ void sub_802C904(struct actor_self *self)
             *(u8 *)&self->animDone = zero1;
             self->animTime = zero2;
         }
-        self->unk_18 = 1;
+        self->palette = 1;
     }
 
     if (self->animIndex != 0x12 && sub_802DD9C(self)) {
@@ -59,7 +59,7 @@ void sub_802C904(struct actor_self *self)
             *(u8 *)&self->animDone = zero1;
             self->animTime = zero2;
         }
-        self->unk_18 = 1;
+        self->palette = 1;
     }
 
     sub_802C4C8(self);

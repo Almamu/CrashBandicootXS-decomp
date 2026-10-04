@@ -4,8 +4,8 @@
 /* Screen-space visibility test and OAM setup for one sprite frame:
  * derives the top-left corner from `self->x`/`self->y` minus half
  * the frame's tile size, culls if fully off-screen, then builds the
- * OAM attribute words (position, `sub_803B060`'s flag byte, and a
- * priority/palette nibble from `self->unk_18`/`self->visible`) and calls
+ * OAM attribute words (position, `GetAnimFrameAttr`'s flag byte, and a
+ * priority/palette nibble from `self->palette`/`self->sortKey`) and calls
  * `SetupSpriteFrameOam`.
  *
  * The dead `flag = 0` initializer (materialized by the ROM as `movs
@@ -21,7 +21,7 @@
  * matches the ROM's own register roles exactly once pinned to match. */
 extern u8 *GetAnimFrameData(void *self);
 extern void SetupSpriteFrameOam(u8 *frame, u32 arg1, u32 arg2, s32 priority);
-extern s32 sub_803B060(void *self);
+extern s32 GetAnimFrameAttr(void *self);
 
 void sub_802C2FC(void *selfArg)
 {
@@ -63,7 +63,7 @@ void sub_802C2FC(void *selfArg)
 
         flag = 0x100;
         {
-            register s32 attrFlag asm("r0") = sub_803B060(self);
+            register s32 attrFlag asm("r0") = GetAnimFrameAttr(self);
             register s32 a0 asm("r3") = 0xff;
             register s32 xm asm("r4") = x;
 
@@ -83,9 +83,9 @@ void sub_802C2FC(void *selfArg)
     }
 
     {
-        register s32 field24 asm("r4") = self->unk_18;
+        register s32 field24 asm("r4") = self->palette;
         s32 a2 = field24 << 12;
-        s32 field20 = self->visible;
+        s32 field20 = self->sortKey;
         register u32 attr2 asm("r2");
 
         if (field20 & 0x8000) {

@@ -17,7 +17,7 @@
 
 extern s32 gUnknown_030014D0;
 extern s32 gUnknown_030014C4;
-extern struct actor_self *gUnknown_03000884;
+extern struct actor_self *gActorList;
 extern struct actor_self *gUnknown_030014BC;
 extern s32 GetAnimFrameBaseOffset(void *self);
 extern void (*gStaticData_0817A840[])(void);
@@ -41,12 +41,12 @@ extern s32 sub_8029EB4(void);
 
 /* One of two confirmed slots (index 3, dispatched via
  * `gStaticData_0817A840[gUnknown_030014D0]`) of the type-0
- * `category_vtable` (`gStaticData_081756C4[0]`, `include/actor_anim.h`)
+ * `category_vtable` (`gActorCategoryVtables[0]`, `include/actor_anim.h`)
  * - `UpdateGameFrame`'s own direct top-level callee for this object, per
  * docs/rom_map.md's "Two new type-0 vtable slots confirmed" section.
  *
  * Unless `gUnknown_030014D0 == 3`, first eases `gUnknown_030014C4`
- * toward the player's cached X position (`gUnknown_03000884->+0x1c`,
+ * toward the player's cached X position (`gActorList->+0x1c`,
  * divisor 32 - the same rsb/lsr/add/asr round-toward-zero idiom as
  * `sub_802D3A8`/`sub_80070EC`). Then advances the object's own anim
  * frame (`+8` accumulator by the `+0x10` per-frame increment,
@@ -119,7 +119,7 @@ void sub_802D7B0(void)
     s32 old, cur;
 
     if (gUnknown_030014D0 != 3)
-        gUnknown_030014C4 += (((struct actor_self *)gUnknown_03000884)->x - gUnknown_030014C4) / 32;
+        gUnknown_030014C4 += (((struct actor_self *)gActorList)->x - gUnknown_030014C4) / 32;
     obj = gUnknown_030014BC;
     old = obj->animTime >> 8;
     obj->animTime += *(s16 *)&obj->animTimer;
@@ -142,7 +142,7 @@ void sub_802D7B0(void)
     f.a = *(struct box16 *)gStaticData_0817AA98;
     BoxMove(&f.a, gUnknown_030014C4 >> 8, 0, gUnknown_030014C8 >> 8);
     if ((u32)gUnknown_030014D0 <= 1) {
-        struct actor_self **playerAddr = &gUnknown_03000884;
+        struct actor_self **playerAddr = &gActorList;
         struct actor_self *pl;
         struct box16 *b;
 
@@ -163,7 +163,7 @@ void sub_802D7B0(void)
             g->animTimer = g->anims[2].duration;
             g->animDone = 0;
             g->animTime = 0;
-            sub_802C018(gUnknown_03000884);
+            sub_802C018(gActorList);
             sub_8029BAC(0);
         }
     }

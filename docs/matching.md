@@ -566,11 +566,11 @@ HUD-icon-plus-number renderer: resets one OAM manager (`sub_8006A90`),
 calls `sub_8006C28` on another global, calls `sub_8008890`, positions a
 left icon by computing its centered X (`(240 - width) >> 1`, width from
 `_call_via_r2`) and a fixed Y, formats/draws a number via
-`sub_803AFE4`/`sub_803AFDC`/`sub_8001214` into a stack buffer, gets its
+`SetAabbPos`/`SetAabbSize`/`sub_8001214` into a stack buffer, gets its
 pixel width via `GetUiText`, then positions a second icon the same way
 - finally calls the already-matched `sub_8006A48` to hide unused OAM
 slots. None of `sub_8006C28`, `sub_8008890`, `_call_via_r2`,
-`sub_803AFE4`, `sub_803AFDC`, `sub_8001214`, `GetUiText` are matched or
+`SetAabbPos`, `SetAabbSize`, `sub_8001214`, `GetUiText` are matched or
 even confidently typed beyond the argument shapes this call site
 implies. Uses `struct icon_record`/`struct icon_manager` for the two
 OAM-slot-record pairs it reads, and extends the existing `struct
@@ -2084,7 +2084,7 @@ combined VRAM tile upload for the whole part. `part` shares
 `struct actor`'s "field+0x18 table pointer" convention at the same
 offset but extends past its 0x1c-byte size (fields read at `+0x28`/
 `+0x29`) - kept as raw offsets rather than guessing a wider struct.
-`info` (`sub_80083B8(part)`'s return) is a small per-part record: an
+`info` (`GetSpriteFrame(part)`'s return) is a small per-part record: an
 array of `{s16 x, s16 y}` offset pairs, a parallel byte array of
 per-piece record ids, and a packed `u32` whose low 24 bits get added
 to the VRAM upload source address and whose top byte is the loop
@@ -2191,8 +2191,8 @@ the allocator overwrite `part`'s own register in place instead.
 
 **Parked, not matched: `sub_8007B00`** (ROM `0x08007B00`, right after
 `sub_8007AB4`, in `src/graphics/actor_part.c`): builds an AABB for
-`part`'s current animation keyframe, via the shared `sub_803AFE4`
-(set-position)/`sub_803AFDC` (set-size) primitive already seen
+`part`'s current animation keyframe, via the shared `SetAabbPos`
+(set-position)/`SetAabbSize` (set-size) primitive already seen
 elsewhere. The keyframe table pointer lives at `part+0x20`, indexed by
 the counter at `part+0x2d` (`0x1c` bytes per record); each record's
 `+0xc`/`+0xe`/`+0x10`/`+0x11` fields are `{s16 xOffset, s16 yOffset, u8
@@ -2200,7 +2200,7 @@ w, u8 h}` - the same offset/table convention seen elsewhere, just AABB
 dimensions instead of a text pointer. `part+0x28` bits 4/5 mirror the
 resulting AABB horizontally/vertically around `part`'s own position.
 Confirms `struct aabb { s32 field_0, field_4, field_8, field_c; }` as
-the shared 16-byte AABB shape (used by the `sub_803AFE4`/`sub_803AFDC`
+the shared 16-byte AABB shape (used by the `SetAabbPos`/`SetAabbSize`
 pair generally, not just here).
 
 Needed the pointer-to-pointer double-dereference at `part+0x20`
@@ -2301,8 +2301,8 @@ instruction pair (the `dest`/`part` parameter spills, `mov r8,r0`/
 Fixes that DID land exactly here: pinning `dest` to `r8` (as
 `sub_8007B00` does) was enough to naturally put `part` in `r7` this
 time (no r6/r7 problem, unlike `sub_8007B00` - the extra register
-pressure from `w`/`h` surviving across both `sub_803AFE4`/
-`sub_803AFDC` calls apparently changes the allocator's choice); pinning
+pressure from `w`/`h` surviving across both `SetAabbPos`/
+`SetAabbSize` calls apparently changes the allocator's choice); pinning
 `w`/`h` to `r5`/`r6` as plain `s32` (not `u8` - a `register u8`
 pin still re-masks the value with `lsl`/`lsr` before each call,
 since the compiler can't assume a register variable's upper bits
@@ -2339,9 +2339,9 @@ same call as `sub_8007B00` and the other parked functions above.
 
 **`sub_8007C30`** (ROM `0x08007C30`, right after `sub_8007B98`, in the
 new `src/graphics/actor_part2.c`): a third AABB-for-keyframe builder -
-same `sub_803AFE4`/`sub_803AFDC`-based shape as `sub_8007B00`/
+same `SetAabbPos`/`SetAabbSize`-based shape as `sub_8007B00`/
 `sub_8007B98`, but this time the 6-byte `{s16 x, s16 y, u8 w, u8 h}`
-record is chosen by a `switch` on `(*(sub_80083B8(part)+4))>>4` (0-6,
+record is chosen by a `switch` on `(*(GetSpriteFrame(part)+4))>>4` (0-6,
 else default) among `info+0x14`, `info+0xc`, or a fixed fallback table
 `gStaticData_0816B2F8` - the ROM compiles this `switch` to a real
 7-entry jump table (`mov pc, rX`), which only happened here once every
@@ -2702,7 +2702,7 @@ LATER comparison) rather than the sign-branch `(s32)(byte << (31-N)) <
 0` form used in `sub_8007B00`/`sub_8007B98`/`sub_8007C30`/
 `sub_8007CF8` (which only works when the value feeds an immediate
 `if`, not when it must survive past intervening code like the
-`sub_803AFE4`/`sub_803AFDC` calls here).
+`SetAabbPos`/`SetAabbSize` calls here).
 
 Matched on the first real attempt using the by-now-established
 `sub_8007B00`-style register-chain-reuse pattern for the keyframe
@@ -2915,8 +2915,8 @@ argument to avoid clobbering). Matched on the first attempt, applying
 the same `addr`/`byteVal` register-reuse pin from `sub_8008304`
 directly.
 
-**Parked, not matched: `sub_80083B8`** (ROM `0x080083B8`, right after
-`sub_80083A8`, same file): looks up `part`'s current keyframe record
+**Parked, not matched: `GetSpriteFrame`** (ROM `0x080083B8`, right after
+`GetSpriteTileBase`, same file): looks up `part`'s current keyframe record
 (the same `sub_8007B00`-style keyframe-table chain used throughout
 this ROM region). If `part+0x38` ("done", set by `sub_8008044`) is
 set and the record's `+0x17` flags byte bit 1 is clear (not looping),
@@ -2972,7 +2972,7 @@ padding). Confirmed byte-identical via isolated compile plus
 `arm-none-eabi-as` assemble against the ROM's raw bytes at
 `0x080083B8`, then via full clean `make compare`.
 
-**`sub_8008408`** (ROM `0x08008408`, right after `sub_80083B8`, new
+**`sub_8008408`** (ROM `0x08008408`, right after `GetSpriteFrame`, new
 `src/graphics/actor_part6.c`): the same `gLevelLayers` sub-object
 convention used throughout this ROM region (`sub_8007F78`/
 `sub_8006FE4`) - if `gLevelLayers+0x2b` is nonzero, returns the
@@ -2983,10 +2983,10 @@ from the ROM (ROM falls through the "nonzero" case first, branches
 past it to the "zero" case second); inverting the C condition
 (`== 0` instead of `!= 0`, with the bodies swapped to match) got the
 ROM's exact block order. Not ROM-adjacent to `actor_part5.c` (the
-parked `sub_80083B8` sits raw between them), so it needed the same
+parked `GetSpriteFrame` sits raw between them), so it needed the same
 file-split treatment used throughout this cluster: `asm/code_3_2_6.s`
 split at the `sub_8008434` boundary into itself (now just the parked
-`sub_80083B8`) and the new `asm/code_3_2_7.s`, with the new
+`GetSpriteFrame`) and the new `asm/code_3_2_7.s`, with the new
 `src/graphics/actor_part6.c` inserted between them in `ldscript.txt`.
 
 **`sub_8008434`** (ROM `0x08008434`, right after `sub_8008408`, same
@@ -3016,7 +3016,7 @@ existing `self` in place instead of allocating a fresh object via
 `sub_8026EDC`. Matched on the first attempt.
 
 **`sub_80084C4`** (ROM `0x080084C4`, right after `sub_80084A4`, same
-file): looks up `part`'s keyframe record via `sub_80083B8` (parked as
+file): looks up `part`'s keyframe record via `GetSpriteFrame` (parked as
 `NON_MATCHING` in `actor_part5.c`), then picks a pointer off it based
 on the record's `+4` byte's upper nibble - 0 selects `info+0x24`, 6
 selects `info+0x14`, and everything else (1-5, or anything above 6)
@@ -3064,7 +3064,7 @@ byte offset the way a compiler-native jump table is. The native
 this attempt once the case-scatter trick was found.
 
 **`sub_8008518`** (ROM `0x08008518`, right after `sub_80084C4`, same
-file): the same `sub_80083B8`-derived-record-nibble `switch` shape as
+file): the same `GetSpriteFrame`-derived-record-nibble `switch` shape as
 `sub_80084C4` immediately above, with a different result mapping - 0
 and 4 select `info+0x1c`, everything else (1, 2, 3, 5, 6, or above 6)
 falls back to `gStaticData_0816B2F8`. No case-scattering trick was
@@ -3078,7 +3078,7 @@ compare chain when the case-to-block mapping actually can be expressed
 as a handful of simple range checks). Matched on the first attempt.
 
 **`sub_8008564`** (ROM `0x08008564`, right after `sub_8008518`, same
-file): the same `sub_80083B8`-derived-record-nibble `switch` shape
+file): the same `GetSpriteFrame`-derived-record-nibble `switch` shape
 again, this time reusing `sub_8007C30`'s exact case-to-block mapping
 (already matched in `actor_part2.c`) - 0/3/4 select `info+0x14`, 5
 selects `info+0xc`, and 1/2/6/anything-above-6 fall back to
@@ -3088,7 +3088,7 @@ produced the ROM's jump table with no scattering needed. Matched on
 the first attempt.
 
 **`sub_80085B8`** (ROM `0x080085B8`, right after `sub_8008564`, same
-file): the same `sub_80083B8`-derived-record-nibble `switch` shape
+file): the same `GetSpriteFrame`-derived-record-nibble `switch` shape
 once more - 0/2/3/4/6 select `info+0xc`, 1/5/anything-above-6 fall
 back to `gStaticData_0816B2F8`. Non-contiguous enough on its own
 (1 and 5 are isolated within a run of the other result), so plain
@@ -3106,14 +3106,14 @@ Matched on the first attempt.
 file): clamps a `frame` argument to `part`'s current keyframe record's
 duration (`+0x16`) minus one if it's out of range, then stores the
 (possibly clamped) result into `part+0x30` (the same frame-index field
-read/written by `sub_80083B8`). Needed explicit register pins across
+read/written by `GetSpriteFrame`). Needed explicit register pins across
 the whole `tablePtr`/`idxAddr`/`table`/`idx` chain to reproduce the
 ROM's real extra callee-saved register (`r5` for `idx`, hence the
 `push {r4, r5, lr}` rather than a tighter single-register reuse) - the
 naturally-allocated version reused fewer registers and only pushed
 `r4`. The final `rec = table + offset` add also hit the same resistant
 "which operand goes first" canonicalization documented at length for
-`sub_8008188`/`sub_8008200`/`sub_8008278`/`sub_80083B8` above - but
+`sub_8008188`/`sub_8008200`/`sub_8008278`/`GetSpriteFrame` above - but
 since this function has no `switch` (and therefore no case-block-
 merging to protect), the usual fallback of parking wasn't necessary:
 a single-instruction inline `asm("add %0, %0, %1" : "+r"(offset) :
@@ -3206,7 +3206,7 @@ file): the same shape as `sub_80086F4` immediately above, setting bit
 5 (mask `-0x21`) instead of bit 4. Matched with the identical fix.
 
 **`sub_800872C`** (ROM `0x0800872C`, right after `sub_8008710`, same
-file): `part+0x38` ("done" flag, also read/written by `sub_80083B8`)
+file): `part+0x38` ("done" flag, also read/written by `GetSpriteFrame`)
 setter. Matched on the first attempt.
 
 **`sub_8008734`** (ROM `0x08008734`, right after `sub_800872C`, same
@@ -5188,7 +5188,7 @@ register-allocation gap each), and 2 (`UpdateGameFrame` itself and
 
 - **`FreezeLevelClock`/`TickLevelClock`**: record 47's periodic-trigger
   setter/decrementer (see `docs/rom_map.md`, "An achievement/unlock-
-  icon spawner family, tied to `gStaticData_084A5600` record 47").
+  icon spawner family, tied to `gSpriteBankTable` record 47").
   Closed after the initial blanket-register-pin attempt (pinning every
   local to mirror the ROM's map directly) made things *worse* - a
   pinned `slot` picked up a spurious truncate-and-remask on every read,
@@ -5991,7 +5991,7 @@ offset here). New conventions confirmed by this chunk: a `+0x50`-rooted
 `{s16 offset; void *fn}` trampoline record (the same shape actor_part10/
 11.c already name at a different offset for a sibling object), and a
 `+0x48`/`+0x4c` circular doubly-linked list of these objects rooted at
-the player-pointer global `gUnknown_03000884` (`sub_802C19C`/
+the player-pointer global `gActorList` (`sub_802C19C`/
 `sub_802C394` unlink from it on teardown; `sub_802C7A8`, left raw,
 walks it for an AABB-overlap scan). Ties into `docs/rom_map.md`'s
 `gUnknown_030014xx` tier-threshold family (`sub_802BED8`/`sub_802BF30`/
@@ -6163,14 +6163,14 @@ raw.
   what agbcc's plain-C codegen picks for a genuinely empty function
   body) - written via `NAKED` + `asm("mov pc, lr")` instead, the same
   technique `_call_via_lr` used in issue #69's PR.
-- **`sub_803AFDC`/`sub_803AFE4`** (ROM `0x0803AFDC`, new
+- **`SetAabbSize`/`SetAabbPos`** (ROM `0x0803AFDC`, new
   `src/graphics/actor_aabb_setup.c`) - the shared AABB set-size
   (`field_8`/`field_c`)/set-position (`field_0`/`field_4`) primitive
   pair, already referenced by name (not yet matched) from
   `actor_part.c`/`actor_part2.c`/`oam_count.c`'s `DrawPowerDialog` entry.
   Two one-line leaf functions, matched first-try (each needed the usual
   trailing `asm(".align 2, 0")` for its 6-byte, non-4-aligned body).
-- **`sub_803AFEC`** (same file) - a trivial `self+0x74` getter; kept as
+- **`GetLives`** (same file) - a trivial `self+0x74` getter; kept as
   a raw offset (no named struct) since this single call site doesn't
   give enough context to know the owning object's shape.
 - **`DestroyLargeFont`/`DestroySmallFont`** (same file) - two more members of the
@@ -6265,7 +6265,7 @@ parked functions under `#if NON_MATCHING` - only `__div0` actually
 contributes bytes in a matching build), the new
 `asm/code_3_2_20e_3ae4c.s` (parked `__modsi3`/`__umodsi3`,
 guarded), and the new `src/graphics/actor_aabb_setup.o`
-(`sub_803AFDC`-`DestroySmallFont`, all matched) - see `ldscript.txt` and
+(`SetAabbSize`-`DestroySmallFont`, all matched) - see `ldscript.txt` and
 `tools/report_units.py`'s `util`/`graphics` categories, both updated to
 match. Verified via a full clean `make compare` (`La suma coincide`)
 and `make NON_MATCHING=1 report`.
@@ -6286,9 +6286,9 @@ respectively). If set, plays a sound only via `sub_801A878` +
 shared fallback `0xC` if either `sub_8023278(gLevelState)` is
 true or `gLevelState+0x8c` is nonzero. If clear, spawns a full
 visual effect instead: allocates a part-object via `sub_8008434`,
-points its `+0x20` table pointer at `gStaticData_084A5600`'s own first
+points its `+0x20` table pointer at `gSpriteBankTable`'s own first
 field (reached through `gUnknown_030012D0`'s pointer-to-pointer, the
-same idiom `sub_80083A8` in `actor_part5.c` already uses, just one
+same idiom `GetSpriteTileBase` in `actor_part5.c` already uses, just one
 `deref` deeper) plus a fixed `0x180` offset, tags it (`+0x2d` =
 7/5/6/8), builds it via the standard `sub_80087C0`/`sub_80087B4`/
 `sub_800872C` OAM trio, sets its `+0x29` bitfield from `sub_800815C`'s

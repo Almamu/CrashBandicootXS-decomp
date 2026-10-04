@@ -194,7 +194,7 @@ elsewhere in this project, re-confirmed rather than re-derived here:
   (issue #62).
 - **`sub_80327A4`** - a bounding-box-culled sprite draw with an
   `r8`-flag-across-calls shape, the same class of gap `DrawPowerDialog`/
-  `DrawLanguageSelect`/`GAX2_init` and the hard-won `UpdateAnimatedActorPart`
+  `DrawLanguageSelect`/`GAX2_init` and the hard-won `DrawActor`
   (issue #50, `actor_part55.c`) already needed elaborate register-pin/
   stack-spill workarounds for.
 - **`sub_8032B6C`** - fully inlines `sub_8033828`'s own P1/P2

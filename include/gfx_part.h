@@ -55,7 +55,7 @@ struct gfx_part
     u8 tag;                 // 0x2D
     u8 unk_2E[2];
     s32 frame;              // 0x30 - step within the animation
-    s32 stepTimer;          // 0x34 - reset to the animation's `duration` (sub_80083B8)
+    s32 stepTimer;          // 0x34 - reset to the animation's `duration` (GetSpriteFrame)
     u8 animDone;            // 0x38
     u8 unk_39[0xB];
     void *ctrl;             // 0x44

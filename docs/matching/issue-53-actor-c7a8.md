@@ -28,7 +28,7 @@ Called from `sub_802C6C0` (`actor_part19g.c`) once a "used" pickup
 (`self`, state `self+0xc == 0x12`) has stayed used for `self+0x44 ==
 0x14` frames. It walks the whole `self+0x4c`-rooted circular actor
 list - the same sentinel-head list `sub_802AA4C`/`sub_802C19C`/
-`sub_802C394` unlink from, rooted at `gUnknown_03000884` (the player
+`sub_802C394` unlink from, rooted at `gActorList` (the player
 object) - looking for every *other* actor whose type byte
 (`*(u8*)(*(u8**)(node+0x30))`, the same type-byte indirection
 `sub_802C540` dispatches on) is `4`, and that overlaps `self`'s own
@@ -62,10 +62,10 @@ from its part table's `+0xd8` halfword into `node+0x10`. In short: once
 one pickup has been "used" for 0x14 frames, it triggers a proximity
 chain-reaction that also marks every nearby type-4 actor used.
 
-The list walk itself starts at `gUnknown_03000884`'s own `+0x4c` (its
+The list walk itself starts at `gActorList`'s own `+0x4c` (its
 first list member, skipping the sentinel head itself) and continues via
 each node's own `+0x4c` until it wraps back around to
-`gUnknown_03000884` itself - a plain circular singly-linked list, one
+`gActorList` itself - a plain circular singly-linked list, one
 iteration per member, `self` skipped via an explicit `node != self`
 check (since `self` is itself a member of the same list).
 
@@ -84,7 +84,7 @@ A real C attempt got remarkably close before hitting this: pinning
 `self` to `sb`/`r9` (matching the ROM's own `mov sb, r0`), `node` to
 `r4`, and a zero constant to `r8` (all matching the ROM's own register
 roles for those three) reproduced the correct 0x24-byte stack frame,
-the correct `gUnknown_03000884` double-reload (once at entry, once
+the correct `gActorList` double-reload (once at entry, once
 again at the loop-end condition check - not cached across the
 intervening `PlaySfx`/`sub_8022FEC` calls, since referencing the global
 directly at both C-level use sites rather than caching it in a local
@@ -134,7 +134,7 @@ matched as plain C, in `src/graphics/actor_part19i.c`:
   (no `sub_802A6EC` guard), also clearing `self+0x44`; no tail call.
 - **`sub_802CA6C`**/**`sub_802CAD0`** - the proximity-gated shape again,
   forwarding a fixed accumulator delta (`4`/`1`) to
-  `sub_802C078(gUnknown_03000884, ...)`; each tail-calls `sub_802C4C8`.
+  `sub_802C078(gActorList, ...)`; each tail-calls `sub_802C4C8`.
 - **`sub_802CB34`** - an `InitActorPart`-based constructor: installs
   `self+0x50 = gStaticData_087E4F94`, then classifies a "kind"
   (`self+0xc`) from a `__divsi3`-scaled function of the `b`

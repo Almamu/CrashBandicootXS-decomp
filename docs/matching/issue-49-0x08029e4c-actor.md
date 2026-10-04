@@ -3,8 +3,8 @@
 25-function `decomp-chunk` continuing the BG2-affine scroll/zoom effect
 subsystem from issue #48, then `SelectActorCategory` (the category
 runtime-state setup function `InitActorCategory` hands off to) plus its
-`gUnknown_03000884`-rooted AABB-overlap "self" object cluster, and
-finally the `gUnknown_03001400` `sub_effect_table` record accessor
+`gActorList`-rooted AABB-overlap "self" object cluster, and
+finally the `gActorSpawnTable` `sub_effect_table` record accessor
 family plus a handful of trailing thin wrappers. See
 [issue-48-0x080291a4-actor.md](./issue-48-0x080291a4-actor.md) for the
 shared debugging notes (recurring gcc-2.9 codegen patterns) both halves
@@ -18,7 +18,7 @@ of this chunk hit.
   scroll accumulators to `REG_BG0*`/`REG_BG1*`, and two small target-
   field getters.
 - `sub_802A4D4`-`sub_802A650`/`sub_802A668` (`actor_part94.c`) - the
-  `gUnknown_03001400` `sub_effect_table` record accessor family
+  `gActorSpawnTable` `sub_effect_table` record accessor family
   (`struct sub_effect_record`, see `include/actor_anim.h`), a
   circular-list marker-drawing pass (`sub_802A5E4`), and several
   trivial wrappers/setters.
@@ -26,17 +26,17 @@ of this chunk hit.
 ## Parked - NAKED transcription (byte-correct, not decompiled)
 
 - **`SelectActorCategory`** (`actor_part102.c`) - sets up the selected
-  category's runtime state (`gUnknown_03001418` vtable pointer,
-  `gUnknown_03001400` `sub_effect_table` pointer, `gUnknown_03001414`
+  category's runtime state (`gActorCategoryVtable` vtable pointer,
+  `gActorSpawnTable` `sub_effect_table` pointer, `gUnknown_03001414`
   variant byte), draws the vtable's slot-0 icon, then runs a two-pass
-  scan over `gUnknown_03001400[]` comparing each entry's threshold
+  scan over `gActorSpawnTable[]` comparing each entry's threshold
   against the vtable's own `+0x20` slot. Fully understood; a real-C
   attempt reproduced every instruction but needed one more live
   register (`r9`) than the ROM's own `sb`/`r8` pair to keep the vtable
   pointer, the table pointer, and the loop index simultaneously live.
   Verified byte-for-byte against `baserom.gba`, relocation-aware.
 - **`sub_802A018`/`sub_802A110`/`sub_802A3AC`** (`actor_part103.c`) -
-  translate `gUnknown_03000884` (the player/list-sentinel) and `self`'s
+  translate `gActorList` (the player/list-sentinel) and `self`'s
   own 12-byte `{s16 x,y,z,sizeX,sizeY,sizeZ}` AABB record into stack
   scratch boxes via `MemCopy32`, then run the same 3-axis overlap
   test already established throughout this project
@@ -50,11 +50,11 @@ of this chunk hit.
   register-allocation bug** - the unforced allocator never reaches `r7`
   for the second scratch AABB box's address, no matter how the C is
   phrased.
-- **`sub_802A208`** (`actor_part103.c`) - fires a scroll enter/exit
+- **`RunActorCategoryFrame`** (`actor_part103.c`) - fires a scroll enter/exit
   trampoline pair off the selected category's vtable, drives a
   `sub_effect_table` draw loop, then walks the whole circular actor
   list twice (once unconditionally drawing each node's own marker, once
-  collecting flagged nodes into `gUnknown_03001408` for a second draw
+  collecting flagged nodes into `gActorDrawList` for a second draw
   pass). Not the AABB-overlap shape above - a different, related
   register-pressure gap: a careful plain-C reconstruction reproduced
   the exact control flow and literal-pool contents but consistently
@@ -72,7 +72,7 @@ of this chunk hit.
   anything controllable per-function. Anchored as NAKED rather than
   chasing the exact trigger further.
 
-All four AABB-cluster/`sub_802A208` functions and both landmark
+All four AABB-cluster/`RunActorCategoryFrame` functions and both landmark
 functions (`SelectActorCategory` here, `InitActorCategory` in issue
 #48) were verified byte-for-byte against `baserom.gba` (relocation-
 aware diff: every byte the isolated compile disagrees with the ROM on
@@ -86,13 +86,13 @@ old_agbcc (`actor_part103.c` moved). They share one inline that keeps
 the three boxes in one frame struct. `sub_802A674`/`sub_802A688` are
 plain C: they return the callee's result. `SelectActorCategory` has a
 `NON_MATCHING` draft with the ROM's instruction sequence but two
-registers swapped. `sub_802A208` is unchanged. See
+registers swapped. `RunActorCategoryFrame` is unchanged. See
 [issue-48-49-52-aabb-naked-retry.md](issue-48-49-52-aabb-naked-retry.md).
 
 ## Later pass: second near-miss sweep
 
 `SelectActorCategory` is real C (both compilers). The zeroing store of
-`gUnknown_03001404` goes through a local pointer. An empty
+`gActorSpawnIndex` goes through a local pointer. An empty
 `asm("" : : "r"(idx))` after the `sub_8029B2C` call gives that pointer
 one more reference, so it outranks `base` and takes r7. Both scan loops
 still name the global directly, which gives the ROM's loop-local copies
@@ -100,7 +100,7 @@ of the address. See [near-miss-polish-2.md](near-miss-polish-2.md).
 
 ## Later pass: category driver retry
 
-`sub_802A208` is now plain C under old_agbcc. The extra `r9` came from
+`RunActorCategoryFrame` is now plain C under old_agbcc. The extra `r9` came from
 the draft caching values across the sub-effect loop; the ROM is a plain
 `while` whose exit test gcc copies ahead of the loop, so the body
 starts at a label and re-reads every global. See

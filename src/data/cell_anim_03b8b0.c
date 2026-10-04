@@ -3,11 +3,11 @@
 
 /*
  * ROM 0x0803B8B0-0x080B2120: BG0 cell animation A (categories 0-2) and
- * category 0's sub_effect_table. Linked in ROM order between data/data.s
+ * category 0's spawnTable. Linked in ROM order between data/data.s
  * sections by ldscript.txt - see docs/data.md ("Category backgrounds").
  */
 
-/* BG0 cell animation A, gStaticData_08175558[0..2].family_shared_04
+/* BG0 cell animation A, gActorCategories[0..2].family_shared_04
  * (family_shared_08 = its size, 0x75B94), played by sub_8029890/
  * sub_80297C8 (actor_part95.c): 19x13 cells, 60 frames. These are type-0
  * categories, so each frame carries its cells' palette banks after the
@@ -35,9 +35,9 @@ const struct cell_anim_03b8b0 gStaticData_0803B8B0 = {
     },
 };
 
-/* Category 0's sub_effect_table (gStaticData_08175558[0].sub_effect_table,
+/* Category 0's spawnTable (gActorCategories[0].spawnTable,
  * read by SelectActorCategory (actor_part102.c) and the sub_802A5xx accessors). Record 0's field_04 is the record count. */
-const SUB_EFFECT_TABLE(164) gStaticData_080B1444 = {
+const SUB_EFFECT_TABLE(164) gCategory0SpawnTable = {
     {
         { 4000, 164, 3, 3, 3, 0, -1, 54 },
         { 18, -1, 28, 28, 28, 0, 30, 54 },

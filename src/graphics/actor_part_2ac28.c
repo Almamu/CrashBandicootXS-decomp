@@ -9,14 +9,14 @@
  *
  * - ConstructAnimTableState (category vtable slot 0, see docs/rom_map.md)
  *   installs the category's animation table (`struct anim_table_record`,
- *   include/actor_anim.h) as gUnknown_0300147C and builds the player with
+ *   include/actor_anim.h) as gActorAnimTable and builds the player with
  *   ConstructActorPart, which also resets the gUnknown_03001480-030014A4
  *   player-state globals.
- * - sub_802B218 (vtable slot 1) turns a level spawn record into a
- *   sub_802AC28 call, picking the record's alternate kind in the
+ * - SpawnActor (vtable slot 1) turns a level spawn record into a
+ *   CreateActor call, picking the record's alternate kind in the
  *   gLevelState+0x8C mode (with several kinds folded to 1) or its
  *   bonus kind when asked to, and skipping kinds 0/32-34/62.
- * - sub_802AC28 is the per-kind `new`: a switch whose case bodies are
+ * - CreateActor is the per-kind `new`: a switch whose case bodies are
  *   the inlined constructors of each actor class (allocate, run the
  *   base constructor, install the method table at +0x50); kinds 36-39
  *   only select a palette-cycle preset (sub_802ABC8).
@@ -27,8 +27,8 @@
  * with the current agbcc like the rest of this zone. See
  * docs/matching/issue-51-actor-2ac28.md. */
 
-extern struct anim_table_record *gUnknown_0300147C;
-extern struct actor_self *gUnknown_03000884;
+extern struct anim_table_record *gActorAnimTable;
+extern struct actor_self *gActorList;
 extern void *gLevelState;
 
 extern u8 gStaticData_087E4E14[];
@@ -66,12 +66,12 @@ static inline struct actor_self *AllocActor(u32 size)
     return (struct actor_self *)mem_alloc(size, MEM_HEAP_IWRAM);
 }
 
-/* `&gUnknown_0300147C[i]` with the index scaled before the table pointer
+/* `&gActorAnimTable[i]` with the index scaled before the table pointer
  * is loaded, as the ROM's inlined constructors compute it (plain
- * `&gUnknown_0300147C[i]` loads the pointer first). */
-#define REC_AT(i) ((struct anim_table_record *)((i) * sizeof(struct anim_table_record) + (u32)gUnknown_0300147C))
+ * `&gActorAnimTable[i]` loads the pointer first). */
+#define REC_AT(i) ((struct anim_table_record *)((i) * sizeof(struct anim_table_record) + (u32)gActorAnimTable))
 
-/* The inlined `new Foo(x, y, z)` bodies of sub_802AC28's switch: allocate,
+/* The inlined `new Foo(x, y, z)` bodies of CreateActor's switch: allocate,
  * run the base constructor, install the class's method table. */
 #define NEW_CB34_ACTOR(size, rec, vt)                                          \
     {                                                                          \
@@ -107,7 +107,7 @@ static inline struct actor_self *AllocActor(u32 size)
         (self)->animTime = 0;                                                  \
     }
 
-/* A spawner-linked actor (sub_802AC28 kinds 8/35): remembers the spawn
+/* A spawner-linked actor (CreateActor kinds 8/35): remembers the spawn
  * record that created it. */
 struct actor_tracked
 {
@@ -115,17 +115,17 @@ struct actor_tracked
     void *spawn;                // 0x54
 };
 
-struct actor_self *sub_802AC28(u8 kind, s32 x, s32 y, s32 z, void *spawn)
+struct actor_self *CreateActor(u8 kind, s32 x, s32 y, s32 z, void *spawn)
 {
-    x += gUnknown_0300147C[kind].spawnX;
-    y += gUnknown_0300147C[kind].spawnY;
+    x += gActorAnimTable[kind].spawnX;
+    y += gActorAnimTable[kind].spawnY;
 
     switch (kind)
     {
     case 9:
         NEW_CB34_ACTOR(0x54, REC_AT(kind), gStaticData_087E4EF4);
     case 3:
-        return sub_802D764(AllocActor(0x54), gUnknown_0300147C + kind, gUnknown_0300147C[kind].spawnX, y, z);
+        return sub_802D764(AllocActor(0x54), gActorAnimTable + kind, gActorAnimTable[kind].spawnX, y, z);
     case 5:
     case 6:
     case 7:
@@ -135,11 +135,11 @@ struct actor_self *sub_802AC28(u8 kind, s32 x, s32 y, s32 z, void *spawn)
     case 4:
         NEW_CB34_ACTOR(0x54, REC_AT(kind), gStaticData_087E4F14);
     case 22:
-        return sub_802CF0C(AllocActor(0x54), gUnknown_0300147C + kind, x, y, z);
+        return sub_802CF0C(AllocActor(0x54), gActorAnimTable + kind, x, y, z);
     case 12:
-        return sub_802D648(AllocActor(0x58), gUnknown_0300147C + kind, x, y, z);
+        return sub_802D648(AllocActor(0x58), gActorAnimTable + kind, x, y, z);
     case 24:
-        return sub_802D0C8(AllocActor(0x68), gUnknown_0300147C + kind, x, y, z, spawn);
+        return sub_802D0C8(AllocActor(0x68), gActorAnimTable + kind, x, y, z, spawn);
     case 28:
     case 29:
     case 30:
@@ -148,13 +148,13 @@ struct actor_self *sub_802AC28(u8 kind, s32 x, s32 y, s32 z, void *spawn)
     case 35:
         if (sub_802AA80(spawn))
         {
-            NEW_CB34_ACTOR(0x54, gUnknown_0300147C + 28, gStaticData_087E4ED4);
+            NEW_CB34_ACTOR(0x54, gActorAnimTable + 28, gStaticData_087E4ED4);
         }
         NEW_CB34_TRACKED_ACTOR(REC_AT(kind), gStaticData_087E4F34);
     case 8:
         if (sub_802AA80(spawn))
         {
-            NEW_CB34_ACTOR(0x54, gUnknown_0300147C + 28, gStaticData_087E4ED4);
+            NEW_CB34_ACTOR(0x54, gActorAnimTable + 28, gStaticData_087E4ED4);
         }
         NEW_CB34_TRACKED_ACTOR(REC_AT(kind), gStaticData_087E4F34);
     case 10:
@@ -162,24 +162,24 @@ struct actor_self *sub_802AC28(u8 kind, s32 x, s32 y, s32 z, void *spawn)
     case 11:
         NEW_BASE_ACTOR(REC_AT(kind), gStaticData_087E4E94);
     case 23:
-        return sub_802CDE4(AllocActor(0x54), gUnknown_0300147C + kind, x, y, z);
+        return sub_802CDE4(AllocActor(0x54), gActorAnimTable + kind, x, y, z);
     case 16:
     case 18:
     case 20:
-        return sub_802D1B8(AllocActor(0x54), gUnknown_0300147C + kind, x, y, z);
+        return sub_802D1B8(AllocActor(0x54), gActorAnimTable + kind, x, y, z);
     case 25:
     {
-        struct actor_self *self = sub_802D5D4(AllocActor(0x54), gUnknown_0300147C + 26, gUnknown_0300147C[26].spawnX, y, z);
+        struct actor_self *self = sub_802D5D4(AllocActor(0x54), gActorAnimTable + 26, gActorAnimTable[26].spawnX, y, z);
 
         SET_ANIM(self, 1);
-        return sub_802D5D4(AllocActor(0x54), gUnknown_0300147C + kind, gUnknown_0300147C[kind].spawnX, y, z);
+        return sub_802D5D4(AllocActor(0x54), gActorAnimTable + kind, gActorAnimTable[kind].spawnX, y, z);
     }
     case 13:
     {
-        struct actor_self *self = sub_802CE38(AllocActor(0x54), gUnknown_0300147C + 14, gUnknown_0300147C[14].spawnX, y, z);
+        struct actor_self *self = sub_802CE38(AllocActor(0x54), gActorAnimTable + 14, gActorAnimTable[14].spawnX, y, z);
 
         SET_ANIM(self, 1);
-        return sub_802CE38(AllocActor(0x54), gUnknown_0300147C + kind, gUnknown_0300147C[kind].spawnX, y, z);
+        return sub_802CE38(AllocActor(0x54), gActorAnimTable + kind, gActorAnimTable[kind].spawnX, y, z);
     }
     case 2:
         NEW_BASE_ACTOR(REC_AT(kind), gStaticData_087E4E14);
@@ -197,27 +197,27 @@ void sub_802B12C(s32 x, s32 y, s32 z)
 {
     struct actor_self *self = AllocActor(0x54);
 
-    InitActorPart(self, &gUnknown_0300147C[40], x, y, z);
+    InitActorPart(self, &gActorAnimTable[40], x, y, z);
     self->vtable = (struct actor_vtable *)gStaticData_087E4E34;
 }
 
 void sub_802B174(s32 x, s32 y, s32 z)
 {
-    sub_802C3E8(AllocActor(0x60), &gUnknown_0300147C[11], x, y, z);
+    sub_802C3E8(AllocActor(0x60), &gActorAnimTable[11], x, y, z);
 }
 
 struct actor_self *sub_802B1A8(s32 x, s32 y, s32 z, s32 arg)
 {
-    return sub_802D528(AllocActor(0x54), &gUnknown_0300147C[27], x, y, z, arg);
+    return sub_802D528(AllocActor(0x54), &gActorAnimTable[27], x, y, z, arg);
 }
 
 extern struct actor_self *ConstructActorPart(struct actor_self *self, struct anim_table_record *rec, s32 z);
 
 void ConstructAnimTableState(struct anim_table_record *table, s32 z)
 {
-    gUnknown_0300147C = table;
-    gUnknown_03000884 = NULL;
-    gUnknown_03000884 = ConstructActorPart(AllocActor(0x54), gUnknown_0300147C, z);
+    gActorAnimTable = table;
+    gActorList = NULL;
+    gActorList = ConstructActorPart(AllocActor(0x54), gActorAnimTable, z);
 }
 
 struct actor_spawn
@@ -231,7 +231,7 @@ struct actor_spawn
     s32 z;
 };
 
-struct actor_self *sub_802B218(struct actor_spawn *spawn, u8 useBonus, s32 zOffset)
+struct actor_self *SpawnActor(struct actor_spawn *spawn, u8 useBonus, s32 zOffset)
 {
     u8 kind = spawn->kind;
 
@@ -249,7 +249,7 @@ struct actor_self *sub_802B218(struct actor_spawn *spawn, u8 useBonus, s32 zOffs
     }
     if (kind == 0 || kind == 32 || kind == 33 || kind == 34 || kind == 62)
         return NULL;
-    return sub_802AC28(kind, spawn->x << 8, spawn->y << 8, (spawn->z << 8) + zOffset, spawn);
+    return CreateActor(kind, spawn->x << 8, spawn->y << 8, (spawn->z << 8) + zOffset, spawn);
 }
 
 extern s32 gUnknown_030014A4;

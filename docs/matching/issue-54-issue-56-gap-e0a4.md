@@ -106,7 +106,7 @@ raw disassembly.
   `actor_part46b.c`).
 - **`sub_802E710`** - stashes its first argument into
   `gUnknown_030014D8` then allocates and forwards to `sub_8032ADC` with
-  a position derived from the player object (`gUnknown_03000884`).
+  a position derived from the player object (`gActorList`).
 - **`sub_802E740`** - a `self`-object physics/collision-react step.
 - **`sub_802E84C`**, **`sub_802E9FC`**, **`sub_802EB78`** - larger
   `self`-object state-machine steps (frame-counter/hazard-timer driven

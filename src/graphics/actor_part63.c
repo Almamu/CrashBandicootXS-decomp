@@ -95,10 +95,10 @@ void sub_8033F48(void *selfArg)
         {
             register s32 eight asm("r2") = 8;
 
-            /* &table->m08.thisOffset, with the 8 in its own register */
+            /* &table->destroy.thisOffset, with the 8 in its own register */
             addr = (u8 *)self + *(s16 *)((u8 *)table + eight);
         }
-        fn = table->m08.fn;
+        fn = table->destroy.fn;
 
         _call_via_r2(addr, (void *)3, fn);
     }

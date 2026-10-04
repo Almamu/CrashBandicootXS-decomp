@@ -3,9 +3,9 @@
 
 /*
  * ROM 0x084b0ae0-0x084b414c: sprite banks 10-21 of the sprite-bank
- * animation system (gStaticData_084A5600, include/sprite_bank.h). Linked in
+ * animation system (gSpriteBankTable, include/sprite_bank.h). Linked in
  * ROM order between data/data.s sections by ldscript.txt - see
- * docs/data.md and docs/data_map.md ("gStaticData_084A5600").
+ * docs/data.md and docs/data_map.md ("gSpriteBankTable").
  *
  * Extracted once from baserom.gba by tools/sprite_banks.py; this file is
  * the source now. Per bank: the animations (a frame-index sequence each),
@@ -19,7 +19,7 @@
  */
 
 /* ---------------------------------------------------------------------- */
-/* Bank 10: 2 animations, 20 frames, tiles in gStaticData_0834DB00 (SPRITE_TILES_BANK10). */
+/* Bank 10: 2 animations, 20 frames, tiles in gSpriteBank10Tiles (SPRITE_TILES_BANK10). */
 
 extern const u16 gSpriteBank10Anim00Seq[9];
 extern const u16 gSpriteBank10Anim01Seq[11];
@@ -257,7 +257,7 @@ const u8 gSpriteBank10Frame018Pieces[1] = { SPRITE_PIECE(2, 3) };
 const u8 gSpriteBank10Frame019Pieces[5] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 9), SPRITE_PIECE(0, 8), SPRITE_PIECE(0, 6), SPRITE_PIECE(0, 0) };
 
 /* ---------------------------------------------------------------------- */
-/* Bank 11: 2 animations, 25 frames, tiles in gStaticData_08353BC0 (SPRITE_TILES_BANK11). */
+/* Bank 11: 2 animations, 25 frames, tiles in gSpriteBank11Tiles (SPRITE_TILES_BANK11). */
 
 extern const u16 gSpriteBank11Anim00Seq[11];
 extern const u16 gSpriteBank11Anim01Seq[14];
@@ -545,7 +545,7 @@ const u8 gSpriteBank11Frame023Pieces[1] = { SPRITE_PIECE(2, 7) };
 const u8 gSpriteBank11Frame024Pieces[1] = { SPRITE_PIECE(2, 7) };
 
 /* ---------------------------------------------------------------------- */
-/* Bank 12: 7 animations, 57 frames, tiles in gStaticData_08359620 (SPRITE_TILES_BANK12). */
+/* Bank 12: 7 animations, 57 frames, tiles in gSpriteBank12Tiles (SPRITE_TILES_BANK12). */
 
 extern const u16 gSpriteBank12Anim00Seq[17];
 extern const u16 gSpriteBank12Anim01Seq[5];
@@ -1214,7 +1214,7 @@ const u8 gSpriteBank12Frame055Pieces[2] = { SPRITE_PIECE(5, 0), SPRITE_PIECE(0, 
 const u8 gSpriteBank12Frame056Pieces[1] = { SPRITE_PIECE(5, 0) };
 
 /* ---------------------------------------------------------------------- */
-/* Bank 13: 2 animations, 19 frames, tiles in gStaticData_083642C0 (SPRITE_TILES_BANK13). */
+/* Bank 13: 2 animations, 19 frames, tiles in gSpriteBank13Tiles (SPRITE_TILES_BANK13). */
 
 extern const u16 gSpriteBank13Anim00Seq[10];
 extern const u16 gSpriteBank13Anim01Seq[9];
@@ -1442,7 +1442,7 @@ const u8 gSpriteBank13Frame017Pieces[3] = { SPRITE_PIECE(2, 6), SPRITE_PIECE(0, 
 const u8 gSpriteBank13Frame018Pieces[4] = { SPRITE_PIECE(2, 6), SPRITE_PIECE(0, 1), SPRITE_PIECE(0, 0), SPRITE_PIECE(0, 0) };
 
 /* ---------------------------------------------------------------------- */
-/* Bank 14: 2 animations, 23 frames, tiles in gStaticData_083663A0 (SPRITE_TILES_BANK14). */
+/* Bank 14: 2 animations, 23 frames, tiles in gSpriteBank14Tiles (SPRITE_TILES_BANK14). */
 
 extern const u16 gSpriteBank14Anim00Seq[12];
 extern const u16 gSpriteBank14Anim01Seq[11];
@@ -1710,7 +1710,7 @@ const u8 gSpriteBank14Frame021Pieces[4] = { SPRITE_PIECE(3, 2), SPRITE_PIECE(0, 
 const u8 gSpriteBank14Frame022Pieces[5] = { SPRITE_PIECE(3, 2), SPRITE_PIECE(0, 0), SPRITE_PIECE(0, 6), SPRITE_PIECE(0, 0), SPRITE_PIECE(0, 0) };
 
 /* ---------------------------------------------------------------------- */
-/* Bank 15: 5 animations, 58 frames, tiles in gStaticData_0836B0E0 (SPRITE_TILES_BANK15). */
+/* Bank 15: 5 animations, 58 frames, tiles in gSpriteBank15Tiles (SPRITE_TILES_BANK15). */
 
 extern const u16 gSpriteBank15Anim00Seq[15];
 extern const u16 gSpriteBank15Anim01Seq[4];
@@ -2365,7 +2365,7 @@ const u8 gSpriteBank15Frame056Pieces[3] = { SPRITE_PIECE(2, 10), SPRITE_PIECE(0,
 const u8 gSpriteBank15Frame057Pieces[2] = { SPRITE_PIECE(2, 10), SPRITE_PIECE(0, 9) };
 
 /* ---------------------------------------------------------------------- */
-/* Bank 16: 2 animations, 24 frames, tiles in gStaticData_08370F20 (SPRITE_TILES_BANK16). */
+/* Bank 16: 2 animations, 24 frames, tiles in gSpriteBank16Tiles (SPRITE_TILES_BANK16). */
 
 extern const u16 gSpriteBank16Anim00Seq[12];
 extern const u16 gSpriteBank16Anim01Seq[12];
@@ -2643,7 +2643,7 @@ const u8 gSpriteBank16Frame022Pieces[1] = { SPRITE_PIECE(2, 7) };
 const u8 gSpriteBank16Frame023Pieces[1] = { SPRITE_PIECE(2, 7) };
 
 /* ---------------------------------------------------------------------- */
-/* Bank 17: 1 animation, 15 frames, tiles in gStaticData_08376860 (SPRITE_TILES_BANK17). */
+/* Bank 17: 1 animation, 15 frames, tiles in gSpriteBank17Tiles (SPRITE_TILES_BANK17). */
 
 extern const u16 gSpriteBank17Anim00Seq[15];
 extern const struct sprite_frame_1box gSpriteBank17Frame000;
@@ -2819,7 +2819,7 @@ const u8 gSpriteBank17Frame013Pieces[3] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 
 const u8 gSpriteBank17Frame014Pieces[3] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 8), SPRITE_PIECE(0, 0) };
 
 /* ---------------------------------------------------------------------- */
-/* Bank 18: 2 animations, 14 frames, tiles in gStaticData_08378E00 (SPRITE_TILES_BANK18). */
+/* Bank 18: 2 animations, 14 frames, tiles in gSpriteBank18Tiles (SPRITE_TILES_BANK18). */
 
 extern const u16 gSpriteBank18Anim00Seq[9];
 extern const u16 gSpriteBank18Anim01Seq[5];
@@ -2997,7 +2997,7 @@ const u8 gSpriteBank18Frame012Pieces[2] = { SPRITE_PIECE(2, 11), SPRITE_PIECE(0,
 const u8 gSpriteBank18Frame013Pieces[2] = { SPRITE_PIECE(2, 11), SPRITE_PIECE(0, 11) };
 
 /* ---------------------------------------------------------------------- */
-/* Bank 19: 2 animations, 35 frames, tiles in gStaticData_0837C8E0 (SPRITE_TILES_BANK19). */
+/* Bank 19: 2 animations, 35 frames, tiles in gSpriteBank19Tiles (SPRITE_TILES_BANK19). */
 
 extern const u16 gSpriteBank19Anim00Seq[14];
 extern const u16 gSpriteBank19Anim01Seq[21];
@@ -3386,7 +3386,7 @@ const u8 gSpriteBank19Frame033Pieces[2] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 
 const u8 gSpriteBank19Frame034Pieces[2] = { SPRITE_PIECE(2, 2), SPRITE_PIECE(0, 0) };
 
 /* ---------------------------------------------------------------------- */
-/* Bank 20: 2 animations, 32 frames, tiles in gStaticData_083807A0 (SPRITE_TILES_BANK20). */
+/* Bank 20: 2 animations, 32 frames, tiles in gSpriteBank20Tiles (SPRITE_TILES_BANK20). */
 
 extern const u16 gSpriteBank20Anim00Seq[16];
 extern const u16 gSpriteBank20Anim01Seq[16];
@@ -3744,7 +3744,7 @@ const u8 gSpriteBank20Frame030Pieces[2] = { SPRITE_PIECE(5, 6), SPRITE_PIECE(0, 
 const u8 gSpriteBank20Frame031Pieces[2] = { SPRITE_PIECE(5, 6), SPRITE_PIECE(0, 0) };
 
 /* ---------------------------------------------------------------------- */
-/* Bank 21: 2 animations, 15 frames, tiles in gStaticData_08382B80 (SPRITE_TILES_BANK21). */
+/* Bank 21: 2 animations, 15 frames, tiles in gSpriteBank21Tiles (SPRITE_TILES_BANK21). */
 
 extern const u16 gSpriteBank21Anim00Seq[8];
 extern const u16 gSpriteBank21Anim01Seq[7];

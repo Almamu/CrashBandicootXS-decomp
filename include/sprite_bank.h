@@ -4,12 +4,12 @@
 #include "gba/types.h"
 
 /*
- * The sprite-bank animation system: gStaticData_084A5600 and the tables it
+ * The sprite-bank animation system: gSpriteBankTable and the tables it
  * points at (src/data/sprite_banks_*.c, docs/data_map.md). An animated
  * part's +0x20 field points at one struct sprite_bank; +0x2D is the
  * animation index into its `anims`, +0x30 the step within that animation.
  *
- * Readers: sub_80083A8 (tileBase), sub_80083B8 (anim -> seq -> frame),
+ * Readers: GetSpriteTileBase (tileBase), GetSpriteFrame (anim -> seq -> frame),
  * sub_8007634/sub_80073DC (the pieces), sub_8007C30/sub_8007CF8 and
  * sub_80084C4-sub_80085B8 (the frame's boxes and anchor, picked by the
  * layout type), RunPauseMenu (the fixed tile pool). Older files read the
@@ -30,7 +30,7 @@ struct sprite_piece_pos {
 };
 
 /* A box relative to the part, in pixels: sub_8007C30 adds {x, y} to the
- * part's position and hands that and {w, h} to sub_803AFE4/sub_803AFDC
+ * part's position and hands that and {w, h} to SetAabbPos/SetAabbSize
  * as an AABB. */
 struct sprite_box {
     s16 x;
@@ -64,7 +64,7 @@ struct sprite_point {
 #define SPRITE_PIECE(type, shape) (((type) << 4) | (shape))
 
 /* `tiles`: bits 0-23 are the frame's byte offset into the sprite tile pool
- * (tileBase, gStaticData_082BF120), bits 24-31 the piece count. The
+ * (tileBase, gSpriteBank00Tiles), bits 24-31 the piece count. The
  * pieces' tiles are back to back from there. */
 #define SPRITE_FRAME_TILES(offset, count) (((u32)(count) << 24) | (offset))
 
@@ -81,7 +81,7 @@ struct sprite_frame {
 
 /*
  * Where each bank's tiles start in the sprite tile pool: the offset of the
- * bank's array in src/data/sprite_tiles_2bf120.c from gStaticData_082BF120
+ * bank's array in src/data/sprite_tiles_2bf120.c from gSpriteBank00Tiles
  * (graphics/sprites/bankNN_*.png, TILE_BYTES_bankNN_* in graphics.mk).
  * Frames give their tile offset relative to these. Resizing a bank's PNG
  * moves every later bank, so these have to follow.
@@ -171,7 +171,7 @@ struct sprite_frame_3box_anchor {
 };
 
 /* sprite_anim.flags */
-#define SPRITE_ANIM_LOOP 2 /* sub_80083B8: without it the last step holds */
+#define SPRITE_ANIM_LOOP 2 /* GetSpriteFrame: without it the last step holds */
 
 /* One animation: a sequence of frame indices into the bank's `frames`. */
 struct sprite_anim {
@@ -192,10 +192,10 @@ struct sprite_bank {
     u16 animCount;                              /* 0x0A */
 };
 
-/* gStaticData_084A5600, *gUnknown_030012D0. */
+/* gSpriteBankTable, *gUnknown_030012D0. */
 struct sprite_bank_table {
     const struct sprite_bank *banks;    /* 0x00 - [bankCount] */
-    const u8 *tileBase;                 /* 0x04 - sprite tile pool, sub_80083A8 */
+    const u8 *tileBase;                 /* 0x04 - sprite tile pool, GetSpriteTileBase */
     const u8 *tilePool;                 /* 0x08 - the fixed 4bpp tiles, RunPauseMenu */
     u16 bankCount;                      /* 0x0C */
     u16 tilePoolCount;                  /* 0x0E - in tiles */

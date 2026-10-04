@@ -3,11 +3,11 @@
 #include "actor_self.h"
 #include "box_part.h"
 
-extern void *sub_80083B8(void *part);
+extern void *GetSpriteFrame(void *part);
 
 /* Same keyframe-record lookup as `sub_8008734`/`sub_8008770` above,
  * returning the record's `+0x16` byte (frame count, also read by
- * `sub_80083B8`). */
+ * `GetSpriteFrame`). */
 u8 sub_800878C(struct actor *part)
 {
     register void **tablePtr asm("r1") = *(void ***)((u8 *)part + 0x20);
@@ -23,7 +23,7 @@ u8 sub_800878C(struct actor *part)
 }
 
 /* Same shape as `sub_800878C` immediately above, returning the
- * record's `+0x15` byte (duration, also read by `sub_80083B8`)
+ * record's `+0x15` byte (duration, also read by `GetSpriteFrame`)
  * instead. */
 u8 sub_80087A0(struct actor *part)
 {

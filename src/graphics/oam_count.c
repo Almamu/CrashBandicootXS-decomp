@@ -53,8 +53,8 @@ struct sub_8006700_actor {
 
 extern void sub_8006C28(struct vram_upload_cursor *arg0);
 extern void sub_8008890(void *arg0, s32 arg1, s32 arg2);
-extern void sub_803AFE4(void *buf, s32 arg1, s32 arg2);
-extern void sub_803AFDC(void *buf, s32 arg1, s32 arg2);
+extern void SetAabbPos(void *buf, s32 arg1, s32 arg2);
+extern void SetAabbSize(void *buf, s32 arg1, s32 arg2);
 extern s32 sub_8001214(void *arg0, void *arg1, void *buf, s32 arg3);
 extern s32 GetUiText(s32 arg0);
 extern struct vram_upload_cursor *gUnknown_030012FC;
@@ -97,8 +97,8 @@ void DrawPowerDialog(struct sub_8006700_actor *arg0)
     set_icon_mgr_pos(gLargeFont, x, 0x2d);
     r = gLargeFont->record;
     _call_via_r2((u8 *)gLargeFont + r->slots[2].offset, arg0->field_10, r->slots[2].ptr);
-    sub_803AFE4(buf, 0x10, 0x6a);
-    sub_803AFDC(buf, 0xd0, 0x35);
+    SetAabbPos(buf, 0x10, 0x6a);
+    SetAabbSize(buf, 0xd0, 0x35);
     sub_8001214(arg0->field_14, gSmallFont, buf, 0);
     n = GetUiText(0x2e);
     r = gSmallFont->record;

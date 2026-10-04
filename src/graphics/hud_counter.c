@@ -7,7 +7,7 @@ extern s32 gHudSlideOffset;
 extern void DrawHudPart(struct hud_digit_part *part, s32 x, s32 y);
 extern s32 __divsi3(s32 dividend, s32 divisor);
 extern s32 __modsi3(s32 dividend, s32 divisor);
-extern s32 sub_803AFEC(void *state);
+extern s32 GetLives(void *state);
 
 void UpdateHudLives(struct hud_counter *counter)
 {
@@ -24,8 +24,8 @@ void UpdateHudLives(struct hud_counter *counter)
         register void **state_slot asm("r4") = &gLevelState;
         register s32 value asm("r0");
 
-        if (sub_803AFEC(*state_slot) > 0) {
-            value = sub_803AFEC(*state_slot);
+        if (GetLives(*state_slot) > 0) {
+            value = GetLives(*state_slot);
         } else {
             value = 0;
         }

@@ -11,8 +11,8 @@
  * tangled functions and are left untouched for now; see
  * docs/matching/issue-12-physics-collision.md. */
 
-extern void sub_803AFE4(void *buf, s32 arg1, s32 arg2);
-extern void sub_803AFDC(void *buf, s32 arg1, s32 arg2);
+extern void SetAabbPos(void *buf, s32 arg1, s32 arg2);
+extern void SetAabbSize(void *buf, s32 arg1, s32 arg2);
 extern u8 sub_8001688(void *buf1, void *buf2);
 extern void *gUnknown_030012D8;
 #define gPlayerPart (*(struct box_part **)&gUnknown_030012D8)
@@ -82,8 +82,8 @@ void sub_800D040(struct box_part *self)
         offY = pb->offY;
         w = pb->w;
         h = pb->h;
-        sub_803AFE4(&f.a, offX + px, offY + py);
-        sub_803AFDC(&f.a, w, h);
+        SetAabbPos(&f.a, offX + px, offY + py);
+        SetAabbSize(&f.a, w, h);
         if (self->mirrorX)
             f.a.x = px * 2 - (f.a.x + f.a.w);
         if (self->mirrorY)
@@ -107,9 +107,9 @@ void sub_800D040(struct box_part *self)
         h = pb->h;
         {
             s32 x = offX + px, y = offY + py;
-            sub_803AFE4(BOX_ADDR(&f.b), x, y);
+            SetAabbPos(BOX_ADDR(&f.b), x, y);
         }
-        sub_803AFDC(BOX_ADDR(&f.b), w, h);
+        SetAabbSize(BOX_ADDR(&f.b), w, h);
         if (gPlayerPart->mirrorX)
             f.b.x = px * 2 - (f.b.x + f.b.w);
         if (gPlayerPart->mirrorY)

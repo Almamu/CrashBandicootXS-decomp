@@ -120,10 +120,10 @@ struct aabb {
     s32 h;
 };
 
-extern void sub_803AFE4(struct aabb *buf, s32 x, s32 y);
-extern void sub_803AFDC(struct aabb *buf, s32 w, s32 h);
+extern void SetAabbPos(struct aabb *buf, s32 x, s32 y);
+extern void SetAabbSize(struct aabb *buf, s32 w, s32 h);
 
-/* Builds the AABB (via the shared sub_803AFE4 set-position/sub_803AFDC
+/* Builds the AABB (via the shared SetAabbPos set-position/SetAabbSize
  * set-size pair) for `part`'s current animation keyframe, whose box sits
  * at record+0xc, and mirrors it horizontally/vertically around `part`'s
  * own position per the 0x28 mirror bits. Returned by value (the hidden
@@ -141,8 +141,8 @@ struct aabb sub_8007B00(struct box_part *part)
     u8 w = pb->w;
     u8 h = pb->h;
 
-    sub_803AFE4(&box, offX + px, offY + py);
-    sub_803AFDC(&box, w, h);
+    SetAabbPos(&box, offX + px, offY + py);
+    SetAabbSize(&box, w, h);
     if (part->mirrorX)
         box.x = (part->x >> 8) * 2 - (box.x + box.w);
     if (part->mirrorY)
@@ -165,8 +165,8 @@ struct aabb sub_8007B98(struct box_part *part)
     u8 w = pb->w;
     u8 h = pb->h;
 
-    sub_803AFE4(&box, offX + px, offY + py);
-    sub_803AFDC(&box, w, h);
+    SetAabbPos(&box, offX + px, offY + py);
+    SetAabbSize(&box, w, h);
     if (part->mirrorX)
         box.x = (part->x >> 8) * 2 - (box.x + box.w);
     if (part->mirrorY)

@@ -36,7 +36,7 @@ matches both.
     register" gap that forced `sub_8007B00`/`sub_8007B98`
     (`actor_part.c`) fully NAKED, but tractable here with explicit
     pins since this function's register pressure is much lower (no
-    `sub_803AFE4`/`sub_803AFDC` calls in the middle). The final
+    `SetAabbPos`/`SetAabbSize` calls in the middle). The final
     add (`record = tag*0x1c + table`) also needed the offset written as
     the *left* operand - the ROM's `adds r0,r0,r1` keeps the
     offset's own register (r0) as the destination, which only a

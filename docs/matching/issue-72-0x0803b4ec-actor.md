@@ -81,12 +81,12 @@ All in `src/graphics/actor_anim.c`, in ROM order:
   `sub_803B800`/`sub_803B82C`/`sub_803B858`/`sub_803B884` - 16 more
   byte-identical `struct linked_node` teardown handlers, the exact same
   shape as issue #71's 20: set `self->field_50` to
-  `gStaticData_087E4DF4`, unlink `self` from its `+0x48`/`+0x4c`
+  `gActorVtable`, unlink `self` from its `+0x48`/`+0x4c`
   circular list, free `self` when `flags & 1`.
 - **`sub_803B57C`** - `sub_803B0F0`'s near-twin: advances `self+0x24`
   (a Q8 fixed-point accumulator, `+170`/256 per call instead of
   `sub_803B0F0`'s `-0x180`/256) and either fires the `+0x50` trampoline
-  record if `self+0x12` is set, or tail-calls `sub_802A7B8(self)`
+  record if `self+0x12` is set, or tail-calls `UpdateActor(self)`
   otherwise.
 - **`sub_803B6F0`/`sub_803B710`/`sub_803B730`** - a third teardown
   shape: tear down via `sub_80321D0(self, 0)` (itself still unmatched)

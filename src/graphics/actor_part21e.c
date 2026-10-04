@@ -9,7 +9,7 @@
  * `gUnknown_03001548` by its per-frame delta and ramps
  * `gUnknown_03001560` toward `0xb2` the same +-1/frame way. While the
  * phase counter (`gUnknown_03001570`) is armed (0), computes the
- * player's (`gUnknown_03000884`) distance from a target point
+ * player's (`gActorList`) distance from a target point
  * (`+0x24` axis, offset `+0xa` minus the accumulated position) via
  * `__divsi3`, and - only once that "speed" term is positive -
  * computes a signed Manhattan-style distance in X/Y (`+0x1c`/`+0x20`
@@ -33,7 +33,7 @@
 extern s32 gUnknown_03001548;
 extern s32 gUnknown_03001560;
 extern s32 gUnknown_03001570;
-extern struct actor_self *gUnknown_03000884;
+extern struct actor_self *gActorList;
 extern s32 __divsi3(s32 arg0, s32 arg1);
 extern s32 gUnknown_03001540;
 extern s32 gUnknown_03001544;
@@ -80,7 +80,7 @@ void sub_8030834(void)
 
     phase = gUnknown_03001570;
     if (phase == 0) {
-        struct actor_self *pl = gUnknown_03000884;
+        struct actor_self *pl = gActorList;
         s32 speed = (pl->z - (gUnknown_03001548 - 10)) / -0x1AA;
         if (speed > 0) {
             s32 dx, dy;

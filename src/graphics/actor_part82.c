@@ -33,7 +33,7 @@ extern u8 gStaticData_0816B300[];
 extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
 extern void FadeOutMusic(void *ctx, u32 value);
 extern void sub_8006D08(void *cache, s32 slot, s32 kind);
-extern void *sub_80083B8(struct act_part *part);
+extern void *GetSpriteFrame(struct act_part *part);
 extern u8 sub_800AAEC(struct act_part *part, s32 action);
 extern void sub_8012160(struct act *self, s32 id);
 extern void sub_8012AF4(struct act *self);
@@ -52,7 +52,7 @@ static inline void ActSetNext27(struct act *self, s32 next)
  * offset record. A macro so each case assigns `dst` itself. */
 #define PART_OFFSET(dst, part)                                                 \
     if (1) {                                                                   \
-        u8 *_info = sub_80083B8(part);                                         \
+        u8 *_info = GetSpriteFrame(part);                                         \
                                                                                \
         switch (**(u8 **)(_info + 4) >> 4) {                                   \
         case 0:                                                                \

@@ -11,7 +11,7 @@
  * scale into the slot's pa/pd, via `FixedInverse16`), selects OBJ mode 1
  * (affine) or 3 (double size, scale > 0x100), and pulls every piece
  * towards the first piece's centre by the scale factor. To find that
- * centre it probes keyframe 0 through `sub_80083B8` with `part->tick`
+ * centre it probes keyframe 0 through `GetSpriteFrame` with `part->tick`
  * temporarily clamped to 0. The tile total goes to `sub_8006C84` once
  * after the loop.
  *
@@ -115,8 +115,8 @@ struct affine_part {
  * bge`); a 1-bit field test compiles to `movs #0x20; ands` instead. */
 #define PART_FLAG_SET(part, shift) ((s32)(*((u8 *)(part) + 0x28) << (shift)) < 0)
 
-extern struct piece_info *sub_80083B8(void *part);
-extern s32 sub_80083A8(void *part);
+extern struct piece_info *GetSpriteFrame(void *part);
+extern s32 GetSpriteTileBase(void *part);
 extern s32 sub_8006C44(void *cursor);
 extern s32 sub_8006C84(void *cursor, s32 src, s32 size);
 extern void sub_8006AC8(void *buffer, void *record);
@@ -153,7 +153,7 @@ void sub_8007634(void *unused, struct affine_part *part, s32 *pos)
 {
     struct oam_pair oam;
     s32 total = 0;
-    struct piece_info *info = sub_80083B8(part);
+    struct piece_info *info = GetSpriteFrame(part);
     s32 tile = sub_8006C44(gUnknown_030012FC);
     s32 scale = part->scale;
     u16 pa;
@@ -231,7 +231,7 @@ void sub_8007634(void *unused, struct affine_part *part, s32 *pos)
                 u8 *pw, *ph;
 
                 ClampTick7634(part, 0);
-                first = sub_80083B8(part);
+                first = GetSpriteFrame(part);
                 ClampTick7634(part, saved);
                 /* The size-table addresses are taken before `pos` is read;
                  * that keeps r0-r4 busy at the `pos` reload, which makes
@@ -290,5 +290,5 @@ void sub_8007634(void *unused, struct affine_part *part, s32 *pos)
         tile += tiles;
         total += tiles << 5;
     }
-    sub_8006C84(gUnknown_030012FC, sub_80083A8(part) + (info->u.packed & 0xffffff), total);
+    sub_8006C84(gUnknown_030012FC, GetSpriteTileBase(part) + (info->u.packed & 0xffffff), total);
 }

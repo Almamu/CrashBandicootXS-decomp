@@ -55,7 +55,7 @@
 . = 0x00001374; gUnknown_03001374 = .;
 . = 0x00001378; gUnknown_03001378 = .;
 . = 0x0000137C; gUnknown_0300137C = .;
-. = 0x00001380; gUnknown_03001380 = .;
+. = 0x00001380; gActorCategory = .;
 . = 0x00001384; gUnknown_03001384 = .;
 . = 0x00001388; gUnknown_03001388 = .;
 . = 0x0000138C; gUnknown_0300138C = .;
@@ -89,13 +89,13 @@
 . = 0x000013F4; gUnknown_030013F4 = .;
 . = 0x000013F8; gUnknown_030013F8 = .;
 . = 0x000013FC; gUnknown_030013FC = .;
-. = 0x00001400; gUnknown_03001400 = .;
-. = 0x00001404; gUnknown_03001404 = .;
-. = 0x00001408; gUnknown_03001408 = .;
-. = 0x0000140C; gUnknown_0300140C = .;
+. = 0x00001400; gActorSpawnTable = .;
+. = 0x00001404; gActorSpawnIndex = .;
+. = 0x00001408; gActorDrawList = .;
+. = 0x0000140C; gActorDrawCount = .;
 . = 0x00001410; gUnknown_03001410 = .;
 . = 0x00001414; gUnknown_03001414 = .;
-. = 0x00001418; gUnknown_03001418 = .;
+. = 0x00001418; gActorCategoryVtable = .;
 . = 0x0000141C; gUnknown_0300141C = .;
 . = 0x00001420; gUnknown_03001420 = .;
 . = 0x00001424; gUnknown_03001424 = .;
@@ -106,7 +106,7 @@
 . = 0x00001470; gUnknown_03001470 = .;
 . = 0x00001474; gUnknown_03001474 = .;
 . = 0x00001478; gUnknown_03001478 = .;
-. = 0x0000147C; gUnknown_0300147C = .;
+. = 0x0000147C; gActorAnimTable = .;
 . = 0x00001480; gUnknown_03001480 = .;
 . = 0x00001484; gUnknown_03001484 = .;
 . = 0x00001488; gUnknown_03001488 = .;

@@ -24,7 +24,7 @@ matches - every function that was previously parked under
 `actor_part6.c`, and `actor_part7.c`/the new `actor_part7b.c`:
 `DrawPowerDialog`, `sub_80073DC`, `sub_8007B00`, `sub_8007B98`,
 `sub_8008044`, `sub_8008188`, `sub_8008200`, `sub_8008278`,
-`sub_80083B8`, `sub_8008770`, `sub_800891C`, `sub_8008A40`,
+`GetSpriteFrame`, `sub_8008770`, `sub_800891C`, `sub_8008A40`,
 `sub_8008AD8`, and `sub_8008D80`. Every one of these had already been
 fully semantically understood (see their doc comments, now preserved
 in git history alongside the plain-C reconstructions they replace, and
@@ -37,7 +37,7 @@ sessions: the categorical `r7`-pin hazard (`DrawPowerDialog`,
 `naked-sub_8007dbc.md`'s account of the same wall), a register-register
 `add`'s stubborn destination-operand canonicalization that this
 compiler never reorders no matter the C source shape (`sub_8008188`,
-`sub_8008200`, `sub_8008278`, `sub_80083B8`), a redundant
+`sub_8008200`, `sub_8008278`, `GetSpriteFrame`), a redundant
 byte-truncation the compiler always optimizes away once it can prove
 an `AND`'s range (`sub_8008770`), a genuine stack-frame/local-variable
 shape this reconstruction couldn't reverse-engineer (`sub_80073DC`,
@@ -105,7 +105,7 @@ This batch retires six now-empty raw-assembly splits entirely -
 `asm/code_3_1_10_11.s` (`DrawPowerDialog`), `asm/code_3_2_2.s`
 (`sub_8007B00`/`sub_8007B98`), `asm/code_3_2_4.s` (`sub_8008044`),
 `asm/code_3_2_5.s` (`sub_8008188`/`sub_8008200`/`sub_8008278`),
-`asm/code_3_2_6.s` (`sub_80083B8`), `asm/code_3_2_7.s`
+`asm/code_3_2_6.s` (`GetSpriteFrame`), `asm/code_3_2_7.s`
 (`sub_8008770`), `asm/code_3_2_8.s` (`sub_800891C`/`sub_8008A40`/
 `sub_8008AD8`), and `asm/code_3_2_12.s` (`sub_8008D80`) - each deleted
 and its `ldscript.txt` line dropped, the same "retire an emptied
@@ -129,7 +129,7 @@ this compiler otherwise proves redundant) to actually materialize.
 See `docs/matching.md`'s "Parked, not matched: sub_8008770" entry for
 the full account.
 
-**Update: `sub_8008188`/`sub_8008200`/`sub_8008278`/`sub_80083B8`
+**Update: `sub_8008188`/`sub_8008200`/`sub_8008278`/`GetSpriteFrame`
 matched in a later session.** Converted back from this NAKED
 transcription to real C. `sub_8008188`/`sub_8008200`/`sub_8008278`'s
 shared holdout - the kind-8/12 switch block's register-register `add`
@@ -144,13 +144,13 @@ way (not just the kind-8/12 one) to get the compiler's block *layout*
 matching, and an explicit `register void *rec asm("r2")` pin on the
 incoming parameter to stop the compiler from spilling it to a
 callee-saved register once its live range was forced to span every
-`goto`-connected block. `sub_80083B8`'s single-instruction
+`goto`-connected block. `GetSpriteFrame`'s single-instruction
 `add`-operand-order gap sits in genuinely straight-line code with no
 case merging to protect, so a plain inline-asm anchor on just that one
 instruction - the same technique that had backfired for the other
 three - worked here directly. See `docs/matching.md`'s "Parked, not
 matched: sub_8008188" entry (and its `sub_8008200`/`sub_8008278`/
-`sub_80083B8` siblings just below it) for the original account of what
+`GetSpriteFrame` siblings just below it) for the original account of what
 had been tried and failed before this session. The remaining nine
 functions in this batch are unaffected and remain NAKED, tracked as
 parked.

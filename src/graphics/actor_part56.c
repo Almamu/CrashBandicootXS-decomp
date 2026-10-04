@@ -8,15 +8,15 @@
 
 /* Same "self" object family as actor_part39.c - see that file's header
  * comment and docs/matching/issue-50-actor-2a69c.md. Non-adjacent to
- * actor_part39.c since the parked `UpdateAnimatedActorPart`
+ * actor_part39.c since the parked `DrawActor`
  * (actor_part44.c) sits raw between them. */
 
 extern s32 sub_8029B2C(void);
 extern s32 sub_8029E40(void);
 
-/* Same movement-threshold computation as `InitActorPart`/`sub_802A7B8`
+/* Same movement-threshold computation as `InitActorPart`/`UpdateActor`
  * (see this file's header comment), but with no trampoline-fire/frame-
- * update tail - just refreshes `depth`/`visible`. */
+ * update tail - just refreshes `depth`/`sortKey`. */
 void sub_802A980(struct actor_self *self)
 {
     register s32 value asm("r2") = self->z - (sub_8029B2C() << 8);
@@ -40,10 +40,10 @@ void sub_802A980(struct actor_self *self)
         value |= c;
     }
 
-    self->visible = value;
+    self->sortKey = value;
 
     if (self->depth > sub_8029E40()) {
-        self->visible |= 0x8000;
+        self->sortKey |= 0x8000;
     }
 }
 

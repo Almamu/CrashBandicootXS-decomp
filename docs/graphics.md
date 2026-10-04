@@ -83,7 +83,7 @@ of the engine's rendering/actor system.
 ### The two largest untyped ROM regions
 
 - `gStaticData_0817E78C` — ~3.2 MB (ROM `0x0817E78C`-`0x084A5600`)
-- `gStaticData_084A5600` — ~747 KB
+- `gSpriteBankTable` — ~747 KB
 
 Together these are over half the ROM and by far the largest remaining
 un-split data. A full LZ77 signature scan across both found **nothing**
@@ -154,7 +154,7 @@ are a per-actor-type message/behavior dispatch table, not graphics data:
 - A runtime actor struct has (at least) two fields that get pointed at one
   of these tables: offset `+0x50` and offset `+0x130`. Many actor types'
   init code just points one of these fields at a **shared default table**
-  (`gStaticData_087E4DF4`, 32 bytes, only 4 pairs - no render slot at all)
+  (`gActorVtable`, 32 bytes, only 4 pairs - no render slot at all)
   rather than a unique one, so most actors are *not* part of the
   renderable-sprite family above; they're presumably non-visual logic
   objects (triggers, timers, etc).
@@ -215,7 +215,7 @@ callers are exhaustively these 3 HUD records and nothing else (confirmed
 via full-ROM pointer scan for `FontUploadTiles`'s address).
 
 The single most shared function across all 93 records, for reference, is
-`UpdateAnimatedActorPart` (used by 40 of the 93) - but it contains no
+`DrawActor` (used by 40 of the 93) - but it contains no
 VRAM/OAM/DMA/`mem_alloc` references at all, so it reads as a generic
 per-frame update (physics/timer-style), not a renderer. No other function
 comes close to being used broadly enough to be "the" sprite-render hook
@@ -582,26 +582,26 @@ question was looking for - found by chasing call sites of the generic
 was called with, which led away from the HUD vtable system entirely into a
 separate, much more elaborate chain:
 
-- **`gStaticData_08175558`** - a per-actor-*category* descriptor array,
+- **`gActorCategories`** - a per-actor-*category* descriptor array,
   `0x34` (52-byte) stride, 7 valid entries. `+0x00` is a `type` field (0
   for categories 0-2, 1 for 3-5, 2 for 6 - only 3 distinct values, see
   next). Selected via `SelectActorCategory(type, ...)` - traced the one
-  real call site: the caller reads `gStaticData_08175558[category].type`
+  real call site: the caller reads `gActorCategories[category].type`
   and passes *that* (not the raw category index) as the argument, which
   `SelectActorCategory` then uses to compute
-  `gStaticData_081756C4 + type*0x34` (see next) and stores it as the
+  `gActorCategoryVtables + type*0x34` (see next) and stores it as the
   active vtable, then calls vtable slot 0 (the constructor) passing the
   descriptor's `+0x18` field. Key fields (word offsets): `+0x10` = a raw
   16-color OBJ palette pointer (DMA'd to `0x05000200`), `+0x18` = the
   **animation table base** for this category-family
-  (`gStaticData_081796CC` for categories 0-2, `gStaticData_0817B2A4` for
+  (`gCategoryFamily0AnimTable` for categories 0-2, `gCategoryFamily1AnimTable` for
   3-6), `+0x1C` = a big LZ77 sprite-sheet pointer (`0x080B2120` for
   categories 0-2, `0x0814174C` for 3-6 - these are the same two giant
   blocks as `graphics/unknown/00_0b2120.bin`/`01_14174c.bin` from the very
   first extraction pass). **Note:** despite living in the same descriptor
   record, this `+0x1C` sheet is *not* the data source for the animation
   system below - see the callout at the end of this section.
-- **`gStaticData_081756C4`** - the vtable array, same `0x34` stride but
+- **`gActorCategoryVtables`** - the vtable array, same `0x34` stride but
   interpreted as **13 plain function pointers** (not the `{0, ptr}` pair
   convention the HUD vtable system uses - a different, unrelated
   convention that happens to reuse the same struct-offset idea). Only
@@ -614,8 +614,8 @@ separate, much more elaborate chain:
   `0x34` stride at all) that there's nothing there to find.
 - **`+0x0C` (`conditional_ptr_0C`)** - dumped this field for all 7
   categories directly from `baserom.gba`: it's `0` for categories 0-2
-  (type 0, the `gStaticData_081796CC` family) and a real pointer for
-  every category in the `gStaticData_0817B2A4` family (3: `0x813d934`,
+  (type 0, the `gCategoryFamily0AnimTable` family) and a real pointer for
+  every category in the `gCategoryFamily1AnimTable` family (3: `0x813d934`,
   4: `0x8151ac4`, 5/6: `0x8155260` - **6 aliases 5's exact pointer**, the
   same kind of intentional data-sharing seen elsewhere in this system,
   not a bug). So this isn't really "conditional" per category so much as
@@ -636,15 +636,15 @@ separate, much more elaborate chain:
   effect.
 - **`InitActorPart`** - constructs one *part* instance: `r1` (the per-part
   descriptor) is computed at call sites as
-  `gUnknown_0300147C[0] + index*0x28` (40-byte stride) - i.e. a single
+  `gActorAnimTable[0] + index*0x28` (40-byte stride) - i.e. a single
   category can spawn several independently-animated parts (limbs on a
   shared body, most likely), each picking its own row out of the
   animation table.
-- **The animation table** (`gStaticData_081796CC` / `_0817B2A4`), `0x28`
+- **The animation table** (`gCategoryFamily0AnimTable` / `_0817B2A4`), `0x28`
   (40-byte) stride records: `{index, table_A_ptr, table_B_ptr, header_byte,
   ...}`. Multiple records can share the same `table_A` (the timing/keyframe
   driver) while pointing at *different* `table_B`s (the actual pixel data)
-  - seen directly in `gStaticData_081796CC` records 5-9, which all reuse
+  - seen directly in `gCategoryFamily0AnimTable` records 5-9, which all reuse
   `table_A = 0x817a2b8` with 5 distinct `table_B`s - consistent with
   several body parts animating in lockstep off one shared timing table.
 - **`table_A`** - 12 bytes/entry; the signed halfword at `+2` is a
@@ -727,7 +727,7 @@ at `+0x18` by `InitActorPart`, role not traced further).
 ### Identified the two giant LZ77 sheets: they're the actual sprite art
 
 Found the reader: `InitActorCategory` (per-category init, called with the
-category number, stored in `gUnknown_03001380`) reads the descriptor's
+category number, stored in `gActorCategory`) reads the descriptor's
 `+0x1C` sheet pointer and calls `DecompressCategorySpriteSheet(sheet_ptr)`, which reads the
 tag+size header, `mem_alloc`s a buffer of the declared decompressed size,
 stores it in **`gUnknown_0300137C`**, and decompresses into it via
@@ -773,7 +773,7 @@ companion/enemy likely) - not a background or something unrelated.
 **The second sheet, `01_14174c.bin` (categories 3-6), decompresses and
 checks out the same way** - `0x0814174C`, tag `0x10`, declared size
 207124, matches the LZ77 stream exactly. Its animation table
-(`gStaticData_0817B2A4`) uses the identical two addressing modes: record
+(`gCategoryFamily1AnimTable`) uses the identical two addressing modes: record
 0 is the absolute-ROM-address/overlap-dedup scheme (like categories 0-2's
 "mask"), while records 1 and 2 are small offsets into this sheet's own
 decompressed buffer (stride `0x804` = `4+8*8*32` for record 1, `0x84` =
@@ -793,7 +793,7 @@ with this category's palette (`gStaticData_0817AAA4`):
   icons (checkpoint/gem/difficulty badges) rather than animation
   frames.
 
-**Records 5-9 of the categories 0-2 animation table** (`gStaticData_081796CC`,
+**Records 5-9 of the categories 0-2 animation table** (`gCategoryFamily0AnimTable`,
 all sharing `table_A = 0x817a2b8`) turned out not to be body parts of one
 character as first guessed - each is an **independent decorated crate
 variant**: rendering frame 0 of all five (all `w=4,h=4`, plain non-
@@ -906,7 +906,7 @@ here is what made that re-split possible, so it's kept as-is.
 **`graphics/unknown/00_0b2120/08_unidentified.png`** (92 frames, the byte
 range covered by categories 0-2's record 2) is genuinely several
 different objects sharing one physical frame pool - and unlike the rest
-of this section, this one **is** code-verified: `gStaticData_081796CC`
+of this section, this one **is** code-verified: `gCategoryFamily0AnimTable`
 (the animation table) turned out to have far more than the 10 records
 originally catalogued - it runs to at least 41 (many are duplicate
 aliases of the same handful of `table_A`/`table_B` pairs, and indices
@@ -954,7 +954,7 @@ exists as a single file either; each object below now has its own file
 
 **`graphics/unknown/01_14174c/03_unidentified.png`** (176 frames,
 categories 3-6's record 3) got the same code-level treatment:
-`gStaticData_0817B2A4` also runs far past the 3 records originally
+`gCategoryFamily1AnimTable` also runs far past the 3 records originally
 catalogued - valid entries go up to at least record 46 (again with many
 duplicate aliases; records 49+ read back the same garbage offset and are
 past the real end). Rendering each distinct record's own frame 0 gives a
@@ -994,8 +994,8 @@ question.
 ### Bundling everything into `entities.json` (done)
 
 All of the structural data recovered above - the 7 category descriptors
-and both animation tables' full record lists (`gStaticData_081796CC`:
-41 slots, `gStaticData_0817B2A4`: 47 slots), keyframe sequences, and a
+and both animation tables' full record lists (`gCategoryFamily0AnimTable`:
+41 slots, `gCategoryFamily1AnimTable`: 47 slots), keyframe sequences, and a
 resolved reference to the exact split PNG frame each keyframe uses - is
 now bundled into two generated files:
 
@@ -1012,7 +1012,7 @@ own frame PNG - so whoever writes the matching structs doesn't have to
 re-derive any of this from raw hex again.
 
 Schema per file: `categories` (this sheet's 2-4 category descriptors,
-every `gStaticData_08175558` field, named where its role is known -
+every `gActorCategories` field, named where its role is known -
 `type_00`, `family_const_04/08`, `conditional_ptr_0C`, `palette`,
 `sub_effect_table_14`, `anim_table_base_18`, `sprite_sheet_1C`,
 `threshold_24`, `flag_2C` - and left as `unknown_XX` otherwise, see

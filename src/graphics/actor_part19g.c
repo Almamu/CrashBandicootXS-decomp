@@ -25,7 +25,7 @@ struct listed_actor {
 
 extern void *gAudioContext;
 extern void *gLevelState;
-extern void *gUnknown_03000884;
+extern void *gActorList;
 
 extern u8 gStaticData_087E4E94[];
 extern u8 gStaticData_0817A768[];
@@ -34,7 +34,7 @@ extern void InitActorPart(void *self, s32 a, s32 b, s32 c, s32 d);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern u8 sub_802A6EC(void *self);
-extern void sub_802A7B8(void *self);
+extern void UpdateActor(void *self);
 extern u8 sub_802DD9C(void *self);
 extern void sub_8022FEC(void *self);
 extern void sub_802AAB4(void *arg0);
@@ -47,21 +47,21 @@ extern void sub_802C0A8(void *arg0);
 extern void sub_802C4C8(void *selfArg);
 
 /* On proximity (`sub_802A6EC`), accumulates `1` into the shared
- * `gUnknown_03000884`-targeted accumulator via `sub_802C078` then fires
+ * `gActorList`-targeted accumulator via `sub_802C078` then fires
  * the `vtable` trampoline (behind this family's `if (self)` guard);
- * otherwise tail-calls `sub_802A7B8(self)`. */
+ * otherwise tail-calls `UpdateActor(self)`. */
 void sub_802C464(void *selfArg)
 {
     struct actor_self *self = selfArg;
 
     if (sub_802A6EC(self)) {
-        sub_802C078(gUnknown_03000884, 1);
+        sub_802C078(gActorList, 1);
         if (self != 0) {
             struct actor_vtable *table = self->vtable;
-            _call_via_r2((u8 *)self + table->m08.thisOffset, (void *)3, table->m08.fn);
+            _call_via_r2((u8 *)self + table->destroy.thisOffset, (void *)3, table->destroy.fn);
         }
     } else {
-        sub_802A7B8(self);
+        UpdateActor(self);
     }
 }
 
@@ -85,7 +85,7 @@ void *sub_802C4A4(void *selfArg, s32 a, s32 b, s32 c, s32 lastArg)
  * `self`'s part-table pointer at `+0xd8`) with a sound cue and the
  * lap-counter tie `sub_8022FEC`. Either way, fires the `vtable`
  * trampoline once state is (already, or now) 0x12 and `animDone` is
- * set; otherwise tail-calls `sub_802A7B8`. */
+ * set; otherwise tail-calls `UpdateActor`. */
 void sub_802C4C8(void *selfArg)
 {
     struct actor_self *self = selfArg;
@@ -110,12 +110,12 @@ void sub_802C4C8(void *selfArg)
     if (self->animIndex == 0x12 && self->animDone != 0) {
         if (self != 0) {
             struct actor_vtable *table = self->vtable;
-            _call_via_r2((u8 *)self + table->m08.thisOffset, (void *)3, table->m08.fn);
+            _call_via_r2((u8 *)self + table->destroy.thisOffset, (void *)3, table->destroy.fn);
         }
         return;
     }
 
-    sub_802A7B8(self);
+    UpdateActor(self);
 }
 
 /* Extends the shared "type-byte event dispatch" family
@@ -157,21 +157,21 @@ void sub_802C540(void *selfArg)
 
     case_1c:
         PlaySfx(gAudioContext, 3, 0x100);
-        sub_802C078(gUnknown_03000884, 1);
+        sub_802C078(gActorList, 1);
         goto state_block;
 
     case_1d:
         PlaySfx(gAudioContext, 3, 0x100);
-        sub_802C078(gUnknown_03000884, 3);
+        sub_802C078(gActorList, 3);
         goto state_block;
 
     case_1e:
         PlaySfx(gAudioContext, 3, 0x100);
-        sub_802C078(gUnknown_03000884, 5);
+        sub_802C078(gActorList, 5);
         goto state_block;
 
     case_1f:
-        sub_802C128(gUnknown_03000884);
+        sub_802C128(gActorList);
 
     state_block:
         self->animIndex = 0x12;
@@ -204,7 +204,7 @@ void sub_802C614(void *selfArg)
         if (sub_802A6EC(self)) {
             PlaySfx(gAudioContext, 7, 0x100);
             sub_8022FEC(gLevelState);
-            sub_802C0A8(gUnknown_03000884);
+            sub_802C0A8(gActorList);
             sub_802AAB4(((struct listed_actor *)self)->unk_54);
             self->animIndex = 0x12;
             {
@@ -216,7 +216,7 @@ void sub_802C614(void *selfArg)
                 *(u8 *)&self->animDone = zero1;
                 *(s32 *)&self->animTime = zero2;
             }
-            self->unk_18 = 1;
+            self->palette = 1;
         }
 
         if (self->animIndex != 0x12 && sub_802DD9C(self)) {
@@ -232,7 +232,7 @@ void sub_802C614(void *selfArg)
                 *(u8 *)&self->animDone = zero1;
                 *(s32 *)&self->animTime = zero2;
             }
-            self->unk_18 = 1;
+            self->palette = 1;
         }
     }
 
@@ -259,7 +259,7 @@ void sub_802C6C0(void *selfArg)
         sub_8029720();
         if (self != 0) {
             struct actor_vtable *table = self->vtable;
-            _call_via_r2((u8 *)self + table->m08.thisOffset, (void *)3, table->m08.fn);
+            _call_via_r2((u8 *)self + table->destroy.thisOffset, (void *)3, table->destroy.fn);
         }
         return;
     } else {
@@ -272,7 +272,7 @@ void sub_802C6C0(void *selfArg)
         if (found) {
             PlaySfx(gAudioContext, 4, 0x100);
             sub_8022FEC(gLevelState);
-            sub_802B730(gUnknown_03000884);
+            sub_802B730(gActorList);
             {
                 register s32 zero2 asm("r2") = 0;
 

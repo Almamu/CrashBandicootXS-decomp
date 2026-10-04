@@ -9,7 +9,7 @@
  * (actor_part21d.c/actor_part21e.c): advances the position
  * accumulators (`gUnknown_03001540`/`gUnknown_03001544`) by their
  * per-frame deltas (`gUnknown_03001558`/`gUnknown_0300155C`), then
- * computes the player's (`gUnknown_03000884`) signed distance from a
+ * computes the player's (`gActorList`) signed distance from a
  * fixed keyframe-table-relative target point on each axis
  * (`self+0x1c`/`0x20` against `gUnknown_0300154C`/`gUnknown_03001550`
  * offset by `gStaticData_0817C3D8`'s box) and, per axis, nudges a
@@ -24,7 +24,7 @@ extern s32 gUnknown_03001540;
 extern s32 gUnknown_03001558;
 extern s32 gUnknown_03001544;
 extern s32 gUnknown_0300155C;
-extern struct actor_self *gUnknown_03000884;
+extern struct actor_self *gActorList;
 extern s32 gUnknown_0300154C;
 extern const s16 gStaticData_0817C3D8[];
 extern s32 gUnknown_03001550;
@@ -51,7 +51,7 @@ void sub_8030E08(void)
     gUnknown_03001540 += gUnknown_03001558;
     gUnknown_03001544 += gUnknown_0300155C;
 
-    pl = gUnknown_03000884;
+    pl = gActorList;
     px = pl->x;
     cx = gUnknown_0300154C - 0x1200;
     dx = px - cx - (gStaticData_0817C3D8[0] + gStaticData_0817C3D8[3] / 2);

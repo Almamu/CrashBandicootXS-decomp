@@ -13,7 +13,7 @@ extern struct AudioContext *gAudioContext;
 extern struct icon_manager *gSmallFont;
 extern struct icon_manager *gLargeFont;
 extern struct vram_upload_cursor *gUnknown_030012FC;
-extern u8 gStaticData_084A5600[];
+extern u8 gSpriteBankTable[];
 extern u8 gStaticData_0816B2C0[];
 extern void sub_8006EF0(struct tile_asset_cache *self, u16 count, const u8 *records);
 extern s32 sub_8006D50(struct tile_asset_cache *self, s32 index);
@@ -102,8 +102,8 @@ s32 RunPauseMenu(void)
 
     oldCache = gUnknown_030012B8;
     gUnknown_030012B8 = sub_8006FB4(sub_8026EDC(sizeof(struct tile_asset_cache)));
-    sub_8006EF0(gUnknown_030012B8, ((struct pause_gfx_pkg *)gStaticData_084A5600)->count,
-                ((struct pause_gfx_pkg *)gStaticData_084A5600)->records);
+    sub_8006EF0(gUnknown_030012B8, ((struct pause_gfx_pkg *)gSpriteBankTable)->count,
+                ((struct pause_gfx_pkg *)gSpriteBankTable)->records);
     sub_8006D50(gUnknown_030012B8, 0xf);
     {
         u8 *dst = (u8 *)gUnknown_030012B8;

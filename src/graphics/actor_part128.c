@@ -104,7 +104,7 @@ extern void sub_80305F8(void *obj, struct kind_entry *rec, s32 a, s32 b, s32 c);
 extern void sub_8030300(void *obj, struct kind_entry *rec, s32 a, s32 b, s32 c, s32 d, s32 e);
 extern void sub_802FA04(void *obj, struct kind_entry *rec, s32 a, s32 b, s32 c, s32 d, s32 e);
 
-extern struct actor_self *gUnknown_03000884;
+extern struct actor_self *gActorList;
 extern void (*gUnpackRleSpriteFrameFunc)(void *dst, u8 *frame);
 extern struct keys_pair gKeys;
 extern void *gAudioContext;
@@ -360,7 +360,7 @@ void sub_802E710(struct kind_entry *table, s32 z)
     struct actor_hp *p;
 
     gUnknown_030014D8 = table;
-    gUnknown_03000884 = &(p = sub_802E740(AllocActor(0x58), gUnknown_030014D8, z))->base;
+    gActorList = &(p = sub_802E740(AllocActor(0x58), gUnknown_030014D8, z))->base;
     ((void **)p->base.unk_48)[0] = p;
     ((void **)p->base.unk_48)[1] = p;
 }
@@ -444,7 +444,7 @@ void sub_802E84C(struct actor_hp *self)
     {
         s32 d = (self->base.depth >> 1) & 0x7f80;
 
-        self->base.visible = d | (((Abs(self->base.y) + Abs(self->base.x)) >> 11) & 0x7f);
+        self->base.sortKey = d | (((Abs(self->base.y) + Abs(self->base.x)) >> 11) & 0x7f);
     }
     self->base.stateTime++;
     self->base.animTime += *(s16 *)&self->base.animTimer;
@@ -537,7 +537,7 @@ void sub_802E9FC(struct actor_hp *self)
             /* the ROM computes the tile number in r0 */
             register u32 tile asm("r0") = GET_TILE_NUM(gUnknown_03001518[gUnknown_03001510]);
 
-            QueueSpriteFrameOam(attr1, tile | (self->base.unk_18 << 12), scale);
+            QueueSpriteFrameOam(attr1, tile | (self->base.palette << 12), scale);
         }
     }
 }

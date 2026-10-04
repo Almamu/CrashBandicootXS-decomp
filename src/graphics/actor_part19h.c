@@ -11,7 +11,7 @@
  * idiom (`+0xc = 0x12`, `+0x10`/`+0x12` anim reset, `+8` accumulator
  * reset). */
 
-extern struct actor_self *gUnknown_03000884;
+extern struct actor_self *gActorList;
 extern void *gAudioContext;
 extern void *gLevelState;
 extern void *MemCopy32(void *dst, const void *src, u32 byteCount);
@@ -68,14 +68,14 @@ static inline u8 ActorsOverlap(struct actor_self *pl, struct actor_self *self)
 }
 
 /* `+0x4c`: next node of the circular actor list rooted at
- * `gUnknown_03000884`; `+0x30`: pointer whose first byte is the type. */
+ * `gActorList`; `+0x30`: pointer whose first byte is the type. */
 #define ACTOR_NEXT(a) (*(struct actor_self **)&(a)->unk_48[4])
 #define ACTOR_TYPE(a) (**(u8 **)&(a)->unk_2C[4])
 
 /* Called from `sub_802C6C0` (actor_part19g.c) once `self` (a "used"
  * pickup, state `0x12`) has stayed used for `self+0x44 == 0x14`
  * frames: walks the whole `self+0x4c`-rooted circular actor list
- * (rooted at `gUnknown_03000884`, the same sentinel-head list every
+ * (rooted at `gActorList`, the same sentinel-head list every
  * other `self+0x4c`/`self+0x48` teardown/unlink helper in this ROM
  * region walks - `sub_802AA4C`/`sub_802C19C`/`sub_802C394`) looking
  * for every OTHER actor whose type byte (`*(u8*)(*(u8**)(node+0x30))`,
@@ -99,7 +99,7 @@ static inline u8 ActorsOverlap(struct actor_self *pl, struct actor_self *self)
  * scheduling in the box translation). */
 void sub_802C7A8(struct actor_self *self)
 {
-    struct actor_self *n = ACTOR_NEXT(gUnknown_03000884);
+    struct actor_self *n = ACTOR_NEXT(gActorList);
 
     do {
         if (ACTOR_TYPE(n) == 4 && n != self && ActorsOverlap(self, n)
@@ -113,7 +113,7 @@ void sub_802C7A8(struct actor_self *self)
             n->animTime = 0;
         }
         n = ACTOR_NEXT(n);
-    } while (n != gUnknown_03000884);
+    } while (n != gActorList);
 }
 
 asm(".align 2, 0");
