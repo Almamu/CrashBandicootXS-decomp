@@ -1,6 +1,6 @@
 .section .rodata
 
-@ gStaticData_0803B8B0..gStaticData_080B1444: src/data/cell_anim_03b8b0.c
+@ gStaticData_0803B8B0..gCategory0SpawnTable: src/data/cell_anim_03b8b0.c
 
 .section .rodata.080B2120
 
@@ -9,11 +9,11 @@ gStaticData_080B2120:
 	@ LZ77 compressed data (unidentified) (213064 bytes decompressed)
 	.incbin "build/crashbandicootxs/graphics/unknown/00_0b2120.bin.lz"
 
-@ gStaticData_080C0C38..gStaticData_080C19F0: src/data/sub_effect_0c0c38.c
+@ gCategory1SpawnTable..gCategory2SpawnTable: src/data/sub_effect_0c0c38.c
 
 @ gStaticData_080C2758..gStaticData_080DA1D8: src/data/rle_sprites_0c2758.c
 
-@ gStaticData_080FF1B0..gStaticData_08140DCC: src/data/cell_anim_0ff1b0.c
+@ gStaticData_080FF1B0..gCategory3SpawnTable: src/data/cell_anim_0ff1b0.c
 
 .section .rodata.0814174C
 
@@ -22,7 +22,7 @@ gStaticData_0814174C:
 	@ LZ77 compressed data (unidentified) (207124 bytes decompressed)
 	.incbin "build/crashbandicootxs/graphics/unknown/01_14174c.bin.lz"
 
-@ gStaticData_08151AC4..gStaticData_0815A030: src/data/bg_picture_151ac4.c
+@ gStaticData_08151AC4..gCategory6SpawnTable: src/data/bg_picture_151ac4.c
 
 @ gStaticData_0815A050: src/data/rle_sprites_15a050.c
 
@@ -94,7 +94,7 @@ gSfxTable:
 
 @ gHudPartAnims..gLargeFontGlyphs: src/data/hud_fonts_174be0.c
 
-@ gStaticData_08175558..gStaticData_081756C4: src/data/actor_category_175558.c
+@ gActorCategories..gActorCategoryVtables: src/data/actor_category_175558.c
 
 @ gStaticData_08175760..gStaticData_08178F70: src/data/palette_cycle_175760.c
 
@@ -153,9 +153,9 @@ gSfxTable:
 @ 0x0824B638..0x08270F08 (33 rooms' level data): src/data/level_rooms_24b638.c
 @ gStaticData_08270F08..gStaticData_08299DCC: src/data/level_tilesets_270f08.c
 @ 0x082B91D0..0x082BF120 (8 rooms' level data): src/data/level_rooms_2b91d0.c
-@ gStaticData_082BF120..gStaticData_084A4660: src/data/sprite_tiles_2bf120.c
+@ gSpriteBank00Tiles..gFixedObjTiles: src/data/sprite_tiles_2bf120.c
 
-@ gStaticData_084A5600..gSpriteBank55: src/data/sprite_banks_4a5600.c,
+@ gSpriteBankTable..gSpriteBank55: src/data/sprite_banks_4a5600.c,
 @ sprite_banks_4b0ae0.c, sprite_banks_4b414c.c, sprite_banks_4b9d7c.c
 
 .section .rodata.084C0006

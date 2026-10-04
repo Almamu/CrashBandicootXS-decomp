@@ -28,7 +28,7 @@
  * is assigned right where the ROM materializes it (declared-and-
  * initialized at the top it gets hoisted into a callee-saved register),
  * the RNG `RandRange` is read back as a `u16` here (the ROM zero-
- * extends its result), and the seek spawn takes `&gUnknown_03000884`
+ * extends its result), and the seek spawn takes `&gActorList`
  * before the last lock check, as the ROM loads that address early. */
 extern s32 gUnknown_03001540;
 extern s32 gUnknown_03001558;
@@ -49,7 +49,7 @@ extern void *gAudioContext;
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern u8 *gLevelState;
 extern s32 gUnknown_0300157C;
-extern void *gUnknown_03000884;
+extern void *gActorList;
 extern u8 gUnknown_03001506;
 extern s32 sub_802F4AC(void *arg0);
 extern void sub_802E3CC(void);
@@ -109,7 +109,7 @@ void sub_80309B4(void)
         PlaySfx(gAudioContext, 0x42, 0x100);
         gUnknown_03001560 = 0x9d;
         if (gLevelState[0x8c] == 0 && gUnknown_0300157C <= 1) {
-            void **pl = &gUnknown_03000884;
+            void **pl = &gActorList;
             if (gUnknown_03001506 == 0) {
                 sub_802F4AC(*pl);
                 sub_802E3CC();

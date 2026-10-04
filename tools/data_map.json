@@ -14,7 +14,7 @@
    "format": "composite: BG0 streamed cell animation A + category-0 sub-effect table",
    "effort": "medium",
    "confidence": "high",
-   "notes": "Reached only through gStaticData_08175558 (category descriptors 0-2, fields +0x04/+0x08 = {0x0803B8B0, 0x75B94}) and +0x14 (0x080B1444). sub_8029890/sub_80297C8/sub_802996C (actor_part95.c) stream it to BG0.",
+   "notes": "Reached only through gActorCategories (category descriptors 0-2, fields +0x04/+0x08 = {0x0803B8B0, 0x75B94}) and +0x14 (0x080B1444). sub_8029890/sub_80297C8/sub_802996C (actor_part95.c) stream it to BG0.",
    "consumers_indirect": [
     "sub_8029890",
     "sub_80297C8",
@@ -55,7 +55,7 @@
    "format": "composite: sub-effect tables, two zero-run-compressed OBJ frame sets, BG0 cell animation B, BG1 picture",
    "effort": "medium",
    "confidence": "high",
-   "notes": "Every region is reached through gStaticData_08175558 (category descriptors) or an animation-table table_B array.",
+   "notes": "Every region is reached through gActorCategories (category descriptors) or an animation-table table_B array.",
    "consumers_indirect": [
     "SelectActorCategory",
     "GetAnimFrameData",
@@ -3313,7 +3313,7 @@
   {
    "address": "0x08175558",
    "size": 12,
-   "name": "gStaticData_08175558",
+   "name": "gActorCategories",
    "consumers": [
     "InitActorCategory",
     "SetupActorVramPool",
@@ -3338,7 +3338,7 @@
    "format": "first 0xC bytes of category_descriptor[0] (label splits the struct array)",
    "effort": "easy",
    "confidence": "high",
-   "notes": "data.s cuts gStaticData_08175558[7] (7 x 0x34 = 0x16C) into three labels at 0x08175558/0x08175564/0x08175584 because code references +0x0C and +0x2C directly. Convert the three together as one struct array."
+   "notes": "data.s cuts gActorCategories[7] (7 x 0x34 = 0x16C) into three labels at 0x08175558/0x08175564/0x08175584 because code references +0x0C and +0x2C directly. Convert the three together as one struct array."
   },
   {
    "address": "0x08175564",
@@ -3353,7 +3353,7 @@
    "ptr_words_code": 0,
    "ptr_words_data": 4,
    "incoming_data_ptrs": 0,
-   "format": "category_descriptor[0] bytes 0x0C-0x2B (part of gStaticData_08175558[7])",
+   "format": "category_descriptor[0] bytes 0x0C-0x2B (part of gActorCategories[7])",
    "effort": "easy",
    "confidence": "high",
    "notes": ""
@@ -3371,7 +3371,7 @@
    "ptr_words_code": 0,
    "ptr_words_data": 34,
    "incoming_data_ptrs": 0,
-   "format": "category_descriptor[0] +0x2C .. [6] end (part of gStaticData_08175558[7])",
+   "format": "category_descriptor[0] +0x2C .. [6] end (part of gActorCategories[7])",
    "effort": "easy",
    "confidence": "high",
    "notes": ""
@@ -3379,7 +3379,7 @@
   {
    "address": "0x081756C4",
    "size": 156,
-   "name": "gStaticData_081756C4",
+   "name": "gActorCategoryVtables",
    "consumers": [
     "SelectActorCategory"
    ],
@@ -3486,7 +3486,7 @@
    "c_decls": [
     "u8 X[]"
    ],
-   "format": "categories 0-2 family data: 16-colour palettes, keyframe tables (table_A), anim table gStaticData_081796CC (41 x 0x28) and table_B arrays (absolute ROM pointers or sheet offsets)",
+   "format": "categories 0-2 family data: 16-colour palettes, keyframe tables (table_A), anim table gCategoryFamily0AnimTable (41 x 0x28) and table_B arrays (absolute ROM pointers or sheet offsets)",
    "effort": "medium",
    "confidence": "high",
    "notes": "Layout already documented in include/actor_anim.h and graphics/unknown/00_0b2120/entities.json; split into typed tables.",
@@ -3876,7 +3876,7 @@
    "c_decls": [
     "u8 X[]"
    ],
-   "format": "categories 3-6 family data: s16 header, palettes, table_A, anim table gStaticData_0817B2A4 (47 x 0x28), table_B arrays",
+   "format": "categories 3-6 family data: s16 header, palettes, table_A, anim table gCategoryFamily1AnimTable (47 x 0x28), table_B arrays",
    "effort": "medium",
    "confidence": "high",
    "notes": "",
@@ -5001,7 +5001,7 @@
     "SetBgStreamerSource",
     "LoadTaggedAsset",
     "SetTileSlotPoolSource",
-    "sub_80083A8",
+    "GetSpriteTileBase",
     "sub_8006C84"
    ],
    "regions": [
@@ -5059,14 +5059,14 @@
     {
      "address": "0x082BF120",
      "size": 1987904,
-     "format": "sprite tile pool for the gStaticData_084A5600 sprite banks: raw 4bpp/8bpp OBJ tiles, addressed as header->tileBase + (frame.packed & 0xFFFFFF)",
+     "format": "sprite tile pool for the gSpriteBankTable sprite banks: raw 4bpp/8bpp OBJ tiles, addressed as header->tileBase + (frame.packed & 0xFFFFFF)",
      "effort": "medium",
      "notes": "max(offset + piece bytes) over all 2429 frames is exactly 0x1E5540, ending where the next region starts"
     },
     {
      "address": "0x084A4660",
      "size": 4000,
-     "format": "125 x 32-byte 4bpp tiles (header +0x08/+0x0E of gStaticData_084A5600; the tile-asset cache sub_8006EF0/sub_8006DF8 serves them)",
+     "format": "125 x 32-byte 4bpp tiles (header +0x08/+0x0E of gSpriteBankTable; the tile-asset cache sub_8006EF0/sub_8006DF8 serves them)",
      "effort": "easy"
     }
    ]
@@ -5074,7 +5074,7 @@
   {
    "address": "0x084A5600",
    "size": 747188,
-   "name": "gStaticData_084A5600",
+   "name": "gSpriteBankTable",
    "consumers": [
     "RunPauseMenu",
     "sub_8022230"
@@ -5096,8 +5096,8 @@
    "consumers_indirect": [
     "RunPauseMenu",
     "sub_8022230",
-    "sub_80083A8",
-    "sub_80083B8",
+    "GetSpriteTileBase",
+    "GetSpriteFrame",
     "sub_800815C",
     "sub_8008734",
     "sub_8006DF8",
@@ -8349,10 +8349,10 @@
   {
    "address": "0x087E4DF4",
    "size": 32,
-   "name": "gStaticData_087E4DF4",
+   "name": "gActorVtable",
    "consumers": [
     "InitActorPart",
-    "sub_802AA54",
+    "DestroyActor",
     "sub_802C19C",
     "sub_802C394",
     "sub_802F6DC",
@@ -8426,7 +8426,7 @@
    "size": 32,
    "name": "gStaticData_087E4E14",
    "consumers": [
-    "sub_802AC28"
+    "CreateActor"
    ],
    "consumer_files": [
     "graphics/actor_part_2ac28.c"
@@ -8526,7 +8526,7 @@
    "size": 32,
    "name": "gStaticData_087E4E94",
    "consumers": [
-    "sub_802AC28",
+    "CreateActor",
     "sub_802C4A4"
    ],
    "consumer_files": [
@@ -8552,7 +8552,7 @@
    "size": 32,
    "name": "gStaticData_087E4EB4",
    "consumers": [
-    "sub_802AC28",
+    "CreateActor",
     "sub_802CB9C"
    ],
    "consumer_files": [
@@ -8578,7 +8578,7 @@
    "size": 32,
    "name": "gStaticData_087E4ED4",
    "consumers": [
-    "sub_802AC28",
+    "CreateActor",
     "sub_802CBC0"
    ],
    "consumer_files": [
@@ -8604,7 +8604,7 @@
    "size": 32,
    "name": "gStaticData_087E4EF4",
    "consumers": [
-    "sub_802AC28",
+    "CreateActor",
     "sub_802CBE4"
    ],
    "consumer_files": [
@@ -8630,7 +8630,7 @@
    "size": 32,
    "name": "gStaticData_087E4F14",
    "consumers": [
-    "sub_802AC28",
+    "CreateActor",
     "sub_802CC08"
    ],
    "consumer_files": [
@@ -8656,7 +8656,7 @@
    "size": 32,
    "name": "gStaticData_087E4F34",
    "consumers": [
-    "sub_802AC28",
+    "CreateActor",
     "sub_802CC2C"
    ],
    "consumer_files": [
@@ -8682,7 +8682,7 @@
    "size": 32,
    "name": "gStaticData_087E4F54",
    "consumers": [
-    "sub_802AC28",
+    "CreateActor",
     "sub_802CC54"
    ],
    "consumer_files": [
@@ -8708,7 +8708,7 @@
    "size": 32,
    "name": "gStaticData_087E4F74",
    "consumers": [
-    "sub_802AC28",
+    "CreateActor",
     "sub_802CC78"
    ],
    "consumer_files": [

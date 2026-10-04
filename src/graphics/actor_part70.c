@@ -5,7 +5,7 @@
 
 /* Same position-sync/flag/trampoline shape as `sub_8034270`
  * (actor_part68.c), but returns the "should animate" boolean directly
- * instead of calling `sub_802A7B8` itself - since the value only ever
+ * instead of calling `UpdateActor` itself - since the value only ever
  * needs to reach the return register (no re-check against zero the
  * way `sub_8034270`'s own call-vs-no-call decision needs), the
  * compute-then-recheck gap that function hit doesn't apply here:

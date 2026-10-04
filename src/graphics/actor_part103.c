@@ -2,10 +2,10 @@
 #include "actor_self.h"
 #include "actor_anim.h"
 
-/* This cluster (`sub_802A018`, `sub_802A110`, `sub_802A208`, `sub_802A3AC`,
+/* This cluster (`sub_802A018`, `sub_802A110`, `RunActorCategoryFrame`, `sub_802A3AC`,
  * ROM 0x0802A018-0x0802A4D4) sits inside the "actor" chunk starting at
  * `SetupActorVramPool` (0x080291A4). `sub_802A018`/`sub_802A110` are
- * near-identical: translate `gUnknown_03000884` (the player/list-sentinel
+ * near-identical: translate `gActorList` (the player/list-sentinel
  * object)'s and `self`'s own 12-byte `{s16 x,y,z,sizeX,sizeY,sizeZ}` AABB
  * record (`self+0x38`, world-translated by `self+0x1c/0x20/0x24 >>8`) into
  * two stack scratch boxes via `MemCopy32` (a real, byte-verified
@@ -15,7 +15,7 @@
  * (sub_802D7B0/sub_802DD9C/sub_802C7A8/sub_8031378 etc - see
  * docs/matching/issue-53-actor-c7a8.md, issue-54-actor-d3a8.md,
  * issue-58-0x08030574-actor.md). `sub_802A3AC` is the same test wrapped in
- * an outer walk of the whole `gUnknown_03000884`-rooted circular list
+ * an outer walk of the whole `gActorList`-rooted circular list
  * (`self+0x4c`), gated by a `_call_via_r1` per-node visibility check first
  * (same shape as `sub_802C7A8`, actor_part19h.c).
  *
@@ -28,10 +28,10 @@
  * that pointer is taken, which puts its `add r4, sp, #0xc` after the
  * three loads. The old note blamed an unreachable `r7`; the file
  * simply needs old_agbcc (current agbcc schedules the `asr`s
- * differently, 24-26 halfwords off). `sub_802A208` matches under
+ * differently, 24-26 halfwords off). `RunActorCategoryFrame` matches under
  * old_agbcc as well. */
 
-extern struct actor_self *gUnknown_03000884;
+extern struct actor_self *gActorList;
 extern u8 gUnknown_030014A0;
 extern u8 gUnknown_03001506;
 
@@ -47,7 +47,7 @@ struct actor_methods {
 typedef u8 (*actor_query_fn)(void *self);
 
 /* `+0x4c`: next node of the circular actor list rooted at
- * `gUnknown_03000884`. */
+ * `gActorList`. */
 #define ACTOR_NEXT(a) (*(struct actor_self **)&(a)->unk_48[4])
 
 struct box16 {
@@ -98,7 +98,7 @@ static inline u8 ActorsOverlap(struct actor_self *pl, struct actor_self *self)
 
 s32 sub_802A018(struct actor_self *self)
 {
-    struct actor_self **plAddr = &gUnknown_03000884;
+    struct actor_self **plAddr = &gActorList;
 
     if (gUnknown_030014A0 != 0)
         return 0;
@@ -107,22 +107,22 @@ s32 sub_802A018(struct actor_self *self)
 
 s32 sub_802A110(struct actor_self *self)
 {
-    struct actor_self **plAddr = &gUnknown_03000884;
+    struct actor_self **plAddr = &gActorList;
 
     if (gUnknown_03001506 != 0)
         return 0;
     return ActorsOverlap(*plAddr, self);
 }
 
-/* `sub_802A208`: fires a "scroll enter/exit" trampoline pair off
- * `gUnknown_03001418->fn[3]`/`fn[0xa]` (the selected category's vtable,
- * `struct category_vtable`), drives a `gUnknown_03001400`-rooted
+/* `RunActorCategoryFrame`: fires a "scroll enter/exit" trampoline pair off
+ * `gActorCategoryVtable->fn[3]`/`fn[0xa]` (the selected category's vtable,
+ * `struct category_vtable`), drives a `gActorSpawnTable`-rooted
  * sub-effect-table draw loop (`_call_via_r3`, same record family as
  * `sub_802A504`/`sub_802A51C`/`sub_802A540`/`sub_802A558`/`sub_802A570`),
- * then walks the whole `gUnknown_03000884`-rooted circular actor list
+ * then walks the whole `gActorList`-rooted circular actor list
  * twice: once unconditionally (drawing each node's own `self+0x50`
  * trampoline-record icon via `_call_via_r1`), once collecting every node
- * with `self+0x2c` set into `gUnknown_03001408` (drawing that filtered
+ * with `self+0x2c` set into `gActorDrawList` (drawing that filtered
  * set through `_call_via_r2` then a second `_call_via_r1` pass on a
  * different trampoline-record offset).
  *
@@ -136,15 +136,15 @@ s32 sub_802A110(struct actor_self *self)
  * (`off`, then `base + 0x14`, then the sum) through two locals.
  * Matches under old_agbcc, this file's compiler. */
 
-extern struct category_vtable *gUnknown_03001418;
+extern struct category_vtable *gActorCategoryVtable;
 extern s32 gUnknown_03001410;
 extern s32 gUnknown_03001420;
-extern struct sub_effect_record *gUnknown_03001400;
+extern struct sub_effect_record *gActorSpawnTable;
 extern u8 gUnknown_0300141C;
-extern s32 gUnknown_03001404;
+extern s32 gActorSpawnIndex;
 extern u8 gUnknown_03001414;
-extern struct actor_self **gUnknown_03001408;
-extern s32 gUnknown_0300140C;
+extern struct actor_self **gActorDrawList;
+extern s32 gActorDrawCount;
 extern void (*gHeapSortActorsByKeyFunc)(s32 count, struct actor_self **list);
 extern s32 gUnknown_03001424;
 
@@ -163,15 +163,15 @@ struct actor_draw_methods {
 typedef void (*actor_draw_fn)(void *self);
 
 /* "The next sub-effect record's threshold has scrolled into view":
- * `gUnknown_03001400[idx + 1].field_00 + gUnknown_03001420 <= scroll +
+ * `gActorSpawnTable[idx + 1].field_00 + gUnknown_03001420 <= scroll +
  * vtable slot 7` (read as a value), bounded by record 0's entry count. */
 #define SUB_EFFECT_DUE()                                                       \
-    (gUnknown_03001404 < gUnknown_03001400->field_04                           \
-     && (off = gUnknown_03001404 * 0x14, tb = (u8 *)gUnknown_03001400 + 0x14, \
+    (gActorSpawnIndex < gActorSpawnTable->field_04                           \
+     && (off = gActorSpawnIndex * 0x14, tb = (u8 *)gActorSpawnTable + 0x14, \
          *(s32 *)(tb + off)) + gUnknown_03001420                              \
-            <= scroll + (s32)gUnknown_03001418->fn[7])
+            <= scroll + (s32)gActorCategoryVtable->fn[7])
 
-s32 sub_802A208(void)
+s32 RunActorCategoryFrame(void)
 {
     s32 scroll;
     struct actor_self *n;
@@ -179,43 +179,43 @@ s32 sub_802A208(void)
     u8 *tb;
     s32 off;
 
-    if (gUnknown_03001418->fn[3] != NULL)
-        _call_via_r0(gUnknown_03001418->fn[3]);
+    if (gActorCategoryVtable->fn[3] != NULL)
+        _call_via_r0(gActorCategoryVtable->fn[3]);
     gUnknown_03001410 = 0;
     scroll = sub_8029B2C();
-    if (scroll - gUnknown_03001420 > gUnknown_03001400->field_00)
-        _call_via_r0(gUnknown_03001418->fn[10]);
+    if (scroll - gUnknown_03001420 > gActorSpawnTable->field_00)
+        _call_via_r0(gActorCategoryVtable->fn[10]);
     if (gUnknown_0300141C != 0) {
         gUnknown_03001420 += sub_8029B8C();
     } else {
         while (SUB_EFFECT_DUE()) {
-            ((void (*)(void *, s32, s32))gUnknown_03001418->fn[1])(
-                (u8 *)gUnknown_03001400 + (gUnknown_03001404 * 0x14 + 8),
+            ((void (*)(void *, s32, s32))gActorCategoryVtable->fn[1])(
+                (u8 *)gActorSpawnTable + (gActorSpawnIndex * 0x14 + 8),
                 gUnknown_03001414, gUnknown_03001420 << 8);
-            gUnknown_03001404++;
+            gActorSpawnIndex++;
         }
     }
 
-    n = gUnknown_03000884;
+    n = gActorList;
     do {
         struct actor_self *next = ACTOR_NEXT(n);
         struct actor_draw_methods *vt = (struct actor_draw_methods *)n->vtable;
 
         ((actor_draw_fn)vt->m10.fn)((u8 *)n + vt->m10.thisOffset);
         n = next;
-    } while (n != gUnknown_03000884);
+    } while (n != gActorList);
 
-    gUnknown_0300140C = 0;
-    n = gUnknown_03000884;
+    gActorDrawCount = 0;
+    n = gActorList;
     do {
         if (n->unk_2C[0] != 0)
-            gUnknown_03001408[gUnknown_0300140C++] = n;
+            gActorDrawList[gActorDrawCount++] = n;
         n = ACTOR_NEXT(n);
-    } while (n != gUnknown_03000884);
-    gHeapSortActorsByKeyFunc(gUnknown_0300140C, gUnknown_03001408);
+    } while (n != gActorList);
+    gHeapSortActorsByKeyFunc(gActorDrawCount, gActorDrawList);
 
-    for (i = 0; i < gUnknown_0300140C; i++) {
-        struct actor_self *a = gUnknown_03001408[i];
+    for (i = 0; i < gActorDrawCount; i++) {
+        struct actor_self *a = gActorDrawList[i];
         struct actor_draw_methods *vt = (struct actor_draw_methods *)a->vtable;
 
         ((actor_draw_fn)vt->m18.fn)((u8 *)a + vt->m18.thisOffset);
@@ -224,7 +224,7 @@ s32 sub_802A208(void)
     return gUnknown_03001410;
 }
 
-/* `sub_802A3AC`: walks the whole `gUnknown_03000884`-rooted circular
+/* `sub_802A3AC`: walks the whole `gActorList`-rooted circular
  * actor list (`self+0x4c`) looking for the first OTHER node
  * (`self`'s own arg0, held live in `r8` for the whole function) that
  * passes its method-table slot 0x28 query (false = not skipped) and
@@ -233,7 +233,7 @@ s32 sub_802A208(void)
  * the third box's `sp+0x18` address into `r7` by itself. */
 void *sub_802A3AC(struct actor_self *self)
 {
-    struct actor_self *n = ACTOR_NEXT(gUnknown_03000884);
+    struct actor_self *n = ACTOR_NEXT(gActorList);
 
     do {
         if (n != self) {
@@ -244,7 +244,7 @@ void *sub_802A3AC(struct actor_self *self)
                 return n;
         }
         n = ACTOR_NEXT(n);
-    } while (n != gUnknown_03000884);
+    } while (n != gActorList);
     return 0;
 }
 

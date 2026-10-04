@@ -220,7 +220,7 @@ instances needing the heavy `asm volatile` treatment `sub_801FDEC`
 needed), this pass started from the *other* end of
 `asm/code_3_2_17_21280.s` (`sub_8021668` onward), which turned out to
 be a much easier mix: one more popup-family instance with a different
-tail shape, a small `gStaticData_084A5600`-record spawner family
+tail shape, a small `gSpriteBankTable`-record spawner family
 (registering into a manager global `sub_8021D80`'s family in
 `graphics_loading_21d80.c` doesn't use), a run of plain
 `sub_801A878`/`sub_801B984` trampolines, one `sub_800CB40`-based
@@ -285,7 +285,7 @@ bit-4/5 clear, final 3-step flags mask) needed the same
 folds two sequential AND-immediates into one, or reorders a call-result
 reload, in ways the ROM's own codegen never does.
 
-### The `gStaticData_084A5600`-record family: `sub_8021748`/`sub_80217D0`/`sub_802183C`
+### The `gSpriteBankTable`-record family: `sub_8021748`/`sub_80217D0`/`sub_802183C`
 
 Same overall shape as `graphics_loading_21d80.c`'s `sub_8021D80` family
 (`sub_8008434` constructor, `+0x20` table offset, `sub_800815C`

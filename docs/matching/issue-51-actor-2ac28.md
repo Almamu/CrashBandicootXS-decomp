@@ -11,12 +11,12 @@ first seven functions, the whole of what was left in
 
 | function | what it is |
 |---|---|
-| `sub_802AC28` | the per-kind actor factory |
+| `CreateActor` | the per-kind actor factory |
 | `sub_802B12C` | builds record 40 with `InitActorPart`, method table `gStaticData_087E4E34` |
 | `sub_802B174` | builds record 11 with `sub_802C3E8` (0x60 bytes) |
 | `sub_802B1A8` | builds record 27 with `sub_802D528`, passing a 4th argument through |
 | `ConstructAnimTableState` | category vtable slot 0: installs the animation table, builds the player |
-| `sub_802B218` | category vtable slot 1: spawn record -> factory call |
+| `SpawnActor` | category vtable slot 1: spawn record -> factory call |
 | `ConstructActorPart` | the player constructor |
 
 All seven match under both `agbcc` and `old_agbcc`, since nothing in them
@@ -26,14 +26,14 @@ agbcc like the rest of this zone (`actor_part52.c`/`actor_part54.c`/
 
 ## The pieces
 
-**`gUnknown_0300147C`** is the category's animation table, a pointer to
+**`gActorAnimTable`** is the category's animation table, a pointer to
 `struct anim_table_record` (`include/actor_anim.h`, 0x28 bytes). This pass
 named the record's tail. `InitActorPart` copies +0x14..+0x20 into the
 object at +0x38 (`vector_14`), and the factory adds +0x20/+0x24 to the
 spawn position (`spawnX`/`spawnY`). The data dump says these are 0 in
 every record observed. The code still reads them.
 
-**`sub_802AC28(u8 kind, x, y, z, spawn)`** adds the record's spawn offset
+**`CreateActor(u8 kind, x, y, z, spawn)`** adds the record's spawn offset
 to x/y and then switches on `kind` (1-39, through a jump table). Every
 case body is an inlined C++ `new Foo(...)`. It allocates with
 `mem_alloc(size, MEM_HEAP_IWRAM)`, runs a base constructor
@@ -59,7 +59,7 @@ The case bodies appear in the ROM in source order (9, 3, 5-7, 1, 4, 22,
 12, 24, 28-31, 35, 8, 10, 11, 23, 16/18/20, 25, 13, 2, 36-39). The C
 lists them in that order.
 
-**`sub_802B218(spawn, useBonus, zOffset)`** picks the kind from the
+**`SpawnActor(spawn, useBonus, zOffset)`** picks the kind from the
 level's spawn record (`struct actor_spawn`: kind/altKind/bonusKind bytes
 and x/y/z in tiles). In the `gLevelState+0x8C` mode it uses
 `altKind`, returns NULL for 11 and folds 3/8/28-31/35 to 1. Otherwise it
@@ -67,8 +67,8 @@ takes `bonusKind` when `useBonus` is set. It skips kinds 0, 32-34 and 62,
 and calls the factory with the position scaled by 256 (plus `zOffset` on
 z).
 
-**`ConstructAnimTableState(table, z)`** sets `gUnknown_0300147C = table`,
-clears the player pointer `gUnknown_03000884`, and builds the player from
+**`ConstructAnimTableState(table, z)`** sets `gActorAnimTable = table`,
+clears the player pointer `gActorList`, and builds the player from
 record 0 with `ConstructActorPart`. That function runs `InitActorPart`
 (y = `z ? 0x2800 : -0x5000`), installs `gStaticData_087E4E54`, calls
 `sub_802B864`, and starts either state 0xD/anim 0xC (when z != 0) or anim
@@ -89,17 +89,17 @@ drive).
   assignment: `self` r4, `kind` r5, `z` r6, `x` r7, `y` r8, `spawn` sb.
   The `NEW_*` macros in the file each open their own block.
 - **`REC_AT(kind)`**, i.e. `(struct anim_table_record *)(kind * 0x28 +
-  (u32)gUnknown_0300147C)`, for the record passed by the inlined
+  (u32)gActorAnimTable)`, for the record passed by the inlined
   constructors. The ROM scales the index *before* loading the table
-  pointer there. Plain `&gUnknown_0300147C[kind]` (and `kind[...]`, and
+  pointer there. Plain `&gActorAnimTable[kind]` (and `kind[...]`, and
   a `u8 *` byte offset) loads the pointer first. Only the integer-first
   sum gives the index-first order. The prologue and the direct
   class-constructor calls use the pointer-first order, so those stay
-  `gUnknown_0300147C[kind]`/`gUnknown_0300147C + kind`.
+  `gActorAnimTable[kind]`/`gActorAnimTable + kind`.
 - **Return types from the epilogue.** `sub_802B12C`/`sub_802B174`/
   `ConstructAnimTableState` end in `pop {r0}; bx r0`, so they are
   `void`. The others end in `pop {r1}; bx r1` and return the object.
-- **`sub_802B218`**: `u8 kind` rather than a wider type. A narrower type
+- **`SpawnActor`**: `u8 kind` rather than a wider type. A narrower type
   is passed to the factory without re-truncation, which keeps `kind` in
   r4 across the argument setup. The skip test is one
   `kind == 0 || kind == 32 || ... || kind == 62` chain. Written after a

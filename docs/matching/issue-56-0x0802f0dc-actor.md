@@ -176,14 +176,14 @@ are named by the lower 5 hex digits of their first function's address
   overlap test) and a `self+0x34` depth threshold before firing
   `self`'s own `self+0x50`-table trampoline (index 8, no NULL-guard on
   that specific call) or, once past the threshold, falling back to
-  `sub_802A7B8` (also no NULL-guard). Two closing fixes over the prior
+  `UpdateActor` (also no NULL-guard). Two closing fixes over the prior
   parked attempt: (1) the threshold check needed to be a plain
-  `if (cond) {...} else {sub_802A7B8(...);}`, with the shared tail
+  `if (cond) {...} else {UpdateActor(...);}`, with the shared tail
   reached by `goto`s landing on a `merge:` label *inside* the `if`
   body, rather than an early-returning `else if` - this compiler places
   an `if`'s `else` body last in program order but an early-returning
   `else if` chain's next statement first, silently relocating the
-  `sub_802A7B8` call relative to the shared tail even though every
+  `UpdateActor` call relative to the shared tail even though every
   individual instruction already matched; (2) the ROM's inconsistent
   (`r2` vs `r3`) scratch-register choice for the repeated `8` immediate
   needed a small inline-asm anchor per site (`asm volatile("mov rN, #8\n\tldrsh

@@ -10,7 +10,7 @@
  * the `+0x30` type-byte indirection, and the `InitActorPart`-based
  * constructor family already matched throughout this ROM region). */
 
-extern void *gUnknown_03000884;
+extern void *gActorList;
 extern void *gAudioContext;
 extern void *gLevelState;
 extern u8 sub_802A6EC(void *self);
@@ -107,7 +107,7 @@ void sub_802CA28(void *selfArg)
 
 /* Same proximity-gated "used" transition shape as `sub_802C540`/
  * `sub_802C614` (actor_part19g.c), forwarding a fixed accumulator
- * delta of `4` to `sub_802C078(gUnknown_03000884, ...)`; tail-calls
+ * delta of `4` to `sub_802C078(gActorList, ...)`; tail-calls
  * `sub_802C4C8`. */
 void sub_802CA6C(void *selfArg)
 {
@@ -116,7 +116,7 @@ void sub_802CA6C(void *selfArg)
     if (self->animIndex != 0x12 && sub_802A6EC(self)) {
         PlaySfx(gAudioContext, 3, 0x100);
         sub_8022FEC(gLevelState);
-        sub_802C078(gUnknown_03000884, 4);
+        sub_802C078(gActorList, 4);
         self->animIndex = 0x12;
         {
             register u16 anim asm("r0") = *(u16 *)&self->anims[18].duration;
@@ -141,7 +141,7 @@ void sub_802CAD0(void *selfArg)
     if (self->animIndex != 0x12 && sub_802A6EC(self)) {
         PlaySfx(gAudioContext, 3, 0x100);
         sub_8022FEC(gLevelState);
-        sub_802C078(gUnknown_03000884, 1);
+        sub_802C078(gActorList, 1);
         self->animIndex = 0x12;
         {
             register u16 anim asm("r0") = *(u16 *)&self->anims[18].duration;

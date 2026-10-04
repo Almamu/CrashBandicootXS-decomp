@@ -94,7 +94,7 @@ byte-identical output from `tools/agbcc`.
   twice compounds rather than cancels the problem. Concretely: the ROM
   keeps exactly two extra callee-saved registers live across both
   builds (`r8` and `sb`, the latter caching `&gUnknown_030012D8` so the
-  player pointer survives the `sub_803AFE4`/`sub_803AFDC` calls'
+  player pointer survives the `SetAabbPos`/`SetAabbSize` calls'
   clobber), reusing `r7`/`r8` for the X/Y "shift" values across *both*
   blocks. Every variant tried here (explicit `xShift`/`yShift` locals
   shared across both blocks; a `vu8` volatile cast on the second
@@ -269,7 +269,7 @@ three):
    The selected box is tested for a zero width/height
    (`gStaticData_0816B2F8+4`/`+5` both 0 => treated as "no box", early
    return) then overlap-tested against the player's own hitbox record
-   (`sub_803AFE4`/`sub_803AFDC` + `sub_8001688`). No overlap => early
+   (`SetAabbPos`/`SetAabbSize` + `sub_8001688`). No overlap => early
    return before either of the other two tables is reached.
 2. **Per-edge handler dispatch**, ROM `0x0800D454`, 6 cases (0-5),
    keyed by an accumulated edge-code value (`r6`, built from

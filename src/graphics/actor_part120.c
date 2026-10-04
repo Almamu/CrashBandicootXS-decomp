@@ -39,7 +39,7 @@
  * `owner->4 < self->0x64`, latches `owner->4 = self->0x64` and fires
  * `sub_800C8AC(self,0)`. Mode 0 builds an AABB at `owner`'s position
  * offset by `self->0x20`/`self->0x24` sized by `self->0x28-0x20`/
- * `self->0x2c-0x24` (via `sub_803AFE4`/`sub_803AFDC`, the same
+ * `self->0x2c-0x24` (via `SetAabbPos`/`SetAabbSize`, the same
  * `struct aabb` shape `actor_part4.c`/`actor_part15.c` already use),
  * mirrors it per `owner->0x28` bit 4, then tests it against the player
  * (`gUnknown_030012D8`) via `sub_800B37C` - on overlap, triggers
@@ -67,8 +67,8 @@ extern s32 __modsi3(s32 a, s32 b);
 extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
 extern struct ctrl_target *sub_8025B0C(void *pool, s32 kind, s32 b, s32 margin, s32 z, s32 e, struct ctrl_target *src);
 extern u8 sub_800B37C(struct ctrl_target *obj, struct part_aabb *box);
-extern void sub_803AFE4(struct part_aabb *box, s32 x, s32 y);
-extern void sub_803AFDC(struct part_aabb *box, s32 w, s32 h);
+extern void SetAabbPos(struct part_aabb *box, s32 x, s32 y);
+extern void SetAabbSize(struct part_aabb *box, s32 w, s32 h);
 extern u32 gUnknown_0300082C;
 extern void *gAudioContext;
 extern void *gEntitySpawner;
@@ -159,8 +159,8 @@ void sub_800C5D4(struct part_ctrl *self)
         y = self->target->y >> 8;
         w = self->boxR - self->boxL;
         h = self->boxB - self->boxT;
-        sub_803AFE4(&box, x + self->boxL, y + self->boxT);
-        sub_803AFDC(&box, w, h);
+        SetAabbPos(&box, x + self->boxL, y + self->boxT);
+        SetAabbSize(&box, w, h);
         if (self->target->mirror.u.x)
             box.x = (self->target->x >> 8) * 2 - (box.x + box.w);
         if (sub_800B37C(gUnknown_030012D8, &box)) {

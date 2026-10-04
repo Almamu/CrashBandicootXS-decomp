@@ -9,7 +9,7 @@ add/add filename collisions. The whole seven-file family was
 renumbered together (not just the four that literally collided) to
 keep it visually contiguous.
 
-25-function `decomp-chunk` covering the `InitActorPart`/`gUnknown_03000884`-
+25-function `decomp-chunk` covering the `InitActorPart`/`gActorList`-
 rooted "self" object family already documented for
 `actor_part17.c`/`actor_part18.c`/`actor_part19.c`/`actor_part28.c`/
 `actor_part32.c`: a "part table" pointer at `self+0` (copied from the
@@ -19,7 +19,7 @@ field at `self+0xc`, an anim-frame halfword/byte pair at `self+0x10`/
 counter at `self+0x44`, a `+0x50`-rooted event/trampoline table fed
 through `_call_via_r2`, and the `+0x48`(next)/`+0x4c`(prev) circular
 doubly-linked list rooted at the player-pointer global
-`gUnknown_03000884`. This chunk additionally pins down `InitActorPart`
+`gActorList`. This chunk additionally pins down `InitActorPart`
 itself (the constructor every other `actor_part*.c` file already
 forward-declares and calls) plus a handful of new fields it introduces:
 the constructor's raw `part`/`b`/`c`/`d` arguments cached at
@@ -52,10 +52,10 @@ only the tail continuation `..._ac28.s` remains.
   (`src/graphics/actor_part50.c`) - four trivial forwarders, the same
   shape as `sub_802C0A8` in `actor_part19.c`: each ignores its own
   argument and calls a different function with the player pointer
-  (`gUnknown_03000884`), discarding the return value.
+  (`gActorList`), discarding the return value.
 - **`sub_802A6EC`** (`src/graphics/actor_part50.c`) - passes its own
   `self` argument through to `_call_via_r1`, alongside a function pointer
-  read from `gUnknown_03001418`'s own `+0x24` field.
+  read from `gActorCategoryVtable`'s own `+0x24` field.
 - **`InitActorPart`** (`src/graphics/actor_part50.c`) - the constructor.
   Matching it byte-exact needed several of this project's established
   idioms stacked together: `part`/`b`/`c` pinned to `r4`/`r5`/`r6` and
@@ -72,7 +72,7 @@ only the tail continuation `..._ac28.s` remains.
   final list-insertion re-ordered to store `self` into the head node's
   `+0x4c` *before* reading its `+0x48` (matching the ROM's literal
   instruction order, not just its final result).
-- **`sub_802A7B8`** (`src/graphics/actor_part50.c`) - the movement-
+- **`UpdateActor`** (`src/graphics/actor_part50.c`) - the movement-
   threshold recompute/frame-advance pair, sharing `InitActorPart`'s
   `ABS32`/`r2`-running-value idiom. Two additional gaps: the trampoline-
   fire call's `self + offset` argument had to be computed into its own
@@ -83,7 +83,7 @@ only the tail continuation `..._ac28.s` remains.
   `table + idx*0xc` address pinned to `r1` to reproduce the ROM's
   register choice for the shared record pointer.
 - **`sub_802A980`** (`src/graphics/actor_part56.c`) - the same
-  movement-threshold recompute as `sub_802A7B8`, with no trampoline-
+  movement-threshold recompute as `UpdateActor`, with no trampoline-
   fire/frame-advance tail.
 - **`sub_802A9D4`** (`src/graphics/actor_part56.c`) - trivial getter:
   the first byte of `self`'s part-table pointer.
@@ -94,7 +94,7 @@ only the tail continuation `..._ac28.s` remains.
   - trivial `self+0x24`/`0x20`/`0x1c` getters.
 - **`sub_802AA4C`** (`src/graphics/actor_part52.c`) - trivial `self+0x2c`
   byte getter.
-- **`sub_802AA54`** (`src/graphics/actor_part52.c`) - teardown: marks
+- **`DestroyActor`** (`src/graphics/actor_part52.c`) - teardown: marks
   `self` "dead", unlinks it from the circular list (the same shape as
   `sub_802C19C`'s unlink sequence in `actor_part19.c`), and frees it
   when requested.
@@ -114,7 +114,7 @@ only the tail continuation `..._ac28.s` remains.
   palette-cycle cluster's remaining seed/arm-disarm pair, non-adjacent to
   `actor_part52.c` since `sub_802AB58`'s own object (`actor_part53.o`)
   sits between them.
-- **`UpdateAnimatedActorPart`** (`src/graphics/actor_part55.c`) - the OAM
+- **`DrawActor`** (`src/graphics/actor_part55.c`) - the OAM
   draw/scale routine: computes an OBJ scale factor and on-screen X/Y
   from `self`'s movement-threshold metric, culls off-screen, and calls
   `SetupSpriteFrameOam`. Closed a later session's remaining gap: the
@@ -131,7 +131,7 @@ only the tail continuation `..._ac28.s` remains.
   drift onto it too and collide with the pinned copy; pinning `flag` to
   `r2` (its own ROM-matching register) fixed the collision but then lost
   the ROM's `str`/`ldr`-through-stack spill of `flag` around the
-  `sub_803B060` call - explicit register variables in a caller-saved
+  `GetAnimFrameAttr` call - explicit register variables in a caller-saved
   register aren't automatically protected across a call the way an
   ordinary gcc-owned pseudo-register is, so the spill/reload needed
   writing out by hand (same technique as `DivMod`'s r2-across-SWI

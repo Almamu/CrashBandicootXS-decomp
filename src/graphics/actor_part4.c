@@ -9,8 +9,8 @@ struct aabb {
     s32 field_c;
 };
 
-extern void sub_803AFE4(void *buf, s32 arg1, s32 arg2);
-extern void sub_803AFDC(void *buf, s32 arg1, s32 arg2);
+extern void SetAabbPos(void *buf, s32 arg1, s32 arg2);
+extern void SetAabbSize(void *buf, s32 arg1, s32 arg2);
 extern u8 sub_8001688(void *buf1, void *buf2);
 
 /* Builds `part`'s AABB (same keyframe-table shape/record layout as
@@ -57,8 +57,8 @@ s32 sub_80080C0(struct actor *part, void *region)
 
     x = offX + xpos;
     y = offY + ypos;
-    sub_803AFE4(&buf_, x, y);
-    sub_803AFDC(&buf_, w, h);
+    SetAabbPos(&buf_, x, y);
+    SetAabbSize(&buf_, w, h);
 
     if (mirrorX) {
         buf_.field_0 = xpos * 2 - (buf_.field_0 + buf_.field_8);

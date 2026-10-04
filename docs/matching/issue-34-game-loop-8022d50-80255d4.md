@@ -274,7 +274,7 @@ whether to proceed (byte result `0`) or poll input and possibly clear
 entered once the retry loop and state dispatch above both settle):
 walks `self->0xdc`-style "current category" objects, gating everything
 on an `r8`-resident status flag persisted across iterations - `0`
-means "keep going," `1` means "check `sub_803AFEC(self) < 0` for an
+means "keep going," `1` means "check `GetLives(self) < 0` for an
 early exit," `2` means "stop the whole per-category loop now." Inside
 each iteration: `sub_8024404`/`sub_80232B8` gate one
 `gEntityFlags` bitmap flush+ping-pong-to-`self+0x1b4` cycle into
@@ -284,13 +284,13 @@ apparently two independent bitmap "channels"). The loop's tail
 (`sub_80232B8`/`sub_8023290` again) decides between two closing
 branches that both refresh the HUD icon via `sub_8024464` +
 `sub_8028568`: the "true" branch also refills `self+0xb0`/`0xb8`/`0xb4`
-(`GetWumpa`/`sub_803AFEC`/`sub_8023414`) via `sub_8024540`; the
+(`GetWumpa`/`GetLives`/`sub_8023414`) via `sub_8024540`; the
 "false" branch only refills `self+0xb4` via `sub_8024524`. Either way
 the loop re-enters at its own top unless `sub_802455C(&self->0xc4)`
 says otherwise, at which point control falls to the end-of-frame block
 that (if `gHud`, the HUD object, is non-null) calls
 `DestroyHud(hud, 3)`, then decides whether to loop all the way back to
-the outer state-dispatch entry (`sub_803AFEC(self) >= 0`, or
+the outer state-dispatch entry (`GetLives(self) >= 0`, or
 `RunContinuePrompt()` true after also re-running `ResetLives(self)`) or
 finally return to `MainLoop` - meaning a single `UpdateGameFrame` call
 from `MainLoop` can internally re-run its entire state-dispatch +

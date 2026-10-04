@@ -33,14 +33,14 @@ extern s32 GetAnimFrameBaseOffset(void *self);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void InitActorPart(void *self, void *part, s32 b, s32 c, s32 d);
 extern u8 sub_802A6EC(void *self);
-extern void sub_802A7B8(void *self);
+extern void UpdateActor(void *self);
 /* Defined as a no-argument counter in actor_part44.c, but the ROM passes
  * the player object here (a C++ method ignoring its `this`). */
 extern s32 sub_802F46C(void *player);
 
 extern s32 gUnknown_0300089C[];
 extern void *gAudioContext;
-extern struct actor_self *gUnknown_03000884;
+extern struct actor_self *gActorList;
 extern s16 gStaticData_0816A820[];
 extern struct actor_pmf gStaticData_0817C260[];
 extern struct actor_pmf gStaticData_0817C280[];
@@ -222,7 +222,7 @@ void sub_802FE1C(struct actor_51b4 *self)
 /* Sets the velocity to 1/16 of the offset to the player. */
 void sub_802FE58(struct actor_51b4 *self)
 {
-    struct actor_self *player = gUnknown_03000884;
+    struct actor_self *player = gActorList;
 
     self->velX = (player->x - self->base.x) >> 4;
     self->velY = (player->y - self->base.y) >> 4;
@@ -302,14 +302,14 @@ void *sub_802FF08(struct actor_51ec *self, u8 *part, s32 b, s32 c, s32 d)
  * contact damages the player (strength 10) and switches to the dying
  * state 6. Then runs this state's gStaticData_0817C280 handler; once
  * the dying animation is done, calls its own "destroy" method,
- * otherwise sinks slightly and runs the standard sub_802A7B8 step. */
+ * otherwise sinks slightly and runs the standard UpdateActor step. */
 void sub_802FFB8(struct actor_51ec *self)
 {
     if (self->base.state != 6) {
-        sub_802F46C(gUnknown_03000884);
+        sub_802F46C(gActorList);
         if (self->base.state != 6 && sub_802A6EC(self)) {
-            ACTOR_VCALL(gUnknown_03000884, m20, 10);
-            self->base.unk_18 = 4;
+            ACTOR_VCALL(gActorList, m20, 10);
+            self->base.palette = 4;
             PlaySfx(gAudioContext, 4, 0x100);
             ACTOR_SET_STATE(&self->base, 6, 1);
         }
@@ -319,18 +319,18 @@ void sub_802FFB8(struct actor_51ec *self)
 
     if (self->base.state == 6 && self->base.animDone != 0) {
         if (self != NULL) {
-            ACTOR_VCALL(&self->base, m08, 3);
+            ACTOR_VCALL(&self->base, destroy, 3);
         }
     } else {
         self->base.z += 0x60;
-        sub_802A7B8(self);
+        UpdateActor(self);
     }
 }
 
 /* Eases `self` 1/32 of the way toward the player. */
 void sub_80300B0(struct actor_51ec *self)
 {
-    struct actor_self *player = gUnknown_03000884;
+    struct actor_self *player = gActorList;
 
     self->base.x += (player->x - self->base.x) >> 5;
     self->base.y += (player->y - self->base.y) >> 5;
@@ -397,7 +397,7 @@ void nullsub_29(struct actor_51ec *self)
 void sub_80301EC(struct actor_51ec *self, s32 damage)
 {
     if (self->base.state != 6 && (self->hp -= damage) <= 0) {
-        self->base.unk_18 = 4;
+        self->base.palette = 4;
         PlaySfx(gAudioContext, 4, 0x100);
         ACTOR_SET_STATE(&self->base, 6, 1);
     }
@@ -417,19 +417,19 @@ u8 sub_8030290(struct actor_51ec *self)
 
 /* Projectile step: moves by its velocity and falls; on player contact
  * damages the player (strength 2) and destroys itself, otherwise runs
- * the standard sub_802A7B8 step. */
+ * the standard UpdateActor step. */
 void sub_8030298(struct actor_5224 *self)
 {
     self->base.x += self->velX;
     self->base.y += self->velY;
     self->base.z += -0x100;
     if (sub_802A6EC(self)) {
-        ACTOR_VCALL(gUnknown_03000884, m20, 2);
+        ACTOR_VCALL(gActorList, m20, 2);
         if (self != NULL) {
-            ACTOR_VCALL(&self->base, m08, 3);
+            ACTOR_VCALL(&self->base, destroy, 3);
         }
     } else {
-        sub_802A7B8(self);
+        UpdateActor(self);
     }
 }
 
@@ -480,7 +480,7 @@ void sub_8030334(struct actor_orbit *self)
         self->radius = 0x2a00;
     }
     {
-        struct actor_self *player = gUnknown_03000884;
+        struct actor_self *player = gActorList;
         s32 px, py, tx, ty;
         register s32 cx asm("r3");
         register s32 cy asm("r4");
@@ -507,8 +507,8 @@ void sub_8030334(struct actor_orbit *self)
         self->base.stateTime = t;
     }
     if (sub_802A6EC(self)) {
-        ACTOR_VCALL(gUnknown_03000884, m20, 6);
-        self->base.unk_18 = 4;
+        ACTOR_VCALL(gActorList, m20, 6);
+        self->base.palette = 4;
         PlaySfx(gAudioContext, 4, 0x100);
         ACTOR_SET_STATE(&self->base, 2, 1);
     }
@@ -529,7 +529,7 @@ void sub_803044C(struct actor_orbit *self)
         self->radius = 0;
     }
     {
-        struct actor_self *player = gUnknown_03000884;
+        struct actor_self *player = gActorList;
         s32 px, py, tx, ty;
         register s32 cx asm("r3");
         register s32 cy asm("r4");
@@ -551,8 +551,8 @@ void sub_803044C(struct actor_orbit *self)
         self->base.y = cy + ((sine[angle] * self->radius) >> 8);
     }
     if (sub_802A6EC(self)) {
-        ACTOR_VCALL(gUnknown_03000884, m20, 6);
-        self->base.unk_18 = 4;
+        ACTOR_VCALL(gActorList, m20, 6);
+        self->base.palette = 4;
         PlaySfx(gAudioContext, 4, 0x100);
         ACTOR_SET_STATE(&self->base, 2, 1);
     }

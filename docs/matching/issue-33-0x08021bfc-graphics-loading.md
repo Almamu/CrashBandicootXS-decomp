@@ -20,7 +20,7 @@ function at the very end:
   shape as `sub_80187FC`'s table read in `actor_part27c.c`) and folds
   two of its bits into the constructed object's `+0x28` bitfield.
 - **`sub_8021D80`/`sub_8021DFC`/`sub_8021E78`/`sub_8021EF4`/
-  `sub_802200C`/`sub_8021F70`/`sub_80220C4`**: the `gStaticData_084A5600`
+  `sub_802200C`/`sub_8021F70`/`sub_80220C4`**: the `gSpriteBankTable`
   record-indexed OAM-trio spawner shape (docs/rom_map.md's "master
   12-byte record array") - allocate via `sub_8008434` (or `sub_8011B0C`
   for `sub_8021F70`), point `+0x20` at `table_base + record*12`, tag
@@ -62,7 +62,7 @@ function at the very end:
   `C8`, clears `gUnknown_03001288`'s mode byte, and zeroes `self+0xc0`
   before returning `self` unchanged. `gUnknown_030012D0` gets pointed
   at a freshly-allocated 4-byte pointer cell which itself is set to
-  `&gStaticData_084A5600` (the 729 KB master asset index).
+  `&gSpriteBankTable` (the 729 KB master asset index).
 
 ## Matched (24 functions, full clean `make compare` passing)
 
@@ -70,7 +70,7 @@ function at the very end:
 fns): the `sub_800FF0C` trampoline family, types `1`-`7`.
 
 `src/graphics/graphics_loading_21d80.c` (`sub_8021D80`-`sub_8022230`,
-18 fns): the `gStaticData_084A5600` spawner family, `sub_802209C`,
+18 fns): the `gSpriteBankTable` spawner family, `sub_802209C`,
 `sub_8022158`, both `nullsub`s, the `sub_801E990` trampolines, the
 `gUnknown_030012D8` position writers, the descriptor pair, and
 `sub_8022230` itself.

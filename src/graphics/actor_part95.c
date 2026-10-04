@@ -27,7 +27,7 @@ void sub_8029748(s32 arg0)
     sub_802AB34();
 }
 
-extern s32 gUnknown_03001380;
+extern s32 gActorCategory;
 
 /* True once the running active-instance count reaches the current
  * category's `unknown_20` threshold. The cast to `s32` matches the
@@ -38,7 +38,7 @@ extern s32 gUnknown_03001380;
  * step 3). */
 s32 sub_8029794(void)
 {
-    return gUnknown_03001384 >= (s32)gStaticData_08175558[gUnknown_03001380].unknown_20;
+    return gUnknown_03001384 >= (s32)gActorCategories[gActorCategory].unknown_20;
 }
 
 extern s32 gUnknown_030013B0;

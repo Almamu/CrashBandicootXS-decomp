@@ -113,7 +113,7 @@ family. Filed under `src/graphics/` on disk, tracked as its own
   **`sub_8022158`**, **`nullsub_22`**, **`sub_802218C`**, **`sub_80221A4`**,
   **`sub_80221BC`**, **`sub_80221D4`**, **`nullsub_23`**, **`DestroyEntitySpawner`**,
   **`CreateEntitySpawner`**, **`sub_8022230`** (`src/graphics/graphics_loading_21d80.c`)
-  - the `gStaticData_084A5600` record-indexed OAM-trio spawner family, the
+  - the `gSpriteBankTable` record-indexed OAM-trio spawner family, the
   `sub_801E990` trampolines, the `gUnknown_030012D8` position writers, the
   `{table_base, count}` descriptor pair, and `sub_8022230` itself - the
   "origin point" that constructs nearly every hot IWRAM global this ROM

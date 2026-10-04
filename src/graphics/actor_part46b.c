@@ -7,9 +7,9 @@
 
 extern void sub_802E674(s32 x, s32 y, s32 z, s32 dx, s32 dy);
 extern u8 sub_802A6EC(void *self);
-extern void sub_802A7B8(void *self);
+extern void UpdateActor(void *self);
 extern struct actor_pmf gStaticData_0817C260[];
-extern struct actor_self *gUnknown_03000884;
+extern struct actor_self *gActorList;
 
 struct actor_fa38 {
     struct actor_self base;
@@ -30,7 +30,7 @@ struct actor_fa38 {
  * away (sub_802E674) when it is close in front - every third hit takes
  * a long cooldown. Then the usual player-contact damage exchange, and
  * finally "destroy" once state 3 rises past a height, else the
- * standard sub_802A7B8 step. */
+ * standard UpdateActor step. */
 void sub_802FA38(struct actor_fa38 *self)
 {
     if (self->base.depth > 0x1B00) {
@@ -48,7 +48,7 @@ void sub_802FA38(struct actor_fa38 *self)
         s32 cooldown = self->cooldown;
 
         if (cooldown == 0) {
-            struct actor_self *player = gUnknown_03000884;
+            struct actor_self *player = gActorList;
             s32 angle = (player->z - (self->base.z - 10)) / -0x1AA;
 
             if (angle > 0 && self->base.depth <= 0x8BFF) {
@@ -78,16 +78,16 @@ void sub_802FA38(struct actor_fa38 *self)
     }
 
     if (self->unk_7C == 0 && sub_802A6EC(self)) {
-        ACTOR_VCALL(gUnknown_03000884, m20, 6);
+        ACTOR_VCALL(gActorList, m20, 6);
         ACTOR_VCALL(&self->base, m20, 4);
     }
 
     if (self->base.state == 3 && self->base.y > 0xE100) {
         if (self != NULL) {
-            ACTOR_VCALL(&self->base, m08, 3);
+            ACTOR_VCALL(&self->base, destroy, 3);
         }
     } else {
-        sub_802A7B8(self);
+        UpdateActor(self);
     }
 }
 

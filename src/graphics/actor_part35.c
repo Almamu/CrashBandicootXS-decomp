@@ -11,7 +11,7 @@ extern struct spawn_timing_table *sub_80338C4(void);
 extern s32 sub_80338D0(void);
 extern s32 RandRange(s32 arg0);
 extern void sub_802E170(s32 kind, s32 x, s32 y, s32 z, s32 arg4);
-extern struct actor_self *gUnknown_03000884;
+extern struct actor_self *gActorList;
 
 /* The singleton's per-spawner timing table (`sub_80338C4`): after each
  * spawn a spawner waits `delay` frames, except every `burst`-th spawn,
@@ -68,7 +68,7 @@ void sub_8033CF8(struct spawner *self)
 
     slot = self->cooldown;
     if (slot == 0) {
-        struct actor_self *player = gUnknown_03000884;
+        struct actor_self *player = gActorList;
         s32 angle = (player->z - self->base.z) / -0x1AA;
 
         if (angle > 0) {

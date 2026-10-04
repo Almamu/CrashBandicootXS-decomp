@@ -78,10 +78,10 @@ struct actor *sub_80084A4(struct actor *self)
     return self;
 }
 
-extern void *sub_80083B8(void *part);
+extern void *GetSpriteFrame(void *part);
 extern u8 gStaticData_0816B300[];
 
-/* Looks up `part`'s keyframe record via `sub_80083B8` (already parked
+/* Looks up `part`'s keyframe record via `GetSpriteFrame` (already parked
  * as `NON_MATCHING` in `actor_part5.c`), then picks a pointer off it
  * per the record's `+4` byte's upper nibble: 0 -> `info+0x24`, 6 ->
  * `info+0x14`, anything else (1-5, or above 6) -> the fixed fallback
@@ -95,7 +95,7 @@ extern u8 gStaticData_0816B300[];
  * jump table here. */
 void *sub_80084C4(void *part)
 {
-    void *info = sub_80083B8(part);
+    void *info = GetSpriteFrame(part);
     u8 type = *(u8 *)(*(void **)((u8 *)info + 4)) >> 4;
     void *result;
 
@@ -126,7 +126,7 @@ void *sub_80084C4(void *part)
 
 extern u8 gStaticData_0816B2F8[];
 
-/* Same `sub_80083B8`-derived-record-nibble-switch shape as
+/* Same `GetSpriteFrame`-derived-record-nibble-switch shape as
  * `sub_80084C4` above, with a different result mapping: 0 and 4
  * select `info+0x1c`, anything else falls back to
  * `gStaticData_0816B2F8`. Unlike `sub_80084C4`, no case-scattering
@@ -135,7 +135,7 @@ extern u8 gStaticData_0816B2F8[];
  * compare chain. */
 void *sub_8008518(void *part)
 {
-    void *info = sub_80083B8(part);
+    void *info = GetSpriteFrame(part);
     u8 type = *(u8 *)(*(void **)((u8 *)info + 4)) >> 4;
     void *result;
 
@@ -162,7 +162,7 @@ void *sub_8008518(void *part)
     return result;
 }
 
-/* Same `sub_80083B8`-derived-record-nibble `switch` shape again, with
+/* Same `GetSpriteFrame`-derived-record-nibble `switch` shape again, with
  * the exact same case-to-block mapping as `sub_8007C30` (already
  * matched in `actor_part2.c`) - 0/3/4 select `info+0x14`, 5 selects
  * `info+0xc`, and 1/2/6/anything-above-6 fall back to
@@ -171,7 +171,7 @@ void *sub_8008518(void *part)
  * no scattering needed. */
 void *sub_8008564(void *part)
 {
-    void *info = sub_80083B8(part);
+    void *info = GetSpriteFrame(part);
     u8 type = *(u8 *)(*(void **)((u8 *)info + 4)) >> 4;
     void *result;
 
@@ -196,12 +196,12 @@ void *sub_8008564(void *part)
     return result;
 }
 
-/* Same `sub_80083B8`-derived-record-nibble `switch` shape once more -
+/* Same `GetSpriteFrame`-derived-record-nibble `switch` shape once more -
  * 0/2/3/4/6 select `info+0xc`, 1/5/anything-above-6 fall back to
  * `gStaticData_0816B2F8`. */
 void *sub_80085B8(void *part)
 {
-    void *info = sub_80083B8(part);
+    void *info = GetSpriteFrame(part);
     u8 type = *(u8 *)(*(void **)((u8 *)info + 4)) >> 4;
     void *result;
 
@@ -245,13 +245,13 @@ void *sub_8008604(struct actor *part)
 /* Clamps `frame` to `part`'s current keyframe record's duration
  * (`+0x16`) minus one if it's out of range, then stores the result
  * into `part+0x30` (the frame index also read/written by
- * `sub_80083B8`). Needed explicit register pins on the whole
+ * `GetSpriteFrame`). Needed explicit register pins on the whole
  * tablePtr/idxAddr/table/idx chain to get the ROM's `r5` (rather than
  * a tighter, naturally-reused register) - `idx` genuinely outlives
  * `table`'s own register here. The final `rec = table + offset` add
  * also hit the resistant "which operand goes first" canonicalization
  * documented at length for `sub_8008188`/`sub_8008200`/
- * `sub_8008278`/`sub_80083B8` - but unlike those (which were inside a
+ * `sub_8008278`/`GetSpriteFrame` - but unlike those (which were inside a
  * `switch` and had to be parked to avoid breaking case-block merging),
  * this function has no such constraint, so a one-instruction inline
  * `asm` anchor for just this add gets a fully byte-exact match. */
@@ -480,7 +480,7 @@ void sub_8008710(void *part, u8 value)
     *addr = result;
 }
 
-/* `part+0x38` ("done" flag, also read/written by `sub_80083B8`)
+/* `part+0x38` ("done" flag, also read/written by `GetSpriteFrame`)
  * setter. */
 void sub_800872C(void *part, u8 val)
 {

@@ -678,8 +678,8 @@ u8 sub_8006FE4(struct actor *self)
 }
 
 extern void *_call_via_r1(void *arg0, void *arg1);
-extern void sub_803AFE4(void *buf, s32 arg1, s32 arg2);
-extern void sub_803AFDC(void *buf, s32 arg1, s32 arg2);
+extern void SetAabbPos(void *buf, s32 arg1, s32 arg2);
+extern void SetAabbSize(void *buf, s32 arg1, s32 arg2);
 extern u8 sub_800B37C(void *arg0, void *buf);
 extern void _call_via_r4(void *arg0, s32 arg1, s32 arg2, s32 arg3);
 extern struct actor *gUnknown_030012D8;
@@ -720,8 +720,8 @@ s32 sub_8007048(struct actor *self)
     rh = rec->padY;
     x += rx;
     y += ry;
-    sub_803AFE4(buf, x, y);
-    sub_803AFDC(buf, rw, rh);
+    SetAabbPos(buf, x, y);
+    SetAabbSize(buf, rw, rh);
 
     {
         register s32 flagTestR0 asm("r0");

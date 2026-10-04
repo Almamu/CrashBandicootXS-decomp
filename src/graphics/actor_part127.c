@@ -49,7 +49,7 @@ extern void sub_8029BAC(s32 arg0);
 extern void LoseLife(void *arg0);
 extern void sub_802DFBC(void);
 extern s32 sub_802D4B0(void *self);
-extern void *sub_802AC28(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4);
+extern void *CreateActor(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4);
 extern void *AllocVramTileBlock(s32 size);
 extern s32 RandRange(s32 max);
 extern s32 SetMaskLevel(void *arg0, s32 arg1);
@@ -122,7 +122,7 @@ void sub_802B364(struct actor_self *self)
     {
         s32 d = (self->depth >> 1) & 0x7f80;
 
-        self->visible = d | (((Abs(self->y) + Abs(self->x)) >> 11) & 0x7f);
+        self->sortKey = d | (((Abs(self->y) + Abs(self->x)) >> 11) & 0x7f);
     }
     self->stateTime++;
     self->animTime += *(s16 *)&self->animTimer;
@@ -239,7 +239,7 @@ void sub_802B5B4(struct actor_self *self)
         {
             register u32 tile asm("r0") = GET_TILE_NUM(gUnknown_030014B0[gUnknown_030014A8]);
 
-            QueueSpriteFrameOam(attr1, tile | (self->unk_18 << 12), scale);
+            QueueSpriteFrameOam(attr1, tile | (self->palette << 12), scale);
         }
     }
 }
@@ -416,7 +416,7 @@ void sub_802B864(struct actor_self *self)
 }
 
 /* Spawn-once trigger for a secondary effect object
- * (`gUnknown_03001490`, via `sub_802AC28`), then drains a "camera
+ * (`gUnknown_03001490`, via `CreateActor`), then drains a "camera
  * catch-up" budget (`gUnknown_030014A4`) into `self+0x20` until it
  * crosses a fixed threshold, at which point it plays a cue, clamps
  * `self+0x20`, resets `self` to state 9/table-index 9, clears
@@ -431,7 +431,7 @@ void sub_802B8E8(struct actor_self *self)
     s32 y;
 
     if (spawn == NULL) {
-        struct actor_self *o = sub_802AC28(2, self->x, 0x2800, self->z, 0);
+        struct actor_self *o = CreateActor(2, self->x, 0x2800, self->z, 0);
 
         *spawnAddr = o;
         o->animIndex = 1;
@@ -449,7 +449,7 @@ void sub_802B8E8(struct actor_self *self)
         ACTOR_SET_STATE(self, 9, 9);
         gUnknown_030014A0 = 0;
         if (*spawnAddr != NULL) {
-            ACTOR_VCALL(*spawnAddr, m08, 3);
+            ACTOR_VCALL(*spawnAddr, destroy, 3);
         }
         *spawnAddr = NULL;
         sub_8029BAC(0x19);
@@ -674,7 +674,7 @@ void sub_802BB4C(void *selfArg)
 
 /* On the state-0x12 anim edge, resets `gUnknown_030014A4`'s stall
  * clamp, and, once `self+0x20` crosses `0x2000`, spawns a secondary
- * effect object via `sub_802AC28` (stashed into `gUnknown_03001490`)
+ * effect object via `CreateActor` (stashed into `gUnknown_03001490`)
  * gated on that same threshold. Resets `self` to state 8/table-index
  * 7, arms `gUnknown_03001480`, and kicks the mode transition the same
  * way as `sub_802B730`/`sub_802BB4C`. */
@@ -683,7 +683,7 @@ void sub_802BBE4(struct actor_self *self)
     if (self->animDone) {
         gUnknown_030014A4 = 0xFFFFF980;
         if (self->y > 0x2000)
-            gUnknown_03001490 = sub_802AC28(2, self->x, 0x2800, self->z, 0);
+            gUnknown_03001490 = CreateActor(2, self->x, 0x2800, self->z, 0);
         ACTOR_SET_STATE(self, 8, 7);
         gUnknown_03001480 = 1;
         {

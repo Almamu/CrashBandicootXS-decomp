@@ -65,7 +65,7 @@ from "core" graphics.
   (`asm/code_3_2_20_28568_c99c_31784_33ef4_3487c.s`, now removed). See
   [old-agbcc-round5.md](../matching/old-agbcc-round5.md).
 - **`sub_80327A4`** (`src/graphics/actor_part130.c`) - issue #60's last
-  function, a bounding-box-culled sprite draw (`UpdateAnimatedActorPart`'s
+  function, a bounding-box-culled sprite draw (`DrawActor`'s
   shape with the scale flag fixed at 0). Plain C; it was NAKED. See
   [issues-14-53-60-last-naked.md](../matching/issues-14-53-60-last-naked.md).
 - **`sub_802CC9C`** (`src/graphics/actor_part126.c`) - issue #53's last
@@ -106,9 +106,9 @@ from "core" graphics.
 - `src/graphics/actor_part5.c` (new file, now directly adjacent to
   `actor_part4.c`'s matched functions): `sub_8008304`,
   `sub_8008328`, `sub_800834C`, `sub_8008350`, `sub_8008364`,
-  `sub_8008394`, `sub_80083A8`, `sub_80083B8` (the latter originally a
+  `sub_8008394`, `GetSpriteTileBase`, `GetSpriteFrame` (the latter originally a
   NAKED transcription, matched to real C in a later session - see
-  `docs/matching.md`'s "Parked, not matched: sub_80083B8" entry and its
+  `docs/matching.md`'s "Parked, not matched: GetSpriteFrame" entry and its
   "Update" note)
 - `src/graphics/actor_part6.c` (new file, now directly adjacent to
   `actor_part5.c`'s matched functions): `sub_8008408`, `sub_8008434`, `sub_8008480`,
@@ -351,9 +351,9 @@ from "core" graphics.
 - `src/graphics/actor_aabb_setup.c` (new file, GitHub issue #70, ROM
   `0x0803AFDC`-`0x0803B060` - right after the parked division/modulo
   trio in `src/util/math_div_util.c`, see that file's `docs/matching.md`
-  entry): `sub_803AFDC`/`sub_803AFE4` (the shared AABB set-size/
+  entry): `SetAabbSize`/`SetAabbPos` (the shared AABB set-size/
   set-position primitive already referenced by name from
-  `actor_part.c`/`actor_part2.c`/`oam_count.c`), `sub_803AFEC` (a
+  `actor_part.c`/`actor_part2.c`/`oam_count.c`), `GetLives` (a
   trivial raw-offset getter), `DestroyLargeFont`/`DestroySmallFont` (two more
   `gStaticData_087E3BEC`-family per-type descriptor table constructors)
 
@@ -486,13 +486,13 @@ from "core" graphics.
 - `src/graphics/actor_anim.c` (extended, GitHub issue #71, ROM
   `0x0803B060`-`0x0803B46C` - immediately adjacent to the file's existing
   `GetAnimFrameBaseOffset`, which itself ends exactly at `0x0803B060`):
-  `sub_803B060` (reads the current keyframe's `attr` halfword pre-shifted
+  `GetAnimFrameAttr` (reads the current keyframe's `attr` halfword pre-shifted
   into the high 16 bits), `GetAnimFrameData` (resolves the current
   keyframe's tile-graphics pointer via `frameOffsets`/`gUnknown_0300137C`),
-  `sub_803B0A8` (selects a new keyframe, resetting the playback
+  `SetActorAnim` (selects a new keyframe, resetting the playback
   accumulator), `sub_803B0F0` (advances a Q8 fall/scroll accumulator,
   then either fires the `self+0x50` trampoline or tail-calls
-  `sub_802A7B8`), and 20 byte-identical `gStaticData_087E4DF4` "kind"
+  `UpdateActor`), and 20 byte-identical `gActorVtable` "kind"
   teardown handlers (`sub_803B0C4`, `sub_803B128`, `sub_803B154`,
   `sub_803B180`, `sub_803B1AC`, `sub_803B1D8`, `sub_803B204`,
   `sub_803B230`, `sub_803B25C`, `sub_803B288`, `sub_803B2B4`,
@@ -578,16 +578,16 @@ from "core" graphics.
   PRs above independently claimed those numbers first; see
   [docs/matching/issue-50-actor-2a69c.md](../matching/issue-50-actor-2a69c.md)):
   `sub_802A69C`, `sub_802A6B0`, `sub_802A6C4`, `sub_802A6D8`,
-  `sub_802A6EC`, `InitActorPart`, `sub_802A7B8`, `sub_802A980`,
+  `sub_802A6EC`, `InitActorPart`, `UpdateActor`, `sub_802A980`,
   `sub_802A9D4`, `sub_802A9DC`, `sub_802AA00`, `sub_802AA04`,
-  `sub_802AA08`, `sub_802AA4C`, `sub_802AA54`, `sub_802AA80`,
+  `sub_802AA08`, `sub_802AA4C`, `DestroyActor`, `sub_802AA80`,
   `sub_802AAB4`, `sub_802AAFC`, `sub_802AB08`, `sub_802AB34`,
   `sub_802ABC8`, `sub_802ABFC` - the `InitActorPart` constructor itself
   (previously only forward-declared by every other `actor_part*.c`
   file), its movement-threshold recompute pair, the fixed 15-slot
   object registry (`gUnknown_03001428`/`gUnknown_03000888`), and the
   `gUnknown_03001464`-gated palette-cycle DMA cluster's members - plus
-  `UpdateAnimatedActorPart`, `sub_802AA0C`, and `sub_802AB58`, all three
+  `DrawActor`, `sub_802AA0C`, and `sub_802AB58`, all three
   matched in a later pass that closed the register-pinning/pool-split
   gaps documented in that same writeup (all 25 of this chunk's functions
   are now real C, none NAKED).
@@ -610,7 +610,7 @@ from "core" graphics.
 - `src/graphics/actor_part107.c` (new file, ROM 0x0802BC68-0x0802BED8 -
   the literal tail of `asm/code_3_2_20_8b7c_ac28.s`, one raw file's
   leftover portion out of GitHub issue #50's original chunk scope;
-  everything before it in that raw file - `sub_802AC28`'s giant
+  everything before it in that raw file - `CreateActor`'s giant
   kind-dispatch actor-part-factory constructor and the run of actor-
   part-factory/animation-table-state functions between it and here -
   stayed raw then, since matched in `actor_part_2ac28.c` (below); see
@@ -779,7 +779,7 @@ from "core" graphics.
 - `src/graphics/actor_part92.c`/`actor_part99.c`/`actor_part93.c`/
   `actor_part94.c` (GitHub issue #49, ROM 0x08029E4C-0x0802A69C):
   `nullsub_6`, `sub_8029E50`, `sub_8029E98`, `sub_8029EB4` (the
-  BG2-affine scroll subsystem's tail), the `gUnknown_03001400`
+  BG2-affine scroll subsystem's tail), the `gActorSpawnTable`
   `sub_effect_table` record accessor family (`sub_802A4D4`-
   `sub_802A650`/`sub_802A668`), and a circular-list marker-drawing pass
   (`sub_802A5E4`) - see
@@ -917,11 +917,11 @@ from "core" graphics.
   See [docs/matching/pmf-dispatch-retry.md](../matching/pmf-dispatch-retry.md).
 - `src/graphics/actor_part_2ac28.c` (new file, GitHub issue #51, ROM
   `0x0802AC28`-`0x0802B364`, formerly `asm/code_3_2_20_8b7c_ac28.s`, now
-  retired): `sub_802AC28`, `sub_802B12C`, `sub_802B174`, `sub_802B1A8`,
-  `ConstructAnimTableState`, `sub_802B218`, `ConstructActorPart` - the
+  retired): `CreateActor`, `sub_802B12C`, `sub_802B174`, `sub_802B1A8`,
+  `ConstructAnimTableState`, `SpawnActor`, `ConstructActorPart` - the
   per-kind actor factory (a 39-case switch of inlined `new Foo(...)`
   constructors over the `struct anim_table_record` table at
-  `gUnknown_0300147C`), three fixed-record constructors, category vtable
+  `gActorAnimTable`), three fixed-record constructors, category vtable
   slots 0/1 (install the animation table and build the player; turn a
   level spawn record into a factory call) and the player constructor.
   All 7 real C, current agbcc (both compilers match). See
@@ -1052,7 +1052,7 @@ See [docs/matching/late-rom-naked-retry.md](../matching/late-rom-naked-retry.md)
   the top of the outer loop, `&gLevelState` assigned right before
   the inner loop, an if/else exit-state chain and a volatile DMA fill
   source reproduce the ROM's reload registers and preheader order.
-- `src/graphics/actor_part103.c` - `sub_802A208` (issue #49), old_agbcc
+- `src/graphics/actor_part103.c` - `RunActorCategoryFrame` (issue #49), old_agbcc
   (the file's compiler). The sub-effect loop is a plain `while` whose
   exit test gcc copies ahead of the loop; the test is a macro (an inline
   function's block notes stop the copy) building the next-record address
@@ -1315,7 +1315,7 @@ embedded as asm instead. They're tracked as parked, not matched.
 - **`sub_8034314`** (`src/graphics/actor_part70.c`) - `sub_8034270`'s
   boolean-returning twin; matched as real C immediately, no opaque-asm
   fix needed - returning the value directly (rather than branching on
-  it to decide whether to call `sub_802A7B8`) means there's no
+  it to decide whether to call `UpdateActor`) means there's no
   recheck for dead-branch elimination to collapse. The old raw
   `asm/code_3_2_20_28568_c99c_31784_33ef4_34314.s` is retired. GitHub
   issue #63, see `docs/matching/issue-63-0x08033ef4-actor.md`.
@@ -1507,7 +1507,7 @@ embedded as asm instead. They're tracked as parked, not matched.
   replaced the draft - see `docs/matching/issue-9-raw-asm-pass.md`) - a per-frame
   reentrancy-guard-shaped wrapper dispatching a pending-action "kind"
   byte (`gLevelLayers+0x29`) through a 10-case jump table, then a
-  keyframe-lookup/camera-position probe via `sub_80083B8`/
+  keyframe-lookup/camera-position probe via `GetSpriteFrame`/
   `sub_8026BC0` sharing `sub_80084C4`'s case-to-block mapping. Every
   load/store/branch/call confirmed correct against the ROM, and now
   (a second follow-up session, 98.0% fuzzy-matched, up from 96.8%)
@@ -1574,7 +1574,7 @@ embedded as asm instead. They're tracked as parked, not matched.
   "Matched" above, and `tools/report_units.py` tracks their address
   ranges as unmatched (`base_object: None`). `sub_8008770`
   (`src/graphics/actor_part6.c`) and `sub_8008188`/`sub_8008200`/
-  `sub_8008278`/`sub_80083B8` (`src/graphics/actor_part4.c`/
+  `sub_8008278`/`GetSpriteFrame` (`src/graphics/actor_part4.c`/
   `actor_part5.c`), which shared this list in earlier versions of this
   page, were converted back to real C and matched in later sessions -
   see "Matched" above and `docs/matching.md`'s "Parked, not matched:

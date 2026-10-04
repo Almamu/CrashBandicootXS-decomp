@@ -5,11 +5,11 @@
  * comment and docs/matching/issue-62-0x08033804-actor.md. */
 
 extern struct actor_pmf gStaticData_0817C4E0[];
-extern void sub_802A7B8(void *self);
+extern void UpdateActor(void *self);
 
 /* Per-state member-pointer dispatch, `(this->*gStaticData_0817C4E0
  * [this->state])()` (see `ACTOR_PMF_CALL`), then the standard
- * sub_802A7B8 step unless the state-2 animation has played through. */
+ * UpdateActor step unless the state-2 animation has played through. */
 void sub_8033B44(struct actor_self *self)
 {
     s32 state;
@@ -23,6 +23,6 @@ void sub_8033B44(struct actor_self *self)
         step = 0;
     }
     if (step) {
-        sub_802A7B8(self);
+        UpdateActor(self);
     }
 }

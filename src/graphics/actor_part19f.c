@@ -26,19 +26,19 @@ u8 sub_802C264(void)
     return gUnknown_030014A0;
 }
 
-/* Sets `visible`, advances `x`/`y` by the velocity pair, and once both
+/* Sets `sortKey`, advances `x`/`y` by the velocity pair, and once both
  * exceed `0x1000`: adds the (signed) `animTimer` into the `animTime`
  * accumulator and, once the frame counter reaches the current anim
  * record's `loopThreshold` (the same test `sub_802C0BC` uses), backs
  * the accumulator off by `loopThreshold - loopBase` and marks
  * `animDone`. Otherwise (the common per-frame case) just plays a sound
- * cue and fires the vtable's `m08` method with 3. */
+ * cue and fires the vtable's `destroy` method with 3. */
 void sub_802C270(void *selfArg)
 {
     struct moving_actor *self = selfArg;
     s32 x, y;
 
-    self->base.visible = 1;
+    self->base.sortKey = 1;
 
     x = self->base.x + self->velX;
     self->base.x = x;
@@ -52,7 +52,7 @@ void sub_802C270(void *selfArg)
     PlaySfx(gAudioContext, 0xe, 0x100);
     if (self != 0) {
         struct actor_vtable *table = self->base.vtable;
-        _call_via_r2((u8 *)self + table->m08.thisOffset, (void *)3, table->m08.fn);
+        _call_via_r2((u8 *)self + table->destroy.thisOffset, (void *)3, table->destroy.fn);
     }
     return;
 

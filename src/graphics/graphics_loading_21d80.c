@@ -40,10 +40,10 @@ extern void sub_8008E94(void *manager, void *value);
     } while (0)
 
 /* Spawns a full visual effect via `sub_8008434`: points its `+0x20`
- * table pointer at `gStaticData_084A5600`'s master 12-byte record 38
+ * table pointer at `gSpriteBankTable`'s master 12-byte record 38
  * (`table_base + 0x1c8` - the same record `overlay_ui`'s
  * `InitPowerDialog` dialog-box spawner uses, see docs/rom_map.md's
- * "`gStaticData_084A5600` record-indexed" writeup), tags it (`+0x2d =
+ * "`gSpriteBankTable` record-indexed" writeup), tags it (`+0x2d =
  * 1`), builds it via the standard `sub_80087C0`/`sub_80087B4`/
  * `sub_800872C` OAM trio, sets its `+0x29` bitfield via
  * `sub_800815C`/`UPDATE_PART_FRAME_NIBBLE`, sets `+0xa` to the fixed
@@ -226,7 +226,7 @@ void sub_802209C(u32 arg0, u32 arg1, u32 arg2, u16 arg3)
  * the master-table record index (`index`), tag (`+0x2d`) and `+0xa`
  * field all taken as *runtime* parameters instead of fixed constants
  * (matches `sub_8025BAC`'s already-documented `param1*12` runtime-
- * indexed access to `gStaticData_084A5600`'s record array, docs/
+ * indexed access to `gSpriteBankTable`'s record array, docs/
  * rom_map.md). */
 void *sub_80220C4(u32 index, u32 tag, u32 field0A, u32 cx, u16 cy, u16 cw, u16 ch)
 {
@@ -362,7 +362,7 @@ extern struct hud_fx_queue *InitPaletteCycles(struct hud_fx_queue *self);
 extern u8 gUnknown_03001288[2];
 extern void sub_8001604(void);
 extern void sub_8001614(void);
-extern u8 gStaticData_084A5600[];
+extern u8 gSpriteBankTable[];
 
 /* `sub_8022230` (docs/rom_map.md, "Found the origin point"): the
  * function `GetLevelState` calls once at the top of the game loop to
@@ -372,7 +372,7 @@ extern u8 gStaticData_084A5600[];
  * `03001304`/`030012B4`/`C8`, clears `gUnknown_03001288`'s mode byte,
  * and zeroes `self+0xc0` before returning `self` unchanged. `gUnknown_
  * 030012D0` gets pointed at a freshly-allocated 4-byte pointer cell
- * which itself is set to `&gStaticData_084A5600` (the 729 KB master
+ * which itself is set to `&gSpriteBankTable` (the 729 KB master
  * asset index, resolved separately in docs/rom_map.md).
  *
  * Several of these constructions call a *void*-returning helper
@@ -411,7 +411,7 @@ void *sub_8022230(void *self)
 
         asm volatile("bl nullsub_1" : "+r" (tmp) :: "r1", "r2", "r3", "lr", "cc");
         *addr = (void ***)tmp;
-        *(u8 **)tmp = gStaticData_084A5600;
+        *(u8 **)tmp = gSpriteBankTable;
     }
     {
         struct tile_asset_cache **addr = &gUnknown_030012B8;
@@ -421,9 +421,9 @@ void *sub_8022230(void *self)
         *addr = cache;
         {
             register u16 count asm("r1") =
-                ((const struct sprite_bank_table *)gStaticData_084A5600)->tilePoolCount;
+                ((const struct sprite_bank_table *)gSpriteBankTable)->tilePoolCount;
             register const u8 *records asm("r2") =
-                ((const struct sprite_bank_table *)gStaticData_084A5600)->tilePool;
+                ((const struct sprite_bank_table *)gSpriteBankTable)->tilePool;
 
             sub_8006EF0(cache, count, records);
         }

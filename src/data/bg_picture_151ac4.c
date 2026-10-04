@@ -7,7 +7,7 @@
  * ldscript.txt - see docs/data.md ("Category backgrounds").
  */
 
-/* Category 4's BG1 picture (gStaticData_08175558[4].conditional_ptr_0C,
+/* Category 4's BG1 picture (gActorCategories[4].conditional_ptr_0C,
  * loaded by sub_802F7B0 in actor_part45d.c): 38x16 map, 237 tiles. Built from
  * graphics/category_bg/151ac4_picture.png (palette and map) and
  * 151ac4_picture_tiles.png (the tile set, grit's -fx external tileset). */
@@ -37,9 +37,9 @@ const struct bg_picture_151ac4 gStaticData_08151AC4 = {
     },
 };
 
-/* Category 4's sub_effect_table (gStaticData_08175558[4].sub_effect_table,
+/* Category 4's spawnTable (gActorCategories[4].spawnTable,
  * read by SelectActorCategory (actor_part102.c) and the sub_802A5xx accessors). Record 0's field_04 is the record count. */
-const SUB_EFFECT_TABLE(230) gStaticData_0815405C = {
+const SUB_EFFECT_TABLE(230) gCategory4SpawnTable = {
     {
         { 7240, 230, 29, 29, 29, 0, -32, -30 },
         { 364, -1, 20, 27, 20, 0, 66, -30 },
@@ -276,7 +276,7 @@ const SUB_EFFECT_TABLE(230) gStaticData_0815405C = {
 };
 
 /* The BG1 picture shared by categories 5 and 6
- * (gStaticData_08175558[5..6].conditional_ptr_0C, loaded by sub_802F7B0
+ * (gActorCategories[5..6].conditional_ptr_0C, loaded by sub_802F7B0
  * in actor_part45d.c): 38x16 map, 374 tiles. Built from
  * graphics/category_bg/155260_picture.png (palette and map) and
  * 155260_picture_tiles.png (the tile set, grit's -fx external tileset). */
@@ -306,9 +306,9 @@ const struct bg_picture_155260 gStaticData_08155260 = {
     },
 };
 
-/* Category 5's sub_effect_table (gStaticData_08175558[5].sub_effect_table,
+/* Category 5's spawnTable (gActorCategories[5].spawnTable,
  * read by SelectActorCategory (actor_part102.c) and the sub_802A5xx accessors). Record 0's field_04 is the record count. */
-const SUB_EFFECT_TABLE(295) gStaticData_08158918 = {
+const SUB_EFFECT_TABLE(295) gCategory5SpawnTable = {
     {
         { 8452, 295, 29, 29, 29, 0, -96, -30 },
         { 280, -1, 20, 24, 20, 0, 32, -30 },
@@ -609,9 +609,9 @@ const SUB_EFFECT_TABLE(295) gStaticData_08158918 = {
     { 8116, -1, 112, 29, 0, 0 },
 };
 
-/* Category 6's sub_effect_table (gStaticData_08175558[6].sub_effect_table,
+/* Category 6's spawnTable (gActorCategories[6].spawnTable,
  * read by SelectActorCategory (actor_part102.c) and the sub_802A5xx accessors). Record 0's field_04 is the record count. */
-const SUB_EFFECT_TABLE(1) gStaticData_0815A030 = {
+const SUB_EFFECT_TABLE(1) gCategory6SpawnTable = {
     {
         { 712, 1, 10, 10, 10, 0, 160, 30 },
     },

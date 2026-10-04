@@ -3,7 +3,7 @@
 
 /* Tail continuation of GitHub issue #50's chunk
  * (asm/code_3_2_20_8b7c_ac28.s, ROM 0x0802AC28-0x0802BED8): the giant
- * `sub_802AC28` kind-dispatch constructor and the run of "actor part
+ * `CreateActor` kind-dispatch constructor and the run of "actor part
  * factory"/animation-table-state functions between it and here
  * (`sub_802B12C`-`sub_802BBE4`) are still raw - this file only covers
  * the literal tail of that raw `.s` file, a self-contained run of

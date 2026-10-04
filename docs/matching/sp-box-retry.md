@@ -64,7 +64,7 @@ Three more things matter:
   first overlap test. Dropping any one of the three leaves 2 to 32
   halfwords.
 - **Compute the first call's x/y before the call.**
-  `{ s32 x = offX + px, y = offY + py; sub_803AFE4(BOX_ADDR(&f.b), x, y); }`.
+  `{ s32 x = offX + px, y = offY + py; SetAabbPos(BOX_ADDR(&f.b), x, y); }`.
   Arguments are evaluated left to right, and the asm pins where the
   copy is computed. Written inline, the `add r0, sp, #16` comes before
   the x/y adds, while the ROM has it after them.

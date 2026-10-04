@@ -22,7 +22,7 @@ extern void sub_8015780(struct act *self, s32 a, s32 b, s32 c, s32 d);
 extern void sub_8006D08(void *cache, s32 slot, s32 kind);
 extern void sub_80153FC(struct act *self);
 extern u8 sub_80122CC(struct act *self);
-extern void *sub_80083B8(struct act_part *part);
+extern void *GetSpriteFrame(struct act_part *part);
 extern void sub_80087C0(struct act_part *p);
 extern void sub_80087B4(struct act_part *p);
 extern void sub_800872C(struct act_part *p, s32 arg1);
@@ -447,7 +447,7 @@ void sub_8014BCC(struct act *self)
 /* Walk handler: retags a finished part (0x21), handles fire/alt like
  * sub_8014BCC, steps a 4-frame idle timer that picks animation 0x22/0x23
  * from the part's frame, and while sub_80122CC reports a step moves the
- * part by the sub_80083B8 record's (or gStaticData_0816B300's) X offset,
+ * part by the GetSpriteFrame record's (or gStaticData_0816B300's) X offset,
  * mirrored by part+0x28 bit 4.
  *
  * The idle dispatch is written out per case: the ROM's one shared
@@ -532,7 +532,7 @@ void sub_8014D18(struct act *self)
     }
     if (sub_80122CC(self))
     {
-        u8 *info = sub_80083B8(self->part);
+        u8 *info = GetSpriteFrame(self->part);
         s32 x;
         s32 y;
 

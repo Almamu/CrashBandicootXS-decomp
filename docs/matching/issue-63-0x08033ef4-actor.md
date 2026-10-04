@@ -66,7 +66,7 @@ anim-frame halfword/byte, `self+8` accumulator, `self+0x28` state,
   register-pinned locals - `field`/`z` for the Z-axis sum, `origCounter`/
   `result` for the orbit-counter decision - matching the ROM's exact
   `r6`-stays-immutable/`r0`-carries-the-final-value split), a near-twin
-  (`sub_80341F8`) that turns out *not* to call `sub_802A7B8` first
+  (`sub_80341F8`) that turns out *not* to call `UpdateActor` first
   (initially miscopied as a byte-identical twin - the map-file address-
   shift diagnostic caught the missing 4-byte call), a trivial death-flag
   getter, and a no-op stub.
@@ -122,7 +122,7 @@ diffed byte-for-byte against `baserom.gba`:
    count and mnemonics, just reordered, so it produced a real 6-byte
    content mismatch without shifting any function's address at all.
 3. `sub_80341F8` being copied as a "byte-identical twin" of `sub_8034188`
-   when it's actually missing the leading `sub_802A7B8(self)` call - a
+   when it's actually missing the leading `UpdateActor(self)` call - a
    genuine 4-byte size difference that happened to exactly cancel the
    4-byte deficit inherited from the upstream `sub_8033EF4` bug, so the
    *next* function (`sub_8034264`) landed back at its correct absolute
@@ -334,7 +334,7 @@ boundaries - not by re-reading the isolated compiles more carefully.
   updater for Kind 1. Semantics fully understood and every field/call
   confirmed correct; parked because the ROM computes a "should animate"
   0/1 value into a register and re-checks it against zero before
-  deciding whether to call `sub_802A7B8`, even though the value is a
+  deciding whether to call `UpdateActor`, even though the value is a
   compile-time constant on each path - this compiler's dead-branch
   elimination always collapses that redundant compute-then-recheck
   step, the same class of gap already documented for `sub_802C2FC`

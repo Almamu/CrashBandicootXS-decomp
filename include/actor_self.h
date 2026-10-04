@@ -27,7 +27,7 @@ struct anim_frame_record {
     s16 loopThreshold;  // 0x04 - sub_803B4EC wraps self->animTime back once the frame base
                         // offset reaches this value
     s16 loopBase;       // 0x06 - subtracted from loopThreshold (then <<8) as the wrap amount
-    u16 attr;           // 0x08 - packed into the high halfword of sub_803B060's return value
+    u16 attr;           // 0x08 - packed into the high halfword of GetAnimFrameAttr's return value
     u8 unknown_0a[2];
 };
 
@@ -40,7 +40,7 @@ struct actor_method {
 
 struct actor_vtable {
     u8 unk_00[8];
-    struct actor_method m08;   // 0x08 - "hit/destroy" (called with arg 3)
+    struct actor_method destroy; // 0x08 - slot 1, the (virtual) destructor; called with 3 to delete
     u8 unk_10[0x10];
     struct actor_method m20;   // 0x20 - "damage" (called on the player with a strength)
     u8 unk_28[0x10];
@@ -73,8 +73,9 @@ struct actor_self {
     u16 animTimer;              // 0x10
     u8 animDone;                // 0x12 - set once the current sequence has played through
     u8 unk_13;
-    s32 visible;                // 0x14 - set to 1 by sub_8032718 (meaning unconfirmed)
-    s32 unk_18;                 // 0x18
+    s32 sortKey;                // 0x14 - draw order: RunActorCategoryFrame heapsorts the draw list
+                                //        by it (HeapSortActorsByKey); bit 15 also sets OAM priority
+    s32 palette;                // 0x18 - OBJ palette bank (OAM attr 2 << 12), from anim_table_record.palette
     s32 x;                      // 0x1C
     s32 y;                      // 0x20
     s32 z;                      // 0x24
@@ -90,7 +91,7 @@ struct actor_self {
 /* Words inside the byte arrays above, which other files still index
  * directly: the `struct anim_table_record` InitActorPart was given
  * (+0x30, actor_anim.h) and the circular list links it sets up (+0x48
- * next, +0x4C prev; the list is rooted at the player, gUnknown_03000884). */
+ * next, +0x4C prev; the list is rooted at the player, gActorList). */
 struct anim_table_record;
 #define ACTOR_RECORD(self) (*(struct anim_table_record **)&(self)->unk_2C[4])
 #define ACTOR_LINK_NEXT(self) (((struct actor_self **)(self)->unk_48)[0])

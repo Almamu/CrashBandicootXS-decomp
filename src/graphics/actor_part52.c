@@ -6,7 +6,7 @@
  * actor_part39.c since the parked `sub_802AA0C` (actor_part40.c) sits
  * raw between them. */
 
-extern u8 gStaticData_087E4DF4[];
+extern u8 gActorVtable[];
 
 /* Trivial getter: `self+0x2c` (the constructor's one-shot byte flag). */
 u8 sub_802AA4C(void *selfArg)
@@ -14,15 +14,15 @@ u8 sub_802AA4C(void *selfArg)
     return *((u8 *)selfArg + 0x2c);
 }
 
-/* Teardown: marks `self` "dead" (`+0x50 = gStaticData_087E4DF4`), unlinks
+/* Teardown: marks `self` "dead" (`+0x50 = gActorVtable`), unlinks
  * it from the circular `+0x48`(next)/`+0x4c`(prev) list, and frees it
  * when `flags & 1`. Same shape as `sub_802C19C`'s unlink sequence in
  * actor_part19.c. */
-void sub_802AA54(void *selfArg, s32 flags)
+void DestroyActor(void *selfArg, s32 flags)
 {
     u8 *self = selfArg;
 
-    *(u8 **)(self + 0x50) = gStaticData_087E4DF4;
+    *(u8 **)(self + 0x50) = gActorVtable;
 
     {
         u8 *prev = *(u8 **)(self + 0x4c);

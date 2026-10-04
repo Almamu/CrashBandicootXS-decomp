@@ -13,7 +13,7 @@ now.
 
 All in `src/graphics/actor_anim.c`, in ROM order:
 
-- **`sub_803B060`** - reads the current keyframe record's `attr`
+- **`GetAnimFrameAttr`** - reads the current keyframe record's `attr`
   halfword (`frameTable[frameIndex].attr`) and returns it pre-shifted
   into the high 16 bits; `sub_803B46C` ORs this straight into an OAM
   attribute word.
@@ -22,7 +22,7 @@ All in `src/graphics/actor_anim.c`, in ROM order:
   GetAnimFrameBaseOffset(self)` indexes `frameOffsets` (an array of
   byte offsets), added to the `gUnknown_0300137C` tile-graphics base
   pointer.
-- **`sub_803B0A8`** - selects a new keyframe: sets `frameIndex`, copies
+- **`SetActorAnim`** - selects a new keyframe: sets `frameIndex`, copies
   that record's `duration` field into `self+0x10`, and resets the
   `+0x12` flag byte and the `field_08` playback accumulator to 0.
 - **20 byte-identical "kind" teardown handlers** (`sub_803B0C4`,
@@ -33,12 +33,12 @@ All in `src/graphics/actor_anim.c`, in ROM order:
   `sub_803B3E8`, `sub_803B414`, `sub_803B440`) - every one of these
   compiles to byte-identical bytes in the ROM (confirmed: each
   function's embedded literal pointer resolves to the same
-  `gStaticData_087E4DF4` symbol, and the surrounding unlink/free
+  `gActorVtable` symbol, and the surrounding unlink/free
   sequence is otherwise identical). Same doubly-linked-list unlink
   convention already named in `src/audio/counter_selector.c`'s
   `sub_803716C` (a local `struct linked_node` with `+0x48`=prev,
   `+0x4c`=next, `+0x50`=state/vtable pointer): set `self+0x50` to the
-  shared "dead" table `gStaticData_087E4DF4`, unlink `self` from its
+  shared "dead" table `gActorVtable`, unlink `self` from its
   circular list, and free `self` when `flags & 1`. Almost certainly one
   shared per-"kind" destructor template the original build never
   deduplicated - the same per-"kind"/per-slot pattern seen elsewhere in
@@ -46,7 +46,7 @@ All in `src/graphics/actor_anim.c`, in ROM order:
 - **`sub_803B0F0`** - advances `self+0x20` (a Q8 fixed-point
   accumulator, likely a fall/scroll speed) by a fixed `-0x180`/256 per
   call, then either fires the `self+0x50` trampoline record (arg `3`)
-  if `self+0x12` is set, or tail-calls `sub_802A7B8(self)` otherwise -
+  if `self+0x12` is set, or tail-calls `UpdateActor(self)` otherwise -
   the same `+0x50`-rooted `{s16 offset; void *fn}` trampoline
   convention already documented in `actor_part19.c`.
 
@@ -65,7 +65,7 @@ All in `src/graphics/actor_anim.c`, in ROM order:
   `add`-order gap catalogued elsewhere in this file's status page, but
   resolved here rather than parked.
 - **A same-valued constant materialized into two different registers.**
-  `sub_803B0A8` zeroes both `self+0x12` (a byte) and `field_08` (a
+  `SetActorAnim` zeroes both `self+0x12` (a byte) and `field_08` (a
   word) in the same statement group; naive C reuses one register for
   both stores, but the ROM materializes `0` twice into two different
   registers (`movs r2,#0` / `movs r3,#0`) even though one would do.
@@ -92,7 +92,7 @@ All in `src/graphics/actor_anim.c`, in ROM order:
 - **`sub_803B46C`** - fixed-position (120, 106) OAM setup for one
   sprite frame: screen-space visibility cull against the frame's
   width/height, then builds the OAM attribute words (masked position,
-  `sub_803B060`'s attr flag, and a priority/palette nibble from
+  `GetAnimFrameAttr`'s attr flag, and a priority/palette nibble from
   `self+0x18`/`self+0x14`) and calls `SetupSpriteFrameOam`. This is the
   near-identical twin of the already-parked `sub_802C2FC`
   (`src/graphics/actor_part19b.c`, self-relative position instead of a

@@ -312,7 +312,7 @@ partially read - 3 Q8.8-shifted x/y/z args, a `gLevelState`-gated
 position/flag write into `gUnknown_030012D8+0x28`, then a conditional
 `PlaySfx`) was read in full this pass too, but not attempted: its second
 half calls into several still-unread helpers
-(`sub_80232E0`/`sub_8023130`/`sub_803AFEC`/`sub_80232B8`/`_call_via_r4`)
+(`sub_80232E0`/`sub_8023130`/`GetLives`/`sub_80232B8`/`_call_via_r4`)
 whose own signatures and the `gUnknown_030012D8+0x18+0x68`-rooted
 sub-struct they read from aren't pinned down yet - a confident
 reconstruction would mean chasing all of those first, which this pass's
@@ -327,7 +327,7 @@ Picked up `sub_801E990` (the sound-trigger dispatcher the third pass
 flagged its unresolved helper calls for). All five previously-unread
 helpers turned out to already be matched elsewhere in the tree as
 plain one-line field accessors on the same `gLevelState`-rooted
-player struct: `sub_80232F4`/`sub_80232E0`/`sub_8023130`/`sub_803AFEC`
+player struct: `sub_80232F4`/`sub_80232E0`/`sub_8023130`/`GetLives`
 (`+0xa8`/`+0x7c`/`+0x84`/`+0x74` respectively - the first three in
 `asm/code_3_2_17_231cc.s`'s still-raw accessor cluster, the fourth
 already matched in `actor_aabb_setup.c`) and `sub_80232B8` (`+0xa4`,
@@ -358,7 +358,7 @@ With every operand pinned down, the function's full semantics are:
    plays SFX `0x100` through `gAudioContext`, gated by a
    budget/reentrancy check - either the player's spawn counter
    (`+0x7c`) has room against its cap (`+0x84`), or, when it doesn't,
-   `sub_803AFEC` (`+0x74`), `sub_80232B8` (`+0xa4`) and the player's
+   `GetLives` (`+0x74`), `sub_80232B8` (`+0xa4`) and the player's
    `+0x78` mode field all agree it's still safe to fire.
 
 A plain-C reconstruction with this exact meaning compiles cleanly and

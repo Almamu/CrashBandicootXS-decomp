@@ -33,7 +33,7 @@ already-matched `actor_part79.c`, `actor_part84.c` between
   checks). Otherwise dispatches its third argument (`arg2 - 1`, range
   `0..0x18`) through a 25-case jump table: several cases are thin
   `sub_8012160` wrappers with a fixed id; case 22 and case 23 each run
-  a shared 7-case inner dispatch on `sub_80083B8(part)`'s nibble result
+  a shared 7-case inner dispatch on `GetSpriteFrame(part)`'s nibble result
   to compute a Q8 position delta from a `gStaticData_0816B300` record
   (or the object's own `+0x24`/`+0x14` fields as a nibble-1-5
   fallback), then reset the state/flag/table-index trio via

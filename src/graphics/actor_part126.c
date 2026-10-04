@@ -1,7 +1,7 @@
 #include "core.h"
 #include "actor_self.h"
 
-/* Continues the `InitActorPart`/`gUnknown_03000884`-rooted "self" object
+/* Continues the `InitActorPart`/`gActorList`-rooted "self" object
  * family (state at `self+0x28`, table-index/"kind" at `self+0xc`, an
  * anim-frame halfword/byte pair at `self+0x10`/`self+0x12`, an
  * accumulator at `self+8`, a `self+0x50`-rooted event/trampoline
@@ -14,7 +14,7 @@
  * described as "a larger, sub_802DD9C/sub_802A6EC/sub_802B7E0-calling
  * state machine ... not attempted this pass". */
 
-extern void *gUnknown_03000884;
+extern void *gActorList;
 extern void *gAudioContext;
 extern s32 gUnknown_030014B8;
 extern s32 gUnknown_0300088C[];
@@ -23,7 +23,7 @@ extern u8 sub_802A6EC(void *self);
 extern u8 sub_802DD9C(void *self);
 extern u8 sub_802B730(void *arg0);
 extern u8 sub_802B7E0(void *arg0);
-extern void sub_802A7B8(void *self);
+extern void UpdateActor(void *self);
 extern void sub_802A980(void *self);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void InitActorPart(void *self, s32 a, s32 b, s32 c, s32 d);
@@ -95,8 +95,8 @@ struct hazard {
     u16 animTimer;              // 0x10
     u8 animDone;                // 0x12
     u8 unk_13;
-    s32 visible;                // 0x14
-    s32 unk_18;
+    s32 sortKey;                // 0x14
+    s32 palette;                // 0x18
     s32 x;                      // 0x1C
     s32 y;                      // 0x20
     s32 z;                      // 0x24
@@ -144,7 +144,7 @@ void sub_802CC9C(void *selfArg)
         }
         self->box = *(struct box12 *)gStaticData_0817A78C;
         if (sub_802A6EC(self)) {
-            if (sub_802B7E0(gUnknown_03000884)) {
+            if (sub_802B7E0(gActorList)) {
                 HAZARD_HIT(self);
             }
         } else {
@@ -159,11 +159,11 @@ void sub_802CC9C(void *selfArg)
         }
     } else if (self->animDone) {
         if (self) {
-            ACTOR_VCALL(self, m08, 3);
+            ACTOR_VCALL(self, destroy, 3);
         }
         return;
     }
-    sub_802A7B8(self);
+    UpdateActor(self);
 }
 
 
@@ -181,16 +181,16 @@ void *sub_802CDE4(void *selfArg, s32 a, s32 b, s32 c, s32 d)
 }
 
 /* On the trampoline-fire edge (`sub_802A6EC`), forwards to
- * `sub_802B730(gUnknown_03000884)` (the player object), discarding its
- * result; always tail-calls `sub_802A7B8`. */
+ * `sub_802B730(gActorList)` (the player object), discarding its
+ * result; always tail-calls `UpdateActor`. */
 void sub_802CE10(void *selfArg)
 {
     u8 *self = selfArg;
 
     if (sub_802A6EC(self)) {
-        sub_802B730(gUnknown_03000884);
+        sub_802B730(gActorList);
     }
-    sub_802A7B8(self);
+    UpdateActor(self);
 }
 
 /* Same `InitActorPart`-based constructor shape as `sub_802CDE4`, minus
@@ -205,13 +205,13 @@ void *sub_802CE38(void *selfArg, s32 a, s32 b, s32 c, s32 d)
 }
 
 /* 3-way `self+0x28` state dispatch. State 0: on `sub_802A6EC`'s
- * trampoline-fire edge, calls `sub_802C14C(gUnknown_03000884)` (the
+ * trampoline-fire edge, calls `sub_802C14C(gActorList)` (the
  * player object), plays a cue, and transitions to state 1/table-index
  * 1; otherwise, on `sub_802DD9C`'s player-overlap test, transitions the
  * same way. State 1: once `self+0x12` fires, dispatches the
  * `self+0x50` trampoline (index 3) instead of the usual
- * `sub_802A7B8` fallback. Any other state (and state 0/1's own
- * non-transition paths) falls through to `sub_802A7B8`. */
+ * `UpdateActor` fallback. Any other state (and state 0/1's own
+ * non-transition paths) falls through to `UpdateActor`. */
 extern void sub_802C14C(void *selfArg);
 
 void sub_802CE5C(void *selfArg)
@@ -232,7 +232,7 @@ case0:
         register s32 fired asm("r6") = sub_802A6EC(self);
 
         if (fired) {
-            sub_802C14C(gUnknown_03000884);
+            sub_802C14C(gActorList);
             PlaySfx(gAudioContext, 4, 0x100);
             self->state = 1;
             self->stateTime = state;
@@ -268,13 +268,13 @@ case1:
     if (self->animDone != 0) {
         if (self != 0) {
             struct actor_vtable *table = self->vtable;
-            _call_via_r2((u8 *)self + table->m08.thisOffset, 3, table->m08.fn);
+            _call_via_r2((u8 *)self + table->destroy.thisOffset, 3, table->destroy.fn);
         }
         return;
     }
 
 done:
-    sub_802A7B8(self);
+    UpdateActor(self);
 }
 
 /* Same `InitActorPart`-based constructor shape as `sub_802CE38`,
@@ -297,7 +297,7 @@ void *sub_802CF0C(void *selfArg, s32 a, s32 b, s32 c, s32 d)
  * test - either hit re-arms a fixed outward velocity (`self+0x54`
  * biased by `self+0x1c`'s sign), a random negative Y kick
  * (`self+0x58`), bumps `self+0x5c`, plays a cue, and transitions to
- * state 1/table-index 0. Always tail-calls `sub_802A7B8`. */
+ * state 1/table-index 0. Always tail-calls `UpdateActor`. */
 extern void sub_802D044(void *selfArg, s32 arg1);
 
 void sub_802CF30(void *selfArg)
@@ -321,7 +321,7 @@ void sub_802CF30(void *selfArg)
             register s32 fired asm("r5") = sub_802A6EC(self);
 
             if (fired) {
-                if (sub_802B730(gUnknown_03000884)) {
+                if (sub_802B730(gActorList)) {
                     s32 velX = (self->base.x > 0) ? 0x600 : 0xFFFFFA00;
 
                     self->velX = velX;
@@ -362,7 +362,7 @@ void sub_802CF30(void *selfArg)
         }
     }
 
-    sub_802A7B8(self);
+    UpdateActor(self);
 }
 
 /* Homing-velocity (re)initializer: with a negative `target` index,
@@ -437,7 +437,7 @@ void sub_802D0F4(void *selfArg)
     register s32 depth asm("r1");
 
     if (sub_802A6EC(self)) {
-        sub_802B730(gUnknown_03000884);
+        sub_802B730(gActorList);
     }
 
     threshold1 = 0x6400;
@@ -502,7 +502,7 @@ increment:
     self->state = self->state + 1;
 
 tail:
-    sub_802A7B8(self);
+    UpdateActor(self);
 }
 
 /* `InitActorPart`-based constructor: forwards `self`/`d` straight

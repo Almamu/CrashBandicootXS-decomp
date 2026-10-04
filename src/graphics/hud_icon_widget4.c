@@ -42,7 +42,7 @@ void FontSetPalette(struct icon_manager *self, u8 val)
 
 /* Looks up a tile-cache slot for the byte at
  * `(**gUnknown_030012D0)[0x1A4]`'s own `+0x14` field (see
- * docs/rom_map.md's `gStaticData_084A5600` investigation) via
+ * docs/rom_map.md's `gSpriteBankTable` investigation) via
  * `sub_8006DF8`, and folds the result into the same `oam_scratch[5]`
  * nibble FontSetPalette sets above. */
 void FontResetPalette(struct icon_manager *self, u32 unused)

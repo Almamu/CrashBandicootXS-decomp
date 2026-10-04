@@ -4,7 +4,7 @@
  * (see InitActorCategory, still raw) and snapshotted into
  * gUnknown_0300138C at the top of SelectActorCategory (also still raw)
  * for the "how long has this sub-effect run" bookkeeping the
- * gUnknown_03001400 sub_effect_table accessors use. */
+ * gActorSpawnTable spawnTable accessors use. */
 extern s32 gUnknown_0300138C;
 extern s32 gUnknown_03000878;
 

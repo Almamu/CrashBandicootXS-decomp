@@ -8,7 +8,7 @@
 
 extern void sub_800A0FC(void *self);
 extern void SetMaskLevel(void *arg0, s32 arg1);
-extern void *sub_80083B8(void *part);
+extern void *GetSpriteFrame(void *part);
 extern s32 sub_8026BC0(void *arg0, s32 x, s32 y);
 extern void *gLevelLayers;
 extern void *gLevelState;
@@ -66,7 +66,7 @@ struct a884_method {
  * `self+0xc` bit 6, clears `+0x8c`, calls `SetMaskLevel`, and fires the
  * `self->table+0x68` trampoline (arg 1); kind 5 sets the `+0x100`
  * flag; kind 7 sets `+0x102`; kind 10 sets `+0x103`. Finally, looks up
- * the current keyframe record (`sub_80083B8`, already parked in
+ * the current keyframe record (`GetSpriteFrame`, already parked in
  * `actor_part5.c`) and picks a `{s16 x, s16 y}` offset table off its
  * `+4` byte's upper nibble - the exact same `sub_80084C4`
  * (`actor_part6.c`) case-to-block mapping (0 -> `info+0x24`, 6 ->
@@ -127,7 +127,7 @@ typedef void (*a884_fn3)(void *self, s32 a, s32 b, s32 c);
 
 static inline s16 *A884Offset(void *part)
 {
-    void *info = sub_80083B8(part);
+    void *info = GetSpriteFrame(part);
     u8 type = *(u8 *)(*(void **)((u8 *)info + 4)) >> 4;
     register s16 *result asm("r3"); /* the ROM builds it in r3 */
 

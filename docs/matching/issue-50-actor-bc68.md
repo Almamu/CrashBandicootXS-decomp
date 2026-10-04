@@ -6,7 +6,7 @@ fully matched - see
 [docs/matching/issue-50-actor-2a69c.md](./issue-50-actor-2a69c.md) and
 `docs/status/actor.md`'s "Matched" list, all 25 functions real C. But
 `tools/report_units.py` still carried a leftover entry,
-`(0x0802AC28, None, "actor")`, commented "sub_802AC28 onward - left raw,
+`(0x0802AC28, None, "actor")`, commented "CreateActor onward - left raw,
 out of GitHub issue #50's chunk scope" - the raw `.s` file issue #50's
 chunk was carved out of (`asm/code_3_2_20_8b7c_ac28.s`) runs well past
 the chunk's own upper bound, all the way to 0x0802BED8 where the
@@ -19,7 +19,7 @@ byte.
 
 ## What's still raw
 
-Everything from `sub_802AC28` (the giant kind-dispatch actor-part-
+Everything from `CreateActor` (the giant kind-dispatch actor-part-
 factory constructor with its own 39-case jump table, ~560 lines of
 disassembly by itself) through `sub_802BBE4` stays raw - the actor-
 part-factory dispatcher itself and the run of animation-table-state/

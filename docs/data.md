@@ -216,13 +216,13 @@ The first batch (all pointer tables, all byte-exact):
 | `hud_fonts_174be0.c` | `0x08174BE0` | the HUD digit slots and the two HUD fonts' character lists and glyph metrics |
 | `actor_category_175558.c` | `0x08175558` | 7 `struct category_descriptor`, 3 `struct category_vtable` |
 | `palette_cycle_175760.c` | `0x08175760` | the 32-frame BG palette cycle and its 4 cursor start/bound pairs |
-| `anim_family_178f80.c` | `0x08178F80` | categories 0-2: OBJ palette, animation table `gStaticData_081796CC`, keyframe and frame arrays (see "Category families") |
+| `anim_family_178f80.c` | `0x08178F80` | categories 0-2: OBJ palette, animation table `gCategoryFamily0AnimTable`, keyframe and frame arrays (see "Category families") |
 | `actor_pmf_17a6b8.c` | `0x0817A6B8` | 1 actor PMF table |
 | `actor_tables_17a728.c` | `0x0817A728` | 5 small palettes, 4 `struct anim_box`, 6 threshold records |
 | `actor_state_fn_17a840.c` | `0x0817A840` | 4 state functions |
 | `anim_frames_17a850.c` | `0x0817A850` | 4 keyframes (`struct anim_frame_record`) |
 | `frame_table_17a880.c` | `0x0817A880` | 123 frame pointers |
-| `anim_family_17aa6c.c` | `0x0817AA6C` | a palette, 2 boxes, then categories 3-6: 2 OBJ palettes, animation table `gStaticData_0817B2A4`, keyframe and frame arrays |
+| `anim_family_17aa6c.c` | `0x0817AA6C` | a palette, 2 boxes, then categories 3-6: 2 OBJ palettes, animation table `gCategoryFamily1AnimTable`, keyframe and frame arrays |
 | `actor_pmf_17c1c0.c` | `0x0817C1C0` | 1 actor PMF table |
 | `palette_strip_17c200.c` | `0x0817C200` | a 3-frame palette strip |
 | `actor_pmf_17c260.c` | `0x0817C260` | 3 actor PMF tables |
@@ -274,7 +274,7 @@ sound-effect set (`gGaxSfxData`, `--sfx`: 88 instruments and 87
 samples, `sound/gax_sfx_manifest.json` + `sound/sfx_samples/*.wav`) and
 the music block (`gGaxMusicData`). See docs/audio.md.
 
-### Sprite banks (`gStaticData_084A5600`)
+### Sprite banks (`gSpriteBankTable`)
 
 The sprite-bank animation system (`0x084A5600`-`0x084C0006`, 2,429
 frames in 56 banks) is typed C in four files, with the structs in
@@ -308,7 +308,7 @@ the C is the source from then on.
   doesn't accept linker fill between objects.
 
 The category families' animation tables (`actor_anim.h`'s
-`gStaticData_081796CC`/`gStaticData_0817B2A4`) are C as well now, see
+`gCategoryFamily0AnimTable`/`gCategoryFamily1AnimTable`) are C as well now, see
 "Category families" below.
 
 ### Category families
@@ -527,7 +527,7 @@ C (see "Level data").
 | `sprite_tiles_2bf120.c` | 56 sprite banks, 125 fixed tiles | `graphics/sprites/bankNN_*.png`, `tile_pool_4a4660.png` |
 
 - **Sprite banks.** The pool at `0x082BF120` has no header. Each of the 56
-  banks of `gStaticData_084A5600` owns one back-to-back range of it, in
+  banks of `gSpriteBankTable` owns one back-to-back range of it, in
   bank order. Each range becomes one `const u8 gStaticData_<addr>[]` and one
   4bpp PNG, `bankNN_<addr>.png`. The PNG is as wide as the bank's most
   common OBJ piece (at least 4 tiles), so with 1D OBJ mapping those pieces

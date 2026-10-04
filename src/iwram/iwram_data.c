@@ -133,7 +133,7 @@ void (*gUnpackRleSpriteFrameFunc)(void *dst, u8 *frame) = UnpackRleSpriteFrame;
 s32 gUnknown_03000878 = 0;
 void (*gDrawMirroredTilemapFunc)(u8 *pal, s32 lowBlock, s32 w, s32 h) = DrawMirroredTilemap;
 void (*gHeapSortActorsByKeyFunc)(s32 n, void **list) = HeapSortActorsByKey;
-void *gUnknown_03000884 = NULL;
+void *gActorList = NULL;
 s32 gUnknown_03000888 = 0;
 /* Speeds, indexed by sub_802A570 (actor_part126.c). */
 s32 gUnknown_0300088C[3] = { 0x40, 0x62, 0x95 };

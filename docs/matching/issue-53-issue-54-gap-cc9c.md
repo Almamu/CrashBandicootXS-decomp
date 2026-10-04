@@ -10,7 +10,7 @@ already flagged `sub_802CC9C` onward as "a larger,
 `sub_802DD9C`/`sub_802A6EC`/`sub_802B7E0`-calling state machine ... not
 attempted this pass".
 
-13 functions total, all on the same `InitActorPart`/`gUnknown_03000884`-
+13 functions total, all on the same `InitActorPart`/`gActorList`-
 rooted "self" object family documented throughout `actor_part17.c`-
 `actor_part19i.c` (a "part table" pointer at `self+0`, a table-index/
 "kind" field at `self+0xc`, an anim-frame halfword/byte pair at
@@ -33,7 +33,7 @@ trampoline table).
   plain proximity), each on a hit also transitioning to "used". Once
   already "used" (`self+0xc != 0`), skips all of that and just fires the
   `self+0x50` trampoline (index 3) while `self+0x12` is set, or falls
-  back to `sub_802A7B8` - the exact same "trampoline-or-`sub_802A7B8`"
+  back to `UpdateActor` - the exact same "trampoline-or-`UpdateActor`"
   tail idiom `sub_802C4C8` (`actor_part19g.c`) uses for the sibling
   object family, just inlined here directly instead of shared via a
   helper call (this object's own "already used" sentinel is a plain `1`,
@@ -66,8 +66,8 @@ All in `src/graphics/actor_part126.c`.
   `a`/`b`/`c`/`d` straight through, installs `self+0x50 =
   gStaticData_087E4FB4`, and clears the `self+0x2c` one-shot flag.
 - **`sub_802CE10`** - on the `sub_802A6EC` trampoline-fire edge,
-  forwards to `sub_802B730(gUnknown_03000884)` (the player object),
-  discarding its result; always tail-calls `sub_802A7B8`. Needed
+  forwards to `sub_802B730(gActorList)` (the player object),
+  discarding its result; always tail-calls `UpdateActor`. Needed
   `sub_802B730`'s extern declared as returning `u8` (not `s32`) even
   though the result is discarded here - the ROM's own boolean check
   at this call site (`lsls r0,r0,0x18; cmp r0,#0`, no accompanying
@@ -82,11 +82,11 @@ All in `src/graphics/actor_part126.c`.
   `if`/`else if` chain instead compiles to an inverted `bne`/`bne`
   pair, a different byte sequence even though behaviorally identical).
   State 0: on `sub_802A6EC`'s fire edge, calls
-  `sub_802C14C(gUnknown_03000884)`, plays a cue, and transitions to
+  `sub_802C14C(gActorList)`, plays a cue, and transitions to
   state 1/table-index 1; otherwise, on `sub_802DD9C`'s overlap test,
   transitions the same way. State 1: once `self+0x12` fires, dispatches
   the `self+0x50` trampoline (index 3) instead of the usual
-  `sub_802A7B8` fallback. `state` pinned to `r5` and the
+  `UpdateActor` fallback. `state` pinned to `r5` and the
   `sub_802A6EC`/`sub_802DD9C`-fired boolean pinned to `r6`, each reused
   directly as the "confirmed zero" for that branch's own `self+0x44`/
   `self+8` stores (matching the ROM's own register reuse) - without

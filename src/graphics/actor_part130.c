@@ -41,11 +41,11 @@ extern void InitActorPart(void *self, s32 a, s32 b, s32 c, s32 d);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern s32 GetAnimFrameBaseOffset(void *self);
 extern u8 *GetAnimFrameData(void *self);
-extern s32 sub_803B060(void *self);
+extern s32 GetAnimFrameAttr(void *self);
 extern void SetupSpriteFrameOam(u8 *frame, u32 arg1, u32 arg2, s32 priority);
-extern void sub_803B0A8(void *self, s32 idx);
+extern void SetActorAnim(void *self, s32 idx);
 extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
-extern void sub_802A7B8(void *self);
+extern void UpdateActor(void *self);
 extern s32 __divsi3(s32 dividend, s32 divisor);
 extern s32 sub_8029E98(void);
 extern s32 sub_8029EB4(void);
@@ -72,7 +72,7 @@ extern void sub_802E5B0(s32 a, s32 b, s32 c);
 
 extern void *gAudioContext;
 extern void *gLevelState;
-extern void *gUnknown_03000884;
+extern void *gActorList;
 extern void *gUnknown_030008B4;
 extern void *gUnknown_030008B8;
 extern u16 gUnknown_03001590;
@@ -114,7 +114,7 @@ extern s32 gUnknown_03001598;
 
 extern u8 gStaticData_087E543C[];
 extern u8 gStaticData_087E5474[];
-extern u8 gStaticData_087E4DF4[];
+extern u8 gActorVtable[];
 extern u8 gStaticData_087E54AC[];
 extern u16 gStaticData_08169AE8[];
 extern u8 gStaticData_08169CE8[];
@@ -143,8 +143,8 @@ static inline void InitAnimPart(struct actor_self *self, struct anim_frame_recor
 {
     self->anims = anims;
     self->frameOffsets = offsets;
-    self->unk_18 = flag;
-    sub_803B0A8(self, 0);
+    self->palette = flag;
+    SetActorAnim(self, 0);
 }
 
 static inline void SingletonSetKind(s32 kind, s32 idx)
@@ -229,13 +229,13 @@ void sub_8032718(void *selfArg)
     s32 x, y;
     s32 base;
 
-    self->base.visible = one;
+    self->base.sortKey = one;
     x = self->base.x += self->velX;
     y = self->base.y += self->velY;
     if (x <= 0x1000 || y <= 0x1000) {
         PlaySfx(gAudioContext, 0xE, 0x100);
         if (self != NULL) {
-            ACTOR_VCALL(&self->base, m08, 3);
+            ACTOR_VCALL(&self->base, destroy, 3);
         }
         return;
     }
@@ -251,11 +251,11 @@ void sub_8032718(void *selfArg)
 
 /* Draws `self`'s current anim frame at its Q8 position, centered on the
  * frame's width/height bytes, unless it is entirely off screen. Same
- * shape as UpdateAnimatedActorPart (actor_part55.c) with the scale
+ * shape as DrawActor (actor_part55.c) with the scale
  * doubling fixed off: `scaled` starts at 0 (halving nothing) and becomes
  * the 0x100 OBJ-affine bit once the sprite is known to be visible. The
- * third OAM word takes `self->unk_18` as its priority nibble, plus 0x800
- * when bit 15 of `self->visible` is set. */
+ * third OAM word takes `self->palette` as its priority nibble, plus 0x800
+ * when bit 15 of `self->sortKey` is set. */
 void sub_80327A4(void *selfArg)
 {
     struct actor_self *self = selfArg;
@@ -293,10 +293,10 @@ void sub_80327A4(void *selfArg)
         return;
 
     scaled |= 0x100;
-    attr = (y & 0xff) | ((x & 0x1ff) << 16) | sub_803B060(self) | scaled;
-    x = self->unk_18;
+    attr = (y & 0xff) | ((x & 0x1ff) << 16) | GetAnimFrameAttr(self) | scaled;
+    x = self->palette;
     attr2 = x << 12;
-    if (self->visible & 0x8000)
+    if (self->sortKey & 0x8000)
         attr2Out = attr2 | highBit;
     else
         attr2Out = attr2;
@@ -328,7 +328,7 @@ void sub_803283C(struct actor_283c *self, u32 flags)
     for (i = 0; i < self->reward; i++) {
         CollectWumpa(gLevelState);
     }
-    self->vtable = gStaticData_087E4DF4;
+    self->vtable = gActorVtable;
     self->l4c->l48 = self->l48;
     self->l48->l4c = self->l4c;
     if (flags & 1) {
@@ -407,7 +407,7 @@ void sub_8032910(void *selfArg, s32 delta)
         return;
     }
 
-    self->base.unk_18 = 4;
+    self->base.palette = 4;
     PlaySfx(gAudioContext, 4, 0x100);
     {
         register s32 one asm("r0") = 1;
@@ -432,7 +432,7 @@ void sub_8032910(void *selfArg, s32 delta)
 
 /* Per-state member-pointer dispatch, `(this->*gStaticData_0817C450
  * [this->state])()` (see `ACTOR_PMF_CALL`), then "destroy" once the
- * state-1 animation has played through, else the standard sub_802A7B8
+ * state-1 animation has played through, else the standard UpdateActor
  * step. */
 void sub_8032950(void *selfArg)
 {
@@ -442,10 +442,10 @@ void sub_8032950(void *selfArg)
 
     if (self->state == 1 && self->animDone != 0) {
         if (self != NULL) {
-            ACTOR_VCALL(self, m08, 3);
+            ACTOR_VCALL(self, destroy, 3);
         }
     } else {
-        sub_802A7B8(self);
+        UpdateActor(self);
     }
 }
 
@@ -489,7 +489,7 @@ void sub_8032A1C(void *selfArg)
 /* Patrol-speed decay plus a death transition: advances `self+0x24` by
  * `self+0x60`, decays `self+0x60` by 5 (floored at 0x14). If
  * `sub_802A6EC(self)` fires, draws a text popup on the orbiting
- * companion object (`gUnknown_03000884`, via its own `+0x50`
+ * companion object (`gActorList`, via its own `+0x50`
  * trampoline-table pointer, same `{s16 offset; ...; void *arg}`
  * convention already documented at `self+0x50` elsewhere in this
  * cluster), then runs the exact same state/anim-frame reset tail as
@@ -509,12 +509,12 @@ void sub_8032A24(void *selfArg)
     }
 
     if (sub_802A6EC(self)) {
-        struct actor_self *player = gUnknown_03000884;
+        struct actor_self *player = gActorList;
         struct actor_vtable *table = player->vtable;
 
         _call_via_r2((u8 *)player + table->m20.thisOffset, 6, table->m20.fn);
 
-        self->base.unk_18 = 4;
+        self->base.palette = 4;
         PlaySfx(gAudioContext, 4, 0x100);
         {
             register s32 one asm("r0") = 1;
@@ -682,7 +682,7 @@ void sub_8032B6C(void)
  * computation (`gUnknown_030015B4`-`030015EC`) - the twin of the boss
  * cluster's `sub_8030E08` (actor_part23c.c). Ramps the Z velocity
  * toward a per-phase target, then by patrol phase: phase 0 steers the
- * X/Y velocities toward the player (`gUnknown_03000884`) relative to a
+ * X/Y velocities toward the player (`gActorList`) relative to a
  * camera-offset target box (`gStaticData_0817C4B0`), clamped to +-0x200
  * and kept inside fixed bounds; phase 1 bounces X at +-0x10000; later
  * phases orbit on the trig table `gStaticData_0816A820` with a growing
@@ -718,7 +718,7 @@ void sub_8032C0C(void)
 
         gUnknown_030015B4 += gUnknown_030015CC;
         gUnknown_030015B8 += gUnknown_030015D0;
-        pl = gUnknown_03000884;
+        pl = gActorList;
         px = pl->x;
         cx = gUnknown_030015C0 - 0x1200;
         gUnknown_030015CC -= (px - cx - (gStaticData_0817C4B0[0] + gStaticData_0817C4B0[3] / 2)) >> 12;
@@ -886,7 +886,7 @@ void sub_8033048(void)
 
         if (gUnknown_030015B8 > 0x4b00) {
             sub_802A4EC();
-            sub_802F0DC(gUnknown_03000884);
+            sub_802F0DC(gActorList);
         }
     }
 

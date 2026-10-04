@@ -100,7 +100,7 @@ void sub_80317E0(struct actor_5294 *self)
         || (self->base.state == 1 && self->base.y < -0xE100)) {
     destroy:
         if (self != NULL) {
-            ACTOR_VCALL(&self->base, m08, 3);
+            ACTOR_VCALL(&self->base, destroy, 3);
         }
     } else {
         sub_8031A08(&self->base);

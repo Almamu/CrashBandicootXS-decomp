@@ -3,12 +3,12 @@
 
 /*
  * ROM 0x080FF1B0-0x0814174C: BG0 cell animation B (categories 3-6),
- * category 3's BG1 picture and its sub_effect_table. Linked in ROM order
+ * category 3's BG1 picture and its spawnTable. Linked in ROM order
  * between data/data.s sections by ldscript.txt - see docs/data.md
  * ("Category backgrounds").
  */
 
-/* BG0 cell animation B, gStaticData_08175558[3..6].family_shared_04
+/* BG0 cell animation B, gActorCategories[3..6].family_shared_04
  * (family_shared_08 = its size, 0x3E784), played by sub_8029890/
  * sub_80297C8 (actor_part95.c): 38x10 cells, 21 frames. Not a type-0
  * category, so there are no per-cell banks: sub_802996C maps the cells to
@@ -35,7 +35,7 @@ const struct cell_anim_0ff1b0 gStaticData_080FF1B0 = {
     },
 };
 
-/* Category 3's BG1 picture (gStaticData_08175558[3].conditional_ptr_0C,
+/* Category 3's BG1 picture (gActorCategories[3].conditional_ptr_0C,
  * loaded by sub_802F7B0 in actor_part45d.c): 38x16 map, 357 tiles. Built from
  * graphics/category_bg/13d934_picture.png (palette and map) and
  * 13d934_picture_tiles.png (the tile set, grit's -fx external tileset). */
@@ -65,9 +65,9 @@ const struct bg_picture_13d934 gStaticData_0813D934 = {
     },
 };
 
-/* Category 3's sub_effect_table (gStaticData_08175558[3].sub_effect_table,
+/* Category 3's spawnTable (gActorCategories[3].spawnTable,
  * read by SelectActorCategory (actor_part102.c) and the sub_802A5xx accessors). Record 0's field_04 is the record count. */
-const SUB_EFFECT_TABLE(121) gStaticData_08140DCC = {
+const SUB_EFFECT_TABLE(121) gCategory3SpawnTable = {
     {
         { 5608, 121, 29, 29, 29, 33, -96, -30 },
         { 312, -1, 21, 24, 19, 138, -4, -30 },

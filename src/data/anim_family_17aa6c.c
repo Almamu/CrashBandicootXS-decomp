@@ -6,7 +6,7 @@
  * ROM 0x0817AA6C-0x0817C1C0: a palette and two boxes of the
  * sub_802D7B0 actor, then the data of actor categories 3-6 (the family
  * whose frames are the gStaticData_0814174C sheet): their two OBJ
- * palettes, the 47-record animation table gStaticData_0817B2A4
+ * palettes, the 47-record animation table gCategoryFamily1AnimTable
  * (include/actor_anim.h) and its keyframe (table_A) and frame (table_B)
  * arrays. Linked in ROM order between data/data.s sections by
  * ldscript.txt - see docs/data.md, "Category families".
@@ -154,7 +154,7 @@ const u16 gStaticData_0817AEA4[0x200] = {
     0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,
 };
 
-const struct anim_table_record gStaticData_0817B2A4[47] = {
+const struct anim_table_record gCategoryFamily1AnimTable[47] = {
     { 0, (struct anim_frame_record *)gStaticData_0817B9FC, (u32 *)gStaticData_0817BA44, 0, { 0 }, 0x1C00, { -10, -20, -1, 20, 42, 3 }, 0, 0 },
     { 1, (struct anim_frame_record *)gStaticData_0817BBC4, (u32 *)gStaticData_0817BC0C, 2, { 0 }, 0x2400, { -32, -16, -2, 64, 32, 4 }, 0, 0 },
     { 2, (struct anim_frame_record *)gStaticData_0817BBAC, (u32 *)gStaticData_0817BBB8, 1, { 0 }, 0x2C00, { -12, -12, -2, 24, 24, 4 }, 0, 0 },

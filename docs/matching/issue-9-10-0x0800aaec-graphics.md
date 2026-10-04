@@ -52,7 +52,7 @@ their action codes `0xB`/`0x10` (`docs/rom_map.md` line 1713).
 
 Early-outs (returns `0`) when `self+0x4e` (a state/type byte) is `5`
 or `0xa`. Otherwise builds **three** AABBs via the shared
-`sub_803AFE4`(set-pos)/`sub_803AFDC`(set-size) primitive (`struct
+`SetAabbPos`(set-pos)/`SetAabbSize`(set-size) primitive (`struct
 aabb` from `actor_part.c`/`game_loop6.c`), all from the same
 `self+0x20`-table-at-28-byte-stride convention `sub_800AAEC` above
 also uses (confirming `docs/rom_map.md`'s own cross-reference: "the

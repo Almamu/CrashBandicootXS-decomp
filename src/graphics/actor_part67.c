@@ -95,7 +95,7 @@ void sub_8034110(void *selfArg, s32 dmg)
     }
 }
 
-extern void sub_802A7B8(void *self);
+extern void UpdateActor(void *self);
 extern s32 sub_8033900(void);
 extern s32 sub_80338F4(void);
 extern s32 sub_80338E8(void);
@@ -104,7 +104,7 @@ extern struct orbit_table *sub_80338C4(void);
 
 /* Per-frame position sync (`+0x1c`/`+0x20`/`+0x24` from the singleton's
  * position plus `self`'s own `+0x5c`/`+0x60`/`+0x64` offsets), calling
- * `sub_802A7B8(self)` first for the frame's regular update. While `self`
+ * `UpdateActor(self)` first for the frame's regular update. While `self`
  * is still in state 0 and `+0x34` is over its `0x2800` threshold, drives
  * an "orbit" counter at `+0x68`: at zero, spawns an effect at the synced
  * position (`sub_802E5E4`) and advances a lap counter (`+0x6c`),
@@ -115,7 +115,7 @@ void sub_8034188(void *selfArg)
 {
     register struct actor_orbiter *self asm("r5") = selfArg;
 
-    sub_802A7B8(self);
+    UpdateActor(self);
     self->base.x = sub_8033900() + self->offX;
     self->base.y = sub_80338F4() + self->offY;
     {
@@ -151,7 +151,7 @@ void sub_8034188(void *selfArg)
 }
 
 /* Near-twin of `sub_8034188` (same position-sync/orbit-effect shape),
- * but does not call `sub_802A7B8(self)` first - this object's regular
+ * but does not call `UpdateActor(self)` first - this object's regular
  * per-frame update is driven elsewhere. */
 void sub_80341F8(void *selfArg)
 {

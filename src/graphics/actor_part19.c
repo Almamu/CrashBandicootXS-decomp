@@ -16,7 +16,7 @@
  * object, just at a different fixed offset here) and a `+0x48`/`+0x4c`
  * circular doubly-linked-list pair (confirmed by `sub_802C19C`'s own
  * unlink sequence below) rooted at the player-pointer global
- * `gUnknown_03000884`. `self` is `struct actor_self` (actor_self.h);
+ * `gActorList`. `self` is `struct actor_self` (actor_self.h);
  * the functions not yet converted still use raw offsets into it - see
  * docs/rom_map.md's "gUnknown_030014xx tier-threshold actor
  * family" and "type-byte event dispatch" sections for the semantics
@@ -30,7 +30,7 @@ extern s32 gUnknown_0300148C;
 extern void *gUnknown_03001494;
 extern void *gAudioContext;
 extern void *gLevelState;
-extern void *gUnknown_03000884;
+extern void *gActorList;
 extern s32 gUnknown_03001488;
 extern s32 gUnknown_03001484;
 extern s32 gUnknown_0300149C;
@@ -38,7 +38,7 @@ extern void *gUnknown_030014B0[2];
 extern void *gUnknown_03001490;
 
 extern u8 gStaticData_087E4E54[];
-extern u8 gStaticData_087E4DF4[];
+extern u8 gActorVtable[];
 extern u8 gStaticData_087E4E74[];
 extern u8 gStaticData_0817A6B8[];
 extern u8 gStaticData_0817A768[];
@@ -50,7 +50,7 @@ extern s32 sub_802D4EC(void *arg0);
 extern s32 GetAnimFrameBaseOffset(void *self);
 extern u8 *GetAnimFrameData(void *self);
 extern void SetupSpriteFrameOam(u8 *frame, u32 arg1, u32 arg2, s32 priority);
-extern s32 sub_803B060(void *self);
+extern s32 GetAnimFrameAttr(void *self);
 extern u8 gStaticData_087E4E94[];
 extern s32 __divsi3(s32 arg0, s32 arg1);
 extern s32 sub_8029E98(void);
@@ -60,7 +60,7 @@ extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern s32 _call_via_r3(void *addr, void *arg1, void *tableEntry, void *fn);
 extern u8 sub_802A6EC(void *self);
-extern void sub_802A7B8(void *self);
+extern void UpdateActor(void *self);
 extern u8 sub_802DD9C(void *self);
 extern void sub_8022FEC(void *self);
 extern s32 AddLife(void *self);
@@ -69,7 +69,7 @@ extern void FreeVramTileBlock(void *arg0);
 extern void sub_802AAB4(s32 arg0);
 extern void sub_802B730(void *arg0);
 extern void sub_8029720(void);
-extern void *sub_802AC28(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4);
+extern void *CreateActor(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4);
 extern void sub_802C7A8(void *self);
 
 /* Accumulates `gUnknown_030014A4` into `y`, then drains
@@ -126,7 +126,7 @@ void sub_802BED8(void *selfArg)
  * the state-11/table-index-7 transition (anim frame from `self`'s
  * part-table pointer at `+0x54`). While `y` (the accumulator
  * `sub_802BED8` above drives) exceeds a threshold, additionally spawns
- * an effect object via `sub_802AC28` and stashes it into
+ * an effect object via `CreateActor` and stashes it into
  * `gUnknown_03001490`. */
 void sub_802BF30(void *selfArg)
 {
@@ -156,7 +156,7 @@ void sub_802BF30(void *selfArg)
                 self->animTime = zero;
 
                 if (self->y > 0x2000) {
-                    gUnknown_03001490 = sub_802AC28(2, self->x, 0x2800,
+                    gUnknown_03001490 = CreateActor(2, self->x, 0x2800,
                                                      self->z, zero);
                 }
             }
@@ -389,7 +389,7 @@ void sub_802C14C(void *selfArg)
  * vtable to `gStaticData_087E4E54` to run `gUnknown_03001488` drain
  * calls into `CollectWumpa(gLevelState)`, runs two
  * `FreeVramTileBlock` cleanup calls on `gUnknown_030014B0[0]`/`[1]`, sets
- * `vtable` to the "dead" vtable `gStaticData_087E4DF4`, unlinks
+ * `vtable` to the "dead" vtable `gActorVtable`, unlinks
  * `self` from the circular `+0x48`(next)/`+0x4c`(prev) list, and frees
  * `self` when `arg1 & 1`. */
 void sub_802C19C(void *selfArg, u32 arg1param)
@@ -409,7 +409,7 @@ void sub_802C19C(void *selfArg, u32 arg1param)
     FreeVramTileBlock(gUnknown_030014B0[0]);
     FreeVramTileBlock(gUnknown_030014B0[1]);
 
-    *(u8 **)(self + 0x50) = gStaticData_087E4DF4;
+    *(u8 **)(self + 0x50) = gActorVtable;
 
     {
         u8 *prev = *(u8 **)(self + 0x4c);

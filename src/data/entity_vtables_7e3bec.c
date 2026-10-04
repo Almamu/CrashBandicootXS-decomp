@@ -14,7 +14,7 @@
 
 extern void DestroyFont();
 extern void FontMeasureText();
-extern void UpdateAnimatedActorPart();
+extern void DrawActor();
 extern void FontUploadTiles();
 extern void nullsub_11();
 extern void nullsub_13();
@@ -195,8 +195,8 @@ extern void FontPutChar();
 extern void FontDrawChars();
 extern void FontDrawText();
 extern void FontMeasureChars();
-extern void sub_802A7B8();
-extern void sub_802AA54();
+extern void UpdateActor();
+extern void DestroyActor();
 extern void sub_802B364();
 extern void sub_802B5B4();
 extern void sub_802C19C();
@@ -1108,7 +1108,12 @@ const struct vtable_slot gFontVtable[9] = {
     VTABLE_SLOT(FontUploadTiles),
 };
 
-/* Used by counter_selector.c (sub_803716C), actor_anim.c (sub_803B0C4,
+/* The actor base class (struct actor_self): slot 1 its destructor
+ * DestroyActor, slot 2 the per-frame UpdateActor, slot 3 DrawActor.
+ * InitActorPart installs it, and every derived destructor puts it back
+ * before unlinking the actor.
+ *
+ * Used by counter_selector.c (sub_803716C), actor_anim.c (sub_803B0C4,
  * sub_803B128, sub_803B154, sub_803B180, sub_803B1AC, sub_803B1D8,
  * sub_803B204, sub_803B230, sub_803B25C, sub_803B288, sub_803B2B4,
  * sub_803B2E0, sub_803B30C, sub_803B338, sub_803B364, sub_803B390,
@@ -1118,19 +1123,19 @@ const struct vtable_slot gFontVtable[9] = {
  * sub_803B7D4, sub_803B800, sub_803B82C, sub_803B858, sub_803B884),
  * actor_part129.c, actor_part130.c (sub_803283C), actor_part19.c,
  * actor_part19c.c, actor_part44.c, actor_part50.c, actor_part52.c. */
-const struct vtable_slot gStaticData_087E4DF4[4] = {
+const struct vtable_slot gActorVtable[4] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_802AA54),
-    VTABLE_SLOT(sub_802A7B8),
-    VTABLE_SLOT(UpdateAnimatedActorPart),
+    VTABLE_SLOT(DestroyActor),
+    VTABLE_SLOT(UpdateActor),
+    VTABLE_SLOT(DrawActor),
 };
 
 /* Used by actor_part_2ac28.c. */
 const struct vtable_slot gStaticData_087E4E14[4] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(sub_803B0C4),
-    VTABLE_SLOT(sub_802A7B8),
-    VTABLE_SLOT(UpdateAnimatedActorPart),
+    VTABLE_SLOT(UpdateActor),
+    VTABLE_SLOT(DrawActor),
 };
 
 /* Used by actor_part_2ac28.c (sub_802B12C). */
@@ -1138,7 +1143,7 @@ const struct vtable_slot gStaticData_087E4E34[4] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(sub_803B128),
     VTABLE_SLOT(sub_803B0F0),
-    VTABLE_SLOT(UpdateAnimatedActorPart),
+    VTABLE_SLOT(DrawActor),
 };
 
 /* Used by actor_part127.c, actor_part19.c, actor_part_2ac28.c
@@ -1163,7 +1168,7 @@ const struct vtable_slot gStaticData_087E4E94[4] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(sub_803B154),
     VTABLE_SLOT(sub_802C464),
-    VTABLE_SLOT(UpdateAnimatedActorPart),
+    VTABLE_SLOT(DrawActor),
 };
 
 /* Used by actor_part19i.c, actor_part_2ac28.c. */
@@ -1171,7 +1176,7 @@ const struct vtable_slot gStaticData_087E4EB4[4] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(sub_803B180),
     VTABLE_SLOT(sub_802C99C),
-    VTABLE_SLOT(UpdateAnimatedActorPart),
+    VTABLE_SLOT(DrawActor),
 };
 
 /* Used by actor_part19i.c, actor_part_2ac28.c. */
@@ -1179,7 +1184,7 @@ const struct vtable_slot gStaticData_087E4ED4[4] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(sub_803B1AC),
     VTABLE_SLOT(sub_802C540),
-    VTABLE_SLOT(UpdateAnimatedActorPart),
+    VTABLE_SLOT(DrawActor),
 };
 
 /* Used by actor_part19i.c, actor_part_2ac28.c. */
@@ -1187,7 +1192,7 @@ const struct vtable_slot gStaticData_087E4EF4[4] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(sub_803B1D8),
     VTABLE_SLOT(sub_802C904),
-    VTABLE_SLOT(UpdateAnimatedActorPart),
+    VTABLE_SLOT(DrawActor),
 };
 
 /* Used by actor_part19i.c, actor_part_2ac28.c. */
@@ -1195,7 +1200,7 @@ const struct vtable_slot gStaticData_087E4F14[4] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(sub_803B204),
     VTABLE_SLOT(sub_802C6C0),
-    VTABLE_SLOT(UpdateAnimatedActorPart),
+    VTABLE_SLOT(DrawActor),
 };
 
 /* Used by actor_part19i.c, actor_part_2ac28.c. */
@@ -1203,7 +1208,7 @@ const struct vtable_slot gStaticData_087E4F34[4] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(sub_803B230),
     VTABLE_SLOT(sub_802C614),
-    VTABLE_SLOT(UpdateAnimatedActorPart),
+    VTABLE_SLOT(DrawActor),
 };
 
 /* Used by actor_part19i.c, actor_part_2ac28.c. */
@@ -1211,7 +1216,7 @@ const struct vtable_slot gStaticData_087E4F54[4] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(sub_803B25C),
     VTABLE_SLOT(sub_802CA6C),
-    VTABLE_SLOT(UpdateAnimatedActorPart),
+    VTABLE_SLOT(DrawActor),
 };
 
 /* Used by actor_part19i.c, actor_part_2ac28.c. */
@@ -1219,7 +1224,7 @@ const struct vtable_slot gStaticData_087E4F74[4] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(sub_803B288),
     VTABLE_SLOT(sub_802CAD0),
-    VTABLE_SLOT(UpdateAnimatedActorPart),
+    VTABLE_SLOT(DrawActor),
 };
 
 /* Used by actor_part19i.c. */
@@ -1227,7 +1232,7 @@ const struct vtable_slot gStaticData_087E4F94[4] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(sub_803B2B4),
     VTABLE_SLOT(sub_802C4C8),
-    VTABLE_SLOT(UpdateAnimatedActorPart),
+    VTABLE_SLOT(DrawActor),
 };
 
 /* Used by actor_part126.c. */
@@ -1235,7 +1240,7 @@ const struct vtable_slot gStaticData_087E4FB4[4] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(sub_803B2E0),
     VTABLE_SLOT(sub_802CC9C),
-    VTABLE_SLOT(UpdateAnimatedActorPart),
+    VTABLE_SLOT(DrawActor),
 };
 
 /* Used by actor_part126.c. */
@@ -1243,7 +1248,7 @@ const struct vtable_slot gStaticData_087E4FD4[4] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(sub_803B30C),
     VTABLE_SLOT(sub_802CE10),
-    VTABLE_SLOT(UpdateAnimatedActorPart),
+    VTABLE_SLOT(DrawActor),
 };
 
 /* Used by actor_part126.c. */
@@ -1251,7 +1256,7 @@ const struct vtable_slot gStaticData_087E4FF4[4] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(sub_803B338),
     VTABLE_SLOT(sub_802CE5C),
-    VTABLE_SLOT(UpdateAnimatedActorPart),
+    VTABLE_SLOT(DrawActor),
 };
 
 /* Used by actor_part126.c. */
@@ -1259,7 +1264,7 @@ const struct vtable_slot gStaticData_087E5014[4] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(sub_803B364),
     VTABLE_SLOT(sub_802CF30),
-    VTABLE_SLOT(UpdateAnimatedActorPart),
+    VTABLE_SLOT(DrawActor),
 };
 
 /* Used by actor_part126.c. */
@@ -1267,7 +1272,7 @@ const struct vtable_slot gStaticData_087E5034[4] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(sub_803B390),
     VTABLE_SLOT(sub_802D0F4),
-    VTABLE_SLOT(UpdateAnimatedActorPart),
+    VTABLE_SLOT(DrawActor),
 };
 
 /* Used by actor_part58.c. */
@@ -1275,7 +1280,7 @@ const struct vtable_slot gStaticData_087E5054[4] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(sub_803B3BC),
     VTABLE_SLOT(sub_802D2DC),
-    VTABLE_SLOT(UpdateAnimatedActorPart),
+    VTABLE_SLOT(DrawActor),
 };
 
 /* Used by actor_part58.c. */
@@ -1283,7 +1288,7 @@ const struct vtable_slot gStaticData_087E5074[4] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(sub_803B3E8),
     VTABLE_SLOT(sub_802D59C),
-    VTABLE_SLOT(UpdateAnimatedActorPart),
+    VTABLE_SLOT(DrawActor),
 };
 
 /* Used by actor_part58.c. */
@@ -1291,7 +1296,7 @@ const struct vtable_slot gStaticData_087E5094[4] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(sub_803B414),
     VTABLE_SLOT(sub_802D600),
-    VTABLE_SLOT(UpdateAnimatedActorPart),
+    VTABLE_SLOT(DrawActor),
 };
 
 /* Used by actor_part58.c. */
@@ -1299,7 +1304,7 @@ const struct vtable_slot gStaticData_087E50B4[4] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(sub_803B440),
     VTABLE_SLOT(sub_802D6A0),
-    VTABLE_SLOT(UpdateAnimatedActorPart),
+    VTABLE_SLOT(DrawActor),
 };
 
 /* Used by actor_part128.c (sub_802E3CC). */
@@ -1318,7 +1323,7 @@ const struct vtable_slot gStaticData_087E510C[7] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(sub_803B5B0),
     VTABLE_SLOT(sub_803B57C),
-    VTABLE_SLOT(UpdateAnimatedActorPart),
+    VTABLE_SLOT(DrawActor),
     VTABLE_SLOT(nullsub_44),
     VTABLE_SLOT(sub_803B5AC),
     VTABLE_SLOT(sub_803B5DC),
@@ -1340,7 +1345,7 @@ const struct vtable_slot gStaticData_087E517C[7] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(sub_803B5E8),
     VTABLE_SLOT(sub_802F97C),
-    VTABLE_SLOT(UpdateAnimatedActorPart),
+    VTABLE_SLOT(DrawActor),
     VTABLE_SLOT(nullsub_44),
     VTABLE_SLOT(sub_802FA34),
     VTABLE_SLOT(sub_803B5DC),
@@ -1351,7 +1356,7 @@ const struct vtable_slot gStaticData_087E51B4[7] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(sub_803B614),
     VTABLE_SLOT(sub_802FA38),
-    VTABLE_SLOT(UpdateAnimatedActorPart),
+    VTABLE_SLOT(DrawActor),
     VTABLE_SLOT(sub_802FD1C),
     VTABLE_SLOT(sub_802FF00),
     VTABLE_SLOT(sub_803B5DC),
@@ -1362,7 +1367,7 @@ const struct vtable_slot gStaticData_087E51EC[7] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(sub_803B640),
     VTABLE_SLOT(sub_802FFB8),
-    VTABLE_SLOT(UpdateAnimatedActorPart),
+    VTABLE_SLOT(DrawActor),
     VTABLE_SLOT(sub_80301EC),
     VTABLE_SLOT(sub_8030290),
     VTABLE_SLOT(sub_803B5DC),
@@ -1373,7 +1378,7 @@ const struct vtable_slot gStaticData_087E5224[7] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(sub_803B66C),
     VTABLE_SLOT(sub_8030298),
-    VTABLE_SLOT(UpdateAnimatedActorPart),
+    VTABLE_SLOT(DrawActor),
     VTABLE_SLOT(nullsub_44),
     VTABLE_SLOT(sub_8030330),
     VTABLE_SLOT(sub_803B5DC),
@@ -1384,7 +1389,7 @@ const struct vtable_slot gStaticData_087E525C[7] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(sub_803B698),
     VTABLE_SLOT(sub_8030574),
-    VTABLE_SLOT(UpdateAnimatedActorPart),
+    VTABLE_SLOT(DrawActor),
     VTABLE_SLOT(sub_8030530),
     VTABLE_SLOT(sub_80306A4),
     VTABLE_SLOT(sub_803B5DC),
@@ -1395,7 +1400,7 @@ const struct vtable_slot gStaticData_087E5294[7] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(sub_803B6C4),
     VTABLE_SLOT(sub_80317E0),
-    VTABLE_SLOT(UpdateAnimatedActorPart),
+    VTABLE_SLOT(DrawActor),
     VTABLE_SLOT(sub_8031858),
     VTABLE_SLOT(sub_8031A64),
     VTABLE_SLOT(sub_803B5DC),
@@ -1406,7 +1411,7 @@ const struct vtable_slot gStaticData_087E52CC[8] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(sub_803B6F0),
     VTABLE_SLOT(sub_8031D04),
-    VTABLE_SLOT(UpdateAnimatedActorPart),
+    VTABLE_SLOT(DrawActor),
     VTABLE_SLOT(sub_8031FE8),
     VTABLE_SLOT(sub_8032350),
     VTABLE_SLOT(sub_803B5DC),
@@ -1418,7 +1423,7 @@ const struct vtable_slot gStaticData_087E530C[8] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(sub_803B710),
     VTABLE_SLOT(sub_8031D7C),
-    VTABLE_SLOT(UpdateAnimatedActorPart),
+    VTABLE_SLOT(DrawActor),
     VTABLE_SLOT(sub_8031E80),
     VTABLE_SLOT(sub_8032350),
     VTABLE_SLOT(sub_803B5DC),
@@ -1430,7 +1435,7 @@ const struct vtable_slot gStaticData_087E534C[8] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(sub_803B730),
     VTABLE_SLOT(sub_8031B0C),
-    VTABLE_SLOT(UpdateAnimatedActorPart),
+    VTABLE_SLOT(DrawActor),
     VTABLE_SLOT(sub_8031C0C),
     VTABLE_SLOT(sub_8032350),
     VTABLE_SLOT(sub_803B5DC),
@@ -1442,7 +1447,7 @@ const struct vtable_slot gStaticData_087E538C[8] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(sub_80321D0),
     VTABLE_SLOT(sub_8031A6C),
-    VTABLE_SLOT(UpdateAnimatedActorPart),
+    VTABLE_SLOT(DrawActor),
     VTABLE_SLOT(sub_8032170),
     VTABLE_SLOT(sub_8032350),
     VTABLE_SLOT(sub_803B5DC),
@@ -1454,7 +1459,7 @@ const struct vtable_slot gStaticData_087E53CC[7] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(sub_803B750),
     VTABLE_SLOT(sub_8032358),
-    VTABLE_SLOT(UpdateAnimatedActorPart),
+    VTABLE_SLOT(DrawActor),
     VTABLE_SLOT(sub_80323F4),
     VTABLE_SLOT(sub_8032478),
     VTABLE_SLOT(sub_803B5DC),
@@ -1465,7 +1470,7 @@ const struct vtable_slot gStaticData_087E5404[7] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(sub_803B77C),
     VTABLE_SLOT(sub_8032480),
-    VTABLE_SLOT(UpdateAnimatedActorPart),
+    VTABLE_SLOT(DrawActor),
     VTABLE_SLOT(sub_80325A4),
     VTABLE_SLOT(sub_8032680),
     VTABLE_SLOT(sub_803B5DC),
@@ -1476,7 +1481,7 @@ const struct vtable_slot gStaticData_087E543C[7] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(sub_803B7A8),
     VTABLE_SLOT(sub_8032688),
-    VTABLE_SLOT(UpdateAnimatedActorPart),
+    VTABLE_SLOT(DrawActor),
     VTABLE_SLOT(nullsub_44),
     VTABLE_SLOT(sub_8032714),
     VTABLE_SLOT(sub_803B5DC),
@@ -1498,7 +1503,7 @@ const struct vtable_slot gStaticData_087E54AC[7] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(sub_803B7D4),
     VTABLE_SLOT(sub_8032950),
-    VTABLE_SLOT(UpdateAnimatedActorPart),
+    VTABLE_SLOT(DrawActor),
     VTABLE_SLOT(sub_8032910),
     VTABLE_SLOT(sub_8032AF0),
     VTABLE_SLOT(sub_803B5DC),
@@ -1509,7 +1514,7 @@ const struct vtable_slot gStaticData_087E54E4[7] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(sub_803B800),
     VTABLE_SLOT(sub_8033B44),
-    VTABLE_SLOT(UpdateAnimatedActorPart),
+    VTABLE_SLOT(DrawActor),
     VTABLE_SLOT(sub_8033AE0),
     VTABLE_SLOT(sub_8033CF0),
     VTABLE_SLOT(sub_803B5DC),
@@ -1520,7 +1525,7 @@ const struct vtable_slot gStaticData_087E551C[7] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(sub_803B82C),
     VTABLE_SLOT(sub_8033E80),
-    VTABLE_SLOT(UpdateAnimatedActorPart),
+    VTABLE_SLOT(DrawActor),
     VTABLE_SLOT(sub_8033E18),
     VTABLE_SLOT(sub_8034050),
     VTABLE_SLOT(sub_803B5DC),
@@ -1531,7 +1536,7 @@ const struct vtable_slot gStaticData_087E5554[7] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(sub_803B858),
     VTABLE_SLOT(sub_8034188),
-    VTABLE_SLOT(UpdateAnimatedActorPart),
+    VTABLE_SLOT(DrawActor),
     VTABLE_SLOT(sub_8034110),
     VTABLE_SLOT(sub_8034264),
     VTABLE_SLOT(sub_803B5DC),
@@ -1542,7 +1547,7 @@ const struct vtable_slot gStaticData_087E558C[7] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(sub_803B884),
     VTABLE_SLOT(sub_8034270),
-    VTABLE_SLOT(UpdateAnimatedActorPart),
+    VTABLE_SLOT(DrawActor),
     VTABLE_SLOT(nullsub_38),
     VTABLE_SLOT(sub_803436C),
     VTABLE_SLOT(sub_803B5DC),

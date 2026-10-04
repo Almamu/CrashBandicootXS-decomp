@@ -5,13 +5,13 @@
 
 /*
  * `InitActorCategory` - the category (re)initialization + loading-screen
- * driver: stores the category argument into gUnknown_03001380, resets the
+ * driver: stores the category argument into gActorCategory, resets the
  * running counters, decompresses the category sprite sheet, rebuilds the
  * tile-cache pins (SetupActorVramPool) and hands off to
  * SelectActorCategory, then runs a per-VBlank loop (polling input,
- * redrawing, flushing the VRAM DMA queue) until `sub_802A208` reports an
+ * redrawing, flushing the VRAM DMA queue) until `RunActorCategoryFrame` reports an
  * exit state. Returns the loop's exit code (0-2); 1 re-runs the outer
- * setup unless gLevelState's own state (sub_803AFEC, its +0x8c
+ * setup unless gLevelState's own state (GetLives, its +0x8c
  * byte) says to leave.
  *
  * Matches under old_agbcc (current agbcc is 3 halfwords off in the
@@ -38,7 +38,7 @@
  */
 
 extern s32 gUnknown_03001390;
-extern s32 gUnknown_03001380;
+extern s32 gActorCategory;
 extern s32 gUnknown_03000878;
 extern s32 gUnknown_03001384;
 extern s32 gUnknown_03001388;
@@ -56,7 +56,7 @@ extern void SetupActorVramPool(void);
 extern void sub_802AAFC(void);
 extern void sub_802ABFC(s32 flag);
 extern void sub_8029C30(s32 kind);
-extern s32 sub_803AFEC(void *state);
+extern s32 GetLives(void *state);
 extern void RestoreCheckpoint(void *arg0);
 extern void sub_800132C(s32 a, s32 b, s32 c);
 extern void sub_8029890(s32 arg0, void *arg1, u32 arg2, s32 arg3);
@@ -65,7 +65,7 @@ extern void sub_802AB08(void);
 extern void SelectActorCategory(s32 type, void *subEffectTable, void *animTable, s32 activeFlag, s32 variant, s32 tick);
 extern void UpdateKeys(void *arg0);
 extern void sub_8029B38(void);
-extern s32 sub_802A208(void);
+extern s32 RunActorCategoryFrame(void);
 extern void TickLevelClock(void *arg0);
 extern void sub_8006C4C(void *self);
 extern void sub_8006A78(void *arg0);
@@ -93,7 +93,7 @@ extern void nullsub_5(void);
 extern void nullsub_6(void);
 extern void sub_802A5E4(void);
 
-#define CUR_CATEGORY (gStaticData_08175558[gUnknown_03001380])
+#define CUR_CATEGORY (gActorCategories[gActorCategory])
 #define PAUSED (gLevelState[0x8c])
 
 s32 InitActorCategory(s32 category)
@@ -111,7 +111,7 @@ s32 InitActorCategory(s32 category)
     void *buf;
 
     gUnknown_03001390 = 0;
-    gUnknown_03001380 = category;
+    gActorCategory = category;
     gUnknown_03000878 = 0;
     gUnknown_03001384 = 0;
     gUnknown_03001388 = 0;
@@ -143,7 +143,7 @@ s32 InitActorCategory(s32 category)
         if (CUR_CATEGORY.conditional_ptr_0C != NULL)
             sub_802F7B0();
         sub_802AB08();
-        SelectActorCategory(CUR_CATEGORY.type, CUR_CATEGORY.sub_effect_table, CUR_CATEGORY.anim_table,
+        SelectActorCategory(CUR_CATEGORY.type, CUR_CATEGORY.spawnTable, CUR_CATEGORY.anim_table,
                             *activeCount >= (s32)CUR_CATEGORY.active_count_threshold, variant,
                             gUnknown_03000878);
         dma->src = (u32)CUR_CATEGORY.palette;
@@ -155,7 +155,7 @@ s32 InitActorCategory(s32 category)
         for (;;) {
             UpdateKeys(gUnknown_03001304);
             sub_8029B38();
-            status = sub_802A208();
+            status = RunActorCategoryFrame();
             if ((*state)[0x8c] != 0)
                 TickLevelClock(*state);
             sub_8006C4C(gUnknown_030012FC);
@@ -236,7 +236,7 @@ s32 InitActorCategory(s32 category)
     done:
         sub_802A5E4();
         nullsub_5();
-    } while (ret == 1 && sub_803AFEC(gLevelState) >= 0 && PAUSED == 0);
+    } while (ret == 1 && GetLives(gLevelState) >= 0 && PAUSED == 0);
 
     nullsub_6();
     FreeSpriteFrameCache();

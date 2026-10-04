@@ -110,7 +110,7 @@ extern void *gUnknown_030012D0;
  * overwriting it) - already declared with this signature at its
  * `sub_80073DC` call site in graphics.c. Returns
  * `(*(void **)gUnknown_030012D0)+4`'s value. */
-s32 sub_80083A8(void *part)
+s32 GetSpriteTileBase(void *part)
 {
     void *p2 = *(void **)gUnknown_030012D0;
     return *(s32 *)((u8 *)p2 + 4);
@@ -129,7 +129,7 @@ s32 sub_80083A8(void *part)
  * pointer at the looked-up index.
  *
  * Matched in a later session than the original NAKED transcription -
- * see docs/matching.md's "Parked, not matched: sub_80083B8" for the
+ * see docs/matching.md's "Parked, not matched: GetSpriteFrame" for the
  * original account. Unlike `sub_8008188`/`sub_8008200`/`sub_8008278`'s
  * shared-switch-case gap, this function's resistant
  * `adds r0, r1, r0`-vs-`adds r0, r0, r1` add sits in genuinely
@@ -142,7 +142,7 @@ s32 sub_80083A8(void *part)
  * `actor_part6.c`, and a plain compiled function's own natural
  * alignment produces a `0x46c0` nop-fill instead - the standard
  * `matching_decomp_alignment_fix` gotcha). */
-void *sub_80083B8(struct gfx_part *part)
+void *GetSpriteFrame(struct gfx_part *part)
 {
     register void *rec asm("r1") = part->bank;
     register u8 *idxAddr asm("r2") = &part->tag;

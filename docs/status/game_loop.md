@@ -803,13 +803,13 @@ plain C didn't converge.
   pair (each exactly `0x68` bytes, DMA3 fixed-source zero-filled at
   entry then restored/re-saved every retry-loop pass), an actor-
   category processing loop keyed on an `r8`-resident status flag (0 =
-  keep going, 1 = check `sub_803AFEC` for early-out, 2 = done this
+  keep going, 1 = check `GetLives` for early-out, 2 = done this
   frame) that ping-pongs the `gEntityFlags` collision-bitmap
   buffer between `self+0x1b4`'s two halves via `sub_8025A5C`/
   `sub_8026EDC(0x408)`, and refreshes the HUD icon (`sub_8028568`) each
   pass. The whole per-category loop, and even the outer state-dispatch
   block above it, can run several times within one call (loops back via
-  `sub_803AFEC`/`RunContinuePrompt` gating) before the function actually
+  `GetLives`/`RunContinuePrompt` gating) before the function actually
   returns to `MainLoop`. At ~730 instructions with three persistent
   cross-call registers (`r7` = `&self->0xc4`, `sl` = `&self->0xc8`,
   `r8`/`sb`) plus six SP-relative field-address slots (`&self->0xe0`,

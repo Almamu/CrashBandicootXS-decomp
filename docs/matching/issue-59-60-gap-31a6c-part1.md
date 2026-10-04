@@ -101,12 +101,12 @@ established "cut at the boundary" convention.
   proximity-triggered transition firing an event-table call on the
   *player* object before its own state-1 transition; clamps
   `self+0x20` forward by `0x140` once it falls behind `self+0x5c`, then
-  tail-calls `sub_802A7B8`. The state-1/`self+0x12`-set branch needed
+  tail-calls `UpdateActor`. The state-1/`self+0x12`-set branch needed
   an explicit `if (self != 0) { ...trampoline... } return;` (matching
   the established idiom already used for `sub_802C4C8`,
   `actor_part19g.c`); separately, the state-1/`self+0x12`-clear branch
   turned out to jump *directly* to the shared tail call
-  (`sub_802A7B8`), **skipping** the `self+0x20` clamp check entirely -
+  (`UpdateActor`), **skipping** the `self+0x20` clamp check entirely -
   a real control-flow detail a first pass got backwards (see below).
 - **`sub_80323F4`/`sub_80325A4`** - more countdown-gated state
   transitions (`self+0x58`/`self+0x64`+`self+0x65` byte flags,
@@ -138,7 +138,7 @@ established "cut at the boundary" convention.
   `push {r4, r5, r6, lr}`.
 - **`sub_8032688`** - type-byte-gated (`self+0x30`'s type byte
   `== 0x1f`) proximity check feeding `sub_802F164`, with a one-shot cue
-  latched via `self+0x58`; tail-calls `sub_802A7B8` unconditionally.
+  latched via `self+0x58`; tail-calls `UpdateActor` unconditionally.
 
 ## Parked - NAKED transcription (5 of 30 functions, byte-correct but not counted as matched)
 
@@ -159,7 +159,7 @@ leaving 4 of 30 still parked.
   `sub_8031A6C` additionally has trailing state/trampoline logic (fires
   a second `self+0x50`-table call while state 1 with a running
   health-style timer past `0xe100`, or state 2 with `self+0x12` set,
-  falling back to `sub_802A7B8` otherwise) that `sub_80322F4` doesn't.
+  falling back to `UpdateActor` otherwise) that `sub_80322F4` doesn't.
 - **`sub_80321FC`** - a parameterized `sub_802E4B8`-based constructor,
   same shape as `sub_8031F78`/`sub_8032054`/`sub_80320C4` above except
   the "kind" is a 6th caller-supplied byte argument instead of a fixed

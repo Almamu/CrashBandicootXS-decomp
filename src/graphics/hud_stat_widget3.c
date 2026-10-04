@@ -50,7 +50,7 @@ struct pct_source
 };
 
 extern s32 gHudSlideOffset;
-extern struct pct_source *gUnknown_03000884;
+extern struct pct_source *gActorList;
 extern s32 _call_via_r1(void *self, void *fn);
 extern s32 sub_80233B4(void *state);
 extern s32 sub_8031784(void);
@@ -270,7 +270,7 @@ void UpdateHudWumpa(struct hud_counter *selfArg)
 /* The percentage-counter widget (`docs/rom_map.md`'s "fx" investigation
  * already named it this way from the `cmp r1, #0x64` special case
  * below): a single 3-digit-or-percent display sourced from
- * `_call_via_r1(gUnknown_03000884's own x-position field + a halfword
+ * `_call_via_r1(gActorList's own x-position field + a halfword
  * read off a nested struct, y-position field)` rather than any of the
  * mode/layout-value or `sub_80233B4`-family sources the rest of the
  * dispatcher's callees use - this is the only counter in the family
@@ -299,7 +299,7 @@ void sub_8027E88(struct hud_counter *selfArg)
     DrawHudPart(part, 0, 0);
 
     {
-        struct pct_source *src = gUnknown_03000884;
+        struct pct_source *src = gActorList;
         struct pct_vtable *vt = src->vtable;
 
         v = _call_via_r1((u8 *)src + vt->delta, vt->fn);

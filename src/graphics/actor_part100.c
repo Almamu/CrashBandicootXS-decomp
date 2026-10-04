@@ -2,8 +2,8 @@
 #include "actor_anim.h"
 
 /* Counts how many of category `categoryIdx`'s sub-effect-table entries
- * (see `struct sub_effect_record`/`category_descriptor.sub_effect_table`
- * in actor_anim.h) match one of two fixed sets of `variantA` byte
+ * (see `struct sub_effect_record`/`category_descriptor.spawnTable`
+ * in actor_anim.h) match one of two fixed sets of `kind` byte
  * values - a different set depending on the category's own `type`
  * field. Record 0 (the table's own header, `field_04` holding the real
  * entry count) doubles as entry 0 for this scan too. */
@@ -15,8 +15,8 @@ s32 sub_802968C(s32 categoryIdx)
     s32 i;
 
     count = 0;
-    table = gStaticData_08175558[categoryIdx].sub_effect_table;
-    if (gStaticData_08175558[categoryIdx].type == 0) {
+    table = gActorCategories[categoryIdx].spawnTable;
+    if (gActorCategories[categoryIdx].type == 0) {
         i = 0;
         total = table[0].field_04;
         /* Manual pre-rotated `if (count<total) do {...} while (++i<total)`
@@ -27,7 +27,7 @@ s32 sub_802968C(s32 categoryIdx)
          * (`adds r5,#1; cmp r5,r2; blt`) - see docs/workflow.md step 3. */
         if (count < total) {
             do {
-                u8 v = table[i].variantA;
+                u8 v = table[i].kind;
                 if (v == 1 || v == 3 || v == 4 || v == 8 || v == 9 || v == 0xa ||
                     v == 0x1c || v == 0x1d || v == 0x1e || v == 0x1f || v == 0x23) {
                     count++;
@@ -51,7 +51,7 @@ s32 sub_802968C(s32 categoryIdx)
 
         if (count < total2) {
             do {
-                register u8 v asm("r1") = table->variantA;
+                register u8 v asm("r1") = table->kind;
 
                 if ((u8)(v - 0x13) <= 4) {
                     count++;
