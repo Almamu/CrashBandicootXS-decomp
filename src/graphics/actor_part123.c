@@ -1,4 +1,5 @@
 #include "core.h"
+#include "vtable.h"
 
 /* GitHub issue #9/#10, tail of the 0x0800B8DC-0x0800D040 cluster (see
  * docs/matching/issue-9-10-0x0800b8dc-graphics.md): the last raw file
@@ -55,7 +56,7 @@ struct cbf4_other {
         } b;            // (ARM structs are 4-byte sized: the union spans 0x0C-0x0F)
     } f;
     u8 unk_10[8];
-    u8 *table;          // 0x18
+    struct vtable_slot *table; // 0x18
     u8 unk_1C[0x1C];
     u8 unk_38;          // 0x38
 };
@@ -82,7 +83,7 @@ static inline void MarkGone(struct cbf4_other *t)
 
 void sub_800CBF4(void *self, struct cbf4_other *other)
 {
-    if (!(u8)(s32)sub_803AD7C((u8 *)other + *(s16 *)(other->table + 0x28), *(void **)(other->table + 0x2c)))
+    if (!(u8)(s32)sub_803AD7C((u8 *)other + other->table[5].delta, other->table[5].fn))
         MarkGone(other);
     if ((other->f.flags >> 3) & 1)
         MarkGone(other);

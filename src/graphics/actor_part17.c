@@ -1,5 +1,6 @@
 #include "core.h"
 #include "actor.h"
+#include "vtable.h"
 
 extern u8 gStaticData_0816B304[];
 extern s32 sub_803AD84(void *addr, void *arg1, void *tableEntry, void *fn);
@@ -12,11 +13,10 @@ extern u8 gStaticData_087E3E7C[];
 
 /* Looks up `selfArg`'s `index`-th 8-byte record (via a double
  * pointer chain at `self+4`), uses its second word as a type index
- * into the 12-byte-stride `gStaticData_0816B304` table, and fires
- * that table entry's trampoline at `self + (int16 offset from
- * self->0xc's part+0x30)` through the function pointer at
- * part+0x34 - the same base+offset+fn-pointer convention already
- * seen in `sub_800B3AC`/`sub_8009D5C`. */
+ * into the 12-byte-stride `gStaticData_0816B304` table, and calls
+ * slot 6 of the vtable at `self+0xc` with that table entry - the same
+ * base+offset+fn-pointer convention already seen in
+ * `sub_800B3AC`/`sub_8009D5C`. */
 void sub_800B704(void *selfArg, void *arg1, s32 index)
 {
     u8 *self = selfArg;
@@ -26,7 +26,7 @@ void sub_800B704(void *selfArg, void *arg1, s32 index)
     u8 *rec;
     s32 type;
     u8 *tableEntry;
-    u8 *part;
+    struct vtable_slot *vtbl;
     s16 offset;
     void *addr;
     void *fn;
@@ -35,10 +35,10 @@ void sub_800B704(void *selfArg, void *arg1, s32 index)
     rec = (u8 *)recOffset;
     type = *(s32 *)(rec + 4);
     tableEntry = gStaticData_0816B304 + type * 12;
-    part = *(u8 **)(self + 0xc);
-    offset = *(s16 *)(part + 0x30);
+    vtbl = *(struct vtable_slot **)(self + 0xc);
+    offset = vtbl[6].delta;
     addr = self + offset;
-    fn = *(void **)(part + 0x34);
+    fn = vtbl[6].fn;
 
     sub_803AD84(addr, arg1, tableEntry, fn);
 }
@@ -101,9 +101,8 @@ void sub_800B7B0(void *selfArg, void *partArg, s32 *vec)
 }
 
 /* Same shape as `sub_800B704`, reading the record's FIRST word as
- * the type index instead of its second, and `part+0x28`/`part+0x2c`
- * instead of `part+0x30`/`part+0x34` - a sibling accessor for a
- * second axis. */
+ * the type index instead of its second, and vtable slot 5 instead of
+ * slot 6 - a sibling accessor for a second axis. */
 void sub_800B838(void *selfArg, void *arg1, s32 index)
 {
     u8 *self = selfArg;
@@ -113,7 +112,7 @@ void sub_800B838(void *selfArg, void *arg1, s32 index)
     u8 *rec;
     s32 type;
     u8 *tableEntry;
-    u8 *part;
+    struct vtable_slot *vtbl;
     s16 offset;
     void *addr;
     void *fn;
@@ -122,10 +121,10 @@ void sub_800B838(void *selfArg, void *arg1, s32 index)
     rec = (u8 *)recOffset;
     type = *(s32 *)(rec + 0);
     tableEntry = gStaticData_0816B304 + type * 12;
-    part = *(u8 **)(self + 0xc);
-    offset = *(s16 *)(part + 0x28);
+    vtbl = *(struct vtable_slot **)(self + 0xc);
+    offset = vtbl[5].delta;
     addr = self + offset;
-    fn = *(void **)(part + 0x2c);
+    fn = vtbl[5].fn;
 
     sub_803AD84(addr, arg1, tableEntry, fn);
 }
