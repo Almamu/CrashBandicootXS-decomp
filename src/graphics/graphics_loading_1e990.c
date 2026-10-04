@@ -1,7 +1,9 @@
 #include "core.h"
 #include "actor.h"
+#include "level_state.h"
+#include "level_data.h"
 
-extern void *gUnknown_030012C0;
+extern struct level_state *gUnknown_030012C0;
 extern void *gUnknown_030012B4;
 extern struct actor *gUnknown_030012D8;
 extern void *gUnknown_030012BC;
@@ -20,7 +22,8 @@ extern void PlaySfx(void *bank, s32 arg1, s32 sfxId);
  *
  * 1. If `sub_80232F4(gUnknown_030012C0)` (the player's `+0xa8` flag)
  *    is set: looks up a per-`z` flags byte via the same
- *    `gUnknown_030012B4 -> *rec -> {+8 offsets[], +0xc base}` table
+ *    `gUnknown_030012B4 -> *rec` entity parameter table
+ *    (`paramOffsets[]`/`params`, the room's `struct level_entity_list`)
  *    `sub_8021D04` (graphics_loading_21bfc.c) already reads, folds
  *    its bit 1 into the player's `+0x28` bitfield's bit 4, then
  *    unconditionally writes the incoming `x`/`y` (Q8.8, shifted from
@@ -28,14 +31,14 @@ extern void PlaySfx(void *bank, s32 arg1, s32 sfxId);
  *    same unconditional write `sub_80221A4`/`sub_80221D4`
  *    (graphics_loading_21d80.c) already do elsewhere in this cluster.
  *
- * 2. Unless the player's `+0x8c` "paused" flag is set: fires the
+ * 2. Unless the level state's `timeTrial` flag is set: fires the
  *    player's `table+0x68` trampoline (via `sub_803AD88`, action
  *    `0x1a`) and plays SFX `0x100` through `gUnknown_030012BC`,
  *    unless a budget/reentrancy guard trips first - either the
  *    player's spawn counter (`sub_80232E0`, `+0x7c`) has room against
  *    its cap (`sub_8023130`, `+0x84`), or (when it doesn't) all three
  *    of `sub_803AFEC` (`+0x74`), `sub_80232B8` (`+0xa4`) and the
- *    player's `+0x78` mode field agree it's still safe to fire.
+ *    level state's `maskLevel` field agree it's still safe to fire.
  *
  * Was a NAKED asm transcription for a long time - see
  * docs/matching/naked-sub_801e990-matched.md for the full derivation
@@ -51,17 +54,17 @@ extern void PlaySfx(void *bank, s32 arg1, s32 sfxId);
 void sub_801E990(u32 arg0, u16 x, u16 y, u16 z)
 {
     if (sub_80232F4(gUnknown_030012C0)) {
-        register u8 *rec asm("r2");
+        register struct level_entity_list *rec asm("r2");
         register u16 *arrayBase asm("r0");
         register s32 addr asm("r1");
         register u8 *tmp asm("r0");
         register struct actor **d8ptr asm("r3");
 
-        rec = *(u8 **)gUnknown_030012B4;
-        arrayBase = *(u16 **)(rec + 8);
+        rec = *(struct level_entity_list **)gUnknown_030012B4;
+        arrayBase = (u16 *)rec->paramOffsets;
         addr = (z << 1) + (s32)arrayBase;
         {
-            s32 base = *(s32 *)(rec + 0xc);
+            s32 base = (s32)rec->params;
             addr = *(u16 *)addr;
             tmp = (u8 *)(addr + base);
         }
@@ -95,7 +98,7 @@ void sub_801E990(u32 arg0, u16 x, u16 y, u16 z)
         }
     }
 
-    if (*(u8 *)((u8 *)gUnknown_030012C0 + 0x8c) != 0) {
+    if (gUnknown_030012C0->timeTrial != 0) {
         goto end;
     }
     {
@@ -110,7 +113,7 @@ void sub_801E990(u32 arg0, u16 x, u16 y, u16 z)
         if (sub_80232B8(gUnknown_030012C0) != 0) {
             goto end;
         }
-        if (*(s32 *)((u8 *)gUnknown_030012C0 + 0x78) != 0) {
+        if (gUnknown_030012C0->maskLevel != 0) {
             goto end;
         }
     }

@@ -81,15 +81,15 @@ void *LoadLevelGraphics(u32 *self)
 
     dma = (struct dma_regs *)REG_ADDR_DMA3SAD;
     dma->src = (u32)gStaticData_0817D034;
-    dma->dst = 0x050003A0;
+    dma->dst = OBJ_PLTT + 13 * 0x20;
     dma->cnt = 0x80000010;
     dma->cnt;
     dma->src = (u32)gStaticData_0817D054;
-    dma->dst = 0x050003C0;
+    dma->dst = OBJ_PLTT + 14 * 0x20;
     dma->cnt = 0x80000010;
     dma->cnt;
     dma->src = (u32)gStaticData_0817D074;
-    dma->dst = 0x050003E0;
+    dma->dst = OBJ_PLTT + 15 * 0x20;
     dma->cnt = 0x80000010;
     dma->cnt;
 
@@ -138,11 +138,11 @@ void LoadBg2Background(u32 *self)
     s32 i;
     u32 bg2cnt;
 
-    LoadTaggedAsset(pkg->paletteAsset, (void *)0x05000000);
-    LoadTaggedAsset(pkg->tileAsset, (void *)0x06008000);
+    LoadTaggedAsset(pkg->paletteAsset, (void *)BG_PLTT);
+    LoadTaggedAsset(pkg->tileAsset, (void *)BG_CHAR_ADDR(2));
     mapBuf = sub_8026EC0((s32)pkg->height * (s32)pkg->width * 2);
     LoadTaggedAsset(pkg->mapAsset, mapBuf);
-    dest = (u16 *)0x0600F000;
+    dest = (u16 *)BG_SCREEN_ADDR(30);
     for (i = 0; i < (s32)pkg->height * (s32)pkg->width; i += 2)
     {
         *dest = (mapBuf[i] & 0xff) | ((mapBuf[i + 1] & 0xff) << 8);
@@ -202,7 +202,7 @@ void LoadObjSpriteTiles(u32 *self)
 {
     register struct bg_package **pkgPtr asm("r7") = (struct bg_package **)gUnknown_030008BC;
     void *tileDest = (void *)0x06010000;
-    void *paletteDest = (void *)0x05000200;
+    void *paletteDest = (void *)OBJ_PLTT;
     void *paletteBuf;
     void *tileBuf;
     u16 *mapBuf;

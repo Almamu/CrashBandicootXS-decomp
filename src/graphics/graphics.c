@@ -2,6 +2,25 @@
 #include "memory.h"
 #include "vram_pool.h"
 #include "actor.h"
+#include "vtable.h"
+
+/* The collision box an actor's vtable slot 2 returns (gobj_1a794.h's
+ * `struct anim_box`): an offset from the actor's position and a size. */
+struct anim_box
+{
+    s16 offX;   // 0x00
+    s16 offY;   // 0x02
+    u8 padX;    // 0x04
+    u8 padY;    // 0x05
+};
+
+struct aabb
+{
+    s32 x;
+    s32 y;
+    s32 w;
+    s32 h;
+};
 
 struct dma_queue_entry {
     void *field_00;
@@ -92,11 +111,18 @@ void sub_80069E8(void *arg0, u16 *arg1, s32 arg2)
  * to `count`/the table still use raw pointer casts on purpose (see
  * docs/matching.md, "Matching decompilation") - this type exists so
  * call sites can be typed meaningfully instead of passing `void *`. */
+/* One shadow OAM entry: attributes 0-2, then the affine-parameter
+ * halfword the hardware interleaves between entries. */
+union oam_shadow_entry {
+    u32 words[2];
+    u16 attr[4];    // [3] is the affine parameter
+};
+
 struct oam_shadow_buffer {
     s32 count;
     s32 field_04;
     s32 field_08;
-    u8 table[0x400];
+    union oam_shadow_entry table[0x80];
 };
 COMPILE_TIME_ASSERT(sizeof(struct oam_shadow_buffer) == 0x40C);
 
@@ -189,15 +215,17 @@ void sub_8006AC8(struct oam_shadow_buffer *arg0, u32 *arg1)
     if (n1 > OAM_ENTRY_COUNT - 1) {
         return;
     }
+    /* `n1`/`addr2` are `arg0` moved on by `count` entries, so their
+     * `table[0]` is entry `count`. */
     n1 = (s32)arg0 + (n1 << 3);
-    saved = *(u16 *)(n1 + 0x12);
+    saved = ((struct oam_shadow_buffer *)n1)->table[0].attr[3];
     v0 = arg1[0];
     v1 = arg1[1];
-    *(u32 *)(n1 + 0xC) = v0;
-    *(u32 *)(n1 + 0x10) = v1;
+    ((struct oam_shadow_buffer *)n1)->table[0].words[0] = v0;
+    ((struct oam_shadow_buffer *)n1)->table[0].words[1] = v1;
     n2 = *(vs32 *)arg0;
     addr2 = (s32)arg0 + (n2 << 3);
-    *(u16 *)(addr2 + 0x12) = saved;
+    ((struct oam_shadow_buffer *)addr2)->table[0].attr[3] = saved;
     n2++;
     *(s32 *)arg0 = n2;
 }
@@ -670,8 +698,8 @@ extern struct actor *gUnknown_030012D8;
  * unused at this call site) - kept to match the byte count exactly. */
 s32 sub_8007048(struct actor *self)
 {
-    void *table;
-    void *rec;
+    struct vtable_slot *table;
+    struct anim_box *rec;
     s32 x, rx;
     s32 y, ry;
     u8 rw, rh;
@@ -682,14 +710,14 @@ s32 sub_8007048(struct actor *self)
     s32 flagTest;
 
     table = self->table;
-    rec = sub_803AD7C((u8 *)self + *(s16 *)((u8 *)table + 0x10), *(void **)((u8 *)table + 0x14));
+    rec = sub_803AD7C((u8 *)self + table[2].delta, table[2].fn);
 
     x = self->x >> 8;
-    rx = *(s16 *)((u8 *)rec + 0);
+    rx = rec->offX;
     y = self->y >> 8;
-    ry = *(s16 *)((u8 *)rec + 2);
-    rw = *((u8 *)rec + 4);
-    rh = *((u8 *)rec + 5);
+    ry = rec->offY;
+    rw = rec->padX;
+    rh = rec->padY;
     x += rx;
     y += ry;
     sub_803AFE4(buf, x, y);
@@ -781,11 +809,11 @@ s32 sub_8007110(void)
  * now, so the trailing `asm(".align 2, 0")` below is required to get
  * the ROM's zero-fill instead of `as`'s default NOP pad - see
  * docs/matching.md, "A gotcha worth knowing". */
-s32 sub_8007114(struct actor *self, void *box)
+s32 sub_8007114(struct actor *self, struct aabb *box)
 {
     register struct actor *pSelf asm("r5") = self;
-    register void *pBox asm("r6") = box;
-    void *table;
+    register struct aabb *pBox asm("r6") = box;
+    struct vtable_slot *table;
     void *rec;
     u8 flag;
     s32 result;
@@ -793,7 +821,7 @@ s32 sub_8007114(struct actor *self, void *box)
     flag = (pSelf->flags >> 4) & 1;
     if (!flag) {
         table = pSelf->table;
-        rec = sub_803AD7C((u8 *)pSelf + *(s16 *)((u8 *)table + 0x10), *(void **)((u8 *)table + 0x14));
+        rec = sub_803AD7C((u8 *)pSelf + table[2].delta, table[2].fn);
         {
             register void *recR0 asm("r0") = rec;
             register s32 minXR4 asm("r4");
@@ -828,13 +856,13 @@ s32 sub_8007114(struct actor *self, void *box)
                 : "r"(recR0), "r"(pSelf)
                 : "r0", "r1", "r2");
             result = 0;
-            boxX0 = *(s32 *)pBox;
+            boxX0 = pBox->x;
             if (minXR4 > boxX0) {
-                s32 boxX1 = boxX0 + *(s32 *)((u8 *)pBox + 8);
+                s32 boxX1 = boxX0 + pBox->w;
                 if (maxXR1 < boxX1) {
-                    register s32 boxY0 asm("r2") = *(s32 *)((u8 *)pBox + 4);
+                    register s32 boxY0 asm("r2") = pBox->y;
                     if (minYR5 > boxY0) {
-                        register s32 boxY1 asm("r0") = boxY0 + *(s32 *)((u8 *)pBox + 0xc);
+                        register s32 boxY1 asm("r0") = boxY0 + pBox->h;
                         if (maxYR3 < boxY1) {
                             result = 1;
                         }
@@ -943,17 +971,16 @@ void sub_8007230(struct actor *self)
     result &= tmp;
     tmp -= 8;
     result &= tmp;
-    /* Kept as raw pointer stores rather than self->flags/halfW/halfH/
-     * rawW/rawH: tried the struct-field form here and rebuilt - it
-     * shifts the zero-constant's materialization earlier and into a
-     * different register (r2 instead of reusing r1 right after the
-     * strb), a real regression, not just a style difference (see
-     * docs/matching.md, "Matching decompilation"). */
-    *((u8 *)self + 0xc) = result;
-    *(u16 *)((u8 *)self + 0x10) = 0;
-    *(u16 *)((u8 *)self + 0x12) = 0;
-    *((u8 *)self + 0x14) = 1;
-    *((u8 *)self + 0x15) = 1;
+    /* Stored through `*(T *)&self->field` casts rather than plain
+     * member stores: those shift the zero-constant's materialization
+     * earlier and into a different register (r2 instead of reusing r1
+     * right after the strb), a real regression, not just a style
+     * difference (see docs/matching.md, "Matching decompilation"). */
+    *(u8 *)&self->flags = result;
+    *(u16 *)&self->halfW = 0;
+    *(u16 *)&self->halfH = 0;
+    *(u8 *)&self->rawW = 1;
+    *(u8 *)&self->rawH = 1;
 }
 asm(".align 2, 0");
 

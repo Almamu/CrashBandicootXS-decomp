@@ -10,7 +10,7 @@ extern s32 gUnknown_0300153C;
  * (a flags word driving this effect's per-frame look). */
 void sub_803171C(void)
 {
-    vu16 *bank1 = (vu16 *)0x05000020;
+    vu16 *bank1 = (vu16 *)(BG_PLTT + 0x20);
 
     if (gUnknown_0300153C & 8) {
         bank1[0xf] = 0x7fff;
@@ -43,5 +43,5 @@ void sub_8031744(void)
         v = 5 - v;
     }
 
-    QueueVramDmaTransfer(gStaticData_0817C378 + (v << 5), (void *)0x05000020, 0x20, 0x10);
+    QueueVramDmaTransfer(gStaticData_0817C378 + (v << 5), (void *)(BG_PLTT + 0x20), 0x20, 0x10);
 }

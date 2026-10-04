@@ -81,7 +81,7 @@ void sub_80309B4(void)
     gUnknown_03001544 += gUnknown_0300155C;
     gUnknown_03001548 += gUnknown_03001560;
     gUnknown_03001578 = 0;
-    pal = (u16 *)0x05000020;
+    pal = (u16 *)(BG_PLTT + 0x20);
     x = gUnknown_03001540 + (gStaticData_0817C3D8[0] << 8);
     y = gUnknown_03001544 + (gStaticData_0817C3D8[1] << 8);
 
