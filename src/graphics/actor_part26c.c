@@ -6,9 +6,9 @@
  *
  * Per docs/rom_map.md ("A new mechanism: a procedurally-generated VRAM
  * fill-level meter"): a near-identical twin of
- * `sub_80336CC` (outside this chunk, issue #62's range) that
+ * `ConvertHovercraftTiles` (outside this chunk, issue #62's range) that
  * procedurally generates a vertical meter/fill-level tile graphic.
- * Indexes `gStaticData_08167AD4`'s per-level table via the
+ * Indexes `gAirshipPalette`'s per-level table via the
  * `gUnknown_03001528`/`gUnknown_0300152C` fields (row/column counts,
  * both capped near 32), sums four rows' worth of heights into
  * `gUnknown_03001530`, computes `0xFF - sum` as a fill level, and DMAs
@@ -18,12 +18,12 @@
  * `gUnknown_03001580`-indexed level data.
  *
  * Matched as plain C with the fixes that closed the one-row twin
- * `sub_80336CC` (actor_part130.c, see
+ * `ConvertHovercraftTiles` (actor_part130.c, see
  * docs/matching/near-miss-polish-3.md). */
 extern s32 gUnknown_03001528;
 extern s32 gUnknown_0300152C;
 extern s32 gUnknown_03001530;
-extern u8 gStaticData_08167AD4[];
+extern u8 gAirshipPalette[];
 extern u8 *gUnknown_03001580[];
 
 /* The height is re-read after the row-pointer store (the ROM's `ldm
@@ -39,7 +39,7 @@ static inline u32 MeterPx(u32 v)
     return r;
 }
 
-void sub_8031604(void)
+void ConvertAirshipTiles(void)
 {
     s32 heights[4];
     u32 stride;
@@ -53,11 +53,11 @@ void sub_8031604(void)
 
     stride = (u32)(gUnknown_03001528 * gUnknown_0300152C + 1) >> 1 << 2;
     for (k = 0; k < 4; k++) {
-        s32 x = *(s32 *)(gStaticData_08167AD4 + off);
+        s32 x = *(s32 *)(gAirshipPalette + off);
         heights[k] = x;
         sum += x;
         off += 4;
-        rows[k] = gStaticData_08167AD4 + off;
+        rows[k] = gAirshipPalette + off;
         /* forces the height to be re-read (the ROM's `ldm r1!`) */
         asm("" : "+m"(heights[k]));
         off += stride;

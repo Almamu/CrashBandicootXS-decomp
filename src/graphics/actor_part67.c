@@ -49,7 +49,7 @@ struct orbit_table {
  * (`sub_803388C`), and switches `self` to state 1, table-index 0 or 1
  * depending on the constructor's cached gate byte (`+0x59`), resetting
  * the anim-frame pair and playing the death sound; otherwise just plays
- * a hit sound. Same shape as `sub_8033AE0` (actor_part30.c). */
+ * a hit sound. Same shape as `DamageHovercraftCannon` (actor_part30.c). */
 void sub_8034110(void *selfArg, s32 dmg)
 {
     struct actor_orbiter *self = selfArg;

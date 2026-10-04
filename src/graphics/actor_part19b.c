@@ -23,7 +23,7 @@ extern u8 *GetAnimFrameData(void *self);
 extern void SetupSpriteFrameOam(u8 *frame, u32 arg1, u32 arg2, s32 priority);
 extern s32 GetAnimFrameAttr(void *self);
 
-void sub_802C2FC(void *selfArg)
+void DrawPolarCollectedWumpa(void *selfArg)
 {
     register struct actor_self *self asm("r6") = selfArg;
     register s32 rawX asm("r0") = self->x;

@@ -12,7 +12,7 @@ extern void *gAudioContext;
 struct spawner {
     struct actor_self base;
     s32 hp;             // 0x54
-    s32 spawnX;         // 0x58 - the constructor's `b`/`c` (sub_8033EF4)
+    s32 spawnX;         // 0x58 - the constructor's `b`/`c` (CreateHovercraftLauncher)
     s32 spawnY;         // 0x5C
     u8 unk_60[4];
     s32 cooldown;       // 0x64
@@ -24,14 +24,14 @@ extern void sub_8033804(void);
 extern void sub_803388C(void);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 
-/* `sub_8033AE0`'s gated twin: only applies damage while `self` is in
+/* `DamageHovercraftCannon`'s gated twin: only applies damage while `self` is in
  * state 1. On death, uses table-index 3 and the anim frame from
- * `self`'s part table `+0x24` field (instead of `sub_8033AE0`'s
+ * `self`'s part table `+0x24` field (instead of `DamageHovercraftCannon`'s
  * table-index 2/`+0x18`), and reuses the just-checked `state` value
  * (always 1 here) for the death-flag store, matching the ROM's literal
  * register reuse. The `*(T *)&self->...` stores keep gcc from treating them
  * as struct-member accesses, which changes where the byte zero is built. */
-void sub_8033E18(struct spawner *self, s32 dmg)
+void DamageHovercraftLauncher(struct spawner *self, s32 dmg)
 {
     s32 state = self->base.state;
 

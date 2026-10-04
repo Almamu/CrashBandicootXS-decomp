@@ -177,7 +177,7 @@ animation-table `table_B` array:
 | `080C0C38` | 0xDB8 | category 1 `sub_effect_record[175]` + 0xC | descriptor 1 `+0x14`, count in record 0 | easy |
 | `080C19F0` | 0xD68 | category 2 `sub_effect_record[171]` + 0xC | descriptor 2 `+0x14` | easy |
 | `080C2758` | 0x17A80 | **compressed frame set A**: 152 back-to-back zero-run-compressed frames `{8, 8, 0x30, 0}` + run stream | the 152 absolute pointers of `table_B` `0x0817941C` (anim record 0 of categories 0-2, 148 distinct) all land on a frame header | medium |
-| `080DA1D8` | 0x24FD8 | **compressed frame set B**: 112 frames of 10x10 tiles | the 123 pointers of `gStaticData_0817A880` (the `sub_802DFDC` singleton's `table_B`, 112 distinct) | medium |
+| `080DA1D8` | 0x24FD8 | **compressed frame set B**: 112 frames of 10x10 tiles | the 123 pointers of `gStaticData_0817A880` (the `CreateYeti` singleton's `table_B`, 112 distinct) | medium |
 | `080FF1B0` | 0x3E784 | **BG0 cell animation B**: palette[256], cols=38, rows=10, **21 frames x 12,160 B** (no side data, type != 0) | descriptors 3-6 `+0x04`/`+0x08` = `{0x080FF1B0, 0x3E784}`; `0x204 + 21*12160` exact | medium |
 | `0813D934` | 0x3498 | **BG1 picture** (category 3, descriptor `+0x0C`) | `LoadBgPicture` layout below; size exact | medium |
 | `08140DCC` | 0x980 | category 3 `sub_effect_record[121]` + 0xC | descriptor 3 `+0x14`; ends exactly at the `0814174C` LZ77 sheet | easy |
@@ -634,10 +634,10 @@ vtable shapes).
 | `0803B8B0` | 0x76870 | composite: BG0 streamed cell animation A + category-0 sub-effect table. **Converted** (`src/data/cell_anim_03b8b0.c`) | `InitCellAnim`, `UploadCellAnimFrame`, `ResetCellAnimBg` +2 | high | done |
 | `080C0C36` | 0x80B16 | composite: sub-effect tables, two compressed OBJ frame sets, BG0 cell animation B, BG1 picture. **Converted**, the 2-byte pad as gbagfx's padding of `00_0b2120.bin.lz` | `SelectActorCategory`, `GetAnimFrameData`, `InitCellAnim` +2 | high | done |
 | `08151AC2` | 0x16012 | composite: BG1 pictures, sub-effect tables, compressed OBJ frame set C (categories 3-6). **Converted**, the 2-byte pad as gbagfx's padding of `01_14174c.bin.lz` | `SelectActorCategory`, `GetAnimFrameData`, `LoadBgPicture` | high | done |
-| `08167AD4` | 0x200 | N. Gin's airship: 16-colour palette (+ zero to 0x200). **Converted** (`src/data/boss_pictures_167ad4.c`) | `sub_8031504`, `sub_8031604` | high | done |
-| `08167CD4` | 0x1E14 | N. Gin's airship picture: {cols 18, rows 12}, 4 frames of {tile count, u16 map, 4bpp tiles} sharing one pool (graphics/boss_pictures/, tools/boss_pictures.py). **Converted** (`src/data/boss_pictures_167ad4.c`) | `sub_8030F88` | medium | done |
-| `08169AE8` | 0x200 | Cortex's hovercraft: palette (16 colours + 240 x 0x03E0). **Converted** (`src/data/boss_pictures_167ad4.c`) | `sub_8032AF8`, `sub_8033604`, `sub_80336CC` | high | done |
-| `08169CE8` | 0xB28 | Cortex's hovercraft picture: {cols 16, rows 10}, 1 frame (graphics/boss_pictures/). **Converted** (`src/data/boss_pictures_167ad4.c`) | `sub_80331BC` | medium | done |
+| `08167AD4` | 0x200 | N. Gin's airship: 16-colour palette (+ zero to 0x200). **Converted** (`src/data/boss_pictures_167ad4.c`) | `LoadAirshipGraphics`, `ConvertAirshipTiles` | high | done |
+| `08167CD4` | 0x1E14 | N. Gin's airship picture: {cols 18, rows 12}, 4 frames of {tile count, u16 map, 4bpp tiles} sharing one pool (graphics/boss_pictures/, tools/boss_pictures.py). **Converted** (`src/data/boss_pictures_167ad4.c`) | `CreateAirship` | medium | done |
+| `08169AE8` | 0x200 | Cortex's hovercraft: palette (16 colours + 240 x 0x03E0). **Converted** (`src/data/boss_pictures_167ad4.c`) | `sub_8032AF8`, `LoadHovercraftGraphics`, `ConvertHovercraftTiles` | high | done |
+| `08169CE8` | 0xB28 | Cortex's hovercraft picture: {cols 16, rows 10}, 1 frame (graphics/boss_pictures/). **Converted** (`src/data/boss_pictures_167ad4.c`) | `CreateHovercraft` | medium | done |
 | `0816A810` | 0x10 | u8[16] d-pad direction lookup. **Converted** (`src/data/boss_pictures_167ad4.c`) | `GetDpadDirection` | medium | done |
 | `0816A820` | 0x200 | s16[256] sine/direction table (`s16` x 256). **Converted** (`src/data/boss_pictures_167ad4.c`) | `DrawPlayer`, `sub_800C8F8`, `sub_800C940` +16 | high | done |
 | `0816AA20` | 0x4C | song table: 19 pointers into the music block, `gGaxMusicData + GAX_SONG_<NAME>` from the generated `gax_songs.h`. **Converted** (`src/data/song_table_16aa20.c`) | `StartSong` | high | done |
@@ -703,16 +703,16 @@ vtable shapes).
 | `0816C290` | 0x40 | table of struct pmf; 4 word(s) look like ROM pointers | `sub_8017650` | high | easy |
 | `0816C2D0` | 0x8 | pointer table (1 data pointers) | `sub_8017FA4` | high | easy |
 | `0816C2D8` | 0x30 | table (element layout: see consumers). **Converted** (`src/data/actor_tables_16c2d8.c`) | `sub_8017ECC`, `sub_8017F14`, `sub_8017F5C` +1 | medium | done |
-| `0816C308` | 0x3 | small constant (040100). **Converted** (`src/data/actor_tables_16c2d8.c`) | `sub_8018008`, `sub_8018400` | medium | done |
-| `0816C30B` | 0x4D | table (element layout: see consumers). **Converted** (`src/data/actor_tables_16c2d8.c`) | `sub_801865C` | medium | done |
+| `0816C308` | 0x3 | small constant (040100). **Converted** (`src/data/actor_tables_16c2d8.c`) | `UpdateTiny`, `SetTinyState` | medium | done |
+| `0816C30B` | 0x4D | table (element layout: see consumers). **Converted** (`src/data/actor_tables_16c2d8.c`) | `PickTinyHopTarget` | medium | done |
 | `0816C358` | 0x4 | small constant (100e0a20). **Converted** (`src/data/actor_tables_16c2d8.c`) | `sub_80196B8` | medium | done |
 | `0816C35C` | 0x3 | small constant (181612). **Converted** (`src/data/actor_tables_16c2d8.c`) | `sub_8018E4C` | medium | done |
 | `0816C35F` | 0x3 | small constant (040404). **Converted** (`src/data/actor_tables_16c2d8.c`) | `sub_8018E4C` | medium | done |
 | `0816C362` | 0x6 | small constant (020202000000). **Converted** (`src/data/actor_tables_16c2d8.c`) | `sub_8018E4C` | medium | done |
-| `0816C368` | 0x10 | table of s32 (`s32` x 4). **Converted** (`src/data/actor_tables_16c2d8.c`) | `sub_80197F8` | high | done |
-| `0816C378` | 0x18 | table of s32 (`s32` x 6). **Converted** (`src/data/actor_tables_16c2d8.c`) | `sub_80197F8` | high | done |
-| `0816C390` | 0x10 | table of s32 (`s32` x 4). **Converted** (`src/data/actor_tables_16c2d8.c`) | `sub_80197F8` | high | done |
-| `0816C3A0` | 0x18 | table of s32 (`s32` x 6). **Converted** (`src/data/actor_tables_16c2d8.c`) | `sub_80197F8` | high | done |
+| `0816C368` | 0x10 | table of s32 (`s32` x 4). **Converted** (`src/data/actor_tables_16c2d8.c`) | `UpdateDingodile` | high | done |
+| `0816C378` | 0x18 | table of s32 (`s32` x 6). **Converted** (`src/data/actor_tables_16c2d8.c`) | `UpdateDingodile` | high | done |
+| `0816C390` | 0x10 | table of s32 (`s32` x 4). **Converted** (`src/data/actor_tables_16c2d8.c`) | `UpdateDingodile` | high | done |
+| `0816C3A0` | 0x18 | table of s32 (`s32` x 6). **Converted** (`src/data/actor_tables_16c2d8.c`) | `UpdateDingodile` | high | done |
 | `0816C3B8` | 0x30 | table of s32 (`s32` x 12). **Converted** (`src/data/actor_tables_16c2d8.c`) | `sub_801A64C`, `sub_801A7AC` | high | done |
 | `0816C3E8` | 0xC | table (element layout: see consumers). **Converted** (`src/data/actor_tables_16c2d8.c`) | `sub_801A2A8` | medium | done |
 | `0816C3F4` | 0x24 | table (element layout: see consumers). **Converted** (`src/data/actor_tables_16c2d8.c`) | `sub_801A2A8` | medium | done |
@@ -773,40 +773,40 @@ vtable shapes).
 | `0817A6B8` | 0x70 | function-pointer / pointer-to-member table (14 code pointers) | `sub_802B364`, `sub_802C208` | high | easy |
 | `0817A728` | 0x20 | 16-colour palette. **Converted** (`src/data/actor_tables_17a728.c`) | `sub_802B730`, `sub_802BB4C` | high | done |
 | `0817A748` | 0x20 | 16-colour palette. **Converted** | `sub_802BB4C` | high | done |
-| `0817A768` | 0xC | `struct anim_box`. **Converted** | `sub_802C6C0` | medium | done |
-| `0817A774` | 0xC | `struct anim_box`. **Converted** | `sub_802CC9C` | medium | done |
-| `0817A780` | 0xC | `struct anim_box`. **Converted** | `sub_802CC9C` | medium | done |
-| `0817A78C` | 0xC | `struct anim_box`. **Converted** | `sub_802CC9C` | medium | done |
+| `0817A768` | 0xC | `struct anim_box`. **Converted** | `UpdatePolarNitroCrate` | medium | done |
+| `0817A774` | 0xC | `struct anim_box`. **Converted** | `UpdatePolarElectricFence` | medium | done |
+| `0817A780` | 0xC | `struct anim_box`. **Converted** | `UpdatePolarElectricFence` | medium | done |
+| `0817A78C` | 0xC | `struct anim_box`. **Converted** | `UpdatePolarElectricFence` | medium | done |
 | `0817A798` | 0x20 | 16-colour palette (gauge tier 1). **Converted** | `sub_802D204` | high | done |
-| `0817A7B8` | 0x20 | 16-colour palette. **Converted** | `sub_802D2DC` | high | done |
-| `0817A7D8` | 0x20 | 16-colour palette. **Converted** | `sub_802D2DC` | high | done |
+| `0817A7B8` | 0x20 | 16-colour palette. **Converted** | `UpdatePolarAkuAku` | high | done |
+| `0817A7D8` | 0x20 | 16-colour palette. **Converted** | `UpdatePolarAkuAku` | high | done |
 | `0817A7F8` | 0x48 | 6 x `{s32 value, s32 threshold, s32 threshold}`. **Converted** | `sub_802DB2C`, `sub_802DCC0` | medium | done |
-| `0817A840` | 0x10 | function-pointer / pointer-to-member table (4 code pointers) (`void (*)(void)` x 4) | `sub_802D7B0` | high | easy |
-| `0817A850` | 0x30 | 4 `struct anim_frame_record` (the sub_802DFDC singleton's keyframes). **Converted** (`src/data/anim_frames_17a850.c`) | `sub_802DFDC` | medium | done |
-| `0817A880` | 0x1EC | table_B: 123 absolute pointers into compressed frame set B (0x080DA1D8..) | `sub_802DFDC` | high | easy |
-| `0817AA6C` | 0x20 | 16-colour gradient palette. **Converted** (`src/data/anim_family_17aa6c.c`) | `sub_802D9A8` | high | done |
+| `0817A840` | 0x10 | function-pointer / pointer-to-member table (4 code pointers) (`void (*)(void)` x 4) | `UpdateYeti` | high | easy |
+| `0817A850` | 0x30 | 4 `struct anim_frame_record` (the CreateYeti singleton's keyframes). **Converted** (`src/data/anim_frames_17a850.c`) | `CreateYeti` | medium | done |
+| `0817A880` | 0x1EC | table_B: 123 absolute pointers into compressed frame set B (0x080DA1D8..) | `CreateYeti` | high | easy |
+| `0817AA6C` | 0x20 | 16-colour gradient palette. **Converted** (`src/data/anim_family_17aa6c.c`) | `UpdateYetiPalette` | high | done |
 | `0817AA8C` | 0xC | `struct anim_box`. **Converted** | `sub_802DD9C` | medium | done |
-| `0817AA98` | 0x1728 | categories 3-6 family data: a box, 2 OBJ palettes, table_A, anim table gCategoryFamily1AnimTable (47 x 0x28), table_B arrays. **Converted** (`src/data/anim_family_17aa6c.c`) | `sub_802D7B0` | high | done |
+| `0817AA98` | 0x1728 | categories 3-6 family data: a box, 2 OBJ palettes, table_A, anim table gCategoryFamily1AnimTable (47 x 0x28), table_B arrays. **Converted** (`src/data/anim_family_17aa6c.c`) | `UpdateYeti` | high | done |
 | `0817C1C0` | 0x40 | function-pointer / pointer-to-member table (8 code pointers) | `sub_802E84C`, `sub_802F748` | high | easy |
 | `0817C200` | 0x60 | 3-frame 16-colour palette strip. **Converted** (`src/data/palette_strip_17c200.c`) | `sub_802F4CC` | high | done |
-| `0817C260` | 0x20 | function-pointer / pointer-to-member table (4 code pointers) | `sub_802FA38`, `sub_802FEA4` | high | easy |
-| `0817C280` | 0x38 | function-pointer / pointer-to-member table (7 code pointers) | `sub_802FFB8`, `sub_8030234` | high | easy |
+| `0817C260` | 0x20 | function-pointer / pointer-to-member table (4 code pointers) | `UpdateJetpackPlane`, `sub_802FEA4` | high | easy |
+| `0817C280` | 0x38 | function-pointer / pointer-to-member table (7 code pointers) | `UpdateJetpackBomber`, `sub_8030234` | high | easy |
 | `0817C2B8` | 0x18 | function-pointer / pointer-to-member table (3 code pointers) | `sub_8030574`, `sub_8030648` | high | easy |
-| `0817C2D0` | 0xA8 | 6 `struct weapon_kind` (7 words). **Converted** (`src/data/weapon_kind_17c2d0.c`) | `sub_8031040` | high | done |
-| `0817C378` | 0x60 | 3-frame 16-colour palette strip. **Converted** | `sub_8031040`, `sub_8031744` | high | done |
-| `0817C3D8` | 0xC | `struct anim_box`. **Converted** | `sub_80309B4`, `sub_8030E08`, `sub_8031378` | high | done |
-| `0817C3E4` | 0x18 | 2 `struct anim_frame_record`. **Converted** | `sub_8030F88` | high | done |
-| `0817C3FC` | 0x18 | function-pointer / pointer-to-member table (6 code pointers) (`void*` x 6) | `sub_80311C4` | high | easy |
+| `0817C2D0` | 0xA8 | 6 `struct weapon_kind` (7 words). **Converted** (`src/data/weapon_kind_17c2d0.c`) | `SpawnAirship` | high | done |
+| `0817C378` | 0x60 | 3-frame 16-colour palette strip. **Converted** | `SpawnAirship`, `sub_8031744` | high | done |
+| `0817C3D8` | 0xC | `struct anim_box`. **Converted** | `AirshipStateExplode`, `sub_8030E08`, `IsTouchingAirship` | high | done |
+| `0817C3E4` | 0x18 | 2 `struct anim_frame_record`. **Converted** | `CreateAirship` | high | done |
+| `0817C3FC` | 0x18 | function-pointer / pointer-to-member table (6 code pointers) (`void*` x 6) | `UpdateAirship` | high | easy |
 | `0817C414` | 0x18 | function-pointer / pointer-to-member table (3 code pointers) | `sub_8031A08` | high | easy |
-| `0817C42C` | 0x18 | function-pointer / pointer-to-member table (3 code pointers) | `sub_8031A6C`, `sub_80322F4` | high | easy |
-| `0817C444` | 0xC | `struct anim_box`. **Converted** (`src/data/actor_box_17c444.c`) | `sub_8032480` | medium | done |
+| `0817C42C` | 0x18 | function-pointer / pointer-to-member table (3 code pointers) | `UpdateJetpackBalloonCrate`, `sub_80322F4` | high | easy |
+| `0817C444` | 0xC | `struct anim_box`. **Converted** (`src/data/actor_box_17c444.c`) | `UpdateJetpackRocket` | medium | done |
 | `0817C450` | 0x10 | function-pointer / pointer-to-member table (2 code pointers) | `sub_8032950`, `sub_8032A94` | high | easy |
-| `0817C460` | 0x50 | 2 `struct singleton_kind` (10 words). **Converted** (`src/data/singleton_kind_17c460.c`) | `sub_8033264` | high | done |
+| `0817C460` | 0x50 | 2 `struct singleton_kind` (10 words). **Converted** (`src/data/singleton_kind_17c460.c`) | `SpawnHovercraft` | high | done |
 | `0817C4B0` | 0xC | `struct anim_box`. **Converted** | `sub_8032C0C` | high | done |
-| `0817C4BC` | 0xC | 1 `struct anim_frame_record`. **Converted** | `sub_80331BC` | medium | done |
+| `0817C4BC` | 0xC | 1 `struct anim_frame_record`. **Converted** | `CreateHovercraft` | medium | done |
 | `0817C4C8` | 0x18 | function-pointer / pointer-to-member table (6 code pointers) (`void*` x 6) | `sub_8032B6C` | high | easy |
-| `0817C4E0` | 0x18 | function-pointer / pointer-to-member table (3 code pointers) | `sub_8033B44`, `sub_8033C84` | high | easy |
-| `0817C4F8` | 0x18 | function-pointer / pointer-to-member table (3 code pointers) | `sub_8033E80`, `sub_8033FE4` | high | easy |
+| `0817C4E0` | 0x18 | function-pointer / pointer-to-member table (3 code pointers) | `UpdateHovercraftCannon`, `sub_8033C84` | high | easy |
+| `0817C4F8` | 0x18 | function-pointer / pointer-to-member table (3 code pointers) | `UpdateHovercraftLauncher`, `sub_8033FE4` | high | easy |
 | `0817C510` | 0x2 | the text ">". **Converted** (`src/data/hud_palettes_17c510.c`) | `DrawContinuePrompt` | medium | done |
 | `0817C512` | 0x20 | 16 palette halfwords. **Converted** | `sub_803487C` | high | done |
 | `0817C532` | 0x20 | 16 palette halfwords. **Converted** | `sub_803487C` | high | done |
@@ -972,7 +972,7 @@ vtable shapes).
 | `087E442C` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_8018858`, `sub_801886C` | high | easy |
 | `087E4494` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_80188D0`, `sub_80188E8` | high | easy |
 | `087E44FC` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_8018948`, `sub_8018960` | high | easy |
-| `087E4564` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_80189C4`, `sub_80189EC` | high | easy |
+| `087E4564` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `DestroyTiny`, `CreateTiny` | high | easy |
 | `087E45CC` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_80195D8`, `sub_80195EC` | high | easy |
 | `087E4634` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_8019608`, `sub_801961C` | high | easy |
 | `087E469C` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_801964C`, `sub_8019660` | high | easy |
@@ -982,7 +982,7 @@ vtable shapes).
 | `087E483C` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_801A724`, `sub_801A73C` | high | easy |
 | `087E48A4` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_801A584`, `sub_801A750`, `sub_801A768` | high | easy |
 | `087E490C` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_801A780`, `sub_801A794` | high | easy |
-| `087E4974` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_801A824`, `sub_801A838` | high | easy |
+| `087E4974` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `DestroyDingodile`, `CreateDingodile` | high | easy |
 | `087E49DC` | 0x78 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreatePlatform`, `DestroyPlatform`, `sub_801B2E4` | high | easy |
 | `087E4A54` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `DestroyPlatformMover`, `CreatePlatformMover` | high | easy |
 | `087E4ABC` | 0x78 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_801B91C`, `sub_801B940` | high | easy |
@@ -998,47 +998,47 @@ vtable shapes).
 | `087E4DAC` | 0x48 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `InitSmallFont`, `InitLargeFont`, `DestroyFont` +3 | high | easy |
 | `087E4DF4` | 0x20 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `InitActorPart`, `DestroyActor`, `sub_802C19C` +41 | high | easy |
 | `087E4E14` | 0x20 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateActor` | high | easy |
-| `087E4E34` | 0x20 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_802B12C` | high | easy |
+| `087E4E34` | 0x20 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreatePolarCheckpointText` | high | easy |
 | `087E4E54` | 0x20 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `ConstructActorPart`, `sub_802C19C` | high | easy |
-| `087E4E74` | 0x20 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_802C394`, `sub_802C3E8` | high | easy |
-| `087E4E94` | 0x20 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateActor`, `sub_802C4A4` | high | easy |
-| `087E4EB4` | 0x20 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateActor`, `sub_802CB9C` | high | easy |
-| `087E4ED4` | 0x20 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateActor`, `sub_802CBC0` | high | easy |
-| `087E4EF4` | 0x20 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateActor`, `sub_802CBE4` | high | easy |
-| `087E4F14` | 0x20 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateActor`, `sub_802CC08` | high | easy |
-| `087E4F34` | 0x20 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateActor`, `sub_802CC2C` | high | easy |
+| `087E4E74` | 0x20 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `DestroyPolarCollectedWumpa`, `CreatePolarCollectedWumpa` | high | easy |
+| `087E4E94` | 0x20 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateActor`, `CreatePolarWumpa` | high | easy |
+| `087E4EB4` | 0x20 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateActor`, `CreatePolarTimeCrate` | high | easy |
+| `087E4ED4` | 0x20 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateActor`, `CreatePolarQuestionCrate` | high | easy |
+| `087E4EF4` | 0x20 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateActor`, `CreatePolarAkuAkuCrate` | high | easy |
+| `087E4F14` | 0x20 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateActor`, `CreatePolarNitroCrate` | high | easy |
+| `087E4F34` | 0x20 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateActor`, `CreatePolarLifeCrate` | high | easy |
 | `087E4F54` | 0x20 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateActor`, `sub_802CC54` | high | easy |
-| `087E4F74` | 0x20 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateActor`, `sub_802CC78` | high | easy |
-| `087E4F94` | 0x20 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_802CB34` | high | easy |
-| `087E4FB4` | 0x20 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_802CDE4` | high | easy |
+| `087E4F74` | 0x20 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateActor`, `CreatePolarBasicCrate` | high | easy |
+| `087E4F94` | 0x20 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `InitPolarCrate` | high | easy |
+| `087E4FB4` | 0x20 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreatePolarElectricFence` | high | easy |
 | `087E4FD4` | 0x20 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_802CE38` | high | easy |
 | `087E4FF4` | 0x20 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_802CF0C` | high | easy |
-| `087E5014` | 0x20 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_802D0C8` | high | easy |
-| `087E5034` | 0x20 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_802D1B8` | high | easy |
-| `087E5054` | 0x20 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_802D528` | high | easy |
+| `087E5014` | 0x20 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreatePolarPenguin` | high | easy |
+| `087E5034` | 0x20 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreatePolarIcicle` | high | easy |
+| `087E5054` | 0x20 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreatePolarAkuAku` | high | easy |
 | `087E5074` | 0x20 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_802D5D4` | high | easy |
 | `087E5094` | 0x20 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_802D648` | high | easy |
-| `087E50B4` | 0x20 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_802D764` | high | easy |
-| `087E50D4` | 0x38 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_802E3CC` | high | easy |
-| `087E510C` | 0x38 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_802E420` | high | easy |
+| `087E50B4` | 0x20 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreatePolarCheckpointCrate` | high | easy |
+| `087E50D4` | 0x38 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateJetpackCheckpointText` | high | easy |
+| `087E510C` | 0x38 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateJetpackExplosion` | high | easy |
 | `087E5144` | 0x38 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_802E740`, `sub_802F6DC` | high | easy |
-| `087E517C` | 0x38 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_802FA04` | high | easy |
-| `087E51B4` | 0x38 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_802FD8C` | high | easy |
-| `087E51EC` | 0x38 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_802FF08` | high | easy |
-| `087E5224` | 0x38 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_8030300` | high | easy |
+| `087E517C` | 0x38 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateJetpackShot` | high | easy |
+| `087E51B4` | 0x38 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateJetpackPlane` | high | easy |
+| `087E51EC` | 0x38 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateJetpackBomber` | high | easy |
+| `087E5224` | 0x38 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateJetpackCannonball` | high | easy |
 | `087E525C` | 0x38 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_80305F8` | high | easy |
-| `087E5294` | 0x38 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_8031920` | high | easy |
-| `087E52CC` | 0x40 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_8032054` | high | easy |
-| `087E530C` | 0x40 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_8031F78` | high | easy |
-| `087E534C` | 0x40 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_80320C4` | high | easy |
-| `087E538C` | 0x40 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_8031F78`, `sub_8032054`, `sub_80320C4` +1 | high | easy |
-| `087E53CC` | 0x38 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_8032440` | high | easy |
-| `087E5404` | 0x38 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_80325EC` | high | easy |
-| `087E543C` | 0x38 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_80326E4` | high | easy |
-| `087E5474` | 0x38 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_803283C`, `sub_8032890` | high | easy |
+| `087E5294` | 0x38 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateJetpackBalloon` | high | easy |
+| `087E52CC` | 0x40 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateJetpackHealthCrate` | high | easy |
+| `087E530C` | 0x40 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateJetpackTimeCrate` | high | easy |
+| `087E534C` | 0x40 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateJetpackQuestionCrate` | high | easy |
+| `087E538C` | 0x40 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateJetpackTimeCrate`, `CreateJetpackHealthCrate`, `CreateJetpackQuestionCrate` +1 | high | easy |
+| `087E53CC` | 0x38 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateJetpackParachuteNitro` | high | easy |
+| `087E5404` | 0x38 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateJetpackRocket` | high | easy |
+| `087E543C` | 0x38 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateJetpackRing` | high | easy |
+| `087E5474` | 0x38 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `DestroyJetpackCollectedWumpa`, `CreateJetpackCollectedWumpa` | high | easy |
 | `087E54AC` | 0x38 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_80329D4` | high | easy |
-| `087E54E4` | 0x38 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_8033BB8` | high | easy |
-| `087E551C` | 0x38 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_8033EF4` | high | easy |
+| `087E54E4` | 0x38 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateHovercraftCannon` | high | easy |
+| `087E551C` | 0x38 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateHovercraftLauncher` | high | easy |
 | `087E5554` | 0x38 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_8034058` | high | easy |
 | `087E558C` | 0x38 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_80342D4` | high | easy |
 | `087E55C4` | 0x20 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `InitLogoActor`, `DestroyLogoActor` | high | easy |

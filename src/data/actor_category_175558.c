@@ -18,23 +18,23 @@ extern void sub_802A6B0();
 extern void sub_802A6C4();
 extern void sub_802A6D8();
 extern void SpawnActor();
-extern void sub_802D7B0();
-extern void sub_802DA68();
-extern void sub_802DE70();
-extern void sub_802DFC8();
-extern void sub_802DFDC();
-extern void sub_802E0CC();
+extern void UpdateYeti();
+extern void UpdateYetiBg2();
+extern void LoadYetiGraphics();
+extern void DestroyYeti();
+extern void CreateYeti();
+extern void SpawnJetpackActor();
 extern void sub_802E710();
-extern void sub_8030F88();
-extern void sub_80311C4();
-extern void sub_80312C4();
-extern void sub_8031504();
-extern void sub_80317C4();
-extern void sub_80331BC();
-extern void sub_8033470();
-extern void sub_8033550();
-extern void sub_8033604();
-extern void sub_80337E4();
+extern void CreateAirship();
+extern void UpdateAirship();
+extern void UpdateAirshipBg2();
+extern void LoadAirshipGraphics();
+extern void DestroyAirship();
+extern void CreateHovercraft();
+extern void UpdateHovercraft();
+extern void UpdateHovercraftBg2();
+extern void LoadHovercraftGraphics();
+extern void DestroyHovercraft();
 
 extern const u8 gCategoryFamily0CellAnim[];
 extern const u8 gCategory0SpawnTable[];
@@ -172,11 +172,11 @@ const struct category_vtable gActorCategoryVtables[3] = {
     /* 0 */ { {
         ConstructAnimTableState,
         SpawnActor,
-        sub_802DFDC,
-        sub_802D7B0,
-        sub_802DA68,
-        sub_802DFC8,
-        sub_802DE70,
+        CreateYeti,
+        UpdateYeti,
+        UpdateYetiBg2,
+        DestroyYeti,
+        LoadYetiGraphics,
         (void (*)(void))0xffffffef,
         (void (*)(void))0xffffffd1,
         sub_802A018,
@@ -186,12 +186,12 @@ const struct category_vtable gActorCategoryVtables[3] = {
     } },
     /* 1 */ { {
         sub_802E710,
-        sub_802E0CC,
-        sub_8030F88,
-        sub_80311C4,
-        sub_80312C4,
-        sub_80317C4,
-        sub_8031504,
+        SpawnJetpackActor,
+        CreateAirship,
+        UpdateAirship,
+        UpdateAirshipBg2,
+        DestroyAirship,
+        LoadAirshipGraphics,
         (void (*)(void))0xa9,
         (void (*)(void))0x1c,
         sub_802A110,
@@ -201,12 +201,12 @@ const struct category_vtable gActorCategoryVtables[3] = {
     } },
     /* 2 */ { {
         sub_802E710,
-        sub_802E0CC,
-        sub_80331BC,
-        sub_8033470,
-        sub_8033550,
-        sub_80337E4,
-        sub_8033604,
+        SpawnJetpackActor,
+        CreateHovercraft,
+        UpdateHovercraft,
+        UpdateHovercraftBg2,
+        DestroyHovercraft,
+        LoadHovercraftGraphics,
         (void (*)(void))0xa9,
         (void (*)(void))0x1c,
         sub_802A110,

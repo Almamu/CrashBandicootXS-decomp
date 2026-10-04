@@ -104,7 +104,7 @@ shape/register-budget gap this exact table family (`gStaticData_0816BF20`)
 already hits repeatedly throughout `docs/status/actor.md`'s "Parked -
 NAKED transcription" section (`sub_801434C`, `sub_80145E4`,
 `sub_8015038`, `sub_8015238`, `sub_80152F0`, `sub_80156EC`,
-`sub_80157C4`, and the whole `sub_8030574`-`sub_8031604` boss-weapon
+`sub_80157C4`, and the whole `sub_8030574`-`ConvertAirshipTiles` boss-weapon
 cluster) - a confirmed categorical difficulty for this class of
 function, not a one-off. Given all six of this remainder's functions
 share the same field-offset/trampoline conventions and jump-table-heavy

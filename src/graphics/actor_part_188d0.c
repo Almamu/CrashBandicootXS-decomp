@@ -26,7 +26,7 @@
  *   and spawns hit effects (sub_8019214).
  * - sub_8019324: hit test of a part against the player and the
  *   gUnknown_030012F0 list (sub_8007xxx boxes, sub_8001688 overlap).
- * - sub_80189EC: allocates a 257-entry table of i*i>>8 squares.
+ * - CreateTiny: allocates a 257-entry table of i*i>>8 squares.
  *
  * Matching notes: this code materializes a byte-RMW's constant/mask
  * before loading the byte, and computes stored values before their
@@ -67,7 +67,7 @@ struct gfx_ctrl
     struct gfx_vtable *vtable;  // 0x0C
 };
 
-/* sub_80189EC/sub_80189C4 (vtable gStaticData_087E4564) */
+/* CreateTiny/DestroyTiny (vtable gTinyVtable) */
 struct gfx_squares
 {
     u8 unk_00[0xC];
@@ -192,7 +192,7 @@ extern void *gUnknown_030012F4;
 extern struct gfx_level *gLevelLayers;
 extern u8 gStaticData_087E4494[];
 extern u8 gStaticData_087E44FC[];
-extern u8 gStaticData_087E4564[];
+extern u8 gTinyVtable[];
 extern u8 gStaticData_087E45CC[];
 extern u8 gStaticData_087E4634[];
 extern u8 gStaticData_087E469C[];
@@ -492,20 +492,20 @@ void sub_8018978(struct gfx_offset_ctrl *self, struct gfx_part *part)
     self->dx = part->pos.x - self->x;
 }
 
-void sub_80189C4(struct gfx_squares *self, s32 flags)
+void DestroyTiny(struct gfx_squares *self, s32 flags)
 {
-    self->vtable = (struct gfx_vtable *)gStaticData_087E4564;
+    self->vtable = (struct gfx_vtable *)gTinyVtable;
     if (self->squares != NULL)
         sub_8026EB4(self->squares);
     sub_8017A78(self, flags);
 }
 
-void *sub_80189EC(struct gfx_squares *self)
+void *CreateTiny(struct gfx_squares *self)
 {
     s32 i;
 
     sub_8017A8C(self);
-    self->vtable = (struct gfx_vtable *)gStaticData_087E4564;
+    self->vtable = (struct gfx_vtable *)gTinyVtable;
     self->unk_24 = -1;
     self->squares = sub_8026EC0(0x202);
     for (i = 0; i <= 0x100; i++)

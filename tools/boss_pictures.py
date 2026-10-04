@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""The two boss pictures drawn on an affine BG (gStaticData_08167CD4, four
-frames of N. Gin's airship, and gStaticData_08169CE8, Cortex's
+"""The two boss pictures drawn on an affine BG (gAirshipPicture, four
+frames of N. Gin's airship, and gHovercraftPicture, Cortex's
 hovercraft; see docs/data.md "Boss pictures").
 
 In the ROM a picture is {s16 cols, s16 rows}, then per frame a tile

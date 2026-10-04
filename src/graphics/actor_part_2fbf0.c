@@ -8,15 +8,15 @@
  * boss-weapon cluster. Each class is identified by the method table its
  * constructor installs at +0x50:
  *
- * - gStaticData_087E51B4 (`struct actor_51b4`, sub_802FBF0-sub_802FF00):
+ * - gJetpackPlaneVtable (`struct jetpack_plane`, AimJetpackPlane-sub_802FF00):
  *   a hopping pickup/hazard that ballistically jumps between the
  *   level's sub-effect target points (`sub_802A5xx` accessors - see
  *   docs/rom_map.md), with a "dying" flag and 4 hit points.
- * - gStaticData_087E51EC (`struct actor_51ec`, sub_802FF08-sub_8030290):
+ * - gJetpackBomberVtable (`struct jetpack_bomber`, CreateJetpackBomber-sub_8030290):
  *   a 2-hit-point object whose spawn kind (4-9) picks its initial
  *   state; its per-state movers circle a home point on the shared
  *   sine table gSineTable or drift toward the player.
- * - gStaticData_087E5224 (`struct actor_5224`, sub_8030298-sub_8030330):
+ * - gJetpackCannonballVtable (`struct jetpack_cannonball`, UpdateJetpackCannonball-sub_8030330):
  *   a straight-line projectile that damages the player on contact.
  *
  * Method-table and member-pointer calls are real indirect calls
@@ -44,11 +44,11 @@ extern struct actor_self *gActorList;
 extern s16 gSineTable[];
 extern struct actor_pmf gStaticData_0817C260[];
 extern struct actor_pmf gStaticData_0817C280[];
-extern u8 gStaticData_087E51B4[];
-extern u8 gStaticData_087E51EC[];
-extern u8 gStaticData_087E5224[];
+extern u8 gJetpackPlaneVtable[];
+extern u8 gJetpackBomberVtable[];
+extern u8 gJetpackCannonballVtable[];
 
-struct actor_51b4 {
+struct jetpack_plane {
     struct actor_self base;
     s32 hp;             // 0x54
     s32 unk_58;         // 0x58
@@ -63,7 +63,7 @@ struct actor_51b4 {
     u8 dying;           // 0x7C
 };
 
-struct actor_51ec {
+struct jetpack_bomber {
     struct actor_self base;
     s32 hp;             // 0x54
     s32 homeX;          // 0x58
@@ -71,7 +71,7 @@ struct actor_51ec {
     u8 unk_60;          // 0x60
 };
 
-struct actor_5224 {
+struct jetpack_cannonball {
     struct actor_self base;
     s32 hp;             // 0x54
     s32 velX;           // 0x58
@@ -98,7 +98,7 @@ struct spawn_arg {
  * target's X/Y after that many steps. A negative target ends the chain
  * (idle state 1 if the hop speed is low, else a practically endless
  * glide). Finally restarts the "low" (3) or "high" (0) animation. */
-void sub_802FBF0(struct actor_51b4 *self, s32 target)
+void AimJetpackPlane(struct jetpack_plane *self, s32 target)
 {
     if (target < 0) {
         if (self->speed <= 0x955) {
@@ -146,7 +146,7 @@ void sub_802FBF0(struct actor_51b4 *self, s32 target)
 /* Damage handler: once hit points run out, marks the object dying,
  * halves its velocity (only an upward Y velocity) and plays the
  * knock-out animation (1 or 4, matching the current pose) in state 2. */
-void sub_802FD1C(struct actor_51b4 *self, s32 damage)
+void DamageJetpackPlane(struct jetpack_plane *self, s32 damage)
 {
     s32 idx;
 
@@ -171,13 +171,13 @@ void sub_802FD1C(struct actor_51b4 *self, s32 damage)
  * hop starts higher up and with the faster speed. The constant 4 is
  * pinned to r4 so it is loaded before the InitActorPart call like the
  * ROM does (docs/workflow.md). */
-void *sub_802FD8C(struct actor_51b4 *self, void *part, s32 b, s32 c, s32 d, struct spawn_arg *arg)
+void *CreateJetpackPlane(struct jetpack_plane *self, void *part, s32 b, s32 c, s32 d, struct spawn_arg *arg)
 {
     register s32 four asm("r4") = 4;
 
     InitActorPart(self, part, b, c, d);
     self->hp = four;
-    self->base.vtable = (struct actor_vtable *)gStaticData_087E51B4;
+    self->base.vtable = (struct actor_vtable *)gJetpackPlaneVtable;
     self->unk_58 = 0x3c;
     self->unk_5C = 0;
     self->dying = 0;
@@ -188,12 +188,12 @@ void *sub_802FD8C(struct actor_51b4 *self, void *part, s32 b, s32 c, s32 d, stru
         self->base.z += -0x8e00;
         self->speed = 0xd55;
     }
-    sub_802FBF0(self, arg->target);
+    AimJetpackPlane(self, arg->target);
     return self;
 }
 
 /* Applies Y acceleration, capped at 0x1400. */
-void sub_802FE04(struct actor_51b4 *self)
+void sub_802FE04(struct jetpack_plane *self)
 {
     self->velY += self->accY;
     if (self->velY > 0x1400) {
@@ -203,7 +203,7 @@ void sub_802FE04(struct actor_51b4 *self)
 
 /* When the current animation finishes, switches to the landing
  * animation (2 or 5) in state 3 with a fixed Y acceleration. */
-void sub_802FE1C(struct actor_51b4 *self)
+void sub_802FE1C(struct jetpack_plane *self)
 {
     s32 idx;
 
@@ -220,7 +220,7 @@ void sub_802FE1C(struct actor_51b4 *self)
 }
 
 /* Sets the velocity to 1/16 of the offset to the player. */
-void sub_802FE58(struct actor_51b4 *self)
+void sub_802FE58(struct jetpack_plane *self)
 {
     struct actor_self *player = gActorList;
 
@@ -230,23 +230,23 @@ void sub_802FE58(struct actor_51b4 *self)
 
 /* Integrates acceleration into velocity; aims the next hop once the
  * step count runs out. */
-void sub_802FE78(struct actor_51b4 *self)
+void sub_802FE78(struct jetpack_plane *self)
 {
     self->velX += self->accX;
     self->velY += self->accY;
     if (--self->steps <= 0) {
-        sub_802FBF0(self, self->next);
+        AimJetpackPlane(self, self->next);
     }
 }
 
 /* Per-frame update: calls this state's gStaticData_0817C260 handler. */
-void sub_802FEA4(struct actor_51b4 *self)
+void sub_802FEA4(struct jetpack_plane *self)
 {
     ACTOR_PMF_CALL(&self->base, gStaticData_0817C260);
 }
 
 /* Getter for the dying flag. */
-u8 sub_802FF00(struct actor_51b4 *self)
+u8 sub_802FF00(struct jetpack_plane *self)
 {
     return self->dying;
 }
@@ -256,7 +256,7 @@ u8 sub_802FF00(struct actor_51b4 *self)
  * the constant 2 are pinned to the ROM's r8/r5/r6/r4, the stack
  * argument to r0 after them (same fix as sub_80305F8), and the kind
  * byte is read through r1 as in the ROM (docs/workflow.md). */
-void *sub_802FF08(struct actor_51ec *self, u8 *part, s32 b, s32 c, s32 d)
+void *CreateJetpackBomber(struct jetpack_bomber *self, u8 *part, s32 b, s32 c, s32 d)
 {
     register u8 *partReg asm("r8") = part;
     register s32 bReg asm("r5") = b;
@@ -267,7 +267,7 @@ void *sub_802FF08(struct actor_51ec *self, u8 *part, s32 b, s32 c, s32 d)
 
     InitActorPart(self, part, b, c, dReg);
     self->hp = two;
-    self->base.vtable = (struct actor_vtable *)gStaticData_087E51EC;
+    self->base.vtable = (struct actor_vtable *)gJetpackBomberVtable;
     self->homeX = bReg;
     self->homeY = cReg;
     self->unk_60 = 0;
@@ -303,7 +303,7 @@ void *sub_802FF08(struct actor_51ec *self, u8 *part, s32 b, s32 c, s32 d)
  * state 6. Then runs this state's gStaticData_0817C280 handler; once
  * the dying animation is done, calls its own "destroy" method,
  * otherwise sinks slightly and runs the standard UpdateActor step. */
-void sub_802FFB8(struct actor_51ec *self)
+void UpdateJetpackBomber(struct jetpack_bomber *self)
 {
     if (self->base.state != 6) {
         sub_802F46C(gActorList);
@@ -328,7 +328,7 @@ void sub_802FFB8(struct actor_51ec *self)
 }
 
 /* Eases `self` 1/32 of the way toward the player. */
-void sub_80300B0(struct actor_51ec *self)
+void sub_80300B0(struct jetpack_bomber *self)
 {
     struct actor_self *player = gActorList;
 
@@ -336,19 +336,19 @@ void sub_80300B0(struct actor_51ec *self)
     self->base.y += (player->y - self->base.y) >> 5;
 }
 
-void nullsub_28(struct actor_51ec *self)
+void nullsub_28(struct jetpack_bomber *self)
 {
 }
 
 /* Moves `self` down by 0x88. */
-void sub_80300D8(struct actor_51ec *self)
+void sub_80300D8(struct jetpack_bomber *self)
 {
     self->base.z -= 0x88;
 }
 
 /* Circles `self` around its home point (radius 60) while above a depth
  * threshold, otherwise homes in on the player. */
-void sub_80300E0(struct actor_51ec *self)
+void sub_80300E0(struct jetpack_bomber *self)
 {
     if (self->base.depth > 0x35ff) {
         s16 *sine = gSineTable;
@@ -362,7 +362,7 @@ void sub_80300E0(struct actor_51ec *self)
 }
 
 /* Horizontal-only variant of sub_80300E0 (radius 80, slower phase). */
-void sub_803013C(struct actor_51ec *self)
+void sub_803013C(struct jetpack_bomber *self)
 {
     if (self->base.depth > 0x35ff) {
         self->base.x = self->homeX + gSineTable[((((self->base.stateTime * 10) >> 4) & 0xff) + 0x40) & 0xff] * 80;
@@ -372,7 +372,7 @@ void sub_803013C(struct actor_51ec *self)
 }
 
 /* Vertical-only variant of sub_80300E0. */
-void sub_8030188(struct actor_51ec *self)
+void sub_8030188(struct jetpack_bomber *self)
 {
     if (self->base.depth > 0x35ff) {
         self->base.y = self->homeY + gSineTable[((self->base.stateTime << 4) >> 4) & 0xff] * 60;
@@ -382,19 +382,19 @@ void sub_8030188(struct actor_51ec *self)
 }
 
 /* Homes in on the player only while at or below the depth threshold. */
-void sub_80301CC(struct actor_51ec *self)
+void sub_80301CC(struct jetpack_bomber *self)
 {
     if (self->base.depth <= 0x35ff) {
         sub_80300B0(self);
     }
 }
 
-void nullsub_29(struct actor_51ec *self)
+void nullsub_29(struct jetpack_bomber *self)
 {
 }
 
 /* Damage handler: when hit points run out, enters the dying state 6. */
-void sub_80301EC(struct actor_51ec *self, s32 damage)
+void DamageJetpackBomber(struct jetpack_bomber *self, s32 damage)
 {
     if (self->base.state != 6 && (self->hp -= damage) <= 0) {
         self->base.palette = 4;
@@ -404,13 +404,13 @@ void sub_80301EC(struct actor_51ec *self, s32 damage)
 }
 
 /* Calls this state's gStaticData_0817C280 handler. */
-void sub_8030234(struct actor_51ec *self)
+void sub_8030234(struct jetpack_bomber *self)
 {
     ACTOR_PMF_CALL(&self->base, gStaticData_0817C280);
 }
 
 /* Getter for the +0x60 flag byte. */
-u8 sub_8030290(struct actor_51ec *self)
+u8 sub_8030290(struct jetpack_bomber *self)
 {
     return self->unk_60;
 }
@@ -418,7 +418,7 @@ u8 sub_8030290(struct actor_51ec *self)
 /* Projectile step: moves by its velocity and falls; on player contact
  * damages the player (strength 2) and destroys itself, otherwise runs
  * the standard UpdateActor step. */
-void sub_8030298(struct actor_5224 *self)
+void UpdateJetpackCannonball(struct jetpack_cannonball *self)
 {
     self->base.x += self->velX;
     self->base.y += self->velY;
@@ -434,10 +434,10 @@ void sub_8030298(struct actor_5224 *self)
 }
 
 /* Constructor: 1 hit point and the given velocity - the same shape as
- * sub_802FA04 (actor_part45c.c), matched with the same register
+ * CreateJetpackShot (actor_part45c.c), matched with the same register
  * arrangement (the constant pinned to r5, the two stack arguments left
  * to the allocator). */
-void *sub_8030300(struct actor_5224 *self, void *part, s32 b, s32 c, s32 d, s32 velX, s32 velY)
+void *CreateJetpackCannonball(struct jetpack_cannonball *self, void *part, s32 b, s32 c, s32 d, s32 velX, s32 velY)
 {
     register s32 one asm("r5") = 1;
     register s32 vx = velX;
@@ -445,14 +445,14 @@ void *sub_8030300(struct actor_5224 *self, void *part, s32 b, s32 c, s32 d, s32 
 
     InitActorPart(self, part, b, c, d);
     self->hp = one;
-    self->base.vtable = (struct actor_vtable *)gStaticData_087E5224;
+    self->base.vtable = (struct actor_vtable *)gJetpackCannonballVtable;
     self->velX = vx;
     self->velY = vy;
     return self;
 }
 
 /* Constant-true predicate. */
-s32 sub_8030330(struct actor_5224 *self)
+s32 sub_8030330(struct jetpack_cannonball *self)
 {
     return 1;
 }

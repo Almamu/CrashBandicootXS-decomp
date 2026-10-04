@@ -26,7 +26,7 @@ push/pop list" failure mode already documented at
 `matching_decomp_register_pinning` memory point 10) - it crashed the
 compiler outright with `internal error--unrecognizable insn`. This is
 the categorical r7-pin limitation cross-referenced from several other
-files in this ROM region (`sub_8007B00`, `sub_802D3A8`,
+files in this ROM region (`sub_8007B00`, `MovePolarAkuAku`,
 `sub_8002D44`/`sub_8002E20`, `sub_8009FD4`'s neighborhood): this
 agbcc build cannot be made to keep a real, cross-block-live value in
 `r7` no matter how it's coaxed.

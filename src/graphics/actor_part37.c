@@ -10,7 +10,7 @@ extern void UpdateActor(void *self);
 /* Per-state member-pointer dispatch, `(this->*gStaticData_0817C4F8
  * [this->state])()` (see `ACTOR_PMF_CALL`), then the standard
  * UpdateActor step unless the state-2 animation has played through. */
-void sub_8033E80(struct actor_self *self)
+void UpdateHovercraftLauncher(struct actor_self *self)
 {
     s32 state;
     s32 step;

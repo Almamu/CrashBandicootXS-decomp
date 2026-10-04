@@ -18,18 +18,18 @@ extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void sub_802A980(void *self);
 extern void sub_8032138(void *obj);
 
-extern s32 gUnknown_03001538;
-extern s32 gUnknown_0300156C;
+extern s32 gAirshipState;
+extern s32 gAirshipHp;
 extern void *gUnknown_03001568;
-extern void *gUnknown_03001534;
+extern void *gAirship;
 extern s32 gUnknown_030013C0;
 extern void sub_8031A08(struct actor_self *self);
 extern void *gAudioContext;
-extern u8 gStaticData_087E5294[];
+extern u8 gJetpackBalloonVtable[];
 extern struct actor_pmf gStaticData_0817C414[];
 
-/* The gStaticData_087E5294 class built by sub_8031920. */
-struct actor_5294 {
+/* The gJetpackBalloonVtable class built by CreateJetpackBalloon. */
+struct jetpack_balloon {
     struct actor_self base;
     s32 hp;             // 0x54
     struct actor_self *pending; // 0x58
@@ -39,23 +39,23 @@ struct actor_5294 {
 };
 
 /* Gates the boss-weapon tracker's own "ready" check: while the tracker
- * is inactive (`gUnknown_03001538 == 0`), reports "not ready" (-1).
- * Otherwise scales the countdown `gUnknown_0300156C` by 100 through
+ * is inactive (`gAirshipState == 0`), reports "not ready" (-1).
+ * Otherwise scales the countdown `gAirshipHp` by 100 through
  * `__divsi3` against the weapon table's own first field
  * (`*gUnknown_03001568`, a `void *` pointing at the small weapon-kind
  * table already characterized in actor_part21d.c), and reports "ready"
  * (1) once that scaled ratio is exactly zero and the countdown is still
  * running (`> 0`); otherwise passes the scaled ratio straight through. */
-s32 sub_8031784(void)
+s32 GetAirshipHpPercent(void)
 {
     register s32 countdown asm("r4");
     s32 result;
 
-    if (gUnknown_03001538 == 0) {
+    if (gAirshipState == 0) {
         return -1;
     }
 
-    countdown = gUnknown_0300156C;
+    countdown = gAirshipHp;
     result = __divsi3(countdown * 100, *(s32 *)gUnknown_03001568);
     if (result == 0 && countdown > 0) {
         result = 1;
@@ -63,12 +63,12 @@ s32 sub_8031784(void)
     return result;
 }
 
-/* Destructor for the small tracker object (`gUnknown_03001534`) -
+/* Destructor for the small tracker object (`gAirship`) -
  * `mem_free`'s it directly, the counterpart to its constructor
- * `sub_8030F88` (actor_part23d.c). */
-void sub_80317C4(void)
+ * `CreateAirship` (actor_part23d.c). */
+void DestroyAirship(void)
 {
-    mem_free(gUnknown_03001534);
+    mem_free(gAirship);
 }
 
 void nullsub_30(void)
@@ -86,7 +86,7 @@ void nullsub_31(void)
  * or state 1 has sunk past a height; otherwise runs the member-pointer
  * dispatch `sub_8031A08`. The shared destroy tail is a `goto` target, as
  * the ROM's branch layout shares it between both paths. */
-void sub_80317E0(struct actor_5294 *self)
+void UpdateJetpackBalloon(struct jetpack_balloon *self)
 {
     sub_802A980(self);
     if (self->base.depth < gUnknown_030013C0 - 0x200) {
@@ -118,7 +118,7 @@ void sub_8031850(void *selfArg)
  * releases the pending linked object through its method table's `m38`
  * slot, plays the death cue and enters state 2 with animation 1. Same
  * overall shape as the boss cluster's `sub_8030530` (actor_part20.c). */
-void sub_8031858(struct actor_5294 *self, s32 damage)
+void DamageJetpackBalloon(struct jetpack_balloon *self, s32 damage)
 {
     if ((self->hp -= damage) > 0) {
         return;
@@ -137,7 +137,7 @@ void sub_8031858(struct actor_5294 *self, s32 damage)
 
 /* Full reset idiom (state=1, counter/accumulator/table-index cleared,
  * anim frame re-synced from `self`'s own part table) - same shape as
- * the boss cluster's established reset blocks (`sub_80306AC`,
+ * the boss cluster's established reset blocks (`AirshipStateApproach`,
  * actor_part21c.c). */
 void sub_80318B4(void *selfArg)
 {
@@ -188,11 +188,11 @@ void sub_80318D0(struct actor_self *self, s32 x, s32 y, s32 z)
 /* An `InitActorPart`-based constructor: forwards its first 4 real
  * arguments straight to `InitActorPart` (the last, `d`, stack-passed),
  * then marks `self+0x54 = 2`, sets `self+0x50`'s event/trampoline table
- * to `gStaticData_087E5294`, stashes a 6th argument (`e`, also
+ * to `gJetpackBalloonVtable`, stashes a 6th argument (`e`, also
  * stack-passed) into `self+0x58`, and clears `self+0x5c` (byte). Same
  * shape as the already-matched `sub_80305F8` (actor_part20d.c), except
  * with a 6th argument instead of a second stash of `c`. */
-void *sub_8031920(void *selfArg, s32 a, s32 b, s32 c, s32 d, s32 e)
+void *CreateJetpackBalloon(void *selfArg, s32 a, s32 b, s32 c, s32 d, s32 e)
 {
     u8 *self = selfArg;
     register s32 eReg asm("r6") = e;
@@ -200,7 +200,7 @@ void *sub_8031920(void *selfArg, s32 a, s32 b, s32 c, s32 d, s32 e)
 
     InitActorPart(self, a, b, c, d);
     *(s32 *)(self + 0x54) = health;
-    *(void **)(self + 0x50) = gStaticData_087E5294;
+    *(void **)(self + 0x50) = gJetpackBalloonVtable;
     *(s32 *)(self + 0x58) = eReg;
     self[0x5c] = 0;
 
@@ -227,7 +227,7 @@ void sub_8031954(struct actor_self *self)
 /* Falls under a decaying vertical velocity (`velY` drops by 6 per
  * frame, floored at -0x12C), then the shared anim-frame-advance-and-
  * clamp idiom (see `sub_80318D0`). */
-void sub_80319A0(struct actor_5294 *self)
+void sub_80319A0(struct jetpack_balloon *self)
 {
     s32 base;
 

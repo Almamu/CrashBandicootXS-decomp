@@ -1,49 +1,49 @@
 #include "core.h"
 #include "memory.h"
 
-/* More of the `gUnknown_030014BC`-rooted object's lifecycle (see
+/* More of the `gYeti`-rooted object's lifecycle (see
  * actor_part58.c's header comment): a state-flag setter, its
  * destructor, and its constructor. */
 
-extern s32 gUnknown_030014D0;
+extern s32 gYetiState;
 
-/* Arms `gUnknown_030014D0 = 3` - a state value none of this chunk's
+/* Arms `gYetiState = 3` - a state value none of this chunk's
  * other functions read back, plausibly consumed by the vtable-dispatch
  * caller itself. */
-void sub_802DFBC(void)
+void StopYeti(void)
 {
-    gUnknown_030014D0 = 3;
+    gYetiState = 3;
 }
 
-extern void *gUnknown_030014BC;
+extern void *gYeti;
 
 /* Destructor: frees the object. */
-void sub_802DFC8(void)
+void DestroyYeti(void)
 {
-    mem_free(gUnknown_030014BC);
+    mem_free(gYeti);
 }
 
 extern s32 gUnknown_030014D4;
-extern s32 gUnknown_030014C4;
-extern s32 gUnknown_030014CC;
+extern s32 gYetiX;
+extern s32 gYetiDistance;
 extern s32 gUnknown_030014C8;
 extern u8 gStaticData_0817A850[];
 extern u8 gStaticData_0817A880[];
 extern void SetActorAnim(void *self, s32 idx);
 extern s32 sub_8029B2C(void);
 extern void sub_8029E34(s32 arg0);
-extern void sub_802DE70(void);
+extern void LoadYetiGraphics(void);
 
 /* Constructor: stashes the caller's argument in `gUnknown_030014D4`,
  * allocates and wires up a fresh instance (part table
  * `gStaticData_0817A850`/`0817A880`, header byte `0xf`, reset via
- * `SetActorAnim`) into `gUnknown_030014BC`, resets the position-tracking
- * pair (`gUnknown_030014C4` to 0, `030014CC` to `0xA000`,
+ * `SetActorAnim`) into `gYeti`, resets the position-tracking
+ * pair (`gYetiX` to 0, `030014CC` to `0xA000`,
  * `030014C8` derived the same way `sub_802DB2C`/`sub_802DCC0` do),
- * primes `sub_8029E34`, clears `gUnknown_030014D0`, and finally calls
- * `sub_802DE70` (the object's own initial VRAM-pattern/DMA setup,
+ * primes `sub_8029E34`, clears `gYetiState`, and finally calls
+ * `LoadYetiGraphics` (the object's own initial VRAM-pattern/DMA setup,
  * parked separately - see docs/matching/issue-54-actor-d3a8.md). */
-void sub_802DFDC(void *arg0)
+void CreateYeti(void *arg0)
 {
     u8 *obj;
     register u32 size asm("r0");
@@ -51,7 +51,7 @@ void sub_802DFDC(void *arg0)
     register void **bcAddr asm("r5");
 
     gUnknown_030014D4 = (s32)arg0;
-    bcAddr = &gUnknown_030014BC;
+    bcAddr = &gYeti;
     asm volatile("mov %0, #0x1c" : "=r"(size));
     asm volatile("mov %0, #0x80\n\tlsl %0, %0, #0x18" : "=r"(flags));
     obj = mem_alloc(size, flags);
@@ -67,13 +67,13 @@ void sub_802DFDC(void *arg0)
     SetActorAnim(obj, 0);
     *bcAddr = obj;
 
-    gUnknown_030014C4 = 0;
-    gUnknown_030014CC = 0xa000;
-    gUnknown_030014C8 = (sub_8029B2C() << 8) - gUnknown_030014CC;
-    sub_8029E34(gUnknown_030014CC);
+    gYetiX = 0;
+    gYetiDistance = 0xa000;
+    gUnknown_030014C8 = (sub_8029B2C() << 8) - gYetiDistance;
+    sub_8029E34(gYetiDistance);
 
-    gUnknown_030014D0 = 0;
-    sub_802DE70();
+    gYetiState = 0;
+    LoadYetiGraphics();
 }
 
 asm(".align 2, 0");

@@ -28,12 +28,12 @@ are constructed in this chunk, all sharing the family's usual layout
 anim-frame halfword/byte, `self+8` accumulator, `self+0x28` state,
 `self+0x44` frame counter, `self+0x50` event/trampoline table):
 
-- **Kind 1** (`sub_8033EF4`, vtable `gStaticData_087E551C`): health at
+- **Kind 1** (`CreateHovercraftLauncher`, vtable `gHovercraftLauncherVtable`): health at
   `+0x54`, caches its own `b`/`c` constructor args at `+0x58`/`+0x5c`,
   a death flag at `+0x6c`.
 - **Kind 2** (`sub_8034058`, vtable `gStaticData_087E5554`): health at
   `+0x54` (`0x10` or `0x18` depending on whether the
-  `gUnknown_030015AC` singleton is already constructed), a death flag
+  `gHovercraft` singleton is already constructed), a death flag
   at `+0x58`, a second one-shot flag at `+0x2c`, the constructor's 6th
   (stack-passed byte) argument cached at `+0x59`, and a little
   "spawn/orbit" record at `+0x5c`/`+0x60`/`+0x64`/`+0x68`/`+0x6c`
@@ -44,7 +44,7 @@ anim-frame halfword/byte, `self+8` accumulator, `self+0x28` state,
 
 ## Matched (19 of 25 functions)
 
-- **`sub_8033EF4`/`sub_8033F48`/`sub_8033F74`** (`src/graphics/actor_part63.c`)
+- **`CreateHovercraftLauncher`/`sub_8033F48`/`sub_8033F74`** (`src/graphics/actor_part63.c`)
   - Kind 1's constructor, its trampoline-fire helper (same shape as
   `sub_8033BFC`, actor_part32.c), and a position-sync/state-1-transition
   helper gated on the singleton's lifetime counter and animation "kind".
@@ -57,7 +57,7 @@ anim-frame halfword/byte, `self+8` accumulator, `self+0x28` state,
   death-flag getter (`self+0x6c`).
 - **`sub_8034110`/`sub_8034188`/`sub_80341F8`/`sub_8034264`/`nullsub_38`**
   (`src/graphics/actor_part67.c`) - Kind 2's damage/death handler (same
-  `sub_8033AE0` shape, register-pinned `zero`/`one` reused across the
+  `DamageHovercraftCannon` shape, register-pinned `zero`/`one` reused across the
   `self+0x58`/`+0x2c`/`+0x28`/`+0x44`/`+8` stores and the gate-byte read
   at `self+0x59` - reachable only via a pointer-offset walk from
   `self+0x58`, since `0x2d` doesn't fit `ldrb`'s 5-bit immediate range
@@ -72,7 +72,7 @@ anim-frame halfword/byte, `self+8` accumulator, `self+0x28` state,
   getter, and a no-op stub.
 - **`sub_80342D4`** (`src/graphics/actor_part69.c`) - Kind 3's
   constructor, same two-distinct-zero-register reset idiom as
-  `sub_8033EF4`.
+  `CreateHovercraftLauncher`.
 - **`sub_803436C`** (`src/graphics/actor_part71.c`) - trivial Kind 3
   one-shot-flag getter (`self+0x58`).
 - **`UpdateStarfield`/`StarfieldWaitForButton`/`DestroyStarfield`** (`src/graphics/actor_part73.c`)
@@ -94,7 +94,7 @@ Every one of this chunk's constructors resets `self+0x28`/`+0x44`/`+0xc`/
 breath. The ROM's own build never reuses one already-live zero register
 for both: it materializes a second, freshly-loaded zero specifically for
 the `self+0x12` store (and reuses *that* second register for anything
-immediately after it, like `sub_8033EF4`'s `self+0x6c` store). Writing
+immediately after it, like `CreateHovercraftLauncher`'s `self+0x6c` store). Writing
 the obvious single-`register zero`-reused-everywhere C consistently
 compiles 2-4 bytes *shorter* than the ROM - an isolated compile still
 "looks right" (same mnemonics, same operands, just one binding fewer),
@@ -102,7 +102,7 @@ and it takes the real map-file address-shift check (function boundaries
 landing 4 bytes early) to catch it. Fixed throughout this chunk with a
 nested block introducing a second `register ... zero2` immediately
 before the `self+0x12` store, mirroring the established idiom already
-in `sub_8033AE0`/`sub_803390C` (actor_part28.c/actor_part30.c).
+in `DamageHovercraftCannon`/`sub_803390C` (actor_part28.c/actor_part30.c).
 
 ### A note on isolated-compile confidence (again)
 
@@ -113,18 +113,18 @@ identical to the ROM disassembly can still be wrong. Three separate
 instances surfaced only once the whole chunk was linked and the ROM
 diffed byte-for-byte against `baserom.gba`:
 
-1. The missing-second-zero-register gap above (`sub_8033EF4`,
+1. The missing-second-zero-register gap above (`CreateHovercraftLauncher`,
    `sub_8033F74`, `sub_80342D4`) - each shrank its own function by 2-4
    bytes, which a from-scratch isolated compile has nothing to compare
    its *size* against.
-2. `sub_8033EF4`'s `d` constructor argument being fetched from the stack
+2. `CreateHovercraftLauncher`'s `d` constructor argument being fetched from the stack
    in the wrong position relative to `b`/`c` - same total instruction
    count and mnemonics, just reordered, so it produced a real 6-byte
    content mismatch without shifting any function's address at all.
 3. `sub_80341F8` being copied as a "byte-identical twin" of `sub_8034188`
    when it's actually missing the leading `UpdateActor(self)` call - a
    genuine 4-byte size difference that happened to exactly cancel the
-   4-byte deficit inherited from the upstream `sub_8033EF4` bug, so the
+   4-byte deficit inherited from the upstream `CreateHovercraftLauncher` bug, so the
    *next* function (`sub_8034264`) landed back at its correct absolute
    address by coincidence and briefly looked like proof nothing was
    wrong.
@@ -312,8 +312,8 @@ boundaries - not by re-reading the isolated compiles more carefully.
 - **`sub_8033FE4`** (`src/graphics/actor_part64.c`) - a
   `gStaticData_0817C4F8` stride-8 trampoline-record dispatcher
   returning a 0/1 result instead of tail-calling. Same `{s16 baseOff;
-  s16 count; void *fn}` record shape as `sub_8033B44`/`sub_8033C84`/
-  `sub_8033E80` (issue #62) and `sub_802C208` (issue #52) - all hit
+  s16 count; void *fn}` record shape as `UpdateHovercraftCannon`/`sub_8033C84`/
+  `UpdateHovercraftLauncher` (issue #62) and `sub_802C208` (issue #52) - all hit
   the same confirmed categorical gcc-2.9 r7-pin bug (the ROM keeps the
   table's base address alive in `r7` for the whole function; an
   explicit `register T x asm("r7")` compiles correct instructions but
@@ -337,8 +337,8 @@ boundaries - not by re-reading the isolated compiles more carefully.
   deciding whether to call `UpdateActor`, even though the value is a
   compile-time constant on each path - this compiler's dead-branch
   elimination always collapses that redundant compute-then-recheck
-  step, the same class of gap already documented for `sub_802C2FC`
-  (issue #52) and the dead `| 0` term in `sub_803B46C` (issue #71).
+  step, the same class of gap already documented for `DrawPolarCollectedWumpa`
+  (issue #52) and the dead `| 0` term in `DrawJetpackCheckpointText` (issue #71).
 - **`sub_8034314`** (`asm/code_3_2_20_28568_c99c_31784_33ef4_34314.s`, C
   in `src/graphics/actor_part70.c`) - `sub_8034270`'s boolean-returning
   twin, parked on the identical gap.

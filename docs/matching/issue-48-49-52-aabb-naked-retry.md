@@ -13,7 +13,7 @@ Nine closed as plain C, with no register pins:
 | `sub_802A018` | `actor_part103.c` | old_agbcc (file moved) | one frame struct for the boxes |
 | `sub_802A110` | `actor_part103.c` | old_agbcc | same inline as `sub_802A018` |
 | `sub_802A3AC` | `actor_part103.c` | old_agbcc | same inline, inside a list walk |
-| `sub_802C7A8` | `actor_part19h.c` | old_agbcc (file moved) | same inline, inside a list walk |
+| `DetonateNearbyPolarNitros` | `actor_part19h.c` | old_agbcc (file moved) | same inline, inside a list walk |
 | `FillCellAnimTilemap` | `actor_part98.c` | both | `tile++` in each branch |
 | `ResetCellAnimBg` | `actor_part95.c` | both | `FillCellAnimTilemap` inlined twice, upward clear loop |
 | `UploadCellAnimFrame` | `actor_part95.c` | both | expression order and locals |
@@ -28,7 +28,7 @@ Still NAKED: `InitActorCategory`, `InitCellAnim`, `SelectActorCategory`,
 
 ## The AABB group: one inline, one frame struct
 
-`sub_802A018`, `sub_802A110`, `sub_802A3AC` and `sub_802C7A8` all run
+`sub_802A018`, `sub_802A110`, `sub_802A3AC` and `DetonateNearbyPolarNitros` all run
 the same test: copy actor A's `+0x38` box to a stack slot, translate it
 by A's position, copy it to a second slot and run the `MemCopy32`
 self-copy, then do the same for actor B, and compare. In the source this
@@ -67,7 +67,7 @@ return BoxOverlap(&f.a, t);
   `add r4, sp, #0xc` after the three loads. B's position is passed
   directly, which gives the ROM's order for the second box.
 
-The type test in `sub_802C7A8` is `**(u8 **)(node + 0x30) == 4`. The
+The type test in `DetonateNearbyPolarNitros` is `**(u8 **)(node + 0x30) == 4`. The
 state test is `animIndex != 0x12`; `+0x0c` is `animIndex`, not `state`.
 `sub_802A3AC`'s gate is method slot `0x28` of the node's method table,
 called through `_call_via_r1`.
@@ -76,7 +76,7 @@ All four need old_agbcc. Current agbcc schedules the `asr`s in the box
 translation differently, which puts them 24-26 halfwords off.
 `actor_part103.c` also holds the NAKED `RunActorCategoryFrame`, which assembles
 the same under either compiler. `actor_part19h.c` holds only
-`sub_802C7A8`. Both files moved to `OLD_AGBCC_OBJS`.
+`DetonateNearbyPolarNitros`. Both files moved to `OLD_AGBCC_OBJS`.
 
 ## The tile-map fill: `tile++` in each branch
 

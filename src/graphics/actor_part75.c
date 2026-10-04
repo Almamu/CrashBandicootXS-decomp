@@ -2,33 +2,33 @@
 #include "actor_self.h"
 
 /* Sits right after actor_part59.c's `sub_802DCC0` and before
- * actor_part60.c's `sub_802DFBC` - the whole contiguous range that used
+ * actor_part60.c's `StopYeti` - the whole contiguous range that used
  * to be `asm/code_3_2_20_28568_c99c_dd9c.s`. Both functions continue the
- * `gUnknown_030014BC`-rooted "gauge" object documented in actor_part59.c/
+ * `gYeti`-rooted "gauge" object documented in actor_part59.c/
  * actor_part74.c's header comments. */
 
 extern u8 gStaticData_0817AA8C[];
-extern s32 gUnknown_030014C4;
+extern s32 gYetiX;
 extern s32 gUnknown_030014C8;
 extern void *MemCopy32(void *dest, void *src, s32 size);
 
-/* `sub_802D7B0`'s (actor_part74.c) shared AABB-overlap-test tail,
+/* `UpdateYeti`'s (actor_part74.c) shared AABB-overlap-test tail,
  * factored out as its own function taking `self` explicitly instead of
- * always reading the player global - used by `sub_802D6A0`
+ * always reading the player global - used by `UpdatePolarCheckpointCrate`
  * (actor_part58.c, already matched, called as `sub_802DD9C(self)`)
  * among others. Same 12-byte `{s16 x, y, z, sizeX, sizeY, sizeZ}` record
- * shape and same self-copy-through-`MemCopy32` idiom as `sub_802D7B0`
+ * shape and same self-copy-through-`MemCopy32` idiom as `UpdateYeti`
  * - see that function's doc comment for the full record-layout writeup.
- * Box A: `gStaticData_0817AA8C` (a record adjacent to `sub_802D7B0`'s
+ * Box A: `gStaticData_0817AA8C` (a record adjacent to `UpdateYeti`'s
  * own `gStaticData_0817AA98` - literal-pool-verified 0xC bytes apart)
- * with `gUnknown_030014C4`/`030014C8` (both `>>8`) added into its `x`/
+ * with `gYetiX`/`030014C8` (both `>>8`) added into its `x`/
  * `z` fields only. Box B: `self+0x38`'s own 12-byte vector, with
  * `self`'s own `+0x1c`/`0x20`/`0x24` position (all `>>8`) added into
  * all three of `x`/`y`/`z` - this is the "self+0x38's own vector"
  * referenced from docs/matching/issue-54-actor-d3a8.md's original
  * parked writeup.
  *
- * Same frame-struct shape as `sub_802D7B0`: A, B and the self box are
+ * Same frame-struct shape as `UpdateYeti`: A, B and the self box are
  * members of one stack struct so their addresses are rematerialized
  * from sp instead of being kept in callee-saved registers, and only
  * `&f.b` goes through a pointer local across the `MemCopy32` call.
@@ -64,7 +64,7 @@ u8 sub_802DD9C(struct actor_self *self)
     struct box16 *b;
 
     f.a = *(struct box16 *)gStaticData_0817AA8C;
-    BoxMove(&f.a, gUnknown_030014C4 >> 8, 0, gUnknown_030014C8 >> 8);
+    BoxMove(&f.a, gYetiX >> 8, 0, gUnknown_030014C8 >> 8);
     f.t = *(struct box16 *)self->unk_38;
     BoxMove(&f.t, self->x >> 8, self->y >> 8, self->z >> 8);
     f.b = f.t;
@@ -75,13 +75,13 @@ u8 sub_802DD9C(struct actor_self *self)
 
 extern u8 gUnknown_030014C0;
 extern void (*gUnpackNibbleTilesFunc)(void *frame, s32 arg);
-extern struct actor_self *gUnknown_030014BC;
+extern struct actor_self *gYeti;
 extern u8 gUnknown_030014C1;
-extern void sub_802DA68(void);
-extern void sub_802D9A8(void);
+extern void UpdateYetiBg2(void);
+extern void UpdateYetiPalette(void);
 
-/* The `gUnknown_030014BC` object's own initial VRAM-pattern/DMA setup
- * (called once from `sub_802DFDC`'s constructor, actor_part60.c): sets
+/* The `gYeti` object's own initial VRAM-pattern/DMA setup
+ * (called once from `CreateYeti`'s constructor, actor_part60.c): sets
  * `REG_DISPCNT`'s OBJ-window-enable bit (`DISPCNT_OBJWIN_ON`, bit 15),
  * then runs the same 16x16 triangular-fill dot-pattern loop twice into a
  * 0x100-byte stack buffer (`sub_802E058`'s own loop body, parameterized
@@ -93,12 +93,12 @@ extern void sub_802D9A8(void);
  * (`gUnknown_030014C0 = 1`), passes the object's current frame data
  * (past its 4-byte header) to the `gUnpackNibbleTilesFunc` hook, latches
  * `gUnknown_030014C1`, and
- * finally calls `sub_802DA68`/`sub_802D9A8` (actor_part74.c) to prime
+ * finally calls `UpdateYetiBg2`/`UpdateYetiPalette` (actor_part74.c) to prime
  * the gauge's sound/palette state immediately.
  *
  * The frame pointer goes through the usual `CurFrame()` inline with the
  * global passed straight in: a `struct actor_self *obj` local puts
- * `&gUnknown_030014BC` last in the r8/sb/sl assignment, where the ROM
+ * `&gYeti` last in the r8/sb/sl assignment, where the ROM
  * gives it r8 (docs/matching/issue-51-54-naked-retry.md). */
 static inline void FillDotPattern(u8 *dst, u8 seed)
 {
@@ -121,7 +121,7 @@ static inline u8 *CurFrame(struct actor_self *self)
     return (u8 *)self->frameOffsets[self->anims[self->animIndex].frameIndex + t];
 }
 
-void sub_802DE70(void)
+void LoadYetiGraphics(void)
 {
     u8 buf[0x100];
 
@@ -139,10 +139,10 @@ void sub_802DE70(void)
             *(u32 *)p = zero;
     }
     gUnknown_030014C0 = 1;
-    gUnpackNibbleTilesFunc(CurFrame(gUnknown_030014BC) + 4, 1);
+    gUnpackNibbleTilesFunc(CurFrame(gYeti) + 4, 1);
     gUnknown_030014C1 = 1;
-    sub_802DA68();
-    sub_802D9A8();
+    UpdateYetiBg2();
+    UpdateYetiPalette();
 }
 
 asm(".align 2, 0");

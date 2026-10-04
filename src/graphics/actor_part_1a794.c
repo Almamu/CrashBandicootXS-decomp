@@ -2,10 +2,10 @@
 #include "gobj_1a794.h"
 
 /* GitHub issue #25, ROM 0x0801A794-0x0801A878 (see include/gobj_1a794.h
- * and docs/matching/issue-25-level-objects.md). sub_801A794/sub_801A824/
- * sub_801A838 are constructor/destructor bodies of a subclass of the
+ * and docs/matching/issue-25-level-objects.md). sub_801A794/DestroyDingodile/
+ * CreateDingodile are constructor/destructor bodies of a subclass of the
  * sub_8017A8C object family (actor_part27.c), method tables
- * gStaticData_087E490C / gStaticData_087E4974; sub_801A7AC is the same
+ * gStaticData_087E490C / gDingodileVtable; sub_801A7AC is the same
  * mirror-gated velocity-record copy as sub_8017F14 (actor_part27b.c) but
  * indexed straight into gStaticData_0816C418.
  *
@@ -76,16 +76,16 @@ void sub_801A7AC(void *self, struct gobj *partArg, s32 indexArg)
     asm("" : : "r"(index));
 }
 
-void sub_801A824(struct seq_obj *self, s32 flags)
+void DestroyDingodile(struct seq_obj *self, s32 flags)
 {
-    self->vtable = gStaticData_087E4974;
+    self->vtable = gDingodileVtable;
     sub_8017A78(self, flags);
 }
 
-struct seq_obj *sub_801A838(struct seq_obj *self, u32 a, u32 b)
+struct seq_obj *CreateDingodile(struct seq_obj *self, u32 a, u32 b)
 {
     sub_8017A8C(self);
-    self->vtable = gStaticData_087E4974;
+    self->vtable = gDingodileVtable;
     sub_8019EBC(self, 0, (u16)a, (u16)b, 0);
     return self;
 }

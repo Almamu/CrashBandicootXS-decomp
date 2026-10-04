@@ -553,17 +553,17 @@ C (see "Level data").
 
 ### Boss pictures
 
-`gStaticData_08167CD4` (N. Gin's airship, 18x12 cells, 4 frames: the
-propellers turn) and `gStaticData_08169CE8` (Cortex's hovercraft, 16x10
+`gAirshipPicture` (N. Gin's airship, 18x12 cells, 4 frames: the
+propellers turn) and `gHovercraftPicture` (Cortex's hovercraft, 16x10
 cells, 1 frame) were read as "per-level meter grid tables" before; drawn,
 they are the two bosses that fly on an affine BG. Each is `{s16 cols,
 s16 rows}` and its frames, a frame being a tile count, a `cols * rows`
 map of `u16` tile indices and that many 4bpp tiles. The frames share one
 tile pool: frame 1's indices count on from frame 0's tiles, and so on.
-The game (`sub_8031604`, `sub_80336CC`) converts the tiles to 8bpp tiles
-of BG palette 1, since an affine BG only takes 8bpp, and `sub_8030D48`
+The game (`ConvertAirshipTiles`, `ConvertHovercraftTiles`) converts the tiles to 8bpp tiles
+of BG palette 1, since an affine BG only takes 8bpp, and `DrawAirshipMap`
 lays them out by the maps. The palette in front of each picture is its
-own label (`gStaticData_08167AD4`, `gStaticData_08169AE8`), and the code
+own label (`gAirshipPalette`, `gHovercraftPalette`), and the code
 walks the frames from that label + 0x204, so the two stay back to back
 in `src/data/boss_pictures_167ad4.c`.
 

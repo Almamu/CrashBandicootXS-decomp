@@ -8,31 +8,31 @@
  * A large "spawn/arm this weapon-kind instance" setup routine: resets
  * the ramp/velocity globals, fires the tracker object's state-1/
  * table-index-0 transition, seeds the position accumulators
- * (`gUnknown_03001540`/`gUnknown_03001544`/`gUnknown_03001548`) from
+ * (`gAirshipX`/`gAirshipY`/`gAirshipZ`) from
  * its own three arguments, looks up a per-kind keyframe-table record
  * (`gStaticData_0817C2D0`, indexed by both `gUnknown_03001564` - the
- * level index `sub_8030F88` stashed - and this function's own first
+ * level index `CreateAirship` stashed - and this function's own first
  * argument) and copies several of its fields into
- * `gUnknown_03001570`/`gUnknown_0300156C`, resets the DMA-refresh/
+ * `gUnknown_03001570`/`gAirshipHp`, resets the DMA-refresh/
  * palette-strip counters, recomputes the BG2 zoom scale/offset via
  * `sub_8029B2C`/`__divsi3`/`sub_8029E34`, blits the tracker's
- * current keyframe-table box via `sub_8030D48`, sets DISPCNT's bit10,
- * recomputes the BG2 affine matrix (`sub_80312C4`), and finally queues
+ * current keyframe-table box via `DrawAirshipMap`, sets DISPCNT's bit10,
+ * recomputes the BG2 affine matrix (`UpdateAirshipBg2`), and finally queues
  * a palette-strip DMA transfer (`QueueVramDmaTransfer`).
  *
  * Matching notes: the zoom divide is an explicit `__divsi3` call
  * (the ROM reloads `gUnknown_03001554` after it, which `/`'s const
  * libcall wouldn't force) and the record lookup is written `a - -b` (see
- * below). `gUnknown_03001564` is the level index `sub_8030F88` caches,
+ * below). `gUnknown_03001564` is the level index `CreateAirship` caches,
  * not an object pointer. */
 extern s32 gUnknown_03001560;
-extern s32 gUnknown_03001538;
+extern s32 gAirshipState;
 extern s32 gUnknown_0300153C;
-extern struct actor_self *gUnknown_03001534;
+extern struct actor_self *gAirship;
 extern s32 GetAnimFrameBaseOffset(void *self);
-extern s32 gUnknown_03001540;
-extern s32 gUnknown_03001544;
-extern s32 gUnknown_03001548;
+extern s32 gAirshipX;
+extern s32 gAirshipY;
+extern s32 gAirshipZ;
 /* One 28-byte per-kind weapon record (`gStaticData_0817C2D0`); only the
  * fields this file reads are meaningful names-wise. */
 struct weapon_kind {
@@ -48,7 +48,7 @@ extern struct weapon_kind *gUnknown_03001568;
 extern s32 gUnknown_03001564;
 extern struct weapon_kind gStaticData_0817C2D0[];
 extern s32 gUnknown_03001570;
-extern s32 gUnknown_0300156C;
+extern s32 gAirshipHp;
 extern s32 gUnknown_03001574;
 extern u8 gUnknown_03001524;
 extern s32 gUnknown_03001520;
@@ -57,8 +57,8 @@ extern s32 sub_8029B2C(void);
 extern s32 gUnknown_0300154C;
 extern s32 gUnknown_03001550;
 extern void sub_8029E34(s32 arg0);
-extern void sub_8030D48(u16 *src);
-extern void sub_80312C4(void);
+extern void DrawAirshipMap(u16 *src);
+extern void UpdateAirshipBg2(void);
 extern s32 gUnknown_03001578;
 extern u8 gStaticData_0817C378[];
 extern s32 QueueVramDmaTransfer(void *arg0, void *arg1, u16 arg2, u16 arg3);
@@ -68,9 +68,9 @@ extern s32 __divsi3(s32 num, s32 den);
 static inline void BossSetState(s32 st, s32 idx)
 {
     struct actor_self *self;
-    gUnknown_03001538 = st;
+    gAirshipState = st;
     gUnknown_0300153C = 0;
-    self = gUnknown_03001534;
+    self = gAirship;
     self->animIndex = idx;
     self->animTimer = self->anims[idx].duration;
     self->animDone = 0;
@@ -78,37 +78,37 @@ static inline void BossSetState(s32 st, s32 idx)
         self->animTime = 0;
 }
 
-void sub_8031040(s32 kind, s32 x, s32 y, s32 z)
+void SpawnAirship(s32 kind, s32 x, s32 y, s32 z)
 {
     s32 scale;
     struct actor_self *self;
 
     gUnknown_03001560 = 0x66;
     BossSetState(1, 0);
-    gUnknown_03001540 = x * 5;
-    gUnknown_03001544 = y * 2;
-    gUnknown_03001548 = z + 0xA000;
+    gAirshipX = x * 5;
+    gAirshipY = y * 2;
+    gAirshipZ = z + 0xA000;
     /* `a - -b` rather than `a + b`: the latter lets fold reassociate the
      * constant table base out of `&table[kind]`, while the ROM adds the
      * level offset to the finished record address. */
     gUnknown_03001568 = (struct weapon_kind *)(gUnknown_03001564 * (s32)sizeof(struct weapon_kind) - -(s32)&gStaticData_0817C2D0[kind]);
     gUnknown_03001570 = gUnknown_03001568->unk_0C;
-    gUnknown_0300156C = gUnknown_03001568->unk_00;
+    gAirshipHp = gUnknown_03001568->unk_00;
     gUnknown_03001574 = 0;
     gUnknown_03001524 = 1;
     gUnknown_03001520 = 0;
-    gUnknown_03001554 = gUnknown_03001548 - (sub_8029B2C() << 8);
+    gUnknown_03001554 = gAirshipZ - (sub_8029B2C() << 8);
     scale = __divsi3(0x1C00000, gUnknown_03001554);
-    gUnknown_0300154C = (gUnknown_03001540 * scale) >> 12;
-    gUnknown_03001550 = (scale * gUnknown_03001544) >> 12;
+    gUnknown_0300154C = (gAirshipX * scale) >> 12;
+    gUnknown_03001550 = (scale * gAirshipY) >> 12;
     sub_8029E34(gUnknown_03001554);
-    self = gUnknown_03001534;
+    self = gAirship;
     {
         s32 t = self->animTime >> 8;
-        sub_8030D48((u16 *)self->frameOffsets[self->anims[self->animIndex].frameIndex + t]);
+        DrawAirshipMap((u16 *)self->frameOffsets[self->anims[self->animIndex].frameIndex + t]);
     }
     REG_DISPCNT |= 0x400;
-    sub_80312C4();
+    UpdateAirshipBg2();
     gUnknown_03001578 = 0;
     QueueVramDmaTransfer(gStaticData_0817C378, (void *)(BG_PLTT + 0x20), 0x20, 0x10);
 }

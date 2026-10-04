@@ -5993,20 +5993,20 @@ offset here). New conventions confirmed by this chunk: a `+0x50`-rooted
 11.c already name at a different offset for a sibling object), and a
 `+0x48`/`+0x4c` circular doubly-linked list of these objects rooted at
 the player-pointer global `gActorList` (`sub_802C19C`/
-`sub_802C394` unlink from it on teardown; `sub_802C7A8`, left raw,
+`DestroyPolarCollectedWumpa` unlink from it on teardown; `DetonateNearbyPolarNitros`, left raw,
 walks it for an AABB-overlap scan). Ties into `docs/rom_map.md`'s
 `gUnknown_030014xx` tier-threshold family (`sub_802BED8`/`sub_802BF30`/
 `sub_802BFD4`/`sub_802C018`/`sub_802C128`/`sub_802C14C`) and the shared
-"type-byte event dispatch"/lap-counter families (`sub_802C540`/
-`sub_802C614`/`sub_802C6C0`/`sub_802C904`, all converging on the shared
-tail `sub_802C4C8`).
+"type-byte event dispatch"/lap-counter families (`UpdatePolarQuestionCrate`/
+`UpdatePolarLifeCrate`/`UpdatePolarNitroCrate`/`UpdatePolarAkuAkuCrate`, all converging on the shared
+tail `UpdatePolarCrate`).
 
 **Matched (21 of 25):** `sub_802BED8`, `sub_802BF30`, `sub_802BFA0`,
 `sub_802BFD4`, `sub_802C018`, `sub_802C078`, `sub_802C0A8`,
 `sub_802C0BC`, `sub_802C128`, `sub_802C14C`, `sub_802C19C`,
-`sub_802C264`, `sub_802C270`, `sub_802C394`, `sub_802C464`,
-`sub_802C4A4`, `sub_802C4C8`, `sub_802C540`, `sub_802C614`,
-`sub_802C6C0`, `sub_802C904`.
+`sub_802C264`, `UpdatePolarCollectedWumpa`, `DestroyPolarCollectedWumpa`, `UpdatePolarWumpa`,
+`CreatePolarWumpa`, `UpdatePolarCrate`, `UpdatePolarQuestionCrate`, `UpdatePolarLifeCrate`,
+`UpdatePolarNitroCrate`, `UpdatePolarAkuAkuCrate`.
 
 - **The repeated "state transition" block** (`self+0x28`=state,
   `self+0xc`=table-index, `self+0x44`/`self+8`=0, an anim halfword from
@@ -6025,7 +6025,7 @@ tail `sub_802C4C8`).
   transposed instruction order, an easy one-instruction-pair swap to
   miss by inspection alone (see "full clean rebuild required" below).
 - **Two-parameter functions taking `self` and a second argument**
-  (`sub_802C0BC`, `sub_802C19C`, `sub_802C394`) needed *both*
+  (`sub_802C0BC`, `sub_802C19C`, `DestroyPolarCollectedWumpa`) needed *both*
   parameters register-pinned (`self` to its ROM register, the second
   argument to its own) to reproduce the ROM's parameter-copy order in
   the prologue - pinning only `self` still let the unpinned second
@@ -6040,7 +6040,7 @@ tail `sub_802C4C8`).
   Rpointer`; no combination of C-level reordering (integer-first,
   pointer-first, split statements, fresh locals) changed the compiler's
   choice, only forcing the instruction directly did. The same technique
-  reproduces `sub_802C270`'s identical `table + idx*0xc` computation in
+  reproduces `UpdatePolarCollectedWumpa`'s identical `table + idx*0xc` computation in
   its own frame-threshold block.
 - **`sub_802C0BC`'s frame-vs-threshold comparison direction was
   initially miscoded backwards** (`if (frame < val)` instead of `if
@@ -6048,9 +6048,9 @@ tail `sub_802C4C8`).
   compile of the function in the wrong direction still produced a
   plausible-looking `blt`/branch pair, and this slipped through an
   early single-function check; only the full-ROM byte comparison caught
-  it. `sub_802C270`'s analogous, already-correct `if (frame >=
+  it. `UpdatePolarCollectedWumpa`'s analogous, already-correct `if (frame >=
   entry[2])` was the tell that something was inverted.
-- **`sub_802C6C0`'s `sub_802A6EC(self)` boolean result must be
+- **`UpdatePolarNitroCrate`'s `sub_802A6EC(self)` boolean result must be
   materialized into its own register with the ROM's exact `lsls
   rX,rX,#0x18` / `lsrs rY,rX,#0x18` double-shift truncation**, not just
   compared inline - the truncated value is reused, unmodified, as a
@@ -6061,7 +6061,7 @@ tail `sub_802C4C8`).
   `register u32 found asm("r5")` through an explicit `raw <<= 24; found
   = raw >> 24;` pair reproduces both the truncation idiom and the
   cross-branch register lifetime.
-- **`sub_802C540`'s type-byte dispatch** (`0x1c`-`0x1f`, extending the
+- **`UpdatePolarQuestionCrate`'s type-byte dispatch** (`0x1c`-`0x1f`, extending the
   shared "type-byte event dispatch" family per docs/rom_map.md) needed
   an explicit `goto`-based rewrite matching the ROM's literal *physical*
   block order (compare chain, then the `>0x1d` sub-dispatch, then case
@@ -6071,10 +6071,10 @@ tail `sub_802C4C8`).
   this specific physical ordering; only forward `goto`s into
   purpose-placed blocks did. The same "physically move the `then`-block
   after the `else`-block via `goto`" technique (already used for
-  `sub_802C270`'s branch polarity) also fixed `sub_802C6C0`'s top-level
+  `UpdatePolarCollectedWumpa`'s branch polarity) also fixed `UpdatePolarNitroCrate`'s top-level
   `state == 0x12` dispatch, which the ROM places at the very end of the
   function via a forward branch rather than inline.
-- **`sub_802C6C0`'s `self+0x38` AABB refresh from `gStaticData_0817A768`**
+- **`UpdatePolarNitroCrate`'s `self+0x38` AABB refresh from `gStaticData_0817A768`**
   (a 12-byte/3-word copy) needed an anonymous 3-`s32`-field struct
   assignment (`*(struct vec3_words *)dst = *(struct vec3_words
   *)src;`) to trigger this compiler's `ldm`/`stm` multi-register
@@ -6093,7 +6093,7 @@ tail `sub_802C4C8`).
   instruction-scheduling around the two `record = base + state*8`
   re-derivations that resisted every register-pin variant tried in this
   pass.
-- **`sub_802C2FC`** (`actor_part19b.c`, real bytes in
+- **`DrawPolarCollectedWumpa`** (`actor_part19b.c`, real bytes in
   `asm/code_3_2_20_28568_c2fc.s`) - screen-space visibility test and OAM
   setup for one sprite frame. Fully understood and matches ROM
   instruction-for-instruction *except* a single dead `flag = 0`
@@ -6105,9 +6105,9 @@ tail `sub_802C4C8`).
   `GetAnimFrameData` call, guarded with an empty-asm or `volatile`
   anti-DCE hint - `volatile register` additionally spills the variable
   to the stack, a bigger mismatch than the one being chased).
-- **`sub_802C3E8`** (`actor_part19c2.c`, real bytes in
+- **`CreatePolarCollectedWumpa`** (`actor_part19c2.c`, real bytes in
   `asm/code_3_2_20_28568_c3e8.s`) - a homing/seek-toward-point spawn-
-  effect constructor (the `sub_8032890` byte-for-byte twin per
+  effect constructor (the `CreateJetpackCollectedWumpa` byte-for-byte twin per
   docs/rom_map.md), computing a Manhattan-distance-style abs-value sum
   for a `__divsi3` angle division. Every field access and call
   matches; the residual gap is this compiler's choice of a different
@@ -6117,11 +6117,11 @@ tail `sub_802C4C8`).
 
 **Left completely raw (1, not attempted to full precision):**
 
-- **`sub_802C7A8`** - walks the circular `self+0x4c`-rooted list of
+- **`DetonateNearbyPolarNitros`** - walks the circular `self+0x4c`-rooted list of
   these objects (see the `+0x48`/`+0x4c` convention above), filters to
   `type == 4` and `!= self`, builds two translated 12-byte AABB copies
   via `MemCopy32` (one of `UpdateGameFrame`'s own direct callees, the
-  same actor->game_loop tie already documented for `sub_802D7B0`), and
+  same actor->game_loop tie already documented for `UpdateYeti`), and
   on overlap fires the shared lap-counter/"used"-state transition.
   Semantics are understood at this level, but the exact stack-buffer
   layout (three candidate buffers touched across the function, `r8`/
@@ -6133,15 +6133,15 @@ tail `sub_802C4C8`).
 (`sub_802BED8`-`sub_802C19C`), the new raw `code_3_2_20_28568_c208.s`
 (parked `sub_802C208`), `actor_part19e.o` (`sub_802C208`'s
 `NON_MATCHING`-only twin), `actor_part19f.o` (`sub_802C264`/
-`sub_802C270`), the new raw `code_3_2_20_28568_c2fc.s` (parked
-`sub_802C2FC`), `actor_part19b.o` (its `NON_MATCHING`-only twin),
-`actor_part19c.o` (`sub_802C394`), the new raw
-`code_3_2_20_28568_c3e8.s` (parked `sub_802C3E8`), `actor_part19c2.o`
-(its `NON_MATCHING`-only twin), `actor_part19g.o` (`sub_802C464`-
-`sub_802C6C0`), the new raw `code_3_2_20_28568_c7a8.s` (left-untouched
-`sub_802C7A8`), `actor_part19d.o` (`sub_802C904`), and finally the new
+`UpdatePolarCollectedWumpa`), the new raw `code_3_2_20_28568_c2fc.s` (parked
+`DrawPolarCollectedWumpa`), `actor_part19b.o` (its `NON_MATCHING`-only twin),
+`actor_part19c.o` (`DestroyPolarCollectedWumpa`), the new raw
+`code_3_2_20_28568_c3e8.s` (parked `CreatePolarCollectedWumpa`), `actor_part19c2.o`
+(its `NON_MATCHING`-only twin), `actor_part19g.o` (`UpdatePolarWumpa`-
+`UpdatePolarNitroCrate`), the new raw `code_3_2_20_28568_c7a8.s` (left-untouched
+`DetonateNearbyPolarNitros`), `actor_part19d.o` (`UpdatePolarAkuAkuCrate`), and finally the new
 raw `code_3_2_20_28568_c99c.s` (the original file's unchanged
-remainder, from `sub_802C99C` on) - see `ldscript.txt` and
+remainder, from `UpdatePolarTimeCrate` on) - see `ldscript.txt` and
 `tools/report_units.py`'s `actor` category, both updated to match.
 Verified via a full clean `make compare` (`La suma coincide`) and
 `make NON_MATCHING=1 report`.

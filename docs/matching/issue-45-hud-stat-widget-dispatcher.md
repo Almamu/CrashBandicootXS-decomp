@@ -573,7 +573,7 @@ it this from its own `cmp r1, #0x64` special case): a value of exactly
 100 shows a single dedicated icon instead of splitting into digits,
 otherwise the usual 2-digit-vs-1-digit split runs; the function then
 repeats the same shape a second, independent time, gated by its own
-`sub_8031784`/`self->field_3c`/`self->field_60` change-detection triple
+`GetAirshipHpPercent`/`self->field_3c`/`self->field_60` change-detection triple
 - two percent-style readouts sharing one function body.
 
 ### Verification

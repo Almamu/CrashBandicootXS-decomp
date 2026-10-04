@@ -123,7 +123,7 @@ right before the first, and `actor_part11d.o`'s neighbor `sub_8009868`
 entry right before the second) - the same "NAKED function embedded in
 an otherwise-matched file still gets its own address-boundary report
 entry" convention already established for `sub_8008044`
-(`actor_part3.c`)/`sub_8033B44`(`actor_part31.c`)-style cases.
+(`actor_part3.c`)/`UpdateHovercraftCannon`(`actor_part31.c`)-style cases.
 
 Full clean `rm -rf build crashbandicootxs.elf crashbandicootxs.gba
 crashbandicootxs.map && make compare` confirms `crashbandicootxs.gba:

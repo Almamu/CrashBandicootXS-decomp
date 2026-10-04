@@ -8,8 +8,8 @@
  * pointer at `self+0`), part of a second boss-weapon "spawn/pre-
  * attack" singleton whose own flags/counters live at
  * `gUnknown_030014E0`-`gUnknown_03001518` - a different singleton
- * cluster than issue #58's `gUnknown_03001534` one and issue #62's
- * `gUnknown_030015AC` one. See docs/matching/issue-56-0x0802f0dc-actor.md
+ * cluster than issue #58's `gAirship` one and issue #62's
+ * `gHovercraft` one. See docs/matching/issue-56-0x0802f0dc-actor.md
  * and docs/status/actor.md. */
 
 extern void SetCellAnimSpeed(s32 arg0);

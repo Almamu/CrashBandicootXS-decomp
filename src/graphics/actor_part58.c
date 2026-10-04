@@ -15,7 +15,7 @@
  * amount of table-specific setup) plus a couple of small self-standing
  * helpers operating on the unrelated `gLevelState`-rooted "player"
  * object's `+0x78` counter field (an Aku-Aku-mask-style add/remove
- * pair, `sub_802D4B0`/`sub_802D4EC`) and a `gUnknown_03001494`-rooted
+ * pair, `RemovePolarAkuAkuMask`/`AddPolarAkuAkuMask`) and a `gPolarAkuAku`-rooted
  * sibling object (`sub_802D490`). See docs/matching/issue-54-actor-d3a8.md. */
 
 extern struct level_state *gLevelState;
@@ -32,14 +32,14 @@ extern void sub_802C0BC(void *selfArg, s32 arg1);
 extern u8 sub_802DD9C(void *self);
 extern void AddBrokenCrate(struct level_state *self);
 extern s32 sub_8029748(s32 arg0);
-extern void sub_802B12C(s32 arg0, s32 arg1, s32 arg2);
+extern void CreatePolarCheckpointText(s32 arg0, s32 arg1, s32 arg2);
 extern s32 _call_via_r2(void *arg0, s32 arg1, void *fn);
 extern s32 sub_802973C(void);
 
-extern u8 gStaticData_087E5054[];
+extern u8 gPolarAkuAkuVtable[];
 extern u8 gStaticData_087E5074[];
 extern u8 gStaticData_087E5094[];
-extern u8 gStaticData_087E50B4[];
+extern u8 gPolarCheckpointCrateVtable[];
 
 /* `actor_self` plus the one-shot byte flag sub_802D600/sub_802D648 use.
  *
@@ -53,9 +53,9 @@ struct actor_once {
 
 /* Passes its argument through to `SetMaskLevel(gLevelState, 0)`,
  * then `sub_802D204(self, 0)` - a trivial reset pair on a different,
- * `gUnknown_03001494`-rooted object family, unrelated to this file's
+ * `gPolarAkuAku`-rooted object family, unrelated to this file's
  * `self` (see `actor_part19.c`'s `sub_802C018`, which calls this with
- * `gUnknown_03001494`). */
+ * `gPolarAkuAku`). */
 void sub_802D490(void *self)
 {
     SetMaskLevel(gLevelState, 0);
@@ -66,7 +66,7 @@ void sub_802D490(void *self)
  * `+0x78` counter (floored at 0), pushes the new count via
  * `SetMaskLevel`, and always calls `sub_802D204(self, 1)`. Returns the
  * (possibly unchanged) counter. */
-s32 sub_802D4B0(void *self)
+s32 RemovePolarAkuAkuMask(void *self)
 {
     s32 count;
 
@@ -80,9 +80,9 @@ s32 sub_802D4B0(void *self)
     return count;
 }
 
-/* "Add a mask" - the increment counterpart to `sub_802D4B0` above,
+/* "Add a mask" - the increment counterpart to `RemovePolarAkuAkuMask` above,
  * capped at 3, `sub_802D204(self, 0)` instead of `1`. */
-s32 sub_802D4EC(void *self)
+s32 AddPolarAkuAkuMask(void *self)
 {
     s32 count;
 
@@ -98,15 +98,15 @@ s32 sub_802D4EC(void *self)
 
 /* Constructor variant: calls `InitActorPart` with `b`/`c`/`d` offset by
  * fixed deltas (`-0x1000`/`-0x1E00`/`-0x200`, the same constants
- * `sub_802D3A8` uses for its own state-0 scatter targets - plausibly a
+ * `MovePolarAkuAku` uses for its own state-0 scatter targets - plausibly a
  * "spawn at scatter offset" helper feeding that function), installs the
- * `gStaticData_087E5054` event table, then pushes the caller's own
+ * `gPolarAkuAkuVtable` event table, then pushes the caller's own
  * 6th argument through `SetMaskLevel` before resetting state via
  * `sub_802D204(self, 0)`. */
-void *sub_802D528(struct actor_self *self, void *part, s32 b, s32 c, s32 d, s32 sixth)
+void *CreatePolarAkuAku(struct actor_self *self, void *part, s32 b, s32 c, s32 d, s32 sixth)
 {
     InitActorPart(self, part, b - 0x1000, c - 0x1E00, d - 0x200);
-    self->vtable = (struct actor_vtable *)gStaticData_087E5054;
+    self->vtable = (struct actor_vtable *)gPolarAkuAkuVtable;
     SetMaskLevel(gLevelState, sixth);
     sub_802D204(self, 0);
     return self;
@@ -122,7 +122,7 @@ void sub_802D57C(void *arg0, s32 arg1)
 }
 
 /* Trivial getter: `gLevelState`'s `+0x78` counter (the same field
- * `sub_802D4B0`/`sub_802D4EC` above adjust). */
+ * `RemovePolarAkuAkuMask`/`AddPolarAkuAkuMask` above adjust). */
 s32 sub_802D590(void)
 {
     return gLevelState->maskLevel;
@@ -229,7 +229,7 @@ void *sub_802D648(struct actor_once *self, void *part, s32 posY, s32 c, s32 d)
 /* State machine: while `self+0xc` ("kind") is still 0, first checks
  * `sub_802A6EC`'s trampoline-fire edge (transitions to kind 1, seeds
  * anim from the part table's `+0xc` record, plays a sound, refreshes
- * the player via `AddBrokenCrate`, and fires `sub_8029748`/`sub_802B12C`
+ * the player via `AddBrokenCrate`, and fires `sub_8029748`/`CreatePolarCheckpointText`
  * position-tied calls), then - only if still kind 0 - checks
  * `sub_802DD9C`'s AABB-overlap test (transitions to kind 3, seeds anim
  * from the `+0x24` record, arms `self+0x18`, plays a different sound,
@@ -237,7 +237,7 @@ void *sub_802D648(struct actor_once *self, void *part, s32 posY, s32 c, s32 d)
  * anim-done flag (`+0x12`) is set, fires the `+0x50` table's slot-3
  * trampoline (guarded by a redundant `self != NULL` check matching the
  * ROM); otherwise advances via `UpdateActor`. */
-void sub_802D6A0(void *selfArg)
+void UpdatePolarCheckpointCrate(void *selfArg)
 {
     register struct actor_self *self asm("r4") = selfArg;
     s32 kind = self->animIndex;
@@ -258,7 +258,7 @@ void sub_802D6A0(void *selfArg)
             PlaySfx(gAudioContext, 0x17, 0x100);
             AddBrokenCrate(gLevelState);
             sub_8029748(self->z);
-            sub_802B12C(self->x, self->y - 0xF00, self->z);
+            CreatePolarCheckpointText(self->x, self->y - 0xF00, self->z);
         }
 
         kind = self->animIndex;
@@ -295,14 +295,14 @@ void sub_802D6A0(void *selfArg)
 }
 
 /* Constructor: `InitActorPart` passthrough installing
- * `gStaticData_087E50B4`, then - only if `sub_802973C()` equals the
+ * `gPolarCheckpointCrateVtable`, then - only if `sub_802973C()` equals the
  * caller's own `d` argument - transitions to kind 2 (anim from the part
  * table's `+0x18` record, accumulator/flag/counter all reset) and plays
  * a sound. */
-void *sub_802D764(struct actor_self *self, void *part, s32 b, s32 c, s32 d)
+void *CreatePolarCheckpointCrate(struct actor_self *self, void *part, s32 b, s32 c, s32 d)
 {
     InitActorPart(self, part, b, c, d);
-    self->vtable = (struct actor_vtable *)gStaticData_087E50B4;
+    self->vtable = (struct actor_vtable *)gPolarCheckpointCrateVtable;
 
     if (sub_802973C() == d) {
         self->animIndex = 2;

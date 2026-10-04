@@ -61,7 +61,7 @@ pointer as an explicit argument) matters in two places:
 
 - the 4-argument `_call_via_r4` call needs no `register void *fn
   asm("r4")` "dead read" trick;
-- `sub_8019CE4`: its cases share one `bl` (see below).
+- `SetDingodileState`: its cases share one `bl` (see below).
 
 ### 3. The AABB builders return their box by value
 
@@ -97,21 +97,21 @@ Thumb pointers:
 | `gStaticData_087E483C` | `sub_801A724` | `sub_801A73C` | `sub_801A64C` (update: sets the part's velocity from `gStaticData_0816C3B8`, removes it past either level edge) |
 | `gStaticData_087E48A4` | `sub_801A768` | `sub_801A750` | `sub_801A2A8` (update) |
 | `gStaticData_087E490C` | `sub_801A794` (issue #25) | `sub_801A780` | `sub_801A114` (update) |
-| `gStaticData_087E4974` | (issue #25 range) | `sub_801A824` (issue #25) | `sub_80197F8` (update) |
+| `gDingodileVtable` | (issue #25 range) | `DestroyDingodile` (issue #25) | `UpdateDingodile` (update) |
 
 `sub_801967C` sets `unk_0A` on every part in `gUnknown_030012EC`'s list.
 `sub_8019718`/`sub_80197F4` are **UNUSED**: no `bl`, no `.4byte` and no
 Thumb pointer anywhere in the ROM. They are matched anyway.
 
-The `087E4974` object (`struct boss`) is a boss-like state machine.
-`sub_80197F8` keeps a companion part 6 px ahead of the boss, counts hits
+The `087E4974` object (`struct dingodile_boss`) is a boss-like state machine.
+`UpdateDingodile` keeps a companion part 6 px ahead of the boss, counts hits
 (overlap of the player's box with the boss's hurt box while the player's
 `unk_0A` is 0x13), walks the boss along the level using the approach
 tables `gStaticData_0816C368/78` (facing) and `0816C390/A0`, turns it
 round at either level edge, spawns projectiles (`sub_8019EBC` mode 1)
 on animation frame 0x14, and finally, once the part falls below the
 level, signals `RequestRoomExit` (the "entity ready" barrier in
-`docs/rom_map.md`). `sub_8019CE4` is its "enter state N" routine: it
+`docs/rom_map.md`). `SetDingodileState` is its "enter state N" routine: it
 calls the object's slot +0x20 method and then runs the state's
 animation, spawns and sounds. `sub_8019EBC`, `sub_801A03C` and
 `sub_801A584` spawn parts through `sub_8009ED0`. `sub_8019EBC` reads the
@@ -132,7 +132,7 @@ low nibble slot, `+0x2D` tag, `+0x30` frame, `+0x38` "animation done",
   `__attribute__((packed))` so that the `s32` bitfield does not widen
   the struct. The same applies to the `fl` union at `+0x0C`: without
   `packed`, ARM's 4-byte struct alignment moves every later field.
-- **`sub_8019CE4`'s shared call**: three states differ only in the
+- **`SetDingodileState`'s shared call**: three states differ only in the
   animation id they pass to slot +0x50. The ROM loads `this`, the
   function pointer and `other` separately in each case, then branches to
   one shared `bl`. `PREP_VCALL2` plus `goto call` gives that, with the
@@ -144,7 +144,7 @@ low nibble slot, `+0x2D` tag, `+0x30` frame, `+0x38` "animation done",
   macro spells out the shift.
 - **Statement order drives load order**: `s32 x = other->x;` before
   comparing against the level edge (several places), per-branch
-  `x`/`y`/`p` loads in `sub_80197F8`'s prologue, and `x >>= 8` read then
+  `x`/`y`/`p` loads in `UpdateDingodile`'s prologue, and `x >>= 8` read then
   adjusted in the turn-round snap.
 - **Small inlines shape registers**: `LevelRight()`/`LevelBottom()`
   (Q8 level edges), `AtLevelEdge()` returning a comparison (the ROM's

@@ -7,31 +7,31 @@
 
 extern s32 GetAnimFrameBaseOffset(void *self);
 extern void sub_802A4F8(void);
-extern s32 gUnknown_03001548;
+extern s32 gAirshipZ;
 extern s32 gUnknown_03001560;
 extern s32 gUnknown_03001554;
 extern s32 gUnknown_03001558;
 extern s32 gUnknown_0300155C;
-extern s32 gUnknown_03001538;
+extern s32 gAirshipState;
 extern s32 gUnknown_0300153C;
-extern struct actor_self *gUnknown_03001534;
+extern struct actor_self *gAirship;
 
 /* Boss-weapon camera-relative position accumulator: advances
- * `gUnknown_03001548` by its per-frame delta (`gUnknown_03001560`),
+ * `gAirshipZ` by its per-frame delta (`gUnknown_03001560`),
  * and - while `gUnknown_03001554` hasn't crossed its ceiling
  * (`0x81FF`) - resets the velocity group (`gUnknown_0300155C`/
  * `gUnknown_03001558`) and fires the state-2/table-index-0 transition
- * on the small tracker object (`gUnknown_03001534`, anim frame from
+ * on the small tracker object (`gAirship`, anim frame from
  * its own part-table pointer at `+0`), then always calls
  * `sub_802A4F8`. Same "pin the zero constant so it's loaded before its
- * address" idiom as `sub_8030C98` (actor_part23.c) - the value is
+ * address" idiom as `AirshipStateFall` (actor_part23.c) - the value is
  * reused across four stores that would otherwise get reordered ahead
  * of the address loads that consume them. The `*(T *)&self->...` stores keep
  * gcc from treating them as struct-member accesses, which would let the
  * scheduler move the `anims[0]` load below the zero constant. */
-void sub_80306AC(void)
+void AirshipStateApproach(void)
 {
-    gUnknown_03001548 += gUnknown_03001560;
+    gAirshipZ += gUnknown_03001560;
 
     if (gUnknown_03001554 <= 0x81FF) {
         struct actor_self *self;
@@ -43,11 +43,11 @@ void sub_80306AC(void)
         *p1558 = zero;
         {
             register s32 two asm("r1") = 2;
-            gUnknown_03001538 = two;
+            gAirshipState = two;
         }
         gUnknown_0300153C = zero;
 
-        self = gUnknown_03001534;
+        self = gAirship;
         self->animIndex = zero;
         {
             register u16 anim asm("r0") = self->anims[0].duration;

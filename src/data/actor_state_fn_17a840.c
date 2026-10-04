@@ -10,10 +10,10 @@ extern void sub_802DB2C();
 extern void sub_802DCC0();
 extern void sub_802E0A4();
 
-/* Per-state update functions of the gUnknown_030014BC gauge object,
- * called as `gStaticData_0817A840[gUnknown_030014D0]()` by
- * sub_802D7B0 (actor_part74.c). */
-void (*const gStaticData_0817A840[4])() = {
+/* Per-state update functions of the gYeti gauge object,
+ * called as `gYetiStateFuncs[gYetiState]()` by
+ * UpdateYeti (actor_part74.c). */
+void (*const gYetiStateFuncs[4])() = {
     sub_802DB2C,
     sub_802DCC0,
     nullsub_27,

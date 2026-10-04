@@ -16,7 +16,7 @@ file is now on the Makefile's `OLD_AGBCC_OBJS` list.
 
 | Function | What it took |
 |---|---|
-| `sub_802B364` | The per-frame update. It is the same shape as `actor_part128.c`'s `sub_802E84C`: branchless `Abs()` for the `visible` word, the inline anim-advance block, and `ACTOR_PMF_CALL(self, gStaticData_0817A6B8)`, which covers the "stride-8 keyframe lookup / r7 hazard" in the old note. Two details mattered. The keys are read as a `struct held_pressed_pair` copy with `keys.held & 0x20` and then `u16 right = keys.held & 0x10`, which keeps the key word in r2. The tier argument of `sub_802B1A8` is read into a local first so it loads before x/y/z. Matches under both compilers. |
+| `sub_802B364` | The per-frame update. It is the same shape as `actor_part128.c`'s `sub_802E84C`: branchless `Abs()` for the `visible` word, the inline anim-advance block, and `ACTOR_PMF_CALL(self, gStaticData_0817A6B8)`, which covers the "stride-8 keyframe lookup / r7 hazard" in the old note. Two details mattered. The keys are read as a `struct held_pressed_pair` copy with `keys.held & 0x20` and then `u16 right = keys.held & 0x10`, which keeps the key word in r2. The tier argument of `SpawnPolarAkuAku` is read into a local first so it loads before x/y/z. Matches under both compilers. |
 | `sub_802B5B4` | The sprite draw. It is `sub_802E9FC` (actor_part128.c) with a `0x2f00000` projection constant, `CurFrame`/`CurAttr` inlines and `GET_TILE_NUM`. Needs old_agbcc; under the current agbcc 2 halfwords are off, in the `attr` load. |
 | `sub_802B864` | Plain C: `h * w * 32` with `f[1] * f[0]` operand order, and `animTime >> 8` evaluated first. The "multiply into one register, copy to a second" sequence is just what old_agbcc emits for this. Needs old_agbcc. |
 | `sub_802B8E8` | Plain C. `ACTOR_SET_STATE` plus `ACTOR_VCALL(*spawnAddr, m08, 3)`, with the spawn slot read through one `struct actor_self **` local. Matches under both. |
@@ -24,7 +24,7 @@ file is now on the Makefile's `OLD_AGBCC_OBJS` list.
 | `sub_802BAD0` | Plain C with `u16 bit = *(u32 *)input & 2` reused as the zero. Needs old_agbcc because the `1` mask is loaded before the `ldrh`. |
 | `sub_802BBE4` | Plain C with `ACTOR_SET_STATE`. Matches under both. |
 
-### `actor_part62.c`: `sub_802D3A8` (current agbcc, no pins)
+### `actor_part62.c`: `MovePolarAkuAku` (current agbcc, no pins)
 
 The old note blamed an r7 pin. Without any pins the prologue order
 comes out right on its own. What was left needed three changes:
@@ -39,21 +39,21 @@ comes out right on its own. What was left needed three changes:
 
 A file-level `asm(".align 2, 0")` supplies the ROM's zero padding.
 
-### `actor_part74.c`: `sub_802D9A8`, `sub_802DA68` (file moved to old_agbcc)
+### `actor_part74.c`: `UpdateYetiPalette`, `UpdateYetiBg2` (file moved to old_agbcc)
 
-- `sub_802D9A8` is the palette ramp. It needs `DmaCopy16`/`DmaFill16`,
+- `UpdateYetiPalette` is the palette ramp. It needs `DmaCopy16`/`DmaFill16`,
   and the two `0x1f` masks must be separate locals (`mask` before the
   pointers, `mask2` after them), which puts one in ip and one in r7 as
   in the ROM. The ROM packs `R | G<<5 | G<<10`, reusing the scaled
   green for blue. Matches under both compilers.
-- `sub_802DA68` is the affine BG2 setup; the old comment described
+- `UpdateYetiBg2` is the affine BG2 setup; the old comment described
   `0x0400000C`/`0x04000020`-`0x2C` as sound registers, which they are
   not. The flag address is copied into a local after the load
   (`u8 *p = &flag; v = *p; changed = p;`, with `v` pinned to r1). The
   `REG_BG2CNT` value is written as an if/else of two stores. Needs
   old_agbcc, where the `1` of the XOR loads before the `ldrb`.
 
-`sub_802D7B0` stays NAKED in the same file. The NAKED body assembles
+`UpdateYeti` stays NAKED in the same file. The NAKED body assembles
 identically under either compiler.
 
 ### `actor_part76.c`: `sub_802E058` (current agbcc)
@@ -64,7 +64,7 @@ no caller).
 
 ## Not closed (3), drafts in tree
 
-- **`sub_802D7B0`** (actor_part74.c): right size, about 52 halfwords
+- **`UpdateYeti`** (actor_part74.c): right size, about 52 halfwords
   off under old_agbcc (55 under agbcc). Box A is built with
   `BoxMove(&a, x, 0, z)`: the zero Y is what gets the ROM's x-then-z
   evaluation order. Box B comes from a struct-returning `ActorBox()`.
@@ -78,14 +78,14 @@ no caller).
 - **`sub_802DD9C`** (actor_part75.c): the same box code as a standalone
   function, with the same `&b` hoist (about 51 halfwords off, plus an
   extra r6 push). This is also the leftover recorded for
-  `actor_part24b.c`'s `sub_8031378` in issue-58-61-naked-retry.md.
+  `actor_part24b.c`'s `IsTouchingAirship` in issue-58-61-naked-retry.md.
   Whoever fixes it for one of the three should get the other two.
-- **`sub_802DE70`** (actor_part75.c): 5 halfwords off under either
+- **`LoadYetiGraphics`** (actor_part75.c): 5 halfwords off under either
   compiler. The two fill loops are a `static inline` copy of
   `sub_802E058`'s body. The clear loop is written as an `s32` address
   walk (`p >= base`, signed, with a separate `zero` local). Only the
   high-register assignment is wrong: the three hoisted addresses
-  (`&gUnknown_030014C0`, `&gUnpackNibbleTilesFunc`, `&gUnknown_030014BC`)
+  (`&gUnknown_030014C0`, `&gUnpackNibbleTilesFunc`, `&gYeti`)
   land in r8/sb/sl in that order, where the ROM gives `...14BC` r8.
   Pinning sb/sl moves the loads to the declaration point, and pointer
   locals let gcc hoist the dereferences as well, so neither helps.
@@ -93,11 +93,11 @@ no caller).
 ### Later pass: all three closed
 
 [actor-zone-naked-retry.md](actor-zone-naked-retry.md) closed the
-three, so issue #54 has nothing left. `sub_802D7B0` and `sub_802DD9C`
+three, so issue #54 has nothing left. `UpdateYeti` and `sub_802DD9C`
 keep their boxes as members of one stack-frame struct, which makes gcc
 rematerialize `&b` from sp the way the ROM does (old_agbcc;
-`actor_part75.c` moved to it). `sub_802DE70` passes
-`gUnknown_030014BC` straight into a `CurFrame()` inline instead of
+`actor_part75.c` moved to it). `LoadYetiGraphics` passes
+`gYeti` straight into a `CurFrame()` inline instead of
 going through an `obj` local, which fixes the r8/sb/sl order.
 
 ## Verification

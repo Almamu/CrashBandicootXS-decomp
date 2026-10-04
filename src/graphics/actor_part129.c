@@ -4,31 +4,31 @@
 /* First half of the `0x08031A6C`-`0x08032858` remainder issue #59's
  * foundational pass (docs/matching/issue-59-0x08031784-actor.md) left
  * for "Phase 2" - the first 30 of the 60 still-raw functions in
- * `asm/code_3_2_20_28568_c99c_31784_31a6c.s`, `sub_8031A6C` through
- * `sub_8032688` inclusive. Same shared "self" object family documented
+ * `asm/code_3_2_20_28568_c99c_31784_31a6c.s`, `UpdateJetpackBalloonCrate` through
+ * `UpdateJetpackRing` inclusive. Same shared "self" object family documented
  * for the boss-weapon cluster (issues #58/#62) and confirmed again on
  * first read here: `struct actor_self` (actor_self.h) - `state`, the
  * table-index/"kind" `animIndex`, the `animTimer`/`animDone` pair, the
  * `animTime` accumulator, the `anims` part table and the `vtable`
  * event/trampoline table.
  *
- * `sub_8031B0C`/`sub_8031C0C`/`sub_8031D04`/`sub_8031D7C`/`sub_8031E80`
+ * `UpdateJetpackQuestionCrate`/`DamageJetpackQuestionCrate`/`UpdateJetpackHealthCrate`/`UpdateJetpackTimeCrate`/`DamageJetpackTimeCrate`
  * are the "type-byte event dispatch" family already characterized by
  * `docs/rom_map.md`: a proximity check (`sub_802A6EC`) or a countdown
  * timer at `self+0x54` gates the transition, `PlaySfx(3, 0x100)` always
  * plays first, then a `self+0x30`-relative type byte selects between
  * `FreezeLevelClock`/`sub_802F540` calls - written as `goto`-chained `if`
  * blocks (not a plain `switch`) to match this family's already-matched
- * sibling `sub_802C540` (`actor_part19g.c`), whose last case does
+ * sibling `UpdatePolarQuestionCrate` (`actor_part19g.c`), whose last case does
  * something structurally different from the others and resists a plain
  * `switch`'s uniform codegen.
  *
- * `sub_8032480` is the already-flagged orbital-motion consumer of the
+ * `UpdateJetpackRocket` is the already-flagged orbital-motion consumer of the
  * shared trig table `gSineTable`; `sub_8032290` turned out to
  * be a second, closely-related consumer of the same table feeding the
  * same `x`/`y` position pair.
  *
- * `sub_8031A6C`/`sub_80322F4` are the per-state member-pointer
+ * `UpdateJetpackBalloonCrate`/`sub_80322F4` are the per-state member-pointer
  * dispatches through `gStaticData_0817C42C` (`ACTOR_PMF_CALL`,
  * include/actor_self.h) - once parked NAKED as an "r7 table-base-pin"
  * hazard, see docs/matching/pmf-dispatch-retry.md. */
@@ -52,7 +52,7 @@ extern void sub_80318B4(void *selfArg);
 extern void sub_80318D0(void *selfArg, s32 a, s32 b, s32 c);
 extern void InitActorPart(void *self, s32 a, s32 b, s32 c, s32 d);
 extern s32 RandRange(s32 max);
-extern s32 sub_802E4B8(s32 kind, s32 a1, s32 a2, s32 a3, void *selfArg);
+extern s32 SpawnJetpackBalloon(s32 kind, s32 a1, s32 a2, s32 a3, void *selfArg);
 extern s32 __divsi3(s32 a, s32 b);
 extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
 extern void mem_free(void *ptr);
@@ -61,12 +61,12 @@ extern u8 gSineTable[];
 extern struct actor_pmf gStaticData_0817C42C[];
 extern u8 gStaticData_0817C444[];
 extern u8 gActorVtable[];
-extern u8 gStaticData_087E52CC[];
-extern u8 gStaticData_087E530C[];
-extern u8 gStaticData_087E534C[];
-extern u8 gStaticData_087E538C[];
-extern u8 gStaticData_087E53CC[];
-extern u8 gStaticData_087E5404[];
+extern u8 gJetpackHealthCrateVtable[];
+extern u8 gJetpackTimeCrateVtable[];
+extern u8 gJetpackQuestionCrateVtable[];
+extern u8 gJetpackBalloonCrateVtable[];
+extern u8 gJetpackParachuteNitroVtable[];
+extern u8 gJetpackRocketVtable[];
 
 /* Anonymous 12-byte (3-word) copy unit - see actor_part19g.c's own copy
  * of this comment for why this shape (rather than three separate `s32`
@@ -80,8 +80,8 @@ struct vec3_words {
  * `*(T *)&self->field` casts: plain member stores let gcc move the
  * zero loads (docs/workflow.md step 7). */
 
-/* `sub_8031B0C`-`sub_8032350`: orbits `center` and carries a child
- * object (`sub_802E4B8`, released with `sub_80318B4`). */
+/* `UpdateJetpackQuestionCrate`-`sub_8032350`: orbits `center` and carries a child
+ * object (`SpawnJetpackBalloon`, released with `sub_80318B4`). */
 struct orbit_actor {
     struct actor_self base;
     s32 health;                 // 0x54
@@ -95,7 +95,7 @@ struct orbit_actor {
     void *unk_70;               // 0x70 - handed to sub_802AAB4
 };
 
-/* `sub_8032358`-`sub_8032478`: climbs until it reaches `limitY`. */
+/* `UpdateJetpackParachuteNitro`-`sub_8032478`: climbs until it reaches `limitY`. */
 struct rising_actor {
     struct actor_self base;
     s32 health;                 // 0x54
@@ -104,7 +104,7 @@ struct rising_actor {
     s32 limitY;                 // 0x5c
 };
 
-/* `sub_8032480`-`sub_8032680`: swings around `originX` while moving
+/* `UpdateJetpackRocket`-`sub_8032680`: swings around `originX` while moving
  * down by `stepY` until `limitY`. */
 struct swing_actor {
     struct actor_self base;
@@ -116,7 +116,7 @@ struct swing_actor {
     u8 hit;                     // 0x65
 };
 
-/* `sub_8032688`: plays its cue once. */
+/* `UpdateJetpackRing`: plays its cue once. */
 struct trigger_actor {
     struct actor_self base;
     u8 unk_54[4];
@@ -129,7 +129,7 @@ void sub_803256C(void *selfArg);
  * [this->state])()` (see `ACTOR_PMF_CALL`), then "destroy" once state 1
  * has risen past a height or the state-2 animation has played through,
  * else the standard UpdateActor step. */
-void sub_8031A6C(void *selfArg)
+void UpdateJetpackBalloonCrate(void *selfArg)
 {
     struct actor_self *self = selfArg;
 
@@ -154,8 +154,8 @@ void sub_8031A6C(void *selfArg)
  * `self+0x30` type byte (`0x14`-`0x16` into `sub_802F540` at
  * increasing tiers, `0x17` into a fixed sound cue plus
  * `sub_802AAB4`/`AddLife`), flushes a pending trampoline call at
- * `self+0x58`, marks `self+0x5c`, and tail-calls `sub_8031A6C`. */
-void sub_8031B0C(void *selfArg)
+ * `self+0x58`, marks `self+0x5c`, and tail-calls `UpdateJetpackBalloonCrate`. */
+void UpdateJetpackQuestionCrate(void *selfArg)
 {
     struct orbit_actor *self = selfArg;
     s32 kind = self->base.animIndex;
@@ -228,13 +228,13 @@ void sub_8031B0C(void *selfArg)
         self->done = 1;
     }
 
-    sub_8031A6C(self);
+    UpdateJetpackBalloonCrate(self);
 }
 
-/* Countdown twin of `sub_8031B0C`: gated by `self+0x54`'s health-style
+/* Countdown twin of `UpdateJetpackQuestionCrate`: gated by `self+0x54`'s health-style
  * timer instead of proximity, same type-byte dispatch, no tail call
  * (the caller drives whatever comes after directly). */
-void sub_8031C0C(void *selfArg, s32 delta)
+void DamageJetpackQuestionCrate(void *selfArg, s32 delta)
 {
     struct orbit_actor *self = selfArg;
     s32 health = self->health - delta;
@@ -319,8 +319,8 @@ after_dispatch:
 
 /* Proximity-triggered transition with a single fixed downstream call
  * (`sub_802F50C(player, 0x14)`) rather than a type-byte dispatch, then
- * flushes `self+0x58` and tail-calls `sub_8031A6C`. */
-void sub_8031D04(void *selfArg)
+ * flushes `self+0x58` and tail-calls `UpdateJetpackBalloonCrate`. */
+void UpdateJetpackHealthCrate(void *selfArg)
 {
     struct orbit_actor *self = selfArg;
     s32 kind = self->base.animIndex;
@@ -352,7 +352,7 @@ void sub_8031D04(void *selfArg)
         self->done = one;
     }
 
-    sub_8031A6C(self);
+    UpdateJetpackBalloonCrate(self);
 }
 
 /* Proximity-triggered member of the `FreezeLevelClock` half of the type-byte
@@ -360,8 +360,8 @@ void sub_8031D04(void *selfArg)
  * plays a different cue and calls `StartTimeTrial` instead, and the
  * trailing flush re-reads the type byte fresh to skip the lap-counter
  * tie (`AddBrokenCrate`) specifically for that case. Tail-calls
- * `sub_8031A6C`. */
-void sub_8031D7C(void *selfArg)
+ * `UpdateJetpackBalloonCrate`. */
+void UpdateJetpackTimeCrate(void *selfArg)
 {
     struct orbit_actor *self = selfArg;
     s32 kind = self->base.animIndex;
@@ -435,12 +435,12 @@ void sub_8031D7C(void *selfArg)
         self->done = 1;
     }
 
-    sub_8031A6C(self);
+    UpdateJetpackBalloonCrate(self);
 }
 
-/* Countdown twin of `sub_8031D7C`: gated by `self+0x54`'s timer instead
+/* Countdown twin of `UpdateJetpackTimeCrate`: gated by `self+0x54`'s timer instead
  * of proximity, same `FreezeLevelClock` dispatch, no tail call. */
-void sub_8031E80(void *selfArg, s32 delta)
+void DamageJetpackTimeCrate(void *selfArg, s32 delta)
 {
     struct orbit_actor *self = selfArg;
     s32 health = self->health - delta;
@@ -526,32 +526,32 @@ after_dispatch:
 
 /* `InitActorPart`-based constructor: forwards `a`/`b`/`c`/`d` straight
  * through, marks health `2`, stashes `b`/`c` into `self+0x60`/`0x64`, a
- * random 16-bit seed into `self+0x68`, then forwards to `sub_802E4B8`
+ * random 16-bit seed into `self+0x68`, then forwards to `SpawnJetpackBalloon`
  * (kind `0x28`) with `c` biased by `-15798` - one of the "spawn effect
  * type N" family's own per-kind constructors (docs/rom_map.md). */
-void *sub_8031F78(void *selfArg, s32 a, s32 b, s32 c, s32 d)
+void *CreateJetpackTimeCrate(void *selfArg, s32 a, s32 b, s32 c, s32 d)
 {
     struct orbit_actor *self = selfArg;
     register s32 health asm("r8") = 2;
 
     InitActorPart(self, a, b, c, d);
     self->health = health;
-    self->base.vtable = (struct actor_vtable *)gStaticData_087E538C;
+    self->base.vtable = (struct actor_vtable *)gJetpackBalloonCrateVtable;
     self->done = 0;
     self->centerX = b;
     self->centerY = c;
     self->phase = (u16)RandRange(0xff);
 
-    self->child = (void *)sub_802E4B8(0x28, b, c + (s32)0xFFFFC24A, d, self);
-    self->base.vtable = (struct actor_vtable *)gStaticData_087E530C;
+    self->child = (void *)SpawnJetpackBalloon(0x28, b, c + (s32)0xFFFFC24A, d, self);
+    self->base.vtable = (struct actor_vtable *)gJetpackTimeCrateVtable;
 
     return self;
 }
 
-/* Countdown twin of `sub_8031C0C`'s shape applied to a fixed-cue,
+/* Countdown twin of `DamageJetpackQuestionCrate`'s shape applied to a fixed-cue,
  * single-downstream-call proximity/countdown transition (same body as
- * `sub_8031FE8` below except gated by `self+0x54`, see there). */
-void sub_8031FE8(void *selfArg, s32 delta)
+ * `DamageJetpackHealthCrate` below except gated by `self+0x54`, see there). */
+void DamageJetpackHealthCrate(void *selfArg, s32 delta)
 {
     struct orbit_actor *self = selfArg;
     s32 health = self->health - delta;
@@ -593,45 +593,45 @@ void sub_8031FE8(void *selfArg, s32 delta)
     }
 }
 
-/* Same `sub_802E4B8`-based constructor shape as `sub_8031F78`, kind
- * `0x2a`, final event table `gStaticData_087E52CC`. */
-void *sub_8032054(void *selfArg, s32 a, s32 b, s32 c, s32 d)
+/* Same `SpawnJetpackBalloon`-based constructor shape as `CreateJetpackTimeCrate`, kind
+ * `0x2a`, final event table `gJetpackHealthCrateVtable`. */
+void *CreateJetpackHealthCrate(void *selfArg, s32 a, s32 b, s32 c, s32 d)
 {
     struct orbit_actor *self = selfArg;
     register s32 health asm("r8") = 2;
 
     InitActorPart(self, a, b, c, d);
     self->health = health;
-    self->base.vtable = (struct actor_vtable *)gStaticData_087E538C;
+    self->base.vtable = (struct actor_vtable *)gJetpackBalloonCrateVtable;
     self->done = 0;
     self->centerX = b;
     self->centerY = c;
     self->phase = (u16)RandRange(0xff);
 
-    self->child = (void *)sub_802E4B8(0x2a, b, c + (s32)0xFFFFC24A, d, self);
-    self->base.vtable = (struct actor_vtable *)gStaticData_087E52CC;
+    self->child = (void *)SpawnJetpackBalloon(0x2a, b, c + (s32)0xFFFFC24A, d, self);
+    self->base.vtable = (struct actor_vtable *)gJetpackHealthCrateVtable;
 
     return self;
 }
 
-/* Same `sub_802E4B8`-based constructor shape again, kind `0x29`, final
- * event table `gStaticData_087E534C`, plus a 6th argument stashed
+/* Same `SpawnJetpackBalloon`-based constructor shape again, kind `0x29`, final
+ * event table `gJetpackQuestionCrateVtable`, plus a 6th argument stashed
  * verbatim into `self+0x70`. */
-void *sub_80320C4(void *selfArg, s32 a, s32 b, s32 c, s32 d, s32 e)
+void *CreateJetpackQuestionCrate(void *selfArg, s32 a, s32 b, s32 c, s32 d, s32 e)
 {
     struct orbit_actor *self = selfArg;
     register s32 health asm("r8") = 2;
 
     InitActorPart(self, a, b, c, d);
     self->health = health;
-    self->base.vtable = (struct actor_vtable *)gStaticData_087E538C;
+    self->base.vtable = (struct actor_vtable *)gJetpackBalloonCrateVtable;
     self->done = 0;
     self->centerX = b;
     self->centerY = c;
     self->phase = (u16)RandRange(0xff);
 
-    self->child = (void *)sub_802E4B8(0x29, b, c + (s32)0xFFFFC24A, d, self);
-    self->base.vtable = (struct actor_vtable *)gStaticData_087E534C;
+    self->child = (void *)SpawnJetpackBalloon(0x29, b, c + (s32)0xFFFFC24A, d, self);
+    self->base.vtable = (struct actor_vtable *)gJetpackQuestionCrateVtable;
     self->unk_70 = (void *)e;
 
     return self;
@@ -672,7 +672,7 @@ void sub_8032140(void *selfArg)
 /* Countdown-gated state-2 transition with a `self+0x58` trampoline
  * flush (sound cue plus lap-counter tie only fire when there's a
  * pending object to flush), no type-byte dispatch. */
-void sub_8032170(void *selfArg, s32 delta)
+void DamageJetpackBalloonCrate(void *selfArg, s32 delta)
 {
     struct orbit_actor *self = selfArg;
     s32 health = self->health - delta;
@@ -717,7 +717,7 @@ void sub_8032170(void *selfArg, s32 delta)
  * event table to `gActorVtable`, then conditionally `mem_free`s
  * `self` if the caller's flag bit 0 is set - a destructor/detach helper
  * for this object family. */
-void sub_80321D0(void *selfArg, s32 flags)
+void DestroyJetpackBalloonCrate(void *selfArg, s32 flags)
 {
     struct orbit_actor *self = selfArg;
     u8 *next;
@@ -741,7 +741,7 @@ void sub_80321D0(void *selfArg, s32 flags)
     }
 }
 
-/* Same `sub_802E4B8`-based constructor shape as `sub_8031F78`, but
+/* Same `SpawnJetpackBalloon`-based constructor shape as `CreateJetpackTimeCrate`, but
  * fully parameterized: the "kind" (`0x28`/`0x29`/`0x2a`/etc there) is a
  * 6th caller-supplied byte argument here rather than a fixed literal,
  * and this one doesn't reassign `vtable`'s event table afterward.
@@ -752,20 +752,20 @@ void sub_80321D0(void *selfArg, s32 flags)
  * form - `kind` declared `u8` and `health` an ordinary local - which
  * matches under both agbcc and old_agbcc (see
  * docs/matching/issue-59-60-m-operand-scheduling.md). */
-void *sub_80321FC(void *selfArg, s32 a, s32 b, s32 c, s32 d, u8 kind)
+void *InitJetpackBalloonCrate(void *selfArg, s32 a, s32 b, s32 c, s32 d, u8 kind)
 {
     struct orbit_actor *self = selfArg;
     s32 health = 2;
 
     InitActorPart(self, a, b, c, d);
     self->health = health;
-    self->base.vtable = (struct actor_vtable *)gStaticData_087E538C;
+    self->base.vtable = (struct actor_vtable *)gJetpackBalloonCrateVtable;
     self->done = 0;
     self->centerX = b;
     self->centerY = c;
     self->phase = (u16)RandRange(0xff);
 
-    self->child = (void *)sub_802E4B8(kind, b, c + (s32)0xFFFFC24A, d, self);
+    self->child = (void *)SpawnJetpackBalloon(kind, b, c + (s32)0xFFFFC24A, d, self);
 
     return self;
 }
@@ -794,7 +794,7 @@ void sub_8032274(void *selfArg)
 
 /* A second, independent consumer of the shared trig table
  * `gSineTable` (the orbital-motion convention already
- * documented for `sub_8032480`): computes an `x`/`y`
+ * documented for `UpdateJetpackRocket`): computes an `x`/`y`
  * position pair from two phase-shifted table lookups around
  * `self+0x68 + self+0x44`, then - while `self+0x58` holds another
  * object - forwards the result into that object's own anim-frame-
@@ -823,7 +823,7 @@ void sub_8032290(void *selfArg)
     }
 }
 
-/* `sub_8031A6C`'s dispatch without its tail: `(this->*gStaticData_
+/* `UpdateJetpackBalloonCrate`'s dispatch without its tail: `(this->*gStaticData_
  * 0817C42C[this->state])()` (see `ACTOR_PMF_CALL`). */
 void sub_80322F4(void *selfArg)
 {
@@ -844,7 +844,7 @@ u8 sub_8032350(void *selfArg)
  * (`gActorList`) before its own state-1/table-index-1
  * transition; either way clamps `y` forward by `0x140` once it
  * falls behind `self+0x5c`, then tail-calls `UpdateActor`. */
-void sub_8032358(void *selfArg)
+void UpdateJetpackParachuteNitro(void *selfArg)
 {
     struct rising_actor *self = selfArg;
 
@@ -889,7 +889,7 @@ tail:
 
 /* Countdown-gated `self+0x58` byte transition into state 1 (anim frame
  * from `self`'s own part table at `+0xc`), then ties the lap counter. */
-void sub_80323F4(void *selfArg, s32 delta)
+void DamageJetpackParachuteNitro(void *selfArg, s32 delta)
 {
     register struct rising_actor *self asm("r6") = selfArg;
     s32 health = self->health - delta;
@@ -938,13 +938,13 @@ void sub_80323F4(void *selfArg, s32 delta)
  * same hazard for the constant too and pins the ROM's exact order;
  * `d`'s own address is still entirely the compiler's choice via the
  * outgoing slot's "m" operand, and `a`/`b` pass through r1/r2
- * untouched. The `0xFFFF0600`/`gStaticData_087E53CC` literal pool
+ * untouched. The `0xFFFF0600`/`gJetpackParachuteNitroVtable` literal pool
  * needed manual placement too (a trailing file-scope `asm` right after
  * the function) since inline asm's own `=constant` load syntax dumps
  * its literal in the assembler's default pool location instead of
  * immediately after the function like this compiler's own `-fhex-asm`
  * literals. */
-void *sub_8032440(void *selfArg, s32 a, s32 b, s32 c, s32 d)
+void *CreateJetpackParachuteNitro(void *selfArg, s32 a, s32 b, s32 c, s32 d)
 {
     struct rising_actor *self = selfArg;
     register s32 aReg asm("r1") = a;
@@ -984,7 +984,7 @@ void *sub_8032440(void *selfArg, s32 a, s32 b, s32 c, s32 d)
 
     return self;
 }
-asm(".align 2, 0\n1: .4byte 0xFFFF0600\n2: .4byte gStaticData_087E53CC\n");
+asm(".align 2, 0\n1: .4byte 0xFFFF0600\n2: .4byte gJetpackParachuteNitroVtable\n");
 
 /* Trivial `self+0x58` byte getter. */
 u8 sub_8032478(void *selfArg)
@@ -1004,7 +1004,7 @@ u8 sub_8032478(void *selfArg)
  * `vtable` trampoline call (state-1/table-index-1 shape) or repeats
  * the same player-proximity event once (latched via `self+0x65`).
  * Falls back to `UpdateActor` in both non-idle paths. */
-void sub_8032480(void *selfArg)
+void UpdateJetpackRocket(void *selfArg)
 {
     struct swing_actor *self = selfArg;
 
@@ -1097,7 +1097,7 @@ void sub_803256C(void *selfArg)
 /* Countdown-gated double-byte state transition (`self+0x64`/`0x65`),
  * anim frame taken from `self`'s own part table at `+0x18` this time
  * (not the usual `+0xc`). */
-void sub_80325A4(void *selfArg, s32 delta)
+void DamageJetpackRocket(void *selfArg, s32 delta)
 {
     register struct swing_actor *self asm("r5") = selfArg;
     s32 health = self->health - delta;
@@ -1147,14 +1147,14 @@ static inline void InitActorPartInline(void *self, s32 a, s32 b, s32 c, s32 d)
  * `self+0x58` (+-0x8000), and derives `self+0x60` from
  * `__divsi3(self+0x5c - 0xfa00, 0xc6)`. Once parked NAKED over the
  * `0xfa00` load's position (see InitActorPartInline above). */
-void *sub_80325EC(void *selfArg, s32 a, s32 b, s32 c, s32 d)
+void *CreateJetpackRocket(void *selfArg, s32 a, s32 b, s32 c, s32 d)
 {
     struct swing_actor *self = selfArg;
     s32 health = 1;
 
     InitActorPartInline(self, a, b, 0xfa00, d);
     self->health = health;
-    self->base.vtable = (struct actor_vtable *)gStaticData_087E5404;
+    self->base.vtable = (struct actor_vtable *)gJetpackRocketVtable;
     if (c > 0x3f00)
         c = 0x3f00;
     if (c < -0x3f00)
@@ -1185,7 +1185,7 @@ u8 sub_8032680(void *selfArg)
  * table's own `+0x20` field, plus `y`, into `sub_802F164`, then
  * latches a one-shot cue via `self+0x58`. Tail-calls `UpdateActor`
  * unconditionally. */
-void sub_8032688(void *selfArg)
+void UpdateJetpackRing(void *selfArg)
 {
     struct trigger_actor *self = selfArg;
 

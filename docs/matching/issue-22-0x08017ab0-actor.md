@@ -175,5 +175,5 @@ project policy (see `docs/status/actor.md`'s "Parked - NAKED
 transcription" section for the tracking entry). `tools/report_units.py`
 keeps `base_object=None` for this address, matching every other NAKED
 entry in this table family. Issue #22 itself stays open -
-`sub_8018008`/`sub_8018400`/`sub_801865C`/`sub_80186F0`
+`UpdateTiny`/`SetTinyState`/`PickTinyHopTarget`/`sub_80186F0`
 (0x08018008-0x080186F0) remain raw/unexamined for a future pass.

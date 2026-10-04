@@ -1,8 +1,8 @@
 #include "core.h"
 #include "actor_self.h"
 
-/* Sits right after actor_part19g.c's `sub_802C6C0` and before
- * actor_part19d.c's `sub_802C904` - directly adjacent to both now,
+/* Sits right after actor_part19g.c's `UpdatePolarNitroCrate` and before
+ * actor_part19d.c's `UpdatePolarAkuAkuCrate` - directly adjacent to both now,
  * closing the raw gap issue #53 tracked. Same `self` object and
  * conventions documented in actor_part19g.c/actor_part74.c: the
  * 12-byte `{s16 x, y, z, sizeX, sizeY, sizeZ}` AABB record (per
@@ -72,17 +72,17 @@ static inline u8 ActorsOverlap(struct actor_self *pl, struct actor_self *self)
 #define ACTOR_NEXT(a) (*(struct actor_self **)&(a)->unk_48[4])
 #define ACTOR_TYPE(a) (**(u8 **)&(a)->unk_2C[4])
 
-/* Called from `sub_802C6C0` (actor_part19g.c) once `self` (a "used"
+/* Called from `UpdatePolarNitroCrate` (actor_part19g.c) once `self` (a "used"
  * pickup, state `0x12`) has stayed used for `self+0x44 == 0x14`
  * frames: walks the whole `self+0x4c`-rooted circular actor list
  * (rooted at `gActorList`, the same sentinel-head list every
  * other `self+0x4c`/`self+0x48` teardown/unlink helper in this ROM
- * region walks - `sub_802AA4C`/`sub_802C19C`/`sub_802C394`) looking
+ * region walks - `sub_802AA4C`/`sub_802C19C`/`DestroyPolarCollectedWumpa`) looking
  * for every OTHER actor whose type byte (`*(u8*)(*(u8**)(node+0x30))`,
- * the same type-byte indirection `sub_802C540` dispatches on) is `4`
+ * the same type-byte indirection `UpdatePolarQuestionCrate` dispatches on) is `4`
  * and that overlaps `self`'s own translated `self+0x38` AABB (both
  * boxes translated into world space by each object's own `+0x1c`/
- * `+0x20`/`+0x24` `>>8` position, exactly like `sub_802D7B0`/
+ * `+0x20`/`+0x24` `>>8` position, exactly like `UpdateYeti`/
  * `sub_802DD9C`'s player-overlap test) - a proximity "chain pickup"
  * that fires the shared used-state transition (sound cue `PlaySfx(...,
  * 4, 0x100)`, lap-counter tie `AddBrokenCrate`, `+0x44`/`+0x12`/`+8`
@@ -97,7 +97,7 @@ static inline u8 ActorsOverlap(struct actor_self *pl, struct actor_self *self)
  * in one frame struct gcc hoists `sp+0x18` into `r7` itself. Needs
  * old_agbcc (25 halfwords off under current agbcc, all `asr`
  * scheduling in the box translation). */
-void sub_802C7A8(struct actor_self *self)
+void DetonateNearbyPolarNitros(struct actor_self *self)
 {
     struct actor_self *n = ACTOR_NEXT(gActorList);
 

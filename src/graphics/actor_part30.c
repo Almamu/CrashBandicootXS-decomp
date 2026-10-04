@@ -12,7 +12,7 @@ extern void *gAudioContext;
 struct spawner {
     struct actor_self base;
     s32 hp;             // 0x54
-    s32 spawnX;         // 0x58 - the constructor's `b`/`c` (sub_8033EF4)
+    s32 spawnX;         // 0x58 - the constructor's `b`/`c` (CreateHovercraftLauncher)
     s32 spawnY;         // 0x5C
     u8 unk_60[4];
     s32 cooldown;       // 0x64
@@ -31,7 +31,7 @@ extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
  * table at `+0x18`), and plays the death sound; otherwise just plays a
  * hit sound. The `*(T *)&self->...` stores keep gcc from treating them as
  * struct-member accesses, which changes where the byte zero is built. */
-void sub_8033AE0(struct spawner *self, s32 dmg)
+void DamageHovercraftCannon(struct spawner *self, s32 dmg)
 {
 
     sub_8033804();

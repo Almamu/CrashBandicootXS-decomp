@@ -21,7 +21,7 @@ struct meter_actor {
 };
 
 extern s32 CollectWumpa(void *arg0);
-extern void sub_802E484(s32 x, s32 y, s32 amount);
+extern void SpawnJetpackCollectedWumpa(s32 x, s32 y, s32 amount);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern s32 __divsi3(s32 arg0, s32 arg1);
 extern void SetCellAnimSpeed(s32 arg0);
@@ -54,7 +54,7 @@ extern u8 gActorVtable[];
  * accumulator `sub_802F540` fills: while the singleton flag
  * (`gUnknown_03001506`) is set, fully drains it via repeated
  * `CollectWumpa` calls; otherwise, once a `gUnknown_030014F8` cooldown
- * elapses, dispenses one of four tiers of reward (via `sub_802E484` at
+ * elapses, dispenses one of four tiers of reward (via `SpawnJetpackCollectedWumpa` at
  * `self`'s position) sized by the accumulator's own magnitude, and
  * plays a cue. */
 void sub_802F3BC(void *selfArg)
@@ -82,16 +82,16 @@ void sub_802F3BC(void *selfArg)
     gUnknown_030014F8 = 0xf;
 
     if (acc <= 9) {
-        sub_802E484(self->base.x, self->base.y, 1);
+        SpawnJetpackCollectedWumpa(self->base.x, self->base.y, 1);
         gUnknown_030014FC -= 1;
     } else if (acc <= 0x13) {
-        sub_802E484(self->base.x, self->base.y, 2);
+        SpawnJetpackCollectedWumpa(self->base.x, self->base.y, 2);
         gUnknown_030014FC -= 2;
     } else if (acc <= 0x27) {
-        sub_802E484(self->base.x, self->base.y, 4);
+        SpawnJetpackCollectedWumpa(self->base.x, self->base.y, 4);
         gUnknown_030014FC -= 4;
     } else {
-        sub_802E484(self->base.x, self->base.y, 8);
+        SpawnJetpackCollectedWumpa(self->base.x, self->base.y, 8);
         gUnknown_030014FC -= 8;
     }
 

@@ -201,7 +201,7 @@ audio context pointer, `self`, a scratch "player pressed either
 qualifying button" flag, and the 0-15 ping-pong counter, respectively)
 is the same "many high registers held live across calls inside a loop"
 shape already NAKED throughout this codebase for this exact reason
-(`sub_80309B4`/`sub_8031040`/`sub_80311C4`,
+(`AirshipStateExplode`/`SpawnAirship`/`UpdateAirship`,
 `actor_part21f.c`/`23e.c`/`23f.c`) - and was already flagged as this
 class of difficulty for this specific function in the original issue-63
 writeup before this pass even started. Transcribed instruction-for-

@@ -8,8 +8,8 @@
  * table, and the position triple at `self+0x1c`/`self+0x20`/`self+0x24`)
  * already documented for `actor_part17.c`-`actor_part19i.c` and
  * `actor_part58.c`. Sits between `actor_part19i.c` (issue #53, ending
- * at `sub_802CC78`) and `actor_part62.c` (issue #54, starting at
- * `sub_802D3A8`) - the whole `0x0802CC9C`-`0x0802D3A8` gap
+ * at `CreatePolarBasicCrate`) and `actor_part62.c` (issue #54, starting at
+ * `MovePolarAkuAku`) - the whole `0x0802CC9C`-`0x0802D3A8` gap
  * docs/matching/issue-53-actor-c7a8.md's "What's left" section
  * described as "a larger, sub_802DD9C/sub_802A6EC/sub_802B7E0-calling
  * state machine ... not attempted this pass". */
@@ -45,11 +45,11 @@ extern u8 gStaticData_0817A780[];
 extern u8 gStaticData_0817A798[];
 extern u8 gStaticData_0817A7D8[];
 extern u8 gStaticData_0817A7B8[];
-extern u8 gStaticData_087E4FB4[];
+extern u8 gPolarElectricFenceVtable[];
 extern u8 gStaticData_087E4FD4[];
 extern u8 gStaticData_087E4FF4[];
-extern u8 gStaticData_087E5014[];
-extern u8 gStaticData_087E5034[];
+extern u8 gPolarPenguinVtable[];
+extern u8 gPolarIcicleVtable[];
 
 /* The gLevelState fields read here. */
 struct game_state {
@@ -59,20 +59,20 @@ struct game_state {
 
 extern struct game_state *gLevelState;
 
-/* The homing projectile (method table gStaticData_087E5014). */
-struct actor_homing {
+/* The homing projectile (method table gPolarPenguinVtable). */
+struct polar_penguin {
     struct actor_self base;
     s32 velX;           // 0x54
     s32 velY;           // 0x58
     s32 velZ;           // 0x5C
     s32 countdown;      // 0x60 - frames until the next retarget
-    s32 targetZ;        // 0x64 - passed back to sub_802D044 on retarget
+    s32 targetZ;        // 0x64 - passed back to AimPolarPenguin on retarget
 };
 
-/* sub_802D0C8's spawn argument. */
+/* CreatePolarPenguin's spawn argument. */
 struct spawn_arg {
     u8 unk_00[0x10];
-    s32 target;         // 0x10 - sub_802D044's homing target index
+    s32 target;         // 0x10 - AimPolarPenguin's homing target index
 };
 
 /* A 12-byte AABB record (the same shape actor_part19g.c copies as
@@ -130,7 +130,7 @@ struct hazard {
  * (a hit there only counts if sub_802B7E0 agrees), or failing that the
  * 0817A774 and 0817A780 boxes; any hit switches to sequence 1. Once used,
  * fires method 0x08 with 3 when the sequence has played through. */
-void sub_802CC9C(void *selfArg)
+void UpdatePolarElectricFence(void *selfArg)
 {
     struct hazard *self = selfArg;
 
@@ -168,14 +168,14 @@ void sub_802CC9C(void *selfArg)
 
 
 /* `InitActorPart`-based constructor: forwards `a`/`b`/`c`/`d` straight
- * through, installs `self+0x50 = gStaticData_087E4FB4`, and clears the
+ * through, installs `self+0x50 = gPolarElectricFenceVtable`, and clears the
  * `self+0x2c` one-shot flag. */
-void *sub_802CDE4(void *selfArg, s32 a, s32 b, s32 c, s32 d)
+void *CreatePolarElectricFence(void *selfArg, s32 a, s32 b, s32 c, s32 d)
 {
     struct actor_self *self = selfArg;
 
     InitActorPart(self, a, b, c, d);
-    self->vtable = (struct actor_vtable *)gStaticData_087E4FB4;
+    self->vtable = (struct actor_vtable *)gPolarElectricFenceVtable;
     self->unk_2C[0] = 0;
     return self;
 }
@@ -193,7 +193,7 @@ void sub_802CE10(void *selfArg)
     UpdateActor(self);
 }
 
-/* Same `InitActorPart`-based constructor shape as `sub_802CDE4`, minus
+/* Same `InitActorPart`-based constructor shape as `CreatePolarElectricFence`, minus
  * the `self+0x2c` clear, `self+0x50 = gStaticData_087E4FD4`. */
 void *sub_802CE38(void *selfArg, s32 a, s32 b, s32 c, s32 d)
 {
@@ -291,18 +291,18 @@ void *sub_802CF0C(void *selfArg, s32 a, s32 b, s32 c, s32 d)
 /* Applies `self`'s own velocity (`self+0x54`/`0x58`/`0x5c`) to its
  * position, and while idle (`self+0x28 == 0`) counts down
  * `self+0x60`, re-deriving a fresh velocity/homing target via
- * `sub_802D044` once it expires. While idle, also probes
+ * `AimPolarPenguin` once it expires. While idle, also probes
  * `sub_802A6EC`'s trampoline-fire edge against the player
  * (`sub_802B730`) or, failing that, `sub_802DD9C`'s player-overlap
  * test - either hit re-arms a fixed outward velocity (`self+0x54`
  * biased by `self+0x1c`'s sign), a random negative Y kick
  * (`self+0x58`), bumps `self+0x5c`, plays a cue, and transitions to
  * state 1/table-index 0. Always tail-calls `UpdateActor`. */
-extern void sub_802D044(void *selfArg, s32 arg1);
+extern void AimPolarPenguin(void *selfArg, s32 arg1);
 
-void sub_802CF30(void *selfArg)
+void UpdatePolarPenguin(void *selfArg)
 {
-    struct actor_homing *self = selfArg;
+    struct polar_penguin *self = selfArg;
     register s32 state asm("r6");
 
     self->base.x += self->velX;
@@ -314,7 +314,7 @@ void sub_802CF30(void *selfArg)
         s32 remain = self->countdown - 1;
         self->countdown = remain;
         if (remain <= 0) {
-            sub_802D044(self, self->targetZ);
+            AimPolarPenguin(self, self->targetZ);
         }
 
         {
@@ -374,9 +374,9 @@ void sub_802CF30(void *selfArg)
  * tracked position (`sub_802A558`/`sub_802A540`) by that factor,
  * caching the new countdown in `self+0x60` (floored at 1) and
  * `target`'s own Z record in `self+0x64`. */
-void sub_802D044(void *selfArg, s32 target)
+void AimPolarPenguin(void *selfArg, s32 target)
 {
-    struct actor_homing *self = selfArg;
+    struct polar_penguin *self = selfArg;
 
     if (target < 0) {
         self->velY = 0;
@@ -410,16 +410,16 @@ void sub_802D044(void *selfArg, s32 target)
 
 /* `InitActorPart`-based constructor, forwarding `a`/`b`/`c`/`d`
  * straight through plus a 6th argument `e` (a pointer whose `+0x10`
- * field feeds `sub_802D044`'s homing target): installs
- * `self+0x50 = gStaticData_087E5014`, then calls
- * `sub_802D044(self, e->0x10)`. */
-void *sub_802D0C8(void *selfArg, s32 a, s32 b, s32 c, s32 d, struct spawn_arg *e)
+ * field feeds `AimPolarPenguin`'s homing target): installs
+ * `self+0x50 = gPolarPenguinVtable`, then calls
+ * `AimPolarPenguin(self, e->0x10)`. */
+void *CreatePolarPenguin(void *selfArg, s32 a, s32 b, s32 c, s32 d, struct spawn_arg *e)
 {
     struct actor_self *self = selfArg;
 
     InitActorPart(self, a, b, c, d);
-    self->vtable = (struct actor_vtable *)gStaticData_087E5014;
-    sub_802D044(self, e->target);
+    self->vtable = (struct actor_vtable *)gPolarPenguinVtable;
+    AimPolarPenguin(self, e->target);
     return self;
 }
 
@@ -430,7 +430,7 @@ void *sub_802D0C8(void *selfArg, s32 a, s32 b, s32 c, s32 d, struct spawn_arg *e
  * `GetAnimFrameBaseOffset` reaches the new record's own threshold,
  * clears `self+8` (deep-tier variant clears it unconditionally with
  * the pre-increment tier value instead) and bumps `self+0x28`. */
-void sub_802D0F4(void *selfArg)
+void UpdatePolarIcicle(void *selfArg)
 {
     struct actor_self *self = selfArg;
     register s32 threshold1 asm("r0");
@@ -508,17 +508,17 @@ tail:
 /* `InitActorPart`-based constructor: forwards `self`/`d` straight
  * through, passing `b` (a `u8 *`, cast to `s32` for `InitActorPart`'s
  * own generic third argument) and `c` unchanged; installs
- * `self+0x50 = gStaticData_087E5034`, then classifies a "kind"
+ * `self+0x50 = gPolarIcicleVtable`, then classifies a "kind"
  * (`self+0xc`) from `b`'s own first byte (bumped by 1 if `c > 0`),
  * scaled `*4 - 0x40`, to seed `self+0x10`/`self+0x12`/`self+8` from the
  * part table. */
-void *sub_802D1B8(void *selfArg, u8 *b, s32 c, s32 d, s32 e)
+void *CreatePolarIcicle(void *selfArg, u8 *b, s32 c, s32 d, s32 e)
 {
     struct actor_self *self = selfArg;
     register s32 kind asm("r1");
 
     InitActorPart(self, (s32)b, c, d, e);
-    self->vtable = (struct actor_vtable *)gStaticData_087E5034;
+    self->vtable = (struct actor_vtable *)gPolarIcicleVtable;
 
     kind = *b;
     if (c > 0) {
@@ -659,7 +659,7 @@ void sub_802D204(void *selfArg, s32 retriggerParam)
  * state 2's own `self+0x12` edge trips. Always advances `self`'s own
  * anim frame (`sub_802A980`, frame-counter bump, and the usual
  * wrap-around `GetAnimFrameBaseOffset` check). */
-void sub_802D2DC(void *selfArg)
+void UpdatePolarAkuAku(void *selfArg)
 {
     struct actor_self *self = selfArg;
 

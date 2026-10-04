@@ -5,11 +5,11 @@
  * docs/matching/issue-22-0x08018008-hopper.md). Built with old_agbcc
  * (Makefile OLD_AGBCC_OBJS), like actor_part_188d0.c right after it.
  *
- * sub_8018008/sub_8018400 are the per-frame update and "enter state"
- * methods of the gStaticData_087E4564 class (constructor sub_80189EC,
+ * UpdateTiny/SetTinyState are the per-frame update and "enter state"
+ * methods of the gTinyVtable class (constructor CreateTiny,
  * actor_part_188d0.c): a boss that hops its `part` along parabolic arcs
  * (the 257-entry i*i>>8 table at +0x48) between the gUnknown_030012EC
- * list's anchor objects, stomping them. sub_801865C picks the next anchor
+ * list's anchor objects, stomping them. PickTinyHopTarget picks the next anchor
  * from a per-round table, sub_80186F0 spawns a falling hazard. */
 
 struct hop_method
@@ -111,8 +111,8 @@ struct hop_level
     struct { u8 unk_00[4]; s32 unk_04; u8 unk_08[8]; s32 width; s32 height; } *layer0;
 };
 
-/* gStaticData_087E4564 class */
-struct hopper
+/* gTinyVtable class */
+struct tiny_tiger
 {
     u8 unk_00[8];
     s32 state;                    // 0x08
@@ -187,8 +187,8 @@ extern struct hop_box sub_8007CF8(void *obj);
 extern u8 sub_8001688(struct hop_box *a, struct hop_box *b);
 extern u8 HasTornadoSpin(void *self);
 extern void RequestRoomExit(void);
-extern void sub_8018978(struct hopper *self, struct hop_part *part);
-extern void nullsub_19(struct hopper *self, struct hop_part *part);
+extern void sub_8018978(struct tiny_tiger *self, struct hop_part *part);
+extern void nullsub_19(struct tiny_tiger *self, struct hop_part *part);
 extern void SpawnTornadoSpinPower(u32 arg0, u16 x, u16 y, u16 arg3);
 extern struct hop_part *sub_8009ED0(u16 arg0, u16 arg1, u16 arg2, u16 arg3);
 extern void sub_80087C0(struct hop_part *p);
@@ -230,11 +230,11 @@ static inline void SetSlot(struct hop_part *part, s32 v)
     *p = m;
 }
 
-void sub_8018400(struct hopper *self, struct hop_part *part, s32 next);
-s32 sub_801865C(struct hopper *self);
-void sub_80186F0(struct hopper *self, struct hop_part *part, s32 n);
+void SetTinyState(struct tiny_tiger *self, struct hop_part *part, s32 next);
+s32 PickTinyHopTarget(struct tiny_tiger *self);
+void sub_80186F0(struct tiny_tiger *self, struct hop_part *part, s32 n);
 
-void sub_8018008(struct hopper *self, struct hop_part *part)
+void UpdateTiny(struct tiny_tiger *self, struct hop_part *part)
 {
     struct hop_box a;
     struct hop_box b;
@@ -260,7 +260,7 @@ void sub_8018008(struct hopper *self, struct hop_part *part)
         b = sub_8007CF8(part);
         if (a.w != 0 && BOX_VALID(b) && sub_8001688(&b, &a)
             && gPlayer->unk_0A == 0x13)
-            sub_8018400(self, part, 9);
+            SetTinyState(self, part, 9);
     }
     else if (gPlayer->busy == 0)
     {
@@ -295,7 +295,7 @@ void sub_8018008(struct hopper *self, struct hop_part *part)
             self->target = one;
             self->count = 0;
         }
-        sub_8018400(self, part, 1);
+        SetTinyState(self, part, 1);
         break;
     case 1:
     case 2:
@@ -316,23 +316,23 @@ void sub_8018008(struct hopper *self, struct hop_part *part)
         {
             if (HasTornadoSpin(gLevelState))
                 RequestRoomExit();
-            sub_8018400(self, part, 16);
+            SetTinyState(self, part, 16);
         }
         else if (self->state == 1)
         {
-            sub_8018400(self, part, 6);
+            SetTinyState(self, part, 6);
         }
         else if (self->state == 11)
         {
             self->count = steps;
             VCALL2(self, m50, part, 3);
             self->nextState = 12;
-            sub_8018400(self, part, 5);
+            SetTinyState(self, part, 5);
         }
         else
         {
             PlaySfx(gAudioContext, 0x3D, 0x100);
-            sub_8018400(self, part, 8);
+            SetTinyState(self, part, 8);
         }
         break;
     }
@@ -358,13 +358,13 @@ void sub_8018008(struct hopper *self, struct hop_part *part)
 
             asm("" : "+r"(s));
             if (s == 14)
-                sub_8018400(self, part, 15);
+                SetTinyState(self, part, 15);
             else if (s == 3)
-                sub_8018400(self, part, 1);
+                SetTinyState(self, part, 1);
             else if (state == 7)
-                sub_8018400(self, part, 2);
+                SetTinyState(self, part, 2);
             else
-                sub_8018400(self, part, 13);
+                SetTinyState(self, part, 13);
         }
         break;
     }
@@ -375,7 +375,7 @@ void sub_8018008(struct hopper *self, struct hop_part *part)
 
             if (timer == 0)
             {
-                sub_8018400(self, part, 11);
+                SetTinyState(self, part, 11);
             }
             else
             {
@@ -391,11 +391,11 @@ void sub_8018008(struct hopper *self, struct hop_part *part)
             if (++self->count > 3)
             {
                 self->count = 0;
-                sub_8018400(self, part, 7);
+                SetTinyState(self, part, 7);
             }
             else
             {
-                sub_8018400(self, part, 3);
+                SetTinyState(self, part, 3);
             }
         }
         break;
@@ -408,25 +408,25 @@ void sub_8018008(struct hopper *self, struct hop_part *part)
         self->timer--;
         VCALL2(self, m50, part, 0);
         self->nextState = 3;
-        sub_8018400(self, part, 5);
+        SetTinyState(self, part, 5);
         break;
     case 5:
         if (part->animDone)
-            sub_8018400(self, part, self->nextState);
+            SetTinyState(self, part, self->nextState);
     case 4:
         if (--self->timer == 0)
-            sub_8018400(self, part, self->nextState);
+            SetTinyState(self, part, self->nextState);
         break;
     case 12:
         self->stomped = gStaticData_0816C308[self->round - 1];
-        sub_8018400(self, part, 3);
+        SetTinyState(self, part, 3);
         break;
     case 9:
         if (self->round > 2)
-            sub_8018400(self, part, 14);
+            SetTinyState(self, part, 14);
         if (part->animDone)
         {
-            sub_8018400(self, part, 10);
+            SetTinyState(self, part, 10);
             PlaySfx(gAudioContext, 0xD, 0x100);
         }
         break;
@@ -445,7 +445,7 @@ static inline void SetFrame(struct hop_part *part, s32 frame)
     part->frame = frame;
 }
 
-void sub_8018400(struct hopper *self, struct hop_part *part, s32 next)
+void SetTinyState(struct tiny_tiger *self, struct hop_part *part, s32 next)
 {
     switch (next)
     {
@@ -482,7 +482,7 @@ void sub_8018400(struct hopper *self, struct hop_part *part, s32 next)
         s32 ay;
         s32 y;
 
-        self->target = sub_801865C(self);
+        self->target = PickTinyHopTarget(self);
         VCALL2(self, m50, part, 4);
         anchor = gUnknown_030012EC->items[self->target];
         ax = anchor->x;
@@ -552,7 +552,7 @@ static inline s32 Abs(s32 v)
 
 /* Picks the hop target: the anchor nearest the player selects a column
  * of this round's/current anchor's gStaticData_0816C30B row. */
-s32 sub_801865C(struct hopper *self)
+s32 PickTinyHopTarget(struct tiny_tiger *self)
 {
     s32 nearest = 0;
     s32 best = 0xFFFFFF;
@@ -579,7 +579,7 @@ s32 sub_801865C(struct hopper *self)
 /* Spawns a falling hazard (a gUnknown_030012F0 part driven by a
  * sub_80188D0 object) at the `n`th third of the way from `part` towards
  * the player. */
-void sub_80186F0(struct hopper *self, struct hop_part *part, s32 n)
+void sub_80186F0(struct tiny_tiger *self, struct hop_part *part, s32 n)
 {
     /* `p` pinned to r4: unpinned, it and `ctrl` swap r4/r5 */
     register struct hop_part *p asm("r4") = sub_8009ED0(0xFFFF, 0, 0, 0);
