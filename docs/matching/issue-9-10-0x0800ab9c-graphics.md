@@ -181,7 +181,7 @@ as of
 - **`sub_800AFF4`** (`asm/code_3_2_16_ac2c.s`, ROM `0x0800AFF4`,
   ~636 B) - unchanged: high register-pressure (`sb`/`sl`/`r8`/`ip` all
   live simultaneously) hitbox-record lookup/commit logic gated on
-  `gUnknown_030012C0+0x78` state values and an unconfirmed per-state
+  `gLevelState+0x78` state values and an unconfirmed per-state
   table. Left raw for the same reason the issue-9 write-up originally
   gave.
 - **`sub_800B8DC`** (`asm/code_3_2_17.s`, ROM `0x0800B8DC`, 546 lines)

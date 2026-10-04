@@ -12,7 +12,7 @@
  * `target + look-ahead` (`x += (goal - x) / 4`), and both publishers
  * (`sub_8026DFC`/`sub_8026E6C`) hand `(x - (120 << 8), y - (80 << 8))`
  * - the position offset by half the 240x160 screen - to the still-raw
- * `sub_80268D0` on `gUnknown_03001308`, which clamps it to `>= 0`,
+ * `SetLevelScroll` on `gLevelLayers`, which clamps it to `>= 0`,
  * converts Q8 to whole pixels, caps it at that object's own `+0x0`/`+0x4`
  * limits, and stores the result at its `+0x8`/`+0xC`. That is what makes
  * this a camera: the target ends up centered on screen, clamped to
@@ -67,8 +67,8 @@ struct camera
     s32 mode;                     // 0x14 - 1/2 select sub_8026D8C/sub_8026C90
 };
 
-extern void *gUnknown_03001308;
-extern void sub_80268D0(void *self, s32 x, s32 y);
+extern void *gLevelLayers;
+extern void SetLevelScroll(void *self, s32 x, s32 y);
 
 void sub_8026C90(struct camera *cam)
 {
@@ -166,7 +166,7 @@ void sub_8026DFC(struct camera *cam)
 
     cam->x += cam->vx;
     cam->y += cam->vy;
-    sub_80268D0(gUnknown_03001308, cam->x - (120 << 8), cam->y - (80 << 8));
+    SetLevelScroll(gLevelLayers, cam->x - (120 << 8), cam->y - (80 << 8));
 }
 
 void sub_8026E6C(struct camera *cam)
@@ -183,7 +183,7 @@ void sub_8026E6C(struct camera *cam)
         break;
     }
 
-    sub_80268D0(gUnknown_03001308, cam->x - (120 << 8), cam->y - (80 << 8));
+    SetLevelScroll(gLevelLayers, cam->x - (120 << 8), cam->y - (80 << 8));
 }
 
 void sub_8026EB4(u8 *ptr)

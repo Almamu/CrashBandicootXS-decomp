@@ -37,10 +37,10 @@ struct byte_arg {
 } __attribute__((packed));
 
 extern void *gUnknown_030012D8;
-extern void *gUnknown_030012B4;
+extern void *gEntityFlags;
 extern void *gUnknown_030012BC;
-extern void *gUnknown_030012E4;
-extern struct viewport *gUnknown_03001308;
+extern void *gEntitySpawner;
+extern struct viewport *gLevelLayers;
 extern s32 gUnknown_030012A0;
 extern s32 gUnknown_030012A4;
 extern s32 gUnknown_030012A8;
@@ -78,14 +78,14 @@ typedef void (*ctrl_bounce_fn)(void *self, s32 a, s32 b, s32 c);
 asm(".set _call_via_r4, sub_803AD88\n");
 
 /* Sets `t`'s `gone` bit and, if it has an id, its bit in the "gone"
- * bitmap at gUnknown_030012B4+0x108. */
+ * bitmap at gEntityFlags+0x108. */
 static inline void MarkGone(struct ctrl_target *t)
 {
     t->gone = 1;
     if (t->id != 0xFFFF)
         do {
             s32 id = t->id;
-            u8 *base = gUnknown_030012B4;
+            u8 *base = gEntityFlags;
             s32 word = id / 32;
             s32 off = word * 4;
             u32 *slot = (u32 *)(base + 0x108);
@@ -201,13 +201,13 @@ void sub_800B8DC(struct part_ctrl *self)
             struct ctrl_target *t = self->target;
             s32 y = t->y;
 
-            if (y > (gUnknown_03001308->camera->bottom << 8) - 0x1E00) {
+            if (y > (gLevelLayers->camera->bottom << 8) - 0x1E00) {
                 t->flag7 = 0;
                 {
                     struct ctrl_target *t2 = self->target;
 
                     y = t2->y;
-                    if (y > (gUnknown_03001308->camera->bottom << 8) + 0x1E00)
+                    if (y > (gLevelLayers->camera->bottom << 8) + 0x1E00)
                         MarkGone(t2);
                 }
             } else if (t->unk_68 == 8) {
@@ -358,7 +358,7 @@ void sub_800B8DC(struct part_ctrl *self)
  *
  * `gUnknown_030012D8+0x88`'s object (when non-null and `state==1`) or
  * `self+0x88`'s own object get the same "flip `+0xc` bit0, bitmap-set
- * `+8`'s halfword id into `gUnknown_030012B4`" treatment already
+ * `+8`'s halfword id into `gEntityFlags`" treatment already
  * documented in `sub_800B8DC`'s doc comment above and in several
  * matched sibling functions - a widely-reused "flag a nearby collision
  * bucket active" idiom, not specific to either function.
@@ -393,7 +393,7 @@ asm(".set _call_via_r2, sub_803AD80\n");
 
 static inline struct ctrl_target *SpawnAt(s32 kind, s32 x, s32 y)
 {
-    return sub_8025BAC(gUnknown_030012E4, kind, 2, x, y, 0);
+    return sub_8025BAC(gEntitySpawner, kind, 2, x, y, 0);
 }
 
 /* MarkGone with r2 held live across the id compare (see above). */
@@ -413,7 +413,7 @@ static inline void MarkGoneHeld(struct ctrl_target *t)
 
             asm("" : : "r"(hold)); /* no code: ...to here */
             id = t->id;
-            base = gUnknown_030012B4;
+            base = gEntityFlags;
             word = id / 32;
             off = word * 4;
             slot = (u32 *)(base + 0x108);
@@ -430,7 +430,7 @@ static inline void MarkGoneFreshBit(struct ctrl_target *t)
     if (t->id != 0xFFFF)
         do {
             s32 id = t->id;
-            u8 *base = gUnknown_030012B4;
+            u8 *base = gEntityFlags;
             s32 word = id / 32;
             s32 off = word * 4;
             u32 *slot = (u32 *)(base + 0x108);

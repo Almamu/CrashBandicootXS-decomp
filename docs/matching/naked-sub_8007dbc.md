@@ -7,10 +7,10 @@
 global `gUnknown_030012D8` (via the already-matched `sub_8007B98`/
 `sub_8001688`), a hit plays a sound (the `sub_8007048`-style
 `table+0x68` offset/`table+4` dead-read idiom keyed off
-`part->field_0A`), marks itself in the `gUnknown_030012B4` bitmap at
+`part->field_0A`), marks itself in the `gEntityFlags` bitmap at
 `+0x108` (`sub_80072D8`'s convention), and finally
 `part->field_0A - 0x1b` selects one of six "kind" values passed to
-`sub_8025BAC(gUnknown_030012E4, 0x2b, kind, part->x>>8, part->y>>8, 0)`
+`sub_8025BAC(gEntitySpawner, 0x2b, kind, part->x>>8, part->y>>8, 0)`
 to spawn an object at `part`'s position.
 
 The plain-C reconstruction (still readable in git history) got every
@@ -43,8 +43,8 @@ several functions in `src/system/link_cable.c` and
   rather than named labels, since the whole function is one `asm()`
   string.
 - Reproduces the ROM's hand-placed literal pools (`gUnknown_030012D8`,
-  the `0xFFFF` sentinel, `gUnknown_030012B4`, and four separate
-  `gUnknown_030012E4` pool copies feeding the six-case spawn switch's
+  the `0xFFFF` sentinel, `gEntityFlags`, and four separate
+  `gEntitySpawner` pool copies feeding the six-case spawn switch's
   jump table) at their exact original positions, including the
   jump-table's own indirection through a pool-held table-base address
   (`mov pc, r0` off a hand-built 8-entry `.4byte` table).

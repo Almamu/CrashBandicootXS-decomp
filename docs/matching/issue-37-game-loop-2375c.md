@@ -11,14 +11,14 @@ A level-start dispatcher, called once from `UpdateGameFrame` when the
 level object's own `+0xdc->+8` state field is `2`
 (`asm/code_3_2_17_225a0.s`). It:
 
-1. Fires two no-argument setup calls (`sub_8022208`, `sub_8024198`).
+1. Fires two no-argument setup calls (`CreateEntitySpawner`, `sub_8024198`).
 2. Allocates the whole per-level widget set: five `dual_array_manager`s
    (`gUnknown_030012E8`/`EC`/`F0`/`F8`/`F4`, the same struct
    `actor_part11.c`'s `sub_8008EE4` already returns) and one
    `pool_manager` (`gUnknown_0300130C`, `sub_8008F20`'s own type from
    `actor_part12.c`), a generic 0x18-byte block (`gUnknown_030012D4`),
-   the text-box singleton (`gUnknown_03001308`, lazily built by the
-   still-raw `sub_80268AC`), and the player actor itself
+   the text-box singleton (`gLevelLayers`, lazily built by the
+   still-raw `GetLevelLayers`), and the player actor itself
    (`gUnknown_030012D8`, a 0x350-byte block handed to `sub_800B3F0`
    - the same constructor `actor_part77.c` already matched, called here
    with a genuine 5th stack argument the matched 4-parameter signature
@@ -38,11 +38,11 @@ level object's own `+0xdc->+8` state field is `2`
    built table/widget and firing `sub_803AD80` on it.
 5. Unconditionally calls `sub_8023A1C` (see below) and stashes its
    return value.
-6. Tears the per-frame update queues back down: `sub_802680C` on the
+6. Tears the per-frame update queues back down: `DestroyLevelLayers` on the
    text-box singleton if non-NULL, `sub_8026ED0` on the 0x18-byte
    block, a `sub_803AD80` call on the player object if non-NULL, then
    `sub_8008EB4`/`sub_8009B9C` on each of the six widget-manager
-   globals if non-NULL, and finally `sub_80221F0`.
+   globals if non-NULL, and finally `DestroyEntitySpawner`.
 7. Returns `sub_8023A1C`'s result.
 
 ### Gotchas worth recording
@@ -55,7 +55,7 @@ level object's own `+0xdc->+8` state field is `2`
   reproduces the ROM's `ldr r4, =global` sitting *before* both `bl`s
   (with `r4` surviving them, since it's callee-saved) rather than a
   fresh `ldr r1, =global` computed afterward. The lone exception is the
-  single-call `gUnknown_03001308 = sub_80268AC();` assignment, which
+  single-call `gLevelLayers = GetLevelLayers();` assignment, which
   the ROM computes address-after-value for (only one call in the way,
   so no register needs to survive it) - the plain, un-idiomed form
   reproduces that one directly.
@@ -146,12 +146,12 @@ Its real bytes now live in `asm/code_3_2_17_23a1c.s` (renamed from
 `0x0802375C`). Left untouched for this pass - see
 `docs/rom_map.md`'s "Traced the fade-to-black's trigger" and "Resolved:
 `sub_80241B0`'s gate" sections for what's already understood about its
-6-case jump table, the `gStaticData_0816C86C` per-level table it indexes,
+6-case jump table, the `gLevelTable` per-level table it indexes,
 and its wait-loop/fade/post-fade structure. `sub_8027018`'s exact
 6-argument call shape (self, targets, lists, angle, list_count,
 direction - matched in `hud_icon_slot.c`) is now confirmed against all
 four of this function's own call sites, closing one of the previously
-open questions; the `gStaticData_0816C81E`/`0816C830`/`0816C842`/
+open questions; the `gThemePaletteCycle1A`/`0816C830`/`0816C842`/
 `0816C862` tables it points at are still just `u16*`/opaque data,
 their record shape not derived. A good next target for a dedicated pass.
 
@@ -165,7 +165,7 @@ previous pass above left open.
 
 ### The 6-case dispatch map
 
-Opening: index `gStaticData_0816C86C` by `self+0` (the confirmed
+Opening: index `gLevelTable` by `self+0` (the confirmed
 36-slot, 0x24-byte-stride per-level master table - `settings_menu19.c`/
 `oam_count.c`/`game_loop17.c` all have their own struct view of it).
 Read its `+0x1c` "initialized" guard byte (calls `sub_8023484` once if
@@ -188,12 +188,12 @@ Every non-default case resets `gUnknown_030012C8` (the `hud_fx_queue`
 `sub_8027018(queue, targets, lists, angle, list_count, direction)`:
 
 - **state 1 or 6**: *two* calls -
-  `sub_8027018(queue, (u16 *)0x05000000, gStaticData_0816C81E, 0x10, 9, 0)`
-  then `sub_8027018(queue, (u16 *)0x05000000, gStaticData_0816C830, 0x14, 9, 0)`.
-- **state 2**: `sub_8027018(queue, (u16 *)0x05000000, gStaticData_0816C814, 6, 5, 1)`
+  `sub_8027018(queue, (u16 *)0x05000000, gThemePaletteCycle1A, 0x10, 9, 0)`
+  then `sub_8027018(queue, (u16 *)0x05000000, gThemePaletteCycle1B, 0x14, 9, 0)`.
+- **state 2**: `sub_8027018(queue, (u16 *)0x05000000, gThemePaletteCycle2, 6, 5, 1)`
   (the only case with `direction=1`).
-- **state 3**: `sub_8027018(queue, (u16 *)0x05000000, gStaticData_0816C842, 0xa, 0x10, 0)`.
-- **state 5**: `sub_8027018(queue, (u16 *)0x05000000, gStaticData_0816C862, 0x14, 5, 0)`.
+- **state 3**: `sub_8027018(queue, (u16 *)0x05000000, gThemePaletteCycle3, 0xa, 0x10, 0)`.
+- **state 5**: `sub_8027018(queue, (u16 *)0x05000000, gThemePaletteCycle5, 0x14, 5, 0)`.
 - **default** (state 0/4/`>6`): no reset, no `sub_8027018` call - just
   clears the queue's own `active` byte directly.
 
@@ -203,7 +203,7 @@ animation**, reusing the exact same generic rotate-by-index-list engine
 `sub_8026F54`/`sub_8027018`'s other (HUD-digit) call sites drive, not a
 new mechanism.
 
-**Resolves the open table-shape question**: `gStaticData_0816C814`
+**Resolves the open table-shape question**: `gThemePaletteCycle2`
 (5 entries), `0816C81E` (9), `0816C830` (9), `0816C842` (0x10), and
 `0816C862` (5) are not per-level records - they're plain, tightly
 packed `u16[]` "permutation index list" arguments to `sub_8027018`'s
@@ -240,7 +240,7 @@ recomputes the player's `+0x29` low nibble from `sub_800815C(player)`
 `sub_8006D08` against the tile-asset cache using a `player+0x20`-table
 lookup indexed by `player+0x2d * 7` (0x1c-byte stride), then flushes
 `gUnknown_030012D4` (`sub_8026DFC`) and the text-box singleton
-(`sub_8026984`).
+(`ResetLevelLayers`).
 
 If the widget kind is `0`: probes `sub_80232B8`/`sub_8024404` or
 `sub_8023290`/`sub_80243E0` (level-object and self readiness checks);
@@ -263,12 +263,12 @@ or `2` after firing `sub_80241BC`'s level-end teardown, a
 `gUnknown_030007E0` input-flag-gated `sub_8028504` ping, `sub_800891C`
 on three ring-buffer managers, two `sub_803AD7C` trampoline probes
 against the player's own `+0x18`/`+0x38`/`+0x18` tables, `sub_80091D4`
-on `gUnknown_0300130C`, `sub_8028400`, and a `gUnknown_030012C0+0x8c`-
-gated `sub_8022F2C` call) before looping back. Once ready: fires the
+on `gUnknown_0300130C`, `sub_8028400`, and a `gLevelState+0x8c`-
+gated `TickLevelClock` call) before looping back. Once ready: fires the
 fade (`sub_80014A4`).
 
 **Post-fade** (converging at `_08023F92`): sets the return value to
-`0`, tries two `sub_802356C` "spawn" dispatches gated by
+`0`, tries two `SetCheckpoint` "spawn" dispatches gated by
 `sub_8024404`/`sub_80232B8`/`sub_8023104` or
 `sub_80243E0`/`sub_8023290` (both skip straight to the flush tail on
 failure); falling through both, loops `gUnknown_0300130C` counting
@@ -276,7 +276,7 @@ entries whose `sub_803AD7C` trampoline probe returns `3` *and* whose
 own `+0x4e` tag is `0xa` (the physics-subsystem state tag
 `gStaticData_0816BC98` indexes,
 [docs/matching/issue-12-physics-collision.md](issue-12-physics-collision.md)),
-then calls `sub_8023140(gUnknown_030012C0, count)`.
+then calls `sub_8023140(gLevelState, count)`.
 
 **Final tail** (every path converges here): flushes all five hot IWRAM
 widget-manager globals (`sub_8008CEC` on `030012E8`/`EC`/`F0`/`F8`/`F4`,

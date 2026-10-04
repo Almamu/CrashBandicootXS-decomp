@@ -46,7 +46,7 @@ avoid an add/add filename collision.
   `sub_80186F0` block sits between them): `sub_80187FC` (a two-state
   "charge" handler), `sub_8018858`/`sub_801886C` (another table-pointer
   reset pair, `gStaticData_087E442C`), `sub_8018884` (a struct-actor-
-  shaped "part"'s flags-OR plus `gUnknown_030012B4+0x108` bitmap-set,
+  shaped "part"'s flags-OR plus `gEntityFlags+0x108` bitmap-set,
   same idiom as `sub_8007DBC`'s `part->field_08` bitmap-set in
   `actor_part2.c`).
 
@@ -98,7 +98,7 @@ worth recording since the techniques generalize:
   computed into a fresh pointer, since the plain `table + 0x50`
   expression got a new register instead of reusing `table`'s; and the
   state-1 body's `other[4] = timer` store moved to happen immediately
-  after computing `timer`, before the `gUnknown_03001308` threshold
+  after computing `timer`, before the `gLevelLayers` threshold
   lookup, matching the ROM's store-then-compute order (the more
   natural "compute both, then store" order left `r2` from `other`
   alive too long, so the trailing `0x2000` constant got a spare

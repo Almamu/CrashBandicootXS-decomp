@@ -11,7 +11,7 @@ struct game_state {
     s32 mode;           // 0x78
 };
 
-extern struct game_state *gUnknown_030012C0;
+extern struct game_state *gLevelState;
 extern struct box_part *gUnknown_030012D8;
 extern void *gUnknown_030012BC;
 extern s32 sub_8009FF4(struct box_part *part, struct part_aabb *box);
@@ -29,7 +29,7 @@ extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
 
 /* `sub_8008AD8`'s twin, operating in this spatial-hash-grid cluster:
  * byte-identical collision-hit resolution logic (mode dispatch via
- * `gUnknown_030012C0`, the AABB push-out via `sub_8007B98`/
+ * `gLevelState`, the AABB push-out via `sub_8007B98`/
  * `sub_8007CF8`/`sub_8001688`, and the "hit" method calls) - see
  * `sub_8008AD8`'s own writeup in `actor_part7.c` for the branch-by-branch
  * semantics, identical here. `list` itself is never read.
@@ -41,7 +41,7 @@ extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
  * in ROM order. */
 void sub_80096C0(struct part_list *list, struct part_aabb box, struct box_part *part)
 {
-    if (gUnknown_030012C0->mode == 3) {
+    if (gLevelState->mode == 3) {
         if (!sub_8009FF4(part, &box))
             return;
         CALL_HIT(part, 1, gUnknown_030012D8->kind, 0);
@@ -85,7 +85,7 @@ void sub_80096C0(struct part_list *list, struct part_aabb box, struct box_part *
             break;
         case 2:
             part->flags |= 8;
-            if (gUnknown_030012C0->mode) {
+            if (gLevelState->mode) {
                 CALL_HIT(part, 1, 1, 0);
             }
             CALL_HIT(gUnknown_030012D8, 1, part->kind, 0);

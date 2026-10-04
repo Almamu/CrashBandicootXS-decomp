@@ -82,13 +82,13 @@ gSfxTable:
 
 @ gStaticData_0816C5F0..gStaticData_0816C674: src/data/map_tables_16c5f0.c
 
-@ gStaticData_0816C6A4: src/data/dispatch_table_16c6a4.c
+@ gEntitySpawnFuncs: src/data/dispatch_table_16c6a4.c
 
-@ gStaticData_0816C814..gStaticData_0816CD80: src/data/level_table_16c814.c
+@ gThemePaletteCycle2..gThemeMusicCues: src/data/level_table_16c814.c
 
-@ gStaticData_0816D1C8..gStaticData_0816D1F4: src/data/cutscenes_16d1c8.c
+@ gCutsceneTextEnglish..gCutscenes: src/data/cutscenes_16d1c8.c
 
-@ gStaticData_081725A8..0x08172CD4 (terrain types): src/data/terrain_1725a8.c
+@ gTerrainTypes..0x08172CD4 (terrain types): src/data/terrain_1725a8.c
 
 @ 0x08172CD4..0x08174BE0 (the UI text of six languages): src/data/ui_text_172cd4.c
 

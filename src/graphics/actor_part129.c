@@ -17,7 +17,7 @@
  * `docs/rom_map.md`: a proximity check (`sub_802A6EC`) or a countdown
  * timer at `self+0x54` gates the transition, `PlaySfx(3, 0x100)` always
  * plays first, then a `self+0x30`-relative type byte selects between
- * `sub_8022EA8`/`sub_802F540` calls - written as `goto`-chained `if`
+ * `FreezeLevelClock`/`sub_802F540` calls - written as `goto`-chained `if`
  * blocks (not a plain `switch`) to match this family's already-matched
  * sibling `sub_802C540` (`actor_part19g.c`), whose last case does
  * something structurally different from the others and resists a plain
@@ -34,20 +34,20 @@
  * hazard, see docs/matching/pmf-dispatch-retry.md. */
 
 extern void *gUnknown_030012BC;
-extern void *gUnknown_030012C0;
+extern void *gLevelState;
 extern void *gUnknown_03000884;
 
 extern u8 sub_802A6EC(void *self);
 extern void sub_802A7B8(void *self);
 extern void sub_8022FEC(void *self);
-extern void sub_8022EA8(void *arg0, s32 arg1);
+extern void FreezeLevelClock(void *arg0, s32 arg1);
 extern void sub_8022D50(void *arg0);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void sub_802F50C(void *selfArg, s32 delta);
 extern void sub_802F540(void *selfArg, s32 delta);
 extern void sub_802F164(void *selfArg, s32 x, s32 y);
 extern void sub_802AAB4(void *selfArg);
-extern s32 sub_8023464(void *self);
+extern s32 AddLife(void *self);
 extern void sub_80318B4(void *selfArg);
 extern void sub_80318D0(void *selfArg, s32 a, s32 b, s32 c);
 extern void InitActorPart(void *self, s32 a, s32 b, s32 c, s32 d);
@@ -155,7 +155,7 @@ void sub_8031A6C(void *selfArg)
  * from `self`'s own part table at `+0xc`), then dispatches on a
  * `self+0x30` type byte (`0x14`-`0x16` into `sub_802F540` at
  * increasing tiers, `0x17` into a fixed sound cue plus
- * `sub_802AAB4`/`sub_8023464`), flushes a pending trampoline call at
+ * `sub_802AAB4`/`AddLife`), flushes a pending trampoline call at
  * `self+0x58`, marks `self+0x5c`, and tail-calls `sub_8031A6C`. */
 void sub_8031B0C(void *selfArg)
 {
@@ -219,11 +219,11 @@ void sub_8031B0C(void *selfArg)
     case_17:
         PlaySfx(gUnknown_030012BC, 7, 0x100);
         sub_802AAB4(self->unk_70);
-        sub_8023464(gUnknown_030012C0);
+        AddLife(gLevelState);
 
     after_dispatch:
         if (self->child != NULL) {
-            sub_8022FEC(gUnknown_030012C0);
+            sub_8022FEC(gLevelState);
             sub_80318B4(self->child);
             self->child = NULL;
         }
@@ -308,11 +308,11 @@ case_16:
 case_17:
     PlaySfx(gUnknown_030012BC, 7, 0x100);
     sub_802AAB4(self->unk_70);
-    sub_8023464(gUnknown_030012C0);
+    AddLife(gLevelState);
 
 after_dispatch:
     if (self->child != NULL) {
-        sub_8022FEC(gUnknown_030012C0);
+        sub_8022FEC(gLevelState);
         sub_80318B4(self->child);
         self->child = NULL;
     }
@@ -347,7 +347,7 @@ void sub_8031D04(void *selfArg)
         PlaySfx(gUnknown_030012BC, 3, 0x100);
 
         if (self->child != NULL) {
-            sub_8022FEC(gUnknown_030012C0);
+            sub_8022FEC(gLevelState);
             sub_80318B4(self->child);
             self->child = (void *)kind;
         }
@@ -357,7 +357,7 @@ void sub_8031D04(void *selfArg)
     sub_8031A6C(self);
 }
 
-/* Proximity-triggered member of the `sub_8022EA8` half of the type-byte
+/* Proximity-triggered member of the `FreezeLevelClock` half of the type-byte
  * dispatch family (values `0x18`/`0x19`/`0x1a`/`0x1d`); the `0x1d` case
  * plays a different cue and calls `sub_8022D50` instead, and the
  * trailing flush re-reads the type byte fresh to skip the lap-counter
@@ -409,27 +409,27 @@ void sub_8031D7C(void *selfArg)
 
     case_18:
         PlaySfx(gUnknown_030012BC, 3, 0x100);
-        sub_8022EA8(gUnknown_030012C0, 1);
+        FreezeLevelClock(gLevelState, 1);
         goto after_dispatch;
 
     case_19:
         PlaySfx(gUnknown_030012BC, 3, 0x100);
-        sub_8022EA8(gUnknown_030012C0, 2);
+        FreezeLevelClock(gLevelState, 2);
         goto after_dispatch;
 
     case_1a:
         PlaySfx(gUnknown_030012BC, 3, 0x100);
-        sub_8022EA8(gUnknown_030012C0, 3);
+        FreezeLevelClock(gLevelState, 3);
         goto after_dispatch;
 
     case_1d:
         PlaySfx(gUnknown_030012BC, 0x18, 0x100);
-        sub_8022D50(gUnknown_030012C0);
+        sub_8022D50(gLevelState);
 
     after_dispatch:
         if (self->child != NULL) {
             if (*(u8 *)(*(u8 **)((u8 *)self + 0x30)) != 0x1d) {
-                sub_8022FEC(gUnknown_030012C0);
+                sub_8022FEC(gLevelState);
             }
             sub_80318B4(self->child);
             self->child = NULL;
@@ -441,7 +441,7 @@ void sub_8031D7C(void *selfArg)
 }
 
 /* Countdown twin of `sub_8031D7C`: gated by `self+0x54`'s timer instead
- * of proximity, same `sub_8022EA8` dispatch, no tail call. */
+ * of proximity, same `FreezeLevelClock` dispatch, no tail call. */
 void sub_8031E80(void *selfArg, s32 delta)
 {
     struct orbit_actor *self = selfArg;
@@ -498,27 +498,27 @@ gt_19:
 
 case_18:
     PlaySfx(gUnknown_030012BC, 3, 0x100);
-    sub_8022EA8(gUnknown_030012C0, 1);
+    FreezeLevelClock(gLevelState, 1);
     goto after_dispatch;
 
 case_19:
     PlaySfx(gUnknown_030012BC, 3, 0x100);
-    sub_8022EA8(gUnknown_030012C0, 2);
+    FreezeLevelClock(gLevelState, 2);
     goto after_dispatch;
 
 case_1a:
     PlaySfx(gUnknown_030012BC, 3, 0x100);
-    sub_8022EA8(gUnknown_030012C0, 3);
+    FreezeLevelClock(gLevelState, 3);
     goto after_dispatch;
 
 case_1d:
     PlaySfx(gUnknown_030012BC, 0x18, 0x100);
-    sub_8022D50(gUnknown_030012C0);
+    sub_8022D50(gLevelState);
 
 after_dispatch:
     if (self->child != NULL) {
         if (*(u8 *)(*(u8 **)((u8 *)self + 0x30)) != 0x1d) {
-            sub_8022FEC(gUnknown_030012C0);
+            sub_8022FEC(gLevelState);
         }
         sub_80318B4(self->child);
         self->child = NULL;
@@ -586,7 +586,7 @@ void sub_8031FE8(void *selfArg, s32 delta)
             PlaySfx(gUnknown_030012BC, 3, 0x100);
 
             if (self->child != NULL) {
-                sub_8022FEC(gUnknown_030012C0);
+                sub_8022FEC(gLevelState);
                 sub_80318B4(self->child);
                 self->child = (void *)zero2;
             }
@@ -667,7 +667,7 @@ void sub_8032140(void *selfArg)
         *(u8 *)&self->base.animDone = zero1;
     }
     self->base.animTime = zero;
-    sub_8022FEC(gUnknown_030012C0);
+    sub_8022FEC(gLevelState);
     self->child = (void *)zero;
 }
 
@@ -705,7 +705,7 @@ void sub_8032170(void *selfArg, s32 delta)
 
             if (self->child != NULL) {
                 PlaySfx(gUnknown_030012BC, 3, 0x100);
-                sub_8022FEC(gUnknown_030012C0);
+                sub_8022FEC(gLevelState);
                 sub_80318B4(self->child);
                 self->child = (void *)zero2;
             }
@@ -866,7 +866,7 @@ void sub_8032358(void *selfArg)
         struct actor_vtable *ptable = player->vtable;
 
         sub_803AD80((u8 *)player + ptable->m20.thisOffset, 0x14, ptable->m20.fn);
-        sub_8022FEC(gUnknown_030012C0);
+        sub_8022FEC(gLevelState);
         PlaySfx(gUnknown_030012BC, 4, 0x100);
         self->base.animIndex = 1;
         {
@@ -917,7 +917,7 @@ void sub_80323F4(void *selfArg, s32 delta)
             *(u8 *)&self->base.animDone = zero1;
         }
         *(s32 *)&self->base.animTime = zero2;
-        sub_8022FEC(gUnknown_030012C0);
+        sub_8022FEC(gLevelState);
     }
 }
 

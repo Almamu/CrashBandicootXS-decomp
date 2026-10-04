@@ -6,12 +6,12 @@ extern void sub_8009008(void *manager, void *item);
 extern void sub_803A94C(void *src, void *dst, s32 control);
 extern s32 sub_803AD80(void *arg0, void *arg1, void *fn);
 extern void *sub_803AD7C(void *arg0, void *fn);
-extern void *gUnknown_03001308;
+extern void *gLevelLayers;
 
 /* A per-frame spatial-hash-grid maintenance pass over `manager`'s
  * `struct pool_manager` (`actor_part12.c`), scoped to the 3-bucket
  * window `[baseIdx, baseIdx+2]` around `baseIdx` (the same
- * `max(gUnknown_03001308`'s sub-object's own `x >> 8`, `0)` bucket
+ * `max(gLevelLayers`'s sub-object's own `x >> 8`, `0)` bucket
  * index `sub_800944C`/`sub_8009528` compute), plus the special "large
  * object" bucket 255 in a second pass - not a full 0-255 sweep like
  * those two sibling functions.
@@ -179,7 +179,7 @@ void sub_80091D4(struct pool_manager *manager)
     v3 = 0x11800;
     box[2] = v2;
     box[3] = v3;
-    pos = ((struct track_obj *)gUnknown_03001308)->pos;
+    pos = ((struct track_obj *)gLevelLayers)->pos;
     v0 = (pos[0] << 8) - 0x6400;
     v1 = (pos[1] << 8) - 0x3c00;
     box[0] = v0;

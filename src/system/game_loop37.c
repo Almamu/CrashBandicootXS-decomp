@@ -10,15 +10,15 @@
 struct AudioContext;
 
 struct SoundChannelItem {
-    void *asset;    /* +0x00: tile/gfx asset pointer, sub_8024708 only */
+    void *asset;    /* +0x00: tile/gfx asset pointer, ShowSlidePicture only */
     s32 field_04;     /* +0x04: sub_80010E0's "count" arg */
     s32 field_08;       /* +0x08: OR'd with -0x80 then truncated to a byte
-                         * (bit 7 set), sub_8024590's sub_800132C arg */
+                         * (bit 7 set), BeginSlide's sub_800132C arg */
     s32 field_0c;         /* +0x0c: sentinel -1 means "none"; else
                             * truncated to a byte and passed to
-                            * sub_800132C, sub_8024640/sub_8024790 */
+                            * sub_800132C, RunSlideshow/EndSlide */
     u8 field_10;            /* +0x10: sub_80010E0's checkButtons arg;
-                              * also sub_80246D8's scan target (==1) */
+                              * also SkipSlides's scan target (==1) */
     u8 field_11;              /* +0x11: nonzero triggers a duck-out via
                                 * sub_8001AC4 */
     u8 field_12;                /* +0x12: nonzero (and field_18 != 0x63)
@@ -35,7 +35,7 @@ struct SoundChannelList {
     struct SoundChannelItem **items; /* +0x00 */
     s32 count;                        /* +0x04 */
     u8 unused_08[4];
-    s32 toggle;                          /* +0x0c: sub_8024708's VRAM-bank
+    s32 toggle;                          /* +0x0c: ShowSlidePicture's VRAM-bank
                                            * toggle, alternates each call */
 };
 
@@ -51,19 +51,19 @@ extern void LoadTaggedAsset(void *asset, void *dest);
 extern void sub_80006A8(void);
 extern void *gUnknown_03001314;
 
-/* Forward declaration: sub_8024708 is defined further down (after
- * sub_8024590/sub_8024640/sub_80246D8, matching ROM order) but
- * sub_8024640 above it calls it; sub_80246D8 is matched below but called
- * by sub_8024640 above it too (ROM order). */
-extern void sub_8024708(struct SoundChannelList *self, s32 idx);
-extern s32 sub_80246D8(struct SoundChannelList *self, s32 startIdx, u8 condFlag);
+/* Forward declaration: ShowSlidePicture is defined further down (after
+ * BeginSlide/RunSlideshow/SkipSlides, matching ROM order) but
+ * RunSlideshow above it calls it; SkipSlides is matched below but called
+ * by RunSlideshow above it too (ROM order). */
+extern void ShowSlidePicture(struct SoundChannelList *self, s32 idx);
+extern s32 SkipSlides(struct SoundChannelList *self, s32 startIdx, u8 condFlag);
 
 /* Starts sound cue `items[idx]->field_14` on the audio context. If the
  * channel already reports that cue, plays the item's secondary sfx
  * (unless it is the 0x63 "none" sentinel) and then starts the item's
  * fade; otherwise starts the fade first, then busy-waits for the cue
  * before playing the sfx. */
-void sub_8024590(struct SoundChannelList *self, s32 idx)
+void BeginSlide(struct SoundChannelList *self, s32 idx)
 {
     struct SoundChannelItem *item;
 
@@ -88,12 +88,17 @@ void sub_8024590(struct SoundChannelList *self, s32 idx)
 
 /* Per-frame driver loop over `self`'s item list: for each index, streams
  * the item's VRAM tile bank and refreshes its sound-channel handle
- * (`sub_8024708`/`sub_8024590`), polls input (`sub_80010E0`) to get a
+ * (`ShowSlidePicture`/`BeginSlide`), polls input (`sub_80010E0`) to get a
  * confirm/cancel result, applies the item's duck-out (`field_11`) and
  * fade-start (`field_0c`, sentinel -1) side effects, re-arms the item's
  * cue if needed (`field_12`/`field_18`), then advances to the next
- * "still active" item via `sub_80246D8`. */
-void sub_8024640(struct SoundChannelList *self0)
+ * "still active" item via `SkipSlides`.
+ *
+ * UNUSED - no caller anywhere in the ROM (checked src/, asm/ and every
+ * Thumb `bl` and aligned word of baserom.gba for its address). It plays
+ * a slide list without text; the cutscenes use RunCutscenePlayer
+ * (game_loop57.c), the same loop with the text pages added. */
+void RunSlideshow(struct SoundChannelList *self0)
 {
     struct SoundChannelList *self = self0;
     s32 i;
@@ -102,8 +107,8 @@ void sub_8024640(struct SoundChannelList *self0)
         u8 checkButtons;
         struct SoundChannelItem *item;
 
-        sub_8024708(self, i);
-        sub_8024590(self, i);
+        ShowSlidePicture(self, i);
+        BeginSlide(self, i);
 
         item = self->items[i];
         checkButtons = (u8)sub_80010E0(item->field_04, item->field_10, 8);
@@ -128,7 +133,7 @@ void sub_8024640(struct SoundChannelList *self0)
             }
         }
 
-        i = sub_80246D8(self, i, checkButtons);
+        i = SkipSlides(self, i, checkButtons);
     }
 }
 
@@ -137,7 +142,7 @@ void sub_8024640(struct SoundChannelList *self0)
  * index reached if every remaining item is busy). Returns `startIdx`
  * unchanged if `condFlag` is set, or if `startIdx + 1` is already past
  * the list. */
-s32 sub_80246D8(struct SoundChannelList *self, s32 startIdx, u8 condFlag)
+s32 SkipSlides(struct SoundChannelList *self, s32 startIdx, u8 condFlag)
 {
     s32 cur = startIdx;
     s32 next;
@@ -171,7 +176,7 @@ s32 sub_80246D8(struct SoundChannelList *self, s32 startIdx, u8 condFlag)
  * new toggle state selects (`0x06000000`/`0x0600A000`), via
  * `LoadTaggedAsset`. Then rebuilds `gUnknown_03001314`'s bit 4 from the
  * toggle's low bit (same `& ~0x10 | bit`-idiom byte-shadow-update shape
- * as `sub_8024708`'s cousin in game_loop18.c, but for a different
+ * as `ShowSlidePicture`'s cousin in game_loop18.c, but for a different
  * global), DMA3-copies the asset's first half into `BG_PLTT` (a second,
  * independent palette-DMA-plus-DISPCNT-write path alongside the
  * already-documented `sub_8001614`/`gUnknown_03001288` one - see
@@ -200,7 +205,7 @@ s32 sub_80246D8(struct SoundChannelList *self, s32 startIdx, u8 condFlag)
  *   which happens to pick the same destination register (r1, not r5) the
  *   ROM's own `ands r1, r5` uses. See
  * docs/matching/issue-38-sound-channel-family.md. */
-void sub_8024708(struct SoundChannelList *self0, s32 idx)
+void ShowSlidePicture(struct SoundChannelList *self0, s32 idx)
 {
     register struct SoundChannelList *self asm("r5") = self0;
     struct SoundChannelItem *item = self->items[idx];

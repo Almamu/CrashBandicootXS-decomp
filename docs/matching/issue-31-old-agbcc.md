@@ -43,7 +43,7 @@ Three functions keep their previous form:
   bitfield constant between registers.
 - `sub_802062C` stays NAKED. Plain C is 62 halfwords off. The ROM spills
   `part+0x28` to its one stack slot and keeps the constant 1 in r8. The
-  reconstruction spills the constant and `&gUnknown_030012B4` instead.
+  reconstruction spills the constant and `&gEntityFlags` instead.
 - `sub_8021280` stays NAKED. Plain C is 9 halfwords off. The ROM computes
   the `{x - 2, y - 0x1e}` point into fresh r2/r3, and the reconstruction
   subtracts in place. This is the same gap as `sub_802209C`
@@ -57,7 +57,7 @@ Three functions keep their previous form:
   actor_part_188d0.c's `struct gfx_part`: `flipX` is bit 4 of +0x28,
   `frameNibble` is +0x29 and `hdr` is +0x44.
 - `struct popup_hdr`, the sub_800CA74 header.
-- `struct level_record`, the gUnknown_030012B4 record.
+- `struct level_record`, the gEntityFlags record.
 
 It also has the `POPUP_ATTACH`/`LEVEL_RECORD` macros and the inline
 setters.
@@ -104,7 +104,7 @@ See [naked-retry-mid45.md](naked-retry-mid45.md).
 
 `sub_802062C` is real C now. On top of the last-nine/last-ten draft, an
 r3 hold over the post-call gfx store and `rec2` lookup moves the
-&gUnknown_030012B4 reload to r1, and a copy of `part` escaped by an
+&gEntityFlags reload to r1, and a copy of `part` escaped by an
 empty asm inside the argument puts the `q2` store after the
 `adds r1, r7, #0` argument move. The r9 hold is no longer needed. See
 [last-eleven-naked-retry.md](last-eleven-naked-retry.md).

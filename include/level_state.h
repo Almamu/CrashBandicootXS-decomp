@@ -2,9 +2,9 @@
 #define GUARD_LEVEL_STATE_H
 
 /*
- * The level/session state object `gUnknown_030012C0` points at (0x1CC
+ * The level/session state object `gLevelState` points at (0x1CC
  * bytes). Its accessor family is src/system/game_loop2.c
- * (sub_8022EA8-sub_8023484); game_loop55.c's level loop still carries
+ * (FreezeLevelClock through sub_8023484); game_loop55.c's level loop still carries
  * its own copy of the same layout (`struct level_state` there).
  *
  * The first 0x68 bytes are the per-attempt block the frame loop
@@ -28,23 +28,23 @@ struct level_state
     u8 unk_00[2];                   // 0x000 - packed lives (bits 0-6), wumpa (9-15) and maskLevel (7-8) (sub_80236AC/sub_80236EC)
     u8 flags;                       // 0x002 - bits 4-7: sub_8023168..sub_80231CC
     u8 unk_03;
-    u32 levelFlags[0x19];           // 0x004 - one word per level, indexed by `level` (sub_80233FC)
+    u32 levelFlags[0x19];           // 0x004 - one word per level, indexed by `level` (GetLevelFlags)
     s32 unk_68;                     // 0x068
-    s32 wumpa;                      // 0x06C - at 100 it wraps and adds a life (sub_8023430)
+    s32 wumpa;                      // 0x06C - at 100 it wraps and adds a life (CollectWumpa)
     s32 unk_70;                     // 0x070 - counter; reaching `unk_bc` sets the level's bit 1 (sub_8022FEC)
-    s32 lives;                      // 0x074 - 5 at the start (sub_80231E4), capped at 99
-    s32 maskLevel;                  // 0x078 - 0-3; 3 plays the invincibility jingle (sub_80231EC)
+    s32 lives;                      // 0x074 - 5 at the start (ResetLives), capped at 99
+    s32 maskLevel;                  // 0x078 - 0-3; 3 plays the invincibility jingle (SetMaskLevel)
     s32 unk_7c;                     // 0x07C - free-running counter (sub_80232E0/sub_80232E4)
     s32 unk_80;                     // 0x080
     s32 unk_84;                     // 0x084 - the cap unk_7c is checked against (graphics_loading_1e990.c)
     s32 unk_88;                     // 0x088
     u8 timeTrial;                   // 0x08C - nonzero: no lives lost, the clock runs
     u8 unk_8d[3];
-    s32 minutes;                    // 0x090 - the time-trial clock (sub_8022F2C), capped at 99
+    s32 minutes;                    // 0x090 - the time-trial clock (TickLevelClock), capped at 99
     s32 seconds;                    // 0x094
     s32 tenths;                     // 0x098
     s32 frames;                     // 0x09C - 0-5, one tenth every 6 frames
-    s32 countdown;                  // 0x0A0 - frames the clock stays frozen (sub_8022EA8 adds seconds * 60)
+    s32 countdown;                  // 0x0A0 - frames the clock stays frozen (FreezeLevelClock adds seconds * 60)
     u8 unk_a4;                      // 0x0A4 - status flags, get/clear (and some set) accessors each
     u8 unk_a5;                      // 0x0A5
     u8 unk_a6;                      // 0x0A6
@@ -60,13 +60,13 @@ struct level_state
     s32 unk_c0;                     // 0x0C0 - bit mask (sub_802314C/sub_8023158)
     s32 level;                      // 0x0C4 - also the head of the progress record (game_loop18.c's struct level_progress)
     s32 unk_c8;                     // 0x0C8
-    s32 unk_cc;                     // 0x0CC - checkpoint copy of unk_70 (sub_802356C/sub_8023548)
+    s32 unk_cc;                     // 0x0CC - checkpoint copy of unk_70 (SetCheckpoint/RestoreCheckpoint)
     u8 unk_d0;                      // 0x0D0 - checkpoint copy of unk_a9
     u8 unk_d1[3];
     s32 checkpointX;                // 0x0D4 - the player's position at the checkpoint
     s32 checkpointY;                // 0x0D8
     struct level_category *cat;     // 0x0DC - level_progress.item
-    u8 unk_e0;                      // 0x0E0 - checkpoint flag (sub_802356C)
+    u8 unk_e0;                      // 0x0E0 - checkpoint flag (SetCheckpoint)
     u8 unk_e1[3];
     u8 snapE4[0x68];                // 0x0E4 - copies of the first 0x68 bytes
     u8 snap14C[0x68];               // 0x14C

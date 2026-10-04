@@ -21,7 +21,7 @@ reads a third offset, byte `+0x16` this time, clamping the result into
 raw bytes below confirm). `docs/matching/issue-9-10-0x0800ab9c-graphics.md`
 had also already flagged the function's risk shape from the outside:
 "high register-pressure (`sb`/`sl`/`r8`/`ip` all live simultaneously)
-hitbox-record lookup/commit logic gated on `gUnknown_030012C0+0x78`
+hitbox-record lookup/commit logic gated on `gLevelState+0x78`
 state values and an unconfirmed per-state table." Neither prior pass
 read the function start-to-finish; this session does.
 
@@ -70,10 +70,10 @@ other files already pass to `sub_8007A84`).
 
 ### Block by block
 
-The whole function is gated by `gUnknown_030012C0+0x78` (the central
+The whole function is gated by `gLevelState+0x78` (the central
 game-state "mode" field several other functions in this ROM region
 gate on - `actor_part13.c`, `actor_part16.c`, and others already
-established this exact `*(void**)gUnknown_030012C0 + 0x78` dereference
+established this exact `*(void**)gLevelState + 0x78` dereference
 chain):
 
 1. **`mode == 3`** ("just got hit" / stun-entry) - runs a whole block
@@ -114,10 +114,10 @@ chain):
    same frame counter, so the child and `self` flicker in lockstep.
 3. **`mode == 3` again**, but only once the `self+0x8c` deadline has
    *expired* (`self+0x8c <= gUnknown_0300082C`, the "not armed"
-   case): calls `sub_80231EC(gUnknown_030012C0, 2)` - a mode-transition
+   case): calls `SetMaskLevel(gLevelState, 2)` - a mode-transition
    call, the same "state close" convention `actor_part84.c`/
    `actor_part58.c` already establish for this function acting on
-   `gUnknown_030012C0`. Reads as: once the blink/stun period is over,
+   `gLevelState`. Reads as: once the blink/stun period is over,
    transition the central game mode from `3` back to `2`.
 4. **Unconditionally** (any mode): pushes `self`'s own current
    `{x, y}` into the 8-slot `self+0xb8` position-history ring buffer
@@ -156,7 +156,7 @@ chain):
 
 This is the per-frame update for a **"stars orbiting a dizzy head"
 companion effect** attached to `self` (almost certainly the player,
-given `gUnknown_030012C0+0x78`'s "mode" values `1`/`2`/`3` read as an
+given `gLevelState+0x78`'s "mode" values `1`/`2`/`3` read as an
 idle/orbit-active/just-stunned state progression, and given
 `actor_part.c`'s `sub_8007A84` - already established as an OAM-queue
 call, not a hitbox commit): while `mode == 3` (just took a hit), the
@@ -220,9 +220,9 @@ conventions:
   very end), each `.4byte` entry given its own local numeric label so
   every `ldr rX, N` reproduces the ROM's own choice of *which* literal
   pool slot to reload from at each of its (sometimes repeated) use
-  sites - `gUnknown_030012C0`, `gUnknown_0300082C`, and
+  sites - `gLevelState`, `gUnknown_0300082C`, and
   `gUnknown_03000818`/`gUnknown_0300081C` are each backed by two (or
-  three, for `gUnknown_030012C0`) *separate* pool entries at different
+  three, for `gLevelState`) *separate* pool entries at different
   addresses rather than one shared literal, exactly matching the ROM's
   own conservative-reload pattern (the same "reload from the literal
   pool fresh every use" convention `sub_800AAEC`'s own doc comment
@@ -233,7 +233,7 @@ Verified byte-exact via the isolated `cpp`/`agbcc`/`as` +
 `0x0800AFF4`-`0x0800B270` (636 bytes): the standalone-compiled output
 is exactly 636 bytes, and every differing byte (49 of 636) falls
 inside one of the function's `bl` call-site half-word pairs (6 calls:
-`sub_8000E1C` x2, `sub_803AD7C` x2, `sub_8007A84` x1, `sub_80231EC`
+`sub_8000E1C` x2, `sub_803AD7C` x2, `sub_8007A84` x1, `SetMaskLevel`
 x1) or a symbol-relocated `.4byte` literal-pool entry (8 of the 11
 pool entries reference RAM-address symbols; the remaining 3 are plain
 numeric constants - `0xFFFFFA00`/`0xFFFFED00`/`0xFFFFE800` - and those
@@ -268,7 +268,7 @@ coincide` (checksum matches).
 
 - `docs/rom_map.md` - "eight more core reads" (the original partial
   `+0x16`-byte-clamp flag) and the `gStaticData_0816A820`/
-  `gUnknown_030012C0+0x78` mentions this session reconciled against.
+  `gLevelState+0x78` mentions this session reconciled against.
 - `docs/matching/issue-9-10-0x0800aaec-graphics.md` - the
   `self+0x20`/`+0x2d`/28-byte-record convention worked out in detail
   there, reused here for the child object's own record lookup.

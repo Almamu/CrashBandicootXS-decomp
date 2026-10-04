@@ -1,19 +1,19 @@
-# Issue #38 second follow-up: closing sub_8024708 for real, parking
-# sub_8024590 as NAKED
+# Issue #38 second follow-up: closing ShowSlidePicture for real, parking
+# BeginSlide as NAKED
 
 A further pass over the two functions
 [docs/matching/issue-38-sound-channel-family.md](./issue-38-sound-channel-family.md)
 left as `NON_MATCHING` C reconstructions in `src/system/game_loop37.c` -
-`sub_8024590` and `sub_8024708`. Both had a single documented residual
-gap each; this pass found the actual fix for `sub_8024708` (now real,
-matched C) and, while chasing `sub_8024590`'s documented gap, found the
+`BeginSlide` and `ShowSlidePicture`. Both had a single documented residual
+gap each; this pass found the actual fix for `ShowSlidePicture` (now real,
+matched C) and, while chasing `BeginSlide`'s documented gap, found the
 prior pass's "every field/branch/call confirmed" claim was itself
 incomplete - isolated per-function compiles are only a diagnostic (see
 docs/workflow.md step 3), and re-diffing the whole function against the
 ROM surfaced two more genuine gaps beyond the one gap the prior write-up
 described, on top of a third, unfixable one.
 
-## Matched: `sub_8024708`
+## Matched: `ShowSlidePicture`
 
 The VRAM-bank-toggling tile-asset streamer + `gUnknown_03001314`
 shadow-byte rebuild + palette DMA + `REG_DISPCNT` writer. Two
@@ -47,7 +47,7 @@ already found:
 
 Full clean `make compare` confirms byte-exact.
 
-## Parked as NAKED: `sub_8024590`
+## Parked as NAKED: `BeginSlide`
 
 Starts/re-selects a sound cue via `sub_8001B54`, then either plays its
 secondary sfx immediately (if the channel already reports the requested
@@ -105,7 +105,7 @@ project's policy, NAKED means **parked, not matched** - tracked as such
 in `docs/status/game_loop.md` and `tools/report_units.py`, and this pass
 doesn't claim it toward closing issue #38.
 
-`sub_8024590`/`sub_8024640`/`sub_80246D8`/`sub_8024708` are now all one
+`BeginSlide`/`RunSlideshow`/`SkipSlides`/`ShowSlidePicture` are now all one
 contiguous span in `src/system/game_loop37.c`'s own object
 (`src/system/game_loop37.o`), so the two single-function raw asm files
 that used to flank the matched middle (`asm/code_3_2_17_24590.s`,

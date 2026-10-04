@@ -56,7 +56,7 @@ transition idiom seen throughout this ROM region
 (`sub_802C4C8`/`sub_802C540`/`sub_802C614` in `actor_part19g.c`): a
 sound cue (`PlaySfx(gUnknown_030012BC, 4, 0x100)` - the same sound id 4
 `sub_802C6C0`'s own proximity-pickup branch uses), the lap-counter tie
-`sub_8022FEC(gUnknown_030012C0)`, `node+0x44`/`node+0x12`/`node+8`
+`sub_8022FEC(gLevelState)`, `node+0x44`/`node+0x12`/`node+8`
 cleared, `node+0xc = 0x12`, and the node's own anim-frame base reloaded
 from its part table's `+0xd8` halfword into `node+0x10`. In short: once
 one pickup has been "used" for 0x14 frames, it triggers a proximity
@@ -128,7 +128,7 @@ matched as plain C, in `src/graphics/actor_part19i.c`:
   (`sub_802C540`'s shape, `actor_part19g.c`): on `sub_802A6EC`
   proximity and `self+0xc != 0x12`, plays a sound, ties the lap
   counter, then `switch`es on `self+0x30`'s type byte (`5`/`6`/`7` each
-  dispatch a different `sub_8022EA8` tier) before the shared used-state
+  dispatch a different `FreezeLevelClock` tier) before the shared used-state
   transition; tail-calls `sub_802C4C8`.
 - **`sub_802CA28`** - the same used-state transition, unconditional
   (no `sub_802A6EC` guard), also clearing `self+0x44`; no tail call.

@@ -29,7 +29,7 @@ extern u8 gUnknown_030014A1;
 extern s32 gUnknown_0300148C;
 extern void *gUnknown_03001494;
 extern void *gUnknown_030012BC;
-extern void *gUnknown_030012C0;
+extern void *gLevelState;
 extern void *gUnknown_03000884;
 extern s32 gUnknown_03001488;
 extern s32 gUnknown_03001484;
@@ -63,8 +63,8 @@ extern u8 sub_802A6EC(void *self);
 extern void sub_802A7B8(void *self);
 extern u8 sub_802DD9C(void *self);
 extern void sub_8022FEC(void *self);
-extern s32 sub_8023464(void *self);
-extern void sub_8023430(void *self);
+extern s32 AddLife(void *self);
+extern void CollectWumpa(void *self);
 extern void FreeVramTileBlock(void *arg0);
 extern void sub_802AAB4(s32 arg0);
 extern void sub_802B730(void *arg0);
@@ -254,14 +254,14 @@ void sub_802C018(void *selfArg)
     PlaySfx(gUnknown_030012BC, 0x41, 0x100);
 }
 
-/* Accumulator: while `gUnknown_030012C0+0x8c` is clear, arms
+/* Accumulator: while `gLevelState+0x8c` is clear, arms
  * `gUnknown_03001484` (once, on the first accumulation) and adds
  * `delta` into `gUnknown_03001488`. Ignores its own first (player-
  * pointer) argument entirely - see docs/rom_map.md's correction on
  * this function. */
 void sub_802C078(void *arg0, s32 delta)
 {
-    if (*((u8 *)gUnknown_030012C0 + 0x8c) == 0) {
+    if (*((u8 *)gLevelState + 0x8c) == 0) {
         if (gUnknown_03001488 == 0) {
             gUnknown_03001484 = 0xf;
         }
@@ -270,12 +270,12 @@ void sub_802C078(void *arg0, s32 delta)
 }
 
 /* Trivial forwarder - ignores its own argument and calls
- * `sub_8023464(gUnknown_030012C0)`, per docs/rom_map.md's correction
+ * `AddLife(gLevelState)`, per docs/rom_map.md's correction
  * (the ROM's own tail-call epilogue clobbers r0/the call's result, so
  * this is void, not passed through as a return value). */
 void sub_802C0A8(void *arg0)
 {
-    sub_8023464(gUnknown_030012C0);
+    AddLife(gLevelState);
 }
 
 /* Only runs while `state` is 1-3: sets table-index 2, anim
@@ -387,7 +387,7 @@ void sub_802C14C(void *selfArg)
 
 /* Teardown, gated by `arg1` bit 0: temporarily swaps `vtable`'s
  * vtable to `gStaticData_087E4E54` to run `gUnknown_03001488` drain
- * calls into `sub_8023430(gUnknown_030012C0)`, runs two
+ * calls into `CollectWumpa(gLevelState)`, runs two
  * `FreeVramTileBlock` cleanup calls on `gUnknown_030014B0[0]`/`[1]`, sets
  * `vtable` to the "dead" vtable `gStaticData_087E4DF4`, unlinks
  * `self` from the circular `+0x48`(next)/`+0x4c`(prev) list, and frees
@@ -401,7 +401,7 @@ void sub_802C19C(void *selfArg, u32 arg1param)
 
     if (gUnknown_03001488 != 0) {
         do {
-            sub_8023430(gUnknown_030012C0);
+            CollectWumpa(gLevelState);
             gUnknown_03001488 -= 1;
         } while (gUnknown_03001488 != 0);
     }

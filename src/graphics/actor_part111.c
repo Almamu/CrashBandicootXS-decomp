@@ -37,7 +37,7 @@
  * consumed at the very end.
  *
  * Read together, this is the per-frame update for a "stars orbiting a
- * dizzy head" companion effect, gated on `gUnknown_030012C0+0x78`
+ * dizzy head" companion effect, gated on `gLevelState+0x78`
  * (the central game-state "mode" field several other functions in
  * this doc already gate on):
  *
@@ -62,7 +62,7 @@
  *   expired) or, while the deadline is still armed, only on the same
  *   4-frame parity - a standard hit-invincibility blink. Once that
  *   deadline is no longer armed while mode == 3, calls
- *   `sub_80231EC(gUnknown_030012C0, 2)` (matched pattern,
+ *   `SetMaskLevel(gLevelState, 2)` (matched pattern,
  *   `actor_part84.c`/`actor_part58.c` - a mode-transition/"state
  *   close" call) - ends the stun state, transitioning mode 3 -> 2.
  *
@@ -175,23 +175,23 @@ struct ac2c_player {
 
 typedef void (*ac2c_fn3)(void *self, s32 a, s32 b, s32 c);
 
-extern struct orbit_game *gUnknown_030012C0;
+extern struct orbit_game *gLevelState;
 extern void *gUnknown_030012BC;
 extern struct ac2c_player *gUnknown_030012D8;
-extern void *gUnknown_030012E4;
+extern void *gEntitySpawner;
 extern void *gUnknown_03001318;
 extern u32 gUnknown_0300082C;
-extern u8 *sub_8023404(void *game);
+extern u8 *GetCurrentLevelFlags(void *game);
 extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
 extern void sub_80241A4(void);
 extern void sub_8028504(void *arg0);
-extern void sub_8022EA8(void *game, s32 n);
+extern void FreezeLevelClock(void *game, s32 n);
 extern void sub_802352C(void *game);
 extern void sub_8023510(void *game);
 extern void sub_8022D50(void *game);
-extern void sub_8023224(void *game);
+extern void RaiseMaskLevel(void *game);
 extern void sub_80232E4(void *game);
-extern void sub_80231EC(void *game, s32 mode);
+extern void SetMaskLevel(void *game, s32 mode);
 extern void *sub_8025BAC(void *pool, s32 a, s32 kind, s32 x, s32 y, s32 mirror);
 
 #define NOTIFY(self, a, b, c)                                                  \
@@ -215,7 +215,7 @@ static inline s32 Ac2cArmed(struct ac2c_self *self)
  * game mode by one, play two sounds, forward event 0xB to `listener`
  * and spawn a star burst at the child; events 29-34 play sfx 0x1F and
  * set a bit in the game's flag bytes; 26 resets the position history
- * and may call sub_8023224; the rest forward `code` to `listener`'s
+ * and may call RaiseMaskLevel; the rest forward `code` to `listener`'s
  * method at vtable+0x10, some after clearing +0x54..+0x5C.
  *
  * Real C under old_agbcc (issue #9 raw-asm pass). The case bodies are in
@@ -228,7 +228,7 @@ void sub_800AC2C(struct ac2c_self *self, s32 a, s32 code, s32 c)
 {
     switch (code) {
     case 27:
-        *sub_8023404(gUnknown_030012C0) |= 1;
+        *GetCurrentLevelFlags(gLevelState) |= 1;
         PlaySfx(gUnknown_030012BC, 0x1c, 0x100);
         break;
     case 18:
@@ -237,51 +237,51 @@ void sub_800AC2C(struct ac2c_self *self, s32 a, s32 code, s32 c)
         break;
     case 17:
         {
-            struct orbit_game *game = gUnknown_030012C0;
+            struct orbit_game *game = gLevelState;
 
             if (game->unk_8c)
-                sub_8022EA8(game, 100);
+                FreezeLevelClock(game, 100);
         }
         NOTIFY(self, a, code, c);
         sub_8028504(gUnknown_03001318);
         break;
     case 15:
-        sub_802352C(gUnknown_030012C0);
+        sub_802352C(gLevelState);
         NOTIFY(self, a, code, c);
         break;
     case 16:
-        sub_8023510(gUnknown_030012C0);
+        sub_8023510(gLevelState);
         NOTIFY(self, a, code, c);
         break;
     case 28:
-        if (gUnknown_030012C0->mode == 3)
+        if (gLevelState->mode == 3)
             self->deadline = 0;
         PlaySfx(gUnknown_030012BC, 0x18, 0x100);
-        sub_8022D50(gUnknown_030012C0);
+        sub_8022D50(gLevelState);
         break;
     case 29:
         PlaySfx(gUnknown_030012BC, 0x1f, 0x100);
-        *sub_8023404(gUnknown_030012C0) |= 2;
+        *GetCurrentLevelFlags(gLevelState) |= 2;
         break;
     case 30:
         PlaySfx(gUnknown_030012BC, 0x1f, 0x100);
-        *sub_8023404(gUnknown_030012C0) |= 4;
+        *GetCurrentLevelFlags(gLevelState) |= 4;
         break;
     case 34:
         PlaySfx(gUnknown_030012BC, 0x1f, 0x100);
-        gUnknown_030012C0->flags2 |= 2;
+        gLevelState->flags2 |= 2;
         break;
     case 32:
         PlaySfx(gUnknown_030012BC, 0x1f, 0x100);
-        gUnknown_030012C0->flags2 |= 4;
+        gLevelState->flags2 |= 4;
         break;
     case 31:
         PlaySfx(gUnknown_030012BC, 0x1f, 0x100);
-        gUnknown_030012C0->flags2 |= 1;
+        gLevelState->flags2 |= 1;
         break;
     case 33:
         PlaySfx(gUnknown_030012BC, 0x1f, 0x100);
-        gUnknown_030012C0->flags2 |= 8;
+        gLevelState->flags2 |= 8;
         break;
     case 35:
     case 36:
@@ -290,7 +290,7 @@ void sub_800AC2C(struct ac2c_self *self, s32 a, s32 code, s32 c)
         sub_80241A4();
         break;
     case 26:
-        if (gUnknown_030012C0->mode == 0) {
+        if (gLevelState->mode == 0) {
             struct ac2c_pos *h = self->hist;
             s32 i;
 
@@ -298,12 +298,12 @@ void sub_800AC2C(struct ac2c_self *self, s32 a, s32 code, s32 c)
                 *h++ = *(struct ac2c_pos *)self;
         }
         {
-            s32 mode = gUnknown_030012C0->mode;
+            s32 mode = gLevelState->mode;
 
             if ((mode <= 2 && gUnknown_030012D8->unk_88 != 1) || mode <= 1)
-                sub_8023224(gUnknown_030012C0);
+                RaiseMaskLevel(gLevelState);
         }
-        if (gUnknown_030012C0->mode == 3)
+        if (gLevelState->mode == 3)
             self->deadline = gUnknown_0300082C + 1200;
         break;
     case 1:
@@ -318,7 +318,7 @@ void sub_800AC2C(struct ac2c_self *self, s32 a, s32 code, s32 c)
     case 10:
         if ((self->flags >> 6) & 1) {
             if (!Ac2cArmed(self)) {
-                struct orbit_game *game = gUnknown_030012C0;
+                struct orbit_game *game = gLevelState;
 
                 if (game->mode != 0) {
                     if (game->mode <= 2) {
@@ -326,17 +326,17 @@ void sub_800AC2C(struct ac2c_self *self, s32 a, s32 code, s32 c)
                         s32 x, y, m;
 
                         self->deadline = gUnknown_0300082C + 90;
-                        sub_80231EC(game, game->mode - 1);
+                        SetMaskLevel(game, game->mode - 1);
                         PlaySfx(gUnknown_030012BC, 0, 0x100);
                         PlaySfx(gUnknown_030012BC, 0x1b, 0x100);
                         NOTIFY(self, a, 0xb, c);
                         /* The ROM reloads the mode here and never uses it. */
-                        (void)*(volatile s32 *)&gUnknown_030012C0->mode;
+                        (void)*(volatile s32 *)&gLevelState->mode;
                         child = self->child;
                         x = child->x >> 8;
                         y = child->y >> 8;
                         m = child->mirrorX;
-                        sub_8025BAC(gUnknown_030012E4, 0x22, 3, x, y, m);
+                        sub_8025BAC(gEntitySpawner, 0x22, 3, x, y, m);
                     }
                 } else {
                     sub_80232E4(game);
@@ -457,7 +457,7 @@ void sub_800AFF4(struct orbit_self *self)
 {
     register s32 hold asm("r6");
 
-    if (gUnknown_030012C0->mode == 3) {
+    if (gLevelState->mode == 3) {
         if (!(gUnknown_0300082C & 7))
             /* One expression, so the store address is loaded before
              * the call; the locals keep `+ 2` from being folded into
@@ -484,15 +484,15 @@ void sub_800AFF4(struct orbit_self *self)
     /* Hard-register hold (emits no code): r6 live across the blink
      * call keeps `self` out of r6, so it gets r7 as in the ROM. */
     asm("" : "=r"(hold));
-    if (gUnknown_030012C0->mode == 3 || !BlinkArmed(self) || (gUnknown_0300082C & 4))
+    if (gLevelState->mode == 3 || !BlinkArmed(self) || (gUnknown_0300082C & 4))
         sub_8007A84(gUnknown_030012CC, self);
     /* End of the hold above (emits no code). */
     asm("" : : "r"(hold));
     {
-        struct orbit_game *game = gUnknown_030012C0;
+        struct orbit_game *game = gLevelState;
 
         if (game->mode == 3 && !BlinkArmed(self))
-            sub_80231EC(game, 2);
+            SetMaskLevel(game, 2);
     }
     {
         s32 x = self->x;
@@ -506,7 +506,7 @@ void sub_800AFF4(struct orbit_self *self)
     }
     self->histIdx = (self->histIdx + 1) % 8;
     {
-        s32 mode = gUnknown_030012C0->mode;
+        s32 mode = gLevelState->mode;
 
         if ((u32)(mode - 1) <= 1) {
             if (!(gUnknown_0300082C & 7)) {

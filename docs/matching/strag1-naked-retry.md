@@ -8,8 +8,8 @@ None of them needs a register pin.
 |---|---|---|---|---|
 | `sub_8025CA4` | `src/system/game_loop14.c` | 132 B | 5 hw (note) | **Closed** |
 | `sub_8025B0C` | `src/system/game_loop14.c` | 160 B | 61 hw (note), no draft | **Closed** |
-| `sub_8024960` | `src/system/game_loop57.c` | 320 B | 13 hw (note), no draft | **Closed** |
-| `sub_8024820` | `src/system/game_loop57.c` | 284 B | 77 hw (note), no draft | **Closed** |
+| `DecodeLayerChunk` | `src/system/game_loop57.c` | 320 B | 13 hw (note), no draft | **Closed** |
+| `RunCutscenePlayer` | `src/system/game_loop57.c` | 284 B | 77 hw (note), no draft | **Closed** |
 | `sub_80073DC` | `src/graphics/graphics_73dc.c` (new, split from `graphics.c`) | 600 B | draft removed long ago | **Closed** |
 
 `game_loop14.c` and `game_loop57.c` were already on `OLD_AGBCC_OBJS`.
@@ -52,24 +52,24 @@ it:
   inline whose arguments are expanded before the four stores (#493). The
   X offset is a `?:`, so the flip byte is tested before `ox + dist`.
 
-## sub_8024960
+## DecodeLayerChunk
 
-This is the terrain cache's RLE/delta decoder `sub_8025334`
+This is the terrain cache's RLE/delta decoder `DecodeCollisionChunk`
 (`game_loop3.c`, already matched), writing into a 64-halfword-stride
-ring buffer. Porting `sub_8025334`'s matched source with the 2D cell
+ring buffer. Porting `DecodeCollisionChunk`'s matched source with the 2D cell
 index `out[(i >> 4) * 64 + (i & 0xf)]` gave 40 halfwords off, all of
 them an r4/r5 swap plus two local spots. Two changes closed it:
 
 - **The odd trailing delta** is stored back into `acc` before the cell
   store, which gives the ROM's `add` before the address. This also
-  resolved the r4/r5 swap. `sub_8025334`'s `asm("" : : "r"(n))` nudge
+  resolved the r4/r5 swap. `DecodeCollisionChunk`'s `asm("" : : "r"(n))` nudge
   is not needed here.
 - **The raw-copy loop** builds its index as `k = written >> 4;
   k = k * 64 + (written & 0xf);`. That gives the ROM's `asr; lsl` pair
   into separate registers. Every single-expression form puts `& 0xf`
   first or merges the two shifts into one register.
 
-## sub_8024820
+## RunCutscenePlayer
 
 This is the text pager driver. The first draft was 110 halfwords off.
 The old note said "the ROM reloads `&gUnknown_03001300` at each OAM

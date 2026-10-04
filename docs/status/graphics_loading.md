@@ -64,7 +64,7 @@ family. Filed under `src/graphics/` on disk, tracked as its own
 - **`sub_801EA5C`**, **`sub_801EB04`**, **`sub_801EBF0`**,
   **`sub_801EC9C`**, **`sub_801ED6C`**, **`sub_801EE3C`**
   (`src/graphics/graphics_loading_1ea5c.c`) - issue #30: six "trigger
-  effect type N" spawners (a `sub_8023404`/`gUnknown_030012C0+2`
+  effect type N" spawners (a `GetCurrentLevelFlags`/`gLevelState+2`
   collected-bit test, then a `sub_8008434` part with a fixed bank
   offset, tag and type byte registered with `gUnknown_030012EC`; the
   last three hand over to `sub_8018D70` in level mode 1). All plain C
@@ -79,12 +79,12 @@ family. Filed under `src/graphics/` on disk, tracked as its own
   **`sub_802117C`** (`src/graphics/trigger_effect.c`) - issue #31: the
   "trigger effect type N" spawners (4 of the 15-slot
   `gStaticData_0816C7D8` dispatch table's slots): sound-only-or-
-  full-spawn effect triggers gated by a `gUnknown_030012C0+2` flag bit.
+  full-spawn effect triggers gated by a `gLevelState+2` flag bit.
   Parked as NAKED for a long time; all four are plain C with no pins
   once built with **old_agbcc** (`OLD_AGBCC_OBJS`). See
   [issue-31-trigger-effect-type-n.md](../matching/issue-31-trigger-effect-type-n.md)'s
   "Old-compiler pass".
-- **`sub_8022354`** (UNUSED), **`sub_8022468`**
+- **`sub_8022354`** (UNUSED), **`PlayCutscene`**
   (`src/graphics/graphics_loading_22354.c`) - the gap between issues #33
   and #34 (no issue of its own): the game context's never-called
   destructor (tears down every singleton `sub_8022230` builds) and the
@@ -111,8 +111,8 @@ family. Filed under `src/graphics/` on disk, tracked as its own
 - **`sub_8021D80`**, **`sub_8021DFC`**, **`sub_8021E78`**, **`sub_8021EF4`**,
   **`sub_8021F70`**, **`sub_802200C`**, **`sub_80220C4`**, **`sub_802209C`**,
   **`sub_8022158`**, **`nullsub_22`**, **`sub_802218C`**, **`sub_80221A4`**,
-  **`sub_80221BC`**, **`sub_80221D4`**, **`nullsub_23`**, **`sub_80221F0`**,
-  **`sub_8022208`**, **`sub_8022230`** (`src/graphics/graphics_loading_21d80.c`)
+  **`sub_80221BC`**, **`sub_80221D4`**, **`nullsub_23`**, **`DestroyEntitySpawner`**,
+  **`CreateEntitySpawner`**, **`sub_8022230`** (`src/graphics/graphics_loading_21d80.c`)
   - the `gStaticData_084A5600` record-indexed OAM-trio spawner family, the
   `sub_801E990` trampolines, the `gUnknown_030012D8` position writers, the
   `{table_base, count}` descriptor pair, and `sub_8022230` itself - the

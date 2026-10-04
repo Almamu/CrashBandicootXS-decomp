@@ -297,7 +297,7 @@ struct viewport {
     struct camera_pos *camera; // 0x10
 };
 
-extern struct viewport *gUnknown_03001308;
+extern struct viewport *gLevelLayers;
 extern s32 sub_803AD80(void *self, void *arg, void *fn);
 extern s32 sub_803AD7C(void *self, void *fn);
 extern void sub_803A94C(const void *src, void *dst, u32 cnt);
@@ -336,7 +336,7 @@ void sub_800891C(struct part_list *list)
         f.near.w = w;
         f.near.h = h;
     }
-    cam = gUnknown_03001308->camera;
+    cam = gLevelLayers->camera;
     {
         s32 x;
         s32 y;
@@ -438,7 +438,7 @@ struct game_state {
     s32 mode;           // 0x78
 };
 
-extern struct game_state *gUnknown_030012C0;
+extern struct game_state *gLevelState;
 extern void *gUnknown_030012BC;
 extern s32 sub_8009FF4(struct box_part *part, struct part_aabb *box);
 extern struct part_aabb sub_8007B98(struct box_part *part);
@@ -456,7 +456,7 @@ extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
 /* Resolves a hit between `part` and the player (gUnknown_030012D8)
  * against the incoming box passed by sub_8008A40 (`list` is unused).
  *
- * In mode 3 (gUnknown_030012C0->mode): if `part` touches the box
+ * In mode 3 (gLevelState->mode): if `part` touches the box
  * (`sub_8009FF4`), calls its hit method with the player's kind.
  * Otherwise, for a solid part (flags2 bit 3): builds the player's box
  * (sub_8007B98) and the part's (sub_8007CF8); on overlap pushes the
@@ -474,7 +474,7 @@ extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
  * hit-flag update goes through a pointer to keep the ROM's registers. */
 void sub_8008AD8(struct part_list *list, struct part_aabb box, struct box_part *part)
 {
-    if (gUnknown_030012C0->mode == 3) {
+    if (gLevelState->mode == 3) {
         if (!sub_8009FF4(part, &box))
             return;
         CALL_HIT(part, 1, gUnknown_030012D8->kind, 0);
@@ -518,7 +518,7 @@ void sub_8008AD8(struct part_list *list, struct part_aabb box, struct box_part *
             break;
         case 2:
             part->flags |= 8;
-            if (gUnknown_030012C0->mode) {
+            if (gLevelState->mode) {
                 CALL_HIT(part, 1, 1, 0);
             }
             CALL_HIT(gUnknown_030012D8, 1, part->kind, 0);

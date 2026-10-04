@@ -3,7 +3,7 @@
 #include "level_state.h"
 
 extern void *gUnknown_030012D8;
-extern void *gUnknown_030012B4;
+extern void *gEntityFlags;
 extern void *gUnknown_030012BC;
 extern void *gUnknown_03001318;
 
@@ -20,7 +20,7 @@ extern void sub_803A94C(const void *src, void *dst, u32 cnt);
 extern void sub_8007398(struct actor *self, s32 arg1, s32 arg2);
 extern void sub_8028568(void *state, s32 arg1);
 extern void sub_8022CA0(void *self, u8 arg1);
-extern void sub_8022468(void *self, s32 mode);
+extern void PlayCutscene(void *self, s32 mode);
 struct AudioContext;
 extern void StopSfx(struct AudioContext *self, u32 id);
 extern void *sub_8026EDC(s32 size);
@@ -70,9 +70,9 @@ void sub_802352C(struct level_state *self)
 
 /* Restores `self->0x70`/`0xa9` from their `0xcc`/`0xd0` shadow copies,
  * then copies the `0xe4`-`0x14b` snapshot block back over `self`'s own
- * first `0x68` bytes - the inverse direction of `sub_802356C`/
+ * first `0x68` bytes - the inverse direction of `SetCheckpoint`/
  * `sub_8022CA0`'s "stash a snapshot at +0xe4" below. */
-void sub_8023548(struct level_state *self)
+void RestoreCheckpoint(struct level_state *self)
 {
     u8 tmp;
 
@@ -86,9 +86,9 @@ void sub_8023548(struct level_state *self)
  * refreshes the `0xcc`/`0xd0` shadow pair, resets the `sub_8023414`
  * animation-state pair (`sub_80232FC`/`sub_80232EC`), snapshots `pair`
  * into `self->0xd4`/`0xd8`, flushes two spans of the
- * `gUnknown_030012B4` bitmap via the `CpuSet` wrapper, then stashes the
- * `0xe4`-byte snapshot block (see `sub_8023548` above). */
-void sub_802356C(void *selfArg, u8 flag, s32 *pairArg)
+ * `gEntityFlags` bitmap via the `CpuSet` wrapper, then stashes the
+ * `0xe4`-byte snapshot block (see `RestoreCheckpoint` above). */
+void SetCheckpoint(void *selfArg, u8 flag, s32 *pairArg)
 {
     register struct level_state *self asm("r5") = selfArg;
     register s32 *pair asm("r4") = pairArg;
@@ -108,7 +108,7 @@ void sub_802356C(void *selfArg, u8 flag, s32 *pairArg)
         dst[1] = py;
     }
 
-    pair = gUnknown_030012B4;
+    pair = gEntityFlags;
     {
         void *a = (u8 *)pair + 0x108;
         void *b = (u8 *)pair + 8;
@@ -151,12 +151,12 @@ void sub_80235E4(struct level_state *self, u8 flag)
 
 void sub_802364C(void *self)
 {
-    sub_8022468(self, 2);
+    PlayCutscene(self, 2);
 }
 
 void sub_8023658(void *self)
 {
-    sub_8022468(self, 1);
+    PlayCutscene(self, 1);
     StopSfx(gUnknown_030012BC, 0x5d);
 }
 
@@ -187,7 +187,7 @@ void sub_8023674(void)
 
 void sub_802369C(void *self)
 {
-    sub_8022468(self, 0);
+    PlayCutscene(self, 0);
 }
 
 void nullsub_24(void)

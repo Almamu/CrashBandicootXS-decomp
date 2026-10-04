@@ -41,7 +41,7 @@ order.
   pointer (the `sub_8011B90`-style idiom from `actor_part39.c`), runs
   `sub_8012AF4`, clears/sets a few more `self+0x10`-record bytes
   (`+0x100`/`+0x102`/`+0x103`/`+0x104`, and two bits of `+0xc` via the
-  established negative-constant-mask idiom), calls `sub_8023234`, then
+  established negative-constant-mask idiom), calls `LoseLife`, then
   looks up a byte through the 28-byte-record-array dereference chain
   `docs/rom_map.md`'s "eight more core reads" section already
   documented from three other call sites (`part+0x20 -> *ptr +

@@ -9,7 +9,7 @@ See docs/levels.md for the format. In short, a room is
 - per layer a `struct level_layer_desc` (bg_scroll_layer_25fc8.c's
   `struct bg_layer_desc`) and a grid of 16x8-cell chunk ids;
 - the level asset: per layer a table of chunk offsets and one RLE/delta
-  token stream per chunk (decoded by sub_8024960/sub_8025334). 34 rooms
+  token stream per chunk (decoded by DecodeLayerChunk/DecodeCollisionChunk). 34 rooms
   keep it LZ77-packed next to the intro graphics, 7 keep it raw;
 - a 256-colour BG palette, the entity list (`{type, x, y, param}` spawn
   records in 256-px columns), the spawn parameter records and the
@@ -67,7 +67,7 @@ LEVELS_DIR = Path("data/levels")
 
 
 # ---------------------------------------------------------------------------
-# Chunk streams (sub_8024960 / sub_8025334)
+# Chunk streams (DecodeLayerChunk / DecodeCollisionChunk)
 
 def decode_chunk(buf, o):
     """Decodes the token stream at buf[o:]. Returns (cells, end offset)."""
@@ -308,7 +308,7 @@ def c_array(values, fmt, per_line):
 
 def entity_groups(room):
     """Entities (in id order) -> group records. Ids run from the last
-    column to the first (sub_80255D4's walk), which is also the order the
+    column to the first (SpawnRoomEntities's walk), which is also the order the
     entities are stored in; a group's `first` counts from the first
     column."""
     ents = room["entities"]
@@ -526,7 +526,7 @@ def render(room_dir, lname, out_path):
         pal += [(v & 31) << 3, (v >> 5 & 31) << 3, (v >> 10 & 31) << 3]
     if lname == "collision":
         # terrain type (low byte) as a colour, types 1-0x23 are the
-        # non-solid ones (sub_80250BC), the rest solid shapes (sub_8025130)
+        # non-solid ones (GetTerrainHeights), the rest solid shapes (GetSolidTerrainHeights)
         pal = []
         for i in range(256):
             pal += [0, 0, 0] if i == 0 else ([64 + i * 5 % 192, 160, 64] if i <= 0x23 else
@@ -614,7 +614,7 @@ def sym(a):
 
 
 def find_rooms(rom):
-    """Room records of gStaticData_0816CD80, in table order: [(pal, desc)]."""
+    """Room records of the level table region from ROM_TABLE, in table order: [(pal, desc)]."""
     out = []
     for a in range(ROOM_TABLE, ROOM_TABLE + ROOM_TABLE_SIZE, 4):
         if in_regions(rom.w(a)) and in_regions(rom.w(a + 4)) and not in_regions(rom.w(a - 4)):

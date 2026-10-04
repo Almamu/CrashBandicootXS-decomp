@@ -25,7 +25,7 @@
  * of `owner->0xd` and plays SFX `0x26`, or on `self->0x6c == 0xf` plays
  * SFX `9`; then unconditionally, if `self->0x6c == 0x17` and
  * `owner->0x30 == 9` and `owner->0x34 == 0`, spawns a part via
- * `sub_8025B0C(gUnknown_030012E4, 0x17, 4, -0x2d, 2, owner)` (the same
+ * `sub_8025B0C(gEntitySpawner, 0x17, 4, -0x2d, 2, owner)` (the same
  * `sub_8025B0C(pool, kind, ..., z, src)` shape `game_loop14.c`
  * documents), tags the new part's `+0xc`/`+0xa` fields, and plays SFX
  * `0x1e`. Mode 5 mirrors mode 3's `owner->0x38` gate but triggers
@@ -71,13 +71,13 @@ extern void sub_803AFE4(struct part_aabb *box, s32 x, s32 y);
 extern void sub_803AFDC(struct part_aabb *box, s32 w, s32 h);
 extern u32 gUnknown_0300082C;
 extern void *gUnknown_030012BC;
-extern void *gUnknown_030012E4;
+extern void *gEntitySpawner;
 extern struct ctrl_target *gUnknown_030012D8;
 
 /* `sub_800C9C8` (actor_part116.c), inlined. */
 static inline struct ctrl_target *SpawnPart(s32 a, s32 b, s32 c, s32 d, s32 e, struct ctrl_target *f)
 {
-    struct ctrl_target *obj = sub_8025B0C(gUnknown_030012E4, a, b, c, d, e, f);
+    struct ctrl_target *obj = sub_8025B0C(gEntitySpawner, a, b, c, d, e, f);
     obj->visible = 1;
     obj->flag6 = 0;
     return obj;

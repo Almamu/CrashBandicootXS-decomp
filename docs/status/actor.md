@@ -511,7 +511,7 @@ from "core" graphics.
   `sub_80084A4`/`sub_8008484`/`nullsub` shape as `actor_part6.c`), a
   handful of small setters/getters on offsets beyond `struct actor`'s
   own 0x1c bytes, and a distance-gate (`sub_8011A8C`) reusing
-  `actor_part2.c`'s `gUnknown_030012B4+0x108` bitmap idiom verbatim.
+  `actor_part2.c`'s `gEntityFlags+0x108` bitmap idiom verbatim.
   Recategorized `graphics`->`actor` from the issue's label: every
   matched function here operates on `struct actor` via the same
   `table@0x18`/`flags@0xc`/`field_08@8` layout `actor_part*.c` already
@@ -661,7 +661,7 @@ from "core" graphics.
   `sub_802D57C`, `sub_802D590`, `sub_802D59C`, `sub_802D5D4`,
   `sub_802D600`, `sub_802D648`, `sub_802D6A0`, `sub_802D764` -
   `InitActorPart`-based constructor variants plus the
-  `gUnknown_030012C0+0x78` Aku-Aku-mask-style add/remove pair.
+  `gLevelState+0x78` Aku-Aku-mask-style add/remove pair.
 - `src/graphics/actor_part59.c` (new file, GitHub issue #54, non-
   adjacent since `actor_part74.c` sits between it and `actor_part58.c`;
   see
@@ -786,7 +786,7 @@ from "core" graphics.
   [docs/matching/issue-49-0x08029e4c-actor.md](../matching/issue-49-0x08029e4c-actor.md).
 
 - **`sub_8009D5C`** (`src/graphics/actor_part13.c`) - fires a
-  `part->table+0x68`-driven trampoline based on `gUnknown_030012C0`'s
+  `part->table+0x68`-driven trampoline based on `gLevelState`'s
   mode, on the player and/or `part` depending on the mode value. A
   `switch` reproduces the ROM's exact 3-way mode dispatch, and explicit
   `goto`s into a shared, ABI-register-pinned tail reproduce the
@@ -1049,7 +1049,7 @@ See [docs/matching/late-rom-naked-retry.md](../matching/late-rom-naked-retry.md)
   category setup + per-VBlank loading loop, old_agbcc (object added to
   `OLD_AGBCC_OBJS`). First C draft; the "four high-register pins" were
   loop.c's own hoisting. Pointer locals for the two counters assigned at
-  the top of the outer loop, `&gUnknown_030012C0` assigned right before
+  the top of the outer loop, `&gLevelState` assigned right before
   the inner loop, an if/else exit-state chain and a volatile DMA fill
   source reproduce the ROM's reload registers and preheader order.
 - `src/graphics/actor_part103.c` - `sub_802A208` (issue #49), old_agbcc
@@ -1506,7 +1506,7 @@ embedded as asm instead. They're tracked as parked, not matched.
   #9/#10; NAKED in that file since the issue #9 raw-asm pass, which also
   replaced the draft - see `docs/matching/issue-9-raw-asm-pass.md`) - a per-frame
   reentrancy-guard-shaped wrapper dispatching a pending-action "kind"
-  byte (`gUnknown_03001308+0x29`) through a 10-case jump table, then a
+  byte (`gLevelLayers+0x29`) through a 10-case jump table, then a
   keyframe-lookup/camera-position probe via `sub_80083B8`/
   `sub_8026BC0` sharing `sub_80084C4`'s case-to-block mapping. Every
   load/store/branch/call confirmed correct against the ROM, and now

@@ -7,11 +7,11 @@
  * throughout for the same reason those files give. */
 
 extern void sub_800A0FC(void *self);
-extern void sub_80231EC(void *arg0, s32 arg1);
+extern void SetMaskLevel(void *arg0, s32 arg1);
 extern void *sub_80083B8(void *part);
 extern s32 sub_8026BC0(void *arg0, s32 x, s32 y);
-extern void *gUnknown_03001308;
-extern void *gUnknown_030012C0;
+extern void *gLevelLayers;
+extern void *gLevelState;
 extern u8 gStaticData_0816B300[];
 
 struct a884_game {
@@ -55,15 +55,15 @@ struct a884_method {
 /* A per-frame "reentrancy guard"-shaped wrapper (only runs if
  * `self+0xc` bit 7 is set): fires `self->table+0x70`'s trampoline via
  * `sub_803AD7C`, then calls `sub_800A0FC` (still raw) with the global
- * `gUnknown_03001308+0x2a` flag held set for the duration. If
+ * `gLevelLayers+0x2a` flag held set for the duration. If
  * `self+0xac` (a pointer, cleared here) was non-null, sets `self+0x68`
  * bit 3 and clears the `+0x100`/`+0x102`/`+0x103` flag bytes. Then
- * dispatches on `gUnknown_03001308+0x29` (a pending-action "kind"
+ * dispatches on `gLevelLayers+0x29` (a pending-action "kind"
  * byte, cleared back to 0 by every path here): kind 0 additionally
  * resets `+0x100`/`+0x102`/`+0x103` if `self+0x68` is exactly 8; kinds
  * 1/5/7/9 (`gStaticData_0816B300`'s index scheme - see the `case`
  * labels below) are no-ops beyond the shared reset; kind 1 also sets
- * `self+0xc` bit 6, clears `+0x8c`, calls `sub_80231EC`, and fires the
+ * `self+0xc` bit 6, clears `+0x8c`, calls `SetMaskLevel`, and fires the
  * `self->table+0x68` trampoline (arg 1); kind 5 sets the `+0x100`
  * flag; kind 7 sets `+0x102`; kind 10 sets `+0x103`. Finally, looks up
  * the current keyframe record (`sub_80083B8`, already parked in
@@ -172,13 +172,13 @@ u8 sub_800A884(struct a884_part *self)
         self->f105 = zero;
         CALL_M70H(self);
         self->f105 = 1;
-        ((struct a884_game *)gUnknown_03001308)->busy = 1;
+        ((struct a884_game *)gLevelLayers)->busy = 1;
         sub_800A0FC(self);
         /* r3 hold (no code) over the flag resets and the kind switch:
          * the ROM's reloads rotate through r0-r2 only, so the flag
          * offsets reuse one register (`adds r1, #3`, `subs r2, #3`). */
         asm("" : "=r"(hold));
-        ((struct a884_game *)gUnknown_03001308)->busy = zero;
+        ((struct a884_game *)gLevelLayers)->busy = zero;
         if (self->unk_ac != 0) {
             self->hitAxes |= 8;
             self->unk_ac = zero;
@@ -186,7 +186,7 @@ u8 sub_800A884(struct a884_part *self)
             self->f102 = zero;
             self->f103 = zero;
         }
-        kind = ((struct a884_game *)gUnknown_03001308)->kind;
+        kind = ((struct a884_game *)gLevelLayers)->kind;
         if (kind != 0) {
             switch (kind) {
             case 1:
@@ -197,7 +197,7 @@ u8 sub_800A884(struct a884_part *self)
                     register s32 _z asm("r0") = 0;
                     *_p = _z;
                 }
-                sub_80231EC(gUnknown_030012C0, 0);
+                SetMaskLevel(gLevelState, 0);
                 CALL_M68H(self, 0, 1, 0);
                 break;
             case 2:
@@ -245,7 +245,7 @@ u8 sub_800A884(struct a884_part *self)
                 }
                 break;
             }
-            ((struct a884_game *)gUnknown_03001308)->kind = 0;
+            ((struct a884_game *)gLevelLayers)->kind = 0;
         } else if (self->hitAxes == 8) {
             self->f102 = 0;
             self->f103 = 0;
@@ -261,7 +261,7 @@ u8 sub_800A884(struct a884_part *self)
         else
             x += off[0];
         y += off[1];
-        if (sub_8026BC0(gUnknown_03001308, x, y) == 6) {
+        if (sub_8026BC0(gLevelLayers, x, y) == 6) {
             if (self->f101 == 0) {
                 s32 snap = (y & 0x00FFFFF8) + 7;
 

@@ -19,7 +19,7 @@
  *     (that cache's own cached width-in-tiles field, `struct
  *     tile_cache::unk010` in `game_loop3.c` - confirmed genuinely read
  *     here, unlike that struct's own comment there which predates this
- *     pass), calling `sub_8025130(self->0x20, tileX, tileY, submode,
+ *     pass), calling `GetSolidTerrainHeights(self->0x20, tileX, tileY, submode,
  *     &scratch)` (matched, `game_loop3.c`) per tile until a hit or the
  *     range is exhausted. On a hit, accumulates into `*outValue` using
  *     `pos->y & 7`: `submode == 2` adds `(8-(y&7))<<8`, `submode == 0`
@@ -39,9 +39,9 @@
  *     ever passes `1`/`3` here).
  *   - Both finish with the same tail: if `self+0x2a` (the "flag held
  *     set" byte `docs/matching/issue-9-10-0x0800a884-graphics.md`
- *     already named for this same `self`/`gUnknown_03001308`-shaped
+ *     already named for this same `self`/`gLevelLayers`-shaped
  *     object) is nonzero *and* the scan's own scratch out-flag from
- *     its last `sub_8025130` call is nonzero, writes that scratch byte
+ *     its last `GetSolidTerrainHeights` call is nonzero, writes that scratch byte
  *     into `self+0x29` (the same doc's "dispatch nibble" byte).
  *     Returns the scan's own hit flag either way. */
 
@@ -59,7 +59,7 @@ struct tile_cache
     s32 unk014;         // 0x14 - height in tiles
 };
 
-/* The gUnknown_03001308-shaped collider these resolvers run on. */
+/* The gLevelLayers-shaped collider these resolvers run on. */
 struct collider
 {
     u8 unk_00[0x20];
@@ -69,10 +69,10 @@ struct collider
     u8 flagHeld;                // 0x2A
 };
 
-extern void *sub_8025130(struct tile_cache *self, s32 x, s32 y, s32 mode, u8 *flagsOut);
+extern void *GetSolidTerrainHeights(struct tile_cache *self, s32 x, s32 y, s32 mode, u8 *flagsOut);
 
 /* Y-axis resolver: scans the tiles under [pos->x, pos->x + span) at
- * pos->y's row until sub_8025130 reports a hit. On a hit, moves
+ * pos->y's row until GetSolidTerrainHeights reports a hit. On a hit, moves
  * *outValue to the tile edge (down for submode 2, up for submode 0).
  * Returns whether anything was hit. */
 s32 sub_8026A18(struct collider *self, struct probe_pos *pos, s32 span, s32 *outValue, s32 submode)
@@ -92,7 +92,7 @@ s32 sub_8026A18(struct collider *self, struct probe_pos *pos, s32 span, s32 *out
         end--;
     for (; x <= end && !hit; x++)
     {
-        if (sub_8025130(self->cache, x, y, submode, &flag))
+        if (GetSolidTerrainHeights(self->cache, x, y, submode, &flag))
             hit = 1;
     }
     if (hit)
@@ -113,7 +113,7 @@ s32 sub_8026A18(struct collider *self, struct probe_pos *pos, s32 span, s32 *out
 }
 
 /* X-axis resolver: scans the tiles beside [pos->y, pos->y + span) at
- * pos->x's column until sub_8025130 reports a hit. On a hit, moves
+ * pos->x's column until GetSolidTerrainHeights reports a hit. On a hit, moves
  * *outValue to the tile edge (right for submode 3, left for submode 1),
  * one unit past it. Returns whether anything was hit. */
 s32 sub_8026AE8(struct collider *self, struct probe_pos *pos, s32 span, s32 *outValue, s32 submode)
@@ -133,7 +133,7 @@ s32 sub_8026AE8(struct collider *self, struct probe_pos *pos, s32 span, s32 *out
         end--;
     for (; y <= end && !hit; y++)
     {
-        if (sub_8025130(self->cache, x, y, submode, &flag))
+        if (GetSolidTerrainHeights(self->cache, x, y, submode, &flag))
             hit = 1;
     }
     if (hit)

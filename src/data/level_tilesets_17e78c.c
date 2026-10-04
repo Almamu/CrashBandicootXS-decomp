@@ -19,7 +19,7 @@ const u16 gStaticData_0817E78C[16] = {
  * Level BG tile sets: tag-0x00 raw tagged assets of 8bpp tiles (64 bytes
  * each). A room's struct bg_layer_desc (bg_scroll_layer_25fc8.c) points at
  * one through `tileData`; the pooled layer 0 (tile_slot_pool.c,
- * sub_8026618) reads the tiles at `tileData + 4`. The tile bytes come from
+ * SetTileSlotPoolSource) reads the tiles at `tileData + 4`. The tile bytes come from
  * graphics/level_tilesets/tilesetN_<addr>.png via graphics.mk
  * (grit -gt -gB8 -p!, then tools/bin2c.py); tools/tile_pools.py extracted
  * the PNGs, with the palette of the first room that uses each set.

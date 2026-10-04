@@ -37,7 +37,7 @@
  * `sub_8026AE8`/`sub_8026A18` (both still raw, `asm/code_3_2_17_266bc.s`)
  * are `docs/rom_map.md`'s already-documented "horizontal/vertical
  * collision-resolver pair": each iterates a run of tiles along one axis
- * via `sub_8025130` (matched, `src/system/game_loop3.c`) and, on a
+ * via `GetSolidTerrainHeights` (matched, `src/system/game_loop3.c`) and, on a
  * solid hit, accumulates a `±(tile_edge_distance << 8)` push-out delta
  * into `*outValue`. Reading their own raw bytes alongside this
  * function confirms which axis each one actually resolves:
@@ -69,8 +69,8 @@
  * they're four mutually exclusive probe directions, not flag bits).
  *
  * Real bytes formerly the middle of `asm/code_3_2_17_25fc8.s` (that
- * file is now trimmed to end right after `sub_8026618`); the
- * remainder from `sub_80266BC` onward (still raw, unexamined this
+ * file is now trimmed to end right after `SetTileSlotPoolSource`); the
+ * remainder from `LoadRoom` onward (still raw, unexamined this
  * session, including `sub_8026AE8`/`sub_8026A18` themselves) moved to
  * the new `asm/code_3_2_17_266bc.s`. */
 

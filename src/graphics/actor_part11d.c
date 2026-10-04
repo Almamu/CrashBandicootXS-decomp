@@ -42,12 +42,12 @@ struct player {
 
 extern void sub_800D040(void *part);
 extern void sub_80109A4(void *part, s32 mode, s32 playerX, s32 playerY);
-extern struct viewport *gUnknown_03001308;
+extern struct viewport *gLevelLayers;
 extern struct player *gUnknown_030012D8;
 
 /* Another per-frame spatial-hash-grid pass over `manager`, scoped to
  * the same 3-bucket window `[baseIdx, baseIdx+2]` (`baseIdx` computed
- * the same way as `sub_80091D4`'s: `max(gUnknown_03001308`'s
+ * the same way as `sub_80091D4`'s: `max(gLevelLayers`'s
  * sub-object's own `x >> 8`, `0)`), reading the player
  * (`gUnknown_030012D8`) rather than writing to the grid.
  *
@@ -66,7 +66,7 @@ extern struct player *gUnknown_030012D8;
  * before the `>> 8`. */
 void sub_8009868(struct pool_manager *m)
 {
-    s32 lo = gUnknown_03001308->camera->x;
+    s32 lo = gLevelLayers->camera->x;
     s32 i;
     struct player *p;
     u8 state;

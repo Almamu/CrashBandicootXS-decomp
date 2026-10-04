@@ -257,10 +257,10 @@ extern struct part_list *gUnknown_030012EC;
 extern struct part_list *gUnknown_030012F0;
 extern struct part *gUnknown_030012D8;
 extern void ***gUnknown_030012D0;
-extern struct level_state *gUnknown_030012B4;
+extern struct level_state *gEntityFlags;
 extern void *gUnknown_030012BC;
-extern void *gUnknown_030012C0;
-extern struct { u8 unk_00[0x10]; struct level_layer *layer; } *gUnknown_03001308;
+extern void *gLevelState;
+extern struct { u8 unk_00[0x10]; struct level_layer *layer; } *gLevelLayers;
 extern u8 gStaticData_0816C358[];
 extern s32 gStaticData_0816C368[];
 extern s32 gStaticData_0816C378[];
@@ -368,13 +368,13 @@ typedef u8 (*query_fn)(void *self);
 /* Right edge of the level, in Q8 units. */
 static inline s32 LevelRight(void)
 {
-    return gUnknown_03001308->layer->width << 8;
+    return gLevelLayers->layer->width << 8;
 }
 
 /* Bottom edge of the level, in Q8 units. */
 static inline s32 LevelBottom(void)
 {
-    return gUnknown_03001308->layer->height << 8;
+    return gLevelLayers->layer->height << 8;
 }
 
 static inline s32 AtLevelEdge(struct part_f28 *f, s32 x)
@@ -399,7 +399,7 @@ static inline void SetTag(struct part *p, u8 tag)
 
 /* (u16)(width + n), computed the way the ROM does it: in the upper
  * halfword, then shifted back down. */
-#define LayerWidthPlus(n) (((gUnknown_03001308->layer->width << 16) + ((n) << 16)) >> 16)
+#define LayerWidthPlus(n) (((gLevelLayers->layer->width << 16) + ((n) << 16)) >> 16)
 
 static inline void MarkCollected(struct part *p)
 {
@@ -407,7 +407,7 @@ static inline void MarkCollected(struct part *p)
     if (p->id != 0xFFFF)
     {
         s32 id = p->id;
-        struct level_state *ls = gUnknown_030012B4;
+        struct level_state *ls = gEntityFlags;
         s32 w = id;
 
         w /= 32;
@@ -489,7 +489,7 @@ void sub_8019770(struct obj_476c *self, s32 unused, s32 arg)
     if (arg == 3)
     {
         VCALL1(self->part->ctl, m20, 9);
-        if (!sub_80231C4(gUnknown_030012C0))
+        if (!sub_80231C4(gLevelState))
             sub_8021D80(0xFFFF, 0x8C, 0x98, 0);
     }
     VCALL1(self, m20, arg);
@@ -767,7 +767,7 @@ void sub_80197F8(struct boss *self, struct part *other)
         if (y >= LevelBottom() + 0x2000)
         {
             sub_801A7AC(self, other, 0);
-            if (sub_80231BC(gUnknown_030012C0))
+            if (sub_80231BC(gLevelState))
                 sub_80241A4();
             sub_8019CE4(self, other, 17);
         }
@@ -794,12 +794,12 @@ void sub_8019CE4(struct boss *self, struct part *other, s32 next)
     switch (next)
     {
     case 16:
-        if (!sub_80231BC(gUnknown_030012C0))
+        if (!sub_80231BC(gLevelState))
             sub_8021EF4(0xFFFF, 0xA0, 0xA9, 0);
         sub_801A7AC(self, other, 3);
         break;
     case 12:
-        sub_801A03C(self, gUnknown_03001308->layer->width, 0x28, 1);
+        sub_801A03C(self, gLevelLayers->layer->width, 0x28, 1);
         sub_801A03C(self, 0, 0x46, 0);
         sub_801A03C(self, LayerWidthPlus(0x46), 0x64, 1);
     case 1:
@@ -889,7 +889,7 @@ void sub_8019EBC(struct boss *self, s32 mode, u16 x, u16 y, struct part *arg)
     p->slot = sub_800815C(p);
     p->ctl = ctl;
     VCALL1(ctl, m18, p);
-    bits = &gUnknown_030012B4->info->bits[*gUnknown_030012B4->info->offset];
+    bits = &gEntityFlags->info->bits[*gEntityFlags->info->offset];
     p->f28.facing = ((*bits >> 1) ^ 1) & 1;
     p->f28.flag5 = (*bits >> 2) & 1;
     p->fl.b.active = 1;

@@ -46,10 +46,10 @@ typedef void (*act_fn3)(void *self, s32 a, s32 b, s32 c);
 
 extern u32 gUnknown_030007E0;
 extern void *gUnknown_030012BC;
-extern void *gUnknown_030012C0;
+extern void *gLevelState;
 extern struct act_part *gUnknown_030012D8;
 extern void *gUnknown_03001304;
-extern struct cam *gUnknown_03001308;
+extern struct cam *gLevelLayers;
 extern struct act_pmf gStaticData_0816BF20[];
 extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
 extern u8 sub_8000760(void *pad);
@@ -58,7 +58,7 @@ extern void sub_8012AF4(struct act *self);
 extern void sub_80138E8(struct act *self);
 extern void sub_80151C8(struct act *self);
 extern u8 sub_80231CC(void *self);
-extern void sub_80231EC(void *self, s32 arg);
+extern void SetMaskLevel(void *self, s32 arg);
 
 /* Trio stores as in actor_part_12fbc.c: as inline parameters, old_agbcc
  * materializes the values before the stores. */
@@ -127,11 +127,11 @@ static inline u8 *PartBytePtr(struct act_part *part, s32 offset)
 /* Clears `self+0x34`'s reentrancy flag once `gUnknown_030007E0`'s bit
  * `0x100` clears. If `part+0x100` (the part's own "active" flag)
  * changed since last frame, re-runs `sub_8012238`. Then, using
- * `gUnknown_03001308`'s sub-object's `+0x14` Q8 field as a screen-space
+ * `gLevelLayers`'s sub-object's `+0x14` Q8 field as a screen-space
  * anchor, checks `part->field_04` against two thresholds: past the near
  * one, resets `part`'s `+0x48`/`+0x4c`/`+0x50` velocity-target fields
  * (and `+0x60` unless still active); past the far one, additionally
- * clears `part+0x8c` and fires a state-close call (`sub_80231EC`) plus
+ * clears `part+0x8c` and fires a state-close call (`SetMaskLevel`) plus
  * `sub_803AD88` through the `self+0xc` manager's `+0x10`/`+0x14`
  * trampoline slot. Decrements `self+0x26` if set. While `self+0x2b`'s
  * countdown is running and `part+0x94 <= 1`, ticks it down and, on
@@ -188,7 +188,7 @@ void sub_8012420(struct act *self)
         struct act_part *part = self->part;
         s32 py = part->y;
 
-        if (py > (gUnknown_03001308->target->y << 8) - 0x1400) {
+        if (py > (gLevelLayers->target->y << 8) - 0x1400) {
             part->flags0C &= 0x7F;
             {
                 struct act_part *q = self->part;
@@ -203,9 +203,9 @@ void sub_8012420(struct act *self)
                 struct act_part *r = self->part;
                 s32 py2 = r->y;
 
-                if (py2 > (gUnknown_03001308->target->y << 8) + 0x1400) {
+                if (py2 > (gLevelLayers->target->y << 8) + 0x1400) {
                     r->unk_8C = 0;
-                    sub_80231EC(gUnknown_030012C0, 0);
+                    SetMaskLevel(gLevelState, 0);
                     {
                         struct act_method *m = &self->vt->m10;
 
@@ -302,7 +302,7 @@ void sub_8012420(struct act *self)
 }
 
 /* A helper of `sub_801283C` (below): if the input snapshot's D-pad bit
- * `1` is set, `self+0x18`'s counter is 0, `gUnknown_030012C0` passes
+ * `1` is set, `self+0x18`'s counter is 0, `gLevelState` passes
  * `sub_80231CC`, and a sub-object type of `6`/`0xb`/`0xc` (each with its
  * own extra `+0x30 >= 0` gate) matches, bumps `self+0x18`, fires the
  * `+0x50`/`+0x54` and `+0x20`/`+0x24` trampoline pairs with type-keyed
@@ -327,7 +327,7 @@ u8 sub_8012694(struct act *self)
     if (pressed) {
         s32 frame = self->frame;
 
-        if (frame == 0 && sub_80231CC(gUnknown_030012C0)) {
+        if (frame == 0 && sub_80231CC(gLevelState)) {
             if (self->part->tag == 6 && self->part->frame >= 0) {
                 self->frame++;
                 *PartBytePtr(gUnknown_030012D8, 0x100) = frame;

@@ -12,7 +12,7 @@
  * 43-function cluster investigation that began with `sub_800B8DC`/
  * `sub_800BD48`. */
 
-extern void *gUnknown_030012B4;
+extern void *gEntityFlags;
 extern void *sub_803AD7C(void *arg0, void *fn);
 
 /* `other` (the second argument - `self`, the first, is never read)
@@ -26,7 +26,7 @@ extern void *sub_803AD7C(void *arg0, void *fn);
  * Runs the "flag active + bitmap-set" idiom (`other->0xc |= 1`, then,
  * unless `other`'s id sentinel-checks as `0xFFFF`, sets bit
  * `other->8 & 0x1f` of word `other->8 >> 5` in the
- * `gUnknown_030012B4+0x108` bitmap) up to three times, independently
+ * `gEntityFlags+0x108` bitmap) up to three times, independently
  * gated: once when the `sub_803AD7C` hit-probe against `other->table`'s
  * own +0x28/+0x2c pair reports *no* hit, once when `other->0xc` bit 3
  * is already set, and once when `other->0x38` is nonzero. This is the
@@ -65,7 +65,7 @@ struct cbf4_other {
     do                                                                         \
     {                                                                          \
         s32 _id = (idExpr);                                                    \
-        u8 *_base = gUnknown_030012B4;                                         \
+        u8 *_base = gEntityFlags;                                         \
         s32 _word = _id / 32;                                                  \
         s32 _off = _word * 4;                                                  \
         u32 *_slot = (u32 *)(_base + 0x108);                                   \

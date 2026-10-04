@@ -2,12 +2,12 @@
 #include "cutscene.h"
 
 /*
- * ROM 0x0816D1C8-0x081725A8: the 11 cutscenes. sub_8022468
+ * ROM 0x0816D1C8-0x081725A8: the 11 cutscenes. PlayCutscene
  * (graphics_loading_22354.c) plays cutscene `idx`: the slides of
- * gStaticData_0816D1F4[idx], each shown with the page of text at the same
+ * gCutscenes[idx], each shown with the page of text at the same
  * index in the current language's `struct cutscene_page` array. The six
  * language tables (English first, then French, German, Spanish, Italian,
- * Dutch) are listed by the IWRAM pointer table gUnknown_03000834, indexed
+ * Dutch) are listed by the IWRAM pointer table gCutsceneTexts, indexed
  * by the language setting gUnknown_03000868.
  *
  * In ROM order: the English table, the slide lists, the English pages,
@@ -17,15 +17,15 @@
  * pictures are in src/data/cutscene_pictures_5a9f70.c.
  *
  * The text is Latin-1, all in lower case. A page with no strings shows
- * the picture only (sub_8024820).
+ * the picture only (RunCutscenePlayer).
  */
 
 #define ARRAY_COUNT(a) (sizeof(a) / sizeof((a)[0]))
 
 extern const u16 gCutscenePicture00[], gCutscenePicture01[], gCutscenePicture02[], gCutscenePicture03[], gCutscenePicture04[], gCutscenePicture05[], gCutscenePicture06[], gCutscenePicture07[], gCutscenePicture08[], gCutscenePicture09[], gCutscenePicture10[], gCutscenePicture11[], gCutscenePicture12[], gCutscenePicture13[], gCutscenePicture14[], gCutscenePicture15[], gCutscenePicture16[], gCutscenePicture17[], gCutscenePicture18[], gCutscenePicture19[], gCutscenePicture20[], gCutscenePicture21[], gCutscenePicture22[], gCutscenePicture23[];
 
-extern const struct cutscene_page *const gStaticData_0816D1C8[11];
-extern const struct cutscene_slides gStaticData_0816D1F4[11];
+extern const struct cutscene_page *const gCutsceneTextEnglish[11];
+extern const struct cutscene_slides gCutscenes[11];
 extern const struct cutscene_page gCutscene01English[4];
 extern const struct cutscene_page gCutscene02English[9];
 extern const struct cutscene_page gCutscene03English[1];
@@ -441,7 +441,7 @@ extern const u8 gCutscene10DutchPage5Text[];
 extern const u8 *const gCutscene10DutchPage5[1];
 
 /* The pages of each cutscene, per language. */
-const struct cutscene_page *const gStaticData_0816D1C8[11] = {
+const struct cutscene_page *const gCutsceneTextEnglish[11] = {
     gCutscene00English,
     gCutscene01English,
     gCutscene02English,
@@ -455,8 +455,8 @@ const struct cutscene_page *const gStaticData_0816D1C8[11] = {
     gCutscene10English,
 };
 
-/* The slides of each cutscene (sub_8022468). */
-const struct cutscene_slides gStaticData_0816D1F4[11] = {
+/* The slides of each cutscene (PlayCutscene). */
+const struct cutscene_slides gCutscenes[11] = {
     { gCutscene00Slides, ARRAY_COUNT(gCutscene00Slides) },
     { gCutscene01Slides, ARRAY_COUNT(gCutscene01Slides) },
     { gCutscene02Slides, ARRAY_COUNT(gCutscene02Slides) },

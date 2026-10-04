@@ -9,14 +9,14 @@ the work done against that list.
 ## What this cluster turned out to be
 
 More slots of the unified ~92-slot function-pointer dispatch array
-docs/rom_map.md documents (`gStaticData_0816C6A4`), plus one landmark
+docs/rom_map.md documents (`gEntitySpawnFuncs`), plus one landmark
 function at the very end:
 
 - **`sub_8021BFC`/`sub_8021C50`-`sub_8021CE0`/`sub_8021D04`**: more
   instances of the already-documented `sub_800FF0C` entity-constructor
   trampoline family, feeding the 93-entry `gStaticData_087Exxx` family
   with type constants `1`-`7`. `sub_8021D04` additionally indexes a
-  small per-record flags byte via `gUnknown_030012B4`'s own table (same
+  small per-record flags byte via `gEntityFlags`'s own table (same
   shape as `sub_80187FC`'s table read in `actor_part27c.c`) and folds
   two of its bits into the constructed object's `+0x28` bitfield.
 - **`sub_8021D80`/`sub_8021DFC`/`sub_8021E78`/`sub_8021EF4`/
@@ -34,10 +34,10 @@ function at the very end:
   `param1*12` runtime-indexed access to the same array).
 - **`sub_802209C`**: a plain state-write slot - packs two args into a
   stack `{x, y}` pair and calls `sub_8023500` (already matched in
-  `game_loop10.c`), storing them into `gUnknown_030012C0->0x1c0`/
+  `game_loop10.c`), storing them into `gLevelState->0x1c0`/
   `->0x1c4`.
 - **`sub_8022158`**: conditionally calls `sub_801173C` (the
-  achievement/unlock-icon family spawner) when `gUnknown_030012C0+0x8c`
+  achievement/unlock-icon family spawner) when `gLevelState+0x8c`
   is clear.
 - **`nullsub_22`/`nullsub_23`**: empty stubs, the same "shared no-op
   fallback" convention already documented for the 42-slot action table
@@ -48,13 +48,13 @@ function at the very end:
 - **`sub_80221A4`/`sub_80221D4`**: write a Q8.8 `{x, y}` position
   straight into `gUnknown_030012D8` (the hot camera/viewport struct) -
   leaf functions, no `push`/`pop` at all.
-- **`sub_80221F0`/`sub_8022208`**: the `{table_base, count}` descriptor
+- **`DestroyEntitySpawner`/`CreateEntitySpawner`**: the `{table_base, count}` descriptor
   constructor/consumer pair docs/rom_map.md's "local vtable copy"
   investigation resolved as generic (nothing table-specific) - allocate
   an 8-byte object, zero it via `sub_8025D6C`, and hand it
-  `{&gStaticData_0816C6A4, 0x5c}` via `sub_8025D4C`.
+  `{&gEntitySpawnFuncs, 0x5c}` via `sub_8025D4C`.
 - **`sub_8022230`** (292 B, the "origin point" - docs/rom_map.md,
-  "Found the origin point"): the function `sub_8023738` calls once at
+  "Found the origin point"): the function `GetLevelState` calls once at
   the top of the game loop to construct essentially every hot IWRAM
   global this whole ROM region references - `gUnknown_030012BC` (an
   8340-byte `AudioContext` allocation, `sub_80016DC`+`sub_8001C2C`),
@@ -119,7 +119,7 @@ fns): the `sub_800FF0C` trampoline family, types `1`-`7`.
   immediate, one off from the ROM's actual two's-complement value.
 - **`sub_8022230`'s five "void helper leaves the pointer in r0" calls**
   (`nullsub_2`, `nullsub_1`, `sub_8006FB4`, `sub_80007DC`,
-  `sub_8025A5C`, and `sub_8022208`'s own `sub_8025D6C`): each is called
+  `sub_8025A5C`, and `CreateEntitySpawner`'s own `sub_8025D6C`): each is called
   immediately after an allocation, and the ROM leaves the fresh
   pointer in `r0` across the call (valid only because each real callee
   never writes r0) instead of reloading/saving it - reproduced with the
@@ -157,7 +157,7 @@ fns): the `sub_800FF0C` trampoline family, types `1`-`7`.
   correct and the bit-test/mask-write tail matches the ROM
   byte-for-byte, but the middle "resolve the per-record flags byte"
   section doesn't: the ROM keeps the record's base object
-  (`S = *(void **)gUnknown_030012B4`) live in `r1` across both of its
+  (`S = *(void **)gEntityFlags`) live in `r1` across both of its
   field reads and only copies the final resolved address into a third
   register (`adds r3, r0, #0`) right at the end, whereas this compiler
   resolves the same value one register (and 4 bytes) short no matter
@@ -221,7 +221,7 @@ crashbandicootxs.map && make compare` - `crashbandicootxs.gba: La suma
 coincide`.
 
 This doesn't yet extend to `sub_801E990`'s own copy of this same
-`gUnknown_030012B4 -> *rec -> {+8, +0xc}` resolution shape
+`gEntityFlags -> *rec -> {+8, +0xc}` resolution shape
 (`src/graphics/graphics_loading_1e990.c`, issue #30) - that function's
 residual is a different register-choice/mask-derivation gap (`byte` in
 r0, a `movs r0,#1`/`subs r0,#0x12` mask derivation rather than a

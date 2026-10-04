@@ -1,12 +1,12 @@
 #include "core.h"
 #include "bg_scroll_layer.h"
 
-extern void sub_8024DAC(void *self, s32 bgIndex);
-extern u8 gStaticData_087E4C14[];
+extern void InitBgLayerBase(void *self, s32 bgIndex);
+extern u8 gBgLayerVtable[];
 
 /* Initializes a BG-scroll-layer object (see game_loop6.c's viewport/
  * parallax-scroll-layer family) for hardware BG `bgIndex`: caches
- * `gStaticData_087E4C14` as its method table, screen block
+ * `gBgLayerVtable` as its method table, screen block
  * `bgIndex + 0x1c`'s address as `screen`, `&REG_BGnCNT` as `cntReg`,
  * `&REG_BGnHOFS` as `ofsReg`, and the BGnCNT shadow `cnt` (screen base
  * `(bgIndex + 0x1c) & 0x1f`, char base 2, priority 0).
@@ -24,7 +24,7 @@ extern u8 gStaticData_087E4C14[];
  * count/order with the other two) is closed by materializing all
  * three loads too, against one explicit trailing pool this function
  * owns outright. */
-void *sub_8025D74(void *self, s32 bgIndex)
+void *InitBgLayer(void *self, s32 bgIndex)
 {
     register struct bg_scroll_layer *s asm("r5") = self;
     register s32 idx asm("r4") = bgIndex;
@@ -32,7 +32,7 @@ void *sub_8025D74(void *self, s32 bgIndex)
     register u8 *addr34 asm("r2");
     register u8 *addr35 asm("r3");
 
-    sub_8024DAC(self, bgIndex);
+    InitBgLayerBase(self, bgIndex);
 
     { register void *gsPtr asm("r0");
       asm volatile("ldr %0, 90f" : "=r"(gsPtr));
@@ -90,7 +90,7 @@ void *sub_8025D74(void *self, s32 bgIndex)
 }
 #define ASM_STR2(x) #x
 #define ASM_STR(x) ASM_STR2(x)
-asm(".align 2, 0\n90: .word gStaticData_087E4C14\n.word " ASM_STR(REG_ADDR_BG0CNT)
+asm(".align 2, 0\n90: .word gBgLayerVtable\n.word " ASM_STR(REG_ADDR_BG0CNT)
     "\n.word " ASM_STR(REG_ADDR_BG0HOFS));
 
 extern void sub_803AD80(void *arg0, s32 arg1, void *fn);
@@ -98,11 +98,11 @@ extern void sub_803AD80(void *arg0, s32 arg1, void *fn);
 /* Grows `self+0x3c` down to `lo` and `self+0x40` up to `hi` one step
  * at a time, firing `self->0x30`'s `+0x30`-offset/`+0x34`-fn trampoline
  * (via `sub_803AD80`, an interworking veneer picked automatically by
- * the compiler for indirect calls - see `sub_8025D28` in
+ * the compiler for indirect calls - see `SpawnEntity` in
  * game_loop14.c) after every step - the streamed-tile-range grower
- * `sub_8025E98` drives for one axis; `sub_8025E2C` is its twin for the
+ * `ScrollBgLayer` drives for one axis; `GrowBgLayerColumns` is its twin for the
  * other axis's `+0x44`/`+0x48` fields. */
-void sub_8025DE8(struct bg_scroll_layer *self, s32 lo, s32 hi)
+void GrowBgLayerRows(struct bg_scroll_layer *self, s32 lo, s32 hi)
 {
     while (self->rowLo > lo) {
         struct bg_layer_vtable *layer;
@@ -136,9 +136,9 @@ void sub_8025DE8(struct bg_scroll_layer *self, s32 lo, s32 hi)
     }
 }
 
-/* Same shape as `sub_8025DE8` above, but grows `self+0x44`/`self+0x48`
+/* Same shape as `GrowBgLayerRows` above, but grows `self+0x44`/`self+0x48`
  * via `self->0x30`'s `+0x38`-offset/`+0x3c`-fn trampoline instead. */
-void sub_8025E2C(struct bg_scroll_layer *self, s32 lo, s32 hi)
+void GrowBgLayerColumns(struct bg_scroll_layer *self, s32 lo, s32 hi)
 {
     while (self->colLo > lo) {
         struct bg_layer_vtable *layer;
@@ -174,10 +174,10 @@ void sub_8025E2C(struct bg_scroll_layer *self, s32 lo, s32 hi)
 
 /* Clamp-to-at-least/at-most pair on `self+0x44`(max with `a`)/
  * `self+0x48`(min with `b`) - the bookkeeping half of the
- * `sub_8025DE8`/`sub_8025E2C` streamed-range growers above (this
+ * `GrowBgLayerRows`/`GrowBgLayerColumns` streamed-range growers above (this
  * variant just widens the recorded extent, without firing any
  * trampoline). */
-void sub_8025E70(struct bg_scroll_layer *self, s32 a, s32 b)
+void ClipBgLayerColumns(struct bg_scroll_layer *self, s32 a, s32 b)
 {
     if (self->colLo < a) {
         self->colLo = a;
@@ -187,8 +187,8 @@ void sub_8025E70(struct bg_scroll_layer *self, s32 a, s32 b)
     }
 }
 
-/* Same shape as `sub_8025E70` above, on `self+0x3c`/`self+0x40`. */
-void sub_8025E84(struct bg_scroll_layer *self, s32 a, s32 b)
+/* Same shape as `ClipBgLayerColumns` above, on `self+0x3c`/`self+0x40`. */
+void ClipBgLayerRows(struct bg_scroll_layer *self, s32 a, s32 b)
 {
     if (self->rowLo < a) {
         self->rowLo = a;

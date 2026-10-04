@@ -69,7 +69,7 @@ struct actor_flag_bits
 
 #define ACTOR_FLAG_BITS(a) ((struct actor_flag_bits *)&(a)->flags)
 
-extern struct level_info *gUnknown_03001308;
+extern struct level_info *gLevelLayers;
 extern void ***gUnknown_030012D0;
 extern void *gUnknown_030012F0;
 
@@ -158,7 +158,7 @@ struct fx_part *sub_8025BAC(void *unused0, s32 anim, s32 tag, s32 x, s32 y, s32 
 
     if (x < 0)
         x = 0;
-    layer = gUnknown_03001308->layer;
+    layer = gLevelLayers->layer;
     /* Compared sign-extended from 24 bits, clamped zero-extended. */
     if (x >= (s32)(layer->width << 8) >> 8)
         x = (layer->width << 8 >> 8) - 1;
@@ -196,7 +196,7 @@ struct fx_part *sub_8025BAC(void *unused0, s32 anim, s32 tag, s32 x, s32 y, s32 
  * Matched (old_agbcc): the three tag bytes are written through a pointer
  * `t`, and the +0x4B zero is an opaque `zero`, so the `movs r0,#0` lands
  * after the +0x49 address instead of being hoisted above it. */
-extern struct level_state14 { u8 unk_00[0x8C]; u8 unk_8C; } *gUnknown_030012C0;
+extern struct level_state14 { u8 unk_00[0x8C]; u8 unk_8C; } *gLevelState;
 extern struct orbit_part *sub_801173C(u16 id, u16 x, u16 y, u16 special);
 extern void sub_801191C(struct orbit_part *self);
 extern void sub_8011870(struct orbit_part *self);
@@ -206,7 +206,7 @@ struct orbit_part *sub_8025CA4(void *unused0, u32 x, u32 y, u32 p3, u32 p4, u32 
     u8 p5 = *(u8 *)&flag5;
     struct orbit_part *part = NULL;
 
-    if (gUnknown_030012C0->unk_8C == 0)
+    if (gLevelState->unk_8C == 0)
     {
         if (p5 || p4 == 0xff)
             part = sub_801173C(0xffff, x, y, 0xffff);
@@ -244,7 +244,7 @@ struct orbit_part *sub_8025CA4(void *unused0, u32 x, u32 y, u32 p3, u32 p4, u32 
  * empty-asm "keep this value live" barrier right before the call. */
 extern void sub_803AD8C(void *a0, u16 a1, u16 a2, u16 a3);
 
-void sub_8025D28(void **table, void *self, u16 *rec)
+void SpawnEntity(void **table, void *self, u16 *rec)
 {
     register void *tablePtr asm("r1") = *table;
     register u16 idx asm("r3") = rec[0];

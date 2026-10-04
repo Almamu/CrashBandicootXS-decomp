@@ -24,7 +24,7 @@ struct listed_actor {
 };
 
 extern void *gUnknown_030012BC;
-extern void *gUnknown_030012C0;
+extern void *gLevelState;
 extern void *gUnknown_03000884;
 
 extern u8 gStaticData_087E4E94[];
@@ -93,7 +93,7 @@ void sub_802C4C8(void *selfArg)
     if (self->animIndex != 0x12) {
         if (sub_802DD9C(self)) {
             PlaySfx(gUnknown_030012BC, 3, 0x100);
-            sub_8022FEC(gUnknown_030012C0);
+            sub_8022FEC(gLevelState);
             self->animIndex = 0x12;
             {
                 register u16 anim asm("r0") = *(u16 *)&self->anims[18].duration;
@@ -132,7 +132,7 @@ void sub_802C540(void *selfArg)
     if (self->animIndex != 0x12 && sub_802A6EC(self)) {
         s32 typeByte;
 
-        sub_8022FEC(gUnknown_030012C0);
+        sub_8022FEC(gLevelState);
         typeByte = **(u8 **)((u8 *)self + 0x30);
 
         if (typeByte == 0x1d) {
@@ -203,7 +203,7 @@ void sub_802C614(void *selfArg)
     if (self->animIndex != 0x12) {
         if (sub_802A6EC(self)) {
             PlaySfx(gUnknown_030012BC, 7, 0x100);
-            sub_8022FEC(gUnknown_030012C0);
+            sub_8022FEC(gLevelState);
             sub_802C0A8(gUnknown_03000884);
             sub_802AAB4(((struct listed_actor *)self)->unk_54);
             self->animIndex = 0x12;
@@ -221,7 +221,7 @@ void sub_802C614(void *selfArg)
 
         if (self->animIndex != 0x12 && sub_802DD9C(self)) {
             PlaySfx(gUnknown_030012BC, 3, 0x100);
-            sub_8022FEC(gUnknown_030012C0);
+            sub_8022FEC(gLevelState);
             self->animIndex = 0x12;
             {
                 register u16 anim asm("r0") = *(u16 *)&self->anims[18].duration;
@@ -271,7 +271,7 @@ void sub_802C6C0(void *selfArg)
 
         if (found) {
             PlaySfx(gUnknown_030012BC, 4, 0x100);
-            sub_8022FEC(gUnknown_030012C0);
+            sub_8022FEC(gLevelState);
             sub_802B730(gUnknown_03000884);
             {
                 register s32 zero2 asm("r2") = 0;
@@ -289,7 +289,7 @@ void sub_802C6C0(void *selfArg)
             }
         } else if (sub_802DD9C(self)) {
             PlaySfx(gUnknown_030012BC, 4, 0x100);
-            sub_8022FEC(gUnknown_030012C0);
+            sub_8022FEC(gLevelState);
             {
                 register s32 zero2 asm("r5") = found;
 

@@ -19,14 +19,14 @@ constant `type` (the 5th, stack-passed argument) and nothing else:
 
 - `src/graphics/graphics_loading_21bfc.c` (GitHub issue #33) - `type`
   `0` through `7`. `type == 0`'s caller (`sub_8021D04`) does extra
-  post-processing: it re-derives the same `gUnknown_030012B4 -> *P ->
+  post-processing: it re-derives the same `gEntityFlags -> *P ->
   {+8 array, +0xc base}` placement-record lookup `sub_800FF0C` itself
   uses internally (indexed by `arg3<<1`), and folds two of the
   record's own flags-byte bits (`0x2`/`0x4`) into the constructed
   object's `+0x28` bitfield *after* `sub_800FF0C` returns - overriding
   the bits `sub_800FF0C`'s own common tail had just cleared.
   `sub_8021BFC` picks `type` `7` or `6` depending on
-  `sub_80232C8(gUnknown_030012C0)`.
+  `sub_80232C8(gLevelState)`.
 - `src/graphics/graphics_loading_21668.c` (GitHub issue #31) - `type`
   `0x12` down to `7` (overlapping `graphics_loading_21bfc.c` at `7`
   through a second, independent trampoline `sub_8021BD8`).
@@ -56,11 +56,11 @@ overrides described below).
    object type, not a mistake in the established `+0xC` convention).
    Stores `arg0` at `self+8`.
 2. **`type == 9` early special-case**: if `arg0 != 0xFFFF` and
-   `sub_802599C(*gUnknown_030012B4, arg0)` (the same "is this placement
+   `sub_802599C(*gEntityFlags, arg0)` (the same "is this placement
    record slot occupied/confirmed" check used throughout) is true,
    `type` is forced to `0`.
-3. **Resource-pressure demotion**: unless `gUnknown_030012C0+0x8c` is
-   set, or `sub_80232E0(gUnknown_030012C0) >= sub_8023128(gUnknown_030012C0)`
+3. **Resource-pressure demotion**: unless `gLevelState+0x8c` is
+   set, or `sub_80232E0(gLevelState) >= sub_8023128(gLevelState)`
    (both take the same argument - read as "how many of this entity
    kind currently exist" vs. some capacity/threshold, i.e. the pool is
    already at or over capacity), `type == 0xb` or `type == 0xf` gets
@@ -83,7 +83,7 @@ overrides described below).
    is set, or the record's own flags byte has bit `0x20` set, sets a
    second local flag (`flagged`) and computes `self+0x54` from the
    record's `+4` halfword (`0x15` if it equals `0x1b`, else the raw
-   signed value) - then, if `gUnknown_030012C0+0x8c` is set, overwrites
+   signed value) - then, if `gLevelState+0x8c` is set, overwrites
    `type` with `self->0x54 - 0x15`.
 7. **Second jump table** (index `type`, `0`-`0x12`) - see the table
    below.

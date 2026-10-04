@@ -3,7 +3,7 @@
 
 /* GitHub issue #25, ROM 0x0801A878-0x0801AB34: sub_801A878, the level
  * object spawner (`new` + inlined constructor sub_801B2E4, spawn-record
- * lookup through the level header at *gUnknown_030012B4, per-type mover
+ * lookup through the level header at *gEntityFlags, per-type mover
  * attachment). See include/gobj_1a794.h and
  * docs/matching/issue-25-level-objects.md.
  *
@@ -28,7 +28,7 @@ struct gobj *sub_801A878(u16 id, u16 x, u16 y, u16 index, s32 kind)
     obj->x = x << 8;
     obj->y = y << 8;
     {
-        u8 *lvl = *(u8 **)gUnknown_030012B4;
+        u8 *lvl = *(u8 **)gEntityFlags;
         u16 *offsets = *(u16 **)(lvl + 8);
 
         rec = (struct spawn_rec *)(*(u8 **)(lvl + 0xC) + offsets[index]);
@@ -107,7 +107,7 @@ struct gobj *sub_801A878(u16 id, u16 x, u16 y, u16 index, s32 kind)
         break;
     case 6:
         obj->type = 6;
-        if (sub_80233B4(gUnknown_030012C0) != 1)
+        if (sub_80233B4(gLevelState) != 1)
         {
             void *mem = sub_8026EDC(0x38);
 

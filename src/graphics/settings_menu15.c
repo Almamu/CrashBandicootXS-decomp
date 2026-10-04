@@ -142,7 +142,7 @@ s32 sub_8004D74(void)
 extern void *sub_801E644(void *buf, s32 arg1, s32 arg2, s32 arg3, s32 arg4);
 extern void LoadGraphicsPackage(void *buf, void *asset);
 extern s32 sub_801E640(void *buf);
-extern void *gUnknown_030012C0;
+extern void *gLevelState;
 extern void ***gUnknown_030012D0;
 extern void *sub_80236EC(void *arg0);
 extern void sub_800599C(struct pause_screen_results *self);
@@ -157,7 +157,7 @@ extern u8 gStaticData_0816B298[];
  * `struct pause_screen_results`) gets `sub_801E644` init, a local
  * BLDCNT/BLDY/DISPCNT setup (`field_c8`/`field_cc`/`field_d0`, the same
  * fields `sub_8006250` applies), `LoadGraphicsPackage`, a row-stats
- * handle from `gUnknown_030012C0`, then hands off to `sub_800599C` to
+ * handle from `gLevelState`, then hands off to `sub_800599C` to
  * build the results sub-widgets. Afterwards builds one more icon (the
  * row-cursor/highlight icon at `field_c0`) directly, seeds the settings-
  * row bookkeeping fields (`field_14`/`field_18`/`field_1c`/`field_20`/
@@ -234,7 +234,7 @@ struct pause_screen_results *sub_8004EC0(struct pause_screen_results *self)
         }
 
         LoadGraphicsPackage(self, gStaticData_0816B284);
-        self->field_10 = sub_80236EC(gUnknown_030012C0);
+        self->field_10 = sub_80236EC(gLevelState);
         sub_800599C(self);
 
         {
@@ -274,7 +274,7 @@ struct pause_screen_results *sub_8004EC0(struct pause_screen_results *self)
     self->field_18 = zero;
     {
         s32 v;
-        if (*((u8 *)gUnknown_030012C0 + 0x8c) != 0) {
+        if (*((u8 *)gLevelState + 0x8c) != 0) {
             v = 5;
             asm volatile(".pool");
         } else {

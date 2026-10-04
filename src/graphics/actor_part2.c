@@ -162,8 +162,8 @@ extern u8 sub_8001688(void *buf1, void *buf2);
 extern void sub_803AD88(void *arg0, s32 arg1, s32 arg2, s32 arg3);
 extern void *sub_8025BAC(void *pool, s32 arg1, s32 kind, s32 x, s32 y, s32 arg5);
 extern struct actor *gUnknown_030012D8;
-extern void *gUnknown_030012E4;
-extern void *gUnknown_030012B4;
+extern void *gEntitySpawner;
+extern void *gEntityFlags;
 
 /* `part` (a `struct actor`, same layout used throughout this ROM
  * region) collides with the player (`gUnknown_030012D8`, tested via
@@ -171,7 +171,7 @@ extern void *gUnknown_030012B4;
  * at the player's position (the `table+0x68` offset/dead-read idiom
  * matches sub_8007048's `sub_803AD88` call exactly, just keyed off
  * `part->field_0A` instead of `self->field_0A`) and marks itself
- * "collected" (`gUnknown_030012B4` bitmap, same convention as
+ * "collected" (`gEntityFlags` bitmap, same convention as
  * sub_80072D8). `part->field_0A - 0x1b` (0-7) then selects a "kind" to
  * spawn via `sub_8025BAC` at `part`'s own position - case 1 and any
  * out-of-range value spawn nothing. If something spawned, its
@@ -219,7 +219,7 @@ struct collect_part {
 
 static inline struct collect_part *SpawnPickup(s32 kind, s32 x, s32 y)
 {
-    return sub_8025BAC(gUnknown_030012E4, 0x2b, kind, x, y, 0);
+    return sub_8025BAC(gEntitySpawner, 0x2b, kind, x, y, 0);
 }
 
 s32 sub_8007DBC(struct collect_part *part)
@@ -244,7 +244,7 @@ s32 sub_8007DBC(struct collect_part *part)
                 COLLECT_FLAGS(part) |= one;
                 if (part->id != 0xFFFF) do {
                     s32 id = part->id;
-                    u8 *base = gUnknown_030012B4;
+                    u8 *base = gEntityFlags;
                     s32 word = id / 32;
                     s32 off = word * 4;
                     u32 *slot = (u32 *)(base + 0x108);

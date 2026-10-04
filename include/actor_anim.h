@@ -123,7 +123,7 @@ struct sub_effect_record {
     s32 field_00;   // 0x00 - selection threshold value (record 0: unused as a threshold, see above)
     s32 field_04;   // 0x04 - record 0 only: the table's real entry count
     u8 variantA;    // 0x08 - "kind"/kind byte, gated by category type in sub_802968C
-    u8 variantB;    // 0x09 - alternate kind byte, selected by sub_802A570 when gUnknown_030012C0+0x8c is set
+    u8 variantB;    // 0x09 - alternate kind byte, selected by sub_802A570 when gLevelState+0x8c is set
     u8 variantC;    // 0x0a - alternate kind byte, selected by sub_802A570 when gUnknown_03001414 is set
     u8 pad_0b;
     s32 offsetX;    // 0x0c - Q8.8 after sub_802A558's <<8

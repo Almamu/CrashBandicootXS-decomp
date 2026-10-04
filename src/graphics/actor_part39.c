@@ -134,13 +134,13 @@ void sub_8011A84(struct actor *self, u8 value)
 }
 
 extern void sub_8008364(struct actor *part);
-extern void *gUnknown_030012B4;
+extern void *gEntityFlags;
 
 /* Distance-gate: if the player (`gUnknown_030012D8`) is within 0x180
  * (384 px) of `self` on both axes, calls `sub_8008364` (already
  * matched in `actor_part5.c`) on `self`. Otherwise sets `self->flags`
  * bit 0 and, unless `self->field_08 == 0xFFFF`, marks its bit in the
- * same `gUnknown_030012B4+0x108` bitmap `actor_part2.c` already
+ * same `gEntityFlags+0x108` bitmap `actor_part2.c` already
  * writes - identical idiom, reused verbatim including the
  * register-pinned `>> 5` (see that file's note on why a plain C shift
  * doesn't reproduce the ROM's exact instruction here). */
@@ -187,7 +187,7 @@ outOfRange:
 
         if (field08a != ffff) {
             register u16 field08b asm("r3") = *(volatile u16 *)&self->field_08;
-            void *base = gUnknown_030012B4;
+            void *base = gEntityFlags;
             register s32 word asm("r0");
             s32 wordOffset;
 

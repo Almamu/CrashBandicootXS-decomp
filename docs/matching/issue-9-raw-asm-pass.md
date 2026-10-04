@@ -22,12 +22,12 @@ under old_agbcc on the first compile, and three changes closed it:
 
 - For the hit cases, the mode-0 branch goes in the `else`. The ROM lays it
   out after the mode-1/2 body and reaches it with `beq`.
-- The ROM reloads `gUnknown_030012C0->mode` after the listener call and
+- The ROM reloads `gLevelState->mode` after the listener call and
   never uses it. Only a volatile read reproduces that load (commented in
-  the source). With it in place, `&gUnknown_030012C0` lands in `sb`, as
+  the source). With it in place, `&gLevelState` lands in `sb`, as
   in the ROM.
 - The star-burst position (`child->x >> 8`, `child->y >> 8`, mirror bit)
-  goes through locals, so the `gUnknown_030012E4` pool load comes after
+  goes through locals, so the `gEntitySpawner` pool load comes after
   them.
 
 It matches only under old_agbcc (agbcc is 218 halfwords off), so

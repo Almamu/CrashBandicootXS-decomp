@@ -13,7 +13,7 @@
  * entry and `x`.
  *
  * Before the loop, gates the whole call on a `sub_8026628` proximity/
- * position probe against the player (`gUnknown_03001308`): builds an
+ * position probe against the player (`gLevelLayers`): builds an
  * integer `{x, y}` position from `self`'s own Q8 position plus the
  * target action `x`'s own keyframe record's box `offY` (added in Q8
  * space before truncating), passes `self`'s horizontal mirror bit as a
@@ -41,7 +41,7 @@ struct pos {
 };
 
 extern struct actor_list *gUnknown_0300130C;
-extern void *gUnknown_03001308;
+extern void *gLevelLayers;
 extern s32 sub_803AD7C(void *addr, void *fn);
 extern u8 sub_800CD00(void *entry, s32 x);
 extern u8 sub_8026628(void *player, s32 dir, struct pos *pos, s32 h, s32 *outY);
@@ -69,7 +69,7 @@ u8 sub_800AAEC(struct box_part *self, s32 x)
     pos.y = pos.y + (box->offY << 8);
     pos.x >>= 8;
     pos.y >>= 8;
-    if (sub_8026628(gUnknown_03001308, dir, &pos, h, &origY))
+    if (sub_8026628(gLevelLayers, dir, &pos, h, &origY))
         return 0;
 
     i = 0;

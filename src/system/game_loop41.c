@@ -5,7 +5,7 @@
  * 8022d50-80255d4.md` left for a follow-up pass (the first,
  * `sub_8022D50`, is `game_loop40.c`, now plain C).
  *
- * `self` is `*gUnknown_030012B4` (the same collision-bitmap base
+ * `self` is `*gEntityFlags` (the same collision-bitmap base
  * `sub_8025944`/`sub_8025968`/`sub_802599C`, game_loop12.c, and
  * `sub_8025A0C`, game_loop13.c, already operate on).
  *
@@ -24,10 +24,10 @@
  * `{count:u16 @2, items:ptr @4}` 8-byte group records, each holding
  * `{tableIdx:u16, p1:u16, p2:u16, p3:u16}` 8-byte item records; for
  * each item not already flagged in the `self+8` bit-grid
- * (`sub_8025968`), `sub_8025D28` (the table-indexed interworking-
+ * (`sub_8025968`), `SpawnEntity` (the table-indexed interworking-
  * trampoline dispatcher, game_loop14.c) fires with a running,
  * never-reset-per-group counter as its own `self` argument, indexing
- * `gUnknown_030012E4`'s table.
+ * `gEntitySpawner`'s table.
  *
  * Second half (skipped when `links` is NULL): each actor in
  * `gUnknown_0300130C` whose id is a link's `from` is chained
@@ -141,18 +141,18 @@ struct lk_actor_list
     struct lk_actor **items;        /* +0x08 */
 };
 
-extern void *gUnknown_030012E4;
+extern void *gEntitySpawner;
 extern struct lk_actor_list *gUnknown_0300130C;
 extern void sub_803A94C(void *src, void *dst, s32 control);
 extern u8 sub_8025968(struct lk_self *self, s32 n);
-extern void sub_8025D28(void *table, s32 n, struct lk_item *item);
+extern void SpawnEntity(void *table, s32 n, struct lk_item *item);
 extern void sub_8010714(struct lk_actor *a, struct lk_actor *b);
 extern void sub_8010710(struct lk_actor *a, struct lk_actor *b);
 extern struct lk_actor *sub_801070C(struct lk_actor *a);
 extern void sub_8007398(struct lk_actor *a, s32 x, s32 y);
 extern u8 *sub_803AD7C(void *self, void *fn);
 
-void sub_80255D4(struct lk_self *self, struct lk_list *list, struct lk_links *links, s32 posArg)
+void SpawnRoomEntities(struct lk_self *self, struct lk_list *list, struct lk_links *links, s32 posArg)
 {
     s32 i;
     s32 counter;
@@ -180,7 +180,7 @@ void sub_80255D4(struct lk_self *self, struct lk_list *list, struct lk_links *li
         for (k = 0; k < group->count; k++)
         {
             if (!sub_8025968(self, counter))
-                sub_8025D28(gUnknown_030012E4, counter, &group->items[k]);
+                SpawnEntity(gEntitySpawner, counter, &group->items[k]);
             counter++;
         }
     }

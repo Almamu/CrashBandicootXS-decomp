@@ -66,9 +66,9 @@ extern void *gUnknown_03001304;
 extern struct keys gUnknown_030007E0;
 extern u32 gUnknown_0300082C;
 extern void *gUnknown_030012BC;
-extern void *gUnknown_030012C0;
+extern void *gLevelState;
 extern void *gUnknown_030012B8;
-extern u8 *gUnknown_030012B4;
+extern u8 *gEntityFlags;
 extern struct pctrl_target *gUnknown_030012D8;
 extern struct pmf gStaticData_0816C250[];
 struct level_anim
@@ -83,7 +83,7 @@ extern u8 gStaticData_087E428C[];
 
 extern u8 sub_8000760(void *arg);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
-extern void sub_8023234(void *arg0);
+extern void LoseLife(void *arg0);
 extern void sub_8006D08(void *cache, s32 slot, s32 recordId);
 extern void sub_80087C0(struct pctrl_target *t);
 extern void sub_80087B4(struct pctrl_target *t);
@@ -268,7 +268,7 @@ void sub_80161EC(struct player_ctrl *self, s32 anim)
     self->target->flag7 = 0;
     self->target->flag6 = 0;
     self->target->unk_104 = 1;
-    sub_8023234(gUnknown_030012C0);
+    LoseLife(gLevelState);
     sub_8006D08(gUnknown_030012B8, self->target->slot,
                 self->target->anim->records[self->target->tag].unk_14);
 }
@@ -334,7 +334,7 @@ static inline void SetPlayerRecord(s32 a, s32 b, s32 c)
     p->unk_50 = c;
 }
 
-/* Sets bit `id` of the gUnknown_030012B4+0x108 bitmap. Kept a
+/* Sets bit `id` of the gEntityFlags+0x108 bitmap. Kept a
  * do/while(0) macro: its loop notes stop CSE from reusing the id already
  * loaded for the caller's 0xFFFF test, so the ROM's reload comes out
  * naturally, and the word index is gcc's signed division of it. */
@@ -342,7 +342,7 @@ static inline void SetPlayerRecord(s32 a, s32 b, s32 c)
     do                                                                         \
     {                                                                          \
         s32 _id = (idExpr);                                                    \
-        u8 *_base = gUnknown_030012B4;                                         \
+        u8 *_base = gEntityFlags;                                         \
         s32 _word = _id / 32;                                                  \
         s32 _off = _word * 4;                                                  \
         u32 *_slot = (u32 *)(_base + 0x108);                                   \

@@ -9,7 +9,7 @@
 struct AudioContext;
 
 /* Same `SoundChannelItem`/`SoundChannelList` shape game_loop37.c's
- * sub_8024590/sub_8024640/sub_8024708 operate on - kept as this file's
+ * BeginSlide/RunSlideshow/ShowSlidePicture operate on - kept as this file's
  * own local copy (only the three fields this function reads), per this
  * project's established per-translation-unit convention for structs
  * shared across non-adjacent files. */
@@ -34,13 +34,13 @@ extern void sub_8001AC4(struct AudioContext *self, u32 value);
 extern void sub_800132C(u8 flags, s32 frameDelay, u8 sync);
 extern void StopSfx(struct AudioContext *self, u32 id);
 
-/* Tail half of sub_8024640's per-item body (game_loop37.c) - duck-out
+/* Tail half of RunSlideshow's per-item body (game_loop37.c) - duck-out
  * (`field_11`), fade-start (`field_0c`), and re-arm (`field_12`/
  * `field_18`) - reused standalone against a caller-supplied index. Each
  * of the three checks re-reads `self->items[idx]` fresh rather than
- * sharing one cached pointer across all three, matching sub_8024640's
+ * sharing one cached pointer across all three, matching RunSlideshow's
  * own inlined copy of this same body. */
-void sub_8024790(struct SoundChannelList *self0, s32 idx)
+void EndSlide(struct SoundChannelList *self0, s32 idx)
 {
     register struct SoundChannelList *self asm("r5") = self0;
 

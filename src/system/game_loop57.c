@@ -13,13 +13,13 @@
  *
  * Two systems share this address range:
  *
- * - `sub_8024810`/`sub_8024820`/`sub_802493C`/`sub_8024948` extend
+ * - `InitSlideshow`/`RunCutscenePlayer`/`DestroyCutscenePlayer`/`InitCutscenePlayer` extend
  *   `struct SoundChannelList` (game_loop37.c/game_loop38.c) with more
- *   fields: `sub_8024804` (already matched, game_loop20.c) sets
- *   `+0xc` (the VRAM-bank toggle) to 1 - `sub_8024948` extends that same
+ *   fields: `ResetSlideshow` (already matched, game_loop20.c) sets
+ *   `+0xc` (the VRAM-bank toggle) to 1 - `InitCutscenePlayer` extends that same
  *   constructor to also zero two new fields, `+0x10`/`+0x14`.
- *   `sub_8024820` is a second per-frame driver loop over the same
- *   `+0/+4` items/count pair `sub_8024640` (game_loop37.c) already
+ *   `RunCutscenePlayer` is a second per-frame driver loop over the same
+ *   `+0/+4` items/count pair `RunSlideshow` (game_loop37.c) already
  *   drives, but interleaved with an explicit OAM-shadow-buffer flush
  *   (`sub_8006A90`/`sub_8006A48`/`sub_80006A8`/`sub_8006AAC` on
  *   `gUnknown_03001300`, the same "HUD-icon-plus-number renderer" OAM
@@ -29,40 +29,40 @@
  *   via `sub_8000EE4` (text_layout.c) against an `icon_manager *` at
  *   `+0x14` and a 2-word "box" at `+0x18`/`+0x1c`, continuing to the
  *   next string in the current record while a held-input mask (9,
- *   versus `sub_8024640`'s 8) stays set. `+0x24` feeds `sub_8037E54`
+ *   versus `RunSlideshow`'s 8) stays set. `+0x24` feeds `sub_8037E54`
  *   (value/divisor) to compute the per-call text-wrap `limit`.
- *   `sub_802493C` is a plain two-argument forwarding trampoline to
- *   `sub_80247EC` (game_loop20.c).
+ *   `DestroyCutscenePlayer` is a plain two-argument forwarding trampoline to
+ *   `DestroySlideshow` (game_loop20.c).
  *
- * - `sub_8024960` through `sub_8024E24` are the "visual scrolling
+ * - `DecodeLayerChunk` through `sub_8024E24` are the "visual scrolling
  *   background streamer" docs/rom_map.md names: a circular 4x4-block
  *   (64 halfword columns x 32 rows, 0x1000 bytes total) ring-buffer
  *   tilemap fed by the same custom RLE/delta token-stream decoder
- *   (`sub_8024960`) the terrain-tile cache's `sub_8025334`
+ *   (`DecodeLayerChunk`) the terrain-tile cache's `DecodeCollisionChunk`
  *   (game_loop3.c) also uses, just writing into a 2D buffer (row
- *   stride 64 halfwords) instead of a flat one. `sub_8024AA0` is the
+ *   stride 64 halfwords) instead of a flat one. `ScrollBgStreamer` is the
  *   per-frame driver: it right-shifts the world position by 7/6 (128/64
  *   px tile granularity), and on each axis the camera crosses a tile
- *   boundary, streams in exactly the newly-exposed row (`sub_8024BAC`)
- *   or column (`sub_8024C08`) via `sub_8024960`, while a mod-4
+ *   boundary, streams in exactly the newly-exposed row (`StreamBgRow`)
+ *   or column (`StreamBgColumn`) via `DecodeLayerChunk`, while a mod-4
  *   "sub-block" accumulator (`+0x14`/`+0x15`) tracks which of the ring
- *   buffer's 4 blocks is now the logical edge. `sub_8024C64` is the
+ *   buffer's 4 blocks is now the logical edge. `FillBgStreamer` is the
  *   "level load" half - seeds the ring buffer's *entire* initial
- *   contents the same way, from a fresh camera position. `sub_8024B18`/
- *   `sub_8024B48`/`sub_8024B78` convert a world pixel position into the
- *   ring buffer's wrapped (col, row) address; `sub_8024B78` combines
+ *   contents the same way, from a fresh camera position. `GetBgStreamerColumn`/
+ *   `GetBgStreamerRow`/`GetBgStreamerCell` convert a world pixel position into the
+ *   ring buffer's wrapped (col, row) address; `GetBgStreamerCell` combines
  *   both and returns the decoded halfword value directly.
- *   `sub_8024CF0`/`sub_8024D0C`/`sub_8024D38`/`sub_8024D58`/
- *   `sub_8024D5C`/`sub_8024D60`/`sub_8024D6C`/`sub_8024D74`/
- *   `sub_8024DAC`/`sub_8024DCC`/`sub_8024DE0`/`sub_8024DFC`/
+ *   `SetBgStreamerSource`/`DestroyBgStreamer`/`InitBgStreamer`/`sub_8024D58`/
+ *   `sub_8024D5C`/`sub_8024D60`/`sub_8024D6C`/`DestroyBgLayerBase`/
+ *   `InitBgLayerBase`/`sub_8024DCC`/`sub_8024DE0`/`ScaleBgLayerScroll`/
  *   `sub_8024E24` round out the streamer object's own construction
  *   (allocates the 0x1000-byte ring buffer, wires up two
  *   `sub_803AD80`-style interworking-trampoline tables -
- *   `gStaticData_087E4BDC`/`gStaticData_087E4BEC` - for notifying a
+ *   `gBgStreamerVtable`/`gBgLayerBaseVtable` - for notifying a
  *   parent object of size/position changes), plain position/clamp
  *   accessors, and the Q8 scale/accumulate step
- *   (`sub_8024DFC`/`sub_8024E24`) game_loop3.c's `sub_8024E68`/
- *   `sub_8024E90` already call into.
+ *   (`ScaleBgLayerScroll`/`sub_8024E24`) game_loop3.c's `ScrollBgLayerBase`/
+ *   `ResetBgLayerBase` already call into.
  *
  * The streamer functions use `struct bg_streamer` below, the layer
  * functions `struct bg_scroll_layer` (include/bg_scroll_layer.h). Built
@@ -77,15 +77,15 @@ struct stream_source
     u8 unk_08[0xE];
     u16 width;                  // 0x16 - in tiles
     u16 height;                 // 0x18
-    u16 widthTiles;             // 0x1A - 8px tiles, cached by sub_8024CF0
+    u16 widthTiles;             // 0x1A - 8px tiles, cached by SetBgStreamerSource
     u16 heightTiles;            // 0x1C
 };
 
-/* The streamer's method table (gStaticData_087E4BDC). */
+/* The streamer's method table (gBgStreamerVtable). */
 struct streamer_vtable
 {
     u8 unk_00[8];
-    struct bg_layer_method destroy; // 0x08 - called with 3 by sub_8024D74
+    struct bg_layer_method destroy; // 0x08 - called with 3 by DestroyBgLayerBase
 };
 
 /* The ring-buffer background streamer (see this file's header comment). */
@@ -104,20 +104,20 @@ struct bg_streamer
     struct streamer_vtable *vtable; // 0x20
 };
 
-extern void sub_8024804(void *self);
-extern void sub_80247EC(void *self, s32 flags);
+extern void ResetSlideshow(void *self);
+extern void DestroySlideshow(void *self, s32 flags);
 
-/* Trivial wrapper: runs `sub_8024804`'s reset, then returns `self`
+/* Trivial wrapper: runs `ResetSlideshow`'s reset, then returns `self`
  * unchanged (a "chained constructor" idiom this project sees a lot of -
- * see e.g. `sub_8024D38` below for another instance). */
-void *sub_8024810(void *self)
+ * see e.g. `InitBgStreamer` below for another instance). */
+void *InitSlideshow(void *self)
 {
-    sub_8024804(self);
+    ResetSlideshow(self);
     return self;
 }
 
 /* Per-frame driver loop over `self`'s `+0/+4` item list (the same
- * `struct SoundChannelList` shape `sub_8024640` (game_loop37.c) drives),
+ * `struct SoundChannelList` shape `RunSlideshow` (game_loop37.c) drives),
  * interleaved with an explicit OAM-shadow-buffer flush and a nested
  * text-paging walk through a second per-item record array at `+0x10`.
  * See this file's header comment for the full shape.
@@ -162,10 +162,10 @@ struct pager
 
 extern void *gUnknown_03001300;
 extern s32 sub_8037E54(s32 value, s32 divisor);
-extern void sub_8024708(struct pager *self, s32 idx);
-extern void sub_8024590(struct pager *self, s32 idx);
-extern void sub_8024790(struct pager *self, s32 idx);
-extern s32 sub_80246D8(struct pager *self, s32 startIdx, u8 condFlag);
+extern void ShowSlidePicture(struct pager *self, s32 idx);
+extern void BeginSlide(struct pager *self, s32 idx);
+extern void EndSlide(struct pager *self, s32 idx);
+extern s32 SkipSlides(struct pager *self, s32 startIdx, u8 condFlag);
 extern void sub_8006A90(void *oam);
 extern void sub_8006A48(void *oam);
 extern void sub_8006AAC(void *oam);
@@ -173,7 +173,7 @@ extern void sub_80006A8(void);
 extern s32 sub_80010E0(s32 count, u8 checkButtons, s32 mask);
 extern s32 sub_8000EE4(u8 *text, void *target, s32 *box, s32 limit, s32 mode);
 
-void sub_8024820(struct pager *self)
+void RunCutscenePlayer(struct pager *self)
 {
     void **oamp = &gUnknown_03001300;
     s32 limit;
@@ -190,12 +190,12 @@ void sub_8024820(struct pager *self)
     {
         u8 res = 1;
 
-        sub_8024708(self, i);
+        ShowSlidePicture(self, i);
         sub_8006A90(*oamp);
         sub_8006A48(*oamp);
         sub_80006A8();
         sub_8006AAC(*oamp);
-        sub_8024590(self, i);
+        BeginSlide(self, i);
         if (self->texts[i].count == 0)
         {
             res = sub_80010E0(self->items[i]->count, self->items[i]->buttons, 9);
@@ -216,8 +216,8 @@ void sub_8024820(struct pager *self)
                 }
             }
         }
-        sub_8024790(self, i);
-        i = sub_80246D8(self, i, res);
+        EndSlide(self, i);
+        i = SkipSlides(self, i, res);
     }
 }
 /* Trailing byte count isn't a multiple of 4 in the ROM's own raw block
@@ -225,23 +225,23 @@ void sub_8024820(struct pager *self)
  * `matching_decomp_alignment_fix` precedent. */
 asm(".align 2, 0");
 
-/* Plain two-argument forwarding trampoline to `sub_80247EC`
+/* Plain two-argument forwarding trampoline to `DestroySlideshow`
  * (game_loop20.c) - a same-shaped alias for a different call site
  * (matches this project's other trivial-wrapper aliases, e.g.
- * `sub_802425C`/`sub_80247EC` themselves). */
-void sub_802493C(void *self, s32 flags)
+ * `sub_802425C`/`DestroySlideshow` themselves). */
+void DestroyCutscenePlayer(void *self, s32 flags)
 {
-    sub_80247EC(self, flags);
+    DestroySlideshow(self, flags);
 }
 
-/* Extends `sub_8024810`'s reset with two more fields this cluster
+/* Extends `InitSlideshow`'s reset with two more fields this cluster
  * introduces: `+0x10`/`+0x14` (the text-paging record array/its count,
- * per `sub_8024820` above) both start zeroed. */
-void *sub_8024948(void *self0)
+ * per `RunCutscenePlayer` above) both start zeroed. */
+void *InitCutscenePlayer(void *self0)
 {
     u8 *self = (u8 *)self0;
 
-    sub_8024810(self);
+    InitSlideshow(self);
     *(s32 *)(self + 0x10) = 0;
     *(s32 *)(self + 0x14) = 0;
     return self;
@@ -252,10 +252,10 @@ void *sub_8024948(void *self0)
  * `recordId`'s halfword table entry, then decodes a token stream,
  * budget-limited to 0x7f halfwords, with the same three run modes
  * (literal-fill, signed-delta-accumulate, raw-copy) as the terrain-tile
- * cache's `sub_8025334` (game_loop3.c) - just writing into a 2D buffer
+ * cache's `DecodeCollisionChunk` (game_loop3.c) - just writing into a 2D buffer
  * (row = idx>>4, 64-halfword row stride) instead of a flat one.
  *
- * Matched (old_agbcc) by porting `sub_8025334`'s matched shape: `src`
+ * Matched (old_agbcc) by porting `DecodeCollisionChunk`'s matched shape: `src`
  * starts as the record table itself, and the delta run's sign extensions
  * are explicit `<< 24` shifts into `s32` locals with `acc` copied to an
  * `s32` first. Two local changes: the odd trailing delta is stored back
@@ -264,7 +264,7 @@ void *sub_8024948(void *self0)
  * `asr; lsl` order there. */
 #define RING_CELL(out, i) (out)[((i) >> 4) * 64 + ((i) & 0xf)]
 
-void sub_8024960(struct bg_streamer *self, s32 recordId, void *dest)
+void DecodeLayerChunk(struct bg_streamer *self, s32 recordId, void *dest)
 {
     u16 *out = dest;
     u16 *src = self->records;
@@ -351,19 +351,19 @@ void sub_8024960(struct bg_streamer *self, s32 recordId, void *dest)
     } while (budget >= 0);
 }
 
-extern void sub_8024C08(struct bg_streamer *self, s32 col);
-extern void sub_8024BAC(struct bg_streamer *self, s32 row);
+extern void StreamBgColumn(struct bg_streamer *self, s32 col);
+extern void StreamBgRow(struct bg_streamer *self, s32 row);
 
 /* Per-frame background-streamer driver (docs/rom_map.md: "Visual
  * scrolling background streamer"): right-shifts the world position by
  * 7/6 (128/64px tile granularity) and, on each axis the camera has
  * crossed a tile boundary since last call, streams in exactly the
- * newly-exposed column (`sub_8024C08`) or row (`sub_8024BAC`) - the
+ * newly-exposed column (`StreamBgColumn`) or row (`StreamBgRow`) - the
  * tile 4 ahead of the old edge when scrolling forward, or the tile
  * directly behind when scrolling back - while advancing the mod-4
  * sub-block accumulator (`self+0x14`/`self+0x15`) that feeds
- * `sub_8024B18`/`sub_8024B48`/`sub_8024B78`'s wrapped addressing. */
-void sub_8024AA0(void *self0, void *worldpos0)
+ * `GetBgStreamerColumn`/`GetBgStreamerRow`/`GetBgStreamerCell`'s wrapped addressing. */
+void ScrollBgStreamer(void *self0, void *worldpos0)
 {
     struct bg_streamer *self = self0;
     s32 *worldpos = (s32 *)worldpos0;
@@ -373,20 +373,20 @@ void sub_8024AA0(void *self0, void *worldpos0)
     s32 oldY = self->tileY;
 
     if (tileX > oldX) {
-        sub_8024C08(self, oldX + 4);
+        StreamBgColumn(self, oldX + 4);
         self->subX = (self->subX + 1) & 3;
     } else if (tileX < oldX) {
         self->subX = (self->subX - 1) & 3;
-        sub_8024C08(self, oldX - 1);
+        StreamBgColumn(self, oldX - 1);
     }
     self->tileX = tileX;
 
     if (tileY > oldY) {
-        sub_8024BAC(self, oldY + 4);
+        StreamBgRow(self, oldY + 4);
         self->subY = (self->subY + 1) & 3;
     } else if (tileY < oldY) {
         self->subY = (self->subY - 1) & 3;
-        sub_8024BAC(self, oldY - 1);
+        StreamBgRow(self, oldY - 1);
     }
     self->tileY = tileY;
 }
@@ -395,10 +395,10 @@ void sub_8024AA0(void *self0, void *worldpos0)
  * circular ring-buffer address (see this file's header comment):
  * `self+0xc`/`self+0x10` are the last-known tile coordinates,
  * `self+0x14`/`self+0x15` the mod-4 sub-block accumulator
- * `sub_8024AA0` advances. Returns the column-wrapped halfword pointer
+ * `ScrollBgStreamer` advances. Returns the column-wrapped halfword pointer
  * (col wrapped mod 0x40) and writes the row (wrapped mod 0x20) out
  * through `rowOut`. */
-void *sub_8024B18(void *self0, s32 x, s32 y, s32 *rowOut)
+void *GetBgStreamerColumn(void *self0, s32 x, s32 y, s32 *rowOut)
 {
     struct bg_streamer *self = self0;
     s32 col = x - self->tileX * 16;
@@ -424,11 +424,11 @@ void *sub_8024B18(void *self0, s32 x, s32 y, s32 *rowOut)
     return ret;
 }
 
-/* Sibling of `sub_8024B18`: same wrapped `(col, row)` computation, but
+/* Sibling of `GetBgStreamerColumn`: same wrapped `(col, row)` computation, but
  * returns the row-wrapped pointer (row stride 0x80 bytes = 0x40
- * halfwords, matching `sub_8024960`'s own row stride) and writes the
+ * halfwords, matching `DecodeLayerChunk`'s own row stride) and writes the
  * column out through `colOut` instead. */
-void *sub_8024B48(void *self0, s32 x, s32 y, s32 *colOut)
+void *GetBgStreamerRow(void *self0, s32 x, s32 y, s32 *colOut)
 {
     struct bg_streamer *self = self0;
     s32 col = x - self->tileX * 16;
@@ -454,9 +454,9 @@ void *sub_8024B48(void *self0, s32 x, s32 y, s32 *colOut)
     return ret;
 }
 
-/* Combines `sub_8024B18`/`sub_8024B48`'s address computation and
+/* Combines `GetBgStreamerColumn`/`GetBgStreamerRow`'s address computation and
  * returns the decoded halfword value directly, with no out-param. */
-u16 sub_8024B78(void *self0, s32 x, s32 y)
+u16 GetBgStreamerCell(void *self0, s32 x, s32 y)
 {
     struct bg_streamer *self = self0;
     s32 col = x - self->tileX * 16;
@@ -484,7 +484,7 @@ u16 sub_8024B78(void *self0, s32 x, s32 y)
 
 /* Streams in the newly exposed tile row `row`: decodes each of its up to
  * 4 in-bounds tiles into the row's ring-buffer blocks. */
-void sub_8024BAC(struct bg_streamer *self, s32 row)
+void StreamBgRow(struct bg_streamer *self, s32 row)
 {
     s32 idx;
     s32 i;
@@ -501,7 +501,7 @@ void sub_8024BAC(struct bg_streamer *self, s32 row)
                 u8 *dest = self->ring;
                 dest += ((self->subY + 4) & 3) << 10;
                 dest += ((self->subX + i + 4) & 3) << 5;
-                sub_8024960(self, self->source->map[idx++], dest);
+                DecodeLayerChunk(self, self->source->map[idx++], dest);
             }
         }
     }
@@ -513,7 +513,7 @@ asm(".align 2, 0");
 
 /* Streams in the newly exposed tile column `col`: decodes each of its up
  * to 4 in-bounds tiles into the column's ring-buffer blocks. */
-void sub_8024C08(struct bg_streamer *self, s32 col)
+void StreamBgColumn(struct bg_streamer *self, s32 col)
 {
     s32 idx;
     s32 i;
@@ -535,7 +535,7 @@ void sub_8024C08(struct bg_streamer *self, s32 col)
                 dest += ((self->subX + 4) & 3) << 5;
                 id = src->map[idx];
                 idx += src->width;
-                sub_8024960(self, id, dest);
+                DecodeLayerChunk(self, id, dest);
             }
         }
     }
@@ -545,7 +545,7 @@ void sub_8024C08(struct bg_streamer *self, s32 col)
  * world x/y): resets the sub-block origin, derives the top-left tile
  * (128x64 px tiles) and decodes all 4x4 in-bounds tiles. The row stride
  * and block height stay in registers across the loops, as in the ROM. */
-void sub_8024C64(struct bg_streamer *self, s32 *pos)
+void FillBgStreamer(struct bg_streamer *self, s32 *pos)
 {
     s32 rowLen = 0x40;
     s32 blockH = 0x20;
@@ -572,7 +572,7 @@ void sub_8024C64(struct bg_streamer *self, s32 *pos)
                     u16 id = src->map[(self->tileY + j) * src->width + x];
                     u16 *ring = (u16 *)self->ring;
 
-                    sub_8024960(self, id, &ring[rowBase + (blockH >> 1) * i]);
+                    DecodeLayerChunk(self, id, &ring[rowBase + (blockH >> 1) * i]);
                 }
             }
         }
@@ -583,15 +583,15 @@ void sub_8024C64(struct bg_streamer *self, s32 *pos)
  * `matching_decomp_alignment_fix` precedent. */
 asm(".align 2, 0");
 
-extern void *gUnknown_03001308;
+extern void *gLevelLayers;
 
 /* Stores `source` (the room/level descriptor - see this file's header
  * comment) into `self+0`, caches its `+0x1a`/`+0x1c` 8px-tile dimensions at
  * `self+0x18`/`self+0x1c`, and derives `self+4` from
- * `gUnknown_03001308`'s own `+0x24` field plus `source+4` - the same
+ * `gLevelLayers`'s own `+0x24` field plus `source+4` - the same
  * "camera offset + source field" shape as the terrain-tile cache's
  * `decodeBase` (game_loop3.c's `struct tile_cache`). */
-void sub_8024CF0(void *self0, void *source0)
+void SetBgStreamerSource(void *self0, void *source0)
 {
     struct bg_streamer *self = self0;
     struct stream_source *source = source0;
@@ -603,7 +603,7 @@ void sub_8024CF0(void *self0, void *source0)
     h = source->heightTiles;
     self->widthTiles = w;
     self->heightTiles = h;
-    self->records = (u16 *)(*(u8 **)((u8 *)gUnknown_03001308 + 0x24) + source->assetOffset);
+    self->records = (u16 *)(*(u8 **)((u8 *)gLevelLayers + 0x24) + source->assetOffset);
 }
 
 extern void sub_8026EB4(void *ptr);
@@ -611,20 +611,20 @@ extern void sub_8026ED0(void *self);
 extern void *sub_8026EC0(u32 size);
 extern void *sub_8026EDC(s32 size);
 extern s32 sub_803AD80(void *arg0, void *arg1, void *arg2);
-extern u8 gStaticData_087E4BDC[];
-extern u8 gStaticData_087E4BEC[];
+extern u8 gBgStreamerVtable[];
+extern u8 gBgLayerBaseVtable[];
 
 /* Wires up `self+0x20`'s `sub_803AD80`-style interworking-trampoline
- * table (a fixed `gStaticData_087E4BDC`), then tears down `self+8`'s
- * ring buffer (if already allocated - `sub_8024D38` below is the
+ * table (a fixed `gBgStreamerVtable`), then tears down `self+8`'s
+ * ring buffer (if already allocated - `InitBgStreamer` below is the
  * matching constructor) and/or notifies via `sub_8026ED0` if bit 0 of
  * `flags` is set - the same conditional-teardown shape this project
- * sees a lot of (e.g. `sub_80247EC`, game_loop20.c). */
-void sub_8024D0C(void *self0, s32 flags)
+ * sees a lot of (e.g. `DestroySlideshow`, game_loop20.c). */
+void DestroyBgStreamer(void *self0, s32 flags)
 {
     struct bg_streamer *self = self0;
 
-    self->vtable = (struct streamer_vtable *)gStaticData_087E4BDC;
+    self->vtable = (struct streamer_vtable *)gBgStreamerVtable;
     if (self->ring != NULL) {
         sub_8026EB4(self->ring);
     }
@@ -633,15 +633,15 @@ void sub_8024D0C(void *self0, s32 flags)
     }
 }
 
-/* Constructor: wires up the same `gStaticData_087E4BDC` trampoline
- * table as `sub_8024D0C` above, allocates the streamer's 0x1000-byte
+/* Constructor: wires up the same `gBgStreamerVtable` trampoline
+ * table as `DestroyBgStreamer` above, allocates the streamer's 0x1000-byte
  * ring buffer (64 halfword columns x 32 rows, per this file's header
  * comment), and returns `self`. */
-void *sub_8024D38(void *self0)
+void *InitBgStreamer(void *self0)
 {
     struct bg_streamer *self = self0;
 
-    self->vtable = (struct streamer_vtable *)gStaticData_087E4BDC;
+    self->vtable = (struct streamer_vtable *)gBgStreamerVtable;
     self->ring = sub_8026EC0(0x1000);
     return self;
 }
@@ -682,17 +682,17 @@ void sub_8024D6C(void *self0, s32 x, s32 y)
 }
 
 /* Wires up `self+0x30`'s second `sub_803AD80`-style trampoline table
- * (`gStaticData_087E4BEC`, a different fixed table from
- * `sub_8024D0C`'s), then - if `self+0x2c`'s child object is already
- * set (per `sub_8024DAC` below) - notifies it via its own `+0x20`
+ * (`gBgLayerBaseVtable`, a different fixed table from
+ * `DestroyBgStreamer`'s), then - if `self+0x2c`'s child object is already
+ * set (per `InitBgLayerBase` below) - notifies it via its own `+0x20`
  * trampoline table with a fixed action code `3`, before the same
- * conditional `sub_8026ED0` teardown notify `sub_8024D0C` has. */
-void sub_8024D74(void *self0, s32 flags)
+ * conditional `sub_8026ED0` teardown notify `DestroyBgStreamer` has. */
+void DestroyBgLayerBase(void *self0, s32 flags)
 {
     struct bg_scroll_layer *self = self0;
     struct bg_streamer *child;
 
-    self->vtable = (struct bg_layer_vtable *)gStaticData_087E4BEC;
+    self->vtable = (struct bg_layer_vtable *)gBgLayerBaseVtable;
     child = self->streamer;
 
     if (child != NULL) {
@@ -706,17 +706,17 @@ void sub_8024D74(void *self0, s32 flags)
     }
 }
 
-/* Constructor: wires up the `gStaticData_087E4BEC` trampoline table
- * (same as `sub_8024D74` above), allocates a 0x24-byte child object and
- * runs `sub_8024D38` on it (the ring-buffer-owning object those
+/* Constructor: wires up the `gBgLayerBaseVtable` trampoline table
+ * (same as `DestroyBgLayerBase` above), allocates a 0x24-byte child object and
+ * runs `InitBgStreamer` on it (the ring-buffer-owning object those
  * `self+0x20`-rooted trampolines above notify), storing the result at
  * `self+0x2c`. */
-void *sub_8024DAC(void *self0)
+void *InitBgLayerBase(void *self0)
 {
     struct bg_scroll_layer *self = self0;
 
-    self->vtable = (struct bg_layer_vtable *)gStaticData_087E4BEC;
-    self->streamer = sub_8024D38(sub_8026EDC(0x24));
+    self->vtable = (struct bg_layer_vtable *)gBgLayerBaseVtable;
+    self->streamer = InitBgStreamer(sub_8026EDC(0x24));
     return self;
 }
 
@@ -759,9 +759,9 @@ void sub_8024DE0(void *self0, s32 *out)
  * `vec2`, floor-dividing the Q8 product by 256 (the `+0xff` bias before
  * the arithmetic shift rounds negative products toward negative
  * infinity, matching a true floor division rather than C's
- * truncate-toward-zero `>>`). Called by game_loop3.c's `sub_8024E68`/
- * `sub_8024E90`. */
-void sub_8024DFC(void *self0, void *vec20)
+ * truncate-toward-zero `>>`). Called by game_loop3.c's `ScrollBgLayerBase`/
+ * `ResetBgLayerBase`. */
+void ScaleBgLayerScroll(void *self0, void *vec20)
 {
     struct bg_scroll_layer *self = self0;
     s32 *vec2 = (s32 *)vec20;
@@ -788,7 +788,7 @@ void sub_8024DFC(void *self0, void *vec20)
  * text draw, same family as the icon-renderer shapes"): for each axis,
  * forwards `delta - self`'s own position through `self+0x30`'s
  * trampoline table (action = the position delta itself, per the same
- * `sub_803AD80`-style convention `sub_8024D74`/`sub_8024DAC` wire up),
+ * `sub_803AD80`-style convention `DestroyBgLayerBase`/`InitBgLayerBase` wire up),
  * then accumulates both trampoline results back into `self`'s own
  * position. */
 void sub_8024E24(void *self0, void *delta0)

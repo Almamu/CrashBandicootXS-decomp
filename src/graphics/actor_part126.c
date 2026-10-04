@@ -31,7 +31,7 @@ extern s32 GetAnimFrameBaseOffset(void *self);
 extern s32 sub_803AD80(void *arg0, s32 arg1, void *arg2);
 extern s32 sub_803ADB4(s32 a, s32 b);
 extern s32 sub_8000E1C(s32 max);
-extern s32 sub_80231EC(void *arg0, s32 arg1);
+extern s32 SetMaskLevel(void *arg0, s32 arg1);
 extern s32 QueueVramDmaTransfer(void *src, void *dest, u16 size, u16 unit);
 extern s32 sub_802A570(s32 idx);
 extern s32 sub_802A51C(s32 idx);
@@ -51,13 +51,13 @@ extern u8 gStaticData_087E4FF4[];
 extern u8 gStaticData_087E5014[];
 extern u8 gStaticData_087E5034[];
 
-/* The gUnknown_030012C0 fields read here. */
+/* The gLevelState fields read here. */
 struct game_state {
     u8 unk_00[0x78];
     s32 mode;           // 0x78 - the current hazard tier (0-3)
 };
 
-extern struct game_state *gUnknown_030012C0;
+extern struct game_state *gLevelState;
 
 /* The homing projectile (method table gStaticData_087E5014). */
 struct actor_homing {
@@ -541,7 +541,7 @@ void *sub_802D1B8(void *selfArg, u8 *b, s32 c, s32 d, s32 e)
 }
 
 /* VRAM-gauge/state-transition driver for a `gUnknown_030014B8`-counted
- * effect: while the current hazard tier (`gUnknown_030012C0->0x78`)
+ * effect: while the current hazard tier (`gLevelState->0x78`)
  * and the `retrigger` flag are both zero, just clears `self+0x2c`;
  * otherwise DMAs one of four `gStaticData_0817A798`-indexed gauge
  * strips and resets `self`'s table index/anim, arming `self+0x2c`.
@@ -554,7 +554,7 @@ void sub_802D204(void *selfArg, s32 retriggerParam)
 {
     struct actor_self *self = selfArg;
     u8 retrigger = (u8)retriggerParam;
-    register s32 tier asm("r5") = gUnknown_030012C0->mode;
+    register s32 tier asm("r5") = gLevelState->mode;
 
     if (tier == 0 && retrigger == 0) {
         self->unk_2C[0] = tier;
@@ -656,7 +656,7 @@ void sub_802D204(void *selfArg, s32 retriggerParam)
 /* Drives `gUnknown_030014B8`'s countdown, DMAing one of two gauge
  * strips per frame (`gStaticData_0817A7D8` on the low bit set,
  * `gStaticData_0817A7B8` otherwise) and, once it expires, resetting
- * the hazard tier via `sub_80231EC(gUnknown_030012C0, 2)` then
+ * the hazard tier via `SetMaskLevel(gLevelState, 2)` then
  * `sub_802D204(self, 0)`. Independently re-fires `sub_802D204` once
  * state 2's own `self+0x12` edge trips. Always advances `self`'s own
  * anim frame (`sub_802A980`, frame-counter bump, and the usual
@@ -674,7 +674,7 @@ void sub_802D2DC(void *selfArg)
 
         gUnknown_030014B8 -= 1;
         if (gUnknown_030014B8 == 0) {
-            sub_80231EC(gUnknown_030012C0, 2);
+            SetMaskLevel(gLevelState, 2);
             sub_802D204(self, 0);
         }
     }

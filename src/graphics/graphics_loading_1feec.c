@@ -215,7 +215,7 @@ void sub_80204EC(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
  * docs/matching/last-eleven-naked-retry.md and the passes it links).
  * The ROM keeps arg3 in r4, part+0x28 in r3 across sub_8008E94 through a
  * stack slot (`str r3, [sp]` after the argument setup, `ldr r3, [sp]`
- * before the second flip), &gUnknown_030012B4 in sb and -0x11 in sl.
+ * before the second flip), &gEntityFlags in sb and -0x11 in sl.
  * The second flip reads part+0x28 back from `q2`, a stack-resident copy
  * (an `"m"` asm operand), so the first flip's pointer is block-local (r3)
  * and arg3/hdr+0x84 get r4/r5. */
@@ -270,7 +270,7 @@ void sub_802062C(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
      * `str r3, [sp]` / `ldr r3, [sp]` pair around the call. */
     asm("" : : "m"(q2));
     /* No code: hold r3 over the gfx store and the rec2 lookup. The ROM
-     * keeps r3 free there, so reloading &gUnknown_030012B4 out of sb
+     * keeps r3 free there, so reloading &gEntityFlags out of sb
      * uses r1 (`mov r1, sb`), not r3. */
     asm("" : "=r"(h3));
     SetPopupGfx(hdr, gStaticData_0816B98C);

@@ -5,7 +5,7 @@ this project hadn't used before: a bare `"m"` (memory) operand
 constraint in inline asm, used to force instruction-scheduling *order*
 around a memory access while still letting the compiler own that
 access's own address computation and register allocation (see
-`src/system/tile_slot_pool.c`'s `sub_80264F8` for the original example
+`src/system/tile_slot_pool.c`'s `AcquireTileSlot` for the original example
 and comment). This session tried adapting that same idea - "isolate
 just the two instructions this compiler's scheduler puts in the wrong
 relative order, and pin only their order via a narrow inline-asm

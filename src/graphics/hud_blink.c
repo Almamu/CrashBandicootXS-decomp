@@ -7,7 +7,7 @@
  * pair: state 0 idle, 1 counting up to a threshold then -> 2, 2 counting
  * down 0x14 frames then -> 3, 3 counting down its own timer then back to
  * 0. Slot 0 blinks with the lives counter and slot 1 with the wumpa
- * counter (`sub_8023430`); slot 2 is triggered whenever the level
+ * counter (`CollectWumpa`); slot 2 is triggered whenever the level
  * state's `unk_70` counter advances (`sub_8022FEC`). `unk_28` receives
  * the level state's `unk_bc` target (`sub_8022BF0`). */
 struct blink_slot
@@ -23,7 +23,7 @@ struct hud_blink
     s32 unk_28;                     // 0x28
 };
 
-extern struct level_state *gUnknown_030012C0;
+extern struct level_state *gLevelState;
 
 extern void sub_8028520(void *self, s32 *state, s32 *timer, s32 threshold);
 
@@ -45,7 +45,7 @@ void sub_8028400(struct hud_blink *state)
      * comment) to reproduce the ROM's exact compare chain - a plain
      * `if (v==1) {...} else if (v==2) {...}` collapses that redundant
      * middle branch away. */
-    if (gUnknown_030012C0->timeTrial != 0) {
+    if (gLevelState->timeTrial != 0) {
         s32 v;
 
         v = state->slots[0].state;
@@ -94,7 +94,7 @@ void sub_8028474(struct hud_blink *state)
 {
     s32 slotState;
 
-    if (gUnknown_030012C0->timeTrial == 0) {
+    if (gLevelState->timeTrial == 0) {
         slotState = state->slots[2].state;
 
         if (slotState == 0 || slotState == 3) {
@@ -110,7 +110,7 @@ void sub_80284A4(struct hud_blink *state)
 {
     s32 slotState;
 
-    if (gUnknown_030012C0->timeTrial == 0) {
+    if (gLevelState->timeTrial == 0) {
         slotState = state->slots[0].state;
 
         if (slotState == 0 || slotState == 3) {
@@ -126,7 +126,7 @@ void sub_80284D4(struct hud_blink *state)
 {
     s32 slotState;
 
-    if (gUnknown_030012C0->timeTrial == 0) {
+    if (gLevelState->timeTrial == 0) {
         slotState = state->slots[1].state;
 
         if (slotState == 0 || slotState == 3) {

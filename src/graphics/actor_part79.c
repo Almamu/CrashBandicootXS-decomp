@@ -26,7 +26,7 @@ extern void PlaySfx(struct AudioContext *arg0, s32 sfxId, s32 arg2);
 extern s32 sub_803AD80(void *arg0, void *arg1, void *arg2);
 extern s32 sub_803AD84(void *arg0, void *arg1, void *arg2, void *arg3);
 extern void sub_8012AF4(void *self);
-extern void sub_8023234(void *arg0);
+extern void LoseLife(void *arg0);
 extern void sub_8006D08(struct tile_asset_cache *self, s32 slot, s32 recordId);
 extern void sub_80087C0(void *part);
 extern void sub_80087B4(void *part);
@@ -36,7 +36,7 @@ extern void sub_8015780(void *self, s32 a, s32 b, s32 c, s32 d);
 extern u8 sub_8000760(void *dummy);
 
 extern struct AudioContext *gUnknown_030012BC;
-extern void *gUnknown_030012C0;
+extern void *gLevelState;
 extern struct tile_asset_cache *gUnknown_030012B8;
 extern void *gUnknown_030012D8;
 extern void *gUnknown_03001304;
@@ -47,7 +47,7 @@ extern void *gUnknown_03001304;
  * `+0x2f`/`+0x27` and `+0x32`/`+0x30`/`+0x28`) via a single walked
  * pointer, runs `sub_8012AF4`, clears/sets a few more `part` bytes
  * (`+0x100`/`+0x102`/`+0x103`/`+0x104`, and clears bits `0x20`/`0x10`
- * of `part+0xc`), then calls `sub_8023234` and looks up a byte from the
+ * of `part+0xc`), then calls `LoseLife` and looks up a byte from the
  * per-tag 28-byte-record table (`part+0x20 -> *ptr + tag*0x1C`, the
  * same dereference chain docs/rom_map.md's "eight more core reads"
  * documented from three other call sites) to feed `sub_8006D08`. */
@@ -121,7 +121,7 @@ void sub_8012160(void *selfArg, void *arg1)
         }
     }
 
-    sub_8023234(gUnknown_030012C0);
+    LoseLife(gLevelState);
 
     {
         register struct tile_asset_cache *cache asm("r0") = gUnknown_030012B8;

@@ -329,11 +329,11 @@ void sub_801AB98(struct gobj *selfArg, void *unused)
                         Call68(gUnknown_030012D8, 0, 0x11, 0);
                         break;
                     case 3:
-                        if (!sub_80232A0(gUnknown_030012C0) && !((u8 *)gUnknown_030012C0)[0x8C])
+                        if (!sub_80232A0(gLevelState) && !((u8 *)gLevelState)[0x8C])
                             Call68(gUnknown_030012D8, 0, 0xF, 0);
                         break;
                     case 4:
-                        if (!sub_8023278(gUnknown_030012C0) && !((u8 *)gUnknown_030012C0)[0x8C])
+                        if (!sub_8023278(gLevelState) && !((u8 *)gLevelState)[0x8C])
                             Call68(gUnknown_030012D8, 0, 0x10, 0);
                         break;
                     }
@@ -375,7 +375,7 @@ void sub_801AB98(struct gobj *selfArg, void *unused)
             }
             break;
         case 3:
-            if (!sub_80232A0(gUnknown_030012C0) && !((u8 *)gUnknown_030012C0)[0x8C]
+            if (!sub_80232A0(gLevelState) && !((u8 *)gLevelState)[0x8C]
                 && sub_8001688(&a, pb))
             {
                 s32 d = (self->x >> 8) - (gUnknown_030012D8->x >> 8);
@@ -389,7 +389,7 @@ void sub_801AB98(struct gobj *selfArg, void *unused)
             }
             break;
         case 4:
-            if (!sub_8023278(gUnknown_030012C0) && !((u8 *)gUnknown_030012C0)[0x8C]
+            if (!sub_8023278(gLevelState) && !((u8 *)gLevelState)[0x8C]
                 && sub_8001688(&a, pb))
             {
                 s32 d = (self->x >> 8) - (gUnknown_030012D8->x >> 8);

@@ -4,18 +4,18 @@ Both issues cover one contiguous, un-split raw block (formerly
 `asm/code_3_2_17_231cc.s`, now retired): issue #35 lists
 `sub_80231CC`-`sub_80232D0` (24 of its own 25 functions - `sub_80231C4`
 was already matched in an earlier pass), issue #36 lists
-`sub_80232D8`-`sub_8023484` (all 25). Together they're exactly this
+`ClearTimeTrial`-`sub_8023484` (all 25). Together they're exactly this
 file's 49 functions, `0x080231CC`-`0x08023488` (`sub_8023484` itself
 ends at `0x080234E8`, where `src/system/game_loop10.o` picks up).
 
 The block sits immediately after `src/system/game_loop2.c`'s own
-existing functions (`sub_8022EA8`-`sub_80231C4`) in ROM, with no gap -
+existing functions (`FreezeLevelClock`-`sub_80231C4`) in ROM, with no gap -
 `ldscript.txt` already links `game_loop2.o` directly before what was
 `asm/code_3_2_17_231cc.o`. All 49 functions turned out to be a direct
 continuation of the exact same `self` type `game_loop2.c` already
-established: the `gUnknown_030012C0`-pointed "level" object (confirmed
+established: the `gLevelState`-pointed "level" object (confirmed
 by `sub_8023A1C`/`game_loop56.c`, whose own opening dispatch reads
-`*gUnknown_030012C0` and passes it as `self` to `sub_8023118`/
+`*gLevelState` and passes it as `self` to `sub_8023118`/
 `sub_8023110`/`sub_8023484`). Rather than open a new file (which would
 need a new `ldscript.txt` entry and a fresh struct-convention writeup),
 all 49 were appended directly to `game_loop2.c`, in ROM address order,
@@ -34,19 +34,19 @@ Building on `game_loop2.c`'s existing `self+2` flags byte and
   counter/threshold/latch cluster. `self+0x70`/`self+0xbc` are a
   counter/limit pair already read by `sub_8022FEC`/`sub_802306C`
   (matched previously) and now also by `sub_8023484` (see below).
-  `self+0x78` is a small "last state" latch (`sub_80231EC`/
-  `sub_8023220`/`sub_8023224`). `self+0x6c`/`self+0x74` form a
-  centisecond/second odometer pair (`sub_8023430`/`sub_8023464`,
+  `self+0x78` is a small "last state" latch (`SetMaskLevel`/
+  `SetLives`/`RaiseMaskLevel`). `self+0x6c`/`self+0x74` form a
+  centisecond/second odometer pair (`CollectWumpa`/`AddLife`,
   distinct from the digit-cascade odometer at `self+0x90`-`0x9c` that
-  `sub_8022F2C` above already documents) - `self+0x6c` wraps at `0x63`
+  `TickLevelClock` above already documents) - `self+0x6c` wraps at `0x63`
   and bumps `self+0x74` (itself saturating at `0x62`).
 - **`self+0x7c`**: a plain free-running counter (get/increment/reset:
   `sub_80232E0`/`E4`/`EC`, plus a "start" helper `sub_8023304` that
   resets it and sets a flag).
-- **`self+0x8c`**: a single flag byte, read by `sub_8023234` (guards a
-  `self+0x74` decrement-and-notify) and cleared by `sub_80232D8`.
+- **`self+0x8c`**: a single flag byte, read by `LoseLife` (guards a
+  `self+0x74` decrement-and-notify) and cleared by `ClearTimeTrial`.
 - **`self+0x90`/`0x94`/`0x98`**: getters for the bottom three tiers of
-  `sub_8022F2C`'s existing digit-cascade odometer (`sub_8023270`/
+  `TickLevelClock`'s existing digit-cascade odometer (`GetClockMinutes`/
   `8023268`/`8023260`).
 - **`self+0xa4`-`self+0xa9`**: a bank of six busy/status-flag bytes
   (`sub_80232B8`/`90`/`98`/`A0`/`C8`/`F4` getters, plus clear-to-0 and,
@@ -54,9 +54,9 @@ Building on `game_loop2.c`'s existing `self+2` flags byte and
   bitfield family, just laid out as whole bytes.
 - **`self+0xc4`**: a "current index" field, read by two dispatchers
   (`sub_8023378`/`sub_80233B4`, see below), resolved to a slot address
-  by `sub_80233FC`/`sub_8023404` (`self + idx*4 + 4`), and re-used as a
-  `gStaticData_0816C86C`-style level index by `sub_8024498`
-  (`game_loop18.c`) when `sub_80231EC` forwards `self+0xc4`'s address
+  by `GetLevelFlags`/`GetCurrentLevelFlags` (`self + idx*4 + 4`), and re-used as a
+  `gLevelTable`-style level index by `sub_8024498`
+  (`game_loop18.c`) when `SetMaskLevel` forwards `self+0xc4`'s address
   into it.
 - **`self+0xc8`/`self+0x1c8`**: two more plain word fields
   (`sub_8023324` getter, `sub_8023318` setter) - `self+0x1c8` sits right
@@ -121,7 +121,7 @@ called out by name as still open - `sub_8023A1C`'s (`game_loop56.c`)
 `sub_8023290`) are clear. Its body is the exact same
 `sub_8022FEC`/`sub_802306C`-shaped tail (if the `self+0xdc`-linked
 level-state record's `+8` widget-kind field is `3`, OR a bit into the
-`sub_8023404`-resolved slot; otherwise forward `self+0x1c0`/`0x1c4` to
+`GetCurrentLevelFlags`-resolved slot; otherwise forward `self+0x1c0`/`0x1c4` to
 `sub_801EB04`), gated by one extra counter/threshold check up front.
 
 Reproducing the ROM's exact register map for the `sub_801EB04` tail
@@ -143,7 +143,7 @@ to its pinned register if the ROM's own code did so.
 
 ## Also needed: `struct AudioContext` forward declaration
 
-`sub_80231EC` (calls `sub_80017BC(gUnknown_030012BC, 0x12)` on state
+`SetMaskLevel` (calls `sub_80017BC(gUnknown_030012BC, 0x12)` on state
 `3`) needed `extern void sub_80017BC(struct AudioContext *self, u32
 songIndex);`, matching the signature already used in
 `src/audio/music_player.c`/`src/audio/audio_context.c`/

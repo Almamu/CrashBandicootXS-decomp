@@ -15,13 +15,13 @@
  * arithmetic). Converting these would need the same rebuild-verify
  * rigor as any other change here - not attempted opportunistically. */
 
-extern void *gUnknown_03001308;
+extern void *gLevelLayers;
 extern s32 sub_803AD80(void *arg0, void *arg1, void *fn);
 extern void *sub_803AD7C(void *arg0, void *fn);
 
 /* Same "extended screen box" filter shape as `sub_800891C`'s own
  * `boxB` pass above (the plain 240x160 GBA screen region, in Q8, at
- * the `gUnknown_03001308` sub-object's own position) - iterates
+ * the `gLevelLayers` sub-object's own position) - iterates
  * `manager`'s array (`manager+0xc` base, `manager+4` count),
  * filtering each `part` whose `table+0x30/0x34`-driven trampoline
  * passes into a second output array (`manager+0x10` base,
@@ -30,7 +30,7 @@ void sub_8008C80(void *manager)
 {
     s32 i;
     s32 box[4];
-    register void *P asm("r0") = gUnknown_03001308;
+    register void *P asm("r0") = gLevelLayers;
     register void *subObj asm("r0");
     s32 v0, v1;
     s32 v2, v3;

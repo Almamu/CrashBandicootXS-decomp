@@ -96,7 +96,7 @@ extern void sub_800450C(struct pause_options_screen *self);
 extern void sub_80047F8(struct pause_options_screen *self);
 extern void sub_8001B54(void *arg0, s32 arg1);
 extern void sub_80048BC(struct pause_options_screen *self);
-extern void *gUnknown_030012C0;
+extern void *gLevelState;
 extern void *sub_80236EC(void *arg0);
 extern void sub_80048E0(void *self, struct settings_row_stats *dest, void *src);
 extern void sub_8004860(struct pause_options_screen *self, void *handle);
@@ -137,7 +137,7 @@ struct pause_options_screen *sub_800306C(struct pause_options_screen *arg0)
     sub_80047F8(self);
     sub_8001B54(gUnknown_030012BC, 0x10);
     sub_80048BC(self);
-    sub_80048E0(self, &self->currentStats, sub_80236EC(gUnknown_030012C0));
+    sub_80048E0(self, &self->currentStats, sub_80236EC(gLevelState));
     sub_8004860(self, *field8cAddr);
 
     {
@@ -403,7 +403,7 @@ void sub_80033E8(struct pause_options_screen *self, u32 flags)
 }
 
 extern void sub_80236AC(void *cache, void *buf);
-extern void sub_8023334(void *cache, u8 arg1);
+extern void SetCurrentLevel(void *cache, u8 arg1);
 extern void sub_8001B50(void *arg0, u16 arg1);
 extern void sub_8001B30(void *arg0, u16 arg1);
 
@@ -435,11 +435,11 @@ void sub_80034BC(struct pause_options_screen *self, u32 flags, void *handle)
         }
         PlaySfx(gUnknown_030012BC, 0x49, 0x100);
         sub_8002C14(handle, self->field_10, buf);
-        sub_80236AC(gUnknown_030012C0, buf);
-        sub_8023334(gUnknown_030012C0, buf[0x68]);
+        sub_80236AC(gLevelState, buf);
+        SetCurrentLevel(gLevelState, buf[0x68]);
         sub_8001B50(gUnknown_030012BC, *(u16 *)&buf[0x6a]);
         sub_8001B30(gUnknown_030012BC, *(u16 *)&buf[0x6c]);
-        sub_80048E0(self, &self->currentStats, sub_80236EC(gUnknown_030012C0));
+        sub_80048E0(self, &self->currentStats, sub_80236EC(gLevelState));
         self->field_20 = 1;
         self->field_8 = 1;
         return;
@@ -523,7 +523,7 @@ void sub_80035C0(struct pause_options_screen *self)
 
 extern u8 sub_8002CE8(void *handle, s32 rowIndex);
 extern void sub_800014C(void *dst, const void *src, s32 size);
-extern s32 sub_802332C(void *arg0);
+extern s32 GetCurrentLevel(void *arg0);
 extern s32 sub_8001ABC(void *arg0);
 extern s32 sub_8001AC0(void *arg0);
 extern s32 sub_8002BA4(void *arg0);
@@ -549,7 +549,7 @@ void sub_8003698(struct pause_options_screen *self, s32 rowIndex)
         wasSelected = 1;
     }
 
-    c0Addr = &gUnknown_030012C0;
+    c0Addr = &gLevelState;
     {
         /* The ROM evaluates sub_80236EC()'s result before computing
          * `buf + 0x70` (the ROM's own callee-arg setup order for
@@ -559,7 +559,7 @@ void sub_8003698(struct pause_options_screen *self, s32 rowIndex)
         void *result = sub_80236EC(*c0Addr);
         sub_800014C(buf + 0x70, result, 0x68);
     }
-    *(u8 *)(buf + 0xd8) = (u8)sub_802332C(*c0Addr);
+    *(u8 *)(buf + 0xd8) = (u8)GetCurrentLevel(*c0Addr);
 
     bcAddr = &gUnknown_030012BC;
     *(u16 *)(buf + 0xda) = (u16)sub_8001ABC(*bcAddr);

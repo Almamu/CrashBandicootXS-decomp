@@ -2,7 +2,7 @@
 #include "actor.h"
 #include "text_popup.h"
 
-extern void *gUnknown_030012C0;
+extern void *gLevelState;
 
 extern u8 sub_80232C8(void *self);
 extern void *sub_800FF0C(u16 arg0, u16 arg1, u16 arg2, u16 arg3, u8 type);
@@ -10,12 +10,12 @@ extern void *sub_800FF0C(u16 arg0, u16 arg1, u16 arg2, u16 arg3, u8 type);
 /* Dispatches to the `sub_800FF0C` entity-constructor trampoline family
  * (docs/rom_map.md, "already-documented `sub_800FF0C` entity-constructor
  * trampoline family") with type `7` or `6` depending on
- * `sub_80232C8(gUnknown_030012C0)`. */
+ * `sub_80232C8(gLevelState)`. */
 void sub_8021BFC(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     void *result;
 
-    if (sub_80232C8(gUnknown_030012C0)) {
+    if (sub_80232C8(gLevelState)) {
         result = sub_800FF0C(arg0, arg1, arg2, arg3, 7);
     } else {
         result = sub_800FF0C(arg0, arg1, arg2, arg3, 6);
@@ -54,8 +54,8 @@ void sub_8021CE0(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 }
 
 /* `sub_800FF0C` trampoline (type `0`), then indexes a small per-record
- * flags byte via `gUnknown_030012B4`'s own table (same
- * `gUnknown_030012B4 -> *P -> {+8 array, +0xc base}` shape as
+ * flags byte via `gEntityFlags`'s own table (same
+ * `gEntityFlags -> *P -> {+8 array, +0xc base}` shape as
  * `sub_80187FC`'s table read in actor_part27c.c, indexed here by
  * `arg3`) and folds two of its bits into the constructed object's
  * `+0x28` bitfield.
@@ -78,7 +78,7 @@ void sub_8021D04(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 
     obj = sub_800FF0C(arg0, arg1, arg2, arg3, 0);
 
-    rec = *gUnknown_030012B4;
+    rec = *gEntityFlags;
     arrayBase = rec->offsets;
     loaded = (arg3 << 1) + (s32)arrayBase;
     {

@@ -18,7 +18,7 @@
  * (`animB`), left/right the other (`animA`), which also sets a speed-like
  * value at the child object's `+0x78` (`+0x1C`, spawned on demand by
  * `sub_8017600`). Once the target passes the level's right edge
- * (`gUnknown_03001308`'s layer 0 width, less 0xA00) the child is marked
+ * (`gLevelLayers`'s layer 0 width, less 0xA00) the child is marked
  * gone and `sub_80241A4` is signalled. It then dispatches the current
  * `state` through `gStaticData_0816C290`, a table of gcc 2.x
  * pointer-to-member-functions: state 0 `sub_8017600`, 1 `sub_801796C`,
@@ -157,12 +157,12 @@ struct pmf
 };
 
 extern void *gUnknown_030012BC;
-extern void *gUnknown_030012C0;
+extern void *gLevelState;
 extern void *gUnknown_030012B8;
-extern void *gUnknown_030012B4;
+extern void *gEntityFlags;
 extern void *gUnknown_030012F0;
 extern u32 gUnknown_030007E0; /* low half: held keys */
-extern struct { u8 unk_00[0x10]; struct { u8 unk_00[0x10]; s32 width; } *layer0; } *gUnknown_03001308;
+extern struct { u8 unk_00[0x10]; struct { u8 unk_00[0x10]; s32 width; } *layer0; } *gLevelLayers;
 extern struct pmf gStaticData_0816C290[];
 extern u8 gStaticData_0816B8C0[];
 extern u8 gStaticData_087E42F4[];
@@ -170,7 +170,7 @@ extern u8 gStaticData_087E42F4[];
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern s32 sub_803AD80(void *self, s32 arg, void *fn);
 extern s32 sub_803AD84(void *self, void *arg1, void *arg2, void *fn);
-extern void sub_8023234(void *arg0);
+extern void LoseLife(void *arg0);
 extern void sub_8006D08(void *self, s32 slot, s32 recordId);
 extern void *sub_8026EDC(u32 size);
 extern struct ctrl_child *sub_801B940(void *mem);
@@ -195,14 +195,14 @@ extern void sub_800B8C8(void *self);
         sub_803AD84((u8 *)(obj) + _m->thisOffset, (a), (b), _m->fn);           \
     } else (void)0
 
-/* sub_80072D8's "set the id's bit in the gUnknown_030012B4+0x108 bitmap"
+/* sub_80072D8's "set the id's bit in the gEntityFlags+0x108 bitmap"
  * (see actor_part_16048.c: the do/while(0) loop notes are what reproduce
  * the id reload after the 0xFFFF test) */
 #define SET_ID_BIT(idExpr)                                                     \
     do                                                                         \
     {                                                                          \
         s32 _id = (idExpr);                                                    \
-        u8 *_base = gUnknown_030012B4;                                         \
+        u8 *_base = gEntityFlags;                                         \
         s32 _word = _id / 32;                                                  \
         s32 _off = _word * 4;                                                  \
         u32 *_slot = (u32 *)(_base + 0x108);                                   \
@@ -281,7 +281,7 @@ void sub_8017564(struct input_ctrl *self, void *arg)
     self->target->flag7 = 0;
     self->target->flag6 = 0;
     self->target->unk_104 = 1;
-    sub_8023234(gUnknown_030012C0);
+    LoseLife(gLevelState);
     {
         void *cache = gUnknown_030012B8;
         struct ctrl_target *t = self->target;
@@ -314,7 +314,7 @@ void sub_8017650(struct input_ctrl *self)
         u32 keys;
         s32 x = self->target->x;
 
-        if (x > (gUnknown_03001308->layer0->width << 8) - 0xA00)
+        if (x > (gLevelLayers->layer0->width << 8) - 0xA00)
         {
             {
                 struct ctrl_child *c = self->child;

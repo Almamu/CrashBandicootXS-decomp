@@ -468,12 +468,12 @@ functions, no more, no fewer, in this half.
   `self` into hitbox tag `0x1d` and rebuilds its record, re-derives its
   `+0x29` sub-animation value and clamps `+0x30`'s index to the newly
   selected record's own `+0x16` count, conditionally reactivates the
-  viewport, flips one bit of `gUnknown_030012B4`'s bit-grid keyed by
+  viewport, flips one bit of `gEntityFlags`'s bit-grid keyed by
   `self+8`, calls `sub_800EDBC` (neighbor "impact spread"
   propagation), then dispatches its own 23-case jump table on `self`'s
   freshly-cached `+0x4e` state id to one of
   `sub_801085C`/`sub_801089C`/`sub_800F368`/`sub_800F2BC`/
-  `sub_800EAFC`/`sub_800ED08`/`sub_800EEF0`/`sub_8022EA8`/a
+  `sub_800EAFC`/`sub_800ED08`/`sub_800EEF0`/`FreezeLevelClock`/a
   SFX-3-plus-particle-spawn fallback (`sub_8025CA4`) - the largest
   jump table in this subsystem after `sub_0800D18C`'s own three.
 - **`sub_800EAFC(self, walkFlag)`** - case-11 handler of
@@ -667,7 +667,7 @@ check is the full clean `make compare`, which passed outright.
   rewind when already `0xa`) via the `sub_80087C0`/`sub_80087B4`/
   `sub_800872C` "set tag, refresh sprite/animation" triplet every
   state-transition function in this cluster shares. Marks a cell in
-  `gUnknown_030012B4`'s 32x32 collision bitmap, plays a fixed sound
+  `gEntityFlags`'s 32x32 collision bitmap, plays a fixed sound
   (id 4), calls `sub_800EDBC(self)` (sibling pass's territory), and -
   gated on a combo/proximity check against `gUnknown_0300082C`/
   `gUnknown_030012D8+0x8c` - `sub_803AD88(self, 0, 4, 0)`. Forces

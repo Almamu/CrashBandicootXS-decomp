@@ -46,15 +46,15 @@ already-matched `actor_part79.c`, `actor_part84.c` between
   `sub_8015558` behind `gUnknown_030012D8+0x68`/`sub_800AAEC` checks.
 - **`sub_8012420`** (628 B, `actor_part84.c`) - a `part`-visibility/OAM-
   priority housekeeping pass: re-runs `sub_8012238` on an activity-flag
-  change, resets velocity/target fields past two `gUnknown_03001308`-
+  change, resets velocity/target fields past two `gLevelLayers`-
   anchored screen-space thresholds (the far one also firing
-  `sub_80231EC`/`sub_803AD88`), ticks a couple of counters, looks up
+  `SetMaskLevel`/`sub_803AD88`), ticks a couple of counters, looks up
   `self+8`'s type in `gStaticData_0816BF20` to fire one `sub_803AD84`
   trampoline call, then writes a small fixed value into `part+0xa` from
   a second, 22-case jump table on the same type.
 - **`sub_8012694`** (424 B, `actor_part84.c`) - a helper of
   `sub_801283C`: gated on the D-pad snapshot's bit 1, `self+0x18`'s
-  counter being 0, `gUnknown_030012C0` passing `sub_80231CC`, and a
+  counter being 0, `gLevelState` passing `sub_80231CC`, and a
   sub-object type of `6`/`0xb`/`0xc` (each with its own `+0x30 >= 0`
   distance-style gate), bumps `self+0x18`, fires the `+0x50`/`+0x54`
   and `+0x20`/`+0x24` trampoline pairs with type-keyed ids, resets the

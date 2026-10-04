@@ -56,7 +56,7 @@ some byte offsets by coincidence, per that header's own comment.
   `sub_801E644` init, a local BLDCNT/BLDY/DISPCNT setup
   (`field_c8`/`field_cc`/`field_d0`, the same fields `sub_8006250`
   applies), `LoadGraphicsPackage`, a row-stats handle from
-  `gUnknown_030012C0`, hands off to `sub_800599C` to build the results
+  `gLevelState`, hands off to `sub_800599C` to build the results
   sub-widgets, builds one more icon directly (the row-cursor/highlight
   icon at `field_c0`), seeds the settings-row bookkeeping fields
   (`field_14`/`field_18`/`field_1c`/`field_20`/`field_24`/`field_28`),

@@ -35,16 +35,16 @@ void sub_80274EC(struct hud_counter *self)
     if (self->icon_flag) sub_8027E88(self);
     sub_8027838(self);
 
-    if (sub_80233B4(gUnknown_030012C0) != -1) {
+    if (sub_80233B4(gLevelState) != -1) {
         sub_802757C(self);
         return;                       /* early return - the rest is skipped */
     }
-    if (sub_80232B8(gUnknown_030012C0)) {
+    if (sub_80232B8(gLevelState)) {
         gUnknown_0300086C = 0;
         sub_8008044(&self->parts[34]);        /* recomputed fresh both times, not cached */
         sub_80270E0(&self->parts[34], 0, 0);
     }
-    if (*((u8 *)gUnknown_030012C0 + 0x8c) && self->mode == 0 && self->field_08 == 0)
+    if (*((u8 *)gLevelState + 0x8c) && self->mode == 0 && self->field_08 == 0)
         sub_802763C(self);
     sub_8027940(self);
     sub_8027D5C(self);
@@ -58,7 +58,7 @@ needed.
 ### Codegen gotcha: pinning `r7` never emits its push/pop in this compiler
 
 Plain C (no pins beyond `self`) put `self` in `r5` and
-`&gUnknown_030012C0` in `r6` correctly on its own, but spilled
+`&gLevelState` in `r6` correctly on its own, but spilled
 `&gUnknown_0300086C` into `r8` (an extra push/pop pair) instead of
 keeping it in `r7` the way the ROM does - this compiler's allocator
 prefers a fresh caller-saved-adjacent `r8` slot over reusing `r7` once
@@ -75,7 +75,7 @@ either). Shipping that version would silently corrupt the caller's `r7`.
 Fix: leave `&gUnknown_0300086C` and the `0` it's compared/stored against
 as **plain, unpinned locals** (`s32 *layout_addr = &gUnknown_0300086C;`,
 no `register`), and only pin `self` to `r5`. With `self` and
-`&gUnknown_030012C0` (unpinned, but naturally chosen as `r6`) already
+`&gLevelState` (unpinned, but naturally chosen as `r6`) already
 occupying two of the four low callee-saved slots, the allocator's next
 choice for the third and fourth live-across-call values is genuinely
 `r7`/`r4` (with `r4` reused for the offset constant `0x880` later in the
@@ -330,7 +330,7 @@ hud_stat_widget2.c`, guarded by `#if NON_MATCHING`; real bytes stay in
   ended up correctly cached).
 - **`sub_802763C`**: three more change-detection-gated widgets, keyed
   off `sync_value_a`/`b`/`c` (`include/hud.h`, already named from the
-  second pass) against `sub_8023270`/`sub_8023268`/`sub_8023260`. The
+  second pass) against `GetClockMinutes`/`GetClockSeconds`/`GetClockTenths`. The
   first two split their value into tens/ones digits
   (`sub_8037E54`/`sub_803AF1C`, div/mod by 10) across a slot pair each
   (14/15, 17/18) using the same clamp idiom as `sub_802757C`; the third
@@ -389,7 +389,7 @@ time already spent on the six functions above:
 - **`sub_8027D5C`**/**`sub_8027E88`**: not read in this pass beyond
   their entry (mode-dispatch header identical in shape to
   `sub_8027940`'s own `self+8`/`self+0xc` check) - `sub_8027D5C` calls
-  `sub_802325C` where `sub_8027940` called `sub_8023414`, suggesting the
+  `GetWumpa` where `sub_8027940` called `sub_8023414`, suggesting the
   same digit-counter shape against a different value source;
   `sub_8027E88`, per the rom_map.md "fx" investigation, is the
   percentage-counter widget with a `cmp r1, #0x64` special case.
@@ -448,7 +448,7 @@ address labels (both branch targets and `ldr rX, =symbol`/`=literal`
 literal-pool entries) became GNU-as local numeric labels, referenced
 `Nf`/`Nb`, since a `NAKED` function's asm block can't use the real ROM
 address as a label. `sub_802763C` reuses one such label (`2:`, the
-`gUnknown_030012C0` pool entry) across three separate `ldr r4, 2f`
+`gLevelState` pool entry) across three separate `ldr r4, 2f`
 sites spread through the function - safe here since only one `2:` is
 ever defined in that asm block, so every forward reference resolves to
 the same single literal-pool word regardless of how many places load
@@ -566,7 +566,7 @@ leading slots via a desired frame of `-1`, exactly like `sub_8027838`'s
 own single-digit case), plus one more icon whose x/y table index is
 itself picked from a 3-way digit-count check on the first counter's
 value. `sub_8027D5C` is a smaller sibling - one 2-digit display sourced
-from `sub_802325C` - that also always refreshes one more fixed slot
+from `GetWumpa` - that also always refreshes one more fixed slot
 regardless of whether its value changed. `sub_8027E88` is the
 percentage-counter widget (`docs/rom_map.md`'s "fx" investigation named
 it this from its own `cmp r1, #0x64` special case): a value of exactly

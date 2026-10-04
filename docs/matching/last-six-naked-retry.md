@@ -88,13 +88,13 @@ block-local pseudos. part+0x28 spans the flip's branch, so it isn't
 block-local. In the draft, the global allocation order (priority is
 `floor_log2(refs) * refs / live_length`) is: part+0x28 (6 refs over 49
 insns, 0.245), then hdr+0x84, the constant 1, `arg3 * 2`, the
-zero-extended arg3 (3/63), -0x11 (3/86) and `&gUnknown_030012B4`
+zero-extended arg3 (3/63), -0x11 (3/86) and `&gEntityFlags`
 (3/94). So part+0x28 takes r5 before arg3 and the pool address get
 callee-saved registers. For the ROM's result, part+0x28 must be
 allocated last among the seven. With the same ref counts that would
 need a live range over 300 insns, so the ROM's pseudos must be shaped
 differently (fewer part+0x28 refs, or arg3/`arg3 * 2` as one
-longer-lived pseudo). An escaped `&gUnknown_030012B4` local gets that
+longer-lived pseudo). An escaped `&gEntityFlags` local gets that
 address into sl but is 88 halfwords.
 
 ## `sub_8005E5C` (73)

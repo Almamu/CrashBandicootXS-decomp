@@ -153,7 +153,7 @@ extern struct phys_obj *sub_801070C(struct phys_obj *obj);
 extern struct phys_obj *sub_801095C(struct phys_obj *obj);
 extern struct phys_obj *sub_8010914(struct phys_obj *obj);
 extern u8 sub_800B324(void *self);
-extern void sub_80231EC(void *self, s32 arg);
+extern void SetMaskLevel(void *self, s32 arg);
 extern void sub_800E494(struct phys_obj *self);
 extern void sub_800E4E4(struct phys_obj *self, struct aabb *box);
 extern void sub_800F2BC(struct phys_obj *self);
@@ -345,7 +345,7 @@ void sub_0800D18C(struct phys_obj *self, s32 idx)
     }
     px = D18C_P->x >> 8;
     py = D18C_P->y >> 8;
-    if (((struct d18c_level *)gUnknown_030012C0)->mode == 3)
+    if (((struct d18c_level *)gLevelState)->mode == 3)
         kind = 6;
     else
     {
@@ -606,13 +606,13 @@ tail:
             }
             if (dx > 5 && f21 == 0)
             {
-                if ((((struct d18c_level *)gUnknown_030012C0)->mode == 0
+                if ((((struct d18c_level *)gLevelState)->mode == 0
                      && ((D18C_P->flags >> 6) & 1)
                      && !D18C_TimerOver())
                     || self->kind != 0xd)
                 {
                     D18C_P->flags |= 0x40;
-                    sub_80231EC(gUnknown_030012C0, 0);
+                    SetMaskLevel(gLevelState, 0);
                     D18C_CALL68(0, 0xa, 0);
                 }
                 else

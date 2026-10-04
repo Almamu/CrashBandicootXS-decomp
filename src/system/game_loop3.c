@@ -4,22 +4,22 @@
 
 /* Built with old_agbcc - see docs/matching/game-loop-old-agbcc.md. */
 
-extern void *gUnknown_03001308;
+extern void *gLevelLayers;
 
-extern void sub_8024DFC(void *self, void *vec2);
+extern void ScaleBgLayerScroll(void *self, void *vec2);
 extern void sub_8024E24(void *self, void *vec2);
-extern void sub_8024C64(void *self, void *source);
-extern void sub_8024CF0(void *self, void *source);
+extern void FillBgStreamer(void *self, void *source);
+extern void SetBgStreamerSource(void *self, void *source);
 
 /* A viewport/parallax-scroll-layer object: `struct bg_scroll_layer`
  * (include/bg_scroll_layer.h; docs/rom_map.md's "Visual scrolling
  * background streamer" family is the sibling system built on the same
- * source-descriptor shape - see `sub_8024AA0` there), initialized from a
+ * source-descriptor shape - see `ScrollBgStreamer` there), initialized from a
  * `struct level_layer_desc`. */
 
 /* Applies the layer's scale-then-clamp step to `vec2` and accumulates
  * the (Q8, floor-divided) result into the layer's own position. */
-void sub_8024E68(struct bg_scroll_layer *self, s32 *vec2)
+void ScrollBgLayerBase(struct bg_scroll_layer *self, s32 *vec2)
 {
     s32 scaled[2];
     s32 x = vec2[0];
@@ -27,23 +27,23 @@ void sub_8024E68(struct bg_scroll_layer *self, s32 *vec2)
 
     scaled[0] = x;
     scaled[1] = y;
-    sub_8024DFC(self, scaled);
+    ScaleBgLayerScroll(self, scaled);
     sub_8024E24(self, scaled);
 }
 
-/* Same shape as `sub_8024E68`, but seeds the scale step directly from
+/* Same shape as `ScrollBgLayerBase`, but seeds the scale step directly from
  * `vec2` in place (no separate stack copy) and finishes by re-deriving
  * the layer's cached-tile buffers from its `streamer` instead of
  * accumulating a position. */
-void sub_8024E90(struct bg_scroll_layer *self, s32 *vec2)
+void ResetBgLayerBase(struct bg_scroll_layer *self, s32 *vec2)
 {
     s32 x = vec2[0];
     s32 y = vec2[1];
 
     self->x = x;
     self->y = y;
-    sub_8024DFC(self, self);
-    sub_8024C64(self->streamer, self);
+    ScaleBgLayerScroll(self, self);
+    FillBgStreamer(self->streamer, self);
 }
 
 /* (Re)initializes the layer from `source`: caches its pixel
@@ -51,7 +51,7 @@ void sub_8024E90(struct bg_scroll_layer *self, s32 *vec2)
  * origin, and re-populates the `streamer` tile-cache sub-object from
  * the same descriptor. Does nothing (besides clearing the ready flag)
  * when `source` is NULL. */
-void sub_8024EB4(struct bg_scroll_layer *self, const struct level_layer_desc *source)
+void SetBgLayerSource(struct bg_scroll_layer *self, const struct level_layer_desc *source)
 {
     u8 *readyFlag;
     s32 zero;
@@ -81,57 +81,57 @@ void sub_8024EB4(struct bg_scroll_layer *self, const struct level_layer_desc *so
         self->x = zero;
         self->y = zero;
 
-        sub_8024CF0(self->streamer, (void *)source);
-        sub_8024C64(self->streamer, self);
+        SetBgStreamerSource(self->streamer, (void *)source);
+        FillBgStreamer(self->streamer, self);
 
         *readyFlag = 1;
     }
 }
 
-u8 sub_8024F04(struct bg_scroll_layer *self)
+u8 IsBgLayerEnabled(struct bg_scroll_layer *self)
 {
     return self->enabled;
 }
 
-s32 sub_8024F0C(struct bg_scroll_layer *self)
+s32 GetBgLayerY(struct bg_scroll_layer *self)
 {
     return self->y;
 }
 
-s32 sub_8024F10(struct bg_scroll_layer *self)
+s32 GetBgLayerX(struct bg_scroll_layer *self)
 {
     return self->x;
 }
 
-s32 sub_8024F14(struct bg_scroll_layer *self)
+s32 GetBgLayerHeightTiles(struct bg_scroll_layer *self)
 {
     return self->heightTiles;
 }
 
-s32 sub_8024F18(struct bg_scroll_layer *self)
+s32 GetBgLayerWidthTiles(struct bg_scroll_layer *self)
 {
     return self->widthTiles;
 }
 
-s32 sub_8024F1C(struct bg_scroll_layer *self)
+s32 GetBgLayerHeight(struct bg_scroll_layer *self)
 {
     return self->heightPx;
 }
 
-s32 sub_8024F20(struct bg_scroll_layer *self)
+s32 GetBgLayerWidth(struct bg_scroll_layer *self)
 {
     return self->widthPx;
 }
 
 /* The 16-slot decode/LRU tile-record cache used throughout this cluster
  * of files (`game_loop3.c`/`game_loop4.c`/`game_loop5.c`; docs/rom_map.md's
- * "Collision/terrain-map streamer" / "`sub_8024F24` (16-slot LRU
+ * "Collision/terrain-map streamer" / "`GetCollisionChunk` (16-slot LRU
  * cache/decode dispatcher)"). `id[N]` holds the record ID currently
  * decoded into the matching 256-byte `buf[N]` slot; `nextSlot` is the
  * ring-buffer eviction cursor this function advances every time it
  * decodes a new record (evicting slot `(nextSlot - 1) & 0xf`, i.e. the
  * slot filled just before the current cursor position). The descriptor
- * this cache is built from (`source` below, populated by `sub_80254F8`
+ * this cache is built from (`source` below, populated by `SetCollisionSource`
  * in game_loop5.c) is kept as raw offsets rather than its own struct -
  * it's never allocated by any function in this cluster, so its full
  * shape isn't confirmed enough to commit to one. This definition is
@@ -139,7 +139,7 @@ s32 sub_8024F20(struct bg_scroll_layer *self)
  * keep them in sync if this layout ever needs revising. */
 struct tile_cache {
     void *source;      /* 0x000 */
-    void *decodeBase;  /* 0x004 - gUnknown_03001308's camera offset + source->4; sub_8025334's decode-table base */
+    void *decodeBase;  /* 0x004 - gLevelLayers's camera offset + source->4; DecodeCollisionChunk's decode-table base */
     s32 unk008;         /* 0x008 - source->0x1a << 3; not read anywhere in this cluster */
     s32 unk00c;          /* 0x00c - source->0x1c << 3; not read anywhere in this cluster */
     s32 unk010;           /* 0x010 - copy of source->0x1a; not read anywhere in this cluster */
@@ -151,12 +151,12 @@ struct tile_cache {
     s32 nextSlot;                    /* 0x1060 */
 };
 
-extern void sub_8025334(struct tile_cache *self, s32 recordId, void *dest);
+extern void DecodeCollisionChunk(struct tile_cache *self, s32 recordId, void *dest);
 
 /* Returns the cache slot holding decoded record recordId. On a miss,
- * decodes it (sub_8025334) into the slot just behind the ring cursor and
+ * decodes it (DecodeCollisionChunk) into the slot just behind the ring cursor and
  * advances the cursor. */
-void *sub_8024F24(struct tile_cache *self, s32 recordId)
+void *GetCollisionChunk(struct tile_cache *self, s32 recordId)
 {
     if (recordId == self->id[0])
         return self->buf[0];
@@ -194,7 +194,7 @@ void *sub_8024F24(struct tile_cache *self, s32 recordId)
         s32 slot = (self->nextSlot + 15) & 0xf;
         u8 *dest = self->buf[slot];
 
-        sub_8025334(self, recordId, dest);
+        DecodeCollisionChunk(self, recordId, dest);
         self->id[slot] = recordId;
         self->nextSlot = (self->nextSlot + 1) & 0xf;
         return dest;
@@ -205,7 +205,7 @@ void *sub_8024F24(struct tile_cache *self, s32 recordId)
  * `matching_decomp_alignment_fix` precedent. */
 asm(".align 2, 0");
 
-extern u8 gStaticData_081725AC[];
+extern u8 gTerrainHeights0[];
 
 /* The decoded cell at pixel (x, y): 16x8-pixel tiles, one 256-byte cache
  * slot per tile record. */
@@ -213,14 +213,14 @@ static inline u16 GetCell(struct tile_cache *self, s32 x, s32 y)
 {
     s32 tileX = x >> 4;
     s32 tileY = y >> 3;
-    u16 *buf = sub_8024F24(self, (*(u16 **)self->source)[tileY * self->width + tileX]);
+    u16 *buf = GetCollisionChunk(self, (*(u16 **)self->source)[tileY * self->width + tileX]);
     return buf[(y & 7) * 16 + (x & 0xf)];
 }
 
-/* The terrain-property row (36 bytes, gStaticData_081725AC) for the cell at
+/* The terrain-property row (36 bytes, gTerrainHeights0) for the cell at
  * pixel (x, y), or NULL when out of bounds or the type is 0 or above 0x23.
  * The cell's flag nibble goes to a local nothing reads. */
-void *sub_80250BC(struct tile_cache *self, s32 x, s32 y)
+void *GetTerrainHeights(struct tile_cache *self, s32 x, s32 y)
 {
     u8 hi;
     u8 *hiOut = &hi;
@@ -237,17 +237,17 @@ void *sub_80250BC(struct tile_cache *self, s32 x, s32 y)
     type = cell & 0xff;
     if (type == 0 || type > 0x23)
         return NULL;
-    return gStaticData_081725AC + type * 36;
+    return gTerrainHeights0 + type * 36;
 }
 
-extern u8 gStaticData_081725B4[];
-extern u8 gStaticData_081725BC[];
-extern u8 gStaticData_081725C4[];
+extern u8 gTerrainHeights1[];
+extern u8 gTerrainHeights2[];
+extern u8 gTerrainHeights3[];
 
-/* Like sub_80250BC with a collision mode (0-3): each mode has its own
+/* Like GetTerrainHeights with a collision mode (0-3): each mode has its own
  * property table and its own "not solid" bit in the cell's top nibble.
  * The flag nibble is written to flagsOut. */
-void *sub_8025130(struct tile_cache *self, s32 x, s32 y, s32 mode, u8 *flagsOut)
+void *GetSolidTerrainHeights(struct tile_cache *self, s32 x, s32 y, s32 mode, u8 *flagsOut)
 {
     void *result = NULL;
     s32 hi = 0;
@@ -274,25 +274,25 @@ void *sub_8025130(struct tile_cache *self, s32 x, s32 y, s32 mode, u8 *flagsOut)
         if (hi & 4)
             result = NULL;
         else
-            result = gStaticData_081725AC + type * 36;
+            result = gTerrainHeights0 + type * 36;
         break;
     case 1:
         if (hi & mode)
             result = NULL;
         else
-            result = gStaticData_081725B4 + type * 36;
+            result = gTerrainHeights1 + type * 36;
         break;
     case 2:
         if (hi & 8)
             result = NULL;
         else
-            result = gStaticData_081725BC + type * 36;
+            result = gTerrainHeights2 + type * 36;
         break;
     case 3:
         if (hi & 2)
             result = NULL;
         else
-            result = gStaticData_081725C4 + type * 36;
+            result = gTerrainHeights3 + type * 36;
         break;
     }
     return result;
@@ -304,7 +304,7 @@ struct terrain_type
     u8 unk_04[0x20];
 };
 
-extern struct terrain_type gStaticData_081725A8[];
+extern struct terrain_type gTerrainTypes[];
 
 /* The mode byte (0-3) of the cell's terrain type at pixel (x, y): -1
  * when out of bounds or the type is 0x23 or below, 0 when the mode's
@@ -336,25 +336,25 @@ s8 sub_8025228(struct tile_cache *self, s32 x, s32 y, s32 mode, u8 *flagsOut)
         if (hi & 4)
             result = 0;
         else
-            result = gStaticData_081725A8[type].modeValue[0];
+            result = gTerrainTypes[type].modeValue[0];
         break;
     case 1:
         if (hi & mode)
             result = 0;
         else
-            result = gStaticData_081725A8[type].modeValue[1];
+            result = gTerrainTypes[type].modeValue[1];
         break;
     case 2:
         if (hi & 8)
             result = 0;
         else
-            result = gStaticData_081725A8[type].modeValue[2];
+            result = gTerrainTypes[type].modeValue[2];
         break;
     case 3:
         if (hi & 2)
             result = 0;
         else
-            result = gStaticData_081725A8[type].modeValue[3];
+            result = gTerrainTypes[type].modeValue[3];
         break;
     }
     return result;
@@ -366,7 +366,7 @@ s8 sub_8025228(struct tile_cache *self, s32 x, s32 y, s32 mode, u8 *flagsOut)
  * stream, budget-limited to 0x7f halfwords, with three run modes per
  * token byte - a literal-fill run, a signed-delta-accumulate run, and a
  * raw-copy run - writing the decoded halfwords into `dest` (a linear
- * 256-byte cache slot in `sub_8024F24`'s caller).
+ * 256-byte cache slot in `GetCollisionChunk`'s caller).
  *
  * Matched (near-miss sweep 2, old_agbcc). Three pieces closed the old
  * 33-halfword gap:
@@ -382,7 +382,7 @@ s8 sub_8025228(struct tile_cache *self, s32 x, s32 y, s32 mode, u8 *flagsOut)
  *   emits no code, see #468) gives `n` one more reference, so the pair
  *   loop's run counter wins r3 and `acc` keeps r4. Without it the
  *   allocator swaps the two. */
-void sub_8025334(struct tile_cache *self, s32 recordId, void *dest)
+void DecodeCollisionChunk(struct tile_cache *self, s32 recordId, void *dest)
 {
     u16 *out = dest;
     u16 *src = self->decodeBase;

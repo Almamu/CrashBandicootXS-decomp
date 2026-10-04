@@ -75,7 +75,7 @@ Still open:
   pre-check, the `flagged` block and case 15. This looks like GCSE's
   reaching-register copy, but re-reading `PLACEMENT(slot)` there either
   changes nothing or recomputes the whole chain.
-- `id`, `self` and `&gUnknown_030012C0` are in different registers from
+- `id`, `self` and `&gLevelState` are in different registers from
   the ROM.
 - Case 15's two ands are folded into one. Two `&=` statements keep both
   ands but change the stack frame.

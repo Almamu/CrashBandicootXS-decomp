@@ -20,7 +20,7 @@ struct meter_actor {
     s32 meter;                  // 0x54
 };
 
-extern s32 sub_8023430(void *arg0);
+extern s32 CollectWumpa(void *arg0);
 extern void sub_802E484(s32 x, s32 y, s32 amount);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern s32 sub_803ADB4(s32 arg0, s32 arg1);
@@ -33,7 +33,7 @@ extern s32 sub_8029B2C(void);
 extern void FreeVramTileBlock(void *arg0);
 extern void mem_free(void *ptr);
 
-extern struct level_state *gUnknown_030012C0;
+extern struct level_state *gLevelState;
 extern void *gUnknown_030012BC;
 extern u8 gUnknown_03001505;
 extern u8 gUnknown_03001506;
@@ -53,7 +53,7 @@ extern u8 gStaticData_087E4DF4[];
 /* Accumulator-drain/reward-dispenser for the `gUnknown_030014FC`
  * accumulator `sub_802F540` fills: while the singleton flag
  * (`gUnknown_03001506`) is set, fully drains it via repeated
- * `sub_8023430` calls; otherwise, once a `gUnknown_030014F8` cooldown
+ * `CollectWumpa` calls; otherwise, once a `gUnknown_030014F8` cooldown
  * elapses, dispenses one of four tiers of reward (via `sub_802E484` at
  * `self`'s position) sized by the accumulator's own magnitude, and
  * plays a cue. */
@@ -68,7 +68,7 @@ void sub_802F3BC(void *selfArg)
 
     if (gUnknown_03001506 != 0) {
         do {
-            sub_8023430(gUnknown_030012C0);
+            CollectWumpa(gLevelState);
             gUnknown_030014FC--;
         } while (gUnknown_030014FC != 0);
         return;
@@ -180,7 +180,7 @@ void sub_802F50C(void *selfArg, s32 delta)
  * `timeTrial` flag. Its own first parameter (`self`) is unused. */
 void sub_802F540(void *selfArg, s32 delta)
 {
-    if (gUnknown_030012C0->timeTrial == 0) {
+    if (gLevelState->timeTrial == 0) {
         if (gUnknown_030014FC == 0) {
             gUnknown_030014F8 = 0xf;
         }
@@ -340,7 +340,7 @@ void sub_802F6DC(void *selfArg, s32 flags)
 
     if (gUnknown_030014FC != 0) {
         do {
-            sub_8023430(gUnknown_030012C0);
+            CollectWumpa(gLevelState);
             gUnknown_030014FC--;
         } while (gUnknown_030014FC != 0);
     }

@@ -11,7 +11,7 @@ asm(".set _call_via_r2, sub_803AD80\n"
 
 extern u32 gUnknown_030007E0;
 extern void *gUnknown_030012BC;
-extern void *gUnknown_030012C0;
+extern void *gLevelState;
 extern void *gUnknown_03001304;
 extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
 extern u8 sub_8000760(void *pad);
@@ -58,7 +58,7 @@ void sub_80138E8(struct act *self)
     }
     else if (part->animDone)
     {
-        if (sub_80231BC(gUnknown_030012C0))
+        if (sub_80231BC(gLevelState))
         {
             ACT_VCALL1(self, m20, 0x19);
             ACT_VCALL2(self, m50, self->part, 7);
@@ -166,7 +166,7 @@ void sub_8013994(struct act *self)
                 switch (dir)
                 {
                 case 3 ... 4:
-                    if ((INPUT_HELD(in) & 0x200) && sub_80231C4(gUnknown_030012C0))
+                    if ((INPUT_HELD(in) & 0x200) && sub_80231C4(gLevelState))
                     {
                         self->unk_29 = 1;
                         ACT_VCALL1(self, m20, 4);

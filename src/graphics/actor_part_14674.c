@@ -12,7 +12,7 @@ asm(".set _call_via_r2, sub_803AD80\n"
     ".set _call_via_r3, sub_803AD84\n");
 
 extern u32 gUnknown_030007E0;
-extern void *gUnknown_030012B4;
+extern void *gEntityFlags;
 extern void *gUnknown_030012B8;
 extern void *gUnknown_030012BC;
 extern struct act_part *gUnknown_030012D8;
@@ -257,7 +257,7 @@ void sub_8014940(struct act *self)
             if (cur != none)
             {
                 register s32 id asm("r3") = *(vu16 *)&part->id;
-                register u8 *base asm("r2") = gUnknown_030012B4;
+                register u8 *base asm("r2") = gEntityFlags;
                 register s32 word asm("r0") = id;
                 s32 off;
                 u32 *slot;

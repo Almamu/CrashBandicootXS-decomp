@@ -49,7 +49,7 @@ functions):
   keys: Up/Down page turns (`sub_801D548`/`sub_801D4C4`), Left/Right
   cursor moves (`sub_801CDE0`/`sub_801CE60`, repeating while held),
   Start exits (`sub_801D300`), A on an open entry selects
-  (`sub_801D110`). Each level's fixed record is `gStaticData_0816C86C`
+  (`sub_801D110`). Each level's fixed record is `gLevelTable`
   (36 bytes: name text, three centisecond thresholds); its saved record
   is a word in `sub_80236EC`'s save block (`cleared`/two more flags/a
   13-bit best time). The object keeps shadow copies of BLDCNT/BLDALPHA

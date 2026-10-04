@@ -54,9 +54,9 @@ struct hud_counter {
     s32 value;               /* +0x1c */
     u8 unknown_20[0xC];      /* +0x20 */
     s32 sync_value_a;        /* +0x2c - sub_802763C's change-detection
-                               * cache for `sub_8023270`'s value. */
-    s32 sync_value_b;        /* +0x30 - same, for `sub_8023268`. */
-    s32 sync_value_c;        /* +0x34 - same, for `sub_8023260`. */
+                               * cache for `GetClockMinutes`'s value. */
+    s32 sync_value_b;        /* +0x30 - same, for `GetClockSeconds`. */
+    s32 sync_value_c;        /* +0x34 - same, for `GetClockTenths`. */
     u8 unknown_38[8];        /* +0x38 */
     s32 previous_value;      /* +0x40 */
     u8 unknown_44[0x20];     /* +0x44 */

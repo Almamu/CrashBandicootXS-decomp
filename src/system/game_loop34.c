@@ -8,8 +8,8 @@
  * game_loop30.c. */
 
 extern void *gUnknown_030012BC;
-extern void *gUnknown_030012B4;
-extern void *gUnknown_030012E4;
+extern void *gEntityFlags;
+extern void *gEntitySpawner;
 extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
 extern s32 sub_802599C(void *self, s32 n);
 extern void sub_80259D4(void *self, s32 n);
@@ -20,7 +20,7 @@ extern struct actor *sub_8025A64(void *unused0, s32 x, s32 y, u8 p3, u32 p5, u8 
 
 /* Plays cue-3 SFX, then - unless `self->field_08` is the sentinel
  * `0xffff` - consumes a slot from the per-record bit-grid
- * (`gUnknown_030012B4`, the same `sub_802599C`/`sub_80259D4` accessor
+ * (`gEntityFlags`, the same `sub_802599C`/`sub_80259D4` accessor
  * pair game_loop12.c/game_loop13.c already establish) keyed by
  * `self->field_08`, setting the bit only if it wasn't already set.
  * Finally spawns a part object (`sub_8025A64`) three tiles below
@@ -32,8 +32,8 @@ void sub_801089C(struct actor *self, u32 arg1)
     PlaySfx(gUnknown_030012BC, 3, 0x100);
 
     if (self->field_08 != 0xFFFF) {
-        if ((u8)sub_802599C(gUnknown_030012B4, self->field_08) == 0) {
-            sub_80259D4(gUnknown_030012B4, self->field_08);
+        if ((u8)sub_802599C(gEntityFlags, self->field_08) == 0) {
+            sub_80259D4(gEntityFlags, self->field_08);
         }
     }
 
@@ -58,7 +58,7 @@ void sub_801089C(struct actor *self, u32 arg1)
             "ldr r2, [%0, #4]\n"
             "asr r2, r2, #8\n"
             "add r2, r2, #3\n"
-            "ldr r0, =gUnknown_030012E4\n"
+            "ldr r0, =gEntitySpawner\n"
             "ldr r0, [r0]\n"
             "mov r3, #3\n"
             "str r3, [sp]\n"

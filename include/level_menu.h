@@ -239,7 +239,7 @@ struct level_menu
     s32 lastIndex;              // 0x04 - last valid `index` on this page
     s32 index;                  // 0x08 - cursor, 0-5
     s32 world;                  // 0x0C - page
-    s32 levelId;                // 0x10 - gStaticData_0816C86C index
+    s32 levelId;                // 0x10 - gLevelTable index
     s32 nameText;               // 0x14 - the level name's text
     struct xy_pair *positions;  // 0x18 - cursor position per index
     struct page_bg *bg1;        // 0x1C - sub_801D7F8, BG1

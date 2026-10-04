@@ -6,7 +6,7 @@
  * `self` object and conventions documented there. */
 
 extern void *gUnknown_030012BC;
-extern void *gUnknown_030012C0;
+extern void *gLevelState;
 extern void *gUnknown_03000884;
 
 extern u8 sub_802A6EC(void *self);
@@ -31,7 +31,7 @@ extern void sub_802C4C8(void *selfArg);
 void sub_802C904(struct actor_self *self)
 {
     if (self->animIndex != 0x12 && sub_802A6EC(self)) {
-        sub_8022FEC(gUnknown_030012C0);
+        sub_8022FEC(gLevelState);
         sub_802C128(gUnknown_03000884);
         self->animIndex = 0x12;
         {
@@ -48,7 +48,7 @@ void sub_802C904(struct actor_self *self)
 
     if (self->animIndex != 0x12 && sub_802DD9C(self)) {
         PlaySfx(gUnknown_030012BC, 3, 0x100);
-        sub_8022FEC(gUnknown_030012C0);
+        sub_8022FEC(gLevelState);
         self->animIndex = 0x12;
         {
             register u16 anim asm("r0") = self->anims[0x12].duration;

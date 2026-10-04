@@ -61,10 +61,10 @@ struct icon_pos {
  * comment. */
 struct pause_screen_results {
     u8 unused_00[0x10];
-    void *field_10;             /* 0x10 - a row-stats handle, passed to sub_8006920/64/68A8/etc and read via gUnknown_030012C0's per-level index table in sub_8005D44 */
+    void *field_10;             /* 0x10 - a row-stats handle, passed to sub_8006920/64/68A8/etc and read via gLevelState's per-level index table in sub_8005D44 */
     void *field_14;               /* 0x14 - base of an 8-byte-stride per-row record array (gStaticData_0816B298), see sub_800556C/sub_8005EF4 */
     s32 field_18;                   /* 0x18 - currently selected/highlighted row index */
-    s32 field_1c;                     /* 0x1c - row count (4 or 5, from gUnknown_030012C0+0x8c) */
+    s32 field_1c;                     /* 0x1c - row count (4 or 5, from gLevelState+0x8c) */
     s32 field_20;                       /* 0x20 - per-row Y spacing (16) */
     s32 field_24;                         /* 0x24 - sub_8005304's jump-table state (0-4) */
     s32 field_28;                           /* 0x28 - sub_8005304's countdown (init 0xb4) */

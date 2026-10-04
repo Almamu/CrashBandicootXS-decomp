@@ -83,8 +83,8 @@ Left (12 halfwords):
 - the `str` comes one instruction early, before `adds r1, r7, #0`
   (the ROM's placement looks like a caller-save);
 - `q2`'s reload registers are r4/r3 swapped;
-- `&gUnknown_030012B4` and -0x11 are in sl/r9 where the ROM has
-  r9/sl. A `tb = &gUnknown_030012B4` local with extra references was
+- `&gEntityFlags` and -0x11 are in sl/r9 where the ROM has
+  r9/sl. A `tb = &gEntityFlags` local with extra references was
   84+.
 
 ## `sub_8005E5C`: 73 to 45

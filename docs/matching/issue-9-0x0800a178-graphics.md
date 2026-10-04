@@ -45,16 +45,16 @@ sharpens that: both are `s32 fn(void *player, struct probe_pos *pos,
 s32 *outValue)`, computing `pos->x >> 3`/`pos->y >> 3` tile coords from
 `player->0x20`'s terrain-data pointer:
 
-- **`sub_8026BF8`** looks the tile row up via `sub_80250BC` ("the raw
+- **`sub_8026BF8`** looks the tile row up via `GetTerrainHeights` ("the raw
   terrain streamer" - returns a row pointer, or `NULL` on a miss).
   On a hit, reads a **signed byte** height sample at
   `row[pos->x & 7]`, computes `((pos->y >> 3) << 3) + heightByte -
   pos->y`, shifts to Q8, and accumulates it into `*outValue`. Returns
-  `1` on a row hit, `0` if `sub_80250BC` returned `NULL`.
+  `1` on a row hit, `0` if `GetTerrainHeights` returned `NULL`.
 - **`sub_8026C3C`** is the exact same shape, but the height byte comes
   from `sub_8025228(terrainPtr, tileX, tileY, 0, &scratch)` instead of
   a direct row-pointer byte read - the "CheckTerrainFlag"-style API
-  `sub_8026A18`/`sub_8026AE8` already use via their own `sub_8025130`
+  `sub_8026A18`/`sub_8026AE8` already use via their own `GetSolidTerrainHeights`
   calls (same argument shape: base pointer, tile coords, a submode, an
   out-parameter - see [issue-9-10-41-0x08026628-game-loop.md](./issue-9-10-41-0x08026628-game-loop.md)).
   Returns `0` if the returned signed byte is negative, `1` otherwise,
@@ -73,7 +73,7 @@ A single Y-axis "floor" probe. Builds an int `{x, y}` position at the
 via the already-matched `sub_8008200(dest, 8, quad)`, nudged left/right
 by half the quad's width depending on `self+0x28` bit 4's mirror flag -
 the same established convention `game_loop43.c`/`actor_part109.c`
-document), then probes it via `sub_8026BF8(*gUnknown_03001308, &pos,
+document), then probes it via `sub_8026BF8(*gLevelLayers, &pos,
 &origY)` where `origY` is `self.y`'s own original (unmodified) Q8
 value, kept aside as the probe's out-parameter target.
 
@@ -167,7 +167,7 @@ Both keep `sb`/`sl`/`r8` (and, for `sub_800A178`, `r7` too) live
 simultaneously across many `bl` calls, reused for genuinely different
 values block to block:
 
-- `sub_800A420`'s `r8` holds `&gUnknown_03001308` across two separate
+- `sub_800A420`'s `r8` holds `&gLevelLayers` across two separate
   `sub_8026BF8` calls (a conservative re-derive-via-cached-address
   idiom, not a straight cached value) rather than re-fetching the
   literal pool address each time; `sb` holds `outFlag` for the whole
@@ -192,7 +192,7 @@ worked-out C-level logic of the pair - see the `outFlag`/bit-1 aside
 above) as a direct confirmation: the straightforward C reconstruction
 compiled cleanly, but this compiler's natural register allocation used
 **no high registers at all** (`r4`-`r7` sufficed for every value,
-including the `gUnknown_03001308` address and `outFlag`) - a
+including the `gLevelLayers` address and `outFlag`) - a
 structurally different register-allocation solution from the ROM's own
 deliberate `sb`/`r8` choice, not a near-miss fixable with one or two
 register pins. Recognizing the established pattern, both functions
@@ -209,7 +209,7 @@ Verified byte-exact via the isolated `cpp`/`agbcc`/`as` +
 only differing bytes fell into exactly the expected relocation-site
 set - 16 `bl` calls (`sub_803AD7C` x2, `sub_800A420` x3, `sub_8008200`
 x2, `sub_8026C3C` x1, `sub_8026628` x3, `sub_8008278` x3, `sub_8026BF8`
-x2) plus 3 `.4byte gUnknown_03001308` literal-pool words, all of which
+x2) plus 3 `.4byte gLevelLayers` literal-pool words, all of which
 resolve correctly once linked.
 
 ## Build layout
@@ -525,7 +525,7 @@ semantically but explicitly left unattempted as C reconstructions
 about their semantics changed from the account above - `s32 fn(void
 *player, struct probe_pos *pos, s32 *outValue)`, `player+0x20`'s
 terrain-data pointer, `pos->x>>3`/`pos->y>>3` tile coords, a signed
-height-byte lookup (`sub_80250BC` row read for `sub_8026BF8`,
+height-byte lookup (`GetTerrainHeights` row read for `sub_8026BF8`,
 `sub_8025228` for `sub_8026C3C`), `((tileY<<3)+height-pos->y)<<8`
 accumulated into `*outValue` - this pass just closes them as real C.
 
@@ -586,7 +586,7 @@ register choices directly once the right C shape was found:
 Confirmed byte-exact via the isolated `cpp`/`agbcc`/`as` +
 `objcopy`/`cmp` pipeline against `baserom.gba`'s own bytes at
 `0x08026BF8`-`0x08026C80` (136 bytes, both functions) - the only
-differing bytes are the two expected `bl` relocation sites (`sub_80250BC`,
+differing bytes are the two expected `bl` relocation sites (`GetTerrainHeights`,
 `sub_8025228`), both resolving correctly once linked. Full clean `rm -rf
 build && make NON_MATCHING=1 report` (no warnings) and `rm -rf build
 crashbandicootxs.elf crashbandicootxs.gba crashbandicootxs.map && make

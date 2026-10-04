@@ -39,7 +39,7 @@ channel B's pair (3/5, back to 0 when neither is held), left/right channel
 A's (7 with speed 0x3200 while the left-hold flag lasts - it expires after
 30 frames held, then re-arms once a 10-frame countdown has run out with
 left released - 8 with speed 0xA00, else 1 with speed 0x1E00). Once the target's x passes the level's right edge
-(`gUnknown_03001308`'s layer 0 width, less 0xA00) the child is marked gone
+(`gLevelLayers`'s layer 0 width, less 0xA00) the child is marked gone
 and `sub_80241A4` is signalled. `sub_8017808` then applies any dirty
 channel through the method table using `gStaticData_0816B8C0`'s 12-byte
 records.

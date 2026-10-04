@@ -24,10 +24,10 @@
 extern s32 gUnknown_03001488;
 extern u8 gUnknown_030014A0;
 extern s32 gUnknown_03001484;
-extern void *gUnknown_030012C0;
+extern void *gLevelState;
 extern void *gUnknown_030012BC;
 
-extern s32 sub_8023430(void *self);
+extern s32 CollectWumpa(void *self);
 extern void sub_802B174(s32 a, s32 b, s32 c);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void sub_8029BAC(s32 arg0);
@@ -35,7 +35,7 @@ extern void sub_8029BAC(s32 arg0);
 /* Accumulator-drain/reward-dispenser for the `gUnknown_03001488`
  * accumulator (filled by `sub_802C078`, still raw): while the "locked"
  * flag `gUnknown_030014A0` is set, fully drains it via repeated
- * `sub_8023430` calls without spawning anything; otherwise, once the
+ * `CollectWumpa` calls without spawning anything; otherwise, once the
  * `gUnknown_03001484` cooldown elapses, dispenses one of four tiers of
  * reward (via `sub_802B174` at `self`'s position) sized by the
  * accumulator's own magnitude, and plays a cue. Exact structural twin
@@ -52,7 +52,7 @@ void sub_802BC68(void *selfArg)
 
     if (gUnknown_030014A0 != 0) {
         do {
-            sub_8023430(gUnknown_030012C0);
+            CollectWumpa(gLevelState);
             gUnknown_03001488--;
         } while (gUnknown_03001488 != 0);
         return;

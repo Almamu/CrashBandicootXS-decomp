@@ -29,7 +29,7 @@ struct spark
 extern u32 gUnknown_030007E0;
 extern void *gUnknown_030012BC;
 extern struct act_part *gUnknown_030012D8;
-extern void *gUnknown_030012E4;
+extern void *gEntitySpawner;
 extern void *gUnknown_03001304;
 extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
 extern u8 sub_8000760(void *pad);
@@ -57,7 +57,7 @@ static inline void OrMaskByte(u8 *p, s32 clear, s32 set)
  * pool pointer is loaded, as in the ROM. */
 static inline struct spark *SpawnSpark(s32 x, s32 y, s32 mirror)
 {
-    return sub_8025BAC(gUnknown_030012E4, 0x29, 1, x, y, mirror);
+    return sub_8025BAC(gEntitySpawner, 0x29, 1, x, y, mirror);
 }
 
 /* The "next action" trio stores (include/action_obj.h's ActSetNext for

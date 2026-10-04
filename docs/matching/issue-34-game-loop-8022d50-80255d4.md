@@ -1,8 +1,8 @@
-# GitHub issue #34 follow-up: `sub_8022D50` (parked, NAKED) / `sub_80255D4` (parked, NAKED)
+# GitHub issue #34 follow-up: `sub_8022D50` (parked, NAKED) / `SpawnRoomEntities` (parked, NAKED)
 
 Picked up the two remaining raw functions the `game_loop` category's
 `docs/status/game_loop.md` still listed under the `UpdateGameFrame`-
-`MainLoop` cluster: `sub_8022D50` and `sub_80255D4`. `sub_80255D4` was
+`MainLoop` cluster: `sub_8022D50` and `SpawnRoomEntities`. `SpawnRoomEntities` was
 initially left raw in a first pass (see below), then picked up again in
 a second follow-up pass once its second half was fully traced - see the
 "NAKED transcription" section below.
@@ -10,7 +10,7 @@ a second follow-up pass once its second half was fully traced - see the
 ## `sub_8022D50` - NAKED transcription, `src/system/game_loop40.c`
 
 Fully traced against the ROM: `self` (every caller passes
-`*gUnknown_030012C0`, the same per-level state object
+`*gLevelState`, the same per-level state object
 `sub_8022BF0`/`sub_8022CA0`, game_loop.c, and the `self+0x80`/`0x84`/...
 accessor family, game_loop2.c, operate on) gets two fields cleared
 (`self+0x8c` as a byte, `self+0x90`-`0xa0` as five zeroed words), then -
@@ -29,7 +29,7 @@ walked: each entry fires its own `+0x18`-table's `+0x48`/`0x4c`
 trampoline too - a nonzero low byte there flags the entry for despawn
 (`sub_8011448(entry, 1)`), otherwise the entry is marked "seen" (`+0xc`
 bit 0) and, unless its `+8` id is the `0xFFFF` sentinel, its bit gets set
-in the `gUnknown_030012B4+0x108` collision bitmap - the exact same
+in the `gEntityFlags+0x108` collision bitmap - the exact same
 inline idiom `sub_80072D8` (graphics.c) uses on a `struct actor`.
 
 Every one of those pieces matches byte-for-byte in isolation with a
@@ -71,13 +71,13 @@ Transcribed straight from the confirmed-correct ROM disassembly instead.
 Full clean `make compare` (`La suma coincide`) confirms the NAKED
 transcription byte-exact.
 
-## `sub_80255D4` - NAKED transcription, `src/system/game_loop41.c`
+## `SpawnRoomEntities` - NAKED transcription, `src/system/game_loop41.c`
 
 Follow-up pass on the entry directly above: the full instruction-level
 trace was finished this time (every field, offset, branch and call
 argument pinned down against the ROM), so this is now understood with
 byte-exact-reconstruction confidence rather than left raw. `self` here
-is `*gUnknown_030012B4` (the same collision-bitmap base
+is `*gEntityFlags` (the same collision-bitmap base
 `sub_8025944`/`sub_8025968`/`sub_802599C`, game_loop12.c, and
 `sub_8025A0C`, game_loop13.c, already operate on).
 
@@ -96,9 +96,9 @@ reconstruction, game_loop12.c, documents for a sibling
 list) over `{count:u16@2, items:ptr@4}` 8-byte group records, each
 holding `{tableIdx:u16, p1:u16, p2:u16, p3:u16}` 8-byte item records; for
 each item not already flagged in the `self+8` bit-grid (`sub_8025968`),
-`sub_8025D28` (the table-indexed interworking-trampoline dispatcher,
+`SpawnEntity` (the table-indexed interworking-trampoline dispatcher,
 game_loop14.c) fires with a running, never-reset-per-group counter as
-its own `self` argument, indexing `gUnknown_030012E4`'s table.
+its own `self` argument, indexing `gEntitySpawner`'s table.
 
 **Second half** (everything gated on `redirectInfo`, a count-prefixed
 `{u32, u32}` array - null skips it entirely, otherwise the first word
@@ -165,7 +165,7 @@ reconstruction in any meaningful sense, just NAKED asm wearing a C
 function signature. This is the same family of gcc-2.9
 high-register/3-operand-add materialization gap already parked
 elsewhere in this ROM region for similarly register-heavy functions
-(`sub_8025B0C`/`sub_8025BAC`/`sub_8025CA4`, `sub_8025E98`/`sub_8025F3C`
+(`sub_8025B0C`/`sub_8025BAC`/`sub_8025CA4`, `ScrollBgLayer`/`DrawBgLayerColumn`
 above, both keeping `r8` live across most of their bodies). Transcribed
 straight from the confirmed-correct ROM disassembly instead - every
 label, branch and literal-pool placement (including the ROM's four
@@ -175,7 +175,7 @@ unmodified.
 
 Full clean `make compare` (`La suma coincide`) confirms the NAKED
 transcription byte-exact. `sub_8025894`, which used to share
-`asm/code_3_2_17_255d4.s` with `sub_80255D4`, was unaffected by this
+`asm/code_3_2_17_255d4.s` with `SpawnRoomEntities`, was unaffected by this
 pass and stayed parked `NON_MATCHING` in `src/system/game_loop12.c` at
 the time - it has since been matched as real C (the whole raw file is
 now gone) - see
@@ -186,7 +186,7 @@ now gone) - see
 Picked up the last big raw piece of the `UpdateGameFrame`-`MainLoop`
 cluster: `UpdateGameFrame` itself (ROM `0x080225A0`-`0x08022BF0`, ~730
 instructions), called once a frame from `MainLoop`
-(`src/system/main_loop.c`) with `self` = `gUnknown_030012C0` - the same
+(`src/system/main_loop.c`) with `self` = `gLevelState` - the same
 per-level state object `sub_8022BF0`/`sub_8022CA0` (`game_loop.c`) and
 the `self+0x80`-`0xc4`/`+2` accessor family (`game_loop2.c`) already
 operate on. `docs/matching.md`'s original entry for this chunk (search
@@ -208,7 +208,7 @@ used as the switch key here. So the 5 special states are literally
 map (the original doc's `sub_8023190`/`8184`/`819C`/`80231A8`
 ordering was slightly off against the real per-case targets):
 
-| case | gate (skip transition if true) | transition callee | extra work | `sub_8022468` mode |
+| case | gate (skip transition if true) | transition callee | extra work | `PlayCutscene` mode |
 |---|---|---|---|---|
 | 0 | `sub_80231BC` | `sub_8023190` | `sub_801D41C`, `sub_80067D4` | 4 |
 | 1 | `sub_80231CC` | `sub_80231A8` | `sub_801D41C`, `sub_80067C4` | 5 |
@@ -218,7 +218,7 @@ ordering was slightly off against the real per-case targets):
 
 Values >4 (i.e. `self->0xc4` outside `0x14`-`0x18`) instead check
 `self->0xdc`'s level object's `+8` state field; if it's `3`,
-OR-sets bit 0 on `sub_8023404(self)`'s returned byte pointer (a flags
+OR-sets bit 0 on `GetCurrentLevelFlags(self)`'s returned byte pointer (a flags
 byte on a per-frame sub-object). All 5 gate functions return "still
 in this state, do nothing more" when true; the transition callee only
 fires when the gate says "no longer in this state."
@@ -230,7 +230,7 @@ allocation) and hands it straight to `LoadLevelGraphics`, then polls
 `sub_8035E14`; while it returns `2` ("still loading") the loop calls
 `sub_80354BC` (map/progress-screen trigger) and repeats. Once
 `sub_8035E14` returns something else: `0` triggers
-`sub_8022468(*gUnknown_030012C0, 2)`, anything nonzero triggers a
+`PlayCutscene(*gLevelState, 2)`, anything nonzero triggers a
 `sub_8004D4C`/`sub_800300C(1,0)`/`sub_8004D20` input-poll bracket
 (purpose not chased further, out of scope for this pass).
 
@@ -277,21 +277,21 @@ on an `r8`-resident status flag persisted across iterations - `0`
 means "keep going," `1` means "check `sub_803AFEC(self) < 0` for an
 early exit," `2` means "stop the whole per-category loop now." Inside
 each iteration: `sub_8024404`/`sub_80232B8` gate one
-`gUnknown_030012B4` bitmap flush+ping-pong-to-`self+0x1b4` cycle into
+`gEntityFlags` bitmap flush+ping-pong-to-`self+0x1b4` cycle into
 `sub_8022BF0`; `sub_80243E0`/`sub_8023290` gate a parallel second
 cycle into `sub_80235E4` (same ping-pong shape, different consumer -
 apparently two independent bitmap "channels"). The loop's tail
 (`sub_80232B8`/`sub_8023290` again) decides between two closing
 branches that both refresh the HUD icon via `sub_8024464` +
 `sub_8028568`: the "true" branch also refills `self+0xb0`/`0xb8`/`0xb4`
-(`sub_802325C`/`sub_803AFEC`/`sub_8023414`) via `sub_8024540`; the
+(`GetWumpa`/`sub_803AFEC`/`sub_8023414`) via `sub_8024540`; the
 "false" branch only refills `self+0xb4` via `sub_8024524`. Either way
 the loop re-enters at its own top unless `sub_802455C(&self->0xc4)`
 says otherwise, at which point control falls to the end-of-frame block
 that (if `gUnknown_03001318`, the HUD object, is non-null) calls
 `sub_8028574(hud, 3)`, then decides whether to loop all the way back to
 the outer state-dispatch entry (`sub_803AFEC(self) >= 0`, or
-`sub_8034CB0()` true after also re-running `sub_80231E4(self)`) or
+`sub_8034CB0()` true after also re-running `ResetLives(self)`) or
 finally return to `MainLoop` - meaning a single `UpdateGameFrame` call
 from `MainLoop` can internally re-run its entire state-dispatch +
 category-loop body multiple times before actually returning.
@@ -299,7 +299,7 @@ category-loop body multiple times before actually returning.
 **NAKED, not plain C.** At this instruction count with three registers
 persisted across the *entire* function body (`r7` = `&self->0xc4`, `sl`
 = `&self->0xc8`, `r8`/`sb` alternating as a category-status flag and
-`&gUnknown_030012B4`) plus the six SP-relative field-address slots
+`&gEntityFlags`) plus the six SP-relative field-address slots
 above all live simultaneously across two nested nine-way-branch loops,
 this is well past the register-pressure range this project's C
 reconstruction toolbox (register pins, opaque `asm volatile`
@@ -314,9 +314,9 @@ semantic changes. Full clean `make compare` (`La suma coincide`)
 confirms the transcription byte-exact; `make NON_MATCHING=1 report`
 compiles the new `src/system/game_loop55.c` warning-free.
 
-## Later pass: `sub_80255D4` is real C
+## Later pass: `SpawnRoomEntities` is real C
 
-The third big NAKED retry closed `sub_80255D4` under old_agbcc
+The third big NAKED retry closed `SpawnRoomEntities` under old_agbcc
 (`game_loop41.o` is now on `OLD_AGBCC_OBJS`). The second pass's
 peeled, index-based searches came from old_agbcc's loop rotation, which
 takes a `break` inside a search loop as the loop's exit test; with the

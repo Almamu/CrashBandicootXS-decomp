@@ -29,14 +29,14 @@
  * `sub_800FEB0(self)` and stores `arg0` at `self+8`.
  *
  * `type == 9` gets one early special-case: if `arg0 != 0xFFFF` and
- * `sub_802599C(*gUnknown_030012B4, arg0)` is true, `type` is forced to
+ * `sub_802599C(*gEntityFlags, arg0)` is true, `type` is forced to
  * `0`.
  *
- * Unless `gUnknown_030012C0+0x8c` is set, or the level's "how many of
+ * Unless `gLevelState+0x8c` is set, or the level's "how many of
  * this entity kind currently exist" counters (`sub_80232E0`/
- * `sub_8023128`, both called on `gUnknown_030012C0`) show the pool
+ * `sub_8023128`, both called on `gLevelState`) show the pool
  * isn't already at/over capacity, `type == 0xb` or `type == 0xf` gets
- * demoted via a placement-record flags byte (the `gUnknown_030012B4 ->
+ * demoted via a placement-record flags byte (the `gEntityFlags ->
  * *P -> {+8 array, +0xc base}` indexed-by-`arg3<<1` convention
  * `sub_8021D04`, graphics_loading_21bfc.c, already established): flag
  * `0x40` forces `type = 2`, flag `0x80` forces `type = 1`, and (for the
@@ -52,7 +52,7 @@
  * this placement record as pre-flagged" bit (a local flag, call it
  * `special`) for `type` in `{1, 9, 11, 12, 15}`; for `type == 3`, if
  * the same placement-record lookup shows the entity is already present
- * (`sub_802599C(*gUnknown_030012B4, arg0)`), escalates `type` to `7`
+ * (`sub_802599C(*gEntityFlags, arg0)`), escalates `type` to `7`
  * outright, running the rest of the function as if `type` had been `7`
  * to begin with. Every other `type` in range is a no-op here.
  *
@@ -60,7 +60,7 @@
  * is set, or the record's own flags byte has bit `0x20` set, sets a
  * second local flag (call it `flagged`) and computes `self+0x54` from
  * the record's `+4` halfword (`0x15` if it equals `0x1b`, else the raw
- * signed value) - then, if `gUnknown_030012C0+0x8c` is set, overwrites
+ * signed value) - then, if `gLevelState+0x8c` is set, overwrites
  * `type` with `self->0x54 - 0x15`.
  *
  * **Second jump table** (index `type`, 0-0x12/18 - the one the
@@ -133,7 +133,7 @@ struct placement_level
     u8 *records;        // 0x0C
 };
 
-#define PLACEMENT_LEVEL (*(struct placement_level **)gUnknown_030012B4)
+#define PLACEMENT_LEVEL (*(struct placement_level **)gEntityFlags)
 #define PLACEMENT(i) (PLACEMENT_LEVEL->records + PLACEMENT_LEVEL->offsets[i])
 /* PLACEMENT as an inline: its return value is copied, which gives the
  * ROM's pointer copies (see the note above) */
@@ -157,10 +157,10 @@ void *sub_800FF0C(u16 id, u16 x, u16 y, u16 slot, u8 type)
         self = obj;
     }
     self->id = id;
-    if (type == 9 && id != 0xffff && sub_802599C(gUnknown_030012B4, id))
+    if (type == 9 && id != 0xffff && sub_802599C(gEntityFlags, id))
         type = 0;
-    if (*((u8 *)gUnknown_030012C0 + 0x8c) == 0
-        && sub_80232E0(gUnknown_030012C0) >= sub_8023128(gUnknown_030012C0))
+    if (*((u8 *)gLevelState + 0x8c) == 0
+        && sub_80232E0(gLevelState) >= sub_8023128(gLevelState))
     {
         if (type == 0xb)
         {
@@ -197,7 +197,7 @@ void *sub_800FF0C(u16 id, u16 x, u16 y, u16 slot, u8 type)
         special = 1;
         break;
     case 3:
-        if (sub_802599C(gUnknown_030012B4, id))
+        if (sub_802599C(gEntityFlags, id))
             type = 7;
         break;
     }
@@ -212,7 +212,7 @@ void *sub_800FF0C(u16 id, u16 x, u16 y, u16 slot, u8 type)
                 self->unk_54 = 0x15;
             else
                 self->unk_54 = *(s16 *)(rec + 4);
-            if (*((u8 *)gUnknown_030012C0 + 0x8c))
+            if (*((u8 *)gLevelState + 0x8c))
                 type = self->unk_54 - 0x15;
         }
     }
@@ -265,7 +265,7 @@ void *sub_800FF0C(u16 id, u16 x, u16 y, u16 slot, u8 type)
         if (!flagged)
         {
             self->unk_54 = 0x15;
-            if (*((u8 *)gUnknown_030012C0 + 0x8c))
+            if (*((u8 *)gLevelState + 0x8c))
                 type = 0;
         }
         break;
@@ -338,10 +338,10 @@ void *sub_800FF0C(u16 id, u16 x, u16 y, u16 slot, u8 type)
     self->slot = sub_800815C(self);
     self->x = x << 8;
     self->y = y << 8;
-    if (sub_802599C(gUnknown_030012B4, id) && (type == 0xb || type == 0xf)
+    if (sub_802599C(gEntityFlags, id) && (type == 0xb || type == 0xf)
         && (PLACEMENT(slot)[0] & 0x80))
         type = 1;
-    if (type == 1 && id != 0xffff && sub_802599C(gUnknown_030012B4, id))
+    if (type == 1 && id != 0xffff && sub_802599C(gEntityFlags, id))
     {
         PhysSetTag(self, 0x1b);
         self->frame = self->anim->records[self->tag].frames - 1;
@@ -354,7 +354,7 @@ void *sub_800FF0C(u16 id, u16 x, u16 y, u16 slot, u8 type)
     asm("" : : "r"(type));
     asm("" : : "r"(type));
     asm("" : : "r"(type));
-    if (type == 5 && sub_802599C(gUnknown_030012B4, id))
+    if (type == 5 && sub_802599C(gEntityFlags, id))
         sub_800F5B8(self);
     sub_8009B70(gUnknown_0300130C, self);
     return self;

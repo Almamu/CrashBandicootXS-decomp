@@ -17,25 +17,25 @@ issue is where they got turned into (attempted) byte-exact C.
   header, in `game_loop3.c`/`game_loop4.c`/`game_loop5.c`): 16
   256-byte decode buffers at `+0x20`, 16 resident record-IDs at
   `+0x1020`, and a ring-buffer eviction cursor at `+0x1060`.
-  `sub_80254F8` constructs one from a small level/room descriptor;
-  `sub_8024F24` is the lookup/decode dispatcher (16 fixed id-checks,
+  `SetCollisionSource` constructs one from a small level/room descriptor;
+  `GetCollisionChunk` is the lookup/decode dispatcher (16 fixed id-checks,
   each either a fixed-offset hit or, on a miss on all 16, an eviction +
-  `sub_8025334` decode); `sub_8025334` is the actual RLE/delta
+  `DecodeCollisionChunk` decode); `DecodeCollisionChunk` is the actual RLE/delta
   token-stream decoder (literal-fill run, signed-delta-accumulate run,
   raw-copy run, budget-limited to 0x7f halfwords per record).
-- **`sub_80250BC`/`sub_8025130`/`sub_8025228`/`sub_80254C0`/
-  `sub_8025460`** are five siblings of the same `(x>>4, y>>3)` tile
+- **`GetTerrainHeights`/`GetSolidTerrainHeights`/`sub_8025228`/`GetCollisionCell`/
+  `GetTerrainType`** are five siblings of the same `(x>>4, y>>3)` tile
   lookup through that cache, differing only in what they do with the
-  decoded cell (bounds-check + `gStaticData_081725AC` terrain-property
+  decoded cell (bounds-check + `gTerrainHeights0` terrain-property
   pointer; add a `mode`-selected table and output flag; add a `mode`
-  dispatch returning a single flag byte from `gStaticData_081725A8`;
+  dispatch returning a single flag byte from `gTerrainTypes`;
   return the raw byte + output params; return the raw decoded halfword
   directly plus a `hiOut` nibble).
-- **`sub_8024E68`/`sub_8024E90`/`sub_8024EB4`** are a small
+- **`ScrollBgLayerBase`/`ResetBgLayerBase`/`SetBgLayerSource`** are a small
   viewport/parallax-scroll-layer object built around the cache (own
   fields not given a struct here - see the doc comment at the top of
   `game_loop3.c` for why: its full shape spans into still-raw neighbor
-  functions `sub_8024DFC`/`sub_8024E24`/`sub_8024C64`/`sub_8024CF0`,
+  functions `ScaleBgLayerScroll`/`sub_8024E24`/`FillBgStreamer`/`SetBgStreamerSource`,
   out of scope for this issue).
 - **`sub_8025444`** is the exact same "`flags & 1` -> forward to
   `sub_8026ED0`" shape already matched as `sub_8006FC8` in
@@ -45,20 +45,20 @@ issue is where they got turned into (attempted) byte-exact C.
   tile cache, just adjacent in ROM.
 - **`sub_80255A8`/`sub_80255C4`** are a `CpuSet`-based 32-halfword
   (one palette bank) zero-fill wrapper and its return-self variant.
-- **`sub_80255D4`** - left completely untouched (see "Left raw" below).
+- **`SpawnRoomEntities`** - left completely untouched (see "Left raw" below).
 
 ## Matched (20 functions, full clean `make compare` passing)
 
-`src/system/game_loop3.c`: `sub_8024E68`, `sub_8024E90`, `sub_8024EB4`,
-`sub_8024F04`, `sub_8024F0C`, `sub_8024F10`, `sub_8024F14`,
-`sub_8024F18`, `sub_8024F1C`, `sub_8024F20`.
+`src/system/game_loop3.c`: `ScrollBgLayerBase`, `ResetBgLayerBase`, `SetBgLayerSource`,
+`IsBgLayerEnabled`, `GetBgLayerY`, `GetBgLayerX`, `GetBgLayerHeightTiles`,
+`GetBgLayerWidthTiles`, `GetBgLayerHeight`, `GetBgLayerWidth`.
 `src/system/game_loop4.c`: `sub_8025444`, `nullsub_4`.
-`src/system/game_loop5.c`: `sub_80254C0`, `sub_80254F8`, `sub_8025554`,
+`src/system/game_loop5.c`: `GetCollisionCell`, `SetCollisionSource`, `sub_8025554`,
 `sub_8025588`, `sub_80255A8`, `sub_80255C4`.
 
 ## Closed as NAKED - 6 functions
 
-- **`sub_8024F24`** (the 16-slot lookup dispatcher): semantics,
+- **`GetCollisionChunk`** (the 16-slot lookup dispatcher): semantics,
   control flow, the shared per-case tail (ROM computes the final
   `self + offset` pointer once, in a block shared by every matching
   case, rather than per-case), and total size were all already
@@ -83,36 +83,36 @@ issue is where they got turned into (attempted) byte-exact C.
   flush points). Verified byte-identical via isolated
   compile+`arm-none-eabi-as` assemble, a direct byte comparison against
   `baserom.gba` at `0x08024F24` (differing only in the
-  as-yet-unresolved `bl sub_8025334` relocation bytes, as expected for
+  as-yet-unresolved `bl DecodeCollisionChunk` relocation bytes, as expected for
   an unlinked object), and a full clean `make compare`. Its raw bytes
   no longer live in `asm/code_3_2_17_24f24.s` - that file now starts
-  directly at `sub_80250BC`.
-- **`sub_80250BC`/`sub_8025130`/`sub_8025228`** (`sub_8024F24`'s three
+  directly at `GetTerrainHeights`.
+- **`GetTerrainHeights`/`GetSolidTerrainHeights`/`sub_8025228`** (`GetCollisionChunk`'s three
   `(x, y)`-tile-lookup consumers - a terrain-property-table pointer
   lookup, its `mode`-selected/`flagsOut`-writing sibling with 4 table
   variants, and a `mode`-dispatched single-flag-byte variant reading
   4 adjacent bytes of one table): same register-allocation-permutation
-  gap `sub_8024F24` had - this compiler never reproduces the ROM's own
+  gap `GetCollisionChunk` had - this compiler never reproduces the ROM's own
   `self`/`x`/`y`/`mode` <-> `r5`/`r4`/`r6`/`r7` register packing no
-  matter the C phrasing tried. Closed the same way as `sub_8024F24`:
+  matter the C phrasing tried. Closed the same way as `GetCollisionChunk`:
   hand-transcribed instruction-for-instruction from the ROM
   disassembly, including every one of the ROM's own mid-function
-  `.pool` splits (`sub_8025130`/`sub_8025228` each have three inline
+  `.pool` splits (`GetSolidTerrainHeights`/`sub_8025228` each have three inline
   literal-pool flushes, one after each of the first three dispatch
   cases, plus a fourth literal shared with the function's own trailing
   pool - `sub_8025228` in particular re-flushes the *same*
-  `gStaticData_081725A8` symbol four separate times rather than reusing
+  `gTerrainTypes` symbol four separate times rather than reusing
   one pool slot, since each `ldr` is in its own already-flushed pool
-  region). Verified the same way as `sub_8024F24`: isolated
+  region). Verified the same way as `GetCollisionChunk`: isolated
   compile+`arm-none-eabi-as` assemble with a direct byte comparison
   against `baserom.gba` (all three came back byte-identical modulo the
-  expected unresolved `bl sub_8024F24`/`ldr =gStaticData_...`
+  expected unresolved `bl GetCollisionChunk`/`ldr =gStaticData_...`
   relocation bytes), confirmed again against the real
   cpp|agbcc-generated `.s` for the whole file, and a full clean `make
   compare`. Their raw bytes no longer live in
   `asm/code_3_2_17_24f24.s` - that file now starts directly at
-  `sub_8025334`.
-- **`sub_8025334`** (the RLE/delta decoder `sub_8024F24` calls on a
+  `DecodeCollisionChunk`.
+- **`DecodeCollisionChunk`** (the RLE/delta decoder `GetCollisionChunk` calls on a
   cache miss): decode-loop mechanics (the three run-mode branches, the
   literal/delta/raw-copy semantics, the 0x7f-halfword budget) and
   control flow were already fully confirmed correct as a real-C
@@ -144,15 +144,15 @@ issue is where they got turned into (attempted) byte-exact C.
   via isolated compile + `arm-none-eabi-as` assemble, a direct byte
   comparison against `baserom.gba` at `0x08025334`, and a full clean
   `make compare`. `asm/code_3_2_17_24f24.s` is now gone entirely - it
-  held only this function after `sub_8024F24`/`sub_80250BC`/
-  `sub_8025130`/`sub_8025228` were closed, so once this one closed too
+  held only this function after `GetCollisionChunk`/`GetTerrainHeights`/
+  `GetSolidTerrainHeights`/`sub_8025228` were closed, so once this one closed too
   the file's contents were empty and it (plus its `ldscript.txt` entry)
   were removed rather than kept as a zero-function husk.
-- **`sub_8025460`** (`src/system/game_loop4.c`) - the last of
-  `sub_8024F24`'s `(x, y)`-tile-lookup consumers: returns the raw
+- **`GetTerrainType`** (`src/system/game_loop4.c`) - the last of
+  `GetCollisionChunk`'s `(x, y)`-tile-lookup consumers: returns the raw
   decoded halfword directly (no bounds check, no terrain-table lookup),
   while also writing the cell's top nibble out through `hiOut`. Same
-  register-allocation-permutation gap as `sub_8025130`/`sub_8025228`
+  register-allocation-permutation gap as `GetSolidTerrainHeights`/`sub_8025228`
   above (this compiler never reproduces the ROM's own `self`/`x`/`y`/
   `flagsOut` <-> `r5`/`r4`/`r6`/`r7` register packing, no matter how the
   C is phrased). Closed the same way: hand-transcribed
@@ -161,12 +161,12 @@ issue is where they got turned into (attempted) byte-exact C.
   `arm-none-eabi-objdump -t` that it held only this one function).
   Unlike its four siblings above, this function needed no mid-function
   `.pool` directive at all - it has zero literal-pool references (no
-  `ldr =symbol`), only a single `bl sub_8024F24` relocation, so the
+  `ldr =symbol`), only a single `bl GetCollisionChunk` relocation, so the
   whole 96-byte body is one contiguous block with no split points.
   Verified byte-identical via isolated `arm-none-eabi-as` assembly, a
   direct byte comparison against a from-scratch assemble of
   `asm/code_3_2_17_25460.s` itself (identical except for the expected
-  unresolved `bl sub_8024F24` relocation bytes, which matched anyway
+  unresolved `bl GetCollisionChunk` relocation bytes, which matched anyway
   since both objects reference the same undefined external symbol), and
   a full clean `make compare`. **This was the last remaining unclosed
   member of the issue #40 terrain-tile-cache cluster - the whole issue
@@ -174,12 +174,12 @@ issue is where they got turned into (attempted) byte-exact C.
 
 ## Left raw (untouched) - 1 function
 
-- **`sub_80255D4`** (0x08025604-0x080255D4? real span
+- **`SpawnRoomEntities`** (0x08025604-0x080255D4? real span
   0x080255D4-0x08025894, ~700 B) - `docs/rom_map.md` characterized this
   as a "per-frame visible-object/window list processor": DMA-writes to
   OBJ palette RAM and a BG window register, then walks a small
-  count-prefixed array touching `gUnknown_030012E4`/`gUnknown_0300130C`,
-  calling several still-unread functions (`sub_8025968`, `sub_8025D28`,
+  count-prefixed array touching `gEntitySpawner`/`gUnknown_0300130C`,
+  calling several still-unread functions (`sub_8025968`, `SpawnEntity`,
   `sub_8010714`, `sub_8010710`, `sub_8007398`, `sub_801070C`). Not
   understood precisely enough (which fields of the visited records mean
   what, why two lookups happen per entry) to commit a byte-exact-attempt
@@ -188,7 +188,7 @@ issue is where they got turned into (attempted) byte-exact C.
 ## Real gotchas found along the way (useful beyond this issue)
 
 1. **A per-statement C write of the same constant can silently cost 4
-   bytes total ROM size**, not just mismatch locally. `sub_8024EB4`
+   bytes total ROM size**, not just mismatch locally. `SetBgLayerSource`
    zeroes three separate fields (`self+0x28` as a byte, `self+0/+4` as
    words); writing each as a fresh `0` literal let the compiler
    re-materialize the constant into a *second* register instead of
@@ -201,7 +201,7 @@ issue is where they got turned into (attempted) byte-exact C.
    assignment statement sits textually matters, not just that the
    variable exists).
 2. **This project's isolated per-function compile only proves
-   *shape*, not size** - `sub_8024F24`'s per-case chain
+   *shape*, not size** - `GetCollisionChunk`'s per-case chain
    (`if (...) return self->buf[N];` × 16) looked byte-identical
    instruction-by-instruction against the ROM in isolation, but totaled
    48 bytes more than the real function once linked, because the ROM
@@ -223,7 +223,7 @@ issue is where they got turned into (attempted) byte-exact C.
    `y & 7` and shifts it before touching `x`, while the ROM (and the
    fix - `s32 my = y & 7; s32 mx = x & 0xf; my <<= 4; return
    cache[my + mx];`) computes *both* masks first, then shifts, then
-   adds. Affected `sub_80254C0` specifically (the only one of this
+   adds. Affected `GetCollisionCell` specifically (the only one of this
    family that stayed matched rather than parked) - a 2-instruction
    reorder, same total size, so this one didn't shift the ROM checksum,
    just failed the byte-exact check locally.
@@ -238,7 +238,7 @@ issue is where they got turned into (attempted) byte-exact C.
 
 ## Later pass: second near-miss sweep
 
-`sub_8025334` is real C (old_agbcc). `src` starts as `decodeBase`
+`DecodeCollisionChunk` is real C (old_agbcc). `src` starts as `decodeBase`
 itself, then gets advanced, so the base lives in r6 as in the ROM. The
 delta run's sign extensions are written as `<< 24` / `<< 16` shifts into
 an `s32`, with `acc` copied into an `s32` before the `>> 24`. That

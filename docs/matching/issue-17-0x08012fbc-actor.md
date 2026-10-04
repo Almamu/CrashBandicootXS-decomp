@@ -79,7 +79,7 @@ child-object/action-table family (`actor_part79.o`/`actor_part83.o`/
   zeroes the player's `+0x94` byte (written twice - the same "no
   redundant-store folding across statements" quirk `docs/matching.md`
   already documents for this compiler), then spawns an object via
-  `sub_8025B0C(gUnknown_030012E4, 0x29, 1, 0, 0xa, 0,
+  `sub_8025B0C(gEntitySpawner, 0x29, 1, 0, 0xa, 0,
   gUnknown_030012D8)` and clears two bits (`~5` on `+0xc`, then a
   `(~4)|1` pack on `+0x28`) on the returned object. All three of these
   cases (and the "none of the above" fallthrough) then converge on a
@@ -89,7 +89,7 @@ child-object/action-table family (`actor_part79.o`/`actor_part83.o`/
   instead calls `sub_8015780(self, 0, 0x12, 0, 0)` then re-sets the same
   trio fields to the same `0x1d`/`1`/`0`/`0x1d` shape by hand. Finally,
   if `gUnknown_030007E0`'s low-half bit `0x200` is set: for `self+8==3`,
-  gates `sub_80231C4(gUnknown_030012C0)` to set `self+0x29=1`, fire a
+  gates `sub_80231C4(gLevelState)` to set `self+0x29=1`, fire a
   trampoline pair (ids `4`/`0x18`), and set the trio to `0`/`1`/`0x1b`;
   for `self+8==4`, sets `self+0x29` from the bit test and tail-calls
   `sub_8015460(self)`; otherwise, while `self+0x18` is already nonzero,
@@ -142,7 +142,7 @@ child-object/action-table family (`actor_part79.o`/`actor_part83.o`/
   `sub_801283C` and resets `part+0x68`, while bit 3 (and `part->0x64
   >= 0`) arms `part+0xd` bit 0, clears `self+0x34`, and - for `self+8`
   in `0x18..0x19` - spawns two objects via
-  `sub_8025BAC(gUnknown_030012E4, 0x29, 1, x, y, tag)` at the player's
+  `sub_8025BAC(gEntitySpawner, 0x29, 1, x, y, tag)` at the player's
   de-Q8'd `+0x14`-anchored position (`+0x14` and `-0x14` X offsets),
   packing bitmasked tag/flag bytes (`+0x28`, `+0xc`) into each spawned
   object via `sl`/`sb`/`r8`-cached negated-mask idioms, and clamping
@@ -160,7 +160,7 @@ child-object/action-table family (`actor_part79.o`/`actor_part83.o`/
   `part->0x30==3`, fires the `+0x50`/`+0x54` trampoline with id `9`;
   for `part->0x30>3` or `part+0x38!=0`, fires it with id `8` instead
   (otherwise does nothing). Otherwise, while `part+0x38!=0`:
-  `sub_80231BC(gUnknown_030012C0)` true fires the `+0x20`/`+0x24`
+  `sub_80231BC(gLevelState)` true fires the `+0x20`/`+0x24`
   trampoline (id `0x19`) then the `+0x50`/`+0x54` trampoline (id `7`);
   false fires only the `+0x20`/`+0x24` trampoline (id `0x18`).
 - **`sub_8013994`** (716 B, `actor_part_138e8.c`) - confirmed by this
@@ -183,7 +183,7 @@ child-object/action-table family (`actor_part79.o`/`actor_part83.o`/
   sets the trio to `0`/`1`/`3`, and tail-calls `sub_801434C(self)`
   (actor_part18.c); otherwise dispatches `sub_8000760`
   (`gUnknown_03001304`) and `sub_800AAEC(part, 2)`: when both fire and
-  the D-pad result is `3`/`4`, gates `sub_80231C4(gUnknown_030012C0)`
+  the D-pad result is `3`/`4`, gates `sub_80231C4(gLevelState)`
   behind a further bit test to either fire a trampoline pair (ids
   `4`/`0x18`) and set the trio to `0x1b`, or tail-call
   `sub_8015460(self)`; any other combination fires one more trampoline
@@ -230,7 +230,7 @@ genuine attempt:
   size of the remaining function, this was not pursued further.
 - **`sub_80138E8`**: its `part[0x38]`-gated single-vs-double
   `sub_803AD80`/`sub_803AD84` trampoline call (keyed on
-  `sub_80231BC(gUnknown_030012C0)`) reproduces the *exact* shape
+  `sub_80231BC(gLevelState)`) reproduces the *exact* shape
   already confirmed unmatchable in `sub_80156EC`
   (`actor_part38c.c`, `docs/matching/issue-18-0x08014f8c-actor.md`'s
   "Parked, not matched: sub_80156EC" - gcc 2.9 insists on an extra

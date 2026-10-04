@@ -25,7 +25,7 @@ struct level_state
     u8 unk_8C;                  // 0x8C
 };
 
-extern struct level_state *gUnknown_030012C0;
+extern struct level_state *gLevelState;
 extern void ***gUnknown_030012D0;
 
 extern struct spawn_part *sub_8011114(u16 arg0, u16 arg1, u16 arg2, s32 arg3);
@@ -40,7 +40,7 @@ static inline void SetPartTag(struct spawn_part *part, s32 tag)
     part->tag = tag;
 }
 
-/* Spawns a sub_8011114 part at (x, y) unless gUnknown_030012C0's +0x8c
+/* Spawns a sub_8011114 part at (x, y) unless gLevelState's +0x8c
  * flag is set (then returns NULL). Tags it with p3/p5/the flag, gives it
  * animation slot 0x8d and tag 0xa, and runs sub_80111B8 on it when
  * `flag6` is set. */
@@ -49,7 +49,7 @@ struct spawn_part *sub_8025A64(void *unused0, u32 x, u32 y, u32 p3, u32 p5, u32 
     /* The ROM reads the flag as the stack word's low byte (ldrb). */
     u8 f = *(u8 *)&flag6;
     struct spawn_part *part = NULL;
-    u8 state = gUnknown_030012C0->unk_8C;
+    u8 state = gLevelState->unk_8C;
 
     if (state == 0)
     {

@@ -112,9 +112,9 @@ Both functions (and `sub_800B8DC`'s own state 5, and several already-
 matched siblings elsewhere in the ROM) repeat the exact same four-step
 idiom on some object `X`: `X->0xC |= 1`; if `X->8` (a `u16`, `0xFFFF` =
 "none" sentinel) `!= 0xFFFF`, then treat `X->8` as a bit index into the
-`gUnknown_030012B4` bitmap array (`word = X->8 >> 5`, `bit = X->8 & 0x1F`,
-`gUnknown_030012B4[0x108/4 + word] |= 1 << bit`). Reads as "mark this
-object's collision/proximity bucket active" - `gUnknown_030012B4` is
+`gEntityFlags` bitmap array (`word = X->8 >> 5`, `bit = X->8 & 0x1F`,
+`gEntityFlags[0x108/4 + word] |= 1 << bit`). Reads as "mark this
+object's collision/proximity bucket active" - `gEntityFlags` is
 the same bitmap several other matched functions in this ROM region
 already tie to the hardware window-register system
 (`sub_8022BF0`/`sub_8022CA0`, `docs/rom_map.md`).
@@ -138,7 +138,7 @@ those.
 | 2 | `0x0800BC48` | `sub_800C074(self)` |
 | 3 | `0x0800BC40` | `sub_800C5D4(self)` |
 | 4 | `0x0800BC56` | `sub_800C40C(self)` |
-| 5 | `0x0800BA10` | **Inline.** Distance-band gate: compares `owner->4` (Y) against two thresholds derived from `gUnknown_03001308`'s own nested `+0x10`/`+0x14` value (a "lazy singleton" object `docs/rom_map.md` ties to a text-box/dialog system elsewhere - plausibly reused here just for its numeric value, not its text-box role). Near band: zeroes or sets `owner`'s `0x48`-`0x5C`/`0x64` velocity-target fields depending on `owner+0x68 == 8`. Far band: flips `owner->0xC` bits 0/1 and, if past the second threshold, runs the "flag active + bitmap-set" idiom on `owner`. |
+| 5 | `0x0800BA10` | **Inline.** Distance-band gate: compares `owner->4` (Y) against two thresholds derived from `gLevelLayers`'s own nested `+0x10`/`+0x14` value (a "lazy singleton" object `docs/rom_map.md` ties to a text-box/dialog system elsewhere - plausibly reused here just for its numeric value, not its text-box role). Near band: zeroes or sets `owner`'s `0x48`-`0x5C`/`0x64` velocity-target fields depending on `owner+0x68 == 8`. Far band: flips `owner->0xC` bits 0/1 and, if past the second threshold, runs the "flag active + bitmap-set" idiom on `owner`. |
 | 6 | `0x0800BC6C` | `sub_800C940(self)` |
 | 7 | `0x0800BC74` | `sub_800C314(self)` |
 | 8 | `0x0800BC7C` | `sub_800C244(self)` |
@@ -197,7 +197,7 @@ any specific case's behavior.
 
 **`0x0800BF2C` ("ambient sound + re-flag" tail, states 1/21/22):**
 converts `owner`'s Q8.8 position to int and calls
-`sub_8025BAC(gUnknown_030012E4, 0x29, 2, ownerX, ownerY, 0)` - the same
+`sub_8025BAC(gEntitySpawner, 0x29, 2, ownerX, ownerY, 0)` - the same
 `sub_8025BAC(pool, id, kind, x, y, ...)` shape already matched in
 `actor_part2.c`, here spawning something of kind `2`/id `0x29` at
 `owner`'s position (a particle or ambient-audio-emitter object, per the
@@ -235,7 +235,7 @@ variants).
 `sub_800B8DC` - only two real code paths (`0x0800BF2C`,
 `0x0800BE80`) plus the shared prelude and a 17-state no-op majority.
 `sub_800CBD4`, `sub_803AD80`'s exact record layout, and
-`gUnknown_030012E4`'s own object shape are the best next targets to
+`gEntitySpawner`'s own object shape are the best next targets to
 fully resolve this function's remaining ambiguity (`sub_800CBD4`'s
 own argument count in particular is unconfirmed - the call site sets no
 registers explicitly, relying on `sub_8026EDC`'s leftover return value
@@ -279,8 +279,8 @@ Both functions closed as **hand-transcribed NAKED asm**, not real C -
 an explicit, deliberate choice given this project's extensive, repeated
 precedent that this exact "`self`/`owner`-style multi-field object with
 many `bl` calls interspersed across branches" shape defeats gcc 2.9's
-register allocator: `sub_8024F24`, `sub_8025130`/`sub_8025228`/
-`sub_8025460` (`game_loop3.c`), `sub_800D040` (`game_loop6.c`),
+register allocator: `GetCollisionChunk`, `GetSolidTerrainHeights`/`sub_8025228`/
+`GetTerrainType` (`game_loop3.c`), `sub_800D040` (`game_loop6.c`),
 `sub_800CD00` (`actor_part109.c`), `sub_800CEAC`/`sub_800CF70`
 (`game_loop42.c`) are all NAKED in this same ROM neighborhood for the
 same underlying reason. Given `sub_800B8DC`'s size (1132 B, 18 branches,
@@ -593,9 +593,9 @@ neighborhood.
   `0x26`, or on `self->0x6c==0xf` plays SFX `9`; then *unconditionally*
   (regardless of the `owner->0x38` gate), if `self->0x6c==0x17` and
   `owner->0x30==9`/`owner->0x34==0`, spawns a part via
-  `sub_8025B0C(gUnknown_030012E4, 0x17, 4, -0x2d, 2, owner)` (matching
+  `sub_8025B0C(gEntitySpawner, 0x17, 4, -0x2d, 2, owner)` (matching
   `game_loop14.c`'s own `sub_8025B0C(arg0, arg1, arg2, margin, z, src)`
-  signature - `gUnknown_030012E4` as the pool, `owner` as `src`, `2` as
+  signature - `gEntitySpawner` as the pool, `owner` as `src`, `2` as
   `z`, `-0x2d` as `margin`), tags the new part's `+0xc` flags/`+0xa`
   bitmap-id fields (same idiom family as the "flag active + bitmap-set"
   idiom elsewhere in this cluster), and plays SFX `0x1e`. Mode 5 mirrors
@@ -1141,7 +1141,7 @@ this doc.
   read; only `other` matters. Runs the "flag active + bitmap-set" idiom
   (`other->0xc |= 1`, then, unless `other`'s `+8` id sentinel-checks as
   `0xFFFF`, sets bit `other->8 & 0x1f` of word `other->8 >> 5` in the
-  `gUnknown_030012B4+0x108` bitmap - the exact idiom `actor_part27c.c`'s
+  `gEntityFlags+0x108` bitmap - the exact idiom `actor_part27c.c`'s
   `sub_8018884` already matches as real C) **three times**, each
   independently gated: once when a `sub_803AD7C(other + offset, fn)`
   hit-probe - reading its `{s16 offset, void *fn}` pair from
@@ -1204,7 +1204,7 @@ Confirmed byte-identical to `baserom.gba` at `0x0800CBF4`-`0x0800CD00`
 (268 bytes, all five) via the isolated `cpp`/`agbcc`/`as` +
 `objcopy`/`cmp` pipeline (the only differences from a direct ROM slice
 were the `bl sub_803AD7C`/`bl sub_800B8A8`/`bl sub_800B8C8`/
-`bl nullsub_3` relocation sites and the `gUnknown_030012B4`/
+`bl nullsub_3` relocation sites and the `gEntityFlags`/
 `gStaticData_087E400C` literal-pool addresses - both expected, resolving
 correctly once linked), plus a full clean `rm -rf build && make
 NON_MATCHING=1 report` (no warnings) and `rm -rf build
@@ -1422,7 +1422,7 @@ idiom already matched elsewhere in this cluster:
   and - only when that probe reports *no* hit - runs the "flag active +
   bitmap-set" idiom on `other` (`other+0xc` bit 0; unless `other+8`'s
   id sentinel-checks as `0xffff`, also sets its bit in the
-  `gUnknown_030012B4+0x108` bitmap) - the exact idiom
+  `gEntityFlags+0x108` bitmap) - the exact idiom
   `actor_part27c.c`'s `sub_8018884` already matches as real C.
 - **`nullsub_14(self)`**: genuine empty stub (`bx lr`) - `sub_800CBD4`'s
   own tail-call hook, per that function's own doc comment.

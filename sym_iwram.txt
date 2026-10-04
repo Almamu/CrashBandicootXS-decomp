@@ -15,10 +15,10 @@
 . = 0x000012A8; gUnknown_030012A8 = .;
 . = 0x000012AC; gUnknown_030012AC = .;
 . = 0x000012B0; gUnknown_030012B0 = .;
-. = 0x000012B4; gUnknown_030012B4 = .;
+. = 0x000012B4; gEntityFlags = .;
 . = 0x000012B8; gUnknown_030012B8 = .;
 . = 0x000012BC; gUnknown_030012BC = .;
-. = 0x000012C0; gUnknown_030012C0 = .;
+. = 0x000012C0; gLevelState = .;
 . = 0x000012C4; gUnknown_030012C4 = .;
 . = 0x000012C8; gUnknown_030012C8 = .;
 . = 0x000012CC; gUnknown_030012CC = .;
@@ -27,7 +27,7 @@
 . = 0x000012D8; gUnknown_030012D8 = .;
 . = 0x000012DC; gUnknown_030012DC = .;
 . = 0x000012E0; gUnknown_030012E0 = .;
-. = 0x000012E4; gUnknown_030012E4 = .;
+. = 0x000012E4; gEntitySpawner = .;
 . = 0x000012E8; gUnknown_030012E8 = .;
 . = 0x000012EC; gUnknown_030012EC = .;
 . = 0x000012F0; gUnknown_030012F0 = .;
@@ -36,7 +36,7 @@
 . = 0x000012FC; gUnknown_030012FC = .;
 . = 0x00001300; gUnknown_03001300 = .;
 . = 0x00001304; gUnknown_03001304 = .;
-. = 0x00001308; gUnknown_03001308 = .;
+. = 0x00001308; gLevelLayers = .;
 . = 0x0000130C; gUnknown_0300130C = .;
 . = 0x00001310; gUnknown_03001310 = .;
 . = 0x00001314; gUnknown_03001314 = .;

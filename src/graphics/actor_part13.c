@@ -17,7 +17,7 @@ struct player_view
     u32 unk_8C;                     // 0x8c - a gUnknown_0300082C deadline
 };
 
-extern struct level_state *gUnknown_030012C0;
+extern struct level_state *gLevelState;
 extern void *gUnknown_030012D8;
 extern u32 gUnknown_0300082C;
 extern void *sub_8007C30(void *dest, void *pt);
@@ -31,7 +31,7 @@ extern void sub_8009D5C(void *partArg);
  * "fast path" check against `gUnknown_0300082C` (the same ~128-frame
  * counter documented in docs/rom_map.md): if `part->flags` bit 2 is
  * set and the player's `unk_8C` field is ahead of the frame counter
- * and `gUnknown_030012C0`'s mode (`maskLevel`) is 3, or independently if
+ * and `gLevelState`'s mode (`maskLevel`) is 3, or independently if
  * `part`'s `+0xd` byte bit 3 is set and the mode is 3, builds `part`'s
  * primary AABB via `sub_8007C30` and tests it against the player via
  * `sub_800B37C`; on a hit, calls `sub_8009D5C` and returns. If the
@@ -56,7 +56,7 @@ void sub_8009CA0(void *partArg)
             fast = 1;
         }
         if (fast != 0) {
-            if (gUnknown_030012C0->maskLevel != 3) {
+            if (gLevelState->maskLevel != 3) {
                 goto gate2;
             }
         }
@@ -83,7 +83,7 @@ gate2:
             return;
         }
     }
-    if (gUnknown_030012C0->maskLevel != 3) {
+    if (gLevelState->maskLevel != 3) {
         return;
     }
 doCheck:
@@ -111,7 +111,7 @@ doCheck:
 /* ROM 0x08009D5C - fires a `part->table+0x68`-driven trampoline (the
  * "dead read" idiom already established for
  * `sub_8008AD8`/`sub_8008D80`/`sub_80099F0`) based on
- * `gUnknown_030012C0`'s mode (`+0x78`): mode 0 fires it on the player
+ * `gLevelState`'s mode (`+0x78`): mode 0 fires it on the player
  * with arguments `(0, part->field_0A, 0)`; modes 1-2 fire it on the
  * player with the same arguments, then again on `part` itself with
  * `(1, 1, 0)`; mode 3 fires it on `part` alone with `(1, 1, 0)`; any
@@ -157,7 +157,7 @@ void sub_8009D5C(void *partArg)
         newFlags = flagBit | curFlags;
         part->flags = newFlags;
     }
-    mode = gUnknown_030012C0->maskLevel;
+    mode = gLevelState->maskLevel;
 
     switch (mode) {
     case 0:

@@ -3,7 +3,7 @@
 extern void *gUnknown_030012FC;
 extern void *gUnknown_03001300;
 extern void *gUnknown_030012D4;
-extern void *gUnknown_03001308;
+extern void *gLevelLayers;
 extern struct tile_asset_cache *gUnknown_030012B8;
 extern u8 gUnknown_03000830;
 
@@ -11,7 +11,7 @@ extern void sub_8006DC8(struct tile_asset_cache *self);
 extern void sub_8006C4C(struct vram_upload_cursor *self);
 extern void sub_8006A90(struct oam_shadow_buffer *arg0);
 extern void sub_8026DFC(void *self);
-extern void sub_8026984(void *self);
+extern void ResetLevelLayers(void *self);
 extern void sub_802400C(void *self);
 extern void sub_8001524(s32 val);
 extern void sub_80015E0(void);
@@ -55,7 +55,7 @@ void sub_80241BC(void *self)
     sub_8006C4C(gUnknown_030012FC);
     sub_8006A90(gUnknown_03001300);
     sub_8026DFC(gUnknown_030012D4);
-    sub_8026984(gUnknown_03001308);
+    ResetLevelLayers(gLevelLayers);
     sub_802400C(self);
     sub_8001524(0);
     sub_80015E0();

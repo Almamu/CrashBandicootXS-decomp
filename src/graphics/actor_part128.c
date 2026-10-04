@@ -72,7 +72,7 @@ extern u32 GetSpriteShapeSizeBits(u8 *frame);
 extern void QueueSpriteFrameOam(u32 attr01, u16 attr2, s32 priority);
 extern void PlayAmbientSfx(void *ctx, s32 id, s32 frame, s32 vol, struct byte_arg force);
 extern u8 sub_8023418(void *self);
-extern void sub_8023234(void *self);
+extern void LoseLife(void *self);
 extern u8 sub_8029794(void);
 extern s32 sub_8029B2C(void);
 extern void sub_8029BAC(s32 a);
@@ -108,7 +108,7 @@ extern struct actor_self *gUnknown_03000884;
 extern void (*gUnknown_03000874)(void *dst, u8 *frame);
 extern struct keys_pair gUnknown_030007E0;
 extern void *gUnknown_030012BC;
-extern u8 *gUnknown_030012C0;
+extern u8 *gLevelState;
 extern void *gUnknown_030014BC;
 extern struct kind_entry *gUnknown_030014D8;
 extern s32 gUnknown_030014DC;
@@ -198,14 +198,14 @@ s32 sub_802E0CC(struct spawn_rec *rec, u8 alt, s32 dz)
     u8 kind = rec->kind[0];
     s32 x, y, z;
 
-    if (gUnknown_030012C0[0x8c] != 0) {
+    if (gLevelState[0x8c] != 0) {
         kind = rec->kind[1];
         if (kind == 0x17)
             kind = 0x14;
     } else if (alt != 0) {
         kind = rec->kind[2];
     }
-    if (kind == 0x1d && !sub_8023418(gUnknown_030012C0))
+    if (kind == 0x1d && !sub_8023418(gLevelState))
         return 0;
     if (kind == 0 || kind == 0x3e || (u8)(kind - 0x20) <= 5)
         return 0;
@@ -558,8 +558,8 @@ void sub_802EB78(struct actor_hp *self, s32 dmg)
         self->hp = 0;
         PlaySfx(gUnknown_030012BC, 0x3a, 0x100);
         ACTOR_SET_STATE(&self->base, 4, 3);
-        if (gUnknown_030012C0[0x8c] == 0)
-            sub_8023234(gUnknown_030012C0);
+        if (gLevelState[0x8c] == 0)
+            LoseLife(gLevelState);
         gUnknown_03001507 = 0;
         gUnknown_030014E8 = 1;
         gUnknown_03001506 = 1;

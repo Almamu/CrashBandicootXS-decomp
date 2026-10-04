@@ -5,7 +5,7 @@
 /* UpdateGameFrame - the main per-frame game-loop driver at the head of
  * the UpdateGameFrame-MainLoop cluster (GitHub issue #34,
  * docs/matching.md). Called once per frame from `MainLoop`
- * (src/system/main_loop.c) with `self` = `gUnknown_030012C0`, the
+ * (src/system/main_loop.c) with `self` = `gLevelState`, the
  * central per-level state object every other function in this
  * cluster (`sub_8022BF0`/`sub_8022CA0`, game_loop.c; the
  * `self+0x80`-`0xc4`/`+2` accessor family, game_loop2.c) also shares.
@@ -15,7 +15,7 @@
  * restores the per-attempt block from `snap14C` (repeating while
  * `sub_801BAF0` asks to), runs the attempt loop (`sub_802375C` or
  * `InitActorCategory` per frame, the two bitmap ping-pongs through
- * `gUnknown_030012B4`, the checkpoint/respawn handling), and after the
+ * `gEntityFlags`, the checkpoint/respawn handling), and after the
  * attempt dispatches on the level number (20-24 are the special
  * levels) and records a time-trial best time.
  *
@@ -25,17 +25,17 @@
  *   ROM's `b` into the middle of the loop. The restore step is a `goto`
  *   loop, so it is not rotated and keeps using the hoisted `&level`.
  * - `bitmap` is assigned right before the attempt loop, which gives
- *   the ROM's `mov sb, r4` copy of `&gUnknown_030012B4`.
+ *   the ROM's `mov sb, r4` copy of `&gEntityFlags`.
  * - The best-time "unset" test reads the record as a halfword
  *   (`raw & 0xfff8`), as the ROM does, while the compare and the store
  *   go through the 13-bit field.
  * - `self->unk_1b8 = self->unk_1bc = 0` computes the 0x1b8 address
- *   first, and the `sub_80231EC` argument starts at 2 and takes the
+ *   first, and the `SetMaskLevel` argument starts at 2 and takes the
  *   tier only when it is <= 1.
  * - `sub_8027138` returns a typed pointer, so the store into
  *   `gUnknown_03001318` loads the global's address before the call.
  */
-/* The per-level state object (`gUnknown_030012C0`) as UpdateGameFrame
+/* The per-level state object (`gLevelState`) as UpdateGameFrame
  * uses it. The first 0x68 bytes are the per-attempt block that the
  * frame loop snapshots into `snapE4`/`snap14C` and restores from. */
 union level_best_time
@@ -93,16 +93,16 @@ struct level_state
     s32 unk_1bc;                    // 0x1bc
 };
 
-extern void *gUnknown_030012B4;
+extern void *gEntityFlags;
 extern void *gUnknown_030012B8;
 extern void *gUnknown_030012BC;
-extern struct level_state *gUnknown_030012C0;
+extern struct level_state *gLevelState;
 extern struct level_state *gUnknown_030012C4;
 extern void *gUnknown_03001318;
 extern s32 gUnknown_0300082C;
 
-extern void sub_80231E4(struct level_state *self);
-extern void sub_80231DC(struct level_state *self);
+extern void ResetLives(struct level_state *self);
+extern void ResetWumpa(struct level_state *self);
 extern void sub_80231D4(struct level_state *self);
 extern void sub_8023120(struct level_state *self, s32 n);
 extern void sub_8023118(struct level_state *self, s32 n);
@@ -116,7 +116,7 @@ extern void sub_80354BC(void);
 extern void sub_8004D4C(void);
 extern s32 sub_800300C(s32 a, s32 b);
 extern void sub_8004D20(void);
-extern void sub_8022468(struct level_state *self, s32 screen);
+extern void PlayCutscene(struct level_state *self, s32 screen);
 extern u8 sub_80231BC(struct level_state *self);
 extern u8 sub_80231CC(struct level_state *self);
 extern u8 sub_80231B4(struct level_state *self);
@@ -131,9 +131,9 @@ extern void sub_80067C4(void);
 extern void sub_80067B4(void);
 extern void sub_80067A4(void);
 extern s32 sub_800697C(struct level_state *self);
-extern union level_best_time *sub_8023404(struct level_state *self);
+extern union level_best_time *GetCurrentLevelFlags(struct level_state *self);
 extern s32 sub_801BAF0(s32 *progress);
-extern void sub_80232D8(struct level_state *self);
+extern void ClearTimeTrial(struct level_state *self);
 extern s32 sub_8024278(s32 level);
 extern struct hud_stat_widget *sub_8027138(void *mem);
 extern void sub_8028568(void *cache, s32 arg1);
@@ -154,7 +154,7 @@ extern s32 InitActorCategory(u16 category);
 extern s32 sub_8029730(void);
 extern void sub_8023140(struct level_state *self, s32 arg1);
 extern void ResetAmbientSfx(void *arg0);
-extern void sub_80231EC(struct level_state *self, s32 tier);
+extern void SetMaskLevel(struct level_state *self, s32 tier);
 extern u8 sub_8024404(s32 *progress);
 extern u8 sub_80243E0(s32 *progress);
 extern u8 sub_80244F0(s32 *progress);
@@ -168,8 +168,8 @@ extern void *sub_8025A5C(void *mem);
 extern void sub_8022BF0(struct level_state *self, u8 arg1);
 extern void sub_80235E4(struct level_state *self, u8 arg1);
 extern s32 sub_803AFEC(struct level_state *self);
-extern void sub_8023548(struct level_state *self);
-extern s32 sub_802325C(struct level_state *self);
+extern void RestoreCheckpoint(struct level_state *self);
+extern s32 GetWumpa(struct level_state *self);
 extern s32 sub_8023414(struct level_state *self);
 extern s32 sub_8024464(struct level_category *cat);
 extern void sub_8028574(void *cache, s32 arg1);
@@ -183,8 +183,8 @@ void UpdateGameFrame(struct level_state *self)
     void **bitmap;
 
     self->unk_68 = 0;
-    sub_80231E4(self);
-    sub_80231DC(self);
+    ResetLives(self);
+    ResetWumpa(self);
     sub_80231D4(self);
     sub_8023120(self, 5);
     sub_8023118(self, 5);
@@ -226,7 +226,7 @@ void UpdateGameFrame(struct level_state *self)
         }
         else
         {
-            sub_8022468(gUnknown_030012C0, 2);
+            PlayCutscene(gLevelState, 2);
         }
     }
     for (;;)
@@ -255,7 +255,7 @@ void UpdateGameFrame(struct level_state *self)
                 goto restore;
             }
         }
-        sub_80232D8(self);
+        ClearTimeTrial(self);
 
     start:
         self->unk_c8 = 0;
@@ -272,11 +272,11 @@ void UpdateGameFrame(struct level_state *self)
         sub_80231D4(self);
         sub_80232D0(self);
         self->unk_ac = 0;
-        *(s32 *)gUnknown_030012B4 = 0;
+        *(s32 *)gEntityFlags = 0;
         best = self->bestTier;
         sub_8022CA0(self, 0);
         sub_8023304(self);
-        bitmap = &gUnknown_030012B4;
+        bitmap = &gEntityFlags;
         for (;;)
         {
             self->unk_1b8 = self->unk_1bc = 0;
@@ -286,10 +286,10 @@ void UpdateGameFrame(struct level_state *self)
                 *bitmap = sub_8025A5C(sub_8026EDC(0x408));
                 if (sub_80232B8(self))
                 {
-                    self->unk_b0 = sub_802325C(self);
+                    self->unk_b0 = GetWumpa(self);
                     self->unk_b8 = sub_803AFEC(self);
                     self->unk_b4 = sub_8023414(self);
-                    sub_80231DC(self);
+                    ResetWumpa(self);
                     self->unk_74 = 0;
                     sub_80231D4(self);
                     sub_8024540(&self->level);
@@ -337,21 +337,21 @@ void UpdateGameFrame(struct level_state *self)
 
                 if (tier <= 1)
                     arg = tier;
-                sub_80231EC(self, arg);
+                SetMaskLevel(self, arg);
             }
             mem_free_bytes(0xC0000000);
             if (sub_8024404(&self->level) && sub_80232B8(self))
             {
-                if (gUnknown_030012B4 != NULL)
-                    sub_8025A44(gUnknown_030012B4, 3);
-                gUnknown_030012B4 = self->savedBitmap;
+                if (gEntityFlags != NULL)
+                    sub_8025A44(gEntityFlags, 3);
+                gEntityFlags = self->savedBitmap;
                 sub_8022BF0(self, status == 0);
             }
             if (sub_80243E0(&self->level) && sub_8023290(self))
             {
-                if (gUnknown_030012B4 != NULL)
-                    sub_8025A44(gUnknown_030012B4, 3);
-                gUnknown_030012B4 = self->savedBitmap;
+                if (gEntityFlags != NULL)
+                    sub_8025A44(gEntityFlags, 3);
+                gEntityFlags = self->savedBitmap;
                 sub_80235E4(self, status == 0);
             }
             if (status == 2)
@@ -365,7 +365,7 @@ void UpdateGameFrame(struct level_state *self)
                 self->unk_c8 = 0;
                 self->unk_cc = 0;
                 sub_8023304(self);
-                sub_80232D8(self);
+                ClearTimeTrial(self);
             }
             if (status == 0)
             {
@@ -382,7 +382,7 @@ void UpdateGameFrame(struct level_state *self)
             }
             else
             {
-                sub_8023548(self);
+                RestoreCheckpoint(self);
             }
         }
         if (gUnknown_03001318 != NULL)
@@ -390,7 +390,7 @@ void UpdateGameFrame(struct level_state *self)
         if (sub_803AFEC(self) < 0)
         {
             if (sub_8034CB0())
-                sub_80231E4(self);
+                ResetLives(self);
             else
                 break;
         }
@@ -413,7 +413,7 @@ void UpdateGameFrame(struct level_state *self)
                     sub_801D41C();
                     sub_8023190(self);
                     sub_80067D4();
-                    sub_8022468(self, 4);
+                    PlayCutscene(self, 4);
                 }
                 break;
             case 21:
@@ -422,7 +422,7 @@ void UpdateGameFrame(struct level_state *self)
                     sub_801D41C();
                     sub_80231A8(self);
                     sub_80067C4();
-                    sub_8022468(self, 5);
+                    PlayCutscene(self, 5);
                 }
                 break;
             case 22:
@@ -431,7 +431,7 @@ void UpdateGameFrame(struct level_state *self)
                     sub_801D41C();
                     sub_8023184(self);
                     sub_80067B4();
-                    sub_8022468(self, 6);
+                    PlayCutscene(self, 6);
                 }
                 break;
             case 23:
@@ -443,21 +443,21 @@ void UpdateGameFrame(struct level_state *self)
                 }
                 if (sub_800697C(self) > 99)
                 {
-                    sub_8022468(self, 8);
+                    PlayCutscene(self, 8);
                     self->level++;
                     self->unk_c8 = 0;
                     goto start;
                 }
-                sub_8022468(self, 10);
+                PlayCutscene(self, 10);
                 sub_80354BC();
                 break;
             case 24:
-                sub_8022468(self, 9);
+                PlayCutscene(self, 9);
                 sub_80354BC();
                 break;
             default:
                 if (self->cat->kind == 3)
-                    sub_8023404(self)->f.flag = 1;
+                    GetCurrentLevelFlags(self)->f.flag = 1;
                 break;
             }
             if (self->timeTrial)
@@ -466,8 +466,8 @@ void UpdateGameFrame(struct level_state *self)
 
                 if (t > 0x1fff)
                     t = 0x1fff;
-                if (t < sub_8023404(self)->f.time || (sub_8023404(self)->raw & 0xfff8) == 0)
-                    sub_8023404(self)->f.time = t;
+                if (t < GetCurrentLevelFlags(self)->f.time || (GetCurrentLevelFlags(self)->raw & 0xfff8) == 0)
+                    GetCurrentLevelFlags(self)->f.time = t;
             }
             sub_800014C(self->snap14C, self, 0x68);
         }

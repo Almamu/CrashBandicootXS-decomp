@@ -2,22 +2,22 @@
 #include "bg_scroll_layer.h"
 
 /* GitHub issue #42: the BG-scroll layer's own methods (`struct
- * bg_scroll_layer`, constructor `sub_8025D74` in game_loop15.c, method
- * table `gStaticData_087E4C14`) and the overrides of its tile-slot-pooled
+ * bg_scroll_layer`, constructor `InitBgLayer` in game_loop15.c, method
+ * table `gBgLayerVtable`) and the overrides of its tile-slot-pooled
  * subclass used for BG layer 0 (`struct pooled_bg_layer`, constructor
- * `sub_8026448` in tile_slot_pool.c, table `gStaticData_087E4C64`).
+ * `InitPooledBgLayer` in tile_slot_pool.c, table `gPooledBgLayerVtable`).
  *
  * The layer keeps a 32x32-entry window of the level's tile map resident in
  * its BG screen block. `+0x3C..+0x40` / `+0x44..+0x48` are the resident
  * tile row / column ranges; the streamer at `+0x2C` (game_loop57.c's
- * `sub_8024B18`/`sub_8024B48`) resolves a (column, row) of the level map
+ * `GetBgStreamerColumn`/`GetBgStreamerRow`) resolves a (column, row) of the level map
  * to its ring-buffer entries. Screen entries wrap modulo 32 on both axes.
  *
  * The base layer copies map entries straight into the screen block; the
  * layer-0 subclass instead routes each source tile through the VRAM
- * tile-slot pool (`sub_80264F8` acquire / `sub_80265A0` release) and
- * releases the tiles of rows/columns that scroll out (`sub_80262E8`,
- * `sub_8026328`).
+ * tile-slot pool (`AcquireTileSlot` acquire / `ReleaseTileSlot` release) and
+ * releases the tiles of rows/columns that scroll out (`ClipPooledBgLayerColumns`,
+ * `ClipPooledBgLayerRows`).
  *
  * Compiled with old_agbcc (Makefile OLD_AGBCC_OBJS): the BGnCNT bitfield
  * setters (`sub_802614C`, `sub_8026160`, `sub_8026174`, `sub_8026190`)
@@ -40,19 +40,19 @@ struct bg_layer_desc
     u16 heightTiles;  // 0x1C
 };
 
-extern u16 *sub_8024B18(void *streamer, s32 col, s32 row, s32 *rowOut);
-extern u16 *sub_8024B48(void *streamer, s32 col, s32 row, s32 *colOut);
-extern void sub_8024E90(struct bg_scroll_layer *self, void *pos);
-extern void sub_8024EB4(struct bg_scroll_layer *self, struct bg_layer_desc *desc);
-extern void sub_8024D74(struct bg_scroll_layer *self, u32 flags);
+extern u16 *GetBgStreamerColumn(void *streamer, s32 col, s32 row, s32 *rowOut);
+extern u16 *GetBgStreamerRow(void *streamer, s32 col, s32 row, s32 *colOut);
+extern void ResetBgLayerBase(struct bg_scroll_layer *self, void *pos);
+extern void SetBgLayerSource(struct bg_scroll_layer *self, struct bg_layer_desc *desc);
+extern void DestroyBgLayerBase(struct bg_scroll_layer *self, u32 flags);
 extern void sub_803AD7C(void *self, void *fn);
 extern void sub_803AD80(void *self, s32 arg, void *fn);
 extern void LoadTaggedAsset(void *asset, void *dest);
-extern u16 sub_80264F8(struct tile_slot_pool *pool, u16 tile);
-extern void sub_80265A0(struct tile_slot_pool *pool, u32 tile);
-extern void sub_802648C(struct tile_slot_pool *pool);
-extern void sub_8026618(struct tile_slot_pool *pool, s32 charBase, u32 src);
-extern u8 gStaticData_087E4C14[];
+extern u16 AcquireTileSlot(struct tile_slot_pool *pool, u16 tile);
+extern void ReleaseTileSlot(struct tile_slot_pool *pool, u32 tile);
+extern void ResetTileSlotPool(struct tile_slot_pool *pool);
+extern void SetTileSlotPoolSource(struct tile_slot_pool *pool, s32 charBase, u32 src);
+extern u8 gBgLayerVtable[];
 
 static inline s32 Mod32(s32 v)
 {
@@ -61,11 +61,11 @@ static inline s32 Mod32(s32 v)
 
 /* Base `drawRow` (table +0x30): copies the resident columns of map row
  * `row` from the streamer into screen row `row % 32`. */
-void sub_8025FC8(struct bg_scroll_layer *self, s32 row)
+void DrawBgLayerRow(struct bg_scroll_layer *self, s32 row)
 {
     u16 *dst = &self->screen[Mod32(row) * 32];
     s32 srcCol;
-    u16 *src = sub_8024B48(self->streamer, self->colLo, row, &srcCol);
+    u16 *src = GetBgStreamerRow(self->streamer, self->colLo, row, &srcCol);
     s32 c = self->colLo;
     s32 end;
     s32 mask;
@@ -90,7 +90,7 @@ loop:
 /* Recomputes the resident tile ranges from the pixel scroll position (a
  * 240x160 screen spans columns x/8..(x+239)/8 and rows y/8..(y+159)/8),
  * then draws every resident row through the method table's `drawRow`. */
-void sub_802602C(struct bg_scroll_layer *self)
+void RedrawBgLayer(struct bg_scroll_layer *self)
 {
     s32 r;
 
@@ -102,29 +102,29 @@ void sub_802602C(struct bg_scroll_layer *self)
         sub_803AD80((u8 *)self + self->vtable->drawRow.thisOffset, r, self->vtable->drawRow.fn);
 }
 
-/* Base `reset` (table +0x10): sets the position (`sub_8024E90`), reloads
+/* Base `reset` (table +0x10): sets the position (`ResetBgLayerBase`), reloads
  * the tiles (`loadTiles`), redraws the whole window and writes BGnCNT. */
-void sub_802608C(struct bg_scroll_layer *self, void *pos)
+void ResetBgLayer(struct bg_scroll_layer *self, void *pos)
 {
-    sub_8024E90(self, pos);
+    ResetBgLayerBase(self, pos);
     sub_803AD7C((u8 *)self + self->vtable->loadTiles.thisOffset, self->vtable->loadTiles.fn);
-    sub_802602C(self);
+    RedrawBgLayer(self);
     *self->cntReg = self->cnt.raw;
 }
 
 /* Base `loadTiles` (table +0x28): unpacks the tile asset into the layer's
  * character base block. */
-void sub_80260B4(struct bg_scroll_layer *self)
+void LoadBgLayerTiles(struct bg_scroll_layer *self)
 {
     LoadTaggedAsset(self->tileData, (void *)(VRAM + (self->cnt.bits.charBase << 14)));
 }
 
-/* Level-load hook for one layer (called by level_layers.c's `sub_80266BC`):
- * `sub_8024EB4` picks up the map size, then an enabled layer takes its
+/* Level-load hook for one layer (called by level_layers.c's `LoadRoom`):
+ * `SetBgLayerSource` picks up the map size, then an enabled layer takes its
  * tile asset and BG priority from the descriptor. */
-void sub_80260D4(struct bg_scroll_layer *self, struct bg_layer_desc *desc)
+void LoadBgLayer(struct bg_scroll_layer *self, struct bg_layer_desc *desc)
 {
-    sub_8024EB4(self, desc);
+    SetBgLayerSource(self, desc);
     if (self->enabled)
     {
         u16 cnt;
@@ -191,14 +191,14 @@ void sub_8026190(struct bg_scroll_layer *self, u32 charBase)
 
 /* Writes the cached HOFS/VOFS pair to the hardware registers.
  * UNUSED - no caller anywhere in the ROM (checked asm/, expected/ and
- * src/); level_layers.c uses `sub_8025F24` instead. */
+ * src/); level_layers.c uses `CommitBgLayerScroll` instead. */
 void sub_80261A8(struct bg_scroll_layer *self)
 {
     *self->ofsReg = *(u32 *)&self->hofs;
 }
 
 /* Writes the BGnCNT shadow to the hardware register (same as the tail of
- * `sub_802608C`). UNUSED - no caller anywhere in the ROM (checked asm/,
+ * `ResetBgLayer`). UNUSED - no caller anywhere in the ROM (checked asm/,
  * expected/ and src/). */
 void sub_80261B0(struct bg_scroll_layer *self)
 {
@@ -206,26 +206,26 @@ void sub_80261B0(struct bg_scroll_layer *self)
 }
 
 /* Base `destroy` (table +0x08): restores the base table and chains to the
- * streamer-owning base destructor `sub_8024D74`. */
-void sub_80261B8(struct bg_scroll_layer *self, u32 flags)
+ * streamer-owning base destructor `DestroyBgLayerBase`. */
+void DestroyBgLayer(struct bg_scroll_layer *self, u32 flags)
 {
-    self->vtable = (struct bg_layer_vtable *)gStaticData_087E4C14;
-    sub_8024D74(self, flags);
+    self->vtable = (struct bg_layer_vtable *)gBgLayerVtable;
+    DestroyBgLayerBase(self, flags);
 }
 
 /* Layer-0 `drawCol` (table +0x38): acquires a pool slot for every resident
  * row's tile in map column `col` and writes the returned map entry, moving
  * down one screen row (mod 32x32) per step. */
-void sub_80261CC(struct pooled_bg_layer *self, s32 col)
+void DrawPooledBgLayerColumn(struct pooled_bg_layer *self, s32 col)
 {
     s32 srcRow;
-    u16 *src = sub_8024B18(self->base.streamer, col, self->base.rowLo, &srcRow);
+    u16 *src = GetBgStreamerColumn(self->base.streamer, col, self->base.rowLo, &srcRow);
     s32 idx = Mod32(self->base.rowLo) * 32 + Mod32(col);
     s32 r;
 
     for (r = self->base.rowLo; r <= self->base.rowHi; r++)
     {
-        self->base.screen[idx] = sub_80264F8(self->pool, src[srcRow * 64]);
+        self->base.screen[idx] = AcquireTileSlot(self->pool, src[srcRow * 64]);
         srcRow = (srcRow + 1) & 0x1F;
         idx = (idx + 32) % 0x400;
     }
@@ -243,97 +243,97 @@ s32 sub_8026250(struct pooled_bg_layer *self, s32 v)
 }
 
 /* Releases the pool slots of map column `col`'s resident rows. */
-void sub_8026264(struct pooled_bg_layer *self, s32 col)
+void ReleasePooledBgLayerColumn(struct pooled_bg_layer *self, s32 col)
 {
     s32 srcRow;
-    u16 *src = sub_8024B18(self->base.streamer, col, self->base.rowLo, &srcRow);
+    u16 *src = GetBgStreamerColumn(self->base.streamer, col, self->base.rowLo, &srcRow);
     s32 r;
 
     for (r = self->base.rowLo; r <= self->base.rowHi; r++)
     {
-        sub_80265A0(self->pool, src[srcRow * 64]);
+        ReleaseTileSlot(self->pool, src[srcRow * 64]);
         srcRow = (srcRow + 1) & 0x1F;
     }
 }
 
 /* Releases the pool slots of map row `row`'s resident columns. */
-void sub_80262A4(struct pooled_bg_layer *self, s32 row)
+void ReleasePooledBgLayerRow(struct pooled_bg_layer *self, s32 row)
 {
     s32 srcCol;
-    u16 *src = sub_8024B48(self->base.streamer, self->base.colLo, row, &srcCol);
+    u16 *src = GetBgStreamerRow(self->base.streamer, self->base.colLo, row, &srcCol);
     s32 c;
 
     for (c = self->base.colLo; c <= self->base.colHi; c++)
     {
-        sub_80265A0(self->pool, src[srcCol++]);
+        ReleaseTileSlot(self->pool, src[srcCol++]);
         srcCol &= 0x3F;
     }
 }
 
-/* Layer-0 `clipCols` (table +0x40; base `sub_8025E70` only narrows the
+/* Layer-0 `clipCols` (table +0x40; base `ClipBgLayerColumns` only narrows the
  * range): releases the columns that leave [lo, hi] one at a time. */
-void sub_80262E8(struct pooled_bg_layer *self, s32 lo, s32 hi)
+void ClipPooledBgLayerColumns(struct pooled_bg_layer *self, s32 lo, s32 hi)
 {
     while (self->base.colLo < lo)
     {
-        sub_8026264(self, self->base.colLo);
+        ReleasePooledBgLayerColumn(self, self->base.colLo);
         self->base.colLo++;
     }
     while (self->base.colHi > hi)
     {
-        sub_8026264(self, self->base.colHi);
+        ReleasePooledBgLayerColumn(self, self->base.colHi);
         self->base.colHi--;
     }
 }
 
 /* Layer-0 `clipRows` (table +0x48): same for rows. */
-void sub_8026328(struct pooled_bg_layer *self, s32 lo, s32 hi)
+void ClipPooledBgLayerRows(struct pooled_bg_layer *self, s32 lo, s32 hi)
 {
     while (self->base.rowLo < lo)
     {
-        sub_80262A4(self, self->base.rowLo);
+        ReleasePooledBgLayerRow(self, self->base.rowLo);
         self->base.rowLo++;
     }
     while (self->base.rowHi > hi)
     {
-        sub_80262A4(self, self->base.rowHi);
+        ReleasePooledBgLayerRow(self, self->base.rowHi);
         self->base.rowHi--;
     }
 }
 
-/* Layer-0 `drawRow` (table +0x30): like `sub_8025FC8`, but each tile goes
+/* Layer-0 `drawRow` (table +0x30): like `DrawBgLayerRow`, but each tile goes
  * through the pool. */
-void sub_8026368(struct pooled_bg_layer *self, s32 row)
+void DrawPooledBgLayerRow(struct pooled_bg_layer *self, s32 row)
 {
     u16 *dst = &self->base.screen[Mod32(row) * 32];
     s32 srcCol;
-    u16 *src = sub_8024B48(self->base.streamer, self->base.colLo, row, &srcCol);
+    u16 *src = GetBgStreamerRow(self->base.streamer, self->base.colLo, row, &srcCol);
     s32 c;
 
     for (c = self->base.colLo; c <= self->base.colHi; c++)
     {
         s32 i = Mod32(c);
 
-        dst[i] = sub_80264F8(self->pool, src[srcCol++]);
+        dst[i] = AcquireTileSlot(self->pool, src[srcCol++]);
         srcCol &= 0x3F;
     }
 }
 
 /* Layer-0 `reset` (table +0x10): empties the pool, then the base reset. */
-void sub_80263DC(struct pooled_bg_layer *self, void *pos)
+void ResetPooledBgLayer(struct pooled_bg_layer *self, void *pos)
 {
-    sub_802648C(self->pool);
-    sub_802608C(&self->base, pos);
+    ResetTileSlotPool(self->pool);
+    ResetBgLayer(&self->base, pos);
 }
 
 /* Layer-0 `loadTiles` (table +0x28): instead of unpacking the tile asset
  * into VRAM, points the pool at the character block and the asset's tile
  * data (past its 4-byte header). */
-void sub_80263F8(struct pooled_bg_layer *self)
+void LoadPooledBgLayerTiles(struct pooled_bg_layer *self)
 {
     u32 tiles = (u32)self->base.tileData;
 
-    sub_8026618(self->pool, self->base.cnt.bits.charBase, tiles + 4);
+    SetTileSlotPoolSource(self->pool, self->base.cnt.bits.charBase, tiles + 4);
 }
 
 /* UNUSED - no caller anywhere in the ROM (checked asm/, expected/ and

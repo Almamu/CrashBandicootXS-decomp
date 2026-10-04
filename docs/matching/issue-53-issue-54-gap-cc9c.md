@@ -163,7 +163,7 @@ All in `src/graphics/actor_part126.c`.
   table-address multiply.
 - **`sub_802D204`** - VRAM-gauge/state-transition driver for a
   `gUnknown_030014B8`-counted effect: while the current hazard tier
-  (`gUnknown_030012C0->0x78`) and the `retrigger` argument are both
+  (`gLevelState->0x78`) and the `retrigger` argument are both
   zero, just clears `self+0x2c`; otherwise DMAs one of four
   `gStaticData_0817A798`-indexed gauge strips and resets `self`'s table
   index/anim, arming `self+0x2c`. Then: tier 3 arms a long
@@ -190,7 +190,7 @@ All in `src/graphics/actor_part126.c`.
   disassembly.
 - **`sub_802D2DC`** - drives `gUnknown_030014B8`'s countdown, DMAing one
   of two gauge strips per frame and, once it expires, resetting the
-  hazard tier via `sub_80231EC(gUnknown_030012C0, 2)` then
+  hazard tier via `SetMaskLevel(gLevelState, 2)` then
   `sub_802D204(self, 0)`; independently re-fires `sub_802D204` once
   state 2's own `self+0x12` edge trips; always advances `self`'s own
   anim frame (`sub_802A980`, frame-counter bump, and the usual

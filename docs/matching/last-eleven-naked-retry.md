@@ -67,7 +67,7 @@ off and 16 bytes long.
 Two changes on top of the last-ten draft.
 
 **r3 hold after the call.** Between `sub_8008E94` and the second flip,
-the ROM reloads &gUnknown_030012B4 out of sb through r1
+the ROM reloads &gEntityFlags out of sb through r1
 (`mov r1, sb`). The draft used r3. A hard-register hold on r3 from after
 the call's `"m"` asm to the end of the `rec2` lookup removes r3 from
 reload's choices there, and reload then picks r1:

@@ -1,40 +1,40 @@
 #include "core.h"
 #include "gba/dma_macros.h"
 
-/* GitHub issue #43: the level-layers singleton (`gUnknown_0300084C`,
- * 0x2C bytes, created on first use by `sub_80268AC`) - the object
- * `gUnknown_03001308` also points at: the camera (`camera_follow.c`)
- * clamps into its scroll fields via `sub_80268D0`, and
+/* GitHub issue #43: the level-layers singleton (`gLevelLayersSingleton`,
+ * 0x2C bytes, created on first use by `GetLevelLayers`) - the object
+ * `gLevelLayers` also points at: the camera (`camera_follow.c`)
+ * clamps into its scroll fields via `SetLevelScroll`, and
  * `game_loop44.c`/`game_loop45.c` already reach its terrain tile cache
  * at `+0x20`.
  *
  * It owns BG layer 0 (`+0x10`, a 0x60-byte tile-slot-pooled layer, see
  * `tile_slot_pool.c`), three BG-scroll layers for BG1-3 (`+0x14`-`+0x1C`,
- * `sub_8025D74`), the terrain tile cache (`+0x20`, 0x1064 bytes) and an
+ * `InitBgLayer`), the terrain tile cache (`+0x20`, 0x1064 bytes) and an
  * optional level asset (`+0x24`, heap-owned when `+0x28` is set).
  *
- * - `sub_80267A0` - constructor; `sub_80268AC` - get-or-create.
- * - `sub_802680C(self, flags)` - destructor: frees the asset, destroys
+ * - `InitLevelLayers` - constructor; `GetLevelLayers` - get-or-create.
+ * - `DestroyLevelLayers(self, flags)` - destructor: frees the asset, destroys
  *   each layer through its method table (`destroy`, called with 3), the
  *   tile cache via `sub_8025444(.., 3)`, clears the singleton pointer,
  *   and frees `self` when `flags & 1` - the same flags convention as
- *   `sub_8025444` and `sub_8026418`.
- * - `sub_80266BC(self, args)` - level load: unpacks or references the
+ *   `sub_8025444` and `DestroyPooledBgLayer`.
+ * - `LoadRoom(self, args)` - level load: unpacks or references the
  *   asset, feeds each layer and the tile cache its data from the level
  *   descriptor, sets the scroll limits to layer 0's size minus the
  *   240x160 screen, and DMA3-copies the BG palette.
- * - `sub_80268D0(self, x, y)` - takes a Q8 camera position, clamps it to
+ * - `SetLevelScroll(self, x, y)` - takes a Q8 camera position, clamps it to
  *   `[0, maxScroll]` in pixels and stores it as the scroll position.
- * - `sub_802692C`/`sub_8026984` - call one method of layer 0 with the
+ * - `ScrollLevelLayers`/`ResetLevelLayers` - call one method of layer 0 with the
  *   scroll position, then the same method of each enabled BG1-3 layer
- *   with layer 0's resulting position. `sub_80268F8` calls
- *   `sub_8025F24` on layer 0 and each enabled layer.
+ *   with layer 0's resulting position. `CommitLevelScroll` calls
+ *   `CommitBgLayerScroll` on layer 0 and each enabled layer.
  * - `sub_80269DC`/`sub_80269F8` - identical predicates: 0 if `arg1`,
  *   `*arg2` and `arg3` are all nonzero, else 1. `sub_8026A14` returns 0.
  *
  * The method-table entries are a 16-bit `this` adjustment plus a function
  * pointer, called through `sub_803AD80`. Function names stay
- * `sub_XXXXXXXX` (docs/naming.md). Only `sub_80268D0` needed a matching
+ * `sub_XXXXXXXX` (docs/naming.md). Only `SetLevelScroll` needed a matching
  * tweak (separate temps per axis). See
  * docs/matching/issue-43-level-layers.md.
  *
@@ -50,9 +50,9 @@ struct layer_method
 struct layer_vtable
 {
     u8 unk_00[8];              // 0x00
-    struct layer_method destroy; // 0x08 - called with 3 by sub_802680C
-    struct layer_method method_10; // 0x10 - sub_8026984
-    struct layer_method method_18; // 0x18 - sub_802692C
+    struct layer_method destroy; // 0x08 - called with 3 by DestroyLevelLayers
+    struct layer_method method_10; // 0x10 - ResetLevelLayers
+    struct layer_method method_18; // 0x18 - ScrollLevelLayers
 };
 
 struct layer
@@ -60,7 +60,7 @@ struct layer
     s32 x;                      // 0x00
     s32 y;                      // 0x04
     u8 unk_08[8];               // 0x08
-    s32 width;                  // 0x10 - pixels (layer 0 only, see sub_80266BC)
+    s32 width;                  // 0x10 - pixels (layer 0 only, see LoadRoom)
     s32 height;                 // 0x14
     u8 unk_18[0x10];            // 0x18
     u8 enabled;                 // 0x28
@@ -78,8 +78,8 @@ struct level_desc
     u32 *asset;          // 0x14 - first word >> 8 is the unpacked size
     u8 assetPacked;      // 0x18
     u8 unk_19[3];        // 0x19
-    void *unk_1C;        // 0x1C - passed to sub_80255D4
-    void *unk_20;        // 0x20 - passed to sub_80255D4
+    void *unk_1C;        // 0x1C - passed to SpawnRoomEntities
+    void *unk_20;        // 0x20 - passed to SpawnRoomEntities
 };
 
 struct level_load_args
@@ -94,8 +94,8 @@ struct level_layers
     s32 maxScrollY;            // 0x04
     s32 scrollX;               // 0x08 - pixels
     s32 scrollY;               // 0x0C
-    struct layer *layer0;      // 0x10 - 0x60 bytes, sub_8026448
-    struct layer *layers[3];   // 0x14 - 0x5C bytes each, sub_8025D74(.., 1..3)
+    struct layer *layer0;      // 0x10 - 0x60 bytes, InitPooledBgLayer
+    struct layer *layers[3];   // 0x14 - 0x5C bytes each, InitBgLayer(.., 1..3)
     struct tile_cache *tiles;  // 0x20 - 0x1064 bytes
     void *asset;               // 0x24
     u8 assetOwned;             // 0x28
@@ -104,29 +104,29 @@ struct level_layers
     u8 unk_2B;                 // 0x2B
 };
 
-extern struct level_layers *gUnknown_0300084C;
-extern void *gUnknown_030012B4;
+extern struct level_layers *gLevelLayersSingleton;
+extern void *gEntityFlags;
 
 extern void *sub_8026EC0(u32 size);
 extern void *sub_8026EDC(u32 size);
 extern void sub_8026EB4(void *ptr);
 extern void sub_8026ED0(void *ptr);
 extern void LoadTaggedAsset(void *asset, void *dest);
-extern void sub_80260D4(struct layer *layer, void *data);
-extern void sub_80254F8(struct tile_cache *self, void *source);
+extern void LoadBgLayer(struct layer *layer, void *data);
+extern void SetCollisionSource(struct tile_cache *self, void *source);
 extern void sub_80015D0(void);
 extern void sub_80015C0(void);
 extern void sub_80015B0(void);
 extern void sub_80015A0(void);
-extern void sub_80255D4(void *self, void *arg1, void *arg2, s32 arg3, s32 arg4);
-extern struct layer *sub_8026448(void *mem, s32 arg1);
+extern void SpawnRoomEntities(void *self, void *arg1, void *arg2, s32 arg3, s32 arg4);
+extern struct layer *InitPooledBgLayer(void *mem, s32 arg1);
 extern struct tile_cache *nullsub_4(void *mem);
-extern struct layer *sub_8025D74(void *mem, s32 bgIndex);
+extern struct layer *InitBgLayer(void *mem, s32 bgIndex);
 extern s32 sub_803AD80(void *self, void *arg1, void *fn);
 extern void sub_8025444(struct tile_cache *self, u32 flags);
-extern void sub_8025F24(struct layer *layer);
+extern void CommitBgLayerScroll(struct layer *layer);
 
-void sub_80266BC(struct level_layers *self, struct level_load_args *args)
+void LoadRoom(struct level_layers *self, struct level_load_args *args)
 {
     struct dma_regs *dma;
     u32 pltt;
@@ -144,23 +144,23 @@ void sub_80266BC(struct level_layers *self, struct level_load_args *args)
         self->assetOwned = 1;
     }
 
-    sub_80260D4(self->layer0, args->desc->layer0Data);
-    sub_80254F8(self->tiles, args->desc->tileData);
+    LoadBgLayer(self->layer0, args->desc->layer0Data);
+    SetCollisionSource(self->tiles, args->desc->tileData);
     self->maxScrollX = self->layer0->width - DISPLAY_WIDTH;
     self->maxScrollY = self->layer0->height - DISPLAY_HEIGHT;
     sub_80015D0();
 
-    sub_80260D4(self->layers[0], args->desc->layerData[0]);
+    LoadBgLayer(self->layers[0], args->desc->layerData[0]);
     if (self->layers[0]->enabled)
         sub_80015C0();
-    sub_80260D4(self->layers[1], args->desc->layerData[1]);
+    LoadBgLayer(self->layers[1], args->desc->layerData[1]);
     if (self->layers[1]->enabled)
         sub_80015B0();
-    sub_80260D4(self->layers[2], args->desc->layerData[2]);
+    LoadBgLayer(self->layers[2], args->desc->layerData[2]);
     if (self->layers[2]->enabled)
         sub_80015A0();
 
-    sub_80255D4(gUnknown_030012B4, args->desc->unk_1C, args->desc->unk_20, 0, 0);
+    SpawnRoomEntities(gEntityFlags, args->desc->unk_1C, args->desc->unk_20, 0, 0);
 
     dma = (struct dma_regs *)REG_ADDR_DMA3SAD;
     dma->src = args->palette;
@@ -171,13 +171,13 @@ void sub_80266BC(struct level_layers *self, struct level_load_args *args)
     *(vu16 *)pltt = 0;
 }
 
-struct level_layers *sub_80267A0(struct level_layers *self)
+struct level_layers *InitLevelLayers(struct level_layers *self)
 {
-    self->layer0 = sub_8026448(sub_8026EDC(0x60), 0);
+    self->layer0 = InitPooledBgLayer(sub_8026EDC(0x60), 0);
     self->tiles = nullsub_4(sub_8026EDC(0x1064));
-    self->layers[0] = sub_8025D74(sub_8026EDC(0x5C), 1);
-    self->layers[1] = sub_8025D74(sub_8026EDC(0x5C), 2);
-    self->layers[2] = sub_8025D74(sub_8026EDC(0x5C), 3);
+    self->layers[0] = InitBgLayer(sub_8026EDC(0x5C), 1);
+    self->layers[1] = InitBgLayer(sub_8026EDC(0x5C), 2);
+    self->layers[2] = InitBgLayer(sub_8026EDC(0x5C), 3);
     self->unk_29 = 0;
     self->asset = NULL;
     self->assetOwned = 0;
@@ -190,7 +190,7 @@ struct level_layers *sub_80267A0(struct level_layers *self)
     if ((layer) != NULL) \
         sub_803AD80((u8 *)(layer) + (layer)->vtable->destroy.thisOffset, (void *)3, (layer)->vtable->destroy.fn)
 
-void sub_802680C(struct level_layers *self, u32 flags)
+void DestroyLevelLayers(struct level_layers *self, u32 flags)
 {
     if ((self->assetOwned != 0 || self->asset != NULL) && self->asset != NULL)
         sub_8026EB4(self->asset);
@@ -202,19 +202,19 @@ void sub_802680C(struct level_layers *self, u32 flags)
     DESTROY_LAYER(self->layers[1]);
     DESTROY_LAYER(self->layers[2]);
 
-    gUnknown_0300084C = NULL;
+    gLevelLayersSingleton = NULL;
     if (flags & 1)
         sub_8026ED0(self);
 }
 
-struct level_layers *sub_80268AC(void)
+struct level_layers *GetLevelLayers(void)
 {
-    if (gUnknown_0300084C == NULL)
-        gUnknown_0300084C = sub_80267A0(sub_8026EDC(sizeof(struct level_layers)));
-    return gUnknown_0300084C;
+    if (gLevelLayersSingleton == NULL)
+        gLevelLayersSingleton = InitLevelLayers(sub_8026EDC(sizeof(struct level_layers)));
+    return gLevelLayersSingleton;
 }
 
-void sub_80268D0(struct level_layers *self, s32 x, s32 y)
+void SetLevelScroll(struct level_layers *self, s32 x, s32 y)
 {
     s32 sx, sy;
 
@@ -236,20 +236,20 @@ void sub_80268D0(struct level_layers *self, s32 x, s32 y)
     self->scrollY = sy;
 }
 
-void sub_80268F8(struct level_layers *self)
+void CommitLevelScroll(struct level_layers *self)
 {
     s32 i;
 
-    sub_8025F24(self->layer0);
+    CommitBgLayerScroll(self->layer0);
     for (i = 0; i < 3; i++)
     {
         struct layer *layer = self->layers[i];
         if (layer->enabled)
-            sub_8025F24(layer);
+            CommitBgLayerScroll(layer);
     }
 }
 
-void sub_802692C(struct level_layers *self)
+void ScrollLevelLayers(struct level_layers *self)
 {
     s32 pos[2];
     s32 i;
@@ -266,7 +266,7 @@ void sub_802692C(struct level_layers *self)
     }
 }
 
-void sub_8026984(struct level_layers *self)
+void ResetLevelLayers(struct level_layers *self)
 {
     s32 pos[2];
     s32 i;

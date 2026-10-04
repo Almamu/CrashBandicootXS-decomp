@@ -43,7 +43,7 @@ real matched C.
 - **`sub_802BC68`** - accumulator-drain/reward-dispenser for
   `gUnknown_03001488` (filled by `sub_802C078`, still raw): while the
   "locked" flag `gUnknown_030014A0` is set, fully drains it via repeated
-  `sub_8023430` calls without spawning anything; otherwise, once the
+  `CollectWumpa` calls without spawning anything; otherwise, once the
   `gUnknown_03001484` cooldown elapses, dispenses one of four tiers of
   reward (via `sub_802B174`, itself still raw but confirmed by
   docs/rom_map.md as a "spawn effect type N" family member) sized by the

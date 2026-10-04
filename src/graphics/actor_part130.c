@@ -55,7 +55,7 @@ extern u8 sub_802A6EC(void *self);
 extern void sub_802A4EC(void);
 extern void sub_802A4F8(void);
 extern void sub_802F0DC(void *arg0);
-extern void sub_8023430(void *self);
+extern void CollectWumpa(void *self);
 extern u8 *mem_alloc(u32 size, s32 flags);
 extern struct actor_pmf gStaticData_0817C450[];
 extern void mem_free(void *ptr);
@@ -71,7 +71,7 @@ extern void sub_802E57C(s32 a, s32 b, s32 c);
 extern void sub_802E5B0(s32 a, s32 b, s32 c);
 
 extern void *gUnknown_030012BC;
-extern void *gUnknown_030012C0;
+extern void *gLevelState;
 extern void *gUnknown_03000884;
 extern void *gUnknown_030008B4;
 extern void *gUnknown_030008B8;
@@ -305,7 +305,7 @@ void sub_80327A4(void *selfArg)
     SetupSpriteFrameOam(frame, attr, attr2Out, oamPriority);
 }
 
-/* Destructor: dispenses `reward` score increments via `sub_8023430`
+/* Destructor: dispenses `reward` score increments via `CollectWumpa`
  * while temporarily wearing `gStaticData_087E5474` (`sub_8032890`'s
  * constructor table), then runs the same teardown as `sub_803B0C4`
  * (actor_anim.c): retag to the shared "dead" table, unlink from the
@@ -328,7 +328,7 @@ void sub_803283C(struct actor_283c *self, u32 flags)
 
     self->vtable = gStaticData_087E5474;
     for (i = 0; i < self->reward; i++) {
-        sub_8023430(gUnknown_030012C0);
+        CollectWumpa(gLevelState);
     }
     self->vtable = gStaticData_087E4DF4;
     self->l4c->l48 = self->l48;

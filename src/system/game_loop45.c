@@ -8,20 +8,20 @@
  * *outValue)`, computing `pos->x >> 3`/`pos->y >> 3` tile coords from
  * `player+0x20`'s terrain-data pointer (the same `struct tile_cache *`
  * field `sub_8026BC0` (`game_loop44.c`) already established that offset
- * for on the same `player`/`arg0` global, `gUnknown_03001308`).
+ * for on the same `player`/`arg0` global, `gLevelLayers`).
  *
  * `sub_8026BF8` looks the tile row up via the already-matched
- * `sub_80250BC` ("the raw terrain streamer" - `game_loop3.c`, GitHub
+ * `GetTerrainHeights` ("the raw terrain streamer" - `game_loop3.c`, GitHub
  * issue #40), returning a row pointer or `NULL` on a miss. On a hit,
  * reads a **signed byte** height sample at `row[pos->x & 7]`, computes
  * `((pos->y >> 3) << 3) + heightByte - pos->y`, shifts to Q8, and
  * accumulates it into `*outValue`. Returns `1` on a row hit, `0` if
- * `sub_80250BC` returned `NULL`.
+ * `GetTerrainHeights` returned `NULL`.
  *
  * `sub_8026C3C` is the exact same shape, but the height byte comes from
  * the already-matched `sub_8025228(terrainPtr, tileX, tileY, 0,
  * &scratch)` instead - the "CheckTerrainFlag"-style API
- * `sub_8026A18`/`sub_8026AE8` already use via their own `sub_8025130`
+ * `sub_8026A18`/`sub_8026AE8` already use via their own `GetSolidTerrainHeights`
  * calls (`game_loop3.c`, same issue #40). `scratch` is a caller-local
  * flag-nibble out-parameter nothing here ever reads back, the same
  * "discarded outValue" idiom `game_loop3.c`'s own siblings already
@@ -113,14 +113,14 @@ struct probe_pos
 
 struct tile_cache;
 
-extern void *sub_80250BC(struct tile_cache *self, s32 x, s32 y);
+extern void *GetTerrainHeights(struct tile_cache *self, s32 x, s32 y);
 extern s8 sub_8025228(struct tile_cache *self, s32 x, s32 y, s32 mode, u8 *flagsOut);
 
 s32 sub_8026BF8(void *player, struct probe_pos *pos, s32 *outValue)
 {
     s32 tileX = pos->x >> 3;
     s32 tileY = pos->y >> 3;
-    s8 *row = (s8 *)sub_80250BC(*(struct tile_cache **)((u8 *)player + 0x20), tileX, tileY);
+    s8 *row = (s8 *)GetTerrainHeights(*(struct tile_cache **)((u8 *)player + 0x20), tileX, tileY);
 
     if (row != NULL)
     {

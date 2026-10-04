@@ -38,7 +38,7 @@ issue's still-open scope.
   buckets - its primary one and, for large objects, bucket 255).
 - **`sub_80091D4`** - a per-frame grid-maintenance pass, scoped to the
   3-bucket window `[baseIdx, baseIdx+2]` around `baseIdx`
-  (`max(gUnknown_03001308`'s sub-object's own `x >> 8`, `0)`, the same
+  (`max(gLevelLayers`'s sub-object's own `x >> 8`, `0)`, the same
   index `sub_800944C`/`sub_8009528` compute), plus bucket 255 in a
   second pass - not a full 0-255 sweep like those two siblings. For
   each windowed object: if it's a "large object" without a bucket-255
@@ -63,7 +63,7 @@ issue's still-open scope.
   to plain integers, then probes it via `sub_8026628` (also still
   unexamined). If the first probe succeeds, restores `self->y` to its
   original value and returns `1`; otherwise clears
-  `gUnknown_03001308`'s `+0x2a` flag and retries up to 3 more times,
+  `gLevelLayers`'s `+0x2a` flag and retries up to 3 more times,
   nudging the working Y down by 8 (Q8) each attempt, always returning
   `0` once it falls into the retry path (restoring the `+0x2a` flag
   either way).

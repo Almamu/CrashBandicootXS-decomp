@@ -108,11 +108,11 @@ argument setup, which is the ROM's shape. But in a single part+0x28
 pointer draft here, the caller-save never survives:
 
 - global.c's order puts the pointer after `hdr`/`part`. `arg3` and
-  `&gUnknown_030012B4` are block-local in r4/r5 and conflict with it,
+  `&gEntityFlags` are block-local in r4/r5 and conflict with it,
   and an `"l"` reference restricts it to LO_REGS. So it goes to the
   caller-save path and gets r3.
 - Reload then spills r3 for the first flip's `ldrb` reload (insn 252).
-  retry_global_alloc moves the pointer to r5 and `&gUnknown_030012B4`
+  retry_global_alloc moves the pointer to r5 and `&gEntityFlags`
   to r9.
 - The output is identical with `-fno-caller-saves`.
 

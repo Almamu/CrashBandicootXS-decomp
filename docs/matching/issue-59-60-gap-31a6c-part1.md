@@ -35,7 +35,7 @@ established "cut at the boundary" convention.
   transition, `PlaySfx(3, 0x100)` always plays first, then a
   `self+0x30`-relative type byte selects a downstream call
   (`sub_802F540` for `sub_8031B0C`/`sub_8031C0C`'s `0x14`-`0x17` range,
-  `sub_8022EA8` for `sub_8031D7C`/`sub_8031E80`'s `0x18`-`0x1a`/`0x1d`
+  `FreezeLevelClock` for `sub_8031D7C`/`sub_8031E80`'s `0x18`-`0x1a`/`0x1d`
   range). Written with explicit `goto`-chained `if` blocks (not a plain
   `switch`) to match this family's already-matched sibling
   `sub_802C540` (`actor_part19g.c`) - its last case does something

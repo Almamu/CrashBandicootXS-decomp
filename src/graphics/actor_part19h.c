@@ -13,7 +13,7 @@
 
 extern struct actor_self *gUnknown_03000884;
 extern void *gUnknown_030012BC;
-extern void *gUnknown_030012C0;
+extern void *gLevelState;
 extern void *sub_800014C(void *dst, const void *src, u32 byteCount);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void sub_8022FEC(void *self);
@@ -105,7 +105,7 @@ void sub_802C7A8(struct actor_self *self)
         if (ACTOR_TYPE(n) == 4 && n != self && ActorsOverlap(self, n)
             && n->animIndex != 0x12) {
             PlaySfx(gUnknown_030012BC, 4, 0x100);
-            sub_8022FEC(gUnknown_030012C0);
+            sub_8022FEC(gLevelState);
             n->stateTime = 0;
             n->animIndex = 0x12;
             n->animTimer = n->anims[0x12].duration;

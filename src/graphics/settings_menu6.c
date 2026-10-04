@@ -165,12 +165,12 @@ void sub_8005C58(struct pause_screen_results *self)
     sub_80060AC(0x14, self->buf4c);
 }
 
-extern void *gUnknown_030012C0;
-extern s32 sub_802332C(void *arg0);
+extern void *gLevelState;
+extern s32 GetCurrentLevel(void *arg0);
 extern void FormatCentiseconds(s32 value, u8 *buf);
 
 /* Same per-level bronze/silver/gold threshold table src/graphics/oam_count.c's
- * `struct threshold_table_entry`/`gStaticData_0816C86C` already document -
+ * `struct threshold_table_entry`/`gLevelTable` already document -
  * duplicated locally (rather than shared via a header) per that file's
  * own comment on the type, matching this project's minimal-local-type
  * convention. */
@@ -183,7 +183,7 @@ struct threshold_table_entry {
 };
 COMPILE_TIME_ASSERT(sizeof(struct threshold_table_entry) == 0x24);
 
-extern struct threshold_table_entry gStaticData_0816C86C[];
+extern struct threshold_table_entry gLevelTable[];
 extern struct icon_pos gStaticData_0816B27C;
 
 /* Tags `icon` with medal frame `frame` and restarts its animation. The
@@ -202,7 +202,7 @@ static inline void set_icon_frame(struct settings_icon_actor *icon, u32 frame)
  * (bits 3-15 of the save block's per-level record word at
  * `field_10 + 4 + levelIdx * 4` - level_menu.h's `struct level_save`
  * `time:13`), formats it via FormatCentiseconds, then compares it
- * against `gStaticData_0816C86C[levelIdx]`'s bronze/silver/gold
+ * against `gLevelTable[levelIdx]`'s bronze/silver/gold
  * thresholds and constructs the icon at `field_bc`, tagged with each
  * medal (from `gStaticData_0816B270`, the same table sub_8005C58 uses)
  * whose threshold was met. `field_6c` is an "earned" flag. */
@@ -214,7 +214,7 @@ void sub_8005D44(struct pause_screen_results *self)
     struct settings_icon_actor **slot;
     u8 earned;
 
-    levelIdx = sub_802332C(gUnknown_030012C0);
+    levelIdx = GetCurrentLevel(gLevelState);
     {
         /* A byte offset, not an index: keeps the ROM's `idx*4 + 4`
          * computed before the base is loaded. */
@@ -223,7 +223,7 @@ void sub_8005D44(struct pause_screen_results *self)
         time = (u16)*(u32 *)((u8 *)self->field_10 + off) >> 3;
     }
     FormatCentiseconds(time, self->timeBuf);
-    entry = &gStaticData_0816C86C[levelIdx];
+    entry = &gLevelTable[levelIdx];
     earned = 0;
     if (time != 0 && time <= entry->threshold_08)
         earned = 1;

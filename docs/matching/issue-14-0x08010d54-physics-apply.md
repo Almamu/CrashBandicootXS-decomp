@@ -202,7 +202,7 @@ branch-by-branch this pass, per Phase 1's scope).
 | `sub_8011388` | 8 B | No existing cross-reference found. |
 | `sub_8011390` | 184 B | No existing cross-reference found. |
 | `sub_8011448` | 256 B | `docs/rom_map.md`: "a randomized-position spawn picker, same flavor as the documented `sub_800EAFC` randomized-behavior selector but for position rather than behavior choice." Called as `sub_8011448(entry, 1)`/`(other, 1)` from `game_loop40.c`/`game_loop49.c` for despawn. |
-| `sub_8011548` | 500 B | `docs/rom_map.md`: entity-vtable-dispatched (`gStaticData_087Exxx` 93-entry family); "integrates position from velocity fields, manages a wrapping counter with mode-gated increment/decrement, and on a branch plays `PlaySfx(0xe, 0x100)` plus calls a scoring/counter candidate, `sub_8023430`." |
+| `sub_8011548` | 500 B | `docs/rom_map.md`: entity-vtable-dispatched (`gStaticData_087Exxx` 93-entry family); "integrates position from velocity fields, manages a wrapping counter with mode-gated increment/decrement, and on a branch plays `PlaySfx(0xe, 0x100)` plus calls a scoring/counter candidate, `CollectWumpa`." |
 | `sub_801173C` | 308 B | `void sub_801173C(u16 arg0)` - the achievement/unlock-icon spawn helper; extern in `graphics_loading_21d80.c`, referenced from `game_loop14.c`/`docs/rom_map.md`. |
 | `sub_8011870` | 172 B | Alternative to `sub_80111B8` (see above), called from `game_loop14.c`. |
 | `sub_801191C` | 16 B | `void sub_801191C(struct actor *self)` - extern in `actor_part39.c`; also called from `game_loop14.c` alongside `sub_801173C` for a "special" 4th spawn-mode case. |
@@ -430,12 +430,12 @@ coincide").
   thresholds/directions; on arrival (`|x|<=0x10 && |y|<=0x10` in mode 1,
   or the mode-2 wrap threshold) both fire
   `PlaySfx(gUnknown_030012BC,0xe,0x100)`, call
-  `sub_8023430(gUnknown_030012C0)` (a scoring/counter candidate per
+  `CollectWumpa(gLevelState)` (a scoring/counter candidate per
   `docs/rom_map.md`), set `self->0xc` bit 0, and - unless `self->8 ==
-  0xffff` - set `self->8`'s bit in the `gUnknown_030012B4+0x108`
+  0xffff` - set `self->8`'s bit in the `gEntityFlags+0x108`
   collision bitmap (the same inline idiom `sub_80072D8`/`sub_8025A64`
   use). Mode 3 increments `self->0x49` each frame, and every 11th frame
-  resets it and calls `sub_8025CA4(gUnknown_030012E4, self->x>>8,
+  resets it and calls `sub_8025CA4(gEntitySpawner, self->x>>8,
   self->y>>8, 0, 1, 0)` (already-matched NAKED part-object spawner,
   `game_loop14.c`) - `self->0x4b` increments every frame too, falling
   into the same collision-bitmap tail every 10th frame. Mode 0
@@ -577,7 +577,7 @@ assembler error instead of a silent miscompile.
 **A genuine transcription bug caught by the isolated-verification step
 before it reached `make compare`:** `sub_8011548`'s first
 `self->0xc`-bit/collision-bitmap tail block's literal-pool
-(`gUnknown_030012BC`/`gUnknown_030012C0`/`0x0000FFFF`) was initially
+(`gUnknown_030012BC`/`gLevelState`/`0x0000FFFF`) was initially
 placed **before** the `_080115BA: b _08011664`-equivalent label instead
 of **after** it (an easy off-by-one when splitting a raw disassembly's
 own `.align 2, 0` + `.4byte` block away from the label it actually
@@ -672,9 +672,9 @@ position).
   rotating/orbiting hazard state machine `docs/rom_map.md` already
   flagged. Mode 1: integrates position by velocity, and once inside
   screen bounds (`|x|<=0xb4`, `|y|<=0xc`) plays a hit SFX, calls
-  `sub_8023464(gUnknown_030012C0)`, sets flags bit 0, and (unless
+  `AddLife(gLevelState)`, sets flags bit 0, and (unless
   `self->8 == 0xffff`) sets `self->8`'s bit in the
-  `gUnknown_030012B4+0x108` collision bitmap. Mode 2: integrates
+  `gEntityFlags+0x108` collision bitmap. Mode 2: integrates
   position, wraps a `self->0x3c` timer up or down depending on
   `self->0x49`, and on wrap fires the identical
   PlaySfx-less-but-otherwise-same trigger tail. Any other mode (0, or
@@ -777,7 +777,7 @@ both unresolved in an isolated unlinked compile) before the
 authoritative full clean `make NON_MATCHING=1 report` (no warnings)
 followed by `make compare` ("La suma coincide"):
 
-- `sub_8010F8C` duplicates its own "PlaySfx+`sub_8023464`+collision-
+- `sub_8010F8C` duplicates its own "PlaySfx+`AddLife`+collision-
   bitmap" trigger tail twice (once per arrival mode), each with a
   different register allocation surviving from that mode's own
   preceding branch - notably mode 1's copy opportunistically reuses

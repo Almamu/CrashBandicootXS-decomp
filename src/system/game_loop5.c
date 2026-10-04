@@ -1,7 +1,7 @@
 #include "core.h"
 #include "level_data.h"
 
-extern void *gUnknown_03001308;
+extern void *gLevelLayers;
 
 /* See game_loop3.c for the full `tile_cache` doc comment - duplicated
  * here (not shared via a header) since it's only ever accessed through
@@ -20,18 +20,18 @@ struct tile_cache {
     s32 nextSlot;                    /* 0x1060 */
 };
 
-extern void *sub_8024F24(struct tile_cache *self, s32 recordId);
+extern void *GetCollisionChunk(struct tile_cache *self, s32 recordId);
 
-/* Same lookup as `sub_80250BC`/`sub_8025460`, but returns the raw
+/* Same lookup as `GetTerrainHeights`/`GetTerrainType`, but returns the raw
  * decoded halfword unfiltered - no bounds check, no output params. */
-u16 sub_80254C0(struct tile_cache *self, s32 x, s32 y)
+u16 GetCollisionCell(struct tile_cache *self, s32 x, s32 y)
 {
     s32 tileX = x >> 4;
     s32 tileY = y >> 3;
     void *src = self->source;
     s32 tileIdx = tileY * self->width + tileX;
     u16 recordId = (*(u16 **)src)[tileIdx];
-    u16 *cache = sub_8024F24(self, recordId);
+    u16 *cache = GetCollisionChunk(self, recordId);
     s32 my = y & 7;
     s32 mx = x & 0xf;
 
@@ -41,11 +41,11 @@ u16 sub_80254C0(struct tile_cache *self, s32 x, s32 y)
 
 /* Constructs `self` from `source` (see the `tile_cache` comment above):
  * caches the tile-grid pointer, the decode-table base
- * (`gUnknown_03001308`'s camera offset + `source->assetOffset`), the tile-grid
+ * (`gLevelLayers`'s camera offset + `source->assetOffset`), the tile-grid
  * dimensions, and the pixel-dimension fields nothing in this cluster
  * reads back - then resets every cache slot's resident id to -1 and the
  * eviction cursor to 0. Does nothing when `source` is NULL. */
-void sub_80254F8(struct tile_cache *self, struct level_layer_desc *source)
+void SetCollisionSource(struct tile_cache *self, struct level_layer_desc *source)
 {
     s32 i;
 
@@ -54,7 +54,7 @@ void sub_80254F8(struct tile_cache *self, struct level_layer_desc *source)
     }
 
     self->source = source;
-    self->decodeBase = (u8 *)*(void **)((u8 *)gUnknown_03001308 + 0x24) + (s32)source->assetOffset;
+    self->decodeBase = (u8 *)*(void **)((u8 *)gLevelLayers + 0x24) + (s32)source->assetOffset;
     self->unk010 = source->widthTiles;
     self->unk014 = source->heightTiles;
     self->unk008 = self->unk010 << 3;

@@ -11,7 +11,7 @@
  * SelectActorCategory, then runs a per-VBlank loop (polling input,
  * redrawing, flushing the VRAM DMA queue) until `sub_802A208` reports an
  * exit state. Returns the loop's exit code (0-2); 1 re-runs the outer
- * setup unless gUnknown_030012C0's own state (sub_803AFEC, its +0x8c
+ * setup unless gLevelState's own state (sub_803AFEC, its +0x8c
  * byte) says to leave.
  *
  * Matches under old_agbcc (current agbcc is 3 halfwords off in the
@@ -24,7 +24,7 @@
  *    `unknown_28` test, r0/r1/r3/r5 in the exit stores) where they are.
  *    With plain globals the reload rotation shifts by one and jump2
  *    cross-jumps the two `ret = 1` exits together.
- *  - `state` (&gUnknown_030012C0) is assigned right before the inner
+ *  - `state` (&gLevelState) is assigned right before the inner
  *    loop, so its load precedes the hoisted gUnknown_03001300 load in the
  *    preheader, as in the ROM (sb before the sl/r8 copies).
  *  - The exit-state tests are an if/else chain (a switch builds a
@@ -43,7 +43,7 @@ extern s32 gUnknown_03000878;
 extern s32 gUnknown_03001384;
 extern s32 gUnknown_03001388;
 extern s32 gUnknown_0300138C;
-extern u8 *gUnknown_030012C0;
+extern u8 *gLevelState;
 extern void *gUnknown_03001300;
 extern void *gUnknown_03001304;
 extern void *gUnknown_030012FC;
@@ -57,7 +57,7 @@ extern void sub_802AAFC(void);
 extern void sub_802ABFC(s32 flag);
 extern void sub_8029C30(s32 kind);
 extern s32 sub_803AFEC(void *state);
-extern void sub_8023548(void *arg0);
+extern void RestoreCheckpoint(void *arg0);
 extern void sub_800132C(s32 a, s32 b, s32 c);
 extern void sub_8029890(s32 arg0, void *arg1, u32 arg2, s32 arg3);
 extern void sub_802F7B0(void);
@@ -66,7 +66,7 @@ extern void SelectActorCategory(s32 type, void *subEffectTable, void *animTable,
 extern void sub_80007AC(void *arg0);
 extern void sub_8029B38(void);
 extern s32 sub_802A208(void);
-extern void sub_8022F2C(void *arg0);
+extern void TickLevelClock(void *arg0);
 extern void sub_8006C4C(void *self);
 extern void sub_8006A78(void *arg0);
 extern void sub_8028400(void *state);
@@ -94,7 +94,7 @@ extern void nullsub_6(void);
 extern void sub_802A5E4(void);
 
 #define CUR_CATEGORY (gStaticData_08175558[gUnknown_03001380])
-#define PAUSED (gUnknown_030012C0[0x8c])
+#define PAUSED (gLevelState[0x8c])
 
 s32 InitActorCategory(s32 category)
 {
@@ -115,7 +115,7 @@ s32 InitActorCategory(s32 category)
     gUnknown_03000878 = 0;
     gUnknown_03001384 = 0;
     gUnknown_03001388 = 0;
-    sub_8022CA0(gUnknown_030012C0);
+    sub_8022CA0(gLevelState);
     DecompressCategorySpriteSheet(CUR_CATEGORY.sprite_sheet);
     SetupActorVramPool();
     sub_802AAFC();
@@ -126,7 +126,7 @@ s32 InitActorCategory(s32 category)
         activeCount = &gUnknown_03001384;
         variantCount = &gUnknown_03001388;
         gUnknown_0300138C = gUnknown_03001390;
-        sub_8023548(gUnknown_030012C0);
+        RestoreCheckpoint(gLevelState);
         if (*variantCount >= (s32)CUR_CATEGORY.unknown_28)
             variant = CUR_CATEGORY.unknown_30;
         else
@@ -151,13 +151,13 @@ s32 InitActorCategory(s32 category)
         dma->cnt = 0x80000100;
         dma->cnt;
 
-        state = &gUnknown_030012C0;
+        state = &gLevelState;
         for (;;) {
             sub_80007AC(gUnknown_03001304);
             sub_8029B38();
             status = sub_802A208();
             if ((*state)[0x8c] != 0)
-                sub_8022F2C(*state);
+                TickLevelClock(*state);
             sub_8006C4C(gUnknown_030012FC);
             sub_8006A78(gUnknown_03001300);
             sub_8028400(gUnknown_03001318);
@@ -236,7 +236,7 @@ s32 InitActorCategory(s32 category)
     done:
         sub_802A5E4();
         nullsub_5();
-    } while (ret == 1 && sub_803AFEC(gUnknown_030012C0) >= 0 && PAUSED == 0);
+    } while (ret == 1 && sub_803AFEC(gLevelState) >= 0 && PAUSED == 0);
 
     nullsub_6();
     FreeSpriteFrameCache();

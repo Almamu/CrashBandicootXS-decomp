@@ -14,7 +14,7 @@
  *   player-state globals.
  * - sub_802B218 (vtable slot 1) turns a level spawn record into a
  *   sub_802AC28 call, picking the record's alternate kind in the
- *   gUnknown_030012C0+0x8C mode (with several kinds folded to 1) or its
+ *   gLevelState+0x8C mode (with several kinds folded to 1) or its
  *   bonus kind when asked to, and skipping kinds 0/32-34/62.
  * - sub_802AC28 is the per-kind `new`: a switch whose case bodies are
  *   the inlined constructors of each actor class (allocate, run the
@@ -29,7 +29,7 @@
 
 extern struct anim_table_record *gUnknown_0300147C;
 extern struct actor_self *gUnknown_03000884;
-extern void *gUnknown_030012C0;
+extern void *gLevelState;
 
 extern u8 gStaticData_087E4E14[];
 extern u8 gStaticData_087E4E34[];
@@ -235,7 +235,7 @@ struct actor_self *sub_802B218(struct actor_spawn *spawn, u8 useBonus, s32 zOffs
 {
     u8 kind = spawn->kind;
 
-    if (((u8 *)gUnknown_030012C0)[0x8C] != 0)
+    if (((u8 *)gLevelState)[0x8C] != 0)
     {
         kind = spawn->altKind;
         if (kind == 11)

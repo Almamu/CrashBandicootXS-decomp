@@ -348,9 +348,9 @@ void sub_80156B4(void *selfArg)
 }
 
 extern s32 sub_80231BC(void *self);
-extern void *gUnknown_030012C0;
+extern void *gLevelState;
 
-/* While `part+0x38` is set: when `sub_80231BC(gUnknown_030012C0)` is
+/* While `part+0x38` is set: when `sub_80231BC(gLevelState)` is
  * true, fires the mgr trampoline pair with actions `0x19`/`7`;
  * otherwise fires only the first trampoline with action `0x18`.
  *
@@ -361,7 +361,7 @@ extern void *gUnknown_030012C0;
 void sub_80156EC(u8 *self)
 {
     if (((u8 *)*(struct actor **)(self + 0x10) + 0x38)[0] != 0) {
-        if ((u8)sub_80231BC(gUnknown_030012C0)) {
+        if ((u8)sub_80231BC(gLevelState)) {
             struct vtable_slot *mgr = *(struct vtable_slot **)(self + 0xc);
             u8 *off;
 

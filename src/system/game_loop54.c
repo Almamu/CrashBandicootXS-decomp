@@ -18,8 +18,8 @@
 
 extern void *gUnknown_030012D8;
 extern void *gUnknown_030012BC;
-extern void *gUnknown_030012C0;
-extern void *gUnknown_030012B4;
+extern void *gLevelState;
+extern void *gEntityFlags;
 extern void *gUnknown_030012EC;
 extern void *gUnknown_03001318;
 
@@ -29,7 +29,7 @@ extern u8 sub_8001688(void *buf1, void *buf2);
 extern void sub_8007174(void *arg0, s32 arg1, s32 arg2, s32 *arg3, s32 *arg4);
 extern s32 sub_80008F0(s32 arg0, s32 arg1);
 extern s32 sub_80008FC(s32 a, s32 b);
-extern s32 sub_8023464(void *self);
+extern s32 AddLife(void *self);
 extern void sub_80284A4(void *state);
 extern void *sub_8026EDC(s32 size);
 extern struct actor *sub_80084A4(struct actor *self);
@@ -188,9 +188,9 @@ void sub_8010EAC(void *selfArg, u8 randomize)
  * 1/2 integrate `self->x`/`self->y` by `self->0x40`/`self->0x44` and,
  * on reaching an on-screen "arrival" bound (mode 1) or a wrapping
  * `self->0x3c` timer threshold (mode 2), fire a hit SFX,
- * `sub_8023464(gUnknown_030012C0)`, set flags bit 0, and (unless
+ * `AddLife(gLevelState)`, set flags bit 0, and (unless
  * `self->8 == 0xffff`) set `self->8`'s bit in the
- * `gUnknown_030012B4+0x108` collision bitmap - the same inline idiom
+ * `gEntityFlags+0x108` collision bitmap - the same inline idiom
  * `sub_8011548` (`game_loop53.c`) also duplicates per mode. Any other
  * mode (0, or 3+): gated by `self->0x4a`, increments `self->0x49` or
  * `self->0x4b` (wrapping the gate off after 32 ticks). The shared tail:
@@ -212,7 +212,7 @@ void sub_8010EAC(void *selfArg, u8 randomize)
     do                                                                         \
     {                                                                          \
         s32 _id = (idExpr);                                                    \
-        u8 *_base = gUnknown_030012B4;                                         \
+        u8 *_base = gEntityFlags;                                         \
         s32 _word = _id / 32;                                                  \
         s32 _off = _word * 4;                                                  \
         u32 *_slot = (u32 *)(_base + 0x108);                                   \
@@ -240,7 +240,7 @@ void sub_8010F8C(struct orbit_part *self)
              * ROM. */
             asm("" : : "r"(vx));
             PlaySfx(gUnknown_030012BC, 0xe, 0x100);
-            sub_8023464(gUnknown_030012C0);
+            AddLife(gLevelState);
             self->base.flags |= 1;
             if (self->base.field_08 != 0xffff)
                 SET_ID_BIT(self->base.field_08, state);

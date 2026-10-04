@@ -56,8 +56,8 @@ most instructions already right. What closed it:
    and jump2 then cross-jumps the two identical `ret = 1; goto done`
    blocks together. The pointers must be assigned at the top of the
    outer loop; initialized at declaration they do not match.
-6. **`state = &gUnknown_030012C0` right before the inner loop** (4 -> 0).
-   Loop.c's first pass hoists `gUnknown_030012C0`, the category base and
+6. **`state = &gLevelState` right before the inner loop** (4 -> 0).
+   Loop.c's first pass hoists `gLevelState`, the category base and
    the palette constant; `gUnknown_03001300` only gets hoisted by the
    second loop pass, so it landed after the base copy. Assigning the
    pointer as a statement before the loop puts it ahead of the movables,

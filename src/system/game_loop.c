@@ -4,7 +4,7 @@
 #include "level_state.h"
 
 extern void *gUnknown_030012D8;
-extern void *gUnknown_030012B4;
+extern void *gEntityFlags;
 extern void *gUnknown_03001318;
 extern struct tile_asset_cache *gUnknown_030012B8;
 
@@ -22,7 +22,7 @@ extern void sub_8022CA0(struct level_state *self, u8 arg1);
 /* Called at level start/checkpoint-restore: `arg1` selects whether to
  * accumulate this attempt's progress into the running totals
  * (`unk_70`/`wumpa`/`lives`, carrying every 100 wumpa into a life the
- * same way `sub_8022F2C`'s odometer carries) or to just reset those
+ * same way `TickLevelClock`'s odometer carries) or to just reset those
  * three fields back from their `unk_b4`/`unk_b0`/`unk_b8` "level start"
  * snapshot. Either way it re-syncs the player's stored position
  * (`checkpointX`/`checkpointY` -> `sub_8007398`) and re-runs
@@ -103,7 +103,7 @@ void sub_8022BF0(struct level_state *self, u8 arg1)
  * `+0xa9` byte) and snapshots the first `0x68` bytes of `self` into
  * `self+0xe4`. Otherwise it also stashes the camera's `{x, y}`
  * (`gUnknown_030012D8`) into `checkpointX`/`checkpointY`, clears two flag
- * bytes, and syncs two spans of the `gUnknown_030012B4` bitmap
+ * bytes, and syncs two spans of the `gEntityFlags` bitmap
  * (`+0x108`->`+8`, `+0x308`->`+0x208`) via the BIOS `CpuSet` wrapper -
  * reads like an end-of-level "freeze the HUD/save state" snapshot.
  *
@@ -165,7 +165,7 @@ void sub_8022CA0(struct level_state *self, u8 arg1)
              * [r0]`); the ROM instead keeps the base pointer from the
              * first store and uses its `[r0, #4]` immediate-offset
              * form. Reproduced with a local pointer and indexed
-             * stores - same gotcha as `sub_8023500`/`sub_802356C` in
+             * stores - same gotcha as `sub_8023500`/`SetCheckpoint` in
              * docs/matching/issue-37-game-loop-234e8.md. */
             s32 *dst = &self->checkpointX;
 
@@ -173,12 +173,12 @@ void sub_8022CA0(struct level_state *self, u8 arg1)
             dst[1] = y;
         }
 
-        base = gUnknown_030012B4;
+        base = gEntityFlags;
         {
             /* The control word is loaded from the literal pool fresh
              * for each call (matching the ROM's two separate `ldr
              * r2, =0x04000040`) rather than hoisted into one shared
-             * register across both calls - see `sub_802356C`'s
+             * register across both calls - see `SetCheckpoint`'s
              * identical gotcha in docs/matching/issue-37-game-loop-
              * 234e8.md for why this needs its own `register` block
              * declared right before each call, after the two pointer

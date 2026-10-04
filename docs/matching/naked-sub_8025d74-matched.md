@@ -1,6 +1,6 @@
-# `sub_8025D74` converted from NAKED transcription to real matched C
+# `InitBgLayer` converted from NAKED transcription to real matched C
 
-`sub_8025D74` (`src/system/game_loop15.c`, a BG-scroll-layer hardware-
+`InitBgLayer` (`src/system/game_loop15.c`, a BG-scroll-layer hardware-
 register/bitfield initializer) had been parked as a byte-correct NAKED
 asm transcription - see
 [issue-41-game-loop-25894.md](./issue-41-game-loop-25894.md) for the
@@ -25,7 +25,7 @@ reconstruction and a byte-exact match:
    / `movs r0,#0xd; rsbs r0,r0,r0`, i.e. `mov`+`neg` in Thumb's plain
    syntax) and does a genuine register-register `AND`.
 2. **Shared literal pool identity**: the function loads three
-   pointer-sized constants (`gStaticData_087E4C14`, `0x04000008`,
+   pointer-sized constants (`gBgLayerVtable`, `0x04000008`,
    `0x04000010`) that the ROM keeps in one pool, in that exact order,
    right after the function. Letting even one of the three stay an
    ordinary C-level reference (relying on this compiler's own
@@ -88,7 +88,7 @@ going through the compiler's own automatic pooling:
 ```
 
 ```c
-asm(".align 2, 0\n90: .word gStaticData_087E4C14\n.word 0x04000008\n.word 0x04000010");
+asm(".align 2, 0\n90: .word gBgLayerVtable\n.word 0x04000008\n.word 0x04000010");
 ```
 
 (An earlier attempt materializing only the `0x04000008` load - the one
@@ -104,12 +104,12 @@ Since the pool is emitted via a *separate* top-level `asm()` statement
 after the function's closing brace (not inside the function body,
 where an unreachable trailing block would be dead-code-eliminated -
 see the `sub_8000CBC` derivation doc for that failure mode), it falls
-outside the compiler's own `.size sub_8025D74, ...` calculation for
+outside the compiler's own `.size InitBgLayer, ...` calculation for
 the function symbol - purely a symbol-table/metadata detail with no
 effect on the actual emitted bytes (confirmed by the full clean
 `make compare` below), but visible as a handful of "extra" bytes
 `objdiff`'s per-symbol diff view attributes to no symbol at all rather
-than to `sub_8025D74`.
+than to `InitBgLayer`.
 
 **A genuine assembler-syntax bug found along the way**: an early draft
 wrote `orr r0, r0, #8` directly, which isn't valid Thumb (`ORR` has no
@@ -133,7 +133,7 @@ byte content difference - confirmed by direct `arm-none-eabi-objdump`
 comparison of the assembled instruction bytes). Full clean `rm -rf
 build crashbandicootxs.elf crashbandicootxs.gba crashbandicootxs.map
 && make compare` - `crashbandicootxs.gba: La suma coincide`.
-`sub_8025D74` is folded into the same `src/system/game_loop15.o` unit
+`InitBgLayer` is folded into the same `src/system/game_loop15.o` unit
 as the already-matched
-`sub_8025DE8`/`sub_8025E2C`/`sub_8025E70`/`sub_8025E84` in
+`GrowBgLayerRows`/`GrowBgLayerColumns`/`ClipBgLayerColumns`/`ClipBgLayerRows` in
 `tools/report_units.py`, since it's the same object file.
