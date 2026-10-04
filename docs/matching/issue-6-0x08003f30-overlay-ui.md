@@ -58,7 +58,7 @@ record that these two were reviewed but not attempted.
 
 - **`sub_800450C`** (`asm/code_3_1_10_4.s`) - the screen's own init
   routine: resets the OAM shadow buffer and two tile caches
-  (`sub_8006A90`/`sub_8006A48`/`sub_80006A8`/`sub_8006AAC` on
+  (`sub_8006A90`/`sub_8006A48`/`WaitForVBlank`/`sub_8006AAC` on
   `gUnknown_03001300`, `sub_8006EA8`/four `sub_8006D50` calls on
   `gUnknown_030012B8`), copies the first four per-level
   `gStaticData_0816Bxxx` tables (`gStaticData_0816B13A`/`15A`/`17A`/
@@ -138,7 +138,7 @@ pass that also converted this file's five sibling functions
 `sub_80041BC` - all built on the same centered-label/positioned-glyph
 primitive, all hitting the identical difficulty class) - see
 `src/graphics/settings_menu.c`'s header comment and
-`src/util/printf_util.c`'s `sub_8000CBC` for the established NAKED-
+`src/util/printf_util.c`'s `FindSubstring` for the established NAKED-
 transcription pattern. Every instruction in all six now matches the
 ROM exactly; verified via a full clean `make compare` (`La suma
 coincide`). Per this project's tracking policy, byte-exact NAKED asm

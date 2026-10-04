@@ -1,19 +1,19 @@
 #include "core.h"
 
-extern s32 sub_8000140(s32 value, s32 base, s32 *remainder);
+extern s32 DivMod(s32 value, s32 base, s32 *remainder);
 
 /* Custom itoa: converts `value` to a NUL-terminated string in `buffer`
  * (base 2-36), returning the digit count (not including the NUL or the
  * '-' sign). Base 16 gets a fast path using bit-AND + arithmetic-shift
  * instead of a division call, producing uppercase hex digits; any other
- * base falls back to sub_8000140 (a divmod helper). Digits are produced
+ * base falls back to DivMod (a divmod helper). Digits are produced
  * least-significant-first then reversed in place at the end.
  *
  * Every local here is register-pinned to r0-r7, chosen to match the
  * ROM's own allocation exactly - none of them touch the r4-r7 hazard in
  * matching_decomp_register_pinning memory, since each pinned r4-r7
  * variable's whole lifetime genuinely survives a call within this
- * function (v/buf/baseR/len/negative all live across the sub_8000140
+ * function (v/buf/baseR/len/negative all live across the DivMod
  * call in the generic-base branch; j survives across the reversal
  * loop's body). `i`/`rem` reuse r1, and `j`/`baseR` reuse r4, matching
  * the ROM reusing a register once its previous occupant is dead - these
@@ -68,7 +68,7 @@ s32 itoa(s32 value, u8 *buffer, s32 base)
         s32 rem2;
         s32 quotient;
         do {
-            quotient = sub_8000140(v, baseR, &rem2);
+            quotient = DivMod(v, baseR, &rem2);
             v = quotient;
             rem2 += 0x30;
             buf[len] = rem2;
@@ -144,7 +144,7 @@ asm(".align 2, 0");
  * has sitting in a register from an unrelated preceding comparison,
  * rather than reusing it - plain C naturally reuses the already-live
  * value instead. */
-u8 *sub_80009F4(u8 *dest, u8 *fmt, s32 *valuePtr, u8 padChar,
+u8 *FormatPaddedNumber(u8 *dest, u8 *fmt, s32 *valuePtr, u8 padChar,
                 s32 *charsConsumedPtr)
 {
     u8 buf[0x20];

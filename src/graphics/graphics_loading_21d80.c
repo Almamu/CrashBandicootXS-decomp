@@ -376,7 +376,7 @@ extern u8 gStaticData_084A5600[];
  * asset index, resolved separately in docs/rom_map.md).
  *
  * Several of these constructions call a *void*-returning helper
- * (`nullsub_2`, `nullsub_1`, `sub_8006FB4`, `sub_80007DC`,
+ * (`nullsub_2`, `nullsub_1`, `sub_8006FB4`, `ClearKeys`,
  * `sub_8025A5C`) immediately after allocating the block, then store
  * *that same allocation* without reloading it - relying on the real
  * ROM function leaving the allocated pointer in `r0` untouched (true
@@ -451,7 +451,7 @@ void *sub_8022230(void *self)
         void **addr = (void **)&gUnknown_03001304;
         register void *tmp asm("r0") = sub_8026EDC(4);
 
-        asm volatile("bl sub_80007DC" : "+r" (tmp) :: "r1", "r2", "r3", "lr", "cc");
+        asm volatile("bl ClearKeys" : "+r" (tmp) :: "r1", "r2", "r3", "lr", "cc");
         *addr = tmp;
     }
     {

@@ -101,7 +101,7 @@ extern struct popup_part *sub_8009ED0(u16 arg0, u16 arg1, u16 arg2, u16 arg3);
 extern s32 sub_800815C(struct popup_part *part);
 extern void *sub_8026EDC(s32 size);
 extern struct popup_hdr *sub_800CA74(void);
-extern s32 sub_803AD80(void *self, void *arg, void *fn);
+extern s32 _call_via_r2(void *self, void *arg, void *fn);
 extern void sub_8008E94(void *manager, void *value);
 extern void sub_800C6A8(struct popup_hdr *hdr, s32 arg1);
 extern void sub_800C860(struct popup_hdr *hdr, s32 arg1, s32 arg2, s32 arg3);
@@ -113,9 +113,9 @@ extern void sub_800872C(struct popup_part *part, s32 arg);
 
 #define POPUP_ANIM(offset) ((void *)((u8 *)**gUnknown_030012D0 + (offset)))
 
-/* hdr->attach(part), through sub_803AD80 (`_call_via_r2`). */
+/* hdr->attach(part), through _call_via_r2. */
 #define POPUP_ATTACH(hdr, part)                                                \
-    sub_803AD80((u8 *)(hdr) + (hdr)->vtable->attach.thisOffset, (part),       \
+    _call_via_r2((u8 *)(hdr) + (hdr)->vtable->attach.thisOffset, (part),       \
                 (hdr)->vtable->attach.fn)
 
 #define LEVEL_RECORD(id)                                                       \

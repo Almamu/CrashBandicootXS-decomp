@@ -33,7 +33,7 @@ screen in `actor_part_1b85c.c` (issue #26):
   - 3: shown. The picture wobbles on the sine table `gStaticData_0816A820`.
   - 4: zoom away while rotating, then go to 5 (gone).
 
-  `sub_801DC28` builds the BgAffineSet source (`sub_803A944`) and
+  `sub_801DC28` builds the `BgAffineSet` source and
   `sub_801DCBC` commits the result to BG2PA-BG2Y. `sub_801DCF8`-
   `sub_801DD38` are the state queries. `sub_801DD48`, `sub_801DD5C` and
   `sub_801DD80` start the exit, start a page turn and request a picture.
@@ -72,17 +72,17 @@ anywhere in the ROM. `sub_801E408` contains an inlined copy of
 
 ## Matching notes
 
-- **`__divsi3` is `sub_803ADB4`.** `0x10000 / self->scale` (`sub_801DC28`,
+- **Division is libgcc's `__divsi3`.** `0x10000 / self->scale` (`sub_801DC28`,
   `sub_801E3A4`) and `0xF8 / d` (`sub_801E480`) load the divisor before
-  the constant. A direct `sub_803ADB4(0x10000, scale)` call does the
-  reverse. The header aliases the libcall with
-  `asm(".set __divsi3, sub_803ADB4")`, which works like the
-  `_call_via_rN` aliases from issue #24.
+  the constant. A direct `__divsi3(0x10000, scale)` call does the
+  reverse. The libcall resolves to the ROM's own `__divsi3` (at the time
+  through a `.set` alias, like the `_call_via_rN` aliases from issue
+  #24; the functions now carry the libgcc names themselves).
 - **Sine lookup: `(tbl[i] * 4) >> 8`, not `tbl[i] >> 6`.** Both compute
   the same value. With `>> 6`, gcc's combiner rewrites the `s16` load and
   shift as `ldrh; lsl #16; asr #22`, but the ROM has `ldrsh; asr #6`. The
   multiply-then-shift form (amplitude 4, Q8) keeps the `ldrsh`.
-- **`(u16)sub_8000E1C(n)` with an `s32` return.** Declaring the RNG as
+- **`(u16)RandRange(n)` with an `s32` return.** Declaring the RNG as
   returning `u16` lets CSE merge the zero-extension into a later `>> 1`
   (`lsrs r0, r1, #17`). With `s32` plus a cast at each call, and
   `t->timer / 2`, the ROM's `lsrs r0, r0, #1` survives. gcc knows the

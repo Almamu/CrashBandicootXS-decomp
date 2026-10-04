@@ -4,7 +4,7 @@ Labeled `graphics` by the chunk generator, but on inspection every
 function here operates on the same large per-level "player/action"
 object already documented in `actor_part18.c`/`actor_part19*.c`
 (`self+0xc` per-category table pointer, `self+0x10` "part" sub-object,
-the `sub_803AD80`/`sub_803AD84` base+offset+fn-pointer trampoline
+the `_call_via_r2`/`_call_via_r3` base+offset+fn-pointer trampoline
 convention) - filed under `docs/status/actor.md` instead, matching the
 precedent already set for `actor_part18.o`/`actor_part18b.o` (also
 `graphics`-labeled-but-actor-shaped, see their own `tools/report_units.py`

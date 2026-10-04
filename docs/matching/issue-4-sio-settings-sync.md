@@ -17,20 +17,20 @@ compare` ("La suma coincide").
   handler that forwards into the music player's existing per-tick fade
   update (`sub_80016EC`, `src/audio/music_player.c`). That file's
   header comment already anticipated this pair by name. Matched.
-- **`sub_8001CB8`-`sub_8002868`ish** (system) - the genuine GBA
+- **`sub_8001CB8`-`ReadSaveData`ish** (system) - the genuine GBA
   multiplayer link-cable/SIO transport this document's `rom_map.md`
   already partially characterized (`sub_8001F50`/`sub_8001DB4` as the
   handshake driver/session-reset). This chunk adds the "stop"/"start"
-  session steps (`sub_8001D30`/`sub_80026E4`), a per-player 8-byte
+  session steps (`LinkStop`/`LinkStart`), a per-player 8-byte
   handshake-id CRC hash helper (`sub_8001CB8`), the session object
   constructor (`sub_80027E8`), the Serial/Timer3 IRQ handlers
-  (`sub_8002830`/`sub_8002848`), and two EEPROM block-transfer loops
-  (`sub_8002868`/`sub_8002938`) that turned out to be a **red herring**
+  (`LinkSerialIntr`/`LinkTimer3Intr`), and two EEPROM block-transfer loops
+  (`ReadSaveData`/`WriteSaveData`) that turned out to be a **red herring**
   for SIO at first glance (stack buffer + polling loop looks like the
   SIO pump from issue #5's `settings_menu8a2.c`) but are actually
   EEPROM save-chip primitives built on `src/system/timer_util.c`'s
-  `EepromConfig`/`sub_803A968`/`sub_803AB54`/`sub_803AD38` - confirmed
-  by `gUnknown_03001634->maxCount` (an `EepromConfig` field) driving
+  `EepromConfig`/`EEPROMConfigure`/`EEPROMRead`/`EEPROMWrite1_check` - confirmed
+  by `gEepromConfig->maxCount` (an `EepromConfig` field) driving
   their loop bound, not anything SIO-shaped.
 - **`sub_8002A08`-`sub_8002C6C`** (overlay_ui) - the settings_sync_record
   persistence layer: EEPROM load/save orchestrators with retry and
@@ -49,12 +49,12 @@ compare` ("La suma coincide").
 
 - `sub_8001C80`, `sub_8001CA4` (`src/audio/music_irq.c`) - VCount-IRQ
   registration and handler for the music player's per-tick update.
-- `sub_8001D30` (`src/system/link_cable.c`) - link-session "stop":
+- `LinkStop` (`src/system/link_cable.c`) - link-session "stop":
   IME-guarded Serial/Timer3 IRQ disable, RCNT/SIOCNT/TM3CNT reset,
   IF acknowledge.
-- `sub_80026E4`, `sub_800276C`, `sub_8002798`, `sub_80027B0`,
-  `sub_80027E8`, `sub_8002830`, `sub_8002848` (`src/system/link_cable2.c`)
-  - link-session "start" (counterpart to `sub_8001D30`), a small
+- `LinkStart`, `sub_800276C`, `sub_8002798`, `sub_80027B0`,
+  `sub_80027E8`, `LinkSerialIntr`, `LinkTimer3Intr` (`src/system/link_cable2.c`)
+  - link-session "start" (counterpart to `LinkStop`), a small
   RCNT/SIOCNT reset helper, a reset-wrapper convenience function, a
   reset+conditional-teardown function (with an inert 4-iteration
   dead-address-computation loop that has no observable effect - kept
@@ -136,14 +136,14 @@ the established pattern this project has hit many times before):
   `self` pinned - full register-pin archaeology wasn't attempted given
   the function's size, on the assumption the gap is the same
   unresolved class documented elsewhere, not a semantic error.
-- **`sub_8002868`, `sub_8002938`** (`asm/code_3_1_10_3_2868.s`, C in
+- **`ReadSaveData`, `WriteSaveData`** (`asm/code_3_1_10_3_2868.s`, C in
   `src/graphics/settings_menu8d.c`) - the EEPROM load/save block-loop
   pair. Semantics fully confirmed; the shared IME-save/IE-clear/IME-
   restore snippet (repeated per exit path) routes the saved IME value
   through an extra register hop this compiler introduces that the ROM
   doesn't, most likely due to this function's higher local-variable
   count (buffer/self/len/p/i) versus the near-identical snippet that
-  matched cleanly in the much smaller `sub_8001D30`.
+  matched cleanly in the much smaller `LinkStop`.
 - **`sub_8002AA4`** (`asm/code_3_1_10_3_2aa4.s`, C in
   `src/graphics/settings_menu8e.c`) - checksum validate + DMA-repair.
   The ROM caches four field addresses (`self+0x1f8/0x1f9/0x1fa/0x1fb`)
@@ -159,13 +159,13 @@ the established pattern this project has hit many times before):
 - **`sub_8001F50`** (452 B, `asm/code_3_1_10_3.s`) - the link-
   connection/handshake driver `docs/rom_map.md` already characterizes
   at a high level (configures SIOCNT/SIODATA32, sets up Timer 3 as a
-  handshake timeout, calls `sub_8001D30`/`sub_8001DB4` on timeout).
+  handshake timeout, calls `LinkStop`/`sub_8001DB4` on timeout).
   Not read to full per-branch confidence in the time available for
   this chunk - left raw rather than risk a low-confidence
   reconstruction or park.
 - **`sub_8002114`** (1488 B, same file) - the file's second-biggest
   function, the per-frame SIO data-exchange pump (called from the
-  Serial IRQ handler `sub_8002830` with the session object and
+  Serial IRQ handler `LinkSerialIntr` with the session object and
   SIODATA32's low half). Extremely register-heavy (`ip`/`r8`/`sb`/`sl`
   all live simultaneously across a large stack frame with deep nested
   branching); `docs/rom_map.md` already documents its broad shape but
@@ -176,7 +176,7 @@ the established pattern this project has hit many times before):
 
 None - all new code reuses `struct settings_sync_record`/
 `struct settings_sync_pump` from `include/settings_sync.h` (issue #5)
-without modification. `struct EepromConfig`/`gUnknown_03001634` from
+without modification. `struct EepromConfig`/`gEepromConfig` from
 `src/system/timer_util.c` are referenced via a raw `u8 *` cast rather
 than importing that file-local struct definition, to avoid coupling
 two otherwise-independent translation units to one private type.
@@ -188,7 +188,7 @@ See `docs/status/system.md`, `docs/status/audio.md` and
 
 Closed out all 7 functions this issue still had open (the 5 parked
 above plus the 2 left raw) - `sub_8001CB8`, `sub_8001DB4`,
-`sub_8001F50`, `sub_8002114`, `sub_8002868`, `sub_8002938`,
+`sub_8001F50`, `sub_8002114`, `ReadSaveData`, `WriteSaveData`,
 `sub_8002AA4` - all now byte-exact matched, confirmed by a full clean
 `make compare` ("La suma coincide"). All 25 functions in this issue's
 original range are now matched; see "Closing this issue" below.
@@ -222,13 +222,13 @@ as a second small block, the *only* remaining gap was that same
 prologue `r7`/push-list interaction - at that point, converting the
 whole function to `NAKED` (this project's established escape hatch for
 exactly this class of problem, already used for
-`src/util/math_div_util.c`'s `nullsub_8` and `src/audio/gax_swi.c`'s
+`src/util/math_div_util.c`'s `__div0` and `src/audio/gax_swi.c`'s
 `GaxHuffUnComp`) was both simpler and more honest than continuing to
 fight the compiler over one instruction's register.
 
 ### The general strategy for the rest: NAKED transcription, byte-verified
 
-`sub_8001DB4`, `sub_8002868`/`sub_8002938`, and `sub_8002AA4` were all
+`sub_8001DB4`, `ReadSaveData`/`WriteSaveData`, and `sub_8002AA4` were all
 already fully understood (their parked-pass doc comments walk every
 field/branch/call), just blocked by this same class of gcc-2.9
 register/stack-plan nondeterminism the project has hit many times
@@ -281,13 +281,13 @@ immediately, independent of and prior to the full-ROM linked build.
 Every function in this issue's original 25-function range
 (`0x08001C80`-`0x08002C84`) is now matched. This PR closes issue #4.
 
-### Later pass: `sub_8002868` closed as real C
+### Later pass: `ReadSaveData` closed as real C
 
 The "red herring" register-pressure theory above (line 28) didn't
 survive a direct retest: the IME-save/IE-clear/IME-restore snippet
 matches the ROM's exact "no extra copy" shape as plain C here (`u16
 savedIme = REG_IME; REG_IME = 0; REG_IE &= 0xFFDF; REG_IME = savedIme;
-REG_IME = 1;`), the same phrasing already proven for `sub_8001D30`
+REG_IME = 1;`), the same phrasing already proven for `LinkStop`
 above - byte-identical, confirmed via a direct `.text`-section byte
 compare against `raw_08002868_target.o` (objdiff-cli's own per-symbol
 instruction diff misreports the trailing literal-pool word at this
@@ -295,15 +295,15 @@ exact symbol boundary as a size mismatch even though the raw bytes are
 identical - a good reminder to fall back to a direct byte compare when
 objdiff and the full linked `make compare` disagree).
 
-### Later pass: `sub_8002938` closed as real C too
+### Later pass: `WriteSaveData` closed as real C too
 
-`sub_8002938` (the EEPROM "save" counterpart) closes the same way, with
+`WriteSaveData` (the EEPROM "save" counterpart) closes the same way, with
 one real ordering fix: the ROM runs the chip-config init check *before*
-the `self`-to-stack-buffer copy (`sub_800014C`), not after - the
+the `self`-to-stack-buffer copy (`MemCopy32`), not after - the
 function's own doc comment had the two reversed from a quick semantic
 read. Reordering the two C statements to match gets the whole function
 byte-identical on the first isolated-compile attempt, confirmed the
-same way as `sub_8002868` (a direct `.text`-section byte compare
+same way as `ReadSaveData` (a direct `.text`-section byte compare
 against the function's own slice of `raw_08002938_target.o`, since
 `report_units.py`'s target file gets renamed once the preceding
 function stops being `base_object=None`). `tools/report_units.py`'s
@@ -324,7 +324,7 @@ The issue #4/#6/#8 retry ([issue-4-6-8-naked-retry.md](issue-4-6-8-naked-retry.m
 
 The link-cable drafts establish `struct link_session`,
 `struct link_player` and `struct link_ring`. `link_cable.c` is now on
-`OLD_AGBCC_OBJS`. `sub_8001D30` takes the session pointer its callers
+`OLD_AGBCC_OBJS`. `LinkStop` takes the session pointer its callers
 pass in r0; the parameter is unused and its code is unchanged.
 `sub_8002114` was not attempted. Nothing in this range closed, so the
 issue stays open.

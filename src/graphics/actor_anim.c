@@ -124,7 +124,7 @@ void sub_803B0C4(struct linked_node *self, u32 flags)
 
 asm(".align 2, 0");
 
-extern s32 sub_803AD80(void *arg0, void *arg1, void *arg2);
+extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern void sub_802A7B8(void *self);
 
 /* Advances `self+0x20` (a Q8 fixed-point accumulator, likely a
@@ -142,7 +142,7 @@ void sub_803B0F0(void *selfArg)
     if (self[0x12] != 0) {
         if (self != NULL) {
             u8 *mgr = *(u8 **)(self + 0x50);
-            sub_803AD80(self + *(s16 *)(mgr + 8), (void *)3, *(void **)(mgr + 0xc));
+            _call_via_r2(self + *(s16 *)(mgr + 8), (void *)3, *(void **)(mgr + 0xc));
         }
     } else {
         sub_802A7B8(self);
@@ -514,7 +514,7 @@ void sub_803B4EC(void *selfArg)
     if (self->animDone != 0) {
         if (self != NULL) {
             struct actor_vtable *mgr = self->vtable;
-            sub_803AD80((u8 *)self + mgr->m08.thisOffset, (void *)3, mgr->m08.fn);
+            _call_via_r2((u8 *)self + mgr->m08.thisOffset, (void *)3, mgr->m08.fn);
         }
     } else {
         s32 base;
@@ -597,7 +597,7 @@ void sub_803B57C(void *selfArg)
     if (self[0x12] != 0) {
         if (self != NULL) {
             u8 *mgr = *(u8 **)(self + 0x50);
-            sub_803AD80(self + *(s16 *)(mgr + 8), (void *)3, *(void **)(mgr + 0xc));
+            _call_via_r2(self + *(s16 *)(mgr + 8), (void *)3, *(void **)(mgr + 0xc));
         }
     } else {
         sub_802A7B8(self);

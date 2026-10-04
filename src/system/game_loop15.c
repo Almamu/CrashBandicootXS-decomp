@@ -93,11 +93,11 @@ void *InitBgLayer(void *self, s32 bgIndex)
 asm(".align 2, 0\n90: .word gBgLayerVtable\n.word " ASM_STR(REG_ADDR_BG0CNT)
     "\n.word " ASM_STR(REG_ADDR_BG0HOFS));
 
-extern void sub_803AD80(void *arg0, s32 arg1, void *fn);
+extern void _call_via_r2(void *arg0, s32 arg1, void *fn);
 
 /* Grows `self+0x3c` down to `lo` and `self+0x40` up to `hi` one step
  * at a time, firing `self->0x30`'s `+0x30`-offset/`+0x34`-fn trampoline
- * (via `sub_803AD80`, an interworking veneer picked automatically by
+ * (via `_call_via_r2`, an interworking veneer picked automatically by
  * the compiler for indirect calls - see `SpawnEntity` in
  * game_loop14.c) after every step - the streamed-tile-range grower
  * `ScrollBgLayer` drives for one axis; `GrowBgLayerColumns` is its twin for the
@@ -117,7 +117,7 @@ void GrowBgLayerRows(struct bg_scroll_layer *self, s32 lo, s32 hi)
         off = layer->drawRow.thisOffset;
         addr = (u8 *)self + off;
         fn = layer->drawRow.fn;
-        sub_803AD80(addr, v, fn);
+        _call_via_r2(addr, v, fn);
     }
     while (self->rowHi < hi) {
         struct bg_layer_vtable *layer;
@@ -132,7 +132,7 @@ void GrowBgLayerRows(struct bg_scroll_layer *self, s32 lo, s32 hi)
         off = layer->drawRow.thisOffset;
         addr = (u8 *)self + off;
         fn = layer->drawRow.fn;
-        sub_803AD80(addr, v, fn);
+        _call_via_r2(addr, v, fn);
     }
 }
 
@@ -153,7 +153,7 @@ void GrowBgLayerColumns(struct bg_scroll_layer *self, s32 lo, s32 hi)
         off = layer->drawCol.thisOffset;
         addr = (u8 *)self + off;
         fn = layer->drawCol.fn;
-        sub_803AD80(addr, v, fn);
+        _call_via_r2(addr, v, fn);
     }
     while (self->colHi < hi) {
         struct bg_layer_vtable *layer;
@@ -168,7 +168,7 @@ void GrowBgLayerColumns(struct bg_scroll_layer *self, s32 lo, s32 hi)
         off = layer->drawCol.thisOffset;
         addr = (u8 *)self + off;
         fn = layer->drawCol.fn;
-        sub_803AD80(addr, v, fn);
+        _call_via_r2(addr, v, fn);
     }
 }
 

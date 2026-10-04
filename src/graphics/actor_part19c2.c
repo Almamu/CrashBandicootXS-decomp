@@ -4,7 +4,7 @@
 /* Thin `InitActorPart`-based constructor (constant last-arg `1`,
  * unlike `sub_802C4A4`'s forwarded one), then computes a velocity
  * vector aiming toward a fixed offset point via the screen-projection
- * helpers `sub_8029E98`/`sub_8029EB4` plus `sub_803ADB4` division -
+ * helpers `sub_8029E98`/`sub_8029EB4` plus `__divsi3` division -
  * the "homing/seek-toward-point effect" `sub_8032890` byte-for-byte
  * twins, per docs/rom_map.md.
  *
@@ -20,7 +20,7 @@
  * byte compare against the ROM, not just a register-choice cosmetic
  * mismatch. */
 extern u8 gStaticData_087E4E74[];
-extern s32 sub_803ADB4(s32 arg0, s32 arg1);
+extern s32 __divsi3(s32 arg0, s32 arg1);
 extern s32 sub_8029E98(void);
 extern s32 sub_8029EB4(void);
 extern void InitActorPart(void *self, s32 a, s32 b, s32 c, s32 d);
@@ -67,8 +67,8 @@ void *sub_802C3E8(void *selfArg, s32 a, s32 b, s32 c, s32 spawnParam)
         }
         q = sum >> 0xb;
 
-        self->velX = sub_803ADB4(0x1000 - dy, q);
-        self->velY = sub_803ADB4(0x1000 - dx, q);
+        self->velX = __divsi3(0x1000 - dy, q);
+        self->velY = __divsi3(0x1000 - dx, q);
     }
 
     return self;

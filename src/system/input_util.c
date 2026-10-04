@@ -3,12 +3,12 @@
 /* Sits between FormatCentiseconds (ROM 0x0800106C, in src/util/time_util.c) and
  * LoadTaggedAsset (still raw in asm/code_3_1_5.s). */
 
-extern void sub_80006A8(void);
-extern s32 sub_80007AC(void *arg0);
+extern void WaitForVBlank(void);
+extern s32 UpdateKeys(void *arg0);
 extern void *gUnknown_03001304;
-extern u16 gUnknown_030007E0;
+extern u16 gKeys;
 
-/* Polls input (via sub_80006A8/sub_80007AC, the same VBlank-wait-then-
+/* Polls input (via WaitForVBlank/UpdateKeys, the same VBlank-wait-then-
  * update-keys pair used elsewhere) until a button matching `mask`'s bit
  * 0 (confirm) or bit 3 (cancel) is newly pressed, or (if `count != 0`)
  * until `count` polls have elapsed. Returns 0 only if a cancel (bit 3)
@@ -17,14 +17,14 @@ extern u16 gUnknown_030007E0;
  * per-poll button checks at all - with it clear and a nonzero `count`,
  * this is just a `count`-poll delay that always returns 1; with it
  * clear and `count == 0`, it returns 1 immediately without polling at
- * all. Reads the "newly pressed this frame" keys (`gUnknown_030007E0`'s
- * companion u16 at +2, see `sub_80007AC`'s own notes in
+ * all. Reads the "newly pressed this frame" keys (`gKeys`'s
+ * companion u16 at +2, see `UpdateKeys`'s own notes in
  * `src/system/irq.c`) fresh each poll (no caching across polls, since
- * `sub_80007AC`'s call in between could change it). The
- * `sub_80007AC(gUnknown_03001304)` calls pass an argument the real,
- * already-matched `sub_80007AC(void)` (in `src/system/irq.c`) never
+ * `UpdateKeys`'s call in between could change it). The
+ * `UpdateKeys(gUnknown_03001304)` calls pass an argument the real,
+ * already-matched `UpdateKeys(void)` (in `src/system/irq.c`) never
  * reads - same "ROM sets up an arg the callee ignores" shape as
- * `sub_80006A8` itself; declared here with a dummy `void *` parameter
+ * `WaitForVBlank` itself; declared here with a dummy `void *` parameter
  * purely so this call site's leftover r0 setup matches the ROM's
  * bytes. `keys` is pinned to r1 and set via an inline-asm copy of
  * `mask` (rather than a plain `keys = mask & ...`) to reproduce the
@@ -50,7 +50,7 @@ extern u16 gUnknown_030007E0;
  * polarity, driving this compiler's branch layout here). The identical
  * check in the *unlimited*-loop variant right below needs no such
  * reordering since it has no separate cancel-check block to place. */
-s32 sub_80010E0(s32 count, u8 checkButtons, s32 mask)
+s32 WaitForKeyPress(s32 count, u8 checkButtons, s32 mask)
 {
     s32 result;
     register s32 i asm("r5");
@@ -79,9 +79,9 @@ checkCount:
     if (i >= count) {
         goto done;
     }
-    sub_80006A8();
-    sub_80007AC(gUnknown_03001304);
-    addr = &gUnknown_030007E0;
+    WaitForVBlank();
+    UpdateKeys(gUnknown_03001304);
+    addr = &gKeys;
     asm volatile("add %0, %1, #0" : "=r"(keys) : "r"(mask));
     keys &= *(u16 *)((u8 *)addr + 2);
     if (flagR == 0) {
@@ -98,9 +98,9 @@ noLimit:
         goto done;
     }
 loopNoLimit:
-    sub_80006A8();
-    sub_80007AC(gUnknown_03001304);
-    addr = &gUnknown_030007E0;
+    WaitForVBlank();
+    UpdateKeys(gUnknown_03001304);
+    addr = &gKeys;
     asm volatile("add %0, %1, #0" : "=r"(keys) : "r"(mask));
     keys &= *(u16 *)((u8 *)addr + 2);
     if ((keys & 1) != 0) {

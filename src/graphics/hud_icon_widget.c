@@ -9,7 +9,7 @@
  * chunk's functions operate on (see include/icon_manager.h and the other
  * hud_icon_widget*.c files). */
 
-extern s32 sub_803AD80(void *arg0, s32 arg1, void *arg2);
+extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
 extern void sub_8026EB4(void *ptr);
 extern void sub_8026ED0(void *manager);
 
@@ -26,7 +26,7 @@ struct icon_slot {
 /* Destructor for a `struct hud_counter`'s `parts` array (see
  * include/hud.h): walks the array back to front, invoking each
  * `hud_digit_part`'s own per-type descriptor's slot-8 (`table+0x50`)
- * teardown trampoline via `sub_803AD80`, frees the array itself
+ * teardown trampoline via `_call_via_r2`, frees the array itself
  * (`self->parts`, allocated with a leading element-count word per the
  * `[-4]` read below - see the same convention in src/graphics/
  * hud_icon_slot.c/actor files), then optionally frees `self` when
@@ -51,7 +51,7 @@ void sub_8028574(struct hud_counter *self, s32 flags)
 
                 end--;
                 slot = (struct icon_slot *)((u8 *)end->table + 0x50);
-                sub_803AD80((u8 *)end + slot->offset, 0, slot->ptr);
+                _call_via_r2((u8 *)end + slot->offset, 0, slot->ptr);
             } while (self->parts != end);
         }
         sub_8026EB4((u8 *)self->parts - 4);

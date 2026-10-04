@@ -2,7 +2,7 @@
 #include "irq.h"
 #include "audio.h"
 
-extern void sub_80005A0(s32 interruptIndex, irq_handler_t *fn);
+extern void IrqSetHandler(s32 interruptIndex, irq_handler_t *fn);
 extern struct AudioContext *gUnknown_030012BC;
 extern void sub_80016EC(struct AudioContext *self);
 
@@ -19,7 +19,7 @@ void sub_8001C80(void)
     register u8 v asm("r0");
     register u8 loaded asm("r2");
 
-    sub_80005A0(INTR_INDEX_VCOUNT, sub_8001CA4);
+    IrqSetHandler(INTR_INDEX_VCOUNT, sub_8001CA4);
     p = (vu8 *)REG_ADDR_DISPSTAT;
     p[1] = 0x35;
     v = DISPSTAT_VCOUNT_INTR;

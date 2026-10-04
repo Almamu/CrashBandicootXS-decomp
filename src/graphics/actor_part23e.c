@@ -15,12 +15,12 @@
  * argument) and copies several of its fields into
  * `gUnknown_03001570`/`gUnknown_0300156C`, resets the DMA-refresh/
  * palette-strip counters, recomputes the BG2 zoom scale/offset via
- * `sub_8029B2C`/`sub_803ADB4`/`sub_8029E34`, blits the tracker's
+ * `sub_8029B2C`/`__divsi3`/`sub_8029E34`, blits the tracker's
  * current keyframe-table box via `sub_8030D48`, sets DISPCNT's bit10,
  * recomputes the BG2 affine matrix (`sub_80312C4`), and finally queues
  * a palette-strip DMA transfer (`QueueVramDmaTransfer`).
  *
- * Matching notes: the zoom divide is an explicit `sub_803ADB4` call
+ * Matching notes: the zoom divide is an explicit `__divsi3` call
  * (the ROM reloads `gUnknown_03001554` after it, which `/`'s const
  * libcall wouldn't force) and the record lookup is written `a - -b` (see
  * below). `gUnknown_03001564` is the level index `sub_8030F88` caches,
@@ -63,7 +63,7 @@ extern s32 gUnknown_03001578;
 extern u8 gStaticData_0817C378[];
 extern s32 QueueVramDmaTransfer(void *arg0, void *arg1, u16 arg2, u16 arg3);
 
-extern s32 sub_803ADB4(s32 num, s32 den);
+extern s32 __divsi3(s32 num, s32 den);
 
 static inline void BossSetState(s32 st, s32 idx)
 {
@@ -98,7 +98,7 @@ void sub_8031040(s32 kind, s32 x, s32 y, s32 z)
     gUnknown_03001524 = 1;
     gUnknown_03001520 = 0;
     gUnknown_03001554 = gUnknown_03001548 - (sub_8029B2C() << 8);
-    scale = sub_803ADB4(0x1C00000, gUnknown_03001554);
+    scale = __divsi3(0x1C00000, gUnknown_03001554);
     gUnknown_0300154C = (gUnknown_03001540 * scale) >> 12;
     gUnknown_03001550 = (scale * gUnknown_03001544) >> 12;
     sub_8029E34(gUnknown_03001554);

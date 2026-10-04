@@ -1,7 +1,7 @@
 #include "core.h"
 #include <stdarg.h>
 
-extern u8 *sub_80009F4(u8 *dest, u8 *fmt, s32 *valuePtr, u8 padChar,
+extern u8 *FormatPaddedNumber(u8 *dest, u8 *fmt, s32 *valuePtr, u8 padChar,
                         s32 *charsConsumedPtr);
 extern s32 itoa(s32 value, u8 *buffer, s32 base);
 
@@ -12,7 +12,7 @@ extern s32 itoa(s32 value, u8 *buffer, s32 base);
  * of the actual value's size. Supported conversions: `%s` (string),
  * `%c` (single byte), `%d`/`%x`/`%X` (via itoa), `%<width>d/x/X`
  * with a space pad (`%5d`), and `%0<width>d/x/X` with a zero pad
- * (`%05d`, via sub_80009F4) - anything else (including a literal `%%`)
+ * (`%05d`, via FormatPaddedNumber) - anything else (including a literal `%%`)
  * is echoed as-is.
  *
  * The specifier `switch` must list `case '%': default:` *last* (not
@@ -36,11 +36,11 @@ extern s32 itoa(s32 value, u8 *buffer, s32 base);
  * (`sp+4` vs `sp+8`, for a 0xc-byte frame) rather than reusing one.
  *
  * Genuinely `void`, not `u8 *`, despite every other function in this
- * printf stack (`itoa`, `sub_80009F4`) returning the advanced
+ * printf stack (`itoa`, `FormatPaddedNumber`) returning the advanced
  * pointer: the ROM's epilogue here never sets up r0 before the
  * `pop {r0}; bx r0` return dance, so whatever's left in r0 (0, from the
  * NUL-terminator write) is discarded by the caller regardless. */
-void sub_8000AA8(u8 *dest, u8 *fmt, u32 *args)
+void vsprintf(u8 *dest, u8 *fmt, u32 *args)
 {
     u8 c;
 
@@ -60,7 +60,7 @@ void sub_8000AA8(u8 *dest, u8 *fmt, u32 *args)
         switch (c) {
         case '0': {
             s32 charsConsumed;
-            dest = sub_80009F4(dest, fmt, (s32 *)args, '0', &charsConsumed);
+            dest = FormatPaddedNumber(dest, fmt, (s32 *)args, '0', &charsConsumed);
             fmt += charsConsumed;
             args++;
             break;
@@ -75,7 +75,7 @@ void sub_8000AA8(u8 *dest, u8 *fmt, u32 *args)
         case '8':
         case '9': {
             s32 charsConsumed;
-            dest = sub_80009F4(dest, fmt - 1, (s32 *)args, ' ', &charsConsumed);
+            dest = FormatPaddedNumber(dest, fmt - 1, (s32 *)args, ' ', &charsConsumed);
             fmt += charsConsumed;
             args++;
             break;
@@ -114,14 +114,14 @@ void sub_8000AA8(u8 *dest, u8 *fmt, u32 *args)
     *dest = 0;
 }
 
-/* Thin variadic wrapper: forwards straight to sub_8000AA8 with a
+/* Thin variadic wrapper: forwards straight to vsprintf with a
  * pointer to the first vararg (each slot is a plain 4-byte word, not
- * type-aware - matches sub_8000AA8's raw `u32 *` argument array). */
-void sub_8000CA8(u8 *dest, u8 *fmt, ...)
+ * type-aware - matches vsprintf's raw `u32 *` argument array). */
+void sprintf(u8 *dest, u8 *fmt, ...)
 {
     va_list args;
     va_start(args, fmt);
-    sub_8000AA8(dest, fmt, (u32 *)args);
+    vsprintf(dest, fmt, (u32 *)args);
     va_end(args);
 }
 
@@ -136,7 +136,7 @@ asm(".align 2, 0");
  * `'A'`-`'Z'`), returning a pointer into `haystack0` at the match or
  * `0` if not found or if `needle` is empty. Not printf-related, but
  * kept in this file rather than a new one purely to preserve the ROM's
- * address order (it sits immediately after sub_8000CA8) without
+ * address order (it sits immediately after sprintf) without
  * another ldscript.txt split.
  *
  * Two compiler gaps, both closed with the techniques already used
@@ -161,7 +161,7 @@ asm(".align 2, 0");
  *    scan/verify loop (so it's the function's last basic block, exactly
  *    where the ROM put it, immediately before the shared epilogue) gets
  *    gcc to lay out the branch the same way the ROM's compiler did. */
-u8 *sub_8000CBC(u8 *haystack0, u8 *needle, s32 caseInsensitive)
+u8 *FindSubstring(u8 *haystack0, u8 *needle, s32 caseInsensitive)
 {
     register u8 *needleRest asm("ip") = needle;
     register u8 *haystack asm("r5") = haystack0;

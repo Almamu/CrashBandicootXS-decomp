@@ -19,7 +19,7 @@
  *   the target, sub_80174D8 (+0x4C) is the destructor and sub_80174EC the
  *   constructor (called from game_loop39.c).
  * - sub_8017264 sets the mode through the method table (+0x20/+0x50,
- *   called through the sub_803AD80/sub_803AD84 `_call_via_rN` thunks) and
+ *   called through the _call_via_r2/_call_via_r3 `_call_via_rN` thunks) and
  *   picks the animation from gStaticData_0816C070[mode][level].
  * - sub_80172D0 writes the player's +0x48/+0x4C/+0x50 record from its
  *   speed, like actor_part57b.c's sub_8015FDC does for +0x54..+0x5C.
@@ -33,7 +33,7 @@
  * ROM: sub_8016AB0, sub_801721C, sub_8017240, sub_8017330, sub_8017348,
  * sub_80174BC, sub_801750C, sub_8017514, sub_801751C. Matched anyway. */
 
-/* The held/pressed key words of gUnknown_030007E0. The zero-length array
+/* The held/pressed key words of gKeys. The zero-length array
  * makes the struct BLKmode, so a local copy lives on the stack (the ROM
  * reads `pressed` back with `ldrh [sp, #2]`); without it gcc keeps the
  * copy in a register. */
@@ -63,7 +63,7 @@ struct pmf
 };
 
 extern void *gUnknown_03001304;
-extern struct keys gUnknown_030007E0;
+extern struct keys gKeys;
 extern u32 gUnknown_0300082C;
 extern void *gUnknown_030012BC;
 extern void *gLevelState;
@@ -81,7 +81,7 @@ extern struct level_anim *gStaticData_0816C070[];
 extern struct pctrl_anim gStaticData_0816B61C[];
 extern u8 gStaticData_087E428C[];
 
-extern u8 sub_8000760(void *arg);
+extern u8 GetDpadDirection(void *arg);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void LoseLife(void *arg0);
 extern void sub_8006D08(void *cache, s32 slot, s32 recordId);
@@ -97,13 +97,6 @@ extern void sub_80159F8(struct player_ctrl *self);
 extern void sub_8015C6C(struct player_ctrl *self);
 extern void sub_8015DF8(struct player_ctrl *self);
 extern void sub_8015FDC(s32 a, s32 b, s32 c);
-
-/* C++ virtual/pointer-to-member calls: an indirect call, which Thumb code
- * emits as `bl _call_via_rN`. This ROM's copies of those libgcc helpers
- * are the sub_803AD78..sub_803AD94 trampolines. */
-asm(".set _call_via_r2, sub_803AD80\n"
-    ".set _call_via_r3, sub_803AD84\n"
-    ".set _call_via_r6, sub_803AD90\n");
 
 typedef void (*pctrl_fn1)(void *self, s32 a);
 typedef void (*pctrl_fn2)(void *self, struct pctrl_target *t, s32 a);
@@ -178,7 +171,7 @@ static inline void SetB(struct player_ctrl *self, s32 value)
 
 void sub_8016048(struct player_ctrl *self)
 {
-    u8 dir = sub_8000760(gUnknown_03001304);
+    u8 dir = GetDpadDirection(gUnknown_03001304);
 
     switch (self->state)
     {
@@ -432,8 +425,8 @@ void sub_8016288(struct player_ctrl *self)
         if (self->cooldown)
             self->cooldown--;
         inp = gUnknown_03001304;
-        keys = *(u32 *)&gUnknown_030007E0; /* the whole word, held keys low */
-        dir = sub_8000760(inp);
+        keys = *(u32 *)&gKeys; /* the whole word, held keys low */
+        dir = GetDpadDirection(inp);
 
         if (!(keys & (DPAD_UP | DPAD_DOWN)) && self->state != 2)
         {
@@ -558,8 +551,8 @@ void sub_8016B1C(struct player_ctrl *self)
     u8 count;
     void *inp = gUnknown_03001304;
 
-    k = gUnknown_030007E0;
-    dir = sub_8000760(inp);
+    k = gKeys;
+    dir = GetDpadDirection(inp);
     count = ++self->counter;
     if (count == 30)
     {
@@ -593,9 +586,9 @@ void sub_8016B1C(struct player_ctrl *self)
 void sub_8016C08(struct player_ctrl *self)
 {
     struct keys k;
-    u8 dir = sub_8000760(gUnknown_03001304);
+    u8 dir = GetDpadDirection(gUnknown_03001304);
 
-    k = gUnknown_030007E0;
+    k = gKeys;
     if (k.pressed & A_BUTTON)
     {
         sub_80159F8(self);
@@ -615,7 +608,7 @@ void sub_8016C08(struct player_ctrl *self)
 void sub_8016C94(struct player_ctrl *self)
 {
     void *inp = gUnknown_03001304;
-    struct keys k = gUnknown_030007E0;
+    struct keys k = gKeys;
     struct keys *kp = &k;
 
     if (kp->pressed & B_BUTTON)
@@ -625,7 +618,7 @@ void sub_8016C94(struct player_ctrl *self)
     }
     if (self->target->unk_38 || gUnknown_0300082C > self->unk_28)
     {
-        u8 dir = sub_8000760(inp);
+        u8 dir = GetDpadDirection(inp);
 
         if (kp->pressed & A_BUTTON)
             sub_80159F8(self);
@@ -644,7 +637,7 @@ void sub_8016C94(struct player_ctrl *self)
 
 void sub_8016D5C(struct player_ctrl *self)
 {
-    u8 dir = sub_8000760(gUnknown_03001304);
+    u8 dir = GetDpadDirection(gUnknown_03001304);
 
     if (++self->timer >= self->timerMax || self->target->unk_38)
     {
@@ -665,7 +658,7 @@ void sub_8016D5C(struct player_ctrl *self)
 
 void sub_8016DDC(struct player_ctrl *self)
 {
-    struct keys k = gUnknown_030007E0;
+    struct keys k = gKeys;
     s32 frame;
 
     if (self->timerMax != 0 && ++self->timer >= self->timerMax)
@@ -735,7 +728,7 @@ void sub_8016DDC(struct player_ctrl *self)
 void sub_8017044(struct player_ctrl *self)
 {
     void *inp = gUnknown_03001304;
-    struct keys k = gUnknown_030007E0;
+    struct keys k = gKeys;
     struct keys *kp = &k;
 
     if (kp->pressed & B_BUTTON)
@@ -745,7 +738,7 @@ void sub_8017044(struct player_ctrl *self)
     }
     if (self->target->unk_38)
     {
-        u8 dir = sub_8000760(inp);
+        u8 dir = GetDpadDirection(inp);
 
         if (kp->pressed & A_BUTTON)
             sub_80159F8(self);
@@ -762,7 +755,7 @@ void sub_8017044(struct player_ctrl *self)
 
 void sub_80170EC(struct player_ctrl *self)
 {
-    struct keys k = gUnknown_030007E0;
+    struct keys k = gKeys;
 
     if (k.pressed & A_BUTTON)
     {

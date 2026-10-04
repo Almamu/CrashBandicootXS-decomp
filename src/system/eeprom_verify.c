@@ -9,24 +9,24 @@
 
 /* The SDK's EEPROMConfig; same layout as in src/system/timer_util.c. */
 struct EepromConfig {
-    u32 unk0;
+    u32 size;
     u16 maxCount;
     u16 waitcntBits;
     u8 addrBitCount;
     u8 pad[3];
 };
 
-extern struct EepromConfig *gUnknown_03001634;
+extern struct EepromConfig *gEepromConfig;
 
-extern s32 sub_803AB54(u16 addr, u16 *dest);
-extern s32 sub_803AC04(u16 addr, u16 *src);
+extern s32 EEPROMRead(u16 addr, u16 *dest);
+extern s32 EEPROMWrite(u16 addr, u16 *src);
 
 /* SDK EEPROMCompare: reads block `addr` back and compares it with
  * `data[0..3]`. Returns 0x80FF if `addr` is out of range, 0x8000 on a
  * mismatch, 0 if equal. The out-of-range case has to be an early
  * `return` (TMC's if/else puts 0x80FF into `result`'s register, 2
  * halfwords off). */
-s32 sub_803ACE0(u16 addr, u16 *data)
+s32 EEPROMCompare(u16 addr, u16 *data)
 {
     u16 result;
     u8 i;
@@ -34,10 +34,10 @@ s32 sub_803ACE0(u16 addr, u16 *data)
     u16 *ptr;
 
     result = 0;
-    if (addr >= gUnknown_03001634->maxCount)
+    if (addr >= gEepromConfig->maxCount)
         return 0x80FF;
 
-    sub_803AB54(addr, buffer);
+    EEPROMRead(addr, buffer);
     ptr = buffer;
     for (i = 0; i < 4; i++) {
         if (*data++ != *ptr++) {
@@ -50,15 +50,15 @@ s32 sub_803ACE0(u16 addr, u16 *data)
 
 /* SDK EEPROMWrite1_check: write + compare, up to 3 attempts; returns
  * the last attempt's status (0 on success). */
-s32 sub_803AD38(u16 addr, u16 *data)
+s32 EEPROMWrite1_check(u16 addr, u16 *data)
 {
     u8 i;
     u16 result;
 
     for (i = 0; i < 3; i++) {
-        result = sub_803AC04(addr, data);
+        result = EEPROMWrite(addr, data);
         if (result == 0) {
-            result = sub_803ACE0(addr, data);
+            result = EEPROMCompare(addr, data);
             if (result == 0)
                 break;
         }

@@ -17,7 +17,7 @@ void sub_801B208(struct gobj *self)
 {
     struct method *m = &self->vtable->m38;
 
-    if ((u8)sub_803AD7C((u8 *)self + m->thisOffset, m->fn))
+    if ((u8)_call_via_r1((u8 *)self + m->thisOffset, m->fn))
     {
         sub_8008044(self);
         OBJ_CALL1(self, m60);
@@ -289,7 +289,7 @@ void sub_801B304(struct mover *self, struct gobj *objArg)
     {
         u32 now = gUnknown_0300082C;
 
-        if (sub_803AF1C(now - self->timer, 30) <= 4)
+        if (__umodsi3(now - self->timer, 30) <= 4)
         {
             if (!(now & 1))
                 obj->y += -0x300;

@@ -6,11 +6,11 @@
  * top-of-file comment for the shared field-offset conventions
  * (`self+0xc`/`self+0x10`/`+0x27`.."+0x32" etc.) these functions use. */
 
-extern u32 gUnknown_030007E0;
+extern u32 gKeys;
 extern void *gUnknown_03001304;
-extern s32 sub_803AD80(void *arg0, void *arg1, void *arg2);
-extern s32 sub_803AD84(void *arg0, void *arg1, void *arg2, void *arg3);
-extern u8 sub_8000760(void *dummy);
+extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
+extern s32 _call_via_r3(void *arg0, void *arg1, void *arg2, void *arg3);
+extern u8 GetDpadDirection(void *dummy);
 extern void sub_8015780(void *self, s32 a, s32 b, s32 c, s32 d);
 
 /* Same shape as `sub_801426C` (actor_part18.c) - resets the same
@@ -31,8 +31,8 @@ void sub_80144E0(struct act *self)
     }
 }
 
-/* While `part+0x38` is set: computes `v = (gUnknown_030007E0 bit 0x100)
- * != 0`, forced to `1` when `sub_8000760`'s D-pad-remap result is `2` or
+/* While `part+0x38` is set: computes `v = (gKeys bit 0x100)
+ * != 0`, forced to `1` when `GetDpadDirection`'s D-pad-remap result is `2` or
  * in `[7,8]`. If still clear, resets the same flag/counter/table-index
  * trio as `sub_801426C` via `sub_8015780`; otherwise fires the usual
  * base+offset+fn-pointer trampoline pair. */
@@ -42,9 +42,9 @@ void sub_8014524(struct act *self)
 
     if (part->animDone != 0) {
         void *dummy = gUnknown_03001304;
-        u16 m = gUnknown_030007E0 & 0x100;
+        u16 m = gKeys & 0x100;
         u8 v = m != 0;
-        s32 st = sub_8000760(dummy);
+        s32 st = GetDpadDirection(dummy);
 
         switch (st) {
         case 2:
@@ -65,10 +65,10 @@ void sub_8014524(struct act *self)
         } else {
             struct act_vtable *mgr = self->vt;
             struct act_method *off;
-            sub_803AD80((u8 *)self + mgr->m20.thisOffset, (void *)0x10,
+            _call_via_r2((u8 *)self + mgr->m20.thisOffset, (void *)0x10,
                         mgr->m20.fn);
             off = &self->vt->m50;
-            sub_803AD84((u8 *)self + off->thisOffset, self->part,
+            _call_via_r3((u8 *)self + off->thisOffset, self->part,
                         (void *)3, off->fn);
             {
                 u8 zero = 0;
@@ -86,7 +86,7 @@ asm(".align 2, 0");
 
 extern void sub_8012D24(void *self);
 
-/* Clears `self+0x18`. If `gUnknown_030007E0` bit `0x100` is set, fires
+/* Clears `self+0x18`. If `gKeys` bit `0x100` is set, fires
  * the usual base+offset+fn-pointer trampoline pair and clears
  * `self+0x1c` too. Otherwise, while `part+0x38` is set, resets the same
  * flag/counter/table-index trio as `sub_801426C` via `sub_8015780`
@@ -100,15 +100,13 @@ extern void sub_8012D24(void *self);
  * copied to the register `flag` keeps - goes away when the assignment
  * sits inside the test, `if ((flag = ...) != 0)`. Matches under both
  * compilers. */
-asm(".set _call_via_r2, sub_803AD80\n"
-    ".set _call_via_r3, sub_803AD84\n");
 
 void sub_80145E4(struct act *self)
 {
     u16 flag;
 
     self->frame = 0;
-    if ((flag = gUnknown_030007E0 & 0x100) != 0)
+    if ((flag = gKeys & 0x100) != 0)
     {
         ACT_CALL1(self, m20, 0x10);
         ACT_CALL2(self, m50, self->part, 3);

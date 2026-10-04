@@ -42,8 +42,8 @@ stack scratch buffer, then translated into world space by adding the
 owning object's own `+0x1c`/`+0x20`/`+0x24` position (each `>>8`) into
 just the `x`/`y`/`z` fields (the `sizeX`/`sizeY`/`sizeZ` half stays raw
 - these are extents, not absolute coordinates). Both boxes are then run
-through `sub_800014C` - the same confirmed no-op `memcpy(dst, dst,
-0xc)` self-copy documented in `actor_part74.c` (`sub_800014C`'s own
+through `MemCopy32` - the same confirmed no-op `memcpy(dst, dst,
+0xc)` self-copy documented in `actor_part74.c` (`MemCopy32`'s own
 definition lives in `src/system/boot_util.c`, a real `CpuSet`-wrapper
 `memcpy`) - kept byte-faithful, not simplified away. The 3-axis overlap
 test itself compares Z, then Y, then X (matching the ROM's own
@@ -77,7 +77,7 @@ project already NAKED-parked twice for `sub_802D7B0`/`sub_802DD9C`
 d3a8.md`) - two 12-byte scratch AABB records built via raw `ldm`/`stm`
 block copies inside one 0x24-byte stack frame, with the second box's
 scratch address (`add r7, sp, #0x18`) computed once and held in `r7`
-for the *entire* loop body, spanning both `sub_800014C` calls and the
+for the *entire* loop body, spanning both `MemCopy32` calls and the
 whole comparison chain.
 
 A real C attempt got remarkably close before hitting this: pinning
@@ -137,7 +137,7 @@ matched as plain C, in `src/graphics/actor_part19i.c`:
   `sub_802C078(gUnknown_03000884, ...)`; each tail-calls `sub_802C4C8`.
 - **`sub_802CB34`** - an `InitActorPart`-based constructor: installs
   `self+0x50 = gStaticData_087E4F94`, then classifies a "kind"
-  (`self+0xc`) from a `sub_803ADB4`-scaled function of the `b`
+  (`self+0xc`) from a `__divsi3`-scaled function of the `b`
   parameter (clamped to `[0, 5]`) plus up to two `+6` bumps keyed off
   the `c` parameter's own range (`<= 0x2b`, `<= 6`) - selecting one of
   up to 18 per-kind anim records from the part table (`self[0]`, stride

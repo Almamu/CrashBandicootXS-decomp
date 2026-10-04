@@ -17,7 +17,7 @@ struct counter_widget {
 extern struct oam_shadow_buffer *gUnknown_03001300;
 extern struct tile_asset_cache *gUnknown_030012B8;
 
-extern void sub_80006A8(void);
+extern void WaitForVBlank(void);
 extern void sub_8006EA8(struct tile_asset_cache *self);
 extern void sub_8006AAC(struct oam_shadow_buffer *arg0);
 extern void sub_8006DC8(struct tile_asset_cache *arg0);

@@ -5,25 +5,25 @@
  * library LCG (multiplier 0x41C64E6D, increment 0x3039 aka 12345) fed
  * from a global seed in IWRAM. */
 
-extern u32 gUnknown_030007E4;
-extern u16 sub_803AF1C(u16 rnd, s32 max);
+extern u32 gRandSeed;
+extern u16 __umodsi3(u16 rnd, s32 max);
 
 /* Seeds the RNG. */
 void srand(u32 seed)
 {
-    gUnknown_030007E4 = seed;
+    gRandSeed = seed;
 }
 
-/* Advances the RNG and returns a value in [0, max) via sub_803AF1C. */
-u16 sub_8000E1C(s32 max)
+/* Advances the RNG and returns a value in [0, max) via __umodsi3. */
+u16 RandRange(s32 max)
 {
-    gUnknown_030007E4 = gUnknown_030007E4 * 0x41C64E6D + 0x3039;
-    return sub_803AF1C((u16)(gUnknown_030007E4 >> 4), max);
+    gRandSeed = gRandSeed * 0x41C64E6D + 0x3039;
+    return __umodsi3((u16)(gRandSeed >> 4), max);
 }
 
 /* Advances the RNG and returns the next raw 16-bit value. */
 u16 rand(void)
 {
-    gUnknown_030007E4 = gUnknown_030007E4 * 0x41C64E6D + 0x3039;
-    return (u16)(gUnknown_030007E4 >> 4);
+    gRandSeed = gRandSeed * 0x41C64E6D + 0x3039;
+    return (u16)(gRandSeed >> 4);
 }

@@ -72,7 +72,7 @@ are named by the lower 5 hex digits of their first function's address
   addresses before either store" scheduling instead of this compiler's
   default "reload the same register per store" pattern); the case-3
   accumulator-clamp arm needed its cap value re-read through the same
-  pinned pointer *after* the `sub_803ADB4` call (a fresh `register s32
+  pinned pointer *after* the `__divsi3` call (a fresh `register s32
   cap asm("r4") = *maxPtr;` declared after the store, not before) to
   match the ROM's own redundant post-call reload rather than reusing
   the pre-call value.
@@ -112,7 +112,7 @@ are named by the lower 5 hex digits of their first function's address
   getter for `gUnknown_030014E8`.
 - **`sub_802F4CC`** (`src/graphics/actor_part44.c`) - countdown timer
   (`gUnknown_030014F4`) driving a palette-strip animation refresh,
-  ping-ponging the frame index via `sub_803ADB4` the same way
+  ping-ponging the frame index via `__divsi3` the same way
   `sub_8031744` (actor_part26.c) does for its own strip.
 - **`sub_802F50C`** (`src/graphics/actor_part44.c`) - advances
   `self+0x54`'s accumulator by a scaled `delta`, clamped to
@@ -240,16 +240,16 @@ are named by the lower 5 hex digits of their first function's address
   ~150-instruction function combining a position update (via
   `self+0x60`/`0x64`/`0x68` velocity-like fields), a `self+0x2c`
   threshold flag, a `gStaticData_0817C260` stride-8 keyframe-table
-  lookup/`sub_803AD84` dispatch, and a player-distance/push-out damage
-  calculation (`sub_803ADB4`-scaled deltas feeding `sub_802E674`) plus
-  a `self+0x7c`-gated `sub_802A6EC`/`sub_803AD80` trampoline pair.
+  lookup/`_call_via_r3` dispatch, and a player-distance/push-out damage
+  calculation (`__divsi3`-scaled deltas feeding `sub_802E674`) plus
+  a `self+0x7c`-gated `sub_802A6EC`/`_call_via_r2` trampoline pair.
   Fully understood and every load/store, branch and call transcribed
   is confirmed correct; parked because the keyframe-table lookup is
   the exact same categorical r7-hazard shape as `sub_802C208`/
   `sub_802F748`/`sub_8030574` (the ROM keeps the table's base address
   alive in `r7` for the whole function - see those entries), and the
   damage-calculation block that follows compounds this with `r8`/`sb`
-  register pressure held live across two `sub_803ADB4` calls and a
+  register pressure held live across two `__divsi3` calls and a
   `sub_802E674` call - no C-level technique (register-variable pins,
   local-copy barriers, splitting into helper calls) reached this exact
   allocation without either losing the ROM's registers or
@@ -282,7 +282,7 @@ matched/parked list this entry feeds into.
 
 ## Later pass: member-pointer dispatch
 
-A later pass promoted `sub_802F748` (`actor_part44b.c`) and `sub_802FA38` (`actor_part46b.c`; its damage block needed plain `/` for `sub_803ADB4`, i.e. `__divsi3`, instead of explicit calls, and no register pins) from NAKED to real C. The "r7 table-base"
+A later pass promoted `sub_802F748` (`actor_part44b.c`) and `sub_802FA38` (`actor_part46b.c`; its damage block needed plain `/` for `__divsi3` instead of explicit calls, and no register pins) from NAKED to real C. The "r7 table-base"
 shape was gcc 2.x's pointer-to-member-function call
 `(this->*table[this->state])()`, which `ACTOR_PMF_CALL` in
 `include/actor_self.h` reproduces with no register pins. See

@@ -51,10 +51,10 @@ extern s32 AddLife(void *self);
 extern void sub_80318B4(void *selfArg);
 extern void sub_80318D0(void *selfArg, s32 a, s32 b, s32 c);
 extern void InitActorPart(void *self, s32 a, s32 b, s32 c, s32 d);
-extern s32 sub_8000E1C(s32 max);
+extern s32 RandRange(s32 max);
 extern s32 sub_802E4B8(s32 kind, s32 a1, s32 a2, s32 a3, void *selfArg);
-extern s32 sub_803ADB4(s32 a, s32 b);
-extern s32 sub_803AD80(void *arg0, s32 arg1, void *arg2);
+extern s32 __divsi3(s32 a, s32 b);
+extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
 extern void mem_free(void *ptr);
 
 extern u8 gStaticData_0816A820[];
@@ -124,8 +124,6 @@ struct trigger_actor {
 };
 
 void sub_803256C(void *selfArg);
-
-ACTOR_CALL_VIA_ALIASES
 
 /* Per-state member-pointer dispatch, `(this->*gStaticData_0817C42C
  * [this->state])()` (see `ACTOR_PMF_CALL`), then "destroy" once state 1
@@ -542,7 +540,7 @@ void *sub_8031F78(void *selfArg, s32 a, s32 b, s32 c, s32 d)
     self->done = 0;
     self->centerX = b;
     self->centerY = c;
-    self->phase = (u16)sub_8000E1C(0xff);
+    self->phase = (u16)RandRange(0xff);
 
     self->child = (void *)sub_802E4B8(0x28, b, c + (s32)0xFFFFC24A, d, self);
     self->base.vtable = (struct actor_vtable *)gStaticData_087E530C;
@@ -608,7 +606,7 @@ void *sub_8032054(void *selfArg, s32 a, s32 b, s32 c, s32 d)
     self->done = 0;
     self->centerX = b;
     self->centerY = c;
-    self->phase = (u16)sub_8000E1C(0xff);
+    self->phase = (u16)RandRange(0xff);
 
     self->child = (void *)sub_802E4B8(0x2a, b, c + (s32)0xFFFFC24A, d, self);
     self->base.vtable = (struct actor_vtable *)gStaticData_087E52CC;
@@ -630,7 +628,7 @@ void *sub_80320C4(void *selfArg, s32 a, s32 b, s32 c, s32 d, s32 e)
     self->done = 0;
     self->centerX = b;
     self->centerY = c;
-    self->phase = (u16)sub_8000E1C(0xff);
+    self->phase = (u16)RandRange(0xff);
 
     self->child = (void *)sub_802E4B8(0x29, b, c + (s32)0xFFFFC24A, d, self);
     self->base.vtable = (struct actor_vtable *)gStaticData_087E534C;
@@ -765,7 +763,7 @@ void *sub_80321FC(void *selfArg, s32 a, s32 b, s32 c, s32 d, u8 kind)
     self->done = 0;
     self->centerX = b;
     self->centerY = c;
-    self->phase = (u16)sub_8000E1C(0xff);
+    self->phase = (u16)RandRange(0xff);
 
     self->child = (void *)sub_802E4B8(kind, b, c + (s32)0xFFFFC24A, d, self);
 
@@ -856,7 +854,7 @@ void sub_8032358(void *selfArg)
         }
         if (self != 0) {
             struct actor_vtable *table = self->base.vtable;
-            sub_803AD80((u8 *)self + table->m08.thisOffset, 3, table->m08.fn);
+            _call_via_r2((u8 *)self + table->m08.thisOffset, 3, table->m08.fn);
         }
         return;
     }
@@ -865,7 +863,7 @@ void sub_8032358(void *selfArg)
         struct actor_self *player = gUnknown_03000884;
         struct actor_vtable *ptable = player->vtable;
 
-        sub_803AD80((u8 *)player + ptable->m20.thisOffset, 0x14, ptable->m20.fn);
+        _call_via_r2((u8 *)player + ptable->m20.thisOffset, 0x14, ptable->m20.fn);
         sub_8022FEC(gLevelState);
         PlaySfx(gUnknown_030012BC, 4, 0x100);
         self->base.animIndex = 1;
@@ -1018,7 +1016,7 @@ void sub_8032480(void *selfArg)
         struct actor_self *player = gUnknown_03000884;
         struct actor_vtable *ptable = player->vtable;
 
-        sub_803AD80((u8 *)player + ptable->m20.thisOffset, 0xe, ptable->m20.fn);
+        _call_via_r2((u8 *)player + ptable->m20.thisOffset, 0xe, ptable->m20.fn);
         self->hit = 1;
         sub_803256C(self);
     }
@@ -1055,7 +1053,7 @@ state_nonzero:
     if (self->base.animDone != 0) {
         if (self != 0) {
             struct actor_vtable *table = self->base.vtable;
-            sub_803AD80((u8 *)self + table->m08.thisOffset, 3, table->m08.fn);
+            _call_via_r2((u8 *)self + table->m08.thisOffset, 3, table->m08.fn);
         }
         return;
     }
@@ -1064,7 +1062,7 @@ state_nonzero:
         struct actor_self *player = gUnknown_03000884;
         struct actor_vtable *ptable = player->vtable;
 
-        sub_803AD80((u8 *)player + ptable->m20.thisOffset, 0xe, ptable->m20.fn);
+        _call_via_r2((u8 *)player + ptable->m20.thisOffset, 0xe, ptable->m20.fn);
         self->hit = 1;
     }
 
@@ -1147,7 +1145,7 @@ static inline void InitActorPartInline(void *self, s32 a, s32 b, s32 c, s32 d)
  * argument replaced with a fixed `0xfa00` bias); clamps the caller's
  * `c` into `self+0x5c` (+-0x3f00), mirrors a clamped `x` into
  * `self+0x58` (+-0x8000), and derives `self+0x60` from
- * `sub_803ADB4(self+0x5c - 0xfa00, 0xc6)`. Once parked NAKED over the
+ * `__divsi3(self+0x5c - 0xfa00, 0xc6)`. Once parked NAKED over the
  * `0xfa00` load's position (see InitActorPartInline above). */
 void *sub_80325EC(void *selfArg, s32 a, s32 b, s32 c, s32 d)
 {
@@ -1167,7 +1165,7 @@ void *sub_80325EC(void *selfArg, s32 a, s32 b, s32 c, s32 d)
     if (self->base.x < -0x8000)
         self->base.x = -0x8000;
     self->originX = self->base.x;
-    self->stepY = sub_803ADB4(self->limitY - 0xfa00, 0xc6);
+    self->stepY = __divsi3(self->limitY - 0xfa00, 0xc6);
     self->hit = 0;
     self->triggered = 0;
     PlaySfx(gUnknown_030012BC, 0x2d, 0x100);

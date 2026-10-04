@@ -23,8 +23,8 @@ built with a different compiler, flags or instruction set.
   (`gGaxArmDownmix` onward, tagged "FILT"/"BART"), which is
   hand-written ARM asm copied into IWRAM at play start; it stays a byte
   transcription (it isn't a function in the report).
-- **Flags - the libgcc exception.** `sub_8037648`/`sub_8037A7C`/
-  `sub_8037ECC` return via a combined `pop {r4-r7, pc}` that no other
+- **Flags - the libgcc exception.** `__divdi3`/`__udivdi3`/
+  `__muldi3` return via a combined `pop {r4-r7, pc}` that no other
   code in the ROM uses. That's just agbcc's epilogue *without*
   `-mthumb-interwork`: with the flag dropped, gcc 2.x's `libgcc2.c`
   source compiles to them byte-for-byte (`__divdi3`, `__udivdi3`,
@@ -32,7 +32,7 @@ built with a different compiler, flags or instruction set.
   a static `__clz_tab` per object - the two tables are
   `gStaticData_085A4C70`/`085A4D70`). `math_div64_util.o` is now built
   with `-mthumb-interwork` filtered out (Makefile `NO_INTERWORK_OBJS`);
-  every function in that object matches with it (`sub_8037E54` is
+  every function in that object matches with it (`__udivsi3` is
   NAKED, so unaffected), and `GaxZeroFill` - the one function in the
   old file with a normal interworking return - moved to
   `src/audio/gax_zero_fill.c` (it's GAX2 code, called from
@@ -40,9 +40,9 @@ built with a different compiler, flags or instruction set.
   `include/libgcc2_udivmoddi4.h`, included once per division object
   with that object's `__clz_tab`; passing the table as a parameter
   instead hoists its address into a register.
-- **Hand-written asm.** `sub_8037E54` is lib1funcs.asm's `__udivsi3`
+- **Hand-written asm.** `__udivsi3` is lib1funcs.asm's routine
   (shift-by-4-then-1 normalization, per-path `push {r4}` ... `mov pc,
-  lr` vs `push {lr}; bl __div0` = `nullsub_8`). Not compiler output -
+  lr` vs `push {lr}; bl __div0`). Not compiler output -
   **leave NAKED**. Don't retry it.
 
 ## Step 2: what actually blocked the rest
@@ -64,8 +64,8 @@ Not the compiler. Two things:
    register-operand variant, `GAX_CALL_ARM_R`). The "fused" labels
    `sub_803A318`/`sub_803A608`/`sub_8039E50` are just the `nop` the call
    returns to - not functions. `GaxMixerApplyEcho`'s work item is a struct with
-   a non-constant initializer (the `bl sub_800014C` in the ROM is gcc's
-   own memcpy of the initializer temp: `.set memcpy, sub_800014C`); the
+   a non-constant initializer (the `bl MemCopy32` in the ROM is gcc's
+   own memcpy of the initializer temp: `.set memcpy, MemCopy32`); the
    first field that's read before the stores has to go through a local.
 2. **Over-pinned drafts.** Almost every "many-register r8/sb/sl
    allocation ceiling" function matched outright once rewritten plainly
@@ -100,7 +100,7 @@ Recurring details that mattered:
   taking the destination pointer first
   (`SetMixRateReciprocal(&gGaxMixRateReciprocal, self)`) - that's what
   loads the address into a callee-saved register before the call.
-- `sub_80372BC`: call the icon method trampoline `sub_803AD80` directly
+- `sub_80372BC`: call the icon method trampoline `_call_via_r2` directly
   with the glyph assigned inside the first call's argument list.
 - `GaxHuffUnComp` (HuffUnComp wrapper): the ROM saves r8 but not r7 even
   though it clobbers r7 - agbcc's r7-pin bug. Here the bug *is* the
@@ -116,10 +116,10 @@ Recurring details that mattered:
 |---|---|---|
 | `sub_80372BC` | counter_selector_icons.c | **C** (direct trampoline call) |
 | `sub_8037388` | counter_selector_icons.c | NAKED, draft (later: **C**, [late-rom-naked-retry.md](./late-rom-naked-retry.md)) |
-| `sub_8037648` | math_div64_util.c | **C** (libgcc2 `__divdi3`, no-interwork) |
-| `sub_8037A7C` | math_div64_util.c | **C** (libgcc2 `__udivdi3`, no-interwork) |
-| `sub_8037E54` | math_div64_util.c | NAKED - hand-written asm (final) |
-| `sub_8037ECC` | math_div64_util.c | **C** (libgcc2 `__muldi3`, no-interwork) |
+| `__divdi3` | math_div64_util.c | **C** (libgcc2 `__divdi3`, no-interwork) |
+| `__udivdi3` | math_div64_util.c | **C** (libgcc2 `__udivdi3`, no-interwork) |
+| `__udivsi3` | math_div64_util.c | NAKED - hand-written asm (final) |
+| `__muldi3` | math_div64_util.c | **C** (libgcc2 `__muldi3`, no-interwork) |
 | `GAX2_estimate` | asm/code_3_2_20c.s | raw, see below (later: NAKED + draft in gax_work_size.c) |
 | `GaxCreateHandlers` | gax_channel_table_alloc.c | NAKED, draft |
 | `GAX2_init` | gax_playstart.c | NAKED, close draft |

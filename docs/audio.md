@@ -10,7 +10,7 @@ The whole engine (mixer, timer IRQ handler, replay logic) lives in
 `asm/code_3.s` roughly between `0x08037110` and `0x0803A950` (narrowed
 from an earlier `0x0803B0C4` estimate — see
 [`docs/rom_map.md`](./rom_map.md#narrowing-the-gax2-boundary) for the
-evidence: `LZ77UnCompWrapper`/`RLUnCompWrapper`, confirmed non-audio, sit
+evidence: `LZ77UnCompVram`/`RLUnCompVram`, confirmed non-audio, sit
 right at the old upper bound). **Be aware this range also contains generic
 compiler-runtime helpers** (a software 64-bit division routine, ARM/Thumb
 interworking trampolines, BIOS `svc` wrapper stubs) interleaved with
@@ -208,7 +208,7 @@ picture):
   either resolves a specific requested channel index, or - when the
   caller passes `-1` - scans for the channel with the lowest priority
   value at `+0x4C` to reuse. Textbook voice stealing.
-- **`sub_8037648`** (1076 B, the second-largest function in the whole
+- **`__divdi3`** (1076 B, the second-largest function in the whole
   GAX2 address range) is very likely **not GAX2 code at all** - its
   opening is the standard prologue shape for a software 64-bit
   division/multiply routine (sign-and-negate both operand halves before
@@ -217,13 +217,13 @@ picture):
   confirmed which operation, but the shape is unambiguous enough to
   flag as a likely false positive for anyone scanning this range by
   address alone.
-- **`sub_8037A7C`** (984 B) is a **second confirmed non-GAX2 false
+- **`__udivdi3`** (984 B) is a **second confirmed non-GAX2 false
   positive** in this range: a generic 64-bit software division routine,
   read in full - normalizes the dividend via a 256-entry bit-
   normalization/leading-zero-count lookup table
   (`gStaticData_085A4D70`, sitting right next to the `gStaticData_
   085A4C5C` instrument-selector data above) before doing long division
-  via `sub_803AF1C`/`sub_8037E54`. Worth noting explicitly: the small
+  via `__umodsi3`/`__udivsi3`. Worth noting explicitly: the small
   data cluster right after the audio block is itself mixed -
   `gGaxDefaultSong` plausibly audio-related,
   `gStaticData_085A4D70` confirmed unrelated - so proximity to
@@ -259,11 +259,11 @@ picture):
   `"BART"` right before `0x0803A818` - reading like named-routine
   markers inside a hand-written ARM-mode DSP/mixer block (plausibly
   "filter" and some `"BART"`-tagged routine). Right after the blob,
-  `sub_803A944`/`948`/`94C` are raw BIOS `svc` wrapper stubs (`svc
+  `BgAffineSet`/`CpuFastSet`/`CpuSet` are raw BIOS `svc` wrapper stubs (`svc
   #0xe`/`#0xc`/`#0xb` - the last is `CpuSet`), 4 bytes of real code
   each - confirmed genuine BIOS wrappers, not further GAX2 internals,
   and the true end of the GAX2 engine: only 12 bytes separate them
-  from `LZ77UnCompWrapper` at `0x0803A950` (see `docs/rom_map.md`'s
+  from `LZ77UnCompVram` at `0x0803A950` (see `docs/rom_map.md`'s
   "Narrowing the GAX2 boundary" for the full boundary resolution).
 - **`GaxChannelMix`** (780 B): reads a pattern/sequence pointer
   (`self+0x3C`), a note value checked against sentinel `0xFFFF8AD0`

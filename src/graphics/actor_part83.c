@@ -13,9 +13,6 @@
  * matches as plain C under it, and `sub_8012AF4` followed in the
  * issue #15/#16 NAKED retry 2 (docs/matching/issue-15-16-naked-retry.md). */
 
-asm(".set _call_via_r2, sub_803AD80\n"
-    ".set _call_via_r3, sub_803AD84\n");
-
 /* One 12-byte gStaticData_0816B304 animation parameter record. */
 struct anim_rec
 {
@@ -24,7 +21,7 @@ struct anim_rec
     s32 c;
 };
 
-extern u32 gUnknown_030007E0;
+extern u32 gKeys;
 extern void *gUnknown_030012BC;
 extern void *gLevelState;
 extern struct act_part *gUnknown_030012D8;
@@ -32,8 +29,8 @@ extern void *gUnknown_03001304;
 extern struct anim_rec gStaticData_0816B304[];
 extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
 extern void StopSfx(void *ctx, u32 id);
-extern s32 sub_80008FC(s32 a, s32 b);
-extern u8 sub_8000760(void *pad);
+extern s32 FixedMul(s32 a, s32 b);
+extern u8 GetDpadDirection(void *pad);
 extern void sub_8009EA8(struct act_part *p, s32 x, s32 y);
 extern u8 sub_8012A7C(struct act *self);
 extern void sub_80122CC(struct act *self);
@@ -76,9 +73,9 @@ static inline u8 PartByte(struct act_part *part, s32 offset)
  * `1`, looks up a per-tag record in `gStaticData_0816B304` (indexed
  * `(*(self+4))[tag]`, `tag = self+0x27`), copies a 12-byte stretch of
  * it onto the stack, optionally rescales two of its three fields
- * (halving one, doubling the other) via `sub_80008FC` when the part is
+ * (halving one, doubling the other) via `FixedMul` when the part is
  * busy and the player is active, special-cases tag `0x1e` to zero the
- * record and rescale differently, then fires a `sub_803AD84` trampoline
+ * record and rescale differently, then fires a `_call_via_r3` trampoline
  * (one of two field-pairs depending on `self+0x30`) with the stack
  * record as its payload and clears the flag. Finally, on `self+0x30==1`,
  * repeats a near-identical stack-record/rescale/trampoline sequence
@@ -142,14 +139,14 @@ skip:
                 asm("" : : "r"(self));
                 asm("" : : "r"(self));
                 asm("" : : "r"(self));
-                rec.c = sub_80008FC(rec.c, 0x180);
+                rec.c = FixedMul(rec.c, 0x180);
                 rec.b /= 2;
             }
             if (self->next27 == 0x1E) {
                 self->next31 = 0;
                 if (gUnknown_030012D8->unk_100) {
-                    rec.b = sub_80008FC(rec.b, 0x200);
-                    rec.a = sub_80008FC(rec.a, 0x180);
+                    rec.b = FixedMul(rec.b, 0x200);
+                    rec.a = FixedMul(rec.a, 0x180);
                 }
             }
             if (self->next31)
@@ -172,7 +169,7 @@ skip:
 }
 
 /* A further sibling/callee of the same action-table family. Reads the
- * D-pad (`sub_8000760`) and ticks `self+0x25` down on release. If
+ * D-pad (`GetDpadDirection`) and ticks `self+0x25` down on release. If
  * `part+0x38` is set, fires the `+0x50`/`+0x54` trampoline (id `0x12`)
  * and clears `part+0x33`. Bumps `self+0x1c`'s frame counter; while the
  * player's type is `0x12` and `+0x30 == 0`, once the counter passes one
@@ -197,8 +194,8 @@ skip:
 void sub_8012D24(struct act *self)
 {
     void *pad = gUnknown_03001304;
-    u32 in = gUnknown_030007E0;
-    u8 dir = sub_8000760(pad);
+    u32 in = gKeys;
+    u8 dir = GetDpadDirection(pad);
     s32 frames;
     struct act_part *part;
 

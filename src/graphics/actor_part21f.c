@@ -15,7 +15,7 @@
  * counter, the same one `sub_8031504`'s palette fade reads) through
  * five weapon-kind cases (0xa/0x32/0x50/0x6e/0xaa), each clearing one
  * BG palette bank-1 slot then spawning 1-3 sub-projectiles via
- * `sub_8000E1C` (a per-axis jitter/randomizer) and `sub_802E420` (the
+ * `RandRange` (a per-axis jitter/randomizer) and `sub_802E420` (the
  * actual spawn call, `(x, y, z)`); the 0xaa case instead
  * fires the state-5/table-index-1 transition on the tracker object,
  * plays a sound, and - gated by a lock byte
@@ -27,7 +27,7 @@
  * CSE'd in registers across the spawn calls), the palette base pointer
  * is assigned right where the ROM materializes it (declared-and-
  * initialized at the top it gets hoisted into a callee-saved register),
- * the RNG `sub_8000E1C` is read back as a `u16` here (the ROM zero-
+ * the RNG `RandRange` is read back as a `u16` here (the ROM zero-
  * extends its result), and the seek spawn takes `&gUnknown_03000884`
  * before the last lock check, as the ROM loads that address early. */
 extern s32 gUnknown_03001540;
@@ -39,7 +39,7 @@ extern s32 gUnknown_03001560;
 extern s32 gUnknown_03001578;
 extern const s16 gStaticData_0817C3D8[];
 extern s32 gUnknown_0300153C;
-extern u16 sub_8000E1C(s32 max);
+extern u16 RandRange(s32 max);
 extern void sub_802E420(s32 x, s32 y, s32 z);
 extern void sub_802A4EC(void);
 extern s32 gUnknown_03001538;
@@ -68,8 +68,8 @@ static inline void BossSetState(s32 st, s32 idx)
 }
 
 /* One sub-projectile, jittered around (x, y) by the box's own +-range. */
-#define SPAWN(x, y) sub_802E420((x) + sub_8000E1C(gStaticData_0817C3D8[3] << 8),  \
-                                (y) + sub_8000E1C(gStaticData_0817C3D8[4] << 8),  \
+#define SPAWN(x, y) sub_802E420((x) + RandRange(gStaticData_0817C3D8[3] << 8),  \
+                                (y) + RandRange(gStaticData_0817C3D8[4] << 8),  \
                                 gUnknown_03001548 - 0x100)
 
 void sub_80309B4(void)

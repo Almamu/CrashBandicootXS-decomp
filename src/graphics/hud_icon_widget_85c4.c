@@ -4,9 +4,9 @@
 /* GitHub issue #46: the HUD icon/text widget's glyph drawer and its two
  * constructors. Built with old_agbcc: under agbcc, sub_80285C4 derives
  * its bitfield masks differently. */
-extern s32 sub_803AD80(void *arg0, s32 arg1, void *arg2);
+extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
 
-extern void sub_803A94C(void *src, void *dst, s32 control);
+extern void CpuSet(void *src, void *dst, s32 control);
 extern void sub_8006AC8(void *arg0, void *arg1);
 extern struct oam_shadow_buffer *gUnknown_03001300;
 extern u8 gStaticData_08174D84[];
@@ -74,7 +74,7 @@ static inline void InitIconManager(struct icon_manager *self)
     self->field_118 = 0;
     self->field_12c = 0;
     zero = 0;
-    sub_803A94C(&zero, self, CPU_SET_32BIT | CPU_SET_SRC_FIXED | 2);
+    CpuSet(&zero, self, CPU_SET_32BIT | CPU_SET_SRC_FIXED | 2);
 }
 
 /* Constructs the "A" widget: 9-pixel lines, 4-pixel spaces, glyph
@@ -144,7 +144,7 @@ struct icon_manager *InitHudIconWidgetB(struct icon_manager *self)
  * time: newline resets `posX` to the left margin and advances `posY` by
  * one line height; space just advances `posX` by `spaceWidth`; anything
  * else is forwarded to `record`'s slot-4 trampoline (the glyph-draw
- * callee, `sub_80285C4` per the widget's own vtable) via `sub_803AD80`.
+ * callee, `sub_80285C4` per the widget's own vtable) via `_call_via_r2`.
  *
  * The 3-way `if`/`else if`/`else` is written as explicit `goto`s so the
  * *middle* arm (the space case) ends up inline and the other two become
@@ -218,6 +218,6 @@ tail:
 dispatch:
     {
         struct icon_slot *slot = &s->record->slots[4];
-        sub_803AD80((u8 *)s + slot->offset, c, slot->ptr);
+        _call_via_r2((u8 *)s + slot->offset, c, slot->ptr);
     }
 }

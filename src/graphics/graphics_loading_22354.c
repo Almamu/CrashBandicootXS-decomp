@@ -35,7 +35,7 @@ extern void *gUnknown_030012B8;
 extern void *gEntityFlags;
 extern void *gUnknown_030012C8;
 extern u32 *gCutsceneTexts[];
-extern s32 gUnknown_03000868;
+extern s32 gLanguage;
 
 /* gCutscenes: {list, count} headers, one per text list
  * (docs/rom_map.md, "gCutscenes is a header array of
@@ -60,11 +60,6 @@ extern void sub_8006FC8(void *self, u32 flags);
 extern void sub_8006F94(void *self, u32 flags);
 extern void sub_8025A44(void *self, s32 flags);
 extern void sub_80270A8(void *self, s32 flags);
-
-/* Thumb makes indirect calls with `bl _call_via_rN`; this ROM's copies
- * of those libgcc helpers are sub_803AD7C.. (include/actor_self.h). */
-asm(".set _call_via_r1, sub_803AD7C\n"
-    ".set _call_via_r2, sub_803AD80\n");
 
 typedef void (*destroy_fn)(void *self, s32 flags);
 
@@ -235,7 +230,7 @@ void PlayCutscene(void *self, s32 idx)
     sub_8024784(*(u32 *)dispcnt);
     f.pager.items = gCutscenes[idx].items;
     f.pager.count = gCutscenes[idx].count;
-    f.pager.pages = (u32 *)gCutsceneTexts[gUnknown_03000868][idx];
+    f.pager.pages = (u32 *)gCutsceneTexts[gLanguage][idx];
     RunCutscenePlayer(&f.pager);
     *dispcnt = mode;
     sub_8001614();

@@ -61,7 +61,7 @@ COMPILE_TIME_ASSERT(sizeof(struct anim_table_record) == 0x28);
  *
  *   - "absolute_rom": each entry is a real ROM pointer straight to a
  *     zero-run-compressed frame ({w, h, 0x30, 0} + u16 run stream,
- *     unpacked by the gUnknown_03000874 IWRAM hook). Used only by record
+ *     unpacked by the gUnpackRleSpriteFrameFunc IWRAM hook). Used only by record
  *     0 of both animation tables (and the sub_802DFDC singleton's table):
  *     the frame sets are rle_sprites_0c2758.c / rle_sprites_15a050.c,
  *     built from graphics/rle_sprites/ (docs/data.md, "Compressed sprite
@@ -153,7 +153,7 @@ COMPILE_TIME_ASSERT(sizeof(struct sub_effect_table_end) == 0xC);
  * 256-colour palette DMA'd whole to BG palette RAM, the grid size in 8x8
  * cells, then the frames, each `cols * rows` 4bpp tiles in row-major cell
  * order (plus, for type-0 categories, one 4-bit palette bank per cell
- * padded to a multiple of 4 bytes, handed to the gUnknown_0300087C map
+ * padded to a multiple of 4 bytes, handed to the gDrawMirroredTilemapFunc map
  * callback). family_shared_08 is the whole record's size. */
 struct cell_anim_header {
     u16 palette[256];   // 0x000

@@ -7,9 +7,9 @@
 
 /* The game's own text (menus, level names, popups, credits labels) in
  * the six languages: per language an array of 70 strings, which
- * sub_8026F38 (`text id -> string`) reads through the IWRAM table
- * gUnknown_03000850 (src/iwram/iwram_data.c), indexed by the language
- * setting gUnknown_03000868. Each language's new strings come before its
+ * GetUiText (`text id -> string`) reads through the IWRAM table
+ * gUiTextTables (src/iwram/iwram_data.c), indexed by the language
+ * setting gLanguage. Each language's new strings come before its
  * array; strings that are the same in several languages (the level names,
  * mostly) are stored once, under the first language that uses them.
  * Latin-1, all lower case. */

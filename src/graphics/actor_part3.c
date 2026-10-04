@@ -2,12 +2,12 @@
 #include "actor.h"
 #include "box_part.h"
 
-extern s32 sub_803AD80(void *arg0, void *arg1, void *arg2);
+extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern void *gLevelLayers;
 
 /* Same shape as sub_8006FE4 (graphics.c) - `part+0x25 == 1` is a fast
  * "always visible" override; otherwise `part+0xd` bit 2 gates an
- * on-screen check via `sub_803AD80`, using a 4-word "region" of
+ * on-screen check via `_call_via_r2`, using a 4-word "region" of
  * `{gLevelLayers's sub-object's two Q8 fields, 240<<8, 160<<8}`
  * (the GBA's screen width/height) and the same
  * `table+N`/`table+N+4` offset/pointer slot pair convention
@@ -49,7 +49,7 @@ s32 sub_8007F78(struct box_part *part)
             }
 
             table = PART_METHOD(part, 0x30);
-            result = (u8)sub_803AD80((u8 *)part + table->thisOffset, buf, table->fn);
+            result = (u8)_call_via_r2((u8 *)part + table->thisOffset, buf, table->fn);
         }
     }
     return result;

@@ -2,8 +2,6 @@
 #include "vram_pool.h"
 #include "phys_obj.h"
 
-asm(".set _call_via_r4, sub_803AD88\n");
-
 /* GitHub issue #12 Phase 2: 0x0800E560-0x0800EEF0, the lower-address
  * half of the remaining tail of the physics/collision subsystem's
  * per-edge handler family (see docs/matching/issue-12-physics-collision.md's
@@ -553,7 +551,7 @@ void sub_800E888(struct phys_obj *self, u32 arg1)
  * multiple `sub_8025CA4` particle spawns at slightly different
  * offsets around `self` the further the level counted down (a
  * escalating "more debris" burst); case 6 fires a screen-shake
- * (`sub_803AD88`, effect `0x1a`) plus SFX; case 7 spawns a
+ * (`_call_via_r4`, effect `0x1a`) plus SFX; case 7 spawns a
  * `sub_8025A64` bonus object and notifies `sub_80259D4`; case 9 spawns
  * one final small `sub_8025CA4` puff. All paths converge on a shared
  * epilogue.

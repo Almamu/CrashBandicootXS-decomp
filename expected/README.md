@@ -18,7 +18,7 @@ Thumb code, and one for the ARM code of the IWRAM image:
 - **`legacy.s`** is `asm/code.s` (the ROM's *entire* code, in one file) as it
   existed at `8b090ca`, the very first commit - covering ROM addresses
   `0x08000170`-`0x080006A7`, i.e. `main.c`/`memory.c`/part of `irq.c`
-  (`AgbMain` through `sub_8000680`), matched away in 2025, well before
+  (`AgbMain` through `AddVBlankCallback`), matched away in 2025, well before
   `code_3.s` ever existed as its own file. `AgbMain` was already named at
   this commit (a standard-enough GBA convention that it carried over from
   the reference project this repo started from); everything else here is

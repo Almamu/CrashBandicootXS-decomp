@@ -57,7 +57,7 @@ already reach its terrain tile cache at `+0x20`.
   **`sub_8026A14`** returns 0.
 
 The layer method-table entries are `{s16 this-adjustment, pad, function
-pointer}`, dispatched through `sub_803AD80(self + adjustment, arg, fn)`.
+pointer}`, dispatched through `_call_via_r2(self + adjustment, arg, fn)`.
 They're modelled as a local `struct layer_method` rather than reusing
 `icon_slot`, since the objects are unrelated even though the shape is the same.
 

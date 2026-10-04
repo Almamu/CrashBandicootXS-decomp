@@ -6,12 +6,12 @@
  * (split from link_cable.c so sub_8001DB4 can sit in its own object;
  * see link_cable_01db4.c). */
 
-extern void sub_8000544(s32 interruptIndex);
+extern void IrqClearHandler(s32 interruptIndex);
 extern u16 gStaticData_0816AF10[];
-extern void sub_80005A0(s32 interruptIndex, irq_handler_t *fn);
-extern void sub_8002830(void);
-extern void sub_8002848(void);
-extern s32 sub_8001D30(struct link_session *self);
+extern void IrqSetHandler(s32 interruptIndex, irq_handler_t *fn);
+extern void LinkSerialIntr(void);
+extern void LinkTimer3Intr(void);
+extern s32 LinkStop(struct link_session *self);
 extern s32 sub_8001DB4(struct link_session *self);
 
 /* Link-connection/handshake driver - see docs/rom_map.md's SIO/link-
@@ -21,13 +21,13 @@ extern s32 sub_8001DB4(struct link_session *self);
  * SIOCNT poke once `self+8` (the "IRQs installed" flag) is still
  * clear. Once `self+8` is clear, checks `REG_SIOCNT` bit 3 (the
  * multi-player "ready" bit): if not ready yet, resets the session
- * (`sub_8001D30`) and re-primes SIOCNT/SIODATA32_H, returning 0
+ * (`LinkStop`) and re-primes SIOCNT/SIODATA32_H, returning 0
  * ("still connecting"). If ready, flips `self+8`, derives an "is
  * player 0 / arm3" flag from `REG_SIOCNT` bits, resets `REG_SIODATA32`
  * (via `REG_TM3CNT`/`0x04000208` toggling, matching
- * `sub_80026E4`-family's RCNT/SIOCNT reset shape in
+ * `LinkStart`-family's RCNT/SIOCNT reset shape in
  * src/system/link_cable2.c), installs the Serial IRQ handler
- * (`sub_8002830`) always and the Timer3 IRQ handler (`sub_8002848`)
+ * (`LinkSerialIntr`) always and the Timer3 IRQ handler (`LinkTimer3Intr`)
  * only when the "arm3" flag is set, programs Timer3 as a running
  * countdown timeout (`0x00C0BBBC`) in that case, and resets several
  * per-session timeout/retry fields (`self+0x1c`=-1, `self+0x14`,
@@ -40,7 +40,7 @@ extern s32 sub_8001DB4(struct link_session *self);
  * whether `self+0xfc`'s stored `s32` is negative), clamping it into
  * `self+7`/giving up (return 0, via the same early-exit path as the
  * top-of-function "still initializing" case) once it exceeds -15, or
- * resetting the session (`sub_8001D30`+`sub_8001DB4`) and retrying
+ * resetting the session (`LinkStop`+`sub_8001DB4`) and retrying
  * once it exceeds 14; either way it refreshes `self+0x10`/`self+0x14`
  * from each other (keeping the larger, with `self+0x18` forcing a
  * reset to 0) and, past a 0x1d threshold, resets the session again.
@@ -80,7 +80,7 @@ s32 sub_8001F50(struct link_session *self)
         asm("" : "+r"(one1)); /* keep the flag's own 1 (r1) */
         one = 1;
         if (!(v & 1)) {
-            sub_8001D30(self);
+            LinkStop(self);
             REG_RCNT = 0;
             REG_SIOCNT = 0x2000;
             REG_SIOCNT |= 0x4003;
@@ -99,11 +99,11 @@ s32 sub_8001F50(struct link_session *self)
         REG_IME = 0;
         REG_IE &= ~0x40;
         REG_IME = saved;
-        sub_8000544(INTR_INDEX_TIMER3);
-        sub_80005A0(INTR_INDEX_SERIAL, (irq_handler_t *)sub_8002830);
+        IrqClearHandler(INTR_INDEX_TIMER3);
+        IrqSetHandler(INTR_INDEX_SERIAL, (irq_handler_t *)LinkSerialIntr);
         REG_IE |= 0x80;
         if (arm3) {
-            sub_80005A0(INTR_INDEX_TIMER3, (irq_handler_t *)sub_8002848);
+            IrqSetHandler(INTR_INDEX_TIMER3, (irq_handler_t *)LinkTimer3Intr);
             REG_IE |= 0x40;
             REG_TM3CNT = 0x00C0BBBC;
         }
@@ -130,7 +130,7 @@ s32 sub_8001F50(struct link_session *self)
         } else if (self->field_c > -15) {
             return 0;
         } else {
-            sub_8001D30(self);
+            LinkStop(self);
             sub_8001DB4(self);
         }
     }
@@ -145,7 +145,7 @@ s32 sub_8001F50(struct link_session *self)
         self->field_14 = b;
         self->field_18 = 0;
         if (b > 0x1d) {
-            sub_8001D30(self);
+            LinkStop(self);
             sub_8001DB4(self);
         }
     }
@@ -154,7 +154,7 @@ s32 sub_8001F50(struct link_session *self)
 }
 
 /* Per-frame SIO data-exchange pump - see docs/rom_map.md's SIO/link-
- * cable section (called from the Serial IRQ handler `sub_8002830` in
+ * cable section (called from the Serial IRQ handler `LinkSerialIntr` in
  * src/system/link_cable2.c, with the session object and SIODATA32's
  * low half as the two arguments). `docs/rom_map.md` confirms the
  * high-level shape: manipulates `REG_SIOCNT`/`SIODATA8`

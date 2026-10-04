@@ -26,8 +26,8 @@ extern void *gUnknown_03001318;
 extern void *gLevelState;
 extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
 extern void sub_8007174(void *arg0, s32 arg1, s32 arg2, s32 *arg3, s32 *arg4);
-extern s32 sub_80008F0(s32 arg0, s32 arg1);
-extern s32 sub_80008FC(s32 a, s32 b);
+extern s32 FixedDiv(s32 arg0, s32 arg1);
+extern s32 FixedMul(s32 a, s32 b);
 extern void sub_80284D4(void *state);
 extern s16 gStaticData_0816A820[];
 extern s32 rand(void);
@@ -60,7 +60,7 @@ static inline void OrbitClampFrame(struct orbit_part *self)
  * zero floor" idiom sub_8010F8C/sub_8011870 also use), self->0x25 = 1,
  * self->0xc |= 0x10, then calls sub_8007174(self, self->x>>8, self->y>>8,
  * &outX, &outY) and re-derives self->x/self->y plus self->0x40/self->0x44
- * (a "distance to travel" pair, via -sub_80008F0(newPos<<8 - offset,
+ * (a "distance to travel" pair, via -FixedDiv(newPos<<8 - offset,
  * 0x1400)) from the results - the exact same tail shape sub_8010EAC/
  * sub_80111B8/sub_8011870 all share in this subsystem.
  *
@@ -108,10 +108,10 @@ void sub_8011448(struct orbit_part *self, u8 randomize)
 
     newX = outX << 8;
     self->base.x = newX;
-    self->velX = -sub_80008F0(newX - dx, 0x1400);
+    self->velX = -FixedDiv(newX - dx, 0x1400);
     newY = outY << 8;
     self->base.y = newY;
-    self->velY = -sub_80008F0(newY - dy, 0x1400);
+    self->velY = -FixedDiv(newY - dy, 0x1400);
 }
 
 /* sub_8011548: "entity-vtable-dispatched velocity integrator" (docs/
@@ -140,7 +140,7 @@ void sub_8011448(struct orbit_part *self, u8 randomize)
  *    gate off after 32 self->0x4b ticks.
  * All four modes converge on a shared tail: if self->0x48 == 0, reads
  * self->0x4a again - if clear, computes a velocity step via
- * gStaticData_0816A820[self->0x49 & 0x7f] and sub_80008FC, added to
+ * gStaticData_0816A820[self->0x49 & 0x7f] and FixedMul, added to
  * self->0x50 and stored into self->y (a "rotate self->y around a fixed
  * center by a table-driven step" idiom, same table/shape as
  * sub_8010F8C's own default-mode branch); if set, calls sub_801192C
@@ -291,7 +291,7 @@ void sub_8011548(struct orbit_part *self)
         if (self->mode == 0) {
             s32 sn = gStaticData_0816A820[(self->counter & 0x7f) * 2];
 
-            sn = sub_80008FC(sn, 0x280);
+            sn = FixedMul(sn, 0x280);
             self->base.y = self->anchor.y + sn;
         } else {
             sub_801192C(self);
@@ -456,10 +456,10 @@ void sub_8011870(struct orbit_part *self)
 
     newX = outX << 8;
     self->base.x = newX;
-    self->velX = -sub_80008F0(OrbitOffset(newX, 0x1000), 0x1400);
+    self->velX = -FixedDiv(OrbitOffset(newX, 0x1000), 0x1400);
     newY = outY << 8;
     self->base.y = newY;
-    self->velY = -sub_80008F0(OrbitOffset(newY, 0x1000), 0x1400);
+    self->velY = -FixedDiv(OrbitOffset(newY, 0x1000), 0x1400);
     sub_80284D4(gUnknown_03001318);
 }
 
@@ -478,10 +478,10 @@ void sub_801191C(struct actor *self)
  * self->0x4a-driven table helper - copies a fixed 3-word table
  * (gStaticData_0816BF14) onto the stack, computes self->y from a
  * gStaticData_0816A820 (shared trig-ish table, see sub_8010F8C's own doc
- * comment) lookup at self->0x4b*4 scaled by sub_80008FC(...,0x3000)
+ * comment) lookup at self->0x4b*4 scaled by FixedMul(...,0x3000)
  * against self->0x50 (the "home Y" sub_801173C/sub_8011548 both write),
  * then computes self->x from a second gStaticData_0816A820 lookup at
- * self->0x4b*2 scaled by sub_80008FC against the stack copy indexed by
+ * self->0x4b*2 scaled by FixedMul against the stack copy indexed by
  * self->0x4a-1, added to or subtracted from self->0x4c (the "home X")
  * depending on whether self->0x4a is 1, 2, or anything else (unchanged).
  * Called from sub_8011548's own default-mode tail above when
@@ -503,10 +503,10 @@ void sub_801192C(struct orbit_part *self)
     s32 sn;
 
     sn = gStaticData_0816A820[self->phase * 4];
-    dy = sub_80008FC(sn, 0x3000);
+    dy = FixedMul(sn, 0x3000);
     self->base.y = self->anchor.y - dy;
     sn = gStaticData_0816A820[self->phase * 2];
-    sn = sub_80008FC(sn, scales.a[self->mode - 1]);
+    sn = FixedMul(sn, scales.a[self->mode - 1]);
     if (self->mode == 1)
         self->base.x = self->anchor.x - sn;
     else if (self->mode == 2)

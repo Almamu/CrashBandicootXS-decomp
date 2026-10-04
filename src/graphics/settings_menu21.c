@@ -25,11 +25,11 @@ extern void sub_800570C(struct pause_screen_results *self);
 extern void sub_80057E0(struct pause_screen_results *self);
 extern void sub_80058C0(struct pause_screen_results *self);
 extern void sub_8008890(void *icon, s32 dx, s32 dy);
-extern u32 sub_803AD80(void *arg0, void *arg1, void *arg2);
+extern u32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern struct vram_upload_cursor *gUnknown_030012FC;
 extern struct icon_manager *gUnknown_030012DC;
 extern struct icon_manager *gUnknown_030012E0;
-extern void *sub_8026F38(s32 id);
+extern void *GetUiText(s32 id);
 extern void sub_8028A40(struct icon_manager *self);
 
 static inline void set_icon_mgr_pos(struct icon_manager *m, u32 x, u32 y)
@@ -43,7 +43,7 @@ static inline void set_icon_mgr_pos(struct icon_manager *m, u32 x, u32 y)
     ({                                                                               \
         struct icon_manager *_m = (mgrExpr);                                         \
         struct icon_record *_r = _m->record;                                         \
-        sub_803AD80((u8 *)_m + _r->slots[slot].offset, (label), _r->slots[slot].ptr); \
+        _call_via_r2((u8 *)_m + _r->slots[slot].offset, (label), _r->slots[slot].ptr); \
     })
 
 /* The composite pause/options screen's per-frame "draw the current
@@ -178,7 +178,7 @@ void sub_800556C(struct pause_screen_results *self)
             sub_8028A30(gUnknown_030012DC, 0xf);
         else
             sub_8028A40(gUnknown_030012DC);
-        label = sub_8026F38(((struct pause_screen_row_record *)self->field_14)[i].labelId);
+        label = GetUiText(((struct pause_screen_row_record *)self->field_14)[i].labelId);
         x = 0x32 - (ICON_SLOT_CALL(gUnknown_030012DC, 0, label) >> 1);
         switch (((struct pause_screen_row_record *)self->field_14)[i].typeTag) {
         case 4:

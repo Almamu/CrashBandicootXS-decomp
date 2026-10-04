@@ -14,11 +14,11 @@ Resets the same kind of field set `GaxFxChannelInit`'s per-channel voice
 constructor does (accumulator/envelope/priority/portamento defaults, plus
 two extra pointer-walked byte zeroes at `+0x24`/`+0x25` that don't fit a
 Thumb `strb` immediate offset), computes a fixed-point reciprocal
-(`sub_8037A7C((s64)1 << 32, (s64)self->field_4's 0x2 halfword)` - a generic
+(`__udivdi3((s64)1 << 32, (s64)self->field_4's 0x2 halfword)` - a generic
 64-bit software division helper, not GAX2-specific, see `docs/audio.md`)
 into the 8-byte global `gGaxMixRateReciprocal`, then loops `self->8`'s
 child-pointer array (count `self->0->0xc`) firing each child's own function
-pointer through the `sub_803AD7C` trampoline - the same pattern
+pointer through the `_call_via_r1` trampoline - the same pattern
 `GaxMixerInit` (UnknownC type's init_fn) uses.
 
 A real C reconstruction got every field-reset store byte-identical on its
@@ -32,7 +32,7 @@ literal-pool load the ROM has. That closed the one gap the previous pass
 flagged - but two *new*, more fundamental compiler limitations surfaced once
 that was fixed:
 
-1. `sub_8037A7C`'s second argument (the halfword field read through a
+1. `__udivdi3`'s second argument (the halfword field read through a
    pointer chain) has to sit in a register pinned to `r2` to match the ROM's
    register choreography around the call, but gcc 2.9's explicit-register-
    variable support always emits one extra defensive copy (`adds r6, r2,
@@ -63,8 +63,8 @@ understood first, the same as this project's other NAKED transcriptions).
 points at per `docs/audio.md`) first forwards its own `(arg1, chanArg)`
 straight into `info`'s own play_fn slot (`info->0->0x8`, the same
 three-function-pointer-per-type table this function itself is a member of)
-via the `sub_803AD84` "call through r3" trampoline - the established
-`sub_803AD84(addr, a1, a2, fn)` parameter order (see
+via the `_call_via_r3` "call through r3" trampoline - the established
+`_call_via_r3(addr, a1, a2, fn)` parameter order (see
 `src/graphics/actor_part17.c`/`src/system/game_loop16.c`) landed the
 function-pointer argument in `r3` with zero extra effort, and this part of
 the reconstruction was byte-exact immediately. Then: if `info` armed a

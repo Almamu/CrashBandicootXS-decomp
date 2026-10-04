@@ -16,7 +16,7 @@ extern void sub_8029BAC(s32 arg0);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void FreezeLevelClock(void *arg0, s32 arg1);
 extern s32 sub_802A4D4(void);
-extern s32 sub_803ADB4(s32 arg0, s32 arg1);
+extern s32 __divsi3(s32 arg0, s32 arg1);
 extern s32 AddLife(void *self);
 extern void *gUnknown_030012BC;
 extern void *gLevelState;
@@ -176,7 +176,7 @@ void sub_802F164(void *selfArg, s32 xArg, s32 yArg)
             register s32 *maxPtr asm("r4") = &gUnknown_030014E4;
             register s32 max asm("r1") = *maxPtr;
             register s32 mul asm("r0") = 0x14;
-            s32 v = self->hp + sub_803ADB4(max * mul, 0x64);
+            s32 v = self->hp + __divsi3(max * mul, 0x64);
 
             self->hp = v;
             {

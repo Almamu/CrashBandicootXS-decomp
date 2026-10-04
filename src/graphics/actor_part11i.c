@@ -1,10 +1,10 @@
 #include "core.h"
 
-extern s32 sub_803AD80(void *arg0, void *arg1, void *fn);
+extern s32 _call_via_r2(void *arg0, void *arg1, void *fn);
 
 /* Resets a pool manager to empty: tears down every active object
  * (`slotArray[0..activeCount)`, firing each one's `table+0x50/0x54`
- * trampoline via `sub_803AD80` with constant arg `3` if non-`NULL`,
+ * trampoline via `_call_via_r2` with constant arg `3` if non-`NULL`,
  * then clearing the slot), resets `activeCount` to 0, and rebuilds
  * both the grid (`gridHead`/`gridTail` zeroed) and the free list from
  * scratch over `nodeArray` - the exact same free-list-build loop
@@ -93,7 +93,7 @@ void sub_8009914(struct pool_init *m)
 
         if (obj != NULL) {
             u8 *m50 = obj->vtable + 0x50;
-            sub_803AD80((u8 *)obj + *(s16 *)m50, (void *)3, *(void **)(m50 + 4));
+            _call_via_r2((u8 *)obj + *(s16 *)m50, (void *)3, *(void **)(m50 + 4));
         }
         m->slotArray[i] = NULL;
     }

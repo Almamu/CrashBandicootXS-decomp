@@ -103,8 +103,8 @@ byte from the *first byte* of its source and dispatches:
 | tag (top nibble of byte 0) | meaning | handler |
 |---|---|---|
 | `0x0` | raw, uncompressed | direct DMA3 copy (source+4, skipping the 4-byte tag+size header) |
-| `0x1` | LZ77 | `LZ77UnCompWrapper` (`svc 0x12`) |
-| `0x3` | RL | `RLUnCompWrapper` (`svc 0x15`) |
+| `0x1` | LZ77 | `LZ77UnCompVram` (`svc 0x12`) |
+| `0x3` | RL | `RLUnCompVram` (`svc 0x15`) |
 
 This is the same tag-byte convention used by the already-identified LZ77
 graphics blocks elsewhere in the ROM (tag `0x10` = `0x1` in the top nibble +
@@ -184,7 +184,7 @@ HUD widget:
   hung off the actor - classic text layout, no icon/number.
 - `_087E4D64` and `_087E4D1C` are set up by two near-identical functions
   (`InitHudIconWidgetA`, `InitHudIconWidgetB`) that **both** start by measuring a string
-  via the same low-level routine (`sub_803A94C`, called with a
+  via the same low-level routine (`CpuSet`, called with a
   `0x05000002` constant - `0x05000000` is GBA Palette RAM, so this looks
   like a palette-aware text draw), then overwrite the actor's vtable to
   `_087E4D64`/`_087E4D1C` and set a graphics-package pointer at a struct
@@ -691,7 +691,7 @@ repeats) into it, instead of storing N independent full frames.
 
 **Correction (later):** there is no sliding window. The `0x30` byte
 marks a zero-run-compressed frame, unpacked by the IWRAM routine behind
-`gUnknown_03000874`; the frames are stored back to back and don't
+`gUnpackRleSpriteFrameFunc`; the frames are stored back to back and don't
 overlap at all. Decoded, record 0 of categories 0-2 is Crash riding the
 polar bear, not a mask. See docs/data.md, "Compressed sprite frames".
 

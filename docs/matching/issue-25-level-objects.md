@@ -28,7 +28,7 @@ Shared structs, externs and the virtual-call macros live in
 
 Found by scanning the ROM for Thumb pointers to each function; the method
 tables are gcc 2.x C++ vtables (`{s16 this-adjust; pad; fn}` entries,
-called through the `sub_803AD7C`/`AD80`/`AD84`/`AD88` "call via
+called through the `_call_via_r1`/`AD80`/`AD84`/`AD88` "call via
 r1/r2/r3/r4" thunks), like issue #21's `input_ctrl`.
 
 - **`sub_801A794`/`sub_801A824`/`sub_801A838`**: constructor/destructor
@@ -56,7 +56,7 @@ r1/r2/r3/r4" thunks), like issue #21's `input_ctrl`.
     player's anim-record collision box (`anim_rec` +4..+9) and the
     `sub_800FDC8` edge probe; it then moves the player (`sub_8007398`),
     sets `carried` (+0xAC) / `+0x68 = 8` when landing, and fires the
-    player's method +0x68 (`sub_803AD88`) with event 0x0C/0x0F/0x10/0x11
+    player's method +0x68 (`_call_via_r4`) with event 0x0C/0x0F/0x10/0x11
     depending on the object type (the 3/4 variants gated on
     `sub_80232A0`/`sub_8023278` and `gLevelState+0x8C`). Without
     overlap it only refreshes `carried` or clears the mover's `active`.

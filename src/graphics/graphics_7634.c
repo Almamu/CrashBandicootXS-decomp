@@ -8,7 +8,7 @@
  * Queues one affine OAM entry per visible sub-piece of an animated
  * `part`, scaled by `part+0x3c` (Q8, at least 0x40). It allocates an
  * affine matrix slot from `gUnknown_03001300->count` (written as a plain
- * scale into the slot's pa/pd, via `sub_800090C`), selects OBJ mode 1
+ * scale into the slot's pa/pd, via `FixedInverse16`), selects OBJ mode 1
  * (affine) or 3 (double size, scale > 0x100), and pulls every piece
  * towards the first piece's centre by the scale factor. To find that
  * centre it probes keyframe 0 through `sub_80083B8` with `part->tick`
@@ -120,8 +120,8 @@ extern s32 sub_80083A8(void *part);
 extern s32 sub_8006C44(void *cursor);
 extern s32 sub_8006C84(void *cursor, s32 src, s32 size);
 extern void sub_8006AC8(void *buffer, void *record);
-extern s32 sub_800090C(s32 scale);
-extern s32 sub_803AD7C(void *self, void *fn);
+extern s32 FixedInverse16(s32 scale);
+extern s32 _call_via_r1(void *self, void *fn);
 extern void *gUnknown_030012FC;
 extern struct oam_buffer *gUnknown_03001300;
 extern u8 gStaticData_0816B2E0[];
@@ -166,7 +166,7 @@ void sub_8007634(void *unused, struct affine_part *part, s32 *pos)
 
     if (scale < 0x40)
         scale = 0x40;
-    pa = sub_800090C((s16)scale);
+    pa = FixedInverse16((s16)scale);
     pd = pa;
     if (scale <= 0x100)
         oam.a.objMode = 1;
@@ -192,7 +192,7 @@ void sub_8007634(void *unused, struct affine_part *part, s32 *pos)
     {
         struct part_method7634 *m = (struct part_method7634 *)(part->vtable + 0x58);
 
-        oam.b.priority = (u16)sub_803AD7C((u8 *)part + m->thisOffset, m->fn);
+        oam.b.priority = (u16)_call_via_r1((u8 *)part + m->thisOffset, m->fn);
     }
     oam.b.palette = part->palette;
 

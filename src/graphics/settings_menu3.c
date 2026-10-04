@@ -13,11 +13,11 @@ s32 sub_8004A50(struct pause_options_screen *self)
 }
 
 extern void sub_8002798(void *arg0);
-extern void *gUnknown_03000804;
+extern void *gLinkSession;
 
 void sub_8004A64(void)
 {
-    void *p = gUnknown_03000804;
+    void *p = gLinkSession;
     sub_8002798(p);
     *((u8 *)p + 5) = 0;
 }
@@ -26,8 +26,8 @@ extern void sub_8002C84(void *arg0);
 
 void sub_8004A80(struct pause_options_screen *self)
 {
-    sub_8002798(gUnknown_03000804);
-    *((u8 *)gUnknown_03000804 + 5) = 1;
+    sub_8002798(gLinkSession);
+    *((u8 *)gLinkSession + 5) = 1;
     sub_8002C84(self->field_90);
 }
 

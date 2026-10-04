@@ -8,7 +8,6 @@ extern s32 sub_8033900(void);
 extern s32 sub_80338F4(void);
 extern s32 sub_80338E8(void);
 extern struct spawn_timing_table *sub_80338C4(void);
-asm(".set __divsi3, sub_803ADB4");
 extern void sub_802E674(s32 x, s32 y, s32 z, s32 dx, s32 dy);
 extern void sub_802E504(s32 x, s32 y, s32 z);
 extern struct actor_self *gUnknown_03000884;
@@ -53,7 +52,7 @@ struct spawner {
  *
  * Matched in a later pass (see docs/matching/issue-62-0x08033804-actor.md,
  * "Later pass: strag2 retry"): both divisions are plain `/` through the ROM's own
- * `__divsi3` (`sub_803ADB4`) - as a libcall they don't clobber memory, so
+ * `__divsi3` - as a libcall they don't clobber memory, so
  * `base.z` stays CSE'd in `r6` across them - the divisor is -0x1AA
  * (not -0xAA), and the new cooldown value is stored at one shared
  * `store:` label from all three paths. */

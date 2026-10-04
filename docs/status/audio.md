@@ -174,8 +174,8 @@ for the per-function notes.
   `GaxMixerPlay`, `GaxMixFrame` (the Thumb-to-ARM call is GAX2's own
   inline-asm idiom, `GAX_CALL_ARM`; `sub_803A318`/`sub_803A608` were
   only its return points, not functions)
-- `src/util/math_div64_util.c` - `sub_8037648`/`sub_8037A7C`/
-  `sub_8037ECC` (`__divdi3`/`__udivdi3`/`__muldi3`, category `util` -
+- `src/util/math_div64_util.c` - `__divdi3`/`__udivdi3`/
+  `__muldi3` (libgcc2, category `util` -
   see [docs/status/util.md](./util.md))
 - `src/audio/gax_playstart.c` - `GAX2_init` (the play-start/init
   entry point; was parked NAKED, matched in GAX retry 5 - see
@@ -189,7 +189,7 @@ for the per-function notes.
 
 No GAX function is parked any more.
 
-`sub_8037E54` (`__udivsi3`, `src/util/math_div64_util.c`) also stays
+`__udivsi3` (`src/util/math_div64_util.c`) also stays
 NAKED - it's lib1funcs.asm's hand-written routine, not compiler output
 (see [docs/status/util.md](./util.md)).
 
@@ -210,7 +210,7 @@ Everything else in `asm/code_3.s`'s `0x08037110`-`0x0803B0C4` range
 actually audio-related - see [docs/audio.md](../audio.md)), including,
 from the `0x08037110`-`0x08038538` pass specifically:
 
-- `sub_8037648`/`sub_8037A7C`/`sub_8037E54`/`sub_8037ECC` - GAX2's
+- `__divdi3`/`__udivdi3`/`__udivsi3`/`__muldi3` - GAX2's
   bundled libgcc helpers (`__divdi3`/`__udivdi3`/`__udivsi3`/
   `__muldi3`), matched/parked under category `util` in
   `src/util/math_div64_util.c` (issue #66) rather than this page - see

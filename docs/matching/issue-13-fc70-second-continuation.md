@@ -51,7 +51,7 @@ matches both.
   already-matched `sub_80106DC` run - it's immediately ROM-adjacent, so
   it joins that file rather than getting its own) - an AABB-overlap
   test between `self`'s own table-driven half-width/half-height box
-  (built via the same `sub_803AD7C` table-trampoline convention
+  (built via the same `_call_via_r1` table-trampoline convention
   `sub_8007048`/`sub_80070D4`, `graphics.c`, already establish) and a
   caller-supplied `struct aabb *`. Short-circuits true when `self+0xc`
   bit 4 is set or `self+0x44` is nonzero. Several gotchas:

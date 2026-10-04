@@ -11,7 +11,7 @@
  * (an object with several `{s16 offset, void *fn}` pairs at different
  * byte offsets, each feeding a different `sub_803AD8x`-family call -
  * see the Phase 1 doc's own "self+0xC" section) and `self+0x70`
- * ("owner"), then fires `sub_803AD84(self + offset, owner, tableEntry,
+ * ("owner"), then fires `_call_via_r3(self + offset, owner, tableEntry,
  * fn)`.
  *
  * `sub_800C8AC`/`sub_800C8BC` are thin wrappers around the two
@@ -38,7 +38,7 @@
 
 extern void sub_800B704(void *selfArg, void *arg1, s32 index);
 extern void sub_800B838(void *selfArg, void *arg1, s32 index);
-extern s32 sub_803AD84(void *arg0, void *arg1, void *arg2, void *arg3);
+extern s32 _call_via_r3(void *arg0, void *arg1, void *arg2, void *arg3);
 
 /* Caches `mode` into `self->0x7c`, then delegates to `sub_800B704`
  * (the anchor's part+0x30/+0x34 pair, record word 1 as type). */
@@ -86,6 +86,6 @@ void sub_800C8CC(void *selfArg, s32 mode)
     entry = table[mode];
     fn = *(void **)(rec + 4);
 
-    sub_803AD84(addr, owner, entry, fn);
+    _call_via_r3(addr, owner, entry, fn);
 }
 asm(".align 2, 0");

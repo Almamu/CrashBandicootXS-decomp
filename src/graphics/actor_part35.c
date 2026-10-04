@@ -9,8 +9,7 @@ extern s32 sub_80338F4(void);
 extern s32 sub_80338E8(void);
 extern struct spawn_timing_table *sub_80338C4(void);
 extern s32 sub_80338D0(void);
-asm(".set __divsi3, sub_803ADB4");
-extern s32 sub_8000E1C(s32 arg0);
+extern s32 RandRange(s32 arg0);
 extern void sub_802E170(s32 kind, s32 x, s32 y, s32 z, s32 arg4);
 extern struct actor_self *gUnknown_03000884;
 
@@ -48,7 +47,7 @@ struct spawner {
  * from the singleton's own position plus a different fixed offset,
  * and - while `cooldown` is zero - measures `self`'s
  * distance to the player the same way; in range, it picks one of three
- * spawn "kinds" (5/6/8, via `sub_8000E1C(3)`) and calls `sub_802E170`
+ * spawn "kinds" (5/6/8, via `RandRange(3)`) and calls `sub_802E170`
  * at `self`'s position, then cycles `count` against a threshold
  * from `sub_80338C4`'s table. Once `base.depth` passes `0x4B00` and the
  * singleton's own "kind" (`sub_80338D0`) is 3, resets `self` back to
@@ -84,7 +83,7 @@ void sub_8033CF8(struct spawner *self)
             s32 absDy = (dy ^ signDy) - signDy;
 
             if (absDx + absDy <= 0xFFF) {
-                s32 kind = (u16)sub_8000E1C(3);
+                s32 kind = (u16)RandRange(3);
                 struct spawn_timing_table *table;
                 s32 count;
 

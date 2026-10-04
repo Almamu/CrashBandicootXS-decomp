@@ -20,7 +20,7 @@ extern void sub_8033F48();
 extern void sub_8033F74();
 
 /* Per-kind animation step functions of the singleton object, called
- * through sub_803AD78 as `gStaticData_0817C4C8[gUnknown_030015B0]` by
+ * through _call_via_r0 as `gStaticData_0817C4C8[gUnknown_030015B0]` by
  * sub_8032B6C (actor_part130.c). */
 void (*const gStaticData_0817C4C8[6])() = {
     nullsub_36,

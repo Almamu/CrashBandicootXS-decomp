@@ -8,7 +8,7 @@
  * docs/matching.md for the full split. */
 
 extern void sub_80013FC(s32 factor);
-extern void sub_80006A8(void);
+extern void WaitForVBlank(void);
 extern u16 gUnknown_03000A80[512];
 extern u16 gUnknown_03000E80[512];
 
@@ -73,7 +73,7 @@ void sub_80014A4(void)
      * `.L8+`-prefixed reference in this function to match. */
     do {
         sub_80013FC(factor);
-        sub_80006A8();
+        WaitForVBlank();
         dma2->src = (u32)bufAddr;
         asm volatile(
             "mov %0, #0xa0\n\t"

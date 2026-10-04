@@ -18,7 +18,7 @@
  * table-index/"kind" field at `self+0xc`, an anim-frame halfword/byte
  * pair at `self+0x10`/`self+0x12`, an accumulator at `self+8`, state at
  * `self+0x28`, a frame counter at `self+0x44`, a `+0x50`-rooted event/
- * trampoline table fed through `sub_803AD80`, and the `+0x48`(next)/
+ * trampoline table fed through `_call_via_r2`, and the `+0x48`(next)/
  * `+0x4c`(prev) circular doubly-linked list rooted at the player-pointer
  * global `gUnknown_03000884`. This file additionally pins down
  * `InitActorPart` itself (the constructor every other actor_part*.c file
@@ -76,16 +76,16 @@ void sub_802A6D8(void *arg0)
 }
 
 extern void *gUnknown_03001418;
-extern s32 sub_803AD7C(void *arg0, void *fn);
+extern s32 _call_via_r1(void *arg0, void *fn);
 
-/* Passes its own `self` argument through to `sub_803AD7C`, alongside a
+/* Passes its own `self` argument through to `_call_via_r1`, alongside a
  * function pointer read from `gUnknown_03001418`'s own `+0x24` field
  * (`gUnknown_03001418` is itself a pointer to some shared record). */
 s32 sub_802A6EC(void *self)
 {
     void *tab = gUnknown_03001418;
 
-    return sub_803AD7C(self, *(void **)((u8 *)tab + 0x24));
+    return _call_via_r1(self, *(void **)((u8 *)tab + 0x24));
 }
 
 extern u8 gStaticData_087E4DF4[];
@@ -183,7 +183,7 @@ void *InitActorPart(void *selfArg, void *partArg, s32 b, s32 c, s32 d)
 
 extern s32 gUnknown_030013C4;
 extern s32 gUnknown_030013C0;
-extern s32 sub_803AD80(void *arg0, s32 arg1, void *fn);
+extern s32 _call_via_r2(void *arg0, s32 arg1, void *fn);
 extern s32 GetAnimFrameBaseOffset(void *self);
 
 /* Recomputes `self`'s movement-threshold pair (`+0x34`/`+0x14`, same
@@ -237,7 +237,7 @@ void sub_802A7B8(void *selfArg)
             u8 *addr = (u8 *)self + offset;
             void *fn = table->m08.fn;
 
-            sub_803AD80(addr, 3, fn);
+            _call_via_r2(addr, 3, fn);
         }
         return;
     }

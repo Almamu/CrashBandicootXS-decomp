@@ -12,7 +12,7 @@
 extern s32 sub_800A528(void *self);
 extern void *sub_8007CF8(void *dest, void *pt);
 extern u8 gStaticData_087E3E04[];
-extern s32 sub_803AD80(void *arg0, void *arg1, void *fn);
+extern s32 _call_via_r2(void *arg0, void *arg1, void *fn);
 extern void sub_8010E14(void *arg0, s32 arg1);
 extern void sub_800A650(void *self, u32 unusedArg);
 
@@ -85,7 +85,7 @@ u8 sub_800B37C(void *selfArg, void *buf)
 
 /* Overwrites `self->table` with `gStaticData_087E3E04`, then (if
  * `self+0xb0`'s child object is set) fires its `table+0x50/0x54`-
- * driven trampoline via `sub_803AD80` with constant arg `3`, then
+ * driven trampoline via `_call_via_r2` with constant arg `3`, then
  * calls `sub_8010E14(self+0x108, 2)` and tail-calls `sub_800A650`
  * (already matched in `actor_part14.c`). */
 void sub_800B3AC(void *selfArg, u32 arg1)
@@ -102,7 +102,7 @@ void sub_800B3AC(void *selfArg, u32 arg1)
             void *addr = (u8 *)rec + offset;
             void *fn = *(void **)(tbl + 4);
 
-            sub_803AD80(addr, (void *)3, fn);
+            _call_via_r2(addr, (void *)3, fn);
         }
     }
     sub_8010E14(self + 0x108, 2);

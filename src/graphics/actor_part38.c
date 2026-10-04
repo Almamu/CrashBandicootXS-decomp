@@ -19,18 +19,18 @@
 extern void *gUnknown_030012BC;
 extern void *gUnknown_030012F0;
 extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
-extern s32 sub_803AD7C(void *addr, void *fn);
-extern s32 sub_803AD80(void *arg0, void *arg1, void *arg2);
-extern s32 sub_803AD84(void *arg0, void *arg1, void *arg2, void *arg3);
-extern void sub_803AD88(void *arg0, s32 arg1, s32 arg2, s32 arg3);
+extern s32 _call_via_r1(void *addr, void *fn);
+extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
+extern s32 _call_via_r3(void *arg0, void *arg1, void *arg2, void *arg3);
+extern void _call_via_r4(void *arg0, s32 arg1, s32 arg2, s32 arg3);
 extern void sub_800F6B8(s32 x, s32 y, s32 arg2, s32 arg3);
 
 /* For each `struct actor *` in the `gUnknown_030012F0` list: skips
- * entries whose `+0x48` trampoline (`sub_803AD7C`) reports a width of 4
+ * entries whose `+0x48` trampoline (`_call_via_r1`) reports a width of 4
  * or less, entries further than 0x40 (Manhattan distance) from `self`'s
  * own part, entries without their `+0xc` bit 6 flag set, and entries
  * more than 0x11 away vertically - then fires the `+0x68` trampoline
- * pair via `sub_803AD88` with action `0x16` on whatever survives all
+ * pair via `_call_via_r4` with action `0x16` on whatever survives all
  * four checks. */
 void sub_8014F8C(void *selfArg)
 {
@@ -86,7 +86,7 @@ loop_body:
         addr = (u8 *)other + offset;
         fn = *(void **)(rec + 4);
 
-        if (sub_803AD7C(addr, fn) <= 4) {
+        if (_call_via_r1(addr, fn) <= 4) {
             goto loop_inc;
         }
 
@@ -128,7 +128,7 @@ loop_body:
             void *addr2 = (u8 *)other + offset2;
             register void *fn2 asm("r4") = *(void *volatile *)(rec2 + 4);
 
-            sub_803AD88(addr2, 0, 0x16, 0);
+            _call_via_r4(addr2, 0, 0x16, 0);
             (void)fn2;
         }
     }
@@ -149,8 +149,8 @@ asm(".align 2, 0\n\t.Lgu12f0_8014f8c: .word gUnknown_030012F0");
 
 
 extern void *gUnknown_030012BC;
-extern s32 sub_803AD80(void *arg0, void *arg1, void *arg2);
-extern s32 sub_803AD84(void *arg0, void *arg1, void *arg2, void *arg3);
+extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
+extern s32 _call_via_r3(void *arg0, void *arg1, void *arg2, void *arg3);
 
 /* Same `mgr`/`{s16 offset; void *fn}` trampoline pair at `self+0xc`
  * (`+0x20`/`+0x24` and `+0x50`/`+0x54`) as `sub_801426C`/`sub_80142B0`.
@@ -193,10 +193,10 @@ void sub_8015038(u8 *self, s32 id, s32 param2)
         zero = 0;
         wait = 0x14;
         mgr = *(struct vtable_slot **)(self + 0xc);
-        sub_803AD80(self + mgr[4].delta, (void *)id, mgr[4].fn);
+        _call_via_r2(self + mgr[4].delta, (void *)id, mgr[4].fn);
         off = *(u8 **)(self + 0xc);
         off += 0x50;
-        sub_803AD84(self + *(s16 *)off, *(void **)(self + 0x10), (void *)idx,
+        _call_via_r3(self + *(s16 *)off, *(void **)(self + 0x10), (void *)idx,
                     *(void **)(off + 4));
         *(s32 *)(self + 0x18) = zero;
         *(s32 *)(self + 0x1c) = wait;
@@ -232,10 +232,10 @@ void sub_8015038(u8 *self, s32 id, s32 param2)
             zero = 0;
             wait = 0x14;
             mgr = *(struct vtable_slot **)(self + 0xc);
-            sub_803AD80(self + mgr[4].delta, (void *)id, mgr[4].fn);
+            _call_via_r2(self + mgr[4].delta, (void *)id, mgr[4].fn);
             off = *(u8 **)(self + 0xc);
             off += 0x50;
-            sub_803AD84(self + *(s16 *)off, *(void **)(self + 0x10), (void *)idx,
+            _call_via_r3(self + *(s16 *)off, *(void **)(self + 0x10), (void *)idx,
                         *(void **)(off + 4));
             *(s32 *)(self + 0x18) = zero;
             *(s32 *)(self + 0x1c) = wait;
@@ -249,10 +249,10 @@ void sub_8015038(u8 *self, s32 id, s32 param2)
             self[0x20] = zero;
             wait = 0x18;
             mgr = *(struct vtable_slot **)(self + 0xc);
-            sub_803AD80(self + mgr[4].delta, (void *)param2, mgr[4].fn);
+            _call_via_r2(self + mgr[4].delta, (void *)param2, mgr[4].fn);
             off = *(u8 **)(self + 0xc);
             off += 0x50;
-            sub_803AD84(self + *(s16 *)off, *(void **)(self + 0x10), (void *)0x10,
+            _call_via_r3(self + *(s16 *)off, *(void **)(self + 0x10), (void *)0x10,
                         *(void **)(off + 4));
             *(s32 *)(self + 0x18) = zero;
             *(s32 *)(self + 0x1c) = wait;

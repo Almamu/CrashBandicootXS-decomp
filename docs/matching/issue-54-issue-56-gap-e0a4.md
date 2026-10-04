@@ -20,7 +20,7 @@ offset. The rest of the range is a family of position-offset/physics
 helpers and hazard-timer functions on the usual `self` object (state/
 table-index/anim-frame fields at the established offsets) and a couple
 of no-argument helpers reading a fixed global object (`gUnknown_
-03001507`/`gUnknown_030007E0`).
+03001507`/`gKeys`).
 
 ## Matched (4 of 25 functions)
 
@@ -113,7 +113,7 @@ raw disassembly.
   transitions); `sub_802E9FC` additionally has `r8`/`sb`/`sl` all
   simultaneously live.
 - **`sub_802EC64`**, **`sub_802ED10`** - no-argument helpers reading
-  `gUnknown_03001507`/`gUnknown_030007E0` directly.
+  `gUnknown_03001507`/`gKeys` directly.
 - **`sub_802EDBC`**, **`sub_802EED0`**, **`sub_802EFD8`** - `self`-
   object frame-counter-threshold steps, each starting with a tail-call
   into `sub_802EC64`/`sub_802ED10` above.

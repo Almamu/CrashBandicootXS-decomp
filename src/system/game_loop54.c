@@ -27,8 +27,8 @@ extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
 extern void *sub_8007B98(void *dest, void *pt);
 extern u8 sub_8001688(void *buf1, void *buf2);
 extern void sub_8007174(void *arg0, s32 arg1, s32 arg2, s32 *arg3, s32 *arg4);
-extern s32 sub_80008F0(s32 arg0, s32 arg1);
-extern s32 sub_80008FC(s32 a, s32 b);
+extern s32 FixedDiv(s32 arg0, s32 arg1);
+extern s32 FixedMul(s32 a, s32 b);
 extern s32 AddLife(void *self);
 extern void sub_80284A4(void *state);
 extern void *sub_8026EDC(s32 size);
@@ -120,7 +120,7 @@ void sub_8010E34(void *selfArg)
  * way: `self->0xc |= 0x10`, `self->0x25 = 1`, then calls
  * `sub_8007174(self, self->x>>8, self->y>>8, &outX, &outY)` and
  * re-derives `self->x`/`self->y` plus `self->0x40`/`self->0x44` (a
- * "distance to travel" pair, `-sub_80008F0(newPos<<8 - offset, 0x1400)`)
+ * "distance to travel" pair, `-FixedDiv(newPos<<8 - offset, 0x1400)`)
  * from the results - the exact same tail shape `sub_8011448`/
  * `sub_80111B8`/`sub_8011870` (`game_loop53.c`) all share. */
 void sub_8010EAC(void *selfArg, u8 randomize)
@@ -174,11 +174,11 @@ void sub_8010EAC(void *selfArg, u8 randomize)
 
     newX = outX << 8;
     *(s32 *)self = newX;
-    *(s32 *)(self + 0x40) = -sub_80008F0(newX - dx, 0x1400);
+    *(s32 *)(self + 0x40) = -FixedDiv(newX - dx, 0x1400);
 
     newY = outY << 8;
     *(s32 *)(self + 4) = newY;
-    *(s32 *)(self + 0x44) = -sub_80008F0(newY - dy, 0x1400);
+    *(s32 *)(self + 0x44) = -FixedDiv(newY - dy, 0x1400);
 }
 
 /* `docs/rom_map.md`: "a bounds-checked, mode-selected object state
@@ -195,7 +195,7 @@ void sub_8010EAC(void *selfArg, u8 randomize)
  * mode (0, or 3+): gated by `self->0x4a`, increments `self->0x49` or
  * `self->0x4b` (wrapping the gate off after 32 ticks). The shared tail:
  * unless `self->0x48 != 0`, either computes an orbit step via
- * `gStaticData_0816A820[(self->0x49 & 0x7f)]` and `sub_80008FC` added
+ * `gStaticData_0816A820[(self->0x49 & 0x7f)]` and `FixedMul` added
  * into `self->0x50`, storing to `self->y` (when `self->0x4a` is clear),
  * or calls `sub_8011248` (`game_loop52.c`'s own orbit-position updater)
  * when `self->0x4a` is set - then always tail-calls `sub_8008364`
@@ -296,7 +296,7 @@ void sub_8010F8C(struct orbit_part *self)
     if (self->state == 0) {
         if (self->mode == 0) {
             s32 sn = gStaticData_0816A820[(self->counter & 0x7f) * 2];
-            sn = sub_80008FC(sn, 0x280);
+            sn = FixedMul(sn, 0x280);
             self->base.y = self->anchor.y + sn;
         } else {
             sub_8011248(self);
@@ -356,7 +356,7 @@ struct orbit_part *sub_8011114(u16 id, u16 x, u16 y, s32 unused)
  * sets `self->0x48 = 1`, nudges `self->x -= self->0x4a<<8`, sets
  * `self->0x25 = 1`, calls `sub_8007174(self, x>>8, y>>8, &outX, &outY)`
  * and re-derives `self->x`/`self->y` plus `self->0x40`/`self->0x44`
- * (the same `-sub_80008F0(newPos<<8 - offset, 0x1400)` "distance to
+ * (the same `-FixedDiv(newPos<<8 - offset, 0x1400)` "distance to
  * travel" idiom `sub_8010EAC`/`sub_8011448`/`sub_8011870` all share),
  * with fixed `0xb400`/`0xc00` offsets on x/y respectively, then fires
  * `sub_80284A4(gUnknown_03001318)` - unlike `sub_8011870`'s
@@ -382,11 +382,11 @@ void sub_80111B8(void *selfArg)
 
     newX = outX << 8;
     *(s32 *)self = newX;
-    *(s32 *)(self + 0x40) = -sub_80008F0(newX - 0xb400, 0x1400);
+    *(s32 *)(self + 0x40) = -FixedDiv(newX - 0xb400, 0x1400);
 
     newY = outY << 8;
     *(s32 *)(self + 4) = newY;
-    *(s32 *)(self + 0x44) = -sub_80008F0(newY - 0xc00, 0x1400);
+    *(s32 *)(self + 0x44) = -FixedDiv(newY - 0xc00, 0x1400);
 
     sub_80284A4(gUnknown_03001318);
 }

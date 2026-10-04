@@ -7,8 +7,6 @@
 extern struct actor_pmf gStaticData_0817C2B8[];
 extern void sub_802A7B8(void *self);
 
-ACTOR_CALL_VIA_ALIASES
-
 /* Per-state member-pointer dispatch, `(this->*gStaticData_0817C2B8
  * [this->state])()` (see `ACTOR_PMF_CALL`), then either the "destroy"
  * virtual call once the state-2 animation has played through, or the

@@ -12,12 +12,12 @@
  * "token" at a time (`GetWordLength` returns each token's byte length -
  * looks like it splits on word boundaries), measuring each token with
  * the render target's `record->slots[1]` method and drawing it with
- * `slots[3]` (gcc 2.x virtual calls through `sub_803AD84` =
+ * `slots[3]` (gcc 2.x virtual calls through `_call_via_r3` =
  * `_call_via_r3`) while accumulating a running pixel width against a
  * per-line budget (`box->field_8`). When the running width would
  * overflow, it advances to a new line (`slots[5]` with a '\n', then
  * re-draws the just-measured token at the line's start) and optionally
- * flushes (`sub_80006A8` then `sub_8006AAC(gUnknown_03001300)`)
+ * flushes (`WaitForVBlank` then `sub_8006AAC(gUnknown_03001300)`)
  * depending on `mode` (0 = never flush per-token, 1 = flush after every
  * token, 2 = only flush after a line wrap) - and flushes once more
  * after the whole string is consumed if `mode != 0`. Recognizes two
@@ -33,9 +33,9 @@ struct sub_8000EE4_box {
 extern void sub_8006A90(void *arg0);
 extern void sub_8006A48(void *arg0);
 extern s32 GetWordLength(u8 *cursor);
-extern s32 sub_803AD80(void *arg0, s32 arg1, void *arg2);
-extern s32 sub_803AD84(void *arg0, u8 *arg1, s32 arg2, void *arg3);
-extern void sub_80006A8(void);
+extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
+extern s32 _call_via_r3(void *arg0, u8 *arg1, s32 arg2, void *arg3);
+extern void WaitForVBlank(void);
 extern void sub_8006AAC(void *arg0);
 extern void *gUnknown_03001300;
 
@@ -88,18 +88,18 @@ s32 sub_8000EE4(u8 *text, struct icon_manager *self, struct sub_8000EE4_box *box
                 /* fallthrough */
             case 'n':
                 r = self->record;
-                sub_803AD80((u8 *)self + r->slots[5].offset, '\n', r->slots[5].ptr);
+                _call_via_r2((u8 *)self + r->slots[5].offset, '\n', r->slots[5].ptr);
                 widthAccum = 0;
                 lineCount++;
             }
             posAccum += len;
         } else {
             r = self->record;
-            charWidth = sub_803AD84((u8 *)self + r->slots[1].offset, token, len, r->slots[1].ptr);
+            charWidth = _call_via_r3((u8 *)self + r->slots[1].offset, token, len, r->slots[1].ptr);
             combined = widthAccum + charWidth;
             if (combined <= box->field_8) {
                 r = self->record;
-                sub_803AD84((u8 *)self + r->slots[3].offset, token, len, r->slots[3].ptr);
+                _call_via_r3((u8 *)self + r->slots[3].offset, token, len, r->slots[3].ptr);
                 widthAccum = combined;
                 /* ROM order: `bne skip; b flush`. */
                 if (mode != 1)
@@ -118,13 +118,13 @@ s32 sub_8000EE4(u8 *text, struct icon_manager *self, struct sub_8000EE4_box *box
                 if (lineCount >= limit)
                     continue;
                 r = self->record;
-                sub_803AD80((u8 *)self + r->slots[5].offset, '\n', r->slots[5].ptr);
+                _call_via_r2((u8 *)self + r->slots[5].offset, '\n', r->slots[5].ptr);
                 r = self->record;
-                sub_803AD84((u8 *)self + r->slots[3].offset, token, len, r->slots[3].ptr);
+                _call_via_r3((u8 *)self + r->slots[3].offset, token, len, r->slots[3].ptr);
                 widthAccum = charWidth;
                 if (mode == 1 || mode == 2) {
                 flush:
-                    sub_80006A8();
+                    WaitForVBlank();
                     sub_8006AAC(gUnknown_03001300);
                 }
             }
@@ -133,7 +133,7 @@ s32 sub_8000EE4(u8 *text, struct icon_manager *self, struct sub_8000EE4_box *box
         }
     }
     if (mode != 0) {
-        sub_80006A8();
+        WaitForVBlank();
         sub_8006AAC(gUnknown_03001300);
     }
     return posAccum;

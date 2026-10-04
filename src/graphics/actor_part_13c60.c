@@ -11,18 +11,15 @@
  * `self+0x10` its on-screen part, `self+0x18`/`+0x1c` an animation
  * counter/limit, and the +0x27..+0x32 bytes the shared "next action"
  * trio (actor_part18.c). Each handler snapshots the input word
- * gUnknown_030007E0 (the high half is the newly-pressed buttons) and
- * most also the D-pad direction sub_8000760 remaps. */
+ * gKeys (the high half is the newly-pressed buttons) and
+ * most also the D-pad direction GetDpadDirection remaps. */
 
-asm(".set _call_via_r2, sub_803AD80\n"
-    ".set _call_via_r3, sub_803AD84\n");
-
-extern u32 gUnknown_030007E0;
+extern u32 gKeys;
 extern void *gUnknown_030012BC;
 extern void *gLevelState;
 extern void *gUnknown_03001304;
 extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
-extern u8 sub_8000760(void *pad);
+extern u8 GetDpadDirection(void *pad);
 extern u8 sub_80231B4(void *self);
 extern u8 sub_800AAEC(struct act_part *part, s32 action);
 extern u8 sub_8012A7C(struct act *self);
@@ -55,7 +52,7 @@ static inline void ActSetNextB(struct act *self, s32 next)
  * to action 7 on fire during contact bit 3, counts alt presses into
  * +0x20 (max 3), and at the animation's end either releases the charge
  * (sub_8015038) or hands off to sub_8015238. The handlers below load
- * sub_8000760's argument before taking the input snapshot, hence the
+ * GetDpadDirection's argument before taking the input snapshot, hence the
  * `pad` local. */
 void sub_8013C60(struct act *self)
 {
@@ -65,8 +62,8 @@ void sub_8013C60(struct act *self)
     {
         void *pad = gUnknown_03001304;
 
-        in = gUnknown_030007E0;
-        dir = sub_8000760(pad);
+        in = gKeys;
+        dir = GetDpadDirection(pad);
     }
     if (self->part->contact == 0)
     {
@@ -103,7 +100,7 @@ void sub_8013D94(struct act *self)
     u32 in;
     struct act_part *part;
 
-    in = gUnknown_030007E0;
+    in = gKeys;
     part = self->part;
 
     if ((part->contact & 8) && part->unk_64 > 0)
@@ -160,8 +157,8 @@ void sub_8013EAC(struct act *self)
     {
         void *pad = gUnknown_03001304;
 
-        in = gUnknown_030007E0;
-        dir = sub_8000760(pad);
+        in = gKeys;
+        dir = GetDpadDirection(pad);
     }
     if (self->part->contact == 0)
     {
@@ -199,7 +196,7 @@ void sub_8013FD4(struct act *self)
     u32 in;
     s32 fire;
 
-    in = gUnknown_030007E0;
+    in = gKeys;
     fire = INPUT_PRESSED(in) & 1;
 
     if (fire)
@@ -253,8 +250,8 @@ void sub_8014084(struct act *self)
     {
         void *pad = gUnknown_03001304;
 
-        in = gUnknown_030007E0;
-        dir = sub_8000760(pad);
+        in = gKeys;
+        dir = GetDpadDirection(pad);
     }
     if ((INPUT_PRESSED(in) & 1) && sub_800AAEC(self->part, 0xB) == 1)
     {
@@ -302,7 +299,7 @@ turn_done:
     moved = 0;
     if (!turned)
     {
-        switch (sub_8000760(gUnknown_03001304))
+        switch (GetDpadDirection(gUnknown_03001304))
         {
         case 3:
         case 4:

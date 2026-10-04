@@ -30,7 +30,7 @@ types, both now named and documented in `include/settings_sync.h`:
   side's copy from its own ring buffer (`sub_8002E20`).
 
 `sub_8002D44`/`sub_8002E20` both drain/fill through a still
-partially-uncharacterized SIO session object (`*gUnknown_03000804`) -
+partially-uncharacterized SIO session object (`*gLinkSession`) -
 a fixed 0x80-byte ring per direction, wrapping at index 0x7f, with a
 separate write-position/pending-count field pair per ring. The RX
 side additionally indexes a per-player sub-record at
@@ -126,9 +126,9 @@ branch and call is semantically confirmed, real bytes stay in the
 - `sub_8002FCC`, `sub_8002FD4`, `sub_8002FD8` - the pump's
   template-attach/data-pointer/reset accessors.
 - `sub_800300C` - the spinner dialog's blocking modal input loop.
-  Needed `gUnknown_030007E0` modelled as a `{u16 held; u16 pressed;}`
+  Needed `gKeys` modelled as a `{u16 held; u16 pressed;}`
   pair (reading `.pressed` directly) rather than
-  `*(u16*)((u8*)&gUnknown_030007E0 + 2)`, which the compiler folds
+  `*(u16*)((u8*)&gKeys + 2)`, which the compiler folds
   into the linker-relocated constant instead of the ROM's runtime
   `ldrh r1, [r0, #2]`; also needed the loop's `self = *selfAddr`
   dereference inlined at each call site (`sub_8004BD0(*selfAddr)` etc.
@@ -207,14 +207,14 @@ technique gets around.
 - **`sub_8003698`** (shared "commit or refresh row" step, `src/
   graphics/settings_menu8b.c`) - the previous pass got this to the
   ROM's exact byte *size* with a single cached `handleAddr`, but the
-  real gap was argument-evaluation order: `sub_800014C(buf + 0x70,
+  real gap was argument-evaluation order: `MemCopy32(buf + 0x70,
   sub_80236EC(*c0Addr), 0x68)` lets this compiler compute `buf + 0x70`
   (the first argument) before calling `sub_80236EC` for the second,
   where the ROM's own build evaluates the call first and only computes
   the pointer argument afterward, as part of the call's own register
   setup. Forcing that order just needs the call's result captured into
   a named local first (`void *result = sub_80236EC(*c0Addr);
-  sub_800014C(buf + 0x70, result, 0x68);`) rather than nesting the call
+  MemCopy32(buf + 0x70, result, 0x68);`) rather than nesting the call
   directly in the outer call's argument list. Separately, `handleAddr`
   genuinely does need recomputing a second time (`&self->field_8c`
   taken again, matching the ROM's second `adds r4, r7, #0`/`adds r4,
@@ -315,7 +315,7 @@ instruction-for-instruction - the same escape hatch already
 established and proven in this project (see
 `docs/matching/issue-4-sio-settings-sync.md`'s "NAKED transcription,
 byte-verified" section, and the smaller worked examples in
-`src/util/math_div_util.c`'s `nullsub_8` and `src/audio/gax_swi.c`'s
+`src/util/math_div_util.c`'s `__div0` and `src/audio/gax_swi.c`'s
 `GaxHuffUnComp`). Both functions were already fully understood
 semantically - the parked C reconstruction that used to sit in
 `src/graphics/settings_menu8a2.c` (now replaced) and the walkthrough
@@ -338,7 +338,7 @@ r3` / `mov sb, r4` / `pop {r4, r5, r6, r7}` / `pop {r0}` / `bx r0`
 epilogue) and `sub_8002E20`'s smaller `mov r7, r8` / `push {r7}` pair -
 exactly the callee-save sequence gcc could never reproduce from C for
 these two. `sub_8002D44` also keeps both of the ROM's separate
-`gUnknown_03000804` literal-pool copies (labels `3:`/`11:`) rather than
+`gLinkSession` literal-pool copies (labels `3:`/`11:`) rather than
 merging them into one, matching the ROM's own pool placement byte for
 byte.
 

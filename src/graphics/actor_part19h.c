@@ -14,7 +14,7 @@
 extern struct actor_self *gUnknown_03000884;
 extern void *gUnknown_030012BC;
 extern void *gLevelState;
-extern void *sub_800014C(void *dst, const void *src, u32 byteCount);
+extern void *MemCopy32(void *dst, const void *src, u32 byteCount);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void sub_8022FEC(void *self);
 
@@ -59,11 +59,11 @@ static inline u8 ActorsOverlap(struct actor_self *pl, struct actor_self *self)
     t = &f.t;
     BoxMove(t, x, y, z);
     f.a = *t;
-    sub_800014C(&f.a, &f.a, sizeof(f.a));
+    MemCopy32(&f.a, &f.a, sizeof(f.a));
     f.s = *(struct box16 *)self->unk_38;
     BoxMove(&f.s, self->x >> 8, self->y >> 8, self->z >> 8);
     *t = f.s;
-    sub_800014C(t, t, sizeof(*t));
+    MemCopy32(t, t, sizeof(*t));
     return BoxOverlap(&f.a, t);
 }
 
@@ -89,7 +89,7 @@ static inline u8 ActorsOverlap(struct actor_self *pl, struct actor_self *self)
  * cleared, `+0xc = 0x12`, anim base reloaded from the node's own part
  * table `+0xd8`) on every type-4 node found overlapping, skipping
  * `self` itself and any node already in the used state. Every box's
- * `sub_800014C` call is the same confirmed no-op `memcpy(dst, dst,
+ * `MemCopy32` call is the same confirmed no-op `memcpy(dst, dst,
  * 0xc)` self-copy documented in actor_part74.c - kept byte-faithful,
  * not simplified away.
  *

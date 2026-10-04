@@ -4,8 +4,8 @@
 #include "pause_screen_results.h"
 
 extern void sub_8008890(void *arg0, s32 arg1, s32 arg2);
-extern s32 sub_8026F38(s32 arg0);
-extern s32 sub_803AD80(void *arg0, void *arg1, void *arg2);
+extern s32 GetUiText(s32 arg0);
+extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern struct icon_manager *gUnknown_030012DC;
 
 /* Shows (`sub_8008890(icon, 0, 0)`) whichever of `icons8c[0..3]` has a
@@ -64,9 +64,9 @@ void sub_800570C(struct pause_screen_results *self)
     }
 
     if (none) {
-        s32 label = sub_8026F38(0x3a);
+        s32 label = GetUiText(0x3a);
         struct icon_record *rec = gUnknown_030012DC->record;
-        u32 width = sub_803AD80((u8 *)gUnknown_030012DC + rec->slots[0].offset, (void *)label, rec->slots[0].ptr);
+        u32 width = _call_via_r2((u8 *)gUnknown_030012DC + rec->slots[0].offset, (void *)label, rec->slots[0].ptr);
         s32 halfX = 0xc2 - (width >> 1);
         struct icon_manager *mgr = gUnknown_030012DC;
         s32 y = 0x64;
@@ -75,6 +75,6 @@ void sub_800570C(struct pause_screen_results *self)
         mgr->posY = y;
 
         rec = gUnknown_030012DC->record;
-        sub_803AD80((u8 *)gUnknown_030012DC + rec->slots[2].offset, (void *)label, rec->slots[2].ptr);
+        _call_via_r2((u8 *)gUnknown_030012DC + rec->slots[2].offset, (void *)label, rec->slots[2].ptr);
     }
 }

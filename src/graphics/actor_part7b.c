@@ -2,8 +2,6 @@
 #include "box_part.h"
 #include "actor_self.h"
 
-ACTOR_CALL_VIA_ALIASES
-
 typedef void (*part_method3_fn)(void *self, s32 a, s32 b, s32 c);
 
 extern s32 sub_8009FF4(struct box_part *part, struct part_aabb *box);

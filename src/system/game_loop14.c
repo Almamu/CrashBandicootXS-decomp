@@ -80,7 +80,7 @@ extern void sub_800872C(struct fx_part *part, s32 val);
 extern s32 sub_800815C(struct fx_part *part);
 extern void *sub_8026EDC(s32 size);
 extern struct manager *sub_800CCE0(void);
-extern s32 sub_803AD80(void *self, void *arg, void *fn);
+extern s32 _call_via_r2(void *self, void *arg, void *fn);
 extern void sub_8008E94(void *manager, void *value);
 
 /* Spawns a `sub_8025BAC` part next to `src` (at `src`'s tile X/Y, facing
@@ -177,7 +177,7 @@ struct fx_part *sub_8025BAC(void *unused0, s32 anim, s32 tag, s32 x, s32 y, s32 
     sub_8026EDC(0x10);
     mgr = sub_800CCE0();
     part->mgr = mgr;
-    sub_803AD80((u8 *)mgr + mgr->vtable->attach.thisOffset, part, mgr->vtable->attach.fn);
+    _call_via_r2((u8 *)mgr + mgr->vtable->attach.thisOffset, part, mgr->vtable->attach.fn);
     ACTOR_FLAG_BITS(&part->base)->bit2 = 0;
     ACTOR_FLAG_BITS(&part->base)->bit1 = 0;
     sub_8008E94(gUnknown_030012F0, part);
@@ -238,11 +238,11 @@ struct orbit_part *sub_8025CA4(void *unused0, u32 x, u32 y, u32 p3, u32 p4, u32 
  * hardware this indirect call has to go through one of this ROM's
  * fixed per-register interworking trampolines
  * (`src/system/reg_trampolines.c`) rather than a direct `blx` - which
- * specific trampoline (here, `sub_803AD8C`/"bx r5") depends purely on
+ * specific trampoline (here, `_call_via_r5`/"bx r5") depends purely on
  * which register this compiler's allocator happens to land the
  * function pointer in, hence the `register ... asm("r5")` pin plus the
  * empty-asm "keep this value live" barrier right before the call. */
-extern void sub_803AD8C(void *a0, u16 a1, u16 a2, u16 a3);
+extern void _call_via_r5(void *a0, u16 a1, u16 a2, u16 a3);
 
 void SpawnEntity(void **table, void *self, u16 *rec)
 {
@@ -256,7 +256,7 @@ void SpawnEntity(void **table, void *self, u16 *rec)
     register void *fn asm("r5") = *(void **)entry;
 
     asm("" :: "r"(fn));
-    sub_803AD8C(self, p1, p2, p3);
+    _call_via_r5(self, p1, p2, p3);
 }
 
 /* Stores `{a, b}` into the two Q8 words at `self+0`/`self+4`. */

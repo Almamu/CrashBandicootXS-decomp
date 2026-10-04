@@ -21,7 +21,7 @@
 extern s32 sub_80338E8(void);
 extern s32 sub_8033900(void);
 extern s32 sub_80338F4(void);
-extern s32 sub_803AD80(void *arg0, void *arg1, void *fn);
+extern s32 _call_via_r2(void *arg0, void *arg1, void *fn);
 extern void sub_802A7B8(void *self);
 
 void sub_8034270(void *selfArg)
@@ -40,7 +40,7 @@ void sub_8034270(void *selfArg)
             u8 *addr = self + *(s16 *)(table + 8);
             void *fn = *(void **)(table + 0xc);
 
-            sub_803AD80(addr, (void *)3, fn);
+            _call_via_r2(addr, (void *)3, fn);
         }
         doAnim = 0;
     } else {

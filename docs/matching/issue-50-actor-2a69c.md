@@ -17,7 +17,7 @@ constructor's `part` argument's own `+4` field), a table-index/"kind"
 field at `self+0xc`, an anim-frame halfword/byte pair at `self+0x10`/
 `self+0x12`, an accumulator at `self+8`, state at `self+0x28`, a frame
 counter at `self+0x44`, a `+0x50`-rooted event/trampoline table fed
-through `sub_803AD80`, and the `+0x48`(next)/`+0x4c`(prev) circular
+through `_call_via_r2`, and the `+0x48`(next)/`+0x4c`(prev) circular
 doubly-linked list rooted at the player-pointer global
 `gUnknown_03000884`. This chunk additionally pins down `InitActorPart`
 itself (the constructor every other `actor_part*.c` file already
@@ -54,7 +54,7 @@ only the tail continuation `..._ac28.s` remains.
   argument and calls a different function with the player pointer
   (`gUnknown_03000884`), discarding the return value.
 - **`sub_802A6EC`** (`src/graphics/actor_part50.c`) - passes its own
-  `self` argument through to `sub_803AD7C`, alongside a function pointer
+  `self` argument through to `_call_via_r1`, alongside a function pointer
   read from `gUnknown_03001418`'s own `+0x24` field.
 - **`InitActorPart`** (`src/graphics/actor_part50.c`) - the constructor.
   Matching it byte-exact needed several of this project's established
@@ -134,7 +134,7 @@ only the tail continuation `..._ac28.s` remains.
   `sub_803B060` call - explicit register variables in a caller-saved
   register aren't automatically protected across a call the way an
   ordinary gcc-owned pseudo-register is, so the spill/reload needed
-  writing out by hand (same technique as `sub_8000140`'s r2-across-SWI
+  writing out by hand (same technique as `DivMod`'s r2-across-SWI
   save/restore, see docs/matching.md), reloading right before its one
   remaining use to match the ROM's late `ldr r2, [sp]` placement.
 - **`sub_802AA0C`** (`src/graphics/actor_part51.c`) - a 12-byte

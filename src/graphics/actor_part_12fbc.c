@@ -6,9 +6,6 @@
  * gStaticData_0816BF20 action-table handlers for the player/action object
  * (include/action_obj.h). Built with old_agbcc. */
 
-asm(".set _call_via_r2, sub_803AD80\n"
-    ".set _call_via_r3, sub_803AD84\n");
-
 /* The object sub_8025B0C spawns for the 0x100 path, as far as it is used. */
 struct spawned
 {
@@ -21,14 +18,14 @@ struct spawned
     u8 unk_28_2:6;
 };
 
-extern u32 gUnknown_030007E0;
+extern u32 gKeys;
 extern void *gUnknown_030012BC;
 extern void *gLevelState;
 extern u8 *gUnknown_030012D8;
 extern void *gEntitySpawner;
 extern void *gUnknown_03001304;
 extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
-extern u8 sub_8000760(void *pad);
+extern u8 GetDpadDirection(void *pad);
 extern u8 sub_8012A7C(struct act *self);
 extern void sub_80122CC(struct act *self);
 extern void sub_800B334(struct act_part *part);
@@ -115,7 +112,7 @@ static inline void ActSetContact(struct act_part *p, s32 v)
 void sub_8012FBC(struct act *self)
 {
     void **pad = &gUnknown_03001304;
-    u32 in = gUnknown_030007E0;
+    u32 in = gKeys;
     u8 busy = sub_8012A7C(self);
 
     if (busy)
@@ -157,7 +154,7 @@ void sub_8012FBC(struct act *self)
         }
     }
     {
-        u8 dir = sub_8000760(*pad);
+        u8 dir = GetDpadDirection(*pad);
 
         switch (dir)
         {
@@ -245,7 +242,7 @@ void sub_8013228(struct act *self)
         return;
     }
     {
-        u32 in = gUnknown_030007E0;
+        u32 in = gKeys;
         u8 busy = self->unk_26;
 
         if (busy == 0 && (INPUT_PRESSED(in) & 2))
@@ -272,7 +269,7 @@ void sub_8013228(struct act *self)
 
         if (part->animDone)
         {
-            u32 cur = gUnknown_030007E0;
+            u32 cur = gKeys;
 
             if ((cur & 1) && (cur & 0x30))
             {
@@ -314,7 +311,7 @@ void sub_8013228(struct act *self)
             }
         }
     }
-    if (sub_8000760(gUnknown_03001304) <= 2)
+    if (GetDpadDirection(gUnknown_03001304) <= 2)
     {
         if (gUnknown_030012D8[0x100] == 0)
         {

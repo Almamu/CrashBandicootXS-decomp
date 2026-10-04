@@ -141,7 +141,7 @@ left as a clear target for a future pass instead.
   immediately or busy-poll `sub_8001AB8` until the channel reports the
   requested id before playing it), its driver loop (`RunSlideshow`:
   calls `ShowSlidePicture`/`BeginSlide` per index, polls input via
-  `sub_80010E0`, ducks music, nudges a delay value, plays a completion
+  `WaitForKeyPress`, ducks music, nudges a delay value, plays a completion
   sfx, then advances via `SkipSlides`), the "find next `+0x10==1`
   item" index scanner (`SkipSlides`), and the VRAM-bank-toggling tile-
   asset streamer + palette DMA + second `DISPCNT` writer (`ShowSlidePicture`,

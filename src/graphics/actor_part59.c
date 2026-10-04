@@ -24,7 +24,7 @@ extern s32 PlayAmbientSfx(void *arg0, s32 arg1, s32 arg2, s32 arg3);
 extern void sub_8029E28(s32 arg0);
 extern s32 gUnknown_030014D4;
 extern u8 gStaticData_0817A7F8[];
-extern s32 sub_8000E1C(s32 arg0);
+extern s32 RandRange(s32 arg0);
 extern s32 gUnknown_030014D0;
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 
@@ -37,7 +37,7 @@ extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
  * byte flag passed via the stack) followed by `sub_8029E28(0x200)`;
  * tiers `0xd`/`0x1d` call `sub_8029E28(0x100)` alone. Finally, while the
  * object's `+0x12` done flag is set, runs a two-stage
- * `sub_8029B98()`/`sub_8000E1C()`-gated check against
+ * `sub_8029B98()`/`RandRange()`-gated check against
  * `gStaticData_0817A7F8[gUnknown_030014D4]`'s `+4`/`+8` thresholds to
  * decide whether to fire the kind-1/anim-reset transition (plus a sound
  * cue while `030014CC <= 0x7800`). */
@@ -94,7 +94,7 @@ void sub_802DB2C(void)
             }
 
             if (sub_8029B98() > 0x24) {
-                s32 v = (u16)sub_8000E1C(0x100);
+                s32 v = (u16)RandRange(0x100);
                 u8 *tableBase = gStaticData_0817A7F8;
                 s32 offset = gUnknown_030014D4 * 0xc;
                 u8 *tablePlus4 = tableBase + 4;
@@ -109,7 +109,7 @@ void sub_802DB2C(void)
                 goto end_transition;
             }
             {
-                s32 v = (u16)sub_8000E1C(0x100);
+                s32 v = (u16)RandRange(0x100);
                 u8 *tableBase = gStaticData_0817A7F8;
                 s32 offset = gUnknown_030014D4 * 0xc;
                 u8 *tablePlus8 = tableBase + 8;

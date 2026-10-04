@@ -11,8 +11,8 @@ typedef unsigned char UQItype;
  * value, `count_leading_zeros`'s lookup), twice: gcc 2.x's libgcc2.c
  * defined it static in each object that used it, and the GAX2 library
  * bundled two of those (src/util/math_div64_util.c): `__divdi3`
- * (`sub_8037648`) reads the first as its `CLZ_TAB`, `__udivdi3`
- * (`sub_8037A7C`) the second. Written the way libgcc2.c writes it. */
+ * (`__divdi3`) reads the first as its `CLZ_TAB`, `__udivdi3`
+ * (`__udivdi3`) the second. Written the way libgcc2.c writes it. */
 const UQItype gStaticData_085A4C70[256] =
 {
     0,1,2,2,3,3,3,3,4,4,4,4,4,4,4,4,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,

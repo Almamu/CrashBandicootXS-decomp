@@ -9,7 +9,7 @@
  * small (0x1c-byte) `struct actor` from include/actor.h. `self+0xc` is
  * a per-category table of `{s16 offset; void *fn}` pairs (at least two
  * entries known so far, `+0x20`/`+0x24` and `+0x50`/`+0x54`) fed
- * through the `sub_803AD80`/`sub_803AD84` trampolines together with
+ * through the `_call_via_r2`/`_call_via_r3` trampolines together with
  * `self+offset` and `self+0x10` (a "part" sub-object) - the same
  * base+offset+fn-pointer convention already named in actor_part17.c's
  * doc comments. The `+0x27`/`+0x28`/`+0x29`/`+0x2f`/`+0x30`/`+0x31`/
@@ -18,18 +18,15 @@
  * are pinned down yet, so every access here stays a raw offset rather
  * than a guessed struct. */
 
-extern u32 gUnknown_030007E0;
+extern u32 gKeys;
 extern void *gUnknown_030012BC;
 extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
-extern s32 sub_803AD80(void *arg0, void *arg1, void *arg2);
-extern s32 sub_803AD84(void *arg0, void *arg1, void *arg2, void *arg3);
+extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
+extern s32 _call_via_r3(void *arg0, void *arg1, void *arg2, void *arg3);
 extern u8 sub_800AAEC(void *self, s32 action);
 extern void sub_801434C(void *self);
 extern void sub_8015508(void *self);
 extern void sub_8015780(void *self, s32 a, s32 b, s32 c, s32 d);
-
-asm(".set _call_via_r2, sub_803AD80\n"
-    ".set _call_via_r3, sub_803AD84\n");
 
 /* Clears `part+0x38`'s "busy" flag by resetting the shared
  * flag/counter/table-index trio (`+0x31`/`+0x2f`/`+0x27` and
@@ -60,7 +57,7 @@ void sub_801426C(void *selfArg)
 void sub_80142B0(void *selfArg)
 {
     struct act *self = selfArg;
-    u32 snap = *(u32 *)&gUnknown_030007E0;
+    u32 snap = *(u32 *)&gKeys;
 
     if ((*(u16 *)((u8 *)&snap + 2) & 1) != 0
         && sub_800AAEC(self->part, 0xb) == 1) {
@@ -87,18 +84,18 @@ void sub_80142B0(void *selfArg)
 
     if (self->part->animDone != 0) {
         struct act_vtable *mgr = self->vt;
-        sub_803AD80((u8 *)self + mgr->m20.thisOffset, (void *)0x14,
+        _call_via_r2((u8 *)self + mgr->m20.thisOffset, (void *)0x14,
                     mgr->m20.fn);
         {
             struct act_method *off = &self->vt->m50;
-            sub_803AD84((u8 *)self + off->thisOffset, self->part,
+            _call_via_r3((u8 *)self + off->thisOffset, self->part,
                         (void *)0, off->fn);
         }
         sub_801434C(self);
     }
 }
 
-extern u8 sub_8000760(void *dummy);
+extern u8 GetDpadDirection(void *dummy);
 extern u8 sub_8012A7C(void *self);
 extern void sub_80122CC(void *self);
 extern void *gUnknown_03001304;
@@ -114,7 +111,7 @@ static inline void ActQueue27(struct act *self, s32 cur, s32 next)
 
 /* The shared handler `sub_80142B0` tail-calls: same "confirm" edge check
  * (short-circuits before reaching `sub_8012A7C` when it fires), then
- * (once `sub_8012A7C(self)` is clear) dispatches on `sub_8000760`'s
+ * (once `sub_8012A7C(self)` is clear) dispatches on `GetDpadDirection`'s
  * D-pad-remap result - `1` fires one trampoline pair, `0`/`2` fires
  * another - before falling into a shared tail that, when the input
  * snapshot's `0x180` bits are clear and `sub_800AAEC(part, 2)` just
@@ -131,7 +128,7 @@ static inline void ActQueue27(struct act *self, s32 cur, s32 next)
 void sub_801434C(void *selfArg)
 {
     struct act *self = selfArg;
-    u32 in = gUnknown_030007E0;
+    u32 in = gKeys;
     u8 busy;
     u8 dir;
     u8 hit;
@@ -148,7 +145,7 @@ void sub_801434C(void *selfArg)
     busy = sub_8012A7C(self);
     if (busy != 0)
         return;
-    dir = sub_8000760(gUnknown_03001304);
+    dir = GetDpadDirection(gUnknown_03001304);
     switch (dir)
     {
     case 0:

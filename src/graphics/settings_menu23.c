@@ -3,8 +3,8 @@
 #include "pause_options_screen.h"
 
 extern s32 sub_8028A30(void *mgr, s32 arg1);
-extern s32 sub_8026F38(s32 arg0);
-extern s32 sub_803AD80(void *arg0, void *arg1, void *arg2);
+extern s32 GetUiText(s32 arg0);
+extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern struct icon_manager *gUnknown_030012E0;
 extern struct icon_manager *gUnknown_030012DC;
 
@@ -16,13 +16,13 @@ static inline void set_icon_mgr_pos(struct icon_manager *m, u32 x, u32 y)
 
 /* Calls `record->slots[n]` on an icon manager with `label` (slot 0
  * measures and returns the pixel width, slot 2 draws) - a gcc 2.x
- * virtual call; sub_803AD80 is `_call_via_r2`. A statement macro so
+ * virtual call through libgcc's `_call_via_r2`. A statement macro so
  * `this` is computed before the label argument, as in the ROM. */
 #define ICON_TEXT_CALL(mgrExpr, n, label)                                       \
     ({                                                                          \
         struct icon_manager *_m = (mgrExpr);                                    \
         struct icon_slot *_s = &_m->record->slots[n];                           \
-        sub_803AD80((u8 *)_m + _s->offset, (void *)(label), _s->ptr);           \
+        _call_via_r2((u8 *)_m + _s->offset, (void *)(label), _s->ptr);           \
     })
 
 /* Sits right after the screen-init BG-load/per-row-stats cluster
@@ -51,13 +51,13 @@ void sub_8004914(struct pause_options_screen *self, s32 arg1, s32 arg2, u8 arg3)
         sub_8028A30(gUnknown_030012DC, ((self->flags >> 2) & 1) ? 1 : 2);
     else
         sub_8028A30(gUnknown_030012DC, 0);
-    w = ICON_TEXT_CALL(gUnknown_030012DC, 0, sub_8026F38(0x25));
+    w = ICON_TEXT_CALL(gUnknown_030012DC, 0, GetUiText(0x25));
     set_icon_mgr_pos(gUnknown_030012DC, x - w / 2, y);
-    ICON_TEXT_CALL(gUnknown_030012DC, 2, sub_8026F38(0x25));
+    ICON_TEXT_CALL(gUnknown_030012DC, 2, GetUiText(0x25));
 }
 
 /* Draws a centered label (from the runtime string table via
- * sub_8026F38) into gUnknown_030012E0's icon pair - `self` is unused.
+ * GetUiText) into gUnknown_030012E0's icon pair - `self` is unused.
  * Matches sub_8006600's (src/graphics/oam_count.c) centered-icon shape
  * exactly, just for a single label rather than flanking a number.
  *
@@ -69,7 +69,7 @@ void sub_80049CC(struct pause_options_screen *self, s32 labelIndex)
     s32 w;
 
     sub_8028A30(gUnknown_030012E0, 0);
-    w = ICON_TEXT_CALL(gUnknown_030012E0, 0, sub_8026F38(labelIndex));
+    w = ICON_TEXT_CALL(gUnknown_030012E0, 0, GetUiText(labelIndex));
     set_icon_mgr_pos(gUnknown_030012E0, (0xf0 - w) >> 1, 6);
-    ICON_TEXT_CALL(gUnknown_030012E0, 2, sub_8026F38(labelIndex));
+    ICON_TEXT_CALL(gUnknown_030012E0, 2, GetUiText(labelIndex));
 }

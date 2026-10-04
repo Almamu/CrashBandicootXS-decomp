@@ -2,7 +2,7 @@
 #include "audio.h"
 
 extern struct GaxPlayerState *gGaxPlayerState;
-extern void *sub_803AD7C(void *arg0, void *fn);
+extern void *_call_via_r1(void *arg0, void *fn);
 
 /* `nullsub_41` (ROM `0x0803A228`) sits immediately before the GAX2_
  * SoundHandler "UnknownC" type's function-pointer trio (see
@@ -21,7 +21,7 @@ asm(".align 2, 0");
 /* GAX2_SoundHandler "UnknownC" type's `init_fn` (ROM `0x0803A22D`, see
  * docs/audio.md) - `self` is the mixer handler. Sets `pos` to 1, then
  * runs every child's `init` callback (`child->type->init`) through the
- * `sub_803AD7C` trampoline. The children are the song's channels
+ * `_call_via_r1` trampoline. The children are the song's channels
  * (`type->childCount`), plus the `extraChildren` sound-effect voices
  * when this is the music player (`curChannelIdx == 0`). */
 void GaxMixerInit(void *self)
@@ -44,7 +44,7 @@ void GaxMixerInit(void *self)
         {
             struct GaxHandler *elem = p->children[i];
             void *fn = elem->type->init;
-            sub_803AD7C(elem, fn);
+            _call_via_r1(elem, fn);
         }
     }
 }

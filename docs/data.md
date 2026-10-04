@@ -673,9 +673,9 @@ music block and the cutscene pictures, are C in three files:
   string (read by flashers and emulators to detect the save type, not
   by the game), the two `struct EepromConfig`s, the write timeout
   `u16[3]`, and a list of the library's 22 address constants. That list
-  holds, function by function, the literal-pool words of `sub_803A968`
-  ... `sub_803ACE0` that are symbol addresses (IWRAM variables, the two
-  configs, the timeout, `sub_803A9AC`). Nothing in the ROM points at
+  holds, function by function, the literal-pool words of `EEPROMConfigure`
+  ... `EEPROMCompare` that are symbol addresses (IWRAM variables, the two
+  configs, the timeout, `EepromTimerIntr`). Nothing in the ROM points at
   it, but every word is a symbol, so it is written as symbol references
   and doesn't pin anything in place.
 
@@ -729,8 +729,8 @@ record. Those stay as symbols (the code uses them), defined with
 table: they aren't objects, so the report doesn't count them.
 
 Then `src/data/ui_text_172cd4.c`: the game's own text (menus, level
-names, popups) in six languages, 70 strings each. `sub_8026F38` looks a
-text id up in `gUnknown_03000850[language]` (`src/iwram/iwram_data.c`),
+names, popups) in six languages, 70 strings each. `GetUiText` looks a
+text id up in `gUiTextTables[language]` (`src/iwram/iwram_data.c`),
 which now points at `gUiTextEnglish`...`gUiTextDutch` by name. Each
 language's new strings sit before its array, and strings several
 languages share (mostly the level names) are stored once. Every string
@@ -836,7 +836,7 @@ u16 zeros;         // ...
 ```
 
 The IWRAM routine `0x03000634` (`UnpackRleSpriteFrame` in
-`src/iwram/sprite_arm.c`, the `gUnknown_03000874` hook, called by
+`src/iwram/sprite_arm.c`, the `gUnpackRleSpriteFrameFunc` hook, called by
 `actor_part127.c`, `actor_part128.c` and `graphics_loading_3686c.c`)
 unpacks a frame into a VRAM tile block. The frame pointer tables
 (`table_B` of animation record 0 of both category families, and

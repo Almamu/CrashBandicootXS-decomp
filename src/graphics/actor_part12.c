@@ -3,8 +3,6 @@
 #include "actor_self.h"
 #include "box_part.h"
 
-ACTOR_CALL_VIA_ALIASES
-
 /* The fixed-slot object-pool manager struct `sub_8008F20`
  * (`actor_part11.c`) initializes: `slotArray` holds the active
  * objects (bounded by `activeCount`, up to `capacity`); `nodeArray`
@@ -27,7 +25,7 @@ struct pool_manager {
 };
 
 extern void sub_8009008(struct pool_manager *manager, void *item);
-extern void sub_803A94C(void *src, void *dst, s32 control);
+extern void CpuSet(void *src, void *dst, s32 control);
 extern void *sub_8009AF0(struct pool_manager *manager, void *data, s32 bucket, s32 extra);
 extern void sub_8009B3C(struct pool_manager *manager, void *obj);
 extern void sub_8026EB4(void *ptr);
@@ -105,7 +103,7 @@ void sub_8009A30(struct pool_manager *manager, void *target)
             void **base3;
 
             control |= 0x4000000;
-            sub_803A94C(src, dst, control);
+            CpuSet(src, dst, control);
 
             cnt = manager->activeCount;
             base3 = manager->slotArray;
@@ -120,7 +118,7 @@ done:
 
 /* Removes the entry at `index` from `manager`'s active-object array
  * the same way `sub_8009A30` does after its own search - unlinks it
- * from the grid via `sub_8009008`, then compacts via `sub_803A94C`. */
+ * from the grid via `sub_8009008`, then compacts via `CpuSet`. */
 void sub_8009AA0(struct pool_manager *manager, s32 index)
 {
     if (index < manager->capacity) {
@@ -140,7 +138,7 @@ void sub_8009AA0(struct pool_manager *manager, s32 index)
             void **base3;
 
             control |= 0x4000000;
-            sub_803A94C(src, dst, control);
+            CpuSet(src, dst, control);
 
             cnt = manager->activeCount;
             base3 = manager->slotArray;

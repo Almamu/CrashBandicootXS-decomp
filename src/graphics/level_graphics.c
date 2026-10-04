@@ -16,10 +16,10 @@ extern struct AudioContext *gUnknown_030012BC;
 
 extern void sub_8006A90(struct oam_shadow_buffer *arg0);
 extern void sub_8006A48(struct oam_shadow_buffer *arg0);
-extern void sub_80006A8(void);
+extern void WaitForVBlank(void);
 extern void sub_8006AAC(struct oam_shadow_buffer *arg0);
 extern void sub_8028A30(struct icon_manager *self, u8 val);
-extern void *sub_803AD7C(void *arg0, void *fn);
+extern void *_call_via_r1(void *arg0, void *fn);
 extern void *sub_8026EDC(s32 size);
 extern void *sub_8034374(void *arg0);
 extern void sub_8001604(void);
@@ -64,7 +64,7 @@ void *LoadLevelGraphics(u32 *self)
     self[3] = (u32)gUnknown_030012DC;
     sub_8006A90(gUnknown_03001300);
     sub_8006A48(gUnknown_03001300);
-    sub_80006A8();
+    WaitForVBlank();
     sub_8006AAC(gUnknown_03001300);
 
     *(vu32 *)REG_ADDR_BLDCNT = 0xff;
@@ -77,7 +77,7 @@ void *LoadLevelGraphics(u32 *self)
     fieldValue = 0x200;
     iconManager->field_108 = fieldValue;
     slot = &iconManager->record->slots[6];
-    sub_803AD7C((u8 *)iconManager + slot->offset, slot->ptr);
+    _call_via_r1((u8 *)iconManager + slot->offset, slot->ptr);
 
     dma = (struct dma_regs *)REG_ADDR_DMA3SAD;
     dma->src = (u32)gStaticData_0817D034;

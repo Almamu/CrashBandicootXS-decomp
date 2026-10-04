@@ -92,10 +92,10 @@ This chunk needed far more register/scheduling massaging than most -
 worth cataloging since every technique here reproduced a genuine ROM
 instruction-for-instruction, not a guess:
 
-- **Missing `u16` truncation drops 2 instructions.** `sub_8000E1C(...)
+- **Missing `u16` truncation drops 2 instructions.** `RandRange(...)
   + 0x78` (a random-range countdown) compiles shorter than the ROM
   unless the return value is explicitly truncated first: `(u16)
-  sub_8000E1C(0x78) + 0x78` forces the ROM's `lsls r0,r0,#0x10 / lsrs
+  RandRange(0x78) + 0x78` forces the ROM's `lsls r0,r0,#0x10 / lsrs
   r0,r0,#0x10` pair back in (hit identically in both `sub_8004EC0` and
   `sub_8005304`).
 - **Mid-function literal pool split via `asm volatile(".pool")`** (the
@@ -192,7 +192,7 @@ reconstructions live alongside the matched functions in
   unread sibling, dispatches on `field_24` to one of five per-icon-
   group draw handlers, and conditionally hides the row-cursor icon.
   Same register-pressure class of difficulty as the others - several
-  sequential `sub_803AD80` draws with hand-scheduled constant/offset
+  sequential `_call_via_r2` draws with hand-scheduled constant/offset
   register reuse (including an `ip`-register spill in one branch) this
   compiler doesn't reach for from plain C.
 - **`sub_800556C`** (`asm/code_3_1_10_7_53f4.s`, same fragment as
@@ -341,7 +341,7 @@ and `sub_800556C` (either compiler). `sub_8004D74`, `sub_8005100`,
 `sub_80053F4` and `sub_8005E5C` are still NAKED, each with a near-miss C
 draft under `NON_MATCHING`. The "register-pressure" explanations given
 above were mostly wrong. The real causes were an argument the old
-drafts dropped (`count * 5`), `sub_803AD7C`/`sub_803AD80` being
+drafts dropped (`count * 5`), `_call_via_r1`/`_call_via_r2` being
 `_call_via_rN` virtual calls, and loop and evaluation-order effects.
 Issue #7 therefore still has NAKED functions.
 
@@ -352,7 +352,7 @@ shared the 0x12c offset between the `field_12c` reads, and holding it
 used up the register the ROM gives &gUnknown_030012FC. Reading the
 field through a `static inline` accessor stops the sharing. Loading the
 two VRAM-reservation operands into locals before `gUnknown_030012FC`,
-and the tile cache base into a local before the `sub_803A94C` source
+and the tile cache base into a local before the `CpuSet` source
 address, fixes the last two load-order differences. See [near-miss-polish-2.md](near-miss-polish-2.md).
 
 ## Later pass: `sub_8005100` matched

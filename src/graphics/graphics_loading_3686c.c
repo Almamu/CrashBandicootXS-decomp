@@ -23,11 +23,11 @@ extern void *gUnknown_03001304;
 extern void *gUnknown_0300160C[2];
 extern s32 gUnknown_03001604;
 extern void *gUnknown_03001608;
-extern void (*gUnknown_03000874)(void *dst, u8 *frame);
+extern void (*gUnpackRleSpriteFrameFunc)(void *dst, u8 *frame);
 extern struct held_pressed_pair {
     u16 held;
     u16 pressed;
-} gUnknown_030007E0;
+} gKeys;
 
 extern u8 gStaticData_0817CFA4[];
 extern u8 gStaticData_0817CFF4[];
@@ -42,21 +42,21 @@ extern u8 gStaticData_087E55C4[];
 
 extern void sub_8006A90(struct oam_shadow_buffer *arg0);
 extern void sub_8006A48(struct oam_shadow_buffer *arg0);
-extern void sub_80006A8(void);
+extern void WaitForVBlank(void);
 extern void sub_8006AAC(struct oam_shadow_buffer *arg0);
 extern void sub_8006AC8(struct oam_shadow_buffer *self, void *record);
 extern void sub_8006A78(struct oam_shadow_buffer *arg0);
-extern s32 sub_803ADB4(s32 arg0, s32 arg1);
+extern s32 __divsi3(s32 arg0, s32 arg1);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void sub_8001614(void);
 extern void sub_8001B54(struct AudioContext *self, u32 id);
 extern void sub_8028A30(struct icon_manager *self, u8 val);
-extern s32 sub_8026F38(s32 arg0);
+extern s32 GetUiText(s32 arg0);
 extern void sub_8034688(s32 arg0);
-extern void *sub_803AD7C(void *arg0, void *fn);
-extern s32 sub_803AD80(void *arg0, void *arg1, void *arg2);
+extern void *_call_via_r1(void *arg0, void *fn);
+extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern void sub_80015B0(void);
-extern s32 sub_8000E1C(s32 arg0);
+extern s32 RandRange(s32 arg0);
 extern void *sub_8026EC0(u32 size);
 extern void sub_8026EB4(void *ptr);
 extern void *sub_8026EDC(s32 size);
@@ -76,19 +76,14 @@ extern void AgeSpriteFrameCache(void);
 extern void FreeCategorySpriteSheet(void);
 extern void FlushVramDmaQueue(void);
 extern s32 QueueVramDmaTransfer(void *src, void *dest, u16 size, u16 unit);
-extern void sub_80007AC(void *arg0);
+extern void UpdateKeys(void *arg0);
 extern void sub_8026ED0(void *self);
-extern s32 sub_803AE4C(void *self, s32 arg1);
+extern s32 __modsi3(void *self, s32 arg1);
 extern void sub_80346FC(void *self, s32 arg1);
 extern void InitActorPart(void *self, s32 a, s32 b, s32 c, s32 d);
 extern s32 GetAnimFrameBaseOffset(void *self);
 extern s32 GetSpriteShapeSizeBits(void *self);
 extern void QueueSpriteFrameOam(u32 attr01, u16 attr2, s32 scale);
-
-/* libgcc helpers under this ROM's names: `sub_803ADB4` is `__divsi3`,
- * `sub_803AD80` is `_call_via_r2` (the Thumb indirect-call thunk). */
-asm(".set __divsi3, sub_803ADB4");
-asm(".set _call_via_r2, sub_803AD80");
 
 /* The camera-ish object an actor part reads through `self+0x30`
  * (same shape as actor_part128.c's). */
@@ -141,7 +136,7 @@ union bgcnt
  * OAM-attribute build (via `sub_8006AC8`, looped 4x for a 4-frame
  * animation strip) from `self+0x224`'s int16 fields; then, for each of
  * 18 slots, builds and queues (`sub_8006AC8`) an OAM entry from that
- * slot's own position fields whenever its `sub_803ADB4`-derived on/off-
+ * slot's own position fields whenever its `__divsi3`-derived on/off-
  * screen test passes, using the header's own play-index accumulator
  * (`sp+0x20`) to place it into consecutive shadow-OAM group slots. Tail
  * repeats the whole shape once more, unconditionally, for a 19th
@@ -580,7 +575,7 @@ void sub_8036EC4(struct actor_self *self)
  * (`sub_8036EC4`) reaches state 4 (`self+0x28 == 4`). Resolves the
  * part's current keyframe's tile-graphics pointer (the same
  * `GetAnimFrameData`-shaped lookup `sub_8036E20` inlines), computes its
- * screen position via two `sub_803ADB4` sine/cosine projections against
+ * screen position via two `__divsi3` sine/cosine projections against
  * the part's own position/scale fields (`self+0x1c`/`self+0x20`,
  * `self+0x30`'s trampoline record), clips it against the screen bounds,
  * and - only if the resolved tile pointer differs from the last frame's
@@ -643,7 +638,7 @@ void sub_8036FBC(struct actor_self *self)
             if (frame != gUnknown_03001608)
             {
                 gUnknown_03001604 ^= 1;
-                gUnknown_03000874(gUnknown_0300160C[gUnknown_03001604], frame);
+                gUnpackRleSpriteFrameFunc(gUnknown_0300160C[gUnknown_03001604], frame);
                 gUnknown_03001608 = frame;
             }
             {

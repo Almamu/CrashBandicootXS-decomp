@@ -75,7 +75,7 @@ order.
   0x26` check needed splitting into two literal `if`/`goto` comparisons
   - the natural `||` form gets optimized into a single `(u8)(type2 -
   0x25) <= 1` range check, which the ROM doesn't do.
-- **`sub_80122CC`**: reads D-pad input (via `sub_8000760`, kept only
+- **`sub_80122CC`**: reads D-pad input (via `GetDpadDirection`, kept only
   for its side effect on register allocation - the result feeds later
   comparisons) and dispatches `self+8`'s type through a 39-entry jump
   table (values 0-0x26; anything higher returns 0 directly without

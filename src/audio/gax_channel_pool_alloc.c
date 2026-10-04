@@ -1,9 +1,6 @@
 #include "core.h"
 #include "audio.h"
 
-/* sub_803AD7C is libgcc's `_call_via_r1` (the mixer's `type->init`). */
-asm(".set _call_via_r1, sub_803AD7C\n");
-
 /* GAX2's fatal-error screen messages. */
 extern const char gGaxErrNameJingle[];
 extern const char gGaxErrNoJingle[];

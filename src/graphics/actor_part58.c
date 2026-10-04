@@ -33,7 +33,7 @@ extern u8 sub_802DD9C(void *self);
 extern void sub_8022FEC(struct level_state *self);
 extern s32 sub_8029748(s32 arg0);
 extern void sub_802B12C(s32 arg0, s32 arg1, s32 arg2);
-extern s32 sub_803AD80(void *arg0, s32 arg1, void *fn);
+extern s32 _call_via_r2(void *arg0, s32 arg1, void *fn);
 extern s32 sub_802973C(void);
 
 extern u8 gStaticData_087E5054[];
@@ -287,7 +287,7 @@ void sub_802D6A0(void *selfArg)
             u8 *addr = (u8 *)self + offset;
             void *fn = table->m08.fn;
 
-            sub_803AD80(addr, 3, fn);
+            _call_via_r2(addr, 3, fn);
         }
     } else {
         sub_802A7B8(self);

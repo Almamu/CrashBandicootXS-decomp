@@ -3,7 +3,7 @@
 
 static inline void mem_free_bytes_update (s32 flags) {
     s32 result = mem_free_bytes(flags);
-    gUnknown_030007D4 = result;
+    mem_initial_free_bytes = result;
 }
 
 static inline void mem_heap_init_section (struct mem_heap_header* first, struct mem_block* block, int length) {
@@ -19,16 +19,16 @@ static inline void mem_heap_init_section (struct mem_heap_header* first, struct 
 }
 
 s32 mem_heap_init (u32 arg0) {
-    u32 start = &gUnknown_03001638;
+    u32 start = &mem_iwram_heap;
     u32 end = &iwram_end;
     u32 iwram_size_left = end - start - arg0;
 
     // zero-out the regions we're going to use
-    DmaClear32(3, &gUnknown_03001638, iwram_size_left);
+    DmaClear32(3, &mem_iwram_heap, iwram_size_left);
     DmaFill16(3, 0, EWRAM_START, EWRAM_SIZE);
 
     // and initialize them with some defaults
-    mem_iwram_heap_pointer = &gUnknown_03001638;
+    mem_iwram_heap_pointer = &mem_iwram_heap;
     mem_heap_init_section (&mem_iwram_heap_pointer->base, &mem_iwram_heap_pointer->mainblock, iwram_size_left);
     mem_ewram_heap_pointer = EWRAM_START;
     mem_heap_init_section (&mem_ewram_heap_pointer->base, &mem_ewram_heap_pointer->mainblock, EWRAM_SIZE);
@@ -291,11 +291,14 @@ void mem_free(u8* address) {
     }
 }
 
-// TODO: WHAT IS THIS USED FOR? THE RETURN OF mem_free_bytes IS NOT USED FOR ANYTHING?
-void sub_8000518() {
+/* Called by AgbMain once MainLoop returns: if the heaps hold less free
+ * memory than right after mem_heap_init (mem_initial_free_bytes), some
+ * allocations are still live, so collect them. The second
+ * mem_free_bytes result is unused. */
+void mem_heap_shutdown() {
     s32 currentFreeBytes = mem_free_bytes(MEM_HEAP_BOTH);
     
-    if (gUnknown_030007D4 != currentFreeBytes) {
+    if (mem_initial_free_bytes != currentFreeBytes) {
         mem_collect(MEM_HEAP_BOTH);
         mem_free_bytes(MEM_HEAP_BOTH);
     }

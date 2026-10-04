@@ -78,7 +78,7 @@ real matched C.
   derivation) and arming hazard direction 3.
 - **`sub_802BE80`** - frame-counter-threshold (`self+0x44 == 0x1e`)
   state-transition, structural twin of `sub_802BD24`: latches
-  `gUnknown_030014A3`, then either (input bit 1 of `gUnknown_030007E0`
+  `gUnknown_030014A3`, then either (input bit 1 of `gKeys`
   clear) resets `self` to state 1/table-index 0 via the same reset
   idiom and fires `sub_8029BAC(0x24)`, or (bit set) transitions to
   state 2 and fires `sub_8029BAC(0x38)` instead.
@@ -86,14 +86,14 @@ real matched C.
 ## Compiler-quirk notes
 
 - **`sub_802BE80`'s boolean-truthy zero-extension idiom.** The ROM
-  computes `gUnknown_030007E0 & 2` into a register, then zero-extends it
+  computes `gKeys & 2` into a register, then zero-extends it
   through an explicit `lsls #0x10`/`lsrs #0x10` pair before comparing
   against 0 and branching - not the plain `ands`/`cmp #0`/`bne` a direct
-  `if ((gUnknown_030007E0 & 2) == 0)` produces. The zero-extended
+  `if ((gKeys & 2) == 0)` produces. The zero-extended
   register (`r3`) is then reused as a general-purpose "0" for several of
   the reset idiom's own field stores inside the `if`-branch, instead of
   materializing a fresh `movs r3, #0`. Reproduced by making the masked
-  value a real `u16 bit = gUnknown_030007E0 & 2;` local (the 16-bit
+  value a real `u16 bit = gKeys & 2;` local (the 16-bit
   truncation is what triggers the shift-pair zero-extension at `-O2` on
   this compiler) and then using `bit` itself, not a literal `0`, for
   every one of those stores inside the `if (bit == 0)` branch - gcc then

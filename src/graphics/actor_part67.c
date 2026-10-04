@@ -7,7 +7,7 @@
  * an anim-frame halfword/byte pair at `self+0x10`/`self+0x12`, an
  * accumulator at `self+8`, state at `self+0x28`, a frame counter at
  * `self+0x44`, and a `+0x50`-rooted event/trampoline table fed through
- * `sub_803AD80`. This is the second object kind (constructed by the
+ * `_call_via_r2`. This is the second object kind (constructed by the
  * parked `sub_8034058`, vtable `gStaticData_087E5554`), with a health-
  * like countdown at `self+0x54`, a "dead" byte flag at `self+0x58`, a
  * second one-shot byte flag at `self+0x2c`, the constructor's cached

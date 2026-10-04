@@ -79,7 +79,7 @@ down to spelling:
   in a register. None of these reproduced it: `sum += heights[k] = ...`,
   walking-pointer forms, `volatile` on one access, a volatile row store,
   or an inline helper with the N-row count as a parameter.
-- **`sub_8037E54`** (`__udivsi3`, math_div64_util.c, #66). This is
+- **`__udivsi3`** (math_div64_util.c, #66). This is
   lib1funcs.asm's hand-written routine, not compiler output. It stays a
   NAKED transcription (a final state, as already recorded).
 - **`GAX2_estimate`** (#66). It was raw `asm/code_3_2_20c.s`. It is now

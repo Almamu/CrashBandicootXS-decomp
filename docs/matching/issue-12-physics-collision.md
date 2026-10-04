@@ -72,7 +72,7 @@ entity's own behavior.
   (80-750 B) state-machine functions, each reading/writing several of
   the same `self+0x4d`/`+0x4e`/`+0x50`/`+0x64`/`+0x74`/`gUnknown_030012D8`
   fields `sub_0800D18C` and `sub_800D040` already touch, calling
-  `PlaySfx`, `sub_803AD88` (one of the `bx rN` BLX-emulation
+  `PlaySfx`, `_call_via_r4` (one of the `bx rN` BLX-emulation
   trampolines - see `docs/rom_map.md`'s trampoline-table correction),
   and each other. Left completely raw for this pass - see "Left raw"
   below.
@@ -320,7 +320,7 @@ three):
    - **Case 4** (`0800DD94`): calls **`sub_801095C`** (already matched,
      `game_loop30.c`) to reselect `self`, re-reads its
      `gStaticData_0816BC98` row, and - if not filtered out - calls
-     **`sub_803AD88`** (the `bx r4` trampoline; a sound/particle-effect
+     **`_call_via_r4`** (the `bx r4` trampoline; a sound/particle-effect
      function pointer loaded from `self+0x18+0x68`/`+4`) with a fixed
      arg pattern (`0, 0xc, 4`).
    - **Case 8** (`0800DE14`): calls **`sub_8010914`** (already matched,
@@ -333,7 +333,7 @@ three):
    conditionally calls **`sub_800E620`** (already-matched-elsewhere
    leaf; gated on `gUnknown_030012D8+0x88==1`, `self+0x4e==0xe`, and a
    re-overlap test), then **`sub_8007398`** (apply the final offset)
-   and, if a sound/effect id was set, **`sub_803AD88`** again, then
+   and, if a sound/effect id was set, **`_call_via_r4`** again, then
    ends by calling **`sub_8010D54`** (already matched) with ~8 packed
    arguments - the actual apply/commit step.
 
@@ -364,7 +364,7 @@ rewrite to id 1 that also mutates `self+0x48`/state byte `+0x4e`):
 - **Case 5** (`0800E434`): calls **`sub_800E6B0(self)`**.
 - Shared tail (`0800E43C`): calls `sub_8007398` (apply the accumulated
   offset, gated on `gUnknown_030012D8+0x1084`'s `+4` byte) and, if a
-  sound/effect id was set (`sp+0x38`), `sub_803AD88`.
+  sound/effect id was set (`sp+0x38`), `_call_via_r4`.
 
 This confirms `sub_0800D18C`'s and `sub_800E08C`'s per-edge dispatch
 tables really are the same shared handler family (identical case
@@ -484,7 +484,7 @@ functions, no more, no fewer, in this half.
   cascade-fall-through into each other (an escalating "more debris"
   particle burst, `sub_8025CA4`, at slightly different offsets the
   further the level counted down); case 6 fires a screen-shake
-  (`sub_803AD88`) plus SFX; case 7 spawns a `sub_8025A64` bonus object;
+  (`_call_via_r4`) plus SFX; case 7 spawns a `sub_8025A64` bonus object;
   case 9 spawns one final small puff.
 - **`sub_800ED08(self, walkFlag)`** - case-15 handler of
   `sub_800E888`'s table (dispatch id `0xf`). Plays SFX 3, then
@@ -670,7 +670,7 @@ check is the full clean `make compare`, which passed outright.
   `gEntityFlags`'s 32x32 collision bitmap, plays a fixed sound
   (id 4), calls `sub_800EDBC(self)` (sibling pass's territory), and -
   gated on a combo/proximity check against `gUnknown_0300082C`/
-  `gUnknown_030012D8+0x8c` - `sub_803AD88(self, 0, 4, 0)`. Forces
+  `gUnknown_030012D8+0x8c` - `_call_via_r4(self, 0, 4, 0)`. Forces
   `self+0x4e = 0x13` in the common case (see `sub_800F8E0` below).
 - **`sub_800F06C(self, u32 arg1)`** - called only by `sub_800F798`
   below (`arg1` = `0x14` or `0x28`, a proximity radius). Two
@@ -682,7 +682,7 @@ check is the full clean `make compare`, which passed outright.
 - **`sub_800F1B8(void)`** - no arguments. Calls `sub_800F258` first
   (flush pending case-`0xa` commits), then an up-to-twice
   `gUnknown_0300130C` list scan removing/re-classifying objects via
-  `sub_8009AA0`/`sub_803AD80`/`sub_803AD7C`, driven by a
+  `sub_8009AA0`/`_call_via_r2`/`_call_via_r1`, driven by a
   `gUnknown_030012B0` one-shot re-scan flag.
 - **`sub_800F258(void)`** - no arguments. Settles every
   `gUnknown_0300130C` object stuck at `+0x4e==0xa`/`+0x4d&0x7f==0` via

@@ -53,7 +53,7 @@ the source takes the two addresses into pointer locals before
   inlining the masks survive, CSE shares one `movs #3`, and neither
   gets folded: the ROM's `asrs; movs r4, #3; ands` and `ands r3, r4;
   lsls #30` (92 → 2; the size also went to 1044 bytes).
-- **Two matrix param variables:** the ROM keeps the `sub_800090C`
+- **Two matrix param variables:** the ROM keeps the `FixedInverse16`
   result in r6 and a copy in r7 for the last store. `pd = pa;` gives
   the copy, but cse2 moves the computation into whichever of the two
   lives longer, which is `pd` (used last). An extra reference

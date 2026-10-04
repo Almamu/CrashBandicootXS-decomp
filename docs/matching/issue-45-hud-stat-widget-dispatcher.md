@@ -174,7 +174,7 @@ in either function reads it back).
 
 - **`sub_8026F54`** (consumer, called with just `self`): for each of
   `self->count` active slots, checks
-  `sub_803AF1C(gUnknown_0300082C, periods[i]) == 0` (a "how many frames
+  `__umodsi3(gUnknown_0300082C, periods[i]) == 0` (a "how many frames
   since this slot's period elapsed" test) and, when it fires, rotates
   `targets[i]` by one position along the permutation order
   `lists[i]` gives - forwards (`direction` set) or backwards
@@ -185,7 +185,7 @@ in either function reads it back).
 - **`sub_8027018`** (producer): appends one new slot at `self->count`
   (no wraparound in either function - the caller resets the queue via
   `sub_8027088`/`sub_80270C0` between bursts), computing `periods[idx]`
-  from `sub_803ADB4(0x3C, angle)`.
+  from `__divsi3(0x3C, angle)`.
 
 Both compiled byte-identical only after a long series of register-pin
 and instruction-ordering fixes, all following the established
@@ -193,7 +193,7 @@ techniques from `docs/workflow.md` step 3/7 and the gotchas already
 documented for this same function family:
 
 - **Caching `i*4` across a `bl`**: `sub_8026F54`'s per-iteration offset
-  needs to survive the `sub_803AF1C` call (used again afterward for
+  needs to survive the `__umodsi3` call (used again afterward for
   `targets[i]`/`lists[i]`/`counts[i]`). Plain `self->arr[i]` struct
   access recomputes `i*4` fresh after the call every time (its
   register is caller-saved, clobbered by the callee) - the fix is the
@@ -213,7 +213,7 @@ documented for this same function family:
   together.
 - **`i`/`next_i` via `ip`, mirroring the ROM's odd early-increment**:
   the ROM computes `i+1` and stashes it in `ip` immediately after the
-  `sub_803AF1C` call (before even checking the call's result), freeing
+  `__umodsi3` call (before even checking the call's result), freeing
   r4 (still holding the *old* `i`, safe since r4 is callee-saved across
   the call) for `target` to occupy for the rest of the iteration. A
   plain `for (i = 0; i < count; i++)` loop's natural increment placement
@@ -230,7 +230,7 @@ documented for this same function family:
   their C source order by this compiler - swapping the two changed
   which one came first in the generated code, matching the ROM's
   `movs r4, #0` preceding its `ldr r0, [r7, #0x40]`.
-- **Deferred global dereference**: `sub_803AF1C(gUnknown_0300082C, *p)`
+- **Deferred global dereference**: `__umodsi3(gUnknown_0300082C, *p)`
   written as a plain `u32 global_val = gUnknown_0300082C;` local
   dereferences the global immediately after taking its address. The
   ROM takes the address first, does unrelated work (the offset/pointer
@@ -332,7 +332,7 @@ hud_stat_widget2.c`, guarded by `#if NON_MATCHING`; real bytes stay in
   off `sync_value_a`/`b`/`c` (`include/hud.h`, already named from the
   second pass) against `GetClockMinutes`/`GetClockSeconds`/`GetClockTenths`. The
   first two split their value into tens/ones digits
-  (`sub_8037E54`/`sub_803AF1C`, div/mod by 10) across a slot pair each
+  (`__udivsi3`/`__umodsi3`, div/mod by 10) across a slot pair each
   (14/15, 17/18) using the same clamp idiom as `sub_802757C`; the third
   does **not** split - slot 20 gets the raw value as its desired frame,
   slot 21 always gets a fixed desired frame of 0 (a single-frame icon,

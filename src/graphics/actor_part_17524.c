@@ -12,7 +12,7 @@
  * (constructor `sub_8017A00` - called from game_loop39.c - destructor
  * `sub_80179EC`; every other slot it calls through is a base-class
  * `sub_800B6xx`/`sub_800B8xx` function). Each frame (`sub_8017650`, table
- * slot +0x0C) it reads the held D-pad bits from `gUnknown_030007E0` and
+ * slot +0x0C) it reads the held D-pad bits from `gKeys` and
  * picks animation pairs for its target (`+0x10`) through
  * `gStaticData_0816B8C0`'s 12-byte records: up/down select one channel
  * (`animB`), left/right the other (`animA`), which also sets a speed-like
@@ -23,7 +23,7 @@
  * `state` through `gStaticData_0816C290`, a table of gcc 2.x
  * pointer-to-member-functions: state 0 `sub_8017600`, 1 `sub_801796C`,
  * 2 `sub_801793C`, 3 `sub_80178EC`. That call sequence - and the
- * `sub_803AD7C`/`AD80`/`AD84` "call via r1/r2/r3" trampolines used for
+ * `_call_via_r1`/`AD80`/`AD84` "call via r1/r2/r3" trampolines used for
  * every virtual call - is what gcc's C++ front end emits, so this object
  * was very likely written in C++.
  *
@@ -161,15 +161,15 @@ extern void *gLevelState;
 extern void *gUnknown_030012B8;
 extern void *gEntityFlags;
 extern void *gUnknown_030012F0;
-extern u32 gUnknown_030007E0; /* low half: held keys */
+extern u32 gKeys; /* low half: held keys */
 extern struct { u8 unk_00[0x10]; struct { u8 unk_00[0x10]; s32 width; } *layer0; } *gLevelLayers;
 extern struct pmf gStaticData_0816C290[];
 extern u8 gStaticData_0816B8C0[];
 extern u8 gStaticData_087E42F4[];
 
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
-extern s32 sub_803AD80(void *self, s32 arg, void *fn);
-extern s32 sub_803AD84(void *self, void *arg1, void *arg2, void *fn);
+extern s32 _call_via_r2(void *self, s32 arg, void *fn);
+extern s32 _call_via_r3(void *self, void *arg1, void *arg2, void *fn);
 extern void LoseLife(void *arg0);
 extern void sub_8006D08(void *self, s32 slot, s32 recordId);
 extern void *sub_8026EDC(u32 size);
@@ -187,12 +187,12 @@ extern void sub_800B8C8(void *self);
 #define CTRL_CALL2(obj, m, a)                                                  \
     if (1) {                                                                   \
         struct ctrl_method *_m = &(obj)->vtable->m;                            \
-        sub_803AD80((u8 *)(obj) + _m->thisOffset, (a), _m->fn);                \
+        _call_via_r2((u8 *)(obj) + _m->thisOffset, (a), _m->fn);                \
     } else (void)0
 #define CTRL_CALL3(obj, m, a, b)                                               \
     if (1) {                                                                   \
         struct ctrl_method *_m = &(obj)->vtable->m;                            \
-        sub_803AD84((u8 *)(obj) + _m->thisOffset, (a), (b), _m->fn);           \
+        _call_via_r3((u8 *)(obj) + _m->thisOffset, (a), (b), _m->fn);           \
     } else (void)0
 
 /* sub_80072D8's "set the id's bit in the gEntityFlags+0x108 bitmap"
@@ -325,7 +325,7 @@ void sub_8017650(struct input_ctrl *self)
             sub_80241A4();
         }
 
-        keys = gUnknown_030007E0;
+        keys = gKeys;
         if ((keys & DPAD_UP) && self->dirState != 1)
         {
             SetAnimB(self, 3);
@@ -396,7 +396,7 @@ void sub_8017650(struct input_ctrl *self)
                 adj = e.delta + d;
             else
                 adj = d;
-            sub_803AD80((u8 *)self + adj, d, fn);
+            _call_via_r2((u8 *)self + adj, d, fn);
         }
     }
     sub_8017808(self);

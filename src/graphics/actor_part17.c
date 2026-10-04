@@ -3,8 +3,8 @@
 #include "vtable.h"
 
 extern u8 gStaticData_0816B304[];
-extern s32 sub_803AD84(void *addr, void *arg1, void *tableEntry, void *fn);
-extern s32 sub_80008FC(s32 a, s32 b);
+extern s32 _call_via_r3(void *addr, void *arg1, void *tableEntry, void *fn);
+extern s32 FixedMul(s32 a, s32 b);
 extern void sub_80087C0(void *part);
 extern void sub_80087B4(void *part);
 extern void sub_800872C(void *part, u8 val);
@@ -40,10 +40,10 @@ void sub_800B704(void *selfArg, void *arg1, s32 index)
     addr = self + offset;
     fn = vtbl[6].fn;
 
-    sub_803AD84(addr, arg1, tableEntry, fn);
+    _call_via_r3(addr, arg1, tableEntry, fn);
 }
 
-/* Scales `vec` by `sub_80008FC(component, self->field4->field4)` per
+/* Scales `vec` by `FixedMul(component, self->field4->field4)` per
  * axis and writes the result into `part+0x48`/`+0x4c`/`+0x50`,
  * negating X and Z when `part+0x28` bit 4 (a mirror flag, distinct
  * from the bit 5 flag used elsewhere) is set. */
@@ -53,17 +53,17 @@ void sub_800B734(void *selfArg, void *partArg, s32 *vec)
     u8 *part = partArg;
 
     if ((s32)(part[0x28] << 27) < 0) {
-        s32 x = -sub_80008FC(vec[0], *(s32 *)(*(void **)(self + 4) + 4));
-        s32 y = sub_80008FC(vec[1], *(s32 *)(*(void **)(self + 4) + 4));
-        s32 z = -sub_80008FC(vec[2], *(s32 *)(*(void **)(self + 4) + 4));
+        s32 x = -FixedMul(vec[0], *(s32 *)(*(void **)(self + 4) + 4));
+        s32 y = FixedMul(vec[1], *(s32 *)(*(void **)(self + 4) + 4));
+        s32 z = -FixedMul(vec[2], *(s32 *)(*(void **)(self + 4) + 4));
 
         *(s32 *)(part + 0x48) = x;
         *(s32 *)(part + 0x4c) = y;
         *(s32 *)(part + 0x50) = z;
     } else {
-        s32 x = sub_80008FC(vec[0], *(s32 *)(*(void **)(self + 4) + 4));
-        s32 y = sub_80008FC(vec[1], *(s32 *)(*(void **)(self + 4) + 4));
-        s32 z = sub_80008FC(vec[2], *(s32 *)(*(void **)(self + 4) + 4));
+        s32 x = FixedMul(vec[0], *(s32 *)(*(void **)(self + 4) + 4));
+        s32 y = FixedMul(vec[1], *(s32 *)(*(void **)(self + 4) + 4));
+        s32 z = FixedMul(vec[2], *(s32 *)(*(void **)(self + 4) + 4));
 
         *(s32 *)(part + 0x48) = x;
         *(s32 *)(part + 0x4c) = y;
@@ -80,18 +80,18 @@ void sub_800B7B0(void *selfArg, void *partArg, s32 *vec)
     u8 *part = partArg;
 
     if ((s32)(part[0x28] << 27) < 0) {
-        s32 x = -sub_80008FC(vec[0], *(s32 *)(*(void **)(self + 4) + 4));
-        s32 y = sub_80008FC(vec[1], *(s32 *)(*(void **)(self + 4) + 4));
-        s32 z = -sub_80008FC(vec[2], *(s32 *)(*(void **)(self + 4) + 4));
+        s32 x = -FixedMul(vec[0], *(s32 *)(*(void **)(self + 4) + 4));
+        s32 y = FixedMul(vec[1], *(s32 *)(*(void **)(self + 4) + 4));
+        s32 z = -FixedMul(vec[2], *(s32 *)(*(void **)(self + 4) + 4));
 
         *(s32 *)(part + 0x60) = x;
         *(s32 *)(part + 0x48) = x;
         *(s32 *)(part + 0x4c) = y;
         *(s32 *)(part + 0x50) = z;
     } else {
-        s32 x = sub_80008FC(vec[0], *(s32 *)(*(void **)(self + 4) + 4));
-        s32 y = sub_80008FC(vec[1], *(s32 *)(*(void **)(self + 4) + 4));
-        s32 z = sub_80008FC(vec[2], *(s32 *)(*(void **)(self + 4) + 4));
+        s32 x = FixedMul(vec[0], *(s32 *)(*(void **)(self + 4) + 4));
+        s32 y = FixedMul(vec[1], *(s32 *)(*(void **)(self + 4) + 4));
+        s32 z = FixedMul(vec[2], *(s32 *)(*(void **)(self + 4) + 4));
 
         *(s32 *)(part + 0x60) = x;
         *(s32 *)(part + 0x48) = x;
@@ -126,7 +126,7 @@ void sub_800B838(void *selfArg, void *arg1, s32 index)
     addr = self + offset;
     fn = vtbl[5].fn;
 
-    sub_803AD84(addr, arg1, tableEntry, fn);
+    _call_via_r3(addr, arg1, tableEntry, fn);
 }
 
 void nullsub_13(void)

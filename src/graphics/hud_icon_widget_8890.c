@@ -4,7 +4,7 @@
 /* GitHub issue #46: whole-string draw and fixed-count measure for the HUD
  * icon/text widget. Built with old_agbcc, which sub_8028900 needs. */
 
-extern s32 sub_803AD80(void *arg0, s32 arg1, void *arg2);
+extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
 
 /* Same per-character logic as sub_8028808 (asm/code_3_2_20_85c4.s),
  * inlined into a loop over a NUL-terminated string instead of
@@ -55,7 +55,7 @@ void sub_8028890(struct icon_manager *selfArg, u8 *strArg)
     dispatch:
         {
             struct icon_slot *slot = &self->record->slots[4];
-            sub_803AD80((u8 *)self + slot->offset, c, slot->ptr);
+            _call_via_r2((u8 *)self + slot->offset, c, slot->ptr);
         }
     tail:
         str++;

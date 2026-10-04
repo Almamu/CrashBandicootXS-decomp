@@ -60,10 +60,9 @@ and closed:
   the field is read directly inside the `if`, the constant goes first.
 - **`sub_802FA38`** (issue #56). Its NAKED note said the damage block
   added "`r8`/`sb` register pressure". That turned out to be ordinary
-  allocation once the two `sub_803ADB4` calls were written as plain `/`
-  (it is libgcc's `__divsi3`, aliased with
-  `asm(".set __divsi3, sub_803ADB4")`, the `level_select_parts.h`
-  technique). Two more changes were needed. The Z gap is written
+  allocation once the two `__divsi3` calls were written as plain `/`
+  (it is libgcc's `__divsi3`, then reached through a `.set` alias,
+  the `level_select_parts.h` technique). Two more changes were needed. The Z gap is written
   `player->z - (self->base.z - 10)`, so `z - 10` is computed once and
   reused as the `sub_802E674` argument. The absolute values are two
   named locals, in the order `signDx, absDx, signDy, absDy`.

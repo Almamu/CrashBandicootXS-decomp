@@ -4,11 +4,11 @@
 #include "pause_screen_results.h"
 
 extern void sub_8008044(struct actor *part);
-extern s32 sub_803AE4C(s32 dividend, s32 divisor);
+extern s32 __modsi3(s32 dividend, s32 divisor);
 extern void sub_80087C0(struct actor *part);
 extern void sub_80087B4(struct actor *part);
 extern void sub_800872C(struct actor *part, u8 val);
-extern s32 sub_8000E1C(s32 max);
+extern s32 RandRange(s32 max);
 
 /* A slow reveal/cycle animation over the results screen's icon groups:
  * `field_24` (0-4) selects which group to hide this call (a plain
@@ -59,7 +59,7 @@ void sub_8005304(struct pause_screen_results *self)
     self->field_28--;
     if (self->field_28 == 0) {
         self->field_24++;
-        self->field_24 = sub_803AE4C(self->field_24, 5);
+        self->field_24 = __modsi3(self->field_24, 5);
         self->field_28 = 0xb4;
     }
 
@@ -78,7 +78,7 @@ void sub_8005304(struct pause_screen_results *self)
                 sub_80087C0((struct actor *)icon);
                 sub_80087B4((struct actor *)icon);
                 sub_800872C((struct actor *)icon, 0);
-                result = (u16)sub_8000E1C(0x78) + 0x78;
+                result = (u16)RandRange(0x78) + 0x78;
                 goto store;
             } else {
                 sub_8008044((struct actor *)icon);

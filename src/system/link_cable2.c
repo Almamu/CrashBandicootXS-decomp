@@ -1,24 +1,24 @@
 #include "core.h"
 #include "irq.h"
 
-extern void sub_8000544(s32 interruptIndex);
-extern void sub_80005A0(s32 interruptIndex, irq_handler_t *fn);
-extern void sub_8002830(void);
-extern void sub_8002848(void);
-extern void sub_8001D30(void);
+extern void IrqClearHandler(s32 interruptIndex);
+extern void IrqSetHandler(s32 interruptIndex, irq_handler_t *fn);
+extern void LinkSerialIntr(void);
+extern void LinkTimer3Intr(void);
+extern void LinkStop(void);
 extern void sub_8001DB4(u8 *self);
 extern void sub_80016D0(u8 *address);
 
-/* "Start" step of the link session - counterpart to `sub_8001D30`
+/* "Start" step of the link session - counterpart to `LinkStop`
  * above. Disables the Serial/Timer3 IRQ lines (same IME-guarded
- * pattern), installs `sub_8002830` as the Serial IRQ handler and
- * enables it, and - only if `arm3` is set - also installs `sub_8002848`
+ * pattern), installs `LinkSerialIntr` as the Serial IRQ handler and
+ * enables it, and - only if `arm3` is set - also installs `LinkTimer3Intr`
  * as the Timer3 IRQ handler, enables it, and arms Timer3 with a fixed
  * reload/control word. Always ends with IME re-enabled. `arg0` (the
  * session pointer every sibling function in this file takes) is never
  * read past the prologue - the ROM genuinely ignores it here, same as
- * `sub_80006A8` in src/system/irq.c. */
-s32 sub_80026E4(void *arg0, u32 flags)
+ * `WaitForVBlank` in src/system/irq.c. */
+s32 LinkStart(void *arg0, u32 flags)
 {
     u8 arm3 = (u8)flags;
     u16 savedIme;
@@ -34,12 +34,12 @@ s32 sub_80026E4(void *arg0, u32 flags)
     REG_IE &= ~0x40;
     REG_IME = savedIme;
 
-    sub_8000544(INTR_INDEX_TIMER3);
-    sub_80005A0(INTR_INDEX_SERIAL, sub_8002830);
+    IrqClearHandler(INTR_INDEX_TIMER3);
+    IrqSetHandler(INTR_INDEX_SERIAL, LinkSerialIntr);
     REG_IE |= 0x80;
 
     if (arm3 != 0) {
-        sub_80005A0(INTR_INDEX_TIMER3, sub_8002848);
+        IrqSetHandler(INTR_INDEX_TIMER3, LinkTimer3Intr);
         REG_IE |= 0x40;
         REG_TM3CNT = 0x00C0BBBC;
     }
@@ -58,11 +58,11 @@ s32 sub_800276C(void)
     return 0;
 }
 
-/* Convenience "full reset": stop (`sub_8001D30`) then re-init the
+/* Convenience "full reset": stop (`LinkStop`) then re-init the
  * session (`sub_8001DB4`). Always returns 0. */
 s32 sub_8002798(u8 *self)
 {
-    sub_8001D30();
+    LinkStop();
     sub_8001DB4(self);
     return 0;
 }
@@ -137,20 +137,20 @@ void *sub_80027E8(u8 *arg0)
 }
 
 extern s32 sub_8002114(void *session, u32 reg);
-extern void *gUnknown_03000804;
+extern void *gLinkSession;
 
-/* The Serial-IRQ handler installed by `sub_80026E4` above: forwards
+/* The Serial-IRQ handler installed by `LinkStart` above: forwards
  * into the still-raw per-frame SIO data pump (`sub_8002114`) with the
  * session object and SIODATA32's low half register address. */
-void sub_8002830(void)
+void LinkSerialIntr(void)
 {
-    sub_8002114(gUnknown_03000804, REG_ADDR_SIODATA32);
+    sub_8002114(gLinkSession, REG_ADDR_SIODATA32);
 }
 
-/* The Timer3-IRQ handler installed by `sub_80026E4` above (the
+/* The Timer3-IRQ handler installed by `LinkStart` above (the
  * handshake-timeout retry beat): re-arms Timer3 (stop, set SIOCNT's
  * start-transfer bit, restart). */
-void sub_8002848(void)
+void LinkTimer3Intr(void)
 {
     REG_TM3CNT_H = 0;
     REG_SIOCNT |= 0x80;

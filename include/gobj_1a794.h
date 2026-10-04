@@ -7,7 +7,7 @@
  * _1b208.c (GitHub issue #25, ROM 0x0801A794-0x0801B85C).
  *
  * Two C++-style classes (gcc 2.x method tables of {s16 this-adjust; fn}
- * pairs, called through the sub_803AD7C/AD80/AD84/AD88 "call via
+ * pairs, called through the _call_via_r1/AD80/AD84/AD88 "call via
  * r1/r2/r3/r4" thunks):
  *
  * - `struct gobj`, a 0x80-byte level object built by sub_801A878 (method
@@ -227,11 +227,11 @@ extern void sub_8019EBC(void *self, s32 a, u16 b, u16 c, s32 d);
 extern void *sub_8026EDC(u32 size);
 extern void sub_8009F90(void *self);
 extern void sub_8009F1C(void *self, s32 flags);
-extern s32 sub_803AD7C(void *self, void *fn);
-extern s32 sub_803AD80(void *self, void *arg, void *fn);
-extern s32 sub_803AD84(void *self, void *arg1, s32 arg2, void *fn);
-extern void sub_803AD88(void *self, s32 a, s32 b, s32 c);
-extern u32 sub_803AF1C(u32 a, u32 b);
+extern s32 _call_via_r1(void *self, void *fn);
+extern s32 _call_via_r2(void *self, void *arg, void *fn);
+extern s32 _call_via_r3(void *self, void *arg1, s32 arg2, void *fn);
+extern void _call_via_r4(void *self, s32 a, s32 b, s32 c);
+extern u32 __umodsi3(u32 a, u32 b);
 extern s32 sub_80233B4(void *arg);
 extern u8 sub_80232A0(void *arg);
 extern u8 sub_8023278(void *arg);
@@ -277,10 +277,10 @@ void sub_801B624(struct mover *self, struct gobj *obj);
     do                                                                         \
     {                                                                          \
         struct method *_m = &(obj)->vtable->m;                                 \
-        sub_803AD84((u8 *)(obj) + _m->thisOffset, (a), (b), _m->fn);           \
+        _call_via_r3((u8 *)(obj) + _m->thisOffset, (a), (b), _m->fn);           \
     } while (0)
 
-/* sub_803AD88 calls the function in r4 */
+/* _call_via_r4 calls the function in r4 */
 #define OBJ_CALL68(obj, a, b, c)                                               \
     do                                                                         \
     {                                                                          \
@@ -289,21 +289,21 @@ void sub_801B624(struct mover *self, struct gobj *obj);
         register void *_fn asm("r4") = _m->fn;                                 \
                                                                                \
         asm volatile("" : : "r"(_fn));                                         \
-        sub_803AD88(_this, (a), (b), (c));                                     \
+        _call_via_r4(_this, (a), (b), (c));                                     \
     } while (0)
 
 #define OBJ_CALL1(obj, m)                                                      \
     do                                                                         \
     {                                                                          \
         struct method *_m = &(obj)->vtable->m;                                 \
-        sub_803AD7C((u8 *)(obj) + _m->thisOffset, _m->fn);                     \
+        _call_via_r1((u8 *)(obj) + _m->thisOffset, _m->fn);                     \
     } while (0)
 
 #define MOVER_CALL2(obj, m, a)                                                 \
     do                                                                         \
     {                                                                          \
         struct method *_m = &(obj)->vtable->m;                                 \
-        sub_803AD80((u8 *)(obj) + _m->thisOffset, (a), _m->fn);                \
+        _call_via_r2((u8 *)(obj) + _m->thisOffset, (a), _m->fn);                \
     } while (0)
 
 #endif /* GUARD_GOBJ_1A794_H */

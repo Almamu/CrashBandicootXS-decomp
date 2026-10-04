@@ -38,7 +38,7 @@ of this chunk hit.
 - **`sub_802A018`/`sub_802A110`/`sub_802A3AC`** (`actor_part103.c`) -
   translate `gUnknown_03000884` (the player/list-sentinel) and `self`'s
   own 12-byte `{s16 x,y,z,sizeX,sizeY,sizeZ}` AABB record into stack
-  scratch boxes via `sub_800014C`, then run the same 3-axis overlap
+  scratch boxes via `MemCopy32`, then run the same 3-axis overlap
   test already established throughout this project
   (`sub_802D7B0`/`sub_802DD9C`/`sub_802C7A8`/`sub_8031378`, see
   `docs/matching.md` and `issue-53-actor-c7a8.md`/

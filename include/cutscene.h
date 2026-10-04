@@ -18,11 +18,11 @@ struct cutscene_slide
     const u16 *picture;     // 0x00 - a 256-colour palette, followed by the
                             //        LZ77 Mode 4 bitmap (ShowSlidePicture reads
                             //        it at +0x200)
-    s32 wait;               // 0x04 - sub_80010E0's frame count
+    s32 wait;               // 0x04 - WaitForKeyPress's frame count
     s32 fade;               // 0x08 - sub_800132C flags (| 0x80) as the
                             //        slide starts
     s32 fadeAfter;          // 0x0C - sub_800132C flags after it, -1 = none
-    u8 buttons;             // 0x10 - sub_80010E0's checkButtons; 1 = the
+    u8 buttons;             // 0x10 - WaitForKeyPress's checkButtons; 1 = the
                             //        slide is skipped past (SkipSlides)
     u8 duckMusic;           // 0x11 - sub_8001AC4 after the slide
     u8 rearmSfx;            // 0x12 - replay `sfx` after the slide

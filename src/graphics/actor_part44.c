@@ -23,7 +23,7 @@ struct meter_actor {
 extern s32 CollectWumpa(void *arg0);
 extern void sub_802E484(s32 x, s32 y, s32 amount);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
-extern s32 sub_803ADB4(s32 arg0, s32 arg1);
+extern s32 __divsi3(s32 arg0, s32 arg1);
 extern void sub_8029BAC(s32 arg0);
 extern s32 sub_8029748(s32 arg0);
 extern s32 QueueVramDmaTransfer(void *arg0, void *arg1, u16 arg2, u16 arg3);
@@ -117,7 +117,7 @@ s32 sub_802F47C(void *selfArg)
     }
 
     v = self->meter;
-    r = sub_803ADB4(v * 0x64, 0x78);
+    r = __divsi3(v * 0x64, 0x78);
     if (r == 0 && v > 0) {
         r = 1;
     }
@@ -140,7 +140,7 @@ u8 sub_802F4C0(void)
 }
 
 /* Countdown timer (`gUnknown_030014F4`) driving a palette-strip
- * animation refresh, ping-ponging the frame index via `sub_803ADB4`
+ * animation refresh, ping-ponging the frame index via `__divsi3`
  * the same way `sub_8031744` (actor_part26.c) does for its own strip. */
 void sub_802F4CC(void)
 {
@@ -148,7 +148,7 @@ void sub_802F4CC(void)
         s32 frame;
 
         gUnknown_030014F4--;
-        frame = sub_803ADB4(gUnknown_030014F4, 3);
+        frame = __divsi3(gUnknown_030014F4, 3);
         if (frame > 2) {
             frame = 5 - frame;
         }
@@ -164,7 +164,7 @@ void sub_802F50C(void *selfArg, s32 delta)
 
     if (gUnknown_03001506 == 0) {
         s32 max = gUnknown_030014E4;
-        s32 add = sub_803ADB4(delta * max, 0x64);
+        s32 add = __divsi3(delta * max, 0x64);
         s32 v = self->meter + add;
 
         self->meter = v;

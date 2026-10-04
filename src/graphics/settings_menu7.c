@@ -8,9 +8,6 @@ extern void sub_8001B30(void *self, u32 value);
 extern void sub_8001B50(void *self, u32 value);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
 
-/* sub_803ADB4 is libgcc's `__divsi3`, reached from plain `/`. */
-asm(".set __divsi3, sub_803ADB4\n");
-
 /* One entry of the per-row record array at `field_14` (8-byte stride;
  * `type` 4/5 are the two editable-percentage rows). */
 struct pause_row {

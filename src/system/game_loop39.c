@@ -11,7 +11,7 @@ extern void *GetLevelLayers(void);
 extern void *sub_800B3F0();
 extern void sub_8007398(struct actor *self, s32 arg1, s32 arg2);
 extern void sub_8026ED0(void *self);
-extern s32 sub_803AD80(void *arg0, void *arg1, void *arg2);
+extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern void *sub_801588C(void *selfArg);
 extern void sub_800B69C(void *selfArg, s32 val);
 extern void *sub_80174EC(void *arg0);
@@ -197,7 +197,7 @@ s32 sub_802375C(void *selfArg)
             w1c = ((struct widget *)widget)->vtable;
             off = w1c->attach.thisOffset;
             widget += off;
-            sub_803AD80(widget, pl, w1c->attach.fn);
+            _call_via_r2(widget, pl, w1c->attach.fn);
         }
         break;
     }
@@ -233,7 +233,7 @@ s32 sub_802375C(void *selfArg)
             w1c = ((struct widget *)w)->vtable;
             off = w1c->attach.thisOffset;
             w = (u8 *)w + off;
-            sub_803AD80(w, pl, w1c->attach.fn);
+            _call_via_r2(w, pl, w1c->attach.fn);
         }
         break;
     }
@@ -259,7 +259,7 @@ s32 sub_802375C(void *selfArg)
             w1c = ((struct widget *)widget)->vtable;
             off = w1c->attach.thisOffset;
             widget += off;
-            sub_803AD80(widget, pl, w1c->attach.fn);
+            _call_via_r2(widget, pl, w1c->attach.fn);
         }
         break;
     }
@@ -276,7 +276,7 @@ s32 sub_802375C(void *selfArg)
         u8 *p = *(u8 **)((u8 *)gUnknown_030012D8 + 0x18) + 0x50;
         s32 off = *(s16 *)p;
 
-        sub_803AD80((u8 *)gUnknown_030012D8 + off, (void *)3, *(void **)(p + 4));
+        _call_via_r2((u8 *)gUnknown_030012D8 + off, (void *)3, *(void **)(p + 4));
     }
 
     if (gUnknown_030012F4 != NULL) {

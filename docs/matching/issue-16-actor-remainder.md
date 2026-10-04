@@ -37,7 +37,7 @@ already-matched `actor_part79.c`, `actor_part84.c` between
   to compute a Q8 position delta from a `gStaticData_0816B300` record
   (or the object's own `+0x24`/`+0x14` fields as a nibble-1-5
   fallback), then reset the state/flag/table-index trio via
-  `sub_8015780`; case 24 plays sound(s) gated on `gUnknown_030007E0`
+  `sub_8015780`; case 24 plays sound(s) gated on `gKeys`
   bits and either resets three `self+0x22..0x24` bytes plus calls
   `sub_8012AF4`, or chains through `sub_8001AC4`/a
   `sub_8006D08`-fed 28-byte-record lookup; case 11 resets a child
@@ -48,8 +48,8 @@ already-matched `actor_part79.c`, `actor_part84.c` between
   priority housekeeping pass: re-runs `sub_8012238` on an activity-flag
   change, resets velocity/target fields past two `gLevelLayers`-
   anchored screen-space thresholds (the far one also firing
-  `SetMaskLevel`/`sub_803AD88`), ticks a couple of counters, looks up
-  `self+8`'s type in `gStaticData_0816BF20` to fire one `sub_803AD84`
+  `SetMaskLevel`/`_call_via_r4`), ticks a couple of counters, looks up
+  `self+8`'s type in `gStaticData_0816BF20` to fire one `_call_via_r3`
   trampoline call, then writes a small fixed value into `part+0xa` from
   a second, 22-case jump table on the same type.
 - **`sub_8012694`** (424 B, `actor_part84.c`) - a helper of
@@ -77,8 +77,8 @@ already-matched `actor_part79.c`, `actor_part84.c` between
   (id `0x12`) when `self+8==0`; then, keyed on `self+0x2f`, looks up a
   per-tag `gStaticData_0816B304` record (`(*(self+4))[tag]`), copies 12
   bytes of it to the stack, optionally rescales two fields via
-  `sub_80008FC` (busy part + active player), special-cases tag `0x1e`,
-  fires one of two `sub_803AD84` trampoline calls with the stack record
+  `FixedMul` (busy part + active player), special-cases tag `0x1e`,
+  fires one of two `_call_via_r3` trampoline calls with the stack record
   as payload, and clears the flag; repeats a near-identical sequence
   keyed on `self+0x30`/`self+0x28` against the same table.
 - **`sub_8012D24`** (664 B, `actor_part83.c`) - a further sibling:

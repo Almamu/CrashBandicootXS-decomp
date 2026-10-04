@@ -11,7 +11,7 @@
  * phase counter (`gUnknown_03001570`) is armed (0), computes the
  * player's (`gUnknown_03000884`) distance from a target point
  * (`+0x24` axis, offset `+0xa` minus the accumulated position) via
- * `sub_803ADB4`, and - only once that "speed" term is positive -
+ * `__divsi3`, and - only once that "speed" term is positive -
  * computes a signed Manhattan-style distance in X/Y (`+0x1c`/`+0x20`
  * against `gUnknown_03001540`/`gUnknown_03001544`, scaled by the speed
  * term, `abs`-combined) and, while under a `0x7FF` threshold, spawns an
@@ -28,13 +28,13 @@
  * that into `(a + K) - b`, which is exactly what keeps the ROM from
  * CSE-ing it with the spawn call's own `b - K` arguments (written
  * `(a + K) - b` directly, the compiler shares `b - K` instead). The
- * `/` goes through the ROM's own `__divsi3` (`sub_803ADB4`) and the
+ * `/` goes through the ROM's own `__divsi3` and the
  * absolute values are the branchless `asrs`/`eors`/`subs` form. */
 extern s32 gUnknown_03001548;
 extern s32 gUnknown_03001560;
 extern s32 gUnknown_03001570;
 extern struct actor_self *gUnknown_03000884;
-extern s32 sub_803ADB4(s32 arg0, s32 arg1);
+extern s32 __divsi3(s32 arg0, s32 arg1);
 extern s32 gUnknown_03001540;
 extern s32 gUnknown_03001544;
 extern s32 sub_802E674(s32 x, s32 y, s32 z, s32 dx, s32 dy);
@@ -47,8 +47,6 @@ extern s32 gUnknown_03001538;
 extern s32 gUnknown_0300153C;
 extern void sub_8030E08(void);
 extern void sub_803171C(void);
-
-asm(".set __divsi3, sub_803ADB4");
 
 static inline void BossSetState(s32 st, s32 idx)
 {

@@ -2,10 +2,9 @@
 #include "gba/defines.h"
 
 /* The GAX2 library's own bundled copy of the libgcc 64-bit arithmetic
- * helpers: `sub_8037648` = `__divdi3`, `sub_8037A7C` = `__udivdi3`,
- * `sub_8037E54` = `__udivsi3`, `sub_8037ECC` = `__muldi3`. (The game's
- * own copies of the 32-bit helpers are `math_div_util.c`'s
- * `sub_803ADB4`/`sub_803AE4C`/`sub_803AF1C`.)
+ * helpers `__divdi3`, `__udivdi3`, `__udivsi3` and `__muldi3`, under
+ * their libgcc names. (The game's own copies of the 32-bit helpers are
+ * `math_div_util.c`'s `__divsi3`/`__modsi3`/`__umodsi3`.)
  *
  * This translation unit is built WITHOUT `-mthumb-interwork` (see the
  * Makefile): all four return via a combined `pop {r4-r7, pc}` / `mov
@@ -19,15 +18,14 @@
  * its own static `__clz_tab` (`gStaticData_085A4C70`/`085A4D70`), as
  * old libgcc2.c did.
  *
- * `sub_8037E54` (`__udivsi3`) stays a NAKED transcription: it's
+ * `__udivsi3` stays a NAKED transcription: it's
  * `lib1funcs.asm`'s hand-written Thumb routine (shift-4-then-1
- * normalization, per-path `push {r4}`/`push {lr}` with `bl __div0` =
- * `nullsub_8` on a zero divisor), not compiler output - the same
+ * normalization, per-path `push {r4}`/`push {lr}` with `bl __div0` on a
+ * zero divisor), not compiler output - the same
  * situation as `math_div_util.c`'s `__divsi3`/`__modsi3`/`__umodsi3`.
  *
- * `sub_8037648` (`__divdi3`) is UNUSED - nothing in the ROM calls it;
- * it rode along with the GAX2 library. `sub_8037A7C` is called from
- * `GaxChannelInit`. */
+ * `__divdi3` is UNUSED - nothing in the ROM calls it; it rode along
+ * with the GAX2 library. `__udivdi3` is called from `GaxChannelInit`. */
 
 typedef unsigned int USItype;
 typedef int SItype;
@@ -45,11 +43,10 @@ typedef union {
     DItype ll;
 } DIunion;
 
-/* `/` and `%` on USItype below compile to these. */
-asm(".set __udivsi3, sub_8037E54\n"
-    ".set __umodsi3, sub_803AF1C\n");
+/* `/` and `%` on USItype below compile to calls to `__udivsi3`
+ * (below) and `__umodsi3` (src/util/math_div_util.c). */
 
-extern void nullsub_8(void);
+extern void __div0(void);
 extern const UQItype gStaticData_085A4C70[256];
 extern const UQItype gStaticData_085A4D70[256];
 
@@ -164,7 +161,7 @@ static inline DItype __negdi2(DItype u)
 #undef CLZ_TAB
 
 /* `__divdi3`: signed 64-bit division, truncating toward zero. UNUSED. */
-DItype sub_8037648(DItype u, DItype v)
+DItype __divdi3(DItype u, DItype v)
 {
     word_type c = 0;
     DIunion uu, vv;
@@ -188,17 +185,17 @@ DItype sub_8037648(DItype u, DItype v)
 }
 
 /* `__udivdi3`: unsigned 64-bit division. */
-UDItype sub_8037A7C(UDItype n, UDItype d)
+UDItype __udivdi3(UDItype n, UDItype d)
 {
     return __udivmoddi4_udivdi3(n, d, (UDItype *)0);
 }
 
 /* `__udivsi3`: unsigned 32-bit division, quotient only. Callers
- * project-wide declare it `s32 sub_8037E54(s32 value, s32 divisor)`.
+ * project-wide declare it `s32 __udivsi3(s32 value, s32 divisor)`.
  * NAKED because it's lib1funcs.asm's hand-written routine (see the
  * header comment): its per-path `push {r4}` ... `mov pc, lr` vs `push
  * {lr}; bl __div0; ...; pop {pc}` shape isn't compiler output. */
-NAKED s32 sub_8037E54(s32 value, s32 divisor)
+NAKED s32 __udivsi3(s32 value, s32 divisor)
 {
     asm(
         "cmp r1, #0\n\t"
@@ -267,7 +264,7 @@ NAKED s32 sub_8037E54(s32 value, s32 divisor)
         "mov pc, lr\n\t"
     "10:\n\t"
         "push {lr}\n\t"
-        "bl nullsub_8\n\t"
+        "bl __div0\n\t"
         "mov r0, #0\n\t"
         "pop {pc}\n\t"
     );
@@ -275,7 +272,7 @@ NAKED s32 sub_8037E54(s32 value, s32 divisor)
 asm(".align 2, 0");
 
 /* `__muldi3`: 64x64->64 truncating multiply (`__umulsidi3` inlined). */
-DItype sub_8037ECC(DItype u, DItype v)
+DItype __muldi3(DItype u, DItype v)
 {
     DIunion w;
     DIunion uu, vv;

@@ -12,15 +12,15 @@ struct row_counter_widget {
     s32 field_1c;
 };
 
-extern s32 sub_803AE4C(s32 arg0, s32 arg1);
+extern s32 __modsi3(s32 arg0, s32 arg1);
 
 /* Bumps `field_18` by one, then re-clamps it against `field_1c` via
- * sub_803AE4C (still raw - reads like a generic "wrap/clamp counter"
+ * __modsi3 (still raw - reads like a generic "wrap/clamp counter"
  * helper, seen throughout this chunk). */
 void sub_8006084(struct row_counter_widget *self)
 {
     self->field_18 = self->field_18 + 1;
-    self->field_18 = sub_803AE4C(self->field_18, self->field_1c);
+    self->field_18 = __modsi3(self->field_18, self->field_1c);
 }
 
 /* Counterpart to sub_8006084 above: decrements `field_18`, wrapping

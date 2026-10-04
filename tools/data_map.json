@@ -26,7 +26,7 @@
     {
      "address": "0x0803B8B0",
      "size": 482196,
-     "format": "BG0 cell animation: u16 palette[256] (0x200), s16 cols=19 @+0x200, s16 rows=13 @+0x202, then 60 frames x 8028 B (19*13 4bpp tiles = 7904 B + 124 B of per-frame side data handed to the gUnknown_0300087C callback, present because type-0 categories set the flag)",
+     "format": "BG0 cell animation: u16 palette[256] (0x200), s16 cols=19 @+0x200, s16 rows=13 @+0x202, then 60 frames x 8028 B (19*13 4bpp tiles = 7904 B + 124 B of per-frame side data handed to the gDrawMirroredTilemapFunc callback, present because type-0 categories set the flag)",
      "effort": "medium",
      "notes": "size 0x204 + 60*8028 = 0x75B94 exactly, matching descriptor field +0x08",
      "status": "converted: src/data/cell_anim_03b8b0.c (graphics/category_bg/03b8b0_cell_anim.png)"
@@ -94,7 +94,7 @@
     {
      "address": "0x080C2758",
      "size": 96896,
-     "format": "compressed OBJ frame set A (old 'rotation strip A'): 152 back-to-back frames {w=8,h=8,0x30,0} + u16 zero/literal run stream, decoded by the IWRAM hook gUnknown_03000874 (0x03000634); addressed by the 152 absolute pointers in table_B gStaticData_0817941C (categories 0-2, anim record 0, 148 distinct)",
+     "format": "compressed OBJ frame set A (old 'rotation strip A'): 152 back-to-back frames {w=8,h=8,0x30,0} + u16 zero/literal run stream, decoded by the IWRAM hook gUnpackRleSpriteFrameFunc (0x03000634); addressed by the 152 absolute pointers in table_B gStaticData_0817941C (categories 0-2, anim record 0, 148 distinct)",
      "effort": "medium",
      "notes": "the frames do not overlap: the old 'sliding window' reading assumed w*h*32 raw bytes per frame",
      "status": "converted: src/data/rle_sprites_0c2758.c (graphics/rle_sprites/0c2758_frames.png, tools/rle_sprites.py)"
@@ -320,9 +320,9 @@
   {
    "address": "0x0816A810",
    "size": 16,
-   "name": "gStaticData_0816A810",
+   "name": "gDpadDirectionTable",
    "consumers": [
-    "sub_8000760"
+    "GetDpadDirection"
    ],
    "consumer_files": [
     "system/irq.c"
@@ -5208,7 +5208,7 @@
    "size": 256,
    "name": "gStaticData_085A4C70",
    "consumers": [
-    "sub_8037648"
+    "__divdi3"
    ],
    "consumer_files": [
     "util/math_div64_util.c"
@@ -5233,7 +5233,7 @@
    "size": 256,
    "name": "gStaticData_085A4D70",
    "consumers": [
-    "sub_8037A7C"
+    "__udivdi3"
    ],
    "consumer_files": [
     "util/math_div64_util.c"
@@ -5625,9 +5625,9 @@
   {
    "address": "0x085A9EF8",
    "size": 12,
-   "name": "gStaticData_085A9EF8",
+   "name": "gEepromConfig512",
    "consumers": [
-    "sub_803A968"
+    "EEPROMConfigure"
    ],
    "consumer_files": [
     "system/timer_util.c"
@@ -5649,9 +5649,9 @@
   {
    "address": "0x085A9F04",
    "size": 12,
-   "name": "gStaticData_085A9F04",
+   "name": "gEepromConfig8k",
    "consumers": [
-    "sub_803A968"
+    "EEPROMConfigure"
    ],
    "consumer_files": [
     "system/timer_util.c"
@@ -5673,9 +5673,9 @@
   {
    "address": "0x085A9F10",
    "size": 608,
-   "name": "gStaticData_085A9F10",
+   "name": "gEepromMaxTime",
    "consumers": [
-    "sub_803AC04"
+    "EEPROMWrite"
    ],
    "consumer_files": [
     "system/eeprom_util.c"
@@ -9545,7 +9545,7 @@
    "format": "IWRAM image (ARM code + initialised data, 0x9E8 B) copied to 0x03000000 by crt0, then 0xFF cartridge fill",
    "effort": "medium",
    "confidence": "high",
-   "notes": "crt0.s DMA-copies (gUnknown_030009E8 - IntrMain_Buffer)/4 words from here. The fill from 0x087E5FCC is excluded from the data total.",
+   "notes": "crt0.s DMA-copies (gIntrTable - IntrMain_Buffer)/4 words from here. The fill from 0x087E5FCC is excluded from the data total.",
    "regions": [
     {
      "address": "0x087E55E4",

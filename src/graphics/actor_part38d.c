@@ -10,8 +10,8 @@
 extern void sub_8015460(void *selfArg);
 extern void sub_8012FBC(void *self);
 extern void sub_8012D24(void *self);
-extern s32 sub_803AD80(void *arg0, void *arg1, void *arg2);
-extern s32 sub_803AD84(void *arg0, void *arg1, void *arg2, void *arg3);
+extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
+extern s32 _call_via_r3(void *arg0, void *arg1, void *arg2, void *arg3);
 
 void nullsub_17(void)
 {
@@ -48,9 +48,9 @@ void sub_8015780(void *selfArg, s32 a, s32 b, s32 c, s32 d)
     struct act_vtable *mgr = self->vt;
     struct act_method *off;
 
-    sub_803AD80((u8 *)self + mgr->m20.thisOffset, (void *)a, mgr->m20.fn);
+    _call_via_r2((u8 *)self + mgr->m20.thisOffset, (void *)a, mgr->m20.fn);
     off = &self->vt->m50;
-    sub_803AD84((u8 *)self + off->thisOffset, self->part, (void *)b, off->fn);
+    _call_via_r3((u8 *)self + off->thisOffset, self->part, (void *)b, off->fn);
 
     if (c != 0x7FFFFFFF) {
         self->frame = c;

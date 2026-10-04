@@ -2,41 +2,41 @@
 #include "audio.h"
 #include "settings_sync.h"
 
-extern void sub_800014C(void *dst, void *src, s32 len);
-extern u8 gUnknown_03000808;
-extern s32 sub_803A968(u16 type);
-extern void *gUnknown_030009FC;
-extern s32 sub_803A9D0(u8 index, void **out);
-extern s32 sub_803AB54(u16 index, void *buf);
-extern s32 sub_803AD38(u16 index, void *buf);
+extern void MemCopy32(void *dst, void *src, s32 len);
+extern u8 gEepromNeedsInit;
+extern s32 EEPROMConfigure(u16 type);
+extern void *gIntrTableTimer2;
+extern s32 SetEepromTimerIntr(u8 index, void **out);
+extern s32 EEPROMRead(u16 index, void *buf);
+extern s32 EEPROMWrite1_check(u16 index, void *buf);
 
 /* Same shape as src/system/timer_util.c's own `struct EepromConfig`
  * (redeclared here per this project's convention - see
  * src/system/eeprom_util.c's own copy). */
 struct EepromConfig {
-    u32 unk0;
+    u32 size;
     u16 maxCount;
     u16 waitcntBits;
     u8 addrBitCount;
     u8 pad[3];
 };
 
-extern struct EepromConfig *gUnknown_03001634;
+extern struct EepromConfig *gEepromConfig;
 
-/* EEPROM "load" - reads `gUnknown_03001634->maxCount` 8-byte blocks
- * from the EEPROM chip (`sub_803AB54`, still raw - see
- * src/system/timer_util.c's `EepromConfig` comment) into a stack
+/* Reads the save data: `gEepromConfig->maxCount` 8-byte blocks from
+ * the EEPROM chip (the SDK's `EEPROMRead`) into a stack
  * buffer sized `len` (always 0x200, `sizeof(struct
  * settings_sync_record)`, from every call site), then copies the whole
  * buffer into `self`. One-time-inits the EEPROM chip config
- * (`sub_803A968`) and claims hardware timer 2 for the transfer
- * (`sub_803A9D0`) on the way in. Returns -1 on any block-read failure
+ * (`EEPROMConfigure`) and claims hardware timer 2 for the transfer
+ * (`SetEepromTimerIntr`, installing its handler straight into the Timer 2
+ * slot of the IRQ table, `gIntrTableTimer2`) on the way in. Returns -1 on any block-read failure
  * (buffer left untouched) or 0 on success.
  *
  * The IME-save/IE-clear/IME-restore snippet (repeated once per exit
  * path) matches the ROM's exact "no extra copy" shape here as plain
  * C (`u16 savedIme = REG_IME; ...`), the same phrasing already proven
- * for `sub_8001D30` (src/system/link_cable.c) - the previously
+ * for `LinkStop` (src/system/link_cable.c) - the previously
  * suspected register-pressure gap didn't reproduce with this
  * function's actual field/loop structure. Byte-identical to the ROM,
  * confirmed via a direct `.text`-section `cmp` against
@@ -44,27 +44,27 @@ extern struct EepromConfig *gUnknown_03001634;
  * instruction diff misreports the trailing literal-pool word at this
  * exact symbol boundary as a size mismatch even though the raw bytes
  * are identical). */
-s32 sub_8002868(void *self, s32 len)
+s32 ReadSaveData(void *self, s32 len)
 {
     u8 buf[0x200];
     s32 i;
     u8 *p;
 
-    if (gUnknown_03000808) {
-        u16 ret = (u16)sub_803A968(4);
+    if (gEepromNeedsInit) {
+        u16 ret = (u16)EEPROMConfigure(4);
         if (ret != 0) {
             return -1;
         }
-        gUnknown_03000808 = 0;
+        gEepromNeedsInit = 0;
     }
 
     REG_IME = 0;
-    sub_803A9D0(2, &gUnknown_030009FC);
+    SetEepromTimerIntr(2, &gIntrTableTimer2);
 
     p = buf;
     i = 0;
-    while (i < gUnknown_03001634->maxCount) {
-        if ((u16)sub_803AB54(i, p) != 0) {
+    while (i < gEepromConfig->maxCount) {
+        if ((u16)EEPROMRead(i, p) != 0) {
             goto fail_restore;
         }
         p += 8;
@@ -79,7 +79,7 @@ s32 sub_8002868(void *self, s32 len)
         REG_IME = 1;
     }
 
-    sub_800014C(self, buf, len);
+    MemCopy32(self, buf, len);
     return 0;
 
 fail_restore:
@@ -93,37 +93,37 @@ fail_restore:
     return -1;
 }
 
-/* EEPROM "save" - counterpart to `sub_8002868`: same one-time
+/* EEPROM "save" - counterpart to `ReadSaveData`: same one-time
  * chip-config init and timer-2 claim, but copies `self` into a stack
  * buffer *after* the chip-config check (not before, matching the
  * ROM's own instruction order), then writes it out `maxCount` 8-byte
- * blocks at a time (`sub_803AD38`, still raw). Same -1-on-failure/
+ * blocks at a time (the SDK's `EEPROMWrite1_check`). Same -1-on-failure/
  * 0-on-success return and IME-save/IE-clear/IME-restore snippet as
- * `sub_8002868`, byte-identical as plain C for the same reason (see
+ * `ReadSaveData`, byte-identical as plain C for the same reason (see
  * that function's doc comment). */
-s32 sub_8002938(void *self, s32 len)
+s32 WriteSaveData(void *self, s32 len)
 {
     u8 buf[0x200];
     s32 i;
     u8 *p;
 
-    if (gUnknown_03000808) {
-        u16 ret = (u16)sub_803A968(4);
+    if (gEepromNeedsInit) {
+        u16 ret = (u16)EEPROMConfigure(4);
         if (ret != 0) {
             return -1;
         }
-        gUnknown_03000808 = 0;
+        gEepromNeedsInit = 0;
     }
 
-    sub_800014C(buf, self, len);
+    MemCopy32(buf, self, len);
 
     REG_IME = 0;
-    sub_803A9D0(2, &gUnknown_030009FC);
+    SetEepromTimerIntr(2, &gIntrTableTimer2);
 
     p = buf;
     i = 0;
-    while (i < gUnknown_03001634->maxCount) {
-        if ((u16)sub_803AD38(i, p) != 0) {
+    while (i < gEepromConfig->maxCount) {
+        if ((u16)EEPROMWrite1_check(i, p) != 0) {
             goto fail_restore;
         }
         p += 8;
@@ -155,10 +155,10 @@ extern struct AudioContext *gUnknown_030012BC;
 extern u32 sub_8001AB8(struct AudioContext *self);
 extern void sub_8001BD4(struct AudioContext *self);
 extern void sub_8001B54(struct AudioContext *self, u32 id);
-extern s32 sub_8002868(void *self, s32 len);
+extern s32 ReadSaveData(void *self, s32 len);
 extern u32 sub_8002B44(struct settings_sync_record *self);
 
-/* Loads the settings record from EEPROM (`sub_8002868`, retried up to
+/* Loads the settings record from EEPROM (`ReadSaveData`, retried up to
  * 3 times), muting the music player across the transfer (stop before,
  * resume after, matching `src/audio/audio_context.c`'s established
  * `AudioContext` helpers), then validates the loaded record's two
@@ -188,7 +188,7 @@ s32 sub_8002A08(struct settings_sync_record *self)
 
     i = 0;
     do {
-        result = sub_8002868(self, 0x200);
+        result = ReadSaveData(self, 0x200);
         i++;
     } while (i <= 2 && result != 0);
 

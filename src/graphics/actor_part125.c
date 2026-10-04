@@ -10,7 +10,7 @@
  * docs/matching/issue-62-0x08033804-actor.md and this range's own
  * write-up in docs/matching/. */
 
-extern s32 sub_803ADB4(s32 a, s32 b);
+extern s32 __divsi3(s32 a, s32 b);
 extern void mem_free(void *ptr);
 extern void InitActorPart(void *self, s32 a, s32 b, s32 c, s32 d);
 extern s32 GetAnimFrameBaseOffset(void *self);
@@ -28,8 +28,6 @@ extern void *gUnknown_030012BC;
 extern u8 gStaticData_087E5294[];
 extern struct actor_pmf gStaticData_0817C414[];
 
-ACTOR_CALL_VIA_ALIASES
-
 /* The gStaticData_087E5294 class built by sub_8031920. */
 struct actor_5294 {
     struct actor_self base;
@@ -43,7 +41,7 @@ struct actor_5294 {
 /* Gates the boss-weapon tracker's own "ready" check: while the tracker
  * is inactive (`gUnknown_03001538 == 0`), reports "not ready" (-1).
  * Otherwise scales the countdown `gUnknown_0300156C` by 100 through
- * `sub_803ADB4` against the weapon table's own first field
+ * `__divsi3` against the weapon table's own first field
  * (`*gUnknown_03001568`, a `void *` pointing at the small weapon-kind
  * table already characterized in actor_part21d.c), and reports "ready"
  * (1) once that scaled ratio is exactly zero and the countdown is still
@@ -58,7 +56,7 @@ s32 sub_8031784(void)
     }
 
     countdown = gUnknown_0300156C;
-    result = sub_803ADB4(countdown * 100, *(s32 *)gUnknown_03001568);
+    result = __divsi3(countdown * 100, *(s32 *)gUnknown_03001568);
     if (result == 0 && countdown > 0) {
         result = 1;
     }

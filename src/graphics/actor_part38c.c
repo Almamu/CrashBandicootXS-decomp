@@ -10,8 +10,8 @@
 extern void *gUnknown_030012BC;
 extern void *gUnknown_030012D8;
 extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
-extern s32 sub_803AD80(void *arg0, void *arg1, void *arg2);
-extern s32 sub_803AD84(void *arg0, void *arg1, void *arg2, void *arg3);
+extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
+extern s32 _call_via_r3(void *arg0, void *arg1, void *arg2, void *arg3);
 extern void sub_80122CC(void *self);
 extern void sub_8014B54(void *self);
 extern void sub_80241A4(void);
@@ -65,10 +65,10 @@ void sub_8015398(void *selfArg)
         *(s32 *)(self + 0x1c) = 0x18;
 
         off = *(u8 **)(self + 0xc) + 0x50;
-        sub_803AD84(self + *(s16 *)off, *(void **)(self + 0x10), (void *)0x10,
+        _call_via_r3(self + *(s16 *)off, *(void **)(self + 0x10), (void *)0x10,
                     *(void **)(off + 4));
         mgr = *(struct vtable_slot **)(self + 0xc);
-        sub_803AD80(self + mgr[4].delta, (void *)0xd, mgr[4].fn);
+        _call_via_r2(self + mgr[4].delta, (void *)0xd, mgr[4].fn);
 
         self[0x21] = 0;
         self[0x20] = 0;
@@ -100,10 +100,10 @@ void sub_80153FC(void *selfArg)
         self[0x24] = 0;
 
         off = *(u8 **)(self + 0xc) + 0x50;
-        sub_803AD84(self + *(s16 *)off, *(void **)(self + 0x10), (void *)0x1e,
+        _call_via_r3(self + *(s16 *)off, *(void **)(self + 0x10), (void *)0x1e,
                     *(void **)(off + 4));
         mgr = *(struct vtable_slot **)(self + 0xc);
-        sub_803AD80(self + mgr[4].delta, (void *)0x21, mgr[4].fn);
+        _call_via_r2(self + mgr[4].delta, (void *)0x21, mgr[4].fn);
     }
 }
 
@@ -124,10 +124,10 @@ void sub_8015460(void *selfArg)
         *(s32 *)(self + 0x18) = 0;
 
         off = *(u8 **)(self + 0xc) + 0x50;
-        sub_803AD84(self + *(s16 *)off, *(void **)(self + 0x10), (void *)0x18,
+        _call_via_r3(self + *(s16 *)off, *(void **)(self + 0x10), (void *)0x18,
                     *(void **)(off + 4));
         mgr = *(struct vtable_slot **)(self + 0xc);
-        sub_803AD80(self + mgr[4].delta, (void *)4, mgr[4].fn);
+        _call_via_r2(self + mgr[4].delta, (void *)4, mgr[4].fn);
 
         {
             u8 val = 0x1b;
@@ -153,11 +153,11 @@ void sub_8015460(void *selfArg)
         u8 *p31;
 
         off = *(u8 **)(self + 0xc) + 0x50;
-        sub_803AD84(self + *(s16 *)off, *(void **)(self + 0x10), (void *)0xd,
+        _call_via_r3(self + *(s16 *)off, *(void **)(self + 0x10), (void *)0xd,
                     *(void **)(off + 4));
         *(s32 *)(self + 0x18) = 0;
         mgr = *(struct vtable_slot **)(self + 0xc);
-        sub_803AD80(self + mgr[4].delta, (void *)3, mgr[4].fn);
+        _call_via_r2(self + mgr[4].delta, (void *)3, mgr[4].fn);
 
         {
             u8 one = 1;
@@ -189,9 +189,9 @@ void sub_8015508(void *selfArg)
     u8 *off;
     u8 *p28;
 
-    sub_803AD80(self + mgr[4].delta, (void *)0xb, mgr[4].fn);
+    _call_via_r2(self + mgr[4].delta, (void *)0xb, mgr[4].fn);
     off = *(u8 **)(self + 0xc) + 0x50;
-    sub_803AD84(self + *(s16 *)off, *(void **)(self + 0x10), (void *)0xb,
+    _call_via_r3(self + *(s16 *)off, *(void **)(self + 0x10), (void *)0xb,
                 *(void **)(off + 4));
 
     *(s32 *)(self + 0x18) = zero;
@@ -214,9 +214,9 @@ void sub_8015558(void *selfArg)
     u8 *off;
     u8 *p28;
 
-    sub_803AD80(self + mgr[4].delta, (void *)0xb, mgr[4].fn);
+    _call_via_r2(self + mgr[4].delta, (void *)0xb, mgr[4].fn);
     off = *(u8 **)(self + 0xc) + 0x50;
-    sub_803AD84(self + *(s16 *)off, *(void **)(self + 0x10), (void *)0xb,
+    _call_via_r3(self + *(s16 *)off, *(void **)(self + 0x10), (void *)0xb,
                 *(void **)(off + 4));
 
     *(s32 *)(self + 0x18) = zero;
@@ -252,9 +252,9 @@ void sub_80155B8(void *selfArg)
         struct vtable_slot *mgr = *(struct vtable_slot **)(self + 0xc);
         u8 *off;
 
-        sub_803AD80(self + mgr[4].delta, (void *)0x20, mgr[4].fn);
+        _call_via_r2(self + mgr[4].delta, (void *)0x20, mgr[4].fn);
         off = *(u8 **)(self + 0xc) + 0x50;
-        sub_803AD84(self + *(s16 *)off, *(void **)(self + 0x10), (void *)0x1f,
+        _call_via_r3(self + *(s16 *)off, *(void **)(self + 0x10), (void *)0x1f,
                     *(void **)(off + 4));
 
         *(s32 *)(self + 0x18) = zero;
@@ -280,9 +280,9 @@ void sub_80155F8(void *selfArg)
         *p26 = 0xc;
 
         m = &self->vt->m20;
-        sub_803AD80((u8 *)self + m->thisOffset, (void *)0x20, m->fn);
+        _call_via_r2((u8 *)self + m->thisOffset, (void *)0x20, m->fn);
         m = &self->vt->m50;
-        sub_803AD84((u8 *)self + m->thisOffset, self->part, (void *)0x1f, m->fn);
+        _call_via_r3((u8 *)self + m->thisOffset, self->part, (void *)0x1f, m->fn);
 
         self->frame = zero;
         self->frames = zero;
@@ -303,9 +303,9 @@ void sub_8015650(void *selfArg)
         struct vtable_slot *mgr = *(struct vtable_slot **)(self + 0xc);
         u8 *off;
 
-        sub_803AD80(self + mgr[4].delta, (void *)0x20, mgr[4].fn);
+        _call_via_r2(self + mgr[4].delta, (void *)0x20, mgr[4].fn);
         off = *(u8 **)(self + 0xc) + 0x50;
-        sub_803AD84(self + *(s16 *)off, *(void **)(self + 0x10), (void *)0x1f,
+        _call_via_r3(self + *(s16 *)off, *(void **)(self + 0x10), (void *)0x1f,
                     *(void **)(off + 4));
 
         *(s32 *)(self + 0x18) = zero;
@@ -340,9 +340,9 @@ void sub_80156B4(void *selfArg)
         struct vtable_slot *mgr = *(struct vtable_slot **)(self + 0xc);
         u8 *off;
 
-        sub_803AD80(self + mgr[4].delta, (void *)0x11, mgr[4].fn);
+        _call_via_r2(self + mgr[4].delta, (void *)0x11, mgr[4].fn);
         off = *(u8 **)(self + 0xc) + 0x50;
-        sub_803AD84(self + *(s16 *)off, *(void **)(self + 0x10), (void *)4,
+        _call_via_r3(self + *(s16 *)off, *(void **)(self + 0x10), (void *)4,
                     *(void **)(off + 4));
     }
 }
@@ -365,14 +365,14 @@ void sub_80156EC(u8 *self)
             struct vtable_slot *mgr = *(struct vtable_slot **)(self + 0xc);
             u8 *off;
 
-            sub_803AD80(self + mgr[4].delta, (void *)0x19, mgr[4].fn);
+            _call_via_r2(self + mgr[4].delta, (void *)0x19, mgr[4].fn);
             off = *(u8 **)(self + 0xc) + 0x50;
-            sub_803AD84(self + *(s16 *)off, *(void **)(self + 0x10), (void *)7,
+            _call_via_r3(self + *(s16 *)off, *(void **)(self + 0x10), (void *)7,
                         *(void **)(off + 4));
         } else {
             struct vtable_slot *mgr = *(struct vtable_slot **)(self + 0xc);
 
-            sub_803AD80(self + mgr[4].delta, (void *)0x18, mgr[4].fn);
+            _call_via_r2(self + mgr[4].delta, (void *)0x18, mgr[4].fn);
         }
     }
 }

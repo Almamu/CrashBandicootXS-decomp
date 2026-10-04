@@ -124,7 +124,7 @@ the shared VRAM upload cursor (`gUnknown_030012FC`, `struct
 vram_upload_cursor`), hooks `self->icons` up to the global text icon
 manager (`gUnknown_030012DC`, `struct icon_manager` - already fully
 described in `include/icon_manager.h`), fires its 7th (index 6) OAM
-trampoline slot via `sub_803AD7C` (the same `icon_slot` shape
+trampoline slot via `_call_via_r1` (the same `icon_slot` shape
 `sub_8011A1C`/`actor_part39.c` already established), clears
 `icons->field_118` and re-derives the cursor's limit from
 `icons->field_12c << 5` (`sub_8006C58`), resets the shared tile cache
@@ -148,7 +148,7 @@ this codebase but were freshly re-confirmed here:
   here.
 - `self->icons` is likewise re-read from `self` (not kept in a
   register, and not re-fetched from `gUnknown_030012DC` again) after the
-  `sub_803AD7C` call, even though the exact same pointer was already
+  `_call_via_r1` call, even though the exact same pointer was already
   live in a register right before that call.
 
 Matched real C for everything except the tile-cache seeding loop's trip
@@ -179,12 +179,12 @@ out of scope here). Busy-loops, yielding via `sub_8034AA4`/
 `sub_8034C5C` each iteration (both still-raw functions just past this
 file's own raw-asm boundary, `asm/..._34aa4.s`), polling input twice per
 outer iteration: a confirm press (bit 0) or D-pad-down-with-L (bit 3) of
-`gUnknown_030007E0.pressed` immediately exits with a "confirm" SFX cue
+`gKeys.pressed` immediately exits with a "confirm" SFX cue
 (`PlaySfx(gUnknown_030012BC, 0x49, 0x100)`); otherwise L alone (bit 6,
 gated on `self+0x20`'s one-shot flag already being set) or R alone (bit
 7, gated on it being clear) plays a "step" cue
 (`PlaySfx(..., 0x46, 0x100)`) and flips that flag - the same
-`gUnknown_030007E0`/`PlaySfx` input-dispatch shape already established
+`gKeys`/`PlaySfx` input-dispatch shape already established
 in `src/audio/counter_selector.c`'s `sub_8037224`. Every two inner
 iterations, a 0-15 ping-pong counter (the low 5 bits of `self+0x12`,
 which is the same byte as `self->blend.b.bldalphaLo`'s partner within

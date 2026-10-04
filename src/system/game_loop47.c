@@ -38,7 +38,7 @@
  *   `sub_8010914` ("get next"/"get prev" neighbor-list-walk-and-filter
  *   helpers, matched in game_loop30.c) and `gStaticData_0816BC98`,
  *   computing a final corrected offset and calling `sub_8007398`
- *   (apply the offset) plus `sub_803AD88` (a `bx r4`
+ *   (apply the offset) plus `_call_via_r4` (a `bx r4`
  *   register-indirect-call trampoline - see docs/rom_map.md's
  *   trampoline-table correction - used here to play a sound/particle
  *   effect through a caller-supplied function pointer).
@@ -165,9 +165,6 @@ extern void sub_800E6B0(struct phys_obj *self);
 extern void sub_8010D54(void *queue, struct phys_obj *obj, s32 kind, s32 code,
                         s32 edge, s32 depth, struct d18c_pos pos, s32 hit,
                         struct d18c_flag8 f20, struct d18c_flag8 f21);
-
-/* sub_803AD88 is libgcc's `_call_via_r4`. */
-asm(".set _call_via_r4, sub_803AD88\n");
 
 #define D18C_CALL68(a, b, c) \
     PhysCall3(D18C_P, (struct method *)&D18C_P->vtable->m68, (a), (b), (c))
@@ -1018,9 +1015,6 @@ struct flag8
 {
     u8 value;
 } __attribute__((packed));
-
-/* sub_803AD88 is libgcc's `_call_via_r4`. */
-asm(".set _call_via_r4, sub_803AD88\n");
 
 #define E08C_CALL68(a, b) \
     PhysCall3(PHYS_PLAYER, (struct method *)&PHYS_PLAYER->vtable->m68, 0, (a), (b))

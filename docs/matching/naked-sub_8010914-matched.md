@@ -111,7 +111,7 @@ loop:
 ```
 
 This is the same "match the ROM's basic-block source order, not just
-condition polarity" technique documented for `sub_80010E0`
+condition polarity" technique documented for `WaitForKeyPress`
 (`naked-sub_80010e0-matched.md`), applied to block *placement* (which
 label comes textually first) rather than which branch sense a single
 `if` compiles to.
@@ -122,7 +122,7 @@ Materialized as one opaque `asm volatile` block per call site,
 matching the ROM's own address-then-mask-then-load order and reusing
 its exact register roles (r1 for the address/byte, r0 for the mask and
 final result) - the same "opaque to the optimizer" technique used on
-`sub_8001524`/`sub_8001624`/`sub_8000CBC`/`sub_80014A4`:
+`sub_8001524`/`sub_8001624`/`FindSubstring`/`sub_80014A4`:
 
 ```c
 asm volatile(

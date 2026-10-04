@@ -71,7 +71,7 @@ struct actor *sub_80119FC(struct actor *self)
     return self;
 }
 
-extern void *sub_803AD7C(void *arg0, void *arg1);
+extern void *_call_via_r1(void *arg0, void *arg1);
 extern void *gUnknown_030012D8;
 
 /* If `self+0x48` is zero and the player (`gUnknown_030012D8`)'s top
@@ -87,7 +87,7 @@ s32 sub_8011A1C(struct actor *self)
             u8 *rec = (u8 *)self->table + 0x68;
             s16 offset = *(s16 *)rec;
 
-            sub_803AD7C((u8 *)self + offset, *(void **)(rec + 4));
+            _call_via_r1((u8 *)self + offset, *(void **)(rec + 4));
         }
     }
     return 0;

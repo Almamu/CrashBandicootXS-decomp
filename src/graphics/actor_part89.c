@@ -8,7 +8,7 @@
  * loading/particle-update helpers just past this file's own raw-asm
  * boundary, `asm/..._34aa4.s`) polling input twice per outer iteration:
  * a confirm press (bit 0) or D-pad-down-with-L (bit 3) of
- * `gUnknown_030007E0.pressed` immediately exits with a "confirm" SFX
+ * `gKeys.pressed` immediately exits with a "confirm" SFX
  * cue (0x49); otherwise L alone (bit 6, only once `self+0x20`'s one-shot
  * flag is already set) or R alone (bit 7, only once it's clear) plays a
  * "step" cue (0x46) and flips that flag. Every two inner iterations, a
@@ -48,10 +48,10 @@ struct keys89 {
     u16 pressed;
 };
 
-extern void sub_80007AC(void *arg0);
+extern void UpdateKeys(void *arg0);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void *gUnknown_03001304;
-extern u32 gUnknown_030007E0;
+extern u32 gKeys;
 extern void *gUnknown_030012BC;
 extern void sub_8034AA4(struct fade_overlay89 *self);
 extern void sub_8034C5C(struct fade_overlay89 *self);
@@ -61,12 +61,12 @@ s32 sub_8034994(struct fade_overlay89 *self)
     s32 dir = 1;
     s32 i = 0;
     s32 level = self->eva;
-    struct keys89 *input = (struct keys89 *)&gUnknown_030007E0;
+    struct keys89 *input = (struct keys89 *)&gKeys;
     void **audio = &gUnknown_030012BC;
 
     while (dir >= 0) {
         asm("" : : "r"(audio)); /* extra reference: audio outranks i for r7 */
-        sub_80007AC(gUnknown_03001304);
+        UpdateKeys(gUnknown_03001304);
         {
             struct keys89 k = *input;
 

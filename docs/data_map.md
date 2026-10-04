@@ -60,7 +60,7 @@ the appendix.
 | `0803B8B0`-`080B1444` | 482,196 | BG0 cell animation A (palette, 19x13 cells, 60 frames) | `sub_8029890`/`sub_80297C8` via category descriptors 0-2 | high | **converted** |
 | `080B1444`-`080B2120` | 3,292 | category 0 `sub_effect_record` table (164 records) | `SelectActorCategory`, `sub_802A5xx` | high | **converted** |
 | `080C0C36`-`080C2758` | 6,946 | 2 B pad + category 1/2 `sub_effect_record` tables | same | high | **converted** (the pad is gbagfx's padding) |
-| `080C2758`-`080FF1B0` | 248,408 | compressed OBJ frame sets A and B (the old "rotation strips") | `GetAnimFrameData` via table_B `0817941C`/`0817A880`, unpacked by the `gUnknown_03000874` IWRAM hook | high | **converted** |
+| `080C2758`-`080FF1B0` | 248,408 | compressed OBJ frame sets A and B (the old "rotation strips") | `GetAnimFrameData` via table_B `0817941C`/`0817A880`, unpacked by the `gUnpackRleSpriteFrameFunc` IWRAM hook | high | **converted** |
 | `080FF1B0`-`0813D934` | 255,876 | BG0 cell animation B (38x10 cells, 21 frames) | `sub_8029890` via category descriptors 3-6 | high | **converted** |
 | `0813D934`-`0814174C` | 15,896 | category 3 BG1 picture + `sub_effect_record` table | `sub_802F7B0`, `SelectActorCategory` | high | **converted** |
 | `08151AC2`-`0815A050` | 34,190 | category 4-6 BG1 pictures + `sub_effect_record` tables | same | high | **converted** (the pad is gbagfx's padding) |
@@ -149,7 +149,7 @@ That function reads a "cell record": a 256-colour palette (DMA'd whole to
 then frames of `cols*rows*32` bytes of 4bpp tiles. When the category type
 is 0, each frame also carries `((cols*rows)+7)/8*4` bytes of side data.
 `sub_80297C8` DMAs one frame per tick to BG0 and hands the side data to
-the `gUnknown_0300087C` callback. The frame count is `(size - 0x204) /
+the `gDrawMirroredTilemapFunc` callback. The frame count is `(size - 0x204) /
 frameSize`.
 
 | Range | Size | Content | Effort |
@@ -207,14 +207,14 @@ out scrambled. The `0x30` byte is the clue: these frames are
 **compressed**, and they are never passed to `LoadSpriteFrameTiles`.
 
 The consumers (`actor_part127.c`, `actor_part128.c`,
-`graphics_loading_3686c.c`) call `gUnknown_03000874(vramBlock, frame)`.
+`graphics_loading_3686c.c`) call `gUnpackRleSpriteFrameFunc(vramBlock, frame)`.
 That IWRAM variable is initialised by the `crt0` copy of the IWRAM image
 (`0x087E55E4 + 0x874`) to `0x03000634`, an ARM routine in the same image.
 Disassembled, it fills `w*h*32` bytes of VRAM from a stream of `u16`
 counts after the header: a count of zero halfwords (DMA3 fixed-source
 fill from a zero on the stack), then alternately a literal count
 followed by that many halfwords (DMA3 copy) and a zero count, until the
-frame is full. (Its neighbour `gUnknown_03000870 = 0x030006FC`, the
+frame is full. (Its neighbour `gLookupSpriteFrameCacheFunc = 0x030006FC`, the
 `LoadSpriteFrameTiles` hook, only looks the frame up in the VRAM frame
 cache.) The frames are simply stored back to back, and decoding them in
 order covers each region exactly, with no overlap and nothing past the
@@ -447,7 +447,7 @@ and the encoder are in [levels.md](./levels.md).
 
 ### The IWRAM image (`087E55E4`-`087E5FCC`) + fill
 
-`crt0.s` DMA-copies `(gUnknown_030009E8 - IntrMain_Buffer) / 4` words
+`crt0.s` DMA-copies `(gIntrTable - IntrMain_Buffer) / 4` words
 from here (`__iwram_lma`) to `0x03000000` at boot. **Converted**: the
 image is now built from source and linked to run at `0x03000000`
 (ldscript.txt's `iwram` section, stored in ROM with `AT(...)`):
@@ -638,7 +638,7 @@ vtable shapes).
 | `08167CD4` | 0x1E14 | N. Gin's airship picture: {cols 18, rows 12}, 4 frames of {tile count, u16 map, 4bpp tiles} sharing one pool (graphics/boss_pictures/, tools/boss_pictures.py). **Converted** (`src/data/boss_pictures_167ad4.c`) | `sub_8030F88` | medium | done |
 | `08169AE8` | 0x200 | Cortex's hovercraft: palette (16 colours + 240 x 0x03E0). **Converted** (`src/data/boss_pictures_167ad4.c`) | `sub_8032AF8`, `sub_8033604`, `sub_80336CC` | high | done |
 | `08169CE8` | 0xB28 | Cortex's hovercraft picture: {cols 16, rows 10}, 1 frame (graphics/boss_pictures/). **Converted** (`src/data/boss_pictures_167ad4.c`) | `sub_80331BC` | medium | done |
-| `0816A810` | 0x10 | u8[16] d-pad direction lookup. **Converted** (`src/data/boss_pictures_167ad4.c`) | `sub_8000760` | medium | done |
+| `0816A810` | 0x10 | u8[16] d-pad direction lookup. **Converted** (`src/data/boss_pictures_167ad4.c`) | `GetDpadDirection` | medium | done |
 | `0816A820` | 0x200 | s16[256] sine/direction table (`s16` x 256). **Converted** (`src/data/boss_pictures_167ad4.c`) | `sub_800AFF4`, `sub_800C8F8`, `sub_800C940` +16 | high | done |
 | `0816AA20` | 0x4C | song table: 19 pointers into the music block, `gGaxMusicData + GAX_SONG_<NAME>` from the generated `gax_songs.h`. **Converted** (`src/data/song_table_16aa20.c`) | `sub_80017BC` | high | done |
 | `0816AF10` | 0x228 | CRC-16/CCITT lookup table (poly 0x1021, u16[256]) + the two link-cable pairing names "crash 1 <-> crash 2"/"crash 1 <-> crash 3" (`gStaticData_0816B110`/`0816B124`, which the IWRAM data `gUnknown_03000810`/`0814` points at). **Converted** (`src/data/link_crc_16af10.c`) | `sub_8001CB8`, `sub_8002114` | high | done |
@@ -837,8 +837,8 @@ vtable shapes).
 | `0817E78C` | 0x326E74 | composite: level BG tile sets (raw tag-0x00 assets), per-room level data, sprite-bank tile pool | `sub_8037388` | high | medium |
 | `084A5600` | 0xB66B4 | composite: sprite-bank (animation) table (**converted**, C) + GAX2 sound-effect bank (**converted**, `gax_audio.py --sfx`) | `sub_8004D74`, `sub_8022230` | high | medium |
 | `085A4C5C` | 0x14 | the default song's GAX2_Song struct `{4, unknownc, info, unk_ptr, channel}` (the engine's default handler layout). **Built** by `tools/gax_audio.py` (`gax_default_layout.bin`) | `GAX2_estimate`, `GAX2_init` | high | done |
-| `085A4C70` | 0x100 | u8[256] count-leading-zeros table (libgcc `__clz_tab` of `__divdi3`). **Converted** (`src/data/clz_tab_5a4c70.c`) | `sub_8037648` | high | done |
-| `085A4D70` | 0x100 | u8[256] count-leading-zeros table (the second copy, `__udivdi3`'s). **Converted** (`src/data/clz_tab_5a4c70.c`) | `sub_8037A7C` | high | done |
+| `085A4C70` | 0x100 | u8[256] count-leading-zeros table (libgcc `__clz_tab` of `__divdi3`). **Converted** (`src/data/clz_tab_5a4c70.c`) | `__divdi3` | high | done |
+| `085A4D70` | 0x100 | u8[256] count-leading-zeros table (the second copy, `__udivdi3`'s). **Converted** (`src/data/clz_tab_5a4c70.c`) | `__udivdi3` | high | done |
 | `085A5519` | 0x3 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
 | `085A60FF` | 0x4D | 1 B pad (gbagfx's padding of the `.lz` stream before it, now built) + GAX2 version string "GAX Sound Engine 2.01D (Sep 28 2001) (c) Shin'en Multimedia. Code: B.Wodok". **Converted** (`gGaxVersionString`, `src/data/gax_tables_5a6100.c`) | `GAX2_init (via gGaxVersionStringPtr)` | high | done |
 | `085A614C` | 0x4 | pointer to the GAX2 version string. **Converted** (`gGaxVersionStringPtr = gGaxVersionString`) | `GAX2_init` | high | done |
@@ -855,9 +855,9 @@ vtable shapes).
 | `085A62CC` | 0x10 | GAX2 halt-screen string "FUNCTION NAME:". **Converted** | `GaxFatalError` | medium | done |
 | `085A62DC` | 0x3BD0 | GAX2 u32 note period table (`u32` x 3828; its 0x08xxxxxx values are a smooth ramp, not pointers). **Converted** | `GaxChannelMix` | high | done |
 | `085A9EAC` | 0x4C | s8[64] vibrato sine wave, then the SDK's "EEPROM_V122" id string (`gEepromLibraryVersion`, `+0x40`). **Converted** (`gax_tables_5a6100.c`, `eeprom_5a9eec.c`) | `GaxChannelTickVibrato` | high | done |
-| `085A9EF8` | 0xC | `struct EepromConfig` of the 4 Kbit chip. **Converted** (`src/data/eeprom_5a9eec.c`) | `sub_803A968` | high | done |
-| `085A9F04` | 0xC | `struct EepromConfig` of the 64 Kbit chip. **Converted** | `sub_803A968` | high | done |
-| `085A9F10` | 0x260 | EEPROM write timeout `u16[3]` + pad, then the library's 22 address constants (`gEepromLibraryAddresses`, no reader), then the palette of cutscene picture 00. **Converted** (`eeprom_5a9eec.c`, `cutscene_pictures_5a9f70.c`) | `sub_803AC04` | high | done |
+| `085A9EF8` | 0xC | `struct EepromConfig` of the 4 Kbit chip. **Converted** (`src/data/eeprom_5a9eec.c`) | `EEPROMConfigure` | high | done |
+| `085A9F04` | 0xC | `struct EepromConfig` of the 64 Kbit chip. **Converted** | `EEPROMConfigure` | high | done |
+| `085A9F10` | 0x260 | EEPROM write timeout `u16[3]` + pad, then the library's 22 address constants (`gEepromLibraryAddresses`, no reader), then the palette of cutscene picture 00. **Converted** (`eeprom_5a9eec.c`, `cutscene_pictures_5a9f70.c`) | `EEPROMWrite` | high | done |
 | `085ADBD1` | 0x203 | 3 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 01), bit 15 set in many entries. **Converted** (`gCutscenePicture01`, `src/data/cutscene_pictures_5a9f70.c`) | `gCutscenes (slide packages)` | high | done |
 | `085B34E1` | 0x203 | 3 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 02), bit 15 set in many entries. **Converted** (`gCutscenePicture02`, `src/data/cutscene_pictures_5a9f70.c`) | `gCutscenes (slide packages)` | high | done |
 | `085B82BC` | 0x200 | 256-colour palette of the next Mode 4 bitmap (cutscene picture 03), bit 15 set in many entries. **Converted** (`gCutscenePicture03`, `src/data/cutscene_pictures_5a9f70.c`) | `gCutscenes (slide packages)` | high | done |

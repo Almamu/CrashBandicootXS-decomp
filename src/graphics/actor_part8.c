@@ -208,12 +208,12 @@ struct actor *sub_8009ED0(u16 arg0, u16 arg1, u16 arg2)
     return part;
 }
 
-extern s32 sub_803AD80(void *arg0, void *arg1, void *fn);
+extern s32 _call_via_r2(void *arg0, void *arg1, void *fn);
 extern void sub_8008484(struct actor *self, u32 arg1);
 
 /* Overwrites `self->table`, then (if `self+0x44`'s record is set)
  * fires a `record->table+0x48/0x4c`-driven trampoline with a constant
- * argument `3` via `sub_803AD80` (same convention as
+ * argument `3` via `_call_via_r2` (same convention as
  * `sub_800891C`/`sub_8006FE4`), and finally tail-calls `sub_8008484`
  * (already matched in `actor_part6.c`). The trampoline's `addr =
  * rec + offset` needed computing before the `fn` load (reusing
@@ -236,7 +236,7 @@ void sub_8009F1C(struct actor *self, u32 arg1)
 
             addr = (u8 *)rec + offset;
             fn = *(void **)(tblAdj + 4);
-            sub_803AD80(addr, (void *)3, fn);
+            _call_via_r2(addr, (void *)3, fn);
         }
     }
 
@@ -300,7 +300,7 @@ extern void sub_8008364(struct actor *part);
 
 /* Calls `sub_8008364` (already matched in `actor_part5.c`), then (if
  * `self+0x44`'s record is set) fires a `record->table+8/0xc`-driven
- * trampoline via `sub_803AD80` with `self` itself as the second
+ * trampoline via `_call_via_r2` with `self` itself as the second
  * argument. Same `addr`-before-`fn` ordering fix as `sub_8009F1C`
  * above. */
 void sub_8009FB0(struct actor *self)
@@ -319,7 +319,7 @@ void sub_8009FB0(struct actor *self)
         addr = (u8 *)rec + offset;
         fn = *(void **)(tbl + 0xc);
         arg1 = self;
-        sub_803AD80(addr, arg1, fn);
+        _call_via_r2(addr, arg1, fn);
     }
 }
 asm(".align 2, 0");

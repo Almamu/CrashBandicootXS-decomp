@@ -7,7 +7,7 @@
 #include "memory.h"
 
 extern void StopAmbientSfx(struct AudioContext *self);
-extern void sub_80006A8(void);
+extern void WaitForVBlank(void);
 extern struct tile_asset_cache *gUnknown_030012B8;
 extern struct AudioContext *gUnknown_030012BC;
 extern struct icon_manager *gUnknown_030012DC;
@@ -18,9 +18,9 @@ extern u8 gStaticData_0816B2C0[];
 extern void sub_8006EF0(struct tile_asset_cache *self, u16 count, const u8 *records);
 extern s32 sub_8006D50(struct tile_asset_cache *self, s32 index);
 extern void sub_8006F94(struct tile_asset_cache *self, u32 flags);
-extern void sub_803A94C(const void *src, void *dst, u32 cnt);
+extern void CpuSet(const void *src, void *dst, u32 cnt);
 extern void sub_8028A40(struct icon_manager *self);
-extern void *sub_803AD7C(void *arg0, void *fn);
+extern void *_call_via_r1(void *arg0, void *fn);
 extern void sub_8006C4C(struct vram_upload_cursor *self);
 extern void *sub_8026EDC(s32 size);
 extern struct pause_screen_results *sub_8004EC0(struct pause_screen_results *self);
@@ -35,7 +35,7 @@ extern void sub_8005004(struct pause_screen_results *self, u32 flags);
  * sized for this screen's icon graphics (seeding slot 15 from
  * `gStaticData_0816B2C0`), re-inits both icon managers (copying
  * `field_12c` between them and firing each one's slot-6 trampoline, the
- * same `sub_803AD7C` pattern documented throughout `icon_manager.h`),
+ * same `_call_via_r1` pattern documented throughout `icon_manager.h`),
  * builds the screen object (`sub_8004EC0`) and hands it to the blocking
  * cursor/confirm/cancel driver (`sub_8005100`), then tears the screen
  * down (`sub_8005004`, flags=3) and restores the original tile cache
@@ -54,9 +54,6 @@ extern void sub_8005004(struct pause_screen_results *self, u32 flags);
  * match the ROM's load order. The two `0`s still come from
  * inline-function parameters, which CSE shares into r8. */
 extern struct tile_asset_cache *sub_8006FB4(void *mem);
-
-/* sub_803AD7C is libgcc's `_call_via_r1`. */
-asm(".set _call_via_r1, sub_803AD7C\n");
 
 /* Fires an icon manager's slot-6 method (a gcc 2.x virtual call). */
 #define ICON_SLOT6_CALL(mgr)                                                   \
@@ -99,7 +96,7 @@ s32 sub_8004D74(void)
 
     mem_free_bytes(MEM_HEAP_BOTH);
     StopAmbientSfx(gUnknown_030012BC);
-    sub_80006A8();
+    WaitForVBlank();
     *(vu16 *)PLTT = 0;
     *(vu16 *)REG_ADDR_DISPCNT = 0;
 
@@ -111,7 +108,7 @@ s32 sub_8004D74(void)
     {
         u8 *dst = (u8 *)gUnknown_030012B8;
 
-        sub_803A94C(gStaticData_0816B2C0, dst + (0x83 << 2), 0x10);
+        CpuSet(gStaticData_0816B2C0, dst + (0x83 << 2), 0x10);
     }
 
     sub_8028A40(gUnknown_030012DC);
@@ -147,7 +144,7 @@ extern void ***gUnknown_030012D0;
 extern void *sub_80236EC(void *arg0);
 extern void sub_800599C(struct pause_screen_results *self);
 extern struct actor *sub_8008904(struct actor *part);
-extern s32 sub_8000E1C(s32 max);
+extern s32 RandRange(s32 max);
 extern u8 gStaticData_0816B284[];
 extern u8 gStaticData_0816B298[];
 
@@ -268,7 +265,7 @@ struct pause_screen_results *sub_8004EC0(struct pause_screen_results *self)
         }
     }
 
-    self->field_c4 = (u16)sub_8000E1C(0x78) + 0x78;
+    self->field_c4 = (u16)RandRange(0x78) + 0x78;
 
     self->field_14 = gStaticData_0816B298;
     self->field_18 = zero;
@@ -292,7 +289,7 @@ struct pause_screen_results *sub_8004EC0(struct pause_screen_results *self)
     return self;
 }
 
-extern s32 sub_803AD80(void *arg0, void *arg1, void *arg2);
+extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern void sub_8026ED0(void *arg0);
 
 /* Same "re-probe an actor's own category-table slot 0x50/0x54" shape
@@ -307,7 +304,7 @@ extern void sub_8026ED0(void *arg0);
         struct settings_icon_actor *_icon = (iconExpr); \
         if (_icon != NULL) { \
             u8 *_p = (u8 *)_icon->base.table + 0x50; \
-            sub_803AD80((u8 *)_icon + *(s16 *)_p, (void *)3, *(void **)(_p + 4)); \
+            _call_via_r2((u8 *)_icon + *(s16 *)_p, (void *)3, *(void **)(_p + 4)); \
         } \
     } while (0)
 

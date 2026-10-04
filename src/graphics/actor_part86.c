@@ -30,7 +30,7 @@ extern void *gUnknown_030012BC;
 extern void *gUnknown_03001304;
 extern const struct speed_table gStaticData_0816C090;
 
-extern u8 sub_8000760(void *arg);
+extern u8 GetDpadDirection(void *arg);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void sub_80087C0(struct pctrl_target *t);
 extern void sub_80087B4(struct pctrl_target *t);
@@ -152,7 +152,7 @@ void sub_8015C6C(struct player_ctrl *self)
     speed = 960;
     flag = 0;
     PlaySfx(gUnknown_030012BC, 9, 256);
-    if ((self->target->unk_68 & 3) && sub_8000760(gUnknown_03001304) <= 2)
+    if ((self->target->unk_68 & 3) && GetDpadDirection(gUnknown_03001304) <= 2)
         flag = 1;
 
     if (self->state == 4)

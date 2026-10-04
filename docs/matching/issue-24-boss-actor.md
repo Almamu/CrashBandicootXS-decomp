@@ -43,7 +43,7 @@ before this one, has the same pin-shaped idioms.
 
 ### 2. Virtual calls are indirect calls through `_call_via_rN`
 
-`sub_803AD7C`/`AD80`/`AD84`/`AD88` (`bx r1`..`bx r4`,
+`_call_via_r1`/`AD80`/`AD84`/`AD88` (`bx r1`..`bx r4`,
 `src/system/reg_trampolines.c`) are this ROM's copies of libgcc's
 `_call_via_rN`. A C++ virtual call is really
 `((fn_t)m->fn)(this + m->thisOffset, args...)`, and gcc puts the function
@@ -52,14 +52,14 @@ ROM's r1/r2/r3/r4 choice. This file writes them as real indirect calls
 (`VCALL1`/`VCALL2`) and aliases the helpers with a top-level
 
 ```c
-asm(".set _call_via_r3, sub_803AD84\n" ...);
+asm(".set _call_via_r3, sub_803AD84\n" ...); /* since dropped: the trampoline is now named _call_via_r3 itself */
 ```
 
 This resolves each `bl _call_via_rN` relocation to the ROM's trampoline.
-Writing indirect calls (instead of calling `sub_803AD84(..., fn)` with the
+Writing indirect calls (instead of calling `_call_via_r3(..., fn)` with the
 pointer as an explicit argument) matters in two places:
 
-- the 4-argument `sub_803AD88` call needs no `register void *fn
+- the 4-argument `_call_via_r4` call needs no `register void *fn
   asm("r4")` "dead read" trick;
 - `sub_8019CE4`: its cases share one `bl` (see below).
 

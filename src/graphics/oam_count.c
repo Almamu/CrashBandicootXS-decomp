@@ -24,7 +24,7 @@ COMPILE_TIME_ASSERT(sizeof(struct threshold_table_entry) == 0x24);
 
 extern struct threshold_table_entry gLevelTable[];
 extern void sub_80062A8(s32 arg0, s32 arg1, s32 arg2);
-extern s32 sub_803AD80(void *arg0, s32 arg1, void *arg2);
+extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
 extern void sub_8026ED0(void *arg0);
 extern void sub_8006DC8(struct tile_asset_cache *arg0);
 extern void sub_8006AAC(void *arg0);
@@ -56,7 +56,7 @@ extern void sub_8008890(void *arg0, s32 arg1, s32 arg2);
 extern void sub_803AFE4(void *buf, s32 arg1, s32 arg2);
 extern void sub_803AFDC(void *buf, s32 arg1, s32 arg2);
 extern s32 sub_8001214(void *arg0, void *arg1, void *buf, s32 arg3);
-extern s32 sub_8026F38(s32 arg0);
+extern s32 GetUiText(s32 arg0);
 extern struct vram_upload_cursor *gUnknown_030012FC;
 
 extern struct icon_manager *gUnknown_030012E0;
@@ -74,7 +74,7 @@ static inline void set_icon_mgr_pos(struct icon_manager *m, u32 x, u32 y)
 /* Positions two OAM icons flanking a number (drawn via sub_8001214 in
  * between) - centers each icon horizontally from its rendered pixel
  * width (the manager's `record->slots[0]` method, a gcc 2.x virtual call
- * through `sub_803AD80` = `_call_via_r2`), at fixed Y coordinates, then
+ * through `_call_via_r2`), at fixed Y coordinates, then
  * draws it with `slots[2]`. Parked as NAKED for a long time over a
  * register-letter gap; closed by computing the centered X into its own
  * local before passing it to the inline setter (passing the expression
@@ -92,25 +92,25 @@ void sub_8006600(struct sub_8006700_actor *arg0)
     sub_8006C28(gUnknown_030012FC);
     sub_8008890(arg0->field_18, 0, 0);
     r = gUnknown_030012E0->record;
-    w = sub_803AD80((u8 *)gUnknown_030012E0 + r->slots[0].offset, arg0->field_10, r->slots[0].ptr);
+    w = _call_via_r2((u8 *)gUnknown_030012E0 + r->slots[0].offset, arg0->field_10, r->slots[0].ptr);
     x = (u32)(240 - w) >> 1;
     set_icon_mgr_pos(gUnknown_030012E0, x, 0x2d);
     r = gUnknown_030012E0->record;
-    sub_803AD80((u8 *)gUnknown_030012E0 + r->slots[2].offset, arg0->field_10, r->slots[2].ptr);
+    _call_via_r2((u8 *)gUnknown_030012E0 + r->slots[2].offset, arg0->field_10, r->slots[2].ptr);
     sub_803AFE4(buf, 0x10, 0x6a);
     sub_803AFDC(buf, 0xd0, 0x35);
     sub_8001214(arg0->field_14, gUnknown_030012DC, buf, 0);
-    n = sub_8026F38(0x2e);
+    n = GetUiText(0x2e);
     r = gUnknown_030012DC->record;
-    w = sub_803AD80((u8 *)gUnknown_030012DC + r->slots[0].offset, n, r->slots[0].ptr);
+    w = _call_via_r2((u8 *)gUnknown_030012DC + r->slots[0].offset, n, r->slots[0].ptr);
     x = (u32)(240 - w) >> 1;
     set_icon_mgr_pos(gUnknown_030012DC, x, 0x90);
     r = gUnknown_030012DC->record;
-    sub_803AD80((u8 *)gUnknown_030012DC + r->slots[2].offset, n, r->slots[2].ptr);
+    _call_via_r2((u8 *)gUnknown_030012DC + r->slots[2].offset, n, r->slots[2].ptr);
     sub_8006A48(gUnknown_03001300);
 }
 
-extern void sub_80006A8(void *arg0);
+extern void WaitForVBlank(void *arg0);
 
 void sub_8006700(struct sub_8006700_actor *arg0)
 {
@@ -120,7 +120,7 @@ void sub_8006700(struct sub_8006700_actor *arg0)
 
 void sub_8006714(struct sub_8006700_actor *arg0)
 {
-    sub_80006A8(arg0);
+    WaitForVBlank(arg0);
     sub_8006DC8(gUnknown_030012B8);
     sub_8006AAC(gUnknown_03001300);
     FlushVramDmaQueue();
@@ -139,7 +139,7 @@ void sub_8006770(struct sub_8006700_actor *arg0, u32 arg1)
     field18 = arg0->field_18;
     if (field18 != NULL) {
         p = (u8 *)field18->table + 0x50;
-        sub_803AD80((u8 *)field18 + *(s16 *)p, 3, *(void **)(p + 4));
+        _call_via_r2((u8 *)field18 + *(s16 *)p, 3, *(void **)(p + 4));
     }
     if (arg1 & 1) {
         sub_8026ED0(arg0);

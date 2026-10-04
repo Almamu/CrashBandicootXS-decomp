@@ -23,7 +23,7 @@ init_vector:
 	str r0, [r2]
 	mov r0, #0x3000000
 	str r0, [r2, #4]
-	ldr r1, _08000130 @ =gUnknown_030009E8
+	ldr r1, _08000130 @ =gIntrTable
 	ldr r0, _08000134 @ =IntrMain_Buffer
 	sub r0, r1, r0
 	mov r1, #-0x7c000000
@@ -38,7 +38,7 @@ _08000120: .4byte gUnknown_03007F00
 _08000124: .4byte iwram_end
 _08000128: .4byte gUnknown_03007FA0
 _0800012C: .4byte __iwram_lma
-_08000130: .4byte gUnknown_030009E8
+_08000130: .4byte gIntrTable
 _08000134: .4byte IntrMain_Buffer
 _08000138: .4byte 0x040000D4
 _0800013C: .4byte AgbMain

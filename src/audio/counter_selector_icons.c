@@ -19,7 +19,7 @@ extern void sub_8006A48(void *arg0);
 extern s32 sub_8028A30(struct icon_manager *mgr, u8 frame);
 extern s32 sub_8037534(struct counter_widget *self);
 /* `_call_via_r2`: calls `fn(self, arg)` (an icon_manager method). */
-extern s32 sub_803AD80(void *self, void *arg, void *fn);
+extern s32 _call_via_r2(void *self, void *arg, void *fn);
 
 /* The counter widget's (src/audio/counter_selector.c) per-frame icon
  * draw loop: for each of the six digit slots (0-5) it sets the shared
@@ -30,7 +30,7 @@ extern s32 sub_803AD80(void *self, void *arg, void *fn);
  * from 0x32.
  *
  * Was NAKED ("many-register allocation ceiling"); calling the method
- * trampoline `sub_803AD80` directly with the glyph assigned inside the
+ * trampoline `_call_via_r2` directly with the glyph assigned inside the
  * first call's argument list (so it's loaded between `this` and the
  * method pointer, as the ROM does) matches outright - see
  * docs/matching/gax-toolchain-retry.md. */
@@ -50,12 +50,12 @@ void sub_80372BC(struct counter_widget *self)
             sub_8028A30(gUnknown_030012DC, sub_8037534(self));
         else
             sub_8028A30(gUnknown_030012DC, 0);
-        x = (240 - sub_803AD80((u8 *)gUnknown_030012DC + gUnknown_030012DC->record->slots[0].offset,
+        x = (240 - _call_via_r2((u8 *)gUnknown_030012DC + gUnknown_030012DC->record->slots[0].offset,
                                glyph = gStaticData_0817E714[i],
                                gUnknown_030012DC->record->slots[0].ptr)) >> 1;
         gUnknown_030012DC->posX = x;
         gUnknown_030012DC->posY = y;
-        sub_803AD80((u8 *)gUnknown_030012DC + gUnknown_030012DC->record->slots[2].offset, glyph,
+        _call_via_r2((u8 *)gUnknown_030012DC + gUnknown_030012DC->record->slots[2].offset, glyph,
                     gUnknown_030012DC->record->slots[2].ptr);
         y += 10;
     }
@@ -67,7 +67,7 @@ void sub_80372BC(struct counter_widget *self)
  * `slots[0]`-`slots[3]` with 4 fixed 32-byte OBJ tiles copied from
  * `gStaticData_0817E72C`/`_74C`/`_76C`/`_78C`, and finally runs
  * `gUnknown_030012DC`'s/`gUnknown_030012E0`'s `record->slots[6]` method
- * (`sub_803AD7C`) plus a VRAM reserve (`sub_8006C58`) for each, copying
+ * (`_call_via_r1`) plus a VRAM reserve (`sub_8006C58`) for each, copying
  * `field_12c` into the other manager's `field_108`.
  *
  * Was NAKED: the ROM rematerializes the 0x108/0x12c/0x130 field-offset
@@ -85,14 +85,14 @@ extern const u16 gStaticData_0817E72C[16];
 extern const u16 gStaticData_0817E74C[16];
 extern const u16 gStaticData_0817E76C[16];
 extern const u16 gStaticData_0817E78C[16];
-extern void sub_80006A8(void);
+extern void WaitForVBlank(void);
 extern void sub_8006AAC(void *arg0);
 extern void sub_8006EA8(struct tile_asset_cache *cache);
 extern s32 sub_8006D50(struct tile_asset_cache *cache, s32 index);
 extern void sub_8006C4C(void *cursor);
 extern s32 sub_8006C58(void *cursor, s32 size);
 extern void sub_8006C30(void *cursor);
-extern void sub_803AD7C(void *self, void *fn);
+extern void _call_via_r1(void *self, void *fn);
 
 static inline void IconSetBase(struct icon_manager *m, u32 base)
 {
@@ -100,7 +100,7 @@ static inline void IconSetBase(struct icon_manager *m, u32 base)
 
     m->field_108 = base;
     slot = &m->record->slots[6];
-    sub_803AD7C((u8 *)m + slot->offset, slot->ptr);
+    _call_via_r1((u8 *)m + slot->offset, slot->ptr);
 }
 
 static inline void IconReserveVram(void *c, struct icon_manager *m)
@@ -114,7 +114,7 @@ void sub_8037388(void *unused)
 
     sub_8006A90(gUnknown_03001300);
     sub_8006A48(gUnknown_03001300);
-    sub_80006A8();
+    WaitForVBlank();
     sub_8006AAC(gUnknown_03001300);
     sub_8006EA8(gUnknown_030012B8);
     sub_8006D50(gUnknown_030012B8, 0);

@@ -77,10 +77,10 @@ area. In `global.c`, the order of allocnos, their conflict lists and
 their priorities (`floor_log2(refs) * refs / live_length`) explain most
 of the register choices.
 
-1. **`sub_8037E54` is `__udivsi3`, so divide with `/`.** With
-   `asm(".set __udivsi3, sub_8037E54")` and a plain `/`, the division is
+1. **`__udivsi3` is the ROM's own lib1funcs routine, so divide with `/`.** With
+   a plain `/` (the libcall resolves to it), the division is
    a libcall. gcc treats a libcall as a const call, which does not
-   clobber memory. An explicit `sub_8037E54(a, b)` call does clobber
+   clobber memory. An explicit `__udivsi3(a, b)` call does clobber
    it. That difference decides what GCSE may carry across the division.
    In `GaxCreateHandlers`, the spilled `gGaxPlayerState` address then
    reaches into the DSP-rate loop, and reload rematerializes it into r1

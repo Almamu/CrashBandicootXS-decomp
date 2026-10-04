@@ -11,11 +11,6 @@ extern void sub_802A7B8(void *self);
 extern struct actor_pmf gStaticData_0817C260[];
 extern struct actor_self *gUnknown_03000884;
 
-ACTOR_CALL_VIA_ALIASES
-
-/* sub_803ADB4 is libgcc's `__divsi3`, reached from plain `/`. */
-asm(".set __divsi3, sub_803ADB4\n");
-
 struct actor_fa38 {
     struct actor_self base;
     s32 hp;             // 0x54

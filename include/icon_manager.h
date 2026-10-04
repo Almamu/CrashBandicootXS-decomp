@@ -1,8 +1,8 @@
 #ifndef __ICON_MANAGER_H__
 #define __ICON_MANAGER_H__
 
-/* One (OAM-slot-offset, pointer) pair, as used by sub_803AD80/
- * sub_803AD84 to draw a single OAM entry. `struct icon_record` is an
+/* One (OAM-slot-offset, pointer) pair, as used by _call_via_r2/
+ * _call_via_r3 to draw a single OAM entry. `struct icon_record` is an
  * array of these, 8 bytes apart, starting at offset 0x10 - sub_8006600
  * (src/graphics/oam_count.c, parked) uses slots 0 and 2 (a wide icon spanning
  * two OAM entries); sub_8000EE4 (src/graphics/text_layout.c, parked) uses slots
@@ -57,7 +57,7 @@ struct icon_manager {
     /* A 6-byte OAM-shaped draw-request scratch buffer, rebuilt fresh by
      * `sub_80285C4` for every glyph drawn (byte 0/1, halfword at 2,
      * halfword at 4) then handed to `sub_8006AC8`; zeroed 8 bytes at a
-     * time (`sub_803A94C`, fixed-source CpuSet fill) by the widget
+     * time (a fixed-source `CpuSet` fill) by the widget
      * constructors. Bytes 6-7 are never written by anything in this
      * chunk. */
     u8 oam_scratch[8];

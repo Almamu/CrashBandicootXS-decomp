@@ -43,7 +43,7 @@ compilers and diffing each against the ROM:
 
 | Function | File | Compiler | Technique |
 |---|---|---|---|
-| `sub_8007DBC` | actor_part2.c | old | constant 1 in a variable pinned to r6 and assigned inside the first flag test (`& (one = 1)`), `gone` ORs it in; spawned part's `mode = 1` through a `u32` local; the player method call needs the `_call_via_r4` = `sub_803AD88` alias. File moved to old_agbcc. |
+| `sub_8007DBC` | actor_part2.c | old | constant 1 in a variable pinned to r6 and assigned inside the first flag test (`& (one = 1)`), `gone` ORs it in; spawned part's `mode = 1` through a `u32` local; the player method call needs the `_call_via_r4` alias. File moved to old_agbcc. |
 | `sub_800891C` | actor_part7.c | old | near/screen boxes in one frame struct; the screen box's w/h stored through a `&screen` pointer taken after its x/y stores (that pointer is the loop's r8). |
 | `sub_8008F20` | actor_part11.c | both | grid clear as a plain indexed `for` (gcc reverses it); free-list loop reads the array through `fl = freeList` taken inside the guard. |
 | `sub_8009914` | actor_part11i.c | both | same tail as `sub_8008F20`; the teardown loop is plain C. |

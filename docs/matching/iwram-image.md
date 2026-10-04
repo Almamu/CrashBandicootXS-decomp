@@ -15,11 +15,11 @@ script and the report. Contents:
 | `03000120` | `strncpy_arm` | same | matched (second pass), UNUSED |
 | `0300015C` | `strcat_arm` | same | matched, UNUSED |
 | `03000198` | `itoa_arm` | same | parked, UNUSED |
-| `0300024C` | `UnpackNibbleTiles` (`gUnknown_03000898`) | `src/iwram/sprite_arm.c` | matched |
-| `0300036C` | `DrawMirroredTilemap` (`gUnknown_0300087C`) | same | matched |
-| `03000474` | `HeapSortActorsByKey` (`gUnknown_03000880`) | same | parked |
-| `03000634` | `UnpackRleSpriteFrame` (`gUnknown_03000874`) | same | matched |
-| `030006FC` | `LookupSpriteFrameCache` (`gUnknown_03000870`) | same | parked |
+| `0300024C` | `UnpackNibbleTiles` (`gUnpackNibbleTilesFunc`) | `src/iwram/sprite_arm.c` | matched |
+| `0300036C` | `DrawMirroredTilemap` (`gDrawMirroredTilemapFunc`) | same | matched |
+| `03000474` | `HeapSortActorsByKey` (`gHeapSortActorsByKeyFunc`) | same | parked |
+| `03000634` | `UnpackRleSpriteFrame` (`gUnpackRleSpriteFrameFunc`) | same | matched |
+| `030006FC` | `LookupSpriteFrameCache` (`gLookupSpriteFrameCacheFunc`) | same | parked |
 | `030007CC`-`030009E8` | initialised globals | `src/iwram/iwram_data.c` | typed C, data |
 
 The five string routines have no caller: none of their addresses occurs
@@ -154,7 +154,7 @@ pool placement).
 ## Data
 
 `iwram_data.c` defines every global from `0x030007CC` up to
-`gUnknown_030009E8`, with an initialiser each so agbcc puts them all in
+`gIntrTable`, with an initialiser each so agbcc puts them all in
 `.data` in definition order (checked with `nm`). The hook pointers now
 point at the ARM functions by name, the cutscene language table
 `gCutsceneTexts` at `src/data/cutscenes_16d1c8.c`'s six tables, and

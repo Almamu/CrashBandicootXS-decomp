@@ -35,12 +35,12 @@ level object's own `+0xdc->+8` state field is `2`
    (`sub_800B69C`). Widget kind `1` additionally builds an OAM entry via
    the standard `sub_80087C0`/`sub_80087B4`/`sub_800872C` trio. All
    three cases finish by pointing `player+0x20`/`0x44` at the freshly
-   built table/widget and firing `sub_803AD80` on it.
+   built table/widget and firing `_call_via_r2` on it.
 5. Unconditionally calls `sub_8023A1C` (see below) and stashes its
    return value.
 6. Tears the per-frame update queues back down: `DestroyLevelLayers` on the
    text-box singleton if non-NULL, `sub_8026ED0` on the 0x18-byte
-   block, a `sub_803AD80` call on the player object if non-NULL, then
+   block, a `_call_via_r2` call on the player object if non-NULL, then
    `sub_8008EB4`/`sub_8009B9C` on each of the six widget-manager
    globals if non-NULL, and finally `DestroyEntitySpawner`.
 7. Returns `sub_8023A1C`'s result.
@@ -247,7 +247,7 @@ If the widget kind is `0`: probes `sub_80232B8`/`sub_8024404` or
 on success, clears the player's busy bit 7, re-stamps `+0x2d` to
 `0x29`, refreshes the OAM entry again, plays a sound effect
 (`gUnknown_030012BC` as sample id, priority `0x2c`, via `PlaySfx`),
-fires the `player+0x44`-table's `sub_803AD80` trampoline (mode
+fires the `player+0x44`-table's `_call_via_r2` trampoline (mode
 `0x29`), repeats the same `sub_8006D08` tile-cache call, and pings
 `gUnknown_03001318` (`sub_8028504`).
 
@@ -260,8 +260,8 @@ while not ready and the player's `+0xc` bit 0 is clear, run one more
 pass (`sub_802423C`/`sub_802400C`, a `sub_8004D74` input-driven mini-
 dispatch that can early-exit the whole function with return value `1`
 or `2` after firing `sub_80241BC`'s level-end teardown, a
-`gUnknown_030007E0` input-flag-gated `sub_8028504` ping, `sub_800891C`
-on three ring-buffer managers, two `sub_803AD7C` trampoline probes
+`gKeys` input-flag-gated `sub_8028504` ping, `sub_800891C`
+on three ring-buffer managers, two `_call_via_r1` trampoline probes
 against the player's own `+0x18`/`+0x38`/`+0x18` tables, `sub_80091D4`
 on `gUnknown_0300130C`, `sub_8028400`, and a `gLevelState+0x8c`-
 gated `TickLevelClock` call) before looping back. Once ready: fires the
@@ -272,7 +272,7 @@ fade (`sub_80014A4`).
 `sub_8024404`/`sub_80232B8`/`sub_8023104` or
 `sub_80243E0`/`sub_8023290` (both skip straight to the flush tail on
 failure); falling through both, loops `gUnknown_0300130C` counting
-entries whose `sub_803AD7C` trampoline probe returns `3` *and* whose
+entries whose `_call_via_r1` trampoline probe returns `3` *and* whose
 own `+0x4e` tag is `0xa` (the physics-subsystem state tag
 `gStaticData_0816BC98` indexes,
 [docs/matching/issue-12-physics-collision.md](issue-12-physics-collision.md)),
@@ -282,7 +282,7 @@ then calls `sub_8023140(gLevelState, count)`.
 widget-manager globals (`sub_8008CEC` on `030012E8`/`EC`/`F0`/`F8`/`F4`,
 `sub_8009914` on `0300130C`), resets the fade cluster's own bitfield
 accessors (`sub_8001578`/`sub_8001564`/`sub_8001550`/`sub_800153C`/
-`sub_800158C`/`sub_80006A8`/`sub_8001614`), and returns `sl` - `1` by
+`sub_800158C`/`WaitForVBlank`/`sub_8001614`), and returns `sl` - `1` by
 default, `2` from the wait-loop's `sub_8004D74`-driven early exit, or
 `0` once the post-fade branch was reached. `sub_802375C` itself stashes
 and returns this value unmodified.

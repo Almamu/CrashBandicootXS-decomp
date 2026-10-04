@@ -1,10 +1,10 @@
 #include "core.h"
 
-/* Sits right after the still-parked sub_80010E0 (asm/code_3_1_5.s) and
+/* Sits right after the still-parked WaitForKeyPress (asm/code_3_1_5.s) and
  * before whatever's still raw in asm/code_3_1_6.s. */
 
-extern void LZ77UnCompWrapper(void *src);
-extern void RLUnCompWrapper(void *src);
+extern void LZ77UnCompVram(void *src);
+extern void RLUnCompVram(void *src);
 
 /* Decompresses (or raw-DMA-copies) a "tagged" asset into `dest`. The
  * asset's first word's high nibble (bits 28-31) selects the format:
@@ -37,15 +37,15 @@ void LoadTaggedAsset(void *asset, void *dest)
         break;
     }
     case 1:
-        LZ77UnCompWrapper(asset);
+        LZ77UnCompVram(asset);
         break;
     case 3:
-        RLUnCompWrapper(asset);
+        RLUnCompVram(asset);
         break;
     }
 }
 
-extern void sub_80006A8(void);
+extern void WaitForVBlank(void);
 
 /* Loads a specific background's tile/tileset data (tagged asset at
  * `asset + 0x200`) into the start of `VRAM`, then DMAs the first 0x200
@@ -57,7 +57,7 @@ void LoadBackgroundTileAndPalette(void *asset)
     u32 val;
 
     LoadTaggedAsset((u8 *)asset + 0x200, (void *)VRAM);
-    sub_80006A8();
+    WaitForVBlank();
     dma = (struct dma_regs *)REG_ADDR_DMA3SAD;
     dma->src = (u32)asset;
     dma->dst = PLTT;

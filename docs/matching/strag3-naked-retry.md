@@ -14,7 +14,7 @@ This is a HUD icon + number renderer. It measures a label with the icon
 manager's `record->slots[0]` method, centers it at `(240 - w) >> 1`,
 sets the Y, draws it with `slots[2]`, and does the same for a second
 manager after the number is formatted. The method calls are gcc 2.x
-virtual calls through `sub_803AD80` (`_call_via_r2`), written the same
+virtual calls through `_call_via_r2`, written the same
 way as in `settings_menu11.c` and `counter_selector_icons.c`.
 
 - The first plain draft, with direct `mgr->posX = ...; mgr->posY = ...;`

@@ -32,7 +32,7 @@ struct viewport {
 
 extern struct viewport *gLevelLayers;
 extern void *gEntityFlags;
-extern s32 sub_803AD84(void *addr, void *arg1, void *arg2, void *fn);
+extern s32 _call_via_r3(void *addr, void *arg1, void *arg2, void *fn);
 extern void sub_800B8A8(void *self, s32 flags);
 extern void sub_800B8C8(void *self);
 
@@ -75,7 +75,7 @@ void sub_80187FC(void *objArg, void *otherArg)
         offset = *(s16 *)table;
         addr = obj + offset;
         fn = *(void **)(table + 4);
-        sub_803AD84(addr, other, (void *)8, fn);
+        _call_via_r3(addr, other, (void *)8, fn);
     }
     goto end;
 

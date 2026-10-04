@@ -51,7 +51,7 @@ struct pct_source
 
 extern s32 gUnknown_0300086C;
 extern struct pct_source *gUnknown_03000884;
-extern s32 sub_803AD7C(void *self, void *fn);
+extern s32 _call_via_r1(void *self, void *fn);
 extern s32 sub_80233B4(void *state);
 extern s32 sub_8031784(void);
 extern void sub_8008044(struct hud_digit_part *part);
@@ -60,8 +60,8 @@ extern struct hud_pos gStaticData_08174C6C[];
 extern void sub_80270E0(struct hud_digit_part *part, s32 x, s32 y);
 extern s32 sub_8023414(void *state);
 extern s32 GetWumpa(void *state);
-extern s32 sub_803ADB4(s32 a, s32 b);
-extern s32 sub_803AE4C(s32 a, s32 b);
+extern s32 __divsi3(s32 a, s32 b);
+extern s32 __modsi3(s32 a, s32 b);
 
 static inline void SetPartPos(s32 x, s32 y, struct hud_digit_part *part)
 {
@@ -128,22 +128,22 @@ void sub_8027940(struct hud_counter *selfArg)
     {
         if (v > 99)
         {
-            s32 f = sub_803ADB4(v, 100);
+            s32 f = __divsi3(v, 100);
 
             parts = self->parts;
             CLAMP_FRAME(&parts[3], parts[3].anim_index, f);
-            f = sub_803AE4C(sub_803ADB4(self->value_a, 10), 10);
+            f = __modsi3(__divsi3(self->value_a, 10), 10);
             CLAMP_FRAME(&parts[4], parts[4].anim_index, f);
-            f = sub_803AE4C(self->value_a, 10);
+            f = __modsi3(self->value_a, 10);
             CLAMP_FRAME(&parts[5], parts[5].anim_index, f);
         }
         else if (v > 9)
         {
-            s32 f = sub_803ADB4(v, 10);
+            s32 f = __divsi3(v, 10);
 
             parts = self->parts;
             CLAMP_FRAME(&parts[3], parts[3].anim_index, f);
-            f = sub_803AE4C(self->value_a, 10);
+            f = __modsi3(self->value_a, 10);
             CLAMP_FRAME(&parts[4], parts[4].anim_index, f);
             CLAMP_FRAME(&parts[5], parts[5].anim_index, -1);
         }
@@ -177,20 +177,20 @@ void sub_8027940(struct hud_counter *selfArg)
     {
         if (v > 99)
         {
-            s32 f = sub_803ADB4(v, 100);
+            s32 f = __divsi3(v, 100);
 
             CLAMP_FRAME(&parts[6], parts[6].anim_index, f);
-            f = sub_803AE4C(sub_803ADB4(self->value_b, 10), 10);
+            f = __modsi3(__divsi3(self->value_b, 10), 10);
             CLAMP_FRAME(&parts[7], parts[7].anim_index, f);
-            f = sub_803AE4C(self->value_b, 10);
+            f = __modsi3(self->value_b, 10);
             CLAMP_FRAME(&parts[8], parts[8].anim_index, f);
         }
         else if (v > 9)
         {
-            s32 f = sub_803ADB4(v, 10);
+            s32 f = __divsi3(v, 10);
 
             CLAMP_FRAME(&parts[6], parts[6].anim_index, f);
-            f = sub_803AE4C(self->value_b, 10);
+            f = __modsi3(self->value_b, 10);
             CLAMP_FRAME(&parts[7], parts[7].anim_index, f);
             CLAMP_FRAME(&parts[8], parts[8].anim_index, -1);
         }
@@ -248,11 +248,11 @@ void sub_8027D5C(struct hud_counter *selfArg)
     {
         if (v > 9)
         {
-            s32 f = sub_803ADB4(v, 10);
+            s32 f = __divsi3(v, 10);
 
             parts = self->parts;
             CLAMP_FRAME(&parts[11], parts[11].anim_index, f);
-            f = sub_803AE4C(self->value_c, 10);
+            f = __modsi3(self->value_c, 10);
             CLAMP_FRAME(&parts[12], parts[12].anim_index, f);
         }
         else
@@ -270,7 +270,7 @@ void sub_8027D5C(struct hud_counter *selfArg)
 /* The percentage-counter widget (`docs/rom_map.md`'s "fx" investigation
  * already named it this way from the `cmp r1, #0x64` special case
  * below): a single 3-digit-or-percent display sourced from
- * `sub_803AD7C(gUnknown_03000884's own x-position field + a halfword
+ * `_call_via_r1(gUnknown_03000884's own x-position field + a halfword
  * read off a nested struct, y-position field)` rather than any of the
  * mode/layout-value or `sub_80233B4`-family sources the rest of the
  * dispatcher's callees use - this is the only counter in the family
@@ -302,7 +302,7 @@ void sub_8027E88(struct hud_counter *selfArg)
         struct pct_source *src = gUnknown_03000884;
         struct pct_vtable *vt = src->vtable;
 
-        v = sub_803AD7C((u8 *)src + vt->delta, vt->fn);
+        v = _call_via_r1((u8 *)src + vt->delta, vt->fn);
     }
     self->value_d = v;
     if (v != self->shown_d)
@@ -318,11 +318,11 @@ void sub_8027E88(struct hud_counter *selfArg)
         }
         else if (v > 9)
         {
-            s32 f = sub_803ADB4(v, 10);
+            s32 f = __divsi3(v, 10);
 
             parts = self->parts;
             CLAMP_FRAME(&parts[25], parts[25].anim_index, f);
-            f = sub_803AE4C(self->value_d, 10);
+            f = __modsi3(self->value_d, 10);
             CLAMP_FRAME(&parts[26], parts[26].anim_index, f);
             CLAMP_FRAME(&parts[27], parts[27].anim_index, 10);
             CLAMP_FRAME(&parts[28], parts[28].anim_index, -1);
@@ -368,11 +368,11 @@ void sub_8027E88(struct hud_counter *selfArg)
         }
         else if (v > 9)
         {
-            s32 f = sub_803ADB4(v, 10);
+            s32 f = __divsi3(v, 10);
 
             parts = self->parts;
             CLAMP_FRAME(&parts[30], parts[30].anim_index, f);
-            f = sub_803AE4C(self->value_e, 10);
+            f = __modsi3(self->value_e, 10);
             CLAMP_FRAME(&parts[31], parts[31].anim_index, f);
             CLAMP_FRAME(&parts[32], parts[32].anim_index, 10);
             f = -1;

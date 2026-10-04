@@ -46,7 +46,7 @@ their bytes to the preceding labelled function:
 - **`nullsub_44`** (0x0803B5E0, 2 bytes, 2-byte aligned pad after) -
   `bx lr` alone, a genuinely empty stub (same shape as `nullsub_16` in
   `src/graphics/actor_part39.c`) - next available `nullsub_N`, since
-  `nullsub_43` was already taken.
+  `_call_via_lr` was already taken.
 - **`sub_803B5E4`** (0x0803B5E4, 4 bytes) - between `nullsub_44`'s
   padding and `sub_803B5E8`. `movs r0,#0; bx lr` - a trivial "return
   false"/"return 0" stub.

@@ -46,7 +46,7 @@ struct ab9c_obj
 };
 
 extern void sub_8007C30(struct aabb *dest, void *obj);
-extern void *sub_800014C(void *dest, void *src, s32 size);
+extern void *MemCopy32(void *dest, void *src, s32 size);
 extern void sub_8008A40(void *manager, struct aabb box, s32 unused, void *compareViewport);
 extern void sub_8009868(void *manager, s32 arg1);
 extern void sub_8008D30(void *manager, s32 arg1);
@@ -56,7 +56,7 @@ extern void *gUnknown_0300130C;
 extern void *gUnknown_030012EC;
 
 /* Bit 1 of +0x0C: builds the object's AABB (sub_8007C30), copies it
- * (sub_800014C, a CpuSet memcpy) and hands the copy to sub_8008A40 by value
+ * (MemCopy32, a CpuSet memcpy) and hands the copy to sub_8008A40 by value
  * - three words in r1-r3, the fourth on the stack, which is what gives the
  * ROM's stack-argument order (6th, 7th, then the box's last word). Bit 7:
  * clears +0x108/+0x10C with the latch's 0 and fires three teardown
@@ -76,7 +76,7 @@ void sub_800AB9C(struct ab9c_obj *self)
 
         sub_8007C30(&b.src, self);
         manager = gUnknown_030012F0;
-        sub_800014C(&b.copy, &b.src, sizeof(b.src));
+        MemCopy32(&b.copy, &b.src, sizeof(b.src));
         sub_8008A40(manager, b.copy, self->unk_24, self);
     }
 

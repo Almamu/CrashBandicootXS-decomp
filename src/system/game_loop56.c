@@ -77,7 +77,7 @@
  * 0x7f`), re-stamps `+0x2d` to `0x29`, refreshes the OAM entry again,
  * plays a sound effect (`gUnknown_030012BC` as the sample id, priority
  * `0x2c`) via `PlaySfx`, fires the `player+0x44`-table's trampoline
- * (`sub_803AD80`, mode `0x29`), repeats the same `sub_8006D08` tile-
+ * (`_call_via_r2`, mode `0x29`), repeats the same `sub_8006D08` tile-
  * cache call, and pings `gUnknown_03001318` (`sub_8028504`).
  *
  * Either way, this converges on flushing the four HUD ring-buffer
@@ -93,7 +93,7 @@
  * dispatch that can early-exit this whole function with return value
  * `1` or `2` via `sub_80241BC`'s level-end teardown, a `gUnknown_
  * 030007E0` input-flag-gated `sub_8028504` ping, `sub_800891C` on
- * three ring-buffer managers, `sub_803AD7C` trampoline probes against
+ * three ring-buffer managers, `_call_via_r1` trampoline probes against
  * the player's own `+0x18`/`+0x38`-`/+0x18` tables, `sub_80091D4` on
  * `gUnknown_0300130C`, `sub_8028400`, and a `gLevelState+0x8c`-
  * gated `TickLevelClock` call) before looping back. Once ready, fires the
@@ -105,7 +105,7 @@
  * dispatches gated by `sub_8024404`/`sub_80232B8`/`sub_8023104` or
  * `sub_80243E0`/`sub_8023290` (both skip straight to the flush tail on
  * failure); falling through both, loops `gUnknown_0300130C` counting
- * entries whose `sub_803AD7C` trampoline probe returns `3` *and* whose
+ * entries whose `_call_via_r1` trampoline probe returns `3` *and* whose
  * own `+0x4e` tag is `0xa` (the same physics-subsystem state tag
  * `gStaticData_0816BC98` indexes, `docs/matching/
  * issue-12-physics-collision.md`), then calls `sub_8023140(gUnknown_
@@ -114,7 +114,7 @@
  * (`sub_8008CEC` on `030012E8`/`EC`/`F0`/`F8`/`F4`, `sub_8009914` on
  * `0300130C`), resets the fade cluster's own bitfield accessors
  * (`sub_8001578`/`sub_8001564`/`sub_8001550`/`sub_800153C`/
- * `sub_800158C`/`sub_80006A8`/`sub_8001614`), and returns whatever
+ * `sub_800158C`/`WaitForVBlank`/`sub_8001614`), and returns whatever
  * `sl` was left holding (`1` by default, `2` from the wait-loop's
  * `sub_8004D74`-driven early exit, or `0` once the post-fade branch
  * was reached) - the value `sub_802375C` itself stashes and returns.
@@ -268,7 +268,7 @@ extern void *gUnknown_030012E8;
 extern void *gUnknown_03001304;
 extern struct gl_entity_list *gUnknown_0300130C;
 extern s32 gUnknown_0300082C;
-extern union gl_input gUnknown_030007E0;
+extern union gl_input gKeys;
 extern struct gl_level_entry gLevelTable[];
 extern u16 gThemePaletteCycle2[];
 extern u16 gThemePaletteCycle1A[];
@@ -315,8 +315,8 @@ extern u8 sub_8023290(void *level);
 extern u8 sub_8024404(struct gl_self *self);
 extern u8 sub_80243E0(struct gl_self *self);
 extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
-extern s32 sub_803AD80(void *self, s32 arg, void *fn);
-extern s32 sub_803AD7C(void *self, void *fn);
+extern s32 _call_via_r2(void *self, s32 arg, void *fn);
+extern s32 _call_via_r1(void *self, void *fn);
 extern void sub_8028504(void *arg);
 extern void sub_8008C80(void *mgr);
 extern void sub_802400C(struct gl_self *self);
@@ -325,7 +325,7 @@ extern void sub_8001604(void);
 extern void sub_80015E0(void);
 extern void sub_8001614(void);
 extern void sub_8001624(void);
-extern void sub_80007AC(void *arg);
+extern void UpdateKeys(void *arg);
 extern s32 sub_8004D74(void);
 extern void sub_80241BC(struct gl_self *self);
 extern void sub_800891C(void *mgr);
@@ -345,15 +345,15 @@ extern void sub_8001564(void);
 extern void sub_8001550(void);
 extern void sub_800153C(void);
 extern void sub_800158C(void);
-extern void sub_80006A8(void);
+extern void WaitForVBlank(void);
 
 #define PAL_RAM ((u16 *)PLTT)
 
-/* obj->vtable->slot(obj), through `_call_via_r1` (sub_803AD7C). */
+/* obj->vtable->slot(obj), through `_call_via_r1`. */
 #define PMF_CALL(obj, slot)                                                    \
     ({                                                                         \
         struct gl_method *_m = &(obj)->vtable->slot;                           \
-        sub_803AD7C((u8 *)(obj) + _m->delta, _m->fn);                          \
+        _call_via_r1((u8 *)(obj) + _m->delta, _m->fn);                          \
     })
 
 static inline void SetPoint(struct gl_point *point, s32 x, s32 y)
@@ -453,7 +453,7 @@ s32 sub_8023A1C(struct gl_self *self)
             RestartPlayerAnim(gUnknown_030012D8, 0x29);
             PlaySfx(gUnknown_030012BC, 0x2C, 0x100);
             a = gUnknown_030012D8->attach;
-            sub_803AD80((u8 *)a + a->vtable->attach.delta, 0x29, a->vtable->attach.fn);
+            _call_via_r2((u8 *)a + a->vtable->attach.delta, 0x29, a->vtable->attach.fn);
             RefreshPlayerTiles();
             sub_8028504(gUnknown_03001318);
         }
@@ -475,15 +475,15 @@ s32 sub_8023A1C(struct gl_self *self)
 
         sub_802423C();
         sub_802400C(self);
-        sub_80007AC(gUnknown_03001304);
-        if (!gUnknown_030012D8->inputLock && (gUnknown_030007E0.half.hi & 8))
+        UpdateKeys(gUnknown_03001304);
+        if (!gUnknown_030012D8->inputLock && (gKeys.half.hi & 8))
         {
             s32 r = sub_8004D74();
 
             if (r == 0)
             {
                 sub_80241BC(self);
-                sub_80007AC(gUnknown_03001304);
+                UpdateKeys(gUnknown_03001304);
             }
             if (r == 1)
             {
@@ -496,7 +496,7 @@ s32 sub_8023A1C(struct gl_self *self)
                 goto fade;
             }
         }
-        if (gUnknown_030007E0.held & 4)
+        if (gKeys.held & 4)
             sub_8028504(gUnknown_03001318);
         sub_800891C(gUnknown_030012F4);
         sub_800891C(gUnknown_030012E8);
@@ -579,7 +579,7 @@ fade:
     sub_8001550();
     sub_800153C();
     sub_800158C();
-    sub_80006A8();
+    WaitForVBlank();
     sub_8001614();
     return ret;
 }

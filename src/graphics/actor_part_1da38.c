@@ -64,7 +64,7 @@ struct zoom_bg
     u32 phase;             // 0x30 - wobble phase, 0-0xFF
     union bgcnt bgcnt;     // 0x34 - REG_BG2CNT value (sub_801DE24)
     u8 unk_36[2];
-    /* BgAffineSet (sub_803A944) source, 0x38-0x49 */
+    /* BgAffineSet source, 0x38-0x49 */
     s32 texX;              // 0x38
     s32 texY;              // 0x3C
     s16 scrX;              // 0x40
@@ -99,7 +99,7 @@ extern u32 gStaticData_0816C610[];
 extern u32 gStaticData_0816C624[];
 
 extern void PlaySfx(void *ctx, s32 sfx, s32 volume);
-extern void sub_803A944(void *src, void *dst, s32 count);
+extern void BgAffineSet(void *src, void *dst, s32 count);
 
 void sub_801DE04(struct zoom_bg *self, struct twinkle *t);
 u8 sub_801DD18(struct zoom_bg *self);
@@ -215,7 +215,7 @@ void sub_801DC28(struct zoom_bg *self)
         self->sy = self->scale;
         break;
     }
-    sub_803A944(&self->texX, &self->pa, 1);
+    BgAffineSet(&self->texX, &self->pa, 1);
 }
 
 /* Commits the affine matrix to BG2PA-BG2Y. */
@@ -295,10 +295,10 @@ void sub_801DD90(struct zoom_bg *self, struct twinkle *t)
 /* Picks a new random frame, duration and blink window for a twinkle. */
 void sub_801DDB4(struct zoom_bg *self, struct twinkle *t)
 {
-    SetFrame(t->part, (u16)sub_8000E1C(8));
-    t->timer = (u16)sub_8000E1C(0x3C);
+    SetFrame(t->part, (u16)RandRange(8));
+    t->timer = (u16)RandRange(0x3C);
     if (t->timer != 0)
-        t->blink = (u16)sub_8000E1C(t->timer / 2 + 1);
+        t->blink = (u16)RandRange(t->timer / 2 + 1);
 }
 
 void sub_801DE04(struct zoom_bg *self, struct twinkle *t)

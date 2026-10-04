@@ -27,15 +27,15 @@
 extern u8 gStaticData_087E4DAC[];
 extern void sub_8026ED0(void *manager);
 
-extern void *sub_803AD7C(void *arg0, void *arg1);
-extern s32 sub_8037E54(s32 value, s32 divisor);
+extern void *_call_via_r1(void *arg0, void *arg1);
+extern s32 __udivsi3(s32 value, s32 divisor);
 
 /* Divides `value` by the widget's own line height (`field_11c`) - see
  * src/util/word_util.c's sub_8001214, which uses this same field as a
  * divisor for a line-count limit. */
 s32 sub_8028AC4(struct icon_manager *self, s32 value)
 {
-    return sub_8037E54(value, self->field_11c);
+    return __udivsi3(value, self->field_11c);
 }
 
 /* Trivial getter/setter pairs around `struct icon_manager`'s fields -
@@ -79,7 +79,7 @@ u32 sub_8028B4C(struct icon_manager *self)
 }
 
 /* Sets `field_108`, then forwards to `record`'s slot-6 trampoline (see
- * include/icon_manager.h's `struct icon_record`) via `sub_803AD7C`,
+ * include/icon_manager.h's `struct icon_record`) via `_call_via_r1`,
  * discarding its result. */
 void sub_8028B58(struct icon_manager *self, u32 val)
 {
@@ -87,7 +87,7 @@ void sub_8028B58(struct icon_manager *self, u32 val)
 
     self->field_108 = val;
     slot = &self->record->slots[6];
-    sub_803AD7C((u8 *)self + slot->offset, slot->ptr);
+    _call_via_r1((u8 *)self + slot->offset, slot->ptr);
 }
 
 void InitHudTextWidget(struct icon_manager *self, u32 flags)

@@ -2,7 +2,7 @@
 #include "audio.h"
 #include "settings_sync.h"
 
-extern void sub_800014C(void *dst, void *src, s32 len);
+extern void MemCopy32(void *dst, void *src, s32 len);
 extern void sub_8002C6C(struct settings_sync_record *self, s32 row);
 extern void sub_8002B70(struct settings_sync_record *self);
 
@@ -124,9 +124,9 @@ extern struct AudioContext *gUnknown_030012BC;
 extern u32 sub_8001AB8(struct AudioContext *self);
 extern void sub_8001BD4(struct AudioContext *self);
 extern void sub_8001B54(struct AudioContext *self, u32 id);
-extern s32 sub_8002938(void *self, s32 len);
+extern s32 WriteSaveData(void *self, s32 len);
 
-/* Saves the settings record to EEPROM (`sub_8002938`, retried up to 5
+/* Saves the settings record to EEPROM (`WriteSaveData`, retried up to 5
  * times), muting the music player across the transfer the same way
  * `sub_8002A08` (src/graphics/settings_menu8d.c) does (checksum
  * refreshed first via `sub_8002B70`, before the mute). Returns 4
@@ -156,7 +156,7 @@ s32 sub_8002BA4(struct settings_sync_record *self)
 
     i = 0;
     do {
-        result = sub_8002938(self, 0x200);
+        result = WriteSaveData(self, 0x200);
         i++;
     } while (i <= 4 && result != 0);
 
@@ -181,7 +181,7 @@ void sub_8002C14(struct settings_sync_record *self, s32 row, void *dst)
 
         offset = row * 0x70;
         offset = offset + (s32)self;
-        sub_800014C(dst, (void *)offset, 0x70);
+        MemCopy32(dst, (void *)offset, 0x70);
     }
 }
 
@@ -195,7 +195,7 @@ void sub_8002C40(struct settings_sync_record *self, s32 row, void *src)
     self->rowSelected[row] = 0;
     offset = row * 0x70;
     offset = offset + (s32)self;
-    sub_800014C((void *)offset, src, 0x70);
+    MemCopy32((void *)offset, src, 0x70);
     sub_8002B70(self);
 }
 

@@ -68,7 +68,7 @@ child-object/action-table family (`actor_part79.o`/`actor_part83.o`/
 
 - **`sub_8012FBC`** (620 B, `actor_part_12fbc.c`) - bails immediately
   (no `sub_80122CC` call at all) if `sub_8012A7C(self)` reports busy.
-  Otherwise reads `gUnknown_030007E0`'s high 16 bits: bit 0 plays a
+  Otherwise reads `gKeys`'s high 16 bits: bit 0 plays a
   fixed sound (id `0xd`), fires the `+0x20`/`+0x24` and `+0x50`/`+0x54`
   trampoline pairs (ids `5`/`0x13`), sets the trio `self+0x18=0`/
   `+0x32=0`/`+0x30=1`/`+0x28=7`, then returns directly - skipping the
@@ -83,12 +83,12 @@ child-object/action-table family (`actor_part79.o`/`actor_part83.o`/
   gUnknown_030012D8)` and clears two bits (`~5` on `+0xc`, then a
   `(~4)|1` pack on `+0x28`) on the returned object. All three of these
   cases (and the "none of the above" fallthrough) then converge on a
-  shared tail: dispatching `sub_8000760(gUnknown_03001304)`'s result -
+  shared tail: dispatching `GetDpadDirection(gUnknown_03001304)`'s result -
   `2`, or `7..8` - resets `self+0x1c=0`, fires one more trampoline pair
   (ids `0x10`/`3`), and sets the trio to `0x1d`/`1`/`0` directly; `0`
   instead calls `sub_8015780(self, 0, 0x12, 0, 0)` then re-sets the same
   trio fields to the same `0x1d`/`1`/`0`/`0x1d` shape by hand. Finally,
-  if `gUnknown_030007E0`'s low-half bit `0x200` is set: for `self+8==3`,
+  if `gKeys`'s low-half bit `0x200` is set: for `self+8==3`,
   gates `sub_80231C4(gLevelState)` to set `self+0x29=1`, fire a
   trampoline pair (ids `4`/`0x18`), and set the trio to `0`/`1`/`0x1b`;
   for `self+8==4`, sets `self+0x29` from the bit test and tail-calls
@@ -103,17 +103,17 @@ child-object/action-table family (`actor_part79.o`/`actor_part83.o`/
   pointer-to-manager/`part+0x2d`-tag/28-byte-stride record's own `+0x16`
   count (the same table-lookup convention `sub_8010480`, game_loop35.c,
   establishes), calls `sub_800B334(part)`, then clears `part+0x68`.
-  Otherwise, while `self+0x26==0` and `gUnknown_030007E0`'s high-half
+  Otherwise, while `self+0x26==0` and `gKeys`'s high-half
   bit 1 is set: plays a fixed sound (id `0xa`), fires another trampoline
   pair (ids `0xe`/`0x10`), resets `self+0x18`/`+0x1c` and the
   `+0x21..+0x24` byte run, and clears the player's `+0x92` byte.
   Otherwise, while `part+0x38` is set: depending on
-  `gUnknown_030007E0`'s low bits (`1` and `0x30`) and whether
+  `gKeys`'s low bits (`1` and `0x30`) and whether
   `part+0x2d==6`, fires one or two more trampoline-pair combinations
   (ids `9`/`6`, or `7`/`0xc`) and, while `self+0x28==7`, resets the
   trio to one of `0xa`/`9`/`8` depending on those same bits. Finally,
   every path but the first converges on dispatching
-  `sub_8000760(gUnknown_03001304)`'s D-pad-remap result: `<=2` resets
+  `GetDpadDirection(gUnknown_03001304)`'s D-pad-remap result: `<=2` resets
   the trio to `0`/`1`/`0` while the player's `+0x100` flag is clear;
   otherwise, a `self+0x27` tag of `0x1b`/`0x1c` resets it to `1`/`1`/
   `0x1c`; a nonzero `self+0x18` (tag `!=0xd`) resets it to `0`/`1`/`0xd`;
@@ -122,8 +122,8 @@ child-object/action-table family (`actor_part79.o`/`actor_part83.o`/
 - **`sub_80134B8`** (1072 B, `actor_part_134b8.c`) - confirmed by this
   pass as `docs/rom_map.md`'s "bonus/score popup" handler, the table's
   shared default reused across 6 of its 42 slots. Caches `part+0x68`
-  (busy flag) and `sub_8000760`'s D-pad-remap result up front. Unless
-  `self+8==0xe`, `self+0x26!=0`, or `gUnknown_030007E0`'s bits/`self+8`
+  (busy flag) and `GetDpadDirection`'s D-pad-remap result up front. Unless
+  `self+8==0xe`, `self+0x26!=0`, or `gKeys`'s bits/`self+8`
   range checks fail, plays a fixed sound (id `0xa`) and fires the usual
   `+0x20`/`+0x24` and `+0x50`/`+0x54` trampoline pairs (ids `0xe`/
   `0x10`), resetting `self+0x18`/`+0x1c` and the `+0x21..+0x24` run plus
@@ -151,12 +151,12 @@ child-object/action-table family (`actor_part79.o`/`actor_part83.o`/
   sound (id `0x19`) and fires one more trampoline pair (ids `0x16`/
   `0x11`) before resetting the trio to `0`/`1`/`0`. Outside the
   `0x18..0x19` range: for `self+8==0xe`, dispatches
-  `gUnknown_030007E0`'s low-half bit `0x30` to set the trio to either
+  `gKeys`'s low-half bit `0x30` to set the trio to either
   `1`/`1`/`1c` or `0`/`1`/tag(0/1); otherwise, gated on
-  `gUnknown_030012D8+0x100` and `sub_8000760`'s result, fires one more
+  `gUnknown_030012D8+0x100` and `GetDpadDirection`'s result, fires one more
   trampoline pair (ids `0x17`/`0x16`) and sets the trio to `0`/`1`.
 - **`sub_80138E8`** (172 B, `actor_part_138e8.c`) - a thin
-  `sub_803AD84` dispatcher on `part`'s state. While `part+0x2d==6`: for
+  `_call_via_r3` dispatcher on `part`'s state. While `part+0x2d==6`: for
   `part->0x30==3`, fires the `+0x50`/`+0x54` trampoline with id `9`;
   for `part->0x30>3` or `part+0x38!=0`, fires it with id `8` instead
   (otherwise does nothing). Otherwise, while `part+0x38!=0`:
@@ -167,7 +167,7 @@ child-object/action-table family (`actor_part79.o`/`actor_part83.o`/
   pass as `docs/rom_map.md`'s "player input/action handling" reader. If
   `part+0x68==0`: sets the trio to `5`/`1`/`0` directly and returns (no
   trampoline calls). Otherwise, on the "confirm" input edge
-  (`gUnknown_030007E0` low bit 0 plus `sub_800AAEC(part, 0xb)`): plays a
+  (`gKeys` low bit 0 plus `sub_800AAEC(part, 0xb)`): plays a
   sound (id `0xc`), clears two `part+0xd` bits (the same runtime
   `-2`/`-3` negated-mask idiom `sub_80142B0`, actor_part18.c, uses),
   and tail-calls `sub_8015508(self)`. On bit 1 plus
@@ -178,10 +178,10 @@ child-object/action-table family (`actor_part79.o`/`actor_part83.o`/
   idiom (initial `3`). Once `self+0x18` catches up: bails if
   `part+0x38==0`; else, if `part+0x68==0`, fires the `+0x20`/`+0x24`
   and `+0x50`/`+0x54` trampoline pair (ids `0x1a`/`0x1b`) and sets the
-  trio to `4`/`1`/`0`; else, on `gUnknown_030007E0`'s low-half bit
+  trio to `4`/`1`/`0`; else, on `gKeys`'s low-half bit
   `0x100`: fires a further pair (ids `0x14`/`0`), resets `self+0x1c`,
   sets the trio to `0`/`1`/`3`, and tail-calls `sub_801434C(self)`
-  (actor_part18.c); otherwise dispatches `sub_8000760`
+  (actor_part18.c); otherwise dispatches `GetDpadDirection`
   (`gUnknown_03001304`) and `sub_800AAEC(part, 2)`: when both fire and
   the D-pad result is `3`/`4`, gates `sub_80231C4(gLevelState)`
   behind a further bit test to either fire a trampoline pair (ids
@@ -214,7 +214,7 @@ genuine attempt:
 
 - **`sub_8013228`**: a first plain-C draft, structured as straightforward
   nested `if`/`else` mirroring the ROM's own branch shape (reusing the
-  exact `mgr = *(u8 **)(self + 0xc); sub_803AD80(...)` idiom already
+  exact `mgr = *(u8 **)(self + 0xc); _call_via_r2(...)` idiom already
   matched in `actor_part18.c`'s `sub_80142B0`, plus the register-pinned
   "clamp against a `part+0x20`-manager/`part+0x2d`-tag table" block
   already matched for `sub_8010480`, game_loop35.c), compiled and
@@ -229,7 +229,7 @@ genuine attempt:
   function repeats verbatim. Given the immediate divergence and the
   size of the remaining function, this was not pursued further.
 - **`sub_80138E8`**: its `part[0x38]`-gated single-vs-double
-  `sub_803AD80`/`sub_803AD84` trampoline call (keyed on
+  `_call_via_r2`/`_call_via_r3` trampoline call (keyed on
   `sub_80231BC(gLevelState)`) reproduces the *exact* shape
   already confirmed unmatchable in `sub_80156EC`
   (`actor_part38c.c`, `docs/matching/issue-18-0x08014f8c-actor.md`'s
@@ -315,11 +315,11 @@ use. The older files in this family still use raw offsets.
 
 ### What made them match
 
-- **The input snapshot.** Every handler copies `gUnknown_030007E0` to a
+- **The input snapshot.** Every handler copies `gKeys` to a
   stack word and reads its halves back with `ldrh [sp, #0]`/`[sp, #2]`.
   A union or struct member read gets folded into a halfword load of the
   global itself, so the halves are read through the local's address
-  (`INPUT_PRESSED`/`INPUT_HELD`). Where the ROM loads `sub_8000760`'s
+  (`INPUT_PRESSED`/`INPUT_HELD`). Where the ROM loads `GetDpadDirection`'s
   argument before taking the snapshot, a `pad` local fixes the order.
 - **Byte stores and the dead `& 0`.** As in `actor_part_18008.c`
   (`docs/matching/issue-22-0x08018008-hopper.md`), a struct-member byte
@@ -357,7 +357,7 @@ differ only in register roles:
 - `sub_8014BCC`, `sub_8014D18`, `sub_8014674`: the ROM keeps the
   constant 1 (and in `sub_8014BCC` the `&self->next27` pointer, in r8)
   in different callee-saved registers from gcc's choice. `sub_8014D18`
-  also shares one `sub_803AD84` call between its 0x22/0x23 animation
+  also shares one `_call_via_r3` call between its 0x22/0x23 animation
   paths.
 
 ### Status

@@ -11,7 +11,7 @@
  * `GetAnimFrameBaseOffset`, and a "part table" pointer at `+0`, the
  * same convention actor_part18.c documents at `animTimer` for its own
  * object), plus a `+0x50`-rooted `{s16 offset; void *fn}` trampoline
- * record fed through `sub_803AD80`/`sub_803AD84` (the same convention
+ * record fed through `_call_via_r2`/`_call_via_r3` (the same convention
  * already named in actor_part10.c/actor_part11.c for a sibling "part"
  * object, just at a different fixed offset here) and a `+0x48`/`+0x4c`
  * circular doubly-linked-list pair (confirmed by `sub_802C19C`'s own
@@ -52,13 +52,13 @@ extern u8 *GetAnimFrameData(void *self);
 extern void SetupSpriteFrameOam(u8 *frame, u32 arg1, u32 arg2, s32 priority);
 extern s32 sub_803B060(void *self);
 extern u8 gStaticData_087E4E94[];
-extern s32 sub_803ADB4(s32 arg0, s32 arg1);
+extern s32 __divsi3(s32 arg0, s32 arg1);
 extern s32 sub_8029E98(void);
 extern s32 sub_8029EB4(void);
 extern void InitActorPart(void *self, s32 a, s32 b, s32 c, s32 d);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
-extern s32 sub_803AD80(void *arg0, void *arg1, void *arg2);
-extern s32 sub_803AD84(void *addr, void *arg1, void *tableEntry, void *fn);
+extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
+extern s32 _call_via_r3(void *addr, void *arg1, void *tableEntry, void *fn);
 extern u8 sub_802A6EC(void *self);
 extern void sub_802A7B8(void *self);
 extern u8 sub_802DD9C(void *self);

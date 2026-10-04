@@ -32,7 +32,7 @@ extern u8 gStaticData_0817A768[];
 
 extern void InitActorPart(void *self, s32 a, s32 b, s32 c, s32 d);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
-extern s32 sub_803AD80(void *arg0, void *arg1, void *arg2);
+extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern u8 sub_802A6EC(void *self);
 extern void sub_802A7B8(void *self);
 extern u8 sub_802DD9C(void *self);
@@ -58,7 +58,7 @@ void sub_802C464(void *selfArg)
         sub_802C078(gUnknown_03000884, 1);
         if (self != 0) {
             struct actor_vtable *table = self->vtable;
-            sub_803AD80((u8 *)self + table->m08.thisOffset, (void *)3, table->m08.fn);
+            _call_via_r2((u8 *)self + table->m08.thisOffset, (void *)3, table->m08.fn);
         }
     } else {
         sub_802A7B8(self);
@@ -110,7 +110,7 @@ void sub_802C4C8(void *selfArg)
     if (self->animIndex == 0x12 && self->animDone != 0) {
         if (self != 0) {
             struct actor_vtable *table = self->vtable;
-            sub_803AD80((u8 *)self + table->m08.thisOffset, (void *)3, table->m08.fn);
+            _call_via_r2((u8 *)self + table->m08.thisOffset, (void *)3, table->m08.fn);
         }
         return;
     }
@@ -259,7 +259,7 @@ void sub_802C6C0(void *selfArg)
         sub_8029720();
         if (self != 0) {
             struct actor_vtable *table = self->vtable;
-            sub_803AD80((u8 *)self + table->m08.thisOffset, (void *)3, table->m08.fn);
+            _call_via_r2((u8 *)self + table->m08.thisOffset, (void *)3, table->m08.fn);
         }
         return;
     } else {

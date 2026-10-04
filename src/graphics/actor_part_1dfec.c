@@ -72,7 +72,7 @@ struct cursor_panel
     struct oam_attrs oam;       // 0x34
     s32 speed;                  // 0x3C - zoom step (sub_801E480)
     s32 scale;                  // 0x40 - 0x100 = 1:1
-    /* ObjAffineSet (sub_803A954) source */
+    /* ObjAffineSet source */
     s16 sx;                     // 0x44
     s16 sy;                     // 0x46
     u16 angle;                  // 0x48
@@ -93,7 +93,7 @@ extern u32 gStaticData_0816C634[];
 extern u8 gStaticData_086377C0[];
 
 extern void sub_8006AC8(struct oam_shadow_buffer *buf, struct oam_attrs *oam);
-extern void sub_803A954(void *src, void *dst, s32 count, s32 stride);
+extern void ObjAffineSet(void *src, void *dst, s32 count, s32 stride);
 
 void sub_801E190(struct cursor_panel *self);
 void sub_801E3A4(struct cursor_panel *self);
@@ -104,7 +104,7 @@ void sub_801E504(struct cursor_panel *self);
 
 static inline void ResetIdleTimer(struct cursor_panel *self)
 {
-    self->timer = (u16)sub_8000E1C(300) + 600;
+    self->timer = (u16)RandRange(300) + 600;
 }
 
 static inline void MoveToPos(struct cursor_panel *self, struct xy *pos)
@@ -269,7 +269,7 @@ void sub_801E3A4(struct cursor_panel *self)
 
     self->sx = s;
     self->sy = s;
-    sub_803A954(&self->sx, self->matrix, 1, 2);
+    ObjAffineSet(&self->sx, self->matrix, 1, 2);
 }
 
 /* UNUSED. Shrunk away (state 5). */

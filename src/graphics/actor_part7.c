@@ -281,8 +281,6 @@ struct actor *sub_8008904(struct actor *part)
     return part;
 }
 
-ACTOR_CALL_VIA_ALIASES
-
 typedef s32 (*part_method0_fn)(void *self);
 typedef s32 (*part_method1_fn)(void *self, void *arg);
 typedef void (*part_method3_fn)(void *self, s32 a, s32 b, s32 c);
@@ -298,9 +296,9 @@ struct viewport {
 };
 
 extern struct viewport *gLevelLayers;
-extern s32 sub_803AD80(void *self, void *arg, void *fn);
-extern s32 sub_803AD7C(void *self, void *fn);
-extern void sub_803A94C(const void *src, void *dst, u32 cnt);
+extern s32 _call_via_r2(void *self, void *arg, void *fn);
+extern s32 _call_via_r1(void *self, void *fn);
+extern void CpuSet(const void *src, void *dst, u32 cnt);
 
 /* `list` is the part list: each call compacts `items` (dropping parts
  * whose `gone` bit is set) and rebuilds `visible` from scratch. Builds
@@ -309,7 +307,7 @@ extern void sub_803A94C(const void *src, void *dst, u32 cnt);
  * (Q8).
  *
  * For each part: if it is gone, and its index is still below
- * `capacity`, removes it from `items` via a `sub_803A94C` (the BIOS
+ * `capacity`, removes it from `items` via a `CpuSet` (the BIOS
  * `CpuSet` SWI) block copy shifting every later element down by one,
  * decrementing `count` and clearing the vacated last slot - then (if
  * the slot held a part) calls its method-table +0x50 method with `3`,
@@ -369,32 +367,32 @@ void sub_800891C(struct part_list *list)
 
         if (part->flags & 1) {
             if (i < list->capacity) {
-                sub_803A94C(&items[i + 1], &items[i], ((list->count - i) & 0x1FFFFF) | 0x4000000);
+                CpuSet(&items[i + 1], &items[i], ((list->count - i) & 0x1FFFFF) | 0x4000000);
                 list->count--;
                 list->items[list->count] = NULL;
             }
             if (part != NULL) {
                 struct part_method *m = PART_METHOD(part, 0x50);
-                sub_803AD80((u8 *)part + m->thisOffset, (void *)3, m->fn);
+                _call_via_r2((u8 *)part + m->thisOffset, (void *)3, m->fn);
             }
             i--;
         } else {
             struct part_method *m = PART_METHOD(part, 0x40);
 
-            if ((u8)sub_803AD80((u8 *)part + m->thisOffset, &f.near, m->fn)) {
+            if ((u8)_call_via_r2((u8 *)part + m->thisOffset, &f.near, m->fn)) {
                 struct part_method *m2 = PART_METHOD(part, 0x18);
                 struct part_method *m3;
 
-                sub_803AD7C((u8 *)part + m2->thisOffset, m2->fn);
+                _call_via_r1((u8 *)part + m2->thisOffset, m2->fn);
                 m3 = PART_METHOD(part, 0x30);
-                if ((u8)sub_803AD80((u8 *)part + m3->thisOffset, &f.screen, m3->fn))
+                if ((u8)_call_via_r2((u8 *)part + m3->thisOffset, &f.screen, m3->fn))
                     list->visible[list->visibleCount++] = part;
             }
         }
     }
 }
 
-extern void *sub_800014C(void *dst, const void *src, s32 size); /* memcpy (asm/crt0.s) */
+extern void *MemCopy32(void *dst, const void *src, s32 size); /* memcpy (asm/crt0.s) */
 extern void sub_8008AD8(struct part_list *list, struct part_aabb box, struct box_part *part);
 extern void sub_8008D80(struct part_list *list, struct part_aabb box, struct box_part *part, struct box_part *other);
 extern struct box_part *gUnknown_030012D8;
@@ -406,7 +404,7 @@ extern struct box_part *gUnknown_030012D8;
  * or `sub_8008D80` (otherwise, also passing `other`).
  *
  * The box arrives and is passed on by value; the ROM copies it into one
- * shared temporary with sub_800014C (memcpy) before each call, which is
+ * shared temporary with MemCopy32 (memcpy) before each call, which is
  * what the explicit call reproduces (a plain struct assignment is
  * copied inline with ldm/stm instead). `unused` is the caller's padding
  * argument. Matches under old_agbcc. */
@@ -424,10 +422,10 @@ void sub_8008A40(struct part_list *list, struct part_aabb box, s32 unused, struc
         if (!((part->flags >> 2) & 1))
             continue;
         if (other == gUnknown_030012D8) {
-            sub_800014C(&tmp, &box, sizeof(tmp));
+            MemCopy32(&tmp, &box, sizeof(tmp));
             sub_8008AD8(list, tmp, part);
         } else {
-            sub_800014C(&tmp, &box, sizeof(tmp));
+            MemCopy32(&tmp, &box, sizeof(tmp));
             sub_8008D80(list, tmp, part, other);
         }
     }

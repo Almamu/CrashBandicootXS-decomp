@@ -2,10 +2,10 @@
 #include "memory.h"
 
 s32 mem_heap_init(u32);
-extern void sub_8000518();                                    /* extern */
+extern void mem_heap_shutdown();                                    /* extern */
 extern void IrqDisable();                                    /* extern */
 extern u32 IrqSetup();                                  /* extern */
-extern void sub_8000620();                                    /* extern */
+extern void EnableVBlankHandler();                                    /* extern */
 extern s32 MainLoop();                                  /* extern */
 
 
@@ -21,14 +21,14 @@ s32 AgbMain(void) {
         return -1;
     }
     
-    sub_8000620();
+    EnableVBlankHandler();
     
     if (MainLoop() != 0) {
         return -1;
     }
     
     IrqDisable();
-    sub_8000518();
+    mem_heap_shutdown();
     
     return 0;
 }

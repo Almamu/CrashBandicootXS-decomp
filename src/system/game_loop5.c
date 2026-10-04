@@ -112,7 +112,7 @@ void sub_8025588(void *self, s32 n)
     *word &= ~mask;
 }
 
-extern void sub_803A94C(void *src, void *dst, s32 control);
+extern void CpuSet(void *src, void *dst, s32 control);
 
 /* Zero-fills 32 words (128 bytes) at `dst` via the BIOS `CpuSet`
  * wrapper, 32-bit fixed-source mode. */
@@ -120,7 +120,7 @@ void sub_80255A8(void *dst)
 {
     s32 zero = 0;
 
-    sub_803A94C(&zero, dst, CPU_SET_32BIT | CPU_SET_SRC_FIXED | 0x20);
+    CpuSet(&zero, dst, CPU_SET_32BIT | CPU_SET_SRC_FIXED | 0x20);
 }
 
 /* `sub_80255A8` wrapper that returns the same pointer it clears. */

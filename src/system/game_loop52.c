@@ -72,10 +72,10 @@ extern void sub_8007A84(void *self, void *part);
 extern void *sub_8007B98(void *dest, void *pt);
 extern void *sub_8007C30(void *dest, void *pt);
 extern u8 sub_8001688(void *buf1, void *buf2);
-extern void *sub_803AD7C(void *arg0, void *fn);
+extern void *_call_via_r1(void *arg0, void *fn);
 extern struct actor *sub_80084A4(struct actor *self);
 extern void sub_8008484(struct actor *self, u32 arg1);
-extern s32 sub_80008FC(s32 a, s32 b);
+extern s32 FixedMul(s32 a, s32 b);
 extern s16 gStaticData_0816A820[];
 extern s32 gStaticData_0816BF08[3];
 extern u8 gStaticData_087E40DC[];
@@ -91,7 +91,7 @@ extern void sub_8011448(void *self, s32 mode);
  * table (`*4` for the y-offset, `*2` for the x-offset - two different
  * "speeds" around the same table, not a copy/paste of the same lookup)
  * and combines each with a scale factor via the overflow-avoiding
- * fixed-point multiply `sub_80008FC`: the y-offset always uses the
+ * fixed-point multiply `FixedMul`: the y-offset always uses the
  * fixed scale `0x800`, while the x-offset's scale comes from a local
  * copy of the 3-entry table `gStaticData_0816BF08`, indexed by
  * `self+0x4a - 1` (so `self+0x4a` must be 1-3 to select a scale; mode 3
@@ -119,10 +119,10 @@ void sub_8011248(struct orbit_part *self)
     s32 sn;
 
     sn = gStaticData_0816A820[self->phase * 4];
-    dy = sub_80008FC(sn, 0x800);
+    dy = FixedMul(sn, 0x800);
     self->base.y = self->anchor.y - dy;
     sn = gStaticData_0816A820[self->phase * 2];
-    sn = sub_80008FC(sn, scales.a[self->mode - 1]);
+    sn = FixedMul(sn, scales.a[self->mode - 1]);
     if (self->mode == 1)
         self->base.x = self->anchor.x - sn;
     else if (self->mode == 2)
@@ -191,7 +191,7 @@ void *sub_8011310(void *selfArg)
 
 /* If `self+0x48` (the "spawned/active" gate) is clear and the player's
  * (`gUnknown_030012D8`) own `+0xc` byte has bit 7 set, fires
- * `self->table+0x68/0x6c`'s trampoline (`sub_803AD7C`) - the usual
+ * `self->table+0x68/0x6c`'s trampoline (`_call_via_r1`) - the usual
  * "offset + fn pointer" pair convention already established throughout
  * this codebase (e.g. `graphics.c`'s own `+0x10`/`+0x14` pair). Always
  * returns 0. */
@@ -207,7 +207,7 @@ s32 sub_8011330(void *selfArg)
             void *addr = self + *(s16 *)entry;
             void *fn = *(void **)(entry + 4);
 
-            sub_803AD7C(addr, fn);
+            _call_via_r1(addr, fn);
         }
     }
     return 0;

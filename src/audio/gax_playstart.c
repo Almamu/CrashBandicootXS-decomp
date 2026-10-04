@@ -7,7 +7,7 @@
  * item count against a 0x18B (395) sanity maximum, fills in default fields
  * (instrument-bank pointer gGaxDefaultSong, default volume 0xFF) when
  * the caller left them zero, looks up a starting song-slot index
- * (GaxFindMixRate) and computes its fixed-point tempo (sub_803ADB4), copies
+ * (GaxFindMixRate) and computes its fixed-point tempo (__divsi3), copies
  * two whole gGaxArmDownmix/0803A73C/0803A818 initializer blocks into
  * the player state (0x48+/0x9c+, 21 and 56 words), computes the sanity-
  * checked buffer bounds for channel/pattern data, arms the loop/priority
@@ -24,7 +24,6 @@
  * separate counter for the dspFn17c copy, `layout` copied from a
  * block-local read after the first types[] load, and three no-code
  * register nudges (commented at each use). */
-asm(".set _call_via_r1, sub_803AD7C\n.set __divsi3, sub_803ADB4\n.set __udivsi3, sub_8037E54\n");
 
 struct RateEntry { u32 rate; u32 timer; };
 struct GaxLayoutList { u32 count; struct GaxHandlerLayout *layouts[1]; };
@@ -40,7 +39,7 @@ extern const char gGaxErrOutOfMemory[];
 extern void GaxFatalError(const char *a, const char *b);
 extern void GaxZeroFill(void *dest, s32 count);
 extern s32 GaxFindMixRate(u32 rate);
-extern s32 sub_8037E54(s32 a, s32 b);
+extern s32 __udivsi3(s32 a, s32 b);
 extern void GaxResetSoundHardware(void);
 extern u8 GaxCreateHandlers(struct GaxHandlerLayout *layout, struct GaxHandlerType **sfx, u32 numSfx, u8 **bufp,
                       u32 *sizep);

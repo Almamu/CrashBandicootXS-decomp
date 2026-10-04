@@ -75,9 +75,9 @@ extern u8 gGaxIrqEnabled;
 extern void GAX_resume(void);
 extern void GAX_play(void);
 extern void GAX_pause(void);
-extern void sub_80006A8(void);
+extern void WaitForVBlank(void);
 extern void sub_80016D0(u8 *address);
-extern void sub_8000558(s32 interruptIndex);
+extern void IrqRestoreHandler(s32 interruptIndex);
 extern void sub_80017BC(struct AudioContext *self, u32 songIndex);
 
 /* currentSong getter. */
@@ -208,7 +208,7 @@ void sub_8001B88(struct AudioContext *self)
         isPaused = 1;
     }
     if (isPaused) {
-        sub_80006A8();
+        WaitForVBlank();
         GAX_resume();
         self->state = 1;
     }
@@ -225,7 +225,7 @@ void sub_8001BAC(struct AudioContext *self)
     }
     if (isPlaying) {
         self->state = 2;
-        sub_80006A8();
+        WaitForVBlank();
         GAX_play();
         GAX_pause();
     }
@@ -286,13 +286,13 @@ struct AudioContext *sub_8001C2C(struct AudioContext *self)
 }
 
 /* Disables the GBA's V-Count interrupt - a counterpart to
- * `sub_8000654` (VBlank) in src/system/irq.c. */
+ * `DisableVBlankHandler` (VBlank) in src/system/irq.c. */
 void sub_8001C64(void)
 {
     register vu8 *dispstat asm("r1") = (vu8 *)REG_ADDR_DISPSTAT;
     u8 tmp = DISPSTAT_VCOUNT_INTR;
 
     *dispstat &= ~tmp;
-    sub_8000558(INTR_INDEX_VCOUNT);
+    IrqRestoreHandler(INTR_INDEX_VCOUNT);
 }
 asm(".align 2, 0");

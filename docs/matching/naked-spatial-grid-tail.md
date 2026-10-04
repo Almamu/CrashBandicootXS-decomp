@@ -45,7 +45,7 @@ issue's still-open scope.
   link yet, lazily creates one (an inline copy of `sub_8009150`'s own
   body); else if its "pending removal" flag is set, removes it from
   the pool (search, `sub_8009008` to unlink the grid node(s),
-  `sub_803A94C`-compact the array) and fires the same `table+0x50/0x54`
+  `CpuSet`-compact the array) and fires the same `table+0x50/0x54`
   "destroy" trampoline `sub_8009914`'s teardown loop fires; else tests
   it against a computed box (the tracked sub-object's position offset
   by fixed Q8 constants, wider than the plain 240x160 screen box the

@@ -26,7 +26,7 @@
 extern u8 gStaticData_0816C2D8[];
 extern u8 gStaticData_0816C2D0[];
 extern u8 gStaticData_087E43C4[];
-extern s32 sub_803AD80(void *arg0, void *arg1, void *arg2);
+extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern void sub_800B6D0(void *unused, void *selfArg, s32 *vec);
 extern void sub_800B7B0(void *selfArg, void *partArg, s32 *vec);
 extern void sub_8017A78(void *selfArg, s32 flags);
@@ -152,7 +152,7 @@ void sub_8017F80(void *selfArg, void *partArg, s32 index)
 }
 
 /* Fires the usual `self+0xc`-table base+offset+fn-pointer trampoline
- * (action `1`) via `sub_803AD80`, clears `self+0x20`'s byte, resets
+ * (action `1`) via `_call_via_r2`, clears `self+0x20`'s byte, resets
  * `self+0x1c` to `-1`, and re-points `self+4` at
  * `gStaticData_0816C2D0`. */
 void sub_8017FA4(void *selfArg)
@@ -163,7 +163,7 @@ void sub_8017FA4(void *selfArg)
     register s32 zero asm("r0");
     u8 *p;
 
-    sub_803AD80(self + table[4].delta, (void *)1, table[4].fn);
+    _call_via_r2(self + table[4].delta, (void *)1, table[4].fn);
     p = self + 0x20;
     zero = 0;
     *p = zero;

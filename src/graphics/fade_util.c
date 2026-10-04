@@ -3,7 +3,7 @@
 /* Sits right after StepBresenhamLine (ROM 0x08001254, in src/util/line_util2.c)
  * and before whatever's still raw in asm/code_3_1_7.s. */
 
-extern void sub_8000670(s32 arg0);
+extern void RemoveVBlankCallback(s32 arg0);
 extern s32 gUnknown_030007F8;
 extern s32 gUnknown_030007F4;
 
@@ -20,7 +20,7 @@ extern struct unk_030007E8 gUnknown_030007E8;
  * counting either up or down depending on `field_8`'s top bit (fading
  * in vs. out). After 17 steps (a full fade), resets both counters,
  * briefly disables interrupts (`REG_IME`) while resetting `field_0` to
- * `-1` and calling `sub_8000670` with `field_4` (presumably to kick off
+ * `-1` and calling `RemoveVBlankCallback` with `field_4` (presumably to kick off
  * whatever comes after the fade), then re-enables interrupts.
  * `mask`/`flag8` are pinned to r0/r1 to match the ROM's exact register
  * choice for the `& 0x80` check - the natural (unpinned) allocation
@@ -52,14 +52,14 @@ void sub_80012AC(void)
             gUnknown_030007F8 = 0;
             REG_IME = 0;
             gUnknown_030007E8.field_0 = -1;
-            sub_8000670(gUnknown_030007E8.field_4);
+            RemoveVBlankCallback(gUnknown_030007E8.field_4);
             REG_IME = 1;
         }
     }
 }
 
-extern s32 sub_8000680(void *callback);
-extern void sub_80006A8(void);
+extern s32 AddVBlankCallback(void *callback);
+extern void WaitForVBlank(void);
 
 /* Starts a screen-brightness fade: `flags` bit 0 selects the blend
  * target (`REG_BLDCNT`, `0xBF` vs `0xFF`), bit 7 selects
@@ -71,10 +71,10 @@ extern void sub_80006A8(void);
  * rather than a plain comparison (matching the ROM's exact `mvn; neg;
  * orr; cmp` sequence - a direct `!= -1` compiles to a shorter
  * load-constant-and-compare instead). If `sync` is nonzero, registers
- * `sub_80012AC` as a periodic callback (via `sub_8000680`) to drive the
+ * `sub_80012AC` as a periodic callback (via `AddVBlankCallback`) to drive the
  * fade one step per call and returns immediately; otherwise it blocks
  * here, looping through all 17 steps itself and busy-waiting
- * `frameDelay` VBlanks between each via `sub_80006A8`. */
+ * `frameDelay` VBlanks between each via `WaitForVBlank`. */
 void sub_800132C(u8 flags, s32 frameDelay, u8 sync)
 {
     {
@@ -107,7 +107,7 @@ void sub_800132C(u8 flags, s32 frameDelay, u8 sync)
         REG_IME = 0;
         gUnknown_030007E8.field_8 = flags;
         gUnknown_030007E8.field_0 = frameDelay;
-        gUnknown_030007E8.field_4 = sub_8000680(sub_80012AC);
+        gUnknown_030007E8.field_4 = AddVBlankCallback(sub_80012AC);
         REG_IME = 1;
     } else {
         s32 i = 0;
@@ -124,7 +124,7 @@ void sub_800132C(u8 flags, s32 frameDelay, u8 sync)
             if (frameDelay > 0) {
                 s32 k = frameDelay;
                 do {
-                    sub_80006A8();
+                    WaitForVBlank();
                     k--;
                 } while (k != 0);
             }

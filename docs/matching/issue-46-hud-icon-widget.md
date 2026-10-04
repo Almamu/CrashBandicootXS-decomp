@@ -123,7 +123,7 @@ difficulty in this codebase:
    reproduced the exact block layout.
 4. **`sub_8028900`/`MeasureText`**: the ROM pins `str`/`&glyphRecords`
    (or `self`/`&spaceWidth` for `MeasureText`) into `r8`/`sb`/`ip`,
-   spilling them across the loop's own `bl sub_803AD84`/`sub_8006DF8`-
+   spilling them across the loop's own `bl _call_via_r3`/`sub_8006DF8`-
    style calls - the same class of gap already documented for
    `sub_8006600`/`sub_8037388` elsewhere in this codebase (see
    `src/audio/counter_selector_setup.c`'s comment on the latter).
@@ -219,7 +219,7 @@ all share a `record`/`posX`/`posY`/`field_118`/`field_12c` zero-init
 preamble. Plain C (any statement order, any struct-field-vs-raw-offset
 phrasing) never reproduced two things at once: the ROM *recomputes*
 `&record` fresh for each of its two stores instead of caching the
-address across the `sub_803A94C` call in between (a CSE this compiler
+address across the `CpuSet` call in between (a CSE this compiler
 applies unconditionally to repeated `self->record = X` assignments),
 and the `posX`/`posY`/`field_118`/`field_12c` zero stores compute their
 addresses in ascending-offset order but store through them in a
@@ -327,7 +327,7 @@ caller's r7 across the call). Rather than keep chasing plain-C
 workarounds around a confirmed compiler bug, this pass transcribed all
 five directly as `NAKED` asm functions instead - the same technique this
 project already uses elsewhere for this exact class of problem
-(`src/util/math_div_util.c`'s `nullsub_8`, `src/audio/gax_swi.c`'s
+(`src/util/math_div_util.c`'s `__div0`, `src/audio/gax_swi.c`'s
 `GaxHuffUnComp`, `src/system/link_cable.c`'s `sub_8001CB8`/`sub_8001F50`).
 A NAKED function has no compiler-generated prologue/epilogue or
 register allocation at all, so the r7 bug (and any other codegen

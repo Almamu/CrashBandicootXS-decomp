@@ -8,8 +8,7 @@
  * through raw offsets.
  *
  * `vt` is a gcc 2.x method table ({s16 this-adjust; fn} entries, called
- * through the _call_via_rN trampolines sub_803AD80/sub_803AD84 - each .c
- * aliases those itself), `part` the on-screen object it animates, and the
+ * through libgcc's _call_via_r2/_call_via_r3 trampolines), `part` the on-screen object it animates, and the
  * +0x27..+0x32 bytes two "next action" trios (+0x31/+0x2F/+0x27 and
  * +0x32/+0x30/+0x28) the table's dispatcher consumes. */
 
@@ -164,7 +163,7 @@ typedef void (*act_fn2)(void *self, void *a, s32 b);
         ((act_fn2)_m->fn)((u8 *)(obj) + _m->thisOffset, (void *)(a), (s32)(b)); \
     } else (void)0
 
-/* gUnknown_030007E0 is the input word: low half held, high half newly
+/* gKeys is the input word: low half held, high half newly
  * pressed. Handlers copy it to a stack slot and read the halves back from
  * there; the halves go through the local's address (a union or struct
  * member read is folded into a halfword load of the global itself). */

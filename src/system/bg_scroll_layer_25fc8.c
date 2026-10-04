@@ -45,8 +45,8 @@ extern u16 *GetBgStreamerRow(void *streamer, s32 col, s32 row, s32 *colOut);
 extern void ResetBgLayerBase(struct bg_scroll_layer *self, void *pos);
 extern void SetBgLayerSource(struct bg_scroll_layer *self, struct bg_layer_desc *desc);
 extern void DestroyBgLayerBase(struct bg_scroll_layer *self, u32 flags);
-extern void sub_803AD7C(void *self, void *fn);
-extern void sub_803AD80(void *self, s32 arg, void *fn);
+extern void _call_via_r1(void *self, void *fn);
+extern void _call_via_r2(void *self, s32 arg, void *fn);
 extern void LoadTaggedAsset(void *asset, void *dest);
 extern u16 AcquireTileSlot(struct tile_slot_pool *pool, u16 tile);
 extern void ReleaseTileSlot(struct tile_slot_pool *pool, u32 tile);
@@ -99,7 +99,7 @@ void RedrawBgLayer(struct bg_scroll_layer *self)
     self->rowLo = self->y / 8;
     self->rowHi = (self->y + 0x9F) / 8;
     for (r = self->rowLo; r <= self->rowHi; r++)
-        sub_803AD80((u8 *)self + self->vtable->drawRow.thisOffset, r, self->vtable->drawRow.fn);
+        _call_via_r2((u8 *)self + self->vtable->drawRow.thisOffset, r, self->vtable->drawRow.fn);
 }
 
 /* Base `reset` (table +0x10): sets the position (`ResetBgLayerBase`), reloads
@@ -107,7 +107,7 @@ void RedrawBgLayer(struct bg_scroll_layer *self)
 void ResetBgLayer(struct bg_scroll_layer *self, void *pos)
 {
     ResetBgLayerBase(self, pos);
-    sub_803AD7C((u8 *)self + self->vtable->loadTiles.thisOffset, self->vtable->loadTiles.fn);
+    _call_via_r1((u8 *)self + self->vtable->loadTiles.thisOffset, self->vtable->loadTiles.fn);
     RedrawBgLayer(self);
     *self->cntReg = self->cnt.raw;
 }

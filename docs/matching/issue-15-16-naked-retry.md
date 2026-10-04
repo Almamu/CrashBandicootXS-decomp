@@ -34,7 +34,7 @@ under both).
 | Function | File | Compiler | Technique |
 |---|---|---|---|
 | `sub_8010D54` | game_loop50.c | both | The +0x04/+0x08 pair is one by-value `struct pos_pair` argument (the ROM copies it with `ldr; ldr; str; str`), and the two pointer fields are `s32`. The trailing byte arguments are read with `ldrb` straight from their stack words, both addresses first (`add r0, sp, #0x30; add r4, sp, #0x34; ldrb; ldrb`): a `u8` parameter always loads the whole word, so each slot's address goes through an empty `asm("" : "=r"(p) : "0"(&arg))`, with the second pinned to r4. |
-| `sub_8011248` | game_loop52.c | old | One reused sine local `sn` (`sn = table[..]; sn = sub_80008FC(sn, ..)`), which old_agbcc keeps in r2 across both calls; the old "operand order of the pointer add" note was the compiler, not the source. |
+| `sub_8011248` | game_loop52.c | old | One reused sine local `sn` (`sn = table[..]; sn = FixedMul(sn, ..)`), which old_agbcc keeps in r2 across both calls; the old "operand order of the pointer add" note was the compiler, not the source. |
 | `sub_801192C` | game_loop53.c | old | Same as `sub_8011248` (0x3000 scale, `gStaticData_0816BF14`), plus a trailing `asm(".align 2, 0")`. |
 | `sub_8011448` | game_loop53.c | old | Plain C; the tag lands in r7 on its own under old_agbcc (the old r7-hazard note). The `+0x25 = 1` store goes through a `u8` local so the 1 is materialized before the field address. |
 | `sub_8011870` | game_loop53.c | old | The fixed `-0x1000` offsets go through `OrbitOffset(pos, off)`, an inline taking the offset as a parameter: that makes old_agbcc reload `0xFFFFF000` from the pool for each axis (into r1, then r6) while `0x1400` stays shared in r4, as in the ROM. |

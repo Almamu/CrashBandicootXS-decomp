@@ -1,7 +1,7 @@
 #include "core.h"
 
-extern s32 sub_803AE4C(s32 dividend, s32 divisor);
-extern s32 sub_803ADB4(s32 dividend, s32 divisor);
+extern s32 __modsi3(s32 dividend, s32 divisor);
+extern s32 __divsi3(s32 dividend, s32 divisor);
 
 /* Decimal `itoa`: writes `value`'s decimal digits (unsigned, most
  * significant first) to `dest`, NUL-terminated, and returns the digit
@@ -35,8 +35,8 @@ s32 sub_80060AC(s32 value, u8 *dest)
     count = 0;
     do {
         u8 *p = &buf[count];
-        *p = (u8)sub_803AE4C(val, 10) + '0';
-        val = sub_803ADB4(val, 10);
+        *p = (u8)__modsi3(val, 10) + '0';
+        val = __divsi3(val, 10);
         count++;
     } while (val != 0);
 

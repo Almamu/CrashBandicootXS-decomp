@@ -13,10 +13,6 @@
  * (docs/matching/issue-15-16-17-naked-retry-2.md), and `sub_8012420` in a
  * later pass. */
 
-asm(".set _call_via_r2, sub_803AD80\n"
-    ".set _call_via_r3, sub_803AD84\n"
-    ".set _call_via_r4, sub_803AD88\n");
-
 /* A gcc 2.x pointer-to-member-function record (gStaticData_0816BF20's
  * per-state handlers): `index > 0` selects virtual slot `index - 1` of the
  * method table at `this + vtableOffset`, otherwise `fn` is called. */
@@ -44,7 +40,7 @@ struct cam
 
 typedef void (*act_fn3)(void *self, s32 a, s32 b, s32 c);
 
-extern u32 gUnknown_030007E0;
+extern u32 gKeys;
 extern void *gUnknown_030012BC;
 extern void *gLevelState;
 extern struct act_part *gUnknown_030012D8;
@@ -52,7 +48,7 @@ extern void *gUnknown_03001304;
 extern struct cam *gLevelLayers;
 extern struct act_pmf gStaticData_0816BF20[];
 extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
-extern u8 sub_8000760(void *pad);
+extern u8 GetDpadDirection(void *pad);
 extern void sub_8012238(struct act *self);
 extern void sub_8012AF4(struct act *self);
 extern void sub_80138E8(struct act *self);
@@ -124,7 +120,7 @@ static inline u8 *PartBytePtr(struct act_part *part, s32 offset)
     return (u8 *)part + offset;
 }
 
-/* Clears `self+0x34`'s reentrancy flag once `gUnknown_030007E0`'s bit
+/* Clears `self+0x34`'s reentrancy flag once `gKeys`'s bit
  * `0x100` clears. If `part+0x100` (the part's own "active" flag)
  * changed since last frame, re-runs `sub_8012238`. Then, using
  * `gLevelLayers`'s sub-object's `+0x14` Q8 field as a screen-space
@@ -132,7 +128,7 @@ static inline u8 *PartBytePtr(struct act_part *part, s32 offset)
  * one, resets `part`'s `+0x48`/`+0x4c`/`+0x50` velocity-target fields
  * (and `+0x60` unless still active); past the far one, additionally
  * clears `part+0x8c` and fires a state-close call (`SetMaskLevel`) plus
- * `sub_803AD88` through the `self+0xc` manager's `+0x10`/`+0x14`
+ * `_call_via_r4` through the `self+0xc` manager's `+0x10`/`+0x14`
  * trampoline slot. Decrements `self+0x26` if set. While `self+0x2b`'s
  * countdown is running and `part+0x94 <= 1`, ticks it down and, on
  * reaching zero, resets the trio's first half (`+0x31`/`+0x2f`/`+0x27`/
@@ -140,7 +136,7 @@ static inline u8 *PartBytePtr(struct act_part *part, s32 offset)
  * player's `+0x90` byte. Looks up `self+8`'s type in
  * `gStaticData_0816BF20`'s 8-byte-per-slot table - a `{s16 baseOffset;
  * s16 count; s16 recordOffset; s32 fallback}` record - to build the
- * arguments for one `sub_803AD84` trampoline call. If `part+0x68` bit 3
+ * arguments for one `_call_via_r3` trampoline call. If `part+0x68` bit 3
  * got cleared this call and `self+0x28` is `4`/`5`, resets the trio's
  * second half; either way calls `sub_8012AF4`, then (unless `part+0xc`
  * bit 7 is set) resets `part`'s `+0x48`/`+0x4c`/`+0x50`/`+0x60` fields
@@ -173,7 +169,7 @@ static inline s32 K100(void)
  */
 void sub_8012420(struct act *self)
 {
-    u32 in = gUnknown_030007E0;
+    u32 in = gKeys;
 
     if (self->unk_34 != 0) {
         u16 held = in & K100();
@@ -316,7 +312,7 @@ void sub_8012420(struct act *self)
  * the constant after `one` as in the ROM. */
 u8 sub_8012694(struct act *self)
 {
-    u32 in = gUnknown_030007E0;
+    u32 in = gKeys;
     u16 pressed;
     s32 one;
 
@@ -368,8 +364,8 @@ u8 sub_8012694(struct act *self)
  * (`0x1a`), or (type `0xe`) tail-call `sub_80151C8`. Then, unless the
  * type is `7`/`9`/`0xb`/`0xe`/`0x1a`, reads the D-pad and remaps
  * `self+0x27`'s table-index byte through a further small dispatch
- * (types `9`/`0x1c`-`0x1d` fire `sub_803AD80`/`sub_80138E8` variants,
- * type `7` fires a `sub_803AD84` pair) before a shared tail that sets
+ * (types `9`/`0x1c`-`0x1d` fire `_call_via_r2`/`sub_80138E8` variants,
+ * type `7` fires a `_call_via_r3` pair) before a shared tail that sets
  * `self+0x31` when the player's `+0x100` flag is set.
  *
  * Matched under old_agbcc. The distance tests are two separate `if`s (one
@@ -386,7 +382,7 @@ void sub_801283C(struct act *self)
         if (sub_8012694(self))
             return;
     }
-    in = gUnknown_030007E0;
+    in = gKeys;
     {
         struct act_part *part;
 
@@ -456,7 +452,7 @@ done:
         }
     }
     if (self->state == 7 || self->state == 9 || self->state == 0xB || self->state == 0xE || self->state == 0x1A) {
-        if (sub_8000760(gUnknown_03001304) <= 2) {
+        if (GetDpadDirection(gUnknown_03001304) <= 2) {
             ActQueue27(self, 0, 0);
         } else {
             u8 *slot = &self->next27;

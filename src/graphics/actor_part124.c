@@ -14,7 +14,7 @@
  * accessors on this cluster's already-well-characterized `self`/`owner`
  * object shape (field table in the Phase 1 section of the doc above),
  * plus two slightly larger helpers (`sub_800CA08`'s camera-distance/
- * volume calculator, `sub_800CACC`'s conditional `sub_803AD88`
+ * volume calculator, `sub_800CACC`'s conditional `_call_via_r4`
  * trigger) and one instance of the "flag active + bitmap-set" idiom
  * (`sub_800CB64`) already matched as real C once before, in
  * `actor_part27c.c`'s `sub_8018884`.
@@ -46,7 +46,7 @@
  *   already consume (`self->0x3c` divisor, `self->0x40` phase offset,
  *   `self->0x44` amplitude) - `sub_800CA94` is their setter.
  * - `self+0x48`/`0x4c`: the fields `sub_800BFA8`'s (`actor_part121.c`)
- *   own `sub_803AE4C` "close enough" gate reads - `sub_800CA9C` is
+ *   own `__modsi3` "close enough" gate reads - `sub_800CA9C` is
  *   their setter.
  * - `self+0x30`/`0x34`/`0x38`: the "blocking condition" pair plus
  *   "enabled" byte the Phase 1 doc's field table already names -
@@ -113,7 +113,7 @@ struct trigger_ctrl {
 };
 
 /* A periodic trigger actor (sub_800CB40 builds one on top of graphics.c's
- * `struct actor`): fires sub_803AD88 at its own position once every
+ * `struct actor`): fires _call_via_r4 at its own position once every
  * `period` frames while near the camera (sub_800CACC). */
 struct timed_trigger {
     struct actor base;      // 0x00 - `base.table` is the method table
@@ -247,7 +247,7 @@ void sub_800CA94(struct trigger_ctrl *self, s32 a, s32 b, s32 c)
 asm(".align 2, 0");
 
 /* `self+0x48`/`0x4c` setter - the fields `sub_800BFA8`'s
- * (`actor_part121.c`) own `sub_803AE4C` "close enough" gate reads. */
+ * (`actor_part121.c`) own `__modsi3` "close enough" gate reads. */
 void sub_800CA9C(struct trigger_ctrl *self, s32 a, s32 b)
 {
     self->period = a;
@@ -297,16 +297,16 @@ void sub_800CAC8(struct trigger_ctrl *self, s32 a)
 }
 
 extern u32 gUnknown_0300082C;
-extern s32 sub_803AE4C(s32 a, s32 b);
-extern void sub_803AD88(void *arg0, s32 arg1, s32 arg2, s32 arg3);
+extern s32 __modsi3(s32 a, s32 b);
+extern void _call_via_r4(void *arg0, s32 arg1, s32 arg2, s32 arg3);
 
 /* If `self`'s own X position (`self+0`, Q8.8) is within `[0xa1, 0x18f]`
  * tiles of `gUnknown_030012D8`'s (the player/camera object) own X
- * position, runs the same `sub_803AE4C(gUnknown_0300082C + a - b, a)`
+ * position, runs the same `__modsi3(gUnknown_0300082C + a - b, a)`
  * "close enough" gate `sub_800BFA8` (`actor_part121.c`) already uses
  * (here against `self+0x20`/`self+0x24`, the AABB corner fields
  * `sub_800CAAC` above sets), and on a pass fires
- * `sub_803AD88((void*)0xffff, (u16)selfX, (u16)(self->4 >> 8), 0)` -
+ * `_call_via_r4((void*)0xffff, (u16)selfX, (u16)(self->4 >> 8), 0)` -
  * the same "directional-target table trigger" primitive
  * `sub_800B8DC` state 11 and `sub_800BD48` states 19-20
  * (`actor_part112.c`) already call directly. `self+0x1c` (the Y-axis
@@ -329,7 +329,7 @@ void sub_800CACC(struct timed_trigger *self)
     if ((u32)(selfX - cameraX - 0xa1) <= 0xee) {
         s32 base = (s32)gUnknown_0300082C;
         s32 period = self->period;
-        s32 divCheck = sub_803AE4C(base + period - self->phase, period);
+        s32 divCheck = __modsi3(base + period - self->phase, period);
 
         if (divCheck == 0) {
             void *arg0 = (void *)0xFFFF;
@@ -339,7 +339,7 @@ void sub_800CACC(struct timed_trigger *self)
 
             dead = *(volatile s32 *)&self->unk_1c;
             (void)dead;
-            sub_803AD88(arg0, arg1, arg2, 0);
+            _call_via_r4(arg0, arg1, arg2, 0);
         }
     }
 }
@@ -392,11 +392,11 @@ void sub_800CB60(struct timed_trigger *self, s32 a)
 }
 
 extern void *gEntityFlags;
-extern void *sub_803AD7C(void *addr, void *fn);
+extern void *_call_via_r1(void *addr, void *fn);
 
 /* `self` (the first argument) is never read - only `other` matters.
  * Reads `other+0x18`'s own struct-actor-shaped table pointer, fires a
- * `sub_803AD7C` hit-probe against its `+0x28`/`+0x2c` `{s16 offset,
+ * `_call_via_r1` hit-probe against its `+0x28`/`+0x2c` `{s16 offset,
  * void *fn}` pair (the exact same convention `src/system/game_loop8.c`'s
  * `sub_802400C` and `actor_part123.c`'s `sub_800CBF4` both already
  * read from their own `table+0x28`/`+0x2c`), and - only when that
@@ -430,7 +430,7 @@ void sub_800CB64(void *selfArg, void *otherArg)
 
     (void)selfArg;
 
-    if ((u8)(s32)sub_803AD7C(addr, fn) == 0) {
+    if ((u8)(s32)_call_via_r1(addr, fn) == 0) {
         register s32 one asm("r0") = 1;
         register u8 flags asm("r1") = other[0xc];
 

@@ -45,7 +45,7 @@ extern s32 sub_80068CC(void *arg0);
 extern s32 sub_8006864(void *arg0);
 extern s32 sub_8006820(void *arg0);
 extern s32 sub_80067EC(void *arg0);
-extern s32 sub_803ADB4(s32 arg0, s32 arg1);
+extern s32 __divsi3(s32 arg0, s32 arg1);
 
 /* The register pins below (and in several functions further down) match
  * the ROM's own register allocation exactly - required for a byte-exact
@@ -77,7 +77,7 @@ s32 sub_800697C(void *arg0)
     total += ((u32)flags << 26) >> 31;
     total += ((u32)flags << 25) >> 31;
     total += ((u32)flags << 27) >> 31;
-    return sub_803ADB4(total * 100, 0x48);
+    return __divsi3(total * 100, 0x48);
 }
 
 void sub_80069E8(void *arg0, u16 *arg1, s32 arg2)
@@ -638,7 +638,7 @@ void nullsub_1(void)
 }
 asm(".align 2, 0");
 
-extern s32 sub_803AD80(void *arg0, void *arg1, void *arg2);
+extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern void *gLevelLayers;
 
 /* `self` uses the shared `struct actor` layout (see actor.h) - the
@@ -672,16 +672,16 @@ u8 sub_8006FE4(struct actor *self)
         buf[1] = d;
 
         table = (u8 *)pSelf->table + 0x40;
-        flag = (u8)sub_803AD80((u8 *)pSelf + *(s16 *)table, buf, *(void **)((u8 *)table + 4));
+        flag = (u8)_call_via_r2((u8 *)pSelf + *(s16 *)table, buf, *(void **)((u8 *)table + 4));
     }
     return flag;
 }
 
-extern void *sub_803AD7C(void *arg0, void *arg1);
+extern void *_call_via_r1(void *arg0, void *arg1);
 extern void sub_803AFE4(void *buf, s32 arg1, s32 arg2);
 extern void sub_803AFDC(void *buf, s32 arg1, s32 arg2);
 extern u8 sub_800B37C(void *arg0, void *buf);
-extern void sub_803AD88(void *arg0, s32 arg1, s32 arg2, s32 arg3);
+extern void _call_via_r4(void *arg0, s32 arg1, s32 arg2, s32 arg3);
 extern struct actor *gUnknown_030012D8;
 
 /* `self` uses the shared `struct actor` layout (see actor.h) - same
@@ -710,7 +710,7 @@ s32 sub_8007048(struct actor *self)
     s32 flagTest;
 
     table = self->table;
-    rec = sub_803AD7C((u8 *)self + table[2].delta, table[2].fn);
+    rec = _call_via_r1((u8 *)self + table[2].delta, table[2].fn);
 
     x = self->x >> 8;
     rx = rec->offX;
@@ -753,7 +753,7 @@ s32 sub_8007048(struct actor *self)
                 register void *deadRead asm("r4") = *(void *volatile *)((u8 *)table2 + 4);
                 (void)deadRead;
             }
-            sub_803AD88(addr, 0, field0a, 0);
+            _call_via_r4(addr, 0, field0a, 0);
         }
     }
     return 0;
@@ -767,7 +767,7 @@ asm(".align 2, 0");
 void sub_80070D4(struct actor *self)
 {
     void *table = self->table;
-    sub_803AD7C((u8 *)self + *(s16 *)((u8 *)table + 8), *(void **)((u8 *)table + 0xc));
+    _call_via_r1((u8 *)self + *(s16 *)((u8 *)table + 8), *(void **)((u8 *)table + 0xc));
 }
 
 void *sub_80070E8(struct actor *self)
@@ -821,7 +821,7 @@ s32 sub_8007114(struct actor *self, struct aabb *box)
     flag = (pSelf->flags >> 4) & 1;
     if (!flag) {
         table = pSelf->table;
-        rec = sub_803AD7C((u8 *)pSelf + table[2].delta, table[2].fn);
+        rec = _call_via_r1((u8 *)pSelf + table[2].delta, table[2].fn);
         {
             register void *recR0 asm("r0") = rec;
             register s32 minXR4 asm("r4");

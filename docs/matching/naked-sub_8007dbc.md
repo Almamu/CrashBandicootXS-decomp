@@ -18,7 +18,7 @@ operation, operand, and instruction order right except one systematic
 register letter: the cached `&gUnknown_030012D8` address landed in
 `r6` instead of the ROM's `r7`. Since that value is read from
 repeatedly across several basic blocks (both `sub_8007B98` calls, the
-`sub_803AD88` sound-position lookup), the single-register mismatch
+`_call_via_r4` sound-position lookup), the single-register mismatch
 cascaded into nearly every later instruction's register numbering.
 Pinning the cached-address local directly to `r7` didn't just fail to
 schedule correctly (the usual "pin silently dropped from the

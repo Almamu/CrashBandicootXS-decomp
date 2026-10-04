@@ -11,8 +11,8 @@ extern struct tile_asset_cache *gUnknown_030012B8;
 extern s32 sub_8023414(void *self);
 extern void sub_80232EC(void *self);
 extern void sub_80232FC(void *self);
-extern void *sub_800014C(void *dest, void *src, s32 size);
-extern void sub_803A94C(void *src, void *dst, s32 control);
+extern void *MemCopy32(void *dest, void *src, s32 size);
+extern void CpuSet(void *src, void *dst, s32 control);
 extern void sub_80232B0(void *self);
 extern void sub_80232C0(void *self);
 extern void sub_8007398(struct actor *self, s32 arg1, s32 arg2);
@@ -113,7 +113,7 @@ void sub_8022BF0(struct level_state *self, u8 arg1)
  * holds `+0xa9`" shape (a plain `*(p+0x27) = *p;` computed the
  * destination address before the read instead). In the `kind == 3`
  * branch that same pointer is then bumped again (`p += 0x14`) to
- * become the `self+0xe4` destination for the trailing `sub_800014C`
+ * become the `self+0xe4` destination for the trailing `MemCopy32`
  * copy, reusing the register chain exactly like the ROM. */
 void sub_8022CA0(struct level_state *self, u8 arg1)
 {
@@ -135,7 +135,7 @@ void sub_8022CA0(struct level_state *self, u8 arg1)
             p += 0x27;
             *p = value;
             p += 0x14;
-            sub_800014C(p, self, 0x68);
+            MemCopy32(p, self, 0x68);
         }
     } else {
         void *player = gUnknown_030012D8;
@@ -187,16 +187,16 @@ void sub_8022CA0(struct level_state *self, u8 arg1)
             void *b = (u8 *)base + 8;
             register u32 ctrl asm("r2") = CPU_SET_32BIT | 0x40;
 
-            sub_803A94C(a, b, ctrl);
+            CpuSet(a, b, ctrl);
         }
         {
             void *a = (u8 *)base + 0x308;
             void *b = (u8 *)base + 0x208;
             register u32 ctrl asm("r2") = CPU_SET_32BIT | 0x40;
 
-            sub_803A94C(a, b, ctrl);
+            CpuSet(a, b, ctrl);
         }
 
-        sub_800014C((u8 *)self + 0xe4, self, 0x68);
+        MemCopy32((u8 *)self + 0xe4, self, 0x68);
     }
 }

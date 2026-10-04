@@ -27,9 +27,6 @@
  *   sign-mask abs, and a hold on r5 over the `result == 0` test so the
  *   reload there takes r0. */
 
-/* sub_803AD88 is libgcc's `_call_via_r4`. */
-asm(".set _call_via_r4, sub_803AD88\n");
-
 typedef void (*ab98_fn3)(void *self, s32 a, s32 b, s32 c);
 
 /* The object's vtable method at +0x68, called with three arguments. */

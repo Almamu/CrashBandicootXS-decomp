@@ -46,7 +46,7 @@ posX, and making `ox` global with a volatile `"+r"` tail.
 **Split.** `-fno-rerun-loop-opt` changes the matching `sub_8002114`, so
 `link_cable.c` is now three objects, all still on `OLD_AGBCC_OBJS`:
 
-- `link_cable.c`: `sub_8001CB8`, `sub_8001D30`
+- `link_cable.c`: `sub_8001CB8`, `LinkStop`
 - `link_cable_01db4.c`: `sub_8001DB4` only
 - `link_cable_01f50.c`: `sub_8001F50`, `sub_8002114`
 

@@ -7,7 +7,7 @@
  * the 2nd argument (the category's `sub_effect_table` array pointer,
  * see `struct sub_effect_record` in actor_part94.c/include/actor_anim.h),
  * resets `gUnknown_03001404`/`gUnknown_0300141C`/`gUnknown_03001420` to
- * 0, draws the vtable's slot-0 function pointer via `sub_803AD84`
+ * 0, draws the vtable's slot-0 function pointer via `_call_via_r3`
  * (arg2/arg3 as x/y - the 5th argument, stack-passed, per the ROM's own
  * `ldr r6, [sp, #0x20]`), then runs a two-pass scan over the
  * `gUnknown_03001400[]` array comparing each entry's threshold field
@@ -16,9 +16,9 @@
  * slot, reinterpreted as a threshold): the first pass finds the last
  * entry whose adjusted threshold the vtable slot still exceeds
  * (`gUnknown_03001404`, an index into the table), the second draws
- * every entry from index 0 up to that point via `sub_803AD84`, mem_
+ * every entry from index 0 up to that point via `_call_via_r3`, mem_
  * alloc's a 0xc8-byte scratch buffer (`gUnknown_03001408`), and fires
- * one more `sub_803AD7C` visibility check if the vtable's own +8 slot
+ * one more `_call_via_r1` visibility check if the vtable's own +8 slot
  * is set, before resetting `gUnknown_03001424`'s call counter to 0.
  *
  * The ROM passes a 6th argument: `[sp, #0x1c]` is the 5th (handed to
@@ -36,9 +36,6 @@
  * returned as a pointer so the load lands after the limit. */
 #include "memory.h"
 #include "actor_anim.h"
-
-asm(".set _call_via_r1, sub_803AD7C\n"
-    ".set _call_via_r3, sub_803AD84");
 
 extern const struct category_vtable *gUnknown_03001418;
 extern u8 gUnknown_03001414;

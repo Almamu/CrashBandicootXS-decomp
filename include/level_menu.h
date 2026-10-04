@@ -9,7 +9,7 @@
  * copies of these definitions and can switch to this header.
  *
  * All of it is gcc 2.x C++: method tables of {s16 this-adjust; pad; fn}
- * entries, called through the sub_803AD7C/AD80/AD84/AD88 "call via
+ * entries, called through the _call_via_r1/AD80/AD84/AD88 "call via
  * r1/r2/r3/r4" thunks. */
 
 struct method

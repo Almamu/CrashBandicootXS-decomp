@@ -29,10 +29,10 @@ extern void ScrollLevelLayers(void *self);
 extern void sub_8026F54(void *self);
 extern void sub_80274EC(void *self);
 extern void sub_8008DC0(struct dual_array_manager *manager);
-extern void *sub_803AD7C(void *arg0, void *arg1);
+extern void *_call_via_r1(void *arg0, void *arg1);
 extern void sub_800944C(void *managerArg);
 extern void sub_8006A48(struct oam_shadow_buffer *arg0);
-extern void sub_80006A8(void);
+extern void WaitForVBlank(void);
 extern void sub_8006AAC(struct oam_shadow_buffer *arg0);
 extern void CommitLevelScroll(void *self);
 extern void FlushVramDmaQueue(void);
@@ -55,10 +55,10 @@ void sub_802400C(void *self)
         {
             struct actor *p = (struct actor *)gUnknown_030012D8;
             struct vtable_slot *tbl = p->table;
-            if ((u8)(s32)sub_803AD7C((u8 *)p + tbl[5].delta, tbl[5].fn) != 0) {
+            if ((u8)(s32)_call_via_r1((u8 *)p + tbl[5].delta, tbl[5].fn) != 0) {
                 struct actor *p2 = (struct actor *)gUnknown_030012D8;
                 struct vtable_slot *tbl2 = p2->table;
-                sub_803AD7C((u8 *)p2 + tbl2[4].delta, tbl2[4].fn);
+                _call_via_r1((u8 *)p2 + tbl2[4].delta, tbl2[4].fn);
             }
         }
 
@@ -68,7 +68,7 @@ void sub_802400C(void *self)
         sub_8008DC0(gUnknown_030012F8);
 
         sub_8006A48(gUnknown_03001300);
-        sub_80006A8();
+        WaitForVBlank();
         sub_8006AAC(gUnknown_03001300);
         CommitLevelScroll(gLevelLayers);
         FlushVramDmaQueue();

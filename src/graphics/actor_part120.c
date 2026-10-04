@@ -10,7 +10,7 @@
  *
  * `sub_800C40C`: a 6-case dispatcher (modes 0, 3, 4, 5; anything else,
  * including 1/2, is a no-op). Modes 0 and 4 share an "impact
- * distance" gate - `sub_803AE4C` division/remainder-style scalar check
+ * distance" gate - `__modsi3` division/remainder-style scalar check
  * against a `gUnknown_0300082C`-relative table lookup indexed by
  * `self->0x30`/`self->0x34`/`self->0x38` (the same "close enough"
  * primitive `docs/rom_map.md` already ties to hud_counter.c/
@@ -54,7 +54,7 @@
  * copy of `sub_800C9C8` (actor_part116.c): passing the arguments
  * through inline parameters is what materializes them in the ROM's
  * order, and the `+0xC` flag writes are bitfield stores (QImode `-0x41`/
- * `-9` masks). `sub_803AE4C` is a remainder (`a % b`).
+ * `-9` masks). `__modsi3` is a remainder (`a % b`).
  *
  * `sub_800C5D4` is real C too (issue #9-#11 NAKED retry): holding
  * `self->target` in a block-local pinned to r1 reproduces the prelude's
@@ -63,7 +63,7 @@
  * zero-pads its last 2 bytes to the next 4-byte boundary). */
 #include "part_ctrl.h"
 
-extern s32 sub_803AE4C(s32 a, s32 b);
+extern s32 __modsi3(s32 a, s32 b);
 extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
 extern struct ctrl_target *sub_8025B0C(void *pool, s32 kind, s32 b, s32 margin, s32 z, s32 e, struct ctrl_target *src);
 extern u8 sub_800B37C(struct ctrl_target *obj, struct part_aabb *box);
@@ -88,7 +88,7 @@ void sub_800C40C(struct part_ctrl *self)
     switch (self->mode) {
     case 0:
         if (self->unk_34 > 0
-            && sub_803AE4C(gUnknown_0300082C + (self->unk_30 + self->unk_34) * 2 - self->unk_38 - self->unk_30,
+            && __modsi3(gUnknown_0300082C + (self->unk_30 + self->unk_34) * 2 - self->unk_38 - self->unk_30,
                            self->unk_30 + self->unk_34) == 0) {
             if (self->anims[3] != 8)
                 sub_800C8CC(self, 3);
@@ -103,7 +103,7 @@ void sub_800C40C(struct part_ctrl *self)
         break;
     case 4:
         if (self->unk_30 > 0
-            && sub_803AE4C(gUnknown_0300082C + self->unk_30 + self->unk_34 - self->unk_38,
+            && __modsi3(gUnknown_0300082C + self->unk_30 + self->unk_34 - self->unk_38,
                            self->unk_30 + self->unk_34) == 0) {
             if (self->anims[5] != 8)
                 sub_800C8CC(self, 5);

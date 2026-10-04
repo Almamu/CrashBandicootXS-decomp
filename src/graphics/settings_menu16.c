@@ -5,7 +5,7 @@
 
 extern struct icon_manager *gUnknown_030012DC;
 extern struct icon_manager *gUnknown_030012E0;
-extern s32 sub_803AD80(void *arg0, void *arg1, void *arg2);
+extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 
 /* Draws `label1`/`label2` (a small "N/M" fraction readout - a row's
  * count over its fixed total, e.g. the icon-row helpers in
@@ -44,12 +44,12 @@ static inline void set_icon_mgr_pos(struct icon_manager *m, u32 x, u32 y)
 }
 
 /* Calls the icon manager's `record->slots[slot]` method on `label` (a
- * gcc 2.x virtual call; sub_803AD80 is `_call_via_r2`). */
+ * gcc 2.x virtual call through libgcc's `_call_via_r2`). */
 #define DRAW_ICON_SLOT(mgrExpr, slot, label)                                          \
     {                                                                                 \
         struct icon_manager *_m = (mgrExpr);                                          \
         struct icon_record *_r = _m->record;                                          \
-        sub_803AD80((u8 *)_m + _r->slots[slot].offset, (label), _r->slots[slot].ptr); \
+        _call_via_r2((u8 *)_m + _r->slots[slot].offset, (label), _r->slots[slot].ptr); \
     }
 
 void sub_8005E5C(struct pause_screen_results *self, void *label1, void *label2)

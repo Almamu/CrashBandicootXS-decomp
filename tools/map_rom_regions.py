@@ -20,7 +20,7 @@ knowing before trusting the output:
   counts for exactly this reason.
 - **This only sees calls made from *other raw asm functions***. A call
   from an already-matched src/*.c file into raw asm (like
-  src/system/asset_util.c's LZ77UnCompWrapper/RLUnCompWrapper calls) is
+  src/system/asset_util.c's LZ77UnCompVram/RLUnCompVram calls) is
   invisible here - re-check callers by hand (grep src/) before trusting
   an "isolated, no callers found" result.
 
@@ -51,7 +51,7 @@ LANDMARK_DOMAINS = {
     'InitObjTileFreeList': 'graphics_loading', 'SetupActorVramPool': 'graphics_loading',
     'LoadLevelGraphics': 'graphics_loading', 'LoadBg2Background': 'graphics_loading',
     'LoadObjSpriteTiles': 'graphics_loading',
-    'LZ77UnCompWrapper': 'graphics_loading', 'RLUnCompWrapper': 'graphics_loading',
+    'LZ77UnCompVram': 'graphics_loading', 'RLUnCompVram': 'graphics_loading',
     'UpdateGameFrame': 'game_loop', 'MainLoop': 'game_loop',
     'InitHudIconWidgetA': 'hud', 'InitHudIconWidgetB': 'hud', 'MeasureText': 'hud',
     'UploadHudTile': 'hud', 'InitHudTextWidget': 'hud',

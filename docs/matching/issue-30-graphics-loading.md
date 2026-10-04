@@ -126,7 +126,7 @@ parked as `sub_8020E84`-`sub_802117C` in `trigger_effect.c` (issue #31)
 to resist here too; `sub_801EF0C` through `sub_801F8DC` are all "text
 label as sprite tiles" constructors sharing `sub_801F8DC`'s already-read
 shape (`sub_8009ED0` allocation, `sub_800CA74` style lookup, two
-`sub_803AD80` calls).
+`_call_via_r2` calls).
 
 Verified via a full clean `rm -rf build && make compare` (`La suma
 coincide`) and `make NON_MATCHING=1 report`.
@@ -239,7 +239,7 @@ that still qualifies. The winning index is packed 2+2 bits split across
 this is the same `self+0x18`-stored index `sub_801E788` reads back and
 re-splits when inserting into the affine table below. It also computes a
 "tile index" (`0x400 - winningArea/32`, clamped to 10 bits) into
-`self+0x14`, and two Q8.8 scale factors (`sub_803ADB4`-divided,
+`self+0x14`, and two Q8.8 scale factors (`__divsi3`-divided,
 `self+0x20`/`self+0x24`) that classify into a 2-bit "scale mode" written
 to `self+0x11` bits 0-1.
 
@@ -312,7 +312,7 @@ partially read - 3 Q8.8-shifted x/y/z args, a `gLevelState`-gated
 position/flag write into `gUnknown_030012D8+0x28`, then a conditional
 `PlaySfx`) was read in full this pass too, but not attempted: its second
 half calls into several still-unread helpers
-(`sub_80232E0`/`sub_8023130`/`sub_803AFEC`/`sub_80232B8`/`sub_803AD88`)
+(`sub_80232E0`/`sub_8023130`/`sub_803AFEC`/`sub_80232B8`/`_call_via_r4`)
 whose own signatures and the `gUnknown_030012D8+0x18+0x68`-rooted
 sub-struct they read from aren't pinned down yet - a confident
 reconstruction would mean chasing all of those first, which this pass's
@@ -331,15 +331,15 @@ player struct: `sub_80232F4`/`sub_80232E0`/`sub_8023130`/`sub_803AFEC`
 (`+0xa8`/`+0x7c`/`+0x84`/`+0x74` respectively - the first three in
 `asm/code_3_2_17_231cc.s`'s still-raw accessor cluster, the fourth
 already matched in `actor_aabb_setup.c`) and `sub_80232B8` (`+0xa4`,
-matched in `game_loop10.c`/`game_loop2.c`). `sub_803AD88` itself is not
+matched in `game_loop10.c`/`game_loop2.c`). `_call_via_r4` itself is not
 a normal function at all - it's the `bx r4` register-trampoline from
 `reg_trampolines.c` (`src/system/reg_trampolines.c`'s
-`sub_803AD78`-`sub_803AD94` "call through register" family) - the ROM
+`_call_via_r0`-`_call_via_r7` "call through register" family) - the ROM
 loads the real callee's address into `r4` right before the `bl`, and
 this project's established convention (`sub_8009FD4` in
 `actor_part9.c`, `sub_8007DBC`) is to model that load as a genuine
 "dead read" (`register void *x asm("r4") = ...; (void)x;`) immediately
-before an ordinary-looking `sub_803AD88(addr, arg1, arg2, arg3)` call.
+before an ordinary-looking `_call_via_r4(addr, arg1, arg2, arg3)` call.
 
 With every operand pinned down, the function's full semantics are:
 
@@ -354,7 +354,7 @@ With every operand pinned down, the function's full semantics are:
    `sub_80221A4`/`sub_80221D4` (`graphics_loading_21d80.c`) already do
    elsewhere in this cluster.
 2. Unless the player's `+0x8c` "paused" flag is set: fires the
-   player's `table+0x68` trampoline (`sub_803AD88`, action `0x1a`) and
+   player's `table+0x68` trampoline (`_call_via_r4`, action `0x1a`) and
    plays SFX `0x100` through `gUnknown_030012BC`, gated by a
    budget/reentrancy check - either the player's spawn counter
    (`+0x7c`) has room against its cap (`+0x84`), or, when it doesn't,
@@ -415,7 +415,7 @@ next:
   as sprite tiles" spawner family whose shape `sub_801FDEC`
   (`graphics_loading_1fdec.c`, issue #31) already matched as **real,
   byte-exact C** - `sub_8009ED0` allocation, `sub_800CA74` style
-  lookup, two `sub_803AD80` trampoline calls, and the same
+  lookup, two `_call_via_r2` trampoline calls, and the same
   `gEntityFlags`-rooted "collected bits" pack this pass's
   `sub_801E990` write-up above also resolves the table shape for. This
   is the more promising real-C target of the two remaining families -

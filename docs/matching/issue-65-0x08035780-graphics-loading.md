@@ -32,7 +32,7 @@ Two distinct object shapes turned out to be involved, not one:
     `sub_8036600` seeds the 20-slot array's initial state from
     `gStaticData_0817D6C0`.
   - A 7-slot rolling-hash "cheat code" detector at `self+0x210`
-    (`sub_8035D1C`, gated on `gUnknown_030007E0.held`'s bit 0x100 - R
+    (`sub_8035D1C`, gated on `gKeys.held`'s bit 0x100 - R
     shoulder - folding one of 7 fixed hex "signature" constants selected
     by a `pressed` bitmask through a rotate-then-multiply-by-521 hash,
     checking the result against a fixed target `0x3034AF3B` to fire song
@@ -85,7 +85,7 @@ Two distinct object shapes turned out to be involved, not one:
     transitions, decaying a position field in the penultimate state).
   - `sub_8036FBC` is its OAM builder (a no-op once the state machine
     reaches its terminal state): resolves the current frame's tile
-    pointer, projects screen position via two `sub_803ADB4` sine/cosine
+    pointer, projects screen position via two `__divsi3` sine/cosine
     calls, clips against screen bounds, re-uploads to VRAM only when the
     frame pointer changed since last time, and queues the OAM entry.
 

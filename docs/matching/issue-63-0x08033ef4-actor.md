@@ -209,7 +209,7 @@ boundaries - not by re-reading the isolated compiles more carefully.
   `asm/code_3_2_20_28568_c99c_31784_33ef4_34058.s`.
 
 - **`sub_80345B0`/`sub_8034634`** (`src/graphics/actor_part72.c`) - a
-  128-slot particle spawner (rolls two `sub_8000E1C` random values
+  128-slot particle spawner (rolls two `RandRange` random values
   against the 256-entry `gStaticData_0816A820` direction table to seed a
   position/velocity record) and a 4-bit-per-cell tilemap nibble writer;
   both now fully matched as real C, retiring

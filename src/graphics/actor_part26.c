@@ -19,14 +19,14 @@ void sub_803171C(void)
     }
 }
 
-extern s32 sub_803ADB4(s32 arg0, s32 arg1);
+extern s32 __divsi3(s32 arg0, s32 arg1);
 extern s32 QueueVramDmaTransfer(void *arg0, void *arg1, u16 arg2, u16 arg3);
 extern s32 gUnknown_03001578;
 extern u8 gStaticData_0817C378[];
 
 /* While `gUnknown_03001578`'s DMA-refresh counter is armed, decrements
  * it and re-queues one "frame" of `gStaticData_0817C378`'s palette
- * animation strip into BG palette bank 1 - `sub_803ADB4` picks a
+ * animation strip into BG palette bank 1 - `__divsi3` picks a
  * triangle-wave frame index (0-2, mirrored back down for 3-4) so the
  * animation ping-pongs. */
 void sub_8031744(void)
@@ -38,7 +38,7 @@ void sub_8031744(void)
     }
     gUnknown_03001578--;
 
-    v = sub_803ADB4(gUnknown_03001578, 3);
+    v = __divsi3(gUnknown_03001578, 3);
     if (v > 2) {
         v = 5 - v;
     }

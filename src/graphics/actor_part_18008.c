@@ -12,12 +12,6 @@
  * list's anchor objects, stomping them. sub_801865C picks the next anchor
  * from a per-round table, sub_80186F0 spawns a falling hazard. */
 
-asm(".set _call_via_r1, sub_803AD7C\n"
-    ".set _call_via_r2, sub_803AD80\n"
-    ".set _call_via_r3, sub_803AD84\n"
-    ".set _call_via_r4, sub_803AD88\n"
-    ".set __divsi3, sub_803ADB4\n");
-
 struct hop_method
 {
     s16 thisOffset;

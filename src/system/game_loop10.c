@@ -15,8 +15,8 @@ extern void sub_8023288(struct level_state *self);
 extern u8 sub_8023290(struct level_state *self);
 extern u8 sub_80232B8(struct level_state *self);
 extern void sub_80231D4(struct level_state *self);
-extern void *sub_800014C(void *dest, void *src, s32 size);
-extern void sub_803A94C(const void *src, void *dst, u32 cnt);
+extern void *MemCopy32(void *dest, void *src, s32 size);
+extern void CpuSet(const void *src, void *dst, u32 cnt);
 extern void sub_8007398(struct actor *self, s32 arg1, s32 arg2);
 extern void sub_8028568(void *state, s32 arg1);
 extern void sub_8022CA0(void *self, u8 arg1);
@@ -79,7 +79,7 @@ void RestoreCheckpoint(struct level_state *self)
     self->unk_70 = self->unk_cc;
     tmp = self->unk_d0;
     self->unk_a9 = tmp;
-    sub_800014C(self, self->snapE4, 0x68);
+    MemCopy32(self, self->snapE4, 0x68);
 }
 
 /* Re-arms a level/checkpoint transition: stores `flag` at `self->0xe0`,
@@ -113,16 +113,16 @@ void SetCheckpoint(void *selfArg, u8 flag, s32 *pairArg)
         void *a = (u8 *)pair + 0x108;
         void *b = (u8 *)pair + 8;
         register u32 ctrl asm("r2") = CPU_SET_32BIT | 0x40;
-        sub_803A94C(a, b, ctrl);
+        CpuSet(a, b, ctrl);
     }
     {
         void *a = (u8 *)pair + 0x308;
         void *b = (u8 *)pair + 0x208;
         register u32 ctrl asm("r2") = CPU_SET_32BIT | 0x40;
-        sub_803A94C(a, b, ctrl);
+        CpuSet(a, b, ctrl);
     }
 
-    sub_800014C(self->snapE4, self, 0x68);
+    MemCopy32(self->snapE4, self, 0x68);
 }
 
 /* When `flag` is set, accumulates `self->0xb4` into `self->0x70`,
@@ -209,8 +209,8 @@ void sub_80236AC(struct level_state *self, void *src)
     register s32 val asm("r0");
     register u16 packed asm("r5");
 
-    sub_800014C(self, src, 0x68);
-    sub_800014C(snap, self, 0x68);
+    MemCopy32(self, src, 0x68);
+    MemCopy32(snap, self, 0x68);
 
     raw = *snap;
     val = (u32)(raw << 25) >> 25;

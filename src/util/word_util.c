@@ -37,7 +37,7 @@ done:
     return len;
 }
 
-extern s32 sub_8037E54(s32 value, s32 divisor);
+extern s32 __udivsi3(s32 value, s32 divisor);
 extern s32 sub_8000EE4(u8 *text, struct icon_manager *self, void *box, s32 limit, s32 mode);
 
 struct sub_8001214_params {
@@ -62,6 +62,6 @@ s32 sub_8001214(u8 *text, struct icon_manager *self, struct sub_8001214_params *
         s32 v = params->field_0;
         self->field_118 = v;
     }
-    limit = sub_8037E54(params->field_c, self->field_11c);
+    limit = __udivsi3(params->field_c, self->field_11c);
     return sub_8000EE4(text, self, params, limit, mode);
 }

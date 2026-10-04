@@ -28,9 +28,9 @@ Otherwise it derives a base pitch from `self+0x2a`/`+0x2e`/`+0x21`/
 it into `gGaxPeriodTable`'s period-lookup table (capped at
 `0xEF3`), derives a per-voice volume by chaining `self+0x16`/`+0x17`/
 `+0x15`/`+0x18`/`info->0->0x18->8` multiplies (each `0xff`-sentineled
-to "skip"), calls `sub_8037ECC` (the 64-bit-division-backed pitch/
+to "skip"), calls `__muldi3` (the 64-bit-division-backed pitch/
 period helper, `src/util/math_div64_util.c`) on the result, then builds
-a stack work-item and forwards it through `sub_800014C`.
+a stack work-item and forwards it through `MemCopy32`.
 
 The remainder (from ROM label `0x08039CDE` onward, i.e. `sub_8039E50`'s
 half) loops the instrument's per-row envelope/pan table

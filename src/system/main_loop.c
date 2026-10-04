@@ -2,8 +2,8 @@
 #include "memory.h"
 
 extern void *gLevelState;
-extern s32 gUnknown_03000868;
-extern s32 *gUnknown_03000850[];
+extern s32 gLanguage;
+extern s32 *gUiTextTables[];
 
 extern void *GetLevelState(void);
 extern void sub_802369C(void);
@@ -29,7 +29,7 @@ s32 MainLoop(void)
     sub_802369C();
     sub_8023674(gLevelState);
     sub_8037620();
-    gUnknown_03000868 = sub_80371B4();
+    gLanguage = sub_80371B4();
     sub_80375EC();
     sub_8023658(gLevelState);
 
@@ -40,11 +40,11 @@ s32 MainLoop(void)
     }
 }
 
-/* Two-level table lookup: `gUnknown_03000850` is an array of per-
- * "counter widget mode" (`gUnknown_03000868`, set above from
- * `sub_80371B4`'s return) tables, each indexed by `index`. Shape/
- * meaning of the tables themselves not established yet. */
-s32 sub_8026F38(s32 index)
+/* UI string `index` in the current language: `gUiTextTables` holds one
+ * string table per language (src/data/ui_text_172cd4.c), and
+ * `gLanguage` (0-5, set above from the language selector
+ * `sub_80371B4`'s return) picks one. */
+s32 GetUiText(s32 index)
 {
-    return gUnknown_03000850[gUnknown_03000868][index];
+    return gUiTextTables[gLanguage][index];
 }
