@@ -8,15 +8,15 @@
  * (ROM 0x0800CA04-0x0800CBD4, 464 bytes, 19 functions/stubs), sitting
  * directly between two already-matched neighbors from the same
  * session: `sub_800C9C8` (`actor_part116.c`) just before it, and
- * `sub_800CBD4` (`actor_part117.c`) - which calls this file's own
+ * `CreateKnockedEnemyCtrl` (`actor_part117.c`) - which calls this file's own
  * `nullsub_14` - immediately after. Despite the address range's small
  * size the whole file turned out to be nothing but tiny single-purpose
  * accessors on this cluster's already-well-characterized `self`/`owner`
  * object shape (field table in the Phase 1 section of the doc above),
  * plus two slightly larger helpers (`sub_800CA08`'s camera-distance/
- * volume calculator, `sub_800CACC`'s conditional `_call_via_r4`
+ * volume calculator, `UpdatePeriodicSpawner`'s conditional `_call_via_r4`
  * trigger) and one instance of the "flag active + bitmap-set" idiom
- * (`sub_800CB64`) already matched as real C once before, in
+ * (`UpdateKnockedEnemyCtrl`) already matched as real C once before, in
  * `actor_part27c.c`'s `sub_8018884`.
  *
  * All 19 matched as **real C**, no NAKED fallback needed anywhere in
@@ -28,18 +28,18 @@
  * `self`/`owner` object shape (offsets not already in the Phase 1
  * doc's own field table):
  *
- * - `self+0x70`: the `owner` pointer itself - `sub_800CA04` is its
+ * - `self+0x70`: the `owner` pointer itself - `AttachEnemyCtrl` is its
  *   setter (every other function in this cluster only ever *reads*
  *   `self+0x70`; this is the first confirmed writer).
  * - `self+0x4`: the "manager" pointer Phase 2's doc already
  *   identified (`sub_800B704`/`sub_800B838`'s own 8-byte-record
- *   array base) - `sub_800CA48` resets it to the fixed global
+ *   array base) - `ResetEnemyCtrl` resets it to the fixed global
  *   `gStaticData_0816BB6C`.
  * - `self+0x84`: the per-instance mode-indexed pointer table Phase 2
- *   already identified (`sub_800C8CC`/`sub_800C6A8`'s own trigger
- *   table) - `sub_800CAC0` is its setter, `sub_800CA48` clears it.
+ *   already identified (`SetEnemyAnimMode`/`SetEnemyState`'s own trigger
+ *   table) - `sub_800CAC0` is its setter, `ResetEnemyCtrl` clears it.
  * - `self+0x88`: the floating-popup child pointer the Phase 1 doc's
- *   field table already names - `sub_800CA48` clears it (part of the
+ *   field table already names - `ResetEnemyCtrl` clears it (part of the
  *   same reset this function performs on `self+0x70`/`self+0x84`).
  * - `self+0x3c`/`0x40`/`0x44`: the sine-oscillator parameters
  *   `sub_800C8F8`/`sub_800C940`/`sub_800C97C` (`actor_part116.c`)
@@ -58,14 +58,14 @@
  * - `self+0x6c`: the "second, larger-range state/anim-id byte" the
  *   Phase 1 doc's field table already names - `sub_800CAC8` is its
  *   setter.
- * - `self+0x1c`: the Y-axis homing bound `sub_800C87C`/`sub_800C898`
+ * - `self+0x1c`: the Y-axis homing bound `SetEnemyRangeYSpeed`/`SetEnemyRangeX`
  *   (`actor_part122.c`) already write - `sub_800CB60` is its setter,
- *   and `sub_800CACC` reads it (into a value it never uses - see that
+ *   and `UpdatePeriodicSpawner` reads it (into a value it never uses - see that
  *   function's own comment).
  * - `self+0x18`: reused here as the struct-actor-shaped "table"
- *   pointer role (`sub_800CB20`/`sub_800CB40`, and `sub_800CB64`'s own
+ *   pointer role (`DestroyPeriodicSpawner`/`CreatePeriodicSpawner`, and `UpdateKnockedEnemyCtrl`'s own
  *   `other` argument) - the same nominal offset the Phase 4 doc's
- *   `sub_800C87C` uses for a Y-axis homing bound instead, on what must
+ *   `SetEnemyRangeYSpeed` uses for a Y-axis homing bound instead, on what must
  *   be a differently-shaped object at that call site (this cluster's
  *   `self`/`owner`/`other` roles are not one single reconciled struct,
  *   per the Phase 1 doc's own explicit caution - not resolved further
@@ -81,7 +81,7 @@
  * suma coincide`). This fully consumes `asm/code_3_2_17_ca04.s`,
  * retired from `ldscript.txt`. */
 
-/* This cluster's controller object (the class of sub_800B8DC,
+/* This cluster's controller object (the class of UpdateEnemyCtrl,
  * actor_part112.c), as far as this file's accessors describe it. The
  * 0x30/0x34/0x38 triple is only ever set here - its readers (the
  * "blocking condition" checks in the docs) test the *owner's* fields at
@@ -108,23 +108,23 @@ struct trigger_ctrl {
     s32 unk_6c;             // 0x6C - state/anim id
     void *owner;            // 0x70 - the controlled object
     u8 unk_74[0x10];
-    void *triggerTable;     // 0x84 - mode-indexed (sub_800C8CC/sub_800C6A8)
+    void *triggerTable;     // 0x84 - mode-indexed (SetEnemyAnimMode/SetEnemyState)
     void *popup;            // 0x88 - floating popup child
 };
 
-/* A periodic trigger actor (sub_800CB40 builds one on top of graphics.c's
+/* A periodic trigger actor (CreatePeriodicSpawner builds one on top of graphics.c's
  * `struct actor`): fires _call_via_r4 at its own position once every
- * `period` frames while near the camera (sub_800CACC). */
-struct timed_trigger {
+ * `period` frames while near the camera (UpdatePeriodicSpawner). */
+struct periodic_spawner {
     struct actor base;      // 0x00 - `base.table` is the method table
-    s32 unk_1c;             // 0x1C - read but unused by sub_800CACC
+    s32 unk_1c;             // 0x1C - read but unused by UpdatePeriodicSpawner
     s32 period;             // 0x20
     s32 phase;              // 0x24
 };
 
 /* `self+0x70` ("owner") setter - the first confirmed writer of this
  * field anywhere in the cluster (every other function only reads it). */
-void sub_800CA04(struct trigger_ctrl *self, void *owner)
+void AttachEnemyCtrl(struct trigger_ctrl *self, void *owner)
 {
     self->owner = owner;
 }
@@ -132,7 +132,7 @@ void sub_800CA04(struct trigger_ctrl *self, void *owner)
 extern struct actor *gPlayer;
 
 /* The exact "distance-scaled ambient sound volume" calculation
- * `sub_800B8DC` state 18 (`actor_part112.c`) already documents inline
+ * `UpdateEnemyCtrl` state 18 (`actor_part112.c`) already documents inline
  * - `max(|x - cameraX|, |y - cameraY|)` against `gPlayer`
  * (the player/camera object), clamped to `[0x20, 0xa0]`, converted to
  * `0x100 - (clamped - 0x20) * 2`. Whether this is the literal function
@@ -188,9 +188,9 @@ extern u8 gStaticData_0816BB6C[];
  * child pointer) to null, and re-points `self+4` (the "manager"
  * pointer, per the Phase 2 doc) at the fixed `gStaticData_0816BB6C`
  * table - an initializer/reset for this object's own extension
- * fields, called by `sub_800CA74` below as part of its own
+ * fields, called by `CreateEnemyCtrl` below as part of its own
  * construction sequence. */
-void sub_800CA48(struct trigger_ctrl *self)
+void ResetEnemyCtrl(struct trigger_ctrl *self)
 {
     self->owner = NULL;
     self->triggerTable = NULL;
@@ -198,12 +198,12 @@ void sub_800CA48(struct trigger_ctrl *self)
     self->popup = NULL;
 }
 
-extern u8 gStaticData_087E3EE4[];
+extern u8 gEnemyCtrlVtable[];
 extern void sub_800B8A8(void *self, s32 flags);
 extern void sub_800B8C8(void *self);
 
-/* Sets `self+0xc`'s table pointer to `gStaticData_087E3EE4` - the
- * same 93-vtable-family record `sub_800B8DC`/`sub_800BD48`
+/* Sets `self+0xc`'s table pointer to `gEnemyCtrlVtable` - the
+ * same 93-vtable-family record `UpdateEnemyCtrl`/`HitEnemy`
  * (`actor_part112.c`) themselves live in, per the Phase 1 doc's own
  * "Bounds and vtable status" section - then tail-calls `sub_800B8A8`.
  * Same "dead store, immediately overwritten by the callee" shape
@@ -214,24 +214,24 @@ extern void sub_800B8C8(void *self);
  * never survives past the call - the same harmless double-set pattern
  * already established for `sub_8018858`/`sub_8017A78`/`sub_8017FD4`/
  * `sub_800CCCC`. */
-void sub_800CA60(struct trigger_ctrl *self, s32 flags)
+void DestroyEnemyCtrl(struct trigger_ctrl *self, s32 flags)
 {
-    self->vtable = gStaticData_087E3EE4;
+    self->vtable = gEnemyCtrlVtable;
     sub_800B8A8(self, flags);
 }
 
 /* Resets via `sub_800B8C8`, re-points `self+0xc` at the same
- * `gStaticData_087E3EE4` table `sub_800CA60` above uses, then calls
- * `sub_800CA48` (clearing this object's own extension fields) and
+ * `gEnemyCtrlVtable` table `DestroyEnemyCtrl` above uses, then calls
+ * `ResetEnemyCtrl` (clearing this object's own extension fields) and
  * returns `self` - the same "reset, re-point, hook, return self"
  * constructor shape already matched for `sub_801886C`/`sub_8018858`/
- * `sub_800CBD4`/`sub_800CCE0`, with `sub_800CA48` playing the
+ * `CreateKnockedEnemyCtrl`/`sub_800CCE0`, with `ResetEnemyCtrl` playing the
  * `nullsub_N`-hook role those other constructors give a no-op. */
-void *sub_800CA74(struct trigger_ctrl *self)
+void *CreateEnemyCtrl(struct trigger_ctrl *self)
 {
     sub_800B8C8(self);
-    self->vtable = gStaticData_087E3EE4;
-    sub_800CA48(self);
+    self->vtable = gEnemyCtrlVtable;
+    ResetEnemyCtrl(self);
     return self;
 }
 
@@ -281,7 +281,7 @@ void sub_800CAAC(struct trigger_ctrl *self, s32 a, s32 b, s32 c, s32 d)
 asm(".align 2, 0");
 
 /* `self+0x84` setter - the per-instance mode-indexed pointer table
- * `sub_800C8CC`/`sub_800C6A8` (`actor_part113.c`/`actor_part122.c`)
+ * `SetEnemyAnimMode`/`SetEnemyState` (`actor_part113.c`/`actor_part122.c`)
  * both trigger through. */
 void sub_800CAC0(struct trigger_ctrl *self, void *a)
 {
@@ -308,7 +308,7 @@ extern void _call_via_r4(void *arg0, s32 arg1, s32 arg2, s32 arg3);
  * `sub_800CAAC` above sets), and on a pass fires
  * `_call_via_r4((void*)0xffff, (u16)selfX, (u16)(self->4 >> 8), 0)` -
  * the same "directional-target table trigger" primitive
- * `sub_800B8DC` state 11 and `sub_800BD48` states 19-20
+ * `UpdateEnemyCtrl` state 11 and `HitEnemy` states 19-20
  * (`actor_part112.c`) already call directly. `self+0x1c` (the Y-axis
  * homing bound `sub_800CB60` below sets) is read here too but its
  * value is never used for anything - a genuine dead read the ROM's own
@@ -321,7 +321,7 @@ extern void _call_via_r4(void *arg0, s32 arg1, s32 arg2, s32 arg3);
  * `self` itself was already using, and free again by this point) -
  * unpinned, gcc picked a spare `r3` for it instead, a harmless but
  * byte-different register choice from the ROM's own. */
-void sub_800CACC(struct timed_trigger *self)
+void UpdatePeriodicSpawner(struct periodic_spawner *self)
 {
     s32 selfX = self->base.x >> 8;
     s32 cameraX = gPlayer->x >> 8;
@@ -352,7 +352,7 @@ extern void sub_8026ED0(void *self);
  * `gStaticData_087E3BEC` - the same table `graphics.c`'s own
  * constructors already use - then, only if bit 0 of `flags` is set,
  * fires `sub_8026ED0(self)`. */
-void sub_800CB20(struct timed_trigger *self, s32 flags)
+void DestroyPeriodicSpawner(struct periodic_spawner *self, s32 flags)
 {
     self->base.table = gStaticData_087E3BEC;
     if (flags & 1) {
@@ -361,32 +361,32 @@ void sub_800CB20(struct timed_trigger *self, s32 flags)
 }
 
 extern struct actor *sub_800725C(struct actor *self);
-extern u8 gStaticData_087E3F4C[];
+extern u8 gPeriodicSpawnerVtable[];
 
 /* Calls `sub_800725C(self)` (already matched, `graphics.c`) - its
  * return value discarded - then sets `self+0x18`'s table pointer to
- * `gStaticData_087E3F4C` and returns `self`. */
-void *sub_800CB40(struct timed_trigger *self)
+ * `gPeriodicSpawnerVtable` and returns `self`. */
+void *CreatePeriodicSpawner(struct periodic_spawner *self)
 {
     sub_800725C(&self->base);
-    self->base.table = gStaticData_087E3F4C;
+    self->base.table = gPeriodicSpawnerVtable;
     return self;
 }
 
 /* `self+0x20`/`0x24` partial (position-only) setter - the same AABB
  * trigger-box fields `sub_800CAAC` above sets all four corners of. */
-void sub_800CB58(struct timed_trigger *self, s32 a, s32 b)
+void sub_800CB58(struct periodic_spawner *self, s32 a, s32 b)
 {
     self->period = a;
     self->phase = b;
 }
 asm(".align 2, 0");
 
-/* `self+0x1c` setter - the Y-axis homing bound `sub_800C87C`/
- * `sub_800C898` (`actor_part122.c`) already write, and the field
- * `sub_800CACC` above reads (but never uses) via its own dead
+/* `self+0x1c` setter - the Y-axis homing bound `SetEnemyRangeYSpeed`/
+ * `SetEnemyRangeX` (`actor_part122.c`) already write, and the field
+ * `UpdatePeriodicSpawner` above reads (but never uses) via its own dead
  * `self+0x1c` load. */
-void sub_800CB60(struct timed_trigger *self, s32 a)
+void sub_800CB60(struct periodic_spawner *self, s32 a)
 {
     self->unk_1c = a;
 }
@@ -420,7 +420,7 @@ struct probe_vtable {
     struct actor_method m28;    // 0x28 - hit probe
 };
 
-void sub_800CB64(void *selfArg, void *otherArg)
+void UpdateKnockedEnemyCtrl(void *selfArg, void *otherArg)
 {
     register u8 *other asm("r4") = otherArg;
     struct probe_vtable *table = ((struct actor *)other)->table;
@@ -460,23 +460,23 @@ void sub_800CB64(void *selfArg, void *otherArg)
     }
 }
 
-/* Genuine empty stub (`bx lr`) - `sub_800CBD4`'s (`actor_part117.c`)
+/* Genuine empty stub (`bx lr`) - `CreateKnockedEnemyCtrl`'s (`actor_part117.c`)
  * own tail-call hook, per that function's own doc comment. */
 void nullsub_14(void *self)
 {
 }
 asm(".align 2, 0");
 
-extern u8 gStaticData_087E3FA4[];
+extern u8 gKnockedEnemyCtrlVtable[];
 
-/* Same "double-set" shape as `sub_800CA60` above: sets `self+0xc`'s
- * table pointer to `gStaticData_087E3FA4` - the same fixed anchor
- * table `sub_800CBD4` (`actor_part117.c`) itself re-points `self+0xc`
+/* Same "double-set" shape as `DestroyEnemyCtrl` above: sets `self+0xc`'s
+ * table pointer to `gKnockedEnemyCtrlVtable` - the same fixed anchor
+ * table `CreateKnockedEnemyCtrl` (`actor_part117.c`) itself re-points `self+0xc`
  * at - then tail-calls `sub_800B8A8`, which promptly resets `self+0xc`
  * right back to `gStaticData_087E3E7C` regardless (same harmless dead
- * store as `sub_800CA60`). */
-void sub_800CBC0(struct trigger_ctrl *self, s32 flags)
+ * store as `DestroyEnemyCtrl`). */
+void DestroyKnockedEnemyCtrl(struct trigger_ctrl *self, s32 flags)
 {
-    self->vtable = gStaticData_087E3FA4;
+    self->vtable = gKnockedEnemyCtrlVtable;
     sub_800B8A8(self, flags);
 }

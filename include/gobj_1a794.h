@@ -10,20 +10,20 @@
  * pairs, called through the _call_via_r1/AD80/AD84/AD88 "call via
  * r1/r2/r3/r4" thunks):
  *
- * - `struct gobj`, a 0x80-byte level object built by sub_801A878 (method
- *   table gStaticData_087E49DC: +0x0C sub_801AB34 player-contact test,
- *   +0x1C sub_801B208 per-frame/destroy step, +0x4C sub_801B2C0,
- *   +0x54 sub_801B2C4 destructor). Its `type` (+0x78) comes from the
+ * - `struct gobj`, a 0x80-byte level object built by CreatePlatform (method
+ *   table gPlatformVtable: +0x0C CheckPlatformContact player-contact test,
+ *   +0x1C UpdatePlatform per-frame/destroy step, +0x4C sub_801B2C0,
+ *   +0x54 DestroyPlatform destructor). Its `type` (+0x78) comes from the
  *   level's spawn record or is forced by the spawn kind; types 1/5/6/7
  *   get a `struct mover` attached at +0x44. The player object
  *   (gPlayer) uses the same layout for the fields read here,
  *   and `carried` (+0xAC) is the object the player is standing on.
- * - `struct mover`, a 0x38-byte helper (method table gStaticData_087E4A54:
- *   +0x0C sub_801B304 per-frame move, +0x4C sub_801B7C4 destructor,
+ * - `struct mover`, a 0x38-byte helper (method table gPlatformMoverVtable:
+ *   +0x0C UpdatePlatformMover per-frame move, +0x4C DestroyPlatformMover destructor,
  *   +0x5C sub_801B7A0 / +0x64 sub_801B77C velocity setters) that
  *   oscillates its owner back and forth over `rangeX`/`rangeY` pixels
  *   using the 12-byte velocity records of gStaticData_0816C460, and drags
- *   the player along while it is `active` (sub_801B624). */
+ *   the player along while it is `active` (MovePlayerWithPlatform). */
 
 struct vec3
 {
@@ -218,8 +218,8 @@ extern struct vec3 gStaticData_0816C460[];
 extern u8 gStaticData_0816C458[];
 extern u8 gStaticData_087E490C[];
 extern u8 gStaticData_087E4974[];
-extern u8 gStaticData_087E49DC[];
-extern u8 gStaticData_087E4A54[];
+extern u8 gPlatformVtable[];
+extern u8 gPlatformMoverVtable[];
 
 extern void *sub_8017A8C(void *self);
 extern void sub_8017A78(void *self, s32 flags);
@@ -256,18 +256,18 @@ extern void sub_800B8C8(void *self);
 
 void sub_801B2D8(struct gobj *self);
 
-/* The object's constructor body (sub_801B2E4), which sub_801A878 inlines
+/* The object's constructor body (sub_801B2E4), which CreatePlatform inlines
  * into its `new`. */
 static inline struct gobj *GobjInit(struct gobj *self)
 {
     sub_8009F90(self);
-    self->vtable = (struct gobj_vtable *)gStaticData_087E49DC;
+    self->vtable = (struct gobj_vtable *)gPlatformVtable;
     sub_801B2D8(self);
     return self;
 }
 void sub_801B2A8(struct gobj *self, u8 value);
 void sub_801AB98(struct gobj *self, void *unused);
-void sub_801B624(struct mover *self, struct gobj *obj);
+void MovePlayerWithPlatform(struct mover *self, struct gobj *obj);
 
 /* Branchless absolute value, updating `x` in place (same helper as
  * actor_part50.c) - the ROM's asr/eor/sub sequence. */

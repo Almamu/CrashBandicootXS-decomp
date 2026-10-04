@@ -8,7 +8,7 @@ in place.
 |---|---|---|---|---|
 | `sub_8002114` (#4) | `src/system/link_cable.c` | 16 | 6 (old_agbcc) | Draft updated |
 | `sub_8002E20` (#5) | `src/graphics/settings_menu8a2.c` | 104 | 97 (4 bytes long) | Draft updated, both loops now match |
-| `sub_802062C` (#31) | `src/graphics/graphics_loading_1feec.c` | 62 | 62 | Draft unchanged, note added |
+| `SpawnFlamethrowerLabAssistant` (#31) | `src/graphics/graphics_loading_1feec.c` | 62 | 62 | Draft unchanged, note added |
 | `DrawPauseFraction` (#7) | `src/graphics/settings_menu16.c` | 73 | 73 | Draft unchanged, note added |
 
 ## `sub_8002114`: nibble test closed (16 to 6)
@@ -78,7 +78,7 @@ register permutation. It was not adopted. Escaping the index for the
 count test instead (E1) or escaping `ch` after its computation were
 worse.
 
-## `sub_802062C`: caller-save analysis (62)
+## `SpawnFlamethrowerLabAssistant`: caller-save analysis (62)
 
 global.c's `find_reg` gives a call-crossing pseudo a call-clobbered
 register (with caller-save code) only if no callee-saved register is
@@ -113,4 +113,4 @@ uses into one pseudo.
 These are in the scratchpad's `last6/`: `d.py`, `var.py`, `rtl.sh` and
 `fnrtl.py` (copies of `last4/` pointed at this worktree), and the
 variant specs `s1`-`s11` (`sub_8002114`), `e1`-`e9` (`sub_8002E20`),
-`g1` (`sub_802062C`) and `m1` (`DrawPauseFraction`).
+`g1` (`SpawnFlamethrowerLabAssistant`) and `m1` (`DrawPauseFraction`).

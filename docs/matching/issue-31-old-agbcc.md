@@ -9,7 +9,7 @@ needed heavy register pins and `asm volatile` islands.
 
 Like issue #24's region (docs/matching/old-agbcc-retry.md), this ROM
 region was built with `tools/agbcc/bin/old_agbcc`. Its scheduler has the
-usual tell here too: `sub_801FDEC` loads the `0x7f` mask before the
+usual tell here too: `SpawnSquid` loads the `0x7f` mask before the
 `ldrb` of `part->flags`. Under old_agbcc the r7 "gap" goes away. The
 allocator uses r7 as a byte-load scratch register on its own, and the
 prologue comes out as `push {r4-r7,lr}` plus the high registers, exactly
@@ -36,12 +36,12 @@ no NAKED:
 
 Three functions keep their previous form:
 
-- `sub_801F170` keeps its agbcc-era pinned C, which matches under
+- `SpawnVenusFlytrap` keeps its agbcc-era pinned C, which matches under
   old_agbcc. Plain C is 5 halfwords off: three constant loads (1 into r9,
   0 into sl, 1 into r8) come out in a different order. Writing `field_0A`
   through `SetPartField0A` fixes that order but swaps hdr and the
   bitfield constant between registers.
-- `sub_802062C` stays NAKED. Plain C is 62 halfwords off. The ROM spills
+- `SpawnFlamethrowerLabAssistant` stays NAKED. Plain C is 62 halfwords off. The ROM spills
   `part+0x28` to its one stack slot and keeps the constant 1 in r8. The
   reconstruction spills the constant and `&gEntityFlags` instead.
 - `sub_8021280` stays NAKED. Plain C is 9 halfwords off. The ROM computes
@@ -56,7 +56,7 @@ Three functions keep their previous form:
 - `struct popup_part`, the sub_8009ED0 part. Its layout matches
   actor_part_188d0.c's `struct gfx_part`: `flipX` is bit 4 of +0x28,
   `frameNibble` is +0x29 and `hdr` is +0x44.
-- `struct popup_hdr`, the sub_800CA74 header.
+- `struct enemy_ctrl`, the CreateEnemyCtrl header.
 - `struct level_record`, the gEntityFlags record.
 
 It also has the `POPUP_ATTACH`/`LEVEL_RECORD` macros and the inline
@@ -96,13 +96,13 @@ are good candidates for the same old_agbcc retry.
 ## Later pass: NAKED retry (mid45)
 
 `sub_8021280` is now C, using four register pins plus one empty `asm`
-nudge for the fresh-register `{x - 2, y - 0x1e}` point. `sub_802062C`
+nudge for the fresh-register `{x - 2, y - 0x1e}` point. `SpawnFlamethrowerLabAssistant`
 stays NAKED at 62 halfwords, now with its draft under `#if NON_MATCHING`.
 See [naked-retry-mid45.md](naked-retry-mid45.md).
 
 ## Later pass: last-eleven NAKED retry
 
-`sub_802062C` is real C now. On top of the last-nine/last-ten draft, an
+`SpawnFlamethrowerLabAssistant` is real C now. On top of the last-nine/last-ten draft, an
 r3 hold over the post-call gfx store and `rec2` lookup moves the
 &gEntityFlags reload to r1, and a copy of `part` escaped by an
 empty asm inside the argument puts the `q2` store after the

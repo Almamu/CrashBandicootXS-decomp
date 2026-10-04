@@ -670,22 +670,22 @@ vtable shapes).
 | `0816B92C` | 0x8 | pointer table (1 data pointers) | `PlayRoom` | high | easy |
 | `0816B934` | 0x8 | pointer table (1 data pointers) | `PlayRoom` | high | easy |
 | `0816B93C` | 0x50 | entry set {entries, 0x100} + its 9 {a, b} entries (`gStaticData_0816B944`). **Converted** (`src/data/entry_set_16b93c.c`) | `PlayRoom` | medium | done |
-| `0816B98C` | 0x20 | table (element layout: see consumers). **Converted** (`src/data/popup_tables_16b98c.c`) | `sub_801EF0C`, `sub_801F050`, `sub_801F170` +22 | medium | done |
-| `0816B9AC` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16). **Converted** (`src/data/popup_tables_16b98c.c`) | `sub_801F528` | high | done |
-| `0816B9CC` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16). **Converted** (`src/data/popup_tables_16b98c.c`) | `sub_801F8DC` | high | done |
-| `0816B9EC` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16). **Converted** (`src/data/popup_tables_16b98c.c`) | `sub_801F3DC` | high | done |
-| `0816BA0C` | 0x20 | table (element layout: see consumers). **Converted** (`src/data/popup_tables_16b98c.c`) | `sub_801F170` | medium | done |
-| `0816BA2C` | 0x20 | table (element layout: see consumers). **Converted** (`src/data/popup_tables_16b98c.c`) | `sub_801F050` | medium | done |
-| `0816BA4C` | 0x20 | table (element layout: see consumers). **Converted** (`src/data/popup_tables_16b98c.c`) | `sub_801FA3C` | medium | done |
-| `0816BA6C` | 0x20 | table (element layout: see consumers). **Converted** (`src/data/popup_tables_16b98c.c`) | `sub_801FDEC` | medium | done |
-| `0816BA8C` | 0x20 | table (element layout: see consumers). **Converted** (`src/data/popup_tables_16b98c.c`) | `sub_801FCB4` | medium | done |
-| `0816BAAC` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16). **Converted** (`src/data/popup_tables_16b98c.c`) | `sub_802062C` | high | done |
+| `0816B98C` | 0x20 | table (element layout: see consumers). **Converted** (`src/data/popup_tables_16b98c.c`) | `sub_801EF0C`, `SpawnVulture`, `SpawnVenusFlytrap` +22 | medium | done |
+| `0816B9AC` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16). **Converted** (`src/data/popup_tables_16b98c.c`) | `SpawnPenguin` | high | done |
+| `0816B9CC` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16). **Converted** (`src/data/popup_tables_16b98c.c`) | `SpawnPufferfish` | high | done |
+| `0816B9EC` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16). **Converted** (`src/data/popup_tables_16b98c.c`) | `SpawnBlowgunTribesman` | high | done |
+| `0816BA0C` | 0x20 | table (element layout: see consumers). **Converted** (`src/data/popup_tables_16b98c.c`) | `SpawnVenusFlytrap` | medium | done |
+| `0816BA2C` | 0x20 | table (element layout: see consumers). **Converted** (`src/data/popup_tables_16b98c.c`) | `SpawnVulture` | medium | done |
+| `0816BA4C` | 0x20 | table (element layout: see consumers). **Converted** (`src/data/popup_tables_16b98c.c`) | `SpawnShark` | medium | done |
+| `0816BA6C` | 0x20 | table (element layout: see consumers). **Converted** (`src/data/popup_tables_16b98c.c`) | `SpawnSquid` | medium | done |
+| `0816BA8C` | 0x20 | table (element layout: see consumers). **Converted** (`src/data/popup_tables_16b98c.c`) | `SpawnElectricEel` | medium | done |
+| `0816BAAC` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16). **Converted** (`src/data/popup_tables_16b98c.c`) | `SpawnFlamethrowerLabAssistant` | high | done |
 | `0816BACC` | 0x20 | table (element layout: see consumers). **Converted** (`src/data/popup_tables_16b98c.c`) | `sub_8020138` | medium | done |
 | `0816BAEC` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16). **Converted** (`src/data/popup_tables_16b98c.c`) | `sub_802026C` | high | done |
-| `0816BB0C` | 0x20 | table (element layout: see consumers). **Converted** (`src/data/popup_tables_16b98c.c`) | `sub_80208C4`, `sub_8020B0C` | medium | done |
-| `0816BB2C` | 0x20 | table (element layout: see consumers). **Converted** (`src/data/popup_tables_16b98c.c`) | `sub_80204EC`, `sub_8020D4C` | medium | done |
-| `0816BB4C` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16). **Converted** (`src/data/popup_tables_16b98c.c`) | `sub_80203A8` | high | done |
-| `0816BB6C` | 0x28 | entry set {entries, 0x100} + its 4 {a, b} entries (`gStaticData_0816BB74`). **Converted** (`src/data/object_tables_16bb6c.c`) | `sub_800CA48` | medium | done |
+| `0816BB0C` | 0x20 | table (element layout: see consumers). **Converted** (`src/data/popup_tables_16b98c.c`) | `sub_80208C4`, `SpawnFrog` | medium | done |
+| `0816BB2C` | 0x20 | table (element layout: see consumers). **Converted** (`src/data/popup_tables_16b98c.c`) | `SpawnPistonCrusher`, `SpawnWoodenCrusher` | medium | done |
+| `0816BB4C` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16). **Converted** (`src/data/popup_tables_16b98c.c`) | `SpawnSaucerLabAssistant` | high | done |
+| `0816BB6C` | 0x28 | entry set {entries, 0x100} + its 4 {a, b} entries (`gStaticData_0816BB74`). **Converted** (`src/data/object_tables_16bb6c.c`) | `ResetEnemyCtrl` | medium | done |
 | `0816BB94` | 0x4 | small constant (281e140a). **Converted** (`src/data/object_tables_16bb6c.c`) | `sub_800F990`, `CreateCrate` | medium | done |
 | `0816BB98` | 0x16 | table (element layout: see consumers). **Converted** (`src/data/object_tables_16bb6c.c`) | `OpenCheckpointCrate`, `BreakCrate`, `ExplodeCrate` | medium | done |
 | `0816BBAE` | 0x16 | table (element layout: see consumers). **Converted** (`src/data/object_tables_16bb6c.c`) | `BlastNearbyCrates`, `BreakCratesInArea`, `sub_8010908` | medium | done |
@@ -717,8 +717,8 @@ vtable shapes).
 | `0816C3E8` | 0xC | table (element layout: see consumers). **Converted** (`src/data/actor_tables_16c2d8.c`) | `sub_801A2A8` | medium | done |
 | `0816C3F4` | 0x24 | table (element layout: see consumers). **Converted** (`src/data/actor_tables_16c2d8.c`) | `sub_801A2A8` | medium | done |
 | `0816C418` | 0x40 | table of struct vec_pair | `sub_801A7AC` | high | easy |
-| `0816C458` | 0x8 | pointer table (1 data pointers) | `sub_801B7D8` | high | easy |
-| `0816C460` | 0x24 | table of struct vec3. **Converted** (`src/data/velocity_16c460.c`) | `sub_801B304`, `sub_801B6EC`, `sub_801B734` +2 | high | done |
+| `0816C458` | 0x8 | pointer table (1 data pointers) | `CreatePlatformMover` | high | easy |
+| `0816C460` | 0x24 | table of struct vec3. **Converted** (`src/data/velocity_16c460.c`) | `UpdatePlatformMover`, `sub_801B6EC`, `sub_801B734` +2 | high | done |
 | `0816C484` | 0x14 | table (element layout: see consumers); 3 word(s) look like ROM pointers | `sub_80047F8`, `InitPowerDialog`, `InitLevelSelect` +1 | medium | easy |
 | `0816C498` | 0x8 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c498.c`) | `InitLevelSelect` | high | done |
 | `0816C4A0` | 0x8 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c498.c`) | `InitLevelSelect` | high | done |
@@ -956,9 +956,9 @@ vtable shapes).
 | `087E3D8C` | 0x78 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_800A604`, `sub_800A650`, `sub_800A6A4` | high | easy |
 | `087E3E04` | 0x78 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `DestroyPlayer`, `InitPlayer` | high | easy |
 | `087E3E7C` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_800B8A8`, `sub_800B8C8` | high | easy |
-| `087E3EE4` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_800CA60`, `sub_800CA74` | high | easy |
-| `087E3F4C` | 0x58 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_800CB40` | high | easy |
-| `087E3FA4` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_800CBC0`, `sub_800CBD4` | high | easy |
+| `087E3EE4` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `DestroyEnemyCtrl`, `CreateEnemyCtrl` | high | easy |
+| `087E3F4C` | 0x58 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreatePeriodicSpawner` | high | easy |
+| `087E3FA4` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `DestroyKnockedEnemyCtrl`, `CreateKnockedEnemyCtrl` | high | easy |
 | `087E400C` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_800CCCC`, `sub_800CCE0` | high | easy |
 | `087E4074` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateCrate`, `DestroyCrate`, `InitCrate` | high | easy |
 | `087E40DC` | 0x70 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateExtraLife`, `DestroyExtraLife`, `InitExtraLife` | high | easy |
@@ -983,8 +983,8 @@ vtable shapes).
 | `087E48A4` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_801A584`, `sub_801A750`, `sub_801A768` | high | easy |
 | `087E490C` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_801A780`, `sub_801A794` | high | easy |
 | `087E4974` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_801A824`, `sub_801A838` | high | easy |
-| `087E49DC` | 0x78 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_801A878`, `sub_801B2C4`, `sub_801B2E4` | high | easy |
-| `087E4A54` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_801B7C4`, `sub_801B7D8` | high | easy |
+| `087E49DC` | 0x78 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreatePlatform`, `DestroyPlatform`, `sub_801B2E4` | high | easy |
+| `087E4A54` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `DestroyPlatformMover`, `CreatePlatformMover` | high | easy |
 | `087E4ABC` | 0x78 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_801B91C`, `sub_801B940` | high | easy |
 | `087E4B34` | 0x78 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_801B984`, `sub_801BAB0`, `sub_801BAD0` | high | easy |
 | `087E4BAC` | 0x30 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_801DF98`, `sub_801DFEC` | high | easy |

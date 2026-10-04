@@ -8,7 +8,7 @@ write-up for a Phase 1 pass over that chunk: crack the entry point
 `docs/rom_map.md` and `sub_8010B6C`'s own doc comment - see below),
 match it, and leave a semantic map + address/size list of the other 24
 functions for a future Phase 2 to parallelize, mirroring the approach
-already used for the `sub_800B8DC` (issue #9/#10) and `sub_0800D18C`
+already used for the `UpdateEnemyCtrl` (issue #9/#10) and `sub_0800D18C`
 (issue #12 Phase 1) clusters earlier in this session.
 
 ## Ground truth: the caller side

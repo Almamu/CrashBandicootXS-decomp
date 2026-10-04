@@ -7,7 +7,7 @@
  *
  * Small method-table ("vtable" at self+0x0C) objects of the same C++-style
  * family as actor_part_17524.c/actor_part27*.c: each class here is a
- * constructor (base sub_800B8C8/sub_8017A8C/sub_801B7D8, then its own
+ * constructor (base sub_800B8C8/sub_8017A8C/CreatePlatformMover, then its own
  * table pointer) plus a destructor (table pointer, then the base
  * destructor), and a handful of per-frame update methods that drive one
  * "part" - a sub_8009ED0-built on-screen object (struct gfx_part below)
@@ -225,7 +225,7 @@ extern void *sub_8007CF8(void *dest, void *pt);
 extern void *sub_8007C30(void *dest, void *pt);
 extern void *sub_8007B98(void *dest, void *pt);
 extern u8 sub_8001688(void *buf1, void *buf2);
-extern void sub_801B7C4(void *self, s32 flags);
+extern void DestroyPlatformMover(void *self, s32 flags);
 extern void *sub_8019758(void *mem);
 extern void *sub_80196F8(void *mem, void *owner);
 extern void sub_80196B8(void *self, struct gfx_part *part, s32 x, s32 y);
@@ -1127,14 +1127,14 @@ void *sub_80195EC(void *selfArg, s32 kind)
 void sub_8019608(struct gfx_ctrl *self, s32 flags)
 {
     self->vtable = (struct gfx_vtable *)gStaticData_087E4634;
-    sub_801B7C4(self, flags);
+    DestroyPlatformMover(self, flags);
 }
 
-/* Constructor: base-constructs through sub_801B7D8(self, 0, 0, 0, {0}, 6)
+/* Constructor: base-constructs through CreatePlatformMover(self, 0, 0, 0, {0}, 6)
  * and points the method table at gStaticData_087E4634.
  *
  * The fifth argument is a byte the ROM stores with `strb` into its
- * outgoing stack slot; like sub_801A878 (actor_part_1a878.c), the call
+ * outgoing stack slot; like CreatePlatform (actor_part_1a878.c), the call
  * writes both stack slots itself through MOVER_NEW's 4-argument view
  * (include/mover_new.h), which also gives the ROM's `mov r1, sp` before
  * the 0. */

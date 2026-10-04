@@ -30,7 +30,7 @@ const u32 gStaticData_0816C418[8][2] = {
     { 0, 2 },
 };
 
-/* The entry set sub_801B7C4 (actor_part_1b208.c) stores in its
+/* The entry set DestroyPlatformMover (actor_part_1b208.c) stores in its
  * object's `set`. */
 const struct entry_set gStaticData_0816C458 = {
     &gStaticData_0816C418[4], 0x100,

@@ -75,14 +75,14 @@ extern void sub_800B838();
 extern void sub_800B86C();
 extern void sub_800B8A4();
 extern void sub_800B8A8();
-extern void sub_800B8DC();
-extern void sub_800BD48();
-extern void sub_800CA04();
-extern void sub_800CA60();
-extern void sub_800CACC();
-extern void sub_800CB20();
-extern void sub_800CB64();
-extern void sub_800CBC0();
+extern void UpdateEnemyCtrl();
+extern void HitEnemy();
+extern void AttachEnemyCtrl();
+extern void DestroyEnemyCtrl();
+extern void UpdatePeriodicSpawner();
+extern void DestroyPeriodicSpawner();
+extern void UpdateKnockedEnemyCtrl();
+extern void DestroyKnockedEnemyCtrl();
 extern void sub_800CBF4();
 extern void sub_800CCCC();
 extern void DrawCrate();
@@ -152,14 +152,14 @@ extern void sub_801A73C();
 extern void sub_801A750();
 extern void sub_801A780();
 extern void sub_801A824();
-extern void sub_801AB34();
-extern void sub_801B208();
+extern void CheckPlatformContact();
+extern void UpdatePlatform();
 extern void sub_801B2C0();
-extern void sub_801B2C4();
-extern void sub_801B304();
+extern void DestroyPlatform();
+extern void UpdatePlatformMover();
 extern void sub_801B77C();
 extern void sub_801B7A0();
-extern void sub_801B7C4();
+extern void DestroyPlatformMover();
 extern void sub_801B8BC();
 extern void sub_801B91C();
 extern void sub_801BA60();
@@ -459,41 +459,41 @@ const struct vtable_slot gStaticData_087E3E7C[13] = {
 };
 
 /* Used by actor_part112.c, actor_part124.c. */
-const struct vtable_slot gStaticData_087E3EE4[13] = {
+const struct vtable_slot gEnemyCtrlVtable[13] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_800B8DC),
-    VTABLE_SLOT(sub_800BD48),
-    VTABLE_SLOT(sub_800CA04),
+    VTABLE_SLOT(UpdateEnemyCtrl),
+    VTABLE_SLOT(HitEnemy),
+    VTABLE_SLOT(AttachEnemyCtrl),
     VTABLE_SLOT(sub_800B698),
     VTABLE_SLOT(sub_800B7B0),
     VTABLE_SLOT(sub_800B6D0),
     VTABLE_SLOT(sub_800B734),
     VTABLE_SLOT(sub_800B6A0),
-    VTABLE_SLOT(sub_800CA60),
+    VTABLE_SLOT(DestroyEnemyCtrl),
     VTABLE_SLOT(sub_800B86C),
     VTABLE_SLOT(sub_800B838),
     VTABLE_SLOT(sub_800B704),
 };
 
 /* Used by actor_part124.c. */
-const struct vtable_slot gStaticData_087E3F4C[11] = {
+const struct vtable_slot gPeriodicSpawnerVtable[11] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(sub_8007048),
     VTABLE_SLOT(sub_80070E8),
-    VTABLE_SLOT(sub_800CACC),
+    VTABLE_SLOT(UpdatePeriodicSpawner),
     VTABLE_SLOT(nullsub_11),
     VTABLE_SLOT(sub_8007110),
     VTABLE_SLOT(sub_800710C),
     VTABLE_SLOT(sub_8006FE4),
     VTABLE_SLOT(sub_8007114),
     VTABLE_SLOT(sub_800722C),
-    VTABLE_SLOT(sub_800CB20),
+    VTABLE_SLOT(DestroyPeriodicSpawner),
 };
 
 /* Used by actor_part112.c, actor_part117.c, actor_part124.c. */
-const struct vtable_slot gStaticData_087E3FA4[13] = {
+const struct vtable_slot gKnockedEnemyCtrlVtable[13] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_800CB64),
+    VTABLE_SLOT(UpdateKnockedEnemyCtrl),
     VTABLE_SLOT(nullsub_13),
     VTABLE_SLOT(sub_800B8A4),
     VTABLE_SLOT(sub_800B698),
@@ -501,7 +501,7 @@ const struct vtable_slot gStaticData_087E3FA4[13] = {
     VTABLE_SLOT(sub_800B6D0),
     VTABLE_SLOT(sub_800B734),
     VTABLE_SLOT(sub_800B6A0),
-    VTABLE_SLOT(sub_800CBC0),
+    VTABLE_SLOT(DestroyKnockedEnemyCtrl),
     VTABLE_SLOT(sub_800B86C),
     VTABLE_SLOT(sub_800B838),
     VTABLE_SLOT(sub_800B704),
@@ -855,8 +855,8 @@ const struct vtable_slot gStaticData_087E47D4[13] = {
 const struct vtable_slot gStaticData_087E483C[13] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(sub_801A64C),
-    VTABLE_SLOT(sub_800BD48),
-    VTABLE_SLOT(sub_800CA04),
+    VTABLE_SLOT(HitEnemy),
+    VTABLE_SLOT(AttachEnemyCtrl),
     VTABLE_SLOT(sub_800B698),
     VTABLE_SLOT(sub_800B7B0),
     VTABLE_SLOT(sub_800B6D0),
@@ -921,29 +921,29 @@ const struct vtable_slot gStaticData_087E4974[13] = {
     VTABLE_SLOT(sub_800B704),
 };
 
-/* Used by actor_part_1b208.c (sub_801B2C4), gobj_1a794.h. */
-const struct vtable_slot gStaticData_087E49DC[15] = {
+/* Used by actor_part_1b208.c (DestroyPlatform), gobj_1a794.h. */
+const struct vtable_slot gPlatformVtable[15] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_801AB34),
+    VTABLE_SLOT(CheckPlatformContact),
     VTABLE_SLOT(sub_8008394),
-    VTABLE_SLOT(sub_801B208),
+    VTABLE_SLOT(UpdatePlatform),
     VTABLE_SLOT(sub_8008350),
     VTABLE_SLOT(sub_8007F78),
     VTABLE_SLOT(sub_8007FD8),
     VTABLE_SLOT(sub_8008328),
     VTABLE_SLOT(sub_8008304),
     VTABLE_SLOT(sub_801B2C0),
-    VTABLE_SLOT(sub_801B2C4),
+    VTABLE_SLOT(DestroyPlatform),
     VTABLE_SLOT(sub_8008408),
     VTABLE_SLOT(sub_8009DF4),
     VTABLE_SLOT(sub_8009FD4),
     VTABLE_SLOT(sub_8009CA0),
 };
 
-/* Used by actor_part_1b208.c (sub_801B7C4), gobj_1a794.h. */
-const struct vtable_slot gStaticData_087E4A54[13] = {
+/* Used by actor_part_1b208.c (DestroyPlatformMover), gobj_1a794.h. */
+const struct vtable_slot gPlatformMoverVtable[13] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_801B304),
+    VTABLE_SLOT(UpdatePlatformMover),
     VTABLE_SLOT(nullsub_13),
     VTABLE_SLOT(sub_800B8A4),
     VTABLE_SLOT(sub_800B698),
@@ -951,7 +951,7 @@ const struct vtable_slot gStaticData_087E4A54[13] = {
     VTABLE_SLOT(sub_800B6D0),
     VTABLE_SLOT(sub_800B734),
     VTABLE_SLOT(sub_800B6A0),
-    VTABLE_SLOT(sub_801B7C4),
+    VTABLE_SLOT(DestroyPlatformMover),
     VTABLE_SLOT(sub_800B86C),
     VTABLE_SLOT(sub_801B7A0),
     VTABLE_SLOT(sub_801B77C),

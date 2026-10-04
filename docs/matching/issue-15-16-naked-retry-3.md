@@ -11,7 +11,7 @@ closed; two got new or better drafts; three were not attempted.
 | `UpdateWumpa` | `game_loop53.c` | Still NAKED, first C draft under `NON_MATCHING` |
 | `sub_8001DB4` | `link_cable.c` | Still NAKED, note on the draft extended |
 | `sub_8002114` | `link_cable.c` | Not attempted (1488 B, no draft) |
-| `sub_800B8DC` | `actor_part112.c` | Not attempted (1132 B, no draft) |
+| `UpdateEnemyCtrl` | `actor_part112.c` | Not attempted (1132 B, no draft) |
 
 ## Closed
 
@@ -88,7 +88,7 @@ themselves. So did the first draft's "temporaries in r6".
   `field_400` back after storing it.
   `-fno-strength-reduce` is worse: the ROM's first loop *is* reversed
   and pointer-reduced.
-- **`sub_8002114`, `sub_800B8DC`.** Not attempted: 1488 B and 1132 B
+- **`sub_8002114`, `UpdateEnemyCtrl`.** Not attempted: 1488 B and 1132 B
   with no C draft to start from.
 
 ## Techniques worth reusing

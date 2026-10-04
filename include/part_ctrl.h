@@ -4,7 +4,7 @@
 #include "box_part.h"
 
 /* The controller object of the 0x0800B8DC-0x0800CA60 cluster
- * (sub_800B8DC's own `self`, docs/matching/issue-9-10-0x0800b8dc-graphics.md)
+ * (UpdateEnemyCtrl's own `self`, docs/matching/issue-9-10-0x0800b8dc-graphics.md)
  * and the part it steers (`self->target`, "owner" in the older docs).
  * Only the fields the cluster touches are named.
  *
@@ -34,7 +34,7 @@ struct ctrl_target {
     u8 unk_1C[4];
     struct keyframe **keyframes; // 0x20
     u8 unk_24[4];
-    /* The mirror bits. `u` is the usual view; sub_800C074's position
+    /* The mirror bits. `u` is the usual view; UpdateEnemyPatrol's position
      * gate reads bit 4 once through each view, which is what keeps the
      * ROM's two sign tests of one `lsl #27` (see that function). */
     union {
@@ -68,7 +68,7 @@ struct ctrl_target {
 };
 
 /* The record `self->anchor` points to; +0x50 is the method the mode
- * trigger (sub_800C8CC) calls. */
+ * trigger (SetEnemyAnimMode) calls. */
 struct ctrl_anchor {
     u8 unk_00[0x10];
     struct part_method bounce;  // 0x10
@@ -97,10 +97,10 @@ struct part_ctrl {
     s32 accel;          // 0x5C
     s32 baseX;          // 0x60 - oscillator base / last target x
     s32 baseY;          // 0x64 - oscillator base / last target y
-    s32 mode;           // 0x68 - see sub_800C8CC
+    s32 mode;           // 0x68 - see SetEnemyAnimMode
     s32 kind;           // 0x6C
     struct ctrl_target *target; // 0x70
-    s32 state;          // 0x74 - sub_800B8DC's state
+    s32 state;          // 0x74 - UpdateEnemyCtrl's state
     s32 modeB;          // 0x78 - see sub_800C8BC
     s32 modeA;          // 0x7C - see sub_800C8AC
     s32 counter;        // 0x80
@@ -110,6 +110,6 @@ struct part_ctrl {
 
 extern void sub_800C8AC(struct part_ctrl *self, s32 mode);
 extern void sub_800C8BC(struct part_ctrl *self, s32 mode);
-extern void sub_800C8CC(struct part_ctrl *self, s32 mode);
+extern void SetEnemyAnimMode(struct part_ctrl *self, s32 mode);
 
 #endif /* GUARD_PART_CTRL_H */

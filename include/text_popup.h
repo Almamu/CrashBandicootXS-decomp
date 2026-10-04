@@ -1,12 +1,13 @@
 #ifndef GUARD_TEXT_POPUP_H
 #define GUARD_TEXT_POPUP_H
 
-/* Shared by the "two-line text popup" spawners in
+/* Shared by the enemy spawners in
  * src/graphics/graphics_loading_1ef0c.c, graphics_loading_1fdec.c,
  * graphics_loading_1feec.c, graphics_loading_21280.c and
- * graphics_loading_21668.c (ROM 0x0801EF0C-0x08021BFC). Each builds a
- * sprite part with sub_8009ED0, attaches a freshly constructed popup
- * header (sub_800CA74) to it, and fills the part's two "collected" bits
+ * graphics_loading_21668.c (ROM 0x0801EF0C-0x08021BFC; they were read as
+ * "two-line text popup" spawners at first, hence the file name). Each
+ * builds a sprite part with sub_8009ED0, attaches a freshly constructed
+ * enemy controller (CreateEnemyCtrl) to it, and fills the part's two "collected" bits
  * from the level's record table. This ROM region was built with
  * old_agbcc (see docs/matching/old-agbcc-retry.md). */
 
@@ -31,7 +32,7 @@ struct popup_part
     u8 unk_2A[3];
     u8 tag;                     // 0x2D
     u8 unk_2E[0x16];
-    struct popup_hdr *hdr;      // 0x44
+    struct enemy_ctrl *hdr;      // 0x44
 };
 
 /* One level record, at `bytes + offsets[id]` in gEntityFlags's
@@ -69,8 +70,9 @@ struct popup_vtable
     struct popup_method attach; // 0x18
 };
 
-/* The popup header sub_800CA74 constructs. */
-struct popup_hdr
+/* The enemy controller CreateEnemyCtrl constructs (part_ctrl.h's
+ * `struct part_ctrl` is another view of the same object). */
+struct enemy_ctrl
 {
     u8 unk_00[0xC];
     struct popup_vtable *vtable; // 0x0C
@@ -88,9 +90,9 @@ struct popup_hdr
     s32 unk_48;
     s32 unk_4C;
     u8 unk_50[0x1C];
-    s32 tag;                    // 0x6C
+    s32 kind;                   // 0x6C - the enemy kind (its sprite bank)
     u8 unk_70[0x14];
-    void *gfx;                  // 0x84
+    void *animMap;              // 0x84 - anim mode -> bank anim (gEnemyDefaultAnimMap...)
 };
 
 extern void ***gUnknown_030012D0;
@@ -100,13 +102,13 @@ extern void *gUnknown_030012F0;
 extern struct popup_part *sub_8009ED0(u16 arg0, u16 arg1, u16 arg2, u16 arg3);
 extern s32 sub_800815C(struct popup_part *part);
 extern void *sub_8026EDC(s32 size);
-extern struct popup_hdr *sub_800CA74(void);
+extern struct enemy_ctrl *CreateEnemyCtrl(void);
 extern s32 _call_via_r2(void *self, void *arg, void *fn);
 extern void sub_8008E94(void *manager, void *value);
-extern void sub_800C6A8(struct popup_hdr *hdr, s32 arg1);
-extern void sub_800C860(struct popup_hdr *hdr, s32 arg1, s32 arg2, s32 arg3);
-extern void sub_800C87C(struct popup_hdr *hdr, s32 arg1, s32 arg2, s32 arg3);
-extern void sub_800C898(struct popup_hdr *hdr, s32 arg1);
+extern void SetEnemyState(struct enemy_ctrl *hdr, s32 arg1);
+extern void SetEnemyRangeXSpeed(struct enemy_ctrl *hdr, s32 arg1, s32 arg2, s32 arg3);
+extern void SetEnemyRangeYSpeed(struct enemy_ctrl *hdr, s32 arg1, s32 arg2, s32 arg3);
+extern void SetEnemyRangeX(struct enemy_ctrl *hdr, s32 arg1);
 extern void sub_80087C0(struct popup_part *part);
 extern void sub_80087B4(struct popup_part *part);
 extern void sub_800872C(struct popup_part *part, s32 arg);
@@ -130,9 +132,9 @@ static inline void SetPartField0A(struct popup_part *part, s32 value)
     part->base.field_0A = value;
 }
 
-static inline void SetPopupGfx(struct popup_hdr *hdr, void *gfx)
+static inline void SetEnemyAnimMap(struct enemy_ctrl *hdr, void *gfx)
 {
-    hdr->gfx = gfx;
+    hdr->animMap = gfx;
 }
 
 static inline void SetPartTag(struct popup_part *part, s32 tag)
@@ -158,7 +160,7 @@ static inline void SetPartAnim(struct popup_part *part, s32 anim)
 
 /* The multi-field setters load every value before storing any, as the ROM
  * does; written as separate statements, each load/store pair interleaves. */
-static inline void SetPopupRect(struct popup_hdr *hdr, s32 x, s32 y, s32 w, s32 h)
+static inline void SetPopupRect(struct enemy_ctrl *hdr, s32 x, s32 y, s32 w, s32 h)
 {
     hdr->unk_20 = x;
     hdr->unk_28 = w;
@@ -166,14 +168,14 @@ static inline void SetPopupRect(struct popup_hdr *hdr, s32 x, s32 y, s32 w, s32 
     hdr->unk_2C = h;
 }
 
-static inline void SetPopupSpan(struct popup_hdr *hdr, s32 a, s32 b, s32 c)
+static inline void SetPopupSpan(struct enemy_ctrl *hdr, s32 a, s32 b, s32 c)
 {
     hdr->unk_30 = a;
     hdr->unk_34 = b;
     hdr->unk_38 = c;
 }
 
-static inline void SetPopupBox(struct popup_hdr *hdr, s32 a, s32 b, s32 c)
+static inline void SetPopupBox(struct enemy_ctrl *hdr, s32 a, s32 b, s32 c)
 {
     hdr->unk_3C = a;
     hdr->unk_40 = b;

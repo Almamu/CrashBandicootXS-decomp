@@ -3,20 +3,20 @@
 /* GitHub issue #9/#10: one of the four `self+0x68`-dispatching siblings
  * the Phase 1/2 investigation (docs/matching/issue-9-10-0x0800b8dc-graphics.md)
  * flagged as the next highest-value target in the 0x0800B8DC-0x0800D040
- * cluster - independently called from several of sub_800B8DC's own
+ * cluster - independently called from several of UpdateEnemyCtrl's own
  * `self+0x74` dispatch states (2, 13, 15, 18).
  *
  * A small 4-case dispatcher keyed off `self+0x68` (the same sub-state
- * byte `sub_800B8DC`'s own state machine reads/writes, and the field
- * `sub_800C40C` also dispatches on): modes 0 and 4 share an identical
+ * byte `UpdateEnemyCtrl`'s own state machine reads/writes, and the field
+ * `UpdateEnemyAttackCycle` also dispatches on): modes 0 and 4 share an identical
  * "mirror-aware position gate" (compares `owner`'s X position against
  * `self+0x10`/`self+0x14` bounds, direction picked by `owner+0x28` bit
  * 4, the established mirror-flag convention) before triggering
- * `sub_800C8CC` with a different constant (1 vs 6) and always calling
+ * `SetEnemyAnimMode` with a different constant (1 vs 6) and always calling
  * `sub_800C8BC(self, 0)`. Modes 1 and 6 both toggle `owner+0x28` bit 4
  * (the "flag active + bitmap-set" idiom's own bit, an unconditional
  * flip via the mask-and-or idiom, not the position gate) when
- * `owner+0x38` is set, then trigger `sub_800C8CC`/`sub_800C8BC` with
+ * `owner+0x38` is set, then trigger `SetEnemyAnimMode`/`sub_800C8BC` with
  * different constants; mode 1 additionally clamps `owner+0x30` against
  * a keyframe-record byte (`owner+0x20`-table[`owner+0x2d`]+0x16, the
  * `sub_800D040`-style 28-byte-stride record convention) when
@@ -34,7 +34,7 @@
  */
 #include "part_ctrl.h"
 
-void sub_800C074(struct part_ctrl *self)
+void UpdateEnemyPatrol(struct part_ctrl *self)
 {
     struct ctrl_target *target;
     s32 t;
@@ -44,7 +44,7 @@ void sub_800C074(struct part_ctrl *self)
     case 0:
         if ((self->target->mirror.u.x && self->target->x < self->rangeX[0])
             || (!self->target->mirror.s.x && self->target->x > self->rangeX[1])) {
-            sub_800C8CC(self, 1);
+            SetEnemyAnimMode(self, 1);
             sub_800C8BC(self, 0);
         }
         break;
@@ -52,7 +52,7 @@ void sub_800C074(struct part_ctrl *self)
         if (self->target->animDone) {
             u32 m = self->target->mirror.u.x;
             self->target->mirror.u.x = !m;
-            sub_800C8CC(self, 0);
+            SetEnemyAnimMode(self, 0);
             sub_800C8BC(self, 1);
             if (self->kind == 15) {
                 target = self->target;
@@ -67,7 +67,7 @@ void sub_800C074(struct part_ctrl *self)
     case 4:
         if ((self->target->mirror.u.x && self->target->x < self->rangeX[0])
             || (!self->target->mirror.s.x && self->target->x > self->rangeX[1])) {
-            sub_800C8CC(self, 6);
+            SetEnemyAnimMode(self, 6);
             sub_800C8BC(self, 0);
         }
         break;
@@ -75,7 +75,7 @@ void sub_800C074(struct part_ctrl *self)
         if (self->target->animDone) {
             u32 m = self->target->mirror.u.x;
             self->target->mirror.u.x = !m;
-            sub_800C8CC(self, 4);
+            SetEnemyAnimMode(self, 4);
             sub_800C8BC(self, 1);
         }
         break;

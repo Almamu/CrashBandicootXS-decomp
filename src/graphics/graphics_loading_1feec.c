@@ -5,30 +5,30 @@
  * continuation of graphics_loading_1ef0c.c. Built with old_agbcc; see
  * include/text_popup.h. */
 
-extern u8 gStaticData_0816B98C[];
-extern u8 gStaticData_0816BAAC[];
+extern u8 gEnemyDefaultAnimMap[];
+extern u8 gFlamethrowerLabAssistantAnimMap[];
 extern u8 gStaticData_0816BACC[];
 extern u8 gStaticData_0816BAEC[];
 extern u8 gStaticData_0816BB0C[];
-extern u8 gStaticData_0816BB2C[];
-extern u8 gStaticData_0816BB4C[];
+extern u8 gCrusherAnimMap[];
+extern u8 gSaucerLabAssistantAnimMap[];
 
-/* Text popup, tag 9. Shows the header with gStaticData_0816B98C and
+/* Text popup, tag 9. Shows the header with gEnemyDefaultAnimMap and
  * style 6, then copies the level record's +8/+0xc/+4 words into
  * header+0x3c/0x40/0x44. */
-void sub_801FEEC(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnJellyfish(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = sub_8009ED0(arg0, arg1, arg2, arg3);
-    struct popup_hdr *hdr;
+    struct enemy_ctrl *hdr;
     struct level_record *rec;
     struct level_record *rec2;
 
     part->anim = POPUP_ANIM(0x6c);
     part->frameNibble = sub_800815C(part);
     sub_8026EDC(0x8c);
-    hdr = sub_800CA74();
+    hdr = CreateEnemyCtrl();
     POPUP_ATTACH(hdr, part);
-    hdr->tag = 9;
+    hdr->kind = 9;
     part->hdr = hdr;
     POPUP_ATTACH(hdr, part);
     SetPartField0A(part, 1);
@@ -37,26 +37,26 @@ void sub_801FEEC(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
     part->unk_28_5 = rec->flags >> 2 & 1;
     sub_8008E94(gUnknown_030012F0, part);
-    SetPopupGfx(hdr, gStaticData_0816B98C);
+    SetEnemyAnimMap(hdr, gEnemyDefaultAnimMap);
     rec2 = LEVEL_RECORD(arg3);
-    sub_800C6A8(hdr, 6);
+    SetEnemyState(hdr, 6);
     SetPopupBox(hdr, rec2->unk_08, rec2->unk_0C, rec2->unk_04);
 }
 
 /* Text popup, tag 0x19, anim +0x12c. Flips the part's flipX, sets
  * field_0A to 2, clears flag bit 6 and shows the header with style 1. */
-void sub_8020010(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnLaserBarrier(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = sub_8009ED0(arg0, arg1, arg2, arg3);
-    struct popup_hdr *hdr;
+    struct enemy_ctrl *hdr;
     struct level_record *rec;
 
     part->anim = POPUP_ANIM(0x12c);
     part->frameNibble = sub_800815C(part);
     sub_8026EDC(0x8c);
-    hdr = sub_800CA74();
+    hdr = CreateEnemyCtrl();
     POPUP_ATTACH(hdr, part);
-    hdr->tag = 0x19;
+    hdr->kind = 0x19;
     part->hdr = hdr;
     POPUP_ATTACH(hdr, part);
     SetPartField0A(part, 1);
@@ -65,14 +65,14 @@ void sub_8020010(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
     part->unk_28_5 = rec->flags >> 2 & 1;
     sub_8008E94(gUnknown_030012F0, part);
-    SetPopupGfx(hdr, gStaticData_0816B98C);
+    SetEnemyAnimMap(hdr, gEnemyDefaultAnimMap);
     {
         s32 f = part->flipX;
         part->flipX = f == 0;
     }
     SetPartField0A(part, 2);
     AndPartFlags(part, ~0x40);
-    sub_800C6A8(hdr, 1);
+    SetEnemyState(hdr, 1);
 }
 
 /* Text popup, tag 0x1b, anim +0x144. After registering the part it
@@ -82,16 +82,16 @@ void sub_8020010(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 void sub_8020138(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = sub_8009ED0(arg0, arg1, arg2, arg3);
-    struct popup_hdr *hdr;
+    struct enemy_ctrl *hdr;
     struct level_record *rec;
     struct level_record *rec2;
 
     part->anim = POPUP_ANIM(0x144);
     part->frameNibble = sub_800815C(part);
     sub_8026EDC(0x8c);
-    hdr = sub_800CA74();
+    hdr = CreateEnemyCtrl();
     POPUP_ATTACH(hdr, part);
-    hdr->tag = 0x1b;
+    hdr->kind = 0x1b;
     part->hdr = hdr;
     POPUP_ATTACH(hdr, part);
     SetPartField0A(part, 1);
@@ -100,30 +100,30 @@ void sub_8020138(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
     part->unk_28_5 = rec->flags >> 2 & 1;
     sub_8008E94(gUnknown_030012F0, part);
-    SetPopupGfx(hdr, gStaticData_0816B98C);
+    SetEnemyAnimMap(hdr, gEnemyDefaultAnimMap);
     rec2 = LEVEL_RECORD(arg3);
-    SetPopupGfx(hdr, gStaticData_0816BACC);
+    SetEnemyAnimMap(hdr, gStaticData_0816BACC);
     SetPopupSpan(hdr, rec2->unk_08, rec2->unk_04, rec2->unk_0C);
-    sub_800C6A8(hdr, 4);
+    SetEnemyState(hdr, 4);
 }
 
 /* Text popup, tag 0x18, anim +0x120. After registering the part it
  * switches the header's graphics to gStaticData_0816BAEC, copies the
  * level record's +8/+0xc/+0x10 fields into header+0x30/0x34/0x38, passes
- * the record's +4 to sub_800C898 and shows the header with style 0xd. */
+ * the record's +4 to SetEnemyRangeX and shows the header with style 0xd. */
 void sub_802026C(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = sub_8009ED0(arg0, arg1, arg2, arg3);
-    struct popup_hdr *hdr;
+    struct enemy_ctrl *hdr;
     struct level_record *rec;
     struct level_record *rec2;
 
     part->anim = POPUP_ANIM(0x120);
     part->frameNibble = sub_800815C(part);
     sub_8026EDC(0x8c);
-    hdr = sub_800CA74();
+    hdr = CreateEnemyCtrl();
     POPUP_ATTACH(hdr, part);
-    hdr->tag = 0x18;
+    hdr->kind = 0x18;
     part->hdr = hdr;
     POPUP_ATTACH(hdr, part);
     SetPartField0A(part, 1);
@@ -132,32 +132,32 @@ void sub_802026C(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
     part->unk_28_5 = rec->flags >> 2 & 1;
     sub_8008E94(gUnknown_030012F0, part);
-    SetPopupGfx(hdr, gStaticData_0816B98C);
+    SetEnemyAnimMap(hdr, gEnemyDefaultAnimMap);
     rec2 = LEVEL_RECORD(arg3);
-    SetPopupGfx(hdr, gStaticData_0816BAEC);
+    SetEnemyAnimMap(hdr, gStaticData_0816BAEC);
     SetPopupSpan(hdr, rec2->unk_08, rec2->unk_0C, rec2->unk_10);
-    sub_800C898(hdr, rec2->unk_04);
-    sub_800C6A8(hdr, 0xd);
+    SetEnemyRangeX(hdr, rec2->unk_04);
+    SetEnemyState(hdr, 0xd);
 }
 
 /* Text popup, tag 0x1d, anim +0x15c, spawned 0x28 pixels above arg2.
  * After registering the part it switches the header's graphics to
- * gStaticData_0816BB4C, sets header+0x30/0x34/0x38 to {0x78, 0x5a,
- * record+0xc}, calls sub_800C898(hdr, 0x28) and shows it with style 0x12. */
-void sub_80203A8(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+ * gSaucerLabAssistantAnimMap, sets header+0x30/0x34/0x38 to {0x78, 0x5a,
+ * record+0xc}, calls SetEnemyRangeX(hdr, 0x28) and shows it with style 0x12. */
+void SpawnSaucerLabAssistant(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     u16 y = arg2 - 0x28;
     struct popup_part *part = sub_8009ED0(arg0, arg1, y, arg3);
-    struct popup_hdr *hdr;
+    struct enemy_ctrl *hdr;
     struct level_record *rec;
     struct level_record *rec2;
 
     part->anim = POPUP_ANIM(0x15c);
     part->frameNibble = sub_800815C(part);
     sub_8026EDC(0x8c);
-    hdr = sub_800CA74();
+    hdr = CreateEnemyCtrl();
     POPUP_ATTACH(hdr, part);
-    hdr->tag = 0x1d;
+    hdr->kind = 0x1d;
     part->hdr = hdr;
     POPUP_ATTACH(hdr, part);
     SetPartField0A(part, 1);
@@ -166,31 +166,31 @@ void sub_80203A8(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
     part->unk_28_5 = rec->flags >> 2 & 1;
     sub_8008E94(gUnknown_030012F0, part);
-    SetPopupGfx(hdr, gStaticData_0816B98C);
+    SetEnemyAnimMap(hdr, gEnemyDefaultAnimMap);
     rec2 = LEVEL_RECORD(arg3);
-    SetPopupGfx(hdr, gStaticData_0816BB4C);
+    SetEnemyAnimMap(hdr, gSaucerLabAssistantAnimMap);
     SetPopupSpan(hdr, 0x78, 0x5a, rec2->unk_0C);
-    sub_800C898(hdr, 0x28);
-    sub_800C6A8(hdr, 0x12);
+    SetEnemyRangeX(hdr, 0x28);
+    SetEnemyState(hdr, 0x12);
 }
 
 /* Text popup, tag 0x1a, anim +0x138. After registering the part it
  * switches it to mode 0xa with flags bit 6 cleared, points the header at
- * gStaticData_0816BB2C, copies the level record's +4/+8/+0xc fields into
+ * gCrusherAnimMap, copies the level record's +4/+8/+0xc fields into
  * header+0x30/0x34/0x38 and shows it with style 4. */
-void sub_80204EC(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnPistonCrusher(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = sub_8009ED0(arg0, arg1, arg2, arg3);
-    struct popup_hdr *hdr;
+    struct enemy_ctrl *hdr;
     struct level_record *rec;
     struct level_record *rec2;
 
     part->anim = POPUP_ANIM(0x138);
     part->frameNibble = sub_800815C(part);
     sub_8026EDC(0x8c);
-    hdr = sub_800CA74();
+    hdr = CreateEnemyCtrl();
     POPUP_ATTACH(hdr, part);
-    hdr->tag = 0x1a;
+    hdr->kind = 0x1a;
     part->hdr = hdr;
     POPUP_ATTACH(hdr, part);
     SetPartField0A(part, 1);
@@ -199,17 +199,17 @@ void sub_80204EC(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
     part->unk_28_5 = rec->flags >> 2 & 1;
     sub_8008E94(gUnknown_030012F0, part);
-    SetPopupGfx(hdr, gStaticData_0816B98C);
+    SetEnemyAnimMap(hdr, gEnemyDefaultAnimMap);
     rec2 = LEVEL_RECORD(arg3);
     SetPartField0A(part, 0xa);
     AndPartFlags(part, ~0x40);
-    SetPopupGfx(hdr, gStaticData_0816BB2C);
+    SetEnemyAnimMap(hdr, gCrusherAnimMap);
     SetPopupSpan(hdr, rec2->unk_04, rec2->unk_08, rec2->unk_0C);
-    sub_800C6A8(hdr, 4);
+    SetEnemyState(hdr, 4);
 }
 
 /* Text popup, tag 0x17, anim +0x114. Flips the part's flipX bit, points
- * the header at gStaticData_0816BAAC, copies the level record's
+ * the header at gFlamethrowerLabAssistantAnimMap, copies the level record's
  * +8/+4/+0xc words into header+0x30/0x34/0x38 and shows it with style 4.
  * Register allocation took several passes (see
  * docs/matching/last-eleven-naked-retry.md and the passes it links).
@@ -232,10 +232,10 @@ struct popup_bits
     u8 unk_29[0x1f];
 };
 
-void sub_802062C(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnFlamethrowerLabAssistant(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = sub_8009ED0(arg0, arg1, arg2, arg3);
-    struct popup_hdr *hdr;
+    struct enemy_ctrl *hdr;
     struct level_record *rec;
     struct level_record *rec2;
     struct popup_bits *q2;
@@ -244,9 +244,9 @@ void sub_802062C(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->anim = POPUP_ANIM(0x114);
     part->frameNibble = sub_800815C(part);
     sub_8026EDC(0x8c);
-    hdr = sub_800CA74();
+    hdr = CreateEnemyCtrl();
     POPUP_ATTACH(hdr, part);
-    hdr->tag = 0x17;
+    hdr->kind = 0x17;
     part->hdr = hdr;
     POPUP_ATTACH(hdr, part);
     SetPartField0A(part, 1);
@@ -273,7 +273,7 @@ void sub_802062C(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
      * keeps r3 free there, so reloading &gEntityFlags out of sb
      * uses r1 (`mov r1, sb`), not r3. */
     asm("" : "=r"(h3));
-    SetPopupGfx(hdr, gStaticData_0816B98C);
+    SetEnemyAnimMap(hdr, gEnemyDefaultAnimMap);
     rec2 = LEVEL_RECORD(arg3);
     /* No code: end of the r3 hold. */
     asm("" : : "r"(h3));
@@ -295,27 +295,27 @@ void sub_802062C(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
         p->flipX = f == 0;
     }
     SetPartField0A(part, 1);
-    SetPopupGfx(hdr, gStaticData_0816BAAC);
+    SetEnemyAnimMap(hdr, gFlamethrowerLabAssistantAnimMap);
     SetPopupSpan(hdr, rec2->unk_08, rec2->unk_04, rec2->unk_0C);
-    sub_800C6A8(hdr, 4);
+    SetEnemyState(hdr, 4);
 }
 
 /* Text popup, tag 0x16, anim +0x108. After registering the part it shows
  * the header with style 9, passes the level record's +4/+8/+0xc fields
- * to sub_800C860 and sets header+0x3c/0x40/0x44 to {0x80, 0, 0x14}. */
+ * to SetEnemyRangeXSpeed and sets header+0x3c/0x40/0x44 to {0x80, 0, 0x14}. */
 void sub_8020788(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = sub_8009ED0(arg0, arg1, arg2, arg3);
-    struct popup_hdr *hdr;
+    struct enemy_ctrl *hdr;
     struct level_record *rec;
     struct level_record *rec2;
 
     part->anim = POPUP_ANIM(0x108);
     part->frameNibble = sub_800815C(part);
     sub_8026EDC(0x8c);
-    hdr = sub_800CA74();
+    hdr = CreateEnemyCtrl();
     POPUP_ATTACH(hdr, part);
-    hdr->tag = 0x16;
+    hdr->kind = 0x16;
     part->hdr = hdr;
     POPUP_ATTACH(hdr, part);
     SetPartField0A(part, 1);
@@ -324,29 +324,29 @@ void sub_8020788(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
     part->unk_28_5 = rec->flags >> 2 & 1;
     sub_8008E94(gUnknown_030012F0, part);
-    SetPopupGfx(hdr, gStaticData_0816B98C);
+    SetEnemyAnimMap(hdr, gEnemyDefaultAnimMap);
     rec2 = LEVEL_RECORD(arg3);
-    sub_800C6A8(hdr, 9);
-    sub_800C860(hdr, rec2->unk_04, rec2->unk_08, rec2->unk_0C);
+    SetEnemyState(hdr, 9);
+    SetEnemyRangeXSpeed(hdr, rec2->unk_04, rec2->unk_08, rec2->unk_0C);
     SetPopupBox(hdr, 0x80, 0, 0x14);
 }
 
 /* Text popup, tag 0x14, anim +0xf0. After registering the part it points
  * the header at gStaticData_0816BB0C, shows it with style 2 and passes
- * the level record's +4 field to sub_800C898. */
+ * the level record's +4 field to SetEnemyRangeX. */
 void sub_80208C4(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = sub_8009ED0(arg0, arg1, arg2, arg3);
-    struct popup_hdr *hdr;
+    struct enemy_ctrl *hdr;
     struct level_record *rec;
     struct level_record *rec2;
 
     part->anim = POPUP_ANIM(0xf0);
     part->frameNibble = sub_800815C(part);
     sub_8026EDC(0x8c);
-    hdr = sub_800CA74();
+    hdr = CreateEnemyCtrl();
     POPUP_ATTACH(hdr, part);
-    hdr->tag = 0x14;
+    hdr->kind = 0x14;
     part->hdr = hdr;
     POPUP_ATTACH(hdr, part);
     SetPartField0A(part, 1);
@@ -355,30 +355,30 @@ void sub_80208C4(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
     part->unk_28_5 = rec->flags >> 2 & 1;
     sub_8008E94(gUnknown_030012F0, part);
-    SetPopupGfx(hdr, gStaticData_0816B98C);
+    SetEnemyAnimMap(hdr, gEnemyDefaultAnimMap);
     rec2 = LEVEL_RECORD(arg3);
-    SetPopupGfx(hdr, gStaticData_0816BB0C);
-    sub_800C6A8(hdr, 2);
-    sub_800C898(hdr, rec2->unk_04);
+    SetEnemyAnimMap(hdr, gStaticData_0816BB0C);
+    SetEnemyState(hdr, 2);
+    SetEnemyRangeX(hdr, rec2->unk_04);
 }
 
 /* "Two-line text popup" spawner, tag 0x15. After the shared setup it
- * points the header at gStaticData_0816B98C, shows it with
- * sub_800C6A8(hdr, 2) and passes the level record's +4 word to
- * sub_800C898. */
-void sub_80209EC(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+ * points the header at gEnemyDefaultAnimMap, shows it with
+ * SetEnemyState(hdr, 2) and passes the level record's +4 word to
+ * SetEnemyRangeX. */
+void SpawnRat(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = sub_8009ED0(arg0, arg1, arg2, arg3);
-    struct popup_hdr *hdr;
+    struct enemy_ctrl *hdr;
     struct level_record *rec;
     struct level_record *rec2;
 
     part->anim = POPUP_ANIM(0xfc);
     part->frameNibble = sub_800815C(part);
     sub_8026EDC(0x8c);
-    hdr = sub_800CA74();
+    hdr = CreateEnemyCtrl();
     POPUP_ATTACH(hdr, part);
-    hdr->tag = 0x15;
+    hdr->kind = 0x15;
     part->hdr = hdr;
     POPUP_ATTACH(hdr, part);
     SetPartField0A(part, 1);
@@ -387,28 +387,28 @@ void sub_80209EC(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
     part->unk_28_5 = rec->flags >> 2 & 1;
     sub_8008E94(gUnknown_030012F0, part);
-    SetPopupGfx(hdr, gStaticData_0816B98C);
+    SetEnemyAnimMap(hdr, gEnemyDefaultAnimMap);
     rec2 = LEVEL_RECORD(arg3);
-    sub_800C6A8(hdr, 2);
-    sub_800C898(hdr, rec2->unk_04);
+    SetEnemyState(hdr, 2);
+    SetEnemyRangeX(hdr, rec2->unk_04);
 }
 
 /* "Two-line text popup" spawner, tag 0x13. The tail points the header at
- * gStaticData_0816B98C, switches the part's field_0A from 1 to 7, then
+ * gEnemyDefaultAnimMap, switches the part's field_0A from 1 to 7, then
  * re-points the header at gStaticData_0816BB0C before showing it with
- * sub_800C6A8(hdr, 8). */
-void sub_8020B0C(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+ * SetEnemyState(hdr, 8). */
+void SpawnFrog(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = sub_8009ED0(arg0, arg1, arg2, arg3);
-    struct popup_hdr *hdr;
+    struct enemy_ctrl *hdr;
     struct level_record *rec;
 
     part->anim = POPUP_ANIM(0xe4);
     part->frameNibble = sub_800815C(part);
     sub_8026EDC(0x8c);
-    hdr = sub_800CA74();
+    hdr = CreateEnemyCtrl();
     POPUP_ATTACH(hdr, part);
-    hdr->tag = 0x13;
+    hdr->kind = 0x13;
     part->hdr = hdr;
     POPUP_ATTACH(hdr, part);
     SetPartField0A(part, 1);
@@ -417,29 +417,29 @@ void sub_8020B0C(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
     part->unk_28_5 = rec->flags >> 2 & 1;
     sub_8008E94(gUnknown_030012F0, part);
-    SetPopupGfx(hdr, gStaticData_0816B98C);
+    SetEnemyAnimMap(hdr, gEnemyDefaultAnimMap);
     part->base.field_0A = 7;
-    hdr->gfx = gStaticData_0816BB0C;
-    sub_800C6A8(hdr, 8);
+    hdr->animMap = gStaticData_0816BB0C;
+    SetEnemyState(hdr, 8);
 }
 
 /* "Two-line text popup" spawner, tag 6. The tail sets the part's field_0A
- * to 4, shows the header with sub_800C6A8(hdr, 0xb), then hands it the
- * level record's X bounds (+0x10..+0x18, sub_800C860) and Y bounds
- * (+0x4..+0xc, sub_800C87C). */
-void sub_8020C18(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+ * to 4, shows the header with SetEnemyState(hdr, 0xb), then hands it the
+ * level record's X bounds (+0x10..+0x18, SetEnemyRangeXSpeed) and Y bounds
+ * (+0x4..+0xc, SetEnemyRangeYSpeed). */
+void SpawnSeaMine(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = sub_8009ED0(arg0, arg1, arg2, arg3);
-    struct popup_hdr *hdr;
+    struct enemy_ctrl *hdr;
     struct level_record *rec;
     struct level_record *rec2;
 
     part->anim = POPUP_ANIM(0x48);
     part->frameNibble = sub_800815C(part);
     sub_8026EDC(0x8c);
-    hdr = sub_800CA74();
+    hdr = CreateEnemyCtrl();
     POPUP_ATTACH(hdr, part);
-    hdr->tag = 6;
+    hdr->kind = 6;
     part->hdr = hdr;
     POPUP_ATTACH(hdr, part);
     SetPartField0A(part, 1);
@@ -448,32 +448,32 @@ void sub_8020C18(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
     part->unk_28_5 = rec->flags >> 2 & 1;
     sub_8008E94(gUnknown_030012F0, part);
-    SetPopupGfx(hdr, gStaticData_0816B98C);
+    SetEnemyAnimMap(hdr, gEnemyDefaultAnimMap);
     rec2 = LEVEL_RECORD(arg3);
     part->base.field_0A = 4;
-    sub_800C6A8(hdr, 0xb);
-    sub_800C860(hdr, rec2->unk_10, rec2->unk_14, rec2->unk_18);
-    sub_800C87C(hdr, rec2->unk_04, rec2->unk_08, rec2->unk_0C);
+    SetEnemyState(hdr, 0xb);
+    SetEnemyRangeXSpeed(hdr, rec2->unk_10, rec2->unk_14, rec2->unk_18);
+    SetEnemyRangeYSpeed(hdr, rec2->unk_04, rec2->unk_08, rec2->unk_0C);
 }
 
 /* "Two-line text popup" spawner, tag 0x12. The tail sets the part's
  * field_0A to 0xa and clears flag bit 6, re-points the header from
- * gStaticData_0816B98C to gStaticData_0816BB2C, copies the level
+ * gEnemyDefaultAnimMap to gCrusherAnimMap, copies the level
  * record's +4/+8/+0xc words into the header's +0x30 box, and shows it
- * with sub_800C6A8(hdr, 4). */
-void sub_8020D4C(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+ * with SetEnemyState(hdr, 4). */
+void SpawnWoodenCrusher(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = sub_8009ED0(arg0, arg1, arg2, arg3);
-    struct popup_hdr *hdr;
+    struct enemy_ctrl *hdr;
     struct level_record *rec;
     struct level_record *rec2;
 
     part->anim = POPUP_ANIM(0xd8);
     part->frameNibble = sub_800815C(part);
     sub_8026EDC(0x8c);
-    hdr = sub_800CA74();
+    hdr = CreateEnemyCtrl();
     POPUP_ATTACH(hdr, part);
-    hdr->tag = 0x12;
+    hdr->kind = 0x12;
     part->hdr = hdr;
     POPUP_ATTACH(hdr, part);
     SetPartField0A(part, 1);
@@ -482,11 +482,11 @@ void sub_8020D4C(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
     part->unk_28_5 = rec->flags >> 2 & 1;
     sub_8008E94(gUnknown_030012F0, part);
-    SetPopupGfx(hdr, gStaticData_0816B98C);
+    SetEnemyAnimMap(hdr, gEnemyDefaultAnimMap);
     rec2 = LEVEL_RECORD(arg3);
     part->base.field_0A = 0xa;
     AndPartFlags(part, ~0x40);
-    hdr->gfx = gStaticData_0816BB2C;
+    hdr->animMap = gCrusherAnimMap;
     SetPopupSpan(hdr, rec2->unk_04, rec2->unk_08, rec2->unk_0C);
-    sub_800C6A8(hdr, 4);
+    SetEnemyState(hdr, 4);
 }

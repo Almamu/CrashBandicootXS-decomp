@@ -3,7 +3,7 @@
 This pass retried four drafts left by the hard-register hold passes
 ([hard-register-hold-retry.md](hard-register-hold-retry.md),
 [issue-9-raw-asm-pass.md](issue-9-raw-asm-pass.md) "Hold pass"):
-`DrawPlayer` (#9), `sub_802062C` (#31), `DrawPauseFraction` (#7) and
+`DrawPlayer` (#9), `SpawnFlamethrowerLabAssistant` (#31), `DrawPauseFraction` (#7) and
 `sub_8002E20` (#5). One closed.
 
 ## Closed (1)
@@ -54,7 +54,7 @@ The spelling matters:
 
 | Function | Before | Now | What was tried / what's left |
 |---|---|---|---|
-| `sub_802062C` (#31, `graphics_loading_1feec.c`) | 62 | 62 (draft unchanged) | In the ROM, `part+0x28` gets r3 through **caller-save**: `str r3,[sp]` right before `bl sub_8008E94`, restored lazily before the flip. old_agbcc does this, as checked on a test file. That needs r4 (arg3) and r5 (`hdr+0x84`) to be taken first. In the draft, local-alloc gives `&gEntityFlags` r5 and arg3 r4. Reload later moves arg3 to r9 and spills `arg3 << 16` to the stack. Zero-length r4/r5 holds, brute-forced over every statement boundary (about 150 placements), got arg3 into r4 and `hdr+0x84` into r5. Each time, though, `part+0x28` went to r8 instead of r3, and part/hdr swapped r6/r7 (80+ hw). Pinning the table pointer to r9 as well didn't help (87+). |
+| `SpawnFlamethrowerLabAssistant` (#31, `graphics_loading_1feec.c`) | 62 | 62 (draft unchanged) | In the ROM, `part+0x28` gets r3 through **caller-save**: `str r3,[sp]` right before `bl sub_8008E94`, restored lazily before the flip. old_agbcc does this, as checked on a test file. That needs r4 (arg3) and r5 (`hdr+0x84`) to be taken first. In the draft, local-alloc gives `&gEntityFlags` r5 and arg3 r4. Reload later moves arg3 to r9 and spills `arg3 << 16` to the stack. Zero-length r4/r5 holds, brute-forced over every statement boundary (about 150 placements), got arg3 into r4 and `hdr+0x84` into r5. Each time, though, `part+0x28` went to r8 instead of r3, and part/hdr swapped r6/r7 (80+ hw). Pinning the table pointer to r9 as well didn't help (87+). |
 | `DrawPauseFraction` (#7, `settings_menu16.c`) | 73 | 73 (draft unchanged) | The second half's `r6 = r7; r7 += 4` is postreload `reload_cse`/move2add. Before reload, the second half loads fresh 0x110/0x114 constants into r6/r7 while r7 still holds the first half's 0x110. So the second half's constants must not be CSE'd with the first half's 0x110 pseudo. None of these gave that: `do { } while (0)` on each draw (8 combinations), fresh or shared `"=r"/"0"` offsets per field and half (81 combinations; best 56 hw, 8 bytes long), or passing the sums to the position setter as above. |
 | `sub_8002E20` (#5, `settings_menu8a2.c`) | 104 | 104 (draft unchanged) | The ROM builds both channel addresses as `(idx * 0xc8 + s) + K` with its own `muls`. Inline accessors (`&s->rx[i]` with and without the global), byte-offset forms and a re-read global all still CSE the product (100-121 hw). Not pursued further, because of the time budget. |
 

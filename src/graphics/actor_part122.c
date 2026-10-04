@@ -2,20 +2,20 @@
 
 /* GitHub issue #9/#10 (0x0800B8DC-0x0800D040 cluster, see
  * docs/matching/issue-9-10-0x0800b8dc-graphics.md): the last four
- * functions of `asm/code_3_2_17_c6a8.s` - `sub_800C6A8`, the
+ * functions of `asm/code_3_2_17_c6a8.s` - `SetEnemyState`, the
  * `menu_ui` dialog-widget system's own 18-state `self+0x74` update
  * (called from all 31 confirmed `menu_ui` dispatch-table entries,
  * `docs/rom_map.md`'s "A parallel fork then found a genuine surprise"
  * section) - plus the three small `self+0x70`-relative accessor
  * triples the existing tracking comment already named
- * (`sub_800C860`/`sub_800C87C`/`sub_800C898`).
+ * (`SetEnemyRangeXSpeed`/`SetEnemyRangeYSpeed`/`SetEnemyRangeX`).
  *
- * Despite the "menu_ui" framing, `sub_800C6A8` operates on the exact
+ * Despite the "menu_ui" framing, `SetEnemyState` operates on the exact
  * same field-offset conventions as the rest of this cluster's
  * `self`/`owner` object shape (`self+0x70` "owner", `self+0xc`
  * "anchor" record, `self+0x84` per-instance table) and calls the
  * exact same helpers `sub_800B704`/`sub_800B838`/`_call_via_r3`
- * already matched for `sub_800C8AC`/`sub_800C8BC`/`sub_800C8CC`
+ * already matched for `sub_800C8AC`/`sub_800C8BC`/`SetEnemyAnimMode`
  * (`actor_part113.c`) - not merely the same *convention* reused on a
  * different struct, but the *identical* struct/helper set, just
  * driven by dialog-widget vtable entries instead of the physics
@@ -25,18 +25,18 @@
  * this ROM neighborhood uses, not merely a structurally-similar
  * sibling.
  *
- * `sub_800C6A8`'s own case bodies never call `sub_800C8AC`/
- * `sub_800C8BC`/`sub_800C8CC` as functions - each case *manually
+ * `SetEnemyState`'s own case bodies never call `sub_800C8AC`/
+ * `sub_800C8BC`/`SetEnemyAnimMode` as functions - each case *manually
  * repeats* those three helpers' own instruction sequences inline
  * (confirmed by the `bl` targets: `sub_800B838`/`sub_800B704`
- * directly, never `sub_800C8AC`/`sub_800C8BC`/`sub_800C8CC`
+ * directly, never `sub_800C8AC`/`sub_800C8BC`/`SetEnemyAnimMode`
  * themselves) - so the C below inlines them (SetModeA/SetModeB/SetMode).
  *
  * The whole file is built with old_agbcc (issue #10 NAKED retry,
- * docs/matching/issue-10-naked-retry.md). Under it `sub_800C6A8` is
+ * docs/matching/issue-10-naked-retry.md). Under it `SetEnemyState` is
  * plain C, and the three bounds setters below match without the
  * register pins and `asm volatile` barriers the current compiler
- * needed. In `sub_800C6A8`:
+ * needed. In `SetEnemyState`:
  *  - The groups the ROM keeps apart ({1,3,17} vs {6,9,10,11}) are
  *    separate cases; reload picks a different scratch register for the
  *    trigger's `ldrsh` in each, so cross-jumping can't merge them.
@@ -90,9 +90,9 @@ static inline void SetVelY(struct ctrl_target *t, s32 v, s32 w)
     t->velB[2] = v;
 }
 
-/* `self->state` update (1-18 valid, same shape as sub_800B8DC's state
+/* `self->state` update (1-18 valid, same shape as UpdateEnemyCtrl's state
  * machine), then latches the target's position into baseX/baseY. */
-void sub_800C6A8(struct part_ctrl *self, s32 state)
+void SetEnemyState(struct part_ctrl *self, s32 state)
 {
     self->state = state;
     switch (state) {
@@ -162,7 +162,7 @@ asm(".align 2, 0");
 
 /* Sets the X homing bounds to the target's x +/- `radius` (Q8) and
  * caches the homing speed pair. */
-void sub_800C860(struct part_ctrl *self, s32 radius, s32 p2, s32 p3)
+void SetEnemyRangeXSpeed(struct part_ctrl *self, s32 radius, s32 p2, s32 p3)
 {
     s32 x = self->target->x;
     self->rangeX[0] = x - (radius << 8);
@@ -171,8 +171,8 @@ void sub_800C860(struct part_ctrl *self, s32 radius, s32 p2, s32 p3)
     self->speed = p2;
 }
 
-/* Y-axis version of `sub_800C860`. */
-void sub_800C87C(struct part_ctrl *self, s32 radius, s32 p2, s32 p3)
+/* Y-axis version of `SetEnemyRangeXSpeed`. */
+void SetEnemyRangeYSpeed(struct part_ctrl *self, s32 radius, s32 p2, s32 p3)
 {
     s32 y = self->target->y;
     self->rangeY[1] = y - (radius << 8);
@@ -181,8 +181,8 @@ void sub_800C87C(struct part_ctrl *self, s32 radius, s32 p2, s32 p3)
     self->speed = p2;
 }
 
-/* `sub_800C860`'s bounds without the speed pair. */
-void sub_800C898(struct part_ctrl *self, s32 radius)
+/* `SetEnemyRangeXSpeed`'s bounds without the speed pair. */
+void SetEnemyRangeX(struct part_ctrl *self, s32 radius)
 {
     s32 x = self->target->x;
     self->rangeX[0] = x - (radius << 8);
