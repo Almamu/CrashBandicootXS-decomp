@@ -347,7 +347,7 @@ extern void sub_800153C(void);
 extern void sub_800158C(void);
 extern void sub_80006A8(void);
 
-#define PAL_RAM ((u16 *)0x05000000)
+#define PAL_RAM ((u16 *)PLTT)
 
 /* obj->vtable->slot(obj), through `_call_via_r1` (sub_803AD7C). */
 #define PMF_CALL(obj, slot)                                                    \

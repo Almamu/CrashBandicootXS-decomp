@@ -1,4 +1,5 @@
 #include "core.h"
+#include "level_state.h"
 
 /* Same `struct aabb` shape as src/graphics/aabb_util.c/actor_part*.c -
  * duplicated here rather than shared, matching this project's existing
@@ -29,13 +30,12 @@ void sub_803AFE4(struct aabb *dest, s32 x, s32 y)
 }
 asm(".align 2, 0");
 
-/* Trivial getter, offset 0x74 of an unknown/unnamed object - not enough
- * context from this call site alone to know the owning struct's shape,
- * so kept as a raw offset per docs/workflow.md's fallback for unclear
- * single-field access. */
-s32 sub_803AFEC(void *self)
+/* Lives getter of the level state (`gUnknown_030012C0`; read by
+ * game_loop55.c, hud_counter.c, actor_part101.c and
+ * graphics_loading_1e990.c). */
+s32 sub_803AFEC(struct level_state *self)
 {
-    return *(s32 *)((u8 *)self + 0x74);
+    return self->lives;
 }
 
 extern u8 gStaticData_087E4D1C[];

@@ -48,19 +48,19 @@ void LoadTaggedAsset(void *asset, void *dest)
 extern void sub_80006A8(void);
 
 /* Loads a specific background's tile/tileset data (tagged asset at
- * `asset + 0x200`) into VRAM at `0x06000000`, then DMAs the first 0x200
+ * `asset + 0x200`) into the start of `VRAM`, then DMAs the first 0x200
  * bytes of `asset` (a raw palette, 256 halfwords) straight into palette
- * RAM at `0x05000000`. */
+ * RAM (`PLTT`). */
 void LoadBackgroundTileAndPalette(void *asset)
 {
     struct dma_regs *dma;
     u32 val;
 
-    LoadTaggedAsset((u8 *)asset + 0x200, (void *)0x06000000);
+    LoadTaggedAsset((u8 *)asset + 0x200, (void *)VRAM);
     sub_80006A8();
     dma = (struct dma_regs *)REG_ADDR_DMA3SAD;
     dma->src = (u32)asset;
-    dma->dst = 0x05000000;
+    dma->dst = PLTT;
     dma->cnt = 0x80000100;
     val = dma->cnt;
 }
