@@ -210,13 +210,13 @@ void sub_8024708(struct SoundChannelList *self0, s32 idx)
     self->toggle = toggle;
 
     if (toggle == 0) {
-        LoadTaggedAsset((u8 *)asset + 0x200, (void *)0x06000000);
+        LoadTaggedAsset((u8 *)asset + 0x200, (void *)VRAM);
     } else {
         register u8 *addr asm("r0");
 
         asm volatile("mov r2, #0x80\n\tlsl r2, r2, #2\n\tadd %0, %1, r2"
                      : "=r"(addr) : "r"(asset) : "r2");
-        LoadTaggedAsset(addr, (void *)0x0600A000);
+        LoadTaggedAsset(addr, (void *)(VRAM + 0xA000));
     }
 
     {
@@ -241,6 +241,6 @@ void sub_8024708(struct SoundChannelList *self0, s32 idx)
 
     sub_80006A8();
 
-    DmaSet(3, asset, (void *)0x05000000, (u32)((DMA_ENABLE | DMA_START_NOW | DMA_16BIT | DMA_SRC_INC | DMA_DEST_INC) << 16 | 0x100));
+    DmaSet(3, asset, (void *)PLTT, (u32)((DMA_ENABLE | DMA_START_NOW | DMA_16BIT | DMA_SRC_INC | DMA_DEST_INC) << 16 | 0x100));
     REG_DISPCNT = *(u16 *)&gUnknown_03001314;
 }

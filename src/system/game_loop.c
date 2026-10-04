@@ -1,6 +1,7 @@
 #include "core.h"
 #include "vram_pool.h"
 #include "actor.h"
+#include "level_state.h"
 
 extern void *gUnknown_030012D8;
 extern void *gUnknown_030012B4;
@@ -16,80 +17,80 @@ extern void sub_80232B0(void *self);
 extern void sub_80232C0(void *self);
 extern void sub_8007398(struct actor *self, s32 arg1, s32 arg2);
 extern void sub_8028568(void *state, s32 arg1);
-extern void sub_8022CA0(void *self, u8 arg1);
+extern void sub_8022CA0(struct level_state *self, u8 arg1);
 
 /* Called at level start/checkpoint-restore: `arg1` selects whether to
  * accumulate this attempt's progress into the running totals
- * (`self+0x70`/`0x6c`/`0x74`, carrying every 100 units of `+0x6c` into
- * `+0x74` the same way `sub_8022F2C`'s odometer carries) or to just
- * reset those three fields back from their `+0xb4`/`0xb0`/`0xb8`
- * "level start" snapshot. Either way it re-syncs the player's stored
- * position (`self+0xd4`/`0xd8` -> `sub_8007398`) and re-runs
- * `sub_8022CA0`, then flushes `self+0xbc` into the `gUnknown_03001318`
+ * (`unk_70`/`wumpa`/`lives`, carrying every 100 wumpa into a life the
+ * same way `sub_8022F2C`'s odometer carries) or to just reset those
+ * three fields back from their `unk_b4`/`unk_b0`/`unk_b8` "level start"
+ * snapshot. Either way it re-syncs the player's stored position
+ * (`checkpointX`/`checkpointY` -> `sub_8007398`) and re-runs
+ * `sub_8022CA0`, then flushes `unk_bc` into the `gUnknown_03001318`
  * cache and clears the `+0xa4` busy flag.
  *
- * `self+0x70`/`0x6c`/`0x74` are accessed with direct `self`-relative
- * offsets throughout (no cached pointer) because those three offsets
- * fit the Thumb `ldr`/`str` immediate range (0-124); only the
- * `0xb4`/`0xb0`/`0xb8`/`0xd4`/`0xe0`/`0xbc` fields (all past that
- * range) need an explicit address computed into a local pointer -
- * matching the ROM exactly. Caching *all* of them in pointers (the
- * earlier attempt here) forced 3 extra always-live locals the natural
- * allocator had to spill into `r8`/`r9`/`sl`. */
-void sub_8022BF0(void *self, u8 arg1)
+ * `wumpa`/`unk_70`/`lives` are accessed directly off `self` throughout
+ * (no cached pointer) because those three offsets fit the Thumb
+ * `ldr`/`str` immediate range (0-124); only the fields past that range
+ * (`unk_b0`-`unk_bc`, the checkpoint position, `unk_e0`) need an
+ * explicit address computed into a local pointer - matching the ROM
+ * exactly. Caching *all* of them in pointers (the earlier attempt here)
+ * forced 3 extra always-live locals the natural allocator had to spill
+ * into `r8`/`r9`/`sl`. */
+void sub_8022BF0(struct level_state *self, u8 arg1)
 {
     s32 *fieldbc;
 
     sub_80232FC(self);
 
     if (arg1 != 0) {
-        s32 *fieldb4 = (s32 *)((u8 *)self + 0xb4);
+        s32 *fieldb4 = &self->unk_b4;
 
-        *(s32 *)((u8 *)self + 0x70) += *fieldb4;
+        self->unk_70 += *fieldb4;
 
         {
-            s32 *fieldb0 = (s32 *)((u8 *)self + 0xb0);
+            s32 *fieldb0 = &self->unk_b0;
 
-            *(s32 *)((u8 *)self + 0x6c) += *fieldb0;
+            self->wumpa += *fieldb0;
         }
 
         {
-            s32 *fieldb8 = (s32 *)((u8 *)self + 0xb8);
-            s32 *fieldd4 = (s32 *)((u8 *)self + 0xd4);
-            u8 *fielde0 = (u8 *)self + 0xe0;
+            s32 *fieldb8 = &self->unk_b8;
+            s32 *fieldd4 = &self->checkpointX;
+            u8 *fielde0 = &self->unk_e0;
             s32 total;
 
-            fieldbc = (s32 *)((u8 *)self + 0xbc);
+            fieldbc = &self->unk_bc;
 
-            if (*(s32 *)((u8 *)self + 0x6c) > 0x63) {
-                s32 carry = *(s32 *)((u8 *)self + 0x74);
-                s32 value = *(s32 *)((u8 *)self + 0x6c);
+            if (self->wumpa > 0x63) {
+                s32 carry = self->lives;
+                s32 value = self->wumpa;
 
                 do {
                     carry++;
                     value -= 100;
                 } while (value > 0x63);
 
-                *(s32 *)((u8 *)self + 0x6c) = value;
-                *(s32 *)((u8 *)self + 0x74) = carry;
+                self->wumpa = value;
+                self->lives = carry;
             }
 
-            total = *(s32 *)((u8 *)self + 0x74) + *fieldb8;
+            total = self->lives + *fieldb8;
             if (total > 0x63) {
                 total = 0x63;
             }
-            *(s32 *)((u8 *)self + 0x74) = total;
+            self->lives = total;
 
             sub_80232B0(self);
             sub_8007398((struct actor *)gUnknown_030012D8, fieldd4[0], fieldd4[1]);
             sub_8022CA0(self, *fielde0);
         }
     } else {
-        *(s32 *)((u8 *)self + 0x70) = *(s32 *)((u8 *)self + 0xb4);
-        *(s32 *)((u8 *)self + 0x6c) = *(s32 *)((u8 *)self + 0xb0);
-        *(s32 *)((u8 *)self + 0x74) = *(s32 *)((u8 *)self + 0xb8);
+        self->unk_70 = self->unk_b4;
+        self->wumpa = self->unk_b0;
+        self->lives = self->unk_b8;
 
-        fieldbc = (s32 *)((u8 *)self + 0xbc);
+        fieldbc = &self->unk_bc;
     }
 
     sub_8028568(gUnknown_03001318, *fieldbc);
@@ -97,11 +98,11 @@ void sub_8022BF0(void *self, u8 arg1)
 }
 
 /* `arg1` truncated to a byte, matching the ROM's own `lsls/lsrs #0x18`
- * parameter normalization. If `self->levelPtr->mode == 3`, just
- * refreshes `self+0xcc`/`0xd0` (a cached frame count / a copy of the
+ * parameter normalization. If `self->cat->kind == 3`, just
+ * refreshes `unk_cc`/`unk_d0` (a cached frame count / a copy of the
  * `+0xa9` byte) and snapshots the first `0x68` bytes of `self` into
  * `self+0xe4`. Otherwise it also stashes the camera's `{x, y}`
- * (`gUnknown_030012D8`) into `self+0xd4`/`0xd8`, clears two flag
+ * (`gUnknown_030012D8`) into `checkpointX`/`checkpointY`, clears two flag
  * bytes, and syncs two spans of the `gUnknown_030012B4` bitmap
  * (`+0x108`->`+8`, `+0x308`->`+0x208`) via the BIOS `CpuSet` wrapper -
  * reads like an end-of-level "freeze the HUD/save state" snapshot.
@@ -110,16 +111,16 @@ void sub_8022BF0(void *self, u8 arg1)
  * `p += 0x27` on the *same* pointer, then the store - matching the
  * ROM's "derive `+0xd0` by adding `0x27` to the register that still
  * holds `+0xa9`" shape (a plain `*(p+0x27) = *p;` computed the
- * destination address before the read instead). In the `mode == 3`
+ * destination address before the read instead). In the `kind == 3`
  * branch that same pointer is then bumped again (`p += 0x14`) to
  * become the `self+0xe4` destination for the trailing `sub_800014C`
  * copy, reusing the register chain exactly like the ROM. */
-void sub_8022CA0(void *self, u8 arg1)
+void sub_8022CA0(struct level_state *self, u8 arg1)
 {
-    void *level = *(void **)((u8 *)self + 0xdc);
+    struct level_category *level = self->cat;
 
-    if (*(s32 *)((u8 *)level + 8) == 3) {
-        *(s32 *)((u8 *)self + 0xcc) = sub_8023414(self);
+    if (level->kind == 3) {
+        self->unk_cc = sub_8023414(self);
 
         /* Barrier: without this, the compiler notices `self + 0xa9`
          * is `(self + 0xcc) - 0x23` and reuses the field-0xcc pointer
@@ -142,8 +143,8 @@ void sub_8022CA0(void *self, u8 arg1)
         s32 y = *(s32 *)((u8 *)player + 4);
         void *base;
 
-        *((u8 *)self + 0xe0) = arg1;
-        *(s32 *)((u8 *)self + 0xcc) = sub_8023414(self);
+        self->unk_e0 = arg1;
+        self->unk_cc = sub_8023414(self);
 
         asm volatile("" : "+r"(self));
 
@@ -166,7 +167,7 @@ void sub_8022CA0(void *self, u8 arg1)
              * form. Reproduced with a local pointer and indexed
              * stores - same gotcha as `sub_8023500`/`sub_802356C` in
              * docs/matching/issue-37-game-loop-234e8.md. */
-            s32 *dst = (s32 *)((u8 *)self + 0xd4);
+            s32 *dst = &self->checkpointX;
 
             dst[0] = x;
             dst[1] = y;
@@ -184,14 +185,14 @@ void sub_8022CA0(void *self, u8 arg1)
              * arguments are already computed. */
             void *a = (u8 *)base + 0x108;
             void *b = (u8 *)base + 8;
-            register u32 ctrl asm("r2") = 0x04000040;
+            register u32 ctrl asm("r2") = CPU_SET_32BIT | 0x40;
 
             sub_803A94C(a, b, ctrl);
         }
         {
             void *a = (u8 *)base + 0x308;
             void *b = (u8 *)base + 0x208;
-            register u32 ctrl asm("r2") = 0x04000040;
+            register u32 ctrl asm("r2") = CPU_SET_32BIT | 0x40;
 
             sub_803A94C(a, b, ctrl);
         }

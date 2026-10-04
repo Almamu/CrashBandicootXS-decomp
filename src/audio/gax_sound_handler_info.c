@@ -1,21 +1,23 @@
 #include "core.h"
+#include "audio.h"
 
 /* All three fixed per-type function-pointer constants docs/audio.md
  * records for the GAX2_SoundHandler "Info" type (init_fn/unknown_fn/
  * play_fn = 0x080393FD/0x08039439/0x0803943D) live in this cluster:
  * sub_80393FC (init_fn), nullsub_39 (unknown_fn, a no-op stub), and
- * sub_803943C (play_fn) are all matched here. The object these operate
- * on isn't confidently modeled yet (same situation as sub_80381FC's
- * constructor in sound_object_init.c) - kept as raw offsets rather than
- * a guessed struct. */
+ * sub_803943C (play_fn) are all matched here. The object they operate
+ * on is the shared `struct GaxInfoHandler` (include/audio.h) - the song
+ * position every Channel handler reads through its `children[0]`. */
 
 /* Resets the shared per-instance state every SoundHandler "Info"-type
  * object carries, regardless of which higher-level init function called
  * it (sub_80393FC below, and sub_803941C, both reset different subsets
- * of fields first and then fall through to this shared core). */
+ * of fields first and then fall through to this shared core). The
+ * `orderPos`/`row` values make the first tick start order 0: `row` is
+ * past any pattern's end, so it wraps and `orderPos` steps to 0. */
 void sub_80393D0(void *self)
 {
-    u8 *p = self;
+    struct GaxInfoHandler *p = self;
     u16 val;
     u8 zeroByte;
     register u16 zeroHalf asm("r3");
@@ -28,20 +30,23 @@ void sub_80393D0(void *self)
      * sub_80381FC in sound_object_init.c). The two zero-fill temps
      * (`zeroByte`/`zeroHalf`) both get set right after the first store,
      * matching the ROM's `movs r2,#0; movs r3,#0` pair, rather than
-     * being zeroed right before each individual use. */
+     * being zeroed right before each individual use; the empty asm
+     * statements keep them there once the stores are struct fields. */
     val = 0xFFFF;
-    *(u16 *)(p + 0x14) = val;
+    p->orderPos = val;
     zeroByte = 0;
+    asm("" : "+r"(zeroByte));
     zeroHalf = 0;
+    asm("" : "+r"(zeroHalf));
     val = 0x4E20;
-    *(u16 *)(p + 0x16) = val;
-    *(u8  *)(p + 0x1c) = zeroByte;
-    *(u16 *)(p + 0x18) = 6;
-    *(u8  *)(p + 0x1f) = 0xff;
-    *(u8  *)(p + 0x1d) = zeroByte;
-    *(u8  *)(p + 0x1e) = zeroByte;
-    *(u8  *)(p + 0x22) = zeroByte;
-    *(u16 *)(p + 0x24) = zeroHalf;
+    p->row = val;
+    p->tickCounter = zeroByte;
+    p->speed = 6;
+    p->field_1f = 0xff;
+    p->field_1d = zeroByte;
+    p->newOrder = zeroByte;
+    p->field_22 = zeroByte;
+    p->field_24 = zeroHalf;
 }
 
 extern void sub_80393D0(void *self);
@@ -50,14 +55,14 @@ extern void sub_80393D0(void *self);
  * docs/audio.md). */
 void sub_80393FC(void *self)
 {
-    u8 *p = self;
+    struct GaxInfoHandler *p = self;
 
-    *(u32 *)(p + 0x10) = 0;
-    *(u32 *)(p + 0xc) = 0;
-    *(u8 *)(p + 0x1a) = 0;
-    *(u8 *)(p + 0x1b) = 0;
-    *(u8 *)(p + 0x20) = 0;
-    *(u8 *)(p + 0x21) = 0;
+    p->firstTick = 0;
+    p->lastTick = 0;
+    p->field_1a = 0;
+    p->field_1b = 0;
+    p->field_20 = 0;
+    p->field_21 = 0;
     sub_80393D0(self);
 }
 
@@ -66,14 +71,14 @@ void sub_80393FC(void *self)
  * sub_80393FC above. */
 void sub_803941C(void *self)
 {
-    u8 *p = self;
+    struct GaxInfoHandler *p = self;
     u32 zero;
 
     sub_80393D0(self);
     zero = 0;
-    *(u8 *)(p + 0x1b) = 2;
-    *(u32 *)(p + 0x10) = zero;
-    *(u8 *)(p + 0x1a) = 1;
+    p->field_1b = 2;
+    p->firstTick = zero;
+    p->field_1a = 1;
 }
 
 /* GAX2_SoundHandler "Info" type's unknown_fn (ROM 0x08039439, see
@@ -84,80 +89,78 @@ void nullsub_39(void)
 asm(".align 2, 0");
 
 /* GAX2_SoundHandler "Info" type's play_fn (ROM 0x0803943D, see
- * docs/audio.md's per-type function-pointer table). A per-tick repeat/
- * retrigger scheduler for the "Info" handler: bails out immediately
- * (still returning 0) unless this is a new channel (self->0xc != the
- * chanArg argument) and the handler is armed (self->0x1a != 0). When
- * armed and self->0x18(byte)!=0 && self->0x1c(byte)==0, it advances a
- * shared 8.8-style rate/counter pair (self->0x16, self->0x18) - either
- * reloading self->0x16 from self->0->0x18's table (a still-unmodeled
- * pointer chain, same situation as the other "Info"/"Channel" functions
- * in this file) when a one-shot retrigger flag (self->0x22) is set, or
- * simply incrementing it - then folds self->0x18's high byte back into
- * its low byte if present, decrements self->0x1c from self->0x18's low
- * byte, and compares self->0x16 against two more thresholds from the
- * same table (self->0->0x18 +2/+4/+6) to arm/disarm "loop point hit"
- * flags at self->0x1e/self->0x21 and reset self->0x14. The other branch
- * (self->0x18==0 or self->0x1c!=0) just decrements self->0x1c and clears
- * self->0x1d. Finally records the new chanArg into self->0xc (and
- * self->0x10, if that's still unset) and decrements self->0x1b if
- * armed. The chained object at self->0 isn't understood well enough yet
- * to give it a named struct (same as sub_8038F94/sub_80393D0's
- * situation) - kept as raw offsets.
+ * docs/audio.md's per-type function-pointer table): advances the song
+ * position once per mixer tick. Every Channel handler shares this one
+ * Info handler, so it bails out (still returning 0) when this tick
+ * (`chanArg`, the mixer's `pos`) already ran (`lastTick`), or when the
+ * song isn't playing (`field_1a == 0`).
+ *
+ * When a row is due (`speed`'s low byte nonzero and `tickCounter` run
+ * down to 0), it steps `row` - or jumps straight to the pattern's end
+ * when the one-shot `field_22` flag is set - swaps `speed`'s two bytes
+ * if the high one is set (alternating row speeds), and reloads
+ * `tickCounter` from the new low byte. At the end of a pattern
+ * (`row >= song->patternRows`) it resets `row`/`field_24`, flags
+ * `newOrder` and steps `orderPos`; past the last order
+ * (`song->orderCount`) it stops the song when `field_20` is set, flags
+ * `field_21` and loops back to `song->loopOrder`. Otherwise it just
+ * counts `tickCounter` down and clears `field_1d`. Finally it records
+ * the tick in `lastTick` (and `firstTick`, if that's still unset) and
+ * counts `field_1b` down if armed.
  *
  * Several compiler-quirk fixups were needed to match:
- * - The `self->0x1c==0` check's "known zero" value needs materializing
- *   into its own register *only after* confirming `self->0x18(byte)!=0`
+ * - The `tickCounter==0` check's "known zero" value needs materializing
+ *   into its own register *only after* confirming `speed(byte)!=0`
  *   (nested `if`, not a single `&&`) - the ROM only computes this copy
  *   inside the outer branch, then reuses it both for the second
  *   comparison and (via `goto`) as the literal 0 later stored into
- *   self->0x22.
- * - The two `self->0x16`/`self->0x14` reads compared against the
- *   self->0->0x18 table are 16-bit *signed* loads at a non-immediate
- *   offset (0x16/0x14) - Thumb's `ldrsh` has no immediate-offset form,
- *   only register-offset, and gcc's default codegen for this pattern
- *   picks the wrong register pairing (and a redundant sign-extend
- *   masking pass) compared to the ROM's `movs r0,#0x16; ldrsh
- *   r1,[r3,r0]` shape - transcribed as a tiny raw-asm block per read to
- *   force the ROM's exact register choice.
- * - The self->0x1c/self->0x1d "not retriggering" fallback path needs its
- *   decrement computed into a *fresh* register (pinned to r0) rather
- *   than modified in place on the register self->0x1c's byte was loaded
- *   into - otherwise gcc reuses that register directly instead of the
- *   ROM's separate `subs r0,r1,#1` / `movs r1,#0` pair. */
+ *   `field_22`.
+ * - The two `row`/`orderPos` reads compared against the song's table
+ *   are 16-bit *signed* loads at a non-immediate offset (0x16/0x14) -
+ *   Thumb's `ldrsh` has no immediate-offset form, only register-offset,
+ *   and gcc's default codegen for this pattern picks the wrong register
+ *   pairing (and a redundant sign-extend masking pass) compared to the
+ *   ROM's `movs r0,#0x16; ldrsh r1,[r3,r0]` shape - transcribed as a
+ *   tiny raw-asm block per read to force the ROM's exact register
+ *   choice.
+ * - The `tickCounter`/`field_1d` "not retriggering" fallback path needs
+ *   its decrement computed into a *fresh* register (pinned to r0)
+ *   rather than modified in place on the register `tickCounter` was
+ *   loaded into - otherwise gcc reuses that register directly instead
+ *   of the ROM's separate `subs r0,r1,#1` / `movs r1,#0` pair. */
 u32 sub_803943C(void *self, u32 arg1, u32 chanArg)
 {
-    u8 *p = self;
+    struct GaxInfoHandler *p = self;
     register u32 c asm("r6") = chanArg;
     u8 b18lo;
     register u16 h18 asm("r4");
     register u8 b1c asm("r1");
 
-    if (*(u32 *)(p + 0xc) == c) {
+    if (p->lastTick == c) {
         return 0;
     }
-    if (*(u8 *)(p + 0x1a) == 0) {
+    if (p->field_1a == 0) {
         return 0;
     }
 
-    b18lo = *(u8 *)(p + 0x18);
-    h18 = *(u16 *)(p + 0x18);
-    b1c = *(u8 *)(p + 0x1c);
+    b18lo = *(u8 *)&p->speed;
+    h18 = p->speed;
+    b1c = p->tickCounter;
 
     if (b18lo != 0) {
     u32 zero = b1c;
     if (zero == 0) {
-        u8 *flag = p + 0x22;
+        u8 *flag = &p->field_22;
 
         if (*flag != 0) {
             *flag = zero;
-            *(u16 *)(p + 0x16) = *(u16 *)((u8 *)(*(void **)((u8 *)(*(void **)p) + 0x18)) + 2);
+            p->row = p->type->data.song->patternRows;
         } else {
-            *(u16 *)(p + 0x16) = *(u16 *)(p + 0x16) + 1;
+            p->row = p->row + 1;
         }
 
         {
-            u16 v18 = *(u16 *)(p + 0x18);
+            u16 v18 = p->speed;
             u16 lo = v18 >> 8;
             if (lo != 0) {
                 register u16 mask asm("r0") = 0xff;
@@ -165,74 +168,76 @@ u32 sub_803943C(void *self, u32 arg1, u32 chanArg)
                 hi = mask & v18;
                 hi <<= 8;
                 lo |= hi;
-                *(u16 *)(p + 0x18) = lo;
+                p->speed = lo;
             }
         }
 
         {
-            u8 dec = *(u8 *)(p + 0x18) - 1;
+            u8 dec = *(u8 *)&p->speed - 1;
             h18 = 0;
-            *(u8 *)(p + 0x1c) = dec;
+            p->tickCounter = dec;
 
             {
                 register s32 cnt asm("r1");
-                void *base0;
+                struct GaxHandlerType *base0;
                 u16 thresh;
 
                 asm("movs r0, #0x16\n\tldrsh r1, [%1, r0]" : "=r"(cnt) : "r"(p) : "r0");
-                base0 = *(void **)p;
-                thresh = *(u16 *)((u8 *)(*(void **)((u8 *)base0 + 0x18)) + 2);
+                base0 = p->type;
+                thresh = base0->data.song->patternRows;
 
                 if (!(cnt < thresh)) {
                     u8 one;
                     register s32 cnt2 asm("r1");
                     u16 thresh2;
 
-                    *(u16 *)(p + 0x16) = h18;
-                    *(u16 *)(p + 0x24) = h18;
+                    /* Stored through plain `u16 *` casts: a direct
+                     * field store copies `h18` into r0 first. */
+                    *(u16 *)&p->row = h18;
+                    *(u16 *)&p->field_24 = h18;
                     one = 1;
-                    *(u8 *)(p + 0x1e) = one;
-                    *(u16 *)(p + 0x14) = *(u16 *)(p + 0x14) + 1;
+                    p->newOrder = one;
+                    p->orderPos = p->orderPos + 1;
 
                     asm("movs r0, #0x14\n\tldrsh r1, [%1, r0]" : "=r"(cnt2) : "r"(p) : "r0");
-                    thresh2 = *(u16 *)((u8 *)(*(void **)((u8 *)base0 + 0x18)) + 4);
+                    thresh2 = base0->data.song->orderCount;
 
                     if (!(cnt2 < thresh2)) {
-                        if (*(u8 *)(p + 0x20) != 0) {
-                            *(u8 *)(p + 0x1a) = 0;
-                            *(u16 *)(p + 0x18) = h18;
+                        if (p->field_20 != 0) {
+                            p->field_1a = 0;
+                            p->speed = h18;
                         }
-                        *(u8 *)(p + 0x21) = one;
-                        *(u16 *)(p + 0x14) = *(u16 *)((u8 *)(*(void **)((u8 *)(*(void **)p) + 0x18)) + 6);
+                        p->field_21 = one;
+                        p->orderPos = p->type->data.song->loopOrder;
                     }
                 } else {
-                    *(u8 *)(p + 0x1e) = h18;
+                    p->newOrder = h18;
                 }
             }
         }
-        *(u8 *)(p + 0x1d) = 1;
-        h18 = *(u16 *)(p + 0x18);
+        p->field_1d = 1;
+        h18 = p->speed;
         goto after_retrigger;
     }
     }
     {
         register u8 dec asm("r0") = b1c - 1;
         u8 zeroB = 0;
-        *(u8 *)(p + 0x1c) = dec;
-        *(u8 *)(p + 0x1d) = zeroB;
+        p->tickCounter = dec;
+        p->field_1d = zeroB;
     }
 after_retrigger:
 
     if ((h18 & 0xff) == 0) {
-        *(u8 *)(p + 0x21) = 1;
+        p->field_21 = 1;
     }
 
-    *(u32 *)(p + 0xc) = c;
-    if (*(u32 *)(p + 0x10) == 0) {
-        *(u32 *)(p + 0x10) = c;
+    p->lastTick = c;
+    if (p->firstTick == 0) {
+        p->firstTick = c;
     }
-    if (*(u8 *)(p + 0x1b) != 0) {
-        *(u8 *)(p + 0x1b) = *(u8 *)(p + 0x1b) - 1;
+    if (p->field_1b != 0) {
+        p->field_1b = p->field_1b - 1;
     }
 
     return 0;
