@@ -3,7 +3,7 @@
 
 /* The player-input controller object of src/graphics/actor_part_16048.c
  * (GitHub issues #19/#20, ROM 0x08016048-0x08017524): a C++-style class
- * with gcc 2.x method table gStaticData_087E428C (+0x0C sub_8016288
+ * with gcc 2.x method table gPlayerCtrlVtable (+0x0C sub_8016288
  * per-frame update, +0x14 sub_8016128 message handler, +0x1C sub_8017218
  * set target, +0x4C sub_80174D8 destructor; the rest are base-class
  * sub_800B6xx/sub_800B8xx functions). Constructor sub_80174EC (called from
@@ -62,7 +62,7 @@ struct pctrl_f28
     u8 unk_6:2;
 } __attribute__((packed));
 
-/* The controlled object (the player, gUnknown_030012D8). Same layout as
+/* The controlled object (the player, gPlayer). Same layout as
  * gobj_1a794.h's `struct gobj` for the fields both read. */
 struct pctrl_target
 {
@@ -100,7 +100,7 @@ struct pctrl_target
     u8 unk_78[0x1A];
     u8 unk_92;          // 0x92
     u8 unk_93[0x71];
-    u8 unk_104;         // 0x104
+    u8 dead;             // 0x104
 };
 
 struct player_ctrl

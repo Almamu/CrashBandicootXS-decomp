@@ -21,7 +21,7 @@ most of the work was loop shape:
   with `if (RunContinuePrompt()) ResetLives(self); else break;`. The part
   after it (the special-level `switch`, the best-time record and the
   `snap14C` save) becomes the loop head at `0x0802268C`. The attempt
-  loop's `if (A || B) {...} else if (!sub_802455C(...)) break;` is
+  loop's `if (A || B) {...} else if (!SelectRoom(...)) break;` is
   rotated the same way. With `goto` loops instead, nothing was hoisted
   (no loop notes) and the seven `&self->field` addresses were not held
   in `r7`/`sl`/stack slots.

@@ -2436,7 +2436,7 @@ AABB-builder clone - `part` (confirmed as a plain `struct actor`,
 matching `include/actor.h`) colliding with the player. Two flag-bit
 tests on `part->flags` (bits 3 and 2, both must be clear/set
 respectively, else return early) gate an AABB-vs-AABB collision test
-against the player global `gUnknown_030012D8` (both boxes built via
+against the player global `gPlayer` (both boxes built via
 the already-matched `sub_8007B98`, compared via `sub_8001688`, a
 new/unnamed collision-test function with the same "return a 0/1 byte"
 convention as `sub_800B37C` in `graphics.c`). On collision: sets
@@ -2466,9 +2466,9 @@ single bit-tests - here it's the SAME loaded-and-shifted value (`r1`)
 feeding both tests, with a single `mask=1` constant (`r6`) reused for
 both ANDs, matching the ROM's own register reuse exactly once written
 as one asm block per test sharing the `shifted`/`mask` register
-variables); caching `&gUnknown_030012D8` in a local
-(`struct actor **pGlobal = &gUnknown_030012D8;`) instead of writing
-`gUnknown_030012D8->field` at each use site, to get the ROM's own
+variables); caching `&gPlayer` in a local
+(`struct actor **pGlobal = &gPlayer;`) instead of writing
+`gPlayer->field` at each use site, to get the ROM's own
 "load the global's address once, dereference it fresh each time"
 reuse pattern instead of gcc reloading the address from the literal
 pool at every access; and, for the six-case spawn switch, writing the
@@ -2483,7 +2483,7 @@ others) - a pattern arrived at by matching the observed block order
 directly rather than any predictive rule for how gcc lays out switch
 bodies.
 
-The one remaining gap: the cached `&gUnknown_030012D8` address lands
+The one remaining gap: the cached `&gPlayer` address lands
 in `r6` here instead of the ROM's `r7`. Since this value is read from
 across several basic blocks (both `sub_8007B98` calls, the
 `_call_via_r4` position lookup), the single register-letter difference
@@ -3495,7 +3495,7 @@ driven trampoline via `_call_via_r1` (same `table+N`/`table+N+4`
 convention throughout this ROM region); skip if the result is `<= 4`
 (a distance/priority-style broad-phase test). Skip unless
 `part->flags` bit 2 is set. Then, depending on whether the caller's
-`compareViewport` argument equals the current `gUnknown_030012D8`
+`compareViewport` argument equals the current `gPlayer`
 (confirmed elsewhere to be "very likely the camera/viewport" - see
 `docs/rom_map.md`) or a *different* one, dispatches the incoming
 `{boxX, boxY, boxW, boxH}` rectangle (passed across `r1`-`r3` plus one
@@ -3579,7 +3579,7 @@ NAKED transcription).
 
 **Parked, not matched: `sub_8008AD8`** (ROM `0x08008AD8`, right after
 `sub_8008A40`, same file). Resolves collision push-out between `part`
-and the player (`gUnknown_030012D8`) against the incoming
+and the player (`gPlayer`) against the incoming
 `{boxX, boxY, boxW, boxH}` rectangle passed by `sub_8008A40`. `manager`
 itself is never read - a dead parameter kept for a uniform call
 signature with `sub_8008D80`'s sibling.
@@ -3692,7 +3692,7 @@ real ROM address sits between the parked `sub_8008AD8` and the raw,
 unclaimed `sub_8008DC0`). `sub_8008AD8`'s sibling: resolves the same
 collision-hit logic when the "compare viewport" doesn't match the
 current one (see `sub_8008A40` above) - `otherViewport` here plays
-the role `gUnknown_030012D8` (the player) plays in `sub_8008AD8`.
+the role `gPlayer` (the player) plays in `sub_8008AD8`.
 Tests `part` against the incoming box via `sub_8009FF4`; on a hit,
 fires a `part->table+0x68`-driven trampoline (same "dead read" idiom
 as `sub_8008AD8`) with `otherViewport->field_0A` as the third
@@ -3723,7 +3723,7 @@ Continuing past `sub_8008D80` (parked), the next six functions turned
 out to be a self-contained family of small, clearly-understood
 "manager" array utilities (the same capacity/count/base-pointer struct
 shape used throughout `actor_part10.c`), not the murkier
-`gLevelState`/`gUnknown_030012D8`-touching dispatch logic - so
+`gLevelState`/`gPlayer`-touching dispatch logic - so
 all six were matched rather than parked or skipped:
 
 - **`sub_8008DC0`**: fires a `part->table+0x20/0x24`-driven trampoline
@@ -3917,7 +3917,7 @@ new `actor_part11g.o` entry inserted between `actor_part11c.o` and
 the now-matched `sub_800944C`, `src/graphics/actor_part11.c`): the same
 "extended screen box" grid-iteration shape as `sub_800944C`, but
 dispatching each hit to `sub_80096C0` (when the box's "compare
-viewport" argument equals `gUnknown_030012D8`, the player) or
+viewport" argument equals `gPlayer`, the player) or
 `sub_80099F0` (otherwise) - the spatial-grid-cluster analog of
 `sub_8008A40`'s own dispatch to `sub_8008AD8`/`sub_8008D80`, right
 down to reconstructing the box via `MemCopy32` with the same
@@ -4148,16 +4148,16 @@ remains its own separate `NAKED` function in `actor_part7b.c`.
 `sub_8009BE0` (right after `sub_8009B9C`) is a physics/collision step-
 probe function calling still-unexamined `sub_8008278`/`sub_8026628`
 (a Q8->int conversion via `>>8`, an up-to-4-attempt probe loop, and
-mysterious `+0x2a` flag toggling on `gUnknown_030012D8`) - left raw
+mysterious `+0x2a` flag toggling on `gPlayer`) - left raw
 rather than guess at semantics.
 
 ## `sub_8009CA0`: third tractable function, `actor_part13.c`
 
 Right after the raw `sub_8009BE0`, `sub_8009CA0` turned out to be
 another self-contained, clearly-understood function: it tests `part`
-for a collision-grid hit against the player (`gUnknown_030012D8`),
+for a collision-grid hit against the player (`gPlayer`),
 gated by a mix of flag bits and a periodic "fast path" check against
-`gUnknown_0300082C` (the same ~128-frame counter documented in
+`gRoomFrameCount` (the same ~128-frame counter documented in
 `docs/rom_map.md`) - if `part->flags` bit 2 is set and the player's
 `+0x8c` field is ahead of the frame counter (an **unsigned**
 comparison - using a signed one here produced a real, full-rebuild-
@@ -4530,7 +4530,7 @@ Right after `actor_part14.c`'s cluster, a big new not-yet-named object
 these 44 functions are pure single-field get/set/clear/increment
 accessors on it, so raw offset casts are used throughout rather than
 guessing at a struct layout. Split across two files at a raw,
-untouched function (`sub_800B3F0`, see below) that sits in the middle
+untouched function (`InitPlayer`, see below) that sits in the middle
 of the run:
 
 - **`sub_800B324`**: `self+0x5c` boolean getter. Needed the verbose
@@ -4543,31 +4543,31 @@ of the run:
 - **`sub_800B360`**: countdown-decrement then tail-call into
   `sub_800A528` (itself still raw, in the `sub_800A0FC`-`sub_800A590`
   span).
-- **`sub_800B37C`**: the `gUnknown_030012D8` AABB-vs-buf collision
+- **`sub_800B37C`**: the `gPlayer` AABB-vs-buf collision
   check every earlier-matched pool/grid function in `actor_part11.c`
   calls by name - finally matched for real. Builds a secondary AABB
   via the already-matched `sub_8007CF8`, and only tests it via
   `sub_8001688` when it has a region (`field_8 > 0`).
-- **`sub_800B3AC`**: overwrites `self->table` with
-  `gStaticData_087E3E04` (a second static table alongside the
+- **`DestroyPlayer`**: overwrites `self->table` with
+  `gPlayerVtable` (a second static table alongside the
   already-matched `gStaticData_087E3D14`), fires a child object's own
   trampoline via `_call_via_r2` if one exists, then calls
   `sub_8010E14(self+0x108, 2)` and tail-calls `sub_800A650`.
-- **`sub_800B3F0`** (LEFT RAW - not reconstructed, given its own
+- **`InitPlayer`** (LEFT RAW - not reconstructed, given its own
   `asm/code_3_2_19.s`): a part-object constructor that calls three
   still-unexamined helpers (`sub_80087C0`, `sub_80087B4`,
   `sub_800872C`) plus `sub_800A734` (itself the start of a still-raw
   94 KB span) and `sub_8008434`/`sub_8010E2C`/`sub_800A6A4`. Sits
-  between `sub_800B3AC` and `sub_800B4A4` in ROM, so it splits this
-  batch into `actor_part15.c` (up to `sub_800B3AC`) and
+  between `DestroyPlayer` and `sub_800B4A4` in ROM, so it splits this
+  batch into `actor_part15.c` (up to `DestroyPlayer`) and
   `actor_part16.c` (`sub_800B4A4` onward).
 - **`sub_800B4A4`-`sub_800B644`**: a long run of plain single-field
   accessors (address getter, byte clear/set/get pairs, bulk 3-word
   setters, countdown decrement/clear/increment/get, an unsigned
-  "counter snapshot ahead of `gUnknown_0300082C`" check, and four
+  "counter snapshot ahead of `gRoomFrameCount`" check, and four
   parallel byte accessor pairs at `+0x100`-`+0x103` that read like a
   small per-phase flag array). One real gap: `sub_800B524`'s unsigned
-  `field > gUnknown_0300082C` check needed to be written as a plain
+  `field > gRoomFrameCount` check needed to be written as a plain
   `return a > b;` rather than an explicit `if/else` - here the
   explicit form was the one that mismatched (the reverse of
   `sub_800B324` above), producing a longer flag-accumulate-then-copy
@@ -4619,9 +4619,9 @@ of the run:
 
 All 44 non-parked functions plus the 2 parked ones were verified via a
 full clean `make compare` after being split into `actor_part15.c`/
-`actor_part16.c` around the raw `sub_800B3F0` gap; `ldscript.txt` links
+`actor_part16.c` around the raw `InitPlayer` gap; `ldscript.txt` links
 them in real ROM order: `actor_part15.o`, `asm/code_3_2_19.o`
-(`sub_800B3F0`, raw), `actor_part16.o`, `asm/code_3_2_18.o` (the two
+(`InitPlayer`, raw), `actor_part16.o`, `asm/code_3_2_18.o` (the two
 parked functions' real bytes), `asm/code_3_2_17.o` (`sub_800B704`
 onward, still raw).
 
@@ -4629,7 +4629,7 @@ onward, still raw).
 
 Continuation right after the previous batch's parked pair - a table-
 driven trampoline pair, a fixed-point-scaled vector-copy pair (mirrors
-of `sub_800B3AC`/`sub_8009D5C` and `sub_800B6A0`/`sub_800B6D0`
+of `DestroyPlayer`/`sub_8009D5C` and `sub_800B6A0`/`sub_800B6D0`
 respectively), and a handful of small `part`/table accessors:
 
 - **`sub_800B704`/`sub_800B838`**: look up `self`'s `index`-th 8-byte
@@ -4639,11 +4639,11 @@ respectively), and a handful of small `part`/table accessors:
   second word (`sub_800B704`) or first word (`sub_800B838`) as a type
   index into the 12-byte-stride `gStaticData_0816B304` table (a new
   table, distinct from the already-matched `gStaticData_087E3D14`/
-  `gStaticData_087E3E04`), and fire that table entry's trampoline via
+  `gPlayerVtable`), and fire that table entry's trampoline via
   `_call_via_r3` at `self + (int16 offset from self->0xc's part+0x30`
   or `part+0x28)` through the function pointer at `part+0x34` or
   `part+0x2c` - the same base+offset+fn-pointer convention as
-  `sub_800B3AC`/`sub_8009D5C`, just with an extra `tableEntry`
+  `DestroyPlayer`/`sub_8009D5C`, just with an extra `tableEntry`
   parameter (`_call_via_r3` takes 4 args where `_call_via_r2` took 3).
   Needed real register work: `rec = arr + index*8`'s pointer addition
   compiled to the wrong `ADDS Rd,Rn,Rm` operand order regardless of
@@ -4887,7 +4887,7 @@ convention and isn't tracked as a function to match. `asm/code_3_1.s`
 Matched 23 of the 25 functions in this chunk (issue #2 in the
 `decomp-chunk` generation), all operating on one shared `AudioContext`
 object (`*gAudioContext` in the ROM - an 8340-byte allocation from
-`sub_8022230`, see docs/rom_map.md's "Found the origin point" section)
+`InitLevelState`, see docs/rom_map.md's "Found the origin point" section)
 - new struct in `include/audio.h`, modeling the leading `0x58` bytes
 this cluster actually touches (fields for state/current-and-pending
 song, two independent fade-envelope pairs, an ambient-sfx `id`/
@@ -5182,7 +5182,7 @@ This chunk's 25 functions sit right at the head of `UpdateGameFrame`
 itself. Of the 26 checkbox entries, 20 matched byte-exact, 4 were
 parked (`NON_MATCHING`, semantics/field offsets confirmed, one specific
 register-allocation gap each), and 2 (`UpdateGameFrame` itself and
-`sub_8022D50`) were left fully raw.
+`StartTimeTrial`) were left fully raw.
 
 **Matched (`src/system/game_loop2.c`, 20 functions):**
 
@@ -5235,7 +5235,7 @@ register-allocation gap each), and 2 (`UpdateGameFrame` itself and
   doesn't need. Real bytes were in `asm/code_3_2_17_22ea8.s`, now
   removed (folded into `game_loop2.o`).
 
-- **`sub_8022FEC`/`sub_802306C`**: two near-identical "tick a frame
+- **`AddBrokenCrate`/`PressSwitchCrate`**: two near-identical "tick a frame
   counter, and when it reaches `self+0xbc`'s limit, either flag the
   level as done (`self->levelPtr->mode == 3`) or fire an out-of-time
   animation (`sub_801EB04(0xffff, self+0x1c0, self+0x1c4, 0)`" - both
@@ -5252,18 +5252,18 @@ register-allocation gap each), and 2 (`UpdateGameFrame` itself and
   1;`) is written *before* the limit comparison, letting the limit's
   address computation reuse `r4` instead of needing a 5th register.
 - **`self+0x80`/`0x84`/`0x88`/`0xac`/`0xc0`/`+2`-flags accessor family**
-  (`sub_8023104`-`sub_80231C4`, 18 trivial one-to-six-instruction
+  (`GetBonusPlatform`-`HasTurboRun`, 18 trivial one-to-six-instruction
   functions): plain get/set/OR/add/bit-test accessors on the same
   `self` object as the rest of this chunk. Two recurring idioms,
   confirmed matching this compiler's known behavior:
   - **Single-bit boolean tests** (`sub_8023158`'s `(flags & mask) !=
-    0`, and `sub_80231B4`/`BC`/`C4`'s "read bit N of `self+2`") compile
+    0`, and `HasTornadoSpin`/`BC`/`C4`'s "read bit N of `self+2`") compile
     branchless only when written as the `(-x | x) >> 31` idiom (for
     `!= 0`) or `(x << (31-N)) >> 31` (for a single bit), matching the
     already-established "this compiler doesn't choose the branchless
     form for a plain comparison" pattern from `sub_800A06C`.
-  - **OR-setters** (`sub_8023184`/`90`/`9C`/`80231A8`, and the `|= 2`
-    step inside `sub_8022FEC`/`sub_802306C` above) all need the mask
+  - **OR-setters** (`GiveTornadoSpin`/`90`/`9C`/`80231A8`, and the `|= 2`
+    step inside `AddBrokenCrate`/`PressSwitchCrate` above) all need the mask
     built into `r1` *before* the byte is loaded into `r2` - a plain
     `*flags |= N;` always loads the byte first regardless of statement
     order, so each needed explicit `register s32 mask asm("r1")`/
@@ -5272,8 +5272,8 @@ register-allocation gap each), and 2 (`UpdateGameFrame` itself and
     isolated per-function compiles for the OR-setters "looked" right at
     a glance (same 4 mnemonics, same operands) and the load/mask swap
     was missed until the real rebuild's byte-diff pinpointed it at
-    `sub_8023184`'s exact address.
-  - **`sub_8023168`** (clears bits `0x10`/`0x40`/`0x20`, masks to
+    `GiveTornadoSpin`'s exact address.
+  - **`ClearPowers`** (clears bits `0x10`/`0x40`/`0x20`, masks to
     `0x7f`): the ROM builds each negative mask via `movs`+`rsbs` (never
     the `~N` constant this compiler folds straight to a positive
     8-bit `mov`) and, critically, keeps the *accumulator* in `r1` while
@@ -5284,17 +5284,17 @@ register-allocation gap each), and 2 (`UpdateGameFrame` itself and
 
 **Parked (`NON_MATCHING`, real bytes in `asm/code_3_2_17_22bf0.s`):**
 
-- **`sub_8022BF0`/`sub_8022CA0`** (`src/system/game_loop.c`): the
+- **`EndBonusRound`/`SetCheckpointAtPlayer`** (`src/system/game_loop.c`): the
   level-start/checkpoint-restore progress-total updater and its
   "refresh cached frame count / snapshot `self`'s first `0x68` bytes"
-  helper (called recursively by `sub_8022BF0` itself, and again from
+  helper (called recursively by `EndBonusRound` itself, and again from
   `UpdateGameFrame`). All field offsets/calls/arguments confirmed,
-  including `sub_8022BF0`'s `self+0x6c`-exceeds-99 carry-into-`+0x74`
+  including `EndBonusRound`'s `self+0x6c`-exceeds-99 carry-into-`+0x74`
   loop and the two `gEntityFlags`-bitmap `CpuSet` (BIOS
-  SWI) spans `sub_8022CA0` syncs. `sub_8022BF0` needs four field
+  SWI) spans `SetCheckpointAtPlayer` syncs. `EndBonusRound` needs four field
   addresses (`self+0x70`/`0x6c`/`0x74`/`0xbc`) live across several
   calls, and this compiler spills them into `r8`/`r9`/`sl` where the
-  ROM reuses just `r4`-`r7`; `sub_8022CA0` has two smaller gaps (the
+  ROM reuses just `r4`-`r7`; `SetCheckpointAtPlayer` has two smaller gaps (the
   `self+0xa9`-byte-to-`+0xd0` copy computing its destination from a
   persisted `self+0xa9` address instead of deriving `+0xd0` via `+0x27`
   off the same register right after a call, and the repeated
@@ -5310,8 +5310,8 @@ register-allocation gap each), and 2 (`UpdateGameFrame` itself and
   driver: a level-load state loop (calling `LoadLevelGraphics`,
   `sub_8035E14`, the map/progress-screen trigger `RunCredits`), a
   5-case jump table dispatching on the player's current state
-  (`sub_80231BC`/`80231A8`/`80231B4`/`80231C4`/`80231CC` gating,
-  `sub_8023190`/`8184`/`819C`/`80231A8` transitioning), and an
+  (`HasSuperBodySlam`/`80231A8`/`80231B4`/`80231C4`/`80231CC` gating,
+  `GiveSuperBodySlam`/`8184`/`819C`/`80231A8` transitioning), and an
   end-of-frame block juggling `gEntityFlags`/`030012B8`/
   `03001318`/`0300082C` plus several still-uncharacterized SP-relative
   locals (8 stack slots). `docs/rom_map.md` has extensive prior
@@ -5322,7 +5322,7 @@ register-allocation gap each), and 2 (`UpdateGameFrame` itself and
   *Later pass (big NAKED retry):* now real C under old_agbcc in
   `src/system/game_loop55.c`. See
   [docs/matching/big-naked-retry.md](matching/big-naked-retry.md).
-- **`sub_8022D50`** (`asm/code_3_2_17_22d50.s`, ROM `0x08022D50`-
+- **`StartTimeTrial`** (`asm/code_3_2_17_22d50.s`, ROM `0x08022D50`-
   `0x08022EA8`) - a level-start/reset routine: clears `self+0x8c`/
   `0x90`-`0xa0`, tears down two actor slots at `self+0x1bc`/`0x1c0` via
   `sub_80087C0`/`sub_80087B4`/`sub_800872C` when non-null, then walks
@@ -5337,10 +5337,10 @@ register-allocation gap each), and 2 (`UpdateGameFrame` itself and
 `code_3_2_17_225a0.s` (raw `UpdateGameFrame`), `code_3_2_17_22bf0.s`
 (raw twin for the two parked `game_loop.c` functions, `.if
 NON_MATCHING == 0`), `game_loop.o`, `code_3_2_17_22d50.s` (raw
-`sub_8022D50`), `game_loop2.o` (now covering `FreezeLevelClock`/
+`StartTimeTrial`), `game_loop2.o` (now covering `FreezeLevelClock`/
 `TickLevelClock` too - `code_3_2_17_22ea8.s`, their former raw twin, is
 removed), and finally `code_3_2_17_231cc.s` (the original file's
-unchanged remainder, from `sub_80231CC` on) - see `ldscript.txt` and
+unchanged remainder, from `HasDoubleJump` on) - see `ldscript.txt` and
 `tools/report_units.py`'s `game_loop` category, both updated to match.
 Verified via a full clean `make compare` (`La suma coincide`) and
 `make NON_MATCHING=1 report`.
@@ -6282,8 +6282,8 @@ that table), and worked them through the real matching loop.
 **Semantics** (all four, differing only in the bit tested/sound ids/tag
 value): tests one bit of `gLevelState+2` (bit 0/1/2/3
 respectively). If set, plays a sound only via `sub_801A878` +
-`sub_80234E8` - the sound id is `0xB`/`3`/`0xA`/`9` normally, or the
-shared fallback `0xC` if either `sub_8023278(gLevelState)` is
+`SetGemPlatform` - the sound id is `0xB`/`3`/`0xA`/`9` normally, or the
+shared fallback `0xC` if either `IsGemPathDone(gLevelState)` is
 true or `gLevelState+0x8c` is nonzero. If clear, spawns a full
 visual effect instead: allocates a part-object via `sub_8008434`,
 points its `+0x20` table pointer at `gSpriteBankTable`'s own first
@@ -6309,8 +6309,8 @@ they're genuinely correct, not guesses:
   it `u16` (matching its siblings) makes gcc truncate it once at entry
   instead, a real structural mismatch, not just a register-numbering one.
 - The functions have to be `void`, not `s32`, even though the ROM's
-  `sub_801A878`/`sub_80234E8` results flow through `r0`. Writing `return
-  sub_80234E8(...)` makes the result "live" for the epilogue's final
+  `sub_801A878`/`SetGemPlatform` results flow through `r0`. Writing `return
+  SetGemPlatform(...)` makes the result "live" for the epilogue's final
   `pop {reg}; bx reg` trick, which then avoids `r0` and uses `r1` -
   the ROM's epilogue uses `r0`, meaning the original source discards
   that return value (an untyped/void call as the last statement),
@@ -6350,10 +6350,10 @@ resisted every further technique tried this pass:
    which just broke register allocation elsewhere in the function -
    `bit`'s own natural register collided with a pin on `arg2`) changed
    gcc's pick.
-2. The `gLevelState+2` bit-test/`sub_8023278` call at function
+2. The `gLevelState+2` bit-test/`IsGemPathDone` call at function
    entry: the ROM computes the global's address once into `sb`/`r9`,
    dereferences straight into `r0`, and reuses that exact `r0` for the
-   `sub_8023278` argument with no intervening move. Every shape tried
+   `IsGemPathDone` argument with no intervening move. Every shape tried
    here (bare global reference, a local `void *`/`u8 *` alias, an
    explicit `r9`/`r0` register pin) instead either routes the value
    through `r1` (adding a spurious `adds r0,r1,#0` before the call) or,

@@ -117,7 +117,7 @@ idiom on some object `X`: `X->0xC |= 1`; if `X->8` (a `u16`, `0xFFFF` =
 object's collision/proximity bucket active" - `gEntityFlags` is
 the same bitmap several other matched functions in this ROM region
 already tie to the hardware window-register system
-(`sub_8022BF0`/`sub_8022CA0`, `docs/rom_map.md`).
+(`EndBonusRound`/`SetCheckpointAtPlayer`, `docs/rom_map.md`).
 
 ## `sub_800B8DC`: the 18-case dispatch map
 
@@ -151,7 +151,7 @@ those.
 | 15 | `0x0800BD20` -> falls into state 10's own code | `sub_800C074(self)`; `sub_800C1E8(self)` |
 | 16 | `0x0800BD2E` | `sub_800C40C(self)`; `sub_800BFA8(self)` |
 | 17 | `0x0800B948` | **Inline, largest block (~200 B).** A "landing/hit" handler: if `owner->4 >= self->0x64`, either nudges via `sub_800C8AC(self,0)`, falls back to `sub_800C5D4(self)`, or - when `owner->0x60 < 0` and a collision probe via `_call_via_r1(owner + hitboxOffsetY, hitbox->0x2C)` reports no hit - applies a **fixed upward Q8.8 impulse**: `owner->0 = self->0x60`, `owner->4 = self->0x64 - 25600` (i.e. `self->0x64 - 100.0` in Q8.8 - a jump-impulse shape), then sets `owner`'s `0x64`/`0x54`/`0x5C` to `0x80` and `0x58` to the probe result, plus `owner->0xC` bit 4. Every path then falls into a **shared tail** (`0x0800B9D2`-`0x0800BA0C`, exclusive to this state): if `owner->0x30` or `owner->0x34` is non-zero, return; otherwise run a second `_call_via_r1` probe on the same hitbox and, if it reports a hit, `PlaySfx(ctx, 0x13, 0x100)`. |
-| 18 | `0x0800BAB2` | **Inline, 2nd-largest block (~400 B).** Computes `max(|ownerX - cameraX|, |ownerY - cameraY|)` against `gUnknown_030012D8` (the player/camera pointer), clamps to `[0x20, 0xA0]`, and derives a volume (`0x100 - (clamped-0x20)*2`) for a **distance-scaled ambient sound**: `PlayAmbientSfx(ctx, 0x2B, 8, volume)`. If `owner->0x38` and `self->0x68 == 3`: spawns/updates a floating popup object via `sub_800C9C8(0x1D, 0, 0, 0x2B, 0, owner)` into `self->0x88`, tags it, and `PlaySfx(ctx, 0x12, 0x100)`. Else if `owner->0x38` and `self->0x68 == 5`: runs the "flag active + bitmap-set" idiom on `self->0x88`'s object (if set) then clears `self->0x88`. Always calls `sub_800C074(self)`+`sub_800C40C(self)`. Then, on `self->0x68 == 1` or `== 6`, sets `owner->0x28`'s mirror-flag bit from `owner`'s own X-sign-flag test and calls a `sub_800C8CC`/`sub_800C8BC` pair (state 6's variant additionally re-derives `owner->0x30` from a keyframe-record byte). Tail: if `self->0x88` is non-null, copies `owner->0` into it. Reads overall as a **"proximity growl/warning + optional floating hint text"** state. |
+| 18 | `0x0800BAB2` | **Inline, 2nd-largest block (~400 B).** Computes `max(|ownerX - cameraX|, |ownerY - cameraY|)` against `gPlayer` (the player/camera pointer), clamps to `[0x20, 0xA0]`, and derives a volume (`0x100 - (clamped-0x20)*2`) for a **distance-scaled ambient sound**: `PlayAmbientSfx(ctx, 0x2B, 8, volume)`. If `owner->0x38` and `self->0x68 == 3`: spawns/updates a floating popup object via `sub_800C9C8(0x1D, 0, 0, 0x2B, 0, owner)` into `self->0x88`, tags it, and `PlaySfx(ctx, 0x12, 0x100)`. Else if `owner->0x38` and `self->0x68 == 5`: runs the "flag active + bitmap-set" idiom on `self->0x88`'s object (if set) then clears `self->0x88`. Always calls `sub_800C074(self)`+`sub_800C40C(self)`. Then, on `self->0x68 == 1` or `== 6`, sets `owner->0x28`'s mirror-flag bit from `owner`'s own X-sign-flag test and calls a `sub_800C8CC`/`sub_800C8BC` pair (state 6's variant additionally re-derives `owner->0x30` from a keyframe-record byte). Tail: if `self->0x88` is non-null, copies `owner->0` into it. Reads overall as a **"proximity growl/warning + optional floating hint text"** state. |
 
 **No-op states worth flagging for the next phase**: states 1 and 12
 both compile to literally nothing (they share the exact same jump-table
@@ -181,7 +181,7 @@ and this one ignores). `state` (`r2`/`arg2`, **not** the same field as
 independent jump table.
 
 **Unconditional prelude** (runs before the switch, every call): if
-`gUnknown_030012D8`'s own object's `+0x88` byte `== 1`, runs the "flag
+`gPlayer`'s own object's `+0x88` byte `== 1`, runs the "flag
 active + bitmap-set" idiom on `owner` (`self+0x70`). Otherwise, if
 `self+0x88`'s own pointer is non-null, runs the *same* idiom on
 *that* object instead. This is a **generic per-call housekeeping step**,
@@ -214,7 +214,7 @@ pointer is still live in `r0`), stores the result into `owner->0x44`,
 then reads that new child's own `+0xC`-pointed record's `+0x18`/`+0x1C`
 pair and calls `_call_via_r2` with it (the directional-target-table
 trigger convention again). Clears `owner->0xC` bit 7. Compares
-`owner->0` against `gUnknown_030012D8`'s own X position and picks one
+`owner->0` against `gPlayer`'s own X position and picks one
 of two **opposite-signed** velocity-target constant sets for
 `owner->0x60`/`0x48`/`0x4C`/`0x50` (`+0x1000`/`0`/`+0x1800` vs.
 `-0x1000`/`0`/`-0x800`) - reads as **launching the child away from the
@@ -260,7 +260,7 @@ All `(self, ...)`-shaped, still fully raw in `asm/code_3_2_17_bfa8.s`:
   rest of this cluster's semantics at once.
 - **`sub_800C18C`/`sub_800C1E8`** - X-axis/Y-axis "homing velocity-
   target setter" pair, already characterized in full above (reads
-  `self+0x10`-`0x1C` bounds, `gUnknown_030012D8`'s position, writes
+  `self+0x10`-`0x1C` bounds, `gPlayer`'s position, writes
   `owner`'s `0x48`-`0x5C` triples).
 - **`sub_800C314`**, **`sub_800C940`**, **`sub_800C97C`**,
   **`sub_800C8F8`**, **`sub_800BFA8`** - not traced beyond their own
@@ -582,7 +582,7 @@ neighborhood.
   6-case dispatcher (modes 0, 3, 4, 5; 1/2/anything-else a no-op). Modes
   0/4 share an "impact distance" gate via `__modsi3` (the
   divide/modulo-style "close enough" scalar primitive) against a
-  `gUnknown_0300082C`-relative table indexed by `self->0x30`/`0x34`/
+  `gRoomFrameCount`-relative table indexed by `self->0x30`/`0x34`/
   `0x38`, then consult `self->0x84`'s pointed record (`+0xc` for mode 0,
   `+0x14` for mode 4) against the constant `8` to pick between two
   `sub_800C8CC` trigger constants; mode 0 also clears `owner->0xd` bit 3
@@ -616,7 +616,7 @@ neighborhood.
   *some* field roles per the Phase 1 doc's table, are not literally
   identical-layout instances at every offset) - mirrors it per
   `owner->0x28` bit 4, and tests it against the player
-  (`gUnknown_030012D8`) via `sub_800B37C`. On overlap: triggers
+  (`gPlayer`) via `sub_800B37C`. On overlap: triggers
   `sub_800C8CC(self,2)` and, only when `self->0x6c==0xb`, seeds
   `owner`'s `0x48`-`0x64` velocity-target fields with a fixed knockback
   impulse (`0x300`/`0x20`/`0`/`-0x200` pattern - same family as
@@ -767,7 +767,7 @@ tempted to re-attempt them:
   an earlier unrelated computation (`self->0x80 & 1`'s leftover
   literal `1`) instead of the ROM's fresh literal load for the mask.
 - **`sub_800C8F8`/`sub_800C940`/`sub_800C97C`** (the sine-wave
-  oscillator family, `gStaticData_0816A820` + `gUnknown_0300082C`):
+  oscillator family, `gStaticData_0816A820` + `gRoomFrameCount`):
   fully traced semantically (see `actor_part116.c`'s own doc comment
   for the per-function field/phase-derivation breakdown), and an
   isolated attempt got every field access and the table lookup itself
@@ -873,7 +873,7 @@ only covering `sub_800BFA8`), matched entries for `actor_part114.o`/
 
 `sub_800C18C`/`sub_800C1E8` (the X/Y "homing velocity-target setter"
 pair, already fully traced in the Phase 1 doc's own field notes - "self
-+0x10-0x1c bounds, gUnknown_030012D8's position, writes owner's
++0x10-0x1c bounds, gPlayer's position, writes owner's
 0x48-0x5c triples", flagged there as "notably simpler register pressure"
 than the dispatchers) remain the single best next target - both are
 called directly from several of `sub_800B8DC`'s own states (10, 11, 15)
@@ -1146,7 +1146,7 @@ this doc.
   independently gated: once when a `_call_via_r1(other + offset, fn)`
   hit-probe - reading its `{s16 offset, void *fn}` pair from
   `other->table+0x28`/`+0x2c`, the exact shape
-  `src/system/game_loop8.c`'s `sub_802400C` already matches as real C -
+  `src/system/game_loop8.c`'s `UpdateRoomFrame` already matches as real C -
   reports *no* hit; once when `other->0xc` bit 3 is already set; and
   once when `other->0x38` is nonzero. `other` shares `struct actor`'s
   leading header layout (id @8, flags @0xc, table @0x18) but is read at
@@ -1245,11 +1245,11 @@ not yet examined." It's called exactly once, from `sub_800B8DC` state
 
 A small `self+0x68`-keyed dispatcher, gated by a `__modsi3` "close
 enough" scalar check - the same primitive `sub_800C40C`'s own case 3/4
-use, but here against `gUnknown_0300082C` read as a **plain word**
-(`__modsi3(gUnknown_0300082C + self->0x48 - self->0x4c,
+use, but here against `gRoomFrameCount` read as a **plain word**
+(`__modsi3(gRoomFrameCount + self->0x48 - self->0x4c,
 self->0x48)`), not the table-base-pointer role `sub_800C40C` uses that
 same still-unexplained global in. This is a fourth confirmed
-"multi-shaped" site for `gUnknown_0300082C` (joining the "plain word"
+"multi-shaped" site for `gRoomFrameCount` (joining the "plain word"
 sites `sub_8016C94`/`sub_801B624` and the "table base pointer" site
 `sub_800C40C` already flagged in `docs/rom_map.md`).
 
@@ -1292,12 +1292,12 @@ project's `docs/matching.md`):
    (`push {r4, lr}` only). Pinning eliminated the duplicate register
    and its push/pop entirely.
 2. **Statement-order hoist for two independent loads.** The prelude's
-   `gUnknown_0300082C` global read and `self->0x48` field read have no
+   `gRoomFrameCount` global read and `self->0x48` field read have no
    data dependency on each other (only their *sum* does), so gcc 2.9's
    scheduler was free to reorder them - and did, emitting
    `self->0x48`'s load first even though the C source computed it
    second. Simply computing the global read into its own named local
-   (`s32 base = (s32)gUnknown_0300082C;`) as the *first* statement,
+   (`s32 base = (s32)gRoomFrameCount;`) as the *first* statement,
    ahead of `s32 field48 = *(s32 *)(self + 0x48);`, was enough to make
    the scheduler honor that order - no inline-asm anchor needed here
    (contrast with [[matching_decomp_register_pinning]] technique 6,
@@ -1306,7 +1306,7 @@ project's `docs/matching.md`):
 Confirmed byte-identical to `baserom.gba`'s own raw bytes at
 `0x0800BFA8`-`0x0800C074` via the isolated cpp/agbcc/as +
 objcopy/cmp pipeline (26 differing bytes total, all at the 5 `bl`
-relocation sites and the `gUnknown_0300082C` literal-pool word - the
+relocation sites and the `gRoomFrameCount` literal-pool word - the
 same expected relocation-only gap documented throughout this cluster)
 plus a full clean `rm -rf build && make NON_MATCHING=1 report` (no
 warnings) and `rm -rf build crashbandicootxs.elf crashbandicootxs.gba
@@ -1347,7 +1347,7 @@ idiom already matched elsewhere in this cluster:
 - **`sub_800CA08(x, y)`**: the exact "distance-scaled ambient sound
   volume" calculation `sub_800B8DC` state 18 (`actor_part112.c`)
   already documents inline - `max(|x-cameraX|, |y-cameraY|)` against
-  `gUnknown_030012D8` (the player/camera object), clamped to
+  `gPlayer` (the player/camera object), clamped to
   `[0x20,0xa0]`, converted to `0x100 - (clamped-0x20)*2`. Whether this
   is literally the function that inline block compiles from, or an
   independently-written sibling with identical logic, isn't resolved
@@ -1391,7 +1391,7 @@ idiom already matched elsewhere in this cluster:
   larger-range state/anim-id byte" the Phase 1 doc's field table
   already names.
 - **`sub_800CACC(self)`**: if `self`'s own X position is within
-  `[0xa1,0x18f]` tiles of `gUnknown_030012D8`'s (the player/camera)
+  `[0xa1,0x18f]` tiles of `gPlayer`'s (the player/camera)
   own X position, runs the same `__modsi3` "close enough" gate
   `sub_800BFA8` already uses (here against `self->0x20`/`self->0x24`,
   the AABB corners `sub_800CAAC` sets), and on a pass fires
@@ -1417,7 +1417,7 @@ idiom already matched elsewhere in this cluster:
   read - only `other` matters. Reads `other+0x18`'s own table pointer,
   fires a `_call_via_r1` hit-probe against its `+0x28`/`+0x2c`
   `{s16 offset, void *fn}` pair (the same convention
-  `src/system/game_loop8.c`'s `sub_802400C` and `actor_part123.c`'s
+  `src/system/game_loop8.c`'s `UpdateRoomFrame` and `actor_part123.c`'s
   `sub_800CBF4` both already read from their own `table+0x28`/`+0x2c`),
   and - only when that probe reports *no* hit - runs the "flag active +
   bitmap-set" idiom on `other` (`other+0xc` bit 0; unless `other+8`'s

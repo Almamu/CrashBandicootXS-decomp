@@ -171,7 +171,7 @@ typedef void (*hop_fn3)(void *self, s32 a, s32 b, s32 c);
 extern void *gAudioContext;
 extern void *gLevelState;
 extern u8 ***gUnknown_030012D0;
-extern struct hop_player *gUnknown_030012D8;
+extern struct hop_player *gPlayer;
 extern struct hop_list *gUnknown_030012EC;
 extern void *gUnknown_030012F0;
 extern struct hop_level *gLevelLayers;
@@ -185,8 +185,8 @@ extern struct hop_vobj *sub_80188D0(void *mem);
 extern struct hop_box sub_8007C30(void *obj);
 extern struct hop_box sub_8007CF8(void *obj);
 extern u8 sub_8001688(struct hop_box *a, struct hop_box *b);
-extern u8 sub_80231B4(void *self);
-extern void sub_80241A4(void);
+extern u8 HasTornadoSpin(void *self);
+extern void RequestRoomExit(void);
 extern void sub_8018978(struct hopper *self, struct hop_part *part);
 extern void nullsub_19(struct hopper *self, struct hop_part *part);
 extern void sub_8021DFC(u32 arg0, u16 x, u16 y, u16 arg3);
@@ -256,24 +256,24 @@ void sub_8018008(struct hopper *self, struct hop_part *part)
 
     if (self->state == 8)
     {
-        a = sub_8007C30(gUnknown_030012D8);
+        a = sub_8007C30(gPlayer);
         b = sub_8007CF8(part);
         if (a.w != 0 && BOX_VALID(b) && sub_8001688(&b, &a)
-            && gUnknown_030012D8->unk_0A == 0x13)
+            && gPlayer->unk_0A == 0x13)
             sub_8018400(self, part, 9);
     }
-    else if (gUnknown_030012D8->busy == 0)
+    else if (gPlayer->busy == 0)
     {
-        a = sub_8007CF8(gUnknown_030012D8);
+        a = sub_8007CF8(gPlayer);
         if (a.w == 0)
         {
-            b = sub_8007C30(gUnknown_030012D8);
+            b = sub_8007C30(gPlayer);
             a = b;
         }
         b = sub_8007C30(part);
         if (BOX_VALID(b) && a.w != 0 && sub_8001688(&b, &a))
         {
-            struct hop_player *pl = gUnknown_030012D8;
+            struct hop_player *pl = gPlayer;
             struct hop_method *m = &pl->vt->m68;
             void *t = (u8 *)pl + m->thisOffset;
             ((hop_fn3)m->fn)(t, 0, 1, 0);
@@ -314,8 +314,8 @@ void sub_8018008(struct hopper *self, struct hop_part *part)
         PlaySfx(gAudioContext, 0x2A, 0x100);
         if (self->state == 15)
         {
-            if (sub_80231B4(gLevelState))
-                sub_80241A4();
+            if (HasTornadoSpin(gLevelState))
+                RequestRoomExit();
             sub_8018400(self, part, 16);
         }
         else if (self->state == 1)
@@ -525,7 +525,7 @@ void sub_8018400(struct hopper *self, struct hop_part *part, s32 next)
         s32 x = anchor->x;
         s32 y = anchor->y - 0x1800;
 
-        if (!sub_80231B4(gLevelState))
+        if (!HasTornadoSpin(gLevelState))
             sub_8021DFC(0xFFFF, x >> 8, y >> 8, 0);
         break;
     }
@@ -561,8 +561,8 @@ s32 sub_801865C(struct hopper *self)
     for (i = 0; i < gUnknown_030012EC->count; i++)
     {
         struct hop_part *anchor = gUnknown_030012EC->items[i];
-        s32 px = gUnknown_030012D8->x;
-        s32 py = gUnknown_030012D8->y;
+        s32 px = gPlayer->x;
+        s32 py = gPlayer->y;
         s32 ax = anchor->x;
         s32 ay = anchor->y;
         s32 d = Abs(ax - px) + Abs(ay - py);
@@ -624,7 +624,7 @@ void sub_80186F0(struct hopper *self, struct hop_part *part, s32 n)
         s32 x0 = part->x;
         s32 y;
 
-        x = x0 + (gUnknown_030012D8->x - x0) * (n - 1) / 3;
+        x = x0 + (gPlayer->x - x0) * (n - 1) / 3;
         y = gLevelLayers->layer0->unk_04 << 8;
         p->x = x;
         p->y = y;

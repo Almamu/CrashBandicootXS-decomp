@@ -57,7 +57,7 @@ family. Filed under `src/graphics/` on disk, tracked as its own
   [issue-65-graphics-loading.md](../matching/issue-65-graphics-loading.md)'s
   "Third pass".
 - **`sub_8021BFC`**-**`sub_8021D04`** (`src/graphics/graphics_loading_21bfc.c`)
-  - the `sub_800FF0C` entity-constructor trampoline family, types `0`-`7`,
+  - the `CreateCrate` entity-constructor trampoline family, types `0`-`7`,
   all matched (`sub_8021D04`, type `0`, closed via register-pinning the
   table-resolution chain to the ROM's own registers) - see
   [issue-33-0x08021bfc-graphics-loading.md](../matching/issue-33-0x08021bfc-graphics-loading.md).
@@ -87,7 +87,7 @@ family. Filed under `src/graphics/` on disk, tracked as its own
 - **`sub_8022354`** (UNUSED), **`PlayCutscene`**
   (`src/graphics/graphics_loading_22354.c`) - the gap between issues #33
   and #34 (no issue of its own): the game context's never-called
-  destructor (tears down every singleton `sub_8022230` builds) and the
+  destructor (tears down every singleton `InitLevelState` builds) and the
   per-level text-list pager with its palette blank/BG2-affine reset.
   Real C, current agbcc (both compilers match). Retires
   `asm/code_3_2_17_22354.s`. See
@@ -112,10 +112,10 @@ family. Filed under `src/graphics/` on disk, tracked as its own
   **`sub_8021F70`**, **`sub_802200C`**, **`sub_80220C4`**, **`sub_802209C`**,
   **`sub_8022158`**, **`nullsub_22`**, **`sub_802218C`**, **`sub_80221A4`**,
   **`sub_80221BC`**, **`sub_80221D4`**, **`nullsub_23`**, **`DestroyEntitySpawner`**,
-  **`CreateEntitySpawner`**, **`sub_8022230`** (`src/graphics/graphics_loading_21d80.c`)
+  **`CreateEntitySpawner`**, **`InitLevelState`** (`src/graphics/graphics_loading_21d80.c`)
   - the `gSpriteBankTable` record-indexed OAM-trio spawner family, the
-  `sub_801E990` trampolines, the `gUnknown_030012D8` position writers, the
-  `{table_base, count}` descriptor pair, and `sub_8022230` itself - the
+  `sub_801E990` trampolines, the `gPlayer` position writers, the
+  `{table_base, count}` descriptor pair, and `InitLevelState` itself - the
   "origin point" that constructs nearly every hot IWRAM global this ROM
   region references. See
   [issue-33-0x08021bfc-graphics-loading.md](../matching/issue-33-0x08021bfc-graphics-loading.md).
@@ -125,7 +125,7 @@ family. Filed under `src/graphics/` on disk, tracked as its own
   (issue #30). Was a NAKED transcription for a long time (see "Parked"
   below for the general convention); the residual context-sensitive
   register-choice gap in the `+0x28` write closed by modeling the
-  r3-pinned local as the *address of* `gUnknown_030012D8`
+  r3-pinned local as the *address of* `gPlayer`
   (`struct actor **`) rather than its dereferenced value, so gcc
   dereferences directly into the same register the `+0x28` add needs,
   with no extra `mov` - see

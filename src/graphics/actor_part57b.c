@@ -21,7 +21,7 @@
 /* Player-velocity-relative "record" writer: computes a Q14-ish rounded
  * `((player->speedY^2 / 0x4000) + 4) * 3 / 2` timing value, then compares
  * `|player->speedY|` against `|arg2|` to decide whether the current
- * `gUnknown_030012D8` record (`velB`, +0x54/+0x58/+0x5c) gets the computed
+ * `gPlayer` record (`velB`, +0x54/+0x58/+0x5c) gets the computed
  * value or a product-sign-selected combination of `arg1`/the computed
  * value. */
 void sub_8015FDC(s32 arg0, s32 arg1arg, s32 arg2arg)
@@ -29,7 +29,7 @@ void sub_8015FDC(s32 arg0, s32 arg1arg, s32 arg2arg)
     register s32 self asm("r6") = arg0;
     register s32 arg1 asm("ip") = arg1arg;
     register s32 arg2 asm("r5") = arg2arg;
-    register struct gobj *player asm("r3") = gUnknown_030012D8;
+    register struct gobj *player asm("r3") = gPlayer;
     register s32 vel asm("r4") = player->speedY;
     register s32 sq asm("r1") = vel;
     s32 result;

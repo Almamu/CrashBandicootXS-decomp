@@ -42,7 +42,7 @@ entity's own behavior.
   `sub_801AB98`), then dispatches a 6-case jump table to per-edge
   handlers (`sub_800F2BC`, `sub_800F368`, `sub_800E7A8`, `sub_800EEF0`,
   `sub_800E6B0`, and a 6th case). Along the way it maintains a 5-slot
-  "recently touched" object ring buffer *inside* `gUnknown_030012D8`
+  "recently touched" object ring buffer *inside* `gPlayer`
   itself (`+0x94` counter, `+0x98`+ array), reads the
   `gStaticData_0816BC98` 22-row/28-byte-stride per-state table, and
   ends by handing an ~8-argument packed position/rect off to
@@ -70,7 +70,7 @@ entity's own behavior.
   through `sub_800F990` are the rest of `sub_0800D18C`'s jump-table
   targets and their own further sub-dispatches - moderately-sized
   (80-750 B) state-machine functions, each reading/writing several of
-  the same `self+0x4d`/`+0x4e`/`+0x50`/`+0x64`/`+0x74`/`gUnknown_030012D8`
+  the same `self+0x4d`/`+0x4e`/`+0x50`/`+0x64`/`+0x74`/`gPlayer`
   fields `sub_0800D18C` and `sub_800D040` already touch, calling
   `PlaySfx`, `_call_via_r4` (one of the `bx rN` BLX-emulation
   trampolines - see `docs/rom_map.md`'s trampoline-table correction),
@@ -93,7 +93,7 @@ byte-identical output from `tools/agbcc`.
   instructions... which anonymous scratch register" gaps); doing it
   twice compounds rather than cancels the problem. Concretely: the ROM
   keeps exactly two extra callee-saved registers live across both
-  builds (`r8` and `sb`, the latter caching `&gUnknown_030012D8` so the
+  builds (`r8` and `sb`, the latter caching `&gPlayer` so the
   player pointer survives the `SetAabbPos`/`SetAabbSize` calls'
   clobber), reusing `r7`/`r8` for the X/Y "shift" values across *both*
   blocks. Every variant tried here (explicit `xShift`/`yShift` locals
@@ -130,7 +130,7 @@ byte-identical output from `tools/agbcc`.
   already flagged there as needing "a dedicated pass" of its own,
   larger in scope than this single chunk issue.
 - **`sub_800E560`, `sub_800E620`, `sub_800E6B0`, `sub_800E7A8`,
-  `sub_800E888`, `sub_800EAFC`, `sub_800ED08`, `sub_800EDBC`,
+  `BreakCrate`, `sub_800EAFC`, `sub_800ED08`, `sub_800EDBC`,
   `sub_800EEF0`, `sub_800F06C`, `sub_800F1B8`, `sub_800F258`,
   `sub_800F2BC`, `sub_800F368`, `sub_800F4F4`, `sub_800F5B8`,
   `sub_800F6B8`, `sub_800F798`, `sub_800F8E0`, `sub_800F990`**
@@ -282,10 +282,10 @@ three):
      **`sub_800F368(self)`**; otherwise no call.
    - **Case 1** (`0800D46C`): identical target to case 0 (shared code).
    - **Case 2** (`0800D48A`): no callee - just sets `self+0x4d` bit
-     `0x80` and `gUnknown_030012D8+0x80 = 1`.
+     `0x80` and `gPlayer+0x80 = 1`.
    - **Case 3** (`0800D4A8`): the most complex case - calls
      **`sub_800E7A8(self, 0, 0, 0)`**, then (unless
-     `gUnknown_030012D8+0x94 != 0`) rebuilds `self`'s hitbox pointer,
+     `gPlayer+0x94 != 0`) rebuilds `self`'s hitbox pointer,
      and if the dispatch id (`sp+0x78`) isn't 3, calls
      **`sub_800CEAC`** (already matched, `game_loop42.c`) to test a
      player-sized box at that spot; on overlap, walks to the "prev"
@@ -299,7 +299,7 @@ three):
    - **Case 5** (`0800D6A2`): calls **`sub_800E6B0(self)`**.
    All six cases converge on a shared tail (`0800D6AC`) that adjusts
    the dispatch id (`sp+0x78`) for two special cases (id 5 + a
-   `gUnknown_030012D8+0x24==4` gate rewrites to id 2; id 3 rewrites to
+   `gPlayer+0x24==4` gate rewrites to id 2; id 3 rewrites to
    id 1), then - unless `self+0x58` was set and `self+0x44` is 0 (early
    return) - calls **`sub_800E4E4(self, &localAABB)`** (already
    NAKED-matched, `game_loop7.c`) when the id isn't 6, before falling
@@ -326,12 +326,12 @@ three):
    - **Case 8** (`0800DE14`): calls **`sub_8010914`** (already matched,
      `game_loop30.c`) to reselect `self`, similarly re-reads its
      `gStaticData_0816BC98` row, optionally resets
-     `gUnknown_030012D8`'s `+0x64`/`+0x54`/`+0x58`/`+0x5c` fields, and
+     `gPlayer`'s `+0x64`/`+0x54`/`+0x58`/`+0x5c` fields, and
      calls **`sub_8007398`** (already matched, `graphics.c` - applies
      the computed position offset).
    All paths converge on the shared tail at `0800E00C`, which
    conditionally calls **`sub_800E620`** (already-matched-elsewhere
-   leaf; gated on `gUnknown_030012D8+0x88==1`, `self+0x4e==0xe`, and a
+   leaf; gated on `gPlayer+0x88==1`, `self+0x4e==0xe`, and a
    re-overlap test), then **`sub_8007398`** (apply the final offset)
    and, if a sound/effect id was set, **`_call_via_r4`** again, then
    ends by calling **`sub_8010D54`** (already matched) with ~8 packed
@@ -342,7 +342,7 @@ three):
 `sub_800E08C(void *self, u32 arg1, u32 arg2, u32 arg3, u8 arg4, u8 arg5, u8 arg6)`
 runs a **single** 6-case jump table, ROM `0x0800E27C`, keyed by `r7`
 (itself derived from `arg1`/`arg2` plus a `gStaticData_0816BC98`-driven
-special-case rewrite for id 1, and a `gUnknown_030012D8+0x92`-gated
+special-case rewrite for id 1, and a `gPlayer+0x92`-gated
 rewrite to id 1 that also mutates `self+0x48`/state byte `+0x4e`):
 
 - **Case 0, 1** (`0800E294`): identical to `sub_0800D18C`'s own case
@@ -351,19 +351,19 @@ rewrite to id 1 that also mutates `self+0x48`/state byte `+0x4e`):
 - **Case 2** (`0800E342`): reads `self+0x4e`; `0xe` =>
   **`sub_800E620(self)`**, `0xc` => **`sub_800E560(self)`**, else no
   callee - just sets `self+0x4d` bit `0x80` and
-  `gUnknown_030012D8+0x80 = 1` (same as `sub_0800D18C`'s own case 2,
+  `gPlayer+0x80 = 1` (same as `sub_0800D18C`'s own case 2,
   `sub_800E620`/`sub_800E560` are new here).
 - **Case 3** (`0800E37C`): a multi-way gate on `arg1`/`self+0x44`/
   `arg2`/`arg3` that always ends in one **`sub_800E7A8(self, 0, ...)`**
   call with a different 3rd/4th argument per branch (`0`, `4`,
   `byte[sp]`+`arg3`, or `0`+`arg3`), optionally also recording `self`
-  into `gUnknown_030012D8`'s ring buffer and bumping its `+0x94`
+  into `gPlayer`'s ring buffer and bumping its `+0x94`
   counter.
 - **Case 4** (`0800E41C`): if `self+0x4d & 0x7f == 0`, calls
   **`sub_800EEF0(self, 1)`**.
 - **Case 5** (`0800E434`): calls **`sub_800E6B0(self)`**.
 - Shared tail (`0800E43C`): calls `sub_8007398` (apply the accumulated
-  offset, gated on `gUnknown_030012D8+0x1084`'s `+4` byte) and, if a
+  offset, gated on `gPlayer+0x1084`'s `+4` byte) and, if a
   sound/effect id was set (`sp+0x38`), `_call_via_r4`.
 
 This confirms `sub_0800D18C`'s and `sub_800E08C`'s per-edge dispatch
@@ -383,7 +383,7 @@ Of this issue's remaining 18-20-function tail
 (`sub_800E560`-`sub_800F990`), exactly **7 are direct callees** of the
 two now-matched dispatchers: `sub_800E560`, `sub_800E620`,
 `sub_800E6B0`, `sub_800E7A8`, `sub_800EEF0`, `sub_800F2BC`,
-`sub_800F368`. The other ~12 (`sub_800E888`, `sub_800EAFC`,
+`sub_800F368`. The other ~12 (`BreakCrate`, `sub_800EAFC`,
 `sub_800ED08`, `sub_800EDBC`, `sub_800F06C`, `sub_800F1B8`,
 `sub_800F258`, `sub_800F4F4`, `sub_800F5B8`, `sub_800F6B8`,
 `sub_800F798`, `sub_800F8E0`, `sub_800F990`) were not seen called from
@@ -414,11 +414,11 @@ sub-call graph is narrower than "each dispatcher owns one of the 7
 direct-callee groups" - `sub_800E560`/`sub_800E620`/`sub_800E6B0` call
 nothing else in this still-raw neighborhood (only already-matched
 siblings, `PlaySfx`, `rand`, or each other within the direct-target
-set), while `sub_800E7A8` calls `sub_800E888` (both times it needs a
+set), while `sub_800E7A8` calls `BreakCrate` (both times it needs a
 "dispatch id" leaf handler, cases 3/22 of `sub_800E7A8`'s own logic),
-and `sub_800E888` in turn calls `sub_800EDBC`, `sub_800EAFC`, and
+and `BreakCrate` in turn calls `sub_800EDBC`, `sub_800EAFC`, and
 `sub_800ED08` (the latter two also reachable directly from
-`sub_800E888`'s own 23-case jump table) - plus `sub_800EEF0`, left for
+`BreakCrate`'s own 23-case jump table) - plus `sub_800EEF0`, left for
 the sibling pass since it's out of this range. That's exactly 8
 functions, no more, no fewer, in this half.
 
@@ -430,7 +430,7 @@ functions, no more, no fewer, in this half.
   alongside it. While that countdown runs and `self+0x50` is zero,
   bumps `+0x51` each call; past 4 retries (or once `+0x48` itself
   expires), hands off to `sub_800E7A8(self, 0, 0, 0)`. Otherwise arms
-  `self+0x4d` bit `0x80`, `gUnknown_030012D8+0x80 = 1`, a fresh
+  `self+0x4d` bit `0x80`, `gPlayer+0x80 = 1`, a fresh
   `+0x4f = 6` sub-timer, and spawns a pair of `sub_8025CA4` particle
   effects (kind `0xe`) at `self`'s position, offset `-6`/`+3` pixels on
   Y/X.
@@ -451,18 +451,18 @@ functions, no more, no fewer, in this half.
   X), initializes its trajectory fields, switches `self` itself into
   hitbox tag `0x1b`, rebuilds its hitbox record, plays SFX `0x17`,
   notifies `sub_80259D4` unless `self+8` is the sentinel `0xffff`,
-  conditionally reactivates the viewport, tells `sub_8022CA0` whether
+  conditionally reactivates the viewport, tells `SetCheckpointAtPlayer` whether
   `self+0x50` is nonzero, and resets `self+0x4d` to `1`.
 - **`sub_800E7A8(self, edgeFlag, walkFlag, dir)`** - case-3 handler
-  (both dispatchers). Counts `self` into `gUnknown_030012D8+0x91`'s
+  (both dispatchers). Counts `self` into `gPlayer+0x91`'s
   "objects handled this frame" tally (gated on `walkFlag`), then walks
   `self`'s neighbor chain (`dir==4` "get prev", `dir==8` "get next")
   past every node whose `+0x4d & 0x7f` state is already `1`, stopping
   at the first node that isn't (or the last reachable node if the
   whole chain is state `1`; neither `dir` value falls back to `self`
   itself). Unless `gStaticData_0816BBDA[target+0x4e]` is nonzero,
-  dispatches to `sub_800E888(target, edgeFlag)`.
-- **`sub_800E888(self, edgeFlag)`** - `sub_800E7A8`'s shared tail.
+  dispatches to `BreakCrate(target, edgeFlag)`.
+- **`BreakCrate(self, edgeFlag)`** - `sub_800E7A8`'s shared tail.
   Early-outs if `self+0x4d & 0x7f == 1`. Otherwise registers `self`
   with the object-pool grid, resets `self+0x4d` to `0x81`, switches
   `self` into hitbox tag `0x1d` and rebuilds its record, re-derives its
@@ -477,7 +477,7 @@ functions, no more, no fewer, in this half.
   SFX-3-plus-particle-spawn fallback (`sub_8025CA4`) - the largest
   jump table in this subsystem after `sub_0800D18C`'s own three.
 - **`sub_800EAFC(self, walkFlag)`** - case-11 handler of
-  `sub_800E888`'s table (dispatch id `0xb`). Plays SFX 3, then (the
+  `BreakCrate`'s table (dispatch id `0xb`). Plays SFX 3, then (the
   first time `self+0x51` is exactly `9`) rolls a random "escalation
   level" (`1`/`4`/`7`/`8`) into that byte. Dispatches its own 10-case
   jump table on `(self+0x51 - 1)`: cases 5 down through 0 deliberately
@@ -487,14 +487,14 @@ functions, no more, no fewer, in this half.
   (`_call_via_r4`) plus SFX; case 7 spawns a `sub_8025A64` bonus object;
   case 9 spawns one final small puff.
 - **`sub_800ED08(self, walkFlag)`** - case-15 handler of
-  `sub_800E888`'s table (dispatch id `0xf`). Plays SFX 3, then
+  `BreakCrate`'s table (dispatch id `0xf`). Plays SFX 3, then
   switches on `self+0x48 & 7`: `1` plays SFX 3 again, notifies
   `sub_80259D4`, and spawns a `sub_8025A64` bonus object 3 pixels below
   `self`; `2` forwards to `sub_800EAFC`; `3` clears `self+0x4d` bit
   `0x80` and calls `sub_800EEF0(self, 1)`; any other value does
   nothing further.
 - **`sub_800EDBC(self, walkFlag)`** - neighbor "impact spread"
-  propagation, called once from `sub_800E888`'s own body (not through
+  propagation, called once from `BreakCrate`'s own body (not through
   its jump table). Derives a base spread budget from `self`'s hitbox
   record's own `+9` byte, then walks `self`'s "get next" neighbor chain
   redistributing that budget across each visited node's `+0x40`/`+0x44`
@@ -534,14 +534,14 @@ functions, no more, no fewer, in this half.
      source statement order), and materializes the `~0xf` clear-mask at
      runtime (`movs r1,#0x10; rsbs r1,r1,#0`, the negative-constant
      register-pinned mask idiom already established for
-     `sub_8010480`/game_loop35.c) rather than folding it into an 8-bit
+     `DrawCrate`/game_loop35.c) rather than folding it into an 8-bit
      AND immediate. Anchored as one inline-asm block covering the whole
      sequence, taking the freshly-extracted `lo` value as an in-out
      operand.
 - **The other 6 (`sub_800E560`/`sub_800E6B0`/`sub_800E7A8`/
-  `sub_800E888`/`sub_800EAFC`/`sub_800EDBC`) closed as NAKED
+  `BreakCrate`/`sub_800EAFC`/`sub_800EDBC`) closed as NAKED
   transcriptions**, the same escape hatch Phase 1's two dispatchers
-  used - jump-table density (`sub_800E888`'s 23 cases, `sub_800EAFC`'s
+  used - jump-table density (`BreakCrate`'s 23 cases, `sub_800EAFC`'s
   10, both with cascading-fallthrough or heavily-reused pool constants)
   and/or this subsystem's confirmed `r8`/`sb`/`sl`-triple-accumulator
   shape (`sub_800EDBC`, matching `sub_0800D18C`'s own AABB-build
@@ -639,7 +639,7 @@ too, not just the pool entry's own defining label - naively emitting the
 raw ROM label name there produces an undefined-symbol assembler error.
 A second near-miss: a naive `_[0-9A-F]{8}` regex for "is this operand a
 local label reference" also matches *inside* an unrelated global
-symbol's name (e.g. `gUnknown_030012D8` contains `_030012D8`, which
+symbol's name (e.g. `gPlayer` contains `_030012D8`, which
 satisfies the same 8-hex-digit pattern) - needs a
 `(?<![A-Za-z0-9_])...(?![0-9A-F])` boundary guard or it corrupts global
 symbol references in pool data.
@@ -661,7 +661,7 @@ check is the full clean `make compare`, which passed outright.
   directly by several siblings below (`arg1=0`) whenever their own
   overlap/state checks reach the same "commit an edge collision"
   outcome. Clears `self+0x4f`/`self+0x4d`'s low 7 bits, sets `self+0xc`
-  bit `0x10`, re-adds `self` to `gUnknown_0300130C`'s active list
+  bit `0x10`, re-adds `self` to `gCrateList`'s active list
   (`sub_8009150`), sets `self+0x4d` bit `0x80` then ORs in `arg1` as the
   low bit. Tags `self+0x2d` (`0x21`, or a `self+0x4e-0x21`-offset
   rewind when already `0xa`) via the `sub_80087C0`/`sub_80087B4`/
@@ -669,23 +669,23 @@ check is the full clean `make compare`, which passed outright.
   state-transition function in this cluster shares. Marks a cell in
   `gEntityFlags`'s 32x32 collision bitmap, plays a fixed sound
   (id 4), calls `sub_800EDBC(self)` (sibling pass's territory), and -
-  gated on a combo/proximity check against `gUnknown_0300082C`/
-  `gUnknown_030012D8+0x8c` - `_call_via_r4(self, 0, 4, 0)`. Forces
+  gated on a combo/proximity check against `gRoomFrameCount`/
+  `gPlayer+0x8c` - `_call_via_r4(self, 0, 4, 0)`. Forces
   `self+0x4e = 0x13` in the common case (see `sub_800F8E0` below).
 - **`sub_800F06C(self, u32 arg1)`** - called only by `sub_800F798`
   below (`arg1` = `0x14` or `0x28`, a proximity radius). Two
-  `gUnknown_0300130C` list-scan passes: settles every nearby object via
+  `gCrateList` list-scan passes: settles every nearby object via
   `gStaticData_0816BBC4`/`gStaticData_0816BBAE`-driven dispatch to
   `sub_800E7A8`/`sub_800F368`/`sub_800F2BC`/`sub_800EEF0`, then a second
   pass over `gUnknown_030012EC` calling `sub_8011448`. Resets
   `self+0x48` to the `-1` sentinel at the end.
 - **`sub_800F1B8(void)`** - no arguments. Calls `sub_800F258` first
   (flush pending case-`0xa` commits), then an up-to-twice
-  `gUnknown_0300130C` list scan removing/re-classifying objects via
+  `gCrateList` list scan removing/re-classifying objects via
   `sub_8009AA0`/`_call_via_r2`/`_call_via_r1`, driven by a
   `gUnknown_030012B0` one-shot re-scan flag.
 - **`sub_800F258(void)`** - no arguments. Settles every
-  `gUnknown_0300130C` object stuck at `+0x4e==0xa`/`+0x4d&0x7f==0` via
+  `gCrateList` object stuck at `+0x4e==0xa`/`+0x4d&0x7f==0` via
   `sub_800EEF0(other, 0)`. Called by both `sub_800F1B8` and
   `sub_800F2BC` as a "flush leftovers from last frame" first step.
 - **`sub_800F2BC(self)`** - per-edge dispatch id-row-`6` target (shared
@@ -696,7 +696,7 @@ check is the full clean `make compare`, which passed outright.
 - **`sub_800F368(self)`** - per-edge dispatch id-row-`3` target (sibling
   of `sub_800F2BC`, same case). Tags `self+0x2d=0x22`, same triplet +
   nibble update, marks the collision bitmap (`sub_8025A0C`), then scans
-  `gUnknown_0300130C` for up to 0x20 simultaneously-triggered
+  `gCrateList` for up to 0x20 simultaneously-triggered
   same-`+0x50`-group neighbors, allocating (`sub_8026EC0`) a linked
   group list at `self+0x48` when any are found (`-1` sentinel
   otherwise). Seeds `self+0x4f` from `self+0x4c`.
@@ -715,7 +715,7 @@ check is the full clean `make compare`, which passed outright.
 - **`sub_800F6B8(s32 x, s32 y, s32 arg2, s32 arg3)`** - the one function
   here taking a raw probe box instead of `self` (existing extern in
   `actor_part.c`: `sub_800F6B8(part->x>>8, part->y>>8, 0x40, 0x12)`).
-  Scans `gUnknown_0300130C` for objects within `(arg2,arg3)` of the box,
+  Scans `gCrateList` for objects within `(arg2,arg3)` of the box,
   dispatching via `gStaticData_0816BBC4`/`gStaticData_0816BBAE` to
   `sub_800E6B0`/`sub_800E7A8`/`sub_800EEF0` - the same "settle nearby
   objects" shape as `sub_800F06C`/`sub_800F798`, box-driven instead of
@@ -726,7 +726,7 @@ check is the full clean `make compare`, which passed outright.
   Dispatches to `sub_800F06C` per `self+0x30`/`gStaticData_0816BBC4`,
   unlinks `self` from its neighbor list when `self+0x38` is set
   (`sub_8010710`/`sub_8010714`), and marks/clears
-  `gUnknown_030012B0`/`gUnknown_030012D8+0x94`'s ring-buffer re-visit
+  `gUnknown_030012B0`/`gPlayer+0x94`'s ring-buffer re-visit
   bookkeeping.
 - **`sub_800F8E0(self)`** - the `0x13`/`0x14`/`0x15` "settle" family's
   own small state cycle, guarded by `self+0x4f`'s cooldown throttle.
@@ -812,7 +812,7 @@ compilers. The object layout is named in `include/phys_obj.h`
   where the ROM recomputes `add r0, sp, #16` at each use. Separate
   structs, an array, and a static inline accessor all gave the same
   result.
-- `sub_800E888`: every block is right, but `self`/`chained` land in
+- `BreakCrate`: every block is right, but `self`/`chained` land in
   r5/r8 instead of r4/r7 (~120 halfwords).
 - `sub_800EDBC`: register allocation, with `self` in r8 and the delta
   byte spilled to `[sp]` in the ROM.
@@ -854,7 +854,7 @@ remaining source-shape details.
 
 ### Later pass: issue #12/#13/#25 NAKED retry
 
-`sub_800E888` is real C under old_agbcc. The "r8/sb accumulators" were
+`BreakCrate` is real C under old_agbcc. The "r8/sb accumulators" were
 ordinary: `sb` is the CSE'd `&self->kind` and `r8` a local `one = 1`
 that the state store and the bitmap shift share. What mattered was
 switching the tag through the `PhysSetTag` inline, clamping the frame

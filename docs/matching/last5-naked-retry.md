@@ -72,7 +72,7 @@ the scratchpad). In order:
    wrong. `flags` is the commit's hit flag, as `hit = dirX` is in
    `sub_0800D18C`.
 7. **No `pp` pointer.** The ROM's `&pos` register is a gcse copy inserted
-   after the `&gUnknown_030012D8` copy at the end of the block. A `pp =
+   after the `&gPlayer` copy at the end of the block. A `pp =
    &pos` statement always puts its copy first. The fix is to write `pos`
    directly and do every later read or write of `pos.y` through
    `PosPtr(&pos)->y` (an identity inline). (-> 5 hw in the last step.)
@@ -83,7 +83,7 @@ the scratchpad). In order:
 9. **`u8 m = 8; q->unk_68 = m;`** (as `sub_0800D18C` writes the stand
    mode). It gives the ROM's `movs r1, #8` before the address and the
    `subs r0, #68` reuse of the `+0xAC` address. (-> 12.)
-10. **`y = gUnknown_030012D8->y; ... = y - ((oy - 1) << 8)`** and
+10. **`y = gPlayer->y; ... = y - ((oy - 1) << 8)`** and
     **`(oy << 8) + pos.y`** / **`(ox << 8) + pos.x`** operand order, as
     in `sub_0800D18C`.
 11. **r5 hold over the `result == 0` test** of the second classify block,

@@ -1,12 +1,12 @@
 # NAKED retry (size2): 2 of 3 closed
 
 This pass took three drafts whose size was nearly right:
-`sub_801AB98` (#25), `sub_800FF0C` (#13) and `LoadCreditsLogos` (#64).
+`sub_801AB98` (#25), `CreateCrate` (#13) and `LoadCreditsLogos` (#64).
 
 | Function | File | Start | Result |
 |---|---|---|---|
 | `LoadCreditsLogos` (#64) | `src/graphics/actor_part131.c` (already old_agbcc) | 114 hw, 420 vs 416 B | **Closed**, real C, old_agbcc |
-| `sub_800FF0C` (#13) | `src/system/game_loop36.c` | 471 hw, 1388 vs 1396 B | **Closed**, real C, old_agbcc (`game_loop36.o` joined `OLD_AGBCC_OBJS`; it is the only function in the file) |
+| `CreateCrate` (#13) | `src/system/game_loop36.c` | 471 hw, 1388 vs 1396 B | **Closed**, real C, old_agbcc (`game_loop36.o` joined `OLD_AGBCC_OBJS`; it is the only function in the file) |
 | `sub_801AB98` (#25) | `src/graphics/actor_part_1ab98.c` | 565 hw, 1640 vs 1648 B | Not closed, draft unchanged, note updated |
 
 ## LoadCreditsLogos: GCSE hashes non-volatile asm
@@ -40,7 +40,7 @@ palette index is now a copy `ps` of `slot` passed through
 **Technique worth reusing:** when PRE/GCSE hoists or merges an
 `asm("" : "+r")` escape, use `asm volatile`.
 
-## sub_800FF0C: the pointer copies come from an inline's return value
+## CreateCrate: the pointer copies come from an inline's return value
 
 The file was not on `OLD_AGBCC_OBJS`, but the draft only converges
 under old_agbcc. Under agbcc the final C is 1404 bytes and about 400
@@ -55,7 +55,7 @@ In order:
    `rec`, which gives the ROM's `add r2,r0,#0`. Re-reading the macro
    instead makes no difference, because cse merges the chains.
    273 hw, 1392 B.
-2. **`gUnknown_0300130C`.** The draft passed `*(void **)gUnknown_0300130C`,
+2. **`gCrateList`.** The draft passed `*(void **)gCrateList`,
    one dereference too many. The ROM passes the variable's value.
 3. **Case 15.**
    - `self->u48.n &= 0x3f; self->u48.n &= 0xf8;` keeps both ands.
@@ -89,7 +89,7 @@ keeps `self` in sb and `result` in r8, and the draft does the reverse.
   `add r2,r5` / `add r5,r2` copies, is worse (702 hw).
 - Two calls with a `c` local give 500 hw and 1628 B.
 - Inline accessors for `box->padY` and `b.x` (the pattern that closed
-  `sub_800FF0C`) change nothing (565/568 hw).
+  `CreateCrate`) change nothing (565/568 hw).
 
 This one needs the global register roles fixed first. The draft is
 unchanged, and its note records these results.

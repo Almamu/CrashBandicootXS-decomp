@@ -5,7 +5,7 @@ this one function - the whole gap between `actor_part27.c` (ends
 0x08017AAC) and `actor_part27b.c` (starts 0x08017ECC) - completely
 untouched ("out of scope... given their size"). `docs/rom_map.md`'s own
 whole-ROM pass had already read it at a high level: "1052 B, 3-state
-dispatch gated by `gUnknown_030012D8[0x104]` and a bit test". This pass
+dispatch gated by `gPlayer[0x104]` and a bit test". This pass
 transcribes it in full and confirms/expands that read into a complete
 semantic account.
 
@@ -26,7 +26,7 @@ fired through `_call_via_r2`/`_call_via_r3`); `other` (r5) is the "part"
 object passed alongside it, with an *analogous* table of its own at
 `other+0x18` (different record offsets: 0x28, 0x48, 0x68 are all seen
 in this one function, each presumably a different logical "slot").
-`gUnknown_030012D8` is the player/camera-viewport object docs/rom_map.md
+`gPlayer` is the player/camera-viewport object docs/rom_map.md
 already names - its `+0x104` byte is a "player busy" gate, and its own
 `+0x18`-table feeds two more trampoline calls.
 
@@ -50,14 +50,14 @@ Dispatches on `self+8` (0/1/2; anything else returns immediately):
      against `other+0x18`'s own table (offset 0x28) up to twice - the
      ROM calls it, and only if the result is "free" *and*
      `self+0x20`'s own latch was already `0` does it stamp
-     `self+0x1c = gUnknown_0300082C` (the game tick counter) and set
+     `self+0x1c = gRoomFrameCount` (the game tick counter) and set
      `self+0x20 = 1`; otherwise it re-probes the *same* address a
      second time and, on "free" and `self+0x20 != 0`, stamps the
      timestamp again and clears `self+0x20` back to the fresh result.
      (Two probes of the same condition, not simplifiable to one - kept
      as the ROM has it.)
   3. **Timeout re-fire**: if `self+0x1c != 0` and
-     `gUnknown_0300082C - self+0x1c > 0x3c` ticks, resets `self+0x1c` to
+     `gRoomFrameCount - self+0x1c > 0x3c` ticks, resets `self+0x1c` to
      `0`, then - keyed on `other+0x28` bit 4 and `self+0x20` - either
      does nothing (bit 4 set), calls `sub_8017F14(self, other, 2)`
      (bit 4 clear, `self+0x20==0`), or `sub_8017F14(self, other, 1)`
@@ -75,13 +75,13 @@ Dispatches on `self+8` (0/1/2; anything else returns immediately):
   6. **Out of bounds - "spawn + scan" cluster**: builds an AABB via
      `sub_8007B98(&box, other)`, unpacks it into
      `sub_8008A40(gUnknown_030012F0, box.x, box.y, box.w, box.h, 0,
-     other)`, then walks the entire `gUnknown_0300130C` object list. For
+     other)`, then walks the entire `gCrateList` object list. For
      each `entry` whose own table (`entry+0x18`, offset 0x48) probes
      `==3` via `_call_via_r1`, and whose Q8>>8 position is within a
      `0x27`/`0x3b` box of `other`, and whose `entry+0x4d` byte has bit
      `0x7f` clear: a `entry+0x4e` tag of `0xe`/`0x13`/`0x14`/`0x15`/`0xa`
      calls `sub_800EEF0(entry, 0)`; any other tag instead gates
-     `sub_800E888(entry, 1)` behind `sub_8010908(entry, tag)`.
+     `BreakCrate(entry, 1)` behind `sub_8010908(entry, tag)`.
 - **State 2** (`self+8==2`): if `other+0x30==8` and `other+0x34==0` and
   the same in-bounds Q8 check as state 1 step 5 passes, fires
   `_call_via_r4(player + player's-own-0x18-table[0x68].offset, 0, 1, 0)`
@@ -108,7 +108,7 @@ this project has already spent a full pass chasing down elsewhere and
 confirmed unclosable from any C phrasing tried - re-litigating either
 here would just rediscover the same dead end at roughly 5x the scale:
 
-1. **The `gUnknown_0300130C` list walk** reloads `&gUnknown_0300130C`
+1. **The `gCrateList` list walk** reloads `&gCrateList`
    from the literal pool fresh on *every* loop-condition check and every
    loop-body entry (5 do-nothing-but-reload instructions, by the ROM's
    own choice, each time). This is the exact shape

@@ -6,12 +6,12 @@
  * (`struct level_menu`, issue #26's actor_part_1b85c.c) and its two
  * background layers:
  *
- * - sub_801CEE0-sub_801D730: level_menu methods - the page-turn
- *   animation (sub_801CEE0, driven by the Down/Up handlers sub_801D4C4/
- *   sub_801D548), the frame loops of the A (sub_801D110) and Start
- *   (sub_801D300) exits, the "previous/next page open" tests, and the
+ * - LevelSelectTurnPage-sub_801D730: level_menu methods - the page-turn
+ *   animation (LevelSelectTurnPage, driven by the Down/Up handlers LevelSelectPrevWorld/
+ *   LevelSelectNextWorld), the frame loops of the A (LevelSelectConfirm) and Start
+ *   (LevelSelectExit) exits, the "previous/next page open" tests, and the
  *   per-page entry refresh (sub_801D5CC/sub_801D638/sub_801D668, also
- *   inlined into sub_801CEE0).
+ *   inlined into LevelSelectTurnPage).
  * - sub_801D77C-sub_801D7F8: `struct page_bg`, BG1 - the page strip whose
  *   vertical scroll eases 8 per frame toward a Q8 target (0x100 = one
  *   page).
@@ -32,7 +32,7 @@ extern void *gAudioContext;
 extern void ***gUnknown_030012D0;
 extern void *gUnknown_03001300;
 extern void *gUnknown_03001304;
-extern u8 gUnknown_03000824;
+extern u8 gNewWorldOpened;
 extern u32 gKeys;     // held keys (low half), newly pressed (high half)
 extern struct xy_pair gStaticData_0816C4D8[];
 extern struct xy_pair gStaticData_0816C508[];
@@ -60,7 +60,7 @@ extern void sub_80088D8(void *part, s32 value);
 extern s32 sub_800815C(void *part);
 extern void sub_801E644(void *self, s32 a, s32 b, s32 c, s32 d);
 
-extern void sub_801C104(struct level_menu *self);
+extern void UpdateLevelSelect(struct level_menu *self);
 extern void sub_801CCF8(struct level_menu *self);
 extern void sub_801DAD8(struct icon_bg *p);
 extern void sub_801DCBC(struct icon_bg *p);
@@ -86,8 +86,8 @@ void sub_801D79C(struct page_bg *p);
 void sub_801D7AC(struct page_bg *p);
 u32 sub_801D7D0(struct page_bg *p);
 void sub_801D05C(struct level_menu *self);
-u8 sub_801D428(struct level_menu *self);
-u8 sub_801D434(struct level_menu *self);
+u8 LevelSelectHasPrevWorld(struct level_menu *self);
+u8 LevelSelectIsNextWorldOpen(struct level_menu *self);
 void sub_801D470(struct level_menu *self);
 
 typedef void (*item_load_fn)(void *self, s32 world, s32 slot);
@@ -112,7 +112,7 @@ static inline void CommitDisplay(struct level_menu *self)
 
 static inline void BeginFrame(struct level_menu *self)
 {
-    sub_801C104(self);
+    UpdateLevelSelect(self);
     WaitForVBlank();
     sub_8006DC8(gUnknown_030012B8);
     sub_8006AAC(gUnknown_03001300);
@@ -184,7 +184,7 @@ static inline void SkinItems(struct level_menu *self)
 /* Runs the page-turn animation: steps BG1's scroll toward its target one
  * frame at a time, and halfway through (scroll 0xA0) swaps the page's
  * entries over to the new page. */
-void sub_801CEE0(struct level_menu *self)
+void LevelSelectTurnPage(struct level_menu *self)
 {
     while (!sub_801D780(self->bg1))
     {
@@ -213,7 +213,7 @@ void sub_801D05C(struct level_menu *self)
 
 /* A pressed on an open entry: sound 0x52, move the panel to the
  * middle, let the icon layer play its selection, then fade out. */
-void sub_801D110(struct level_menu *self)
+void LevelSelectConfirm(struct level_menu *self)
 {
     s32 t;
 
@@ -249,7 +249,7 @@ void sub_801D110(struct level_menu *self)
 }
 
 /* Start: sound 0x49, fade to black, and leave with `result` 1. */
-void sub_801D300(struct level_menu *self)
+void LevelSelectExit(struct level_menu *self)
 {
     s32 t;
 
@@ -275,14 +275,14 @@ void sub_801D300(struct level_menu *self)
     self->result = 1;
 }
 
-void sub_801D41C(void)
+void SetNewWorldOpened(void)
 {
-    gUnknown_03000824 = 1;
+    gNewWorldOpened = 1;
 }
 
 /* Whether there is a previous page (`world != 0`, spelled as the ROM's
  * branchless neg/orr/lsr; a plain comparison compiles to a branch). */
-u8 sub_801D428(struct level_menu *self)
+u8 LevelSelectHasPrevWorld(struct level_menu *self)
 {
     u32 w = self->world;
 
@@ -290,7 +290,7 @@ u8 sub_801D428(struct level_menu *self)
 }
 
 /* Whether the next page has been opened (save byte 2, bits 5/7/6). */
-u8 sub_801D434(struct level_menu *self)
+u8 LevelSelectIsNextWorldOpen(struct level_menu *self)
 {
     u8 r = 0;
 
@@ -335,9 +335,9 @@ void sub_801D470(struct level_menu *self)
 /* Down: turn back one page (repeating while Down is held); sound 0x48 on
  * the first page. The loop is written with gotos to keep the ROM's
  * block order (the test sits after the body, entered by a jump). */
-void sub_801D4C4(struct level_menu *self)
+void LevelSelectPrevWorld(struct level_menu *self)
 {
-    if (sub_801D428(self))
+    if (LevelSelectHasPrevWorld(self))
     {
         sub_801CCF8(self);
         PlaySfx(gAudioContext, 0x56, 0x100);
@@ -345,12 +345,12 @@ void sub_801D4C4(struct level_menu *self)
     loop:
         self->world--;
         sub_801D790(self->bg1);
-        sub_801CEE0(self);
+        LevelSelectTurnPage(self);
         UpdateKeys(gUnknown_03001304);
         if (!(gKeys & DPAD_DOWN))
             goto done;
     check:
-        if (sub_801D428(self))
+        if (LevelSelectHasPrevWorld(self))
             goto loop;
     done:
         sub_801D470(self);
@@ -363,9 +363,9 @@ void sub_801D4C4(struct level_menu *self)
 
 /* Up: turn forward one page (repeating while Up is held) while the next
  * page is open; sound 0x48 otherwise. */
-void sub_801D548(struct level_menu *self)
+void LevelSelectNextWorld(struct level_menu *self)
 {
-    if (sub_801D434(self))
+    if (LevelSelectIsNextWorldOpen(self))
     {
         sub_801CCF8(self);
         PlaySfx(gAudioContext, 0x55, 0x100);
@@ -373,12 +373,12 @@ void sub_801D548(struct level_menu *self)
     loop:
         self->world++;
         sub_801D79C(self->bg1);
-        sub_801CEE0(self);
+        LevelSelectTurnPage(self);
         UpdateKeys(gUnknown_03001304);
         if (!(gKeys & DPAD_UP))
             goto done;
     check:
-        if (sub_801D434(self))
+        if (LevelSelectIsNextWorldOpen(self))
             goto loop;
     done:
         sub_801D470(self);

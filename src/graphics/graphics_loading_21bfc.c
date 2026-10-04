@@ -4,56 +4,56 @@
 
 extern void *gLevelState;
 
-extern u8 sub_80232C8(void *self);
-extern void *sub_800FF0C(u16 arg0, u16 arg1, u16 arg2, u16 arg3, u8 type);
+extern u8 IsSwitchPressed(void *self);
+extern void *CreateCrate(u16 arg0, u16 arg1, u16 arg2, u16 arg3, u8 type);
 
-/* Dispatches to the `sub_800FF0C` entity-constructor trampoline family
- * (docs/rom_map.md, "already-documented `sub_800FF0C` entity-constructor
+/* Dispatches to the `CreateCrate` entity-constructor trampoline family
+ * (docs/rom_map.md, "already-documented `CreateCrate` entity-constructor
  * trampoline family") with type `7` or `6` depending on
- * `sub_80232C8(gLevelState)`. */
+ * `IsSwitchPressed(gLevelState)`. */
 void sub_8021BFC(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     void *result;
 
-    if (sub_80232C8(gLevelState)) {
-        result = sub_800FF0C(arg0, arg1, arg2, arg3, 7);
+    if (IsSwitchPressed(gLevelState)) {
+        result = CreateCrate(arg0, arg1, arg2, arg3, 7);
     } else {
-        result = sub_800FF0C(arg0, arg1, arg2, arg3, 6);
+        result = CreateCrate(arg0, arg1, arg2, arg3, 6);
     }
     (void)result;
 }
 
-/* Plain `sub_800FF0C` trampoline, type `5`. */
+/* Plain `CreateCrate` trampoline, type `5`. */
 void sub_8021C50(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    sub_800FF0C(arg0, arg1, arg2, arg3, 5);
+    CreateCrate(arg0, arg1, arg2, arg3, 5);
 }
 
-/* Plain `sub_800FF0C` trampoline, type `4`. */
+/* Plain `CreateCrate` trampoline, type `4`. */
 void sub_8021C74(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    sub_800FF0C(arg0, arg1, arg2, arg3, 4);
+    CreateCrate(arg0, arg1, arg2, arg3, 4);
 }
 
-/* Plain `sub_800FF0C` trampoline, type `3`. */
+/* Plain `CreateCrate` trampoline, type `3`. */
 void sub_8021C98(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    sub_800FF0C(arg0, arg1, arg2, arg3, 3);
+    CreateCrate(arg0, arg1, arg2, arg3, 3);
 }
 
-/* Plain `sub_800FF0C` trampoline, type `2`. */
+/* Plain `CreateCrate` trampoline, type `2`. */
 void sub_8021CBC(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    sub_800FF0C(arg0, arg1, arg2, arg3, 2);
+    CreateCrate(arg0, arg1, arg2, arg3, 2);
 }
 
-/* Plain `sub_800FF0C` trampoline, type `1`. */
+/* Plain `CreateCrate` trampoline, type `1`. */
 void sub_8021CE0(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    sub_800FF0C(arg0, arg1, arg2, arg3, 1);
+    CreateCrate(arg0, arg1, arg2, arg3, 1);
 }
 
-/* `sub_800FF0C` trampoline (type `0`), then indexes a small per-record
+/* `CreateCrate` trampoline (type `0`), then indexes a small per-record
  * flags byte via `gEntityFlags`'s own table (same
  * `gEntityFlags -> *P -> {+8 array, +0xc base}` shape as
  * `sub_80187FC`'s table read in actor_part27c.c, indexed here by
@@ -76,7 +76,7 @@ void sub_8021D04(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     register u8 *tmp asm("r0");
     register u8 *flagsAddr asm("r3");
 
-    obj = sub_800FF0C(arg0, arg1, arg2, arg3, 0);
+    obj = CreateCrate(arg0, arg1, arg2, arg3, 0);
 
     rec = *gEntityFlags;
     arrayBase = rec->offsets;

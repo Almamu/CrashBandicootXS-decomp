@@ -9,8 +9,8 @@ struct tile_asset_cache;
 struct dual_array_manager;
 struct oam_shadow_buffer;
 
-extern void *gUnknown_030012D8;
-extern void *gUnknown_030012D4;
+extern void *gPlayer;
+extern void *gCamera;
 extern void *gPaletteCycles;
 extern void *gUnknown_03001300;
 extern u8 *gLevelLayers;
@@ -19,12 +19,12 @@ extern void *gUnknown_030012F0;
 extern void *gUnknown_030012F4;
 extern void *gUnknown_030012F8;
 extern void *gUnknown_030012EC;
-extern void *gUnknown_0300130C;
+extern void *gCrateList;
 extern union blend gUnknown_03001280;
 extern struct tile_asset_cache *gUnknown_030012B8;
 
 extern void sub_8006DC8(struct tile_asset_cache *self);
-extern void sub_8026E6C(void *self);
+extern void UpdateCamera(void *self);
 extern void ScrollLevelLayers(void *self);
 extern void TickPaletteCycles(void *self);
 extern void UpdateHud(void *self);
@@ -41,10 +41,10 @@ extern void FlushVramDmaQueue(void);
  * currently-active dual-array manager, then flushes the VRAM DMA
  * queue - only while `self->0x0` is still within the "near start of
  * level" range (`<= 0x1000`), otherwise this is a no-op. */
-void sub_802400C(void *self)
+void UpdateRoomFrame(void *self)
 {
     sub_8006DC8(gUnknown_030012B8);
-    sub_8026E6C(gUnknown_030012D4);
+    UpdateCamera(gCamera);
     ScrollLevelLayers(gLevelLayers);
     TickPaletteCycles(gPaletteCycles);
 
@@ -53,10 +53,10 @@ void sub_802400C(void *self)
         sub_8008DC0(gUnknown_030012F4);
 
         {
-            struct actor *p = (struct actor *)gUnknown_030012D8;
+            struct actor *p = (struct actor *)gPlayer;
             struct vtable_slot *tbl = p->table;
             if ((u8)(s32)_call_via_r1((u8 *)p + tbl[5].delta, tbl[5].fn) != 0) {
-                struct actor *p2 = (struct actor *)gUnknown_030012D8;
+                struct actor *p2 = (struct actor *)gPlayer;
                 struct vtable_slot *tbl2 = p2->table;
                 _call_via_r1((u8 *)p2 + tbl2[4].delta, tbl2[4].fn);
             }
@@ -64,7 +64,7 @@ void sub_802400C(void *self)
 
         sub_8008DC0(gUnknown_030012F0);
         sub_8008DC0(gUnknown_030012EC);
-        sub_800944C(gUnknown_0300130C);
+        sub_800944C(gCrateList);
         sub_8008DC0(gUnknown_030012F8);
 
         sub_8006A48(gUnknown_03001300);
@@ -95,7 +95,7 @@ struct level_ctx
 /* Rebuilds the gUnknown_03001280 BLDCNT/BLDALPHA shadow from the level's
  * blend settings and sets gLevelLayers's +0x2b flag in mode 1. With
  * no blend effect, the shadow gets a fixed 16/16 alpha pattern. */
-void sub_80240E4(struct level_ctx *self)
+void SetupRoomBlend(struct level_ctx *self)
 {
     union blend *b = &gUnknown_03001280;
 

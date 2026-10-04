@@ -22,9 +22,9 @@
 /* The gLevelState fields read here. */
 struct game_state {
     u8 unk_00[0x78];
-    s32 mode;           // 0x78 - the current hazard tier (0-3)
+    s32 maskLevel;      // 0x78 - the Aku Aku mask level (0-3)
     u8 unk_7C[0x10];
-    u8 paused;          // 0x8C
+    u8 timeTrial;       // 0x8C
 };
 
 extern struct game_state *gLevelState;
@@ -111,7 +111,7 @@ void sub_802B364(struct actor_self *self)
         ACTOR_SET_STATE(self, 10, 10);
     }
     if (gUnknown_0300149C != 0 && --gUnknown_0300149C != 0 && gUnknown_030014A0 == 0
-        && gLevelState->mode != 3)
+        && gLevelState->maskLevel != 3)
         self->unk_2C[0] = ((u32)gUnknown_0300149C >> 2) & 1;
     else
         self->unk_2C[0] = 1;
@@ -162,7 +162,7 @@ void sub_802B364(struct actor_self *self)
     if (gUnknown_03001494 != NULL) {
         sub_802D3A8(gUnknown_03001494, self->x, self->y, self->z);
     } else {
-        s32 tier = gLevelState->mode;
+        s32 tier = gLevelState->maskLevel;
 
         gUnknown_03001494 = sub_802B1A8(self->x, self->y, self->z, tier);
         if (sub_8029794())
@@ -248,7 +248,7 @@ void sub_802B5B4(struct actor_self *self)
  * `gUnknown_0300148x`/`gUnknown_030014Bx` cluster): if the shared
  * "used" respawn timer (`gUnknown_0300149C`) is already counting down,
  * reports "still used" (1) without doing anything. Otherwise, while
- * the current hazard tier (`gLevelState->0x78`) is clear, plays
+ * the current mask level (`maskLevel`) (`gLevelState->0x78`) is clear, plays
  * a cue, DMAs a gauge strip, resets `self` to state 6/table-index 5,
  * arms `gUnknown_03001480`, kicks the game-mode transition
  * (`LoseLife`) if not already paused, clears
@@ -284,7 +284,7 @@ s32 sub_802B730(void *selfArg)
     {
         register void **effectAddr asm("r2") = &gUnknown_03001494;
         void **playerAddr = (void **)&gLevelState;
-        s32 tier = ((struct game_state *)*playerAddr)->mode;
+        s32 tier = ((struct game_state *)*playerAddr)->maskLevel;
 
         if (tier == 0) {
             PlaySfx(gAudioContext, 0x1b, 0x100);
@@ -312,7 +312,7 @@ s32 sub_802B730(void *selfArg)
                         {
                             struct game_state *player = *playerAddr;
 
-                            if (player->paused == 0) {
+                            if (player->timeTrial == 0) {
                                 LoseLife(player);
                             }
                         }
@@ -336,7 +336,7 @@ end:
 
 /* Same shape as `sub_802B730` (twin trigger, different reset target -
  * state 0xc/table-index 0xb): once-only spawn/reset gated the same way
- * on `gUnknown_0300149C`/hazard tier, or forwards to `sub_802D4B0`.
+ * on `gUnknown_0300149C`/mask level (`maskLevel`), or forwards to `sub_802D4B0`.
  *
  * Same `goto`-shared-tail idiom as `sub_802B730` above (single `return
  * result;` at one shared `end` label) and the same three
@@ -360,7 +360,7 @@ s32 sub_802B7E0(void *selfArg)
     {
         register void **effectAddr asm("r4") = &gUnknown_03001494;
         void **playerAddr = (void **)&gLevelState;
-        s32 tier = ((struct game_state *)*playerAddr)->mode;
+        s32 tier = ((struct game_state *)*playerAddr)->maskLevel;
 
         if (tier == 0) {
             register s32 state asm("r0") = 0xc;
@@ -662,7 +662,7 @@ void sub_802BB4C(void *selfArg)
                 self->animTime = zero;
             }
         }
-        if (gLevelState->paused == 0) {
+        if (gLevelState->timeTrial == 0) {
             LoseLife(gLevelState);
         }
     } else if (counter & 4) {
@@ -689,7 +689,7 @@ void sub_802BBE4(struct actor_self *self)
         {
             struct game_state *player = gLevelState;
 
-            if (player->paused == 0)
+            if (player->timeTrial == 0)
                 LoseLife(player);
         }
     }

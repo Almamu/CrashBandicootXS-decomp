@@ -1,16 +1,16 @@
 #include "core.h"
 
 /* GitHub issue #37 follow-up to `docs/matching/issue-37-game-loop-2375c.md`
- * (which matched this function's only caller, `sub_802375C`, in
+ * (which matched this function's only caller, `PlayRoom`, in
  * `game_loop39.c`, but left this one "not yet confidently understood
- * branch-by-branch"). `self` (r7) is the level object `sub_802375C`
+ * branch-by-branch"). `self` (r7) is the level object `PlayRoom`
  * itself received; `gLevelState` is the separate "level" object
  * most of its own callees take. `gLevelTable` is the confirmed
  * 36-slot, 0x24-byte-stride per-level master table (see
  * `settings_menu19.c`/`oam_count.c`/`game_loop17.c`'s own struct views
  * of it) - here indexed by `self+0`, reading its `+0x1c` "already
- * initialized" guard byte (calls `sub_8023484` once if clear), then
- * `+0x14`/`+0x18` (fed straight through to `sub_8023118`/`sub_8023110`)
+ * initialized" guard byte (calls `CheckAllCratesBroken` once if clear), then
+ * `+0x14`/`+0x18` (fed straight through to `SetMaskAssistDeaths`/`sub_8023110`)
  * and finally `+4`, the **state field the 6-case jump table below
  * dispatches on**.
  *
@@ -57,10 +57,10 @@
  * every call site's own `list_count` argument exactly. No further
  * struct needed.
  *
- * **Shared tail**: calls `sub_80240E4(self)`/`sub_802423C()` (the
+ * **Shared tail**: calls `SetupRoomBlend(self)`/`sub_802423C()` (the
  * latter already matched in `game_loop9.c`), then re-reads the
  * level-state record's (`self->0x18`) own `+8` "widget kind" field
- * (the same field `sub_802375C` dispatched its own widget-construction
+ * (the same field `PlayRoom` dispatched its own widget-construction
  * switch on) - if it's `1`, re-stamps the player's `+0x2d` byte to
  * `0x1f`, refreshes its OAM entry (`sub_80087C0`/`sub_80087B4`/
  * `sub_800872C`), and sets the 0x18-byte scratch block's `+0x14` to
@@ -68,11 +68,11 @@
  * `sub_800815C(player)` (the "negative-constant bit-clear idiom",
  * `docs/matching.md`) and fires `sub_8006D08` against the tile-asset
  * cache using a `player+0x20`-table lookup indexed by `player+0x2d*7`
- * (0x1c-byte stride), flushes the scratch block (`sub_8026DFC`) and
+ * (0x1c-byte stride), flushes the scratch block (`SnapCamera`) and
  * text-box singleton (`ResetLevelLayers`).
  *
- * If the widget kind is `0`: probes `sub_80232B8`/`sub_8024404` or
- * `sub_8023290`/`sub_80243E0` (level-object and self-based readiness
+ * If the widget kind is `0`: probes `IsInBonusRound`/`IsInBonusRoom` or
+ * `IsInGemPath`/`IsInGemPathRoom` (level-object and self-based readiness
  * checks); on success, clears the player's busy bit 7 (`+0xc &=
  * 0x7f`), re-stamps `+0x2d` to `0x29`, refreshes the OAM entry again,
  * plays a sound effect (`gAudioContext` as the sample id, priority
@@ -82,29 +82,29 @@
  *
  * Either way, this converges on flushing the four HUD ring-buffer
  * managers (`sub_8008C80` on `030012F4`/`EC`/`F0`/`F8`), a
- * `sub_802400C(self)` VRAM/OAM refresh, and the fade-cluster
+ * `UpdateRoomFrame(self)` VRAM/OAM refresh, and the fade-cluster
  * `sub_8001524(0)`/`sub_80015E0`/`sub_8001614`/`sub_8001624` reset
  * quartet, landing at the **wait loop** (`_08023E5A`/`_08023D7C`,
  * `docs/rom_map.md`'s "Traced the fade-to-black's trigger" section):
- * poll `sub_80241B0` (the `gUnknown_03000830` readiness flag,
+ * poll `IsRoomExitRequested` (the `gRoomExitRequested` readiness flag,
  * `game_loop9.c`) each iteration; while not ready and the player's
  * `+0xc` bit 0 is clear, run one more "outstanding work" pass
- * (`sub_802423C`/`sub_802400C`, a `RunPauseMenu` input-driven mini-
+ * (`sub_802423C`/`UpdateRoomFrame`, a `RunPauseMenu` input-driven mini-
  * dispatch that can early-exit this whole function with return value
- * `1` or `2` via `sub_80241BC`'s level-end teardown, a `gUnknown_
+ * `1` or `2` via `ResumeRoomAfterPause`'s level-end teardown, a `gUnknown_
  * 030007E0` input-flag-gated `ShowHudCounters` ping, `sub_800891C` on
  * three ring-buffer managers, `_call_via_r1` trampoline probes against
  * the player's own `+0x18`/`+0x38`-`/+0x18` tables, `sub_80091D4` on
- * `gUnknown_0300130C`, `UpdateHudSlides`, and a `gLevelState+0x8c`-
+ * `gCrateList`, `UpdateHudSlides`, and a `gLevelState+0x8c`-
  * gated `TickLevelClock` call) before looping back. Once ready, fires the
  * fade (`sub_80014A4`) - the concrete trigger `rom_map.md` originally
  * traced this function down to find.
  *
  * **Post-fade** (`_08023E82` onward, converging at `_08023F92`): sets
  * the return value to `0`, then tries two `SetCheckpoint` "spawn"
- * dispatches gated by `sub_8024404`/`sub_80232B8`/`sub_8023104` or
- * `sub_80243E0`/`sub_8023290` (both skip straight to the flush tail on
- * failure); falling through both, loops `gUnknown_0300130C` counting
+ * dispatches gated by `IsInBonusRoom`/`IsInBonusRound`/`GetBonusPlatform` or
+ * `IsInGemPathRoom`/`IsInGemPath` (both skip straight to the flush tail on
+ * failure); falling through both, loops `gCrateList` counting
  * entries whose `_call_via_r1` trampoline probe returns `3` *and* whose
  * own `+0x4e` tag is `0xa` (the same physics-subsystem state tag
  * `gStaticData_0816BC98` indexes, `docs/matching/
@@ -117,7 +117,7 @@
  * `sub_800158C`/`WaitForVBlank`/`sub_8001614`), and returns whatever
  * `sl` was left holding (`1` by default, `2` from the wait-loop's
  * `RunPauseMenu`-driven early exit, or `0` once the post-fade branch
- * was reached) - the value `sub_802375C` itself stashes and returns.
+ * was reached) - the value `PlayRoom` itself stashes and returns.
  *
  * Was a NAKED transcription (from `asm/code_3_2_17_23a1c.s`); matches
  * as plain C under old_agbcc since the hard-register hold pass
@@ -184,10 +184,10 @@ struct gl_player
     u8 unk_2A[3];
     u8 animIndex;                   /* +0x2D */
     u8 unk_2E[0x16];
-    struct gl_attach *attach;       /* +0x44 */
+    struct gl_attach *ctrl;         /* +0x44 - the room kind's controller */
     u8 unk_48[0x3C];
     u8 unk_84[0x80];
-    u8 inputLock;                   /* +0x104 */
+    u8 dead;                        /* +0x104 */
 };
 
 struct gl_entity
@@ -239,7 +239,7 @@ struct gl_scratch
 struct gl_level
 {
     u8 unk_00[0x8C];
-    u8 busy;                        /* +0x8C */
+    u8 timeTrial;                   /* +0x8C */
 };
 
 union gl_input
@@ -252,8 +252,8 @@ union gl_input
     } half;
 };
 
-extern struct gl_player *gUnknown_030012D8;
-extern struct gl_scratch *gUnknown_030012D4;
+extern struct gl_player *gPlayer;
+extern struct gl_scratch *gCamera;
 extern void *gLevelLayers;
 extern struct gl_level *gLevelState;
 extern u8 *gPaletteCycles;
@@ -266,8 +266,8 @@ extern void *gUnknown_030012F0;
 extern void *gUnknown_030012F8;
 extern void *gUnknown_030012E8;
 extern void *gUnknown_03001304;
-extern struct gl_entity_list *gUnknown_0300130C;
-extern s32 gUnknown_0300082C;
+extern struct gl_entity_list *gCrateList;
+extern s32 gRoomFrameCount;
 extern union gl_input gKeys;
 extern struct gl_level_entry gLevelTable[];
 extern u16 gThemePaletteCycle2[];
@@ -278,10 +278,10 @@ extern u16 gThemePaletteCycle5[];
 
 extern void sub_800A810(void *player);
 extern void LoadRoom(void *box, void *widget);
-extern void sub_8023484(void *level);
-extern u8 sub_80232C8(void *level);
+extern void CheckAllCratesBroken(void *level);
+extern u8 IsSwitchPressed(void *level);
 extern void sub_800F1B8(void);
-extern void sub_8023118(void *level, s32 value);
+extern void SetMaskAssistDeaths(void *level, s32 value);
 extern void sub_8023110(void *level, s32 value);
 extern void ClearPaletteCycles(void *queue);
 /* The direction flag travels as a one-byte struct by value - the ROM
@@ -301,25 +301,25 @@ extern void AddPaletteCycle(void *queue, u16 *targets, u16 *lists, s32 rate, s32
 #define FX_CYCLE(lists, rate, count, dir) \
     AddPaletteCycle(gPaletteCycles, PAL_RAM, (lists), (rate), (count), \
                 (struct fx_direction){ (dir) })
-extern void sub_80240E4(struct gl_self *self);
+extern void SetupRoomBlend(struct gl_self *self);
 extern void sub_802423C(void);
 extern void sub_80087C0(void *part);
 extern void sub_80087B4(void *part);
 extern void sub_800872C(void *part, s32 arg);
 extern s32 sub_800815C(void *part);
 extern void sub_8006D08(void *cache, s32 slot, s32 recordId);
-extern void sub_8026DFC(void *scratch);
+extern void SnapCamera(void *scratch);
 extern void ResetLevelLayers(void *box);
-extern u8 sub_80232B8(void *level);
-extern u8 sub_8023290(void *level);
-extern u8 sub_8024404(struct gl_self *self);
-extern u8 sub_80243E0(struct gl_self *self);
+extern u8 IsInBonusRound(void *level);
+extern u8 IsInGemPath(void *level);
+extern u8 IsInBonusRoom(struct gl_self *self);
+extern u8 IsInGemPathRoom(struct gl_self *self);
 extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
 extern s32 _call_via_r2(void *self, s32 arg, void *fn);
 extern s32 _call_via_r1(void *self, void *fn);
 extern void ShowHudCounters(void *arg);
 extern void sub_8008C80(void *mgr);
-extern void sub_802400C(struct gl_self *self);
+extern void UpdateRoomFrame(struct gl_self *self);
 extern void sub_8001524(s32 arg);
 extern void sub_8001604(void);
 extern void sub_80015E0(void);
@@ -327,14 +327,14 @@ extern void sub_8001614(void);
 extern void sub_8001624(void);
 extern void UpdateKeys(void *arg);
 extern s32 RunPauseMenu(void);
-extern void sub_80241BC(struct gl_self *self);
+extern void ResumeRoomAfterPause(struct gl_self *self);
 extern void sub_800891C(void *mgr);
 extern void sub_80091D4(void *list);
 extern void UpdateHudSlides(void *arg);
 extern void TickLevelClock(struct gl_level *level);
-extern u8 sub_80241B0(void);
+extern u8 IsRoomExitRequested(void);
 extern void sub_80014A4(void);
-extern s32 *sub_8023104(void *level);
+extern s32 *GetBonusPlatform(void *level);
 extern s32 sub_801B29C(s32 *arg);
 extern void SetCheckpoint(void *level, s32 arg, s32 *point);
 extern void sub_8023140(void *level, s32 count);
@@ -370,7 +370,7 @@ static inline void SpawnNearPlayer(s32 x, s32 y)
     point.x = x;
     point.y = y;
     level = gLevelState;
-    SetCheckpoint(level, sub_801B29C(sub_8023104(level)), &point.x);
+    SetCheckpoint(level, sub_801B29C(GetBonusPlatform(level)), &point.x);
 }
 
 static inline void RestartPlayerAnim(struct gl_player *p, s32 anim)
@@ -384,25 +384,25 @@ static inline void RestartPlayerAnim(struct gl_player *p, s32 anim)
 static inline void RefreshPlayerTiles(void)
 {
     void *cache = gUnknown_030012B8;
-    struct gl_player *p = gUnknown_030012D8;
+    struct gl_player *p = gPlayer;
 
     sub_8006D08(cache, p->frameNibble, (*p->anim)[p->animIndex].tileRecord);
 }
 
-s32 sub_8023A1C(struct gl_self *self)
+s32 RunRoom(struct gl_self *self)
 {
     s32 ret = 1;
     s32 i;
 
-    sub_800A810(gUnknown_030012D8);
-    gUnknown_030012D4->player = gUnknown_030012D8;
-    gUnknown_030012D4->unk_14 = ret;
+    sub_800A810(gPlayer);
+    gCamera->player = gPlayer;
+    gCamera->unk_14 = ret;
     LoadRoom(gLevelLayers, self->widget);
     if (!gLevelTable[self->level].initialized)
-        sub_8023484(gLevelState);
-    if (sub_80232C8(gLevelState))
+        CheckAllCratesBroken(gLevelState);
+    if (IsSwitchPressed(gLevelState))
         sub_800F1B8();
-    sub_8023118(gLevelState, gLevelTable[self->level].unk_14);
+    SetMaskAssistDeaths(gLevelState, gLevelTable[self->level].unk_14);
     sub_8023110(gLevelState, gLevelTable[self->level].unk_18);
 
     switch (gLevelTable[self->level].state)
@@ -430,29 +430,29 @@ s32 sub_8023A1C(struct gl_self *self)
         break;
     }
 
-    sub_80240E4(self);
+    SetupRoomBlend(self);
     sub_802423C();
     if (self->widget->kind == 1)
     {
-        RestartPlayerAnim(gUnknown_030012D8, 0x1F);
-        gUnknown_030012D4->unk_14 = 2;
+        RestartPlayerAnim(gPlayer, 0x1F);
+        gCamera->unk_14 = 2;
     }
-    gUnknown_030012D8->frameNibble = sub_800815C(gUnknown_030012D8);
+    gPlayer->frameNibble = sub_800815C(gPlayer);
     RefreshPlayerTiles();
-    sub_8026DFC(gUnknown_030012D4);
+    SnapCamera(gCamera);
     ResetLevelLayers(gLevelLayers);
 
     if (self->widget->kind == 0)
     {
-        if ((sub_80232B8(gLevelState) && sub_8024404(self))
-            || (sub_8023290(gLevelState) && sub_80243E0(self)))
+        if ((IsInBonusRound(gLevelState) && IsInBonusRoom(self))
+            || (IsInGemPath(gLevelState) && IsInGemPathRoom(self)))
         {
             struct gl_attach *a;
 
-            gUnknown_030012D8->flags &= 0x7F;
-            RestartPlayerAnim(gUnknown_030012D8, 0x29);
+            gPlayer->flags &= 0x7F;
+            RestartPlayerAnim(gPlayer, 0x29);
             PlaySfx(gAudioContext, 0x2C, 0x100);
-            a = gUnknown_030012D8->attach;
+            a = gPlayer->ctrl;
             _call_via_r2((u8 *)a + a->vtable->attach.delta, 0x29, a->vtable->attach.fn);
             RefreshPlayerTiles();
             ShowHudCounters(gHud);
@@ -462,27 +462,27 @@ s32 sub_8023A1C(struct gl_self *self)
     sub_8008C80(gUnknown_030012EC);
     sub_8008C80(gUnknown_030012F0);
     sub_8008C80(gUnknown_030012F8);
-    sub_802400C(self);
+    UpdateRoomFrame(self);
     sub_8001524(0);
     sub_8001604();
     sub_80015E0();
     sub_8001614();
     sub_8001624();
 
-    while (!sub_80241B0() && !(gUnknown_030012D8->flags & 1))
+    while (!IsRoomExitRequested() && !(gPlayer->flags & 1))
     {
         struct gl_player *p;
 
         sub_802423C();
-        sub_802400C(self);
+        UpdateRoomFrame(self);
         UpdateKeys(gUnknown_03001304);
-        if (!gUnknown_030012D8->inputLock && (gKeys.half.hi & 8))
+        if (!gPlayer->dead && (gKeys.half.hi & 8))
         {
             s32 r = RunPauseMenu();
 
             if (r == 0)
             {
-                sub_80241BC(self);
+                ResumeRoomAfterPause(self);
                 UpdateKeys(gUnknown_03001304);
             }
             if (r == 1)
@@ -500,35 +500,35 @@ s32 sub_8023A1C(struct gl_self *self)
             ShowHudCounters(gHud);
         sub_800891C(gUnknown_030012F4);
         sub_800891C(gUnknown_030012E8);
-        if ((u8)PMF_CALL(gUnknown_030012D8, m38))
-            PMF_CALL(gUnknown_030012D8, m18);
-        sub_80091D4(gUnknown_0300130C);
+        if ((u8)PMF_CALL(gPlayer, m38))
+            PMF_CALL(gPlayer, m18);
+        sub_80091D4(gCrateList);
         sub_800891C(gUnknown_030012EC);
         sub_800891C(gUnknown_030012F0);
         sub_800891C(gUnknown_030012F8);
         UpdateHudSlides(gHud);
-        if (gLevelState->busy)
+        if (gLevelState->timeTrial)
             TickLevelClock(gLevelState);
-        gUnknown_0300082C++;
+        gRoomFrameCount++;
     }
 fade:
     sub_80014A4();
-    if (sub_80241B0())
+    if (IsRoomExitRequested())
     {
         ret = 0;
-        if (!sub_8024404(self) && sub_80232B8(gLevelState))
+        if (!IsInBonusRoom(self) && IsInBonusRound(gLevelState))
         {
             struct gl_point point;
             s32 x;
 
-            x = *sub_8023104(gLevelState) + -0x1E00;
-            i = gUnknown_030012D8->pos.y + 0x1200;
+            x = *GetBonusPlatform(gLevelState) + -0x1E00;
+            i = gPlayer->pos.y + 0x1200;
             point.x = x;
             point.y = i;
             x = (s32)gLevelState;
-            SetCheckpoint((void *)x, sub_801B29C(sub_8023104((void *)x)), &point.x);
+            SetCheckpoint((void *)x, sub_801B29C(GetBonusPlatform((void *)x)), &point.x);
         }
-        else if (!sub_80243E0(self) && sub_8023290(gLevelState))
+        else if (!IsInGemPathRoom(self) && IsInGemPath(gLevelState))
         {
             struct gl_point point;
             struct gl_player *pl;
@@ -540,7 +540,7 @@ fade:
              * as in the ROM. */
             asm("" : "=r"(hold));
             asm("" : "=r"(hold1));
-            pl = gUnknown_030012D8;
+            pl = gPlayer;
             /* End of the hold. */
             asm("" : : "r"(hold));
             asm("" : : "r"(hold1));
@@ -553,9 +553,9 @@ fade:
             struct gl_entity_list **list;
 
             i = 0;
-            if (count < gUnknown_0300130C->count)
+            if (count < gCrateList->count)
             {
-                list = &gUnknown_0300130C;
+                list = &gCrateList;
                 do
                 {
                     struct gl_entity *e = (*list)->items[i];
@@ -569,7 +569,7 @@ fade:
         }
     }
     sub_8008CEC(gUnknown_030012E8);
-    sub_8009914(gUnknown_0300130C);
+    sub_8009914(gCrateList);
     sub_8008CEC(gUnknown_030012EC);
     sub_8008CEC(gUnknown_030012F0);
     sub_8008CEC(gUnknown_030012F8);

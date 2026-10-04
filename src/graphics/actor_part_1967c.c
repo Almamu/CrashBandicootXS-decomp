@@ -17,7 +17,7 @@
  * A0, turning round at either level edge), counts hits the player lands
  * on it, and spawns helper parts through sub_8019EBC/sub_801A03C;
  * sub_8019CE4 is its "enter state N" transition (animation + follow-up
- * spawns/sounds). The last state signals sub_80241A4 (the "entity ready"
+ * spawns/sounds). The last state signals RequestRoomExit (the "entity ready"
  * barrier, see docs/rom_map.md) once the part falls off the bottom.
  *
  * This file is compiled with tools/agbcc/bin/old_agbcc (see Makefile and
@@ -255,7 +255,7 @@ struct level_state
 
 extern struct part_list *gUnknown_030012EC;
 extern struct part_list *gUnknown_030012F0;
-extern struct part *gUnknown_030012D8;
+extern struct part *gPlayer;
 extern void ***gUnknown_030012D0;
 extern struct level_state *gEntityFlags;
 extern void *gAudioContext;
@@ -282,8 +282,8 @@ extern void sub_8017A78(void *self, s32 flags);
 extern void sub_8017A8C(void *self);
 extern void sub_800CA60(void *self, s32 flags);
 extern void sub_800CA74(void *self);
-extern u8 sub_80231BC(void *arg0);
-extern u8 sub_80231C4(void *arg0);
+extern u8 HasSuperBodySlam(void *arg0);
+extern u8 HasTurboRun(void *arg0);
 extern void sub_8021D80(u32 arg0, s32 arg1, s32 arg2, s32 arg3);
 extern void sub_8021EF4(u32 arg0, s32 arg1, s32 arg2, s32 arg3);
 /* These three return their box by value (gcc passes the hidden result
@@ -292,7 +292,7 @@ extern struct box sub_8007C30(struct part *obj);
 extern struct box sub_8007CF8(struct part *obj);
 extern struct box sub_8007B98(struct part *obj);
 extern u8 sub_8001688(struct box *a, struct box *b);
-extern void sub_80241A4(void);
+extern void RequestRoomExit(void);
 extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
 extern struct part *sub_8009ED0(u32 arg0, u16 x, u16 y, u32 arg3);
 extern void sub_80087C0(struct part *p);
@@ -479,7 +479,7 @@ void sub_8019770(struct obj_476c *self, s32 unused, s32 arg)
     if (arg == 3)
     {
         VCALL1(self->part->ctl, m20, 9);
-        if (!sub_80231C4(gLevelState))
+        if (!HasTurboRun(gLevelState))
             sub_8021D80(0xFFFF, 0x8C, 0x98, 0);
     }
     VCALL1(self, m20, arg);
@@ -529,9 +529,9 @@ void sub_80197F8(struct boss *self, struct part *other)
         p->y = y;
     }
     hurt = sub_8007CF8(other);
-    if (self->state == 8 && gUnknown_030012D8->unk_0A == 0x13)
+    if (self->state == 8 && gPlayer->unk_0A == 0x13)
     {
-        box = sub_8007C30(gUnknown_030012D8);
+        box = sub_8007C30(gPlayer);
         if (BOX_VALID(box) && sub_8001688(&box, &hurt))
         {
             self->hits++;
@@ -565,7 +565,7 @@ void sub_80197F8(struct boss *self, struct part *other)
                     tbl = gStaticData_0816C378;
                 if (x <= tbl[self->step])
                 {
-                    Approach(self, other, gUnknown_030012D8->x - x);
+                    Approach(self, other, gPlayer->x - x);
                     self->step++;
                     break;
                 }
@@ -577,7 +577,7 @@ void sub_80197F8(struct boss *self, struct part *other)
                     tbl = gStaticData_0816C3A0;
                 if (x >= tbl[self->step])
                 {
-                    Approach(self, other, x - gUnknown_030012D8->x);
+                    Approach(self, other, x - gPlayer->x);
                     self->step++;
                     break;
                 }
@@ -757,8 +757,8 @@ void sub_80197F8(struct boss *self, struct part *other)
         if (y >= LevelBottom() + 0x2000)
         {
             sub_801A7AC(self, other, 0);
-            if (sub_80231BC(gLevelState))
-                sub_80241A4();
+            if (HasSuperBodySlam(gLevelState))
+                RequestRoomExit();
             sub_8019CE4(self, other, 17);
         }
         break;
@@ -784,7 +784,7 @@ void sub_8019CE4(struct boss *self, struct part *other, s32 next)
     switch (next)
     {
     case 16:
-        if (!sub_80231BC(gLevelState))
+        if (!HasSuperBodySlam(gLevelState))
             sub_8021EF4(0xFFFF, 0xA0, 0xA9, 0);
         sub_801A7AC(self, other, 3);
         break;
@@ -921,7 +921,7 @@ void sub_801A03C(struct boss *self, u16 x, u16 y, u8 facing)
 /* gStaticData_087E490C's per-frame update (this controller is created
  * by sub_8019EBC mode 0; `other` is the part it drives): while the
  * player isn't busy
- * (gUnknown_030012D8+0x104) and `other` reports a hit (its own table
+ * (gPlayer+0x104) and `other` reports a hit (its own table
  * slot +0x28), overlaps `other`'s box with the player's hurt box (falling
  * back to the player's plain box) and on contact fires the player's slot
  * +0x68 method with `other->unk_0A`. Then: state 0 writes BLDCNT/
@@ -932,7 +932,7 @@ void sub_801A03C(struct boss *self, u16 x, u16 y, u8 facing)
  *
  * Was NAKED (~159 halfwords off as C). The ROM leaves r4-r6 unused for
  * the long-lived values (`self` r7, `&b` r8, `other` r9,
- * &gUnknown_030012D8 r10); the draft's allocation order was already the
+ * &gPlayer r10); the draft's allocation order was already the
  * ROM's, but it started at r5. Holding r5 and r6 across the box builders
  * (docs/matching/hard-register-hold-retry.md) makes global-alloc skip
  * them. The state-0 BLDCNT accumulator lives in r5 in the ROM: a
@@ -949,7 +949,7 @@ void sub_801A114(struct obj_490c *self, struct part *other)
         struct vmethod *m = &other->vt->m28;
         if (((query_fn)m->fn)((u8 *)other + m->thisOffset))
         {
-            if (!gUnknown_030012D8->busy)
+            if (!gPlayer->busy)
             {
                 /* Hard-register hold (no code): r5 and r6 stay live
                  * across the box builders, so no long-lived pseudo gets
@@ -957,19 +957,19 @@ void sub_801A114(struct obj_490c *self, struct part *other)
                 asm("" : "=r"(hr5));
                 asm("" : "=r"(hr6));
                 a = sub_8007C30(other);
-                b = sub_8007CF8(gUnknown_030012D8);
+                b = sub_8007CF8(gPlayer);
                 if (!BOX_VALID(b))
                 {
                     struct box *pb = &b;
 
-                    *pb = sub_8007C30(gUnknown_030012D8);
+                    *pb = sub_8007C30(gPlayer);
                 }
                 /* End of the hold. */
                 asm("" : : "r"(hr5));
                 asm("" : : "r"(hr6));
                 if (sub_8001688(&b, &a))
                 {
-                    struct part *pl = gUnknown_030012D8;
+                    struct part *pl = gPlayer;
                     struct vmethod *m2 = &pl->vt->m68;
 
                     ((method3_fn)m2->fn)((u8 *)pl + m2->thisOffset, 0, other->unk_0A, 0);
@@ -1049,18 +1049,18 @@ void sub_801A2A8(struct obj_48a4 *self, struct part *other)
                 }
             }
         }
-        if (!gUnknown_030012D8->busy)
+        if (!gPlayer->busy)
         {
-            b = sub_8007CF8(gUnknown_030012D8);
+            b = sub_8007CF8(gPlayer);
             if (!BOX_VALID(b))
             {
                 struct box *pb = &b;
 
-                *pb = sub_8007C30(gUnknown_030012D8);
+                *pb = sub_8007C30(gPlayer);
             }
             if (sub_8001688(&a, &b))
             {
-                struct part *pl = gUnknown_030012D8;
+                struct part *pl = gPlayer;
                 struct vmethod *m2 = &pl->vt->m68;
 
                 ((method3_fn)m2->fn)((u8 *)pl + m2->thisOffset, 0, other->unk_0A, 0);

@@ -33,7 +33,7 @@
  * scratch register before subtracting into `i`'s register, instead of
  * the ROM's direct load-then-decrement-in-place into the same
  * register - see docs/matching/issue-41-game-loop-25894.md. */
-s32 sub_8025894(void *self, void *list)
+s32 CountCrateEntities(void *self, void *list)
 {
     u8 *l = (u8 *)list;
     s32 count = 0;

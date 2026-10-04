@@ -141,7 +141,7 @@ extern void LoadGraphicsPackage(void *buf, void *asset);
 extern s32 sub_801E640(void *buf);
 extern void *gLevelState;
 extern void ***gUnknown_030012D0;
-extern void *sub_80236EC(void *arg0);
+extern void *PackSaveData(void *arg0);
 extern void InitPauseMenuInfo(struct pause_screen_results *self);
 extern struct actor *sub_8008904(struct actor *part);
 extern s32 RandRange(s32 max);
@@ -231,7 +231,7 @@ struct pause_screen_results *InitPauseMenu(struct pause_screen_results *self)
         }
 
         LoadGraphicsPackage(self, gStaticData_0816B284);
-        self->field_10 = sub_80236EC(gLevelState);
+        self->field_10 = PackSaveData(gLevelState);
         InitPauseMenuInfo(self);
 
         {

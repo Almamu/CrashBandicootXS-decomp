@@ -62,7 +62,7 @@ void sub_8015780(void *selfArg, s32 a, s32 b, s32 c, s32 d)
 
 
 extern void *gAudioContext;
-extern void *gUnknown_030012D8;
+extern void *gPlayer;
 extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
 extern void StopSfx(void *self, u32 id);
 extern u8 sub_800B86C(void *unused, void *partArg, s32 newVal);
@@ -100,7 +100,7 @@ extern u8 sub_800B86C(void *unused, void *partArg, s32 newVal);
  * 99.8%-matching pass). */
 s32 sub_80157C4(void *arg0, void *other, s32 mode)
 {
-    struct act_part *player = gUnknown_030012D8;
+    struct act_part *player = gPlayer;
 
     if (player->unk_100 == 0) {
         goto tail;

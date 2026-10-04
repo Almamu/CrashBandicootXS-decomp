@@ -16,7 +16,7 @@
  *   +0x54 sub_801B2C4 destructor). Its `type` (+0x78) comes from the
  *   level's spawn record or is forced by the spawn kind; types 1/5/6/7
  *   get a `struct mover` attached at +0x44. The player object
- *   (gUnknown_030012D8) uses the same layout for the fields read here,
+ *   (gPlayer) uses the same layout for the fields read here,
  *   and `carried` (+0xAC) is the object the player is standing on.
  * - `struct mover`, a 0x38-byte helper (method table gStaticData_087E4A54:
  *   +0x0C sub_801B304 per-frame move, +0x4C sub_801B7C4 destructor,
@@ -127,7 +127,7 @@ struct gobj
     u8 unk_81[7];
     u8 unk_88;          // 0x88 - nonzero freezes `list` (sub_800B58C/sub_800B650/sub_800B678)
     u8 unk_89[3];
-    u32 deadline;       // 0x8C - gUnknown_0300082C frame sub_800B524 tests against
+    u32 deadline;       // 0x8C - gRoomFrameCount frame sub_800B524 tests against
     u8 unk_90;          // 0x90
     u8 countdown;       // 0x91
     u8 unk_92;          // 0x92 - a counter
@@ -143,7 +143,7 @@ struct gobj
     u8 unk_101;         // 0x101
     u8 unk_102;         // 0x102
     u8 unk_103;         // 0x103
-    u8 unk_104;         // 0x104 - a boolean
+    u8 dead;            // 0x104 - the player died (KillPlayer and the other controllers' kill handlers); blocks pause and further hits
     u8 unk_105[3];
     u8 unk_108[4];      // 0x108 - an embedded object (sub_800B4A4 returns its address)
 };
@@ -205,13 +205,13 @@ struct spawn_rec
     s16 flag;           // 0x14
 };
 
-extern struct gobj *gUnknown_030012D8;
+extern struct gobj *gPlayer;
 extern void *gLevelState;
 extern void *gUnknown_030012B8;
 extern void *gUnknown_030012EC;
 extern u8 *gEntityFlags;
 extern u8 ***gUnknown_030012D0;
-extern u32 gUnknown_0300082C;
+extern u32 gRoomFrameCount;
 extern struct vec_pair gStaticData_0816C418[];
 extern struct vec3 gStaticData_0816C3B8[];
 extern struct vec3 gStaticData_0816C460[];
@@ -233,8 +233,8 @@ extern s32 _call_via_r3(void *self, void *arg1, s32 arg2, void *fn);
 extern void _call_via_r4(void *self, s32 a, s32 b, s32 c);
 extern u32 __umodsi3(u32 a, u32 b);
 extern s32 sub_80233B4(void *arg);
-extern u8 sub_80232A0(void *arg);
-extern u8 sub_8023278(void *arg);
+extern u8 IsBonusRoundDone(void *arg);
+extern u8 IsGemPathDone(void *arg);
 extern struct mover *sub_801961C(void *mem);
 extern void sub_8008E94(void *manager, void *value);
 extern void sub_80087C0(void *self);

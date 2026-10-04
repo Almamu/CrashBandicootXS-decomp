@@ -18,7 +18,7 @@ ands r0, r2`), which points to old_agbcc. `game_loop47.o` is not on
 ## What the function does
 
 The draft names the fields through a local `struct d18c_player` view of
-`gUnknown_030012D8` and `struct phys_obj`. In outline:
+`gPlayer` and `struct phys_obj`. In outline:
 
 1. It builds `self`'s box and the player's box. The player's hitbox quad
    comes from the inlined `sub_8008518` switch. If the boxes overlap, it
@@ -49,7 +49,7 @@ there:
   ROM order: 4, 8, then 1/2.
 - **One function-scope `pp`** for the four position structs. With a
   separate `pp` in each block, alias analysis knew the store could not
-  touch `gUnknown_030012D8` and dropped the reload the ROM has after
+  touch `gPlayer` and dropped the reload the ROM has after
   `pp->y = ...`.
 - **`obj` and the final target (`tgt`) are separate variables**, and the
   hitbox quad of the first part (`hb`) is separate from the rebuilt
@@ -92,7 +92,7 @@ ip, and everything after it shifted up by one register.
 One `asm("" : : "r"(ay))` nudge after `side` is computed puts `ay` ahead
 of `q` (brief item 8). With it the ROM's cascade appears: `ay` r7, `q`
 r8, `dy` sb, `self` sl, `px` on the stack, and the `&obj->kind` and
-case-3 `&gUnknown_030012D8` GCSE temps in sb. The `goto` change then
+case-3 `&gPlayer` GCSE temps in sb. The `goto` change then
 made the draft exactly 3840 bytes.
 
 ## What is left (968 halfwords)
@@ -103,7 +103,7 @@ made the draft exactly 3840 bytes.
   recomputes `add r0, sp, #0x3c` before each call and only holds the
   pointer (in r4) from `sub_8001688` to `sub_800CF70`. In the rebuild
   this pushes w/h into r5/r6 instead of r4/r5. The
-  `&gUnknown_030012D8` GCSE temp then lands in sb instead of r6, which
+  `&gPlayer` GCSE temp then lands in sb instead of r6, which
   adds four `mov rX, sb` instructions. Things that did not stop the
   merge: a frame struct, separate locals, a pointer local, an inline
   builder, `do { } while (0)` around the calls, and a cast spelling.
@@ -144,7 +144,7 @@ take the address through an empty `asm("" : "+r")` copy (`BOX_ADDR`),
 and a `bb` local holds it (also from `BOX_ADDR`) from `sub_8001688` to
 `sub_800CF70`. That block now matches the ROM, including `r4`, and the
 draft is 938 halfwords off at the exact size. The same fix on the
-rebuilt box matches that block too, and puts the `&gUnknown_030012D8`
+rebuilt box matches that block too, and puts the `&gPlayer`
 temp in r6 as in the ROM. But other low registers then shift and the
 draft comes out 8 bytes short, so the draft doesn't use it there yet.
 See [sp-box-retry.md](sp-box-retry.md).

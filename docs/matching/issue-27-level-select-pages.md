@@ -19,19 +19,19 @@ left was loop shape and evaluation order, described below.
 ## What the code is
 
 This is the rest of issue #26's level-select screen (`struct level_menu`,
-0xAC bytes, built by `sub_801BC28`), plus its two background objects.
+0xAC bytes, built by `InitLevelSelect`), plus its two background objects.
 
-- **Page turns.** `sub_801D4C4` (Down) and `sub_801D548` (Up) are the
-  handlers `sub_801C96C` dispatches. If the move is allowed
-  (`sub_801D428`: `world != 0`; `sub_801D434`: bit 5/7/6 of save byte 2
+- **Page turns.** `LevelSelectPrevWorld` (Down) and `LevelSelectNextWorld` (Up) are the
+  handlers `LevelSelectLoop` dispatches. If the move is allowed
+  (`LevelSelectHasPrevWorld`: `world != 0`; `LevelSelectIsNextWorldOpen`: bit 5/7/6 of save byte 2
   for pages 0/1/2), each one settles the cursor (`sub_801CCF8`) and
   plays 0x56/0x55. Then it loops while the key stays held: step `world`,
   move BG1's scroll target a page (`sub_801D790` +0x100 /
-  `sub_801D79C` -0x100), run `sub_801CEE0`, wait a frame. After the loop,
+  `sub_801D79C` -0x100), run `LevelSelectTurnPage`, wait a frame. After the loop,
   `sub_801D470` switches the page-title sprite's animation
   (`gStaticData_0816C548[world]`) and puts the cursor panel back on the
   clamped cursor. A blocked move plays 0x48.
-- **`sub_801CEE0`** runs frames until BG1's scroll reaches its target
+- **`LevelSelectTurnPage`** runs frames until BG1's scroll reaches its target
   (`sub_801D7AC` eases it 8 per frame). When the low byte of the scroll
   reaches 0xA0 (the halfway point), it reloads the page entries. This
   is `sub_801D638` (item method +0x10 `(world, slot)`),
@@ -40,10 +40,10 @@ This is the rest of issue #26's level-select screen (`struct level_menu`,
   all five levels of the page are cleared, then item method +0x18
   `(&positions[i])`) and `sub_801D668`
   (`sub_801DF0C(item, gStaticData_0816C538[world])`), all three inlined.
-- **Exits.** `sub_801D110` handles A on an open entry: sound 0x52, panel
+- **Exits.** `LevelSelectConfirm` handles A on an open entry: sound 0x52, panel
   to (0x78, 0x35), wait for the panel and the icon layer, then fade
   (`BLDCNT` effect 3 on all first targets, `evy = t / 2`).
-  `sub_801D300` handles Start: sound 0x49, the same fade, and
+  `LevelSelectExit` handles Start: sound 0x49, the same fade, and
   `result = 1`. `sub_801D05C` is the "wait for the panel" loop.
   `sub_801D730` reloads palette 0xF and re-applies it to the eight
   sprites.
@@ -58,7 +58,7 @@ This is the rest of issue #26's level-select screen (`struct level_menu`,
   positions `gStaticData_0816C5F0` around (0x78, 0x35), mirrored X/Y
   per corner) registered through `sub_801DDB4`. The rest of this class
   is in issue #28's range.
-- `sub_801D41C` sets `gUnknown_03000824` (called from `game_loop55.c`).
+- `SetNewWorldOpened` sets `gNewWorldOpened` (called from `game_loop55.c`).
 
 **UNUSED:** `sub_801D698` (one frame of the screen without the menu's
 update). It has no `bl`/`.4byte` reference and no Thumb pointer anywhere
@@ -71,13 +71,13 @@ types the save block (`struct menu_save`) and the two background layers.
 
 ## Matching notes
 
-- **Loops written with `goto`** (`sub_801D4C4`/`sub_801D548`). The ROM
+- **Loops written with `goto`** (`LevelSelectPrevWorld`/`LevelSelectNextWorld`). The ROM
   jumps into the loop test and keeps the key test's exit inside the
   body. A `while` with `break` gives gcc's rotated loop with a duplicated
   test instead.
-- **`sub_801D428`**: `world != 0` compiles to a compare and a branch.
+- **`LevelSelectHasPrevWorld`**: `world != 0` compiles to a compare and a branch.
   The ROM's `neg/orr/lsr #31` is `(-w | w) >> 31` on a `u32` copy.
-- **`sub_801D434`**: explicit shifts (`(b >> 5) & 1`). A bitfield read
+- **`LevelSelectIsNextWorldOpen`**: explicit shifts (`(b >> 5) & 1`). A bitfield read
   gives `lsl/lsr`, and the ROM drops the `& 1` only for bit 7, which
   gcc does on its own.
 - **`sub_801D470`**: an inline `SetAnim(sprite, u32 idx)`. Passing the
@@ -90,7 +90,7 @@ types the save block (`struct menu_save`) and the two background layers.
   (`union level_record`) gives the `ldrb`.
 - **`sub_801D730`**: `self->sprites[i]` indexed twice. A pointer local
   gets strength-reduced and the loop reversed.
-- **`sub_801CEE0`**: `(x & 0xFF) == 0xA0` for the ROM's
+- **`LevelSelectTurnPage`**: `(x & 0xFF) == 0xA0` for the ROM's
   `movs #0xff; ands` (a `(u8)` cast gives `lsl/lsr`).
 - **`sub_801D828`** needed five things:
   - The tile block is written `dst[j] = v` in the inner loop with

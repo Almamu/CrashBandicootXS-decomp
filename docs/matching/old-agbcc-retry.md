@@ -16,9 +16,9 @@ compared it against the ROM.
 | `sub_801961C` | `actor_part_188d0.c` (#23) | **matched**, rewritten with the `sub_801A878` stack-argument idiom |
 | `sub_801A878` | `actor_part_1a878.c` (#25) | **matched**, after removing every register pin |
 | `sub_801AB98` | `actor_part_1ab98.c` (#25) | still NAKED |
-| `sub_801BC28` | `actor_part_1b85c.c` (#26) | still NAKED here; real C since the #12/#24/#26 retry |
+| `InitLevelSelect` | `actor_part_1b85c.c` (#26) | still NAKED here; real C since the #12/#24/#26 retry |
 | `sub_801C608` | `actor_part_1b85c.c` (#26) | still NAKED |
-| `sub_801C96C` | `actor_part_1b85c.c` (#26) | still NAKED |
+| `LevelSelectLoop` | `actor_part_1b85c.c` (#26) | still NAKED |
 
 Issue #23 has no NAKED/NON_MATCHING functions left. Issue #25 still has
 `sub_801AB98`, and issue #26 still has all three.
@@ -65,7 +65,7 @@ are removed from the tree.
 - **Pins**: `SetTag`'s r0 pin, and those in `sub_80188FC`, `sub_8018978`
   (`ip`), `sub_8018BDC`, `sub_8019094`, `sub_80194E0`, `sub_8019324` (r8)
   and `sub_8018E4C`'s `steps` (r8) (#23). In #26: `sub_801B8BC`,
-  `sub_801B984`, `sub_801C104`, `sub_801C364` and `sub_801C51C`'s
+  `sub_801B984`, `UpdateLevelSelect`, `sub_801C364` and `sub_801C51C`'s
   `asm volatile` self barrier.
 - **The zero-index `ldrsh` asm** (#23, see above).
 
@@ -97,7 +97,7 @@ None of these four matches under old_agbcc, so their NON_MATCHING C is
 left unchanged. The closer variants found are recorded in the issue
 write-ups, not applied.
 
-- **`sub_801C96C`** (#26), 900 vs 908 bytes. The three `CommitDisplay`
+- **`LevelSelectLoop`** (#26), 900 vs 908 bytes. The three `CommitDisplay`
   BLDY-register differences that parked it under agbcc are gone. Two
   things are left. First, the fade-in `evy--`: a packed
   `struct { u8 evy:5; u8 rest:3; }` view fixes it and brings the size to
@@ -112,7 +112,7 @@ write-ups, not applied.
   each fix part of it. Still left: the ROM's 12-byte frame (it spills
   `info`), and its `time << 16` held across compares with a fresh
   `>> 19` for each one.
-- **`sub_801BC28`** (#26), 1040 vs 1048 bytes. With `SetAnim(s32)` the
+- **`InitLevelSelect`** (#26), 1040 vs 1048 bytes. With `SetAnim(s32)` the
   whole sprite-setup middle matches. It is still off in the opening
   blend/BLDY/DISPCNT constant blocks (which register holds 0/1/2/0x10,
   and a separate `self + 0xA9` address), in the item loop's r4/r5 roles,
@@ -123,7 +123,7 @@ write-ups, not applied.
   the pins makes it worse.
 
 `SetAnim(s32)` keeps every matched function in `actor_part_1b85c.c`
-matching, so it is safe to adopt whenever `sub_801C608`/`sub_801BC28` are
+matching, so it is safe to adopt whenever `sub_801C608`/`InitLevelSelect` are
 picked up again.
 
 ## Tools

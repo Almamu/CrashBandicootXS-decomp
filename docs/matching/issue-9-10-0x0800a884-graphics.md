@@ -6,15 +6,15 @@ GitHub issues #9/#10's original scope, the `actor` "part" object
 family already covered at length by
 [issue-9-0x08007634-actor.md](./issue-9-0x08007634-actor.md)):
 
-- `0x0800A884`-`0x0800AFF4` (`sub_800A884` through `sub_800AFF4`)
-- `0x0800B3F0` (`sub_800B3F0`)
+- `0x0800A884`-`0x0800AFF4` (`sub_800A884` through `DrawPlayer`)
+- `0x0800B3F0` (`InitPlayer`)
 - `0x0800B8DC` onward (`sub_800B8DC`, 546+ lines, and beyond)
 
 ## Matched - 1 function
 
-- **`sub_800B3F0`** (`src/graphics/actor_part77.c`) - a part-object
+- **`InitPlayer`** (`src/graphics/actor_part77.c`) - a part-object
   constructor: re-initializes `self` via `sub_800A6A4` (matched,
-  `actor_part14.c`), overwrites its table with `gStaticData_087E3E04`,
+  `actor_part14.c`), overwrites its table with `gPlayerVtable`,
   clears its trailing `+0x108`/`+0x10c` fields via `sub_8010E2C` (still
   raw, trivial - a 2-field clear), allocates a fresh `struct
   actor`-shaped child object via `sub_8008434(0, 0, 0, 0)` (matched,
@@ -251,7 +251,7 @@ family already covered at length by
 ## Left raw (deeper, still-unexamined dependencies) - 4 functions + 1 large block
 
 - **`sub_800AAEC`** (`asm/code_3_2_16.s`, ROM `0x0800AAEC`) - iterates
-  `gUnknown_0300130C` (a count-prefixed pointer array), testing each
+  `gCrateList` (a count-prefixed pointer array), testing each
   entry via `_call_via_r1` (matched) and, on a hit (return code 3),
   calling `sub_800CD00` (still fully unexamined) with the entry and
   this function's own second argument; a `<= 1` return from that call
@@ -265,16 +265,16 @@ family already covered at length by
   `self+0xc` flag bits. The most tractable of the four left-raw
   functions here; a reasonable next target for a future session, not
   attempted this pass purely for time.
-- **`sub_800AC2C`** (`asm/code_3_2_16.s`, ROM `0x0800AC2C`, ~950 B) - a
+- **`PlayerHandleEvent`** (`asm/code_3_2_16.s`, ROM `0x0800AC2C`, ~950 B) - a
   38-case jump-table player action-state dispatcher (the same shape
   `docs/status/actor.md` already flags as "left raw, out of scope" for
   `sub_8018008`, GitHub issue #22); calls a dozen still-unexamined
-  state-transition functions (`GetCurrentLevelFlags`, `sub_8022D50`,
-  `sub_8025BAC`, `SetMaskLevel`, `sub_80232E4`, `RaiseMaskLevel`,
-  `FreezeLevelClock`, `sub_80241A4`, `sub_802352C`, `sub_8023510`,
+  state-transition functions (`GetCurrentLevelFlags`, `StartTimeTrial`,
+  `sub_8025BAC`, `SetMaskLevel`, `AddDeath`, `RaiseMaskLevel`,
+  `FreezeLevelClock`, `RequestRoomExit`, `RequestBonusRound`, `RequestGemPath`,
   `ShowHudCounters`, and others). Left raw per this project's established
   policy for this exact dispatcher shape.
-- **`sub_800AFF4`** (`asm/code_3_2_16.s`, ROM `0x0800AFF4`, ~636 B) -
+- **`DrawPlayer`** (`asm/code_3_2_16.s`, ROM `0x0800AFF4`, ~636 B) -
   high register-pressure (`sb`/`sl`/`r8`/`ip` all live simultaneously)
   hitbox-record lookup/commit logic referencing the `+0x20`/`+0x2d`
   convention from `docs/rom_map.md`'s physics/collision write-up, but
@@ -392,7 +392,7 @@ before, everything after" split `sub_8026628` itself used to get
 carved out of this same file). `src/system/game_loop44.c` (new file)
 holds the matched `sub_8026BC0`. The remainder - `sub_8026BF8` onward,
 still raw/unexamined this session (including `sub_8026C90`,
-`sub_8026D8C`, `sub_8026DFC`, `sub_8026E6C` and others referencing
+`sub_8026D8C`, `SnapCamera`, `UpdateCamera` and others referencing
 `gLevelLayers` and per-object velocity-style fields) - moved
 unchanged to the new `asm/code_3_2_17_26bf8.s`, inserted between the
 two in `ldscript.txt`:

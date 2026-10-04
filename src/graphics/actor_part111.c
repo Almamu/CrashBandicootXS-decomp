@@ -1,9 +1,9 @@
 #include "core.h"
 
 /* GitHub issue #9/#10, dedicated deep-investigation session:
- * `sub_800AFF4` (0x0800AFF4-0x0800B270), the second function in the
- * `sub_800AC2C`-through-`sub_800AFF4` raw span `tools/report_units.py`
- * tracked as parked (`base_object=None`). `sub_800AC2C` (the 38-case
+ * `DrawPlayer` (0x0800AFF4-0x0800B270), the second function in the
+ * `PlayerHandleEvent`-through-`DrawPlayer` raw span `tools/report_units.py`
+ * tracked as parked (`base_object=None`). `PlayerHandleEvent` (the 38-case
  * event dispatcher right before it) was moved here from
  * `asm/code_3_2_16_ac2c.s` as real C in the issue #9 raw-asm pass; see
  * its own comment below.
@@ -26,9 +26,9 @@
  * documents from a sibling call site), `self+0x28` bit 4 (the
  * mirror-flag bit `actor_part16.c`/`actor_part17.c`/`actor_part108.c`
  * already read), `self+0x2d` (per-tag selector byte), and `self+0x8c`
- * (a `gUnknown_0300082C`-relative deadline - the exact
+ * (a `gRoomFrameCount`-relative deadline - the exact
  * `IsTimerArmed`/`SetTimer` convention `actor_part16.c` names:
- * `*(u32 *)(self+0x8c) > gUnknown_0300082C` means "still armed").
+ * `*(u32 *)(self+0x8c) > gRoomFrameCount` means "still armed").
  * `self+0xb0` is a pointer to a single "child" companion object (the
  * same object across every use in this function); `self+0xb4` is a
  * write index into an 8-slot circular buffer of `self`'s own recent
@@ -42,7 +42,7 @@
  * this doc already gate on):
  *
  * - **mode == 3** ("just got hit" / stun-entry): every ~8 frames
- *   (`gUnknown_0300082C & 7 == 0`) re-rolls `gUnknown_03000818` to
+ *   (`gRoomFrameCount & 7 == 0`) re-rolls `gUnknown_03000818` to
  *   `(u16)RandRange(2) + 2 - (mirrored ? 2 : 0)` (0/1 if mirrored,
  *   2/3 otherwise - which side the effect "starts" from, based on
  *   facing). Clamps that value against the child's own hitbox/variant
@@ -52,7 +52,7 @@
  *   *current* position (`self.x +/- 0x600` depending on the mirror
  *   flag, `self.y - 0x1300`, both Q8 - a fixed offset near the head).
  *   Toggles the child's own `+0x2d` tag between `1`/`2` on a 4-frame
- *   parity of `gUnknown_0300082C` (a flicker), then fires the child's
+ *   parity of `gRoomFrameCount` (a flicker), then fires the child's
  *   own `+0x18`-table `+0x20`/`+0x24` trampoline (the `_call_via_r1`
  *   refresh/notify convention). Also (regardless of the mode-3 gate,
  *   using `self`'s own blink deadline at `self+0x8c`) draws `self`
@@ -144,7 +144,7 @@ struct ac2c_self {
     u8 unk_08[4];
     u8 flags;                   // 0x0C - bit 6: can be hit
     u8 unk_0D[0x37];
-    struct ac2c_listener *listener; // 0x44
+    struct ac2c_listener *ctrl;     // 0x44 - the room kind's controller (PlayRoom)
     u8 unk_48[0xc];
     s32 unk_54;                 // 0x54
     s32 unk_58;                 // 0x58
@@ -153,17 +153,17 @@ struct ac2c_self {
     u32 deadline;               // 0x8C
     u8 unk_90[0x20];
     struct ac2c_child *child;   // 0xB0
-    s32 histIdx;                // 0xB4
-    struct ac2c_pos hist[8];    // 0xB8
+    s32 maskTrailIdx;                // 0xB4
+    struct ac2c_pos maskTrail[8];    // 0xB8
 };
 
 struct orbit_game {
     u8 unk_00[2];
     u8 flags2;                  // 0x02
     u8 unk_03[0x75];
-    s32 mode;                   // 0x78
+    s32 maskLevel;              // 0x78
     u8 unk_7C[0x10];
-    u8 unk_8c;                  // 0x8C
+    u8 timeTrial;               // 0x8C
 };
 
 struct ac2c_player {
@@ -175,26 +175,26 @@ typedef void (*ac2c_fn3)(void *self, s32 a, s32 b, s32 c);
 
 extern struct orbit_game *gLevelState;
 extern void *gAudioContext;
-extern struct ac2c_player *gUnknown_030012D8;
+extern struct ac2c_player *gPlayer;
 extern void *gEntitySpawner;
 extern void *gHud;
-extern u32 gUnknown_0300082C;
+extern u32 gRoomFrameCount;
 extern u8 *GetCurrentLevelFlags(void *game);
 extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
-extern void sub_80241A4(void);
+extern void RequestRoomExit(void);
 extern void ShowHudCounters(void *arg0);
 extern void FreezeLevelClock(void *game, s32 n);
-extern void sub_802352C(void *game);
-extern void sub_8023510(void *game);
-extern void sub_8022D50(void *game);
+extern void RequestBonusRound(void *game);
+extern void RequestGemPath(void *game);
+extern void StartTimeTrial(void *game);
 extern void RaiseMaskLevel(void *game);
-extern void sub_80232E4(void *game);
+extern void AddDeath(void *game);
 extern void SetMaskLevel(void *game, s32 mode);
 extern void *sub_8025BAC(void *pool, s32 a, s32 kind, s32 x, s32 y, s32 mirror);
 
 #define NOTIFY(self, a, b, c)                                                  \
     if (1) {                                                                   \
-        struct ac2c_listener *_l = (self)->listener;                           \
+        struct ac2c_listener *_l = (self)->ctrl;                               \
         struct ac2c_method *_m = (struct ac2c_method *)(_l->vtable + 0x10);    \
         ((ac2c_fn3)_m->fn)((u8 *)_l + _m->thisOffset, (a), (b), (c));          \
     } else (void)0
@@ -203,17 +203,17 @@ static inline s32 Ac2cArmed(struct ac2c_self *self)
 {
     s32 armed = 0;
 
-    if (self->deadline > gUnknown_0300082C)
+    if (self->deadline > gRoomFrameCount)
         armed = 1;
     return armed;
 }
 
 /* Event handler of the player-side object: `code` selects the event
  * (1-38). Hits (1-10) start a 90-frame invulnerability window, drop the
- * game mode by one, play two sounds, forward event 0xB to `listener`
+ * game mode by one, play two sounds, forward event 0xB to `ctrl`
  * and spawn a star burst at the child; events 29-34 play sfx 0x1F and
  * set a bit in the game's flag bytes; 26 resets the position history
- * and may call RaiseMaskLevel; the rest forward `code` to `listener`'s
+ * and may call RaiseMaskLevel; the rest forward `code` to `ctrl`'s
  * method at vtable+0x10, some after clearing +0x54..+0x5C.
  *
  * Real C under old_agbcc (issue #9 raw-asm pass). The case bodies are in
@@ -222,7 +222,7 @@ static inline s32 Ac2cArmed(struct ac2c_self *self)
  * pointer is loaded after them. The ROM reloads the game mode after the
  * listener call and never uses it; only a volatile read reproduces that
  * load. */
-void sub_800AC2C(struct ac2c_self *self, s32 a, s32 code, s32 c)
+void PlayerHandleEvent(struct ac2c_self *self, s32 a, s32 code, s32 c)
 {
     switch (code) {
     case 27:
@@ -230,32 +230,32 @@ void sub_800AC2C(struct ac2c_self *self, s32 a, s32 code, s32 c)
         PlaySfx(gAudioContext, 0x1c, 0x100);
         break;
     case 18:
-        sub_80241A4();
+        RequestRoomExit();
         ShowHudCounters(gHud);
         break;
     case 17:
         {
             struct orbit_game *game = gLevelState;
 
-            if (game->unk_8c)
+            if (game->timeTrial)
                 FreezeLevelClock(game, 100);
         }
         NOTIFY(self, a, code, c);
         ShowHudCounters(gHud);
         break;
     case 15:
-        sub_802352C(gLevelState);
+        RequestBonusRound(gLevelState);
         NOTIFY(self, a, code, c);
         break;
     case 16:
-        sub_8023510(gLevelState);
+        RequestGemPath(gLevelState);
         NOTIFY(self, a, code, c);
         break;
     case 28:
-        if (gLevelState->mode == 3)
+        if (gLevelState->maskLevel == 3)
             self->deadline = 0;
         PlaySfx(gAudioContext, 0x18, 0x100);
-        sub_8022D50(gLevelState);
+        StartTimeTrial(gLevelState);
         break;
     case 29:
         PlaySfx(gAudioContext, 0x1f, 0x100);
@@ -285,24 +285,24 @@ void sub_800AC2C(struct ac2c_self *self, s32 a, s32 code, s32 c)
     case 36:
     case 37:
     case 38:
-        sub_80241A4();
+        RequestRoomExit();
         break;
     case 26:
-        if (gLevelState->mode == 0) {
-            struct ac2c_pos *h = self->hist;
+        if (gLevelState->maskLevel == 0) {
+            struct ac2c_pos *h = self->maskTrail;
             s32 i;
 
             for (i = 7; i >= 0; i--)
                 *h++ = *(struct ac2c_pos *)self;
         }
         {
-            s32 mode = gLevelState->mode;
+            s32 mode = gLevelState->maskLevel;
 
-            if ((mode <= 2 && gUnknown_030012D8->unk_88 != 1) || mode <= 1)
+            if ((mode <= 2 && gPlayer->unk_88 != 1) || mode <= 1)
                 RaiseMaskLevel(gLevelState);
         }
-        if (gLevelState->mode == 3)
-            self->deadline = gUnknown_0300082C + 1200;
+        if (gLevelState->maskLevel == 3)
+            self->deadline = gRoomFrameCount + 1200;
         break;
     case 1:
     case 2:
@@ -318,18 +318,18 @@ void sub_800AC2C(struct ac2c_self *self, s32 a, s32 code, s32 c)
             if (!Ac2cArmed(self)) {
                 struct orbit_game *game = gLevelState;
 
-                if (game->mode != 0) {
-                    if (game->mode <= 2) {
+                if (game->maskLevel != 0) {
+                    if (game->maskLevel <= 2) {
                         struct ac2c_child *child;
                         s32 x, y, m;
 
-                        self->deadline = gUnknown_0300082C + 90;
-                        SetMaskLevel(game, game->mode - 1);
+                        self->deadline = gRoomFrameCount + 90;
+                        SetMaskLevel(game, game->maskLevel - 1);
                         PlaySfx(gAudioContext, 0, 0x100);
                         PlaySfx(gAudioContext, 0x1b, 0x100);
                         NOTIFY(self, a, 0xb, c);
                         /* The ROM reloads the mode here and never uses it. */
-                        (void)*(volatile s32 *)&gLevelState->mode;
+                        (void)*(volatile s32 *)&gLevelState->maskLevel;
                         child = self->child;
                         x = child->x >> 8;
                         y = child->y >> 8;
@@ -337,7 +337,7 @@ void sub_800AC2C(struct ac2c_self *self, s32 a, s32 code, s32 c)
                         sub_8025BAC(gEntitySpawner, 0x22, 3, x, y, m);
                     }
                 } else {
-                    sub_80232E4(game);
+                    AddDeath(game);
                     NOTIFY(self, a, code, c);
                 }
             }
@@ -388,8 +388,8 @@ struct orbit_self {
     u32 blinkDeadline;          // 0x8C
     u8 unk_90[0x20];
     struct box_part *child;     // 0xB0
-    s32 histIdx;                // 0xB4
-    struct orbit_pos hist[8];   // 0xB8
+    s32 maskTrailIdx;                // 0xB4
+    struct orbit_pos maskTrail[8];   // 0xB8
 };
 
 extern s32 gUnknown_03000818;
@@ -404,7 +404,7 @@ static inline s32 BlinkArmed(struct orbit_self *self)
 {
     s32 armed = 0;
 
-    if (self->blinkDeadline > gUnknown_0300082C)
+    if (self->blinkDeadline > gRoomFrameCount)
         armed = 1;
     return armed;
 }
@@ -431,7 +431,7 @@ static inline void SetPos(s32 x, s32 y, struct box_part *child, s32 dx, s32 dy)
  * before it copies them into the parameters. So the history addresses
  * and table reads come first, in argument order, and the shifts,
  * history loads and adds come after the `child` load, as in the ROM.
- * The same sums in locals, or with `(tbl << 4)` or `tbl * 16 + hist`,
+ * The same sums in locals, or with `(tbl << 4)` or `tbl * 16 + maskTrail`,
  * come out in statement order instead. */
 static inline void SetChildPos(struct box_part *child, s32 x, s32 y)
 {
@@ -451,12 +451,12 @@ static inline void RefreshChild(struct box_part *child)
     _call_via_r1((u8 *)child + m->thisOffset, m->fn);
 }
 
-void sub_800AFF4(struct orbit_self *self)
+void DrawPlayer(struct orbit_self *self)
 {
     register s32 hold asm("r6");
 
-    if (gLevelState->mode == 3) {
-        if (!(gUnknown_0300082C & 7))
+    if (gLevelState->maskLevel == 3) {
+        if (!(gRoomFrameCount & 7))
             /* One expression, so the store address is loaded before
              * the call; the locals keep `+ 2` from being folded into
              * the mirror term and load the mirror bit before the u16
@@ -473,7 +473,7 @@ void sub_800AFF4(struct orbit_self *self)
             SetPos(self->x, self->y, self->child, -0x600, -0x1300);
         else
             SetPos(self->x, self->y, self->child, 0x600, -0x1300);
-        if (gUnknown_0300082C & 4)
+        if (gRoomFrameCount & 4)
             SetFrame(self->child, 1);
         else
             SetFrame(self->child, 2);
@@ -482,32 +482,32 @@ void sub_800AFF4(struct orbit_self *self)
     /* Hard-register hold (emits no code): r6 live across the blink
      * call keeps `self` out of r6, so it gets r7 as in the ROM. */
     asm("" : "=r"(hold));
-    if (gLevelState->mode == 3 || !BlinkArmed(self) || (gUnknown_0300082C & 4))
+    if (gLevelState->maskLevel == 3 || !BlinkArmed(self) || (gRoomFrameCount & 4))
         sub_8007A84(gUnknown_030012CC, self);
     /* End of the hold above (emits no code). */
     asm("" : : "r"(hold));
     {
         struct orbit_game *game = gLevelState;
 
-        if (game->mode == 3 && !BlinkArmed(self))
+        if (game->maskLevel == 3 && !BlinkArmed(self))
             SetMaskLevel(game, 2);
     }
     {
         s32 x = self->x;
 
-        self->hist[self->histIdx].x = x;
+        self->maskTrail[self->maskTrailIdx].x = x;
     }
     {
         s32 y = self->y;
 
-        self->hist[self->histIdx].y = y;
+        self->maskTrail[self->maskTrailIdx].y = y;
     }
-    self->histIdx = (self->histIdx + 1) % 8;
+    self->maskTrailIdx = (self->maskTrailIdx + 1) % 8;
     {
-        s32 mode = gLevelState->mode;
+        s32 mode = gLevelState->maskLevel;
 
         if ((u32)(mode - 1) <= 1) {
-            if (!(gUnknown_0300082C & 7)) {
+            if (!(gRoomFrameCount & 7)) {
                 s32 v;
 
                 gUnknown_0300081C = gUnknown_0300081C + (u16)RandRange(3) - 1;
@@ -520,15 +520,15 @@ void sub_800AFF4(struct orbit_self *self)
             }
             ClampTick(self->child, gUnknown_0300081C);
             {
-                s32 idx = self->histIdx;
+                s32 idx = self->maskTrailIdx;
 
                 SetChildPos(self->child,
-                            self->hist[idx].x + gStaticData_0816A820[gUnknown_0300082C & 0xff] * 16,
-                            self->hist[idx].y + gStaticData_0816A820[(gUnknown_0300082C >> 1) & 0xff] * 8 - 0x1800);
+                            self->maskTrail[idx].x + gStaticData_0816A820[gRoomFrameCount & 0xff] * 16,
+                            self->maskTrail[idx].y + gStaticData_0816A820[(gRoomFrameCount >> 1) & 0xff] * 8 - 0x1800);
             }
             /* Hard-register hold (emits no code): r6 live here keeps
              * `&self->child` out of r6 (it goes to ip), which leaves r6
-             * for `&histIdx` in global-alloc; reload then evicts it to
+             * for `&maskTrailIdx` in global-alloc; reload then evicts it to
              * [sp], giving the ROM's single spill and sb/sl/r8 layout. */
             asm("" : "=r"(hold));
             self->child->frame = mode - 1;

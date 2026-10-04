@@ -8,7 +8,7 @@
  * section - now closed. Real bytes formerly the entirety of
  * asm/code_3_2_17_e560_ff0c.s (now deleted).
  *
- * **The `sub_800FF0C` entity-constructor trampoline family.** Two whole
+ * **The `CreateCrate` entity-constructor trampoline family.** Two whole
  * files exist purely to call this one function with a fixed constant
  * `type` (the 5th, stack-passed argument): every `type` from `0` to
  * `0x12` (18) is externally confirmed by a caller -
@@ -21,7 +21,7 @@
  * stayed `NAKED`.
  *
  * Allocates a 0x64 (100)-byte object via `sub_8026EDC`, sets
- * `self+0x18` to `&gStaticData_087E4074` (a real address inside the
+ * `self+0x18` to `&gCrateVtable` (a real address inside the
  * documented 93-entry `gStaticData_087Exxx` vtable family, but at a
  * `+0x18` offset - every other constructor this project has matched so
  * far uses `+0xC` for this same table-pointer convention; this function
@@ -33,7 +33,7 @@
  * `0`.
  *
  * Unless `gLevelState+0x8c` is set, or the level's "how many of
- * this entity kind currently exist" counters (`sub_80232E0`/
+ * this entity kind currently exist" counters (`GetDeaths`/
  * `sub_8023128`, both called on `gLevelState`) show the pool
  * isn't already at/over capacity, `type == 0xb` or `type == 0xf` gets
  * demoted via a placement-record flags byte (the `gEntityFlags ->
@@ -87,12 +87,12 @@
  * 1` and `arg0 != 0xFFFF` and the placement record confirms presence,
  * re-tags `self+0x2d = 0x1b` (27), reruns the sprite/animation trio,
  * and initializes `self+0x30` from the 28-byte-stride hitbox-record
- * table's own `+0x16` count (the same convention `sub_8010480`,
+ * table's own `+0x16` count (the same convention `DrawCrate`,
  * game_loop35.c, already established) minus one; also folds `type`'s
  * low bit into `self+0x4d` bit 0 (keeping bit 7). Writes
  * `self+0x4e = type` unconditionally. If `type == 5` and the placement
  * record confirms presence, calls `sub_800F5B8(self)` (see above).
- * Finally registers `self` via `sub_8009B70(gUnknown_0300130C, self)`
+ * Finally registers `self` via `sub_8009B70(gCrateList, self)`
  * and returns `self`.
  *
  * Built with old_agbcc (the file is on the Makefile's OLD_AGBCC_OBJS;
@@ -117,14 +117,14 @@ extern void *sub_8026EDC(u32 size);
 extern void sub_80084A4(void *self);
 extern void sub_800FEB0(struct phys_obj *self);
 extern u8 sub_802599C(void *level, s32 id);
-extern s32 sub_80232E0(void *self);
+extern s32 GetDeaths(void *self);
 extern s32 sub_8023128(void *self);
 extern s32 sub_800815C(struct phys_obj *self);
 extern void sub_8009B70(void *list, struct phys_obj *self);
 extern void sub_800F5B8(struct phys_obj *self);
-extern struct phys_obj_vtable gStaticData_087E4074;
+extern struct phys_obj_vtable gCrateVtable;
 extern u8 gStaticData_0816BB94[];
-extern void *gUnknown_0300130C;
+extern void *gCrateList;
 
 struct placement_level
 {
@@ -141,7 +141,7 @@ static inline u8 *Placement(u16 i)
 {
     return PLACEMENT(i);
 }
-void *sub_800FF0C(u16 id, u16 x, u16 y, u16 slot, u8 type)
+void *CreateCrate(u16 id, u16 x, u16 y, u16 slot, u8 type)
 {
     struct phys_obj *self;
     s32 special;
@@ -151,7 +151,7 @@ void *sub_800FF0C(u16 id, u16 x, u16 y, u16 slot, u8 type)
         void *obj = sub_8026EDC(0x64);
 
         sub_80084A4(obj);
-        ((struct phys_obj *)obj)->vtable = &gStaticData_087E4074;
+        ((struct phys_obj *)obj)->vtable = &gCrateVtable;
         ((struct phys_obj *)obj)->unk_59 = 0;
         sub_800FEB0(obj);
         self = obj;
@@ -160,7 +160,7 @@ void *sub_800FF0C(u16 id, u16 x, u16 y, u16 slot, u8 type)
     if (type == 9 && id != 0xffff && sub_802599C(gEntityFlags, id))
         type = 0;
     if (*((u8 *)gLevelState + 0x8c) == 0
-        && sub_80232E0(gLevelState) >= sub_8023128(gLevelState))
+        && GetDeaths(gLevelState) >= sub_8023128(gLevelState))
     {
         if (type == 0xb)
         {
@@ -356,6 +356,6 @@ void *sub_800FF0C(u16 id, u16 x, u16 y, u16 slot, u8 type)
     asm("" : : "r"(type));
     if (type == 5 && sub_802599C(gEntityFlags, id))
         sub_800F5B8(self);
-    sub_8009B70(gUnknown_0300130C, self);
+    sub_8009B70(gCrateList, self);
     return self;
 }

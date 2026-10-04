@@ -134,9 +134,9 @@ extern const struct sprite_frame *const gSpriteBank08Frames[36];
 extern const struct sprite_anim gSpriteBank09Anims[1];
 extern const struct sprite_frame *const gSpriteBank09Frames[14];
 
-/* The root of the system: sub_8022230 (graphics_loading_21d80.c) points
+/* The root of the system: InitLevelState (graphics_loading_21d80.c) points
  * *gUnknown_030012D0 here. GetSpriteTileBase returns tileBase;
- * sub_8022230 and RunPauseMenu (settings_menu15.c) build the tile-asset
+ * InitLevelState and RunPauseMenu (settings_menu15.c) build the tile-asset
  * cache from tilePool/tilePoolCount. */
 const struct sprite_bank_table gSpriteBankTable = {
     .banks = gSpriteBanks,

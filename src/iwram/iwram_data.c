@@ -86,11 +86,11 @@ const u8 *gUnknown_03000814 = (const u8 *)gStaticData_0816B124;
 
 s32 gUnknown_03000818 = 0;
 s32 gUnknown_0300081C = 0;
-void *gUnknown_03000820 = NULL; /* struct level_menu * */
-u8 gUnknown_03000824 = 0;
-void *gUnknown_03000828 = NULL;
-u32 gUnknown_0300082C = 0;
-u8 gUnknown_03000830 = 0;
+void *gLevelSelect = NULL; /* struct level_menu * */
+u8 gNewWorldOpened = 0;
+void *gLevelStateSingleton = NULL;
+u32 gRoomFrameCount = 0;
+u8 gRoomExitRequested = 0;
 
 /* The cutscene text of each language, indexed by gLanguage
  * (src/data/cutscenes_16d1c8.c, graphics_loading_22354.c). */

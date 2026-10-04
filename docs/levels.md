@@ -26,7 +26,7 @@ to two extra rooms, each a `struct level_room` record
 (0x14 bytes). All of it is C in `src/data/level_table_16c814.c`, with
 one record per room (`gLevelRoom00`..`gLevelRoom40`) plus seven records
 of kind 3 for the stages played in an actor category, which have no
-room data. The room record is the widget `sub_8023A1C` hands to
+room data. The room record is the widget `RunRoom` hands to
 `LoadRoom` (`level_layers.c`), which loads a room: it unpacks or
 references the asset, feeds each layer its descriptor, feeds the terrain
 cache the collision layer, hands the entity list and links to
@@ -48,7 +48,7 @@ struct names the code's own local views of the same record.
 | 0x10 | `collision`: the collision layer | `SetCollisionSource` (terrain cache) |
 | 0x14 | `asset`: the level asset | `LoadRoom` |
 | 0x18 | `u8 assetPacked`: 1 = LZ77 stream (unpacked to the heap), 0 = used in place | same |
-| 0x1C | `entities`: `struct level_entity_list` | `SpawnRoomEntities`, `sub_8025894`, `sub_801A878`, ... |
+| 0x1C | `entities`: `struct level_entity_list` | `SpawnRoomEntities`, `CountCrateEntities`, `sub_801A878`, ... |
 | 0x20 | `links`: `struct level_link_list` or NULL | `SpawnRoomEntities` |
 | 0x24 | 12 zero bytes in every room | - |
 
@@ -160,7 +160,7 @@ of the table at `gEntitySpawner` (`SpawnEntity`) with the id, x, y and
 2 go to the spawned object's `+0x28` flags: `sub_8021D04`, `sub_801E990`,
 `actor_part_1967c.c`) and per-type words, e.g. `struct spawn_rec` of
 `sub_801A878` (mover kind and distances); type 0x1A takes its effective
-type from the record's `+8` (`sub_8025894`).
+type from the record's `+8` (`CountCrateEntities`).
 
 In the ROM:
 

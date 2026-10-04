@@ -51,13 +51,13 @@ The shared layout of these objects is in the new `include/box_part.h`:
 | `sub_8009BE0` (actor_part12b.c) | old_agbcc attempt 61 hw off and 8 bytes short. The ROM recomputes `&origY` in the loop and keeps two copies of the tries pointer and `&pos`. Inline helpers and pointer locals didn't reproduce this. No draft kept. |
 | `sub_80091D4` (actor_part11c.c) | tried inline versions of `sub_8009150`'s link and `sub_8009A30`'s remove. The shape is close, but the frame and spill slots differ (~200 hw). No draft kept. |
 | `sub_8009008` (actor_part11b.c) | not retried (two-phase unlink with an odd `0x100` reload). |
-| `sub_800AFF4` (actor_part111.c) | first C attempt, ~170 hw: `self` in r6 instead of r7, and the orbit tail's address caching differs. No draft kept. |
+| `DrawPlayer` (actor_part111.c) | first C attempt, ~170 hw: `self` in r6 instead of r7, and the orbit tail's address caching differs. No draft kept. |
 
 `make compare` was run from clean and passes.
 
 ## Later pass (issue #9-#11 NAKED retry)
 
-`sub_8007DBC`, `sub_800891C`, `sub_8008F20`, `sub_8009914`, `sub_8009BE0`, `sub_800A178` and `sub_800A420` are real C now. `sub_8009008`, `sub_80091D4` and `sub_800AFF4` are still NAKED (`sub_800AFF4` now has a draft). See [issue-9-11-box-naked-retry.md](issue-9-11-box-naked-retry.md).
+`sub_8007DBC`, `sub_800891C`, `sub_8008F20`, `sub_8009914`, `sub_8009BE0`, `sub_800A178` and `sub_800A420` are real C now. `sub_8009008`, `sub_80091D4` and `DrawPlayer` are still NAKED (`DrawPlayer` now has a draft). See [issue-9-11-box-naked-retry.md](issue-9-11-box-naked-retry.md).
 
 ## Later pass (fresh NAKED retry)
 

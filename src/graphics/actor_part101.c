@@ -50,7 +50,7 @@ extern void *gUnknown_030012FC;
 extern void *gHud;
 extern u32 gKeys;
 
-extern void sub_8022CA0(void *arg0);
+extern void SetCheckpointAtPlayer(void *arg0);
 extern void DecompressCategorySpriteSheet(const u8 *sheet);
 extern void SetupActorVramPool(void);
 extern void sub_802AAFC(void);
@@ -115,7 +115,7 @@ s32 InitActorCategory(s32 category)
     gUnknown_03000878 = 0;
     gUnknown_03001384 = 0;
     gUnknown_03001388 = 0;
-    sub_8022CA0(gLevelState);
+    SetCheckpointAtPlayer(gLevelState);
     DecompressCategorySpriteSheet(CUR_CATEGORY.sprite_sheet);
     SetupActorVramPool();
     sub_802AAFC();

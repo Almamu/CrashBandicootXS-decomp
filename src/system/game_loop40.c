@@ -59,14 +59,14 @@ struct level_obj
 struct level_state
 {
     u8 unk_00[0x8C];
-    u8 unk_8C;                  // 0x8C
+    u8 timeTrial;                  // 0x8C
     u8 unk_8D[3];
     s32 unk_90[5];              // 0x90-0xA0
     u8 unk_A4[0x38];
     struct level_obj *level;    // 0xDC
     u8 unk_E0[0xD8];
-    struct slot_part *slotA;    // 0x1B8
-    struct slot_part *slotB;    // 0x1BC
+    struct slot_part *bonusPlatform;    // 0x1B8
+    struct slot_part *gemPlatform;    // 0x1BC
 };
 
 struct entity_list
@@ -111,13 +111,13 @@ static inline void SetPartTag(struct slot_part *part, s32 tag)
  * re-registers every entity in gUnknown_030012EC whose +0x48 method
  * returns 2: those whose +0x28 method fails are despawned, the rest are
  * flagged seen and marked in the collision map's seen bitmap. */
-void sub_8022D50(struct level_state *self)
+void StartTimeTrial(struct level_state *self)
 {
     struct slot_part *part;
     s32 i;
 
     SetMaskLevel(self, 0);
-    self->unk_8C = 1;
+    self->timeTrial = 1;
     self->unk_90[0] = 0;
     self->unk_90[1] = 0;
     self->unk_90[2] = 0;
@@ -126,7 +126,7 @@ void sub_8022D50(struct level_state *self)
     if (self->level->state == 3)
         return;
 
-    part = self->slotA;
+    part = self->bonusPlatform;
     if (part != NULL)
     {
         SetPartTag(part, 7);
@@ -134,15 +134,15 @@ void sub_8022D50(struct level_state *self)
         sub_80087B4(part);
         sub_800872C(part, 0);
     }
-    part = self->slotB;
+    part = self->gemPlatform;
     if (part != NULL)
     {
         SetPartTag(part, 0xc);
         sub_80087C0(part);
         sub_80087B4(part);
         sub_800872C(part, 0);
-        sub_8006D08(gUnknown_030012B8, self->slotB->frameNibble,
-                    self->slotB->anim->records[self->slotB->tag].tileRecord);
+        sub_8006D08(gUnknown_030012B8, self->gemPlatform->frameNibble,
+                    self->gemPlatform->anim->records[self->gemPlatform->tag].tileRecord);
     }
     sub_8010804();
 

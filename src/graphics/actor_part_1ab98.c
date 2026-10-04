@@ -18,7 +18,7 @@
  *   from the first box build into the no-overlap switch.
  * - The player's position is written as `pos`, then read and written
  *   back only through the `PosPtr` inline (no `pp` pointer local): the
- *   ROM's pointer is a gcse copy inserted after the `&gUnknown_030012D8`
+ *   ROM's pointer is a gcse copy inserted after the `&gPlayer`
  *   one.
  * - The vtable call is a `static inline` (`Call68`) calling through the
  *   method's function pointer, not the r4-pinned OBJ_CALL68 macro.
@@ -78,18 +78,18 @@ void sub_801AB98(struct gobj *selfArg, void *unused)
     asm("" : "=r"(hold8));
     sub_8007B98(&a, self);
     {
-        s32 t = gUnknown_030012D8->x;
+        s32 t = gPlayer->x;
 
         px = t >> 8;
     }
-    py = gUnknown_030012D8->y >> 8;
+    py = gPlayer->y >> 8;
     pb = &b;
     /* Emits nothing: hides `pb`'s value from cse, so `&b` stays in a
      * register (r4) instead of being re-added to sp at each use. */
     asm("" : "+r"(pb));
-    sub_8007B98(pb, gUnknown_030012D8);
+    sub_8007B98(pb, gPlayer);
     {
-        struct gobj *q = gUnknown_030012D8;
+        struct gobj *q = gPlayer;
         struct anim_table *anim = q->anim;
         u32 tag = q->tag;
 
@@ -103,12 +103,12 @@ void sub_801AB98(struct gobj *selfArg, void *unused)
         above = 0;
         if (b.y < a.y)
             above = 1;
-        tx = sub_8009EC4(gUnknown_030012D8);
-        ty = sub_8009EBC(gUnknown_030012D8);
+        tx = sub_8009EC4(gPlayer);
+        ty = sub_8009EBC(gPlayer);
         side = 2;
         if (px > tx)
             side = 1;
-        if ((gUnknown_030012D8->x >> 8) < (self->x >> 8))
+        if ((gPlayer->x >> 8) < (self->x >> 8))
         {
             hdir = 1;
             ox = Span(b.x, b.w, a.x) + 1;
@@ -118,7 +118,7 @@ void sub_801AB98(struct gobj *selfArg, void *unused)
             hdir = 2;
             ox = Span(a.x, a.w, b.x) + 1;
         }
-        if ((gUnknown_030012D8->y >> 8) > (self->y >> 8))
+        if ((gPlayer->y >> 8) > (self->y >> 8))
         {
             vdir = 4;
             oy = Span(a.y, a.h, b.y);
@@ -243,8 +243,8 @@ void sub_801AB98(struct gobj *selfArg, void *unused)
             }
         }
 
-        pos.x = gUnknown_030012D8->x;
-        pos.y = gUnknown_030012D8->y;
+        pos.x = gPlayer->x;
+        pos.y = gPlayer->y;
         if (ox < 0)
             ox = 0;
         if (oy < 0)
@@ -256,7 +256,7 @@ void sub_801AB98(struct gobj *selfArg, void *unused)
             break;
         case 4:
             {
-                struct gobj *q = gUnknown_030012D8;
+                struct gobj *q = gPlayer;
 
                 if (!(q->unk_68 & 8))
                 {
@@ -279,7 +279,7 @@ void sub_801AB98(struct gobj *selfArg, void *unused)
         }
         if (result == 8 || oy <= 1)
         {
-            struct gobj *q = gUnknown_030012D8;
+            struct gobj *q = gPlayer;
 
             if (!(q->dir & 4) && above)
             {
@@ -290,19 +290,19 @@ void sub_801AB98(struct gobj *selfArg, void *unused)
                     q->unk_68 = m;
                 }
                 {
-                    s32 y = gUnknown_030012D8->y;
+                    s32 y = gPlayer->y;
 
                     PosPtr(&pos)->y = y - ((oy - 1) << 8);
                 }
                 flags = 0;
-                pos.x = gUnknown_030012D8->x;
+                pos.x = gPlayer->x;
             }
         }
-        sub_8007398(gUnknown_030012D8, pos.x, PosPtr(&pos)->y);
+        sub_8007398(gPlayer, pos.x, PosPtr(&pos)->y);
         if (flags)
         {
-            Call68(gUnknown_030012D8, 0, 0xC, flags);
-            gUnknown_030012D8->unk_74 |= flags;
+            Call68(gPlayer, 0, 0xC, flags);
+            gPlayer->unk_74 |= flags;
         }
         if (result == 8)
         {
@@ -312,7 +312,7 @@ void sub_801AB98(struct gobj *selfArg, void *unused)
                 self->mover->active = 1;
             else
             {
-                s32 d = (self->x >> 8) - (gUnknown_030012D8->x >> 8);
+                s32 d = (self->x >> 8) - (gPlayer->x >> 8);
                 s32 sign;
 
                 sign = d >> 31;
@@ -323,15 +323,15 @@ void sub_801AB98(struct gobj *selfArg, void *unused)
                     switch (type)
                     {
                     case 2:
-                        Call68(gUnknown_030012D8, 0, 0x11, 0);
+                        Call68(gPlayer, 0, 0x11, 0);
                         break;
                     case 3:
-                        if (!sub_80232A0(gLevelState) && !((u8 *)gLevelState)[0x8C])
-                            Call68(gUnknown_030012D8, 0, 0xF, 0);
+                        if (!IsBonusRoundDone(gLevelState) && !((u8 *)gLevelState)[0x8C])
+                            Call68(gPlayer, 0, 0xF, 0);
                         break;
                     case 4:
-                        if (!sub_8023278(gLevelState) && !((u8 *)gLevelState)[0x8C])
-                            Call68(gUnknown_030012D8, 0, 0x10, 0);
+                        if (!IsGemPathDone(gLevelState) && !((u8 *)gLevelState)[0x8C])
+                            Call68(gPlayer, 0, 0x10, 0);
                         break;
                     }
                 }
@@ -348,7 +348,7 @@ void sub_801AB98(struct gobj *selfArg, void *unused)
         case 7:
             if (sub_8001688(&a, pb))
             {
-                struct gobj *q = gUnknown_030012D8;
+                struct gobj *q = gPlayer;
 
                 q->carried = self;
                 {
@@ -361,42 +361,42 @@ void sub_801AB98(struct gobj *selfArg, void *unused)
         case 2:
             if (sub_8001688(&a, pb))
             {
-                s32 d = (self->x >> 8) - (gUnknown_030012D8->x >> 8);
+                s32 d = (self->x >> 8) - (gPlayer->x >> 8);
                 s32 sign;
 
                 sign = d >> 31;
                 d ^= sign;
                 d -= sign;
                 if (d <= 7)
-                    Call68(gUnknown_030012D8, 0, 0x11, 0);
+                    Call68(gPlayer, 0, 0x11, 0);
             }
             break;
         case 3:
-            if (!sub_80232A0(gLevelState) && !((u8 *)gLevelState)[0x8C]
+            if (!IsBonusRoundDone(gLevelState) && !((u8 *)gLevelState)[0x8C]
                 && sub_8001688(&a, pb))
             {
-                s32 d = (self->x >> 8) - (gUnknown_030012D8->x >> 8);
+                s32 d = (self->x >> 8) - (gPlayer->x >> 8);
                 s32 sign;
 
                 sign = d >> 31;
                 d ^= sign;
                 d -= sign;
                 if (d <= 7)
-                    Call68(gUnknown_030012D8, 0, 0xF, 0);
+                    Call68(gPlayer, 0, 0xF, 0);
             }
             break;
         case 4:
-            if (!sub_8023278(gLevelState) && !((u8 *)gLevelState)[0x8C]
+            if (!IsGemPathDone(gLevelState) && !((u8 *)gLevelState)[0x8C]
                 && sub_8001688(&a, pb))
             {
-                s32 d = (self->x >> 8) - (gUnknown_030012D8->x >> 8);
+                s32 d = (self->x >> 8) - (gPlayer->x >> 8);
                 s32 sign;
 
                 sign = d >> 31;
                 d ^= sign;
                 d -= sign;
                 if (d <= 7)
-                    Call68(gUnknown_030012D8, 0, 0x10, 0);
+                    Call68(gPlayer, 0, 0x10, 0);
             }
             break;
         case 1:

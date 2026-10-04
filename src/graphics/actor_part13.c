@@ -9,17 +9,17 @@ struct aabb {
     s32 field_c;
 };
 
-/* The one player-object field (gUnknown_030012D8, a `struct gobj`)
+/* The one player-object field (gPlayer, a `struct gobj`)
  * this file reads. */
 struct player_view
 {
     u8 unk_00[0x8c];
-    u32 unk_8C;                     // 0x8c - a gUnknown_0300082C deadline
+    u32 unk_8C;                     // 0x8c - a gRoomFrameCount deadline
 };
 
 extern struct level_state *gLevelState;
-extern void *gUnknown_030012D8;
-extern u32 gUnknown_0300082C;
+extern void *gPlayer;
+extern u32 gRoomFrameCount;
 extern void *sub_8007C30(void *dest, void *pt);
 extern void *sub_8007CF8(void *dest, void *pt);
 extern u8 sub_800B37C(void *arg0, void *buf);
@@ -27,8 +27,8 @@ extern void _call_via_r4(void *arg0, s32 arg1, s32 arg2, s32 arg3);
 extern void sub_8009D5C(void *partArg);
 
 /* Tests `part` for a collision-grid hit against the player
- * (`gUnknown_030012D8`), gated by a mix of flag bits and a periodic
- * "fast path" check against `gUnknown_0300082C` (the same ~128-frame
+ * (`gPlayer`), gated by a mix of flag bits and a periodic
+ * "fast path" check against `gRoomFrameCount` (the same ~128-frame
  * counter documented in docs/rom_map.md): if `part->flags` bit 2 is
  * set and the player's `unk_8C` field is ahead of the frame counter
  * and `gLevelState`'s mode (`maskLevel`) is 3, or independently if
@@ -49,10 +49,10 @@ void sub_8009CA0(void *partArg)
     flagsBit = flagsShifted & mask;
     if (flagsBit) {
         s32 fast;
-        struct player_view *player = gUnknown_030012D8;
+        struct player_view *player = gPlayer;
 
         fast = 0;
-        if (player->unk_8C > gUnknown_0300082C) {
+        if (player->unk_8C > gRoomFrameCount) {
             fast = 1;
         }
         if (fast != 0) {
@@ -91,7 +91,7 @@ doCheck:
         struct aabb box;
         sub_8007C30(&box, part);
         if (box.field_8 != 0) {
-            if (sub_800B37C(gUnknown_030012D8, &box)) {
+            if (sub_800B37C(gPlayer, &box)) {
                 sub_8009D5C(part);
                 return;
             }
@@ -101,7 +101,7 @@ doCheck:
         struct aabb box2;
         sub_8007CF8(&box2, part);
         if (*(s32 volatile *)&box2.field_8 != 0) {
-            if (sub_800B37C(gUnknown_030012D8, &box2)) {
+            if (sub_800B37C(gPlayer, &box2)) {
                 sub_8009D5C(part);
             }
         }
@@ -173,7 +173,7 @@ void sub_8009D5C(void *partArg)
 
 mode0:
     {
-        register struct actor *player asm("r0") = gUnknown_030012D8;
+        register struct actor *player asm("r0") = gPlayer;
         u8 *rec = (u8 *)player->table + 0x68;
         s16 offset = *(s16 *)rec;
         addr = (u8 *)player + offset;
@@ -185,7 +185,7 @@ mode0:
 
 mode1or2:
     {
-        struct actor *player = gUnknown_030012D8;
+        struct actor *player = gPlayer;
         u8 *rec = (u8 *)player->table + 0x68;
         s16 offset = *(s16 *)rec;
         void *addr0 = (u8 *)player + offset;

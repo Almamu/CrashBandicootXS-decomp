@@ -90,7 +90,7 @@ struct level_desc
 
 /*
  * One room record of the level table (src/data/level_table_16c814.c):
- * the record sub_8023A1C hands to LoadRoom (level_layers.c's
+ * the record RunRoom hands to LoadRoom (level_layers.c's
  * `struct level_load_args`, the palette and descriptor), `MedalListItem`
  * in game_loop17.c/game_loop18.c, `gl_widget_kind` in game_loop56.c.
  */
@@ -126,13 +126,13 @@ struct level_info
 {
     s32 nameText;       // 0x00 - text id of the level's name (GetUiText)
     u32 theme;          // 0x04 - picks the level-start colour cycle
-                        //        (sub_8023A1C) and indexes the music cues
-                        //        gThemeMusicCues (sub_8024498)
+                        //        (RunRoom) and indexes the music cues
+                        //        gThemeMusicCues (PlayRoomMusic)
     u32 times[3];       // 0x08 - time-trial thresholds, centiseconds,
                         //        loosest first
-    s32 unk_14;         // 0x14 - sub_8023118
+    s32 unk_14;         // 0x14 - SetMaskAssistDeaths
     s32 unk_18;         // 0x18 - sub_8023110
-    u8 unk_1C;          // 0x1C - sub_8023484 runs at level start if 0
+    u8 unk_1C;          // 0x1C - CheckAllCratesBroken runs at level start if 0
     const struct level_room_list *rooms; // 0x20
 };
 

@@ -146,7 +146,7 @@ void sub_8011448(struct orbit_part *self, u8 randomize)
  * sub_8010F8C's own default-mode branch); if set, calls sub_801192C
  * (the small self->0x4b/self->0x4a-driven table helper above) instead.
  * If self->0x48 == 3 specifically, self->x/self->y are instead reset to
- * gUnknown_030012D8's own position minus a small fixed offset
+ * gPlayer's own position minus a small fixed offset
  * (0xFFFFFC00/0xFFFFF200, i.e. -0x400/-0xe00 in Q8). Every path ends
  * with a tail call to sub_8008364(self) (already matched elsewhere,
  * src/graphics/actor_part5.c).
@@ -164,7 +164,7 @@ void sub_8011448(struct orbit_part *self, u8 randomize)
  * locals settle the last register and order differences. */
 extern void *gEntityFlags;
 extern void *gEntitySpawner;
-extern struct orbit_part *gUnknown_030012D8;
+extern struct orbit_part *gPlayer;
 extern void CollectWumpa(void *state);
 extern struct actor *sub_8025CA4(void *unused0, u16 x, u16 y, u8 p3, u8 p4, u8 p5);
 typedef struct actor *(*OrbitSpawn4)(void *pool, s32 x, s32 y, u8 p3);
@@ -297,7 +297,7 @@ void sub_8011548(struct orbit_part *self)
             sub_801192C(self);
         }
     } else if (self->state == 3) {
-        struct orbit_part *p = gUnknown_030012D8;
+        struct orbit_part *p = gPlayer;
         s32 px = p->base.x, py = p->base.y;
         s32 nx = px - 0x400, ny = py - 0xe00;
 

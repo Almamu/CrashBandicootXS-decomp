@@ -1,25 +1,25 @@
-# GitHub issue #34 follow-up: `sub_8022D50` (parked, NAKED) / `SpawnRoomEntities` (parked, NAKED)
+# GitHub issue #34 follow-up: `StartTimeTrial` (parked, NAKED) / `SpawnRoomEntities` (parked, NAKED)
 
 Picked up the two remaining raw functions the `game_loop` category's
 `docs/status/game_loop.md` still listed under the `UpdateGameFrame`-
-`MainLoop` cluster: `sub_8022D50` and `SpawnRoomEntities`. `SpawnRoomEntities` was
+`MainLoop` cluster: `StartTimeTrial` and `SpawnRoomEntities`. `SpawnRoomEntities` was
 initially left raw in a first pass (see below), then picked up again in
 a second follow-up pass once its second half was fully traced - see the
 "NAKED transcription" section below.
 
-## `sub_8022D50` - NAKED transcription, `src/system/game_loop40.c`
+## `StartTimeTrial` - NAKED transcription, `src/system/game_loop40.c`
 
 Fully traced against the ROM: `self` (every caller passes
 `*gLevelState`, the same per-level state object
-`sub_8022BF0`/`sub_8022CA0`, game_loop.c, and the `self+0x80`/`0x84`/...
+`EndBonusRound`/`SetCheckpointAtPlayer`, game_loop.c, and the `self+0x80`/`0x84`/...
 accessor family, game_loop2.c, operate on) gets two fields cleared
 (`self+0x8c` as a byte, `self+0x90`-`0xa0` as five zeroed words), then -
 unless `self+0xdc`'s level object is already in state 3 - the two actor
 slots at `self+0x1b8`/`0x1bc` are torn down (`sub_80087C0`/
 `sub_80087B4`/`sub_800872C(..., 0)`, the same OAM-trio teardown
-`sub_802375C`, game_loop39.c, already uses) when non-null. `self+0x1bc`'s
+`PlayRoom`, game_loop39.c, already uses) when non-null. `self+0x1bc`'s
 actor additionally feeds its own `+0x20`-table/`+0x2d`-tag hitbox record
-(the same convention `sub_8010480`, game_loop35.c, and `sub_8010674`,
+(the same convention `DrawCrate`, game_loop35.c, and `sub_8010674`,
 game_loop23.c, already document) into `sub_8006D08` (the tile-asset-cache
 slot loader) - `self+0x29`'s low nibble is the cache slot, and the
 record's own `+0x14` byte is the asset id. Finally `gUnknown_030012EC`
@@ -88,10 +88,10 @@ collision-bitmap arrays that family already documents) get
 DMA-zero-filled (64 bytes each, matching a plain `DmaFill32(3, 0, dest,
 64)`), then unconditionally `self+8`→`self+0x108` and
 `self+0x208`→`self+0x308` get `CpuSet`-copied (the same
-`CpuSet(src, dst, 0x04000040)` idiom `sub_8022CA0`, game_loop.c,
+`CpuSet(src, dst, 0x04000040)` idiom `SetCheckpointAtPlayer`, game_loop.c,
 already documents in the opposite direction). `self+4` is set from
 `posArg >> 8`. Then `list` itself is walked as a `{count:u16@2,
-groups:ptr@4}` header (the same shape `sub_8025894`'s own matched
+groups:ptr@4}` header (the same shape `CountCrateEntities`'s own matched
 reconstruction, game_loop12.c, documents for a sibling
 list) over `{count:u16@2, items:ptr@4}` 8-byte group records, each
 holding `{tableIdx:u16, p1:u16, p2:u16, p3:u16}` 8-byte item records; for
@@ -103,10 +103,10 @@ its own `self` argument, indexing `gEntitySpawner`'s table.
 **Second half** (everything gated on `redirectInfo`, a count-prefixed
 `{u32, u32}` array - null skips it entirely, otherwise the first word
 is the count and the array starts right after): for each
-`gUnknown_0300130C` (`struct actor_list`) entry in reverse, its `+8` id
+`gCrateList` (`struct actor_list`) entry in reverse, its `+8` id
 is looked up in `redirectInfo`'s array (`.a` field, read as a full
 `u32`); a match's paired `.b` value is used to search
-`gUnknown_0300130C` *again*, in reverse, for an entry with that id,
+`gCrateList` *again*, in reverse, for an entry with that id,
 linking the two via `sub_8010714`/`sub_8010710` (the neighbor-list
 set-next/set-prev pair, game_loop23.c) on success. On failure the code
 chases a *second* lookup back into `redirectInfo`'s array itself
@@ -121,7 +121,7 @@ way every other index is. A second, independent forward pass then walks
 time read as a `u16`, not the first pass's `u32` - a genuinely different
 load width for the exact same field, confirmed against the ROM and
 transcribed as-is rather than "cleaned up" to one consistent width) up
-in `gUnknown_0300130C` directly (forward this time); on a miss it
+in `gCrateList` directly (forward this time); on a miss it
 chases the same kind of `u16`-width id→id redirect chain through the
 array until a match is found or the chain runs out. Once a match is
 found (either pass), its `+0x18`-table's `+0x10`/`+0x14` `_call_via_r1`
@@ -169,12 +169,12 @@ elsewhere in this ROM region for similarly register-heavy functions
 above, both keeping `r8` live across most of their bodies). Transcribed
 straight from the confirmed-correct ROM disassembly instead - every
 label, branch and literal-pool placement (including the ROM's four
-redundant re-loads of `&gUnknown_0300130C` into separate nearby literal
+redundant re-loads of `&gCrateList` into separate nearby literal
 pools, one per Thumb `ldr`-range-limited region) carried over
 unmodified.
 
 Full clean `make compare` (`La suma coincide`) confirms the NAKED
-transcription byte-exact. `sub_8025894`, which used to share
+transcription byte-exact. `CountCrateEntities`, which used to share
 `asm/code_3_2_17_255d4.s` with `SpawnRoomEntities`, was unaffected by this
 pass and stayed parked `NON_MATCHING` in `src/system/game_loop12.c` at
 the time - it has since been matched as real C (the whole raw file is
@@ -187,7 +187,7 @@ Picked up the last big raw piece of the `UpdateGameFrame`-`MainLoop`
 cluster: `UpdateGameFrame` itself (ROM `0x080225A0`-`0x08022BF0`, ~730
 instructions), called once a frame from `MainLoop`
 (`src/system/main_loop.c`) with `self` = `gLevelState` - the same
-per-level state object `sub_8022BF0`/`sub_8022CA0` (`game_loop.c`) and
+per-level state object `EndBonusRound`/`SetCheckpointAtPlayer` (`game_loop.c`) and
 the `self+0x80`-`0xc4`/`+2` accessor family (`game_loop2.c`) already
 operate on. `docs/matching.md`'s original entry for this chunk (search
 "GitHub issue #34: `0x080225A0`-`0x080231C4`") sketched the shape but
@@ -202,18 +202,18 @@ a separate `self->0xdc`-level-object-state-3` OR-set branch, see
 below). Crucially, `self->0xc4` is *not* a separate "player state"
 field distinct from the retry-loop's frame-tick counter documented
 below - it is the exact same field, doing double duty: clamped to
-`<=0x17` (23) and fed to `sub_801BAF0` every retry-loop pass, *and*
+`<=0x17` (23) and fed to `RunLevelSelect` every retry-loop pass, *and*
 used as the switch key here. So the 5 special states are literally
 `self->0xc4` values `0x14`-`0x18` (20-24). Corrected transition-target
-map (the original doc's `sub_8023190`/`8184`/`819C`/`80231A8`
+map (the original doc's `GiveSuperBodySlam`/`8184`/`819C`/`80231A8`
 ordering was slightly off against the real per-case targets):
 
 | case | gate (skip transition if true) | transition callee | extra work | `PlayCutscene` mode |
 |---|---|---|---|---|
-| 0 | `sub_80231BC` | `sub_8023190` | `sub_801D41C`, `ShowSuperBodySlamDialog` | 4 |
-| 1 | `sub_80231CC` | `sub_80231A8` | `sub_801D41C`, `ShowDoubleJumpDialog` | 5 |
-| 2 | `sub_80231B4` | `sub_8023184` | `sub_801D41C`, `ShowTornadoSpinDialog` | 6 |
-| 3 | `sub_80231C4` | `sub_802319C` | `sub_801D41C`, `ShowTurboRunDialog`, then unconditionally: `GetCompletionPercent(self) > 0x63` frames increments `self->0xc4` (advances to the next state) and zeroes `*(self+0xc8)`, mode 8, `goto` the post-category-reset block directly; otherwise mode 0xa | 8 or 0xa |
+| 0 | `HasSuperBodySlam` | `GiveSuperBodySlam` | `SetNewWorldOpened`, `ShowSuperBodySlamDialog` | 4 |
+| 1 | `HasDoubleJump` | `GiveDoubleJump` | `SetNewWorldOpened`, `ShowDoubleJumpDialog` | 5 |
+| 2 | `HasTornadoSpin` | `GiveTornadoSpin` | `SetNewWorldOpened`, `ShowTornadoSpinDialog` | 6 |
+| 3 | `HasTurboRun` | `GiveTurboRun` | `SetNewWorldOpened`, `ShowTurboRunDialog`, then unconditionally: `GetCompletionPercent(self) > 0x63` frames increments `self->0xc4` (advances to the next state) and zeroes `*(self+0xc8)`, mode 8, `goto` the post-category-reset block directly; otherwise mode 0xa | 8 or 0xa |
 | 4 | (none - unconditional) | (none) | `RunCredits` | 9 |
 
 Values >4 (i.e. `self->0xc4` outside `0x14`-`0x18`) instead check
@@ -242,7 +242,7 @@ one scratch halfword at `sp+0`, all now traced):
   fixed-source operand for the entry-time zero-fill below; dead after.
 - `sp+0x4`: a snapshot of `self->0x78` taken once, at the start of each
   fresh per-level dispatch round (`self->0x78` is a progress/lives-style
-  counter judging by `game_loop.c`'s `sub_8022BF0`). Read back exactly
+  counter judging by `game_loop.c`'s `EndBonusRound`). Read back exactly
   once, at the *top* of the outer state-dispatch loop (label reached
   only via the loop-back branches at the very end of the function):
   when the just-finished category loop's status flag (`r8`) was `2`
@@ -266,7 +266,7 @@ backup. Every pass through the retry loop (top label reached both from
 function entry and via `beq`-back-to-self) restores `self[0:0x68)`
 *from* `self+0x14c` (undo whatever the previous attempt did), then
 re-snapshots the freshly-restored bytes into `self+0xe4` (a second,
-independent backup) before deciding via `sub_801BAF0(&self->0xc4)`
+independent backup) before deciding via `RunLevelSelect(&self->0xc4)`
 whether to proceed (byte result `0`) or poll input and possibly clear
 `self->0xe0` and retry (nonzero result).
 
@@ -276,17 +276,17 @@ walks `self->0xdc`-style "current category" objects, gating everything
 on an `r8`-resident status flag persisted across iterations - `0`
 means "keep going," `1` means "check `GetLives(self) < 0` for an
 early exit," `2` means "stop the whole per-category loop now." Inside
-each iteration: `sub_8024404`/`sub_80232B8` gate one
+each iteration: `IsInBonusRoom`/`IsInBonusRound` gate one
 `gEntityFlags` bitmap flush+ping-pong-to-`self+0x1b4` cycle into
-`sub_8022BF0`; `sub_80243E0`/`sub_8023290` gate a parallel second
-cycle into `sub_80235E4` (same ping-pong shape, different consumer -
+`EndBonusRound`; `IsInGemPathRoom`/`IsInGemPath` gate a parallel second
+cycle into `EndGemPath` (same ping-pong shape, different consumer -
 apparently two independent bitmap "channels"). The loop's tail
-(`sub_80232B8`/`sub_8023290` again) decides between two closing
-branches that both refresh the HUD icon via `sub_8024464` +
+(`IsInBonusRound`/`IsInGemPath` again) decides between two closing
+branches that both refresh the HUD icon via `CountRoomCrates` +
 `sub_8028568`: the "true" branch also refills `self+0xb0`/`0xb8`/`0xb4`
-(`GetWumpa`/`GetLives`/`sub_8023414`) via `sub_8024540`; the
-"false" branch only refills `self+0xb4` via `sub_8024524`. Either way
-the loop re-enters at its own top unless `sub_802455C(&self->0xc4)`
+(`GetWumpa`/`GetLives`/`GetCrateCount`) via `EnterBonusRoom`; the
+"false" branch only refills `self+0xb4` via `EnterGemPathRoom`. Either way
+the loop re-enters at its own top unless `SelectRoom(&self->0xc4)`
 says otherwise, at which point control falls to the end-of-frame block
 that (if `gHud`, the HUD object, is non-null) calls
 `DestroyHud(hud, 3)`, then decides whether to loop all the way back to

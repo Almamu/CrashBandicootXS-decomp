@@ -17,7 +17,7 @@ raw.
 `gLevelLayersSingleton` is a 0x2C-byte singleton created on first use by
 `GetLevelLayers` (`sub_8026EDC(0x2C)` then the constructor `InitLevelLayers`).
 It's the same object `gLevelLayers` points at: the camera
-(`gUnknown_030012D4`, issue #44) clamps into its scroll fields via
+(`gCamera`, issue #44) clamps into its scroll fields via
 `SetLevelScroll(gLevelLayers, ...)`, and `sub_8026BF8`/`sub_8026C3C`
 already reach its terrain tile cache at `+0x20`.
 

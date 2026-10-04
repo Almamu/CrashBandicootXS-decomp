@@ -14,23 +14,23 @@ void *sub_800B4A4(void *selfArg)
     return ((struct gobj *)selfArg)->unk_108;
 }
 
-/* `self+0x104` byte clear/set/get accessors. */
+/* `dead` (+0x104) clear/set/get accessors. */
 void sub_800B4AC(void *selfArg)
 {
     struct gobj *self = selfArg;
-    self->unk_104 = 0;
+    self->dead = 0;
 }
 
 void sub_800B4B8(void *selfArg)
 {
     struct gobj *self = selfArg;
-    self->unk_104 = 1;
+    self->dead = 1;
 }
 
 u8 sub_800B4C4(void *selfArg)
 {
     struct gobj *self = selfArg;
-    return self->unk_104;
+    return self->dead;
 }
 
 /* Bulk-sets `self+0x48`/`self+0x4c`/`self+0x50`; also sets
@@ -88,14 +88,14 @@ u8 sub_800B51C(void *selfArg)
     return self->countdown;
 }
 
-/* `self+0x8c` is a snapshot of the `gUnknown_0300082C` frame counter
+/* `self+0x8c` is a snapshot of the `gRoomFrameCount` frame counter
  * (the same counter documented in `docs/rom_map.md`); this tests
  * whether it's still ahead of the counter (unsigned comparison - a
  * signed one here would be a real, previously-caught bug). */
 u8 sub_800B524(void *selfArg)
 {
     struct gobj *self = selfArg;
-    return self->deadline > gUnknown_0300082C;
+    return self->deadline > gRoomFrameCount;
 }
 
 void sub_800B53C(void *selfArg)
@@ -104,12 +104,12 @@ void sub_800B53C(void *selfArg)
     self->deadline = 0;
 }
 
-/* Sets `self+0x8c` to `gUnknown_0300082C + arg1` - arming the
+/* Sets `self+0x8c` to `gRoomFrameCount + arg1` - arming the
  * "ahead of the counter" check `sub_800B524` performs. */
 void sub_800B544(void *selfArg, s32 arg1)
 {
     struct gobj *self = selfArg;
-    self->deadline = gUnknown_0300082C + arg1;
+    self->deadline = gRoomFrameCount + arg1;
 }
 
 /* `self+0x88` byte set/get accessors. */

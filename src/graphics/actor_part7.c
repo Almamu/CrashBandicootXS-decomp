@@ -285,17 +285,20 @@ typedef s32 (*part_method0_fn)(void *self);
 typedef s32 (*part_method1_fn)(void *self, void *arg);
 typedef void (*part_method3_fn)(void *self, s32 a, s32 b, s32 c);
 
-struct camera_pos {
+/* gLevelLayers's view here (level_layers.c's `struct level_layers`):
+ * BG layer 0's scroll position (include/bg_scroll_layer.h), which is the
+ * camera position in pixels. */
+struct bg_scroll_layer {
     s32 x;
     s32 y;
 };
 
-struct viewport {
+struct level_layers {
     u8 unk_00[0x10];
-    struct camera_pos *camera; // 0x10
+    struct bg_scroll_layer *layer0; // 0x10
 };
 
-extern struct viewport *gLevelLayers;
+extern struct level_layers *gLevelLayers;
 extern s32 _call_via_r2(void *self, void *arg, void *fn);
 extern s32 _call_via_r1(void *self, void *fn);
 extern void CpuSet(const void *src, void *dst, u32 cnt);
@@ -323,7 +326,7 @@ extern void CpuSet(const void *src, void *dst, u32 cnt);
 void sub_800891C(struct part_list *list)
 {
     struct { struct part_aabb near; struct part_aabb screen; } f;
-    struct camera_pos *cam;
+    struct bg_scroll_layer *cam;
     s32 i;
     s32 zero;
     struct part_aabb *ps;
@@ -334,7 +337,7 @@ void sub_800891C(struct part_list *list)
         f.near.w = w;
         f.near.h = h;
     }
-    cam = gLevelLayers->camera;
+    cam = gLevelLayers->layer0;
     {
         s32 x;
         s32 y;
@@ -395,12 +398,12 @@ void sub_800891C(struct part_list *list)
 extern void *MemCopy32(void *dst, const void *src, s32 size); /* memcpy (asm/crt0.s) */
 extern void sub_8008AD8(struct part_list *list, struct part_aabb box, struct box_part *part);
 extern void sub_8008D80(struct part_list *list, struct part_aabb box, struct box_part *part, struct box_part *other);
-extern struct box_part *gUnknown_030012D8;
+extern struct box_part *gPlayer;
 
 /* Walks `list`'s visible parts. For each: asks its method-table +0x48
  * method for a state and skips it unless that is above 4, and skips it
  * unless its `visible` bit (flags bit 2) is set. Then hands the incoming
- * box to `sub_8008AD8` (when `other` is the player, gUnknown_030012D8)
+ * box to `sub_8008AD8` (when `other` is the player, gPlayer)
  * or `sub_8008D80` (otherwise, also passing `other`).
  *
  * The box arrives and is passed on by value; the ROM copies it into one
@@ -421,7 +424,7 @@ void sub_8008A40(struct part_list *list, struct part_aabb box, s32 unused, struc
             continue;
         if (!((part->flags >> 2) & 1))
             continue;
-        if (other == gUnknown_030012D8) {
+        if (other == gPlayer) {
             MemCopy32(&tmp, &box, sizeof(tmp));
             sub_8008AD8(list, tmp, part);
         } else {
@@ -433,7 +436,7 @@ void sub_8008A40(struct part_list *list, struct part_aabb box, s32 unused, struc
 
 struct game_state {
     u8 unk_00[0x78];
-    s32 mode;           // 0x78
+    s32 maskLevel;      // 0x78 - the Aku Aku mask level (0-3)
 };
 
 extern struct game_state *gLevelState;
@@ -451,10 +454,10 @@ extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
         ((part_method3_fn)_m->fn)((u8 *)(obj) + _m->thisOffset, (a), (b), (c)); \
     } else (void)0
 
-/* Resolves a hit between `part` and the player (gUnknown_030012D8)
+/* Resolves a hit between `part` and the player (gPlayer)
  * against the incoming box passed by sub_8008A40 (`list` is unused).
  *
- * In mode 3 (gLevelState->mode): if `part` touches the box
+ * In mode 3 (gLevelState->maskLevel): if `part` touches the box
  * (`sub_8009FF4`), calls its hit method with the player's kind.
  * Otherwise, for a solid part (flags2 bit 3): builds the player's box
  * (sub_8007B98) and the part's (sub_8007CF8); on overlap pushes the
@@ -472,25 +475,25 @@ extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
  * hit-flag update goes through a pointer to keep the ROM's registers. */
 void sub_8008AD8(struct part_list *list, struct part_aabb box, struct box_part *part)
 {
-    if (gLevelState->mode == 3) {
+    if (gLevelState->maskLevel == 3) {
         if (!sub_8009FF4(part, &box))
             return;
-        CALL_HIT(part, 1, gUnknown_030012D8->kind, 0);
+        CALL_HIT(part, 1, gPlayer->kind, 0);
     } else if ((part->flags2 >> 3) & 1) {
         struct part_aabb a, b;
         s32 px;
 
-        a = sub_8007B98(gUnknown_030012D8);
+        a = sub_8007B98(gPlayer);
         b = sub_8007CF8(part);
         if (!sub_8001688(&a, &b))
             return;
         px = part->x;
-        if (px < gUnknown_030012D8->x) {
-            gUnknown_030012D8->x = px + ((b.w + a.w) << 7);
-            CALL_HIT(gUnknown_030012D8, 0, 0xc, 2);
+        if (px < gPlayer->x) {
+            gPlayer->x = px + ((b.w + a.w) << 7);
+            CALL_HIT(gPlayer, 0, 0xc, 2);
         } else {
-            gUnknown_030012D8->x = px - ((b.w + a.w) << 7);
-            CALL_HIT(gUnknown_030012D8, 0, 0xc, 1);
+            gPlayer->x = px - ((b.w + a.w) << 7);
+            CALL_HIT(gPlayer, 0, 0xc, 1);
         }
     } else {
         u8 kind;
@@ -500,14 +503,14 @@ void sub_8008AD8(struct part_list *list, struct part_aabb box, struct box_part *
             break;
         case 1:
         {
-            u8 *flags = &gUnknown_030012D8->flags;
+            u8 *flags = &gPlayer->flags;
             *flags |= 8;
         }
-            kind = gUnknown_030012D8->kind;
+            kind = gPlayer->kind;
             if (kind == 1) {
-                if (gUnknown_030012D8->unk_64 > 0) {
+                if (gPlayer->unk_64 > 0) {
                     CALL_HIT(part, 1, 1, 0);
-                    CALL_HIT(gUnknown_030012D8, 0, 0xd, 0);
+                    CALL_HIT(gPlayer, 0, 0xd, 0);
                     PlaySfx(gAudioContext, 0x21, 0x100);
                 }
             } else {
@@ -516,10 +519,10 @@ void sub_8008AD8(struct part_list *list, struct part_aabb box, struct box_part *
             break;
         case 2:
             part->flags |= 8;
-            if (gLevelState->mode) {
+            if (gLevelState->maskLevel) {
                 CALL_HIT(part, 1, 1, 0);
             }
-            CALL_HIT(gUnknown_030012D8, 1, part->kind, 0);
+            CALL_HIT(gPlayer, 1, part->kind, 0);
             break;
         }
     }

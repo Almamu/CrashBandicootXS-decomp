@@ -7,11 +7,11 @@
  * `sub_801075C`/the two Bresenham-line helpers `sub_8010784`/
  * `sub_80107C4` right before `sub_8010804` are left untouched raw. */
 
-extern struct phys_obj_list *gUnknown_0300130C;
+extern struct phys_obj_list *gCrateList;
 extern s32 _call_via_r1(void *addr, void *fn);
 extern void sub_800F5B8(void *self);
 
-/* Walks the `gUnknown_0300130C` object list (the same list/table
+/* Walks the `gCrateList` object list (the same list/table
  * layout `sub_800F1B8`/`sub_800F258` elsewhere in this raw region
  * read); for each box (vtable `m48`, the class id, reports `3`) whose
  * `unk_54` countdown isn't disabled (`-1`), truncates that countdown
@@ -21,8 +21,8 @@ void sub_8010804(void)
 {
     s32 i = 0;
 
-    if (i < gUnknown_0300130C->count) {
-        struct phys_obj_list **listAddr = &gUnknown_0300130C;
+    if (i < gCrateList->count) {
+        struct phys_obj_list **listAddr = &gCrateList;
         do {
             struct phys_obj *e = (*listAddr)->items[i];
             struct method *rec = &e->vtable->m48;
@@ -52,7 +52,7 @@ extern void _call_via_r4(void *arg0, s32 arg1, s32 arg2, s32 arg3);
  * `sub_801085C`'s sibling functions in this subsystem use throughout. */
 void sub_801085C(void)
 {
-    u8 *self = (u8 *)gUnknown_030012D8;
+    u8 *self = (u8 *)gPlayer;
     register u8 flags asm("r1") = self[0xc];
     register u32 bit asm("r0");
 

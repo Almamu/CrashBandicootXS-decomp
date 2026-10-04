@@ -8,13 +8,13 @@
  * documented at the top of actor_part18.c/actor_part28.c. */
 
 extern void *gAudioContext;
-extern void *gUnknown_030012D8;
+extern void *gPlayer;
 extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern s32 _call_via_r3(void *arg0, void *arg1, void *arg2, void *arg3);
 extern void sub_80122CC(void *self);
 extern void sub_8014B54(void *self);
-extern void sub_80241A4(void);
+extern void RequestRoomExit(void);
 
 /* Clears `self+0x33`, saves `self+8`'s previous value (truncated) into
  * `self+0x2d`, overwrites `self+8` with `arg1`, and clears
@@ -40,11 +40,11 @@ void sub_8015350(void *selfArg, s32 arg1)
 
         ((u8 *)part)[0x90] = 0;
 
-        player = *(u8 * volatile *)&gUnknown_030012D8;
+        player = *(u8 * volatile *)&gPlayer;
         player[0x92] = 0;
-        player = *(u8 * volatile *)&gUnknown_030012D8;
+        player = *(u8 * volatile *)&gPlayer;
         player[0x94] = 0;
-        player = *(u8 * volatile *)&gUnknown_030012D8;
+        player = *(u8 * volatile *)&gPlayer;
         player[0x94] = 0;
     }
 }
@@ -314,19 +314,19 @@ void sub_8015650(void *selfArg)
 }
 
 /* While `part+0x38` is set: sets the player's `+0xc` bit `0x80` and
- * tail-calls `sub_80241A4`. */
+ * tail-calls `RequestRoomExit`. */
 void sub_8015690(void *selfArg)
 {
     u8 *self = selfArg;
 
     if (((u8 *)*(struct actor **)(self + 0x10) + 0x38)[0] != 0) {
-        register u8 *player asm("r1") = gUnknown_030012D8;
+        register u8 *player asm("r1") = gPlayer;
         register s32 bit asm("r0") = 0x80;
         register u8 old asm("r2") = player[0xc];
 
         bit |= old;
         player[0xc] = bit;
-        sub_80241A4();
+        RequestRoomExit();
     }
 }
 
@@ -347,10 +347,10 @@ void sub_80156B4(void *selfArg)
     }
 }
 
-extern s32 sub_80231BC(void *self);
+extern s32 HasSuperBodySlam(void *self);
 extern void *gLevelState;
 
-/* While `part+0x38` is set: when `sub_80231BC(gLevelState)` is
+/* While `part+0x38` is set: when `HasSuperBodySlam(gLevelState)` is
  * true, fires the mgr trampoline pair with actions `0x19`/`7`;
  * otherwise fires only the first trampoline with action `0x18`.
  *
@@ -361,7 +361,7 @@ extern void *gLevelState;
 void sub_80156EC(u8 *self)
 {
     if (((u8 *)*(struct actor **)(self + 0x10) + 0x38)[0] != 0) {
-        if ((u8)sub_80231BC(gLevelState)) {
+        if ((u8)HasSuperBodySlam(gLevelState)) {
             struct vtable_slot *mgr = *(struct vtable_slot **)(self + 0xc);
             u8 *off;
 

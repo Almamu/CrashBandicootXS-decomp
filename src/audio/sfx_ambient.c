@@ -64,7 +64,7 @@ void PlaySfx(struct AudioContext *self, u32 id, u32 volumeParam)
     }
 }
 
-extern u32 gUnknown_0300082C;
+extern u32 gRoomFrameCount;
 extern void GAX_set_fx_volume(s32 channel, u32 volume);
 extern void GAX_stop_fx(s32 channel);
 extern s32 GAX_fx_ex(u32 handle, s32 channel, s32 pitchOffset, s32 priority);
@@ -72,7 +72,7 @@ extern s32 GAX_fx_ex(u32 handle, s32 channel, s32 pitchOffset, s32 priority);
 /* Per-tick update of the "ambient" (looping/crossfaded, as opposed to
  * `PlaySfx`'s one-shot) sound-effect channel: ramps `ambientSfxVolume` (the
  * channel's live volume) toward `activeSfx.volume`, and once
- * `gUnknown_0300082C` passes `activeSfx.deadline`, fades the channel
+ * `gRoomFrameCount` passes `activeSfx.deadline`, fades the channel
  * out over several ticks before promoting the queued `pendingSfx`
  * record into `activeSfx` (a 12-byte struct copy - see
  * include/audio.h) and triggering it via `GAX_fx_ex`. */
@@ -83,7 +83,7 @@ void TickAmbientSfx(struct AudioContext *self)
     if (self->activeSfx.id == 0x63) {
         return;
     }
-    now = gUnknown_0300082C;
+    now = gRoomFrameCount;
     if (now >= self->activeSfx.deadline) {
         register s32 v asm("r0");
 
@@ -159,6 +159,6 @@ void ResetAmbientSfx(struct AudioContext *self)
 void StopAmbientSfx(struct AudioContext *self)
 {
     self->pendingSfx.id = 0x63;
-    self->activeSfx.deadline = gUnknown_0300082C;
+    self->activeSfx.deadline = gRoomFrameCount;
 }
 asm(".align 2, 0");

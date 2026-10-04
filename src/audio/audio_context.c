@@ -7,12 +7,12 @@
  * cluster (play/pause/stop, the two fade-envelope arm/setter pairs,
  * the constructor). */
 
-extern u32 gUnknown_0300082C;
+extern u32 gRoomFrameCount;
 extern s32 GAX_fx_ex(u32 handle, s32 channel, s32 pitchOffset, s32 priority);
 extern void GAX_set_fx_volume(s32 channel, u32 volume);
 
 /* Requests the ambient-sfx channel play `id` for `frameOffset` frames
- * (relative to `gUnknown_0300082C`) at a volume derived from
+ * (relative to `gRoomFrameCount`) at a volume derived from
  * `volumeMul`/the table's own base volume/`sfxVolume`, same formula as
  * `PlaySfx`. If nothing is currently active, starts it immediately;
  * if something louder-or-equal is already active with the same `id`,
@@ -44,11 +44,11 @@ void PlayAmbientSfx(struct AudioContext *self, u32 id, u32 frameOffset, s32 volu
             GAX_fx_ex(handle, 2, 0, -1);
             GAX_set_fx_volume(2, self->ambientSfxVolume);
             self->activeSfx.id = id;
-            self->activeSfx.deadline = gUnknown_0300082C + frameOffset;
+            self->activeSfx.deadline = gRoomFrameCount + frameOffset;
             self->activeSfx.volume = volume;
         } else if (volume >= self->activeSfx.volume) {
             if (cur == id) {
-                self->activeSfx.deadline = gUnknown_0300082C + frameOffset;
+                self->activeSfx.deadline = gRoomFrameCount + frameOffset;
                 self->activeSfx.volume = volume;
                 if (forceFlag) {
                     GAX_fx_ex(handle, 2, 0, -1);
@@ -60,7 +60,7 @@ void PlayAmbientSfx(struct AudioContext *self, u32 id, u32 frameOffset, s32 volu
                 u32 now;
 
                 self->pendingSfx.id = id;
-                now = gUnknown_0300082C;
+                now = gRoomFrameCount;
                 self->pendingSfx.deadline = now + frameOffset;
                 self->pendingSfx.volume = volume;
                 self->activeSfx.deadline = now;

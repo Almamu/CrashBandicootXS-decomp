@@ -28,8 +28,8 @@ mode-trampoline family, a DMA3/VRAM refresh pass gating on
 `REG_BLDALPHA` shadow-word rebuild (see `src/graphics/aabb_util.c`'s
 `sub_8001624`, which commits that same shadow to hardware), and the
 level-end teardown/VRAM-flush tail. Sandwiched in the middle of all
-that: two large functions (`sub_802375C`, ~300 instructions;
-`sub_8023A1C`, ~650 instructions, its own internal jump-table state
+that: two large functions (`PlayRoom`, ~300 instructions;
+`RunRoom`, ~650 instructions, its own internal jump-table state
 machine with cross-branch `goto`-style jumps) that read like the real
 level-start dispatcher and its post-processing continuation - clearly
 important, but not confidently understood branch-by-branch within this
@@ -37,39 +37,39 @@ pass's scope, so left completely untouched.
 
 ## Matched (24 functions, full clean `make compare` passing)
 
-`src/system/game_loop10.c` (`sub_80234E8`-`sub_80236EC`, 15 fns):
-`sub_80234E8`/`sub_80234F4` (camera-position field setters),
-`sub_8023500` (two-word position setter), `sub_8023510`/`sub_802352C`
-(busy-flag setters gated on `sub_8023290`/`sub_80232B8`),
+`src/system/game_loop10.c` (`SetGemPlatform`-`PackSaveData`, 15 fns):
+`SetGemPlatform`/`SetBonusPlatform` (camera-position field setters),
+`SetCrateGemPos` (two-word position setter), `RequestGemPath`/`RequestBonusRound`
+(busy-flag setters gated on `IsInGemPath`/`IsInBonusRound`),
 `RestoreCheckpoint`/`SetCheckpoint` (checkpoint snapshot restore/stash pair,
 the latter also flushing two spans of the `gEntityFlags` bitmap
-via the `CpuSet` wrapper), `sub_80235E4` (progress-accumulate-or-reset
+via the `CpuSet` wrapper), `EndGemPath` (progress-accumulate-or-reset
 dispatcher), `sub_802364C`/`sub_8023658`/`sub_802369C` (the
 `PlayCutscene` mode-trampoline family, one of them also playing a fixed
 SFX), `sub_8023674` (allocates a `0x44c`-byte block and hands it to
-`sub_8037154`), `nullsub_24` (empty stub), `sub_80236AC` (bitfield
-unpacker, refreshing its own snapshot first), `sub_80236EC` (its
+`sub_8037154`), `nullsub_24` (empty stub), `UnpackSaveData` (bitfield
+unpacker, refreshing its own snapshot first), `PackSaveData` (its
 packer inverse - see the update below, added after this doc's original
 pass).
 
 `src/system/game_loop11.c`: `GetLevelState` (lazy-allocates and returns
-`gUnknown_03000828`) - its own file since the still-raw
-`sub_802375C`/`sub_8023A1C` pair sits on both sides of it in ROM order.
+`gLevelStateSingleton`) - its own file since the still-raw
+`PlayRoom`/`RunRoom` pair sits on both sides of it in ROM order.
 
-`src/system/game_loop8.c`: `sub_802400C` (the DMA3/VRAM refresh pass).
+`src/system/game_loop8.c`: `UpdateRoomFrame` (the DMA3/VRAM refresh pass).
 
-`src/system/game_loop9.c` (`sub_8024198`-`sub_802423C`, 5 fns):
-`sub_8024198`/`sub_80241A4`/`sub_80241B0` (a boolean flag
-clear/set/get trio on `gUnknown_03000830`), `sub_80241BC` (level-end
+`src/system/game_loop9.c` (`ClearRoomExit`-`sub_802423C`, 5 fns):
+`ClearRoomExit`/`RequestRoomExit`/`IsRoomExitRequested` (a boolean flag
+clear/set/get trio on `gRoomExitRequested`), `ResumeRoomAfterPause` (level-end
 teardown: DMA-copies the level's first palette word into `PLTT`,
-clears it, then re-runs `sub_802400C`'s refresh pass and four
+clears it, then re-runs `UpdateRoomFrame`'s refresh pass and four
 `fade_screen_mode2.c` state resets), `sub_802423C` (the shared
-vram-upload-cursor/OAM-shadow flush tail both `sub_802400C` and
-`sub_80241BC` end with).
+vram-upload-cursor/OAM-shadow flush tail both `UpdateRoomFrame` and
+`ResumeRoomAfterPause` end with).
 
 ### Gotchas worth recording
 
-- **`sub_8023500`/`SetCheckpoint`'s two-word field copies**: writing
+- **`SetCrateGemPos`/`SetCheckpoint`'s two-word field copies**: writing
   `dst->field0 = x; dst->field1 = y;` as two independent raw-offset
   stores makes this compiler compute two full addresses from scratch.
   The ROM computes the base pointer once and uses immediate-offset
@@ -120,7 +120,7 @@ vram-upload-cursor/OAM-shadow flush tail both `sub_802400C` and
   conservative move beforehand, so this isn't a general "keep values in
   r0 forever" trick, just an accurate description of this one no-op
   call's real effect.
-- **`sub_80236AC`'s byte/halfword extracts**: the ROM loads each raw
+- **`UnpackSaveData`'s byte/halfword extracts**: the ROM loads each raw
   byte/halfword into one register and computes the shifted result into
   a *different* one (`ldrb r1,[r5]` then `lsls r0,r1,#0x19`), rather
   than shifting in place - the same "freshly-loaded value and its
@@ -129,8 +129,8 @@ vram-upload-cursor/OAM-shadow flush tail both `sub_802400C` and
   pins for the raw value (r1) and the shifted result (r0), reusing r5
   (the snapshot pointer) for the halfword load too, matching the ROM's
   register reuse exactly.
-- **`sub_802400C`'s `_call_via_r1` reload pattern**: computing
-  `gUnknown_030012D8` and its `->table` field into plainly-named
+- **`UpdateRoomFrame`'s `_call_via_r1` reload pattern**: computing
+  `gPlayer` and its `->table` field into plainly-named
   locals both times let the compiler pick whichever register was
   convenient rather than reloading through r0 the way the ROM does at
   both call sites (needed since the global's value can change as a
@@ -139,20 +139,20 @@ vram-upload-cursor/OAM-shadow flush tail both `sub_802400C` and
 
 ## Left raw - 2 functions
 
-- **`sub_802375C`/`sub_8023A1C`** (`asm/code_3_2_17_2375c.s`, ROM
+- **`PlayRoom`/`RunRoom`** (`asm/code_3_2_17_2375c.s`, ROM
   `0x0802375C`-`0x08024007`) - a ~300-instruction level-start
   dispatcher (allocates and initializes several HUD/counter widget
   objects via `sub_8026EDC`+`sub_800B69C`/`_call_via_r2`, dispatches on
   a 3-way record-type switch) feeding into a ~650-instruction
-  continuation (`sub_8023A1C`) built around a 6-case jump table with
+  continuation (`RunRoom`) built around a 6-case jump table with
   cross-branch jumps into a shared tail (`_08023BB8`/`_08023BBE`
   setting a state flag and jumping into the middle of a *different*
   branch's cleanup code, `_08023E72`). The overall shape (spawn a HUD
-  widget set, run a per-frame update loop gated on `sub_80241B0`,
+  widget set, run a per-frame update loop gated on `IsRoomExitRequested`,
   react to a completion signal from `RunPauseMenu`) is legible, but
   several callees (the `gStaticData_0816C8xx` tables' exact record
   shape, `AddPaletteCycle`'s 6-argument signature, `LoadRoom`,
-  `sub_800B3F0`, `TickPaletteCycles`) aren't characterized precisely enough
+  `InitPlayer`, `TickPaletteCycles`) aren't characterized precisely enough
   yet to commit to a byte-exact reconstruction of this size with
   confidence - left untouched rather than force a low-confidence
   match. A good next target once the HUD-effect-queue family
@@ -162,7 +162,7 @@ vram-upload-cursor/OAM-shadow flush tail both `sub_802400C` and
 See [docs/status/game_loop.md](../status/game_loop.md) for the running
 matched/parked/raw lists this updates.
 
-## Update: `sub_8022BF0`/`sub_8022CA0` matched
+## Update: `EndBonusRound`/`SetCheckpointAtPlayer` matched
 
 Both of this entry's two parked functions are now byte-exact matched
 (full clean `make compare`: `crashbandicootxs.gba: La suma coincide`),
@@ -170,7 +170,7 @@ closing out the last of the original 25-function chunk. `asm/code_3_2_17_22bf0.s
 (which held only these two functions' raw bytes) is deleted; its
 `ldscript.txt` line is removed.
 
-- **`sub_8022BF0`**: the earlier attempt cached all four of
+- **`EndBonusRound`**: the earlier attempt cached all four of
   `self+0x70`/`0x6c`/`0x74`/`0xbc` behind pointer locals, which spilled
   into `r8`/`r9`/`sl`. The fix: `self+0x70`/`0x6c`/`0x74` all fit the
   Thumb `ldr`/`str` immediate range (0-124) and the ROM addresses them
@@ -179,7 +179,7 @@ closing out the last of the original 25-function chunk. `asm/code_3_2_17_22bf0.s
   actually need an address computed into a local. Dropping the three
   unnecessary pointer locals brought the whole function down to the
   ROM's exact `r4`-`r7` register set, no spill.
-- **`sub_8022CA0`**: three separate gaps, all fixed:
+- **`SetCheckpointAtPlayer`**: three separate gaps, all fixed:
   1. The `self+0xa9`-byte-to-`+0xd0` copy needed a `u8 *p = self+0xa9;
      u8 v = *p; p += 0x27; *p = v;` shape (read, then bump the *same*
      pointer, then store) to reproduce the ROM's "derive `+0xd0` by
@@ -196,9 +196,9 @@ closing out the last of the original 25-function chunk. `asm/code_3_2_17_22bf0.s
      `register u8 *p asm("r0") = self + 0xa9;` then lands the
      recomputed pointer in the same register the ROM uses.
   3. The `self+0xd4`/`self+0xd8` two-word position store (`x`/`y` from
-     `gUnknown_030012D8`) had the exact same "two independent
+     `gPlayer`) had the exact same "two independent
      raw-offset stores recompute the address twice" gotcha as
-     `sub_8023500`/`SetCheckpoint` above - fixed the same way, with a
+     `SetCrateGemPos`/`SetCheckpoint` above - fixed the same way, with a
      local `s32 *dst = (s32 *)(self + 0xd4); dst[0] = x; dst[1] = y;`
      so the second store reuses `[r0, #4]` off the first store's base
      register instead of an extra `adds r0, #4`. This one was only
@@ -210,21 +210,21 @@ closing out the last of the original 25-function chunk. `asm/code_3_2_17_22bf0.s
   The `0x04000040` control-word-reload-per-call and `gEntityFlags`-
   in-`r4` fixes from the original parked note both held up unchanged.
 
-## Update: `sub_80236EC` matched
+## Update: `PackSaveData` matched
 
 Now byte-exact matched (full clean `make compare`:
-`crashbandicootxs.gba: La suma coincide`), leaving only `sub_80240E4`
+`crashbandicootxs.gba: La suma coincide`), leaving only `SetupRoomBlend`
 parked in this chunk (since also matched - see the update below).
 `asm/code_3_2_17_236ec.s` (which held only this one function's raw
 bytes) is deleted; its `ldscript.txt` line is removed.
 
 - **Missing return value.** The real fix wasn't a register-allocation
-  trick at all: `sub_80236EC` actually returns the `self+0x14c`
+  trick at all: `PackSaveData` actually returns the `self+0x14c`
   snapshot pointer it just wrote through, as `void *` - the earlier
   parked attempt treated it as `void`. This is externally visible
   already: `settings_menu15.c`/`settings_menu8b.c` both declare
-  `extern void *sub_80236EC(void *arg0);` and use the result as a
-  pointer (`self->field_10 = sub_80236EC(...)`, and as the `src`
+  `extern void *PackSaveData(void *arg0);` and use the result as a
+  pointer (`self->field_10 = PackSaveData(...)`, and as the `src`
   argument to `SummarizeProgress`), so those call sites were already correct
   and needed no changes. Because that pointer is already sitting in r0
   at the end of the function, the epilogue's LR-restore register
@@ -261,7 +261,7 @@ bytes) is deleted; its `ldscript.txt` line is removed.
   reproduce the ROM's instruction order without any extra pinning
   beyond the registers already pinned for value shape.
 
-## Update: `sub_80240E4` matched
+## Update: `SetupRoomBlend` matched
 
 Now byte-exact matched (full clean `make compare`:
 `crashbandicootxs.gba: La suma coincide`), closing out the last

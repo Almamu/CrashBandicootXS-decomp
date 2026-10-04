@@ -3,64 +3,64 @@
 #include "actor.h"
 #include "level_state.h"
 
-extern void *gUnknown_030012D8;
+extern void *gPlayer;
 extern void *gEntityFlags;
 extern void *gHud;
 extern struct tile_asset_cache *gUnknown_030012B8;
 
-extern s32 sub_8023414(void *self);
-extern void sub_80232EC(void *self);
-extern void sub_80232FC(void *self);
+extern s32 GetCrateCount(void *self);
+extern void ResetDeaths(void *self);
+extern void ClearSpawnAtStart(void *self);
 extern void *MemCopy32(void *dest, void *src, s32 size);
 extern void CpuSet(void *src, void *dst, s32 control);
-extern void sub_80232B0(void *self);
-extern void sub_80232C0(void *self);
+extern void SetBonusRoundDone(void *self);
+extern void ClearInBonusRound(void *self);
 extern void sub_8007398(struct actor *self, s32 arg1, s32 arg2);
 extern void sub_8028568(void *state, s32 arg1);
-extern void sub_8022CA0(struct level_state *self, u8 arg1);
+extern void SetCheckpointAtPlayer(struct level_state *self, u8 arg1);
 
 /* Called at level start/checkpoint-restore: `arg1` selects whether to
  * accumulate this attempt's progress into the running totals
- * (`unk_70`/`wumpa`/`lives`, carrying every 100 wumpa into a life the
+ * (`crateCount`/`wumpa`/`lives`, carrying every 100 wumpa into a life the
  * same way `TickLevelClock`'s odometer carries) or to just reset those
- * three fields back from their `unk_b4`/`unk_b0`/`unk_b8` "level start"
+ * three fields back from their `savedCrateCount`/`savedWumpa`/`savedLives` "level start"
  * snapshot. Either way it re-syncs the player's stored position
  * (`checkpointX`/`checkpointY` -> `sub_8007398`) and re-runs
- * `sub_8022CA0`, then flushes `unk_bc` into the `gHud`
+ * `SetCheckpointAtPlayer`, then flushes `crateTotal` into the `gHud`
  * cache and clears the `+0xa4` busy flag.
  *
- * `wumpa`/`unk_70`/`lives` are accessed directly off `self` throughout
+ * `wumpa`/`crateCount`/`lives` are accessed directly off `self` throughout
  * (no cached pointer) because those three offsets fit the Thumb
  * `ldr`/`str` immediate range (0-124); only the fields past that range
- * (`unk_b0`-`unk_bc`, the checkpoint position, `unk_e0`) need an
+ * (`savedWumpa`-`crateTotal`, the checkpoint position, `unk_e0`) need an
  * explicit address computed into a local pointer - matching the ROM
  * exactly. Caching *all* of them in pointers (the earlier attempt here)
  * forced 3 extra always-live locals the natural allocator had to spill
  * into `r8`/`r9`/`sl`. */
-void sub_8022BF0(struct level_state *self, u8 arg1)
+void EndBonusRound(struct level_state *self, u8 arg1)
 {
     s32 *fieldbc;
 
-    sub_80232FC(self);
+    ClearSpawnAtStart(self);
 
     if (arg1 != 0) {
-        s32 *fieldb4 = &self->unk_b4;
+        s32 *fieldb4 = &self->savedCrateCount;
 
-        self->unk_70 += *fieldb4;
+        self->crateCount += *fieldb4;
 
         {
-            s32 *fieldb0 = &self->unk_b0;
+            s32 *fieldb0 = &self->savedWumpa;
 
             self->wumpa += *fieldb0;
         }
 
         {
-            s32 *fieldb8 = &self->unk_b8;
+            s32 *fieldb8 = &self->savedLives;
             s32 *fieldd4 = &self->checkpointX;
             u8 *fielde0 = &self->unk_e0;
             s32 total;
 
-            fieldbc = &self->unk_bc;
+            fieldbc = &self->crateTotal;
 
             if (self->wumpa > 0x63) {
                 s32 carry = self->lives;
@@ -81,28 +81,28 @@ void sub_8022BF0(struct level_state *self, u8 arg1)
             }
             self->lives = total;
 
-            sub_80232B0(self);
-            sub_8007398((struct actor *)gUnknown_030012D8, fieldd4[0], fieldd4[1]);
-            sub_8022CA0(self, *fielde0);
+            SetBonusRoundDone(self);
+            sub_8007398((struct actor *)gPlayer, fieldd4[0], fieldd4[1]);
+            SetCheckpointAtPlayer(self, *fielde0);
         }
     } else {
-        self->unk_70 = self->unk_b4;
-        self->wumpa = self->unk_b0;
-        self->lives = self->unk_b8;
+        self->crateCount = self->savedCrateCount;
+        self->wumpa = self->savedWumpa;
+        self->lives = self->savedLives;
 
-        fieldbc = &self->unk_bc;
+        fieldbc = &self->crateTotal;
     }
 
     sub_8028568(gHud, *fieldbc);
-    sub_80232C0(self);
+    ClearInBonusRound(self);
 }
 
 /* `arg1` truncated to a byte, matching the ROM's own `lsls/lsrs #0x18`
  * parameter normalization. If `self->cat->kind == 3`, just
- * refreshes `unk_cc`/`unk_d0` (a cached frame count / a copy of the
+ * refreshes `checkpointCrateCount`/`checkpointSwitchPressed` (a cached frame count / a copy of the
  * `+0xa9` byte) and snapshots the first `0x68` bytes of `self` into
  * `self+0xe4`. Otherwise it also stashes the camera's `{x, y}`
- * (`gUnknown_030012D8`) into `checkpointX`/`checkpointY`, clears two flag
+ * (`gPlayer`) into `checkpointX`/`checkpointY`, clears two flag
  * bytes, and syncs two spans of the `gEntityFlags` bitmap
  * (`+0x108`->`+8`, `+0x308`->`+0x208`) via the BIOS `CpuSet` wrapper -
  * reads like an end-of-level "freeze the HUD/save state" snapshot.
@@ -115,12 +115,12 @@ void sub_8022BF0(struct level_state *self, u8 arg1)
  * branch that same pointer is then bumped again (`p += 0x14`) to
  * become the `self+0xe4` destination for the trailing `MemCopy32`
  * copy, reusing the register chain exactly like the ROM. */
-void sub_8022CA0(struct level_state *self, u8 arg1)
+void SetCheckpointAtPlayer(struct level_state *self, u8 arg1)
 {
     struct level_category *level = self->cat;
 
     if (level->kind == 3) {
-        self->unk_cc = sub_8023414(self);
+        self->checkpointCrateCount = GetCrateCount(self);
 
         /* Barrier: without this, the compiler notices `self + 0xa9`
          * is `(self + 0xcc) - 0x23` and reuses the field-0xcc pointer
@@ -138,13 +138,13 @@ void sub_8022CA0(struct level_state *self, u8 arg1)
             MemCopy32(p, self, 0x68);
         }
     } else {
-        void *player = gUnknown_030012D8;
+        void *player = gPlayer;
         s32 x = *(s32 *)player;
         s32 y = *(s32 *)((u8 *)player + 4);
         void *base;
 
         self->unk_e0 = arg1;
-        self->unk_cc = sub_8023414(self);
+        self->checkpointCrateCount = GetCrateCount(self);
 
         asm volatile("" : "+r"(self));
 
@@ -156,8 +156,8 @@ void sub_8022CA0(struct level_state *self, u8 arg1)
             *p = value;
         }
 
-        sub_80232FC(self);
-        sub_80232EC(self);
+        ClearSpawnAtStart(self);
+        ResetDeaths(self);
         {
             /* Two-word field copy: a plain `self->0xd4 = x; self->0xd8
              * = y;` re-derives the destination address from scratch
@@ -165,7 +165,7 @@ void sub_8022CA0(struct level_state *self, u8 arg1)
              * [r0]`); the ROM instead keeps the base pointer from the
              * first store and uses its `[r0, #4]` immediate-offset
              * form. Reproduced with a local pointer and indexed
-             * stores - same gotcha as `sub_8023500`/`SetCheckpoint` in
+             * stores - same gotcha as `SetCrateGemPos`/`SetCheckpoint` in
              * docs/matching/issue-37-game-loop-234e8.md. */
             s32 *dst = &self->checkpointX;
 

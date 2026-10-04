@@ -196,7 +196,7 @@ struct fx_part *sub_8025BAC(void *unused0, s32 anim, s32 tag, s32 x, s32 y, s32 
  * Matched (old_agbcc): the three tag bytes are written through a pointer
  * `t`, and the +0x4B zero is an opaque `zero`, so the `movs r0,#0` lands
  * after the +0x49 address instead of being hoisted above it. */
-extern struct level_state14 { u8 unk_00[0x8C]; u8 unk_8C; } *gLevelState;
+extern struct level_state14 { u8 unk_00[0x8C]; u8 timeTrial; } *gLevelState;
 extern struct orbit_part *sub_801173C(u16 id, u16 x, u16 y, u16 special);
 extern void sub_801191C(struct orbit_part *self);
 extern void sub_8011870(struct orbit_part *self);
@@ -206,7 +206,7 @@ struct orbit_part *sub_8025CA4(void *unused0, u32 x, u32 y, u32 p3, u32 p4, u32 
     u8 p5 = *(u8 *)&flag5;
     struct orbit_part *part = NULL;
 
-    if (gLevelState->unk_8C == 0)
+    if (gLevelState->timeTrial == 0)
     {
         if (p5 || p4 == 0xff)
             part = sub_801173C(0xffff, x, y, 0xffff);

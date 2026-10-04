@@ -6,7 +6,7 @@
  */
 
 /* The {entries, 0x100} entry set of entry_set_16b92c.c, followed by its
- * entries: the third HUD widget's, which sub_802375C (game_loop39.c)
+ * entries: the third HUD widget's, which PlayRoom (game_loop39.c)
  * builds through sub_800B69C. */
 struct entry_set
 {

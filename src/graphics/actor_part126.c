@@ -54,7 +54,7 @@ extern u8 gStaticData_087E5034[];
 /* The gLevelState fields read here. */
 struct game_state {
     u8 unk_00[0x78];
-    s32 mode;           // 0x78 - the current hazard tier (0-3)
+    s32 maskLevel;      // 0x78 - the Aku Aku mask level (0-3)
 };
 
 extern struct game_state *gLevelState;
@@ -539,7 +539,7 @@ void *sub_802D1B8(void *selfArg, u8 *b, s32 c, s32 d, s32 e)
 }
 
 /* VRAM-gauge/state-transition driver for a `gUnknown_030014B8`-counted
- * effect: while the current hazard tier (`gLevelState->0x78`)
+ * effect: while the current mask level (`maskLevel`) (`gLevelState->0x78`)
  * and the `retrigger` flag are both zero, just clears `self+0x2c`;
  * otherwise DMAs one of four `gStaticData_0817A798`-indexed gauge
  * strips and resets `self`'s table index/anim, arming `self+0x2c`.
@@ -552,7 +552,7 @@ void sub_802D204(void *selfArg, s32 retriggerParam)
 {
     struct actor_self *self = selfArg;
     u8 retrigger = (u8)retriggerParam;
-    register s32 tier asm("r5") = gLevelState->mode;
+    register s32 tier asm("r5") = gLevelState->maskLevel;
 
     if (tier == 0 && retrigger == 0) {
         self->unk_2C[0] = tier;
@@ -654,7 +654,7 @@ void sub_802D204(void *selfArg, s32 retriggerParam)
 /* Drives `gUnknown_030014B8`'s countdown, DMAing one of two gauge
  * strips per frame (`gStaticData_0817A7D8` on the low bit set,
  * `gStaticData_0817A7B8` otherwise) and, once it expires, resetting
- * the hazard tier via `SetMaskLevel(gLevelState, 2)` then
+ * the mask level (`maskLevel`) via `SetMaskLevel(gLevelState, 2)` then
  * `sub_802D204(self, 0)`. Independently re-fires `sub_802D204` once
  * state 2's own `self+0x12` edge trips. Always advances `self`'s own
  * anim frame (`sub_802A980`, frame-counter bump, and the usual

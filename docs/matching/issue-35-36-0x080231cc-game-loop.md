@@ -2,21 +2,21 @@
 
 Both issues cover one contiguous, un-split raw block (formerly
 `asm/code_3_2_17_231cc.s`, now retired): issue #35 lists
-`sub_80231CC`-`sub_80232D0` (24 of its own 25 functions - `sub_80231C4`
+`HasDoubleJump`-`ClearSwitchPressed` (24 of its own 25 functions - `HasTurboRun`
 was already matched in an earlier pass), issue #36 lists
-`ClearTimeTrial`-`sub_8023484` (all 25). Together they're exactly this
-file's 49 functions, `0x080231CC`-`0x08023488` (`sub_8023484` itself
+`ClearTimeTrial`-`CheckAllCratesBroken` (all 25). Together they're exactly this
+file's 49 functions, `0x080231CC`-`0x08023488` (`CheckAllCratesBroken` itself
 ends at `0x080234E8`, where `src/system/game_loop10.o` picks up).
 
 The block sits immediately after `src/system/game_loop2.c`'s own
-existing functions (`FreezeLevelClock`-`sub_80231C4`) in ROM, with no gap -
+existing functions (`FreezeLevelClock`-`HasTurboRun`) in ROM, with no gap -
 `ldscript.txt` already links `game_loop2.o` directly before what was
 `asm/code_3_2_17_231cc.o`. All 49 functions turned out to be a direct
 continuation of the exact same `self` type `game_loop2.c` already
 established: the `gLevelState`-pointed "level" object (confirmed
-by `sub_8023A1C`/`game_loop56.c`, whose own opening dispatch reads
-`*gLevelState` and passes it as `self` to `sub_8023118`/
-`sub_8023110`/`sub_8023484`). Rather than open a new file (which would
+by `RunRoom`/`game_loop56.c`, whose own opening dispatch reads
+`*gLevelState` and passes it as `self` to `SetMaskAssistDeaths`/
+`sub_8023110`/`CheckAllCratesBroken`). Rather than open a new file (which would
 need a new `ldscript.txt` entry and a fresh struct-convention writeup),
 all 49 were appended directly to `game_loop2.c`, in ROM address order,
 keeping the existing object boundary and the existing `self+2`/
@@ -27,13 +27,13 @@ keeping the existing object boundary and the existing `self+2`/
 Building on `game_loop2.c`'s existing `self+2` flags byte and
 `self+0x80`/`0x84`/`0x88`/`0xac`/`0xc0` int fields:
 
-- **`self+2` bit 7**: one more getter (`sub_80231CC`) extending the
+- **`self+2` bit 7**: one more getter (`HasDoubleJump`) extending the
   existing flag-bit family (bits 4-6 already covered by
-  `sub_80231B4`/`BC`/`C4` above).
+  `HasTornadoSpin`/`BC`/`C4` above).
 - **`self+0x6c`/`self+0x70`/`self+0x74`/`self+0x78`/`self+0xbc`**: a
   counter/threshold/latch cluster. `self+0x70`/`self+0xbc` are a
-  counter/limit pair already read by `sub_8022FEC`/`sub_802306C`
-  (matched previously) and now also by `sub_8023484` (see below).
+  counter/limit pair already read by `AddBrokenCrate`/`PressSwitchCrate`
+  (matched previously) and now also by `CheckAllCratesBroken` (see below).
   `self+0x78` is a small "last state" latch (`SetMaskLevel`/
   `SetLives`/`RaiseMaskLevel`). `self+0x6c`/`self+0x74` form a
   centisecond/second odometer pair (`CollectWumpa`/`AddLife`,
@@ -41,7 +41,7 @@ Building on `game_loop2.c`'s existing `self+2` flags byte and
   `TickLevelClock` above already documents) - `self+0x6c` wraps at `0x63`
   and bumps `self+0x74` (itself saturating at `0x62`).
 - **`self+0x7c`**: a plain free-running counter (get/increment/reset:
-  `sub_80232E0`/`E4`/`EC`, plus a "start" helper `sub_8023304` that
+  `GetDeaths`/`E4`/`EC`, plus a "start" helper `ArmStartSpawn` that
   resets it and sets a flag).
 - **`self+0x8c`**: a single flag byte, read by `LoseLife` (guards a
   `self+0x74` decrement-and-notify) and cleared by `ClearTimeTrial`.
@@ -49,18 +49,18 @@ Building on `game_loop2.c`'s existing `self+2` flags byte and
   `TickLevelClock`'s existing digit-cascade odometer (`GetClockMinutes`/
   `8023268`/`8023260`).
 - **`self+0xa4`-`self+0xa9`**: a bank of six busy/status-flag bytes
-  (`sub_80232B8`/`90`/`98`/`A0`/`C8`/`F4` getters, plus clear-to-0 and,
+  (`IsInBonusRound`/`90`/`98`/`A0`/`C8`/`F4` getters, plus clear-to-0 and,
   for three of them, set-to-1 setters) - the same shape as the `self+2`
   bitfield family, just laid out as whole bytes.
 - **`self+0xc4`**: a "current index" field, read by two dispatchers
   (`sub_8023378`/`sub_80233B4`, see below), resolved to a slot address
   by `GetLevelFlags`/`GetCurrentLevelFlags` (`self + idx*4 + 4`), and re-used as a
-  `gLevelTable`-style level index by `sub_8024498`
+  `gLevelTable`-style level index by `PlayRoomMusic`
   (`game_loop18.c`) when `SetMaskLevel` forwards `self+0xc4`'s address
   into it.
 - **`self+0xc8`/`self+0x1c8`**: two more plain word fields
   (`sub_8023324` getter, `sub_8023318` setter) - `self+0x1c8` sits right
-  after the `self+0x1c0`/`0x1c4` pair `sub_8023484` reads.
+  after the `self+0x1c0`/`0x1c4` pair `CheckAllCratesBroken` reads.
 
 ## The two `self+0xc4` dispatchers
 
@@ -83,7 +83,7 @@ the ROM's own compiler chose them:
   genuine **5-slot jump table**, and slot 4 (`idx-0x14==4`, i.e.
   `idx==0x18`) points at the *exact same address* as the range-check's
   own "out of bounds" fallthrough target - the same cross-slot code
-  sharing this project has already seen in `sub_8023A1C`'s state-1/6
+  sharing this project has already seen in `RunRoom`'s state-1/6
   vs. state-5 tail (`game_loop56.c`). A plain `switch` with only 4
   explicit cases plus `default` stayed under this compiler's jump-table
   threshold and fell back to another comparison tree instead; adding an
@@ -111,15 +111,15 @@ the ROM's own compiler chose them:
   `baserom.gba` (see `docs/workflow.md` step 3's warning about isolated
   compiles never being proof of a match).
 
-## `sub_8023484`: closing GitHub issue #37's last gap
+## `CheckAllCratesBroken`: closing GitHub issue #37's last gap
 
-`sub_8023484` is the one function `docs/matching/issue-37-game-loop-2375c.md`
-called out by name as still open - `sub_8023A1C`'s (`game_loop56.c`)
+`CheckAllCratesBroken` is the one function `docs/matching/issue-37-game-loop-2375c.md`
+called out by name as still open - `RunRoom`'s (`game_loop56.c`)
 "init guard" call, firing once per level to lazily initialize this
 "level" object's counter-notification state the first time
-`self+0x70 == self+0xbc` and both busy flags (`sub_80232B8`/
-`sub_8023290`) are clear. Its body is the exact same
-`sub_8022FEC`/`sub_802306C`-shaped tail (if the `self+0xdc`-linked
+`self+0x70 == self+0xbc` and both busy flags (`IsInBonusRound`/
+`IsInGemPath`) are clear. Its body is the exact same
+`AddBrokenCrate`/`PressSwitchCrate`-shaped tail (if the `self+0xdc`-linked
 level-state record's `+8` widget-kind field is `3`, OR a bit into the
 `GetCurrentLevelFlags`-resolved slot; otherwise forward `self+0x1c0`/`0x1c4` to
 `sub_801EB04`), gated by one extra counter/threshold check up front.
@@ -137,7 +137,7 @@ register write-back into `r3` rather than letting the compiler route
 the incremented value through a fresh scratch register and never
 touch `r3` at all, since nothing reads `off` again afterward). This is
 the same class of gotcha `issue-37-game-loop-2375c.md` already
-catalogued for `sub_802375C`'s own case-block shapes - a value that
+catalogued for `PlayRoom`'s own case-block shapes - a value that
 looks "dead" after one more use still has to be visibly written back
 to its pinned register if the ROM's own code did so.
 
@@ -164,7 +164,7 @@ warnings for `game_loop2.c`) and a full clean `make compare`
 is retired; `ldscript.txt`'s entry for it is removed (no replacement
 needed, since `game_loop2.o` now covers the whole span directly).
 
-This does not close issue #37 by itself - `sub_8023A1C` was already
+This does not close issue #37 by itself - `RunRoom` was already
 matched separately (`game_loop56.c`, `NAKED`) in the same prior
 session; this pass only closed the one remaining gap
-(`sub_8023484`) that document's own follow-up section called out.
+(`CheckAllCratesBroken`) that document's own follow-up section called out.

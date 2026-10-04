@@ -8,8 +8,8 @@
  * down 0x14 frames then -> 3, 3 counting down its own timer then back to
  * 0. Slot 0 blinks with the lives counter and slot 1 with the wumpa
  * counter (`CollectWumpa`); slot 2 is triggered whenever the level
- * state's `unk_70` counter advances (`sub_8022FEC`). `unk_28` receives
- * the level state's `unk_bc` target (`sub_8022BF0`). */
+ * state's `crateCount` advances (`AddBrokenCrate`). `unk_28` receives
+ * the level state's `crateTotal` (`EndBonusRound`). */
 struct blink_slot
 {
     s32 state;

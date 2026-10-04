@@ -16,7 +16,7 @@
  * the remaining fields: each of the 3 slots pairs a `targets`/`lists`
  * pointer pair with a `periods`/`counts` scalar pair, and `TickPaletteCycles`
  * (the per-frame consumer) rotates `targets[i]` by one position, once
- * every `periods[i]` frames (`gUnknown_0300082C % periods[i] == 0`),
+ * every `periods[i]` frames (`gRoomFrameCount % periods[i] == 0`),
  * walking the permutation order given by `lists[i]` - forwards or
  * backwards depending on `direction`. `AddPaletteCycle` (the producer) only
  * ever appends at `count` (no wraparound seen in either function - the
@@ -51,7 +51,7 @@ extern void sub_80088F0(struct actor *part, u32 arg1);
 extern struct actor *sub_8008904(struct actor *part);
 extern u8 gStaticData_087E4CB4[];
 
-extern u32 gUnknown_0300082C;
+extern u32 gRoomFrameCount;
 extern s32 __divsi3(s32 arg0, s32 arg1);
 extern u32 __umodsi3(u32 a, u32 b);
 
@@ -99,10 +99,10 @@ void TickPaletteCycles(struct hud_fx_queue *self)
              * `offset`/builds the periods-slot address, and only
              * dereferences the global right before the call - not
              * immediately after taking its address. A plain
-             * `u32 global_val = gUnknown_0300082C;` local dereferences
+             * `u32 global_val = gRoomFrameCount;` local dereferences
              * it immediately instead (tried and confirmed to change the
              * generated code); see docs/workflow.md step 7. */
-            u32 *global_addr = &gUnknown_0300082C;
+            u32 *global_addr = &gRoomFrameCount;
             u8 *p;
 
             offset = i << 2;

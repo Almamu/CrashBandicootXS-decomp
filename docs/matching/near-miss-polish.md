@@ -7,7 +7,7 @@ within a few instructions of the ROM. Three of them now match as real C:
 |---|---|---|---|---|
 | `PlaySfx` (`sub_8001854`) | `src/audio/sfx_ambient.c` | agbcc | raw asm, 4 halfwords | unpin `self`, then one empty `asm("" : : "r"(&gSfxVoiceToggle))` |
 | `ValidateSaveData` | `src/graphics/settings_menu8e.c` | agbcc | NAKED, 6 halfwords | one empty `asm("" : : "r"(flags))` |
-| `sub_801C96C` | `src/graphics/actor_part_1b85c.c` | old_agbcc | NAKED, 1 instruction | statement expression plus an empty `asm("" : "+r"(k.all))` |
+| `LevelSelectLoop` | `src/graphics/actor_part_1b85c.c` | old_agbcc | NAKED, 1 instruction | statement expression plus an empty `asm("" : "+r"(k.all))` |
 
 `asm/code_3_1_10.s`, which held only `PlaySfx`, has been deleted along
 with its `ldscript.txt` line.
@@ -38,7 +38,7 @@ Try this whenever a draft is instruction-identical to the ROM but has a
 register permutation among callee-saved or high registers. Brute-force
 the variable and the count; the right answer is usually one reference.
 
-## `sub_801C96C`: a copy the ROM makes between `ands` and `cmp`
+## `LevelSelectLoop`: a copy the ROM makes between `ands` and `cmp`
 
 Before the 0x80 test's `cmp`, the ROM copies the key word
 (`adds r1, r2, #0`) and later tests 0x20 on the copy. A statement
@@ -68,7 +68,7 @@ expression is not enough either.
 | `sub_800450C` | loop pre-header order (0x80 hoisted before the pointer copies) | passing 0x80 through a variable in any position fixes the order but changes which invariants the loop pass hoists (11 halfwords) |
 | `PauseMenuLoop` | fade pointer computed after `disp` | fade local at top, before or after `disp`, in either or both loops; for/break/goto loop forms; late `disp`. `asm("" : : "r"(FADE(self)))` before `disp` gets the order right but computes the pointer into r0 and copies it to r4 afterwards. A fade local used in the second loop only gets the order but is 8 bytes short. |
 | `sub_8001CB8` | `hash >> 8` folded into `(x << 16) >> 24`; -16 as `mov; neg` instead of `sub r0,#31` | u32/s32 hash with casts or masks, temporaries, `+r`/`r` barriers, manual nibble insert (7 halfwords, but 0xF0 replaces the -16) |
-| `sub_8023A1C` | `add rN, sp, #4` should come before the direction-byte constant | struct spellings: packed, plain, array, s8, bitfield, nested; locals; compound literals. Only the packed one-byte struct keeps `strb`. |
+| `RunRoom` | `add rN, sp, #4` should come before the direction-byte constant | struct spellings: packed, plain, array, s8, bitfield, nested; locals; compound literals. Only the packed one-byte struct keeps `strb`. |
 | `sub_80360DC` | seedBase/counter/zero and stride/slot register rotation | 0-2 extra `asm` references on each of the five variables, before the loop or inside it (3^5 combinations): the gap never dropped below 18 halfwords |
 
 Helpers: the brute-force variant runner (`brute2.py`, adapted from the

@@ -12,7 +12,7 @@ extern u32 gKeys;
 extern void *gEntityFlags;
 extern void *gUnknown_030012B8;
 extern void *gAudioContext;
-extern struct act_part *gUnknown_030012D8;
+extern struct act_part *gPlayer;
 extern void *gUnknown_03001304;
 extern u8 gStaticData_0816B300[];
 extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
@@ -277,7 +277,7 @@ void sub_80149BC(struct act *self)
 {
     if (self->part->animDone)
     {
-        *((u8 *)gUnknown_030012D8 + 0xC) |= 0x80;
+        *((u8 *)gPlayer + 0xC) |= 0x80;
         sub_8015780(self, 0, 0x12, 0, 0);
         self->next31 = 0;
         self->flag2F = 1;

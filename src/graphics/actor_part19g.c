@@ -36,7 +36,7 @@ extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern u8 sub_802A6EC(void *self);
 extern void UpdateActor(void *self);
 extern u8 sub_802DD9C(void *self);
-extern void sub_8022FEC(void *self);
+extern void AddBrokenCrate(void *self);
 extern void sub_802AAB4(void *arg0);
 extern void sub_802B730(void *arg0);
 extern void sub_8029720(void);
@@ -83,7 +83,7 @@ void *sub_802C4A4(void *selfArg, s32 a, s32 b, s32 c, s32 lastArg)
  * once (state != 0x12 and `sub_802DD9C`'s overlap test passes),
  * transitions to the shared "used" state 0x12 (anim frame from
  * `self`'s part-table pointer at `+0xd8`) with a sound cue and the
- * lap-counter tie `sub_8022FEC`. Either way, fires the `vtable`
+ * lap-counter tie `AddBrokenCrate`. Either way, fires the `vtable`
  * trampoline once state is (already, or now) 0x12 and `animDone` is
  * set; otherwise tail-calls `UpdateActor`. */
 void sub_802C4C8(void *selfArg)
@@ -93,7 +93,7 @@ void sub_802C4C8(void *selfArg)
     if (self->animIndex != 0x12) {
         if (sub_802DD9C(self)) {
             PlaySfx(gAudioContext, 3, 0x100);
-            sub_8022FEC(gLevelState);
+            AddBrokenCrate(gLevelState);
             self->animIndex = 0x12;
             {
                 register u16 anim asm("r0") = *(u16 *)&self->anims[18].duration;
@@ -122,7 +122,7 @@ void sub_802C4C8(void *selfArg)
  * (`sub_8031D7C`/etc., per docs/rom_map.md) to value range `0x1c`-
  * `0x1f`, reading the type byte through one extra pointer indirection
  * (`self+0x30`). Ties into the wraparound-lap-counter system via
- * `sub_8022FEC` and dispatches accumulator/lock-timer calls
+ * `AddBrokenCrate` and dispatches accumulator/lock-timer calls
  * (`sub_802C078`/`sub_802C128`) before tail-calling the shared cleanup
  * `sub_802C4C8`. */
 void sub_802C540(void *selfArg)
@@ -132,7 +132,7 @@ void sub_802C540(void *selfArg)
     if (self->animIndex != 0x12 && sub_802A6EC(self)) {
         s32 typeByte;
 
-        sub_8022FEC(gLevelState);
+        AddBrokenCrate(gLevelState);
         typeByte = **(u8 **)((u8 *)self + 0x30);
 
         if (typeByte == 0x1d) {
@@ -203,7 +203,7 @@ void sub_802C614(void *selfArg)
     if (self->animIndex != 0x12) {
         if (sub_802A6EC(self)) {
             PlaySfx(gAudioContext, 7, 0x100);
-            sub_8022FEC(gLevelState);
+            AddBrokenCrate(gLevelState);
             sub_802C0A8(gActorList);
             sub_802AAB4(((struct listed_actor *)self)->unk_54);
             self->animIndex = 0x12;
@@ -221,7 +221,7 @@ void sub_802C614(void *selfArg)
 
         if (self->animIndex != 0x12 && sub_802DD9C(self)) {
             PlaySfx(gAudioContext, 3, 0x100);
-            sub_8022FEC(gLevelState);
+            AddBrokenCrate(gLevelState);
             self->animIndex = 0x12;
             {
                 register u16 anim asm("r0") = *(u16 *)&self->anims[18].duration;
@@ -271,7 +271,7 @@ void sub_802C6C0(void *selfArg)
 
         if (found) {
             PlaySfx(gAudioContext, 4, 0x100);
-            sub_8022FEC(gLevelState);
+            AddBrokenCrate(gLevelState);
             sub_802B730(gActorList);
             {
                 register s32 zero2 asm("r2") = 0;
@@ -289,7 +289,7 @@ void sub_802C6C0(void *selfArg)
             }
         } else if (sub_802DD9C(self)) {
             PlaySfx(gAudioContext, 4, 0x100);
-            sub_8022FEC(gLevelState);
+            AddBrokenCrate(gLevelState);
             {
                 register s32 zero2 asm("r5") = found;
 

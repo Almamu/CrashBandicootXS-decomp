@@ -1,9 +1,9 @@
-# Issue #9/#10: `sub_800AFF4` (graphics) - the "dizzy stars" companion update
+# Issue #9/#10: `DrawPlayer` (graphics) - the "dizzy stars" companion update
 
-Dedicated deep-investigation session against `sub_800AFF4` (ROM
+Dedicated deep-investigation session against `DrawPlayer` (ROM
 `0x0800AFF4`, 636 bytes), the second function in the small two-function
 region `0x0800AC2C`-`0x0800B270` `tools/report_units.py` tracked as
-parked (`base_object=None`, still raw). Its neighbor, `sub_800AC2C` (a
+parked (`base_object=None`, still raw). Its neighbor, `PlayerHandleEvent` (a
 38-case player action-state jump-table dispatcher directly above it),
 is out of scope and untouched - same standing exclusion this project
 already applies to `sub_8018008` (issue #22): a large jump-table
@@ -13,7 +13,7 @@ left raw rather than guessed at.
 ## Starting point
 
 `docs/rom_map.md`'s "eight more core reads" passage had already sampled
-this function once, from one angle only: "`sub_800AFF4` (636 B) reaches
+this function once, from one angle only: "`DrawPlayer` (636 B) reaches
 [the 28-byte-record table] through a *child* object's `+0x20` field and
 reads a third offset, byte `+0x16` this time, clamping the result into
 `self+0x30`" (that prose actually meant the *child's own* `+0x30`, not
@@ -42,15 +42,15 @@ neighborhood - the same fields `actor_part16.c`/`actor_part79.c`/
 - `self+0x20` - a per-tag 28-byte-record table pointer:
   `*(self+0x20) + tag*0x1c`, the exact convention `actor_part79.c`
   documents from a sibling call site (there written
-  `sub_8012160`'s `xptr`/`base`/`record` chain).
+  `KillPlayer`'s `xptr`/`base`/`record` chain).
 - `self+0x28` bit 4 - the mirror-flag bit `actor_part16.c`/
   `actor_part17.c`/`actor_part108.c` already read (tested via
   `lsls rX, rY, #0x1b` / `bge`, the same "shift bit into the sign
   position" idiom used everywhere else this bit is read).
 - `self+0x2d` - a per-tag selector byte (indexes the `+0x20` table).
-- `self+0x8c` - a `gUnknown_0300082C`-relative deadline, the exact
+- `self+0x8c` - a `gRoomFrameCount`-relative deadline, the exact
   `IsTimerArmed`/`SetTimer` convention `actor_part16.c` names:
-  `*(u32 *)(self+0x8c) > gUnknown_0300082C` means "still armed",
+  `*(u32 *)(self+0x8c) > gRoomFrameCount` means "still armed",
   confirmed here by the identical comparison shape appearing twice.
 - `self+0xb0` - a pointer to a single **"child" companion object**
   (the same object dereferenced by every block in this function).
@@ -64,7 +64,7 @@ neighborhood - the same fields `actor_part16.c`/`actor_part79.c`/
 
 Two file-scope globals not previously declared anywhere in `src/`:
 `gUnknown_03000818`/`gUnknown_0300081C` (both plain `u32`, alongside
-the already-`extern`'d `gUnknown_0300082C` frame counter and
+the already-`extern`'d `gRoomFrameCount` frame counter and
 `gUnknown_030012CC`, a plain `void *` OAM-manager-style global several
 other files already pass to `sub_8007A84`).
 
@@ -78,14 +78,14 @@ chain):
 
 1. **`mode == 3`** ("just got hit" / stun-entry) - runs a whole block
    skipped entirely for any other mode:
-   - Every ~8 frames (`gUnknown_0300082C & 7 == 0`), re-rolls
+   - Every ~8 frames (`gRoomFrameCount & 7 == 0`), re-rolls
      `gUnknown_03000818 = (u16)RandRange(2) + 2 - (mirrored ? 2 : 0)`
      - `0`/`1` if `self` is mirrored, `2`/`3` otherwise: which side the
        effect "starts" from, tied to facing.
    - Clamps `gUnknown_03000818` against the **child's own** hitbox/
      variant record's `+0x16` byte (`child[0x20] -> *table + child[0x2d]*0x1c`,
      read `[+0x16]` - the same table-dereference chain
-     `sub_800AAEC`/`sub_800CD00` and `actor_part79.c`'s `sub_8012160`
+     `sub_800AAEC`/`sub_800CD00` and `actor_part79.c`'s `KillPlayer`
      already established, just with a different single-byte field read
      out of the 28-byte record than either of those): `val = min(roll,
      limit) if roll < limit else limit - 1`, stored into the child's
@@ -96,7 +96,7 @@ chain):
      unconditional) - a fixed offset near the head, mirrored
      horizontally with facing.
    - Toggles the child's own `+0x2d` tag between `1`/`2` on a 4-frame
-     parity of `gUnknown_0300082C` (`&4`) - a flicker - then fires the
+     parity of `gRoomFrameCount` (`&4`) - a flicker - then fires the
      child's own `+0x18`-table `+0x20`/`+0x24` trampoline via
      `_call_via_r1` (a "refresh/notify" call, same convention
      `sub_800AAEC` uses at its own `+0x18`-table `+0x48` slot - a
@@ -106,14 +106,14 @@ chain):
    `sub_8007A84(gUnknown_030012CC, self)` (matched, `actor_part.c` -
    queues `self`'s own OAM using its own Q8 position, truncated to
    int) - unconditionally if `mode == 3` **or** the deadline has
-   expired (`self+0x8c <= gUnknown_0300082C`); while the deadline is
+   expired (`self+0x8c <= gRoomFrameCount`); while the deadline is
    still armed and `mode != 3`, only on the same 4-frame parity
-   (`gUnknown_0300082C & 4`). This is a standard hit-invincibility
+   (`gRoomFrameCount & 4`). This is a standard hit-invincibility
    blink, reusing the identical "armed deadline + 4-frame parity"
    shape as the child's own flicker in block 1 - both driven off the
    same frame counter, so the child and `self` flicker in lockstep.
 3. **`mode == 3` again**, but only once the `self+0x8c` deadline has
-   *expired* (`self+0x8c <= gUnknown_0300082C`, the "not armed"
+   *expired* (`self+0x8c <= gRoomFrameCount`, the "not armed"
    case): calls `SetMaskLevel(gLevelState, 2)` - a mode-transition
    call, the same "state close" convention `actor_part84.c`/
    `actor_part58.c` already establish for this function acting on
@@ -126,7 +126,7 @@ chain):
    including `3` - blocks 1 and 5 are mutually exclusive in practice,
    since only one mode value is active at a time, but structurally
    independent gates):
-   - Every ~8 frames (`gUnknown_0300082C & 7 == 0`), random-walks
+   - Every ~8 frames (`gRoomFrameCount & 7 == 0`), random-walks
      `gUnknown_0300081C += RandRange(3) - 1` (so `-1`/`0`/`+1`),
      clamped to `[0, 3]`.
    - Clamps `gUnknown_0300081C` against the **same child record's**
@@ -220,13 +220,13 @@ conventions:
   very end), each `.4byte` entry given its own local numeric label so
   every `ldr rX, N` reproduces the ROM's own choice of *which* literal
   pool slot to reload from at each of its (sometimes repeated) use
-  sites - `gLevelState`, `gUnknown_0300082C`, and
+  sites - `gLevelState`, `gRoomFrameCount`, and
   `gUnknown_03000818`/`gUnknown_0300081C` are each backed by two (or
   three, for `gLevelState`) *separate* pool entries at different
   addresses rather than one shared literal, exactly matching the ROM's
   own conservative-reload pattern (the same "reload from the literal
   pool fresh every use" convention `sub_800AAEC`'s own doc comment
-  already names for `gUnknown_0300130C`).
+  already names for `gCrateList`).
 
 Verified byte-exact via the isolated `cpp`/`agbcc`/`as` +
 `objcopy`/`cmp` pipeline against `baserom.gba`'s own bytes at
@@ -251,17 +251,17 @@ coincide` (checksum matches).
 
 ## Files changed
 
-- **New**: `src/graphics/actor_part111.c` - `sub_800AFF4`, NAKED.
-- `asm/code_3_2_16_ac2c.s` - trimmed to end right after `sub_800AC2C`
-  (`sub_800AFF4`'s real bytes, and its own trailing literal pool,
+- **New**: `src/graphics/actor_part111.c` - `DrawPlayer`, NAKED.
+- `asm/code_3_2_16_ac2c.s` - trimmed to end right after `PlayerHandleEvent`
+  (`DrawPlayer`'s real bytes, and its own trailing literal pool,
   removed).
 - `ldscript.txt` - new `actor_part111.o(.text)` entry inserted between
   `code_3_2_16_ac2c.o` and `actor_part49.o`, preserving link order.
 - `tools/report_units.py` - the combined `0x0800AC2C` (`None`) entry
-  split: `0x0800AC2C` narrowed to just `sub_800AC2C` (still raw), new
+  split: `0x0800AC2C` narrowed to just `PlayerHandleEvent` (still raw), new
   `0x0800AFF4` entry pointing at `actor_part111.o`.
-- `docs/status/actor.md` - the old combined `sub_800AC2C`/`sub_800AFF4`
-  "Left raw" bullet narrowed to just `sub_800AC2C`; new `sub_800AFF4`
+- `docs/status/actor.md` - the old combined `PlayerHandleEvent`/`DrawPlayer`
+  "Left raw" bullet narrowed to just `PlayerHandleEvent`; new `DrawPlayer`
   bullet added to the "Parked - NAKED transcription" section.
 
 ## Cross-references
@@ -272,7 +272,7 @@ coincide` (checksum matches).
 - `docs/matching/issue-9-10-0x0800aaec-graphics.md` - the
   `self+0x20`/`+0x2d`/28-byte-record convention worked out in detail
   there, reused here for the child object's own record lookup.
-- `src/graphics/actor_part79.c` - `sub_8012160`'s own
+- `src/graphics/actor_part79.c` - `KillPlayer`'s own
   `part+0x20 -> *ptr + tag*0x1c` chain, the closest existing sibling of
   this function's own child-record clamp.
 - `src/graphics/actor_part16.c` - the `self+0x8c`
@@ -293,8 +293,8 @@ orbit tail caches addresses differently. No draft is kept. See [issue-9-naked-re
 
 ## Later pass (issue #9-#11 NAKED retry)
 
-`sub_800AFF4` now has an old_agbcc C draft under `NON_MATCHING` (not converged: `self` lands in r6 instead of r7 and it spills one slot too many). Still NAKED. See [issue-9-11-box-naked-retry.md](issue-9-11-box-naked-retry.md).
+`DrawPlayer` now has an old_agbcc C draft under `NON_MATCHING` (not converged: `self` lands in r6 instead of r7 and it spills one slot too many). Still NAKED. See [issue-9-11-box-naked-retry.md](issue-9-11-box-naked-retry.md).
 
 ## Later pass (issue #9/#10 raw-asm pass)
 
-`sub_800AFF4` is still NAKED. Its file now builds with old_agbcc (for `sub_800AC2C`), and the draft is 256 halfwords off there. See [issue-9-raw-asm-pass.md](issue-9-raw-asm-pass.md).
+`DrawPlayer` is still NAKED. Its file now builds with old_agbcc (for `PlayerHandleEvent`), and the draft is 256 halfwords off there. See [issue-9-raw-asm-pass.md](issue-9-raw-asm-pass.md).

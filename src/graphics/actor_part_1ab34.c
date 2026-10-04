@@ -2,7 +2,7 @@
 #include "gobj_1a794.h"
 
 /* GitHub issue #25, ROM 0x0801AB34-0x0801AB98: sub_801AB34, struct
- * gobj's method-table +0x0C entry - if the player (gUnknown_030012D8) is
+ * gobj's method-table +0x0C entry - if the player (gPlayer) is
  * active and within 0x7FFF (Q8) on both axes, run the collision test
  * sub_801AB98. See include/gobj_1a794.h. */
 
@@ -10,7 +10,7 @@ s32 sub_801AB34(struct gobj *self)
 {
     if (self->type != 6 || self->frame <= 0x12)
     {
-        register struct gobj *p asm("r3") = gUnknown_030012D8;
+        register struct gobj *p asm("r3") = gPlayer;
         void *arg = *(void **)((u8 *)p->mover + 8);
         register u32 f asm("r1") = p->flags;
         register u32 top asm("r0") = f >> 7;

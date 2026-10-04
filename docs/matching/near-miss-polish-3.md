@@ -94,7 +94,7 @@ take the same changes.
 | `sub_800450C` (raw) | 5 | 5 | With the constant trick for 0x80, gcc hoists the `asm` too far (into the palette-loop area, 116 halfwords); an `asm volatile` stays put but is no better (20+). |
 | `PauseMenuLoop` | 5 | 5 | The ROM computes the fade-in loop's `self+0xcc` (r4) before `disp`; here after. Constant-trick/`"+r"` forms of `disp`, first-loop shapes, a label before `disp`, and a fade pointer local for the fade-in loop don't move it. |
 | `sub_8001CB8` | 11 | 11 | Mask spellings of the tail (`& 0xf0`, `& ~0xf`, `& -16`) and `"+r"` barriers on `hash` make it worse (27-51). The ROM's `sub r0, #0x1f` (-16 from the 15 in r0) looks like reload's move2add, which the draft doesn't trigger. |
-| `sub_8023A1C` | 15 | 15 | The one-byte stack argument: an `asm` copy of the direction makes things worse (109); a plain `u8`/`s8`/`u16` parameter or no prototype stores a word. |
+| `RunRoom` | 15 | 15 | The one-byte stack argument: an `asm` copy of the direction makes things worse (109); a plain `u8`/`s8`/`u16` parameter or no prototype stores a word. |
 | `sub_800BD48` | 21 | 21 | Mostly reload scratch registers (the ROM's rotation is r3, r3, r3, r4, r6, r2). The constant trick for the layer's `1` (shared with the `gone` OR) costs 8 bytes. |
 
 ## Notes for next time

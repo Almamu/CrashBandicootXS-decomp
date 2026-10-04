@@ -10,16 +10,16 @@
  * - sub_801B85C-sub_801B980: `struct follow_child`, the 0x80-byte
  *   object (method table gStaticData_087E4ABC) sub_8017600
  *   (actor_part_17524.c) spawns for the input controller. It trails the
- *   player (gUnknown_030012D8) at a horizontal offset that eases 2 px per
+ *   player (gPlayer) at a horizontal offset that eases 2 px per
  *   frame toward a clamped target, and registers itself as
- *   gUnknown_030012D4's follow target while alive.
+ *   gCamera's follow target while alive.
  * - sub_801B984-sub_801BAD0: a 0x78-byte sprite subclass (method table
  *   gStaticData_087E4B34) with a factory, a player-overlap check that
  *   fires the player's method 13 (0x19), constructor and destructor.
- * - sub_801BAF0-sub_801CE60: `struct level_menu`, the paged level-select
+ * - RunLevelSelect-LevelSelectCursorRight: `struct level_menu`, the paged level-select
  *   screen (docs/rom_map.md: "a paged menu/screen with a smooth
- *   horizontal page-turn animation"). sub_801BAF0 is the whole modal
- *   screen: it builds the menu (sub_801BC28), runs it (sub_801C96C)
+ *   horizontal page-turn animation"). RunLevelSelect is the whole modal
+ *   screen: it builds the menu (InitLevelSelect), runs it (LevelSelectLoop)
  *   and returns the chosen level through `*arg`. Five levels per page
  *   (`arg / 5`, `arg % 5`); each level's fixed record (name text, three
  *   time-trial thresholds) is gLevelTable, its saved record a
@@ -74,7 +74,7 @@ struct follow_child
 
 COMPILE_TIME_ASSERT(sizeof(struct follow_child) == 0x80);
 
-/* gUnknown_030012D8, only the fields used here. */
+/* gPlayer, only the fields used here. */
 struct player
 {
     s32 x;                  // 0x00
@@ -249,11 +249,11 @@ union dispcnt
 struct item_vtable
 {
     struct method unk_00;
-    struct method m08;          // 0x08 - per-frame update (sub_801C104)
+    struct method m08;          // 0x08 - per-frame update (UpdateLevelSelect)
     struct method m10;          // 0x10
     struct method m18;          // 0x18
     struct method m20;          // 0x20 - draw (sub_801C51C)
-    struct method m28;          // 0x28 - destructor (sub_801C040)
+    struct method m28;          // 0x28 - destructor (DestroyLevelSelect)
 };
 
 /* One level entry on the current page (sub_801DFEC, 0x14 bytes). */
@@ -263,10 +263,10 @@ struct item
     struct item_vtable *vtable; // 0x10
 };
 
-/* The level-select screen object (0xAC bytes, sub_801BC28). */
+/* The level-select screen object (0xAC bytes, InitLevelSelect). */
 struct level_menu
 {
-    u8 result;                  // 0x00 - returned by sub_801BAF0
+    u8 result;                  // 0x00 - returned by RunLevelSelect
     u8 unk_01[3];
     s32 lastIndex;              // 0x04 - last valid `index` on this page
     s32 index;                  // 0x08 - cursor, 0-5
@@ -290,7 +290,7 @@ struct level_menu
     s32 unk_90;                 // 0x90
     s32 unk_94;                 // 0x94
     s32 rank;                   // 0x98 - sub_801C608's classification, 5 = none
-    u8 *save;                   // 0x9C - sub_80236EC's save block
+    u8 *save;                   // 0x9C - PackSaveData's save block
     union blend blend;          // 0xA0 - REG_BLDCNT + REG_BLDALPHA
     struct bldy bldy;           // 0xA4 - REG_BLDY
     union dispcnt dispcnt;      // 0xA8 - REG_DISPCNT
@@ -324,8 +324,8 @@ union key_state
     struct held_pressed_pair half;
 };
 
-extern struct player *gUnknown_030012D8;
-extern struct follow_owner *gUnknown_030012D4;
+extern struct player *gPlayer;
+extern struct follow_owner *gCamera;
 extern void ***gUnknown_030012D0;
 extern void *gUnknown_030012F0;
 extern struct tile_cache *gUnknown_030012B8;
@@ -336,8 +336,8 @@ extern struct icon_manager *gLargeFont;
 extern struct vram_cursor *gUnknown_030012FC;
 extern void *gUnknown_03001300;
 extern void *gUnknown_03001304;
-extern struct level_menu *gUnknown_03000820;
-extern u8 gUnknown_03000824;
+extern struct level_menu *gLevelSelect;
+extern u8 gNewWorldOpened;
 extern union key_state gKeys;
 extern u8 gStaticData_087E4ABC[];
 extern u8 gStaticData_087E4B34[];
@@ -412,7 +412,7 @@ extern void FontResetPalette(struct icon_manager *m);
 extern void FormatCentiseconds(s32 value, char *buf);
 
 /* Save data. */
-extern u8 *sub_80236EC(void *p);
+extern u8 *PackSaveData(void *p);
 extern u8 sub_802336C(void *p, s32 id);
 extern u8 sub_8023360(void *p, s32 id);
 extern u8 sub_8023354(void *p, s32 id);
@@ -429,12 +429,12 @@ extern void sub_801D5CC(struct level_menu *self);
 extern void sub_801D668(struct level_menu *self);
 extern void sub_801D730(struct level_menu *self);
 extern void sub_801D05C(struct level_menu *self);
-extern void sub_801D110(struct level_menu *self);
-extern void sub_801D300(struct level_menu *self);
-extern u8 sub_801D428(struct level_menu *self);
-extern u8 sub_801D434(struct level_menu *self);
-extern void sub_801D4C4(struct level_menu *self);
-extern void sub_801D548(struct level_menu *self);
+extern void LevelSelectConfirm(struct level_menu *self);
+extern void LevelSelectExit(struct level_menu *self);
+extern u8 LevelSelectHasPrevWorld(struct level_menu *self);
+extern u8 LevelSelectIsNextWorldOpen(struct level_menu *self);
+extern void LevelSelectPrevWorld(struct level_menu *self);
+extern void LevelSelectNextWorld(struct level_menu *self);
 extern void sub_801D7AC(void *p);
 extern void sub_801D7D4(void *p);
 extern u32 sub_801D7D0(void *p);
@@ -465,15 +465,15 @@ extern void sub_801E524(void *p, s32 flags);
 extern u16 sub_801E640(void *p);
 
 void sub_801BAC4(struct sprite *self);
-struct level_menu *sub_801BC28(struct level_menu *self, s32 arg);
-void sub_801C040(struct level_menu *self, s32 flags);
+struct level_menu *InitLevelSelect(struct level_menu *self, s32 arg);
+void DestroyLevelSelect(struct level_menu *self, s32 flags);
 void sub_801C2B0(struct level_menu *self);
 void sub_801C364(struct level_menu *self);
 void sub_801C3E8(struct level_menu *self, u32 time);
 void sub_801C608(struct level_menu *self);
-s32 sub_801C96C(struct level_menu *self);
-void sub_801CDE0(struct level_menu *self);
-void sub_801CE60(struct level_menu *self);
+s32 LevelSelectLoop(struct level_menu *self);
+void LevelSelectCursorLeft(struct level_menu *self);
+void LevelSelectCursorRight(struct level_menu *self);
 
 /* Returns `v` unchanged. gcc's tree folder moves a constant operand of a
  * commutative operator second, so `mask & *p` loads `*p` before building
@@ -546,7 +546,7 @@ void sub_801B85C(struct follow_child *self)
 }
 
 /* (Re)initializes a follow child: makes it visible, registers it as
- * gUnknown_030012D4's follow target and snaps it 0x1E00 (30 px, Q8) to
+ * gCamera's follow target and snaps it 0x1E00 (30 px, Q8) to
  * the player's right with both offsets reset. The `visible` bit test/
  * toggle and the stores need register pins to keep the ROM's
  * allocation (see the doc for issue 26). */
@@ -557,9 +557,9 @@ void sub_801B864(struct follow_child *self)
 
     if (!(v & one))
         self->visible = v ^ 1;
-    gUnknown_030012D4->follow = self;
+    gCamera->follow = self;
     {
-        struct player *p = gUnknown_030012D8;
+        struct player *p = gPlayer;
         register s32 x asm("r0") = p->x;
         register s32 y asm("r2") = p->y;
         register s32 off asm("r1") = 0x1E00;
@@ -612,22 +612,22 @@ void sub_801B8BC(struct follow_child *self)
             self->offset = cur;
     }
     {
-        struct player *p = gUnknown_030012D8;
+        struct player *p = gPlayer;
         s32 x = p->x;
         s32 y = p->y;
 
         self->x = x + self->offset;
         self->y = y;
     }
-    self->unk_60 = gUnknown_030012D8->unk_60;
+    self->unk_60 = gPlayer->unk_60;
 }
 
-/* Destructor (method table +0x50): hands gUnknown_030012D4's follow
+/* Destructor (method table +0x50): hands gCamera's follow
  * target back to the player. */
 void sub_801B91C(struct follow_child *self, s32 flags)
 {
     self->vtable = gStaticData_087E4ABC;
-    gUnknown_030012D4->follow = gUnknown_030012D8;
+    gCamera->follow = gPlayer;
     sub_8009F1C(self, flags);
 }
 
@@ -715,12 +715,12 @@ void sub_801BA60(void *self)
 {
     struct hit_box box;
 
-    if (gUnknown_030012D8->flags >> 7)
+    if (gPlayer->flags >> 7)
     {
         sub_8007B98(&box, self);
-        if (box.unk_08 != 0 && sub_800B37C(gUnknown_030012D8, &box))
+        if (box.unk_08 != 0 && sub_800B37C(gPlayer, &box))
         {
-            struct player *p = gUnknown_030012D8;
+            struct player *p = gPlayer;
             struct method *m = &p->vtable[13];
             void *addr = (u8 *)p + m->thisOffset;
             register void *fn asm("r4") = *(void *volatile *)&m->fn;
@@ -783,7 +783,7 @@ static inline void LoadMenuPalette(struct tile_cache *cache)
     CpuSet(gStaticData_0816C56C, cache->palette, 0x10);
 }
 
-u8 sub_801BAF0(s32 *arg)
+u8 RunLevelSelect(s32 *arg)
 {
     struct level_menu *menu;
     u8 result;
@@ -810,14 +810,14 @@ u8 sub_801BAF0(s32 *arg)
     sub_8006C30(gUnknown_030012FC);
     PlaySong(gAudioContext, 0x10);
     {
-        struct level_menu **menuAddr = &gUnknown_03000820;
+        struct level_menu **menuAddr = &gLevelSelect;
 
-        *menuAddr = sub_801BC28(sub_8026EDC(0xAC), *arg);
-        *arg = sub_801C96C(*menuAddr);
+        *menuAddr = InitLevelSelect(sub_8026EDC(0xAC), *arg);
+        *arg = LevelSelectLoop(*menuAddr);
         menu = *menuAddr;
         result = menu->result;
         if (menu != NULL)
-            sub_801C040(menu, 3);
+            DestroyLevelSelect(menu, 3);
         *menuAddr = NULL;
     }
     sub_8006EA8(gUnknown_030012B8);
@@ -835,7 +835,7 @@ u8 sub_801BAF0(s32 *arg)
  * compiler chains the ORs itself); the six-entry loop needs its own
  * counter and the sprite loop's 0x80 a variable set with the counter,
  * for the ROM's register choice and hoisted constant. */
-struct level_menu *sub_801BC28(struct level_menu *self, s32 arg)
+struct level_menu *InitLevelSelect(struct level_menu *self, s32 arg)
 {
     u8 bg0cnt[0x10];
     s32 i;
@@ -869,7 +869,7 @@ struct level_menu *sub_801BC28(struct level_menu *self, s32 arg)
         self->index = 5;
     }
     self->nameText = 0;
-    self->save = sub_80236EC(gLevelState);
+    self->save = PackSaveData(gLevelState);
     self->result = 0;
     self->bg1 = sub_801D7F8(sub_8026EDC(0x28), 0, 0x1D);
     sub_801E644(bg0cnt, 2, 0x1E, 2, 3);
@@ -930,7 +930,7 @@ struct level_menu *sub_801BC28(struct level_menu *self, s32 arg)
     self->sprites[9]->anim = AnimTable(0x270);
     SetAnim(self->sprites[9], 0);
     sub_800737C(self->sprites[9], gStaticData_0816C4D0.x, gStaticData_0816C4D0.y);
-    if (gUnknown_03000824 && sub_801D434(self))
+    if (gNewWorldOpened && LevelSelectIsNextWorldOpen(self))
     {
         sub_801E408(self->panel);
     }
@@ -950,7 +950,7 @@ struct level_menu *sub_801BC28(struct level_menu *self, s32 arg)
 
 /* Destructor: deletes the sprites, panel, BG layers and level entries
  * through their own destructors; frees itself if `flags & 1`. */
-void sub_801C040(struct level_menu *self, s32 flags)
+void DestroyLevelSelect(struct level_menu *self, s32 flags)
 {
     struct sprite *s;
     s32 i;
@@ -986,7 +986,7 @@ void sub_801C040(struct level_menu *self, s32 flags)
  * the BG1 page has settled draws text 0x2F centred at y=0x96 (the first
  * time only, with the page arrows) and steps BG2; BG2's DISPCNT enable
  * bit follows sub_801DD28. */
-void sub_801C104(struct level_menu *self)
+void UpdateLevelSelect(struct level_menu *self)
 {
     s32 i;
 
@@ -1086,7 +1086,7 @@ void sub_801C2B0(struct level_menu *self)
         register struct sprite *s asm("r1");
         register s32 f asm("r4");
 
-        if (sub_801D434(self))
+        if (LevelSelectIsNextWorldOpen(self))
         {
             s = self->sprites[8];
             f = 0;
@@ -1111,7 +1111,7 @@ void sub_801C2B0(struct level_menu *self)
             sub_8008890(t, 0, 0);
         }
     }
-    if (sub_801D428(self))
+    if (LevelSelectHasPrevWorld(self))
     {
         register struct sprite *s asm("r3") = self->sprites[9];
         register s32 f asm("r4") = 0;
@@ -1360,15 +1360,15 @@ void sub_801C608(struct level_menu *self)
 }
 
 /* The menu loop: fades in (BLDY), then runs frames until A is pressed on
- * an open entry (sub_801D110) or Start exits (sub_801D300), dispatching
- * Up/Down page turns (sub_801D548/sub_801D4C4) and Left/Right cursor
- * moves (sub_801CDE0/sub_801CE60); returns the selected entry's level.
+ * an open entry (LevelSelectConfirm) or Start exits (LevelSelectExit), dispatching
+ * Up/Down page turns (LevelSelectNextWorld/LevelSelectPrevWorld) and Left/Right cursor
+ * moves (LevelSelectCursorLeft/LevelSelectCursorRight); returns the selected entry's level.
  *
  * Matched under old_agbcc in the near-miss polish pass
  * (docs/matching/near-miss-polish.md): the key-word copy the ROM makes
  * inside the 0x80 test comes from a statement expression holding the
  * copy plus an empty `asm` that keeps gcc from merging it. */
-s32 sub_801C96C(struct level_menu *self)
+s32 LevelSelectLoop(struct level_menu *self)
 {
     struct level_info *info;
 
@@ -1385,7 +1385,7 @@ s32 sub_801C96C(struct level_menu *self)
             if (f->evy != 0)
                 f->evy--;
         }
-        sub_801C104(self);
+        UpdateLevelSelect(self);
         WaitForVBlank();
         sub_8006DC8(gUnknown_030012B8);
         sub_8006AAC(gUnknown_03001300);
@@ -1401,22 +1401,22 @@ s32 sub_801C96C(struct level_menu *self)
     self->blend.bits.bdSecond = 1;
     self->blend.bits.eva = 0x10;
     self->blend.bits.evb = 0x10;
-    if (gUnknown_03000824 && sub_801D434(self))
+    if (gNewWorldOpened && LevelSelectIsNextWorldOpen(self))
     {
         self->index = 0;
-        sub_801D548(self);
+        LevelSelectNextWorld(self);
     }
-    gUnknown_03000824 = 0;
+    gNewWorldOpened = 0;
     goto loop;
 
 check_exit:
     if (gKeys.half.pressed & 8)
     {
-        sub_801D300(self);
+        LevelSelectExit(self);
         goto end;
     }
 loop:
-    sub_801C104(self);
+    UpdateLevelSelect(self);
     WaitForVBlank();
     sub_8006DC8(gUnknown_030012B8);
     sub_8006AAC(gUnknown_03001300);
@@ -1432,7 +1432,7 @@ loop:
         union key_state k;
 
         if (keys.half.pressed & 0x40)
-            sub_801D548(self);
+            LevelSelectNextWorld(self);
         /* The ROM copies the key word between the 0x80 test's `ands`
          * and its `cmp`, and tests 0x20 on the copy; gcc merges a plain
          * copy, so the (code-free) asm keeps `k` a separate value. */
@@ -1443,13 +1443,13 @@ loop:
                      asm("" : "+r"(k.all));
                      hit;
                  }))
-            sub_801D4C4(self);
+            LevelSelectPrevWorld(self);
         else
         {
             if (k.half.pressed & 0x20)
-                sub_801CDE0(self);
+                LevelSelectCursorLeft(self);
             else if (keys.half.pressed & 0x10)
-                sub_801CE60(self);
+                LevelSelectCursorRight(self);
         }
     }
     if (!(gKeys.half.pressed & 1))
@@ -1458,7 +1458,7 @@ loop:
         goto check_exit;
     if (!sub_801DD18(self->bg2))
         goto check_exit;
-    sub_801D110(self);
+    LevelSelectConfirm(self);
 end:
     self->dispcnt.raw = 0;
     self->dispcnt.bits.obj1d = 1;
@@ -1470,7 +1470,7 @@ end:
 }
 
 /* Deselects the current entry and runs frames until BG2 and the cursor
- * panel settle. Called by the page-turn handlers (sub_801D4C4/D548). */
+ * panel settle. Called by the page-turn handlers (LevelSelectPrevWorld/D548). */
 void sub_801CCF8(struct level_menu *self)
 {
     sub_801DEA0(self->items[self->index], 0);
@@ -1478,7 +1478,7 @@ void sub_801CCF8(struct level_menu *self)
     sub_801E408(self->panel);
     while (sub_801DD38(self->bg2) || !(u8)sub_801E464(self->panel))
     {
-        sub_801C104(self);
+        UpdateLevelSelect(self);
         WaitForVBlank();
         sub_8006DC8(gUnknown_030012B8);
         sub_8006AAC(gUnknown_03001300);
@@ -1491,7 +1491,7 @@ void sub_801CCF8(struct level_menu *self)
 
 /* Moves the cursor left, repeating while Left is held; sound 0x48 at the
  * first entry. */
-void sub_801CDE0(struct level_menu *self)
+void LevelSelectCursorLeft(struct level_menu *self)
 {
     if (self->index == 0)
     {
@@ -1516,7 +1516,7 @@ void sub_801CDE0(struct level_menu *self)
 
 /* Moves the cursor right, repeating while Right is held; sound 0x48 at
  * the last entry. */
-void sub_801CE60(struct level_menu *self)
+void LevelSelectCursorRight(struct level_menu *self)
 {
     if (self->index == self->lastIndex)
     {

@@ -11,7 +11,7 @@ extern void *gActorList;
 
 extern u8 sub_802A6EC(void *self);
 extern u8 sub_802DD9C(void *self);
-extern void sub_8022FEC(void *self);
+extern void AddBrokenCrate(void *self);
 extern void sub_802C128(void *arg0);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void sub_802C4C8(void *selfArg);
@@ -31,7 +31,7 @@ extern void sub_802C4C8(void *selfArg);
 void sub_802C904(struct actor_self *self)
 {
     if (self->animIndex != 0x12 && sub_802A6EC(self)) {
-        sub_8022FEC(gLevelState);
+        AddBrokenCrate(gLevelState);
         sub_802C128(gActorList);
         self->animIndex = 0x12;
         {
@@ -48,7 +48,7 @@ void sub_802C904(struct actor_self *self)
 
     if (self->animIndex != 0x12 && sub_802DD9C(self)) {
         PlaySfx(gAudioContext, 3, 0x100);
-        sub_8022FEC(gLevelState);
+        AddBrokenCrate(gLevelState);
         self->animIndex = 0x12;
         {
             register u16 anim asm("r0") = self->anims[0x12].duration;

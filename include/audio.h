@@ -5,7 +5,7 @@
 
 /* The music/SFX-trigger "context" object `PlaySfx` and its neighbors take
  * as their first argument - `*gAudioContext` in the ROM, an
- * 8340-byte allocation made by `sub_8022230` (see docs/rom_map.md's
+ * 8340-byte allocation made by `InitLevelState` (see docs/rom_map.md's
  * "Found the origin point" section). Only the leading 0x58 bytes this
  * cluster of functions models by field are covered here; starting at
  * +0x58 sits an embedded GAX2 runtime player-state object (initialized by
@@ -29,7 +29,7 @@
  *
  * A second pair of 3-word records tracks a currently-playing/queued
  * "ambient" sound effect (distinct from the one-shot `PlaySfx` calls):
- * `activeSfx`/`pendingSfx`, each `{id, gUnknown_0300082C-relative
+ * `activeSfx`/`pendingSfx`, each `{id, gRoomFrameCount-relative
  * deadline, volume}` - see `TickAmbientSfx`/`ResetAmbientSfx`/`StopAmbientSfx`/
  * `PlayAmbientSfx`. `0x63` (99) is the "none" sentinel for both ids.
  * `TickAmbientSfx` copies `pendingSfx` over `activeSfx` as a single 12-byte
@@ -37,7 +37,7 @@
  * to reproduce the ROM's `ldm/stm {r2,r3,r5}` block-move codegen. */
 struct SfxRecord {
     u32 id;              // 0x63 (99) = none
-    u32 deadline;          // gUnknown_0300082C-relative
+    u32 deadline;          // gRoomFrameCount-relative
     s32 volume;              // target the owning ambientSfxVolume fade ramps toward
 };
 

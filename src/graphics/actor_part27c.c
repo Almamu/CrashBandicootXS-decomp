@@ -16,21 +16,21 @@
  * actor_part18.c. */
 
 extern u8 gStaticData_087E442C[];
-/* gLevelLayers's view here: only the followed object's `+0x14`
- * word is read (same `viewport`/`camera` naming as actor_part7.c). */
-struct camera_pos {
+/* gLevelLayers's view here (level_layers.c's `struct level_layers`):
+ * only BG layer 0's `heightPx` is read. */
+struct bg_scroll_layer {
     s32 x;
     s32 y;
     u8 unk_08[0xC];
-    s32 unk_14;         // 0x14 - `<< 8` then `+ 0x2000` is the charge target
+    s32 heightPx;       // 0x14 - the level's height in pixels; `<< 8` then `+ 0x2000` is the charge target
 };
 
-struct viewport {
+struct level_layers {
     u8 unk_00[0x10];
-    struct camera_pos *camera; // 0x10
+    struct bg_scroll_layer *layer0; // 0x10
 };
 
-extern struct viewport *gLevelLayers;
+extern struct level_layers *gLevelLayers;
 extern void *gEntityFlags;
 extern s32 _call_via_r3(void *addr, void *arg1, void *arg2, void *fn);
 extern void sub_800B8A8(void *self, s32 flags);
@@ -82,12 +82,12 @@ void sub_80187FC(void *objArg, void *otherArg)
 case1:
     {
         s32 timer = *(s32 *)(other + 4) + 0x400;
-        struct camera_pos *subObj;
+        struct bg_scroll_layer *subObj;
         s32 threshold;
 
         *(s32 *)(other + 4) = timer;
-        subObj = gLevelLayers->camera;
-        threshold = (subObj->unk_14 << 8) + 0x2000;
+        subObj = gLevelLayers->layer0;
+        threshold = (subObj->heightPx << 8) + 0x2000;
         if (timer >= threshold) {
             *(s32 *)(obj + 8) = 2;
         }

@@ -3,13 +3,13 @@ results scan and the sound-channel-handle family
 
 This is a follow-up pass over three functions
 [docs/matching/issue-38-medal-results-tally.md](./issue-38-medal-results-tally.md)
-left raw: `sub_8024344` (the medal item-list per-flag nonzero scan), and
+left raw: `LevelHasEntityType` (the medal item-list per-flag nonzero scan), and
 the `BeginSlide`-`EndSlide` sound-channel-handle helper family.
 
 ## Matched (real C, full clean `make compare` passing)
 
-- **`sub_8024344`** (`src/system/game_loop18.c`, prepended ahead of
-  `sub_80243E0`) - the medal item-list per-flag nonzero scan the earlier
+- **`LevelHasEntityType`** (`src/system/game_loop18.c`, prepended ahead of
+  `IsInGemPathRoom`) - the medal item-list per-flag nonzero scan the earlier
   pass parked over an `ip`/r12 register-pinning gap for its `flagIdx`
   parameter. That pin (`register s32 fi asm("ip") = flagIdx;`) turned out
   to be only the first of several needed: the loop also needed the guard
@@ -52,7 +52,7 @@ the `BeginSlide`-`EndSlide` sound-channel-handle helper family.
 
 ### The `table`/pointer-canonicalization gotcha, worked example
 
-`sub_8024344`'s loop body reads a `u16` flag at `table + shift` (`table`
+`LevelHasEntityType`'s loop body reads a `u16` flag at `table + shift` (`table`
 a pointer loaded from `linkedObj->0x1c->0x10`, `shift` the pre-computed
 `flagIdx << 1`). The ROM's instruction order is `adds r1, r7, r1` (shift
 first, table second) in the loop, but `adds r1, r1, r0` (table first,

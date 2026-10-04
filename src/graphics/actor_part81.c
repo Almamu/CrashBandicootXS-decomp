@@ -52,7 +52,7 @@ extern void sub_8009868(void *manager, s32 arg1);
 extern void sub_8008D30(void *manager, s32 arg1);
 extern void sub_80106DC(void);
 extern void *gUnknown_030012F0;
-extern void *gUnknown_0300130C;
+extern void *gCrateList;
 extern void *gUnknown_030012EC;
 
 /* Bit 1 of +0x0C: builds the object's AABB (sub_8007C30), copies it
@@ -86,7 +86,7 @@ void sub_800AB9C(struct ab9c_obj *self)
 
         link->unk_0 = cleared;
         link->unk_4 = cleared;
-        sub_8009868(gUnknown_0300130C, 3);
+        sub_8009868(gCrateList, 3);
         sub_8008D30(gUnknown_030012EC, 4);
         sub_80106DC();
     }

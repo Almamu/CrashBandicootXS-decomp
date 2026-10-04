@@ -40,7 +40,7 @@ This chunk turned out to be two interleaved families:
 3. A **part-object spawn family**
    (`sub_8025A64`/`sub_8025B0C`/`sub_8025BAC`/`sub_8025CA4`) and one
    **table-indexed function-pointer dispatcher** (`SpawnEntity`) and a
-   **jump-table list counter** (`sub_8025894`) - these reuse the
+   **jump-table list counter** (`CountCrateEntities`) - these reuse the
    `struct actor` + `gUnknown_030012D0` triple-indirection convention
    already established in `actor_part8.c`/`trigger_effect.c`.
 
@@ -85,7 +85,7 @@ branch and call confirmed) but not iterated to an exact register
 allocation within this issue's scope - each has its own `PARKED, NOT
 BYTE-MATCHING` doc comment at the definition explaining what was tried:
 
-- **`sub_8025894`** (game_loop12.c) - the group/item list counter.
+- **`CountCrateEntities`** (game_loop12.c) - the group/item list counter.
   Every operand matches; the remaining gap is that the ROM's
   `item->type == 0x1a` lookup branch does its whole four-load chain
   using only two scratch registers (`r0`/`r1`, aggressively reusing
@@ -129,7 +129,7 @@ BYTE-MATCHING` doc comment at the definition explaining what was tried:
 five matched runs, per `docs/workflow.md`'s "everything before,
 everything after" rule:
 
-- `asm/code_3_2_17_255d4.s` (truncated) - `SpawnRoomEntities`, `sub_8025894`
+- `asm/code_3_2_17_255d4.s` (truncated) - `SpawnRoomEntities`, `CountCrateEntities`
 - `asm/code_3_2_17_259d4.s` (new) - `sub_80259D4`
 - `asm/code_3_2_17_25a64.s` (new) - `sub_8025A64`-`sub_8025CA4`
 - `asm/code_3_2_17_25d74.s` (new) - `InitBgLayer`
@@ -192,7 +192,7 @@ progress on two of them without reaching a byte-exact match on either
   of the ROM's `r2`/`r3`). The mask-folding half matches the exact
   unfixable value-propagation already documented on `sub_8001524`
   elsewhere in `docs/matching.md` - the established negative-literal
-  register-pin idiom (`sub_8023168`/`LoadLanguageSelectBg`) was tried again here
+  register-pin idiom (`ClearPowers`/`LoadLanguageSelectBg`) was tried again here
   and still gets folded via a cheaper `subs`/`adds` off the
   previously-loaded constant.
 
@@ -231,7 +231,7 @@ C has no way to work around on this toolchain:
   `src/graphics/oam_count.c`/`src/graphics/actor_part.c` and elsewhere
   project-wide); separately, the trailing `(*bf & -0x10) | (result &
   0xf)` bitfield combine - even with the established negative-literal
-  register-pin idiom (`sub_8023168`/`LoadLanguageSelectBg`) - gets
+  register-pin idiom (`ClearPowers`/`LoadLanguageSelectBg`) - gets
   constant-folded into a cheaper derived `sub`, one instruction shorter
   than the ROM's genuine two-instruction `movs`/`rsbs` pair. Now
   `NAKED`.
@@ -304,10 +304,10 @@ address):
 Full clean `make compare` passes again after this restructuring:
 `crashbandicootxs.gba: La suma coincide`.
 
-## Update: `sub_8025894` closed as real matched C
+## Update: `CountCrateEntities` closed as real matched C
 
 The one function this issue's whole range still owed a real match -
-`sub_8025894` itself, left genuinely `NON_MATCHING` (not even `NAKED`)
+`CountCrateEntities` itself, left genuinely `NON_MATCHING` (not even `NAKED`)
 through both earlier passes above since it wasn't in scope for either
 - has now been closed as real decompiled C, no NAKED transcription
 needed.
@@ -375,17 +375,17 @@ With both fixed, the isolated-compile assembly is byte-identical to
 the ROM's raw fragment (previously `asm/code_3_2_17_255d4.s`), and full
 clean `rm -rf build && make NON_MATCHING=1 report` +
 `objdiff-cli report generate` confirm 100.0% fuzzy match for
-`sub_8025894` and the whole `game_loop12` unit. `sub_8025894` is folded
+`CountCrateEntities` and the whole `game_loop12` unit. `CountCrateEntities` is folded
 into `src/system/game_loop12.o` in `tools/report_units.py` (it's the
 first function in that unit now, immediately ahead of `sub_8025944`).
-`asm/code_3_2_17_255d4.s` - which held only `sub_8025894` by this
+`asm/code_3_2_17_255d4.s` - which held only `CountCrateEntities` by this
 point - is deleted, with its `ldscript.txt` line dropped (the linker
 now places `game_loop12.o` directly where the raw fragment used to
 sit). Full clean `rm -rf build crashbandicootxs.elf crashbandicootxs.gba
 crashbandicootxs.map && make compare` confirms
 `crashbandicootxs.gba: La suma coincide`.
 
-`sub_8025894` was the only function in this issue's range that had
+`CountCrateEntities` was the only function in this issue's range that had
 stayed genuinely `NON_MATCHING` (never even converted to `NAKED`) - it
 is now matched. GitHub issue #41 itself stays open: six of the
 NAKED-transcribed functions from the earlier pass (`sub_8025A64`,

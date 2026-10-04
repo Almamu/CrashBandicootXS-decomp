@@ -25,7 +25,7 @@ struct spark
 
 extern u32 gKeys;
 extern void *gAudioContext;
-extern struct act_part *gUnknown_030012D8;
+extern struct act_part *gPlayer;
 extern void *gEntitySpawner;
 extern void *gUnknown_03001304;
 extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
@@ -123,7 +123,7 @@ void sub_80134B8(struct act *self)
             self->unk_22 = busy;
             self->unk_23 = busy;
             self->unk_24[0] = busy;
-            ((u8 *)gUnknown_030012D8)[0x92] = busy;
+            ((u8 *)gPlayer)[0x92] = busy;
         }
     }
     if (contact == 0)
@@ -202,10 +202,10 @@ void sub_80134B8(struct act *self)
                 s32 frame;
                 s32 count;
 
-                x = gUnknown_030012D8->x;
+                x = gPlayer->x;
                 x >>= 8;
                 x += 0x14;
-                y = gUnknown_030012D8->y;
+                y = gPlayer->y;
                 y >>= 8;
                 y += 0xC;
                 obj = SpawnSpark(x, y, 1);
@@ -219,10 +219,10 @@ void sub_80134B8(struct act *self)
                     frame = count - 1;
                 obj->frame = frame;
 
-                x = gUnknown_030012D8->x;
+                x = gPlayer->x;
                 x >>= 8;
                 x -= 0x14;
-                y = gUnknown_030012D8->y;
+                y = gPlayer->y;
                 y >>= 8;
                 y += 0xC;
                 obj = SpawnSpark(x, y, bit4);
@@ -267,7 +267,7 @@ void sub_80134B8(struct act *self)
                     ACT_VCALL1(self, m20, 0xD);
                 return;
             }
-            if (((u8 *)gUnknown_030012D8)[0x100])
+            if (((u8 *)gPlayer)[0x100])
             {
                 ACT_VCALL1(self, m20, 0x17);
                 ACT_VCALL2(self, m50, self->part, 0x16);

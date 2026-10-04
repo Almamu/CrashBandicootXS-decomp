@@ -8,7 +8,7 @@ extern s32 gHudSlideOffset;
 extern void DrawHudPart(struct hud_digit_part *part, s32 x, s32 y);
 extern void sub_8008044(struct actor *part);
 extern s32 sub_80233B4(void *self);
-extern u8 sub_80232B8(void *self);
+extern u8 IsInBonusRound(void *self);
 extern void UpdateHudLives(struct hud_counter *counter);
 extern void sub_8027E88(struct hud_counter *self);
 extern void sub_802757C(struct hud_counter *self);
@@ -27,7 +27,7 @@ extern void UpdateHudWumpa(struct hud_counter *self);
  * (!= -1) hands off entirely to the icon-indicator widget
  * (`sub_802757C`) and returns early, skipping the rest of the family;
  * otherwise it refreshes the last OAM slot's animation state whenever
- * `sub_80232B8` says the mode changed, conditionally runs
+ * `IsInBonusRound` says the mode changed, conditionally runs
  * `UpdateHudClock` while a "paused"-style central-state flag is set and
  * `mode`/`field_08` are both still zero, then unconditionally runs the
  * two remaining digit counters (`sub_8027940`, `UpdateHudWumpa`). */
@@ -48,7 +48,7 @@ void UpdateHud(struct hud_counter *self)
         return;
     }
 
-    if (sub_80232B8(gLevelState)) {
+    if (IsInBonusRound(gLevelState)) {
         gHudSlideOffset = 0;
         sub_8008044((struct actor *)((u8 *)sself->parts + 0x880));
         DrawHudPart((struct hud_digit_part *)((u8 *)sself->parts + 0x880), 0, 0);

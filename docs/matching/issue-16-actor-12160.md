@@ -17,7 +17,7 @@ usage) were left raw again, still out of scope.
 ## New files
 
 `asm/code_3_2_17_11bd4.s` is trimmed to just `sub_8011BD4` (unchanged
-start address, 0x08011BD4-0x08012160). `sub_8012160`/`sub_8012238`/
+start address, 0x08011BD4-0x08012160). `KillPlayer`/`sub_8012238`/
 `sub_80122CC` (contiguous, 0x08012160-0x08012420) move to a new
 `src/graphics/actor_part79.c`. A new `asm/code_3_2_17_12420.s` picks up
 `sub_8012420`/`sub_8012694`/`sub_801283C` (0x08012420-0x08012A7C).
@@ -34,7 +34,7 @@ order.
 
 ## Matched (4/10)
 
-- **`sub_8012160`**: plays a sound (id `0x1b`), fires the `+0x50`/
+- **`KillPlayer`**: plays a sound (id `0x1b`), fires the `+0x50`/
   `+0x54` trampoline pair with the function's second argument as the
   "part" object, then the `+0x20`/`+0x24` pair (id `0x1d`), resets
   both halves of the state/flag/table-index trio via a single walked
@@ -59,7 +59,7 @@ order.
   to force the ROM's `Rd==Rs` `adds r2, r2, r4` encoding instead of the
   compiler's own (numerically identical, but differently-encoded)
   `adds r2, r4, r2`.
-- **`sub_8012238`**: if the player (`gUnknown_030012D8`)'s `+0x100`
+- **`sub_8012238`**: if the player (`gPlayer`)'s `+0x100`
   flag is set, dispatches on the player's `+0x2d` type byte - `0x12`
   (only when `+0x60` is nonzero) or `0xd`/`0x18` re-tag the player
   `0x25`/`0x26` and fire the standard `sub_80087C0`/`sub_80087B4`/

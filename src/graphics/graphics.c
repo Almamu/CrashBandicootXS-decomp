@@ -682,7 +682,7 @@ extern void SetAabbPos(void *buf, s32 arg1, s32 arg2);
 extern void SetAabbSize(void *buf, s32 arg1, s32 arg2);
 extern u8 sub_800B37C(void *arg0, void *buf);
 extern void _call_via_r4(void *arg0, s32 arg1, s32 arg2, s32 arg3);
-extern struct actor *gUnknown_030012D8;
+extern struct actor *gPlayer;
 
 /* `self` uses the shared `struct actor` layout (see actor.h) - same
  * precedent as sub_8006FE4 above.
@@ -736,7 +736,7 @@ s32 sub_8007048(struct actor *self)
         flagTest = flagTestR0;
     }
     if (flagTest) {
-        if (sub_800B37C(gUnknown_030012D8, buf)) {
+        if (sub_800B37C(gPlayer, buf)) {
             asm volatile(
                 "mov r0, #8\n\t"
                 "ldrb r2, [%0, #0xc]\n\t"
@@ -746,8 +746,8 @@ s32 sub_8007048(struct actor *self)
                 : "r"(self)
                 : "r0", "r2", "memory");
 
-            table2 = (u8 *)gUnknown_030012D8->table + 0x68;
-            addr = (u8 *)gUnknown_030012D8 + *(s16 *)table2;
+            table2 = (u8 *)gPlayer->table + 0x68;
+            addr = (u8 *)gPlayer + *(s16 *)table2;
             field0a = self->field_0A;
             {
                 register void *deadRead asm("r4") = *(void *volatile *)((u8 *)table2 + 4);

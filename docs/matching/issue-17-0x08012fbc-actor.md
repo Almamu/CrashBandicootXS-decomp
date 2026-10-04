@@ -80,7 +80,7 @@ child-object/action-table family (`actor_part79.o`/`actor_part83.o`/
   redundant-store folding across statements" quirk `docs/matching.md`
   already documents for this compiler), then spawns an object via
   `sub_8025B0C(gEntitySpawner, 0x29, 1, 0, 0xa, 0,
-  gUnknown_030012D8)` and clears two bits (`~5` on `+0xc`, then a
+  gPlayer)` and clears two bits (`~5` on `+0xc`, then a
   `(~4)|1` pack on `+0x28`) on the returned object. All three of these
   cases (and the "none of the above" fallthrough) then converge on a
   shared tail: dispatching `GetDpadDirection(gUnknown_03001304)`'s result -
@@ -89,7 +89,7 @@ child-object/action-table family (`actor_part79.o`/`actor_part83.o`/
   instead calls `sub_8015780(self, 0, 0x12, 0, 0)` then re-sets the same
   trio fields to the same `0x1d`/`1`/`0`/`0x1d` shape by hand. Finally,
   if `gKeys`'s low-half bit `0x200` is set: for `self+8==3`,
-  gates `sub_80231C4(gLevelState)` to set `self+0x29=1`, fire a
+  gates `HasTurboRun(gLevelState)` to set `self+0x29=1`, fire a
   trampoline pair (ids `4`/`0x18`), and set the trio to `0`/`1`/`0x1b`;
   for `self+8==4`, sets `self+0x29` from the bit test and tail-calls
   `sub_8015460(self)`; otherwise, while `self+0x18` is already nonzero,
@@ -101,7 +101,7 @@ child-object/action-table family (`actor_part79.o`/`actor_part83.o`/
   fires the `+0x20`/`+0x24` and `+0x50`/`+0x54` trampoline pairs (ids
   `0x1a`/`0x15`), clamps `part+0x30`'s index against the `part+0x20`-
   pointer-to-manager/`part+0x2d`-tag/28-byte-stride record's own `+0x16`
-  count (the same table-lookup convention `sub_8010480`, game_loop35.c,
+  count (the same table-lookup convention `DrawCrate`, game_loop35.c,
   establishes), calls `sub_800B334(part)`, then clears `part+0x68`.
   Otherwise, while `self+0x26==0` and `gKeys`'s high-half
   bit 1 is set: plays a fixed sound (id `0xa`), fires another trampoline
@@ -153,14 +153,14 @@ child-object/action-table family (`actor_part79.o`/`actor_part83.o`/
   `0x18..0x19` range: for `self+8==0xe`, dispatches
   `gKeys`'s low-half bit `0x30` to set the trio to either
   `1`/`1`/`1c` or `0`/`1`/tag(0/1); otherwise, gated on
-  `gUnknown_030012D8+0x100` and `GetDpadDirection`'s result, fires one more
+  `gPlayer+0x100` and `GetDpadDirection`'s result, fires one more
   trampoline pair (ids `0x17`/`0x16`) and sets the trio to `0`/`1`.
 - **`sub_80138E8`** (172 B, `actor_part_138e8.c`) - a thin
   `_call_via_r3` dispatcher on `part`'s state. While `part+0x2d==6`: for
   `part->0x30==3`, fires the `+0x50`/`+0x54` trampoline with id `9`;
   for `part->0x30>3` or `part+0x38!=0`, fires it with id `8` instead
   (otherwise does nothing). Otherwise, while `part+0x38!=0`:
-  `sub_80231BC(gLevelState)` true fires the `+0x20`/`+0x24`
+  `HasSuperBodySlam(gLevelState)` true fires the `+0x20`/`+0x24`
   trampoline (id `0x19`) then the `+0x50`/`+0x54` trampoline (id `7`);
   false fires only the `+0x20`/`+0x24` trampoline (id `0x18`).
 - **`sub_8013994`** (716 B, `actor_part_138e8.c`) - confirmed by this
@@ -183,7 +183,7 @@ child-object/action-table family (`actor_part79.o`/`actor_part83.o`/
   sets the trio to `0`/`1`/`3`, and tail-calls `sub_801434C(self)`
   (actor_part18.c); otherwise dispatches `GetDpadDirection`
   (`gUnknown_03001304`) and `sub_800AAEC(part, 2)`: when both fire and
-  the D-pad result is `3`/`4`, gates `sub_80231C4(gLevelState)`
+  the D-pad result is `3`/`4`, gates `HasTurboRun(gLevelState)`
   behind a further bit test to either fire a trampoline pair (ids
   `4`/`0x18`) and set the trio to `0x1b`, or tail-call
   `sub_8015460(self)`; any other combination fires one more trampoline
@@ -217,7 +217,7 @@ genuine attempt:
   exact `mgr = *(u8 **)(self + 0xc); _call_via_r2(...)` idiom already
   matched in `actor_part18.c`'s `sub_80142B0`, plus the register-pinned
   "clamp against a `part+0x20`-manager/`part+0x2d`-tag table" block
-  already matched for `sub_8010480`, game_loop35.c), compiled and
+  already matched for `DrawCrate`, game_loop35.c), compiled and
   isolated-assembled cleanly but diverged at the very first instructions:
   gcc 2.9 pushed an extra `r7` (5 callee-saved registers instead of the
   ROM's 3) for the live `mgr`/`part` pointers, and `part[0xd] &= ~2`
@@ -230,7 +230,7 @@ genuine attempt:
   size of the remaining function, this was not pursued further.
 - **`sub_80138E8`**: its `part[0x38]`-gated single-vs-double
   `_call_via_r2`/`_call_via_r3` trampoline call (keyed on
-  `sub_80231BC(gLevelState)`) reproduces the *exact* shape
+  `HasSuperBodySlam(gLevelState)`) reproduces the *exact* shape
   already confirmed unmatchable in `sub_80156EC`
   (`actor_part38c.c`, `docs/matching/issue-18-0x08014f8c-actor.md`'s
   "Parked, not matched: sub_80156EC" - gcc 2.9 insists on an extra
@@ -241,7 +241,7 @@ genuine attempt:
   nature of that specific gap.
 - **`sub_8013994`**: shares the same action-table frame-shape wall
   its ROM-adjacent neighbors already hit, and additionally repeats the
-  identical `sub_80231C4`-gated single-vs-double trampoline idiom
+  identical `HasTurboRun`-gated single-vs-double trampoline idiom
   `sub_8013228` and `sub_80138E8` both show. Given the two more
   isolated, smaller occurrences of this idiom in this very batch both
   resisted or were recognized as the same wall, this larger function

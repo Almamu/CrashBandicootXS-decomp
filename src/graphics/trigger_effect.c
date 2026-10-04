@@ -10,8 +10,8 @@
  * Each one tests one "collected" bit of the level progress record
  * (gLevelState + 2). If it is set, the effect only plays a sound:
  * sub_801A878 with a per-slot id, or the shared id 0xC when
- * sub_8023278 says so or the record's +0x8C byte is set, handed to
- * sub_80234E8. Otherwise it spawns the full visual effect: a
+ * IsGemPathDone says so or the record's +0x8C byte is set, handed to
+ * SetGemPlatform. Otherwise it spawns the full visual effect: a
  * sub_8008434 part on anim bank offset 0x180, with a per-slot tag,
  * built through the sub_80087C0/sub_80087B4/sub_800872C OAM trio, and
  * registered with the gUnknown_030012EC manager.
@@ -38,16 +38,16 @@ struct level_progress
     u8 unk_00[2];
     u8 collected;   // 0x02 - one bit per trigger effect slot
     u8 unk_03[0x89];
-    u8 unk_8C;      // 0x8C
+    u8 timeTrial;      // 0x8C
 };
 
 extern struct level_progress *gLevelState;
 extern u8 ***gUnknown_030012D0;
 extern void *gUnknown_030012EC;
 
-extern u8 sub_8023278(struct level_progress *self);
+extern u8 IsGemPathDone(struct level_progress *self);
 extern void *sub_801A878(u16 x, u16 y, u16 w, u16 h, s32 id);
-extern void sub_80234E8(struct level_progress *self, void *handle);
+extern void SetGemPlatform(struct level_progress *self, void *handle);
 extern struct gfx_part *sub_8008434(u16 a0, u16 a1, u16 a2, u16 a3);
 extern void sub_80087C0(struct gfx_part *part);
 extern void sub_80087B4(struct gfx_part *part);
@@ -66,11 +66,11 @@ void sub_8020E84(u32 a0, u16 a1, u16 a2, u16 a3)
     {
         void *snd;
 
-        if (sub_8023278(gLevelState) || gLevelState->unk_8C)
+        if (IsGemPathDone(gLevelState) || gLevelState->timeTrial)
             snd = sub_801A878(a0, a1, a2, a3, 0xC);
         else
             snd = sub_801A878(a0, a1, a2, a3, 0xB);
-        sub_80234E8(gLevelState, snd);
+        SetGemPlatform(gLevelState, snd);
     }
     else
     {
@@ -97,11 +97,11 @@ void sub_8020F7C(u32 a0, u16 a1, u16 a2, u16 a3)
     {
         void *snd;
 
-        if (sub_8023278(gLevelState) || gLevelState->unk_8C)
+        if (IsGemPathDone(gLevelState) || gLevelState->timeTrial)
             snd = sub_801A878(a0, a1, a2, a3, 0xC);
         else
             snd = sub_801A878(a0, a1, a2, a3, 0x3);
-        sub_80234E8(gLevelState, snd);
+        SetGemPlatform(gLevelState, snd);
     }
     else
     {
@@ -128,11 +128,11 @@ void sub_802107C(u32 a0, u16 a1, u16 a2, u16 a3)
     {
         void *snd;
 
-        if (sub_8023278(gLevelState) || gLevelState->unk_8C)
+        if (IsGemPathDone(gLevelState) || gLevelState->timeTrial)
             snd = sub_801A878(a0, a1, a2, a3, 0xC);
         else
             snd = sub_801A878(a0, a1, a2, a3, 0xA);
-        sub_80234E8(gLevelState, snd);
+        SetGemPlatform(gLevelState, snd);
     }
     else
     {
@@ -161,11 +161,11 @@ void sub_802117C(u32 a0, u16 a1, u16 a2, u16 a3)
     {
         void *snd;
 
-        if (sub_8023278(gLevelState) || gLevelState->unk_8C)
+        if (IsGemPathDone(gLevelState) || gLevelState->timeTrial)
             snd = sub_801A878(a0, a1, a2, a3, 0xC);
         else
             snd = sub_801A878(a0, a1, a2, a3, 0x9);
-        sub_80234E8(gLevelState, snd);
+        SetGemPlatform(gLevelState, snd);
     }
     else
     {

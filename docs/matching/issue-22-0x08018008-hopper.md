@@ -82,7 +82,7 @@ out-of-range exit goes to state 0's mirror-bit test, not to the
   prototype probably closes `actor_part81.c`'s parked `sub_800AB9C`,
   which the NAKED note cites for the identical order. It has not been
   tried there.
-- **The `gUnknown_0300130C` list walk.** The "per-iteration literal
+- **The `gCrateList` list walk.** The "per-iteration literal
   reload" from the old NAKED note turns out to be a plain guarded
   do-while: `i = 0; if (i < list->count) do { ... } while (i <
   list->count);`. A `for` loop shares the list pointer between the entry

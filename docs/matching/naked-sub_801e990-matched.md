@@ -12,7 +12,7 @@ closed and the function is fully matched as real C (NAKED asm and the
 ## What was closed (this session, previous rounds)
 
 The function's two independent halves (a table-resolution/bitfield-pack
-section gated on `sub_80232F4`, and a budget-gated trampoline-fire
+section gated on `GetSpawnAtStart`, and a budget-gated trampoline-fire
 section) both compile to fully correct, byte-exact C:
 
 - **The `movs r0,#1`/`subs r0,#0x12` negative-mask idiom** - the exact
@@ -34,7 +34,7 @@ section) both compile to fully correct, byte-exact C:
   (`actor_part9.c`) and `sub_8007DBC`; needs the `volatile` qualifier
   or this compiler dead-store-eliminates it.
 - **Two double-dereference bugs caught during development**: an early
-  draft wrote `*(u8 **)gUnknown_030012D8` (treating the *value* as a
+  draft wrote `*(u8 **)gPlayer` (treating the *value* as a
   second address to dereference again), which compiled without error
   but inserted an extra, wrong `ldr` the ROM doesn't have. Caught by
   comparing against the real target object's disassembly, not by
@@ -43,7 +43,7 @@ section) both compile to fully correct, byte-exact C:
   applies here too.
 - **A structural insight into the ROM's own register reuse**: the
   mask section's `+0x28` write and the later `x`/`y` position writes
-  both target the *same* `gUnknown_030012D8`-rooted object, and the
+  both target the *same* `gPlayer`-rooted object, and the
   ROM issues a **second, genuinely redundant** `ldr` to re-fetch that
   same value for the second use rather than keeping the first load's
   result register alive across the intervening `strb` - confirmed via
@@ -53,7 +53,7 @@ section) both compile to fully correct, byte-exact C:
 ## What closed the final gap
 
 Across two earlier sessions, the real-file build (with the actual
-`struct actor *gUnknown_030012D8` declaration and real `core.h`/
+`struct actor *gPlayer` declaration and real `core.h`/
 `actor.h` surrounding types - an isolated minimal harness gave a
 *misleading* 100% result that didn't reproduce once integrated) kept
 putting the object's *address* in r1 and its *value* in r3 for the
@@ -65,16 +65,16 @@ further.
 
 The fix, found this session, was a *type* change, not a register-pin
 change: the r3-pinned local was modeled as `u8 *d8addr` holding the
-*dereferenced value* of `gUnknown_030012D8` (`d8addr = (u8
-*)gUnknown_030012D8;`), with `addr28 = d8addr + 0x28` computed
+*dereferenced value* of `gPlayer` (`d8addr = (u8
+*)gPlayer;`), with `addr28 = d8addr + 0x28` computed
 afterward as a separate step. That's semantically correct but requires
 gcc to first materialize the dereferenced value in *some* register (it
 chose r1) before copying it into d8addr's forced r3 - hence the extra
 `mov`. Re-modeling the r3-pinned local as `struct actor **d8ptr`
 holding the *address of the global itself* (`d8ptr =
-&gUnknown_030012D8;`), with the `+0x28` write computed as a single
+&gPlayer;`), with the `+0x28` write computed as a single
 dereference-and-add expression (`addr28 = (u8 *)*d8ptr + 0x28;`),
-matches what the ROM actually does: load `&gUnknown_030012D8` into r3
+matches what the ROM actually does: load `&gPlayer` into r3
 once, dereference-and-add directly into r1 with no intermediate
 register at all. The later re-fetch for the x/y write
 (`obj2 = (u8 *)*d8ptr`) becomes a real second dereference of `d8ptr`
@@ -91,8 +91,8 @@ value) can resist every register-pinning/matching-constraint trick and
 still close once the C-level modeling of the value itself changes to
 match what the compiler naturally does with that type - no inline asm,
 no matching-constraint operand, and no new hard-register binding were
-needed here, just changing `u8 *d8addr = gUnknown_030012D8` to
-`struct actor **d8ptr = &gUnknown_030012D8` and moving the `+0x28` add
+needed here, just changing `u8 *d8addr = gPlayer` to
+`struct actor **d8ptr = &gPlayer` and moving the `+0x28` add
 into the same expression as the dereference.
 
 Verified via direct `.text`-section byte comparison (`objcopy -O

@@ -24,7 +24,7 @@ struct anim_rec
 extern u32 gKeys;
 extern void *gAudioContext;
 extern void *gLevelState;
-extern struct act_part *gUnknown_030012D8;
+extern struct act_part *gPlayer;
 extern void *gUnknown_03001304;
 extern struct anim_rec gStaticData_0816B304[];
 extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
@@ -36,7 +36,7 @@ extern u8 sub_8012A7C(struct act *self);
 extern void sub_80122CC(struct act *self);
 extern void sub_8015398(struct act *self);
 extern void sub_8015460(struct act *self);
-extern u8 sub_80231C4(void *self);
+extern u8 HasTurboRun(void *self);
 
 /* Trio stores as in actor_part_12fbc.c: as inline parameters, old_agbcc
  * materializes the values before the stores. */
@@ -93,7 +93,7 @@ void sub_8012AF4(struct act *self)
     struct anim_rec rec;
     struct act_part *p;
 
-    p = gUnknown_030012D8;
+    p = gPlayer;
     if (p->unk_102 == 0) {
         if (p->unk_103 == 0)
             goto skip;
@@ -104,19 +104,19 @@ void sub_8012AF4(struct act *self)
                 p->x -= 0x100;
             else if (p->unk_103)
                 p->x += 0x100;
-            sub_8009EA8(gUnknown_030012D8, gUnknown_030012D8->x, gUnknown_030012D8->y);
+            sub_8009EA8(gPlayer, gPlayer->x, gPlayer->y);
         }
     }
 skip:
     if (self->state == 0) {
-        struct act_part *p = gUnknown_030012D8;
+        struct act_part *p = gPlayer;
         if (p->unk_60 == 0 && p->bank->unk_0A != 0x12 && self->unk_33 == 0) {
             StopSfx(gAudioContext, 0x36);
-            ACT_CALL2(self, m50, gUnknown_030012D8, 0x12);
+            ACT_CALL2(self, m50, gPlayer, 0x12);
         }
     }
     if (self->state == 0 || self->state == 0x11) {
-        struct act_part *p = gUnknown_030012D8;
+        struct act_part *p = gPlayer;
         if (p->unk_60 != 0 && p->unk_100 == 0) {
             self->next31 = 0;
             self->flag2F = 1;
@@ -130,7 +130,7 @@ skip:
             struct act_part *q;
 
             rec = *(gStaticData_0816B304 + (*self->anims)[self->next27].first);
-            q = gUnknown_030012D8;
+            q = gPlayer;
             if (q->unk_100 && self->part->contact == 8 && q->unk_60 != 0) {
                 self->next31 = f;
                 /* Three extra references to `self` (no code): they raise its
@@ -144,7 +144,7 @@ skip:
             }
             if (self->next27 == 0x1E) {
                 self->next31 = 0;
-                if (gUnknown_030012D8->unk_100) {
+                if (gPlayer->unk_100) {
                     rec.b = FixedMul(rec.b, 0x200);
                     rec.a = FixedMul(rec.a, 0x180);
                 }
@@ -182,7 +182,7 @@ skip:
  * `sub_8015398`, bit `0x80` (high byte) fires a different trampoline
  * pair - all converging on `sub_80122CC`. A further branch (input byte
  * unset, `self+0x25==0`) reads `self+8`'s snapshot value against `2`/
- * `8`-range checks to gate a `sub_80231C4`-confirmed trampoline call
+ * `8`-range checks to gate a `HasTurboRun`-confirmed trampoline call
  * (id `4`/`0x18`) or fall through to `sub_8015460`/a final `+0x20`/
  * `+0x24` trampoline pair, each path ending in `sub_80122CC`.
  *
@@ -268,7 +268,7 @@ skip:
             if (wait == 0) {
                 switch (dir) {
                 case 3 ... 8:
-                    if ((INPUT_HELD(in) & 0x200) && sub_80231C4(gLevelState)) {
+                    if ((INPUT_HELD(in) & 0x200) && HasTurboRun(gLevelState)) {
                         self->unk_29 = 1;
                         ACT_CALL1(self, m20, 4);
                         ACT_CALL2(self, m50, self->part, 0x18);

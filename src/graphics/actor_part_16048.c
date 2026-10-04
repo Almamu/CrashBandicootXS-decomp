@@ -3,7 +3,7 @@
 
 /* GitHub issues #19 (its last raw function, sub_8016048) and #20
  * (0x08016128-0x08017524): the player-input controller class of
- * include/player_ctrl.h, method table gStaticData_087E428C.
+ * include/player_ctrl.h, method table gPlayerCtrlVtable.
  *
  * Built with the older compiler, tools/agbcc/bin/old_agbcc (the Makefile's
  * OLD_AGBCC_OBJS) - see docs/matching/issue-20-player-ctrl.md.
@@ -64,12 +64,12 @@ struct pmf
 
 extern void *gUnknown_03001304;
 extern struct keys gKeys;
-extern u32 gUnknown_0300082C;
+extern u32 gRoomFrameCount;
 extern void *gAudioContext;
 extern void *gLevelState;
 extern void *gUnknown_030012B8;
 extern u8 *gEntityFlags;
-extern struct pctrl_target *gUnknown_030012D8;
+extern struct pctrl_target *gPlayer;
 extern struct pmf gStaticData_0816C250[];
 struct level_anim
 {
@@ -79,7 +79,7 @@ struct level_anim
 
 extern struct level_anim *gStaticData_0816C070[];
 extern struct pctrl_anim gStaticData_0816B61C[];
-extern u8 gStaticData_087E428C[];
+extern u8 gPlayerCtrlVtable[];
 
 extern u8 GetDpadDirection(void *arg);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
@@ -120,7 +120,7 @@ typedef void (*pctrl_fn0)(void *self);
 #define KEEP 0x7FFFFFFF
 
 void sub_8017264(struct player_ctrl *self, s32 a, s32 mode, s32 timer, s32 timerMax);
-void sub_80161EC(struct player_ctrl *self, s32 anim);
+void PlayerCtrlKillPlayer(struct player_ctrl *self, s32 anim);
 
 static inline u8 LevelAnim(struct player_ctrl *self)
 {
@@ -235,32 +235,32 @@ void sub_8016128(struct player_ctrl *self, s32 unused, s32 msg, s32 arg)
         break;
     }
     case 5:
-        sub_80161EC(self, 0x2D);
+        PlayerCtrlKillPlayer(self, 0x2D);
         break;
     case 3:
-        sub_80161EC(self, 0x2B);
+        PlayerCtrlKillPlayer(self, 0x2B);
         break;
     case 4:
-        sub_80161EC(self, 0x2C);
+        PlayerCtrlKillPlayer(self, 0x2C);
         break;
     case 1:
     case 6:
     case 10:
-        sub_80161EC(self, 0x2E);
+        PlayerCtrlKillPlayer(self, 0x2E);
         break;
     case 13:
         break;
     }
 }
 
-void sub_80161EC(struct player_ctrl *self, s32 anim)
+void PlayerCtrlKillPlayer(struct player_ctrl *self, s32 anim)
 {
     PlaySfx(gAudioContext, 0x1B, 0x100);
     SET_MODE(self, 7);
     SET_ANIM(self, self->target, anim);
     self->target->flag7 = 0;
     self->target->flag6 = 0;
-    self->target->unk_104 = 1;
+    self->target->dead = 1;
     LoseLife(gLevelState);
     sub_8006D08(gUnknown_030012B8, self->target->slot,
                 self->target->anim->records[self->target->tag].unk_14);
@@ -295,7 +295,7 @@ void sub_80161EC(struct player_ctrl *self, s32 anim)
 /* the out-of-line copy is sub_80172D0 */
 static inline void SetPlayerRecord(s32 a, s32 b, s32 c)
 {
-    struct pctrl_target *p = gUnknown_030012D8;
+    struct pctrl_target *p = gPlayer;
     s32 v = p->speedX;
     s32 t = v * v / 0x4000 + 4;
     s32 signV;
@@ -616,7 +616,7 @@ void sub_8016C94(struct player_ctrl *self)
         sub_8015C6C(self);
         return;
     }
-    if (self->target->unk_38 || gUnknown_0300082C > self->unk_28)
+    if (self->target->unk_38 || gRoomFrameCount > self->unk_28)
     {
         u8 dir = GetDpadDirection(inp);
 
@@ -641,7 +641,7 @@ void sub_8016D5C(struct player_ctrl *self)
 
     if (++self->timer >= self->timerMax || self->target->unk_38)
     {
-        gUnknown_030012D8->unk_92 = 0;
+        gPlayer->unk_92 = 0;
         self->cooldown = 0xC;
         if (dir == 0)
         {
@@ -830,14 +830,14 @@ void sub_80174BC(struct player_ctrl *self)
 
 void sub_80174D8(struct player_ctrl *self, s32 flags)
 {
-    self->vtable = (struct pctrl_vtable *)gStaticData_087E428C;
+    self->vtable = (struct pctrl_vtable *)gPlayerCtrlVtable;
     sub_800B8A8(self, flags);
 }
 
 struct player_ctrl *sub_80174EC(struct player_ctrl *self)
 {
     sub_800B8C8(self);
-    self->vtable = (struct pctrl_vtable *)gStaticData_087E428C;
+    self->vtable = (struct pctrl_vtable *)gPlayerCtrlVtable;
     sub_8015958(self);
     return self;
 }

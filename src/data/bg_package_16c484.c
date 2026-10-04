@@ -11,7 +11,7 @@ extern const u8 gStaticData_0861C30C[];
 extern const u8 gStaticData_0862FB24[];
 
 /* BG0 graphics package shared by sub_80047F8 (settings_menu2.c),
- * LoadLanguageSelectBg (counter_selector_setup.c), sub_801BAF0
+ * LoadLanguageSelectBg (counter_selector_setup.c), RunLevelSelect
  * (actor_part_1b85c.c) and settings_menu13.c. */
 const struct bg_package gStaticData_0816C484 = {
     0x20,

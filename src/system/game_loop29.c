@@ -22,7 +22,7 @@ struct spawn_part
 struct level_state
 {
     u8 unk_00[0x8C];
-    u8 unk_8C;                  // 0x8C
+    u8 timeTrial;                  // 0x8C
 };
 
 extern struct level_state *gLevelState;
@@ -49,7 +49,7 @@ struct spawn_part *sub_8025A64(void *unused0, u32 x, u32 y, u32 p3, u32 p5, u32 
     /* The ROM reads the flag as the stack word's low byte (ldrb). */
     u8 f = *(u8 *)&flag6;
     struct spawn_part *part = NULL;
-    u8 state = gLevelState->unk_8C;
+    u8 state = gLevelState->timeTrial;
 
     if (state == 0)
     {

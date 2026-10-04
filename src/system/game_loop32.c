@@ -18,7 +18,7 @@ extern void sub_800E620(struct phys_obj *self);
  * Otherwise it sets the global one-shot flag byte `gUnknown_030012B0`,
  * then loops, once per unit of `speed`, folding `remaining` toward
  * zero by +-0x100 (or +-0x40, when the viewport's own
- * `gUnknown_030012D8`-relative `+0x88` byte reads 1 - a "half speed"
+ * `gPlayer`-relative `+0x88` byte reads 1 - a "half speed"
  * mode) while accumulating the matching step into `self+0x4`; each
  * time `remaining` crosses to <=0 it re-derives the wrap via the
  * `gStaticData_0816BBC4[self+0x4e]` per-state table and, depending on

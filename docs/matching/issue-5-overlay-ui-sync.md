@@ -208,12 +208,12 @@ technique gets around.
   graphics/settings_menu8b.c`) - the previous pass got this to the
   ROM's exact byte *size* with a single cached `handleAddr`, but the
   real gap was argument-evaluation order: `MemCopy32(buf + 0x70,
-  sub_80236EC(*c0Addr), 0x68)` lets this compiler compute `buf + 0x70`
-  (the first argument) before calling `sub_80236EC` for the second,
+  PackSaveData(*c0Addr), 0x68)` lets this compiler compute `buf + 0x70`
+  (the first argument) before calling `PackSaveData` for the second,
   where the ROM's own build evaluates the call first and only computes
   the pointer argument afterward, as part of the call's own register
   setup. Forcing that order just needs the call's result captured into
-  a named local first (`void *result = sub_80236EC(*c0Addr);
+  a named local first (`void *result = PackSaveData(*c0Addr);
   MemCopy32(buf + 0x70, result, 0x68);`) rather than nesting the call
   directly in the outer call's argument list. Separately, `handleAddr`
   genuinely does need recomputing a second time (`&self->field_8c`

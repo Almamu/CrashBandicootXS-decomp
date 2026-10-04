@@ -63,7 +63,7 @@
  * mode that differs per AABB path, and (primary-AABB path only) plays
  * a hit SFX. */
 
-extern void *gUnknown_030012D8;
+extern void *gPlayer;
 extern void *gUnknown_030012CC;
 extern void *gAudioContext;
 
@@ -190,7 +190,7 @@ void *sub_8011310(void *selfArg)
 }
 
 /* If `self+0x48` (the "spawned/active" gate) is clear and the player's
- * (`gUnknown_030012D8`) own `+0xc` byte has bit 7 set, fires
+ * (`gPlayer`) own `+0xc` byte has bit 7 set, fires
  * `self->table+0x68/0x6c`'s trampoline (`_call_via_r1`) - the usual
  * "offset + fn pointer" pair convention already established throughout
  * this codebase (e.g. `graphics.c`'s own `+0x10`/`+0x14` pair). Always
@@ -200,7 +200,7 @@ s32 sub_8011330(void *selfArg)
     u8 *self = selfArg;
 
     if (self[0x48] == 0) {
-        u8 *player = gUnknown_030012D8;
+        u8 *player = gPlayer;
 
         if (player[0xc] >> 7) {
             u8 *entry = *(u8 **)(self + 0x18) + 0x68;
@@ -255,7 +255,7 @@ void sub_8011388(void *selfArg, u8 val)
 
 /* Per-frame player-proximity/hit-resolve step. Gated: does nothing
  * unless the orbit is active (`self+0x4a != 0`) and either its phase
- * hasn't wrapped past `0x16` yet or the player (`gUnknown_030012D8`)
+ * hasn't wrapped past `0x16` yet or the player (`gPlayer`)
  * is in state `+0x88 == 3`; if the orbit is active, the phase has
  * wrapped, and the player isn't in that state, returns immediately.
  *
@@ -278,7 +278,7 @@ void sub_8011390(void *selfArg)
     u8 *player;
 
     if (self[0x4a] != 0 && self[0x4b] <= 0x16) {
-        if (((u8 *)gUnknown_030012D8)[0x88] != 3) {
+        if (((u8 *)gPlayer)[0x88] != 3) {
             return;
         }
     }
@@ -296,7 +296,7 @@ void sub_8011390(void *selfArg)
     }
 
     sub_8007B98(selfBox, self);
-    player = gUnknown_030012D8;
+    player = gPlayer;
 
     if (player[0xa] == 0x13) {
         sub_8007C30(playerBox, player);

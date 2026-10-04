@@ -13,7 +13,7 @@ docs/rom_map.md documents (`gEntitySpawnFuncs`), plus one landmark
 function at the very end:
 
 - **`sub_8021BFC`/`sub_8021C50`-`sub_8021CE0`/`sub_8021D04`**: more
-  instances of the already-documented `sub_800FF0C` entity-constructor
+  instances of the already-documented `CreateCrate` entity-constructor
   trampoline family, feeding the 93-entry `gStaticData_087Exxx` family
   with type constants `1`-`7`. `sub_8021D04` additionally indexes a
   small per-record flags byte via `gEntityFlags`'s own table (same
@@ -33,7 +33,7 @@ function at the very end:
   fixed constants (matches `sub_8025BAC`'s already-documented
   `param1*12` runtime-indexed access to the same array).
 - **`sub_802209C`**: a plain state-write slot - packs two args into a
-  stack `{x, y}` pair and calls `sub_8023500` (already matched in
+  stack `{x, y}` pair and calls `SetCrateGemPos` (already matched in
   `game_loop10.c`), storing them into `gLevelState->0x1c0`/
   `->0x1c4`.
 - **`sub_8022158`**: conditionally calls `sub_801173C` (the
@@ -46,14 +46,14 @@ function at the very end:
   `sub_801E990` - still raw, at the top of this same `asm/*.s` file,
   out of this chunk's scope.
 - **`sub_80221A4`/`sub_80221D4`**: write a Q8.8 `{x, y}` position
-  straight into `gUnknown_030012D8` (the hot camera/viewport struct) -
+  straight into `gPlayer` (the hot camera/viewport struct) -
   leaf functions, no `push`/`pop` at all.
 - **`DestroyEntitySpawner`/`CreateEntitySpawner`**: the `{table_base, count}` descriptor
   constructor/consumer pair docs/rom_map.md's "local vtable copy"
   investigation resolved as generic (nothing table-specific) - allocate
   an 8-byte object, zero it via `sub_8025D6C`, and hand it
   `{&gEntitySpawnFuncs, 0x5c}` via `sub_8025D4C`.
-- **`sub_8022230`** (292 B, the "origin point" - docs/rom_map.md,
+- **`InitLevelState`** (292 B, the "origin point" - docs/rom_map.md,
   "Found the origin point"): the function `GetLevelState` calls once at
   the top of the game loop to construct essentially every hot IWRAM
   global this whole ROM region references - `gAudioContext` (an
@@ -67,13 +67,13 @@ function at the very end:
 ## Matched (24 functions, full clean `make compare` passing)
 
 `src/graphics/graphics_loading_21bfc.c` (`sub_8021BFC`-`sub_8021CE0`, 6
-fns): the `sub_800FF0C` trampoline family, types `1`-`7`.
+fns): the `CreateCrate` trampoline family, types `1`-`7`.
 
-`src/graphics/graphics_loading_21d80.c` (`sub_8021D80`-`sub_8022230`,
+`src/graphics/graphics_loading_21d80.c` (`sub_8021D80`-`InitLevelState`,
 18 fns): the `gSpriteBankTable` spawner family, `sub_802209C`,
 `sub_8022158`, both `nullsub`s, the `sub_801E990` trampolines, the
-`gUnknown_030012D8` position writers, the descriptor pair, and
-`sub_8022230` itself.
+`gPlayer` position writers, the descriptor pair, and
+`InitLevelState` itself.
 
 ### Gotchas worth recording
 
@@ -91,25 +91,25 @@ fns): the `sub_800FF0C` trampoline family, types `1`-`7`.
   unused) makes gcc reach for `r1` instead to protect the "live"
   return value, a 2-byte-per-function mismatch that's easy to miss on
   a quick visual diff since both forms *look* like `pop {reg}; bx reg`.
-  Only `sub_80220C4` and `sub_8022230` actually return their value (both
+  Only `sub_80220C4` and `InitLevelState` actually return their value (both
   have real callers that use the result) and keep `void *`/`void *`
   return types with an explicit `return`.
-- **The `sub_800FF0C` trampolines' cross-jump merge.** A naive
+- **The `CreateCrate` trampolines' cross-jump merge.** A naive
   `if (cond) return f(...,A); return f(...,B);` (or the `void`
   equivalent, `if (cond) { f(...,A); return; } f(...,B);`) gets
   cross-jump-merged by this compiler into one shared call site with the
   constant hoisted before the branch - the ROM instead has two fully
-  duplicated call sites (`sub_8021BFC`'s two `bl sub_800FF0C`s, one per
+  duplicated call sites (`sub_8021BFC`'s two `bl CreateCrate`s, one per
   branch). Assigning each branch's result to a `void *result;` local
   (even though the value is never read afterward) is what defeats the
   merge - the same "assign-then-fall-through" shape used elsewhere in
   this project to force duplication instead of sharing.
-- **`sub_800FF0C`'s own first parameter must be declared `u16`, not
+- **`CreateCrate`'s own first parameter must be declared `u16`, not
   `u32`, in the caller-side prototype**, even though the *callee*
   function truncates it again internally - the ROM's callers defer
   `arg0`'s truncation to inside each branch (`u32 arg0` on the caller's
   own parameter, deferred to point of use), but the call *itself* still
-  truncates before passing, which only happens if `sub_800FF0C`'s
+  truncates before passing, which only happens if `CreateCrate`'s
   extern prototype types that parameter `u16`.
 - **The negative-mask idiom, again**: `sub_8021D04`'s (parked) and
   every OAM-trio spawner's `+0x29` bitfield update need the explicit
@@ -117,7 +117,7 @@ fns): the `sub_800FF0C` trampoline family, types `1`-`7`.
   `UPDATE_ICON_FRAME_NIBBLE` in `settings_menu6.c`) - a bare `& -0x10`
   in C gets constant-folded into a single-instruction bitwise-complement
   immediate, one off from the ROM's actual two's-complement value.
-- **`sub_8022230`'s five "void helper leaves the pointer in r0" calls**
+- **`InitLevelState`'s five "void helper leaves the pointer in r0" calls**
   (`nullsub_2`, `nullsub_1`, `sub_8006FB4`, `ClearKeys`,
   `sub_8025A5C`, and `CreateEntitySpawner`'s own `sub_8025D6C`): each is called
   immediately after an allocation, and the ROM leaves the fresh
@@ -134,7 +134,7 @@ fns): the `sub_800FF0C` trampoline family, types `1`-`7`.
   one expression, cleaner than the two-step `void *`-typed alias used
   in the still-parked `trigger_effect.c`.
 - **Pre-computing a global's address into a local *before* a call it's
-  used after** (`sub_8022230`'s dozen `{addr = &global; ...; *addr =
+  used after** (`InitLevelState`'s dozen `{addr = &global; ...; *addr =
   result;}` blocks): writing the assignment as `global = f(...);`
   directly lets gcc defer the address computation to right before the
   store (after the call), while the ROM computes it once, early, and
@@ -143,7 +143,7 @@ fns): the `sub_800FF0C` trampoline family, types `1`-`7`.
   expression that uses it.
 - **A single-use two-operand computation's operand-evaluation order is
   a genuine source-order dependency, not just an expression-tree
-  question**: `sub_8022230`'s tail (`gUnknown_03001288` halfword store,
+  question**: `InitLevelState`'s tail (`gUnknown_03001288` halfword store,
   then the `self+0xc0` word store, both writing the same zero constant)
   needed the *address* local declared before the *constant* local (not
   the reverse) to match the ROM's `ldr r0,=addr` / `movs r4,#0` order -

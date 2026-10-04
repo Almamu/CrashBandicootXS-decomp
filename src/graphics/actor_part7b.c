@@ -9,7 +9,7 @@ extern s32 sub_8009FF4(struct box_part *part, struct part_aabb *box);
 /* `sub_8008AD8`'s sibling: resolves the same collision-hit logic when
  * the "compare viewport" doesn't match the current one (see
  * `sub_8008A40` in actor_part7.c) - `other` here plays the role
- * `gUnknown_030012D8` (the player) plays in `sub_8008AD8`. Tests `part`
+ * `gPlayer` (the player) plays in `sub_8008AD8`. Tests `part`
  * against the incoming box via `sub_8009FF4`; on a hit, calls `part`'s
  * method-table +0x68 method with `other->kind` as the second argument,
  * then sets `other`'s hit flag (bit 3).

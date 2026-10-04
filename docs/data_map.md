@@ -73,7 +73,7 @@ the appendix.
 | `082B91D0`-`082BF120` | 24,400 | per-room level data, 8 rooms | as block 1 | high | **done** (C) |
 | `082BF120`-`084A4660` | 1,987,904 | sprite tile pool for the 56 sprite banks | `graphics_7634.c`/`graphics_73dc.c` (`GetSpriteTileBase` + frame offset) | high | **done** (grit) |
 | `084A4660`-`084A5600` | 4,000 | 125 fixed 4bpp tiles | `RunPauseMenu` pool, `sub_8006DF8` | high | **done** (grit) |
-| `084A5600`-`084C0006` | 109,062 | sprite-bank table ("master asset table"): header, 56 banks, 2,429 frames | `RunPauseMenu`, `sub_8022230`, every `**gUnknown_030012D0` user | high | **converted** (C) |
+| `084A5600`-`084C0006` | 109,062 | sprite-bank table ("master asset table"): header, 56 banks, 2,429 frames | `RunPauseMenu`, `InitLevelState`, every `**gUnknown_030012D0` user | high | **converted** (C) |
 | `084C0006`-`0855BCB4` | 638,126 | GAX2 sound-effect data set: 88 instruments, 87 8-bit samples, sample table, the SFX voice handler type | `PlaySfx`/`GAX_fx_ex` voices via `GaxSongHeader.sfxTypes` (`StartSong`) | high | **converted** (`gax_audio.py --sfx`) |
 | `085A4C5C`-`086ECCD2` | 28,979 | 111 labels between the built intro/tileset1 LZ77 blobs: GAX2 tables and strings, libgcc `__clz_tab` x2, EEPROM tables, 23 intro palettes, 67 alignment pads | direct / slide packages | high | easy (the pads and palettes **done**) |
 | `086C127C`-`086D9CAC` | 100,912 | raw level asset (room `0825E7DC`) | `LoadRoom` -> `SetCollisionSource`/`SetBgStreamerSource` | high | **done** (decoded tilemaps) |
@@ -269,7 +269,7 @@ them rooms: `{u16 (*palette)[256]; struct level_desc *desc; s32 kind;
 `level_layers.c` (first two fields), `gl_widget_kind` in `game_loop56.c`
 (`kind`), and `MedalListItem` in `game_loop18.c` (`linkedObj` is the
 `desc`, and `linkedObj->0x1C` is the descriptor's object list). A room
-record is the `self->widget` that `sub_8023A1C` hands to `LoadRoom`.
+record is the `self->widget` that `RunRoom` hands to `LoadRoom`.
 Walking them:
 
 - `struct level_desc` (0x24): `layerData[3]`, `layer0Data`, `tileData`
@@ -639,7 +639,7 @@ vtable shapes).
 | `08169AE8` | 0x200 | Cortex's hovercraft: palette (16 colours + 240 x 0x03E0). **Converted** (`src/data/boss_pictures_167ad4.c`) | `sub_8032AF8`, `sub_8033604`, `sub_80336CC` | high | done |
 | `08169CE8` | 0xB28 | Cortex's hovercraft picture: {cols 16, rows 10}, 1 frame (graphics/boss_pictures/). **Converted** (`src/data/boss_pictures_167ad4.c`) | `sub_80331BC` | medium | done |
 | `0816A810` | 0x10 | u8[16] d-pad direction lookup. **Converted** (`src/data/boss_pictures_167ad4.c`) | `GetDpadDirection` | medium | done |
-| `0816A820` | 0x200 | s16[256] sine/direction table (`s16` x 256). **Converted** (`src/data/boss_pictures_167ad4.c`) | `sub_800AFF4`, `sub_800C8F8`, `sub_800C940` +16 | high | done |
+| `0816A820` | 0x200 | s16[256] sine/direction table (`s16` x 256). **Converted** (`src/data/boss_pictures_167ad4.c`) | `DrawPlayer`, `sub_800C8F8`, `sub_800C940` +16 | high | done |
 | `0816AA20` | 0x4C | song table: 19 pointers into the music block, `gGaxMusicData + GAX_SONG_<NAME>` from the generated `gax_songs.h`. **Converted** (`src/data/song_table_16aa20.c`) | `StartSong` | high | done |
 | `0816AF10` | 0x228 | CRC-16/CCITT lookup table (poly 0x1021, u16[256]) + the two link-cable pairing names "crash 1 <-> crash 2"/"crash 1 <-> crash 3" (`gStaticData_0816B110`/`0816B124`, which the IWRAM data `gUnknown_03000810`/`0814` points at). **Converted** (`src/data/link_crc_16af10.c`) | `sub_8001CB8`, `sub_8002114` | high | done |
 | `0816B138` | 0x2 | the text ">". **Converted** (`src/data/menu_tables_16b138.c`) | `sub_8003D3C` | medium | done |
@@ -667,9 +667,9 @@ vtable shapes).
 | `0816B304` | 0x318 | 44 {s32, s32, s32} motion records + 33 {a, b} entry pairs (`gStaticData_0816B514`, gStaticData_0816B92C's entries). **Converted** (`src/data/motion_records_16b304.c`) | `sub_800B704`, `sub_800B838`, `sub_8012AF4` | high | done |
 | `0816B61C` | 0x2A4 | 31 {s32, s32, s32} motion records + 38 {a, b} entry pairs (`gStaticData_0816B790`, gStaticData_0816B934's entries). **Converted** (`src/data/motion_records_16b304.c`) | `sub_8016AB0`, `sub_801721C`, `sub_8017240` | high | done |
 | `0816B8C0` | 0x6C | table (element layout: see consumers). **Converted** (`src/data/motion_records_16b304.c`) | `sub_8017808` | medium | done |
-| `0816B92C` | 0x8 | pointer table (1 data pointers) | `sub_802375C` | high | easy |
-| `0816B934` | 0x8 | pointer table (1 data pointers) | `sub_802375C` | high | easy |
-| `0816B93C` | 0x50 | entry set {entries, 0x100} + its 9 {a, b} entries (`gStaticData_0816B944`). **Converted** (`src/data/entry_set_16b93c.c`) | `sub_802375C` | medium | done |
+| `0816B92C` | 0x8 | pointer table (1 data pointers) | `PlayRoom` | high | easy |
+| `0816B934` | 0x8 | pointer table (1 data pointers) | `PlayRoom` | high | easy |
+| `0816B93C` | 0x50 | entry set {entries, 0x100} + its 9 {a, b} entries (`gStaticData_0816B944`). **Converted** (`src/data/entry_set_16b93c.c`) | `PlayRoom` | medium | done |
 | `0816B98C` | 0x20 | table (element layout: see consumers). **Converted** (`src/data/popup_tables_16b98c.c`) | `sub_801EF0C`, `sub_801F050`, `sub_801F170` +22 | medium | done |
 | `0816B9AC` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16). **Converted** (`src/data/popup_tables_16b98c.c`) | `sub_801F528` | high | done |
 | `0816B9CC` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16). **Converted** (`src/data/popup_tables_16b98c.c`) | `sub_801F8DC` | high | done |
@@ -686,8 +686,8 @@ vtable shapes).
 | `0816BB2C` | 0x20 | table (element layout: see consumers). **Converted** (`src/data/popup_tables_16b98c.c`) | `sub_80204EC`, `sub_8020D4C` | medium | done |
 | `0816BB4C` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16). **Converted** (`src/data/popup_tables_16b98c.c`) | `sub_80203A8` | high | done |
 | `0816BB6C` | 0x28 | entry set {entries, 0x100} + its 4 {a, b} entries (`gStaticData_0816BB74`). **Converted** (`src/data/object_tables_16bb6c.c`) | `sub_800CA48` | medium | done |
-| `0816BB94` | 0x4 | small constant (281e140a). **Converted** (`src/data/object_tables_16bb6c.c`) | `sub_800F990`, `sub_800FF0C` | medium | done |
-| `0816BB98` | 0x16 | table (element layout: see consumers). **Converted** (`src/data/object_tables_16bb6c.c`) | `sub_800E6B0`, `sub_800E888`, `sub_800EEF0` | medium | done |
+| `0816BB94` | 0x4 | small constant (281e140a). **Converted** (`src/data/object_tables_16bb6c.c`) | `sub_800F990`, `CreateCrate` | medium | done |
+| `0816BB98` | 0x16 | table (element layout: see consumers). **Converted** (`src/data/object_tables_16bb6c.c`) | `sub_800E6B0`, `BreakCrate`, `sub_800EEF0` | medium | done |
 | `0816BBAE` | 0x16 | table (element layout: see consumers). **Converted** (`src/data/object_tables_16bb6c.c`) | `sub_800F06C`, `sub_800F6B8`, `sub_8010908` | medium | done |
 | `0816BBC4` | 0x16 | table (element layout: see consumers). **Converted** (`src/data/object_tables_16bb6c.c`) | `sub_800D040`, `sub_800EDBC`, `sub_800F06C` +3 | medium | done |
 | `0816BBDA` | 0x16 | table (element layout: see consumers). **Converted** (`src/data/object_tables_16bb6c.c`) | `sub_0800D18C`, `sub_800E7A8` | medium | done |
@@ -719,21 +719,21 @@ vtable shapes).
 | `0816C418` | 0x40 | table of struct vec_pair | `sub_801A7AC` | high | easy |
 | `0816C458` | 0x8 | pointer table (1 data pointers) | `sub_801B7D8` | high | easy |
 | `0816C460` | 0x24 | table of struct vec3. **Converted** (`src/data/velocity_16c460.c`) | `sub_801B304`, `sub_801B6EC`, `sub_801B734` +2 | high | done |
-| `0816C484` | 0x14 | table (element layout: see consumers); 3 word(s) look like ROM pointers | `sub_80047F8`, `InitPowerDialog`, `sub_801BC28` +1 | medium | easy |
-| `0816C498` | 0x8 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c498.c`) | `sub_801BC28` | high | done |
-| `0816C4A0` | 0x8 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c498.c`) | `sub_801BC28` | high | done |
-| `0816C4A8` | 0x8 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c498.c`) | `sub_801BC28` | high | done |
-| `0816C4B0` | 0x8 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c498.c`) | `sub_801BC28` | high | done |
-| `0816C4B8` | 0x8 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c498.c`) | `sub_801BC28` | high | done |
-| `0816C4C0` | 0x8 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c498.c`) | `sub_801BC28`, `sub_801C3E8` | high | done |
-| `0816C4C8` | 0x8 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c498.c`) | `sub_801BC28` | high | done |
-| `0816C4D0` | 0x8 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c498.c`) | `sub_801BC28` | high | done |
-| `0816C4D8` | 0x30 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c498.c`) | `sub_801CEE0`, `sub_801D5CC` | high | done |
-| `0816C508` | 0x30 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c498.c`) | `sub_801CEE0`, `sub_801D5CC` | high | done |
-| `0816C538` | 0x10 | table of u32 (`u32` x 4). **Converted** (`src/data/map_tables_16c498.c`) | `sub_801CEE0`, `sub_801D668` | high | done |
-| `0816C548` | 0x10 | table of u32 (`u32` x 4). **Converted** (`src/data/map_tables_16c498.c`) | `sub_801BC28`, `sub_801D470` | high | done |
+| `0816C484` | 0x14 | table (element layout: see consumers); 3 word(s) look like ROM pointers | `sub_80047F8`, `InitPowerDialog`, `InitLevelSelect` +1 | medium | easy |
+| `0816C498` | 0x8 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c498.c`) | `InitLevelSelect` | high | done |
+| `0816C4A0` | 0x8 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c498.c`) | `InitLevelSelect` | high | done |
+| `0816C4A8` | 0x8 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c498.c`) | `InitLevelSelect` | high | done |
+| `0816C4B0` | 0x8 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c498.c`) | `InitLevelSelect` | high | done |
+| `0816C4B8` | 0x8 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c498.c`) | `InitLevelSelect` | high | done |
+| `0816C4C0` | 0x8 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c498.c`) | `InitLevelSelect`, `sub_801C3E8` | high | done |
+| `0816C4C8` | 0x8 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c498.c`) | `InitLevelSelect` | high | done |
+| `0816C4D0` | 0x8 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c498.c`) | `InitLevelSelect` | high | done |
+| `0816C4D8` | 0x30 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c498.c`) | `LevelSelectTurnPage`, `sub_801D5CC` | high | done |
+| `0816C508` | 0x30 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c498.c`) | `LevelSelectTurnPage`, `sub_801D5CC` | high | done |
+| `0816C538` | 0x10 | table of u32 (`u32` x 4). **Converted** (`src/data/map_tables_16c498.c`) | `LevelSelectTurnPage`, `sub_801D668` | high | done |
+| `0816C548` | 0x10 | table of u32 (`u32` x 4). **Converted** (`src/data/map_tables_16c498.c`) | `InitLevelSelect`, `sub_801D470` | high | done |
 | `0816C558` | 0x14 | table of u32 (`u32` x 5). **Converted** (`src/data/map_tables_16c498.c`) | `sub_801C608` | high | done |
-| `0816C56C` | 0x20 | table (element layout: see consumers). **Converted** (`src/data/map_tables_16c498.c`) | `sub_801BAF0` | medium | done |
+| `0816C56C` | 0x20 | table (element layout: see consumers). **Converted** (`src/data/map_tables_16c498.c`) | `RunLevelSelect` | medium | done |
 | `0816C58C` | 0x14 | table (element layout: see consumers); 3 word(s) look like ROM pointers | `sub_801D7F8` | medium | easy |
 | `0816C5A0` | 0x50 | pointer table (20 data pointers) | `sub_801DAD8` | high | easy |
 | `0816C5F0` | 0x20 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c5f0.c`) | `sub_801D828` | high | done |
@@ -743,13 +743,13 @@ vtable shapes).
 | `0816C644` | 0x30 | table of s32 (`s32` x 12). **Converted** (`src/data/map_tables_16c5f0.c`) | `sub_801E688`, `sub_801E788` | high | done |
 | `0816C674` | 0x30 | table of s32 (`s32` x 12). **Converted** (`src/data/map_tables_16c5f0.c`) | `sub_801E688`, `sub_801E788` | high | done |
 | `0816C6A4` (`gEntitySpawnFuncs`) | 0x170 | function-pointer table: 92 Thumb function pointers (menu/trigger-effect dispatch) (`void (*)(void)` x 92) | `CreateEntitySpawner` | high | easy |
-| `0816C814` (`gThemePaletteCycle2`) | 0xA | `u16[5]` palette-entry list of a level-start colour cycle. **Converted** (`src/data/level_table_16c814.c`) | `sub_8023A1C` | high | done |
-| `0816C81E` (`gThemePaletteCycle1A`) | 0x12 | `u16[9]` colour-cycle list. **Converted** (same) | `sub_8023A1C` | high | done |
-| `0816C830` (`gThemePaletteCycle1B`) | 0x12 | `u16[9]` colour-cycle list. **Converted** (same) | `sub_8023A1C` | high | done |
-| `0816C842` (`gThemePaletteCycle3`) | 0x20 | `u16[16]` colour-cycle list (palette entries 0x20-0x2F, not a palette). **Converted** (same) | `sub_8023A1C` | high | done |
-| `0816C862` (`gThemePaletteCycle5`) | 0xA | `u16[5]` colour-cycle list. **Converted** (same) | `sub_8023A1C` | high | done |
+| `0816C814` (`gThemePaletteCycle2`) | 0xA | `u16[5]` palette-entry list of a level-start colour cycle. **Converted** (`src/data/level_table_16c814.c`) | `RunRoom` | high | done |
+| `0816C81E` (`gThemePaletteCycle1A`) | 0x12 | `u16[9]` colour-cycle list. **Converted** (same) | `RunRoom` | high | done |
+| `0816C830` (`gThemePaletteCycle1B`) | 0x12 | `u16[9]` colour-cycle list. **Converted** (same) | `RunRoom` | high | done |
+| `0816C842` (`gThemePaletteCycle3`) | 0x20 | `u16[16]` colour-cycle list (palette entries 0x20-0x2F, not a palette). **Converted** (same) | `RunRoom` | high | done |
+| `0816C862` (`gThemePaletteCycle5`) | 0xA | `u16[5]` colour-cycle list. **Converted** (same) | `RunRoom` | high | done |
 | `0816C86C` (`gLevelTable`) | 0x514 | level table: 25 x 0x24 `struct level_info`, then 25 x 0x10 room lists `{count, rooms**, extra1, extra2}`. **Converted** (same) | `InitPauseMenuInfo`, `InitPauseTimeTrialPage`, `CountPlatinumRelics` +17 | high | done |
-| `0816CD80` (`gThemeMusicCues`) | 0x474 | `u8[11]` theme music cues, 17 room records (0x14 each), the room lists' pointer arrays, 31 more room records. **Converted** (same); its last 0x2C bytes are the English cutscene table `0816D1C8` | `sub_8024498` | high | done |
+| `0816CD80` (`gThemeMusicCues`) | 0x474 | `u8[11]` theme music cues, 17 room records (0x14 each), the room lists' pointer arrays, 31 more room records. **Converted** (same); its last 0x2C bytes are the English cutscene table `0816D1C8` | `PlayRoomMusic` | high | done |
 | `0816D1F4` (`gCutscenes`) | 0x53B4 | the cutscenes: 11 slide lists `{slides*, count}` (`struct cutscene_slides`), the English pages, 5 more language tables, slide arrays, text strings and pointer arrays of 6 languages, 24 slides (0x1C, `struct cutscene_slide`). **Converted** (`src/data/cutscenes_16d1c8.c`, from `0816D1C8`) | `PlayCutscene` | high | done |
 | `081725A8` (`gTerrainTypes`) | 0x4 | 51 `struct terrain_type` {u8 modeValue[4]; u8 heights[4][8]} (the rest of the old blob is the UI text, see `081725C4`). **Converted** (`src/data/terrain_1725a8.c`) | `sub_8025228` | high | done |
 | `081725AC` (`gTerrainHeights0`) | 0x8 | name for heights[0] of terrain type 0 (an `asm` `.set` alias into gTerrainTypes). **Converted** (`src/data/terrain_1725a8.c`) | `GetTerrainHeights`, `GetSolidTerrainHeights` | medium | done |
@@ -835,7 +835,7 @@ vtable shapes).
 | `0817E74C` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16). **Converted** (`src/data/palettes_17e72c.c`) | `InitLanguageSelectGraphics` | high | done |
 | `0817E76C` | 0x20 | table of u16 (`u16` x 16). **Converted** (`src/data/palettes_17e72c.c`) | `InitLanguageSelectGraphics` | high | done |
 | `0817E78C` | 0x326E74 | composite: level BG tile sets (raw tag-0x00 assets), per-room level data, sprite-bank tile pool | `InitLanguageSelectGraphics` | high | medium |
-| `084A5600` | 0xB66B4 | composite: sprite-bank (animation) table (**converted**, C) + GAX2 sound-effect bank (**converted**, `gax_audio.py --sfx`) | `RunPauseMenu`, `sub_8022230` | high | medium |
+| `084A5600` | 0xB66B4 | composite: sprite-bank (animation) table (**converted**, C) + GAX2 sound-effect bank (**converted**, `gax_audio.py --sfx`) | `RunPauseMenu`, `InitLevelState` | high | medium |
 | `085A4C5C` | 0x14 | the default song's GAX2_Song struct `{4, unknownc, info, unk_ptr, channel}` (the engine's default handler layout). **Built** by `tools/gax_audio.py` (`gax_default_layout.bin`) | `GAX2_estimate`, `GAX2_init` | high | done |
 | `085A4C70` | 0x100 | u8[256] count-leading-zeros table (libgcc `__clz_tab` of `__divdi3`). **Converted** (`src/data/clz_tab_5a4c70.c`) | `__divdi3` | high | done |
 | `085A4D70` | 0x100 | u8[256] count-leading-zeros table (the second copy, `__udivdi3`'s). **Converted** (`src/data/clz_tab_5a4c70.c`) | `__udivdi3` | high | done |
@@ -954,13 +954,13 @@ vtable shapes).
 | `087E3CAC` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_80088F0`, `sub_8008904` | high | easy |
 | `087E3D14` | 0x78 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_8009ED0`, `sub_8009F1C`, `sub_8009F90` | high | easy |
 | `087E3D8C` | 0x78 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_800A604`, `sub_800A650`, `sub_800A6A4` | high | easy |
-| `087E3E04` | 0x78 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_800B3AC`, `sub_800B3F0` | high | easy |
+| `087E3E04` | 0x78 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `DestroyPlayer`, `InitPlayer` | high | easy |
 | `087E3E7C` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_800B8A8`, `sub_800B8C8` | high | easy |
 | `087E3EE4` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_800CA60`, `sub_800CA74` | high | easy |
 | `087E3F4C` | 0x58 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_800CB40` | high | easy |
 | `087E3FA4` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_800CBC0`, `sub_800CBD4` | high | easy |
 | `087E400C` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_800CCCC`, `sub_800CCE0` | high | easy |
-| `087E4074` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_800FF0C`, `sub_801071C`, `sub_801075C` | high | easy |
+| `087E4074` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateCrate`, `sub_801071C`, `sub_801075C` | high | easy |
 | `087E40DC` | 0x70 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_8011114`, `sub_80112F4`, `sub_8011310` | high | easy |
 | `087E414C` | 0x70 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_801173C`, `sub_80119D8`, `sub_80119FC` | high | easy |
 | `087E41BC` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_8011B0C`, `sub_8011B5C`, `sub_8011B70` | high | easy |

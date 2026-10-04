@@ -58,7 +58,7 @@ extern void sub_8008044(struct hud_digit_part *part);
 extern void *gLevelState;
 extern struct hud_pos gHudPartPositions[];
 extern void DrawHudPart(struct hud_digit_part *part, s32 x, s32 y);
-extern s32 sub_8023414(void *state);
+extern s32 GetCrateCount(void *state);
 extern s32 GetWumpa(void *state);
 extern s32 __divsi3(s32 a, s32 b);
 extern s32 __modsi3(s32 a, s32 b);
@@ -117,7 +117,7 @@ void sub_8027940(struct hud_counter *selfArg)
 
     if (self->mode_a == 0)
         return;
-    self->value_a = sub_8023414(gLevelState);
+    self->value_a = GetCrateCount(gLevelState);
     if (self->mode_a == 1 || self->mode_a == 3)
         gHudSlideOffset = self->layout_a * 2 - 0x28;
     else
@@ -223,7 +223,7 @@ void sub_8027940(struct hud_counter *selfArg)
 /* A smaller sibling of `sub_8027940` above: one 2-digit display
  * (`self->field_20`/`self->field_44` change-detection pair, slots
  * `0xb0*4`/`0xc0*4`), sourced from `GetWumpa` (`sub_8027940` used
- * `sub_8023414` for its own primary counter) rather than a mode/layout
+ * `GetCrateCount` for its own primary counter) rather than a mode/layout
  * pair like the dispatcher's other callees - always refreshes one more
  * slot (`self->parts + 0xd0*4`) up front via `sub_8008044`/
  * `DrawHudPart` regardless of whether the value changed. */

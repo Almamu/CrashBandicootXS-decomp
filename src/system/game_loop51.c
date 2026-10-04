@@ -12,7 +12,7 @@ extern void sub_800FC70(struct phys_obj *self);
 /* GitHub issue #13: 0x0800FC70-0x08010A0C, continuing the physics/
  * collision subsystem (see game_loop17.c's header comment and
  * docs/matching/issue-13-graphics-fc70.md). Sits between the matched
- * `sub_8010480` (game_loop35.c) and `sub_8010674` (game_loop23.c) in
+ * `DrawCrate` (game_loop35.c) and `sub_8010674` (game_loop23.c) in
  * ROM, so it needs its own file - see docs/workflow.md's "one file
  * per contiguous ROM region" rule. `self` throughout is the same
  * "collision box" object (`struct phys_obj`, include/phys_obj.h) every
@@ -36,9 +36,9 @@ extern void sub_800FC70(struct phys_obj *self);
  * position-wrap advance). Then, if `self+0x4d`'s bit 7 is set and
  * `self+0x38` is nonzero, re-derives `self+0x30`'s index via the same
  * `self+0x20`-pointer-to-manager/`self+0x2d`-tag/0x1c-stride hitbox-
- * record clamp `sub_8010480` uses, clears `self+0x38` and
+ * record clamp `DrawCrate` uses, clears `self+0x38` and
  * `self+0x4d`'s bit 7, and clears the "recently touched" object's
- * (`gUnknown_030012D8`) own `+0x80` byte - then, depending on
+ * (`gPlayer`) own `+0x80` byte - then, depending on
  * `self+0x4e`: state 6 settles to state 7, tags `self+0x2d = 0x20`,
  * runs the `sub_80087C0`/`sub_80087B4`/`sub_800872C` triplet, then
  * folds the low nibble of a `sub_8006DF8` tile-cache lookup (keyed by

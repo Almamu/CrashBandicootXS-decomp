@@ -371,7 +371,7 @@ void sub_801E504(struct cursor_panel *self)
     ResetIdleTimer(self);
 }
 
-/* Destructor (`level_menu.panel`, called from sub_801C040). */
+/* Destructor (`level_menu.panel`, called from DestroyLevelSelect). */
 void sub_801E524(struct cursor_panel *self, s32 flags)
 {
     sub_8006D68(gUnknown_030012B8, PART_RECORD(self->part).tileRecord);

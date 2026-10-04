@@ -43,7 +43,7 @@ typedef void (*act_fn3)(void *self, s32 a, s32 b, s32 c);
 extern u32 gKeys;
 extern void *gAudioContext;
 extern void *gLevelState;
-extern struct act_part *gUnknown_030012D8;
+extern struct act_part *gPlayer;
 extern void *gUnknown_03001304;
 extern struct cam *gLevelLayers;
 extern struct act_pmf gStaticData_0816BF20[];
@@ -53,7 +53,7 @@ extern void sub_8012238(struct act *self);
 extern void sub_8012AF4(struct act *self);
 extern void sub_80138E8(struct act *self);
 extern void sub_80151C8(struct act *self);
-extern u8 sub_80231CC(void *self);
+extern u8 HasDoubleJump(void *self);
 extern void SetMaskLevel(void *self, s32 arg);
 
 /* Trio stores as in actor_part_12fbc.c: as inline parameters, old_agbcc
@@ -225,7 +225,7 @@ void sub_8012420(struct act *self)
                     ActQueue27(self, left, self->unk_2A[2]);
                     self->unk_2A[2] = left;
                 }
-                gUnknown_030012D8->unk_90 = left;
+                gPlayer->unk_90 = left;
             }
         }
     }
@@ -299,7 +299,7 @@ void sub_8012420(struct act *self)
 
 /* A helper of `sub_801283C` (below): if the input snapshot's D-pad bit
  * `1` is set, `self+0x18`'s counter is 0, `gLevelState` passes
- * `sub_80231CC`, and a sub-object type of `6`/`0xb`/`0xc` (each with its
+ * `HasDoubleJump`, and a sub-object type of `6`/`0xb`/`0xc` (each with its
  * own extra `+0x30 >= 0` gate) matches, bumps `self+0x18`, fires the
  * `+0x50`/`+0x54` and `+0x20`/`+0x24` trampoline pairs with type-keyed
  * ids, resets the state/flag/table-index trio to a type-keyed value,
@@ -323,10 +323,10 @@ u8 sub_8012694(struct act *self)
     if (pressed) {
         s32 frame = self->frame;
 
-        if (frame == 0 && sub_80231CC(gLevelState)) {
+        if (frame == 0 && HasDoubleJump(gLevelState)) {
             if (self->part->tag == 6 && self->part->frame >= 0) {
                 self->frame++;
-                *PartBytePtr(gUnknown_030012D8, 0x100) = frame;
+                *PartBytePtr(gPlayer, 0x100) = frame;
                 ACT_CALL2(self, m50, self->part, 0x12);
                 ACT_CALL1(self, m20, 9);
                 ACT_CALL2(self, m50, self->part, 6);
@@ -467,7 +467,7 @@ done:
             } else
                 ActSetNext27P(self, slot, 7);
         }
-        if (gUnknown_030012D8->unk_100)
+        if (gPlayer->unk_100)
             self->next31 = 1;
     }
 }

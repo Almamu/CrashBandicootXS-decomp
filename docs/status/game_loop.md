@@ -15,9 +15,9 @@ system from "core" system startup/init code.
   were NAKED. `actor_part123.o` and `game_loop42.o` moved to old_agbcc
   (whole-file matches).
 
-- `src/system/game_loop.c` (GitHub issue #34): `sub_8022BF0`
+- `src/system/game_loop.c` (GitHub issue #34): `EndBonusRound`
   (level-start/checkpoint-restore progress-total updater) and
-  `sub_8022CA0` (its cached-state/snapshot helper) - see
+  `SetCheckpointAtPlayer` (its cached-state/snapshot helper) - see
   [docs/matching/issue-37-game-loop-234e8.md](../matching/issue-37-game-loop-234e8.md)
   for the register-allocation fixes that closed these two out.
 - `src/system/main_loop.c` (new file, GitHub issue #45 - categorized
@@ -26,23 +26,23 @@ system from "core" system startup/init code.
   once from `AgbMain`, sets up the central per-level state object and
   the on-screen counter widget, then runs `UpdateGameFrame` forever) -
   and `GetUiText`, the UI string lookup in the current language
-- `src/system/game_loop2.c`: `sub_8022FEC`, `sub_802306C`, `sub_8023104`,
-  `sub_8023110`, `sub_8023118`, `sub_8023120`, `sub_8023128`,
-  `sub_8023130`, `sub_8023138`, `sub_8023140`, `sub_802314C`,
-  `sub_8023158`, `sub_8023168`, `sub_8023184`, `sub_8023190`,
-  `sub_802319C`, `sub_80231A8`, `sub_80231B4`, `sub_80231BC`,
-  `sub_80231C4` (GitHub issue #34, `UpdateGameFrame`-`MainLoop` cluster -
+- `src/system/game_loop2.c`: `AddBrokenCrate`, `PressSwitchCrate`, `GetBonusPlatform`,
+  `sub_8023110`, `SetMaskAssistDeaths`, `sub_8023120`, `sub_8023128`,
+  `GetMaskAssistDeaths`, `sub_8023138`, `sub_8023140`, `sub_802314C`,
+  `sub_8023158`, `ClearPowers`, `GiveTornadoSpin`, `GiveSuperBodySlam`,
+  `GiveTurboRun`, `GiveDoubleJump`, `HasTornadoSpin`, `HasSuperBodySlam`,
+  `HasTurboRun` (GitHub issue #34, `UpdateGameFrame`-`MainLoop` cluster -
   a `self+0x80`/`0x84`/`0x88`/`0xac`/`0xc0`/`+2`-flags accessor family
   plus the two frame-counter/limit tick functions), and (GitHub issues
-  #35/#36) `sub_80231CC` through `sub_8023484` (49 more functions,
+  #35/#36) `HasDoubleJump` through `CheckAllCratesBroken` (49 more functions,
   formerly `asm/code_3_2_17_231cc.s`, now retired - a direct, fully
   contiguous continuation of the same `gLevelState`-pointed
   "level" object: more `self+2` flag bits, the `self+0x6c`/`0x70`/
   `0x74`/`0x78`/`0xbc` counter/threshold-pair family, the `self+0xa4`-
   `0xa9` busy-flag bank, `self+0x7c`/`0x8c`/`0x90`/`0x94`/`0x98`/`0xc4`/
   `0xc8`/`0x1c8` fields, five thin `sub_8024428`-family forwarders, two
-  `self+0xc4` "current index" dispatchers, and `sub_8023484` (the
-  counter-notification consumer `sub_8023A1C`/`game_loop56.c` calls to
+  `self+0xc4` "current index" dispatchers, and `CheckAllCratesBroken` (the
+  counter-notification consumer `RunRoom`/`game_loop56.c` calls to
   lazily initialize this object - GitHub issue #37's last standing
   gap) - all matched as real C, no `NAKED` fallbacks needed. See
   [docs/matching/issue-35-36-0x080231cc-game-loop.md](../matching/issue-35-36-0x080231cc-game-loop.md)
@@ -81,35 +81,35 @@ system from "core" system startup/init code.
   and a `CpuSet`-based palette-bank zero-fill wrapper pair
 - `src/system/game_loop10.c` (GitHub issue #37 - numbered `10` rather
   than `6` since issue #12's parallel PR independently claimed
-  `game_loop6.c`/`game_loop7.c` first): `sub_80234E8`,
-  `sub_80234F4`, `sub_8023500`, `sub_8023510`, `sub_802352C`,
-  `RestoreCheckpoint`, `SetCheckpoint`, `sub_80235E4`, `sub_802364C`,
+  `game_loop6.c`/`game_loop7.c` first): `SetGemPlatform`,
+  `SetBonusPlatform`, `SetCrateGemPos`, `RequestGemPath`, `RequestBonusRound`,
+  `RestoreCheckpoint`, `SetCheckpoint`, `EndGemPath`, `sub_802364C`,
   `sub_8023658`, `sub_8023674`, `sub_802369C`, `nullsub_24`,
-  `sub_80236AC`, `sub_80236EC` - camera-position setters,
+  `UnpackSaveData`, `PackSaveData` - camera-position setters,
   checkpoint/level-transition snapshot helpers, the `PlayCutscene`
   mode-trampoline family, and a packed-bitfield unpacker/repacker pair
 - `src/system/game_loop11.c` (GitHub issue #37): `GetLevelState` - lazily
-  allocates and returns `gUnknown_03000828`
-- `src/system/game_loop8.c` (GitHub issue #37): `sub_802400C` - the
+  allocates and returns `gLevelStateSingleton`
+- `src/system/game_loop8.c` (GitHub issue #37): `UpdateRoomFrame` - the
   DMA3/VRAM refresh pass gated on `self+0x0 <= 0x1000` - and
-  `sub_80240E4` - the `REG_BLDCNT`/`REG_BLDALPHA` shadow-word rebuild
+  `SetupRoomBlend` - the `REG_BLDCNT`/`REG_BLDALPHA` shadow-word rebuild
   (plain C, built with old_agbcc - see [game-loop-old-agbcc.md](../matching/game-loop-old-agbcc.md)). See
   [docs/matching/issue-37-game-loop-234e8.md](../matching/issue-37-game-loop-234e8.md)
   for the details.
 - `src/system/game_loop39.c` (GitHub issue #37, follow-up pass):
-  `sub_802375C` - the level-start dispatcher that allocates the
+  `PlayRoom` - the level-start dispatcher that allocates the
   per-level HUD widget set, the player actor, and the text-box
   singleton, then dispatches on a widget-kind field to construct one of
-  three counter/ring-buffer widgets before handing off to `sub_8023A1C`
+  three counter/ring-buffer widgets before handing off to `RunRoom`
   (now parked `NAKED`, see below). See
   [docs/matching/issue-37-game-loop-2375c.md](../matching/issue-37-game-loop-2375c.md)
   for the register-pinning/evaluation-order gotchas that closed this
   out.
-- `src/system/game_loop9.c` (GitHub issue #37): `sub_8024198`,
-  `sub_80241A4`, `sub_80241B0`, `sub_80241BC`, `sub_802423C` - a
+- `src/system/game_loop9.c` (GitHub issue #37): `ClearRoomExit`,
+  `RequestRoomExit`, `IsRoomExitRequested`, `ResumeRoomAfterPause`, `sub_802423C` - a
   boolean flag clear/set/get trio, the level-end teardown, and the
   shared vram-upload-cursor/OAM-shadow flush tail
-- `src/system/game_loop12.c` (GitHub issue #41): `sub_8025894`
+- `src/system/game_loop12.c` (GitHub issue #41): `CountCrateEntities`
   (group/item list counter with a 19-entry jump table - previously
   `NON_MATCHING`, now matched as real C by materializing the
   `item->type == 0x1a` four-load lookup chain as one opaque
@@ -152,14 +152,14 @@ system from "core" system startup/init code.
   truncates the Q8 position to a tile-scroll halfword pair and writes
   it through the `self+0x58` hardware-register pointer
 - `src/system/game_loop17.c` (GitHub issue #38): `sub_802425C`,
-  `nullsub_25`, `sub_8024278` - a bit-tested `sub_8026ED0` teardown
+  `nullsub_25`, `CountLevelCrates` - a bit-tested `sub_8026ED0` teardown
   wrapper, an empty stub, and the medal-table per-level tally
-- `src/system/game_loop18.c` (GitHub issue #38): `sub_80243E0`,
-  `sub_8024404`, `sub_8024428`, `sub_8024434`, `sub_8024440`,
-  `sub_802444C`, `sub_8024458`, `sub_8024464`, `sub_8024498`,
-  `sub_80244F0`, `sub_8024524`, `sub_8024540`, `sub_802455C` -
+- `src/system/game_loop18.c` (GitHub issue #38): `IsInGemPathRoom`,
+  `IsInBonusRoom`, `sub_8024428`, `sub_8024434`, `sub_8024440`,
+  `sub_802444C`, `sub_8024458`, `CountRoomCrates`, `PlayRoomMusic`,
+  `NextRoom`, `EnterGemPathRoom`, `EnterBonusRoom`, `SelectRoom` -
   medal-table entry/item-list field accessors, the sound-cue resolver,
-  and the `sub_8024344` constant wrappers (`sub_8024344` itself is left
+  and the `LevelHasEntityType` constant wrappers (`LevelHasEntityType` itself is left
   raw, see below)
 - `src/system/game_loop19.c` (GitHub issue #38): `sub_8024784` -
   trivial `gUnknown_03001314` setter
@@ -182,7 +182,7 @@ system from "core" system startup/init code.
   [docs/matching/issue-13-fc70-second-continuation.md](../matching/issue-13-fc70-second-continuation.md)
   for `sub_8010674`'s register-pinning/toolchain-bug notes.
 - `src/system/game_loop24.c` (GitHub issue #13): `sub_8010804` (a
-  state-3-countdown-expiry sweep over `gUnknown_0300130C`),
+  state-3-countdown-expiry sweep over `gCrateList`),
   `sub_801085C` (viewport trampoline-pair/cue-1 firing)
 - `src/system/game_loop25.c` (GitHub issue #13): `sub_8010908` -
   trivial `gStaticData_0816BBAE[idx]` lookup
@@ -220,11 +220,11 @@ system from "core" system startup/init code.
   see [naked-sub_800fdc8-matched.md](../matching/naked-sub_800fdc8-matched.md).
 - `src/system/game_loop36.c` (GitHub issue #13, fourth pass, new file -
   replaces the trimmed `asm/code_3_2_17_e560_ff0c.s`, now deleted):
-  `sub_800FF0C` - the `sub_800FF0C` entity-constructor trampoline
+  `CreateCrate` - the `CreateCrate` entity-constructor trampoline
   family's own target function (two whole files, `graphics_loading_21bfc.c`/
   `graphics_loading_21668.c`, exist purely to call it with a fixed
   `type` constant). Allocates a 0x64-byte object, sets `self+0x18` to
-  `&gStaticData_087E4074` (a `+0x18` outlier of the usual `+0xC`
+  `&gCrateVtable` (a `+0x18` outlier of the usual `+0xC`
   table-pointer convention), then dispatches on `type` (0-0x12,
   externally confirmed by every trampoline caller) through two nested
   jump tables (15 and 19 cases) to tag `self+0x2d` and initialize
@@ -243,16 +243,16 @@ system from "core" system startup/init code.
   block and case 15. See
   [docs/matching/size2-naked-retry.md](../matching/size2-naked-retry.md).
 - `src/system/game_loop35.c` (GitHub issue #13, third pass, new file -
-  it sits between `sub_800FF0C` (now `game_loop36.c`) and `sub_80104E4`,
-  so it can't join either neighbor's file): `sub_8010480` - a
+  it sits between `CreateCrate` (now `game_loop36.c`) and `sub_80104E4`,
+  so it can't join either neighbor's file): `DrawCrate` - a
   `self+0x4d`-gated reset of `self+0x30`/`self+0x38` via the
   `self+0x20`-pointer-to-manager/`self+0x2d`-tag/0x1c-stride
   hitbox-record convention `sub_800D040` (game_loop6.c) also uses,
   then a tail call to `sub_8007A84`. See
   [docs/matching/issue-13-fc70-second-continuation.md](../matching/issue-13-fc70-second-continuation.md).
-- `src/system/game_loop18.c` (GitHub issue #38, follow-up pass): `sub_8024344`
+- `src/system/game_loop18.c` (GitHub issue #38, follow-up pass): `LevelHasEntityType`
   (medal item-list per-flag nonzero scan) - prepended ahead of
-  `sub_80243E0`, contiguous with `game_loop17.c` in ROM. See
+  `IsInGemPathRoom`, contiguous with `game_loop17.c` in ROM. See
   [docs/matching/issue-38-sound-channel-family.md](../matching/issue-38-sound-channel-family.md)
   for the `ip`/r12 pin plus the pointer-arithmetic-canonicalization
   gotcha that closed this out.
@@ -370,14 +370,14 @@ system from "core" system startup/init code.
   - both UNUSED (no caller anywhere in the ROM), matched anyway per this
   project's usual practice. `asm/code_3_2_17_26bf8.s` trimmed to begin
   at `sub_8026C90`.
-- **`sub_8026C90`/`sub_8026D8C`/`sub_8026DFC`/`sub_8026E6C`/`sub_8026EB4`/`sub_8026EC0`/`sub_8026ED0`/`sub_8026EDC`**
+- **`sub_8026C90`/`sub_8026D8C`/`SnapCamera`/`UpdateCamera`/`sub_8026EB4`/`sub_8026EC0`/`sub_8026ED0`/`sub_8026EDC`**
   (`src/system/camera_follow.c`, new file - GitHub issue #44) - the
-  `gUnknown_030012D4` camera follower: Q8 position eased a quarter-step
+  `gCamera` camera follower: Q8 position eased a quarter-step
   per frame toward `target + look-ahead`, published centered on screen
   (`- (120 << 8)`, `- (80 << 8)`) through `SetLevelScroll`'s level-bounds
   clamp. Mode 2 (`sub_8026C90`) steers the look-ahead from `target+0x24`
   direction bits, mode 1 (`sub_8026D8C`) from the `target+0x28` mirror
-  flag; `sub_8026DFC` snaps, `sub_8026E6C` is the per-frame dispatcher.
+  flag; `SnapCamera` snaps, `UpdateCamera` is the per-frame dispatcher.
   Plus two `mem_free`/`mem_alloc(size, MEM_HEAP_EWRAM)` wrapper pairs.
   Needed r2/r3 pins on the target position, an r4-pinned easing temp, an
   empty `case 3` for the switch's decision-tree shape, and a trailing
@@ -416,7 +416,7 @@ system from "core" system startup/init code.
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
 
-- **`sub_8022D50`** (`game_loop40.c`), **`sub_8025A64`** (`game_loop29.c`),
+- **`StartTimeTrial`** (`game_loop40.c`), **`sub_8025A64`** (`game_loop29.c`),
   **`sub_8025BAC`** (`game_loop14.c`), **`ScrollBgLayer`**/**`DrawBgLayerColumn`**
   (`game_loop16.c`), and the other functions above marked "built with
   old_agbcc" - 17 former `NAKED` transcriptions in 0x08022D50-0x08026BC0,
@@ -434,13 +434,13 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
 - **Issue #12 NAKED retry:** `sub_800EDBC` (`game_loop48.c`, old_agbcc,
   the neighbor "impact spread" walk) promoted from NAKED to real C. See
   [docs/matching/issue-24-26-12-naked-retry.md](../matching/issue-24-26-12-naked-retry.md).
-- **Issue #12/#13/#25 NAKED retry:** `sub_800E888` (`game_loop48.c`,
+- **Issue #12/#13/#25 NAKED retry:** `BreakCrate` (`game_loop48.c`,
   the shared "apply the collision response" landing point),
   `sub_800FC70` (`game_loop32.c`, the position-wrap advance) and
   `sub_80104E4` (`game_loop51.c`, the per-frame state tick) promoted
   from NAKED to real C, all under old_agbcc (`game_loop32.o` and
   `game_loop51.o` joined `OLD_AGBCC_OBJS`). `sub_800D040`,
-  `sub_800E08C`, `sub_800F990` and `sub_800FF0C` stay NAKED with new
+  `sub_800E08C`, `sub_800F990` and `CreateCrate` stay NAKED with new
   C drafts under `#if NON_MATCHING`. See
   [docs/matching/issue-12-13-25-naked-retry.md](../matching/issue-12-13-25-naked-retry.md).
 - **Big NAKED retry:** `UpdateGameFrame` (`game_loop55.c`, GitHub issue
@@ -489,7 +489,7 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   `asm("" : "+r")` copy so cse doesn't hold `sp+16` in a callee-saved
   register, and `px`/`py` are shared by both blocks. See
   [docs/matching/sp-box-retry.md](../matching/sp-box-retry.md).
-- **Hard-register hold pass:** `sub_8023A1C` (`game_loop56.c`, issue
+- **Hard-register hold pass:** `RunRoom` (`game_loop56.c`, issue
   #37, the level-lifecycle state machine) promoted from NAKED to real C
   under old_agbcc (`game_loop56.o` joined `OLD_AGBCC_OBJS`). The
   one-byte `direction` stack argument of `AddPaletteCycle` is a struct with
@@ -498,7 +498,7 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   in the ROM). An r0/r1 hard-register hold puts the post-fade
   player-position copy's pointer in r2. See
   [docs/matching/hard-register-hold-retry.md](../matching/hard-register-hold-retry.md).
-- **Size2 NAKED retry:** `sub_800FF0C` (`game_loop36.c`, issue #13, the
+- **Size2 NAKED retry:** `CreateCrate` (`game_loop36.c`, issue #13, the
   entity constructor behind the trampoline family) promoted from NAKED
   to real C under old_agbcc (`game_loop36.o` joined `OLD_AGBCC_OBJS`).
   See [docs/matching/size2-naked-retry.md](../matching/size2-naked-retry.md).
@@ -522,9 +522,9 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
 
 ## Parked - NAKED transcription (byte-correct, not decompiled)
 
-- **Now matched as real C (hard-register hold pass, see Matched); entry kept for history.** **`sub_8023A1C`** (`src/system/game_loop56.c`, new file - GitHub
+- **Now matched as real C (hard-register hold pass, see Matched); entry kept for history.** **`RunRoom`** (`src/system/game_loop56.c`, new file - GitHub
   issue #37, ROM `0x08023A1C`-`0x0802400C`) - the ~650-instruction
-  level-lifecycle state machine `sub_802375C` unconditionally hands off
+  level-lifecycle state machine `PlayRoom` unconditionally hands off
   to (`game_loop39.c`). Its 6-case jump table (state `1`/`6` share one
   code block) fires `AddPaletteCycle` "fx queue" calls - a palette
   color-cycle animation (`(u16 *)0x05000000`, GBA palette RAM, passed
@@ -536,9 +536,9 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   than per-level records with their own shape - closing that open
   question. Past the dispatch, a shared tail rebuilds the player's OAM
   entry and re-derives its `+0x29` low nibble, then a wait loop polls
-  `sub_80241B0` (`gUnknown_03000830`, `game_loop9.c`) until ready before
+  `IsRoomExitRequested` (`gRoomExitRequested`, `game_loop9.c`) until ready before
   firing the fade (`sub_80014A4`), and a post-fade tail counts
-  `gUnknown_0300130C` entries in physics state `0xA`
+  `gCrateList` entries in physics state `0xA`
   (`gStaticData_0816BC98`'s own convention,
   [docs/matching/issue-12-physics-collision.md](../matching/issue-12-physics-collision.md))
   before flushing every hot IWRAM widget-manager global. Parked `NAKED`
@@ -581,7 +581,7 @@ plain C didn't converge.
   selector, the 6-case per-edge handler dispatch
   `docs/rom_map.md`/this issue's write-up already described, and a
   9-case post-processing dispatch), a 5-slot "recently touched" ring
-  buffer inside `gUnknown_030012D8`, and ~30 distinct callees.
+  buffer inside `gPlayer`, and ~30 distinct callees.
   `sub_800E08C` (1032 B) is a further 6-case jump-table dispatcher
   `sub_0800D18C` itself calls into, sharing the exact same per-edge
   handler family. Both verified byte-exact via a full clean
@@ -592,7 +592,7 @@ plain C didn't converge.
   `sub_800E08C` is now real C (last-five NAKED retry, see Matched);
   `sub_0800D18C` is now real C too (huge NAKED retry 3, see Matched);
   entry kept for history.
-- **Now matched as real C (issue #12/#13/#25 NAKED retry, see Matched); entry kept for history.** **`sub_800E888`** (`src/system/game_loop48.c`; `sub_800EDBC` was
+- **Now matched as real C (issue #12/#13/#25 NAKED retry, see Matched); entry kept for history.** **`BreakCrate`** (`src/system/game_loop48.c`; `sub_800EDBC` was
   promoted by the issue #12/#24/#26 retry; the
   rest of this file was promoted to C by the NAKED-retry pass, see
   Matched) (originally with `sub_800E560`/`sub_800E6B0`/`sub_800E7A8`/
@@ -601,9 +601,9 @@ plain C didn't converge.
   of the direct dispatch targets both `sub_0800D18C`'s and
   `sub_800E08C`'s per-edge jump tables call (`sub_800E560`,
   `sub_800E6B0`, `sub_800E7A8`) plus their own transitive callees
-  (`sub_800E888`, called from `sub_800E7A8`; `sub_800EAFC`/
-  `sub_800EDBC`, called from `sub_800E888`) - jump-table-heavy
-  (`sub_800E888`'s own 23-case table is the largest in this subsystem
+  (`BreakCrate`, called from `sub_800E7A8`; `sub_800EAFC`/
+  `sub_800EDBC`, called from `BreakCrate`) - jump-table-heavy
+  (`BreakCrate`'s own 23-case table is the largest in this subsystem
   after `sub_0800D18C`'s three) and/or built on this subsystem's
   confirmed `r8`/`sb`/`sl`-triple-accumulator-resistant shape
   (`sub_800EDBC`). See
@@ -750,7 +750,7 @@ plain C didn't converge.
   issue #9/#10) - the last raw function in the cluster's own
   `asm/code_3_2_17_bfa8.s` chunk, called only from `sub_800B8DC` state
   15. A small `self+0x68`-keyed 2-way dispatcher gated by a
-  `__modsi3` "close enough" check against `gUnknown_0300082C` (here
+  `__modsi3` "close enough" check against `gRoomFrameCount` (here
   read as a plain word, not the table-base-pointer role `sub_800C40C`
   uses it in) plus `self->0x48`/`self->0x4c`; on pass, triggers
   `sub_800C8CC(self,2)`/`sub_800C8CC(self,7)` for `self->0x68==0`/`4`.
@@ -764,7 +764,7 @@ plain C didn't converge.
   register-pressure trap - matched as real C, needing `self` pinned to
   `asm("r4")` (gcc's unforced allocator otherwise duplicates `self`
   into a spare `r5` just to re-read `self->0x68` a second time) and the
-  `gUnknown_0300082C` read hoisted into its own statement ahead of
+  `gRoomFrameCount` read hoisted into its own statement ahead of
   `self->0x48`'s (two independent loads gcc's scheduler otherwise
   reorders vs. the ROM). This fully consumes `asm/code_3_2_17_bfa8.s` -
   retired from `ldscript.txt` entirely. See
@@ -791,9 +791,9 @@ plain C didn't converge.
   (`LoadLevelGraphics`/`sub_8035E14`/`RunCredits`) that spins until the
   level finishes loading; a confirmed 5-case jump table on
   `self->0xc4` (doubling as both the literal player-state enum value
-  *and* the retry-loop's `sub_801BAF0` seed) - gates
-  `sub_80231BC`/`sub_80231CC`/`sub_80231B4`/`sub_80231C4` transition to
-  `sub_8023190`/`sub_80231A8`/`sub_8023184`/`sub_802319C` respectively
+  *and* the retry-loop's `RunLevelSelect` seed) - gates
+  `HasSuperBodySlam`/`HasDoubleJump`/`HasTornadoSpin`/`HasTurboRun` transition to
+  `GiveSuperBodySlam`/`GiveDoubleJump`/`GiveTornadoSpin`/`GiveTurboRun` respectively
   (case 3's own gate additionally free-runs a `GetCompletionPercent` timeout
   that increments `self->0xc4` past 0x63 frames), case 4 has no gate/
   transition and is unconditional; states past this table's range
@@ -828,12 +828,12 @@ plain C didn't converge.
   `self+0x4e`'s settle-state byte, always calls `sub_800FC70`, then -
   gated on `self+0x4d`'s bit 7 and `self+0x38` - re-derives
   `self+0x30`'s index via the same `self+0x20`/`self+0x2d`-tag/
-  0x1c-stride hitbox-record clamp `sub_8010480` (`game_loop35.c`)
+  0x1c-stride hitbox-record clamp `DrawCrate` (`game_loop35.c`)
   uses and settles state 6/3, or otherwise re-triggers `sub_800F798`;
   finally hands off to the `_call_via_r1` table-trampoline convention
   `sub_8007048`/`sub_80070D4` (`graphics.c`) establish. A plain-C
   attempt (the same register-pin-per-nested-scope technique that
-  matched `sub_8010480`'s near-identical hitbox-record clamp) matched
+  matched `DrawCrate`'s near-identical hitbox-record clamp) matched
   the first ~10 instructions but diverged once a *second* field
   address needed the same "computed once, copied to a callee-saved
   register, reused later" shape - this compiler's liveness tracking
@@ -859,7 +859,7 @@ plain C didn't converge.
   per-edge dispatch. Appends one 0x24-byte "collision candidate" record
   to a per-entity queue at `self->candidates[self->count]` (`self` is
   the caller's own `entity+0x108` - the player's
-  `gUnknown_030012D8+0x108` at this specific call site - the same
+  `gPlayer+0x108` at this specific call site - the same
   record shape `sub_8010B6C`/`game_loop28.c` already reads back, per
   its own doc comment calling `sub_8010D54` its "mirror image"). A
   plain-C reconstruction reproduces the ROM's exact instruction *shape*

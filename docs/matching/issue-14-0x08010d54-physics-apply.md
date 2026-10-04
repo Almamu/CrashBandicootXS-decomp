@@ -94,7 +94,7 @@ Every argument's meaning is confirmed against `sub_0800D18C`'s own
 final call site (`game_loop47.c`, the `bl sub_8010D54` right before that
 function's epilogue):
 
-- `self` = `gUnknown_030012D8 + 0x108` (dereferencing the pointer
+- `self` = `gPlayer + 0x108` (dereferencing the pointer
   variable first) - the *player's* own instance of this queue. This is
   the exact same base address `sub_8010A0C`-`sub_8010B68`
   (`game_loop27.c`) and `sub_8010B6C` (`game_loop28.c`) already operate
@@ -321,7 +321,7 @@ object (distinct from `struct actor`'s own 0x1c bytes and from
 | `sub_8011364` | 20B | Seeds `self`/`self+4` (Q8 x/y) from raw `x`/`y` arguments (`<<8`), mirrors both into `self+0x4c`/`self+0x50` (the orbit anchor). |
 | `sub_8011378` | 16B | Sets orbit mode (`self+0x4a`), resets orbit phase (`self+0x4b`) to 0. |
 | `sub_8011388` | 8B | Unexamined byte setter, `self+0x49` - address-adjacent to the mode/phase pair but not read by anything else in this group. |
-| `sub_8011390` | 184B | Per-frame player-proximity/hit-resolve step: gated by the same orbit-mode/phase fields plus flags bits 2/3 (`self+0xc`), AABB-tests `self` against the player (`gUnknown_030012D8`) - primary AABB (`sub_8007C30`) when the player's own `+0xa == 0x13`, secondary AABB (`sub_8007B98`) otherwise - and on overlap sets flags bit 3 and tail-calls the despawn picker `sub_8011448` (Phase 2's neighboring group, not read this pass - only extern'd) with a mode that differs per path, playing a hit SFX only on the primary-AABB path. |
+| `sub_8011390` | 184B | Per-frame player-proximity/hit-resolve step: gated by the same orbit-mode/phase fields plus flags bits 2/3 (`self+0xc`), AABB-tests `self` against the player (`gPlayer`) - primary AABB (`sub_8007C30`) when the player's own `+0xa == 0x13`, secondary AABB (`sub_8007B98`) otherwise - and on overlap sets flags bit 3 and tail-calls the despawn picker `sub_8011448` (Phase 2's neighboring group, not read this pass - only extern'd) with a mode that differs per path, playing a hit SFX only on the primary-AABB path. |
 
 All matched as real C except `sub_8011248`, closed as a NAKED
 transcription: a plain-C reconstruction reproduces the ROM's exact
@@ -448,7 +448,7 @@ coincide").
   table/shape as `sub_8010F8C`'s own default-mode branch) when
   `self->0x4a` is clear, or calls `sub_801192C` (below) when set. If
   `self->0x48 == 3` specifically, `self->x`/`self->y` are instead reset
-  to `gUnknown_030012D8`'s own position minus a fixed
+  to `gPlayer`'s own position minus a fixed
   `-0x400`/`-0xe00` (Q8) offset. Every path ends with a tail call to
   `sub_8008364(self)` (already matched, `actor_part5.c`).
 - **`sub_801173C`** (308B) - the achievement/unlock-icon spawn helper.

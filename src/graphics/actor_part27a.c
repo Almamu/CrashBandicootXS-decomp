@@ -9,7 +9,7 @@
  * pairs of `{s16 offset; u8 pad[2]; void *fn}` records read at fixed
  * offsets - 0x20, 0x50, 0x58 here - and fired through `_call_via_r2`/
  * `_call_via_r3`); `other` (r5) is the "part" object passed alongside
- * it, with its own analogous table at `other+0x18`. `gUnknown_030012D8`
+ * it, with its own analogous table at `other+0x18`. `gPlayer`
  * is the player/camera-viewport object (see docs/rom_map.md) - its
  * `+0x104` byte is the "player busy" gate this function's state 0/2
  * paths both check, and its `+0x18`-table feeds two more trampoline
@@ -31,8 +31,8 @@
  *   is `!=0x1e`), fires the `0x50`/`0x20`/`0x58`-indexed trampoline
  *   trio, then runs a `_call_via_r1` "occupied" probe (twice, toggling
  *   `self+0x20`'s latch and re-stamping `self+0x1c` from the tick
- *   counter `gUnknown_0300082C` on a transition), a timeout check
- *   (`gUnknown_0300082C - self+0x1c > 0x3c` ticks re-fires
+ *   counter `gRoomFrameCount` on a transition), a timeout check
+ *   (`gRoomFrameCount - self+0x1c > 0x3c` ticks re-fires
  *   `sub_8017F14` with a mode selected by `other+0x28` bit 4 and
  *   `self+0x20`), then a screen-relative "reset entry 3's flags"
  *   double gate (X `< `/`>` viewport, mirroring `other+0x28` bits
@@ -42,12 +42,12 @@
  *   calls, or - out of bounds - falls into a "spawn + scan" cluster:
  *   builds an AABB via `sub_8007B98(&box, other)`, unpacks it into
  *   `sub_8008A40(gUnknown_030012F0, box.x, box.y, box.w, box.h, 0,
- *   other)`, then walks the whole `gUnknown_0300130C` object list -
+ *   other)`, then walks the whole `gCrateList` object list -
  *   for each entry whose own table (`+0x18`, offset `0x48`) probes
  *   `==3` and is within a `0x27`/`0x3b` Q8>>8 box of `other` with
  *   `entry+0x4d` bit-`0x7f`-clear: a `entry+0x4e` tag of `0xe`/`0x13`/
  *   `0x14`/`0x15`/`0xa` calls `sub_800EEF0(entry, 0)`, otherwise
- *   `sub_8010908(entry, tag)` gates a `sub_800E888(entry, 1)`.
+ *   `sub_8010908(entry, tag)` gates a `BreakCrate(entry, 1)`.
  * - **State 2**: if `other+0x30==8` and `other+0x34==0` and the same
  *   in-bounds Q8 check passes, fires `_call_via_r4` against the
  *   player's own `+0x18`-table (offset `0x68`) and returns; otherwise
@@ -205,16 +205,16 @@ static inline s32 Abs(s32 v)
     return (v ^ sign) - sign;
 }
 
-extern u32 gUnknown_0300082C;
-extern struct ab_player *gUnknown_030012D8;
+extern u32 gRoomFrameCount;
+extern struct ab_player *gPlayer;
 extern void *gUnknown_030012F0;
-extern struct ab_list *gUnknown_0300130C;
+extern struct ab_list *gCrateList;
 extern void sub_8017F14(void *self, void *part, s32 index);
 extern struct ab_box sub_8007B98(void *obj);
 extern void sub_8008A40(void *manager, struct ab_box box, s32 unused, void *compareViewport);
 extern void sub_800EEF0(struct ab_part *p, s32 arg);
 extern u8 sub_8010908(struct ab_part *p, s32 kind);
-extern void sub_800E888(struct ab_part *p, s32 arg);
+extern void BreakCrate(struct ab_part *p, s32 arg);
 
 void sub_8017AB0(struct ab_self *self, struct ab_part *other)
 {
@@ -229,7 +229,7 @@ void sub_8017AB0(struct ab_self *self, struct ab_part *other)
     switch (self->state)
     {
     case 0:
-        if (gUnknown_030012D8->busy != 0)
+        if (gPlayer->busy != 0)
             return;
     test:
         if ((s8)(other->flags28 << 3) < 0)
@@ -240,7 +240,7 @@ void sub_8017AB0(struct ab_self *self, struct ab_part *other)
         s32 i;
         s32 px;
 
-        if (Busy(gUnknown_030012D8) != 0 || gUnknown_030012D8->ctrl->state == 0x1E)
+        if (Busy(gPlayer) != 0 || gPlayer->ctrl->state == 0x1E)
         {
             VCALL2(self, m50, other, 2);
             VCALL1(self, m20, 0);
@@ -248,7 +248,7 @@ void sub_8017AB0(struct ab_self *self, struct ab_part *other)
         }
         if (Probe28(other) && self->latch == 0)
         {
-            self->stamp = gUnknown_0300082C;
+            self->stamp = gRoomFrameCount;
             self->latch = 1;
         }
         else
@@ -257,11 +257,11 @@ void sub_8017AB0(struct ab_self *self, struct ab_part *other)
 
             if (hit == 0 && self->latch != 0)
             {
-                self->stamp = gUnknown_0300082C;
+                self->stamp = gRoomFrameCount;
                 self->latch = hit;
             }
         }
-        if (self->stamp != 0 && gUnknown_0300082C - self->stamp > 0x3C)
+        if (self->stamp != 0 && gRoomFrameCount - self->stamp > 0x3C)
         {
             self->stamp = 0;
             if ((s8)(other->flags28 << 3) >= 0)
@@ -274,7 +274,7 @@ void sub_8017AB0(struct ab_self *self, struct ab_part *other)
             else
                 sub_8017F14(self, other, 3);
         }
-        if (gUnknown_030012D8->x < other->x)
+        if (gPlayer->x < other->x)
         {
             u8 f = other->flags28;
 
@@ -289,7 +289,7 @@ void sub_8017AB0(struct ab_self *self, struct ab_part *other)
             }
         }
         /* read into a local first: in place, gcc loads it after the sum */
-        px = gUnknown_030012D8->x;
+        px = gPlayer->x;
         if (px > other->x + 0xA00)
         {
             u8 f = other->flags28;
@@ -304,7 +304,7 @@ void sub_8017AB0(struct ab_self *self, struct ab_part *other)
             }
         }
         {
-            struct ab_player *pl = gUnknown_030012D8;
+            struct ab_player *pl = gPlayer;
 
             if (Abs(pl->x - other->x) <= 0x27FF && Abs(pl->y - other->y) <= 0x31FF)
             {
@@ -322,11 +322,11 @@ void sub_8017AB0(struct ab_self *self, struct ab_part *other)
         /* a guarded do-while: a `for` shares the list pointer between the
          * entry test and the body, where the ROM reloads it */
         i = 0;
-        if (i < gUnknown_0300130C->count)
+        if (i < gCrateList->count)
         {
             do
             {
-                struct ab_part *e = gUnknown_0300130C->items[i];
+                struct ab_part *e = gCrateList->items[i];
 
                 if (Probe48(e) == 3)
                 {
@@ -346,18 +346,18 @@ void sub_8017AB0(struct ab_self *self, struct ab_part *other)
                             || kind == 0x15 || kind == 0xA)
                             sub_800EEF0(t, 0);
                         else if (sub_8010908(e, kind))
-                            sub_800E888(e, 1);
+                            BreakCrate(e, 1);
                     }
                 }
                 i++;
-            } while (i < gUnknown_0300130C->count);
+            } while (i < gCrateList->count);
         }
         return;
     }
     case 2:
         if (other->frame == 8 && other->unk_34 == 0)
         {
-            struct ab_player *pl = gUnknown_030012D8;
+            struct ab_player *pl = gPlayer;
 
             if (Abs(pl->x - other->x) > 0x27FF || Abs(pl->y - other->y) > 0x31FF)
                 goto test;
@@ -371,7 +371,7 @@ void sub_8017AB0(struct ab_self *self, struct ab_part *other)
         }
         if (!other->animDone)
             return;
-        if (Busy(gUnknown_030012D8) == 0)
+        if (Busy(gPlayer) == 0)
         {
             if ((s8)(other->flags28 << 3) < 0)
             {

@@ -4,7 +4,7 @@
 /* GitHub issue #9/#10: 0x0800AAEC, the input-action-check function the
  * 42-slot `gStaticData_0816BF20` action-dispatch table's own entries
  * (`sub_8013994` etc.) call for their action codes `0xB`/`0x10` (see
- * docs/rom_map.md). Iterates the `gUnknown_0300130C` object list (the
+ * docs/rom_map.md). Iterates the `gCrateList` object list (the
  * same count-prefixed `{count, unused_4, items}` layout already
  * established in `src/system/game_loop24.c`'s `sub_8010804`), testing
  * each entry's own `+0x18`-table `+0x48` trampoline via `_call_via_r1`
@@ -23,7 +23,7 @@
  *
  * Matching notes (see docs/matching/issue-9-naked-retry.md): the list
  * walk is the guarded do-while shape (not a `for`), which is what gives
- * the ROM's per-iteration `&gUnknown_0300130C` literal reload; the
+ * the ROM's per-iteration `&gCrateList` literal reload; the
  * position is read as one struct copy (both words loaded, then both
  * stored, then `y` reloaded for `origY`); and the record pointer's `+4`
  * is a separate `rec += 4` step (the ROM's `adds r1, #4; adds r4, r1, #0`
@@ -40,7 +40,7 @@ struct pos {
     s32 y;
 };
 
-extern struct actor_list *gUnknown_0300130C;
+extern struct actor_list *gCrateList;
 extern void *gLevelLayers;
 extern s32 _call_via_r1(void *addr, void *fn);
 extern u8 sub_800CD00(void *entry, s32 x);
@@ -73,8 +73,8 @@ u8 sub_800AAEC(struct box_part *self, s32 x)
         return 0;
 
     i = 0;
-    if (i < gUnknown_0300130C->count) do {
-        u8 *entry = gUnknown_0300130C->items[i];
+    if (i < gCrateList->count) do {
+        u8 *entry = gCrateList->items[i];
         u8 *method = *(u8 **)(entry + 0x18) + 0x48;
 
         if (_call_via_r1(entry + *(s16 *)method, *(void **)(method + 4)) == 3) {
@@ -82,6 +82,6 @@ u8 sub_800AAEC(struct box_part *self, s32 x)
                 return 0;
         }
         i++;
-    } while (i < gUnknown_0300130C->count);
+    } while (i < gCrateList->count);
     return 1;
 }

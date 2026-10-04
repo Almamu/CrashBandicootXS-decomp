@@ -10,7 +10,7 @@ extern s32 gUnknown_03000878;
 extern void *gLevelState;
 
 extern s32 sub_802A4E0(void);
-extern void sub_8022CA0(void *arg0);
+extern void SetCheckpointAtPlayer(void *arg0);
 extern void sub_802AB34(void);
 
 /* Re-bases the category's secondary tick counter from `arg0` (net of
@@ -22,7 +22,7 @@ void sub_8029748(s32 arg0)
     gUnknown_03000878 = arg0 - sub_802A4E0();
     gUnknown_03001384 = 0;
     gUnknown_03001388 = 0;
-    sub_8022CA0(gLevelState);
+    SetCheckpointAtPlayer(gLevelState);
     gUnknown_03001390 = gUnknown_0300138C;
     sub_802AB34();
 }

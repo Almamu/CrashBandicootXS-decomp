@@ -178,7 +178,7 @@ issue is where they got turned into (attempted) byte-exact C.
   0x080255D4-0x08025894, ~700 B) - `docs/rom_map.md` characterized this
   as a "per-frame visible-object/window list processor": DMA-writes to
   OBJ palette RAM and a BG window register, then walks a small
-  count-prefixed array touching `gEntitySpawner`/`gUnknown_0300130C`,
+  count-prefixed array touching `gEntitySpawner`/`gCrateList`,
   calling several still-unread functions (`sub_8025968`, `SpawnEntity`,
   `sub_8010714`, `sub_8010710`, `sub_8007398`, `sub_801070C`). Not
   understood precisely enough (which fields of the visited records mean

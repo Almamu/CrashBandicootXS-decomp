@@ -165,7 +165,7 @@ struct gfx_player
     u8 unk_08[0x10];
     u8 *vtable;                 // 0x18
     u8 unk_1C[0xE8];
-    u8 unk_104;                 // 0x104
+    u8 dead;                     // 0x104
 };
 
 struct gfx_list
@@ -186,7 +186,7 @@ extern void *gEntityFlags;
 extern void *gAudioContext;
 extern void *gLevelState;
 extern u8 ***gUnknown_030012D0;
-extern struct gfx_player *gUnknown_030012D8;
+extern struct gfx_player *gPlayer;
 extern struct gfx_list *gUnknown_030012F0;
 extern void *gUnknown_030012F4;
 extern struct gfx_level *gLevelLayers;
@@ -219,8 +219,8 @@ extern s32 _call_via_r3(void *self, void *arg1, s32 arg2, void *fn);
 extern void _call_via_r4(void *arg0, s32 arg1, s32 arg2, s32 arg3);
 extern s32 __divsi3(s32 dividend, s32 divisor);
 extern s32 __udivsi3(s32 value, s32 divisor);
-extern u8 sub_80231C4(void *self);
-extern void sub_80241A4(void);
+extern u8 HasTurboRun(void *self);
+extern void RequestRoomExit(void);
 extern void *sub_8007CF8(void *dest, void *pt);
 extern void *sub_8007C30(void *dest, void *pt);
 extern void *sub_8007B98(void *dest, void *pt);
@@ -519,7 +519,7 @@ void *sub_80189EC(struct gfx_squares *self)
  * both parts towards the second child and sets both parts' frame from
  * the horizontal distance (0-5, scaled by the level width); state 2
  * counts to 3 before moving on; state 3 sinks everything 0x80 per frame
- * until it leaves the bottom of the level, then signals sub_80241A4.
+ * until it leaves the bottom of the level, then signals RequestRoomExit.
  *
  * Parked as NAKED under the current agbcc (it put `self`/`part` in r6/r7
  * where the ROM uses r7 as scratch); matches unchanged under old_agbcc. */
@@ -575,8 +575,8 @@ void sub_8018A30(struct gfx_pair_ctrl *self, struct gfx_part *part)
         part->pos.y += 0x80;
         if (part->pos.y >= (gLevelLayers->layer0->height << 8) + 0x4000)
         {
-            if (sub_80231C4(gLevelState))
-                sub_80241A4();
+            if (HasTurboRun(gLevelState))
+                RequestRoomExit();
             sub_8019770(self, part, 4);
         }
         break;
@@ -773,7 +773,7 @@ void sub_8018E4C(struct gfx_mover *self, struct gfx_part *partArg)
             *blinking = left;
             SET_FRAME_R(part, 1, "r3", "r4");
         }
-        sub_80196B8(self, part, gUnknown_030012D8->x, gUnknown_030012D8->y - 0xA00);
+        sub_80196B8(self, part, gPlayer->x, gPlayer->y - 0xA00);
         {
             s32 i = self->cfg->index;
 
@@ -969,18 +969,18 @@ void sub_8019324(struct gfx_hit_ctrl *self, struct gfx_part *partArg)
 
     if (part->unk_0A == 1)
     {
-        sub_8007CF8(&a, gUnknown_030012D8);
+        sub_8007CF8(&a, gPlayer);
         if (a.w == 0)
         {
-            sub_8007C30(&b, gUnknown_030012D8);
+            sub_8007C30(&b, gPlayer);
             a = b;
         }
         sub_8007C30(&b, part);
         if (sub_8001688(&a, &b))
         {
-            struct gfx_player *p = gUnknown_030012D8;
+            struct gfx_player *p = gPlayer;
 
-            if (p->unk_104 == 0)
+            if (p->dead == 0)
             {
                 /* _call_via_r4 calls through r4: the method's function
                  * pointer is loaded there but never passed in r0-r3 (same
