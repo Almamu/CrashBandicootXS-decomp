@@ -6,11 +6,11 @@
  * in the cluster, `asm/code_3_2_17_cbf4.s` - `sub_800CBF4`,
  * `nullsub_15`, `nullsub_3`, `sub_800CCCC`, `sub_800CCE0`, ROM
  * 0x0800CBF4-0x0800CD00 (contiguous, no gap on either side -
- * `actor_part117.o`'s `sub_800CBD4` ends exactly where this file
+ * `actor_part117.o`'s `CreateKnockedEnemyCtrl` ends exactly where this file
  * starts, and `actor_part109.o`'s already-matched `sub_800CD00`
  * begins exactly where this file ends). Closes out the entire
- * 43-function cluster investigation that began with `sub_800B8DC`/
- * `sub_800BD48`. */
+ * 43-function cluster investigation that began with `UpdateEnemyCtrl`/
+ * `HitEnemy`. */
 
 extern void *gEntityFlags;
 extern void *_call_via_r1(void *arg0, void *fn);
@@ -120,7 +120,7 @@ extern void sub_800B8C8(void *self);
  * `gStaticData_087E400C`, and runs `nullsub_3(self)` - the same
  * "reset via `sub_800B8C8`, re-point `self+0xc`, return `self`"
  * constructor shape already matched for `sub_801886C`/`sub_8018858`/
- * `sub_800CBD4`. */
+ * `CreateKnockedEnemyCtrl`. */
 void *sub_800CCE0(void *selfArg)
 {
     u8 *self = selfArg;

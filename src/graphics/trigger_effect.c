@@ -9,7 +9,7 @@
  *
  * Each one tests one "collected" bit of the level progress record
  * (gLevelState + 2). If it is set, the effect only plays a sound:
- * sub_801A878 with a per-slot id, or the shared id 0xC when
+ * CreatePlatform with a per-slot id, or the shared id 0xC when
  * IsGemPathDone says so or the record's +0x8C byte is set, handed to
  * SetGemPlatform. Otherwise it spawns the full visual effect: a
  * sub_8008434 part on anim bank offset 0x180, with a per-slot tag,
@@ -27,7 +27,7 @@
  * tell. Under it all four are plain C with no pins; they had been
  * parked as NAKED after drafts under the current agbcc stalled on
  * register allocation (see docs/matching/issue-31-trigger-effect-type-n.md,
- * "Old-compiler pass"). The two sub_801A878 calls are written
+ * "Old-compiler pass"). The two CreatePlatform calls are written
  * separately, one per sound id: the ROM repeats the a0 truncation in
  * both arms and shares the rest of the call, which is gcc's
  * cross-jumping of two call sites (a single call with an `id` variable
@@ -46,7 +46,7 @@ extern u8 ***gUnknown_030012D0;
 extern void *gUnknown_030012EC;
 
 extern u8 IsGemPathDone(struct level_progress *self);
-extern void *sub_801A878(u16 x, u16 y, u16 w, u16 h, s32 id);
+extern void *CreatePlatform(u16 x, u16 y, u16 w, u16 h, s32 id);
 extern void SetGemPlatform(struct level_progress *self, void *handle);
 extern struct gfx_part *sub_8008434(u16 a0, u16 a1, u16 a2, u16 a3);
 extern void sub_80087C0(struct gfx_part *part);
@@ -67,9 +67,9 @@ void SpawnRedGemPlatform(u32 a0, u16 a1, u16 a2, u16 a3)
         void *snd;
 
         if (IsGemPathDone(gLevelState) || gLevelState->timeTrial)
-            snd = sub_801A878(a0, a1, a2, a3, 0xC);
+            snd = CreatePlatform(a0, a1, a2, a3, 0xC);
         else
-            snd = sub_801A878(a0, a1, a2, a3, 0xB);
+            snd = CreatePlatform(a0, a1, a2, a3, 0xB);
         SetGemPlatform(gLevelState, snd);
     }
     else
@@ -98,9 +98,9 @@ void SpawnYellowGemPlatform(u32 a0, u16 a1, u16 a2, u16 a3)
         void *snd;
 
         if (IsGemPathDone(gLevelState) || gLevelState->timeTrial)
-            snd = sub_801A878(a0, a1, a2, a3, 0xC);
+            snd = CreatePlatform(a0, a1, a2, a3, 0xC);
         else
-            snd = sub_801A878(a0, a1, a2, a3, 0x3);
+            snd = CreatePlatform(a0, a1, a2, a3, 0x3);
         SetGemPlatform(gLevelState, snd);
     }
     else
@@ -129,9 +129,9 @@ void SpawnGreenGemPlatform(u32 a0, u16 a1, u16 a2, u16 a3)
         void *snd;
 
         if (IsGemPathDone(gLevelState) || gLevelState->timeTrial)
-            snd = sub_801A878(a0, a1, a2, a3, 0xC);
+            snd = CreatePlatform(a0, a1, a2, a3, 0xC);
         else
-            snd = sub_801A878(a0, a1, a2, a3, 0xA);
+            snd = CreatePlatform(a0, a1, a2, a3, 0xA);
         SetGemPlatform(gLevelState, snd);
     }
     else
@@ -162,9 +162,9 @@ void SpawnBlueGemPlatform(u32 a0, u16 a1, u16 a2, u16 a3)
         void *snd;
 
         if (IsGemPathDone(gLevelState) || gLevelState->timeTrial)
-            snd = sub_801A878(a0, a1, a2, a3, 0xC);
+            snd = CreatePlatform(a0, a1, a2, a3, 0xC);
         else
-            snd = sub_801A878(a0, a1, a2, a3, 0x9);
+            snd = CreatePlatform(a0, a1, a2, a3, 0x9);
         SetGemPlatform(gLevelState, snd);
     }
     else

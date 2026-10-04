@@ -1,7 +1,7 @@
 # Late NAKED retry 3
 
 This pass retried six drafts outside the #4/#9 zones: `sub_8014B54`
-(#17), `sub_800BD48` (#10), `LoadCreditsLogos` (#64), `DrawVvLogoPieces` (#65),
+(#17), `HitEnemy` (#10), `LoadCreditsLogos` (#64), `DrawVvLogoPieces` (#65),
 and the GAX functions `GAX2_init` (#67) and `GaxChannelMix` (#68). Two
 closed, both with one new technique. Issues #10 and #17 have no NAKED
 functions left.
@@ -11,7 +11,7 @@ functions left.
 | Function | File | Compiler | What it took |
 |---|---|---|---|
 | `sub_8014B54` | `src/graphics/actor_part_14674.c` (already old_agbcc) | old_agbcc | Was 3 halfwords off: the 0x600 reload was in r2 where the ROM has r3. An `r2` register variable `hold`, set by `asm("" : "=r"(hold))` before the add and used by `asm("" : : "r"(hold))` after it, keeps r2 live across the add. No code is emitted. Reload then spills r3 for the constant, and the later reloads rotate as in the ROM. |
-| `sub_800BD48` | `src/graphics/actor_part112.c` (already old_agbcc) | old_agbcc | Was 21 halfwords off, nearly all reload registers. The same `hold` in r2 across the first MarkGone's id compare (`MarkGoneHeld`) left 5 halfwords. That was the layer's `1` in states 1/21/22, loaded after the `-4` mask instead of before it. Storing the layer from an `s32 one = 1` local fixes the order. On its own, that local was CSE'd into the bitmap's `1 << n` (4 bytes over). `MarkGoneFreshBit` computes the shift count first and builds its bit with the constant-init asm, so it gets its own `movs #1`. |
+| `HitEnemy` | `src/graphics/actor_part112.c` (already old_agbcc) | old_agbcc | Was 21 halfwords off, nearly all reload registers. The same `hold` in r2 across the first MarkGone's id compare (`MarkGoneHeld`) left 5 halfwords. That was the layer's `1` in states 1/21/22, loaded after the `-4` mask instead of before it. Storing the layer from an `s32 one = 1` local fixes the order. On its own, that local was CSE'd into the bitmap's `1 << n` (4 bytes over). `MarkGoneFreshBit` computes the shift count first and builds its bit with the constant-init asm, so it gets its own `movs #1`. |
 
 ## The technique: holding a hard register live
 
@@ -29,7 +29,7 @@ So when the ROM's first reload register is r3 where the draft gets r2,
 the ROM had r2 busy at that insn. From then on, every later reload
 rotates through a different set: {1,3,6} against {1,2,6} in
 `sub_8014B54`, and r3, r3, r3, r4, r6, r2 against r6, r4, r4, r6, r2 in
-`sub_800BD48`. The fix is to make r2 hard-live at that one insn:
+`HitEnemy`. The fix is to make r2 hard-live at that one insn:
 
 ```c
 register s32 hold asm("r2");

@@ -7,13 +7,13 @@
  *
  * UNUSED - no caller anywhere in the ROM (checked asm/ .s files, src/ .c files
  * and the ROM for Thumb pointers): sub_801B2E4 (the gobj constructor -
- * sub_801A878 inlines its body instead), sub_801B6EC, sub_801B734,
+ * CreatePlatform inlines its body instead), sub_801B6EC, sub_801B734,
  * sub_801B854.
  *
  * Register pins and the few one-instruction-wide inline asm operands
  * below are load-bearing (docs/workflow.md step 7); each is commented. */
 
-void sub_801B208(struct gobj *self)
+void UpdatePlatform(struct gobj *self)
 {
     struct method *m = &self->vtable->m38;
 
@@ -63,9 +63,9 @@ s32 sub_801B2C0(void)
     return 4;
 }
 
-void sub_801B2C4(struct gobj *self, s32 flags)
+void DestroyPlatform(struct gobj *self, s32 flags)
 {
-    self->vtable = (struct gobj_vtable *)gStaticData_087E49DC;
+    self->vtable = (struct gobj_vtable *)gPlatformVtable;
     sub_8009F1C(self, flags);
 }
 
@@ -99,13 +99,13 @@ static inline struct vec3 *MoverVec(struct mover *self)
  * after the player lands and then wobbles the owner +-3px, kinds 6/7
  * freeze the owner's animation until its +0x38 trigger fires (kind 7 then
  * marks the owner gone in the gEntityFlags+0x108 bitmap, as
- * sub_80072D8 does). Finally sub_801B624 drags the player along.
+ * sub_80072D8 does). Finally MovePlayerWithPlatform drags the player along.
  *
  * Every `register ... asm()` below pins a value to the register the ROM
  * uses for it; unpinned, this compiler picks a different low register at
  * each site (docs/workflow.md step 7). The small u8/s32 constant
  * variables reproduce the ROM's load order (constant before the ldrb). */
-void sub_801B304(struct mover *self, struct gobj *objArg)
+void UpdatePlatformMover(struct mover *self, struct gobj *objArg)
 {
     register struct gobj *obj asm("r4") = objArg;
     s32 kind;
@@ -356,7 +356,7 @@ void sub_801B304(struct mover *self, struct gobj *objArg)
         }
     }
 done:
-    sub_801B624(self, obj);
+    MovePlayerWithPlatform(self, obj);
     self->lastX = obj->x >> 8;
     self->lastY = obj->y >> 8;
 }
@@ -364,8 +364,8 @@ done:
 /* While the mover is active (the player is standing on its owner), move
  * the player by the owner's displacement since last frame, mark the owner
  * as the player's `carried` object, and fold the owner's velocity signs
- * into the player's +0x24 direction bits. Pins as in sub_801B304. */
-void sub_801B624(struct mover *self, struct gobj *obj)
+ * into the player's +0x24 direction bits. Pins as in UpdatePlatformMover. */
+void MovePlayerWithPlatform(struct mover *self, struct gobj *obj)
 {
     if (self->active && self->kind != 6)
     {
@@ -480,9 +480,9 @@ void sub_801B7A0(struct mover *self, struct gobj *part, s32 index)
     sub_800B7B0(self, part, &gStaticData_0816C460[self->set->entries[index].a]);
 }
 
-void sub_801B7C4(struct mover *self, s32 flags)
+void DestroyPlatformMover(struct mover *self, s32 flags)
 {
-    self->vtable = (struct mover_vtable *)gStaticData_087E4A54;
+    self->vtable = (struct mover_vtable *)gPlatformMoverVtable;
     sub_800B8A8(self, flags);
 }
 
@@ -490,7 +490,7 @@ void sub_801B7C4(struct mover *self, s32 flags)
  * genuine byte, which the ROM reads with `add r0, sp, #0x18; ldrb` - this
  * compiler would load the whole word and mask it, so only the address is
  * computed in asm and the byte load itself is plain C. */
-struct mover *sub_801B7D8(struct mover *self, s32 distX, s32 distY, u32 dirXArg, u8 dirY, s32 kind)
+struct mover *CreatePlatformMover(struct mover *self, s32 distX, s32 distY, u32 dirXArg, u8 dirY, s32 kind)
 {
     register u8 *dyp asm("r0");
     u8 dy;
@@ -501,7 +501,7 @@ struct mover *sub_801B7D8(struct mover *self, s32 distX, s32 distY, u32 dirXArg,
     dy = *dyp;
 
     sub_800B8C8(self);
-    self->vtable = (struct mover_vtable *)gStaticData_087E4A54;
+    self->vtable = (struct mover_vtable *)gPlatformMoverVtable;
     if ((u32)(kind - 6) <= 1)
     {
         distY = 0;

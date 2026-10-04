@@ -8,7 +8,7 @@ closed and one draft got much closer.
 |---|---|---|---|---|
 | `DrawPauseFraction` (#7) | `src/graphics/settings_menu16.c` | 14 | match (both compilers) | **Closed** |
 | `sub_8001DB4` (#4) | `src/system/link_cable_01db4.c` (split) | 136 | 51 (same size, old_agbcc + `-fno-rerun-loop-opt`) | Draft updated |
-| `sub_802062C` (#31) | `src/graphics/graphics_loading_1feec.c` | 4 | 4 | Note added |
+| `SpawnFlamethrowerLabAssistant` (#31) | `src/graphics/graphics_loading_1feec.c` | 4 | 4 | Note added |
 
 ## `DrawPauseFraction`: closed
 
@@ -100,7 +100,7 @@ Left:
 Without the flag the same draft is 142 halfwords (8 bytes long), even
 with an `asm` use of `j` to block the inner loop's reversal.
 
-## `sub_802062C`: notes only
+## `SpawnFlamethrowerLabAssistant`: notes only
 
 Old_agbcc does do caller-saves. A test function with every callee-saved
 register held puts a pointer in r1 with `str r1, [sp]` after the

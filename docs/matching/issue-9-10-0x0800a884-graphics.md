@@ -8,7 +8,7 @@ family already covered at length by
 
 - `0x0800A884`-`0x0800AFF4` (`sub_800A884` through `DrawPlayer`)
 - `0x0800B3F0` (`InitPlayer`)
-- `0x0800B8DC` onward (`sub_800B8DC`, 546+ lines, and beyond)
+- `0x0800B8DC` onward (`UpdateEnemyCtrl`, 546+ lines, and beyond)
 
 ## Matched - 1 function
 
@@ -282,20 +282,20 @@ family already covered at length by
   `gSineTable` (a per-state table not independently
   confirmed). Left raw for the same reason the issue-9 write-up
   originally gave.
-- **`sub_800B8DC`** (`asm/code_3_2_17.s`, ROM `0x0800B8DC`, 546 lines)
+- **`UpdateEnemyCtrl`** (`asm/code_3_2_17.s`, ROM `0x0800B8DC`, 546 lines)
   - an 18-case jump-table state dispatcher over `self+0x74`, calling
-  **18 entirely unexamined helper functions** (`sub_800C074`,
-  `sub_800C40C`, `sub_800C314`, `sub_800C244`, `sub_800C18C`,
+  **18 entirely unexamined helper functions** (`UpdateEnemyPatrol`,
+  `UpdateEnemyAttackCycle`, `sub_800C314`, `sub_800C244`, `sub_800C18C`,
   `sub_800C1E8`, `sub_800C8F8`, `sub_800C97C`, `sub_800C940`,
-  `sub_800C5D4`, `sub_800C8AC`, `sub_800C8BC`, `sub_800C8CC`,
+  `sub_800C5D4`, `sub_800C8AC`, `sub_800C8BC`, `SetEnemyAnimMode`,
   `sub_800C9C8`, `sub_800BFA8`, plus already-matched
   `_call_via_r1`/`_call_via_r4`/`PlaySfx`) none of which have any
   existing write-up anywhere in this project. This function sits
   immediately before the already-flagged-out-of-scope physics/
   collision subsystem (`sub_800D040` onward, GitHub issues #12/#13 -
   see `docs/matching/issue-12-physics-collision.md`), and its own
-  callees (`sub_800BD48`, `sub_800BFA8`, `sub_800C074`, etc.) are the
-  *same* neighborhood - reconstructing `sub_800B8DC` with real
+  callees (`HitEnemy`, `sub_800BFA8`, `UpdateEnemyPatrol`, etc.) are the
+  *same* neighborhood - reconstructing `UpdateEnemyCtrl` with real
   confidence would require first understanding a dozen-plus completely
   fresh functions this session didn't have room for, each individually
   as large a task as this whole session's other two chunks combined.
@@ -420,7 +420,7 @@ body moved from opaque raw bytes to matched, documented C.
   `GetSpriteFrame`/`sub_80084C4` keyframe-lookup convention this session
   reused directly.
 - `docs/matching/issue-12-physics-collision.md` - the physics/collision
-  subsystem `sub_800B8DC` leads into, already flagged out of scope for
+  subsystem `UpdateEnemyCtrl` leads into, already flagged out of scope for
   the same reasons.
 
 ## Later pass (issue #9/#10 raw-asm pass)

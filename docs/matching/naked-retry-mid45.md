@@ -51,7 +51,7 @@ listed in the table below.
   The ROM places the link-chasing do-while's actor search before its
   link scan, while this compile places the scan first. `while`,
   `for (;;)` and hand-written `goto` loops made no difference.
-- **`sub_802062C`** (`graphics_loading_1feec.c`, #31): the draft is 62
+- **`SpawnFlamethrowerLabAssistant`** (`graphics_loading_1feec.c`, #31): the draft is 62
   halfwords off, unchanged. The ROM keeps `arg3` in r4 and
   `&gEntityFlags` in sb. Pinning either one, or holding the table
   address in a local, made it worse (120+).

@@ -3,10 +3,10 @@
 
 /* GitHub issue #9/#10: `sub_800BFA8`, the last raw function in the
  * `0x0800B8DC`-`0x0800D040` cluster's own `asm/code_3_2_17_bfa8.s`
- * chunk - called only from `sub_800B8DC` state 15 (case 42, right
- * after `sub_800C40C`), per docs/matching/issue-9-10-0x0800b8dc-
+ * chunk - called only from `UpdateEnemyCtrl` state 15 (case 42, right
+ * after `UpdateEnemyAttackCycle`), per docs/matching/issue-9-10-0x0800b8dc-
  * graphics.md. Small "close enough" gate + `self+0x68`-keyed 2-way
- * dispatch, the same `self+0x68` sub-state byte `sub_800C40C`/
+ * dispatch, the same `self+0x68` sub-state byte `UpdateEnemyAttackCycle`/
  * `sub_800C5D4` already key off (docs/rom_map.md's "generic state-
  * machine selector" family, now 8+ confirmed sites).
  *
@@ -14,16 +14,16 @@
  * self->0x48)` - the same "close enough" scalar-check primitive used
  * throughout this cluster, here against the still-unexplained global
  * `gRoomFrameCount` read as a plain word (not the table-base-pointer
- * role `sub_800C40C` uses it in - `docs/rom_map.md` already flags this
+ * role `UpdateEnemyAttackCycle` uses it in - `docs/rom_map.md` already flags this
  * global as multi-shaped across its 3 confirmed sites). When the check
  * passes (result `0`), `self->0x68 == 0`/`4` trigger
- * `sub_800C8CC(self, 2)`/`sub_800C8CC(self, 7)` respectively; anything
+ * `SetEnemyAnimMode(self, 2)`/`SetEnemyAnimMode(self, 7)` respectively; anything
  * else is a no-op.
  *
  * When the check fails, dispatch moves to `owner` (`self->0x70`).  If
  * `owner->0x38` (the cluster's established "enabled" byte) is set,
- * `self->0x68 == 2`/`7` trigger `sub_800C8CC(self, 0)`/
- * `sub_800C8CC(self, 4)`. Otherwise (`owner->0x38 == 0`),
+ * `self->0x68 == 2`/`7` trigger `SetEnemyAnimMode(self, 0)`/
+ * `SetEnemyAnimMode(self, 4)`. Otherwise (`owner->0x38 == 0`),
  * `self->0x68 == 2`/`7` each gate a `sub_800C9C8(0xc, 6, 0, d, 0x400,
  * owner)` call (`d = -0xa` for mode 2, `d = 8` for mode 7) behind an
  * `owner->0x30`/`owner->0x34` magic-constant check (`0xa`/`0` and
@@ -52,12 +52,12 @@
  * make compare` (`La suma coincide`). This closes out
  * `asm/code_3_2_17_bfa8.s` entirely - retired from `ldscript.txt`. */
 
-extern void sub_800C8CC(void *self, s32 mode);
+extern void SetEnemyAnimMode(void *self, s32 mode);
 extern s32 __modsi3(s32 a, s32 b);
 extern void *sub_800C9C8(s32 a, s32 b, s32 c, s32 d, s32 e, void *f);
 
 /* The fields of this cluster's controller object (the class of
- * sub_800B8DC, see actor_part124.c's `struct trigger_ctrl`) read here:
+ * UpdateEnemyCtrl, see actor_part124.c's `struct trigger_ctrl`) read here:
  * `period`/`phase` make the gate below pass once every `period` frames,
  * `mode` is the `self+0x68` sub-state and `owner` the controlled
  * object. */
@@ -83,10 +83,10 @@ void sub_800BFA8(void *selfArg)
     if (divCheck == 0) {
         switch (self->mode) {
         case 0:
-            sub_800C8CC(self, 2);
+            SetEnemyAnimMode(self, 2);
             break;
         case 4:
-            sub_800C8CC(self, 7);
+            SetEnemyAnimMode(self, 7);
             break;
         }
         return;
@@ -96,10 +96,10 @@ void sub_800BFA8(void *selfArg)
     if (owner->unk_38 != 0) {
         switch (self->mode) {
         case 2:
-            sub_800C8CC(self, 0);
+            SetEnemyAnimMode(self, 0);
             break;
         case 7:
-            sub_800C8CC(self, 4);
+            SetEnemyAnimMode(self, 4);
             break;
         }
         return;

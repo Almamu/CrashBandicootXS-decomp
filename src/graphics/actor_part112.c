@@ -6,15 +6,15 @@
  * documented physics/collision subsystem (`sub_800D040`,
  * game_loop6.c). See docs/matching/issue-9-10-0x0800b8dc-graphics.md
  * for the full semantic map this pass produced - the 18-case dispatch
- * table, `sub_800BD48`'s own 22-case table, and field-layout notes for
+ * table, `HitEnemy`'s own 22-case table, and field-layout notes for
  * whoever picks up the cluster's other ~41 functions next.
  *
  * Both functions here are entity-vtable slots (their own thumb-bit-set
  * addresses were found as raw pointer values inside the documented
- * 93-entry `gStaticData_087Exxx` family - `sub_800B8DC` sits at
- * `gStaticData_087E3EE4+0xC`, per docs/rom_map.md's "Found it" section)
- * - NOT caller/callee: `sub_800BD48` is never `bl`'d from `sub_800B8DC`,
- * confirmed by reading `sub_800B8DC`'s own bytes in full. They're two
+ * 93-entry `gStaticData_087Exxx` family - `UpdateEnemyCtrl` sits at
+ * `gEnemyCtrlVtable+0xC`, per docs/rom_map.md's "Found it" section)
+ * - NOT caller/callee: `HitEnemy` is never `bl`'d from `UpdateEnemyCtrl`,
+ * confirmed by reading `UpdateEnemyCtrl`'s own bytes in full. They're two
  * independent per-object-type behavior slots that merely sit next to
  * each other in ROM address order. */
 
@@ -51,19 +51,19 @@ extern s32 gUnknown_030012AC;
  * this investigation's own scope (dispatch shape first, callee
  * semantics are the next phase's job). Signatures are inferred purely
  * from the registers each call site sets. */
-extern void sub_800C074(void *self);
+extern void UpdateEnemyPatrol(void *self);
 extern void sub_800C18C(void *self);
 extern void sub_800C1E8(void *self);
 extern void sub_800C244(void *self);
 extern void sub_800C314(void *self);
-extern void sub_800C40C(void *self);
+extern void UpdateEnemyAttackCycle(void *self);
 extern void sub_800C5D4(void *self);
 extern void sub_800C8F8(void *self);
 extern void sub_800C940(void *self);
 extern void sub_800C97C(void *self);
 extern void *sub_800C9C8(s32 a, s32 b, s32 c, s32 d, s32 e, void *f);
 extern void sub_800BFA8(void *self);
-extern void *sub_800CBD4(void *mem); /* constructor: resets the fresh object and points its +0xC table at gStaticData_087E3FA4 (actor_part117.c) */
+extern void *CreateKnockedEnemyCtrl(void *mem); /* constructor: resets the fresh object and points its +0xC table at gKnockedEnemyCtrlVtable (actor_part117.c) */
 extern void *sub_8026EDC(s32 size);
 extern void *_call_via_r1(void *arg0, void *fn);
 extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
@@ -157,7 +157,7 @@ static inline u32 TargetHit(struct ctrl_target *t)
  * - state 5's height tests read `t->y` into a local first, and the
  *   second test goes through its own `t2`;
  * - state 9 reads each position into a local before storing it. */
-void sub_800B8DC(struct part_ctrl *self)
+void UpdateEnemyCtrl(struct part_ctrl *self)
 {
     switch (self->state) {
     case 1:
@@ -171,7 +171,7 @@ void sub_800B8DC(struct part_ctrl *self)
                 u8 done;
 
                 if (self->target->animDone)
-                    sub_800C8CC(self, 0);
+                    SetEnemyAnimMode(self, 0);
                 done = AnimQuery(self->target);
                 if (done == 0) {
                     struct ctrl_target *t;
@@ -244,21 +244,21 @@ void sub_800B8DC(struct part_ctrl *self)
             MarkGone(self->popup);
             self->popup = 0;
         }
-        sub_800C074(self);
-        sub_800C40C(self);
+        UpdateEnemyPatrol(self);
+        UpdateEnemyAttackCycle(self);
         if (self->mode == 1) {
             struct ctrl_target *t = self->target;
             u32 m = t->mirror.u.x;
 
             t->mirror.u.x = !m;
-            sub_800C8CC(self, 0);
+            SetEnemyAnimMode(self, 0);
             sub_800C8BC(self, 1);
         } else if (self->mode == 6) {
             struct ctrl_target *t = self->target;
             u32 m = t->mirror.u.x;
 
             t->mirror.u.x = !m;
-            sub_800C8CC(self, 4);
+            SetEnemyAnimMode(self, 4);
             {
                 struct ctrl_target *t2 = self->target;
 
@@ -273,16 +273,16 @@ void sub_800B8DC(struct part_ctrl *self)
         sub_800C5D4(self);
         break;
     case 2:
-        sub_800C074(self);
+        UpdateEnemyPatrol(self);
         break;
     case 13:
-        sub_800C074(self);
+        UpdateEnemyPatrol(self);
         /* fallthrough */
     case 4:
-        sub_800C40C(self);
+        UpdateEnemyAttackCycle(self);
         break;
     case 14:
-        sub_800C40C(self);
+        UpdateEnemyAttackCycle(self);
         sub_800C97C(self);
         break;
     case 6:
@@ -330,19 +330,19 @@ void sub_800B8DC(struct part_ctrl *self)
         }
         break;
     case 15:
-        sub_800C074(self);
+        UpdateEnemyPatrol(self);
         /* fallthrough */
     case 10:
         sub_800C1E8(self);
         break;
     case 16:
-        sub_800C40C(self);
+        UpdateEnemyAttackCycle(self);
         sub_800BFA8(self);
         break;
     }
 }
 
-/* `sub_800BD48`'s own state selector (`arg2`, values 1-22) dispatches
+/* `HitEnemy`'s own state selector (`arg2`, values 1-22) dispatches
  * through a *second*, independent jump table after a shared prelude
  * (a `gPlayer+0x88` state-object bit-flip + bitmap-set, or
  * the same on `self+0x88` if that global gate is off). Case values
@@ -351,12 +351,12 @@ void sub_800B8DC(struct part_ctrl *self)
  * (a spawn-and-launch-a-child-object handler) and 0/20/21 (the ambient
  * sound tail) do real, distinct work - 17 of the 22 declared states are
  * pure no-ops sharing one target, the same "mostly-empty dense switch"
- * shape `sub_800B8DC` itself has for states 1/12.
+ * shape `UpdateEnemyCtrl` itself has for states 1/12.
  *
  * `gPlayer+0x88`'s object (when non-null and `state==1`) or
  * `self+0x88`'s own object get the same "flip `+0xc` bit0, bitmap-set
  * `+8`'s halfword id into `gEntityFlags`" treatment already
- * documented in `sub_800B8DC`'s doc comment above and in several
+ * documented in `UpdateEnemyCtrl`'s doc comment above and in several
  * matched sibling functions - a widely-reused "flag a nearby collision
  * bucket active" idiom, not specific to either function.
  *
@@ -439,7 +439,7 @@ static inline void MarkGoneFreshBit(struct ctrl_target *t)
         } while (0);
 }
 
-void sub_800BD48(struct part_ctrl *self, s32 unused, s32 state)
+void HitEnemy(struct part_ctrl *self, s32 unused, s32 state)
 {
     if (((struct player_ring *)gPlayer)->ringLocked == 1) {
         MarkGoneHeld(self->target);
@@ -453,7 +453,7 @@ void sub_800BD48(struct part_ctrl *self, s32 unused, s32 state)
     case 19:
     case 20:
         {
-            struct launch_obj *obj = sub_800CBD4(sub_8026EDC(0x10));
+            struct launch_obj *obj = CreateKnockedEnemyCtrl(sub_8026EDC(0x10));
             struct part_method *m;
             struct ctrl_target *t;
             s32 a, v;

@@ -126,7 +126,7 @@ void sub_800C97C(struct part_ctrl *self)
     target->y = self->baseY + Wave(table, t, self->phase - 0x100) * self->amplitude;
 }
 
-/* `sub_800B8DC` state 18's floating-popup spawner
+/* `UpdateEnemyCtrl` state 18's floating-popup spawner
  * (`sub_800C9C8(0x1D, 0, 0, 0x2B, 0, owner)`, per the Phase 1 doc) -
  * a thin wrapper around the already-matched `sub_8025B0C`
  * (`src/system/game_loop14.c`, the AABB-aware "spawn part near src"

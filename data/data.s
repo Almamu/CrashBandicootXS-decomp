@@ -58,7 +58,7 @@ gSfxTable:
 
 @ gStaticData_0816B93C..gStaticData_0816B944: src/data/entry_set_16b93c.c
 
-@ gStaticData_0816B98C..gStaticData_0816BB4C: src/data/popup_tables_16b98c.c
+@ gEnemyDefaultAnimMap..gSaucerLabAssistantAnimMap: src/data/popup_tables_16b98c.c
 
 @ gStaticData_0816BB6C..gStaticData_0816BF14: src/data/object_tables_16bb6c.c
 

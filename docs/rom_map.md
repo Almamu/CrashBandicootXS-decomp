@@ -384,8 +384,8 @@ different systems, not one:
   the result into a 9-bit position field. Reads as **background/
   viewport alignment** - genuinely graphics/level-layout work, no
   correction needed here.
-- **`sub_801F8DC`** (352 B): allocates an object (`sub_8009ED0`), pulls
-  a shared style/font object (`sub_800CA74`), calls `_call_via_r2` (the
+- **`SpawnPufferfish`** (352 B): allocates an object (`sub_8009ED0`), pulls
+  a shared style/font object (`CreateEnemyCtrl`), calls `_call_via_r2` (the
   matched text-width helper) **twice**, and writes through the same
   low-level OAM setter trio (`sub_80087C0`/`sub_80087B4`/`sub_800872C`)
   every other widget system in this document has used. Not a graphics
@@ -1571,11 +1571,11 @@ bucket to start narrowing it down. Both point the same direction:
   (pixel-to-tile helpers). Reads as a **tile/viewport collision-edge
   test** - `gPlayer` is very likely the camera/viewport
   rectangle, and this is screen- or tile-boundary collision detection.
-- **`sub_800B8DC`** (1132 B): dispatches through an **18-entry jump
+- **`UpdateEnemyCtrl`** (1132 B): dispatches through an **18-entry jump
   table** (`self+0x74` as the state selector, cases 0-17) into
   per-state handler blocks that read a second object pointer
   (`self+0x70`, an "owner"/context reference), call state-transition
-  helpers (`sub_800C8AC`/`sub_800C8BC`/`sub_800C8CC`), and set a
+  helpers (`sub_800C8AC`/`sub_800C8BC`/`SetEnemyAnimMode`), and set a
   fixed-point velocity-shaped constant (`0xFFFF9C00`, i.e. `-100` in the
   same Q8.8 format - a negative/upward value, the shape of an initial
   jump impulse). An 18-state state machine with velocity assignment is
@@ -1597,12 +1597,12 @@ did for `menu_ui`.
 ### Found it: the 93-entry "entity descriptor" family is 93 vtables, not 93 descriptors
 
 Same technique as `menu_ui`'s dispatch table: searched `baserom.gba` for
-`sub_800B8DC`'s and `sub_801AB34`'s own addresses (thumb bit set) as raw
+`UpdateEnemyCtrl`'s and `CheckPlatformContact`'s own addresses (thumb bit set) as raw
 pointer values. Both turned up **inside the already-documented 93-entry
 `gStaticData_087Exxx` family** this document has been calling
 "per-placeable-object-type descriptors" since the `game_loop`
-investigation - `sub_800B8DC` at `gStaticData_087E3EE4+0xC`,
-`sub_801AB34` at `gStaticData_087E49DC+0xC`. Dumping those two records in
+investigation - `UpdateEnemyCtrl` at `gEnemyCtrlVtable+0xC`,
+`CheckPlatformContact` at `gPlatformVtable+0xC`. Dumping those two records in
 full (0x68 and 0x78 bytes respectively) shows neither is a "descriptor"
 in the sense assumed earlier - **every word is either `0` or a valid
 thumb function pointer, alternating `{0, ptr}`** - exactly the same
@@ -1670,10 +1670,10 @@ address - there's no `type` parameter or table-index computation
 anywhere in this chain, just direct, compile-time-fixed calls.
 
 One example worth flagging rather than smoothing over:
-**`sub_800CA60`** sets `self+0xC = &gStaticData_087E3EE4` (the very
+**`DestroyEnemyCtrl`** sets `self+0xC = &gEnemyCtrlVtable` (the very
 vtable already dumped in full above) and then immediately calls
 `sub_800B8A8` - which unconditionally overwrites that same field to
-`&gStaticData_087E3E7C` instead. Read literally, `sub_800CA60`'s own
+`&gStaticData_087E3E7C` instead. Read literally, `DestroyEnemyCtrl`'s own
 write is dead, entirely superseded before the function returns; the only
 surviving effect is whatever `sub_800B8A8` does (assign the *other*
 vtable, and conditionally call `sub_8026ED0`). Not resolved here -
@@ -1769,10 +1769,10 @@ subsection's claim by hand:
 | **Total explained** | **~24.7 KB of 48.2 KB (~51%)** |
 
 Plus several of the core's largest individual functions read end-to-end
-regardless of which bucket they fell in (`sub_801AB98`, `sub_800B8DC`,
+regardless of which bucket they fell in (`sub_801AB98`, `UpdateEnemyCtrl`,
 `sub_80134B8`, `sub_0800D18C`, `sub_8016288`, `sub_8011BD4`,
 `CreateCrate`, `sub_8017AB0`, `InitLevelSelect`, `DrawAffineSpritePieces`,
-`sub_800E08C`, `sub_801C608`, `sub_801B304`, and - this round -
+`sub_800E08C`, `sub_801C608`, `UpdatePlatformMover`, and - this round -
 `BreakCrate`, `sub_800F990`, `DrawPlayer`, `sub_8012420`,
 `sub_801A2A8`, `sub_800A884`, `sub_80159F8`, `sub_8016DDC`; see
 below). The remaining ~9.4 KB has no distinguishing signature found
@@ -1820,7 +1820,7 @@ clamps a halfword at `self+0x3c`, min `0x40` - likely velocity/timer);
 **`sub_801C608`** (868 B, clean priority classifier - calls five
 sibling predicates `sub_802336C`/`sub_8023360`/`sub_8023354`/
 `sub_8023348`/`sub_802333C` in sequence, stores the index of the first
-true one into `self+0x98`); **`sub_801B304`** (800 B, indexes a new
+true one into `self+0x98`); **`UpdatePlatformMover`** (800 B, indexes a new
 unlabeled 3-word-record table `gStaticData_0816C460` by
 `(child_object+8)*3`, conditionally sign-flips the three values,
 writes into a target object's `+0x60`/`+0x48`/`+0x4c`/`+0x50` -
@@ -1871,19 +1871,19 @@ pattern, not exhaustively re-checked against `baserom.gba`).
 
 A further fork read five more functions, with two results that fold
 into an already-counted bucket rather than adding new coverage:
-**`sub_800BD48`** and **`sub_8018E4C`** are both **entity-vtable-
+**`HitEnemy`** and **`sub_8018E4C`** are both **entity-vtable-
 dispatched** (their thumb-bit-set addresses appear as raw pointer
 values inside the documented `gStaticData_087Exxx` 93-entry entity
 family), so their combined ~1.2 KB already belongs to the "Direct
 93-vtable cross-reference" line in the running-total table below, not
-new territory. `sub_800BD48` is still a strong synthesis, though: gated
+new territory. `HitEnemy` is still a strong synthesis, though: gated
 on `gPlayer+0x88`, it either flips a bit in
 `gEntityFlags`'s bitset (the same global feeding the hardware
 window registers via `EndBonusRound`/`SetCheckpointAtPlayer`) plus `PlaySfx(0x5a)`,
 or dispatches a 22-case jump table where cases 18/19 allocate an
 object, draw floating text, and write the **exact same
 `self+0x60`/`+0x48`/`+0x4c`/`+0x50` directional-target field layout**
-`sub_801B304` (actor) and `sub_80159F8` (game_loop core) already
+`UpdatePlatformMover` (actor) and `sub_80159F8` (game_loop core) already
 write - a real synthesis point tying together the window-register
 bitset, the directional-target field convention, the shared
 `RandRange` input-check, and floating-text feedback in one function.
@@ -2110,7 +2110,7 @@ further), `sub_80194E0` reuses the already-confirmed record 53.
 dispenser with idle bounce animation, tagging a child object from
 `gStaticData_0816C634` - not previously catalogued as its own
 behavior, though built entirely from known toolkit pieces (OAM trio,
-per-level table lookup). **`sub_800C074`**/**`sub_800C314`** are a
+per-level table lookup). **`UpdateEnemyPatrol`**/**`sub_800C314`** are a
 5th+ instance of the recurring `self+0x68`/`self+0x74` generic
 state-machine selector pattern already noted across unrelated object
 types. **`PickUpWumpa`** is a randomized-position spawn picker, same
@@ -2178,11 +2178,11 @@ AABB-construction primitive, now reused across 3+ sites (also seen in
 `sub_802DD9C`'s overlap test). `sub_8016C94` is pure input-dispatch
 orchestration. `sub_801A584` extends the master-table spawner family
 with a new record index (34) and a new 93-entry-family address.
-`sub_801B624` is a camera-target-position setter extending
+`MovePlayerWithPlatform` is a camera-target-position setter extending
 `gPlayer`'s known field layout. **Two new data points worth
 flagging**: a recurring, still-unexplained global **`gRoomFrameCount`**
 (3 independent confirmed sites - `sub_8016C94`, `sub_800BFA8`,
-`sub_801B624`) and the confirmed AABB-builder primitive reused widely.
+`MovePlayerWithPlatform`) and the confirmed AABB-builder primitive reused widely.
 
 ### Cross-checked the `UpdateGameFrame`-`MainLoop` cluster: same signature, not an island
 
@@ -2780,12 +2780,12 @@ is the *same* OAM-refresh-plus-text-centering shape as `DrawPowerDialog`
 from the very first `overlay_ui` investigation - the shared "refresh a
 text label's screen position" routine invoked every display-commit
 cycle, most likely the timer/counter HUD text specifically given how
-often it's called. **`sub_800C40C`** (456 B) dispatches on `self+0x68`
-- the *exact* field offset `sub_800B8DC`'s 18-state player-physics
+often it's called. **`UpdateEnemyAttackCycle`** (456 B) dispatches on `self+0x68`
+- the *exact* field offset `UpdateEnemyCtrl`'s 18-state player-physics
 machine also uses as its own state selector - with 6 cases, gating on
 the same `gRoomFrameCount` frame counter the fade/post-fade
 investigation touches. Reads as another per-object state machine, same
-field shape as `sub_800B8DC` but a distinct object/context - evidence
+field shape as `UpdateEnemyCtrl` but a distinct object/context - evidence
 `+0x68` is a **conventional state-field offset reused across several
 different object structs** in this codebase, not proof every function
 using it shares one struct. Neither function ties to a new table or
@@ -2796,13 +2796,13 @@ the `+0x68`/`+0x74`-style state fields), rather than hiding another
 undiscovered subsystem the way the earlier passes through this zone did.
 
 **A parallel fork then found a genuine surprise connecting two
-previously-separate categories.** `sub_800C6A8` (210 B) is an **18-state
+previously-separate categories.** `SetEnemyState` (210 B) is an **18-state
 state machine using `self+0x74`** - structurally identical to
-`sub_800B8DC`'s own 18-state player-physics machine found earlier
+`UpdateEnemyCtrl`'s own 18-state player-physics machine found earlier
 (same comparison shape, same state-count, same field role). But its 26
 callers are **every one of the confirmed 31 `menu_ui` dispatch-table
 functions** (`gStaticData_0816C744`'s entries, `sub_801EF0C` through
-`sub_8020D4C`). That means **`menu_ui`'s text/dialog entries aren't 31
+`SpawnWoodenCrusher`). That means **`menu_ui`'s text/dialog entries aren't 31
 independent one-off constructors** - they're all instances of *one*
 18-state dialog-widget object type, each entry just supplying its own
 text content and layout. The `+0x74`/18-state shape isn't only a
@@ -3002,7 +3002,7 @@ of each entry) increments `2, 3, 4` across the first three entries -
 consistent with, but not confirmed as, a sequential level-number tag.
 
 **Checked whether the region's other heavy-hitters are separate systems
-or shared resources.** `gStaticData_0816B98C` (32 B, the single
+or shared resources.** `gEnemyDefaultAnimMap` (32 B, the single
 most-referenced symbol at 50 hits) traces back to `sub_801EF0C` - the
 *first* of the 31 confirmed `menu_ui` dispatch-table functions. Its
 reference count (50, versus `menu_ui`'s 31 table slots) is consistent
@@ -3030,7 +3030,7 @@ that accumulated value - separate handlers per edge direction/combo
 (`ActivateNitroSwitchCrate`, `ActivateIronSwitchCrate`, `BreakCrateInStack`, `ExplodeCrate`,
 `OpenCheckpointCrate`), each gated by additional state checks (an animation
 "state 6" special-case appears twice, matching a state also checked in
-`sub_800B8DC`'s 18-state machine). Along the way it maintains a small
+`UpdateEnemyCtrl`'s 18-state machine). Along the way it maintains a small
 5-slot ring buffer of "recently touched" object pointers *inside*
 `gPlayer` itself (`+0x94` counter, `+0x98`+ array) - the
 camera/viewport struct isn't just position data, it's also tracking
@@ -3056,7 +3056,7 @@ functions (14.9 KB) form one single connected component** - the same
 confirmed subsystem in this document has shown. Traced its entry point
 up the call chain (`sub_0800D18C` ← `sub_80109A4` ← `sub_8009868` ←
 `sub_800AB9C`) and checked whether the top of that chain is itself
-vtable-dispatched, the same way `sub_800B8DC`/`sub_801AB34` were.
+vtable-dispatched, the same way `UpdateEnemyCtrl`/`CheckPlatformContact` were.
 **It is** - `sub_800AB9C` sits at `gPlayerVtable+0x74`, the last
 slot of a *different* 15-slot entity vtable than either of the two
 already traced. That's the clean confirmation: this physics/collision
@@ -3064,7 +3064,7 @@ code isn't specific to one entity type's behavior, it's **shared
 infrastructure multiple different entity-type vtables call into** -
 edge detection, collision response, and position commit as common
 services, with each type's own vtable slots supplying the
-type-specific behavior on top (state machines like `sub_800B8DC`'s,
+type-specific behavior on top (state machines like `UpdateEnemyCtrl`'s,
 spawn/trigger logic, etc.).
 
 Cross-checked against what's still unexplained in `game_loop`'s core:
@@ -3125,7 +3125,7 @@ happen to route through the same trampoline for unrelated reasons.
 **What still holds**: every one of those findings also included at least
 one function read in full, where the actual calling convention was
 checked by hand (`DrawPowerDialog`'s `(240-width)/2` centering math,
-`sub_8007F78`/`FD8`'s paired width-then-position calls, `sub_801F8DC`'s
+`sub_8007F78`/`FD8`'s paired width-then-position calls, `SpawnPufferfish`'s
 object-allocate-then-measure-twice shape) - those specific reads remain
 valid regardless of the trampoline mechanics, because the surrounding
 code's *behavior* was verified directly, not inferred from the call
@@ -3580,7 +3580,7 @@ double-indirection shape already noted for `gStaticData_0816C460`
 vector record**, conditionally negate all three components based on a
 flag bit, and write them into `self+0x54`/`+0x58`/`+0x5c` or
 `self+0x48`/`+0x4c`/`+0x50` - the same "directional target" convention
-as `sub_801B304`/`sub_80159F8`/`sub_800BD48`. `sub_8017FD4` ties this
+as `UpdatePlatformMover`/`sub_80159F8`/`HitEnemy`. `sub_8017FD4` ties this
 region directly to the 93-entry entity vtable family: stores
 `&gStaticData_087E43C4` into `self+0xc` then calls `sub_8017A78`.
 
@@ -3605,7 +3605,7 @@ twin family may still have a third member elsewhere, just not this one.
 Each of the two confirmed twins checks a specific bit of
 `gLevelState+2` (bit 2 vs bit 3 - one bit per type); if set *and*
 `IsGemPathDone` (matched accessor, `+0xA7`) is false *and*
-`gLevelState+0x8C==0`: plays a type-specific sound (`sub_801A878`,
+`gLevelState+0x8C==0`: plays a type-specific sound (`CreatePlatform`,
 IDs `0xA` vs `9`) via `SetGemPlatform`. If that top-level bit isn't set at
 all, it instead **spawns a full visual effect** - tags the object
 (`self+0x2D=6`), wires an animation-table pointer through
@@ -3659,15 +3659,15 @@ a plain array, no `{0,ptr}` pairing):
 
 | Slot | Function | Behavior |
 |---|---|---|
-| 0 | `sub_8020D4C` (312 B) | New shape: a richer spawn with a **two-line text popup** (two `_call_via_r2` calls), `self+0x20` = header base **`+0xd8`** (a much smaller `gSpriteBankTable` offset than the `0x18C`+ family), picks between two more tables (`gStaticData_0816B98C`/`0816BB2C`) via a `gEntityFlags` bit - not the sound/effect toggle shape. |
-| 1-3 | `sub_80219BC`/`8021998`/`8021974` (36 B each) | Trivial `sub_801A878(x,y,w,h,id)` trampolines, ids 0/1/2 - sound-cue-only. |
+| 0 | `SpawnWoodenCrusher` (312 B) | New shape: a richer spawn with a **two-line text popup** (two `_call_via_r2` calls), `self+0x20` = header base **`+0xd8`** (a much smaller `gSpriteBankTable` offset than the `0x18C`+ family), picks between two more tables (`gEnemyDefaultAnimMap`/`0816BB2C`) via a `gEntityFlags` bit - not the sound/effect toggle shape. |
+| 1-3 | `SpawnLargePlatform`/`8021998`/`8021974` (36 B each) | Trivial `CreatePlatform(x,y,w,h,id)` trampolines, ids 0/1/2 - sound-cue-only. |
 | 4-5 | `SpawnRedGemPlatform`/`SpawnYellowGemPlatform` | Confirmed twin-shape siblings (prior round). |
 | 6-7 | `SpawnGreenGemPlatform`/`SpawnBlueGemPlatform` | Confirmed twin family, sounds `0xA`/`9`, fallback `0xC`, full OAM spawn on the "no bit set" path. |
 | 8 | `sub_8021280` | Confirmed distinct bonus/reward spawner - a real slot, not part of the twins' behavioral pattern. |
-| 9 | `sub_802190C` (~104 B) | Sound-only variant with its own gate (`IsBonusRoundDone(gLevelState)` OR `gLevelState+0x8c`, the twins' own field) picking sound `7`/`5`, closing via a *different* accessor (`SetBonusPlatform` vs. the twins' `SetGemPlatform`). |
-| 10-11 | `sub_80218E8`/`sub_80218C4` (36 B) | More `sub_801A878` trampolines, ids 6/8. |
+| 9 | `SpawnBonusPlatform` (~104 B) | Sound-only variant with its own gate (`IsBonusRoundDone(gLevelState)` OR `gLevelState+0x8c`, the twins' own field) picking sound `7`/`5`, closing via a *different* accessor (`SetBonusPlatform` vs. the twins' `SetGemPlatform`). |
+| 10-11 | `sub_80218E8`/`SpawnRockPlatform` (36 B) | More `CreatePlatform` trampolines, ids 6/8. |
 | 12 | `sub_802209C` (40 B) | New shape: a plain state-write slot, no sound/spawn - packs two args and calls `SetCrateGemPos`, which just stores them into `gLevelState+0x1c0`/`+0x1c4`. |
-| 13-14 | `sub_802183C`/`sub_8021748` (136 B each) | Full-OAM-trio spawners, header offsets **`+0x210`**/**`+0x21C`** - two more `gSpriteBankTable` offsets, extending that family to at least 8 confirmed values (`0xd8`, `0x18C`, `0x1C8`, `0x210`, `0x21C`, `0x228`, `0x234`, `0x240`, `0x27C`). |
+| 13-14 | `SpawnFlame`/`SpawnSeaweed` (136 B each) | Full-OAM-trio spawners, header offsets **`+0x210`**/**`+0x21C`** - two more `gSpriteBankTable` offsets, extending that family to at least 8 confirmed values (`0xd8`, `0x18C`, `0x1C8`, `0x210`, `0x21C`, `0x228`, `0x234`, `0x240`, `0x27C`). |
 
 **Adjacent non-slot sibling**: `sub_80217D0`, sitting between slots 13
 and 14 in ROM, is byte-for-byte identical to slot 14 minus the tag
@@ -3692,9 +3692,9 @@ sprite/effect spawner (`SpawnCrystal`, record index 37, spawns via
 `sub_8008434` instead of the usual `sub_8009ED0`, then the standard
 OAM trio) and, more strikingly, **several more near-identical
 siblings of the two-line-text-popup spawner** (the 15-slot table's
-slot 0, `sub_8020D4C`) - `sub_802062C` (record 23) and `sub_8020788`
+slot 0, `SpawnWoodenCrusher`) - `SpawnFlamethrowerLabAssistant` (record 23) and `sub_8020788`
 (record 22) share its exact shape (`sub_8009ED0` → two `_call_via_r2`
-calls via `sub_800CA74`, a `gEntityFlags`-bit-selected pair of
+calls via `CreateEnemyCtrl`, a `gEntityFlags`-bit-selected pair of
 tables) but each with its own distinct record index and table pair -
 a **family of many near-identical popup spawners**, not one instance.
 
@@ -3818,8 +3818,8 @@ remembers `{table_base, 0x5c}` as a small descriptor, plausibly so
 some other, not-yet-identified consumer can do bounds-checked indexed
 access into the table rather than hardcoding its address everywhere.
 `DestroyEntitySpawner` is plain teardown (frees `gEntitySpawner` via the
-documented `mem_free`). Also resolved: **`sub_801F680`** (the
-per-instance callback `sub_8021A00` installs) is just another instance
+documented `mem_free`). Also resolved: **`SpawnSeal`** (the
+per-instance callback `SpawnSealSpawner` installs) is just another instance
 of the standard `gSpriteBankTable` popup-spawner shape, at a new
 record index (17); **`sub_801B984`** is a standard entity constructor,
 fits the established `+0x18`-pointer convention exactly, no anomalies.
@@ -3859,7 +3859,7 @@ something bigger than any individual function read this session:
 checking three accessors on `gLevelState` and the 36-slot
 per-level table's `+0x4` field before spawning a 100×100 or 40×40
 tagged object (type `0x12`) via `sub_80071E4`/`sub_80070EC`, gated by a
-viewport flag and paired with a `sub_801A878` sound call - a real,
+viewport flag and paired with a `CreatePlatform` sound call - a real,
 distinct function, just not part of the family it was guessed to
 belong to.
 

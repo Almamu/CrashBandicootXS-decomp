@@ -6,7 +6,7 @@ This pass retried the two drafts left by
 | Function | File | Before | Now | Compiler |
 |---|---|---|---|---|
 | `sub_8001DB4` (#4) | `src/system/link_cable_01db4.c` | 51 | match | old_agbcc + `-fno-rerun-loop-opt` |
-| `sub_802062C` (#31) | `src/graphics/graphics_loading_1feec.c` | 4 | match | old_agbcc |
+| `SpawnFlamethrowerLabAssistant` (#31) | `src/graphics/graphics_loading_1feec.c` | 4 | match | old_agbcc |
 
 ## `sub_8001DB4`: closed
 
@@ -62,7 +62,7 @@ last-ten draft are still needed (removing any of them is 39-183
 halfwords). Without `-fno-rerun-loop-opt` the final C is 147 halfwords
 off and 16 bytes long.
 
-## `sub_802062C`: closed
+## `SpawnFlamethrowerLabAssistant`: closed
 
 Two changes on top of the last-ten draft.
 
@@ -76,7 +76,7 @@ reload's choices there, and reload then picks r1:
 register s32 h3 asm("r3");
 ...
 asm("" : "=r"(h3));
-SetPopupGfx(hdr, gStaticData_0816B98C);
+SetEnemyAnimMap(hdr, gEnemyDefaultAnimMap);
 rec2 = LEVEL_RECORD(arg3);
 asm("" : : "r"(h3));
 ```
@@ -131,7 +131,7 @@ These are in the scratchpad's `last11/`:
   taken from `last11/`.
 - `m2.py`/`m3.py`/`m4.py`: the `sub_8001DB4` variants: magic local,
   nibble and tail spellings, and reference-count ablations.
-- `s2.py`/`s7.py`/`s8.py`: the `sub_802062C` variants: holds, argument
+- `s2.py`/`s7.py`/`s8.py`: the `SpawnFlamethrowerLabAssistant` variants: holds, argument
   statement-expressions, and ablations.
 - `cs_scan.py`: flags variants whose output has a `str rN, [sp]` right
   before a `bl`.

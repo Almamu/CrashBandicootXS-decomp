@@ -3,7 +3,7 @@
 /* GitHub issue #9/#10: the three small `(self, mode)`-shaped trigger
  * functions the Phase 1 investigation (docs/matching/issue-9-10-0x0800b8dc-graphics.md)
  * flagged as the highest-value next target in the 0x0800B8DC-0x0800D040
- * cluster - shared by nearly every one of sub_800B8DC's dispatch states
+ * cluster - shared by nearly every one of UpdateEnemyCtrl's dispatch states
  * and by all four of its self+0x68 sub-dispatchers.
  *
  * All three cache `mode` into a `self`-local field and then delegate to
@@ -24,7 +24,7 @@
  * same 8-byte record (word 0 vs word 1) - this resolves two more of the
  * anchor record's pair offsets the Phase 1 doc left open.
  *
- * `sub_800C8CC` is the odd one out: instead of going through
+ * `SetEnemyAnimMode` is the odd one out: instead of going through
  * `sub_800B704`/`sub_800B838`'s global-table-plus-type-index lookup, it
  * indexes `self->0x84` *directly* by `mode` (`((void **)self->0x84)[mode]`)
  * to get its table entry, and reads its own anchor pair at
@@ -65,7 +65,7 @@ void sub_800C8BC(void *selfArg, s32 mode)
  * gStaticData_0816B304 lookup): reads the anchor's part+0x50/+0x54
  * pair for the offset/fn, and indexes `self->0x84`'s own pointer array
  * by `mode` for the table-entry argument. */
-void sub_800C8CC(void *selfArg, s32 mode)
+void SetEnemyAnimMode(void *selfArg, s32 mode)
 {
     u8 *self = selfArg;
     u8 *rec;

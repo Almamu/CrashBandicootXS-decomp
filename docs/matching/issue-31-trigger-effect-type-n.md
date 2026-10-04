@@ -78,7 +78,7 @@ picks up the other three next.
   `if`/`else` merge) - this compiler's own cross-branch tail merging
   then reunites the *shared* call-marshalling tail (the stack-arg store
   plus `arg1`/`arg2`/`a3` register moves) on its own once the source is
-  shaped this way, matching the ROM's single `bl sub_801A878` call site
+  shaped this way, matching the ROM's single `bl CreatePlatform` call site
   exactly (not two separate calls).
 - **The `+0x8c` re-check after the `IsGemPathDone` call re-derefs
   `gLevelState` through the `r9`-pinned address**, not by reusing
@@ -91,11 +91,11 @@ picks up the other three next.
   &= negFive;`) to land the AND's result in the same register (`r0`)
   the ROM's own `ands r0, r1` does - the mask-materialization instruction
   pair itself (`mov r0, #5` / `neg r0, r0`) is the same established
-  negative-constant idiom `sub_801FDEC` uses elsewhere in this cluster.
+  negative-constant idiom `SpawnSquid` uses elsewhere in this cluster.
 
 ## What's still unmatched (11 bytes)
 
-- **Argument-marshalling order for the `sub_801A878`/`sub_8008434`
+- **Argument-marshalling order for the `CreatePlatform`/`sub_8008434`
   calls.** The ROM fills the stack slot (`id`) and `r1`/`r2`
   (`arg1`/`arg2`) *before* `r3` (the hard-pinned `a3`), but this
   compiler always moves `a3`'s already-pinned register into its call
@@ -110,7 +110,7 @@ picks up the other three next.
   into the next point.
 - **Pinning `arg2` to `r7` explicitly reproduces the confirmed
   categorical r7-pin toolchain bug** this project has already documented
-  for `sub_8007114`/`sub_802190C`/`sub_8021280`/`sub_8021480`
+  for `sub_8007114`/`SpawnBonusPlatform`/`sub_8021280`/`sub_8021480`
   (`docs/status/graphics_loading.md`): the compiler silently drops
   `arg2`'s own truncation code *and* `r7`'s save/restore from the
   prologue's push/pop set entirely once it's explicitly pinned, leaving
@@ -211,8 +211,8 @@ bytes regardless of correctness, matching this project's own documented
 caveat):
 
 1. **Argument-marshalling order** for *both* call sites now
-   (`sub_801A878` **and** `sub_8008434` - `SpawnRedGemPlatform` only has the one
-   `sub_801A878` call site affected, since its spawn branch doesn't pass
+   (`CreatePlatform` **and** `sub_8008434` - `SpawnRedGemPlatform` only has the one
+   `CreatePlatform` call site affected, since its spawn branch doesn't pass
    a `a3`-shaped hard-pinned register through the same marshal pattern
    in a way that exposes it... actually it does, structurally identical
    call shape, so this is really the same blocker just visible at two
@@ -255,7 +255,7 @@ third-pass doc comment in the source ("gcc never reproduced this one's
 shifted r5/r6/r7 dx/dy/dz register roles either"), predating even this
 issue's round-3/round-4 passes. `arg3`'s target register, r7, is the
 project's confirmed-categorically-buggy pin target
-(`docs/matching.md`, `sub_8007114`/`sub_802190C`/`sub_8021280`/
+(`docs/matching.md`, `sub_8007114`/`SpawnBonusPlatform`/`sub_8021280`/
 `sub_8021480`) - explicitly off-limits per this project's standing
 rule, so `arg3` is left unpinned (a plain `u16 a3 = arg3;` local) while
 `arg1`/`arg2` are pinned to r5/r6 (neither is r7, both safe). Several
@@ -271,7 +271,7 @@ alone reaches r7 for `a3` without spilling:
   r7 survives the call on its own and spills `a3` to a stack slot
   instead (`sub sp, #8` instead of the ROM's `sub sp, #4`, plus a `str
   r7, [sp, #4]` right after the truncation and a `ldr r3, [sp, #4]`
-  right before the `sub_801A878` call) - even though r7 is
+  right before the `CreatePlatform` call) - even though r7 is
   callee-saved and any correctly-behaving external function *must*
   preserve it across a call. This makes the reconstruction 4 bytes
   longer than the ROM (264 vs. 260), on top of the same
@@ -306,7 +306,7 @@ alone reaches r7 for `a3` without spilling:
   version has, even though this shape fixes the argument register
   consistency issue.
 - **A fully hand-spelled `asm volatile` marshal-through-call block for
-  both `sub_801A878` and `sub_8008434`**, treating r7 purely as
+  both `CreatePlatform` and `sub_8008434`**, treating r7 purely as
   raw-text-only scratch space (never bound to any C variable via
   `register T x asm("r7")`, specifically to avoid the categorical r7-pin
   bug, only ever named literally inside `asm volatile` text and listed
@@ -355,14 +355,14 @@ rewritten as the obvious C. It follows `graphics_loading_1ea5c.c`'s
 conventions: `struct gfx_part` from `include/gfx_part.h`, and a `u8 tag`
 local set before the `sub_8008434` call.
 
-Only one thing needed care. The sound arm is two separate `sub_801A878`
+Only one thing needed care. The sound arm is two separate `CreatePlatform`
 calls, one per sound id:
 
 ```c
 if (IsGemPathDone(gLevelState) || gLevelState->unk_8C)
-    snd = sub_801A878(a0, a1, a2, a3, 0xC);
+    snd = CreatePlatform(a0, a1, a2, a3, 0xC);
 else
-    snd = sub_801A878(a0, a1, a2, a3, 0xB);
+    snd = CreatePlatform(a0, a1, a2, a3, 0xB);
 ```
 
 The ROM repeats the `a0` truncation (`lsl`/`lsr`) and the id load in

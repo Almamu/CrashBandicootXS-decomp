@@ -4,22 +4,22 @@ All 25 functions of the former `asm/code_3_2_17_188d0_1a794.s` are now in C
 (the file is deleted). **24 are real C, byte-exact; 1 is parked as a NAKED
 transcription** (`sub_801AB98`) with its near-miss C reconstruction kept
 under `#if NON_MATCHING`. Verified with a clean `make compare`
-(`crashbandicootxs.gba: OK`). `sub_801A878` was NAKED too until the
+(`crashbandicootxs.gba: OK`). `CreatePlatform` was NAKED too until the
 old_agbcc retry (docs/matching/old-agbcc-retry.md): its object is now
 built with `tools/agbcc/bin/old_agbcc` (Makefile `OLD_AGBCC_OBJS`), under
 which it matches with all of its register pins removed.
 
 The range is split by address into five objects so that
 `tools/report_units.py` can track the NAKED function as unmatched (and so
-`sub_801A878` could move to old_agbcc on its own):
+`CreatePlatform` could move to old_agbcc on its own):
 
 | file | functions | state |
 |---|---|---|
 | `src/graphics/actor_part_1a794.c` | `sub_801A794`-`sub_801A874` (6) | matched |
-| `src/graphics/actor_part_1a878.c` | `sub_801A878` | matched (old_agbcc) |
-| `src/graphics/actor_part_1ab34.c` | `sub_801AB34` | matched |
+| `src/graphics/actor_part_1a878.c` | `CreatePlatform` | matched (old_agbcc) |
+| `src/graphics/actor_part_1ab34.c` | `CheckPlatformContact` | matched |
 | `src/graphics/actor_part_1ab98.c` | `sub_801AB98` | NAKED (C under NON_MATCHING) |
-| `src/graphics/actor_part_1b208.c` | `sub_801B208`-`sub_801B854` (16) | matched |
+| `src/graphics/actor_part_1b208.c` | `UpdatePlatform`-`sub_801B854` (16) | matched |
 
 Shared structs, externs and the virtual-call macros live in
 `include/gobj_1a794.h`.
@@ -39,8 +39,8 @@ r1/r2/r3/r4" thunks), like issue #21's `input_ctrl`.
   `sub_801A7AC` is `sub_8017F14`'s mirror-gated velocity copy, but taking
   its record index straight from `gStaticData_0816C418` (8-byte `{a, b}`
   pairs into the 12-byte `gStaticData_0816C3B8` vectors).
-- **`struct gobj`** (0x80 bytes, method table `gStaticData_087E49DC`):
-  `sub_801A878(id, x, y, index, kind)` allocates and constructs one (it
+- **`struct gobj`** (0x80 bytes, method table `gPlatformVtable`):
+  `CreatePlatform(id, x, y, index, kind)` allocates and constructs one (it
   inlines the constructor `sub_801B2E4`), looks its spawn record up through
   the level header at `*gEntityFlags` (u16 offset table at +8, records
   at +0xC), derives `type` (+0x78) from the record or forces it from `kind`
@@ -48,7 +48,7 @@ r1/r2/r3/r4" thunks), like issue #21's `input_ctrl`.
   attaches a `struct mover` (type 6 uses `sub_801961C` instead when
   `sub_80233B4(gLevelState) == 1`). Callers: `trigger_effect.c`,
   `graphics_loading_21280.c`, `graphics_loading_21668.c`.
-  - `sub_801AB34` (+0x0C) gates `sub_801AB98` on the player
+  - `CheckPlatformContact` (+0x0C) gates `sub_801AB98` on the player
     (`gPlayer`) being active and within 0x7FFF on both axes.
   - `sub_801AB98` resolves player-vs-object contact: two AABBs from
     `sub_8007B98`, overlap via `sub_8001688`, then a classification into
@@ -60,18 +60,18 @@ r1/r2/r3/r4" thunks), like issue #21's `input_ctrl`.
     depending on the object type (the 3/4 variants gated on
     `IsBonusRoundDone`/`IsGemPathDone` and `gLevelState+0x8C`). Without
     overlap it only refreshes `carried` or clears the mover's `active`.
-  - `sub_801B208` (+0x1C) steps or destroys the object and forwards to its
+  - `UpdatePlatform` (+0x1C) steps or destroys the object and forwards to its
     mover; `sub_801B29C`/`sub_801B2A8` read/write bit 4 of +0x0D
     (`sub_801B29C` is called from `game_loop56.c`); `sub_801B2D8` clears
-    bit 6 of +0x0C; `sub_801B2C4` is the destructor.
-- **`struct mover`** (0x38 bytes, method table `gStaticData_087E4A54`,
-  constructor `sub_801B7D8`, destructor `sub_801B7C4`): an oscillating
-  platform driver. `sub_801B304` (+0x0C) starts each axis with velocity
+    bit 6 of +0x0C; `DestroyPlatform` is the destructor.
+- **`struct mover`** (0x38 bytes, method table `gPlatformMoverVtable`,
+  constructor `CreatePlatformMover`, destructor `DestroyPlatformMover`): an oscillating
+  platform driver. `UpdatePlatformMover` (+0x0C) starts each axis with velocity
   record 1 of its `set` (12-byte records in `gStaticData_0816C460`,
   sign-flipped by `dirX`/`dirY`), accumulates the distance travelled and
   reverses once it exceeds `rangeX`/`rangeY` (twice the constructor's
   distance); kinds 5/6/7 add timed behaviour (see the function comment).
-  `sub_801B624` drags the player along by the owner's per-frame
+  `MovePlayerWithPlatform` drags the player along by the owner's per-frame
   displacement while `active`. `sub_801B77C`/`sub_801B7A0` (+0x64/+0x5C)
   resolve a record and tail-call `sub_800B6D0`/`sub_800B7B0`.
 
@@ -90,12 +90,12 @@ ROM): `sub_801A870`, `sub_801A874`, `sub_801B2E4` (inlined instead),
   (`movs r2, #0x11; negs`) right after using `1` or `0xF` in the same
   register, reload rewrites it as `subs r2, #0x12`. An empty
   `asm("" : "+r"(one))` on the earlier constant hides its value.
-- **`sub_801B7D8`'s stack-passed byte**: the ROM reads it with
+- **`CreatePlatformMover`'s stack-passed byte**: the ROM reads it with
   `add r0, sp, #0x18; ldrb r7, [r0]`. Only the address is computed in asm;
   the byte load is C.
-- **`sub_801B624`** writes `p->unk_68` through `&p->carried - 0x44` (the
+- **`MovePlayerWithPlatform`** writes `p->unk_68` through `&p->carried - 0x44` (the
   ROM reuses that address register), written that way explicitly.
-- **`sub_801B304`**: gcc's `abs()` expands to a branch here; the ROM's
+- **`UpdatePlatformMover`**: gcc's `abs()` expands to a branch here; the ROM's
   `asr/eor/sub` is the in-place `ABS32` macro (as in `actor_part50.c`).
   The "mark actor gone" bitmap update is `sub_80178EC`'s signed-division
   idiom. The rest is register pins (commented in the source).
@@ -104,9 +104,9 @@ ROM): `sub_801A870`, `sub_801A874`, `sub_801B2E4` (inlined instead),
 - **`sub_801B29C`**: `(flags2 >> 4) & 1` (a bitfield read gives
   `lsl #27; lsr #31`).
 
-## Parked: `sub_801AB98` (and, until the old_agbcc retry, `sub_801A878`)
+## Parked: `sub_801AB98` (and, until the old_agbcc retry, `CreatePlatform`)
 
-**`sub_801A878` is matched now.** Built with old_agbcc, the reload
+**`CreatePlatform` is matched now.** Built with old_agbcc, the reload
 rotation described below comes out as in the ROM once every register pin
 and the `rec` barrier are removed (with them left in, old_agbcc is still
 off - 696 vs 700 bytes, first difference at +0x60). The spawn-record lookup is plain
@@ -139,13 +139,13 @@ a register decided by how many reloads came before it in the function.
   rotation. Unpinned, `px`, `self`, `result` and `ty` also land in the
   ROM's registers except `px`, which needs a pin plus a pinned r0 load
   temp.
-- `sub_801A878`: 24 instructions still differ, all reload register choices
+- `CreatePlatform`: 24 instructions still differ, all reload register choices
   (the spawn record lives in r8 and each use copies it to a low register).
   An exhaustive search over all 4096 on/off combinations of the 12
   register pins it uses (script-driven) bottomed out at 24; pinning
   individual copy sites moves the rotation elsewhere. This function also
   needs a hand-built outgoing-argument block for the `strb` of
-  `sub_801B7D8`'s 5th argument (this compiler always stores stack
+  `CreatePlatformMover`'s 5th argument (this compiler always stores stack
   arguments as words): stores through `volatile` casts into a local struct
   at sp+0 and a call through a 4-argument function-pointer view. The
   spawn-record lookup needs `rec` to stay in the index register

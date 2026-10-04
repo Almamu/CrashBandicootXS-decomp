@@ -5,7 +5,7 @@ Dedicated deep-investigation session against two functions flagged in
 `sub_800AAEC` (0x0800AAEC, [issue-9-10-0x0800a884-graphics.md](./issue-9-10-0x0800a884-graphics.md)'s
 own summary already called this "mechanically clear ... blocked on
 [its callee]") and `sub_800CD00` (0x0800CD00, inside the still-raw
-`sub_800B8DC` onward span), which `sub_800AAEC` is the only caller of.
+`UpdateEnemyCtrl` onward span), which `sub_800AAEC` is the only caller of.
 `docs/rom_map.md`'s "A companion function" passage (its own reads
 around line 2782) had already worked out `sub_800CD00`'s field-offset
 shape in a later pass, but that finding was never carried into a
