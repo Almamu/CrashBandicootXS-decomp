@@ -146,9 +146,9 @@ struct ac2c_self {
     u8 unk_0D[0x37];
     struct ac2c_listener *ctrl;     // 0x44 - the room kind's controller (PlayRoom)
     u8 unk_48[0xc];
-    s32 unk_54;                 // 0x54
-    s32 unk_58;                 // 0x58
-    s32 unk_5c;                 // 0x5C
+    s32 rampYStart;                 // 0x54
+    s32 rampYStep;                 // 0x58
+    s32 rampYTarget;                 // 0x5C
     u8 unk_60[0x2c];
     u32 deadline;               // 0x8C
     u8 unk_90[0x20];
@@ -345,9 +345,9 @@ void PlayerHandleEvent(struct ac2c_self *self, s32 a, s32 code, s32 c)
         break;
     case 23:
     case 24:
-        self->unk_54 = 0;
-        self->unk_58 = 0;
-        self->unk_5c = 0;
+        self->rampYStart = 0;
+        self->rampYStep = 0;
+        self->rampYTarget = 0;
         NOTIFY(self, a, code, c);
         break;
     case 12:
@@ -356,9 +356,9 @@ void PlayerHandleEvent(struct ac2c_self *self, s32 a, s32 code, s32 c)
     case 13:
     case 14:
     case 25:
-        self->unk_54 = 0;
-        self->unk_58 = 0;
-        self->unk_5c = 0;
+        self->rampYStart = 0;
+        self->rampYStep = 0;
+        self->rampYTarget = 0;
         NOTIFY(self, a, code, c);
         break;
     }

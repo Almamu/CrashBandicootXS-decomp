@@ -75,7 +75,7 @@ too, continuing issue #12's precedent.
 - **`IsCrateKindBreakable`** (`src/system/game_loop25.c`) - trivial
   `gCrateKindBreakable[idx]` byte-table lookup; its first parameter is
   unused in the ROM.
-- **`sub_8010A00`** (`src/system/game_loop26.c`) - extracts `self+0x48`
+- **`GetSlotCrateStage`** (`src/system/game_loop26.c`) - extracts `self+0x48`
   bits 6-7. Needed a trailing `asm(".align 2, 0")` - the function body
   is 10 bytes (not 4-aligned), and the ROM pads the 2-byte gap before
   the next function with a zero halfword rather than the assembler's
@@ -125,7 +125,7 @@ fragment (unchanged name, everything before `UpdateCrateFall`) and six new
 untouched-fragment files named by the lower 5 hex digits of their first
 function's address (`..._fc70.s`, `..._ff0c.s`, `..._1071c.s`,
 `..._1089c.s`, `..._10914.s`, `..._10a0c.s` - the last one is the tail,
-everything from `sub_8010A0C` onward, outside this issue's range),
+everything from `DecrementSlotCrateStage` onward, outside this issue's range),
 interleaved with the five new matched `.c` files in `ldscript.txt`'s
 link order.
 

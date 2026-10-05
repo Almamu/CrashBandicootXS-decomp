@@ -209,11 +209,11 @@ void *CreateCrate(u16 id, u16 x, u16 y, u16 slot, u8 type)
         {
             flagged = 1;
             if (*(u16 *)(rec + 4) == 0x1b)
-                self->unk_54 = 0x15;
+                self->trialKind = 0x15;
             else
-                self->unk_54 = *(s16 *)(rec + 4);
+                self->trialKind = *(s16 *)(rec + 4);
             if (*((u8 *)gLevelState + 0x8c))
-                type = self->unk_54 - 0x15;
+                type = self->trialKind - 0x15;
         }
     }
     switch (type)
@@ -222,7 +222,7 @@ void *CreateCrate(u16 id, u16 x, u16 y, u16 slot, u8 type)
         PhysSetTag(self, 0x1f);
         break;
     case 1:
-        self->unk_50 = (u32)(PLACEMENT(slot)[0] << 25) >> 31;
+        self->paramA = (u32)(PLACEMENT(slot)[0] << 25) >> 31;
         PhysSetTag(self, 0x1a);
         break;
     case 2:
@@ -233,9 +233,9 @@ void *CreateCrate(u16 id, u16 x, u16 y, u16 slot, u8 type)
             u8 *rec = PLACEMENT(slot);
 
             PhysSetTag(self, 3);
-            self->unk_50 = rec[6];
-            self->unk_51 = rec[7];
-            self->unk_4C = rec[8];
+            self->paramA = rec[6];
+            self->paramB = rec[7];
+            self->fallSpeed = rec[8];
         }
         break;
     case 4:
@@ -246,9 +246,9 @@ void *CreateCrate(u16 id, u16 x, u16 y, u16 slot, u8 type)
             u8 *rec = PLACEMENT(slot);
 
             PhysSetTag(self, 0x15);
-            self->unk_50 = rec[6];
-            self->unk_51 = rec[7];
-            self->u48.n = *(s16 *)(rec + 8);
+            self->paramA = rec[6];
+            self->paramB = rec[7];
+            self->u48.solidKind = *(s16 *)(rec + 8);
         }
         break;
     case 6:
@@ -264,7 +264,7 @@ void *CreateCrate(u16 id, u16 x, u16 y, u16 slot, u8 type)
         PhysSetTag(self, 0x1c);
         if (!flagged)
         {
-            self->unk_54 = 0x15;
+            self->trialKind = 0x15;
             if (*((u8 *)gLevelState + 0x8c))
                 type = 0;
         }
@@ -283,11 +283,11 @@ void *CreateCrate(u16 id, u16 x, u16 y, u16 slot, u8 type)
                 asm("" : "=r"(zero) : "0"(0));
                 PhysSetTag(self, zero);
             }
-            self->unk_51 = rec[6];
+            self->paramB = rec[6];
         }
         break;
     case 12:
-        self->u48.n = -0x2a;
+        self->u48.bounceTimer = -0x2a;
         PhysSetTag(self, 0x19);
         break;
     case 13:
@@ -305,22 +305,22 @@ void *CreateCrate(u16 id, u16 x, u16 y, u16 slot, u8 type)
 
                 GetPaletteSlot(gPaletteCache, ar->paletteId);
             }
-            self->u48.n &= 0x3f;
-            self->u48.n &= 0xf8;
+            self->u48.slotState &= 0x3f;
+            self->u48.slotState &= 0xf8;
             PhysSetTag(self, 7);
             {
-                u32 idx = (u32)(self->u48.n & 0x38) >> 3;
+                u32 idx = (u32)(self->u48.slotState & 0x38) >> 3;
 
                 self->timer = gSlotCrateTimers[idx];
             }
-            self->unk_51 = rec[6];
-            self->unk_50 = 0;
+            self->paramB = rec[6];
+            self->paramA = 0;
             if (rec[1] & 2)
-                self->unk_50 = 1;
+                self->paramA = 1;
             if (rec[1] & 4)
-                self->unk_50 |= 2;
+                self->paramA |= 2;
             if (rec[1] & 8)
-                self->unk_50 |= 4;
+                self->paramA |= 4;
         }
         break;
     case 16:

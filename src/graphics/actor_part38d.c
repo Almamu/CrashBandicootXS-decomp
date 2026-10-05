@@ -102,7 +102,7 @@ s32 ActionCtrlSetTargetAnim(void *arg0, void *other, s32 mode)
 {
     struct act_part *player = gPlayer;
 
-    if (player->unk_100 == 0) {
+    if (player->slippery == 0) {
         goto tail;
     }
     if (mode == 0x12) {

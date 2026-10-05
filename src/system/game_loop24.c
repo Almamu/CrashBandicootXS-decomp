@@ -31,9 +31,9 @@ void ConvertCratesForTimeTrial(void)
             void *fn = rec->fn;
 
             if (_call_via_r1(addr, fn) == 3) {
-                s32 v = e->unk_54;
+                s32 v = e->trialKind;
                 if (v != -1) {
-                    e->u48.n = (u8)v;
+                    e->u48.solidKind = (u8)v;
                     SolidifyOutlineCrate(e);
                 }
             }

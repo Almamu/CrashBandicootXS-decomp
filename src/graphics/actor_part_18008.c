@@ -70,11 +70,11 @@ struct hop_part
     u8 unk_39[0xB];
     struct hop_vobj *ctrl;        // 0x44
     u8 unk_48[0xC];
-    s32 unk_54;                   // 0x54
-    s32 unk_58;                   // 0x58
-    s32 unk_5C;                   // 0x5C
+    s32 rampYStart;                   // 0x54
+    s32 rampYStep;                   // 0x58
+    s32 rampYTarget;                   // 0x5C
     u8 unk_60[4];
-    s32 unk_64;                   // 0x64
+    s32 speedY;                   // 0x64
 };
 
 struct hop_player
@@ -615,10 +615,10 @@ void SpawnTinyFallingLeaves(struct tiny_tiger *self, struct hop_part *part, s32 
         /* the ROM materializes 0x80 before re-reading `zero` */
         s32 k = 0x80;
 
-        p->unk_64 = zero;
-        p->unk_54 = zero;
-        p->unk_58 = k;
-        p->unk_5C = k;
+        p->speedY = zero;
+        p->rampYStart = zero;
+        p->rampYStep = k;
+        p->rampYTarget = k;
     }
     {
         s32 x0 = part->x;

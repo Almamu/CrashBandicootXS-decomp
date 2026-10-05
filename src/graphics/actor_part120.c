@@ -87,9 +87,9 @@ void UpdateEnemyAttackCycle(struct part_ctrl *self)
 {
     switch (self->mode) {
     case 0:
-        if (self->unk_34 > 0
-            && __modsi3(gRoomFrameCount + (self->unk_30 + self->unk_34) * 2 - self->unk_38 - self->unk_30,
-                           self->unk_30 + self->unk_34) == 0) {
+        if (self->attackTime > 0
+            && __modsi3(gRoomFrameCount + (self->idleTime + self->attackTime) * 2 - self->cycleOffset - self->idleTime,
+                           self->idleTime + self->attackTime) == 0) {
             if (self->anims[3] != 8)
                 SetEnemyAnimMode(self, 3);
             else
@@ -102,9 +102,9 @@ void UpdateEnemyAttackCycle(struct part_ctrl *self)
         }
         break;
     case 4:
-        if (self->unk_30 > 0
-            && __modsi3(gRoomFrameCount + self->unk_30 + self->unk_34 - self->unk_38,
-                           self->unk_30 + self->unk_34) == 0) {
+        if (self->idleTime > 0
+            && __modsi3(gRoomFrameCount + self->idleTime + self->attackTime - self->cycleOffset,
+                           self->idleTime + self->attackTime) == 0) {
             if (self->anims[5] != 8)
                 SetEnemyAnimMode(self, 5);
             else
@@ -170,14 +170,14 @@ void UpdateEnemyTriggerBox(struct part_ctrl *self)
                 s32 a = 0x300, b = 0x20, c;
 
                 target->speedY = a;
-                target->velB[0] = a;
-                target->velB[1] = b;
-                target->velB[2] = mode;
+                target->rampY[0] = a;
+                target->rampY[1] = b;
+                target->rampY[2] = mode;
                 c = -0x200;
                 target->speedX = mode;
-                target->velA[0] = mode;
-                target->velA[1] = b;
-                target->velA[2] = c;
+                target->rampX[0] = mode;
+                target->rampX[1] = b;
+                target->rampX[2] = c;
             }
         }
         break;

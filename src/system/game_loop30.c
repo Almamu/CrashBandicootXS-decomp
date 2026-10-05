@@ -2,7 +2,7 @@
 
 /* GitHub issue #13: 0x0800FC70-0x08010A0C, continuing the physics/
  * collision subsystem (see game_loop17.c's header comment and
- * docs/matching/issue-13-graphics-fc70.md). `sub_8010A00` right after
+ * docs/matching/issue-13-graphics-fc70.md). `GetSlotCrateStage` right after
  * this file is already matched in game_loop26.c. `self` throughout
  * this file is the same actor/"collision box" object every other
  * function in this subsystem operates on - offsets `0`/`4`/`0xc` here

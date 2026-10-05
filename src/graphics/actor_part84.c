@@ -120,20 +120,20 @@ static inline u8 *PartBytePtr(struct act_part *part, s32 offset)
     return (u8 *)part + offset;
 }
 
-/* Clears `self+0x34`'s reentrancy flag once `gKeys`'s bit
- * `0x100` clears. If `part+0x100` (the part's own "active" flag)
- * changed since last frame, re-runs `sub_8012238`. Then, using
+/* Clears `slamBlocked` (+0x34) once R (`gKeys` bit `0x100`) is
+ * released. If `part->slippery` (+0x100) changed since last frame
+ * (`prevSlippery`), re-runs `sub_8012238`. Then, using
  * `gLevelLayers`'s sub-object's `+0x14` Q8 field as a screen-space
  * anchor, checks `part->field_04` against two thresholds: past the near
  * one, resets `part`'s `+0x48`/`+0x4c`/`+0x50` velocity-target fields
- * (and `+0x60` unless still active); past the far one, additionally
+ * (and `+0x60` unless slippery); past the far one, additionally
  * clears `part+0x8c` and fires a state-close call (`SetMaskLevel`) plus
  * `_call_via_r4` through the `self+0xc` manager's `+0x10`/`+0x14`
- * trampoline slot. Decrements `self+0x26` if set. While `self+0x2b`'s
+ * trampoline slot. Decrements `self+0x26` if set. While `bumpTimer`'s (+0x2b)
  * countdown is running and `part+0x94 <= 1`, ticks it down and, on
  * reaching zero, resets the trio's first half (`+0x31`/`+0x2f`/`+0x27`/
  * `+0x2c`) if `+0x27` was already clear, then always clears the
- * player's `+0x90` byte. Looks up `self+8`'s type in
+ * player's `bumped` (+0x90). Looks up `self+8`'s type in
  * `gActionCtrlStateTable`'s 8-byte-per-slot table - a `{s16 baseOffset;
  * s16 count; s16 recordOffset; s32 fallback}` record - to build the
  * arguments for one `_call_via_r3` trampoline call. If `part+0x68` bit 3
@@ -171,15 +171,15 @@ void UpdateActionCtrl(struct act *self)
 {
     u32 in = gKeys;
 
-    if (self->unk_34 != 0) {
+    if (self->slamBlocked != 0) {
         u16 held = in & K100();
 
         if (held == 0)
-            self->unk_34 = held;
+            self->slamBlocked = held;
     }
-    if (self->unk_2A[4] != PartByte(self->part, 0x100))
+    if (self->prevSlippery != PartByte(self->part, 0x100))
         sub_8012238(self);
-    self->unk_2A[4] = PartByte(self->part, 0x100);
+    self->prevSlippery = PartByte(self->part, 0x100);
     {
         struct act_part *part = self->part;
         s32 py = part->y;
@@ -191,9 +191,9 @@ void UpdateActionCtrl(struct act *self)
 
                 if (PartByte(q, 0x100) == 0)
                     q->speedX = 0;
-                q->velAX = 0;
-                q->velAY = 0;
-                q->velAZ = 0;
+                q->rampXStart = 0;
+                q->rampXStep = 0;
+                q->rampXTarget = 0;
             }
             {
                 struct act_part *r = self->part;
@@ -214,18 +214,18 @@ void UpdateActionCtrl(struct act *self)
     if (self->spinCooldown)
         self->spinCooldown--;
     {
-        u8 t = self->unk_2A[1];
+        u8 t = self->bumpTimer;
         s32 v94;
 
         if (t != 0 && (v94 = self->part->listCount, v94 <= 1)) {
-            u8 left = --self->unk_2A[1];
+            u8 left = --self->bumpTimer;
 
             if (left == 0) {
                 if (self->motionX == 0) {
-                    ActQueue27(self, left, self->unk_2A[2]);
-                    self->unk_2A[2] = left;
+                    ActQueue27(self, left, self->bumpedMotionX);
+                    self->bumpedMotionX = left;
                 }
-                gPlayer->unk_90 = left;
+                gPlayer->bumped = left;
             }
         }
     }
@@ -270,9 +270,9 @@ void UpdateActionCtrl(struct act *self)
         if (top == 0) {
             if (PartByte(part, 0x100) == 0)
                 part->speedX = top;
-            part->velAX = top;
-            part->velAY = top;
-            part->velAZ = top;
+            part->rampXStart = top;
+            part->rampXStep = top;
+            part->rampXTarget = top;
         }
     }
     switch (self->state) {
@@ -424,13 +424,13 @@ void HandleActionCtrlAirInput(struct act *self)
     }
 done:
     if (self->state != 0xE && self->state != 0xB && near && (in & 0x100)) {
-        u8 busy = self->unk_34;
+        u8 busy = self->slamBlocked;
 
         if (busy == 0) {
             u8 tag;
 
             ACT_PART_FLAGS0D(self->part) |= 1;
-            tag = self->unk_2A[3];
+            tag = self->prevState;
             if (tag == 9 || self->state == 9) {
                 ACT_CALL1(self, m20, 0xA);
                 self->motionXKeepSpeed = busy;
@@ -438,7 +438,7 @@ done:
                 self->motionX = busy;
                 ActTrio28(self, busy, 1, 0x16);
                 ActionCtrlStateFlipBodySlamStart(self);
-                self->unk_2A[0] = busy;
+                self->unk_2A = busy;
                 return;
             }
             if (tag == 7) {
@@ -467,7 +467,7 @@ done:
             } else
                 ActSetNext27P(self, slot, 7);
         }
-        if (gPlayer->unk_100)
+        if (gPlayer->slippery)
             self->motionXKeepSpeed = 1;
     }
 }

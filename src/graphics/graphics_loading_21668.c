@@ -83,7 +83,7 @@ void SpawnMegaMix(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     SetFrameNibble(part, GetPaletteSlot(gPaletteCache,
         ((struct anim_table_21668 *)part->anim)->records->paletteId));
     part->flipX = 0;
-    part->unk_28_5 = 0;
+    part->flipY = 0;
     hdr = CreateMegaMixCtrl(OperatorNew(0x24));
     part->hdr = hdr;
     POPUP_ATTACH(hdr, part);

@@ -157,7 +157,7 @@ void ActionCtrlStateAirborne(struct act *self)
             if (self->state != 0x1A)
             {
                 ActOrFlags0D(self->part, 1);
-                self->unk_34 = 0;
+                self->slamBlocked = 0;
                 if (self->state != 0xE)
                 {
                     struct act_part *part;
@@ -192,7 +192,7 @@ void ActionCtrlStateAirborne(struct act *self)
             s32 st;
 
             ACT_PART_FLAGS0D(self->part) |= 1;
-            self->unk_34 = bit4;
+            self->slamBlocked = bit4;
             st = self->state;
             if ((u32)(st - 0x18) <= 1)
             {

@@ -96,7 +96,7 @@ function's epilogue):
 
 - `self` = `gPlayer + 0x108` (dereferencing the pointer
   variable first) - the *player's* own instance of this queue. This is
-  the exact same base address `sub_8010A0C`-`sub_8010B68`
+  the exact same base address `DecrementSlotCrateStage`-`GetCrateTrialKind`
   (`game_loop27.c`) and `ResolveCollisionCandidates` (`game_loop28.c`) already operate
   on as `self` for their own "collision box" record fields
   (`self+0x44`-`self+0x58`) - i.e. the queue this function appends to is
@@ -212,7 +212,7 @@ branch-by-branch this pass, per Phase 1's scope).
 `0x08011248`-`0x08011398`) have zero existing cross-references** and
 are tightly clustered (all within ~0x150 bytes, several under 32 bytes)
 - the same shape as the small bit-field accessor families this
-subsystem already has several of (`sub_8010A0C`-`sub_8010B68`,
+subsystem already has several of (`DecrementSlotCrateStage`-`GetCrateTrialKind`,
 `game_loop27.c`). A reasonable Phase 2 split: one group for this
 accessor cluster (likely fast to characterize/match together once the
 struct they operate on is identified), separate groups for the larger,
@@ -369,7 +369,7 @@ opaque-materialization toolbox:
   `nop`/`mov r8, r8` instruction, not the ROM's own zero-byte padding -
   fixed with an explicit `asm(".align 2, 0");` after the function body,
   the same `matching_decomp_alignment_fix` technique already used
-  elsewhere in this codebase (e.g. `game_loop27.c`'s `sub_8010AEC`).
+  elsewhere in this codebase (e.g. `game_loop27.c`'s `GetCrateFallSpeed`).
 
 `asm/code_3_2_17_e560_10d54.s` further trimmed to end at `SendExtraLifeToHud`
 (its own tail, `PickUpWumpa`-`UpdateWumpaHop`, split off into the new

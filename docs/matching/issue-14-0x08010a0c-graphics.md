@@ -10,7 +10,7 @@ issue #9.
 ## Category correction: `graphics` -> `game_loop`
 
 Every function in this chunk operates on the same `self` type
-`sub_8010A00` (game_loop26.c, matched under GitHub issue #13) and
+`GetSlotCrateStage` (game_loop26.c, matched under GitHub issue #13) and
 `ResetCrate` (game_loop22.c, issue #13) already do - a "collision box"
 record embedded inside the player at `gPlayer+0x108`,
 confirmed directly: `ResolvePlayerCollisions` (game_loop23.c) already calls
@@ -23,28 +23,28 @@ the surrounding `game_loop17.c`-`game_loop26.c` file family issues
 
 ## Matched - 24 functions (+1 unlabeled)
 
-`src/system/game_loop27.c` (new file): `sub_8010A0C`-`sub_8010B68`,
+`src/system/game_loop27.c` (new file): `DecrementSlotCrateStage`-`GetCrateTrialKind`,
 covering:
 
 - A 3-way bit-field family packed into `self+0x48`: bits 6-7 (get
-  already matched as `sub_8010A00`; `sub_8010A0C` decrements it if
-  nonzero; `sub_8010A34` sets it; `sub_8010A44` clears it), bits 3-5
-  (`sub_8010A50` gets, `sub_8010A5C` decrements-if-nonzero,
-  `sub_8010A84` sets), and bits 0-2 (`sub_8010A94` sets, `sub_8010AA4`
+  already matched as `GetSlotCrateStage`; `DecrementSlotCrateStage` decrements it if
+  nonzero; `SetSlotCrateStage` sets it; `ClearSlotCrateStage` clears it), bits 3-5
+  (`GetSlotCrateSpins` gets, `DecrementSlotCrateSpins` decrements-if-nonzero,
+  `SetSlotCrateSpins` sets), and bits 0-2 (`SetSlotCratePhase` sets, `GetSlotCratePhase`
   gets).
 - Plain field accessors: `SetCrateKind`/`GetCrateKind` (`self+0x4e`
   byte), `SetCrateFallDistance`/`GetCrateFallDistance` (`self+0x44` word),
   `SetCrateState`/`GetCrateState` (`self+0x4d`'s low 7 bits, preserving bit
-  7), `sub_8010AE4` (`self+0x4c` byte setter), `sub_8010AEC`
+  7), `SetCrateFallSpeed` (`self+0x4c` byte setter), `GetCrateFallSpeed`
   (`self+0x4c` sign-extending getter), `SetCrateTouched` (`self+0x58`
-  byte setter), `sub_8010B4C`/`sub_8010B54` (`self+0x51`/`self+0x50`
-  byte getters), `sub_8010B5C` (`self+0x48` whole-field byte setter,
-  unlike `sub_8010A94` which masks), `sub_8010B64`/`sub_8010B68`
+  byte setter), `GetCrateParamB`/`GetCrateParamA` (`self+0x51`/`self+0x50`
+  byte getters), `SetCrateSolidKind` (`self+0x48` whole-field byte setter,
+  unlike `SetSlotCratePhase` which masks), `SetCrateTrialKind`/`GetCrateTrialKind`
   (`self+0x54` word accessors).
 - `IsCrateBusy` - a boolean getter for `self+0x4d` bit 7. **The
   original disassembly never gave this one its own label/symbol** - it
-  sits directly after `sub_8010AEC`'s trailing alignment padding, at
-  the address the byte-count arithmetic works out to (`sub_8010AEC` is
+  sits directly after `GetCrateFallSpeed`'s trailing alignment padding, at
+  the address the byte-count arithmetic works out to (`GetCrateFallSpeed` is
   10 bytes, padded to 12; `IsCrateBusy` starts right after). Named
   `IsCrateBusy` per the usual `sub_XXXXXXXX` convention (its own ROM
   address) since it's still a completely ordinary function, just one

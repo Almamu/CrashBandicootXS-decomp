@@ -315,22 +315,22 @@ static inline void SetPlayerRecord(s32 a, s32 b, s32 c)
     absC = (c ^ signC) - signC;
     if (absV > absC)
     {
-        p->velAX = a;
-        p->velAY = t;
+        p->rampXStart = a;
+        p->rampXStep = t;
     }
     else if (v * c < 0)
     {
         s32 sum = t + b;
 
-        p->velAX = a;
-        p->velAY = sum;
+        p->rampXStart = a;
+        p->rampXStep = sum;
     }
     else
     {
-        p->velAX = a;
-        p->velAY = b;
+        p->rampXStart = a;
+        p->rampXStep = b;
     }
-    p->velAZ = c;
+    p->rampXTarget = c;
 }
 
 /* Sets bit `id` of the gEntityFlags+0x108 bitmap. Kept a

@@ -8,10 +8,10 @@
 /* Base-class accessors of the level object/player (`struct gobj`,
  * gobj_1a794.h). */
 
-/* `unk_108` address getter. */
-void *sub_800B4A4(void *selfArg)
+/* `collisionQueue` (+0x108) address getter. */
+void *GetPlayerCollisionQueue(void *selfArg)
 {
-    return ((struct gobj *)selfArg)->unk_108;
+    return ((struct gobj *)selfArg)->collisionQueue;
 }
 
 /* `dead` (+0x104) clear/set/get accessors. */
@@ -33,30 +33,28 @@ u8 IsPlayerDead(void *selfArg)
     return self->dead;
 }
 
-/* Bulk-sets `self+0x48`/`self+0x4c`/`self+0x50`; also sets
- * `self+0x60` to the first argument, but only if `self+0x100` is
- * clear. */
-void sub_800B4D0(void *selfArg, s32 a, s32 b, s32 c)
+/* Sets `rampX` (+0x48) and starts speedX at its `start`, unless the
+ * player is on slippery ground (`slippery`), where the speed is kept. */
+void StartPlayerRampX(void *selfArg, s32 a, s32 b, s32 c)
 {
     struct gobj *self = selfArg;
 
-    if (self->unk_100 == 0) {
+    if (self->slippery == 0) {
         self->speedX = a;
     }
-    self->velA.x = a;
-    self->velA.y = b;
-    self->velA.z = c;
+    self->rampX.start = a;
+    self->rampX.step = b;
+    self->rampX.target = c;
 }
 
-/* Same bulk setter as `sub_800B4D0`, without the conditional
- * `self+0x60` write. */
-void sub_800B4F0(void *selfArg, s32 a, s32 b, s32 c)
+/* Sets `rampX` only, keeping the current speedX. */
+void SetPlayerRampX(void *selfArg, s32 a, s32 b, s32 c)
 {
     struct gobj *self = selfArg;
 
-    self->velA.x = a;
-    self->velA.y = b;
-    self->velA.z = c;
+    self->rampX.start = a;
+    self->rampX.step = b;
+    self->rampX.target = c;
 }
 
 /* `self+0x91` countdown byte decrement/clear/increment/get
@@ -212,22 +210,22 @@ u8 sub_800B5D8(void *selfArg)
     return self->unk_92;
 }
 
-/* `self+0x90` byte set/get accessors. */
-void sub_800B5E0(void *selfArg, u8 arg1)
+/* `bumped` (+0x90) set/get accessors. */
+void SetPlayerBumped(void *selfArg, u8 arg1)
 {
     struct gobj *self = selfArg;
-    self->unk_90 = arg1;
+    self->bumped = arg1;
 }
 
-u8 sub_800B5E8(void *selfArg)
+u8 IsPlayerBumped(void *selfArg)
 {
     struct gobj *self = selfArg;
-    return self->unk_90;
+    return self->bumped;
 }
 
 /* `self+0x103`/`self+0x102`/`self+0x101`/`self+0x100` byte get/set
  * accessor pairs (`pushRight`/`pushLeft`: the standing player is moved
- * 1px per frame that way; +0x101/+0x100 not understood yet). */
+ * 1px per frame that way), `hanging` (+0x101) and `slippery` (+0x100). */
 u8 GetPlayerPushRight(void *selfArg)
 {
     struct gobj *self = selfArg;
@@ -252,28 +250,28 @@ void SetPlayerPushLeft(void *selfArg, u8 arg1)
     self->pushLeft = arg1;
 }
 
-u8 sub_800B620(void *selfArg)
+u8 IsPlayerHanging(void *selfArg)
 {
     struct gobj *self = selfArg;
-    return self->unk_101;
+    return self->hanging;
 }
 
-void sub_800B62C(void *selfArg, u8 arg1)
+void SetPlayerHanging(void *selfArg, u8 arg1)
 {
     struct gobj *self = selfArg;
-    self->unk_101 = arg1;
+    self->hanging = arg1;
 }
 
-u8 sub_800B638(void *selfArg)
+u8 IsPlayerSlippery(void *selfArg)
 {
     struct gobj *self = selfArg;
-    return self->unk_100;
+    return self->slippery;
 }
 
-void sub_800B644(void *selfArg, u8 arg1)
+void SetPlayerSlippery(void *selfArg, u8 arg1)
 {
     struct gobj *self = selfArg;
-    self->unk_100 = arg1;
+    self->slippery = arg1;
 }
 
 /* Indexed getter into the `self+0x98` 5-entry `s32` array, gated by
@@ -363,17 +361,17 @@ void SetCtrlTargetMotionY(void *unused, void *selfArg, struct vec3 *vec)
         register s32 z asm("r1") = -v[2];
         register s32 y asm("r2") = v[1];
 
-        self->velB.x = x;
-        self->velB.y = y;
-        self->velB.z = z;
+        self->rampY.start = x;
+        self->rampY.step = y;
+        self->rampY.target = z;
     } else {
         register s32 x asm("r0") = v[0];
         register s32 y asm("r1") = v[1];
         register s32 z asm("r2") = v[2];
 
-        self->velB.x = x;
-        self->velB.y = y;
-        self->velB.z = z;
+        self->rampY.start = x;
+        self->rampY.step = y;
+        self->rampY.target = z;
     }
 }
 
@@ -391,18 +389,18 @@ void StartCtrlTargetMotionY(void *unused, void *selfArg, struct vec3 *vec)
         register s32 y asm("r2") = v[1];
 
         self->speedY = x;
-        self->velB.x = x;
-        self->velB.y = y;
-        self->velB.z = z;
+        self->rampY.start = x;
+        self->rampY.step = y;
+        self->rampY.target = z;
     } else {
         register s32 x asm("r0") = v[0];
         register s32 y asm("r1") = v[1];
         register s32 z asm("r2") = v[2];
 
         self->speedY = x;
-        self->velB.x = x;
-        self->velB.y = y;
-        self->velB.z = z;
+        self->rampY.start = x;
+        self->rampY.step = y;
+        self->rampY.target = z;
     }
 }
 asm(".align 2, 0");

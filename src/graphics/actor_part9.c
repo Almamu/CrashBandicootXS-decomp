@@ -185,17 +185,17 @@ void AttachSpriteCtrl(struct gobj *self, struct mover *rec)
 void StartSpriteMotionY(struct gobj *self, s32 a, s32 b, s32 c)
 {
     self->speedY = a;
-    self->velB.x = a;
-    self->velB.y = b;
-    self->velB.z = c;
+    self->rampY.start = a;
+    self->rampY.step = b;
+    self->rampY.target = c;
 }
 
 /* Same shape as `StartSpriteMotionY` above, without the `self+0x64` write. */
 void SetSpriteMotionY(struct gobj *self, s32 a, s32 b, s32 c)
 {
-    self->velB.x = a;
-    self->velB.y = b;
-    self->velB.z = c;
+    self->rampY.start = a;
+    self->rampY.step = b;
+    self->rampY.target = c;
 }
 
 /* `self+0x60`/`self+0x48`/`self+0x4c`/`self+0x50` bulk setter - the
@@ -204,17 +204,17 @@ void SetSpriteMotionY(struct gobj *self, s32 a, s32 b, s32 c)
 void StartSpriteMotionX(struct gobj *self, s32 a, s32 b, s32 c)
 {
     self->speedX = a;
-    self->velA.x = a;
-    self->velA.y = b;
-    self->velA.z = c;
+    self->rampX.start = a;
+    self->rampX.step = b;
+    self->rampX.target = c;
 }
 
 /* Same shape as `StartSpriteMotionX` above, without the `self+0x60` write. */
 void SetSpriteMotionX(struct gobj *self, s32 a, s32 b, s32 c)
 {
-    self->velA.x = a;
-    self->velA.y = b;
-    self->velA.z = c;
+    self->rampX.start = a;
+    self->rampX.step = b;
+    self->rampX.target = c;
 }
 
 /* `self+0x69` (cleared by `ResetMovingSprite`, set 0 by that same

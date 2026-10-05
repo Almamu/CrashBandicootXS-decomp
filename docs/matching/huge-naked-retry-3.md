@@ -92,13 +92,13 @@ were branch targets that asmdiff never showed.
    same expression. Two branches changed, one in case 3 and one in its
    `n` loop.
 
-5. **The `dy > 2 || (dx <= 3 && sub_800B324())` arm (2 -> 0).** The
+5. **The `dy > 2 || (dx <= 3 && HasPlayerRampYTarget())` arm (2 -> 0).** The
    ROM's two branches for this arm go to the r6 copy of `edge = dirX`
    (the first slope check's), not to `edge_x`'s r0 copy. The arm is now
    written like the `ax == px` arm above it:
 
    ```c
-   else if (dy <= 2 && (dx > 3 || !sub_800B324(D18C_P)))
+   else if (dy <= 2 && (dx > 3 || !HasPlayerRampYTarget(D18C_P)))
    {
        edge = 4;
        if (f21 != 0)

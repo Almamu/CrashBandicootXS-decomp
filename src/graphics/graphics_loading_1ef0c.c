@@ -26,10 +26,10 @@ static inline struct level_record *GetLevelRecord(u16 id)
     return LEVEL_RECORD(id);
 }
 
-static inline void SetPopupCenter(struct enemy_ctrl *hdr, s32 x, s32 y)
+static inline void SetEnemyShotTiming(struct enemy_ctrl *hdr, s32 period, s32 phase)
 {
-    hdr->unk_48 = x;
-    hdr->unk_4C = y;
+    hdr->shotPeriod = period;
+    hdr->shotPhase = phase;
 }
 
 /* The u8 parameter keeps the toggled bit's truncation where the ROM
@@ -60,7 +60,7 @@ void SpawnLizard(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->base.flags &= 0x7f;
     rec = LEVEL_RECORD(arg3);
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
-    part->unk_28_5 = rec->flags >> 2 & 1;
+    part->flipY = rec->flags >> 2 & 1;
     AddToPartList(gCollidableList, part);
     SetEnemyAnimMap(hdr, gEnemyDefaultAnimMap);
     rec2 = LEVEL_RECORD(arg3);
@@ -93,7 +93,7 @@ void SpawnVulture(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->base.flags &= 0x7f;
     rec = LEVEL_RECORD(arg3);
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
-    part->unk_28_5 = rec->flags >> 2 & 1;
+    part->flipY = rec->flags >> 2 & 1;
     AddToPartList(gCollidableList, part);
     SetEnemyAnimMap(hdr, gEnemyDefaultAnimMap);
     SetEnemyState(hdr, 0x11);
@@ -318,7 +318,7 @@ void SpawnPatrollingJungleEnemy(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->base.flags &= 0x7f;
     rec = LEVEL_RECORD(arg3);
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
-    part->unk_28_5 = rec->flags >> 2 & 1;
+    part->flipY = rec->flags >> 2 & 1;
     AddToPartList(gCollidableList, part);
     SetEnemyAnimMap(hdr, gEnemyDefaultAnimMap);
     rec2 = LEVEL_RECORD(arg3);
@@ -349,14 +349,14 @@ void SpawnBlowgunTribesman(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->base.flags &= 0x7f;
     rec = LEVEL_RECORD(arg3);
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
-    part->unk_28_5 = rec->flags >> 2 & 1;
+    part->flipY = rec->flags >> 2 & 1;
     AddToPartList(gCollidableList, part);
     SetEnemyAnimMap(hdr, gEnemyDefaultAnimMap);
     rec2 = GetLevelRecord(arg3);
     SetEnemyAnimMap(hdr, gBlowgunTribesmanAnimMap);
-    SetPopupSpan(hdr, rec2->unk_04, rec2->unk_08, rec2->unk_0C);
+    SetEnemyAttackCycle(hdr, rec2->unk_04, rec2->unk_08, rec2->unk_0C);
     mid = (rec2->unk_04 + rec2->unk_08) / 2;
-    SetPopupCenter(hdr, mid, rec2->unk_0C + mid / 4);
+    SetEnemyShotTiming(hdr, mid, rec2->unk_0C + mid / 4);
     SetEnemyState(hdr, 0x10);
 }
 
@@ -382,7 +382,7 @@ void SpawnPenguin(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->base.flags &= 0x7f;
     rec = LEVEL_RECORD(arg3);
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
-    part->unk_28_5 = rec->flags >> 2 & 1;
+    part->flipY = rec->flags >> 2 & 1;
     AddToPartList(gCollidableList, part);
     SetEnemyAnimMap(hdr, gEnemyDefaultAnimMap);
     rec2 = LEVEL_RECORD(arg3);
@@ -391,7 +391,7 @@ void SpawnPenguin(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     ResetSpriteFrameIndex(part);
     SetSpriteAnimDone(part, 0);
     SetEnemyAnimMap(hdr, gPenguinAnimMap);
-    SetPopupSpan(hdr, rec2->unk_0C, rec2->unk_08, rec2->unk_10);
+    SetEnemyAttackCycle(hdr, rec2->unk_0C, rec2->unk_08, rec2->unk_10);
     SetEnemyRangeX(hdr, rec2->unk_04);
     SetEnemyState(hdr, 0xd);
 }
@@ -418,7 +418,7 @@ void SpawnSeal(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->base.flags &= 0x7f;
     rec = LEVEL_RECORD(arg3);
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
-    part->unk_28_5 = rec->flags >> 2 & 1;
+    part->flipY = rec->flags >> 2 & 1;
     part->base.flags |= 0x10;
     AddToPartList(gCollidableList, part);
     SetEnemyAnimMap(hdr, gEnemyDefaultAnimMap);
@@ -448,7 +448,7 @@ void SpawnPolarBear(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->base.flags &= 0x7f;
     rec = LEVEL_RECORD(arg3);
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
-    part->unk_28_5 = rec->flags >> 2 & 1;
+    part->flipY = rec->flags >> 2 & 1;
     AddToPartList(gCollidableList, part);
     SetEnemyAnimMap(hdr, gEnemyDefaultAnimMap);
     rec2 = LEVEL_RECORD(arg3);
@@ -480,14 +480,14 @@ void SpawnPufferfish(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->base.flags &= 0x7f;
     rec = LEVEL_RECORD(arg3);
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
-    part->unk_28_5 = rec->flags >> 2 & 1;
+    part->flipY = rec->flags >> 2 & 1;
     AddToPartList(gCollidableList, part);
     SetEnemyAnimMap(hdr, gEnemyDefaultAnimMap);
     rec2 = LEVEL_RECORD(arg3);
     SetPartAnim(part, 2);
     part->base.field_0A = 5;
     SetEnemyAnimMap(hdr, gPufferfishAnimMap);
-    SetPopupSpan(hdr, rec2->unk_04, rec2->unk_08, rec2->unk_0C);
+    SetEnemyAttackCycle(hdr, rec2->unk_04, rec2->unk_08, rec2->unk_0C);
     SetEnemyWave(hdr, rec2->unk_14, rec2->unk_18, rec2->unk_10);
     SetEnemyState(hdr, 14);
 }
@@ -514,7 +514,7 @@ void SpawnShark(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->base.flags &= 0x7f;
     rec = LEVEL_RECORD(arg3);
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
-    part->unk_28_5 = rec->flags >> 2 & 1;
+    part->flipY = rec->flags >> 2 & 1;
     AddToPartList(gCollidableList, part);
     SetEnemyAnimMap(hdr, gEnemyDefaultAnimMap);
     rec2 = LEVEL_RECORD(arg3);
@@ -546,7 +546,7 @@ void SpawnMorayEel(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->base.flags &= 0x7f;
     rec = LEVEL_RECORD(arg3);
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
-    part->unk_28_5 = rec->flags >> 2 & 1;
+    part->flipY = rec->flags >> 2 & 1;
     AddToPartList(gCollidableList, part);
     SetEnemyAnimMap(hdr, gEnemyDefaultAnimMap);
     SetPartAnim(part, 0);
@@ -581,13 +581,13 @@ void SpawnElectricEel(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->base.flags &= 0x7f;
     rec = LEVEL_RECORD(arg3);
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
-    part->unk_28_5 = rec->flags >> 2 & 1;
+    part->flipY = rec->flags >> 2 & 1;
     AddToPartList(gCollidableList, part);
     SetEnemyAnimMap(hdr, gEnemyDefaultAnimMap);
     rec2 = LEVEL_RECORD(arg3);
     part->base.field_0A = 3;
     SetEnemyAnimMap(hdr, gElectricEelAnimMap);
-    SetPopupSpan(hdr, rec2->unk_08, rec2->unk_0C, rec2->unk_10);
+    SetEnemyAttackCycle(hdr, rec2->unk_08, rec2->unk_0C, rec2->unk_10);
     SetEnemyRangeX(hdr, rec2->unk_04);
     SetEnemyState(hdr, 13);
 }

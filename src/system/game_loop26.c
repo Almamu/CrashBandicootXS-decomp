@@ -5,16 +5,16 @@
  * collision subsystem (see game_loop17.c's header comment and
  * docs/matching/issue-13-graphics-fc70.md). `GetTopCrate`/
  * `GetBottomCrate`/`CollideCrateWithPlayer` right before this function are left
- * untouched raw; `sub_8010A0C` right after it is outside this issue's
+ * untouched raw; `DecrementSlotCrateStage` right after it is outside this issue's
  * range and also stays raw. */
 
 /* Extracts `u48` (+0x48) bits 6-7 (a 2-bit sub-state field packed
  * alongside the low bits other functions in this subsystem test via
  * `& 7`). */
-u32 sub_8010A00(void *selfArg)
+u32 GetSlotCrateStage(void *selfArg)
 {
     struct crate *self = selfArg;
-    return ((u32)self->u48.n & 0xc0) >> 6;
+    return ((u32)self->u48.slotState & 0xc0) >> 6;
 }
 /* Trailing byte-padding mismatch fix: the function body is 10 bytes
  * (not a multiple of 4), and the ROM pads the gap before the next

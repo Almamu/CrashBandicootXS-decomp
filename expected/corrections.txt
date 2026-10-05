@@ -120,7 +120,7 @@ rename sub_8029168 FreeCategorySpriteSheet
 # src/graphics/sprite_frame_queue.c's comment on GetFreeVramTileBytes.
 split 0x08028D94 GetFreeVramTileBytes
 
-# src/system/game_loop27.c: sub_8010AF8 follows sub_8010AEC's padding
+# src/system/game_loop27.c: sub_8010AF8 follows sub_8010AEC's (GetCrateFallSpeed) padding
 # with no label of its own in the original disassembly.
 split 0x08010AF8 IsCrateBusy
 
@@ -2602,6 +2602,33 @@ rename sub_8025588 ClearBitmapBit
 rename sub_80255A8 ClearBitmap
 rename sub_80255C4 InitBitmap
 rename sub_801EF0C SpawnLizard
+rename sub_800B324 HasPlayerRampYTarget
+rename sub_800B33C StopPlayerFalling
+rename sub_800B4A4 GetPlayerCollisionQueue
+rename sub_800B4D0 StartPlayerRampX
+rename sub_800B4F0 SetPlayerRampX
+rename sub_800B5E0 SetPlayerBumped
+rename sub_800B5E8 IsPlayerBumped
+rename sub_800B620 IsPlayerHanging
+rename sub_800B62C SetPlayerHanging
+rename sub_800B638 IsPlayerSlippery
+rename sub_800B644 SetPlayerSlippery
+rename sub_8010A00 GetSlotCrateStage
+rename sub_8010A0C DecrementSlotCrateStage
+rename sub_8010A34 SetSlotCrateStage
+rename sub_8010A44 ClearSlotCrateStage
+rename sub_8010A50 GetSlotCrateSpins
+rename sub_8010A5C DecrementSlotCrateSpins
+rename sub_8010A84 SetSlotCrateSpins
+rename sub_8010A94 SetSlotCratePhase
+rename sub_8010AA4 GetSlotCratePhase
+rename sub_8010AE4 SetCrateFallSpeed
+rename sub_8010AEC GetCrateFallSpeed
+rename sub_8010B4C GetCrateParamB
+rename sub_8010B54 GetCrateParamA
+rename sub_8010B5C SetCrateSolidKind
+rename sub_8010B64 SetCrateTrialKind
+rename sub_8010B68 GetCrateTrialKind
 rename gUnknown_030012E8 gUpdateOnlyPartList
 rename gUnknown_03000818 gAkuAkuInvincibleFrame
 rename gUnknown_0300081C gAkuAkuFollowFrame

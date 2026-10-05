@@ -60,8 +60,8 @@ struct ctrl_target {
     s32 timer;          // 0x34
     u8 animDone;        // 0x38
     u8 unk_39[0xF];
-    s32 velA[3];        // 0x48 - X velocity targets
-    s32 velB[3];        // 0x54 - Y velocity targets
+    s32 rampX[3];       // 0x48 - speedX's ramp: start, step, target (struct gobj.rampX)
+    s32 rampY[3];       // 0x54 - speedY's ramp
     s32 speedX;         // 0x60
     s32 speedY;         // 0x64
     u8 hitAxes;         // 0x68 - collision axes the terrain probe resolved (8: Y)
@@ -86,9 +86,12 @@ struct part_ctrl {
     s32 boxT;           // 0x24
     s32 boxR;           // 0x28
     s32 boxB;           // 0x2C
-    s32 unk_30;         // 0x30
-    s32 unk_34;         // 0x34
-    s32 unk_38;         // 0x38
+    s32 idleTime;       // 0x30 - attack cycle (UpdateEnemyAttackCycle): frames in mode 0
+                        //        before the attack (mode 3/4) starts
+    s32 attackTime;     // 0x34 - frames in the attack before it ends (mode 5); the cycle
+                        //        repeats every idleTime + attackTime frames of gRoomFrameCount
+    s32 cycleOffset;    // 0x38 - where in the cycle the enemy starts (SetEnemyState starts it
+                        //        attacking when cycleOffset >= idleTime)
     s32 period;         // 0x3C - oscillator
     s32 phase;          // 0x40
     s32 amplitude;      // 0x44

@@ -14,7 +14,7 @@ halfwords off and 8 bytes short.
 These are in the order they were applied. Each step was checked against
 the ROM one region at a time and kept the exact size, except where noted.
 
-1. **`goto edge_x` for the `dy > 2 || (dx <= 3 && sub_800B324())` arm,
+1. **`goto edge_x` for the `dy > 2 || (dx <= 3 && HasPlayerRampYTarget())` arm,
    and `BOX_ADDR` on the rebuilt player box** (both from the last-five
    pass). With the steps below the 4 extra bytes go away.
 2. **`f.c = f.a` through a pointer local** (`struct aabb *pc = &f.c;

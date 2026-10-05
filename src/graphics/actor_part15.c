@@ -16,12 +16,12 @@ extern s32 _call_via_r2(void *arg0, void *arg1, void *fn);
 extern void DestroyCollisionQueue(void *arg0, s32 arg1);
 extern void DestroyGroundSprite(void *self, u32 unusedArg);
 
-/* `velB.z` (+0x5c) boolean getter (nonzero -> 1). */
-u8 sub_800B324(void *selfArg)
+/* `rampY.target` (+0x5c) boolean getter (nonzero -> 1). */
+u8 HasPlayerRampYTarget(void *selfArg)
 {
     struct gobj *self = selfArg;
 
-    if (self->velB.z != 0) {
+    if (self->rampY.target != 0) {
         return 1;
     } else {
         return 0;
@@ -35,19 +35,19 @@ void ClearPlayerSpeedY(void *selfArg)
     self->speedY = 0;
 }
 
-/* Clamps `speedY`/`velB.x`/`velB.y` (+0x64/+0x54/+0x58) to `<= 0`. */
-void sub_800B33C(void *selfArg)
+/* Clamps `speedY`/`rampY.start`/`rampY.step` (+0x64/+0x54/+0x58) to `<= 0`. */
+void StopPlayerFalling(void *selfArg)
 {
     register struct gobj *self asm("r1") = selfArg;
 
     if (self->speedY > 0) {
         self->speedY = 0;
     }
-    if (self->velB.x > 0) {
-        self->velB.x = 0;
+    if (self->rampY.start > 0) {
+        self->rampY.start = 0;
     }
-    if (self->velB.y > 0) {
-        self->velB.y = 0;
+    if (self->rampY.step > 0) {
+        self->rampY.step = 0;
     }
 }
 

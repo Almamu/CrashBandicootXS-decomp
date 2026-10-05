@@ -123,9 +123,9 @@ void UpdatePlatformMover(struct mover *self, struct gobj *objArg)
             s32 z = e->z;
 
             obj->speedX = x;
-            obj->velA.x = x;
-            obj->velA.y = y;
-            obj->velA.z = z;
+            obj->rampX.start = x;
+            obj->rampX.step = y;
+            obj->rampX.target = z;
         }
         else
         {
@@ -134,9 +134,9 @@ void UpdatePlatformMover(struct mover *self, struct gobj *objArg)
             s32 y = e->y;
 
             obj->speedX = x;
-            obj->velA.x = x;
-            obj->velA.y = y;
-            obj->velA.z = z;
+            obj->rampX.start = x;
+            obj->rampX.step = y;
+            obj->rampX.target = z;
         }
     }
     if (self->lastY == 0 && self->rangeY > 0)
@@ -152,9 +152,9 @@ void UpdatePlatformMover(struct mover *self, struct gobj *objArg)
             s32 z = e->z;
 
             obj->speedY = x;
-            obj->velB.x = x;
-            obj->velB.y = y;
-            obj->velB.z = z;
+            obj->rampY.start = x;
+            obj->rampY.step = y;
+            obj->rampY.target = z;
         }
         else
         {
@@ -163,9 +163,9 @@ void UpdatePlatformMover(struct mover *self, struct gobj *objArg)
             s32 y = e->y;
 
             obj->speedY = x;
-            obj->velB.x = x;
-            obj->velB.y = y;
-            obj->velB.z = z;
+            obj->rampY.start = x;
+            obj->rampY.step = y;
+            obj->rampY.target = z;
         }
     }
 
@@ -229,9 +229,9 @@ void UpdatePlatformMover(struct mover *self, struct gobj *objArg)
             s32 y = e->y;
             s32 z = e->z;
 
-            obj->velA.x = x;
-            obj->velA.y = y;
-            obj->velA.z = z;
+            obj->rampX.start = x;
+            obj->rampX.step = y;
+            obj->rampX.target = z;
         }
         else
         {
@@ -239,9 +239,9 @@ void UpdatePlatformMover(struct mover *self, struct gobj *objArg)
             s32 z = -e->z;
             s32 y = e->y;
 
-            obj->velA.x = x;
-            obj->velA.y = y;
-            obj->velA.z = z;
+            obj->rampX.start = x;
+            obj->rampX.step = y;
+            obj->rampX.target = z;
         }
         self->distX = -1;
     }
@@ -262,9 +262,9 @@ void UpdatePlatformMover(struct mover *self, struct gobj *objArg)
             s32 y = e->y;
             s32 z = e->z;
 
-            obj->velB.x = x;
-            obj->velB.y = y;
-            obj->velB.z = z;
+            obj->rampY.start = x;
+            obj->rampY.step = y;
+            obj->rampY.target = z;
         }
         else
         {
@@ -272,9 +272,9 @@ void UpdatePlatformMover(struct mover *self, struct gobj *objArg)
             s32 z = -e->z;
             s32 y = e->y;
 
-            obj->velB.x = x;
-            obj->velB.y = y;
-            obj->velB.z = z;
+            obj->rampY.start = x;
+            obj->rampY.step = y;
+            obj->rampY.target = z;
         }
         self->distY = -1;
     }
@@ -428,9 +428,9 @@ void SetPlatformMoverMotionYFromSet(struct mover *self, struct gobj *part, s32 i
         s32 z = -e->z;
         s32 y = e->y;
 
-        part->velB.x = x;
-        part->velB.y = y;
-        part->velB.z = z;
+        part->rampY.start = x;
+        part->rampY.step = y;
+        part->rampY.target = z;
     }
     else
     {
@@ -438,9 +438,9 @@ void SetPlatformMoverMotionYFromSet(struct mover *self, struct gobj *part, s32 i
         s32 y = e->y;
         s32 z = e->z;
 
-        part->velB.x = x;
-        part->velB.y = y;
-        part->velB.z = z;
+        part->rampY.start = x;
+        part->rampY.step = y;
+        part->rampY.target = z;
     }
 }
 
@@ -454,9 +454,9 @@ void SetPlatformMoverMotionXFromSet(struct mover *self, struct gobj *part, s32 i
         s32 z = -e->z;
         s32 y = e->y;
 
-        part->velA.x = x;
-        part->velA.y = y;
-        part->velA.z = z;
+        part->rampX.start = x;
+        part->rampX.step = y;
+        part->rampX.target = z;
     }
     else
     {
@@ -464,9 +464,9 @@ void SetPlatformMoverMotionXFromSet(struct mover *self, struct gobj *part, s32 i
         s32 y = e->y;
         s32 z = e->z;
 
-        part->velA.x = x;
-        part->velA.y = y;
-        part->velA.z = z;
+        part->rampX.start = x;
+        part->rampX.step = y;
+        part->rampX.target = z;
     }
 }
 

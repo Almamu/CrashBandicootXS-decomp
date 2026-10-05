@@ -32,6 +32,18 @@ struct vec3
     s32 z;
 };
 
+/* A sprite object's per-axis speed ramp (struct gobj.rampX/rampY, the
+ * 12-byte motion records of gCtrlMotionRecords and the gStaticData_0816C*
+ * entry sets): each frame ApplySpriteVelocity steps speedX/speedY by `step`
+ * toward `target` without overshooting. The Start...MotionX/Y setters also
+ * load `start` into the speed; the Set... ones keep the current speed. */
+struct speed_ramp
+{
+    s32 start;
+    s32 step;
+    s32 target;
+};
+
 struct vec_pair
 {
     u32 a;
@@ -100,7 +112,9 @@ struct gobj
     void *platform;     // 0x1C - the last m10 record (UpdateGroundSprite/sub_800A590)
     struct anim_table *anim; // 0x20
     u8 dir;             // 0x24
-    u8 unk_25[3];
+    u8 screenSpace;     // 0x25 - 1: x/y are screen coordinates (DrawSpriteAt skips WorldToScreen;
+                        //        always counts as on screen). GetSpriteScreenSpace/SetSpriteScreenSpace
+    u8 unk_26[2];
     u8 mirror;          // 0x28 - bit 4: X mirrored, bit 5: Y mirrored
     u8 slot;            // 0x29 - low nibble: palette/tile slot
     u8 unk_2A[2];
@@ -112,8 +126,8 @@ struct gobj
     u8 animDone;        // 0x38 - set once a non-looping animation ends (SetSpriteAnimDone)
     u8 unk_39[0xB];
     struct mover *mover; // 0x44
-    struct vec3 velA;   // 0x48
-    struct vec3 velB;   // 0x54
+    struct speed_ramp rampX; // 0x48 - speedX's ramp (ApplySpriteVelocity)
+    struct speed_ramp rampY; // 0x54 - speedY's ramp
     s32 speedX;         // 0x60
     s32 speedY;         // 0x64
     u8 hitAxes;         // 0x68 - collision axes the terrain probe resolved (8: Y, standing; 4: X)
@@ -131,7 +145,9 @@ struct gobj
                         //        (actor_part48.c); nonzero freezes `list` (sub_800B58C/sub_800B650/sub_800B678)
     u8 unk_89[3];
     u32 deadline;       // 0x8C - gRoomFrameCount frame IsPlayerInvulnerable tests against
-    u8 unk_90;          // 0x90
+    u8 bumped;          // 0x90 - set when a crate's side stopped the player's X motion
+                        //        (ActionCtrlHandleEvent event 12); cleared when the
+                        //        controller's bumpTimer runs out or its mode changes
     u8 countdown;       // 0x91
     u8 unk_92;          // 0x92 - a counter
     u8 unk_93;
@@ -142,13 +158,17 @@ struct gobj
     /* The rest is only reached by the base-class accessors in
      * actor_part16.c. */
     u8 unk_B0[0x50];
-    u8 unk_100;         // 0x100 - nonzero stops sub_800B4D0 from setting speedX
-    u8 unk_101;         // 0x101
+    u8 slippery;        // 0x100 - standing on terrain kind 5 (CollidePlayer): the player keeps
+                        //         sliding (speedX isn't zeroed, motion keeps its speed, steps halve)
+                        //         and skids (anims 0x25/0x26, sfx 0x36; ActionCtrlSetTargetAnim)
+    u8 hanging;         // 0x101 - hanging from hang terrain (code 6): CollidePlayer sends event
+                        //         0x17 to grab and 0x18 when it's gone; ActionCtrlHandleEvent sets/clears it
     u8 pushLeft;        // 0x102 - nonzero: moves the standing player 1px left per frame
     u8 pushRight;       // 0x103 - nonzero: moves the standing player 1px right per frame
     u8 dead;            // 0x104 - the player died (KillPlayer and the other controllers' kill handlers); blocks pause and further hits
     u8 unk_105[3];
-    u8 unk_108[4];      // 0x108 - an embedded object (sub_800B4A4 returns its address)
+    u8 collisionQueue[4]; // 0x108 - the embedded collision queue (ResetCollisionQueue/
+                          //         DestroyCollisionQueue; GetPlayerCollisionQueue returns its address)
 };
 
 struct mover_vtable

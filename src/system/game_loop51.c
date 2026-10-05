@@ -92,14 +92,14 @@ void UpdateCrate(struct crate *self)
         if (self->kind == 0xc)
         {
             if (self->timer == 0)
-                self->unk_50 = 0;
+                self->paramA = 0;
         }
         else if (self->kind == 3)
             SolidifyOutlineCrates(self);
     done:;
     }
-    if (self->kind == 0xc && self->u48.n > 0)
-        self->u48.n--;
+    if (self->kind == 0xc && self->u48.bounceTimer > 0)
+        self->u48.bounceTimer--;
     UpdateCrateFall(self);
     if (self->state & 0x80)
     {

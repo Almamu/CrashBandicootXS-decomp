@@ -25,11 +25,12 @@ struct popup_part
     u8 unk_24[4];
     u32 unk_28_0:4;             // 0x28
     u32 flipX:1;
-    u32 unk_28_5:1;
+    u32 flipY:1;
     u32 unk_28_6:2;
     u8 frameNibble:4;           // 0x29
     u8 unk_29_4:4;
-    u8 unk_2A[3];
+    u8 unk_2A[2];
+    u8 animating;               // 0x2C - nonzero while the keyframe timer runs
     u8 tag;                     // 0x2D
     u8 unk_2E[0x16];
     struct enemy_ctrl *hdr;      // 0x44
@@ -39,7 +40,7 @@ struct popup_part
  * table. */
 struct level_record
 {
-    u8 flags;                   // bit 1: not yet collected, bit 2: ?
+    u8 flags;                   // bit 1: clear = X-mirrored (popup_part.flipX), bit 2: Y-mirrored
     u8 unk_01[3];
     s32 unk_04;
     s32 unk_08;
@@ -81,14 +82,14 @@ struct enemy_ctrl
     s32 boxT;                   // 0x24   (part_ctrl.boxL..boxB)
     s32 boxR;                   // 0x28
     s32 boxB;                   // 0x2C
-    s32 unk_30;
-    s32 unk_34;
-    s32 unk_38;
+    s32 idleTime;               // 0x30 - attack cycle (part_ctrl.idleTime/
+    s32 attackTime;             // 0x34   attackTime/cycleOffset)
+    s32 cycleOffset;            // 0x38
     s32 period;                 // 0x3C - oscillator (part_ctrl.period/
     s32 phase;                  // 0x40   phase/amplitude, UpdateEnemyOscillateX)
     s32 amplitude;              // 0x44
-    s32 unk_48;
-    s32 unk_4C;
+    s32 shotPeriod;             // 0x48 - UpdateEnemyShooter fires every shotPeriod
+    s32 shotPhase;              // 0x4C   frames, offset by shotPhase
     u8 unk_50[0x1C];
     s32 kind;                   // 0x6C - the enemy kind (its sprite bank)
     u8 unk_70[0x14];
@@ -168,11 +169,11 @@ static inline void SetEnemyHitBox(struct enemy_ctrl *hdr, s32 l, s32 t, s32 r, s
     hdr->boxB = b;
 }
 
-static inline void SetPopupSpan(struct enemy_ctrl *hdr, s32 a, s32 b, s32 c)
+static inline void SetEnemyAttackCycle(struct enemy_ctrl *hdr, s32 idleTime, s32 attackTime, s32 cycleOffset)
 {
-    hdr->unk_30 = a;
-    hdr->unk_34 = b;
-    hdr->unk_38 = c;
+    hdr->idleTime = idleTime;
+    hdr->attackTime = attackTime;
+    hdr->cycleOffset = cycleOffset;
 }
 
 static inline void SetEnemyWave(struct enemy_ctrl *hdr, s32 period, s32 phase, s32 amplitude)

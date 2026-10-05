@@ -95,7 +95,7 @@ Holds tried and not needed: the draft's `register ... asm("r0")` and
 ## QueueCratePlayerCollision: not closed
 
 Findings, both kept as a note on the draft:
-- Writing the `dy > 2 || (dx <= 3 && sub_800B324(...))` arm as `goto
+- Writing the `dy > 2 || (dx <= 3 && HasPlayerRampYTarget(...))` arm as `goto
   edge_x` gives the ROM's block order in the edge classifier.
 - BOX_ADDR on the rebuilt player box matches that block.
 

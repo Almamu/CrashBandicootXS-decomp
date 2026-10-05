@@ -47,9 +47,9 @@ void StartDingodileMotion(void *self, struct gobj *partArg, s32 indexArg)
         s32 y = e->y;
 
         part->speedX = x;
-        part->velA.x = x;
-        part->velA.y = y;
-        part->velA.z = z;
+        part->rampX.start = x;
+        part->rampX.step = y;
+        part->rampX.target = z;
     }
     else
     {
@@ -58,9 +58,9 @@ void StartDingodileMotion(void *self, struct gobj *partArg, s32 indexArg)
         s32 z = e->z;
 
         part->speedX = x;
-        part->velA.x = x;
-        part->velA.y = y;
-        part->velA.z = z;
+        part->rampX.start = x;
+        part->rampX.step = y;
+        part->rampX.target = z;
     }
     {
         struct vec3 *e2 = &gDingodileMotionRecords[gDingodileMotionEntries[index].b];
@@ -69,9 +69,9 @@ void StartDingodileMotion(void *self, struct gobj *partArg, s32 indexArg)
         s32 z = e2->z;
 
         part->speedY = x;
-        part->velB.x = x;
-        part->velB.y = y;
-        part->velB.z = z;
+        part->rampY.start = x;
+        part->rampY.step = y;
+        part->rampY.target = z;
     }
     asm("" : : "r"(index));
 }

@@ -90,7 +90,7 @@ void ActionCtrlStateLeftGround(struct act *self)
 
         ACT_PART_FLAGS0D(self->part) |= 1;
         {
-            u8 *p34 = &self->unk_34;
+            u8 *p34 = &self->slamBlocked;
 
             z = 0;
             *p34 = z;
@@ -101,7 +101,7 @@ void ActionCtrlStateLeftGround(struct act *self)
         case 0x18:
             if (tag == 0xD)
             {
-                if (self->unk_29)
+                if (self->turboRun)
                 {
                     self->frame = 0;
                     ACT_VCALL2(self, m50, self->part, 0x18);
@@ -127,7 +127,7 @@ void ActionCtrlStateLeftGround(struct act *self)
                 self->motionYKeepSpeed = 0;
                 self->motionYPending = 1;
                 self->motionY = 0;
-                self->unk_29 = 1;
+                self->turboRun = 1;
                 ActQueue27(self, 0, 0x1B);
             }
             break;
@@ -192,7 +192,7 @@ void ActionCtrlStateLeftGround(struct act *self)
             if (alt)
             {
                 ActOrFlags0D(self->part, 1);
-                self->unk_34 = fire;
+                self->slamBlocked = fire;
                 if (gKeys & 0x30)
                 {
                     self->motionXKeepSpeed = fire;
@@ -213,7 +213,7 @@ void ActionCtrlStateLeftGround(struct act *self)
             else if (INPUT_HELD(in) & 0x100)
             {
                 ActOrFlags0D(self->part, 1);
-                self->unk_34 = alt;
+                self->slamBlocked = alt;
                 ACT_VCALL1(self, m20, 0x10);
                 ACT_VCALL2(self, m50, self->part, 3);
                 self->frames = alt;
@@ -359,7 +359,7 @@ void ActionCtrlReleaseHang(struct act *self)
     s32 count;
     register s32 hold asm("r2");
 
-    self->part->unk_101 = 0;
+    self->part->hanging = 0;
     asm("" : "=r"(hold)); /* r2 live from here: no code */
     self->part->y += 0x600;
     asm("" : : "r"(hold)); /* ...to here, so the 0x600 reload takes r3 */

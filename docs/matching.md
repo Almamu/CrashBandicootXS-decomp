@@ -4523,7 +4523,7 @@ initially passed with the redundant register copy already dropped
 (matching in isolation) but the full build caught the resulting
 4-byte size regression once the whole file was assembled together.
 
-## A new unnamed object: `actor_part15.c`/`actor_part16.c` (`sub_800B324`-`StartCtrlTargetMotionY`)
+## A new unnamed object: `actor_part15.c`/`actor_part16.c` (`HasPlayerRampYTarget`-`StartCtrlTargetMotionY`)
 
 Right after `actor_part14.c`'s cluster, a big new not-yet-named object
 (at least 0x108 bytes, distinct from `struct actor`) starts - most of
@@ -4533,12 +4533,12 @@ guessing at a struct layout. Split across two files at a raw,
 untouched function (`InitPlayer`, see below) that sits in the middle
 of the run:
 
-- **`sub_800B324`**: `self+0x5c` boolean getter. Needed the verbose
+- **`HasPlayerRampYTarget`**: `self+0x5c` boolean getter. Needed the verbose
   `if (cond) { return 1; } else { return 0; }` form (the ROM has a
   genuinely redundant `movs r0,#0; b end; ...; movs r0,#1; end:`
   rather than reusing the comparison operand's register) - the same
   idiom already documented for other boolean accessors in this ROM.
-- **`sub_800B33C`**: clamps three fields to `<= 0`; needed `self`
+- **`StopPlayerFalling`**: clamps three fields to `<= 0`; needed `self`
   pinned to `r1` to avoid an extra register copy the ROM doesn't have.
 - **`UpdatePlayer`**: countdown-decrement then tail-call into
   `UpdateGroundSprite` (itself still raw, in the `CollideGroundSprite`-`sub_800A590`
@@ -4558,10 +4558,10 @@ of the run:
   still-unexamined helpers (`ResetSpriteFrameTimer`, `ResetSpriteFrameIndex`,
   `SetSpriteAnimDone`) plus `ResetPlayer` (itself the start of a still-raw
   94 KB span) and `CreateSpriteObj`/`ResetCollisionQueue`/`InitGroundSprite`. Sits
-  between `DestroyPlayer` and `sub_800B4A4` in ROM, so it splits this
+  between `DestroyPlayer` and `GetPlayerCollisionQueue` in ROM, so it splits this
   batch into `actor_part15.c` (up to `DestroyPlayer`) and
-  `actor_part16.c` (`sub_800B4A4` onward).
-- **`sub_800B4A4`-`sub_800B644`**: a long run of plain single-field
+  `actor_part16.c` (`GetPlayerCollisionQueue` onward).
+- **`GetPlayerCollisionQueue`-`SetPlayerSlippery`**: a long run of plain single-field
   accessors (address getter, byte clear/set/get pairs, bulk 3-word
   setters, countdown decrement/clear/increment/get, an unsigned
   "counter snapshot ahead of `gRoomFrameCount`" check, and four
@@ -4570,7 +4570,7 @@ of the run:
   `field > gRoomFrameCount` check needed to be written as a plain
   `return a > b;` rather than an explicit `if/else` - here the
   explicit form was the one that mismatched (the reverse of
-  `sub_800B324` above), producing a longer flag-accumulate-then-copy
+  `HasPlayerRampYTarget` above), producing a longer flag-accumulate-then-copy
   sequence instead of the ROM's compact set-0/conditionally-set-1/
   return pattern.
 - **`sub_800B650`/`sub_800B678`**: indexed getter/setter into a

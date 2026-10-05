@@ -95,17 +95,17 @@ static inline void MarkGone(struct ctrl_target *t)
 static inline void SetVelX(struct ctrl_target *t, s32 a, s32 b, s32 c)
 {
     t->speedX = a;
-    t->velA[0] = a;
-    t->velA[1] = b;
-    t->velA[2] = c;
+    t->rampX[0] = a;
+    t->rampX[1] = b;
+    t->rampX[2] = c;
 }
 
 static inline void SetVelY(struct ctrl_target *t, s32 a, s32 b, s32 c)
 {
     t->speedY = a;
-    t->velB[0] = a;
-    t->velB[1] = b;
-    t->velB[2] = c;
+    t->rampY[0] = a;
+    t->rampY[1] = b;
+    t->rampY[2] = c;
 }
 
 /* Both values are evaluated before either store, as in the ROM. */

@@ -21,7 +21,7 @@
 /* Player-velocity-relative "record" writer: computes a Q14-ish rounded
  * `((player->speedY^2 / 0x4000) + 4) * 3 / 2` timing value, then compares
  * `|player->speedY|` against `|arg2|` to decide whether the current
- * `gPlayer` record (`velB`, +0x54/+0x58/+0x5c) gets the computed
+ * `gPlayer` record (`rampY`, +0x54/+0x58/+0x5c) gets the computed
  * value or a product-sign-selected combination of `arg1`/the computed
  * value. */
 void SetPlayerSwimDriftY(s32 arg0, s32 arg1arg, s32 arg2arg)
@@ -62,8 +62,8 @@ void SetPlayerSwimDriftY(s32 arg0, s32 arg1arg, s32 arg2arg)
             absArg2 = (absArg2 ^ signArg2) - signArg2;
 
             if (absVel > absArg2) {
-                player->velB.x = self;
-                player->velB.y = result;
+                player->rampY.start = self;
+                player->rampY.step = result;
             } else {
                 register s32 prod asm("r0") = vel;
 
@@ -71,16 +71,16 @@ void SetPlayerSwimDriftY(s32 arg0, s32 arg1arg, s32 arg2arg)
                 if (prod < 0) {
                     s32 sum = result + arg1;
 
-                    player->velB.x = self;
-                    player->velB.y = sum;
+                    player->rampY.start = self;
+                    player->rampY.step = sum;
                 } else {
-                    player->velB.x = self;
-                    player->velB.y = arg1;
+                    player->rampY.start = self;
+                    player->rampY.step = arg1;
                 }
             }
         }
     }
 
-    player->velB.z = arg2;
+    player->rampY.target = arg2;
 }
 asm(".align 2, 0");

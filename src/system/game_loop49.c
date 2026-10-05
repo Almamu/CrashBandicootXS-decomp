@@ -48,7 +48,7 @@ extern u8 gCrateKindCounted[];
 extern void AddBrokenCrate(void *arg);
 extern void DropCratesAbove(struct crate *self);
 extern void BreakCrateInStack(void *self, u32 arg1, u32 arg2, u32 arg3);
-extern u32 sub_8010A50(struct crate *self);
+extern u32 GetSlotCrateSpins(struct crate *self);
 extern u8 gSlotCrateTimers[];
 
 
@@ -241,7 +241,7 @@ void BlastNearbyCrates(struct crate *self, s32 dist)
             i++;
         } while (i < (*list)->count);
     }
-    self->u48.n = 0xff;
+    self->u48.blastState = 0xff;
 }
 
 /* Takes no arguments - a pure `gCrateList` list-scan helper,
@@ -341,7 +341,7 @@ void DetonateNitroCrates(void)
 
 void ActivateNitroSwitchCrate(struct crate *self)
 {
-    if (self->u48.n == 0) {
+    if (self->u48.pressed == 0) {
         s32 one;
         struct anim_rec *recs;
         struct anim_rec *rec;
@@ -359,7 +359,7 @@ void ActivateNitroSwitchCrate(struct crate *self)
         DetonateNitroCrates();
         ShowHudCrates(gHud);
         PlaySfx(gAudioContext, 4, 0x100);
-        self->u48.n = one;
+        self->u48.pressed = one;
         PressSwitchCrate(gLevelState);
     }
 }
@@ -430,7 +430,7 @@ void ActivateIronSwitchCrate(struct crate *self)
             struct crate *o = gCrateList->items[i];
 
             if (PHYS_CALL(o, m48) == 3 && (o->state & 0x7f) == 0) {
-                if (o->kind == 5 && o->unk_50 == self->unk_50) {
+                if (o->kind == 5 && o->paramA == self->paramA) {
                     found[n] = o;
                     n++;
                     n &= 0x1f;
@@ -452,8 +452,8 @@ void ActivateIronSwitchCrate(struct crate *self)
     } else {
         self->u48.group = PHYS_NO_GROUP;
     }
-    self->unk_50 = 0;
-    self->timer = self->unk_4C;
+    self->paramA = 0;
+    self->timer = self->fallSpeed;
 }
 
 /* Called from `SolidifyOutlineCrate`'s own jump-table-driven state machine
@@ -481,7 +481,7 @@ void SolidifyOutlineCrates(struct crate *self)
     if (self->timer != 0)
         return;
 
-    if (++self->unk_50 >= self->unk_51) {
+    if (++self->paramA >= self->paramB) {
         struct crate_group *g = self->u48.group;
 
         if (PHYS_HAS_GROUP(g)) {
@@ -506,7 +506,7 @@ void SolidifyOutlineCrates(struct crate *self)
             for (i = 0; i < n; i++) {
                 struct crate *o = items[i];
 
-                if (o->kind == 5 && self->unk_50 >= o->unk_51) {
+                if (o->kind == 5 && self->paramA >= o->paramB) {
                     SolidifyOutlineCrate(o);
                     if (!played) {
                         PlaySfx(gAudioContext, 0xf, 0x100);
@@ -515,7 +515,7 @@ void SolidifyOutlineCrates(struct crate *self)
                 }
             }
         }
-        self->timer = self->unk_4C;
+        self->timer = self->fallSpeed;
     }
 }
 
@@ -540,7 +540,7 @@ void SolidifyOutlineCrates(struct crate *self)
 
 void SolidifyOutlineCrate(struct crate *self)
 {
-    self->kind = self->u48.n - 0x15;
+    self->kind = self->u48.solidKind - 0x15;
     switch (self->kind) {
     case 0:
         PhysSetTag(self, 0x1f);
@@ -567,7 +567,7 @@ void SolidifyOutlineCrate(struct crate *self)
         PhysSetTag(self, 5);
         break;
     case 12:
-        self->u48.n = -0x2a;
+        self->u48.bounceTimer = -0x2a;
         PhysSetTag(self, 0x19);
         break;
     case 13:
@@ -784,7 +784,7 @@ void UpdateTntCountdown(struct crate *self)
  * `2`, `3`, sub-split further by the *previous* phase value in a nested
  * compare) into per-phase blocks. These re-tag `self+0x2d`, re-run the
  * `ResetSpriteFrameTimer`/`ResetSpriteFrameIndex`/`SetSpriteAnimDone` triplet, and (per the
- * `0xc0`-bit branch taken near the top) call `sub_8010A50(self)` -
+ * `0xc0`-bit branch taken near the top) call `GetSlotCrateSpins(self)` -
  * already matched elsewhere (`game_loop30.c` family) - to decide
  * whether the phase cycle continues or the object's position gets
  * finally committed. Given the size and self-contained nature of this
@@ -806,7 +806,7 @@ void UpdateSlotCrate(struct crate *self)
     s32 ph0;
     s32 w1;
 
-    w = self->u48.n;
+    w = self->u48.slotState;
     if (!(w & 0xc0))
     {
         struct gobj *pl = gPlayer;
@@ -828,15 +828,15 @@ void UpdateSlotCrate(struct crate *self)
                 w |= 0x40;
                 w &= 0xc7;
                 w |= 0x10;
-                self->u48.n = w;
+                self->u48.slotState = w;
             }
         }
     }
     if (self->timer != 0)
         return;
-    ph0 = self->u48.n & 7;
+    ph0 = self->u48.slotState & 7;
     ph0 &= 4;
-    w1 = self->u48.n;
+    w1 = self->u48.slotState;
     if (ph0 && self->tag == 8)
     {
         s32 done = 0;
@@ -847,43 +847,43 @@ void UpdateSlotCrate(struct crate *self)
             s32 nx;
             s32 lw;
 
-            lw = self->u48.n;
+            lw = self->u48.slotState;
             nx = ((lw & 7) + 1) & 3;
             ph = nx;
             lw = (lw & 0xf8) | nx;
             asm("" : : "r"(lw)); /* extra reference: lw wins r1 over nx */
-            self->u48.n = lw;
+            self->u48.slotState = lw;
             switch (ph)
             {
             case 0:
                 PhysSetTag(self, 7);
-                if (self->u48.n & 0xc0)
+                if (self->u48.slotState & 0xc0)
                 {
-                    u8 r = sub_8010A50(self);
+                    u8 r = GetSlotCrateSpins(self);
 
                     if (r != 0)
                     {
                         u32 t = (r - 1) << 24;
-                        s32 cw = self->u48.n;
+                        s32 cw = self->u48.slotState;
 
                         cw &= 0xc7;
                         t >>= 21;
                         cw |= t;
-                        self->u48.n = cw;
+                        self->u48.slotState = cw;
                     }
-                    w = self->u48.n;
+                    w = self->u48.slotState;
                     if (!(w & 0x38))
                     {
                         s32 w2 = (w & 0xc7) | 0x10;
 
-                        self->u48.n = w2;
+                        self->u48.slotState = w2;
                         switch ((s32)((u32)(w2 & 0xc0) >> 6))
                         {
                         case 1:
-                            self->u48.n = (w2 & 0x3f) | 0x80;
+                            self->u48.slotState = (w2 & 0x3f) | 0x80;
                             break;
                         case 2:
-                            self->u48.n = (w2 & 0x3f) | 0xc0;
+                            self->u48.slotState = (w2 & 0x3f) | 0xc0;
                             break;
                         case 3:
                             PhysSetTag(self, 0x20);
@@ -894,21 +894,21 @@ void UpdateSlotCrate(struct crate *self)
                 }
                 goto out;
             case 1:
-                if (self->unk_50 & 2)
+                if (self->paramA & 2)
                 {
                     PhysSetTag(self, 9);
                     goto out;
                 }
                 break;
             case 2:
-                if (self->unk_50 & 1)
+                if (self->paramA & 1)
                 {
                     PhysSetTag(self, 0xb);
                     goto out;
                 }
                 break;
             case 3:
-                if (self->unk_50 & 4)
+                if (self->paramA & 4)
                 {
                     PhysSetTag(self, 0xd);
                     done = 1;
@@ -924,7 +924,7 @@ void UpdateSlotCrate(struct crate *self)
             self->slot = GetPaletteSlot(gPaletteCache, rec->paletteId);
         }
         {
-            s32 d = (s32)((u32)(self->u48.n & 0xc0) >> 6);
+            s32 d = (s32)((u32)(self->u48.slotState & 0xc0) >> 6);
 
             self->timer = gSlotCrateTimers[d];
         }
@@ -936,7 +936,7 @@ void UpdateSlotCrate(struct crate *self)
 
             w1 = p | (w1 & 0xf8);
         }
-        self->u48.n = w1;
+        self->u48.slotState = w1;
         self->timer = 1;
         if (self->tag == 0xc)
             PhysSetTag(self, 0xa);
@@ -944,7 +944,7 @@ void UpdateSlotCrate(struct crate *self)
             PhysSetTag(self, 8);
         else
         {
-            switch ((s32)((u32)(self->u48.n & 0xc0) >> 6))
+            switch ((s32)((u32)(self->u48.slotState & 0xc0) >> 6))
             {
             case 0:
             case 1:
@@ -964,7 +964,7 @@ void UpdateSlotCrate(struct crate *self)
 
             self->slot = GetPaletteSlot(gPaletteCache, rec->paletteId);
         }
-        if (self->u48.n & 0xc0)
+        if (self->u48.slotState & 0xc0)
             PlaySfx(gAudioContext, 0x10, 0x100);
     }
 }

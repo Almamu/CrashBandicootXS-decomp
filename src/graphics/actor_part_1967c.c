@@ -130,14 +130,14 @@ struct part
     u8 animDone;           // 0x38
     u8 unk_39[0xB];
     void *ctl;             // 0x44
-    s32 unk_48;            // 0x48
-    s32 unk_4C;            // 0x4C
-    s32 unk_50;            // 0x50
-    s32 unk_54;            // 0x54
-    s32 unk_58;            // 0x58
-    s32 unk_5C;            // 0x5C
-    s32 unk_60;            // 0x60
-    s32 unk_64;            // 0x64
+    s32 rampXStart;            // 0x48
+    s32 rampXStep;            // 0x4C
+    s32 rampXTarget;            // 0x50
+    s32 rampYStart;            // 0x54
+    s32 rampYStep;            // 0x58
+    s32 rampYTarget;            // 0x5C
+    s32 speedX;            // 0x60
+    s32 speedY;            // 0x64
     u8 unk_68[0x9C];
     u8 busy;               // 0x104
 };
@@ -1089,10 +1089,10 @@ void UpdateDingodileProjectile(struct obj_48a4 *self, struct part *other)
     case 1:
         if (other->y <= 0x800)
         {
-            other->unk_64 = 0;
-            other->unk_54 = 0;
-            other->unk_58 = 0;
-            other->unk_5C = 0;
+            other->speedY = 0;
+            other->rampYStart = 0;
+            other->rampYStep = 0;
+            other->rampYTarget = 0;
             VCALL2(self, m50, other, 8);
             other->slot = GetSpriteAnimPaletteSlot(other);
             SpawnDingodileStalactite(self, other->x >> 8, other->y >> 8);
@@ -1118,10 +1118,10 @@ void UpdateDingodileProjectile(struct obj_48a4 *self, struct part *other)
         break;
     }
     case 6:
-        other->unk_64 = 0;
-        other->unk_54 = 0;
-        other->unk_58 = 0;
-        other->unk_5C = 0;
+        other->speedY = 0;
+        other->rampYStart = 0;
+        other->rampYStep = 0;
+        other->rampYTarget = 0;
     case 2:
         if (other->animDone)
             MarkCollected(other);
@@ -1163,20 +1163,20 @@ void UpdateDingodileShark(struct obj_483c *self, struct part *other)
             s32 a = -gDingodileMotionRecords[9];
             s32 c = -gDingodileMotionRecords[11];
             s32 b = gDingodileMotionRecords[10];
-            other->unk_60 = a;
-            other->unk_48 = a;
-            other->unk_4C = b;
-            other->unk_50 = c;
+            other->speedX = a;
+            other->rampXStart = a;
+            other->rampXStep = b;
+            other->rampXTarget = c;
         }
         else
         {
             s32 a = gDingodileMotionRecords[9];
             s32 b = gDingodileMotionRecords[10];
             s32 c = gDingodileMotionRecords[11];
-            other->unk_60 = a;
-            other->unk_48 = a;
-            other->unk_4C = b;
-            other->unk_50 = c;
+            other->speedX = a;
+            other->rampXStart = a;
+            other->rampXStep = b;
+            other->rampXTarget = c;
         }
         break;
     case 1:

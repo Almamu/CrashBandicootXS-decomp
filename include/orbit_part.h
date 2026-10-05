@@ -23,7 +23,8 @@ struct orbit_part
     u8 unk_1C[4];
     struct act_anim_bank *bank; // 0x20
     u8 unk_24;
-    u8 unk_25;                  // 0x25 - set to 1 when the part starts moving
+    u8 screenSpace;             // 0x25 - 1: x/y are screen coordinates (struct gobj.screenSpace); set when
+                                //        the wumpa flies to the HUD (SendWumpaToHud)
     u8 unk_26[2];
     u32 unk_28_0:4;             // 0x28 (same bit layout as struct crate)
     s32 flipX:1;                //      bit 4: X mirrored

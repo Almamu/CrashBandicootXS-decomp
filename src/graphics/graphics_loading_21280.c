@@ -107,7 +107,7 @@ void SpawnDingodile(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     SetPartField0A(part, 1);
     rec = LEVEL_RECORD(arg3);
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
-    part->unk_28_5 = rec->flags >> 2 & 1;
+    part->flipY = rec->flags >> 2 & 1;
     AddToPartList(gCollidableList, part);
     hdr = CreateDingodile(OperatorNew(0x30), arg1, arg2);
     part->hdr = hdr;
@@ -133,7 +133,7 @@ void SpawnTiny(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     POPUP_ATTACH(hdr, part);
     rec = LEVEL_RECORD(arg3);
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
-    part->unk_28_5 = rec->flags >> 2 & 1;
+    part->flipY = rec->flags >> 2 & 1;
     part->base.flags |= 0x10;
     AddToPartList(gCollidableList, part);
     SetLevelBoss(gLevelState, hdr);
@@ -161,9 +161,9 @@ void SpawnCortexBoss(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     POPUP_ATTACH(hdr, part);
     rec = LEVEL_RECORD(arg3);
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
-    part->unk_28_5 = rec->flags >> 2 & 1;
+    part->flipY = rec->flags >> 2 & 1;
     part->base.flags |= 0x10;
     AddToPartList(gUnknown_030012F4, part);
-    part->unk_2A[2] = 0;
+    part->animating = 0;
     SetLevelBoss(gLevelState, hdr);
 }

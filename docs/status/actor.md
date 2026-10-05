@@ -267,17 +267,17 @@ from "core" graphics.
 - `src/graphics/actor_part15.c`/`src/graphics/actor_part16.c` (new
   files, split around the raw untouched `InitPlayer` - see
   `docs/matching.md`): a new not-yet-named big object's accessors -
-  `sub_800B324`, `ClearPlayerSpeedY`, `sub_800B33C`, `UpdatePlayer`,
-  `PlayerTouchesBox`, `DestroyPlayer`, `sub_800B4A4`, `ClearPlayerDead`,
-  `SetPlayerDead`, `IsPlayerDead`, `sub_800B4D0`, `sub_800B4F0`,
+  `HasPlayerRampYTarget`, `ClearPlayerSpeedY`, `StopPlayerFalling`, `UpdatePlayer`,
+  `PlayerTouchesBox`, `DestroyPlayer`, `GetPlayerCollisionQueue`, `ClearPlayerDead`,
+  `SetPlayerDead`, `IsPlayerDead`, `StartPlayerRampX`, `SetPlayerRampX`,
   `sub_800B4F8`, `sub_800B508`, `sub_800B510`, `sub_800B51C`,
   `IsPlayerInvulnerable`, `ClearPlayerInvulnerability`, `SetPlayerInvulnerable`, `SetPlayerControlMode`,
   `GetPlayerControlMode`, `GetPlayerStandingOn`, `SetPlayerStandingOn`, `SetPlayerBusy`,
   `IsPlayerBusy`, `sub_800B584`, `sub_800B58C`, `sub_800B5A0`,
   `sub_800B5A8`, `sub_800B5B0`, `sub_800B5BC`, `sub_800B5C4`,
-  `sub_800B5CC`, `sub_800B5D8`, `sub_800B5E0`, `sub_800B5E8`,
+  `sub_800B5CC`, `sub_800B5D8`, `SetPlayerBumped`, `IsPlayerBumped`,
   `GetPlayerPushRight`, `SetPlayerPushRight`, `GetPlayerPushLeft`, `SetPlayerPushLeft`,
-  `sub_800B620`, `sub_800B62C`, `sub_800B638`, `sub_800B644`,
+  `IsPlayerHanging`, `SetPlayerHanging`, `IsPlayerSlippery`, `SetPlayerSlippery`,
   `sub_800B650`, `sub_800B678`, `SetCtrlMode`, `SetCtrlAnimSet`,
   `SetCtrlTargetMotionY`, `StartCtrlTargetMotionY` (issues #84/#85 - see
   [docs/matching/issue-84-85-SetCtrlTargetMotionY.md](../matching/issue-84-85-SetCtrlTargetMotionY.md);

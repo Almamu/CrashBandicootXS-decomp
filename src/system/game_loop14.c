@@ -45,11 +45,11 @@ struct fx_part
     u8 tag;                     // 0x2D
     u8 unk_2E[0x16];
     struct manager *mgr;        // 0x44
-    s32 unk_48;                 // 0x48 - velocity fields seeded by LaunchEffectPart
-    s32 unk_4C;                 // 0x4C
-    s32 unk_50;                 // 0x50
+    s32 rampXStart;                 // 0x48 - velocity fields seeded by LaunchEffectPart
+    s32 rampXStep;                 // 0x4C
+    s32 rampXTarget;                 // 0x50
     u8 unk_54[0xC];
-    s32 unk_60;                 // 0x60
+    s32 speedX;                 // 0x60
 };
 
 struct fx_box
@@ -103,10 +103,10 @@ extern void GetSpriteHitbox(struct fx_box *dest, void *obj);
 
 static inline void SetVel(struct fx_part *p, s32 v, s32 k)
 {
-    p->unk_60 = v;
-    p->unk_48 = v;
-    p->unk_4C = k;
-    p->unk_50 = v;
+    p->speedX = v;
+    p->rampXStart = v;
+    p->rampXStep = k;
+    p->rampXTarget = v;
 }
 
 struct fx_part *LaunchEffectPart(void *pool, s32 arg1, s32 kind, s32 margin, s32 z, s32 speed, struct fx_part *src)

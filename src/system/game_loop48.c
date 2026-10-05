@@ -125,13 +125,13 @@ void BounceWumpaCrate(struct crate *self)
     s32 argP4;
     u32 argP5;
 
-    if (self->u48.n == -0x2a) {
-        self->u48.n = 0x168;
-        self->unk_51 = 0;
+    if (self->u48.bounceTimer == -0x2a) {
+        self->u48.bounceTimer = 0x168;
+        self->paramB = 0;
     }
-    if (self->u48.n > 0) {
-        if (self->unk_50 == 0) {
-            if (++self->unk_51 > 4) {
+    if (self->u48.bounceTimer > 0) {
+        if (self->paramA == 0) {
+            if (++self->paramB > 4) {
                 BreakCrateInStack(self, 0, 0, 0);
             } else {
                 self->state |= 0x80;
@@ -142,7 +142,7 @@ void BounceWumpaCrate(struct crate *self)
                     p->busy = one;
                 }
                 self->timer = 6;
-                self->unk_50 = 1;
+                self->paramA = 1;
             }
             {
                 register u8 *p5 asm("r5");
@@ -342,7 +342,7 @@ void OpenCheckpointCrate(struct crate *self)
     }
     if (gCrateKindCounted[self->kind])
         AddBrokenCrate(gLevelState);
-    SetCheckpointAtPlayer(gLevelState, self->unk_50 != 0);
+    SetCheckpointAtPlayer(gLevelState, self->paramA != 0);
     self->state &= 0x7f;
     PHYS_PLAYER->busy = 0;
     one = 1;
@@ -571,19 +571,19 @@ void OpenMysteryCrate(struct crate *self, u32 arg1)
     u8 flag = arg1;
 
     PlaySfx(gAudioContext, 3, 0x100);
-    if (self->unk_51 == 9) {
+    if (self->paramB == 9) {
         u8 r = (u16)rand() >> 8;
 
         if (r <= 0x56)
-            self->unk_51 = 1;
+            self->paramB = 1;
         else if (r <= 0xd3)
-            self->unk_51 = 4;
+            self->paramB = 4;
         else if (r <= 0xec)
-            self->unk_51 = 7;
+            self->paramB = 7;
         else
-            self->unk_51 = 8;
+            self->paramB = 8;
     }
-    switch (self->unk_51) {
+    switch (self->paramB) {
     case 10:
         {
             s32 x = self->x >> 8;
@@ -662,7 +662,7 @@ void OpenSlotCrate(struct crate *self, u32 arg1)
     u8 flag = arg1;
 
     PlaySfx(gAudioContext, 3, 0x100);
-    switch (self->u48.n & 7) {
+    switch (self->u48.slotState & 7) {
     case 0:
         break;
     case 1:
@@ -749,17 +749,17 @@ void DropCratesAbove(struct crate *self)
             n->fallDistance = spread;
             n->fallTargetY = n->y + base;
         }
-        t = n->unk_4C;
+        t = n->fallSpeed;
         if (t > 0)
             t = 0;
         {
             s32 d = delta;
 
-            n->unk_4C = t + d;
+            n->fallSpeed = t + d;
         }
         n->flags |= 0x10;
         LinkCrateToActiveBucket(gCrateList, n);
-        if (tbl[n->kind] && self->u48.n == 0 && n->fallDistance > 0x1600)
+        if (tbl[n->kind] && self->u48.blastState == 0 && n->fallDistance > 0x1600)
         {
             struct crate *next = GetCrateAbove(n);
             struct crate *prev = GetCrateBelow(n);
@@ -772,7 +772,7 @@ void DropCratesAbove(struct crate *self)
                     goto advance;
             }
             n->timer = 0;
-            n->u48.n = 1;
+            n->u48.blastState = 1;
         }
     advance:
         n = GetCrateAbove(n);
