@@ -114,7 +114,7 @@ fns): the `CreateCrate` trampoline family, types `1`-`7`.
 - **The negative-mask idiom, again**: `SpawnBasicCrate`'s (parked) and
   every OAM-trio spawner's `+0x29` bitfield update need the explicit
   `asm("mov %0, #0x10\n\tneg %0, %0")` register-pin trick (see
-  `UPDATE_ICON_FRAME_NIBBLE` in `settings_menu6.c`) - a bare `& -0x10`
+  `UPDATE_ICON_FRAME_NIBBLE` in `pause_menu_pages_init.c`) - a bare `& -0x10`
   in C gets constant-folded into a single-instruction bitwise-complement
   immediate, one off from the ROM's actual two's-complement value.
 - **`InitLevelState`'s five "void helper leaves the pointer in r0" calls**
@@ -128,7 +128,7 @@ fns): the `CreateCrate` trampoline family, types `1`-`7`.
   `docs/matching/issue-37-game-loop-234e8.md`).
 - **`gSpriteBankSet`'s triple pointer-to-pointer-to-pointer
   dereference**: declaring it `void ***gSpriteBankSet;` (matching
-  `settings_menu6.c`'s already-confirmed-matching `InitPauseCrystalsPage`) and
+  `pause_menu_pages_init.c`'s already-confirmed-matching `InitPauseCrystalsPage`) and
   writing `**gSpriteBankSet` reproduces the ROM's exact 4-load
   chain (address load, then three register-indirect dereferences) in
   one expression, cleaner than the two-step `void *`-typed alias used

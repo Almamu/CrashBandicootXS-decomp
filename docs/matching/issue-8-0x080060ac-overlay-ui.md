@@ -2,21 +2,21 @@
 
 The tail end of the composite pause/options screen's `asm/code_3_1_10.s`
 region, continuing directly from GitHub issue #7's `PauseMenuCursorDown`/
-`PauseMenuCursorUp` (`src/graphics/settings_menu5.o`) up to the pre-existing
-parked `DrawPowerDialog` guard (`src/graphics/oam_count.c`) that already
+`PauseMenuCursorUp` (`src/menus/pause_menu_widgets.o`) up to the pre-existing
+parked `DrawPowerDialog` guard (`src/menus/power_dialog_draw.c`) that already
 marks this file's end. 3 of the 9 functions matched, 4 parked
 (`NON_MATCHING`, semantics understood), 2 left completely untouched.
 
 ## Matched (3)
 
-- **`FormatDecimal`** (`src/graphics/settings_menu9.c`) - decimal `itoa`:
+- **`FormatDecimal`** (`src/menus/pause_menu_widgets.c`) - decimal `itoa`:
   writes `value`'s digits (unsigned, most significant first) into
   `dest`, NUL-terminated, returning the digit count. Builds digits
   least-significant-first into a small stack buffer via the existing
   `__modsi3`/`__divsi3` div/mod primitives
   (`lib/libgcc/lib1funcs.s`), then reverses them into `dest`. Shared
   by every settings-row/results-widget number label already matched in
-  `src/graphics/settings_menu6.c`/`settings_menu7.c` (both already call
+  `src/menus/pause_menu_pages_init.c`/`pause_menu_widgets.c` (both already call
   it as an `extern`).
 
   The interesting gotcha: this compiler always copies argument
@@ -37,18 +37,18 @@ marks this file's end. 3 of the 9 functions matched, 4 parked
   r7 unprompted, which is what happens here once `value`'s copy is
   deferred.
 
-- **`FormatVolumePercent`** (`src/graphics/settings_menu9.c`) - formats a
+- **`FormatVolumePercent`** (`src/menus/pause_menu_widgets.c`) - formats a
   `" <NN%>"`-shaped scratch string (space, `<`, decimal digits of
   `arg1 * 5` via `FormatDecimal` above, `%`, `>`, NUL) into `out`. Its
   first parameter is read by nothing in the ROM - a genuinely unused
   argument (confirmed: the very first real instruction overwrites r0
   before ever reading it).
 
-- **`CommitPauseMenuFrame`** (`src/graphics/settings_menu12.c`) - the composite
+- **`CommitPauseMenuFrame`** (`src/menus/pause_menu_pages_draw.c`) - the composite
   screen's own top-level object's "apply display registers" step:
   flushes VRAM DMA, clears `PLTT`, and writes `field_c8`/`field_cc`/
   `field_d0` to `REG_BLDCNT`/`REG_BLDY`/`REG_DISPCNT` - the same shape
-  `src/graphics/oam_count.c`'s already-matched `CommitPowerDialogFrame` uses for a
+  `src/menus/power_dialog_draw.c`'s already-matched `CommitPowerDialogFrame` uses for a
   *different*, smaller per-widget object (`struct sub_8006700_actor`),
   confirming this is a second, larger "self" object still not fully
   reconciled (built by the still-raw `RunPauseMenu`/`InitPauseMenu`,
@@ -74,8 +74,8 @@ marks this file's end. 3 of the 9 functions matched, 4 parked
 
 All four hit the same class of gcc-2.9 register-allocation difficulty
 already documented at length for `DrawPowerDialog` (`src/graphics/
-oam_count.c`) and `InitPausePowersPage`/`InitPauseGemsPage`/`InitPauseRelicsPage`/`InitPauseTimeTrialPage`
-(`src/graphics/settings_menu6.c`, GitHub issue #7): every load, store,
+power_dialog_draw.c`) and `InitPausePowersPage`/`InitPauseGemsPage`/`InitPauseRelicsPage`/`InitPauseTimeTrialPage`
+(`src/menus/pause_menu_pages_init.c`, GitHub issue #7): every load, store,
 branch, and call is semantically confirmed, but the loop/self pointer
 and the icon-manager position-store's scratch registers never land
 exactly where the ROM's own allocator puts them, no matter how the
@@ -85,7 +85,7 @@ per-call-site register-pin macro work already invested in `DrawPowerDialog`
 of it.
 
 - **`DrawPauseTimeTrialPage`**, **`DrawPauseCrystalsPage`**, **`DrawPauseMenuPageTitle`**
-  (`src/graphics/settings_menu11.c`, real bytes wrapped `.if
+  (`src/menus/pause_menu_pages_draw.c`, real bytes wrapped `.if
   NON_MATCHING == 0` in `asm/code_3_1_10_14.s`) - three icon-manager
   centered-label draws, each the companion "draw a number/label
   centered on an icon widget" step for one of GitHub issue #7's
@@ -94,7 +94,7 @@ of it.
     result) centered on the medal-icon widget `InitPauseTimeTrialPage` builds,
     using the same fixed `gPauseTimeTrialIconPos` position pair that
     icon itself is positioned with. `self` is the same `struct
-    pause_menu` `settings_menu6.c` already documents
+    pause_menu` `pause_menu_pages_init.c` already documents
     (`field_6c`/`field_bc`/`timeBuf` all line up at their existing
     offsets).
   - `DrawPauseCrystalsPage` positions the icon manager at `gPauseCrystalIconPos`
@@ -111,10 +111,10 @@ of it.
     object from the other two (only `field_24`, a plain `s32` category
     index, is touched here).
 
-- **`PowerDialogLoop`** (`src/graphics/settings_menu10.c`, real bytes
+- **`PowerDialogLoop`** (`src/menus/power_dialog_loop.c`, real bytes
   wrapped `.if NON_MATCHING == 0` in `asm/code_3_1_10_13.s`) - the
   settings-row confirm-cursor stepper on the small per-widget object
-  `src/graphics/oam_count.c` already names `struct sub_8006700_actor`
+  `src/menus/power_dialog_draw.c` already names `struct sub_8006700_actor`
   (redeclared locally here per this project's minimal-local-type
   convention for a type already anchored in another translation unit).
   Steps `field_24`'s low 5 bits down to 0 one at a time (redrawing/
@@ -143,13 +143,13 @@ of it.
 
 `asm/code_3_1_10_11.s` (originally `FormatDecimal` through the
 pre-existing parked `DrawPowerDialog` guard) split into:
-`src/graphics/settings_menu9.c` (`FormatDecimal`/`FormatVolumePercent`, matched),
+`src/menus/pause_menu_widgets.c` (`FormatDecimal`/`FormatVolumePercent`, matched),
 the new raw `asm/code_3_1_10_14.s` (`DrawPauseTimeTrialPage`/`DrawPauseCrystalsPage`/
-`DrawPauseMenuPageTitle`'s real bytes, wrapped), `src/graphics/settings_menu11.c`
-(their `NON_MATCHING` C reconstructions), `src/graphics/settings_menu12.c`
+`DrawPauseMenuPageTitle`'s real bytes, wrapped), `src/menus/pause_menu_pages_draw.c`
+(their `NON_MATCHING` C reconstructions), `src/menus/pause_menu_pages_draw.c`
 (`CommitPauseMenuFrame`, matched), the new raw `asm/code_3_1_10_12.s`
 (`ShowPowerDialog`/`InitPowerDialog`, left untouched), `src/graphics/
-settings_menu10.c` (`PowerDialogLoop`'s `NON_MATCHING` C reconstruction),
+power_dialog_loop.c` (`PowerDialogLoop`'s `NON_MATCHING` C reconstruction),
 the new raw `asm/code_3_1_10_13.s` (its real bytes, wrapped), and
 finally the trimmed `asm/code_3_1_10_11.s` (just the original file's
 unchanged `DrawPowerDialog` guard). `ldscript.txt` and `tools/
@@ -166,7 +166,7 @@ as `FormatDecimal`/`FormatVolumePercent` reordered it *before* the parked
 whole object files link as contiguous units in `ldscript.txt` order,
 regardless of which functions within them are matched vs. parked) -
 fixed by giving `CommitPauseMenuFrame` its own object file
-(`settings_menu12.o`) positioned after the trio's; (2) the
+(`pause_menu_pages_draw.o`) positioned after the trio's; (2) the
 `FormatVolumePercent`/`DrawPauseTimeTrialPage` boundary needed the trailing
 `asm(".align 2, 0")` described above. Neither was visible from an
 isolated per-function compile - both are exactly the kind of
@@ -200,18 +200,18 @@ A follow-up pass tackled this issue's final two "left completely
 untouched" functions, `ShowPowerDialog`/`InitPowerDialog` (previously raw in
 `asm/code_3_1_10_12.s`).
 
-- **`InitPowerDialog`** (`src/graphics/settings_menu13.c`) - the two-string
+- **`InitPowerDialog`** (`src/menus/power_dialog.c`) - the two-string
   dialog/message-box object constructor docs/rom_map.md's "Correction"
   section already traced: builds a small `struct sub_8006700_actor`
-  (the same object `src/graphics/oam_count.c`/`settings_menu10.c`
+  (the same object `src/menus/power_dialog_draw.c`/`power_dialog_loop.c`
   already name, allocated by the caller at exactly its own `0x2c`-byte
   size) plus one `struct settings_icon_actor`-shaped background icon
-  owned via `field_18`, built the same way `settings_menu6.c`'s icon
+  owned via `field_18`, built the same way `pause_menu_pages_init.c`'s icon
   constructors are (`InitUiSpriteObj(OperatorNew(0x40))`, `field_20`
   pointed at the shared `gSpriteBankSet` header table at a new
   `0xe4<<1` offset). **Matched byte-exact**, but only after the same
-  class of heavy register pinning `oam_count.c`'s `SUB_8006600_*`
-  macros and `settings_menu6.c`'s `UPDATE_ICON_FRAME_NIBBLE` already
+  class of heavy register pinning `power_dialog_draw.c`'s `SUB_8006600_*`
+  macros and `pause_menu_pages_init.c`'s `UPDATE_ICON_FRAME_NIBBLE` already
   use - see the full account of gotchas (post-increment-store fusion,
   address-register reuse across adjacent-but-distinct offsets, and a
   plain `register T v asm("rN") = expr` initializer not actually
@@ -233,7 +233,7 @@ untouched" functions, `ShowPowerDialog`/`InitPowerDialog` (previously raw in
   diffing it directly against the ROM's own disassembly, not by trusting
   the isolated `.s` output a second time.
 
-- **`ShowPowerDialog`** (`src/graphics/settings_menu14.c`) - the higher-
+- **`ShowPowerDialog`** (`src/menus/power_dialog.c`) - the higher-
   level dialog spawner docs/rom_map.md already traced (palette/DISPCNT
   reset, re-init the two icon managers, reset the VRAM upload cursor,
   fire each manager's `record->slots[6]` trampoline, allocate and build
@@ -263,12 +263,12 @@ this pass** - one function's worth of register-allocation work remains.
 
 `asm/code_3_1_10_12.s` (previously holding both `ShowPowerDialog` and
 `InitPowerDialog` raw) is gone - split into the new `src/graphics/
-settings_menu14.c` (`ShowPowerDialog`'s `NON_MATCHING` C reconstruction),
+power_dialog.c` (`ShowPowerDialog`'s `NON_MATCHING` C reconstruction),
 the new `asm/code_3_1_10_15.s` (`ShowPowerDialog`'s real bytes, wrapped),
-and the new `src/graphics/settings_menu13.c` (`InitPowerDialog`, matched,
+and the new `src/menus/power_dialog.c` (`InitPowerDialog`, matched,
 unconditional). `ldscript.txt` updated to link them in that order
-(`settings_menu12.o`, `settings_menu14.o`, `code_3_1_10_15.o`,
-`settings_menu13.o`, `settings_menu10.o`, ...), keeping every
+(`pause_menu_pages_draw.o`, `power_dialog.o`, `code_3_1_10_15.o`,
+`power_dialog.o`, `power_dialog_loop.o`, ...), keeping every
 function's own address unchanged. `tools/report_units.py`'s
 `overlay_ui` entries updated to match.
 
@@ -279,9 +279,9 @@ crashbandicootxs.map && make compare` (`La suma coincide`).
 ## Third pass: the remaining parked quartet + `ShowPowerDialog` matched via NAKED transcription
 
 Closed out this issue's last 4 parked functions (`DrawPauseTimeTrialPage`,
-`DrawPauseCrystalsPage`, `DrawPauseMenuPageTitle` in `src/graphics/settings_menu11.c`,
-`PowerDialogLoop` in `src/graphics/settings_menu10.c`) plus `ShowPowerDialog`
-(`src/graphics/settings_menu14.c`), the second pass's remaining parked
+`DrawPauseCrystalsPage`, `DrawPauseMenuPageTitle` in `src/menus/pause_menu_pages_draw.c`,
+`PowerDialogLoop` in `src/menus/power_dialog_loop.c`) plus `ShowPowerDialog`
+(`src/menus/power_dialog.c`), the second pass's remaining parked
 function - all 5 now byte-exact matched, confirmed by a full clean
 `make compare` (`La suma coincide`).
 
@@ -301,7 +301,7 @@ reproducing the ROM's own register choices verbatim.
 
 `DrawPauseTimeTrialPage`/`DrawPauseCrystalsPage`/`DrawPauseMenuPageTitle` and `PowerDialogLoop` needed no
 `ldscript.txt`/file restructuring - each already had its own dedicated
-object file position reserved (`settings_menu11.o`/`settings_menu10.o`),
+object file position reserved (`pause_menu_pages_draw.o`/`power_dialog_loop.o`),
 just contributing zero bytes to the real build while entirely parked;
 removing their `#if NON_MATCHING` guards (and the corresponding raw
 `.if NON_MATCHING == 0` bytes from `asm/code_3_1_10_14.s`/
@@ -332,6 +332,6 @@ from the third pass with plain C:
 - `ShowPowerDialog` matches under both with the `IconSetup`/`IconReserve`
   helpers and a one-argument `FontResetPalette`.
 - `PowerDialogLoop` matches under old_agbcc with a packed `level:5`
-  bitfield. `settings_menu10.c` is now on `OLD_AGBCC_OBJS`.
+  bitfield. `power_dialog_loop.c` is now on `OLD_AGBCC_OBJS`.
 
 The issue's range now has no NAKED, raw or NON_MATCHING functions.

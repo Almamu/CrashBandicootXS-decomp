@@ -225,7 +225,7 @@ fires when the gate says "no longer in this state."
 
 **Level-load loop** (function entry, before the state dispatch):
 allocates a `0x220`-byte scratch buffer (`OperatorNew`, matches
-`src/graphics/level_graphics.c`'s own doc comment for this exact
+`src/frontend/title_screen_init.c`'s own doc comment for this exact
 allocation) and hands it straight to `InitTitleScreen`, then polls
 `RunTitleScreen`; while it returns `2` ("still loading") the loop calls
 `RunCredits` (map/progress-screen trigger) and repeats. Once

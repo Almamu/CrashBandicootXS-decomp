@@ -3,13 +3,13 @@
 All 13 functions from this chunk now have a byte-exact answer - either
 real C or a NAKED transcription - with the whole raw span
 (`asm/code_3_2_20_28568_c99c_31784_33ef4_34aa4.s`) removed, replaced by
-`src/graphics/actor_part131.c`.
+`src/frontend/credits.c`.
 
 This picks up straight from
 [issue-63-final-raw-actor.md](issue-63-final-raw-actor.md): the first
 five functions here are more methods on that same `struct continue_prompt`
 "self" object (`InitContinuePrompt`/`InitContinuePromptGraphics`/`ContinuePromptLoop`,
-actor_part87.c/88.c/89.c), which had already flagged `DrawContinuePrompt`/
+continue_prompt_init.c/continue_prompt.c), which had already flagged `DrawContinuePrompt`/
 `CommitContinuePromptFrame` as its per-frame yield helpers before this pass started.
 The remaining eight operate on a completely different, previously
 undocumented object - a between-level map/progress screen driven
@@ -19,7 +19,7 @@ directly from `game_loop`'s level-load state machine (see
 ## `struct continue_prompt` gets two of its vague fields clarified
 
 `GetContinuePromptBlink`/`CommitContinuePromptFrame`/`DestroyContinuePrompt`/`RunContinuePrompt`/`DrawContinuePrompt` all
-operate on the fade overlay object actor_part87.c already named. Working
+operate on the fade overlay object continue_prompt_init.c already named. Working
 through them pins down real meanings for two fields that file's own
 comment left vague:
 
@@ -27,7 +27,7 @@ comment left vague:
   advanced by `GetContinuePromptBlink` and read back as `(counter >> 1) & 2` - a
   0/2 flicker mask consumed by `DrawContinuePrompt` to hide a Yes/No option's
   label every other frame-pair while it's the current selection.
-- `flag_20` - guessed in actor_part87.c as "which of two alternating
+- `flag_20` - guessed in continue_prompt_init.c as "which of two alternating
   cue sfx last fired" - turns out, in this sibling function set, to hold
   the Yes/No dialog's currently-selected option index (0/1; any other
   value means neither option is highlighted) instead. Same field, a
@@ -87,7 +87,7 @@ via `FontSetPalette` in between, and re-commits the OAM shadow buffer.
 (r7), and two `0x130`/`0x98<<1` index constants (r8/sb) all stay
 resident across many `bl` sites with no register left over - the same
 "many live values across calls, no spare register" shape already NAKED
-throughout this codebase (`ContinuePromptLoop`, actor_part89.c) - and this
+throughout this codebase (`ContinuePromptLoop`, continue_prompt.c) - and this
 function was already flagged as exactly this class of difficulty in
 `docs/matching/issue-63-0x08033ef4-actor.md` before this pass even
 started. Transcribed instruction-for-instruction from the ROM's own
@@ -98,7 +98,7 @@ disassembly rather than attempted as plain C, given the precedent.
 `InitCredits`/`CreditsLoop`/`DrawCreditsText`/`UpdateCreditsText`/`LoadCreditsLogos`/
 `CommitCreditsFrame`/`DestroyCredits`/`RunCredits` all operate on a brand-new
 0x98-byte heap object (`OperatorNew(0x98)`, `struct credits_screen` in
-actor_part131.c) - a combined minimap-reveal + floating-text-popup
+credits.c) - a combined minimap-reveal + floating-text-popup
 screen shown between levels, already partially characterized by
 `docs/rom_map.md`'s "A fourth thing in this file"/"Correction: `RunContinuePrompt`
 turns out to be a separate screen trigger" sections from earlier
@@ -126,7 +126,7 @@ the rest of what's understood without committing it to the struct.
     picked (reusing the pointer's register), where the ROM keeps
     accumulating into the mask constant's own register instead. The
     same "accumulate into the constant's own register" idiom
-    `InitContinuePrompt`/actor_part87.c's `four &= 0x3f;` already established.
+    `InitContinuePrompt`/continue_prompt_init.c's `four &= 0x3f;` already established.
   - `CommitCreditsFrame` needed a `void *unused` parameter it never reads:
     both of `CreditsLoop`'s call sites materialize `self` into r0 right
     before calling it, even though `CommitCreditsFrame`'s own body never
@@ -176,7 +176,7 @@ the rest of what's understood without committing it to the struct.
   stay resident across a long run of `bl` sites, while r4/r6 each get
   rebound to a *different* global's address multiple times over that
   same span with several unrelated calls in between each rebinding - the
-  same shape `InitContinuePromptGraphics` (actor_part88.c, this cluster's own sibling
+  same shape `InitContinuePromptGraphics` (continue_prompt.c, this cluster's own sibling
   constructor) hit, there closed only partially (parked NON_MATCHING
   over a single r7-pin bug). Given the similarity and this function's
   additional mid-function register-rebinding on top of that, transcribed
@@ -233,7 +233,7 @@ build crashbandicootxs.elf crashbandicootxs.gba crashbandicootxs.map &&
 make compare` (`La suma coincide`). The raw bytes that used to live in
 `asm/code_3_2_20_28568_c99c_31784_33ef4_34aa4.s` are gone - that file
 held nothing but these 13 functions, so it was deleted outright, with
-its `ldscript.txt` line replaced by the new `actor_part131.o`.
+its `ldscript.txt` line replaced by the new `credits.o`.
 
 See [docs/status/actor.md](../status/actor.md) for the running
 matched/parked list this entry feeds into.

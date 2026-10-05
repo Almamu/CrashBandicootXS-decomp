@@ -83,7 +83,7 @@ For each entry in `tools/report_units.py`'s address table:
   was carved out with, so relocations and literal pools survive intact -
   then `tools/patch_expected_target.py` applies `expected/corrections.txt`
   to the assembled slice (see the next section). Four files
-  (`printf.c`, `wrapped_text.c`, `input.c`, `oam_count.c`) contain
+  (`printf.c`, `wrapped_text.c`, `input.c`, `power_dialog_draw.c`) contain
   a still-parked function; their range is wider than their own
   `NON_MATCHING=0` object shows, since the parked function's real ROM
   bytes currently live in the *neighboring* still-raw `asm/*.s` chunk

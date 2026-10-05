@@ -114,8 +114,8 @@ Recurring details that mattered:
 
 | Function | File | Result |
 |---|---|---|
-| `DrawLanguageSelect` | counter_selector_icons.c | **C** (direct trampoline call) |
-| `InitLanguageSelectGraphics` | counter_selector_icons.c | NAKED, draft (later: **C**, [late-rom-naked-retry.md](./late-rom-naked-retry.md)) |
+| `DrawLanguageSelect` | language_select.c | **C** (direct trampoline call) |
+| `InitLanguageSelectGraphics` | language_select.c | NAKED, draft (later: **C**, [late-rom-naked-retry.md](./late-rom-naked-retry.md)) |
 | `__divdi3` | libgcc2.c | **C** (libgcc2 `__divdi3`, no-interwork) |
 | `__udivdi3` | libgcc2.c | **C** (libgcc2 `__udivdi3`, no-interwork) |
 | `__udivsi3` | libgcc2.c | NAKED - hand-written asm (final) |

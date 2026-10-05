@@ -13,8 +13,8 @@
  * holds two copies: the cartridge's (`field_8c`) and the one received
  * over the link cable (`field_90`). Formerly
  * `struct settings_sync_record`. See docs/matching/issue-5-overlay-ui-sync.md.
- * Shared (via this header) between src/graphics/settings_menu8.c and
- * settings_menu8b.c/settings_menu8c.c, split apart so the two parked
+ * Shared (via this header) between src/save/save_data.c and
+ * save_menu_input.c, split apart so the two parked
  * functions between them (SendSaveTransferChunk/ReceiveSaveTransferChunk/PollSaveTransfer,
  * SaveGameToSlot) can stay raw asm without breaking ROM link order. */
 struct save_data {
@@ -30,7 +30,7 @@ COMPILE_TIME_ASSERT(sizeof(struct save_data) == 0x200);
 
 /* A transient SIO send/receive envelope wrapping a save_data
  * copy - allocated per "connecting..." spinner-dialog session
- * (LinkExchangeSaveData, src/graphics/settings_menu.c, parked) and torn down
+ * (LinkExchangeSaveData, src/save/save_menu_draw.c, parked) and torn down
  * with it. `tmpl`/`cursor` stream a save_data's bytes out to
  * the SIO session's per-player ring buffer (SendSaveTransferChunk); `data`
  * receives the remote side's copy of the same shape from its own ring

@@ -46,7 +46,7 @@ constructor `InitPooledBgLayer`). It also has the method table, whose entries ar
 |---|---|
 | 0x00/0x04 | pixel position |
 | 0x28 | enabled |
-| 0x2C | tile-map ring-buffer streamer (game_loop57.c) |
+| 0x2C | tile-map ring-buffer streamer (cutscene_player.c) |
 | 0x30 | method table |
 | 0x34 | BGnCNT shadow: priority:2, charBase:2, bits 4-6, colors256:1, screenBase:5, bits 13-15 (a `u16`/bitfield union, which pads to 4 bytes) |
 | 0x38 | `&REG_BGnCNT` |

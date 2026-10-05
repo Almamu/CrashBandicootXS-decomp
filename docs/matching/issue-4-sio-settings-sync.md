@@ -27,7 +27,7 @@ compare` ("La suma coincide").
   (`LinkSerialIntr`/`LinkTimer3Intr`), and two EEPROM block-transfer loops
   (`ReadSaveData`/`WriteSaveData`) that turned out to be a **red herring**
   for SIO at first glance (stack buffer + polling loop looks like the
-  SIO pump from issue #5's `settings_menu8a2.c`) but are actually
+  SIO pump from issue #5's `save_transfer.c`) but are actually
   EEPROM save-chip primitives built on `lib/agb_eeprom/src/eeprom_timer.c`'s
   `EepromConfig`/`EEPROMConfigure`/`EEPROMRead`/`EEPROMWrite1_check` - confirmed
   by `gEepromConfig->maxCount` (an `EepromConfig` field) driving
@@ -42,7 +42,7 @@ compare` ("La suma coincide").
   `struct save_data` from `include/settings_sync.h`
   (issue #5). `EraseSaveSlot` in particular was already referenced by
   name in that header's `rowSelected` field comment and in
-  `src/graphics/settings_menu8.c`'s extern declaration, both written
+  `src/save/save_data.c`'s extern declaration, both written
   before this chunk landed.
 
 ## Matched (16)
@@ -60,11 +60,11 @@ compare` ("La suma coincide").
   dead-address-computation loop that has no observable effect - kept
   byte-faithful since it's genuinely present in the ROM), the session
   object constructor, and the Serial/Timer3 IRQ handlers.
-- `LoadSaveData` (`src/graphics/settings_menu8d.c`) - EEPROM-load-with-
+- `LoadSaveData` (`src/save/save_data.c`) - EEPROM-load-with-
   retry (up to 3 tries) plus marker/checksum validation, muting the
   music player across the transfer.
 - `CheckSaveChecksum`, `UpdateSaveChecksum`, `GetSaveGameId`, `StoreSaveData`,
-  `ReadSaveSlot`, `WriteSaveSlot`, `EraseSaveSlot` (`src/graphics/settings_menu8e.c`)
+  `ReadSaveSlot`, `WriteSaveSlot`, `EraseSaveSlot` (`src/save/save_data.c`)
   - checksum compare/store, `versionNibble` accessor, EEPROM-save-with-
   retry (up to 5 tries, same music-mute pattern as `LoadSaveData`), and
   the three per-row default-refresh/force-set/mark-selected helpers.
@@ -137,7 +137,7 @@ the established pattern this project has hit many times before):
   the function's size, on the assumption the gap is the same
   unresolved class documented elsewhere, not a semantic error.
 - **`ReadSaveData`, `WriteSaveData`** (`asm/code_3_1_10_3_2868.s`, C in
-  `src/graphics/settings_menu8d.c`) - the EEPROM load/save block-loop
+  `src/save/save_data.c`) - the EEPROM load/save block-loop
   pair. Semantics fully confirmed; the shared IME-save/IE-clear/IME-
   restore snippet (repeated per exit path) routes the saved IME value
   through an extra register hop this compiler introduces that the ROM
@@ -145,7 +145,7 @@ the established pattern this project has hit many times before):
   count (buffer/self/len/p/i) versus the near-identical snippet that
   matched cleanly in the much smaller `LinkStop`.
 - **`ValidateSaveData`** (`asm/code_3_1_10_3_2aa4.s`, C in
-  `src/graphics/settings_menu8e.c`) - checksum validate + DMA-repair.
+  `src/save/save_data.c`) - checksum validate + DMA-repair.
   The ROM caches four field addresses (`self+0x1f8/0x1f9/0x1fa/0x1fb`)
   into `r6`/`sb`/`r7`/`r8` ahead of the row loop; explicit register
   pins reproduced that caching and got the loop body and post-loop
@@ -308,7 +308,7 @@ against the function's own slice of `raw_08002938_target.o`, since
 `report_units.py`'s target file gets renamed once the preceding
 function stops being `base_object=None`). `tools/report_units.py`'s
 entries for both `0x08002868` and `0x08002938` now point at
-`src/graphics/settings_menu8d.o`.
+`src/save/save_data.o`.
 
 ## Later pass: drafts for four of the five
 

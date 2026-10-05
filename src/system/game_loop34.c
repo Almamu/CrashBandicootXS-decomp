@@ -44,7 +44,7 @@ void OpenLifeCrate(struct actor *self, u32 arg1)
      * always emits a direct word-sized `str` for a stack argument
      * regardless of the parameter's declared width (same gap already
      * closed for `DrawSaveMenuMain`'s own `DrawSaveSlotStats` call in
-     * settings_menu8c.c - see docs/matching/issue-5-overlay-ui-sync.md).
+     * save_menu_input.c - see docs/matching/issue-5-overlay-ui-sync.md).
      * The whole call is spelled out in asm to match; a dummy 2-word
      * local's address is taken as an unused input operand purely to
      * make this compiler reserve the same 8-byte outgoing-argument

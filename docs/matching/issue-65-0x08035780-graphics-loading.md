@@ -6,7 +6,7 @@ listed 22 raw functions in `0x080354E0`-`0x08037110`. An earlier pass
 covered the first three - `InitTitleScreen` (matched, real C),
 `LoadTitleScreenBg` (NAKED), `LoadTitleScreenObjTiles` (matched, real C,
 register-pinning + opaque asm islands) - all three now living in
-`src/graphics/level_graphics.c`. This is the write-up for the
+`src/frontend/title_screen_init.c`. This is the write-up for the
 remaining 19 functions, `UpdateTitleLogoPieces` through `DrawLogoActor`, the whole
 former contents of `asm/code_3_2_20_28568_c99c_31784_33ef4_355e0.s`
 (confirmed by re-listing that file's functions with
@@ -91,7 +91,7 @@ Two distinct object shapes turned out to be involved, not one:
 
 ## Matched (1 function, full clean `make compare` passing)
 
-- **`HashTitleCheatInput`** (`src/graphics/graphics_loading_35780.c`) - the
+- **`HashTitleCheatInput`** (`src/frontend/title_screen_init.c`) - the
   standalone rotate-then-multiply-by-521 hash update. Every operation
   matched a plain-C reconstruction immediately except the rotate itself:
   the natural `(v << 1) | (v >> 31)` idiom gets folded by agbcc's
@@ -193,7 +193,7 @@ of "off by one instruction" mismatches for the rest of the function)
 and fixed before integrating.
 
 After integrating all 19 functions into
-`src/graphics/graphics_loading_35780.c` (replacing the now-fully-
+`src/frontend/title_screen_init.c` (replacing the now-fully-
 consumed `asm/code_3_2_20_28568_c99c_31784_33ef4_355e0.s`, which is
 deleted), a second, whole-file version of the same check was run:
 compiling the finished `.c` file with the real `cpp`+`agbcc`+`as`
@@ -212,10 +212,10 @@ matching the chunk's own address range precisely.
 
 `asm/code_3_2_20_28568_c99c_31784_33ef4_355e0.s` is deleted (its entire
 remaining content - all 19 functions - is now covered).
-`src/graphics/graphics_loading_35780.c` holds all 19 functions: 18
+`src/frontend/title_screen_init.c` holds all 19 functions: 18
 `NAKED`, 1 (`HashTitleCheatInput`) real C. `ldscript.txt`'s
 `code_3_2_20_28568_c99c_31784_33ef4_355e0.o` line is replaced with
-`graphics_loading_35780.o` in the same link position.
+`title_screen_init.o` in the same link position.
 `tools/report_units.py`'s single combined "left raw" entry for this
 range is split into 19 per-function entries (18 `base_object = None`,
 1 pointing at the new file). Verified via a full clean
@@ -241,6 +241,6 @@ and `LoadUniversalLogoBg` stay NAKED, each with a near-miss draft under
 ## Later pass (issues #64/#65 second NAKED retry)
 
 `ResetTitleLogoPieces`, `RunTitleScreen` and `DrawTitleLogoPieces` are now real C. The file
-was split at `TitleScreenCheatInput` into `graphics_loading_35d1c.c`, because
+was split at `TitleScreenCheatInput` into `title_screen.c`, because
 `DrawTitleLogoPieces` needs strength reduction on and `InitVvLogoPieces` needs it
 off. See [issue-64-65-naked-retry-2.md](issue-64-65-naked-retry-2.md).

@@ -5,11 +5,11 @@
  * sections by ldscript.txt - see docs/data.md.
  */
 
-/* The text DrawContinuePrompt (actor_part131.c) prints in an icon's text
+/* The text DrawContinuePrompt (credits.c) prints in an icon's text
  * slot. */
 const u8 gContinuePromptCursorText[] = ">";
 
-/* InitContinuePromptGraphics (actor_part88.c) fills palette-cache slot 0 from the
+/* InitContinuePromptGraphics (continue_prompt.c) fills palette-cache slot 0 from the
  * first two arrays and slot 2 from the last two, 16 halfwords of each
  * (slot 2's are mostly 0xFFFF, which isn't a colour). The last
  * halfword of gContinuePromptPalette3 is the zero padding before the next

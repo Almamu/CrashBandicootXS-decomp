@@ -90,7 +90,7 @@ asm(".align 2, 0");
 
 /* Shared shape for the 20 near-identical teardown functions below: same
  * doubly-linked-list unlink convention already named in
- * src/audio/counter_selector.c's `DestroyLogoActor` (`+0x48`=prev,
+ * src/frontend/language_select.c's `DestroyLogoActor` (`+0x48`=prev,
  * `+0x4c`=next, `+0x50`=state/vtable pointer) - duplicated here rather
  * than shared, matching this project's existing per-file convention for
  * small locally-scoped structs (see `struct aabb`). */

@@ -20,7 +20,7 @@ only real decompiled C counts, even when the NAKED transcription is
 provably byte-correct against the ROM. All six functions below (and
 their siblings converted the same pass - `PlayAmbientSfx` in
 `src/audio/audio.c`, and the eight
-`src/graphics/settings_menu.c`/`settings_menu23.c` functions) are
+`src/save/save_menu_draw.c`/`save_menu_ui.c` functions) are
 tracked as **parked**, not matched, in those files. The functions
 themselves are still real, working, byte-verified code - only the
 progress-tracking classification differs from an ordinary match.
@@ -112,7 +112,7 @@ crashbandicootxs.map && make compare` passes (`La suma coincide`) with
 all six converted at once, alongside `PlayAmbientSfx`
 (`src/audio/audio.c` - see
 `docs/matching/issue-3-overlay-ui-audio-wrapper.md`) and the eight
-`src/graphics/settings_menu.c`/`settings_menu23.c` functions (see
+`src/save/save_menu_draw.c`/`save_menu_ui.c` functions (see
 `docs/matching/issue-6-0x08003f30-overlay-ui.md`) converted the same
 way in the same pass. `make NON_MATCHING=1 report` also still succeeds
 - none of these six had a `NON_MATCHING`-only reconstruction left

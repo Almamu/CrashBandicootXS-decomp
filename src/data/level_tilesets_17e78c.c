@@ -7,7 +7,7 @@
  * and docs/data_map.md ("gLanguageSelectPalette3").
  */
 
-/* 16 BGR555 colours: InitLanguageSelectGraphics (counter_selector_icons.c) copies them
+/* 16 BGR555 colours: InitLanguageSelectGraphics (language_select.c) copies them
  * into tile-asset cache slot 2 (+0x20), after its three siblings
  * gLanguageSelectPalette0/1/2 (palettes_17e72c.c). */
 const u16 gLanguageSelectPalette3[16] = {

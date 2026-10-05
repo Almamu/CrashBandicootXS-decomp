@@ -10,7 +10,7 @@ struct xy_pair {
     s32 y;
 };
 
-/* InitZoomBg (actor_part_1cee0.c): the four slots' offsets. */
+/* InitZoomBg (level_select_pages.c): the four slots' offsets. */
 const struct xy_pair gZoomBgSlotOffsets[4] = {
     { 4, -4 },
     { -4, -4 },
@@ -18,8 +18,8 @@ const struct xy_pair gZoomBgSlotOffsets[4] = {
     { -4, 4 },
 };
 
-/* Animation ids: SetLevelSelectEntryBox (actor_part_1da38.c) by kind, SetLevelSelectEntryLevel
- * by world, UpdateLevelSelectCursor (actor_part_1dfec.c). */
+/* Animation ids: SetLevelSelectEntryBox (level_select_widgets.c) by kind, SetLevelSelectEntryLevel
+ * by world, UpdateLevelSelectCursor (level_select_widgets.c). */
 const u32 gLevelSelectEntryBoxAnims[5] = {
     0, 1, 4, 3, 2,
 };

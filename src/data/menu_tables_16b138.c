@@ -11,12 +11,12 @@ struct icon_pos {
     s32 y;
 };
 
-/* The text DrawYesNoPrompt (settings_menu.c) draws in an icon's text slot. */
+/* The text DrawYesNoPrompt (save_menu_draw.c) draws in an icon's text slot. */
 const u8 gMenuCursorText[] = ">";
 
-/* InitSaveMenuIcons (settings_menu.c) fills palette-cache slot 0 from the
+/* InitSaveMenuIcons (save_menu_draw.c) fills palette-cache slot 0 from the
  * first two arrays and slot 2 from the last two, 16 halfwords of each
- * (the same four as actor_part88.c's gContinuePromptPalette0 ... 0817C572). */
+ * (the same four as continue_prompt.c's gContinuePromptPalette0 ... 0817C572). */
 const u16 gSaveMenuPalette0[16] = {
     0x83E0, 0x9CC6, 0x107F, 0x0D04, 0x0F9F, 0x894C, 0x0864, 0x05D4,
     0x0ABE, 0xA27F, 0x09BE, 0x1D5F, 0x886B, 0x94DF, 0x0C9B, 0x0873,
@@ -37,19 +37,19 @@ const u16 gSaveMenuPalette3[16] = {
     0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF,
 };
 
-/* The text ids of the five labels DrawSaveMenuMain (settings_menu8c.c) draws. */
+/* The text ids of the five labels DrawSaveMenuMain (save_menu_input.c) draws. */
 const s32 gSaveMenuOptions[5] = {
     0x1B, 0x1C, 0x1E, 0x1D, 0x20,
 };
 
-/* The label text ids DrawPauseMenuPageTitle (settings_menu11.c) picks from. */
+/* The label text ids DrawPauseMenuPageTitle (pause_menu_pages_draw.c) picks from. */
 const s32 gPauseMenuPageTitles[5] = {
     0x36, 0x35, 0x37, 0x38, 0x39,
 };
 
 /* Icon positions and frame indices of the menu screens in
- * settings_menu6.c (InitPauseCrystalsPage, InitPausePowersPage, InitPauseGemsPage, InitPauseRelicsPage,
- * InitPauseTimeTrialPage), settings_menu11.c and settings_menu22.c. */
+ * pause_menu_pages_init.c (InitPauseCrystalsPage, InitPausePowersPage, InitPauseGemsPage, InitPauseRelicsPage,
+ * InitPauseTimeTrialPage), pause_menu_pages_draw.c and pause_menu_gems.c. */
 const struct icon_pos gPauseCrystalIconPos = { 212, 112 };
 const struct icon_pos gPausePowerIconPos[4] = {
     { 180, 96 },

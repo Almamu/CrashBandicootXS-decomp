@@ -18,7 +18,7 @@ palette/tiles/tilemap loader) and two of the cluster's other members
 constructor), without carrying either through to C. This pass instead
 went after the small, self-contained functions immediately after
 `LoadGraphicsPackage` - all six turned out to be accessors on the same
-0x10-byte scratch buffer `LoadLanguageSelectBg` (`counter_selector_setup.c`)
+0x10-byte scratch buffer `LoadLanguageSelectBg` (`language_select_setup.c`)
 already shows a caller building up field-by-field before passing it to
 `LoadGraphicsPackage`/`GetBgSetupControl`:
 
@@ -162,7 +162,7 @@ the running matched/parked list.
 `LoadGraphicsPackage` (the cluster's own namesake, `0x0801E578`-`0x0801E640`,
 real bytes now guarded at the tail of `asm/code_3_2_17_188d0.s`) is fully
 understood: it uses the same 5-field `struct bg_package` descriptor
-`LoadTitleScreenBg`/`LoadTitleScreenObjTiles` (`src/graphics/level_graphics.c`,
+`LoadTitleScreenBg`/`LoadTitleScreenObjTiles` (`src/frontend/title_screen_init.c`,
 issue #65) already established for package loading - moved to a shared
 `include/graphics_package.h` header per docs/workflow.md step 7's "check
 whether a struct for the same object already exists elsewhere first" rule,
@@ -202,7 +202,7 @@ but ABI-incorrect towards the caller - a real bug, not a cosmetic
 mismatch) or ABI-correct with r6 landing on a different scratch register
 than the ROM picked. This is the same first-pass-vs-second-pass
 register-pressure artifact category already documented for
-`LoadTitleScreenBg` (`src/graphics/level_graphics.c`, issue #65) and
+`LoadTitleScreenBg` (`src/frontend/title_screen_init.c`, issue #65) and
 `InitBgSetup` above - parked under `NON_MATCHING` (the ABI-correct
 variant) rather than force either a broken function or a fake match.
 
@@ -549,7 +549,7 @@ register pressure" limitation already closed this session for
 `SetupRoomBlend` (`src/system/game_loop8.c`, PR #334) and `FitScaledSprite`
 (`src/gfx/graphics_package.c`, PR #336, "Seventh pass"
 above), and documented as still-open for `LoadTitleScreenBg`
-(`src/graphics/level_graphics.c`, issue #65) - given the extensive
+(`src/frontend/title_screen_init.c`, issue #65) - given the extensive
 prior iteration already recorded in the third pass's write-up (every
 plausible C-level restructuring already tried and exhausted), this pass
 skipped straight to the NAKED escape hatch rather than re-attempt

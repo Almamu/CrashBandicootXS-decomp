@@ -17,7 +17,7 @@ Five now match as real C:
 |---|---|---|---|---|
 | `UpdateSlotCrate` | `src/system/game_loop49.c` | old_agbcc | 7 | count update split into in-place steps on a fresh local; one earlier `"+r"` barrier dropped |
 | `ActionCtrlStateCrouch` | `src/graphics/actor_part_13c60.c` | old_agbcc | 1 insn | scoped `volatile u8 *` for the facing block's second read-modify-write |
-| `LoadLevelSelectRecord` | `src/graphics/actor_part_1b85c.c` | old_agbcc | spill | a second local for the record pointer (the ROM's spilled copy) |
+| `LoadLevelSelectRecord` | `src/menus/level_select.c` | old_agbcc | spill | a second local for the record pointer (the ROM's spilled copy) |
 | `UpdateExtraLife` | `src/system/game_loop54.c` | old_agbcc | 22 | plain re-reads instead of `volatile` ones; two extra references per velocity |
 | `ConvertHovercraftTiles` | `src/graphics/actor_part130.c` | both | 29 | opaque 0xf mask (`asm("" : "=r"(m) : "0"(0xf))`) ANDed as `m & b`; own counter for the second loop; row header in ROM order |
 

@@ -97,7 +97,7 @@ across the *entire* address range rather than one clump.
 Spot-checked two of the small chains (`DestroyCtrl`, `DestroySpriteObj`) and
 found the *same* code shape in both: set one field of a passed-in struct
 to a ROM data pointer, then conditionally call `OperatorDelete` (matched,
-`src/graphics/oam_count.c`/`graphics.c`) based on a bit in the second
+`src/menus/power_dialog_draw.c`/`graphics.c`) based on a bit in the second
 argument. Both point at a data symbol from the same family -
 `gCtrlVtable`/`gEntityVtable` - which turns out to be
 **93 distinct, individually-labeled, variable-sized entries** in
@@ -442,7 +442,7 @@ one sample read.
 |---|---|---|---|---|
 | `0x08000000`-`0x08006C00` | ~26 KB | `system`/`util`/`graphics` | **matched** | `src/*.c`, see decomp_dev.md |
 | `0x080014A4`-`0x08006700` | 20.6 KB | audio (SFX) | medium | anchored on `PlaySfx`; see "The SFX system" below |
-| `0x08006700`-`0x08006C00` | ~1.3 KB | `graphics` | **matched** | `oam_count.c`/`graphics.c` |
+| `0x08006700`-`0x08006C00` | ~1.3 KB | `graphics` | **matched** | `power_dialog_draw.c`/`graphics.c` |
 | `0x0801E578`-`0x08029ED0`ish | ~27 KB | graphics loading + HUD + actor init | high | `LoadGraphicsPackage`, `InitSmallFont/B`, `FontMeasureText`, `FontUploadTiles`, `DestroyFont`, `InitObjTileFreeList`, `LoadSpriteFrameTiles`, `SetupSpriteFrameOam`, `DecompressCategorySpriteSheet`, `SetupActorVramPool`, `InitActorCategory` all fall in this stretch, tightly packed |
 | `0x08029ED0`-`0x0802B348`ish | ~5.6 KB | actor system | high | `SelectActorCategory`, `InitActorPart`, `DrawActor`, `ConstructAnimTableState`, `ConstructActorPart` - the vtable/animation system documented in `docs/graphics.md` |
 | `0x080354E0`-`0x08035780`ish | ~0.7 KB | graphics loading | high | `InitTitleScreen`, `LoadTitleScreenBg`, `LoadTitleScreenObjTiles` |
@@ -641,7 +641,7 @@ them directly:
   neighborhood.
 - **New finding: several of these runs also call `_call_via_r2`/
   `_call_via_r3`** - the text-drawing helpers already matched in
-  `src/text/wrapped_text.c`/`oam_count.c` (`_call_via_r2` measures a
+  `src/text/wrapped_text.c`/`power_dialog_draw.c` (`_call_via_r2` measures a
   string's pixel width, `_call_via_r3` draws one). Meaning: at least some
   actor types render text as part of their behavior - a floating score,
   a countdown, a crate-contents readout, something along those lines.
@@ -3340,7 +3340,7 @@ pause-menu screens sharing one constructor toolkit**:
   alpha-ish counter `0x1f`→`0`, VBlank-waits for a button press, ramps
   back `0`→`0x10`) - a complete modal-dialog lifecycle. (`DrawPowerDialog`,
   one of `PowerDialogLoop`'s callees, is already partially matched as
-  `src/oam_count.c`, parked under `#if NON_MATCHING` per an asm
+  `src/menus/power_dialog_draw.c`, parked under `#if NON_MATCHING` per an asm
   comment right after it - a useful cross-reference for whoever
   continues this thread.)
 - **`InitPauseMenu`, `InitPowerDialog`, `InitPauseTimeTrialPage` are all instances of
@@ -3396,7 +3396,7 @@ screen plus a separate one-shot achievement-notification sequence.**
   other sits in a different, level-init-adjacent context (near
   `SetupActorVramPool`), not fully characterized.
 - **`ShowPowerDialog` has no `bl` caller in raw asm - it's called from
-  already-matched C code**, `src/graphics/oam_count.c`. Four tiny
+  already-matched C code**, `src/menus/power_dialog_draw.c`. Four tiny
   wrappers there (`ShowTurboRunDialog`...`ShowSuperBodySlamDialog`) each call it with a fixed
   `(label1, label2, type)` triple, matching `InitPowerDialog`'s dialog-box
   shape exactly. These four wrappers are called from `UpdateGameFrame`'s

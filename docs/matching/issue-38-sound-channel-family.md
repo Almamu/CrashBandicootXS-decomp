@@ -29,7 +29,7 @@ the `BeginSlide`-`EndSlide` sound-channel-handle helper family.
   `register u16 v asm("r3")` pin (matching the `result` variable's own
   register) to avoid an extra register hop between the `ldrh` and the
   `-x|x` nonzero-test bit-trick.
-- **`RunSlideshow`** (`src/system/game_loop37.c`) - the per-item driver
+- **`RunSlideshow`** (`src/cutscene/slideshow.c`) - the per-item driver
   loop: streams each item's VRAM bank and sound-channel handle
   (`ShowSlidePicture`/`BeginSlide`), polls input, applies duck-out/fade-start
   side effects, re-arms the cue if needed, then advances via
@@ -37,14 +37,14 @@ the `BeginSlide`-`EndSlide` sound-channel-handle helper family.
   to `r4` (`register struct SoundChannelList *self asm("r4")`) - every
   other register (the loop counter, the cached `i*4` byte offset, the
   polled button result) fell into place on its own.
-- **`SkipSlides`** (`src/system/game_loop37.c`) - the "find the next
+- **`SkipSlides`** (`src/cutscene/slideshow.c`) - the "find the next
   `field_10 != 1` item" index scanner RunSlideshow calls to advance.
   Matched with no special techniques at all - a straight transcription of
   the traced control flow (including writing the array access as
   `items[cur + 1]` rather than introducing a separate `next` index
   variable, to keep the "+1" folded into the load's own immediate offset
   the way the ROM does) compiled byte-identical immediately.
-- **`EndSlide`** (`src/system/game_loop38.c`) - the tail half of
+- **`EndSlide`** (`src/cutscene/slideshow_display.c`) - the tail half of
   `RunSlideshow`'s per-item body (duck-out/fade-start/re-arm), reused
   standalone against a caller-supplied index. Matched with only a `self`
   register pin (`r5`) - same technique as `BeginSlide`/`ShowSlidePicture`
@@ -77,12 +77,12 @@ case.
 
 Real bytes for both stay in their own single-function `asm/*.s` files
 (split out of the original `asm/code_3_2_17_24590.s` so the matched
-functions on both sides could be extracted into `game_loop37.c` - see
+functions on both sides could be extracted into `slideshow.c` - see
 `tools/report_units.py`'s updated `UNITS` table for the exact address
 ranges). Both were attempted extensively; every field, struct offset,
 branch condition and call argument is confirmed correct against the ROM.
 
-- **`BeginSlide`** (`src/system/game_loop37.c`; real bytes in
+- **`BeginSlide`** (`src/cutscene/slideshow.c`; real bytes in
   `asm/code_3_2_17_24590.s`) - starts/re-selects a sound cue via
   `PlaySong`, then either plays a secondary sfx immediately (if the
   channel already reports the requested id) or busy-polls `GetCurrentSong`
@@ -103,7 +103,7 @@ branch condition and call argument is confirmed correct against the ROM.
   variables). Two instructions short (4 bytes) in each of two call sites
   (the `playing == field_14` and `playing != field_14` branches both
   need it).
-- **`ShowSlidePicture`** (`src/system/game_loop37.c`; real bytes in
+- **`ShowSlidePicture`** (`src/cutscene/slideshow.c`; real bytes in
   `asm/code_3_2_17_24708.s`) - toggles `self`'s VRAM-bank flip-flop and
   streams `self->items[idx]`'s tile asset to whichever bank the new state
   selects, rebuilds `gSlideshowDispcnt`'s bit 4 (the same `& ~0x10 | bit`

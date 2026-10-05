@@ -139,7 +139,7 @@ chain):
      (up to) 8 frames ago - and adds a rotating offset built from the
      shared 256-entry sine-ish table `gSineTable` (already
      `extern s16 gSineTable[];`-declared and confirmed real
-     in `actor_part72.c`, itself tied by `docs/rom_map.md` to the
+     in `starfield.c`, itself tied by `docs/rom_map.md` to the
      minimap and an "orbiting-companion actor"):
      `child.x = oldX + (table[frame & 0xff] << 4)`,
      `child.y = oldY + (table[(frame >> 1) & 0xff] << 3) - 0x1800`
@@ -278,7 +278,7 @@ coincide` (checksum matches).
 - `src/graphics/actor_part16.c` - the `self+0x8c`
   `IsTimerArmed`/`SetTimer` convention and the mirror-flag-bit
   convention, both reused here.
-- `src/graphics/actor_part72.c` - `gSineTable`'s own
+- `src/frontend/starfield.c` - `gSineTable`'s own
   `extern s16 [];` declaration and confirmed 256-entry sine-table
   shape.
 - `src/graphics/actor_part.c` - `DrawSprite`'s own matched definition

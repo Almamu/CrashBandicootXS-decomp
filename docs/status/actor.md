@@ -59,7 +59,7 @@ from "core" graphics.
   `CreateHovercraft`, `SpawnHovercraft`, `UpdateHovercraft`, `LoadHovercraftGraphics`
   (`actor_part130.c`). Plain C under current agbcc, no register pins;
   they were NAKED.
-- **`InitContinuePromptGraphics`** (`src/graphics/actor_part88.c`) - issue #63: the fade
+- **`InitContinuePromptGraphics`** (`src/menus/continue_prompt.c`) - issue #63: the fade
   overlay's other setup half (icon manager hookup, tile-cache seeding
   loop). Plain C, built with old_agbcc; it was raw asm
   (`asm/code_3_2_20_28568_c99c_31784_33ef4_3487c.s`, now removed). See
@@ -353,7 +353,7 @@ from "core" graphics.
   trio in `lib/libgcc/lib1funcs.s`, see that file's `docs/matching.md`
   entry): `SetAabbSize`/`SetAabbPos` (the shared AABB set-size/
   set-position primitive already referenced by name from
-  `actor_part.c`/`actor_part2.c`/`oam_count.c`), `GetLives` (a
+  `actor_part.c`/`actor_part2.c`/`power_dialog_draw.c`), `GetLives` (a
   trivial raw-offset getter), `DestroyLargeFont`/`DestroySmallFont` (two more
   `gEntityVtable`-family per-type descriptor table constructors)
 
@@ -703,13 +703,13 @@ from "core" graphics.
   [docs/matching/issue-54-issue-56-gap-e0a4.md](../matching/issue-54-issue-56-gap-e0a4.md)
   and [docs/matching/issue-55-naked-retry.md](../matching/issue-55-naked-retry.md).
 - `src/graphics/actor_part63.c`/`actor_part65.c`/`actor_part67.c`/
-  `actor_part69.c`/`actor_part71.c`/`actor_part72.c`/`actor_part73.c`
+  `actor_part69.c`/`actor_part71.c`/`starfield.c`
   (new files, GitHub issue #63, ROM 0x08033EF4-0x08034AA4 - three
   `InitActorPart`-rooted "self" object kinds immediately following
   issue #62's cluster, non-adjacent since 2 remain parked
   (`UpdateHovercraftCannonFlash`/`sub_8034314`, in `actor_part68.c`/`actor_part70.c` -
   `CreateHovercraftSideGun`/`InitStarfield`/`DrawStarfield`/`SpawnStar`/`PlotStarfieldPixel`
-  are now matched too, closing `actor_part85.c` entirely, see below),
+  are now matched too, closing `starfield.c` entirely, see below),
   `RunHovercraftLauncherState`
   (`actor_part64.c`, now matched - see below), and 3 left-raw functions sit
   interleaved between them; numbered `63`-`73` rather than `57`-`67`
@@ -732,7 +732,7 @@ from "core" graphics.
   compute-then-copy tail - see that file's doc comments for the full
   account), a particle-spawn-budget driver, an input-poll busy-wait, and a
   buffer-release/teardown helper.
-- **`InitContinuePrompt`** (`src/graphics/actor_part87.c`, GitHub issue #63) - a
+- **`InitContinuePrompt`** (`src/menus/continue_prompt_init.c`, GitHub issue #63) - a
   standalone `struct continue_prompt` object's constructor half: allocates
   and loads its three BG scratch buffers, builds DISPCNT, hands off to
   `InitContinuePromptGraphics`, then builds the BLDCNT/BLDALPHA alpha-blend value.
@@ -765,8 +765,8 @@ from "core" graphics.
   became two named `s16` fields (`loopThreshold`/`loopBase`), both read
   by `UpdateJetpackCheckpointText`.
 
-- `src/graphics/actor_part87.c`/`actor_part100.c`/`actor_part88.c`/
-  `actor_part95.c`/`actor_part89.c`/`actor_part96.c`/`actor_part90.c`/
+- `src/menus/continue_prompt_init.c`/`actor_part100.c`/`continue_prompt.c`/
+  `actor_part95.c`/`continue_prompt.c`/`actor_part96.c`/`actor_part90.c`/
   `actor_part97.c`/`actor_part91.c`/`actor_part98.c`/`actor_part92.c`
   (new files, GitHub issue #48, ROM 0x080291A4-0x08029E4C):
   `SetupActorVramPool` (pins the category's tile-cache slots and
@@ -875,7 +875,7 @@ from "core" graphics.
   promoted to real C in a follow-up pass via the static-inline anti-CSE
   technique - see
   [issue-59-60-static-inline-cse-promotion.md](../matching/issue-59-60-static-inline-cse-promotion.md).
-- `src/graphics/actor_part131.c` (new file, ROM 0x08034AA4-0x080354E0,
+- `src/frontend/credits.c` (new file, ROM 0x08034AA4-0x080354E0,
   GitHub issue #64): `GetContinuePromptBlink` (the fade overlay's Yes/No-dialog
   blink/toggle helper), `CommitContinuePromptFrame` (fade overlay per-frame "yield"
   helper), `DestroyContinuePrompt` (fade overlay teardown), `RunContinuePrompt` (the
@@ -1034,7 +1034,7 @@ See [docs/matching/strag2-naked-retry.md](../matching/strag2-naked-retry.md).
   in two statements and the high nibble masked; 7B0 also needs three
   empty `asm("" : : "r"(x))` extra references (`dest` after the loop,
   `cols` twice before the call) to settle two register-priority ties.
-- `src/graphics/actor_part89.c` - `ContinuePromptLoop` (the fade overlay's
+- `src/menus/continue_prompt.c` - `ContinuePromptLoop` (the fade overlay's
   per-frame input driver, issue #63), old_agbcc (object added to
   `OLD_AGBCC_OBJS`). An extra reference to `audio` at the top of the
   loop replaces the old r8 pin on the pair counter, and a `"+r"` asm on
@@ -1138,7 +1138,7 @@ See [docs/matching/sp-box-retry.md](../matching/sp-box-retry.md).
 
 ### Matched in the size2 NAKED retry
 
-- `src/graphics/actor_part131.c` - `LoadCreditsLogos` (issue #64, the map
+- `src/frontend/credits.c` - `LoadCreditsLogos` (issue #64, the map
   screen's popup-text asset loader), old_agbcc. A non-volatile asm with
   outputs is an ordinary expression to GCSE, so PRE hoisted even a
   `"+r"` copy of `slot`. The palette index is a copy passed through
@@ -1244,7 +1244,7 @@ plain C didn't converge.
 - **Now matched as real C (strag2 retry, see Matched); entry kept for history.** **`ActionCtrlStateBodySlamStart`** (`src/graphics/actor_part38c.c`) -
   `part+0x38`/`HasSuperBodySlam`-gated mgr-trampoline dispatcher. See
   `docs/matching/issue-18-0x08014f8c-actor.md`.
-- **Now matched as real C (size2 NAKED retry, see Matched and docs/matching/size2-naked-retry.md); entry kept for history.** **`LoadCreditsLogos`** (`src/graphics/actor_part131.c`, GitHub issue #64) -
+- **Now matched as real C (size2 NAKED retry, see Matched and docs/matching/size2-naked-retry.md); entry kept for history.** **`LoadCreditsLogos`** (`src/frontend/credits.c`, GitHub issue #64) -
   the map screen's popup-text asset loader. The issue #64/#65 NAKED
   retry left a near-miss C draft under `#if NON_MATCHING` (old_agbcc):
   the "seven live values" allocation is right; what is left is that gcc
@@ -1394,7 +1394,7 @@ embedded as asm instead. They're tracked as parked, not matched.
   address-in-`r0`/value-in-`r2` register choice directly. Retires the
   old raw `asm/code_3_2_9.s`. See
   [docs/matching/issue-97-ApplySpriteVelocity.md](../matching/issue-97-ApplySpriteVelocity.md).
-- **`InitStarfield`** (`src/graphics/actor_part85.c`) - constructs the
+- **`InitStarfield`** (`src/frontend/starfield.c`) - constructs the
   particle-trail BG0 object; now fully matched as real C. The ROM
   builds a 4-bit-palette-bank tile-index mask (0xFFFFF000) by loading
   the literal into `r1` first and copying it into `r5` (`ldr
@@ -1413,13 +1413,13 @@ embedded as asm instead. They're tracked as parked, not matched.
   `asm/code_3_2_20_28568_c99c_31784_33ef4_34374.s`, split at the time
   into `asm/code_3_2_20_28568_c99c_31784_33ef4_34480.s` (real bytes for
   the twin `DrawStarfield`) - that fragment is now retired too (see
-  below), closing `actor_part85.c` entirely. GitHub issue #63, see
+  below), closing `starfield.c` entirely. GitHub issue #63, see
   `docs/matching/issue-63-0x08033ef4-actor.md`.
-- **`DrawStarfield`** (`src/graphics/actor_part85.c`) - `InitStarfield`'s
+- **`DrawStarfield`** (`src/frontend/starfield.c`) - `InitStarfield`'s
   companion per-frame updater; now fully matched as real C, closing the
   file. Commits last frame's `tileBuffer` to tile VRAM, clears it back
   to zero, then for each active particle inlines the same nibble-
-  address formula as `PlotStarfieldPixel` (`actor_part72.c`) *twice* (nibble
+  address formula as `PlotStarfieldPixel` (`starfield.c`) *twice* (nibble
   `1` pre-move, nibble `2` post-move), applying `dx`/`dy` and
   respawning via `SpawnStar` in between. Needed a mix of
   `PlotStarfieldPixel`'s own three fixes (unsigned casts for the `x`/`newX`
@@ -1438,7 +1438,7 @@ embedded as asm instead. They're tracked as parked, not matched.
   reload rather than as its `register` declaration's own initializer.
   Retires `asm/code_3_2_20_28568_c99c_31784_33ef4_34480.s` entirely.
   GitHub issue #63, see `docs/matching/issue-63-0x08033ef4-actor.md`.
-- **`SpawnStar`/`PlotStarfieldPixel`** (`src/graphics/actor_part72.c`) - a
+- **`SpawnStar`/`PlotStarfieldPixel`** (`src/frontend/starfield.c`) - a
   128-slot particle-slot spawner (rolls two `RandRange` random values
   against the 256-entry `gSineTable` direction table to seed a
   position/velocity record) and a 4-bit-per-cell tilemap nibble writer;

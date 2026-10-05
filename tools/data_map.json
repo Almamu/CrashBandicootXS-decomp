@@ -369,8 +369,8 @@
     "graphics/actor_part129.c",
     "graphics/actor_part130.c",
     "graphics/actor_part62.c",
-    "graphics/actor_part72.c",
-    "graphics/actor_part_1da38.c",
+    "frontend/starfield.c",
+    "menus/level_select_widgets.c",
     "graphics/actor_part_2fbf0.c",
     "system/game_loop52.c",
     "system/game_loop53.c",
@@ -452,7 +452,7 @@
     "DrawYesNoPrompt"
    ],
    "consumer_files": [
-    "graphics/settings_menu.c"
+    "save/save_menu_draw.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -473,7 +473,7 @@
     "InitSaveMenuIcons"
    ],
    "consumer_files": [
-    "graphics/settings_menu.c"
+    "save/save_menu_draw.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 1,
@@ -497,7 +497,7 @@
     "InitSaveMenuIcons"
    ],
    "consumer_files": [
-    "graphics/settings_menu.c"
+    "save/save_menu_draw.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 2,
@@ -521,7 +521,7 @@
     "InitSaveMenuIcons"
    ],
    "consumer_files": [
-    "graphics/settings_menu.c"
+    "save/save_menu_draw.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -545,7 +545,7 @@
     "InitSaveMenuIcons"
    ],
    "consumer_files": [
-    "graphics/settings_menu.c"
+    "save/save_menu_draw.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -569,7 +569,7 @@
     "DrawSaveMenuMain"
    ],
    "consumer_files": [
-    "graphics/settings_menu8c.c"
+    "save/save_menu_input.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -593,7 +593,7 @@
     "DrawPauseMenuPageTitle"
    ],
    "consumer_files": [
-    "graphics/settings_menu11.c"
+    "menus/pause_menu_pages_draw.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -618,8 +618,8 @@
     "DrawPauseCrystalsPage"
    ],
    "consumer_files": [
-    "graphics/settings_menu11.c",
-    "graphics/settings_menu6.c"
+    "menus/pause_menu_pages_draw.c",
+    "menus/pause_menu_pages_init.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -643,7 +643,7 @@
     "InitPausePowersPage"
    ],
    "consumer_files": [
-    "graphics/settings_menu6.c"
+    "menus/pause_menu_pages_init.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -667,7 +667,7 @@
     "InitPausePowersPage"
    ],
    "consumer_files": [
-    "graphics/settings_menu6.c"
+    "menus/pause_menu_pages_init.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -692,8 +692,8 @@
     "InitPauseGemsPage"
    ],
    "consumer_files": [
-    "graphics/settings_menu22.c",
-    "graphics/settings_menu6.c"
+    "menus/pause_menu_gems.c",
+    "menus/pause_menu_pages_init.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -717,7 +717,7 @@
     "InitPauseGemsPage"
    ],
    "consumer_files": [
-    "graphics/settings_menu6.c"
+    "menus/pause_menu_pages_init.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -742,8 +742,8 @@
     "InitPauseRelicsPage"
    ],
    "consumer_files": [
-    "graphics/settings_menu22.c",
-    "graphics/settings_menu6.c"
+    "menus/pause_menu_gems.c",
+    "menus/pause_menu_pages_init.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -768,7 +768,7 @@
     "InitPauseTimeTrialPage"
    ],
    "consumer_files": [
-    "graphics/settings_menu6.c"
+    "menus/pause_menu_pages_init.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -793,8 +793,8 @@
     "DrawPauseTimeTrialPage"
    ],
    "consumer_files": [
-    "graphics/settings_menu11.c",
-    "graphics/settings_menu6.c"
+    "menus/pause_menu_pages_draw.c",
+    "menus/pause_menu_pages_init.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -818,7 +818,7 @@
     "InitPauseMenu"
    ],
    "consumer_files": [
-    "graphics/settings_menu15.c"
+    "menus/pause_menu.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 3,
@@ -838,7 +838,7 @@
     "InitPauseMenu"
    ],
    "consumer_files": [
-    "graphics/settings_menu15.c"
+    "menus/pause_menu.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -859,7 +859,7 @@
     "RunPauseMenu"
    ],
    "consumer_files": [
-    "graphics/settings_menu15.c"
+    "menus/pause_menu.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2271,10 +2271,10 @@
     "LoadLanguageSelectBg"
    ],
    "consumer_files": [
-    "audio/counter_selector_setup.c",
-    "graphics/actor_part_1b85c.c",
-    "graphics/settings_menu13.c",
-    "graphics/settings_menu2.c"
+    "frontend/language_select_setup.c",
+    "menus/level_select.c",
+    "menus/power_dialog.c",
+    "save/save_menu_ui.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 3,
@@ -2294,7 +2294,7 @@
     "InitLevelSelect"
    ],
    "consumer_files": [
-    "graphics/actor_part_1b85c.c"
+    "menus/level_select.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2318,7 +2318,7 @@
     "InitLevelSelect"
    ],
    "consumer_files": [
-    "graphics/actor_part_1b85c.c"
+    "menus/level_select.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2342,7 +2342,7 @@
     "InitLevelSelect"
    ],
    "consumer_files": [
-    "graphics/actor_part_1b85c.c"
+    "menus/level_select.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2366,7 +2366,7 @@
     "InitLevelSelect"
    ],
    "consumer_files": [
-    "graphics/actor_part_1b85c.c"
+    "menus/level_select.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2390,7 +2390,7 @@
     "InitLevelSelect"
    ],
    "consumer_files": [
-    "graphics/actor_part_1b85c.c"
+    "menus/level_select.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2415,7 +2415,7 @@
     "DrawLevelSelectTime"
    ],
    "consumer_files": [
-    "graphics/actor_part_1b85c.c"
+    "menus/level_select.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2439,7 +2439,7 @@
     "InitLevelSelect"
    ],
    "consumer_files": [
-    "graphics/actor_part_1b85c.c"
+    "menus/level_select.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2463,7 +2463,7 @@
     "InitLevelSelect"
    ],
    "consumer_files": [
-    "graphics/actor_part_1b85c.c"
+    "menus/level_select.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2488,7 +2488,7 @@
     "PlaceLevelSelectEntries"
    ],
    "consumer_files": [
-    "graphics/actor_part_1cee0.c"
+    "menus/level_select_pages.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2513,7 +2513,7 @@
     "PlaceLevelSelectEntries"
    ],
    "consumer_files": [
-    "graphics/actor_part_1cee0.c"
+    "menus/level_select_pages.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2538,7 +2538,7 @@
     "SetLevelSelectEntryBoxes"
    ],
    "consumer_files": [
-    "graphics/actor_part_1cee0.c"
+    "menus/level_select_pages.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2563,8 +2563,8 @@
     "RefreshLevelSelectPage"
    ],
    "consumer_files": [
-    "graphics/actor_part_1b85c.c",
-    "graphics/actor_part_1cee0.c"
+    "menus/level_select.c",
+    "menus/level_select_pages.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2588,7 +2588,7 @@
     "LoadLevelSelectRecord"
    ],
    "consumer_files": [
-    "graphics/actor_part_1b85c.c"
+    "menus/level_select.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2612,7 +2612,7 @@
     "RunLevelSelect"
    ],
    "consumer_files": [
-    "graphics/actor_part_1b85c.c"
+    "menus/level_select.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2633,7 +2633,7 @@
     "CreateLevelSelectPageBg"
    ],
    "consumer_files": [
-    "graphics/actor_part_1cee0.c"
+    "menus/level_select_pages.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 3,
@@ -2653,7 +2653,7 @@
     "UpdateZoomBg"
    ],
    "consumer_files": [
-    "graphics/actor_part_1da38.c"
+    "menus/level_select_widgets.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 20,
@@ -2676,7 +2676,7 @@
     "InitZoomBg"
    ],
    "consumer_files": [
-    "graphics/actor_part_1cee0.c"
+    "menus/level_select_pages.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2700,7 +2700,7 @@
     "SetLevelSelectEntryBox"
    ],
    "consumer_files": [
-    "graphics/actor_part_1da38.c"
+    "menus/level_select_widgets.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2724,7 +2724,7 @@
     "SetLevelSelectEntryLevel"
    ],
    "consumer_files": [
-    "graphics/actor_part_1da38.c"
+    "menus/level_select_widgets.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2748,7 +2748,7 @@
     "UpdateLevelSelectCursor"
    ],
    "consumer_files": [
-    "graphics/actor_part_1dfec.c"
+    "menus/level_select_widgets.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2985,11 +2985,11 @@
     "SelectRoom"
    ],
    "consumer_files": [
-    "graphics/actor_part_1b85c.c",
+    "menus/level_select.c",
     "graphics/graphics_loading_21280.c",
-    "graphics/oam_count.c",
-    "graphics/settings_menu19.c",
-    "graphics/settings_menu6.c",
+    "menus/power_dialog_draw.c",
+    "menus/pause_menu_info.c",
+    "menus/pause_menu_pages_init.c",
     "system/game_loop17.c",
     "system/game_loop18.c",
     "system/game_loop56.c"
@@ -3180,7 +3180,7 @@
     "ConfigureHudParts"
    ],
    "consumer_files": [
-    "graphics/hud_digit_array.c"
+    "hud/hud_init.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3208,9 +3208,9 @@
     "UpdateHudPercentCounters"
    ],
    "consumer_files": [
-    "graphics/hud_digit_array.c",
-    "graphics/hud_stat_widget2.c",
-    "graphics/hud_stat_widget3.c"
+    "hud/hud_init.c",
+    "hud/hud_boss_clock.c",
+    "hud/hud_counters.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3478,7 +3478,7 @@
     "RunCompanyLogos"
    ],
    "consumer_files": [
-    "graphics/graphics_loading_35d1c.c"
+    "frontend/title_screen.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 234,
@@ -4384,7 +4384,7 @@
     "DrawContinuePrompt"
    ],
    "consumer_files": [
-    "graphics/actor_part131.c"
+    "frontend/credits.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -4405,7 +4405,7 @@
     "InitContinuePromptGraphics"
    ],
    "consumer_files": [
-    "graphics/actor_part88.c"
+    "menus/continue_prompt.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 1,
@@ -4429,7 +4429,7 @@
     "InitContinuePromptGraphics"
    ],
    "consumer_files": [
-    "graphics/actor_part88.c"
+    "menus/continue_prompt.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 2,
@@ -4453,7 +4453,7 @@
     "InitContinuePromptGraphics"
    ],
    "consumer_files": [
-    "graphics/actor_part88.c"
+    "menus/continue_prompt.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -4477,7 +4477,7 @@
     "InitContinuePromptGraphics"
    ],
    "consumer_files": [
-    "graphics/actor_part88.c"
+    "menus/continue_prompt.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -4501,7 +4501,7 @@
     "InitContinuePrompt"
    ],
    "consumer_files": [
-    "graphics/actor_part87.c"
+    "menus/continue_prompt_init.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 3,
@@ -4521,7 +4521,7 @@
     "InitContinuePrompt"
    ],
    "consumer_files": [
-    "graphics/actor_part87.c"
+    "menus/continue_prompt_init.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 3,
@@ -4541,7 +4541,7 @@
     "InitContinuePrompt"
    ],
    "consumer_files": [
-    "graphics/actor_part87.c"
+    "menus/continue_prompt_init.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 3,
@@ -4561,7 +4561,7 @@
     "InitCredits"
    ],
    "consumer_files": [
-    "graphics/actor_part131.c"
+    "frontend/credits.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -4583,7 +4583,7 @@
     "UpdateCreditsText"
    ],
    "consumer_files": [
-    "graphics/actor_part131.c"
+    "frontend/credits.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -4604,7 +4604,7 @@
     "LoadCreditsLogos"
    ],
    "consumer_files": [
-    "graphics/actor_part131.c"
+    "frontend/credits.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 10,
@@ -4628,7 +4628,7 @@
     "ResetTitleLogoPieces"
    ],
    "consumer_files": [
-    "graphics/graphics_loading_35d1c.c"
+    "frontend/title_screen.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 9,
@@ -4648,7 +4648,7 @@
     "DrawTitleLogoPieces"
    ],
    "consumer_files": [
-    "graphics/graphics_loading_35780.c"
+    "frontend/title_screen_init.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -4672,7 +4672,7 @@
     "InitTitleScreen"
    ],
    "consumer_files": [
-    "graphics/level_graphics.c"
+    "frontend/title_screen_init.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 1,
@@ -4693,7 +4693,7 @@
     "InitTitleScreen"
    ],
    "consumer_files": [
-    "graphics/level_graphics.c"
+    "frontend/title_screen_init.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 1,
@@ -4717,7 +4717,7 @@
     "InitTitleScreen"
    ],
    "consumer_files": [
-    "graphics/level_graphics.c"
+    "frontend/title_screen_init.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 12,
@@ -4738,7 +4738,7 @@
     "LoadTitleScreenBg"
    ],
    "consumer_files": [
-    "graphics/level_graphics.c"
+    "frontend/title_screen_init.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 3,
@@ -4763,7 +4763,7 @@
     "RunCompanyLogos"
    ],
    "consumer_files": [
-    "graphics/graphics_loading_35d1c.c"
+    "frontend/title_screen.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 2,
@@ -4784,7 +4784,7 @@
     "InitVvLogoPieces"
    ],
    "consumer_files": [
-    "graphics/graphics_loading_35d1c.c"
+    "frontend/title_screen.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 20,
@@ -4804,7 +4804,7 @@
     "LoadVvLogoGraphics"
    ],
    "consumer_files": [
-    "graphics/graphics_loading_35d1c.c"
+    "frontend/title_screen.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 2,
@@ -4824,7 +4824,7 @@
     "LoadVvLogoGraphics"
    ],
    "consumer_files": [
-    "graphics/graphics_loading_35d1c.c"
+    "frontend/title_screen.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 2,
@@ -4844,7 +4844,7 @@
     "LoadVvLogoGraphics"
    ],
    "consumer_files": [
-    "graphics/graphics_loading_35d1c.c"
+    "frontend/title_screen.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 2,
@@ -4864,7 +4864,7 @@
     "LoadUniversalLogoBg"
    ],
    "consumer_files": [
-    "graphics/graphics_loading_3686c.c"
+    "frontend/company_logos.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 3,
@@ -4872,7 +4872,7 @@
    "c_decls": [
     "u8 X[]"
    ],
-   "format": "bg_package (graphics_loading_35780.c) + trailing per-screen records",
+   "format": "bg_package (title_screen_init.c) + trailing per-screen records",
    "effort": "medium",
    "confidence": "medium",
    "notes": "",
@@ -4886,7 +4886,7 @@
     "DrawLanguageSelect"
    ],
    "consumer_files": [
-    "audio/counter_selector_icons.c"
+    "frontend/language_select.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 6,
@@ -4909,7 +4909,7 @@
     "InitLanguageSelectGraphics"
    ],
    "consumer_files": [
-    "audio/counter_selector_icons.c"
+    "frontend/language_select.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 1,
@@ -4933,7 +4933,7 @@
     "InitLanguageSelectGraphics"
    ],
    "consumer_files": [
-    "audio/counter_selector_icons.c"
+    "frontend/language_select.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 1,
@@ -4957,7 +4957,7 @@
     "InitLanguageSelectGraphics"
    ],
    "consumer_files": [
-    "audio/counter_selector_icons.c"
+    "frontend/language_select.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -4981,7 +4981,7 @@
     "InitLanguageSelectGraphics"
    ],
    "consumer_files": [
-    "audio/counter_selector_icons.c"
+    "frontend/language_select.c"
    ],
    "ptr_words_code": 67,
    "ptr_words_data": 1875,
@@ -5081,7 +5081,7 @@
    ],
    "consumer_files": [
     "graphics/graphics_loading_21d80.c",
-    "graphics/settings_menu15.c"
+    "menus/pause_menu.c"
    ],
    "ptr_words_code": 220,
    "ptr_words_data": 9413,
@@ -8066,7 +8066,7 @@
     "CreateCameraLead"
    ],
    "consumer_files": [
-    "graphics/actor_part_1b85c.c"
+    "menus/level_select.c"
    ],
    "ptr_words_code": 14,
    "ptr_words_data": 0,
@@ -8092,7 +8092,7 @@
     "InitLaunchPad"
    ],
    "consumer_files": [
-    "graphics/actor_part_1b85c.c"
+    "menus/level_select.c"
    ],
    "ptr_words_code": 14,
    "ptr_words_data": 0,
@@ -8117,8 +8117,7 @@
     "CreateLevelSelectEntry"
    ],
    "consumer_files": [
-    "graphics/actor_part_1da38.c",
-    "graphics/actor_part_1dfec.c"
+    "menus/level_select_widgets.c"
    ],
    "ptr_words_code": 5,
    "ptr_words_data": 0,
@@ -8143,7 +8142,7 @@
     "InitBgStreamer"
    ],
    "consumer_files": [
-    "system/game_loop57.c"
+    "cutscene/cutscene_player.c"
    ],
    "ptr_words_code": 1,
    "ptr_words_data": 0,
@@ -8168,7 +8167,7 @@
     "InitBgLayerBase"
    ],
    "consumer_files": [
-    "system/game_loop57.c"
+    "cutscene/cutscene_player.c"
    ],
    "ptr_words_code": 4,
    "ptr_words_data": 0,
@@ -8396,7 +8395,7 @@
     "DestroyHovercraftCannonFlash"
    ],
    "consumer_files": [
-    "audio/counter_selector.c",
+    "frontend/language_select.c",
     "graphics/actor_anim.c",
     "graphics/actor_part129.c",
     "graphics/actor_part130.c",
@@ -9511,8 +9510,8 @@
     "DestroyLogoActor"
    ],
    "consumer_files": [
-    "audio/counter_selector.c",
-    "graphics/graphics_loading_3686c.c"
+    "frontend/language_select.c",
+    "frontend/company_logos.c"
    ],
    "ptr_words_code": 3,
    "ptr_words_data": 0,

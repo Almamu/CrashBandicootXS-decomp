@@ -9,7 +9,7 @@
  * hardware BG. See docs/matching/issue-42-bg-scroll-layer.md.
  *
  * The layer keeps a 32x32-entry window of the level's tile map (a
- * `DecodeLayerChunk`-family ring-buffer streamer at `+0x2C`, game_loop57.c)
+ * `DecodeLayerChunk`-family ring-buffer streamer at `+0x2C`, cutscene_player.c)
  * resident in its BG screen block: `+0x3C..+0x40` is the resident tile
  * row range and `+0x44..+0x48` the column range. Methods draw/release
  * one row or column at a time as the window moves. */

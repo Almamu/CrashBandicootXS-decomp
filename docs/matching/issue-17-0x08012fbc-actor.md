@@ -26,21 +26,21 @@ accurate by this pass's own full transcription.
 `src/graphics/actor_part_138e8.c` (`ActionCtrlStateFlipBodySlamStart`/`ActionCtrlStateSlide`,
 0x080138E8-0x08013C60). All three are named `actor_part_<addr>.c`
 (address-suffixed) rather than the next sequential `actor_partNN`
-(`actor_part85.c`/`86.c`/...) - `actor_part85.c` turned out to already
+(`starfield.c`/`86.c`/...) - `starfield.c` turned out to already
 be claimed by unrelated, non-ROM-adjacent issue #63 work
 (`InitStarfield`/`DrawStarfield`, the particle-trail BG0 object at
 0x08034374). **This was discovered the hard way**: an early draft of
-this pass's own `actor_part85.c` silently overwrote that file via the
+this pass's own `starfield.c` silently overwrote that file via the
 Write tool before its pre-existing content had been read, destroying
 377 lines of already-matched real C. Caught by an unrelated-looking
 symptom - a full clean `make compare` failing with undefined references
 to `InitStarfield`/`DrawStarfield` from three completely different,
-untouched files (`level_graphics.c`, `counter_selector_setup.c`,
-`actor_part73.c`) far away in ROM address space - which made no sense
+untouched files (`title_screen_init.c`, `language_select_setup.c`,
+`starfield.c`) far away in ROM address space - which made no sense
 as a "pre-existing repo bug" once `git diff --stat HEAD -- ...` was
 checked and showed 716 insertions/369 deletions against a file this
 pass had supposedly only ever *created* fresh. Restored via
-`git checkout HEAD -- src/graphics/actor_part85.c` and the real new
+`git checkout HEAD -- src/frontend/starfield.c` and the real new
 content moved to address-suffixed names instead, which fixed the link
 on its own with no other changes needed. Filed here as a standing
 warning: **check for an existing file before naming a new

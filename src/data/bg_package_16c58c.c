@@ -10,7 +10,7 @@ extern const u8 gLevelSelectPageBgPalette[];
 extern const u8 gLevelSelectPageBgTiles[];
 extern const u8 gLevelSelectPageBgMap[];
 
-/* BG graphics package loaded by DestroyLevelSelectPageBg (actor_part_1cee0.c). */
+/* BG graphics package loaded by DestroyLevelSelectPageBg (level_select_pages.c). */
 const struct bg_package gLevelSelectPageBg = {
     0x20,
     0x20,

@@ -50,7 +50,7 @@ struct wrapped_text_box_params {
  * stashes `params->field_0` into `self`'s own `marginX`, computes a
  * line-count limit as `params->field_c / self->lineHeight`, then
  * forwards to DrawWrappedText with that limit and returns its result
- * (unused by the one call site matched so far, in `src/graphics/oam_count.c`'s
+ * (unused by the one call site matched so far, in `src/menus/power_dialog_draw.c`'s
  * still-parked `DrawPowerDialog`, but the ROM does actually propagate it -
  * confirmed by the epilogue needing r1, not r0, to restore the return
  * address, since r0 holds the forwarded value at that point). */

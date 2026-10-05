@@ -5,7 +5,7 @@
  * temporary 0x70-byte scratch buffer built by ReadSaveSlot (still raw -
  * `arg0` there is some list/category handle, `arg1` a row index). Used
  * as a contiguous 4-element array at `save_menu.rowStats`
- * (see RefreshSaveSlotSummaries in src/graphics/settings_menu2.c). */
+ * (see RefreshSaveSlotSummaries in src/save/save_menu_ui.c). */
 struct settings_row_stats {
     s32 percent;
     s32 gems;
@@ -28,7 +28,7 @@ COMPILE_TIME_ASSERT(sizeof(struct settings_row_stats) == 0x14);
  * (SummarizeProgress). Formerly `struct pause_options_screen`; earlier
  * notes read it as a pause/options screen. */
 struct save_menu {
-    /* 0x00 - read by CommitSaveMenuFrame (src/graphics/settings_menu4.c), shifted
+    /* 0x00 - read by CommitSaveMenuFrame (src/save/save_menu.c), shifted
      * right by 3 and written to REG_BG0HOFS (a u16) - a saved/pending BG0
      * horizontal-scroll value, pre-shifted by the caller. Also a plain
      * per-frame counter: SaveMenuInput increments it by 1 unconditionally

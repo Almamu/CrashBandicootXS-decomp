@@ -960,7 +960,7 @@ const struct vtable_slot gPlatformMoverVtable[13] = {
     VTABLE_SLOT(StartPlatformMoverMotionYFromSet),
 };
 
-/* Used by actor_part_1b85c.c (DestroyCameraLead). */
+/* Used by level_select.c (DestroyCameraLead). */
 const struct vtable_slot gCameraLeadVtable[15] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(CollideMovingSprite),
@@ -979,7 +979,7 @@ const struct vtable_slot gCameraLeadVtable[15] = {
     VTABLE_SLOT(CheckPlayerContact),
 };
 
-/* Used by actor_part_1b85c.c (GetCameraLeadOffset, DestroyLaunchPad, sub_801BAC4). */
+/* Used by level_select.c (GetCameraLeadOffset, DestroyLaunchPad, sub_801BAC4). */
 const struct vtable_slot gLaunchPadVtable[15] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(CollideMovingSprite),
@@ -998,7 +998,7 @@ const struct vtable_slot gLaunchPadVtable[15] = {
     VTABLE_SLOT(CheckLaunchPadContact),
 };
 
-/* Used by actor_part_1da38.c (DestroyLevelSelectEntry), actor_part_1dfec.c,
+/* Used by level_select_widgets.c (DestroyLevelSelectEntry), level_select_widgets.c,
  * level_select_parts.h. */
 const struct vtable_slot gLevelSelectEntryVtable[6] = {
     VTABLE_SLOT(NULL),
@@ -1009,13 +1009,13 @@ const struct vtable_slot gLevelSelectEntryVtable[6] = {
     VTABLE_SLOT(DestroyLevelSelectEntry),
 };
 
-/* Used by game_loop57.c. */
+/* Used by cutscene_player.c. */
 const struct vtable_slot gBgStreamerVtable[2] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyBgStreamer),
 };
 
-/* Used by game_loop57.c. */
+/* Used by cutscene_player.c. */
 const struct vtable_slot gBgLayerBaseVtable[5] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyBgLayerBase),
@@ -1116,7 +1116,7 @@ const struct vtable_slot gFontVtable[9] = {
  * InitActorPart installs it, and every derived destructor puts it back
  * before unlinking the actor.
  *
- * Used by counter_selector.c (DestroyLogoActor), actor_anim.c (DestroyRiderlessPolar,
+ * Used by language_select.c (DestroyLogoActor), actor_anim.c (DestroyRiderlessPolar,
  * DestroyPolarCheckpointText, DestroyPolarWumpa, DestroyPolarTimeCrate, DestroyPolarQuestionCrate, DestroyPolarAkuAkuCrate,
  * DestroyPolarNitroCrate, DestroyPolarLifeCrate, sub_803B25C, DestroyPolarBasicCrate, DestroyPolarCrate,
  * DestroyPolarElectricFence, sub_803B30C, DestroyPolarLauncher, DestroyPolarPenguin, DestroyPolarIcicle,
@@ -1556,8 +1556,8 @@ const struct vtable_slot gHovercraftCannonFlashVtable[7] = {
     VTABLE_SLOT(GetActorHp),
 };
 
-/* Used by counter_selector.c (DestroyLogoActor), graphics_loading_35780.c,
- * graphics_loading_35d1c.c, graphics_loading_3686c.c (LoadUniversalLogoBg). */
+/* Used by language_select.c (DestroyLogoActor), title_screen_init.c,
+ * title_screen.c, company_logos.c (LoadUniversalLogoBg). */
 const struct vtable_slot gLogoActorVtable[4] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyLogoActor),

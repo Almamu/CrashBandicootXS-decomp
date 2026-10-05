@@ -20,15 +20,15 @@ No register pins, no asm in a function body and no NAKED.
 |---|---|
 | `StartTimeTrial` | `game_loop40.c` |
 | `SetupRoomBlend` | `game_loop8.c` |
-| `BeginSlide` | `game_loop37.c` |
-| `StreamBgRow`, `StreamBgColumn`, `FillBgStreamer` | `game_loop57.c` |
+| `BeginSlide` | `slideshow.c` |
+| `StreamBgRow`, `StreamBgColumn`, `FillBgStreamer` | `cutscene_player.c` |
 | `GetCollisionChunk`, `GetTerrainHeights`, `GetSolidTerrainHeights`, `sub_8025228` | `game_loop3.c` |
 | `GetTerrainType` | `game_loop4.c` |
 | `DropExtraLife` | `game_loop29.c` |
 | `SpawnEffectPart` | `game_loop14.c` |
 | `ScrollBgLayer`, `DrawBgLayerColumn` | `game_loop16.c` |
 | `ProbeTerrainY`, `ProbeTerrainX` | `game_loop46.c` |
-| `InitHud` | `hud_digit_array.c` |
+| `InitHud` | `hud_init.c` |
 
 All eleven files move to `OLD_AGBCC_OBJS` whole.
 
@@ -75,14 +75,14 @@ call, not the "stack-reuse coincidence" its old comment described.
 
 Under old_agbcc, five already-matched functions in these files match
 with all of their register pins removed, so the pins are gone:
-`RunSlideshow` (game_loop37.c), `GetBgStreamerColumn`, `GetBgStreamerRow`,
-`GetBgStreamerCell` (game_loop57.c) and `UpdateRoomFrame` (game_loop8.c).
+`RunSlideshow` (slideshow.c), `GetBgStreamerColumn`, `GetBgStreamerRow`,
+`GetBgStreamerCell` (cutscene_player.c) and `UpdateRoomFrame` (game_loop8.c).
 `SpawnEntity` and `ShowSlidePicture` still need theirs (5 and 3 halfwords off
 without them).
 
 ## Later pass: NAKED retry (mid45)
 
-`ConfigureHudParts` (`hud_digit_array.c`) is now plain C. Its three separate
+`ConfigureHudParts` (`hud_init.c`) is now plain C. Its three separate
 nibble-insert copies survive when the two inner stores go through a
 `SetPal` inline, and the slot tests are `switch`es. See
 [naked-retry-mid45.md](naked-retry-mid45.md).

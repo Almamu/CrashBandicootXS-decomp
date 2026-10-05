@@ -6,8 +6,8 @@
  */
 
 /* `struct xy_pair` positions and animation ids of the level-select
- * screens: actor_part_1b85c.c (InitLevelSelect, DrawLevelSelectTime, LoadLevelSelectRecord,
- * InitLaunchPad) and actor_part_1cee0.c (its level menu's item positions
+ * screens: level_select.c (InitLevelSelect, DrawLevelSelectTime, LoadLevelSelectRecord,
+ * InitLaunchPad) and level_select_pages.c (its level menu's item positions
  * and skins, RefreshLevelSelectPage). */
 struct xy_pair {
     s32 x;

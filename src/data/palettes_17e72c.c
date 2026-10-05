@@ -6,7 +6,7 @@
  */
 
 /* 16-halfword palette-cache slot contents InitLanguageSelectGraphics
- * (counter_selector_icons.c) copies, before level_tilesets_17e78c.c's
+ * (language_select.c) copies, before level_tilesets_17e78c.c's
  * gLanguageSelectPalette3. */
 const u16 gLanguageSelectPalette0[16] = {
     0x83E0, 0x9CC6, 0x107F, 0x0D04, 0x0F9F, 0x894C, 0x0864, 0x05D4,

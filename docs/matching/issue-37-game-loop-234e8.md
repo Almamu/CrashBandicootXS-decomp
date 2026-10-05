@@ -107,7 +107,7 @@ vram-upload-cursor/OAM-shadow flush tail both `UpdateRoomFrame` and
   allocated block's pointer in r0 *across* the `bl nullsub_7` call and
   only moves it to a callee-saved register afterward - only possible
   because `nullsub_7` (now matched separately, in
-  `src/audio/counter_selector.c`) was compiled in the same translation
+  `src/frontend/language_select.c`) was compiled in the same translation
   unit as this function originally, so the compiler could prove it
   doesn't touch r0. Split across files, an ordinary C call must
   conservatively assume r0-r3 are clobbered and moves the pointer to
@@ -222,7 +222,7 @@ bytes) is deleted; its `ldscript.txt` line is removed.
   trick at all: `PackSaveData` actually returns the `self+0x14c`
   snapshot pointer it just wrote through, as `void *` - the earlier
   parked attempt treated it as `void`. This is externally visible
-  already: `settings_menu15.c`/`settings_menu8b.c` both declare
+  already: `pause_menu.c`/`save_menu_input.c` both declare
   `extern void *PackSaveData(void *arg0);` and use the result as a
   pointer (`self->field_10 = PackSaveData(...)`, and as the `src`
   argument to `SummarizeProgress`), so those call sites were already correct
@@ -295,7 +295,7 @@ compiler silently dropped it from both the push and pop list
 (confirmed with a minimal isolated-compile repro:
 `push {r4, r5, r6, lr}` / `pop {r4, r5, r6}`, r7 missing from both).
 This is the same "gcc-2.9 r7-pin bug" already documented project-wide
-(`src/graphics/oam_count.c`'s `DrawPowerDialog`,
+(`src/menus/power_dialog_draw.c`'s `DrawPowerDialog`,
 `src/graphics/graphics_loading_21280.c`'s `SpawnRoomExit`, among
 others) - an explicit `register T x asm("r7")` pin doesn't reliably
 survive here either. The fix was the same project-wide escape hatch

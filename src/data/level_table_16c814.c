@@ -200,8 +200,8 @@ const u16 gThemePaletteCycle5[5] = { 0x97, 0xb4, 0xf7, 0xf8, 0xff };
 /*
  * The levels, indexed by level id (the game's level numbering; `nameText`
  * is the text id of the level's name). Read through local views all over
- * the game loop: `struct level_info` (actor_part_1b85c.c),
- * `threshold_table_entry` (settings_menu6.c, oam_count.c),
+ * the game loop: `struct level_info` (level_select.c),
+ * `threshold_table_entry` (pause_menu_pages_init.c, power_dialog_draw.c),
  * `MedalTableEntry` (game_loop17.c, game_loop18.c), `level_guard`
  * (graphics_loading_21280.c) and `gl_level_entry` (game_loop56.c).
  */

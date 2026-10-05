@@ -8,14 +8,14 @@ system from "core" graphics.
 
 ## Matched
 
-- `src/graphics/hud_counter.c` (new file, contributed via PR #1 by
+- `src/hud/hud_lives.c` (new file, contributed via PR #1 by
   @MiryamSanchez26 - `UpdateHudLives` is an isolated HUD counter update
   inside the raw HUD stat-widget region, so preserving its ROM address
   required a split of what's now `asm/code_3_2_17.s`/`asm/code_3_2_20.s`
   right around it): `UpdateHudLives`
 
 - `src/gfx/palette_cycle.c` (new file, GitHub issue #45, non-
-  adjacent to `hud_counter.c` since `InitHud`-`UpdateHudClock` sit raw
+  adjacent to `hud_lives.c` since `InitHud`-`UpdateHudClock` sit raw
   between them): `TickPaletteCycles`/`AddPaletteCycle` (the fx ring-buffer's
   per-frame consumer/producer pair - see
   `docs/matching/issue-45-hud-stat-widget-dispatcher.md`'s "Third pass"
@@ -25,11 +25,11 @@ system from "core" graphics.
   ROM), `InitHudPart` - a fixed 3-entry particle/effect queue's reset/
   constructor/teardown trio, a HUD digit-slot draw helper, and two
   `struct actor`-table-swap slot constructors; see `docs/matching.md`.
-  Also added `include/hud.h`, moving `hud_counter.c`'s
+  Also added `include/hud.h`, moving `hud_lives.c`'s
   `hud_anim_record`/`hud_anim_data`/`hud_digit_part`/`hud_counter`
   structs there so this file could reuse them.
 
-- `src/graphics/hud_blink.c` (new file, GitHub issue #45):
+- `src/hud/hud_slide.c` (new file, GitHub issue #45):
   `UpdateHudSlides`, `ShowHudCrates`, `ShowHudLives`, `ShowHudWumpa`,
   `ShowHudCounters`, `StepHudSlide` - a 3-slot icon-blink animation timer
   (per-frame tick, three per-slot triggers, and the generic single-slot
@@ -38,7 +38,7 @@ system from "core" graphics.
   `IncHudCrateTotal` - a setter/increment pair on the same central-state
   object's `+0x28` field.
 
-- `src/graphics/hud_icon_widget.c` (new file, GitHub issue #46):
+- `src/hud/hud_slide.c` (new file, GitHub issue #46):
   `DestroyHud` - a `struct hud_counter`'s `parts`-array destructor.
 
 - `src/text/font_glyph.c` (GitHub issue #46, second pass):
@@ -77,18 +77,18 @@ system from "core" graphics.
   (misnomer aside - it's plain C, not a NAKED transcription; named to
   match this repo's existing untracked-function-writeup convention).
 
-- `src/graphics/hud_stat_widget.c` (new file, GitHub issue #45's second
+- `src/hud/hud.c` (new file, GitHub issue #45's second
   pass): `UpdateHud` - the HUD stat-widget family's dispatcher.
   Extended `struct hud_counter` (`include/hud.h`) with `field_08`,
   `icon_flag`, and `sync_value_a`/`b`/`c` - fields this function (and
   the family's other callees) touch inside what was previously opaque
   padding.
 
-- `src/graphics/hud_stat_widget2.c`, `hud_digit_array.c`,
-  `hud_stat_widget3.c` (GitHub issue #45's dispatcher family):
+- `src/hud/hud_boss_clock.c`, `hud_init.c`,
+  `hud_counters.c` (GitHub issue #45's dispatcher family):
   `UpdateHudBoss`, `UpdateHudClock`, `InitHud`, `ConfigureHudParts`,
   `UpdateHudCrates`, `UpdateHudWumpa`, `UpdateHudPercentCounters`. All plain C built with
-  old_agbcc (`hud_stat_widget2.c`/`hud_stat_widget3.c` moved to it). Six
+  old_agbcc (`hud_boss_clock.c`/`hud_counters.c` moved to it). Six
   of them were NAKED until the NAKED retry pass. The "r7 miscompile"
   that parked them turned out to be a compiler mismatch: under
   old_agbcc the plain clamp compiles byte for byte. See

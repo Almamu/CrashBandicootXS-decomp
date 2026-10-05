@@ -77,7 +77,7 @@ This reproduces the ROM's instruction sequence exactly:
 The original NAKED conversion predates this project's later
 inline-asm-anchor techniques (forcing a specific instruction sequence
 opaque to the optimizer, established more thoroughly in later matching
-passes across the codebase - e.g. `settings_menu13.c`'s
+passes across the codebase - e.g. `power_dialog.c`'s
 forced-same-register-move idiom). At the time `SetDispcntMode` was parked,
 only C-level respelling of the constant (`-8` vs `~7`) had been tried,
 which can't defeat a compiler-level value-propagation pass since the

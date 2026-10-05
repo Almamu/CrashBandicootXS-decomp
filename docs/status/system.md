@@ -78,7 +78,7 @@ category page - see [game_loop.md](./game_loop.md).
   (reset convenience wrapper), `DestroyLinkSession` (reset + conditional
   teardown), `InitLinkSession` (session object constructor), `LinkSerialIntr`/
   `LinkTimer3Intr` (Serial/Timer3 IRQ handlers), `ReadSaveData`/`WriteSaveData`
-  (`src/graphics/settings_menu8d.c`, EEPROM load/save block-loop pair
+  (`src/save/save_data.c`, EEPROM load/save block-loop pair
   for the settings record - the previously-suspected register-pressure
   gap in their shared IME-save/IE-clear/IME-restore snippet didn't
   reproduce with the actual field/loop structure; plain C matches

@@ -279,7 +279,7 @@ void sub_801E8F8(u8 *selfArg, s32 arg1)
  * (both in r2, one right after the other - a fresh `mov r2,#0xd`
  * reload, not a reuse of the earlier `#3` value) once the second mask
  * is materialized via the same `mov #N; neg` opaque-asm idiom as
- * `UPDATE_ICON_FRAME_NIBBLE` (src/graphics/settings_menu6.c) instead of
+ * `UPDATE_ICON_FRAME_NIBBLE` (src/menus/pause_menu_pages_init.c) instead of
  * a plain C `~0xc`/`-0xd`, which this compiler folds differently. */
 void sub_801E950(u8 *self, u32 arg1)
 {

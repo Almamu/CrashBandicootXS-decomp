@@ -1,6 +1,6 @@
 # Issue #63's final raw span: 0x0803472C-0x08034AA4 (actor)
 
-> **Update:** `InitContinuePromptGraphics` is now plain C in `actor_part88.c` under old_agbcc, and
+> **Update:** `InitContinuePromptGraphics` is now plain C in `continue_prompt.c` under old_agbcc, and
 > the raw asm file below is gone - see [old-agbcc-round5.md](old-agbcc-round5.md).
 
 This closes out the last three raw functions from issue #63's original
@@ -42,7 +42,7 @@ BLDCNT/BLDALPHA mirror re-applied every frame to drive a flicker/pulse
 effect, and a hookup to the shared text icon manager
 (`gSmallFont`) and tile cache (`gPaletteCache`).
 
-## `InitContinuePrompt` (`src/graphics/actor_part87.c`) - matched, real C
+## `InitContinuePrompt` (`src/menus/continue_prompt_init.c`) - matched, real C
 
 The constructor half: allocates and initializes the three BG scratch
 buffers (`OperatorNew`/`InitBgSetup`), loads their graphics packages,
@@ -108,16 +108,16 @@ Confirmed byte-identical against the real ROM disassembly both in an
 isolated compile (`cmp` against a standalone `arm-none-eabi-as` of the
 guarded raw block - identical) and via a full clean `rm -rf build &&
 make NON_MATCHING=1 report` (`objdiff-cli report generate` shows
-100.0% for `actor_part87`) plus `rm -rf build crashbandicootxs.elf
+100.0% for `menus/continue_prompt_init`) plus `rm -rf build crashbandicootxs.elf
 crashbandicootxs.gba crashbandicootxs.map && make compare` (`La suma
 coincide`). The raw bytes that used to live in
 `asm/code_3_2_20_28568_c99c_31784_33ef4_3472c.s` under a
 `.if NON_MATCHING == 0` guard are gone now - that file held nothing but
 this one function, so it was deleted outright, with its `ldscript.txt`
-line dropped (the still-matched `src/graphics/actor_part87.o` now
+line dropped (the still-matched `src/menus/continue_prompt_init.o` now
 supplies the real bytes at that link position on its own).
 
-## `InitContinuePromptGraphics` (`src/graphics/actor_part88.c`) - parked, NON_MATCHING
+## `InitContinuePromptGraphics` (`src/menus/continue_prompt.c`) - parked, NON_MATCHING
 
 The other setup half, called from `InitContinuePrompt`: flushes/double-flushes
 the shared VRAM upload cursor (`gObjVramCursor`, `struct
@@ -154,7 +154,7 @@ this codebase but were freshly re-confirmed here:
 Matched real C for everything except the tile-cache seeding loop's trip
 counter, which the ROM keeps live in r7 for the whole loop - this
 project's **confirmed categorical gcc-2.9 r7-pin bug** (see
-`graphics_package.c`/`oam_count.c`/`actor_part7.c` and the several
+`graphics_package.c`/`power_dialog_draw.c`/`actor_part7.c` and the several
 `docs/matching/naked-*.md` entries): an explicit
 `register s32 counter asm("r7")` pin compiles the exact right
 instructions but this compiler's own push/pop-list computation never
@@ -171,7 +171,7 @@ otherwise. Parked (`NON_MATCHING`); raw bytes live in
 `asm/code_3_2_20_28568_c99c_31784_33ef4_3487c.s` under the same
 `.if NON_MATCHING == 0` guard pattern.
 
-## `ContinuePromptLoop` (`src/graphics/actor_part89.c`) - NAKED, parked
+## `ContinuePromptLoop` (`src/menus/continue_prompt.c`) - NAKED, parked
 
 The fade overlay's per-frame driver (caller not yet identified in this
 pass - a per-frame "run this overlay" hook somewhere in `game_loop`,
@@ -185,7 +185,7 @@ gated on `self+0x20`'s one-shot flag already being set) or R alone (bit
 7, gated on it being clear) plays a "step" cue
 (`PlaySfx(..., 0x46, 0x100)`) and flips that flag - the same
 `gKeys`/`PlaySfx` input-dispatch shape already established
-in `src/audio/counter_selector.c`'s `LanguageSelectInput`. Every two inner
+in `src/frontend/language_select.c`'s `LanguageSelectInput`. Every two inner
 iterations, a 0-15 ping-pong counter (the low 5 bits of `self+0x12`,
 which is the same byte as `self->blend.b.bldalphaLo`'s partner within
 the `dispcnt`/`blend` layout above) gets folded back into `self+0x10`'s
@@ -234,7 +234,7 @@ matched/parked list this entry feeds into.
 off under old_agbcc (a single r0/r1 swap in the first input test); it
 stays NAKED. See [late-rom-naked-retry.md](./late-rom-naked-retry.md).
 
-A second late-ROM pass closed it (old_agbcc; `actor_part89.o` joined
+A second late-ROM pass closed it (old_agbcc; `continue_prompt.o` joined
 `OLD_AGBCC_OBJS`). `asm("" : "+r"(k))` on the input copy between the
 `& 1` and `& 8` tests gives the first test the ROM's registers, and an
 extra reference to `audio` at the top of the loop gives it r7, which

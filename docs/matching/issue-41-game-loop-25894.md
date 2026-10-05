@@ -228,7 +228,7 @@ C has no way to work around on this toolchain:
   in `r7` across every intervening call the way the ROM keeps it there,
   and an explicit `register T x asm("r7")` pin never makes it into this
   compiler's own `push`/`pop` list (the same confirmed bug documented on
-  `src/graphics/oam_count.c`/`src/graphics/actor_part.c` and elsewhere
+  `src/menus/power_dialog_draw.c`/`src/graphics/actor_part.c` and elsewhere
   project-wide); separately, the trailing `(*bf & -0x10) | (result &
   0xf)` bitfield combine - even with the established negative-literal
   register-pin idiom (`ClearPowers`/`LoadLanguageSelectBg`) - gets

@@ -13,8 +13,8 @@
  * distance" gate - `__modsi3` division/remainder-style scalar check
  * against a `gRoomFrameCount`-relative table lookup indexed by
  * `self->0x30`/`self->0x34`/`self->0x38` (the same "close enough"
- * primitive `docs/rom_map.md` already ties to hud_counter.c/
- * hud_stat_widget3.c) - only proceeding when the check passes, then
+ * primitive `docs/rom_map.md` already ties to hud_lives.c/
+ * hud_counters.c) - only proceeding when the check passes, then
  * consulting `self->0x84`'s pointed record (`+0xc` for mode 0, `+0x14`
  * for mode 4) against a constant `8` to pick between two
  * `SetEnemyAnimMode` trigger constants. Mode 0 additionally clears bit 3 of

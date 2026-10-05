@@ -75,7 +75,7 @@ anim-frame halfword/byte, `self+8` accumulator, `self+0x28` state,
   `CreateHovercraftLauncher`.
 - **`IsHovercraftCannonFlashUnshootable`** (`src/graphics/actor_part71.c`) - trivial Kind 3
   one-shot-flag getter (`self+0x58`).
-- **`UpdateStarfield`/`StarfieldWaitForButton`/`DestroyStarfield`** (`src/graphics/actor_part73.c`)
+- **`UpdateStarfield`/`StarfieldWaitForButton`/`DestroyStarfield`** (`src/frontend/starfield.c`)
   - a particle-spawn-budget driver (calls `DrawStarfield`, then spawns up
   to 8 particles via `SpawnStar`; needed the incoming-`idx`-value
   register pinned through `r0` then copied to `r1` for the call,
@@ -134,7 +134,7 @@ diffing it byte-for-byte against `baserom.gba`, and cross-referencing
 every differing byte range against `crashbandicootxs.map`'s function
 boundaries - not by re-reading the isolated compiles more carefully.
 
-- **`InitStarfield`** (`src/graphics/actor_part85.c`) - constructs the
+- **`InitStarfield`** (`src/frontend/starfield.c`) - constructs the
   particle-trail BG0 object (see that file's header comment for the
   full `struct particle_bg` field layout: a `tileVramBase`/`mapVramBase`
   pair of fixed VRAM constants, a 128-slot particle array, an active
@@ -142,7 +142,7 @@ boundaries - not by re-reading the isolated compiles more carefully.
   apparent "read of an uninitialized local" this function was
   previously left raw over turned out to be the same negative-constant
   bit-clear idiom already established for `LoadTitleScreenBg`'s
-  `bg2cnt` (`src/graphics/level_graphics.c`, issue #65) - an
+  `bg2cnt` (`src/frontend/title_screen_init.c`, issue #65) - an
   intentionally uninitialized `u32` ANDed against `0xFFFF0000` before
   every bit the final halfword write actually reads gets ORed in, not a
   real bug. Now fully matched as real C: the ROM builds the tilemap-
@@ -169,7 +169,7 @@ boundaries - not by re-reading the isolated compiles more carefully.
   split at the time into `asm/code_3_2_20_28568_c99c_31784_33ef4_34480.s`
   (real bytes for the twin `DrawStarfield`) - that fragment is also retired
   now that `DrawStarfield` itself is matched (see below), so
-  `actor_part85.c` is fully matched, closing the whole file.
+  `starfield.c` is fully matched, closing the whole file.
 - **`CreateHovercraftSideGun`** (`src/graphics/actor_part66.c`) - Kind 2's
   constructor. Now fully matched as real C, closing two gaps: the 6th
   (stack-passed, byte-sized) constructor argument needs the same
@@ -208,7 +208,7 @@ boundaries - not by re-reading the isolated compiles more carefully.
   for `UpdateActorPaletteCycle` in `actor_part53.c`. Retires the raw
   `asm/code_3_2_20_28568_c99c_31784_33ef4_34058.s`.
 
-- **`SpawnStar`/`PlotStarfieldPixel`** (`src/graphics/actor_part72.c`) - a
+- **`SpawnStar`/`PlotStarfieldPixel`** (`src/frontend/starfield.c`) - a
   128-slot particle spawner (rolls two `RandRange` random values
   against the 256-entry `gSineTable` direction table to seed a
   position/velocity record) and a 4-bit-per-cell tilemap nibble writer;
@@ -265,7 +265,7 @@ boundaries - not by re-reading the isolated compiles more carefully.
   address) as inputs, and `val` (already pinned to `r3` for the leaf-
   function register-spill fix) as an in/out operand.
 
-- **`DrawStarfield`** (`src/graphics/actor_part85.c`) - the particle-trail
+- **`DrawStarfield`** (`src/frontend/starfield.c`) - the particle-trail
   BG0 object's per-frame updater (`InitStarfield`'s companion, same file);
   now fully matched as real C, closing the file entirely. Commits last
   frame's `tileBuffer` to tile VRAM, clears it back to zero, then for
@@ -304,7 +304,7 @@ boundaries - not by re-reading the isolated compiles more carefully.
      pair too early, ahead of the ROM's own position.
 
   Retires `asm/code_3_2_20_28568_c99c_31784_33ef4_34480.s` entirely,
-  closing `actor_part85.c` (both `InitStarfield` and `DrawStarfield`, its
+  closing `starfield.c` (both `InitStarfield` and `DrawStarfield`, its
   only two functions) as fully matched.
 
 ## NAKED transcription (byte-correct, not counted as matched)

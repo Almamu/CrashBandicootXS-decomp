@@ -13,7 +13,7 @@ struct aabb {
 };
 
 /* Set-size primitive - already referenced by name from several other
- * files (actor_part.c/actor_part2.c/oam_count.c's DrawPowerDialog) as the
+ * files (actor_part.c/actor_part2.c/power_dialog_draw.c's DrawPowerDialog) as the
  * shared `SetAabbPos`(set-position)/`SetAabbSize`(set-size) pair. */
 void SetAabbSize(struct aabb *dest, s32 w, s32 h)
 {
@@ -31,7 +31,7 @@ void SetAabbPos(struct aabb *dest, s32 x, s32 y)
 asm(".align 2, 0");
 
 /* Lives getter of the level state (`gLevelState`; read by
- * game_loop55.c, hud_counter.c, actor_part101.c and
+ * game_loop55.c, hud_lives.c, actor_part101.c and
  * graphics_loading_1e990.c). */
 s32 GetLives(struct level_state *self)
 {
@@ -55,7 +55,7 @@ extern void OperatorDelete(void *self);
  * store that's really in the ROM (confirmed: the two address
  * computations and both stores are distinct instructions, not a
  * disassembly artifact). The address is recomputed fresh for each
- * store via an inline-asm anchor (matching oam_count.c's established
+ * store via an inline-asm anchor (matching power_dialog_draw.c's established
  * technique for stopping gcc from CSE-ing/dead-store-eliminating a
  * repeated address expression, see docs/matching.md, "Matching
  * decompilation") - plain double `struct` field assignment collapses

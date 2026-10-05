@@ -125,7 +125,7 @@ struct text_rect
 };
 
 /* The text pager InitCutscenePlayer constructs and RunCutscenePlayer runs
- * (game_loop57.c): the +0/+4 item list, the +0x10 per-item page table,
+ * (cutscene_player.c): the +0/+4 item list, the +0x10 per-item page table,
  * the font (an icon manager) at +0x14 and the text box at +0x18. */
 struct text_pager
 {

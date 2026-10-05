@@ -1,7 +1,7 @@
 # Issue #26: 0x0801B85C-0x0801CEE0 (level-select screen and two small classes)
 
 All 25 functions of the former `asm/code_3_2_17_188d0_1b85c.s` now live in
-`src/graphics/actor_part_1b85c.c` (the `.s` file is retired). **22 are
+`src/menus/level_select.c` (the `.s` file is retired). **22 are
 plain C; 3 (`InitLevelSelect`, `LoadLevelSelectRecord`, `LevelSelectLoop`) are NAKED
 transcriptions** with their C reconstructions kept under
 `#if NON_MATCHING`. Verified with a full clean
@@ -90,7 +90,7 @@ their method tables.
   the stores), `AnimTable`/`SetAnim` (the inlined `SetSpriteAnim`), and
   `CommitDisplay`. `RunLevelSelect` also needed the global's address taken
   first (`struct level_menu **menuAddr = &gLevelSelect;`, the same
-  idiom as `settings_menu8b.c`'s `RunSaveMenu`) and was previously the
+  idiom as `save_menu_input.c`'s `RunSaveMenu`) and was previously the
   kind of function this project would have NAKED'd (its sibling
   `ShowPowerDialog` is).
 - **Operand order of an indexed address.** `&recs[idx]` with a 28-byte
@@ -99,7 +99,7 @@ their method tables.
   is written as `idx * sizeof + (u32)base` (`UpdateLevelSelectPageArrows`) or through a
   pinned offset (`ItemAt`, `DrawLevelSelect`).
 - **Keys.** `gKeys` is declared as a union of the whole word
-  and a `{held, pressed}` halfword pair (as in `settings_menu8b.c`) so
+  and a `{held, pressed}` halfword pair (as in `save_menu_input.c`) so
   `pressed` reads as `ldrh [base, #2]` instead of a folded `sym+2`
   literal.
 - **`asm volatile("" : "+r"(self))`** after a call stops gcc hoisting

@@ -5,7 +5,7 @@ This pass took on two of the largest parked NAKED functions. One closed.
 | Function | File | Size | Result |
 |---|---|---|---|
 | `UpdateGameFrame` (#34) | `src/system/game_loop55.c` | ~730 insns | matched, old_agbcc |
-| `DrawVvLogoPieces` (#65) | `src/graphics/graphics_loading_35d1c.c` | 1160 bytes | still NAKED, draft 329 halfwords off |
+| `DrawVvLogoPieces` (#65) | `src/frontend/title_screen.c` | 1160 bytes | still NAKED, draft 329 halfwords off |
 
 ## `UpdateGameFrame` (never attempted before, now real C)
 
@@ -75,7 +75,7 @@ under agbcc (4 bytes short). Findings:
   before the reversed counter. Only check_dbra_loop emits it in that
   order. So the loop is written up-counting and built with strength
   reduction on, like `DrawTitleLogoPieces`'s inner loop. Closing it therefore
-  also means splitting `graphics_loading_35d1c.c` at `0x0803686C` into
+  also means splitting `title_screen.c` at `0x0803686C` into
   an address-keyed file without `-fno-strength-reduce`. A whole-file
   compile with strength reduction on differs only in `InitVvLogoPieces` (16
   halfwords), so everything from `DrawVvLogoPieces` on would match in the new

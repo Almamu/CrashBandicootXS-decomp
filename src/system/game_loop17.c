@@ -10,15 +10,15 @@
  * wrapper functions that call it).
  *
  * `gLevelTable` is the confirmed 36-slot medal table (see
- * `struct threshold_table_entry` in src/graphics/oam_count.c and
- * src/graphics/settings_menu6.c) - this file's functions resolve one
+ * `struct threshold_table_entry` in src/menus/power_dialog_draw.c and
+ * src/menus/pause_menu_pages_init.c) - this file's functions resolve one
  * more of that struct's `unused` bytes: `+0x20` (a pointer to a small
  * `{count, items[], extra1, extra2}` list header, see CountLevelCrates
  * below). Kept as this file's own local copy of the struct rather than
  * editing the other two files' already-matched copies (this project's
  * established per-translation-unit convention for this particular
  * global, see the comment on `struct threshold_table_entry` in
- * settings_menu6.c). */
+ * pause_menu_pages_init.c). */
 struct MedalTableEntry {
     u8 unused_00[0x20];
     void *itemList; /* +0x20: -> struct MedalItemList, see CountLevelCrates */

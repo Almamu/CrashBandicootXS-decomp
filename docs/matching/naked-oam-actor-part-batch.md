@@ -19,7 +19,7 @@ drawn, is left as-is rather than retroactively re-filed.
 
 This batch closes - as byte-exact NAKED transcriptions, not real
 matches - every function that was previously parked under
-`#if NON_MATCHING` across `src/graphics/oam_count.c`, `graphics.c`,
+`#if NON_MATCHING` across `src/menus/power_dialog_draw.c`, `graphics.c`,
 `actor_part.c`, `actor_part3.c`, `actor_part4.c`, `actor_part5.c`,
 `actor_part6.c`, and `actor_part7.c`/the new `actor_part7b.c`:
 `DrawPowerDialog`, `DrawSpritePieces`, `GetSpriteBounds`, `GetSpriteHitbox`,
@@ -172,4 +172,4 @@ in the same shape as its matched affine sibling `DrawAffineSpritePieces`. See
 
 ## Later pass (strag3): DrawPowerDialog matched
 
-`DrawPowerDialog` is now real C in `src/graphics/oam_count.c` (agbcc). It uses an inline position setter, with the centered X computed into a local first. See [strag3-naked-retry.md](strag3-naked-retry.md).
+`DrawPowerDialog` is now real C in `src/menus/power_dialog_draw.c` (agbcc). It uses an inline position setter, with the centered X computed into a local first. See [strag3-naked-retry.md](strag3-naked-retry.md).

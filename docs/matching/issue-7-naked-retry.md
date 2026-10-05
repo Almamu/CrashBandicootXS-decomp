@@ -8,11 +8,11 @@ as C and tested it under both compilers. It closed 9 of the 13.
 
 **Compilers:**
 
-- `settings_menu6.c` (4 closed) and `settings_menu22.c` (2 closed) are
+- `pause_menu_pages_init.c` (4 closed) and `pause_menu_gems.c` (2 closed) are
   now on `OLD_AGBCC_OBJS`. Their functions only match under old_agbcc.
-  `InitPauseCrystalsPage`, the one function in `settings_menu6.c` that was already
+  `InitPauseCrystalsPage`, the one function in `pause_menu_pages_init.c` that was already
   matched, compiles the same under both.
-- `settings_menu7.c` (2) and `DrawPauseMenuRows` in `settings_menu21.c` match
+- `pause_menu_widgets.c` (2) and `DrawPauseMenuRows` in `pause_menu_draw.c` match
   under both compilers, so they stay on current agbcc.
 
 No file needed splitting.

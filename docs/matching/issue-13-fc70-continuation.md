@@ -34,7 +34,7 @@ second pass against those five.
     always emits a direct word-sized `str` for a stack-passed byte
     argument regardless of the parameter's declared width - the same
     gap already closed for `DrawSaveMenuMain`'s own `DrawSaveSlotStats` call in
-    `settings_menu8c.c` (see
+    `save_menu_input.c` (see
     [docs/matching/issue-5-overlay-ui-sync.md](issue-5-overlay-ui-sync.md)).
     A dummy 2-word local's address is passed as an unused input operand
     purely to make this compiler reserve the same 8-byte outgoing-

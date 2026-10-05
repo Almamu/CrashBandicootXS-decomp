@@ -14,9 +14,9 @@ closed 12 of the 19.
 
 **Compilers:**
 
-- `settings_menu10.c` (`PowerDialogLoop`) only matches under old_agbcc and
+- `power_dialog_loop.c` (`PowerDialogLoop`) only matches under old_agbcc and
   is now on `OLD_AGBCC_OBJS`.
-- `settings_menu.c` is also on `OLD_AGBCC_OBJS`. Its five matched
+- `save_menu_draw.c` is also on `OLD_AGBCC_OBJS`. Its five matched
   functions compile the same under both compilers, but the
   `InitSaveMenuIcons` draft at the end of the file is 5 halfwords off under
   old_agbcc and 23 under agbcc. The ROM loads that function's nibble
@@ -47,7 +47,7 @@ NON_MATCHING build, where the C draft replaces them.
   first compile. Their old notes described a "last mile" register gap
   that doesn't exist once the calls are written this way.
 - **`ShowPowerDialog`** uses the `IconSetup`/`IconReserve` inline helpers
-  from `RunLevelSelect` (`src/graphics/actor_part_1b85c.c`), which has the
+  from `RunLevelSelect` (`src/menus/level_select.c`), which has the
   same display/icon-manager setup sequence. It needed one more fix:
   `FontResetPalette` takes one argument. The old two-argument declaration
   added a `movs r1, #0` before each call.
@@ -87,13 +87,13 @@ NON_MATCHING build, where the C draft replaces them.
 
 ## Didn't close (7 functions, drafts left under `NON_MATCHING`)
 
-- **`DrawYesNoPrompt`** (`settings_menu.c`, NAKED): 9 halfwords off under
+- **`DrawYesNoPrompt`** (`save_menu_draw.c`, NAKED): 9 halfwords off under
   both compilers. Everything else matches, but two long-lived constants
   are swapped: the ROM keeps the record offset `0x130` in r8 and the Y
   constant `0x87` in sb. I tried setting the positions through the
   setter or with direct stores in all 32 combinations, a `y` local,
   and a ternary. None of them swapped the pair.
-- **`InitSaveMenuIcons`** (raw; draft in `settings_menu.c`): 5 halfwords off
+- **`InitSaveMenuIcons`** (raw; draft in `save_menu_draw.c`): 5 halfwords off
   under old_agbcc. The whole body matches, including the palette-copy
   loop (`u16 (*pal)[16]` indexing gives the ROM's two base pointers),
   the icon setup, and the down-counting icon-array loop with `ldm`
@@ -107,7 +107,7 @@ NON_MATCHING build, where the C draft replaces them.
   it as a parameter, `field_3c` typed `s16`/`u32`, reordering the
   array-pointer locals, and per-file flags (`-fno-rerun-loop-opt`,
   `-frerun-cse-after-loop`).
-- **`ValidateSaveData`** (`settings_menu8e.c`, NAKED): 18 halfwords off.
+- **`ValidateSaveData`** (`save_data.c`, NAKED): 18 halfwords off.
   The checksum is an inlined copy of `CheckSaveChecksum` with its result
   pinned to r1, as there, and that part and the `DmaFill16` match.
   The ROM computes the four marker-byte addresses before the row loop

@@ -7,7 +7,7 @@
 are plain C. Four of the five only match under `old_agbcc` (agbcc is 2-80
 halfwords off), and every function in the three files matches under it, so
 all three move into `OLD_AGBCC_OBJS`. This is the same region as
-`hud_digit_array.c` (docs/matching/game-loop-old-agbcc.md). What mattered:
+`hud_init.c` (docs/matching/game-loop-old-agbcc.md). What mattered:
 
 - **`FontDrawGlyph`:**
   - The glyph's OAM scratch is a local `struct glyph_oam` with y, shape, x, size and tile bitfields.
@@ -29,7 +29,7 @@ its comment).
 
 ## Issue #63: `InitContinuePromptGraphics`
 
-Previously raw asm with a `NON_MATCHING` draft; now plain C in actor_part88.c
+Previously raw asm with a `NON_MATCHING` draft; now plain C in continue_prompt.c
 under `old_agbcc`, and `asm/code_3_2_20_28568_c99c_31784_33ef4_3487c.s` is
 gone.
 

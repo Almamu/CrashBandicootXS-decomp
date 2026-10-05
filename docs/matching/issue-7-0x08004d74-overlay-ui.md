@@ -7,16 +7,19 @@ order more naturally) because issue #8's parallel PR independently
 claimed `settings_menu13.c`/`14.c` first, before this PR merged -
 resolved as a rename on merge to avoid an add/add filename collision.
 The whole five-file family was renumbered together (not just the two
-that literally collided) to keep it visually contiguous.
+that literally collided) to keep it visually contiguous. (#575 has
+since given all of them descriptive names in `src/menus/`; see
+`tools/file_layout_plan.tsv` for the mapping. The rest of this note
+uses the new names.)
 
 GitHub issue #7 covers 12 functions: the composite pause/options
 screen's top-level constructor/driver pair, its per-row list renderer
 and draw step, its five icon-row-group draw handlers, and the results
 sub-region constructor. All 12 live in what was `asm/code_3_1_10_7.s`
 (0x08004D74-0x08005A78, contiguous up to the already-matched
-`InitPauseCrystalsPage` in `src/graphics/settings_menu6.c`) plus the single
+`InitPauseCrystalsPage` in `src/menus/pause_menu_pages_init.c`) plus the single
 isolated `DrawPauseFraction` (0x08005E5C-0x08005EF4, between
-`settings_menu6.o` and `settings_menu7.o`).
+`pause_menu_pages_init.o` and `pause_menu_widgets.o`).
 
 5 of the 12 are now matched; 7 stay parked under `NON_MATCHING`. Issue
 #7 stays open - not every function closed.
@@ -25,9 +28,9 @@ isolated `DrawPauseFraction` (0x08005E5C-0x08005EF4, between
 
 Before this pass, the composite screen's 0xd4-byte top-level object had
 three independent, non-overlapping partial views: `struct
-pause_menu` (settings_menu6.c), `struct
-pause_screen_row_counts` (settings_menu7.c), and `struct
-pause_screen_apply_state` (settings_menu12.c). Tracing the real call
+pause_menu` (pause_menu_pages_init.c), `struct
+pause_screen_row_counts` (pause_menu_widgets.c), and `struct
+pause_screen_apply_state` (pause_menu_pages_draw.c). Tracing the real call
 chain this pass (`RunPauseMenu` allocates the object and hands it to
 `InitPauseMenu`, which hands the *same pointer* to `InitPauseMenuInfo`, which
 hands it to `InitPauseCrystalsPage`/`AE8`/`B80`/`C58`/`D44`; `InitPauseMenu`
@@ -36,14 +39,14 @@ three views are genuinely the same allocation - merging them into one
 struct in `include/pause_menu.h`, with all three previously-
 separate field sets agreeing at zero-overlap boundaries once combined
 (strong independent confirmation this is one real object, not a
-coincidence). `settings_menu6.c`, `settings_menu7.c`, and
-`settings_menu12.c` now `#include` the shared header instead of
+coincidence). `pause_menu_pages_init.c`, `pause_menu_widgets.c`, and
+`pause_menu_pages_draw.c` now `#include` the shared header instead of
 defining their own local copies; this is a pure type-rename (no field
 offsets changed) verified not to affect their own already-matched
 bytes by the same full `make compare` this issue's own work required.
 Also moved: `struct settings_icon_actor`, `struct icon_pos`, and the
 `UPDATE_ICON_FRAME_NIBBLE` macro (previously local to
-`settings_menu6.c`), since the new file needs them too.
+`pause_menu_pages_init.c`), since the new file needs them too.
 
 Distinct from (and still not reconciled with) `struct
 save_menu` (`include/save_menu.h`) - a smaller,
@@ -65,7 +68,7 @@ some byte offsets by coincidence, per that header's own comment.
   screen owns (`field_c0`, `field_bc`, `iconsB0[3]`, `icons9c[5]`,
   `icons8c[4]`, `field_88`, in that order) via the same "re-probe an
   actor's own category-table slot 0x50/0x54" shape `DestroyPowerDialog`
-  (`src/graphics/oam_count.c`) already established, then frees `self`
+  (`src/menus/power_dialog_draw.c`) already established, then frees `self`
   if bit 0 of `flags` is set.
 - **`AnimatePauseMenu`** - the icon-group reveal/cycle animation
   (`field_24`/`field_28` cycle through hiding one icon group per call,
@@ -81,9 +84,9 @@ some byte offsets by coincidence, per that header's own comment.
   then builds the five icon-widget sub-groups in order (delegating to
   `InitPauseCrystalsPage`/`AE8`/`B80`/`C58`/`D44`).
 
-New files: `src/graphics/settings_menu15.c` (`InitPauseMenu`,
-`DestroyPauseMenu`, plus the parked functions below), `settings_menu17.c`
-(`AnimatePauseMenu`), `settings_menu18.c` (`DrawPausePowersPage`), `settings_menu19.c`
+New files: `src/menus/pause_menu.c` (`InitPauseMenu`,
+`DestroyPauseMenu`, plus the parked functions below), `pause_menu_draw.c`
+(`AnimatePauseMenu`), `pause_menu_powers.c` (`DrawPausePowersPage`), `pause_menu_info.c`
 (`InitPauseMenuInfo`).
 
 ### Real codegen gotchas hit and fixed (all five functions)
@@ -157,9 +160,9 @@ matched functions above and `docs/rom_map.md`'s `overlay_ui`
 investigation; none were guessed. Real bytes stay in the asm fragments
 below (each wrapped `.if NON_MATCHING == 0`); the NON_MATCHING C
 reconstructions live alongside the matched functions in
-`src/graphics/settings_menu15.c` (`RunPauseMenu`, `PauseMenuLoop`,
+`src/menus/pause_menu.c` (`RunPauseMenu`, `PauseMenuLoop`,
 `DrawPauseMenu`, `DrawPauseMenuRows`, `DrawPauseGemsPage`, `DrawPauseRelicsPage`) and
-`src/graphics/settings_menu16.c` (`DrawPauseFraction`).
+`src/menus/pause_menu_widgets.c` (`DrawPauseFraction`).
 
 - **`RunPauseMenu`** (`asm/code_3_1_10_7.s`) - the composite screen's
   top-level orchestrator: frees pending heap bytes, resets the audio
@@ -230,7 +233,7 @@ See `docs/status/overlay_ui.md` for the updated matched/parked lists.
 Closed out every function this issue still had parked
 (`RunPauseMenu`/`PauseMenuLoop`/`DrawPauseMenu`/`DrawPauseMenuRows`/`DrawPauseGemsPage`/
 `DrawPauseRelicsPage`/`DrawPauseFraction`) plus the four already-cross-referenced
-siblings in `src/graphics/settings_menu6.c`
+siblings in `src/menus/pause_menu_pages_init.c`
 (`InitPausePowersPage`/`InitPauseGemsPage`/`InitPauseRelicsPage`/`InitPauseTimeTrialPage`) that hit the
 same difficulty class - all 11 now byte-exact matched, confirmed by a
 full clean `make compare` (`La suma coincide`).
@@ -270,12 +273,12 @@ conversion used).
 functions (`RunPauseMenu`, `DrawPauseMenu`/`DrawPauseMenuRows`,
 `DrawPauseGemsPage`/`DrawPauseRelicsPage`, `InitPausePowersPage`-`InitPauseTimeTrialPage`, `DrawPauseFraction`)
 were previously all textually grouped for convenience into a small
-number of `.c` files (`settings_menu15.c`/`settings_menu6.c`/
-`settings_menu16.c`) even though their *real* ROM addresses were
+number of `.c` files (`pause_menu.c`/`pause_menu_pages_init.c`/
+`pause_menu_widgets.c`) even though their *real* ROM addresses were
 interleaved with several already-matched functions living in
-*different* object files (`AnimatePauseMenu` in `settings_menu17.c`,
-`DrawPausePowersPage` in `settings_menu18.c`, `InitPauseMenuInfo` in
-`settings_menu19.c`) - this was harmless while they were `#if
+*different* object files (`AnimatePauseMenu` in `pause_menu_draw.c`,
+`DrawPausePowersPage` in `pause_menu_powers.c`, `InitPauseMenuInfo` in
+`pause_menu_info.c`) - this was harmless while they were `#if
 NON_MATCHING`-guarded (invisible to the real build, only compiled
 together for the `NON_MATCHING=1` diagnostic build where interleaving
 doesn't matter), but making them unconditional C would have
@@ -284,20 +287,20 @@ shifting every address after them and breaking `make compare` in a way
 an isolated per-function compile can't catch (exactly the class of bug
 `docs/workflow.md`'s step 2/3 warning describes). Fixed per
 `docs/workflow.md` step 4's "one `.c` file per contiguous ROM region"
-rule: `PauseMenuLoop` (address-adjacent to `settings_menu15.o` on one
-side and `settings_menu17.o` on the other) and
+rule: `PauseMenuLoop` (address-adjacent to `pause_menu.o` on one
+side and `pause_menu_draw.o` on the other) and
 `DrawPauseMenu`/`DrawPauseMenuRows` (adjacent to each other, but bracketed by
-`settings_menu17.o` and `settings_menu18.o`) and
-`DrawPauseGemsPage`/`DrawPauseRelicsPage` (bracketed by `settings_menu18.o` and
-`settings_menu19.o`) each got their own new object file
-(`settings_menu20.c`/`settings_menu21.c`/`settings_menu22.c`
+`pause_menu_draw.o` and `pause_menu_powers.o`) and
+`DrawPauseGemsPage`/`DrawPauseRelicsPage` (bracketed by `pause_menu_powers.o` and
+`pause_menu_info.o`) each got their own new object file
+(`pause_menu_loop.c`/`pause_menu_draw.c`/`pause_menu_gems.c`
 respectively), inserted into `ldscript.txt` at exactly the position the
 now-empty raw asm fragment used to occupy. `RunPauseMenu` stayed merged
-into `settings_menu15.c` (it's genuinely address-adjacent to that
-file's `InitPauseMenu`, no gap). The four `settings_menu6.c` siblings and
-`DrawPauseFraction` (`settings_menu16.c`) needed no restructuring -
-`settings_menu6.c`'s new functions are address-adjacent to its own
-already-matched `InitPauseCrystalsPage`, and `settings_menu16.c` simply got its
+into `pause_menu.c` (it's genuinely address-adjacent to that
+file's `InitPauseMenu`, no gap). The four `pause_menu_pages_init.c` siblings and
+`DrawPauseFraction` (`pause_menu_widgets.c`) needed no restructuring -
+`pause_menu_pages_init.c`'s new functions are address-adjacent to its own
+already-matched `InitPauseCrystalsPage`, and `pause_menu_widgets.c` simply got its
 first-ever real content plus a brand new `ldscript.txt` entry (it had
 none before, since it contributed zero bytes to the real build while
 entirely parked).
@@ -322,12 +325,12 @@ on is now fully matched (the 5 from the first pass plus all 7 parked
 ones from this pass). GitHub issue #7 itself tracks a wider 25-function
 range (`0x08004CB4`-`0x080060AC`) that also includes `InitPausePowersPage`/
 `InitPauseGemsPage`/`InitPauseRelicsPage`/`InitPauseTimeTrialPage` (`src/graphics/
-settings_menu6.c`) and `PauseMenuVolumeDown`/`PauseMenuVolumeUp` (`src/graphics/
-settings_menu7.c`) - four settings-row icon-widget constructors and a
+pause_menu_pages_init.c`) and `PauseMenuVolumeDown`/`PauseMenuVolumeUp` (`src/graphics/
+pause_menu_widgets.c`) - four settings-row icon-widget constructors and a
 per-row percentage inc/dec pair that were already checked off as
 "parked" on that issue's own checklist, and this same session's pass
 also converted all six of those to NAKED and matched them byte-exact
-(see `docs/status/overlay_ui.md`'s `settings_menu6.c`/`settings_menu7.c`
+(see `docs/status/overlay_ui.md`'s `pause_menu_pages_init.c`/`pause_menu_widgets.c`
 entries). With that, every one of GitHub issue #7's 25 functions is now
 byte-exact matched. This PR closes issue #7.
 
@@ -357,7 +360,7 @@ address, fixes the last two load-order differences. See [near-miss-polish-2.md](
 
 ## Later pass: `PauseMenuLoop` matched
 
-`PauseMenuLoop` is plain C under old_agbcc now, and `settings_menu20.o`
+`PauseMenuLoop` is plain C under old_agbcc now, and `pause_menu_loop.o`
 is on `OLD_AGBCC_OBJS`. The input loop is a plain `for (;;)` with the
 B test at the bottom, which old_agbcc rotates to the ROM's layout.
 `disp` is taken only after the fade-in loop, so GCSE's copy of the fade

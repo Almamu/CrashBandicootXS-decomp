@@ -15,7 +15,7 @@
 /* One (OAM-slot-offset, pointer) pair, as used by _call_via_r2/
  * _call_via_r3 to draw a single OAM entry. `struct icon_record` is an
  * array of these, 8 bytes apart, starting at offset 0x10 - DrawPowerDialog
- * (src/graphics/oam_count.c, parked) uses slots 0 and 2 (a wide icon spanning
+ * (src/menus/power_dialog_draw.c, parked) uses slots 0 and 2 (a wide icon spanning
  * two OAM entries); DrawWrappedText (src/text/wrapped_text.c, parked) uses slots
  * 1, 3, and 5 (per-glyph and newline-marker OAM entries). */
 struct icon_slot {
@@ -38,7 +38,7 @@ struct icon_record {
 /* A single glyph's draw metrics - `bitmap_font.glyphRecords` is an
  * array of these, 12 bytes apart, indexed by `bitmap_font.charLookup`.
  * Established by GitHub issue #46's chunk (`FontDrawGlyph`/`FontMeasureChars`/
- * `FontMeasureText`, src/graphics/hud_icon_widget.c): `width` is the glyph's
+ * `FontMeasureText`, src/hud/hud_slide.c): `width` is the glyph's
  * horizontal advance (added to `posX` after each draw, and what
  * `FontMeasureText`/`FontMeasureChars` sum to measure a run of text); `shape`
  * feeds a small (2-bit, `<<6` into a byte) shape/size selector;
@@ -58,9 +58,9 @@ COMPILE_TIME_ASSERT(sizeof(struct icon_glyph_metrics) == 0xC);
  * object.
  *
  * The leading `unused_00`/`unused_10c` regions and part of `unused_118`
- * were opaque when this struct was first written (oam_count.c/
+ * were opaque when this struct was first written (power_dialog_draw.c/
  * wrapped_text.c, both still not byte-matched); GitHub issue #46's chunk
- * (src/graphics/hud_icon_widget.c) reads and writes them directly and
+ * (src/hud/hud_slide.c) reads and writes them directly and
  * fills in the real shape below. */
 struct bitmap_font {
     /* A 6-byte OAM-shaped draw-request scratch buffer, rebuilt fresh by

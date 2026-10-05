@@ -166,7 +166,7 @@ void PlayIntroCutscene(void *self)
 void ShowCompanyLogos(void)
 {
     /* `nullsub_7` is a real no-op (`bx lr`) but, split into its own
-     * translation unit (src/audio/counter_selector.c), an ordinary call
+     * translation unit (src/frontend/language_select.c), an ordinary call
      * forces the allocated block's pointer into a callee-saved register
      * *before* the call, one instruction earlier than the ROM (which
      * keeps it in r0 across the call and only moves it afterward - only
@@ -226,7 +226,7 @@ void UnpackSaveData(struct level_state *self, void *src)
 /* Packs `self->0x74`/`0x6c`/`0x78` back into the halfword at
  * `self->0x14c`/`0x14d` - the inverse of `UnpackSaveData` above - and
  * returns the `self->0x14c` snapshot pointer (matching the `void *`
- * externs used at its call sites in settings_menu15.c/settings_menu8b.c).
+ * externs used at its call sites in pause_menu.c/save_menu_input.c).
  *
  * Register-pinned to reproduce three ROM-specific shapes plain C
  * phrasing alone didn't reach (see docs/workflow.md step 7):

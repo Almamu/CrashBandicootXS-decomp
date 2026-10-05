@@ -49,13 +49,13 @@ struct icon_pos {
  * allocates it with `OperatorNew(0xd4)`, passes it to InitPauseMenu,
  * which passes the same pointer to InitPauseMenuInfo, which passes it to
  * the five Init*Page functions - and separately InitPauseMenu also passes
- * it to CommitPauseMenuFrame/PauseMenuLoop, which is the settings_menu12.c/
- * settings_menu7.c fields' own consumer):
- * - `struct pause_menu` (src/graphics/settings_menu6.c,
+ * it to CommitPauseMenuFrame/PauseMenuLoop, which is the pause_menu_pages_draw.c/
+ * pause_menu_widgets.c fields' own consumer):
+ * - `struct pause_menu` (src/menus/pause_menu_pages_init.c,
  *   originally local to that file) - the icon-widget fields.
- * - `struct pause_screen_row_counts` (src/graphics/settings_menu7.c) -
+ * - `struct pause_screen_row_counts` (src/menus/pause_menu_widgets.c) -
  *   the per-row edit-count fields.
- * - `struct pause_screen_apply_state` (src/graphics/settings_menu12.c) -
+ * - `struct pause_screen_apply_state` (src/menus/pause_menu_pages_draw.c) -
  *   the BLDCNT/BLDY/DISPCNT apply-step fields.
  * All three agreed on their own fields' offsets with zero overlap once
  * merged - strong confirmation this is genuinely one object, not a
@@ -115,9 +115,9 @@ extern s32 GetSpriteAnimPaletteSlot(struct actor *part);
 /* Sets `field_29`'s low nibble from GetSpriteAnimPaletteSlot's result, keeping the
  * high nibble - the recurring last step of every icon constructor that
  * touches a `struct settings_icon_actor` (see src/graphics/
- * settings_menu6.c and src/graphics/settings_menu13.c). Written with
+ * pause_menu_pages_init.c and src/menus/power_dialog.c). Written with
  * explicit register pins (matching the SUB_8006600_* macros in
- * src/graphics/oam_count.c) because gcc's constant-propagation
+ * src/menus/power_dialog_draw.c) because gcc's constant-propagation
  * otherwise folds the ROM's two-instruction "movs r1,#0x10 / rsbs
  * r1,r1,#0" -0x10 load into a single `sub` relative to the just-used
  * 0xf mask, which the ROM never does. */

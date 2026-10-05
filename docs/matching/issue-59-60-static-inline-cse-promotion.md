@@ -33,7 +33,7 @@ previously documented as blocked by exactly this class of compiler
 behavior. Two closed; one didn't (a related but distinct blocker - see
 below).
 
-## Closed: `UpdateTitleLogoPieces` (`src/graphics/graphics_loading_35780.c`)
+## Closed: `UpdateTitleLogoPieces` (`src/frontend/title_screen_init.c`)
 
 The highest-confidence candidate - its own file's header comment already
 described the blocker in almost these exact words: "any plain-C phrasing
@@ -181,7 +181,7 @@ now points at `actor_part130.o` (matched), `0x08032C0C` keeps `None`
 (`HovercraftStateCloseIn`/`HovercraftStateFallBack` remain parked - unrelated many-high-register
 gap, untouched by this pass).
 
-## Did not close: `TitleScreenCheatInput` (`src/graphics/graphics_loading_35780.c`)
+## Did not close: `TitleScreenCheatInput` (`src/frontend/title_screen_init.c`)
 
 Given a real attempt per the task, but this one's blocker is a genuinely
 different shape than the other two, exactly as this project's own prior
