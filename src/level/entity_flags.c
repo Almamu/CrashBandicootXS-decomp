@@ -1,5 +1,6 @@
 #include "core.h"
 #include "memory.h"
+#include "level.h"
 
 /* GitHub issue #41: 0x08025894-0x08025FC8. Counts, across every group
  * in `list` (a `{count:u16 @2, groups:ptr @4}` header) and every item
@@ -252,8 +253,9 @@ void DestroyEntityFlags(void *self, s32 flags)
 }
 
 /* Zeroes the two Q8 position words at `self+0`/`self+4`. */
-void InitEntityFlags(void *self)
+void *InitEntityFlags(void *self)
 {
     *(s32 *)self = 0;
     *(s32 *)((u8 *)self + 4) = 0;
+    return self;
 }

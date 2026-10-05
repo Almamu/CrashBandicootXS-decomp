@@ -2,11 +2,9 @@
 #include "actor.h"
 #include "hud.h"
 #include "objects.h"
+#include "level.h"
 
 extern void *gLevelState;
-
-extern s32 GetBossIndex(void *self);
-extern u8 IsInBonusRound(void *self);
 
 /* The HUD stat-widget family's dispatcher - see docs/rom_map.md's "full
  * HUD stat-widget family" section. `self` is the same `struct

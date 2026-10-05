@@ -1,21 +1,16 @@
 #include "core.h"
 #include "bg_scroll_layer.h"
 #include "system.h"
+#include "level.h"
 
 /* Built with old_agbcc - see docs/matching/game-loop-old-agbcc.md. */
 
-extern void ScrollBgLayerBase(struct bg_scroll_layer *self, void *vec2);
 extern void _call_via_r3(void *self, s32 lo, s32 hi, void *fn);
-extern void ScrollBgStreamer(void *streamer, struct bg_scroll_layer *self);
-extern void GrowBgLayerColumns(struct bg_scroll_layer *self, s32 lo, s32 hi);
-extern void GrowBgLayerRows(struct bg_scroll_layer *self, s32 lo, s32 hi);
 
 static inline void CallClip(struct bg_scroll_layer *self, struct bg_layer_method *m, s32 lo, s32 hi)
 {
     _call_via_r3((u8 *)self + m->thisOffset, lo, hi, m->fn);
 }
-
-extern u16 *GetBgStreamerColumn(void *streamer, s32 col, s32 row, s32 *rowOut);
 
 static inline s32 Mod32(s32 v)
 {
@@ -108,31 +103,8 @@ void DrawBgLayerColumn(struct bg_scroll_layer *self, s32 col)
  *
  * Real bytes formerly the whole of `asm/code_3_2_17_25fc8.s`. */
 
-/* Per-layer part of the level descriptor (level_layers.c's
- * `struct level_desc` points at one per layer). */
-struct bg_layer_desc
-{
-    u8 unk_00[8];     // 0x00
-    void *tileData;   // 0x08
-    s32 scaleX;       // 0x0C
-    s32 scaleY;       // 0x10
-    u16 cnt;          // 0x14 - BGnCNT bits (only the priority is used here)
-    u8 unk_16[4];     // 0x16
-    u16 widthTiles;   // 0x1A
-    u16 heightTiles;  // 0x1C
-};
-
-extern u16 *GetBgStreamerRow(void *streamer, s32 col, s32 row, s32 *colOut);
-extern void ResetBgLayerBase(struct bg_scroll_layer *self, void *pos);
-extern void SetBgLayerSource(struct bg_scroll_layer *self, struct bg_layer_desc *desc);
-extern void DestroyBgLayerBase(struct bg_scroll_layer *self, u32 flags);
 extern void _call_via_r1(void *self, void *fn);
 extern void _call_via_r2(void *self, s32 arg, void *fn);
-extern u16 AcquireTileSlot(struct tile_slot_pool *pool, u16 tile);
-extern void ReleaseTileSlot(struct tile_slot_pool *pool, u32 tile);
-extern void ResetTileSlotPool(struct tile_slot_pool *pool);
-extern void SetTileSlotPoolSource(struct tile_slot_pool *pool, s32 charBase, u32 src);
-extern u8 gBgLayerVtable[];
 
 /* Base `drawRow` (table +0x30): copies the resident columns of map row
  * `row` from the streamer into screen row `row % 32`. */
@@ -197,14 +169,14 @@ void LoadBgLayerTiles(struct bg_scroll_layer *self)
 /* Level-load hook for one layer (called by level_layers.c's `LoadRoom`):
  * `SetBgLayerSource` picks up the map size, then an enabled layer takes its
  * tile asset and BG priority from the descriptor. */
-void LoadBgLayer(struct bg_scroll_layer *self, struct bg_layer_desc *desc)
+void LoadBgLayer(struct bg_scroll_layer *self, const struct level_layer_desc *desc)
 {
     SetBgLayerSource(self, desc);
     if (self->enabled)
     {
         u16 cnt;
 
-        self->tileData = desc->tileData;
+        self->tileData = (void *)desc->tileData;
         cnt = desc->cnt;
         self->cnt.bits.priority = cnt;
     }

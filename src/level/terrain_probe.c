@@ -1,4 +1,5 @@
 #include "core.h"
+#include "level.h"
 
 /* GitHub issues #9/#10/#41's shared cross-reference: `sub_8009BE0`'s
  * physics/collision step-probe (`src/objects/step_probe.c`, see
@@ -74,12 +75,6 @@
  * session, including `ProbeTerrainX`/`ProbeTerrainY` themselves) moved to
  * the new `asm/code_3_2_17_266bc.s`. */
 
-struct probe_pos
-{
-    s32 x;
-    s32 y;
-};
-
 /* `self+0x10` points at a per-object bounds record; only the two
  * fields this function itself reads are confirmed (a right/lower
  * streamed-region edge pair, compared directly against the caller's
@@ -90,9 +85,6 @@ struct sub_8026628_bounds
     s32 maxX; /* +0x10 */
     s32 maxY; /* +0x14 */
 };
-
-extern s32 ProbeTerrainX(void *self, struct probe_pos *pos, s32 span, s32 *outValue, s32 submode);
-extern s32 ProbeTerrainY(void *self, struct probe_pos *pos, s32 span, s32 *outValue, s32 submode);
 
 s32 ProbeTerrain(void *self, s32 mode, struct probe_pos *pos, s32 span, s32 *outValue)
 {

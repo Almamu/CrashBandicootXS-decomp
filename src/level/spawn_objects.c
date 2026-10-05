@@ -6,18 +6,13 @@
 #include "bosses.h"
 #include "gfx.h"
 #include "objects.h"
+#include "level.h"
 
 /* Spawner table entries next to the text popups (ROM 0x08021668-0x08021BFC).
  * Built with old_agbcc; see include/text_popup.h. */
 
 extern void *gPaletteCache;
 extern u8 *gLevelState;
-extern void *gUpdateOnlyPartList;
-extern void *gDecorationList;
-
-extern u8 IsBonusRoundDone(void *self);
-extern void SetBonusPlatform(void *self, s32 value);
-extern void SpawnSeal(void);
 
 /* Same shape as level_select_parts.h's anim_table/anim_record. */
 struct anim_record_21668
@@ -100,7 +95,7 @@ void SpawnSeaweed(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     PART_FLAGS(part)->bit7 = 0;
     PART_FLAGS(part)->bit2 = 0;
     part->base.field_0A = 0;
-    AddToPartList(gDecorationList, part);
+    AddToPartList((struct part_list *)gDecorationList, part);
 }
 
 /* SpawnSeaweed without the animation reset. */
@@ -113,7 +108,7 @@ void sub_80217D0(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     PART_FLAGS(part)->bit7 = 0;
     PART_FLAGS(part)->bit2 = 0;
     part->base.field_0A = 0;
-    AddToPartList(gDecorationList, part);
+    AddToPartList((struct part_list *)gDecorationList, part);
 }
 
 /* Builds a CreateSpriteObj sprite part on animation table +0x210, resets
@@ -132,7 +127,7 @@ void SpawnFlame(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     PART_FLAGS(part)->bit7 = 0;
     PART_FLAGS(part)->bit2 = 0;
     part->base.field_0A = 0;
-    AddToPartList(gDecorationList, part);
+    AddToPartList((struct part_list *)gDecorationList, part);
 }
 
 /* Plain `CreatePlatform` trampoline (docs/rom_map.md; same callee as
@@ -159,11 +154,11 @@ void SpawnBonusPlatform(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     s32 result;
 
-    if (IsBonusRoundDone(gLevelState) || gLevelState[0x8c])
+    if (IsBonusRoundDone((struct level_state *)gLevelState) || gLevelState[0x8c])
         result = (s32)CreatePlatform(arg0, arg1, arg2, arg3, 7);
     else
         result = (s32)CreatePlatform(arg0, arg1, arg2, arg3, 5);
-    SetBonusPlatform(gLevelState, result);
+    SetBonusPlatform((struct level_state *)gLevelState, result);
 }
 
 /* Plain `CreatePlatform` trampoline, id `2`. */
@@ -205,13 +200,13 @@ void SpawnSealSpawner(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 
     obj = CreatePeriodicSpawner(OperatorNew(0x28));
     zero = 0;
-    obj->callback = SpawnSeal;
+    obj->callback = (void (*)(void))SpawnSeal;
     obj->period = 0x78;
     obj->phase = zero;
     obj->base.x = arg1 << 8;
     obj->base.y = arg2 << 8;
     obj->base.flags |= 0x10;
-    AddToPartList(gUpdateOnlyPartList, obj);
+    AddToPartList((struct part_list *)gUpdateOnlyPartList, obj);
 }
 
 /* Plain `CreateCrate` entity-constructor trampoline (docs/rom_map.md;

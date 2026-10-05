@@ -3,6 +3,7 @@
 #include "system.h"
 #include "audio.h"
 #include "player.h"
+#include "level.h"
 
 /* Part of GitHub issue #16's remainder (0x08011BD4-0x08012D24): three
  * gActionCtrlStateTable action-table helpers for the player/action object
@@ -36,8 +37,6 @@ extern void *gLevelState;
 extern struct act_part *gPlayer;
 extern void *gInput;
 extern struct cam *gLevelLayers;
-extern u8 HasDoubleJump(void *self);
-extern void SetMaskLevel(void *self, s32 arg);
 
 /* Trio stores as in action_ctrl_run_jump.c: as inline parameters, old_agbcc
  * materializes the values before the stores. */
@@ -306,7 +305,7 @@ u8 TryActionCtrlDoubleJump(struct act *self)
     if (pressed) {
         s32 frame = self->frame;
 
-        if (frame == 0 && HasDoubleJump(gLevelState)) {
+        if (frame == 0 && (u8)HasDoubleJump(gLevelState)) {
             if (self->part->tag == 6 && self->part->frame >= 0) {
                 self->frame++;
                 *PartBytePtr(gPlayer, 0x100) = frame;

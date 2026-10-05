@@ -3,13 +3,12 @@
 #include "actor_self.h"
 #include "player.h"
 #include "objects.h"
+#include "level.h"
 
 /* GitHub issue #9/#10: 0x0800A884 - the same big, still-unnamed "part"
  * object family as `player_update.c`/`player_reset.c`; raw offset casts
  * throughout for the same reason those files give. */
 
-extern void SetMaskLevel(void *arg0, s32 arg1);
-extern s32 GetTerrainFlagsAt(void *arg0, s32 x, s32 y);
 extern void *gLevelLayers;
 extern void *gLevelState;
 extern u8 gEmptySpritePoint[];

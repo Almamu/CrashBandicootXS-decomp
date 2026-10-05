@@ -1,5 +1,6 @@
 #include "core.h"
 #include "memory.h"
+#include "level.h"
 
 /* GitHub issue #44: the `gCamera` camera-follow block (the
  * "generic 0x18-byte block" docs/matching/issue-37-game-loop-2375c.md
@@ -68,7 +69,6 @@ struct camera
 };
 
 extern void *gLevelLayers;
-extern void SetLevelScroll(void *self, s32 x, s32 y);
 
 void StepCameraDirectional(struct camera *cam)
 {

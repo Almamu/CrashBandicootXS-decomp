@@ -5,6 +5,7 @@
 #include "gfx.h"
 #include "objects.h"
 #include "memory.h"
+#include "level.h"
 
 /* GitHub issue #21: 0x08017524-0x08017A44, the whole tail of the former
  * asm/code_3_2_17_16048.s.
@@ -162,8 +163,6 @@ extern struct { u8 unk_00[0x10]; struct { u8 unk_00[0x10]; s32 width; } *layer0;
 
 extern s32 _call_via_r2(void *self, s32 arg, void *fn);
 extern s32 _call_via_r3(void *self, void *arg1, void *arg2, void *fn);
-extern void LoseLife(void *arg0);
-extern void RequestRoomExit(void);
 
 /* A virtual call as gcc 2.x lowers it: take the method-table entry's
  * address once, then read its `this` adjustment and function from it.

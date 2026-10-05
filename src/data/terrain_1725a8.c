@@ -1,22 +1,10 @@
 #include "core.h"
+#include "level.h"
 
 /*
  * ROM 0x081725A8-0x08172CD4. Linked in ROM order between data/data.s
  * sections by ldscript.txt - see docs/data.md.
  */
-
-/* The terrain types of the level collision maps (bg_layer_base.c): a
- * cell's low byte picks one (0x24 and above are solid, 0 is empty, and
- * GetTerrainHeights stops at 0x23), `modeValue` is a value per collision mode
- * (sub_8025228) and `heights` the surface height of each of the cell's
- * 8 pixel columns per mode, 0-7, 0xFF where there is none (GetTerrainHeights,
- * GetSolidTerrainHeights). bg_layer_base.c's `struct terrain_type` names only
- * `modeValue`. */
-struct terrain_type
-{
-    u8 modeValue[4];
-    u8 heights[4][8];
-};
 
 const struct terrain_type gTerrainTypes[51] = {
     { /* 0 */

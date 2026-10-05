@@ -6,18 +6,12 @@
 #include "hud.h"
 #include "system.h"
 #include "gfx.h"
+#include "level.h"
 
 extern void *gPlayer;
 extern void *gEntityFlags;
 extern void *gHud;
 extern struct palette_cache *gPaletteCache;
-
-extern s32 GetCrateCount(void *self);
-extern void ResetDeaths(void *self);
-extern void ClearSpawnAtStart(void *self);
-extern void SetBonusRoundDone(void *self);
-extern void ClearInBonusRound(void *self);
-extern void SetCheckpointAtPlayer(struct level_state *self, u8 arg1);
 
 /* Called at level start/checkpoint-restore: `arg1` selects whether to
  * accumulate this attempt's progress into the running totals

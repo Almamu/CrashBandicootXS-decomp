@@ -9,16 +9,12 @@
 #include "audio.h"
 #include "bosses.h"
 #include "gfx.h"
+#include "level.h"
 
 extern void *gHud;
 extern void *gAudioContext;
 extern void *gSpriteBankSet;
 extern struct palette_cache *gPaletteCache;
-
-extern u8 IsInBonusRound(struct level_state *self);
-extern u8 IsInGemPath(struct level_state *self);
-extern u8 *GetCurrentLevelFlags(struct level_state *self);
-extern void SpawnCrateGem(s32 a, u16 b, u16 c, u16 d);
 
 /* Record 47's periodic-trigger setter (docs/rom_map.md, "An
  * achievement/unlock-icon spawner family, tied to gSpriteBankTable
@@ -420,7 +416,6 @@ void ResetLives(struct level_state *self)
 }
 
 struct AudioContext;
-extern void PlayRoomMusic(void *self);
 
 /* Sets the Aku Aku mask level (`maskLevel`, +0x78, 0-3): level `3` (the
  * invincibility mask) always fires a jingle (`StartSong(
@@ -440,7 +435,7 @@ void SetMaskLevel(void *selfArg, s32 stateArg)
         StartSong(gAudioContext, 0x12);
     } else if (self->maskLevel == 3) {
         self->maskLevel = state;
-        PlayRoomMusic(&self->level);
+        PlayRoomMusic((struct level_progress *)&self->level);
     }
     self->maskLevel = state;
 }
@@ -626,12 +621,6 @@ void SetCurrentLevel(struct level_state *self, s32 value)
 {
     self->level = value;
 }
-
-extern s32 LevelHasYellowGemEntity(s32 idx);
-extern s32 LevelHasBlueGemEntity(s32 idx);
-extern s32 LevelHasGreenGemEntity(s32 idx);
-extern s32 LevelHasRedGemEntity(s32 idx);
-extern s32 LevelHasGemPathGemEntity(s32 idx);
 
 /* Five thin two-argument wrappers that drop `self` entirely and forward
  * straight to one of `LevelHasYellowGemEntity`/`34`/`40`/`4C`/`58` (the medal
@@ -838,14 +827,6 @@ void CheckAllCratesBroken(void *selfArg)
 extern void *gPlayer;
 extern void *gEntityFlags;
 
-extern s32 GetCrateCount(struct level_state *self);
-extern void ResetDeaths(struct level_state *self);
-extern void ClearSpawnAtStart(struct level_state *self);
-extern void ClearInGemPath(struct level_state *self);
-extern void SetGemPathDone(struct level_state *self);
-extern void ResetCrateCount(struct level_state *self);
-extern void SetCheckpointAtPlayer(void *self, u8 arg1);
-extern void PlayCutscene(void *self, s32 mode);
 struct AudioContext;
 
 /* Sets `self->0x1bc` (a Q-format camera/position field paired with the
@@ -908,7 +889,7 @@ void RestoreCheckpoint(struct level_state *self)
  * into `self->0xd4`/`0xd8`, flushes two spans of the
  * `gEntityFlags` bitmap via the `CpuSet` wrapper, then stashes the
  * `0xe4`-byte snapshot block (see `RestoreCheckpoint` above). */
-void SetCheckpoint(void *selfArg, u8 flag, s32 *pairArg)
+void SetCheckpoint(void *selfArg, s32 flag, s32 *pairArg)
 {
     register struct level_state *self asm("r5") = selfArg;
     register s32 *pair asm("r4") = pairArg;
@@ -983,7 +964,7 @@ void PlayIntroCutscene(void *self)
 /* Allocates a `0x44c`-byte block, fires an (empty) `nullsub_7` hook and
  * `RunCompanyLogos`, then hands the block to `DestroyCompanyLogos` with flags `3`
  * if the allocation succeeded. */
-void ShowCompanyLogos(void)
+void ShowCompanyLogos(void *unused)
 {
     /* `nullsub_7` is a real no-op (`bx lr`) but, split into its own
      * translation unit (src/frontend/language_select.c), an ordinary call
@@ -1110,8 +1091,6 @@ void *PackSaveData(void *selfArg)
     return snap;
 }
 
-extern void *InitLevelState(void *arg0);
-
 /* Lazily allocates `gLevelStateSingleton` (0x1cc bytes) through
  * `InitLevelState` the first time it's needed, then returns it. Its own
  * file: ROM-adjacent to `PlayRoom` (now matched, `play_room.c`)
@@ -1120,7 +1099,6 @@ extern void *InitLevelState(void *arg0);
  * asm/code_3_2_17_23a1c.s after), so it can't share an object file
  * with either matched neighbor without splitting the ROM-contiguous
  * layout. */
-extern void *gLevelStateSingleton;
 void *GetLevelState(void)
 {
     if (gLevelStateSingleton == NULL) {

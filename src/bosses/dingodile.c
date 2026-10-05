@@ -7,6 +7,7 @@
 #include "objects.h"
 #include "memory.h"
 #include "crates.h"
+#include "level.h"
 
 /* codegen: GetSpriteAttackBox/GetSpriteBodyBox take the destination as
  * their first argument (objects.h); this file was matched against the
@@ -230,13 +231,6 @@ struct obj_48a4
     struct part *target; // 0x1C
 };
 
-struct level_layer
-{
-    u8 unk_00[0x10];
-    s32 width;  // 0x10
-    s32 height; // 0x14
-};
-
 struct collect_info
 {
     u8 unk_00[8];
@@ -244,7 +238,7 @@ struct collect_info
     u8 *bits;                  // 0x0C
 };
 
-struct level_state
+struct entity_flags
 {
     struct collect_info *info; // 0x00
     u8 unk_04[0x104];
@@ -255,16 +249,10 @@ extern struct part_list *gUnknown_030012EC;
 extern struct part_list *gCollidableList;
 extern struct part *gPlayer;
 extern void ***gSpriteBankSet;
-extern struct level_state *gEntityFlags;
+extern struct entity_flags *gEntityFlags;
 extern void *gAudioContext;
 extern void *gLevelState;
-extern struct { u8 unk_00[0x10]; struct level_layer *layer; } *gLevelLayers;
-
-extern u8 HasSuperBodySlam(void *arg0);
-extern u8 HasTurboRun(void *arg0);
-extern void SpawnBodySlamPower(u32 arg0, s32 arg1, s32 arg2, s32 arg3);
-extern void SpawnTurboRunPower(u32 arg0, s32 arg1, s32 arg2, s32 arg3);
-extern void RequestRoomExit(void);
+extern struct level_layers *gLevelLayers;
 
 typedef void (*method1_fn)(void *self, s32 a);
 typedef void (*method2_fn)(void *self, void *a, s32 b);
@@ -313,13 +301,13 @@ typedef u8 (*query_fn)(void *self);
 /* Right edge of the level, in Q8 units. */
 static inline s32 LevelRight(void)
 {
-    return gLevelLayers->layer->width << 8;
+    return gLevelLayers->layer0->widthPx << 8;
 }
 
 /* Bottom edge of the level, in Q8 units. */
 static inline s32 LevelBottom(void)
 {
-    return gLevelLayers->layer->height << 8;
+    return gLevelLayers->layer0->heightPx << 8;
 }
 
 static inline s32 AtLevelEdge(struct part_f28 *f, s32 x)
@@ -344,7 +332,7 @@ static inline void SetTag(struct part *p, u8 tag)
 
 /* (u16)(width + n), computed the way the ROM does it: in the upper
  * halfword, then shifted back down. */
-#define LayerWidthPlus(n) (((gLevelLayers->layer->width << 16) + ((n) << 16)) >> 16)
+#define LayerWidthPlus(n) (((gLevelLayers->layer0->widthPx << 16) + ((n) << 16)) >> 16)
 
 static inline void MarkCollected(struct part *p)
 {
@@ -352,7 +340,7 @@ static inline void MarkCollected(struct part *p)
     if (p->id != 0xFFFF)
     {
         s32 id = p->id;
-        struct level_state *ls = gEntityFlags;
+        struct entity_flags *ls = gEntityFlags;
         s32 w = id;
 
         w /= 32;
@@ -434,7 +422,7 @@ void SetCortexBossState(struct obj_476c *self, s32 unused, s32 arg)
     if (arg == 3)
     {
         VCALL1(self->part->ctl, m20, 9);
-        if (!HasTurboRun(gLevelState))
+        if (!(u8)HasTurboRun(gLevelState))
             SpawnBodySlamPower(0xFFFF, 0x8C, 0x98, 0);
     }
     VCALL1(self, m20, arg);
@@ -712,7 +700,7 @@ void UpdateDingodile(struct dingodile_boss *self, struct part *other)
         if (y >= LevelBottom() + 0x2000)
         {
             StartDingodileMotion(self, (struct gobj *)other, 0);
-            if (HasSuperBodySlam(gLevelState))
+            if ((u8)HasSuperBodySlam(gLevelState))
                 RequestRoomExit();
             SetDingodileState(self, other, 17);
         }
@@ -739,12 +727,12 @@ void SetDingodileState(struct dingodile_boss *self, struct part *other, s32 next
     switch (next)
     {
     case 16:
-        if (!HasSuperBodySlam(gLevelState))
+        if (!(u8)HasSuperBodySlam(gLevelState))
             SpawnTurboRunPower(0xFFFF, 0xA0, 0xA9, 0);
         StartDingodileMotion(self, (struct gobj *)other, 3);
         break;
     case 12:
-        SpawnDingodileShark(self, gLevelLayers->layer->width, 0x28, 1);
+        SpawnDingodileShark(self, gLevelLayers->layer0->widthPx, 0x28, 1);
         SpawnDingodileShark(self, 0, 0x46, 0);
         SpawnDingodileShark(self, LayerWidthPlus(0x46), 0x64, 1);
     case 1:
@@ -839,9 +827,9 @@ void SpawnDingodileShieldOrRocket(struct dingodile_boss *self, s32 mode, u16 x, 
     p->f28.flag5 = (*bits >> 2) & 1;
     p->fl.b.active = 1;
     if (mode == 0)
-        AddToPartList((struct dual_array_manager *)gUnknown_030012EC, p);
+        AddToPartList((struct part_list *)gUnknown_030012EC, p);
     else
-        AddToPartList((struct dual_array_manager *)gCollidableList, p);
+        AddToPartList((struct part_list *)gCollidableList, p);
 }
 
 /* Spawns one of the boss's floor-tile parts (record index 1 of the
@@ -870,7 +858,7 @@ void SpawnDingodileShark(struct dingodile_boss *self, u16 x, u16 y, u8 facing)
     p->f28.facing = facing;
     p->fl.b.active = 1;
     VCALL1_B(ctl, m18, p)
-    AddToPartList((struct dual_array_manager *)gCollidableList, p);
+    AddToPartList((struct part_list *)gCollidableList, p);
 }
 
 /* gDingodileShieldVtable's per-frame update (this controller is created
@@ -1099,7 +1087,7 @@ void SpawnDingodileStalactite(struct obj_48a4 *self, u16 x, u16 y)
     p->ctl = c;
     VCALL1(c, m18, p);
     p->fl.b.active = 1;
-    AddToPartList((struct dual_array_manager *)gCollidableList, p);
+    AddToPartList((struct part_list *)gCollidableList, p);
 }
 
 void UpdateDingodileShark(struct obj_483c *self, struct part *other)

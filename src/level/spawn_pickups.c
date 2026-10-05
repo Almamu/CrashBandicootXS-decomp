@@ -8,6 +8,7 @@
 #include "gfx.h"
 #include "objects.h"
 #include "memory.h"
+#include "level.h"
 
 extern void *gLevelState;
 extern void *gEntityFlags;
@@ -117,8 +118,6 @@ void SpawnTurboRunPower(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     AddToPartList(gUnknown_030012EC, part);
 }
 
-extern u8 IsCrystalSaved(void *self);
-
 /* Gated spawn (see `SpawnBlueGem` below for the sibling shape), but
  * built via `CreateStopwatch` instead of `CreateSpriteObj`, gated by
  * `IsCrystalSaved(gLevelState)` being true instead of a flag-bit
@@ -127,7 +126,7 @@ extern u8 IsCrystalSaved(void *self);
  * registering it. */
 void SpawnStopwatch(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    if (IsCrystalSaved(gLevelState)) {
+    if ((u8)IsCrystalSaved(gLevelState)) {
         register struct actor *part asm("r4") = CreateStopwatch(arg0, arg1, arg2, arg3);
 
         *(void **)((u8 *)part + 0x20) = (u8 *)(**gSpriteBankSet) + 0x1b0;
@@ -183,8 +182,6 @@ void SpawnBlueGem(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     *((u8 *)part + 0xa) = field0A;
     AddToPartList(gUnknown_030012EC, part);
 }
-
-extern void SetCrateGemPos(void *self, s32 *point);
 
 /* New shape (docs/rom_map.md's 15-slot dispatch table, slot 12): a
  * plain state-write, no sound/spawn - never reads `arg0`/`arg3` at all
@@ -255,7 +252,6 @@ void nullsub_22(void)
 {
 }
 
-extern void *SpawnStartMarker(u32 arg0, u16 arg1, u16 arg2, u16 arg3);
 extern struct actor *gPlayer;
 
 /* Entity type 0x04: the player start of the kind-2 (hover vehicle) room
@@ -296,21 +292,15 @@ void nullsub_23(void)
 {
 }
 
-extern void sub_8025D54(void *self, u32 flags);
-
 /* Constructor/consumer pair (docs/rom_map.md): frees `gEntitySpawner`
  * (via `sub_8025D54`'s conditional `OperatorDelete`, gated bit 0) if
  * already allocated. */
-void DestroyEntitySpawner(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void DestroyEntitySpawner(void)
 {
     if (gEntitySpawner != 0) {
         sub_8025D54(gEntitySpawner, 3);
     }
 }
-
-extern void InitEntitySpawner(void *self);
-extern void SetEntitySpawnerTable(void *self, void *base, s32 count);
-extern u8 gEntitySpawnFuncs[];
 
 /* Allocates an 8-byte `{table_base, count}` descriptor
  * (docs/rom_map.md disproves the earlier "local vtable copy"
@@ -321,7 +311,7 @@ extern u8 gEntitySpawnFuncs[];
  * `InitLevelState`'s `nullsub_2`/`nullsub_1` calls, `InitEntitySpawner` is
  * void and the ROM leaves the freshly-allocated pointer in `r0`
  * across the call rather than saving it - same inline-asm technique. */
-void CreateEntitySpawner(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void CreateEntitySpawner(void)
 {
     void **addr = &gEntitySpawner;
     register void *obj asm("r0") = OperatorNew(8);
@@ -338,7 +328,6 @@ extern struct oam_shadow_buffer *gOamBuffer;
 extern struct vram_upload_cursor *gObjVramCursor;
 extern void *gInput;
 extern u8 gDispcnt[2];
-extern u8 gSpriteBankTable[];
 
 /* `InitLevelState` (docs/rom_map.md, "Found the origin point"): the
  * function `GetLevelState` calls once at the top of the game loop to
@@ -387,7 +376,7 @@ void *InitLevelState(void *self)
 
         asm volatile("bl nullsub_1" : "+r" (tmp) :: "r1", "r2", "r3", "lr", "cc");
         *addr = (void ***)tmp;
-        *(u8 **)tmp = gSpriteBankTable;
+        *(const void **)tmp = &gSpriteBankTable;
     }
     {
         struct palette_cache **addr = &gPaletteCache;
@@ -397,9 +386,9 @@ void *InitLevelState(void *self)
         *addr = cache;
         {
             register u16 count asm("r1") =
-                ((const struct sprite_bank_table *)gSpriteBankTable)->paletteCount;
+                gSpriteBankTable.paletteCount;
             register const u8 *records asm("r2") =
-                ((const struct sprite_bank_table *)gSpriteBankTable)->palettes;
+                gSpriteBankTable.palettes;
 
             SetPaletteCacheSource(cache, count, records);
         }

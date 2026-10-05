@@ -7,6 +7,7 @@
 #include "gfx.h"
 #include "objects.h"
 #include "memory.h"
+#include "level.h"
 
 /* GitHub issue #9/#10: the three small `(self, mode)`-shaped trigger
  * functions the Phase 1 investigation (docs/matching/issue-9-10-0x0800b8dc-graphics.md)
@@ -245,7 +246,6 @@ void UpdateEnemyOscillateY(struct part_ctrl *self)
  * its own wider 6-parameter extern prototype purely to reproduce
  * that harmless extra stack store byte-for-byte. */
 extern void *gEntitySpawner;
-extern void *LaunchEffectPart(void *pool, s32 a, s32 b, s32 c, s32 d, s32 e, void *f);
 
 void *LaunchHarmfulEffectPart(s32 a, s32 b, s32 c, s32 d, s32 e, void *f)
 {

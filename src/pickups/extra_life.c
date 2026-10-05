@@ -7,6 +7,7 @@
 #include "gfx.h"
 #include "objects.h"
 #include "memory.h"
+#include "level.h"
 
 /* GitHub issue #12/#14 Phase 2 mop-up: the last 5 raw functions of the
  * still-large 24-function tail past `AddCollisionCandidate`
@@ -30,7 +31,6 @@ extern void *gEntityFlags;
 extern void *gUnknown_030012EC;
 extern void *gHud;
 
-extern s32 AddLife(void *self);
 extern s16 gSineTable[];
 
 /* Built with old_agbcc (Makefile OLD_AGBCC_OBJS) since the issue #15

@@ -92,6 +92,9 @@ extern const struct entry_set gActionCtrlMotionSet;
 extern const struct entry_set gPlayerCtrlMotionSet;
 extern const struct entry_set gInputCtrlMotionSet;
 
+/* The player's controller (sym_iwram.txt), built by PlayRoom. */
+extern void *gPlayerCtrl;
+
 /* src/pickups/wumpa.c */
 extern void ResetActionCtrl(void *self);
 

@@ -2,6 +2,7 @@
 #include "text_popup.h"
 #include "audio.h"
 #include "objects.h"
+#include "level.h"
 
 /* codegen: CreateEnemyCtrl takes the 0x8C-byte block OperatorNew
  * returns (enemies.h). In 11 of the 26 spawners below the registers only
@@ -15,14 +16,6 @@ extern struct part_ctrl *CreateEnemyCtrl_r0(void) asm("CreateEnemyCtrl");
  * part's collected bits from its level record; the tails differ. Built
  * with old_agbcc; see include/text_popup.h. */
 
-extern const s32 gEnemyDefaultAnimMap[8];
-extern const s32 gPenguinAnimMap[8];
-extern const s32 gPufferfishAnimMap[8];
-extern const s32 gBlowgunTribesmanAnimMap[8];
-extern const s32 gVenusFlytrapAnimMap[8];
-extern const s32 gVultureAnimMap[8];
-extern const s32 gSharkAnimMap[8];
-extern const s32 gElectricEelAnimMap[8];
 extern void *gAudioContext;
 
 /* Inline so the lookup's result gets its own register copy, as the ROM
@@ -591,8 +584,6 @@ void SpawnElectricEel(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 /* "Two-line text popup" spawner. Built with old_agbcc; see
  * include/text_popup.h. */
 
-extern const s32 gSquidAnimMap[8];
-
 /* Text popup, tag 7: the plainest member of the family. Shows the header
  * with gSquidAnimMap and style 7. */
 void SpawnSquid(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
@@ -622,13 +613,6 @@ void SpawnSquid(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 /* "Two-line text popup" spawners, ROM 0x0801FEEC-0x08020E84 - the
  * continuation of the code above. Built with old_agbcc; see
  * include/text_popup.h. */
-
-extern const s32 gFlamethrowerLabAssistantAnimMap[8];
-extern const s32 gStationarySpaceEnemyAnimMap[8];
-extern const s32 gPatrollingSpaceEnemyAnimMap[8];
-extern const s32 gPatrollingSewerEnemyAnimMap[8];
-extern const s32 gCrusherAnimMap[8];
-extern const s32 gSaucerLabAssistantAnimMap[8];
 
 /* Text popup, tag 9. Shows the header with gEnemyDefaultAnimMap and
  * style 6, then copies the level record's +8/+0xc/+4 words into

@@ -1,16 +1,11 @@
 #include "core.h"
 #include "memory.h"
 #include "util.h"
+#include "level.h"
+#include "gfx.h"
 
 /* Sits right after the parked CommitBlendRegs (asm/code_3_1_9.s) and
  * before the still-raw pause-menu/SIO cluster. */
-
-struct unk_03001280 {
-    u32 bldcntAlpha;
-    u8 bldy;
-};
-
-extern struct unk_03001280 gBlendRegs;
 
 /* Commits the `gBlendRegs` shadow to the real blend registers:
  * the word at `+0` covers both `REG_BLDCNT` and `REG_BLDALPHA` (a
@@ -31,8 +26,8 @@ extern struct unk_03001280 gBlendRegs;
 void CommitBlendRegs(void)
 {
     register vu32 *bldReg asm("r2") = (vu32 *)REG_ADDR_BLDCNT;
-    register struct unk_03001280 *src asm("r1") = &gBlendRegs;
-    register u32 word asm("r0") = src->bldcntAlpha;
+    register struct blend_regs *src asm("r1") = &gBlendRegs;
+    register u32 word asm("r0") = src->blend.raw;
     register u32 bldy asm("r1");
     register u32 masked asm("r0");
 

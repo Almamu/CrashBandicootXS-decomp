@@ -3,14 +3,13 @@
 #include "gfx.h"
 #include "objects.h"
 #include "memory.h"
+#include "level.h"
 
 /* Built with old_agbcc - see docs/matching/game-loop-old-agbcc.md. */
 
 extern void ***gSpriteBankSet;
 extern void *gLevelState;
 extern u8 *gPaletteCache;
-
-extern s32 GetBossIndex(void *self);
 
 #define HUD_ANIM(offset) ((struct hud_anim_data *)((u8 *)**gSpriteBankSet + (offset)))
 #define SLOT_RECORD(s) ((s)->anim_data->records[(s)->anim_index])

@@ -8,6 +8,7 @@
 #include "audio.h"
 #include "gfx.h"
 #include "objects.h"
+#include "level.h"
 
 /* 0x08022354-0x080225A0, formerly asm/code_3_2_17_22354.s: the two
  * functions between issue #33's chunk (spawn_pickups.c, which
@@ -27,7 +28,6 @@
  * Both match under either compiler; built with the current agbcc like
  * their neighbours. */
 
-extern void *gLevelStateSingleton;
 extern u16 gDispcnt;
 extern void *gOamBuffer;
 extern void *gObjVramCursor;
@@ -37,8 +37,6 @@ extern void *gSpriteRenderer;
 extern void *gSpriteBankSet;
 extern void *gPaletteCache;
 extern void *gEntityFlags;
-
-extern void DestroyEntityFlags(void *self, s32 flags);
 
 typedef void (*destroy_fn)(void *self, s32 flags);
 

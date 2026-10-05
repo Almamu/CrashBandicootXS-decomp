@@ -3,6 +3,7 @@
 #include "system.h"
 #include "audio.h"
 #include "player.h"
+#include "level.h"
 
 /* GitHub issue #17, ROM 0x080134B8-0x080138E8 (details in
  * docs/matching/issue-17-0x08012fbc-actor.md, "Third pass"). Built with
@@ -31,7 +32,6 @@ extern void *gAudioContext;
 extern struct act_part *gPlayer;
 extern void *gEntitySpawner;
 extern void *gInput;
-extern struct spark *SpawnEffectPart(void *pool, s32 a, s32 b, s32 x, s32 y, s32 mirror);
 
 /* Byte masks with the mask as an `s32` parameter: the AND stays in SImode
  * (a plain `*p & -0x11` is narrowed to 0xEF), so the -0x11 the ROM derives
@@ -289,8 +289,6 @@ asm(".align 2, 0");
  * (include/action_obj.h). Built with old_agbcc. */
 
 extern void *gLevelState;
-extern u8 HasSuperBodySlam(void *self);
-extern u8 HasTurboRun(void *self);
 
 /* Picks the part animation from its state: with tag 6, animation 9 on
  * frame 3 or 8 past it (or once finished); otherwise, once finished, 0x19
@@ -310,7 +308,7 @@ void ActionCtrlStateFlipBodySlamStart(struct act *self)
     }
     else if (part->animDone)
     {
-        if (HasSuperBodySlam(gLevelState))
+        if ((u8)HasSuperBodySlam(gLevelState))
         {
             ACT_VCALL1(self, m20, 0x19);
             ACT_VCALL2(self, m50, self->part, 7);
@@ -418,7 +416,7 @@ void ActionCtrlStateSlide(struct act *self)
                 switch (dir)
                 {
                 case 3 ... 4:
-                    if ((INPUT_HELD(in) & 0x200) && HasTurboRun(gLevelState))
+                    if ((INPUT_HELD(in) & 0x200) && (u8)HasTurboRun(gLevelState))
                     {
                         self->turboRun = 1;
                         ACT_VCALL1(self, m20, 4);
@@ -465,8 +463,6 @@ void ActionCtrlStateSlide(struct act *self)
  * trio (action_ctrl_states.c). Each handler snapshots the input word
  * gKeys (the high half is the newly-pressed buttons) and
  * most also the D-pad direction GetDpadDirection remaps. */
-
-extern u8 HasTornadoSpin(void *self);
 
 /* ActSetNext for the "fire" paths below. There the ROM loads a fresh 1 for
  * +0x30; plain C reuses the 1 of the preceding `pressed & 1` test, which
@@ -518,7 +514,7 @@ void ActionCtrlStateSpin(struct act *self)
         self->part->contact = 0;
         return;
     }
-    if (HasTornadoSpin(gLevelState) && (INPUT_PRESSED(in) & 2) && self->spinCooldown == 0)
+    if ((u8)HasTornadoSpin(gLevelState) && (INPUT_PRESSED(in) & 2) && self->spinCooldown == 0)
     {
         if (++self->charge > 3)
             self->charge = 3;
@@ -552,7 +548,7 @@ void ActionCtrlStateAirSpin(struct act *self)
         ActionCtrlStateSpin(self);
         return;
     }
-    if (HasTornadoSpin(gLevelState) && (INPUT_PRESSED(in) & 2) && self->spinCooldown == 0)
+    if ((u8)HasTornadoSpin(gLevelState) && (INPUT_PRESSED(in) & 2) && self->spinCooldown == 0)
     {
         if (++self->charge > 3)
             self->charge = 3;
@@ -619,7 +615,7 @@ void ActionCtrlStateTornadoSpin(struct act *self)
         self->part->contact = 0;
         return;
     }
-    if (HasTornadoSpin(gLevelState) && (INPUT_PRESSED(in) & 2) && self->spinCooldown == 0)
+    if ((u8)HasTornadoSpin(gLevelState) && (INPUT_PRESSED(in) & 2) && self->spinCooldown == 0)
     {
         if (++self->charge > 3)
             self->charge = 3;

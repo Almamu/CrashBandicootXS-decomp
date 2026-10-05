@@ -9,6 +9,11 @@
 #include "bosses.h"
 #include "vehicle.h"
 #include "gfx.h"
+#include "level.h"
+
+/* codegen: SetCheckpointAtPlayer takes (state, flag) (level.h); this
+ * caller passes the state only and leaves r1 as it is. docs/headers_plan.md */
+extern void SetCheckpointAtPlayer_1(void *self) asm("SetCheckpointAtPlayer");
 
 /*
  * `InitActorCategory` - the category (re)initialization + loading-screen
@@ -51,10 +56,6 @@ extern void *gObjVramCursor;
 extern void *gHud;
 extern u32 gKeys;
 
-extern void SetCheckpointAtPlayer(void *arg0);
-extern void RestoreCheckpoint(void *arg0);
-extern void TickLevelClock(void *arg0);
-
 #define CUR_CATEGORY (gActorCategories[gActorCategory])
 #define PAUSED (gLevelState[0x8c])
 
@@ -77,7 +78,7 @@ s32 InitActorCategory(s32 category)
     gActorCheckpoint = 0;
     gActorCategoryDeaths = 0;
     gUnknown_03001388 = 0;
-    SetCheckpointAtPlayer(gLevelState);
+    SetCheckpointAtPlayer_1(gLevelState);
     DecompressCategorySpriteSheet(CUR_CATEGORY.sprite_sheet);
     SetupActorVramPool();
     ClearCollectedSpawns();
@@ -88,7 +89,7 @@ s32 InitActorCategory(s32 category)
         activeCount = &gActorCategoryDeaths;
         variantCount = &gUnknown_03001388;
         gActorMissedNitros = gActorCheckpointMissedNitros;
-        RestoreCheckpoint(gLevelState);
+        RestoreCheckpoint((struct level_state *)gLevelState);
         if (*variantCount >= (s32)CUR_CATEGORY.unknown_28)
             variant = CUR_CATEGORY.unknown_30;
         else
@@ -119,7 +120,7 @@ s32 InitActorCategory(s32 category)
             AdvanceCellAnim();
             status = RunActorCategoryFrame();
             if ((*state)[0x8c] != 0)
-                TickLevelClock(*state);
+                TickLevelClock((struct level_state *)*state);
             ResetObjVram(gObjVramCursor);
             RewindOamBuffer(gOamBuffer);
             UpdateHudSlides(gHud);

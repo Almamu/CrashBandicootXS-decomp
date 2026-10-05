@@ -1,14 +1,9 @@
 #include "core.h"
 #include "system.h"
 #include "frontend.h"
+#include "level.h"
 
 extern void *gLevelState;
-
-extern void *GetLevelState(void);
-extern void PlayBootCutscene(void);
-extern void ShowCompanyLogos(void *state);
-extern void PlayIntroCutscene(void *state);
-extern void UpdateGameFrame(void *state);
 
 /* The game's top-level loop (called once from `AgbMain`, see
  * src/system/main.c): sets up the central per-level state object
@@ -22,7 +17,7 @@ extern void UpdateGameFrame(void *state);
 s32 MainLoop(void)
 {
     gLevelState = GetLevelState();
-    PlayBootCutscene();
+    PlayBootCutscene(gLevelState);
     ShowCompanyLogos(gLevelState);
     OpenLanguageSelect();
     gLanguage = RunLanguageSelect();

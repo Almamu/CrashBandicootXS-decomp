@@ -10,6 +10,7 @@
 #include "gfx.h"
 #include "objects.h"
 #include "memory.h"
+#include "level.h"
 
 /* Shared by src/bosses/dingodile_create.c and src/objects/platform_create.c/
  * platform_contact.c/platform_collide.c/platform.c (GitHub issue #25,
@@ -233,9 +234,6 @@ extern s32 _call_via_r1(void *self, void *fn);
 extern s32 _call_via_r2(void *self, void *arg, void *fn);
 extern s32 _call_via_r3(void *self, void *arg1, s32 arg2, void *fn);
 extern void _call_via_r4(void *self, s32 a, s32 b, s32 c);
-extern s32 GetBossIndex(void *arg);
-extern u8 IsBonusRoundDone(void *arg);
-extern u8 IsGemPathDone(void *arg);
 
 /* The object's constructor body (InitPlatform), which CreatePlatform inlines
  * into its `new`. */

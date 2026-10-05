@@ -10,6 +10,7 @@
 #include "player.h"
 #include "gfx.h"
 #include "objects.h"
+#include "level.h"
 
 /* GitHub issue #26: 0x0801B85C-0x0801CEE0, the whole of the former
  * asm/code_3_2_17_188d0_1b85c.s. Three objects, all gcc 2.x C++ classes
@@ -151,19 +152,6 @@ struct sprite
 
 COMPILE_TIME_ASSERT(level_select_c, sizeof(struct sprite) == 0x40);
 
-/* One level's fixed data (`gLevelTable`, 36-byte records,
- * indexed by level id). */
-struct level_info
-{
-    s32 nameText;           // 0x00 - text id (GetUiText)
-    s32 theme;              // 0x04 - also the SetZoomBgPicture image
-    u32 time0;              // 0x08 - time-trial thresholds, centiseconds,
-    u32 time1;              // 0x0C   loosest first
-    u32 time2;              // 0x10
-    u8 unk_14[0x10];
-};
-
-COMPILE_TIME_ASSERT(level_select_c, sizeof(struct level_info) == 0x24);
 
 /* One level's saved record word (`level_menu.save + 4 + id * 4`; byte 2
  * of the save block itself holds four more flags LoadLevelSelectRecord tests). */
@@ -177,40 +165,6 @@ struct level_save
 };
 
 /* Shadow copies of the blend/display registers, committed every frame. */
-struct blend_bits
-{
-    u32 bg0First:1;     // BLDCNT 1st target
-    u32 bg1First:1;
-    u32 bg2First:1;
-    u32 bg3First:1;
-    u32 objFirst:1;
-    u32 bdFirst:1;
-    u32 effect:2;
-    u32 bg0Second:1;    // BLDCNT 2nd target
-    u32 bg1Second:1;
-    u32 bg2Second:1;
-    u32 bg3Second:1;
-    u32 objSecond:1;
-    u32 bdSecond:1;
-    u32 unk_14:2;
-    u32 eva:5;          // BLDALPHA
-    u32 unk_21:3;
-    u32 evb:5;
-    u32 unk_29:3;
-};
-
-union blend
-{
-    u32 raw;
-    struct blend_bits bits;
-};
-
-struct bldy
-{
-    u32 evy:5;
-    u32 unk_5:27;
-};
-
 /* The same register viewed as its low byte, for the fade-in decrement
  * (a byte-sized test is what makes gcc narrow the `evy != 0` check to
  * an `and` of the loaded byte). */
@@ -304,7 +258,6 @@ extern struct vram_upload_cursor *gObjVramCursor;
 extern void *gOamBuffer;
 extern void *gInput;
 extern union key_state gKeys;
-extern struct level_info gLevelTable[];
 
 /* codegen: gLevelSelectGemPos and gLevelSelectTrialIconPos are const
  * (menus.h), but InitLevelSelect reads each one twice, across calls,
@@ -321,12 +274,6 @@ extern s32 _call_via_r2(void *self, s32 arg, void *fn);
 extern void _call_via_r4(void *self, s32 a, s32 b, s32 c);
 
 /* Save data. */
-extern u8 *PackSaveData(void *p);
-extern u8 LevelHasGemPathGem(void *p, s32 id);
-extern u8 LevelHasRedGem(void *p, s32 id);
-extern u8 LevelHasGreenGem(void *p, s32 id);
-extern u8 LevelHasBlueGem(void *p, s32 id);
-extern u8 LevelHasYellowGem(void *p, s32 id);
 
 /* The level-select screen's sub-objects and siblings (0x0801CEE0 on). */
 
@@ -1012,12 +959,12 @@ void DrawLevelSelectRecord(struct level_menu *self)
  * the best time. */
 void DrawLevelSelectTime(struct level_menu *self, u32 time)
 {
-    struct level_info *info;
+    const struct level_info *info;
 
     DrawSpriteWithOffset((struct actor *)self->sprites[5], -self->panelSlideX, self->trialIconY);
     DrawSpriteWithOffset((struct actor *)self->sprites[6], -self->panelSlideX, self->trialIcon2Y);
     info = &gLevelTable[self->levelId];
-    if (time != 0 && time <= info->time2)
+    if (time != 0 && time <= info->times[2])
     {
         struct icon_slot *slot;
 
@@ -1069,7 +1016,7 @@ void DrawLevelSelect(struct level_menu *self)
             SetLevelSelectEntrySelected(it, 1);
             if (!IsZoomBgShown(self->bg2))
             {
-                struct level_info *info;
+                const struct level_info *info;
 
                 self->levelId = GetLevelSelectEntryLevel(it);
                 info = &gLevelTable[self->levelId];
@@ -1118,15 +1065,15 @@ void LoadLevelSelectRecord(struct level_menu *self)
     struct level_save *sv;
 
     *rank = 5;
-    if (LevelHasGemPathGem(gLevelState, self->levelId))
+    if ((u8)LevelHasGemPathGem(gLevelState, self->levelId))
         *rank = 0;
-    if (LevelHasRedGem(gLevelState, self->levelId))
+    if ((u8)LevelHasRedGem(gLevelState, self->levelId))
         *rank = 1;
-    if (LevelHasGreenGem(gLevelState, self->levelId))
+    if ((u8)LevelHasGreenGem(gLevelState, self->levelId))
         *rank = 2;
-    if (LevelHasBlueGem(gLevelState, self->levelId))
+    if ((u8)LevelHasBlueGem(gLevelState, self->levelId))
         *rank = 3;
-    if (LevelHasYellowGem(gLevelState, self->levelId))
+    if ((u8)LevelHasYellowGem(gLevelState, self->levelId))
         *rank = 4;
     self->clearedIconY = 0;
     self->flag1IconY = 0;
@@ -1177,34 +1124,34 @@ void LoadLevelSelectRecord(struct level_menu *self)
     }
     if (sv->cleared)
     {
-        struct level_info *entry = &gLevelTable[self->levelId];
-        struct level_info *info = entry;
+        const struct level_info *entry = &gLevelTable[self->levelId];
+        const struct level_info *info = entry;
 
-        FormatCentiseconds(info->time0, self->recordText);
+        FormatCentiseconds(info->times[0], self->recordText);
         FormatCentiseconds(sv->time, self->timeText);
         SetAnim(self->sprites[5], 0);
         SetAnim(self->sprites[6], 0);
         SetAnim(self->sprites[7], 0);
         if (sv->time != 0)
         {
-            if (sv->time <= info->time2)
+            if (sv->time <= info->times[2])
             {
                 self->trialIcon2Y = 0x1C;
                 self->trialIconY = 0x1C;
                 SetAnim(self->sprites[5], 1);
                 SetAnim(self->sprites[6], 1);
             }
-            else if (sv->time <= info->time1)
+            else if (sv->time <= info->times[1])
             {
-                FormatCentiseconds(info->time2, self->recordText);
+                FormatCentiseconds(info->times[2], self->recordText);
                 self->trialIconY = 0x1C;
                 SetAnim(self->sprites[5], 2);
                 SetAnim(self->sprites[6], 1);
                 SetAnim(self->sprites[7], 1);
             }
-            else if (sv->time <= entry->time0)
+            else if (sv->time <= entry->times[0])
             {
-                FormatCentiseconds(info->time1, self->recordText);
+                FormatCentiseconds(info->times[1], self->recordText);
                 self->trialIconY = 0x1C;
                 SetAnim(self->sprites[5], 0);
                 SetAnim(self->sprites[6], 2);
@@ -1225,7 +1172,7 @@ void LoadLevelSelectRecord(struct level_menu *self)
  * copy plus an empty `asm` that keeps gcc from merging it. */
 s32 LevelSelectLoop(struct level_menu *self)
 {
-    struct level_info *info;
+    const struct level_info *info;
 
     self->result = 0;
     self->levelId = GetLevelSelectEntryLevel(self->items[self->index]);

@@ -1,4 +1,5 @@
 #include "core.h"
+#include "level.h"
 
 /* GitHub issues #9/#10/#41's shared cross-reference: `CollidePlayer`
  * (`src/player/player_collide.c`, still `NON_MATCHING`/parked) flags
@@ -56,8 +57,6 @@
  * See docs/matching/issue-9-10-0x0800a884-graphics.md for the full
  * write-up of this closure, appended to the section that originally
  * flagged this function raw. */
-
-extern u16 GetTerrainType(void *self, s32 x, s32 y, u8 *flagsOut, s32 *hiOut);
 
 s32 GetTerrainFlagsAt(void *arg0, s32 x, s32 y)
 {
@@ -181,16 +180,7 @@ s32 GetTerrainFlagsAt(void *arg0, s32 x, s32 y)
  * Real bytes formerly the start of `asm/code_3_2_17_26bf8.s` (that file
  * is now trimmed to begin at `StepCameraDirectional`). */
 
-struct probe_pos
-{
-    s32 x;
-    s32 y;
-};
-
 struct tile_cache;
-
-extern void *GetTerrainHeights(struct tile_cache *self, s32 x, s32 y);
-extern s8 sub_8025228(struct tile_cache *self, s32 x, s32 y, s32 mode, u8 *flagsOut);
 
 s32 sub_8026BF8(void *player, struct probe_pos *pos, s32 *outValue)
 {

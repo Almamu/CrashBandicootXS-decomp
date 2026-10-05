@@ -6,6 +6,7 @@
 #include "actor.h"
 #include "vehicle.h"
 #include "gfx.h"
+#include "level.h"
 
 /* Continues the same player/action-object action-table family already
  * documented in ctrl.c/action_ctrl_states.c/action_ctrl_land.c - `self`
@@ -35,9 +36,6 @@ extern u8 gActorVtable[];
 
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern s32 _call_via_r3(void *addr, void *arg1, void *tableEntry, void *fn);
-extern void AddBrokenCrate(void *self);
-extern s32 AddLife(void *self);
-extern void CollectWumpa(void *self);
 
 /* Accumulates `gPolarPlayerVelY` into `y`, then drains
  * `gPolarPlayerVelY` toward a fixed ceiling (`0x780`) - the same

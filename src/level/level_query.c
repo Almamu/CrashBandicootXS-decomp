@@ -3,6 +3,7 @@
 #include "audio.h"
 #include "actor.h"
 #include "memory.h"
+#include "level.h"
 
 /* GitHub issue #38: 0x0802425C-0x08024810 (game_loop). Continues the
  * medal-results tally chain documented in docs/rom_map.md ("A per-level
@@ -13,27 +14,13 @@
  * contiguous with both halves in ROM, and ended up grouped with the
  * wrapper functions that call it).
  *
- * `gLevelTable` is the confirmed 36-slot medal table (see
- * `struct threshold_table_entry` in src/menus/power_dialog_draw.c and
- * src/menus/pause_menu_pages_init.c) - this file's functions resolve one
- * more of that struct's `unused` bytes: `+0x20` (a pointer to a small
- * `{count, items[], extra1, extra2}` list header, see CountLevelCrates
- * below). Kept as this file's own local copy of the struct rather than
- * editing the other two files' already-matched copies (this project's
- * established per-translation-unit convention for this particular
- * global, see the comment on `struct threshold_table_entry` in
- * pause_menu_pages_init.c). */
-struct MedalTableEntry {
-    u8 unused_00[4];
-    u32 cueTableOffset; /* +0x04: byte offset into gThemeMusicCues, see PlayRoomMusic below */
-    u8 unused_08[0x18];
-    void *itemList; /* +0x20: -> struct MedalItemList, see CountLevelCrates */
-};
-COMPILE_TIME_ASSERT(level_query_c, sizeof(struct MedalTableEntry) == 0x24);
+ * `gLevelTable` is the level table (`struct level_info`, level_data.h):
+ * this file reads each level's `theme` (the gThemeMusicCues offset,
+ * PlayRoomMusic) and `rooms` (its room list, CountLevelCrates).
+ * `struct MedalListItem` and `struct MedalItemList` below are this file's
+ * views of level_data.h's `struct level_room` and `struct level_room_list`. */
 
-extern struct MedalTableEntry gLevelTable[];
-
-/* One entry of a `MedalTableEntry.itemList`. `linkedObj`'s own `+0x1c`
+/* One entry of a `level_info.rooms` list. `linkedObj`'s own `+0x1c`
  * field is a pointer to a further nested structure (see CountCrateEntities's
  * `list` parameter in entity_flags.c) - not itself named here, since
  * only this one offset into it is read anywhere in this file. */
@@ -53,7 +40,6 @@ struct MedalItemList {
 };
 
 extern void *gEntityFlags;
-extern s32 CountCrateEntities(void *self, void *list);
 
 /* Wrapper: if bit 0 of `flags` is set, tears down `self` via
  * `OperatorDelete` (the documented UI-overlay-manager-family destroy
@@ -85,7 +71,7 @@ void nullsub_25(void)
 s32 CountLevelCrates(s32 idx)
 {
     s32 total = 0;
-    struct MedalItemList *list = (struct MedalItemList *)gLevelTable[idx].itemList;
+    struct MedalItemList *list = (struct MedalItemList *)gLevelTable[idx].rooms;
     s32 i;
 
     for (i = 0; i < list->count; i++) {
@@ -153,8 +139,8 @@ s32 CountLevelCrates(s32 idx)
  * own file - see docs/workflow.md's "one .c file per contiguous ROM
  * region" rule) and runs through SelectRoom, the last matched function
  * before the BeginSlide..ShowSlidePicture run (parked/left in
- * asm/code_3_2_17_24590.s). The `MedalTableEntry`/`MedalListItem`/
- * `MedalItemList` structs are the ones declared at the top of this file. */
+ * asm/code_3_2_17_24590.s). The `MedalListItem`/`MedalItemList`
+ * structs are the ones declared at the top of this file. */
 
 /* The level-progress record these functions take: `&level_state.level`
  * (level_state.h), so `item` is the level state's `cat`. */
@@ -196,7 +182,7 @@ s32 LevelHasEntityType(s32 idx, s32 flagIdx)
 {
     register s32 fi asm("ip") = flagIdx;
     s32 result = 0;
-    struct MedalItemList *list = (struct MedalItemList *)gLevelTable[idx].itemList;
+    struct MedalItemList *list = (struct MedalItemList *)gLevelTable[idx].rooms;
     s32 i = 0;
 
     if (result < list->count) {
@@ -240,13 +226,13 @@ s32 LevelHasEntityType(s32 idx, s32 flagIdx)
     return result;
 }
 
-/* `self->item == gLevelTable[self->level].itemList->extra2` - i.e.
+/* `self->item == gLevelTable[self->level].rooms->extra2` - i.e.
  * "does self's cached value (see SelectRoom) match this medal entry's
  * item list's `extra2` slot" - a sibling read of the same field
  * EnterGemPathRoom copies out. */
 s32 IsInGemPathRoom(struct level_progress *self)
 {
-    struct MedalItemList *list = (struct MedalItemList *)gLevelTable[self->level].itemList;
+    struct MedalItemList *list = (struct MedalItemList *)gLevelTable[self->level].rooms;
     s32 result = 0;
     s32 cached = (s32)self->item;
 
@@ -259,7 +245,7 @@ s32 IsInGemPathRoom(struct level_progress *self)
 /* Same as IsInGemPathRoom but against the item list's `extra1` slot. */
 s32 IsInBonusRoom(struct level_progress *self)
 {
-    struct MedalItemList *list = (struct MedalItemList *)gLevelTable[self->level].itemList;
+    struct MedalItemList *list = (struct MedalItemList *)gLevelTable[self->level].rooms;
     s32 result = 0;
     s32 cached = (s32)self->item;
 
@@ -322,7 +308,6 @@ s32 CountRoomCrates(struct MedalListItem *item)
 
 extern struct level_state *gLevelState;
 extern void *gAudioContext;
-extern u8 gThemeMusicCues[];
 
 /* Resolves which sound cue to play for a medal-results screen event:
  * `0x12` while `gLevelState`'s mode field (`+0x78`, see
@@ -345,7 +330,7 @@ void PlayRoomMusic(struct level_progress *self)
     } else if ((u8)IsInBonusRoom(self) != 0) {
         id = 6;
     } else {
-        u32 offset = gLevelTable[self->level].cueTableOffset;
+        u32 offset = gLevelTable[self->level].theme;
 
         id = gThemeMusicCues[offset];
     }
@@ -359,7 +344,7 @@ void PlayRoomMusic(struct level_progress *self)
 s32 NextRoom(struct level_progress *self)
 {
     s32 advanced = 0;
-    struct MedalItemList *list = (struct MedalItemList *)gLevelTable[self->level].itemList;
+    struct MedalItemList *list = (struct MedalItemList *)gLevelTable[self->level].rooms;
     s32 threshold = list->count - 1;
     s32 cur = self->itemIndex;
 
@@ -375,7 +360,7 @@ s32 NextRoom(struct level_progress *self)
  * read. */
 void EnterGemPathRoom(struct level_progress *self)
 {
-    struct MedalItemList *list = (struct MedalItemList *)gLevelTable[self->level].itemList;
+    struct MedalItemList *list = (struct MedalItemList *)gLevelTable[self->level].rooms;
 
     self->item = list->extra2;
 }
@@ -383,7 +368,7 @@ void EnterGemPathRoom(struct level_progress *self)
 /* Same as EnterGemPathRoom but for the item list's `extra1` slot. */
 void EnterBonusRoom(struct level_progress *self)
 {
-    struct MedalItemList *list = (struct MedalItemList *)gLevelTable[self->level].itemList;
+    struct MedalItemList *list = (struct MedalItemList *)gLevelTable[self->level].rooms;
 
     self->item = list->extra1;
 }
@@ -397,7 +382,7 @@ void EnterBonusRoom(struct level_progress *self)
  * style notes in docs/matching.md for other instances of this split. */
 s32 SelectRoom(struct level_progress *self)
 {
-    struct MedalItemList *list = (struct MedalItemList *)gLevelTable[self->level].itemList;
+    struct MedalItemList *list = (struct MedalItemList *)gLevelTable[self->level].rooms;
 
     if (list->count != 0) {
         s32 cur = self->itemIndex;

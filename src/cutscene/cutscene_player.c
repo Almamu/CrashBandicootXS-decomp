@@ -5,6 +5,7 @@
 #include <libgcc.h>
 #include "system.h"
 #include "gfx.h"
+#include "level.h"
 
 /* GitHub issue #39: 0x08024810-0x08024E68 (game_loop) - the remainder of
  * the UpdateGameFrame-MainLoop cluster between the sound-channel-handle
@@ -300,9 +301,6 @@ void DecodeLayerChunk(struct bg_streamer *self, s32 recordId, void *dest)
         }
     } while (budget >= 0);
 }
-
-extern void StreamBgColumn(struct bg_streamer *self, s32 col);
-extern void StreamBgRow(struct bg_streamer *self, s32 row);
 
 /* Per-frame background-streamer driver (docs/rom_map.md: "Visual
  * scrolling background streamer"): right-shifts the world position by
@@ -657,7 +655,7 @@ void DestroyBgLayerBase(void *self0, s32 flags)
  * runs `InitBgStreamer` on it (the ring-buffer-owning object those
  * `self+0x20`-rooted trampolines above notify), storing the result at
  * `self+0x2c`. */
-void *InitBgLayerBase(void *self0)
+void *InitBgLayerBase(void *self0, s32 unused)
 {
     struct bg_scroll_layer *self = self0;
 

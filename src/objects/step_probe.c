@@ -1,13 +1,8 @@
 #include "core.h"
 #include "actor.h"
 #include "objects.h"
+#include "level.h"
 
-struct probe_pos {
-    s32 x;
-    s32 y;
-};
-
-extern u8 ProbeTerrain(void *player, s32 mode, void *posInt, s32 span, void *outY);
 extern void *gLevelLayers;
 
 /* A physics/collision "step probe": makes a working copy of `self`'s
@@ -68,7 +63,7 @@ s32 sub_8009BE0(struct box_part *self, s32 mode, struct hitbox_quad *quad)
     f.y >>= 8;
     tries = &self->probeTries;
     *tries = 0;
-    hit = ProbeTerrain(gLevelLayers, mode, &f, span, &f.origY);
+    hit = (u8)ProbeTerrain(gLevelLayers, mode, (struct probe_pos *)&f, span, &f.origY);
     if (hit) {
         self->y = f.origY;
         return 1;
@@ -84,7 +79,7 @@ s32 sub_8009BE0(struct box_part *self, s32 mode, struct hitbox_quad *quad)
         do {
             (*t2)++;
             pp->y += 8;
-            if (ProbeTerrain(gLevelLayers, mode, &f, span, &f.origY)) {
+            if ((u8)ProbeTerrain(gLevelLayers, mode, (struct probe_pos *)&f, span, &f.origY)) {
                 ((struct probe_world *)gLevelLayers)->probeFlag = saved;
                 return 0;
             }

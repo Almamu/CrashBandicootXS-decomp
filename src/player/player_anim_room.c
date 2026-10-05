@@ -2,6 +2,7 @@
 #include "box_part.h"
 #include "crates.h"
 #include "player.h"
+#include "level.h"
 
 /* GitHub issue #9/#10: 0x0800AAEC, the input-action-check function the
  * 42-slot `gActionCtrlStateTable` action-dispatch table's own entries
@@ -45,7 +46,6 @@ struct pos {
 extern struct actor_list *gCrateList;
 extern void *gLevelLayers;
 extern s32 _call_via_r1(void *addr, void *fn);
-extern u8 ProbeTerrain(void *player, s32 dir, struct pos *pos, s32 h, s32 *outY);
 
 u8 PlayerHasRoomForAnim(struct box_part *self, s32 x)
 {
@@ -70,7 +70,7 @@ u8 PlayerHasRoomForAnim(struct box_part *self, s32 x)
     pos.y = pos.y + (box->offY << 8);
     pos.x >>= 8;
     pos.y >>= 8;
-    if (ProbeTerrain(gLevelLayers, dir, &pos, h, &origY))
+    if ((u8)ProbeTerrain(gLevelLayers, dir, (struct probe_pos *)&pos, h, &origY))
         return 0;
 
     i = 0;

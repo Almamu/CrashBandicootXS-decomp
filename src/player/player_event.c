@@ -9,6 +9,7 @@
 #include "crates.h"
 #include "player.h"
 #include "objects.h"
+#include "level.h"
 
 /* GitHub issue #9/#10, ROM 0x0800AB9C-0x0800AC2C (details in
  * docs/matching/issue-9-10-0x0800ab9c-graphics.md). Built with old_agbcc
@@ -265,16 +266,6 @@ extern struct ac2c_player *gPlayer;
 extern void *gEntitySpawner;
 extern void *gHud;
 extern u32 gRoomFrameCount;
-extern u8 *GetCurrentLevelFlags(void *game);
-extern void RequestRoomExit(void);
-extern void FreezeLevelClock(void *game, s32 n);
-extern void RequestBonusRound(void *game);
-extern void RequestGemPath(void *game);
-extern void StartTimeTrial(void *game);
-extern void RaiseMaskLevel(void *game);
-extern void AddDeath(void *game);
-extern void SetMaskLevel(void *game, s32 mode);
-extern void *SpawnEffectPart(void *pool, s32 a, s32 kind, s32 x, s32 y, s32 mirror);
 
 #define NOTIFY(self, a, b, c)                                                  \
     if (1) {                                                                   \
@@ -310,7 +301,7 @@ void PlayerHandleEvent(struct ac2c_self *self, s32 a, s32 code, s32 c)
 {
     switch (code) {
     case 27:
-        *GetCurrentLevelFlags(gLevelState) |= 1;
+        *GetCurrentLevelFlags((struct level_state *)gLevelState) |= 1;
         PlaySfx(gAudioContext, 0x1c, 0x100);
         break;
     case 18:
@@ -322,32 +313,32 @@ void PlayerHandleEvent(struct ac2c_self *self, s32 a, s32 code, s32 c)
             struct orbit_game *game = gLevelState;
 
             if (game->timeTrial)
-                FreezeLevelClock(game, 100);
+                FreezeLevelClock((struct level_state *)game, 100);
         }
         NOTIFY(self, a, code, c);
         ShowHudCounters(gHud);
         break;
     case 15:
-        RequestBonusRound(gLevelState);
+        RequestBonusRound((struct level_state *)gLevelState);
         NOTIFY(self, a, code, c);
         break;
     case 16:
-        RequestGemPath(gLevelState);
+        RequestGemPath((struct level_state *)gLevelState);
         NOTIFY(self, a, code, c);
         break;
     case 28:
         if (gLevelState->maskLevel == 3)
             self->deadline = 0;
         PlaySfx(gAudioContext, 0x18, 0x100);
-        StartTimeTrial(gLevelState);
+        StartTimeTrial((struct level_state *)gLevelState);
         break;
     case 29:
         PlaySfx(gAudioContext, 0x1f, 0x100);
-        *GetCurrentLevelFlags(gLevelState) |= 2;
+        *GetCurrentLevelFlags((struct level_state *)gLevelState) |= 2;
         break;
     case 30:
         PlaySfx(gAudioContext, 0x1f, 0x100);
-        *GetCurrentLevelFlags(gLevelState) |= 4;
+        *GetCurrentLevelFlags((struct level_state *)gLevelState) |= 4;
         break;
     case 34:
         PlaySfx(gAudioContext, 0x1f, 0x100);
@@ -383,7 +374,7 @@ void PlayerHandleEvent(struct ac2c_self *self, s32 a, s32 code, s32 c)
             s32 mode = gLevelState->maskLevel;
 
             if ((mode <= 2 && gPlayer->unk_88 != 1) || mode <= 1)
-                RaiseMaskLevel(gLevelState);
+                RaiseMaskLevel((struct level_state *)gLevelState);
         }
         if (gLevelState->maskLevel == 3)
             self->deadline = gRoomFrameCount + 1200;
@@ -421,7 +412,7 @@ void PlayerHandleEvent(struct ac2c_self *self, s32 a, s32 code, s32 c)
                         SpawnEffectPart(gEntitySpawner, 0x22, 3, x, y, m);
                     }
                 } else {
-                    AddDeath(game);
+                    AddDeath((struct level_state *)game);
                     NOTIFY(self, a, code, c);
                 }
             }

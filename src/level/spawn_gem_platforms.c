@@ -1,6 +1,7 @@
 #include "core.h"
 #include "gfx_part.h"
 #include "objects.h"
+#include "level.h"
 
 /* 0x08020E84-0x08021280 (GitHub issue #31): four of the "trigger effect
  * type N" spawners reached through the 15-slot dispatch table at
@@ -34,27 +35,16 @@
  * cross-jumping of two call sites (a single call with an `id` variable
  * truncates a0 once, after the join). */
 
-struct level_progress
-{
-    u8 unk_00[2];
-    u8 collected;   // 0x02 - one bit per trigger effect slot
-    u8 unk_03[0x89];
-    u8 timeTrial;      // 0x8C
-};
-
-extern struct level_progress *gLevelState;
+extern struct level_state *gLevelState;
 extern u8 ***gSpriteBankSet;
 extern void *gUnknown_030012EC;
-
-extern u8 IsGemPathDone(struct level_progress *self);
-extern void SetGemPlatform(struct level_progress *self, void *handle);
 
 /* The `tag` locals are set before the CreateSpriteObj call on purpose: the
  * ROM loads the constant into a callee-saved register up front and
  * stores it from there afterwards. */
 void SpawnRedGemPlatform(u32 a0, u16 a1, u16 a2, u16 a3)
 {
-    u8 bit = gLevelState->collected & 1;
+    u8 bit = gLevelState->flags & 1;
 
     if (bit)
     {
@@ -64,7 +54,7 @@ void SpawnRedGemPlatform(u32 a0, u16 a1, u16 a2, u16 a3)
             snd = CreatePlatform(a0, a1, a2, a3, 0xC);
         else
             snd = CreatePlatform(a0, a1, a2, a3, 0xB);
-        SetGemPlatform(gLevelState, snd);
+        SetGemPlatform(gLevelState, (s32)snd);
     }
     else
     {
@@ -85,7 +75,7 @@ void SpawnRedGemPlatform(u32 a0, u16 a1, u16 a2, u16 a3)
 
 void SpawnYellowGemPlatform(u32 a0, u16 a1, u16 a2, u16 a3)
 {
-    u8 bit = gLevelState->collected & 2;
+    u8 bit = gLevelState->flags & 2;
 
     if (bit)
     {
@@ -95,7 +85,7 @@ void SpawnYellowGemPlatform(u32 a0, u16 a1, u16 a2, u16 a3)
             snd = CreatePlatform(a0, a1, a2, a3, 0xC);
         else
             snd = CreatePlatform(a0, a1, a2, a3, 0x3);
-        SetGemPlatform(gLevelState, snd);
+        SetGemPlatform(gLevelState, (s32)snd);
     }
     else
     {
@@ -116,7 +106,7 @@ void SpawnYellowGemPlatform(u32 a0, u16 a1, u16 a2, u16 a3)
 
 void SpawnGreenGemPlatform(u32 a0, u16 a1, u16 a2, u16 a3)
 {
-    u8 bit = gLevelState->collected & 4;
+    u8 bit = gLevelState->flags & 4;
 
     if (bit)
     {
@@ -126,7 +116,7 @@ void SpawnGreenGemPlatform(u32 a0, u16 a1, u16 a2, u16 a3)
             snd = CreatePlatform(a0, a1, a2, a3, 0xC);
         else
             snd = CreatePlatform(a0, a1, a2, a3, 0xA);
-        SetGemPlatform(gLevelState, snd);
+        SetGemPlatform(gLevelState, (s32)snd);
     }
     else
     {
@@ -149,7 +139,7 @@ void SpawnGreenGemPlatform(u32 a0, u16 a1, u16 a2, u16 a3)
  * it in a callee-saved register for both uses. */
 void SpawnBlueGemPlatform(u32 a0, u16 a1, u16 a2, u16 a3)
 {
-    u8 bit = gLevelState->collected & 8;
+    u8 bit = gLevelState->flags & 8;
 
     if (bit)
     {
@@ -159,7 +149,7 @@ void SpawnBlueGemPlatform(u32 a0, u16 a1, u16 a2, u16 a3)
             snd = CreatePlatform(a0, a1, a2, a3, 0xC);
         else
             snd = CreatePlatform(a0, a1, a2, a3, 0x9);
-        SetGemPlatform(gLevelState, snd);
+        SetGemPlatform(gLevelState, (s32)snd);
     }
     else
     {

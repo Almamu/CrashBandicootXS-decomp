@@ -1,15 +1,11 @@
 #include "core.h"
 #include "bg_scroll_layer.h"
 #include "level_data.h"
+#include "level.h"
 
 /* Built with old_agbcc - see docs/matching/game-loop-old-agbcc.md. */
 
 extern void *gLevelLayers;
-
-extern void ScaleBgLayerScroll(void *self, void *vec2);
-extern void StepBgLayerScroll(void *self, void *vec2);
-extern void FillBgStreamer(void *self, void *source);
-extern void SetBgStreamerSource(void *self, void *source);
 
 /* A viewport/parallax-scroll-layer object: `struct bg_scroll_layer`
  * (include/bg_scroll_layer.h; docs/rom_map.md's "Visual scrolling
@@ -43,7 +39,7 @@ void ResetBgLayerBase(struct bg_scroll_layer *self, s32 *vec2)
     self->x = x;
     self->y = y;
     ScaleBgLayerScroll(self, self);
-    FillBgStreamer(self->streamer, self);
+    FillBgStreamer(self->streamer, (s32 *)self);
 }
 
 /* (Re)initializes the layer from `source`: caches its pixel
@@ -82,7 +78,7 @@ void SetBgLayerSource(struct bg_scroll_layer *self, const struct level_layer_des
         self->y = zero;
 
         SetBgStreamerSource(self->streamer, (void *)source);
-        FillBgStreamer(self->streamer, self);
+        FillBgStreamer(self->streamer, (s32 *)self);
 
         *readyFlag = 1;
     }
@@ -122,36 +118,6 @@ s32 GetBgLayerWidth(struct bg_scroll_layer *self)
 {
     return self->widthPx;
 }
-
-/* The 16-slot decode/LRU tile-record cache used throughout this cluster
- * of files (`bg_layer_base.c`/`tile_cache.c`/`collision_map.c`; docs/rom_map.md's
- * "Collision/terrain-map streamer" / "`GetCollisionChunk` (16-slot LRU
- * cache/decode dispatcher)"). `id[N]` holds the record ID currently
- * decoded into the matching 256-byte `buf[N]` slot; `nextSlot` is the
- * ring-buffer eviction cursor this function advances every time it
- * decodes a new record (evicting slot `(nextSlot - 1) & 0xf`, i.e. the
- * slot filled just before the current cursor position). The descriptor
- * this cache is built from (`source` below, populated by `SetCollisionSource`
- * in collision_map.c) is kept as raw offsets rather than its own struct -
- * it's never allocated by any function in this cluster, so its full
- * shape isn't confirmed enough to commit to one. This definition is
- * duplicated (not shared via a header) in tile_cache.c/collision_map.c -
- * keep them in sync if this layout ever needs revising. */
-struct tile_cache {
-    void *source;      /* 0x000 */
-    void *decodeBase;  /* 0x004 - gLevelLayers's camera offset + source->4; DecodeCollisionChunk's decode-table base */
-    s32 unk008;         /* 0x008 - source->0x1a << 3; not read anywhere in this cluster */
-    s32 unk00c;          /* 0x00c - source->0x1c << 3; not read anywhere in this cluster */
-    s32 unk010;           /* 0x010 - copy of source->0x1a; not read anywhere in this cluster */
-    s32 unk014;            /* 0x014 - copy of source->0x1c; not read anywhere in this cluster */
-    s32 width;               /* 0x018 - tiles, copy of source->0x16 */
-    s32 height;                /* 0x01c - tiles, copy of source->0x18; not read anywhere in this cluster */
-    u8 buf[16][0x100];           /* 0x020 - 0x1020, 16 decoded 256-byte chunks */
-    s32 id[16];                    /* 0x1020 - 0x105c, record IDs resident in `buf` */
-    s32 nextSlot;                    /* 0x1060 */
-};
-
-extern void DecodeCollisionChunk(struct tile_cache *self, s32 recordId, void *dest);
 
 /* Returns the cache slot holding decoded record recordId. On a miss,
  * decodes it (DecodeCollisionChunk) into the slot just behind the ring cursor and
@@ -205,8 +171,6 @@ void *GetCollisionChunk(struct tile_cache *self, s32 recordId)
  * `matching_decomp_alignment_fix` precedent. */
 asm(".align 2, 0");
 
-extern u8 gTerrainHeights0[];
-
 /* The decoded cell at pixel (x, y): 16x8-pixel tiles, one 256-byte cache
  * slot per tile record. */
 static inline u16 GetCell(struct tile_cache *self, s32 x, s32 y)
@@ -239,10 +203,6 @@ void *GetTerrainHeights(struct tile_cache *self, s32 x, s32 y)
         return NULL;
     return gTerrainHeights0 + type * 36;
 }
-
-extern u8 gTerrainHeights1[];
-extern u8 gTerrainHeights2[];
-extern u8 gTerrainHeights3[];
 
 /* Like GetTerrainHeights with a collision mode (0-3): each mode has its own
  * property table and its own "not solid" bit in the cell's top nibble.
@@ -297,14 +257,6 @@ void *GetSolidTerrainHeights(struct tile_cache *self, s32 x, s32 y, s32 mode, u8
     }
     return result;
 }
-
-struct terrain_type
-{
-    u8 modeValue[4];
-    u8 unk_04[0x20];
-};
-
-extern struct terrain_type gTerrainTypes[];
 
 /* The mode byte (0-3) of the cell's terrain type at pixel (x, y): -1
  * when out of bounds or the type is 0x23 or below, 0 when the mode's

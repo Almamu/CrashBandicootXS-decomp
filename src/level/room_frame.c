@@ -7,11 +7,12 @@
 #include "crates.h"
 #include "gfx.h"
 #include "objects.h"
+#include "level.h"
 
 /* Built with old_agbcc - see docs/matching/game-loop-old-agbcc.md. */
 
 struct palette_cache;
-struct dual_array_manager;
+struct part_list;
 struct oam_shadow_buffer;
 
 extern void *gPlayer;
@@ -21,16 +22,11 @@ extern u8 *gLevelLayers;
 extern void *gHud;
 extern void *gCollidableList;
 extern void *gUnknown_030012F4;
-extern void *gDecorationList;
 extern void *gUnknown_030012EC;
 extern void *gCrateList;
-extern union blend gBlendRegs;
 extern struct palette_cache *gPaletteCache;
 
-extern void UpdateCamera(void *self);
-extern void ScrollLevelLayers(void *self);
 extern void *_call_via_r1(void *arg0, void *arg1);
-extern void CommitLevelScroll(void *self);
 
 /* Runs the DMA3/`UploadPaletteCache`+`ResetLevelLayers` refresh pass over every
  * currently-active dual-array manager, then flushes the VRAM DMA
@@ -40,7 +36,7 @@ void UpdateRoomFrame(void *self)
 {
     UploadPaletteCache(gPaletteCache);
     UpdateCamera(gCamera);
-    ScrollLevelLayers(gLevelLayers);
+    ScrollLevelLayers((struct level_layers *)gLevelLayers);
     TickPaletteCycles(gPaletteCycles);
 
     if (*(s32 *)self <= 0x1000) {
@@ -60,12 +56,12 @@ void UpdateRoomFrame(void *self)
         DrawPartList(gCollidableList);
         DrawPartList(gUnknown_030012EC);
         DrawCrateList(gCrateList);
-        DrawPartList(gDecorationList);
+        DrawPartList((struct part_list *)gDecorationList);
 
         HideUnusedOamEntries(gOamBuffer);
         WaitForVBlank();
         CommitOamBuffer(gOamBuffer);
-        CommitLevelScroll(gLevelLayers);
+        CommitLevelScroll((struct level_layers *)gLevelLayers);
         FlushVramDmaQueue();
     }
 }
@@ -92,7 +88,7 @@ struct level_ctx
  * no blend effect, the shadow gets a fixed 16/16 alpha pattern. */
 void SetupRoomBlend(struct level_ctx *self)
 {
-    union blend *b = &gBlendRegs;
+    union blend *b = &gBlendRegs.blend;
 
     b->raw = 0;
     gLevelLayers[0x2b] = 0;

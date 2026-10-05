@@ -2,6 +2,7 @@
 #include "actor.h"
 #include "audio.h"
 #include "crates.h"
+#include "level.h"
 
 /* GitHub issue #13: 0x0800FC70-0x08010A0C, continuing the physics/
  * collision subsystem (see crate_reset.c's header comment and
@@ -12,12 +13,9 @@
 extern void *gAudioContext;
 extern void *gEntityFlags;
 extern void *gEntitySpawner;
-extern s32 sub_802599C(void *self, s32 n);
-extern void sub_80259D4(void *self, s32 n);
 /* DropExtraLife is parked (NON_MATCHING) as of entity_spawner.c. This call
  * site's own arguments are spelled out entirely in inline asm below -
  * see the comment right above that block for why. */
-extern struct actor *DropExtraLife(void *unused0, s32 x, s32 y, u8 p3, u32 p5, u8 flag6);
 
 /* Plays cue-3 SFX, then - unless `self->field_08` is the sentinel
  * `0xffff` - consumes a slot from the per-record bit-grid

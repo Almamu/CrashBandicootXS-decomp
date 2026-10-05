@@ -6,6 +6,7 @@
 #include "actor.h"
 #include "vehicle.h"
 #include "gfx.h"
+#include "level.h"
 
 /* Continuation of polar_player_actions.c's player/action-object family, right
  * after `RunPolarPlayerState` (matched C, see polar_player_dispatch.c) - same `self`
@@ -218,8 +219,6 @@ extern void *gLevelState;
 
 extern u8 gActorVtable[];
 
-extern void CollectWumpa(void *self);
-
 /* Same "award `fruit` fruit via `CollectWumpa(gLevelState)`,
  * retarget the vtable to the 'dead' state, unlink from the circular
  * `+0x48`/`+0x4c` list, free on `arg1 & 1`" teardown shape as
@@ -342,8 +341,6 @@ struct listed_actor {
 };
 
 extern void *gActorList;
-
-extern void AddBrokenCrate(void *self);
 
 /* On proximity (`IsTouchingPlayer`), accumulates `1` into the shared
  * `gActorList`-targeted accumulator via `QueuePolarWumpa` then fires

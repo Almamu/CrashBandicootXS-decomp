@@ -1,8 +1,6 @@
 #include "core.h"
 #include "bg_scroll_layer.h"
-
-extern void InitBgLayerBase(void *self, s32 bgIndex);
-extern u8 gBgLayerVtable[];
+#include "level.h"
 
 /* Initializes a BG-scroll-layer object (see crate_hit.c's viewport/
  * parallax-scroll-layer family) for hardware BG `bgIndex`: caches

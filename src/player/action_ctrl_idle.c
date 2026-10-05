@@ -5,6 +5,7 @@
 #include "audio.h"
 #include "player.h"
 #include "objects.h"
+#include "level.h"
 
 /* Part of GitHub issue #16's remainder (0x08011BD4-0x08012D24): two
  * gActionCtrlStateTable action-table helpers for the player/action object
@@ -23,7 +24,6 @@ extern void *gAudioContext;
 extern void *gLevelState;
 extern struct act_part *gPlayer;
 extern void *gInput;
-extern u8 HasTurboRun(void *self);
 
 /* Trio stores as in action_ctrl_run_jump.c: as inline parameters, old_agbcc
  * materializes the values before the stores. */
@@ -255,7 +255,7 @@ skip:
             if (wait == 0) {
                 switch (dir) {
                 case 3 ... 8:
-                    if ((INPUT_HELD(in) & 0x200) && HasTurboRun(gLevelState)) {
+                    if ((INPUT_HELD(in) & 0x200) && (u8)HasTurboRun(gLevelState)) {
                         self->turboRun = 1;
                         ACT_CALL1(self, m20, 4);
                         ACT_CALL2(self, m50, self->part, 0x18);

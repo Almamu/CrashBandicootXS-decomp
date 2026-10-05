@@ -116,11 +116,9 @@ struct level_room_list
 };
 
 /*
- * One level (gLevelTable). The code's views: `level_info`
- * (level_select.c), `threshold_table_entry` (pause_menu_pages_init.c,
- * power_dialog_draw.c), `MedalTableEntry` (level_query.c),
- * `level_guard` (spawn_bosses.c), `gl_level_entry`
- * (run_room.c).
+ * One level (gLevelTable, level.h). Every user reads the table through
+ * this struct; the local views `threshold_table_entry`, `MedalTableEntry`,
+ * `level_guard` and `gl_level_entry` were merged into it (#574, batch 8b).
  */
 struct level_info
 {

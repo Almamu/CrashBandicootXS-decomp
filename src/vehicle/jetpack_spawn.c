@@ -8,6 +8,7 @@
 #include "bosses.h"
 #include "vehicle.h"
 #include "gfx.h"
+#include "level.h"
 
 /* Covers the 0x0802E0A4-0x0802F0DC gap between issue #54's chunk
  * (`yeti.c`, ending at `YetiStateCaught`/`sub_802E0A0`) and issue
@@ -52,9 +53,6 @@ struct keys_pair {
     u16 held;
     u16 pressed;
 };
-
-extern u8 IsCrystalSaved(void *self);
-extern void LoseLife(void *self);
 
 extern struct actor_self *gActorList;
 extern struct keys_pair gKeys;
@@ -127,7 +125,7 @@ void *SpawnJetpackActor(struct spawn_rec *rec, u8 alt, s32 dz)
     } else if (alt != 0) {
         kind = rec->kind[2];
     }
-    if (kind == 0x1d && !IsCrystalSaved(gLevelState))
+    if (kind == 0x1d && !(u8)IsCrystalSaved((struct level_state *)gLevelState))
         return 0;
     if (kind == 0 || kind == 0x3e || (u8)(kind - 0x20) <= 5)
         return 0;
@@ -486,7 +484,7 @@ void DamageJetpackPlayer(struct actor_hp *self, s32 dmg)
         PlaySfx(gAudioContext, 0x3a, 0x100);
         ACTOR_SET_STATE(&self->base, 4, 3);
         if (gLevelState[0x8c] == 0)
-            LoseLife(gLevelState);
+            LoseLife((struct level_state *)gLevelState);
         gJetpackInputEnabled = 0;
         gJetpackPauseLocked = 1;
         gJetpackPlayerInactive = 1;

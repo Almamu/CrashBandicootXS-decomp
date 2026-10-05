@@ -1,5 +1,6 @@
 #include "core.h"
 #include "memory.h"
+#include "level.h"
 
 /* Built with old_agbcc - see docs/matching/game-loop-old-agbcc.md. */
 
@@ -12,29 +13,11 @@ void DestroyTileCache(void *self, u32 flags)
     }
 }
 
-void nullsub_4(void)
+struct tile_cache *nullsub_4(struct tile_cache *self)
 {
+    return self;
 }
 asm(".align 2, 0");
-
-/* See bg_layer_base.c for the full `tile_cache` doc comment - duplicated
- * here (not shared via a header) since it's only ever accessed through
- * a raw pointer parameter in this cluster of files. */
-struct tile_cache {
-    void *source;      /* 0x000 */
-    void *decodeBase;  /* 0x004 */
-    s32 unk008;         /* 0x008 */
-    s32 unk00c;          /* 0x00c */
-    s32 unk010;           /* 0x010 */
-    s32 unk014;            /* 0x014 */
-    s32 width;               /* 0x018 */
-    s32 height;                /* 0x01c */
-    u8 buf[16][0x100];           /* 0x020 - 0x1020 */
-    s32 id[16];                    /* 0x1020 - 0x105c */
-    s32 nextSlot;                    /* 0x1060 */
-};
-
-extern void *GetCollisionChunk(struct tile_cache *self, s32 recordId);
 
 /* The decoded cell at pixel (x, y): 16x8-pixel tiles, one 256-byte cache
  * slot per tile record. */
