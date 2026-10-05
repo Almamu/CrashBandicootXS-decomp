@@ -5,12 +5,12 @@
  * actor_part20.c since `UpdateMegaMix` (NAKED-parked, see
  * actor_part27a.c) sits between them. `self` uses the same `self+4` double-
  * pointer-chain record lookup as `StartCtrlTargetMotionYFromSet`/`StartCtrlTargetMotionXFromSet`
- * (actor_part17.c): `self+4` is a manager pointer whose own first
+ * (ctrl.c): `self+4` is a manager pointer whose own first
  * word is an array of 8-byte records, indexed here by `index`. Each
  * record's word (offset 0 or 4, depending on the function) is a type
  * id into the 12-byte-stride `gMegaMixMotionRecords` table - the same
  * base+offset+fn-pointer-table family already named in
- * actor_part18.c, just a per-vector-component variant instead of the
+ * action_ctrl_states.c, just a per-vector-component variant instead of the
  * per-action variant. `part+0x28` bit 4/bit 5 mirror flags negate the
  * X/Z components exactly like `SetCtrlTargetMotionX`/`StartCtrlTargetMotionX`/
  * `SetCtrlTargetMotionY`/`StartCtrlTargetMotionY`. `self+0xc`'s table convention and
@@ -21,7 +21,7 @@
  * spills `part` to a callee-saved register across the branch (an
  * unneeded push/pop the true-leaf ROM function doesn't have), the same
  * class of gap documented for `SetCtrlTargetMotionY`/`StartCtrlTargetMotionY`
- * (actor_part16.c). */
+ * (player_flags.c). */
 
 extern u8 gMegaMixMotionRecords[];
 extern u8 gMegaMixMotionSet[];
@@ -115,7 +115,7 @@ void SetMegaMixMotionXFromSet(void *selfArg, void *partArg, s32 index)
 }
 
 /* Resolves the same `rec+4`-typed `gMegaMixMotionRecords` table entry
- * as `SetMegaMixMotionYFromSet`, then tail-calls `StartCtrlTargetMotionY` (actor_part16.c,
+ * as `SetMegaMixMotionYFromSet`, then tail-calls `StartCtrlTargetMotionY` (player_flags.c,
  * still parked) to do the mirror-gated copy itself. */
 void StartMegaMixMotionYFromSet(void *selfArg, void *partArg, s32 index)
 {
@@ -134,7 +134,7 @@ void StartMegaMixMotionYFromSet(void *selfArg, void *partArg, s32 index)
 }
 
 /* Resolves the `rec+0`-typed table entry like `SetMegaMixMotionXFromSet`, then
- * tail-calls `StartCtrlTargetMotionX` (actor_part17.c). */
+ * tail-calls `StartCtrlTargetMotionX` (ctrl.c). */
 void StartMegaMixMotionXFromSet(void *selfArg, void *partArg, s32 index)
 {
     register u8 *arr asm("r3") = *(u8 **)(*(void ***)((u8 *)selfArg + 4));

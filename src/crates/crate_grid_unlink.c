@@ -2,9 +2,9 @@
 #include "actor.h"
 
 /* The spatial-hash-grid removal primitive `RemoveCrateFromList`/`RemoveCrateListAt`
- * (`actor_part12.c`) call before compacting `manager`'s active-object
+ * (`crate_list.c`) call before compacting `manager`'s active-object
  * array - unlinks `item`'s pool node(s) from `manager`'s grid
- * (the `struct pool_manager` documented in `actor_part12.c`) and
+ * (the `struct pool_manager` documented in `crate_list.c`) and
  * returns them to the free list.
  *
  * Two-phase search, matching the two places `LinkCrateInGrid` (insert side)

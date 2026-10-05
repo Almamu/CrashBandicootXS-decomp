@@ -6,7 +6,7 @@
  */
 
 /* The 12-byte {x, y, z} velocity records (gobj_1a794.h's `struct vec3`)
- * of actor_part_1b208.c, indexed through gPlatformMoverMotionSet's entries
+ * of platform.c, indexed through gPlatformMoverMotionSet's entries
  * (entry_set_16c418.c). */
 const s32 gPlatformMoverMotionRecords[3][3] = {
     { 0, 0, 0 },

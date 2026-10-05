@@ -12,7 +12,8 @@ rather than `game_loop6`/`game_loop7` (which would have matched their
 original creation order more naturally) because issue #12's parallel PR
 independently claimed `game_loop6.c`/`game_loop7.c` first for unrelated
 functions before this PR merged - resolved as a rename on merge to
-avoid an add/add filename collision.
+avoid an add/add filename collision. (#575 has since given these files
+descriptive names; see `tools/file_layout_plan.tsv` for the mapping.)
 
 ## What this cluster turned out to be
 

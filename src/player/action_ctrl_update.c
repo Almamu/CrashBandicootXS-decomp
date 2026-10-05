@@ -3,8 +3,8 @@
 
 /* Part of GitHub issue #16's remainder (0x08011BD4-0x08012D24): three
  * gActionCtrlStateTable action-table helpers for the player/action object
- * (include/action_obj.h). Not ROM-adjacent to actor_part79.c/
- * actor_part80.c (the still-NAKED `ActionCtrlHandleEvent` sits before it,
+ * (include/action_obj.h). Not ROM-adjacent to kill_player.c/
+ * action_ctrl_left_ground.c (the still-NAKED `ActionCtrlHandleEvent` sits before it,
  * `ApplyActionCtrlMotion` after) - see docs/matching/issue-16-actor-12420.md.
  *
  * Built with old_agbcc (Makefile OLD_AGBCC_OBJS) since the issue #15/#16
@@ -56,7 +56,7 @@ extern void sub_80151C8(struct act *self);
 extern u8 HasDoubleJump(void *self);
 extern void SetMaskLevel(void *self, s32 arg);
 
-/* Trio stores as in actor_part_12fbc.c: as inline parameters, old_agbcc
+/* Trio stores as in action_ctrl_run_jump.c: as inline parameters, old_agbcc
  * materializes the values before the stores. */
 static inline void ActTrio27(struct act *self, s32 cur, s32 flag, s32 next)
 {

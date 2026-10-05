@@ -3,7 +3,7 @@
 #include "gobj_1a794.h"
 
 /* Continuation of the big unnamed object introduced in
- * actor_part15.c - see that file's header comment. */
+ * player_update.c - see that file's header comment. */
 
 /* Base-class accessors of the level object/player (`struct gobj`,
  * gobj_1a794.h). */

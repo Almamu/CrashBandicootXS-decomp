@@ -1,7 +1,7 @@
 #include "core.h"
 
 /* GitHub issues #9/#10/#41's shared cross-reference: `CollidePlayer`
- * (`src/graphics/actor_part78.c`, still `NON_MATCHING`/parked) flags
+ * (`src/player/player_collide.c`, still `NON_MATCHING`/parked) flags
  * this as "still raw, only its return code's meaning as an opaque
  * 'hit' test against the constant 6 is used" from its own camera-
  * probe tail; `DrawAffineSpritePieces`'s original write-up
@@ -29,7 +29,7 @@
  * against a small constant.
  *
  * `arg0` is always `gLevelLayers` at both known call sites
- * (`actor_part78.c`'s camera-probe tail); `arg0+0x20` is that same
+ * (`player_collide.c`'s camera-probe tail); `arg0+0x20` is that same
  * global struct's tile-cache-pointer field, the same offset
  * `CollidePlayer`'s own doc already established other fields of
  * (`+0x29`/`+0x2a`) for - not given its own named struct here since

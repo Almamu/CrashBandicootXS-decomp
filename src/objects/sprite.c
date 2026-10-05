@@ -178,8 +178,8 @@ asm(".align 2, 0");
 extern void *GetSpriteFrame(void *part);
 extern u8 gEmptySpriteBox[];
 
-/* A third AABB-for-keyframe builder (see GetSpriteBounds/GetSpriteHitbox in
- * src/graphics/actor_part.c), this time selecting its 6-byte
+/* A third AABB-for-keyframe builder (see GetSpriteBounds/GetSpriteHitbox
+ * above), this time selecting its 6-byte
  * `{s16 x, s16 y, u8 w, u8 h}` record via a `GetSpriteFrame(part)`-derived
  * "info" struct rather than `part`'s own keyframe table pointer:
  * `info+4` points to a byte whose upper nibble (0-15, but only 0-6
@@ -343,7 +343,7 @@ extern void *gEntityFlags;
  * spawned object's own type isn't established yet.
  *
  * Real C under old_agbcc (issue #9-#11 NAKED retry; the whole file
- * matches under it, so actor_part2.o is in OLD_AGBCC_OBJS - old_agbcc
+ * matches under it, so sprite.o is in OLD_AGBCC_OBJS - old_agbcc
  * is also what puts the cached player global in r7). Two details: the
  * flag tests' constant 1 is a variable pinned to r6 and assigned inside
  * the first test (`& (one = 1)`), and the `gone` OR uses it (`orrs r0,

@@ -215,7 +215,7 @@ extern void DestroySpriteObj(struct actor *self, u32 arg1);
  * fires a `record->table+0x48/0x4c`-driven trampoline with a constant
  * argument `3` via `_call_via_r2` (same convention as
  * `UpdatePartList`/`IsEntityNearCamera`), and finally tail-calls `DestroySpriteObj`
- * (already matched in `actor_part6.c`). The trampoline's `addr =
+ * (already matched in `sprite_obj.c`). The trampoline's `addr =
  * rec + offset` needed computing before the `fn` load (reusing
  * `rec`'s own dying register), matching the accumulator-register
  * pattern used throughout this ROM region - computing them in the
@@ -298,7 +298,7 @@ struct actor *InitMovingSprite(struct actor *part)
 
 extern void UpdateSpriteObj(struct actor *part);
 
-/* Calls `UpdateSpriteObj` (already matched in `actor_part5.c`), then (if
+/* Calls `UpdateSpriteObj` (already matched in `sprite_obj.c`), then (if
  * `self+0x44`'s record is set) fires a `record->table+8/0xc`-driven
  * trampoline via `_call_via_r2` with `self` itself as the second
  * argument. Same `addr`-before-`fn` ordering fix as `DestroyMovingSprite`

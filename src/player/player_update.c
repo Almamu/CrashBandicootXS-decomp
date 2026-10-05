@@ -251,7 +251,7 @@ u8 PlayerTouchesBox(void *selfArg, void *buf)
  * `self+0xb0`'s child object is set) fires its `table+0x50/0x54`-
  * driven trampoline via `_call_via_r2` with constant arg `3`, then
  * calls `DestroyCollisionQueue(self+0x108, 2)` and tail-calls `DestroyGroundSprite`
- * (already matched in `actor_part14.c`). */
+ * (already matched in `ground_sprite.c`). */
 void DestroyPlayer(void *selfArg, u32 arg1)
 {
     u8 *self = selfArg;

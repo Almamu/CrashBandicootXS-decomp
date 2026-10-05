@@ -11,7 +11,7 @@ extern s32 _call_via_r2(void *arg0, void *arg1, void *fn);
 extern void *gLevelLayers;
 
 /* The "filter into a second array" manager struct also used by
- * `CullPartList`/`ClearPartList`/`CollidePartsOfClass` in `actor_part10.c` -
+ * `CullPartList`/`ClearPartList`/`CollidePartsOfClass` in `part_list_cull.c` -
  * `array1` is the primary list (bounded by `count1`, up to
  * `capacity`), `array2` a filtered/derived list built from it
  * (bounded by `count2`). `InitPartList` below is this struct's own
@@ -318,9 +318,9 @@ struct pool_init *InitCrateList(struct pool_init *m, s32 count)
 }
 asm(".align 2, 0");
 
-/* Same pool-manager struct InitCrateList initializes and actor_part12.c
+/* Same pool-manager struct InitCrateList initializes and crate_list.c
  * operates on - see that file for the full field writeup. Also used by
- * the now-matched `LinkCrateToActiveBucket` (`actor_part11g.c`). */
+ * the now-matched `LinkCrateToActiveBucket` (`crate_grid_link.c`). */
 struct pool_manager {
     s32 activeCount;
     s32 capacity;
@@ -334,22 +334,22 @@ struct pool_manager {
 
 /* ResetCrateList is reconstructed (semantics fully understood, and now
  * matched) as a NAKED transcription in its own translation unit,
- * `src/graphics/actor_part11i.c` - not appended here since its real
+ * `src/crates/crate_list_reset.c` - not appended here since its real
  * ROM address, 0x08009914, doesn't sit adjacent to this file's own
- * functions (it comes right after `CollidePlayerWithCrates`, `actor_part11d.c`,
- * and right before `CollideCrateGridPartWithObject`/`actor_part12.c`), per
+ * functions (it comes right after `CollidePlayerWithCrates`, `crate_player_collide.c`,
+ * and right before `CollideCrateGridPartWithObject`/`crate_list.c`), per
  * docs/workflow.md step 4's "needs its own new .c file" case - the
  * same reason `CollideCrateGridPartWithPlayer` above got its own file
- * (`actor_part11e.c`), `CollideCrateGrid` got `actor_part11f.c`, the
- * now-matched `LinkCrateToActiveBucket` got `actor_part11g.c`, and the now-matched
- * `DrawCrateList` got `actor_part11h.c`. */
+ * (`crate_grid_collide.c`), `CollideCrateGrid` got `crate_grid_collide.c`, the
+ * now-matched `LinkCrateToActiveBucket` got `crate_grid_link.c`, and the now-matched
+ * `DrawCrateList` got `crate_list_draw.c`. */
 
 /* DrawCrateList is now matched as real C in its own translation unit,
- * `src/graphics/actor_part11h.c`; CollideCrateGrid is a NAKED transcription
- * in `src/graphics/actor_part11f.c`; CollideCrateGridPartWithPlayer likewise in
- * `src/graphics/actor_part11e.c` - none appended here since their real
+ * `src/crates/crate_list_draw.c`; CollideCrateGrid is a NAKED transcription
+ * in `src/crates/crate_grid_collide.c`; CollideCrateGridPartWithPlayer likewise in
+ * `src/crates/crate_grid_collide.c` - none appended here since their real
  * ROM addresses don't sit adjacent to this file's own functions (they
  * come right after `LinkCrateToActiveBucket` above and right before `CollidePlayerWithCrates`,
- * `actor_part11d.c`), per docs/workflow.md step 4's "needs its own new
+ * `crate_player_collide.c`), per docs/workflow.md step 4's "needs its own new
  * .c file" case. */
 asm(".align 2, 0");

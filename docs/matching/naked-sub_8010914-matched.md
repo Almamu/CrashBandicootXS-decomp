@@ -1,6 +1,6 @@
 # `GetTopCrate`/`GetBottomCrate` converted from NAKED transcription to real matched C
 
-`GetTopCrate` and `GetBottomCrate` (`src/system/game_loop30.c`, the
+`GetTopCrate` and `GetBottomCrate` (`src/crates/crate_stack.c`, the
 "get prev"/"get next" neighbor-list-walk-and-filter helpers) had been
 parked as byte-correct NAKED asm transcriptions - see
 [issue-13-fc70-continuation.md](./issue-13-fc70-continuation.md) for
@@ -29,7 +29,7 @@ Two gaps, both shared with other functions already documented
 elsewhere in this project:
 
 1. **Cross-jump-merge shared-tail placement** (same class of gap as
-   `FindLineCrossing`, game_loop33.c). The loop's two `return cur;` sites
+   `FindLineCrossing`, crate_reset.c). The loop's two `return cur;` sites
    compile to byte-identical code (`add r0, r4, #0; b <exit>`); the
    ROM keeps them as a single physical copy reached by two *backward*
    branches, positioned *before* the loop body in the ROM's own
@@ -44,7 +44,7 @@ elsewhere in this project:
    two backward `beq`s the ROM has become one that jumps 4 bytes
    forward instead of back.
 2. **Mask-check instruction order** (same class of gap as
-   `ResetCrate`/`OpenAkuAkuCrate`, game_loop22.c/game_loop24.c). A plain
+   `ResetCrate`/`OpenAkuAkuCrate`, crate_reset.c/crate_time_trial.c). A plain
    `(node[0x4d] & 0x7f) == 1` compiles as load-byte-then-mask; the ROM
    computes the field address first, loads the `0x7f` mask constant
    *before* the byte load, then loads the byte into the same register
@@ -146,7 +146,7 @@ register the template writes closes that gap.
 
 This same mask-check block is already the established pattern in this
 same file - `CollideCrateWithPlayer` (already matched, further down
-`game_loop30.c`) uses the equivalent materialization for its own
+`crate_stack.c`) uses the equivalent materialization for its own
 `self+0x4d & 0x7f` check.
 
 `GetBottomCrate` is the "get next" twin, identical structure, using
@@ -160,6 +160,6 @@ for both `GetTopCrate` and `GetBottomCrate`. `objdiff-cli report
 generate` succeeds (no symbol-pairing errors). Full clean `rm -rf
 build crashbandicootxs.elf crashbandicootxs.gba crashbandicootxs.map
 && make compare` - `crashbandicootxs.gba: La suma coincide`. Both
-functions are folded into the same `src/system/game_loop30.o` unit as
+functions are folded into the same `src/crates/crate_stack.o` unit as
 the already-matched `CollideCrateWithPlayer` in `tools/report_units.py`, since
 it's the same object file.

@@ -6,14 +6,16 @@ more naturally) because issue #19's parallel PR independently claimed
 `actor_part57.c`/`57b.c` first, before this PR merged - resolved as a
 rename on merge to avoid an add/add filename collision. The whole
 five-file family was renumbered together (not just the one that
-literally collided) to keep it visually contiguous.
+literally collided) to keep it visually contiguous. (#575 has since
+given these files descriptive names; see `tools/file_layout_plan.tsv`
+for the mapping.)
 
 25-function `decomp-chunk` covering `asm/code_3_2_20_28568_c99c.s`'s
 `MovePolarAkuAku`-`sub_802E058`/`YetiStateCaught` range. Two distinct object
 families live in this chunk:
 
 - The `InitActorPart`/`gActorList`-rooted "self" object family
-  already documented for `actor_part17.c`/`actor_part18.c`/
+  already documented for `ctrl.c`/`action_ctrl_states.c`/
   `actor_part19.c`/`actor_part50.c` and others: a "part table" pointer
   at `self+0`, a table-index/"kind" field at `self+0xc`, an anim-frame
   halfword/byte pair at `self+0x10`/`self+0x12`, an accumulator at
@@ -145,7 +147,7 @@ function's address (`..._d3a8.s`, `..._d7b0.s`, `..._dd9c.s`,
      `ldr r7, .Lxx` scratch-reuse bug overwriting the live position
      value before its real use). This is the same categorical `r7`-pin
      limitation already documented for `CheckSpritePickup` in
-     `actor_part2.c` and `matching_decomp_register_pinning` memory
+     `sprite.c` and `matching_decomp_register_pinning` memory
      point 10 ("r7 cannot be pinned in this toolchain, ever") - not
      something more C-level rephrasing is likely to fix, so parked here
      rather than continuing to chase it.
@@ -225,7 +227,7 @@ and register-role analysis (self→r5, posX→r6, posY→ip, posZ→r7) were
 already fully correct - what blocked it was this project's confirmed,
 categorical `r7`-pin limitation (`matching_decomp_register_pinning`
 memory point 10: "r7 cannot be pinned in this toolchain, ever"), the
-same bug already on file for `CheckSpritePickup` in `actor_part2.c` and, per
+same bug already on file for `CheckSpritePickup` in `sprite.c` and, per
 `docs/matching/issue-4-sio-settings-sync.md`'s third pass, the general
 escape hatch this project uses once a function's semantics are fully
 understood but no further C-level rephrasing is likely to help: convert

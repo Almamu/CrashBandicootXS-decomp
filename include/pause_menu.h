@@ -11,7 +11,7 @@
  * are a plain `struct actor` (see actor.h), then a second keyframe-
  * table pointer at +0x20 and a frame index at +0x2d - both already
  * established by the already-matched GetSpriteAnimPaletteSlot/SpriteHitboxOverlaps
- * (src/graphics/actor_part4.c), which read this exact same object
+ * (src/objects/sprite_obj.c), which read this exact same object
  * through raw offsets. +0x29's low nibble and +0x3c are new fields this
  * chunk's functions write but don't otherwise interpret. Allocated with
  * `OperatorNew(0x40)` - bigger than plain `struct actor` (0x1c), so it

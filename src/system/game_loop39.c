@@ -73,7 +73,7 @@ struct widget {
  * level object's own `+0xdc->+8` state field is `2` (see
  * `asm/code_3_2_17_225a0.s`). Allocates the whole per-level widget set
  * (ring-buffer/pool object families already matched in
- * `actor_part11.c`/`actor_part12.c`: `gUpdateOnlyPartList`, `gUnknown_030012EC`, `gCollidableList`,
+ * `part_list.c`/`crate_list.c`: `gUpdateOnlyPartList`, `gUnknown_030012EC`, `gCollidableList`,
  * `gDecorationList` and `gUnknown_030012F4` are
  * `dual_array_manager`s, `gCrateList` a `pool_manager`), the
  * player actor itself (`gPlayer`, `InitPlayer`), and the
@@ -160,7 +160,7 @@ s32 PlayRoom(void *selfArg)
          * r0, r0, #0` runtime mask computation instead of
          * constant-folding it to a single immediate load - the
          * "negative-constant bit-clear idiom" documented in
-         * docs/matching.md (see `ClearSpriteObjFlag5` in actor_part14.c for the
+         * docs/matching.md (see `ClearSpriteObjFlag5` in ground_sprite.c for the
          * established `register ... = -N` shape this mirrors). */
         register s32 mask asm("r0") = -0x11;
         register u8 cur asm("r3") = *p;

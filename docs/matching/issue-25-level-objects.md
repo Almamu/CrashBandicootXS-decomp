@@ -16,10 +16,10 @@ The range is split by address into five objects so that
 | file | functions | state |
 |---|---|---|
 | `src/graphics/actor_part_1a794.c` | `CreateDingodileShieldCtrl`-`SetDingodileNextState` (6) | matched |
-| `src/graphics/actor_part_1a878.c` | `CreatePlatform` | matched (old_agbcc) |
-| `src/graphics/actor_part_1ab34.c` | `CheckPlatformContact` | matched |
-| `src/graphics/actor_part_1ab98.c` | `ResolvePlatformCollision` | NAKED (C under NON_MATCHING) |
-| `src/graphics/actor_part_1b208.c` | `UpdatePlatform`-`ClearPlatformMoverActive` (16) | matched |
+| `src/objects/platform_create.c` | `CreatePlatform` | matched (old_agbcc) |
+| `src/objects/platform_contact.c` | `CheckPlatformContact` | matched |
+| `src/objects/platform_collide.c` | `ResolvePlatformCollision` | NAKED (C under NON_MATCHING) |
+| `src/objects/platform.c` | `UpdatePlatform`-`ClearPlatformMoverActive` (16) | matched |
 
 Shared structs, externs and the virtual-call macros live in
 `include/gobj_1a794.h`.
@@ -33,7 +33,7 @@ r1/r2/r3/r4" thunks), like issue #21's `input_ctrl`.
 
 - **`CreateDingodileShieldCtrl`/`DestroyDingodile`/`CreateDingodile`**: constructor/destructor
   bodies of two subclasses of the `CreateBossCtrl` object family
-  (`actor_part27.c`), method tables `gDingodileShieldVtable` and
+  (`input_ctrl_queue.c`), method tables `gDingodileShieldVtable` and
   `gDingodileVtable` (`DestroyDingodile` is the latter's +0x4C destructor).
   `CreateDingodile` is called from `graphics_loading_21280.c`.
   `StartDingodileMotion` is `SetMegaMixMotionXFromSet`'s mirror-gated velocity copy, but taking
@@ -156,7 +156,7 @@ function for the matching build.
 
 ## Later pass: ResolvePlatformCollision matched (last-five NAKED retry)
 
-`ResolvePlatformCollision` is now real C under old_agbcc (`actor_part_1ab98.o` joined
+`ResolvePlatformCollision` is now real C under old_agbcc (`platform_collide.o` joined
 `OLD_AGBCC_OBJS`). An r8 hard-register hold up to the first overlap test
 gives `result` r8 and `self` sb; both `FindLineCrossing` calls pass a
 reassigned `px`; the player position goes through a `PosPtr` inline

@@ -5,7 +5,7 @@
  * covers `nullsub_17` through `ActionCtrlSetTargetAnim` (all matched); non-adjacent
  * to actor_part28c.c since the parked `ActionCtrlStateBodySlamStart` sits raw between
  * them (asm/code_3_2_17_156ec.s). Same "self" object family documented
- * at the top of actor_part18.c/actor_part28.c. */
+ * at the top of action_ctrl_states.c/actor_part28.c. */
 
 extern void StartActionCtrlRun(void *selfArg);
 extern void ActionCtrlStateRun(void *self);
@@ -145,12 +145,12 @@ tail:
 
 /* GitHub issue #19: 0x08015840-0x08016128, `graphics`-labeled chunk that
  * turned out to be the same "self" action-table object family documented
- * at length in actor_part17.c/actor_part18.c/actor_part38c.c/
- * actor_part38d.c - recategorized `graphics`->`actor` (see docs/matching/
- * issue-19-0x08015840-actor.md). Directly adjacent to actor_part38d.c's
- * matched span (which ends with the shared `SetActionCtrlModeAnim` trampoline
+ * at length in ctrl.c/action_ctrl_states.c/action_ctrl_moves.c and
+ * above - recategorized `graphics`->`actor` (see docs/matching/
+ * issue-19-0x08015840-actor.md). Directly adjacent to the matched span
+ * above (which ends with the shared `SetActionCtrlModeAnim` trampoline
  * helper this file's first function calls) and its parked `ActionCtrlSetTargetAnim`
- * right before this chunk starts. Non-adjacent to actor_part57b.c (this
+ * right before this chunk starts. Non-adjacent to swim_ctrl_drift.c (this
  * chunk's other matched file) since the left-raw
  * `StartPlayerCtrlStroke`/`StartPlayerCtrlSpin`/`ApplyPlayerCtrlSwimDrift` sit between them (see
  * asm/code_3_2_17_159f8.s). */
@@ -165,7 +165,7 @@ extern void SetPlayerCtrlState(void *selfArg, s32 a, s32 b, s32 c, s32 d);
 /* Fires the mgr trampoline pair (actions `0`/`0x12`), then resets the
  * `0x27`/`0x2f`/`0x31` and `0x28`/`0x30`/`0x32` state/counter/table-index
  * pairs (same trio shape as `StartActionCtrlHighJump`/`sub_8015558` in
- * actor_part38c.c). */
+ * action_ctrl_moves.c). */
 void RestartActionCtrl(void *selfArg)
 {
     u8 *self = selfArg;
@@ -182,7 +182,7 @@ void RestartActionCtrl(void *selfArg)
 
 /* Sets `self+0xc`'s table pointer to `gActionCtrlVtable`, then
  * tail-calls `DestroyCtrl(self, flags)` - which promptly resets it back
- * to `gCtrlVtable` (see actor_part17.c) - same double-set
+ * to `gCtrlVtable` (see ctrl.c) - same double-set
  * pattern as `DestroyBossCtrl`. */
 void DestroyActionCtrl(void *selfArg, s32 flags)
 {
@@ -195,7 +195,7 @@ void DestroyActionCtrl(void *selfArg, s32 flags)
 /* Resets via `InitCtrl` (table pointer to `gCtrlVtable`,
  * `self+8` cleared), re-points the table at `gActionCtrlVtable`, then
  * calls `ResetActionCtrl` (the child-object field-reset constructor
- * documented in actor_part39.c). Returns `self`. */
+ * documented in wumpa.c). Returns `self`. */
 void *InitActionCtrl(void *selfArg)
 {
     u8 *self = selfArg;

@@ -11,7 +11,7 @@ already flagged `UpdatePolarElectricFence` onward as "a larger,
 attempted this pass".
 
 13 functions total, all on the same `InitActorPart`/`gActorList`-
-rooted "self" object family documented throughout `actor_part17.c`-
+rooted "self" object family documented throughout `ctrl.c`-
 `actor_part19i.c` (a "part table" pointer at `self+0`, a table-index/
 "kind" field at `self+0xc`, an anim-frame halfword/byte pair at
 `self+0x10`/`self+0x12`, an accumulator at `self+8`, state at

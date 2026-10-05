@@ -20,7 +20,7 @@ was register rotation or unused registers: `InitSaveMenuIcons` (#6, raw asm),
 
 | Function | Before | Now | What's left |
 |---|---|---|---|
-| `ApplyCrateCollision` (#12, `game_loop47.c`) | 49 (old_agbcc) | 49 (draft unchanged) | The case-3 reload is `(set r2 (mem:SI sp))`, because the spilled `f20` is a promoted SImode pseudo and nothing asks for its QImode part. A hold changes which register a reload gets, not its mode. `u32`/`s32`/`u16`/`s8` `f20` with a `(u8)` cast and calls through `u8`-parameter function pointers stay at 49-51 halfwords (or grow). `game_loop47.c` would also need `QueueCratePlayerCollision` to build under old_agbcc (it's NAKED, so that part is fine). |
+| `ApplyCrateCollision` (#12, `crate_break.c`) | 49 (old_agbcc) | 49 (draft unchanged) | The case-3 reload is `(set r2 (mem:SI sp))`, because the spilled `f20` is a promoted SImode pseudo and nothing asks for its QImode part. A hold changes which register a reload gets, not its mode. `u32`/`s32`/`u16`/`s8` `f20` with a `(u8)` cast and calls through `u8`-parameter function pointers stay at 49-51 halfwords (or grow). `crate_break.c` would also need `QueueCratePlayerCollision` to build under old_agbcc (it's NAKED, so that part is fine). |
 | `SpawnFlamethrowerLabAssistant` (#31, `graphics_loading_1feec.c`) | 62 | 62 (draft unchanged) | It isn't only the `arg3` register. The draft keeps `arg3 << 16` (the first half of the zero-extension) alive, spilled, to rebuild `arg3 * 2` for the second `LEVEL_RECORD`. The ROM zero-extends a copy in r4 and doubles it in place. A `u32` copy behind `asm("" : "+r")` gets arg3 into r4 but moves the extension after the first call (120). r4/r5 holds over parts of the part+0x28 range were 80 or worse. |
 
 ## Notes on the technique

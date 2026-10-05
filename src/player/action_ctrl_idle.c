@@ -3,8 +3,8 @@
 
 /* Part of GitHub issue #16's remainder (0x08011BD4-0x08012D24): two
  * gActionCtrlStateTable action-table helpers for the player/action object
- * (include/action_obj.h, the same object issue #17's actor_part_12fbc.c
- * handlers use). Not ROM-adjacent to actor_part80.c's matched
+ * (include/action_obj.h, the same object issue #17's action_ctrl_run_jump.c
+ * handlers use). Not ROM-adjacent to action_ctrl_left_ground.c's matched
  * `CheckActionCtrlLeftGround` (this file starts right where that one ends, at
  * 0x08012AF4).
  *
@@ -38,7 +38,7 @@ extern void StartActionCtrlSpin(struct act *self);
 extern void StartActionCtrlRun(struct act *self);
 extern u8 HasTurboRun(void *self);
 
-/* Trio stores as in actor_part_12fbc.c: as inline parameters, old_agbcc
+/* Trio stores as in action_ctrl_run_jump.c: as inline parameters, old_agbcc
  * materializes the values before the stores. */
 static inline void ActTrio27(struct act *self, s32 cur, s32 flag, s32 next)
 {

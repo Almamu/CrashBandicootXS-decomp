@@ -80,7 +80,7 @@ u32 IsCrateInsideRect(void *selfArg, struct aabb *boxArg)
          * `rec[5] << 7` shift, stealing r3/r0 from each other (the
          * same "which anonymous scratch register" gap already
          * NAKED-parked for `GetSpriteBounds`/`GetSpriteHitbox`,
-         * actor_part.c) - anchored as one literal block instead,
+         * sprite.c) - anchored as one literal block instead,
          * matching `self`'s own register (r5, reused here for `top`
          * once `self` is dead) and `rec`'s (r0, reused for the
          * `self->y` load once `rec` is dead). */
@@ -232,8 +232,8 @@ extern void DestroySpriteObj(struct actor *self, u32 arg1);
 /* Sets `self->table`, then - if `self`'s own `+0x4e` state byte is 3 -
  * frees `self+0x48` (a heap pointer, unless it's the sentinel `-1` or
  * already `NULL`) and clears `self+0x59`, before tail-calling
- * `DestroySpriteObj` (already matched, `actor_part6.c`) - same table-set/
- * tail-call shape as `DestroyWumpa` (`actor_part39.c`). */
+ * `DestroySpriteObj` (already matched, `sprite_obj.c`) - same table-set/
+ * tail-call shape as `DestroyWumpa` (`wumpa.c`). */
 void DestroyCrate(struct actor *self, u32 arg1)
 {
     self->table = gCrateVtable;
@@ -255,9 +255,9 @@ extern struct actor *InitSpriteObj(struct actor *self);
 extern void ResetCrate(void *selfArg);
 
 /* Re-initializes `self` via `InitSpriteObj` (already matched,
- * `actor_part6.c`), sets `self->table`, clears `self+0x59`, then
+ * `sprite_obj.c`), sets `self->table`, clears `self+0x59`, then
  * resets `self`'s own collision-response state via `ResetCrate`
- * (`game_loop22.c`). */
+ * (`crate_reset.c`). */
 struct actor *InitCrate(struct actor *self)
 {
     InitSpriteObj(self);

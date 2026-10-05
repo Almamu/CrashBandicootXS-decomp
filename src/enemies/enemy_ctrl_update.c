@@ -2,9 +2,9 @@
 
 /* GitHub issue #9/#10: foundational investigation of the large, fully
  * raw 0x0800B8DC-0x0800D040 cluster (43 functions, ~5988 bytes) sitting
- * right after `actor_part17.c`'s span and right before the already-
+ * right after `ctrl.c`'s span and right before the already-
  * documented physics/collision subsystem (`BreakCrateTouchedByPlayer`,
- * game_loop6.c). See docs/matching/issue-9-10-0x0800b8dc-graphics.md
+ * crate_hit.c). See docs/matching/issue-9-10-0x0800b8dc-graphics.md
  * for the full semantic map this pass produced - the 18-case dispatch
  * table, `HitEnemy`'s own 22-case table, and field-layout notes for
  * whoever picks up the cluster's other ~41 functions next.
@@ -63,7 +63,7 @@ extern void UpdateEnemyBob(void *self);
 extern void UpdateEnemyOscillateY(void *self);
 extern void *LaunchHarmfulEffectPart(s32 a, s32 b, s32 c, s32 d, s32 e, void *f);
 extern void UpdateEnemyShooter(void *self);
-extern void *CreateKnockedEnemyCtrl(void *mem); /* constructor: resets the fresh object and points its +0xC table at gKnockedEnemyCtrlVtable (actor_part117.c) */
+extern void *CreateKnockedEnemyCtrl(void *mem); /* constructor: resets the fresh object and points its +0xC table at gKnockedEnemyCtrlVtable (enemy_ctrl.c) */
 extern void *OperatorNew(s32 size);
 extern void *_call_via_r1(void *arg0, void *fn);
 extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);

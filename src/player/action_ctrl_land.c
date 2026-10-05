@@ -1,8 +1,8 @@
 #include "core.h"
 #include "action_obj.h"
 
-/* Continuation of actor_part18.c's `gActionCtrlStateTable` action-table
- * entries. See actor_part18.c's own
+/* Continuation of action_ctrl_states.c's `gActionCtrlStateTable` action-table
+ * entries. See action_ctrl_states.c's own
  * top-of-file comment for the shared field-offset conventions
  * (`self+0xc`/`self+0x10`/`+0x27`.."+0x32" etc.) these functions use. */
 
@@ -13,7 +13,7 @@ extern s32 _call_via_r3(void *arg0, void *arg1, void *arg2, void *arg3);
 extern u8 GetDpadDirection(void *dummy);
 extern void SetActionCtrlModeAnim(void *self, s32 a, s32 b, s32 c, s32 d);
 
-/* Same shape as `ActionCtrlStateStandUp` (actor_part18.c) - resets the same
+/* Same shape as `ActionCtrlStateStandUp` (action_ctrl_states.c) - resets the same
  * flag/counter/table-index trio via `SetActionCtrlModeAnim` while `part+0x38` is
  * set. */
 void ActionCtrlStateCrawlStandUp(struct act *self)

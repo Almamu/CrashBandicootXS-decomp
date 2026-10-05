@@ -17,24 +17,24 @@ of those four functions.
 ## Category correction: `game_loop` -> `actor`
 
 Every function in this chunk sits directly between already-matched
-`src/graphics/actor_part*.c` files (`actor_part9.c`/`actor_part11.c`
-before it, `actor_part14.c`/`actor_part15.c` interleaved and after it)
+`src/graphics/actor_part*.c` files (`moving_sprite_collide.c`/`part_list.c`
+before it, `ground_sprite.c`/`player_update.c` interleaved and after it)
 - the same "part" object family `docs/status/actor.md` has tracked
-since `actor_part2.c`. The chunk generator's `game_loop` label is
+since `sprite.c`. The chunk generator's `game_loop` label is
 stale/inherited, not re-derived from the actual function content (the
 same mistake already documented for GitHub issue #12 in
 `docs/matching/issue-12-physics-collision.md`). `tools/report_units.py`
 already tracks this whole neighborhood as category `graphics` (the
 label this project's `actor_part*.c` family has used since
-`actor_part2.c` - not a new choice made here), so this chunk's new
+`sprite.c` - not a new choice made here), so this chunk's new
 units use that same category rather than `game_loop`.
 
 ## Prior history: this exact range was already assessed, twice
 
 Both `docs/matching.md` (the frozen historical log) and
 `docs/status/actor.md` already discuss most of these 18 functions by
-name, from earlier sessions working the surrounding `actor_part11.c`-
-`actor_part17.c` clusters:
+name, from earlier sessions working the surrounding `part_list.c`-
+`ctrl.c` clusters:
 
 - `DrawAffineSpritePieces`: previously read at a high level and left entirely
   untouched - real GBA hardware affine (rotation/scaling) sprite-matrix
@@ -48,7 +48,7 @@ name, from earlier sessions working the surrounding `actor_part11.c`-
   physics/collision step-probe ... left raw rather than guess"
   (`sub_8009BE0`).
 - `CollideGroundSprite`-`sub_800A590`: flagged as "a raw span ... left raw
-  rather than guess at semantics" when `actor_part14.c` was matched.
+  rather than guess at semantics" when `ground_sprite.c` was matched.
 - `ResetPlayer` onward: flagged as "the start of a still-raw 94 KB
   span" in the same pass.
 
@@ -63,7 +63,7 @@ already gave - see "Left untouched" below.
 
 ## Matched - 3 functions
 
-- **`ResetPlayerForRoom`** (`src/graphics/actor_part48.c`, right after the
+- **`ResetPlayerForRoom`** (`src/player/player_reset.c`, right after the
   still-parked `ResetPlayer` in the same file): dispatches a sub-state
   byte (`self+0x88`) to one of three teardown helpers
   (`RestartActionCtrl`/`RestartPlayerCtrl`/`RestartInputCtrl`), each called with the
@@ -87,7 +87,7 @@ already gave - see "Left untouched" below.
   collapsed the branch polarity to `bne`-skip and let the compiler's CSE
   drop the redundant copy entirely (see "Real gotchas" below for the
   general form of this pin-scope lesson).
-- **`ApplyPlayerVelocity`** (`src/graphics/actor_part49.c`) - a per-frame
+- **`ApplyPlayerVelocity`** (`src/player/player_update.c`) - a per-frame
   velocity integrator. Moves `self+0x60`/`self+0x64` (current X/Y
   velocity) toward `self+0x50`/`self+0x5c` (target X/Y velocity) by up
   to `self+0x4c`/`self+0x58` (X/Y acceleration step) each call,
@@ -115,7 +115,7 @@ already gave - see "Left untouched" below.
   fold to an unconditional `mov r0, #1` - fixed by pinning only `vx`
   and leaving `vy` an unpinned local, which lands in `r1` naturally
   anyway. Retires the raw `asm/code_3_2_16_b270.s`.
-- **`UpdateGroundSprite`/`sub_800A590`** (`src/graphics/actor_part47.c`) - a
+- **`UpdateGroundSprite`/`sub_800A590`** (`src/objects/ground_sprite_update.c`) - a
   moving-platform "ride along" hookup: looks up a position record via a
   `self->table+0x10/0x14` trampoline and, if it changed since the last
   call, nudges `self->y` by the delta between the old and new record's
@@ -152,13 +152,13 @@ this file's original writing - see the update note on the entry below.
 - **`ResetPlayer`** - **UPDATE: matched in a later session, see
   `docs/matching/issue-14-0x08010a0c-graphics.md`'s "Follow-up"
   section** for the techniques that closed the gap described below.
-  (`src/graphics/actor_part48.c`; real bytes were in
+  (`src/player/player_reset.c`; real bytes were in
   `asm/code_3_2_16_a734.s`, now removed) - a part-object velocity/state
   reset that
   additionally hooks up a child object at `self+0xb0` (calls
   `GetSpriteAnimPaletteSlot` on it, packs the result's low nibble into the child's
   `+0x29` byte) and zeroes the `+0x100`-`+0x105` per-phase flag bytes
-  `actor_part15.c`'s doc comment already describes. Field writes
+  `player_update.c`'s doc comment already describes. Field writes
   confirmed correct one-for-one against the ROM; the ROM builds several
   field addresses as one running pointer incremented by small relative
   offsets across a long stretch of otherwise-unrelated-looking writes,

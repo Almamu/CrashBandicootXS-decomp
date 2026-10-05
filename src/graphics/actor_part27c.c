@@ -9,11 +9,11 @@
  * `+0x38`/`+0xc`/`+8` fields match the same `struct actor`-shaped
  * header used by every other "part" object in this ROM region
  * (compare `CheckSpritePickup`'s `part->flags`/`part->field_08` bitmap-set
- * in actor_part2.c) - kept as raw offsets rather than `struct actor`
+ * in sprite.c) - kept as raw offsets rather than `struct actor`
  * itself since this object is bigger than the 0x1c-byte `struct actor`
  * (its own `+0x38` byte is read directly here), matching the same
  * "three objects, none fully pinned down" caution documented in
- * actor_part18.c. */
+ * action_ctrl_states.c. */
 
 extern u8 gStompedHopPadVtable[];
 /* gLevelLayers's view here (level_layers.c's `struct level_layers`):

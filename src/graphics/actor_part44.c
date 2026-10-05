@@ -2,7 +2,7 @@
 #include "actor_self.h"
 #include "level_state.h"
 
-/* Same "spawn/pre-attack" singleton family as actor_part39.c - see that
+/* Same "spawn/pre-attack" singleton family as wumpa.c - see that
  * file's header comment and docs/matching/issue-56-0x0802f0dc-actor.md.
  * This file covers the whole contiguous run of accessors/accumulator-
  * drivers/state-transition helpers for the singleton and its `self`

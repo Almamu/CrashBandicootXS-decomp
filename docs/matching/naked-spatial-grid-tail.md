@@ -13,7 +13,7 @@ object-pool AI-collision cluster that `docs/rom_map.md`'s "Two big
 unnamed systems" section flagged, sitting interleaved with the
 already-parked `InitCrateList`/`LinkCrateToActiveBucket`/`DrawCrateList`/`CollideCrateGrid`/
 `CollideCrateGridPartWithPlayer`/`ResetCrateList`/`CollideCrateGridPartWithObject` (all `NON_MATCHING` C
-reconstructions in `actor_part11.c`/`actor_part12.c`) and the already-
+reconstructions in `part_list.c`/`crate_list.c`) and the already-
 matched functions around them. GitHub issue #9 tracked
 `UnlinkCrateFromGrid`/`UpdateCrateList`/`CollidePlayerWithCrates` (part of the `0x08009008`-
 `0x08009914` range) and `sub_8009BE0` separately; none of it closes
@@ -24,7 +24,7 @@ issue's still-open scope.
 ## What each function does
 
 - **`UnlinkCrateFromGrid`** - the grid-removal primitive `RemoveCrateFromList`/
-  `RemoveCrateListAt` (`actor_part12.c`) call before compacting the active-
+  `RemoveCrateListAt` (`crate_list.c`) call before compacting the active-
   object array. Two-phase search: phase 1 walks the object's own
   primary bucket (`gridHead[*(s16 *)(item+2)]`, the same bucket index
   `LinkCrateInGrid` computes on insert) for a node whose data pointer
@@ -120,20 +120,20 @@ needs to be unconditionally compiled (not itself guarded), extracting
 these three raw bodies required splitting that one file into four:
 
 - `asm/code_3_2_13.s` (trimmed to just `InitCrateList`'s guard)
-- new `src/graphics/actor_part11b.c` (`UnlinkCrateFromGrid`)
+- new `src/crates/crate_grid_unlink.c` (`UnlinkCrateFromGrid`)
 - `asm/code_3_2_13_9150.s` (`LinkCrateToActiveBucket`'s guard)
-- new `src/graphics/actor_part11c.c` (`UpdateCrateList`)
+- new `src/crates/crate_list_update.c` (`UpdateCrateList`)
 - `asm/code_3_2_13_944c.s` (`DrawCrateList`/`CollideCrateGrid`/`CollideCrateGridPartWithPlayer`'s
   guards)
-- new `src/graphics/actor_part11d.c` (`CollidePlayerWithCrates`)
+- new `src/crates/crate_player_collide.c` (`CollidePlayerWithCrates`)
 - `asm/code_3_2_13_9914.s` (`ResetCrateList`/`CollideCrateGridPartWithObject`'s guards)
 
 `ldscript.txt` places each new object exactly where its raw block used
 to sit in link order. `asm/code_3_2_14.s` held only `sub_8009BE0` and
 nothing else, so it's retired entirely (same "retire an emptied split"
 convention as earlier batches) in favor of a new
-`src/graphics/actor_part12b.c`, inserted between `actor_part12.o` and
-`actor_part13.o` in `ldscript.txt`.
+`src/objects/step_probe.c`, inserted between `crate_list.o` and
+`player_contact.o` in `ldscript.txt`.
 
 Full clean `rm -rf build crashbandicootxs.elf crashbandicootxs.gba
 crashbandicootxs.map && make compare` confirms `La suma coincide`

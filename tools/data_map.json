@@ -364,17 +364,17 @@
     "SpawnStar"
    ],
    "consumer_files": [
-    "graphics/actor_part111.c",
-    "graphics/actor_part116.c",
+    "player/player_event.c",
+    "enemies/enemy_ctrl.c",
     "graphics/actor_part129.c",
     "graphics/actor_part130.c",
     "graphics/actor_part62.c",
     "frontend/starfield.c",
     "menus/level_select_widgets.c",
     "graphics/actor_part_2fbf0.c",
-    "system/game_loop52.c",
-    "system/game_loop53.c",
-    "system/game_loop54.c"
+    "pickups/extra_life.c",
+    "pickups/wumpa_update.c",
+    "pickups/extra_life.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -931,9 +931,9 @@
     "GetSpriteFrameBodyBox"
    ],
    "consumer_files": [
-    "graphics/actor_part2.c",
-    "graphics/actor_part6.c",
-    "system/game_loop47.c"
+    "objects/sprite.c",
+    "objects/sprite_obj.c",
+    "crates/crate_break.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -957,10 +957,10 @@
     "ActionCtrlStateHangMove"
    ],
    "consumer_files": [
-    "graphics/actor_part6.c",
-    "graphics/actor_part78.c",
-    "graphics/actor_part82.c",
-    "graphics/actor_part_14674.c"
+    "objects/sprite_obj.c",
+    "player/player_collide.c",
+    "player/action_ctrl_event.c",
+    "player/action_ctrl_hang.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -983,8 +983,8 @@
     "ApplyActionCtrlMotion"
    ],
    "consumer_files": [
-    "graphics/actor_part17.c",
-    "graphics/actor_part83.c"
+    "objects/ctrl.c",
+    "player/action_ctrl_idle.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -1011,7 +1011,7 @@
     "StartPlayerCtrlMotionXFromSet"
    ],
    "consumer_files": [
-    "graphics/actor_part_16048.c"
+    "player/swim_ctrl.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -1035,7 +1035,7 @@
     "ApplyInputCtrlMotion"
    ],
    "consumer_files": [
-    "graphics/actor_part_17524.c"
+    "player/input_ctrl.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -1477,7 +1477,7 @@
     "ResetEnemyCtrl"
    ],
    "consumer_files": [
-    "graphics/actor_part124.c"
+    "enemies/enemy_ctrl.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 1,
@@ -1499,8 +1499,8 @@
     "CreateCrate"
    ],
    "consumer_files": [
-    "system/game_loop36.c",
-    "system/game_loop49.c"
+    "crates/crate_create.c",
+    "crates/crate_break.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -1523,8 +1523,7 @@
     "ExplodeCrate"
    ],
    "consumer_files": [
-    "system/game_loop48.c",
-    "system/game_loop49.c"
+    "crates/crate_break.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -1547,8 +1546,8 @@
     "IsCrateKindBreakable"
    ],
    "consumer_files": [
-    "system/game_loop25.c",
-    "system/game_loop49.c"
+    "crates/crate_stack.c",
+    "crates/crate_break.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -1574,10 +1573,9 @@
     "UpdateCrateFall"
    ],
    "consumer_files": [
-    "system/game_loop32.c",
-    "system/game_loop48.c",
-    "system/game_loop49.c",
-    "system/game_loop6.c"
+    "crates/crate_break.c",
+    "crates/crate_break.c",
+    "crates/crate_hit.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -1599,8 +1597,7 @@
     "BreakCrateInStack"
    ],
    "consumer_files": [
-    "system/game_loop47.c",
-    "system/game_loop48.c"
+    "crates/crate_break.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -1621,7 +1618,7 @@
     "QueueCratePlayerCollision"
    ],
    "consumer_files": [
-    "system/game_loop47.c"
+    "crates/crate_break.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -1646,7 +1643,7 @@
     "ApplyCrateCollision"
    ],
    "consumer_files": [
-    "system/game_loop47.c"
+    "crates/crate_break.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -1670,7 +1667,7 @@
     "QueueCratePlayerCollision"
    ],
    "consumer_files": [
-    "system/game_loop47.c"
+    "crates/crate_break.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -1691,7 +1688,7 @@
     "UpdateExtraLifeHop"
    ],
    "consumer_files": [
-    "system/game_loop52.c"
+    "pickups/extra_life.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -1715,7 +1712,7 @@
     "UpdateWumpaHop"
    ],
    "consumer_files": [
-    "system/game_loop53.c"
+    "pickups/wumpa_update.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -1739,7 +1736,7 @@
     "UpdateActionCtrl"
    ],
    "consumer_files": [
-    "graphics/actor_part84.c"
+    "player/action_ctrl_update.c"
    ],
    "ptr_words_code": 42,
    "ptr_words_data": 0,
@@ -1767,7 +1764,7 @@
     "ApplyPlayerCtrlTilt"
    ],
    "consumer_files": [
-    "graphics/actor_part_16048.c"
+    "player/swim_ctrl.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 8,
@@ -1790,7 +1787,7 @@
     "StartPlayerCtrlStroke"
    ],
    "consumer_files": [
-    "graphics/actor_part86.c"
+    "player/swim_ctrl_stroke.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -1814,7 +1811,7 @@
     "UpdatePlayerCtrl"
    ],
    "consumer_files": [
-    "graphics/actor_part_16048.c"
+    "player/swim_ctrl.c"
    ],
    "ptr_words_code": 8,
    "ptr_words_data": 0,
@@ -1838,7 +1835,7 @@
     "UpdateInputCtrl"
    ],
    "consumer_files": [
-    "graphics/actor_part_17524.c"
+    "player/input_ctrl.c"
    ],
    "ptr_words_code": 4,
    "ptr_words_data": 0,
@@ -2220,7 +2217,7 @@
     "CreatePlatformMover"
    ],
    "consumer_files": [
-    "graphics/actor_part_1b208.c"
+    "objects/platform.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 1,
@@ -2244,7 +2241,7 @@
     "StartPlatformMoverMotionXFromSet"
    ],
    "consumer_files": [
-    "graphics/actor_part_1b208.c"
+    "objects/platform.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -7149,8 +7146,8 @@
     "DestroyPeriodicSpawner"
    ],
    "consumer_files": [
-    "graphics/actor_part124.c",
-    "graphics/actor_part6.c",
+    "enemies/enemy_ctrl.c",
+    "objects/sprite_obj.c",
     "gfx/graphics.c"
    ],
    "ptr_words_code": 10,
@@ -7176,7 +7173,7 @@
     "InitSpriteObj"
    ],
    "consumer_files": [
-    "graphics/actor_part6.c"
+    "objects/sprite_obj.c"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
@@ -7201,7 +7198,7 @@
     "InitUiSpriteObj"
    ],
    "consumer_files": [
-    "graphics/actor_part7.c"
+    "objects/sprite_anim.c"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
@@ -7227,7 +7224,7 @@
     "InitMovingSprite"
    ],
    "consumer_files": [
-    "graphics/actor_part8.c"
+    "objects/moving_sprite.c"
    ],
    "ptr_words_code": 14,
    "ptr_words_data": 0,
@@ -7253,7 +7250,7 @@
     "InitGroundSprite"
    ],
    "consumer_files": [
-    "graphics/actor_part14.c"
+    "objects/ground_sprite.c"
    ],
    "ptr_words_code": 14,
    "ptr_words_data": 0,
@@ -7278,8 +7275,8 @@
     "InitPlayer"
    ],
    "consumer_files": [
-    "graphics/actor_part15.c",
-    "graphics/actor_part77.c"
+    "player/player_update.c",
+    "player/player_init.c"
    ],
    "ptr_words_code": 14,
    "ptr_words_data": 0,
@@ -7304,7 +7301,7 @@
     "InitCtrl"
    ],
    "consumer_files": [
-    "graphics/actor_part17.c"
+    "objects/ctrl.c"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
@@ -7329,7 +7326,7 @@
     "CreateEnemyCtrl"
    ],
    "consumer_files": [
-    "graphics/actor_part124.c"
+    "enemies/enemy_ctrl.c"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
@@ -7353,7 +7350,7 @@
     "CreatePeriodicSpawner"
    ],
    "consumer_files": [
-    "graphics/actor_part124.c"
+    "enemies/enemy_ctrl.c"
    ],
    "ptr_words_code": 10,
    "ptr_words_data": 0,
@@ -7378,8 +7375,7 @@
     "CreateKnockedEnemyCtrl"
    ],
    "consumer_files": [
-    "graphics/actor_part117.c",
-    "graphics/actor_part124.c"
+    "enemies/enemy_ctrl.c"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
@@ -7404,7 +7400,7 @@
     "InitEffectCtrl"
    ],
    "consumer_files": [
-    "graphics/actor_part123.c"
+    "objects/effect_ctrl.c"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
@@ -7430,8 +7426,8 @@
     "InitCrate"
    ],
    "consumer_files": [
-    "system/game_loop31.c",
-    "system/game_loop36.c"
+    "crates/crate.c",
+    "crates/crate_create.c"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
@@ -7458,8 +7454,7 @@
     "InitExtraLife"
    ],
    "consumer_files": [
-    "system/game_loop52.c",
-    "system/game_loop54.c"
+    "pickups/extra_life.c"
    ],
    "ptr_words_code": 13,
    "ptr_words_data": 0,
@@ -7485,8 +7480,8 @@
     "InitWumpa"
    ],
    "consumer_files": [
-    "graphics/actor_part39.c",
-    "system/game_loop53.c"
+    "pickups/wumpa.c",
+    "pickups/wumpa_update.c"
    ],
    "ptr_words_code": 13,
    "ptr_words_data": 0,
@@ -7512,7 +7507,7 @@
     "InitStopwatch"
    ],
    "consumer_files": [
-    "graphics/actor_part39.c"
+    "pickups/wumpa.c"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
@@ -7537,7 +7532,7 @@
     "InitActionCtrl"
    ],
    "consumer_files": [
-    "graphics/actor_part57.c"
+    "player/action_ctrl.c"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
@@ -7562,7 +7557,7 @@
     "InitPlayerCtrl"
    ],
    "consumer_files": [
-    "graphics/actor_part_16048.c"
+    "player/swim_ctrl.c"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
@@ -7587,7 +7582,7 @@
     "CreateInputCtrl"
    ],
    "consumer_files": [
-    "graphics/actor_part_17524.c"
+    "player/input_ctrl.c"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
@@ -7612,7 +7607,7 @@
     "CreateBossCtrl"
    ],
    "consumer_files": [
-    "graphics/actor_part27.c"
+    "player/input_ctrl_queue.c"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
@@ -8015,8 +8010,8 @@
     "InitPlatform"
    ],
    "consumer_files": [
-    "graphics/actor_part_1a878.c",
-    "graphics/actor_part_1b208.c"
+    "objects/platform_create.c",
+    "objects/platform.c"
    ],
    "ptr_words_code": 14,
    "ptr_words_data": 0,
@@ -8041,7 +8036,7 @@
     "CreatePlatformMover"
    ],
    "consumer_files": [
-    "graphics/actor_part_1b208.c"
+    "objects/platform.c"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,

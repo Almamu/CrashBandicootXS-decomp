@@ -345,7 +345,7 @@ void DrawHudPart(struct hud_digit_part *part, s32 arg1, s32 arg2)
  * variant of `InitHudPart` below: sets `table` directly instead of
  * going through `InitUiSpriteObj`, then forwards to `DestroyUiSpriteObj` (which
  * immediately overwrites `table` again as part of its own two-step
- * table swap - see actor_part7.c). */
+ * table swap - see sprite_anim.c). */
 void sub_802710C(struct actor *part, u32 arg1)
 {
     part->table = gHudPartVtable;

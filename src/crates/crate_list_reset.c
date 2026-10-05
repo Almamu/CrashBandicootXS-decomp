@@ -8,16 +8,16 @@ extern s32 _call_via_r2(void *arg0, void *arg1, void *fn);
  * then clearing the slot), resets `activeCount` to 0, and rebuilds
  * both the grid (`gridHead`/`gridTail` zeroed) and the free list from
  * scratch over `nodeArray` - the exact same free-list-build loop
- * `InitCrateList` (`actor_part11.c`) performs during initialization; see
+ * `InitCrateList` (`part_list.c`) performs during initialization; see
  * that function's own struct/field writeup, identical here.
  *
  * Real C (issue #9-#11 NAKED retry; matches under both compilers): the
  * teardown loop is plain C, and the tail is `InitCrateList`'s
- * `PoolResetFreeList` inline (see actor_part11.c for the two source
+ * `PoolResetFreeList` inline (see part_list.c for the two source
  * details it needs). Kept in its own translation unit (not appended to
- * `actor_part11.c`) since its real ROM address, 0x08009914, sits
- * between `CollidePlayerWithCrates` (`actor_part11d.c`) and `CollideCrateGridPartWithObject`
- * (`actor_part12.c`) in ROM order. */
+ * `part_list.c`) since its real ROM address, 0x08009914, sits
+ * between `CollidePlayerWithCrates` (`crate_player_collide.c`) and `CollideCrateGridPartWithObject`
+ * (`crate_list.c`) in ROM order. */
 struct pool_init_link;
 
 struct pool_init_node {

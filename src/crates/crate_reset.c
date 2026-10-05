@@ -15,7 +15,7 @@
  * the sign and relative magnitude of `dx = a - pos` vs `dy = b -
  * count`, the classic 4-case Bresenham octant split - each case is a
  * fixed single-octant variant of the same shape
- * `FindLineCrossingYMajor`/`FindLineCrossingXMajor` (game_loop31.c) already establish.
+ * `FindLineCrossingYMajor`/`FindLineCrossingXMajor` (crate.c) already establish.
  *
  * Was NAKED asm, not plain C: this compiler's cross-jump pass used to
  * notice the X-major-increasing case's own early-return (`adds
@@ -221,7 +221,7 @@ returnNeg1:
 }
 
 /* GitHub issue #13: 0x0800FC70-0x08010A0C - continues the physics/
- * collision subsystem `game_loop6.c`/`game_loop7.c` started (see
+ * collision subsystem `crate_hit.c`/`crate_break.c` started (see
  * docs/matching/issue-12-physics-collision.md and
  * docs/matching/issue-13-graphics-fc70.md), still in the same
  * `asm/code_3_2_17_e560.s` region issue #12 left untouched past its

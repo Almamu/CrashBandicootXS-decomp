@@ -2,9 +2,9 @@
 
 | Function | File | Issue | Before | After |
 |---|---|---|---|---|
-| `QueueCratePlayerCollision` | `src/system/game_loop47.c` | #12 | 33 hw, size-exact, NAKED | real C, matches |
+| `QueueCratePlayerCollision` | `src/crates/crate_break.c` | #12 | 33 hw, size-exact, NAKED | real C, matches |
 
-The function now builds under old_agbcc (`game_loop47.o` was already on
+The function now builds under old_agbcc (`crate_break.o` was already on
 `OLD_AGBCC_OBJS`). The NAKED copy and the `#if NON_MATCHING` split are
 gone. It was the last NAKED function in issue #12's range.
 
@@ -135,6 +135,6 @@ The scratch helpers are in `huge3/`, copied from `huge2/`, plus:
 ## Verification
 
 - `rm -rf build && make NON_MATCHING=1 report`: no warnings from
-  `game_loop47.c`.
+  `crate_break.c`.
 - `rm -rf build crashbandicootxs.elf crashbandicootxs.gba crashbandicootxs.map && make compare`:
   `crashbandicootxs.gba: OK`.

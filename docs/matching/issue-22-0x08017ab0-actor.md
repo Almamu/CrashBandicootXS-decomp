@@ -1,7 +1,7 @@
 # Issue #22: 0x08017AB0-0x08017ECC (`UpdateMegaMix`)
 
 Follow-up to `docs/matching/issue-22-0x08017a44-actor.md`, which left
-this one function - the whole gap between `actor_part27.c` (ends
+this one function - the whole gap between `input_ctrl_queue.c` (ends
 0x08017AAC) and `actor_part27b.c` (starts 0x08017ECC) - completely
 untouched ("out of scope... given their size"). `docs/rom_map.md`'s own
 whole-ROM pass had already read it at a high level: "1052 B, 3-state
@@ -112,7 +112,7 @@ here would just rediscover the same dead end at roughly 5x the scale:
    from the literal pool fresh on *every* loop-condition check and every
    loop-body entry (5 do-nothing-but-reload instructions, by the ROM's
    own choice, each time). This is the exact shape
-   `actor_part108.c`'s `PlayerHasRoomForAnim` (`#if NON_MATCHING` branch's own
+   `player_anim_room.c`'s `PlayerHasRoomForAnim` (`#if NON_MATCHING` branch's own
    doc comment) already tried three different phrasings against - a
    plain `for`, a cached-`&var`-inside-an-`if` idiom, and an explicit
    `goto`-loop with both the address and the dereferenced value pinned
@@ -123,7 +123,7 @@ here would just rediscover the same dead end at roughly 5x the scale:
 2. **The `CollidePartList(manager, boxX, boxY, boxW, boxH, unused,
    compareViewport)` call** (7 args, 3 on the stack) reproduces the
    exact "which order the compiler batches its outgoing stack-argument
-   stores in" gap `actor_part81.c`'s `CollidePlayerWithObjects` (`#if NON_MATCHING`
+   stores in" gap `player_event.c`'s `CollidePlayerWithObjects` (`#if NON_MATCHING`
    branch) already documents as unclosable from *any* C-level phrasing
    tried (inlined values, named locals in ROM source order, an
    `asm volatile("":::"memory")` scheduling barrier - all failed the
@@ -145,13 +145,13 @@ Transcribed mechanically from `asm/code_3_2_17_17ab0.s` (now retired -
 its one function moved to the new `src/graphics/actor_part27a.c`),
 keeping the ROM's own `_0XXXXXXX` hex-address labels verbatim as plain,
 file-local asm symbols (safe since each is a unique ROM address) - the
-same approach `actor_part82.c`'s `ActionCtrlHandleEvent`, `actor_part_12fbc.c`'s
-five functions, and `actor_part18.c`'s `ActionCtrlStateCrawl` all already use.
+same approach `action_ctrl_event.c`'s `ActionCtrlHandleEvent`, `action_ctrl_run_jump.c`'s
+five functions, and `action_ctrl_states.c`'s `ActionCtrlStateCrawl` all already use.
 Register/argument roles for every external call (`_call_via_r2`/
 `_call_via_r3`/`_call_via_r1`/`_call_via_r4`'s base+offset+fn-pointer
 trampoline convention, `GetSpriteHitbox`/`CollidePartList`'s AABB-relocate-then-
 unpack idiom) were cross-checked against their existing signatures in
-`actor_part18.c`/`actor_part81.c`/`actor_part.c` before transcription,
+`action_ctrl_states.c`/`player_event.c`/`sprite.c` before transcription,
 confirming the semantic read above rather than leaving it a guess.
 
 ## Verification

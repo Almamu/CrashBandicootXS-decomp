@@ -5,7 +5,7 @@
  *
  * - IsInputCtrlMotionXPending .. QueueInputCtrlMotionX (0x08017A44-
  *   0x08017A6C) finish the input_ctrl accessor run that ends
- *   actor_part_17524.c (SetInputCtrlMotionYPending .. IsInputCtrlMotionYPending,
+ *   input_ctrl.c (SetInputCtrlMotionYPending .. IsInputCtrlMotionYPending,
  *   0x08017A20-0x08017A40): the bytes they touch are input_ctrl's motion
  *   queue (`+0x14` motionX, `+0x15` motionY, `+0x17`/`+0x18`
  *   motionX/YPending, `+0x19`/`+0x1A` motionX/YKeepSpeed). Nothing calls
@@ -18,7 +18,7 @@
  *   them (they leave `+0x14`-`+0x1B` alone).
  *
  * `self` is the per-level "player/action" ctrl object documented in
- * actor_part18.c's top-of-file comment; `self+0xc` is its method table
+ * action_ctrl_states.c's top-of-file comment; `self+0xc` is its method table
  * and `self+0x10` the "part" it drives. The accesses stay raw offsets. */
 
 extern u8 gBossCtrlVtable[];
@@ -86,7 +86,7 @@ void BossCtrlHandleEvent(void *selfArg, s32 arg1, s32 a, s32 b)
 
 /* Sets `self+0xc`'s table pointer to `gBossCtrlVtable`, then
  * tail-calls `DestroyCtrl(self, flags)` - which promptly resets it
- * back to `gCtrlVtable` (see actor_part17.c) and, if
+ * back to `gCtrlVtable` (see ctrl.c) and, if
  * `flags` bit 0 is set, fires `OperatorDelete`. */
 void DestroyBossCtrl(void *selfArg, s32 flags)
 {

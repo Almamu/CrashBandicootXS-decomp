@@ -467,10 +467,10 @@ void ActionCtrlStateSlide(struct act *self)
  *
  * Five more entries of the gActionCtrlStateTable 42-slot action table
  * (docs/rom_map.md), the same player/action object as
- * actor_part18.c/actor_part_138e8.c: `self+0xc` is its method table,
+ * action_ctrl_states.c: `self+0xc` is its method table,
  * `self+0x10` its on-screen part, `self+0x18`/`+0x1c` an animation
  * counter/limit, and the +0x27..+0x32 bytes the shared "next action"
- * trio (actor_part18.c). Each handler snapshots the input word
+ * trio (action_ctrl_states.c). Each handler snapshots the input word
  * gKeys (the high half is the newly-pressed buttons) and
  * most also the D-pad direction GetDpadDirection remaps. */
 
@@ -673,7 +673,7 @@ void ActionCtrlStateCrouchDown(struct act *self)
 }
 
 /* On the "confirm" edge (PlayerHasRoomForAnim(part, 0xB)) hands off to
- * StartActionCtrlHighJump like ActionCtrlStateCrawlStart (actor_part18.c); otherwise, unless
+ * StartActionCtrlHighJump like ActionCtrlStateCrawlStart (action_ctrl_states.c); otherwise, unless
  * CheckActionCtrlLeftGround reports busy, turns the part to face the D-pad direction
  * (setting +0x2F), starts a walk (action 3) on a horizontal direction,
  * and - with neither shoulder button held - either starts action 2 on a
@@ -789,7 +789,7 @@ turn_done:
 }
 asm(".align 2, 0");
 
-/* This file (and actor_part18b.c, its non-adjacent continuation) covers
+/* This file (and action_ctrl_land.c, its non-adjacent continuation) covers
  * part of `gActionCtrlStateTable`, the 42-slot per-level action dispatch
  * table documented in docs/rom_map.md ("`gActionCtrlStateTable` is a
  * 42-slot, fully-populated action dispatch table") - `self` is the
@@ -799,7 +799,7 @@ asm(".align 2, 0");
  * entries known so far, `+0x20`/`+0x24` and `+0x50`/`+0x54`) fed
  * through the `_call_via_r2`/`_call_via_r3` trampolines together with
  * `self+offset` and `self+0x10` (a "part" sub-object) - the same
- * base+offset+fn-pointer convention already named in actor_part17.c's
+ * base+offset+fn-pointer convention already named in ctrl.c's
  * doc comments. The `+0x27`/`+0x28`/`+0x29`/`+0x2f`/`+0x30`/`+0x31`/
  * `+0x32` bytes are a state/flag/table-index trio pair this whole
  * action-table family shares; none of the three objects' full shapes

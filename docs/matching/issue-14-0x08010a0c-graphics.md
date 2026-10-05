@@ -10,20 +10,20 @@ issue #9.
 ## Category correction: `graphics` -> `game_loop`
 
 Every function in this chunk operates on the same `self` type
-`GetSlotCrateStage` (game_loop26.c, matched under GitHub issue #13) and
-`ResetCrate` (game_loop22.c, issue #13) already do - a "collision box"
+`GetSlotCrateStage` (slot_crate.c, matched under GitHub issue #13) and
+`ResetCrate` (crate_reset.c, issue #13) already do - a "collision box"
 record embedded inside the player at `gPlayer+0x108`,
-confirmed directly: `ResolvePlayerCollisions` (game_loop23.c) already calls
+confirmed directly: `ResolvePlayerCollisions` (crate.c) already calls
 `ResolveCollisionCandidates(gPlayer + 0x108)`. `tools/report_units.py`'s
 `0x08010A0C` entry only ever carried `graphics` as a pre-existing
 placeholder pending examination (its own comment said so). Now that
 it's examined, this chunk is recategorized to `game_loop`, matching
-the surrounding `game_loop17.c`-`game_loop26.c` file family issues
+the surrounding `game_loop17.c`-`slot_crate.c` file family issues
 #12/#13 already recategorized for the same reason.
 
 ## Matched - 24 functions (+1 unlabeled)
 
-`src/system/game_loop27.c` (new file): `DecrementSlotCrateStage`-`GetCrateTrialKind`,
+`src/crates/slot_crate.c` (new file): `DecrementSlotCrateStage`-`GetCrateTrialKind`,
 covering:
 
 - A 3-way bit-field family packed into `self+0x48`: bits 6-7 (get
@@ -53,14 +53,14 @@ covering:
   that mechanism renames an *existing* label, and this function never
   had a wrong one to correct - it simply had none.
 - `SetCrateBusy`/`ClearCrateBusy` - set/clear `self+0x4d` bit 7 together
-  with the global "hit" latch `gPlayer+0x80` `game_loop22.c`
+  with the global "hit" latch `gPlayer+0x80` `crate_reset.c`
   already established.
 
 ## Follow-up: `ResolveCollisionCandidates` - now matched (NAKED transcription)
 
-`ResolveCollisionCandidates` (`src/system/game_loop28.c`) - the chunk's last and
+`ResolveCollisionCandidates` (`src/objects/collision_queue.c`) - the chunk's last and
 largest function (488 bytes), and the one `ResolvePlayerCollisions`
-(game_loop23.c) already calls by name - was originally parked here
+(crate.c) already calls by name - was originally parked here
 under `NON_MATCHING`. A later pass in the same session that closed
 `ResetPlayer` below (see the next "Follow-up" section) closed this one
 too, as a byte-exact `NAKED` transcription rather than real decompiled
@@ -112,17 +112,17 @@ zero-fill gap before `AddCollisionCandidate` (the assembler's default `nop`
 fill pattern otherwise mismatches the ROM's zero halfword there - see
 `matching_decomp_alignment_fix`). Verified via isolated
 `arm-none-eabi-as` assembly against the ROM's raw bytes first, then
-folded into `src/system/game_loop28.c`/`.o` and confirmed with a full
+folded into `src/objects/collision_queue.c`/`.o` and confirmed with a full
 clean `make compare` (`crashbandicootxs.gba: La suma coincide`). The
 old `asm/code_3_2_17_e560_10b6c.s` fragment (which held only this one
 function) is removed entirely, `ldscript.txt`'s now-redundant
 `code_3_2_17_e560_10b6c.o` entry is dropped, and
 `tools/report_units.py`'s `0x08010B6C` unit now points at
-`src/system/game_loop28.o` instead of `None`.
+`src/objects/collision_queue.o` instead of `None`.
 
 ## Follow-up: GitHub issue #9's `ResetPlayer` - now matched
 
-`ResetPlayer` (`src/graphics/actor_part48.c`) was previously parked
+`ResetPlayer` (`src/player/player_reset.c`) was previously parked
 (see this same repo's `issue-9-0x08007634-actor.md` for its original
 write-up) on exactly the same shape of gap `ResolveCollisionCandidates` above hit -
 the ROM building several field addresses as a running pointer
@@ -197,7 +197,7 @@ techniques that got it over the line, in the order they were needed:
    narrowing.
 
 `tools/report_units.py`'s `0x0800A734` unit is now folded into the
-existing `actor_part48.o` entry (base object, not `None`) since both
+existing `player_reset.o` entry (base object, not `None`) since both
 functions in that file are matched and the old `asm/code_3_2_16_a734.s`
 fragment has been removed entirely - `docs/status/actor.md`'s "Parked"
 section entry for `ResetPlayer` is removed accordingly.
@@ -211,13 +211,13 @@ section entry for `ResetPlayer` is removed accordingly.
   "Matched".
 - `tools/report_units.py` - `UNITS` list split for
   `0x08010A0C`-`0x08010D54`, recategorized `graphics` -> `game_loop`;
-  `0x0800A734` merged into the existing `actor_part48.o` unit;
-  `0x08010B6C` now points at `src/system/game_loop28.o` instead of
+  `0x0800A734` merged into the existing `player_reset.o` unit;
+  `0x08010B6C` now points at `src/objects/collision_queue.o` instead of
   `None`.
 - `ldscript.txt` - the now-redundant
   `build/crashbandicootxs/asm/code_3_2_17_e560_10b6c.o(.text);` line
   removed (the function moved into the already-present
-  `game_loop28.o(.text);` line just above it).
+  `collision_queue.o(.text);` line just above it).
 - `docs/matching/issue-9-0x08007634-actor.md` - the original write-up
   for `ResetPlayer`'s first (parked) pass; this file's "Follow-up"
   section above is the second pass that closed the gap.

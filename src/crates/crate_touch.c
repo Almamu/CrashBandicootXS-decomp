@@ -1,6 +1,6 @@
 #include "core.h"
 
-/* GitHub issue #9/#10: 0x0800CD00, `PlayerHasRoomForAnim`'s (`actor_part108.c`)
+/* GitHub issue #9/#10: 0x0800CD00, `PlayerHasRoomForAnim`'s (`player_anim_room.c`)
  * only caller/callee companion - `PlayerHasRoomForAnim` calls this once per
  * `gCrateList` list entry whose own `+0x18`-table `+0x48`
  * trampoline (`_call_via_r1`) reports state `3`, passing that entry as
@@ -13,9 +13,9 @@
  *
  * Otherwise builds THREE AABBs via the shared `SetAabbPos`(set-pos)/
  * `SetAabbSize`(set-size) primitive (`struct aabb` from
- * `actor_part.c`/`src/system/game_loop6.c`), all from the same
+ * `sprite.c`/`src/crates/crate_hit.c`), all from the same
  * "keyframe/hitbox record" table convention documented at length in
- * `game_loop6.c`'s own `BreakCrateTouchedByPlayer` header comment: `+0x20` is a
+ * `crate_hit.c`'s own `BreakCrateTouchedByPlayer` header comment: `+0x20` is a
  * pointer-to-table, indexed by a `+0x2d` tag byte at 28-byte stride
  * (`docs/rom_map.md`'s own cross-reference from this exact function:
  * "matching `gCrateHitResponse`'s stride exactly, but clearly a
@@ -24,13 +24,13 @@
  * a plain `gCrateList` list entry, not the physics subsystem's
  * own object type), with the record's own `{s16 offX, s16 offY, u8 w,
  * u8 h}` quad at `+4`/`+6`/`+8`/`+9` this time (yet another layout
- * variant of the same convention, alongside `actor_part.c`'s
- * `+0xc`/`+0xe`/`+0x10`/`+0x11` and `game_loop6.c`'s own `+4`/`+6`/
+ * variant of the same convention, alongside `sprite.c`'s
+ * `+0xc`/`+0xe`/`+0x10`/`+0x11` and `crate_hit.c`'s own `+4`/`+6`/
  * `+8`/`+9`, which this function's first two AABBs match exactly).
  * Each AABB is mirrored horizontally/vertically around its own
  * object's integer position when that object's own `+0x28` bits 4/5
- * (the mirror-flag convention `actor_part16.c`/`actor_part17.c`/
- * `game_loop6.c` all already read) are set:
+ * (the mirror-flag convention `player_flags.c`/`ctrl.c`/
+ * `crate_hit.c` all already read) are set:
  *
  *   - AABB1: from `self`'s own `+0x20`-table, indexed by `self`'s own
  *     `+0x2d` tag - `self`'s current hitbox.

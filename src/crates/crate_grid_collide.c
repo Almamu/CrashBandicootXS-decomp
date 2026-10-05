@@ -46,7 +46,7 @@ extern void CollideCrateGridPartWithObject(struct pool_manager *m, struct part_a
  * (when `compareViewport` is the player, `gPlayer`) or
  * `CollideCrateGridPartWithObject` (otherwise) - the exact same dispatch `CollidePartList`
  * makes to `CollidePartWithPlayer`/`CollidePartWithObject`. See `CollidePartList`'s own
- * writeup (`actor_part7.c`) for the full branch-by-branch semantics,
+ * writeup (`sprite_anim.c`) for the full branch-by-branch semantics,
  * identical here.
  *
  * Matches under old_agbcc (see docs/matching/issue-9-naked-retry.md).
@@ -56,7 +56,7 @@ extern void CollideCrateGridPartWithObject(struct pool_manager *m, struct part_a
  * in CollidePartList. The duplicated per-node test is an inline helper;
  * `heads`/`last` (gridHead / &gridHead[255]) are computed up front, in
  * that order, as the ROM does. Its ROM address, 0x08009528, sits
- * between `DrawCrateList` (`actor_part11h.c`) and
+ * between `DrawCrateList` (`crate_list_draw.c`) and
  * `CollideCrateGridPartWithPlayer` (below). */
 static inline void CheckPart(struct pool_manager *m, struct box_part *part, struct part_aabb *screen,
                              struct part_aabb *box, struct part_aabb *tmp, struct box_part *other)
@@ -146,13 +146,13 @@ extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
  * byte-identical collision-hit resolution logic (mode dispatch via
  * `gLevelState`, the AABB push-out via `GetSpriteHitbox`/
  * `GetSpriteBodyBox`/`AabbOverlaps`, and the "hit" method calls) - see
- * `CollidePartWithPlayer`'s own writeup in `actor_part7.c` for the branch-by-branch
+ * `CollidePartWithPlayer`'s own writeup in `sprite_anim.c` for the branch-by-branch
  * semantics, identical here. `list` itself is never read.
  *
  * Matches under old_agbcc with the box passed by value, the same C as
  * CollidePartWithPlayer (see docs/matching/issue-9-naked-retry.md). Its
  * ROM address, 0x080096C0, sits between `CollideCrateGrid` (above) and
- * `CollidePlayerWithCrates` (`actor_part11d.c`) in ROM order. */
+ * `CollidePlayerWithCrates` (`crate_player_collide.c`) in ROM order. */
 void CollideCrateGridPartWithPlayer(struct part_list *list, struct part_aabb box, struct box_part *part)
 {
     if (gLevelState->maskLevel == 3) {

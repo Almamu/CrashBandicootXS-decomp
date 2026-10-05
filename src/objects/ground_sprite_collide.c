@@ -8,7 +8,7 @@
  * parked. `CollideGroundSprite` itself (the caller of `ProbeGroundSpriteTerrain`, see
  * `asm/code_3_2_11.s`) stays raw/unexamined - its own gate logic still
  * depends on the also-still-raw `sub_8009BE0` (parked NAKED,
- * `actor_part12b.c`), so closing `ProbeGroundSpriteTerrain`/`ProbeGroundSpriteFloor` alone
+ * `step_probe.c`), so closing `ProbeGroundSpriteTerrain`/`ProbeGroundSpriteFloor` alone
  * doesn't unblock it.
  *
  * `docs/rom_map.md` (line ~2624) had already partially flagged
@@ -27,7 +27,7 @@
  * also already flagged both functions as built on `sub_8008200`/
  * `ProbeTerrain`/`sub_8026C3C`/`sub_8026BF8` - two of those four
  * (`sub_8008200`, `ProbeTerrain`) are already matched this session
- * (`src/graphics/actor_part4.c`, `src/system/game_loop43.c`); this
+ * (`src/objects/sprite_obj.c`, `src/system/game_loop43.c`); this
  * session additionally reads `sub_8026C3C`/`sub_8026BF8` (still raw,
  * `asm/code_3_2_17_266bc.s`) far enough to place them precisely.
  *
@@ -36,8 +36,8 @@
  * Both operate on the same "hitbox quad" pointer - `self->table[0x10]`/
  * `[0x14]`'s own `_call_via_r1(self + addr, fn)` trampoline result,
  * i.e. a `{s16 xOff, s16 yOff, u8 w, u8 h}` record straight from this
- * ROM region's already-established convention (`game_loop42.c`'s
- * `struct hitbox_quad`, `actor_part109.c`'s AABB builds) - and share
+ * ROM region's already-established convention (`crate_hit.c`'s
+ * `struct hitbox_quad`, `crate_touch.c`'s AABB builds) - and share
  * the same "adjust the object's own Q8 position based on where a
  * collision probe says the ground/wall actually is" shape:
  *
@@ -151,7 +151,7 @@
  * immediately before `ProbeGroundSpriteTerrain` in ROM and formerly the sole
  * remaining content of `asm/code_3_2_11.s`). It stayed raw the first
  * pass through this cluster because its own gate logic calls
- * `sub_8009BE0` (parked NAKED, `src/graphics/actor_part12b.c`, see
+ * `sub_8009BE0` (parked NAKED, `src/objects/step_probe.c`, see
  * `docs/matching/naked-spatial-grid-tail.md`) - at the time that
  * function's semantics were still unresolved. `sub_8009BE0` is now
  * fully understood (a physics/collision step-probe: converts `self`'s
@@ -167,7 +167,7 @@
  * collision-axis mask - distinct from `self+0x74`'s own per-call
  * scratch mask `ProbeGroundSpriteTerrain` zeroes and rebuilds every call), then
  * unconditionally fires `CollideMovingSprite(self)` (the already-matched
- * `self->table+0x70/0x74` trampoline, `src/graphics/actor_part9.c` -
+ * `self->table+0x70/0x74` trampoline, `src/objects/moving_sprite_collide.c` -
  * a side-effect-only call, its always-`0` return discarded). If
  * `self+0x68` bit 3 (the "Y-axis/mode-8" collision bit `ProbeGroundSpriteTerrain`
  * just OR'd in, if it hit) is now set: clears `self+0xc` bits 0 and 5,

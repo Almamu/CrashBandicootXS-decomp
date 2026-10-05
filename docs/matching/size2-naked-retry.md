@@ -6,8 +6,8 @@ This pass took three drafts whose size was nearly right:
 | Function | File | Start | Result |
 |---|---|---|---|
 | `LoadCreditsLogos` (#64) | `src/frontend/credits.c` (already old_agbcc) | 114 hw, 420 vs 416 B | **Closed**, real C, old_agbcc |
-| `CreateCrate` (#13) | `src/system/game_loop36.c` | 471 hw, 1388 vs 1396 B | **Closed**, real C, old_agbcc (`game_loop36.o` joined `OLD_AGBCC_OBJS`; it is the only function in the file) |
-| `ResolvePlatformCollision` (#25) | `src/graphics/actor_part_1ab98.c` | 565 hw, 1640 vs 1648 B | Not closed, draft unchanged, note updated |
+| `CreateCrate` (#13) | `src/crates/crate_create.c` | 471 hw, 1388 vs 1396 B | **Closed**, real C, old_agbcc (`crate_create.o` joined `OLD_AGBCC_OBJS`; it is the only function in the file) |
+| `ResolvePlatformCollision` (#25) | `src/objects/platform_collide.c` | 565 hw, 1640 vs 1648 B | Not closed, draft unchanged, note updated |
 
 ## LoadCreditsLogos: GCSE hashes non-volatile asm
 
@@ -44,7 +44,7 @@ palette index is now a copy `ps` of `slot` passed through
 
 The file was not on `OLD_AGBCC_OBJS`, but the draft only converges
 under old_agbcc. Under agbcc the final C is 1404 bytes and about 400
-halfwords off. `game_loop36.c` holds only this function, so the whole
+halfwords off. `crate_create.c` holds only this function, so the whole
 object moved to old_agbcc.
 
 In order:

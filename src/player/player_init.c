@@ -3,7 +3,7 @@
 
 /* GitHub issue #9/#10: 0x0800B3F0 - a part-object constructor on the
  * same big, still-unnamed "part" object (at least 0x108 bytes)
- * documented in `actor_part15.c`'s file header - raw offset casts are
+ * documented in `player_update.c`'s file header - raw offset casts are
  * used throughout for the same reason that file gives: most individual
  * fields' meaning isn't confirmed beyond "a byte/word at this offset". */
 
@@ -18,11 +18,11 @@ extern u8 gPlayerVtable[];
 extern void ***gSpriteBankSet;
 
 /* Re-initializes `self` (via `InitGroundSprite`, already matched in
- * `actor_part14.c`), then overwrites its table with
+ * `ground_sprite.c`), then overwrites its table with
  * `gPlayerVtable` and clears its trailing `+0x108`/`+0x10c`
  * fields via `ResetCollisionQueue` (still raw - a two-field, 4-byte-plus-byte
  * clear). Allocates a fresh `struct actor`-shaped child object
- * (`CreateSpriteObj(0, 0, 0, 0)`, the same allocator `actor_part6.c`'s
+ * (`CreateSpriteObj(0, 0, 0, 0)`, the same allocator `sprite_obj.c`'s
  * `CreateSpriteObj` is - called here with an extra, unused 4th zero
  * argument, the same calling convention already used by
  * `graphics_loading_21d80.c`'s own callers of it) and hooks it up at
@@ -31,11 +31,11 @@ extern void ***gSpriteBankSet;
  * idiom `graphics_loading_21d80.c` uses throughout), clears its
  * `+0x2d` byte, and builds it via the standard `ResetSpriteFrameTimer`/
  * `ResetSpriteFrameIndex`/`SetSpriteAnimDone` OAM trio. Clears `self+0xb4`, then
- * calls `ResetPlayer` (matched in `actor_part48.c`) to finish resetting
+ * calls `ResetPlayer` (matched in `player_reset.c`) to finish resetting
  * `self`'s velocity/state fields and hook the `self+0xb0` child up via
  * its own `GetSpriteAnimPaletteSlot` call. Finally sets `self+8`'s `field_08` and
  * the Q8 `x`/`y` position from the three `u16` arguments - the same
- * tail `CreateGroundSprite` (`actor_part14.c`) uses for its own, smaller
+ * tail `CreateGroundSprite` (`ground_sprite.c`) uses for its own, smaller
  * `struct actor` - and returns `self`. */
 void *InitPlayer(void *selfArg, u16 arg1, u16 arg2, u16 arg3)
 {

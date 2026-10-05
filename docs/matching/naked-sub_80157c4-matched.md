@@ -1,6 +1,6 @@
 # `ActionCtrlSetTargetAnim` progress: 99.8% instruction match, still NAKED
 
-`ActionCtrlSetTargetAnim` (`src/graphics/actor_part38d.c`, player mode-remapper
+`ActionCtrlSetTargetAnim` (`src/player/action_ctrl.c`, player mode-remapper
 tail-calling `SetCtrlTargetAnim`) is still a byte-correct NAKED asm
 transcription for the default build - see
 [issue-18-0x08014f8c-actor.md](./issue-18-0x08014f8c-actor.md)'s
@@ -107,7 +107,7 @@ the call's result is considered live in `r0` up to the `return`,
 freeing `r0` for the epilogue's `pop`/`bx` scratch role and forcing
 `r1` - the same live-value mechanism `GetCompletionPercent` used, just applied
 through a cast instead of a same-typed passthrough. `SetCtrlTargetAnim`'s own
-extern declaration (`src/graphics/actor_part17.c`, where it's already
+extern declaration (`src/objects/ctrl.c`, where it's already
 matched) is untouched - the cast is scoped to this one call site, and
 is arguably a more literal reading of what the ROM's own compiled code
 actually does with the value (uses the raw 32-bit `r0` register,
@@ -129,12 +129,12 @@ Verified: isolated `cpp`+`agbcc` recompile of `ActionCtrlSetTargetAnim` byte-for
 byte identical to the ROM's own raw disassembly (direct `objcopy
 --only-section=.text` + `cmp`, zero difference); full clean `rm -rf
 build && make NON_MATCHING=1 report` (no warnings, including for
-`actor_part38d.c`); full clean `rm -rf build crashbandicootxs.elf
+`action_ctrl.c`); full clean `rm -rf build crashbandicootxs.elf
 crashbandicootxs.gba crashbandicootxs.map && make compare` -
 `crashbandicootxs.gba: La suma coincide`. The `#if NON_MATCHING`/
 `NAKED` split is gone - `ActionCtrlSetTargetAnim` is now a single, unconditional,
-real C definition in `src/graphics/actor_part38d.c`, and
+real C definition in `src/player/action_ctrl.c`, and
 `tools/report_units.py`'s separate `0x080157C4` entry was removed
-entirely (folded into the neighboring `actor_part38d.o` entry, which
+entirely (folded into the neighboring `action_ctrl.o` entry, which
 now spans `0x0801574C`-`0x08015840` with no gap before
-`actor_part57.o`).
+`action_ctrl.o`).

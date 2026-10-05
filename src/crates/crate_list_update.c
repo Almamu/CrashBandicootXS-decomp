@@ -9,7 +9,7 @@ extern void *_call_via_r1(void *arg0, void *fn);
 extern void *gLevelLayers;
 
 /* A per-frame spatial-hash-grid maintenance pass over `manager`'s
- * `struct pool_manager` (`actor_part12.c`), scoped to the 3-bucket
+ * `struct pool_manager` (`crate_list.c`), scoped to the 3-bucket
  * window `[baseIdx, baseIdx+2]` around `baseIdx` (the same
  * `max(gLevelLayers`'s sub-object's own `x >> 8`, `0)` bucket
  * index `DrawCrateList`/`CollideCrateGrid` compute), plus the special "large

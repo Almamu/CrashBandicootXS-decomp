@@ -5,7 +5,7 @@
 #include "action_obj.h"
 
 /* The 0x54-byte "orbiting hazard / collectible" part object spawned by
- * CreateExtraLife (game_loop54.c) and CreateWumpa (game_loop53.c) and driven
+ * CreateExtraLife (extra_life.c) and CreateWumpa (wumpa_update.c) and driven
  * by the per-frame updaters UpdateExtraLife/UpdateWumpa and the orbit helpers
  * UpdateExtraLifeHop/UpdateWumpaHop (GitHub issues #14/#15). It starts with the
  * shared `struct actor` header; `bank` is the same animation-record bank

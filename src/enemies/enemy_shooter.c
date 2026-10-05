@@ -57,7 +57,7 @@ extern s32 __modsi3(s32 a, s32 b);
 extern void *LaunchHarmfulEffectPart(s32 a, s32 b, s32 c, s32 d, s32 e, void *f);
 
 /* The fields of this cluster's controller object (the class of
- * UpdateEnemyCtrl, see actor_part124.c's `struct trigger_ctrl`) read here:
+ * UpdateEnemyCtrl, see enemy_ctrl.c's `struct trigger_ctrl`) read here:
  * `shotPeriod`/`shotPhase` make the gate below pass once every `shotPeriod` frames,
  * `mode` is the `self+0x68` sub-state and `owner` the controlled
  * object. */

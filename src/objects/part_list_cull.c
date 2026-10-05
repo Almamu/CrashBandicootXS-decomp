@@ -3,7 +3,7 @@
 #include "vtable.h"
 
 /* This file's `manager` is the same `dual_array_manager` struct
- * defined and used in `actor_part11.c` (capacity/count1/count2/
+ * defined and used in `part_list.c` (capacity/count1/count2/
  * array1/array2), but is deliberately kept as raw offset casts here
  * instead of named struct field access: every function below pins
  * specific registers (`register ... asm("rN")`) to reproduce exact

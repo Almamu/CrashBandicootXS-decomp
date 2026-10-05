@@ -21,7 +21,7 @@ extern void InputCtrlStateDead();
 extern void sub_801793C();
 extern void sub_801796C();
 
-/* Per-state handlers dispatched by UpdatePlayerCtrl (actor_part_16048.c,
+/* Per-state handlers dispatched by UpdatePlayerCtrl (swim_ctrl.c,
  * its `struct pmf` view); PlayerCtrlKillPlayer sets state 7. */
 const struct actor_pmf gPlayerCtrlStateFuncs[8] = {
     ACTOR_PMF(PlayerCtrlStateIdle),
@@ -34,7 +34,7 @@ const struct actor_pmf gPlayerCtrlStateFuncs[8] = {
     ACTOR_PMF(PlayerCtrlStateDead),
 };
 
-/* Per-state handlers dispatched by UpdateInputCtrl (actor_part_17524.c). */
+/* Per-state handlers dispatched by UpdateInputCtrl (input_ctrl.c). */
 const struct actor_pmf gInputCtrlStateFuncs[4] = {
     ACTOR_PMF(InputCtrlStateStart),
     ACTOR_PMF(sub_801796C),

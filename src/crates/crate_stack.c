@@ -5,7 +5,7 @@
  * collision subsystem (see game_loop17.c's header comment and
  * docs/matching/issue-13-graphics-fc70.md). `GetTopCrate`/
  * `GetBottomCrate`/`CollideCrateWithPlayer` right after this function are matched in
- * game_loop30.c. */
+ * crate_stack.c. */
 
 extern void *gAudioContext;
 extern void *gEntityFlags;
@@ -92,13 +92,13 @@ u8 IsCrateKindBreakable(void *arg0, u32 idx)
 /* GitHub issue #13: 0x0800FC70-0x08010A0C, continuing the physics/
  * collision subsystem (see game_loop17.c's header comment and
  * docs/matching/issue-13-graphics-fc70.md). `GetSlotCrateStage` right after
- * this file is already matched in game_loop26.c. `self` throughout
+ * this file is already matched in slot_crate.c. `self` throughout
  * this file is the same actor/"collision box" object every other
  * function in this subsystem operates on - offsets `0`/`4`/`0xc` here
  * line up with `struct actor`'s own `x`/`y`/`flags` fields
  * (include/actor.h), kept as raw offsets rather than that struct type
  * to stay consistent with every already-matched sibling in this file
- * family (game_loop22.c-game_loop29.c), which do the same. */
+ * family (crate_reset.c-game_loop29.c), which do the same. */
 
 extern void *GetCrateBelow(void *selfArg);
 extern void *GetCrateAbove(void *selfArg);

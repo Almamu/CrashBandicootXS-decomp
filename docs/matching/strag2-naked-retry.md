@@ -4,7 +4,7 @@ This pass covered six unfinished functions that no open issue tracked:
 
 - Two still-raw functions from issue #62 (closed too early), parked back
   in PR #216.
-- Four NAKED transcriptions from issue #18's `actor_part38` family, in
+- Four NAKED transcriptions from issue #18's `actor_part38*` family (now `src/player/action_ctrl*.c`), in
   the confirmed old_agbcc range.
 
 **5 of 6 closed.** All five match under both agbcc and old_agbcc.
@@ -15,9 +15,9 @@ This pass covered six unfinished functions that no open issue tracked:
 |---|---|---|---|
 | `HovercraftCannonStateFire` | `actor_part29.c` | raw asm (99 hw off) | real `/` via `__divsi3` alias (libcall keeps `self+0x24` CSE'd across it), divisor fixed to `-0x1AA`, one shared `store:` label for the new cooldown, a stored `count` local, `dx` then `dy` statement order, `"=r"`/`"0"` `u8` zero |
 | `HovercraftLauncherStateLaunch` | `actor_part35.c` | raw asm (102 hw off) | same as `HovercraftCannonStateFire`, plus `"=r"`/`"0"` escapes for the reset block's `0`/`2`, the `2` via `asm volatile` so it isn't sunk |
-| `ActionCtrlStateBodySlamStart` | `actor_part38c.c` | NAKED | `u8 *self` parameter instead of a `selfArg` copy that GCSE left in the `else` arm |
-| `SteerActionCtrlSpin` | `actor_part38b.c` | NAKED | `u8` locals for the table indices so they are loaded before the stores (moves `mode` to `r4`) |
-| `EndActionCtrlSpin` | `actor_part38b.c` | NAKED | real `u8 *`/`u8` params (fixes the entry-copy order); `0x200` built in `m`, copied by an `"=r"`/`"0"` escape, and a volatile `"+r"(flags)`/`"r"(m)` use right after the `and` (stops combine and regmove from retargeting it); pointer local for `self+0x29` |
+| `ActionCtrlStateBodySlamStart` | `action_ctrl_moves.c` | NAKED | `u8 *self` parameter instead of a `selfArg` copy that GCSE left in the `else` arm |
+| `SteerActionCtrlSpin` | `action_ctrl_moves.c` | NAKED | `u8` locals for the table indices so they are loaded before the stores (moves `mode` to `r4`) |
+| `EndActionCtrlSpin` | `action_ctrl_moves.c` | NAKED | real `u8 *`/`u8` params (fixes the entry-copy order); `0x200` built in `m`, copied by an `"=r"`/`"0"` escape, and a volatile `"+r"(flags)`/`"r"(m)` use right after the `and` (stops combine and regmove from retargeting it); pointer local for `self+0x29` |
 
 Bookkeeping:
 
@@ -26,7 +26,7 @@ Bookkeeping:
   ROM order.
 - `actor_part29.o`/`actor_part35.o` stay on agbcc: both compilers give
   the same bytes, and they sit outside the known old_agbcc ranges.
-- `actor_part38.o`/`38b.o`/`38c.o` joined `OLD_AGBCC_OBJS`. Each file's
+- `action_ctrl_hang.o`/`38b.o`/`38c.o` joined `OLD_AGBCC_OBJS`. Each file's
   whole `.text` is identical under both compilers, and
   0x08013C60-0x0801EA5C is confirmed old_agbcc territory.
 
@@ -40,7 +40,7 @@ None of the parked notes' diagnoses held up:
 
 ## Not closed
 
-- **`StartActionCtrlTornadoSpin`** (`actor_part38.c`, 400 bytes) is still NAKED
+- **`StartActionCtrlTornadoSpin`** (`action_ctrl_hang.c`, 400 bytes) is still NAKED
   (matched later in the strag4 retry, see `strag4-naked-retry.md`). It
   now has a C draft under `#if NON_MATCHING`, down from about 163
   halfwords off to 2 under both compilers.

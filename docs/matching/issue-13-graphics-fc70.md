@@ -24,7 +24,7 @@ too, continuing issue #12's precedent.
 
 ## Matched (11 of 25 functions)
 
-- **`ResetCrate`** (`src/system/game_loop22.c`) - resets `self`'s
+- **`ResetCrate`** (`src/crates/crate_reset.c`) - resets `self`'s
   collision-response state: sets flags `+0xc` bits 2/6, clears the low
   7 bits of `+0x4d` while also clearing the global
   `gPlayer+0x80` "hit" latch, zeroes the timer/list-link
@@ -47,7 +47,7 @@ too, continuing issue #12's precedent.
   inline-asm block.
 - **`ResolvePlayerCollisions`**/**`GetCrateBelow`**/**`GetCrateAbove`**/
   **`SetCrateBelow`**/**`SetCrateAbove`**/**`GetCrateClassId`**
-  (`src/system/game_loop23.c`) - the viewport collision-box refresh
+  (`src/crates/crate.c`) - the viewport collision-box refresh
   (`ResolveCollisionCandidates` on `gPlayer+0x108`, then a saturating-at-
   zero `+0x92` hit counter), and the neighbor-list "get prev"/"get
   next"/"set prev"/"set next" accessor quartet (`self+0x60`/`+0x5c`)
@@ -58,7 +58,7 @@ too, continuing issue #12's precedent.
   gotchas beyond `ResolvePlayerCollisions` needing its second `gPlayer`
   dereference kept as a separate local (not reusing the first) to get
   the post-call reload the ROM does.
-- **`ConvertCratesForTimeTrial`**/**`OpenAkuAkuCrate`** (`src/system/game_loop24.c`) -
+- **`ConvertCratesForTimeTrial`**/**`OpenAkuAkuCrate`** (`src/crates/crate_time_trial.c`) -
   a state-3-countdown-expiry sweep over the `gCrateList` object
   list (same list/table layout `UpdateCrates`/`DetonateNitroCrates` elsewhere in
   this still-raw region read), and a viewport `+0x18`-table trampoline-
@@ -72,10 +72,10 @@ too, continuing issue #12's precedent.
   always shifts in place) - and a `u32` (not `u8`) result type on the
   asm output operand to avoid a spurious truncation instruction the
   ROM doesn't have.
-- **`IsCrateKindBreakable`** (`src/system/game_loop25.c`) - trivial
+- **`IsCrateKindBreakable`** (`src/crates/crate_stack.c`) - trivial
   `gCrateKindBreakable[idx]` byte-table lookup; its first parameter is
   unused in the ROM.
-- **`GetSlotCrateStage`** (`src/system/game_loop26.c`) - extracts `self+0x48`
+- **`GetSlotCrateStage`** (`src/crates/slot_crate.c`) - extracts `self+0x48`
   bits 6-7. Needed a trailing `asm(".align 2, 0")` - the function body
   is 10 bytes (not 4-aligned), and the ROM pads the 2-byte gap before
   the next function with a zero halfword rather than the assembler's

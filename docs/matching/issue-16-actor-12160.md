@@ -8,8 +8,8 @@ this "child object" family (a per-level 42-slot action dispatch table,
 `gActionCtrlStateTable`) "isn't understood with byte-exact precision
 yet." This pass picked that remainder back up: 4 of the 10 turned out
 tractable with the same base+offset+fn-pointer trampoline and
-state/flag/table-index-trio conventions `actor_part18.c`/
-`actor_part18b.c` already established for other members of the same
+state/flag/table-index-trio conventions `action_ctrl_states.c`/
+`action_ctrl_land.c` already established for other members of the same
 table; the other 6 (including the two hardest - `ActionCtrlHandleEvent`'s
 25-case/7-case nested jump table and `ApplyActionCtrlMotion`'s stack-array/`r8`
 usage) were left raw again, still out of scope.
@@ -19,10 +19,10 @@ usage) were left raw again, still out of scope.
 `asm/code_3_2_17_11bd4.s` is trimmed to just `ActionCtrlHandleEvent` (unchanged
 start address, 0x08011BD4-0x08012160). `KillPlayer`/`sub_8012238`/
 `UpdatePlayerFacing` (contiguous, 0x08012160-0x08012420) move to a new
-`src/graphics/actor_part79.c`. A new `asm/code_3_2_17_12420.s` picks up
+`src/player/kill_player.c`. A new `asm/code_3_2_17_12420.s` picks up
 `UpdateActionCtrl`/`TryActionCtrlDoubleJump`/`HandleActionCtrlAirInput` (0x08012420-0x08012A7C).
 `CheckActionCtrlLeftGround` alone (0x08012A7C-0x08012AF4, not ROM-adjacent to either
-matched group) moves to a new `src/graphics/actor_part80.c`. A final
+matched group) moves to a new `src/player/action_ctrl_left_ground.c`. A final
 new `asm/code_3_2_17_12af4.s` picks up `ApplyActionCtrlMotion` onward - this file
 is much wider than issue #16's own range, since `code_3_2_17_11bd4.s`
 already covered everything through `ActionCtrlStateStandUp-1` before this pass
@@ -38,7 +38,7 @@ order.
   `+0x54` trampoline pair with the function's second argument as the
   "part" object, then the `+0x20`/`+0x24` pair (id `0x1d`), resets
   both halves of the state/flag/table-index trio via a single walked
-  pointer (the `ResetActionCtrl`-style idiom from `actor_part39.c`), runs
+  pointer (the `ResetActionCtrl`-style idiom from `wumpa.c`), runs
   `ApplyActionCtrlMotion`, clears/sets a few more `self+0x10`-record bytes
   (`+0x100`/`+0x102`/`+0x103`/`+0x104`, and two bits of `+0xc` via the
   established negative-constant-mask idiom), calls `LoseLife`, then
@@ -53,7 +53,7 @@ order.
   computation, the opposite of the ROM's r1 - only an inline-asm
   anchor computing the shift itself (`asm volatile("mov %0, #0x82\n\tlsl
   %0, %0, #1")`) pins that specific register, the same escape hatch
-  `actor_part39.c`/`graphics.c` already use for shift results elsewhere.
+  `wumpa.c`/`graphics.c` already use for shift results elsewhere.
   The closing dereference chain also needed a compound-assignment
   register pin (`record += (s32)base;` rather than `base + tag*0x1c`)
   to force the ROM's `Rd==Rs` `adds r2, r2, r4` encoding instead of the
@@ -69,7 +69,7 @@ order.
   `goto check_18:` block (rather than a nested `if`) to keep the
   compiler from inverting it into the opposite branch/fallthrough pair,
   the same "goto forces exact fall-through shape" technique
-  `actor_part39.c`'s `UpdateStopwatch` already used, plus a `s32` (not
+  `wumpa.c`'s `UpdateStopwatch` already used, plus a `s32` (not
   `u8`) type for the compared byte to get the ROM's signed `bgt`
   instead of an unsigned `bhi`. The final `type2 == 0x25 || type2 ==
   0x26` check needed splitting into two literal `if`/`goto` comparisons

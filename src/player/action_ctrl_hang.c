@@ -611,7 +611,7 @@ asm(".align 2, 0");
 
 /* GitHub issue #18's chunk, ROM 0x08014F8C-0x080157C0 - continues the
  * same "self" action-table object family documented at the top of
- * actor_part18.c (`self+0xc` a per-category `{s16 offset; void *fn}`
+ * action_ctrl_states.c (`self+0xc` a per-category `{s16 offset; void *fn}`
  * table, `self+0x10` a `struct actor *` sub-object, `self+0x27`-`0x32` a
  * shared state/flag/table-index trio) - `StartActionCtrlHighJump`/`SetActionCtrlModeAnim` are
  * both called directly by `ActionCtrlStateStandUp`/`ActionCtrlStateCrawlStart` there, confirming

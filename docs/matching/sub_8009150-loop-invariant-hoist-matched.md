@@ -1,7 +1,7 @@
 # `LinkCrateToActiveBucket` converted from `NON_MATCHING` to real matched C
 
-`LinkCrateToActiveBucket` (now `src/graphics/actor_part11g.c`, previously an
-`#if NON_MATCHING` block inside `src/graphics/actor_part11.c`) had been
+`LinkCrateToActiveBucket` (now `src/crates/crate_grid_link.c`, previously an
+`#if NON_MATCHING` block inside `src/objects/part_list.c`) had been
 parked as "extremely close" since an earlier pass - see `docs/matching.md`,
 "Parked, not matched: `LinkCrateToActiveBucket`". It's now genuinely matched as real
 decompiled C.
@@ -146,7 +146,7 @@ scratch copy of the function, assembled with `arm-none-eabi-as -mcpu=arm7tdmi
 `objcopy -O binary --only-section=.text` + `cmp`) directly against the
 ROM's own raw bytes (assembled from the pre-integration
 `asm/code_3_2_13_9150.s`) - identical. Then, after integrating into
-`src/graphics/actor_part11g.c` and updating `ldscript.txt`/
+`src/crates/crate_grid_link.c` and updating `ldscript.txt`/
 `tools/report_units.py`, a full clean `rm -rf build && make
 NON_MATCHING=1 report` followed by `objdiff-cli report generate`
 (100.0%), then a full clean `rm -rf build crashbandicootxs.elf
@@ -156,19 +156,19 @@ crashbandicootxs.gba crashbandicootxs.map && make compare` -
 ## File/link-order change
 
 `LinkCrateToActiveBucket` moves from an `#if NON_MATCHING` block inside
-`src/graphics/actor_part11.c` (whose real bytes, while parked, lived in
+`src/objects/part_list.c` (whose real bytes, while parked, lived in
 the standalone `asm/code_3_2_13_9150.s`, guarded by `.if NON_MATCHING ==
-0`) into its own new `src/graphics/actor_part11g.c` - its real ROM
-address isn't adjacent to `actor_part11.c`'s own matched functions
+0`) into its own new `src/crates/crate_grid_link.c` - its real ROM
+address isn't adjacent to `part_list.c`'s own matched functions
 (`DrawPartList`-`InitPartList`), sitting instead between the NAKED
-`UnlinkCrateFromGrid` (`actor_part11b.c`) and `UpdateCrateList` (`actor_part11c.c`),
+`UnlinkCrateFromGrid` (`crate_grid_unlink.c`) and `UpdateCrateList` (`crate_list_update.c`),
 per `docs/workflow.md` step 4's "needs its own new `.c` file" case.
 `asm/code_3_2_13_9150.s` held only this one function and is retired
 entirely; `ldscript.txt`'s `code_3_2_13_9150.o` line is replaced with
-`actor_part11g.o` at the same link-order position. The `struct
+`crate_grid_link.o` at the same link-order position. The `struct
 pool_manager` definition that block relied on is still needed by the
-three other `#if NON_MATCHING` blocks remaining in `actor_part11.c`
+three other `#if NON_MATCHING` blocks remaining in `part_list.c`
 (`ResetCrateList`/`DrawCrateList`/`CollideCrateGrid`), so it stays there too,
 duplicated (matching this codebase's existing convention of a
 per-translation-unit local copy of shared structs like this one - see
-also `actor_part12.c`'s own copy).
+also `crate_list.c`'s own copy).

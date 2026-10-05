@@ -332,7 +332,7 @@ see [levels.md](./levels.md).
 
 This is the "master asset table" of docs/rom_map.md. Its structure,
 from the matched readers (`RunPauseMenu` in `pause_menu.c`, `GetSpriteTileBase`/
-`GetSpriteFrame`/`GetSpriteAnimPaletteSlot`/`GetSpriteAnimPaletteId` in `actor_part4.c`-`actor_part6.c`,
+`GetSpriteFrame`/`GetSpriteAnimPaletteSlot`/`GetSpriteAnimPaletteId` in `sprite_obj.c`,
 `affine_sprite_pieces.c`, and the `**gSpriteBankSet + N` users):
 
 ```

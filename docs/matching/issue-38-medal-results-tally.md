@@ -97,7 +97,7 @@ teardown wrapper), `ResetSlideshow` (trivial constructor).
   before the `cmp #0`, discarding whatever garbage might be in the
   upper 24 bits rather than trusting a clean 0/1 return. Matches this
   codebase's established `(u8)funcCall(...) != 0` idiom (see e.g.
-  `src/graphics/actor_part38c.c`) once applied here too.
+  `src/player/action_ctrl_moves.c`) once applied here too.
 - **`ShowSlidePicture`'s `& ~0x10`/negated-constant idiom.** The ROM computes
   `gSlideshowDispcnt`'s low byte as `(byte & -0x11) | ((toggle&1)<<4)`
   - `-0x11` (`0xFFFFFFEF`) is numerically identical to `~0x10`, and is

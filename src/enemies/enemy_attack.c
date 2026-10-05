@@ -41,7 +41,7 @@
  * `SetEnemyMotionY(self,0)`. Mode 0 builds an AABB at `owner`'s position
  * offset by `self->0x20`/`self->0x24` sized by `self->0x28-0x20`/
  * `self->0x2c-0x24` (via `SetAabbPos`/`SetAabbSize`, the same
- * `struct aabb` shape `actor_part4.c`/`actor_part15.c` already use),
+ * `struct aabb` shape `sprite_obj.c`/`player_update.c` already use),
  * mirrors it per `owner->0x28` bit 4, then tests it against the player
  * (`gPlayer`) via `PlayerTouchesBox` - on overlap, triggers
  * `SetEnemyAnimMode(self,2)` and, if `self->0x6c==0xb`, seeds `owner`'s
@@ -52,7 +52,7 @@
  *
  * `UpdateEnemyAttackCycle` is real C under old_agbcc (issue #10 NAKED retry,
  * docs/matching/issue-10-naked-retry.md). Its spawn call is an inline
- * copy of `LaunchHarmfulEffectPart` (actor_part116.c): passing the arguments
+ * copy of `LaunchHarmfulEffectPart` (enemy_ctrl.c): passing the arguments
  * through inline parameters is what materializes them in the ROM's
  * order, and the `+0xC` flag writes are bitfield stores (QImode `-0x41`/
  * `-9` masks). `__modsi3` is a remainder (`a % b`).
@@ -74,7 +74,7 @@ extern void *gAudioContext;
 extern void *gEntitySpawner;
 extern struct ctrl_target *gPlayer;
 
-/* `LaunchHarmfulEffectPart` (actor_part116.c), inlined. */
+/* `LaunchHarmfulEffectPart` (enemy_ctrl.c), inlined. */
 static inline struct ctrl_target *SpawnPart(s32 a, s32 b, s32 c, s32 d, s32 e, struct ctrl_target *f)
 {
     struct ctrl_target *obj = LaunchEffectPart(gEntitySpawner, a, b, c, d, e, f);
@@ -205,7 +205,7 @@ asm(".align 2, 0");
  * "anchor" record, `self+0x84` per-instance table) and calls the
  * exact same helpers `StartCtrlTargetMotionYFromSet`/`StartCtrlTargetMotionXFromSet`/`_call_via_r3`
  * already matched for `SetEnemyMotionY`/`SetEnemyMotionX`/`SetEnemyAnimMode`
- * (`actor_part113.c`) - not merely the same *convention* reused on a
+ * (`enemy_ctrl.c`) - not merely the same *convention* reused on a
  * different struct, but the *identical* struct/helper set, just
  * driven by dialog-widget vtable entries instead of the physics
  * cluster's own entries. Confirms `docs/rom_map.md`'s "general-purpose

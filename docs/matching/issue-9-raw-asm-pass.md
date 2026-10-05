@@ -9,9 +9,9 @@ two NAKED holdouts from #9. It removes `asm/code_3_2.s`,
 
 | Function | File | Compiler | Technique |
 |---|---|---|---|
-| `PlayerHandleEvent` | `src/graphics/actor_part111.c` | old_agbcc | New plain-`switch` C, see below |
-| `UpdateEnemyBob` | `src/graphics/actor_part116.c` | either | Empty asm clobber of r5, plus pins |
-| `UpdateEnemyOscillateY` | `src/graphics/actor_part116.c` | either | Empty asm clobber of r8, one pin |
+| `PlayerHandleEvent` | `src/player/player_event.c` | old_agbcc | New plain-`switch` C, see below |
+| `UpdateEnemyBob` | `src/enemies/enemy_ctrl.c` | either | Empty asm clobber of r5, plus pins |
+| `UpdateEnemyOscillateY` | `src/enemies/enemy_ctrl.c` | either | Empty asm clobber of r8, one pin |
 
 ### PlayerHandleEvent (formerly raw)
 
@@ -31,7 +31,7 @@ under old_agbcc on the first compile, and three changes closed it:
   them.
 
 It matches only under old_agbcc (agbcc is 218 halfwords off), so
-`actor_part111.o` is now on `OLD_AGBCC_OBJS`. The file's other function,
+`player_event.o` is now on `OLD_AGBCC_OBJS`. The file's other function,
 `DrawPlayer`, is NAKED, so the switch does not affect it. Before the
 switch, `movs #1; ldrb; orrs` in the ROM (constant before the byte) had
 already pointed to old_agbcc.
@@ -64,7 +64,7 @@ Each empty asm has a comment in the source.
   (1032 bytes under agbcc and 1024 under old_agbcc, against the ROM's
   1044). The ROM spills nearly every local into a 0x48-byte frame, the
   same obstacle that parks `DrawSpritePieces`.
-- **`CollidePlayer`**'s NAKED body moved into `src/graphics/actor_part78.c`,
+- **`CollidePlayer`**'s NAKED body moved into `src/player/player_collide.c`,
   and `asm/code_3_2_16_a884.s` is gone. The old draft used register pins
   and two asm islands and was 137 halfwords off under both compilers,
   not the near match its comment described. It was replaced with plain C:
@@ -165,7 +165,7 @@ This pass applied the hard-register hold from #489
 (`register s32 hold asm("rN"); asm("" : "=r"(hold)); ...
 asm("" : : "r"(hold));`) to the two drafts above.
 
-- **`UpdateCrateList`: matched** (old_agbcc; `actor_part11c.o` joined
+- **`UpdateCrateList`: matched** (old_agbcc; `crate_list_update.o` joined
   `OLD_AGBCC_OBJS`. It is the only function in that file, and it is
   still 28 halfwords off under agbcc).
   - The `(s32)gridHeadBase + (i << 2)` byte-offset form fixes the

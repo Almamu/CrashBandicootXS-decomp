@@ -1,7 +1,7 @@
 #include "core.h"
 #include "gobj_1a794.h"
 
-/* GitHub issue #19: continuation of actor_part57.c's chunk
+/* GitHub issue #19: continuation of action_ctrl.c's chunk
  * (0x08015840-0x08016128), non-adjacent since the left-raw
  * `StartPlayerCtrlStroke`/`StartPlayerCtrlSpin`/`ApplyPlayerCtrlSwimDrift` (asm/code_3_2_17_159f8.s)
  * sit between them - see docs/matching/issue-19-0x08015840-actor.md.

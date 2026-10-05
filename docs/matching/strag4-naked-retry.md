@@ -1,17 +1,17 @@
 # strag4 retry: issue #18's last function (`StartActionCtrlTornadoSpin`)
 
 The strag2 retry (`docs/matching/strag2-naked-retry.md`) left
-`StartActionCtrlTornadoSpin` (`src/graphics/actor_part38.c`, 400 bytes) NAKED. Its
+`StartActionCtrlTornadoSpin` (`src/player/action_ctrl_hang.c`, 400 bytes) NAKED. Its
 C draft was 2 halfwords off under both compilers.
 
-**1 of 1 closed**, under old_agbcc (`actor_part38.o` was already on
+**1 of 1 closed**, under old_agbcc (`action_ctrl_hang.o` was already on
 `OLD_AGBCC_OBJS`). It was the last function in issue #18.
 
 ## Closed
 
 | Function | File | Was | Technique |
 |---|---|---|---|
-| `StartActionCtrlTornadoSpin` | `actor_part38.c` | NAKED (draft 2 hw off) | test `self[0x22]` directly in the `self+0x24 != 0` arm instead of through a `u8 v` local; one no-code `r1` hold spanning the test |
+| `StartActionCtrlTornadoSpin` | `action_ctrl_hang.c` | NAKED (draft 2 hw off) | test `self[0x22]` directly in the `self+0x24 != 0` arm instead of through a `u8 v` local; one no-code `r1` hold spanning the test |
 
 ## What was wrong
 

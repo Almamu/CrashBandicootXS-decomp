@@ -16,7 +16,7 @@ original agbcc pass; where a workaround has since gone, it is marked.
 
 ## What the code is
 
-The same C++-style object family as `actor_part_17524.c` and
+The same C++-style object family as `input_ctrl.c` and
 `actor_part27*.c`: small classes with a method table ("vtable") at
 `self+0xc`, gcc 2.x `{s16 this-adjust, pad, fn}` method entries called
 through the `_call_via_r2`/`AD84`/`AD88` call-via-register trampolines.
@@ -126,7 +126,7 @@ Fixes, all plain C plus pins/barriers unless noted:
   (`CreateTiny`); an explicit empty `case 10` to keep `UpdateCortexTarget`'s
   11-entry jump table; `if (stepsLeft) break; goto next;` for its
   branch-trampoline shape; the `_call_via_r4` call's function pointer
-  loaded into r4 through a volatile read (the `actor_part78.c` idiom);
+  loaded into r4 through a volatile read (the `player_collide.c` idiom);
   `part` pinned to `ip` in `StartTinyHop`.
 
 ## Formerly NAKED, matched under old_agbcc

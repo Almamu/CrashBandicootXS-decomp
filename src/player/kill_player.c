@@ -11,11 +11,11 @@
  * (at least `+0x20`/`+0x24` and `+0x50`/`+0x54` entries known so far)
  * fed through the `_call_via_r2`/`_call_via_r3` trampolines together
  * with `self+offset` and `self+0x10` (a "part" sub-object) - the same
- * convention already named in actor_part18.c's doc comments, which
+ * convention already named in action_ctrl_states.c's doc comments, which
  * this file's functions are siblings of (not ROM-adjacent to them,
  * hence a separate file per the one-file-per-contiguous-region rule).
  * The `+0x27`-`+0x32` bytes are the same shared state/flag/table-index
- * trio pair actor_part18.c documents; none of the three objects' full
+ * trio pair action_ctrl_states.c documents; none of the three objects' full
  * shapes are pinned down yet, so every access here stays a raw offset
  * rather than a guessed struct, same as that file. */
 

@@ -2,9 +2,9 @@
 
 Dedicated deep-investigation session against the two functions opening
 the large, fully-raw `0x0800B8DC`-`0x0800D040` cluster (43 functions,
-~5988 bytes, sitting right after `actor_part17.c`'s span and ending at
+~5988 bytes, sitting right after `ctrl.c`'s span and ending at
 the already-documented physics/collision subsystem's own boundary,
-`BreakCrateTouchedByPlayer`/`game_loop6.c`). No existing doc described what any of
+`BreakCrateTouchedByPlayer`/`crate_hit.c`). No existing doc described what any of
 this cluster's functions do; `docs/rom_map.md`'s only prior note on
 `UpdateEnemyCtrl` was a one-paragraph "18-entry jump table, `self+0x74` as
 the state selector, cases 0-17" sketch from an earlier connectivity
@@ -64,7 +64,7 @@ identical apparent roles:
 |---|---|
 | `0x00`/`0x04` | Q8.8 position (owner only - `self` itself is never read at 0/4 in either function) |
 | `0x0C` | flags byte - bit 0 set by the "flag active + bitmap-set" idiom (see below); bit 4 read/written in several `self+0x68`-dispatch siblings |
-| `0x28` | flags byte - bit 4 is the established mirror-flag convention (`actor_part16.c`/`actor_part17.c`/`game_loop6.c`); bits 5-6 (`0x1a`/`0x1b` shift-tests) gate several branches |
+| `0x28` | flags byte - bit 4 is the established mirror-flag convention (`player_flags.c`/`ctrl.c`/`crate_hit.c`); bits 5-6 (`0x1a`/`0x1b` shift-tests) gate several branches |
 | `0x2D` | table row index, paired with a `+0x20` table pointer at 28-byte stride (`BreakCrateTouchedByPlayer`'s own "keyframe/hitbox record" convention) |
 | `0x30`/`0x34` | a "blocking condition" pair - compared against small magic constants (`8`, `9`, `0xA`) and `0`; non-zero gates several states off entirely |
 | `0x38` | an "enabled"/"active" byte gating most `self+0x68`-dispatch siblings' real work |
@@ -127,7 +127,7 @@ it `<= 17` unsigned, and jumps through an 18-entry table; out-of-range
 falls straight to the function epilogue). This is the *same*
 comparison/field shape `SetEnemyState` (a `menu_ui` dialog-widget update,
 called by all 31 of that system's own dispatch-table entries) and
-`PlayerAnimWouldTouchCrate` (`actor_part109.c`, `docs/rom_map.md`) already use - a
+`PlayerAnimWouldTouchCrate` (`crate_touch.c`, `docs/rom_map.md`) already use - a
 general-purpose "18-state stateful widget" convention reused across
 several *different* object types, not proof this is the same struct as
 those.
@@ -199,7 +199,7 @@ any specific case's behavior.
 converts `owner`'s Q8.8 position to int and calls
 `SpawnEffectPart(gEntitySpawner, 0x29, 2, ownerX, ownerY, 0)` - the same
 `SpawnEffectPart(pool, id, kind, x, y, ...)` shape already matched in
-`actor_part2.c`, here spawning something of kind `2`/id `0x29` at
+`sprite.c`, here spawning something of kind `2`/id `0x29` at
 `owner`'s position (a particle or ambient-audio-emitter object, per the
 global's name and the "queues something via `SpawnEffectPart`" precedent
 `docs/rom_map.md` already notes for a *different* id/kind pair
@@ -280,9 +280,9 @@ an explicit, deliberate choice given this project's extensive, repeated
 precedent that this exact "`self`/`owner`-style multi-field object with
 many `bl` calls interspersed across branches" shape defeats gcc 2.9's
 register allocator: `GetCollisionChunk`, `GetSolidTerrainHeights`/`sub_8025228`/
-`GetTerrainType` (`game_loop3.c`), `BreakCrateTouchedByPlayer` (`game_loop6.c`),
-`PlayerAnimWouldTouchCrate` (`actor_part109.c`), `sub_800CEAC`/`sub_800CF70`
-(`game_loop42.c`) are all NAKED in this same ROM neighborhood for the
+`GetTerrainType` (`game_loop3.c`), `BreakCrateTouchedByPlayer` (`crate_hit.c`),
+`PlayerAnimWouldTouchCrate` (`crate_touch.c`), `sub_800CEAC`/`sub_800CF70`
+(`crate_hit.c`) are all NAKED in this same ROM neighborhood for the
 same underlying reason. Given `UpdateEnemyCtrl`'s size (1132 B, 18 branches,
 several inline blocks juggling `self`+`owner`+3-5 more live
 locals/temporaries across `bl` calls - worse than any of the functions
@@ -328,8 +328,8 @@ coincide`).
 
 - Hand-transcribed NAKED asm, the established escape hatch for this
   ROM region's dominant `self`/`owner`-multi-field register-allocation
-  gap (see `game_loop3.c`/`game_loop6.c`/`actor_part109.c`/
-  `game_loop42.c` for the same bug class documented independently).
+  gap (see `game_loop3.c`/`crate_hit.c`/`crate_touch.c`/
+  `crate_hit.c` for the same bug class documented independently).
 - Unique, never-reused GNU-as local numeric labels (rather than the
   more typical small reused set) to keep two separate large jump
   tables' many-target, far-forward `.4byte Nf` references unambiguous
@@ -343,20 +343,20 @@ coincide`).
 
 `asm/code_3_2_17.s` (which held this whole cluster, `UpdateEnemyCtrl`
 through `InitEffectCtrl`) is removed entirely. `UpdateEnemyCtrl`/`HitEnemy`
-now live in the new `src/graphics/actor_part112.c`; the unchanged
+now live in the new `src/enemies/enemy_ctrl_update.c`; the unchanged
 remainder (`UpdateEnemyShooter` onward - the cluster's other ~41 functions,
 still fully raw and unexamined) moved to the new
 `asm/code_3_2_17_bfa8.s`. `ldscript.txt` now reads:
 
 ```
-build/crashbandicootxs/src/graphics/actor_part112.o(.text);
+build/crashbandicootxs/src/enemies/enemy_ctrl_update.o(.text);
 build/crashbandicootxs/asm/code_3_2_17_bfa8.o(.text);
-build/crashbandicootxs/src/graphics/actor_part109.o(.text);
+build/crashbandicootxs/src/crates/crate_touch.o(.text);
 ```
 
 `tools/report_units.py`'s single `(0x0800B8DC, None, "graphics")`
 placeholder entry is replaced with a matched entry for
-`actor_part112.o` plus a new `(0x0800BFA8, None, "graphics")`
+`enemy_ctrl_update.o` plus a new `(0x0800BFA8, None, "graphics")`
 placeholder for the still-raw remainder.
 
 ## What's still open
@@ -394,7 +394,7 @@ trigger" primitive.** The delegate differs per function:
 
 - **`SetEnemyMotionY(self, mode)`**: `self->0x7c = mode;` then calls the
   *already-matched* `StartCtrlTargetMotionYFromSet(self, self->0x70 /* owner */, mode)`
-  (`src/graphics/actor_part17.c`). `StartCtrlTargetMotionYFromSet` itself: looks up an
+  (`src/objects/ctrl.c`). `StartCtrlTargetMotionYFromSet` itself: looks up an
   8-byte record at `(*(self+4))[mode]`, reads that record's **second**
   word (`+4`) as a type index into the shared, 12-byte-stride
   `gCtrlMotionRecords` table, then reads `self->0xc`'s "anchor"
@@ -455,7 +455,7 @@ trigger" primitive.** The delegate differs per function:
 All three matched as real C on the first structured attempt (raw
 pointer-arithmetic casts, matching the established convention of the
 immediately-neighboring already-matched `StartCtrlTargetMotionYFromSet`/`StartCtrlTargetMotionXFromSet` in
-`src/graphics/actor_part17.c` - no named structs committed yet, same
+`src/objects/ctrl.c` - no named structs committed yet, same
 reasoning as the Phase 1 pass: several of the object's fields are still
 not fully reconciled across all its callers). `SetEnemyMotionY`/
 `SetEnemyMotionX` compiled byte-exact immediately. `SetEnemyAnimMode` needed one
@@ -468,7 +468,7 @@ independent-expressions version instead computed a fresh base in `r2`
 for the `+0x50` read and cost one extra 2-byte instruction. Also needed
 a trailing `asm(".align 2, 0")` after `SetEnemyAnimMode` (following the
 `matching_decomp_alignment_fix` convention, same idiom already used
-after `CtrlHandleEvent` in `actor_part17.c`): the ROM zero-pads
+after `CtrlHandleEvent` in `ctrl.c`): the ROM zero-pads
 `SetEnemyAnimMode`'s trailing 2 bytes to the next 4-byte boundary, but
 without an explicit trailing align directive the linker instead filled
 that gap with its default NOP-fill (`0xc046`) when placing the next
@@ -485,7 +485,7 @@ coincide`).
 
 ### Build layout
 
-The three functions now live in the new `src/graphics/actor_part113.c`.
+The three functions now live in the new `src/enemies/enemy_ctrl.c`.
 `asm/code_3_2_17_bfa8.s` is trimmed to end right before `SetEnemyMotionY`
 (unchanged otherwise - still holds `UpdateEnemyShooter` through `SetEnemyRangeX`,
 raw); the remainder from `UpdateEnemyOscillateX` onward (`UpdateEnemyBob` through
@@ -494,16 +494,16 @@ new `asm/code_3_2_17_c8f8.s`. `ldscript.txt` now reads, in this
 stretch:
 
 ```
-build/crashbandicootxs/src/graphics/actor_part112.o(.text);
+build/crashbandicootxs/src/enemies/enemy_ctrl_update.o(.text);
 build/crashbandicootxs/asm/code_3_2_17_bfa8.o(.text);
-build/crashbandicootxs/src/graphics/actor_part113.o(.text);
+build/crashbandicootxs/src/enemies/enemy_ctrl.o(.text);
 build/crashbandicootxs/asm/code_3_2_17_c8f8.o(.text);
-build/crashbandicootxs/src/graphics/actor_part109.o(.text);
+build/crashbandicootxs/src/crates/crate_touch.o(.text);
 ```
 
 `tools/report_units.py`'s single `(0x0800BFA8, None, "graphics")`
 placeholder is replaced with: the same placeholder (now only covering
-`UpdateEnemyShooter`-`SetEnemyRangeX`), a matched entry for `actor_part113.o`,
+`UpdateEnemyShooter`-`SetEnemyRangeX`), a matched entry for `enemy_ctrl.o`,
 and a new `(0x0800C8F8, None, "graphics")` placeholder for the
 still-raw remainder in `asm/code_3_2_17_c8f8.s`.
 
@@ -554,7 +554,7 @@ neighborhood.
   picked by `owner+0x28` bit 4) before triggering `SetEnemyAnimMode` with mode
   1 or 6 respectively and always `SetEnemyMotionX(self, 0)`. Modes 1/6 both
   toggle `owner+0x28` bit 4 (via the `-0x11`-materialized mask-and-or
-  idiom already established in `actor_part6.c`'s `SetSpriteFlipX`/
+  idiom already established in `sprite_obj.c`'s `SetSpriteFlipX`/
   `SetSpriteFlipY` - `mask = -0x11; result = mask & flags; result |=
   bit << 4;`, **not** a plain XOR, which gcc would compile to a
   shorter/different instruction sequence) when `owner+0x38` is set, then
@@ -608,7 +608,7 @@ neighborhood.
   Unconditional prelude: if `self->0x6c==0xb` and `owner->4 <
   self->0x64`, latches `owner->4 = self->0x64` and fires
   `SetEnemyMotionY(self,0)`. Mode 0 builds a `struct aabb` (the same shape
-  `actor_part4.c`/`actor_part15.c` already use, via `SetAabbPos`/
+  `sprite_obj.c`/`player_update.c` already use, via `SetAabbPos`/
   `SetAabbSize`) at `owner`'s position offset by `self->0x20`/`0x24`,
   sized by `self->0x28-0x20`/`self->0x2c-0x24` - a per-instance trigger
   box distinct from `owner`'s own smaller flags-byte field layout at the
@@ -658,7 +658,7 @@ initial approach, not skipped) - `UpdateEnemyPatrol`'s dispatch-chain shape,
 case-body ordering, and the mask-and-or bit-toggle idiom were all
 successfully coaxed to match byte-for-byte using register-pinned locals
 and an `asm volatile` block for the boolean materialization (see
-`actor_part6.c`'s own established precedent for this exact idiom), but
+`sprite_obj.c`'s own established precedent for this exact idiom), but
 the mode 0/4 "shared-retest" gate (described above) could not be
 reproduced without gcc 2.9 collapsing it to fewer instructions than the
 ROM actually emits - at that point, given the other three functions
@@ -671,7 +671,7 @@ the same wall four times.
 
 - Hand-transcribed NAKED asm (established escape hatch for this ROM
   region), reusing the unique-per-function numeric local label
-  convention from `actor_part112.c`.
+  convention from `enemy_ctrl_update.c`.
 - `-al` assembler listing cross-checked against the ROM's own literal
   label offsets to place every `.pool` directive correctly on the
   (eventual) first try, after two placement bugs in `UpdateEnemyAttackCycle`
@@ -680,7 +680,7 @@ the same wall four times.
   `UpdateEnemyTriggerBox`'s own non-4-aligned trailing byte count.
 - Verified each function byte-exact in isolation *and* as physically
   combined into a shared object file (`UpdateEnemyAttackCycle`+`UpdateEnemyTriggerBox` in one
-  `actor_part116.c`) - the combined-file build caught a real bug
+  `enemy_ctrl.c`) - the combined-file build caught a real bug
   (duplicate/misplaced `.pool` directives reintroduced by hand-copying
   from the isolated scratch files into the production file) that the
   per-function isolated tests alone did not, underscoring that the
@@ -690,8 +690,8 @@ the same wall four times.
 ### Build layout
 
 The four functions now live in three new files: `src/graphics/
-actor_part114.c` (`UpdateEnemyPatrol`), `src/graphics/actor_part115.c`
-(`UpdateEnemyHop`), and `src/graphics/actor_part116.c` (`UpdateEnemyAttackCycle` +
+enemy_motion.c` (`UpdateEnemyPatrol`), `src/enemies/enemy_motion.c`
+(`UpdateEnemyHop`), and `src/enemies/enemy_ctrl.c` (`UpdateEnemyAttackCycle` +
 `UpdateEnemyTriggerBox`, contiguous in ROM with no gap). The single raw
 `asm/code_3_2_17_bfa8.s` (which held `UpdateEnemyShooter` through
 `SetEnemyRangeX`) is split into four pieces around the newly-matched
@@ -713,12 +713,12 @@ another parallel session was assigned (`UpdateEnemyPatrol`/`UpdateEnemyAttackCyc
 
 **Closed, real C**: `LaunchHarmfulEffectPart` (the floating-popup spawner, state
 18's `LaunchHarmfulEffectPart(0x1D, 0, 0, 0x2B, 0, owner)` callee - a thin
-`LaunchEffectPart` wrapper, `src/graphics/actor_part116.c`) and `CreateKnockedEnemyCtrl`
-(`src/graphics/actor_part117.c`, see below).
+`LaunchEffectPart` wrapper, `src/enemies/enemy_ctrl.c`) and `CreateKnockedEnemyCtrl`
+(`src/enemies/enemy_ctrl.c`, see below).
 
-**Closed, NAKED**: `UpdateEnemyHomingX`/`UpdateEnemyHomingY` (`actor_part114.c`),
-`UpdateEnemyFlipCycle` (`actor_part115.c`), `UpdateEnemyOscillateX`/`UpdateEnemyBob`/
-`UpdateEnemyOscillateY` (`actor_part116.c`) - each is small (60-248B),
+**Closed, NAKED**: `UpdateEnemyHomingX`/`UpdateEnemyHomingY` (`enemy_motion.c`),
+`UpdateEnemyFlipCycle` (`enemy_motion.c`), `UpdateEnemyOscillateX`/`UpdateEnemyBob`/
+`UpdateEnemyOscillateY` (`enemy_ctrl.c`) - each is small (60-248B),
 straight-line or shallow-branching, and semantically fully understood
 (documented in each file's own doc comment), but every one hit a
 *different* flavor of gcc-2.9/this-agbcc-build code-selection gap that
@@ -751,7 +751,7 @@ tempted to re-attempt them:
 - **`UpdateEnemyFlipCycle`**: an isolated attempt reproduced the entire
   dispatch/switch structure exactly, and even reproduced the
   established `(s32)(x << 27) < 0` mirror-flag-bit-test idiom
-  (`src/graphics/actor_part17.c`) correctly for both of this
+  (`src/objects/ctrl.c`) correctly for both of this
   function's own bit-toggle sites - but could not reproduce the ROM's
   own instruction *sequencing* for folding the toggled bit back into
   the byte (compute 0/1 flag via the shift-test, shift it into bit
@@ -768,7 +768,7 @@ tempted to re-attempt them:
   literal `1`) instead of the ROM's fresh literal load for the mask.
 - **`UpdateEnemyOscillateX`/`UpdateEnemyBob`/`UpdateEnemyOscillateY`** (the sine-wave
   oscillator family, `gSineTable` + `gRoomFrameCount`):
-  fully traced semantically (see `actor_part116.c`'s own doc comment
+  fully traced semantically (see `enemy_ctrl.c`'s own doc comment
   for the per-function field/phase-derivation breakdown), and an
   isolated attempt got every field access and the table lookup itself
   correct, but two ROM-specific micro-choices resisted: (1) the ROM's
@@ -828,11 +828,11 @@ resistant. Good next targets given `SetEnemyMotionY`/`SetEnemyMotionX`/
 `UpdateEnemyPatrol` (still raw, `UpdateEnemyPatrol` is one of the other parallel
 session's four `self+0x68` targets). The removed
 `UpdateEnemyHomingX`/`UpdateEnemyHomingY` now live in the new
-`src/graphics/actor_part114.c`. `UpdateEnemyHop` (untouched, another
+`src/enemies/enemy_motion.c`. `UpdateEnemyHop` (untouched, another
 `self+0x68` target) was carved into its own new `asm/code_3_2_17_c244.s`
 so it wouldn't need to move again once its own session closes it. The
 removed `UpdateEnemyFlipCycle` now lives in the new
-`src/graphics/actor_part115.c`. `UpdateEnemyAttackCycle` onward (through
+`src/enemies/enemy_motion.c`. `UpdateEnemyAttackCycle` onward (through
 `SetEnemyRangeX` - `UpdateEnemyAttackCycle`/`UpdateEnemyTriggerBox` untouched `self+0x68`
 targets, plus `SetEnemyState`/`SetEnemyRangeXSpeed`/`SetEnemyRangeYSpeed`/`SetEnemyRangeX`,
 none of this pass's or the parallel session's concern) moved to the new
@@ -840,32 +840,31 @@ none of this pass's or the parallel session's concern) moved to the new
 
 Likewise, `asm/code_3_2_17_c8f8.s` is fully consumed: the removed
 `UpdateEnemyOscillateX`/`UpdateEnemyBob`/`UpdateEnemyOscillateY`/`LaunchHarmfulEffectPart` now live in the
-new `src/graphics/actor_part116.c`; the untouched, still-raw
+new `src/enemies/enemy_ctrl.c`; the untouched, still-raw
 `AttachEnemyCtrl`-`DestroyKnockedEnemyCtrl` remainder moved to the new
 `asm/code_3_2_17_ca04.s`; the removed `CreateKnockedEnemyCtrl` now lives in the
-new `src/graphics/actor_part117.c`; the untouched, still-raw
+new `src/enemies/enemy_ctrl.c`; the untouched, still-raw
 `UpdateEffectCtrl` onward (through `InitEffectCtrl`) moved to the new
 `asm/code_3_2_17_cbf4.s`.
 
 `ldscript.txt` now reads, in this stretch:
 
 ```
-build/crashbandicootxs/src/graphics/actor_part112.o(.text);
+build/crashbandicootxs/src/enemies/enemy_ctrl_update.o(.text);
 build/crashbandicootxs/asm/code_3_2_17_bfa8.o(.text);
-build/crashbandicootxs/src/graphics/actor_part114.o(.text);
+build/crashbandicootxs/src/enemies/enemy_motion.o(.text);
 build/crashbandicootxs/asm/code_3_2_17_c18c.o(.text);
-build/crashbandicootxs/src/graphics/actor_part115.o(.text);
+build/crashbandicootxs/src/enemies/enemy_motion.o(.text);
 build/crashbandicootxs/asm/code_3_2_17_c314.o(.text);
-build/crashbandicootxs/src/graphics/actor_part116.o(.text);
+build/crashbandicootxs/src/enemies/enemy_ctrl.o(.text);
 build/crashbandicootxs/asm/code_3_2_17_c6a8.o(.text);
-build/crashbandicootxs/src/graphics/actor_part113.o(.text);
+build/crashbandicootxs/src/enemies/enemy_ctrl.o(.text);
 build/crashbandicootxs/asm/code_3_2_17_c8f8.o(.text);
 ```
 
 `tools/report_units.py`'s single `(0x0800BFA8, None, "graphics")`
 placeholder is replaced with seven entries: the same placeholder (now
-only covering `UpdateEnemyShooter`), matched entries for `actor_part114.o`/
-`actor_part115.o`/`actor_part116.o`, and new placeholders
+only covering `UpdateEnemyShooter`), matched entries for `enemy_motion.o`/`enemy_ctrl.o`, and new placeholders
 `(0x0800C18C, None, "graphics")`, `(0x0800C314, None, "graphics")`, and
 `(0x0800C6A8, None, "graphics")` for the still-raw remainders.
 
@@ -885,14 +884,14 @@ dialog dispatcher plus three small `self+0x70`-relative accessor
 triples) round out the rest of this now much-smaller raw remainder
 between `UpdateEnemyShooter` and `SetEnemyMotionY`.
 build/crashbandicootxs/asm/code_3_2_17_c244.o(.text);
-build/crashbandicootxs/src/graphics/actor_part115.o(.text);
+build/crashbandicootxs/src/enemies/enemy_motion.o(.text);
 build/crashbandicootxs/asm/code_3_2_17_c40c.o(.text);
-build/crashbandicootxs/src/graphics/actor_part113.o(.text);
-build/crashbandicootxs/src/graphics/actor_part116.o(.text);
+build/crashbandicootxs/src/enemies/enemy_ctrl.o(.text);
+build/crashbandicootxs/src/enemies/enemy_ctrl.o(.text);
 build/crashbandicootxs/asm/code_3_2_17_ca04.o(.text);
-build/crashbandicootxs/src/graphics/actor_part117.o(.text);
+build/crashbandicootxs/src/enemies/enemy_ctrl.o(.text);
 build/crashbandicootxs/asm/code_3_2_17_cbf4.o(.text);
-build/crashbandicootxs/src/graphics/actor_part109.o(.text);
+build/crashbandicootxs/src/crates/crate_touch.o(.text);
 ```
 
 `tools/report_units.py`'s two placeholder entries
@@ -955,7 +954,7 @@ void *fn}` pairs), `self+0x84` (the per-instance pointer table
 `SetEnemyAnimMode` indexes by mode) - and its case bodies' `bl` targets are
 the *exact same* `StartCtrlTargetMotionYFromSet`/`StartCtrlTargetMotionXFromSet`/`_call_via_r3` primitives
 already matched for `SetEnemyMotionY`/`SetEnemyMotionX`/`SetEnemyAnimMode`
-(`actor_part113.c`, Phase 2). `menu_ui`'s dialog widgets are literal
+(`enemy_ctrl.c`, Phase 2). `menu_ui`'s dialog widgets are literal
 instances of the same object type the physics-actor cluster's own
 `UpdateEnemyCtrl` operates on (or at minimum, share 100% of the field
 layout and helper functions this function touches) - not a
@@ -1049,7 +1048,7 @@ conventions (unified mnemonics, GNU-as local numeric labels - all
 forward references only, since this function's control flow never
 branches backward, `ldr rX, =literal` + explicit `.pool` at each of the
 ROM's own two internal literal-flush points, matching
-`actor_part112.c`'s own established style for this exact family of
+`enemy_ctrl_update.c`'s own established style for this exact family of
 dispatcher).
 
 **`SetEnemyRangeXSpeed`/`SetEnemyRangeYSpeed`/`SetEnemyRangeX`**: matched as real C,
@@ -1072,7 +1071,7 @@ exactly). `SetEnemyRangeX` additionally needed the
 `matching_decomp_alignment_fix` trailing `asm(".align 2, 0")` idiom
 (its own 20-byte body isn't 4-byte-aligned against the next function's
 start, `SetEnemyMotionY` at the cluster's already-matched
-`actor_part113.c` boundary).
+`enemy_ctrl.c` boundary).
 
 Confirmed byte-identical to `baserom.gba` at `0x0800C6A8`-`0x0800C8AC`
 (516 bytes, all four functions) via the isolated cpp/agbcc/as +
@@ -1100,12 +1099,12 @@ coincide`).
 
 ### Build layout
 
-All four functions now live in the new `src/graphics/actor_part122.c`.
+All four functions now live in the new `src/enemies/enemy_attack.c`.
 `asm/code_3_2_17_c6a8.s` is fully consumed and removed. `ldscript.txt`'s
 single `build/crashbandicootxs/asm/code_3_2_17_c6a8.o(.text);` line is
-replaced with `build/crashbandicootxs/src/graphics/actor_part122.o(.text);`
+replaced with `build/crashbandicootxs/src/enemies/enemy_attack.o(.text);`
 in place. `tools/report_units.py`'s `(0x0800C6A8, None, "graphics")`
-placeholder is replaced with a matched entry for `actor_part122.o`.
+placeholder is replaced with a matched entry for `enemy_attack.o`.
 
 ### What's still open in the wider cluster
 
@@ -1129,8 +1128,8 @@ Phase 4 pass, closing out the entire 43-function cluster.
 Follow-up session, closing the last raw file in the cluster,
 `asm/code_3_2_17_cbf4.s` (ROM `0x0800CBF4`-`0x0800CD00`, 268 bytes,
 5 functions/stubs) - contiguous, no gap on either side: it starts
-exactly where `actor_part117.c`'s `CreateKnockedEnemyCtrl` ends and ends exactly
-where the already-matched `PlayerAnimWouldTouchCrate` (`actor_part109.c`) begins.
+exactly where `enemy_ctrl.c`'s `CreateKnockedEnemyCtrl` ends and ends exactly
+where the already-matched `PlayerAnimWouldTouchCrate` (`crate_touch.c`) begins.
 This closes the entire 43-function `0x0800B8DC`-`0x0800D040` cluster
 investigation that began with `UpdateEnemyCtrl`/`HitEnemy` at the top of
 this doc.
@@ -1180,7 +1179,7 @@ same 93-vtable entity-object family (`CreateStompedHopPadCtrl`, `DestroyStompedH
 characteristic shapes (no AABB build, no neighbor-list walk, no
 `self+0x4d`/`+0x4e`/`+0x50` field access `BreakCrateTouchedByPlayer`'s own doc
 comment documents). It is immediately followed in ROM, with no gap, by
-the already-matched `PlayerAnimWouldTouchCrate` (`actor_part109.c`) - itself already
+the already-matched `PlayerAnimWouldTouchCrate` (`crate_touch.c`) - itself already
 established as part of this cluster, not the physics one, despite also
 sitting right at the same boundary. `BreakCrateTouchedByPlayer` itself, one function
 later, is where the physics subsystem's own recognizable shape actually
@@ -1213,14 +1212,14 @@ compare` (`crashbandicootxs.gba: La suma coincide`).
 
 ### Build layout
 
-All five functions now live in the new `src/graphics/actor_part123.c`.
+All five functions now live in the new `src/objects/effect_ctrl.c`.
 `asm/code_3_2_17_cbf4.s` is now empty and deleted; `ldscript.txt`'s
 `build/crashbandicootxs/asm/code_3_2_17_cbf4.o(.text);` line is replaced
-with `build/crashbandicootxs/src/graphics/actor_part123.o(.text);`,
-sitting between `actor_part117.o` and `actor_part109.o` exactly as the
+with `build/crashbandicootxs/src/objects/effect_ctrl.o(.text);`,
+sitting between `enemy_ctrl.o` and `crate_touch.o` exactly as the
 removed asm block did. `tools/report_units.py`'s
 `(0x0800CBF4, None, "graphics")` placeholder is replaced with a matched
-entry for `actor_part123.o`.
+entry for `effect_ctrl.o`.
 
 ### The cluster is closed
 
@@ -1277,7 +1276,7 @@ trap that forced every `self+0x68`-dispatching sibling
 (`UpdateEnemyPatrol`/`UpdateEnemyHop`/`UpdateEnemyAttackCycle`/`UpdateEnemyTriggerBox`) to NAKED.
 Straightforward pointer-offset-cast C (this neighborhood's established
 convention - `u8 *self = selfArg;` plus `*(s32 *)(self + off)`, per
-`actor_part113.c`/`actor_part117.c`) got every branch, constant, and
+`enemy_ctrl.c`) got every branch, constant, and
 call argument right on the first pass and diffed to within two
 register-allocation quirks of the ROM, both resolved via
 [[matching_decomp_register_pinning]] (see that memory doc / the
@@ -1315,8 +1314,8 @@ coincide`).
 
 This was the last function in `asm/code_3_2_17_bfa8.s` - the file is
 now empty and has been deleted, with its `ldscript.txt` entry replaced
-by `build/crashbandicootxs/src/graphics/actor_part121.o(.text);`
-(new file, `src/graphics/actor_part121.c`).
+by `build/crashbandicootxs/src/enemies/enemy_shooter.o(.text);`
+(new file, `src/enemies/enemy_shooter.c`).
 
 ## Closing the small gap: `asm/code_3_2_17_ca04.s` (19 functions)
 
@@ -1325,8 +1324,8 @@ sessions above (Phase 4, the `UpdateEnemyShooter` pass, and the final
 `UpdateEffectCtrl` pass) all missed: `asm/code_3_2_17_ca04.s`, ROM
 `0x0800CA04`-`0x0800CBD4` (464 bytes, 19 functions/stubs), sitting
 directly between two already-matched neighbors from this same overall
-cluster investigation - `LaunchHarmfulEffectPart` (`actor_part116.c`) just before
-it, and `CreateKnockedEnemyCtrl` (`actor_part117.c`) - which calls this file's own
+cluster investigation - `LaunchHarmfulEffectPart` (`enemy_ctrl.c`) just before
+it, and `CreateKnockedEnemyCtrl` (`enemy_ctrl.c`) - which calls this file's own
 `nullsub_14` as its own tail-call hook - immediately after.
 `tools/report_units.py` still carried a `(0x0800CA04, None, "graphics")`
 placeholder for it ("remainder of the cluster past LaunchHarmfulEffectPart up to
@@ -1345,7 +1344,7 @@ idiom already matched elsewhere in this cluster:
   cluster (every other function across the whole 43-function
   investigation only ever reads `self+0x70`).
 - **`GetSfxVolumeAt(x, y)`**: the exact "distance-scaled ambient sound
-  volume" calculation `UpdateEnemyCtrl` state 18 (`actor_part112.c`)
+  volume" calculation `UpdateEnemyCtrl` state 18 (`enemy_ctrl_update.c`)
   already documents inline - `max(|x-cameraX|, |y-cameraY|)` against
   `gPlayer` (the player/camera object), clamped to
   `[0x20,0xa0]`, converted to `0x100 - (clamped-0x20)*2`. Whether this
@@ -1358,7 +1357,7 @@ idiom already matched elsewhere in this cluster:
   null, and re-points `self->4` (the "manager" pointer Phase 2 already
   identified) at the fixed `gEnemyCtrlMotionSet` table.
 - **`DestroyEnemyCtrl(self, flags)`** / **`DestroyKnockedEnemyCtrl(self, flags)`**: both
-  the same "double-set" shape as `DestroyEffectCtrl` (`actor_part123.c`) -
+  the same "double-set" shape as `DestroyEffectCtrl` (`effect_ctrl.c`) -
   set `self+0xc`'s table pointer (to `gEnemyCtrlVtable` and
   `gKnockedEnemyCtrlVtable` respectively - the same two anchor tables
   `UpdateEnemyCtrl`/`HitEnemy` and `CreateKnockedEnemyCtrl` themselves already use)
@@ -1373,20 +1372,20 @@ idiom already matched elsewhere in this cluster:
   own hook), returns `self`.
 - **`SetEnemyOscillator(self, a, b, c)`**: `self->0x3c/0x40/0x44` setter - the
   sine-oscillator parameters (divisor, phase offset, amplitude)
-  `UpdateEnemyOscillateX`/`UpdateEnemyBob`/`UpdateEnemyOscillateY` (`actor_part116.c`) already
+  `UpdateEnemyOscillateX`/`UpdateEnemyBob`/`UpdateEnemyOscillateY` (`enemy_ctrl.c`) already
   consume.
 - **`SetEnemyShotPeriod(self, a, b)`**: `self->0x48/0x4c` setter - the exact
-  fields `UpdateEnemyShooter`'s (`actor_part121.c`) own `__modsi3` "close
+  fields `UpdateEnemyShooter`'s (`enemy_shooter.c`) own `__modsi3` "close
   enough" gate reads.
 - **`sub_800CAA4(self, a, b, c)`**: `self->0x30/0x34/0x38` setter - the
   "blocking condition" pair plus "enabled" byte the Phase 1 doc's field
   table already names.
 - **`SetEnemyTriggerBox(self, a, b, c, d)`**: full 4-corner
   `self->0x20/0x24/0x28/0x2c` setter - the per-instance AABB trigger
-  box `UpdateEnemyTriggerBox` (`actor_part116.c`) already builds from.
+  box `UpdateEnemyTriggerBox` (`enemy_ctrl.c`) already builds from.
 - **`SetEnemyModeTable(self, a)`**: `self->0x84` setter - the per-instance
   mode-indexed pointer table `SetEnemyAnimMode`/`SetEnemyState`
-  (`actor_part113.c`/`actor_part122.c`) both trigger through.
+  (`enemy_ctrl.c`/`enemy_attack.c`) both trigger through.
 - **`sub_800CAC8(self, a)`**: `self->0x6c` setter - the "second,
   larger-range state/anim-id byte" the Phase 1 doc's field table
   already names.
@@ -1412,12 +1411,12 @@ idiom already matched elsewhere in this cluster:
   only) setter - the same AABB fields `SetEnemyTriggerBox` sets all four
   corners of.
 - **`sub_800CB60(self, a)`**: `self->0x1c` setter - the Y-axis homing
-  bound `SetEnemyRangeYSpeed`/`SetEnemyRangeX` (`actor_part122.c`) already write.
+  bound `SetEnemyRangeYSpeed`/`SetEnemyRangeX` (`enemy_attack.c`) already write.
 - **`UpdateKnockedEnemyCtrl(self, other)`**: `self` (the first argument) is never
   read - only `other` matters. Reads `other+0x18`'s own table pointer,
   fires a `_call_via_r1` hit-probe against its `+0x28`/`+0x2c`
   `{s16 offset, void *fn}` pair (the same convention
-  `src/system/game_loop8.c`'s `UpdateRoomFrame` and `actor_part123.c`'s
+  `src/system/game_loop8.c`'s `UpdateRoomFrame` and `effect_ctrl.c`'s
   `UpdateEffectCtrl` both already read from their own `table+0x28`/`+0x2c`),
   and - only when that probe reports *no* hit - runs the "flag active +
   bitmap-set" idiom on `other` (`other+0xc` bit 0; unless `other+8`'s
@@ -1485,13 +1484,13 @@ coincide`).
 
 ### Build layout
 
-All 19 functions now live in the new `src/graphics/actor_part124.c`.
+All 19 functions now live in the new `src/enemies/enemy_ctrl.c`.
 `asm/code_3_2_17_ca04.s` is fully consumed and deleted;
 `ldscript.txt`'s `build/crashbandicootxs/asm/code_3_2_17_ca04.o(.text);`
 line is replaced with
-`build/crashbandicootxs/src/graphics/actor_part124.o(.text);` in
+`build/crashbandicootxs/src/enemies/enemy_ctrl.o(.text);` in
 place. `tools/report_units.py`'s `(0x0800CA04, None, "graphics")`
-placeholder is replaced with a matched entry for `actor_part124.o`.
+placeholder is replaced with a matched entry for `enemy_ctrl.o`.
 
 This closes the small gap left over from the three parallel closing
 sessions above - the entire 43-function `0x0800B8DC`-`0x0800D040`
@@ -1502,8 +1501,7 @@ no raw bytes remaining anywhere in the span.
 
 `UpdateEnemyHomingX`, `UpdateEnemyHomingY`, `UpdateEnemyFlipCycle`, `UpdateEnemyPatrol`,
 `UpdateEnemyAttackCycle` and `SetEnemyState` are now real C. The last three need
-old_agbcc, so `actor_part118.o`, `actor_part120.o` and
-`actor_part122.o` build with it. The earlier notes above about
+old_agbcc, so `enemy_patrol.o`, `enemy_attack.o` build with it. The earlier notes above about
 cross-jumping, bit-toggle sequencing and the gate's CFG diamond all
 turned out to be source shape or compiler choice. `UpdateEnemyCtrl`,
 `HitEnemy`, `UpdateEnemyHop`, `UpdateEnemyTriggerBox` and the oscillator trio

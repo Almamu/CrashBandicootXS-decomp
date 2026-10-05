@@ -4,7 +4,7 @@
  * asm/code_3_2_17_16048.s.
  *
  * The first six functions are byte accessors of the underwater player
- * controller (include/player_ctrl.h, actor_part_16048.c right before
+ * controller (include/player_ctrl.h, swim_ctrl.c right before
  * them): its queued X/Y motion entries (`+0x24`/`+0x25`) and their
  * "pending" flags (`+0x2C`/`+0x2D`).
  *
@@ -38,7 +38,7 @@
  * `CancelInputCtrlMotionX`, `IsInputCtrlMotionYPending`. Matched anyway.
  *
  * Built with the older compiler, tools/agbcc/bin/old_agbcc (the Makefile's
- * OLD_AGBCC_OBJS), like actor_part_16048.c before it. Under old_agbcc the
+ * OLD_AGBCC_OBJS), like swim_ctrl.c before it. Under old_agbcc the
  * whole file is plain C: no register pins, `volatile` re-reads or empty
  * `asm` barriers (those were needed to imitate old_agbcc's output with the
  * current agbcc).
@@ -48,7 +48,7 @@
  * `QueueMotionX`/`QueueMotionY`/`SetCameraLeadSpeed` inline helpers reproduce the ROM
  * evaluating the stored constant before the store's own loads; the
  * "mark actor gone" bitmap sequence (MarkEntityGone's, inlined twice) is
- * MARK_GONE, actor_part_16048.c's MarkGone - its word index comes from a signed
+ * MARK_GONE, swim_ctrl.c's MarkGone - its word index comes from a signed
  * division of the zero-extended id. */
 
 /* include/player_ctrl.h's `struct player_ctrl`, as far as these
@@ -202,7 +202,7 @@ extern void InitCtrl(void *self);
     } else (void)0
 
 /* MarkEntityGone's "set the id's bit in the gEntityFlags+0x108 bitmap"
- * (see actor_part_16048.c: the do/while(0) loop notes are what reproduce
+ * (see swim_ctrl.c: the do/while(0) loop notes are what reproduce
  * the id reload after the 0xFFFF test) */
 #define SET_ID_BIT(idExpr)                                                     \
     do                                                                         \

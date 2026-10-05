@@ -55,7 +55,7 @@ and the functions aren't.
 ## Matching notes
 
 - **`target+0x28` bit 4** needs the `(flags << 27) < 0` sign-test form
-  (the same idiom `actor_part108.c` uses for this flag) to get the ROM's
+  (the same idiom `player_anim_room.c` uses for this flag) to get the ROM's
   `lsls #27` / `bge`; `flags & 0x10` and a 1-bit unsigned bitfield both
   compile to `movs #0x10` / `ands` / `beq`.
 - **`tx`/`ty` pinned to r2/r3** in `StepCameraDirectional`/`StepCameraFacing`. Unpinned,

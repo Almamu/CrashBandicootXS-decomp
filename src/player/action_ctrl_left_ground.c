@@ -2,9 +2,9 @@
 #include "action_obj.h"
 
 /* Part of GitHub issue #16's remainder (0x08011BD4-0x08012D24) - see
- * actor_part79.c's top-of-file comment for the shared field-offset
+ * kill_player.c's top-of-file comment for the shared field-offset
  * conventions (`self+0xc`/`self+0x10`/`+0x27`..`+0x32`) this "child
- * object" family uses (include/action_obj.h's `struct act`). Not ROM-adjacent to actor_part79.c's functions
+ * object" family uses (include/action_obj.h's `struct act`). Not ROM-adjacent to kill_player.c's functions
  * (raw `UpdateActionCtrl`/`TryActionCtrlDoubleJump`/`HandleActionCtrlAirInput` sit in between, see
  * asm/code_3_2_17_12420.s), hence its own file. */
 

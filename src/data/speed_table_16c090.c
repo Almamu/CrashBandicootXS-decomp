@@ -5,13 +5,13 @@
  * sections by ldscript.txt - see docs/data.md.
  */
 
-/* actor_part86.c's `struct speed_table`: StartPlayerCtrlStroke copies it. */
+/* swim_ctrl_stroke.c's `struct speed_table`: StartPlayerCtrlStroke copies it. */
 struct speed_table
 {
     s32 v[8];
 };
 
-/* actor_part_16048.c's `struct level_anim`: the animation of a player
+/* swim_ctrl.c's `struct level_anim`: the animation of a player
  * mode at a level, and a second byte (0xFF in some rows). */
 struct level_anim
 {

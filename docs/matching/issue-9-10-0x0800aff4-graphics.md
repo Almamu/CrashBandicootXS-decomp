@@ -32,24 +32,24 @@ The full disassembly (formerly the tail of `asm/code_3_2_16_ac2c.s`,
 forward branch, so the function is a purely linear sequence of gated
 blocks. `self` (`r0`/`r7`) is the same wide, still-unnamed "big object"
 struct (0x108+ bytes) referenced by raw offset throughout this ROM
-neighborhood - the same fields `actor_part16.c`/`actor_part79.c`/
-`actor_part108.c` already establish:
+neighborhood - the same fields `player_flags.c`/`kill_player.c`/
+`player_anim_room.c` already establish:
 
 - `self+0xc` - flags byte (bit 3 cleared at the very end).
 - `self+0x18` - a per-category `{s16 offset; void *fn}` trampoline
-  table pointer, the `_call_via_r1` convention `actor_part108.c`
+  table pointer, the `_call_via_r1` convention `player_anim_room.c`
   documents (`self + *(s16*)(table+N), *(void**)(table+N+4)`).
 - `self+0x20` - a per-tag 28-byte-record table pointer:
-  `*(self+0x20) + tag*0x1c`, the exact convention `actor_part79.c`
+  `*(self+0x20) + tag*0x1c`, the exact convention `kill_player.c`
   documents from a sibling call site (there written
   `KillPlayer`'s `xptr`/`base`/`record` chain).
-- `self+0x28` bit 4 - the mirror-flag bit `actor_part16.c`/
-  `actor_part17.c`/`actor_part108.c` already read (tested via
+- `self+0x28` bit 4 - the mirror-flag bit `player_flags.c`/
+  `ctrl.c`/`player_anim_room.c` already read (tested via
   `lsls rX, rY, #0x1b` / `bge`, the same "shift bit into the sign
   position" idiom used everywhere else this bit is read).
 - `self+0x2d` - a per-tag selector byte (indexes the `+0x20` table).
 - `self+0x8c` - a `gRoomFrameCount`-relative deadline, the exact
-  `IsTimerArmed`/`SetTimer` convention `actor_part16.c` names:
+  `IsTimerArmed`/`SetTimer` convention `player_flags.c` names:
   `*(u32 *)(self+0x8c) > gRoomFrameCount` means "still armed",
   confirmed here by the identical comparison shape appearing twice.
 - `self+0xb0` - a pointer to a single **"child" companion object**
@@ -72,7 +72,7 @@ other files already pass to `DrawSprite`).
 
 The whole function is gated by `gLevelState+0x78` (the central
 game-state "mode" field several other functions in this ROM region
-gate on - `actor_part13.c`, `actor_part16.c`, and others already
+gate on - `player_contact.c`, `player_flags.c`, and others already
 established this exact `*(void**)gLevelState + 0x78` dereference
 chain):
 
@@ -85,7 +85,7 @@ chain):
    - Clamps `gAkuAkuInvincibleFrame` against the **child's own** hitbox/
      variant record's `+0x16` byte (`child[0x20] -> *table + child[0x2d]*0x1c`,
      read `[+0x16]` - the same table-dereference chain
-     `PlayerHasRoomForAnim`/`PlayerAnimWouldTouchCrate` and `actor_part79.c`'s `KillPlayer`
+     `PlayerHasRoomForAnim`/`PlayerAnimWouldTouchCrate` and `kill_player.c`'s `KillPlayer`
      already established, just with a different single-byte field read
      out of the 28-byte record than either of those): `val = min(roll,
      limit) if roll < limit else limit - 1`, stored into the child's
@@ -103,7 +103,7 @@ chain):
      *different* vtable slot here, `+0x20`/`+0x24`).
 2. **Unconditionally** (any mode, using `self`'s own `self+0x8c`
    deadline): draws `self` itself via
-   `DrawSprite(gSpriteRenderer, self)` (matched, `actor_part.c` -
+   `DrawSprite(gSpriteRenderer, self)` (matched, `sprite.c` -
    queues `self`'s own OAM using its own Q8 position, truncated to
    int) - unconditionally if `mode == 3` **or** the deadline has
    expired (`self+0x8c <= gRoomFrameCount`); while the deadline is
@@ -115,7 +115,7 @@ chain):
 3. **`mode == 3` again**, but only once the `self+0x8c` deadline has
    *expired* (`self+0x8c <= gRoomFrameCount`, the "not armed"
    case): calls `SetMaskLevel(gLevelState, 2)` - a mode-transition
-   call, the same "state close" convention `actor_part84.c`/
+   call, the same "state close" convention `action_ctrl_update.c`/
    `actor_part58.c` already establish for this function acting on
    `gLevelState`. Reads as: once the blink/stun period is over,
    transition the central game mode from `3` back to `2`.
@@ -158,7 +158,7 @@ This is the per-frame update for a **"stars orbiting a dizzy head"
 companion effect** attached to `self` (almost certainly the player,
 given `gLevelState+0x78`'s "mode" values `1`/`2`/`3` read as an
 idle/orbit-active/just-stunned state progression, and given
-`actor_part.c`'s `DrawSprite` - already established as an OAM-queue
+`sprite.c`'s `DrawSprite` - already established as an OAM-queue
 call, not a hitbox commit): while `mode == 3` (just took a hit), the
 single child effect object snaps to a fixed spot near `self`'s head and
 both `self` and the child flicker together on the same 4-frame parity
@@ -251,15 +251,15 @@ coincide` (checksum matches).
 
 ## Files changed
 
-- **New**: `src/graphics/actor_part111.c` - `DrawPlayer`, NAKED.
+- **New**: `src/player/player_event.c` - `DrawPlayer`, NAKED.
 - `asm/code_3_2_16_ac2c.s` - trimmed to end right after `PlayerHandleEvent`
   (`DrawPlayer`'s real bytes, and its own trailing literal pool,
   removed).
-- `ldscript.txt` - new `actor_part111.o(.text)` entry inserted between
-  `code_3_2_16_ac2c.o` and `actor_part49.o`, preserving link order.
+- `ldscript.txt` - new `player_event.o(.text)` entry inserted between
+  `code_3_2_16_ac2c.o` and `player_update.o`, preserving link order.
 - `tools/report_units.py` - the combined `0x0800AC2C` (`None`) entry
   split: `0x0800AC2C` narrowed to just `PlayerHandleEvent` (still raw), new
-  `0x0800AFF4` entry pointing at `actor_part111.o`.
+  `0x0800AFF4` entry pointing at `player_event.o`.
 - `docs/status/actor.md` - the old combined `PlayerHandleEvent`/`DrawPlayer`
   "Left raw" bullet narrowed to just `PlayerHandleEvent`; new `DrawPlayer`
   bullet added to the "Parked - NAKED transcription" section.
@@ -272,16 +272,16 @@ coincide` (checksum matches).
 - `docs/matching/issue-9-10-0x0800aaec-graphics.md` - the
   `self+0x20`/`+0x2d`/28-byte-record convention worked out in detail
   there, reused here for the child object's own record lookup.
-- `src/graphics/actor_part79.c` - `KillPlayer`'s own
+- `src/player/kill_player.c` - `KillPlayer`'s own
   `part+0x20 -> *ptr + tag*0x1c` chain, the closest existing sibling of
   this function's own child-record clamp.
-- `src/graphics/actor_part16.c` - the `self+0x8c`
+- `src/player/player_flags.c` - the `self+0x8c`
   `IsTimerArmed`/`SetTimer` convention and the mirror-flag-bit
   convention, both reused here.
 - `src/frontend/starfield.c` - `gSineTable`'s own
   `extern s16 [];` declaration and confirmed 256-entry sine-table
   shape.
-- `src/graphics/actor_part.c` - `DrawSprite`'s own matched definition
+- `src/objects/sprite.c` - `DrawSprite`'s own matched definition
   (confirms it's an OAM-queue/draw call, not a hitbox operation).
 
 ## Later pass (issue #9 NAKED retry)

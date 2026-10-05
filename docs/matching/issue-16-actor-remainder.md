@@ -12,23 +12,23 @@ NAKED transcriptions, not real decompiled C (see "Why NAKED" below).
 
 `asm/code_3_2_17_11bd4.s` (just `ActionCtrlHandleEvent`, 0x08011BD4-0x08012160)
 is removed entirely - its function moves to a new
-`src/graphics/actor_part82.c`. `asm/code_3_2_17_12420.s`
+`src/player/action_ctrl_event.c`. `asm/code_3_2_17_12420.s`
 (`UpdateActionCtrl`/`TryActionCtrlDoubleJump`/`HandleActionCtrlAirInput`, 0x08012420-0x08012A7C) is
-also removed entirely, moving to a new `src/graphics/actor_part84.c`.
+also removed entirely, moving to a new `src/player/action_ctrl_update.c`.
 `asm/code_3_2_17_12af4.s` is trimmed to drop its leading
 `ApplyActionCtrlMotion`/`ActionCtrlStateIdle` span (0x08012AF4-0x08012FBC, which moves to
-a new `src/graphics/actor_part83.c`), now starting at `ActionCtrlStateRun`
+a new `src/player/action_ctrl_idle.c`), now starting at `ActionCtrlStateRun`
 (0x08012FBC) - the rest of that file was already out of this issue's
 scope per the prior pass's writeup. `ldscript.txt` and
 `tools/report_units.py`'s `UNITS` list were updated to place all three
-new files in their correct link order (`actor_part82.c` before the
-already-matched `actor_part79.c`, `actor_part84.c` between
-`actor_part79.c` and `actor_part80.c`, `actor_part83.c` right after
-`actor_part80.c` and before the trimmed `code_3_2_17_12af4.s`).
+new files in their correct link order (`action_ctrl_event.c` before the
+already-matched `kill_player.c`, `action_ctrl_update.c` between
+`kill_player.c` and `action_ctrl_left_ground.c`, `action_ctrl_idle.c` right after
+`action_ctrl_left_ground.c` and before the trimmed `code_3_2_17_12af4.s`).
 
 ## Semantics (all six)
 
-- **`ActionCtrlHandleEvent`** (1420 B, `actor_part82.c`) - bails unless
+- **`ActionCtrlHandleEvent`** (1420 B, `action_ctrl_event.c`) - bails unless
   `self+8 == 0x1d` (the same type gate `UpdatePlayerCtrl`, still raw,
   checks). Otherwise dispatches its third argument (`arg2 - 1`, range
   `0..0x18`) through a 25-case jump table: several cases are thin
@@ -44,7 +44,7 @@ already-matched `actor_part79.c`, `actor_part84.c` between
   object and pool-releases it via one of two dereference-chain-computed
   slots depending on the player's D-pad remap state; cases 9/10 gate
   `sub_8015558` behind `gPlayer+0x68`/`PlayerHasRoomForAnim` checks.
-- **`UpdateActionCtrl`** (628 B, `actor_part84.c`) - a `part`-visibility/OAM-
+- **`UpdateActionCtrl`** (628 B, `action_ctrl_update.c`) - a `part`-visibility/OAM-
   priority housekeeping pass: re-runs `sub_8012238` on an activity-flag
   change, resets velocity/target fields past two `gLevelLayers`-
   anchored screen-space thresholds (the far one also firing
@@ -52,7 +52,7 @@ already-matched `actor_part79.c`, `actor_part84.c` between
   `self+8`'s type in `gActionCtrlStateTable` to fire one `_call_via_r3`
   trampoline call, then writes a small fixed value into `part+0xa` from
   a second, 22-case jump table on the same type.
-- **`TryActionCtrlDoubleJump`** (424 B, `actor_part84.c`) - a helper of
+- **`TryActionCtrlDoubleJump`** (424 B, `action_ctrl_update.c`) - a helper of
   `HandleActionCtrlAirInput`: gated on the D-pad snapshot's bit 1, `self+0x18`'s
   counter being 0, `gLevelState` passing `HasDoubleJump`, and a
   sub-object type of `6`/`0xb`/`0xc` (each with its own `+0x30 >= 0`
@@ -60,7 +60,7 @@ already-matched `actor_part79.c`, `actor_part84.c` between
   and `+0x20`/`+0x24` trampoline pairs with type-keyed ids, resets the
   trio to a type-keyed value, plays a fixed sound, and returns 1;
   otherwise returns 0.
-- **`HandleActionCtrlAirInput`** (576 B, `actor_part84.c`) - a proximity-triggered
+- **`HandleActionCtrlAirInput`** (576 B, `action_ctrl_update.c`) - a proximity-triggered
   indicator: dispatches `self+8`'s type (`7`/`9`/`0xb`/`0xe`) against
   per-type distance thresholds on `part->field_0x64` (falling back to
   `TryActionCtrlDoubleJump` first when within a `0x27f` threshold), setting
@@ -70,7 +70,7 @@ already-matched `actor_part79.c`, `actor_part84.c` between
   `self+0x27`'s table-index byte through a further small dispatch
   before a shared tail arming `self+0x31` when the player's `+0x100`
   flag is set.
-- **`ApplyActionCtrlMotion`** (560 B, `actor_part83.c`) - an OAM-visibility/
+- **`ApplyActionCtrlMotion`** (560 B, `action_ctrl_idle.c`) - an OAM-visibility/
   priority pass: nudges the player's saved-position word by a fixed
   delta and calls `SetSpritePrevPos` when `part+0x68` is busy and a flag
   just changed; plays a sound and fires the `+0x50`/`+0x54` trampoline
@@ -81,7 +81,7 @@ already-matched `actor_part79.c`, `actor_part84.c` between
   fires one of two `_call_via_r3` trampoline calls with the stack record
   as payload, and clears the flag; repeats a near-identical sequence
   keyed on `self+0x30`/`self+0x28` against the same table.
-- **`ActionCtrlStateIdle`** (664 B, `actor_part83.c`) - a further sibling:
+- **`ActionCtrlStateIdle`** (664 B, `action_ctrl_idle.c`) - a further sibling:
   reads the D-pad and ticks `self+0x25` down on release; fires the
   `+0x50`/`+0x54` trampoline (id `0x12`) and clears `part+0x33` when
   `part+0x38` is set; bumps `self+0x1c`'s frame counter and, while the
@@ -114,7 +114,7 @@ codebase so far - 25 outer cases plus two independent 7-case inner
 tables), every one was transcribed instruction-for-instruction from the
 ROM disassembly instead, the same escape hatch used for
 `MakeLinkHandshakeId`/`ResetLinkSessionState` (`src/link/link_handshake.c`) and
-`ActionCtrlStateCrawl` (`actor_part18.c`).
+`ActionCtrlStateCrawl` (`action_ctrl_states.c`).
 
 To keep a function this size transcription-error-free, `ActionCtrlHandleEvent`
 was transcribed mechanically (a small Python pass converting each ROM
@@ -155,7 +155,7 @@ CONTRIBUTING.md's "Opening the PR").
 
 ## Later pass: issue #16 NAKED retry
 
-`ActionCtrlStateIdle` (actor_part83.c) and `HandleActionCtrlAirInput` (actor_part84.c) are
+`ActionCtrlStateIdle` (action_ctrl_idle.c) and `HandleActionCtrlAirInput` (action_ctrl_update.c) are
 real C now, under old_agbcc (both files moved to `OLD_AGBCC_OBJS`), on
 the `struct act` player/action object from `include/action_obj.h`.
 `ApplyActionCtrlMotion`, `UpdateActionCtrl` and `TryActionCtrlDoubleJump` have old_agbcc drafts
@@ -170,5 +170,5 @@ under `NON_MATCHING`; `ActionCtrlHandleEvent` wasn't attempted. See
 
 ## Later pass (second big NAKED retry)
 
-`ActionCtrlHandleEvent` is real C under old_agbcc now (`actor_part82.o` joined
+`ActionCtrlHandleEvent` is real C under old_agbcc now (`action_ctrl_event.o` joined
 `OLD_AGBCC_OBJS`). See [big-naked-retry-2.md](big-naked-retry-2.md).

@@ -2144,13 +2144,13 @@ and confidently understood before writing any C for it - a guessed
 reconstruction risks leaving wrong documentation behind, which is
 worse than leaving it unclaimed. Revisit with a dedicated session.
 
-**`DrawSpriteAt`** (new file `src/graphics/actor_part.c` - its real ROM
+**`DrawSpriteAt`** (new file `src/objects/sprite.c` - its real ROM
 address, `0x08007A48`, sits right after the still-unclaimed
 `DrawSpritePieces`/`DrawAffineSpritePieces` pair, so it isn't adjacent to any of
 `graphics.c`'s matched functions; `asm/code_3_2.s` was split at this
 boundary into itself (ending after `DrawAffineSpritePieces`) and a new
 `asm/code_3_2_2.s` picking up at `DrawSprite`, with `ldscript.txt`
-updated to interleave `actor_part.o` between them - see
+updated to interleave `sprite.o` between them - see
 `docs/workflow.md` step 4's "needs its own new `.c` file" case).
 Resolves whether `(x, y)` are already screen-relative
 (`part+0x25 != 0`) or need the camera-relative conversion
@@ -2190,7 +2190,7 @@ register even though `part` is dead right after, while plain C let
 the allocator overwrite `part`'s own register in place instead.
 
 **Parked, not matched: `GetSpriteBounds`** (ROM `0x08007B00`, right after
-`ResetSpriteObj`, in `src/graphics/actor_part.c`): builds an AABB for
+`ResetSpriteObj`, in `src/objects/sprite.c`): builds an AABB for
 `part`'s current animation keyframe, via the shared `SetAabbPos`
 (set-position)/`SetAabbSize` (set-size) primitive already seen
 elsewhere. The keyframe table pointer lives at `part+0x20`, indexed by
@@ -2252,7 +2252,7 @@ the shift result (pinning `flags` alone collapsed the `ldrb`/`lsl`
 pair back into one register; the shift needed its own explicit
 destination pin too). Also discovered: giving the function a genuine
 `void *` return type and `return pDest;` (the one call site,
-`SpriteObjOverlapsRect` in `actor_part3.c`, already discards the return value,
+`SpriteObjOverlapsRect` in `sprite.c`, already discards the return value,
 so this is behavior-preserving) reproduces the ROM's own redundant
 `mov r0, r8` reload right before the epilogue and, as a side effect,
 shifts the final `pop`/`bx` register choice from `r0` to `r1`,
@@ -2271,10 +2271,10 @@ addressing-mode folding, emitting an extra `add`/`mov r0,#0` pair
 instead - strictly worse). Kept in-tree as a `#if NON_MATCHING` C
 reconstruction alongside the byte-exact NAKED `#else` branch (default
 builds unaffected) rather than left only in git history, given how
-close it is - see `src/graphics/actor_part.c` for the full writeup.
+close it is - see `src/objects/sprite.c` for the full writeup.
 
 **Parked, not matched: `GetSpriteHitbox`** (ROM `0x08007B98`, right after
-`GetSpriteBounds`, in `src/graphics/actor_part.c`): the same AABB-for-
+`GetSpriteBounds`, in `src/objects/sprite.c`): the same AABB-for-
 keyframe shape as `GetSpriteBounds` above, for a second, differently-laid-
 out keyframe table - `offX`/`offY`/`w`/`h` sit at `rec+4`/`+6`/`+8`/
 `+9` here rather than `rec+0xc`/`+0xe`/`+0x10`/`+0x11`, reusing the
@@ -2338,7 +2338,7 @@ helped one spot and broke another already-matching one. Parked as
 same call as `GetSpriteBounds` and the other parked functions above.
 
 **`GetSpriteAttackBox`** (ROM `0x08007C30`, right after `GetSpriteHitbox`, in the
-new `src/graphics/actor_part2.c`): a third AABB-for-keyframe builder -
+new `src/objects/sprite.c`): a third AABB-for-keyframe builder -
 same `SetAabbPos`/`SetAabbSize`-based shape as `GetSpriteBounds`/
 `GetSpriteHitbox`, but this time the 6-byte `{s16 x, s16 y, u8 w, u8 h}`
 record is chosen by a `switch` on `(*(GetSpriteFrame(part)+4))>>4` (0-6,
@@ -2385,22 +2385,22 @@ techniques per `docs/workflow.md` step 3, just combined for one
 instruction pair instead of a whole function.
 
 Getting this to link at its correct ROM address needed a second file
-split: `GetSpriteAttackBox` isn't ROM-adjacent to `actor_part.c` (the parked
+split: `GetSpriteAttackBox` isn't ROM-adjacent to `sprite.c` (the parked
 `GetSpriteBounds`/`GetSpriteHitbox` sit raw, in `asm/code_3_2_2.s`, between
 them), so it needed its own new `.c` file - but naively appending it
-to the end of `actor_part.c` and rebuilding produced a byte-exact
-*function* that still broke the checksum, because `actor_part.o` links
+to the end of `sprite.c` and rebuilding produced a byte-exact
+*function* that still broke the checksum, because `sprite.o` links
 *before* `asm/code_3_2_2.o` in `ldscript.txt`: appending `GetSpriteAttackBox`
-to `actor_part.c` placed its compiled bytes right after `ResetSpriteObj`,
+to `sprite.c` placed its compiled bytes right after `ResetSpriteObj`,
 *before* `GetSpriteBounds`/`GetSpriteHitbox`'s raw bytes instead of after them,
 shifting everything downstream. Fixed by splitting `asm/code_3_2_2.s`
 itself a second time, at the `GetSpriteBodyBox` boundary right after
 `GetSpriteHitbox`'s NON_MATCHING guard: `asm/code_3_2_2.s` now ends there,
 a new `asm/code_3_2_3.s` picks up the (unchanged) remainder starting
-at `GetSpriteBodyBox`, and the new `src/graphics/actor_part2.c` (holding
+at `GetSpriteBodyBox`, and the new `src/objects/sprite.c` (holding
 just `GetSpriteAttackBox`) is inserted between them in `ldscript.txt` - the
 same "split file, new file for the non-adjacent function" pattern used
-for `DrawSpriteAt`/`actor_part.c` itself, just one level deeper. (The
+for `DrawSpriteAt`/`sprite.c` itself, just one level deeper. (The
 second split boundary moved to `CheckSpritePickup` once `GetSpriteBodyBox`, right
 after `GetSpriteAttackBox`, matched too - see below.)
 
@@ -2500,7 +2500,7 @@ warning applies here too, just with a harder failure. Parked as
 as `GetSpriteBounds`/`GetSpriteHitbox` above.
 
 **`IsSpriteObjOnScreen`** (ROM `0x08007F78`, right after `CheckSpritePickup`, new
-`src/graphics/actor_part3.c`): a visibility/on-screen check, the same
+`src/objects/sprite.c`): a visibility/on-screen check, the same
 shape as `IsEntityNearCamera` in `graphics.c` - `part+0x25 == 1` is a fast
 "always visible" override; otherwise `part+0xd` bit 2 gates a call to
 `_call_via_r2` with a 4-word "region" built from
@@ -2540,17 +2540,17 @@ literal `0`), even though every value actually stored in the
 register-pinned `result asm("r3")` local was already byte-clean.
 
 Same file-split lesson as `GetSpriteAttackBox` (see its entry above), one
-level deeper: `IsSpriteObjOnScreen` isn't ROM-adjacent to `actor_part2.c`
+level deeper: `IsSpriteObjOnScreen` isn't ROM-adjacent to `sprite.c`
 either (the parked `CheckSpritePickup` sits raw, in `asm/code_3_2_3.s`,
-between them), so appending it to `actor_part2.c` compiled a
-byte-exact *function* but still broke the checksum - `actor_part2.o`
+between them), so appending it to `sprite.c` compiled a
+byte-exact *function* but still broke the checksum - `sprite.o`
 links before `asm/code_3_2_3.o`, so the extra bytes landed before
 `CheckSpritePickup`'s raw block instead of after it, shifting everything
 downstream. Fixed the same way: split `asm/code_3_2_3.s` again, this
 time at the `SpriteObjOverlapsRect` boundary right after `CheckSpritePickup`'s guard,
 into `asm/code_3_2_3.s` (now just the parked `CheckSpritePickup`) and a new
 `asm/code_3_2_4.s` (the unchanged remainder), with the new
-`src/graphics/actor_part3.c` (holding just `IsSpriteObjOnScreen`) inserted
+`src/objects/sprite.c` (holding just `IsSpriteObjOnScreen`) inserted
 between them in `ldscript.txt`.
 
 **`UpdateHudLives`** (ROM `0x08027838`, 262 bytes, contributed via PR #1 by
@@ -2583,7 +2583,7 @@ this exact location; its untouched remainder begins at `UpdateHudCrates` in
 new `asm/code_3_2_20.s`, with `hud_lives.o` interleaved between them in
 `ldscript.txt`. (The PR's own second matched function, `SetSpriteFrameIndex`,
 turned out to duplicate work already matched independently on `main` in
-`actor_part6.c` - see that file's own entry above for the real writeup;
+`sprite_obj.c` - see that file's own entry above for the real writeup;
 the PR's version wasn't merged.)
 
 **`SpriteObjOverlapsRect`** (ROM `0x08007FD8`, right after `IsSpriteObjOnScreen`, same
@@ -2633,7 +2633,7 @@ toolchain now have three known-different failure shapes - avoid them
 entirely and let the allocator find r7 on its own wherever possible.
 
 Also needed a trailing `asm(".align 2, 0");` after this function - it
-is the last one in `src/graphics/actor_part3.c`, and without it the
+is the last one in `src/objects/sprite.c`, and without it the
 2-byte gap gcc leaves between this object's end and the next linked
 object filled with a real `nop` encoding (`0x46c0`) instead of the
 ROM's zero bytes (the raw `.s` file's original `.align 2, 0` directive
@@ -2687,7 +2687,7 @@ chase this - same call as `GetSpriteBounds`/`GetSpriteHitbox`/`CheckSpritePickup
 above.
 
 **`SpriteHitboxOverlaps`** (ROM `0x080080C0`, right after `AdvanceSpriteAnim`, new
-`src/graphics/actor_part4.c`): builds `part`'s AABB (the same
+`src/objects/sprite_obj.c`): builds `part`'s AABB (the same
 keyframe-table shape/record layout as `GetSpriteHitbox` -
 `{s16 offX, s16 offY, u8 w, u8 h}` at `rec+4`/`+6`/`+8`/`+9` - but
 inlined directly here rather than calling it, since this function
@@ -2720,13 +2720,13 @@ needed for this, gcc emits it automatically once enough values need
 protecting past the calls.
 
 Needed a trailing `asm(".align 2, 0");` since it's the only function
-in `src/graphics/actor_part4.c` - same established alignment gotcha as
-`SpriteObjOverlapsRect` above. Not ROM-adjacent to `actor_part3.c` either (the
+in `src/objects/sprite_obj.c` - same established alignment gotcha as
+`SpriteObjOverlapsRect` above. Not ROM-adjacent to `sprite.c` either (the
 parked `AdvanceSpriteAnim` sits raw between them, in `asm/code_3_2_4.s`), so
 needed the same file-split treatment: `asm/code_3_2_4.s` split again
 at the `GetSpriteAnimPaletteSlot` boundary right after `AdvanceSpriteAnim`'s guard, into
 `asm/code_3_2_4.s` (now just the parked `AdvanceSpriteAnim`) and a new
-`asm/code_3_2_5.s`, with the new `src/graphics/actor_part4.c`
+`asm/code_3_2_5.s`, with the new `src/objects/sprite_obj.c`
 (holding just `SpriteHitboxOverlaps`) inserted between them in `ldscript.txt`.
 
 **`GetSpriteAnimPaletteSlot`** (ROM `0x0800815C`, right after `SpriteHitboxOverlaps`, same
@@ -2886,7 +2886,7 @@ plus `arm-none-eabi-as` assemble against the ROM's raw bytes at
 `0x08008278`, then via full clean `make compare`.
 
 **`IsSpriteObjInsideRect`** (ROM `0x08008304`, right after `sub_8008278`, new
-`src/graphics/actor_part5.c`): `part+0x25 == 1` is the same fast
+`src/objects/sprite_obj.c`): `part+0x25 == 1` is the same fast
 override seen in `IsSpriteObjOnScreen`/`SpriteObjOverlapsRect`; otherwise defers entirely
 to `IsEntityInsideRect` (already matched in `graphics.c`), forwarding a `box`
 argument straight through untouched. Matched on the second attempt: the
@@ -2904,7 +2904,7 @@ differences. Same file-split treatment as the previous non-adjacent
 functions in this cluster: `asm/code_3_2_5.s` split at the
 `IsSpriteObjNearCamera` boundary into itself (now just the three parked
 functions) and a new `asm/code_3_2_6.s`, with the new
-`src/graphics/actor_part5.c` inserted between them in `ldscript.txt`.
+`src/objects/sprite_obj.c` inserted between them in `ldscript.txt`.
 
 **`IsSpriteObjNearCamera`** (ROM `0x08008328`, right after `IsSpriteObjInsideRect`, same
 file): the same `part+0x25 == 1` fast-override shape, deferring to
@@ -2964,8 +2964,8 @@ inside the other three functions' shared blocks - it was never tried
 against this function specifically in the original pass (only operand
 reordering, register pins, and a separate destination variable were).
 Also needed a trailing `asm(".align 2, 0")` since it's the last
-function in `actor_part5.c` (2 bytes of zero padding before
-`GetSpriteObjPriority` in `actor_part6.c` - the standard
+function in `sprite_obj.c` (2 bytes of zero padding before
+`GetSpriteObjPriority` in `sprite_obj.c` - the standard
 `matching_decomp_alignment_fix` gotcha, a plain compiled function's own
 alignment produces a `0x46c0` nop-fill instead of the ROM's zero
 padding). Confirmed byte-identical via isolated compile plus
@@ -2973,7 +2973,7 @@ padding). Confirmed byte-identical via isolated compile plus
 `0x080083B8`, then via full clean `make compare`.
 
 **`GetSpriteObjPriority`** (ROM `0x08008408`, right after `GetSpriteFrame`, new
-`src/graphics/actor_part6.c`): the same `gLevelLayers` sub-object
+`src/objects/sprite_obj.c`): the same `gLevelLayers` sub-object
 convention used throughout this ROM region (`IsSpriteObjOnScreen`/
 `IsEntityNearCamera`) - if `gLevelLayers+0x2b` is nonzero, returns the
 sub-object's `+0x34` byte's low 2 bits minus 1; otherwise returns
@@ -2982,12 +2982,12 @@ had the compiler lay out the `if`/`else` bodies in the opposite order
 from the ROM (ROM falls through the "nonzero" case first, branches
 past it to the "zero" case second); inverting the C condition
 (`== 0` instead of `!= 0`, with the bodies swapped to match) got the
-ROM's exact block order. Not ROM-adjacent to `actor_part5.c` (the
+ROM's exact block order. Not ROM-adjacent to `sprite_obj.c` (the
 parked `GetSpriteFrame` sits raw between them), so it needed the same
 file-split treatment used throughout this cluster: `asm/code_3_2_6.s`
 split at the `CreateSpriteObj` boundary into itself (now just the parked
 `GetSpriteFrame`) and the new `asm/code_3_2_7.s`, with the new
-`src/graphics/actor_part6.c` inserted between them in `ldscript.txt`.
+`src/objects/sprite_obj.c` inserted between them in `ldscript.txt`.
 
 **`CreateSpriteObj`** (ROM `0x08008434`, right after `GetSpriteObjPriority`, same
 file): a `struct actor`-shaped object constructor - allocates via
@@ -2995,7 +2995,7 @@ file): a `struct actor`-shaped object constructor - allocates via
 matched in `graphics.c`, wires up `gEntityVtable` and clears
 flags), then immediately overwrites its `table` with
 `gSpriteObjVtable` instead and clears its part-object fields via
-`ResetSpriteObj` (already matched in `actor_part.c`). The three `u16`
+`ResetSpriteObj` (already matched in `sprite.c`). The three `u16`
 arguments become `field_08` and the Q8 `x`/`y` position. Matched on
 the first attempt.
 
@@ -3017,7 +3017,7 @@ existing `self` in place instead of allocating a fresh object via
 
 **`GetSpriteFrameAnchor`** (ROM `0x080084C4`, right after `InitSpriteObj`, same
 file): looks up `part`'s keyframe record via `GetSpriteFrame` (parked as
-`NON_MATCHING` in `actor_part5.c`), then picks a pointer off it based
+`NON_MATCHING` in `sprite_obj.c`), then picks a pointer off it based
 on the record's `+4` byte's upper nibble - 0 selects `info+0x24`, 6
 selects `info+0x14`, and everything else (1-5, or anything above 6)
 falls back to the fixed table `gEmptySpritePoint`.
@@ -3080,7 +3080,7 @@ as a handful of simple range checks). Matched on the first attempt.
 **`GetSpriteFrameAttackBox`** (ROM `0x08008564`, right after `GetSpriteFrameThirdBox`, same
 file): the same `GetSpriteFrame`-derived-record-nibble `switch` shape
 again, this time reusing `GetSpriteAttackBox`'s exact case-to-block mapping
-(already matched in `actor_part2.c`) - 0/3/4 select `info+0x14`, 5
+(already matched in `sprite.c`) - 0/3/4 select `info+0x14`, 5
 selects `info+0xc`, and 1/2/6/anything-above-6 fall back to
 `gEmptySpriteBox`. That mapping is non-contiguous on its own
 (same reasoning as `GetSpriteFrameThirdBox`), so plain ascending case order
@@ -3248,31 +3248,31 @@ get/set pair, no other logic. Both matched on the first attempt.
 `ResetSpriteFrameTimer`/`SetSpriteAnimIndex`/`SetSpriteAnim`/`IncSpriteFrameIndex`/`IncSpriteFrameTimer`/
 `SetSpriteMoveAxes`/`GetSpriteMoveAxes`/`GetSpriteFrameIndex`/`GetSpriteFrameTimer`/`GetSpriteAnim`/
 `GetSpriteGfxMode`** (ROM `0x0800878C`-`0x08008824`, new
-`src/graphics/actor_part7.c`): two
+`src/objects/sprite_anim.c`): two
 more `GetSpriteAnimPaletteId`-style keyframe-record byte lookups (`+0x16` frame
 count, `+0x15` duration) plus a run of plain `part+0x24`/`+0x28`/
 `+0x2d`/`+0x30`/`+0x34` field get/set/reset/increment accessors (the
 low-2-bit getter for `+0x28` reuses the `(u32 << 30) >> 30` idiom from
 `GetSpriteObjPriority`). All matched on the first or second attempt.
 
-This batch is genuinely non-adjacent to `actor_part6.c`'s matched
+This batch is genuinely non-adjacent to `sprite_obj.c`'s matched
 functions, since the parked `IsSpriteAnimLooping` sits raw between
 `GetSpriteAnimTable` and `GetSpriteAnimFrameCount` - a mistake first caught here the same
 way as every other time this session: appending these directly to
-`actor_part6.c` produced byte-exact functions in isolation, but a full
+`sprite_obj.c` produced byte-exact functions in isolation, but a full
 clean `make compare` still failed, with `cmp` finding the first
 differing byte far outside this region entirely (a `bl` instruction at
 ROM `0x08004686`, hundreds of KB before this file) - a strong signal
 that a *later* function's address had shifted, since only a `bl`'s
 *target* encoding changes when a callee moves, not the call site
 itself. The parked `IsSpriteAnimLooping`'s raw bytes stay in `asm/
-code_3_2_7.s`, which links *after* all of `actor_part6.o` - so
-anything appended past the guard in `actor_part6.c` was landing
+code_3_2_7.s`, which links *after* all of `sprite_obj.o` - so
+anything appended past the guard in `sprite_obj.c` was landing
 *before* `IsSpriteAnimLooping` in the final ROM instead of after it. Fixed
 with the usual file split: `asm/code_3_2_7.s` split again at the
 `SetSpriteGfxMode` boundary into itself (now holding just the parked
 `IsSpriteAnimLooping`) and a new `asm/code_3_2_8.s`, with a new
-`src/graphics/actor_part7.c` holding this whole batch inserted between
+`src/objects/sprite_anim.c` holding this whole batch inserted between
 them in `ldscript.txt`.
 
 **Parked, not matched: `IsSpriteAnimLooping`** (ROM `0x08008770`, right after
@@ -3318,7 +3318,7 @@ it explicitly. Confirmed byte-identical via isolated compile plus
 raw bytes at `0x08008770`, then via full clean `make compare`.
 
 **`SetSpriteGfxMode`** (ROM `0x08008830`, right after `GetSpriteGfxMode`, new
-`src/graphics/actor_part7.c`): sets `part+0x28`'s low 2 bits to
+`src/objects/sprite_anim.c`): sets `part+0x28`'s low 2 bits to
 `value & 3`. Same accumulator-register pattern and `+r`-on-the-other-
 operand fix as `SetSpritePalette` above (mask `-4` computed via a fresh
 `movs`+`negs`, not relative to the leftover `3` register value).
@@ -3363,7 +3363,7 @@ already isolates the top 2 bits).
 
 **`DestroyUiSpriteObj`** (ROM `0x080088F0`, right after `GetSpritePriority`, same
 file): overwrites `part->table` with `gUiSpriteObjVtable`, then
-tail-calls `DestroySpriteObj` (already matched in `actor_part6.c`) with the
+tail-calls `DestroySpriteObj` (already matched in `sprite_obj.c`) with the
 same `arg1` - which immediately overwrites `table` again with
 `gEntityVtable` before its own conditional `OperatorDelete` call.
 Reproduces the ROM's apparently-redundant double table write exactly
@@ -3371,7 +3371,7 @@ as found; matched on the first attempt.
 
 **`InitUiSpriteObj`** (ROM `0x08008904`, right after `DestroyUiSpriteObj`, same
 file): re-initializes `part` via `InitSpriteObj` (already matched in
-`actor_part6.c`, itself sets `table` to `gSpriteObjVtable`), then
+`sprite_obj.c`, itself sets `table` to `gSpriteObjVtable`), then
 immediately overwrites `table` with `gUiSpriteObjVtable` instead -
 the same "overwrite right after a helper that just set it" shape as
 `DestroyUiSpriteObj` above. Matched on the first attempt.
@@ -3474,7 +3474,7 @@ explicitly restructuring the loop as a `while` with a `count` local
 mirroring the ROM's cached-register reuse was tried and **regressed**
 the `i`-onto-`r7` fix (raised pressure too far, pushed `i` back onto
 `r8`/`r9`), so it was reverted. The `#if NON_MATCHING` branch in
-`src/graphics/actor_part7.c` now carries this improved-but-still-
+`src/objects/sprite_anim.c` now carries this improved-but-still-
 imperfect reconstruction (default builds still use the byte-exact
 NAKED transcription) - see the file for the full technique writeup.
 Given the size of the remaining gap (roughly 15-20 residual
@@ -3573,7 +3573,7 @@ plain unpinned local pointer, and reading the fields into named
 temporaries before the call) reproduced; gcc's own internal scheduling
 insisted on either the hoist-to-`r7` or the `r2`-collision shuffle
 every time. The `#if NON_MATCHING` branch in
-`src/graphics/actor_part7.c` now carries this improved-but-still-
+`src/objects/sprite_anim.c` now carries this improved-but-still-
 imperfect reconstruction (default builds still use the byte-exact
 NAKED transcription).
 
@@ -3586,13 +3586,13 @@ signature with `CollidePartWithObject`'s sibling.
 
 If `gLevelState`'s mode field (`+0x78`) is 3: tests `part`
 against the box via `ClassifySpriteContact` (already matched in
-`actor_part9.c`); if it misses entirely, returns. Otherwise fires a
+`moving_sprite_collide.c`); if it misses entirely, returns. Otherwise fires a
 `part->table+0x68`-driven trampoline via `_call_via_r4` with the
 player's `+0xa` byte as the third argument.
 
 Otherwise, if `part+0xd` bit 3 is set (a "large object" case): builds
 the player's AABB via `GetSpriteHitbox` (parked as `NON_MATCHING` in
-`actor_part.c`) and `part`'s secondary AABB via `GetSpriteBodyBox` (already
+`sprite.c`) and `part`'s secondary AABB via `GetSpriteBodyBox` (already
 matched), tests them via `AabbOverlaps`; on a hit, pushes the player's
 X position away from `part` by the sum of both boxes' widths (`<<7`,
 i.e. `*128`) in whichever direction `part` is relative to the player,
@@ -3636,7 +3636,7 @@ C has no way to express directly.
 
 **`CullPartList`** (ROM `0x08008C80`, right after the raw, unclaimed
 `CollidePartWithPlayer`... no wait, right after the *parked* `CollidePartWithPlayer`, new
-`src/graphics/actor_part10.c`): the same "extended screen box" filter
+`src/objects/part_list_cull.c`): the same "extended screen box" filter
 shape as `UpdatePartList`'s own `boxB` pass - the plain 240x160 GBA
 screen region, in Q8, at the `gLevelLayers` sub-object's own
 position - iterating `manager`'s array (`manager+0xc` base,
@@ -3687,7 +3687,7 @@ another mismatch the isolated test missed and only the full clean
 build caught. Matched after fixing it.
 
 **Parked, not matched: `CollidePartWithObject`** (ROM `0x08008D80`, right after
-`CollidePartsOfClass`, same file - `src/graphics/actor_part7.c`, since its
+`CollidePartsOfClass`, same file - `src/objects/sprite_anim.c`, since its
 real ROM address sits between the parked `CollidePartWithPlayer` and the raw,
 unclaimed `DrawPartList`). `CollidePartWithPlayer`'s sibling: resolves the same
 collision-hit logic when the "compare viewport" doesn't match the
@@ -3717,12 +3717,12 @@ isolated one-function test can't reproduce. The full clean
 integration - not just after drafting - is what this workflow already
 mandates, and it is what caught both regressions here.
 
-## Six more manager utilities matched: `actor_part11.c`
+## Six more manager utilities matched: `part_list.c`
 
 Continuing past `CollidePartWithObject` (parked), the next six functions turned
 out to be a self-contained family of small, clearly-understood
 "manager" array utilities (the same capacity/count/base-pointer struct
-shape used throughout `actor_part10.c`), not the murkier
+shape used throughout `part_list_cull.c`), not the murkier
 `gLevelState`/`gPlayer`-touching dispatch logic - so
 all six were matched rather than parked or skipped:
 
@@ -3771,12 +3771,12 @@ all six were matched rather than parked or skipped:
   order (`movs r2, #0` before `ldr r1, [r5, #0xc]`).
 
 All six were verified both in isolation and via a full recompile of
-`actor_part11.c` together, after this session's earlier
+`part_list.c` together, after this session's earlier
 `CullPartList`/`CollidePartsOfClass` regressions showed isolated tests alone
 aren't sufficient proof.
 
 **Parked, not matched: `InitCrateList`** (ROM `0x08008F20`, right after
-`InitPartList`, `src/graphics/actor_part11.c`): initializes a
+`InitPartList`, `src/objects/part_list.c`): initializes a
 fixed-slot object-pool manager struct - `+0x0` active count (0),
 `+0x4` capacity, `+0x8` a `count`-pointer array (zeroed), `+0xc` a
 `count`-entry array of 0x14-byte nodes, `+0x10`..`+0x40F` and
@@ -3807,7 +3807,7 @@ two-phase search whose higher-level "why" isn't recoverable without
 more context. Left raw rather than guess.
 
 **Parked, not matched: `LinkCrateToActiveBucket`** (ROM `0x08009150`, right after
-the raw `UnlinkCrateFromGrid`, `src/graphics/actor_part11.c`): searches every
+the raw `UnlinkCrateFromGrid`, `src/objects/part_list.c`): searches every
 bucket (254 down to 0, i.e. every bucket except the special "large
 object" bucket 255) of `manager`'s spatial hash grid for a node whose
 data pointer equals `obj`. On the first match: if the object's `+0xc`
@@ -3846,8 +3846,8 @@ list-management logic whose higher-level purpose isn't recoverable
 without more context. Left raw rather than guess.
 
 **Matched: `DrawCrateList`** (ROM `0x0800944C`, right after the raw
-`UpdateCrateList`, now `src/graphics/actor_part11g.c` - moved out of
-`actor_part11.c`, since its real ROM address isn't adjacent to that
+`UpdateCrateList`, now `src/crates/crate_grid_link.c` - moved out of
+`part_list.c`, since its real ROM address isn't adjacent to that
 file's own matched functions, per docs/workflow.md step 4's "needs its
 own new .c file" case): the same "extended screen box" filter shape as
 `CullPartList` (the plain 240x160 GBA screen region, in Q8, at the
@@ -3901,20 +3901,21 @@ section-end padding artifact from testing the function in isolation,
 outside the function's own `.size` boundary) plus a full clean `make
 compare` (`crashbandicootxs.gba: La suma coincide`).
 
-Moved into its own new translation unit, `src/graphics/actor_part11g.c`
+Moved into its own new translation unit, `src/crates/crate_grid_link.c`
 (also hoisting `struct pool_manager`'s definition there, mirroring the
-copy `actor_part12.c` and `actor_part11.c` each keep - `actor_part11g`
-rather than the more obvious `actor_part11f`, since a concurrent PR
-matched-as-NAKED `CollideCrateGrid` into `actor_part11f.c` first). Its raw
+copy `crate_list.c` and `part_list.c` each keep - it was named
+`actor_part11g.c` rather than the more obvious `actor_part11f.c`, since
+a concurrent PR matched-as-NAKED `CollideCrateGrid` into
+`actor_part11f.c` first; that file is now `crate_grid_collide.c`). Its raw
 `.if NON_MATCHING == 0` guard block was removed from
 `asm/code_3_2_13_944c.s`; once `CollideCrateGrid` also moved out (see that
 function's own "Update: converted to `NAKED`" entry below), the shared
 file held nothing at all and was deleted entirely. `ldscript.txt` got a
-new `actor_part11g.o` entry inserted between `actor_part11c.o` and
-`actor_part11f.o` (`CollideCrateGrid`'s own new home), preserving ROM order.
+new `crate_grid_link.o` entry inserted between `crate_list_update.o` and
+`crate_grid_collide.o` (`CollideCrateGrid`'s own new home), preserving ROM order.
 
 **Parked, not matched: `CollideCrateGrid`** (ROM `0x08009528`, right after
-the now-matched `DrawCrateList`, `src/graphics/actor_part11.c`): the same
+the now-matched `DrawCrateList`, `src/objects/part_list.c`): the same
 "extended screen box" grid-iteration shape as `DrawCrateList`, but
 dispatching each hit to `CollideCrateGridPartWithPlayer` (when the box's "compare
 viewport" argument equals `gPlayer`, the player) or
@@ -3952,16 +3953,16 @@ even for large, register-pressure-heavy functions (`ResolveCollisionCandidates`,
 was hand-transcribed as literal Thumb asm instead of staying an
 unclosable `#if NON_MATCHING` C draft: the ROM's own ldr/str/lsl/asr
 sequence, one-to-one, both grid passes byte-identical to each other.
-Moved out of `actor_part11.c` into its own new translation unit,
-`src/graphics/actor_part11f.c` (its real ROM address isn't adjacent to
+Moved out of `part_list.c` into its own new translation unit,
+`src/crates/crate_grid_collide.c` (its real ROM address isn't adjacent to
 that file's other functions - it sits between `DrawCrateList`, still raw
 asm in `asm/code_3_2_13_944c.s`, and `CollideCrateGridPartWithPlayer`,
-`src/graphics/actor_part11e.c` - per docs/workflow.md step 4's "needs
+`src/crates/crate_grid_collide.c` - per docs/workflow.md step 4's "needs
 its own new .c file" case). Its raw `.if NON_MATCHING == 0` guard block
 was removed from `asm/code_3_2_13_944c.s` (which still carries
 `DrawCrateList`'s own guard, untouched); `ldscript.txt` got a new
-`actor_part11f.o` entry inserted between `asm/code_3_2_13_944c.o` and
-`actor_part11e.o`. Verified byte-identical via `arm-none-eabi-as`
+`crate_grid_collide.o` entry inserted between `asm/code_3_2_13_944c.o` and
+`crate_grid_collide.o`. Verified byte-identical via `arm-none-eabi-as`
 isolated assemble (a standalone reassembly of both the ROM's own
 verified instruction stream and this transcription produced bit-for-
 bit identical `.text` bytes and relocations) plus a full clean `make
@@ -3971,7 +3972,7 @@ decompiled C does, so `CollideCrateGrid` stays filed as parked (now "parked,
 NAKED" rather than "parked, NON_MATCHING").
 
 **Parked, not matched: `CollideCrateGridPartWithPlayer`** (ROM `0x080096C0`, right after
-the parked `CollideCrateGrid`, `src/graphics/actor_part11.c`): `CollidePartWithPlayer`'s
+the parked `CollideCrateGrid`, `src/objects/part_list.c`): `CollidePartWithPlayer`'s
 twin, confirmed by reading its disassembly directly against
 `CollidePartWithPlayer`'s own - byte-identical collision-hit resolution logic
 (mode dispatch via `gLevelState`, AABB push-out via
@@ -3992,16 +3993,16 @@ label offsets - only the branch target labels and the compiled symbol
 name differ), `CollideCrateGridPartWithPlayer` was hand-transcribed as literal Thumb asm
 instead of staying an unclosable `#if NON_MATCHING` C draft, the same
 technique already used for `CollidePartWithPlayer`, `CollidePartWithObject`, and
-`CollideCrateGridPartWithObject`. Moved out of `actor_part11.c` into its own new
-translation unit, `src/graphics/actor_part11e.c` (its real ROM
+`CollideCrateGridPartWithObject`. Moved out of `part_list.c` into its own new
+translation unit, `src/crates/crate_grid_collide.c` (its real ROM
 address isn't adjacent to that file's other functions - it sits
 between `CollideCrateGrid`, still raw asm in `asm/code_3_2_13_944c.s`, and
-`CollidePlayerWithCrates`, `actor_part11d.c` - per docs/workflow.md step 4's
+`CollidePlayerWithCrates`, `crate_player_collide.c` - per docs/workflow.md step 4's
 "needs its own new .c file" case). Its raw `.if NON_MATCHING == 0`
 guard block was removed from `asm/code_3_2_13_944c.s` (which still
 carries `DrawCrateList`/`CollideCrateGrid`'s own still-parked guards,
-untouched); `ldscript.txt` got a new `actor_part11e.o` entry inserted
-between `asm/code_3_2_13_944c.o` and `actor_part11d.o`. Verified
+untouched); `ldscript.txt` got a new `crate_grid_collide.o` entry inserted
+between `asm/code_3_2_13_944c.o` and `crate_player_collide.o`. Verified
 byte-identical via `arm-none-eabi-as` isolated assemble (every
 differing byte against the raw ROM bytes falls exactly on an
 unresolved `bl` target or `.4byte` pool word, both necessarily zero in
@@ -4011,7 +4012,7 @@ an isolated, unlinked object) plus a full clean `make compare`
 decompiled C does, so `CollideCrateGridPartWithPlayer` stays filed as parked (now
 "parked, NAKED" rather than "parked, NON_MATCHING"). `CollidePartWithPlayer`
 itself is untouched by this change and remains its own separate
-`NAKED` function in `actor_part7.c`.
+`NAKED` function in `sprite_anim.c`.
 
 `CollidePlayerWithCrates` (right after the parked `CollideCrateGridPartWithPlayer`) remains raw -
 calls still-unexamined helpers (`BreakCrateTouchedByPlayer`, `CollideCrateWithPlayer`) whose
@@ -4019,7 +4020,7 @@ higher-level purpose isn't recoverable without more context. Left raw
 rather than guess.
 
 **Parked, not matched: `ResetCrateList`** (ROM `0x08009914`, right after
-the raw `CollidePlayerWithCrates`, `src/graphics/actor_part11.c`):
+the raw `CollidePlayerWithCrates`, `src/objects/part_list.c`):
 resets a pool manager to empty. First tears down every active object
 in `slotArray[0..activeCount)` - firing each one's `table+0x50/0x54`
 trampoline via `_call_via_r2` with constant arg `3` if non-`NULL`, then
@@ -4040,12 +4041,12 @@ reconstruction as close as it got), while this reconstruction's most
 faithful attempt still only needs two. Parked for the same reason as
 `InitCrateList`.
 
-## Second tractable pocket: `actor_part12.c`
+## Second tractable pocket: `crate_list.c`
 
 Right after that raw span, `CollideCrateGridPartWithObject` through `DestroyCrateList` turned
 out to be another self-contained, clearly-understood run - the same
 active-object array/grid manipulation primitives seen in
-`actor_part11.c`/`actor_part10.c`, just operating on the pool-manager
+`part_list.c`/`part_list_cull.c`, just operating on the pool-manager
 struct's own fields (`+0`=active count, `+4`=capacity, `+8`=slot
 array, `+0xc`=node array, `+0x10`/`+0x410`=spatial grid head/tail
 tables, `+0x810`/`+0x814`=free-list array/head):
@@ -4060,7 +4061,7 @@ tables, `+0x810`/`+0x814`=free-list array/head):
   grid via `UnlinkCrateFromGrid` and compacts the array (bound = active count,
   at `+0`) via the same CpuSet shift used throughout this region.
   Matched first-attempt - this manager struct's field layout (`+4`
-  search bound vs `+0xc` array base in `actor_part11.c`'s simpler
+  search bound vs `+0xc` array base in `part_list.c`'s simpler
   manager type) is genuinely different from the one used by
   `RemoveFromPartList` etc., confirmed by cross-referencing which fields
   `InitPartList`/`InitCrateList` themselves initialize.
@@ -4105,7 +4106,7 @@ tables, `+0x810`/`+0x814`=free-list array/head):
 initially declared "matches" from isolated per-function compiles, the
 same mistake this project has hit before with `CullPartList`/
 `CollidePartsOfClass`. Only a full clean `make compare` after integrating the
-whole batch into `actor_part12.c` caught both regressions - the ROM
+whole batch into `crate_list.c` caught both regressions - the ROM
 size grew by 4 bytes and every address after the bug shifted, which is
 exactly the kind of failure an isolated test cannot surface. A
 function is not "matched" until the *entire ROM* has been rebuilt from
@@ -4120,7 +4121,7 @@ itself (a physics/collision step-probe calling still-unexamined
 this remains a separate raw span for now.
 
 **Parked, not matched: `CollideCrateGridPartWithObject`** (ROM `0x080099F0`, right after
-the raw `UnlinkCrateFromGrid`-`ResetCrateList` span, `src/graphics/actor_part12.c`):
+the raw `UnlinkCrateFromGrid`-`ResetCrateList` span, `src/crates/crate_list.c`):
 byte-identical in shape to the already-parked `CollidePartWithObject` - the same
 `boxH` stack-layout gap applies. See "Parked, not matched:
 `CollidePartWithObject`" above for the full writeup; this is its twin.
@@ -4130,12 +4131,12 @@ computed delta was already confirmed correct (the ROM instruction
 stream turned out byte-identical to `CollidePartWithObject`'s, down to the label
 offsets - only the branch target label and the compiled symbol name
 differ), `CollideCrateGridPartWithObject` was hand-transcribed as literal Thumb asm in
-`src/graphics/actor_part12.c` instead of staying an unclosable
+`src/crates/crate_list.c` instead of staying an unclosable
 `#if NON_MATCHING` C draft, the same technique already used for
-`CollidePartWithObject` (`src/graphics/actor_part7b.c`). Its raw `.if
+`CollidePartWithObject` (`src/objects/part_collide.c`). Its raw `.if
 NON_MATCHING == 0` guard block was removed from
 `asm/code_3_2_13_9914.s` (which still carries `ResetCrateList`'s own
-still-parked guard, untouched); `actor_part12.o` already linked right
+still-parked guard, untouched); `crate_list.o` already linked right
 after that object in `ldscript.txt`, so no linker-script change was
 needed. Verified byte-identical via `arm-none-eabi-as` isolated
 assemble plus a full clean `make compare` (`crashbandicootxs.gba: La
@@ -4143,7 +4144,7 @@ suma coincide`). Per project policy a `NAKED` transcription doesn't
 count as "matched" the way real decompiled C does, so `CollideCrateGridPartWithObject`
 stays filed as parked (now "parked, NAKED" rather than "parked,
 NON_MATCHING"). `CollidePartWithObject` itself is untouched by this change and
-remains its own separate `NAKED` function in `actor_part7b.c`.
+remains its own separate `NAKED` function in `part_collide.c`.
 
 `sub_8009BE0` (right after `DestroyCrateList`) is a physics/collision step-
 probe function calling still-unexamined `sub_8008278`/`ProbeTerrain`
@@ -4151,7 +4152,7 @@ probe function calling still-unexamined `sub_8008278`/`ProbeTerrain`
 mysterious `+0x2a` flag toggling on `gPlayer`) - left raw
 rather than guess at semantics.
 
-## `CheckPlayerContact`: third tractable function, `actor_part13.c`
+## `CheckPlayerContact`: third tractable function, `player_contact.c`
 
 Right after the raw `sub_8009BE0`, `CheckPlayerContact` turned out to be
 another self-contained, clearly-understood function: it tests `part`
@@ -4191,7 +4192,7 @@ each one only surfacing via the full integrated rebuild - the
 isolated per-function compile looked correct both times.
 
 **Parked, not matched: `ResolvePlayerContact`** (ROM `0x08009D5C`, right after
-`CheckPlayerContact`, `src/graphics/actor_part13.c`): fires a
+`CheckPlayerContact`, `src/objects/player_contact.c`): fires a
 `part->table+0x68`-driven trampoline (the established "dead read"
 idiom) based on `gLevelState`'s mode: mode 0 fires it on the
 player with `(0, part->field_0A, 0)`; modes 1-2 fire it on the player
@@ -4218,7 +4219,7 @@ top-level `if (mode > 2)` block - collapses to the more compact
 into the return that's already right there). Parked on this single
 conditional-branch encoding gap.
 
-## Tractable pocket found past the AI/collision cluster: `actor_part8.c`
+## Tractable pocket found past the AI/collision cluster: `moving_sprite.c`
 
 Matching then resumes at `ApplySpriteVelocity` - which, despite living inside
 the same general address range as the still-unclear AI/collision
@@ -4229,7 +4230,7 @@ functions (`DestroySpriteObj`, `UpdateSpriteObj`) already matched earlier this
 session.
 
 **Parked, not matched: `ApplySpriteVelocity`** (ROM `0x08009DF4`, right after
-the raw AI/collision cluster, new `src/graphics/actor_part8.c`): a
+the raw AI/collision cluster, new `src/objects/moving_sprite.c`): a
 velocity/position integrator. For each axis (X: `self+0x60` velocity,
 `self+0x50` max, `self+0x4c` accel; Y: `self+0x64`/`self+0x5c`/
 `self+0x58`), steps the velocity toward its max by the accel amount,
@@ -4283,7 +4284,7 @@ Matched on the first attempt.
 file): the same `CreateSpriteObj`-style part-object constructor shape used
 throughout this ROM region, this time allocating a bigger 0x78-byte
 object, initializing via `InitSpriteObj` (already matched in
-`actor_part6.c`), setting `table` to `gMovingSpriteVtable`, clearing
+`sprite_obj.c`), setting `table` to `gMovingSpriteVtable`, clearing
 extra fields via `ResetMovingSprite` (below) instead of `ResetSpriteObj`, then
 setting `field_08` and the Q8 `x`/`y` position from three `u16`
 arguments. Matched on the first attempt.
@@ -4293,7 +4294,7 @@ file): overwrites `self->table`, then (if `self+0x44`'s record is
 set) fires a `record->table+0x48/0x4c`-driven trampoline with a
 constant argument `3` via `_call_via_r2` (same `table+N`/`table+N+4`
 convention as `IsEntityNearCamera`/`IsSpriteObjOnScreen`/`UpdateSpriteObj`), and finally
-tail-calls `DestroySpriteObj` (already matched in `actor_part6.c`). Needed
+tail-calls `DestroySpriteObj` (already matched in `sprite_obj.c`). Needed
 the trampoline's `addr = rec + offset` computed *before* the `fn`
 load, both pinned to the same registers the ROM uses (`rec`/`fn`
 sharing `r2`, `tblAdj` in `r1`, `offset`/`addr` in `r0`) - computing
@@ -4322,14 +4323,14 @@ allocating a new one - the same relationship `InitSpriteObj` itself has
 to `CreateSpriteObj`. Matched on the first attempt.
 
 **`UpdateMovingSprite`** (ROM `0x08009FB0`, right after `InitMovingSprite`, same
-file): calls `UpdateSpriteObj` (already matched in `actor_part5.c`), then
+file): calls `UpdateSpriteObj` (already matched in `sprite_obj.c`), then
 (if `self+0x44`'s record is set) fires a `record->table+8/0xc`-driven
 trampoline via `_call_via_r2` with `self` itself as the second
 argument. Same `addr`-before-`fn` register-aliasing fix as
 `DestroyMovingSprite` above. Matched `UpdateMovingSprite` after fixing the read
 order.
 
-## `HitMovingSprite` resolved and matched: `actor_part9.c`
+## `HitMovingSprite` resolved and matched: `moving_sprite_collide.c`
 
 `HitMovingSprite` (right after `UpdateMovingSprite`) was initially left raw -
 its call to `_call_via_r4` only set two of that function's four
@@ -4341,22 +4342,22 @@ locally. Resolved while investigating the much larger
 `CollidePartList`-`CollidePartWithPlayer` collision cluster below: the `r4` load is
 a genuine **"dead read"** - the same idiom already established and
 tested for `CheckSpritePickup`'s own `_call_via_r4` call in
-`actor_part2.c` (`table+0x68`'s function-pointer half read into `r4`
+`sprite.c` (`table+0x68`'s function-pointer half read into `r4`
 but marked `(void)deadRead;`, never actually passed to
 `_call_via_r4`, which is confirmed to be a plain 4-argument function,
 not itself a trampoline). `HitMovingSprite` forwards `arg1`/`arg2`/`arg3`
 straight through as `_call_via_r4`'s own `arg1`-`arg3`. Matched after
 applying the dead-read pattern; folded into the front of
-`actor_part9.c` (replacing what was `asm/code_3_2_10.o`, which held
+`moving_sprite_collide.c` (replacing what was `asm/code_3_2_10.o`, which held
 only this one function) since its own real ROM address comes right
 after the parked `ApplySpriteVelocity` and before `ClassifySpriteContact`.
 
 **`ClassifySpriteContact`** (ROM `0x08009FF4`, right after `HitMovingSprite`, same
 file): builds `part`'s
-primary AABB (`GetSpriteAttackBox`, already matched in `actor_part2.c`) and
+primary AABB (`GetSpriteAttackBox`, already matched in `sprite.c`) and
 tests it against `region` (`AabbOverlaps`, the same collision-test
 function already declared for `CheckSpritePickup`/`IsSpriteObjInsideRect`'s sibling
-in `actor_part.c`/`actor_part4.c`); if that already overlaps, returns
+in `sprite.c`/`sprite_obj.c`); if that already overlaps, returns
 2. Otherwise builds the secondary AABB (`GetSpriteBodyBox`, also already
 matched) and re-tests; if that misses, returns 0. If it hits, returns
 2 unless `part->flags` bit 6 is set, in which case it returns the
@@ -4435,7 +4436,7 @@ fields `ApplySpriteVelocity` clamps. Both matched on the first attempt.
 file): `self+0x69` (cleared by `ResetMovingSprite`) getter. Matched on the
 first attempt.
 
-## New tractable pocket after the AI/collision cluster: `actor_part14.c`
+## New tractable pocket after the AI/collision cluster: `ground_sprite.c`
 
 Past the whole AI/collision cluster resolved above, `CollideGroundSprite`
 through `sub_800A590` (part-object update/collision dispatchers
@@ -4447,7 +4448,7 @@ to be another self-contained, clearly-understood run: a small
 `gGroundSpriteVtable`-table family of part-object constructors,
 mirroring the already-matched `gMovingSpriteVtable`-table family
 (`CreateMovingSprite`/`DestroyMovingSprite`/`ResetMovingSprite`/`InitMovingSprite`) in
-`actor_part8.c`, plus a dozen tiny single-bit accessor pairs.
+`moving_sprite.c`, plus a dozen tiny single-bit accessor pairs.
 
 - **`DrawGroundSprite`**: a void tail-call wrapper around the already-
   matched `DrawSpriteObj` - the ROM discards its return value (`pop
@@ -4511,7 +4512,7 @@ mirroring the already-matched `gMovingSpriteVtable`-table family
 - **`GetMovingSpriteCtrl`**: `self+0x44` getter (the same "record" field
   `DestroyMovingSprite`/`UpdateMovingSprite` fire their trampolines through).
 
-All 16 were verified via a full recompile of `actor_part14.c` together
+All 16 were verified via a full recompile of `ground_sprite.c` together
 and a full clean `make compare`, after this session's earlier
 regressions (`CullPartList`/`RemoveCrateListAt`/`LinkCrateInGrid`) established
 that isolated per-function compiles aren't sufficient proof - and this
@@ -4523,9 +4524,9 @@ initially passed with the redundant register copy already dropped
 (matching in isolation) but the full build caught the resulting
 4-byte size regression once the whole file was assembled together.
 
-## A new unnamed object: `actor_part15.c`/`actor_part16.c` (`HasPlayerRampYTarget`-`StartCtrlTargetMotionY`)
+## A new unnamed object: `player_update.c`/`player_flags.c` (`HasPlayerRampYTarget`-`StartCtrlTargetMotionY`)
 
-Right after `actor_part14.c`'s cluster, a big new not-yet-named object
+Right after `ground_sprite.c`'s cluster, a big new not-yet-named object
 (at least 0x108 bytes, distinct from `struct actor`) starts - most of
 these 44 functions are pure single-field get/set/clear/increment
 accessors on it, so raw offset casts are used throughout rather than
@@ -4544,7 +4545,7 @@ of the run:
   `UpdateGroundSprite` (itself still raw, in the `CollideGroundSprite`-`sub_800A590`
   span).
 - **`PlayerTouchesBox`**: the `gPlayer` AABB-vs-buf collision
-  check every earlier-matched pool/grid function in `actor_part11.c`
+  check every earlier-matched pool/grid function in `part_list.c`
   calls by name - finally matched for real. Builds a secondary AABB
   via the already-matched `GetSpriteBodyBox`, and only tests it via
   `AabbOverlaps` when it has a region (`field_8 > 0`).
@@ -4559,8 +4560,8 @@ of the run:
   `SetSpriteAnimDone`) plus `ResetPlayer` (itself the start of a still-raw
   94 KB span) and `CreateSpriteObj`/`ResetCollisionQueue`/`InitGroundSprite`. Sits
   between `DestroyPlayer` and `GetPlayerCollisionQueue` in ROM, so it splits this
-  batch into `actor_part15.c` (up to `DestroyPlayer`) and
-  `actor_part16.c` (`GetPlayerCollisionQueue` onward).
+  batch into `player_update.c` (up to `DestroyPlayer`) and
+  `player_flags.c` (`GetPlayerCollisionQueue` onward).
 - **`GetPlayerCollisionQueue`-`SetPlayerSlippery`**: a long run of plain single-field
   accessors (address getter, byte clear/set/get pairs, bulk 3-word
   setters, countdown decrement/clear/increment/get, an unsigned
@@ -4603,7 +4604,7 @@ of the run:
 - **`SetCtrlMode`/`SetCtrlAnimSet`**: plain word setters at `self+8`/
   `self+4`.
 - **`SetCtrlTargetMotionY`/`StartCtrlTargetMotionY`** (PARKED, `#if NON_MATCHING` in
-  `actor_part16.c`, raw bytes in `asm/code_3_2_18.s`): copy a 3-vector
+  `player_flags.c`, raw bytes in `asm/code_3_2_18.s`): copy a 3-vector
   into `self+0x54`/`+0x58`/`+0x5c` (the second function also mirrors
   the X component into `+0x64`), negating X and Z when `self+0x28`
   bit 5 (a mirror flag) is set. The `vec` pointer is referenced in
@@ -4618,14 +4619,14 @@ of the run:
   limitation for this pattern and parked.
 
 All 44 non-parked functions plus the 2 parked ones were verified via a
-full clean `make compare` after being split into `actor_part15.c`/
-`actor_part16.c` around the raw `InitPlayer` gap; `ldscript.txt` links
-them in real ROM order: `actor_part15.o`, `asm/code_3_2_19.o`
-(`InitPlayer`, raw), `actor_part16.o`, `asm/code_3_2_18.o` (the two
+full clean `make compare` after being split into `player_update.c`/
+`player_flags.c` around the raw `InitPlayer` gap; `ldscript.txt` links
+them in real ROM order: `player_update.o`, `asm/code_3_2_19.o`
+(`InitPlayer`, raw), `player_flags.o`, `asm/code_3_2_18.o` (the two
 parked functions' real bytes), `asm/code_3_2_17.o` (`StartCtrlTargetMotionYFromSet`
 onward, still raw).
 
-## `actor_part17.c` (`StartCtrlTargetMotionYFromSet`-`GetCtrlMode`)
+## `ctrl.c` (`StartCtrlTargetMotionYFromSet`-`GetCtrlMode`)
 
 Continuation right after the previous batch's parked pair - a table-
 driven trampoline pair, a fixed-point-scaled vector-copy pair (mirrors
@@ -4652,13 +4653,13 @@ respectively), and a handful of small `part`/table accessors:
   don't respect source operand order the way ordinary locals
   sometimes do), so it needed the same explicit `asm("add %0, %0,
   %1")` two-operand-form trick already used by `GetSpriteAnimDuration` in
-  `actor_part7.c`, pinning the destination register directly instead
+  `sprite_anim.c`, pinning the destination register directly instead
   of hoping the compiler picks it.
 - **`SetCtrlTargetMotionX`/`StartCtrlTargetMotionX`**: per-axis `FixedMul(component,
   self->field4->field4)`-scaled vector write into `part+0x48`/`+0x4c`/
   `+0x50`, negating X and Z when `part+0x28` bit 4 (`(s32)(flags <<
   27) < 0` - the same 32-bit-shift bit-test idiom already used for
-  this exact field in `actor_part.c`/`actor_part2.c`, confirming
+  this exact field in `sprite.c`, confirming
   `part+0x28` is the actor_part's own flags byte and not a new field)
   is set. `StartCtrlTargetMotionX` additionally duplicates the (possibly negated)
   X component into `part+0x60` - the scaled-copy counterpart of
@@ -4701,7 +4702,7 @@ left for a future pass - a background pass on it read the whole
 jump-table dispatcher and worked out most of its shape, but found a
 real structural contradiction (case 17 stores a pointer through
 `self+0x88` and later dereferences it as a `struct actor`, while the
-already-matched `SetPlayerControlMode`/`GetPlayerControlMode` in `actor_part16.c` treat
+already-matched `SetPlayerControlMode`/`GetPlayerControlMode` in `player_flags.c` treat
 `self+0x88` as a plain byte) that needs `LaunchHarmfulEffectPart`'s own semantics
 pinned down first; left completely untouched rather than guess.
 
@@ -4796,8 +4797,8 @@ tiny `mem_free`/`mem_alloc` wrappers:
   `<=` (touching edges count as overlap) while `AabbOverlaps`'s uses
   `<` (touching does not count); the Y-axis test is `<` in both.
   `AabbOverlaps` is the variant already referenced by name as an
-  `extern` from `actor_part15.c`'s `PlayerTouchesBox` and the pool/grid
-  collision functions in `actor_part11.c`. Both needed the Y-axis
+  `extern` from `player_update.c`'s `PlayerTouchesBox` and the pool/grid
+  collision functions in `part_list.c`. Both needed the Y-axis
   result computed into a separate `u8 temp = 0;` local, only then
   copied into the return-value variable (`result = temp;`), instead of
   assigning `result = 1;` directly inside the innermost `if` - the ROM
@@ -5411,7 +5412,7 @@ pins or reordering needed.
   `table` at `+0x18` are byte-identical to `struct actor`
   (`include/actor.h`) - both call the same generic `DestroyUiSpriteObj`/
   `InitUiSpriteObj` table-swap helpers already matched for the actor/part
-  system (`actor_part7.c`), just with this widget family's own
+  system (`sprite_anim.c`), just with this widget family's own
   `gHudPartVtable` table. `InitHudPart` is called 35 times in a
   loop by the still-raw `InitHud` (stride `0x40` = `sizeof(struct
   hud_digit_part)`, confirming the struct size independently).
@@ -5616,13 +5617,13 @@ object those table entries run on, `self+0xc` a per-category table of
 entries seen so far) fed through the `_call_via_r2`/`_call_via_r3`
 trampolines together with `self+offset` and `self+0x10` (a "part"
 sub-object) - the same base+offset+fn-pointer convention already named
-in `actor_part17.c`. A shared state/flag/table-index trio at
+in `ctrl.c`. A shared state/flag/table-index trio at
 `+0x27`/`+0x28`/`+0x29`/`+0x2f`/`+0x30`/`+0x31`/`+0x32` recurs across
 every function in this cluster; none of the three objects (self,
 table, part) has its full shape pinned down yet, so every access stays
 a raw offset with a doc comment rather than a guessed struct.
 
-Matched (`src/graphics/actor_part18.c`/`actor_part18b.c`):
+Matched (`src/player/action_ctrl_states.c`/`action_ctrl_land.c`):
 `ActionCtrlStateStandUp`, `ActionCtrlStateCrawlStart`, `ActionCtrlStateCrawlStandUp`, `ActionCtrlStateBodySlamLand`.
 
 - The `part+0xd` bit-clear idiom (`& -2`/`& -3`, shared by
@@ -5687,10 +5688,10 @@ Matched (`src/graphics/actor_part18.c`/`actor_part18b.c`):
 
 Parked (`.if NON_MATCHING == 0` in `asm/code_3_2_17_1434c.s`/
 `asm/code_3_2_17_145e4.s`, `#if NON_MATCHING` C reconstruction in
-`actor_part18.c`/`actor_part18b.c`):
+`action_ctrl_states.c`/`action_ctrl_land.c`):
 
 *Later pass: both are now real C (docs/matching/issue-15-16-17-naked-retry-2.md).
-`ActionCtrlStateCrawl` matches under old_agbcc (`actor_part18.o` moved to it) with
+`ActionCtrlStateCrawl` matches under old_agbcc (`action_ctrl_states.o` moved to it) with
 no pins; `ActionCtrlStateLand` matches under either compiler once the bit test is
 written `if ((flag = ...) != 0)`.*
 
@@ -5734,9 +5735,9 @@ ROM's biggest still-unexplained functions and deserve their own
 focused pass rather than a rushed low-confidence match.
 
 **File structure:** `asm/code_3_2_17.s` (truncated right before
-`ActionCtrlStateStandUp`) is followed, in ROM order, by `actor_part18.o`
+`ActionCtrlStateStandUp`) is followed, in ROM order, by `action_ctrl_states.o`
 (`ActionCtrlStateStandUp`/`ActionCtrlStateCrawlStart`), `code_3_2_17_1434c.s` (raw parked
-`ActionCtrlStateCrawl`), `actor_part18b.o` (`ActionCtrlStateCrawlStandUp`/`ActionCtrlStateBodySlamLand`),
+`ActionCtrlStateCrawl`), `action_ctrl_land.o` (`ActionCtrlStateCrawlStandUp`/`ActionCtrlStateBodySlamLand`),
 `code_3_2_17_145e4.s` (raw parked `ActionCtrlStateLand`), and finally
 `code_3_2_17_14674.s` (the original file's unchanged remainder, from
 `ActionCtrlStateLeftGround` on) - see `ldscript.txt` and `tools/report_units.py`'s
@@ -5981,16 +5982,16 @@ three new `.c` files. See `ldscript.txt` and `tools/report_units.py`'s
 
 `0x0802BED8`-`0x0802C99C` (25-function chunk), `asm/code_3_2_20_28568.s`
 (the file's own truncation point, already past several other sessions'
-splits). Same large per-instance "self" object as `actor_part17.c`/
-`actor_part18.c`/`actor_part18b.c` - state at `+0x28`, a table-index
+splits). Same large per-instance "self" object as `ctrl.c`/
+`action_ctrl_states.c`/`action_ctrl_land.c` - state at `+0x28`, a table-index
 field at `+0xc`, an anim-frame halfword/byte pair at `+0x10`/`+0x12`, a
 counter at `+0x44`, an accumulator at `+8` (also readable as
 `GetAnimFrameBaseOffset`'s `struct anim_part_instance.field_08`), and a
-"part table" pointer at `+0` (the same convention actor_part18.c
+"part table" pointer at `+0` (the same convention action_ctrl_states.c
 documents at `self+0x10` for its own object, just a different fixed
 offset here). New conventions confirmed by this chunk: a `+0x50`-rooted
-`{s16 offset; void *fn}` trampoline record (the same shape actor_part10/
-11.c already name at a different offset for a sibling object), and a
+`{s16 offset; void *fn}` trampoline record (the same shape part_list_cull.c/
+part_list.c already name at a different offset for a sibling object), and a
 `+0x48`/`+0x4c` circular doubly-linked list of these objects rooted at
 the player-pointer global `gActorList` (`DestroyPolarPlayer`/
 `DestroyPolarCollectedWumpa` unlink from it on teardown; `DetonateNearbyPolarNitros`, left raw,
@@ -6011,7 +6012,7 @@ tail `UpdatePolarCrate`).
 - **The repeated "state transition" block** (`self+0x28`=state,
   `self+0xc`=table-index, `self+0x44`/`self+8`=0, an anim halfword from
   the part-table into `self+0x10`, `self+0x12`=0) needed the exact same
-  register-pinning discipline as the earlier `actor_part18.c` entries,
+  register-pinning discipline as the earlier `action_ctrl_states.c` entries,
   applied consistently across every occurrence in this chunk: the
   state/index constants loaded together *before* the first store
   (`register s32 stateVal asm("r0")`/`idxVal asm("r1")`), then a
@@ -6033,7 +6034,7 @@ tail `UpdatePolarCrate`).
 - **`BoostPolarPlayer`'s `entry = table + idx*0xc` pointer computation**
   needed a literal `asm("add %0, %0, %1" : "+r"(entryPtr) :
   "r"(table))` (the same extended-asm idiom already used in
-  `actor_part17.c`/`actor_part6.c`/`actor_part7.c` for this exact
+  `ctrl.c`/`sprite_obj.c`/`sprite_anim.c` for this exact
   problem) - this compiler consistently canonicalizes `pointer +
   computed_offset` as `add Rd, Rpointer, Roffset` regardless of the C
   expression's own operand order, while the ROM has `add Rd, Roffset,
@@ -6168,7 +6169,7 @@ raw.
   `src/util/aabb_setup.c`) - the shared AABB set-size
   (`field_8`/`field_c`)/set-position (`field_0`/`field_4`) primitive
   pair, already referenced by name (not yet matched) from
-  `actor_part.c`/`actor_part2.c`/`power_dialog_draw.c`'s `DrawPowerDialog` entry.
+  `sprite.c`/`power_dialog_draw.c`'s `DrawPowerDialog` entry.
   Two one-line leaf functions, matched first-try (each needed the usual
   trailing `asm(".align 2, 0")` for its 6-byte, non-4-aligned body).
 - **`GetLives`** (same file) - a trivial `self+0x74` getter; kept as
@@ -6289,7 +6290,7 @@ true or `gLevelState+0x8c` is nonzero. If clear, spawns a full
 visual effect instead: allocates a part-object via `CreateSpriteObj`,
 points its `+0x20` table pointer at `gSpriteBankTable`'s own first
 field (reached through `gSpriteBankSet`'s pointer-to-pointer, the
-same idiom `GetSpriteTileBase` in `actor_part5.c` already uses, just one
+same idiom `GetSpriteTileBase` in `sprite_obj.c` already uses, just one
 `deref` deeper) plus a fixed `0x180` offset, tags it (`+0x2d` =
 7/5/6/8), builds it via the standard `ResetSpriteFrameTimer`/`ResetSpriteFrameIndex`/
 `SetSpriteAnimDone` OAM trio, sets its `+0x29` bitfield from `GetSpriteAnimPaletteSlot`'s

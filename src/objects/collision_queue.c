@@ -3,7 +3,7 @@
 /* GitHub issue #14: 0x08010A0C-0x08010D54, continuing the physics/
  * collision subsystem (game_loop17.c-game_loop27.c). `ResolveCollisionCandidates` is
  * this chunk's final and by far largest function - the collision-
- * candidate scan/resolve helper `ResolvePlayerCollisions` (game_loop23.c) already
+ * candidate scan/resolve helper `ResolvePlayerCollisions` (crate.c) already
  * calls once a frame as `ResolveCollisionCandidates(gPlayer + 0x108)`. */
 
 /* A byte passed on the stack as a genuine byte (`strb`); a plain `u8`
@@ -134,8 +134,8 @@ asm(".align 2, 0");
  * semantic map and Phase 2 planning notes on the other 24 functions. */
 
 /* One queued "commit this collision" candidate - the record
- * `AddCollisionCandidate` appends here and `ResolveCollisionCandidates` (game_loop28.c, already
- * matched) later scans/resolves via `ApplyCrateCollision` (game_loop27.c's own
+ * `AddCollisionCandidate` appends here and `ResolveCollisionCandidates` (collision_queue.c, already
+ * matched) later scans/resolves via `ApplyCrateCollision` (slot_crate.c's own
  * extern declaration for it). Field names/types mirror
  * `ApplyCrateCollision`'s own already-established extern signature exactly,
  * confirmed field-for-field against this function's own stores - both
@@ -168,10 +168,10 @@ COMPILE_TIME_ASSERT(sizeof(struct collision_candidate) == 0x24);
 /* The player's own small append-only queue of pending collision
  * candidates, embedded inside the same per-entity collision-state
  * record at `gPlayer + 0x108` that `DecrementSlotCrateStage`-`GetCrateTrialKind`
- * (game_loop27.c) and `ResolveCollisionCandidates` (game_loop28.c) already operate on
+ * (slot_crate.c) and `ResolveCollisionCandidates` (collision_queue.c) already operate on
  * - confirmed by this function's own caller
- * (`QueueCratePlayerCollision`/game_loop47.c) passing exactly that address as `self`.
- * `self+0x44`-`self+0x58` (per game_loop27.c) are further fields of the
+ * (`QueueCratePlayerCollision` in crate_break.c) passing exactly that address as `self`.
+ * `self+0x44`-`self+0x58` (per slot_crate.c) are further fields of the
  * *same* record past this queue - true capacity of `candidates` beyond
  * one confirmed slot isn't established here (see this file's own issue
  * doc); declared with a single element and indexed dynamically past it
@@ -185,14 +185,14 @@ struct collision_queue {
 };
 
 /* Physics/collision subsystem's **apply/commit step** - the final call
- * `QueueCratePlayerCollision` (game_loop47.c) makes at the end of its own per-edge
+ * `QueueCratePlayerCollision` (crate_break.c) makes at the end of its own per-edge
  * dispatch, per docs/rom_map.md's already-confirmed read: "hands off to
  * `AddCollisionCandidate` with ~8 packed arguments... the actual apply/commit
  * step". Appends one `collision_candidate` record to the player's queue
  * (`self`) at `self->candidates[self->count]`, then increments
  * `self->count`. Every field's caller-side value is confirmed against
  * `QueueCratePlayerCollision`'s own NAKED call site (the final `bl AddCollisionCandidate` in
- * game_loop47.c): `neighbor` is the entity whose collision is being
+ * crate_break.c): `neighbor` is the entity whose collision is being
  * committed (`self` from `QueueCratePlayerCollision`'s own perspective), `kind` is
  * its adjusted dispatch id, and the rest are packed position/rect
  * fields already accumulated across `QueueCratePlayerCollision`'s three jump tables.
@@ -235,7 +235,7 @@ void AddCollisionCandidate(struct collision_queue *self, void *neighbor, s32 kin
  * `DestroyOamBuffer`, `src/gfx/graphics.c`) as the exact same
  * one-line "conditional call on bit 0" shape: `OperatorDelete` (VRAM
  * upload manager, matched in graphics.c) only fires when `arg1`'s low
- * bit is set. `src/graphics/actor_part15.c` already externs this
+ * bit is set. `src/player/player_update.c` already externs this
  * function and calls it as `DestroyCollisionQueue(self + 0x108, 2)` - i.e. bit 0
  * clear, so that call site is itself a no-op (the manager call never
  * fires); nevertheless this confirms `self` is the same
@@ -255,11 +255,11 @@ void DestroyCollisionQueue(void *arg0, s32 arg1)
 }
 
 /* Sibling reset: clears just `count` (`+0x00`) and `unk4`'s first byte
- * (`+0x04`) - confirming (per `src/graphics/actor_part77.c`'s own doc
+ * (`+0x04`) - confirming (per `src/player/player_init.c`'s own doc
  * comment, already noting this exact function) that `unk4` is read
  * back elsewhere as a real field, not unexamined padding, though its
  * own full meaning/width past this one byte remains open. Called as
- * `ResetCollisionQueue(self + 0x108)` from `actor_part77.c`. */
+ * `ResetCollisionQueue(self + 0x108)` from `player_init.c`. */
 void ResetCollisionQueue(void *arg0)
 {
     struct collision_queue *self = arg0;

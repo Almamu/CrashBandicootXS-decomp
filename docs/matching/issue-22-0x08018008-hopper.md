@@ -19,7 +19,7 @@ loaded before the byte it is combined with (`movs r0, #0x10; ldrb r3,
 [r4, #0xc]; orrs r0, r3` in `SpawnTinyFallingLeaves`, `movs r0, #0x7f; ldrb r1,
 [r1]; ands r0, r1` in `UpdateMegaMix`).
 
-The other #22 files (`actor_part27.c`, `actor_part27b.c`,
+The other #22 files (`input_ctrl_queue.c`, `actor_part27b.c`,
 `actor_part27c.c`) also match byte for byte under old_agbcc as they are,
 pins included. They stay on the current agbcc, because switching them
 gains nothing without also dropping their pins.
@@ -79,7 +79,7 @@ out-of-range exit goes to state 0's mirror-bit test, not to the
   `CollidePartList(void *, struct box, s32, void *)`, it closes. The 16-byte
   box goes three words in r1-r3 and one on the stack, gcc stores the two
   scalar stack arguments first, and that is the ROM's order. The same
-  prototype probably closes `actor_part81.c`'s parked `CollidePlayerWithObjects`,
+  prototype probably closes `player_event.c`'s parked `CollidePlayerWithObjects`,
   which the NAKED note cites for the identical order. It has not been
   tried there.
 - **The `gCrateList` list walk.** The "per-iteration literal

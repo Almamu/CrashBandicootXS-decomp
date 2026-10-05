@@ -3,9 +3,9 @@
 #include "vtable.h"
 #include "actor.h"
 
-/* Continuation of actor_part38.c (issue #18's chunk) - covers
+/* Continuation of action_ctrl_hang.c (issue #18's chunk) - covers
  * `sub_80151C8`, `EndActionCtrlSpin` and `SteerActionCtrlSpin`. Same "self" object
- * family documented at the top of actor_part18.c/actor_part28.c. */
+ * family documented at the top of action_ctrl_states.c/actor_part28.c. */
 
 /* One-shot guard (`self+0x23`): the first time through, picks a value
  * (`0x18`/`0x19`/`0x1a`) from `self+0x22` (a small jump table for
@@ -222,9 +222,9 @@ void SteerActionCtrlSpin(u8 *self, u8 mode)
  * docs/matching.md's alignment-padding gotcha). */
 asm(".align 2, 0");
 
-/* Continuation of actor_part38b.c (issue #18's chunk) - covers
+/* Continuation of the code above (issue #18's chunk) - covers
  * `SetActionCtrlMode` through `ActionCtrlStateBodySlamStart`. Same "self" object family
- * documented at the top of actor_part18.c/actor_part28.c. */
+ * documented at the top of action_ctrl_states.c/actor_part28.c. */
 
 extern void *gAudioContext;
 extern void *gPlayer;

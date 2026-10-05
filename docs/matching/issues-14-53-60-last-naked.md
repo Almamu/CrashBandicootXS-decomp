@@ -5,7 +5,7 @@ are plain C now, with no register pins, no asm in the function body and
 no NAKED, and all three match under both `agbcc` and `old_agbcc`. None of
 the files change compiler.
 
-## `ResolveCollisionCandidates` (game_loop28.c, issue #14)
+## `ResolveCollisionCandidates` (collision_queue.c, issue #14)
 
 The collision-candidate scan/resolve helper `ResolvePlayerCollisions` calls once a
 frame. The old park note blamed "up to twelve running pointers" live

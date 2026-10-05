@@ -19,11 +19,11 @@ slots at `self+0x1b8`/`0x1bc` are torn down (`ResetSpriteFrameTimer`/
 `ResetSpriteFrameIndex`/`SetSpriteAnimDone(..., 0)`, the same OAM-trio teardown
 `PlayRoom`, game_loop39.c, already uses) when non-null. `self+0x1bc`'s
 actor additionally feeds its own `+0x20`-table/`+0x2d`-tag hitbox record
-(the same convention `DrawCrate`, game_loop35.c, and `IsCrateInsideRect`,
-game_loop23.c, already document) into `LoadPaletteSlot` (the tile-asset-cache
+(the same convention `DrawCrate`, crate_draw.c, and `IsCrateInsideRect`,
+crate.c, already document) into `LoadPaletteSlot` (the tile-asset-cache
 slot loader) - `self+0x29`'s low nibble is the cache slot, and the
 record's own `+0x14` byte is the asset id. Finally `gUnknown_030012EC`
-(a `dual_array_manager`, per `actor_part11.c`'s canonical definition) is
+(a `dual_array_manager`, per `part_list.c`'s canonical definition) is
 walked: each entry fires its own `+0x18`-table's `+0x48`/`0x4c`
 `_call_via_r1` trampoline, and a result of `2` fires the `+0x28`/`0x2c`
 trampoline too - a nonzero low byte there flags the entry for despawn
@@ -54,7 +54,7 @@ The one piece that never converged: the loop's own `0xffff` sentinel has
 to live in r7 for the *entire* array walk. A `register s32 sentinel
 asm("r7")` pin hits a confirmed toolchain bug - this compiler never adds
 an inline-asm-clobbered r7 to the function's own push/pop list (the same
-gap already parked for `IsCrateInsideRect`'s `success` local, game_loop23.c,
+gap already parked for `IsCrateInsideRect`'s `success` local, crate.c,
 and `DropExtraLife`, game_loop29.c - see `docs/status/game_loop.md`). A
 *plain* (non-pinned) `s32 sentinel = 0xffff;` local dodges the bug and
 gets tracked correctly, but only in isolation - once every other quirk
@@ -108,7 +108,7 @@ is looked up in `redirectInfo`'s array (`.a` field, read as a full
 `u32`); a match's paired `.b` value is used to search
 `gCrateList` *again*, in reverse, for an entry with that id,
 linking the two via `SetCrateAbove`/`SetCrateBelow` (the neighbor-list
-set-next/set-prev pair, game_loop23.c) on success. On failure the code
+set-next/set-prev pair, crate.c) on success. On failure the code
 chases a *second* lookup back into `redirectInfo`'s array itself
 (treating it as an id→id redirect table, `.a`→`.b` again) and retries
 the actor-list search with the new id - a "follow a redirect chain

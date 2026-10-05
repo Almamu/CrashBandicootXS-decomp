@@ -167,7 +167,7 @@ void UpdateEnemyHop(struct part_ctrl *self)
  *
  * - Case 0: if `self+0x80` bit 0 is set, toggles `owner+0x28` bit 4
  *   (the established mirror-flag convention, see
- *   `src/graphics/actor_part17.c`'s `(s32)(part[0x28] << 27) < 0`
+ *   `src/objects/ctrl.c`'s `(s32)(part[0x28] << 27) < 0`
  *   idiom) and triggers `SetEnemyAnimMode(self, 1)`; otherwise just
  *   `SetEnemyAnimMode(self, 6)`. Either way, tails into
  *   `SetEnemyMotionX(self, 0)` + `SetEnemyMotionY(self, 0)`.

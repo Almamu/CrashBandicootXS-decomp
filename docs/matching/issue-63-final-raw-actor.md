@@ -125,7 +125,7 @@ vram_upload_cursor`), hooks `self->icons` up to the global text icon
 manager (`gSmallFont`, `struct bitmap_font` - already fully
 described in `include/bitmap_font.h`), fires its 7th (index 6) OAM
 trampoline slot via `_call_via_r1` (the same `icon_slot` shape
-`CollideWumpa`/`actor_part39.c` already established), clears
+`CollideWumpa`/`wumpa.c` already established), clears
 `icons->field_118` and re-derives the cursor's limit from
 `icons->field_12c << 5` (`ReserveObjVram`), resets the shared tile cache
 (`gPaletteCache`, `struct palette_cache`) and pins its first four
@@ -154,7 +154,7 @@ this codebase but were freshly re-confirmed here:
 Matched real C for everything except the tile-cache seeding loop's trip
 counter, which the ROM keeps live in r7 for the whole loop - this
 project's **confirmed categorical gcc-2.9 r7-pin bug** (see
-`graphics_package.c`/`power_dialog_draw.c`/`actor_part7.c` and the several
+`graphics_package.c`/`power_dialog_draw.c`/`sprite_anim.c` and the several
 `docs/matching/naked-*.md` entries): an explicit
 `register s32 counter asm("r7")` pin compiles the exact right
 instructions but this compiler's own push/pop-list computation never

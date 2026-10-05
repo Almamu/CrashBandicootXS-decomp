@@ -46,7 +46,7 @@ extern void ActionCtrlStateTurboRun();
 extern void sub_8015774();
 
 /* 42-slot action dispatch table: one member-function pointer per player
- * action, indexed by the action id (actor_part84.c's `struct act_pmf`
+ * action, indexed by the action id (action_ctrl_update.c's `struct act_pmf`
  * view; docs/rom_map.md "gActionCtrlStateTable is a 42-slot,
  * fully-populated action dispatch table"). ActionCtrlStateAirborne is the shared
  * handler of the six airborne states (7 jump, 9 flip jump, 0xB high jump,
@@ -108,7 +108,7 @@ const struct actor_pmf gActionCtrlStateTable[42] = {
 
 /* The 13-level animation rows (4-byte `struct level_anim` records,
  * gPlayerCtrlModeLevelAnims in speed_table_16c090.c), one pointer per mode:
- * actor_part_16048.c reads `gPlayerCtrlModeAnimRows[mode][level]`. */
+ * swim_ctrl.c reads `gPlayerCtrlModeAnimRows[mode][level]`. */
 extern const u8 gPlayerCtrlModeLevelAnims[8][13][4];
 
 const u8 *const gPlayerCtrlModeAnimRows[8] = {

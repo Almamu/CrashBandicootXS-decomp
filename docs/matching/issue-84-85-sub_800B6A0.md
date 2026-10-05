@@ -1,7 +1,7 @@
 # Issues #84/#85: `SetCtrlTargetMotionY`/`StartCtrlTargetMotionY`
 
 Two `parked-function` issues, both against the same pair of sibling
-functions in `src/graphics/actor_part16.c` (real bytes previously in
+functions in `src/player/player_flags.c` (real bytes previously in
 the now-removed `asm/code_3_2_18.s`). Both matched in the same pass,
 since they share the exact same gap and fix.
 
@@ -17,7 +17,7 @@ additionally duplicates the (possibly negated) X component into
 ## The gap, and what actually closed it
 
 `docs/matching.md`'s frozen entry for this pair ("A new unnamed
-object: `actor_part15.c`/`actor_part16.c`") documented this compiler
+object: `player_update.c`/`player_flags.c`") documented this compiler
 unconditionally spilling the `vec` pointer to a callee-saved register
 (`push {r4,lr}`/`pop {r4}`) whenever it's referenced from both branches
 of the `if`/`else`, even though nothing in either branch actually
@@ -59,12 +59,12 @@ after an otherwise-perfect instruction match (see
 
 ## Cross-references
 
-- `docs/status/actor.md` - `actor_part16.c`'s matched-function list
+- `docs/status/actor.md` - `player_flags.c`'s matched-function list
   updated, the stale parked entry for this pair removed.
 - `docs/matching.md` - the frozen historical entry ("A new unnamed
-  object: `actor_part15.c`/`actor_part16.c`") still describes the three
+  object: `player_update.c`/`player_flags.c`") still describes the three
   earlier failed attempts; this file supersedes only the final
   disposition (matched, not parked).
 - `ldscript.txt`/`tools/report_units.py` - `asm/code_3_2_18.s` (now
-  empty) removed from both; `actor_part16.o` now links directly against
-  `actor_part17.o`.
+  empty) removed from both; `player_flags.o` now links directly against
+  `ctrl.o`.

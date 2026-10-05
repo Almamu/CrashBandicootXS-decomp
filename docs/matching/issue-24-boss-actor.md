@@ -2,7 +2,7 @@
 
 All 25 functions of the former `asm/code_3_2_17_188d0_1967c.s` now live
 in the new `src/graphics/actor_part_1967c.c` (named by address, like
-`actor_part_17524.c`). **23 are real C; `SpawnDingodileShark` and `UpdateDingodileShield`
+`input_ctrl.c`). **23 are real C; `SpawnDingodileShark` and `UpdateDingodileShield`
 are NAKED transcriptions** with complete C reconstructions kept under
 `#if NON_MATCHING`. Issue #24 stays open for those two.
 
@@ -29,7 +29,7 @@ ands r0, r1                     ands r0, r1
 The same holds for `|= 0x10`, for 4-bit bitfield inserts (`movs r1,#0x10;
 rsbs` before the `ldrb`), and for byte stores of a constant through an
 inline setter. Other files handled this pattern with per-site register
-pins (`actor_part_17524.c`'s `register s32 m asm("r0") = 0x7F`,
+pins (`input_ctrl.c`'s `register s32 m asm("r0") = 0x7F`,
 `graphics_loading_1fdec.c`'s inline-asm `mov r1, #0x10; neg r1, r1`).
 With `old_agbcc` the natural C gives these sequences with no pins.
 `SpawnDingodileStalactite`, for example, matches as plain C under `old_agbcc` and
@@ -38,7 +38,7 @@ does not match at all under `agbcc`.
 The Makefile now has an `OLD_AGBCC_OBJS` list. Objects in it are
 compiled with `$(CC1_OLD)`, and `-fprologue-bugfix` is dropped because
 `old_agbcc` does not accept it. **This is probably worth trying on
-neighbouring issue chunks.** `actor_part_17524.c` (issue #21), right
+neighbouring issue chunks.** `input_ctrl.c` (issue #21), right
 before this one, has the same pin-shaped idioms.
 
 ### 2. Virtual calls are indirect calls through `_call_via_rN`

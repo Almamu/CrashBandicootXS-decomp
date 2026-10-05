@@ -3,16 +3,16 @@
 #include "actor_self.h"
 
 /* Continues the same player/action-object action-table family already
- * documented in actor_part17.c/actor_part18.c/actor_part18b.c - `self`
+ * documented in ctrl.c/action_ctrl_states.c/action_ctrl_land.c - `self`
  * is the same large per-instance object those files use (state at
  * `+0x28`, a table-index field at `+0xc`, an anim-frame halfword/byte
  * pair at `+0x10`/`+0x12`, a counter at `+0x44`, an accumulator at `+8`
  * that doubles as `struct anim_part_instance.field_08` for
  * `GetAnimFrameBaseOffset`, and a "part table" pointer at `+0`, the
- * same convention actor_part18.c documents at `animTimer` for its own
+ * same convention action_ctrl_states.c documents at `animTimer` for its own
  * object), plus a `+0x50`-rooted `{s16 offset; void *fn}` trampoline
  * record fed through `_call_via_r2`/`_call_via_r3` (the same convention
- * already named in actor_part10.c/actor_part11.c for a sibling "part"
+ * already named in part_list_cull.c/part_list.c for a sibling "part"
  * object, just at a different fixed offset here) and a `+0x48`/`+0x4c`
  * circular doubly-linked-list pair (confirmed by `DestroyPolarPlayer`'s own
  * unlink sequence below) rooted at the player-pointer global

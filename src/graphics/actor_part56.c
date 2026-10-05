@@ -2,13 +2,13 @@
 #include "actor_self.h"
 #include "actor_anim.h"
 
-/* Branchless absolute value - see actor_part39.c's copy of this macro
+/* Branchless absolute value - see wumpa.c's copy of this macro
  * for the full explanation. */
 #define ABS32(x, sign) do { (sign) = (x) >> 0x1f; (x) ^= (sign); (x) -= (sign); } while (0)
 
-/* Same "self" object family as actor_part39.c - see that file's header
+/* Same "self" object family as wumpa.c - see that file's header
  * comment and docs/matching/issue-50-actor-2a69c.md. Non-adjacent to
- * actor_part39.c since the parked `DrawActor`
+ * wumpa.c since the parked `DrawActor`
  * (actor_part44.c) sits raw between them. */
 
 extern s32 GetCellAnimDistance(void);

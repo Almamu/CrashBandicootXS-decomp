@@ -5,7 +5,7 @@
 
 /* The crate (CreateCrate, gCrateVtable): the object the issue #12
  * "physics/collision" cluster (ROM 0x0800D040-0x0800FC70,
- * src/system/game_loop6.c/7.c/47.c/48.c/49.c) turned out to be. `kind`
+ * src/crates/crate_hit.c/crate_break.c) turned out to be. `kind`
  * is the crate type CreateCrate picks (0 plain, 1 checkpoint, 2 Aku Aku,
  * 3 iron "!", 4 arrow, 5 outline, 6 nitro switch, 7 iron, 8 iron arrow,
  * 9 life, 10 nitro, 11 "?", 12 bouncy wumpa, 14 TNT, 16-18 time crates,
@@ -231,7 +231,7 @@ static inline void PhysSetFrame(struct crate *obj, s32 idx)
 }
 
 /* Sets bit `id` of the gEntityFlags+0x108 bitmap - the same
- * sequence (and the same do/while(0) trick) as actor_part_16048.c's
+ * sequence (and the same do/while(0) trick) as swim_ctrl.c's
  * SET_ID_BIT. */
 #define PHYS_SET_ID_BIT(idExpr)                                                \
     do                                                                         \

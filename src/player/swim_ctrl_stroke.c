@@ -5,11 +5,11 @@
  * jump-table dispatchers of the player-input controller class
  * (include/player_ctrl.h) documented in
  * docs/matching/issue-19-0x08015840-actor.md. The third, ApplyPlayerCtrlSwimDrift, is
- * actor_part86b.c. All three are called from actor_part_16048.c's
+ * swim_ctrl_stroke.c. All three are called from swim_ctrl.c's
  * per-state handlers.
  *
  * Built with the older compiler, tools/agbcc/bin/old_agbcc (the Makefile's
- * OLD_AGBCC_OBJS), like actor_part_16048.c right after it. Under old_agbcc
+ * OLD_AGBCC_OBJS), like swim_ctrl.c right after it. Under old_agbcc
  * these are plain C; the "extra scratch-register copy" that kept them
  * NAKED under the current agbcc is simply old_agbcc's register allocation.
  *
@@ -218,7 +218,7 @@ void StartPlayerCtrlSpin(struct player_ctrl *self)
 
 /* GitHub issue #19: 0x08015DF8-0x08015FDC, the third jump-table dispatcher
  * of the player-input controller class (include/player_ctrl.h), after
- * actor_part86.c's StartPlayerCtrlStroke/StartPlayerCtrlSpin - see
+ * StartPlayerCtrlStroke/StartPlayerCtrlSpin above - see
  * docs/matching/issue-19-0x08015840-actor.md. Built with old_agbcc (the
  * Makefile's OLD_AGBCC_OBJS): the "scratch-register copy" before each
  * `>> 2` (`adds r5,r0,r5; adds r1,r5,#0; asrs r6,r1,#2`) that kept this

@@ -8,12 +8,12 @@ now match as real C:
 
 | Function | File | Issue | Compiler | Was | Now |
 |---|---|---|---|---|---|
-| `PlayerAnimWouldTouchCrate` | `src/graphics/actor_part109.c` | #11 | old_agbcc | 42 | match |
-| `BreakCrateTouchedByPlayer` | `src/system/game_loop6.c` | #12 | old_agbcc | 151 | match |
-| `QueueCratePlayerCollision` | `src/system/game_loop47.c` | #12 | old_agbcc | 968 | 938, still NAKED |
-| `ApplyCrateCollision` | `src/system/game_loop47.c` | #12 | old_agbcc | 49 | 49, still NAKED |
+| `PlayerAnimWouldTouchCrate` | `src/crates/crate_touch.c` | #11 | old_agbcc | 42 | match |
+| `BreakCrateTouchedByPlayer` | `src/crates/crate_hit.c` | #12 | old_agbcc | 151 | match |
+| `QueueCratePlayerCollision` | `src/crates/crate_break.c` | #12 | old_agbcc | 968 | 938, still NAKED |
+| `ApplyCrateCollision` | `src/crates/crate_break.c` | #12 | old_agbcc | 49 | 49, still NAKED |
 
-Each of `actor_part109.o` and `game_loop6.o` holds only its one
+Each of `crate_touch.o` and `crate_hit.o` holds only its one
 function, and both joined `OLD_AGBCC_OBJS`. Under current agbcc the
 closed C is 25 and 129 halfwords off. Both objects end with
 `asm(".align 2, 0")` because the ROM pads with zeros, not a `nop`.
@@ -116,7 +116,7 @@ does because `sp` isn't a valid QImode base. Tried:
 - **Passing the packed struct, or calling through an unprototyped or
   `u8`-parameter function-pointer cast:** either no change or 4 to 12 bytes too long.
 
-`game_loop47.o` stays on current agbcc. Both of its functions are still
+`crate_break.o` stays on current agbcc. Both of its functions are still
 NAKED, so the compiler choice doesn't matter yet. When one of them
 closes, the file can simply move to `OLD_AGBCC_OBJS`.
 

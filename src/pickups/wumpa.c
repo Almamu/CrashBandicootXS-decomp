@@ -4,9 +4,9 @@
 extern void DrawSprite(void *self, void *part);
 extern void *gSpriteRenderer;
 
-/* Calls `DrawSprite` (already matched in `actor_part.c`) with the
+/* Calls `DrawSprite` (already matched in `sprite.c`) with the
  * global `gSpriteRenderer` as `self` - same tail-call shape as
- * `DrawSpriteObj` (`actor_part5.c`), but here as a leading step rather
+ * `DrawSpriteObj` (`sprite_obj.c`), but here as a leading step rather
  * than the whole body. If `part+0x38` (a field not otherwise
  * characterized yet in this ROM region) is nonzero, also clears
  * `part->flags` bit 3 - written as `& -9` (the established
@@ -26,7 +26,7 @@ void DrawWumpa(struct actor *part)
 }
 
 /* Always-2 stub - same shape as `GetSpriteObjClassId`'s always-true stub
- * (`actor_part6.c`). */
+ * (`sprite_obj.c`). */
 s32 GetWumpaClassId(void)
 {
     return 2;
@@ -36,7 +36,7 @@ extern void DestroySpriteObj(struct actor *self, u32 arg1);
 extern u8 gWumpaVtable[];
 
 /* Sets `self->table` then tail-calls `DestroySpriteObj` (already matched in
- * `actor_part6.c`), which unconditionally overwrites `table` again
+ * `sprite_obj.c`), which unconditionally overwrites `table` again
  * with `gEntityVtable` - so this function's own store is
  * immediately clobbered by the callee. Kept faithfully anyway; the
  * compiler can't see through the opaque call to know the store is
@@ -61,7 +61,7 @@ void ResetWumpaPickup(struct actor *self)
 extern struct actor *InitSpriteObj(struct actor *self);
 
 /* Re-initializes `self` via `InitSpriteObj` (already matched in
- * `actor_part6.c`), then overwrites its table with
+ * `sprite_obj.c`), then overwrites its table with
  * `gWumpaVtable` and runs `ResetWumpaPickup` on it. */
 struct actor *InitWumpa(struct actor *self)
 {
@@ -76,7 +76,7 @@ extern void *gPlayer;
 
 /* If `self+0x48` is zero and the player (`gPlayer`)'s top
  * flag bit is set, fires a `self->table+0x68`-driven trampoline (the
- * same idiom documented in `actor_part12.c`/`actor_part13.c`) on
+ * same idiom documented in `crate_list.c`/`player_contact.c`) on
  * `self` itself. Always returns 0. */
 s32 CollideWumpa(struct actor *self)
 {
@@ -138,9 +138,9 @@ extern void *gEntityFlags;
 
 /* Distance-gate: if the player (`gPlayer`) is within 0x180
  * (384 px) of `self` on both axes, calls `UpdateSpriteObj` (already
- * matched in `actor_part5.c`) on `self`. Otherwise sets `self->flags`
+ * matched in `sprite_obj.c`) on `self`. Otherwise sets `self->flags`
  * bit 0 and, unless `self->field_08 == 0xFFFF`, marks its bit in the
- * same `gEntityFlags+0x108` bitmap `actor_part2.c` already
+ * same `gEntityFlags+0x108` bitmap `sprite.c` already
  * writes - identical idiom, reused verbatim including the
  * register-pinned `>> 5` (see that file's note on why a plain C shift
  * doesn't reproduce the ROM's exact instruction here). */
@@ -213,7 +213,7 @@ extern void ResetStopwatch(void *self);
 extern u8 gStopwatchVtable[];
 
 /* Allocates a new `struct actor`-shaped object (`OperatorNew(0x40)`,
- * same size as `CreateSpriteObj`'s constructor in `actor_part6.c`),
+ * same size as `CreateSpriteObj`'s constructor in `sprite_obj.c`),
  * re-initializes it via `InitSpriteObj`, overwrites its table with
  * `gStopwatchVtable`, and runs the empty `ResetStopwatch` on it before
  * setting `field_08`/`x`/`y` from the raw pixel arguments. */
@@ -246,7 +246,7 @@ void DestroyStopwatch(struct actor *self, u32 arg1)
 /* Same re-init/table-set/`ResetStopwatch` shape as `CreateStopwatch` above,
  * but re-initializing an existing `self` instead of allocating a new
  * one - the same relationship `InitSpriteObj` itself has to
- * `CreateSpriteObj` (see `actor_part6.c`'s note on that pair). */
+ * `CreateSpriteObj` (see `sprite_obj.c`'s note on that pair). */
 struct actor *InitStopwatch(struct actor *self)
 {
     InitSpriteObj(self);

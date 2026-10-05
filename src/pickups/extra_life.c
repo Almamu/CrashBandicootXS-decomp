@@ -8,12 +8,12 @@
  * this pass" section for the individual draft characterizations this
  * file finishes integrating: `CheckExtraLifePickup`, `PickUpExtraLife`, `UpdateExtraLife`,
  * `CreateExtraLife`, `SendExtraLifeToHud`. All 5 operate on the same still-unnamed
- * "part" object `src/system/game_loop52.c`/`game_loop53.c` already
+ * "part" object `src/pickups/extra_life.c`/`wumpa_update.c` already
  * document (the older functions use raw `u8 *` offsets; the ones
  * turned into C by the issue #15 NAKED retry use `struct orbit_part`,
  * include/orbit_part.h). This closes out
  * the entire `0x08010D54` chunk (issue #12/#14): every function between
- * `AddCollisionCandidate` and the already-matched `src/graphics/actor_part39.c`
+ * `AddCollisionCandidate` and the already-matched `src/pickups/wumpa.c`
  * (`DrawWumpa`) is now matched. */
 
 extern void *gPlayer;
@@ -45,7 +45,7 @@ extern u8 gExtraLifeVtable[];
  * file compiles identically under either compiler. */
 
 /* `frame = min(0, frameCount - 1)` against the part's current animation
- * record (same clamp as game_loop53.c's copy). */
+ * record (same clamp as wumpa_update.c's copy). */
 static inline void OrbitClampFrame(struct orbit_part *self)
 {
     s32 frame = 0;
@@ -65,7 +65,7 @@ void PickUpExtraLife(void *selfArg, u8 randomize);
  * active (`self+0x4a != 0`) and either its phase hasn't wrapped past
  * `0x16` yet or the player (`gPlayer`) is in state
  * `+0x88 == 3` - the exact same opening gate `CheckWumpaPickup`
- * (`game_loop52.c`) already uses. Once past that gate, proceeds only
+ * (`extra_life.c`) already uses. Once past that gate, proceeds only
  * when flags bit 3 is clear and flags bit 2 is set (same bit-test idiom
  * as `CheckWumpaPickup`), builds both `self`'s and the player's AABB via
  * `GetSpriteHitbox` (unlike `CheckWumpaPickup`, always the "secondary" AABB
@@ -122,7 +122,7 @@ void CheckExtraLifePickup(void *selfArg)
  * re-derives `self->x`/`self->y` plus `self->0x40`/`self->0x44` (a
  * "distance to travel" pair, `-FixedDiv(newPos<<8 - offset, 0x1400)`)
  * from the results - the exact same tail shape `PickUpWumpa`/
- * `SendExtraLifeToHud`/`SendWumpaToHud` (`game_loop53.c`) all share. */
+ * `SendExtraLifeToHud`/`SendWumpaToHud` (`wumpa_update.c`) all share. */
 void PickUpExtraLife(void *selfArg, u8 randomize)
 {
     u8 *self = selfArg;
@@ -191,15 +191,15 @@ void PickUpExtraLife(void *selfArg, u8 randomize)
  * `AddLife(gLevelState)`, set flags bit 0, and (unless
  * `self->8 == 0xffff`) set `self->8`'s bit in the
  * `gEntityFlags+0x108` collision bitmap - the same inline idiom
- * `UpdateWumpa` (`game_loop53.c`) also duplicates per mode. Any other
+ * `UpdateWumpa` (`wumpa_update.c`) also duplicates per mode. Any other
  * mode (0, or 3+): gated by `self->0x4a`, increments `self->0x49` or
  * `self->0x4b` (wrapping the gate off after 32 ticks). The shared tail:
  * unless `self->0x48 != 0`, either computes an orbit step via
  * `gSineTable[(self->0x49 & 0x7f)]` and `FixedMul` added
  * into `self->0x50`, storing to `self->y` (when `self->0x4a` is clear),
- * or calls `UpdateExtraLifeHop` (`game_loop52.c`'s own orbit-position updater)
+ * or calls `UpdateExtraLifeHop` (`extra_life.c`'s own orbit-position updater)
  * when `self->0x4a` is set - then always tail-calls `UpdateSpriteObj`
- * (already matched, `actor_part5.c`).
+ * (already matched, `sprite_obj.c`).
  *
  *
  * old_agbcc. The `"+r"` copy in mode 1 reproduces its recomputed
@@ -313,13 +313,13 @@ void UpdateExtraLife(struct orbit_part *self)
  * Allocates a `0x54`-byte object (`OperatorNew`), re-initializes it
  * (`InitSpriteObj`), repoints `self->table` (`self+0x18`) at
  * `gExtraLifeVtable`, clears the "spawned/active" gate byte via
- * `ResetExtraLifePickup` (`game_loop52.c`), stores `arg0` at `self+8` and
+ * `ResetExtraLifePickup` (`extra_life.c`), stores `arg0` at `self+8` and
  * `arg1`/`arg2` (Q8-scaled) at `self+0`/`self+4`, mirrored into
  * `self+0x4c`/`self+0x50` (the orbit anchor `SetExtraLifePos`/
  * `UpdateExtraLifeHop` also use), joins the `gUnknown_030012EC`
  * `dual_array_manager` list (`AddToPartList`), derives `self+0x30` from
  * the same `table[self->0x2d]->+0x16` clamp idiom `PickUpWumpa`/
- * `SendWumpaToHud` (`game_loop53.c`) use, clears bits 0/5 of `self+0x28`,
+ * `SendWumpaToHud` (`wumpa_update.c`) use, clears bits 0/5 of `self+0x28`,
  * and always tags `self+0x29`/`+0x2a`/`+0x2b` all `0`, returning the
  * new part.
  *
@@ -352,7 +352,7 @@ struct orbit_part *CreateExtraLife(u16 id, u16 x, u16 y, s32 unused)
 
 /* `void SendExtraLifeToHud(void *part)` - extern already declared in
  * `game_loop29.c`; the documented "mutually exclusive alternative" is
- * `SendWumpaToHud` (`game_loop53.c`, already matched). Plays a hit SFX,
+ * `SendWumpaToHud` (`wumpa_update.c`, already matched). Plays a hit SFX,
  * sets `self->0x48 = 1`, nudges `self->x -= self->0x4a<<8`, sets
  * `self->0x25 = 1`, calls `WorldToScreen(self, x>>8, y>>8, &outX, &outY)`
  * and re-derives `self->x`/`self->y` plus `self->0x40`/`self->0x44`
@@ -398,9 +398,9 @@ void SendExtraLifeToHud(void *selfArg)
  * `self` here is a further, still-unnamed "part"-shaped object -
  * distinct from `struct actor` (only 0x1c bytes) and from the
  * `struct collision_queue` `AddCollisionCandidate`/`DestroyCollisionQueue`/`ResetCollisionQueue`
- * (game_loop50.c) operate on - the same "big, mostly-uncharacterized
+ * (collision_queue.c) operate on - the same "big, mostly-uncharacterized
  * object, individual fields named only by offset" situation already
- * documented for this object family in `src/graphics/actor_part15.c`'s
+ * documented for this object family in `src/player/player_update.c`'s
  * own file header. Every function here operates on a handful of fields
  * clustered at `self+0xc`/`+0x18`/`+0x38`/`+0x48`-`+0x50`:
  *
@@ -443,7 +443,7 @@ void SendExtraLifeToHud(void *selfArg)
  * `DrawSprite`/`self+0x38` gate and clears flags bit 3 when gated off,
  * `DestroyExtraLife`/`InitExtraLife`/`ResetExtraLifePickup` are a small
  * init/reset/table-repoint trio (same `InitSpriteObj`/table-swap shape
- * documented throughout `actor_part8.c`), and `CheckWumpaPickup` is the
+ * documented throughout `moving_sprite.c`), and `CheckWumpaPickup` is the
  * per-frame player-proximity/hit-resolve step: gated by the same
  * orbit-mode/phase fields, it AABB-tests against the player (choosing
  * primary vs. secondary AABB build depending on the player's own
@@ -465,7 +465,7 @@ extern s32 gExtraLifeHopWidths[3];
 /* Phase 2's neighboring group (not read/matched this pass) - the
  * randomized-position despawn picker `docs/rom_map.md` already
  * documents, called as `PickUpWumpa(entry, 1)`/`(other, 1)` elsewhere
- * (`game_loop40.c`/`game_loop49.c`). */
+ * (`game_loop40.c`/`crate_break.c`). */
 extern void PickUpWumpa(void *self, s32 mode);
 
 /* Per-frame orbit-position update. Reads the current orbit phase
@@ -514,7 +514,7 @@ void UpdateExtraLifeHop(struct orbit_part *self)
 }
 
 /* Re-derives visibility via `DrawSprite(gSpriteRenderer, self)`
- * (already matched, `actor_part.c`), then clears flags bit 3
+ * (already matched, `sprite.c`), then clears flags bit 3
  * (`self+0xc`) when `self+0x38` is nonzero - the same "consumed/hit"
  * flag bit `CheckWumpaPickup` below sets. */
 void DrawExtraLife(void *selfArg)
@@ -537,7 +537,7 @@ s32 GetExtraLifeClassId(void)
 }
 
 /* Repoints `self->table` (`self+0x18`) at `gExtraLifeVtable`, then
- * tail-calls `DestroySpriteObj` (already matched, `actor_part8.c`) with
+ * tail-calls `DestroySpriteObj` (already matched, `moving_sprite.c`) with
  * `self` and this function's own second argument passed straight
  * through. */
 void DestroyExtraLife(void *selfArg, u32 arg1)
@@ -557,7 +557,7 @@ void ResetExtraLifePickup(void *selfArg)
 }
 
 /* Re-initializes `self` via `InitSpriteObj` (already matched,
- * `actor_part8.c`; its return value is discarded - same "call for
+ * `moving_sprite.c`; its return value is discarded - same "call for
  * side effect only" shape used elsewhere in this object family),
  * repoints `self->table` at `gExtraLifeVtable`, clears the
  * "spawned/active" gate byte via `ResetExtraLifePickup`, and returns `self`. */

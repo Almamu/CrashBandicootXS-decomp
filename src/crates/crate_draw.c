@@ -11,7 +11,7 @@
  * "collision box" object every other function in this subsystem
  * operates on - offsets kept raw rather than a named struct, matching
  * every already-matched sibling in this file family
- * (game_loop22.c-game_loop34.c). See
+ * (crate_reset.c-game_loop34.c). See
  * docs/matching/issue-13-fc70-second-continuation.md for the
  * register-pinning technique this needed. */
 
@@ -22,7 +22,7 @@ extern void DrawSprite(void *self, void *part);
  * bits are already nonzero, resets `self+0x38` to 0 and clamps
  * `self+0x30`'s index to the `self+0x20`-pointer-to-manager/
  * `self+0x2d`-tag/0x1c-stride hitbox-record's own `+0x16` count
- * (the same table-lookup convention `BreakCrateTouchedByPlayer`, game_loop6.c,
+ * (the same table-lookup convention `BreakCrateTouchedByPlayer`, crate_hit.c,
  * establishes). Always tail-fires `DrawSprite(gSpriteRenderer,
  * self)`, then - only if `self+0x38` ended up nonzero - clears
  * `self+0xc` bit 3. */
@@ -79,7 +79,7 @@ void DrawCrate(void *selfArg)
          * (`movs r0,#9; rsbs r0,r0,#0`, the negative-constant
          * register-pinned mask idiom - see
          * matching_decomp_register_pinning and CollideCrateWithPlayer's own use
-         * of it, game_loop30.c) rather than folding it into an 8-bit
+         * of it, crate_stack.c) rather than folding it into an 8-bit
          * AND immediate, which a plain `self[0xc] &= -9;` always did
          * instead. `self` is passed as an input purely so this
          * compiler knows the asm still depends on it - without that,

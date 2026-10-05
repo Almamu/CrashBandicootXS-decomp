@@ -473,7 +473,7 @@ s32 ApplySpriteObjVelocity(void)
 extern void DrawSprite(void *self, void *part);
 extern void *gSpriteRenderer;
 
-/* Tail-calls `DrawSprite` (already matched in `actor_part.c`) with
+/* Tail-calls `DrawSprite` (already matched in `sprite.c`) with
  * the global `gSpriteRenderer` as `self`. */
 void DrawSpriteObj(void *part)
 {
@@ -556,8 +556,8 @@ s32 GetSpriteTileBase(void *part)
  * technique that had backfired inside those functions' shared case
  * blocks - works here with no caveats. Needed a trailing
  * `asm(".align 2, 0")` since it's the last function in this file (the
- * ROM has 2 bytes of zero padding here before `GetSpriteObjPriority` in
- * `actor_part6.c`, and a plain compiled function's own natural
+ * ROM has 2 bytes of zero padding here before `GetSpriteObjPriority`
+ * below, and a plain compiled function's own natural
  * alignment produces a `0x46c0` nop-fill instead - the standard
  * `matching_decomp_alignment_fix` gotcha). */
 void *GetSpriteFrame(struct gfx_part *part)
@@ -639,7 +639,7 @@ extern u8 gSpriteObjVtable[];
  * wires up `gEntityVtable` and clears flags), then overwrites
  * its table with `gSpriteObjVtable` instead and clears its
  * part-object fields via `ResetSpriteObj` (already matched in
- * actor_part.c). `arg0` becomes `field_08`, `arg1`/`arg2` become the
+ * sprite.c). `arg0` becomes `field_08`, `arg1`/`arg2` become the
  * Q8 `x`/`y` position. */
 struct actor *CreateSpriteObj(u16 arg0, u16 arg1, u16 arg2)
 {
@@ -687,7 +687,7 @@ struct actor *InitSpriteObj(struct actor *self)
 extern u8 gEmptySpritePoint[];
 
 /* Looks up `part`'s keyframe record via `GetSpriteFrame` (already parked
- * as `NON_MATCHING` in `actor_part5.c`), then picks a pointer off it
+ * as `NON_MATCHING` in `sprite_obj.c`), then picks a pointer off it
  * per the record's `+4` byte's upper nibble: 0 -> `info+0x24`, 6 ->
  * `info+0x14`, anything else (1-5, or above 6) -> the fixed fallback
  * table `gEmptySpritePoint`. Needed the case labels scattered
@@ -769,7 +769,7 @@ void *GetSpriteFrameThirdBox(void *part)
 
 /* Same `GetSpriteFrame`-derived-record-nibble `switch` shape again, with
  * the exact same case-to-block mapping as `GetSpriteAttackBox` (already
- * matched in `actor_part2.c`) - 0/3/4 select `info+0x14`, 5 selects
+ * matched in `sprite.c`) - 0/3/4 select `info+0x14`, 5 selects
  * `info+0xc`, and 1/2/6/anything-above-6 fall back to
  * `gEmptySpriteBox`. That mapping is non-contiguous on its own,
  * so plain ascending case order was enough for a jump table here too,

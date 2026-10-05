@@ -1,7 +1,7 @@
 #ifndef GUARD_PLAYER_CTRL_H
 #define GUARD_PLAYER_CTRL_H
 
-/* The player-input controller object of src/graphics/actor_part_16048.c
+/* The player-input controller object of src/player/swim_ctrl.c
  * (GitHub issues #19/#20, ROM 0x08016048-0x08017524): the underwater
  * (scuba-diving) controller game_loop39.c attaches in room kind 1, with
  * sprite bank 1 (Crash in an air tank and flippers). It is a C++-style class
@@ -9,9 +9,8 @@
  * per-frame update, +0x14 PlayerCtrlHandleEvent message handler, +0x1C AttachPlayerCtrl
  * set target, +0x4C DestroyPlayerCtrl destructor; the rest are base-class
  * sub_800B6xx/sub_800B8xx functions). Constructor InitPlayerCtrl (called from
- * game_loop39.c), whose field reset is actor_part57.c's ResetPlayerCtrl.
- * The dispatchers StartPlayerCtrlStroke/StartPlayerCtrlSpin/ApplyPlayerCtrlSwimDrift (actor_part86.c/
- * actor_part86b.c) and SetPlayerSwimDriftY (actor_part57b.c) are methods of the
+ * game_loop39.c), whose field reset is action_ctrl.c's ResetPlayerCtrl.
+ * The dispatchers StartPlayerCtrlStroke/StartPlayerCtrlSpin/ApplyPlayerCtrlSwimDrift (swim_ctrl_stroke.c) and SetPlayerSwimDriftY (swim_ctrl_drift.c) are methods of the
  * same class. */
 
 struct pctrl_method

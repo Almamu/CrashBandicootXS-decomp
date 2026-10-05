@@ -2,7 +2,7 @@
 #include "actor_self.h"
 #include "actor_anim.h"
 
-/* Same "self" object family as actor_part39.c - see that file's header
+/* Same "self" object family as wumpa.c - see that file's header
  * comment and docs/matching/issue-50-actor-2a69c.md. */
 
 extern s32 gUnknown_030013C8;

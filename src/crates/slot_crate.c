@@ -23,16 +23,16 @@ u32 GetSlotCrateStage(void *selfArg)
 asm(".align 2, 0");
 
 /* GitHub issue #14: 0x08010A0C-0x08010D54, continuing the physics/
- * collision subsystem (`game_loop17.c`-`game_loop26.c`, see
+ * collision subsystem (`game_loop17.c`-`slot_crate.c`, see
  * docs/matching/issue-13-graphics-fc70.md). `GetSlotCrateStage` right before
- * this function is already matched in game_loop26.c; everything here
+ * this function is already matched in slot_crate.c; everything here
  * operates on the same `self` type `GetSlotCrateStage`/`ResetCrate` do - the
  * viewport's own "collision box" sub-record embedded at
  * `gPlayer+0x108` (confirmed by `ResolvePlayerCollisions` in
- * game_loop23.c, which already calls `ResolveCollisionCandidates(gPlayer +
+ * crate.c, which already calls `ResolveCollisionCandidates(gPlayer +
  * 0x108)`). Its fields are `struct crate`'s (include/crate.h). */
 
-/* Getter for the slot crate's stage (`u48.slotState` bits 6-7) - already matched, game_loop26.c. */
+/* Getter for the slot crate's stage (`u48.slotState` bits 6-7) - already matched, slot_crate.c. */
 extern u32 GetSlotCrateStage(void *selfArg);
 
 /* Decrements `self+0x48`'s bits 6-7 sub-state by one, if it isn't

@@ -6,8 +6,8 @@
  * in the cluster, `asm/code_3_2_17_cbf4.s` - `UpdateEffectCtrl`,
  * `EffectCtrlHandleEvent`, `nullsub_3`, `DestroyEffectCtrl`, `InitEffectCtrl`, ROM
  * 0x0800CBF4-0x0800CD00 (contiguous, no gap on either side -
- * `actor_part117.o`'s `CreateKnockedEnemyCtrl` ends exactly where this file
- * starts, and `actor_part109.o`'s already-matched `PlayerAnimWouldTouchCrate`
+ * `enemy_ctrl.o`'s `CreateKnockedEnemyCtrl` ends exactly where this file
+ * starts, and `crate_touch.o`'s already-matched `PlayerAnimWouldTouchCrate`
  * begins exactly where this file ends). Closes out the entire
  * 43-function cluster investigation that began with `UpdateEnemyCtrl`/
  * `HitEnemy`. */
@@ -37,10 +37,10 @@ extern void *_call_via_r1(void *arg0, void *fn);
  * inlined three times over (the ROM has no `bl` to a shared helper).
  *
  * Real C under old_agbcc (issue #9-#11 NAKED retry; the whole file
- * matches under it, so actor_part123.o is in OLD_AGBCC_OBJS - the
+ * matches under it, so effect_ctrl.o is in OLD_AGBCC_OBJS - the
  * constant-before-`ldrb` flag ORs are old_agbcc's tell). `MarkGone` is
  * an inline with the do/while(0) `SET_ID_BIT` that
- * actor_part_16048.c uses (its loop notes give the id reload). The
+ * swim_ctrl.c uses (its loop notes give the id reload). The
  * gone bit is set through a bitfield view of +0x0C and bit 3 is tested
  * through the byte view: that is what makes the second copy reuse the
  * tested byte and its `1` for the OR, in the ROM's registers. */

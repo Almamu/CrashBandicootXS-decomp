@@ -4,7 +4,7 @@
 /* GitHub issue #9: 0x08007634-0x0800B3F0, game_loop-labeled chunk that
  * turned out to be part of the `actor` category's "part" object family
  * (see docs/matching/issue-9-0x08007634-actor.md). `ResetPlayer`/
- * `ResetPlayerForRoom` sit right after already-matched actor_part14.c
+ * `ResetPlayerForRoom` sit right after already-matched ground_sprite.c
  * (`DrawGroundSprite`-`GetMovingSpriteCtrl`). */
 
 extern s32 GetSpriteAnimPaletteSlot(void *part);
@@ -17,11 +17,11 @@ extern void RestartInputCtrl(void *arg0);
  * snapshots the current frame counter (`gRoomFrameCount`) into
  * `+0x8c` (the same "periodic check" field documented elsewhere in
  * this ROM), zeroes the `+0x100`-`+0x105` per-phase flag bytes
- * `actor_part15.c`'s doc comment already describes, and hooks up a
+ * `player_update.c`'s doc comment already describes, and hooks up a
  * child/"owner" object at `+0xb0`: calls `GetSpriteAnimPaletteSlot(child)` and packs
  * its low nibble into `child+0x29`'s own low nibble (preserving the
  * high nibble) - the same field `ResetPlayer`'s sibling constructors in
- * actor_part14.c already touch at a different bit.
+ * ground_sprite.c already touch at a different bit.
  *
  * Matched after a second pass closed the gap an earlier session parked
  * on (see docs/matching/issue-9-0x08007634-actor.md's original entry

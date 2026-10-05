@@ -71,7 +71,7 @@
  * - `type == 5`: sets `self+0x50`/`+0x51`/`+0x48` from the placement
  *   record, tags `self+0x2d = 0x15`; later, if the placement record
  *   confirms the entity is present, calls `SolidifyOutlineCrate(self)` (matched
- *   as `NAKED` in game_loop49.c, issue #12) - a direct, concrete tie
+ *   as `NAKED` in crate_break.c, issue #12) - a direct, concrete tie
  *   between this constructor family and that subsystem.
  * - `type == 0xf` (case `_0801028E`): the largest single case - looks
  *   up a tile/graphics asset via `GetPaletteSlot`, masks `self+0x48`,
@@ -88,7 +88,7 @@
  * re-tags `self+0x2d = 0x1b` (27), reruns the sprite/animation trio,
  * and initializes `self+0x30` from the 28-byte-stride hitbox-record
  * table's own `+0x16` count (the same convention `DrawCrate`,
- * game_loop35.c, already established) minus one; also folds `type`'s
+ * crate_draw.c, already established) minus one; also folds `type`'s
  * low bit into `self+0x4d` bit 0 (keeping bit 7). Writes
  * `self+0x4e = type` unconditionally. If `type == 5` and the placement
  * record confirms presence, calls `SolidifyOutlineCrate(self)` (see above).

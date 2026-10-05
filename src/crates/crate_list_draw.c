@@ -7,8 +7,8 @@ extern s32 _call_via_r2(void *arg0, void *arg1, void *fn);
 extern void *gLevelLayers;
 
 /* The spatial-hash-grid pool manager struct `InitCrateList` initializes
- * and `actor_part12.c` operates on - see that file (and
- * `actor_part11.c`) for the full field writeup. */
+ * and `crate_list.c` operates on - see that file (and
+ * `part_list.c`) for the full field writeup. */
 struct pool_manager {
     s32 activeCount;
     s32 capacity;
@@ -165,7 +165,7 @@ void DrawCrateList(void *managerArg)
 }
 
 /* Matches the ROM's own trailing zero-fill padding out to the 4-byte
- * boundary that `CollideCrateGrid` (`actor_part11f.c`, immediately following
+ * boundary that `CollideCrateGrid` (`crate_grid_collide.c`, immediately following
  * in `ldscript.txt` link order) needs for its own alignment. Without this,
  * the linker bridges the same 2-byte gap with its default Thumb NOP
  * fill (`mov r8, r8` / `0x46c0`) instead of the ROM's zero bytes - same

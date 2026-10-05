@@ -44,7 +44,7 @@ overrides described below).
 
 1. Allocates a `0x64` (100)-byte object via `OperatorNew(0x64)`
    (`self`), zero-initializes `self+0x59`, then calls
-   `ResetCrate(self)` (already matched, game_loop22.c - clears the
+   `ResetCrate(self)` (already matched, crate_reset.c - clears the
    collision-response state/countdown/neighbor-list-pointer block).
    Sets `self+0x18 = &gCrateVtable` - a real address inside the
    documented 93-entry `gStaticData_087Exxx` vtable family, but at a
@@ -112,7 +112,7 @@ overrides described below).
 | `2` | `SpawnAkuAkuCrate` | `0x17` (23) | |
 | `3` | `SpawnIronSwitchCrate` | `3` (or escalates to `7`) | `self+0x50/0x51/0x4c` = record `[6]/[7]/[8]`; escalates to `type 7` if record present |
 | `4` | `SpawnArrowCrate` | `0x18` (24) | |
-| `5` | `SpawnOutlineCrate` | `0x15` (21) | `self+0x50/0x51` = record `[6]/[7]`, `self+0x48` = signed record `[8:9]`; post-tail calls `SolidifyOutlineCrate(self)` (game_loop49.c, issue #12) if record confirmed |
+| `5` | `SpawnOutlineCrate` | `0x15` (21) | `self+0x50/0x51` = record `[6]/[7]`, `self+0x48` = signed record `[8:9]`; post-tail calls `SolidifyOutlineCrate(self)` (crate_break.c, issue #12) if record confirmed |
 | `6` | `SpawnNitroSwitchCrate` (else branch) | `4` | |
 | `7` | `SpawnNitroSwitchCrate` (if branch), `SpawnIronCrate` | `0x20` (32) | also the `type 3` escalation target |
 | `8` | `SpawnIronArrowCrate` | `2` | |
@@ -140,7 +140,7 @@ byte, and folds three placement-record `+1` flag bits
 `type == 5`'s post-tail call to `SolidifyOutlineCrate(self)` is a direct,
 concrete link between this constructor family and the issue #12
 physics/collision cluster: `SolidifyOutlineCrate` is matched as `NAKED` in
-`src/system/game_loop49.c` (issue #12 Phase 2). This confirms `type 5`
+`src/crates/crate_break.c` (issue #12 Phase 2). This confirms `type 5`
 spawns an entity that immediately participates in that cluster's own
 collision-response state machine.
 
@@ -154,7 +154,7 @@ pointer, live only across `type == 0xf`'s case), and the same
 `self+0x20`/`self+0x2d`/28-byte-stride hitbox-record register shape
 this project's issue #12/#13 write-ups already established as a
 confirmed gcc-2.9-resistant allocation (see `QueueCratePlayerCollision`/
-`ApplyCrateCollision`, game_loop47.c/game_loop48.c) made a plain-C attempt a
+`ApplyCrateCollision`, crate_break.c) made a plain-C attempt a
 poor bet given the size (~660 instructions, roughly four times any
 function this project has successfully matched as real C). Transcribed
 instruction-for-instruction from the ROM disassembly (cross-checked
@@ -192,14 +192,14 @@ Verified byte-exact via a full clean `make compare`
 - `docs/status/game_loop.md` - matched list updated for this pass;
   `CreateCrate` moved out of "Still raw, category-mapped".
 - `tools/report_units.py` - the `0x0800FF0C` unit now points at the new
-  `src/system/game_loop36.o` instead of `None`.
-- `ldscript.txt` - `game_loop36.o` replaces the deleted
+  `src/crates/crate_create.o` instead of `None`.
+- `ldscript.txt` - `crate_create.o` replaces the deleted
   `asm/code_3_2_17_e560_ff0c.o` in link order (immediately before
-  `game_loop35.o`).
+  `crate_draw.o`).
 - `asm/code_3_2_17_e560_ff0c.s` - deleted, fully consumed.
 
 *Later pass (size2 NAKED retry):* `CreateCrate` is real C under
-old_agbcc (`game_loop36.o` joined `OLD_AGBCC_OBJS`; under agbcc the C is
+old_agbcc (`crate_create.o` joined `OLD_AGBCC_OBJS`; under agbcc the C is
 8 bytes long). The three placement-record pointer copies come from an
 inline `Placement(slot)` whose return value is copied; the other reads
 use the plain macro. See [size2-naked-retry.md](size2-naked-retry.md).

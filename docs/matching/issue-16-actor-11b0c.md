@@ -24,20 +24,20 @@ different systems by content, not by address contiguity:
 
 `asm/code_3_2_17_e560.s` is truncated to end right before `DrawWumpa`
 (0x080119A8, unchanged start address). The 15 matched functions move to
-a new `src/graphics/actor_part39.c` (numbered `39` - the next free
-number after `actor_part38d.c`, this repo's highest existing
-`actor_part*.c` at the time this chunk was picked up). A new
+a new `src/graphics/actor_part39.c`, now `src/pickups/wumpa.c` (numbered
+`39` - the next free number after `actor_part38d.c`, this repo's highest
+existing `actor_part*.c` at the time this chunk was picked up). A new
 `asm/code_3_2_17_11bd4.s` picks up the unexamined remainder starting at
 `ActionCtrlHandleEvent` (0x08011BD4) through the end of this chunk's range
 (0x08012FBC, where `ActionCtrlStateRun` - outside this issue's function list -
 begins); `ldscript.txt` and `tools/report_units.py`'s `UNITS` list were
 updated to place all three pieces (`code_3_2_17_e560.o`,
-`actor_part39.o`, `code_3_2_17_11bd4.o`) in that exact link order.
+`wumpa.o`, `code_3_2_17_11bd4.o`) in that exact link order.
 
 ## Matched (15/25)
 
 - **`DrawWumpa`**: tail-calls `DrawSprite` (already matched,
-  `actor_part.c`) with `gSpriteRenderer` as `self`, then clears
+  `sprite.c`) with `gSpriteRenderer` as `self`, then clears
   `part->flags` bit 3 if `part+0x38` is nonzero. Needed the
   negative-constant bit-clear idiom (`& -9` computed via a genuine
   runtime `movs`+`rsbs`, not folded to a positive immediate AND) with
@@ -48,7 +48,7 @@ updated to place all three pieces (`code_3_2_17_e560.o`,
 - **`GetWumpaClassId`**: always-2 stub, same shape as `GetSpriteObjClassId`'s
   always-true stub.
 - **`DestroyWumpa`**: sets `self->table = gWumpaVtable` then
-  tail-calls `DestroySpriteObj` (already matched, `actor_part6.c`), which
+  tail-calls `DestroySpriteObj` (already matched, `sprite_obj.c`), which
   unconditionally overwrites `table` again with `gEntityVtable`
   - this function's own store is immediately clobbered by its callee,
   but kept faithfully since the compiler can't see through the opaque
@@ -65,7 +65,7 @@ updated to place all three pieces (`code_3_2_17_e560.o`,
 - **`CollideWumpa`**: if `self+0x48` is zero and the player
   (`gPlayer`)'s flags top bit is set, fires a
   `self->table+0x68`-driven trampoline (same idiom documented in
-  `actor_part12.c`/`actor_part13.c`) on `self` via `_call_via_r1`.
+  `crate_list.c`/`player_contact.c`) on `self` via `_call_via_r1`.
   Matched directly, no register-pinning needed - the natural ABI
   register choice already matched the ROM.
 - **`SetWumpaPos`**: sets `self->x`/`self->y` (Q8) from raw pixel
@@ -87,9 +87,9 @@ updated to place all three pieces (`code_3_2_17_e560.o`,
 - **`SetWumpaCounter`**: trivial one-byte setter at `self+0x49`.
 - **`UpdateStopwatch`**: distance-gate - if the player is within 0x180
   (384 px) of `self` on both axes, calls `UpdateSpriteObj` (already
-  matched, `actor_part5.c`); otherwise sets `self->flags` bit 0 and,
+  matched, `sprite_obj.c`); otherwise sets `self->flags` bit 0 and,
   unless `self->field_08 == 0xFFFF`, marks its bit in the same
-  `gEntityFlags+0x108` bitmap `actor_part2.c` already writes,
+  `gEntityFlags+0x108` bitmap `sprite.c` already writes,
   reusing that file's exact register-pinned `>> 5` idiom. By far the
   most register-pinning of this batch's functions - the ROM keeps a
   raw load and its shifted result in two different registers at three
@@ -105,7 +105,7 @@ updated to place all three pieces (`code_3_2_17_e560.o`,
   into the opposite branch-target/condition-code pairing.
 - **`CreateStopwatch`**: constructor - allocates a `struct actor`-shaped
   object (`OperatorNew(0x40)`, same size as `CreateSpriteObj`'s constructor
-  in `actor_part6.c`), re-inits it, sets `table = gStopwatchVtable`,
+  in `sprite_obj.c`), re-inits it, sets `table = gStopwatchVtable`,
   runs the empty `ResetStopwatch` on it, then sets `field_08`/`x`/`y` from
   the raw pixel arguments.
 - **`ResetStopwatch`**: empty stub.

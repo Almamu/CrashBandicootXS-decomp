@@ -4,8 +4,7 @@
 /* The collision/animation view of a `part` object (the same object as
  * include/gfx_part.h's `struct gfx_part` / include/gobj_1a794.h's
  * `struct gobj` / include/actor.h's `struct actor`), as read by the
- * early actor/collision core in src/graphics/actor_part.c,
- * actor_part3.c, actor_part7.c, actor_part7b.c and actor_part108.c.
+ * early actor/collision core in src/objects/sprite.c, sprite_anim.c, part_collide.c and player_anim_room.c.
  * Only the fields those functions touch are named.
  *
  * The mirror bits at 0x28 are `u32` bitfields on purpose: that is what

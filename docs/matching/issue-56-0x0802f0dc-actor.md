@@ -2,7 +2,7 @@
 
 25-function `decomp-chunk` covering a second boss-weapon "spawn/pre-
 attack" singleton and its "self" object - the same large per-instance
-object family already documented in `actor_part17.c`/`actor_part18.c`/
+object family already documented in `ctrl.c`/`action_ctrl_states.c`/
 `actor_part19.c`/`actor_part20.c` (state at `self+0x28`, a table-index
 at `self+0xc`, an anim-frame halfword/byte pair at `self+0x10`/
 `self+0x12`, an accumulator at `self+8`, a "part table" pointer at

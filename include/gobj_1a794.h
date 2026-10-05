@@ -142,7 +142,7 @@ struct gobj
                         //        bit 7), cleared when it ends; enemies skip the player meanwhile
     u8 unk_81[7];
     u8 ctrlMode;        // 0x88 - player control mode 0-3: picks the `mover` controller update
-                        //        (actor_part48.c); nonzero freezes `list` (sub_800B58C/sub_800B650/sub_800B678)
+                        //        (player_reset.c); nonzero freezes `list` (sub_800B58C/sub_800B650/sub_800B678)
     u8 unk_89[3];
     u32 deadline;       // 0x8C - gRoomFrameCount frame IsPlayerInvulnerable tests against
     u8 bumped;          // 0x90 - set when a crate's side stopped the player's X motion
@@ -156,7 +156,7 @@ struct gobj
     s32 list[5];        // 0x98 - appended to by sub_800B678
     struct gobj *carried; // 0xAC
     /* The rest is only reached by the base-class accessors in
-     * actor_part16.c. */
+     * player_flags.c. */
     u8 unk_B0[0x50];
     u8 slippery;        // 0x100 - standing on terrain kind 5 (CollidePlayer): the player keeps
                         //         sliding (speedX isn't zeroed, motion keeps its speed, steps halve)

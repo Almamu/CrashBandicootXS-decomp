@@ -20,7 +20,7 @@ the file's `.rodata` at the table's ROM address, between the raw parts of
 - **One file per contiguous run of converted tables.** Name it
   `<what>_<ROM offset>.c`, the offset in lowercase hex without the
   `0x08` (`action_table_16bf20.c` is at `0x0816BF20`), the way
-  `src/graphics/actor_part_16048.c` is named. Two C files can sit next to
+  `src/player/swim_ctrl.c` is named. Two C files can sit next to
   each other when their tables are unrelated (`bg_package_16c58c.c`,
   then `image_table_16c5a0.c`).
 - **Symbol names don't change.** The code references

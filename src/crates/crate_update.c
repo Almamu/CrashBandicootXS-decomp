@@ -12,7 +12,7 @@ extern void UpdateCrateFall(struct crate *self);
 /* GitHub issue #13: 0x0800FC70-0x08010A0C, continuing the physics/
  * collision subsystem (see game_loop17.c's header comment and
  * docs/matching/issue-13-graphics-fc70.md). Sits between the matched
- * `DrawCrate` (game_loop35.c) and `IsCrateInsideRect` (game_loop23.c) in
+ * `DrawCrate` (crate_draw.c) and `IsCrateInsideRect` (crate.c) in
  * ROM, so it needs its own file - see docs/workflow.md's "one file
  * per contiguous ROM region" rule. `self` throughout is the same
  * "collision box" object (`struct crate`, include/crate.h) every
@@ -24,7 +24,7 @@ extern void UpdateCrateFall(struct crate *self);
  * dispatches once more on `self+0x4e` (the settle-state byte):
  * - `0x13`-`0x15`: re-enters the edge-settle chain (`UpdateTntCountdown`),
  *   also arming the global one-shot rescan flag `gCrateListChanged`
- *   (the same flag `UpdateCrateFall`, game_loop32.c, reads).
+ *   (the same flag `UpdateCrateFall`, crate_break.c, reads).
  * - `0xf`: re-triggers `UpdateSlotCrate` when `self+0x4d`'s low 7 bits
  *   are already 0.
  * - `0xc`: once `self+0x4f` has reached 0 this frame, clears

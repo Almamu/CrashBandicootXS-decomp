@@ -12,7 +12,7 @@
 #define ABS32(x, sign) do { (sign) = (x) >> 0x1f; (x) ^= (sign); (x) -= (sign); } while (0)
 
 /* The `InitActorPart`/`gActorList`-rooted "self" object family
- * already documented in actor_part17.c/actor_part18.c/actor_part19.c/
+ * already documented in ctrl.c/action_ctrl_states.c/actor_part19.c/
  * actor_part28.c/actor_part32.c: a "part table" pointer at `self+0`
  * (copied from the constructor's `part` argument's own `+4` field), a
  * table-index/"kind" field at `self+0xc`, an anim-frame halfword/byte

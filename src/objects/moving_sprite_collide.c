@@ -8,7 +8,7 @@
  * genuine "dead read" - loaded into `r4` but never actually passed to
  * `_call_via_r4` (a plain 4-argument function, not itself a trampoline)
  * - the same idiom already confirmed and documented for
- * `CheckSpritePickup`'s own `_call_via_r4` call in `actor_part2.c`. */
+ * `CheckSpritePickup`'s own `_call_via_r4` call in `sprite.c`. */
 void HitMovingSprite(struct gobj *self, s32 arg1, s32 arg2, s32 arg3)
 {
     struct mover *rec = self->mover;

@@ -6,9 +6,9 @@ as real C**, both under old_agbcc. Their files were already on
 
 | Function | File | Issue | Before | Now |
 |---|---|---|---|---|
-| `ActionCtrlStateLeftGround` | `actor_part_14674.c` | #17 | 1 hw (branch target) | **real C** |
-| `UpdateWumpa` | `game_loop53.c` | #15 | 21 hw | **real C** |
-| `ActionCtrlReleaseHang` | `actor_part_14674.c` | #17 | 3 hw | NAKED, unchanged |
+| `ActionCtrlStateLeftGround` | `action_ctrl_hang.c` | #17 | 1 hw (branch target) | **real C** |
+| `UpdateWumpa` | `wumpa_update.c` | #15 | 21 hw | **real C** |
+| `ActionCtrlReleaseHang` | `action_ctrl_hang.c` | #17 | 3 hw | NAKED, unchanged |
 | `GaxChannelMix` | `gax_note_trigger.c` | #68 | ~237 seq | NAKED, draft ~202 seq |
 | `GAX2_init` | `gax_playstart.c` | #66 | ~294 seq | NAKED, not retried |
 

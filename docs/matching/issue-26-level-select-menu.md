@@ -26,7 +26,7 @@ functions):
 
 - **`struct follow_child`** (`sub_801B85C`-`GetCameraLeadOffset`, method table
   `gCameraLeadVtable`, 0x80 bytes) - the child object `InputCtrlStateStart`
-  (`actor_part_17524.c`) spawns. It registers itself as
+  (`input_ctrl.c`) spawns. It registers itself as
   `gCamera`'s follow target (`+0x10`) and each frame
   (`UpdateCameraLead`, table slot `+0x18`) eases a Q8 x offset from the
   player (`+0x7C`) toward a target (`+0x78`, clamped to 0xA00-0x3200 by

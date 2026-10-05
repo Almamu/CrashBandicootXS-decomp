@@ -5,8 +5,8 @@
 /* Dedicated deep investigation (docs/matching/issue-9-10-0x0800ceac-graphics.md):
  * these two functions sit in the still-raw span `tools/report_units.py`
  * tracked as parked (`base_object=None`) between the just-closed
- * `PlayerAnimWouldTouchCrate` (src/graphics/actor_part109.c, issue #9/#10) and the
- * already-matched `BreakCrateTouchedByPlayer` (src/system/game_loop6.c, issue #12,
+ * `PlayerAnimWouldTouchCrate` (src/crates/crate_touch.c, issue #9/#10) and the
+ * already-matched `BreakCrateTouchedByPlayer` (src/crates/crate_hit.c, issue #12,
  * the physics/collision subsystem's documented entry point). Both are
  * called *only* from `QueueCratePlayerCollision` (asm/code_3_2_17_d18c.s, the
  * subsystem's ~1960-byte collision-response commit function,
@@ -149,7 +149,7 @@ u8 sub_800CEAC(void *self, struct hitbox_quad *quad, struct aabb *box,
  *
  * Reads `self`'s doubly-linked neighbor pointers both ways
  * (`GetCrateAbove` = "get next", `GetCrateBelow` = "get prev" - the
- * established pair, see `src/system/game_loop7.c`). If *neither*
+ * established pair, see `src/crates/crate_break.c`). If *neither*
  * exists, returns `self` unchanged with no other side effect - `self`
  * is isolated in the list.
  *
@@ -242,13 +242,13 @@ extern void BreakCrateInStack(void *self, u8 arg1, u8 arg2, u8 arg3);
 /* Builds two AABBs - one for `self`, one for the player
  * (`gPlayer`) - from the shared "keyframe/hitbox record"
  * table convention already established by `GetSpriteBounds`/`GetSpriteHitbox`
- * in actor_part.c (`self+0x20` -> a pointer-to-table, indexed by
+ * in sprite.c (`self+0x20` -> a pointer-to-table, indexed by
  * `self+0x2d` at 0x1c/28-byte stride; here the {s16 xOff, s16 yOff, u8
  * w, u8 h} quad sits at the record's `+4`/`+6`/`+8`/`+9` instead of
  * `+0xc`/`+0xe`/`+0x10`/`+0x11`, the same "differently laid out"
  * variance `GetSpriteHitbox`'s doc comment already flags). `self+0x28`
  * bits 4/5 mirror each box horizontally/vertically around its own
- * object's position, exactly like the `actor_part.c` pair. If the two
+ * object's position, exactly like the `sprite.c` pair. If the two
  * boxes overlap (`AabbOverlaps`), dispatches to `ExplodeCrate` or
  * `BreakCrateInStack` depending on a per-state-id lookup in
  * `gCrateKindExplosive`.
@@ -266,7 +266,7 @@ extern void BreakCrateInStack(void *self, u8 arg1, u8 arg2, u8 arg3);
  * hides the value from cse, so each is its own single-use pseudo that
  * combine folds into the `add` right before the call. The first build's
  * x/y are computed first so that the `add r0, sp, #16` comes after them.
- * The same fix closed `PlayerAnimWouldTouchCrate` (actor_part109.c); see
+ * The same fix closed `PlayerAnimWouldTouchCrate` (crate_touch.c); see
  * docs/matching/sp-box-retry.md. */
 
 /* `a` through a copy that an empty asm claims to modify (emits nothing):

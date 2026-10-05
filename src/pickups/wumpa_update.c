@@ -8,7 +8,7 @@
  * docs/matching/issue-14-0x08010d54-physics-apply.md's Phase 2 planning
  * section for the full function/size list. This file carves out only
  * PickUpWumpa-UpdateWumpaHop (the chunk's last 6 functions, contiguous
- * through to the already-matched src/graphics/actor_part39.c at
+ * through to the already-matched src/pickups/wumpa.c at
  * 0x080119A8) - a clean single trim point at the tail of the asm file,
  * chosen specifically because CreateExtraLife and the UpdateExtraLifeHop-
  * CheckWumpaPickup "no cross-reference" accessor cluster in between this
@@ -19,7 +19,7 @@
  * NOT integrate here - splitting the asm file at more than one point to
  * reach them would need a second new C file, which this session's
  * parallel-agent convention reserves collision-avoidance for a single
- * name (game_loop53.c) - see the issue doc's own follow-up note. */
+ * name (wumpa_update.c) - see the issue doc's own follow-up note. */
 
 extern void *gAudioContext;
 extern void *gHud;
@@ -50,7 +50,7 @@ static inline void OrbitClampFrame(struct orbit_part *self)
 
 /* PickUpWumpa: "randomized-position spawn/despawn picker" (docs/rom_map.md),
  * called as `PickUpWumpa(entry, 1)`/`(other, 1)` from game_loop40.c/
- * game_loop49.c for despawn. PlaySfx(gAudioContext, 8, 0x100), then
+ * crate_break.c for despawn. PlaySfx(gAudioContext, 8, 0x100), then
  * either derives a randomized (dx,dy) offset pair from rand() (arg1
  * nonzero - self->0x48 = 2, self->0x49 tags which of three rand()-driven
  * bands was picked) or uses a fixed (0x1000,0x1000) offset and fires
@@ -149,7 +149,7 @@ void PickUpWumpa(struct orbit_part *self, u8 randomize)
  * gPlayer's own position minus a small fixed offset
  * (0xFFFFFC00/0xFFFFF200, i.e. -0x400/-0xe00 in Q8). Every path ends
  * with a tail call to UpdateSpriteObj(self) (already matched elsewhere,
- * src/graphics/actor_part5.c).
+ * src/objects/sprite_obj.c).
  *
  * Matched (old_agbcc) over three passes, see
  * docs/matching/big-naked-retry-3.md and
@@ -318,7 +318,7 @@ void UpdateWumpa(struct orbit_part *self)
  * two dual_array_manager lists (`gUnknown_030012F4` vs `gUnknown_030012EC`)
  * the newly spawned part joins. Allocates a new 0x54-byte object
  * (`OperatorNew`), re-initializes it (`InitSpriteObj`), points its vtable
- * at `gWumpaVtable`, re-initializes via `ResetWumpaPickup` (actor_part39.c,
+ * at `gWumpaVtable`, re-initializes via `ResetWumpaPickup` (wumpa.c,
  * already matched), stores `id` at `+8` and `x`/`y` (Q8-shifted) at `+0`/
  * `+4` - mirrored into `+0x4c`/`+0x50` as a "home position" pair the same
  * way UpdateWumpa's mode-3 branch reads it back - joins the
@@ -466,7 +466,7 @@ void SendWumpaToHud(struct orbit_part *self)
 /* StartWumpaPayout: sibling of SendWumpaToHud above - sets self->0x48 = 3 (mode)
  * and self->0x49 = 0xa (a fixed countdown), no other side effects.
  * Already extern-declared as `void StartWumpaPayout(struct actor *self)` in
- * src/graphics/actor_part39.c. Matched: trivial leaf, no push/pop, plain
+ * src/pickups/wumpa.c. Matched: trivial leaf, no push/pop, plain
  * field stores. */
 void StartWumpaPayout(struct actor *self)
 {
@@ -487,7 +487,7 @@ void StartWumpaPayout(struct actor *self)
  * Called from UpdateWumpa's own default-mode tail above when
  * self->0x4a is nonzero.
  *
- * Same shape as UpdateExtraLifeHop (game_loop52.c) with a 0x3000 y-scale: the
+ * Same shape as UpdateExtraLifeHop (extra_life.c) with a 0x3000 y-scale: the
  * sine sample goes through one reused local, which old_agbcc keeps in r2
  * across both calls exactly like the ROM. */
 struct three_words {

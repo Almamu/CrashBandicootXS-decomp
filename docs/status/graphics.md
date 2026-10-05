@@ -67,7 +67,7 @@ and [graphics_loading.md](./graphics_loading.md).
   [naked-CommitBlendRegs-matched.md](../matching/naked-CommitBlendRegs-matched.md)),
   `AabbOverlapsInclusiveX`, `AabbOverlaps`, `IwramFree`, `IwramAlloc` - two AABB
   overlap tests (one already referenced by name from `actor.md`'s
-  `actor_part15.c`) plus `mem_free`/`mem_alloc` wrappers.
+  `player_update.c`) plus `mem_free`/`mem_alloc` wrappers.
 
 - `src/gfx/bitmap_screen.c` (new file, replacing `asm/code_3_1.s` -
   boot-adjacent but not part of `src/system/boot.c` since
@@ -75,7 +75,7 @@ and [graphics_loading.md](./graphics_loading.md).
   `ShowBitmapScreen` - BG2 affine setup for a full-screen intro image; see
   `docs/matching.md` for the statement-ordering gotchas.
 
-- `src/graphics/actor_part_16048.c` (new file - GitHub issue #20, plus
+- `src/player/swim_ctrl.c` (new file - GitHub issue #20, plus
   issue #19's last raw function `CheckPlayerCtrlTurn`): `CheckPlayerCtrlTurn`-
   `SetPlayerCtrlMotionXPending` (26 functions), all real C - the player-input controller
   class (method table `gPlayerCtrlVtable`, struct in
@@ -91,7 +91,7 @@ and [graphics_loading.md](./graphics_loading.md).
   only in `ApplyPlayerCtrlMotion`. See
   [docs/matching/issue-20-player-ctrl.md](../matching/issue-20-player-ctrl.md).
 
-- `src/graphics/actor_part_17524.c` (new file - GitHub issue #21):
+- `src/player/input_ctrl.c` (new file - GitHub issue #21):
   `ClearPlayerCtrlMotionYPending`-`IsInputCtrlMotionYPending` (25 functions) - six byte accessors, then a
   D-pad-driven actor-part subclass (method table `gInputCtrlVtable`):
   per-frame animation/speed selection from the held keys, a gcc 2.x
@@ -148,11 +148,11 @@ and [graphics_loading.md](./graphics_loading.md).
   [docs/matching/issue-24-boss-actor.md](../matching/issue-24-boss-actor.md).
 - GitHub issue #25 (0x0801A794-0x0801B85C, shared structs in
   `include/gobj_1a794.h`): `src/graphics/actor_part_1a794.c`
-  (`CreateDingodileShieldCtrl`-`SetDingodileNextState`), `src/graphics/actor_part_1ab34.c`
-  (`CheckPlatformContact`) and `src/graphics/actor_part_1b208.c`
+  (`CreateDingodileShieldCtrl`-`SetDingodileNextState`), `src/objects/platform_contact.c`
+  (`CheckPlatformContact`) and `src/objects/platform.c`
   (`UpdatePlatform`-`ClearPlatformMoverActive`) - 23 functions: the level-object class
   (`gPlatformVtable`) and its oscillating-platform mover
-  (`gPlatformMoverVtable`) - plus `src/graphics/actor_part_1a878.c`
+  (`gPlatformMoverVtable`) - plus `src/objects/platform_create.c`
   (`CreatePlatform`, the level-object spawner, built with
   `tools/agbcc/bin/old_agbcc`; NAKED under agbcc, see
   [docs/matching/old-agbcc-retry.md](../matching/old-agbcc-retry.md)).
@@ -192,7 +192,7 @@ and [graphics_loading.md](./graphics_loading.md).
   as in the ROM; the state-0 BLDCNT accumulator is a block-scoped r5
   variable set through the constant-init asm. See
   [docs/matching/hard-register-hold-retry.md](../matching/hard-register-hold-retry.md).
-- **Last-five NAKED retry:** `ResolvePlatformCollision` (`actor_part_1ab98.c`, issue
+- **Last-five NAKED retry:** `ResolvePlatformCollision` (`platform_collide.c`, issue
   #25, player-vs-object collision resolver) promoted from NAKED to real
   C under old_agbcc (object added to `OLD_AGBCC_OBJS`). An r8 hold gives
   `result` r8 and `self` sb; the FindLineCrossing calls pass a reassigned

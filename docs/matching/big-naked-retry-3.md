@@ -6,10 +6,10 @@ drafts that are the same size as the ROM.
 | Function | File | Issue | Size | Result |
 |---|---|---|---|---|
 | `SpawnRoomEntities` | `src/system/game_loop41.c` | #40 | 704 bytes | matched, old_agbcc (object added to `OLD_AGBCC_OBJS`) |
-| `UpdateWumpa` | `src/system/game_loop53.c` | #15 | 500 bytes | still NAKED; draft size-exact, 21 halfwords off (was 84 bytes too long) |
+| `UpdateWumpa` | `src/pickups/wumpa_update.c` | #15 | 500 bytes | still NAKED; draft size-exact, 21 halfwords off (was 84 bytes too long) |
 | `HandleLinkSerial` | `src/link/link_handshake.c` | #4 | 1488 bytes | still NAKED; first draft, size-exact, 514 halfwords off |
 
-All three are measured under old_agbcc. `game_loop53.o` and
+All three are measured under old_agbcc. `wumpa_update.o` and
 `link_handshake.o` were already on `OLD_AGBCC_OBJS`.
 
 ## Loop rotation in old_agbcc
@@ -63,7 +63,7 @@ loop points above. The rest:
 - `i` (the first link pass's counter) is declared at function scope.
   That puts it in the second spill slot, as in the ROM.
 - The move call is `p.x = ...; pp->y = ...; SetEntityPos(actor, p.x,
-  pp->y);` with `pp = &p`, the same shape as `actor_part_1ab98.c`. It
+  pp->y);` with `pp = &p`, the same shape as `platform_collide.c`. It
   gives the ROM's hoisted `add r4, sp, #4`.
 - The DMA fills use a `u32 zero` local, so the 0 is loaded before the
   `list` compare.

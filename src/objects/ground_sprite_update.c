@@ -3,17 +3,17 @@
 
 /* GitHub issue #9: 0x08007634-0x0800B3F0, game_loop-labeled chunk that
  * turned out to be part of the `actor` category's "part" object family
- * already tracked in actor_part11.c-actor_part17.c (see
+ * already tracked in part_list.c-actor_part17.c (see
  * docs/matching/issue-9-0x08007634-actor.md). `UpdateGroundSprite`/
- * `sub_800A590` sit between actor_part11.c's raw tail (still-raw
+ * `sub_800A590` sit between part_list.c's raw tail (still-raw
  * CollideGroundSprite/ProbeGroundSpriteTerrain/ProbeGroundSpriteFloor) and the already-matched
- * actor_part14.c (DrawGroundSprite onward). */
+ * ground_sprite.c (DrawGroundSprite onward). */
 
 extern void UpdateMovingSprite(void *self);
 
 /* Looks up `self`'s current "moving platform" record via the
  * virtual method `m10` (the same method-table convention as
- * `DrawPartList`'s `m20` slot in actor_part11.c) and, if the record
+ * `DrawPartList`'s `m20` slot in part_list.c) and, if the record
  * pointer changed since the last call (cached in `self->platform`,
  * non-NULL), nudges `self->y` by the delta between the old and new
  * record's position - interpreted as `record[5] + record[2]` (a Q8

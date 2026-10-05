@@ -28,7 +28,7 @@
  *   called through the _call_via_r2/_call_via_r3 `_call_via_rN` thunks) and
  *   picks the animation from gPlayerCtrlModeAnimRows[mode][tilt].
  * - SetPlayerSwimDriftX writes the player's +0x48/+0x4C/+0x50 record from its
- *   speed, like actor_part57b.c's SetPlayerSwimDriftY does for +0x54..+0x5C.
+ *   speed, like swim_ctrl_drift.c's SetPlayerSwimDriftY does for +0x54..+0x5C.
  *
  * Several functions are inline helpers in the original (C++ inline
  * methods): SetState/SetPlayerCtrlState, ResetMode/StartPlayerCtrlSwim,

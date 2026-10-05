@@ -8,7 +8,7 @@
  * (Makefile OLD_AGBCC_OBJS).
  *
  * A two-flag-gated teardown/notification step on the still-unnamed "big
- * object" (at least 0x110 bytes) actor_part15.c/actor_part77.c work on,
+ * object" (at least 0x110 bytes) player_update.c/player_init.c work on,
  * guarded by its +0x105 "torn down already" latch. */
 
 struct aabb
@@ -112,17 +112,17 @@ asm(".align 2, 0");
  *
  * `self` is the same wide, still-unnamed "big object" struct
  * (0x108+ bytes) referenced by raw offset throughout this ROM
- * neighborhood (`actor_part16.c`/`actor_part79.c`/`actor_part108.c`
+ * neighborhood (`player_flags.c`/`kill_player.c`/`player_anim_room.c`
  * etc.) - `self+0xc` (flags byte), `self+0x18` (per-category
  * `{s16 offset; void *fn}` trampoline table pointer, the
- * `_call_via_r1` convention `actor_part108.c` already established),
+ * `_call_via_r1` convention `player_anim_room.c` already established),
  * `self+0x20` (per-tag 28-byte-record table pointer,
- * `*(self+0x20) + tag*0x1c`, the exact convention `actor_part79.c`
+ * `*(self+0x20) + tag*0x1c`, the exact convention `kill_player.c`
  * documents from a sibling call site), `self+0x28` bit 4 (the
- * mirror-flag bit `actor_part16.c`/`actor_part17.c`/`actor_part108.c`
+ * mirror-flag bit `player_flags.c`/`ctrl.c`/`player_anim_room.c`
  * already read), `self+0x2d` (per-tag selector byte), and `self+0x8c`
  * (a `gRoomFrameCount`-relative deadline - the exact
- * `IsTimerArmed`/`SetTimer` convention `actor_part16.c` names:
+ * `IsTimerArmed`/`SetTimer` convention `player_flags.c` names:
  * `*(u32 *)(self+0x8c) > gRoomFrameCount` means "still armed").
  * `self+0xb0` is a pointer to a single "child" companion object (the
  * same object across every use in this function); `self+0xb4` is a
@@ -152,13 +152,13 @@ asm(".align 2, 0");
  *   refresh/notify convention). Also (regardless of the mode-3 gate,
  *   using `self`'s own blink deadline at `self+0x8c`) draws `self`
  *   itself via `DrawSprite(gSpriteRenderer, self)` (matched,
- *   `actor_part.c` - queues `self`'s own OAM using its own Q8
+ *   `sprite.c` - queues `self`'s own OAM using its own Q8
  *   position) either unconditionally (mode == 3, or the deadline has
  *   expired) or, while the deadline is still armed, only on the same
  *   4-frame parity - a standard hit-invincibility blink. Once that
  *   deadline is no longer armed while mode == 3, calls
  *   `SetMaskLevel(gLevelState, 2)` (matched pattern,
- *   `actor_part84.c`/`actor_part58.c` - a mode-transition/"state
+ *   `action_ctrl_update.c`/`actor_part58.c` - a mode-transition/"state
  *   close" call) - ends the stun state, transitioning mode 3 -> 2.
  *
  * - Unconditionally (any mode): pushes `self`'s own current `{x, y}`

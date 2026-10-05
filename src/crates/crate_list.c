@@ -5,7 +5,7 @@
 #include <agb_syscall.h>
 
 /* The fixed-slot object-pool manager struct `InitCrateList`
- * (`actor_part11.c`) initializes: `slotArray` holds the active
+ * (`part_list.c`) initializes: `slotArray` holds the active
  * objects (bounded by `activeCount`, up to `capacity`); `nodeArray`
  * is a flat array of `capacity` 0x14-byte pool nodes; `gridHead`/
  * `gridTail` are a 256-bucket spatial hash grid, each bucket a
@@ -35,7 +35,7 @@ typedef void (*part_method3_fn)(void *self, s32 a, s32 b, s32 c);
 
 extern s32 ClassifySpriteContact(struct box_part *part, struct part_aabb *box);
 
-/* `CollidePartWithObject`'s twin (actor_part7b.c): the same collision-hit
+/* `CollidePartWithObject`'s twin (part_collide.c): the same collision-hit
  * resolver, called from elsewhere in this AI/collision cluster (`list`
  * is never read). Tests `part` against the incoming box via
  * `ClassifySpriteContact`; on a hit, calls `part`'s method-table +0x68 method

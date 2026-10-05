@@ -6,7 +6,7 @@ still-raw span (`base_object=None`): `ProbeGroundSpriteTerrain` (ROM `0x0800A178
 680 bytes) and `ProbeGroundSpriteFloor` (ROM `0x0800A420`, 264 bytes).
 `CollideGroundSprite` itself, the only caller of `ProbeGroundSpriteTerrain` (both live in
 `asm/code_3_2_11.s`), stays raw - its own gate logic depends on
-`sub_8009BE0` (parked NAKED, `actor_part12b.c`,
+`sub_8009BE0` (parked NAKED, `step_probe.c`,
 [naked-spatial-grid-tail.md](./naked-spatial-grid-tail.md)), so closing
 `ProbeGroundSpriteTerrain`/`ProbeGroundSpriteFloor` alone doesn't unblock it.
 
@@ -21,14 +21,14 @@ traced here." `docs/matching/issue-9-0x08007634-actor.md` (line ~206)
 had also already flagged both functions as built on `sub_8008200`/
 `ProbeTerrain`/`sub_8026C3C`/`sub_8026BF8` - two of those four
 (`sub_8008200`, `ProbeTerrain`) are already matched this session
-(`src/graphics/actor_part4.c`, `src/system/game_loop43.c`), leaving
+(`src/objects/sprite_obj.c`, `src/system/game_loop43.c`), leaving
 only `sub_8026C3C`/`sub_8026BF8` genuinely unexamined.
 
 ## Reading the real bytes
 
 Both functions sit in `asm/code_3_2_11.s`, immediately after the
 still-raw `CollideGroundSprite` and immediately before the already-matched
-`UpdateGroundSprite`/`sub_800A590` (`src/graphics/actor_part47.c`, which
+`UpdateGroundSprite`/`sub_800A590` (`src/objects/ground_sprite_update.c`, which
 itself already notes "still-raw `CollideGroundSprite`/`ProbeGroundSpriteTerrain`/
 `ProbeGroundSpriteFloor`" as its own neighbors). `sub_8026C3C`/`sub_8026BF8`
 themselves live in `asm/code_3_2_17_266bc.s` (the file `ProbeTerrain`
@@ -72,7 +72,7 @@ A single Y-axis "floor" probe. Builds an int `{x, y}` position at the
 *bottom* of `quad` (`self.x`/`self.y + (quad->yOff + quad->h) << 8`,
 via the already-matched `sub_8008200(dest, 8, quad)`, nudged left/right
 by half the quad's width depending on `self+0x28` bit 4's mirror flag -
-the same established convention `game_loop43.c`/`actor_part109.c`
+the same established convention `game_loop43.c`/`crate_touch.c`
 document), then probes it via `sub_8026BF8(*gLevelLayers, &pos,
 &origY)` where `origY` is `self.y`'s own original (unmodified) Q8
 value, kept aside as the probe's out-parameter target.
@@ -214,11 +214,11 @@ resolve correctly once linked.
 
 ## Build layout
 
-New object `src/graphics/actor_part110.c` holds both functions,
+New object `src/objects/ground_sprite_collide.c` holds both functions,
 inserted in `ldscript.txt` exactly where `ProbeGroundSpriteTerrain`/`ProbeGroundSpriteFloor`'s
 real bytes used to sit: between the trimmed `asm/code_3_2_11.o` (now
 ending right after `CollideGroundSprite`'s own trailing `bx r1`) and the
-already-matched `src/graphics/actor_part47.o` (`UpdateGroundSprite` onward).
+already-matched `src/objects/ground_sprite_update.o` (`UpdateGroundSprite` onward).
 `asm/code_3_2_11.s` is trimmed accordingly - `CollideGroundSprite` unchanged,
 everything after it removed.
 
@@ -265,7 +265,7 @@ A second dedicated session against the immediate follow-up: `CollideGroundSprite
 (ROM `0x0800A0FC`, 124 bytes), `ProbeGroundSpriteTerrain`'s only caller and, until
 now, the sole remaining content of `asm/code_3_2_11.s`. It stayed raw
 the first pass through this cluster because its own gate logic calls
-`sub_8009BE0` (parked NAKED, `src/graphics/actor_part12b.c`, see
+`sub_8009BE0` (parked NAKED, `src/objects/step_probe.c`, see
 [naked-spatial-grid-tail.md](./naked-spatial-grid-tail.md)) - at the
 time that function's own semantics were still unresolved, so closing
 `ProbeGroundSpriteTerrain`/`ProbeGroundSpriteFloor` alone didn't unblock this one. Both facts
@@ -342,7 +342,7 @@ bx r1
 ```
 
 There's a third callee alongside the two flagged in the task ticket:
-`CollideMovingSprite` (already matched, `src/graphics/actor_part9.c`) - a
+`CollideMovingSprite` (already matched, `src/objects/moving_sprite_collide.c`) - a
 fire-and-forget `self->table+0x70/0x74` trampoline call, its always-`0`
 return discarded. It sits between the `ProbeGroundSpriteTerrain` call and the
 `self+0x68` bit-3 recheck, with no other effect on this function's
@@ -416,7 +416,7 @@ first, only fall back if it's a genuine structural gap" order:
   ROM neighborhood.
 - **`self+0xc &= ~0x21`**: the established "negative-constant
   register-pinned mask" idiom already confirmed for `ResetPlayer`
-  (`register s32 mask asm("r0") = -0x21`, `actor_part48.c`) reused
+  (`register s32 mask asm("r0") = -0x21`, `player_reset.c`) reused
   unchanged here - the ROM materializes `-0x21` via `movs`+`rsbs`
   rather than folding the AND mask to a literal, since Thumb's `ANDS`
   has no immediate form.
@@ -431,7 +431,7 @@ first, only fall back if it's a genuine structural gap" order:
   just `0x0800A0FC`-`0x0800A178` caught it directly too, once checked
   carefully - see "Verification" below).
 - **`(self+0xd >> 1) & 1` gate**: the same bit-1 accessor shape as the
-  already-matched `IsGroundSpriteGrounded` (`actor_part14.c`, `return
+  already-matched `IsGroundSpriteGrounded` (`ground_sprite.c`, `return
   (self[0xd]>>1)&1;`, no pinning needed there since it's a standalone
   function) - but inlined here alongside other already-pinned locals,
   this compiler's allocator picked different registers than the ROM at
@@ -491,25 +491,25 @@ coincide` (checksum matches).
 
 ### Build layout
 
-`CollideGroundSprite` was added directly to `src/graphics/actor_part110.c`
+`CollideGroundSprite` was added directly to `src/objects/ground_sprite_collide.c`
 (prepended before `ProbeGroundSpriteTerrain`), the same translation unit as the
 NAKED `ProbeGroundSpriteTerrain`/`ProbeGroundSpriteFloor` - the same "NAKED function sharing a
 file with matched ones" precedent already established for `AdvanceSpriteAnim`/
-`actor_part3.c`. `asm/code_3_2_11.s` is retired entirely (it held only
-`CollideGroundSprite`) and removed from `ldscript.txt`; `actor_part110.o` now
-sits directly between the trimmed `actor_part9.o` and `actor_part47.o`
-in link order, with no raw `.s` gap between `actor_part9.o` and
-`actor_part110.o` any more.
+`sprite.c`. `asm/code_3_2_11.s` is retired entirely (it held only
+`CollideGroundSprite`) and removed from `ldscript.txt`; `ground_sprite_collide.o` now
+sits directly between the trimmed `moving_sprite_collide.o` and `ground_sprite_update.o`
+in link order, with no raw `.s` gap between `moving_sprite_collide.o` and
+`ground_sprite_collide.o` any more.
 
 ### Cross-references (follow-up)
 
-- `docs/status/actor.md` - new `src/graphics/actor_part110.c` bullet
+- `docs/status/actor.md` - new `src/objects/ground_sprite_collide.c` bullet
   in "Matched" for `CollideGroundSprite`; the stale "Left raw" entry for it
-  removed; the `actor_part14.c` bullet's "large raw span" note
+  removed; the `ground_sprite.c` bullet's "large raw span" note
   corrected (that span was never fully raw - `UpdateGroundSprite`/
-  `sub_800A590` were already matched in `actor_part47.c`).
+  `sub_800A590` were already matched in `ground_sprite_update.c`).
 - `tools/report_units.py` - the `0x0800A0FC` unit's `base_object`
-  changed from `None` to `"src/graphics/actor_part110.o"` (matched);
+  changed from `None` to `"src/objects/ground_sprite_collide.o"` (matched);
   the `0x0800A178` unit's comment updated to note it now shares that
   object with the matched `CollideGroundSprite`.
 - `ldscript.txt` - `asm/code_3_2_11.o` line removed.
@@ -676,4 +676,4 @@ hit path. `ProbeGroundSpriteTerrain` was not retried. See [issue-9-naked-retry.m
 
 ## Later pass (issue #9-#11 NAKED retry)
 
-`ProbeGroundSpriteTerrain` and `ProbeGroundSpriteFloor` (and the formerly pinned `CollideGroundSprite`) are plain C under old_agbcc; `actor_part110.o` is in `OLD_AGBCC_OBJS`. See [issue-9-11-box-naked-retry.md](issue-9-11-box-naked-retry.md).
+`ProbeGroundSpriteTerrain` and `ProbeGroundSpriteFloor` (and the formerly pinned `CollideGroundSprite`) are plain C under old_agbcc; `ground_sprite_collide.o` is in `OLD_AGBCC_OBJS`. See [issue-9-11-box-naked-retry.md](issue-9-11-box-naked-retry.md).

@@ -10,8 +10,8 @@ functions left.
 
 | Function | File | Compiler | What it took |
 |---|---|---|---|
-| `ActionCtrlReleaseHang` | `src/graphics/actor_part_14674.c` (already old_agbcc) | old_agbcc | Was 3 halfwords off: the 0x600 reload was in r2 where the ROM has r3. An `r2` register variable `hold`, set by `asm("" : "=r"(hold))` before the add and used by `asm("" : : "r"(hold))` after it, keeps r2 live across the add. No code is emitted. Reload then spills r3 for the constant, and the later reloads rotate as in the ROM. |
-| `HitEnemy` | `src/graphics/actor_part112.c` (already old_agbcc) | old_agbcc | Was 21 halfwords off, nearly all reload registers. The same `hold` in r2 across the first MarkGone's id compare (`MarkGoneHeld`) left 5 halfwords. That was the layer's `1` in states 1/21/22, loaded after the `-4` mask instead of before it. Storing the layer from an `s32 one = 1` local fixes the order. On its own, that local was CSE'd into the bitmap's `1 << n` (4 bytes over). `MarkGoneFreshBit` computes the shift count first and builds its bit with the constant-init asm, so it gets its own `movs #1`. |
+| `ActionCtrlReleaseHang` | `src/player/action_ctrl_hang.c` (already old_agbcc) | old_agbcc | Was 3 halfwords off: the 0x600 reload was in r2 where the ROM has r3. An `r2` register variable `hold`, set by `asm("" : "=r"(hold))` before the add and used by `asm("" : : "r"(hold))` after it, keeps r2 live across the add. No code is emitted. Reload then spills r3 for the constant, and the later reloads rotate as in the ROM. |
+| `HitEnemy` | `src/enemies/enemy_ctrl_update.c` (already old_agbcc) | old_agbcc | Was 21 halfwords off, nearly all reload registers. The same `hold` in r2 across the first MarkGone's id compare (`MarkGoneHeld`) left 5 halfwords. That was the layer's `1` in states 1/21/22, loaded after the `-4` mask instead of before it. Storing the layer from an `s32 one = 1` local fixes the order. On its own, that local was CSE'd into the bitmap's `1 << n` (4 bytes over). `MarkGoneFreshBit` computes the shift count first and builds its bit with the constant-init asm, so it gets its own `movs #1`. |
 
 ## The technique: holding a hard register live
 

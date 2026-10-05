@@ -2,7 +2,7 @@
 #include "actor.h"
 
 /* Same fixed-slot object-pool/spatial-hash-grid struct `InitCrateList`
- * initializes (`actor_part11.c`) and `actor_part12.c` operates on - see
+ * initializes (`part_list.c`) and `crate_list.c` operates on - see
  * that file for the full field writeup. */
 struct pool_manager {
     s32 activeCount;

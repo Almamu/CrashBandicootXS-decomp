@@ -3,10 +3,10 @@
 #include "crate.h"
 
 /* GitHub issue #12: 0x0800D040-0x0800FC70, the physics/collision
- * subsystem (see game_loop6.c's header comment and
+ * subsystem (see crate_hit.c's header comment and
  * docs/matching/issue-12-physics-collision.md). These are the two
- * functions left untouched between game_loop6.c's `BreakCrateTouchedByPlayer` and
- * game_loop7.c's `ClearCrateStackTouched` - the subsystem's largest, most tangled
+ * functions left untouched between crate_hit.c's `BreakCrateTouchedByPlayer` and
+ * crate_break.c's `ClearCrateStackTouched` - the subsystem's largest, most tangled
  * dispatchers. Real bytes formerly in asm/code_3_2_17_d18c.s (now
  * deleted, fully consumed). */
 
@@ -38,7 +38,7 @@
  *   falling through to a shared tail at old ROM offset `0x0800E00C`)
  *   that further classifies the collision via `GetBottomCrate`/
  *   `GetTopCrate` ("get next"/"get prev" neighbor-list-walk-and-filter
- *   helpers, matched in game_loop30.c) and `gCrateHitResponse`,
+ *   helpers, matched in crate_stack.c) and `gCrateHitResponse`,
  *   computing a final corrected offset and calling `SetEntityPos`
  *   (apply the offset) plus `_call_via_r4` (a `bx r4`
  *   register-indirect-call trampoline - see docs/rom_map.md's
@@ -1211,7 +1211,7 @@ commit:
 asm(".align 2, 0");
 
 /* GitHub issue #12: 0x0800D040-0x0800FC70, the physics/collision
- * subsystem (see game_loop6.c's header comment and
+ * subsystem (see crate_hit.c's header comment and
  * docs/matching/issue-12-physics-collision.md). Compiled with
  * old_agbcc (see the Makefile's OLD_AGBCC_OBJS). */
 
@@ -1296,7 +1296,7 @@ asm(".align 2, 0");
  * half of the remaining tail of the physics/collision subsystem's
  * per-edge handler family (see docs/matching/issue-12-physics-collision.md's
  * "Phase 1" appendix for the confirmed dispatch map both
- * QueueCratePlayerCollision/ApplyCrateCollision, src/system/game_loop47.c, dispatch into).
+ * QueueCratePlayerCollision/ApplyCrateCollision, src/crates/crate_break.c, dispatch into).
  * `self` throughout is the same "collision box" object every other
  * function in this subsystem operates on (`struct crate`,
  * include/crate.h). Compiled with old_agbcc (the Makefile's
@@ -1552,7 +1552,7 @@ void LightTntCrate(struct crate *selfArg)
      * `~0xf` clear-mask at runtime (`movs r1,#0x10; rsbs r1,r1,#0`,
      * the negative-constant register-pinned mask idiom - see
      * matching_decomp_register_pinning and DrawCrate's own use of
-     * it, game_loop35.c) rather than folding it into an 8-bit AND
+     * it, crate_draw.c) rather than folding it into an 8-bit AND
      * immediate, ORing into the mask register (not the freshly-
      * extracted low-nibble register) before storing - transcribed as
      * one block to pin the whole sequence's order and registers at
@@ -2066,12 +2066,12 @@ void DropCratesAbove(struct crate *self)
 }
 
 /* GitHub issue #12: 0x0800D040-0x0800FC70, the physics/collision
- * subsystem (see game_loop6.c's header comment and
+ * subsystem (see crate_hit.c's header comment and
  * docs/matching/issue-12-physics-collision.md). Phase 2, higher-address
  * half: the twelve functions from `ExplodeCrate` through `UpdateSlotCrate`
  * (0x0800EEF0-0x0800FC70, the end of this whole cluster), all direct or
  * transitive callees of `QueueCratePlayerCollision`'s and `ApplyCrateCollision`'s per-edge
- * jump table (game_loop47.c) - see that issue doc's "Phase 2 grouping
+ * jump table (crate_break.c) - see that issue doc's "Phase 2 grouping
  * hint" for the confirmed dispatch map this group is built from. Real
  * bytes formerly the tail of asm/code_3_2_17_e560.s (from
  * `ExplodeCrate` onward - the head, `BounceWumpaCrate` through `DropCratesAbove`,
@@ -2103,7 +2103,7 @@ extern u8 gSlotCrateTimers[];
 
 /* Per-edge jump table's **case 4 handler**
  * (`QueueCratePlayerCollision(self+0x4d & 0x7f == 0) -> ExplodeCrate(self, 1)`, and
- * `ApplyCrateCollision`'s own case 4, per game_loop47.c's confirmed dispatch
+ * `ApplyCrateCollision`'s own case 4, per crate_break.c's confirmed dispatch
  * map). Also called by several of this file's own sibling functions
  * (`BlastNearbyCrates`, `DetonateNitroCrates`, `BreakCratesInArea`, `UpdateTntCountdown`) whenever
  * their own overlap/state checks land on the same "commit an edge
@@ -2366,7 +2366,7 @@ void DetonateNitroCrates(void)
 
 /* Per-edge jump table's **case 0/1 handler when the dispatch-id row is
  * 6** (`QueueCratePlayerCollision`'s/`ApplyCrateCollision`'s shared case 0/1 target - see
- * game_loop47.c's confirmed dispatch map). Early-outs when `self+0x48`
+ * crate_break.c's confirmed dispatch map). Early-outs when `self+0x48`
  * is already nonzero (a pending sub-state timer, same field
  * `BlastNearbyCrates` resets to `-1`).
  *
@@ -2640,7 +2640,7 @@ void SolidifyOutlineCrate(struct crate *self)
 
 /* `BreakCratesInArea(s32 x, s32 y, s32 arg2, s32 arg3)` - the one function in
  * this group taking a raw position/box instead of a `self` pointer (see
- * `src/graphics/actor_part38.c`'s existing extern: called as
+ * `src/player/action_ctrl_hang.c`'s existing extern: called as
  * `BreakCratesInArea(part->x >> 8, part->y >> 8, 0x40, 0x12)`, a fixed
  * 0x40x0x12 probe box around an actor-part's own position). Walks
  * `gCrateList`'s whole list: for every object whose
@@ -2703,7 +2703,7 @@ void BreakCratesInArea(s32 x, s32 y, s32 dist, s32 height)
  * bitmap (the same 32x32-grid convention `ExplodeCrate`/`ActivateIronSwitchCrate`
  * use, here against `gEntityFlags`) and walks
  * `gPlayer+0x94`'s "recently touched" ring buffer
- * (`QueueCratePlayerCollision`'s own 5-slot buffer, per game_loop47.c's doc comment)
+ * (`QueueCratePlayerCollision`'s own 5-slot buffer, per crate_break.c's doc comment)
  * clearing each slot's `+0x94` re-visit flag once it matches `self`.
  *
  * If `self+0x38` was clear instead, and `self+0x4e != 1`, sets
@@ -2834,7 +2834,7 @@ void UpdateTntCountdown(struct crate *self)
  * compare) into per-phase blocks. These re-tag `self+0x2d`, re-run the
  * `ResetSpriteFrameTimer`/`ResetSpriteFrameIndex`/`SetSpriteAnimDone` triplet, and (per the
  * `0xc0`-bit branch taken near the top) call `GetSlotCrateSpins(self)` -
- * already matched elsewhere (`game_loop30.c` family) - to decide
+ * already matched elsewhere (`crate_stack.c` family) - to decide
  * whether the phase cycle continues or the object's position gets
  * finally committed. Given the size and self-contained nature of this
  * state cycle (no calls out to any other function in this cluster), a
@@ -3035,7 +3035,7 @@ void UpdateSlotCrate(struct crate *self)
  * that table's value and `self+0x48`/`self+0x4d`'s state, dispatches
  * `ExplodeCrate`/`LightTntCrate` on `self` and its whole `GetCrateBelow`
  * "get next" neighbor-list chain (the same list `ResetCrate`/
- * `ResolvePlayerCollisions`, game_loop22.c/game_loop23.c, already establish). At
+ * `ResolvePlayerCollisions`, crate_reset.c/crate.c, already establish). At
  * the end, `self+0x4`'s accumulated step is folded into `self`'s own
  * position (`self+0`/`self+4`), and `self+0x4c`'s "speed" byte is
  * either cleared (when `remaining` ended up exactly 0) or incremented

@@ -258,7 +258,7 @@ extern u8 gUiSpriteObjVtable[];
 extern void DestroySpriteObj(struct actor *self, u32 arg1);
 
 /* Overwrites `part->table` with `gUiSpriteObjVtable`, then tail-
- * calls `DestroySpriteObj` (already matched in `actor_part6.c`) with the
+ * calls `DestroySpriteObj` (already matched in `sprite_obj.c`) with the
  * same `arg1` - which immediately overwrites `table` again with
  * `gEntityVtable` before its own conditional `OperatorDelete`
  * call. Reproduces the ROM's apparently-redundant double table write
@@ -272,7 +272,7 @@ void DestroyUiSpriteObj(struct actor *part, u32 arg1)
 extern struct actor *InitSpriteObj(struct actor *self);
 
 /* Re-initializes `part` via `InitSpriteObj` (already matched in
- * `actor_part6.c`, which itself sets `table` to `gSpriteObjVtable`),
+ * `sprite_obj.c`, which itself sets `table` to `gSpriteObjVtable`),
  * then immediately overwrites `table` with `gUiSpriteObjVtable`
  * instead. */
 struct actor *InitUiSpriteObj(struct actor *part)
@@ -530,8 +530,8 @@ void CollidePartWithPlayer(struct part_list *list, struct part_aabb box, struct 
 
 /* CollidePartWithObject, this function's ROM-adjacent sibling (its collision-hit
  * logic mirror for a non-default "compare viewport"), lives in
- * src/graphics/actor_part7b.c instead of here - its real ROM address
- * isn't adjacent to this file's functions (actor_part10.c's
+ * src/objects/part_collide.c instead of here - its real ROM address
+ * isn't adjacent to this file's functions (part_list_cull.c's
  * CullPartList/ClearPartList/CollidePartsOfClass sit between CollidePartWithPlayer above and
  * CollidePartWithObject in ROM order), so it needs its own translation unit per
  * docs/workflow.md step 4. */
