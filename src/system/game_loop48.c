@@ -40,7 +40,7 @@ extern void ExplodeCrate(struct crate *self, u8 arg1);
 extern void ActivateIronSwitchCrate(struct crate *self);
 extern void ActivateNitroSwitchCrate(struct crate *self);
 
-/* The effect object sub_8025BAC spawns (only the fields set here). */
+/* The effect object SpawnEffectPart spawns (only the fields set here). */
 struct phys_puff
 {
     u8 unk_00[0xC];
@@ -59,7 +59,7 @@ struct phys_puff
     s32 velY;           // 0x64
 };
 
-extern struct phys_puff *sub_8025BAC(void *pool, s32 arg1, s32 kind, s32 x, s32 y, s32 arg5);
+extern struct phys_puff *SpawnEffectPart(void *pool, s32 arg1, s32 kind, s32 x, s32 y, s32 arg5);
 extern void *DropWumpa(void *pool, u16 x, u16 y, u8 p3, u8 p4, u8 p5);
 extern void *DropExtraLife(void *pool, u16 x, u16 y, u8 p3, u32 p4, u8 p5);
 
@@ -300,7 +300,7 @@ void LightTntCrate(void *selfArg)
 /* Case-5 handler both `sub_0800D18C`'s and `sub_800E08C`'s per-edge
  * jump tables select unconditionally - see
  * docs/matching/issue-12-physics-collision.md's dispatch map. Spawns
- * a particle-effect object (`sub_8025BAC`, kind `0x2a`) at `self`'s
+ * a particle-effect object (`SpawnEffectPart`, kind `0x2a`) at `self`'s
  * position (minus 10 pixels on X), initializes it (clearing flag bits
  * `+0xc`/`+0x28`, arming `+0x64`/`+0x54`/`+0x58`/`+0x5c` with a fixed
  * "settle" trajectory), then switches `self` itself into sub-state
@@ -327,7 +327,7 @@ void OpenCheckpointCrate(struct crate *self)
         s32 x = (self->x >> 8) - 10;
         s32 y = self->y >> 8;
 
-        puff = sub_8025BAC(gEntitySpawner, 0x2a, 0, x, y, 0);
+        puff = SpawnEffectPart(gEntitySpawner, 0x2a, 0, x, y, 0);
     }
     puff->hidden = 0;
     puff->flipX = 0;

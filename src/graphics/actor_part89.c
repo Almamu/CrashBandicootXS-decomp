@@ -50,7 +50,7 @@ struct keys89 {
 
 extern void UpdateKeys(void *arg0);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
-extern void *gUnknown_03001304;
+extern void *gInput;
 extern u32 gKeys;
 extern void *gAudioContext;
 extern void DrawContinuePrompt(struct fade_overlay89 *self);
@@ -66,7 +66,7 @@ s32 ContinuePromptLoop(struct fade_overlay89 *self)
 
     while (dir >= 0) {
         asm("" : : "r"(audio)); /* extra reference: audio outranks i for r7 */
-        UpdateKeys(gUnknown_03001304);
+        UpdateKeys(gInput);
         {
             struct keys89 k = *input;
 

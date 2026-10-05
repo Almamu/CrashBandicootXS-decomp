@@ -214,7 +214,7 @@ backwards, a single addressing-mode fold, a 3-way dispatch's register
 choice) responded to further plain-C restructuring, so each was
 converted to `NAKED` and its ROM disassembly transcribed
 instruction-for-instruction - the same escape hatch this project
-already established for `sub_8001CB8`/`sub_8001DB4`
+already established for `MakeLinkHandshakeId`/`ResetLinkSessionState`
 (`src/system/link_cable.c`, see
 `docs/matching/issue-4-sio-settings-sync.md`'s "The general strategy
 for the rest" section). `sub_8015038`, `sub_8015238` and `sub_80152F0`

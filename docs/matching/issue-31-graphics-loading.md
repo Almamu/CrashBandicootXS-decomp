@@ -30,7 +30,7 @@ only in a handful of embedded constants:
    rest" convention seen elsewhere in this codebase).
 2. Points the new part's `+0x20` field at a fixed offset (`0x54` for
    this instance) into the record reached through
-   `gUnknown_030012D0`'s double pointer-to-pointer (one level deeper
+   `gSpriteBankSet`'s double pointer-to-pointer (one level deeper
    than the twin family's single dereference).
 3. Sets the part's `+0x29` bitfield low nibble from `GetSpriteAnimPaletteSlot`'s
    result, via the same "compute address, then mask, then reload-AND-OR"
@@ -143,7 +143,7 @@ The rest of the chunk - `SpawnShark`, `SpawnMorayEel`, `SpawnElectricEel`,
 `SpawnJellyfish`, `SpawnLaserBarrier`, `sub_8020138`, `sub_802026C`,
 `SpawnSaucerLabAssistant`, `SpawnPistonCrusher`, `SpawnFlamethrowerLabAssistant`, `sub_8020788`,
 `sub_80208C4`, `SpawnRat`, `SpawnFrog`, `SpawnSeaMine`,
-`SpawnWoodenCrusher`, `sub_8021280`, `sub_8021388`, `sub_8021480`,
+`SpawnWoodenCrusher`, `sub_8021280`, `SpawnDingodile`, `SpawnTiny`,
 `SpawnCortexBoss` - are all confirmed instances of the same "two-line text
 popup" family `SpawnSquid` belongs to (semantics fully read for all of
 them this pass), several with their own tail variant (a second
@@ -179,7 +179,7 @@ the residual register-allocation gaps that first pass documented
 sequencing gcc 2.9 never reproduced) never responded to further plain-C
 restructuring, so all four were converted to `NAKED` and their ROM
 disassembly transcribed instruction-for-instruction - the same escape
-hatch this project already established for `sub_8001CB8`/`sub_8001DB4`
+hatch this project already established for `MakeLinkHandshakeId`/`ResetLinkSessionState`
 (`src/system/link_cable.c`, see
 `docs/matching/issue-4-sio-settings-sync.md`'s "The general strategy
 for the rest" section). All four share the exact same shape (confirmed
@@ -383,24 +383,24 @@ pass's writeup carried forward:
 - **`sub_8021280`** is a *different* function entirely - not part of
   the popup family. It dispatches on `IsInGemPath`/`IsInBonusRound`/
   `sub_8023324`/`GetCurrentLevel` (a `gLevelTable`-indexed guard
-  check) into one of three arms: two calls to `sub_80071E4` +
-  `sub_80070EC` (a differently-sized spawn, tag `0x12`, registering into
+  check) into one of three arms: two calls to `CreateEntity` +
+  `SetEntitySize` (a differently-sized spawn, tag `0x12`, registering into
   `gUnknown_030012E8`), or a `CreatePlatform` position-probe feeding
   `SetCrateGemPos` with an offset `{x, y}` pair. Not attempted this pass -
   semantics read far enough to know it's not a popup-family sibling, but
   not worked through to a full C reconstruction.
-- **`sub_8021388`**, **`sub_8021480`**, **`SpawnCortexBoss`** genuinely
+- **`SpawnDingodile`**, **`SpawnTiny`**, **`SpawnCortexBoss`** genuinely
   *are* 3 more popup-family instances (same `CreateMovingSprite` constructor,
   `+0x20` table offset, `GetSpriteAnimPaletteSlot`/`UPDATE_PART_FRAME_NIBBLE` nibble
   update, `gEntityFlags` two-bit collected pack, `_call_via_r2`
   trampoline via an allocated header, tag/manager-register tail -
-  `sub_8021480`/`SpawnCortexBoss` skip the flags-mask step `sub_8021388`
+  `SpawnTiny`/`SpawnCortexBoss` skip the flags-mask step `SpawnDingodile`
   has and use a plain `flags |= 0x10` instead, and `SpawnCortexBoss` adds
   the OAM trio like `sub_8021668`). All three additionally call a
   header-construction helper (`CreateDingodile(block, arg1, arg2)` for
-  `sub_8021388`, `CreateTiny()` for `sub_8021480`, `CreateCortexBoss()` for
-  `SpawnCortexBoss`) and a closing `sub_8023318(gLevelState, hdr)`
-  neither `SpawnSquid` nor `sub_8021668` have. `sub_8021388` got the
+  `SpawnDingodile`, `CreateTiny()` for `SpawnTiny`, `CreateCortexBoss()` for
+  `SpawnCortexBoss`) and a closing `SetLevelBoss(gLevelState, hdr)`
+  neither `SpawnSquid` nor `sub_8021668` have. `SpawnDingodile` got the
   furthest this pass: every instruction's *operation* matches the ROM
   (confirmed via isolated compile, using the same collected-bits-pack
   `asm volatile` block as `SpawnSquid`/`graphics_loading_21668.c`), but
@@ -409,7 +409,7 @@ pass's writeup carried forward:
   the *raw, untruncated* incoming values, immediately followed by a
   second `mov r8, r1` / `mov sb, r2` pair from the *truncated* values -
   i.e. the ROM spills the parameter twice) that no plain-C phrasing or
-  register-pin tried this pass reproduced. Given `sub_8021480`/
+  register-pin tried this pass reproduced. Given `SpawnTiny`/
   `SpawnCortexBoss` likely share a close variant of the same gap
   (unconfirmed - not attempted), this looks like the same class of
   gcc-2.9 parameter-lowering quirk documented elsewhere in this cluster,
@@ -430,11 +430,11 @@ always-compiled code (2 matched, 2 NAKED), retiring the raw file entirely.
 New file: `src/graphics/graphics_loading_21280.c`, replacing
 `asm/code_3_2_17_21280.o` in `ldscript.txt` at the same point.
 
-### Matched: `sub_8021388`, `SpawnCortexBoss`
+### Matched: `SpawnDingodile`, `SpawnCortexBoss`
 
 Both are "two-line text popup" siblings, matched byte-exact (full clean
 `make compare`, `La suma coincide`). Confirms the fourth pass's guess that
-`sub_8021388`'s prologue double-store (`mov r8, r1` / `mov sb, r2` from
+`SpawnDingodile`'s prologue double-store (`mov r8, r1` / `mov sb, r2` from
 the raw incoming values, immediately followed by a second pair from the
 truncated ones) really is a pure gcc-2.9 codegen quirk, not a semantics
 gap - but it turned out reachable from plain C after all, via a technique
@@ -446,7 +446,7 @@ registers (`r0`-`r3`) pinned as inputs and `part`/`a1`/`a2`/the truncated
 scheduler into the ROM's exact instruction order through plain-C
 statement ordering (which this pass confirmed, again, gets silently
 reordered/CSE'd away; see "Two more compiler-codegen gotchas" below for
-the two extra spots this same class of gap turned up in `sub_8021388`
+the two extra spots this same class of gap turned up in `SpawnDingodile`
 itself, past the point the fourth pass had already diagnosed).
 
 `SpawnCortexBoss` (the OAM-trio tail variant, same shape as `sub_8021668`)
@@ -476,7 +476,7 @@ base and this compiler has to compute the address separately when
 starting from the `r8`-pinned variable instead of the call's fresh `r0`
 return value).
 
-#### Two more compiler-codegen gotchas found finishing `sub_8021388`
+#### Two more compiler-codegen gotchas found finishing `SpawnDingodile`
 
 Isolated-compile "confirmed matching" from the fourth pass turned out to
 still have two real mismatches, only caught by this pass's full clean
@@ -500,7 +500,7 @@ this) - both fixed with small `asm volatile` blocks:
   `asm volatile` idiom `SpawnSquid`'s own version of this pack already
   established (`mov r0, #1` / `mov r5, #1` / `strb r0, [r6, #0xa]`).
 
-### Parked as NAKED: `sub_8021280`, `sub_8021480`
+### Parked as NAKED: `sub_8021280`, `SpawnTiny`
 
 Both fully understood, every instruction's *content* confirmed matching
 via isolated compile, but both hit the confirmed `r7`-pin gap documented
@@ -510,7 +510,7 @@ push/pop set when it tracks that register as holding a value live across
 a *wider* span than a single inline-asm block, and `r7` in both of these
 functions is only ever used as scratch inside one `asm volatile` block
 (the position-probe offset marshalling for `sub_8021280`'s middle arm; the
-collected-bits pack's mask-byte reload for `sub_8021480`). Every plain-C
+collected-bits pack's mask-byte reload for `SpawnTiny`). Every plain-C
 technique tried to force `r7`'s inclusion - an unused pinned local, capturing
 it as the asm's own output, a trailing "keep it alive" read spanning from
 the asm block to the end of the function - failed to get this compiler to
@@ -524,19 +524,19 @@ from the ROM disassembly instead:
   (`gLevelState`) all say "no" and the current level's
   `gLevelTable`-indexed threshold-table entry's guard field
   (offset `+4`, meaning not otherwise understood) is zero, spawns a
-  `sub_80071E4`-built part sized `0x64`x`0x64` tagged `0x12`, registering
+  `CreateEntity`-built part sized `0x64`x`0x64` tagged `0x12`, registering
   into `gUnknown_030012E8`. Otherwise, if the byte at
   `gPlayer + 0x88` is zero, probes a position via
   `CreatePlatform(..., id=4)` (returning a pointer whose first two Q8.8
   fields line up with `struct actor`'s own `x`/`y`) and feeds
   `SetCrateGemPos` an `{x - 2, y - 0x1e}` offset pair; otherwise falls
-  through to the same `sub_80071E4` spawn as the first arm, sized
-  `0x28`x`0x28` instead. Every `sub_80071E4`/`CreatePlatform` call still
+  through to the same `CreateEntity` spawn as the first arm, sized
+  `0x28`x`0x28` instead. Every `CreateEntity`/`CreatePlatform` call still
   marshals `arg3` into `r3` even though neither function's real body
   reads a 4th argument - the same "pass everything, callee ignores the
   rest" convention this whole ROM region's `CreateMovingSprite` callers
   establish.
-- **`sub_8021480`** - one more "two-line text popup" sibling (a bare
+- **`SpawnTiny`** - one more "two-line text popup" sibling (a bare
   `CreateTiny()` header call, no OAM trio, `flags |= 0x10` at the very
   end instead of right after the `+0x29` nibble update).
 
@@ -545,7 +545,7 @@ from the ROM disassembly instead:
 Full clean `make compare` (`La suma coincide`) and `make NON_MATCHING=1
 report`, both passing. Issue #31 stays open in the PR text (not every
 function across the whole issue's original scope is a real C match -
-`sub_8021280`/`sub_8021480` here, plus every other NAKED/`NON_MATCHING`
+`sub_8021280`/`SpawnTiny` here, plus every other NAKED/`NON_MATCHING`
 entry this issue accumulated across all five passes, don't count) but this
 retires the last raw bytes this issue's own scope covers - what's left
 open against #31 from here is exclusively already-parked functions
@@ -566,7 +566,7 @@ that wrote that note - this pass is that follow-up. Semantics for all
 12 are the numbered list at the top of this document, unchanged - every
 one allocates via `CreateMovingSprite` (or, for `SpawnSeal`, the bigger
 `CreateGroundSprite` constructor), hooks its own fixed offset into the
-`gUnknown_030012D0`-rooted table at `+0x20`, updates its `+0x29` frame
+`gSpriteBankSet`-rooted table at `+0x20`, updates its `+0x29` frame
 nibble via `GetSpriteAnimPaletteSlot`, packs the `gEntityFlags` "collected" bits
 into `+0x28`, registers into `gUnknown_030012F0`, and closes with one of
 several tail shapes this cluster's earlier passes already catalogued
@@ -603,7 +603,7 @@ fix, confirmed by isolated-compile diff against the ROM disassembly:
   C statements/nested-block declarations to match, the same technique
   `SpawnSquid` already established.
 - **A bare-constant register pin is silently ignored.** Exactly the
-  `sub_8021388` gotcha this document's fourth/fifth passes already
+  `SpawnDingodile` gotcha this document's fourth/fifth passes already
   flagged (`register s32 off asm("r3") = 0x18;` lands the two-step
   mov/lsl synthesis in whatever register this compiler likes, not the
   pinned one) recurred for `SpawnVenusFlytrap`'s second `_call_via_r2`
@@ -613,7 +613,7 @@ fix, confirmed by isolated-compile diff against the ROM disassembly:
   earlier passes already documented, just for a register choice this
   time instead of a reload). Fixed by hand-spelling the whole trampoline
   call - argument marshalling, offset constant, and `bl` - as one
-  `asm volatile` block, the same escape hatch `sub_8021388` used for its
+  `asm volatile` block, the same escape hatch `SpawnDingodile` used for its
   own `+0x20` table-offset constant. The identical fix was needed for
   both of `SpawnSeal`'s two trampoline calls (`hdr` lives in `r8`
   there, so the "avoid an immediate-offset load off a high-register
@@ -642,7 +642,7 @@ fix, confirmed by isolated-compile diff against the ROM disassembly:
 `sub_801EF0C`, `sub_801F2BC`, `SpawnBlowgunTribesman`, `SpawnPenguin`,
 `SpawnPolarBear`, `SpawnPufferfish`, `SpawnShark`, `SpawnMorayEel`,
 `SpawnElectricEel` all hit the confirmed `r7`-in-the-callee-saved-set gap
-`sub_8021280`/`sub_8021480`/`SpawnBonusPlatform` already established for this
+`sub_8021280`/`SpawnTiny`/`SpawnBonusPlatform` already established for this
 project: each one's ROM disassembly needs `r7` in its
 `push {..., r7, lr}`/`pop {..., r7}` prologue/epilogue, shadowing a
 third extra high register (`sl`, alongside `sb`/`r8`) through `r7`
@@ -657,7 +657,7 @@ technique was found for this pass (the same techniques that worked for
 `SpawnVulture`/`SpawnVenusFlytrap`/`SpawnSeal` above, and every real-C match
 elsewhere in this cluster, were tried first and consistently failed to
 get `r7` into the push/pop list here, exactly as documented for
-`sub_8021280`/`sub_8021480` in the fifth pass above) - transcribed
+`sub_8021280`/`SpawnTiny` in the fifth pass above) - transcribed
 instruction-for-instruction from the ROM disassembly instead, the same
 escape hatch used throughout this project. Two additional tail-shape
 variants get their first real writeup here (the rest reuse shapes
@@ -698,7 +698,7 @@ own still-raw remainder (`tools/report_units.py`'s own comment on this
 range called it "most of the rest of the chunk 31 range"). All 13 are
 one more set of "two-line text popup" family instances, same numbered
 skeleton as documented at the top of this file: a `CreateMovingSprite`-built
-part object, a `gUnknown_030012D0`-rooted `+0x20` table offset, a
+part object, a `gSpriteBankSet`-rooted `+0x20` table offset, a
 `GetSpriteAnimPaletteSlot` frame-nibble update, a `gEntityFlags` two-bit
 "collected" pack into `+0x28`, a `gUnknown_030012F0` manager
 registration, and a header (`CreateEnemyCtrl`) with one or two `_call_via_r2`
@@ -771,7 +771,7 @@ collected-bits pack's mask-byte reload) - never a value this compiler's
 own allocator tracks as live across a wider span, which is the
 precondition every technique in this project's toolbox needs to get a
 register into the callee-saved set at all. No new technique was tried
-this pass beyond what `sub_8021280`/`sub_8021480`/`SpawnBonusPlatform` and the
+this pass beyond what `sub_8021280`/`SpawnTiny`/`SpawnBonusPlatform` and the
 nine `graphics_loading_1ef0c.c` functions already exhausted for this
 exact wall - transcribed instruction-for-instruction from the ROM
 disassembly instead, per this project's established NAKED escape hatch.

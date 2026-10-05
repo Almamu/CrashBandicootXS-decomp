@@ -4,8 +4,8 @@
 this as "the start of the next still-unexamined chunk past issue #14's
 range" - 25 functions, `asm/code_3_2_17_e560_10d54.s`. This is the
 write-up for a Phase 1 pass over that chunk: crack the entry point
-(`sub_8010D54` itself, already strongly implicated by both
-`docs/rom_map.md` and `sub_8010B6C`'s own doc comment - see below),
+(`AddCollisionCandidate` itself, already strongly implicated by both
+`docs/rom_map.md` and `ResolveCollisionCandidates`'s own doc comment - see below),
 match it, and leave a semantic map + address/size list of the other 24
 functions for a future Phase 2 to parallelize, mirroring the approach
 already used for the `UpdateEnemyCtrl` (issue #9/#10) and `sub_0800D18C`
@@ -17,13 +17,13 @@ already used for the `UpdateEnemyCtrl` (issue #9/#10) and `sub_0800D18C`
 subsystem" section) already read `sub_0800D18C`'s own tail (matched as
 NAKED transcription in `src/system/game_loop47.c`, see
 [docs/matching/issue-12-physics-collision.md](issue-12-physics-collision.md))
-and confirmed it hands off to `sub_8010D54` with "~8 packed arguments"
+and confirmed it hands off to `AddCollisionCandidate` with "~8 packed arguments"
 as "the actual apply/commit step" - the very last call
 `sub_0800D18C`'s own three-jump-table dispatch makes before returning.
-`sub_8010B6C` (matched earlier this session as a NAKED transcription in
+`ResolveCollisionCandidates` (matched earlier this session as a NAKED transcription in
 `src/system/game_loop28.c`, GitHub issue #14) went further: its own doc
-comment already calls `sub_8010D54` its **"mirror-image"** function -
-`sub_8010B6C` *reads* the exact record shape `sub_8010D54` *writes*.
+comment already calls `AddCollisionCandidate` its **"mirror-image"** function -
+`ResolveCollisionCandidates` *reads* the exact record shape `AddCollisionCandidate` *writes*.
 That doc comment (`game_loop28.c`) documents the record layout in
 detail:
 
@@ -41,12 +41,12 @@ extern void sub_800E08C(void *neighbor, s32 kind, void *field10, void *field14,
                          u8 field20, u8 field21, u8 extra);
 ```
 
-This is decisive ground truth: `sub_8010D54`'s own raw bytes (read
+This is decisive ground truth: `AddCollisionCandidate`'s own raw bytes (read
 directly from `asm/code_3_2_17_e560_10d54.s` before this pass) write to
 exactly these ten fields, in a pattern that maps one-for-one onto this
 already-established naming.
 
-## `sub_8010D54`'s confirmed shape
+## `AddCollisionCandidate`'s confirmed shape
 
 A single straight-line function (192 bytes, no branches, no literal
 pool - every operand is either an argument or a small immediate).
@@ -73,7 +73,7 @@ struct collision_queue {
     struct collision_candidate candidates[1];        // 0x08+
 };
 
-void sub_8010D54(struct collision_queue *self, void *neighbor, s32 kind,
+void AddCollisionCandidate(struct collision_queue *self, void *neighbor, s32 kind,
                   void *field10, void *field14, s32 field18, s32 field4,
                   s32 field8, s32 field1c, u8 field20, u8 field21);
 ```
@@ -91,13 +91,13 @@ for-instruction.
 ### Caller-side argument confirmation
 
 Every argument's meaning is confirmed against `sub_0800D18C`'s own
-final call site (`game_loop47.c`, the `bl sub_8010D54` right before that
+final call site (`game_loop47.c`, the `bl AddCollisionCandidate` right before that
 function's epilogue):
 
 - `self` = `gPlayer + 0x108` (dereferencing the pointer
   variable first) - the *player's* own instance of this queue. This is
   the exact same base address `sub_8010A0C`-`sub_8010B68`
-  (`game_loop27.c`) and `sub_8010B6C` (`game_loop28.c`) already operate
+  (`game_loop27.c`) and `ResolveCollisionCandidates` (`game_loop28.c`) already operate
   on as `self` for their own "collision box" record fields
   (`self+0x44`-`self+0x58`) - i.e. the queue this function appends to is
   embedded in the *front* of that same larger per-entity record, past
@@ -109,17 +109,17 @@ function's epilogue):
 - The remaining seven fields are packed position/rect values
   `sub_0800D18C` accumulated across its own three jump tables.
 
-### Independent confirmation: `sub_8010E14`/`sub_8010E2C`
+### Independent confirmation: `DestroyCollisionQueue`/`ResetCollisionQueue`
 
-The chunk's first two remaining functions (right after `sub_8010D54`,
+The chunk's first two remaining functions (right after `AddCollisionCandidate`,
 `0x08010E14`/`0x08010E2C`) are **already extern-declared elsewhere** in
 the codebase, and both operate on this exact same `self+0x108` queue on
 *arbitrary* entities (not just the player):
 
-- `src/graphics/actor_part15.c`: `extern void sub_8010E14(void *arg0,
-  s32 arg1);`, called as `sub_8010E14(self + 0x108, 2)`.
-- `src/graphics/actor_part77.c`: `extern void sub_8010E2C(void *arg0);`,
-  called as `sub_8010E2C(self + 0x108)`, documented there as "clears its
+- `src/graphics/actor_part15.c`: `extern void DestroyCollisionQueue(void *arg0,
+  s32 arg1);`, called as `DestroyCollisionQueue(self + 0x108, 2)`.
+- `src/graphics/actor_part77.c`: `extern void ResetCollisionQueue(void *arg0);`,
+  called as `ResetCollisionQueue(self + 0x108)`, documented there as "clears its
   trailing `+0x108`/`+0x10c` fields" - i.e. clears exactly `count`
   (`+0x108+0x0`) and the field this doc calls `unk4`
   (`+0x108+0x4`/`+0x10c`) **together**, confirming `unk4` is a real,
@@ -130,11 +130,11 @@ the codebase, and both operate on this exact same `self+0x108` queue on
 This confirms the `collision_queue` struct is generic per-entity
 infrastructure (every entity has its own queue at `self+0x108`), not
 player-specific - the player is just the one instance `sub_0800D18C`'s
-one call site happens to target. `sub_8010D54`/`sub_8010E14`/
-`sub_8010E2C` read as a three-function accessor family for the same
-struct: a fixed-argument append (`sub_8010D54`), a mode-parameterized
-insert (`sub_8010E14`, `arg1` presumably selecting append-vs-dedup-vs-
-replace), and a reset (`sub_8010E2C`).
+one call site happens to target. `AddCollisionCandidate`/`DestroyCollisionQueue`/
+`ResetCollisionQueue` read as a three-function accessor family for the same
+struct: a fixed-argument append (`AddCollisionCandidate`), a mode-parameterized
+insert (`DestroyCollisionQueue`, `arg1` presumably selecting append-vs-dedup-vs-
+replace), and a reset (`ResetCollisionQueue`).
 
 ## Matching result
 
@@ -164,7 +164,7 @@ clean `make NON_MATCHING=1 report` (no warnings) followed by
 
 New file `src/system/game_loop50.c`, inserted in `ldscript.txt` between
 `game_loop28.o` and the now-trimmed `asm/code_3_2_17_e560_10d54.o`
-(which now begins at `sub_8010E14`). `tools/report_units.py`'s old
+(which now begins at `DestroyCollisionQueue`). `tools/report_units.py`'s old
 `0x08010D54` entry is split in two: `0x08010D54` now points at
 `game_loop50.o` (category `game_loop`, matching the rest of this
 subsystem), and a new `0x08010E14` entry covers the remaining 24-
@@ -183,22 +183,22 @@ branch-by-branch this pass, per Phase 1's scope).
 
 | Address | Size | Known from elsewhere |
 |---|---|---|
-| `sub_8010E14` | 24 B | `void sub_8010E14(void *arg0, s32 arg1)` - called as `sub_8010E14(self+0x108, 2)` from `actor_part15.c`. Sibling of `sub_8010D54`/`sub_8010E2C` (see above) - mode-parameterized queue insert. |
-| `sub_8010E2C` | 8 B | `void sub_8010E2C(void *arg0)` - called as `sub_8010E2C(self+0x108)` from `actor_part77.c`, "clears its trailing `+0x108`/`+0x10c` fields" - queue reset (`count`+`unk4`). |
+| `DestroyCollisionQueue` | 24 B | `void DestroyCollisionQueue(void *arg0, s32 arg1)` - called as `DestroyCollisionQueue(self+0x108, 2)` from `actor_part15.c`. Sibling of `AddCollisionCandidate`/`ResetCollisionQueue` (see above) - mode-parameterized queue insert. |
+| `ResetCollisionQueue` | 8 B | `void ResetCollisionQueue(void *arg0)` - called as `ResetCollisionQueue(self+0x108)` from `actor_part77.c`, "clears its trailing `+0x108`/`+0x10c` fields" - queue reset (`count`+`unk4`). |
 | `CheckExtraLifePickup` | 120 B | No existing cross-reference found. |
 | `PickUpExtraLife` | 224 B | `docs/rom_map.md`: part of "the randomized-behavior... famil[y]" alongside `sub_8016048`. |
 | `UpdateExtraLife` | 392 B | `docs/rom_map.md`: "a bounds-checked, mode-selected object state machine that self-destructs off-screen" - default mode reads `gSineTable` (shared trig table), a rotating/orbiting projectile-or-hazard behavior. |
 | `CreateExtraLife` | 164 B | `struct actor *CreateExtraLife(u16 arg0, u16 arg1, u16 arg2, s32 arg3)` - spawns a part-object; extern in `game_loop29.c`. |
 | `SendExtraLifeToHud` | 144 B | `void SendExtraLifeToHud(void *part)` - extern in `game_loop29.c`; `game_loop14.c` notes a sibling call site uses `SendWumpaToHud` "instead of `SendExtraLifeToHud`" (mutually-exclusive alternative behavior). |
-| `sub_8011248` | 124 B | No existing cross-reference found. |
+| `UpdateExtraLifeHop` | 124 B | No existing cross-reference found. |
 | `DrawExtraLife` | 44 B | No existing cross-reference found. |
 | `sub_80112F0` | 4 B | No existing cross-reference found - tiny, likely a trivial accessor/tail-call stub. |
 | `DestroyExtraLife` | 20 B | No existing cross-reference found. |
 | `sub_8011308` | 8 B | No existing cross-reference found. |
 | `InitExtraLife` | 32 B | No existing cross-reference found. |
 | `sub_8011330` | 52 B | No existing cross-reference found. |
-| `sub_8011364` | 20 B | No existing cross-reference found. |
-| `sub_8011378` | 16 B | No existing cross-reference found. |
+| `SetExtraLifePos` | 20 B | No existing cross-reference found. |
+| `SetExtraLifeHop` | 16 B | No existing cross-reference found. |
 | `sub_8011388` | 8 B | No existing cross-reference found. |
 | `CheckWumpaPickup` | 184 B | No existing cross-reference found. |
 | `PickUpWumpa` | 256 B | `docs/rom_map.md`: "a randomized-position spawn picker, same flavor as the documented `OpenMysteryCrate` randomized-behavior selector but for position rather than behavior choice." Called as `PickUpWumpa(entry, 1)`/`(other, 1)` from `game_loop40.c`/`game_loop49.c` for despawn. |
@@ -206,9 +206,9 @@ branch-by-branch this pass, per Phase 1's scope).
 | `CreateWumpa` | 308 B | `void CreateWumpa(u16 arg0)` - the achievement/unlock-icon spawn helper; extern in `graphics_loading_21d80.c`, referenced from `game_loop14.c`/`docs/rom_map.md`. |
 | `SendWumpaToHud` | 172 B | Alternative to `SendExtraLifeToHud` (see above), called from `game_loop14.c`. |
 | `sub_801191C` | 16 B | `void sub_801191C(struct actor *self)` - extern in `actor_part39.c`; also called from `game_loop14.c` alongside `CreateWumpa` for a "special" 4th spawn-mode case. |
-| `sub_801192C` | 16 B | No existing cross-reference found - address-adjacent to `sub_801191C`, likely a closely related tiny accessor. |
+| `UpdateWumpaHop` | 16 B | No existing cross-reference found - address-adjacent to `sub_801191C`, likely a closely related tiny accessor. |
 
-**11 functions in the middle (`sub_8011248`-`CheckWumpaPickup`, addresses
+**11 functions in the middle (`UpdateExtraLifeHop`-`CheckWumpaPickup`, addresses
 `0x08011248`-`0x08011398`) have zero existing cross-references** and
 are tightly clustered (all within ~0x150 bytes, several under 32 bytes)
 - the same shape as the small bit-field accessor families this
@@ -219,8 +219,8 @@ struct they operate on is identified), separate groups for the larger,
 already-partially-characterized functions above and below it
 (`CheckExtraLifePickup`/`PickUpExtraLife`/`UpdateExtraLife`/`CreateExtraLife`/`SendExtraLifeToHud`
 as one group; `PickUpWumpa`/`UpdateWumpa`/`CreateWumpa`/`SendWumpaToHud`/
-`sub_801191C`/`sub_801192C` as another), plus the confirmed
-`sub_8010E14`/`sub_8010E2C` queue-accessor pair as a quick standalone
+`sub_801191C`/`UpdateWumpaHop` as another), plus the confirmed
+`DestroyCollisionQueue`/`ResetCollisionQueue` queue-accessor pair as a quick standalone
 win given how well-understood they already are from this pass.
 
 ### Open question for Phase 2: category
@@ -229,7 +229,7 @@ This chunk's category is left as the pre-existing `graphics` placeholder
 in `tools/report_units.py` (unchanged from before this pass) rather than
 recategorized to `game_loop`, unlike every other slice of this
 subsystem (issues #12/#13/#14 all recategorized on their first
-examining pass). Reasoning: `sub_8010E14`/`sub_8010E2C` are called
+examining pass). Reasoning: `DestroyCollisionQueue`/`ResetCollisionQueue` are called
 *from* `actor_part15.c`/`actor_part77.c` (both `graphics`-categorized
 files) as generic per-entity accessors, not from `game_loop`-side code
 - structurally similar to how `game_loop27.c`'s own bit-field accessors
@@ -240,7 +240,7 @@ actually read, rather than guessing from two data points.
 
 ## Cross-references
 
-- `docs/status/game_loop.md` - `sub_8010D54`'s matched entry and the
+- `docs/status/game_loop.md` - `AddCollisionCandidate`'s matched entry and the
   remaining 24-function chunk's "still raw" entry added.
 - `tools/report_units.py` - old `0x08010D54` entry split into a matched
   `game_loop50.o` entry and a new `0x08010E14` entry for the remaining
@@ -249,10 +249,10 @@ actually read, rather than guessing from two data points.
   `docs/matching/issue-14-0x08010a0c-graphics.md` - the calling
   convention and struct fields this issue's work depended on.
 - `docs/rom_map.md` - the read-only reconnaissance (`sub_0800D18C`'s
-  own hand-off to `sub_8010D54`, and the `PickUpExtraLife`/`UpdateExtraLife`/
+  own hand-off to `AddCollisionCandidate`, and the `PickUpExtraLife`/`UpdateExtraLife`/
   `PickUpWumpa`/`UpdateWumpa` notes used in the Phase 2 table above).
 
-## Phase 2 update: "quick win" (sub_8010E14/sub_8010E2C) and "accessor cluster" (sub_8011248-CheckWumpaPickup) groups closed
+## Phase 2 update: "quick win" (DestroyCollisionQueue/ResetCollisionQueue) and "accessor cluster" (UpdateExtraLifeHop-CheckWumpaPickup) groups closed
 
 Two of Phase 2's own proposed groups (see the planning table above),
 worked as a single combined pass since both were expected to be
@@ -260,14 +260,14 @@ small/fast. Both fully matched; confirmed by a full clean `make
 NON_MATCHING=1 report` (no warnings) followed by `make compare`
 ("La suma coincide").
 
-### `sub_8010E14`/`sub_8010E2C` - folded into `game_loop50.c`
+### `DestroyCollisionQueue`/`ResetCollisionQueue` - folded into `game_loop50.c`
 
 Both trivially small (24B/8B) and already semantically understood from
 Phase 1's own pass (see above). Reading the raw bytes confirmed:
 
-- `sub_8010E14(void *arg0, s32 arg1)`:
+- `DestroyCollisionQueue(void *arg0, s32 arg1)`:
   ```c
-  void sub_8010E14(void *arg0, s32 arg1)
+  void DestroyCollisionQueue(void *arg0, s32 arg1)
   {
       if (arg1 & 1) {
           OperatorDelete(arg0);
@@ -281,11 +281,11 @@ Phase 1's own pass (see above). Reading the raw bytes confirmed:
   written before this function was read branch-by-branch) - `arg1`
   gates a VRAM-upload-manager refresh (`OperatorDelete`, matched
   elsewhere), unrelated to the insert-mode idea. `actor_part15.c`'s own
-  call site (`sub_8010E14(self + 0x108, 2)`) passes `arg1 = 2`, whose
+  call site (`DestroyCollisionQueue(self + 0x108, 2)`) passes `arg1 = 2`, whose
   bit 0 is clear - so that specific call is itself a no-op at runtime,
   though it still confirms `self` is the same `struct collision_queue`
-  `sub_8010D54` operates on.
-- `sub_8010E2C(void *arg0)`: `self->count = 0; self->unk4[0] = 0;` -
+  `AddCollisionCandidate` operates on.
+- `ResetCollisionQueue(void *arg0)`: `self->count = 0; self->unk4[0] = 0;` -
   matches Phase 1's own prediction exactly (a two-field reset, only the
   first byte of `unk4` cleared despite the field being reserved as
   `u8 unk4[4]`).
@@ -293,37 +293,37 @@ Phase 1's own pass (see above). Reading the raw bytes confirmed:
 Both matched as plain, unremarkable real C on the first isolated
 compile pass (no register pinning needed). New object `src/system/game_loop50.o`'s
 own `.text` grows to include these two (contiguous, no gap, since they
-immediately follow `sub_8010D54` in the ROM); `asm/code_3_2_17_e560_10d54.s`
+immediately follow `AddCollisionCandidate` in the ROM); `asm/code_3_2_17_e560_10d54.s`
 trimmed further to begin at `CheckExtraLifePickup`.
 
-### `sub_8011248`-`CheckWumpaPickup` - new `src/system/game_loop52.c` (11 functions)
+### `UpdateExtraLifeHop`-`CheckWumpaPickup` - new `src/system/game_loop52.c` (11 functions)
 
 Zero prior cross-references (per Phase 1's own table). Reading all 11
 functions' raw bytes at once (as planned) revealed a shared struct
-immediately: `sub_8011364` (seed anchor+position) and `sub_8011248`
+immediately: `SetExtraLifePos` (seed anchor+position) and `UpdateExtraLifeHop`
 (per-frame position update) both touch `self+0x0`/`self+4` (current
 Q8 x/y) and `self+0x4c`/`self+0x50` (Q8 anchor x/y) with the exact same
-offsets, and `sub_8011378`/`sub_8011388`/`sub_8011330`/`CheckWumpaPickup`
+offsets, and `SetExtraLifeHop`/`sub_8011388`/`sub_8011330`/`CheckWumpaPickup`
 all touch the adjacent `self+0x48`-`self+0x4b` byte run - a small
 **"orbiting hazard" behavior** family on a further still-unnamed "part"
 object (distinct from `struct actor`'s own 0x1c bytes and from
-`sub_8010D54`'s own `struct collision_queue`):
+`AddCollisionCandidate`'s own `struct collision_queue`):
 
 | Function | Size | Role |
 |---|---|---|
-| `sub_8011248` | 124B | Per-frame orbit-position update: two lookups into the shared sine table `gSineTable` (`self+0x4b`'s phase, at strides `*4` and `*2`), combined via the overflow-avoiding fixed-point multiply `FixedMul` (already matched, `math_util.c`) - `self+4` (`y`) is always anchor-y minus the y-offset; `self` (`x`) is anchor-x minus/plus the x-offset depending on `self+0x4a` (mode 1/2), or just the anchor x unchanged for any other mode value. |
+| `UpdateExtraLifeHop` | 124B | Per-frame orbit-position update: two lookups into the shared sine table `gSineTable` (`self+0x4b`'s phase, at strides `*4` and `*2`), combined via the overflow-avoiding fixed-point multiply `FixedMul` (already matched, `math_util.c`) - `self+4` (`y`) is always anchor-y minus the y-offset; `self` (`x`) is anchor-x minus/plus the x-offset depending on `self+0x4a` (mode 1/2), or just the anchor x unchanged for any other mode value. |
 | `DrawExtraLife` | 44B | Re-derives visibility via `DrawSprite(gSpriteRenderer, self)` (already matched), clears flags bit 3 when `self+0x38` is nonzero. |
 | `sub_80112F0` | 4B | Trivial - always returns 2. |
 | `DestroyExtraLife` | 20B | Repoints `self->table` at `gExtraLifeVtable`, tail-calls `DestroySpriteObj` (already matched) with `self`+its own 2nd argument passed through. |
 | `sub_8011308` | 8B | Clears the "spawned/active" gate byte `self+0x48`. |
 | `InitExtraLife` | 32B | `InitSpriteObj(self)` (already matched, return discarded) + table repoint (`gExtraLifeVtable`) + `sub_8011308(self)`; returns `self`. Same init/reset/table-repoint trio shape as `actor_part8.c`. |
 | `sub_8011330` | 52B | If `self+0x48 == 0` and the player's `+0xc` bit 7 is set, fires `self->table+0x68/0x6c`'s trampoline (`_call_via_r1`, already matched) - the usual "offset + fn pointer" pair convention. Always returns 0. |
-| `sub_8011364` | 20B | Seeds `self`/`self+4` (Q8 x/y) from raw `x`/`y` arguments (`<<8`), mirrors both into `self+0x4c`/`self+0x50` (the orbit anchor). |
-| `sub_8011378` | 16B | Sets orbit mode (`self+0x4a`), resets orbit phase (`self+0x4b`) to 0. |
+| `SetExtraLifePos` | 20B | Seeds `self`/`self+4` (Q8 x/y) from raw `x`/`y` arguments (`<<8`), mirrors both into `self+0x4c`/`self+0x50` (the orbit anchor). |
+| `SetExtraLifeHop` | 16B | Sets orbit mode (`self+0x4a`), resets orbit phase (`self+0x4b`) to 0. |
 | `sub_8011388` | 8B | Unexamined byte setter, `self+0x49` - address-adjacent to the mode/phase pair but not read by anything else in this group. |
 | `CheckWumpaPickup` | 184B | Per-frame player-proximity/hit-resolve step: gated by the same orbit-mode/phase fields plus flags bits 2/3 (`self+0xc`), AABB-tests `self` against the player (`gPlayer`) - primary AABB (`sub_8007C30`) when the player's own `+0xa == 0x13`, secondary AABB (`GetSpriteHitbox`) otherwise - and on overlap sets flags bit 3 and tail-calls the despawn picker `PickUpWumpa` (Phase 2's neighboring group, not read this pass - only extern'd) with a mode that differs per path, playing a hit SFX only on the primary-AABB path. |
 
-All matched as real C except `sub_8011248`, closed as a NAKED
+All matched as real C except `UpdateExtraLifeHop`, closed as a NAKED
 transcription: a plain-C reconstruction reproduces the ROM's exact
 *shape* (same struct-copy local via `ldm`/`stm`, same two
 `gSineTable` lookups at the right strides and program-order
@@ -333,7 +333,7 @@ persistently picks the opposite register/operand order for the two
 ROM's own `adds r0, r0, r4`) no matter how the C source phrases the
 addition - pointer-arithmetic normalizes the pointer operand first
 internally in this compiler, so this isn't one isolated register letter
-to pin (same category of gap as `sub_8010D54` itself, Phase 1 above).
+to pin (same category of gap as `AddCollisionCandidate` itself, Phase 1 above).
 
 Two smaller gcc-2.9 quirks recurred across the *real-C* functions in
 this group and needed the project's established register-pinning/
@@ -350,7 +350,7 @@ opaque-materialization toolbox:
   same technique as the project's established `matching_decomp_register_pinning`
   memory point.
 - `self[0x4a] = mode; self[0x4b] = 0;`-shaped byte-pair setters
-  (`sub_8011378`) compile the `0` constant lazily, right before its own
+  (`SetExtraLifeHop`) compile the `0` constant lazily, right before its own
   use, but the ROM materializes it *earlier*, between the address
   computation and the first store, reusing the same scratch register
   for both stores' worth of bookkeeping. Fixed by writing the local
@@ -358,7 +358,7 @@ opaque-materialization toolbox:
   between the address computation and the first store (source order
   controls scratch-register lifetime for this compiler beyond just the
   final `-O2` schedule).
-- `sub_8011364`'s trailing `self->anchor = self->pos;` mirror reads
+- `SetExtraLifePos`'s trailing `self->anchor = self->pos;` mirror reads
   compile away entirely (the optimizer sees `self->pos` was *just*
   written with a known value and reuses the register instead of
   reloading) but the ROM does reload from memory - fixed via
@@ -372,14 +372,14 @@ opaque-materialization toolbox:
   elsewhere in this codebase (e.g. `game_loop27.c`'s `sub_8010AEC`).
 
 `asm/code_3_2_17_e560_10d54.s` further trimmed to end at `SendExtraLifeToHud`
-(its own tail, `PickUpWumpa`-`sub_801192C`, split off into the new
+(its own tail, `PickUpWumpa`-`UpdateWumpaHop`, split off into the new
 `asm/code_3_2_17_e560_11448.s` since it's no longer address-adjacent to
 the file's own remaining front half once the middle was carved out).
 New object `src/system/game_loop52.o` inserted between the two in
 `ldscript.txt`. Categorized `actor` in `tools/report_units.py` (not
 `game_loop`): this is per-entity behavior state on the "part" object
 family, not the shared physics/collision-queue infrastructure
-`sub_8010D54`/`sub_8010E14`/`sub_8010E2C` operate on - unlike those
+`AddCollisionCandidate`/`DestroyCollisionQueue`/`ResetCollisionQueue` operate on - unlike those
 three, nothing here touches the `self+0x108` queue or is called from
 the `sub_0800D18C`/`sub_800E08C` dispatch chain.
 
@@ -391,19 +391,19 @@ the `sub_0800D18C`/`sub_800E08C` dispatch chain.
   the old `0x08010E14` raw entry split into `0x08010E34` (still raw),
   `0x08011248` (`game_loop52.o`, matched), and `0x08011448` (still raw).
 - `src/graphics/actor_part15.c` / `src/graphics/actor_part77.c` - the
-  external call-site confirmation for `sub_8010E14`/`sub_8010E2C`
+  external call-site confirmation for `DestroyCollisionQueue`/`ResetCollisionQueue`
   already used in Phase 1, re-verified against the actual instruction
   bytes this pass.
 - `src/graphics/graphics.c` - `DestroyOamBuffer`, the already-matched twin
-  shape that confirmed `sub_8010E14`'s own semantics.
+  shape that confirmed `DestroyCollisionQueue`'s own semantics.
 
-## Phase 2, second parallel slice: `PickUpWumpa`-`sub_801192C` (the chunk's tail 6)
+## Phase 2, second parallel slice: `PickUpWumpa`-`UpdateWumpaHop` (the chunk's tail 6)
 
 Two agents worked Phase 2 in parallel, each in an isolated worktree, on
 non-overlapping subsets of the 24-function chunk. This slice covers the
 6 largest/individually-characterized functions the Phase 2 table above
 already flagged with real cross-references: `PickUpWumpa`, `UpdateWumpa`,
-`CreateWumpa`, `SendWumpaToHud`, `sub_801191C`, `sub_801192C` - all 6
+`CreateWumpa`, `SendWumpaToHud`, `sub_801191C`, `UpdateWumpaHop` - all 6
 **matched**, confirmed by a full clean `make compare` ("La suma
 coincide").
 
@@ -418,7 +418,7 @@ coincide").
   offset and fires `ShowHudWumpa(gHud)` (`self->0x48 = 1`).
   Either way: `self->0x3c = 0xa0`, `self->0x30` clamped from a
   `self->0x20` table lookup at `self->0x2d*0x1c+0x16`, `self->0x25 = 1`,
-  `self->0xc |= 0x10`, then calls `sub_8007174` and re-derives
+  `self->0xc |= 0x10`, then calls `WorldToScreen` and re-derives
   `self->x`/`self->y` plus `self->0x40`/`self->0x44` (a "distance to
   travel" pair, `-FixedDiv(newPos<<8 - offset, 0x1400)`) from the
   results - the exact same tail shape `PickUpExtraLife`/`SendExtraLifeToHud`/
@@ -446,7 +446,7 @@ coincide").
   `FixedMul` added into `self->0x50` (stored to `self->y` - a
   "rotate around a fixed center by a table-driven step" idiom, same
   table/shape as `UpdateExtraLife`'s own default-mode branch) when
-  `self->0x4a` is clear, or calls `sub_801192C` (below) when set. If
+  `self->0x4a` is clear, or calls `UpdateWumpaHop` (below) when set. If
   `self->0x48 == 3` specifically, `self->x`/`self->y` are instead reset
   to `gPlayer`'s own position minus a fixed
   `-0x400`/`-0xe00` (Q8) offset. Every path ends with a tail call to
@@ -465,7 +465,7 @@ coincide").
   re-initializes via `ResetWumpaPickup` (`actor_part39.c`, already matched),
   stores `id`/`x`/`y` (mirrored into `+0x4c`/`+0x50` as a "home
   position" pair `UpdateWumpa`'s mode-3 branch reads back), joins the
-  `special`-selected list, points `+0x20` at `gUnknown_030012D0`'s
+  `special`-selected list, points `+0x20` at `gSpriteBankSet`'s
   shared resource table (fixed slot `0xd2*2`, the same
   `DropExtraLife`/`DropWumpa` convention), tags `+0x2d = 1`, builds the
   OAM/keyframe trio, derives `+0x30` from the same
@@ -489,12 +489,12 @@ coincide").
 - **`sub_801191C`** (16B) - a trivial leaf: `self->0x48 = 3`,
   `self->0x49 = 0xa`. Already extern-declared as `void
   sub_801191C(struct actor *self)` in `actor_part39.c`.
-- **`sub_801192C`** (124B, not 16B as the Phase 1 table above estimated
+- **`UpdateWumpaHop`** (124B, not 16B as the Phase 1 table above estimated
   - that estimate was a Phase-1 address-delta approximation that turned
   out wrong for this one entry; corrected here from this pass's own
   direct byte read) - address-adjacent to `sub_801191C`, a small
   `self->0x4b`/`self->0x4a`-driven table helper. Copies a fixed 3-word
-  table (`gStaticData_0816BF14`) onto the stack, computes `self->y` from
+  table (`gWumpaHopWidths`) onto the stack, computes `self->y` from
   a `gSineTable[self->0x4b*4]` lookup scaled by `FixedMul`
   against `self->0x50` (the "home Y" `CreateWumpa`/`UpdateWumpa` both
   write), then computes `self->x` from a second
@@ -546,7 +546,7 @@ make compare`, which passed outright ("La suma coincide"):
   registers survive from that mode's own preceding branch - a shape a
   natural compile collapses into one shared subroutine instead of the
   ROM's own three separately-kept inlined copies.
-- `sub_801192C`'s register picks (which scratch register holds the
+- `UpdateWumpaHop`'s register picks (which scratch register holds the
   reloaded `self->0x4b`/`self->0x4a` byte, and whether the ROM's own
   extra register-to-register `mov` before each `FixedMul` call
   argument survives) resisted both named-temporary and pointer-cached-
@@ -569,7 +569,7 @@ never emits a `.syntax unified` directive; and Thumb `NEG` (encoded as
 `rsbs rN,rN,#0` in unified syntax) must be spelled `neg rN,rN` in divided
 syntax specifically (`rsb` alone doesn't accept an immediate flags
 suffix at 16-bit width). Confirmed by every other `NAKED` function
-already in this codebase (`DropExtraLife`/`DropWumpa`/`sub_8010D54`/etc.)
+already in this codebase (`DropExtraLife`/`DropWumpa`/`AddCollisionCandidate`/etc.)
 using exactly this divided spelling - worth calling out explicitly since
 it's easy to copy raw disassembly text unmodified and get a confusing
 assembler error instead of a silent miscompile.
@@ -598,7 +598,7 @@ drafted as C reconstructions this same pass (`PickUpExtraLife`/
 `SendWumpaToHud`/`PickUpWumpa`/`SendExtraLifeToHud` share one obvious near-
 identical tail shape worth noting for whoever picks these up: fixed or
 randomized `(dx,dy)`, `self->0x3c`/`self->0x30`/`self->0x25`/`self->0xc`
-setup, `sub_8007174`, then the `-FixedDiv(...)` distance-pair
+setup, `WorldToScreen`, then the `-FixedDiv(...)` distance-pair
 derivation). None were integrated into `ldscript.txt`/
 `tools/report_units.py` this pass: `CreateExtraLife` (a fifth member of the
 same address-contiguous group, called from `game_loop29.c`, already
@@ -633,7 +633,7 @@ avoidance convention hadn't reserved a slot for it) are now all matched,
 in a new file `src/system/game_loop54.c` (the next available
 `game_loopNN.c` slot after this session's `50`-`53`). **This closes the
 entire `0x08010D54` physics/collision-apply chunk (GitHub issue
-#12/#14): every function between `sub_8010D54` and the already-matched
+#12/#14): every function between `AddCollisionCandidate` and the already-matched
 `src/graphics/actor_part39.c` (`DrawWumpa`) is now matched.**
 `asm/code_3_2_17_e560_10d54.s` is fully consumed and removed from the
 tree; its `ldscript.txt` line is replaced by `game_loop54.o` (inserted
@@ -665,7 +665,7 @@ position).
   x-offset, `self->0x49` tags which one, `self->0x48 = 2`) or uses a
   fixed `(0xb400, 0xc00)` offset and fires
   `ShowHudLives(gHud)` (`self->0x48 = 1`); either way,
-  `self->0xc |= 0x10`, `self->0x25 = 1`, `sub_8007174(...)`, then
+  `self->0xc |= 0x10`, `self->0x25 = 1`, `WorldToScreen(...)`, then
   `self->0x40`/`self->0x44` become `-FixedDiv(newPos<<8 - offset,
   0x1400)`.
 - **`UpdateExtraLife`** (392B) - the bounds-checked, mode-selected
@@ -683,7 +683,7 @@ position).
   `self->0x48 != 0`, computes an orbit step via
   `gSineTable[self->0x49 & 0x7f]` and `FixedMul` added into
   `self->0x50`, stored to `self->y`, when `self->0x4a` is clear, or
-  calls `sub_8011248` (`game_loop52.c`'s orbit-position updater) when
+  calls `UpdateExtraLifeHop` (`game_loop52.c`'s orbit-position updater) when
   set - then always tail-calls `UpdateSpriteObj`.
 - **`CreateExtraLife`** (164B) - `struct actor *CreateExtraLife(u16 arg0, u16
   arg1, u16 arg2, s32 arg3)`, the part-object spawn helper
@@ -704,7 +704,7 @@ position).
   (`game_loop53.c`) - reading both side by side, `SendExtraLifeToHud` is
   notably *simpler*: it has no `self->0x3c`/`self->0x30` table-lookup-
   clamp setup at all, just `self->0x48 = 1`, `self->x -=
-  self->0x4a<<8`, `self->0x25 = 1`, `sub_8007174(...)`, the same
+  self->0x4a<<8`, `self->0x25 = 1`, `WorldToScreen(...)`, the same
   distance-pair derivation with fixed `(0xb400, 0xc00)` offsets, then
   `ShowHudLives(gHud)` (not `ShowHudWumpa`, unlike
   `SendWumpaToHud`).
@@ -818,9 +818,9 @@ followed by `make compare` ("La suma coincide"):
 
 ## Later pass: issue #15 NAKED retry
 
-Six of this chunk's NAKED functions are real C now: `sub_8010D54`
-(game_loop50.c, either compiler), `sub_8011248` (game_loop52.c),
-`PickUpWumpa`/`SendWumpaToHud`/`sub_801192C` (game_loop53.c) and
+Six of this chunk's NAKED functions are real C now: `AddCollisionCandidate`
+(game_loop50.c, either compiler), `UpdateExtraLifeHop` (game_loop52.c),
+`PickUpWumpa`/`SendWumpaToHud`/`UpdateWumpaHop` (game_loop53.c) and
 `CreateExtraLife` (game_loop54.c), the last five under old_agbcc -
 game_loop52/53/54 moved to `OLD_AGBCC_OBJS` (their other functions
 compile identically under both). The "part" object these files poke at

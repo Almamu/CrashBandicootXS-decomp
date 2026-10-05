@@ -49,7 +49,7 @@ extern s32 gHudSlideOffset;
 extern void DrawSpriteWithOffset(struct actor *part, s32 arg1, s32 arg2);
 extern void DestroyUiSpriteObj(struct actor *part, u32 arg1);
 extern struct actor *InitUiSpriteObj(struct actor *part);
-extern u8 gStaticData_087E4CB4[];
+extern u8 gHudPartVtable[];
 
 extern u32 gRoomFrameCount;
 extern s32 __divsi3(s32 arg0, s32 arg1);
@@ -348,18 +348,18 @@ void DrawHudPart(struct hud_digit_part *part, s32 arg1, s32 arg2)
  * table swap - see actor_part7.c). */
 void sub_802710C(struct actor *part, u32 arg1)
 {
-    part->table = gStaticData_087E4CB4;
+    part->table = gHudPartVtable;
     DestroyUiSpriteObj(part, arg1);
 }
 
 /* Constructs one `struct hud_digit_part` slot as a `struct actor`
  * (the two share the same first 0x18 bytes plus `table` at +0x18 - see
  * include/hud.h): re-initializes it via `InitUiSpriteObj`, then overwrites
- * `table` with this widget family's own `gStaticData_087E4CB4` in
+ * `table` with this widget family's own `gHudPartVtable` in
  * place of whatever `InitUiSpriteObj` set it to. */
 struct actor *InitHudPart(struct actor *part)
 {
     InitUiSpriteObj(part);
-    part->table = gStaticData_087E4CB4;
+    part->table = gHudPartVtable;
     return part;
 }

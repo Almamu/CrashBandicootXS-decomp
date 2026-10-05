@@ -117,5 +117,5 @@ symbol-pairing errors). Full clean `rm -rf build crashbandicootxs.elf
 crashbandicootxs.gba crashbandicootxs.map && make compare` -
 `crashbandicootxs.gba: La suma coincide`. `sub_80259D4` is folded into
 the same `src/system/game_loop13.o` unit as the already-matched
-`sub_8025A0C`/`sub_8025A3C`/`sub_8025A44`/`sub_8025A5C` in
+`sub_8025A0C`/`sub_8025A3C`/`DestroyEntityFlags`/`InitEntityFlags` in
 `tools/report_units.py`, since it's the same object file.

@@ -20,7 +20,7 @@
  * `ClipPooledBgLayerRows`).
  *
  * Compiled with old_agbcc (Makefile OLD_AGBCC_OBJS): the BGnCNT bitfield
- * setters (`sub_802614C`, `sub_8026160`, `sub_8026174`, `sub_8026190`)
+ * setters (`SetBgLayerScreenBase`, `SetBgLayerPriority`, `SetBgLayerColors256`, `SetBgLayerCharBase`)
  * schedule the mask constant before the `ldrb`, which the current agbcc
  * never does. See docs/matching/issue-42-bg-scroll-layer.md.
  *
@@ -138,13 +138,13 @@ void LoadBgLayer(struct bg_scroll_layer *self, struct bg_layer_desc *desc)
 /* Screen-block entry index of map (col, row): 32x32 wrap.
  * UNUSED - no caller anywhere in the ROM (checked asm/, expected/ and
  * src/); no method table points at it either. */
-s32 sub_8026108(void *self, s32 col, s32 row)
+s32 GetBgLayerScreenIndex(void *self, s32 col, s32 row)
 {
     return Mod32(row) * 32 + Mod32(col);
 }
 
 /* Column wrap `col % 32`. Not a named symbol in the old disassembly (it was
- * folded into `sub_8026108`'s listing after its padding halfword).
+ * folded into `GetBgLayerScreenIndex`'s listing after its padding halfword).
  * UNUSED - no caller anywhere in the ROM (checked asm/, expected/ and
  * src/). */
 s32 sub_802612C(void *self, s32 col)
@@ -164,27 +164,27 @@ s32 sub_802613C(void *self, s32 col)
 /* BGnCNT shadow setters/getter, this one and the next four.
  * UNUSED - no caller anywhere in the ROM (checked asm/, expected/ and
  * src/). */
-void sub_802614C(struct bg_scroll_layer *self, u32 screenBase)
+void SetBgLayerScreenBase(struct bg_scroll_layer *self, u32 screenBase)
 {
     self->cnt.bits.screenBase = screenBase;
 }
 
-void sub_8026160(struct bg_scroll_layer *self, u32 priority)
+void SetBgLayerPriority(struct bg_scroll_layer *self, u32 priority)
 {
     self->cnt.bits.priority = priority;
 }
 
-void sub_8026174(struct bg_scroll_layer *self, u32 colors256)
+void SetBgLayerColors256(struct bg_scroll_layer *self, u32 colors256)
 {
     self->cnt.bits.colors256 = colors256;
 }
 
-u32 sub_8026184(struct bg_scroll_layer *self)
+u32 GetBgLayerCharBase(struct bg_scroll_layer *self)
 {
     return self->cnt.bits.charBase;
 }
 
-void sub_8026190(struct bg_scroll_layer *self, u32 charBase)
+void SetBgLayerCharBase(struct bg_scroll_layer *self, u32 charBase)
 {
     self->cnt.bits.charBase = charBase;
 }
@@ -192,7 +192,7 @@ void sub_8026190(struct bg_scroll_layer *self, u32 charBase)
 /* Writes the cached HOFS/VOFS pair to the hardware registers.
  * UNUSED - no caller anywhere in the ROM (checked asm/, expected/ and
  * src/); level_layers.c uses `CommitBgLayerScroll` instead. */
-void sub_80261A8(struct bg_scroll_layer *self)
+void WriteBgLayerOffsetRegs(struct bg_scroll_layer *self)
 {
     *self->ofsReg = *(u32 *)&self->hofs;
 }
@@ -200,7 +200,7 @@ void sub_80261A8(struct bg_scroll_layer *self)
 /* Writes the BGnCNT shadow to the hardware register (same as the tail of
  * `ResetBgLayer`). UNUSED - no caller anywhere in the ROM (checked asm/,
  * expected/ and src/). */
-void sub_80261B0(struct bg_scroll_layer *self)
+void WriteBgLayerCntReg(struct bg_scroll_layer *self)
 {
     *self->cntReg = self->cnt.raw;
 }
@@ -231,9 +231,9 @@ void DrawPooledBgLayerColumn(struct pooled_bg_layer *self, s32 col)
     }
 }
 
-/* Layer-0 override of table +0x20 (base: `sub_8024DCC`): clamps a scroll
+/* Layer-0 override of table +0x20 (base: `ClampBgLayerScrollStep`): clamps a scroll
  * step to [-8, 8]. */
-s32 sub_8026250(struct pooled_bg_layer *self, s32 v)
+s32 ClampPooledBgLayerScrollStep(struct pooled_bg_layer *self, s32 v)
 {
     if (v < -8)
         v = -8;

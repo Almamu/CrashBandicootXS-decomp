@@ -7,7 +7,7 @@
 
 extern void nullsub_21();
 extern void nullsub_22();
-extern void sub_801E990();
+extern void SpawnStartMarker();
 extern void SpawnCrystal();
 extern void sub_801EBF0();
 extern void SpawnRedGem();
@@ -43,8 +43,8 @@ extern void SpawnYellowGemPlatform();
 extern void SpawnGreenGemPlatform();
 extern void SpawnBlueGemPlatform();
 extern void sub_8021280();
-extern void sub_8021388();
-extern void sub_8021480();
+extern void SpawnDingodile();
+extern void SpawnTiny();
 extern void SpawnCortexBoss();
 extern void sub_8021668();
 extern void SpawnSeaweed();
@@ -82,7 +82,7 @@ extern void SpawnDoubleJumpPower();
 extern void SpawnTurboRunPower();
 extern void SpawnStopwatch();
 extern void SpawnBlueGem();
-extern void sub_802209C();
+extern void SpawnCrateGemMarker();
 extern void SpawnWumpa();
 extern void sub_802218C();
 extern void sub_80221A4();
@@ -92,11 +92,11 @@ extern void sub_80221D4();
 /* The unified 92-slot function-pointer dispatch array (docs/rom_map.md
  * "Major correction: there is no second table"): the spawn function of
  * each entity type of the room data (docs/levels.md, "Entities").
- * CreateEntitySpawner (graphics_loading_21d80.c) hands it to sub_8025D4C
+ * CreateEntitySpawner (graphics_loading_21d80.c) hands it to SetEntitySpawnerTable
  * with a count of 0x5c, as gEntitySpawner; SpawnEntity calls entry
  * `type` with the entity's id, x, y and param. */
 void (*const gEntitySpawnFuncs[92])() = {
-    sub_801E990,
+    SpawnStartMarker,
     sub_80221D4,
     sub_80221BC,
     sub_80221A4,
@@ -165,9 +165,9 @@ void (*const gEntitySpawnFuncs[92])() = {
     sub_80208C4,
     SpawnRat,
     SpawnFrog,
-    sub_8021388,
+    SpawnDingodile,
     nullsub_21,
-    sub_8021480,
+    SpawnTiny,
     SpawnCortexBoss,
     sub_8021668,
     SpawnTornadoSpinPower,
@@ -185,7 +185,7 @@ void (*const gEntitySpawnFuncs[92])() = {
     SpawnBonusPlatform,
     sub_80218E8,
     SpawnRockPlatform,
-    sub_802209C,
+    SpawnCrateGemMarker,
     SpawnFlame,
     SpawnSeaweed,
 };

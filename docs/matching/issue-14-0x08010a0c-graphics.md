@@ -13,8 +13,8 @@ Every function in this chunk operates on the same `self` type
 `sub_8010A00` (game_loop26.c, matched under GitHub issue #13) and
 `ResetCrate` (game_loop22.c, issue #13) already do - a "collision box"
 record embedded inside the player at `gPlayer+0x108`,
-confirmed directly: `sub_80106DC` (game_loop23.c) already calls
-`sub_8010B6C(gPlayer + 0x108)`. `tools/report_units.py`'s
+confirmed directly: `ResolvePlayerCollisions` (game_loop23.c) already calls
+`ResolveCollisionCandidates(gPlayer + 0x108)`. `tools/report_units.py`'s
 `0x08010A0C` entry only ever carried `graphics` as a pre-existing
 placeholder pending examination (its own comment said so). Now that
 it's examined, this chunk is recategorized to `game_loop`, matching
@@ -32,34 +32,34 @@ covering:
   (`sub_8010A50` gets, `sub_8010A5C` decrements-if-nonzero,
   `sub_8010A84` sets), and bits 0-2 (`sub_8010A94` sets, `sub_8010AA4`
   gets).
-- Plain field accessors: `sub_8010AAC`/`sub_8010AB4` (`self+0x4e`
+- Plain field accessors: `SetCrateKind`/`GetCrateKind` (`self+0x4e`
   byte), `sub_8010ABC`/`sub_8010AC0` (`self+0x44` word),
-  `sub_8010AC4`/`sub_8010AD8` (`self+0x4d`'s low 7 bits, preserving bit
+  `SetCrateState`/`GetCrateState` (`self+0x4d`'s low 7 bits, preserving bit
   7), `sub_8010AE4` (`self+0x4c` byte setter), `sub_8010AEC`
-  (`self+0x4c` sign-extending getter), `sub_8010B44` (`self+0x58`
+  (`self+0x4c` sign-extending getter), `SetCrateTouched` (`self+0x58`
   byte setter), `sub_8010B4C`/`sub_8010B54` (`self+0x51`/`self+0x50`
   byte getters), `sub_8010B5C` (`self+0x48` whole-field byte setter,
   unlike `sub_8010A94` which masks), `sub_8010B64`/`sub_8010B68`
   (`self+0x54` word accessors).
-- `sub_8010AF8` - a boolean getter for `self+0x4d` bit 7. **The
+- `IsCrateBusy` - a boolean getter for `self+0x4d` bit 7. **The
   original disassembly never gave this one its own label/symbol** - it
   sits directly after `sub_8010AEC`'s trailing alignment padding, at
   the address the byte-count arithmetic works out to (`sub_8010AEC` is
-  10 bytes, padded to 12; `sub_8010AF8` starts right after). Named
-  `sub_8010AF8` per the usual `sub_XXXXXXXX` convention (its own ROM
+  10 bytes, padded to 12; `IsCrateBusy` starts right after). Named
+  `IsCrateBusy` per the usual `sub_XXXXXXXX` convention (its own ROM
   address) since it's still a completely ordinary function, just one
   the original tooling's symbol table missed. Not entered into
   `expected/corrections.txt`, per `docs/decomp_dev.md`'s note there:
   that mechanism renames an *existing* label, and this function never
   had a wrong one to correct - it simply had none.
-- `sub_8010B0C`/`sub_8010B28` - set/clear `self+0x4d` bit 7 together
+- `SetCrateBusy`/`ClearCrateBusy` - set/clear `self+0x4d` bit 7 together
   with the global "hit" latch `gPlayer+0x80` `game_loop22.c`
   already established.
 
-## Follow-up: `sub_8010B6C` - now matched (NAKED transcription)
+## Follow-up: `ResolveCollisionCandidates` - now matched (NAKED transcription)
 
-`sub_8010B6C` (`src/system/game_loop28.c`) - the chunk's last and
-largest function (488 bytes), and the one `sub_80106DC`
+`ResolveCollisionCandidates` (`src/system/game_loop28.c`) - the chunk's last and
+largest function (488 bytes), and the one `ResolvePlayerCollisions`
 (game_loop23.c) already calls by name - was originally parked here
 under `NON_MATCHING`. A later pass in the same session that closed
 `ResetPlayer` below (see the next "Follow-up" section) closed this one
@@ -88,8 +88,8 @@ next frame.
 
 Every field offset, branch, and call argument here was already
 understood and cross-referenced against the mirror-image writer
-`sub_8010D54` (right after this issue's own range, not itself in
-scope) and the `sub_80106DC` caller when this was first parked - but
+`AddCollisionCandidate` (right after this issue's own range, not itself in
+scope) and the `ResolvePlayerCollisions` caller when this was first parked - but
 the ROM builds nearly every record-field address in both the loop
 body and the two `sub_800E08C` call sites as a *running pointer*,
 incremented by `0x24` once per loop iteration, with up to twelve of
@@ -108,7 +108,7 @@ project's assembler invocation accepts identically), with the single
 `gPlayer` literal pool kept at the ROM's own mid-function
 split point (right after the loop's first `sub_800E08C` call site's
 `b` past it) and a trailing `asm(".align 2, 0")` for the 2-byte
-zero-fill gap before `sub_8010D54` (the assembler's default `nop`
+zero-fill gap before `AddCollisionCandidate` (the assembler's default `nop`
 fill pattern otherwise mismatches the ROM's zero halfword there - see
 `matching_decomp_alignment_fix`). Verified via isolated
 `arm-none-eabi-as` assembly against the ROM's raw bytes first, then
@@ -124,7 +124,7 @@ function) is removed entirely, `ldscript.txt`'s now-redundant
 
 `ResetPlayer` (`src/graphics/actor_part48.c`) was previously parked
 (see this same repo's `issue-9-0x08007634-actor.md` for its original
-write-up) on exactly the same shape of gap `sub_8010B6C` above hit -
+write-up) on exactly the same shape of gap `ResolveCollisionCandidates` above hit -
 the ROM building several field addresses as a running pointer
 incremented by small relative offsets across a long, non-uniform
 stretch of writes. A second pass this session closed that gap. The
@@ -205,7 +205,7 @@ section entry for `ResetPlayer` is removed accordingly.
 ## Cross-references
 
 - `docs/status/game_loop.md` - matched/parked lists updated for this
-  issue's functions; `sub_8010B6C` moved from "Parked (NON_MATCHING)"
+  issue's functions; `ResolveCollisionCandidates` moved from "Parked (NON_MATCHING)"
   to the "Parked - NAKED transcription" section.
 - `docs/status/actor.md` - `ResetPlayer` moved from "Parked" to
   "Matched".

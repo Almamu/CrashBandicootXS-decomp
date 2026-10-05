@@ -12,7 +12,7 @@
  * caller or symbol reference anywhere in the tree, and is reproduced
  * automatically by this file's own trailing `asm(".align 2, 0")`
  * without needing its own C function (see docs/matching.md's
- * `sub_8007364` entry for the established precedent: a disassembler-
+ * `GetEntityPixelY` entry for the established precedent: a disassembler-
  * rendered `movs r0, r0` at a function gap is usually just a zero-fill
  * halfword, not a literal instruction). `sub_8016048` continues in
  * asm/code_3_2_17_16048.s. */

@@ -5,10 +5,10 @@
  * width/height pair (both raw and pre-halved/negated for centering), and
  * a pointer to a per-category data table (offset/text record pairs read
  * at several different fixed offsets by src/graphics/graphics.c's
- * sub_8006FE4/sub_8007048/sub_8007114/sub_80070D4/sub_8007230/etc. and
+ * sub_8006FE4/sub_8007048/sub_8007114/sub_80070D4/ResetEntity/etc. and
  * by oam_count.c's DestroyPowerDialog - none of that table's own shape is
  * understood yet, so it stays a raw `void *` here). Exactly 0x1c bytes -
- * confirmed by sub_80071E4's `OperatorNew(0x1c)` allocation. Several
+ * confirmed by CreateEntity's `OperatorNew(0x1c)` allocation. Several
  * fields (0x0A, 0x0B, 0x0D-0x0F, 0x16-0x17) are read/written but not
  * understood beyond their offset yet - named `unusedNN`/`fieldNN`
  * rather than guessed. `struct sub_8006700_actor.field_18` (in
@@ -21,8 +21,8 @@ struct actor {
     u8 unused_0B;             // 0x0B
     u8 flags;                  // 0x0C - individual bits tested/set by several functions
     u8 unused_0D[3];             // 0x0D-0x0F
-    s16 halfW;                     // 0x10 - -rawW/2, set by sub_80070EC/sub_8007230
-    s16 halfH;                       // 0x12 - -rawH/2, set by sub_80070EC/sub_8007230
+    s16 halfW;                     // 0x10 - -rawW/2, set by SetEntitySize/ResetEntity
+    s16 halfH;                       // 0x12 - -rawH/2, set by SetEntitySize/ResetEntity
     u8 rawW;                           // 0x14
     u8 rawH;                            // 0x15
     u8 unused_16[2];                      // 0x16-0x17

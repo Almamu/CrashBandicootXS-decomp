@@ -103,7 +103,7 @@
  * guidance.
  *
  * Real bytes formerly the start of `asm/code_3_2_17_26bf8.s` (that file
- * is now trimmed to begin at `sub_8026C90`). */
+ * is now trimmed to begin at `StepCameraDirectional`). */
 
 struct probe_pos
 {

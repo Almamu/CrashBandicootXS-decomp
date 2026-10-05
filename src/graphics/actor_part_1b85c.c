@@ -326,7 +326,7 @@ union key_state
 
 extern struct player *gPlayer;
 extern struct follow_owner *gCamera;
-extern void ***gUnknown_030012D0;
+extern void ***gSpriteBankSet;
 extern void *gUnknown_030012F0;
 extern struct tile_cache *gPaletteCache;
 extern void *gAudioContext;
@@ -335,7 +335,7 @@ extern struct icon_manager *gSmallFont;
 extern struct icon_manager *gLargeFont;
 extern struct vram_cursor *gObjVramCursor;
 extern void *gOamBuffer;
-extern void *gUnknown_03001304;
+extern void *gInput;
 extern struct level_menu *gLevelSelect;
 extern u8 gNewWorldOpened;
 extern union key_state gKeys;
@@ -377,7 +377,7 @@ extern void ResetSpriteFrameTimer(void *part);
 extern void ResetSpriteFrameIndex(void *part);
 extern void SetSpriteAnimDone(void *part, s32 arg);
 extern void SetSpritePriority(void *part, s32 value);
-extern void sub_800737C(void *part, s32 x, s32 y);
+extern void SetEntityPixelPos(void *part, s32 x, s32 y);
 extern void DrawSpriteWithOffset(void *part, s32 dx, s32 dy);
 extern s32 GetSpriteAnimPaletteSlot(void *part);
 extern void AdvanceSpriteAnim(void *p);
@@ -497,7 +497,7 @@ static inline void SetAnim(struct sprite *s, s32 idx)
 
 static inline struct anim_table *AnimTable(s32 offset)
 {
-    return (struct anim_table *)((u8 *)**gUnknown_030012D0 + offset);
+    return (struct anim_table *)((u8 *)**gSpriteBankSet + offset);
 }
 
 static inline void SetIconPos(struct icon_manager *m, u32 x, u32 y)
@@ -662,7 +662,7 @@ s32 sub_801B980(struct follow_child *self)
 /* Factory for the 0x78-byte sprite (method table gStaticData_087E4B34,
  * constructor inlined): places it at (x, y) pixels with record id `id`,
  * registers it with gUnknown_030012F0, and starts animation 0 of the
- * table at `**gUnknown_030012D0 + 0x150`. Called from sub_8021668's
+ * table at `**gSpriteBankSet + 0x150`. Called from sub_8021668's
  * family (graphics_loading_21668.c). The two mask constants are
  * materialized with `mov/neg` asm like graphics_loading_21668.c's
  * sub_8021668, since the compiler otherwise derives them from constants
@@ -678,7 +678,7 @@ struct sprite *sub_801B984(u16 id, u16 x, u16 y)
     obj->x = x << 8;
     obj->y = y << 8;
     AddToPartList(gUnknown_030012F0, obj);
-    obj->anim = (struct anim_table *)(**gUnknown_030012D0 + 0x150);
+    obj->anim = (struct anim_table *)(**gSpriteBankSet + 0x150);
     obj->animIndex = 0;
     ResetSpriteFrameTimer(obj);
     ResetSpriteFrameIndex(obj);
@@ -900,36 +900,36 @@ struct level_menu *InitLevelSelect(struct level_menu *self, s32 arg)
     }
     self->sprites[0]->anim = AnimTable(0x234);
     SetAnim(self->sprites[0], gStaticData_0816C548[self->world]);
-    sub_800737C(self->sprites[0], gStaticData_0816C498.x, gStaticData_0816C498.y);
+    SetEntityPixelPos(self->sprites[0], gStaticData_0816C498.x, gStaticData_0816C498.y);
     self->sprites[1]->anim = AnimTable(0x234);
     SetAnim(self->sprites[1], 10);
-    sub_800737C(self->sprites[1], gStaticData_0816C4A0.x, gStaticData_0816C4A0.y);
+    SetEntityPixelPos(self->sprites[1], gStaticData_0816C4A0.x, gStaticData_0816C4A0.y);
     self->sprites[2]->anim = AnimTable(0x1BC);
-    sub_800737C(self->sprites[2], gStaticData_0816C4A8.x, gStaticData_0816C4A8.y);
+    SetEntityPixelPos(self->sprites[2], gStaticData_0816C4A8.x, gStaticData_0816C4A8.y);
     self->sprites[3]->anim = AnimTable(0x180);
     SetAnim(self->sprites[3], 1);
-    sub_800737C(self->sprites[3], gStaticData_0816C4B0.x, gStaticData_0816C4B0.y);
+    SetEntityPixelPos(self->sprites[3], gStaticData_0816C4B0.x, gStaticData_0816C4B0.y);
     self->sprites[4]->anim = AnimTable(0x180);
     SetAnim(self->sprites[4], 1);
-    sub_800737C(self->sprites[4], gStaticData_0816C4B0.x, gStaticData_0816C4B0.y);
+    SetEntityPixelPos(self->sprites[4], gStaticData_0816C4B0.x, gStaticData_0816C4B0.y);
     self->sprites[5]->anim = AnimTable(0x18C);
-    sub_800737C(self->sprites[5], gStaticData_0816C4B8.x, gStaticData_0816C4B8.y);
+    SetEntityPixelPos(self->sprites[5], gStaticData_0816C4B8.x, gStaticData_0816C4B8.y);
     self->sprites[6]->anim = AnimTable(0x18C);
-    sub_800737C(self->sprites[6], gStaticData_0816C4B8.x, gStaticData_0816C4B8.y);
+    SetEntityPixelPos(self->sprites[6], gStaticData_0816C4B8.x, gStaticData_0816C4B8.y);
     self->sprites[7]->anim = AnimTable(0x18C);
-    sub_800737C(self->sprites[7], gStaticData_0816C4C0.x, gStaticData_0816C4C0.y);
+    SetEntityPixelPos(self->sprites[7], gStaticData_0816C4C0.x, gStaticData_0816C4C0.y);
     s = InitUiSpriteObj(OperatorNew(0x40));
     self->sprites[8] = s;
     SetSpritePriority(s, 1);
     self->sprites[8]->anim = AnimTable(0x270);
     SetAnim(self->sprites[8], 1);
-    sub_800737C(self->sprites[8], gStaticData_0816C4C8.x, gStaticData_0816C4C8.y);
+    SetEntityPixelPos(self->sprites[8], gStaticData_0816C4C8.x, gStaticData_0816C4C8.y);
     s = InitUiSpriteObj(OperatorNew(0x40));
     self->sprites[9] = s;
     SetSpritePriority(s, 1);
     self->sprites[9]->anim = AnimTable(0x270);
     SetAnim(self->sprites[9], 0);
-    sub_800737C(self->sprites[9], gStaticData_0816C4D0.x, gStaticData_0816C4D0.y);
+    SetEntityPixelPos(self->sprites[9], gStaticData_0816C4D0.x, gStaticData_0816C4D0.y);
     if (gNewWorldOpened && LevelSelectIsNextWorldOpen(self))
     {
         ParkLevelSelectCursor(self->panel);
@@ -1426,7 +1426,7 @@ loop:
         goto loop;
     if (!(u8)HasLevelSelectCursorArrived(self->panel))
         goto loop;
-    UpdateKeys(gUnknown_03001304);
+    UpdateKeys(gInput);
     {
         union key_state keys = gKeys;
         union key_state k;
@@ -1508,7 +1508,7 @@ void LevelSelectCursorLeft(struct level_menu *self)
         pos = &self->positions[self->index];
         MoveLevelSelectCursor(self->panel, pos->x, pos->y - 0x18);
         WaitLevelSelectCursor(self);
-        UpdateKeys(gUnknown_03001304);
+        UpdateKeys(gInput);
         if (!(gKeys.all & 0x20))
             return;
     }
@@ -1533,7 +1533,7 @@ void LevelSelectCursorRight(struct level_menu *self)
         pos = &self->positions[self->index];
         MoveLevelSelectCursor(self->panel, pos->x, pos->y - 0x18);
         WaitLevelSelectCursor(self);
-        UpdateKeys(gUnknown_03001304);
+        UpdateKeys(gInput);
         if (!(gKeys.all & 0x10))
             return;
     }

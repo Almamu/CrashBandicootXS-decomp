@@ -9,7 +9,7 @@
 extern u32 gKeys;
 extern void *gAudioContext;
 extern void *gLevelState;
-extern void *gUnknown_03001304;
+extern void *gInput;
 extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
 extern u8 GetDpadDirection(void *pad);
 extern u8 sub_800AAEC(struct act_part *part, s32 action);
@@ -156,7 +156,7 @@ void sub_8013994(struct act *self)
             return;
         }
         {
-            u8 dir = GetDpadDirection(gUnknown_03001304);
+            u8 dir = GetDpadDirection(gInput);
 
             if (dir != 0 && sub_800AAEC(self->part, 2))
             {

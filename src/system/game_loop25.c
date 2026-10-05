@@ -9,7 +9,7 @@ extern u8 gCrateKindBreakable[];
 
 /* Trivial byte-table lookup: `gCrateKindBreakable[idx]`. The first
  * parameter is unused in the ROM. */
-u8 sub_8010908(void *arg0, u32 idx)
+u8 IsCrateKindBreakable(void *arg0, u32 idx)
 {
     return gCrateKindBreakable[idx];
 }

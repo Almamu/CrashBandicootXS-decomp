@@ -190,7 +190,7 @@ extern void StartTimeTrial(void *game);
 extern void RaiseMaskLevel(void *game);
 extern void AddDeath(void *game);
 extern void SetMaskLevel(void *game, s32 mode);
-extern void *sub_8025BAC(void *pool, s32 a, s32 kind, s32 x, s32 y, s32 mirror);
+extern void *SpawnEffectPart(void *pool, s32 a, s32 kind, s32 x, s32 y, s32 mirror);
 
 #define NOTIFY(self, a, b, c)                                                  \
     if (1) {                                                                   \
@@ -334,7 +334,7 @@ void PlayerHandleEvent(struct ac2c_self *self, s32 a, s32 code, s32 c)
                         x = child->x >> 8;
                         y = child->y >> 8;
                         m = child->mirrorX;
-                        sub_8025BAC(gEntitySpawner, 0x22, 3, x, y, m);
+                        SpawnEffectPart(gEntitySpawner, 0x22, 3, x, y, m);
                     }
                 } else {
                     AddDeath(game);

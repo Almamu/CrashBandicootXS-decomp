@@ -27,7 +27,7 @@ struct icon_slot {
 struct icon_record {
     u8 unused_00[8];
     /* The object's destructor entry (gcc 2.x {this-adjust, fn} method
-     * record): sub_8022354 tears both icon managers down by calling it
+     * record): DestroyLevelState tears both icon managers down by calling it
      * with the "delete" flags 3. */
     struct icon_slot destroy;
     /* A 7th slot (index 6, offset 0x40) is read by InitLanguageSelectGraphics - extends
@@ -91,7 +91,7 @@ struct icon_manager {
     /* Left-margin X: `posX` is reset to this on a newline character. */
     u32 marginX;
     /* Line height: added to `posY` on a newline character; also used
-     * as a plain divisor by `sub_8028AC4`/`sub_8001214`
+     * as a plain divisor by `FontHeightToLines`/`sub_8001214`
      * (src/util/word_util.c). */
     s32 lineHeight;
     /* Advance width contributed by a literal space character, in place

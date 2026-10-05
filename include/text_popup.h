@@ -95,7 +95,7 @@ struct enemy_ctrl
     void *animMap;              // 0x84 - anim mode -> bank anim (gEnemyDefaultAnimMap...)
 };
 
-extern void ***gUnknown_030012D0;
+extern void ***gSpriteBankSet;
 extern struct level_record_table **gEntityFlags;
 extern void *gUnknown_030012F0;
 
@@ -113,7 +113,7 @@ extern void ResetSpriteFrameTimer(struct popup_part *part);
 extern void ResetSpriteFrameIndex(struct popup_part *part);
 extern void SetSpriteAnimDone(struct popup_part *part, s32 arg);
 
-#define POPUP_ANIM(offset) ((void *)((u8 *)**gUnknown_030012D0 + (offset)))
+#define POPUP_ANIM(offset) ((void *)((u8 *)**gSpriteBankSet + (offset)))
 
 /* hdr->attach(part), through _call_via_r2. */
 #define POPUP_ATTACH(hdr, part)                                                \

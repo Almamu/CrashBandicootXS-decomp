@@ -22,7 +22,7 @@
 extern struct oam_shadow_buffer *gOamBuffer;
 extern struct AudioContext *gAudioContext;
 extern u8 gDispcnt[2];
-extern void *gUnknown_03001304;
+extern void *gInput;
 extern void *gLogoActorTiles[2];
 extern s32 gLogoActorTileBuffer;
 extern void *gLogoActorLastFrame;
@@ -417,7 +417,7 @@ seedLoop:
     {
         DrawTitleScreen(self);
         UpdateStarfield(self[0x82]);
-        UpdateKeys(gUnknown_03001304);
+        UpdateKeys(gInput);
         pressed = gKeys.pressed;
         pressed = TitleScreenCheatInput(self, pressed);
         if (pressed & 9)
@@ -750,7 +750,7 @@ void RunCompanyLogos(u32 *self)
         s32 v;
         s32 q;
 
-        UpdateKeys(gUnknown_03001304);
+        UpdateKeys(gInput);
         if (gKeys.pressed & 9)
         {
             if (SLOT_SYSTEM(self)->fade > 0x40)
@@ -810,7 +810,7 @@ void RunCompanyLogos(u32 *self)
         s32 *fade;
         register s32 v asm("r1");
 
-        UpdateKeys(gUnknown_03001304);
+        UpdateKeys(gInput);
         if (gKeys.pressed & 9)
         {
             if (SLOT_SYSTEM(self)->timer > 0)

@@ -24,7 +24,7 @@ level object's own `+0xdc->+8` state field is `2`
    with a genuine 5th stack argument the matched 4-parameter signature
    there simply never touches).
 3. Sets the player's position from `self+0x10`/`0x14`
-   (`sub_8007398`), sets `player+0xc` bit 4, and mirrors `self+0x1c`
+   (`SetEntityPos`), sets `player+0xc` bit 4, and mirrors `self+0x1c`
    bit 0 into `player+0x28` bit 4.
 4. Reads the level-state record's (`self->0x18`) own `+8` "widget kind"
    field and dispatches on it (0/1/2) to construct one of three HUD
@@ -74,7 +74,7 @@ level object's own `+0xdc->+8` state field is `2`
   value* computed before its *destination pointer*.** All three switch
   cases (and the `player+0xc`/`+0x28` bit-manipulation pair right before
   them) write to `player+0x20` and `player+0x44` (or similar) back to
-  back; the ROM computes whatever's being stored (`**gUnknown_030012D0`,
+  back; the ROM computes whatever's being stored (`**gSpriteBankSet`,
   a table pointer, etc.) *first*, then reloads `gPlayer`'s
   value into a register, then does both stores through it. A plain
   `u8 *pl = *d8; *(void**)(pl+0x20) = value;` computes `pl` first
@@ -230,7 +230,7 @@ targets exactly the latter.
 ### Shared tail, wait loop, and post-fade
 
 The 5 non-default cases (plus the default's direct clear) converge on
-one tail: `SetupRoomBlend(self)`/`sub_802423C()`, then a widget-kind check
+one tail: `SetupRoomBlend(self)`/`ResetObjBuffers()`, then a widget-kind check
 (`self->0x18->+8`, the same field `PlayRoom` dispatched its own
 widget-construction switch on) that - if `1` - re-stamps the player's
 `+0x2d` byte to `0x1f` and refreshes its OAM entry
@@ -257,7 +257,7 @@ fade-cluster `SetDispcntMode(0)`/`ShowObj`/`CommitDispcnt`/`CommitBlendRegs`
 reset quartet, landing at the **wait loop** (confirming and completing
 `docs/rom_map.md`'s earlier trace): poll `IsRoomExitRequested` each iteration;
 while not ready and the player's `+0xc` bit 0 is clear, run one more
-pass (`sub_802423C`/`UpdateRoomFrame`, a `RunPauseMenu` input-driven mini-
+pass (`ResetObjBuffers`/`UpdateRoomFrame`, a `RunPauseMenu` input-driven mini-
 dispatch that can early-exit the whole function with return value `1`
 or `2` after firing `ResumeRoomAfterPause`'s level-end teardown, a
 `gKeys` input-flag-gated `ShowHudCounters` ping, `UpdatePartList`
@@ -276,7 +276,7 @@ entries whose `_call_via_r1` trampoline probe returns `3` *and* whose
 own `+0x4e` tag is `0xa` (the physics-subsystem state tag
 `gCrateHitResponse` indexes,
 [docs/matching/issue-12-physics-collision.md](issue-12-physics-collision.md)),
-then calls `sub_8023140(gLevelState, count)`.
+then calls `AddPendingSwitchCrates(gLevelState, count)`.
 
 **Final tail** (every path converges here): flushes all five hot IWRAM
 widget-manager globals (`ClearPartList` on `030012E8`/`EC`/`F0`/`F8`/`F4`,

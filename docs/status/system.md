@@ -74,9 +74,9 @@ category page - see [game_loop.md](./game_loop.md).
   interleaved with `audio`/`overlay_ui` in this same address range -
   see `docs/rom_map.md`'s SIO/link-cable section): `LinkStop`
   (link-session "stop"), `LinkStart` (link-session "start"),
-  `sub_800276C` (RCNT/SIOCNT reset helper), `sub_8002798`
-  (reset convenience wrapper), `sub_80027B0` (reset + conditional
-  teardown), `sub_80027E8` (session object constructor), `LinkSerialIntr`/
+  `LinkSetupSio` (RCNT/SIOCNT reset helper), `ResetLinkSession`
+  (reset convenience wrapper), `DestroyLinkSession` (reset + conditional
+  teardown), `InitLinkSession` (session object constructor), `LinkSerialIntr`/
   `LinkTimer3Intr` (Serial/Timer3 IRQ handlers), `ReadSaveData`/`WriteSaveData`
   (`src/graphics/settings_menu8d.c`, EEPROM load/save block-loop pair
   for the settings record - the previously-suspected register-pressure
@@ -84,15 +84,15 @@ category page - see [game_loop.md](./game_loop.md).
   reproduce with the actual field/loop structure; plain C matches
   byte-for-byte) - all
   matched, GitHub
-  issue #4, see `docs/matching/issue-4-sio-settings-sync.md`. (`sub_8001DB4`,
+  issue #4, see `docs/matching/issue-4-sio-settings-sync.md`. (`ResetLinkSessionState`,
   the link-session reset/init, is real C in its own
   `link_cable_01db4.c` since the last-eleven NAKED retry - see
-  [last-eleven-naked-retry.md](../matching/last-eleven-naked-retry.md); `sub_8002114`, the
+  [last-eleven-naked-retry.md](../matching/last-eleven-naked-retry.md); `HandleLinkSerial`, the
   per-frame SIO pump, is real C since the last-seven NAKED retry - see
-  [last-seven-naked-retry.md](../matching/last-seven-naked-retry.md). `sub_8001F50`, the
+  [last-seven-naked-retry.md](../matching/last-seven-naked-retry.md). `UpdateLinkSession`, the
   link handshake driver, is real C since the second near-miss sweep -
   see [near-miss-polish-2.md](../matching/near-miss-polish-2.md) - and
-  `sub_8001CB8`, the per-player CRC-16-style handshake-id hash helper,
+  `MakeLinkHandshakeId`, the per-player CRC-16-style handshake-id hash helper,
   since the early-ROM NAKED retry 2 - see
   [early-rom-naked-retry-2.md](../matching/early-rom-naked-retry-2.md).)
 

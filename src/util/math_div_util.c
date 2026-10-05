@@ -6,7 +6,7 @@ extern void __div0(void);
 /* libgcc's `__divsi3` (lib1funcs.asm): signed integer division (a / b),
  * truncating toward zero - what plain `/` compiles to, and called
  * directly in many places (math_util.c's FixedInverse16/FixedDiv16/
- * FixedDiv wrappers, sub_8027940's digit splitting). Classic shift-and-subtract binary long division, 4 bits at a
+ * FixedDiv wrappers, UpdateHudCrates's digit splitting). Classic shift-and-subtract binary long division, 4 bits at a
  * time: normalizes `divisor`/`bit` up to the dividend's magnitude, then
  * repeatedly tests the top 4 candidate bit positions before shrinking
  * by another nibble.

@@ -9,7 +9,7 @@
 
 extern void LoadTaggedAsset(void *asset, void *dest);
 extern u8 *gPaletteCache;
-extern void ***gUnknown_030012D0;
+extern void ***gSpriteBankSet;
 extern s32 GetPaletteSlot(u8 *cache, s32 recordId);
 
 /* Uploads `tiles`'s referenced tile data to the OBJ VRAM slot
@@ -41,14 +41,14 @@ void FontSetPalette(struct icon_manager *self, u8 val)
 }
 
 /* Looks up a tile-cache slot for the byte at
- * `(**gUnknown_030012D0)[0x1A4]`'s own `+0x14` field (see
+ * `(**gSpriteBankSet)[0x1A4]`'s own `+0x14` field (see
  * docs/rom_map.md's `gSpriteBankTable` investigation) via
  * `GetPaletteSlot`, and folds the result into the same `oam_scratch[5]`
  * nibble FontSetPalette sets above. */
 void FontResetPalette(struct icon_manager *self, u32 unused)
 {
     u8 *cache = gPaletteCache;
-    void *rec = *(void **)((u8 *)(**gUnknown_030012D0) + (0xD2 << 1));
+    void *rec = *(void **)((u8 *)(**gSpriteBankSet) + (0xD2 << 1));
     u8 field = ((u8 *)rec)[0x14];
     s32 slot = GetPaletteSlot(cache, field);
     u32 shifted = slot << 4;

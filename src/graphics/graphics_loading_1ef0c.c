@@ -142,7 +142,7 @@ void SpawnVenusFlytrap(u32 arg0, u32 arg1, u32 arg2, u32 arg3)
         : "r" (raw0), "r" (raw1), "r" (raw2), "r" (raw3)
         : "r1", "r2", "r3", "lr", "memory");
 
-    p2 = *(void **)gUnknown_030012D0;
+    p2 = *(void **)gSpriteBankSet;
     p3 = *(void **)p2;
     *(void **)((u8 *)part + 0x20) = (u8 *)p3 + 0x78;
 
@@ -174,7 +174,7 @@ void SpawnVenusFlytrap(u32 arg0, u32 arg1, u32 arg2, u32 arg3)
          * (lands the two-step mov/lsl synthesis in whatever register it
          * likes, not the ROM's r3) - the same gotcha
          * docs/matching/issue-31-graphics-loading.md documents for
-         * sub_8021388's own `+0x20` table-offset constant. Spelled out
+         * SpawnDingodile's own `+0x20` table-offset constant. Spelled out
          * as a full hand-written trampoline call instead. */
         register void *tbl asm("r1") = table;
         asm volatile(

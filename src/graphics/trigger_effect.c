@@ -42,7 +42,7 @@ struct level_progress
 };
 
 extern struct level_progress *gLevelState;
-extern u8 ***gUnknown_030012D0;
+extern u8 ***gSpriteBankSet;
 extern void *gUnknown_030012EC;
 
 extern u8 IsGemPathDone(struct level_progress *self);
@@ -77,7 +77,7 @@ void SpawnRedGemPlatform(u32 a0, u16 a1, u16 a2, u16 a3)
         u8 tag = 7;
         struct gfx_part *part = CreateSpriteObj(a0, a1, a2, a3);
 
-        part->bank = (struct anim_bank *)(**gUnknown_030012D0 + 0x180);
+        part->bank = (struct anim_bank *)(**gSpriteBankSet + 0x180);
         part->tag = tag;
         ResetSpriteFrameTimer(part);
         ResetSpriteFrameIndex(part);
@@ -108,7 +108,7 @@ void SpawnYellowGemPlatform(u32 a0, u16 a1, u16 a2, u16 a3)
         u8 tag = 5;
         struct gfx_part *part = CreateSpriteObj(a0, a1, a2, a3);
 
-        part->bank = (struct anim_bank *)(**gUnknown_030012D0 + 0x180);
+        part->bank = (struct anim_bank *)(**gSpriteBankSet + 0x180);
         part->tag = tag;
         ResetSpriteFrameTimer(part);
         ResetSpriteFrameIndex(part);
@@ -139,7 +139,7 @@ void SpawnGreenGemPlatform(u32 a0, u16 a1, u16 a2, u16 a3)
         u8 tag = 6;
         struct gfx_part *part = CreateSpriteObj(a0, a1, a2, a3);
 
-        part->bank = (struct anim_bank *)(**gUnknown_030012D0 + 0x180);
+        part->bank = (struct anim_bank *)(**gSpriteBankSet + 0x180);
         part->tag = tag;
         ResetSpriteFrameTimer(part);
         ResetSpriteFrameIndex(part);
@@ -172,7 +172,7 @@ void SpawnBlueGemPlatform(u32 a0, u16 a1, u16 a2, u16 a3)
         u8 tag = 8;
         struct gfx_part *part = CreateSpriteObj(a0, a1, a2, a3);
 
-        part->bank = (struct anim_bank *)(**gUnknown_030012D0 + 0x180);
+        part->bank = (struct anim_bank *)(**gSpriteBankSet + 0x180);
         part->tag = tag;
         ResetSpriteFrameTimer(part);
         ResetSpriteFrameIndex(part);

@@ -5,7 +5,7 @@
  * docs/matching/issue-17-0x08012fbc-actor.md, "Third pass"). Built with
  * old_agbcc. */
 
-/* The spark object sub_8025BAC spawns, as far as it is used. */
+/* The spark object SpawnEffectPart spawns, as far as it is used. */
 struct spark
 {
     u8 unk_00[0xC];
@@ -27,14 +27,14 @@ extern u32 gKeys;
 extern void *gAudioContext;
 extern struct act_part *gPlayer;
 extern void *gEntitySpawner;
-extern void *gUnknown_03001304;
+extern void *gInput;
 extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
 extern u8 GetDpadDirection(void *pad);
 extern void UpdatePlayerFacing(struct act *self);
 extern void sub_801283C(struct act *self);
 extern void sub_800B334(struct act_part *part);
 extern void sub_8014F8C(struct act *self);
-extern struct spark *sub_8025BAC(void *pool, s32 a, s32 b, s32 x, s32 y, s32 mirror);
+extern struct spark *SpawnEffectPart(void *pool, s32 a, s32 b, s32 x, s32 y, s32 mirror);
 
 /* Byte masks with the mask as an `s32` parameter: the AND stays in SImode
  * (a plain `*p & -0x11` is narrowed to 0xEF), so the -0x11 the ROM derives
@@ -54,7 +54,7 @@ static inline void OrMaskByte(u8 *p, s32 clear, s32 set)
  * pool pointer is loaded, as in the ROM. */
 static inline struct spark *SpawnSpark(s32 x, s32 y, s32 mirror)
 {
-    return sub_8025BAC(gEntitySpawner, 0x29, 1, x, y, mirror);
+    return SpawnEffectPart(gEntitySpawner, 0x29, 1, x, y, mirror);
 }
 
 /* The "next action" trio stores (include/action_obj.h's ActSetNext for
@@ -98,7 +98,7 @@ static inline void ActSetContact(struct act_part *p, s32 v)
  * the -0x11 r8) as in the ROM. */
 void sub_80134B8(struct act *self)
 {
-    void *pad = gUnknown_03001304;
+    void *pad = gInput;
     u32 in = gKeys;
     u8 contact = self->part->contact;
     u8 dir = GetDpadDirection(pad);

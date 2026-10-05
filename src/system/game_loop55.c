@@ -72,7 +72,7 @@ struct level_state
     s32 seconds;                    // 0x094
     s32 tenths;                     // 0x098
     u8 unk_9c[0xac - 0x9c];
-    s32 unk_ac;                     // 0x0ac
+    s32 pendingSwitchCrates;                     // 0x0ac
     s32 savedWumpa;                     // 0x0b0
     s32 savedCrateCount;                     // 0x0b4
     s32 savedLives;                     // 0x0b8
@@ -136,7 +136,7 @@ extern s32 RunLevelSelect(s32 *progress);
 extern void ClearTimeTrial(struct level_state *self);
 extern s32 CountLevelCrates(s32 level);
 extern struct hud_stat_widget *InitHud(void *mem);
-extern void sub_8028568(void *cache, s32 arg1);
+extern void SetHudCrateTotal(void *cache, s32 arg1);
 extern void ClearBonusRoundDone(struct level_state *self);
 extern void ClearInBonusRound(struct level_state *self);
 extern void ClearGemPathDone(struct level_state *self);
@@ -145,14 +145,14 @@ extern void ClearSwitchPressed(struct level_state *self);
 extern void SetCheckpointAtPlayer(struct level_state *self, u8 arg1);
 extern void ArmStartSpawn(struct level_state *self);
 extern void FreeUnlockedPaletteSlots(void *cache);
-extern void sub_802732C(void *cache, s32 arg1);
-extern void sub_8023318(struct level_state *self, s32 arg1);
+extern void ConfigureHudParts(void *cache, s32 arg1);
+extern void SetLevelBoss(struct level_state *self, s32 arg1);
 extern void PlayRoomMusic(s32 *progress);
 extern s32 mem_free_bytes(s32 arg0);
 extern s32 PlayRoom(s32 *progress);
 extern s32 InitActorCategory(u16 category);
 extern s32 sub_8029730(void);
-extern void sub_8023140(struct level_state *self, s32 arg1);
+extern void AddPendingSwitchCrates(struct level_state *self, s32 arg1);
 extern void ResetAmbientSfx(void *arg0);
 extern void SetMaskLevel(struct level_state *self, s32 tier);
 extern u8 IsInBonusRoom(s32 *progress);
@@ -163,8 +163,8 @@ extern void EnterBonusRoom(s32 *progress);
 extern void EnterGemPathRoom(s32 *progress);
 extern u8 IsInBonusRound(struct level_state *self);
 extern u8 IsInGemPath(struct level_state *self);
-extern void sub_8025A44(void *bitmap, s32 arg1);
-extern void *sub_8025A5C(void *mem);
+extern void DestroyEntityFlags(void *bitmap, s32 arg1);
+extern void *InitEntityFlags(void *mem);
 extern void EndBonusRound(struct level_state *self, u8 arg1);
 extern void EndGemPath(struct level_state *self, u8 arg1);
 extern s32 GetLives(struct level_state *self);
@@ -264,14 +264,14 @@ void UpdateGameFrame(struct level_state *self)
         status = 1;
         self->crateTotal = CountLevelCrates(self->level);
         gHud = InitHud(OperatorNew(0x68));
-        sub_8028568(gHud, self->crateTotal);
+        SetHudCrateTotal(gHud, self->crateTotal);
         ClearBonusRoundDone(self);
         ClearInBonusRound(self);
         ClearGemPathDone(self);
         ClearInGemPath(self);
         ResetCrateCount(self);
         ClearSwitchPressed(self);
-        self->unk_ac = 0;
+        self->pendingSwitchCrates = 0;
         *(s32 *)gEntityFlags = 0;
         best = self->maskLevel;
         SetCheckpointAtPlayer(self, 0);
@@ -283,7 +283,7 @@ void UpdateGameFrame(struct level_state *self)
             if (IsInBonusRound(self) || IsInGemPath(self))
             {
                 self->savedBitmap = *bitmap;
-                *bitmap = sub_8025A5C(OperatorNew(0x408));
+                *bitmap = InitEntityFlags(OperatorNew(0x408));
                 if (IsInBonusRound(self))
                 {
                     self->savedWumpa = GetWumpa(self);
@@ -293,14 +293,14 @@ void UpdateGameFrame(struct level_state *self)
                     self->lives = 0;
                     ResetCrateCount(self);
                     EnterBonusRoom(&self->level);
-                    sub_8028568(gHud, CountRoomCrates(self->cat));
+                    SetHudCrateTotal(gHud, CountRoomCrates(self->cat));
                 }
                 else
                 {
                     self->savedCrateCount = GetCrateCount(self);
                     ResetCrateCount(self);
                     EnterGemPathRoom(&self->level);
-                    sub_8028568(gHud, CountRoomCrates(self->cat));
+                    SetHudCrateTotal(gHud, CountRoomCrates(self->cat));
                 }
                 ArmStartSpawn(self);
             }
@@ -309,9 +309,9 @@ void UpdateGameFrame(struct level_state *self)
                 break;
             }
             FreeUnlockedPaletteSlots(gPaletteCache);
-            sub_802732C(gHud, 0);
+            ConfigureHudParts(gHud, 0);
             gRoomFrameCount = 0;
-            sub_8023318(self, 0);
+            SetLevelBoss(self, 0);
             PlayRoomMusic(&self->level);
             mem_free_bytes(0xC0000000);
             switch (self->cat->kind)
@@ -325,7 +325,7 @@ void UpdateGameFrame(struct level_state *self)
                 status = InitActorCategory(self->cat->category);
                 if (status == 0)
                 {
-                    sub_8023140(self, sub_8029730());
+                    AddPendingSwitchCrates(self, sub_8029730());
                     SetCheckpointAtPlayer(self, 0);
                 }
                 break;
@@ -343,14 +343,14 @@ void UpdateGameFrame(struct level_state *self)
             if (IsInBonusRoom(&self->level) && IsInBonusRound(self))
             {
                 if (gEntityFlags != NULL)
-                    sub_8025A44(gEntityFlags, 3);
+                    DestroyEntityFlags(gEntityFlags, 3);
                 gEntityFlags = self->savedBitmap;
                 EndBonusRound(self, status == 0);
             }
             if (IsInGemPathRoom(&self->level) && IsInGemPath(self))
             {
                 if (gEntityFlags != NULL)
-                    sub_8025A44(gEntityFlags, 3);
+                    DestroyEntityFlags(gEntityFlags, 3);
                 gEntityFlags = self->savedBitmap;
                 EndGemPath(self, status == 0);
             }
@@ -360,7 +360,7 @@ void UpdateGameFrame(struct level_state *self)
                 break;
             if (self->timeTrial && status == 1)
             {
-                self->unk_ac = 0;
+                self->pendingSwitchCrates = 0;
                 self->checkpointSwitchPressed = 0;
                 self->unk_c8 = 0;
                 self->checkpointCrateCount = 0;

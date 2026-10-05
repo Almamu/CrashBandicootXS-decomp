@@ -44,7 +44,7 @@ extern void DestroySaveMenu(void *self, u32 flags);
 extern void FreeUnlockedPaletteSlots(struct palette_cache *self);
 
 /* Tears down the "connecting..." SIO-handshake spinner object (see
- * sub_8003B40, src/graphics/settings_menu3.c, for the object this
+ * LinkExchangeSaveData, src/graphics/settings_menu3.c, for the object this
  * pointer comes from) if one is active, then re-requests the tile
  * cache flush CommitSaveMenuFrame above pairs with. */
 void CloseSaveMenu(void)

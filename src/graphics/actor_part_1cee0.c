@@ -29,9 +29,9 @@
 
 extern void *gPaletteCache;
 extern void *gAudioContext;
-extern void ***gUnknown_030012D0;
+extern void ***gSpriteBankSet;
 extern void *gOamBuffer;
-extern void *gUnknown_03001304;
+extern void *gInput;
 extern u8 gNewWorldOpened;
 extern u32 gKeys;     // held keys (low half), newly pressed (high half)
 extern struct xy_pair gStaticData_0816C4D8[];
@@ -346,7 +346,7 @@ void LevelSelectPrevWorld(struct level_menu *self)
         self->world--;
         sub_801D790(self->bg1);
         LevelSelectTurnPage(self);
-        UpdateKeys(gUnknown_03001304);
+        UpdateKeys(gInput);
         if (!(gKeys & DPAD_DOWN))
             goto done;
     check:
@@ -374,7 +374,7 @@ void LevelSelectNextWorld(struct level_menu *self)
         self->world++;
         sub_801D79C(self->bg1);
         LevelSelectTurnPage(self);
-        UpdateKeys(gUnknown_03001304);
+        UpdateKeys(gInput);
         if (!(gKeys & DPAD_UP))
             goto done;
     check:
@@ -565,7 +565,7 @@ struct icon_bg *InitZoomBg(struct icon_bg *self, s32 charBlock, s32 screenBlock)
     for (i = 0; i <= 3; i++)
     {
         self->slots[i].sprite = InitUiSpriteObj(OperatorNew(0x40));
-        self->slots[i].sprite->anim = (struct anim_table *)((u8 *)**gUnknown_030012D0 + 0x258);
+        self->slots[i].sprite->anim = (struct anim_table *)((u8 *)**gSpriteBankSet + 0x258);
         SetMode(self->slots[i].sprite, 1);
         SetPos(self->slots[i].sprite, self->x + gStaticData_0816C5F0[i].x, self->y + gStaticData_0816C5F0[i].y);
         SetSpritePriority(self->slots[i].sprite, 1);

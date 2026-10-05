@@ -7,7 +7,7 @@ the first near-miss pass ([near-miss-polish.md](near-miss-polish.md)),
 
 | Function | File | Compiler | Was | Technique |
 |---|---|---|---|---|
-| `sub_8001F50` | `src/system/link_cable.c` | old_agbcc (both match) | 37 | `asm("" : "+r"(one1))` keeps a second 1; `asm("" : "+r"(arm3))` between `^` and `&` blocks the `bic` fold |
+| `UpdateLinkSession` | `src/system/link_cable.c` | old_agbcc (both match) | 37 | `asm("" : "+r"(one1))` keeps a second 1; `asm("" : "+r"(arm3))` between `^` and `&` blocks the `bic` fold |
 | `RunPauseMenu` | `src/graphics/settings_menu15.c` | agbcc | 54 (4 bytes short) | `static inline` accessor for `field_12c` so CSE doesn't share the 0x12c offset; two locals fix load order |
 | `DecodeCollisionChunk` | `src/system/game_loop3.c` | old_agbcc | 33 | explicit `<< 24 >> 24` sign extensions through `s32` locals; `asm("" : : "r"(n))` fixes the r4/r5 swap |
 | `InitCellAnim` | `src/graphics/actor_part95.c` | agbcc (both match) | 37 | `asm("" : "=r"(reload) : "0"(a4))` copies the address used for the reload; evaluation-order tweaks |
@@ -27,7 +27,7 @@ loops too, the ROM's loop-local copies of the address (`adds r3, r7, #0`)
 disappear.
 
 **`"+r"` to keep a value gcc would merge or fold.** Uses in
-`sub_8001F50`:
+`UpdateLinkSession`:
 
 - Two `1` constants would be merged by CSE. `asm("" : "+r"(one1))`
   hides the fact that `one1` is 1. The two statements must not be
@@ -84,7 +84,7 @@ shift.
   expression. When two values need to stay distinct, give their `asm`
   statements different shapes or make one `volatile`.
 - An `asm` barrier stops combine only between the two operations it
-  separates. `sub_8001F50`'s `bic` fold is gone, but the same barrier
+  separates. `UpdateLinkSession`'s `bic` fold is gone, but the same barrier
   placed before `arm3` is computed did nothing.
 - Brute-force runners and specs are in the scratchpad `polish2/`:
   `brute2.py` (sorted by halfword count, accepts a list of (old, new)

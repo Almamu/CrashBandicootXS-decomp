@@ -197,11 +197,11 @@ any specific case's behavior.
 
 **`0x0800BF2C` ("ambient sound + re-flag" tail, states 1/21/22):**
 converts `owner`'s Q8.8 position to int and calls
-`sub_8025BAC(gEntitySpawner, 0x29, 2, ownerX, ownerY, 0)` - the same
-`sub_8025BAC(pool, id, kind, x, y, ...)` shape already matched in
+`SpawnEffectPart(gEntitySpawner, 0x29, 2, ownerX, ownerY, 0)` - the same
+`SpawnEffectPart(pool, id, kind, x, y, ...)` shape already matched in
 `actor_part2.c`, here spawning something of kind `2`/id `0x29` at
 `owner`'s position (a particle or ambient-audio-emitter object, per the
-global's name and the "queues something via `sub_8025BAC`" precedent
+global's name and the "queues something via `SpawnEffectPart`" precedent
 `docs/rom_map.md` already notes for a *different* id/kind pair
 elsewhere). Clears bits `{0,2}` of the returned object's `+0xC`, sets
 bit 0 (clearing bit 2) of its `+0x28`, then re-runs the "flag active +
@@ -593,8 +593,8 @@ neighborhood.
   `0x26`, or on `self->0x6c==0xf` plays SFX `9`; then *unconditionally*
   (regardless of the `owner->0x38` gate), if `self->0x6c==0x17` and
   `owner->0x30==9`/`owner->0x34==0`, spawns a part via
-  `sub_8025B0C(gEntitySpawner, 0x17, 4, -0x2d, 2, owner)` (matching
-  `game_loop14.c`'s own `sub_8025B0C(arg0, arg1, arg2, margin, z, src)`
+  `LaunchEffectPart(gEntitySpawner, 0x17, 4, -0x2d, 2, owner)` (matching
+  `game_loop14.c`'s own `LaunchEffectPart(arg0, arg1, arg2, margin, z, src)`
   signature - `gEntitySpawner` as the pool, `owner` as `src`, `2` as
   `z`, `-0x2d` as `margin`), tags the new part's `+0xc` flags/`+0xa`
   bitmap-id fields (same idiom family as the "flag active + bitmap-set"
@@ -713,7 +713,7 @@ another parallel session was assigned (`UpdateEnemyPatrol`/`UpdateEnemyAttackCyc
 
 **Closed, real C**: `sub_800C9C8` (the floating-popup spawner, state
 18's `sub_800C9C8(0x1D, 0, 0, 0x2B, 0, owner)` callee - a thin
-`sub_8025B0C` wrapper, `src/graphics/actor_part116.c`) and `CreateKnockedEnemyCtrl`
+`LaunchEffectPart` wrapper, `src/graphics/actor_part116.c`) and `CreateKnockedEnemyCtrl`
 (`src/graphics/actor_part117.c`, see below).
 
 **Closed, NAKED**: `UpdateEnemyHomingX`/`UpdateEnemyHomingY` (`actor_part114.c`),
@@ -1402,10 +1402,10 @@ idiom already matched elsewhere in this cluster:
   sets) into a value that's never used for anything - a genuine dead
   read the ROM's own compiled output still performs.
 - **`DestroyPeriodicSpawner(self, flags)`**: sets `self->0x18`'s table pointer
-  (the struct-actor-shaped "table" field role) to `gStaticData_087E3BEC`
+  (the struct-actor-shaped "table" field role) to `gEntityVtable`
   - the same table `graphics.c`'s own constructors use - then, only if
   `flags` bit 0 is set, fires `OperatorDelete(self)`.
-- **`CreatePeriodicSpawner(self)`**: calls `sub_800725C(self)` (already matched,
+- **`CreatePeriodicSpawner(self)`**: calls `InitEntity(self)` (already matched,
   `graphics.c`, return value discarded), sets `self->0x18` to
   `gPeriodicSpawnerVtable`, returns `self`.
 - **`sub_800CB58(self, a, b)`**: `self->0x20/0x24` partial (position-

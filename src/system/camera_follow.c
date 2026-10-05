@@ -18,12 +18,12 @@
  * this a camera: the target ends up centered on screen, clamped to
  * the level bounds.
  *
- * - `sub_8026C90` (mode 2): `target+0x24` direction bits steer the
+ * - `StepCameraDirectional` (mode 2): `target+0x24` direction bits steer the
  *   look-ahead in 0x100 steps (bit 0/1 = +x/-x up to +0x27FF/-0x2800,
  *   bit 2/3 = -y/+y up to -0x1AAA/+0x1AA9); an axis with neither of its
  *   bits set decays back toward 0 by the same step. What writes
  *   `target+0x24` is not traced here.
- * - `sub_8026D8C` (mode 1): horizontal look-ahead grows toward -0x1276
+ * - `StepCameraFacing` (mode 1): horizontal look-ahead grows toward -0x1276
  *   or +0x1276 depending on `target+0x28` bit 4 (the mirror flag several
  *   actor-side functions already document at that offset), vertical
  *   look-ahead fixed at -0x1000.
@@ -38,7 +38,7 @@
  * functions - left to itself this compiler gives them r3/r4 (or r4/r5)
  * and moves `cam` down into the low register the ROM uses for `tx`;
  * pinning `cam` to r4 instead breaks the shared +-0x100 tail. The
- * easing tail in `sub_8026C90` also needs an r4-pinned `cur` temp and a
+ * easing tail in `StepCameraDirectional` also needs an r4-pinned `cur` temp and a
  * separate `n` result so the add lands as `adds r0, r4, r0`. The empty
  * `case 3` in `UpdateCamera` has no behavior; it reproduces the ROM's
  * switch decision tree (`cmp #2 / beq`, `bgt`, `cmp #1 / bne`), which
@@ -64,13 +64,13 @@ struct camera
     s32 vx;                       // 0x08 - Q8 look-ahead
     s32 vy;                       // 0x0C - Q8 look-ahead
     struct camera_target *target; // 0x10
-    s32 mode;                     // 0x14 - 1/2 select sub_8026D8C/sub_8026C90
+    s32 mode;                     // 0x14 - 1/2 select StepCameraFacing/StepCameraDirectional
 };
 
 extern void *gLevelLayers;
 extern void SetLevelScroll(void *self, s32 x, s32 y);
 
-void sub_8026C90(struct camera *cam)
+void StepCameraDirectional(struct camera *cam)
 {
     // r2/r3 pins are load-bearing (see docs/workflow.md step 7 and the file comment)
     register s32 tx asm("r2") = cam->target->x;
@@ -119,7 +119,7 @@ void sub_8026C90(struct camera *cam)
     }
 }
 
-void sub_8026D8C(struct camera *cam)
+void StepCameraFacing(struct camera *cam)
 {
     // r2/r3 pins are load-bearing (see docs/workflow.md step 7 and the file comment)
     register s32 tx asm("r2") = cam->target->x;
@@ -174,10 +174,10 @@ void UpdateCamera(struct camera *cam)
     switch (cam->mode)
     {
     case 1:
-        sub_8026D8C(cam);
+        StepCameraFacing(cam);
         break;
     case 2:
-        sub_8026C90(cam);
+        StepCameraDirectional(cam);
         break;
     case 3: // no behavior - needed for the ROM's switch shape (see the file comment)
         break;

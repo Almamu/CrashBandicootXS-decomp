@@ -128,7 +128,7 @@ void sub_800C97C(struct part_ctrl *self)
 
 /* `UpdateEnemyCtrl` state 18's floating-popup spawner
  * (`sub_800C9C8(0x1D, 0, 0, 0x2B, 0, owner)`, per the Phase 1 doc) -
- * a thin wrapper around the already-matched `sub_8025B0C`
+ * a thin wrapper around the already-matched `LaunchEffectPart`
  * (`src/system/game_loop14.c`, the AABB-aware "spawn part near src"
  * primitive): forwards all six arguments (`gEntitySpawner` as the
  * pool) and, on return, ORs bit 2 into the new object's `+0xc` flags
@@ -143,7 +143,7 @@ void sub_800C97C(struct part_ctrl *self)
  * a single combined expression let the compiler swap operand load
  * order and pick a cheaper single-instruction positive-immediate
  * mask load instead of the ROM's own `movs #0x41; neg` two-
- * instruction materialization. `sub_8025B0C`'s own already-matched
+ * instruction materialization. `LaunchEffectPart`'s own already-matched
  * NAKED signature only declares 5 real parameters after the pool
  * pointer (`arg1, arg2, margin, z, src`) - this call site's own sixth
  * argument (`f`) is written to the stack but never read back by the
@@ -151,7 +151,7 @@ void sub_800C97C(struct part_ctrl *self)
  * its own wider 6-parameter extern prototype purely to reproduce
  * that harmless extra stack store byte-for-byte. */
 extern void *gEntitySpawner;
-extern void *sub_8025B0C(void *pool, s32 a, s32 b, s32 c, s32 d, s32 e, void *f);
+extern void *LaunchEffectPart(void *pool, s32 a, s32 b, s32 c, s32 d, s32 e, void *f);
 
 void *sub_800C9C8(s32 a, s32 b, s32 c, s32 d, s32 e, void *f)
 {
@@ -159,7 +159,7 @@ void *sub_800C9C8(s32 a, s32 b, s32 c, s32 d, s32 e, void *f)
     s32 flags;
     s32 mask;
 
-    obj = sub_8025B0C(gEntitySpawner, a, b, c, d, e, f);
+    obj = LaunchEffectPart(gEntitySpawner, a, b, c, d, e, f);
     flags = 4;
     flags |= obj[0xc];
     mask = -0x41;

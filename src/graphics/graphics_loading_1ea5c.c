@@ -11,8 +11,8 @@
  *
  * - SpawnCrystal/SpawnCrateGem/sub_801EBF0 test bits 0/1/2 of the byte
  *   GetCurrentLevelFlags(gLevelState) points at; SpawnCrateGem also spawns a
- *   second (0x2B) effect through sub_8025BAC.
- * - SpawnRedGem/SpawnGreenGem/SpawnYellowGem first ask sub_80233B4 whether
+ *   second (0x2B) effect through SpawnEffectPart.
+ * - SpawnRedGem/SpawnGreenGem/SpawnYellowGem first ask GetBossIndex whether
  *   the level is in mode 1, and if so hand over to sub_8018D70
  *   (actor_part_188d0.c) with kind 0/1/2 instead; otherwise they test
  *   bits 0/2/1 of gLevelState+2.
@@ -25,19 +25,19 @@
  * "Tenth pass". */
 
 extern void *gLevelState;
-extern u8 ***gUnknown_030012D0;
+extern u8 ***gSpriteBankSet;
 extern void *gEntitySpawner;
 extern void *gUnknown_030012EC;
 
 extern u8 *GetCurrentLevelFlags(void *self);
-extern s32 sub_80233B4(void *self);
+extern s32 GetBossIndex(void *self);
 extern struct gfx_part *CreateSpriteObj(u16 a0, u16 a1, u16 a2, u16 a3);
 extern void ResetSpriteFrameTimer(struct gfx_part *part);
 extern void ResetSpriteFrameIndex(struct gfx_part *part);
 extern void SetSpriteAnimDone(struct gfx_part *part, s32 val);
 extern s32 GetSpriteAnimPaletteSlot(struct gfx_part *part);
 extern void AddToPartList(void *manager, struct gfx_part *part);
-extern struct gfx_part *sub_8025BAC(void *pool, s32 arg1, s32 kind, s32 x, s32 y, s32 arg5);
+extern struct gfx_part *SpawnEffectPart(void *pool, s32 arg1, s32 kind, s32 x, s32 y, s32 arg5);
 extern void sub_8018D70(u32 a0, u16 a1, u16 a2, u16 a3, s32 kind);
 
 /* The `tag`/`type` locals are not just naming: the ROM loads both
@@ -53,7 +53,7 @@ void SpawnCrystal(u32 a0, u16 a1, u16 a2, u16 a3)
         u8 type = 0x1B;
         struct gfx_part *part = CreateSpriteObj(a0, a1, a2, a3);
 
-        part->bank = (struct anim_bank *)(**gUnknown_030012D0 + 0x1BC);
+        part->bank = (struct anim_bank *)(**gSpriteBankSet + 0x1BC);
         part->tag = bit;
         ResetSpriteFrameTimer(part);
         ResetSpriteFrameIndex(part);
@@ -74,7 +74,7 @@ void SpawnCrateGem(u32 a0, u16 a1, u16 a2, u16 a3)
         u8 type = 0x1D;
         struct gfx_part *part = CreateSpriteObj(a0, a1, a2, a3);
 
-        part->bank = (struct anim_bank *)(**gUnknown_030012D0 + 0x180);
+        part->bank = (struct anim_bank *)(**gSpriteBankSet + 0x180);
         part->tag = tag;
         ResetSpriteFrameTimer(part);
         ResetSpriteFrameIndex(part);
@@ -84,7 +84,7 @@ void SpawnCrateGem(u32 a0, u16 a1, u16 a2, u16 a3)
         AddToPartList(gUnknown_030012EC, part);
 
         {
-            struct gfx_part *p = sub_8025BAC(gEntitySpawner, 0x2B, 2, a1, a2, bit);
+            struct gfx_part *p = SpawnEffectPart(gEntitySpawner, 0x2B, 2, a1, a2, bit);
             p->unk_28_0 = 1;
             p->hidden = 0;
         }
@@ -99,7 +99,7 @@ void sub_801EBF0(u32 a0, u16 a1, u16 a2, u16 a3)
         u8 type = 0x1E;
         struct gfx_part *part = CreateSpriteObj(a0, a1, a2, a3);
 
-        part->bank = (struct anim_bank *)(**gUnknown_030012D0 + 0x180);
+        part->bank = (struct anim_bank *)(**gSpriteBankSet + 0x180);
         part->tag = tag;
         ResetSpriteFrameTimer(part);
         ResetSpriteFrameIndex(part);
@@ -112,7 +112,7 @@ void sub_801EBF0(u32 a0, u16 a1, u16 a2, u16 a3)
 
 void SpawnRedGem(u32 a0, u16 a1, u16 a2, u16 a3)
 {
-    if (sub_80233B4(gLevelState) != 1)
+    if (GetBossIndex(gLevelState) != 1)
     {
         if ((((u8 *)gLevelState)[2] & 1) == 0)
         {
@@ -120,7 +120,7 @@ void SpawnRedGem(u32 a0, u16 a1, u16 a2, u16 a3)
             u8 type = 0x1F;
             struct gfx_part *part = CreateSpriteObj(a0, a1, a2, a3);
 
-            part->bank = (struct anim_bank *)(**gUnknown_030012D0 + 0x180);
+            part->bank = (struct anim_bank *)(**gSpriteBankSet + 0x180);
             part->tag = tag;
             ResetSpriteFrameTimer(part);
             ResetSpriteFrameIndex(part);
@@ -138,7 +138,7 @@ void SpawnRedGem(u32 a0, u16 a1, u16 a2, u16 a3)
 
 void SpawnGreenGem(u32 a0, u16 a1, u16 a2, u16 a3)
 {
-    if (sub_80233B4(gLevelState) != 1)
+    if (GetBossIndex(gLevelState) != 1)
     {
         if ((((u8 *)gLevelState)[2] & 4) == 0)
         {
@@ -146,7 +146,7 @@ void SpawnGreenGem(u32 a0, u16 a1, u16 a2, u16 a3)
             u8 type = 0x20;
             struct gfx_part *part = CreateSpriteObj(a0, a1, a2, a3);
 
-            part->bank = (struct anim_bank *)(**gUnknown_030012D0 + 0x180);
+            part->bank = (struct anim_bank *)(**gSpriteBankSet + 0x180);
             part->tag = tag;
             ResetSpriteFrameTimer(part);
             ResetSpriteFrameIndex(part);
@@ -164,7 +164,7 @@ void SpawnGreenGem(u32 a0, u16 a1, u16 a2, u16 a3)
 
 void SpawnYellowGem(u32 a0, u16 a1, u16 a2, u16 a3)
 {
-    if (sub_80233B4(gLevelState) != 1)
+    if (GetBossIndex(gLevelState) != 1)
     {
         u8 bit = ((u8 *)gLevelState)[2] & 2;
 
@@ -173,7 +173,7 @@ void SpawnYellowGem(u32 a0, u16 a1, u16 a2, u16 a3)
             u8 type = 0x22;
             struct gfx_part *part = CreateSpriteObj(a0, a1, a2, a3);
 
-            part->bank = (struct anim_bank *)(**gUnknown_030012D0 + 0x180);
+            part->bank = (struct anim_bank *)(**gSpriteBankSet + 0x180);
             part->tag = bit;
             ResetSpriteFrameTimer(part);
             ResetSpriteFrameIndex(part);

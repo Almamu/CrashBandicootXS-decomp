@@ -104,15 +104,15 @@ void *GetSpriteObjHitbox(struct actor *part)
     return (u8 *)rec + 4;
 }
 
-extern void *gUnknown_030012D0;
+extern void *gSpriteBankSet;
 
 /* Ignores its `part` argument entirely (the ROM never reads r0 before
  * overwriting it) - already declared with this signature at its
  * `DrawSpritePieces` call site in graphics.c. Returns
- * `(*(void **)gUnknown_030012D0)+4`'s value. */
+ * `(*(void **)gSpriteBankSet)+4`'s value. */
 s32 GetSpriteTileBase(void *part)
 {
-    void *p2 = *(void **)gUnknown_030012D0;
+    void *p2 = *(void **)gSpriteBankSet;
     return *(s32 *)((u8 *)p2 + 4);
 }
 

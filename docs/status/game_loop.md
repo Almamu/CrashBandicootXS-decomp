@@ -28,7 +28,7 @@ system from "core" system startup/init code.
   and `GetUiText`, the UI string lookup in the current language
 - `src/system/game_loop2.c`: `AddBrokenCrate`, `PressSwitchCrate`, `GetBonusPlatform`,
   `sub_8023110`, `SetMaskAssistDeaths`, `sub_8023120`, `sub_8023128`,
-  `GetMaskAssistDeaths`, `sub_8023138`, `sub_8023140`, `sub_802314C`,
+  `GetMaskAssistDeaths`, `sub_8023138`, `AddPendingSwitchCrates`, `sub_802314C`,
   `sub_8023158`, `ClearPowers`, `GiveTornadoSpin`, `GiveSuperBodySlam`,
   `GiveTurboRun`, `GiveDoubleJump`, `HasTornadoSpin`, `HasSuperBodySlam`,
   `HasTurboRun` (GitHub issue #34, `UpdateGameFrame`-`MainLoop` cluster -
@@ -47,7 +47,7 @@ system from "core" system startup/init code.
   gap) - all matched as real C, no `NAKED` fallbacks needed. See
   [docs/matching/issue-35-36-0x080231cc-game-loop.md](../matching/issue-35-36-0x080231cc-game-loop.md)
 - `src/system/game_loop57.c` (new file, GitHub issue #39): `InitSlideshow`-
-  `sub_8024E24` (25 functions) - extends `struct SoundChannelList`
+  `StepBgLayerScroll` (25 functions) - extends `struct SoundChannelList`
   (game_loop37.c/38.c) with more fields, plus the "visual scrolling
   background streamer" family (docs/rom_map.md): a circular 4x4-block
   ring-buffer tilemap fed by the same custom RLE/delta token-stream
@@ -58,8 +58,8 @@ system from "core" system startup/init code.
   (`FillBgStreamer`), three wrapped-address helpers (`GetBgStreamerColumn`/
   `GetBgStreamerRow`/`GetBgStreamerCell`, matched as real C), and the object's
   construction/accessors (`SetBgStreamerSource`/`DestroyBgStreamer`/`InitBgStreamer`/
-  `sub_8024D58`/`sub_8024D5C`/`sub_8024D60`/`sub_8024D6C`/`DestroyBgLayerBase`/
-  `InitBgLayerBase`/`sub_8024DCC`/`sub_8024DE0`/`ScaleBgLayerScroll`/`sub_8024E24`,
+  `GetBgStreamerHeight`/`GetBgStreamerWidth`/`SetBgStreamerSizeVec`/`SetBgStreamerSize`/`DestroyBgLayerBase`/
+  `InitBgLayerBase`/`ClampBgLayerScrollStep`/`ClampBgLayerScrollMax`/`ScaleBgLayerScroll`/`StepBgLayerScroll`,
   all matched as real C). All 25 are real C (built with old_agbcc, see
   [game-loop-old-agbcc.md](../matching/game-loop-old-agbcc.md)); `RunCutscenePlayer` and `DecodeLayerChunk`, the last two `NAKED` transcriptions, became real C last (see [strag1-naked-retry.md](../matching/strag1-naked-retry.md)). `asm/code_3_2_17_24810.s` is now fully retired. See
   [docs/matching/issue-39-0x08024810-game-loop.md](../matching/issue-39-0x08024810-game-loop.md)
@@ -71,7 +71,7 @@ system from "core" system startup/init code.
   `sub_8025228` (plain C, built with old_agbcc - see [game-loop-old-agbcc.md](../matching/game-loop-old-agbcc.md)),
   and `DecodeCollisionChunk`, the RLE/delta decoder (real C since the second
   near-miss sweep - see [near-miss-polish-2.md](../matching/near-miss-polish-2.md))
-- `src/system/game_loop4.c` (GitHub issue #40): `sub_8025444`,
+- `src/system/game_loop4.c` (GitHub issue #40): `DestroyTileCache`,
   `nullsub_4`, `GetTerrainType` (plain C, built with old_agbcc - see
   [game-loop-old-agbcc.md](../matching/game-loop-old-agbcc.md))
 - `src/system/game_loop5.c` (GitHub issue #40): `GetCollisionCell`,
@@ -84,7 +84,7 @@ system from "core" system startup/init code.
   `game_loop6.c`/`game_loop7.c` first): `SetGemPlatform`,
   `SetBonusPlatform`, `SetCrateGemPos`, `RequestGemPath`, `RequestBonusRound`,
   `RestoreCheckpoint`, `SetCheckpoint`, `EndGemPath`, `sub_802364C`,
-  `sub_8023658`, `sub_8023674`, `sub_802369C`, `nullsub_24`,
+  `PlayIntroCutscene`, `ShowCompanyLogos`, `PlayBootCutscene`, `nullsub_24`,
   `UnpackSaveData`, `PackSaveData` - camera-position setters,
   checkpoint/level-transition snapshot helpers, the `PlayCutscene`
   mode-trampoline family, and a packed-bitfield unpacker/repacker pair
@@ -106,7 +106,7 @@ system from "core" system startup/init code.
   for the register-pinning/evaluation-order gotchas that closed this
   out.
 - `src/system/game_loop9.c` (GitHub issue #37): `ClearRoomExit`,
-  `RequestRoomExit`, `IsRoomExitRequested`, `ResumeRoomAfterPause`, `sub_802423C` - a
+  `RequestRoomExit`, `IsRoomExitRequested`, `ResumeRoomAfterPause`, `ResetObjBuffers` - a
   boolean flag clear/set/get trio, the level-end teardown, and the
   shared vram-upload-cursor/OAM-shadow flush tail
 - `src/system/game_loop12.c` (GitHub issue #41): `CountCrateEntities`
@@ -130,14 +130,14 @@ system from "core" system startup/init code.
   [naked-sub_80259d4-matched.md](../matching/naked-sub_80259d4-matched.md)),
   `sub_8025A0C`
   (third bit-grid setter), `sub_8025A3C` (Q8-to-int store),
-  `sub_8025A44` (conditional `OperatorDelete` forward), `sub_8025A5C`
+  `DestroyEntityFlags` (conditional `OperatorDelete` forward), `InitEntityFlags`
   (zero two Q8 words)
 - `src/system/game_loop14.c` (GitHub issue #41): `SpawnEntity`
   (table-indexed function-pointer dispatch via the interworking
-  trampoline convention), `sub_8025D4C` (store two Q8 words),
+  trampoline convention), `SetEntitySpawnerTable` (store two Q8 words),
   `sub_8025D54` (conditional `OperatorDelete` forward, dup of
-  `sub_8025A44`), `sub_8025D6C` (zero two Q8 words, dup of
-  `sub_8025A5C`)
+  `DestroyEntityFlags`), `InitEntitySpawner` (zero two Q8 words, dup of
+  `InitEntityFlags`)
 - `src/system/game_loop15.c` (GitHub issue #41): `InitBgLayer`
   (BG-scroll-layer hardware-register/bitfield initializer - previously
   NAKED, now matched as real C via opaque inline-asm-materialized mask
@@ -161,8 +161,8 @@ system from "core" system startup/init code.
   medal-table entry/item-list field accessors, the sound-cue resolver,
   and the `LevelHasEntityType` constant wrappers (`LevelHasEntityType` itself is left
   raw, see below)
-- `src/system/game_loop19.c` (GitHub issue #38): `sub_8024784` -
-  trivial `gUnknown_03001314` setter
+- `src/system/game_loop19.c` (GitHub issue #38): `SetSlideshowDispcnt` -
+  trivial `gSlideshowDispcnt` setter
 - `src/system/game_loop20.c` (GitHub issue #38): `DestroySlideshow`,
   `ResetSlideshow` - the `sub_802425C`-shaped teardown wrapper and a
   trivial constructor
@@ -175,7 +175,7 @@ system from "core" system startup/init code.
   `sub_8010674`): `sub_8010674` (AABB-overlap test between `self`'s
   own table-driven half-width/half-height box and a caller-supplied
   box, prepended ahead of the rest since it's immediately
-  ROM-adjacent), `sub_80106DC` (viewport collision-box refresh),
+  ROM-adjacent), `ResolvePlayerCollisions` (viewport collision-box refresh),
   `GetCrateBelow`/`GetCrateAbove` (neighbor-list "get prev"/"get next"),
   `SetCrateBelow`/`SetCrateAbove` ("set prev"/"set next"), `GetCrateClassId`
   (UNUSED trivial constant). See
@@ -184,7 +184,7 @@ system from "core" system startup/init code.
 - `src/system/game_loop24.c` (GitHub issue #13): `sub_8010804` (a
   state-3-countdown-expiry sweep over `gCrateList`),
   `OpenAkuAkuCrate` (viewport trampoline-pair/cue-1 firing)
-- `src/system/game_loop25.c` (GitHub issue #13): `sub_8010908` -
+- `src/system/game_loop25.c` (GitHub issue #13): `IsCrateKindBreakable` -
   trivial `gCrateKindBreakable[idx]` lookup
 - `src/system/game_loop26.c` (GitHub issue #13): `sub_8010A00` -
   `self+0x48` bits 6-7 sub-state extractor
@@ -271,15 +271,15 @@ system from "core" system startup/init code.
 - `src/system/game_loop27.c` (GitHub issue #14, recategorized
   graphics->game_loop - a direct continuation of the same physics/
   collision subsystem file family): `sub_8010A0C`-`sub_8010B68` (24
-  functions) plus the unlabeled `sub_8010AF8` (the original
+  functions) plus the unlabeled `IsCrateBusy` (the original
   disassembly never gave it its own symbol - it falls out of
   `sub_8010AEC`'s trailing alignment padding) - a run of bit-field get/
   set/clear accessors and plain field accessors on the same
   "collision box" record `sub_8010A00`/`ResetCrate` already operate
   on. See
   [docs/matching/issue-14-0x08010a0c-graphics.md](../matching/issue-14-0x08010a0c-graphics.md).
-- **`sub_8010B6C`** (`src/system/game_loop28.c`) - issue #14's last
-  function, the collision-candidate scan/resolve helper `sub_80106DC`
+- **`ResolveCollisionCandidates`** (`src/system/game_loop28.c`) - issue #14's last
+  function, the collision-candidate scan/resolve helper `ResolvePlayerCollisions`
   calls once a frame. Plain C; it was NAKED. The "twelve running
   pointers" were gcc's own loop strength reduction of
   `self->records[i].field`. See
@@ -309,7 +309,7 @@ system from "core" system startup/init code.
   `sub_8026628`'s Y-axis (floor/ceiling) and X-axis (wall) tile-scan
   resolvers, 208/216 B. Plain C, built with old_agbcc - see [game-loop-old-agbcc.md](../matching/game-loop-old-agbcc.md) and
   [docs/matching/issue-9-10-41-0x08026628-game-loop.md](../matching/issue-9-10-41-0x08026628-game-loop.md).
-- **`DrawBgLayerRow`/`RedrawBgLayer`/`ResetBgLayer`/`LoadBgLayerTiles`/`LoadBgLayer`/`sub_8026108`/`sub_802612C`/`sub_802613C`/`sub_802614C`/`sub_8026160`/`sub_8026174`/`sub_8026184`/`sub_8026190`/`sub_80261A8`/`sub_80261B0`/`DestroyBgLayer`/`DrawPooledBgLayerColumn`/`sub_8026250`/`ReleasePooledBgLayerColumn`/`ReleasePooledBgLayerRow`/`ClipPooledBgLayerColumns`/`ClipPooledBgLayerRows`/`DrawPooledBgLayerRow`/`ResetPooledBgLayer`/`LoadPooledBgLayerTiles`/`nullsub_26`**
+- **`DrawBgLayerRow`/`RedrawBgLayer`/`ResetBgLayer`/`LoadBgLayerTiles`/`LoadBgLayer`/`GetBgLayerScreenIndex`/`sub_802612C`/`sub_802613C`/`SetBgLayerScreenBase`/`SetBgLayerPriority`/`SetBgLayerColors256`/`GetBgLayerCharBase`/`SetBgLayerCharBase`/`WriteBgLayerOffsetRegs`/`WriteBgLayerCntReg`/`DestroyBgLayer`/`DrawPooledBgLayerColumn`/`ClampPooledBgLayerScrollStep`/`ReleasePooledBgLayerColumn`/`ReleasePooledBgLayerRow`/`ClipPooledBgLayerColumns`/`ClipPooledBgLayerRows`/`DrawPooledBgLayerRow`/`ResetPooledBgLayer`/`LoadPooledBgLayerTiles`/`nullsub_26`**
   (`src/system/bg_scroll_layer_25fc8.c`, new file - GitHub issue #42,
   compiled with **old_agbcc**) - the BG-scroll layer's methods (base
   table `gBgLayerVtable`: destroy, reset, load tiles, draw row,
@@ -369,14 +369,14 @@ system from "core" system startup/init code.
   two tiny functions immediately following, `sub_8026C80`/`sub_8026C8C`
   - both UNUSED (no caller anywhere in the ROM), matched anyway per this
   project's usual practice. `asm/code_3_2_17_26bf8.s` trimmed to begin
-  at `sub_8026C90`.
-- **`sub_8026C90`/`sub_8026D8C`/`SnapCamera`/`UpdateCamera`/`OperatorDeleteArray`/`OperatorNewArray`/`OperatorDelete`/`OperatorNew`**
+  at `StepCameraDirectional`.
+- **`StepCameraDirectional`/`StepCameraFacing`/`SnapCamera`/`UpdateCamera`/`OperatorDeleteArray`/`OperatorNewArray`/`OperatorDelete`/`OperatorNew`**
   (`src/system/camera_follow.c`, new file - GitHub issue #44) - the
   `gCamera` camera follower: Q8 position eased a quarter-step
   per frame toward `target + look-ahead`, published centered on screen
   (`- (120 << 8)`, `- (80 << 8)`) through `SetLevelScroll`'s level-bounds
-  clamp. Mode 2 (`sub_8026C90`) steers the look-ahead from `target+0x24`
-  direction bits, mode 1 (`sub_8026D8C`) from the `target+0x28` mirror
+  clamp. Mode 2 (`StepCameraDirectional`) steers the look-ahead from `target+0x24`
+  direction bits, mode 1 (`StepCameraFacing`) from the `target+0x28` mirror
   flag; `SnapCamera` snaps, `UpdateCamera` is the per-frame dispatcher.
   Plus two `mem_free`/`mem_alloc(size, MEM_HEAP_EWRAM)` wrapper pairs.
   Needed r2/r3 pins on the target position, an r4-pinned easing temp, an
@@ -417,7 +417,7 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
 
 - **`StartTimeTrial`** (`game_loop40.c`), **`DropExtraLife`** (`game_loop29.c`),
-  **`sub_8025BAC`** (`game_loop14.c`), **`ScrollBgLayer`**/**`DrawBgLayerColumn`**
+  **`SpawnEffectPart`** (`game_loop14.c`), **`ScrollBgLayer`**/**`DrawBgLayerColumn`**
   (`game_loop16.c`), and the other functions above marked "built with
   old_agbcc" - 17 former `NAKED` transcriptions in 0x08022D50-0x08026BC0,
   now plain C. This ROM region was built with old_agbcc; see [game-loop-old-agbcc.md](../matching/game-loop-old-agbcc.md).
@@ -559,7 +559,7 @@ they don't count as "matched" for this project's tracking - the goal
 is readable C, and an asm blob wrapped in a C function signature
 doesn't advance that even when byte-correct. See
 [docs/workflow.md](../workflow.md)'s NAKED-transcription escape hatch
-(`sub_8001CB8`/`sub_8001DB4` in `src/system/link_cable.c`) for the
+(`MakeLinkHandshakeId`/`ResetLinkSessionState` in `src/system/link_cable.c`) for the
 established convention, and each entry's linked write-up for why
 plain C didn't converge.
 
@@ -698,7 +698,7 @@ plain C didn't converge.
   isolated real-C attempts getting the full branch/dispatch structure
   and even established idioms like the `(s32)(x<<27)<0` mirror-flag
   test right - see the doc's own "Phase 3" section for the full
-  per-function breakdown. `sub_800C9C8` (a thin `sub_8025B0C` wrapper,
+  per-function breakdown. `sub_800C9C8` (a thin `LaunchEffectPart` wrapper,
   state 18's floating-popup spawner) and `CreateKnockedEnemyCtrl` (`HitEnemy`
   states 19-20's child-object allocator, resolving `self+0xc` to the
   fixed `gKnockedEnemyCtrlVtable` table) both matched as real C. See
@@ -770,10 +770,10 @@ plain C didn't converge.
   retired from `ldscript.txt` entirely. See
   [docs/matching/issue-9-10-0x0800b8dc-graphics.md](../matching/issue-9-10-0x0800b8dc-graphics.md)'s
   "`sub_800BFA8`" entry.
-- **Now matched as real C (see docs/matching/strag1-naked-retry.md); entry kept for history.** **`sub_8025B0C`/`DropWumpa`** (`src/system/game_loop14.c`, GitHub
+- **Now matched as real C (see docs/matching/strag1-naked-retry.md); entry kept for history.** **`LaunchEffectPart`/`DropWumpa`** (`src/system/game_loop14.c`, GitHub
   issue #41) - two part-object spawn helpers. Under old_agbcc, plain C
   is 61 and 5 halfwords off (register allocation, and one constant
-  load's scheduling); their sibling `sub_8025BAC` is matched. See
+  load's scheduling); their sibling `SpawnEffectPart` is matched. See
   [game-loop-old-agbcc.md](../matching/game-loop-old-agbcc.md).
 - **Now matched as real C (third big NAKED retry, see Matched and docs/matching/big-naked-retry-3.md); entry kept for history.** **`SpawnRoomEntities`** (`src/system/game_loop41.c`, GitHub issue #34/#40/
   #41) - `self` is `*gEntityFlags`: refreshes the collision
@@ -805,8 +805,8 @@ plain C didn't converge.
   category processing loop keyed on an `r8`-resident status flag (0 =
   keep going, 1 = check `GetLives` for early-out, 2 = done this
   frame) that ping-pongs the `gEntityFlags` collision-bitmap
-  buffer between `self+0x1b4`'s two halves via `sub_8025A5C`/
-  `OperatorNew(0x408)`, and refreshes the HUD icon (`sub_8028568`) each
+  buffer between `self+0x1b4`'s two halves via `InitEntityFlags`/
+  `OperatorNew(0x408)`, and refreshes the HUD icon (`SetHudCrateTotal`) each
   pass. The whole per-category loop, and even the outer state-dispatch
   block above it, can run several times within one call (loops back via
   `GetLives`/`RunContinuePrompt` gating) before the function actually
@@ -843,16 +843,16 @@ plain C didn't converge.
   inconsistent reuse pattern (sometimes recomputed fresh a few
   instructions after an equivalent address was already live) - the
   same "which anonymous scratch register" gap as `sub_800D040`/
-  `sub_8010B6C` above, at a finer grain spread across the whole
+  `ResolveCollisionCandidates` above, at a finer grain spread across the whole
   function rather than one isolated block. Replaces
   `asm/code_3_2_17_e560_104e4.o` in `ldscript.txt`, sitting between
   `src/system/game_loop35.o` and `game_loop23.o`. Filed as
   `game_loop51.c`, not `game_loop50.c`, after a merge conflict with
-  the concurrently-matched `sub_8010D54` below, which took the
+  the concurrently-matched `AddCollisionCandidate` below, which took the
   `game_loop50.c` name first. See
   [docs/matching/issue-13-fc70-continuation.md](../matching/issue-13-fc70-continuation.md)'s
   "Update: `UpdateCrate` matched" section.
-- **`sub_8010D54`** (`src/system/game_loop50.c`, new file - Phase 1 of
+- **`AddCollisionCandidate`** (`src/system/game_loop50.c`, new file - Phase 1 of
   the next still-unexamined chunk past issue #14's own range) - the
   physics/collision subsystem's **apply/commit step**, the call
   `sub_0800D18C` (`game_loop47.c`) makes at the very end of its own
@@ -860,8 +860,8 @@ plain C didn't converge.
   to a per-entity queue at `self->candidates[self->count]` (`self` is
   the caller's own `entity+0x108` - the player's
   `gPlayer+0x108` at this specific call site - the same
-  record shape `sub_8010B6C`/`game_loop28.c` already reads back, per
-  its own doc comment calling `sub_8010D54` its "mirror image"). A
+  record shape `ResolveCollisionCandidates`/`game_loop28.c` already reads back, per
+  its own doc comment calling `AddCollisionCandidate` its "mirror image"). A
   plain-C reconstruction reproduces the ROM's exact instruction *shape*
   (the same 8-way common-subexpression grouping for the repeated
   `self->count` index computation, sharing a computation between
@@ -872,29 +872,29 @@ plain C didn't converge.
   instead (no branches or literal pool in this function, so no label
   renumbering was needed). Matched, confirmed by a full clean `make
   compare` ("La suma coincide"). Phase 2's own "quick win" group later
-  folded `sub_8010E14`/`sub_8010E2C` into this same file (both real C):
-  `sub_8010E14` is byte-identical in shape to `graphics.c`'s already-
+  folded `DestroyCollisionQueue`/`ResetCollisionQueue` into this same file (both real C):
+  `DestroyCollisionQueue` is byte-identical in shape to `graphics.c`'s already-
   matched `DestroyOamBuffer` (`if (arg1 & 1) OperatorDelete(arg0);`) - a VRAM-
   manager-refresh gate that happens to be called from `actor_part15.c`
   with `arg1 = 2` (bit 0 clear), so that particular call site is itself
-  a no-op; `sub_8010E2C` is a trivial two-field queue reset
+  a no-op; `ResetCollisionQueue` is a trivial two-field queue reset
   (`count`/`unk4[0]`). `asm/code_3_2_17_e560_10d54.s` trimmed to begin
   at `CheckExtraLifePickup` - see
   [docs/matching/issue-14-0x08010d54-physics-apply.md](../matching/issue-14-0x08010d54-physics-apply.md)
   for the full semantic map and Phase 2 planning notes on the rest of
   the former 24-function tail. *Later pass (issue #15 NAKED retry):*
-  `sub_8010D54` is real C now - the two trailing byte arguments are read
+  `AddCollisionCandidate` is real C now - the two trailing byte arguments are read
   with `ldrb` from their stack words through an empty-asm-hidden address
   (the ROM's `add; add; ldrb; ldrb`), and the +0x04/+0x08 pair is a
   by-value struct copy. See
   [docs/matching/issue-15-16-naked-retry.md](../matching/issue-15-16-naked-retry.md).
-- **`sub_8011248`-`CheckWumpaPickup`** (`src/system/game_loop52.c`, new file
+- **`UpdateExtraLifeHop`-`CheckWumpaPickup`** (`src/system/game_loop52.c`, new file
   - Phase 2's "accessor cluster" group) - 11 functions, a small
   "orbiting hazard" behavior family on a further still-unnamed "part"
-  object distinct from `struct actor` and from `sub_8010D54`'s own
-  `struct collision_queue`: `sub_8011364` seeds an orbit anchor+start
-  position, `sub_8011378` (re)starts the orbit at a given mode/phase 0,
-  `sub_8011388` sets an adjacent still-unexamined byte, `sub_8011248` is
+  object distinct from `struct actor` and from `AddCollisionCandidate`'s own
+  `struct collision_queue`: `SetExtraLifePos` seeds an orbit anchor+start
+  position, `SetExtraLifeHop` (re)starts the orbit at a given mode/phase 0,
+  `sub_8011388` sets an adjacent still-unexamined byte, `UpdateExtraLifeHop` is
   the per-frame orbit-position update (two lookups into the shared sine
   table `gSineTable` at different strides, combined via the
   overflow-avoiding fixed-point multiply `FixedMul`), `sub_8011330`
@@ -907,7 +907,7 @@ plain C didn't converge.
   (AABB-tests against the player, choosing primary vs. secondary AABB
   build depending on the player's own state, and on overlap tail-calls
   the despawn picker `PickUpWumpa`). All matched as real C except
-  `sub_8011248` (NAKED transcription: gcc 2.9 persistently picks the
+  `UpdateExtraLifeHop` (NAKED transcription: gcc 2.9 persistently picks the
   opposite operand order for the shared-table pointer adds no matter how
   the C source phrases the addition - not one isolated register to pin).
   Confirmed by a full clean `make compare` ("La suma coincide").
@@ -915,12 +915,12 @@ plain C didn't converge.
   `SendExtraLifeToHud` - see
   [docs/matching/issue-14-0x08010d54-physics-apply.md](../matching/issue-14-0x08010d54-physics-apply.md)'s
   Phase 2 findings for the full field map. *Later pass (issue #15
-  NAKED retry):* `sub_8011248` is real C under old_agbcc (the file moved
+  NAKED retry):* `UpdateExtraLifeHop` is real C under old_agbcc (the file moved
   to `OLD_AGBCC_OBJS`); the object is now `struct orbit_part`
   (`include/orbit_part.h`). See
   [docs/matching/issue-15-16-naked-retry.md](../matching/issue-15-16-naked-retry.md).
 - **`PickUpWumpa`/`UpdateWumpa`/`CreateWumpa`/`SendWumpaToHud`/`sub_801191C`/
-  `sub_801192C`** (`src/system/game_loop53.c`, new file - Phase 2,
+  `UpdateWumpaHop`** (`src/system/game_loop53.c`, new file - Phase 2,
   a parallel slice of the same 24-function chunk) - the chunk's tail 6
   functions, contiguous through to the already-matched `actor_part39.c`.
   `PickUpWumpa` is a randomized-position spawn/despawn picker;
@@ -929,17 +929,17 @@ plain C didn't converge.
   collision-bitmap arrival tail and a `DropWumpa` mode-3 spawn);
   `CreateWumpa` is the achievement/unlock-icon spawn helper;
   `SendWumpaToHud` is `SendExtraLifeToHud`'s alternative; `sub_801191C`/
-  `sub_801192C` are a tiny mode setter and a `gSineTable`
+  `UpdateWumpaHop` are a tiny mode setter and a `gSineTable`
   table helper. All but `sub_801191C` (trivial, real C) closed as NAKED
   transcription - this neighborhood reconfirms the same gcc-2.9
   register-pressure hazards (r7/r8/sb) already documented at length for
-  `sub_800D040`/`sub_0800D18C`/`sub_8010B6C` and the already-NAKED
+  `sub_800D040`/`sub_0800D18C`/`ResolveCollisionCandidates` and the already-NAKED
   `DropExtraLife`/`DropWumpa` wrappers. Matched, confirmed by a full
   clean `make compare`. `CheckExtraLifePickup`/`PickUpExtraLife`/`UpdateExtraLife`/
   `SendExtraLifeToHud` were also read and isolated-verified this pass but left
   un-integrated at the time - see the `game_loop54.c` entry below for
   their eventual integration. *Later pass (issue #15 NAKED retry):*
-  `PickUpWumpa`, `SendWumpaToHud` and `sub_801192C` are real C under
+  `PickUpWumpa`, `SendWumpaToHud` and `UpdateWumpaHop` are real C under
   old_agbcc (the file moved to `OLD_AGBCC_OBJS`); `UpdateWumpa` and
   `CreateWumpa` stay NAKED (`CreateWumpa` with a C draft under
   `NON_MATCHING`). See
@@ -958,12 +958,12 @@ plain C didn't converge.
 - **`CheckExtraLifePickup`/`PickUpExtraLife`/`UpdateExtraLife`/`CreateExtraLife`/
   `SendExtraLifeToHud`** (`src/system/game_loop54.c`, new file - Phase 2
   mop-up, the chunk's final slice) - the last 5 functions of the former
-  24-function tail, closing the entire `sub_8010D54` chunk (issue
+  24-function tail, closing the entire `AddCollisionCandidate` chunk (issue
   #12/#14). `CheckExtraLifePickup` (real C) is a bounds-checked AABB gate that
   calls `PickUpExtraLife(self, 0)` on overlap, sharing its opening gate and
   bit-test idiom verbatim with `CheckWumpaPickup` (`game_loop52.c`).
   `PickUpExtraLife`/`SendExtraLifeToHud` (both real C) are two more members of the
-  "randomized/fixed `(dx,dy)` offset, `PlaySfx`, `sub_8007174`,
+  "randomized/fixed `(dx,dy)` offset, `PlaySfx`, `WorldToScreen`,
   `-FixedDiv(...)` distance-pair" tail shape already documented for
   `PickUpWumpa`/`SendWumpaToHud` (`game_loop53.c`) - unlike those two,
   both closed as real C this time, needing a handful of register-pinned/

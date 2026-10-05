@@ -2,7 +2,7 @@
 #include "orbit_part.h"
 
 /* GitHub issue #12/#14 Phase 2 mop-up: the last 5 raw functions of the
- * still-large 24-function tail past `sub_8010D54`
+ * still-large 24-function tail past `AddCollisionCandidate`
  * (`asm/code_3_2_17_e560_10d54.s`) - see
  * docs/matching/issue-14-0x08010d54-physics-apply.md's "Not integrated
  * this pass" section for the individual draft characterizations this
@@ -13,7 +13,7 @@
  * turned into C by the issue #15 NAKED retry use `struct orbit_part`,
  * include/orbit_part.h). This closes out
  * the entire `0x08010D54` chunk (issue #12/#14): every function between
- * `sub_8010D54` and the already-matched `src/graphics/actor_part39.c`
+ * `AddCollisionCandidate` and the already-matched `src/graphics/actor_part39.c`
  * (`DrawWumpa`) is now matched. */
 
 extern void *gPlayer;
@@ -26,7 +26,7 @@ extern void *gHud;
 extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
 extern void *GetSpriteHitbox(void *dest, void *pt);
 extern u8 AabbOverlaps(void *buf1, void *buf2);
-extern void sub_8007174(void *arg0, s32 arg1, s32 arg2, s32 *arg3, s32 *arg4);
+extern void WorldToScreen(void *arg0, s32 arg1, s32 arg2, s32 *arg3, s32 *arg4);
 extern s32 FixedDiv(s32 arg0, s32 arg1);
 extern s32 FixedMul(s32 a, s32 b);
 extern s32 AddLife(void *self);
@@ -35,7 +35,7 @@ extern void *OperatorNew(s32 size);
 extern struct actor *InitSpriteObj(struct actor *self);
 extern void AddToPartList(void *manager, void *value);
 extern void sub_8011308(void *self);
-extern void sub_8011248(void *self);
+extern void UpdateExtraLifeHop(void *self);
 extern void UpdateSpriteObj(struct actor *part);
 extern s16 gSineTable[];
 extern u8 gExtraLifeVtable[];
@@ -118,7 +118,7 @@ void CheckExtraLifePickup(void *selfArg)
  * came from, `self->0x48 = 2`) or uses a fixed `(0xb400,0xc00)` offset
  * and fires `ShowHudLives(gHud)` (`self->0x48 = 1`). Either
  * way: `self->0xc |= 0x10`, `self->0x25 = 1`, then calls
- * `sub_8007174(self, self->x>>8, self->y>>8, &outX, &outY)` and
+ * `WorldToScreen(self, self->x>>8, self->y>>8, &outX, &outY)` and
  * re-derives `self->x`/`self->y` plus `self->0x40`/`self->0x44` (a
  * "distance to travel" pair, `-FixedDiv(newPos<<8 - offset, 0x1400)`)
  * from the results - the exact same tail shape `PickUpWumpa`/
@@ -170,7 +170,7 @@ void PickUpExtraLife(void *selfArg, u8 randomize)
         self[0x25] = one;
     }
 
-    sub_8007174(self, *(s32 *)self >> 8, *(s32 *)(self + 4) >> 8, &outX, &outY);
+    WorldToScreen(self, *(s32 *)self >> 8, *(s32 *)(self + 4) >> 8, &outX, &outY);
 
     newX = outX << 8;
     *(s32 *)self = newX;
@@ -197,7 +197,7 @@ void PickUpExtraLife(void *selfArg, u8 randomize)
  * unless `self->0x48 != 0`, either computes an orbit step via
  * `gSineTable[(self->0x49 & 0x7f)]` and `FixedMul` added
  * into `self->0x50`, storing to `self->y` (when `self->0x4a` is clear),
- * or calls `sub_8011248` (`game_loop52.c`'s own orbit-position updater)
+ * or calls `UpdateExtraLifeHop` (`game_loop52.c`'s own orbit-position updater)
  * when `self->0x4a` is set - then always tail-calls `UpdateSpriteObj`
  * (already matched, `actor_part5.c`).
  *
@@ -299,7 +299,7 @@ void UpdateExtraLife(struct orbit_part *self)
             sn = FixedMul(sn, 0x280);
             self->base.y = self->anchor.y + sn;
         } else {
-            sub_8011248(self);
+            UpdateExtraLifeHop(self);
         }
     }
     UpdateSpriteObj(&self->base);
@@ -315,8 +315,8 @@ void UpdateExtraLife(struct orbit_part *self)
  * `gExtraLifeVtable`, clears the "spawned/active" gate byte via
  * `sub_8011308` (`game_loop52.c`), stores `arg0` at `self+8` and
  * `arg1`/`arg2` (Q8-scaled) at `self+0`/`self+4`, mirrored into
- * `self+0x4c`/`self+0x50` (the orbit anchor `sub_8011364`/
- * `sub_8011248` also use), joins the `gUnknown_030012EC`
+ * `self+0x4c`/`self+0x50` (the orbit anchor `SetExtraLifePos`/
+ * `UpdateExtraLifeHop` also use), joins the `gUnknown_030012EC`
  * `dual_array_manager` list (`AddToPartList`), derives `self+0x30` from
  * the same `table[self->0x2d]->+0x16` clamp idiom `PickUpWumpa`/
  * `SendWumpaToHud` (`game_loop53.c`) use, clears bits 0/5 of `self+0x28`,
@@ -354,7 +354,7 @@ struct orbit_part *CreateExtraLife(u16 id, u16 x, u16 y, s32 unused)
  * `game_loop29.c`; the documented "mutually exclusive alternative" is
  * `SendWumpaToHud` (`game_loop53.c`, already matched). Plays a hit SFX,
  * sets `self->0x48 = 1`, nudges `self->x -= self->0x4a<<8`, sets
- * `self->0x25 = 1`, calls `sub_8007174(self, x>>8, y>>8, &outX, &outY)`
+ * `self->0x25 = 1`, calls `WorldToScreen(self, x>>8, y>>8, &outX, &outY)`
  * and re-derives `self->x`/`self->y` plus `self->0x40`/`self->0x44`
  * (the same `-FixedDiv(newPos<<8 - offset, 0x1400)` "distance to
  * travel" idiom `PickUpExtraLife`/`PickUpWumpa`/`SendWumpaToHud` all share),
@@ -378,7 +378,7 @@ void SendExtraLifeToHud(void *selfArg)
     }
     self[0x25] = 1;
 
-    sub_8007174(self, *(s32 *)self >> 8, *(s32 *)(self + 4) >> 8, &outX, &outY);
+    WorldToScreen(self, *(s32 *)self >> 8, *(s32 *)(self + 4) >> 8, &outX, &outY);
 
     newX = outX << 8;
     *(s32 *)self = newX;

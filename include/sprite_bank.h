@@ -192,7 +192,7 @@ struct sprite_bank {
     u16 animCount;                              /* 0x0A */
 };
 
-/* gSpriteBankTable, *gUnknown_030012D0. */
+/* gSpriteBankTable, *gSpriteBankSet. */
 struct sprite_bank_table {
     const struct sprite_bank *banks;    /* 0x00 - [bankCount] */
     const u8 *tileBase;                 /* 0x04 - sprite tile pool, GetSpriteTileBase */

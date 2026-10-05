@@ -33,7 +33,7 @@ second pass against those five.
     (`add r3, sp, #4`) then a genuine `strb`, while this compiler
     always emits a direct word-sized `str` for a stack-passed byte
     argument regardless of the parameter's declared width - the same
-    gap already closed for `DrawSaveMenuMain`'s own `sub_8003F30` call in
+    gap already closed for `DrawSaveMenuMain`'s own `DrawSaveSlotStats` call in
     `settings_menu8c.c` (see
     [docs/matching/issue-5-overlay-ui-sync.md](issue-5-overlay-ui-sync.md)).
     A dummy 2-word local's address is passed as an unused input operand
@@ -219,7 +219,7 @@ While `self+0x4f` (a per-object throttle counter, matching the
 describe) is nonzero, decrements it and, only for the frame it reaches
 zero-triggering, dispatches once more on `self+0x4e` (the settle-state
 byte): `0x13`-`0x15` re-enters the edge-settle chain (`UpdateTntCountdown`)
-and arms the global one-shot rescan flag `gUnknown_030012B0`; `0xf`
+and arms the global one-shot rescan flag `gCrateListChanged`; `0xf`
 re-triggers `UpdateSlotCrate` when `self+0x4d`'s low 7 bits are already 0;
 `0xc`, once the throttle has reached 0 this frame, clears `self+0x50`;
 `3` re-triggers `SolidifyOutlineCrates`. Unconditionally afterwards: while
@@ -273,7 +273,7 @@ checks a few instructions later, rather than reusing the r6 copy the
 immediately-preceding `0xf` check just made) - a finer-grained, more
 pervasive version of the same "which anonymous scratch register" gap
 that already forced `GetSpriteBounds`/`GetSpriteHitbox` (`actor_part.c`) and
-`sub_8010B6C` (`game_loop28.c`) fully NAKED. Given the depth of
+`ResolveCollisionCandidates` (`game_loop28.c`) fully NAKED. Given the depth of
 precise, non-uniform register control needed across the *entire*
 ~195-instruction function (not just one isolated block), it was
 transcribed byte-exact instead - every instruction checked directly

@@ -6,8 +6,8 @@ extern void IrqSetHandler(s32 interruptIndex, irq_handler_t *fn);
 extern void LinkSerialIntr(void);
 extern void LinkTimer3Intr(void);
 extern void LinkStop(void);
-extern void sub_8001DB4(u8 *self);
-extern void sub_80016D0(u8 *address);
+extern void ResetLinkSessionState(u8 *self);
+extern void IwramFree(u8 *address);
 
 /* "Start" step of the link session - counterpart to `LinkStop`
  * above. Disables the Serial/Timer3 IRQ lines (same IME-guarded
@@ -50,7 +50,7 @@ s32 LinkStart(void *arg0, u32 flags)
 
 /* Small standalone helper: resets RCNT to general-purpose mode and sets
  * SIOCNT to a fixed idle-multiplayer-mode value. Always returns 0. */
-s32 sub_800276C(void)
+s32 LinkSetupSio(void)
 {
     REG_RCNT = 0;
     REG_SIOCNT = 0x2000;
@@ -59,27 +59,27 @@ s32 sub_800276C(void)
 }
 
 /* Convenience "full reset": stop (`LinkStop`) then re-init the
- * session (`sub_8001DB4`). Always returns 0. */
-s32 sub_8002798(u8 *self)
+ * session (`ResetLinkSessionState`). Always returns 0. */
+s32 ResetLinkSession(u8 *self)
 {
     LinkStop();
-    sub_8001DB4(self);
+    ResetLinkSessionState(self);
     return 0;
 }
 
-/* Resets the session (`sub_8002798`), then walks a dead loop computing
+/* Resets the session (`ResetLinkSession`), then walks a dead loop computing
  * `self+0xd0` from `self+0x3f0` in steps of 0xc8 (4 iterations, result
  * unused - reads as a leftover/inlined bounds-check artifact rather
  * than anything with an observable effect), then - only if `flags` bit
- * 0 is set - tears the session down (`sub_80016D0`, matched in
+ * 0 is set - tears the session down (`IwramFree`, matched in
  * src/graphics/aabb_util.c, also used by src/audio/audio_context.c's
  * `DestroyAudioContext` on an unrelated object - a generic free/release call).
  */
-void sub_80027B0(u8 *self, u32 flags)
+void DestroyLinkSession(u8 *self, u32 flags)
 {
     u8 *p;
 
-    sub_8002798(self);
+    ResetLinkSession(self);
 
     p = self + 0xd0;
     if (p != NULL) {
@@ -92,16 +92,16 @@ void sub_80027B0(u8 *self, u32 flags)
     }
 
     if (flags & 1) {
-        sub_80016D0(self);
+        IwramFree(self);
     }
 }
 
 /* Session object constructor: zeroes the transient TX ring bookkeeping
  * (self+0xc4/0xc8, self+0xcc=0x7f), zeroes the same trio for all 4
  * per-player sub-records (self+0x18c+playerIndex*0xc8, matching the
- * layout `sub_8001DB4` above also touches), resets the session
- * (`sub_8002798`), clears self+5, and returns `self`. */
-void *sub_80027E8(u8 *arg0)
+ * layout `ResetLinkSessionState` above also touches), resets the session
+ * (`ResetLinkSession`), clears self+5, and returns `self`. */
+void *InitLinkSession(u8 *arg0)
 {
     register u8 *self asm("r4");
     u8 *p;
@@ -130,21 +130,21 @@ void *sub_80027E8(u8 *arg0)
         i--;
     } while (i != sentinel);
 
-    sub_8002798(self);
+    ResetLinkSession(self);
     self[5] = 0;
 
     return self;
 }
 
-extern s32 sub_8002114(void *session, u32 reg);
+extern s32 HandleLinkSerial(void *session, u32 reg);
 extern void *gLinkSession;
 
 /* The Serial-IRQ handler installed by `LinkStart` above: forwards
- * into the still-raw per-frame SIO data pump (`sub_8002114`) with the
+ * into the still-raw per-frame SIO data pump (`HandleLinkSerial`) with the
  * session object and SIODATA32's low half register address. */
 void LinkSerialIntr(void)
 {
-    sub_8002114(gLinkSession, REG_ADDR_SIODATA32);
+    HandleLinkSerial(gLinkSession, REG_ADDR_SIODATA32);
 }
 
 /* The Timer3-IRQ handler installed by `LinkStart` above (the

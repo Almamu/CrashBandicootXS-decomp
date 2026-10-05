@@ -2,20 +2,20 @@
 #include "settings_sync.h"
 
 extern void *gLinkSession;
-extern void sub_8002E20(struct settings_sync_pump *self, s32 playerIndex);
-extern void sub_8002D44(struct settings_sync_pump *self);
+extern void ReceiveSaveTransferChunk(struct settings_sync_pump *self, s32 playerIndex);
+extern void SendSaveTransferChunk(struct settings_sync_pump *self);
 
 /* Polls the SIO-handshake spinner's transfer state once per frame: if
  * the session (*gLinkSession, byte +7 = "connected") isn't
  * connected, just tracks completion/reset of `self` and returns
  * 1 (reset)/0 (still finishing). If connected, picks a player slot from
- * the session's +0x3fc negotiation value, pumps RX (sub_8002E20) and TX
- * (sub_8002D44) at most once each per call, and once both sides report
+ * the session's +0x3fc negotiation value, pumps RX (ReceiveSaveTransferChunk) and TX
+ * (SendSaveTransferChunk) at most once each per call, and once both sides report
  * complete, waits ~0x1e extra polls before finally returning 0
  * ("settled"). Returns 2 if the session's +0x3fc value is neither 0 nor
  * 1 (unrecognised role).
  *
- * Its two siblings (sub_8002D44/sub_8002E20, src/graphics/
+ * Its two siblings (SendSaveTransferChunk/ReceiveSaveTransferChunk, src/graphics/
  * settings_menu8a2.c) stay parked - both need r7 as genuine scratch,
  * and this exact agbcc build never includes r7 in a function's
  * automatic callee-save push/pop (see the doc comment above their
@@ -24,7 +24,7 @@ extern void sub_8002D44(struct settings_sync_pump *self);
  * instruction-for-instruction transcription of the ROM's own
  * disassembly like the rest of this chunk's r7-affected neighbours -
  * see docs/matching/issue-5-overlay-ui-sync.md. */
-s32 sub_8002EFC(struct settings_sync_pump *self)
+s32 PollSaveTransfer(struct settings_sync_pump *self)
 {
     register s32 result asm("r0");
 
@@ -98,7 +98,7 @@ s32 sub_8002EFC(struct settings_sync_pump *self)
         "cmp r0, #0\n"
         "bne 6f\n"
         "add r0, r4, #0\n"
-        "bl sub_8002E20\n"
+        "bl ReceiveSaveTransferChunk\n"
         "6:\n"
         "movs r1, #0x85\n"
         "lsl r1, r1, #2\n"
@@ -107,7 +107,7 @@ s32 sub_8002EFC(struct settings_sync_pump *self)
         "cmp r0, #0\n"
         "bne 7f\n"
         "add r0, r4, #0\n"
-        "bl sub_8002D44\n"
+        "bl SendSaveTransferChunk\n"
         "7:\n"
         "movs r3, #0\n"
         "ldr r0, [r6]\n"

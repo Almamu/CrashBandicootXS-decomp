@@ -11,7 +11,7 @@ canonicalization, and argument-spill ordering - that no amount of
 respelling, reordering, or register-pinning the C source could close.
 Each was converted to a byte-verified NAKED asm transcription instead,
 the established pattern for this class of gap (see
-`src/system/link_cable.c`'s `sub_8001CB8`/`sub_8001DB4` and
+`src/system/link_cable.c`'s `MakeLinkHandshakeId`/`ResetLinkSessionState` and
 `src/util/math_div_util.c`'s `__div0` for the earliest examples).
 
 **Tracking note**: byte-exact NAKED asm is not treated as "matched" in

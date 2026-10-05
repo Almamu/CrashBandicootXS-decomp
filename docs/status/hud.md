@@ -30,12 +30,12 @@ system from "core" graphics.
   structs there so this file could reuse them.
 
 - `src/graphics/hud_blink.c` (new file, GitHub issue #45):
-  `UpdateHudSlides`, `sub_8028474`, `ShowHudLives`, `ShowHudWumpa`,
+  `UpdateHudSlides`, `ShowHudCrates`, `ShowHudLives`, `ShowHudWumpa`,
   `ShowHudCounters`, `StepHudSlide` - a 3-slot icon-blink animation timer
   (per-frame tick, three per-slot triggers, and the generic single-slot
   advance they share); see `docs/matching.md` for two codegen gotchas
-  hit along the way. Extended by GitHub issue #46 with `sub_8028568`/
-  `sub_802856C` - a setter/increment pair on the same central-state
+  hit along the way. Extended by GitHub issue #46 with `SetHudCrateTotal`/
+  `IncHudCrateTotal` - a setter/increment pair on the same central-state
   object's `+0x28` field.
 
 - `src/graphics/hud_icon_widget.c` (new file, GitHub issue #46):
@@ -65,7 +65,7 @@ system from "core" graphics.
   above) carries no `#if NON_MATCHING` guard at all any more.
 
 - `src/graphics/hud_icon_widget5.c` (new file, GitHub issue #46):
-  `sub_8028AC4`, `FontGetTileCount`, `FontSetPos`, `FontNewLineAt`,
+  `FontHeightToLines`, `FontGetTileCount`, `FontSetPos`, `FontNewLineAt`,
   `FontGetMargin`, `FontSetMargin`, `FontGetY`, `FontGetX`,
   `FontSetTileBase` - trivial `struct icon_manager` getter/setter/
   trampoline-forwarder family. Also includes `DestroyFont`
@@ -86,8 +86,8 @@ system from "core" graphics.
 
 - `src/graphics/hud_stat_widget2.c`, `hud_digit_array.c`,
   `hud_stat_widget3.c` (GitHub issue #45's dispatcher family):
-  `sub_802757C`, `UpdateHudClock`, `InitHud`, `sub_802732C`,
-  `sub_8027940`, `UpdateHudWumpa`, `sub_8027E88`. All plain C built with
+  `UpdateHudBoss`, `UpdateHudClock`, `InitHud`, `ConfigureHudParts`,
+  `UpdateHudCrates`, `UpdateHudWumpa`, `UpdateHudPercentCounters`. All plain C built with
   old_agbcc (`hud_stat_widget2.c`/`hud_stat_widget3.c` moved to it). Six
   of them were NAKED until the NAKED retry pass. The "r7 miscompile"
   that parked them turned out to be a compiler mismatch: under

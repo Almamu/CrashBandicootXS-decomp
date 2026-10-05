@@ -46,7 +46,7 @@ r1/r2/r3/r4" thunks), like issue #21's `input_ctrl`.
   at +0xC), derives `type` (+0x78) from the record or forces it from `kind`
   (3/9-12 -> 4, 4 -> 2, 5 -> 3, 6 -> 6, 8 -> 7), and for types 1/5/6/7
   attaches a `struct mover` (type 6 uses `sub_801961C` instead when
-  `sub_80233B4(gLevelState) == 1`). Callers: `trigger_effect.c`,
+  `GetBossIndex(gLevelState) == 1`). Callers: `trigger_effect.c`,
   `graphics_loading_21280.c`, `graphics_loading_21668.c`.
   - `CheckPlatformContact` (+0x0C) gates `sub_801AB98` on the player
     (`gPlayer`) being active and within 0x7FFF on both axes.
@@ -54,7 +54,7 @@ r1/r2/r3/r4" thunks), like issue #21's `input_ctrl`.
     `GetSpriteHitbox`, overlap via `AabbOverlaps`, then a classification into
     push-left/right (1/2), land-on-top (8) or hit-from-below (4) using the
     player's anim-record collision box (`anim_rec` +4..+9) and the
-    `sub_800FDC8` edge probe; it then moves the player (`sub_8007398`),
+    `sub_800FDC8` edge probe; it then moves the player (`SetEntityPos`),
     sets `carried` (+0xAC) / `+0x68 = 8` when landing, and fires the
     player's method +0x68 (`_call_via_r4`) with event 0x0C/0x0F/0x10/0x11
     depending on the object type (the 3/4 variants gated on

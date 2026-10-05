@@ -85,11 +85,11 @@ const u8 gStaticData_0816BF00[8] = {
     0, 0, 1, 0, 0, 0, 0, 0,
 };
 
-/* The {x, y, z} scale triples of sub_8011248 (game_loop52.c) and
- * sub_801192C (game_loop53.c). */
-const s32 gStaticData_0816BF08[3] = {
+/* The {x, y, z} scale triples of UpdateExtraLifeHop (game_loop52.c) and
+ * UpdateWumpaHop (game_loop53.c). */
+const s32 gExtraLifeHopWidths[3] = {
     0x300, 0x0, 0x200,
 };
-const s32 gStaticData_0816BF14[3] = {
+const s32 gWumpaHopWidths[3] = {
     0x300, 0x0, 0x200,
 };

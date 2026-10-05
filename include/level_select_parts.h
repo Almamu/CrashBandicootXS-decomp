@@ -74,7 +74,7 @@ struct level_item
     u8 *vtable;                 // 0x10
 };
 
-extern void ***gUnknown_030012D0;
+extern void ***gSpriteBankSet;
 extern void *gPaletteCache;
 extern u8 gLevelSelectEntryVtable[];
 
@@ -86,7 +86,7 @@ extern void ResetSpriteFrameTimer(struct sprite *part);
 extern void ResetSpriteFrameIndex(struct sprite *part);
 extern void SetSpriteAnimDone(struct sprite *part, s32 arg);
 extern s32 GetSpriteAnimPaletteSlot(struct sprite *part);
-extern void sub_800737C(struct sprite *part, s32 x, s32 y);
+extern void SetEntityPixelPos(struct sprite *part, s32 x, s32 y);
 extern void DrawSpriteWithOffset(struct sprite *part, s32 dx, s32 dy);
 extern void AdvanceSpriteAnim(struct sprite *part);
 extern void UnlockPalette(void *cache, u8 record);
@@ -114,7 +114,7 @@ typedef void (*dtor_fn)(void *self, s32 flags);
 
 static inline struct anim_table *AnimTable(s32 offset)
 {
-    return (struct anim_table *)((u8 *)**gUnknown_030012D0 + offset);
+    return (struct anim_table *)((u8 *)**gSpriteBankSet + offset);
 }
 
 /* Shows animation frame `frame`, clamped to the animation's last one. */

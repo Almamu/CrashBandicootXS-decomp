@@ -99,9 +99,9 @@ found the *same* code shape in both: set one field of a passed-in struct
 to a ROM data pointer, then conditionally call `OperatorDelete` (matched,
 `src/graphics/oam_count.c`/`graphics.c`) based on a bit in the second
 argument. Both point at a data symbol from the same family -
-`gCtrlVtable`/`gStaticData_087E3BEC` - which turns out to be
+`gCtrlVtable`/`gEntityVtable` - which turns out to be
 **93 distinct, individually-labeled, variable-sized entries** in
-`data/data.s` (`gStaticData_087E3BEC` onward, sizes from `0x58` to
+`data/data.s` (`gEntityVtable` onward, sizes from `0x58` to
 `0x78`+ bytes each in the two sampled) - a genuinely large table, clearly
 separate from the 3-vtable/7-category actor system this document already
 confirmed. Read as **per-placeable-object-type descriptors** - crates,
@@ -205,7 +205,7 @@ the user asked directly whether it's genuinely all `fx`. It isn't - and
 most of it, on direct reading, turns out to be `hud` again, just with
 real evidence behind it this time instead of ROM proximity:
 
-- **`sub_8027940`** (1052 B, the biggest function in the gap): reads a
+- **`UpdateHudCrates`** (1052 B, the biggest function in the gap): reads a
   value via `GetCrateCount`, compares it to 99, and - when over two
   digits - calls `__divsi3(value, 100)` then `__divsi3(value, 10)`
   + `__modsi3(_, 10)` (the "atan2 helper" and the "generic division
@@ -215,16 +215,16 @@ real evidence behind it this time instead of ROM proximity:
   struct (`+0x30` field, capped against a per-glyph-set max read from a
   table). This is a textbook **numeric counter widget update** - almost
   certainly a score display.
-- **`sub_8027E88`** (1400 B, the largest function in the whole zone):
+- **`UpdateHudPercentCounters`** (1400 B, the largest function in the whole zone):
   calls `_call_via_r1` (immediately next to the matched `_call_via_r2`/
   `_call_via_r3` text-drawing helpers), computes a value, and branches
   specially on `cmp r1, #0x64` (100) before writing per-digit glyph
   indices the same way as above. Reads as a **percentage counter**
   (a "XX% complete" style display, cmp-100 handling the 3-digit special
   case) - not fx at all.
-- **The `sub_802710C`/`InitHudPart`/`InitHud`/`sub_802732C` cluster**
+- **The `sub_802710C`/`InitHudPart`/`InitHud`/`ConfigureHudParts` cluster**
   (992 B): sets up a fixed 34-slot OAM array, pulling its per-slot
-  constructor pointer from `gStaticData_087E4CB4` - a member of the
+  constructor pointer from `gHudPartVtable` - a member of the
   *same* 93-entry entity-descriptor family this document already tied
   to `game_loop`/`actor`. Called directly by both `UpdateGameFrame` and
   `SetupActorVramPool` (a real `graphics_loading`/actor landmark, not a
@@ -249,17 +249,17 @@ label it was given under time pressure.
 ### Read the rest of the cluster: it's a full HUD stat-widget family with one dispatcher
 
 Kept reading past the two samples above - the other five members of that
-same 8-function connected component (`UpdateHud`, `sub_802757C`,
+same 8-function connected component (`UpdateHud`, `UpdateHudBoss`,
 `UpdateHudClock`, `UpdateHudLives`, `UpdateHudWumpa`) all turn out to be more
 widgets of the same shape, not a mix. `UpdateHud` is the group's
-**dispatcher**: it calls `sub_8027E88` (the percentage counter) when a
+**dispatcher**: it calls `UpdateHudPercentCounters` (the percentage counter) when a
 flag is set, unconditionally calls `UpdateHudLives`, checks a mode value to
-pick between `sub_802757C` and a fallback OAM-init path, conditionally
-calls `UpdateHudClock`, then unconditionally calls `sub_8027940` (the score
+pick between `UpdateHudBoss` and a fallback OAM-init path, conditionally
+calls `UpdateHudClock`, then unconditionally calls `UpdateHudCrates` (the score
 counter) and `UpdateHudWumpa`. The other four:
 
-- **`sub_802757C`**: sets up *two* icon slots (not digits) gated on a
-  count from `sub_8023378`, showing a second icon only once the count
+- **`UpdateHudBoss`**: sets up *two* icon slots (not digits) gated on a
+  count from `GetBossHealth`, showing a second icon only once the count
   exceeds 1 - reads as an icon-based indicator (an "×N" style icon plus
   count, lives being the obvious guess) rather than a digit counter.
 - **`UpdateHudClock`**, **`UpdateHudLives`**, **`UpdateHudWumpa`**: three more
@@ -267,7 +267,7 @@ counter) and `UpdateHudWumpa`. The other four:
   (`GetClockMinutes`/`GetLives`/`GetWumpa` respectively) and each with
   a **change-detection cache** (comparing against a stored `last value`
   field before redoing the digit-split work) - the same
-  divide-by-100/divide-by-10-and-mod idiom as `sub_8027940` throughout.
+  divide-by-100/divide-by-10-and-mod idiom as `UpdateHudCrates` throughout.
 
 So the full 3.9 KB cluster, not just the two pieces read first, is one
 coherent **HUD stat-widget family**: one dispatcher plus several
@@ -296,22 +296,22 @@ struct `gLevelState` points at: a single, large, field-accessed
 globals - tying together everything read in the `game_loop` and `hud`
 investigations so far.
 
-One field stands out: **`+0xC4`** is read by `sub_8023378` (feeding the
-icon-indicator widget, `sub_802757C`) and separately by `sub_80233B4`
+One field stands out: **`+0xC4`** is read by `GetBossHealth` (feeding the
+icon-indicator widget, `UpdateHudBoss`) and separately by `GetBossIndex`
 (the exact function `UpdateHud`'s dispatcher itself branches on to
-choose between `sub_802757C` and a fallback path). Observed values
-`0x14`-`0x17`; `sub_80233B4` maps them through a 5-entry jump table to
+choose between `UpdateHudBoss` and a fallback path). Observed values
+`0x14`-`0x17`; `GetBossIndex` maps them through a 5-entry jump table to
 `{3, 2, 0, 1, -1}` and anything else falls through to `-1` - reads as a
 small, closed **level-type/game-mode enum** (4 real variants: normal
 level? boss? bonus round? time trial? - unconfirmed which is which)
-gating which HUD layout applies. `sub_8023378` itself, for three of
+gating which HUD layout applies. `GetBossHealth` itself, for three of
 those four modes, computes `3 - self_ptr->+0x10` from a separate
 sub-object at `+0x1C8` - a countdown-from-3 formula that's a strong,
 concrete hint the icon widget is **lives remaining**, only shown in
 modes where lives are tracked at all.
 
 The two remaining getters (`+0x70` via `GetCrateCount`, feeding the score
-counter `sub_8027940`; `+0x74` via `GetLives`, feeding `UpdateHudLives`)
+counter `UpdateHudCrates`; `+0x74` via `GetLives`, feeding `UpdateHudLives`)
 are adjacent 4-byte fields with no comparable smoking-gun evidence yet -
 plausible as a related stat pair (score/bonus, or two different
 collectible counts) but not confirmed the way the lives field is. Worth
@@ -1125,7 +1125,7 @@ A further pass read 4 more actor-zone functions. **New mechanism:
 that circles the player: integrates position toward the player
 (`gActorList`) with the same exponential-smoothing lerp shape
 already documented for the camera-follow filter
-(`SnapCamera`/`sub_8026D8C`, `>>5` damping), maintains a growing
+(`SnapCamera`/`StepCameraFacing`, `>>5` damping), maintains a growing
 radius accumulator and an angle index, and looks up
 **`gSineTable`** at the angle index and at `angle+0x40` (a
 90-degree-phase-shifted pair) - a sine/cosine table read. **This is
@@ -1953,7 +1953,7 @@ a `rand()`-based state on entry, then dispatches a 10-case jump table;
 one case conditionally calls `sub_802599C(gEntityFlags)`, the
 same helper already tied to that global in `CreateCrate`'s finding -
 reads as an AI/behavior pattern selector for some actor type.
-**`sub_8010B6C`** (488 B, partially read) is a proximity/nearest-
+**`ResolveCollisionCandidates`** (488 B, partially read) is a proximity/nearest-
 neighbor search over the hot `gPlayer` global's leading
 fields against a target, populating a stack array of pointers into
 `self`'s own fields - not fully characterized, the loop body past
@@ -1970,7 +1970,7 @@ identical tag-field triple (`self+0x31`/`+0x2f`/`+0x27`) across both
 functions. **`CheckSpritePickup`** (444 B) is entity-vtable-dispatched (5
 separate hits in the `gStaticData_087Exxx` family - one shared generic
 slot reused by 5 different entity records), and dispatches an 8-case
-table that calls the already-documented **`sub_8025BAC`** (the
+table that calls the already-documented **`SpawnEffectPart`** (the
 runtime-indexed 12-byte-record spawner in `gSpriteBankTable`) -
 a concrete new tie between the entity-vtable system and that master
 array. **`sub_801A114`** (404 B) is also entity-vtable-dispatched, and
@@ -2358,7 +2358,7 @@ streamer: each iterates tiles along one axis, calling
 nudges a caller-supplied position pointer by `±(tile_edge_distance<<8)`
 (Q8.8 sub-pixel push-out math) - the concrete gameplay consumer tying
 the terrain/collision streaming system to actual movement collision
-response. **`sub_8025BAC`** (248 B) is another `gSpriteBankTable`
+response. **`SpawnEffectPart`** (248 B) is another `gSpriteBankTable`
 consumer, but with a genuinely different access pattern: it indexes
 the table's "first real record" base pointer by **`param1 * 12`** - a
 real runtime-indexed array of **12-byte records**, unlike the fixed
@@ -2367,7 +2367,7 @@ resolving part of the open "is the body index-scanned" question (yes,
 here, by caller-supplied index). Spawns an object via `CreateMovingSprite`,
 clamped against `gLevelLayers`'s screen bounds - reads as an
 object/pickup spawner selected by a runtime record index.
-**`sub_8026C90`** (252 B) is a level-boundary clamp/spring-back
+**`StepCameraDirectional`** (252 B) is a level-boundary clamp/spring-back
 function on `self+0xc`/`self+8` offset fields, gated per-direction by
 a blocked-flag nibble - shape consistent with feeding the hardware-
 window-register system (`EndBonusRound`/`SetCheckpointAtPlayer`), not directly
@@ -2388,7 +2388,7 @@ A further pass read three more functions, none entity-vtable-
 dispatched, finding a concrete link between the medal-results screen
 and a per-level counting pass. **`TickLevelClock`** (192 B) is a
 countdown-gated periodic event trigger: on its countdown reaching 0 it
-reaches through `gUnknown_030012D0`'s triple-dereference into
+reaches through `gSpriteBankSet`'s triple-dereference into
 `gSpriteBankTable` at header-relative offset **`0x8d<<2 = 0x234`**
 - a new offset, only 3 words after the already-documented `0x228`
 (`0x8a<<2`). Otherwise it falls into a nested-counter cascade
@@ -2444,7 +2444,7 @@ concrete resolution worth folding into `actor_anim.h`'s comment on
 that field.
 
 Five more extend already-documented conventions without introducing
-new ones: **`sub_8025B0C`** wraps the already-documented `sub_8025BAC`
+new ones: **`LaunchEffectPart`** wraps the already-documented `SpawnEffectPart`
 (`gSpriteBankTable` 12-byte-record spawner) and writes the exact
 `self+0x60`/`0x48`/`0x4c`/`0x50` directional-target field layout
 already confirmed five other places - a sixth instance.
@@ -2505,7 +2505,7 @@ hand-transcribed NAKED functions - same doc).
 **`PressSwitchCrate`/`AddBrokenCrate`** are two more entry points into the
 `EndBonusRound` wraparound lap-counter system (same `self+0x70`/`0xbc`
 field pair), and on threshold-cross call `SpawnCrateGem` with the same
-`self+0x1c0`/`0x1c4` fields the 15-slot table's `sub_802209C` writes -
+`self+0x1c0`/`0x1c4` fields the 15-slot table's `SpawnCrateGemMarker` writes -
 a concrete new tie between that table slot and this counter system.
 
 **Two entity-vtable hits extend the decoded-tile-chunk system, one
@@ -2550,7 +2550,7 @@ list-of-lists structure testing for nonzero - a sibling of the
 already-documented tally chain, likely an item/flag-presence check
 rather than a full tally.
 
-**`SnapCamera`/`sub_8026D8C`** (a linked pair) are a strong
+**`SnapCamera`/`StepCameraFacing`** (a linked pair) are a strong
 **camera-follow/damping filter candidate**: clamp a target position
 against symmetric boundary constants (~±4725), then compute an
 exponential-smoothing lerp (`self += (target - self) / 4`) toward it -
@@ -2578,7 +2578,7 @@ fills in `GetBgStreamerRow`'s role (the background streamer's "get source
 pointer" helper, previously called but never characterized).
 **`CheckAllCratesBroken`** closes the loop on the `self+0x1c0`/`0x1c4`
 counter-notification chain - the consumer/trigger side of the 15-slot
-table's `sub_802209C` writer, forwarding into `SpawnCrateGem` alongside
+table's `SpawnCrateGemMarker` writer, forwarding into `SpawnCrateGem` alongside
 `PressSwitchCrate`/`AddBrokenCrate`'s threshold-cross paths. **`RedrawBgLayer`**
 is a generalized multi-line sibling of `ScrollBgLayer`. **`GetTerrainType`**
 extends the `CheckTerrainFlag` characterization (`sub_8025228` above)
@@ -2624,9 +2624,9 @@ already-investigated functions from an earlier round's report were
 never individually named in this document's prose.** For completeness:
 `ScrollLevelLayers`/`ResetLevelLayers` (a P1/P2 HUD value-plus-alternates
 display), `UnpackSaveData`/`PackSaveData` (a getter/setter pair for a
-packed state round-tripping through `MemCopy32`), `sub_8024E24`
+packed state round-tripping through `MemCopy32`), `StepBgLayerScroll`
 (a two-line text draw, same family as the icon-renderer shapes), and
-`sub_8026108`/`sub_802613E` (tile-alignment modulo-32 helpers; `sub_802613E` really starts at `0x0802613C` and a third, `sub_802612C`, sits between them - see docs/matching/issue-42-bg-scroll-layer.md). Two
+`GetBgLayerScreenIndex`/`sub_802613E` (tile-alignment modulo-32 helpers; `sub_802613E` really starts at `0x0802613C` and a third, `sub_802612C`, sits between them - see docs/matching/issue-42-bg-scroll-layer.md). Two
 functions are genuinely new to this pass: **`ClipPooledBgLayerColumns`/`ClipPooledBgLayerRows`**
 are bounded-range bulk-release helpers for the cache-slot system -
 each loops calling the already-documented single-call release
@@ -2716,7 +2716,7 @@ everyone to be ready" barrier.
 `==3` *and* `entry+0x4E==0xA` - the **exact same field offset**
 `gCrateHitResponse` indexes by, tying this directly back to the
 physics-subsystem investigation. Counts the matches and calls
-`sub_8023140(gLevelState, count)` - reads as **"count how many
+`AddPendingSwitchCrates(gLevelState, count)` - reads as **"count how many
 objects are currently in state `0xA`"**, plausibly a
 remaining-enemies/collectibles check feeding into level-completion
 logic, unconfirmed. Immediately after, calls `ClearPartList` on five hot
@@ -2763,7 +2763,7 @@ tables:
   check - `gRoomFrameCount` is the same counter the post-fade
   investigation above also touches) **and** an input check
   (`RandRange(2)`), then queues something via
-  `sub_8025BAC(gEntitySpawner, 28, 4, ...)`. Reads as a periodic,
+  `SpawnEffectPart(gEntitySpawner, 28, 4, ...)`. Reads as a periodic,
   input-gated trigger - every ~128 frames, only while a specific button
   state holds.
 - **`SetDingodileState`** (472 B): calls the `_call_via_r2` trampoline once,
@@ -2901,7 +2901,7 @@ first entry (`0x087E3BEC`), a new low-address data point in that family.
 **`sub_8019EBC`** is the **first confirmed consumer of
 `gSpriteBankTable`** (the 729 KB master asset table) beyond its own
 header-reading code: allocates a tagged object, reads through
-`gUnknown_030012D0`'s chain at offset `0x288`, then dispatches on a
+`gSpriteBankSet`'s chain at offset `0x288`, then dispatches on a
 mode parameter to spawn effect objects - the same "spawn effect type N"
 shape as `graphics_loading`'s trigger-effect family, but this one
 concretely ties back into the master table rather than a per-level
@@ -3036,7 +3036,7 @@ that accumulated value - separate handlers per edge direction/combo
 camera/viewport struct isn't just position data, it's also tracking
 recent collision events. Ends by computing a final corrected
 position/rect (again via `gCrateHitResponse`) and handing everything
-off to **`sub_8010D54`** with ~8 packed arguments - the actual
+off to **`AddCollisionCandidate`** with ~8 packed arguments - the actual
 apply/commit step.
 
 **One caller only** (`sub_80109A4`, itself unread) - and the 27 distinct
@@ -3165,7 +3165,7 @@ calls `_call_via_r2` (text width) **four times**, computing
 labels, and writes the results into OAM-shaped position fields via three
 more of the "hot IWRAM globals" already tied to `game_loop`/`hud`
 (`gLargeFont`/`030012DC`/`030012FC`). Pure text-layout work.
-`sub_8002114` (1488 B, second-biggest) is genuinely different again -
+`HandleLinkSerial` (1488 B, second-biggest) is genuinely different again -
 it manipulates `0x04000128`/`0x0400012A` (**`REG_SIOCNT`/`SIODATA8`**,
 the GBA's serial-IO/link-cable hardware), checking specific control
 bits before touching per-object state. Neither is audio in any sense.
@@ -3177,7 +3177,7 @@ hanging off it) leaves **one dominant component of 118 functions,
 19.2 KB - effectively the entire file** minus a small 2-function SIO
 pair and a handful of tiny leaf singletons (**correction from a later
 coverage-check fork: the SIO footprint here is bigger than "2
-functions" - `sub_8001F50`, 452 B, also touches SIOCNT/RCNT and the
+functions" - `UpdateLinkSession`, 452 B, also touches SIOCNT/RCNT and the
 interrupt-control registers `0x04000200`/`0x04000208` (IE/IME) and is
 not part of the already-identified pair; not read to completion, but
 a concrete third+ member of this file's SIO/link-cable cluster,
@@ -3204,12 +3204,12 @@ cable hardware handling, unrelated to either audio or UI.
 ### Narrowed down which screen `overlay_ui` is: a settings/options menu
 
 A parallel fork read three more of the dominant component's biggest
-functions and found a specific, distinctive shape. **`sub_80041BC`**
+functions and found a specific, distinctive shape. **`DrawSaveSlots`**
 (848 B) queries a selection/enabled state for a list item
 (`IsSaveSlotEmpty(handle, 0/1)`), then either draws it **highlighted** or
-plain via **`sub_8003F30`** (652 B), which calls **`itoa`** (matched
+plain via **`DrawSaveSlotStats`** (652 B), which calls **`itoa`** (matched
 libc-equivalent) to render a *numeric value* at a computed screen
-position - not a fixed label string, a live number. `sub_80041BC` has
+position - not a fixed label string, a live number. `DrawSaveSlots` has
 exactly **six callers**, in a tight address cluster - almost certainly
 six near-identical per-item wrappers, one per menu row.
 
@@ -3234,7 +3234,7 @@ runtime string-table lookup this document already characterized, all
 the way back in the very first `game_loop`/DARK1 investigation - so the
 row titles are real text, just RAM-resident and populated from ROM
 elsewhere, out of reach of this static read. Three of the four rows
-share the same shape: draw a value via `sub_80041BC`, gate a flag on
+share the same shape: draw a value via `DrawSaveSlots`, gate a flag on
 whether the value `==4` - consistent with **four discrete 0-4-level
 sliders** (5 positions each), the `==4` check plausibly a "maxed out"
 indicator. The fourth breaks the pattern - skips the slider draw
@@ -3243,7 +3243,7 @@ a level.
 
 **Couldn't name the actual settings** (no literal ASCII text - the
 label table is RAM-resident) - but did find one more concrete tie:
-`sub_800450C` copies from **the very first four tables in the
+`InitSaveMenuIcons` copies from **the very first four tables in the
 documented per-level `gStaticData_0816Bxxx` family**
 (`gStaticData_0816B13A`/`15A`/`17A`/`19A`) into this screen's own
 per-item arrays. A real, direct link between this settings screen and
@@ -3265,7 +3265,7 @@ handler driving the same per-row updates the rows themselves use -
 consistent with, not a correction to, the settings-menu reading.
 
 **A follow-up fork read four more functions in this zone.**
-`sub_8003D3C` (500 B) and `DrawPauseMenuRows` (416 B, list-iterating over a
+`DrawYesNoPrompt` (500 B) and `DrawPauseMenuRows` (416 B, list-iterating over a
 `self+0x1c`-counted, `self+0x14`-based `*8`-stride array) both fit the
 documented settings-row text-layout pattern exactly (label lookup via
 `GetUiText`, the `gUiTextTables[gLanguage]` runtime
@@ -3350,7 +3350,7 @@ pause-menu screens sharing one constructor toolkit**:
   than shared) → `LoadGraphicsPackage` with a per-screen package
   (`gStaticData_0816B284` for `InitPauseMenu`, `gStaticData_0816C484`
   for `InitPowerDialog`) → allocate an object → reach through
-  `gUnknown_030012D0`'s triple-dereference into `gSpriteBankTable`
+  `gSpriteBankSet`'s triple-dereference into `gSpriteBankTable`
   at a **new header-relative offset each time**. New offsets this
   pass: `0x8a<<2=0x228` (`InitPauseMenu`), `0xc6<<1=0x18C`
   (`InitPauseTimeTrialPage`), `0xe4<<1=0x1C8` (`InitPowerDialog`) - combined with the
@@ -3472,16 +3472,16 @@ internally complete at the narrative level, just not exhaustively
 named function-by-function.
 
 **Follow-up resolved both leads fully, correcting the "pause-menu
-constructor" speculation: both `sub_8001F50` and `sub_8001DB4` are
+constructor" speculation: both `UpdateLinkSession` and `ResetLinkSessionState` are
 core members of the SIO/link-cable multiplayer subsystem, not UI
-code.** `sub_8001F50` is the **link-connection/handshake driver**,
+code.** `UpdateLinkSession` is the **link-connection/handshake driver**,
 called repeatedly (once per frame) until the link is established or
 times out: configures `SIOCNT`/`SIODATA32_H` for multiplayer mode,
 checks status bits, sets up interrupts (`IE`/`IME`, two registered
 ISR handlers), programs hardware **Timer 3** as a handshake timeout,
-and on timeout calls `LinkStop` then **`sub_8001DB4`** to reset the
-session and retry. `sub_8001DB4` is the **link-session reset/init
-function**: sets `gUnknown_03000800 = 1` (a "link active" flag,
+and on timeout calls `LinkStop` then **`ResetLinkSessionState`** to reset the
+session and retry. `ResetLinkSessionState` is the **link-session reset/init
+function**: sets `gLinkSessionReset = 1` (a "link active" flag,
 referenced from only two sites in the whole codebase, both in this
 SIO region), resets 4 per-player communication slot buffers, and -
 the clinching detail - writes the literal **`0x1234`** to each
@@ -3490,7 +3490,7 @@ player's data-exchange field before programming `SIOMLT_SEND`
 sync/ready magic value from the standard link-cable handshake
 protocol (matches libgba/devkitPro's well-known constant), unambiguous
 hard evidence this resets a multiplayer session, not a UI screen.
-Only 3 callers total for `sub_8001DB4`, all inside this same SIO
+Only 3 callers total for `ResetLinkSessionState`, all inside this same SIO
 cluster. This deepens (but doesn't contradict) the earlier finding
 that this file's SIO footprint is bigger than "2 functions," and
 retires the pause-menu speculation as a false lead.
@@ -3509,7 +3509,7 @@ previously-uncharacterized member of the per-level data family, right
 near its tail) by an 8-byte stride using its own second parameter.
 
 **Called directly by `UpdateGameFrame` itself**, plus three siblings
-(`sub_802364C`/`sub_8023658`/`sub_802369C`) all living in the separate
+(`sub_802364C`/`PlayIntroCutscene`/`PlayBootCutscene`) all living in the separate
 `UpdateGameFrame`-`MainLoop` cluster - a real, non-hub connection, not
 inferred. Reads as a **level-start or screen-transition setup step**:
 reset the affine background to identity and load a level-indexed
@@ -3609,7 +3609,7 @@ Each of the two confirmed twins checks a specific bit of
 IDs `0xA` vs `9`) via `SetGemPlatform`. If that top-level bit isn't set at
 all, it instead **spawns a full visual effect** - tags the object
 (`self+0x2D=6`), wires an animation-table pointer through
-`gUnknown_030012D0`, builds it via the same
+`gSpriteBankSet`, builds it via the same
 `ResetSpriteFrameTimer`/`ResetSpriteFrameIndex`/`SetSpriteAnimDone` OAM trio seen throughout this
 document, and registers it via `AddToPartList`. Falls back to a **shared**
 sound ID `0xC` when the type-specific path is muted/overridden. Reads
@@ -3666,7 +3666,7 @@ a plain array, no `{0,ptr}` pairing):
 | 8 | `sub_8021280` | Confirmed distinct bonus/reward spawner - a real slot, not part of the twins' behavioral pattern. |
 | 9 | `SpawnBonusPlatform` (~104 B) | Sound-only variant with its own gate (`IsBonusRoundDone(gLevelState)` OR `gLevelState+0x8c`, the twins' own field) picking sound `7`/`5`, closing via a *different* accessor (`SetBonusPlatform` vs. the twins' `SetGemPlatform`). |
 | 10-11 | `sub_80218E8`/`SpawnRockPlatform` (36 B) | More `CreatePlatform` trampolines, ids 6/8. |
-| 12 | `sub_802209C` (40 B) | New shape: a plain state-write slot, no sound/spawn - packs two args and calls `SetCrateGemPos`, which just stores them into `gLevelState+0x1c0`/`+0x1c4`. |
+| 12 | `SpawnCrateGemMarker` (40 B) | New shape: a plain state-write slot, no sound/spawn - packs two args and calls `SetCrateGemPos`, which just stores them into `gLevelState+0x1c0`/`+0x1c4`. |
 | 13-14 | `SpawnFlame`/`SpawnSeaweed` (136 B each) | Full-OAM-trio spawners, header offsets **`+0x210`**/**`+0x21C`** - two more `gSpriteBankTable` offsets, extending that family to at least 8 confirmed values (`0xd8`, `0x18C`, `0x1C8`, `0x210`, `0x21C`, `0x228`, `0x234`, `0x240`, `0x27C`). |
 
 **Adjacent non-slot sibling**: `sub_80217D0`, sitting between slots 13
@@ -3684,7 +3684,7 @@ characterized.
 
 A follow-up fork checked what the rest of `graphics_loading`'s 71-
 function remainder actually is. **~50 of the 71 reference
-`gUnknown_030012D0`** (the triple-dereference into
+`gSpriteBankSet`** (the triple-dereference into
 `gSpriteBankTable`'s confirmed 12-byte-record array) - essentially
 the whole remainder, not a grab-bag of independent unknowns. Five
 samples read in full confirm two known shapes recur widely: a
@@ -3741,7 +3741,7 @@ other 2 matched genuine no-op stubs (`nullsub_21`/`nullsub_22`) -
 `nullsub_21`'s address recurs as a shared fallback slot **8 times**
 across the table, the same "shared no-op fallback" convention already
 documented for the 42-slot action table. **One slot of this new
-leading segment was read: `sub_801E990`** - takes 3 Q8.8-shifted x/y/z
+leading segment was read: `SpawnStartMarker`** - takes 3 Q8.8-shifted x/y/z
 args, checks the level-type enum via the documented `GetSpawnAtStart`,
 packs bits into `gPlayer+0x28`, writes the position into
 `gPlayer`'s target - a position/state-write handler on the
@@ -3751,10 +3751,10 @@ trigger-effect segments.
 
 **Net picture**: one unified ~92-slot table - ~31 slots the documented
 `menu_ui` text/dialog handlers, 15 slots the documented trigger-effect
-spawners, and ~40 leading slots (starting `sub_801E990`) a newly-found,
+spawners, and ~40 leading slots (starting `SpawnStartMarker`) a newly-found,
 not-yet-individually-characterized segment reading from
 `gPlayer`/`gLevelState`. The "~50 spawner-family
-functions referencing `gUnknown_030012D0`" found in the section above
+functions referencing `gSpriteBankSet`" found in the section above
 are very likely largely drawn from this same combined table's various
 segments, not evidence of yet another distinct table elsewhere.
 
@@ -3772,7 +3772,7 @@ settings/state bit - and two new record indices came out of it:
 **record 38** (`0x1C8`) - the *same* record `overlay_ui`'s
 `InitPowerDialog` dialog-box spawner already uses, now also confirmed
 feeding plain entity spawns, not just dialogs - and **record 32**
-(`0x180`). Only slot 0 (`sub_801E990`) stands apart with the
+(`0x180`). Only slot 0 (`SpawnStartMarker`) stands apart with the
 position/state-write shape on `gPlayer`; also confirmed:
 four `nullsub_21` shared-fallback slots in a row, the same convention
 seen elsewhere in this table and the 42-slot action table. Net effect:
@@ -3784,7 +3784,7 @@ parameters throughout.
 
 A fork isolated `graphics_loading`'s truly-unsampled remainder - the
 ~20 functions in this cluster that don't reference
-`gUnknown_030012D0` - from the ~50 already known to be the
+`gSpriteBankSet` - from the ~50 already known to be the
 `gSpriteBankTable` spawner family. Of 9 read, **5 turn out to be
 more slots of the unified 92-slot table** (confirmed via raw-pointer
 hits), extending its characterization further: a distinct constructor
@@ -3800,20 +3800,20 @@ index word and DMAs it to VRAM address `0x06017800` - a graphics
 primitive ("fill one BG tilemap row with a single tile/palette value")
 not seen elsewhere in this document. More interesting-looking:
 **`CreateEntitySpawner`/`DestroyEntitySpawner`**, a constructor/consumer pair, calls
-`sub_8025D4C(gEntitySpawnFuncs, 0x5c, ...)` - passing the 92-slot
+`SetEntitySpawnerTable(gEntitySpawnFuncs, 0x5c, ...)` - passing the 92-slot
 table's own base address plus a size `0x5c` (92 bytes). `sub_801E96C`
 is a flags-clear utility, same shape family as the already-documented
 trivial bit-helpers.
 
 **Follow-up disproves the "local vtable copy" hypothesis - it's a
 generic `{base, count}` descriptor pair, nothing table-specific.**
-`sub_8025D4C(self, r1, r2)` is a trivial 2-field setter
+`SetEntitySpawnerTable(self, r1, r2)` is a trivial 2-field setter
 (`self->field_0=r1; self->field_4=r2`), and its zeroing counterpart
-`sub_8025D6C` is likewise a generic 2-word zeroer - no loop, no copy,
+`InitEntitySpawner` is likewise a generic 2-word zeroer - no loop, no copy,
 no table-specific logic in either body. The table-relatedness lives
 entirely in the caller's arguments: `CreateEntitySpawner` allocates an 8-byte
 object, zeroes it, stores it in `gEntitySpawner`, then calls
-`sub_8025D4C(obj, &gEntitySpawnFuncs, 0x5c)` - the object just
+`SetEntitySpawnerTable(obj, &gEntitySpawnFuncs, 0x5c)` - the object just
 remembers `{table_base, 0x5c}` as a small descriptor, plausibly so
 some other, not-yet-identified consumer can do bounds-checked indexed
 access into the table rather than hardcoding its address everywhere.
@@ -3826,7 +3826,7 @@ fits the established `+0x18`-pointer convention exactly, no anomalies.
 
 **`sub_802364C`** (8 B): a trivial wrapper, `PlayCutscene(self, 2)` -
 confirms `PlayCutscene`'s second parameter is a context/mode selector, as
-suspected. **`sub_8023658`**: calls `PlayCutscene(self, 1)` then
+suspected. **`PlayIntroCutscene`**: calls `PlayCutscene(self, 1)` then
 **`StopSfx(gAudioContext, 0x5D)`** - a *second*, distinct
 audio-triggering function alongside `PlaySfx`, sharing `PlaySfx`'s own
 first argument global (`gAudioContext`). Confirms the same "screen
@@ -3844,10 +3844,10 @@ byte (`handler+0x24 = 1`), with a special-case for parameter `-1`
 suggesting "stop all channels" versus "stop one specific channel."
 Six callers total, spanning *both* the `overlay_ui` region
 (`sub_8012238`/`sub_8012AF4`/`ActionCtrlSetTargetAnim`) and the `game_loop` region
-(`sub_8023658`/`RunSlideshow`/`EndSlide`) - narrower than `PlaySfx`
+(`PlayIntroCutscene`/`RunSlideshow`/`EndSlide`) - narrower than `PlaySfx`
 (a true hub), but still cross-cutting, used whenever some unrelated
 subsystem needs to "stop this sound if it's currently playing." Fits
-`sub_8023658`'s pattern exactly: pair a screen-transition setup with
+`PlayIntroCutscene`'s pattern exactly: pair a screen-transition setup with
 silencing a specific sound, not starting a new one.
 
 ## Found the origin point: `InitLevelState` allocates nearly every hot global this document tracks
@@ -3858,7 +3858,7 @@ something bigger than any individual function read this session:
 (corrected above) - it's a **conditional bonus/reward-object spawner**,
 checking three accessors on `gLevelState` and the 36-slot
 per-level table's `+0x4` field before spawning a 100×100 or 40×40
-tagged object (type `0x12`) via `sub_80071E4`/`sub_80070EC`, gated by a
+tagged object (type `0x12`) via `CreateEntity`/`SetEntitySize`, gated by a
 viewport flag and paired with a `CreatePlatform` sound call - a real,
 distinct function, just not part of the family it was guessed to
 belong to.
@@ -3874,7 +3874,7 @@ entire document has been referencing all session** -
 the OAM shadow buffer, matching `HideUnusedOamEntries`'s `struct
 oam_shadow_buffer*` parameter found back in the `hud` investigation),
 `03001304`, and clears `gDispcnt` (the fade cluster's own mode
-byte). One field, `gUnknown_030012D0`, gets pointed at a **brand-new
+byte). One field, `gSpriteBankSet`, gets pointed at a **brand-new
 symbol never seen anywhere else in this document**:
 `gSpriteBankTable` (the `0x084Axxxx` region - entirely outside every
 address range mapped so far, a genuinely fresh lead).
@@ -3913,11 +3913,11 @@ count}`-style entries pointing into the preceding graphics blob,
 consumed by a loader. Exact record stride not pinned down (too few
 samples).
 
-**`gUnknown_030012D0`** (184 references - genuinely hot, and already
+**`gSpriteBankSet`** (184 references - genuinely hot, and already
 seen this session in `InitHud`'s icon-array setup and the "trigger
 effect type N" family) **is a pointer *variable*, not the struct
 itself** - `InitLevelState` sets it to `&gSpriteBankTable`, and code
-dereferences through it (`**gUnknown_030012D0 + 4` at one confirmed
+dereferences through it (`**gSpriteBankSet + 4` at one confirmed
 site) to reach the table's own first field, itself another pointer.
 
 **Follow-up fork pinned down the schema, and corrected the earlier
@@ -3925,11 +3925,11 @@ guess at how many places reference it.** Only **two direct symbolic
 references exist in the whole codebase** (inside `InitLevelState` itself,
 and inside a separate function, `RunPauseMenu`, in
 `asm/code_3_1_7.s`) - not a wide-reaching table lookup, a narrow one.
-`gUnknown_030012D0` turns out to be a **pointer-to-pointer**:
+`gSpriteBankSet` turns out to be a **pointer-to-pointer**:
 `InitLevelState` allocates 4 fresh bytes, stores *that* address in
-`gUnknown_030012D0`, then stores `&gSpriteBankTable` into those 4
-bytes - so `*gUnknown_030012D0 == &gSpriteBankTable`, matching the
-`**gUnknown_030012D0+4` read found earlier. **`SetPaletteCacheSource`/
+`gSpriteBankSet`, then stores `&gSpriteBankTable` into those 4
+bytes - so `*gSpriteBankSet == &gSpriteBankTable`, matching the
+`**gSpriteBankSet+4` read found earlier. **`SetPaletteCacheSource`/
 `InitPaletteCache` turned out to be unrelated to this table's content** -
 generic pool-allocator constructors (a 16-slot free-list setup, and a
 plain struct-zeroer) reused all over the codebase for unrelated pools;
@@ -3956,8 +3956,8 @@ specific thread.
 
 **Follow-up: the body is not a flat record array - it's a header
 pointing to distinct sub-structures at different fixed offsets.** Two
-more consumers reach through `gUnknown_030012D0`'s same three-level
-dereference (`gUnknown_030012D0 → *P → &gSpriteBankTable →
+more consumers reach through `gSpriteBankSet`'s same three-level
+dereference (`gSpriteBankSet → *P → &gSpriteBankTable →
 *table` = the table's own `+0x0` "first real record" field) to
 header-relative offsets not previously sampled:
 
@@ -4002,7 +4002,7 @@ records, starting at record 0, zero gaps** - and every one of the 9
 evenly by 12 - they're records **18, 33, 38, 44, 45, 46, 47, 48, 53**
 respectively, not scattered ad-hoc offsets: each consumer function is
 simply hardcoded to a fixed record-index literal, exactly matching
-`sub_8025BAC`'s already-documented `param1*12` runtime-indexed access
+`SpawnEffectPart`'s already-documented `param1*12` runtime-indexed access
 to the same array. (The `CreateLevelSelectCursor`/28-byte-record finding above
 still stands as real - record 48's `ptr_A`/`ptr_B` themselves point to
 a *further* array of 28-byte sub-records, a second, nested table -

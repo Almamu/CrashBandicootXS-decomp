@@ -387,7 +387,7 @@ void SetLevelSelectEntryBox(struct level_item *self, s32 kind)
 void SetLevelSelectEntryPos(struct level_item *self, s32 *pos)
 {
     SetPosQ8(self->icon, pos[0], pos[1] - 3);
-    sub_800737C(self->frame, pos[0], pos[1]);
+    SetEntityPixelPos(self->frame, pos[0], pos[1]);
 }
 
 /* Method +0x20. */

@@ -44,7 +44,7 @@ already reach its terrain tile cache at `+0x20`.
   to BG palette RAM, clearing color 0.
 - **`DestroyLevelLayers(self, flags)`** - destructor. Frees the asset if one is
   set, destroys each layer through its method table's `destroy` entry
-  (called with 3), the tile cache via `sub_8025444(.., 3)`, clears
+  (called with 3), the tile cache via `DestroyTileCache(.., 3)`, clears
   `gLevelLayersSingleton`, and frees `self` when `flags & 1`.
 - **`SetLevelScroll(self, x, y)`** - Q8 position to scroll: clamp each axis
   to `>= 0`, `>> 8`, cap at the max scroll.

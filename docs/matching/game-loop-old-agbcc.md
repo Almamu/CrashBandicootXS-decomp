@@ -25,7 +25,7 @@ No register pins, no asm in a function body and no NAKED.
 | `GetCollisionChunk`, `GetTerrainHeights`, `GetSolidTerrainHeights`, `sub_8025228` | `game_loop3.c` |
 | `GetTerrainType` | `game_loop4.c` |
 | `DropExtraLife` | `game_loop29.c` |
-| `sub_8025BAC` | `game_loop14.c` |
+| `SpawnEffectPart` | `game_loop14.c` |
 | `ScrollBgLayer`, `DrawBgLayerColumn` | `game_loop16.c` |
 | `sub_8026A18`, `sub_8026AE8` | `game_loop46.c` |
 | `InitHud` | `hud_digit_array.c` |
@@ -39,8 +39,8 @@ Still NAKED, with the remaining gap under old_agbcc:
 | `DropWumpa` | 5 halfwords: one `movs r0, #0` scheduled after the wrong address |
 | `DecodeLayerChunk` | 13 halfwords: sign-extension order around the delta byte, and the copy loop's index order |
 | `DecodeCollisionChunk` | 30 halfwords: the accumulator and the pair loop's pointer swap r4/r5 |
-| `sub_802732C` | 32 bytes: the ROM keeps three copies of one nibble insert |
-| `sub_8025B0C` | 61 halfwords: `&srcBox` held in a callee-saved register across a call |
+| `ConfigureHudParts` | 32 bytes: the ROM keeps three copies of one nibble insert |
+| `LaunchEffectPart` | 61 halfwords: `&srcBox` held in a callee-saved register across a call |
 | `RunCutscenePlayer` | 77 halfwords: the ROM reloads `&gOamBuffer` at each OAM flush |
 | `SpawnRoomEntities` | 153 halfwords: the second pass's list searches are peeled and index-based |
 | `RunRoom` | not attempted |
@@ -67,8 +67,8 @@ Still NAKED, with the remaining gap under old_agbcc:
 - **Existing types.** `SetupRoomBlend` uses `level_menu.h`'s
   `union blend`; `ScrollBgLayer`/`DrawBgLayerColumn` use `bg_scroll_layer.h`.
 
-`sub_8025B0C` takes seven arguments (`pool, arg1, kind, margin, z,
-speed, src`); its call into `sub_8025BAC` is an ordinary six-argument
+`LaunchEffectPart` takes seven arguments (`pool, arg1, kind, margin, z,
+speed, src`); its call into `SpawnEffectPart` is an ordinary six-argument
 call, not the "stack-reuse coincidence" its old comment described.
 
 ## Pins that turned out to be unnecessary
@@ -82,13 +82,13 @@ without them).
 
 ## Later pass: NAKED retry (mid45)
 
-`sub_802732C` (`hud_digit_array.c`) is now plain C. Its three separate
+`ConfigureHudParts` (`hud_digit_array.c`) is now plain C. Its three separate
 nibble-insert copies survive when the two inner stores go through a
 `SetPal` inline, and the slot tests are `switch`es. See
 [naked-retry-mid45.md](naked-retry-mid45.md).
 
 ## Later pass (strag1)
 
-`DropWumpa`, `sub_8025B0C`, `DecodeLayerChunk` and `RunCutscenePlayer` from the
+`DropWumpa`, `LaunchEffectPart`, `DecodeLayerChunk` and `RunCutscenePlayer` from the
 "still NAKED" table above are now real C, all under old_agbcc with no
 register pins. See [strag1-naked-retry.md](strag1-naked-retry.md).

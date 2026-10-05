@@ -45,7 +45,7 @@ extern s32 gUnknown_03001388;
 extern s32 gUnknown_0300138C;
 extern u8 *gLevelState;
 extern void *gOamBuffer;
-extern void *gUnknown_03001304;
+extern void *gInput;
 extern void *gObjVramCursor;
 extern void *gHud;
 extern u32 gKeys;
@@ -153,7 +153,7 @@ s32 InitActorCategory(s32 category)
 
         state = &gLevelState;
         for (;;) {
-            UpdateKeys(gUnknown_03001304);
+            UpdateKeys(gInput);
             AdvanceCellAnim();
             status = RunActorCategoryFrame();
             if ((*state)[0x8c] != 0)

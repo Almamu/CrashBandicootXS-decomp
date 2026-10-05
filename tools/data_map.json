@@ -348,9 +348,9 @@
     "UpdateEnemyBob",
     "sub_800C97C",
     "UpdateExtraLife",
-    "sub_8011248",
+    "UpdateExtraLifeHop",
     "UpdateWumpa",
-    "sub_801192C",
+    "UpdateWumpaHop",
     "UpdateZoomBg",
     "MovePolarAkuAku",
     "JetpackBomberStateCircle",
@@ -420,10 +420,10 @@
   {
    "address": "0x0816AF10",
    "size": 552,
-   "name": "gStaticData_0816AF10",
+   "name": "gCrc16Table",
    "consumers": [
-    "sub_8001CB8",
-    "sub_8002114"
+    "MakeLinkHandshakeId",
+    "HandleLinkSerial"
    ],
    "consumer_files": [
     "system/link_cable.c",
@@ -441,15 +441,15 @@
    "format": "CRC-16/CCITT lookup table (poly 0x1021, u16[256]) + 0x28 trailing bytes",
    "effort": "easy",
    "confidence": "high",
-   "notes": "Link-cable packet checksum (sub_8001CB8, seed 0x1234).",
+   "notes": "Link-cable packet checksum (MakeLinkHandshakeId, seed 0x1234).",
    "status": "converted: src/data/link_crc_16af10.c"
   },
   {
    "address": "0x0816B138",
    "size": 2,
-   "name": "gStaticData_0816B138",
+   "name": "gMenuCursorText",
    "consumers": [
-    "sub_8003D3C"
+    "DrawYesNoPrompt"
    ],
    "consumer_files": [
     "graphics/settings_menu.c"
@@ -470,7 +470,7 @@
    "size": 32,
    "name": "gStaticData_0816B13A",
    "consumers": [
-    "sub_800450C"
+    "InitSaveMenuIcons"
    ],
    "consumer_files": [
     "graphics/settings_menu.c"
@@ -494,7 +494,7 @@
    "size": 32,
    "name": "gStaticData_0816B15A",
    "consumers": [
-    "sub_800450C"
+    "InitSaveMenuIcons"
    ],
    "consumer_files": [
     "graphics/settings_menu.c"
@@ -518,7 +518,7 @@
    "size": 32,
    "name": "gStaticData_0816B17A",
    "consumers": [
-    "sub_800450C"
+    "InitSaveMenuIcons"
    ],
    "consumer_files": [
     "graphics/settings_menu.c"
@@ -542,7 +542,7 @@
    "size": 34,
    "name": "gStaticData_0816B19A",
    "consumers": [
-    "sub_800450C"
+    "InitSaveMenuIcons"
    ],
    "consumer_files": [
     "graphics/settings_menu.c"
@@ -1544,7 +1544,7 @@
    "consumers": [
     "BlastNearbyCrates",
     "BreakCratesInArea",
-    "sub_8010908"
+    "IsCrateKindBreakable"
    ],
    "consumer_files": [
     "system/game_loop25.c",
@@ -1686,9 +1686,9 @@
   {
    "address": "0x0816BF08",
    "size": 12,
-   "name": "gStaticData_0816BF08",
+   "name": "gExtraLifeHopWidths",
    "consumers": [
-    "sub_8011248"
+    "UpdateExtraLifeHop"
    ],
    "consumer_files": [
     "system/game_loop52.c"
@@ -1710,9 +1710,9 @@
   {
    "address": "0x0816BF14",
    "size": 12,
-   "name": "gStaticData_0816BF14",
+   "name": "gWumpaHopWidths",
    "consumers": [
-    "sub_801192C"
+    "UpdateWumpaHop"
    ],
    "consumer_files": [
     "system/game_loop53.c"
@@ -2265,7 +2265,7 @@
    "size": 20,
    "name": "gStaticData_0816C484",
    "consumers": [
-    "sub_80047F8",
+    "LoadSaveMenuBg",
     "InitPowerDialog",
     "InitLevelSelect",
     "LoadLanguageSelectBg"
@@ -3177,7 +3177,7 @@
    "name": "gHudPartAnims",
    "consumers": [
     "InitHud",
-    "sub_802732C"
+    "ConfigureHudParts"
    ],
    "consumer_files": [
     "graphics/hud_digit_array.c"
@@ -3202,10 +3202,10 @@
    "name": "gHudPartPositions",
    "consumers": [
     "InitHud",
-    "sub_802732C",
-    "sub_802757C",
-    "sub_8027940",
-    "sub_8027E88"
+    "ConfigureHudParts",
+    "UpdateHudBoss",
+    "UpdateHudCrates",
+    "UpdateHudPercentCounters"
    ],
    "consumer_files": [
     "graphics/hud_digit_array.c",
@@ -5114,7 +5114,7 @@
     {
      "address": "0x084A5610",
      "size": 672,
-     "format": "56 struct sprite_bank {anims, frames, u16 unk_08 (always 0), u16 animCount} (12 B); code reaches bank N as **gUnknown_030012D0 + 12*N",
+     "format": "56 struct sprite_bank {anims, frames, u16 unk_08 (always 0), u16 animCount} (12 B); code reaches bank N as **gSpriteBankSet + 12*N",
      "element_size": 12,
      "element_count": 56,
      "effort": "easy",
@@ -7140,11 +7140,11 @@
   {
    "address": "0x087E3BEC",
    "size": 88,
-   "name": "gStaticData_087E3BEC",
+   "name": "gEntityVtable",
    "consumers": [
-    "sub_80071E4",
-    "sub_800725C",
-    "sub_80073BC",
+    "CreateEntity",
+    "InitEntity",
+    "DestroyEntity",
     "DestroySpriteObj",
     "DestroyPeriodicSpawner"
    ],
@@ -8240,7 +8240,7 @@
   {
    "address": "0x087E4CB4",
    "size": 104,
-   "name": "gStaticData_087E4CB4",
+   "name": "gHudPartVtable",
    "consumers": [
     "sub_802710C",
     "InitHudPart"

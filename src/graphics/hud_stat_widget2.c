@@ -6,7 +6,7 @@
  * docs/matching/issue-45-hud-stat-widget-dispatcher.md for the full
  * semantic account: positions and clamps the primary icon slot
  * (parts[22]) unconditionally, then a second icon (parts[23]) only when
- * sub_8023378's count exceeds 1.
+ * GetBossHealth's count exceeds 1.
  *
  * Built with old_agbcc (the whole file matches under it). The earlier
  * NAKED note blamed an "r7 wrong-value miscompile" at the clamp sites;
@@ -24,7 +24,7 @@ extern s32 gHudSlideOffset;
 extern void *gLevelState;
 extern struct hud_pos gHudPartPositions[];
 extern void DrawHudPart(struct hud_digit_part *part, s32 x, s32 y);
-extern s32 sub_8023378(void *state);
+extern s32 GetBossHealth(void *state);
 extern s32 GetClockMinutes(void *state);
 extern s32 GetClockSeconds(void *state);
 extern s32 GetClockTenths(void *state);
@@ -48,7 +48,7 @@ static inline void SetPartPos(s32 x, s32 y, struct hud_digit_part *part)
         _p->frame_index = _f;                                             \
     }
 
-void sub_802757C(struct hud_counter *self)
+void UpdateHudBoss(struct hud_counter *self)
 {
     struct hud_digit_part *part;
     s32 count;
@@ -58,7 +58,7 @@ void sub_802757C(struct hud_counter *self)
     CLAMP_FRAME(part, self->parts[22].anim_index, 0);
     DrawHudPart(part, 0, 0);
 
-    count = sub_8023378(gLevelState);
+    count = GetBossHealth(gLevelState);
     if (count > 0)
     {
         struct hud_digit_part *second = &self->parts[23];
@@ -78,7 +78,7 @@ void sub_802757C(struct hud_counter *self)
  * always gets a fixed desired frame of 0 (a single-frame icon, not a
  * digit). All six slots get redrawn unconditionally afterward via
  * `DrawHudPart` - slot 21 appears twice in that list, matching the ROM
- * exactly. Old_agbcc, like `sub_802757C`; `CLAMP_FRAME` binds the
+ * exactly. Old_agbcc, like `UpdateHudBoss`; `CLAMP_FRAME` binds the
  * part pointer before the frame value, which is the order the ROM
  * computes them in. */
 void UpdateHudClock(struct hud_counter *self)

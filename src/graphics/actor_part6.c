@@ -24,13 +24,13 @@ s32 GetSpriteObjPriority(void)
 }
 
 extern void *OperatorNew(s32 size);
-extern struct actor *sub_800725C(struct actor *self);
+extern struct actor *InitEntity(struct actor *self);
 extern void ResetSpriteObj(void *arg0);
 extern u8 gSpriteObjVtable[];
 
 /* Allocates a new `struct actor`-shaped object (`OperatorNew`),
- * initializes it via `sub_800725C` (already matched in graphics.c -
- * wires up `gStaticData_087E3BEC` and clears flags), then overwrites
+ * initializes it via `InitEntity` (already matched in graphics.c -
+ * wires up `gEntityVtable` and clears flags), then overwrites
  * its table with `gSpriteObjVtable` instead and clears its
  * part-object fields via `ResetSpriteObj` (already matched in
  * actor_part.c). `arg0` becomes `field_08`, `arg1`/`arg2` become the
@@ -39,7 +39,7 @@ struct actor *CreateSpriteObj(u16 arg0, u16 arg1, u16 arg2)
 {
     struct actor *part = OperatorNew(0x40);
 
-    sub_800725C(part);
+    InitEntity(part);
     part->table = gSpriteObjVtable;
     ResetSpriteObj(part);
     part->field_08 = arg0;
@@ -55,24 +55,24 @@ s32 GetSpriteObjClassId(void)
 }
 
 extern void OperatorDelete(void *arg0);
-extern u8 gStaticData_087E3BEC[];
+extern u8 gEntityVtable[];
 
-/* Same `gStaticData_087E3BEC`/conditional-`OperatorDelete` shape as
- * `sub_80073BC` (already matched in `graphics.c`). */
+/* Same `gEntityVtable`/conditional-`OperatorDelete` shape as
+ * `DestroyEntity` (already matched in `graphics.c`). */
 void DestroySpriteObj(struct actor *self, u32 arg1)
 {
-    self->table = gStaticData_087E3BEC;
+    self->table = gEntityVtable;
     if (arg1 & 1) {
         OperatorDelete(self);
     }
 }
 
-/* Same `sub_800725C`/table-swap/`ResetSpriteObj` shape as `CreateSpriteObj`
+/* Same `InitEntity`/table-swap/`ResetSpriteObj` shape as `CreateSpriteObj`
  * above, but re-initializes an existing `self` instead of allocating
  * a new one. */
 struct actor *InitSpriteObj(struct actor *self)
 {
-    sub_800725C(self);
+    InitEntity(self);
     self->table = gSpriteObjVtable;
     ResetSpriteObj(self);
     return self;

@@ -259,7 +259,7 @@ extern void DestroySpriteObj(struct actor *self, u32 arg1);
 /* Overwrites `part->table` with `gUiSpriteObjVtable`, then tail-
  * calls `DestroySpriteObj` (already matched in `actor_part6.c`) with the
  * same `arg1` - which immediately overwrites `table` again with
- * `gStaticData_087E3BEC` before its own conditional `OperatorDelete`
+ * `gEntityVtable` before its own conditional `OperatorDelete`
  * call. Reproduces the ROM's apparently-redundant double table write
  * as-is. */
 void DestroyUiSpriteObj(struct actor *part, u32 arg1)

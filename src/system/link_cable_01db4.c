@@ -1,13 +1,13 @@
 #include "core.h"
 #include "link_session.h"
 
-extern void sub_8001CB8(u8 *self);
-extern u8 gUnknown_03000800;
+extern void MakeLinkHandshakeId(u8 *self);
+extern u8 gLinkSessionReset;
 
 /* Link-session reset/init - see docs/rom_map.md's SIO/link-cable
- * section. Sets the link-active flag (`gUnknown_03000800`), resets a
+ * section. Sets the link-active flag (`gLinkSessionReset`), resets a
  * handful of session-header fields, seeds a per-session 8-byte
- * handshake id via `sub_8001CB8` (self+0x30), mirrors that id into two
+ * handshake id via `MakeLinkHandshakeId` (self+0x30), mirrors that id into two
  * more session-header slots and every one of the 4 per-player 0xc8-byte
  * sub-records (self+playerIndex*0xc8), resets each per-player
  * sub-record's own RX-ring bookkeeping, writes the literal `0x1234`
@@ -17,7 +17,7 @@ extern u8 gUnknown_03000800;
  *
  * Built with old_agbcc plus `-fno-rerun-loop-opt` (this object is on
  * both OLD_AGBCC_OBJS and NO_RERUN_LOOP_OPT_OBJS in the Makefile; the
- * flag would change the matching sub_8002114, hence the split). See
+ * flag would change the matching HandleLinkSerial, hence the split). See
  * docs/matching/last-ten-naked-retry.md and
  * docs/matching/last-eleven-naked-retry.md. */
 static inline void ring_reset(struct link_ring *r)
@@ -33,7 +33,7 @@ static inline void ring_reset(struct link_ring *r)
  *   over one pointer (`p[9]`/`p[8]` read, `p[0]`/`p[1]` written) with its
  *   own counter `k` (sharing `i` with the outer loop moved every
  *   register).
- * - `id` is a local passed to sub_8001CB8 and copied into `src` inside
+ * - `id` is a local passed to MakeLinkHandshakeId and copied into `src` inside
  *   the outer loop; loop motion moves that copy out, which is the ROM's
  *   `str r4, [sp, #4]`.
  * - field_30 goes through a `f30` base plus an `s32 t` offset, so the
@@ -60,7 +60,7 @@ static inline void ring_reset(struct link_ring *r)
  *   0xc8`'s life by one insn; that breaks its priority tie with the
  *   nibble pointer, so the pointer gets r4 and the base ip, as in the
  *   ROM. */
-s32 sub_8001DB4(struct link_session *self)
+s32 ResetLinkSessionState(struct link_session *self)
 {
     s32 i, j;
     s32 k;
@@ -70,13 +70,13 @@ s32 sub_8001DB4(struct link_session *self)
     self->field_6 = 0;
     self->field_8 = 0;
     self->field_7 = 0;
-    gUnknown_03000800 = 1;
+    gLinkSessionReset = 1;
     self->field_4 = 0;
     self->field_1c = -1;
     self->field_3fc = -1;
     ring_reset(&self->ring);
     id = self->id;
-    sub_8001CB8(id);
+    MakeLinkHandshakeId(id);
     /* No code: 13 extra references on `id` (see above). */
     asm("" : : "r"(id));
     asm("" : : "r"(id));

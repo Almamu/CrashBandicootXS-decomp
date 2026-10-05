@@ -140,7 +140,7 @@ extern void *InitBgSetup(void *buf, s32 arg1, s32 arg2, s32 arg3, s32 arg4);
 extern void LoadGraphicsPackage(void *buf, void *asset);
 extern s32 GetBgSetupControl(void *buf);
 extern void *gLevelState;
-extern void ***gUnknown_030012D0;
+extern void ***gSpriteBankSet;
 extern void *PackSaveData(void *arg0);
 extern void InitPauseMenuInfo(struct pause_screen_results *self);
 extern struct actor *InitUiSpriteObj(struct actor *part);
@@ -240,7 +240,7 @@ struct pause_screen_results *InitPauseMenu(struct pause_screen_results *self)
 
             *field_c0_addr = icon;
             {
-                register u8 *base asm("r1") = (u8 *)(**gUnknown_030012D0);
+                register u8 *base asm("r1") = (u8 *)(**gSpriteBankSet);
                 asm volatile("mov r3, #0x8a\n\tlsl r3, r3, #2\n\tadd %0, %0, r3" : "+r" (base) :: "r3");
                 icon->field_20 = (void **)base;
             }

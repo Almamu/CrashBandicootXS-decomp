@@ -37,7 +37,7 @@ extern u8 gWumpaVtable[];
 
 /* Sets `self->table` then tail-calls `DestroySpriteObj` (already matched in
  * `actor_part6.c`), which unconditionally overwrites `table` again
- * with `gStaticData_087E3BEC` - so this function's own store is
+ * with `gEntityVtable` - so this function's own store is
  * immediately clobbered by the callee. Kept faithfully anyway; the
  * compiler can't see through the opaque call to know the store is
  * dead. */

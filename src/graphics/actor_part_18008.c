@@ -170,7 +170,7 @@ typedef void (*hop_fn3)(void *self, s32 a, s32 b, s32 c);
 
 extern void *gAudioContext;
 extern void *gLevelState;
-extern u8 ***gUnknown_030012D0;
+extern u8 ***gSpriteBankSet;
 extern struct hop_player *gPlayer;
 extern struct hop_list *gUnknown_030012EC;
 extern void *gUnknown_030012F0;
@@ -587,7 +587,7 @@ void sub_80186F0(struct tiny_tiger *self, struct hop_part *part, s32 n)
     s32 x;
     s32 zero;
 
-    p->bank = (void *)(**gUnknown_030012D0 + 0x294);
+    p->bank = (void *)(**gSpriteBankSet + 0x294);
     {
         /* The ROM loads the tag (5, in r0) before its address, and
          * materializes the 0 it later stores to +0x64/+0x54 here, keeping

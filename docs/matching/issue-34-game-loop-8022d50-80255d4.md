@@ -128,7 +128,7 @@ found (either pass), its `+0x18`-table's `+0x10`/`+0x14` `_call_via_r1`
 trampoline record's returned `+5` byte becomes a `(byte+1)<<8` Q8 delta
 added to the matched entry's own `+4` field, then every entry in its
 `GetCrateAbove` ("get next") neighbor chain has
-`sub_8007398(entry, entry+0, entry+4+delta)` fired on it in turn - a
+`SetEntityPos(entry, entry+0, entry+4+delta)` fired on it in turn - a
 position-resync pass over whatever got linked.
 
 The real-world *meaning* of `redirectInfo`'s two `u32`/`u16` fields
@@ -165,7 +165,7 @@ reconstruction in any meaningful sense, just NAKED asm wearing a C
 function signature. This is the same family of gcc-2.9
 high-register/3-operand-add materialization gap already parked
 elsewhere in this ROM region for similarly register-heavy functions
-(`sub_8025B0C`/`sub_8025BAC`/`DropWumpa`, `ScrollBgLayer`/`DrawBgLayerColumn`
+(`LaunchEffectPart`/`SpawnEffectPart`/`DropWumpa`, `ScrollBgLayer`/`DrawBgLayerColumn`
 above, both keeping `r8` live across most of their bodies). Transcribed
 straight from the confirmed-correct ROM disassembly instead - every
 label, branch and literal-pool placement (including the ROM's four
@@ -283,7 +283,7 @@ cycle into `EndGemPath` (same ping-pong shape, different consumer -
 apparently two independent bitmap "channels"). The loop's tail
 (`IsInBonusRound`/`IsInGemPath` again) decides between two closing
 branches that both refresh the HUD icon via `CountRoomCrates` +
-`sub_8028568`: the "true" branch also refills `self+0xb0`/`0xb8`/`0xb4`
+`SetHudCrateTotal`: the "true" branch also refills `self+0xb0`/`0xb8`/`0xb4`
 (`GetWumpa`/`GetLives`/`GetCrateCount`) via `EnterBonusRoom`; the
 "false" branch only refills `self+0xb4` via `EnterGemPathRoom`. Either way
 the loop re-enters at its own top unless `SelectRoom(&self->0xc4)`

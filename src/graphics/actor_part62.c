@@ -18,7 +18,7 @@ extern s16 gSineTable[];
  *     offset), and toward `posZ+0x200`.
  * "Easing" is a round-toward-zero divide (by 16 for X/Y, by 4 for Z) of
  * the remaining delta, added back onto the cached position - the ROM's
- * own rsb/lsr/add/asr rounding idiom, same shape as `sub_80070EC` in
+ * own rsb/lsr/add/asr rounding idiom, same shape as `SetEntitySize` in
  * docs/matching.md.
  *
  * No register pins needed: the table offsets go through their own locals

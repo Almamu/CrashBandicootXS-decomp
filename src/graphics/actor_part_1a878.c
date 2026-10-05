@@ -107,7 +107,7 @@ struct gobj *CreatePlatform(u16 id, u16 x, u16 y, u16 index, s32 kind)
         break;
     case 6:
         obj->type = 6;
-        if (sub_80233B4(gLevelState) != 1)
+        if (GetBossIndex(gLevelState) != 1)
         {
             void *mem = OperatorNew(0x38);
 
@@ -134,7 +134,7 @@ struct gobj *CreatePlatform(u16 id, u16 x, u16 y, u16 index, s32 kind)
         break;
     }
     AddToPartList(gUnknown_030012EC, obj);
-    obj->anim = (void *)(**gUnknown_030012D0 + 0x1D4);
+    obj->anim = (void *)(**gSpriteBankSet + 0x1D4);
     obj->tag = kind;
     ResetSpriteFrameTimer(obj);
     ResetSpriteFrameIndex(obj);

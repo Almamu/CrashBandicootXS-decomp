@@ -263,7 +263,7 @@ Every isolated per-function compile was diagnostic only, as always
 `.text` bytes, and every other NAKED function's, matching the ROM
 exactly once fully linked (spot-checked directly against
 `arm-none-eabi-objcopy`'d `.o` output and the base ROM before ever
-touching `ldscript.txt`, the same methodology `sub_8002114`'s NAKED
+touching `ldscript.txt`, the same methodology `HandleLinkSerial`'s NAKED
 conversion used).
 
 **File/link-order restructuring required.** Six of these eleven

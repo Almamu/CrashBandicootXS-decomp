@@ -8,26 +8,26 @@
  * fields' meaning isn't confirmed beyond "a byte/word at this offset". */
 
 extern struct actor *InitGroundSprite(struct actor *self);
-extern void sub_8010E2C(void *arg0);
+extern void ResetCollisionQueue(void *arg0);
 extern struct actor *CreateSpriteObj(u16 arg0, u16 arg1, u16 arg2, u16 arg3);
 extern void ResetSpriteFrameTimer(void *part);
 extern void ResetSpriteFrameIndex(void *part);
 extern void SetSpriteAnimDone(void *part, u8 val);
 extern void ResetPlayer(void *selfArg);
 extern u8 gPlayerVtable[];
-extern void ***gUnknown_030012D0;
+extern void ***gSpriteBankSet;
 
 /* Re-initializes `self` (via `InitGroundSprite`, already matched in
  * `actor_part14.c`), then overwrites its table with
  * `gPlayerVtable` and clears its trailing `+0x108`/`+0x10c`
- * fields via `sub_8010E2C` (still raw - a two-field, 4-byte-plus-byte
+ * fields via `ResetCollisionQueue` (still raw - a two-field, 4-byte-plus-byte
  * clear). Allocates a fresh `struct actor`-shaped child object
  * (`CreateSpriteObj(0, 0, 0, 0)`, the same allocator `actor_part6.c`'s
  * `CreateSpriteObj` is - called here with an extra, unused 4th zero
  * argument, the same calling convention already used by
  * `graphics_loading_21d80.c`'s own callers of it) and hooks it up at
  * `self+0xb0`: points its own `+0x20` table-entry pointer at the
- * `gUnknown_030012D0` shared table's `(0xcc << 1)` slot (the same
+ * `gSpriteBankSet` shared table's `(0xcc << 1)` slot (the same
  * idiom `graphics_loading_21d80.c` uses throughout), clears its
  * `+0x2d` byte, and builds it via the standard `ResetSpriteFrameTimer`/
  * `ResetSpriteFrameIndex`/`SetSpriteAnimDone` OAM trio. Clears `self+0xb4`, then
@@ -44,11 +44,11 @@ void *InitPlayer(void *selfArg, u16 arg1, u16 arg2, u16 arg3)
 
     InitGroundSprite((struct actor *)self);
     *(u8 **)(self + 0x18) = gPlayerVtable;
-    sub_8010E2C(self + 0x108);
+    ResetCollisionQueue(self + 0x108);
 
     child = CreateSpriteObj(0, 0, 0, 0);
     *(struct actor **)(self + 0xb0) = child;
-    *(void **)((u8 *)child + 0x20) = (u8 *)(**gUnknown_030012D0) + (0xcc << 1);
+    *(void **)((u8 *)child + 0x20) = (u8 *)(**gSpriteBankSet) + (0xcc << 1);
 
     /* Register-pinned: the ROM keeps this `0` constant alive in `sl`
      * across all three `ResetSpriteFrameTimer`/`ResetSpriteFrameIndex`/`SetSpriteAnimDone` calls

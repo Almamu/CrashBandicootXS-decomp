@@ -110,7 +110,7 @@ picks up the other three next.
   into the next point.
 - **Pinning `arg2` to `r7` explicitly reproduces the confirmed
   categorical r7-pin toolchain bug** this project has already documented
-  for `sub_8007114`/`SpawnBonusPlatform`/`sub_8021280`/`sub_8021480`
+  for `sub_8007114`/`SpawnBonusPlatform`/`sub_8021280`/`SpawnTiny`
   (`docs/status/graphics_loading.md`): the compiler silently drops
   `arg2`'s own truncation code *and* `r7`'s save/restore from the
   prologue's push/pop set entirely once it's explicitly pinned, leaving
@@ -256,7 +256,7 @@ shifted r5/r6/r7 dx/dy/dz register roles either"), predating even this
 issue's round-3/round-4 passes. `arg3`'s target register, r7, is the
 project's confirmed-categorically-buggy pin target
 (`docs/matching.md`, `sub_8007114`/`SpawnBonusPlatform`/`sub_8021280`/
-`sub_8021480`) - explicitly off-limits per this project's standing
+`SpawnTiny`) - explicitly off-limits per this project's standing
 rule, so `arg3` is left unpinned (a plain `u16 a3 = arg3;` local) while
 `arg1`/`arg2` are pinned to r5/r6 (neither is r7, both safe). Several
 register-pressure configurations were tried empirically (isolated

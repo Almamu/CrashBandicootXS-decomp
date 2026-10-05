@@ -15,7 +15,7 @@ described, on top of a third, unfixable one.
 
 ## Matched: `ShowSlidePicture`
 
-The VRAM-bank-toggling tile-asset streamer + `gUnknown_03001314`
+The VRAM-bank-toggling tile-asset streamer + `gSlideshowDispcnt`
 shadow-byte rebuild + palette DMA + `REG_DISPCNT` writer. Two
 gotchas, on top of the `self`/`asset` register pins the first pass
 already found:
@@ -28,7 +28,7 @@ already found:
   "=r"(addr) : "r"(asset) : "r2")` anchor, the same "hardcode the scratch
   register, let the output land wherever" idiom `hud_icon_widget_8a78.c`
   uses.
-- The `gUnknown_03001314` shadow-byte rebuild (`& ~0x10 | bit`) was not
+- The `gSlideshowDispcnt` shadow-byte rebuild (`& ~0x10 | bit`) was not
   actually confirmed correct as the first pass's write-up claimed: gcc's
   front end always schedules the `& ~0x10` mask/byte-read pair *before*
   the toggle-bit `& 1 << 4` shift-and-mask when both are written as

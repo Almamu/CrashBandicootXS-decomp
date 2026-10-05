@@ -1,16 +1,16 @@
 # Last-seven NAKED retry
 
-This pass retried the drafts of `sub_8002114` (#4), `sub_8002E20` (#5)
-and, if time allowed, `sub_8001DB4` (#4). One closed and one draft got
+This pass retried the drafts of `HandleLinkSerial` (#4), `ReceiveSaveTransferChunk` (#5)
+and, if time allowed, `ResetLinkSessionState` (#4). One closed and one draft got
 much closer.
 
 | Function | File | Before | Now | Status |
 |---|---|---|---|---|
-| `sub_8002114` (#4) | `src/system/link_cable.c` | 6 | match (old_agbcc) | Real C |
-| `sub_8002E20` (#5) | `src/graphics/settings_menu8a2.c` | 97 (4 bytes long) | 14 (same size, both compilers) | Draft updated |
-| `sub_8001DB4` (#4) | `src/system/link_cable.c` | 136 | 136 | Not attempted |
+| `HandleLinkSerial` (#4) | `src/system/link_cable.c` | 6 | match (old_agbcc) | Real C |
+| `ReceiveSaveTransferChunk` (#5) | `src/graphics/settings_menu8a2.c` | 97 (4 bytes long) | 14 (same size, both compilers) | Draft updated |
+| `ResetLinkSessionState` (#4) | `src/system/link_cable.c` | 136 | 136 | Not attempted |
 
-## `sub_8002114`: closed
+## `HandleLinkSerial`: closed
 
 What was left was the first receive loop. The loop dump shows why.
 loop.c scans for givs starting at `scan_start` (the loop entry) and
@@ -49,7 +49,7 @@ The constants use the constant-init form, so loop has nothing to hoist.
 following `field_400` copy still reads `self->field_20` (the ROM's
 `ldrh r0, [sl, #0x20]`).
 
-## `sub_8002E20`: 97 to 14
+## `ReceiveSaveTransferChunk`: 97 to 14
 
 - **One 0xc8 register.** thumb `mulsi3`'s output is earlyclobber
   (`=&l`), so local-alloc never ties it to an input. The ROM's
@@ -76,8 +76,8 @@ pointer and `old`, where the ROM uses r1/r7/r2. Extra references on
 ## Helpers
 
 These are in the scratchpad's `last7/`: `d.py`, `var.py`, `rtl.sh`, `fnrtl.py`
-(copies pointed at this worktree), the specs `s1`-`s3` (`sub_8002114`)
-and `e1`-`e10` (`sub_8002E20`).
+(copies pointed at this worktree), the specs `s1`-`s3` (`HandleLinkSerial`)
+and `e1`-`e10` (`ReceiveSaveTransferChunk`).
 
 ## Verification
 

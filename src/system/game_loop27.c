@@ -7,8 +7,8 @@
  * this function is already matched in game_loop26.c; everything here
  * operates on the same `self` type `sub_8010A00`/`ResetCrate` do - the
  * viewport's own "collision box" sub-record embedded at
- * `gPlayer+0x108` (confirmed by `sub_80106DC` in
- * game_loop23.c, which already calls `sub_8010B6C(gPlayer +
+ * `gPlayer+0x108` (confirmed by `ResolvePlayerCollisions` in
+ * game_loop23.c, which already calls `ResolveCollisionCandidates(gPlayer +
  * 0x108)`). Its fields are `struct crate`'s (include/phys_obj.h). */
 
 
@@ -89,13 +89,13 @@ u32 sub_8010AA4(void *selfArg)
     return self->u48.n & 7;
 }
 
-void sub_8010AAC(void *selfArg, u8 val)
+void SetCrateKind(void *selfArg, u8 val)
 {
     struct crate *self = selfArg;
     self->kind = val;
 }
 
-u8 sub_8010AB4(void *selfArg)
+u8 GetCrateKind(void *selfArg)
 {
     struct crate *self = selfArg;
     return self->kind;
@@ -112,7 +112,7 @@ s32 sub_8010AC0(void *selfArg)
 }
 
 /* Overwrites `self+0x4d`'s low 7 bits with `val`, preserving bit 7. */
-void sub_8010AC4(void *selfArg, u32 val)
+void SetCrateState(void *selfArg, u32 val)
 {
     struct crate *self = selfArg;
     u8 v = (u8)val;
@@ -121,7 +121,7 @@ void sub_8010AC4(void *selfArg, u32 val)
     *p = v | (mask & *p);
 }
 
-u32 sub_8010AD8(void *selfArg)
+u32 GetCrateState(void *selfArg)
 {
     /* Register-pinned: the ROM copies `self` into r1 before advancing
      * it, keeping r0 free for the mask constant - a plain `self[0x4d] &
@@ -147,7 +147,7 @@ s32 sub_8010AEC(void *selfArg)
 }
 /* Trailing byte-padding mismatch fix: the function body isn't a
  * multiple of 4 bytes, and the ROM immediately continues with the
- * unlabeled `sub_8010AF8` right below - see matching_decomp_alignment_fix
+ * unlabeled `IsCrateBusy` right below - see matching_decomp_alignment_fix
  * memory. */
 asm(".align 2, 0");
 
@@ -155,7 +155,7 @@ asm(".align 2, 0");
  * it sits directly after `sub_8010AEC`'s padding, at the address the
  * `bx lr`/alignment arithmetic works out to. Boolean getter for
  * `self+0x4d` bit 7. */
-u32 sub_8010AF8(void *selfArg)
+u32 IsCrateBusy(void *selfArg)
 {
     register u8 *p asm("r0") = &((struct crate *)selfArg)->state;
     register u32 mask asm("r1") = 0x80;
@@ -169,7 +169,7 @@ u32 sub_8010AF8(void *selfArg)
 
 /* Sets `self+0x4d` bit 7 and the global "hit" latch
  * `gPlayer+0x80`. */
-void sub_8010B0C(void *selfArg)
+void SetCrateBusy(void *selfArg)
 {
     u8 *p = &((struct crate *)selfArg)->state;
     u32 mask = 0x80;
@@ -185,7 +185,7 @@ void sub_8010B0C(void *selfArg)
 
 /* Clears `self+0x4d` bit 7 and the global "hit" latch
  * `gPlayer+0x80`. */
-void sub_8010B28(void *selfArg)
+void ClearCrateBusy(void *selfArg)
 {
     u8 *p = &((struct crate *)selfArg)->state;
     u32 mask = 0x7f;
@@ -195,7 +195,7 @@ void sub_8010B28(void *selfArg)
     *((u8 *)gPlayer + 0x80) = zero;
 }
 
-void sub_8010B44(void *selfArg, u8 val)
+void SetCrateTouched(void *selfArg, u8 val)
 {
     struct crate *self = selfArg;
     self->touched = val;

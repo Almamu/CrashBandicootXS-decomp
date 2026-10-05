@@ -44,9 +44,9 @@ pass's scope, so left completely untouched.
 `RestoreCheckpoint`/`SetCheckpoint` (checkpoint snapshot restore/stash pair,
 the latter also flushing two spans of the `gEntityFlags` bitmap
 via the `CpuSet` wrapper), `EndGemPath` (progress-accumulate-or-reset
-dispatcher), `sub_802364C`/`sub_8023658`/`sub_802369C` (the
+dispatcher), `sub_802364C`/`PlayIntroCutscene`/`PlayBootCutscene` (the
 `PlayCutscene` mode-trampoline family, one of them also playing a fixed
-SFX), `sub_8023674` (allocates a `0x44c`-byte block and hands it to
+SFX), `ShowCompanyLogos` (allocates a `0x44c`-byte block and hands it to
 `DestroyCompanyLogos`), `nullsub_24` (empty stub), `UnpackSaveData` (bitfield
 unpacker, refreshing its own snapshot first), `PackSaveData` (its
 packer inverse - see the update below, added after this doc's original
@@ -58,12 +58,12 @@ pass).
 
 `src/system/game_loop8.c`: `UpdateRoomFrame` (the DMA3/VRAM refresh pass).
 
-`src/system/game_loop9.c` (`ClearRoomExit`-`sub_802423C`, 5 fns):
+`src/system/game_loop9.c` (`ClearRoomExit`-`ResetObjBuffers`, 5 fns):
 `ClearRoomExit`/`RequestRoomExit`/`IsRoomExitRequested` (a boolean flag
 clear/set/get trio on `gRoomExitRequested`), `ResumeRoomAfterPause` (level-end
 teardown: DMA-copies the level's first palette word into `PLTT`,
 clears it, then re-runs `UpdateRoomFrame`'s refresh pass and four
-`fade_screen_mode2.c` state resets), `sub_802423C` (the shared
+`fade_screen_mode2.c` state resets), `ResetObjBuffers` (the shared
 vram-upload-cursor/OAM-shadow flush tail both `UpdateRoomFrame` and
 `ResumeRoomAfterPause` end with).
 
@@ -103,7 +103,7 @@ vram-upload-cursor/OAM-shadow flush tail both `UpdateRoomFrame` and
   with an explicit `u8 tmp = *src; *dst = tmp;` two-step, forcing the
   read to happen (and the value to be captured) before the destination
   address is computed.
-- **`sub_8023674`'s `nullsub_7` call**: the ROM keeps the freshly
+- **`ShowCompanyLogos`'s `nullsub_7` call**: the ROM keeps the freshly
   allocated block's pointer in r0 *across* the `bl nullsub_7` call and
   only moves it to a callee-saved register afterward - only possible
   because `nullsub_7` (now matched separately, in

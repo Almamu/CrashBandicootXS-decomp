@@ -52,7 +52,7 @@ struct level_state
     u8 spawnAtStart;                // 0x0A8 - the player is placed on the room's start marker (ArmStartSpawn)
     u8 switchPressed;               // 0x0A9 - the switch crate was hit (PressSwitchCrate)
     u8 unk_aa[2];
-    s32 unk_ac;                     // 0x0AC - amount PressSwitchCrate adds to crateCount
+    s32 pendingSwitchCrates;                     // 0x0AC - amount PressSwitchCrate adds to crateCount
     s32 savedWumpa;                 // 0x0B0 - saved on bonus-round entry (UpdateGameFrame), restored or added to by EndBonusRound
     s32 savedCrateCount;            // 0x0B4 - same, also for the gem path; PressSwitchCrate credits it while inBonusRound
     s32 savedLives;                 // 0x0B8 - same
@@ -75,16 +75,16 @@ struct level_state
     s32 gemPlatform;                // 0x1BC - the gem-path platform object (SetGemPlatform)
     s32 crateGemX;                  // 0x1C0 - where the crate gem appears (SetCrateGemPos); low halves go to SpawnCrateGem
     s32 crateGemY;                  // 0x1C4
-    struct level_state_1c8 *unk_1c8; // 0x1C8 - sub_8023318
+    struct level_state_1c8 *boss; // 0x1C8 - SetLevelBoss
 };
 
 COMPILE_TIME_ASSERT(sizeof(struct level_state) == 0x1CC);
 
-/* The record `level_state.unk_1c8` points at (sub_8023378). */
+/* The record `level_state.boss` points at (GetBossHealth). */
 struct level_state_1c8
 {
     u8 unk_00[0x10];
-    s32 unk_10;                     // 0x10 - sub_8023378 returns 3 minus this
+    s32 unk_10;                     // 0x10 - GetBossHealth returns 3 minus this
 };
 
 #endif /* GUARD_LEVEL_STATE_H */

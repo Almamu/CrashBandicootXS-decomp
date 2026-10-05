@@ -4,7 +4,7 @@
 #include "core.h"
 
 /* The link-cable session layouts (src/system/link_cable*.c), as the
- * NON_MATCHING drafts of sub_8001CB8/sub_8001DB4/sub_8001F50 establish
+ * NON_MATCHING drafts of MakeLinkHandshakeId/ResetLinkSessionState/UpdateLinkSession establish
  * (docs/matching/issue-4-6-8-naked-retry.md). */
 struct nibble_pair {
     u8 lo:4;
@@ -58,7 +58,7 @@ struct link_session {
     u8 unused_22[2];
     s32 field_24;
     u8 field_28[8];
-    u8 id[8];           /* 0x30 - sub_8001CB8's handshake id */
+    u8 id[8];           /* 0x30 - MakeLinkHandshakeId's handshake id */
     s32 field_38;
     s32 field_3c;
     struct link_ring ring;         /* 0x40 */

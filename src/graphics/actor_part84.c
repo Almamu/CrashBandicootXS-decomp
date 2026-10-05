@@ -44,7 +44,7 @@ extern u32 gKeys;
 extern void *gAudioContext;
 extern void *gLevelState;
 extern struct act_part *gPlayer;
-extern void *gUnknown_03001304;
+extern void *gInput;
 extern struct cam *gLevelLayers;
 extern struct act_pmf gActionCtrlStateTable[];
 extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
@@ -452,7 +452,7 @@ done:
         }
     }
     if (self->state == 7 || self->state == 9 || self->state == 0xB || self->state == 0xE || self->state == 0x1A) {
-        if (GetDpadDirection(gUnknown_03001304) <= 2) {
+        if (GetDpadDirection(gInput) <= 2) {
             ActQueue27(self, 0, 0);
         } else {
             u8 *slot = &self->next27;

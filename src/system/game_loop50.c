@@ -3,18 +3,18 @@
 /* GitHub issue #12/#14's physics/collision subsystem continues past
  * 0x08010D54 into a large, still-unexamined 25-function/~27KB chunk
  * (asm/code_3_2_17_e560_10d54.s). This file is Phase 1 of that chunk's
- * examination: just the entry point, `sub_8010D54` itself - see
+ * examination: just the entry point, `AddCollisionCandidate` itself - see
  * docs/matching/issue-14-0x08010d54-physics-apply.md for the full
  * semantic map and Phase 2 planning notes on the other 24 functions. */
 
 /* One queued "commit this collision" candidate - the record
- * `sub_8010D54` appends here and `sub_8010B6C` (game_loop28.c, already
+ * `AddCollisionCandidate` appends here and `ResolveCollisionCandidates` (game_loop28.c, already
  * matched) later scans/resolves via `sub_800E08C` (game_loop27.c's own
  * extern declaration for it). Field names/types mirror
  * `sub_800E08C`'s own already-established extern signature exactly,
  * confirmed field-for-field against this function's own stores - both
- * functions operate on the same record shape (`sub_8010B6C`'s doc
- * comment already calls `sub_8010D54` its "mirror image" for exactly
+ * functions operate on the same record shape (`ResolveCollisionCandidates`'s doc
+ * comment already calls `AddCollisionCandidate` its "mirror image" for exactly
  * this reason). 0x24 bytes (0x22 bytes of real fields, naturally
  * padded to a 4-byte multiple by the trailing `s32` alignment). */
 /* A position pair, copied into the record as one 8-byte struct (the
@@ -42,7 +42,7 @@ COMPILE_TIME_ASSERT(sizeof(struct collision_candidate) == 0x24);
 /* The player's own small append-only queue of pending collision
  * candidates, embedded inside the same per-entity collision-state
  * record at `gPlayer + 0x108` that `sub_8010A0C`-`sub_8010B68`
- * (game_loop27.c) and `sub_8010B6C` (game_loop28.c) already operate on
+ * (game_loop27.c) and `ResolveCollisionCandidates` (game_loop28.c) already operate on
  * - confirmed by this function's own caller
  * (`sub_0800D18C`/game_loop47.c) passing exactly that address as `self`.
  * `self+0x44`-`self+0x58` (per game_loop27.c) are further fields of the
@@ -61,11 +61,11 @@ struct collision_queue {
 /* Physics/collision subsystem's **apply/commit step** - the final call
  * `sub_0800D18C` (game_loop47.c) makes at the end of its own per-edge
  * dispatch, per docs/rom_map.md's already-confirmed read: "hands off to
- * `sub_8010D54` with ~8 packed arguments... the actual apply/commit
+ * `AddCollisionCandidate` with ~8 packed arguments... the actual apply/commit
  * step". Appends one `collision_candidate` record to the player's queue
  * (`self`) at `self->candidates[self->count]`, then increments
  * `self->count`. Every field's caller-side value is confirmed against
- * `sub_0800D18C`'s own NAKED call site (the final `bl sub_8010D54` in
+ * `sub_0800D18C`'s own NAKED call site (the final `bl AddCollisionCandidate` in
  * game_loop47.c): `neighbor` is the entity whose collision is being
  * committed (`self` from `sub_0800D18C`'s own perspective), `kind` is
  * its adjusted dispatch id, and the rest are packed position/rect
@@ -80,7 +80,7 @@ struct collision_queue {
  * else is plain C (matches under both agbcc and old_agbcc). */
 #define STACK_ARG_U8_ADDR(ptr, arg) asm("" : "=r"(ptr) : "0"(&(arg)))
 
-void sub_8010D54(struct collision_queue *self, void *neighbor, s32 kind,
+void AddCollisionCandidate(struct collision_queue *self, void *neighbor, s32 kind,
                  s32 field10, s32 field14, s32 field18, struct pos_pair pos,
                  s32 field1c, s32 field20, s32 field21)
 {
@@ -110,10 +110,10 @@ void sub_8010D54(struct collision_queue *self, void *neighbor, s32 kind,
  * one-line "conditional call on bit 0" shape: `OperatorDelete` (VRAM
  * upload manager, matched in graphics.c) only fires when `arg1`'s low
  * bit is set. `src/graphics/actor_part15.c` already externs this
- * function and calls it as `sub_8010E14(self + 0x108, 2)` - i.e. bit 0
+ * function and calls it as `DestroyCollisionQueue(self + 0x108, 2)` - i.e. bit 0
  * clear, so that call site is itself a no-op (the manager call never
  * fires); nevertheless this confirms `self` is the same
- * `struct collision_queue` `sub_8010D54` above operates on (Phase 2 of
+ * `struct collision_queue` `AddCollisionCandidate` above operates on (Phase 2 of
  * docs/matching/issue-14-0x08010d54-physics-apply.md's own planning:
  * this was already flagged there as a "mode-parameterized insert"
  * sibling before being read branch-by-branch - turns out to be this
@@ -121,7 +121,7 @@ void sub_8010D54(struct collision_queue *self, void *neighbor, s32 kind,
  * than selecting an insert mode). */
 extern void OperatorDelete(void *arg0);
 
-void sub_8010E14(void *arg0, s32 arg1)
+void DestroyCollisionQueue(void *arg0, s32 arg1)
 {
     if (arg1 & 1) {
         OperatorDelete(arg0);
@@ -133,8 +133,8 @@ void sub_8010E14(void *arg0, s32 arg1)
  * comment, already noting this exact function) that `unk4` is read
  * back elsewhere as a real field, not unexamined padding, though its
  * own full meaning/width past this one byte remains open. Called as
- * `sub_8010E2C(self + 0x108)` from `actor_part77.c`. */
-void sub_8010E2C(void *arg0)
+ * `ResetCollisionQueue(self + 0x108)` from `actor_part77.c`. */
+void ResetCollisionQueue(void *arg0)
 {
     struct collision_queue *self = arg0;
 

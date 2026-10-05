@@ -9,7 +9,7 @@ against that list.
 Two unrelated things, plus one bigger, previously-only-partially-known
 object family:
 
-- **`sub_8028568`/`sub_802856C`** are a trivial setter/increment pair on
+- **`SetHudCrateTotal`/`IncHudCrateTotal`** are a trivial setter/increment pair on
   the same central blink-timer object `src/graphics/hud_blink.c` already
   documents (`gHud`), extending its known field range to
   `+0x28`. Contiguous with `hud_blink.c`'s existing functions, so they
@@ -50,18 +50,18 @@ object family:
   fixed-count run of characters; `FontMeasureChars`/`FontTextHeight`/
   `FontMeasureText` are text-measurement helpers (line width, block height,
   widest line); `FontUploadTiles` uploads the glyph sheet to OBJ VRAM; the
-  rest of `sub_8028AC4`-`FontSetTileBase` are trivial field
+  rest of `FontHeightToLines`-`FontSetTileBase` are trivial field
   getters/setters/trampoline-forwarders.
 
 ## Matched (17 functions, full clean `make compare` passing)
 
-`src/graphics/hud_blink.c` (appended): `sub_8028568`, `sub_802856C`.
+`src/graphics/hud_blink.c` (appended): `SetHudCrateTotal`, `IncHudCrateTotal`.
 `src/graphics/hud_icon_widget.c`: `DestroyHud`.
 `src/graphics/hud_icon_widget2.c`: `FontDrawChars`.
 `src/graphics/hud_icon_widget3.c`: `FontTextHeight`.
 `src/graphics/hud_icon_widget4.c`: `FontUploadTiles`, `FontSetPalette`,
 `FontResetPalette`.
-`src/graphics/hud_icon_widget5.c`: `sub_8028AC4`, `FontGetTileCount`,
+`src/graphics/hud_icon_widget5.c`: `FontHeightToLines`, `FontGetTileCount`,
 `FontSetPos`, `FontNewLineAt`, `FontGetMargin`, `FontSetMargin`,
 `FontGetY`, `FontGetX`, `FontSetTileBase`.
 
@@ -328,7 +328,7 @@ workarounds around a confirmed compiler bug, this pass transcribed all
 five directly as `NAKED` asm functions instead - the same technique this
 project already uses elsewhere for this exact class of problem
 (`src/util/math_div_util.c`'s `__div0`, `src/audio/gax_swi.c`'s
-`GaxHuffUnComp`, `src/system/link_cable.c`'s `sub_8001CB8`/`sub_8001F50`).
+`GaxHuffUnComp`, `src/system/link_cable.c`'s `MakeLinkHandshakeId`/`UpdateLinkSession`).
 A NAKED function has no compiler-generated prologue/epilogue or
 register allocation at all, so the r7 bug (and any other codegen
 mismatch) is moot - the instructions are typed in verbatim, checked

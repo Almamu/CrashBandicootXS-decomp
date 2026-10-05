@@ -8,12 +8,12 @@
  * docs/matching/issue-38-sound-channel-family.md) and EndSlide
  * (matched, game_loop38.c). */
 
-extern void *gUnknown_03001314;
+extern void *gSlideshowDispcnt;
 
-/* Trivial setter: `gUnknown_03001314 = value` - see game_loop37.c's
+/* Trivial setter: `gSlideshowDispcnt = value` - see game_loop37.c's
  * ShowSlidePicture for the other (bitfield-level) writer of this same
  * global. */
-void sub_8024784(void *value)
+void SetSlideshowDispcnt(void *value)
 {
-    gUnknown_03001314 = value;
+    gSlideshowDispcnt = value;
 }

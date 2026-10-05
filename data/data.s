@@ -42,9 +42,9 @@ gSfxTable:
 	@ Built from sound/sfx_table.json by tools/sfx_table.py.
 	.incbin "build/crashbandicootxs/sound/sfx_table.bin"
 
-@ gStaticData_0816AF10..gStaticData_0816B124: src/data/link_crc_16af10.c
+@ gCrc16Table..gCrash3LinkText: src/data/link_crc_16af10.c
 
-@ gStaticData_0816B138..gStaticData_0816B27C: src/data/menu_tables_16b138.c
+@ gMenuCursorText..gStaticData_0816B27C: src/data/menu_tables_16b138.c
 
 @ gStaticData_0816B284: src/data/bg_package_16b284.c
 
@@ -60,7 +60,7 @@ gSfxTable:
 
 @ gEnemyDefaultAnimMap..gSaucerLabAssistantAnimMap: src/data/popup_tables_16b98c.c
 
-@ gStaticData_0816BB6C..gStaticData_0816BF14: src/data/object_tables_16bb6c.c
+@ gStaticData_0816BB6C..gWumpaHopWidths: src/data/object_tables_16bb6c.c
 
 @ gActionCtrlStateTable..gStaticData_0816C070: src/data/action_table_16bf20.c
 
@@ -957,7 +957,7 @@ gRoom33Asset:
 	@ raw level asset of room33_25233c (docs/levels.md)
 	.incbin "build/crashbandicootxs/data/levels/room33_25233c/asset.bin"
 
-@ gStaticData_087E3BEC..gLogoActorVtable: src/data/entity_vtables_7e3bec.c
+@ gEntityVtable..gLogoActorVtable: src/data/entity_vtables_7e3bec.c
 
 @ 0x087E55E4..0x087E5FCC: the IWRAM image (asm/intr_main.s, src/iwram/),
 @ linked to run at 0x03000000 - the `iwram` section in ldscript.txt.

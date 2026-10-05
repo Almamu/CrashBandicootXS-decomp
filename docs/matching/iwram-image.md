@@ -158,7 +158,7 @@ pool placement).
 `.data` in definition order (checked with `nm`). The hook pointers now
 point at the ARM functions by name, the cutscene language table
 `gCutsceneTexts` at `src/data/cutscenes_16d1c8.c`'s six tables, and
-the pointers into still-raw blobs (`gStaticData_0816AF10`,
+the pointers into still-raw blobs (`gCrc16Table`,
 `gTerrainHeights3`, `gTitleMenuBlinkPalette`) are the blob plus an
 offset. `gGaxHaltFont` is GAX2's Huffman-compressed fatal-error
 font. `sym_iwram.txt` lost the 46 entries below `0x9E8`, which are now

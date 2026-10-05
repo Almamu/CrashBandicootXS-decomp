@@ -50,7 +50,7 @@ extern void *MemCopy32(void *dest, void *src, s32 size);
 extern void CollidePartList(void *manager, struct aabb box, s32 unused, void *compareViewport);
 extern void CollidePlayerWithCrates(void *manager, s32 arg1);
 extern void sub_8008D30(void *manager, s32 arg1);
-extern void sub_80106DC(void);
+extern void ResolvePlayerCollisions(void);
 extern void *gUnknown_030012F0;
 extern void *gCrateList;
 extern void *gUnknown_030012EC;
@@ -88,7 +88,7 @@ void CollidePlayerWithObjects(struct ab9c_obj *self)
         link->unk_4 = cleared;
         CollidePlayerWithCrates(gCrateList, 3);
         sub_8008D30(gUnknown_030012EC, 4);
-        sub_80106DC();
+        ResolvePlayerCollisions();
     }
 }
 asm(".align 2, 0");

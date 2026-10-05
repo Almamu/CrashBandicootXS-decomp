@@ -43,7 +43,7 @@
  * `0xf` path only) placement-record byte `+1` bit `0x1` forces
  * `type = 9`.
  *
- * Sets `self+0x20` to `***gUnknown_030012D0 + 0x174` (the same
+ * Sets `self+0x20` to `***gSpriteBankSet + 0x174` (the same
  * `self+0x20`-pointer-to-manager/`self+0x2d`-tag/0x1c-stride hitbox-
  * record table every sibling in this subsystem uses).
  *
@@ -186,7 +186,7 @@ void *CreateCrate(u16 id, u16 x, u16 y, u16 slot, u8 type)
         }
     }
     special = 0;
-    self->anim = (struct anim_table *)(**gUnknown_030012D0 + 0x174);
+    self->anim = (struct anim_table *)(**gSpriteBankSet + 0x174);
     switch (type)
     {
     case 1:

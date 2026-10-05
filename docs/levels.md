@@ -157,7 +157,7 @@ running id (its bit in the `gEntityFlags` bitmaps, and the id the
 links use), and unless that bit is set calls the spawn function `type`
 of the table at `gEntitySpawner` (`SpawnEntity`) with the id, x, y and
 `param`. `param` indexes the parameter records: a flags word (bits 1 and
-2 go to the spawned object's `+0x28` flags: `SpawnBasicCrate`, `sub_801E990`,
+2 go to the spawned object's `+0x28` flags: `SpawnBasicCrate`, `SpawnStartMarker`,
 `actor_part_1967c.c`) and per-type words, e.g. `struct spawn_rec` of
 `CreatePlatform` (mover kind and distances); type 0x1A takes its effective
 type from the record's `+8` (`CountCrateEntities`).
@@ -210,8 +210,8 @@ code it gives the object and where the levels place it:
 | 0x40 | `SpawnFlamethrowerLabAssistant` | enemy, bank 23 |
 | 0x43 | `SpawnRat` | enemy, bank 21 |
 | 0x44 | `SpawnFrog` | enemy, bank 19 |
-| 0x45 | `sub_8021388` | Dingodile (`CreateDingodile`, bank 54) |
-| 0x47 | `sub_8021480` | Tiny Tiger (`CreateTiny`, bank 55) |
+| 0x45 | `SpawnDingodile` | Dingodile (`CreateDingodile`, bank 54) |
+| 0x47 | `SpawnTiny` | Tiny Tiger (`CreateTiny`, bank 55) |
 | 0x48 | `SpawnCortexBoss` | the Neo Cortex fight's controller (`CreateCortexBoss`, bank 53); only the "neo cortex" level places it |
 | 0x4B, 0x4C | `SpawnSeaMine` | hazard, bank 6 |
 | 0x4D | `SpawnWoodenCrusher` | hazard, bank 18 |

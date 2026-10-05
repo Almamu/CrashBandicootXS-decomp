@@ -1,14 +1,14 @@
 #include "core.h"
 #include "level_state.h"
 
-/* A small 3-slot icon "blink" animation timer, shared with `sub_8028568`/
- * `sub_802856C` (src/system/game_loop.c, still raw asm here) via the
+/* A small 3-slot icon "blink" animation timer, shared with `SetHudCrateTotal`/
+ * `IncHudCrateTotal` (src/system/game_loop.c, still raw asm here) via the
  * `gHud` instance - each slot is a `{state, timer}` s32
  * pair: state 0 idle, 1 counting up to a threshold then -> 2, 2 counting
  * down 0x14 frames then -> 3, 3 counting down its own timer then back to
  * 0. Slot 0 blinks with the lives counter and slot 1 with the wumpa
  * counter (`CollectWumpa`); slot 2 is triggered whenever the level
- * state's `crateCount` advances (`AddBrokenCrate`). `unk_28` receives
+ * state's `crateCount` advances (`AddBrokenCrate`). `crateTotal` receives
  * the level state's `crateTotal` (`EndBonusRound`). */
 struct blink_slot
 {
@@ -20,7 +20,7 @@ struct hud_blink
 {
     struct blink_slot slots[3];     // 0x00
     u8 unk_18[0x10];
-    s32 unk_28;                     // 0x28
+    s32 crateTotal;                     // 0x28
 };
 
 extern struct level_state *gLevelState;
@@ -90,7 +90,7 @@ void UpdateHudSlides(struct hud_blink *state)
  * a fresh blink (state -> 1); already counting down the "on" phase (2)
  * instead just refreshes its timer back to the full 0x78-frame hold.
  * Already counting up (1) is left alone. */
-void sub_8028474(struct hud_blink *state)
+void ShowHudCrates(struct hud_blink *state)
 {
     s32 slotState;
 
@@ -105,7 +105,7 @@ void sub_8028474(struct hud_blink *state)
     }
 }
 
-/* Same trigger as `sub_8028474`, for slot 0. */
+/* Same trigger as `ShowHudCrates`, for slot 0. */
 void ShowHudLives(struct hud_blink *state)
 {
     s32 slotState;
@@ -121,7 +121,7 @@ void ShowHudLives(struct hud_blink *state)
     }
 }
 
-/* Same trigger as `sub_8028474`, for slot 1. */
+/* Same trigger as `ShowHudCrates`, for slot 1. */
 void ShowHudWumpa(struct hud_blink *state)
 {
     s32 slotState;
@@ -140,7 +140,7 @@ void ShowHudWumpa(struct hud_blink *state)
 /* Fires all three slots' triggers at once. */
 void ShowHudCounters(struct hud_blink *state)
 {
-    sub_8028474(state);
+    ShowHudCrates(state);
     ShowHudLives(state);
     ShowHudWumpa(state);
 }
@@ -183,14 +183,14 @@ void StepHudSlide(void *self, s32 *state, s32 *timer, s32 threshold)
     }
 }
 
-/* Setter/increment pair for `unk_28` (see the file doc comment
+/* Setter/increment pair for `crateTotal` (see the file doc comment
  * above) - GitHub issue #46. */
-void sub_8028568(struct hud_blink *state, s32 val)
+void SetHudCrateTotal(struct hud_blink *state, s32 val)
 {
-    state->unk_28 = val;
+    state->crateTotal = val;
 }
 
-void sub_802856C(struct hud_blink *state)
+void IncHudCrateTotal(struct hud_blink *state)
 {
-    state->unk_28 += 1;
+    state->crateTotal += 1;
 }

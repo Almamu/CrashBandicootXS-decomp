@@ -185,7 +185,7 @@ struct gfx_level
 extern void *gEntityFlags;
 extern void *gAudioContext;
 extern void *gLevelState;
-extern u8 ***gUnknown_030012D0;
+extern u8 ***gSpriteBankSet;
 extern struct gfx_player *gPlayer;
 extern struct gfx_list *gUnknown_030012F0;
 extern void *gUnknown_030012F4;
@@ -588,7 +588,7 @@ void sub_8018BDC(struct gfx_pair_ctrl *self, struct gfx_part *part)
     struct gfx_part *c = CreateMovingSprite(0xFFFF, 0, 0, 0);
     struct gfx_ctrl *ctrl;
 
-    c->bank = (struct anim_bank *)(**gUnknown_030012D0 + 0x27C);
+    c->bank = (struct anim_bank *)(**gSpriteBankSet + 0x27C);
     SetTag(c, 3);
     c->unk_2C = 0;
     ctrl = sub_8019758(OperatorNew(0x10));
@@ -608,7 +608,7 @@ void sub_8018CB0(struct gfx_pair_ctrl *self, struct gfx_part *part)
     struct gfx_ctrl *ctrl;
     s32 x, y;
 
-    c->bank = (struct anim_bank *)(**gUnknown_030012D0 + 0x27C);
+    c->bank = (struct anim_bank *)(**gSpriteBankSet + 0x27C);
     {
         /* the ROM keeps 0xF in r5 across the calls and reuses it as the
          * frame-nibble mask below */
@@ -652,7 +652,7 @@ void sub_8018D70(u32 a0, u16 a1, u16 a2, u16 a3, s32 kind)
     struct gfx_part *c = CreateMovingSprite(a0, a1, a2, a3);
     struct gfx_ctrl *ctrl;
 
-    c->bank = (struct anim_bank *)(**gUnknown_030012D0 + 0x180);
+    c->bank = (struct anim_bank *)(**gSpriteBankSet + 0x180);
     switch (kind)
     {
     case 0:
@@ -926,7 +926,7 @@ void sub_8019214(struct gfx_mover *self, struct gfx_part *partArg, s32 kindArg)
     struct gfx_part *c = CreateMovingSprite(0xFFFF, 0, 0, 0);
     struct { u8 unk_00[0xC]; struct gfx_vtable *vtable; u8 fast; } *ctrl;
 
-    c->bank = (struct anim_bank *)(**gUnknown_030012D0 + 0x27C);
+    c->bank = (struct anim_bank *)(**gSpriteBankSet + 0x27C);
     switch (kind)
     {
     case 0:
@@ -1084,7 +1084,7 @@ void sub_80194E0(struct gfx_kind_ctrl *self, struct gfx_part *partArg)
     case 0:
         if (part->unk_0A == 1)
         {
-            part->bank = (struct anim_bank *)(**gUnknown_030012D0 + 0x27C);
+            part->bank = (struct anim_bank *)(**gSpriteBankSet + 0x27C);
             switch (self->kind)
             {
             case 0:

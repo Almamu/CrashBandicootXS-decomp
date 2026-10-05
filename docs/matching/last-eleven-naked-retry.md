@@ -5,10 +5,10 @@ This pass retried the two drafts left by
 
 | Function | File | Before | Now | Compiler |
 |---|---|---|---|---|
-| `sub_8001DB4` (#4) | `src/system/link_cable_01db4.c` | 51 | match | old_agbcc + `-fno-rerun-loop-opt` |
+| `ResetLinkSessionState` (#4) | `src/system/link_cable_01db4.c` | 51 | match | old_agbcc + `-fno-rerun-loop-opt` |
 | `SpawnFlamethrowerLabAssistant` (#31) | `src/graphics/graphics_loading_1feec.c` | 4 | match | old_agbcc |
 
-## `sub_8001DB4`: closed
+## `ResetLinkSessionState`: closed
 
 Three changes on top of the last-ten draft.
 
@@ -129,7 +129,7 @@ These are in the scratchpad's `last11/`:
 - `d.py`, `var.py`, `rtl.sh`, `regs.sh` and `fnrtl.py`, as before.
 - `t.sh`: runs `d.py` from the worktree. A relative source path is
   taken from `last11/`.
-- `m2.py`/`m3.py`/`m4.py`: the `sub_8001DB4` variants: magic local,
+- `m2.py`/`m3.py`/`m4.py`: the `ResetLinkSessionState` variants: magic local,
   nibble and tail spellings, and reference-count ablations.
 - `s2.py`/`s7.py`/`s8.py`: the `SpawnFlamethrowerLabAssistant` variants: holds, argument
   statement-expressions, and ablations.

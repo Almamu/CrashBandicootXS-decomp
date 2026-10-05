@@ -62,7 +62,7 @@ struct pmf
     } u;
 };
 
-extern void *gUnknown_03001304;
+extern void *gInput;
 extern struct keys gKeys;
 extern u32 gRoomFrameCount;
 extern void *gAudioContext;
@@ -171,7 +171,7 @@ static inline void SetB(struct player_ctrl *self, s32 value)
 
 void sub_8016048(struct player_ctrl *self)
 {
-    u8 dir = GetDpadDirection(gUnknown_03001304);
+    u8 dir = GetDpadDirection(gInput);
 
     switch (self->state)
     {
@@ -424,7 +424,7 @@ void UpdatePlayerCtrl(struct player_ctrl *self)
 
         if (self->cooldown)
             self->cooldown--;
-        inp = gUnknown_03001304;
+        inp = gInput;
         keys = *(u32 *)&gKeys; /* the whole word, held keys low */
         dir = GetDpadDirection(inp);
 
@@ -549,7 +549,7 @@ void sub_8016B1C(struct player_ctrl *self)
     struct keys k;
     u8 dir;
     u8 count;
-    void *inp = gUnknown_03001304;
+    void *inp = gInput;
 
     k = gKeys;
     dir = GetDpadDirection(inp);
@@ -586,7 +586,7 @@ void sub_8016B1C(struct player_ctrl *self)
 void sub_8016C08(struct player_ctrl *self)
 {
     struct keys k;
-    u8 dir = GetDpadDirection(gUnknown_03001304);
+    u8 dir = GetDpadDirection(gInput);
 
     k = gKeys;
     if (k.pressed & A_BUTTON)
@@ -607,7 +607,7 @@ void sub_8016C08(struct player_ctrl *self)
 
 void sub_8016C94(struct player_ctrl *self)
 {
-    void *inp = gUnknown_03001304;
+    void *inp = gInput;
     struct keys k = gKeys;
     struct keys *kp = &k;
 
@@ -637,7 +637,7 @@ void sub_8016C94(struct player_ctrl *self)
 
 void sub_8016D5C(struct player_ctrl *self)
 {
-    u8 dir = GetDpadDirection(gUnknown_03001304);
+    u8 dir = GetDpadDirection(gInput);
 
     if (++self->timer >= self->timerMax || self->target->unk_38)
     {
@@ -727,7 +727,7 @@ void sub_8016DDC(struct player_ctrl *self)
 
 void sub_8017044(struct player_ctrl *self)
 {
-    void *inp = gUnknown_03001304;
+    void *inp = gInput;
     struct keys k = gKeys;
     struct keys *kp = &k;
 

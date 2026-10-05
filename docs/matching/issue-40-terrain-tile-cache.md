@@ -35,10 +35,10 @@ issue is where they got turned into (attempted) byte-exact C.
   viewport/parallax-scroll-layer object built around the cache (own
   fields not given a struct here - see the doc comment at the top of
   `game_loop3.c` for why: its full shape spans into still-raw neighbor
-  functions `ScaleBgLayerScroll`/`sub_8024E24`/`FillBgStreamer`/`SetBgStreamerSource`,
+  functions `ScaleBgLayerScroll`/`StepBgLayerScroll`/`FillBgStreamer`/`SetBgStreamerSource`,
   out of scope for this issue).
-- **`sub_8025444`** is the exact same "`flags & 1` -> forward to
-  `OperatorDelete`" shape already matched as `sub_8006FC8` in
+- **`DestroyTileCache`** is the exact same "`flags & 1` -> forward to
+  `OperatorDelete`" shape already matched as `DestroySpriteBankSet` in
   `src/graphics/graphics.c`.
 - **`sub_8025554`/`sub_8025588`** are a floor-divide-by-32 bitmap
   set/clear pair on an arbitrary `void *self` array - unrelated to the
@@ -52,7 +52,7 @@ issue is where they got turned into (attempted) byte-exact C.
 `src/system/game_loop3.c`: `ScrollBgLayerBase`, `ResetBgLayerBase`, `SetBgLayerSource`,
 `IsBgLayerEnabled`, `GetBgLayerY`, `GetBgLayerX`, `GetBgLayerHeightTiles`,
 `GetBgLayerWidthTiles`, `GetBgLayerHeight`, `GetBgLayerWidth`.
-`src/system/game_loop4.c`: `sub_8025444`, `nullsub_4`.
+`src/system/game_loop4.c`: `DestroyTileCache`, `nullsub_4`.
 `src/system/game_loop5.c`: `GetCollisionCell`, `SetCollisionSource`, `sub_8025554`,
 `sub_8025588`, `sub_80255A8`, `sub_80255C4`.
 
@@ -180,7 +180,7 @@ issue is where they got turned into (attempted) byte-exact C.
   OBJ palette RAM and a BG window register, then walks a small
   count-prefixed array touching `gEntitySpawner`/`gCrateList`,
   calling several still-unread functions (`sub_8025968`, `SpawnEntity`,
-  `SetCrateAbove`, `SetCrateBelow`, `sub_8007398`, `GetCrateAbove`). Not
+  `SetCrateAbove`, `SetCrateBelow`, `SetEntityPos`, `GetCrateAbove`). Not
   understood precisely enough (which fields of the visited records mean
   what, why two lookups happen per entry) to commit a byte-exact-attempt
   reconstruction with confidence - left completely raw rather than guess.

@@ -49,7 +49,7 @@ extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern s32 WaitForKeyPress(s32 count, u8 checkButtons, s32 mask);
 extern void LoadTaggedAsset(void *asset, void *dest);
 extern void WaitForVBlank(void);
-extern void *gUnknown_03001314;
+extern void *gSlideshowDispcnt;
 
 /* Forward declaration: ShowSlidePicture is defined further down (after
  * BeginSlide/RunSlideshow/SkipSlides, matching ROM order) but
@@ -174,13 +174,13 @@ s32 SkipSlides(struct SoundChannelList *self, s32 startIdx, u8 condFlag)
  * `self->items[idx]`'s tile asset (its `+0x200` byte offset - the
  * asset's second half) to whichever of the two OBJ tile VRAM banks the
  * new toggle state selects (`0x06000000`/`0x0600A000`), via
- * `LoadTaggedAsset`. Then rebuilds `gUnknown_03001314`'s bit 4 from the
+ * `LoadTaggedAsset`. Then rebuilds `gSlideshowDispcnt`'s bit 4 from the
  * toggle's low bit (same `& ~0x10 | bit`-idiom byte-shadow-update shape
  * as `ShowSlidePicture`'s cousin in game_loop18.c, but for a different
  * global), DMA3-copies the asset's first half into `BG_PLTT` (a second,
  * independent palette-DMA-plus-DISPCNT-write path alongside the
  * already-documented `CommitDispcnt`/`gDispcnt` one - see
- * docs/rom_map.md), and finally commits `gUnknown_03001314`'s low
+ * docs/rom_map.md), and finally commits `gSlideshowDispcnt`'s low
  * halfword straight to `REG_DISPCNT`.
  *
  * Matched, but only after two more register-pinning/ordering gotchas on
@@ -192,7 +192,7 @@ s32 SkipSlides(struct SoundChannelList *self, s32 startIdx, u8 condFlag)
  *   lsl r2, r2, #2\n\tadd %0, %1, r2" : "=r"(addr) : "r"(asset) : "r2")`
  *   anchor (the same "hardcode the scratch register, let the output land
  *   wherever" idiom `hud_icon_widget_8a78.c` uses) forces it.
- * - The `gUnknown_03001314` shadow-byte rebuild needed its own two-part
+ * - The `gSlideshowDispcnt` shadow-byte rebuild needed its own two-part
  *   fix: gcc's front end always schedules the `& ~0x10` mask/byte-read
  *   pair *before* the toggle-bit `& 1 << 4` shift-and-mask when both are
  *   written as independent statements (this reconstruction's first
@@ -225,7 +225,7 @@ void ShowSlidePicture(struct SoundChannelList *self0, s32 idx)
     }
 
     {
-        u8 *shadow = (u8 *)&gUnknown_03001314;
+        u8 *shadow = (u8 *)&gSlideshowDispcnt;
         {
             register s32 bit4 asm("r1") = 1;
             register s32 toggleByte asm("r5");
@@ -247,5 +247,5 @@ void ShowSlidePicture(struct SoundChannelList *self0, s32 idx)
     WaitForVBlank();
 
     DmaSet(3, asset, (void *)PLTT, (u32)((DMA_ENABLE | DMA_START_NOW | DMA_16BIT | DMA_SRC_INC | DMA_DEST_INC) << 16 | 0x100));
-    REG_DISPCNT = *(u16 *)&gUnknown_03001314;
+    REG_DISPCNT = *(u16 *)&gSlideshowDispcnt;
 }

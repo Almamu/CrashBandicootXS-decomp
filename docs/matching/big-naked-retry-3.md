@@ -1,4 +1,4 @@
-# Third big NAKED retry: `SpawnRoomEntities`, `UpdateWumpa`, `sub_8002114`
+# Third big NAKED retry: `SpawnRoomEntities`, `UpdateWumpa`, `HandleLinkSerial`
 
 Three large NAKED functions. One closed. The other two now have C
 drafts that are the same size as the ROM.
@@ -7,7 +7,7 @@ drafts that are the same size as the ROM.
 |---|---|---|---|---|
 | `SpawnRoomEntities` | `src/system/game_loop41.c` | #40 | 704 bytes | matched, old_agbcc (object added to `OLD_AGBCC_OBJS`) |
 | `UpdateWumpa` | `src/system/game_loop53.c` | #15 | 500 bytes | still NAKED; draft size-exact, 21 halfwords off (was 84 bytes too long) |
-| `sub_8002114` | `src/system/link_cable.c` | #4 | 1488 bytes | still NAKED; first draft, size-exact, 514 halfwords off |
+| `HandleLinkSerial` | `src/system/link_cable.c` | #4 | 1488 bytes | still NAKED; first draft, size-exact, 514 halfwords off |
 
 All three are measured under old_agbcc. `game_loop53.o` and
 `link_cable.o` were already on `OLD_AGBCC_OBJS`.
@@ -62,7 +62,7 @@ loop points above. The rest:
   `k` the counters and cached counts swap registers.
 - `i` (the first link pass's counter) is declared at function scope.
   That puts it in the second spill slot, as in the ROM.
-- The move call is `p.x = ...; pp->y = ...; sub_8007398(actor, p.x,
+- The move call is `p.x = ...; pp->y = ...; SetEntityPos(actor, p.x,
   pp->y);` with `pp = &p`, the same shape as `actor_part_1ab98.c`. It
   gives the ROM's hoisted `add r4, sp, #4`.
 - The DMA fills use a `u32 zero` local, so the 0 is loaded before the
@@ -106,7 +106,7 @@ them), the spawn's `movs r5, #1` comes one instruction before
 `add r3, sp, #4`, and the state-3 tail stores x before computing y.
 `switch`, `ORBIT_POS` copies and setter inlines were worse.
 
-## `sub_8002114` (no draft -> size-exact, 514 halfwords)
+## `HandleLinkSerial` (no draft -> size-exact, 514 halfwords)
 
 The per-frame SIO pump. The first draft was written straight from the
 ROM, and its control flow and block order match. `data` is a pointer

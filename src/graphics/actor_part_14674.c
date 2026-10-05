@@ -13,7 +13,7 @@ extern void *gEntityFlags;
 extern void *gPaletteCache;
 extern void *gAudioContext;
 extern struct act_part *gPlayer;
-extern void *gUnknown_03001304;
+extern void *gInput;
 extern u8 gStaticData_0816B300[];
 extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
 extern u8 GetDpadDirection(void *pad);
@@ -224,7 +224,7 @@ void sub_8014674(struct act *self)
         }
     }
     {
-        u8 dir = GetDpadDirection(gUnknown_03001304);
+        u8 dir = GetDpadDirection(gInput);
 
         if (dir == 0)
         {
@@ -292,7 +292,7 @@ void sub_80149BC(struct act *self)
 
 void sub_8014A3C(struct act *self)
 {
-    u8 dir = GetDpadDirection(gUnknown_03001304);
+    u8 dir = GetDpadDirection(gInput);
     u32 in = gKeys;
 
     if (dir != 0)
@@ -381,7 +381,7 @@ void sub_8014B54(struct act *self)
  * method calls use ACT_CALL (include/action_obj.h). */
 void sub_8014BCC(struct act *self)
 {
-    void *pad = gUnknown_03001304;
+    void *pad = gInput;
     u32 in = gKeys;
     s32 v = INPUT_PRESSED(in) & 1;
 
@@ -459,7 +459,7 @@ void sub_8014BCC(struct act *self)
  * emit the ROM's jump table. */
 void sub_8014D18(struct act *self)
 {
-    u8 dir = GetDpadDirection(gUnknown_03001304);
+    u8 dir = GetDpadDirection(gInput);
     u32 in = gKeys;
     struct act_part *part = self->part;
     s32 fire;

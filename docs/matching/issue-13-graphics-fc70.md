@@ -45,17 +45,17 @@ too, continuing issue #12's precedent.
   `strb` (the ROM interleaves `movs r1,#0` there, reusing that same
   zero for every later zeroing store) rather than after the whole
   inline-asm block.
-- **`sub_80106DC`**/**`GetCrateBelow`**/**`GetCrateAbove`**/
+- **`ResolvePlayerCollisions`**/**`GetCrateBelow`**/**`GetCrateAbove`**/
   **`SetCrateBelow`**/**`SetCrateAbove`**/**`GetCrateClassId`**
   (`src/system/game_loop23.c`) - the viewport collision-box refresh
-  (`sub_8010B6C` on `gPlayer+0x108`, then a saturating-at-
+  (`ResolveCollisionCandidates` on `gPlayer+0x108`, then a saturating-at-
   zero `+0x92` hit counter), and the neighbor-list "get prev"/"get
   next"/"set prev"/"set next" accessor quartet (`self+0x60`/`+0x5c`)
   `docs/rom_map.md` already ties to `sub_0800D18C`'s linked-list walk.
   `GetCrateClassId` is a trivial `return 3;` constant accessor with no
   caller anywhere in the ROM (checked every `asm/*.s`, `expected/*.s`
   and `src/*.c` file) - tagged `UNUSED`. All six matched with no
-  gotchas beyond `sub_80106DC` needing its second `gPlayer`
+  gotchas beyond `ResolvePlayerCollisions` needing its second `gPlayer`
   dereference kept as a separate local (not reusing the first) to get
   the post-call reload the ROM does.
 - **`sub_8010804`**/**`OpenAkuAkuCrate`** (`src/system/game_loop24.c`) -
@@ -72,7 +72,7 @@ too, continuing issue #12's precedent.
   always shifts in place) - and a `u32` (not `u8`) result type on the
   asm output operand to avoid a spurious truncation instruction the
   ROM doesn't have.
-- **`sub_8010908`** (`src/system/game_loop25.c`) - trivial
+- **`IsCrateKindBreakable`** (`src/system/game_loop25.c`) - trivial
   `gCrateKindBreakable[idx]` byte-table lookup; its first parameter is
   unused in the ROM.
 - **`sub_8010A00`** (`src/system/game_loop26.c`) - extracts `self+0x48`

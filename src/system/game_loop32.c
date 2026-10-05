@@ -1,7 +1,7 @@
 #include "core.h"
 #include "phys_obj.h"
 
-extern u8 gUnknown_030012B0;
+extern u8 gCrateListChanged;
 extern u8 gCrateKindExplosive[];
 extern struct crate *GetCrateBelow(struct crate *obj);
 extern struct crate *GetCrateAbove(struct crate *obj);
@@ -15,7 +15,7 @@ extern void LightTntCrate(struct crate *self);
 /* A per-frame position-wrap advance: `self+0x4c` is a signed "speed"
  * (defaulting to 1 when 0), `self+0x44` a signed Q8-ish countdown
  * ("remaining"). When `remaining == 0` the whole function is a no-op.
- * Otherwise it sets the global one-shot flag byte `gUnknown_030012B0`,
+ * Otherwise it sets the global one-shot flag byte `gCrateListChanged`,
  * then loops, once per unit of `speed`, folding `remaining` toward
  * zero by +-0x100 (or +-0x40, when the viewport's own
  * `gPlayer`-relative `+0x88` byte reads 1 - a "half speed"
@@ -25,7 +25,7 @@ extern void LightTntCrate(struct crate *self);
  * that table's value and `self+0x48`/`self+0x4d`'s state, dispatches
  * `ExplodeCrate`/`LightTntCrate` on `self` and its whole `GetCrateBelow`
  * "get next" neighbor-list chain (the same list `ResetCrate`/
- * `sub_80106DC`, game_loop22.c/game_loop23.c, already establish). At
+ * `ResolvePlayerCollisions`, game_loop22.c/game_loop23.c, already establish). At
  * the end, `self+0x4`'s accumulated step is folded into `self`'s own
  * position (`self+0`/`self+4`), and `self+0x4c`'s "speed" byte is
  * either cleared (when `remaining` ended up exactly 0) or incremented
@@ -49,7 +49,7 @@ void UpdateCrateFall(struct crate *self)
 
     if (remaining == 0)
         return;
-    gUnknown_030012B0 = 1;
+    gCrateListChanged = 1;
     speed = self->unk_4C;
     if (speed == 0)
         speed = 1;

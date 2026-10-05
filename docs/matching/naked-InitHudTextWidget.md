@@ -3,7 +3,7 @@
 `DestroyFont` (ROM `0x08028B7C`, real bytes previously in
 `asm/code_3_2_20_8b7c.s`) has no tracked GitHub issue - it sits
 immediately after GitHub issue #46's fully-matched
-`sub_8028AC4`-`FontSetTileBase` run (`src/graphics/hud_icon_widget5.c`,
+`FontHeightToLines`-`FontSetTileBase` run (`src/graphics/hud_icon_widget5.c`,
 "trivial `struct icon_manager` getter/setter/trampoline-forwarder
 family") and was explicitly called out in that chunk's own write-up as
 next-but-out-of-scope.
@@ -27,7 +27,7 @@ void DestroyFont(struct icon_manager *self, u32 flags)
 `src/graphics/actor_aabb_setup.c`'s `DestroyLargeFont`/`DestroySmallFont` and
 `src/graphics/hud_icon_widget_8a78.c`'s `InitFont` already point a
 `record` field at, for a different self object each time - part of the
-`gStaticData_087E3BEC`-family "per-type descriptor" convention
+`gEntityVtable`-family "per-type descriptor" convention
 `docs/rom_map.md` documents at length, and the same conditional
 `OperatorDelete(self)` "register for teardown if bit 0 of flags is set"
 idiom used throughout this codebase.
@@ -47,7 +47,7 @@ codegen already lands the address add in `r2` exactly like the ROM.
 Folded into `src/graphics/hud_icon_widget5.c` (immediately after
 `FontSetTileBase`) rather than getting its own object file, since it's
 directly contiguous with that file's existing ROM range and shares the
-same `struct icon_manager`/`gStaticData_087E3BEC`-family conventions -
+same `struct icon_manager`/`gEntityVtable`-family conventions -
 see `docs/workflow.md`'s "one `.c` file per contiguous ROM region"
 rule. The function's block was cut out of `asm/code_3_2_20_8b7c.s`,
 which now starts at `InitObjTileFreeList` (`0x08028BA0`) instead;

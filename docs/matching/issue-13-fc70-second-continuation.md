@@ -48,7 +48,7 @@ matches both.
     != 0` check just above it, corrupting the address this block
     reads/writes).
 - **`sub_8010674`** (`src/system/game_loop23.c`, prepended ahead of the
-  already-matched `sub_80106DC` run - it's immediately ROM-adjacent, so
+  already-matched `ResolvePlayerCollisions` run - it's immediately ROM-adjacent, so
   it joins that file rather than getting its own) - an AABB-overlap
   test between `self`'s own table-driven half-width/half-height box
   (built via the same `_call_via_r1` table-trampoline convention

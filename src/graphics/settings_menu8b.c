@@ -7,31 +7,31 @@ extern void ReadSaveSlot(void *handle, s32 rowIndex, void *buf);
 extern void WriteSaveSlot(void *handle, s32 rowIndex, void *buf);
 extern void EraseSaveSlot(void *handle, s32 rowIndex);
 
-void sub_8002FCC(struct settings_sync_pump *self, struct settings_sync_record *tmpl)
+void SetSaveTransferRecord(struct settings_sync_pump *self, struct settings_sync_record *tmpl)
 {
     self->tmpl = tmpl;
     self->cursor = (u8 *)tmpl;
 }
 
-void *sub_8002FD4(struct settings_sync_pump *self)
+void *GetSaveTransferData(struct settings_sync_pump *self)
 {
     return self->data;
 }
 
-void sub_8002FD8(struct settings_sync_pump *self)
+void ResetSaveTransfer(struct settings_sync_pump *self)
 {
     self->remaining = sizeof(self->data);
     self->totalReceived = 0;
     self->cursor = (u8 *)self->tmpl;
     self->writePtr = self->data;
-    self->field_214 = 0;
-    self->field_218 = 0;
-    self->field_21c = 0;
+    self->sendDone = 0;
+    self->receiveDone = 0;
+    self->settleTimer = 0;
 }
 
-extern void *gUnknown_03001304;
+extern void *gInput;
 /* gKeys is a plain u32 elsewhere (e.g.
- * src/graphics/settings_menu.c's sub_8003B40) but this call site reads
+ * src/graphics/settings_menu.c's LinkExchangeSaveData) but this call site reads
  * only its upper 16 bits (the "newly pressed" half of a held/pressed
  * input pair) - matching the ROM's own `ldrh r1,[r0,#2]` (a runtime
  * +2 byte offset on the reloaded base address) requires a real field
@@ -72,7 +72,7 @@ u8 RunSaveMenu(u32 state, u32 field10)
     for (;;) {
         u16 keys;
 
-        UpdateKeys(gUnknown_03001304);
+        UpdateKeys(gInput);
         keys = gKeys.pressed;
         SaveMenuInput(*selfAddr, keys);
     dispatch:
@@ -92,27 +92,27 @@ extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
 extern u8 CheckSaveChecksum(void *arg0);
 extern struct palette_cache *gPaletteCache;
 extern void FreeUnlockedPaletteSlots(struct palette_cache *self);
-extern void sub_800450C(struct pause_options_screen *self);
-extern void sub_80047F8(struct pause_options_screen *self);
+extern void InitSaveMenuIcons(struct pause_options_screen *self);
+extern void LoadSaveMenuBg(struct pause_options_screen *self);
 extern void PlaySong(void *arg0, s32 arg1);
 extern void LoadSaveMenuData(struct pause_options_screen *self);
 extern void *gLevelState;
 extern void *PackSaveData(void *arg0);
 extern void SummarizeProgress(void *self, struct settings_row_stats *dest, void *src);
 extern void RefreshSaveSlotSummaries(struct pause_options_screen *self, void *handle);
-extern void *sub_80016DC(s32 size);
-extern void *sub_80027E8(void *arg0);
+extern void *IwramAlloc(s32 size);
+extern void *InitLinkSession(void *arg0);
 extern void FadeBrightness(u8 flags, s32 frameDelay, u8 sync);
 extern void ResetSaveData(struct settings_sync_record *self);
 
 /* The composite pause/options screen's (and the spinner dialog's, via
  * InitSaveMenu above) `field_8c`/`field_90` constructor: allocates and
  * initialises both settings_sync_record instances (ResetSaveData), does
- * the screen's tile/BG/list setup (sub_800450C/sub_80047F8/
+ * the screen's tile/BG/list setup (InitSaveMenuIcons/LoadSaveMenuBg/
  * LoadSaveMenuData, still raw), fills `currentStats` and the first
  * `rowStats` entry, then allocates and stashes the global SIO session
  * object (`gLinkSession`, still uncharacterized - see
- * sub_8002D44/sub_8002E20, src/graphics/settings_menu8.c) and kicks off
+ * SendSaveTransferChunk/ReceiveSaveTransferChunk, src/graphics/settings_menu8.c) and kicks off
  * a VBlank IRQ request. */
 struct pause_options_screen *InitSaveMenu(struct pause_options_screen *arg0)
 {
@@ -133,8 +133,8 @@ struct pause_options_screen *InitSaveMenu(struct pause_options_screen *arg0)
     *field90Addr = obj;
 
     FreeUnlockedPaletteSlots(gPaletteCache);
-    sub_800450C(self);
-    sub_80047F8(self);
+    InitSaveMenuIcons(self);
+    LoadSaveMenuBg(self);
     PlaySong(gAudioContext, 0x10);
     LoadSaveMenuData(self);
     SummarizeProgress(self, &self->currentStats, PackSaveData(gLevelState));
@@ -142,14 +142,14 @@ struct pause_options_screen *InitSaveMenu(struct pause_options_screen *arg0)
 
     {
         register void **sessionAddr asm("r4") = &gLinkSession;
-        *sessionAddr = sub_80027E8(sub_80016DC(0x408));
+        *sessionAddr = InitLinkSession(IwramAlloc(0x408));
     }
     FadeBrightness(0x80, 1, 0);
     self->field_20 = 0;
     return self;
 }
 
-extern void sub_80027B0(void *arg0, s32 arg1);
+extern void DestroyLinkSession(void *arg0, s32 arg1);
 extern void OperatorDelete(void *arg0);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 
@@ -167,7 +167,7 @@ void DestroySaveMenu(struct pause_options_screen *self, u32 flags)
     extern void *gLinkSession;
 
     if (gLinkSession != NULL) {
-        sub_80027B0(gLinkSession, 3);
+        DestroyLinkSession(gLinkSession, 3);
     }
 
     OperatorDelete(*(void **)((u8 *)self + 0x90));
@@ -292,7 +292,7 @@ void SaveMenuInput(struct pause_options_screen *self, u32 keys)
 }
 
 extern s32 GetUiText(s32 arg0);
-extern void sub_8004A80(struct pause_options_screen *self);
+extern void BeginLinkSaveTransfer(struct pause_options_screen *self);
 
 /* State 0's input handler: cancel/confirm-combo (bits 1/3) requests an
  * exit; confirm (bit 0) advances through this state's own little
@@ -318,7 +318,7 @@ void SaveMenuMainInput(struct pause_options_screen *self, u32 flags)
             self->field_10 = 0;
             self->field_14 = GetUiText(0x2b);
             self->field_18 = GetUiText(0x2d);
-            sub_8004A80(self);
+            BeginLinkSaveTransfer(self);
             break;
         case 2:
             self->state = 5;
@@ -453,31 +453,31 @@ void SaveMenuLoadInput(struct pause_options_screen *self, u32 flags, void *handl
     SaveMenuMoveCursor(self, flags);
 }
 
-extern s32 sub_8003B40(struct pause_options_screen *self);
-/* Matches sub_8004A64's real (void)-taking, unused-argument prototype
+extern s32 LinkExchangeSaveData(struct pause_options_screen *self);
+/* Matches EndLinkSaveTransfer's real (void)-taking, unused-argument prototype
  * from src/graphics/settings_menu3.c - this call site passes `self`
  * anyway (the ROM's caller sets it up in r0 even though the callee
  * never reads it), so it's declared here as taking one ignored
  * argument to reproduce that dead register setup. */
-extern void sub_8004A64(void *arg0);
-extern s32 gUnknown_03000810;
-extern s32 gUnknown_03000814;
+extern void EndLinkSaveTransfer(void *arg0);
+extern s32 gCrash2LinkTextPtr;
+extern s32 gCrash3LinkTextPtr;
 
 /* State 3's input handler: polls the SIO-handshake spinner
- * (sub_8003B40, parked). Timeout/cancel -> settle back to state 0;
+ * (LinkExchangeSaveData, parked). Timeout/cancel -> settle back to state 0;
  * error/checksum-mismatch -> a "connection failed" message (state 4);
  * otherwise, if both sides agree on the checksummed record
- * (sub_8002B94's version nibble), accept it (state 2); if they don't,
+ * (GetSaveGameId's version nibble), accept it (state 2); if they don't,
  * inspect the remote's nibble to merge either flag 2 or flag 4 into our
  * own record and show a matching "conflict" message. */
 void SaveMenuLinkInput(struct pause_options_screen *self)
 {
-    extern u32 sub_8002B94(void *arg0);
+    extern u32 GetSaveGameId(void *arg0);
     extern s32 StoreSaveData(void *arg0);
     extern void SetSaveFlags(void *handle, u8 flags);
-    s32 state = sub_8003B40(self);
+    s32 state = LinkExchangeSaveData(self);
 
-    sub_8004A64(self);
+    EndLinkSaveTransfer(self);
 
     if (state == 3) {
         self->state = 0;
@@ -493,25 +493,25 @@ void SaveMenuLinkInput(struct pause_options_screen *self)
         return;
     }
 
-    if (sub_8002B94(self->field_8c) == sub_8002B94(self->field_90)) {
+    if (GetSaveGameId(self->field_8c) == GetSaveGameId(self->field_90)) {
         self->state = 2;
         self->field_10 = 0;
         RefreshSaveSlotSummaries(self, self->field_90);
         return;
     }
 
-    switch (sub_8002B94(self->field_90)) {
+    switch (GetSaveGameId(self->field_90)) {
     case 2:
         SetSaveFlags(self->field_8c, 2);
         StoreSaveData(self->field_8c);
         self->state = 4;
-        self->field_14 = gUnknown_03000810;
+        self->field_14 = gCrash2LinkTextPtr;
         break;
     case 3:
         SetSaveFlags(self->field_8c, 4);
         StoreSaveData(self->field_8c);
         self->state = 4;
-        self->field_14 = gUnknown_03000814;
+        self->field_14 = gCrash3LinkTextPtr;
         break;
     default:
         self->state = 0;

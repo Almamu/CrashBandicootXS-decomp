@@ -17,8 +17,8 @@ extern u8 IsInBonusRound(struct level_state *self);
 extern void ResetCrateCount(struct level_state *self);
 extern void *MemCopy32(void *dest, void *src, s32 size);
 extern void CpuSet(const void *src, void *dst, u32 cnt);
-extern void sub_8007398(struct actor *self, s32 arg1, s32 arg2);
-extern void sub_8028568(void *state, s32 arg1);
+extern void SetEntityPos(struct actor *self, s32 arg1, s32 arg2);
+extern void SetHudCrateTotal(void *state, s32 arg1);
 extern void SetCheckpointAtPlayer(void *self, u8 arg1);
 extern void PlayCutscene(void *self, s32 mode);
 struct AudioContext;
@@ -137,11 +137,11 @@ void EndGemPath(struct level_state *self, u8 flag)
         ClearInGemPath(self);
         ClearSpawnAtStart(self);
         SetGemPathDone(self);
-        sub_8028568(gHud, self->crateTotal);
+        SetHudCrateTotal(gHud, self->crateTotal);
         {
             struct actor *player = (struct actor *)gPlayer;
             s32 *p = &self->checkpointX;
-            sub_8007398(player, p[0], p[1]);
+            SetEntityPos(player, p[0], p[1]);
         }
         SetCheckpointAtPlayer(self, self->unk_e0);
     } else {
@@ -154,7 +154,7 @@ void sub_802364C(void *self)
     PlayCutscene(self, 2);
 }
 
-void sub_8023658(void *self)
+void PlayIntroCutscene(void *self)
 {
     PlayCutscene(self, 1);
     StopSfx(gAudioContext, 0x5d);
@@ -163,7 +163,7 @@ void sub_8023658(void *self)
 /* Allocates a `0x44c`-byte block, fires an (empty) `nullsub_7` hook and
  * `RunCompanyLogos`, then hands the block to `DestroyCompanyLogos` with flags `3`
  * if the allocation succeeded. */
-void sub_8023674(void)
+void ShowCompanyLogos(void)
 {
     /* `nullsub_7` is a real no-op (`bx lr`) but, split into its own
      * translation unit (src/audio/counter_selector.c), an ordinary call
@@ -185,7 +185,7 @@ void sub_8023674(void)
     }
 }
 
-void sub_802369C(void *self)
+void PlayBootCutscene(void *self)
 {
     PlayCutscene(self, 0);
 }

@@ -7,7 +7,7 @@
 extern void *gLevelLayers;
 
 extern void ScaleBgLayerScroll(void *self, void *vec2);
-extern void sub_8024E24(void *self, void *vec2);
+extern void StepBgLayerScroll(void *self, void *vec2);
 extern void FillBgStreamer(void *self, void *source);
 extern void SetBgStreamerSource(void *self, void *source);
 
@@ -28,7 +28,7 @@ void ScrollBgLayerBase(struct bg_scroll_layer *self, s32 *vec2)
     scaled[0] = x;
     scaled[1] = y;
     ScaleBgLayerScroll(self, scaled);
-    sub_8024E24(self, scaled);
+    StepBgLayerScroll(self, scaled);
 }
 
 /* Same shape as `ScrollBgLayerBase`, but seeds the scale step directly from

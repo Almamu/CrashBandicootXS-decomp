@@ -175,13 +175,13 @@ link-context-only bug docs/workflow.md's step 2/3 warning describes.
 ## Issue #6/#7 status (not addressed this pass)
 
 This pass focused entirely on issue #8. Issue #6's two remaining
-untouched functions (`sub_8003F30`, `sub_800450C`) and its two
-already-parked functions worth revisiting (`sub_8004914`,
-`sub_80049CC`) were reviewed but not changed - `sub_8003F30`/
-`sub_800450C` are each several hundred lines of raw disassembly (a
+untouched functions (`DrawSaveSlotStats`, `InitSaveMenuIcons`) and its two
+already-parked functions worth revisiting (`DrawEmptySlotLabel`,
+`DrawSaveMenuTitle`) were reviewed but not changed - `DrawSaveSlotStats`/
+`InitSaveMenuIcons` are each several hundred lines of raw disassembly (a
 per-row multi-array numeric renderer and the screen's own OAM-buffer/
 object-allocation init routine respectively) that weren't traced to
-full confidence in the time available, and `sub_8004914`/`sub_80049CC`
+full confidence in the time available, and `DrawEmptySlotLabel`/`DrawSaveMenuTitle`
 hit the exact same well-documented gcc-2.9 "last mile" register
 nondeterminism this issue's own parked quartet does - no new technique
 was found to close them this pass. Issue #7's 12 untouched functions
@@ -208,7 +208,7 @@ untouched" functions, `ShowPowerDialog`/`InitPowerDialog` (previously raw in
   size) plus one `struct settings_icon_actor`-shaped background icon
   owned via `field_18`, built the same way `settings_menu6.c`'s icon
   constructors are (`InitUiSpriteObj(OperatorNew(0x40))`, `field_20`
-  pointed at the shared `gUnknown_030012D0` header table at a new
+  pointed at the shared `gSpriteBankSet` header table at a new
   `0xe4<<1` offset). **Matched byte-exact**, but only after the same
   class of heavy register pinning `oam_count.c`'s `SUB_8006600_*`
   macros and `settings_menu6.c`'s `UPDATE_ICON_FRAME_NIBBLE` already

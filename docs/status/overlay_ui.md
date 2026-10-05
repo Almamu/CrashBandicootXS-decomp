@@ -21,20 +21,20 @@ as its own `overlay_ui` category since `docs/rom_map.md` and the
   refresh row" step, and the state-select label list draw; matched. See
   `docs/matching/issue-5-overlay-ui-sync.md` for the full write-up:
   `ResetSaveData`, `IsSaveSlotEmpty`, `TestSaveFlags`, `ClearSaveFlags`,
-  `SetSaveFlags`, `sub_8002EFC`,
-  `sub_8002FCC`, `sub_8002FD4`, `sub_8002FD8`, `RunSaveMenu`,
+  `SetSaveFlags`, `PollSaveTransfer`,
+  `SetSaveTransferRecord`, `GetSaveTransferData`, `ResetSaveTransfer`, `RunSaveMenu`,
   `InitSaveMenu`, `DestroySaveMenu`, `SaveMenuInput`, `SaveMenuMainInput`,
   `SaveMenuMoveCursor`, `SaveMenuLoadInput`, `SaveMenuLinkInput`, `SaveGameToSlot`,
   `SaveMenuOverwriteInput`, `SaveMenuSaveInput`, `SaveMenuDeleteInput`, `SaveMenuConfirmDeleteInput`,
-  `DrawSaveMenuMain`, and `sub_8002E20` (was NAKED, see below).
+  `DrawSaveMenuMain`, and `ReceiveSaveTransferChunk` (was NAKED, see below).
 - `src/graphics/settings_menu2.c` (new file - the composite pause/
   options screen's BG-load helper and per-row stats gatherer/
   aggregator; see `docs/rom_map.md`'s `overlay_ui` section):
-  `sub_80047F8`, `RefreshSaveSlotSummaries`, `LoadSaveMenuData`, `SummarizeProgress`
+  `LoadSaveMenuBg`, `RefreshSaveSlotSummaries`, `LoadSaveMenuData`, `SummarizeProgress`
 - `src/graphics/settings_menu3.c` (new file - the same screen's flag
   test, link-cancel-flag pair, six near-identical per-item wrappers,
   state jump-table dispatcher, and a final list-refresh trio):
-  `sub_8004A50`, `sub_8004A64`, `sub_8004A80`, `DrawSaveMenuConfirmDelete`,
+  `GetSaveMenuBlinkPalette`, `EndLinkSaveTransfer`, `BeginLinkSaveTransfer`, `DrawSaveMenuConfirmDelete`,
   `DrawSaveMenuDelete`, `DrawSaveMenuOverwrite`, `DrawSaveMenuSave`, `DrawSaveMenuMessage`,
   `DrawSaveMenuLoadLink`, `DrawSaveMenuLoad`, `DrawSaveMenu`, `DeleteSaveSlot`
 - `src/graphics/settings_menu4.c` (new file - confirm/cancel handler,
@@ -66,7 +66,7 @@ as its own `overlay_ui` category since `docs/rom_map.md` and the
   accessor, the EEPROM-save-with-retry orchestrator, and three per-row
   default-refresh/force-set/mark-selected helpers extending
   `struct settings_sync_record`: `CheckSaveChecksum`, `UpdateSaveChecksum`,
-  `sub_8002B94`, `StoreSaveData`, `ReadSaveSlot`, `WriteSaveSlot`,
+  `GetSaveGameId`, `StoreSaveData`, `ReadSaveSlot`, `WriteSaveSlot`,
   `EraseSaveSlot`. See `docs/matching/issue-4-sio-settings-sync.md`. The
   file's `ValidateSaveData` (checksum validate + DMA-repair) is real C too
   since the near-miss polish pass - see
@@ -102,17 +102,17 @@ as its own `overlay_ui` category since `docs/rom_map.md` and the
   0x0800599C-0x08005A78): the results sub-region constructor:
   `InitPauseMenuInfo`. See `docs/matching/issue-7-0x08004d74-overlay-ui.md`.
 - `src/graphics/settings_menu.c` (issue #6 retry, old_agbcc): the
-  "connecting..." spinner dialog `sub_8003B40`, the centered-label draws
-  `sub_8003BDC`/`sub_8003C90`, the per-row stat renderer `sub_8003F30`
-  and its 4-row driver `sub_80041BC` - all plain C, were NAKED. See
+  "connecting..." spinner dialog `LinkExchangeSaveData`, the centered-label draws
+  `DrawSaveMenuMessageLines`/`DrawSaveMenuCancel`, the per-row stat renderer `DrawSaveSlotStats`
+  and its 4-row driver `DrawSaveSlots` - all plain C, were NAKED. See
   [issue-4-6-8-naked-retry.md](../matching/issue-4-6-8-naked-retry.md).
-  The value-label/pair draw `sub_8003D3C` followed in the early-ROM
+  The value-label/pair draw `DrawYesNoPrompt` followed in the early-ROM
   NAKED retry ([early-rom-naked-retry.md](../matching/early-rom-naked-retry.md)),
-  and the screen's init routine `sub_800450C` (was raw asm in the now
+  and the screen's init routine `InitSaveMenuIcons` (was raw asm in the now
   retired `asm/code_3_1_10_4.s`) in the hard-register hold pass
   ([hard-register-hold-retry.md](../matching/hard-register-hold-retry.md)).
-- `src/graphics/settings_menu23.c` (issue #6 retry): `sub_8004914`,
-  `sub_80049CC` - plain C, were NAKED.
+- `src/graphics/settings_menu23.c` (issue #6 retry): `DrawEmptySlotLabel`,
+  `DrawSaveMenuTitle` - plain C, were NAKED.
 - `src/graphics/settings_menu10.c` (issue #8 retry, old_agbcc):
   `PowerDialogLoop`; `settings_menu11.c`: `DrawPauseTimeTrialPage`, `DrawPauseCrystalsPage`,
   `DrawPauseMenuPageTitle`; `settings_menu14.c`: `ShowPowerDialog` - plain C, were
@@ -127,10 +127,10 @@ as its own `overlay_ui` category since `docs/rom_map.md` and the
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
 
-- **`sub_8002D44`** (`src/graphics/settings_menu8a2.c`) - the SIO pump's
+- **`SendSaveTransferChunk`** (`src/graphics/settings_menu8a2.c`) - the SIO pump's
   TX fill step (issue #5). Plain C; it was NAKED. The old "r7 can never be
   pushed" note was wrong - plain C gives the r7/r8/sb prologue. See [old-agbcc-round5.md](../matching/old-agbcc-round5.md).
-- **`sub_8002E20`** (`src/graphics/settings_menu8a2.c`) - the SIO pump's
+- **`ReceiveSaveTransferChunk`** (`src/graphics/settings_menu8a2.c`) - the SIO pump's
   RX drain step (issue #5). Plain C; it was NAKED. The channel pointer
   comes out of an asm with a plain `"r"` input (no copy preference for
   r2) and the wrap loop's count pointer is pinned to r1. See
@@ -145,7 +145,7 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
 
 - No functions are parked here now. `DrawPauseFraction` became real C in
   the last-ten retry - see Matched.
-  `DrawPauseMenu` and the raw `sub_800450C` are now real C (hard-register
+  `DrawPauseMenu` and the raw `InitSaveMenuIcons` are now real C (hard-register
   hold pass). Eleven former members of
   this list (`RunPauseMenu`, `DrawPauseMenuRows`, `DrawPauseGemsPage`, `DrawPauseRelicsPage`,
   `InitPausePowersPage`, `InitPauseGemsPage`, `InitPauseRelicsPage`, `InitPauseTimeTrialPage`,

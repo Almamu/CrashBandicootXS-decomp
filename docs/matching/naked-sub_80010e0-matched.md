@@ -73,7 +73,7 @@ checkCount:
         goto done;
     }
     WaitForVBlank();
-    UpdateKeys(gUnknown_03001304);
+    UpdateKeys(gInput);
     addr = &gKeys;
     asm volatile("add %0, %1, #0" : "=r"(keys) : "r"(mask));
     keys &= *(u16 *)((u8 *)addr + 2);

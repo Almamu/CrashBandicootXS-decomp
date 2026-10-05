@@ -8,7 +8,7 @@ issue covered them. Both are now real C in
 retired. Both match under either compiler. The file is built with the
 current agbcc like its neighbours.
 
-## `sub_8022354` - UNUSED
+## `DestroyLevelState` - UNUSED
 
 This is the destructor that pairs with `InitLevelState`. It calls
 `FreeVramDmaQueue`, then destroys every singleton the constructor built,
@@ -16,7 +16,7 @@ each with flags 3 when it is non-NULL:
 
 - `gOamBuffer` (`DestroyOamBuffer`)
 - `gObjVramCursor` (`DestroyObjVramCursor`)
-- `gUnknown_03001304` (freed directly)
+- `gInput` (freed directly)
 - the audio context `gAudioContext` (`DisableMusicVCountIrq`, then `DestroyAudioContext`)
 - the two icon managers `gLargeFont`/`gSmallFont`, through
   their method table

@@ -5,20 +5,20 @@
 extern void InitObjTileFreeList(void *addr);
 extern void InitSpriteFrameOamQueue(void);
 extern void InitSpriteFrameCache(void);
-extern void ***gUnknown_030012D0;
+extern void ***gSpriteBankSet;
 extern struct palette_cache *gPaletteCache;
 extern void FreeUnlockedPaletteSlots(struct palette_cache *self);
 extern void BindPaletteSlot(struct palette_cache *self, s32 slot, s32 index);
 extern s32 gActorCategory;
 extern void *gHud;
-extern void sub_802732C(void *arr, s32 flag);
+extern void ConfigureHudParts(void *arr, s32 flag);
 
 /* Pins the current category's tile-cache slots that every actor part
  * shares - the type-0 sprite family gets 2 slots (7/0xf), the type-1/2
  * family gets 5 (9/0xc/0xe/0xd/8) pulled from two ROM-side sub-tables
  * (entityTable/otherTable below) whose own shapes aren't reversed yet -
  * kept as raw offsets per docs/workflow.md step 7. Finishes by (re)
- * building the category's status-icon OAM row via sub_802732C, gated on
+ * building the category's status-icon OAM row via ConfigureHudParts, gated on
  * whether the category's type is nonzero.
  *
  * `gActorCategories[category]`'s address is deliberately computed
@@ -27,7 +27,7 @@ extern void sub_802732C(void *arr, s32 flag);
  * an expression it never has to keep alive past one immediate use)
  * rather than letting the register allocator give it a stable "home"
  * register, which changes which register ends up holding the combined
- * pointer. Likewise the final `sub_802732C` call's arguments are broken
+ * pointer. Likewise the final `ConfigureHudParts` call's arguments are broken
  * into their own local variables in the exact order this compiler
  * evaluates them (icon array pointer, then the array base, then the
  * index) to reproduce the ROM's exact register assignment - see
@@ -43,7 +43,7 @@ void SetupActorVramPool(void)
     InitSpriteFrameOamQueue();
     InitSpriteFrameCache();
 
-    entityTable = (u8 *)**gUnknown_030012D0 + 0x1a4;
+    entityTable = (u8 *)**gSpriteBankSet + 0x1a4;
     otherTable = entityTable + 0x90;
     cache = gPaletteCache;
     FreeUnlockedPaletteSlots(cache);
@@ -81,6 +81,6 @@ void SetupActorVramPool(void)
         u8 *arr = (u8 *)gActorCategories;
         s32 idx = gActorCategory;
 
-        sub_802732C(iconArray, *(s32 *)(arr + idx * 0x34) != 0);
+        ConfigureHudParts(iconArray, *(s32 *)(arr + idx * 0x34) != 0);
     }
 }

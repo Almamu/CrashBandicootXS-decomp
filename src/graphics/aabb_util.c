@@ -101,12 +101,12 @@ u8 AabbOverlaps(struct aabb *a, struct aabb *b)
     return result;
 }
 
-void sub_80016D0(u8 *address)
+void IwramFree(u8 *address)
 {
     mem_free(address);
 }
 
-void *sub_80016DC(u32 size)
+void *IwramAlloc(u32 size)
 {
     return mem_alloc(size, 0x80000000);
 }

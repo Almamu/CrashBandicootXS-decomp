@@ -3,14 +3,14 @@
 #include "orbit_part.h"
 
 /* GitHub issue #12/#14 Phase 2, second parallel slice: the tail 6
- * functions of the still-large 24-function chunk past sub_8010D54
+ * functions of the still-large 24-function chunk past AddCollisionCandidate
  * (asm/code_3_2_17_e560_10d54.s) - see
  * docs/matching/issue-14-0x08010d54-physics-apply.md's Phase 2 planning
  * section for the full function/size list. This file carves out only
- * PickUpWumpa-sub_801192C (the chunk's last 6 functions, contiguous
+ * PickUpWumpa-UpdateWumpaHop (the chunk's last 6 functions, contiguous
  * through to the already-matched src/graphics/actor_part39.c at
  * 0x080119A8) - a clean single trim point at the tail of the asm file,
- * chosen specifically because CreateExtraLife and the sub_8011248-
+ * chosen specifically because CreateExtraLife and the UpdateExtraLifeHop-
  * CheckWumpaPickup "no cross-reference" accessor cluster in between this
  * file's own functions and the ones a sibling parallel session is
  * working on are interleaved with several *other* individually-
@@ -25,7 +25,7 @@ extern void *gAudioContext;
 extern void *gHud;
 extern void *gLevelState;
 extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
-extern void sub_8007174(void *arg0, s32 arg1, s32 arg2, s32 *arg3, s32 *arg4);
+extern void WorldToScreen(void *arg0, s32 arg1, s32 arg2, s32 *arg3, s32 *arg4);
 extern s32 FixedDiv(s32 arg0, s32 arg1);
 extern s32 FixedMul(s32 a, s32 b);
 extern void ShowHudWumpa(void *state);
@@ -33,7 +33,7 @@ extern s16 gSineTable[];
 extern s32 rand(void);
 
 /* Built with old_agbcc (Makefile OLD_AGBCC_OBJS) since the issue #15
- * NAKED retry: PickUpWumpa and sub_801192C match only under it, and the
+ * NAKED retry: PickUpWumpa and UpdateWumpaHop match only under it, and the
  * rest of the file compiles identically under either compiler. */
 
 /* `frame = min(0, frameCount - 1)` against the part's current animation
@@ -58,7 +58,7 @@ static inline void OrbitClampFrame(struct orbit_part *self)
  * = 0xa0, self->0x30 clamped from a self->0x20 table lookup at
  * self->0x2d*0x1c+0x16 (same "table[tag]->field 0x16, clamp against a
  * zero floor" idiom UpdateExtraLife/SendWumpaToHud also use), self->0x25 = 1,
- * self->0xc |= 0x10, then calls sub_8007174(self, self->x>>8, self->y>>8,
+ * self->0xc |= 0x10, then calls WorldToScreen(self, self->x>>8, self->y>>8,
  * &outX, &outY) and re-derives self->x/self->y plus self->0x40/self->0x44
  * (a "distance to travel" pair, via -FixedDiv(newPos<<8 - offset,
  * 0x1400)) from the results - the exact same tail shape PickUpExtraLife/
@@ -104,7 +104,7 @@ void PickUpWumpa(struct orbit_part *self, u8 randomize)
     }
     self->base.flags |= 0x10;
 
-    sub_8007174(self, self->base.x >> 8, self->base.y >> 8, &outX, &outY);
+    WorldToScreen(self, self->base.x >> 8, self->base.y >> 8, &outX, &outY);
 
     newX = outX << 8;
     self->base.x = newX;
@@ -143,7 +143,7 @@ void PickUpWumpa(struct orbit_part *self, u8 randomize)
  * gSineTable[self->0x49 & 0x7f] and FixedMul, added to
  * self->0x50 and stored into self->y (a "rotate self->y around a fixed
  * center by a table-driven step" idiom, same table/shape as
- * UpdateExtraLife's own default-mode branch); if set, calls sub_801192C
+ * UpdateExtraLife's own default-mode branch); if set, calls UpdateWumpaHop
  * (the small self->0x4b/self->0x4a-driven table helper above) instead.
  * If self->0x48 == 3 specifically, self->x/self->y are instead reset to
  * gPlayer's own position minus a small fixed offset
@@ -169,7 +169,7 @@ extern void CollectWumpa(void *state);
 extern struct actor *DropWumpa(void *unused0, u16 x, u16 y, u8 p3, u8 p4, u8 p5);
 typedef struct actor *(*OrbitSpawn4)(void *pool, s32 x, s32 y, u8 p3);
 
-extern void sub_801192C(struct orbit_part *self);
+extern void UpdateWumpaHop(struct orbit_part *self);
 extern void UpdateSpriteObj(struct actor *self);
 
 /* flags |= 1 and, unless the id is 0xffff, the id's bit in the
@@ -294,7 +294,7 @@ void UpdateWumpa(struct orbit_part *self)
             sn = FixedMul(sn, 0x280);
             self->base.y = self->anchor.y + sn;
         } else {
-            sub_801192C(self);
+            UpdateWumpaHop(self);
         }
     } else if (self->state == 3) {
         struct orbit_part *p = gPlayer;
@@ -322,7 +322,7 @@ void UpdateWumpa(struct orbit_part *self)
  * already matched), stores `id` at `+8` and `x`/`y` (Q8-shifted) at `+0`/
  * `+4` - mirrored into `+0x4c`/`+0x50` as a "home position" pair the same
  * way UpdateWumpa's mode-3 branch reads it back - joins the
- * `special`-selected list, points `+0x20` at `gUnknown_030012D0`'s shared
+ * `special`-selected list, points `+0x20` at `gSpriteBankSet`'s shared
  * resource table (fixed slot `0xd2*2`, per the same `DropExtraLife`/
  * `DropWumpa` convention), tags `+0x2d = 1`, builds the OAM/keyframe
  * trio (`ResetSpriteFrameTimer`/`ResetSpriteFrameIndex`/`SetSpriteAnimDone`), derives `+0x30` from
@@ -352,7 +352,7 @@ void UpdateWumpa(struct orbit_part *self)
  *   tag address and its `strb`. */
 extern void *gUnknown_030012EC;
 extern void *gUnknown_030012F4;
-extern void ***gUnknown_030012D0;
+extern void ***gSpriteBankSet;
 extern void *gPaletteCache;
 extern u8 gWumpaVtable[];
 extern void *OperatorNew(s32 size);
@@ -385,7 +385,7 @@ struct orbit_part *CreateWumpa(u16 id, u16 x, u16 y, u16 special)
     else
         AddToPartList(gUnknown_030012EC, self);
     p = self;
-    p->bank = (struct act_anim_bank *)((u8 *)**gUnknown_030012D0 + 0xd2 * 2);
+    p->bank = (struct act_anim_bank *)((u8 *)**gSpriteBankSet + 0xd2 * 2);
     {
         u8 one = 1;
         u8 *t = &p->tag;
@@ -424,7 +424,7 @@ struct orbit_part *CreateWumpa(u16 id, u16 x, u16 y, u16 special)
  * gAudioContext, 8, 0x100), self->0x48 = 1, self->x -= self->0x4a<<8
  * (a fixed-offset nudge), self->0x3c = 0xa0, self->0x30 clamped from the
  * same self->0x20/self->0x2d table-lookup idiom, self->0x25 = 1, calls
- * sub_8007174(self, x>>8, y>>8, &outX, &outY) and re-derives self->x/
+ * WorldToScreen(self, x>>8, y>>8, &outX, &outY) and re-derives self->x/
  * self->y plus self->0x40/self->0x44 the same way, with a fixed
  * 0xFFFFF000 (-0x1000) offset on both axes instead of a randomized one -
  * then, unlike PickUpWumpa/SendExtraLifeToHud, finishes with
@@ -452,7 +452,7 @@ void SendWumpaToHud(struct orbit_part *self)
     OrbitClampFrame(self);
     self->unk_25 = 1;
 
-    sub_8007174(self, self->base.x >> 8, self->base.y >> 8, &outX, &outY);
+    WorldToScreen(self, self->base.x >> 8, self->base.y >> 8, &outX, &outY);
 
     newX = outX << 8;
     self->base.x = newX;
@@ -474,9 +474,9 @@ void sub_801191C(struct actor *self)
     *((u8 *)self + 0x49) = 0xa;
 }
 
-/* sub_801192C: address-adjacent to sub_801191C, a small self->0x4b/
+/* UpdateWumpaHop: address-adjacent to sub_801191C, a small self->0x4b/
  * self->0x4a-driven table helper - copies a fixed 3-word table
- * (gStaticData_0816BF14) onto the stack, computes self->y from a
+ * (gWumpaHopWidths) onto the stack, computes self->y from a
  * gSineTable (shared trig-ish table, see UpdateExtraLife's own doc
  * comment) lookup at self->0x4b*4 scaled by FixedMul(...,0x3000)
  * against self->0x50 (the "home Y" CreateWumpa/UpdateWumpa both write),
@@ -487,18 +487,18 @@ void sub_801191C(struct actor *self)
  * Called from UpdateWumpa's own default-mode tail above when
  * self->0x4a is nonzero.
  *
- * Same shape as sub_8011248 (game_loop52.c) with a 0x3000 y-scale: the
+ * Same shape as UpdateExtraLifeHop (game_loop52.c) with a 0x3000 y-scale: the
  * sine sample goes through one reused local, which old_agbcc keeps in r2
  * across both calls exactly like the ROM. */
 struct three_words {
     s32 a[3];
 };
 
-extern struct three_words gStaticData_0816BF14;
+extern struct three_words gWumpaHopWidths;
 
-void sub_801192C(struct orbit_part *self)
+void UpdateWumpaHop(struct orbit_part *self)
 {
-    struct three_words scales = gStaticData_0816BF14;
+    struct three_words scales = gWumpaHopWidths;
     s32 dy;
     s32 sn;
 

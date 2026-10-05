@@ -46,7 +46,7 @@ dispatch body), `PlayRoomMusic` (medal-results sound-cue resolver),
 (item-list `extra2`/`extra1` field-copy accessors), `SelectRoom`
 (item-list nonempty check + cursor-indexed cache).
 
-`src/system/game_loop19.c`: `sub_8024784` (trivial `gUnknown_03001314`
+`src/system/game_loop19.c`: `SetSlideshowDispcnt` (trivial `gSlideshowDispcnt`
 setter).
 
 `src/system/game_loop20.c`: `DestroySlideshow` (the `sub_802425C`-shaped
@@ -99,7 +99,7 @@ teardown wrapper), `ResetSlideshow` (trivial constructor).
   codebase's established `(u8)funcCall(...) != 0` idiom (see e.g.
   `src/graphics/actor_part38c.c`) once applied here too.
 - **`ShowSlidePicture`'s `& ~0x10`/negated-constant idiom.** The ROM computes
-  `gUnknown_03001314`'s low byte as `(byte & -0x11) | ((toggle&1)<<4)`
+  `gSlideshowDispcnt`'s low byte as `(byte & -0x11) | ((toggle&1)<<4)`
   - `-0x11` (`0xFFFFFFEF`) is numerically identical to `~0x10`, and is
   how this compiler materializes a plain `& ~0x10` bit-clear via
   `mov`+`rsb` rather than a `mvn`/`bic`. Writing the C as the natural

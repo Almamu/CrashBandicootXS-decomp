@@ -355,7 +355,7 @@ from "core" graphics.
   set-position primitive already referenced by name from
   `actor_part.c`/`actor_part2.c`/`oam_count.c`), `GetLives` (a
   trivial raw-offset getter), `DestroyLargeFont`/`DestroySmallFont` (two more
-  `gStaticData_087E3BEC`-family per-type descriptor table constructors)
+  `gEntityVtable`-family per-type descriptor table constructors)
 
 - `src/graphics/actor_part20.c`/`actor_part20d.c`/`actor_part21.c`/
   `actor_part21c.c`/`actor_part22.c`/`actor_part23.c`/
@@ -1160,7 +1160,7 @@ they don't count as "matched" for this project's tracking - the goal
 is readable C, and an asm blob wrapped in a C function signature
 doesn't advance that even when byte-correct. See
 [docs/workflow.md](../workflow.md)'s NAKED-transcription escape hatch
-(`sub_8001CB8`/`sub_8001DB4` in `src/system/link_cable.c`) for the
+(`MakeLinkHandshakeId`/`ResetLinkSessionState` in `src/system/link_cable.c`) for the
 established convention, and each entry's linked write-up for why
 plain C didn't converge.
 

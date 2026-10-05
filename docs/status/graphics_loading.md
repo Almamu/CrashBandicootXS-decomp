@@ -85,7 +85,7 @@ family. Filed under `src/graphics/` on disk, tracked as its own
   once built with **old_agbcc** (`OLD_AGBCC_OBJS`). See
   [issue-31-trigger-effect-type-n.md](../matching/issue-31-trigger-effect-type-n.md)'s
   "Old-compiler pass".
-- **`sub_8022354`** (UNUSED), **`PlayCutscene`**
+- **`DestroyLevelState`** (UNUSED), **`PlayCutscene`**
   (`src/graphics/graphics_loading_22354.c`) - the gap between issues #33
   and #34 (no issue of its own): the game context's never-called
   destructor (tears down every singleton `InitLevelState` builds) and the
@@ -110,17 +110,17 @@ family. Filed under `src/graphics/` on disk, tracked as its own
   [naked-retry-mid45.md](../matching/naked-retry-mid45.md)). See
   [issue-31-old-agbcc.md](../matching/issue-31-old-agbcc.md).
 - **`SpawnBodySlamPower`**, **`SpawnTornadoSpinPower`**, **`SpawnDoubleJumpPower`**, **`SpawnTurboRunPower`**,
-  **`SpawnStopwatch`**, **`SpawnBlueGem`**, **`sub_80220C4`**, **`sub_802209C`**,
+  **`SpawnStopwatch`**, **`SpawnBlueGem`**, **`sub_80220C4`**, **`SpawnCrateGemMarker`**,
   **`SpawnWumpa`**, **`nullsub_22`**, **`sub_802218C`**, **`sub_80221A4`**,
   **`sub_80221BC`**, **`sub_80221D4`**, **`nullsub_23`**, **`DestroyEntitySpawner`**,
   **`CreateEntitySpawner`**, **`InitLevelState`** (`src/graphics/graphics_loading_21d80.c`)
   - the `gSpriteBankTable` record-indexed OAM-trio spawner family, the
-  `sub_801E990` trampolines, the `gPlayer` position writers, the
+  `SpawnStartMarker` trampolines, the `gPlayer` position writers, the
   `{table_base, count}` descriptor pair, and `InitLevelState` itself - the
   "origin point" that constructs nearly every hot IWRAM global this ROM
   region references. See
   [issue-33-0x08021bfc-graphics-loading.md](../matching/issue-33-0x08021bfc-graphics-loading.md).
-- **`sub_801E990`** (`src/graphics/graphics_loading_1e990.c`) - the
+- **`SpawnStartMarker`** (`src/graphics/graphics_loading_1e990.c`) - the
   sound-trigger dispatch/position writer at the end of the
   `LoadGraphicsPackage` cluster's scratch-buffer-style helper family
   (issue #30). Was a NAKED transcription for a long time (see "Parked"
@@ -210,7 +210,7 @@ they don't count as "matched" for this project's tracking - the goal
 is readable C, and an asm blob wrapped in a C function signature
 doesn't advance that even when byte-correct. See
 [docs/workflow.md](../workflow.md)'s NAKED-transcription escape hatch
-(`sub_8001CB8`/`sub_8001DB4` in `src/system/link_cable.c`) for the
+(`MakeLinkHandshakeId`/`ResetLinkSessionState` in `src/system/link_cable.c`) for the
 established convention, and each entry's linked write-up for why
 plain C didn't converge.
 

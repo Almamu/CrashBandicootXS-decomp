@@ -34,7 +34,7 @@
  * (`SetCrateAbove`/`SetCrateBelow`) to the actor with the link's `to` id,
  * following further links while `to` isn't spawned. Then each link whose
  * `from` actor doesn't exist resolves its `to` chain to a spawned actor
- * and moves that actor's neighbour chain (`GetCrateAbove`/`sub_8007398`)
+ * and moves that actor's neighbour chain (`GetCrateAbove`/`SetEntityPos`)
  * up by its `+0x10` method's height.
  *
  * Built with old_agbcc (game_loop41.o is on OLD_AGBCC_OBJS; this file
@@ -149,7 +149,7 @@ extern void SpawnEntity(void *table, s32 n, struct lk_item *item);
 extern void SetCrateAbove(struct lk_actor *a, struct lk_actor *b);
 extern void SetCrateBelow(struct lk_actor *a, struct lk_actor *b);
 extern struct lk_actor *GetCrateAbove(struct lk_actor *a);
-extern void sub_8007398(struct lk_actor *a, s32 x, s32 y);
+extern void SetEntityPos(struct lk_actor *a, s32 x, s32 y);
 extern u8 *_call_via_r1(void *self, void *fn);
 
 void SpawnRoomEntities(struct lk_self *self, struct lk_list *list, struct lk_links *links, s32 posArg)
@@ -342,7 +342,7 @@ void SpawnRoomEntities(struct lk_self *self, struct lk_list *list, struct lk_lin
                 {
                     p.x = actor->pos.x;
                     pp->y = actor->pos.y + lift;
-                    sub_8007398(actor, p.x, pp->y);
+                    SetEntityPos(actor, p.x, pp->y);
                     actor = GetCrateAbove(actor);
                 } while (actor != NULL);
             }

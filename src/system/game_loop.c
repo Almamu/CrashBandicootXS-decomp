@@ -15,8 +15,8 @@ extern void *MemCopy32(void *dest, void *src, s32 size);
 extern void CpuSet(void *src, void *dst, s32 control);
 extern void SetBonusRoundDone(void *self);
 extern void ClearInBonusRound(void *self);
-extern void sub_8007398(struct actor *self, s32 arg1, s32 arg2);
-extern void sub_8028568(void *state, s32 arg1);
+extern void SetEntityPos(struct actor *self, s32 arg1, s32 arg2);
+extern void SetHudCrateTotal(void *state, s32 arg1);
 extern void SetCheckpointAtPlayer(struct level_state *self, u8 arg1);
 
 /* Called at level start/checkpoint-restore: `arg1` selects whether to
@@ -25,7 +25,7 @@ extern void SetCheckpointAtPlayer(struct level_state *self, u8 arg1);
  * same way `TickLevelClock`'s odometer carries) or to just reset those
  * three fields back from their `savedCrateCount`/`savedWumpa`/`savedLives` "level start"
  * snapshot. Either way it re-syncs the player's stored position
- * (`checkpointX`/`checkpointY` -> `sub_8007398`) and re-runs
+ * (`checkpointX`/`checkpointY` -> `SetEntityPos`) and re-runs
  * `SetCheckpointAtPlayer`, then flushes `crateTotal` into the `gHud`
  * cache and clears the `+0xa4` busy flag.
  *
@@ -82,7 +82,7 @@ void EndBonusRound(struct level_state *self, u8 arg1)
             self->lives = total;
 
             SetBonusRoundDone(self);
-            sub_8007398((struct actor *)gPlayer, fieldd4[0], fieldd4[1]);
+            SetEntityPos((struct actor *)gPlayer, fieldd4[0], fieldd4[1]);
             SetCheckpointAtPlayer(self, *fielde0);
         }
     } else {
@@ -93,7 +93,7 @@ void EndBonusRound(struct level_state *self, u8 arg1)
         fieldbc = &self->crateTotal;
     }
 
-    sub_8028568(gHud, *fieldbc);
+    SetHudCrateTotal(gHud, *fieldbc);
     ClearInBonusRound(self);
 }
 

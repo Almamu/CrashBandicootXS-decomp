@@ -6,12 +6,12 @@ extern s32 gLanguage;
 extern s32 *gUiTextTables[];
 
 extern void *GetLevelState(void);
-extern void sub_802369C(void);
-extern void sub_8023674(void *state);
+extern void PlayBootCutscene(void);
+extern void ShowCompanyLogos(void *state);
 extern void OpenLanguageSelect(void);
 extern s32 RunLanguageSelect(void);
 extern void CloseLanguageSelect(void);
-extern void sub_8023658(void *state);
+extern void PlayIntroCutscene(void *state);
 extern void UpdateGameFrame(void *state);
 
 /* The game's top-level loop (called once from `AgbMain`, see
@@ -26,12 +26,12 @@ extern void UpdateGameFrame(void *state);
 s32 MainLoop(void)
 {
     gLevelState = GetLevelState();
-    sub_802369C();
-    sub_8023674(gLevelState);
+    PlayBootCutscene();
+    ShowCompanyLogos(gLevelState);
     OpenLanguageSelect();
     gLanguage = RunLanguageSelect();
     CloseLanguageSelect();
-    sub_8023658(gLevelState);
+    PlayIntroCutscene(gLevelState);
 
     for (;;) {
         mem_free_bytes(MEM_HEAP_BOTH);

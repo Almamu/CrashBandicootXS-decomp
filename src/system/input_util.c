@@ -5,7 +5,7 @@
 
 extern void WaitForVBlank(void);
 extern s32 UpdateKeys(void *arg0);
-extern void *gUnknown_03001304;
+extern void *gInput;
 extern u16 gKeys;
 
 /* Polls input (via WaitForVBlank/UpdateKeys, the same VBlank-wait-then-
@@ -21,7 +21,7 @@ extern u16 gKeys;
  * companion u16 at +2, see `UpdateKeys`'s own notes in
  * `src/system/irq.c`) fresh each poll (no caching across polls, since
  * `UpdateKeys`'s call in between could change it). The
- * `UpdateKeys(gUnknown_03001304)` calls pass an argument the real,
+ * `UpdateKeys(gInput)` calls pass an argument the real,
  * already-matched `UpdateKeys(void)` (in `src/system/irq.c`) never
  * reads - same "ROM sets up an arg the callee ignores" shape as
  * `WaitForVBlank` itself; declared here with a dummy `void *` parameter
@@ -80,7 +80,7 @@ checkCount:
         goto done;
     }
     WaitForVBlank();
-    UpdateKeys(gUnknown_03001304);
+    UpdateKeys(gInput);
     addr = &gKeys;
     asm volatile("add %0, %1, #0" : "=r"(keys) : "r"(mask));
     keys &= *(u16 *)((u8 *)addr + 2);
@@ -99,7 +99,7 @@ noLimit:
     }
 loopNoLimit:
     WaitForVBlank();
-    UpdateKeys(gUnknown_03001304);
+    UpdateKeys(gInput);
     addr = &gKeys;
     asm volatile("add %0, %1, #0" : "=r"(keys) : "r"(mask));
     keys &= *(u16 *)((u8 *)addr + 2);

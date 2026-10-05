@@ -4,14 +4,14 @@
 
 extern void *gHud;
 extern void *gAudioContext;
-extern void *gUnknown_030012D0;
+extern void *gSpriteBankSet;
 extern struct palette_cache *gPaletteCache;
 
 extern u8 IsInBonusRound(struct level_state *self);
 extern u8 IsInGemPath(struct level_state *self);
 extern u8 *GetCurrentLevelFlags(struct level_state *self);
 extern void SpawnCrateGem(s32 a, u16 b, u16 c, u16 d);
-extern void sub_8028474(void *state);
+extern void ShowHudCrates(void *state);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
 extern u8 GetPaletteSlot(struct palette_cache *self, s32 recordId);
 extern void LoadPaletteSlot(struct palette_cache *self, s32 slot, s32 recordId);
@@ -21,7 +21,7 @@ extern void UploadPaletteSlot(struct palette_cache *self, s32 index);
  * achievement/unlock-icon spawner family, tied to gSpriteBankTable
  * record 47") - `TickLevelClock` is its decrementer/consumer.
  *
- * The ROM keeps `&gUnknown_030012D0` and `&gPaletteCache` alive
+ * The ROM keeps `&gSpriteBankSet` and `&gPaletteCache` alive
  * across the `GetPaletteSlot` call in `r4`/`r7` (only 4 low registers
  * total, `r4`'s slot reused from the now-dead `seconds` parameter).
  * Blanket register pins for all of `self`/`seconds`/the two cached
@@ -60,14 +60,14 @@ void FreezeLevelClock(struct level_state *self, s32 seconds)
     self->countdown += seconds * 60;
 
     base = gPaletteCache;
-    p3 = *(void **)gUnknown_030012D0;
+    p3 = *(void **)gSpriteBankSet;
     header = *(void **)p3;
     off = 0x8d << 2;
     record = *(void **)((u8 *)header + off);
     recordId = *((u8 *)record + 0x30);
     slot = GetPaletteSlot(base, recordId);
 
-    p3b = *(void **)gUnknown_030012D0;
+    p3b = *(void **)gSpriteBankSet;
     headerb = *(void **)p3b;
     recordb = *(void **)((u8 *)headerb + 0x234);
     recordId = *((u8 *)recordb + 0x84);
@@ -130,14 +130,14 @@ void TickLevelClock(struct level_state *self)
             struct level_category *level;
 
             base = gPaletteCache;
-            p3 = *(void **)gUnknown_030012D0;
+            p3 = *(void **)gSpriteBankSet;
             header = *(void **)p3;
             off = 0x8d << 2;
             record = *(void **)((u8 *)header + off);
             recordId = *((u8 *)record + 0x30);
             slot = GetPaletteSlot(base, recordId);
 
-            p3b = *(void **)gUnknown_030012D0;
+            p3b = *(void **)gSpriteBankSet;
             headerb = *(void **)p3b;
             recordb = *(void **)((u8 *)headerb + 0x234);
             recordId = *((u8 *)recordb + 0x30);
@@ -219,7 +219,7 @@ void AddBrokenCrate(struct level_state *self)
     }
 
     if (self->timeTrial == 0) {
-        sub_8028474(gHud);
+        ShowHudCrates(gHud);
     }
 }
 
@@ -228,11 +228,11 @@ void PressSwitchCrate(struct level_state *self)
     self->switchPressed = 1;
 
     if (IsInBonusRound(self)) {
-        self->savedCrateCount += self->unk_ac;
+        self->savedCrateCount += self->pendingSwitchCrates;
         return;
     }
 
-    self->crateCount += self->unk_ac;
+    self->crateCount += self->pendingSwitchCrates;
 
     if (self->crateCount != self->crateTotal) {
         return;
@@ -290,9 +290,9 @@ s32 sub_8023138(struct level_state *self)
     return self->unk_80;
 }
 
-void sub_8023140(struct level_state *self, s32 delta)
+void AddPendingSwitchCrates(struct level_state *self, s32 delta)
 {
-    self->unk_ac += delta;
+    self->pendingSwitchCrates += delta;
 }
 
 void sub_802314C(struct level_state *self, s32 mask)
@@ -604,13 +604,13 @@ void ArmStartSpawn(struct level_state *self)
 
 /* Plain setter for a fourth word-sized field at `self+0x1c8`, right
  * after the `self+0x1c0`/`0x1c4` pair `CheckAllCratesBroken` below reads. */
-void sub_8023318(struct level_state *self, struct level_state_1c8 *value)
+void SetLevelBoss(struct level_state *self, struct level_state_1c8 *value)
 {
-    self->unk_1c8 = value;
+    self->boss = value;
 }
 
 /* Plain getter/getter/setter trio for `self+0xc8`/`self+0xc4` - the
- * latter is the "current index" field `sub_8023378`/`sub_80233B4`/
+ * latter is the "current index" field `GetBossHealth`/`GetBossIndex`/
  * `GetCurrentLevelFlags`/`IsCrystalSaved` below all read. */
 s32 sub_8023324(struct level_state *self)
 {
@@ -666,10 +666,10 @@ extern s32 GetHovercraftPartsLeft(void);
 /* Dispatches on `self+0xc4`'s "current index" field: index `0x15` fires
  * the actor-part singleton lifetime counter (`GetHovercraftPartsLeft`,
  * `actor_part28.c`); indices `0x14`/`0x16`/`0x17` instead compute
- * `3 - (*(self+0x1c8))->0x10` (the fourth word-field `sub_8023318`
+ * `3 - (*(self+0x1c8))->0x10` (the fourth word-field `SetLevelBoss`
  * above sets, apparently itself a pointer to a small record); anything
  * else returns `0`. */
-s32 sub_8023378(struct level_state *self)
+s32 GetBossHealth(struct level_state *self)
 {
     s32 idx = self->level;
 
@@ -677,15 +677,15 @@ s32 sub_8023378(struct level_state *self)
     case 0x15:
         return GetHovercraftPartsLeft();
     case 0x14: {
-        struct level_state_1c8 *p = self->unk_1c8;
+        struct level_state_1c8 *p = self->boss;
         return 3 - p->unk_10;
     }
     case 0x16: {
-        struct level_state_1c8 *p = self->unk_1c8;
+        struct level_state_1c8 *p = self->boss;
         return 3 - p->unk_10;
     }
     case 0x17: {
-        struct level_state_1c8 *p = self->unk_1c8;
+        struct level_state_1c8 *p = self->boss;
         return 3 - p->unk_10;
     }
     default:
@@ -701,7 +701,7 @@ s32 sub_8023378(struct level_state *self)
  * `_080233F6`'s `subs r0,#6` cases 0-3 share - a plain
  * `return 9 - 6;`-style fold collapses that shared instruction away,
  * so the subtraction has to stay a genuine runtime step). */
-s32 sub_80233B4(struct level_state *self)
+s32 GetBossIndex(struct level_state *self)
 {
     s32 idx = self->level;
     s32 result;
@@ -793,7 +793,7 @@ void AddLife(struct level_state *self)
 /* GitHub issue #37: closes the loop on the `self+0x1c0`/`0x1c4`
  * counter-notification chain (`docs/rom_map.md`'s "Coverage check and
  * eight more small reads" section) - the consumer/trigger side of the
- * 15-slot table's `sub_802209C` writer, forwarding into `SpawnCrateGem`
+ * 15-slot table's `SpawnCrateGemMarker` writer, forwarding into `SpawnCrateGem`
  * alongside `PressSwitchCrate`/`AddBrokenCrate`'s own threshold-cross paths
  * above (identical shape: gated by the same `self+0x70 == self+0xbc`
  * counter/threshold pair, `IsInBonusRound`/`IsInGemPath` readiness checks,

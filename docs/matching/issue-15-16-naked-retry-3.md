@@ -9,8 +9,8 @@ closed; two got new or better drafts; three were not attempted.
 | `UpdateActionCtrl` | `actor_part84.c` | **Real C**, old_agbcc |
 | `CreateWumpa` | `game_loop53.c` | Still NAKED, analysis added to the draft's note |
 | `UpdateWumpa` | `game_loop53.c` | Still NAKED, first C draft under `NON_MATCHING` |
-| `sub_8001DB4` | `link_cable.c` | Still NAKED, note on the draft extended |
-| `sub_8002114` | `link_cable.c` | Not attempted (1488 B, no draft) |
+| `ResetLinkSessionState` | `link_cable.c` | Still NAKED, note on the draft extended |
+| `HandleLinkSerial` | `link_cable.c` | Not attempted (1488 B, no draft) |
 | `UpdateEnemyCtrl` | `actor_part112.c` | Not attempted (1132 B, no draft) |
 
 ## Closed
@@ -81,14 +81,14 @@ themselves. So did the first draft's "temporaries in r6".
   three "flags |= 1, set the id bit" tails: mode 1 jumps into the
   bit-set part, and modes 2 and 3 share the code from the `orr` on.
   Here the three copies get different registers, so none of them merge.
-- **`sub_8001DB4`.** 136 halfwords off, same size. old_agbcc reverses
+- **`ResetLinkSessionState`.** 136 halfwords off, same size. old_agbcc reverses
   the inner id-copy loop, which the ROM keeps counting up; do/while,
   goto, `continue` and explicit pointer forms don't prevent that. The
   ROM also rebuilds `self + 0xd0` inside the outer loop, and reads
   `field_400` back after storing it.
   `-fno-strength-reduce` is worse: the ROM's first loop *is* reversed
   and pointer-reduced.
-- **`sub_8002114`, `UpdateEnemyCtrl`.** Not attempted: 1488 B and 1132 B
+- **`HandleLinkSerial`, `UpdateEnemyCtrl`.** Not attempted: 1488 B and 1132 B
   with no C draft to start from.
 
 ## Techniques worth reusing

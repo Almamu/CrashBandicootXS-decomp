@@ -50,8 +50,8 @@ struct hud_counter {
                               * while neither counter is shown. */
     u8 unknown_0c[0xC];      /* +0x0c */
     u8 icon_flag;            /* +0x18 - UpdateHud's dispatcher gate for
-                               * sub_8027E88 (percentage counter); also set
-                               * from sub_802732C's second argument while
+                               * UpdateHudPercentCounters (percentage counter); also set
+                               * from ConfigureHudParts's second argument while
                                * the OAM slot array is being built. */
     u8 unknown_19[3];        /* +0x19 */
     s32 lives;               /* +0x1c */

@@ -306,7 +306,7 @@ def main():
             out.extend(decls)
             out.append("")
             out.append("/* The root of the system: InitLevelState (graphics_loading_21d80.c) points")
-            out.append(" * *gUnknown_030012D0 here. GetSpriteTileBase returns tileBase;")
+            out.append(" * *gSpriteBankSet here. GetSpriteTileBase returns tileBase;")
             out.append(" * InitLevelState and RunPauseMenu (settings_menu15.c) build the tile-asset")
             out.append(" * cache from tilePool/tilePoolCount. */")
             out.append("const struct sprite_bank_table gSpriteBankTable = {")
@@ -317,7 +317,7 @@ def main():
             out.append("    .tilePoolCount = sizeof(gFixedObjTiles) / 32,")
             out.append("};")
             out.append("")
-            out.append("/* Bank N is `**gUnknown_030012D0 + 12 * N` in the code (a part's +0x20). */")
+            out.append("/* Bank N is `**gSpriteBankSet + 12 * N` in the code (a part's +0x20). */")
             out.append("const struct sprite_bank gSpriteBanks[56] = {")
             for i in range(nbanks):
                 b = f"gSpriteBank{i:02}"

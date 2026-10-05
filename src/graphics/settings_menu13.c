@@ -56,7 +56,7 @@ extern void LoadGraphicsPackage(void *buf, void *asset);
 extern s32 GetBgSetupControl(void *buf);
 extern void PlaySong(void *self, s32 id);
 
-extern void ***gUnknown_030012D0;
+extern void ***gSpriteBankSet;
 extern u8 gStaticData_0816C484[];
 extern void *gAudioContext;
 
@@ -71,7 +71,7 @@ extern void *gAudioContext;
  * background package, and builds the background icon the same way
  * `settings_menu6.c`'s icon-constructor family does (allocate via
  * `InitUiSpriteObj(OperatorNew(0x40))`, point `field_20` at the shared
- * `gUnknown_030012D0` header table at a new `0xe4<<1` offset - see
+ * `gSpriteBankSet` header table at a new `0xe4<<1` offset - see
  * docs/rom_map.md's "five confirmed header-relative offsets" note,
  * frame index from `type`, the standard `ResetSpriteFrameTimer`/`ResetSpriteFrameIndex`/
  * `SetSpriteAnimDone` OAM trio, positioned at a fixed (0xf0<<7, 0xa0<<7)
@@ -206,7 +206,7 @@ struct sub_8006700_actor *InitPowerDialog(struct sub_8006700_actor *selfArg, s32
 
     icon = (struct settings_icon_actor *)InitUiSpriteObj((struct actor *)OperatorNew(0x40));
     self->field_18 = icon;
-    icon->field_20 = (void **)((u8 *)(**gUnknown_030012D0) + (0xe4 << 1));
+    icon->field_20 = (void **)((u8 *)(**gSpriteBankSet) + (0xe4 << 1));
     {
         register u8 *addr asm("r0");
         register u8 t3 asm("r3");

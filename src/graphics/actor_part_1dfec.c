@@ -234,7 +234,7 @@ void UpdateLevelSelectCursor(struct cursor_panel *self)
  * affine OBJ with its own matrix; otherwise the sprite part draws it. */
 void DrawLevelSelectCursor(struct cursor_panel *self)
 {
-    sub_800737C(self->part, self->line.x0, self->line.y0);
+    SetEntityPixelPos(self->part, self->line.x0, self->line.y0);
     switch (self->state)
     {
     case 4 ... 5:
@@ -363,7 +363,7 @@ void SetLevelSelectCursorPos(struct cursor_panel *self, s32 x, s32 y)
 {
     self->line.x0 = x;
     self->line.y0 = y;
-    sub_800737C(self->part, x, y);
+    SetEntityPixelPos(self->part, x, y);
 }
 
 void sub_801E504(struct cursor_panel *self)

@@ -39,7 +39,7 @@ extern struct AudioContext *gAudioContext;
 extern void *gLevelState;
 extern struct palette_cache *gPaletteCache;
 extern void *gPlayer;
-extern void *gUnknown_03001304;
+extern void *gInput;
 
 /* Plays a sound, fires the `+0x50`/`+0x54` trampoline pair with `arg1`
  * as its "part" argument, then the `+0x20`/`+0x24` pair with id `0x1d`,
@@ -221,7 +221,7 @@ end:
 s32 UpdatePlayerFacing(void *selfArg)
 {
     u8 *self = selfArg;
-    register s32 dpad asm("r3") = GetDpadDirection(gUnknown_03001304);
+    register s32 dpad asm("r3") = GetDpadDirection(gInput);
     register s32 result asm("r2") = 0;
     s32 type = *(s32 *)(self + 8);
 

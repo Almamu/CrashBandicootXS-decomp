@@ -1,6 +1,6 @@
-# `sub_801E990`: matched
+# `SpawnStartMarker`: matched
 
-`sub_801E990` (`src/graphics/graphics_loading_1e990.c`, sound-trigger
+`SpawnStartMarker` (`src/graphics/graphics_loading_1e990.c`, sound-trigger
 dispatch/position writer) was a byte-correct NAKED asm transcription
 for a long time - see [issue-30-graphics-loading.md](./issue-30-graphics-loading.md)'s
 "Fifth pass" for the original parking rationale. This doc originally
