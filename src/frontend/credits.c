@@ -8,6 +8,7 @@
 #include "text.h"
 #include "frontend.h"
 #include "system.h"
+#include "menus.h"
 
 /* GitHub issue #64 (0x08034AA4-0x080354E0, 13 functions). Continues
  * straight on from issue #63's fade-overlay cluster (continue_prompt_init.c/
@@ -19,27 +20,6 @@
  * "RunContinuePrompt turns out to be a separate screen trigger"/"A fourth
  * thing in this file" sections) - see
  * docs/matching/issue-64-0x08034aa4-actor.md for the full write-up. */
-
-/* Same `struct continue_prompt` as continue_prompt_init.c/continue_prompt.c, redeclared
- * locally per this project's minimal-local-type convention. This
- * chunk's functions pin down real meanings for two fields continue_prompt_init.c
- * left vague: `unused_1c` is a per-item blink/flash toggle counter
- * (kept the same field name there since that file never touches it),
- * and `selection` (once `flag_20`, guessed as "which of two alternating
- * cue sfx last fired") turns out, in this sibling function set, to hold the
- * Yes/No dialog's currently-selected option index (0/1; any other value
- * means neither option is highlighted) instead. Same field, a related
- * but distinct use by this file's functions. */
-struct continue_prompt {
-    u8 *bg1Buf;   /* 0x00 */
-    u8 *bg0Buf;   /* 0x04 */
-    u8 *bg2Buf;   /* 0x08 */
-    u16 dispcnt;  /* 0x0c */
-    u8 unused_0e[0xa];
-    struct bitmap_font *icons; /* 0x18 */
-    s32 blinkCounter; /* 0x1c */
-    s32 selection;     /* 0x20 */
-};
 
 /* The credits screen (RunCredits; docs/rom_map.md read it as a
  * "between-level map/progress screen"), allocated `OperatorNew(0x98)` by
@@ -67,12 +47,10 @@ extern void FlushVramDmaQueue(void);
  * with that the "many live values across calls" allocation falls out
  * of plain C. */
 extern struct vram_upload_cursor *gObjVramCursor;
-extern u8 gContinuePromptCursorText[];
 extern void ResetOamBuffer(struct oam_shadow_buffer *arg0);
 extern void HideUnusedOamEntries(struct oam_shadow_buffer *arg0);
 extern void RewindObjVram(struct vram_upload_cursor *arg0);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
-s32 GetContinuePromptBlink(struct continue_prompt *self, s32 mode);
 
 /* `record->slots[n]` on an icon manager, called with `label` (slot 0
  * measures and returns the pixel width, slot 2 draws). */
@@ -171,8 +149,6 @@ void DestroyContinuePrompt(struct continue_prompt *self, s32 mode)
 }
 
 extern void *OperatorNew(s32 size);
-extern void *InitContinuePrompt(void *selfArg);
-extern s32 ContinuePromptLoop(void *selfArg);
 
 /* --------------------------------------------------------------------
  * RunContinuePrompt - the "Are you sure?" confirmation-dialog trigger
@@ -182,7 +158,7 @@ extern s32 ContinuePromptLoop(void *selfArg);
  * (DestroyContinuePrompt) if it was actually built, and returns which option was
  * selected.
  * ------------------------------------------------------------------ */
-s32 RunContinuePrompt(void)
+u8 RunContinuePrompt(void)
 {
     struct continue_prompt *self;
     u8 result;

@@ -1,5 +1,6 @@
 #include "core.h"
 #include "actor.h"
+#include "crates.h"
 
 /* Same fixed-slot object-pool/spatial-hash-grid struct `InitCrateList`
  * initializes (`part_list.c`) and `crate_list.c` operates on - see

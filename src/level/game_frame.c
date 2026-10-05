@@ -7,6 +7,7 @@
 #include "util.h"
 #include "system.h"
 #include "audio.h"
+#include "menus.h"
 
 /* UpdateGameFrame - the main per-frame game-loop driver at the head of
  * the UpdateGameFrame-MainLoop cluster (GitHub issue #34,
@@ -119,18 +120,12 @@ extern u8 HasSuperBodySlam(struct level_state *self);
 extern u8 HasDoubleJump(struct level_state *self);
 extern u8 HasTornadoSpin(struct level_state *self);
 extern u8 HasTurboRun(struct level_state *self);
-extern void SetNewWorldOpened(void);
 extern void GiveSuperBodySlam(struct level_state *self);
 extern void GiveDoubleJump(struct level_state *self);
 extern void GiveTornadoSpin(struct level_state *self);
 extern void GiveTurboRun(struct level_state *self);
-extern void ShowSuperBodySlamDialog(void);
-extern void ShowDoubleJumpDialog(void);
-extern void ShowTornadoSpinDialog(void);
-extern void ShowTurboRunDialog(void);
 extern s32 GetCompletionPercent(struct level_state *self);
 extern union level_best_time *GetCurrentLevelFlags(struct level_state *self);
-extern s32 RunLevelSelect(s32 *progress);
 extern void ClearTimeTrial(struct level_state *self);
 extern s32 CountLevelCrates(s32 level);
 extern void ClearBonusRoundDone(struct level_state *self);
@@ -164,7 +159,6 @@ extern void RestoreCheckpoint(struct level_state *self);
 extern s32 GetWumpa(struct level_state *self);
 extern s32 GetCrateCount(struct level_state *self);
 extern s32 CountRoomCrates(struct level_category *cat);
-extern u8 RunContinuePrompt(void);
 
 void UpdateGameFrame(struct level_state *self)
 {

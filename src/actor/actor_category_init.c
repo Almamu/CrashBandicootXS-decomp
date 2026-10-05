@@ -4,6 +4,7 @@
 #include "system.h"
 #include "hud.h"
 #include "util.h"
+#include "menus.h"
 
 /*
  * `InitActorCategory` - the category (re)initialization + loading-screen
@@ -81,7 +82,6 @@ extern u8 CanPauseActorCategory(void);
 extern void FreeSpriteFrameCache(void);
 extern void FreeSpriteFrameOamQueue(void);
 extern void FreeObjTileFreeList(void);
-extern s32 RunPauseMenu(void);
 extern void ResetCellAnimBg(void);
 extern void ReloadActorCategoryGraphics(void);
 extern void FreeCategorySpriteSheet(void);

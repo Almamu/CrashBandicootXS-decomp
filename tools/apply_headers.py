@@ -108,6 +108,12 @@ def apply(path, hdr_path, hdecls, adopt, dry_run, allow_definer):
     for d in hits:
         sym = d['asm'] or d['name']
         h = hdecls[sym]
+        if d['asm'] and d['asm'] != d['name'] and not h['asm']:
+            # `extern T Foo_alias(...) asm("Foo");`: a codegen alias of
+            # the header's Foo under another name. It doesn't clash with
+            # the header, so it stays (docs/headers_plan.md, rule 3).
+            msgs.append('kept asm-label alias %s of %s (line %d)' % (d['name'], sym, d['line']))
+            continue
         if d['asm'] != h['asm']:
             conflicts.append('%s: asm label %r vs header %r' % (sym, d['asm'], h['asm']))
         elif not same_type(d, h) and sym not in adopt:

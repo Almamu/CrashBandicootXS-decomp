@@ -8,6 +8,7 @@
 #include "text.h"
 #include "util.h"
 #include <libgcc.h>
+#include "menus.h"
 
 extern void AdvanceSpriteAnim(struct actor *part);
 extern void ResetSpriteFrameTimer(struct actor *part);
@@ -115,13 +116,6 @@ extern void ResetOamBuffer(void *arg0);
 extern void RewindObjVram(struct vram_upload_cursor *self);
 extern struct oam_shadow_buffer *gOamBuffer;
 extern void HideUnusedOamEntries(struct oam_shadow_buffer *arg0);
-extern void DrawPauseMenuRows(struct pause_menu *self);
-extern void DrawPauseMenuPageTitle(struct pause_menu *self);
-extern void DrawPauseCrystalsPage(struct pause_menu *self);
-extern void DrawPauseTimeTrialPage(struct pause_menu *self);
-extern void DrawPausePowersPage(struct pause_menu *self);
-extern void DrawPauseGemsPage(struct pause_menu *self);
-extern void DrawPauseRelicsPage(struct pause_menu *self);
 extern void DrawSpriteWithOffset(void *icon, s32 dx, s32 dy);
 extern u32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern struct vram_upload_cursor *gObjVramCursor;
@@ -235,14 +229,6 @@ void DrawPauseMenu(struct pause_menu *self)
     HideUnusedOamEntries(gOamBuffer);
 }
 
-/* One 8-byte record of `self->field_14`'s per-row array: a runtime
- * string-table label id, then a type tag (`DrawPauseMenuRows` branches on
- * `==4`/`==5`/else; `PauseMenuLoop`'s confirm check uses the same tag). */
-struct pause_screen_row_record {
-    s32 labelId;
-    s32 typeTag;
-};
-
 /* The composite pause/options screen's per-row list renderer - draws
  * `self->field_1c` rows (from `self->field_14`'s record array),
  * highlighting whichever matches `self->field_18` (the selected
@@ -270,9 +256,9 @@ void DrawPauseMenuRows(struct pause_menu *self)
             FontSetPalette(gSmallFont, 0xf);
         else
             FontResetPalette(gSmallFont);
-        label = (void *)GetUiText(((struct pause_screen_row_record *)self->field_14)[i].labelId);
+        label = (void *)GetUiText(self->field_14[i].labelId);
         x = 0x32 - (ICON_SLOT_CALL(gSmallFont, 0, label) >> 1);
-        switch (((struct pause_screen_row_record *)self->field_14)[i].typeTag) {
+        switch (self->field_14[i].type) {
         case 4:
             x -= ICON_SLOT_CALL(gSmallFont, 0, self->musicVolumeText) >> 1;
             set_icon_mgr_pos(gSmallFont, x, y);

@@ -1,19 +1,14 @@
 #include "core.h"
+#include "menus.h"
 
 /*
  * ROM 0x0816B298-0x0816B2E0. Linked in ROM order between data/data.s
  * sections by ldscript.txt - see docs/data.md.
  */
 
-/* pause_menu_draw.c's `struct pause_screen_row_record`. */
-struct pause_screen_row_record {
-    s32 labelId;
-    s32 typeTag;
-};
-
 /* The rows of the pause/options screen: InitPauseMenu (pause_menu.c)
  * stores the table in its object's field_14. */
-const struct pause_screen_row_record gPauseMenuRows[5] = {
+const struct pause_row gPauseMenuRows[5] = {
     { 0x32, 0x0 },
     { 0x30, 0x4 },
     { 0x31, 0x5 },

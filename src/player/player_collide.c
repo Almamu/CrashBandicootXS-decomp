@@ -1,6 +1,7 @@
 #include "core.h"
 #include "actor.h"
 #include "actor_self.h"
+#include "player.h"
 
 /* GitHub issue #9/#10: 0x0800A884 - the same big, still-unnamed "part"
  * object family as `player_update.c`/`player_reset.c`; raw offset casts

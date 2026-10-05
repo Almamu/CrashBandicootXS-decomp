@@ -2,6 +2,7 @@
 #include "vtable.h"
 #include "actor.h"
 #include "aabb.h"
+#include "crates.h"
 
 /* The fields of a level object (`struct gobj`, gobj_1a794.h) that
  * `IsCrateInsideRect` reads. */
@@ -219,7 +220,6 @@ u32 GetCrateClassId(void)
  * collision subsystem (see crate_reset.c's header comment and
  * docs/matching/issue-13-graphics-fc70.md). */
 
-extern u8 gCrateVtable[];
 extern void OperatorDeleteArray(void *ptr);
 extern void DestroySpriteObj(struct actor *self, u32 arg1);
 
@@ -230,7 +230,7 @@ extern void DestroySpriteObj(struct actor *self, u32 arg1);
  * tail-call shape as `DestroyWumpa` (`wumpa.c`). */
 void DestroyCrate(struct actor *self, u32 arg1)
 {
-    self->table = gCrateVtable;
+    self->table = (void *)gCrateVtable;
 
     if (*((u8 *)self + 0x4e) == 3) {
         void *p = *(void **)((u8 *)self + 0x48);
@@ -246,7 +246,6 @@ void DestroyCrate(struct actor *self, u32 arg1)
 }
 
 extern struct actor *InitSpriteObj(struct actor *self);
-extern void ResetCrate(void *selfArg);
 
 /* Re-initializes `self` via `InitSpriteObj` (already matched,
  * `sprite_obj.c`), sets `self->table`, clears `self+0x59`, then
@@ -255,7 +254,7 @@ extern void ResetCrate(void *selfArg);
 struct actor *InitCrate(struct actor *self)
 {
     InitSpriteObj(self);
-    self->table = gCrateVtable;
+    self->table = (void *)gCrateVtable;
     *((u8 *)self + 0x59) = 0;
     ResetCrate(self);
     return self;

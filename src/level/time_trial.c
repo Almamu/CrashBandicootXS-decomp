@@ -1,6 +1,7 @@
 #include "core.h"
 #include "actor.h"
 #include "pickups.h"
+#include "crates.h"
 
 /* GitHub issue #34, UpdateGameFrame-MainLoop cluster (docs/rom_map.md).
  * Built with old_agbcc - see docs/matching/game-loop-old-agbcc.md. */
@@ -93,7 +94,6 @@ extern void ResetSpriteFrameTimer(struct slot_part *part);
 extern void ResetSpriteFrameIndex(struct slot_part *part);
 extern void SetSpriteAnimDone(struct slot_part *part, s32 arg);
 extern void LoadPaletteSlot(void *cache, s32 palette, u8 record);
-extern void ConvertCratesForTimeTrial(void);
 extern s32 _call_via_r1(void *self, void *fn);
 
 static inline void SetPartTag(struct slot_part *part, s32 tag)

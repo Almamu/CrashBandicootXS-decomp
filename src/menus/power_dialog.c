@@ -5,6 +5,8 @@
 #include "actor.h"
 #include "text.h"
 #include "audio.h"
+#include "pause_menu.h"
+#include "menus.h"
 
 /* `ShowPowerDialog` (GitHub issue #8) - the higher-level dialog spawner:
  * resets palette color 0 and `REG_DISPCNT`, re-initializes the popup-
@@ -33,29 +35,12 @@
  * (src/menus/level_select.c) uses, and `FontResetPalette` takes one
  * argument. See docs/matching/issue-4-6-8-naked-retry.md. */
 
-/* Same struct sub_8006700_actor shape src/menus/power_dialog.c
- * documents (redeclared locally per this project's convention). */
-struct sub_8006700_actor {
-    u8 unused_00[0x10];
-    s32 field_10;
-    void *field_14;
-    struct settings_icon_actor *field_18;
-    u32 field_1c;
-    u32 field_20;
-    u8 field_24;
-    u8 unused_25[3];
-    u16 field_28;
-};
-
 extern void *OperatorNew(s32 size);
 extern void FreeUnlockedPaletteSlots(struct palette_cache *self);
 extern void ResetObjVram(struct vram_upload_cursor *self);
 extern s32 ReserveObjVram(struct vram_upload_cursor *self, s32 size);
 extern void MarkObjVram(struct vram_upload_cursor *self);
 extern void _call_via_r1(void *addr, void *fn);
-extern void DestroyPowerDialog(struct sub_8006700_actor *self, u32 flags);
-extern void PowerDialogLoop(struct sub_8006700_actor *self);
-extern struct sub_8006700_actor *InitPowerDialog(struct sub_8006700_actor *self, s32 label1, s32 label2, s32 type);
 
 extern struct palette_cache *gPaletteCache;
 extern struct vram_upload_cursor *gObjVramCursor;
@@ -122,20 +107,6 @@ void ShowPowerDialog(s32 label1, s32 label2, s32 type)
  * `InitPowerDialog` to feed straight into `PowerDialogLoop`'s (the
  * fade/confirm driver) and `DestroyPowerDialog`'s (the on-hit
  * teardown/sound helper) existing signatures. */
-
-/* Same `struct settings_icon_actor` shape `src/menus/pause_menu_pages_init.c`
- * already documents (a `struct actor`-derived on-screen icon, allocated
- * the same way via `InitUiSpriteObj(OperatorNew(0x40))`) - redeclared
- * locally per this project's convention. */
-struct settings_icon_actor {
-    struct actor base;    /* 0x00-0x1b */
-    u8 unused_1c[0x20 - 0x1c];
-    void **field_20;        /* 0x20 - keyframe-table pointer */
-    u8 unused_24[0x29 - 0x24];
-    u8 field_29;               /* 0x29 - low nibble set from GetSpriteAnimPaletteSlot's result */
-    u8 unused_2a[0x2d - 0x2a];
-    u8 frameIndex;                /* 0x2d - current keyframe index */
-};
 
 extern struct actor *InitUiSpriteObj(struct actor *part);
 extern void ResetSpriteFrameTimer(struct actor *part);
@@ -255,7 +226,7 @@ struct sub_8006700_actor *InitPowerDialog(struct sub_8006700_actor *selfArg, s32
         }
     }
 
-    self->field_28 = 0;
+    self->field_28.all = 0;
     {
         register u8 *addr asm("r2");
         register s32 v asm("r0");

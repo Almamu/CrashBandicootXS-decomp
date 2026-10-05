@@ -7,6 +7,8 @@
  * zooming BG2 picture, the per-level page entries and the cursor panel.
  * All of them own animated sprite parts built by InitUiSpriteObj. */
 
+#include "menus.h"
+
 struct vmethod
 {
     s16 thisOffset;
@@ -71,12 +73,11 @@ struct level_item
     u8 unk_05[3];
     struct sprite *icon;        // 0x08
     struct sprite *frame;       // 0x0C
-    u8 *vtable;                 // 0x10
+    const struct vtable_slot *vtable; // 0x10 - gLevelSelectEntryVtable
 };
 
 extern void ***gSpriteBankSet;
 extern void *gPaletteCache;
-extern u8 gLevelSelectEntryVtable[];
 
 extern void *OperatorNew(u32 size);
 extern void OperatorDelete(void *p);
@@ -91,7 +92,7 @@ extern void DrawSpriteWithOffset(struct sprite *part, s32 dx, s32 dy);
 extern void AdvanceSpriteAnim(struct sprite *part);
 extern void UnlockPalette(void *cache, u8 record);
 extern void LockPalette(void *cache, u8 record);
-extern void LoadTaggedAsset(void *asset, void *dest);
+extern void LoadTaggedAsset(const void *asset, void *dest);
 
 typedef void (*dtor_fn)(void *self, s32 flags);
 

@@ -4,6 +4,7 @@
 #include "pause_menu.h"
 #include "text.h"
 #include "system.h"
+#include "menus.h"
 
 extern void DrawSpriteWithOffset(void *arg0, s32 arg1, s32 arg2);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);

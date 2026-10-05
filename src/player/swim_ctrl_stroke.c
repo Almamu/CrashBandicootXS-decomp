@@ -3,6 +3,7 @@
 #include "util.h"
 #include "system.h"
 #include "audio.h"
+#include "player.h"
 
 /* GitHub issue #19: 0x080159F8-0x08015DF8, the first two of the three
  * jump-table dispatchers of the player-input controller class
@@ -22,21 +23,13 @@
 
 #define KEEP 0x7FFFFFFF
 
-/* the 8-word per-frame speed table copied to the stack by StartPlayerCtrlStroke */
-struct speed_table
-{
-    s32 v[8];
-};
-
 extern u32 gRoomFrameCount;
 extern void *gAudioContext;
 extern void *gInput;
-extern const struct speed_table gStaticData_0816C090;
 
 extern void ResetSpriteFrameTimer(struct pctrl_target *t);
 extern void ResetSpriteFrameIndex(struct pctrl_target *t);
 extern void SetSpriteAnimDone(struct pctrl_target *t, s32 a);
-extern void SetPlayerCtrlState(struct player_ctrl *self, s32 a, s32 mode, s32 timer, s32 timerMax);
 
 /* `v`, mirrored when the target faces left */
 #define SIGNED_X(t, v) ((t)->f28.flipX ? -(v) : (v))
@@ -236,8 +229,6 @@ struct spawned
 
 extern void *gEntitySpawner;
 extern struct spawned *SpawnEffectPart(void *pool, s32 arg1, s32 kind, s32 x, s32 y, s32 arg5);
-extern void SetPlayerSwimDriftX(s32 a, s32 b, s32 c);
-extern void SetPlayerSwimDriftY(s32 a, s32 b, s32 c);
 
 /* Picks three tuning values by `state` - `mag` (always 300), `valB` and
  * `valA` - reads the D-pad direction (GetDpadDirection), on a 1-in-128 frame

@@ -1,24 +1,10 @@
 #include "core.h"
+#include "player.h"
 
 /*
  * ROM 0x0816C090-0x0816C250. Linked in ROM order between data/data.s
  * sections by ldscript.txt - see docs/data.md.
  */
-
-/* swim_ctrl_stroke.c's `struct speed_table`: StartPlayerCtrlStroke copies it. */
-struct speed_table
-{
-    s32 v[8];
-};
-
-/* swim_ctrl.c's `struct level_anim`: the animation of a player
- * mode at a level, and a second byte (0xFF in some rows). */
-struct level_anim
-{
-    u8 anim;
-    u8 unk_1;
-    u8 pad[2];
-};
 
 const struct speed_table gStaticData_0816C090 = { { 528, 352, 176, -176, -352, -528, -704, -704 } };
 

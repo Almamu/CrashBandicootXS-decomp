@@ -7,6 +7,8 @@
 #include "frontend.h"
 #include "util.h"
 #include "audio.h"
+#include "menus.h"
+#include "player.h"
 
 /*
  * IWRAM 0x030007CC-0x030009E8 (stored in ROM at 0x087E5DB0-0x087E5FCC):
@@ -95,7 +97,7 @@ const u8 *gCrash3LinkTextPtr = (const u8 *)gCrash3LinkText;
  * following the player (levels 1-2). */
 s32 gAkuAkuInvincibleFrame = 0;
 s32 gAkuAkuFollowFrame = 0;
-void *gLevelSelect = NULL; /* struct level_menu * */
+struct level_menu *gLevelSelect = NULL;
 u8 gNewWorldOpened = 0;
 void *gLevelStateSingleton = NULL;
 u32 gRoomFrameCount = 0;

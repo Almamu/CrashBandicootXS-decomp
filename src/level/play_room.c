@@ -1,6 +1,8 @@
 #include "core.h"
 #include "actor.h"
 #include "level_data.h"
+#include "crates.h"
+#include "player.h"
 
 extern void CreateEntitySpawner(void);
 extern void ClearRoomExit(void);
@@ -8,21 +10,15 @@ extern void *OperatorNew(s32 size);
 extern struct dual_array_manager *InitPartList(struct dual_array_manager *manager, s32 count);
 extern struct pool_manager *InitCrateList(struct pool_manager *manager, s32 count);
 extern void *GetLevelLayers(void);
-extern void *InitPlayer();
 extern void SetEntityPos(struct actor *self, s32 arg1, s32 arg2);
 extern void OperatorDelete(void *self);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
-extern void *InitActionCtrl(void *selfArg);
-extern void SetCtrlAnimSet(void *selfArg, s32 val);
-extern void *InitPlayerCtrl(void *arg0);
-extern void *CreateInputCtrl(void *arg0);
 extern void ResetSpriteFrameTimer(void *part);
 extern void ResetSpriteFrameIndex(void *part);
 extern void SetSpriteAnimDone(void *part, u8 val);
 extern s32 RunRoom(void *self);
 extern void DestroyLevelLayers(void *self, s32 flag);
 extern void DestroyPartList(struct dual_array_manager *manager, s32 flags);
-extern void DestroyCrateList(struct pool_manager *manager, s32 flags);
 extern void DestroyEntitySpawner(void);
 
 extern struct dual_array_manager *gUpdateOnlyPartList;
@@ -239,7 +235,7 @@ s32 PlayRoom(void *selfArg)
         break;
     }
     case 2: {
-        u8 *widget = CreateInputCtrl(OperatorNew(0x28));
+        u8 *widget = (u8 *)CreateInputCtrl(OperatorNew(0x28));
 
         SetCtrlAnimSet(widget, (s32)gInputCtrlMotionSet);
 

@@ -1,5 +1,6 @@
 #include "core.h"
 #include "actor.h"
+#include "player.h"
 
 /* GitHub issue #9/#10: 0x0800B3F0 - a part-object constructor on the
  * same big, still-unnamed "part" object (at least 0x108 bytes)
@@ -13,8 +14,6 @@ extern struct actor *CreateSpriteObj(u16 arg0, u16 arg1, u16 arg2, u16 arg3);
 extern void ResetSpriteFrameTimer(void *part);
 extern void ResetSpriteFrameIndex(void *part);
 extern void SetSpriteAnimDone(void *part, u8 val);
-extern void ResetPlayer(void *selfArg);
-extern u8 gPlayerVtable[];
 extern void ***gSpriteBankSet;
 
 /* Re-initializes `self` (via `InitGroundSprite`, already matched in
@@ -37,13 +36,13 @@ extern void ***gSpriteBankSet;
  * the Q8 `x`/`y` position from the three `u16` arguments - the same
  * tail `CreateGroundSprite` (`ground_sprite.c`) uses for its own, smaller
  * `struct actor` - and returns `self`. */
-void *InitPlayer(void *selfArg, u16 arg1, u16 arg2, u16 arg3)
+void *InitPlayer(void *selfArg, u16 arg1, u16 arg2, u16 arg3, u16 unused)
 {
     u8 *self = selfArg;
     struct actor *child;
 
     InitGroundSprite((struct actor *)self);
-    *(u8 **)(self + 0x18) = gPlayerVtable;
+    *(u8 **)(self + 0x18) = (u8 *)gPlayerVtable;
     ResetCollisionQueue(self + 0x108);
 
     child = CreateSpriteObj(0, 0, 0, 0);

@@ -1,6 +1,8 @@
 #ifndef __PAUSE_MENU_H__
 #define __PAUSE_MENU_H__
 
+#include "menus.h"
+
 /* A small `struct actor`-derived on-screen icon: the first 0x1c bytes
  * are a plain `struct actor` (see actor.h), then a second keyframe-
  * table pointer at +0x20 and a frame index at +0x2d - both already
@@ -22,12 +24,6 @@ struct settings_icon_actor {
     u8 field_38;                    /* 0x38 - AnimatePauseMenu: "currently highlighted/armed" flag */
     u8 unused_39[0x3c - 0x39];
     u16 field_3c;                   /* 0x3c - InitPauseGemsPage/InitPauseRelicsPage only, set to 0x80 */
-};
-
-/* A fixed {x, y} screen-position pair, as consumed by SetEntityPixelPos. */
-struct icon_pos {
-    s32 x;
-    s32 y;
 };
 
 /* The pause menu (built by `RunPauseMenu`/`InitPauseMenu`, GitHub issue
@@ -61,7 +57,7 @@ struct icon_pos {
 struct pause_menu {
     u8 unused_00[0x10];
     void *field_10;             /* 0x10 - a row-stats handle, passed to CountClearGems/CountGems/CountRelics/etc and read via gLevelState's per-level index table in InitPauseTimeTrialPage */
-    void *field_14;               /* 0x14 - base of an 8-byte-stride per-row record array (gPauseMenuRows), see DrawPauseMenuRows/PauseMenuVolumeDown */
+    const struct pause_row *field_14; /* 0x14 - the rows (gPauseMenuRows), see DrawPauseMenuRows/PauseMenuVolumeDown */
     s32 field_18;                   /* 0x18 - currently selected/highlighted row index */
     s32 field_1c;                     /* 0x1c - row count (4 or 5, from gLevelState+0x8c) */
     s32 field_20;                       /* 0x20 - per-row Y spacing (16) */
@@ -129,5 +125,18 @@ extern s32 GetSpriteAnimPaletteSlot(struct actor *part);
         _mask |= _ret; \
         *_addr = _mask; \
     } while (0)
+
+/* `field_29` viewed as the nibble pair it is: the low nibble is the
+ * GetSpriteAnimPaletteSlot-derived frame bits (same byte as level_menu.h's
+ * `struct sprite` `palette:4`). Assigning the bitfield gives the ROM's
+ * `and #0xf / mov #0x10; neg / and / orr` sequence with no pins
+ * (pause_menu_pages_init.c, save_menu_draw.c). */
+struct icon_frame_nibble {
+    u8 lo:4;
+    u8 hi:4;
+};
+
+#define SET_ICON_FRAME_NIBBLE(iconExpr) \
+    (((struct icon_frame_nibble *)&(iconExpr)->field_29)->lo = GetSpriteAnimPaletteSlot(&(iconExpr)->base))
 
 #endif /* __PAUSE_MENU_H__ */

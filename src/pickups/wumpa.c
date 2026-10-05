@@ -1,6 +1,7 @@
 #include "core.h"
 #include "actor.h"
 #include "pickups.h"
+#include "player.h"
 
 extern void DrawSprite(void *self, void *part);
 extern void *gSpriteRenderer;

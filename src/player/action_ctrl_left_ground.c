@@ -1,5 +1,6 @@
 #include "core.h"
 #include "action_obj.h"
+#include "player.h"
 
 /* Part of GitHub issue #16's remainder (0x08011BD4-0x08012D24) - see
  * kill_player.c's top-of-file comment for the shared field-offset

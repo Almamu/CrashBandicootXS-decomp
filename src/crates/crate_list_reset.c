@@ -1,4 +1,5 @@
 #include "core.h"
+#include "crates.h"
 
 extern s32 _call_via_r2(void *arg0, void *arg1, void *fn);
 

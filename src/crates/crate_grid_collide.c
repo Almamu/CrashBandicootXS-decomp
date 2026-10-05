@@ -4,6 +4,7 @@
 #include "util.h"
 #include "system.h"
 #include "audio.h"
+#include "crates.h"
 
 struct grid_node {
     struct box_part *data;
@@ -32,8 +33,6 @@ extern struct level_layers *gLevelLayers;
 extern struct box_part *gPlayer;
 extern s32 _call_via_r2(void *self, void *arg, void *fn);
 extern s32 _call_via_r1(void *self, void *fn);
-extern void CollideCrateGridPartWithPlayer(struct part_list *list, struct aabb box, struct box_part *part);
-extern void CollideCrateGridPartWithObject(struct pool_manager *m, struct aabb box, struct box_part *part, struct box_part *other);
 
 /* The spatial-hash-grid-cluster analog of `CollidePartList`: the same
  * "extended screen box" filter shape as `DrawCrateList` (iterating
@@ -75,7 +74,7 @@ static inline void CheckPart(struct pool_manager *m, struct box_part *part, stru
                 CollideCrateGridPartWithPlayer((struct part_list *)m, *tmp, part);
             } else {
                 MemCopy32(tmp, box, sizeof(*tmp));
-                CollideCrateGridPartWithObject(m, *tmp, part, other);
+                CollideCrateGridPartWithObject((struct part_list *)m, *tmp, part, other);
             }
         }
     }

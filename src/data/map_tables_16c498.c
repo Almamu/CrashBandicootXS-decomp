@@ -1,19 +1,15 @@
 #include "core.h"
+#include "menus.h"
 
 /*
  * ROM 0x0816C498-0x0816C58C. Linked in ROM order between data/data.s
  * sections by ldscript.txt - see docs/data.md.
  */
 
-/* `struct xy_pair` positions and animation ids of the level-select
+/* `struct xy_pair` (menus.h) positions and animation ids of the level-select
  * screens: level_select.c (InitLevelSelect, DrawLevelSelectTime, LoadLevelSelectRecord,
  * InitLaunchPad) and level_select_pages.c (its level menu's item positions
  * and skins, RefreshLevelSelectPage). */
-struct xy_pair {
-    s32 x;
-    s32 y;
-};
-
 const struct xy_pair gLevelSelectWorldPos = { 16, 32 };
 const struct xy_pair gStaticData_0816C4A0 = { 16, 60 };
 const struct xy_pair gLevelSelectCrystalPos = { 40, 33 };

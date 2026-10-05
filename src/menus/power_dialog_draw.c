@@ -5,6 +5,8 @@
 #include "text.h"
 #include "util.h"
 #include "system.h"
+#include "pause_menu.h"
+#include "menus.h"
 
 /* A small per-category threshold table: CountSapphireRelics/CountGoldRelics/
  * CountPlatinumRelics each count how many of a caller's 20 records fall between
@@ -26,7 +28,6 @@ struct threshold_table_entry {
 COMPILE_TIME_ASSERT(power_dialog_draw_c, sizeof(struct threshold_table_entry) == 0x24);
 
 extern struct threshold_table_entry gLevelTable[];
-extern void ShowPowerDialog(s32 arg0, s32 arg1, s32 arg2);
 extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
 extern void OperatorDelete(void *arg0);
 extern void UploadPaletteCache(struct palette_cache *arg0);
@@ -38,21 +39,6 @@ extern struct palette_cache *gPaletteCache;
 extern void *gOamBuffer;
 
 extern void AdvanceSpriteAnim(void *arg0);
-
-/* Shared by DrawPowerDialog/AnimatePowerDialog/CommitPowerDialogFrame/DestroyPowerDialog below - all
- * four access field_18 (and DrawPowerDialog also field_10/field_14) at the
- * same offsets on what looks like the same "actor" object. */
-struct sub_8006700_actor {
-    u8 unused_00[0x10];
-    s32 field_10;
-    void *field_14;
-    struct actor *field_18;
-    u32 field_1c;
-    u32 field_20;
-    u8 field_24;
-    u8 unused_25[3];
-    u16 field_28;
-};
 
 extern void RewindObjVram(struct vram_upload_cursor *arg0);
 extern void DrawSpriteWithOffset(void *arg0, s32 arg1, s32 arg2);
@@ -121,8 +107,8 @@ void CommitPowerDialogFrame(struct sub_8006700_actor *arg0)
     *(vu16 *)REG_ADDR_BG0HOFS = arg0->field_1c >> 3;
     *(vu16 *)PLTT = 0;
     *(vu32 *)REG_ADDR_BLDCNT = arg0->field_20;
-    *(vu16 *)REG_ADDR_BLDY = (u32)(arg0->field_24 << 27) >> 27;
-    *(vu16 *)REG_ADDR_DISPCNT = arg0->field_28;
+    *(vu16 *)REG_ADDR_BLDY = (u32)(arg0->field_24.raw << 27) >> 27;
+    *(vu16 *)REG_ADDR_DISPCNT = arg0->field_28.all;
 }
 
 void DestroyPowerDialog(struct sub_8006700_actor *arg0, u32 arg1)
@@ -130,7 +116,7 @@ void DestroyPowerDialog(struct sub_8006700_actor *arg0, u32 arg1)
     struct actor *field18;
     u8 *p;
 
-    field18 = arg0->field_18;
+    field18 = &arg0->field_18->base;
     if (field18 != NULL) {
         p = (u8 *)field18->table + 0x50;
         _call_via_r2((u8 *)field18 + *(s16 *)p, 3, *(void **)(p + 4));
@@ -160,7 +146,7 @@ void ShowSuperBodySlamDialog(void)
     ShowPowerDialog(0x3C, 0x40, 3);
 }
 
-u8 GetProgressLives(void *arg0)
+s32 GetProgressLives(void *arg0)
 {
     return (u32)(*(u8 *)arg0 << 25) >> 25;
 }
@@ -269,9 +255,6 @@ s32 CountSapphireRelics(void *arg0)
     } while (i >= 0);
     return count;
 }
-
-extern s32 CountGoldRelics(void *arg0);
-extern s32 CountPlatinumRelics(void *arg0);
 
 s32 CountRelics(void *arg0)
 {

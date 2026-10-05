@@ -1,6 +1,7 @@
 #include "core.h"
 #include "crate.h"
 #include "audio.h"
+#include "crates.h"
 
 /* GitHub issue #13: 0x0800FC70-0x08010A0C, continuing the physics/
  * collision subsystem (see crate_reset.c's header comment and
@@ -10,7 +11,6 @@
 
 extern struct crate_list *gCrateList;
 extern s32 _call_via_r1(void *addr, void *fn);
-extern void SolidifyOutlineCrate(void *self);
 
 /* Walks the `gCrateList` object list (the same list/table
  * layout `UpdateCrates`/`DetonateNitroCrates` elsewhere in this raw region
@@ -49,8 +49,9 @@ extern void _call_via_r4(void *arg0, s32 arg1, s32 arg2, s32 arg3);
 /* If the viewport's `+0xc` bit 7 flag is set, fires its own `+0x18`
  * table's `+0x68` trampoline pair (`_call_via_r4`, action `0x1a`) and
  * plays cue 1 - the same `+0x18`-table/trampoline-pair convention
- * `OpenAkuAkuCrate`'s sibling functions in this subsystem use throughout. */
-void OpenAkuAkuCrate(void)
+ * `OpenAkuAkuCrate`'s sibling functions in this subsystem use throughout.
+ * `crate` (the Aku Aku crate) is unused; BreakCrate passes it. */
+void OpenAkuAkuCrate(struct crate *crate)
 {
     u8 *self = (u8 *)gPlayer;
     register u8 flags asm("r1") = self[0xc];

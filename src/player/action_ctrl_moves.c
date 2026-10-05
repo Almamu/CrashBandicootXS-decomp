@@ -3,6 +3,7 @@
 #include "vtable.h"
 #include "actor.h"
 #include "audio.h"
+#include "player.h"
 
 /* Continuation of action_ctrl_hang.c (issue #18's chunk) - covers
  * `sub_80151C8`, `EndActionCtrlSpin` and `SteerActionCtrlSpin`. Same "self" object
@@ -109,8 +110,6 @@ asm(".align 2, 0");
 extern void *gLevelState;
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern s32 _call_via_r3(void *arg0, void *arg1, void *arg2, void *arg3);
-extern void StartActionCtrlRun(void *selfArg);
-extern void SetActionCtrlModeAnim(void *selfArg, s32 a, s32 b, s32 c, s32 d);
 extern s32 HasTurboRun(void *self);
 
 /* Always sets `self+0x26 = 0xc`. For `mode` `3`/`4`: if `flags` bit
@@ -183,8 +182,6 @@ void EndActionCtrlSpin(struct act *self, u8 mode, s32 flags)
     }
 }
 
-extern void UpdatePlayerFacing(void *self);
-
 /* While `self+0x27`/`self+0x2b` are both clear and `mode` is `3`/`4`:
  * sets the state/counter/table-index trio (`0x31`/`0x2f`/`0x27`) to
  * `0`/`1`/`0x17`. Independently, for `mode <= 2`: resets the same trio
@@ -229,7 +226,6 @@ asm(".align 2, 0");
 
 extern void *gAudioContext;
 extern void *gPlayer;
-extern void ActionCtrlReleaseHang(void *self);
 extern void RequestRoomExit(void);
 
 /* Clears `self+0x33`, saves `self+8`'s previous value (truncated) into

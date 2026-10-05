@@ -1,6 +1,7 @@
 #include "core.h"
 #include "util.h"
 #include "audio.h"
+#include "player.h"
 
 /* GitHub issue #24: 0x0801967C-0x0801A794, formerly
  * asm/code_3_2_17_188d0_1967c.s.
@@ -278,8 +279,6 @@ extern u8 gDingodileShieldVtable[];
 
 extern void DestroyCtrl(void *self, s32 flags);
 extern void InitCtrl(void *self);
-extern void DestroyBossCtrl(void *self, s32 flags);
-extern void CreateBossCtrl(void *self);
 /* As in enemies.h, which this file can't include yet: its local `struct
  * part_list` clashes with box_part.h's (bosses batch). */
 struct part_ctrl;

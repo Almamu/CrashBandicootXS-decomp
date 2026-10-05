@@ -28,17 +28,19 @@ Batch 1 (link + hud) done: `include/link.h` and `include/hud.h`, see
 `aabb.h`, and `COMPILE_TIME_ASSERT` takes a tag, see "Batch 4" below.
 Batch 5 (system + audio) done: `include/system.h`, `irq.h`/`memory.h`/
 `audio.h` extended, the IRQ table typed as `irq_handler_t [14]`, see
-"Batch 5" below.
+"Batch 5" below. Batch 6 (menus + crates + player, one PR) done:
+`include/menus.h`, `include/crates.h` and `include/player.h`, see
+"Batch 6" below.
 
 Audit totals (`tools/extern_audit.py`) as the batches land:
 
-| | Pilot merged | After batch 1 | After batch 2 | After batch 3 | After batch 4 | After batch 5 |
-|---|---:|---:|---:|---:|---:|---:|
-| Declarations in `.c` files (symbols defined elsewhere) | 4,572 | 4,513 | 4,436 | 4,279 | 4,159 | 3,897 |
-| Unique symbols declared in a `.c` file | 2,317 | 2,284 | 2,214 | 2,112 | 2,091 | 2,034 |
-| - conflicting | 231 | 229 | 226 | 222 | 210 | 196 |
-| Local struct/union definitions in `.c` files | 548 | 538 | 522 | 501 | 487 | 485 |
-| Struct names defined in more than one `.c` file | 75 | 74 | 68 | 63 | 62 | 62 |
+| | Pilot merged | After batch 1 | After batch 2 | After batch 3 | After batch 4 | After batch 5 | After batch 6 |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Declarations in `.c` files (symbols defined elsewhere) | 4,572 | 4,513 | 4,436 | 4,279 | 4,159 | 3,897 | 3,474 |
+| Unique symbols declared in a `.c` file | 2,317 | 2,284 | 2,214 | 2,112 | 2,091 | 2,034 | 1,697 |
+| - conflicting | 231 | 229 | 226 | 222 | 210 | 196 | 167 |
+| Local struct/union definitions in `.c` files | 548 | 538 | 522 | 501 | 487 | 485 | 448 |
+| Struct names defined in more than one `.c` file | 75 | 74 | 68 | 63 | 62 | 62 | 51 |
 
 ## Tools
 
@@ -190,7 +192,7 @@ The full list:
 | actor | `actor.h` (extend) | |
 | audio | `audio.h` (**done**, batch 5) | includes `<gax.h>` and `byte_arg.h` |
 | bosses | `bosses.h` (new) | |
-| crates | `crates.h` (new) | includes `crate.h` (types) |
+| crates | `crates.h` (**done**, batch 6) | includes `aabb.h`, `byte_arg.h`, `vtable.h`; not `crate.h` (see "Batch 6") |
 | cutscene | `cutscene.h` (extend) | |
 | enemies | `enemies.h` (new) | |
 | frontend | `frontend.h` (new) | |
@@ -199,10 +201,10 @@ The full list:
 | iwram | `iwram.h` (new) | the ARM IWRAM routines |
 | level | `level.h` (new) | includes `level_state.h`, `level_data.h` |
 | link | `link.h` (new) | includes `link_session.h` |
-| menus | `menus.h` (new) | |
+| menus | `menus.h` (**done**, batch 6) | includes `vtable.h`; `pause_menu.h`, `level_menu.h` and `level_select_parts.h` include it |
 | objects | `objects.h` (new) | |
 | pickups | `pickups.h` (new) | |
-| player | `player.h` (new) | |
+| player | `player.h` (**done**, batch 6) | includes `actor_self.h` (`struct actor_pmf`) and `vtable.h` |
 | save | `save.h` (new) | |
 | system | `system.h` (**done**, batch 5) | includes `irq.h` (the IRQ table and VBlank callbacks) and `memory.h` (the heap), which got the rest of irq.c's and memory.c's prototypes |
 | text | `text.h` (**done**, pilot) | |
@@ -262,11 +264,11 @@ Where the remaining declarations would go (after the pilot):
 | lib/gax (internal) | 43 | 3 | 74 | 22 |
 | save (**done**, batch 3) | 50 | 2 | 62 | 9 |
 | frontend (**done**, batch 3) | 60 | 2 | 109 | 15 |
-| crates | 57 | 9 | 74 | 24 |
+| crates (**done**, batch 6) | 57 | 9 | 74 | 24 |
 | objects | 100 | 36 | 318 | 75 |
 | gfx | 120 | 29 | 383 | 85 |
-| player | 129 | 13 | 173 | 33 |
-| menus | 152 | 8 | 185 | 26 |
+| player (**done**, batch 6) | 129 | 13 | 173 | 33 |
+| menus (**done**, batch 6) | 152 | 8 | 185 | 26 |
 | actor | 197 | 6 | 365 | 49 |
 | bosses | 239 | 10 | 344 | 35 |
 | vehicle | 277 | 13 | 374 | 38 |
@@ -395,7 +397,8 @@ before the files that every subsystem touches.
 6. **system, audio (done):** `WaitForVBlank` (27 files), `PlaySfx` (66
    files, 3 variants). Big include fan-out but few distinct symbols. See
    "Batch 5" below.
-7. **menus, crates, player:** one PR each.
+7. **menus, crates, player (done):** one PR (batch 6). See "Batch 6"
+   below.
 8. **actor, bosses, vehicle:** one PR each. These have many symbols but few
    conflicts, and few files outside the subsystem use them.
 9. **objects, gfx, level:** the hubs, with 110 conflicting symbols between
@@ -881,6 +884,132 @@ After a clean build, every `.o` and `.s` file in src/ and lib/ is
 identical to origin/main's, and the build has 7 fewer warnings (6 in
 irq.c, 1 in audio.c) and no new ones.
 
+## Batch 6: menus + crates + player
+
+One PR for the three subsystems. 423 local declarations are gone
+(3,897 -> 3,474), and 37 local struct definitions (485 -> 448). Two
+files needed an asm-label alias (`gLevelSelectGemPos`/
+`gLevelSelectTrialIconPos` in level_select.c, `UpdatePlayerFacing` in
+action_ctrl_hang.c, see "Codegen exceptions").
+
+- **`include/menus.h`** (new) declares every function of src/menus/,
+  the continue prompt functions at the start of credits.c (batch 3's
+  deferral), the menu vtables, `gLevelSelect` (now `struct level_menu *`
+  in iwram_data.c), `gNewWorldOpened` and the level select, pause menu
+  and continue prompt tables (`const`, the data files' types). The
+  menus' object structs stay in the type headers, and menus.h only
+  declares their tags: `level_menu.h` and `level_select_parts.h` each
+  define a different `struct sprite`, so no header can include both
+  (see "Left for later"). `pause_menu.h`, `level_menu.h` and
+  `level_select_parts.h` include menus.h.
+  - Struct merges: `struct continue_prompt` (3 copies, three views of
+    +0x10: a word, four bytes, and an `eva:5` bitfield, now one union;
+    `unused_1c` is `blinkCounter`), `struct sub_8006700_actor` (the power
+    dialog, 3 copies; `field_24`/`field_28` are unions of the byte/
+    halfword and the bitfield views, `field_18` is the icon's `struct
+    settings_icon_actor *`), `struct pause_row` (pause_menu_loop.c,
+    pause_menu_widgets.c, and pause_menu_draw.c's and the data file's
+    `struct pause_screen_row_record`; `pause_menu.field_14` is now a
+    `const struct pause_row *`), `struct xy_pair` (level_menu.h,
+    level_select.c, both map_tables data files, and
+    level_select_widgets.c's `struct xy`), `struct icon_pos`
+    (pause_menu.h and the data file), `struct image_pair`
+    (level_select_widgets.c; the data file defines `gLevelSelectPictures`
+    with it), `struct icon_frame_nibble` and `SET_ICON_FRAME_NIBBLE`
+    (pause_menu_pages_init.c, save_menu_draw.c, now in pause_menu.h),
+    and power_dialog.c's copy of `struct settings_icon_actor`.
+    pause_menu_widgets.c's `struct row_counter_widget` and
+    pause_menu_pages_draw.c's `struct pause_screen_category_state` were
+    views of `struct pause_menu`, which `PauseMenuCursorDown`/
+    `PauseMenuCursorUp`/`DrawPauseMenuPageTitle` now take.
+    level_select.c's local `struct item` is renamed `struct level_item`
+    (it is that object, seen through its method table).
+  - Definition fixes, all identical: `RunLevelSelect` returns `s32`
+    (game_frame.c's type; it returned `u8`), `RunContinuePrompt` returns
+    `u8` (game_frame.c tests it as one), `GetProgressLives` returns
+    `s32`, `SpawnLaunchPad` takes an unused fourth `u16` (the spawn
+    trampoline passes four), `InitContinuePrompt` takes and returns
+    `struct continue_prompt *`.
+- **`include/crates.h`** (new) declares every function of src/crates/,
+  `gCrateVtable`, the crate kind tables, `gCrateListChanged`, `struct
+  hitbox_quad` (crate_hit.c; crate_break.c's `struct d18c_quad` is the
+  same quad) and `struct e08c_pos`, the position ApplyCrateCollision
+  takes by value (crate_break.c's `d18c_pos` and `e08c_pos`, and
+  collision_queue.c's candidate `pos`). The packed one-byte `struct
+  flag8`/`d18c_flag8` (crate_break.c, collision_queue.c) are `struct
+  byte_arg` (`byte_arg.h`, field `v`). It doesn't include `crate.h`:
+  that pulls in `gobj_1a794.h`, whose own declarations clash with
+  several callers. `gobj_1a794.h` includes crates.h and player.h
+  instead, and lost its copies of `CreateBossCtrl`, `DestroyBossCtrl`,
+  `FindLineCrossing` and `StartCtrlTargetMotionY`.
+  - Definition fixes, all identical: `OpenAkuAkuCrate` takes an unused
+    `struct crate *` (BreakCrate passes it; dropping it changes the
+    bytes), `CollidePlayerWithCrates` takes an unused second `s32`
+    (CollidePlayerWithObjects passes 3), and `CollideCrateWithPlayer`'s
+    `unused1` is `idx`: it is still in r1 when the function calls
+    `QueueCratePlayerCollision`, which takes it as the
+    gActionCtrlStateAttackKinds index, so the call now passes it.
+  - Most crate functions keep the `void *self` of their definitions
+    (slot_crate.c, crate.c, crate_stack.c); typing them `struct crate *`
+    is a later cleanup. Callers that hold the crate as another type
+    (`struct box_part *`, `struct ab_part *`, the crate list as `struct
+    crate_list *`) cast.
+- **`include/player.h`** (new) declares every function of src/player/,
+  `ResetActionCtrl` (wumpa.c, batch 2's deferral), the five player and
+  controller vtables, the three state-function tables (`const struct
+  actor_pmf`, so it includes `actor_self.h`),
+  `gActionCtrlStateAttackKinds`, the swim controller's animation rows
+  and stroke speeds, and `gAkuAkuInvincibleFrame`/`gAkuAkuFollowFrame`.
+  - Struct merges: input_ctrl.c's and swim_ctrl.c's `struct pmf` and
+    action_ctrl_update.c's `struct act_pmf` are `struct actor_pmf`
+    (`delta` -> `thisOffset`); their `struct pmf_entry` is `struct
+    vtable_slot`. `struct speed_table` and `struct level_anim` (the data
+    file's and swim_ctrl.c's copies) are in player.h, and
+    `gPlayerCtrlModeAnimRows` is a `const struct level_anim *const [8]`
+    in its data file too.
+  - Definition fixes, all identical: `InitPlayer` takes an unused fifth
+    `u16` (play_room.c called the unprototyped declaration with five
+    arguments), and `KillPlayer`'s second parameter is the `s32` death
+    animation id its only caller passes (it was `void *`).
+  - The player object has no shared struct yet, so most player
+    functions keep `void *` (gPlayer has 16 local views; `globals.h`).
+- **Tools:** `apply_headers.py` leaves a codegen alias (`extern T
+  Foo_x(...) asm("Foo");`) in place instead of reporting it as a
+  conflict with the header's `Foo`.
+- **Left for later**, by ownership:
+  - the crate list's pool structs (`struct pool_manager` in 6 crates
+    files with two layouts, `pool_init`/`pool_init_node`/`pool_init_link`
+    in crate_list_reset.c, `pool_node`, `grid_node`) go with
+    src/objects/part_list.c's copies in the objects batch;
+  - `gPlayerCtrlMotionRecords`/`gInputCtrlMotionRecords` share `struct
+    motion_rec` (`struct pctrl_anim`, player_flags.c's `struct vec3`)
+    with ctrl.c's `gCtrlMotionRecords`: objects batch;
+  - `struct threshold_table_entry` (pause_menu_pages_init.c,
+    power_dialog_draw.c) is a view of `gLevelTable`'s `struct
+    level_info`: level batch;
+  - graphics.c's `struct anim_box` is `struct hitbox_quad` (gfx batch),
+    and level_select.c's and level_select_widgets.c's display register
+    and OAM views (`dispcnt_bits`, `bgcnt`, `oam_attrs`, `oam_entry`,
+    `oam_shadow_buffer`) go with the gfx batch, as batch 3 noted;
+  - level_select.c still defines its own copies of `level_menu.h`'s
+    types, and level_select_widgets.c of `struct zoom_bg`/`twinkle`.
+    Switching them needs `struct sprite` merged first: level_menu.h's
+    and level_select_parts.h's differ (`struct method *` vs `struct
+    sprite_vtable *` at +0x18, `f28` vs `unk_24[5]`), and so do
+    level_select.c's `flags28`/`paletteId` names;
+  - input_ctrl.c reads the camera lead through its own `struct
+    ctrl_child` (a `gone:1` bit where level_select.c's `struct
+    follow_child` has the byte `flags`; `MARK_GONE` uses `->gone` on two
+    types), with casts at CreateCameraLead/ResetCameraLead;
+  - `gEmptySpritePoint` (mostly player users, but a sprite table: gfx),
+    `gLevelTable` (level), and `gPlayer`/`gKeys`/`gCrateList`
+    (`globals.h`).
+
+After a clean build every `.o` file in src/ and lib/ is identical to
+origin/main's, and so is every `.s` file except level_select.s, whose
+local label numbers (`.LCB`) differ. The build has the same 35 warnings
+as origin/main.
+
 ## Codegen findings
 
 The pilot itself had **no codegen surprises**: every file's `.s` was
@@ -936,6 +1065,17 @@ here (built with agbcc and, in `font_glyph.c`, `font_draw_text.c`,
 | return `u8 *` -> `void *`, parameter `s32` -> `u32` (`&` test only), `u8 *` -> `void *` | `mem_alloc`/`mem_free` (memory.c) and callers | identical |
 | parameters `void *, s32, s32` -> `struct AudioContext *, u32, u32`; `u16` -> `u32` value | `PlaySfx` in 64 files, `SetMusicVolume`/`SetSfxVolume` | identical |
 | one-byte struct argument written through a pinned `&dummyStack` -> a `struct byte_arg` local | `PlayAmbientSfx` in YetiStateChase | **changes** (`mov r1, #1` moves before `mov r4, sp`); kept as an alias |
+| `const` on a `struct xy_pair` global read twice across calls | `gLevelSelectGemPos`/`gLevelSelectTrialIconPos` in InitLevelSelect (old_agbcc) | **changes** (the second reads reuse the first loads, registers shift); kept as non-const aliases |
+| `const` on byte/word tables, vtables and graphics packages, with `(void *)` casts where a vtable is stored | crates, menus, player and the data files | identical |
+| return `u8` -> `s32` (definition's type) at a call whose result is tested | `UpdatePlayerFacing` in ActionCtrlStateHangMove | **changes** (`lsl #0x18` lost); the definition with `u8` adds a truncation, so the caller keeps an alias |
+| definition return `u8` -> `s32`, `s32` -> `u8`, to the callers' type | `RunLevelSelect`, `GetProgressLives`, `RunContinuePrompt` | identical, and so are the callers |
+| call `f(self)` -> `f()` for a `(void)` definition | `OpenAkuAkuCrate` in BreakCrate | **changes** (`add r0, r4, #0` lost); the definition takes an unused parameter instead |
+| unused parameter added so a longer (or unprototyped) call keeps its arguments | `InitPlayer` (5th), `SpawnLaunchPad` (4th), `CollidePlayerWithCrates` (2nd) | identical |
+| passing the value already in r1 as a real argument | `QueueCratePlayerCollision(self, idx)` in CollideCrateWithPlayer | identical |
+| plain fields -> union members (`b.bldcntLo`, `bits.eva`, `field_24.raw`, `field_28.all`) | continue_prompt*.c, power_dialog*.c (old_agbcc) | identical; agbcc pads every unpacked struct and union to 4 bytes, so a one-byte union needs `packed` |
+| local `struct pmf`/`act_pmf` -> `struct actor_pmf`, `pmf_entry` -> `struct vtable_slot` | input_ctrl.c, swim_ctrl.c, action_ctrl_update.c (old_agbcc) | identical |
+| `struct flag8`/`d18c_flag8` -> `struct byte_arg` as a by-value stack argument | crate_break.c, collision_queue.c | identical |
+| `void *` view parameter -> `struct pause_menu *` | `PauseMenuCursorDown`/`Up`, `DrawPauseMenuPageTitle` | identical |
 
 Experiments for later batches:
 
@@ -966,6 +1106,8 @@ adds its entries here.
 | src/frontend/title_screen_init.c | `RandRange` | `s32 RandRange_s32(s32 max) asm("RandRange")` | `u16 RandRange(s32 max)` (util.h) | with the `u16` return, InitTitleScreen's two stack slots (`[sp, #0x20]`/`[sp, #0x24]`) swap (old_agbcc) |
 | src/level/spawn_enemies.c | `CreateEnemyCtrl` | `CreateEnemyCtrl_r0(void) asm("CreateEnemyCtrl")`, called after a bare `OperatorNew(0x8c);` | `struct part_ctrl *(struct part_ctrl *self)` | in 11 of the 26 spawners (old_agbcc) the registers only match with the block left in r0 by the previous call; the other 15 use the header's prototype |
 | src/vehicle/yeti_states.c | `PlayAmbientSfx` | `void PlayAmbientSfx_4(void *self, s32 id, s32 frameOffset, s32 volumeMul) asm("PlayAmbientSfx")`, the byte stored at sp through a pinned r4 | `void (struct AudioContext *, u32, u32, s32, struct byte_arg)` (audio.h) | passing a `struct byte_arg` schedules `mov r1, #1` before `mov r4, sp` in YetiStateChase |
+| src/menus/level_select.c | `gLevelSelectGemPos`, `gLevelSelectTrialIconPos` | `struct xy_pair gLevelSelectGemPos_rw asm("gLevelSelectGemPos")` (and `_rw` for the other) | `const struct xy_pair` (menus.h) | InitLevelSelect reads each twice across calls; through the const object gcc keeps the first loads (old_agbcc) |
+| src/player/action_ctrl_hang.c | `UpdatePlayerFacing` | `u8 UpdatePlayerFacing_u8(void *self) asm("UpdatePlayerFacing")`, used where ActionCtrlStateHangMove tests the result | `s32 (void *)` (player.h) | the test needs the `u8` return's `lsl #0x18`; the definition only matches as `s32` |
 
 Known permanent exceptions: `_call_via_rN` (rule 5 above), and the
 one-argument `LZ77UnCompVram`/`RLUnCompVram` in `src/system/asset.c`

@@ -6,6 +6,8 @@
 #include "aabb.h"
 #include "util.h"
 #include <libgcc.h>
+#include "menus.h"
+#include "player.h"
 
 /* The collision box an actor's vtable slot 2 returns (gobj_1a794.h's
  * `struct anim_box`): an offset from the actor's position and a size. */
@@ -34,12 +36,6 @@ extern struct dma_queue gVramDmaQueue;
 #define QUEUE_COUNT (((volatile struct dma_queue *)&gVramDmaQueue)->count)
 /* Allocated capacity of gVramDmaQueue.entries. */
 #define DMA_QUEUE_MAX_ENTRIES 0x300
-
-extern s32 CountCrystals(void *arg0);
-extern s32 CountGems(void *arg0);
-extern s32 CountSapphireRelics(void *arg0);
-extern s32 CountGoldRelics(void *arg0);
-extern s32 CountPlatinumRelics(void *arg0);
 
 /* The register pins below (and in several functions further down) match
  * the ROM's own register allocation exactly - required for a byte-exact
@@ -674,7 +670,6 @@ u8 IsEntityNearCamera(struct actor *self)
 }
 
 extern void *_call_via_r1(void *arg0, void *arg1);
-extern u8 PlayerTouchesBox(void *arg0, void *buf);
 extern void _call_via_r4(void *arg0, s32 arg1, s32 arg2, s32 arg3);
 extern struct actor *gPlayer;
 

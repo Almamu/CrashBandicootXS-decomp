@@ -2,6 +2,7 @@
 #include "action_obj.h"
 #include "system.h"
 #include "audio.h"
+#include "player.h"
 
 /* GitHub issue #17, ROM 0x080134B8-0x080138E8 (details in
  * docs/matching/issue-17-0x08012fbc-actor.md, "Third pass"). Built with
@@ -30,10 +31,6 @@ extern void *gAudioContext;
 extern struct act_part *gPlayer;
 extern void *gEntitySpawner;
 extern void *gInput;
-extern void UpdatePlayerFacing(struct act *self);
-extern void HandleActionCtrlAirInput(struct act *self);
-extern void ClearPlayerSpeedY(struct act_part *part);
-extern void DoSuperBodySlamShockwave(struct act *self);
 extern struct spark *SpawnEffectPart(void *pool, s32 a, s32 b, s32 x, s32 y, s32 mirror);
 
 /* Byte masks with the mask as an `s32` parameter: the AND stays in SImode
@@ -292,13 +289,8 @@ asm(".align 2, 0");
  * (include/action_obj.h). Built with old_agbcc. */
 
 extern void *gLevelState;
-extern u8 PlayerHasRoomForAnim(struct act_part *part, s32 action);
 extern u8 HasSuperBodySlam(void *self);
 extern u8 HasTurboRun(void *self);
-extern void StartActionCtrlHighJump(struct act *self);
-extern void StartActionCtrlSpin(struct act *self);
-extern void ActionCtrlStateCrawl(struct act *self);
-extern void StartActionCtrlRun(struct act *self);
 
 /* Picks the part animation from its state: with tag 6, animation 9 on
  * frame 3 or 8 past it (or once finished); otherwise, once finished, 0x19
@@ -355,7 +347,7 @@ void ActionCtrlStateSlide(struct act *self)
         }
         else if (INPUT_HELD(in) & 1)
         {
-            if (PlayerHasRoomForAnim(part, 0xB) == 1)
+            if (PlayerHasRoomForAnim((struct box_part *)part, 0xB) == 1)
             {
                 PlaySfx(gAudioContext, 0xC, 0x100);
                 ActAndFlags0D(self->part, -2);
@@ -366,7 +358,7 @@ void ActionCtrlStateSlide(struct act *self)
         }
         else if (INPUT_PRESSED(in) & 2)
         {
-            if (PlayerHasRoomForAnim(part, 0x10) == 1)
+            if (PlayerHasRoomForAnim((struct box_part *)part, 0x10) == 1)
             {
                 StartActionCtrlSpin(self);
                 ActTrio27(self, 0, 1, 1);
@@ -421,7 +413,7 @@ void ActionCtrlStateSlide(struct act *self)
         {
             u8 dir = GetDpadDirection(gInput);
 
-            if (dir != 0 && PlayerHasRoomForAnim(self->part, 2))
+            if (dir != 0 && PlayerHasRoomForAnim((struct box_part *)self->part, 2))
             {
                 switch (dir)
                 {
@@ -444,7 +436,7 @@ void ActionCtrlStateSlide(struct act *self)
             }
             else
             {
-                u8 hit = PlayerHasRoomForAnim(self->part, 2);
+                u8 hit = PlayerHasRoomForAnim((struct box_part *)self->part, 2);
 
                 if (hit == 1)
                 {
@@ -475,12 +467,6 @@ void ActionCtrlStateSlide(struct act *self)
  * most also the D-pad direction GetDpadDirection remaps. */
 
 extern u8 HasTornadoSpin(void *self);
-extern u8 CheckActionCtrlLeftGround(struct act *self);
-extern void SteerActionCtrlSpin(struct act *self, u8 dir);
-extern void EndActionCtrlSpin(struct act *self, u8 dir, u32 in);
-extern void StartActionCtrlTornadoSpin(struct act *self, s32 id, s32 param);
-extern void sub_80151C8(struct act *self);
-extern void ActionCtrlStateAirborne(struct act *self);
 
 /* ActSetNext for the "fire" paths below. There the ROM loads a fresh 1 for
  * +0x30; plain C reuses the 1 of the preceding `pressed & 1` test, which
@@ -537,11 +523,11 @@ void ActionCtrlStateSpin(struct act *self)
         if (++self->charge > 3)
             self->charge = 3;
     }
-    SteerActionCtrlSpin(self, dir);
+    SteerActionCtrlSpin((u8 *)self, dir);
     if (++self->frame >= self->frames || self->part->animDone)
     {
         if (self->charge)
-            StartActionCtrlTornadoSpin(self, 0xF, 0xD);
+            StartActionCtrlTornadoSpin((u8 *)self, 0xF, 0xD);
         else
             EndActionCtrlSpin(self, dir, in);
     }
@@ -586,7 +572,7 @@ void ActionCtrlStateAirSpin(struct act *self)
         charge = self->charge;
         if (charge)
         {
-            StartActionCtrlTornadoSpin(self, 0xE, 0xE);
+            StartActionCtrlTornadoSpin((u8 *)self, 0xE, 0xE);
         }
         else
         {
@@ -638,9 +624,9 @@ void ActionCtrlStateTornadoSpin(struct act *self)
         if (++self->charge > 3)
             self->charge = 3;
     }
-    SteerActionCtrlSpin(self, dir);
+    SteerActionCtrlSpin((u8 *)self, dir);
     if (++self->frame >= self->frames || self->part->animDone)
-        StartActionCtrlTornadoSpin(self, 0xF, 0xD);
+        StartActionCtrlTornadoSpin((u8 *)self, 0xF, 0xD);
 }
 
 void ActionCtrlStateCrouchDown(struct act *self)
@@ -698,7 +684,7 @@ void ActionCtrlStateCrouch(struct act *self)
         in = gKeys;
         dir = GetDpadDirection(pad);
     }
-    if ((INPUT_PRESSED(in) & 1) && PlayerHasRoomForAnim(self->part, 0xB) == 1)
+    if ((INPUT_PRESSED(in) & 1) && PlayerHasRoomForAnim((struct box_part *)self->part, 0xB) == 1)
     {
         PlaySfx(gAudioContext, 0xC, 0x100);
         ActAndFlags0D(self->part, -2);
@@ -763,7 +749,7 @@ turn_done:
 
         if (held == 0)
         {
-            u8 hit = PlayerHasRoomForAnim(self->part, 2);
+            u8 hit = PlayerHasRoomForAnim((struct box_part *)self->part, 2);
 
             if (hit == 1)
             {
@@ -808,7 +794,6 @@ asm(".align 2, 0");
 
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern s32 _call_via_r3(void *arg0, void *arg1, void *arg2, void *arg3);
-extern void SetActionCtrlModeAnim(void *self, s32 a, s32 b, s32 c, s32 d);
 
 /* Clears `part+0x38`'s "busy" flag by resetting the shared
  * flag/counter/table-index trio (`+0x31`/`+0x2f`/`+0x27` and
@@ -842,7 +827,7 @@ void ActionCtrlStateCrawlStart(void *selfArg)
     u32 snap = *(u32 *)&gKeys;
 
     if ((*(u16 *)((u8 *)&snap + 2) & 1) != 0
-        && PlayerHasRoomForAnim(self->part, 0xb) == 1) {
+        && PlayerHasRoomForAnim((struct box_part *)self->part, 0xb) == 1) {
         PlaySfx(gAudioContext, 0xc, 0x100);
 
         {
@@ -902,7 +887,7 @@ void ActionCtrlStateCrawl(struct act *selfArg)
     u8 hit;
     u32 held;
 
-    if ((INPUT_PRESSED(in) & 1) && PlayerHasRoomForAnim(self->part, 0xB) == 1)
+    if ((INPUT_PRESSED(in) & 1) && PlayerHasRoomForAnim((struct box_part *)self->part, 0xB) == 1)
     {
         PlaySfx(gAudioContext, 0xC, 0x100);
         ActAndFlags0D(self->part, -2);
@@ -923,7 +908,7 @@ void ActionCtrlStateCrawl(struct act *selfArg)
         ActQueue27(self, 0, 0);
         break;
     case 1:
-        if (PlayerHasRoomForAnim(self->part, 2) == 1)
+        if (PlayerHasRoomForAnim((struct box_part *)self->part, 2) == 1)
         {
             ACT_VCALL1(self, m20, 0x15);
             ACT_VCALL2(self, m50, self->part, 2);
@@ -940,7 +925,7 @@ void ActionCtrlStateCrawl(struct act *selfArg)
         break;
     }
     held = INPUT_HELD(in) & 0x180;
-    if (held == 0 && (hit = PlayerHasRoomForAnim(self->part, 2)) == 1)
+    if (held == 0 && (hit = PlayerHasRoomForAnim((struct box_part *)self->part, 2)) == 1)
     {
         ACT_CALL1(self, m20, 0x12);
         ACT_CALL2(self, m50, self->part, 2);

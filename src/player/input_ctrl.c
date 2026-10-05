@@ -1,5 +1,7 @@
 #include "core.h"
 #include "audio.h"
+#include "player.h"
+#include "menus.h"
 
 /* GitHub issue #21: 0x08017524-0x08017A44, the whole tail of the former
  * asm/code_3_2_17_16048.s.
@@ -106,6 +108,8 @@ struct ctrl_target
     u8 dead;           // 0x104
 };
 
+/* The camera lead (CreateCameraLead), as far as this file reads it:
+ * level_select.c's `struct follow_child` sees the byte at 0x0C whole. */
 struct ctrl_child
 {
     s32 x;            // 0x00
@@ -145,24 +149,6 @@ struct input_ctrl
     s32 timer;                   // 0x24
 };
 
-struct pmf_entry
-{
-    s16 delta;
-    s16 index;
-    void *fn;
-};
-
-struct pmf
-{
-    s16 delta;
-    s16 index;
-    union
-    {
-        void *fn;
-        s16 vtableOffset;
-    } u;
-};
-
 extern void *gAudioContext;
 extern void *gLevelState;
 extern void *gPaletteCache;
@@ -170,17 +156,13 @@ extern void *gEntityFlags;
 extern void *gCollidableList;
 extern u32 gKeys; /* low half: held keys */
 extern struct { u8 unk_00[0x10]; struct { u8 unk_00[0x10]; s32 width; } *layer0; } *gLevelLayers;
-extern struct pmf gInputCtrlStateFuncs[];
 extern u8 gInputCtrlMotionRecords[];
-extern u8 gInputCtrlVtable[];
 
 extern s32 _call_via_r2(void *self, s32 arg, void *fn);
 extern s32 _call_via_r3(void *self, void *arg1, void *arg2, void *fn);
 extern void LoseLife(void *arg0);
 extern void LoadPaletteSlot(void *self, s32 slot, s32 recordId);
 extern void *OperatorNew(u32 size);
-extern struct ctrl_child *CreateCameraLead(void *mem);
-extern void ResetCameraLead(struct ctrl_child *child);
 extern void AddToPartList(void *manager, void *value);
 extern void RequestRoomExit(void);
 extern void DestroyCtrl(void *self, s32 flags);
@@ -242,10 +224,6 @@ static inline void QueueMotionY(struct input_ctrl *self, u8 anim)
     self->motionY = anim;
 }
 
-void SetInputCtrlModeAnim(struct input_ctrl *self, s32 mode, void *arg, s32 unused3, s32 unused4);
-void ApplyInputCtrlMotion(struct input_ctrl *self);
-void ResetInputCtrl(struct input_ctrl *self);
-
 void ClearPlayerCtrlMotionYPending(struct pctrl_motion_queue *self)
 {
     self->motionYPending = 0;
@@ -306,10 +284,10 @@ void InputCtrlStateStart(struct input_ctrl *self)
     self->dirState = 0;
     if (self->cameraLead == NULL)
     {
-        self->cameraLead = CreateCameraLead(OperatorNew(0x80));
+        self->cameraLead = (struct ctrl_child *)CreateCameraLead(OperatorNew(0x80));
         AddToPartList(gCollidableList, self->cameraLead);
     }
-    ResetCameraLead(self->cameraLead);
+    ResetCameraLead((struct follow_child *)self->cameraLead);
 }
 
 
@@ -382,12 +360,12 @@ void UpdateInputCtrl(struct input_ctrl *self)
 
     {
         s32 idx = gInputCtrlStateFuncs[self->state].index;
-        struct pmf_entry e;
+        struct vtable_slot e;
         void *fn;
 
         if (idx > 0)
         {
-            e = (*(struct pmf_entry **)((u8 *)self + gInputCtrlStateFuncs[self->state].u.vtableOffset))[idx - 1];
+            e = (*(struct vtable_slot **)((u8 *)self + gInputCtrlStateFuncs[self->state].u.vtableOffset))[idx - 1];
             fn = e.fn;
         }
         else
@@ -395,7 +373,7 @@ void UpdateInputCtrl(struct input_ctrl *self)
             fn = gInputCtrlStateFuncs[self->state].u.fn;
         }
         {
-            s32 d = gInputCtrlStateFuncs[self->state].delta;
+            s32 d = gInputCtrlStateFuncs[self->state].thisOffset;
             s32 adj;
 
             if (idx > 0)

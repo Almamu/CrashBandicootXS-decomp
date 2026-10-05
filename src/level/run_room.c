@@ -3,6 +3,9 @@
 #include "util.h"
 #include "system.h"
 #include "audio.h"
+#include "menus.h"
+#include "crates.h"
+#include "player.h"
 
 /* GitHub issue #37 follow-up to `docs/matching/issue-37-game-loop-2375c.md`
  * (which matched this function's only caller, `PlayRoom`, in
@@ -283,11 +286,9 @@ extern u16 gThemePaletteCycle1B[];
 extern u16 gThemePaletteCycle3[];
 extern u16 gThemePaletteCycle5[];
 
-extern void ResetPlayerForRoom(void *player);
 extern void LoadRoom(void *box, void *widget);
 extern void CheckAllCratesBroken(void *level);
 extern u8 IsSwitchPressed(void *level);
-extern void UpdateCrates(void);
 extern void SetMaskAssistDeaths(void *level, s32 value);
 extern void SetCrateAssistDeaths(void *level, s32 value);
 extern void ClearPaletteCycles(void *queue);
@@ -329,10 +330,8 @@ extern void SetDispcntMode(s32 arg);
 extern void SetObjMapping1D(void);
 extern void ShowObj(void);
 extern void CommitDispcnt(void);
-extern s32 RunPauseMenu(void);
 extern void ResumeRoomAfterPause(struct gl_self *self);
 extern void UpdatePartList(void *mgr);
-extern void UpdateCrateList(void *list);
 extern void TickLevelClock(struct gl_level *level);
 extern u8 IsRoomExitRequested(void);
 extern void FadePaletteToBlack(void);
@@ -341,7 +340,6 @@ extern s32 sub_801B29C(s32 *arg);
 extern void SetCheckpoint(void *level, s32 arg, s32 *point);
 extern void AddPendingSwitchCrates(void *level, s32 count);
 extern void ClearPartList(void *mgr);
-extern void ResetCrateList(void *list);
 extern void HideBg0(void);
 extern void HideBg1(void);
 extern void HideBg2(void);
@@ -503,7 +501,7 @@ s32 RunRoom(struct gl_self *self)
         UpdatePartList(gUpdateOnlyPartList);
         if ((u8)PMF_CALL(gPlayer, m38))
             PMF_CALL(gPlayer, m18);
-        UpdateCrateList(gCrateList);
+        UpdateCrateList((struct pool_manager *)gCrateList);
         UpdatePartList(gUnknown_030012EC);
         UpdatePartList(gCollidableList);
         UpdatePartList(gDecorationList);
@@ -570,7 +568,7 @@ fade:
         }
     }
     ClearPartList(gUpdateOnlyPartList);
-    ResetCrateList(gCrateList);
+    ResetCrateList((struct pool_init *)gCrateList);
     ClearPartList(gUnknown_030012EC);
     ClearPartList(gCollidableList);
     ClearPartList(gDecorationList);

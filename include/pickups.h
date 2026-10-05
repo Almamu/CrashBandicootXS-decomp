@@ -12,7 +12,7 @@
  * (docs/headers_plan.md).
  *
  * `ResetActionCtrl` (src/pickups/wumpa.c) only shares the file's ROM
- * range; it goes in the player subsystem's header. */
+ * range; it is in player.h. */
 
 #include "core.h"
 #include "actor.h"

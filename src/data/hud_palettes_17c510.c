@@ -1,4 +1,5 @@
 #include "core.h"
+#include "menus.h"
 
 /*
  * ROM 0x0817C510-0x0817C594. Linked in ROM order between data/data.s

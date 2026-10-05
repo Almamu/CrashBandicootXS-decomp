@@ -4,45 +4,13 @@
 #include "bitmap_font.h"
 #include "vram_pool.h"
 #include "audio.h"
-
-/* GitHub issue #63's final remaining raw span, right after the
- * three-kind `InitActorPart` cluster (`hovercraft_launcher.c`-`starfield.c`)
- * - see docs/matching/issue-63-0x08033ef4-actor.md. This "self" object
- * is *not* part of that `InitActorPart` family (no `InitActorPart` call,
- * and its field layout doesn't match): it's a standalone fade/overlay
- * controller that owns three small BG scratch buffers plus a combined
- * BLDCNT/BLDALPHA mirror, driving a full-screen alpha-blend effect. */
-struct continue_prompt {
-    u8 *bg1Buf;   /* 0x00 - LoadGraphicsPackage "self" scratch for BG1 */
-    u8 *bg0Buf;   /* 0x04 - ditto for BG0 */
-    u8 *bg2Buf;   /* 0x08 - ditto for BG2 */
-    u16 dispcnt;  /* 0x0c - written as one halfword to REG_DISPCNT; bytes
-                   * accessed individually below via DISPCNT_LO/DISPCNT_HI */
-    u8 unused_0e[2];
-    union {
-        u32 word;    /* 0x10 - written as one word to REG_BLDCNT/BLDALPHA */
-        struct {
-            u8 bldcntLo;
-            u8 bldcntHi;
-            u8 bldalphaLo;
-            u8 bldalphaHi;
-        } b;
-    } blend;
-    u8 unused_14[4]; /* 0x14 - never referenced by this file's functions */
-    struct bitmap_font *icons; /* 0x18 */
-    u32 unused_1c;
-    u32 selection; /* 0x20 - the Yes/No cursor, 0/1 (ContinuePromptLoop) */
-};
+#include "menus.h"
 
 extern void *OperatorNew(s32 size);
 extern void InitBgSetup(u8 *self, u32 arg1, u32 arg2, u32 arg3, u32 arg5);
 extern u16 GetBgSetupControl(u8 *self);
 extern void LoadGraphicsPackage(u8 *selfArg, struct bg_package *pkgArg);
-extern u8 gContinuePromptUkaUkaBg[];
-extern u8 gContinuePromptSmokeBg[];
-extern u8 gContinuePromptGlowBg[];
 extern struct AudioContext *gAudioContext;
-extern struct continue_prompt *InitContinuePromptGraphics(struct continue_prompt *self);
 
 /* Allocates and initializes the continue prompt's three BG scratch buffers
  * (BG1 priority 3/bgcnt 0x1e, BG0 bgcnt 0x1f/slot 3, BG2 priority
@@ -81,7 +49,7 @@ extern struct continue_prompt *InitContinuePromptGraphics(struct continue_prompt
  *    `asm/code_3_2_20_28568_c99c_31784_33ef4_3472c.s` under a
  *    `.if NON_MATCHING == 0` guard; that block is now removed since
  *    this function always compiles to the ROM's exact bytes. */
-void *InitContinuePrompt(void *selfArg)
+struct continue_prompt *InitContinuePrompt(struct continue_prompt *selfArg)
 {
     /* Register-pinned to match the ROM's own allocation
      * (matching_decomp_register_pinning memory): `self` occupies r5 for
@@ -106,9 +74,9 @@ void *InitContinuePrompt(void *selfArg)
     self->bg2Buf = buf;
 
     buf = self->bg1Buf;
-    LoadGraphicsPackage(buf, (struct bg_package *)gContinuePromptUkaUkaBg);
-    LoadGraphicsPackage(self->bg0Buf, (struct bg_package *)gContinuePromptSmokeBg);
-    LoadGraphicsPackage(self->bg2Buf, (struct bg_package *)gContinuePromptGlowBg);
+    LoadGraphicsPackage(buf, (struct bg_package *)&gContinuePromptUkaUkaBg);
+    LoadGraphicsPackage(self->bg0Buf, (struct bg_package *)&gContinuePromptSmokeBg);
+    LoadGraphicsPackage(self->bg2Buf, (struct bg_package *)&gContinuePromptGlowBg);
 
     *(vu16 *)PLTT = 0;
 
@@ -241,7 +209,7 @@ void *InitContinuePrompt(void *selfArg)
 
                         *(vu16 *)REG_ADDR_DISPCNT = self->dispcnt;
                         *(vu32 *)REG_ADDR_BLDCNT = self->blend.word;
-                        self->unused_1c = z2;
+                        self->blinkCounter = z2;
                         self->selection = z2;
                     }
                 }

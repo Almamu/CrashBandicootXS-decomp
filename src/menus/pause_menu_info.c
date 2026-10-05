@@ -4,19 +4,13 @@
 #include "bitmap_font.h"
 #include "pause_menu.h"
 #include "system.h"
+#include "menus.h"
 
 extern s32 GetCurrentLevel(void *arg0);
 extern void *gLevelState;
 extern u8 gLevelTable[];
 extern s32 GetCompletionPercent(void *arg0);
-extern s32 FormatDecimal(s32 value, void *dest);
-extern void FormatVolumePercent(s32 arg0, s32 arg1, u8 *out);
 extern struct AudioContext *gAudioContext;
-extern void InitPauseCrystalsPage(struct pause_menu *self);
-extern void InitPausePowersPage(struct pause_menu *self);
-extern void InitPauseGemsPage(struct pause_menu *self);
-extern void InitPauseRelicsPage(struct pause_menu *self);
-extern void InitPauseTimeTrialPage(struct pause_menu *self);
 
 /* The composite pause/options screen's "results" sub-region
  * constructor: resolves the current level's name/index label

@@ -6,6 +6,7 @@
 #include "pause_menu.h"
 #include "memory.h"
 #include "text.h"
+#include "menus.h"
 
 /* DrawPauseGemsPage + DrawPauseRelicsPage: mutually address-adjacent, bracketed by
  * the already-matched DrawPausePowersPage (pause_menu_powers.c) before and
@@ -17,8 +18,6 @@
  * order shows in DrawPauseGemsPage's flag tests. */
 
 extern void DrawSpriteWithOffset(void *arg0, s32 arg1, s32 arg2);
-extern struct icon_pos gPauseGemIconPos[];
-extern void DrawPauseFraction(struct pause_menu *self, void *label1, void *label2);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 
 static inline void set_icon_mgr_pos(struct bitmap_font *m, u32 x, u32 y)
@@ -65,8 +64,6 @@ void DrawPauseGemsPage(struct pause_menu *self)
     set_icon_mgr_pos(gSmallFont, 0xb4, 0x80);
     DrawPauseFraction(self, self->buf32, self->buf49);
 }
-
-extern struct icon_pos gPauseRelicIconPos[];
 
 /* Same shape as DrawPauseGemsPage above for the `iconsB0[3]` row: shows all
  * three icons unconditionally (no per-bit gating this time), then

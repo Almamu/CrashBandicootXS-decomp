@@ -2,6 +2,7 @@
 #include "actor.h"
 #include "pause_menu.h"
 #include "util.h"
+#include "menus.h"
 
 /* Built with old_agbcc (Makefile OLD_AGBCC_OBJS): the four icon-group
  * constructors below only match under it, and InitPauseCrystalsPage compiles
@@ -10,10 +11,7 @@
 extern void *OperatorNew(s32 size);
 extern struct actor *InitUiSpriteObj(struct actor *part);
 extern void SetEntityPixelPos(struct actor *self, s32 arg1, s32 arg2);
-extern s32 CountCrystals(void *arg0);
-extern s32 FormatDecimal(s32 value, void *dest);
 extern void ***gSpriteBankSet;
-extern struct icon_pos gPauseCrystalIconPos;
 
 /* Constructs the single icon at `field_88`: positions it from the fixed
  * `gPauseCrystalIconPos` pair, picks its starting keyframe-table entry
@@ -38,18 +36,6 @@ extern void ResetSpriteFrameTimer(struct actor *part);
 extern void ResetSpriteFrameIndex(struct actor *part);
 extern void SetSpriteAnimDone(struct actor *part, u8 val);
 
-/* `field_29` viewed as the nibble pair it is: the low nibble is the
- * GetSpriteAnimPaletteSlot-derived frame bits (same byte as level_menu.h's
- * `struct sprite` `palette:4`). Assigning the bitfield gives the ROM's
- * `and #0xf / mov #0x10; neg / and / orr` sequence with no pins. */
-struct icon_frame_nibble {
-    u8 lo:4;
-    u8 hi:4;
-};
-
-#define SET_ICON_FRAME_NIBBLE(iconExpr) \
-    (((struct icon_frame_nibble *)&(iconExpr)->field_29)->lo = GetSpriteAnimPaletteSlot(&(iconExpr)->base))
-
 /* Allocates and constructs a fresh 0x40-byte icon into `icon`, yielding
  * it. Used as the right-hand side of the `self->iconsXX[i] = ...`
  * stores below: because that right-hand side is a comma expression
@@ -59,13 +45,10 @@ struct icon_frame_nibble {
 #define NEW_ICON(icon) \
     ((icon) = (struct settings_icon_actor *)InitUiSpriteObj((struct actor *)OperatorNew(0x40)), (icon))
 
-static inline void set_icon_pos(struct actor *a, struct icon_pos *p)
+static inline void set_icon_pos(struct actor *a, const struct icon_pos *p)
 {
     SetEntityPixelPos(a, p->x, p->y);
 }
-
-extern u32 gPausePowerIconFrames[];
-extern struct icon_pos gPausePowerIconPos[];
 
 /* Builds the 4-icon array at `icons8c`: one per `gPausePowerIconPos`
  * position entry, keyframe-table base `0xe4<<1` off the same shared
@@ -88,11 +71,6 @@ void InitPausePowersPage(struct pause_menu *self)
         SET_ICON_FRAME_NIBBLE(self->icons8c[i]);
     }
 }
-
-extern s32 CountClearGems(void *arg0);
-extern s32 CountGems(void *arg0);
-extern u32 gPauseGemIconFrames[];
-extern struct icon_pos gPauseGemIconPos[];
 
 /* Same shape as InitPausePowersPage above for the 5-icon array at `icons9c`
  * (keyframe-table base `0xc0<<1`, positions/frame indices from
@@ -125,13 +103,6 @@ void InitPauseGemsPage(struct pause_menu *self)
     FormatDecimal(b, self->buf32);
     FormatDecimal(0x1c, self->buf49);
 }
-
-extern s32 CountSapphireRelics(void *arg0);
-extern s32 CountGoldRelics(void *arg0);
-extern s32 CountPlatinumRelics(void *arg0);
-extern s32 CountRelics(void *arg0);
-extern u32 gPauseRelicIconFrames[];
-extern struct icon_pos gPauseRelicIconPos[];
 
 /* Same shape as InitPausePowersPage/InitPauseGemsPage above for the 3-icon array at
  * `iconsB0` (keyframe-table base `0xc6<<1`, positions/frame indices
@@ -184,7 +155,6 @@ struct threshold_table_entry {
 COMPILE_TIME_ASSERT(pause_menu_pages_init_c, sizeof(struct threshold_table_entry) == 0x24);
 
 extern struct threshold_table_entry gLevelTable[];
-extern struct icon_pos gPauseTimeTrialIconPos;
 
 /* Tags `icon` with medal frame `frame` and restarts its animation. The
  * frame is a word parameter (not u8) so the table word is loaded after

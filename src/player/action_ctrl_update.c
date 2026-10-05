@@ -2,6 +2,7 @@
 #include "action_obj.h"
 #include "system.h"
 #include "audio.h"
+#include "player.h"
 
 /* Part of GitHub issue #16's remainder (0x08011BD4-0x08012D24): three
  * gActionCtrlStateTable action-table helpers for the player/action object
@@ -14,19 +15,6 @@
  * matches as plain C under it, and `TryActionCtrlDoubleJump` since the second retry
  * (docs/matching/issue-15-16-17-naked-retry-2.md), and `UpdateActionCtrl` in a
  * later pass. */
-
-/* A gcc 2.x pointer-to-member-function record (gActionCtrlStateTable's
- * per-state handlers): `index > 0` selects virtual slot `index - 1` of the
- * method table at `this + vtableOffset`, otherwise `fn` is called. */
-struct act_pmf
-{
-    s16 thisOffset;
-    s16 index;
-    union {
-        s16 vtableOffset;
-        void *fn;
-    } u;
-};
 
 struct cam_target
 {
@@ -48,11 +36,6 @@ extern void *gLevelState;
 extern struct act_part *gPlayer;
 extern void *gInput;
 extern struct cam *gLevelLayers;
-extern struct act_pmf gActionCtrlStateTable[];
-extern void sub_8012238(struct act *self);
-extern void ApplyActionCtrlMotion(struct act *self);
-extern void ActionCtrlStateFlipBodySlamStart(struct act *self);
-extern void sub_80151C8(struct act *self);
 extern u8 HasDoubleJump(void *self);
 extern void SetMaskLevel(void *self, s32 arg);
 

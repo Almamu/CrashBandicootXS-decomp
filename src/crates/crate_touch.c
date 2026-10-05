@@ -71,6 +71,7 @@
  * lands in r1 as in the ROM. See docs/matching/sp-box-retry.md. */
 #include "box_part.h"
 #include "util.h"
+#include "crates.h"
 
 extern struct box_part *gPlayer;
 

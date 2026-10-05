@@ -1,16 +1,11 @@
 #include "core.h"
 #include "save.h"
+#include "menus.h"
 
 /*
  * ROM 0x0816B138-0x0816B284. Linked in ROM order between data/data.s
  * sections by ldscript.txt - see docs/data.md.
  */
-
-/* pause_menu.h's `struct icon_pos`. */
-struct icon_pos {
-    s32 x;
-    s32 y;
-};
 
 /* The text DrawYesNoPrompt (save_menu_draw.c) draws in an icon's text slot. */
 const u8 gMenuCursorText[] = ">";
