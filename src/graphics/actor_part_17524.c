@@ -9,8 +9,8 @@
  *
  * The other 19 are one self-contained actor-part subclass,
  * `struct input_ctrl`, whose method table is `gInputCtrlVtable`
- * (constructor `sub_8017A00` - called from game_loop39.c - destructor
- * `sub_80179EC`; every other slot it calls through is a base-class
+ * (constructor `CreateInputCtrl` - called from game_loop39.c - destructor
+ * `DestroyInputCtrl`; every other slot it calls through is a base-class
  * `sub_800B6xx`/`sub_800B8xx` function). Each frame (`sub_8017650`, table
  * slot +0x0C) it reads the held D-pad bits from `gKeys` and
  * picks animation pairs for its target (`+0x10`) through
@@ -173,8 +173,8 @@ extern s32 _call_via_r3(void *self, void *arg1, void *arg2, void *fn);
 extern void LoseLife(void *arg0);
 extern void LoadPaletteSlot(void *self, s32 slot, s32 recordId);
 extern void *sub_8026EDC(u32 size);
-extern struct ctrl_child *sub_801B940(void *mem);
-extern void sub_801B864(struct ctrl_child *child);
+extern struct ctrl_child *CreateCameraLead(void *mem);
+extern void ResetCameraLead(struct ctrl_child *child);
 extern void sub_8008E94(void *manager, void *value);
 extern void RequestRoomExit(void);
 extern void sub_800B8A8(void *self, s32 flags);
@@ -238,7 +238,7 @@ static inline void SetAnimB(struct input_ctrl *self, u8 anim)
 
 void sub_80178BC(struct input_ctrl *self, s32 mode, void *arg, s32 unused3, s32 unused4);
 void sub_8017808(struct input_ctrl *self);
-void sub_80179BC(struct input_ctrl *self);
+void ResetInputCtrl(struct input_ctrl *self);
 
 void sub_8017524(struct flag_pair_owner *self)
 {
@@ -300,10 +300,10 @@ void sub_8017600(struct input_ctrl *self)
     self->dirState = 0;
     if (self->child == NULL)
     {
-        self->child = sub_801B940(sub_8026EDC(0x80));
+        self->child = CreateCameraLead(sub_8026EDC(0x80));
         sub_8008E94(gUnknown_030012F0, self->child);
     }
-    sub_801B864(self->child);
+    ResetCameraLead(self->child);
 }
 
 
@@ -466,7 +466,7 @@ void sub_8017994(struct input_ctrl *self)
     self->animB = 0;
 }
 
-void sub_80179BC(struct input_ctrl *self)
+void ResetInputCtrl(struct input_ctrl *self)
 {
     self->state = 1;
     self->animA = 0;
@@ -489,22 +489,22 @@ void sub_80179D4(struct input_ctrl *self, s32 arg1, s32 arg2)
         InputCtrlKillPlayer(self, (void *)1);
 }
 
-void sub_80179E8(struct input_ctrl *self, struct ctrl_target *target)
+void AttachInputCtrl(struct input_ctrl *self, struct ctrl_target *target)
 {
     self->target = target;
 }
 
-void sub_80179EC(struct input_ctrl *self, s32 flags)
+void DestroyInputCtrl(struct input_ctrl *self, s32 flags)
 {
     self->vtable = (struct ctrl_vtable *)gInputCtrlVtable;
     sub_800B8A8(self, flags);
 }
 
-struct input_ctrl *sub_8017A00(struct input_ctrl *self)
+struct input_ctrl *CreateInputCtrl(struct input_ctrl *self)
 {
     sub_800B8C8(self);
     self->vtable = (struct ctrl_vtable *)gInputCtrlVtable;
-    sub_80179BC(self);
+    ResetInputCtrl(self);
     return self;
 }
 

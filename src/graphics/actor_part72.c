@@ -94,7 +94,7 @@ void SpawnStar(void *mgrArg, s32 idx)
  * The final residual gap - the ROM's own "materialize `cell` into `r4`,
  * `bics` it against `mask` in `r0`, then copy `r4` back into `r0` before
  * `orrs`/`strh`" idiom, the same class of redundant-copy-after-a-binary-op
- * gcc-2.9 quirk already seen for `sub_802F338`'s multiply - is closed with
+ * gcc-2.9 quirk already seen for `AllocJetpackPlayerTiles`'s multiply - is closed with
  * one opaque `asm volatile` block emitting that exact instruction sequence
  * verbatim, taking `shift` and `tileMapEntry` (itself pinned to `r2` via a
  * nested `register` local, matching the ROM's own choice) as inputs and

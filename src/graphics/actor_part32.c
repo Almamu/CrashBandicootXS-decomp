@@ -24,9 +24,9 @@ extern u8 gHovercraftCannonVtable[];
 extern void InitActorPart(void *self, s32 a, s32 b, s32 c, s32 d);
 extern void sub_8029E28(s32 arg0);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *fn);
-extern s32 sub_8033900(void);
-extern s32 sub_80338F4(void);
-extern s32 sub_80338E8(void);
+extern s32 GetHovercraftX(void);
+extern s32 GetHovercraftY(void);
+extern s32 GetHovercraftZ(void);
 extern void *sub_80338C4(void);
 
 /* Constructor: forwards to `InitActorPart`, then sets `self`'s health
@@ -56,7 +56,7 @@ void *CreateHovercraftCannon(void *selfArg, s32 a, s32 b, s32 cParam, s32 d)
 /* Plays a fixed sound cue (`sub_8029E28(0x400)`), then - if `self`'s
  * `+0x12` flag is set - fires the `vtable` event table's slot-3
  * trampoline at `self` offset by the table's `+8` halfword. */
-void sub_8033BFC(void *selfArg)
+void HovercraftCannonStateDestroyed(void *selfArg)
 {
     struct health_actor *self = selfArg;
 
@@ -84,13 +84,13 @@ void sub_8033BFC(void *selfArg)
  * table-index 1, seeding `+0x64`/`+0x68` from `gUnknown_030015DC`'s
  * table and resetting the anim-frame pair from `self`'s part table's
  * `+0xc` field. */
-void sub_8033C28(void *selfArg)
+void HovercraftCannonStateWait(void *selfArg)
 {
     struct health_actor *self = selfArg;
 
-    self->base.x = sub_8033900() + 0x2000;
-    self->base.y = sub_80338F4() + 0x3000;
-    self->base.z = sub_80338E8() - 0x100;
+    self->base.x = GetHovercraftX() + 0x2000;
+    self->base.y = GetHovercraftY() + 0x3000;
+    self->base.z = GetHovercraftZ() - 0x100;
 
     if (self->base.depth <= 0x4AFF) {
         s32 *table = sub_80338C4();

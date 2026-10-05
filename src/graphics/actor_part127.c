@@ -14,7 +14,7 @@
  * cluster from disassembly alone.
  *
  * Built with old_agbcc: `sub_802BAD0` (the `1` mask materialized before
- * the `ldrh` it is ANDed with) and `sub_802B5B4`/`sub_802B864` (operand
+ * the `ldrh` it is ANDed with) and `DrawPolarPlayer`/`AllocPolarPlayerTiles` (operand
  * order of their loads and multiplies) only match under it, and every
  * other function here matches under both compilers - see
  * docs/matching/issue-51-54-naked-retry.md. */
@@ -53,7 +53,7 @@ extern void *CreateActor(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4);
 extern void *AllocVramTileBlock(s32 size);
 extern s32 RandRange(s32 max);
 extern s32 SetMaskLevel(void *arg0, s32 arg1);
-extern void sub_802BC68(void *selfArg);
+extern void DispensePolarWumpa(void *selfArg);
 extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
 
 extern u8 gStaticData_0817A728[];
@@ -62,9 +62,9 @@ extern u8 gStaticData_0817A748[];
 extern s32 gUnknown_0300148C;
 extern s32 gUnknown_03001498;
 extern u8 gUnknown_030014A1;
-extern struct actor_pmf gStaticData_0817A6B8[];
+extern struct actor_pmf gPolarPlayerStateFuncs[];
 extern void (*gUnpackRleSpriteFrameFunc)(void *dst, u8 *frame);
-extern void *gUnknown_030014B0[2];     // the two VRAM tile buffers
+extern void *gPolarPlayerTiles[2];     // the two VRAM tile buffers
 extern s32 gUnknown_030014A8;          // which buffer holds the current frame
 extern u8 *gUnknown_030014AC;          // the frame last uploaded
 
@@ -93,18 +93,18 @@ static inline s32 Abs(s32 x)
     return (x ^ s) - s;
 }
 
-/* The per-frame update (`docs/rom_map.md`'s "sub_802B364", a slot of
- * the `gStaticData_087E4E54` method table): runs `sub_802BC68`, ticks
+/* The per-frame update (`docs/rom_map.md`'s "UpdatePolarPlayer", a slot of
+ * the `gPolarPlayerVtable` method table): runs `DispensePolarWumpa`, ticks
  * the two countdowns (`gUnknown_0300148C` expiring into state 10;
  * `gUnknown_0300149C` blinking `self+0x2C`), depth, animation, the
- * current state's handler from `gStaticData_0817A6B8` (a C++
+ * current state's handler from `gPolarPlayerStateFuncs` (a C++
  * pointer-to-member call), left/right steering while
  * `gUnknown_030014A3` is set, then drives - or first spawns - the
  * companion object in `gPolarAkuAku`. Same shape as
- * `actor_part128.c`'s `sub_802E84C`. */
-void sub_802B364(struct actor_self *self)
+ * `actor_part128.c`'s `UpdateJetpackPlayer`. */
+void UpdatePolarPlayer(struct actor_self *self)
 {
-    sub_802BC68(self);
+    DispensePolarWumpa(self);
     if (gUnknown_0300148C != 0 && --gUnknown_0300148C == 0) {
         gUnknown_030014A1 = 1;
         SetCellAnimSpeed(0);
@@ -133,7 +133,7 @@ void sub_802B364(struct actor_self *self)
         self->animDone = 1;
     }
     sub_8029D8C(self->x, self->y);
-    ACTOR_PMF_CALL(self, gStaticData_0817A6B8);
+    ACTOR_PMF_CALL(self, gPolarPlayerStateFuncs);
     if (gUnknown_030014A3 != 0) {
         struct held_pressed_pair keys = gKeys;
 
@@ -190,9 +190,9 @@ static inline u8 *CurFrame(struct actor_self *self)
  * double-sized when drawn behind the camera's reference depth), culls
  * against the screen, uploads the frame's tiles into the other of the
  * two VRAM buffers when the frame changed, and queues the OAM entry.
- * The same code as `actor_part128.c`'s `sub_802E9FC` with a different
+ * The same code as `actor_part128.c`'s `DrawJetpackPlayer` with a different
  * projection constant. */
-void sub_802B5B4(struct actor_self *self)
+void DrawPolarPlayer(struct actor_self *self)
 {
     s32 scale;
     s32 attr1 = 0;
@@ -233,11 +233,11 @@ void sub_802B5B4(struct actor_self *self)
         attr1 |= (sy & 0xff) | ((sx & 0x1ff) << 16) | attr | GetSpriteShapeSizeBits(frame);
         if (frame != gUnknown_030014AC) {
             gUnknown_030014A8 ^= 1;
-            gUnpackRleSpriteFrameFunc(gUnknown_030014B0[gUnknown_030014A8], frame);
+            gUnpackRleSpriteFrameFunc(gPolarPlayerTiles[gUnknown_030014A8], frame);
             gUnknown_030014AC = frame;
         }
         {
-            register u32 tile asm("r0") = GET_TILE_NUM(gUnknown_030014B0[gUnknown_030014A8]);
+            register u32 tile asm("r0") = GET_TILE_NUM(gPolarPlayerTiles[gUnknown_030014A8]);
 
             QueueSpriteFrameOam(attr1, tile | (self->palette << 12), scale);
         }
@@ -270,7 +270,7 @@ void sub_802B5B4(struct actor_self *self)
  * lifetime (never re-deriving an address it already has); `self`
  * itself is reused for the unrelated `1` constant once its own fields
  * are no longer needed (`one`, sharing r4 with the now-dead `self`). */
-s32 sub_802B730(void *selfArg)
+s32 HurtPolarPlayer(void *selfArg)
 {
     struct actor_self *self = selfArg;
     register s32 result asm("r0");
@@ -334,11 +334,11 @@ end:
     return result;
 }
 
-/* Same shape as `sub_802B730` (twin trigger, different reset target -
+/* Same shape as `HurtPolarPlayer` (twin trigger, different reset target -
  * state 0xc/table-index 0xb): once-only spawn/reset gated the same way
  * on `gUnknown_0300149C`/mask level (`maskLevel`), or forwards to `RemovePolarAkuAkuMask`.
  *
- * Same `goto`-shared-tail idiom as `sub_802B730` above (single `return
+ * Same `goto`-shared-tail idiom as `HurtPolarPlayer` above (single `return
  * result;` at one shared `end` label) and the same three
  * persistent-address-local shape, except here `effectAddr` itself
  * (`&gPolarAkuAku`, in r4) is the register reused for the
@@ -346,7 +346,7 @@ end:
  * the tier-clear path (the tier-active path never touches that reuse,
  * since it reads through the original `effectAddr` before this
  * function would ever take the tier-clear branch). */
-s32 sub_802B7E0(void *selfArg)
+s32 ShockPolarPlayer(void *selfArg)
 {
     struct actor_self *self = selfArg;
     register s32 result asm("r0");
@@ -395,22 +395,22 @@ end:
 }
 
 /* Allocates the pair of VRAM tile blocks this cluster's gauge display
- * uses (`gUnknown_030014B0[0]`/`[1]`), each sized from the same
+ * uses (`gPolarPlayerTiles[0]`/`[1]`), each sized from the same
  * keyframe-table byte-pair lookup (`self`'s part table, indexed by
  * `self+0xc`, offset by `self+8`'s frame accumulator, into a *second*
- * pointer array at `self+4`) already established for `sub_802F338`
+ * pointer array at `self+4`) already established for `AllocJetpackPlayerTiles`
  * (`actor_part43b.c`, `docs/matching/issue-56-0x0802f0dc-actor.md`);
  * arms `gUnknown_030014A8`, clears `gUnknown_030014AC`. The ROM's
  * "multiply into a copy, copy again, then shift" sequence is simply
  * old_agbcc's code for `h * w * 32` - no register forcing needed. */
-void sub_802B864(struct actor_self *self)
+void AllocPolarPlayerTiles(struct actor_self *self)
 {
     u8 *f;
 
     f = CurFrame(self);
-    gUnknown_030014B0[0] = AllocVramTileBlock(f[1] * f[0] * 32);
+    gPolarPlayerTiles[0] = AllocVramTileBlock(f[1] * f[0] * 32);
     f = CurFrame(self);
-    gUnknown_030014B0[1] = AllocVramTileBlock(f[1] * f[0] * 32);
+    gPolarPlayerTiles[1] = AllocVramTileBlock(f[1] * f[0] * 32);
     gUnknown_030014A8 = 1;
     gUnknown_030014AC = 0;
 }
@@ -632,7 +632,7 @@ void sub_802BAD0(struct actor_self *self)
 /* Frame-counter threshold DMA driver: past `0x2c` frames, does the
  * full gauge-strip DMA plus state 6/table-index 5 reset (arming
  * `gUnknown_03001480` and kicking the mode transition, same shape as
- * `sub_802B730` above); otherwise DMAs one of two gauge-strip variants
+ * `HurtPolarPlayer` above); otherwise DMAs one of two gauge-strip variants
  * every 4th frame without touching any state. */
 void sub_802BB4C(void *selfArg)
 {
@@ -677,7 +677,7 @@ void sub_802BB4C(void *selfArg)
  * effect object via `CreateActor` (stashed into `gUnknown_03001490`)
  * gated on that same threshold. Resets `self` to state 8/table-index
  * 7, arms `gUnknown_03001480`, and kicks the mode transition the same
- * way as `sub_802B730`/`sub_802BB4C`. */
+ * way as `HurtPolarPlayer`/`sub_802BB4C`. */
 void sub_802BBE4(struct actor_self *self)
 {
     if (self->animDone) {

@@ -273,7 +273,7 @@
    "size": 512,
    "name": "gHovercraftPalette",
    "consumers": [
-    "sub_8032AF8",
+    "UpdateHovercraftHitFlash",
     "LoadHovercraftGraphics",
     "ConvertHovercraftTiles"
    ],
@@ -353,12 +353,12 @@
     "sub_801192C",
     "UpdateZoomBg",
     "MovePolarAkuAku",
-    "sub_80300E0",
-    "sub_803013C",
-    "sub_8030188",
-    "sub_8030334",
-    "sub_803044C",
-    "sub_8032290",
+    "JetpackBomberStateCircle",
+    "JetpackBomberStateSwingHorizontal",
+    "JetpackBomberStateBobVertical",
+    "AirshipFireballStateOrbit",
+    "AirshipFireballStateSpiralIn",
+    "JetpackBalloonCrateStateHang",
     "UpdateJetpackRocket",
     "sub_8032C0C",
     "SpawnStar"
@@ -2412,7 +2412,7 @@
    "name": "gStaticData_0816C4C0",
    "consumers": [
     "InitLevelSelect",
-    "sub_801C3E8"
+    "DrawLevelSelectTime"
    ],
    "consumer_files": [
     "graphics/actor_part_1b85c.c"
@@ -2560,7 +2560,7 @@
    "name": "gStaticData_0816C548",
    "consumers": [
     "InitLevelSelect",
-    "sub_801D470"
+    "RefreshLevelSelectPage"
    ],
    "consumer_files": [
     "graphics/actor_part_1b85c.c",
@@ -2585,7 +2585,7 @@
    "size": 20,
    "name": "gStaticData_0816C558",
    "consumers": [
-    "sub_801C608"
+    "LoadLevelSelectRecord"
    ],
    "consumer_files": [
     "graphics/actor_part_1b85c.c"
@@ -2630,7 +2630,7 @@
    "size": 20,
    "name": "gStaticData_0816C58C",
    "consumers": [
-    "sub_801D7F8"
+    "CreateLevelSelectPageBg"
    ],
    "consumer_files": [
     "graphics/actor_part_1cee0.c"
@@ -2697,7 +2697,7 @@
    "size": 20,
    "name": "gStaticData_0816C610",
    "consumers": [
-    "sub_801DF0C"
+    "SetLevelSelectEntryBox"
    ],
    "consumer_files": [
     "graphics/actor_part_1da38.c"
@@ -2721,7 +2721,7 @@
    "size": 16,
    "name": "gStaticData_0816C624",
    "consumers": [
-    "sub_801DEA4"
+    "SetLevelSelectEntryLevel"
    ],
    "consumer_files": [
     "graphics/actor_part_1da38.c"
@@ -2745,7 +2745,7 @@
    "size": 16,
    "name": "gStaticData_0816C634",
    "consumers": [
-    "sub_801E190"
+    "UpdateLevelSelectCursor"
    ],
    "consumer_files": [
     "graphics/actor_part_1dfec.c"
@@ -2968,9 +2968,9 @@
     "CountPlatinumRelics",
     "CountGoldRelics",
     "CountSapphireRelics",
-    "sub_801C3E8",
-    "sub_801C51C",
-    "sub_801C608",
+    "DrawLevelSelectTime",
+    "DrawLevelSelect",
+    "LoadLevelSelectRecord",
     "LevelSelectLoop",
     "sub_8021280",
     "RunRoom",
@@ -3317,7 +3317,7 @@
    "consumers": [
     "InitActorCategory",
     "SetupActorVramPool",
-    "sub_802968C",
+    "CountCategoryCrates",
     "sub_8029794"
    ],
    "consumer_files": [
@@ -3405,7 +3405,7 @@
    "size": 14336,
    "name": "gStaticData_08175760",
    "consumers": [
-    "sub_802AB58"
+    "UpdateActorPaletteCycle"
    ],
    "consumer_files": [
     "graphics/actor_part53.c"
@@ -3427,7 +3427,7 @@
    "size": 16,
    "name": "gStaticData_08178F60",
    "consumers": [
-    "sub_802ABC8"
+    "SetActorPaletteCycle"
    ],
    "consumer_files": [
     "graphics/actor_part54.c"
@@ -3451,7 +3451,7 @@
    "size": 16,
    "name": "gStaticData_08178F70",
    "consumers": [
-    "sub_802ABC8"
+    "SetActorPaletteCycle"
    ],
    "consumer_files": [
     "graphics/actor_part54.c"
@@ -3495,9 +3495,9 @@
   {
    "address": "0x0817A6B8",
    "size": 112,
-   "name": "gStaticData_0817A6B8",
+   "name": "gPolarPlayerStateFuncs",
    "consumers": [
-    "sub_802B364",
+    "UpdatePolarPlayer",
     "sub_802C208"
    ],
    "consumer_files": [
@@ -3524,7 +3524,7 @@
    "size": 32,
    "name": "gStaticData_0817A728",
    "consumers": [
-    "sub_802B730",
+    "HurtPolarPlayer",
     "sub_802BB4C"
    ],
    "consumer_files": [
@@ -3885,9 +3885,9 @@
   {
    "address": "0x0817C1C0",
    "size": 64,
-   "name": "gStaticData_0817C1C0",
+   "name": "gJetpackPlayerStateFuncs",
    "consumers": [
-    "sub_802E84C",
+    "UpdateJetpackPlayer",
     "sub_802F748"
    ],
    "consumer_files": [
@@ -3935,7 +3935,7 @@
   {
    "address": "0x0817C260",
    "size": 32,
-   "name": "gStaticData_0817C260",
+   "name": "gJetpackPlaneStateFuncs",
    "consumers": [
     "UpdateJetpackPlane",
     "sub_802FEA4"
@@ -3961,7 +3961,7 @@
   {
    "address": "0x0817C280",
    "size": 56,
-   "name": "gStaticData_0817C280",
+   "name": "gJetpackBomberStateFuncs",
    "consumers": [
     "UpdateJetpackBomber",
     "sub_8030234"
@@ -3986,9 +3986,9 @@
   {
    "address": "0x0817C2B8",
    "size": 24,
-   "name": "gStaticData_0817C2B8",
+   "name": "gAirshipFireballStateFuncs",
    "consumers": [
-    "sub_8030574",
+    "UpdateAirshipFireball",
     "sub_8030648"
    ],
    "consumer_files": [
@@ -4039,7 +4039,7 @@
    "name": "gStaticData_0817C378",
    "consumers": [
     "SpawnAirship",
-    "sub_8031744"
+    "AnimateAirshipPalette"
    ],
    "consumer_files": [
     "graphics/actor_part23e.c",
@@ -4139,7 +4139,7 @@
   {
    "address": "0x0817C414",
    "size": 24,
-   "name": "gStaticData_0817C414",
+   "name": "gJetpackBalloonStateFuncs",
    "consumers": [
     "sub_8031A08"
    ],
@@ -4163,7 +4163,7 @@
   {
    "address": "0x0817C42C",
    "size": 24,
-   "name": "gStaticData_0817C42C",
+   "name": "gJetpackBalloonCrateStateFuncs",
    "consumers": [
     "UpdateJetpackBalloonCrate",
     "sub_80322F4"
@@ -4209,9 +4209,9 @@
   {
    "address": "0x0817C450",
    "size": 16,
-   "name": "gStaticData_0817C450",
+   "name": "gHovercraftFireballStateFuncs",
    "consumers": [
-    "sub_8032950",
+    "UpdateHovercraftFireball",
     "sub_8032A94"
    ],
    "consumer_files": [
@@ -4305,7 +4305,7 @@
    "size": 24,
    "name": "gHovercraftStateFuncs",
    "consumers": [
-    "sub_8032B6C"
+    "RunHovercraftState"
    ],
    "consumer_files": [
     "graphics/actor_part130.c"
@@ -4327,10 +4327,10 @@
   {
    "address": "0x0817C4E0",
    "size": 24,
-   "name": "gStaticData_0817C4E0",
+   "name": "gHovercraftCannonStateFuncs",
    "consumers": [
     "UpdateHovercraftCannon",
-    "sub_8033C84"
+    "RunHovercraftCannonState"
    ],
    "consumer_files": [
     "graphics/actor_part31.c",
@@ -4353,10 +4353,10 @@
   {
    "address": "0x0817C4F8",
    "size": 24,
-   "name": "gStaticData_0817C4F8",
+   "name": "gHovercraftLauncherStateFuncs",
    "consumers": [
     "UpdateHovercraftLauncher",
-    "sub_8033FE4"
+    "RunHovercraftLauncherState"
    ],
    "consumer_files": [
     "graphics/actor_part37.c",
@@ -4402,7 +4402,7 @@
    "size": 32,
    "name": "gStaticData_0817C512",
    "consumers": [
-    "sub_803487C"
+    "InitContinuePromptGraphics"
    ],
    "consumer_files": [
     "graphics/actor_part88.c"
@@ -4426,7 +4426,7 @@
    "size": 32,
    "name": "gStaticData_0817C532",
    "consumers": [
-    "sub_803487C"
+    "InitContinuePromptGraphics"
    ],
    "consumer_files": [
     "graphics/actor_part88.c"
@@ -4450,7 +4450,7 @@
    "size": 32,
    "name": "gStaticData_0817C552",
    "consumers": [
-    "sub_803487C"
+    "InitContinuePromptGraphics"
    ],
    "consumer_files": [
     "graphics/actor_part88.c"
@@ -4474,7 +4474,7 @@
    "size": 34,
    "name": "gStaticData_0817C572",
    "consumers": [
-    "sub_803487C"
+    "InitContinuePromptGraphics"
    ],
    "consumer_files": [
     "graphics/actor_part88.c"
@@ -7583,8 +7583,8 @@
    "size": 104,
    "name": "gInputCtrlVtable",
    "consumers": [
-    "sub_80179EC",
-    "sub_8017A00"
+    "DestroyInputCtrl",
+    "CreateInputCtrl"
    ],
    "consumer_files": [
     "graphics/actor_part_17524.c"
@@ -7881,10 +7881,10 @@
   {
    "address": "0x087E47D4",
    "size": 104,
-   "name": "gStaticData_087E47D4",
+   "name": "gCortexBossVtable",
    "consumers": [
-    "sub_80197C8",
-    "sub_80197DC"
+    "DestroyCortexBoss",
+    "CreateCortexBoss"
    ],
    "consumer_files": [
     "graphics/actor_part_1967c.c"
@@ -8060,10 +8060,10 @@
   {
    "address": "0x087E4ABC",
    "size": 120,
-   "name": "gStaticData_087E4ABC",
+   "name": "gCameraLeadVtable",
    "consumers": [
-    "sub_801B91C",
-    "sub_801B940"
+    "DestroyCameraLead",
+    "CreateCameraLead"
    ],
    "consumer_files": [
     "graphics/actor_part_1b85c.c"
@@ -8111,10 +8111,10 @@
   {
    "address": "0x087E4BAC",
    "size": 48,
-   "name": "gStaticData_087E4BAC",
+   "name": "gLevelSelectEntryVtable",
    "consumers": [
-    "sub_801DF98",
-    "sub_801DFEC"
+    "DestroyLevelSelectEntry",
+    "CreateLevelSelectEntry"
    ],
    "consumer_files": [
     "graphics/actor_part_1da38.c",
@@ -8353,9 +8353,9 @@
    "consumers": [
     "InitActorPart",
     "DestroyActor",
-    "sub_802C19C",
+    "DestroyPolarPlayer",
     "DestroyPolarCollectedWumpa",
-    "sub_802F6DC",
+    "DestroyJetpackPlayer",
     "DestroyJetpackBalloonCrate",
     "DestroyJetpackCollectedWumpa",
     "DestroyLogoActor",
@@ -8385,16 +8385,16 @@
     "DestroyJetpackPlane",
     "DestroyJetpackBomber",
     "DestroyJetpackCannonball",
-    "sub_803B698",
+    "DestroyAirshipFireball",
     "DestroyJetpackBalloon",
     "DestroyJetpackParachuteNitro",
     "DestroyJetpackRocket",
     "DestroyJetpackRing",
-    "sub_803B7D4",
+    "DestroyHovercraftFireball",
     "DestroyHovercraftCannon",
     "DestroyHovercraftLauncher",
-    "sub_803B858",
-    "sub_803B884"
+    "DestroyHovercraftSideGun",
+    "DestroyHovercraftCannonFlash"
    ],
    "consumer_files": [
     "audio/counter_selector.c",
@@ -8472,10 +8472,10 @@
   {
    "address": "0x087E4E54",
    "size": 32,
-   "name": "gStaticData_087E4E54",
+   "name": "gPolarPlayerVtable",
    "consumers": [
     "ConstructActorPart",
-    "sub_802C19C"
+    "DestroyPolarPlayer"
    ],
    "consumer_files": [
     "graphics/actor_part19.c",
@@ -9020,10 +9020,10 @@
   {
    "address": "0x087E5144",
    "size": 56,
-   "name": "gStaticData_087E5144",
+   "name": "gJetpackPlayerVtable",
    "consumers": [
-    "sub_802E740",
-    "sub_802F6DC"
+    "InitJetpackPlayer",
+    "DestroyJetpackPlayer"
    ],
    "consumer_files": [
     "graphics/actor_part128.c",
@@ -9142,9 +9142,9 @@
   {
    "address": "0x087E525C",
    "size": 56,
-   "name": "gStaticData_087E525C",
+   "name": "gAirshipFireballVtable",
    "consumers": [
-    "sub_80305F8"
+    "CreateAirshipFireball"
    ],
    "consumer_files": [
     "graphics/actor_part20d.c"
@@ -9386,9 +9386,9 @@
   {
    "address": "0x087E54AC",
    "size": 56,
-   "name": "gStaticData_087E54AC",
+   "name": "gHovercraftFireballVtable",
    "consumers": [
-    "sub_80329D4"
+    "CreateHovercraftFireball"
    ],
    "consumer_files": [
     "graphics/actor_part130.c"
@@ -9458,9 +9458,9 @@
   {
    "address": "0x087E5554",
    "size": 56,
-   "name": "gStaticData_087E5554",
+   "name": "gHovercraftSideGunVtable",
    "consumers": [
-    "sub_8034058"
+    "CreateHovercraftSideGun"
    ],
    "consumer_files": [
     "graphics/actor_part66.c"
@@ -9482,9 +9482,9 @@
   {
    "address": "0x087E558C",
    "size": 56,
-   "name": "gStaticData_087E558C",
+   "name": "gHovercraftCannonFlashVtable",
    "consumers": [
-    "sub_80342D4"
+    "CreateHovercraftCannonFlash"
    ],
    "consumer_files": [
     "graphics/actor_part69.c"

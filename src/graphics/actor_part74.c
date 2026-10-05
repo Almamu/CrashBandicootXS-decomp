@@ -33,7 +33,7 @@ extern u8 gStaticData_0817AA98[];
 extern s32 gUnknown_030014C8;
 extern u8 gUnknown_030014A0;
 extern void *MemCopy32(void *dest, void *src, s32 size);
-extern void sub_802C018(void *self);
+extern void CatchPolarPlayer(void *self);
 extern void SetCellAnimSpeed(s32 arg0);
 extern u16 gYetiPalette[];
 extern s32 sub_8029E98(void);
@@ -75,7 +75,7 @@ extern s32 sub_8029EB4(void);
  * *is* its own source, not a disassembly artifact. On overlap, arms
  * `gYetiState = 2`, resets the object's kind/anim state to the
  * part table's `+0x18` record, and refreshes the player via
- * `sub_802C018`/`SetCellAnimSpeed(0)`; skipped once `gUnknown_030014A0` (an
+ * `CatchPolarPlayer`/`SetCellAnimSpeed(0)`; skipped once `gUnknown_030014A0` (an
  * already-consumed one-shot flag elsewhere in this ROM region) is set.
  *
  * The three boxes (static A at sp, the copy B at sp+0xc, the player
@@ -163,7 +163,7 @@ void UpdateYeti(void)
             g->animTimer = g->anims[2].duration;
             g->animDone = 0;
             g->animTime = 0;
-            sub_802C018(gActorList);
+            CatchPolarPlayer(gActorList);
             SetCellAnimSpeed(0);
         }
     }

@@ -2,7 +2,7 @@
 
 All 25 functions of the former `asm/code_3_2_17_188d0_1b85c.s` now live in
 `src/graphics/actor_part_1b85c.c` (the `.s` file is retired). **22 are
-plain C; 3 (`InitLevelSelect`, `sub_801C608`, `LevelSelectLoop`) are NAKED
+plain C; 3 (`InitLevelSelect`, `LoadLevelSelectRecord`, `LevelSelectLoop`) are NAKED
 transcriptions** with their C reconstructions kept under
 `#if NON_MATCHING`. Verified with a full clean
 `rm -rf build && make NON_MATCHING=1 report` and
@@ -13,8 +13,8 @@ transcriptions** with their C reconstructions kept under
 object is now built with `tools/agbcc/bin/old_agbcc` (Makefile
 `OLD_AGBCC_OBJS`), the compiler this region was originally built with.
 All 22 plain-C functions match under it; `sub_801B984` needed its zero/id
-pins dropped to do so, and the pins/barriers of `sub_801B8BC`,
-`sub_801B984`, `UpdateLevelSelect`, `sub_801C364` and `sub_801C51C` turned out
+pins dropped to do so, and the pins/barriers of `UpdateCameraLead`,
+`sub_801B984`, `UpdateLevelSelect`, `DrawLevelSelectRecord` and `DrawLevelSelect` turned out
 to be unnecessary and were removed. The three NAKED functions still don't
 match under old_agbcc (see "Parked" below) and are unchanged.
 
@@ -25,13 +25,13 @@ Three gcc 2.x C++ classes (method tables, virtual calls through the
 functions):
 
 - **`struct follow_child`** (`sub_801B85C`-`sub_801B980`, method table
-  `gStaticData_087E4ABC`, 0x80 bytes) - the child object `sub_8017600`
+  `gCameraLeadVtable`, 0x80 bytes) - the child object `sub_8017600`
   (`actor_part_17524.c`) spawns. It registers itself as
   `gCamera`'s follow target (`+0x10`) and each frame
-  (`sub_801B8BC`, table slot `+0x18`) eases a Q8 x offset from the
+  (`UpdateCameraLead`, table slot `+0x18`) eases a Q8 x offset from the
   player (`+0x7C`) toward a target (`+0x78`, clamped to 0xA00-0x3200 by
   `sub_801B960`) by 0x200, then copies the player's position. The
-  destructor (`sub_801B91C`, slot `+0x50`) hands the follow target back
+  destructor (`DestroyCameraLead`, slot `+0x50`) hands the follow target back
   to the player.
 - **A 0x78-byte sprite subclass** (`sub_801B984`-`sub_801BAD0`, method
   table `gStaticData_087E4B34`) - a factory that inlines the constructor
@@ -55,14 +55,14 @@ functions):
   13-bit best time). The object keeps shadow copies of BLDCNT/BLDALPHA
   (`+0xA0`), BLDY (`+0xA4`) and DISPCNT (`+0xA8`), modelled as bitfield
   unions, and commits them with the scroll registers every frame - the
-  commit docs/rom_map.md described for `sub_801CCF8` is an inlined
+  commit docs/rom_map.md described for `SettleLevelSelectPage` is an inlined
   helper (`CommitDisplay`), also inlined three times into
   `LevelSelectLoop`.
 
 UNUSED (no `bl`/`.4byte` reference in `asm/`, `data/` or `src/`, and no
 Thumb pointer anywhere in the ROM): `sub_801B85C`, `sub_801B960`,
-`sub_801B980`, `sub_801BAD0`. Matched anyway. `sub_801B8BC`,
-`sub_801B91C`, `sub_801BA60` and `sub_801BAB0` are reached only through
+`sub_801B980`, `sub_801BAD0`. Matched anyway. `UpdateCameraLead`,
+`DestroyCameraLead`, `sub_801BA60` and `sub_801BAB0` are reached only through
 their method tables.
 
 ## Techniques
@@ -86,7 +86,7 @@ their method tables.
   docs/matching/issue-59-60-static-inline-cse-promotion.md) and
   evaluating an argument before the rest of a call: `IconSetup`/
   `IconReserve`/`LoadMenuPalette` (`RunLevelSelect`), `SetIconPos`
-  (`UpdateLevelSelect`, `sub_801C3E8` - it also puts `posY`'s constant ahead of
+  (`UpdateLevelSelect`, `DrawLevelSelectTime` - it also puts `posY`'s constant ahead of
   the stores), `AnimTable`/`SetAnim` (the inlined `sub_80087D0`), and
   `CommitDisplay`. `RunLevelSelect` also needed the global's address taken
   first (`struct level_menu **menuAddr = &gLevelSelect;`, the same
@@ -96,17 +96,17 @@ their method tables.
 - **Operand order of an indexed address.** `&recs[idx]` with a 28-byte
   stride and `&items[i]` with a 4-byte stride come out with opposite
   `adds` operand orders; where the ROM wanted the other one, the index
-  is written as `idx * sizeof + (u32)base` (`sub_801C2B0`) or through a
-  pinned offset (`ItemAt`, `sub_801C51C`).
+  is written as `idx * sizeof + (u32)base` (`UpdateLevelSelectPageArrows`) or through a
+  pinned offset (`ItemAt`, `DrawLevelSelect`).
 - **Keys.** `gKeys` is declared as a union of the whole word
   and a `{held, pressed}` halfword pair (as in `settings_menu8b.c`) so
   `pressed` reads as `ldrh [base, #2]` instead of a folded `sym+2`
   literal.
 - **`asm volatile("" : "+r"(self))`** after a call stops gcc hoisting
-  `self + 0x24` above it (`sub_801C51C`); a non-volatile barrier or one
+  `self + 0x24` above it (`DrawLevelSelect`); a non-volatile barrier or one
   on the derived pointer does not.
-- The rest is the usual register pinning (`sub_801B864`, `sub_801B8BC`,
-  `sub_801B984`, `UpdateLevelSelect`, `sub_801C2B0`, `sub_801C364`). No pins
+- The rest is the usual register pinning (`ResetCameraLead`, `UpdateCameraLead`,
+  `sub_801B984`, `UpdateLevelSelect`, `UpdateLevelSelectPageArrows`, `DrawLevelSelectRecord`). No pins
   on `r7`.
 
 ## Parked (NAKED + NON_MATCHING C)
@@ -118,7 +118,7 @@ their method tables.
   across dozens of calls and picks a different scratch register at
   almost every store; matching it would mean pinning most of the
   function (including `r8`, which this compiler mishandles).
-- **`sub_801C608`** (record loader, 868 bytes). The reconstruction
+- **`LoadLevelSelectRecord`** (record loader, 868 bytes). The reconstruction
   differs only in which low register reload picks for each
   `mov rX, r8`/`mov rX, sl` copy before a store, and in the stack slots
   of the cached `self+0x90`/`+0x94` addresses - at nearly every
@@ -133,7 +133,7 @@ their method tables.
   `r7` pin; the ROM also copies the key word once (`adds r1, r2, #0`)
   before the third direction test; and one `mov r2, sb` vs `mov r3, sb`
   at the end. The fade-in `evy--` only matches with a u8 bitfield view
-  of BLDY, which in turn breaks `sub_801CCF8`'s commit; the
+  of BLDY, which in turn breaks `SettleLevelSelectPage`'s commit; the
   reconstruction uses the u32 view.
 
 ### Under old_agbcc
@@ -152,7 +152,7 @@ none of the three matches, but two got much closer with small changes
   `asm("" : "+r"(k.all))` barrier it survives, but it lands either in the
   wrong block (after the 0x80 branch, 10 bytes off) or in the right block
   with `keys`/`k` in r3/r2 instead of r2/r1 (12 bytes off).
-- **`sub_801C608`**: taking `SetAnim`'s index as `s32` instead of `u8`
+- **`LoadLevelSelectRecord`**: taking `SetAnim`'s index as `s32` instead of `u8`
   fixes the rank-icon load (the ROM loads the table word, then `strb`s
   it; with a `u8` parameter old_agbcc narrows the load to `ldrb`).
   Testing the saved time with `*(u16 *)sv & 0xFFF8` gives the ROM's
@@ -181,7 +181,7 @@ none of the three matches, but two got much closer with small changes
   (`+0x20` animation table, `+0x29` palette nibble, `+0x2D` animation
   index, `+0x30` frame, `+0x3C`); `struct anim_record` is 28 bytes with
   the tile-cache record id at `+0x14` and the frame count at `+0x16`.
-- `struct item` (0x14, `sub_801DFEC`) has its method table at `+0x10`:
+- `struct item` (0x14, `CreateLevelSelectEntry`) has its method table at `+0x10`:
   `+0x08` update, `+0x20` draw, `+0x28` destructor.
 
 ## Later pass (issue #12/#24/#26 NAKED retry)
@@ -192,7 +192,7 @@ plain bitfield stores (`self->blend.bits.effect = 3; ...`) chain the
 counter for the six-entry loop and the sprite loop's 0x80 in a variable
 set with the counter). `struct level_save` became u16 bitfields,
 `struct level_info`'s thresholds u32, and `SetAnim` takes an int index;
-with these `sub_801C608` and `LevelSelectLoop` are each one allocation
+with these `LoadLevelSelectRecord` and `LevelSelectLoop` are each one allocation
 detail away. See [issue-24-26-12-naked-retry.md](issue-24-26-12-naked-retry.md).
 
 ## Later pass: near-miss polish
@@ -200,12 +200,12 @@ detail away. See [issue-24-26-12-naked-retry.md](issue-24-26-12-naked-retry.md).
 `LevelSelectLoop` is real C under old_agbcc. The ROM copies the key word
 between the 0x80 test's `ands` and `cmp`. A statement expression puts
 the copy (`k = keys` plus an empty `asm("" : "+r"(k.all))`) at that
-point. `sub_801C608` stays parked: no source form tried makes the ROM's
+point. `LoadLevelSelectRecord` stays parked: no source form tried makes the ROM's
 spill of `info` appear. See [near-miss-polish.md](near-miss-polish.md).
 
 ## Later pass: third near-miss sweep
 
-`sub_801C608` is real C under old_agbcc. The ROM's spill of `info` is a
+`LoadLevelSelectRecord` is real C under old_agbcc. The ROM's spill of `info` is a
 second variable: `entry` holds the record pointer, `info` is a plain
 copy of it, and the `time0` test reads `entry`, which is spilled. See
 [near-miss-polish-3.md](near-miss-polish-3.md).

@@ -6,9 +6,9 @@
  * docs/matching/pmf-dispatch-retry.md. */
 
 extern void SpawnJetpackCannonball(s32 x, s32 y, s32 z, s32 dx, s32 dy);
-extern u8 sub_802A6EC(void *self);
+extern u8 IsTouchingPlayer(void *self);
 extern void UpdateActor(void *self);
-extern struct actor_pmf gStaticData_0817C260[];
+extern struct actor_pmf gJetpackPlaneStateFuncs[];
 extern struct actor_self *gActorList;
 
 struct actor_fa38 {
@@ -25,7 +25,7 @@ struct actor_fa38 {
 
 /* Per-frame update: flags `self` as "deep" past a depth threshold,
  * integrates its velocity (Q4), runs the per-state member-pointer
- * dispatch `(this->*gStaticData_0817C260[this->state])()`, and while
+ * dispatch `(this->*gJetpackPlaneStateFuncs[this->state])()`, and while
  * animation 3 plays and the cooldown has run out, pushes the player
  * away (SpawnJetpackCannonball) when it is close in front - every third hit takes
  * a long cooldown. Then the usual player-contact damage exchange, and
@@ -42,7 +42,7 @@ void UpdateJetpackPlane(struct actor_fa38 *self)
     self->base.y += self->velY >> 4;
     self->base.z += self->velZ >> 4;
 
-    ACTOR_PMF_CALL(&self->base, gStaticData_0817C260);
+    ACTOR_PMF_CALL(&self->base, gJetpackPlaneStateFuncs);
 
     if (self->base.animIndex == 3) {
         s32 cooldown = self->cooldown;
@@ -77,7 +77,7 @@ void UpdateJetpackPlane(struct actor_fa38 *self)
         }
     }
 
-    if (self->unk_7C == 0 && sub_802A6EC(self)) {
+    if (self->unk_7C == 0 && IsTouchingPlayer(self)) {
         ACTOR_VCALL(gActorList, m20, 6);
         ACTOR_VCALL(&self->base, m20, 4);
     }

@@ -17,7 +17,7 @@ extern s32 sub_8029E40(void);
 /* Same movement-threshold computation as `InitActorPart`/`UpdateActor`
  * (see this file's header comment), but with no trampoline-fire/frame-
  * update tail - just refreshes `depth`/`sortKey`. */
-void sub_802A980(struct actor_self *self)
+void UpdateActorDepth(struct actor_self *self)
 {
     register s32 value asm("r2") = self->z - (sub_8029B2C() << 8);
     s32 sign;
@@ -55,7 +55,7 @@ u8 sub_802A9D4(struct actor_self *self)
 }
 
 /* State/table-index/anim-frame reset, the same idiom already documented
- * for the boss cluster's `sub_8030530`/`AirshipStateFall` (see
+ * for the boss cluster's `DamageAirshipFireball`/`AirshipStateFall` (see
  * docs/matching/issue-58-0x08030334-actor.md): sets `self+0x28`/
  * `self+0xc` from its own arguments, resets the frame counter
  * (`+0x44`)/accumulator (`+8`), and seeds the anim-frame halfword/byte
@@ -82,19 +82,19 @@ void sub_802A9DC(struct actor_self *self, s32 a, s32 kind)
 }
 
 /* Trivial getter: `self->z` (the constructor's `d` argument). */
-s32 sub_802AA00(struct actor_self *self)
+s32 GetActorZ(struct actor_self *self)
 {
     return self->z;
 }
 
 /* Trivial getter: `self->y` (the constructor's `c` argument). */
-s32 sub_802AA04(struct actor_self *self)
+s32 GetActorY(struct actor_self *self)
 {
     return self->y;
 }
 
 /* Trivial getter: `self->x` (the constructor's `b` argument). */
-s32 sub_802AA08(struct actor_self *self)
+s32 GetActorX(struct actor_self *self)
 {
     return self->x;
 }

@@ -19,7 +19,7 @@
  * - CreateActor is the per-kind `new`: a switch whose case bodies are
  *   the inlined constructors of each actor class (allocate, run the
  *   base constructor, install the method table at +0x50); kinds 36-39
- *   only select a palette-cycle preset (sub_802ABC8).
+ *   only select a palette-cycle preset (SetActorPaletteCycle).
  * - CreatePolarCheckpointText/SpawnPolarCollectedWumpa/SpawnPolarAkuAku construct three fixed records
  *   (40, 11, 27) the same way.
  *
@@ -33,7 +33,7 @@ extern void *gLevelState;
 
 extern u8 gStaticData_087E4E14[];
 extern u8 gPolarCheckpointTextVtable[];
-extern u8 gStaticData_087E4E54[];
+extern u8 gPolarPlayerVtable[];
 extern u8 gPolarWumpaVtable[];
 extern u8 gPolarTimeCrateVtable[];
 extern u8 gPolarQuestionCrateVtable[];
@@ -55,9 +55,9 @@ extern struct actor_self *sub_802D5D4(struct actor_self *self, struct anim_table
 extern struct actor_self *sub_802CE38(struct actor_self *self, struct anim_table_record *rec, s32 x, s32 y, s32 z);
 extern struct actor_self *CreatePolarCollectedWumpa(struct actor_self *self, struct anim_table_record *rec, s32 x, s32 y, s32 z);
 extern struct actor_self *CreatePolarAkuAku(struct actor_self *self, struct anim_table_record *rec, s32 x, s32 y, s32 z, s32 arg);
-extern u8 sub_802AA80(void *spawn);
-extern void sub_802ABC8(s32 idx);
-extern void sub_802B864(struct actor_self *self);
+extern u8 IsSpawnCollected(void *spawn);
+extern void SetActorPaletteCycle(s32 idx);
+extern void AllocPolarPlayerTiles(struct actor_self *self);
 
 /* An inline wrapper rather than a macro: the ROM materializes the size
  * before the heap flags, i.e. evaluates it as an argument of its own. */
@@ -146,13 +146,13 @@ struct actor_self *CreateActor(u8 kind, s32 x, s32 y, s32 z, void *spawn)
     case 31:
         NEW_CB34_ACTOR(0x54, REC_AT(kind), gPolarQuestionCrateVtable);
     case 35:
-        if (sub_802AA80(spawn))
+        if (IsSpawnCollected(spawn))
         {
             NEW_CB34_ACTOR(0x54, gActorAnimTable + 28, gPolarQuestionCrateVtable);
         }
         NEW_CB34_TRACKED_ACTOR(REC_AT(kind), gPolarLifeCrateVtable);
     case 8:
-        if (sub_802AA80(spawn))
+        if (IsSpawnCollected(spawn))
         {
             NEW_CB34_ACTOR(0x54, gActorAnimTable + 28, gPolarQuestionCrateVtable);
         }
@@ -187,7 +187,7 @@ struct actor_self *CreateActor(u8 kind, s32 x, s32 y, s32 z, void *spawn)
     case 37:
     case 38:
     case 39:
-        sub_802ABC8(kind - 36);
+        SetActorPaletteCycle(kind - 36);
         break;
     }
     return NULL;
@@ -262,15 +262,15 @@ extern s32 gUnknown_0300148C;
 extern u8 gUnknown_030014A0;
 extern u8 gUnknown_030014A2;
 extern u8 gUnknown_030014A1;
-extern s32 gUnknown_03001488;
+extern s32 gPolarQueuedWumpa;
 extern s32 gUnknown_03001484;
 extern u8 gUnknown_03001480;
 
 struct actor_self *ConstructActorPart(struct actor_self *self, struct anim_table_record *rec, s32 z)
 {
     InitActorPart(self, rec, 0, z != 0 ? 0x2800 : -0x5000, z);
-    self->vtable = (struct actor_vtable *)gStaticData_087E4E54;
-    sub_802B864(self);
+    self->vtable = (struct actor_vtable *)gPolarPlayerVtable;
+    AllocPolarPlayerTiles(self);
     if (self->z != 0)
     {
         ACTOR_SET_STATE(self, 0xD, 0xC);
@@ -294,7 +294,7 @@ struct actor_self *ConstructActorPart(struct actor_self *self, struct anim_table
     gUnknown_030014A0 = 1;
     gUnknown_030014A2 = 0;
     gUnknown_030014A1 = 0;
-    gUnknown_03001488 = 0;
+    gPolarQueuedWumpa = 0;
     gUnknown_03001484 = 0;
     gUnknown_03001480 = 0;
     return self;

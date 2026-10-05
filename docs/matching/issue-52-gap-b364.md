@@ -2,12 +2,12 @@
 
 A scoping investigation of the actor zone found this 2308-byte range -
 the tail of `asm/code_3_2_20_8b7c_ac28.s` right before its own already-
-matched literal tail (`sub_802BC68` onward, `src/graphics/
+matched literal tail (`DispensePolarWumpa` onward, `src/graphics/
 actor_part107.c`, `docs/matching/issue-50-actor-bc68.md`) - still
 completely raw. `tools/report_units.py`'s `(0x0802AC28, None, "actor")`
 entry covers the still-raw `CreateActor`-`SpawnActor` run before this
-gap; `docs/rom_map.md` had already flagged `sub_802B364` itself (740 B,
-vtable-dispatched at an untraced slot of `gStaticData_087E4E54`) from
+gap; `docs/rom_map.md` had already flagged `UpdatePolarPlayer` itself (740 B,
+vtable-dispatched at an untraced slot of `gPolarPlayerVtable`) from
 disassembly alone.
 
 11 functions total, all on the same `gUnknown_0300148x`-`gUnknown_
@@ -24,7 +24,7 @@ at `self+0xc`, an anim-frame halfword/byte pair at `self+0x10`/
 - **`sub_802BB4C`** (`src/graphics/actor_part127.c`) - frame-counter
   threshold DMA driver: past `0x2c` frames, DMAs a gauge-strip pair and
   resets `self` to state 6/table-index 5 (arming `gUnknown_03001480`
-  and kicking the mode transition, the same shared idiom `sub_802B730`
+  and kicking the mode transition, the same shared idiom `HurtPolarPlayer`
   below uses); otherwise DMAs one of two gauge-strip variants every 4th
   frame without touching any state. Needed the established "materialize
   both sibling constants (state `6` into `r0`, index `5` into `r1`)
@@ -33,7 +33,7 @@ at `self+0xc`, an anim-frame halfword/byte pair at `self+0x10`/
   literal per store instead of reusing the two already-loaded registers
   the ROM keeps live across both.
 
-- **`sub_802B730`**/**`sub_802B7E0`** (`src/graphics/actor_part127.c`) -
+- **`HurtPolarPlayer`**/**`ShockPolarPlayer`** (`src/graphics/actor_part127.c`) -
   the once-only spawn/reset trigger pair described below, promoted from
   NAKED using the **`goto`-shared-tail idiom**: instead of a plain
   `if (already_used) return 1; ... return 0;` guard clause (which this
@@ -57,8 +57,8 @@ at `self+0xc`, an anim-frame halfword/byte pair at `self+0x10`/
     time as its own fresh local (rather than keeping one `player`
     variable alive across both dereferences) was needed to reproduce
     the ROM's own two separate loads into two different registers.
-  - `self` (`sub_802B730`) and the `effectAddr` pointer itself
-    (`sub_802B7E0`) get reused for an unrelated constant once their own
+  - `self` (`HurtPolarPlayer`) and the `effectAddr` pointer itself
+    (`ShockPolarPlayer`) get reused for an unrelated constant once their own
     value is no longer needed on the "tier clear" path - modeled by
     declaring a *fresh* `register` variable pinned to the same
     register name in a nested scope (`register u8 one asm("r4") = 1;`
@@ -96,8 +96,8 @@ at `self+0xc`, an anim-frame halfword/byte pair at `self+0x10`/
 
 ## Parked - NAKED transcription (byte-correct, not decompiled)
 
-The remaining 7 in `src/graphics/actor_part127.c` (`sub_802B730`,
-`sub_802B7E0`, and `sub_802B990` were promoted to the "Matched" section
+The remaining 7 in `src/graphics/actor_part127.c` (`HurtPolarPlayer`,
+`ShockPolarPlayer`, and `sub_802B990` were promoted to the "Matched" section
 above in a later pass). Every one was fully understood semantically;
 each resisted a byte-exact plain-C reconstruction for a different
 reason, transcribed instruction-for-instruction from the ROM
@@ -108,14 +108,14 @@ renumbering to GNU-as local numeric labels, plus unified-to-plain
 mnemonic translation) was used to avoid hand-transcription typos, the
 same approach this project has used for other large NAKED batches.
 
-- **`sub_802B364`** - the countdown-timer/respawn state machine
-  `docs/rom_map.md` already flagged. Tail-calls `sub_802BC68` first,
-  then drives a `gStaticData_0817A6B8` stride-8 keyframe-table lookup
+- **`UpdatePolarPlayer`** - the countdown-timer/respawn state machine
+  `docs/rom_map.md` already flagged. Tail-calls `DispensePolarWumpa` first,
+  then drives a `gPolarPlayerStateFuncs` stride-8 keyframe-table lookup
   (the same categorical r7-hazard shape already NAKED-parked elsewhere,
   e.g. `sub_802C208`) feeding a `_call_via_r3` trampoline dispatch,
   followed by a `gKeys` input-gated position-easing block.
   `r5`/`r6`/`r7` each switch roles repeatedly across the whole function.
-- **`sub_802B5B4`** - sprite-frame OAM queuing: computes a keyframe-
+- **`DrawPolarPlayer`** - sprite-frame OAM queuing: computes a keyframe-
   table-driven position offset (with a per-frame interpolation variant
   on a fresh animation transition), applies a shape/priority/palette
   bitmask, arms a `_call_via_r2` trampoline the first time a new part-
@@ -125,11 +125,11 @@ same approach this project has used for other large NAKED batches.
   codebase's other DMA/OAM functions are consistently NAKED-parked for
   (`docs/matching/issue-56-0x0802f0dc-actor.md`'s `LoadBgPicture`/
   `FillBgPictureMap` entry).
-- **`sub_802B864`** - allocates a pair of VRAM tile blocks
-  (`gUnknown_030014B0[0]`/`[1]`), each sized from the same keyframe-
+- **`AllocPolarPlayerTiles`** - allocates a pair of VRAM tile blocks
+  (`gPolarPlayerTiles[0]`/`[1]`), each sized from the same keyframe-
   table byte-pair lookup (`self`'s part table, indexed by `self+0xc`,
   offset by `self+8`'s frame accumulator, into a *second* pointer array
-  at `self+4`) already established for `sub_802F338`
+  at `self+4`) already established for `AllocJetpackPlayerTiles`
   (`actor_part43b.c`, issue #56) - which itself needed heavy `asm
   volatile` register-order forcing for this exact "materialize the
   multiply result into one register, copy it to a second, then shift"
@@ -146,23 +146,23 @@ same approach this project has used for other large NAKED batches.
 - **`sub_802BA5C`**/**`sub_802BAD0`** - camera catch-up accumulate/
   threshold-reset pair and a `gKeys`-gated one-shot
   transition pair, both sharing the same reset idiom as
-  `sub_802B730`/`sub_802BB4C`.
+  `HurtPolarPlayer`/`sub_802BB4C`.
 - **`sub_802BBE4`** - on the `self+0x12` edge, resets
   `gUnknown_030014A4`'s stall clamp, conditionally spawns a secondary
   effect object once `self+0x20` crosses `0x2000`, and resets `self` to
   state 8/table-index 7 (arming `gUnknown_03001480`, kicking the mode
-  transition - the same shared tail idiom as `sub_802B730` above). Hit
+  transition - the same shared tail idiom as `HurtPolarPlayer` above). Hit
   the same "spawned/self pointer gets an extra register copy" gotcha as
   `sub_802B8E8`.
 
 ## A note on two literal-pool placement bugs
 
-The first NAKED-transcription attempt at `sub_802B364` initially placed
+The first NAKED-transcription attempt at `UpdatePolarPlayer` initially placed
 two `.4byte` pool entries (`gUnknown_030014A1` and `0xFFFFFC80`) too
 early - grouped with the nearest preceding code block instead of the
 ROM's own, more distant placement (each shared a single pool group with
 a *later* code block's own literal, e.g. `gUnknown_030014A1` sits in the
-same aligned group as `gStaticData_0817A6B8`, separated from its own
+same aligned group as `gPolarPlayerStateFuncs`, separated from its own
 first use site by an entire keyframe-lookup block). Since GNU-as
 computes `ldr rD, [pc, #N]` distances automatically from wherever a
 label is actually placed, this didn't produce an assembler error - just
@@ -186,7 +186,7 @@ identical `graphics/`/`sound/` source trees via `diff -rq` - every
 relinked from scratch.) `make NON_MATCHING=1 report` also compiled
 clean, no warnings for `actor_part127.c`.
 
-A later pass promoted `sub_802B730`/`sub_802B7E0`/`sub_802B990` from
+A later pass promoted `HurtPolarPlayer`/`ShockPolarPlayer`/`sub_802B990` from
 that NAKED batch to real C using the `goto`-shared-tail idiom (see the
 "Matched" section above); re-verified with a fresh `rm -rf build &&
 make NON_MATCHING=1 report` (clean, no warnings for
@@ -199,13 +199,13 @@ matched/parked list this entry feeds into.
 
 ## Later pass: the other 7 promoted (issue #51/#54 NAKED retry)
 
-`sub_802B364`, `sub_802B5B4`, `sub_802B864`, `sub_802B8E8`,
+`UpdatePolarPlayer`, `DrawPolarPlayer`, `AllocPolarPlayerTiles`, `sub_802B8E8`,
 `sub_802BA5C`, `sub_802BAD0` and `sub_802BBE4` are now real C too, so
 the whole gap is decompiled. None of the reasons recorded above held
 up: `actor_part127.c` is an old_agbcc file (`sub_802BAD0` materializes
-its `1` mask before the `ldrh`; `sub_802B5B4`/`sub_802B864` differ only
+its `1` mask before the `ldrh`; `DrawPolarPlayer`/`AllocPolarPlayerTiles` differ only
 in load/multiply operand order under the current agbcc), the "stride-8
-keyframe lookup" in `sub_802B364` is a C++ pointer-to-member call
-(`ACTOR_PMF_CALL` on `gStaticData_0817A6B8`), and `sub_802B5B4` is the
-same code as `actor_part128.c`'s `sub_802E9FC`. No register pins. See
+keyframe lookup" in `UpdatePolarPlayer` is a C++ pointer-to-member call
+(`ACTOR_PMF_CALL` on `gPolarPlayerStateFuncs`), and `DrawPolarPlayer` is the
+same code as `actor_part128.c`'s `DrawJetpackPlayer`. No register pins. See
 [issue-51-54-naked-retry.md](issue-51-54-naked-retry.md).

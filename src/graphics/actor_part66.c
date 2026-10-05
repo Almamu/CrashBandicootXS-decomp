@@ -6,7 +6,7 @@
 /* Constructor: health defaults to `0x10`, or `0x18` if the
  * `gHovercraft` singleton hasn't been constructed yet
  * (`sub_80338DC() == 0`). Forwards to `InitActorPart`, sets the event
- * table (`+0x50=&gStaticData_087E5554`), caches the constructor's 6th
+ * table (`+0x50=&gHovercraftSideGunVtable`), caches the constructor's 6th
  * (byte, stack-passed) argument at `+0x59`, selects table-index 0 or 1
  * depending on whether that byte is set, resets the usual state/frame-
  * counter/anim fields, clears the death flag (`+0x58=0`), seeds the
@@ -32,7 +32,7 @@
  * - The `+0x5c` spawn-record ternary (`(self[0x59] != 0) ? 0xFFFFBF00
  *   : 0x8400`): the ROM computes this as a genuine two-way diamond (a
  *   forward `beq`/`ldr`/`b` skipping a `movs`/`lsls` false-branch,
- *   with `gStaticData_087E5554`'s pending literal and `0xFFFFBF00`
+ *   with `gHovercraftSideGunVtable`'s pending literal and `0xFFFFBF00`
  *   pooled together right after the skip branch). A plain-C ternary
  *   or if/else always collapses this into an eager "compute one value,
  *   conditionally overwrite" shape instead (4 bytes short - missing
@@ -53,14 +53,14 @@
  *   hazard above - does not perturb the surrounding C's own register
  *   allocation) with a real `ldr r0, =0xFFFFBF00` assembler pseudo-op
  *   and a manual `.pool` directive right after the skip branch; the
- *   preceding `gStaticData_087E5554` store (originally plain C) also
+ *   preceding `gHovercraftSideGunVtable` store (originally plain C) also
  *   had to move into its own tiny `asm volatile` island using the same
  *   `=symbol` pseudo-op, because a real, respected `.pool` split only
  *   works for symbols whose literal load is itself opaque assembler
  *   text - this compiler's own C-driven pool placement always defers
  *   a plain `extern` global access to the function's very end and
  *   ignores an `asm(".pool")` marker around it, exactly the gap
- *   already documented in `actor_part53.c`'s `sub_802AB58`. The
+ *   already documented in `actor_part53.c`'s `UpdateActorPaletteCycle`. The
  *   `self[0x28]=0`/self[0x59] reload pair and the `zeroByte`/`zero2`
  *   register splits below needed the same "which register holds
  *   which cached zero" register-pinning treatment, each in its own
@@ -68,10 +68,10 @@
  *   actually needs that register reserved. */
 extern void *sub_80338DC(void);
 extern void *InitActorPart(void *selfArg, void *part, s32 b, s32 c, s32 d);
-extern u8 gStaticData_087E5554[];
+extern u8 gHovercraftSideGunVtable[];
 extern void *sub_80338C4(void);
 
-void *sub_8034058(void *selfArg, void *part, s32 b, s32 cParam, s32 d, u8 eByte)
+void *CreateHovercraftSideGun(void *selfArg, void *part, s32 b, s32 cParam, s32 d, u8 eByte)
 {
     u8 *self;
     register u32 eByteVal asm("r9");
@@ -91,7 +91,7 @@ void *sub_8034058(void *selfArg, void *part, s32 b, s32 cParam, s32 d, u8 eByte)
     InitActorPart(self, part, b, cParam, d);
     *(s32 *)(self + 0x54) = health;
     asm volatile (
-        "ldr r0, =gStaticData_087E5554\n\t"
+        "ldr r0, =gHovercraftSideGunVtable\n\t"
         "str r0, [r5, #0x50]\n\t"
         :
         :

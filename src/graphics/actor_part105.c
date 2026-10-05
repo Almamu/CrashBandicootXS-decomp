@@ -6,7 +6,7 @@
  * for the "how long has this sub-effect run" bookkeeping the
  * gActorSpawnTable spawnTable accessors use. */
 extern s32 gUnknown_0300138C;
-extern s32 gUnknown_03000878;
+extern s32 gActorCheckpoint;
 
 void sub_8029720(void)
 {
@@ -18,7 +18,7 @@ s32 sub_8029730(void)
     return gUnknown_0300138C;
 }
 
-s32 sub_802973C(void)
+s32 GetActorCheckpoint(void)
 {
-    return gUnknown_03000878;
+    return gActorCheckpoint;
 }

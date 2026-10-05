@@ -28,7 +28,7 @@ only match under old_agbcc. So both objects went onto the Makefile's
 | `LoadVvLogoGraphics` | Direct `self[...] = Alloc(...)` stores. The last two use a destination pointer taken before the call: `dst = &self[0x10c]; *dst = (u32)(buf = sub_8026EC0(size))`, because the ROM computes the address first. |
 | `InitLogoActor` | A `CurFrame`-style inline (as in `actor_part128.c`), with `frame[1] * frame[0] * 32` in that order. |
 | `UpdateLogoActor` | `ACTOR_SET_STATE`, plus `switch ((u32)self->state)` to get the ROM's unsigned case tree. |
-| `DrawLogoActor` | The same draw shape as `actor_part128.c`'s `sub_802E9FC`. Division goes through `__divsi3` and the virtual calls through `_call_via_r2`, and the tile number is pinned to r0. The keyframe record is a declared local assigned from the `table[idx]` CSE temp. `w`/`h`/`sx`/... are declared in a nested block, so their stack slots come after `rec`'s as in the ROM. |
+| `DrawLogoActor` | The same draw shape as `actor_part128.c`'s `DrawJetpackPlayer`. Division goes through `__divsi3` and the virtual calls through `_call_via_r2`, and the tile number is pinned to r0. The keyframe record is a declared local assigned from the `table[idx]` CSE temp. `w`/`h`/`sx`/... are declared in a nested block, so their stack slots come after `rec`'s as in the ROM. |
 
 New shared pieces in `graphics_loading_35780.c`:
 - `struct dispcnt_bits` (the `gDispcnt` DISPCNT shadow).

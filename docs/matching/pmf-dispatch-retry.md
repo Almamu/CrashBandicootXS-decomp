@@ -23,13 +23,13 @@ was added to `OLD_AGBCC_OBJS`.
 | `sub_8031A08` | `actor_part125.c` | none |
 | `sub_80322F4` | `actor_part129.c` | none |
 | `sub_8032A94` | `actor_part130.c` | none |
-| `sub_8030574` | `actor_part20b.c` | state-2 destroy (`m08`) or `UpdateActor` |
-| `sub_8032950` | `actor_part130.c` | state-1 destroy or `UpdateActor` |
+| `UpdateAirshipFireball` | `actor_part20b.c` | state-2 destroy (`m08`) or `UpdateActor` |
+| `UpdateHovercraftFireball` | `actor_part130.c` | state-1 destroy or `UpdateActor` |
 | `UpdateJetpackBalloonCrate` | `actor_part129.c` | two destroy conditions or `UpdateActor` |
 | `UpdateHovercraftCannon` | `actor_part31.c` | `UpdateActor` unless state 2 has finished |
-| `UpdateHovercraftLauncher` | `actor_part37.c` | same, on `gStaticData_0817C4F8` |
-| `sub_8033C84` | `actor_part33.c` | returns 0 once state 2 has finished, else 1 |
-| `sub_8033FE4` | `actor_part64.c` | same, on `gStaticData_0817C4F8` |
+| `UpdateHovercraftLauncher` | `actor_part37.c` | same, on `gHovercraftLauncherStateFuncs` |
+| `RunHovercraftCannonState` | `actor_part33.c` | returns 0 once state 2 has finished, else 1 |
+| `RunHovercraftLauncherState` | `actor_part64.c` | same, on `gHovercraftLauncherStateFuncs` |
 | `UpdateJetpackPlane` | `actor_part46b.c` | position update before the dispatch, then a player push-out/damage block |
 
 These functions were not the PMF shape, but they sat in the same files
@@ -39,7 +39,7 @@ and closed:
 |---|---|---|
 | `UpdateJetpackBalloon` | `actor_part125.c` | per-frame update; its dispatch is a call to `sub_8031A08` |
 | `DamageJetpackBalloon` | `actor_part125.c` | damage handler: releases a linked object through its `m38` method, then `ACTOR_SET_STATE` |
-| `sub_80318D0`, `sub_8031954`, `sub_80319A0` | `actor_part125.c` | the shared anim-frame-advance-and-clamp idiom |
+| `MoveJetpackBalloon`, `sub_8031954`, `sub_80319A0` | `actor_part125.c` | the shared anim-frame-advance-and-clamp idiom |
 | `UpdateJetpackCollectedWumpa` | `actor_part130.c` | the same idiom, gated by an out-of-bounds check |
 | `DestroyJetpackCollectedWumpa` | `actor_part130.c` | reward-dispensing destructor |
 
@@ -66,7 +66,7 @@ and closed:
   `player->z - (self->base.z - 10)`, so `z - 10` is computed once and
   reused as the `SpawnJetpackCannonball` argument. The absolute values are two
   named locals, in the order `signDx, absDx, signDy, absDy`.
-- **The anim-frame-advance idiom** (`sub_80318D0`/`sub_8031954`/
+- **The anim-frame-advance idiom** (`MoveJetpackBalloon`/`sub_8031954`/
   `sub_80319A0`/`UpdateJetpackCollectedWumpa`) had been parked three times on the
   "`#4`/`#6` constants scheduled one instruction early" gap. The ROM
   re-indexes `self->anims[self->animIndex]` for each of

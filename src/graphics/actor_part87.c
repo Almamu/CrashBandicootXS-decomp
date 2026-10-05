@@ -42,14 +42,14 @@ extern u8 gStaticData_0817C594[];
 extern u8 gStaticData_0817C5A8[];
 extern struct AudioContext *gAudioContext;
 extern void FadeOutMusic(struct AudioContext *self, u32 value);
-extern struct fade_overlay *sub_803487C(struct fade_overlay *self);
+extern struct fade_overlay *InitContinuePromptGraphics(struct fade_overlay *self);
 
 /* Allocates and initializes the continue prompt's three BG scratch buffers
  * (BG1 priority 3/bgcnt 0x1e, BG0 bgcnt 0x1f/slot 3, BG2 priority
  * 1/bgcnt 0x1d/slot 2 - see `InitBgSetup`), loads their graphics
  * packages, clears palette entry 0, builds a DISPCNT value enabling
  * BG0/BG1/BG2 in BG2-priority-preserving mode 0 (dropping the "forced
- * blank" bit), hands off to `sub_803487C` for the HUD/level-object
+ * blank" bit), hands off to `InitContinuePromptGraphics` for the HUD/level-object
  * setup half, then builds a fixed BLDCNT/BLDALPHA alpha-blend value
  * (BG2 -> BG0, mode 1, EVA=8/16 EVB=16/16), applies every register,
  * zeroes two more fields, and finally ducks the audio context out via
@@ -87,7 +87,7 @@ void *InitContinuePrompt(void *selfArg)
      * (matching_decomp_register_pinning memory): `self` occupies r5 for
      * the whole function (it's still needed for the final return value),
      * which leaves no free low register for the two constants (`0`,
-     * `0x40`) that stay live across the `sub_803487C` call below, so the
+     * `0x40`) that stay live across the `InitContinuePromptGraphics` call below, so the
      * ROM's own build pushes them into r8/sb instead - reproduced here
      * the same way. */
     register struct fade_overlay *self asm("r5") = selfArg;
@@ -117,7 +117,7 @@ void *InitContinuePrompt(void *selfArg)
          * materializes it (matching_decomp_register_pinning memory) -
          * `zero`/`c0x40` land in r8/sb since `self` (r5) and `buf`'s
          * former home (r0) leave no free low register for either, and
-         * `one`/`four` (r6/r4) stay resident across the `sub_803487C`
+         * `one`/`four` (r6/r4) stay resident across the `InitContinuePromptGraphics`
          * call below and get reused for the BLDCNT bit-2/bit-0 sets
          * afterward instead of being re-materialized as fresh
          * immediates. */
@@ -163,7 +163,7 @@ void *InitContinuePrompt(void *selfArg)
 
                     ((u8 *)&self->dispcnt)[1] |= four;
 
-                    sub_803487C(self);
+                    InitContinuePromptGraphics(self);
 
                     /* Each of these zero-stores gets its own fresh
                      * low-register copy-down from r8 (matching_decomp_

@@ -31,10 +31,10 @@ established "cut at the boundary" convention.
 - **`UpdateJetpackQuestionCrate`/`DamageJetpackQuestionCrate`/`UpdateJetpackHealthCrate`/`UpdateJetpackTimeCrate`/
   `DamageJetpackTimeCrate`** - the "type-byte event dispatch" family
   `docs/rom_map.md` had already characterized: a proximity check
-  (`sub_802A6EC`) or a countdown timer at `self+0x54` gates the
+  (`IsTouchingPlayer`) or a countdown timer at `self+0x54` gates the
   transition, `PlaySfx(3, 0x100)` always plays first, then a
   `self+0x30`-relative type byte selects a downstream call
-  (`sub_802F540` for `UpdateJetpackQuestionCrate`/`DamageJetpackQuestionCrate`'s `0x14`-`0x17` range,
+  (`QueueJetpackWumpa` for `UpdateJetpackQuestionCrate`/`DamageJetpackQuestionCrate`'s `0x14`-`0x17` range,
   `FreezeLevelClock` for `UpdateJetpackTimeCrate`/`DamageJetpackTimeCrate`'s `0x18`-`0x1a`/`0x1d`
   range). Written with explicit `goto`-chained `if` blocks (not a plain
   `switch`) to match this family's already-matched sibling
@@ -53,7 +53,7 @@ established "cut at the boundary" convention.
   constructors forwarding straight through then calling
   `SpawnJetpackBalloon` (kind `0x28`/`0x2a`/`0x29` respectively) with a
   `-15798`-biased position argument - three more members of the
-  "spawn effect type N" family (`sub_802E504`-family siblings,
+  "spawn effect type N" family (`SpawnHovercraftCannonFlash`-family siblings,
   `actor_part128.c`). All three needed the literal health constant `2`
   pinned to `r8` and kept alive across the `InitActorPart` call,
   matching the established `CreateHovercraftCannon` gap (issue #62) where this
@@ -61,7 +61,7 @@ established "cut at the boundary" convention.
   `CreateJetpackQuestionCrate` additionally stashes a 6th argument into `self+0x70`
   after the constructor proper.
 - **`sub_8032138`** - trivial `self+0x58` clearing setter.
-- **`sub_8032140`** - full reset idiom (state=1, `self+0x44`/`0xc`/`8`/
+- **`BreakJetpackBalloonCrate`** - full reset idiom (state=1, `self+0x44`/`0xc`/`8`/
   `0x6c` cleared, anim frame re-synced from `self`'s own part table at
   `+0` rather than the usual `+0xc`), plus a lap-counter tie and
   `self+0x58` clear. Needed the shared `zero` constant (`self+0x6c`/
@@ -80,22 +80,22 @@ established "cut at the boundary" convention.
   translation put them in the opposite registers - same total
   instruction count, but two swapped operand-register encodings.
 - **`nullsub_33`** - no-op stub.
-- **`sub_8032274`** - trivial `self+0x20`/`self+0x6c` accumulator,
+- **`JetpackBalloonCrateStateFall`** - trivial `self+0x20`/`self+0x6c` accumulator,
   clamped to `0x4c0`. Needed `self+0x20`'s own prior value read into a
   local *before* `self+0x6c`'s delta (matching the ROM's load order),
   and the delta variable incremented in place (`delta += 0x12;`) rather
   than assigned to a second `next` variable, so the compiler reuses the
   same register the ROM does instead of allocating a second one.
-- **`sub_8032290`** - a *second*, independent consumer of the shared
+- **`JetpackBalloonCrateStateHang`** - a *second*, independent consumer of the shared
   orbital-motion trig table `gSineTable` (alongside the
   already-flagged `UpdateJetpackRocket`): computes an `self+0x1c`/`self+0x20`
   position pair from two phase-shifted table lookups, then forwards
   the result into another object's (`self+0x58`) anim-frame-advance
-  step (`sub_80318D0`). Needed the `self+0x1c` store moved to sit
+  step (`MoveJetpackBalloon`). Needed the `self+0x1c` store moved to sit
   immediately after computing it (matching the ROM's own instruction
   order) rather than batched together with the `self+0x20` store at
   the end.
-- **`sub_8032350`/`sub_8032478`/`sub_8032680`** - trivial `self+0x5c`/
+- **`IsJetpackBalloonCrateUnshootable`/`IsJetpackParachuteNitroUnshootable`/`IsJetpackRocketUnshootable`** - trivial `self+0x5c`/
   `0x58`/`0x64` byte getters.
 - **`UpdateJetpackParachuteNitro`** - state-1 trampoline-flush, or (otherwise) a
   proximity-triggered transition firing an event-table call on the
@@ -122,7 +122,7 @@ established "cut at the boundary" convention.
 - **`UpdateJetpackRocket`** - the already-flagged orbital-motion consumer of
   `gSineTable`. The real gap here was a control-flow one, not
   a register one: the ROM re-checks `self+0xc`'s state *after* the
-  initial proximity-triggered `sub_803256C` call fires (since that call
+  initial proximity-triggered `LaunchJetpackRocket` call fires (since that call
   can itself transition the state away from 0) and, if so, joins the
   state-nonzero handling below instead of running the orbital-motion
   step on stale state - reproduced with explicit `goto`s mirroring the
@@ -130,7 +130,7 @@ established "cut at the boundary" convention.
   The state-nonzero branch's `self+0x12 != 0` case also needed the same
   `if (self != 0) { ... } return;` dead-guard-plus-early-skip idiom as
   `UpdateJetpackParachuteNitro` above.
-- **`sub_803256C`** - state-transition setter (`self+0x64` byte,
+- **`LaunchJetpackRocket`** - state-transition setter (`self+0x64` byte,
   `self+0x18`, `self+0xc`, anim reset). Needed the target-field
   *address* (`self+0x64`) computed before the constants `0`/`1`
   (pinned to `r6`/`r5` and reused across all three of their stores -
@@ -148,7 +148,7 @@ the "Update" note on its own entry below and
 leaving 4 of 30 still parked.
 
 - **`UpdateJetpackBalloonCrate`**, **`sub_80322F4`** - near-duplicate keyframe-table-
-  relative dispatch helpers indexing `gStaticData_0817C42C` (stride 8)
+  relative dispatch helpers indexing `gJetpackBalloonCrateStateFuncs` (stride 8)
   by `self+0x28`, structurally identical in their core to the
   already-parked `sub_8031A08` (issue #59 Phase 1, same table-family
   shape, different table). Resist a byte-exact reproduction of the
@@ -244,8 +244,8 @@ compile's disassembly more carefully:
   the missing dead-`self`-check/wrong-branch-target and the compiler's
   own register-choice differences elsewhere), and only fell apart under
   a direct disassembly diff.
-- Several functions (`sub_8032274`, `DamageJetpackParachuteNitro`, `DamageJetpackRocket`,
-  `sub_803256C`) needed a target field's *address* computed strictly
+- Several functions (`JetpackBalloonCrateStateFall`, `DamageJetpackParachuteNitro`, `DamageJetpackRocket`,
+  `LaunchJetpackRocket`) needed a target field's *address* computed strictly
   before the constant(s) being stored there, matching the ROM's own
   instruction schedule - a plain top-to-bottom C translation let this
   compiler group the address calculation and the constant

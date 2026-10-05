@@ -4,7 +4,7 @@
  * comment and docs/matching/issue-63-0x08033ef4-actor.md. */
 
 /* Constant getter - returns `self`'s one-shot flag (`self+0x58`). */
-u8 sub_803436C(void *selfArg)
+u8 IsHovercraftCannonFlashUnshootable(void *selfArg)
 {
     u8 *self = selfArg;
 

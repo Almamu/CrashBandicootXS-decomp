@@ -13,10 +13,10 @@
 extern void *gActorList;
 extern void *gAudioContext;
 extern void *gLevelState;
-extern u8 sub_802A6EC(void *self);
+extern u8 IsTouchingPlayer(void *self);
 extern void AddBrokenCrate(void *self);
 extern void FreezeLevelClock(void *arg0, s32 arg1);
-extern void sub_802C078(void *arg0, s32 delta);
+extern void QueuePolarWumpa(void *arg0, s32 delta);
 extern void UpdatePolarCrate(void *selfArg);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void InitActorPart(void *self, s32 a, s32 b, s32 c, s32 d);
@@ -33,7 +33,7 @@ extern u8 gPolarBasicCrateVtable[];
 
 /* Extends the type-byte event dispatch family (`UpdateJetpackTimeCrate`/etc, per
  * docs/rom_map.md; the `UpdatePolarQuestionCrate` shape in actor_part19g.c) with
- * values `5`-`7`. On proximity (`sub_802A6EC`), plays a sound, ties the
+ * values `5`-`7`. On proximity (`IsTouchingPlayer`), plays a sound, ties the
  * lap counter, then dispatches `FreezeLevelClock` with a tier argument keyed
  * off `self+0x30`'s type byte (`5`->1, `6`->2, `7`->anything else
  * dispatches nothing) before the shared "used" state transition;
@@ -42,7 +42,7 @@ void UpdatePolarTimeCrate(void *selfArg)
 {
     struct actor_self *self = selfArg;
 
-    if (self->animIndex != 0x12 && sub_802A6EC(self)) {
+    if (self->animIndex != 0x12 && IsTouchingPlayer(self)) {
         s32 typeByte;
 
         PlaySfx(gAudioContext, 3, 0x100);
@@ -77,7 +77,7 @@ void UpdatePolarTimeCrate(void *selfArg)
     UpdatePolarCrate(self);
 }
 
-/* Unconditional (no `sub_802A6EC` proximity guard) "used"-state
+/* Unconditional (no `IsTouchingPlayer` proximity guard) "used"-state
  * transition: plays a sound, ties the lap counter, clears `stateTime`,
  * then the usual state-0x12/anim-reset block. No tail call - the
  * caller drives whatever comes after directly. */
@@ -107,16 +107,16 @@ void sub_802CA28(void *selfArg)
 
 /* Same proximity-gated "used" transition shape as `UpdatePolarQuestionCrate`/
  * `UpdatePolarLifeCrate` (actor_part19g.c), forwarding a fixed accumulator
- * delta of `4` to `sub_802C078(gActorList, ...)`; tail-calls
+ * delta of `4` to `QueuePolarWumpa(gActorList, ...)`; tail-calls
  * `UpdatePolarCrate`. */
 void sub_802CA6C(void *selfArg)
 {
     struct actor_self *self = selfArg;
 
-    if (self->animIndex != 0x12 && sub_802A6EC(self)) {
+    if (self->animIndex != 0x12 && IsTouchingPlayer(self)) {
         PlaySfx(gAudioContext, 3, 0x100);
         AddBrokenCrate(gLevelState);
-        sub_802C078(gActorList, 4);
+        QueuePolarWumpa(gActorList, 4);
         self->animIndex = 0x12;
         {
             register u16 anim asm("r0") = *(u16 *)&self->anims[18].duration;
@@ -138,10 +138,10 @@ void UpdatePolarBasicCrate(void *selfArg)
 {
     struct actor_self *self = selfArg;
 
-    if (self->animIndex != 0x12 && sub_802A6EC(self)) {
+    if (self->animIndex != 0x12 && IsTouchingPlayer(self)) {
         PlaySfx(gAudioContext, 3, 0x100);
         AddBrokenCrate(gLevelState);
-        sub_802C078(gActorList, 1);
+        QueuePolarWumpa(gActorList, 1);
         self->animIndex = 0x12;
         {
             register u16 anim asm("r0") = *(u16 *)&self->anims[18].duration;

@@ -8,13 +8,13 @@ this same chunk that got closed out later.
 ## Parked - NAKED transcription (byte-correct, not decompiled)
 
 - **`sub_802C208`** (`src/graphics/actor_part19e.c`) - a
-  `gStaticData_0817A6B8` stride-8 trampoline-record dispatcher (`{s16
+  `gPolarPlayerStateFuncs` stride-8 trampoline-record dispatcher (`{s16
   baseOff; s16 count; s16 subOffset}`, count-gated between an inline
   fallback pair and a per-instance list's last entry). Previously
   parked (see docs/matching.md's original entry) on "register-
   allocation/instruction-scheduling around two `record = base +
   state*8` re-derivations". Revisiting this: the ROM keeps
-  `gStaticData_0817A6B8`'s base address alive in `r7` for the whole
+  `gPolarPlayerStateFuncs`'s base address alive in `r7` for the whole
   function (a plain `adds r7, r1, #0`, not a high-register relay) -
   this is this project's confirmed categorical gcc-2.9 r7-pin bug (see
   docs/matching.md's `sub_8007DBC`/`DrawPowerDialog` entries): an explicit
@@ -35,11 +35,11 @@ this same chunk that got closed out later.
   The same r7 hazard and NAKED-transcription-but-not-matched status
   apply identically to this dispatcher's other four instances sharing
   this exact stride-8 shape: `sub_802F748` (issue #56,
-  `src/graphics/actor_part44b.c`, `gStaticData_0817C1C0`),
-  `UpdateHovercraftCannon`/`sub_8033C84`/`UpdateHovercraftLauncher` (issue #62,
+  `src/graphics/actor_part44b.c`, `gJetpackPlayerStateFuncs`),
+  `UpdateHovercraftCannon`/`RunHovercraftCannonState`/`UpdateHovercraftLauncher` (issue #62,
   `src/graphics/actor_part31.c`/`actor_part33.c`/`actor_part37.c`,
-  `gStaticData_0817C4E0`/`gStaticData_0817C4F8`), and `sub_8033FE4`
-  (issue #63, `src/graphics/actor_part64.c`, `gStaticData_0817C4F8`) -
+  `gHovercraftCannonStateFuncs`/`gHovercraftLauncherStateFuncs`), and `RunHovercraftLauncherState`
+  (issue #63, `src/graphics/actor_part64.c`, `gHovercraftLauncherStateFuncs`) -
   see those files' own doc comments and the matching-issue docs for
   issues #56/#62/#63.
 

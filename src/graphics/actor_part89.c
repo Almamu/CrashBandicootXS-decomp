@@ -1,6 +1,6 @@
 #include "core.h"
 
-/* The continue prompt's (`InitContinuePrompt`/`sub_803487C`, actor_part87.c/
+/* The continue prompt's (`InitContinuePrompt`/`InitContinuePromptGraphics`, actor_part87.c/
  * actor_part88.c) per-frame driver, called once per frame while the
  * effect is running (caller not yet identified in this pass - out of
  * scope, see docs/matching/issue-63-0x08033ef4-actor.md). Busy-loops

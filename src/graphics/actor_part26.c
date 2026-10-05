@@ -8,7 +8,7 @@ extern s32 gUnknown_0300153C;
 /* Sets BG palette bank 1's last color (index 15) to either a near-white
  * flash color or a dim default, gated by bit 3 of `gUnknown_0300153C`
  * (a flags word driving this effect's per-frame look). */
-void sub_803171C(void)
+void UpdateAirshipFlashColor(void)
 {
     vu16 *bank1 = (vu16 *)(BG_PLTT + 0x20);
 
@@ -29,7 +29,7 @@ extern u8 gStaticData_0817C378[];
  * animation strip into BG palette bank 1 - `__divsi3` picks a
  * triangle-wave frame index (0-2, mirrored back down for 3-4) so the
  * animation ping-pongs. */
-void sub_8031744(void)
+void AnimateAirshipPalette(void)
 {
     s32 v;
 

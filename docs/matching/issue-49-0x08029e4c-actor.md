@@ -20,7 +20,7 @@ of this chunk hit.
 - `sub_802A4D4`-`sub_802A650`/`sub_802A668` (`actor_part94.c`) - the
   `gActorSpawnTable` `sub_effect_table` record accessor family
   (`struct sub_effect_record`, see `include/actor_anim.h`), a
-  circular-list marker-drawing pass (`sub_802A5E4`), and several
+  circular-list marker-drawing pass (`DestroyAllActors`), and several
   trivial wrappers/setters.
 
 ## Parked - NAKED transcription (byte-correct, not decompiled)
@@ -35,7 +35,7 @@ of this chunk hit.
   register (`r9`) than the ROM's own `sb`/`r8` pair to keep the vtable
   pointer, the table pointer, and the loop index simultaneously live.
   Verified byte-for-byte against `baserom.gba`, relocation-aware.
-- **`sub_802A018`/`sub_802A110`/`sub_802A3AC`** (`actor_part103.c`) -
+- **`PolarIsTouchingPlayer`/`JetpackIsTouchingPlayer`/`FindShotTarget`** (`actor_part103.c`) -
   translate `gActorList` (the player/list-sentinel) and `self`'s
   own 12-byte `{s16 x,y,z,sizeX,sizeY,sizeZ}` AABB record into stack
   scratch boxes via `MemCopy32`, then run the same 3-axis overlap
@@ -43,8 +43,8 @@ of this chunk hit.
   (`UpdateYeti`/`sub_802DD9C`/`DetonateNearbyPolarNitros`/`IsTouchingAirship`, see
   `docs/matching.md` and `issue-53-actor-c7a8.md`/
   `issue-54-actor-d3a8.md`/`issue-58-0x08030574-actor.md`).
-  `sub_802A018`/`sub_802A110` are near-identical (differ only in guard
-  byte: `gUnknown_030014A0` vs `gUnknown_03001506`); `sub_802A3AC` wraps
+  `PolarIsTouchingPlayer`/`JetpackIsTouchingPlayer` are near-identical (differ only in guard
+  byte: `gUnknown_030014A0` vs `gUnknown_03001506`); `FindShotTarget` wraps
   the same test in an outer walk of the whole circular actor list. All
   three hit this project's **confirmed categorical gcc-2.9 `r7`
   register-allocation bug** - the unforced allocator never reaches `r7`
@@ -63,7 +63,7 @@ of this chunk hit.
   simultaneously live.
 - **`sub_802A674`/`sub_802A688`** (`actor_part94.c`) - plain one-call
   trampolines, identical in shape to already-matched siblings elsewhere
-  in this project (e.g. `actor_part50.c`'s `sub_802A69C`). This
+  in this project (e.g. `actor_part50.c`'s `JetpackReloadPlayerTiles`). This
   compiler's epilogue register allocator picks `r1` for these two
   specific functions' `pop`/`bx` pair instead of the usual `r0` - every
   plain-C phrasing tried (including register-pinning the call argument)
@@ -81,7 +81,7 @@ once linked).
 
 ## Later pass: NAKED retry
 
-`sub_802A018`, `sub_802A110` and `sub_802A3AC` are now plain C under
+`PolarIsTouchingPlayer`, `JetpackIsTouchingPlayer` and `FindShotTarget` are now plain C under
 old_agbcc (`actor_part103.c` moved). They share one inline that keeps
 the three boxes in one frame struct. `sub_802A674`/`sub_802A688` are
 plain C: they return the callee's result. `SelectActorCategory` has a

@@ -18,20 +18,20 @@
  * forcing the recheck to materialize - the same class of gap already
  * closed for `DrawPolarCollectedWumpa` (issue #52) and the `| 0`-with-a-zero-
  * valued-term case in `DrawJetpackCheckpointText` (issue #71). */
-extern s32 sub_80338E8(void);
-extern s32 sub_8033900(void);
-extern s32 sub_80338F4(void);
+extern s32 GetHovercraftZ(void);
+extern s32 GetHovercraftX(void);
+extern s32 GetHovercraftY(void);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *fn);
 extern void UpdateActor(void *self);
 
-void sub_8034270(void *selfArg)
+void UpdateHovercraftCannonFlash(void *selfArg)
 {
     u8 *self = selfArg;
     register s32 doAnim asm("r0");
 
-    *(s32 *)(self + 0x24) = sub_80338E8() - 0x200;
-    *(s32 *)(self + 0x1c) = sub_8033900() + 0x2000;
-    *(s32 *)(self + 0x20) = sub_80338F4() + 0x3000;
+    *(s32 *)(self + 0x24) = GetHovercraftZ() - 0x200;
+    *(s32 *)(self + 0x1c) = GetHovercraftX() + 0x2000;
+    *(s32 *)(self + 0x20) = GetHovercraftY() + 0x3000;
     self[0x58] = 1;
 
     if (self[0x12] != 0) {

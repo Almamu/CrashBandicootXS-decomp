@@ -7,7 +7,7 @@ extern s32 gCellAnimLength;
 extern s32 gUnknown_030013A8;
 
 extern void UploadCellAnimFrame(void);
-extern void sub_802AB58(void);
+extern void UpdateActorPaletteCycle(void);
 
 /* Advances the console/text-plane's horizontal scroll accumulator by
  * `gCellAnimSpeed` (a Q8.8 per-frame velocity), wrapping it against
@@ -48,6 +48,6 @@ void AdvanceCellAnim(void)
     if (delta != 0) {
         gUnknown_030013A8 += delta;
         UploadCellAnimFrame();
-        sub_802AB58();
+        UpdateActorPaletteCycle();
     }
 }

@@ -636,7 +636,7 @@ vtable shapes).
 | `08151AC2` | 0x16012 | composite: BG1 pictures, sub-effect tables, compressed OBJ frame set C (categories 3-6). **Converted**, the 2-byte pad as gbagfx's padding of `01_14174c.bin.lz` | `SelectActorCategory`, `GetAnimFrameData`, `LoadBgPicture` | high | done |
 | `08167AD4` | 0x200 | N. Gin's airship: 16-colour palette (+ zero to 0x200). **Converted** (`src/data/boss_pictures_167ad4.c`) | `LoadAirshipGraphics`, `ConvertAirshipTiles` | high | done |
 | `08167CD4` | 0x1E14 | N. Gin's airship picture: {cols 18, rows 12}, 4 frames of {tile count, u16 map, 4bpp tiles} sharing one pool (graphics/boss_pictures/, tools/boss_pictures.py). **Converted** (`src/data/boss_pictures_167ad4.c`) | `CreateAirship` | medium | done |
-| `08169AE8` | 0x200 | Cortex's hovercraft: palette (16 colours + 240 x 0x03E0). **Converted** (`src/data/boss_pictures_167ad4.c`) | `sub_8032AF8`, `LoadHovercraftGraphics`, `ConvertHovercraftTiles` | high | done |
+| `08169AE8` | 0x200 | Cortex's hovercraft: palette (16 colours + 240 x 0x03E0). **Converted** (`src/data/boss_pictures_167ad4.c`) | `UpdateHovercraftHitFlash`, `LoadHovercraftGraphics`, `ConvertHovercraftTiles` | high | done |
 | `08169CE8` | 0xB28 | Cortex's hovercraft picture: {cols 16, rows 10}, 1 frame (graphics/boss_pictures/). **Converted** (`src/data/boss_pictures_167ad4.c`) | `CreateHovercraft` | medium | done |
 | `0816A810` | 0x10 | u8[16] d-pad direction lookup. **Converted** (`src/data/boss_pictures_167ad4.c`) | `GetDpadDirection` | medium | done |
 | `0816A820` | 0x200 | s16[256] sine/direction table (`s16` x 256). **Converted** (`src/data/boss_pictures_167ad4.c`) | `DrawPlayer`, `sub_800C8F8`, `sub_800C940` +16 | high | done |
@@ -725,21 +725,21 @@ vtable shapes).
 | `0816C4A8` | 0x8 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c498.c`) | `InitLevelSelect` | high | done |
 | `0816C4B0` | 0x8 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c498.c`) | `InitLevelSelect` | high | done |
 | `0816C4B8` | 0x8 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c498.c`) | `InitLevelSelect` | high | done |
-| `0816C4C0` | 0x8 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c498.c`) | `InitLevelSelect`, `sub_801C3E8` | high | done |
+| `0816C4C0` | 0x8 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c498.c`) | `InitLevelSelect`, `DrawLevelSelectTime` | high | done |
 | `0816C4C8` | 0x8 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c498.c`) | `InitLevelSelect` | high | done |
 | `0816C4D0` | 0x8 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c498.c`) | `InitLevelSelect` | high | done |
 | `0816C4D8` | 0x30 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c498.c`) | `LevelSelectTurnPage`, `sub_801D5CC` | high | done |
 | `0816C508` | 0x30 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c498.c`) | `LevelSelectTurnPage`, `sub_801D5CC` | high | done |
 | `0816C538` | 0x10 | table of u32 (`u32` x 4). **Converted** (`src/data/map_tables_16c498.c`) | `LevelSelectTurnPage`, `sub_801D668` | high | done |
-| `0816C548` | 0x10 | table of u32 (`u32` x 4). **Converted** (`src/data/map_tables_16c498.c`) | `InitLevelSelect`, `sub_801D470` | high | done |
-| `0816C558` | 0x14 | table of u32 (`u32` x 5). **Converted** (`src/data/map_tables_16c498.c`) | `sub_801C608` | high | done |
+| `0816C548` | 0x10 | table of u32 (`u32` x 4). **Converted** (`src/data/map_tables_16c498.c`) | `InitLevelSelect`, `RefreshLevelSelectPage` | high | done |
+| `0816C558` | 0x14 | table of u32 (`u32` x 5). **Converted** (`src/data/map_tables_16c498.c`) | `LoadLevelSelectRecord` | high | done |
 | `0816C56C` | 0x20 | table (element layout: see consumers). **Converted** (`src/data/map_tables_16c498.c`) | `RunLevelSelect` | medium | done |
-| `0816C58C` | 0x14 | table (element layout: see consumers); 3 word(s) look like ROM pointers | `sub_801D7F8` | medium | easy |
+| `0816C58C` | 0x14 | table (element layout: see consumers); 3 word(s) look like ROM pointers | `CreateLevelSelectPageBg` | medium | easy |
 | `0816C5A0` | 0x50 | pointer table (20 data pointers) | `UpdateZoomBg` | high | easy |
 | `0816C5F0` | 0x20 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c5f0.c`) | `InitZoomBg` | high | done |
-| `0816C610` | 0x14 | table of u32 (`u32` x 5). **Converted** (`src/data/map_tables_16c5f0.c`) | `sub_801DF0C` | high | done |
-| `0816C624` | 0x10 | table of u32 (`u32` x 4). **Converted** (`src/data/map_tables_16c5f0.c`) | `sub_801DEA4` | high | done |
-| `0816C634` | 0x10 | table of u32 (`u32` x 4). **Converted** (`src/data/map_tables_16c5f0.c`) | `sub_801E190` | high | done |
+| `0816C610` | 0x14 | table of u32 (`u32` x 5). **Converted** (`src/data/map_tables_16c5f0.c`) | `SetLevelSelectEntryBox` | high | done |
+| `0816C624` | 0x10 | table of u32 (`u32` x 4). **Converted** (`src/data/map_tables_16c5f0.c`) | `SetLevelSelectEntryLevel` | high | done |
+| `0816C634` | 0x10 | table of u32 (`u32` x 4). **Converted** (`src/data/map_tables_16c5f0.c`) | `UpdateLevelSelectCursor` | high | done |
 | `0816C644` | 0x30 | table of s32 (`s32` x 12). **Converted** (`src/data/map_tables_16c5f0.c`) | `FitScaledSprite`, `DrawScaledSprite` | high | done |
 | `0816C674` | 0x30 | table of s32 (`s32` x 12). **Converted** (`src/data/map_tables_16c5f0.c`) | `FitScaledSprite`, `DrawScaledSprite` | high | done |
 | `0816C6A4` (`gEntitySpawnFuncs`) | 0x170 | function-pointer table: 92 Thumb function pointers (menu/trigger-effect dispatch) (`void (*)(void)` x 92) | `CreateEntitySpawner` | high | easy |
@@ -762,16 +762,16 @@ vtable shapes).
 | `08174DD4` | 0x3B4 | table (element layout: see consumers). **Converted** (`src/data/hud_fonts_174be0.c`) | `InitSmallFont` | medium | done |
 | `08175188` | 0x4C | HUD font B's characters in glyph order. **Converted** (`src/data/hud_fonts_174be0.c`) | `InitLargeFont` | medium | done |
 | `081751D4` | 0x384 | table (element layout: see consumers). **Converted** (`src/data/hud_fonts_174be0.c`) | `InitLargeFont` | medium | done |
-| `08175558` | 0xC | first 0xC bytes of category_descriptor[0] (label splits the struct array) (`struct category_descriptor` x 7) | `InitActorCategory`, `SetupActorVramPool`, `sub_802968C` +1 | high | easy |
+| `08175558` | 0xC | first 0xC bytes of category_descriptor[0] (label splits the struct array) (`struct category_descriptor` x 7) | `InitActorCategory`, `SetupActorVramPool`, `CountCategoryCrates` +1 | high | easy |
 | `08175564` | 0x20 | category_descriptor[0] bytes 0x0C-0x2B (part of gActorCategories[7]) | `InitActorCategory` | high | easy |
 | `08175584` | 0x140 | category_descriptor[0] +0x2C .. [6] end (part of gActorCategories[7]) | `InitActorCategory` | high | easy |
 | `081756C4` | 0x9C | category_vtable[3]: 3 x 13 Thumb function pointers (slots 7/8 of type 0 hold junk values) | `SelectActorCategory` | high | easy |
-| `08175760` | 0x3800 | palette-cycle frames: 32 x 0x1C0-byte BGR555 blocks (BG palettes 0-13). **Converted** (`src/data/palette_cycle_175760.c`) | `sub_802AB58` | high | done |
-| `08178F60` | 0x10 | palette-cycle cursor starts `s32[4]`. **Converted** | `sub_802ABC8` | high | done |
-| `08178F70` | 0x10 | palette-cycle cursor bounds `s32[4]`. **Converted** | `sub_802ABC8` | high | done |
+| `08175760` | 0x3800 | palette-cycle frames: 32 x 0x1C0-byte BGR555 blocks (BG palettes 0-13). **Converted** (`src/data/palette_cycle_175760.c`) | `UpdateActorPaletteCycle` | high | done |
+| `08178F60` | 0x10 | palette-cycle cursor starts `s32[4]`. **Converted** | `SetActorPaletteCycle` | high | done |
+| `08178F70` | 0x10 | palette-cycle cursor bounds `s32[4]`. **Converted** | `SetActorPaletteCycle` | high | done |
 | `08178F80` | 0x1738 | categories 0-2 family data: OBJ palette, keyframe tables (table_A), anim table gCategoryFamily0AnimTable (41 x 0x28) and table_B arrays. **Converted** (`src/data/anim_family_178f80.c`, docs/data.md "Category families") | `RunCompanyLogos` | high | done |
-| `0817A6B8` | 0x70 | function-pointer / pointer-to-member table (14 code pointers) | `sub_802B364`, `sub_802C208` | high | easy |
-| `0817A728` | 0x20 | 16-colour palette. **Converted** (`src/data/actor_tables_17a728.c`) | `sub_802B730`, `sub_802BB4C` | high | done |
+| `0817A6B8` | 0x70 | function-pointer / pointer-to-member table (14 code pointers) | `UpdatePolarPlayer`, `sub_802C208` | high | easy |
+| `0817A728` | 0x20 | 16-colour palette. **Converted** (`src/data/actor_tables_17a728.c`) | `HurtPolarPlayer`, `sub_802BB4C` | high | done |
 | `0817A748` | 0x20 | 16-colour palette. **Converted** | `sub_802BB4C` | high | done |
 | `0817A768` | 0xC | `struct anim_box`. **Converted** | `UpdatePolarNitroCrate` | medium | done |
 | `0817A774` | 0xC | `struct anim_box`. **Converted** | `UpdatePolarElectricFence` | medium | done |
@@ -787,31 +787,31 @@ vtable shapes).
 | `0817AA6C` | 0x20 | 16-colour gradient palette. **Converted** (`src/data/anim_family_17aa6c.c`) | `UpdateYetiPalette` | high | done |
 | `0817AA8C` | 0xC | `struct anim_box`. **Converted** | `sub_802DD9C` | medium | done |
 | `0817AA98` | 0x1728 | categories 3-6 family data: a box, 2 OBJ palettes, table_A, anim table gCategoryFamily1AnimTable (47 x 0x28), table_B arrays. **Converted** (`src/data/anim_family_17aa6c.c`) | `UpdateYeti` | high | done |
-| `0817C1C0` | 0x40 | function-pointer / pointer-to-member table (8 code pointers) | `sub_802E84C`, `sub_802F748` | high | easy |
+| `0817C1C0` | 0x40 | function-pointer / pointer-to-member table (8 code pointers) | `UpdateJetpackPlayer`, `sub_802F748` | high | easy |
 | `0817C200` | 0x60 | 3-frame 16-colour palette strip. **Converted** (`src/data/palette_strip_17c200.c`) | `sub_802F4CC` | high | done |
 | `0817C260` | 0x20 | function-pointer / pointer-to-member table (4 code pointers) | `UpdateJetpackPlane`, `sub_802FEA4` | high | easy |
 | `0817C280` | 0x38 | function-pointer / pointer-to-member table (7 code pointers) | `UpdateJetpackBomber`, `sub_8030234` | high | easy |
-| `0817C2B8` | 0x18 | function-pointer / pointer-to-member table (3 code pointers) | `sub_8030574`, `sub_8030648` | high | easy |
+| `0817C2B8` | 0x18 | function-pointer / pointer-to-member table (3 code pointers) | `UpdateAirshipFireball`, `sub_8030648` | high | easy |
 | `0817C2D0` | 0xA8 | 6 `struct weapon_kind` (7 words). **Converted** (`src/data/weapon_kind_17c2d0.c`) | `SpawnAirship` | high | done |
-| `0817C378` | 0x60 | 3-frame 16-colour palette strip. **Converted** | `SpawnAirship`, `sub_8031744` | high | done |
+| `0817C378` | 0x60 | 3-frame 16-colour palette strip. **Converted** | `SpawnAirship`, `AnimateAirshipPalette` | high | done |
 | `0817C3D8` | 0xC | `struct anim_box`. **Converted** | `AirshipStateExplode`, `sub_8030E08`, `IsTouchingAirship` | high | done |
 | `0817C3E4` | 0x18 | 2 `struct anim_frame_record`. **Converted** | `CreateAirship` | high | done |
 | `0817C3FC` | 0x18 | function-pointer / pointer-to-member table (6 code pointers) (`void*` x 6) | `UpdateAirship` | high | easy |
 | `0817C414` | 0x18 | function-pointer / pointer-to-member table (3 code pointers) | `sub_8031A08` | high | easy |
 | `0817C42C` | 0x18 | function-pointer / pointer-to-member table (3 code pointers) | `UpdateJetpackBalloonCrate`, `sub_80322F4` | high | easy |
 | `0817C444` | 0xC | `struct anim_box`. **Converted** (`src/data/actor_box_17c444.c`) | `UpdateJetpackRocket` | medium | done |
-| `0817C450` | 0x10 | function-pointer / pointer-to-member table (2 code pointers) | `sub_8032950`, `sub_8032A94` | high | easy |
+| `0817C450` | 0x10 | function-pointer / pointer-to-member table (2 code pointers) | `UpdateHovercraftFireball`, `sub_8032A94` | high | easy |
 | `0817C460` | 0x50 | 2 `struct singleton_kind` (10 words). **Converted** (`src/data/singleton_kind_17c460.c`) | `SpawnHovercraft` | high | done |
 | `0817C4B0` | 0xC | `struct anim_box`. **Converted** | `sub_8032C0C` | high | done |
 | `0817C4BC` | 0xC | 1 `struct anim_frame_record`. **Converted** | `CreateHovercraft` | medium | done |
-| `0817C4C8` | 0x18 | function-pointer / pointer-to-member table (6 code pointers) (`void*` x 6) | `sub_8032B6C` | high | easy |
-| `0817C4E0` | 0x18 | function-pointer / pointer-to-member table (3 code pointers) | `UpdateHovercraftCannon`, `sub_8033C84` | high | easy |
-| `0817C4F8` | 0x18 | function-pointer / pointer-to-member table (3 code pointers) | `UpdateHovercraftLauncher`, `sub_8033FE4` | high | easy |
+| `0817C4C8` | 0x18 | function-pointer / pointer-to-member table (6 code pointers) (`void*` x 6) | `RunHovercraftState` | high | easy |
+| `0817C4E0` | 0x18 | function-pointer / pointer-to-member table (3 code pointers) | `UpdateHovercraftCannon`, `RunHovercraftCannonState` | high | easy |
+| `0817C4F8` | 0x18 | function-pointer / pointer-to-member table (3 code pointers) | `UpdateHovercraftLauncher`, `RunHovercraftLauncherState` | high | easy |
 | `0817C510` | 0x2 | the text ">". **Converted** (`src/data/hud_palettes_17c510.c`) | `DrawContinuePrompt` | medium | done |
-| `0817C512` | 0x20 | 16 palette halfwords. **Converted** | `sub_803487C` | high | done |
-| `0817C532` | 0x20 | 16 palette halfwords. **Converted** | `sub_803487C` | high | done |
-| `0817C552` | 0x20 | 16 halfwords (mostly 0xFFFF). **Converted** | `sub_803487C` | high | done |
-| `0817C572` | 0x22 | 16 halfwords + the 2-byte zero pad. **Converted** | `sub_803487C` | high | done |
+| `0817C512` | 0x20 | 16 palette halfwords. **Converted** | `InitContinuePromptGraphics` | high | done |
+| `0817C532` | 0x20 | 16 palette halfwords. **Converted** | `InitContinuePromptGraphics` | high | done |
+| `0817C552` | 0x20 | 16 halfwords (mostly 0xFFFF). **Converted** | `InitContinuePromptGraphics` | high | done |
+| `0817C572` | 0x22 | 16 halfwords + the 2-byte zero pad. **Converted** | `InitContinuePromptGraphics` | high | done |
 | `0817C594` | 0x14 | table (element layout: see consumers); 3 word(s) look like ROM pointers | `InitContinuePrompt` | medium | easy |
 | `0817C5A8` | 0x14 | table (element layout: see consumers); 3 word(s) look like ROM pointers | `InitContinuePrompt` | medium | easy |
 | `0817C5BC` | 0x14 | table (element layout: see consumers); 3 word(s) look like ROM pointers | `InitContinuePrompt` | medium | easy |
@@ -966,7 +966,7 @@ vtable shapes).
 | `087E41BC` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateStopwatch`, `DestroyStopwatch`, `InitStopwatch` | high | easy |
 | `087E4224` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_8015878`, `sub_801588C` | high | easy |
 | `087E428C` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_80174D8`, `sub_80174EC` | high | easy |
-| `087E42F4` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_80179EC`, `sub_8017A00` | high | easy |
+| `087E42F4` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `DestroyInputCtrl`, `CreateInputCtrl` | high | easy |
 | `087E435C` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_8017A78`, `sub_8017A8C` | high | easy |
 | `087E43C4` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_8017FD4`, `sub_8017FE8` | high | easy |
 | `087E442C` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_8018858`, `sub_801886C` | high | easy |
@@ -978,16 +978,16 @@ vtable shapes).
 | `087E469C` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_801964C`, `sub_8019660` | high | easy |
 | `087E4704` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_80196E4`, `sub_80196F8` | high | easy |
 | `087E476C` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_8019744`, `sub_8019758` | high | easy |
-| `087E47D4` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_80197C8`, `sub_80197DC` | high | easy |
+| `087E47D4` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `DestroyCortexBoss`, `CreateCortexBoss` | high | easy |
 | `087E483C` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_801A724`, `sub_801A73C` | high | easy |
 | `087E48A4` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_801A584`, `sub_801A750`, `sub_801A768` | high | easy |
 | `087E490C` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_801A780`, `sub_801A794` | high | easy |
 | `087E4974` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `DestroyDingodile`, `CreateDingodile` | high | easy |
 | `087E49DC` | 0x78 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreatePlatform`, `DestroyPlatform`, `sub_801B2E4` | high | easy |
 | `087E4A54` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `DestroyPlatformMover`, `CreatePlatformMover` | high | easy |
-| `087E4ABC` | 0x78 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_801B91C`, `sub_801B940` | high | easy |
+| `087E4ABC` | 0x78 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `DestroyCameraLead`, `CreateCameraLead` | high | easy |
 | `087E4B34` | 0x78 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_801B984`, `sub_801BAB0`, `sub_801BAD0` | high | easy |
-| `087E4BAC` | 0x30 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_801DF98`, `sub_801DFEC` | high | easy |
+| `087E4BAC` | 0x30 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `DestroyLevelSelectEntry`, `CreateLevelSelectEntry` | high | easy |
 | `087E4BDC` (`gBgStreamerVtable`) | 0x10 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `DestroyBgStreamer`, `InitBgStreamer` | high | easy |
 | `087E4BEC` (`gBgLayerBaseVtable`) | 0x28 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `DestroyBgLayerBase`, `InitBgLayerBase` | high | easy |
 | `087E4C14` (`gBgLayerVtable`) | 0x50 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `InitBgLayer`, `DestroyBgLayer`, `DestroyPooledBgLayer` | high | easy |
@@ -996,10 +996,10 @@ vtable shapes).
 | `087E4D1C` | 0x48 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `InitLargeFont`, `DestroyLargeFont` | high | easy |
 | `087E4D64` | 0x48 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `InitSmallFont`, `DestroySmallFont` | high | easy |
 | `087E4DAC` | 0x48 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `InitSmallFont`, `InitLargeFont`, `DestroyFont` +3 | high | easy |
-| `087E4DF4` | 0x20 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `InitActorPart`, `DestroyActor`, `sub_802C19C` +41 | high | easy |
+| `087E4DF4` | 0x20 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `InitActorPart`, `DestroyActor`, `DestroyPolarPlayer` +41 | high | easy |
 | `087E4E14` | 0x20 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateActor` | high | easy |
 | `087E4E34` | 0x20 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreatePolarCheckpointText` | high | easy |
-| `087E4E54` | 0x20 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `ConstructActorPart`, `sub_802C19C` | high | easy |
+| `087E4E54` | 0x20 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `ConstructActorPart`, `DestroyPolarPlayer` | high | easy |
 | `087E4E74` | 0x20 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `DestroyPolarCollectedWumpa`, `CreatePolarCollectedWumpa` | high | easy |
 | `087E4E94` | 0x20 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateActor`, `CreatePolarWumpa` | high | easy |
 | `087E4EB4` | 0x20 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateActor`, `CreatePolarTimeCrate` | high | easy |
@@ -1021,12 +1021,12 @@ vtable shapes).
 | `087E50B4` | 0x20 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreatePolarCheckpointCrate` | high | easy |
 | `087E50D4` | 0x38 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateJetpackCheckpointText` | high | easy |
 | `087E510C` | 0x38 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateJetpackExplosion` | high | easy |
-| `087E5144` | 0x38 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_802E740`, `sub_802F6DC` | high | easy |
+| `087E5144` | 0x38 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `InitJetpackPlayer`, `DestroyJetpackPlayer` | high | easy |
 | `087E517C` | 0x38 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateJetpackShot` | high | easy |
 | `087E51B4` | 0x38 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateJetpackPlane` | high | easy |
 | `087E51EC` | 0x38 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateJetpackBomber` | high | easy |
 | `087E5224` | 0x38 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateJetpackCannonball` | high | easy |
-| `087E525C` | 0x38 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_80305F8` | high | easy |
+| `087E525C` | 0x38 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateAirshipFireball` | high | easy |
 | `087E5294` | 0x38 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateJetpackBalloon` | high | easy |
 | `087E52CC` | 0x40 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateJetpackHealthCrate` | high | easy |
 | `087E530C` | 0x40 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateJetpackTimeCrate` | high | easy |
@@ -1036,10 +1036,10 @@ vtable shapes).
 | `087E5404` | 0x38 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateJetpackRocket` | high | easy |
 | `087E543C` | 0x38 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateJetpackRing` | high | easy |
 | `087E5474` | 0x38 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `DestroyJetpackCollectedWumpa`, `CreateJetpackCollectedWumpa` | high | easy |
-| `087E54AC` | 0x38 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_80329D4` | high | easy |
+| `087E54AC` | 0x38 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateHovercraftFireball` | high | easy |
 | `087E54E4` | 0x38 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateHovercraftCannon` | high | easy |
 | `087E551C` | 0x38 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateHovercraftLauncher` | high | easy |
-| `087E5554` | 0x38 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_8034058` | high | easy |
-| `087E558C` | 0x38 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_80342D4` | high | easy |
+| `087E5554` | 0x38 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateHovercraftSideGun` | high | easy |
+| `087E558C` | 0x38 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateHovercraftCannonFlash` | high | easy |
 | `087E55C4` | 0x20 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `InitLogoActor`, `DestroyLogoActor` | high | easy |
 | `087E55E4` | 0x1AA1C | IWRAM image (ARM code + initialised data, 0x9E8 B) copied to 0x03000000 by crt0, then 0xFF cartridge fill | `_0800012C` | high | **converted** (`asm/intr_main.s`, `src/iwram/`, ldscript `iwram`/`rom_fill`) |

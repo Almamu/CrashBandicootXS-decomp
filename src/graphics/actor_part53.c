@@ -16,7 +16,7 @@ extern s32 QueueVramDmaTransfer(void *arg0, void *arg1, u16 arg2, u16 arg3);
  * `gUnknown_03001478` counter), advances the cursor (`gUnknown_03001470`)
  * toward `gUnknown_03001474`: increments while still below the bound,
  * decrements once past it, and holds steady exactly at the bound -
- * `sub_802AB34`/`sub_802ABC8` flip which end is "the bound" to make this
+ * `SaveActorPaletteCycle`/`SetActorPaletteCycle` flip which end is "the bound" to make this
  * ping-pong.
  *
  * Two gaps this needed, see docs/matching/issue-50-actor-2a69c.md:
@@ -45,7 +45,7 @@ extern s32 QueueVramDmaTransfer(void *arg0, void *arg1, u16 arg2, u16 arg3);
  *   return point, reached by both this asm's early `beq`/`ble` and by
  *   falling off the end), so the function signature/prologue/epilogue
  *   are still fully compiler-generated. */
-void sub_802AB58(void)
+void UpdateActorPaletteCycle(void)
 {
     asm volatile(
         "ldr r0, =gUnknown_03001464\n"

@@ -11,7 +11,7 @@
  * at `CreatePolarBasicCrate`) and `actor_part62.c` (issue #54, starting at
  * `MovePolarAkuAku`) - the whole `0x0802CC9C`-`0x0802D3A8` gap
  * docs/matching/issue-53-actor-c7a8.md's "What's left" section
- * described as "a larger, sub_802DD9C/sub_802A6EC/sub_802B7E0-calling
+ * described as "a larger, sub_802DD9C/IsTouchingPlayer/ShockPolarPlayer-calling
  * state machine ... not attempted this pass". */
 
 extern void *gActorList;
@@ -19,12 +19,12 @@ extern void *gAudioContext;
 extern s32 gUnknown_030014B8;
 extern s32 gUnknown_0300088C[];
 
-extern u8 sub_802A6EC(void *self);
+extern u8 IsTouchingPlayer(void *self);
 extern u8 sub_802DD9C(void *self);
-extern u8 sub_802B730(void *arg0);
-extern u8 sub_802B7E0(void *arg0);
+extern u8 HurtPolarPlayer(void *arg0);
+extern u8 ShockPolarPlayer(void *arg0);
 extern void UpdateActor(void *self);
-extern void sub_802A980(void *self);
+extern void UpdateActorDepth(void *self);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void InitActorPart(void *self, s32 a, s32 b, s32 c, s32 d);
 extern s32 GetAnimFrameBaseOffset(void *self);
@@ -126,8 +126,8 @@ struct hazard {
 
 /* Once-per-frame hazard/proximity update. Latches `deep` once `depth`
  * passes 0x15FF. While unused (sequence 0) it tests the part table's own
- * box with sub_802DD9C, then gStaticData_0817A78C's box with sub_802A6EC
- * (a hit there only counts if sub_802B7E0 agrees), or failing that the
+ * box with sub_802DD9C, then gStaticData_0817A78C's box with IsTouchingPlayer
+ * (a hit there only counts if ShockPolarPlayer agrees), or failing that the
  * 0817A774 and 0817A780 boxes; any hit switches to sequence 1. Once used,
  * fires method 0x08 with 3 when the sequence has played through. */
 void UpdatePolarElectricFence(void *selfArg)
@@ -143,17 +143,17 @@ void UpdatePolarElectricFence(void *selfArg)
             HAZARD_HIT(self);
         }
         self->box = *(struct box12 *)gStaticData_0817A78C;
-        if (sub_802A6EC(self)) {
-            if (sub_802B7E0(gActorList)) {
+        if (IsTouchingPlayer(self)) {
+            if (ShockPolarPlayer(gActorList)) {
                 HAZARD_HIT(self);
             }
         } else {
             self->box = *(struct box12 *)gStaticData_0817A774;
-            if (sub_802A6EC(self)) {
+            if (IsTouchingPlayer(self)) {
                 HAZARD_HIT(self);
             }
             self->box = *(struct box12 *)gStaticData_0817A780;
-            if (sub_802A6EC(self)) {
+            if (IsTouchingPlayer(self)) {
                 HAZARD_HIT(self);
             }
         }
@@ -180,15 +180,15 @@ void *CreatePolarElectricFence(void *selfArg, s32 a, s32 b, s32 c, s32 d)
     return self;
 }
 
-/* On the trampoline-fire edge (`sub_802A6EC`), forwards to
- * `sub_802B730(gActorList)` (the player object), discarding its
+/* On the trampoline-fire edge (`IsTouchingPlayer`), forwards to
+ * `HurtPolarPlayer(gActorList)` (the player object), discarding its
  * result; always tail-calls `UpdateActor`. */
 void sub_802CE10(void *selfArg)
 {
     u8 *self = selfArg;
 
-    if (sub_802A6EC(self)) {
-        sub_802B730(gActorList);
+    if (IsTouchingPlayer(self)) {
+        HurtPolarPlayer(gActorList);
     }
     UpdateActor(self);
 }
@@ -204,7 +204,7 @@ void *sub_802CE38(void *selfArg, s32 a, s32 b, s32 c, s32 d)
     return self;
 }
 
-/* 3-way `self+0x28` state dispatch. State 0: on `sub_802A6EC`'s
+/* 3-way `self+0x28` state dispatch. State 0: on `IsTouchingPlayer`'s
  * trampoline-fire edge, calls `sub_802C14C(gActorList)` (the
  * player object), plays a cue, and transitions to state 1/table-index
  * 1; otherwise, on `sub_802DD9C`'s player-overlap test, transitions the
@@ -229,7 +229,7 @@ void sub_802CE5C(void *selfArg)
 
 case0:
     {
-        register s32 fired asm("r6") = sub_802A6EC(self);
+        register s32 fired asm("r6") = IsTouchingPlayer(self);
 
         if (fired) {
             sub_802C14C(gActorList);
@@ -292,8 +292,8 @@ void *sub_802CF0C(void *selfArg, s32 a, s32 b, s32 c, s32 d)
  * position, and while idle (`self+0x28 == 0`) counts down
  * `self+0x60`, re-deriving a fresh velocity/homing target via
  * `AimPolarPenguin` once it expires. While idle, also probes
- * `sub_802A6EC`'s trampoline-fire edge against the player
- * (`sub_802B730`) or, failing that, `sub_802DD9C`'s player-overlap
+ * `IsTouchingPlayer`'s trampoline-fire edge against the player
+ * (`HurtPolarPlayer`) or, failing that, `sub_802DD9C`'s player-overlap
  * test - either hit re-arms a fixed outward velocity (`self+0x54`
  * biased by `self+0x1c`'s sign), a random negative Y kick
  * (`self+0x58`), bumps `self+0x5c`, plays a cue, and transitions to
@@ -318,10 +318,10 @@ void UpdatePolarPenguin(void *selfArg)
         }
 
         {
-            register s32 fired asm("r5") = sub_802A6EC(self);
+            register s32 fired asm("r5") = IsTouchingPlayer(self);
 
             if (fired) {
-                if (sub_802B730(gActorList)) {
+                if (HurtPolarPlayer(gActorList)) {
                     s32 velX = (self->base.x > 0) ? 0x600 : 0xFFFFFA00;
 
                     self->velX = velX;
@@ -423,7 +423,7 @@ void *CreatePolarPenguin(void *selfArg, s32 a, s32 b, s32 c, s32 d, struct spawn
     return self;
 }
 
-/* On the trampoline-fire edge, forwards to `sub_802B730` on the player
+/* On the trampoline-fire edge, forwards to `HurtPolarPlayer` on the player
  * object (discarding its result), then, gated on `self+0x34`'s cached
  * depth crossing one of two thresholds paired with `self+0x28`'s
  * current tier, advances `self+0xc`'s table index and, once
@@ -436,8 +436,8 @@ void UpdatePolarIcicle(void *selfArg)
     register s32 threshold1 asm("r0");
     register s32 depth asm("r1");
 
-    if (sub_802A6EC(self)) {
-        sub_802B730(gActorList);
+    if (IsTouchingPlayer(self)) {
+        HurtPolarPlayer(gActorList);
     }
 
     threshold1 = 0x6400;
@@ -657,7 +657,7 @@ void sub_802D204(void *selfArg, s32 retriggerParam)
  * the mask level (`maskLevel`) via `SetMaskLevel(gLevelState, 2)` then
  * `sub_802D204(self, 0)`. Independently re-fires `sub_802D204` once
  * state 2's own `self+0x12` edge trips. Always advances `self`'s own
- * anim frame (`sub_802A980`, frame-counter bump, and the usual
+ * anim frame (`UpdateActorDepth`, frame-counter bump, and the usual
  * wrap-around `GetAnimFrameBaseOffset` check). */
 void UpdatePolarAkuAku(void *selfArg)
 {
@@ -681,7 +681,7 @@ void UpdatePolarAkuAku(void *selfArg)
         sub_802D204(self, 0);
     }
 
-    sub_802A980(self);
+    UpdateActorDepth(self);
     self->stateTime += 1;
     self->animTime += *(s16 *)&self->animTimer;
     *(u8 *)&self->animDone = 0;

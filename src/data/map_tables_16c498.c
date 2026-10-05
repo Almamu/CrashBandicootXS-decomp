@@ -6,9 +6,9 @@
  */
 
 /* `struct xy_pair` positions and animation ids of the level-select
- * screens: actor_part_1b85c.c (InitLevelSelect, sub_801C3E8, sub_801C608,
+ * screens: actor_part_1b85c.c (InitLevelSelect, DrawLevelSelectTime, LoadLevelSelectRecord,
  * sub_801BAD0) and actor_part_1cee0.c (its level menu's item positions
- * and skins, sub_801D470). */
+ * and skins, RefreshLevelSelectPage). */
 struct xy_pair {
     s32 x;
     s32 y;

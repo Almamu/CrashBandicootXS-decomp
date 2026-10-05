@@ -7,7 +7,7 @@
  * values - a different set depending on the category's own `type`
  * field. Record 0 (the table's own header, `field_04` holding the real
  * entry count) doubles as entry 0 for this scan too. */
-s32 sub_802968C(s32 categoryIdx)
+s32 CountCategoryCrates(s32 categoryIdx)
 {
     struct sub_effect_record *table;
     s32 total;

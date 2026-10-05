@@ -48,7 +48,7 @@ const struct {
 };
 
 /* Cortex's hovercraft: its palette. LoadHovercraftGraphics (actor_part130.c) DMAs
- * the first 16 colours to BG palette 1 and sub_8032AF8 restores them
+ * the first 16 colours to BG palette 1 and UpdateHovercraftHitFlash restores them
  * from here; the other 240 entries are the 0x03E0 filler colour. */
 const u16 gHovercraftPalette[256] = {
     0x03E0, 0x66F5, 0x5250, 0x41EF, 0x25AF, 0x7FFF, 0x1CE9, 0x2D04,

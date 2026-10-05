@@ -80,8 +80,8 @@ extern s32 _call_via_r2(void *arg0, void *arg1, void *fn);
 /* Plays a fixed sound cue (`sub_8029E28(0x400)`), then - if `self` is
  * non-NULL and its `+0x12` flag is set - fires the `self+0x50` event
  * table's slot-3 trampoline at `self` offset by the table's `+8`
- * halfword. Same shape as `sub_8033BFC` (actor_part32.c). */
-void sub_8033F48(void *selfArg)
+ * halfword. Same shape as `HovercraftCannonStateDestroyed` (actor_part32.c). */
+void HovercraftLauncherStateDestroyed(void *selfArg)
 {
     struct actor_self *self = selfArg;
 
@@ -104,31 +104,31 @@ void sub_8033F48(void *selfArg)
     }
 }
 
-extern s32 sub_8033900(void);
-extern s32 sub_80338F4(void);
-extern s32 sub_80338E8(void);
-extern s32 sub_8033880(void);
-extern s32 sub_80338D0(void);
+extern s32 GetHovercraftX(void);
+extern s32 GetHovercraftY(void);
+extern s32 GetHovercraftZ(void);
+extern s32 GetHovercraftPartsLeft(void);
+extern s32 GetHovercraftState(void);
 
 /* Syncs `self`'s position fields (`+0x1c`/`+0x20`/`+0x24`) from the
  * `gHovercraft` singleton's own position plus a fixed offset, and
- * - while the singleton's lifetime counter (`sub_8033880`) is still
- * under 3, and the singleton's own animation "kind" (`sub_80338D0`) is
+ * - while the singleton's lifetime counter (`GetHovercraftPartsLeft`) is still
+ * under 3, and the singleton's own animation "kind" (`GetHovercraftState`) is
  * either 2, or 3 with `self+0x34` still under its `0x4AFF` threshold -
  * switches `self` to state 1/table-index 1, resetting the anim-frame
  * pair from the part table's `+0xc` entry and clearing the
  * accumulator/frame counter. */
-void sub_8033F74(void *selfArg)
+void HovercraftLauncherStateWait(void *selfArg)
 {
     register struct spawner *self asm("r4") = selfArg;
 
-    self->base.x = sub_8033900() + 0x1E00;
-    self->base.y = sub_80338F4() - 0x3000;
-    self->base.z = sub_80338E8() - 0x100;
+    self->base.x = GetHovercraftX() + 0x1E00;
+    self->base.y = GetHovercraftY() - 0x3000;
+    self->base.z = GetHovercraftZ() - 0x100;
 
-    if (sub_8033880() <= 2
-     && (sub_80338D0() == 2
-      || (sub_80338D0() == 3 && self->base.depth <= 0x4AFF))) {
+    if (GetHovercraftPartsLeft() <= 2
+     && (GetHovercraftState() == 2
+      || (GetHovercraftState() == 3 && self->base.depth <= 0x4AFF))) {
         register s32 zero asm("r2") = 0;
         register s32 one asm("r0");
 

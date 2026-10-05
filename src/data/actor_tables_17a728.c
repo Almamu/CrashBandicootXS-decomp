@@ -6,7 +6,7 @@
  * sections by ldscript.txt - see docs/data.md.
  */
 
-/* 16-colour palettes sub_802B730 and sub_802BB4C (actor_part127.c)
+/* 16-colour palettes HurtPolarPlayer and sub_802BB4C (actor_part127.c)
  * queue for OBJ palette 0; sub_802BB4C blinks between the two. */
 const u16 gStaticData_0817A728[16] = {
     0x03E0, 0x768B, 0x7AF1, 0x4D83, 0x7586, 0x5D24, 0x3D04, 0x6E66,

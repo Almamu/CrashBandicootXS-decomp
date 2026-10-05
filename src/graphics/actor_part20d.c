@@ -5,12 +5,12 @@
  * docs/matching/issue-58-0x08030334-actor.md. */
 
 extern void InitActorPart(void *self, s32 a, s32 b, s32 c, s32 d);
-extern u8 gStaticData_087E525C[];
+extern u8 gAirshipFireballVtable[];
 
 /* An `InitActorPart`-based constructor: forwards all 4 of its own real
  * arguments (the last stack-passed) straight to `InitActorPart`, then
  * marks `self+0x54 = 2`, sets `self+0x50`'s event/trampoline table to
- * `gStaticData_087E525C`, and stashes its own `b`/`c` arguments a
+ * `gAirshipFireballVtable`, and stashes its own `b`/`c` arguments a
  * second time into `self+0x58`/`self+0x5c`, `self+0x64 = 0`,
  * `self+0x60 = 0x95`, `self+0x68 (byte) = 0`. Returns `self` - the same
  * shape as the already-matched `CreateHovercraftCannon` (actor_part32.c) and the
@@ -22,7 +22,7 @@ extern u8 gStaticData_087E525C[];
  * own build does - declaring it earlier reorders the fetch ahead of the
  * `r6`/`r8` parameter homes, which is the "4-instruction scheduling
  * permutation" this function previously resisted. */
-void *sub_80305F8(void *selfArg, s32 a, s32 b, s32 c, s32 d)
+void *CreateAirshipFireball(void *selfArg, s32 a, s32 b, s32 c, s32 d)
 {
     u8 *self = selfArg;
     register s32 bReg asm("r6") = b;
@@ -32,7 +32,7 @@ void *sub_80305F8(void *selfArg, s32 a, s32 b, s32 c, s32 d)
 
     InitActorPart(self, a, b, c, dReg);
     *(s32 *)(self + 0x54) = health;
-    *(void **)(self + 0x50) = gStaticData_087E525C;
+    *(void **)(self + 0x50) = gAirshipFireballVtable;
     *(s32 *)(self + 0x58) = bReg;
     *(s32 *)(self + 0x5c) = cReg;
     *(s32 *)(self + 0x64) = 0;

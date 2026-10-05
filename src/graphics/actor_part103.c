@@ -2,9 +2,9 @@
 #include "actor_self.h"
 #include "actor_anim.h"
 
-/* This cluster (`sub_802A018`, `sub_802A110`, `RunActorCategoryFrame`, `sub_802A3AC`,
+/* This cluster (`PolarIsTouchingPlayer`, `JetpackIsTouchingPlayer`, `RunActorCategoryFrame`, `FindShotTarget`,
  * ROM 0x0802A018-0x0802A4D4) sits inside the "actor" chunk starting at
- * `SetupActorVramPool` (0x080291A4). `sub_802A018`/`sub_802A110` are
+ * `SetupActorVramPool` (0x080291A4). `PolarIsTouchingPlayer`/`JetpackIsTouchingPlayer` are
  * near-identical: translate `gActorList` (the player/list-sentinel
  * object)'s and `self`'s own 12-byte `{s16 x,y,z,sizeX,sizeY,sizeZ}` AABB
  * record (`self+0x38`, world-translated by `self+0x1c/0x20/0x24 >>8`) into
@@ -14,7 +14,7 @@
  * test already established throughout this ROM
  * (UpdateYeti/sub_802DD9C/DetonateNearbyPolarNitros/IsTouchingAirship etc - see
  * docs/matching/issue-53-actor-c7a8.md, issue-54-actor-d3a8.md,
- * issue-58-0x08030574-actor.md). `sub_802A3AC` is the same test wrapped in
+ * issue-58-0x08030574-actor.md). `FindShotTarget` is the same test wrapped in
  * an outer walk of the whole `gActorList`-rooted circular list
  * (`self+0x4c`), gated by a `_call_via_r1` per-node visibility check first
  * (same shape as `DetonateNearbyPolarNitros`, actor_part19h.c).
@@ -23,7 +23,7 @@
  * members of one frame struct (the actor_part74.c/actor_part81.c
  * pattern), so every box address is a fresh `add rX, sp, #off`; only
  * the pointer to the middle box stays live across both `MemCopy32`
- * calls (that is the ROM's `r4`, or `r7` once `sub_802A3AC`'s loop
+ * calls (that is the ROM's `r4`, or `r7` once `FindShotTarget`'s loop
  * hoists it). The first actor's position is read into locals before
  * that pointer is taken, which puts its `add r4, sp, #0xc` after the
  * three loads. The old note blamed an unreachable `r7`; the file
@@ -96,7 +96,7 @@ static inline u8 ActorsOverlap(struct actor_self *pl, struct actor_self *self)
     return BoxOverlap(&f.a, t);
 }
 
-s32 sub_802A018(struct actor_self *self)
+s32 PolarIsTouchingPlayer(struct actor_self *self)
 {
     struct actor_self **plAddr = &gActorList;
 
@@ -105,7 +105,7 @@ s32 sub_802A018(struct actor_self *self)
     return ActorsOverlap(*plAddr, self);
 }
 
-s32 sub_802A110(struct actor_self *self)
+s32 JetpackIsTouchingPlayer(struct actor_self *self)
 {
     struct actor_self **plAddr = &gActorList;
 
@@ -224,14 +224,14 @@ s32 RunActorCategoryFrame(void)
     return gUnknown_03001410;
 }
 
-/* `sub_802A3AC`: walks the whole `gActorList`-rooted circular
+/* `FindShotTarget`: walks the whole `gActorList`-rooted circular
  * actor list (`self+0x4c`) looking for the first OTHER node
  * (`self`'s own arg0, held live in `r8` for the whole function) that
  * passes its method-table slot 0x28 query (false = not skipped) and
  * overlaps `self`'s translated 12-byte AABB, via the same
- * `ActorsOverlap` inline as `sub_802A018`. Inside the loop gcc hoists
+ * `ActorsOverlap` inline as `PolarIsTouchingPlayer`. Inside the loop gcc hoists
  * the third box's `sp+0x18` address into `r7` by itself. */
-void *sub_802A3AC(struct actor_self *self)
+void *FindShotTarget(struct actor_self *self)
 {
     struct actor_self *n = ACTOR_NEXT(gActorList);
 

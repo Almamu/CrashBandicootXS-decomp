@@ -113,13 +113,13 @@ struct sprite_frame {
  * category vtable's slot 1 (SpawnActor for type 0), which reads it as
  * `{kind, altKind, bonusKind, pad, x, y, z}` - so a spawn's own depth is
  * the following record's `field_00`. Resolved from
- * `sub_802968C` (counts matching `kind` entries), `SelectActorCategory`
+ * `CountCategoryCrates` (counts matching `kind` entries), `SelectActorCategory`
  * (which stores this pointer directly into `gActorSpawnTable`, indexing
  * with `idx*0x14`), and the `sub_802A504`/`51C`/`540`/`558`/`570`
  * per-index accessor family (see docs/rom_map.md's "The sub_802A5xx
  * siblings pin down spawnTable's runtime shape"). Record 0 doubles
  * as a combined header+entry: `field_04` there is the table's real entry
- * count (read by `sub_802968C`/`SelectActorCategory`), while every
+ * count (read by `CountCategoryCrates`/`SelectActorCategory`), while every
  * record's own `field_00`/`field_04` otherwise serve as the *next*
  * record's threshold/opaque-accessor fields for `sub_802A51C`/
  * `sub_802A504` (`idx*0x14+0x14 == (idx+1)*0x14+0x0`, i.e. those two
@@ -127,7 +127,7 @@ struct sprite_frame {
 struct sub_effect_record {
     s32 field_00;   // 0x00 - selection threshold value (record 0: unused as a threshold, see above)
     s32 field_04;   // 0x04 - record 0 only: the table's real entry count
-    u8 kind;        // 0x08 - the actor kind CreateActor builds; counted by sub_802968C
+    u8 kind;        // 0x08 - the actor kind CreateActor builds; counted by CountCategoryCrates
     u8 altKind;     // 0x09 - the kind used instead when gLevelState+0x8c is set (SpawnActor, sub_802A570)
     u8 bonusKind;   // 0x0a - the kind used instead when gUnknown_03001414 is set (SpawnActor's useBonus, sub_802A570)
     u8 pad_0b;

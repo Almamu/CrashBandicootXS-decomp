@@ -573,7 +573,7 @@ expected relocation-placeholder pattern, not a real mismatch.
 Cut the guarded `LoadGraphicsPackage` block out of the tail of
 `asm/code_3_2_17_188d0.s` entirely (it was the last thing in the file,
 so this was a pure truncation, no mid-file split needed) - the file now
-ends at `sub_801E524`'s trailing literal pool. No `ldscript.txt` changes
+ends at `DestroyLevelSelectCursor`'s trailing literal pool. No `ldscript.txt` changes
 were needed: `graphics_package_1e578.o` already linked immediately
 after `code_3_2_17_188d0.o` and before `graphics_package_1e688.o`, which
 is still the correct order now that the `.c` file unconditionally

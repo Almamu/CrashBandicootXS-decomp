@@ -9,43 +9,43 @@
 
 extern void nullsub_28();
 extern void nullsub_29();
-extern void sub_802FE04();
+extern void JetpackPlaneStateFall();
 extern void sub_802FE1C();
 extern void sub_802FE58();
-extern void sub_802FE78();
-extern void sub_80300D8();
-extern void sub_80300E0();
-extern void sub_803013C();
-extern void sub_8030188();
-extern void sub_80301CC();
-extern void sub_8030334();
-extern void sub_803044C();
+extern void JetpackPlaneStateFly();
+extern void JetpackBomberStateDrop();
+extern void JetpackBomberStateCircle();
+extern void JetpackBomberStateSwingHorizontal();
+extern void JetpackBomberStateBobVertical();
+extern void JetpackBomberStateHome();
+extern void AirshipFireballStateOrbit();
+extern void AirshipFireballStateSpiralIn();
 extern void sub_8030640();
 
 /* Dispatched by UpdateJetpackPlane (actor_part46b.c) and sub_802FEA4
  * (actor_part_2fbf0.c). */
-const struct actor_pmf gStaticData_0817C260[4] = {
-    ACTOR_PMF(sub_802FE78),
+const struct actor_pmf gJetpackPlaneStateFuncs[4] = {
+    ACTOR_PMF(JetpackPlaneStateFly),
     ACTOR_PMF(sub_802FE58),
     ACTOR_PMF(sub_802FE1C),
-    ACTOR_PMF(sub_802FE04),
+    ACTOR_PMF(JetpackPlaneStateFall),
 };
 
 /* Dispatched by UpdateJetpackBomber and sub_8030234 (actor_part_2fbf0.c). */
-const struct actor_pmf gStaticData_0817C280[7] = {
+const struct actor_pmf gJetpackBomberStateFuncs[7] = {
     ACTOR_PMF(nullsub_29),
-    ACTOR_PMF(sub_80301CC),
-    ACTOR_PMF(sub_8030188),
-    ACTOR_PMF(sub_803013C),
-    ACTOR_PMF(sub_80300E0),
-    ACTOR_PMF(sub_80300D8),
+    ACTOR_PMF(JetpackBomberStateHome),
+    ACTOR_PMF(JetpackBomberStateBobVertical),
+    ACTOR_PMF(JetpackBomberStateSwingHorizontal),
+    ACTOR_PMF(JetpackBomberStateCircle),
+    ACTOR_PMF(JetpackBomberStateDrop),
     ACTOR_PMF(nullsub_28),
 };
 
-/* Dispatched by sub_8030574 (actor_part20b.c) and sub_8030648
+/* Dispatched by UpdateAirshipFireball (actor_part20b.c) and sub_8030648
  * (actor_part21b.c). */
-const struct actor_pmf gStaticData_0817C2B8[3] = {
-    ACTOR_PMF(sub_8030334),
-    ACTOR_PMF(sub_803044C),
+const struct actor_pmf gAirshipFireballStateFuncs[3] = {
+    ACTOR_PMF(AirshipFireballStateOrbit),
+    ACTOR_PMF(AirshipFireballStateSpiralIn),
     ACTOR_PMF(sub_8030640),
 };

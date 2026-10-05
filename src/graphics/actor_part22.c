@@ -5,7 +5,7 @@
 
 /* Trivial getter counterpart to `sub_8030640` (actor_part21.c): reads
  * `self+0x68`. */
-u8 sub_80306A4(void *selfArg)
+u8 IsAirshipFireballUnshootable(void *selfArg)
 {
     u8 *self = selfArg;
     return self[0x68];

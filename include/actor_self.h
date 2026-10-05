@@ -48,7 +48,7 @@ struct actor_vtable {
 };
 
 /* A gcc 2.x pointer-to-member-function record, as stored in the
- * per-state dispatch tables (gStaticData_0817C260/0817C280/...):
+ * per-state dispatch tables (gJetpackPlaneStateFuncs/0817C280/...):
  * `index > 0` selects virtual slot `index - 1` of the method table
  * found at `this + vtableOffset`, otherwise `fn` is called directly. */
 struct actor_pmf {

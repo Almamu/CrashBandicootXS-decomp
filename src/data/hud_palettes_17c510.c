@@ -9,7 +9,7 @@
  * slot. */
 const u8 gStaticData_0817C510[] = ">";
 
-/* sub_803487C (actor_part88.c) fills palette-cache slot 0 from the
+/* InitContinuePromptGraphics (actor_part88.c) fills palette-cache slot 0 from the
  * first two arrays and slot 2 from the last two, 16 halfwords of each
  * (slot 2's are mostly 0xFFFF, which isn't a colour). The last
  * halfword of gStaticData_0817C572 is the zero padding before the next

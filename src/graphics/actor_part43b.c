@@ -5,7 +5,7 @@
  * file's header comment and docs/matching/issue-56-0x0802f0dc-actor.md.
  *
  * Computes two `self`-keyframe-driven sizes (byte0*byte1, scaled by
- * 32) via `AllocVramTileBlock`, storing them into the `gUnknown_03001518`
+ * 32) via `AllocVramTileBlock`, storing them into the `gJetpackPlayerTiles`
  * pair, then arms `gUnknown_03001510`/clears `gUnknown_03001514`. Both
  * keyframe-size sub-blocks are literally identical computations,
  * matching the ROM's own duplication.
@@ -26,11 +26,11 @@
  * and the final byte-load pair (`rec[0]`/`rec[1]`) pinned per-block to
  * the exact registers the ROM's `ldrb` pair uses. */
 extern void *AllocVramTileBlock(s32 size);
-extern void *gUnknown_03001518[2];
+extern void *gJetpackPlayerTiles[2];
 extern s32 gUnknown_03001510;
 extern s32 gUnknown_03001514;
 
-void sub_802F338(void *selfArg)
+void AllocJetpackPlayerTiles(void *selfArg)
 {
     struct actor_self *self = selfArg;
 
@@ -54,7 +54,7 @@ void sub_802F338(void *selfArg)
             "lsl %3, %3, #5\n\t"
             : "=r"(temp), "+r"(b1), "+r"(b0), "=r"(size)
         );
-        gUnknown_03001518[0] = AllocVramTileBlock(size);
+        gJetpackPlayerTiles[0] = AllocVramTileBlock(size);
     }
     {
         s32 accum = self->animTime >> 8;
@@ -87,7 +87,7 @@ void sub_802F338(void *selfArg)
                 "lsl %3, %3, #5\n\t"
                 : "=r"(temp), "+r"(b1), "+r"(b0), "=r"(size)
             );
-            gUnknown_03001518[1] = AllocVramTileBlock(size);
+            gJetpackPlayerTiles[1] = AllocVramTileBlock(size);
         }
     }
 

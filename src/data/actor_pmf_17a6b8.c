@@ -21,9 +21,9 @@ extern void sub_802BED8();
 extern void sub_802BF30();
 extern void sub_802BFA0();
 
-/* Per-state handlers of the actor object dispatched by sub_802B364
+/* Per-state handlers of the actor object dispatched by UpdatePolarPlayer
  * (actor_part127.c) and sub_802C208 (actor_part19e.c). */
-const struct actor_pmf gStaticData_0817A6B8[14] = {
+const struct actor_pmf gPolarPlayerStateFuncs[14] = {
     ACTOR_PMF(sub_802B8E8),
     ACTOR_PMF(sub_802B990),
     ACTOR_PMF(sub_802BAD0),

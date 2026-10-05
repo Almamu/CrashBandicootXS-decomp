@@ -4,8 +4,8 @@ All 41 functions of the former `asm/code_3_2_17_188d0_1da38.s` (issue #28,
 25 functions) and `asm/code_3_2_17_188d0_1dfec.s` (issue #29, 16
 functions) are now **real C**, with no NAKED or NON_MATCHING code:
 
-- `src/graphics/actor_part_1da38.c`: `DestroyZoomBg`-`sub_801DF98`
-- `src/graphics/actor_part_1dfec.c`: `sub_801DFEC`-`sub_801E524`
+- `src/graphics/actor_part_1da38.c`: `DestroyZoomBg`-`DestroyLevelSelectEntry`
+- `src/graphics/actor_part_1dfec.c`: `CreateLevelSelectEntry`-`DestroyLevelSelectCursor`
 - `include/level_select_parts.h`: the structs, macros and inlines the two
   files share
 
@@ -41,39 +41,39 @@ screen in `actor_part_1b85c.c` (issue #26):
   a random time. They move with the wobble during their blink window
   (`MoveZoomBgTwinkle`, `RandomizeZoomBgTwinkle`, `TickZoomBgTwinkle`).
 - **`struct level_item`** (0x14 bytes, `level_menu.items[]`): one entry
-  on the page. Its constructor is `sub_801DFEC`, its method table is
-  `gStaticData_087E4BAC`, and its methods are:
-  - +0x08 `sub_801DE30`: bob
-  - +0x10 `sub_801DEA4`: set world/index (indices 0-4 are levels; later
+  on the page. Its constructor is `CreateLevelSelectEntry`, its method table is
+  `gLevelSelectEntryVtable`, and its methods are:
+  - +0x08 `AnimateLevelSelectEntry`: bob
+  - +0x10 `SetLevelSelectEntryLevel`: set world/index (indices 0-4 are levels; later
     indices are the world's extra entry)
-  - +0x18 `sub_801DF70`: position
+  - +0x18 `SetLevelSelectEntryPos`: position
   - +0x20 `nullsub_20`
-  - +0x28 `sub_801DF98`: destructor
+  - +0x28 `DestroyLevelSelectEntry`: destructor
 
   It also has plain accessors (`sub_801DE28`, `sub_801DE2C`,
-  `sub_801DEA0`) and `sub_801DF0C`, which sets the box animation.
+  `sub_801DEA0`) and `SetLevelSelectEntryBox`, which sets the box animation.
 - **`struct cursor_panel`** (`level_menu.panel`, 0x54 bytes): the
   cursor. Its first member is a `struct bresenham_line`
-  (`include/line_util.h`), and `sub_801E43C` takes two steps along it per
-  frame toward the target `sub_801E480` sets. `sub_801E480` also derives
-  the zoom speed from half the major-axis distance. `sub_801E190` runs an
+  (`include/line_util.h`), and `GlideLevelSelectCursor` takes two steps along it per
+  frame toward the target `MoveLevelSelectCursor` sets. `MoveLevelSelectCursor` also derives
+  the zoom speed from half the major-axis distance. `UpdateLevelSelectCursor` runs an
   idle animation cycle (`gStaticData_0816C634`) at random intervals
   (`sub_801E504`), plus the grow-in and shrink-away states 4 and 5. While
-  growing or shrinking, `sub_801E2BC` draws the cursor itself as an affine
+  growing or shrinking, `DrawLevelSelectCursor` draws the cursor itself as an affine
   OBJ. It takes the next matrix slot from the OAM shadow buffer
   (`gOamBuffer->field_08`), writes the ObjAffineSet result
-  (`sub_801E3A4`) into the four entries' affine words, and queues the
+  (`SetLevelSelectCursorMatrix`) into the four entries' affine words, and queues the
   panel's own OAM attributes (`+0x34`) with `AddOamEntry`.
 
 UNUSED: `sub_801E3D4`, `sub_801E3E4` and `sub_801E4E4` have no
 `bl`/`.4byte` reference in `asm/`, `data/` or `src/`, and no Thumb pointer
-anywhere in the ROM. `sub_801E408` contains an inlined copy of
+anywhere in the ROM. `ParkLevelSelectCursor` contains an inlined copy of
 `sub_801E4E4`. All three are matched anyway.
 
 ## Matching notes
 
 - **Division is libgcc's `__divsi3`.** `0x10000 / self->scale` (`DrawZoomBg`,
-  `sub_801E3A4`) and `0xF8 / d` (`sub_801E480`) load the divisor before
+  `SetLevelSelectCursorMatrix`) and `0xF8 / d` (`MoveLevelSelectCursor`) load the divisor before
   the constant. A direct `__divsi3(0x10000, scale)` call does the
   reverse. The libcall resolves to the ROM's own `__divsi3` (at the time
   through a `.set` alias, like the `_call_via_rN` aliases from issue
@@ -95,7 +95,7 @@ anywhere in the ROM. `sub_801E408` contains an inlined copy of
   loads to `ldrb`.
 - **Range `case`s** reproduce the ROM's two-compare range tests:
   `case 0 ... 3:`/`case 4 ... 5:` in `DrawZoomBg`, `case 1 ... 2:` in
-  `SetZoomBgPicture`, and `case 4 ... 5:` with a `default` in `sub_801E2BC`.
+  `SetZoomBgPicture`, and `case 4 ... 5:` with a `default` in `DrawLevelSelectCursor`.
   An `if (s >= 1 && s <= 2)` gives `subs; cmp; bhi`.
 - **Packed bitfield unions.** `union bgcnt` (BG2CNT at `+0x34`) needs
   `__attribute__((packed))`. Without it, this ABI rounds the union to 4
@@ -105,7 +105,7 @@ anywhere in the ROM. `sub_801E408` contains an inlined copy of
   bits), because the ROM inserts it as `idx & 7`, `(idx >> 3) & 1` and
   `(idx >> 4) & 1`. Assigning `idx` directly to the 3-bit field (rather
   than `idx & 7`) gives the ROM's operand order.
-- **Value before address: an inline setter.** `sub_801E2BC` loads each
+- **Value before address: an inline setter.** `DrawLevelSelectCursor` loads each
   matrix word before it computes the destination address. A plain
   `buf->entries[n].affineParam = m[k]` computes the address first.
   `SetAffineParam(gOamBuffer, idx * 4 + k, self->matrix[k])`
@@ -114,14 +114,14 @@ anywhere in the ROM. `sub_801E408` contains an inlined copy of
   `idx * 4` kept in a register. The value parameter must be `u16`: with
   `s16`, the loads become `ldrsh`.
 - **Statement shape for register choice.**
-  - `sub_801DF70`: an inline `SetPosQ8(part, x, y - 3)` loads both
+  - `SetLevelSelectEntryPos`: an inline `SetPosQ8(part, x, y - 3)` loads both
     coordinates before shifting, as the ROM does.
-  - `sub_801DE30`: the frame is `if (selected) SetFrame(f, 1); else
+  - `AnimateLevelSelectEntry`: the frame is `if (selected) SetFrame(f, 1); else
     SetFrame(f, 0);`. The two tails cross-jump into the ROM's shared
     clamp. `selected ? 1 : 0` gives a branchless `neg/orr/lsr`.
-  - `sub_801DFEC`: re-reading `self->frame`/`self->icon` after each
+  - `CreateLevelSelectEntry`: re-reading `self->frame`/`self->icon` after each
     store keeps the part in r0. A local copies it to r1.
-  - `sub_801E190`: using `self->part` directly in every state gives the
+  - `UpdateLevelSelectCursor`: using `self->part` directly in every state gives the
     ROM's `self` in r4 and part in r5. A shared `p` local swaps them.
-  - `sub_801E480`: `(x1 - x0) / 2` goes inside each branch of the
+  - `MoveLevelSelectCursor`: `(x1 - x0) / 2` goes inside each branch of the
     major-axis `if`.

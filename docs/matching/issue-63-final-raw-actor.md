@@ -1,10 +1,10 @@
 # Issue #63's final raw span: 0x0803472C-0x08034AA4 (actor)
 
-> **Update:** `sub_803487C` is now plain C in `actor_part88.c` under old_agbcc, and
+> **Update:** `InitContinuePromptGraphics` is now plain C in `actor_part88.c` under old_agbcc, and
 > the raw asm file below is gone - see [old-agbcc-round5.md](old-agbcc-round5.md).
 
 This closes out the last three raw functions from issue #63's original
-25-function chunk (`InitContinuePrompt`/`sub_803487C`/`ContinuePromptLoop`, previously
+25-function chunk (`InitContinuePrompt`/`InitContinuePromptGraphics`/`ContinuePromptLoop`, previously
 left raw as "out of scope for this pass" - see
 [issue-63-0x08033ef4-actor.md](issue-63-0x08033ef4-actor.md)'s "Left
 raw" section). All three are now understood and parked/matched, leaving
@@ -47,7 +47,7 @@ effect, and a hookup to the shared text icon manager
 The constructor half: allocates and initializes the three BG scratch
 buffers (`sub_8026EDC`/`InitBgSetup`), loads their graphics packages,
 clears palette entry 0, builds the DISPCNT value (mode 0, 1D OBJ
-mapping, BG0/BG1/BG2 enabled), calls `sub_803487C` for the other setup
+mapping, BG0/BG1/BG2 enabled), calls `InitContinuePromptGraphics` for the other setup
 half, then builds the BLDCNT/BLDALPHA alpha-blend value (BG2 -> BG0,
 mode 1, EVA=8/16 EVB=16/16), applies every register, zeroes two more
 fields, and ducks the audio context out via `FadeOutMusic`.
@@ -117,7 +117,7 @@ this one function, so it was deleted outright, with its `ldscript.txt`
 line dropped (the still-matched `src/graphics/actor_part87.o` now
 supplies the real bytes at that link position on its own).
 
-## `sub_803487C` (`src/graphics/actor_part88.c`) - parked, NON_MATCHING
+## `InitContinuePromptGraphics` (`src/graphics/actor_part88.c`) - parked, NON_MATCHING
 
 The other setup half, called from `InitContinuePrompt`: flushes/double-flushes
 the shared VRAM upload cursor (`gObjVramCursor`, `struct
@@ -215,8 +215,8 @@ Issue #63's original 25-function chunk, plus these 3:
 - **Real C, matched:** 15 (14 from before this pass + `InitContinuePrompt`,
   matched in a later follow-up pass - see above)
 - **Parked, NON_MATCHING (real C, not byte-exact):** 8 (7 from before +
-  `sub_803487C`)
-- **NAKED (byte-exact, not real C):** 2 (`sub_8033FE4` from before +
+  `InitContinuePromptGraphics`)
+- **NAKED (byte-exact, not real C):** 2 (`RunHovercraftLauncherState` from before +
   `ContinuePromptLoop`)
 - **Left raw:** 0
 

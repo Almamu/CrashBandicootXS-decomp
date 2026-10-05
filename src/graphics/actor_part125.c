@@ -15,7 +15,7 @@ extern void mem_free(void *ptr);
 extern void InitActorPart(void *self, s32 a, s32 b, s32 c, s32 d);
 extern s32 GetAnimFrameBaseOffset(void *self);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
-extern void sub_802A980(void *self);
+extern void UpdateActorDepth(void *self);
 extern void sub_8032138(void *obj);
 
 extern s32 gAirshipState;
@@ -26,7 +26,7 @@ extern s32 gUnknown_030013C0;
 extern void sub_8031A08(struct actor_self *self);
 extern void *gAudioContext;
 extern u8 gJetpackBalloonVtable[];
-extern struct actor_pmf gStaticData_0817C414[];
+extern struct actor_pmf gJetpackBalloonStateFuncs[];
 
 /* The gJetpackBalloonVtable class built by CreateJetpackBalloon. */
 struct jetpack_balloon {
@@ -79,7 +79,7 @@ void nullsub_31(void)
 {
 }
 
-/* Per-frame update: syncs via `sub_802A980`; once `self` has fallen
+/* Per-frame update: syncs via `UpdateActorDepth`; once `self` has fallen
  * behind the camera (`depth` below `gUnknown_030013C0 - 0x200`) it
  * releases its pending linked object (`sub_8032138`) and destroys
  * itself, as it also does once the state-2 animation has played through
@@ -88,7 +88,7 @@ void nullsub_31(void)
  * the ROM's branch layout shares it between both paths. */
 void UpdateJetpackBalloon(struct jetpack_balloon *self)
 {
-    sub_802A980(self);
+    UpdateActorDepth(self);
     if (self->base.depth < gUnknown_030013C0 - 0x200) {
         if (self->pending != NULL) {
             sub_8032138(self->pending);
@@ -117,7 +117,7 @@ void sub_8031850(void *selfArg)
 /* Damage handler: once hit points run out, marks `self` dying,
  * releases the pending linked object through its method table's `m38`
  * slot, plays the death cue and enters state 2 with animation 1. Same
- * overall shape as the boss cluster's `sub_8030530` (actor_part20.c). */
+ * overall shape as the boss cluster's `DamageAirshipFireball` (actor_part20.c). */
 void DamageJetpackBalloon(struct jetpack_balloon *self, s32 damage)
 {
     if ((self->hp -= damage) > 0) {
@@ -167,7 +167,7 @@ void sub_80318B4(void *selfArg)
  * re-indexed rather than read through a record pointer - that is what
  * gives the ROM's `#4`/`#6` constant scheduling
  * (docs/matching/pmf-dispatch-retry.md). */
-void sub_80318D0(struct actor_self *self, s32 x, s32 y, s32 z)
+void MoveJetpackBalloon(struct actor_self *self, s32 x, s32 y, s32 z)
 {
     s32 base;
 
@@ -190,7 +190,7 @@ void sub_80318D0(struct actor_self *self, s32 x, s32 y, s32 z)
  * then marks `self+0x54 = 2`, sets `self+0x50`'s event/trampoline table
  * to `gJetpackBalloonVtable`, stashes a 6th argument (`e`, also
  * stack-passed) into `self+0x58`, and clears `self+0x5c` (byte). Same
- * shape as the already-matched `sub_80305F8` (actor_part20d.c), except
+ * shape as the already-matched `CreateAirshipFireball` (actor_part20d.c), except
  * with a 6th argument instead of a second stash of `c`. */
 void *CreateJetpackBalloon(void *selfArg, s32 a, s32 b, s32 c, s32 d, s32 e)
 {
@@ -208,7 +208,7 @@ void *CreateJetpackBalloon(void *selfArg, s32 a, s32 b, s32 c, s32 d, s32 e)
 }
 
 /* The shared anim-frame-advance-and-clamp idiom on its own (see
- * `sub_80318D0`). */
+ * `MoveJetpackBalloon`). */
 void sub_8031954(struct actor_self *self)
 {
     s32 base;
@@ -226,7 +226,7 @@ void sub_8031954(struct actor_self *self)
 
 /* Falls under a decaying vertical velocity (`velY` drops by 6 per
  * frame, floored at -0x12C), then the shared anim-frame-advance-and-
- * clamp idiom (see `sub_80318D0`). */
+ * clamp idiom (see `MoveJetpackBalloon`). */
 void sub_80319A0(struct jetpack_balloon *self)
 {
     s32 base;
@@ -251,17 +251,17 @@ void nullsub_32(void)
 {
 }
 
-/* Per-state member-pointer dispatch, `(this->*gStaticData_0817C414
+/* Per-state member-pointer dispatch, `(this->*gJetpackBalloonStateFuncs
  * [this->state])()` (see `ACTOR_PMF_CALL`). */
 void sub_8031A08(struct actor_self *self)
 {
-    ACTOR_PMF_CALL(self, gStaticData_0817C414);
+    ACTOR_PMF_CALL(self, gJetpackBalloonStateFuncs);
 }
 
 /* Trivial `self+0x5c` byte getter. Needs a trailing `asm(".align 2, 0")`
  * - the lone-function-at-end-of-translation-unit padding gap already
- * documented for `sub_80306A4`/`sub_8033CF0` (issues #58/#62). */
-u8 sub_8031A64(void *selfArg)
+ * documented for `IsAirshipFireballUnshootable`/`IsHovercraftCannonUnshootable` (issues #58/#62). */
+u8 IsJetpackBalloonUnshootable(void *selfArg)
 {
     u8 *self = selfArg;
     return self[0x5c];

@@ -661,10 +661,10 @@ s32 sub_802336C(void *self, s32 idx)
     return sub_8024458(idx);
 }
 
-extern s32 sub_8033880(void);
+extern s32 GetHovercraftPartsLeft(void);
 
 /* Dispatches on `self+0xc4`'s "current index" field: index `0x15` fires
- * the actor-part singleton lifetime counter (`sub_8033880`,
+ * the actor-part singleton lifetime counter (`GetHovercraftPartsLeft`,
  * `actor_part28.c`); indices `0x14`/`0x16`/`0x17` instead compute
  * `3 - (*(self+0x1c8))->0x10` (the fourth word-field `sub_8023318`
  * above sets, apparently itself a pointer to a small record); anything
@@ -675,7 +675,7 @@ s32 sub_8023378(struct level_state *self)
 
     switch (idx) {
     case 0x15:
-        return sub_8033880();
+        return GetHovercraftPartsLeft();
     case 0x14: {
         struct level_state_1c8 *p = self->unk_1c8;
         return 3 - p->unk_10;

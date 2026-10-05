@@ -558,7 +558,7 @@ asm(".align 2, 0");
  * sub_800039C/strlen in docs/decomp_dev.md - see the matching split
  * entry in expected/corrections.txt for this address). A trivial
  * "return true" stub, plausibly a vtable slot default. */
-s32 sub_803B54C(void)
+s32 IsJetpackCheckpointTextUnshootable(void)
 {
     return 1;
 }
@@ -566,7 +566,7 @@ s32 sub_803B54C(void)
 asm(".align 2, 0");
 
 /* Another hidden function with no `thumb_func_start` label of its own
- * (see `sub_803B54C` above) - the standard "kind" teardown handler
+ * (see `IsJetpackCheckpointTextUnshootable` above) - the standard "kind" teardown handler
  * shape already matched 20 times over in this file (`sub_803B0C4`
  * onward) and again below (`DestroyJetpackExplosion` onward): set `self->field_50`
  * to the shared "dead" table, unlink `self` from its `+0x48`/`+0x4c`
@@ -583,7 +583,7 @@ void DestroyJetpackCheckpointText(struct linked_node *self, u32 flags)
 
 asm(".align 2, 0");
 
-/* A third hidden, unlabelled function (see `sub_803B54C` above) -
+/* A third hidden, unlabelled function (see `IsJetpackCheckpointTextUnshootable` above) -
  * `UpdatePolarCheckpointText`'s near-twin: advances `self+0x24` (a Q8 fixed-point
  * accumulator, `+170`/256 per call this time instead of `-0x180`/256)
  * and either fires the `+0x50` trampoline record if `self+0x12` is set,
@@ -606,11 +606,11 @@ void UpdateJetpackExplosion(void *selfArg)
 
 asm(".align 2, 0");
 
-/* Byte-identical to sub_803B54C above (see its doc comment for the
+/* Byte-identical to IsJetpackCheckpointTextUnshootable above (see its doc comment for the
  * "no direct reference found, but grep-invisible callers are normal for
  * this vtable-dispatched family" caveat), and hidden the same way - see
  * this address's own split entry in expected/corrections.txt. */
-s32 sub_803B5AC(void)
+s32 IsJetpackExplosionUnshootable(void)
 {
     return 1;
 }
@@ -636,7 +636,7 @@ struct actor_self_54 {
 };
 
 /* A fourth hidden function with no thumb_func_start of its own (see
- * sub_803B54C above, including its "no direct reference found" caveat)
+ * IsJetpackCheckpointTextUnshootable above, including its "no direct reference found" caveat)
  * - a plain self->unk_54 getter. */
 s32 GetActorHp(struct actor_self_54 *self)
 {
@@ -645,7 +645,7 @@ s32 GetActorHp(struct actor_self_54 *self)
 
 asm(".align 2, 0");
 
-/* A fifth hidden function (see sub_803B54C above) - a genuinely empty
+/* A fifth hidden function (see IsJetpackCheckpointTextUnshootable above) - a genuinely empty
  * stub, same shape as nullsub_16 (src/graphics/actor_part39.c). */
 void nullsub_44(void *self)
 {
@@ -653,9 +653,9 @@ void nullsub_44(void *self)
 
 asm(".align 2, 0");
 
-/* A sixth hidden function (see sub_803B54C above) - a trivial "return
+/* A sixth hidden function (see IsJetpackCheckpointTextUnshootable above) - a trivial "return
  * 0" stub. */
-s32 sub_803B5E4(void)
+s32 IsJetpackPlayerUnshootable(void)
 {
     return 0;
 }
@@ -710,7 +710,7 @@ void DestroyJetpackCannonball(struct linked_node *self, u32 flags)
 
 asm(".align 2, 0");
 
-void sub_803B698(struct linked_node *self, u32 flags)
+void DestroyAirshipFireball(struct linked_node *self, u32 flags)
 {
     self->field_50 = gActorVtable;
     self->next->prev = self->prev;
@@ -806,7 +806,7 @@ void DestroyJetpackRing(struct linked_node *self, u32 flags)
 
 asm(".align 2, 0");
 
-void sub_803B7D4(struct linked_node *self, u32 flags)
+void DestroyHovercraftFireball(struct linked_node *self, u32 flags)
 {
     self->field_50 = gActorVtable;
     self->next->prev = self->prev;
@@ -842,7 +842,7 @@ void DestroyHovercraftLauncher(struct linked_node *self, u32 flags)
 
 asm(".align 2, 0");
 
-void sub_803B858(struct linked_node *self, u32 flags)
+void DestroyHovercraftSideGun(struct linked_node *self, u32 flags)
 {
     self->field_50 = gActorVtable;
     self->next->prev = self->prev;
@@ -854,7 +854,7 @@ void sub_803B858(struct linked_node *self, u32 flags)
 
 asm(".align 2, 0");
 
-void sub_803B884(struct linked_node *self, u32 flags)
+void DestroyHovercraftCannonFlash(struct linked_node *self, u32 flags)
 {
     self->field_50 = gActorVtable;
     self->next->prev = self->prev;

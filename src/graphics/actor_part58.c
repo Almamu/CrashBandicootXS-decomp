@@ -24,17 +24,17 @@ extern s32 SetMaskLevel(struct level_state *arg0, s32 arg1);
 extern void sub_802D204(void *self, s32 arg1);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void *InitActorPart(void *self, void *part, s32 b, s32 c, s32 d);
-extern u8 sub_802A6EC(void *self);
+extern u8 IsTouchingPlayer(void *self);
 extern void UpdateActor(void *self);
 extern void *gActorList;
 extern void sub_802BFD4(void *arg0);
 extern void sub_802C0BC(void *selfArg, s32 arg1);
 extern u8 sub_802DD9C(void *self);
 extern void AddBrokenCrate(struct level_state *self);
-extern s32 sub_8029748(s32 arg0);
+extern s32 SetActorCheckpoint(s32 arg0);
 extern void CreatePolarCheckpointText(s32 arg0, s32 arg1, s32 arg2);
 extern s32 _call_via_r2(void *arg0, s32 arg1, void *fn);
-extern s32 sub_802973C(void);
+extern s32 GetActorCheckpoint(void);
 
 extern u8 gPolarAkuAkuVtable[];
 extern u8 gStaticData_087E5074[];
@@ -54,7 +54,7 @@ struct actor_once {
 /* Passes its argument through to `SetMaskLevel(gLevelState, 0)`,
  * then `sub_802D204(self, 0)` - a trivial reset pair on a different,
  * `gPolarAkuAku`-rooted object family, unrelated to this file's
- * `self` (see `actor_part19.c`'s `sub_802C018`, which calls this with
+ * `self` (see `actor_part19.c`'s `CatchPolarPlayer`, which calls this with
  * `gPolarAkuAku`). */
 void sub_802D490(void *self)
 {
@@ -129,7 +129,7 @@ s32 sub_802D590(void)
 }
 
 /* Once `self`'s frame counter (`+0x44`) exceeds 5, latches the one-shot
- * flag at `+0x2c`. Then, on `sub_802A6EC`'s trampoline-fire edge, calls
+ * flag at `+0x2c`. Then, on `IsTouchingPlayer`'s trampoline-fire edge, calls
  * `sub_802BFD4(gActorList)` (the player object), and always
  * advances via `UpdateActor`. */
 void sub_802D59C(void *selfArg)
@@ -140,7 +140,7 @@ void sub_802D59C(void *selfArg)
         self->unk_2C[0] = 1;
     }
 
-    if (sub_802A6EC(self)) {
+    if (IsTouchingPlayer(self)) {
         sub_802BFD4(gActorList);
     }
 
@@ -159,7 +159,7 @@ void *sub_802D5D4(struct actor_self *self, void *part, s32 b, s32 c, s32 d)
     return self;
 }
 
-/* On `sub_802A6EC`'s trampoline-fire edge, forwards `self+0x1c` to
+/* On `IsTouchingPlayer`'s trampoline-fire edge, forwards `self+0x1c` to
  * `sub_802C0BC(gActorList, ...)` (the player object) and, the
  * first time through (guarded by a one-shot byte flag at `self+0x54`),
  * plays a sound. Always advances via `UpdateActor`. */
@@ -167,7 +167,7 @@ void sub_802D600(void *selfArg)
 {
     register struct actor_once *self asm("r4") = selfArg;
 
-    if (sub_802A6EC(self)) {
+    if (IsTouchingPlayer(self)) {
         sub_802C0BC(gActorList, self->base.x);
         {
             u8 *flag = &self->once;
@@ -227,9 +227,9 @@ void *sub_802D648(struct actor_once *self, void *part, s32 posY, s32 c, s32 d)
 }
 
 /* State machine: while `self+0xc` ("kind") is still 0, first checks
- * `sub_802A6EC`'s trampoline-fire edge (transitions to kind 1, seeds
+ * `IsTouchingPlayer`'s trampoline-fire edge (transitions to kind 1, seeds
  * anim from the part table's `+0xc` record, plays a sound, refreshes
- * the player via `AddBrokenCrate`, and fires `sub_8029748`/`CreatePolarCheckpointText`
+ * the player via `AddBrokenCrate`, and fires `SetActorCheckpoint`/`CreatePolarCheckpointText`
  * position-tied calls), then - only if still kind 0 - checks
  * `sub_802DD9C`'s AABB-overlap test (transitions to kind 3, seeds anim
  * from the `+0x24` record, arms `self+0x18`, plays a different sound,
@@ -243,7 +243,7 @@ void UpdatePolarCheckpointCrate(void *selfArg)
     s32 kind = self->animIndex;
 
     if (kind == 0) {
-        if (sub_802A6EC(self)) {
+        if (IsTouchingPlayer(self)) {
             self->animIndex = 1;
             {
                 struct anim_frame_record *table = self->anims;
@@ -257,7 +257,7 @@ void UpdatePolarCheckpointCrate(void *selfArg)
 
             PlaySfx(gAudioContext, 0x17, 0x100);
             AddBrokenCrate(gLevelState);
-            sub_8029748(self->z);
+            SetActorCheckpoint(self->z);
             CreatePolarCheckpointText(self->x, self->y - 0xF00, self->z);
         }
 
@@ -295,7 +295,7 @@ void UpdatePolarCheckpointCrate(void *selfArg)
 }
 
 /* Constructor: `InitActorPart` passthrough installing
- * `gPolarCheckpointCrateVtable`, then - only if `sub_802973C()` equals the
+ * `gPolarCheckpointCrateVtable`, then - only if `GetActorCheckpoint()` equals the
  * caller's own `d` argument - transitions to kind 2 (anim from the part
  * table's `+0x18` record, accumulator/flag/counter all reset) and plays
  * a sound. */
@@ -304,7 +304,7 @@ void *CreatePolarCheckpointCrate(struct actor_self *self, void *part, s32 b, s32
     InitActorPart(self, part, b, c, d);
     self->vtable = (struct actor_vtable *)gPolarCheckpointCrateVtable;
 
-    if (sub_802973C() == d) {
+    if (GetActorCheckpoint() == d) {
         self->animIndex = 2;
         {
             struct anim_frame_record *table = self->anims;

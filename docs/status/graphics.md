@@ -107,20 +107,20 @@ and [graphics_loading.md](./graphics_loading.md).
   (`sub_8018948` is UNUSED; `sub_801961C` base-constructs through
   `CreatePlatformMover`), a part-gone bitmap setter, the squares-table
   constructor `CreateTiny`, the two-part effect (state machine
-  `sub_8018A30`, child spawners `sub_8018BDC`/`sub_8018CB0`), the "mover"
+  `UpdateCortexBoss`, child spawners `sub_8018BDC`/`sub_8018CB0`), the "mover"
   object (`sub_8018D70` spawner, `sub_8018E4C` per-frame update,
   `sub_8019094` state setter, `sub_8019214` hit-effect spawner), the part
   hit test `sub_8019324`, and two more per-frame methods (`sub_8019464`,
   `sub_80194E0`). Built with `tools/agbcc/bin/old_agbcc`, under which
-  `sub_8018A30` and `sub_801961C` (NAKED under agbcc) closed. See
+  `UpdateCortexBoss` and `sub_801961C` (NAKED under agbcc) closed. See
   [docs/matching/issue-23-graphics.md](../matching/issue-23-graphics.md)
   and [docs/matching/old-agbcc-retry.md](../matching/old-agbcc-retry.md).
 - `src/graphics/actor_part_1b85c.c` (new file - GitHub issue #26):
   `sub_801B85C`-`sub_801B980` (the player-follow child `sub_8017600`
   spawns), `sub_801B984`-`sub_801BAD0` (a 0x78-byte sprite subclass),
   `RunLevelSelect` (the modal level-select screen), `DestroyLevelSelect`,
-  `UpdateLevelSelect`, `sub_801C2B0`, `sub_801C364`, `sub_801C3E8`,
-  `sub_801C51C`, `sub_801CCF8`, `LevelSelectCursorLeft`, `LevelSelectCursorRight` (its
+  `UpdateLevelSelect`, `UpdateLevelSelectPageArrows`, `DrawLevelSelectRecord`, `DrawLevelSelectTime`,
+  `DrawLevelSelect`, `SettleLevelSelectPage`, `LevelSelectCursorLeft`, `LevelSelectCursorRight` (its
   destructor, per-frame update/draw, record panel and cursor moves) -
   22 of the chunk's 25 functions as plain C; the other three are parked
   below. Built with `tools/agbcc/bin/old_agbcc`. See
@@ -131,7 +131,7 @@ and [graphics_loading.md](./graphics_loading.md).
   screen: the page-turn animation `LevelSelectTurnPage` and its Down/Up handlers
   `LevelSelectPrevWorld`/`LevelSelectNextWorld`, the A/Start exit loops `LevelSelectConfirm`/
   `LevelSelectExit`, the page-entry refresh (`sub_801D5CC`/`sub_801D638`/
-  `sub_801D668`), the BG1 page strip (`sub_801D77C`-`sub_801D7F8`) and
+  `sub_801D668`), the BG1 page strip (`sub_801D77C`-`CreateLevelSelectPageBg`) and
   the BG2 icon layer's constructor `InitZoomBg`. `sub_801D698` is
   UNUSED. Compiled with `old_agbcc`. See
   [docs/matching/issue-27-level-select-pages.md](../matching/issue-27-level-select-pages.md).
@@ -161,12 +161,12 @@ and [graphics_loading.md](./graphics_loading.md).
   [docs/matching/issue-25-level-objects.md](../matching/issue-25-level-objects.md).
 - GitHub issues #28/#29 (0x0801DA38-0x0801E578, shared structs in
   `include/level_select_parts.h`, both files built with `old_agbcc`):
-  `src/graphics/actor_part_1da38.c` (`DestroyZoomBg`-`sub_801DF98`, all
+  `src/graphics/actor_part_1da38.c` (`DestroyZoomBg`-`DestroyLevelSelectEntry`, all
   25) - the level-select screen's zooming BG2 picture (`struct
   zoom_bg`: destructor, state machine, affine draw/commit, state
   queries, twinkle sprites) and the level entry's methods (`struct
-  level_item`, method table `gStaticData_087E4BAC`);
-  `src/graphics/actor_part_1dfec.c` (`sub_801DFEC`-`sub_801E524`, all
+  level_item`, method table `gLevelSelectEntryVtable`);
+  `src/graphics/actor_part_1dfec.c` (`CreateLevelSelectEntry`-`DestroyLevelSelectCursor`, all
   16) - the level entry's constructor and the cursor panel (`struct
   cursor_panel`: Bresenham glide, idle animation cycle, affine OBJ
   grow/shrink). `sub_801E3D4`, `sub_801E3E4` and `sub_801E4E4` are
@@ -180,7 +180,7 @@ and [graphics_loading.md](./graphics_loading.md).
   level-select constructor) promoted from NAKED to real C, both under
   old_agbcc. See
   [docs/matching/issue-24-26-12-naked-retry.md](../matching/issue-24-26-12-naked-retry.md).
-- **Third near-miss sweep:** `sub_801C608` (`actor_part_1b85c.c`,
+- **Third near-miss sweep:** `LoadLevelSelectRecord` (`actor_part_1b85c.c`,
   level-select record loader) promoted from NAKED to real C under
   old_agbcc: the ROM's stack-spilled second copy of the record pointer
   is a separate local that `info` copies. See

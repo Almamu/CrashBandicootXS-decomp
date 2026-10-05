@@ -21,7 +21,7 @@
  * plays a sound, and - gated by a lock byte
  * (`gLevelState+0x8c`) and a spawn-budget counter
  * (`gUnknown_0300157C`) - spawns a homing/seek effect via
- * `sub_802F4AC`/`CreateJetpackCheckpointText`.
+ * `SetJetpackCheckpoint`/`CreateJetpackCheckpointText`.
  *
  * Matching notes: the box table is `const` (so its jitter ranges stay
  * CSE'd in registers across the spawn calls), the palette base pointer
@@ -51,7 +51,7 @@ extern u8 *gLevelState;
 extern s32 gUnknown_0300157C;
 extern void *gActorList;
 extern u8 gUnknown_03001506;
-extern s32 sub_802F4AC(void *arg0);
+extern s32 SetJetpackCheckpoint(void *arg0);
 extern void CreateJetpackCheckpointText(void);
 
 static inline void BossSetState(s32 st, s32 idx)
@@ -111,7 +111,7 @@ void AirshipStateExplode(void)
         if (gLevelState[0x8c] == 0 && gUnknown_0300157C <= 1) {
             void **pl = &gActorList;
             if (gUnknown_03001506 == 0) {
-                sub_802F4AC(*pl);
+                SetJetpackCheckpoint(*pl);
                 CreateJetpackCheckpointText();
                 gUnknown_0300157C++;
             }

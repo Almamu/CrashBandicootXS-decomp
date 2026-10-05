@@ -184,7 +184,7 @@ void sub_802A5C4(void)
  * r5 as a second step (visible in the extra `adds r5, r0, #0`) -
  * anchored with inline asm for that exact three-instruction prologue,
  * per docs/workflow.md step 3. */
-void sub_802A5E4(void)
+void DestroyAllActors(void)
 {
     register void **headAddr asm("r5");
     register void *head asm("r1");

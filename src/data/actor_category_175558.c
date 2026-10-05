@@ -9,12 +9,12 @@
  */
 
 extern void ConstructAnimTableState();
-extern void sub_802A018();
-extern void sub_802A110();
+extern void PolarIsTouchingPlayer();
+extern void JetpackIsTouchingPlayer();
 extern void sub_802A674();
 extern void sub_802A688();
-extern void sub_802A69C();
-extern void sub_802A6B0();
+extern void JetpackReloadPlayerTiles();
+extern void PolarReloadPlayerTiles();
 extern void sub_802A6C4();
 extern void sub_802A6D8();
 extern void SpawnActor();
@@ -24,7 +24,7 @@ extern void LoadYetiGraphics();
 extern void DestroyYeti();
 extern void CreateYeti();
 extern void SpawnJetpackActor();
-extern void sub_802E710();
+extern void CreateJetpackPlayer();
 extern void CreateAirship();
 extern void UpdateAirship();
 extern void UpdateAirshipBg2();
@@ -179,13 +179,13 @@ const struct category_vtable gActorCategoryVtables[3] = {
         LoadYetiGraphics,
         (void (*)(void))0xffffffef,
         (void (*)(void))0xffffffd1,
-        sub_802A018,
+        PolarIsTouchingPlayer,
         sub_802A6D8,
-        sub_802A6B0,
+        PolarReloadPlayerTiles,
         sub_802A688,
     } },
     /* 1 */ { {
-        sub_802E710,
+        CreateJetpackPlayer,
         SpawnJetpackActor,
         CreateAirship,
         UpdateAirship,
@@ -194,13 +194,13 @@ const struct category_vtable gActorCategoryVtables[3] = {
         LoadAirshipGraphics,
         (void (*)(void))0xa9,
         (void (*)(void))0x1c,
-        sub_802A110,
+        JetpackIsTouchingPlayer,
         sub_802A6C4,
-        sub_802A69C,
+        JetpackReloadPlayerTiles,
         sub_802A674,
     } },
     /* 2 */ { {
-        sub_802E710,
+        CreateJetpackPlayer,
         SpawnJetpackActor,
         CreateHovercraft,
         UpdateHovercraft,
@@ -209,9 +209,9 @@ const struct category_vtable gActorCategoryVtables[3] = {
         LoadHovercraftGraphics,
         (void (*)(void))0xa9,
         (void (*)(void))0x1c,
-        sub_802A110,
+        JetpackIsTouchingPlayer,
         sub_802A6C4,
-        sub_802A69C,
+        JetpackReloadPlayerTiles,
         sub_802A674,
     } },
 };

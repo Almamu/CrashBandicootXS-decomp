@@ -24,8 +24,8 @@ extern void CollectWumpa(void *self);
 /* Same "award `fruit` fruit via `CollectWumpa(gLevelState)`,
  * retarget the vtable to the 'dead' state, unlink from the circular
  * `+0x48`/`+0x4c` list, free on `arg1 & 1`" teardown shape as
- * `sub_802C19C` above, but with a plain iteration count instead of a
- * `gUnknown_03001488` global drain. */
+ * `DestroyPolarPlayer` above, but with a plain iteration count instead of a
+ * `gPolarQueuedWumpa` global drain. */
 void DestroyPolarCollectedWumpa(void *selfArg, u32 arg1)
 {
     register u8 *self asm("r4") = selfArg;

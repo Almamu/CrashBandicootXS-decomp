@@ -4,11 +4,11 @@
 /* Same "self" object family as actor_part28.c - see that file's header
  * comment and docs/matching/issue-62-0x08033804-actor.md. */
 
-extern s32 sub_8033900(void);
-extern s32 sub_80338F4(void);
-extern s32 sub_80338E8(void);
+extern s32 GetHovercraftX(void);
+extern s32 GetHovercraftY(void);
+extern s32 GetHovercraftZ(void);
 extern struct spawn_timing_table *sub_80338C4(void);
-extern s32 sub_80338D0(void);
+extern s32 GetHovercraftState(void);
 extern s32 RandRange(s32 arg0);
 extern void CreateJetpackActor(s32 kind, s32 x, s32 y, s32 z, s32 arg4);
 extern struct actor_self *gActorList;
@@ -43,28 +43,28 @@ struct spawner {
     u8 dead;            // 0x6C
 };
 
-/* sub_8033CF8: `sub_80339DC`'s sibling. Sets `self`'s position fields
+/* HovercraftLauncherStateLaunch: `HovercraftCannonStateFire`'s sibling. Sets `self`'s position fields
  * from the singleton's own position plus a different fixed offset,
  * and - while `cooldown` is zero - measures `self`'s
  * distance to the player the same way; in range, it picks one of three
  * spawn "kinds" (5/6/8, via `RandRange(3)`) and calls `CreateJetpackActor`
  * at `self`'s position, then cycles `count` against a threshold
  * from `sub_80338C4`'s table. Once `base.depth` passes `0x4B00` and the
- * singleton's own "kind" (`sub_80338D0`) is 3, resets `self` back to
+ * singleton's own "kind" (`GetHovercraftState`) is 3, resets `self` back to
  * its idle animation state.
  *
- * Matched in a later pass with the same shape as `sub_80339DC` (see
+ * Matched in a later pass with the same shape as `HovercraftCannonStateFire` (see
  * docs/matching/issue-62-0x08033804-actor.md, "Later pass: strag2 retry"): no
  * register pins at all - the old `r7` blocker came from a wrong
  * source shape, not from a register the allocator couldn't reach. */
-void sub_8033CF8(struct spawner *self)
+void HovercraftLauncherStateLaunch(struct spawner *self)
 {
     s32 slot;
     s32 next;
 
-    self->base.x = sub_8033900() + 0x1E00;
-    self->base.y = sub_80338F4() - 0x3000;
-    self->base.z = sub_80338E8() - 0x100;
+    self->base.x = GetHovercraftX() + 0x1E00;
+    self->base.y = GetHovercraftY() - 0x3000;
+    self->base.z = GetHovercraftZ() - 0x100;
 
     slot = self->cooldown;
     if (slot == 0) {
@@ -115,7 +115,7 @@ void sub_8033CF8(struct spawner *self)
         self->cooldown = next;
     }
 
-    if (self->base.depth > 0x4B00 && sub_80338D0() == 3) {
+    if (self->base.depth > 0x4B00 && GetHovercraftState() == 3) {
         s32 zero32;
         s32 state;
 

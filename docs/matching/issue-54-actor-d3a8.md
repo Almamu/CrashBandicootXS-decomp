@@ -32,7 +32,7 @@ families live in this chunk:
   setup (`LoadYetiGraphics`/`sub_802E058`) plus a palette-gradient cursor
   (`UpdateYetiPalette`/`UpdateYetiBg2`). `sub_802DB2C`/`sub_802DCC0` are two of
   `gYetiStateFuncs`'s four vtable slots operating on this object
-  (the other two, `sub_802AB08`-family, were already matched in issue
+  (the other two, `RestoreActorPaletteCycle`-family, were already matched in issue
   #50 under a different chunk).
 
 The raw source file `asm/code_3_2_20_28568_c99c.s` (spanning far beyond
@@ -60,14 +60,14 @@ function's address (`..._d3a8.s`, `..._d7b0.s`, `..._dd9c.s`,
   `sub_802D5D4` is a plain passthrough clearing the `+0x2c` one-shot
   flag; `sub_802D648` classifies `posY>>8` into a 3-way "kind" selecting
   which anim record seeds `self+0x10`/`0x12`; `CreatePolarCheckpointCrate` only
-  transitions to kind 2 when `sub_802973C()` matches its own `d`
+  transitions to kind 2 when `GetActorCheckpoint()` matches its own `d`
   argument.
 - **`sub_802D57C`/`sub_802D590`** (`src/graphics/actor_part58.c`) -
   trivial: a pass-through-second-argument forwarder to `SetMaskLevel`,
   and a getter for `gLevelState`'s `+0x78` counter.
 - **`sub_802D59C`/`sub_802D600`/`UpdatePolarCheckpointCrate`**
   (`src/graphics/actor_part58.c`) - small state-machine steps gated on
-  `sub_802A6EC`'s trampoline-fire edge and/or `sub_802DD9C`'s AABB
+  `IsTouchingPlayer`'s trampoline-fire edge and/or `sub_802DD9C`'s AABB
   overlap test, each ending in `UpdateActor`'s frame-advance.
   `UpdatePolarCheckpointCrate` needed a fresh, separately-pinned zero register
   (`register u8 zero asm("r1") = 0;`) for its `self[0x12] = 0` stores -

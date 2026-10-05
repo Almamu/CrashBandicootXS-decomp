@@ -36,7 +36,7 @@ Tried this pass, beyond what's already logged in `docs/matching.md`:
   - no net change from the prior pass's parked state.
 
 This is the same class of gap as `FadePaletteToBlack`'s loop-invariant-hoisting
-entry and `sub_80305F8`'s stack-argument-fetch-ordering entry elsewhere
+entry and `CreateAirshipFireball`'s stack-argument-fetch-ordering entry elsewhere
 in this project (see `docs/matching/issue-58-0x08030334-actor.md`) -
 gcc 2.9's own instruction scheduler picks a fixed policy for *when* to
 materialize a cached register that doesn't appear to be steerable from
@@ -139,7 +139,7 @@ Retried this pass, none of which closed it:
   not more - moving further from a match, not closer.
 
 Both gaps are the same general class already cataloged elsewhere in
-this project (`FadePaletteToBlack`, `sub_8030574`/`sub_8030648` in
+this project (`FadePaletteToBlack`, `UpdateAirshipFireball`/`sub_8030648` in
 `docs/matching/issue-58-0x08030334-actor.md`): register-allocation and
 CSE decisions this specific gcc 2.9 build makes internally, that don't
 appear to be reachable from C source no matter how the expressions or

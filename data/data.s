@@ -100,7 +100,7 @@ gSfxTable:
 
 @ gStaticData_08178F80..0x0817A6B8 (categories 0-2 family data): src/data/anim_family_178f80.c
 
-@ gStaticData_0817A6B8: src/data/actor_pmf_17a6b8.c
+@ gPolarPlayerStateFuncs: src/data/actor_pmf_17a6b8.c
 
 @ gStaticData_0817A728..gStaticData_0817A7F8: src/data/actor_tables_17a728.c
 
@@ -112,23 +112,23 @@ gSfxTable:
 
 @ gYetiPalette..0x0817C1C0 (categories 3-6 family data): src/data/anim_family_17aa6c.c
 
-@ gStaticData_0817C1C0: src/data/actor_pmf_17c1c0.c
+@ gJetpackPlayerStateFuncs: src/data/actor_pmf_17c1c0.c
 
 @ gStaticData_0817C200: src/data/palette_strip_17c200.c
 
-@ gStaticData_0817C260..gStaticData_0817C2B8: src/data/actor_pmf_17c260.c
+@ gJetpackPlaneStateFuncs..gAirshipFireballStateFuncs: src/data/actor_pmf_17c260.c
 
 @ gStaticData_0817C2D0..gStaticData_0817C3E4: src/data/weapon_kind_17c2d0.c
 
-@ gAirshipStateFuncs..gStaticData_0817C42C: src/data/actor_state_17c3fc.c
+@ gAirshipStateFuncs..gJetpackBalloonCrateStateFuncs: src/data/actor_state_17c3fc.c
 
 @ gStaticData_0817C444: src/data/actor_box_17c444.c
 
-@ gStaticData_0817C450: src/data/actor_pmf_17c450.c
+@ gHovercraftFireballStateFuncs: src/data/actor_pmf_17c450.c
 
 @ gStaticData_0817C460..gStaticData_0817C4BC: src/data/singleton_kind_17c460.c
 
-@ gHovercraftStateFuncs..gStaticData_0817C4F8: src/data/actor_state_17c4c8.c
+@ gHovercraftStateFuncs..gHovercraftLauncherStateFuncs: src/data/actor_state_17c4c8.c
 
 @ gStaticData_0817C510..gStaticData_0817C572: src/data/hud_palettes_17c510.c
 

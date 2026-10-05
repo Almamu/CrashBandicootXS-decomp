@@ -24,14 +24,14 @@ end); the pins and barriers described under "Matching notes" are gone.
 | 0x14/0x15 | current animation pair per channel (`animA`/`animB`) |
 | 0x16 | up/down latch (0 none, 1 up, 2 down) |
 | 0x17/0x18 | channel dirty flags; 0x19/0x1A alternate-method flags |
-| 0x1C | child object (0x80 bytes, `sub_801B940`), its `+0x78` a speed-like value |
+| 0x1C | child object (0x80 bytes, `CreateCameraLead`), its `+0x78` a speed-like value |
 | 0x20/0x24 | a left-hold flag and timer |
 
 Found by scanning the ROM for Thumb pointers: the method table holds
 `sub_8017650` (+0x0C, per-frame update), `sub_80179D4` (+0x14),
-`sub_80179E8` (+0x1C, set target) and `sub_80179EC` (+0x4C, destroy); the
+`AttachInputCtrl` (+0x1C, set target) and `DestroyInputCtrl` (+0x4C, destroy); the
 slots this code calls through (+0x24 ... +0x54) are all base-class
-`sub_800B6xx`/`sub_800B8xx` functions, and `sub_8017A00` (constructor,
+`sub_800B6xx`/`sub_800B8xx` functions, and `CreateInputCtrl` (constructor,
 called from `game_loop39.c`) chains to the base constructor `sub_800B8C8`.
 
 `sub_8017650` reads the held keys (`gKeys`): up/down pick

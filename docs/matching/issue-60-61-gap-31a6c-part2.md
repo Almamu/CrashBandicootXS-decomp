@@ -69,7 +69,7 @@ have entries for this pass, cross-referencing this document).
 
 ### A confirmed structural tie
 
-`sub_8033048`/`DrawHovercraftMap`/`UpdateHovercraft`/`UpdateHovercraftBg2`/`LoadHovercraftGraphics`
+`HovercraftStateFall`/`DrawHovercraftMap`/`UpdateHovercraft`/`UpdateHovercraftBg2`/`LoadHovercraftGraphics`
 confirm the singleton is a **second, independent "unique object"**
 running machinery structurally parallel to the boss cluster (issue #58)
 end to end: a patrol/oscillation driver (mirrors `AirshipStateFireballs`), a
@@ -91,7 +91,7 @@ the boss's (`gAirshipPalette`/`gUnknown_03001580`).
 actual ROM branch condition (`bgt` skips the clamp, i.e. the clamp only
 fires when the decaying value has dropped to `0x13` or below) - it's a
 **floor**, consistent with the "decays... floored at 0x14" reading
-already used to describe `sub_8033048`'s own oscillator. Fixed to
+already used to describe `HovercraftStateFall`'s own oscillator. Fixed to
 `if (delta <= 0x13) delta = 0x14;` before this was recorded as matched.
 
 ## Compiler-quirk catalog for this pass
@@ -133,7 +133,7 @@ real `.c` file and linking:
   copy is scheduled second), empirically confirmed here by test-
   compiling both variants. Transcribed NAKED rather than ship code that
   corrupts the caller's `r7`.
-- **`sub_8032910`/`sub_8032A24`'s shared state/anim-frame-reset tail** -
+- **`DamageHovercraftFireball`/`sub_8032A24`'s shared state/anim-frame-reset tail** -
   needed the same "nested register-pin block" idiom already documented
   for `sub_80318B4` (issue #59): a `one` (r0) and `zero` (r2) constant
   each declared in their own nested block, matching the ROM's exact
@@ -157,7 +157,7 @@ real `.c` file and linking:
   expressions restored the ROM's left-to-right evaluation order
   (`table+0x20` read, then the `player+offset` add, then `table+0x24`
   read last, immediately before the call).
-- **`sub_8032AF8`'s counter-reload and XOR-toggle** - this compiler
+- **`UpdateHovercraftHitFlash`'s counter-reload and XOR-toggle** - this compiler
   keeps the just-incremented counter value live in its own register and
   reuses it for the following `& 3` check, where the ROM's own build
   re-reads the counter from memory instead; forced via a genuine
@@ -167,7 +167,7 @@ real `.c` file and linking:
   `r1`=the reloaded value, with the AND's result forced back into `r0`
   via a separate pinned output variable) to reproduce the ROM's exact
   operand/destination choice for the `ands` instruction.
-- **`sub_8032AF8`'s loop end-address computation** - a literal
+- **`UpdateHovercraftHitFlash`'s loop end-address computation** - a literal
   `(vu16 *)0x0500003e` constant compiles to a single `ldr` from the
   literal pool, but the ROM's own build computes it at runtime instead
   (`dst_base + 0x1e`), a different instruction shape entirely; switched
@@ -185,19 +185,19 @@ elsewhere in this project, re-confirmed rather than re-derived here:
 - **`UpdateJetpackCollectedWumpa`** - the shared anim-frame-advance-and-clamp idiom
   (this compiler schedules the `#4`/`#6` `ldrsh` constant loads one
   instruction earlier than the ROM's own build), same as
-  `sub_80318D0`/`sub_8031954`/`sub_80319A0` (issue #59).
-- **`sub_8032950`/`sub_8032A94`** - a `gStaticData_0817C450` stride-8
+  `MoveJetpackBalloon`/`sub_8031954`/`sub_80319A0` (issue #59).
+- **`UpdateHovercraftFireball`/`sub_8032A94`** - a `gHovercraftFireballStateFuncs` stride-8
   table lookup keeping the table's base address alive in `r7` across
   straight-line code with no call to piggyback a high-register relay
   on, the same categorical `r7`-never-self-allocated hazard as
-  `sub_8031A08` (issue #59)/`UpdateHovercraftCannon`/`sub_8033C84`/`UpdateHovercraftLauncher`
+  `sub_8031A08` (issue #59)/`UpdateHovercraftCannon`/`RunHovercraftCannonState`/`UpdateHovercraftLauncher`
   (issue #62).
 - **`DrawJetpackCollectedWumpa`** - a bounding-box-culled sprite draw with an
   `r8`-flag-across-calls shape, the same class of gap `DrawPowerDialog`/
   `DrawLanguageSelect`/`GAX2_init` and the hard-won `DrawActor`
   (issue #50, `actor_part55.c`) already needed elaborate register-pin/
   stack-spill workarounds for.
-- **`sub_8032B6C`** - fully inlines `sub_8033828`'s own P1/P2
+- **`RunHovercraftState`** - fully inlines `sub_8033828`'s own P1/P2
   speed-toggle shape (issue #62) *twice*, once per frame-counter
   schedule case, plus an outer dispatch - the same cross-jump-merging
   register-pin hazard that function's own writeup documents, doubled.
@@ -236,7 +236,7 @@ matched/parked list this entry feeds into.
 
 ## Later pass: member-pointer dispatch
 
-A later pass promoted `UpdateJetpackCollectedWumpa`, `DestroyJetpackCollectedWumpa`, `sub_8032950` and `sub_8032A94` (`actor_part130.c`). `DestroyJetpackCollectedWumpa`'s parameter-copy order came out right from a plain C destructor with no barrier; `UpdateJetpackCollectedWumpa`'s anim idiom needed per-field `anims[animIndex]` indexing. The other NAKED functions here (many-high-register, DMA/tile, constructor cases) were not retried from NAKED to real C. The "r7 table-base"
+A later pass promoted `UpdateJetpackCollectedWumpa`, `DestroyJetpackCollectedWumpa`, `UpdateHovercraftFireball` and `sub_8032A94` (`actor_part130.c`). `DestroyJetpackCollectedWumpa`'s parameter-copy order came out right from a plain C destructor with no barrier; `UpdateJetpackCollectedWumpa`'s anim idiom needed per-field `anims[animIndex]` indexing. The other NAKED functions here (many-high-register, DMA/tile, constructor cases) were not retried from NAKED to real C. The "r7 table-base"
 shape was gcc 2.x's pointer-to-member-function call
 `(this->*table[this->state])()`, which `ACTOR_PMF_CALL` in
 `include/actor_self.h` reproduces with no register pins. See

@@ -4,7 +4,7 @@
  * comment and docs/matching/issue-62-0x08033804-actor.md. */
 
 /* Constant getter - returns `self`'s death flag (`self+0x6c`). */
-u8 sub_8033CF0(void *selfArg)
+u8 IsHovercraftCannonUnshootable(void *selfArg)
 {
     u8 *self = selfArg;
 

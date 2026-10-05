@@ -116,8 +116,8 @@ extern void sub_8017218();
 extern void sub_80174D8();
 extern void sub_8017650();
 extern void sub_80179D4();
-extern void sub_80179E8();
-extern void sub_80179EC();
+extern void AttachInputCtrl();
+extern void DestroyInputCtrl();
 extern void sub_8017A70();
 extern void sub_8017A78();
 extern void sub_8017AB0();
@@ -132,7 +132,7 @@ extern void sub_80188E8();
 extern void sub_80188FC();
 extern void sub_8018960();
 extern void DestroyTiny();
-extern void sub_8018A30();
+extern void UpdateCortexBoss();
 extern void sub_8018E4C();
 extern void sub_8019324();
 extern void sub_8019464();
@@ -143,7 +143,7 @@ extern void sub_801964C();
 extern void sub_80196E4();
 extern void sub_8019730();
 extern void sub_8019744();
-extern void sub_80197C8();
+extern void DestroyCortexBoss();
 extern void UpdateDingodile();
 extern void sub_801A114();
 extern void sub_801A2A8();
@@ -160,14 +160,14 @@ extern void UpdatePlatformMover();
 extern void sub_801B77C();
 extern void sub_801B7A0();
 extern void DestroyPlatformMover();
-extern void sub_801B8BC();
-extern void sub_801B91C();
+extern void UpdateCameraLead();
+extern void DestroyCameraLead();
 extern void sub_801BA60();
 extern void sub_801BAB0();
-extern void sub_801DE30();
-extern void sub_801DEA4();
-extern void sub_801DF70();
-extern void sub_801DF98();
+extern void AnimateLevelSelectEntry();
+extern void SetLevelSelectEntryLevel();
+extern void SetLevelSelectEntryPos();
+extern void DestroyLevelSelectEntry();
 extern void DestroyBgStreamer();
 extern void DestroyBgLayerBase();
 extern void sub_8024DCC();
@@ -197,9 +197,9 @@ extern void FontDrawText();
 extern void FontMeasureChars();
 extern void UpdateActor();
 extern void DestroyActor();
-extern void sub_802B364();
-extern void sub_802B5B4();
-extern void sub_802C19C();
+extern void UpdatePolarPlayer();
+extern void DrawPolarPlayer();
+extern void DestroyPolarPlayer();
 extern void UpdatePolarCollectedWumpa();
 extern void DrawPolarCollectedWumpa();
 extern void DestroyPolarCollectedWumpa();
@@ -221,27 +221,27 @@ extern void UpdatePolarAkuAku();
 extern void sub_802D59C();
 extern void sub_802D600();
 extern void UpdatePolarCheckpointCrate();
-extern void sub_802E84C();
-extern void sub_802E9FC();
-extern void sub_802EB78();
-extern void sub_802F47C();
-extern void sub_802F6DC();
+extern void UpdateJetpackPlayer();
+extern void DrawJetpackPlayer();
+extern void DamageJetpackPlayer();
+extern void GetJetpackPlayerHpPercent();
+extern void DestroyJetpackPlayer();
 extern void UpdateJetpackShot();
-extern void sub_802FA34();
+extern void IsJetpackShotUnshootable();
 extern void UpdateJetpackPlane();
 extern void DamageJetpackPlane();
-extern void sub_802FF00();
+extern void IsJetpackPlaneUnshootable();
 extern void UpdateJetpackBomber();
 extern void DamageJetpackBomber();
-extern void sub_8030290();
+extern void IsJetpackBomberUnshootable();
 extern void UpdateJetpackCannonball();
-extern void sub_8030330();
-extern void sub_8030530();
-extern void sub_8030574();
-extern void sub_80306A4();
+extern void IsJetpackCannonballUnshootable();
+extern void DamageAirshipFireball();
+extern void UpdateAirshipFireball();
+extern void IsAirshipFireballUnshootable();
 extern void UpdateJetpackBalloon();
 extern void DamageJetpackBalloon();
-extern void sub_8031A64();
+extern void IsJetpackBalloonUnshootable();
 extern void UpdateJetpackBalloonCrate();
 extern void UpdateJetpackQuestionCrate();
 extern void DamageJetpackQuestionCrate();
@@ -249,36 +249,36 @@ extern void UpdateJetpackHealthCrate();
 extern void UpdateJetpackTimeCrate();
 extern void DamageJetpackTimeCrate();
 extern void DamageJetpackHealthCrate();
-extern void sub_8032140();
+extern void BreakJetpackBalloonCrate();
 extern void DamageJetpackBalloonCrate();
 extern void DestroyJetpackBalloonCrate();
-extern void sub_8032350();
+extern void IsJetpackBalloonCrateUnshootable();
 extern void UpdateJetpackParachuteNitro();
 extern void DamageJetpackParachuteNitro();
-extern void sub_8032478();
+extern void IsJetpackParachuteNitroUnshootable();
 extern void UpdateJetpackRocket();
 extern void DamageJetpackRocket();
-extern void sub_8032680();
+extern void IsJetpackRocketUnshootable();
 extern void UpdateJetpackRing();
-extern void sub_8032714();
+extern void IsJetpackRingUnshootable();
 extern void UpdateJetpackCollectedWumpa();
 extern void DrawJetpackCollectedWumpa();
 extern void DestroyJetpackCollectedWumpa();
-extern void sub_803290C();
-extern void sub_8032910();
-extern void sub_8032950();
-extern void sub_8032AF0();
+extern void IsJetpackCollectedWumpaUnshootable();
+extern void DamageHovercraftFireball();
+extern void UpdateHovercraftFireball();
+extern void IsHovercraftFireballUnshootable();
 extern void DamageHovercraftCannon();
 extern void UpdateHovercraftCannon();
-extern void sub_8033CF0();
+extern void IsHovercraftCannonUnshootable();
 extern void DamageHovercraftLauncher();
 extern void UpdateHovercraftLauncher();
-extern void sub_8034050();
-extern void sub_8034110();
-extern void sub_8034188();
-extern void sub_8034264();
-extern void sub_8034270();
-extern void sub_803436C();
+extern void IsHovercraftLauncherUnshootable();
+extern void DamageHovercraftSideGun();
+extern void UpdateHovercraftSideGun();
+extern void IsHovercraftSideGunUnshootable();
+extern void UpdateHovercraftCannonFlash();
+extern void IsHovercraftCannonFlashUnshootable();
 extern void UpdateLogoActor();
 extern void DrawLogoActor();
 extern void DestroyLogoActor();
@@ -307,18 +307,18 @@ extern void sub_803B414();
 extern void DestroyPolarCheckpointCrate();
 extern void DrawJetpackCheckpointText();
 extern void UpdateJetpackCheckpointText();
-extern void sub_803B54C();
+extern void IsJetpackCheckpointTextUnshootable();
 extern void DestroyJetpackCheckpointText();
 extern void UpdateJetpackExplosion();
-extern void sub_803B5AC();
+extern void IsJetpackExplosionUnshootable();
 extern void DestroyJetpackExplosion();
 extern void GetActorHp();
-extern void sub_803B5E4();
+extern void IsJetpackPlayerUnshootable();
 extern void DestroyJetpackShot();
 extern void DestroyJetpackPlane();
 extern void DestroyJetpackBomber();
 extern void DestroyJetpackCannonball();
-extern void sub_803B698();
+extern void DestroyAirshipFireball();
 extern void DestroyJetpackBalloon();
 extern void DestroyJetpackHealthCrate();
 extern void DestroyJetpackTimeCrate();
@@ -326,11 +326,11 @@ extern void DestroyJetpackQuestionCrate();
 extern void DestroyJetpackParachuteNitro();
 extern void DestroyJetpackRocket();
 extern void DestroyJetpackRing();
-extern void sub_803B7D4();
+extern void DestroyHovercraftFireball();
 extern void DestroyHovercraftCannon();
 extern void DestroyHovercraftLauncher();
-extern void sub_803B858();
-extern void sub_803B884();
+extern void DestroyHovercraftSideGun();
+extern void DestroyHovercraftCannonFlash();
 
 /* Used by actor_aabb_setup.c, actor_part124.c, actor_part39.c,
  * actor_part6.c (sub_8008484), actor_part7.c, graphics.c (nullsub_12,
@@ -629,18 +629,18 @@ const struct vtable_slot gPlayerCtrlVtable[13] = {
     VTABLE_SLOT(sub_800B704),
 };
 
-/* Used by actor_part_17524.c (sub_80179EC). */
+/* Used by actor_part_17524.c (DestroyInputCtrl). */
 const struct vtable_slot gInputCtrlVtable[13] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(sub_8017650),
     VTABLE_SLOT(sub_80179D4),
-    VTABLE_SLOT(sub_80179E8),
+    VTABLE_SLOT(AttachInputCtrl),
     VTABLE_SLOT(sub_800B698),
     VTABLE_SLOT(sub_800B7B0),
     VTABLE_SLOT(sub_800B6D0),
     VTABLE_SLOT(sub_800B734),
     VTABLE_SLOT(sub_800B6A0),
-    VTABLE_SLOT(sub_80179EC),
+    VTABLE_SLOT(DestroyInputCtrl),
     VTABLE_SLOT(sub_800B86C),
     VTABLE_SLOT(sub_800B838),
     VTABLE_SLOT(sub_800B704),
@@ -834,10 +834,10 @@ const struct vtable_slot gStaticData_087E476C[13] = {
     VTABLE_SLOT(sub_800B704),
 };
 
-/* Used by actor_part_1967c.c (sub_80197C8). */
-const struct vtable_slot gStaticData_087E47D4[13] = {
+/* Used by actor_part_1967c.c (DestroyCortexBoss). */
+const struct vtable_slot gCortexBossVtable[13] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_8018A30),
+    VTABLE_SLOT(UpdateCortexBoss),
     VTABLE_SLOT(sub_8017A70),
     VTABLE_SLOT(sub_800B8A4),
     VTABLE_SLOT(sub_800B698),
@@ -845,7 +845,7 @@ const struct vtable_slot gStaticData_087E47D4[13] = {
     VTABLE_SLOT(sub_800B6D0),
     VTABLE_SLOT(sub_800B734),
     VTABLE_SLOT(sub_800B6A0),
-    VTABLE_SLOT(sub_80197C8),
+    VTABLE_SLOT(DestroyCortexBoss),
     VTABLE_SLOT(sub_800B86C),
     VTABLE_SLOT(sub_800B838),
     VTABLE_SLOT(sub_800B704),
@@ -957,19 +957,19 @@ const struct vtable_slot gPlatformMoverVtable[13] = {
     VTABLE_SLOT(sub_801B77C),
 };
 
-/* Used by actor_part_1b85c.c (sub_801B91C). */
-const struct vtable_slot gStaticData_087E4ABC[15] = {
+/* Used by actor_part_1b85c.c (DestroyCameraLead). */
+const struct vtable_slot gCameraLeadVtable[15] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(sub_800A050),
     VTABLE_SLOT(sub_8008394),
-    VTABLE_SLOT(sub_801B8BC),
+    VTABLE_SLOT(UpdateCameraLead),
     VTABLE_SLOT(sub_8008350),
     VTABLE_SLOT(sub_8007F78),
     VTABLE_SLOT(sub_8007FD8),
     VTABLE_SLOT(sub_8008328),
     VTABLE_SLOT(sub_8008304),
     VTABLE_SLOT(sub_8009ECC),
-    VTABLE_SLOT(sub_801B91C),
+    VTABLE_SLOT(DestroyCameraLead),
     VTABLE_SLOT(sub_8008408),
     VTABLE_SLOT(sub_8009DF4),
     VTABLE_SLOT(sub_8009FD4),
@@ -995,15 +995,15 @@ const struct vtable_slot gStaticData_087E4B34[15] = {
     VTABLE_SLOT(sub_801BA60),
 };
 
-/* Used by actor_part_1da38.c (sub_801DF98), actor_part_1dfec.c,
+/* Used by actor_part_1da38.c (DestroyLevelSelectEntry), actor_part_1dfec.c,
  * level_select_parts.h. */
-const struct vtable_slot gStaticData_087E4BAC[6] = {
+const struct vtable_slot gLevelSelectEntryVtable[6] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_801DE30),
-    VTABLE_SLOT(sub_801DEA4),
-    VTABLE_SLOT(sub_801DF70),
+    VTABLE_SLOT(AnimateLevelSelectEntry),
+    VTABLE_SLOT(SetLevelSelectEntryLevel),
+    VTABLE_SLOT(SetLevelSelectEntryPos),
     VTABLE_SLOT(nullsub_20),
-    VTABLE_SLOT(sub_801DF98),
+    VTABLE_SLOT(DestroyLevelSelectEntry),
 };
 
 /* Used by game_loop57.c. */
@@ -1119,8 +1119,8 @@ const struct vtable_slot gFontVtable[9] = {
  * DestroyPolarElectricFence, sub_803B30C, sub_803B338, DestroyPolarPenguin, DestroyPolarIcicle,
  * DestroyPolarAkuAku, sub_803B3E8, sub_803B414, DestroyPolarCheckpointCrate, DestroyJetpackCheckpointText,
  * DestroyJetpackExplosion, DestroyJetpackShot, DestroyJetpackPlane, DestroyJetpackBomber, DestroyJetpackCannonball,
- * sub_803B698, DestroyJetpackBalloon, DestroyJetpackParachuteNitro, DestroyJetpackRocket, DestroyJetpackRing,
- * sub_803B7D4, DestroyHovercraftCannon, DestroyHovercraftLauncher, sub_803B858, sub_803B884),
+ * DestroyAirshipFireball, DestroyJetpackBalloon, DestroyJetpackParachuteNitro, DestroyJetpackRocket, DestroyJetpackRing,
+ * DestroyHovercraftFireball, DestroyHovercraftCannon, DestroyHovercraftLauncher, DestroyHovercraftSideGun, DestroyHovercraftCannonFlash),
  * actor_part129.c, actor_part130.c (DestroyJetpackCollectedWumpa), actor_part19.c,
  * actor_part19c.c, actor_part44.c, actor_part50.c, actor_part52.c. */
 const struct vtable_slot gActorVtable[4] = {
@@ -1148,11 +1148,11 @@ const struct vtable_slot gPolarCheckpointTextVtable[4] = {
 
 /* Used by actor_part127.c, actor_part19.c, actor_part_2ac28.c
  * (ConstructAnimTableState). */
-const struct vtable_slot gStaticData_087E4E54[4] = {
+const struct vtable_slot gPolarPlayerVtable[4] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_802C19C),
-    VTABLE_SLOT(sub_802B364),
-    VTABLE_SLOT(sub_802B5B4),
+    VTABLE_SLOT(DestroyPolarPlayer),
+    VTABLE_SLOT(UpdatePolarPlayer),
+    VTABLE_SLOT(DrawPolarPlayer),
 };
 
 /* Used by actor_part19.c, actor_part19c.c, actor_part19c2.c. */
@@ -1314,7 +1314,7 @@ const struct vtable_slot gJetpackCheckpointTextVtable[7] = {
     VTABLE_SLOT(UpdateJetpackCheckpointText),
     VTABLE_SLOT(DrawJetpackCheckpointText),
     VTABLE_SLOT(nullsub_44),
-    VTABLE_SLOT(sub_803B54C),
+    VTABLE_SLOT(IsJetpackCheckpointTextUnshootable),
     VTABLE_SLOT(GetActorHp),
 };
 
@@ -1325,19 +1325,19 @@ const struct vtable_slot gJetpackExplosionVtable[7] = {
     VTABLE_SLOT(UpdateJetpackExplosion),
     VTABLE_SLOT(DrawActor),
     VTABLE_SLOT(nullsub_44),
-    VTABLE_SLOT(sub_803B5AC),
+    VTABLE_SLOT(IsJetpackExplosionUnshootable),
     VTABLE_SLOT(GetActorHp),
 };
 
-/* Used by actor_part128.c (sub_802E710), actor_part44.c. */
-const struct vtable_slot gStaticData_087E5144[7] = {
+/* Used by actor_part128.c (CreateJetpackPlayer), actor_part44.c. */
+const struct vtable_slot gJetpackPlayerVtable[7] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_802F6DC),
-    VTABLE_SLOT(sub_802E84C),
-    VTABLE_SLOT(sub_802E9FC),
-    VTABLE_SLOT(sub_802EB78),
-    VTABLE_SLOT(sub_803B5E4),
-    VTABLE_SLOT(sub_802F47C),
+    VTABLE_SLOT(DestroyJetpackPlayer),
+    VTABLE_SLOT(UpdateJetpackPlayer),
+    VTABLE_SLOT(DrawJetpackPlayer),
+    VTABLE_SLOT(DamageJetpackPlayer),
+    VTABLE_SLOT(IsJetpackPlayerUnshootable),
+    VTABLE_SLOT(GetJetpackPlayerHpPercent),
 };
 
 /* Used by actor_part45c.c. */
@@ -1347,7 +1347,7 @@ const struct vtable_slot gJetpackShotVtable[7] = {
     VTABLE_SLOT(UpdateJetpackShot),
     VTABLE_SLOT(DrawActor),
     VTABLE_SLOT(nullsub_44),
-    VTABLE_SLOT(sub_802FA34),
+    VTABLE_SLOT(IsJetpackShotUnshootable),
     VTABLE_SLOT(GetActorHp),
 };
 
@@ -1358,7 +1358,7 @@ const struct vtable_slot gJetpackPlaneVtable[7] = {
     VTABLE_SLOT(UpdateJetpackPlane),
     VTABLE_SLOT(DrawActor),
     VTABLE_SLOT(DamageJetpackPlane),
-    VTABLE_SLOT(sub_802FF00),
+    VTABLE_SLOT(IsJetpackPlaneUnshootable),
     VTABLE_SLOT(GetActorHp),
 };
 
@@ -1369,7 +1369,7 @@ const struct vtable_slot gJetpackBomberVtable[7] = {
     VTABLE_SLOT(UpdateJetpackBomber),
     VTABLE_SLOT(DrawActor),
     VTABLE_SLOT(DamageJetpackBomber),
-    VTABLE_SLOT(sub_8030290),
+    VTABLE_SLOT(IsJetpackBomberUnshootable),
     VTABLE_SLOT(GetActorHp),
 };
 
@@ -1380,18 +1380,18 @@ const struct vtable_slot gJetpackCannonballVtable[7] = {
     VTABLE_SLOT(UpdateJetpackCannonball),
     VTABLE_SLOT(DrawActor),
     VTABLE_SLOT(nullsub_44),
-    VTABLE_SLOT(sub_8030330),
+    VTABLE_SLOT(IsJetpackCannonballUnshootable),
     VTABLE_SLOT(GetActorHp),
 };
 
 /* Used by actor_part20d.c. */
-const struct vtable_slot gStaticData_087E525C[7] = {
+const struct vtable_slot gAirshipFireballVtable[7] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_803B698),
-    VTABLE_SLOT(sub_8030574),
+    VTABLE_SLOT(DestroyAirshipFireball),
+    VTABLE_SLOT(UpdateAirshipFireball),
     VTABLE_SLOT(DrawActor),
-    VTABLE_SLOT(sub_8030530),
-    VTABLE_SLOT(sub_80306A4),
+    VTABLE_SLOT(DamageAirshipFireball),
+    VTABLE_SLOT(IsAirshipFireballUnshootable),
     VTABLE_SLOT(GetActorHp),
 };
 
@@ -1402,7 +1402,7 @@ const struct vtable_slot gJetpackBalloonVtable[7] = {
     VTABLE_SLOT(UpdateJetpackBalloon),
     VTABLE_SLOT(DrawActor),
     VTABLE_SLOT(DamageJetpackBalloon),
-    VTABLE_SLOT(sub_8031A64),
+    VTABLE_SLOT(IsJetpackBalloonUnshootable),
     VTABLE_SLOT(GetActorHp),
 };
 
@@ -1413,9 +1413,9 @@ const struct vtable_slot gJetpackHealthCrateVtable[8] = {
     VTABLE_SLOT(UpdateJetpackHealthCrate),
     VTABLE_SLOT(DrawActor),
     VTABLE_SLOT(DamageJetpackHealthCrate),
-    VTABLE_SLOT(sub_8032350),
+    VTABLE_SLOT(IsJetpackBalloonCrateUnshootable),
     VTABLE_SLOT(GetActorHp),
-    VTABLE_SLOT(sub_8032140),
+    VTABLE_SLOT(BreakJetpackBalloonCrate),
 };
 
 /* Used by actor_part129.c. */
@@ -1425,9 +1425,9 @@ const struct vtable_slot gJetpackTimeCrateVtable[8] = {
     VTABLE_SLOT(UpdateJetpackTimeCrate),
     VTABLE_SLOT(DrawActor),
     VTABLE_SLOT(DamageJetpackTimeCrate),
-    VTABLE_SLOT(sub_8032350),
+    VTABLE_SLOT(IsJetpackBalloonCrateUnshootable),
     VTABLE_SLOT(GetActorHp),
-    VTABLE_SLOT(sub_8032140),
+    VTABLE_SLOT(BreakJetpackBalloonCrate),
 };
 
 /* Used by actor_part129.c. */
@@ -1437,9 +1437,9 @@ const struct vtable_slot gJetpackQuestionCrateVtable[8] = {
     VTABLE_SLOT(UpdateJetpackQuestionCrate),
     VTABLE_SLOT(DrawActor),
     VTABLE_SLOT(DamageJetpackQuestionCrate),
-    VTABLE_SLOT(sub_8032350),
+    VTABLE_SLOT(IsJetpackBalloonCrateUnshootable),
     VTABLE_SLOT(GetActorHp),
-    VTABLE_SLOT(sub_8032140),
+    VTABLE_SLOT(BreakJetpackBalloonCrate),
 };
 
 /* Used by actor_part129.c. */
@@ -1449,9 +1449,9 @@ const struct vtable_slot gJetpackBalloonCrateVtable[8] = {
     VTABLE_SLOT(UpdateJetpackBalloonCrate),
     VTABLE_SLOT(DrawActor),
     VTABLE_SLOT(DamageJetpackBalloonCrate),
-    VTABLE_SLOT(sub_8032350),
+    VTABLE_SLOT(IsJetpackBalloonCrateUnshootable),
     VTABLE_SLOT(GetActorHp),
-    VTABLE_SLOT(sub_8032140),
+    VTABLE_SLOT(BreakJetpackBalloonCrate),
 };
 
 /* Used by actor_part129.c (CreateJetpackParachuteNitro). */
@@ -1461,7 +1461,7 @@ const struct vtable_slot gJetpackParachuteNitroVtable[7] = {
     VTABLE_SLOT(UpdateJetpackParachuteNitro),
     VTABLE_SLOT(DrawActor),
     VTABLE_SLOT(DamageJetpackParachuteNitro),
-    VTABLE_SLOT(sub_8032478),
+    VTABLE_SLOT(IsJetpackParachuteNitroUnshootable),
     VTABLE_SLOT(GetActorHp),
 };
 
@@ -1472,7 +1472,7 @@ const struct vtable_slot gJetpackRocketVtable[7] = {
     VTABLE_SLOT(UpdateJetpackRocket),
     VTABLE_SLOT(DrawActor),
     VTABLE_SLOT(DamageJetpackRocket),
-    VTABLE_SLOT(sub_8032680),
+    VTABLE_SLOT(IsJetpackRocketUnshootable),
     VTABLE_SLOT(GetActorHp),
 };
 
@@ -1483,7 +1483,7 @@ const struct vtable_slot gJetpackRingVtable[7] = {
     VTABLE_SLOT(UpdateJetpackRing),
     VTABLE_SLOT(DrawActor),
     VTABLE_SLOT(nullsub_44),
-    VTABLE_SLOT(sub_8032714),
+    VTABLE_SLOT(IsJetpackRingUnshootable),
     VTABLE_SLOT(GetActorHp),
 };
 
@@ -1494,18 +1494,18 @@ const struct vtable_slot gJetpackCollectedWumpaVtable[7] = {
     VTABLE_SLOT(UpdateJetpackCollectedWumpa),
     VTABLE_SLOT(DrawJetpackCollectedWumpa),
     VTABLE_SLOT(nullsub_44),
-    VTABLE_SLOT(sub_803290C),
+    VTABLE_SLOT(IsJetpackCollectedWumpaUnshootable),
     VTABLE_SLOT(GetActorHp),
 };
 
 /* Used by actor_part130.c. */
-const struct vtable_slot gStaticData_087E54AC[7] = {
+const struct vtable_slot gHovercraftFireballVtable[7] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_803B7D4),
-    VTABLE_SLOT(sub_8032950),
+    VTABLE_SLOT(DestroyHovercraftFireball),
+    VTABLE_SLOT(UpdateHovercraftFireball),
     VTABLE_SLOT(DrawActor),
-    VTABLE_SLOT(sub_8032910),
-    VTABLE_SLOT(sub_8032AF0),
+    VTABLE_SLOT(DamageHovercraftFireball),
+    VTABLE_SLOT(IsHovercraftFireballUnshootable),
     VTABLE_SLOT(GetActorHp),
 };
 
@@ -1516,7 +1516,7 @@ const struct vtable_slot gHovercraftCannonVtable[7] = {
     VTABLE_SLOT(UpdateHovercraftCannon),
     VTABLE_SLOT(DrawActor),
     VTABLE_SLOT(DamageHovercraftCannon),
-    VTABLE_SLOT(sub_8033CF0),
+    VTABLE_SLOT(IsHovercraftCannonUnshootable),
     VTABLE_SLOT(GetActorHp),
 };
 
@@ -1527,29 +1527,29 @@ const struct vtable_slot gHovercraftLauncherVtable[7] = {
     VTABLE_SLOT(UpdateHovercraftLauncher),
     VTABLE_SLOT(DrawActor),
     VTABLE_SLOT(DamageHovercraftLauncher),
-    VTABLE_SLOT(sub_8034050),
+    VTABLE_SLOT(IsHovercraftLauncherUnshootable),
     VTABLE_SLOT(GetActorHp),
 };
 
-/* Used by actor_part65.c, actor_part66.c (sub_8034058), actor_part67.c. */
-const struct vtable_slot gStaticData_087E5554[7] = {
+/* Used by actor_part65.c, actor_part66.c (CreateHovercraftSideGun), actor_part67.c. */
+const struct vtable_slot gHovercraftSideGunVtable[7] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_803B858),
-    VTABLE_SLOT(sub_8034188),
+    VTABLE_SLOT(DestroyHovercraftSideGun),
+    VTABLE_SLOT(UpdateHovercraftSideGun),
     VTABLE_SLOT(DrawActor),
-    VTABLE_SLOT(sub_8034110),
-    VTABLE_SLOT(sub_8034264),
+    VTABLE_SLOT(DamageHovercraftSideGun),
+    VTABLE_SLOT(IsHovercraftSideGunUnshootable),
     VTABLE_SLOT(GetActorHp),
 };
 
 /* Used by actor_part69.c. */
-const struct vtable_slot gStaticData_087E558C[7] = {
+const struct vtable_slot gHovercraftCannonFlashVtable[7] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_803B884),
-    VTABLE_SLOT(sub_8034270),
+    VTABLE_SLOT(DestroyHovercraftCannonFlash),
+    VTABLE_SLOT(UpdateHovercraftCannonFlash),
     VTABLE_SLOT(DrawActor),
     VTABLE_SLOT(nullsub_38),
-    VTABLE_SLOT(sub_803436C),
+    VTABLE_SLOT(IsHovercraftCannonFlashUnshootable),
     VTABLE_SLOT(GetActorHp),
 };
 

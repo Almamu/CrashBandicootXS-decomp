@@ -45,7 +45,7 @@ extern void SpawnBlueGemPlatform();
 extern void sub_8021280();
 extern void sub_8021388();
 extern void sub_8021480();
-extern void sub_802155C();
+extern void SpawnCortexBoss();
 extern void sub_8021668();
 extern void SpawnSeaweed();
 extern void SpawnFlame();
@@ -168,7 +168,7 @@ void (*const gEntitySpawnFuncs[92])() = {
     sub_8021388,
     nullsub_21,
     sub_8021480,
-    sub_802155C,
+    SpawnCortexBoss,
     sub_8021668,
     SpawnTornadoSpinPower,
     SpawnSeaMine,

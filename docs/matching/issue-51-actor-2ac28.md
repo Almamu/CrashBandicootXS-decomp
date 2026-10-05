@@ -1,9 +1,9 @@
 # Issue #51: 0x0802AC28-0x0802B364 - the actor factory
 
 GitHub issue #51 covers `0x0802AC28`-`0x0802BED8`. Its tail was already
-done: `sub_802B364`-`sub_802BBE4` in `actor_part127.c`
+done: `UpdatePolarPlayer`-`sub_802BBE4` in `actor_part127.c`
 ([issue-52-gap-b364.md](./issue-52-gap-b364.md), four real C, seven
-NAKED) and `sub_802BC68`-`sub_802BE80` in `actor_part107.c`
+NAKED) and `DispensePolarWumpa`-`sub_802BE80` in `actor_part107.c`
 ([issue-50-actor-bc68.md](./issue-50-actor-bc68.md)). This pass did the
 first seven functions, the whole of what was left in
 `asm/code_3_2_20_8b7c_ac28.s`. They are now real C in
@@ -43,7 +43,7 @@ case body is an inlined C++ `new Foo(...)`. It allocates with
 is a shared one, stores the class's method table at +0x50. Points of
 note:
 
-- Kinds 8 and 35 check `sub_802AA80(spawn)`, the fixed-slot registry. If
+- Kinds 8 and 35 check `IsSpawnCollected(spawn)`, the fixed-slot registry. If
   the spawn is already registered they build a plain record-28 object.
   Otherwise they build a 0x58-byte object that remembers `spawn` at +0x54
   (`struct actor_tracked`).
@@ -52,7 +52,7 @@ note:
   sequence 1, and the second is the one returned.
 - Kind 3 and the kind-13/25 pairs pass the record's own `spawnX` as the X
   coordinate, not the adjusted `x`. This is exactly what the ROM does.
-- Kinds 36-39 only select a palette-cycle preset (`sub_802ABC8(kind -
+- Kinds 36-39 only select a palette-cycle preset (`SetActorPaletteCycle(kind -
   36)`) and return NULL, as do all unlisted kinds.
 
 The case bodies appear in the ROM in source order (9, 3, 5-7, 1, 4, 22,
@@ -70,8 +70,8 @@ z).
 **`ConstructAnimTableState(table, z)`** sets `gActorAnimTable = table`,
 clears the player pointer `gActorList`, and builds the player from
 record 0 with `ConstructActorPart`. That function runs `InitActorPart`
-(y = `z ? 0x2800 : -0x5000`), installs `gStaticData_087E4E54`, calls
-`sub_802B864`, and starts either state 0xD/anim 0xC (when z != 0) or anim
+(y = `z ? 0x2800 : -0x5000`), installs `gPolarPlayerVtable`, calls
+`AllocPolarPlayerTiles`, and starts either state 0xD/anim 0xC (when z != 0) or anim
 8. It then resets the `gUnknown_03001480`-`gUnknown_030014A4` player-state
 globals (the ones `actor_part19.c`/`actor_part44.c`/`actor_part107.c`
 drive).
@@ -110,7 +110,7 @@ drive).
   an `idx` local for the other one. The shared tail (anim timer, done
   flag, time) then cross-jumps into one copy, as in the ROM.
 
-Issue #51 stays open: `sub_802B364`, `sub_802B5B4`, `sub_802B864`,
+Issue #51 stays open: `UpdatePolarPlayer`, `DrawPolarPlayer`, `AllocPolarPlayerTiles`,
 `sub_802B8E8`, `sub_802BA5C`, `sub_802BAD0` and `sub_802BBE4`
 (`actor_part127.c`) are still NAKED.
 

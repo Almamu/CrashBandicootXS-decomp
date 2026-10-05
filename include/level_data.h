@@ -102,7 +102,7 @@ struct level_room
                                      //        in actor category `catIndex`
     s32 unk_0C;                      // 0x0C - 0 in every record
     u16 catIndex;                    // 0x10 - kind 3: the actor category
-                                     //        (sub_802968C)
+                                     //        (CountCategoryCrates)
     u16 unk_12;                      // 0x12
 };
 

@@ -29,7 +29,7 @@ level object's own `+0xdc->+8` state field is `2`
 4. Reads the level-state record's (`self->0x18`) own `+8` "widget kind"
    field and dispatches on it (0/1/2) to construct one of three HUD
    counter/ring-buffer widgets, each via
-   `sub_801588C`/`sub_80174EC`/`sub_8017A00` (three different
+   `sub_801588C`/`sub_80174EC`/`CreateInputCtrl` (three different
    constructors, still raw) plus a `gStaticData_0816B92C`/`0816B934`/
    `0816B93C` action-table pointer stashed at `widget+4`
    (`sub_800B69C`). Widget kind `1` additionally builds an OAM entry via

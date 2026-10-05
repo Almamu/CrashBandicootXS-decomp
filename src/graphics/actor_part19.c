@@ -14,7 +14,7 @@
  * record fed through `_call_via_r2`/`_call_via_r3` (the same convention
  * already named in actor_part10.c/actor_part11.c for a sibling "part"
  * object, just at a different fixed offset here) and a `+0x48`/`+0x4c`
- * circular doubly-linked-list pair (confirmed by `sub_802C19C`'s own
+ * circular doubly-linked-list pair (confirmed by `DestroyPolarPlayer`'s own
  * unlink sequence below) rooted at the player-pointer global
  * `gActorList`. `self` is `struct actor_self` (actor_self.h);
  * the functions not yet converted still use raw offsets into it - see
@@ -31,16 +31,16 @@ extern void *gPolarAkuAku;
 extern void *gAudioContext;
 extern void *gLevelState;
 extern void *gActorList;
-extern s32 gUnknown_03001488;
+extern s32 gPolarQueuedWumpa;
 extern s32 gUnknown_03001484;
 extern s32 gUnknown_0300149C;
-extern void *gUnknown_030014B0[2];
+extern void *gPolarPlayerTiles[2];
 extern void *gUnknown_03001490;
 
-extern u8 gStaticData_087E4E54[];
+extern u8 gPolarPlayerVtable[];
 extern u8 gActorVtable[];
 extern u8 gPolarCollectedWumpaVtable[];
-extern u8 gStaticData_0817A6B8[];
+extern u8 gPolarPlayerStateFuncs[];
 extern u8 gStaticData_0817A768[];
 
 extern void SetCellAnimSpeed(s32 arg0);
@@ -59,15 +59,15 @@ extern void InitActorPart(void *self, s32 a, s32 b, s32 c, s32 d);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern s32 _call_via_r3(void *addr, void *arg1, void *tableEntry, void *fn);
-extern u8 sub_802A6EC(void *self);
+extern u8 IsTouchingPlayer(void *self);
 extern void UpdateActor(void *self);
 extern u8 sub_802DD9C(void *self);
 extern void AddBrokenCrate(void *self);
 extern s32 AddLife(void *self);
 extern void CollectWumpa(void *self);
 extern void FreeVramTileBlock(void *arg0);
-extern void sub_802AAB4(s32 arg0);
-extern void sub_802B730(void *arg0);
+extern void MarkSpawnCollected(s32 arg0);
+extern void HurtPolarPlayer(void *arg0);
 extern void sub_8029720(void);
 extern void *CreateActor(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4);
 extern void DetonateNearbyPolarNitros(void *self);
@@ -221,7 +221,7 @@ void sub_802BFD4(void)
  * `sub_802D490` on `gPolarAkuAku`, and fires the state-7/table-
  * index-6 transition (anim frame from `self`'s part-table pointer at
  * `+0x48`) plus a sound cue. */
-void sub_802C018(void *selfArg)
+void CatchPolarPlayer(void *selfArg)
 {
     struct actor_self *self = selfArg;
 
@@ -256,16 +256,16 @@ void sub_802C018(void *selfArg)
 
 /* Accumulator: while `gLevelState+0x8c` is clear, arms
  * `gUnknown_03001484` (once, on the first accumulation) and adds
- * `delta` into `gUnknown_03001488`. Ignores its own first (player-
+ * `delta` into `gPolarQueuedWumpa`. Ignores its own first (player-
  * pointer) argument entirely - see docs/rom_map.md's correction on
  * this function. */
-void sub_802C078(void *arg0, s32 delta)
+void QueuePolarWumpa(void *arg0, s32 delta)
 {
     if (*((u8 *)gLevelState + 0x8c) == 0) {
-        if (gUnknown_03001488 == 0) {
+        if (gPolarQueuedWumpa == 0) {
             gUnknown_03001484 = 0xf;
         }
-        gUnknown_03001488 += delta;
+        gPolarQueuedWumpa += delta;
     }
 }
 
@@ -340,7 +340,7 @@ void sub_802C0BC(void *selfArg, s32 arg1param)
 
 /* Lock-timer setter: while `AddPolarAkuAkuMask(gPolarAkuAku)` returns 3,
  * arms `gUnknown_0300149C = 500` - the same lock/active flag
- * `sub_802B7E0` gates on, per docs/rom_map.md. */
+ * `ShockPolarPlayer` gates on, per docs/rom_map.md. */
 void sub_802C128(void *arg0)
 {
     if (AddPolarAkuAkuMask(gPolarAkuAku) == 3) {
@@ -349,7 +349,7 @@ void sub_802C128(void *arg0)
 }
 
 /* While `state` is 1-3 and `gUnknown_0300149C` (the same
- * lock/active flag `sub_802B7E0` gates on, per docs/rom_map.md) is
+ * lock/active flag `ShockPolarPlayer` gates on, per docs/rom_map.md) is
  * clear: transitions to state 5/table-index 3 (anim frame from
  * `self`'s part-table pointer at `+0x24`), resets
  * `gUnknown_030014A4` to `-0x780`, and fires `SetCellAnimSpeed(0x1c)`. */
@@ -386,28 +386,28 @@ void sub_802C14C(void *selfArg)
 }
 
 /* Teardown, gated by `arg1` bit 0: temporarily swaps `vtable`'s
- * vtable to `gStaticData_087E4E54` to run `gUnknown_03001488` drain
+ * vtable to `gPolarPlayerVtable` to run `gPolarQueuedWumpa` drain
  * calls into `CollectWumpa(gLevelState)`, runs two
- * `FreeVramTileBlock` cleanup calls on `gUnknown_030014B0[0]`/`[1]`, sets
+ * `FreeVramTileBlock` cleanup calls on `gPolarPlayerTiles[0]`/`[1]`, sets
  * `vtable` to the "dead" vtable `gActorVtable`, unlinks
  * `self` from the circular `+0x48`(next)/`+0x4c`(prev) list, and frees
  * `self` when `arg1 & 1`. */
-void sub_802C19C(void *selfArg, u32 arg1param)
+void DestroyPolarPlayer(void *selfArg, u32 arg1param)
 {
     register u8 *self asm("r5") = selfArg;
     u32 arg1 = arg1param;
 
-    *(u8 **)(self + 0x50) = gStaticData_087E4E54;
+    *(u8 **)(self + 0x50) = gPolarPlayerVtable;
 
-    if (gUnknown_03001488 != 0) {
+    if (gPolarQueuedWumpa != 0) {
         do {
             CollectWumpa(gLevelState);
-            gUnknown_03001488 -= 1;
-        } while (gUnknown_03001488 != 0);
+            gPolarQueuedWumpa -= 1;
+        } while (gPolarQueuedWumpa != 0);
     }
 
-    FreeVramTileBlock(gUnknown_030014B0[0]);
-    FreeVramTileBlock(gUnknown_030014B0[1]);
+    FreeVramTileBlock(gPolarPlayerTiles[0]);
+    FreeVramTileBlock(gPolarPlayerTiles[1]);
 
     *(u8 **)(self + 0x50) = gActorVtable;
 

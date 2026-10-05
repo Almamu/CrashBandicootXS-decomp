@@ -8,7 +8,7 @@
  *
  * Constructor for the small tracker object (`gAirship`):
  * stashes its level-index argument into `gUnknown_03001564`, and - if
- * `sub_802973C` (a level-index/mode query) returns zero - clears
+ * `GetActorCheckpoint` (a level-index/mode query) returns zero - clears
  * `gUnknown_0300157C`'s spawn-budget counter. Seeds the row/column
  * dimensions (`gUnknown_03001528`/`gUnknown_0300152C`) from
  * `gAirshipPicture`'s first two halfwords, allocates the 0x1c-byte
@@ -36,7 +36,7 @@ extern s32 gAirshipState;
 extern s32 gUnknown_0300153C;
 extern u8 gUnknown_03001524;
 extern s32 gUnknown_03001564;
-extern s32 sub_802973C(void);
+extern s32 GetActorCheckpoint(void);
 extern void SetActorAnim(void *self, s32 idx);
 extern s32 GetAnimFrameBaseOffset(void *self);
 extern void LoadAirshipGraphics(void);
@@ -76,7 +76,7 @@ void CreateAirship(s32 level)
     struct actor_self **slot;
 
     gUnknown_03001564 = level;
-    if (sub_802973C() == 0)
+    if (GetActorCheckpoint() == 0)
         gUnknown_0300157C = 0;
     gUnknown_03001528 = gAirshipPicture[0];
     gUnknown_0300152C = gAirshipPicture[1];

@@ -12,7 +12,7 @@ extern u8 gJetpackShotVtable[];
  * `self+0x50`'s event/trampoline table to `gJetpackShotVtable`, and
  * stashes its remaining two stack arguments into `self+0x58`/`self+0x5c`.
  * The same 7-argument `InitActorPart`-wrapper shape already left raw as
- * `sub_80305F8` (docs/matching/issue-58-0x08030334-actor.md). The ROM
+ * `CreateAirshipFireball` (docs/matching/issue-58-0x08030334-actor.md). The ROM
  * wants `self`/the constant `1`/`e`/`f` pinned to `r4`/`r5`/`r6`/`r7`
  * respectively, all kept live across the `InitActorPart` call, with a
  * matching 4-register `push`/`pop`. Explicitly pinning `e`/`f` to their
