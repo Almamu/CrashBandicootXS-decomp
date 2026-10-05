@@ -4,6 +4,7 @@
 #include "bitmap_font.h"
 #include "vram_pool.h"
 #include "text.h"
+#include "frontend.h"
 
 /* The language menu shown at boot (OpenLanguageSelect/RunLanguageSelect/
  * CloseLanguageSelect, called from MainLoop): up/down cycles `language`
@@ -13,17 +14,7 @@
  * result in gLanguage, which picks the gUiText<Lang>/cutscene tables.
  * Sits at the very start of the address range docs/audio.md calls the
  * GAX2 engine, but is game-side code that merely uses PlaySfx.
- * (Formerly `struct counter_widget`.) */
-struct language_select {
-    u32 frame;
-    u8 done;
-    u8 pad_5[3];
-    s32 language;
-    u8 field_c;
-    u8 field_d;
-    u8 pad_e[2];
-    void *starfield;
-};
+ * `struct language_select` is in frontend.h. */
 
 extern void *OperatorNewArray(u32 size);
 extern void OperatorDeleteArray(void *ptr);
@@ -34,13 +25,7 @@ extern u16 gKeys;
 extern void *gAudioContext;
 extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
 extern s32 UpdateKeys(void *arg0);
-extern void CommitLanguageSelectFrame(struct language_select *self);
-extern void DrawLanguageSelect(struct language_select *self);
-extern void UpdateStarfield(void *arg0);
-extern struct language_select *gLanguageSelect;
 extern void LoadTaggedAsset(void *asset, void *dest);
-
-void LanguageSelectInput(struct language_select *self, u32 flags);
 
 /* Loads a "tagged" asset (see LoadTaggedAsset, src/system/asset.c)
  * into a freshly allocated buffer, then queues a DMA3 transfer from that
@@ -82,28 +67,17 @@ void DestroyCompanyLogos(void *self, u32 flags)
  * called through the vtable with the deleting flags 3. It frees the two
  * VRAM tile blocks InitLogoActor allocated, drops back to the base
  * gActorVtable, unlinks the actor from the actor ring and frees it on
- * flags bit 0 - the same shape as DestroyActor. Its object is a much
- * larger one than the 0x14-byte `language_select` every neighboring
- * function in this file operates on, so it gets its own minimal,
- * locally-scoped struct. */
-struct linked_node {
-    u8 unused_00[0x48];
-    struct linked_node *prev;
-    struct linked_node *next;
-    void *field_50;
-};
+ * flags bit 0 - the same shape as DestroyActor. */
 
 extern void FreeVramTileBlock(void *arg0);
-extern void *gLogoActorTiles[2];
-extern u8 gLogoActorVtable[];
 extern u8 gActorVtable[];
 
-void DestroyLogoActor(struct linked_node *self, u32 flags)
+void DestroyLogoActor(struct actor_self *self, u32 flags)
 {
-    self->field_50 = gLogoActorVtable;
+    self->vtable = (struct actor_vtable *)gLogoActorVtable;
     FreeVramTileBlock(gLogoActorTiles[0]);
     FreeVramTileBlock(gLogoActorTiles[1]);
-    self->field_50 = gActorVtable;
+    self->vtable = (struct actor_vtable *)gActorVtable;
     self->next->prev = self->prev;
     self->prev->next = self->next;
     if (flags & 1) {
@@ -172,12 +146,9 @@ void LanguageSelectInput(struct language_select *self, u32 flags)
 
 extern void *gOamBuffer;
 extern void *gObjVramCursor;
-/* The six language names. */
-extern void *gLanguageNames[6];
 extern void ResetOamBuffer(void *arg0);
 extern void RewindObjVram(void *arg0);
 extern void HideUnusedOamEntries(void *arg0);
-extern s32 LanguageSelectBlink(struct language_select *self);
 /* `_call_via_r2`: calls `fn(self, arg)` (an bitmap_font method). */
 extern s32 _call_via_r2(void *self, void *arg, void *fn);
 
@@ -203,7 +174,7 @@ void DrawLanguageSelect(struct language_select *self)
     RewindObjVram(gObjVramCursor);
     y = 0x32;
     for (i = 0; i <= 5; i++) {
-        void *glyph;
+        const u8 *glyph;
         s32 x;
 
         if (i == self->language)
@@ -211,11 +182,11 @@ void DrawLanguageSelect(struct language_select *self)
         else
             FontSetPalette(gSmallFont, 0);
         x = (240 - _call_via_r2((u8 *)gSmallFont + gSmallFont->record->slots[0].offset,
-                               glyph = gLanguageNames[i],
+                               (void *)(glyph = gLanguageNames[i]),
                                gSmallFont->record->slots[0].ptr)) >> 1;
         gSmallFont->posX = x;
         gSmallFont->posY = y;
-        _call_via_r2((u8 *)gSmallFont + gSmallFont->record->slots[2].offset, glyph,
+        _call_via_r2((u8 *)gSmallFont + gSmallFont->record->slots[2].offset, (void *)glyph,
                     gSmallFont->record->slots[2].ptr);
         y += 10;
     }
@@ -239,10 +210,6 @@ void DrawLanguageSelect(struct language_select *self)
  * `zero` local shared by the `field_8`/`tileBase` stores - the 0 the
  * ROM keeps in r8. Matches under both compilers. */
 extern struct palette_cache *gPaletteCache;
-extern const u16 gLanguageSelectPalette0[16];
-extern const u16 gLanguageSelectPalette1[16];
-extern const u16 gLanguageSelectPalette2[16];
-extern const u16 gLanguageSelectPalette3[16];
 extern void CommitOamBuffer(void *arg0);
 extern void FreeUnlockedPaletteSlots(struct palette_cache *cache);
 extern s32 ClaimPaletteSlot(struct palette_cache *cache, s32 index);

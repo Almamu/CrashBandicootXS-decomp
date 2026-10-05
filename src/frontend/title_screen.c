@@ -4,8 +4,8 @@
 #include "actor_self.h"
 #include "gba/dma_macros.h"
 #include "graphics_package.h"
-#include "logo_screen.h"
 #include "text.h"
+#include "frontend.h"
 
 /* Middle part of GitHub issue #65's chunk (0x08035D1C-0x0803686C), split
  * off `title_screen_init.c` at `TitleScreenCheatInput` in the issues #64/#65
@@ -24,25 +24,11 @@ extern struct oam_shadow_buffer *gOamBuffer;
 extern struct AudioContext *gAudioContext;
 extern u8 gDispcnt[2];
 extern void *gInput;
-extern void *gLogoActorTiles[2];
-extern s32 gLogoActorTileBuffer;
-extern void *gLogoActorLastFrame;
 extern void (*gUnpackRleSpriteFrameFunc)(void *dst, u8 *frame);
 extern struct held_pressed_pair {
     u16 held;
     u16 pressed;
 } gKeys;
-
-extern u8 gTitleLogoPieceSeeds[];
-extern u8 gTitleArrowPieceOffsets[];
-extern u8 gLogoActorAnim[];
-extern u8 gPolarCategoryPalette[];
-extern u8 gVvLogoEmblemObj[];
-extern u8 gVvLogoLettersObj[];
-extern u8 gVvLogoUrlObj[];
-extern u8 gVvLogoPieceSeeds[];
-extern u8 gUniversalLogoBg[];
-extern u8 gLogoActorVtable[];
 
 extern void ResetOamBuffer(struct oam_shadow_buffer *arg0);
 extern void HideUnusedOamEntries(struct oam_shadow_buffer *arg0);
@@ -55,7 +41,6 @@ extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void CommitDispcnt(void);
 extern void PlaySong(struct AudioContext *self, u32 id);
 extern s32 GetUiText(s32 arg0);
-extern void UpdateStarfield(s32 arg0);
 extern void *_call_via_r1(void *arg0, void *fn);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern void ShowBg2(void);
@@ -63,7 +48,6 @@ extern s32 RandRange(s32 arg0);
 extern void *OperatorNewArray(u32 size);
 extern void OperatorDeleteArray(void *ptr);
 extern void *OperatorNew(s32 size);
-extern void *InitStarfield(void *arg0);
 extern void LoadTaggedAsset(void *asset, void *dest);
 extern void LoadTaggedAssetBuffered(void *self, void *asset, void *dest);
 extern void *AllocVramTileBlock(u32 size);
@@ -82,7 +66,6 @@ extern s32 QueueVramDmaTransfer(void *src, void *dest, u16 size, u16 unit);
 extern void UpdateKeys(void *arg0);
 extern void OperatorDelete(void *self);
 extern s32 __modsi3(void *self, s32 arg1);
-extern void DestroyStarfield(void *self, s32 arg1);
 extern void InitActorPart(void *self, s32 a, s32 b, s32 c, s32 d);
 extern s32 GetAnimFrameBaseOffset(void *self);
 extern s32 GetSpriteShapeSizeBits(void *self);
@@ -133,20 +116,6 @@ union bgcnt
     } bits;
 };
 
-/* One entry of the 8-byte {delta-record pointer, initial hold} seed
- * tables (`gTitleLogoPieceSeeds`/`gVvLogoPieceSeeds`) the slot arrays
- * are initialized from. */
-struct slot_seed
-{
-    struct delta_record *record;
-    s32 hold;
-};
-
-void UpdateTitleLogoPieces(u32 *self);
-void DrawTitleLogoPieces(u32 *self);
-void DrawTitleScreen(u32 *self);
-void CommitTitleScreenFrame(u32 *self);
-
 /* Per-frame updater for the scratch object's 9-slot (`i` = 0..8,
  * stride 0x34, base `self+4`) record array: while a slot's countdown
  * word at `self+0x14+i*0x34` is nonzero, decrements it; on reaching 0,
@@ -181,21 +150,6 @@ void CommitTitleScreenFrame(u32 *self);
  * explicit register pins to land in the exact temp registers the
  * ROM's own build chose instead of whatever this compiler naturally
  * picks. */
-struct delta_record
-{
-    s16 hold;      // 0x0 - countdown reload value
-    u16 dPosA;     // 0x2 - Q16.16 position (<<16)
-    u16 dPosB;     // 0x4 - Q16.16 position (<<16)
-    u16 dPosC;     // 0x6 - Q16.16 position (<<16)
-    s16 dVelA;     // 0x8 - Q24.8 velocity (<<8)
-    s16 dVelB;     // 0xa - Q24.8 velocity (<<8)
-    s32 deltaA;    // 0xc  - raw delta for dPosA's live field
-    s32 deltaB;    // 0x10 - raw delta for dPosB's live field
-    s32 deltaC;    // 0x14 - raw delta for dPosC's live field
-    s32 deltaD;    // 0x18 - raw delta for dVelA's live field
-    s32 deltaE;    // 0x1c - raw delta for dVelB's live field
-};
-
 static inline struct delta_record **RecordAt(u32 *self, s32 stride)
 {
     u8 *base = (u8 *)self + 0x40;
@@ -382,7 +336,7 @@ seedLoop:
 
         *dst = *(s32 *)(off + holdBase) + 1;
     }
-    *RecordAt(self, stride) = seed->record;
+    *RecordAt(self, stride) = (struct delta_record *)seed->record;
     {
         s32 off = i << 2;
         u32 base = (u32)self + 0x1e4;
@@ -403,7 +357,7 @@ seedLoop:
     {
         UpdateTitleLogoPieces(self);
         DrawTitleScreen(self);
-        UpdateStarfield(self[0x82]);
+        UpdateStarfield((void *)self[0x82]);
         WaitForVBlank();
         *(vu32 *)REG_ADDR_BLDCNT = 0;
         CommitTitleScreenFrame(self);
@@ -416,7 +370,7 @@ seedLoop:
     for (;;)
     {
         DrawTitleScreen(self);
-        UpdateStarfield(self[0x82]);
+        UpdateStarfield((void *)self[0x82]);
         UpdateKeys(gInput);
         pressed = gKeys.pressed;
         pressed = TitleScreenCheatInput(self, pressed);
@@ -445,7 +399,7 @@ seedLoop:
     }
 fadeLoop:
     DrawTitleScreen(self);
-    UpdateStarfield(self[0x82]);
+    UpdateStarfield((void *)self[0x82]);
     WaitForVBlank();
     REG_BLDY = fade;
     REG_BLDCNT = 0xff;
@@ -619,7 +573,7 @@ loop:
 
         *dst = *(s32 *)(off + holdBase) + 1;
     }
-    *RecordAt(self, stride) = seed->record;
+    *RecordAt(self, stride) = (struct delta_record *)seed->record;
     *counter++ = -1;
     seed++;
     slot += 0x34;
@@ -671,16 +625,9 @@ struct part_vtable
     struct actor_method m18;    // 0x18
 };
 
-void LoadUniversalLogoBg(u32 *self);
-
 /* This subsystem's `self` (a raw `u32 *` throughout, as the matched
  * code indexes it) is a `struct logo_screen`. */
 #define SLOT_SYSTEM(self) ((struct logo_screen *)(self))
-struct actor_self *InitLogoActor(struct actor_self *self, void *a);
-void LoadVvLogoGraphics(u32 *self);
-void InitVvLogoPieces(u32 *self);
-void UpdateVvLogoPieces(u32 *self);
-void DrawVvLogoPieces(struct logo_screen *self);
 
 /* `operator new`: an inline wrapper puts the size constant after the
  * heap flag, as the ROM loads them. */
@@ -715,7 +662,7 @@ void RunCompanyLogos(u32 *self)
     InitObjTileFreeList(OBJ_VRAM0);
     InitSpriteFrameOamQueue();
     InitSpriteFrameCache();
-    part = InitLogoActor(New(0x54), gLogoActorAnim);
+    part = InitLogoActor(New(0x54), &gLogoActorAnim);
     {
         struct dma_regs *dma = (struct dma_regs *)REG_ADDR_DMA3SAD;
         dma->src = (u32)gPolarCategoryPalette;
@@ -739,7 +686,7 @@ void RunCompanyLogos(u32 *self)
             *(vu32 *)REG_ADDR_BLDCNT = 0;
         }
         WaitForVBlank();
-        UpdateStarfield((s32)bgObj);
+        UpdateStarfield(bgObj);
     }
     PlaySfx(gAudioContext, 0x4b, 0x100);
     scale = 0x2000;
@@ -796,7 +743,7 @@ void RunCompanyLogos(u32 *self)
         REG_BG2PD = q;
         REG_BG2PB = 0;
         REG_BG2PC = 0;
-        UpdateStarfield((s32)bgObj);
+        UpdateStarfield(bgObj);
     } while (SLOT_SYSTEM(self)->fade != 0);
     ((struct dispcnt_bits *)gDispcnt)->bg2 = 0;
     ((struct dispcnt_bits *)gDispcnt)->obj = 1;
@@ -828,7 +775,7 @@ void RunCompanyLogos(u32 *self)
         FlushSpriteFrameOamQueue();
         UpdateVvLogoPieces(self);
         DrawVvLogoPieces(SLOT_SYSTEM(self));
-        UpdateStarfield((s32)bgObj);
+        UpdateStarfield(bgObj);
         WaitForVBlank();
         fade = &SLOT_SYSTEM(self)->fade;
         v = *fade;
@@ -884,9 +831,9 @@ void RunCompanyLogos(u32 *self)
  * plus a 0x1000-byte scratch buffer (`self+0x434`). The last two
  * stores go through a destination pointer taken before the allocation
  * call, as the ROM computes the address first. */
-#define PKG_A ((struct bg_package *)gVvLogoEmblemObj)
-#define PKG_B ((struct bg_package *)gVvLogoLettersObj)
-#define PKG_C ((struct bg_package *)gVvLogoUrlObj)
+#define PKG_A (&gVvLogoEmblemObj)
+#define PKG_B (&gVvLogoLettersObj)
+#define PKG_C (&gVvLogoUrlObj)
 
 void LoadVvLogoGraphics(u32 *self)
 {
@@ -946,7 +893,7 @@ void InitVvLogoPieces(u32 *self)
     {
         *active = zero;
         *countdown = *hold + 1;
-        *(struct delta_record **)((u8 *)countdown + 0x2c) = seed->record;
+        *(struct delta_record **)((u8 *)countdown + 0x2c) = (struct delta_record *)seed->record;
         seed++;
         active += 0x34;
         countdown = (s32 *)((u8 *)countdown + 0x34);

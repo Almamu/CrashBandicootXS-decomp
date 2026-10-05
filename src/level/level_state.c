@@ -4,6 +4,7 @@
 #include "actor.h"
 #include <agb_syscall.h>
 #include "hud.h"
+#include "frontend.h"
 
 extern void *gHud;
 extern void *gAudioContext;
@@ -853,9 +854,6 @@ extern void PlayCutscene(void *self, s32 mode);
 struct AudioContext;
 extern void StopSfx(struct AudioContext *self, u32 id);
 extern void *OperatorNew(s32 size);
-extern void nullsub_7(void);
-extern s32 RunCompanyLogos(void);
-extern void DestroyCompanyLogos(void *self, u32 flags);
 
 /* Sets `self->0x1bc` (a Q-format camera/position field paired with the
  * `SetCrateGemPos` two-word setter below). */
@@ -1008,7 +1006,7 @@ void ShowCompanyLogos(void)
 
     asm volatile("bl nullsub_7" : "+r"(tmp) :: "r1", "r2", "r3", "lr", "cc");
     block = tmp;
-    RunCompanyLogos();
+    RunCompanyLogos(tmp);
     if (block != NULL) {
         DestroyCompanyLogos(block, 3);
     }

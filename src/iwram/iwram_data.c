@@ -3,6 +3,8 @@
 #include "cutscene.h"
 #include "hud.h"
 #include "link.h"
+#include "save.h"
+#include "frontend.h"
 
 /*
  * IWRAM 0x030007CC-0x030009E8 (stored in ROM at 0x087E5DB0-0x087E5FCC):
@@ -78,9 +80,9 @@ u32 gSfxVoiceToggle = 0;
  * session object the link IRQ handlers work on. gEepromNeedsInit is the
  * save code's (save_data.c): set until its first EEPROMConfigure. */
 u8 gLinkSessionReset = 1;
-void *gLinkSession = NULL;
+struct link_session *gLinkSession = NULL;
 u8 gEepromNeedsInit = 1;
-void *gSaveMenu = NULL;
+struct save_menu *gSaveMenu = NULL;
 /* The two link compatibility messages, stored after the CRC table
  * (src/data/link_crc_16af10.c): "crash 1 <-> crash 2", "crash 1 <-> crash 3". */
 const u8 *gCrash2LinkTextPtr = (const u8 *)gCrash2LinkText;
@@ -159,7 +161,7 @@ const void *gTitleObjPackages[4] = {
     gTitleBandicootObj,
 };
 
-void *gLanguageSelect = NULL; /* struct language_select * */
+struct language_select *gLanguageSelect = NULL;
 
 /* GAX2's fatal-error screen font (gax_fatal_error.c), Huffman-compressed
  * for the BIOS HuffUnComp: 8-bit symbols, 0x4A0 bytes (37 4bpp tiles)

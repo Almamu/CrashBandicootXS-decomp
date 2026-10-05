@@ -1,14 +1,9 @@
 #include "core.h"
-#include "settings_sync.h"
-#include "save_menu.h"
 #include "box_part.h"
 #include "bitmap_font.h"
 #include "text.h"
 #include "link.h"
-
-extern void ReadSaveSlot(void *handle, s32 rowIndex, void *buf);
-extern void WriteSaveSlot(void *handle, s32 rowIndex, void *buf);
-extern void EraseSaveSlot(void *handle, s32 rowIndex);
+#include "save.h"
 
 void SetSaveTransferRecord(struct settings_sync_pump *self, struct save_data *tmpl)
 {
@@ -46,11 +41,7 @@ struct held_pressed_pair {
 };
 extern struct held_pressed_pair gKeys;
 extern void UpdateKeys(void *arg0);
-extern void DrawSaveMenu(struct save_menu *self);
 extern void WaitForVBlank(void);
-extern void CommitSaveMenuFrame(struct save_menu *self);
-extern void *gSaveMenu;
-extern void SaveMenuInput(struct save_menu *self, u32 keys);
 
 /* The "connecting..." spinner dialog's blocking modal loop: sets up
  * `gSaveMenu`'s `state`/`field_10`/`flags`/`field_8`/`field_20`,
@@ -92,20 +83,13 @@ u8 RunSaveMenu(u32 state, u32 field10)
 extern void *OperatorNew(s32 size);
 extern void *gAudioContext;
 extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
-extern u8 CheckSaveChecksum(void *arg0);
 extern struct palette_cache *gPaletteCache;
 extern void FreeUnlockedPaletteSlots(struct palette_cache *self);
-extern void InitSaveMenuIcons(struct save_menu *self);
-extern void LoadSaveMenuBg(struct save_menu *self);
 extern void PlaySong(void *arg0, s32 arg1);
-extern void LoadSaveMenuData(struct save_menu *self);
 extern void *gLevelState;
 extern void *PackSaveData(void *arg0);
-extern void SummarizeProgress(void *self, struct settings_row_stats *dest, void *src);
-extern void RefreshSaveSlotSummaries(struct save_menu *self, void *handle);
 extern void *IwramAlloc(s32 size);
 extern void FadeBrightness(u8 flags, s32 frameDelay, u8 sync);
-extern void ResetSaveData(struct save_data *self);
 
 /* The composite pause/options screen's (and the spinner dialog's, via
  * InitSaveMenu above) `field_8c`/`field_90` constructor: allocates and
@@ -113,8 +97,8 @@ extern void ResetSaveData(struct save_data *self);
  * the screen's tile/BG/list setup (InitSaveMenuIcons/LoadSaveMenuBg/
  * LoadSaveMenuData, still raw), fills `currentStats` and the first
  * `rowStats` entry, then allocates and stashes the global SIO session
- * object (`gLinkSession`, still uncharacterized - see
- * SendSaveTransferChunk/ReceiveSaveTransferChunk, src/save/save_data.c) and kicks off
+ * object (`gLinkSession`, a `struct link_session` - see
+ * SendSaveTransferChunk/ReceiveSaveTransferChunk, src/save/save_transfer.c) and kicks off
  * a VBlank IRQ request. */
 struct save_menu *InitSaveMenu(struct save_menu *arg0)
 {
@@ -123,7 +107,6 @@ struct save_menu *InitSaveMenu(struct save_menu *arg0)
     register void **field90Addr asm("r8");
     register s32 size asm("r6") = 0x200;
     register void *obj asm("r4");
-    extern void *gLinkSession;
 
     obj = OperatorNew(size);
     ResetSaveData(obj);
@@ -143,7 +126,7 @@ struct save_menu *InitSaveMenu(struct save_menu *arg0)
     RefreshSaveSlotSummaries(self, *field8cAddr);
 
     {
-        register void **sessionAddr asm("r4") = &gLinkSession;
+        register struct link_session **sessionAddr asm("r4") = &gLinkSession;
         *sessionAddr = InitLinkSession(IwramAlloc(0x408));
     }
     FadeBrightness(0x80, 1, 0);
@@ -165,7 +148,6 @@ void DestroySaveMenu(struct save_menu *self, u32 flags)
     register void **b asm("r5");
     register void **a asm("r4");
     register s32 n asm("r8");
-    extern void *gLinkSession;
 
     if (gLinkSession != NULL) {
         DestroyLinkSession(gLinkSession, 3);
@@ -215,14 +197,6 @@ void DestroySaveMenu(struct save_menu *self, u32 flags)
 }
 
 extern void _call_via_r1(void *arg0, void *fn);
-extern void SaveMenuMainInput(struct save_menu *self, u32 keys);
-extern void SaveMenuLoadInput(struct save_menu *self, u32 keys, void *handle);
-extern void SaveMenuLinkInput(struct save_menu *self);
-extern void SaveMenuMessageInput(struct save_menu *self, u32 keys);
-extern void SaveMenuSaveInput(struct save_menu *self, u32 keys);
-extern void SaveMenuDeleteInput(struct save_menu *self, u32 keys);
-extern void SaveMenuOverwriteInput(struct save_menu *self, u32 keys);
-extern void SaveMenuConfirmDeleteInput(struct save_menu *self, u32 keys);
 
 /* Per-frame input dispatch for the composite screen (or, via
  * RunSaveMenu above, the spinner dialog sharing the same struct shape):
@@ -293,7 +267,6 @@ void SaveMenuInput(struct save_menu *self, u32 keys)
 }
 
 extern s32 GetUiText(s32 arg0);
-extern void BeginLinkSaveTransfer(struct save_menu *self);
 
 /* State 0's input handler: cancel/confirm-combo (bits 1/3) requests an
  * exit; confirm (bit 0) advances through this state's own little
@@ -417,7 +390,6 @@ extern void SetMusicVolume(void *arg0, u16 arg1);
 void SaveMenuLoadInput(struct save_menu *self, u32 flags, void *handle)
 {
     u8 buf[0x70];
-    extern u8 IsSaveSlotEmpty(void *handle, s32 rowIndex);
 
     if (flags & 1) {
         goto confirm;
@@ -454,16 +426,6 @@ void SaveMenuLoadInput(struct save_menu *self, u32 flags, void *handle)
     SaveMenuMoveCursor(self, flags);
 }
 
-extern s32 LinkExchangeSaveData(struct save_menu *self);
-/* Matches EndLinkSaveTransfer's real (void)-taking, unused-argument prototype
- * from src/save/save_menu_ui.c - this call site passes `self`
- * anyway (the ROM's caller sets it up in r0 even though the callee
- * never reads it), so it's declared here as taking one ignored
- * argument to reproduce that dead register setup. */
-extern void EndLinkSaveTransfer(void *arg0);
-extern s32 gCrash2LinkTextPtr;
-extern s32 gCrash3LinkTextPtr;
-
 /* State 3's input handler: polls the SIO-handshake spinner
  * (LinkExchangeSaveData, parked). Timeout/cancel -> settle back to state 0;
  * error/checksum-mismatch -> a "connection failed" message (state 4);
@@ -473,9 +435,6 @@ extern s32 gCrash3LinkTextPtr;
  * own record and show a matching "conflict" message. */
 void SaveMenuLinkInput(struct save_menu *self)
 {
-    extern u32 GetSaveGameId(void *arg0);
-    extern s32 StoreSaveData(void *arg0);
-    extern void SetSaveFlags(void *handle, u8 flags);
     s32 state = LinkExchangeSaveData(self);
 
     EndLinkSaveTransfer(self);
@@ -487,7 +446,7 @@ void SaveMenuLinkInput(struct save_menu *self)
         return;
     }
 
-    if (state == 2 || !CheckSaveChecksum(self->field_90)) {
+    if (state == 2 || !(u8)CheckSaveChecksum(self->field_90)) {
         self->state = 4;
         self->field_14 = GetUiText(0x2c);
         self->field_18 = GetUiText(0x2e);
@@ -506,13 +465,13 @@ void SaveMenuLinkInput(struct save_menu *self)
         SetSaveFlags(self->field_8c, 2);
         StoreSaveData(self->field_8c);
         self->state = 4;
-        self->field_14 = gCrash2LinkTextPtr;
+        self->field_14 = (u32)gCrash2LinkTextPtr;
         break;
     case 3:
         SetSaveFlags(self->field_8c, 4);
         StoreSaveData(self->field_8c);
         self->state = 4;
-        self->field_14 = gCrash3LinkTextPtr;
+        self->field_14 = (u32)gCrash3LinkTextPtr;
         break;
     default:
         self->state = 0;
@@ -522,12 +481,10 @@ void SaveMenuLinkInput(struct save_menu *self)
     self->field_18 = GetUiText(0x2e);
 }
 
-extern u8 IsSaveSlotEmpty(void *handle, s32 rowIndex);
 extern void MemCopy32(void *dst, const void *src, s32 size);
 extern s32 GetCurrentLevel(void *arg0);
 extern s32 GetSfxVolume(void *arg0);
 extern s32 GetMusicVolume(void *arg0);
-extern s32 StoreSaveData(void *arg0);
 
 /* Shared "commit or refresh row `rowIndex`" step used by states 5-9
  * below: pulls the row's stats/name/icon scratch data, feeds it through
@@ -590,9 +547,6 @@ void SaveGameToSlot(struct save_menu *self, s32 rowIndex)
  * docs/matching.md's alignment-padding gotcha / the
  * matching_decomp_alignment_fix convention). */
 asm(".align 2, 0");
-
-extern void SaveGameToSlot(struct save_menu *self, s32 rowIndex);
-extern void SaveMenuMoveCursor(struct save_menu *self, u32 flags);
 
 /* State 7's input handler: confirm/cancel-combo commits row `field_24`
  * (SaveGameToSlot, src/save/save_menu_input.c) and returns to state 0
@@ -766,10 +720,6 @@ void SaveMenuConfirmDeleteInput(struct save_menu *self, u32 flags)
         }
     }
 }
-
-extern s32 GetSaveMenuBlinkPalette(struct save_menu *self);
-extern void DrawSaveSlotStats(struct save_menu *self, s32 label1, s32 label2, s32 rowIdx, u8 flag);
-extern s32 gSaveMenuOptions[];
 
 /* Draws the 5-entry state-select sub-menu label list (SaveMenuMainInput's
  * `field_10` states, gSaveMenuOptions's label table) into

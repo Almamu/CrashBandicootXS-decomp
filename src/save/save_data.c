@@ -1,11 +1,10 @@
 #include "core.h"
 #include "audio.h"
-#include "settings_sync.h"
 #include <agb_eeprom.h>
 #include "gba/dma_macros.h"
+#include "save.h"
 
 extern void MemCopy32(void *dst, void *src, s32 len);
-extern u8 gEepromNeedsInit;
 extern void (*gIntrTableTimer2)(void);
 
 /* Reads the save data: `gEepromConfig->maxCount` 8-byte blocks from
@@ -140,8 +139,6 @@ extern struct AudioContext *gAudioContext;
 extern u32 GetCurrentSong(struct AudioContext *self);
 extern void StopSong(struct AudioContext *self);
 extern void PlaySong(struct AudioContext *self, u32 id);
-extern s32 ReadSaveData(void *self, s32 len);
-extern u32 CheckSaveChecksum(struct save_data *self);
 
 /* Loads the settings record from EEPROM (`ReadSaveData`, retried up to
  * 3 times), muting the music player across the transfer (stop before,
@@ -195,9 +192,6 @@ s32 LoadSaveData(struct save_data *self)
     }
     return 0;
 }
-
-extern void EraseSaveSlot(struct save_data *self, s32 row);
-extern void UpdateSaveChecksum(struct save_data *self);
 
 /* Validates the record's checksum (inline word-sum, same shape as
  * `CheckSaveChecksum` below but not a call to it - the ROM genuinely inlines
@@ -312,8 +306,6 @@ u32 GetSaveGameId(struct save_data *self)
 {
     return self->versionNibble >> 4;
 }
-
-extern s32 WriteSaveData(void *self, s32 len);
 
 /* Saves the settings record to EEPROM (`WriteSaveData`, retried up to 5
  * times), muting the music player across the transfer the same way

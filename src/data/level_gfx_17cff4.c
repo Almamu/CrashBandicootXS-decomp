@@ -5,27 +5,7 @@
  * sections by ldscript.txt - see docs/data.md.
  */
 
-#include "graphics_package.h"
-
-/* title_screen.c's `struct delta_record`: one step of a
- * countdown slot's motion. When the slot's hold count runs out it loads
- * the next record: a new hold count (0 ends the sequence), three Q16.16
- * positions, two Q24.8 velocities and the five per-frame deltas added to
- * them while the hold lasts. */
-struct delta_record
-{
-    s16 hold;
-    u16 dPosA;
-    u16 dPosB;
-    u16 dPosC;
-    s16 dVelA;
-    s16 dVelB;
-    s32 deltaA;
-    s32 deltaB;
-    s32 deltaC;
-    s32 deltaD;
-    s32 deltaE;
-};
+#include "frontend.h"
 
 extern const u8 gTitleBandicootObjPalette[];
 extern const u8 gTitleCrashObjPalette[];
@@ -176,9 +156,7 @@ struct anim_record_view
     s32 spawnY;
 };
 
-extern const u8 gPolarCategoryPalette[];
-
 const struct anim_record_view gLogoActorAnim = {
-    0, gPolarCategoryPalette + 0x400, gPolarCategoryPalette + 0x49C,
+    0, (const u8 *)gPolarCategoryPalette + 0x400, (const u8 *)gPolarCategoryPalette + 0x49C,
     0, { 0 }, 0x100, { -10, -20, -1, 20, 44, 3 }, 0, 0,
 };

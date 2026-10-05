@@ -2,17 +2,7 @@
 #include "vram_pool.h"
 #include "gba/dma_macros.h"
 #include "memory.h"
-
-struct language_select {
-    u32 frame;
-    u8 done;
-    u8 pad_5[3];
-    s32 language;
-    u8 field_c;
-    u8 field_d;
-    u8 pad_e[2];
-    void *starfield;
-};
+#include "frontend.h"
 
 extern struct oam_shadow_buffer *gOamBuffer;
 extern struct palette_cache *gPaletteCache;
@@ -26,9 +16,7 @@ extern void FlushVramDmaQueue(void);
 extern u8 gMenuSkyBg[];
 
 extern void *OperatorNew(s32 size);
-extern void DestroyStarfield(void *self, s32 arg1);
 extern void OperatorDelete(void *self);
-extern void *InitStarfield(void *arg0);
 extern void LoadGraphicsPackage(void *buf, void *asset);
 extern void *InitBgSetup(void *buf, s32 arg1, s32 arg2, s32 arg3, s32 arg4);
 extern s32 GetBgSetupControl(void *buf);
@@ -37,20 +25,6 @@ extern void SetObjMapping1D(void);
 extern void ShowObj(void);
 extern void SetDispcntMode(s32 val);
 extern void CommitDispcnt(void);
-extern struct language_select *gLanguageSelect;
-
-/* Left raw (asm/code_3_2_20a.s, alongside DrawLanguageSelect) rather than
- * matched here - it fully decodes (initializes gPaletteCache's tile
- * cache with 4 fixed OBJ tiles, then copies a few bitmap_font fields
- * from gSmallFont's instance into gLargeFont's), but hits
- * the same class of gcc-2.9 register-allocation difficulty already
- * documented for DrawPowerDialog (src/menus/power_dialog_draw.c) - the compiler
- * keeps reaching for r8/r9/sl instead of the ROM's plain r4-r7 reuse no
- * matter how the source is rephrased (indexed vs pointer-increment copy
- * loop, address-of-global caching, ...). Parking it properly (the
- * SUB_8006600-style register-pin macros) would need more of that same
- * heavy, per-call-site engineering than this pass has budget for. */
-extern void InitLanguageSelectGraphics(void *unused);
 
 /* Resets `self`'s two byte flags, requests a BG tile/map graphics
  * package, and sets BG0's control register from it - a shared "load my
@@ -82,9 +56,9 @@ void LoadLanguageSelectBg(struct language_select *self)
     *(vu32 *)REG_ADDR_BG0HOFS = zero;
 }
 
-s32 LanguageSelectBlink(s32 *arg0)
+s32 LanguageSelectBlink(struct language_select *self)
 {
-    if ((*arg0 >> 2) & 1) {
+    if ((self->frame >> 2) & 1) {
         return 1;
     }
     return 2;
@@ -99,12 +73,12 @@ void CommitLanguageSelectFrame(struct language_select *self)
     FlushVramDmaQueue();
 }
 
-void DestroyLanguageSelect(void *self, u32 flags)
+void DestroyLanguageSelect(struct language_select *self, u32 flags)
 {
-    void *field10 = *(void **)((u8 *)self + 0x10);
+    void *starfield = self->starfield;
 
-    if (field10 != NULL) {
-        DestroyStarfield(field10, 3);
+    if (starfield != NULL) {
+        DestroyStarfield(starfield, 3);
     }
     if (flags & 1) {
         OperatorDelete(self);

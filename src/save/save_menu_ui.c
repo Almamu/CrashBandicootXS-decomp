@@ -1,20 +1,8 @@
 #include "core.h"
-#include "save_menu.h"
 #include "bitmap_font.h"
 #include "text.h"
 #include "link.h"
-
-/* A small "load my background" sub-widget - the same field_c/field_d
- * bit-flags-pair idiom as `struct language_select`
- * (src/frontend/language_select_setup.c's LoadLanguageSelectBg), just at offsets
- * 0x1c/0x1d here - this chunk doesn't include whatever embeds it in a
- * bigger object, so it gets its own minimal type. */
-struct bg_widget {
-    u32 field_0;
-    u8 unused_04[0x1c - 4];
-    u8 field_1c;
-    u8 field_1d;
-};
+#include "save.h"
 
 extern void *InitBgSetup(void *buf, s32 arg1, s32 arg2, s32 arg3, s32 arg4);
 extern void LoadGraphicsPackage(void *buf, void *asset);
@@ -22,27 +10,28 @@ extern s32 GetBgSetupControl(void *buf);
 extern u8 gMenuSkyBg[];
 
 /* Same shape as LoadLanguageSelectBg (src/frontend/language_select_setup.c) - reset
- * two bit-flag bytes, request a BG tile/map graphics package, set BG0's
+ * the DISPCNT shadow (`field_1c`) and set its two bytes one at a time,
+ * request a BG tile/map graphics package, set BG0's
  * control register from it - plus zeroing `field_0`, which LoadLanguageSelectBg's
  * language_select doesn't have. */
-void LoadSaveMenuBg(struct bg_widget *self)
+void LoadSaveMenuBg(struct save_menu *self)
 {
     u8 buf[0x10];
     u32 zero = 0;
     s32 a;
     register s32 b asm("r1");
 
-    *(u16 *)&self->field_1c = zero;
+    self->field_1c = zero;
     a = 0x40;
-    a |= self->field_1c;
+    a |= ((u8 *)&self->field_1c)[0];
     a &= -8;
     a |= 1;
-    self->field_1c = a;
+    ((u8 *)&self->field_1c)[0] = a;
     b = 1;
-    b |= self->field_1d;
+    b |= ((u8 *)&self->field_1c)[1];
     b &= -3;
     b |= 0x10;
-    self->field_1d = b;
+    ((u8 *)&self->field_1c)[1] = b;
 
     InitBgSetup(buf, 2, 0x1e, 1, 3);
     LoadGraphicsPackage(buf, gMenuSkyBg);
@@ -56,8 +45,6 @@ extern s32 CountRelics(void *arg0);
 extern s32 GetProgressLives(void *arg0);
 extern s32 CountCrystals(void *arg0);
 extern s32 GetCompletionPercent(void *arg0);
-extern u8 IsSaveSlotEmpty(void *handle, s32 rowIndex);
-extern void ReadSaveSlot(void *handle, s32 rowIndex, void *buf);
 
 /* Refreshes each of the 4 settings rows' aggregate stats from `handle`,
  * skipping any row IsSaveSlotEmpty reports as inactive/hidden. */
@@ -83,10 +70,6 @@ void RefreshSaveSlotSummaries(struct save_menu *self, void *handle)
     } while (i <= 3);
 }
 
-extern s32 LoadSaveData(void *arg0);
-extern s32 StoreSaveData(void *arg0);
-extern void ResetSaveData(void *arg0);
-
 void LoadSaveMenuData(struct save_menu *self)
 {
     s32 v = LoadSaveData(self->field_8c);
@@ -99,7 +82,7 @@ void LoadSaveMenuData(struct save_menu *self)
 /* Fills `dest` from `src` using the same five-function battery as the
  * loop in RefreshSaveSlotSummaries above - `self` (the screen widget) is passed but
  * never used, matching the ROM exactly. */
-void SummarizeProgress(void *self, struct settings_row_stats *dest, void *src)
+void SummarizeProgress(struct save_menu *self, struct settings_row_stats *dest, void *src)
 {
     dest->gems = CountClearGems(src);
     dest->relics = CountRelics(src);
@@ -188,27 +171,21 @@ s32 GetSaveMenuBlinkPalette(struct save_menu *self)
     return 2;
 }
 
-extern void *gLinkSession;
-
-void EndLinkSaveTransfer(void)
+/* `self` is never read, but SaveMenuLinkInput passes it (the ROM's call
+ * sets it up in r0). */
+void EndLinkSaveTransfer(struct save_menu *self)
 {
-    void *p = gLinkSession;
+    struct link_session *p = gLinkSession;
     ResetLinkSession(p);
-    *((u8 *)p + 5) = 0;
+    p->field_5 = 0;
 }
 
 void BeginLinkSaveTransfer(struct save_menu *self)
 {
     ResetLinkSession(gLinkSession);
-    *((u8 *)gLinkSession + 5) = 1;
+    gLinkSession->field_5 = 1;
     ResetSaveData(self->field_90);
 }
-
-extern void DrawSaveMenuTitle(struct save_menu *self, s32 labelIndex);
-extern void DrawSaveSlots(struct save_menu *self, void *handle, s32 arg2);
-extern void DrawYesNoPrompt(struct save_menu *self, s32 labelIndex);
-extern void DrawSaveMenuCancel(struct save_menu *self, u8 highlight);
-extern void DrawSaveMenuMessageLines(struct save_menu *self, s32 label1, s32 label2);
 
 void DrawSaveMenuConfirmDelete(struct save_menu *self)
 {
@@ -261,7 +238,6 @@ void DrawSaveMenuLoad(struct save_menu *self)
 extern void ResetOamBuffer(void *arg0);
 extern void HideUnusedOamEntries(void *arg0);
 extern void RewindObjVram(void *arg0);
-extern void DrawSaveMenuMain(struct save_menu *self);
 extern void *gOamBuffer;
 extern void *gObjVramCursor;
 
@@ -306,9 +282,6 @@ void DrawSaveMenu(struct save_menu *self)
     }
     HideUnusedOamEntries(gOamBuffer);
 }
-
-extern void EraseSaveSlot(void *arg0, s32 arg1);
-extern void WriteSaveSlot(void *arg0, s32 arg1, void *buf);
 
 void DeleteSaveSlot(struct save_menu *self, s32 arg1)
 {

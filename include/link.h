@@ -7,14 +7,15 @@
  * Declarations here are the functions' real prototypes, copied from
  * their definitions. A .c file that needs a different local declaration
  * for codegen keeps it as an asm-label alias with a `codegen:` comment
- * (docs/headers_plan.md).
- *
- * `gLinkSession` (src/iwram/iwram_data.c) is not declared here yet:
- * src/save/save_transfer.c reads it through its own `struct sio_session`
- * view, which has to be merged into `struct link_session` first. */
+ * (docs/headers_plan.md). */
 
 #include "core.h"
 #include "link_session.h"
+
+/* The link session the link IRQ handlers and the save transfer work on:
+ * allocated by InitSaveMenu, freed by DestroySaveMenu
+ * (src/save/save_menu_input.c). Defined in src/iwram/iwram_data.c. */
+extern struct link_session *gLinkSession;
 
 /* Set by ResetLinkSessionState, cleared by LinkExchangeSaveData
  * (src/save/save_menu_draw.c). Defined in src/iwram/iwram_data.c. */

@@ -1,4 +1,5 @@
 #include "tagged_asset.h"
+#include "frontend.h"
 
 /*
  * ROM 0x0817E78C-0x0824B638: the first 0x20 bytes of the old

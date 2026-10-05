@@ -93,7 +93,7 @@ void DestroyLinkSession(struct link_session *self, u32 flags)
 }
 
 /* Session object constructor: zeroes the transient TX ring bookkeeping
- * (`ring.field_84`/`field_88`, `field_8c` = 0x7f), zeroes the same trio
+ * (`ring.count`/`readPos`, `writePos` = 0x7f), zeroes the same trio
  * for all 4 per-player rings (`players[i].ring`, at self+0x18c +
  * playerIndex*0xc8; the loop keeps the raw offset, which the ROM builds
  * as `0xc6 << 1` in r6), resets the session (`ResetLinkSession`), clears
@@ -109,9 +109,9 @@ struct link_session *InitLinkSession(struct link_session *arg0)
     register s32 sentinel asm("r3");
 
     self = arg0;
-    self->ring.field_84 = 0;
-    self->ring.field_88 = 0;
-    self->ring.field_8c = 0x7f;
+    self->ring.count = 0;
+    self->ring.readPos = 0;
+    self->ring.writePos = 0x7f;
 
     i = 3;
     zero = 0;
@@ -132,8 +132,6 @@ struct link_session *InitLinkSession(struct link_session *arg0)
 
     return self;
 }
-
-extern void *gLinkSession;
 
 /* The Serial-IRQ handler installed by `LinkStart` above: forwards
  * into the still-raw per-frame SIO data pump (`HandleLinkSerial`) with the

@@ -1,9 +1,5 @@
 #include "core.h"
-#include "settings_sync.h"
-
-extern void *gLinkSession;
-extern void ReceiveSaveTransferChunk(struct settings_sync_pump *self, s32 playerIndex);
-extern void SendSaveTransferChunk(struct settings_sync_pump *self);
+#include "save.h"
 
 /* Polls the SIO-handshake spinner's transfer state once per frame: if
  * the session (*gLinkSession, byte +7 = "connected") isn't

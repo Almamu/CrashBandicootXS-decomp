@@ -2,6 +2,8 @@
 #include "gba/io_reg.h"
 #include "gba/dma_macros.h"
 #include "hud.h"
+#include "save.h"
+#include "frontend.h"
 
 /* UpdateGameFrame - the main per-frame game-loop driver at the head of
  * the UpdateGameFrame-MainLoop cluster (GitHub issue #34,
@@ -110,13 +112,6 @@ extern void SetMaskAssistDeaths(struct level_state *self, s32 n);
 extern void SetCrateAssistDeaths(struct level_state *self, s32 n);
 extern void *MemCopy32(void *dest, void *src, s32 size);
 extern void *OperatorNew(u32 size);
-extern void *InitTitleScreen(void *mem);
-extern s32 RunTitleScreen(void *gfx);
-extern void DestroyTitleScreen(void *gfx, u32 flag);
-extern void RunCredits(void);
-extern void OpenSaveMenu(void);
-extern s32 RunSaveMenu(s32 a, s32 b);
-extern void CloseSaveMenu(void);
 extern void PlayCutscene(struct level_state *self, s32 screen);
 extern u8 HasSuperBodySlam(struct level_state *self);
 extern u8 HasDoubleJump(struct level_state *self);
