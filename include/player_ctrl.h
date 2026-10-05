@@ -3,13 +3,13 @@
 
 /* The player-input controller object of src/player/swim_ctrl.c
  * (GitHub issues #19/#20, ROM 0x08016048-0x08017524): the underwater
- * (scuba-diving) controller game_loop39.c attaches in room kind 1, with
+ * (scuba-diving) controller play_room.c attaches in room kind 1, with
  * sprite bank 1 (Crash in an air tank and flippers). It is a C++-style class
  * with gcc 2.x method table gPlayerCtrlVtable (+0x0C UpdatePlayerCtrl
  * per-frame update, +0x14 PlayerCtrlHandleEvent message handler, +0x1C AttachPlayerCtrl
  * set target, +0x4C DestroyPlayerCtrl destructor; the rest are base-class
  * sub_800B6xx/sub_800B8xx functions). Constructor InitPlayerCtrl (called from
- * game_loop39.c), whose field reset is action_ctrl.c's ResetPlayerCtrl.
+ * play_room.c), whose field reset is action_ctrl.c's ResetPlayerCtrl.
  * The dispatchers StartPlayerCtrlStroke/StartPlayerCtrlSpin/ApplyPlayerCtrlSwimDrift (swim_ctrl_stroke.c) and SetPlayerSwimDriftY (swim_ctrl_drift.c) are methods of the
  * same class. */
 
@@ -53,7 +53,7 @@ struct pctrl_anim_rec
 };
 
 /* The bitfield byte at the target's +0x28 (same layout as
- * actor_part_1967c.c's `struct part_f28`). `flipX` is a signed field: the
+ * dingodile.c's `struct part_f28`). `flipX` is a signed field: the
  * ROM tests it with `lsl #27` / sign branch. */
 struct pctrl_f28
 {

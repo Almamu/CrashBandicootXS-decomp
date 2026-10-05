@@ -45,19 +45,19 @@ anim-frame halfword/byte, `self+8` accumulator, `self+0x28` state,
 
 ## Matched (19 of 25 functions)
 
-- **`CreateHovercraftLauncher`/`HovercraftLauncherStateDestroyed`/`HovercraftLauncherStateWait`** (`src/graphics/actor_part63.c`)
+- **`CreateHovercraftLauncher`/`HovercraftLauncherStateDestroyed`/`HovercraftLauncherStateWait`** (`src/bosses/hovercraft_launcher.c`)
   - Kind 1's constructor, its trampoline-fire helper (same shape as
-  `HovercraftCannonStateDestroyed`, actor_part32.c), and a position-sync/state-1-transition
+  `HovercraftCannonStateDestroyed`, hovercraft_cannon.c), and a position-sync/state-1-transition
   helper gated on the singleton's lifetime counter and animation "kind".
   The constructor needed the established two-distinct-zero-register
   reset idiom (`zero`/`zero2`, see below) plus an explicit `d`-parameter
   register pin (`r0`) placed *after* the `b`/`c` pins so this compiler
   fetches the 5th (stack) constructor argument in the same position the
   ROM's own build does, rather than up front with the others.
-- **`IsHovercraftLauncherUnshootable`** (`src/graphics/actor_part65.c`) - trivial Kind 1
+- **`IsHovercraftLauncherUnshootable`** (`src/bosses/hovercraft_launcher.c`) - trivial Kind 1
   death-flag getter (`self+0x6c`).
 - **`DamageHovercraftSideGun`/`UpdateHovercraftSideGun`/`sub_80341F8`/`IsHovercraftSideGunUnshootable`/`DamageHovercraftCannonFlash`**
-  (`src/graphics/actor_part67.c`) - Kind 2's damage/death handler (same
+  (`src/bosses/hovercraft_side_gun.c`) - Kind 2's damage/death handler (same
   `DamageHovercraftCannon` shape, register-pinned `zero`/`one` reused across the
   `self+0x58`/`+0x2c`/`+0x28`/`+0x44`/`+8` stores and the gate-byte read
   at `self+0x59` - reachable only via a pointer-offset walk from
@@ -71,10 +71,10 @@ anim-frame halfword/byte, `self+8` accumulator, `self+0x28` state,
   (initially miscopied as a byte-identical twin - the map-file address-
   shift diagnostic caught the missing 4-byte call), a trivial death-flag
   getter, and a no-op stub.
-- **`CreateHovercraftCannonFlash`** (`src/graphics/actor_part69.c`) - Kind 3's
+- **`CreateHovercraftCannonFlash`** (`src/bosses/hovercraft_cannon_flash.c`) - Kind 3's
   constructor, same two-distinct-zero-register reset idiom as
   `CreateHovercraftLauncher`.
-- **`IsHovercraftCannonFlashUnshootable`** (`src/graphics/actor_part71.c`) - trivial Kind 3
+- **`IsHovercraftCannonFlashUnshootable`** (`src/bosses/hovercraft_cannon_flash.c`) - trivial Kind 3
   one-shot-flag getter (`self+0x58`).
 - **`UpdateStarfield`/`StarfieldWaitForButton`/`DestroyStarfield`** (`src/frontend/starfield.c`)
   - a particle-spawn-budget driver (calls `DrawStarfield`, then spawns up
@@ -103,7 +103,7 @@ and it takes the real map-file address-shift check (function boundaries
 landing 4 bytes early) to catch it. Fixed throughout this chunk with a
 nested block introducing a second `register ... zero2` immediately
 before the `self+0x12` store, mirroring the established idiom already
-in `DamageHovercraftCannon`/`SetHovercraftState` (actor_part28.c/actor_part30.c).
+in `DamageHovercraftCannon`/`SetHovercraftState` (hovercraft_parts.c/hovercraft_cannon.c).
 
 ### A note on isolated-compile confidence (again)
 
@@ -171,7 +171,7 @@ boundaries - not by re-reading the isolated compiles more carefully.
   (real bytes for the twin `DrawStarfield`) - that fragment is also retired
   now that `DrawStarfield` itself is matched (see below), so
   `starfield.c` is fully matched, closing the whole file.
-- **`CreateHovercraftSideGun`** (`src/graphics/actor_part66.c`) - Kind 2's
+- **`CreateHovercraftSideGun`** (`src/bosses/hovercraft_side_gun.c`) - Kind 2's
   constructor. Now fully matched as real C, closing two gaps: the 6th
   (stack-passed, byte-sized) constructor argument needs the same
   stack-slot-address-then-`ldrb` `asm volatile` anchor already
@@ -310,7 +310,7 @@ boundaries - not by re-reading the isolated compiles more carefully.
 
 ## NAKED transcription (byte-correct, not counted as matched)
 
-- **`RunHovercraftLauncherState`** (`src/graphics/actor_part64.c`) - a
+- **`RunHovercraftLauncherState`** (`src/bosses/hovercraft_launcher.c`) - a
   `gHovercraftLauncherStateFuncs` stride-8 trampoline-record dispatcher
   returning a 0/1 result instead of tail-calling. Same `{s16 baseOff;
   s16 count; void *fn}` record shape as `UpdateHovercraftCannon`/`RunHovercraftCannonState`/
@@ -331,7 +331,7 @@ boundaries - not by re-reading the isolated compiles more carefully.
 ## Parked (2 of 25 functions, `NON_MATCHING`)
 
 - **`UpdateHovercraftCannonFlash`** (`asm/code_3_2_20_28568_c99c_31784_33ef4_34270.s`, C
-  in `src/graphics/actor_part68.c`) - position-sync/flag/trampoline
+  in `src/bosses/hovercraft_cannon_flash.c`) - position-sync/flag/trampoline
   updater for Kind 1. Semantics fully understood and every field/call
   confirmed correct; parked because the ROM computes a "should animate"
   0/1 value into a register and re-checks it against zero before
@@ -341,7 +341,7 @@ boundaries - not by re-reading the isolated compiles more carefully.
   step, the same class of gap already documented for `DrawPolarCollectedWumpa`
   (issue #52) and the dead `| 0` term in `DrawJetpackCheckpointText` (issue #71).
 - **`sub_8034314`** (`asm/code_3_2_20_28568_c99c_31784_33ef4_34314.s`, C
-  in `src/graphics/actor_part70.c`) - `UpdateHovercraftCannonFlash`'s boolean-returning
+  in `src/bosses/hovercraft_cannon_flash.c`) - `UpdateHovercraftCannonFlash`'s boolean-returning
   twin, parked on the identical gap.
 
 ## Left raw (3 of 25 functions, not attempted)
@@ -363,7 +363,7 @@ matched/parked list this entry feeds into.
 
 ## Later pass: member-pointer dispatch
 
-A later pass promoted `RunHovercraftLauncherState` (`actor_part64.c`) from NAKED to real C. The "r7 table-base"
+A later pass promoted `RunHovercraftLauncherState` (`hovercraft_launcher.c`) from NAKED to real C. The "r7 table-base"
 shape was gcc 2.x's pointer-to-member-function call
 `(this->*table[this->state])()`, which `ACTOR_PMF_CALL` in
 `include/actor_self.h` reproduces with no register pins. See

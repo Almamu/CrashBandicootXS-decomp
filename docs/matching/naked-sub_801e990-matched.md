@@ -1,6 +1,6 @@
 # `SpawnStartMarker`: matched
 
-`SpawnStartMarker` (`src/graphics/graphics_loading_1e990.c`, sound-trigger
+`SpawnStartMarker` (`src/level/spawn_start_marker.c`, sound-trigger
 dispatch/position writer) was a byte-correct NAKED asm transcription
 for a long time - see [issue-30-graphics-loading.md](./issue-30-graphics-loading.md)'s
 "Fifth pass" for the original parking rationale. This doc originally
@@ -16,7 +16,7 @@ section gated on `GetSpawnAtStart`, and a budget-gated trampoline-fire
 section) both compile to fully correct, byte-exact C:
 
 - **The `movs r0,#1`/`subs r0,#0x12` negative-mask idiom** - the exact
-  same technique as `SpawnBasicCrate`'s (`graphics_loading_21bfc.c`) and
+  same technique as `SpawnBasicCrate`'s (`spawn_crates.c`) and
   `UPDATE_ICON_FRAME_NIBBLE`'s (`src/menus/pause_menu_pages_init.c`): an
   `asm volatile("sub %0, %0, #0x12" : "+r"(one))` materializes the
   mask instead of a plain C `-0x11`/`~...` expression this compiler
@@ -108,5 +108,5 @@ no warnings for this file. Full clean `rm -rf build
 crashbandicootxs.elf crashbandicootxs.gba crashbandicootxs.map && make
 compare` - `crashbandicootxs.gba: La suma coincide`.
 `tools/report_units.py`'s entry for `0x0801E990` now points at
-`src/graphics/graphics_loading_1e990.o` (matched), no longer `None`
+`src/level/spawn_start_marker.o` (matched), no longer `None`
 (parked).

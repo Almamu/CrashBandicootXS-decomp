@@ -7,7 +7,7 @@ drafts under `#if NON_MATCHING`.
 
 | Function | File | Before | Now | Status |
 |---|---|---|---|---|
-| `SpawnFlamethrowerLabAssistant` (#31) | `src/graphics/graphics_loading_1feec.c` | 12 | 4 (same size, old_agbcc) | Draft updated |
+| `SpawnFlamethrowerLabAssistant` (#31) | `src/level/spawn_enemies.c` | 12 | 4 (same size, old_agbcc) | Draft updated |
 | `DrawPauseFraction` (#7) | `src/menus/pause_menu_widgets.c` | 45 | 14 (same size, both compilers) | Draft updated |
 | `ResetLinkSessionState` (#4) | `src/link/link_handshake.c` | 136 | 136 | Note added |
 

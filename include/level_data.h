@@ -11,8 +11,8 @@
  */
 
 /* One layer (BG0-3 or the collision layer): `struct bg_layer_desc` in
- * bg_scroll_layer_25fc8.c, `struct stream_source` in cutscene_player.c, and
- * the raw `source` of the terrain cache (game_loop3.c/game_loop5.c). */
+ * bg_layer.c, `struct stream_source` in cutscene_player.c, and
+ * the raw `source` of the terrain cache (bg_layer_base.c/collision_map.c). */
 struct level_layer_desc
 {
     const u16 *chunkGrid;   // 0x00 - gridWidth x gridHeight chunk ids, row-major
@@ -48,8 +48,8 @@ struct level_entity_group
     const struct level_entity *entities;
 };
 
-/* `struct lk_list` in game_loop41.c, `struct collect_info` in
- * actor_part_1967c.c, the level header of CreatePlatform. */
+/* `struct lk_list` in room_entities.c, `struct collect_info` in
+ * dingodile.c, the level header of CreatePlatform. */
 struct level_entity_list
 {
     u16 count;              // 0x00 - all entities
@@ -60,7 +60,7 @@ struct level_entity_list
     const u16 *typeCounts;  // 0x10 - entities per type
 };
 
-/* `struct lk_link` in game_loop41.c: chains entity `from` to entity
+/* `struct lk_link` in room_entities.c: chains entity `from` to entity
  * `to` (entity ids = spawn order). */
 struct level_link
 {
@@ -92,7 +92,7 @@ struct level_desc
  * One room record of the level table (src/data/level_table_16c814.c):
  * the record RunRoom hands to LoadRoom (level_layers.c's
  * `struct level_load_args`, the palette and descriptor), `MedalListItem`
- * in game_loop17.c/game_loop18.c, `gl_widget_kind` in game_loop56.c.
+ * in level_query.c, `gl_widget_kind` in run_room.c.
  */
 struct level_room
 {
@@ -106,7 +106,7 @@ struct level_room
     u16 unk_12;                      // 0x12
 };
 
-/* A level's rooms: `MedalItemList` in game_loop17.c/game_loop18.c. */
+/* A level's rooms: `MedalItemList` in level_query.c. */
 struct level_room_list
 {
     s32 count;
@@ -118,9 +118,9 @@ struct level_room_list
 /*
  * One level (gLevelTable). The code's views: `level_info`
  * (level_select.c), `threshold_table_entry` (pause_menu_pages_init.c,
- * power_dialog_draw.c), `MedalTableEntry` (game_loop17.c, game_loop18.c),
- * `level_guard` (graphics_loading_21280.c), `gl_level_entry`
- * (game_loop56.c).
+ * power_dialog_draw.c), `MedalTableEntry` (level_query.c),
+ * `level_guard` (spawn_bosses.c), `gl_level_entry`
+ * (run_room.c).
  */
 struct level_info
 {

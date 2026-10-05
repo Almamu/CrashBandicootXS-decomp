@@ -9,7 +9,7 @@ the first near-miss pass ([near-miss-polish.md](near-miss-polish.md)),
 |---|---|---|---|---|
 | `UpdateLinkSession` | `src/link/link_handshake.c` | old_agbcc (both match) | 37 | `asm("" : "+r"(one1))` keeps a second 1; `asm("" : "+r"(arm3))` between `^` and `&` blocks the `bic` fold |
 | `RunPauseMenu` | `src/menus/pause_menu.c` | agbcc | 54 (4 bytes short) | `static inline` accessor for `field_12c` so CSE doesn't share the 0x12c offset; two locals fix load order |
-| `DecodeCollisionChunk` | `src/system/game_loop3.c` | old_agbcc | 33 | explicit `<< 24 >> 24` sign extensions through `s32` locals; `asm("" : : "r"(n))` fixes the r4/r5 swap |
+| `DecodeCollisionChunk` | `src/level/bg_layer_base.c` | old_agbcc | 33 | explicit `<< 24 >> 24` sign extensions through `s32` locals; `asm("" : : "r"(n))` fixes the r4/r5 swap |
 | `InitCellAnim` | `src/graphics/actor_part95.c` | agbcc (both match) | 37 | `asm("" : "=r"(reload) : "0"(a4))` copies the address used for the reload; evaluation-order tweaks |
 | `SelectActorCategory` | `src/graphics/actor_part102.c` | agbcc (both match) | 125 (4 bytes long) | local pointer to `gActorSpawnIndex` plus one `asm("" : : "r"(idx))` so it outranks `base` |
 

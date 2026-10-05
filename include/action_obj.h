@@ -184,7 +184,7 @@ typedef void (*act_fn2)(void *self, void *a, s32 b);
 /* Byte read-modify-writes of part+0x0D, through a plain byte pointer: as
  * a struct member store, gcc's expansion leaves a dead `& 0` whose 0 CSE
  * then reuses for later zero stores, moving them (see
- * actor_part_18008.c). The mask arrives as an `s32` parameter so
+ * tiny_update.c). The mask arrives as an `s32` parameter so
  * old_agbcc materializes it before the load. */
 #define ACT_PART_FLAGS0D(p) (*((u8 *)(p) + 0xD))
 

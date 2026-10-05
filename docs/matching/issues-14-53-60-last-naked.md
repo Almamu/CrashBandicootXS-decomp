@@ -29,7 +29,7 @@ is gcc propagating the zero the hit blocks store. The hit block is a
 `HAZARD_HIT` macro wrapped in `if (1)`: `do { } while (0)` and an inline
 function both change the block layout. `ShockPolarPlayer` returns `u8`.
 
-## `DrawJetpackCollectedWumpa` (actor_part130.c, issue #60)
+## `DrawJetpackCollectedWumpa` (hovercraft.c, issue #60)
 
 A bounding-box-culled sprite draw with `DrawActor`'s shape.
 The doubling code stays in with the scale flag fixed at 0, followed by

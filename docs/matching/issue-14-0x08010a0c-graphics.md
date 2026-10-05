@@ -18,7 +18,7 @@ confirmed directly: `ResolvePlayerCollisions` (crate.c) already calls
 `0x08010A0C` entry only ever carried `graphics` as a pre-existing
 placeholder pending examination (its own comment said so). Now that
 it's examined, this chunk is recategorized to `game_loop`, matching
-the surrounding `game_loop17.c`-`slot_crate.c` file family issues
+the surrounding `crate_reset.c`-`slot_crate.c` file family issues
 #12/#13 already recategorized for the same reason.
 
 ## Matched - 24 functions (+1 unlabeled)

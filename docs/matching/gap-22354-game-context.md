@@ -1,10 +1,10 @@
 # 0x08022354-0x080225A0: the game-context destructor and the text-list pager
 
 These are the two functions between issue #33's chunk
-(`graphics_loading_21d80.c`, which ends with the game-context
-constructor `InitLevelState`) and `UpdateGameFrame` (`game_loop55.c`). No
+(`spawn_pickups.c`, which ends with the game-context
+constructor `InitLevelState`) and `UpdateGameFrame` (`game_frame.c`). No
 issue covered them. Both are now real C in
-`src/graphics/graphics_loading_22354.c`, and `asm/code_3_2_17_22354.s` is
+`src/level/level_cutscene.c`, and `asm/code_3_2_17_22354.s` is
 retired. Both match under either compiler. The file is built with the
 current agbcc like its neighbours.
 

@@ -3,7 +3,7 @@
 
 /*
  * ROM 0x0816D1C8-0x081725A8: the 11 cutscenes. PlayCutscene
- * (graphics_loading_22354.c) plays cutscene `idx`: the slides of
+ * (level_cutscene.c) plays cutscene `idx`: the slides of
  * gCutscenes[idx], each shown with the page of text at the same
  * index in the current language's `struct cutscene_page` array. The six
  * language tables (English first, then French, German, Spanish, Italian,

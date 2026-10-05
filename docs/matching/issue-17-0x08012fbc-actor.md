@@ -303,7 +303,7 @@ throughout (`movs r0, #8; ldrb r1, [r1]; ands r0, r1` for `contact &
 8`). `ActionCtrlStateCrouchDown` is the cleanest proof: the same C is byte-exact under
 old_agbcc and differs in 8 bytes under the current agbcc. Both new objects are
 on `OLD_AGBCC_OBJS`. The chunk's first five functions
-(`action_ctrl_run_jump.c`/`_134b8.c`/`_138e8.c`, all NAKED without C) were
+(`action_ctrl_run_jump.c` and the start of `action_ctrl_states.c`, all NAKED without C) were
 parked against the current agbcc. They are candidates for an old_agbcc
 retry, which this pass did not attempt.
 
@@ -322,7 +322,7 @@ use. The older files in this family still use raw offsets.
   global itself, so the halves are read through the local's address
   (`INPUT_PRESSED`/`INPUT_HELD`). Where the ROM loads `GetDpadDirection`'s
   argument before taking the snapshot, a `pad` local fixes the order.
-- **Byte stores and the dead `& 0`.** As in `actor_part_18008.c`
+- **Byte stores and the dead `& 0`.** As in `tiny_update.c`
   (`docs/matching/issue-22-0x08018008-hopper.md`), a struct-member byte
   store leaves a 0 that CSE reuses for a later zero store. So the
   `part+0x0D`/`+0x0C` flag RMWs go through a byte pointer, and the
@@ -336,7 +336,7 @@ use. The older files in this family still use raw offsets.
 - **Ranges.** `dir` range tests the ROM writes as `cmp #8; bgt; cmp #3;
   blt` come from a GNU range `case 3 ... 8:`. An `if` gets folded to an
   unsigned `dir - 3 <= 5`.
-- **`ActionCtrlStateDying`'s bitmap set** is `actor_part_188d0.c`'s
+- **`ActionCtrlStateDying`'s bitmap set** is `cortex.c`'s
   `MARK_GONE_BITMAP` with the same pins. Its word index needs a barriered
   signed shift: gcc knows a zero-extended `u16` can't be negative and
   would use `lsr`.

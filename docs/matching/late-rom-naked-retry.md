@@ -70,8 +70,8 @@ down to spelling:
   `pressed`'s. Variants of the mask, pins, locals, inline accessors,
   unions/bitfields, and separate or `do {} while (0)`-wrapped tests
   either keep this tie or let CSE merge the shifts.
-- **`ConvertAirshipTiles`** (actor_part26c.c, #58) and **`ConvertHovercraftTiles`**
-  (actor_part130.c, #61), the fill-level meter twins, are still about 95
+- **`ConvertAirshipTiles`** (airship_graphics.c, #58) and **`ConvertHovercraftTiles`**
+  (hovercraft.c, #61), the fill-level meter twins, are still about 95
   and 105 halfwords off. The first loop in the ROM spills each height
   and reloads it (`ldm r1!`) after the row-pointer store, because all 8
   low registers are taken. That includes `&gAirshipMapTileBase`, which is

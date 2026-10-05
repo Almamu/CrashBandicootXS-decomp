@@ -78,7 +78,7 @@ no caller).
 - **`IsTouchingYeti`** (actor_part75.c): the same box code as a standalone
   function, with the same `&b` hoist (about 51 halfwords off, plus an
   extra r6 push). This is also the leftover recorded for
-  `actor_part24b.c`'s `IsTouchingAirship` in issue-58-61-naked-retry.md.
+  `airship_touch.c`'s `IsTouchingAirship` in issue-58-61-naked-retry.md.
   Whoever fixes it for one of the three should get the other two.
 - **`LoadYetiGraphics`** (actor_part75.c): 5 halfwords off under either
   compiler. The two fill loops are a `static inline` copy of

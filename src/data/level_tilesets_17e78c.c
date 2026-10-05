@@ -17,7 +17,7 @@ const u16 gLanguageSelectPalette3[16] = {
 
 /*
  * Level BG tile sets: tag-0x00 raw tagged assets of 8bpp tiles (64 bytes
- * each). A room's struct bg_layer_desc (bg_scroll_layer_25fc8.c) points at
+ * each). A room's struct bg_layer_desc (bg_layer.c) points at
  * one through `tileData`; the pooled layer 0 (tile_slot_pool.c,
  * SetTileSlotPoolSource) reads the tiles at `tileData + 4`. The tile bytes come from
  * graphics/level_tilesets/tilesetN_<addr>.png via graphics.mk

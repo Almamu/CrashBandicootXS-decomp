@@ -19,11 +19,11 @@ family already covered at length by
   raw, trivial - a 2-field clear), allocates a fresh `struct
   actor`-shaped child object via `CreateSpriteObj(0, 0, 0, 0)` (matched,
   `sprite_obj.c` - called with the same "extra unused 4th zero
-  argument" calling convention `graphics_loading_21d80.c`'s own callers
+  argument" calling convention `spawn_pickups.c`'s own callers
   already use) and hooks it up at `self+0xb0`: points its own `+0x20`
   table-entry pointer at `gSpriteBankSet`'s shared table (the same
   `(u8 *)(**gSpriteBankSet) + offset` idiom used throughout
-  `graphics_loading_21d80.c`), clears its `+0x2d` byte, and builds it
+  `spawn_pickups.c`), clears its `+0x2d` byte, and builds it
   via the standard `ResetSpriteFrameTimer`/`ResetSpriteFrameIndex`/`SetSpriteAnimDone` OAM trio.
   Clears `self+0xb4`, then calls `ResetPlayer` (matched,
   `player_reset.c`) to finish the reset - `ResetPlayer` itself is what
@@ -347,7 +347,7 @@ s32 GetTerrainFlagsAt(void *arg0, s32 x, s32 y)
 ```
 
 It's a thin wrapper around the already-matched terrain-tile-cache
-lookup `GetTerrainType` (`src/system/game_loop4.c`, GitHub issue #40):
+lookup `GetTerrainType` (`src/level/tile_cache.c`, GitHub issue #40):
 `arg0+0x20` is `gLevelLayers`'s own tile-cache-pointer field (the
 same global whose `+0x29`/`+0x2a` fields this doc's own leading block
 already established), `x`/`y` get divided by 8 and clamped to a
@@ -389,7 +389,7 @@ in the ROM, unlike `ProbeTerrain`'s own end-of-function padding quirk.
 `asm/code_3_2_17_266bc.s` is trimmed to end right after `ProbeTerrainX`'s
 own trailing `.align 2, 0` (685 lines, matching the same "everything
 before, everything after" split `ProbeTerrain` itself used to get
-carved out of this same file). `src/system/game_loop44.c` (new file)
+carved out of this same file). `src/level/terrain.c` (new file)
 holds the matched `GetTerrainFlagsAt`. The remainder - `sub_8026BF8` onward,
 still raw/unexamined this session (including `StepCameraDirectional`,
 `StepCameraFacing`, `SnapCamera`, `UpdateCamera` and others referencing
@@ -399,7 +399,7 @@ two in `ldscript.txt`:
 
 ```
 asm/code_3_2_17_266bc.o(.text);
-src/system/game_loop44.o(.text);
+src/level/terrain.o(.text);
 asm/code_3_2_17_26bf8.o(.text);
 ```
 

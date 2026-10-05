@@ -1,7 +1,7 @@
 #include "core.h"
 
 /* GitHub issue #38: 0x0802425C-0x08024810 (game_loop), continued from
- * game_loop18.c - see game_loop17.c's header comment and
+ * level_query.c - see level_query.c's header comment and
  * docs/matching/issue-38-medal-results-tally.md for the full write-up.
  * This single function sits between the BeginSlide..ShowSlidePicture run
  * (slideshow.c - BeginSlide NAKED-parked, the rest matched - see
@@ -84,14 +84,14 @@ void EndSlide(struct SoundChannelList *self0, s32 idx)
 }
 
 /* GitHub issue #38: 0x0802425C-0x08024810 (game_loop), continued from
- * slideshow_display.c - see game_loop17.c's header comment and
+ * slideshow_display.c - see level_query.c's header comment and
  * docs/matching/issue-38-medal-results-tally.md for the full write-up.
  * This is the tail of the chunk, right after EndSlide (parked/left
  * in asm/code_3_2_17_24790.s). */
 
 extern void OperatorDelete(void *self);
 
-/* Same wrapper shape as sub_802425C (game_loop17.c): tears `self` down
+/* Same wrapper shape as sub_802425C (level_query.c): tears `self` down
  * via OperatorDelete if bit 0 of `flags` is set. */
 void DestroySlideshow(void *self, s32 flags)
 {

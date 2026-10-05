@@ -17,9 +17,8 @@ as in the ROM.
 
 ## Result
 
-All five files move to old_agbcc whole: `graphics_loading_1ef0c.c`,
-`graphics_loading_1fdec.c`, `graphics_loading_1feec.c`,
-`graphics_loading_21280.c` and `graphics_loading_21668.c`. Every function
+All five files move to old_agbcc whole: `spawn_enemies.c`,
+`spawn_bosses.c` and `spawn_objects.c`. Every function
 in them already matched under old_agbcc as written (NAKED bodies and asm
 islands are literal), so no file needed a split.
 
@@ -28,11 +27,11 @@ no NAKED:
 
 | file | rewritten | was NAKED |
 |---|---|---|
-| `graphics_loading_1ef0c.c` | 11 of 12 | 9 |
-| `graphics_loading_1fdec.c` | 1 of 1 | 0 |
-| `graphics_loading_1feec.c` | 12 of 13 | 11 |
-| `graphics_loading_21280.c` | 3 of 4 | 1 |
-| `graphics_loading_21668.c` | 6 (the rest were already plain C) | 1 |
+| `spawn_enemies.c` | 11 of 12 | 9 |
+| `spawn_enemies.c` | 1 of 1 | 0 |
+| `spawn_enemies.c` | 12 of 13 | 11 |
+| `spawn_bosses.c` | 3 of 4 | 1 |
+| `spawn_objects.c` | 6 (the rest were already plain C) | 1 |
 
 Three functions keep their previous form:
 
@@ -47,14 +46,14 @@ Three functions keep their previous form:
 - `SpawnRoomExit` stays NAKED. Plain C is 9 halfwords off. The ROM computes
   the `{x - 2, y - 0x1e}` point into fresh r2/r3, and the reconstruction
   subtracts in place. This is the same gap as `SpawnCrateGemMarker`
-  (graphics_loading_21d80.c).
+  (spawn_pickups.c).
 
 ## Shared header
 
 `include/text_popup.h` holds the shared types:
 
 - `struct popup_part`, the CreateMovingSprite part. Its layout matches
-  actor_part_188d0.c's `struct gfx_part`: `flipX` is bit 4 of +0x28,
+  cortex.c's `struct gfx_part`: `flipX` is bit 4 of +0x28,
   `frameNibble` is +0x29 and `hdr` is +0x44.
 - `struct enemy_ctrl`, the CreateEnemyCtrl header.
 - `struct level_record`, the gEntityFlags record.

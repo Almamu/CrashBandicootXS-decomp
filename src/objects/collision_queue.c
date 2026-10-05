@@ -1,7 +1,7 @@
 #include "core.h"
 
 /* GitHub issue #14: 0x08010A0C-0x08010D54, continuing the physics/
- * collision subsystem (game_loop17.c-game_loop27.c). `ResolveCollisionCandidates` is
+ * collision subsystem (crate_reset.c-slot_crate.c). `ResolveCollisionCandidates` is
  * this chunk's final and by far largest function - the collision-
  * candidate scan/resolve helper `ResolvePlayerCollisions` (crate.c) already
  * calls once a frame as `ResolveCollisionCandidates(gPlayer + 0x108)`. */

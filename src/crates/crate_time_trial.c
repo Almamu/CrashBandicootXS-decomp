@@ -2,7 +2,7 @@
 #include "crate.h"
 
 /* GitHub issue #13: 0x0800FC70-0x08010A0C, continuing the physics/
- * collision subsystem (see game_loop17.c's header comment and
+ * collision subsystem (see crate_reset.c's header comment and
  * docs/matching/issue-13-graphics-fc70.md). `DestroyCrate`/
  * `InitCrate`/the two Bresenham-line helpers `FindLineCrossingYMajor`/
  * `FindLineCrossingXMajor` right before `ConvertCratesForTimeTrial` are left untouched raw. */
@@ -59,7 +59,7 @@ void OpenAkuAkuCrate(void)
     /* Inline-asm-anchored: this compiler always shifts in place
      * (`lsrs r1,r1,#7`) regardless of C phrasing, while the ROM keeps
      * the loaded byte in r1 and the shifted bit in a separate r0 -
-     * see the same gap in ResetCrate (game_loop17.c). */
+     * see the same gap in ResetCrate (crate_reset.c). */
     asm volatile("lsr r0, r1, #7" : "=r"(bit) : "r"(flags));
 
     if (bit != 0) {

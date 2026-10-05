@@ -2,7 +2,7 @@
 #define __BG_SCROLL_LAYER_H__
 
 /* The BG-scroll layer (0x5C bytes, constructor `InitBgLayer` in
- * game_loop15.c, base method table `gBgLayerVtable`), and its
+ * bg_layer_init.c, base method table `gBgLayerVtable`), and its
  * tile-slot-pooled subclass used for BG layer 0 (0x60 bytes, constructor
  * `InitPooledBgLayer` in tile_slot_pool.c, method table `gPooledBgLayerVtable`).
  * The level-layers singleton (level_layers.c) owns one of each kind per
@@ -43,7 +43,7 @@ struct bg_scroll_layer
 {
     s32 x;                          // 0x00 - pixels
     s32 y;                          // 0x04
-    /* 0x08-0x24: set from the level layer by SetBgLayerSource (game_loop3.c) */
+    /* 0x08-0x24: set from the level layer by SetBgLayerSource (bg_layer_base.c) */
     s32 maxX;                       // 0x08 - widthPx - 240, the scroll limit
     s32 maxY;                       // 0x0C - heightPx - 160
     s32 widthPx;                    // 0x10

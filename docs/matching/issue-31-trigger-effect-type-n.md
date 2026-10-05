@@ -7,7 +7,7 @@
 Follow-up to the third pass recorded in
 [issue-31-graphics-loading.md](./issue-31-graphics-loading.md) ("the
 'trigger effect type N' twin family matched via NAKED transcription"),
-which converted all four `src/graphics/trigger_effect.c` functions to
+which converted all four `src/level/spawn_gem_platforms.c` functions to
 `NAKED` after concluding plain-C restructuring couldn't reproduce two
 register-allocation spots. This pass revisits `SpawnRedGemPlatform` with
 techniques established by *later* passes in this same document (the
@@ -343,15 +343,15 @@ already been flagged as unreproduced before this pass even started.
 
 ## Old-compiler pass: all four matched as plain C
 
-All four functions are now plain C in `src/graphics/trigger_effect.c`,
+All four functions are now plain C in `src/level/spawn_gem_platforms.c`,
 with no register pins, inline asm or `goto`s. The object is on the
 Makefile's `OLD_AGBCC_OBJS` list. The earlier passes above all used the
 current agbcc. The ROM's `mov rA, #mask` before `ldrb rB` is old_agbcc's
 tell, the same one that closed the neighbouring spawners
-`SpawnCrystal`-`SpawnYellowGem` (`graphics_loading_1ea5c.c`, issue #30).
+`SpawnCrystal`-`SpawnYellowGem` (`spawn_gems.c`, issue #30).
 Under old_agbcc the pinned drafts that were kept under `#if NON_MATCHING`
 were further off, not closer, so they were thrown away. The file was
-rewritten as the obvious C. It follows `graphics_loading_1ea5c.c`'s
+rewritten as the obvious C. It follows `spawn_gems.c`'s
 conventions: `struct gfx_part` from `include/gfx_part.h`, and a `u8 tag`
 local set before the `CreateSpriteObj` call.
 

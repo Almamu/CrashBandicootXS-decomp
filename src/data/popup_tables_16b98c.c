@@ -5,8 +5,7 @@
  * sections by ldscript.txt - see docs/data.md.
  */
 
-/* The 8-word tables the text popups of graphics_loading_1ef0c.c,
- * graphics_loading_1fdec.c and graphics_loading_1feec.c hand their
+/* The 8-word tables the text popups of spawn_enemies.c hand their
  * header (text_popup.h's `gfx`, +0x84): a small index 0-5 per slot, 8 in
  * the unused ones. gEnemyDefaultAnimMap is the one every popup starts
  * with. */

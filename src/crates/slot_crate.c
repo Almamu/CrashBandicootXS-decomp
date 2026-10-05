@@ -2,7 +2,7 @@
 #include "crate.h"
 
 /* GitHub issue #13: 0x0800FC70-0x08010A0C, continuing the physics/
- * collision subsystem (see game_loop17.c's header comment and
+ * collision subsystem (see crate_reset.c's header comment and
  * docs/matching/issue-13-graphics-fc70.md). `GetTopCrate`/
  * `GetBottomCrate`/`CollideCrateWithPlayer` right before this function are left
  * untouched raw; `DecrementSlotCrateStage` right after it is outside this issue's
@@ -23,7 +23,7 @@ u32 GetSlotCrateStage(void *selfArg)
 asm(".align 2, 0");
 
 /* GitHub issue #14: 0x08010A0C-0x08010D54, continuing the physics/
- * collision subsystem (`game_loop17.c`-`slot_crate.c`, see
+ * collision subsystem (`crate_reset.c`-`slot_crate.c`, see
  * docs/matching/issue-13-graphics-fc70.md). `GetSlotCrateStage` right before
  * this function is already matched in slot_crate.c; everything here
  * operates on the same `self` type `GetSlotCrateStage`/`ResetCrate` do - the

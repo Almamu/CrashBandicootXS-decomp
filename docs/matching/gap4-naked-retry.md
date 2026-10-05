@@ -8,7 +8,7 @@ This pass took the four drafts that the mix-6 pass
 | CreateWumpa (#15) | `src/pickups/wumpa_update.c` | 95 hw, 312 vs 308 B | **Closed**, real C, old_agbcc (the file already builds with it). |
 | ResolvePlatformCollision (#25) | `src/objects/platform_collide.c` | 644 hw, 1608 vs 1648 B | Not closed. The draft is now 1640 B. What's left is register copies and reload phase. |
 | CreateCrate (#13) | `src/crates/crate_create.c` | 508 hw, 1416 vs 1396 B | Not closed. The type/slot*2 swap is fixed and the draft is 1388 B. Placement-record pointer copies are still missing. |
-| UpdateDingodileShield (#24) | `src/graphics/actor_part_1967c.c` | 159 hw, 392 vs 404 B | Not closed. Only the note changed. |
+| UpdateDingodileShield (#24) | `src/bosses/dingodile.c` | 159 hw, 392 vs 404 B | Not closed. Only the note changed. |
 
 ## CreateWumpa
 

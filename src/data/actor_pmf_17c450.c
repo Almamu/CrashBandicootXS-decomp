@@ -10,7 +10,7 @@ extern void HovercraftFireballStateExplode();
 extern void HovercraftFireballStateFly();
 
 /* Per-state handlers dispatched by UpdateHovercraftFireball and RunHovercraftFireballState
- * (actor_part130.c). */
+ * (hovercraft.c). */
 const struct actor_pmf gHovercraftFireballStateFuncs[2] = {
     ACTOR_PMF(HovercraftFireballStateFly),
     ACTOR_PMF(HovercraftFireballStateExplode),

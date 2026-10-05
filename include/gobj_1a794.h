@@ -3,8 +3,9 @@
 
 #include "mover_new.h"
 
-/* Shared by src/graphics/actor_part_1a794.c/_1a878.c/_1ab34.c/_1ab98.c/
- * _1b208.c (GitHub issue #25, ROM 0x0801A794-0x0801B85C).
+/* Shared by src/bosses/dingodile_create.c and src/objects/platform_create.c/
+ * platform_contact.c/platform_collide.c/platform.c (GitHub issue #25,
+ * ROM 0x0801A794-0x0801B85C).
  *
  * Two C++-style classes (gcc 2.x method tables of {s16 this-adjust; fn}
  * pairs, called through the _call_via_r1/AD80/AD84/AD88 "call via

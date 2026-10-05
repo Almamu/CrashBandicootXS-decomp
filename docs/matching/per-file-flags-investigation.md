@@ -153,8 +153,8 @@ normalized) finds changed code in matched real-C functions in 11
 old_agbcc files:
 
 - `continue_prompt.c` (`InitContinuePromptGraphics`)
-- `actor_part_18008.c` (`PickTinyHopTarget`)
-- `actor_part_188d0.c` (`CreateTiny`)
+- `tiny_update.c` (`PickTinyHopTarget`)
+- `cortex.c` (`CreateTiny`)
 - `level_select.c` (`DestroyLevelSelect`)
 - `level_select_pages.c` (`LevelSelectTurnPage`, `PlaceLevelSelectEntries`, `InitZoomBg`)
 - `graphics_package.c` (`LoadGraphicsPackage`)
@@ -167,7 +167,7 @@ old_agbcc files:
 Those are all byte-exact today, so each change is a break. Among the
 current-agbcc objects, 8 files change (`audio.c`,
 `actor_part100.c`, `graphics.c`, `palette_cycle.c`, `collision_queue.c`,
-`game_loop5.c`, `irq.c`, `tile_slot_pool.c`). The flag is **not** a
+`collision_map.c`, `irq.c`, `tile_slot_pool.c`). The flag is **not** a
 property of the old_agbcc build as a whole, nor of the whole ROM. Of the
 old_agbcc objects, `title_screen_init.o` is one where it changes
 nothing that already matched.

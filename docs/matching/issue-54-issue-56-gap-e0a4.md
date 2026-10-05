@@ -93,7 +93,7 @@ raw disassembly.
 - **`CreateJetpackCheckpointText`**, **`CreateJetpackExplosion`** - small helpers in the same
   family (established externs already exist for both:
   `void CreateJetpackCheckpointText(void);` and
-  `s32 CreateJetpackExplosion(s32 x, s32 y, s32 z, s32 kind);`, `actor_part21f.c`).
+  `s32 CreateJetpackExplosion(s32 x, s32 y, s32 z, s32 kind);`, `airship_explode.c`).
 - **`SpawnJetpackBalloon`**, **`SpawnHovercraftSideGun`**, **`SpawnHovercraftFireball`** (2-arg),
   **`SpawnAirshipFireball`**, **`SpawnJetpackCannonball`**, **`SpawnJetpackShot`** - more of
   `CreateJetpackActor`'s own constructor-family case bodies and position-
@@ -101,8 +101,8 @@ raw disassembly.
   `sl` too) simultaneously live across the whole function - the same
   register-pressure family this codebase's DMA/OAM functions are
   consistently NAKED-parked for. Established externs already exist for
-  `SpawnHovercraftFireball`, `SpawnAirshipFireball`, and `SpawnJetpackCannonball` (`actor_part67.c`,
-  `actor_part21d.c`, `actor_part21e.c`/`actor_part29.c`/
+  `SpawnHovercraftFireball`, `SpawnAirshipFireball`, and `SpawnJetpackCannonball` (`hovercraft_side_gun.c`,
+  `airship_states.c`/`hovercraft_cannon.c`/
   `actor_part46b.c`).
 - **`CreateJetpackPlayer`** - stashes its first argument into
   `gJetpackAnimTable` then allocates and forwards to `sub_8032ADC` with

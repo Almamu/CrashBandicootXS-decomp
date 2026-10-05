@@ -1,6 +1,6 @@
 # Issue #42: 0x08025FC8-0x08026418, game_loop - the BG-scroll layer's methods
 
-All of `asm/code_3_2_17_25fc8.s` is now `src/system/bg_scroll_layer_25fc8.c`:
+All of `asm/code_3_2_17_25fc8.s` is now `src/level/bg_layer.c`:
 26 functions, all byte-exact plain C. Nothing parked, nothing left raw, no
 inline asm.
 
@@ -108,7 +108,7 @@ Unused (no caller, not in a method table): `GetBgLayerScreenIndex`, `sub_802612C
   `NOTE_INSN_LOOP_BEG` notes, so a hand-rolled `if (...) return; loop:
   ... if (c <= end) goto loop;` avoids it. Explicit `end = colHi` and
   `mask = 0x3F` locals give the ROM's hoisted `r4`/`r7`. (The sibling
-  `DrawBgLayerColumn`, NAKED in game_loop16.c, does hoist its cursor, so the
+  `DrawBgLayerColumn`, NAKED in bg_layer.c, does hoist its cursor, so the
   goto is specific to this function.)
 - Trailing `asm(".align 2, 0")` for the `0000` pad after `nullsub_26`.
 

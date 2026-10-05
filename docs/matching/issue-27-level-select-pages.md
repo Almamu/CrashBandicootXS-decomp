@@ -8,7 +8,7 @@ the new `include/level_menu.h`. Verified with a clean
 (`crashbandicootxs.gba: OK`).
 
 **The file is compiled with `old_agbcc`.** It is on the Makefile's
-`OLD_AGBCC_OBJS` list, next to `actor_part_1967c.o`. In the first draft
+`OLD_AGBCC_OBJS` list, next to `dingodile.o`. In the first draft
 compiled with both compilers, the current `agbcc` got 12 functions wrong
 and `old_agbcc` got 9 wrong. Every byte read-modify-write here (the
 blend-register shadows, BG2CNT, the sprites' mirror/mode/palette bits)
@@ -58,7 +58,7 @@ This is the rest of issue #26's level-select screen (`struct level_menu`,
   positions `gZoomBgSlotOffsets` around (0x78, 0x35), mirrored X/Y
   per corner) registered through `RandomizeZoomBgTwinkle`. The rest of this class
   is in issue #28's range.
-- `SetNewWorldOpened` sets `gNewWorldOpened` (called from `game_loop55.c`).
+- `SetNewWorldOpened` sets `gNewWorldOpened` (called from `game_frame.c`).
 
 **UNUSED:** `CommitLevelSelectFrame` (one frame of the screen without the menu's
 update). It has no `bl`/`.4byte` reference and no Thumb pointer anywhere

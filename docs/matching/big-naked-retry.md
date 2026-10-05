@@ -4,7 +4,7 @@ This pass took on two of the largest parked NAKED functions. One closed.
 
 | Function | File | Size | Result |
 |---|---|---|---|
-| `UpdateGameFrame` (#34) | `src/system/game_loop55.c` | ~730 insns | matched, old_agbcc |
+| `UpdateGameFrame` (#34) | `src/level/game_frame.c` | ~730 insns | matched, old_agbcc |
 | `DrawVvLogoPieces` (#65) | `src/frontend/title_screen.c` | 1160 bytes | still NAKED, draft 329 halfwords off |
 
 ## `UpdateGameFrame` (never attempted before, now real C)
@@ -61,7 +61,7 @@ in the last slot instead of the first). It fixed itself once the rest of
 the function matched. If the slot order is the only thing left, look for
 code differences elsewhere before blaming the slots.
 
-`game_loop55.o` joined `OLD_AGBCC_OBJS`. Under agbcc the same C is 168
+`game_frame.o` joined `OLD_AGBCC_OBJS`. Under agbcc the same C is 168
 halfwords off. The file holds only this function.
 
 ## `DrawVvLogoPieces` (still NAKED)

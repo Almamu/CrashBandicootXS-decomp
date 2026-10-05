@@ -9,9 +9,9 @@ One now matches as real C:
 
 | Function | File | Compiler | Was | Technique |
 |---|---|---|---|---|
-| `ConvertAirshipTiles` | `src/graphics/actor_part26c.c` | both | 56 | the `ConvertHovercraftTiles` fixes, ported unchanged |
+| `ConvertAirshipTiles` | `src/bosses/airship_graphics.c` | both | 56 | the `ConvertHovercraftTiles` fixes, ported unchanged |
 
-`actor_part26c.c` holds only this function and isn't on
+`airship_graphics.c` holds only this function and isn't on
 `OLD_AGBCC_OBJS`. The C matches under both compilers, so no Makefile
 change. With it, issue #58's range has no NAKED or raw functions left.
 
@@ -81,7 +81,7 @@ These didn't change it:
 
 - `brute2.py` replaces the first occurrence of a pattern in the file.
   In files with several near-identical functions (the text-popup
-  spawners in `graphics_loading_1feec.c`), a pattern can hit an earlier
+  spawners in `spawn_enemies.c`), a pattern can hit an earlier
   function. Replace the whole function text instead. This pass's specs
   do that with a `FNTEXT(src, signature)` helper.
 - `brute2.py` drops branch targets from its disassembly by default, so

@@ -13,8 +13,8 @@ This pass covered six unfinished functions that no open issue tracked:
 
 | Function | File | Was | Technique |
 |---|---|---|---|
-| `HovercraftCannonStateFire` | `actor_part29.c` | raw asm (99 hw off) | real `/` via `__divsi3` alias (libcall keeps `self+0x24` CSE'd across it), divisor fixed to `-0x1AA`, one shared `store:` label for the new cooldown, a stored `count` local, `dx` then `dy` statement order, `"=r"`/`"0"` `u8` zero |
-| `HovercraftLauncherStateLaunch` | `actor_part35.c` | raw asm (102 hw off) | same as `HovercraftCannonStateFire`, plus `"=r"`/`"0"` escapes for the reset block's `0`/`2`, the `2` via `asm volatile` so it isn't sunk |
+| `HovercraftCannonStateFire` | `hovercraft_cannon.c` | raw asm (99 hw off) | real `/` via `__divsi3` alias (libcall keeps `self+0x24` CSE'd across it), divisor fixed to `-0x1AA`, one shared `store:` label for the new cooldown, a stored `count` local, `dx` then `dy` statement order, `"=r"`/`"0"` `u8` zero |
+| `HovercraftLauncherStateLaunch` | `hovercraft_launcher.c` | raw asm (102 hw off) | same as `HovercraftCannonStateFire`, plus `"=r"`/`"0"` escapes for the reset block's `0`/`2`, the `2` via `asm volatile` so it isn't sunk |
 | `ActionCtrlStateBodySlamStart` | `action_ctrl_moves.c` | NAKED | `u8 *self` parameter instead of a `selfArg` copy that GCSE left in the `else` arm |
 | `SteerActionCtrlSpin` | `action_ctrl_moves.c` | NAKED | `u8` locals for the table indices so they are loaded before the stores (moves `mode` to `r4`) |
 | `EndActionCtrlSpin` | `action_ctrl_moves.c` | NAKED | real `u8 *`/`u8` params (fixes the entry-copy order); `0x200` built in `m`, copied by an `"=r"`/`"0"` escape, and a volatile `"+r"(flags)`/`"r"(m)` use right after the `and` (stops combine and regmove from retargeting it); pointer local for `self+0x29` |
@@ -24,7 +24,7 @@ Bookkeeping:
 - Deleted `asm/code_3_2_20_28568_c99c_31784_339dc.s` and `..._33cf8.s`
   and their `ldscript.txt` lines. The C objects were already linked in
   ROM order.
-- `actor_part29.o`/`actor_part35.o` stay on agbcc: both compilers give
+- `hovercraft_cannon.o`/`hovercraft_launcher.o` stay on agbcc: both compilers give
   the same bytes, and they sit outside the known old_agbcc ranges.
 - `action_ctrl_hang.o`/`38b.o`/`38c.o` joined `OLD_AGBCC_OBJS`. Each file's
   whole `.text` is identical under both compilers, and

@@ -7,7 +7,7 @@
  * sections by ldscript.txt - see docs/data.md.
  */
 
-/* actor_part130.c's `struct singleton_kind` (0x28 bytes, fields not
+/* hovercraft.c's `struct singleton_kind` (0x28 bytes, fields not
  * named yet), written as ten words. SpawnHovercraft picks one by
  * gHovercraftLevel. */
 struct singleton_kind {
@@ -20,10 +20,10 @@ const struct singleton_kind gHovercraftAttacks[2] = {
 };
 
 /* The camera-offset target box (struct anim_box) HovercraftStateCloseIn
- * (actor_part130.c) steers by. */
+ * (hovercraft.c) steers by. */
 const struct anim_box gHovercraftBox = { -102, -12, -2, 51, 68, 4 };
 
-/* The one keyframe CreateHovercraft (actor_part130.c) gives the singleton. */
+/* The one keyframe CreateHovercraft (hovercraft.c) gives the singleton. */
 const struct anim_frame_record gHovercraftKeyframes[1] = {
     { 64, 0, 1, 0, 0x0, { 0, 0 } },
 };

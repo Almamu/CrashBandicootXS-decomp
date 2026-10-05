@@ -1,7 +1,7 @@
 #include "core.h"
 
 /* GitHub issue #13: 0x0800FC70-0x08010A0C, continuing the physics/
- * collision subsystem (see game_loop17.c's header comment and
+ * collision subsystem (see crate_reset.c's header comment and
  * docs/matching/issue-13-graphics-fc70.md). This is the last still-raw
  * function from that pass's leftover cluster - see
  * docs/matching/issue-13-fc70-second-continuation.md's "Still left raw"
@@ -12,8 +12,8 @@
  * files exist purely to call this one function with a fixed constant
  * `type` (the 5th, stack-passed argument): every `type` from `0` to
  * `0x12` (18) is externally confirmed by a caller -
- * src/graphics/graphics_loading_21bfc.c (`type` 0-7, issue #33) and
- * src/graphics/graphics_loading_21668.c (`type` 7-0x12, issue #31) -
+ * src/level/spawn_crates.c (`type` 0-7, issue #33) and
+ * src/level/spawn_objects.c (`type` 7-0x12, issue #31) -
  * matching this function's own internal 19-entry jump table
  * (case IDs 0-0x12) exactly. See docs/matching/issue-13-0x0800ff0c-
  * graphics.md for the full type-code-to-behavior table this cross-
@@ -38,7 +38,7 @@
  * isn't already at/over capacity, `type == 0xb` or `type == 0xf` gets
  * demoted via a placement-record flags byte (the `gEntityFlags ->
  * *P -> {+8 array, +0xc base}` indexed-by-`arg3<<1` convention
- * `SpawnBasicCrate`, graphics_loading_21bfc.c, already established): flag
+ * `SpawnBasicCrate`, spawn_crates.c, already established): flag
  * `0x40` forces `type = 2`, flag `0x80` forces `type = 1`, and (for the
  * `0xf` path only) placement-record byte `+1` bit `0x1` forces
  * `type = 9`.

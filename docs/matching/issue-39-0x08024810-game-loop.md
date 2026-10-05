@@ -6,7 +6,7 @@ in `asm/code_3_2_17_24810.s` - the remainder of the `UpdateGameFrame`-
 family (`BeginSlide`-`ResetSlideshow`, GitHub issue #38,
 `slideshow_display.c`/`slideshow.c`/`slideshow_display.c`) and the terrain-tile
 decode cache (`ScrollBgLayerBase`-`DecodeCollisionChunk`, GitHub issue #40,
-`game_loop3.c`/`game_loop4.c`/`game_loop5.c`). All 25 turned out to
+`bg_layer_base.c`/`tile_cache.c`/`collision_map.c`). All 25 turned out to
 belong to two already-partially-documented systems from
 `docs/rom_map.md`, closing both out.
 
@@ -53,7 +53,7 @@ byte-exact C.
 The object is a small viewport/parallax layer built around a **circular
 4x4-block ring-buffer tilemap** (64 halfword columns x 32 rows, 0x1000
 bytes total at `self+8`), fed by the same custom RLE/delta token-stream
-decoder the terrain-tile cache's `DecodeCollisionChunk` (`game_loop3.c`) uses,
+decoder the terrain-tile cache's `DecodeCollisionChunk` (`bg_layer_base.c`) uses,
 just writing into a 2D buffer (row stride 64 halfwords) instead of a
 flat one:
 
@@ -102,10 +102,10 @@ flat one:
   accumulating both axes' results back into the layer's own position.
 
 None of this cluster's fields are given a named struct here, for the
-same reason `game_loop3.c`'s own viewport/parallax-layer object isn't:
+same reason `bg_layer_base.c`'s own viewport/parallax-layer object isn't:
 several fields are only ever written/read by functions on both sides of
-this ROM range (this file, `game_loop3.c`, and still-raw neighbors like
-`ScaleBgLayerScroll`/`StepBgLayerScroll`/`FillBgStreamer`/`SetBgStreamerSource` that `game_loop3.c`'s
+this ROM range (this file, `bg_layer_base.c`, and still-raw neighbors like
+`ScaleBgLayerScroll`/`StepBgLayerScroll`/`FillBgStreamer`/`SetBgStreamerSource` that `bg_layer_base.c`'s
 own header comment named before this issue closed them), so committing
 a struct now risks getting a field wrong that only surfaces once the
 rest is matched.
@@ -178,7 +178,7 @@ trailing-pad cases.
 register-allocation-permutation/redundant-shadow-register class of gap
 already exhaustively documented for the neighboring terrain-tile-cache
 cluster (`GetCollisionChunk`/`GetTerrainHeights`/`GetSolidTerrainHeights`/`sub_8025228`/
-`DecodeCollisionChunk`, `game_loop3.c`, GitHub issue #40): each packs several
+`DecodeCollisionChunk`, `bg_layer_base.c`, GitHub issue #40): each packs several
 persistent values (a running linear tile/byte index, a loop counter, a
 budget counter, fixed mask constants) into a specific fixed register
 (`r6`/`r7`/`r8`/`ip`/`sb`/`sl`) simultaneously live across one or more

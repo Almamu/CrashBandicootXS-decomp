@@ -12,10 +12,9 @@ second pass against those five.
 - **`OpenLifeCrate`** (`src/crates/crate_stack.c`, new file) - plays
   cue-3 SFX, then - unless `self->field_08` is the sentinel `0xffff` -
   consumes a slot from the per-record bit-grid (`gEntityFlags`,
-  the same `sub_802599C`/`sub_80259D4` accessor pair game_loop12.c/
-  game_loop13.c already establish) keyed by `self->field_08`, setting
+  the same `sub_802599C`/`sub_80259D4` accessor pair entity_flags.c already establish) keyed by `self->field_08`, setting
   the bit only if it wasn't already set. Finally spawns a part object
-  (`DropExtraLife`, itself still parked as of game_loop14.c) three tiles
+  (`DropExtraLife`, itself still parked as of entity_spawner.c) three tiles
   below `self`'s own position, tagged with the caller's own byte
   argument. `self` here is a `struct actor *` - `self->x`/`self->y`/
   `self->field_08` (include/actor.h) match the record's `+0`/`+4`/`+8`
@@ -24,7 +23,7 @@ second pass against those five.
   `sub_802599C`/`sub_80259D4` calls. Two gotchas:
   - `DropExtraLife`'s `x`/`y` arguments need wider `s32` types in this
     call site's own local extern declaration than the `u16 x, u16 y`
-    prototype game_loop14.c's (still-parked) definition uses - this
+    prototype entity_spawner.c's (still-parked) definition uses - this
     call site's own ROM bytes never truncate the computed Q8-to-tile
     values to 16 bits.
   - The 6th (stack-passed, `u8`) `flag6` argument needs the whole call

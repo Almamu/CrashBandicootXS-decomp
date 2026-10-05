@@ -4,7 +4,7 @@
 /* GitHub issue #39: 0x08024810-0x08024E68 (game_loop) - the remainder of
  * the UpdateGameFrame-MainLoop cluster between the sound-channel-handle
  * family (slideshow.c/slideshow_display.c) and the terrain-tile decode cache
- * (game_loop3.c, GitHub issue #40). docs/rom_map.md's "A new find: a
+ * (bg_layer_base.c, GitHub issue #40). docs/rom_map.md's "A new find: a
  * custom RLE/delta token-stream decoder" and its two follow-up sections
  * ("Follow-up: resolved the semantics by tracing callers", "The
  * background streamer's missing 'level load' half") already
@@ -39,7 +39,7 @@
  *   (64 halfword columns x 32 rows, 0x1000 bytes total) ring-buffer
  *   tilemap fed by the same custom RLE/delta token-stream decoder
  *   (`DecodeLayerChunk`) the terrain-tile cache's `DecodeCollisionChunk`
- *   (game_loop3.c) also uses, just writing into a 2D buffer (row
+ *   (bg_layer_base.c) also uses, just writing into a 2D buffer (row
  *   stride 64 halfwords) instead of a flat one. `ScrollBgStreamer` is the
  *   per-frame driver: it right-shifts the world position by 7/6 (128/64
  *   px tile granularity), and on each axis the camera crosses a tile
@@ -61,7 +61,7 @@
  *   `gBgStreamerVtable`/`gBgLayerBaseVtable` - for notifying a
  *   parent object of size/position changes), plain position/clamp
  *   accessors, and the Q8 scale/accumulate step
- *   (`ScaleBgLayerScroll`/`StepBgLayerScroll`) game_loop3.c's `ScrollBgLayerBase`/
+ *   (`ScaleBgLayerScroll`/`StepBgLayerScroll`) bg_layer_base.c's `ScrollBgLayerBase`/
  *   `ResetBgLayerBase` already call into.
  *
  * The streamer functions use `struct bg_streamer` below, the layer
@@ -252,7 +252,7 @@ void *InitCutscenePlayer(void *self0)
  * `recordId`'s halfword table entry, then decodes a token stream,
  * budget-limited to 0x7f halfwords, with the same three run modes
  * (literal-fill, signed-delta-accumulate, raw-copy) as the terrain-tile
- * cache's `DecodeCollisionChunk` (game_loop3.c) - just writing into a 2D buffer
+ * cache's `DecodeCollisionChunk` (bg_layer_base.c) - just writing into a 2D buffer
  * (row = idx>>4, 64-halfword row stride) instead of a flat one.
  *
  * Matched (old_agbcc) by porting `DecodeCollisionChunk`'s matched shape: `src`
@@ -590,7 +590,7 @@ extern void *gLevelLayers;
  * `self+0x18`/`self+0x1c`, and derives `self+4` from
  * `gLevelLayers`'s own `+0x24` field plus `source+4` - the same
  * "camera offset + source field" shape as the terrain-tile cache's
- * `decodeBase` (game_loop3.c's `struct tile_cache`). */
+ * `decodeBase` (bg_layer_base.c's `struct tile_cache`). */
 void SetBgStreamerSource(void *self0, void *source0)
 {
     struct bg_streamer *self = self0;
@@ -759,7 +759,7 @@ void ClampBgLayerScrollMax(void *self0, s32 *out)
  * `vec2`, floor-dividing the Q8 product by 256 (the `+0xff` bias before
  * the arithmetic shift rounds negative products toward negative
  * infinity, matching a true floor division rather than C's
- * truncate-toward-zero `>>`). Called by game_loop3.c's `ScrollBgLayerBase`/
+ * truncate-toward-zero `>>`). Called by bg_layer_base.c's `ScrollBgLayerBase`/
  * `ResetBgLayerBase`. */
 void ScaleBgLayerScroll(void *self0, void *vec20)
 {

@@ -35,14 +35,14 @@ from "core" graphics.
 
 - **Actor-zone NAKED near-miss retry** ([docs/matching/actor-zone-naked-retry.md](../matching/actor-zone-naked-retry.md)):
   the AABB-overlap trio `UpdateYeti` (`actor_part74.c`), `IsTouchingYeti`
-  (`actor_part75.c`) and `IsTouchingAirship` (`actor_part24b.c`) - the boxes
+  (`actor_part75.c`) and `IsTouchingAirship` (`airship_touch.c`) - the boxes
   are members of one stack-frame struct, so their addresses are
   rematerialized from sp as in the ROM; `LoadYetiGraphics`
   (`actor_part75.c`); the BG-tilemap blit twins `DrawAirshipMap`
-  (`actor_part23b.c`) and `DrawHovercraftMap` (`actor_part130.c`); and the
-  easing helper `SteerAirship` (`actor_part23c.c`). All plain C, no
-  register pins; they were NAKED. `actor_part23b.c`, `actor_part24b.c`,
-  `actor_part75.c` and `actor_part130.c` moved to old_agbcc.
+  (`airship_map.c`) and `DrawHovercraftMap` (`hovercraft.c`); and the
+  easing helper `SteerAirship` (`airship.c`). All plain C, no
+  register pins; they were NAKED. `airship_map.c`, `airship_touch.c`,
+  `actor_part75.c` and `hovercraft.c` moved to old_agbcc.
 
 - **`ActionCtrlStateIdle`** (`src/player/action_ctrl_idle.c`) and **`HandleActionCtrlAirInput`**
   (`src/player/action_ctrl_update.c`) - issue #16: two
@@ -51,20 +51,20 @@ from "core" graphics.
   `OLD_AGBCC_OBJS`); they were NAKED transcriptions. See
   [issue-15-16-naked-retry.md](../matching/issue-15-16-naked-retry.md).
 - **Issues #58/#61 NAKED retry** ([docs/matching/issue-58-61-naked-retry.md](../matching/issue-58-61-naked-retry.md)):
-  the boss-weapon cluster's `AirshipStateFireballs` (`actor_part21d.c`),
-  `AirshipStateCannon` (`actor_part21e.c`), `AirshipStateExplode` (`actor_part21f.c`),
-  `CreateAirship` (`actor_part23d.c`), `SpawnAirship` (`actor_part23e.c`),
-  `UpdateAirship` (`actor_part23f.c`), `LoadAirshipGraphics` (`actor_part26b.c`),
+  the boss-weapon cluster's `AirshipStateFireballs` (`airship_states.c`),
+  `AirshipStateCannon` (`airship_states.c`), `AirshipStateExplode` (`airship_explode.c`),
+  `CreateAirship` (`airship.c`), `SpawnAirship` (`airship.c`),
+  `UpdateAirship` (`airship.c`), `LoadAirshipGraphics` (`airship_load_graphics.c`),
   and the `gHovercraft` singleton's `HovercraftStateCloseIn`, `HovercraftStateFallBack`,
   `CreateHovercraft`, `SpawnHovercraft`, `UpdateHovercraft`, `LoadHovercraftGraphics`
-  (`actor_part130.c`). Plain C under current agbcc, no register pins;
+  (`hovercraft.c`). Plain C under current agbcc, no register pins;
   they were NAKED.
 - **`InitContinuePromptGraphics`** (`src/menus/continue_prompt.c`) - issue #63: the fade
   overlay's other setup half (icon manager hookup, tile-cache seeding
   loop). Plain C, built with old_agbcc; it was raw asm
   (`asm/code_3_2_20_28568_c99c_31784_33ef4_3487c.s`, now removed). See
   [old-agbcc-round5.md](../matching/old-agbcc-round5.md).
-- **`DrawJetpackCollectedWumpa`** (`src/graphics/actor_part130.c`) - issue #60's last
+- **`DrawJetpackCollectedWumpa`** (`src/bosses/hovercraft.c`) - issue #60's last
   function, a bounding-box-culled sprite draw (`DrawActor`'s
   shape with the scale flag fixed at 0). Plain C; it was NAKED. See
   [issues-14-53-60-last-naked.md](../matching/issues-14-53-60-last-naked.md).
@@ -356,9 +356,8 @@ from "core" graphics.
   trivial raw-offset getter), `DestroyLargeFont`/`DestroySmallFont` (two more
   `gEntityVtable`-family per-type descriptor table constructors)
 
-- `src/graphics/actor_part20.c`/`actor_part20d.c`/`actor_part21.c`/
-  `actor_part21c.c`/`actor_part22.c`/`actor_part23.c`/
-  `actor_part24.c`/`actor_part25.c`/`actor_part26.c` (new files, issue
+- `src/bosses/airship_fireball.c`/`airship_states.c`/`airship_fall.c`/
+  `airship.c`/`airship_damage.c`/`airship_graphics.c` (new files, issue
   #58, ROM `0x08030334`-`0x08031784` - the boss-weapon effect state
   machine, non-adjacent since 18 raw functions sit between/around them;
   see
@@ -378,7 +377,7 @@ from "core" graphics.
   the same player/action-object family as `action_ctrl_states.c`/
   `actor_part19.c` (`self+0xc` table pointer, `self+0x10` part
   pointer); see `docs/matching/issue-22-0x08017a44-actor.md`.
-- `src/graphics/actor_part27b.c` (new file, GitHub issue #22, ROM
+- `src/bosses/mega_mix.c` (new file, GitHub issue #22, ROM
   0x08017ECC-0x08017FE8, non-adjacent to `input_ctrl_queue.c` since the
   raw `UpdateMegaMix` sits between them): `SetMegaMixMotionYFromSet`, `SetMegaMixMotionXFromSet`,
   `StartMegaMixMotionYFromSet`, `StartMegaMixMotionXFromSet`, `ResetMegaMixCtrl`, `DestroyMegaMixCtrl`,
@@ -386,16 +385,16 @@ from "core" graphics.
   shape as `StartCtrlTargetMotionYFromSet`/`StartCtrlTargetMotionXFromSet`) feeding the
   `gMegaMixMotionRecords` per-vector-component trampoline table; see
   `docs/matching/issue-22-0x08017a44-actor.md`.
-- `src/graphics/actor_part27c.c` (new file, GitHub issue #22, ROM
-  0x080187FC-0x08018884, non-adjacent to `actor_part27b.c` since the
+- `src/bosses/tiny_hop_pad.c` (new file, GitHub issue #22, ROM
+  0x080187FC-0x08018884, non-adjacent to `mega_mix.c` since the
   raw `UpdateTiny`-`SpawnTinyFallingLeaves` block sits between them):
   `UpdateStompedHopPad`, `DestroyStompedHopPadCtrl`, `CreateStompedHopPadCtrl`, `UpdateOneShotAnimCtrl`; see
   `docs/matching/issue-22-0x08017a44-actor.md`.
-- `src/graphics/actor_part27a.c` (GitHub issue #22, ROM
+- `src/bosses/mega_mix_update.c` (GitHub issue #22, ROM
   0x08017AB0-0x08017ECC): `UpdateMegaMix` - the player-vs-part 3-state
   dispatcher, previously a NAKED transcription, now real C built with
   old_agbcc; see `docs/matching/issue-22-0x08018008-hopper.md`.
-- `src/graphics/actor_part_18008.c` (new file, GitHub issue #22, ROM
+- `src/bosses/tiny_update.c` (new file, GitHub issue #22, ROM
   0x08018008-0x080187FC, built with old_agbcc): `UpdateTiny`,
   `SetTinyState`, `PickTinyHopTarget`, `SpawnTinyFallingLeaves` - the
   `gTinyVtable` hopping boss's update/enter-state methods,
@@ -425,11 +424,10 @@ from "core" graphics.
   big object's teardown/notification step, formerly parked
   NON_MATCHING. The box goes to `CollidePartList` by value; see
   `docs/matching/issue-9-10-0x0800ab9c-graphics.md`.
-- `src/graphics/actor_part28.c`/`actor_part30.c`/`actor_part32.c`/
-  `actor_part34.c`/`actor_part36.c` (new files, GitHub issue #62, ROM
+- `src/bosses/hovercraft_parts.c`/`hovercraft_cannon.c`/`hovercraft_launcher.c` (new files, GitHub issue #62, ROM
   0x08033804-0x08033EF4 - the `gHovercraft` singleton system's
   accessor/state-machine cluster, non-adjacent since the (now matched)
-  `HovercraftCannonStateFire`/`HovercraftLauncherStateLaunch` (`actor_part29.c`/`actor_part35.c`) and the (now matched)
+  `HovercraftCannonStateFire`/`HovercraftLauncherStateLaunch` (`hovercraft_cannon.c`/`hovercraft_launcher.c`) and the (now matched)
   `UpdateHovercraftCannon`/`RunHovercraftCannonState`/`UpdateHovercraftLauncher` (see below) sit interleaved
   between them; see
   [docs/matching/issue-62-0x08033804-actor.md](../matching/issue-62-0x08033804-actor.md)):
@@ -552,7 +550,7 @@ from "core" graphics.
   state-machine update, an accumulator-drain/reward-
   dispenser, accessors, accumulator drivers, idle-state-reset idioms,
   and the singleton's teardown/destructor, all sharing
-  `ctrl.c`/`action_ctrl_states.c`/`actor_part20.c`'s established
+  `ctrl.c`/`action_ctrl_states.c`/`airship_fireball.c`'s established
   "self" object conventions.
 - `src/graphics/actor_part_2fbf0.c` (new file, GitHub issue #57 plus
   issue #58's first two functions, ROM 0x0802FBF0-0x08030530, formerly
@@ -700,16 +698,16 @@ from "core" graphics.
   from NAKED in the retry pass. See
   [docs/matching/issue-54-issue-56-gap-e0a4.md](../matching/issue-54-issue-56-gap-e0a4.md)
   and [docs/matching/issue-55-naked-retry.md](../matching/issue-55-naked-retry.md).
-- `src/graphics/actor_part63.c`/`actor_part65.c`/`actor_part67.c`/
-  `actor_part69.c`/`actor_part71.c`/`starfield.c`
+- `src/bosses/hovercraft_launcher.c`/`hovercraft_side_gun.c`/
+  `hovercraft_cannon_flash.c`/`starfield.c`
   (new files, GitHub issue #63, ROM 0x08033EF4-0x08034AA4 - three
   `InitActorPart`-rooted "self" object kinds immediately following
   issue #62's cluster, non-adjacent since 2 remain parked
-  (`UpdateHovercraftCannonFlash`/`sub_8034314`, in `actor_part68.c`/`actor_part70.c` -
+  (`UpdateHovercraftCannonFlash`/`sub_8034314`, in `hovercraft_cannon_flash.c` -
   `CreateHovercraftSideGun`/`InitStarfield`/`DrawStarfield`/`SpawnStar`/`PlotStarfieldPixel`
   are now matched too, closing `starfield.c` entirely, see below),
   `RunHovercraftLauncherState`
-  (`actor_part64.c`, now matched - see below), and 3 left-raw functions sit
+  (`hovercraft_launcher.c`, now matched - see below), and 3 left-raw functions sit
   interleaved between them; numbered `63`-`73` rather than `57`-`67`
   since issues #19 and #54's PRs independently claimed
   `actor_part57.c`-`62.c` first - see
@@ -846,7 +844,7 @@ from "core" graphics.
   the second by passing its `0xfa00` constant through a static inline
   wrapper around `InitActorPart` - see
   [docs/matching/issue-59-60-m-operand-scheduling.md](../matching/issue-59-60-m-operand-scheduling.md).
-- `src/graphics/actor_part130.c` (new file, ROM 0x080326E4-0x08033804,
+- `src/bosses/hovercraft.c` (new file, ROM 0x080326E4-0x08033804,
   Phase 2 second half of the boss-weapon/singleton cluster's gap between
   issue #58 and issue #62 - a sibling pass, `actor_part129.c`, covers
   the first half, `0x08031A6C`-`0x080326E4`): `CreateJetpackRing` (`InitActorPart`
@@ -865,7 +863,7 @@ from "core" graphics.
   `DestroyHovercraft`/`nullsub_34`/`sub_80337FC`/`nullsub_35` (singleton
   destructor, no-op stub, trivial "false" getter, no-op stub) - opens
   the singleton's own camera-follow/scroll-velocity RAM family
-  (`gHovercraftMapCols`-`030015FF`, reusing `actor_part28.c`'s existing
+  (`gHovercraftMapCols`-`030015FF`, reusing `hovercraft_parts.c`'s existing
   naming for the fields that family already touches) - see
   [docs/matching/issue-60-61-gap-31a6c-part2.md](../matching/issue-60-61-gap-31a6c-part2.md).
   `RunHovercraftState` (the P1/P2 speed-toggle dispatcher + category-vtable
@@ -897,14 +895,14 @@ from "core" graphics.
   [docs/matching/issue-64-0x08034aa4-actor.md](../matching/issue-64-0x08034aa4-actor.md).
 
 - `src/graphics/actor_part19e.c` (`RunPolarPlayerState`),
-  `actor_part20b.c` (`UpdateAirshipFireball`), `actor_part21b.c` (`RunAirshipFireballState`),
-  `actor_part31.c` (`UpdateHovercraftCannon`), `actor_part33.c` (`RunHovercraftCannonState`),
-  `actor_part37.c` (`UpdateHovercraftLauncher`), `actor_part44b.c` (`RunJetpackPlayerState`),
-  `actor_part46b.c` (`UpdateJetpackPlane`), `actor_part64.c` (`RunHovercraftLauncherState`),
+  `airship_fireball.c` (`UpdateAirshipFireball`), `airship_fireball.c` (`RunAirshipFireballState`),
+  `hovercraft_cannon.c` (`UpdateHovercraftCannon`), `hovercraft_cannon.c` (`RunHovercraftCannonState`),
+  `hovercraft_launcher.c` (`UpdateHovercraftLauncher`), `actor_part44b.c` (`RunJetpackPlayerState`),
+  `actor_part46b.c` (`UpdateJetpackPlane`), `hovercraft_launcher.c` (`RunHovercraftLauncherState`),
   all of `actor_part125.c` (`UpdateJetpackBalloon`, `DamageJetpackBalloon`,
   `MoveJetpackBalloon`, `JetpackBalloonStatePop`, `JetpackBalloonStateFloatAway`, `RunJetpackBalloonState`),
   `actor_part129.c`'s `UpdateJetpackBalloonCrate`/`RunJetpackBalloonCrateState`, and
-  `actor_part130.c`'s `UpdateJetpackCollectedWumpa`/`DestroyJetpackCollectedWumpa`/`UpdateHovercraftFireball`/
+  `hovercraft.c`'s `UpdateJetpackCollectedWumpa`/`DestroyJetpackCollectedWumpa`/`UpdateHovercraftFireball`/
   `RunHovercraftFireballState` - formerly NAKED as the "r7 table-base-pin hazard".
   That shape is gcc 2.x's pointer-to-member-function call
   `(this->*table[this->state])()`, reproduced by `ACTOR_PMF_CALL`
@@ -942,8 +940,8 @@ See [docs/matching/strag4-naked-retry.md](../matching/strag4-naked-retry.md).
 
 ### Matched in the strag2 retry (issue #62 raw pair, issue #18 NAKED)
 
-- `src/graphics/actor_part29.c` - `HovercraftCannonStateFire`, and
-  `src/graphics/actor_part35.c` - `HovercraftLauncherStateLaunch` (issue #62's proximity
+- `src/bosses/hovercraft_cannon.c` - `HovercraftCannonStateFire`, and
+  `src/bosses/hovercraft_launcher.c` - `HovercraftLauncherStateLaunch` (issue #62's proximity
   detector pair, formerly raw asm behind `.if NON_MATCHING == 0`; the
   `.s` files and their `ldscript.txt` lines are gone). No pins: both
   divisions are plain `/` through the ROM's `__divsi3`, the new cooldown
@@ -1091,7 +1089,7 @@ See [docs/matching/issue-15-16-naked-retry-3.md](../matching/issue-15-16-naked-r
   old_agbcc. The facing block's second branch writes through a scoped
   `volatile u8 *`, which keeps the `+0x28` address in the part copy's
   register ahead of the -0x11 mask.
-- `src/graphics/actor_part130.c` - `ConvertHovercraftTiles` (P2 fill-level meter),
+- `src/bosses/hovercraft.c` - `ConvertHovercraftTiles` (P2 fill-level meter),
   both compilers. The 0xf mask is an opaque value
   (`asm("" : "=r"(m) : "0"(0xf))`) ANDed as `m & b`, the second byte has
   its own local, the second loop has its own counter, and the row
@@ -1113,7 +1111,7 @@ See [docs/matching/big-naked-retry-2.md](../matching/big-naked-retry-2.md).
 
 ### Matched in the fourth mid-range NAKED retry
 
-- `src/graphics/actor_part26c.c` - `ConvertAirshipTiles` (issue #58, VRAM
+- `src/bosses/airship_graphics.c` - `ConvertAirshipTiles` (issue #58, VRAM
   fill-level meter), both compilers. The fixes that closed its one-row
   twin `ConvertHovercraftTiles`: the 0xf mask from `asm("" : "=r"(m) : "0"(0xf))`
   ANDed as `m & b`, a separate local for the second byte, the second
@@ -1208,7 +1206,7 @@ plain C didn't converge.
   GitHub issue #9/#10) - the part-object movement-resolution pair
   `docs/matching/issue-9-0x08007634-actor.md` flagged as built on
   `sub_8008200`/`ProbeTerrain`/`sub_8026C3C`/`sub_8026BF8` (the first
-  two now matched, see `sprite_obj.c`/`game_loop43.c`). `ProbeGroundSpriteFloor`
+  two now matched, see `sprite_obj.c`/`terrain_probe.c`). `ProbeGroundSpriteFloor`
   is a single Y-axis "floor" probe via `sub_8026BF8`; `ProbeGroundSpriteTerrain` is
   the larger orchestrator - two gate checks, an unconditional
   `self+0x74` zero (confirming and completing `docs/rom_map.md`'s own
@@ -1300,7 +1298,7 @@ embedded as asm instead. They're tracked as parked, not matched.
   direct byte compare against the ROM, not just a register-choice
   cosmetic mismatch. The old raw `asm/code_3_2_20_28568_c3e8.s` is
   retired. See `docs/matching.md`, issue #52.
-- **`UpdateHovercraftCannonFlash`** (`src/graphics/actor_part68.c`) - a position-sync/
+- **`UpdateHovercraftCannonFlash`** (`src/bosses/hovercraft_cannon_flash.c`) - a position-sync/
   flag/trampoline updater; now fully matched as real C. The ROM
   computes a "should animate" 0/1 value and re-checks it against zero
   even though the value is a compile-time constant on each path -
@@ -1310,7 +1308,7 @@ embedded as asm instead. They're tracked as parked, not matched.
   right before the check. The old raw
   `asm/code_3_2_20_28568_c99c_31784_33ef4_34270.s` is retired. GitHub
   issue #63, see `docs/matching/issue-63-0x08033ef4-actor.md`.
-- **`sub_8034314`** (`src/graphics/actor_part70.c`) - `UpdateHovercraftCannonFlash`'s
+- **`sub_8034314`** (`src/bosses/hovercraft_cannon_flash.c`) - `UpdateHovercraftCannonFlash`'s
   boolean-returning twin; matched as real C immediately, no opaque-asm
   fix needed - returning the value directly (rather than branching on
   it to decide whether to call `UpdateActor`) means there's no
@@ -1469,7 +1467,7 @@ embedded as asm instead. They're tracked as parked, not matched.
   in/out operand. Retires
   `asm/code_3_2_20_28568_c99c_31784_33ef4_345b0.s` entirely. GitHub
   issue #63, see `docs/matching/issue-63-0x08033ef4-actor.md`.
-- **`CreateHovercraftSideGun`** (`src/graphics/actor_part66.c`, GitHub issue #63) -
+- **`CreateHovercraftSideGun`** (`src/bosses/hovercraft_side_gun.c`, GitHub issue #63) -
   an `InitActorPart`-based constructor with a trailing (stack-passed,
   byte-sized) 6th argument and a spawn-record ternary; now fully
   matched as real C. Two gaps, both closed with `asm volatile`
@@ -1657,7 +1655,7 @@ embedded as asm instead. They're tracked as parked, not matched.
   (`src/objects/part_collide.c`) is unaffected by this change and
   remains its own separate `NAKED` function.
 - **Now matched as real C (strag2 retry, see Matched); entry kept for history.** **`HovercraftCannonStateFire`** (`asm/code_3_2_20_28568_c99c_31784_339dc.s`, C in
-  `src/graphics/actor_part29.c`) - a proximity-triggered effect/hazard
+  `src/bosses/hovercraft_cannon.c`) - a proximity-triggered effect/hazard
   detector measuring `self`'s distance to the player after syncing to
   the singleton's position. Every load/store, branch and call
   confirmed correct; parked on a residual register-allocation gap for
@@ -1666,7 +1664,7 @@ embedded as asm instead. They're tracked as parked, not matched.
   `ip`/`r8`/`r9` pins - see
   `docs/matching/issue-62-0x08033804-actor.md`, issue #62.
 - **Now matched as real C (strag2 retry, see Matched); entry kept for history.** **`HovercraftLauncherStateLaunch`** (`asm/code_3_2_20_28568_c99c_31784_33cf8.s`, C in
-  `src/graphics/actor_part35.c`) - `HovercraftCannonStateFire`'s sibling proximity/
+  `src/bosses/hovercraft_launcher.c`) - `HovercraftCannonStateFire`'s sibling proximity/
   spawn detector. Every branch and call confirmed correct; parked
   because this agbcc build never emits a callee-save push/pop for a
   plain low-register (`r0`-`r7`) `register` variable used across a

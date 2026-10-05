@@ -666,7 +666,7 @@ const struct vtable_slot gBossCtrlVtable[13] = {
     VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
 };
 
-/* Used by actor_part27b.c. */
+/* Used by mega_mix.c. */
 const struct vtable_slot gMegaMixCtrlVtable[13] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(UpdateMegaMix),
@@ -683,7 +683,7 @@ const struct vtable_slot gMegaMixCtrlVtable[13] = {
     VTABLE_SLOT(StartMegaMixMotionYFromSet),
 };
 
-/* Used by actor_part27c.c. */
+/* Used by tiny_hop_pad.c. */
 const struct vtable_slot gStompedHopPadVtable[13] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(UpdateStompedHopPad),
@@ -700,7 +700,7 @@ const struct vtable_slot gStompedHopPadVtable[13] = {
     VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
 };
 
-/* Used by actor_part_188d0.c (CreateOneShotAnimCtrl, DestroyOneShotAnimCtrl). */
+/* Used by cortex.c (CreateOneShotAnimCtrl, DestroyOneShotAnimCtrl). */
 const struct vtable_slot gOneShotAnimCtrlVtable[13] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(UpdateOneShotAnimCtrl),
@@ -717,7 +717,7 @@ const struct vtable_slot gOneShotAnimCtrlVtable[13] = {
     VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
 };
 
-/* Used by actor_part_188d0.c (CreateUnusedOneShotAnimCtrl, DestroyUnusedOneShotAnimCtrl). */
+/* Used by cortex.c (CreateUnusedOneShotAnimCtrl, DestroyUnusedOneShotAnimCtrl). */
 const struct vtable_slot gUnusedOneShotAnimCtrlVtable[13] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(UpdateUnusedOneShotAnimCtrl),
@@ -734,7 +734,7 @@ const struct vtable_slot gUnusedOneShotAnimCtrlVtable[13] = {
     VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
 };
 
-/* Used by actor_part_18008.c, actor_part_188d0.c (DestroyTiny,
+/* Used by tiny_update.c, cortex.c (DestroyTiny,
  * CreateTiny). */
 const struct vtable_slot gTinyVtable[13] = {
     VTABLE_SLOT(NULL),
@@ -752,7 +752,7 @@ const struct vtable_slot gTinyVtable[13] = {
     VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
 };
 
-/* Used by actor_part_188d0.c (DestroyCortexBossGemCtrl, CreateCortexBossGemCtrl). */
+/* Used by cortex.c (DestroyCortexBossGemCtrl, CreateCortexBossGemCtrl). */
 const struct vtable_slot gCortexBossGemVtable[13] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(UpdateCortexBossGem),
@@ -769,7 +769,7 @@ const struct vtable_slot gCortexBossGemVtable[13] = {
     VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
 };
 
-/* Used by actor_part_188d0.c (DestroyCortexBossPlatformMover, CreateCortexBossPlatformMover). */
+/* Used by cortex.c (DestroyCortexBossPlatformMover, CreateCortexBossPlatformMover). */
 const struct vtable_slot gCortexBossPlatformMoverVtable[13] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(UpdateCortexBossPlatformMover),
@@ -786,7 +786,7 @@ const struct vtable_slot gCortexBossPlatformMoverVtable[13] = {
     VTABLE_SLOT(StartPlatformMoverMotionYFromSet),
 };
 
-/* Used by actor_part_188d0.c (DestroyCortexShotCtrl, CreateCortexShotCtrl). */
+/* Used by cortex.c (DestroyCortexShotCtrl, CreateCortexShotCtrl). */
 const struct vtable_slot gCortexShotVtable[13] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(UpdateCortexShot),
@@ -803,7 +803,7 @@ const struct vtable_slot gCortexShotVtable[13] = {
     VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
 };
 
-/* Used by actor_part_1967c.c (DestroyCortexTargetCtrl). */
+/* Used by dingodile.c (DestroyCortexTargetCtrl). */
 const struct vtable_slot gCortexTargetVtable[13] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(UpdateCortexTarget),
@@ -820,7 +820,7 @@ const struct vtable_slot gCortexTargetVtable[13] = {
     VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
 };
 
-/* Used by actor_part_1967c.c (DestroyCortexCannonCtrl). */
+/* Used by dingodile.c (DestroyCortexCannonCtrl). */
 const struct vtable_slot gCortexCannonVtable[13] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(UpdateCortexCannon),
@@ -837,7 +837,7 @@ const struct vtable_slot gCortexCannonVtable[13] = {
     VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
 };
 
-/* Used by actor_part_1967c.c (DestroyCortexBoss). */
+/* Used by dingodile.c (DestroyCortexBoss). */
 const struct vtable_slot gCortexBossVtable[13] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(UpdateCortexBoss),
@@ -854,7 +854,7 @@ const struct vtable_slot gCortexBossVtable[13] = {
     VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
 };
 
-/* Used by actor_part_1967c.c (UpdateDingodileShark, DestroyDingodileSharkCtrl). */
+/* Used by dingodile.c (UpdateDingodileShark, DestroyDingodileSharkCtrl). */
 const struct vtable_slot gDingodileSharkVtable[13] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(UpdateDingodileShark),
@@ -871,7 +871,7 @@ const struct vtable_slot gDingodileSharkVtable[13] = {
     VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
 };
 
-/* Used by actor_part_1967c.c (SpawnDingodileStalactite, DestroyDingodileProjectileCtrl). */
+/* Used by dingodile.c (SpawnDingodileStalactite, DestroyDingodileProjectileCtrl). */
 const struct vtable_slot gDingodileProjectileVtable[13] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(UpdateDingodileProjectile),
@@ -888,7 +888,7 @@ const struct vtable_slot gDingodileProjectileVtable[13] = {
     VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
 };
 
-/* Used by actor_part_1967c.c (DestroyDingodileShieldCtrl), actor_part_1a794.c,
+/* Used by dingodile.c (DestroyDingodileShieldCtrl), dingodile_create.c,
  * gobj_1a794.h. */
 const struct vtable_slot gDingodileShieldVtable[13] = {
     VTABLE_SLOT(NULL),
@@ -906,7 +906,7 @@ const struct vtable_slot gDingodileShieldVtable[13] = {
     VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
 };
 
-/* Used by actor_part_1967c.c, actor_part_1a794.c (DestroyDingodile),
+/* Used by dingodile.c, dingodile_create.c (DestroyDingodile),
  * gobj_1a794.h. */
 const struct vtable_slot gDingodileVtable[13] = {
     VTABLE_SLOT(NULL),
@@ -1024,7 +1024,7 @@ const struct vtable_slot gBgLayerBaseVtable[5] = {
     VTABLE_SLOT(ClampBgLayerScrollStep),
 };
 
-/* Used by bg_scroll_layer_25fc8.c (DestroyBgLayer), game_loop15.c
+/* Used by bg_layer.c (DestroyBgLayer), bg_layer_init.c
  * (InitBgLayer), tile_slot_pool.c (DestroyPooledBgLayer), bg_scroll_layer.h. */
 const struct vtable_slot gBgLayerVtable[10] = {
     VTABLE_SLOT(NULL),
@@ -1039,7 +1039,7 @@ const struct vtable_slot gBgLayerVtable[10] = {
     VTABLE_SLOT(ClipBgLayerRows),
 };
 
-/* Used by bg_scroll_layer_25fc8.c, tile_slot_pool.c (DestroyPooledBgLayer),
+/* Used by bg_layer.c, tile_slot_pool.c (DestroyPooledBgLayer),
  * bg_scroll_layer.h. */
 const struct vtable_slot gPooledBgLayerVtable[10] = {
     VTABLE_SLOT(NULL),
@@ -1124,7 +1124,7 @@ const struct vtable_slot gFontVtable[9] = {
  * DestroyJetpackExplosion, DestroyJetpackShot, DestroyJetpackPlane, DestroyJetpackBomber, DestroyJetpackCannonball,
  * DestroyAirshipFireball, DestroyJetpackBalloon, DestroyJetpackParachuteNitro, DestroyJetpackRocket, DestroyJetpackRing,
  * DestroyHovercraftFireball, DestroyHovercraftCannon, DestroyHovercraftLauncher, DestroyHovercraftSideGun, DestroyHovercraftCannonFlash),
- * actor_part129.c, actor_part130.c (DestroyJetpackCollectedWumpa), actor_part19.c,
+ * actor_part129.c, hovercraft.c (DestroyJetpackCollectedWumpa), actor_part19.c,
  * actor_part19c.c, actor_part44.c, actor_part50.c, actor_part52.c. */
 const struct vtable_slot gActorVtable[4] = {
     VTABLE_SLOT(NULL),
@@ -1387,7 +1387,7 @@ const struct vtable_slot gJetpackCannonballVtable[7] = {
     VTABLE_SLOT(GetActorHp),
 };
 
-/* Used by actor_part20d.c. */
+/* Used by airship_fireball.c. */
 const struct vtable_slot gAirshipFireballVtable[7] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyAirshipFireball),
@@ -1479,7 +1479,7 @@ const struct vtable_slot gJetpackRocketVtable[7] = {
     VTABLE_SLOT(GetActorHp),
 };
 
-/* Used by actor_part130.c. */
+/* Used by hovercraft.c. */
 const struct vtable_slot gJetpackRingVtable[7] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyJetpackRing),
@@ -1490,7 +1490,7 @@ const struct vtable_slot gJetpackRingVtable[7] = {
     VTABLE_SLOT(GetActorHp),
 };
 
-/* Used by actor_part130.c (DestroyJetpackCollectedWumpa). */
+/* Used by hovercraft.c (DestroyJetpackCollectedWumpa). */
 const struct vtable_slot gJetpackCollectedWumpaVtable[7] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyJetpackCollectedWumpa),
@@ -1501,7 +1501,7 @@ const struct vtable_slot gJetpackCollectedWumpaVtable[7] = {
     VTABLE_SLOT(GetActorHp),
 };
 
-/* Used by actor_part130.c. */
+/* Used by hovercraft.c. */
 const struct vtable_slot gHovercraftFireballVtable[7] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyHovercraftFireball),
@@ -1512,7 +1512,7 @@ const struct vtable_slot gHovercraftFireballVtable[7] = {
     VTABLE_SLOT(GetActorHp),
 };
 
-/* Used by actor_part32.c. */
+/* Used by hovercraft_cannon.c. */
 const struct vtable_slot gHovercraftCannonVtable[7] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyHovercraftCannon),
@@ -1523,7 +1523,7 @@ const struct vtable_slot gHovercraftCannonVtable[7] = {
     VTABLE_SLOT(GetActorHp),
 };
 
-/* Used by actor_part63.c. */
+/* Used by hovercraft_launcher.c. */
 const struct vtable_slot gHovercraftLauncherVtable[7] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyHovercraftLauncher),
@@ -1534,7 +1534,7 @@ const struct vtable_slot gHovercraftLauncherVtable[7] = {
     VTABLE_SLOT(GetActorHp),
 };
 
-/* Used by actor_part65.c, actor_part66.c (CreateHovercraftSideGun), actor_part67.c. */
+/* Used by hovercraft_launcher.c, hovercraft_side_gun.c (CreateHovercraftSideGun and the functions after it). */
 const struct vtable_slot gHovercraftSideGunVtable[7] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyHovercraftSideGun),
@@ -1545,7 +1545,7 @@ const struct vtable_slot gHovercraftSideGunVtable[7] = {
     VTABLE_SLOT(GetActorHp),
 };
 
-/* Used by actor_part69.c. */
+/* Used by hovercraft_cannon_flash.c. */
 const struct vtable_slot gHovercraftCannonFlashVtable[7] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(DestroyHovercraftCannonFlash),

@@ -6,7 +6,7 @@ See docs/levels.md for the format. In short, a room is
 - a `struct level_desc` (level_layers.c's view): up to five layers (BG1-3,
   the pooled BG0 and the collision layer), the level asset, the entity list
   and the entity links;
-- per layer a `struct level_layer_desc` (bg_scroll_layer_25fc8.c's
+- per layer a `struct level_layer_desc` (bg_layer.c's
   `struct bg_layer_desc`) and a grid of 16x8-cell chunk ids;
 - the level asset: per layer a table of chunk offsets and one RLE/delta
   token stream per chunk (decoded by DecodeLayerChunk/DecodeCollisionChunk). 34 rooms

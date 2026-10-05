@@ -41,7 +41,7 @@ functions):
 - **`struct level_menu`** (`RunLevelSelect`-`LevelSelectCursorRight`, 0xAC bytes) - the
   paged level-select screen docs/rom_map.md found from the other side
   ("a paged menu/screen with a smooth horizontal page-turn animation").
-  `RunLevelSelect` (called from `game_loop55.c`) is the modal entry point:
+  `RunLevelSelect` (called from `game_frame.c`) is the modal entry point:
   display/icon-manager setup (the same sequence as `ShowPowerDialog`),
   construct (`InitLevelSelect`), run (`LevelSelectLoop`), return the selected
   level through `*arg`. Five entries per page (`arg / 5`, `arg % 5`;

@@ -1494,14 +1494,14 @@ consistent with the earlier "homing/seek-toward-point" reading.
 ### Issue #59 Phase 2 second half closes the singleton's camera-follow RAM family, and corrects a floor/ceiling misreading
 
 `docs/matching/issue-60-61-gap-31a6c-part2.md` matched/NAKED all 30
-functions from `0x080326E4` to `0x08033804` (`src/graphics/actor_part130.c`).
+functions from `0x080326E4` to `0x08033804` (`src/bosses/hovercraft.c`).
 Two things worth recording here rather than only in that writeup:
 
 - **This pass's "second RAM-struct family" guess above turned out not
   to need a struct at all.** `HovercraftStateCloseIn`/`HovercraftStateFallBack` are the first
   functions in ROM order to touch most of `gHovercraftX`-
-  `030015EC`, but the *later* issue #62 pass (`actor_part28.c`-
-  `actor_part37.c`, already merged) had already established these as
+  `030015EC`, but the *later* issue #62 pass (`hovercraft_parts.c`-
+  `hovercraft_launcher.c`, already merged) had already established these as
   flat, independently-linked `extern` globals - not fields of a struct
   reached through a common base pointer, since the linked BSS layout
   doesn't put them in one contiguous allocation. This pass reused that

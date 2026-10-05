@@ -176,7 +176,7 @@ s32 SkipSlides(struct SoundChannelList *self, s32 startIdx, u8 condFlag)
  * new toggle state selects (`0x06000000`/`0x0600A000`), via
  * `LoadTaggedAsset`. Then rebuilds `gSlideshowDispcnt`'s bit 4 from the
  * toggle's low bit (same `& ~0x10 | bit`-idiom byte-shadow-update shape
- * as `ShowSlidePicture`'s cousin in game_loop18.c, but for a different
+ * as `ShowSlidePicture`'s cousin in level_query.c, but for a different
  * global), DMA3-copies the asset's first half into `BG_PLTT` (a second,
  * independent palette-DMA-plus-DISPCNT-write path alongside the
  * already-documented `CommitDispcnt`/`gDispcnt` one - see

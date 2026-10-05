@@ -55,7 +55,7 @@ class with method table `gPlayerCtrlVtable`:
 | +0x1C | `AttachPlayerCtrl` set target |
 | +0x4C | `DestroyPlayerCtrl` destructor |
 
-The constructor is `InitPlayerCtrl`, called from `game_loop39.c`. Its field
+The constructor is `InitPlayerCtrl`, called from `play_room.c`. Its field
 reset is `action_ctrl.c`'s `ResetPlayerCtrl`. The #19 dispatchers
 `StartPlayerCtrlStroke`/`StartPlayerCtrlSpin`/`ApplyPlayerCtrlSwimDrift` and `SetPlayerSwimDriftY` are methods of
 the same class. The target (`+0x10`) is the player object.

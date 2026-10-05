@@ -3,7 +3,7 @@
 #include "hud.h"
 
 /* A small 3-slot icon "blink" animation timer, shared with `SetHudCrateTotal`/
- * `IncHudCrateTotal` (src/system/game_loop.c, still raw asm here) via the
+ * `IncHudCrateTotal` (src/level/bonus_round.c, still raw asm here) via the
  * `gHud` instance - each slot is a `{state, timer}` s32
  * pair: state 0 idle, 1 counting up to a threshold then -> 2, 2 counting
  * down 0x14 frames then -> 3, 3 counting down its own timer then back to

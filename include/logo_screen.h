@@ -1,7 +1,7 @@
 #ifndef GUARD_LOGO_SCREEN_H
 #define GUARD_LOGO_SCREEN_H
 
-/* The 0x44c-byte block ShowCompanyLogos (game_loop10.c) allocates for the
+/* The 0x44c-byte block ShowCompanyLogos (level_state.c) allocates for the
  * 20-slot object subsystem RunCompanyLogos drives
  * (src/frontend/title_screen.c / company_logos.c):
  * 20 `struct logo_piece` records, then a small header. Only the fields

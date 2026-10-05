@@ -5186,7 +5186,7 @@ parked (`NON_MATCHING`, semantics/field offsets confirmed, one specific
 register-allocation gap each), and 2 (`UpdateGameFrame` itself and
 `StartTimeTrial`) were left fully raw.
 
-**Matched (`src/system/game_loop2.c`, 20 functions):**
+**Matched (`src/level/level_state.c`, 20 functions):**
 
 - **`FreezeLevelClock`/`TickLevelClock`**: record 47's periodic-trigger
   setter/decrementer (see `docs/rom_map.md`, "An achievement/unlock-
@@ -5235,7 +5235,7 @@ register-allocation gap each), and 2 (`UpdateGameFrame` itself and
   (`val1`/`val2`/`val3`) instead of re-reading `*addr` for the
   increment, since re-reading re-emits a redundant `ldr` gcc otherwise
   doesn't need. Real bytes were in `asm/code_3_2_17_22ea8.s`, now
-  removed (folded into `game_loop2.o`).
+  removed (folded into `level_state.o`).
 
 - **`AddBrokenCrate`/`PressSwitchCrate`**: two near-identical "tick a frame
   counter, and when it reaches `self+0xbc`'s limit, either flag the
@@ -5286,7 +5286,7 @@ register-allocation gap each), and 2 (`UpdateGameFrame` itself and
 
 **Parked (`NON_MATCHING`, real bytes in `asm/code_3_2_17_22bf0.s`):**
 
-- **`EndBonusRound`/`SetCheckpointAtPlayer`** (`src/system/game_loop.c`): the
+- **`EndBonusRound`/`SetCheckpointAtPlayer`** (`src/level/bonus_round.c`): the
   level-start/checkpoint-restore progress-total updater and its
   "refresh cached frame count / snapshot `self`'s first `0x68` bytes"
   helper (called recursively by `EndBonusRound` itself, and again from
@@ -5322,7 +5322,7 @@ register-allocation gap each), and 2 (`UpdateGameFrame` itself and
   reconstruction with confidence in one session - a natural next
   chunk for whoever picks this up.
   *Later pass (big NAKED retry):* now real C under old_agbcc in
-  `src/system/game_loop55.c`. See
+  `src/level/game_frame.c`. See
   [docs/matching/big-naked-retry.md](matching/big-naked-retry.md).
 - **`StartTimeTrial`** (`asm/code_3_2_17_22d50.s`, ROM `0x08022D50`-
   `0x08022EA8`) - a level-start/reset routine: clears `self+0x8c`/
@@ -5337,9 +5337,9 @@ register-allocation gap each), and 2 (`UpdateGameFrame` itself and
 **File structure:** `asm/code_3_2_17.s` (truncated right before
 `UpdateGameFrame`) is now followed, in ROM order, by
 `code_3_2_17_225a0.s` (raw `UpdateGameFrame`), `code_3_2_17_22bf0.s`
-(raw twin for the two parked `game_loop.c` functions, `.if
-NON_MATCHING == 0`), `game_loop.o`, `code_3_2_17_22d50.s` (raw
-`StartTimeTrial`), `game_loop2.o` (now covering `FreezeLevelClock`/
+(raw twin for the two parked `bonus_round.c` functions, `.if
+NON_MATCHING == 0`), `bonus_round.o`, `code_3_2_17_22d50.s` (raw
+`StartTimeTrial`), `level_state.o` (now covering `FreezeLevelClock`/
 `TickLevelClock` too - `code_3_2_17_22ea8.s`, their former raw twin, is
 removed), and finally `code_3_2_17_231cc.s` (the original file's
 unchanged remainder, from `HasDoubleJump` on) - see `ldscript.txt` and
@@ -5429,8 +5429,8 @@ pass added, splitting it out of what was previously an opaque
 `StepHudSlide`, contiguous):
 
 A 3-slot icon "blink" animation timer on the `gHud`
-object (already referenced as `void *` from `src/system/game_loop.c`/
-`game_loop2.c` - kept the same untyped convention here rather than
+object (already referenced as `void *` from `src/level/bonus_round.c`/
+`level_state.c` - kept the same untyped convention here rather than
 naming a struct, since the object extends past this file's own fields,
 to at least `+0x28` per `SetHudCrateTotal`). Each slot is a `{state, timer}`
 `s32` pair: state 0 idle, 1 counting up to a threshold then -> 2, 2
@@ -6336,7 +6336,7 @@ they're genuinely correct, not guesses:
   field type, is what makes the idiom reproduce.
 
 **Parked (`NON_MATCHING`, 4): `SpawnRedGemPlatform`/`SpawnYellowGemPlatform`/
-`SpawnGreenGemPlatform`/`SpawnBlueGemPlatform`** (`src/graphics/trigger_effect.c`, real
+`SpawnGreenGemPlatform`/`SpawnBlueGemPlatform`** (`src/level/spawn_gem_platforms.c`, real
 bytes staying in place in `asm/code_3_2_17_14674.s` under a new `.if
 NON_MATCHING == 0` guard - no file split needed since all four
 functions are parked together as one contiguous block, not mixed with

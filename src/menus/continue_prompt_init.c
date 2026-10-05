@@ -5,7 +5,7 @@
 #include "vram_pool.h"
 
 /* GitHub issue #63's final remaining raw span, right after the
- * three-kind `InitActorPart` cluster (`actor_part63.c`-`starfield.c`)
+ * three-kind `InitActorPart` cluster (`hovercraft_launcher.c`-`starfield.c`)
  * - see docs/matching/issue-63-0x08033ef4-actor.md. This "self" object
  * is *not* part of that `InitActorPart` family (no `InitActorPart` call,
  * and its field layout doesn't match): it's a standalone fade/overlay

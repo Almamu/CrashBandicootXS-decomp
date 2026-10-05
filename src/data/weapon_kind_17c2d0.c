@@ -7,7 +7,7 @@
  * sections by ldscript.txt - see docs/data.md.
  */
 
-/* actor_part23e.c's `struct weapon_kind`: seven words per kind, none
+/* airship.c's `struct weapon_kind`: seven words per kind, none
  * named yet. SpawnAirship picks one by gAirshipLevel. */
 struct weapon_kind {
     s32 unk_00;
@@ -28,8 +28,8 @@ const struct weapon_kind gAirshipAttacks[6] = {
     { 50, 60, 5, 150, 15, 7, 90 },
 };
 
-/* A 3-frame palette strip for BG palette 1: SpawnAirship (actor_part23e.c)
- * loads frame 0, AnimateAirshipPalette (actor_part26.c) ping-pongs through all
+/* A 3-frame palette strip for BG palette 1: SpawnAirship (airship.c)
+ * loads frame 0, AnimateAirshipPalette (airship_graphics.c) ping-pongs through all
  * three while its counter runs. */
 const u16 gAirshipHitFlashPalettes[3][16] = {
     {
@@ -47,11 +47,11 @@ const u16 gAirshipHitFlashPalettes[3][16] = {
 };
 
 /* The boss's box (struct anim_box), read by AirshipStateExplode
- * (actor_part21f.c), SteerAirship (actor_part23c.c) and IsTouchingAirship
- * (actor_part24b.c). */
+ * (airship_explode.c), SteerAirship (airship.c) and IsTouchingAirship
+ * (airship_touch.c). */
 const struct anim_box gAirshipBox = { -102, -12, -2, 51, 68, 4 };
 
-/* The two keyframes CreateAirship (actor_part23d.c) gives its tracker part. */
+/* The two keyframes CreateAirship (airship.c) gives its tracker part. */
 const struct anim_frame_record gAirshipKeyframes[2] = {
     { 64, 0, 4, 0, 0x0, { 0, 0 } },
     { 64, 0, 1, 0, 0x0, { 0, 0 } },

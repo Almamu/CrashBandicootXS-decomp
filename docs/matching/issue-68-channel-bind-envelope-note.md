@@ -106,7 +106,7 @@ file boundaries.
 A later pass closed `GaxChannelSetInstrument` (`lib/gax/src/gax_channel_bind_instrument.c`)
 using the same "`self` lives in `ip` for the whole function, never spilled
 to a callee-saved register" idiom already established for `sub_80259D4`
-(`src/system/game_loop13.c`, see
+(`src/level/entity_flags.c`, see
 [naked-sub_80259d4-matched.md](./naked-sub_80259d4-matched.md)):
 
 ```c

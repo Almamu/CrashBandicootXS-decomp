@@ -11,12 +11,12 @@ closed as plain C with no register pins. Issue #54 has nothing left.
 | `UpdateYeti` | `actor_part74.c` | old_agbcc (file already on it) | 52 off |
 | `IsTouchingYeti` | `actor_part75.c` | old_agbcc (file moved) | 69 off |
 | `LoadYetiGraphics` | `actor_part75.c` | both | 5 off |
-| `IsTouchingAirship` | `actor_part24b.c` | old_agbcc (file moved) | 53 off |
-| `DrawAirshipMap` | `actor_part23b.c` | old_agbcc (file moved) | 11 off |
-| `DrawHovercraftMap` | `actor_part130.c` | old_agbcc (whole file moved) | 11 off |
-| `SteerAirship` | `actor_part23c.c` | both (file stays on agbcc) | 19 off |
+| `IsTouchingAirship` | `airship_touch.c` | old_agbcc (file moved) | 53 off |
+| `DrawAirshipMap` | `airship_map.c` | old_agbcc (file moved) | 11 off |
+| `DrawHovercraftMap` | `hovercraft.c` | old_agbcc (whole file moved) | 11 off |
+| `SteerAirship` | `airship.c` | both (file stays on agbcc) | 19 off |
 
-`actor_part130.c` was checked function by function under old_agbcc
+`hovercraft.c` was checked function by function under old_agbcc
 before the move: every function in it, the previously matched ones
 included, compiles to the ROM's bytes (the NAKED `ConvertHovercraftTiles`
 assembles identically either way).
@@ -114,8 +114,8 @@ compilers.
 
 ## Not attempted
 
-- `ConvertHovercraftTiles` (`actor_part130.c`) and its 4-row twin `ConvertAirshipTiles`
-  (`actor_part26c.c`) are still NAKED with their drafts, 95-105 halfwords
+- `ConvertHovercraftTiles` (`hovercraft.c`) and its 4-row twin `ConvertAirshipTiles`
+  (`airship_graphics.c`) are still NAKED with their drafts, 95-105 halfwords
   off (unchanged from issue-58-61-naked-retry.md). They are why issues
   #58 and #61 stay open.
 

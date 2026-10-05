@@ -18,16 +18,16 @@ No register pins, no asm in a function body and no NAKED.
 
 | function | file |
 |---|---|
-| `StartTimeTrial` | `game_loop40.c` |
-| `SetupRoomBlend` | `game_loop8.c` |
+| `StartTimeTrial` | `time_trial.c` |
+| `SetupRoomBlend` | `room_frame.c` |
 | `BeginSlide` | `slideshow.c` |
 | `StreamBgRow`, `StreamBgColumn`, `FillBgStreamer` | `cutscene_player.c` |
-| `GetCollisionChunk`, `GetTerrainHeights`, `GetSolidTerrainHeights`, `sub_8025228` | `game_loop3.c` |
-| `GetTerrainType` | `game_loop4.c` |
-| `DropExtraLife` | `game_loop29.c` |
-| `SpawnEffectPart` | `game_loop14.c` |
-| `ScrollBgLayer`, `DrawBgLayerColumn` | `game_loop16.c` |
-| `ProbeTerrainY`, `ProbeTerrainX` | `game_loop46.c` |
+| `GetCollisionChunk`, `GetTerrainHeights`, `GetSolidTerrainHeights`, `sub_8025228` | `bg_layer_base.c` |
+| `GetTerrainType` | `tile_cache.c` |
+| `DropExtraLife` | `drop_extra_life.c` |
+| `SpawnEffectPart` | `entity_spawner.c` |
+| `ScrollBgLayer`, `DrawBgLayerColumn` | `bg_layer.c` |
+| `ProbeTerrainY`, `ProbeTerrainX` | `terrain_probe_axes.c` |
 | `InitHud` | `hud_init.c` |
 
 All eleven files move to `OLD_AGBCC_OBJS` whole.
@@ -54,7 +54,7 @@ Still NAKED, with the remaining gap under old_agbcc:
   gcc's strength-reduced `&dest[written]`.
 - **Inline-helper parameters.** Stores whose value comes before the
   address (`part->tag` in `DropExtraLife` and `StartTimeTrial`) go through an
-  `s32` setter; `DrawBgLayerColumn` uses `bg_scroll_layer_25fc8.c`'s `Mod32`.
+  `s32` setter; `DrawBgLayerColumn` uses `bg_layer.c`'s `Mod32`.
 - **The tile cache's `GetCell`.** A shared inline returning `u16` gives
   the ROM's extra `lsl`/`lsr 16`, with the index written as
   `(y & 7) * 16 + (x & 0xf)` (`<< 4` schedules differently).
@@ -76,7 +76,7 @@ call, not the "stack-reuse coincidence" its old comment described.
 Under old_agbcc, five already-matched functions in these files match
 with all of their register pins removed, so the pins are gone:
 `RunSlideshow` (slideshow.c), `GetBgStreamerColumn`, `GetBgStreamerRow`,
-`GetBgStreamerCell` (cutscene_player.c) and `UpdateRoomFrame` (game_loop8.c).
+`GetBgStreamerCell` (cutscene_player.c) and `UpdateRoomFrame` (room_frame.c).
 `SpawnEntity` and `ShowSlidePicture` still need theirs (5 and 3 halfwords off
 without them).
 

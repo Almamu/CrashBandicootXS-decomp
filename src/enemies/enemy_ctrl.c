@@ -221,7 +221,7 @@ void UpdateEnemyOscillateY(struct part_ctrl *self)
 /* `UpdateEnemyCtrl` state 18's floating-popup spawner
  * (`LaunchHarmfulEffectPart(0x1D, 0, 0, 0x2B, 0, owner)`, per the Phase 1 doc) -
  * a thin wrapper around the already-matched `LaunchEffectPart`
- * (`src/system/game_loop14.c`, the AABB-aware "spawn part near src"
+ * (`src/level/entity_spawner.c`, the AABB-aware "spawn part near src"
  * primitive): forwards all six arguments (`gEntitySpawner` as the
  * pool) and, on return, ORs bit 2 into the new object's `+0xc` flags
  * byte while clearing bit 6 (`(obj[0xc] | 4) & ~0x40` - the ROM
@@ -274,7 +274,7 @@ void *LaunchHarmfulEffectPart(s32 a, s32 b, s32 c, s32 d, s32 e, void *f)
  * volume calculator, `UpdatePeriodicSpawner`'s conditional `_call_via_r4`
  * trigger) and one instance of the "flag active + bitmap-set" idiom
  * (`UpdateKnockedEnemyCtrl`) already matched as real C once before, in
- * `actor_part27c.c`'s `UpdateOneShotAnimCtrl`.
+ * `tiny_hop_pad.c`'s `UpdateOneShotAnimCtrl`.
  *
  * All 19 matched as **real C**, no NAKED fallback needed anywhere in
  * this file - smaller and more resistant-shape-free than most of this
@@ -653,14 +653,14 @@ extern void *_call_via_r1(void *addr, void *fn);
 /* `self` (the first argument) is never read - only `other` matters.
  * Reads `other+0x18`'s own struct-actor-shaped table pointer, fires a
  * `_call_via_r1` hit-probe against its `+0x28`/`+0x2c` `{s16 offset,
- * void *fn}` pair (the exact same convention `src/system/game_loop8.c`'s
+ * void *fn}` pair (the exact same convention `src/level/room_frame.c`'s
  * `UpdateRoomFrame` and `effect_ctrl.c`'s `UpdateEffectCtrl` both already
  * read from their own `table+0x28`/`+0x2c`), and - only when that
  * probe reports *no* hit - runs the "flag active + bitmap-set" idiom
  * on `other` (`other+0xc` |= bit 0; unless `other+8`'s id sentinel-
  * checks as `0xffff`, also sets bit `other+8 & 0x1f` of word
  * `other+8 >> 5` in the `gEntityFlags+0x108` bitmap) - the exact
- * idiom `actor_part27c.c`'s `UpdateOneShotAnimCtrl` already matches as real C.
+ * idiom `tiny_hop_pad.c`'s `UpdateOneShotAnimCtrl` already matches as real C.
  *
  * Needed the same `[[matching_decomp_register_pinning]]` treatment
  * `UpdateOneShotAnimCtrl` itself documents needing: `other` pinned to `r4`

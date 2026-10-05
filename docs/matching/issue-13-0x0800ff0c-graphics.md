@@ -17,7 +17,7 @@ This pass closes it.
 Two entire files exist purely to call `CreateCrate` with a fixed
 constant `type` (the 5th, stack-passed argument) and nothing else:
 
-- `src/graphics/graphics_loading_21bfc.c` (GitHub issue #33) - `type`
+- `src/level/spawn_crates.c` (GitHub issue #33) - `type`
   `0` through `7`. `type == 0`'s caller (`SpawnBasicCrate`) does extra
   post-processing: it re-derives the same `gEntityFlags -> *P ->
   {+8 array, +0xc base}` placement-record lookup `CreateCrate` itself
@@ -27,8 +27,8 @@ constant `type` (the 5th, stack-passed argument) and nothing else:
   the bits `CreateCrate`'s own common tail had just cleared.
   `SpawnNitroSwitchCrate` picks `type` `7` or `6` depending on
   `IsSwitchPressed(gLevelState)`.
-- `src/graphics/graphics_loading_21668.c` (GitHub issue #31) - `type`
-  `0x12` down to `7` (overlapping `graphics_loading_21bfc.c` at `7`
+- `src/level/spawn_objects.c` (GitHub issue #31) - `type`
+  `0x12` down to `7` (overlapping `spawn_crates.c` at `7`
   through a second, independent trampoline `SpawnIronCrate`).
 
 Together every `type` from `0` to `0x12` (18) - all 19 values - is

@@ -6,25 +6,25 @@ Both issues cover one contiguous, un-split raw block (formerly
 was already matched in an earlier pass), issue #36 lists
 `ClearTimeTrial`-`CheckAllCratesBroken` (all 25). Together they're exactly this
 file's 49 functions, `0x080231CC`-`0x08023488` (`CheckAllCratesBroken` itself
-ends at `0x080234E8`, where `src/system/game_loop10.o` picks up).
+ends at `0x080234E8`, where `src/level/level_state.o` picks up).
 
-The block sits immediately after `src/system/game_loop2.c`'s own
+The block sits immediately after `src/level/level_state.c`'s own
 existing functions (`FreezeLevelClock`-`HasTurboRun`) in ROM, with no gap -
-`ldscript.txt` already links `game_loop2.o` directly before what was
+`ldscript.txt` already links `level_state.o` directly before what was
 `asm/code_3_2_17_231cc.o`. All 49 functions turned out to be a direct
-continuation of the exact same `self` type `game_loop2.c` already
+continuation of the exact same `self` type `level_state.c` already
 established: the `gLevelState`-pointed "level" object (confirmed
-by `RunRoom`/`game_loop56.c`, whose own opening dispatch reads
+by `RunRoom`/`run_room.c`, whose own opening dispatch reads
 `*gLevelState` and passes it as `self` to `SetMaskAssistDeaths`/
 `SetCrateAssistDeaths`/`CheckAllCratesBroken`). Rather than open a new file (which would
 need a new `ldscript.txt` entry and a fresh struct-convention writeup),
-all 49 were appended directly to `game_loop2.c`, in ROM address order,
+all 49 were appended directly to `level_state.c`, in ROM address order,
 keeping the existing object boundary and the existing `self+2`/
 `self+0x80`-`0xc0` field convention that file already documents.
 
 ## The struct fields this pass adds
 
-Building on `game_loop2.c`'s existing `self+2` flags byte and
+Building on `level_state.c`'s existing `self+2` flags byte and
 `self+0x80`/`0x84`/`0x88`/`0xac`/`0xc0` int fields:
 
 - **`self+2` bit 7**: one more getter (`HasDoubleJump`) extending the
@@ -56,7 +56,7 @@ Building on `game_loop2.c`'s existing `self+2` flags byte and
   (`GetBossHealth`/`GetBossIndex`, see below), resolved to a slot address
   by `GetLevelFlags`/`GetCurrentLevelFlags` (`self + idx*4 + 4`), and re-used as a
   `gLevelTable`-style level index by `PlayRoomMusic`
-  (`game_loop18.c`) when `SetMaskLevel` forwards `self+0xc4`'s address
+  (`level_query.c`) when `SetMaskLevel` forwards `self+0xc4`'s address
   into it.
 - **`self+0xc8`/`self+0x1c8`**: two more plain word fields
   (`sub_8023324` getter, `SetLevelBoss` setter) - `self+0x1c8` sits right
@@ -84,7 +84,7 @@ the ROM's own compiler chose them:
   `idx==0x18`) points at the *exact same address* as the range-check's
   own "out of bounds" fallthrough target - the same cross-slot code
   sharing this project has already seen in `RunRoom`'s state-1/6
-  vs. state-5 tail (`game_loop56.c`). A plain `switch` with only 4
+  vs. state-5 tail (`run_room.c`). A plain `switch` with only 4
   explicit cases plus `default` stayed under this compiler's jump-table
   threshold and fell back to another comparison tree instead; adding an
   explicit (empty, fall-through) `case 4:` right before `default:`
@@ -106,7 +106,7 @@ the ROM's own compiler chose them:
   internally self-consistent, but a droppped/added instruction shifts
   every ROM address after it, and this project's build maps everything
   by fixed absolute address via `ldscript.txt` - the actual failure
-  surfaced as a 4-byte drift in `game_loop2.o`'s total linked size,
+  surfaced as a 4-byte drift in `level_state.o`'s total linked size,
   caught only once the whole ROM was reassembled and diffed against
   `baserom.gba` (see `docs/workflow.md` step 3's warning about isolated
   compiles never being proof of a match).
@@ -114,7 +114,7 @@ the ROM's own compiler chose them:
 ## `CheckAllCratesBroken`: closing GitHub issue #37's last gap
 
 `CheckAllCratesBroken` is the one function `docs/matching/issue-37-game-loop-2375c.md`
-called out by name as still open - `RunRoom`'s (`game_loop56.c`)
+called out by name as still open - `RunRoom`'s (`run_room.c`)
 "init guard" call, firing once per level to lazily initialize this
 "level" object's counter-notification state the first time
 `self+0x70 == self+0xbc` and both busy flags (`IsInBonusRound`/
@@ -147,7 +147,7 @@ to its pinned register if the ROM's own code did so.
 `3`) needed `extern void StartSong(struct AudioContext *self, u32
 songIndex);`, matching the signature already used in
 `src/audio/audio.c`/
-`src/frontend/title_screen_init.c`. Unlike those files, `game_loop2.c` had
+`src/frontend/title_screen_init.c`. Unlike those files, `level_state.c` had
 no prior reference to `struct AudioContext` anywhere at file scope, so
 the tag's first appearance was inside this `extern` declaration's own
 parameter list - triggering `agbcc`'s "declared inside parameter list"
@@ -159,12 +159,12 @@ AudioContext;` forward declaration right above it.
 
 All 49 functions matched as real C - no `NAKED` fallbacks needed for
 this batch. Verified via a full clean `make NON_MATCHING=1 report` (no
-warnings for `game_loop2.c`) and a full clean `make compare`
+warnings for `level_state.c`) and a full clean `make compare`
 (`crashbandicootxs.gba: La suma coincide`). `asm/code_3_2_17_231cc.s`
 is retired; `ldscript.txt`'s entry for it is removed (no replacement
-needed, since `game_loop2.o` now covers the whole span directly).
+needed, since `level_state.o` now covers the whole span directly).
 
 This does not close issue #37 by itself - `RunRoom` was already
-matched separately (`game_loop56.c`, `NAKED`) in the same prior
+matched separately (`run_room.c`, `NAKED`) in the same prior
 session; this pass only closed the one remaining gap
 (`CheckAllCratesBroken`) that document's own follow-up section called out.

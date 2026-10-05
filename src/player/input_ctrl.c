@@ -10,10 +10,10 @@
  *
  * The other 19 are one self-contained actor-part subclass,
  * `struct input_ctrl`, whose method table is `gInputCtrlVtable`. It is
- * the controller game_loop39.c attaches in room kind 2, where the player
+ * the controller play_room.c attaches in room kind 2, where the player
  * uses sprite bank 2 (Crash riding a hover vehicle; anim 1 is it
  * blowing up)
- * (constructor `CreateInputCtrl` - called from game_loop39.c - destructor
+ * (constructor `CreateInputCtrl` - called from play_room.c - destructor
  * `DestroyInputCtrl`; every other slot it calls through is a base-class
  * `sub_800B6xx`/`sub_800B8xx` function). Each frame (`UpdateInputCtrl`, table
  * slot +0x0C) it reads the held D-pad bits from `gKeys` and

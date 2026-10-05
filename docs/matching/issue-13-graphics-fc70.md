@@ -6,7 +6,9 @@ more naturally) because issue #38's parallel PR independently claimed
 `game_loop17.c`-`20.c` first, before this PR merged - resolved as a
 rename on merge to avoid add/add filename collisions. The whole
 five-file family was renumbered together (not just the four that
-literally collided) to keep it visually contiguous.
+literally collided) to keep it visually contiguous. (#575 has since
+given these files descriptive names; see `tools/file_layout_plan.tsv`
+for the mapping.)
 
 25-function `decomp-chunk` covering the ROM span right after issue #12's
 `0x0800D040`-`0x0800FC70` physics/collision-subsystem chunk left off

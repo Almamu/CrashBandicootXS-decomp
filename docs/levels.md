@@ -30,7 +30,7 @@ room data. The room record is the widget `RunRoom` hands to
 `LoadRoom` (`level_layers.c`), which loads a room: it unpacks or
 references the asset, feeds each layer its descriptor, feeds the terrain
 cache the collision layer, hands the entity list and links to
-`SpawnRoomEntities` (`game_loop41.c`) and DMAs the palette to BG palette RAM.
+`SpawnRoomEntities` (`room_entities.c`) and DMAs the palette to BG palette RAM.
 The rooms are numbered here in the order of their records
 (`room00`..`room40`); the directory names add the descriptor's ROM
 offset (`room17_25e7dc` is the room whose `level_desc` is at
@@ -54,7 +54,7 @@ struct names the code's own local views of the same record.
 
 ### `struct level_layer_desc` (0x20)
 
-`struct bg_layer_desc` in `bg_scroll_layer_25fc8.c`, `struct
+`struct bg_layer_desc` in `bg_layer.c`, `struct
 stream_source` in `cutscene_player.c`, the terrain cache's `source`.
 
 | Offset | Field |
@@ -171,7 +171,7 @@ links use), and unless that bit is set calls the spawn function `type`
 of the table at `gEntitySpawner` (`SpawnEntity`) with the id, x, y and
 `param`. `param` indexes the parameter records: a flags word (bits 1 and
 2 go to the spawned object's `+0x28` flags: `SpawnBasicCrate`, `SpawnStartMarker`,
-`actor_part_1967c.c`) and per-type words, e.g. `struct spawn_rec` of
+`dingodile.c`) and per-type words, e.g. `struct spawn_rec` of
 `CreatePlatform` (mover kind and distances); type 0x1A takes its effective
 type from the record's `+8` (`CountCrateEntities`).
 

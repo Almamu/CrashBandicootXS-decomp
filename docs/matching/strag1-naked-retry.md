@@ -6,13 +6,13 @@ None of them needs a register pin.
 
 | Function | File | Size | Before | Result |
 |---|---|---|---|---|
-| `DropWumpa` | `src/system/game_loop14.c` | 132 B | 5 hw (note) | **Closed** |
-| `LaunchEffectPart` | `src/system/game_loop14.c` | 160 B | 61 hw (note), no draft | **Closed** |
+| `DropWumpa` | `src/level/entity_spawner.c` | 132 B | 5 hw (note) | **Closed** |
+| `LaunchEffectPart` | `src/level/entity_spawner.c` | 160 B | 61 hw (note), no draft | **Closed** |
 | `DecodeLayerChunk` | `src/cutscene/cutscene_player.c` | 320 B | 13 hw (note), no draft | **Closed** |
 | `RunCutscenePlayer` | `src/cutscene/cutscene_player.c` | 284 B | 77 hw (note), no draft | **Closed** |
 | `DrawSpritePieces` | `src/gfx/sprite_pieces.c` (new, split from `graphics.c`) | 600 B | draft removed long ago | **Closed** |
 
-`game_loop14.c` and `cutscene_player.c` were already on `OLD_AGBCC_OBJS`.
+`entity_spawner.c` and `cutscene_player.c` were already on `OLD_AGBCC_OBJS`.
 `DrawSpritePieces` was the last function in `graphics.c`, which is built with
 agbcc. Its loop loads the `0xf` mask before the `ldrb` it is combined
 with, which is the old_agbcc tell. It now lives in its own
@@ -55,7 +55,7 @@ it:
 ## DecodeLayerChunk
 
 This is the terrain cache's RLE/delta decoder `DecodeCollisionChunk`
-(`game_loop3.c`, already matched), writing into a 64-halfword-stride
+(`bg_layer_base.c`, already matched), writing into a 64-halfword-stride
 ring buffer. Porting `DecodeCollisionChunk`'s matched source with the 2D cell
 index `out[(i >> 4) * 64 + (i & 0xf)]` gave 40 halfwords off, all of
 them an r4/r5 swap plus two local spots. Two changes closed it:

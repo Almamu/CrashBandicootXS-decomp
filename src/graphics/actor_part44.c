@@ -141,7 +141,7 @@ u8 IsJetpackPauseLocked(void)
 
 /* Countdown timer (`gJetpackFlashTimer`) driving a palette-strip
  * animation refresh, ping-ponging the frame index via `__divsi3`
- * the same way `AnimateAirshipPalette` (actor_part26.c) does for its own strip. */
+ * the same way `AnimateAirshipPalette` (airship_graphics.c) does for its own strip. */
 void AnimateJetpackPlayerPalette(void)
 {
     if (gJetpackFlashTimer != 0) {

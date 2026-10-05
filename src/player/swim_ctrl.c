@@ -23,7 +23,7 @@
  *   PlayerCtrlStateTurn, PlayerCtrlStateStop, PlayerCtrlStateSwimStart, PlayerCtrlStateDead.
  * - PlayerCtrlHandleEvent (+0x14) is the message handler, AttachPlayerCtrl (+0x1C) sets
  *   the target, DestroyPlayerCtrl (+0x4C) is the destructor and InitPlayerCtrl the
- *   constructor (called from game_loop39.c).
+ *   constructor (called from play_room.c).
  * - SetPlayerCtrlState sets the mode through the method table (+0x20/+0x50,
  *   called through the _call_via_r2/_call_via_r3 `_call_via_rN` thunks) and
  *   picks the animation from gPlayerCtrlModeAnimRows[mode][tilt].

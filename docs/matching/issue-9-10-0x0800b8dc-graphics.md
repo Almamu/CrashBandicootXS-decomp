@@ -280,7 +280,7 @@ an explicit, deliberate choice given this project's extensive, repeated
 precedent that this exact "`self`/`owner`-style multi-field object with
 many `bl` calls interspersed across branches" shape defeats gcc 2.9's
 register allocator: `GetCollisionChunk`, `GetSolidTerrainHeights`/`sub_8025228`/
-`GetTerrainType` (`game_loop3.c`), `BreakCrateTouchedByPlayer` (`crate_hit.c`),
+`GetTerrainType` (`bg_layer_base.c`), `BreakCrateTouchedByPlayer` (`crate_hit.c`),
 `PlayerAnimWouldTouchCrate` (`crate_touch.c`), `sub_800CEAC`/`sub_800CF70`
 (`crate_hit.c`) are all NAKED in this same ROM neighborhood for the
 same underlying reason. Given `UpdateEnemyCtrl`'s size (1132 B, 18 branches,
@@ -328,7 +328,7 @@ coincide`).
 
 - Hand-transcribed NAKED asm, the established escape hatch for this
   ROM region's dominant `self`/`owner`-multi-field register-allocation
-  gap (see `game_loop3.c`/`crate_hit.c`/`crate_touch.c`/
+  gap (see `bg_layer_base.c`/`crate_hit.c`/`crate_touch.c`/
   `crate_hit.c` for the same bug class documented independently).
 - Unique, never-reused GNU-as local numeric labels (rather than the
   more typical small reused set) to keep two separate large jump
@@ -594,7 +594,7 @@ neighborhood.
   (regardless of the `owner->0x38` gate), if `self->0x6c==0x17` and
   `owner->0x30==9`/`owner->0x34==0`, spawns a part via
   `LaunchEffectPart(gEntitySpawner, 0x17, 4, -0x2d, 2, owner)` (matching
-  `game_loop14.c`'s own `LaunchEffectPart(arg0, arg1, arg2, margin, z, src)`
+  `entity_spawner.c`'s own `LaunchEffectPart(arg0, arg1, arg2, margin, z, src)`
   signature - `gEntitySpawner` as the pool, `owner` as `src`, `2` as
   `z`, `-0x2d` as `margin`), tags the new part's `+0xc` flags/`+0xa`
   bitmap-id fields (same idiom family as the "flag active + bitmap-set"
@@ -757,7 +757,7 @@ tempted to re-attempt them:
   the byte (compute 0/1 flag via the shift-test, shift it into bit
   position, materialize the "clear that bit" mask via a
   `movs #imm; rsbs r,r,#0` negate-trick, AND, OR - all as one shared
-  tail, matching the exact shape `src/graphics/actor_part27c.c`'s
+  tail, matching the exact shape `src/bosses/tiny_hop_pad.c`'s
   `UpdateOneShotAnimCtrl` doc comment already documents needing heavy register
   pinning for on a related idiom). Every C rephrasing tried (nested
   ternary, a separate `bit = cond ? 0 : 1;` statement, full if/else
@@ -1140,17 +1140,17 @@ this doc.
   read; only `other` matters. Runs the "flag active + bitmap-set" idiom
   (`other->0xc |= 1`, then, unless `other`'s `+8` id sentinel-checks as
   `0xFFFF`, sets bit `other->8 & 0x1f` of word `other->8 >> 5` in the
-  `gEntityFlags+0x108` bitmap - the exact idiom `actor_part27c.c`'s
+  `gEntityFlags+0x108` bitmap - the exact idiom `tiny_hop_pad.c`'s
   `UpdateOneShotAnimCtrl` already matches as real C) **three times**, each
   independently gated: once when a `_call_via_r1(other + offset, fn)`
   hit-probe - reading its `{s16 offset, void *fn}` pair from
   `other->table+0x28`/`+0x2c`, the exact shape
-  `src/system/game_loop8.c`'s `UpdateRoomFrame` already matches as real C -
+  `src/level/room_frame.c`'s `UpdateRoomFrame` already matches as real C -
   reports *no* hit; once when `other->0xc` bit 3 is already set; and
   once when `other->0x38` is nonzero. `other` shares `struct actor`'s
   leading header layout (id @8, flags @0xc, table @0x18) but is read at
   `+0x38` too, past `struct actor`'s own 0x1c-byte size, so kept as raw
-  offsets rather than that struct - same reasoning `actor_part27c.c`
+  offsets rather than that struct - same reasoning `tiny_hop_pad.c`
   already documents for its own `other`/`part`.
 - **`EffectCtrlHandleEvent`/`nullsub_3`** (4 B each) - genuine empty stubs
   (`bx lr`), no different from any other `nullsub_N` in this project.
@@ -1187,7 +1187,7 @@ starts.
 
 ### Matching
 
-`UpdateEffectCtrl` closed as hand-transcribed **NAKED** asm - `actor_part27c.c`'s
+`UpdateEffectCtrl` closed as hand-transcribed **NAKED** asm - `tiny_hop_pad.c`'s
 `UpdateOneShotAnimCtrl` doc comment already documents this exact "flag active +
 bitmap-set" idiom needing heavy `register asm` pinning and a `volatile`
 reload to match even a *single* occurrence (defeating this compiler's
@@ -1416,13 +1416,13 @@ idiom already matched elsewhere in this cluster:
   read - only `other` matters. Reads `other+0x18`'s own table pointer,
   fires a `_call_via_r1` hit-probe against its `+0x28`/`+0x2c`
   `{s16 offset, void *fn}` pair (the same convention
-  `src/system/game_loop8.c`'s `UpdateRoomFrame` and `effect_ctrl.c`'s
+  `src/level/room_frame.c`'s `UpdateRoomFrame` and `effect_ctrl.c`'s
   `UpdateEffectCtrl` both already read from their own `table+0x28`/`+0x2c`),
   and - only when that probe reports *no* hit - runs the "flag active +
   bitmap-set" idiom on `other` (`other+0xc` bit 0; unless `other+8`'s
   id sentinel-checks as `0xffff`, also sets its bit in the
   `gEntityFlags+0x108` bitmap) - the exact idiom
-  `actor_part27c.c`'s `UpdateOneShotAnimCtrl` already matches as real C.
+  `tiny_hop_pad.c`'s `UpdateOneShotAnimCtrl` already matches as real C.
 - **`nullsub_14(self)`**: genuine empty stub (`bx lr`) - `CreateKnockedEnemyCtrl`'s
   own tail-call hook, per that function's own doc comment.
 
@@ -1456,7 +1456,7 @@ established `[[matching_decomp_register_pinning]]` toolbox:
   picked a spare `r3` for it instead, a harmless but byte-different
   register choice from the ROM's own `ldr r4, [r4, #0x1c]`.
 - **`UpdateKnockedEnemyCtrl`**: needed the same register-pinning chain
-  `actor_part27c.c`'s `UpdateOneShotAnimCtrl` doc comment already documents for
+  `tiny_hop_pad.c`'s `UpdateOneShotAnimCtrl` doc comment already documents for
   this exact "flag active + bitmap-set" idiom - `other` pinned to
   `r4` (matching the ROM's own choice, freed up again by the time the
   bitmap-set idiom's own `0x108`-offset computation reuses it), plus

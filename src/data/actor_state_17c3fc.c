@@ -21,7 +21,7 @@ extern void JetpackBalloonCrateStateHang();
 
 /* Per-state step functions of the weapon-kind tracker, called through
  * _call_via_r0 as `gAirshipStateFuncs[gAirshipState]` by
- * UpdateAirship (actor_part23f.c). */
+ * UpdateAirship (airship.c). */
 void (*const gAirshipStateFuncs[6])() = {
     AirshipStateInactive,
     AirshipStateApproach,

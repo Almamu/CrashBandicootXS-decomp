@@ -47,7 +47,7 @@ REG_BG0CNT = GetBgSetupControl(buf);
 centering helpers `docs/rom_map.md` already read) and the rest of the
 chunk - a sound-trigger dispatcher (`SpawnStartMarker`) plus two more large
 families (a "trigger effect type N" twin family shaped just like the
-already-parked `SpawnRedGemPlatform`-`SpawnBlueGemPlatform` in `trigger_effect.c`, and
+already-parked `SpawnRedGemPlatform`-`SpawnBlueGemPlatform` in `spawn_gem_platforms.c`, and
 the "text label as sprite tiles" family `SpawnPufferfish` anchors) - were
 not attempted this pass; see "Left raw" below.
 
@@ -121,7 +121,7 @@ now in the new `asm/code_3_2_17_1e990.s`) - not attempted this pass,
 left untouched rather than force a low-confidence match. Two families
 worth flagging for whoever picks this up next: `SpawnCrystal` through
 `SpawnYellowGem` share the exact bit-test/`CreateSpriteObj`-spawn shape already
-parked as `SpawnRedGemPlatform`-`SpawnBlueGemPlatform` in `trigger_effect.c` (issue #31)
+parked as `SpawnRedGemPlatform`-`SpawnBlueGemPlatform` in `spawn_gem_platforms.c` (issue #31)
 - the same register-rotation gap that resisted parking there is likely
 to resist here too; `SpawnLizard` through `SpawnPufferfish` are all "text
 label as sprite tiles" constructors sharing `SpawnPufferfish`'s already-read
@@ -278,7 +278,7 @@ closer (heavy iteration: the negative-constant clear-mask idiom for all
 three `self+0x13` bit-pack masks including the ROM's own `subs r2,#0x10`
 delta-derivation of the third mask from the second, a
 `struct oam_shadow_buffer **addr = &gOamBuffer` address cache
-matching `graphics_loading_21d80.c`'s established pattern so the final
+matching `spawn_pickups.c`'s established pattern so the final
 `AddOamEntry` call's address load is shared across both branches like the
 ROM's own `r6` reuse, and an explicit register pin for the loop-scoped
 `slot`/`field_08` value) but hit one gap that resisted every technique
@@ -331,7 +331,7 @@ player struct: `GetSpawnAtStart`/`GetDeaths`/`GetMaskAssistDeaths`/`GetLives`
 (`+0xa8`/`+0x7c`/`+0x84`/`+0x74` respectively - the first three in
 `asm/code_3_2_17_231cc.s`'s still-raw accessor cluster, the fourth
 already matched in `aabb_setup.c`) and `IsInBonusRound` (`+0xa4`,
-matched in `game_loop10.c`/`game_loop2.c`). `_call_via_r4` itself is not
+matched in `level_state.c`). `_call_via_r4` itself is not
 a normal function at all - it's the `bx r4` register-trampoline from
 `lib1funcs.s` (`lib/libgcc/lib1funcs.s`'s
 `_call_via_r0`-`_call_via_r7` "call through register" family) - the ROM
@@ -346,12 +346,12 @@ With every operand pinned down, the function's full semantics are:
 1. If the player's `+0xa8` flag (`GetSpawnAtStart`) is set: looks up a
    per-`z` flags byte via the `gEntityFlags -> *rec -> {+8
    offsets[], +0xc base}` table - the exact same table
-   `SpawnBasicCrate` (`graphics_loading_21bfc.c`, issue #33) already reads,
+   `SpawnBasicCrate` (`spawn_crates.c`, issue #33) already reads,
    indexed the same way (`offsets[z]`, then `base[offsets[z]]`) - folds
    bit 1 of that byte into the player's `+0x28` bitfield's bit 4, then
    unconditionally writes the incoming `x`/`y` args (shifted to Q8.8)
    into the player's own `x`/`y` fields, the same unconditional write
-   `sub_80221A4`/`sub_80221D4` (`graphics_loading_21d80.c`) already do
+   `sub_80221A4`/`sub_80221D4` (`spawn_pickups.c`) already do
    elsewhere in this cluster.
 2. Unless the player's `+0x8c` "paused" flag is set: fires the
    player's `table+0x68` trampoline (`_call_via_r4`, action `0x1a`) and
@@ -385,7 +385,7 @@ the ROM disassembly instead - confirmed byte-identical against the ROM
 bytes (compared via `arm-none-eabi-objdump` on both the isolated
 compile and the raw ROM disassembly reassembled standalone) before
 integrating. Cut out of `asm/code_3_2_17_1e990.s` (was the first
-function in that file) into the new `src/graphics/graphics_loading_1e990.c`,
+function in that file) into the new `src/level/spawn_start_marker.c`,
 with `ldscript.txt` updated to place the new object immediately before
 the now-trimmed raw file (which starts at `SpawnCrystal` instead).
 
@@ -396,7 +396,7 @@ fix (modeling the r3-pinned local as the *address of*
 `gPlayer` rather than its dereferenced value). `SpawnStartMarker`
 is now real, fully matched C; the `NAKED` wrapper and `#if
 NON_MATCHING` toggle described above have been removed from
-`graphics_loading_1e990.c`.
+`spawn_start_marker.c`.
 
 **The rest of this issue's raw region** (`SpawnCrystal` through
 `SpawnElectricEel`, ending at the already-matched `SpawnSquid`) splits into
@@ -405,7 +405,7 @@ next:
 
 - **`SpawnCrystal`-`SpawnYellowGem`** (5 functions): the same "trigger
   effect type N" bit-test (`GetCurrentLevelFlags`)/`CreateSpriteObj`-spawn shape
-  already parked as `NAKED` in `trigger_effect.c`
+  already parked as `NAKED` in `spawn_gem_platforms.c`
   (`SpawnRedGemPlatform`-`SpawnBlueGemPlatform`, issue #31/#33) - the same register-
   rotation gap that resisted plain C there is likely to resist here
   too, so NAKED transcription is the expected outcome, not another
@@ -413,7 +413,7 @@ next:
 - **`SpawnLizard`-`SpawnPufferfish`** (through `SpawnShark`/`SpawnMorayEel`/
   `SpawnElectricEel`, ~10 functions): further instances of the "text label
   as sprite tiles" spawner family whose shape `SpawnSquid`
-  (`graphics_loading_1fdec.c`, issue #31) already matched as **real,
+  (`spawn_enemies.c`, issue #31) already matched as **real,
   byte-exact C** - `CreateMovingSprite` allocation, `CreateEnemyCtrl` style
   lookup, two `_call_via_r2` trampoline calls, and the same
   `gEntityFlags`-rooted "collected bits" pack this pass's
@@ -546,7 +546,7 @@ though the function body still writes and later reads it through the
 whole outer loop. This is the exact same "compiler drops a genuinely
 live register from its own auto-generated prologue/epilogue list under
 register pressure" limitation already closed this session for
-`SetupRoomBlend` (`src/system/game_loop8.c`, PR #334) and `FitScaledSprite`
+`SetupRoomBlend` (`src/level/room_frame.c`, PR #334) and `FitScaledSprite`
 (`src/gfx/graphics_package.c`, PR #336, "Seventh pass"
 above), and documented as still-open for `LoadTitleScreenBg`
 (`src/frontend/title_screen_init.c`, issue #65) - given the extensive
@@ -666,11 +666,11 @@ crashbandicootxs.map && make compare` (`La suma coincide`).
 
 The last raw stretch of this issue, `asm/code_3_2_17_1e990.s`
 (`0x0801EA5C`-`0x0801EF0C`, six functions), is now real C in
-`src/graphics/graphics_loading_1ea5c.c`, and the raw file is retired.
+`src/level/spawn_gems.c`, and the raw file is retired.
 
 These are the "trigger effect type N" spawners the fifth pass flagged
 as likely to hit the same register-rotation gap that parked
-`SpawnRedGemPlatform`-`SpawnBlueGemPlatform` (`trigger_effect.c`) as NAKED. That gap was
+`SpawnRedGemPlatform`-`SpawnBlueGemPlatform` (`spawn_gem_platforms.c`) as NAKED. That gap was
 the compiler. The ROM's bit tests read `movs rA, #mask; ldrb rB, [..];
 ands rA, rB` - the constant is materialized before the byte it is ANDed
 with - which is old_agbcc's tell (docs/matching/issue-24-boss-actor.md).
@@ -682,7 +682,7 @@ differs in all six (20-34 changed instructions each).
 What the six do (all four-argument `(u32 a0, u16 a1, u16 a2, u16 a3)`
 spawners reached through the trigger dispatch table at
 `gStaticData_0816C6C0`; `SpawnCrateGem` is also called directly from
-`game_loop2.c`):
+`level_state.c`):
 
 - `SpawnCrystal`/`SpawnCrateGem`/`SpawnGemPathGem` test bit 0/1/2 of the byte
   `GetCurrentLevelFlags(gLevelState)` returns a pointer to. If it is clear
@@ -696,7 +696,7 @@ spawners reached through the trigger dispatch table at
   to 1 and clears its "hidden" flag bit.
 - `SpawnRedGem`/`SpawnGreenGem`/`SpawnYellowGem` first call
   `GetBossIndex(gLevelState)`; if that returns 1 they hand the
-  spawn to `SpawnCortexBossGem` (`actor_part_188d0.c`) with kind 0/1/2.
+  spawn to `SpawnCortexBossGem` (`cortex.c`) with kind 0/1/2.
   Otherwise they test bit 0/2/1 of `gLevelState+2` and spawn the
   same way (tags 3/2/0, types 0x1F/0x20/0x22).
 
@@ -717,11 +717,11 @@ The only things the C has to get right:
   SpawnCortexBossGem(...); }` - the other nesting puts the hand-off first.
 
 The part object is `struct gfx_part`, moved out of
-`actor_part_188d0.c` into the new shared `include/gfx_part.h` (bits 0-3
+`cortex.c` into the new shared `include/gfx_part.h` (bits 0-3
 of +0x28 split into two 2-bit fields for `SpawnCrateGem`'s write; nothing
-in `actor_part_188d0.c` used them, and it still matches).
+in `cortex.c` used them, and it still matches).
 
-The four `trigger_effect.c` siblings (`SpawnRedGemPlatform`, `SpawnYellowGemPlatform`,
+The four `spawn_gem_platforms.c` siblings (`SpawnRedGemPlatform`, `SpawnYellowGemPlatform`,
 `SpawnGreenGemPlatform`, `SpawnBlueGemPlatform`, NAKED with `#if NON_MATCHING` near-misses
 written against the current agbcc) have the same mask-first tell and
 very likely fall to the same switch. They were outside this pass's

@@ -18,7 +18,7 @@ descriptive names; see `tools/file_layout_plan.tsv` for the mapping.)
 ## What this cluster turned out to be
 
 A grab-bag of small helpers on the same large "self" object already
-used throughout the `game_loop2.c`/`game_loop3.c` family (no dedicated
+used throughout the `level_state.c`/`bg_layer_base.c` family (no dedicated
 struct here either, for the same reason those files give: most of its
 fields are only ever touched by functions still raw elsewhere) -
 camera-position setters, checkpoint/level-transition snapshot helpers
@@ -38,7 +38,7 @@ pass's scope, so left completely untouched.
 
 ## Matched (24 functions, full clean `make compare` passing)
 
-`src/system/game_loop10.c` (`SetGemPlatform`-`PackSaveData`, 15 fns):
+`src/level/level_state.c` (`SetGemPlatform`-`PackSaveData`, 15 fns):
 `SetGemPlatform`/`SetBonusPlatform` (camera-position field setters),
 `SetCrateGemPos` (two-word position setter), `RequestGemPath`/`RequestBonusRound`
 (busy-flag setters gated on `IsInGemPath`/`IsInBonusRound`),
@@ -53,13 +53,13 @@ unpacker, refreshing its own snapshot first), `PackSaveData` (its
 packer inverse - see the update below, added after this doc's original
 pass).
 
-`src/system/game_loop11.c`: `GetLevelState` (lazy-allocates and returns
+`src/level/level_state.c`: `GetLevelState` (lazy-allocates and returns
 `gLevelStateSingleton`) - its own file since the still-raw
 `PlayRoom`/`RunRoom` pair sits on both sides of it in ROM order.
 
-`src/system/game_loop8.c`: `UpdateRoomFrame` (the DMA3/VRAM refresh pass).
+`src/level/room_frame.c`: `UpdateRoomFrame` (the DMA3/VRAM refresh pass).
 
-`src/system/game_loop9.c` (`ClearRoomExit`-`ResetObjBuffers`, 5 fns):
+`src/level/room.c` (`ClearRoomExit`-`ResetObjBuffers`, 5 fns):
 `ClearRoomExit`/`RequestRoomExit`/`IsRoomExitRequested` (a boolean flag
 clear/set/get trio on `gRoomExitRequested`), `ResumeRoomAfterPause` (level-end
 teardown: DMA-copies the level's first palette word into `PLTT`,
@@ -297,7 +297,7 @@ compiler silently dropped it from both the push and pop list
 `push {r4, r5, r6, lr}` / `pop {r4, r5, r6}`, r7 missing from both).
 This is the same "gcc-2.9 r7-pin bug" already documented project-wide
 (`src/menus/power_dialog_draw.c`'s `DrawPowerDialog`,
-`src/graphics/graphics_loading_21280.c`'s `SpawnRoomExit`, among
+`src/level/spawn_bosses.c`'s `SpawnRoomExit`, among
 others) - an explicit `register T x asm("r7")` pin doesn't reliably
 survive here either. The fix was the same project-wide escape hatch
 those functions already use: mark the function `NAKED` and write the

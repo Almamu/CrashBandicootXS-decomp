@@ -37,9 +37,9 @@ this same chunk that got closed out later.
   this exact stride-8 shape: `RunJetpackPlayerState` (issue #56,
   `src/graphics/actor_part44b.c`, `gJetpackPlayerStateFuncs`),
   `UpdateHovercraftCannon`/`RunHovercraftCannonState`/`UpdateHovercraftLauncher` (issue #62,
-  `src/graphics/actor_part31.c`/`actor_part33.c`/`actor_part37.c`,
+  `src/bosses/hovercraft_cannon.c`/`hovercraft_launcher.c`,
   `gHovercraftCannonStateFuncs`/`gHovercraftLauncherStateFuncs`), and `RunHovercraftLauncherState`
-  (issue #63, `src/graphics/actor_part64.c`, `gHovercraftLauncherStateFuncs`) -
+  (issue #63, `src/bosses/hovercraft_launcher.c`, `gHovercraftLauncherStateFuncs`) -
   see those files' own doc comments and the matching-issue docs for
   issues #56/#62/#63.
 

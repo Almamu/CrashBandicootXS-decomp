@@ -35,7 +35,7 @@ struct anim_table
 };
 
 /* Bits of a sprite's `+0x28` byte (see struct part_f28 in
- * actor_part_1967c.c). */
+ * dingodile.c). */
 struct sprite_f28
 {
     u8 mode:2;

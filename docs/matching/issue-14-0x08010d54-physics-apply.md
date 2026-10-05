@@ -188,8 +188,8 @@ branch-by-branch this pass, per Phase 1's scope).
 | `CheckExtraLifePickup` | 120 B | No existing cross-reference found. |
 | `PickUpExtraLife` | 224 B | `docs/rom_map.md`: part of "the randomized-behavior... famil[y]" alongside `CheckPlayerCtrlTurn`. |
 | `UpdateExtraLife` | 392 B | `docs/rom_map.md`: "a bounds-checked, mode-selected object state machine that self-destructs off-screen" - default mode reads `gSineTable` (shared trig table), a rotating/orbiting projectile-or-hazard behavior. |
-| `CreateExtraLife` | 164 B | `struct actor *CreateExtraLife(u16 arg0, u16 arg1, u16 arg2, s32 arg3)` - spawns a part-object; extern in `game_loop29.c`. |
-| `SendExtraLifeToHud` | 144 B | `void SendExtraLifeToHud(void *part)` - extern in `game_loop29.c`; `game_loop14.c` notes a sibling call site uses `SendWumpaToHud` "instead of `SendExtraLifeToHud`" (mutually-exclusive alternative behavior). |
+| `CreateExtraLife` | 164 B | `struct actor *CreateExtraLife(u16 arg0, u16 arg1, u16 arg2, s32 arg3)` - spawns a part-object; extern in `drop_extra_life.c`. |
+| `SendExtraLifeToHud` | 144 B | `void SendExtraLifeToHud(void *part)` - extern in `drop_extra_life.c`; `entity_spawner.c` notes a sibling call site uses `SendWumpaToHud` "instead of `SendExtraLifeToHud`" (mutually-exclusive alternative behavior). |
 | `UpdateExtraLifeHop` | 124 B | No existing cross-reference found. |
 | `DrawExtraLife` | 44 B | No existing cross-reference found. |
 | `GetExtraLifeClassId` | 4 B | No existing cross-reference found - tiny, likely a trivial accessor/tail-call stub. |
@@ -201,11 +201,11 @@ branch-by-branch this pass, per Phase 1's scope).
 | `SetExtraLifeHop` | 16 B | No existing cross-reference found. |
 | `SetExtraLifeCounter` | 8 B | No existing cross-reference found. |
 | `CheckWumpaPickup` | 184 B | No existing cross-reference found. |
-| `PickUpWumpa` | 256 B | `docs/rom_map.md`: "a randomized-position spawn picker, same flavor as the documented `OpenMysteryCrate` randomized-behavior selector but for position rather than behavior choice." Called as `PickUpWumpa(entry, 1)`/`(other, 1)` from `game_loop40.c`/`crate_break.c` for despawn. |
+| `PickUpWumpa` | 256 B | `docs/rom_map.md`: "a randomized-position spawn picker, same flavor as the documented `OpenMysteryCrate` randomized-behavior selector but for position rather than behavior choice." Called as `PickUpWumpa(entry, 1)`/`(other, 1)` from `time_trial.c`/`crate_break.c` for despawn. |
 | `UpdateWumpa` | 500 B | `docs/rom_map.md`: entity-vtable-dispatched (`gStaticData_087Exxx` 93-entry family); "integrates position from velocity fields, manages a wrapping counter with mode-gated increment/decrement, and on a branch plays `PlaySfx(0xe, 0x100)` plus calls a scoring/counter candidate, `CollectWumpa`." |
-| `CreateWumpa` | 308 B | `void CreateWumpa(u16 arg0)` - the achievement/unlock-icon spawn helper; extern in `graphics_loading_21d80.c`, referenced from `game_loop14.c`/`docs/rom_map.md`. |
-| `SendWumpaToHud` | 172 B | Alternative to `SendExtraLifeToHud` (see above), called from `game_loop14.c`. |
-| `StartWumpaPayout` | 16 B | `void StartWumpaPayout(struct actor *self)` - extern in `wumpa.c`; also called from `game_loop14.c` alongside `CreateWumpa` for a "special" 4th spawn-mode case. |
+| `CreateWumpa` | 308 B | `void CreateWumpa(u16 arg0)` - the achievement/unlock-icon spawn helper; extern in `spawn_pickups.c`, referenced from `entity_spawner.c`/`docs/rom_map.md`. |
+| `SendWumpaToHud` | 172 B | Alternative to `SendExtraLifeToHud` (see above), called from `entity_spawner.c`. |
+| `StartWumpaPayout` | 16 B | `void StartWumpaPayout(struct actor *self)` - extern in `wumpa.c`; also called from `entity_spawner.c` alongside `CreateWumpa` for a "special" 4th spawn-mode case. |
 | `UpdateWumpaHop` | 16 B | No existing cross-reference found - address-adjacent to `StartWumpaPayout`, likely a closely related tiny accessor. |
 
 **11 functions in the middle (`UpdateExtraLifeHop`-`CheckWumpaPickup`, addresses
@@ -410,7 +410,7 @@ coincide").
 ### Semantics confirmed
 
 - **`PickUpWumpa`** (256B) - a randomized-position spawn/despawn picker,
-  called `PickUpWumpa(entry, 1)`/`(other, 1)` from `game_loop40.c`/
+  called `PickUpWumpa(entry, 1)`/`(other, 1)` from `time_trial.c`/
   `crate_break.c` for despawn. `PlaySfx(gAudioContext, 8, 0x100)`,
   then either derives a randomized `(dx,dy)` offset from `rand()`
   (`arg1` nonzero - `self->0x48 = 2`, `self->0x49` tags which of three
@@ -437,7 +437,7 @@ coincide").
   use). Mode 3 increments `self->0x49` each frame, and every 11th frame
   resets it and calls `DropWumpa(gEntitySpawner, self->x>>8,
   self->y>>8, 0, 1, 0)` (already-matched NAKED part-object spawner,
-  `game_loop14.c`) - `self->0x4b` increments every frame too, falling
+  `entity_spawner.c`) - `self->0x4b` increments every frame too, falling
   into the same collision-bitmap tail every 10th frame. Mode 0
   (default): gated by `self->0x4a`, increments `self->0x49` or
   `self->0x4b`, wrapping `self->0x4a`'s own gate off after 32
@@ -453,10 +453,10 @@ coincide").
   `UpdateSpriteObj(self)` (already matched, `sprite_obj.c`).
 - **`CreateWumpa`** (308B) - the achievement/unlock-icon spawn helper.
   Extern-declared as `void CreateWumpa(u16 arg0)` in
-  `graphics_loading_21d80.c` (that call site only ever reads `arg0`, per
+  `spawn_pickups.c` (that call site only ever reads `arg0`, per
   its own doc comment), but the function's **real** signature is 4
   arguments - confirmed against its other call site,
-  `DropWumpa` (`game_loop14.c`, NAKED, already matched):
+  `DropWumpa` (`entity_spawner.c`, NAKED, already matched):
   `CreateWumpa(id, x, y, special)` where `special` is `0xFFFF` or `0`
   selecting which of two `dual_array_manager` lists
   (`gUnknown_030012F4` vs `gUnknown_030012EC`) the new part joins.
@@ -477,7 +477,7 @@ coincide").
   nibble-from-`GetPaletteSlot` bitfield combine `DropExtraLife`/`DropWumpa`
   already use, returning the new part.
 - **`SendWumpaToHud`** (172B) - the alternative to `SendExtraLifeToHud`
-  (`game_loop29.c`), called from `game_loop14.c` "instead of
+  (`drop_extra_life.c`), called from `entity_spawner.c` "instead of
   `SendExtraLifeToHud`" per that file's own doc comment. Same tail shape as
   `PickUpWumpa`/`SendExtraLifeToHud`: `PlaySfx(gAudioContext, 8, 0x100)`,
   `self->0x48 = 1`, `self->x -= self->0x4a<<8`, `self->0x3c = 0xa0`,
@@ -532,7 +532,7 @@ make compare`, which passed outright ("La suma coincide"):
   into this compiler's own push/pop list).
 - `CreateWumpa`/`UpdateWumpa`'s mode-3 spawn call share the identical
   shape as the already-NAKED `DropExtraLife`/`DropWumpa` wrappers
-  (`game_loop29.c`/`game_loop14.c`): truncated arguments held live in
+  (`drop_extra_life.c`/`entity_spawner.c`): truncated arguments held live in
   `r8`/`sb` across a `OperatorNew`/`InitSpriteObj`/re-init call sequence,
   the `mov r_lo,r_hi`/`push {r_lo,...}` high-register save dance this
   compiler only reproduces when its own *unforced* allocator picks
@@ -601,7 +601,7 @@ randomized `(dx,dy)`, `self->0x3c`/`self->0x30`/`self->0x25`/`self->0xc`
 setup, `WorldToScreen`, then the `-FixedDiv(...)` distance-pair
 derivation). None were integrated into `ldscript.txt`/
 `tools/report_units.py` this pass: `CreateExtraLife` (a fifth member of the
-same address-contiguous group, called from `game_loop29.c`, already
+same address-contiguous group, called from `drop_extra_life.c`, already
 extern-declared) sits physically between `UpdateExtraLife` and `SendExtraLifeToHud`
 in ROM order and was left for a sibling parallel session's own pass over
 the chunk's remaining/small-accessor functions - splitting this file's
@@ -687,7 +687,7 @@ position).
   set - then always tail-calls `UpdateSpriteObj`.
 - **`CreateExtraLife`** (164B) - `struct actor *CreateExtraLife(u16 arg0, u16
   arg1, u16 arg2, s32 arg3)`, the part-object spawn helper
-  extern-declared in `game_loop29.c`. Confirmed `arg3` is genuinely
+  extern-declared in `drop_extra_life.c`. Confirmed `arg3` is genuinely
   dead - the ROM hardcodes the three fields it would otherwise feed
   (`self+0x29`/`+0x2a`/`+0x2b`) to a compile-time `0` regardless,
   matching the extern's own always-`0` call sites. Allocates a
@@ -809,7 +809,7 @@ followed by `make compare` ("La suma coincide"):
 - `ldscript.txt` - `asm/code_3_2_17_e560_10d54.o` removed entirely,
   replaced by `extra_life.o` in the correct ROM-order position (between
   `collision_queue.o` and `extra_life.o`).
-- `src/system/game_loop29.c` - the `CreateExtraLife`/`SendExtraLifeToHud` extern
+- `src/level/drop_extra_life.c` - the `CreateExtraLife`/`SendExtraLifeToHud` extern
   declarations and call-site context used to confirm both signatures.
 - `src/pickups/extra_life.c`/`wumpa_update.c` - the sibling functions
   (`CheckWumpaPickup`, `PickUpWumpa`/`UpdateWumpa`/`SendWumpaToHud`) whose

@@ -32,11 +32,11 @@ family. Filed under `src/graphics/` on disk, tracked as its own
   [issue-47-graphics-loading.md](../matching/issue-47-graphics-loading.md)
   for the full write-up (issue #47).
 
-- **`LoadGraphicsPackage`**-**`sub_801E96C`** (`src/gfx/graphics_package.c`,
-  `_1e640.c`, `_1e688.c`, `_1e8f8.c`, `_1e964.c`) - issue #30's BG
+- **`LoadGraphicsPackage`**-**`sub_801E96C`** (`src/gfx/graphics_package.c`) -
+  issue #30's BG
   loader and its `struct bg_setup` accessors (`include/graphics_package.h`)
   and the sprite-box fitter `FitScaledSprite`/`DrawScaledSprite`. All built with
-  old_agbcc (as is `graphics_loading_1e990.c`). The four that were NAKED
+  old_agbcc (as is `spawn_start_marker.c`). The four that were NAKED
   under agbcc (the dropped-`r7` gap) are now plain C. See
   [issue-30-old-agbcc.md](../matching/issue-30-old-agbcc.md), and
   [issue-30-graphics-loading.md](../matching/issue-30-graphics-loading.md)
@@ -57,27 +57,27 @@ family. Filed under `src/graphics/` on disk, tracked as its own
   previously-parked semantically-faithful reconstruction - see
   [issue-65-graphics-loading.md](../matching/issue-65-graphics-loading.md)'s
   "Third pass".
-- **`SpawnNitroSwitchCrate`**-**`SpawnBasicCrate`** (`src/graphics/graphics_loading_21bfc.c`)
+- **`SpawnNitroSwitchCrate`**-**`SpawnBasicCrate`** (`src/level/spawn_crates.c`)
   - the `CreateCrate` entity-constructor trampoline family, types `0`-`7`,
   all matched (`SpawnBasicCrate`, type `0`, closed via register-pinning the
   table-resolution chain to the ROM's own registers) - see
   [issue-33-0x08021bfc-graphics-loading.md](../matching/issue-33-0x08021bfc-graphics-loading.md).
 - **`SpawnCrystal`**, **`SpawnCrateGem`**, **`SpawnGemPathGem`**,
   **`SpawnRedGem`**, **`SpawnGreenGem`**, **`SpawnYellowGem`**
-  (`src/graphics/graphics_loading_1ea5c.c`) - issue #30: six "trigger
+  (`src/level/spawn_gems.c`) - issue #30: six "trigger
   effect type N" spawners (a `GetCurrentLevelFlags`/`gLevelState+2`
   collected-bit test, then a `CreateSpriteObj` part with a fixed bank
   offset, tag and type byte registered with `gUnknown_030012EC`; the
   last three hand over to `SpawnCortexBossGem` in level mode 1). All plain C
   once built with **old_agbcc** (`OLD_AGBCC_OBJS`), whose mask-before-
   `ldrb` order the ROM shows; the current agbcc misses all six, which is
-  likely also what parked the `trigger_effect.c` siblings.
+  likely also what parked the `spawn_gem_platforms.c` siblings.
   Retires `asm/code_3_2_17_1e990.s`. Uses the new shared
-  `include/gfx_part.h` (moved out of `actor_part_188d0.c`). See
+  `include/gfx_part.h` (moved out of `cortex.c`). See
   [issue-30-graphics-loading.md](../matching/issue-30-graphics-loading.md)'s
   "Tenth pass".
 - **`SpawnRedGemPlatform`**, **`SpawnYellowGemPlatform`**, **`SpawnGreenGemPlatform`**,
-  **`SpawnBlueGemPlatform`** (`src/graphics/trigger_effect.c`) - issue #31: the
+  **`SpawnBlueGemPlatform`** (`src/level/spawn_gem_platforms.c`) - issue #31: the
   "trigger effect type N" spawners (4 of the 15-slot
   `gStaticData_0816C7D8` dispatch table's slots): sound-only-or-
   full-spawn effect triggers gated by a `gLevelState+2` flag bit.
@@ -86,19 +86,19 @@ family. Filed under `src/graphics/` on disk, tracked as its own
   [issue-31-trigger-effect-type-n.md](../matching/issue-31-trigger-effect-type-n.md)'s
   "Old-compiler pass".
 - **`DestroyLevelState`** (UNUSED), **`PlayCutscene`**
-  (`src/graphics/graphics_loading_22354.c`) - the gap between issues #33
+  (`src/level/level_cutscene.c`) - the gap between issues #33
   and #34 (no issue of its own): the game context's never-called
   destructor (tears down every singleton `InitLevelState` builds) and the
   per-level text-list pager with its palette blank/BG2-affine reset.
   Real C, current agbcc (both compilers match). Retires
   `asm/code_3_2_17_22354.s`. See
   [gap-22354-game-context.md](../matching/gap-22354-game-context.md).
-- **`SpawnLizard`**-**`SpawnElectricEel`** (`src/graphics/graphics_loading_1ef0c.c`),
-  **`SpawnSquid`** (`graphics_loading_1fdec.c`), **`SpawnJellyfish`**-
-  **`SpawnWoodenCrusher`** (`graphics_loading_1feec.c`; `SpawnFlamethrowerLabAssistant` closed in
+- **`SpawnLizard`**-**`SpawnElectricEel`** (`src/level/spawn_enemies.c`),
+  **`SpawnSquid`** (`spawn_enemies.c`), **`SpawnJellyfish`**-
+  **`SpawnWoodenCrusher`** (`spawn_enemies.c`; `SpawnFlamethrowerLabAssistant` closed in
   [last-eleven-naked-retry.md](../matching/last-eleven-naked-retry.md)),
-  **`SpawnRoomExit`**-**`SpawnCortexBoss`** (`graphics_loading_21280.c`) and
-  **`SpawnMegaMix`**-**`SpawnIronCrate`** (`graphics_loading_21668.c`) - the
+  **`SpawnRoomExit`**-**`SpawnCortexBoss`** (`spawn_bosses.c`) and
+  **`SpawnMegaMix`**-**`SpawnIronCrate`** (`spawn_objects.c`) - the
   "two-line text popup" spawners (issue #31) and the spawner-table
   entries that follow them. All five files are built with old_agbcc and
   share `include/text_popup.h`. 33 functions were rewritten as plain C with no pins or
@@ -113,14 +113,14 @@ family. Filed under `src/graphics/` on disk, tracked as its own
   **`SpawnStopwatch`**, **`SpawnBlueGem`**, **`sub_80220C4`**, **`SpawnCrateGemMarker`**,
   **`SpawnWumpa`**, **`nullsub_22`**, **`SpawnHoverStartMarker`**, **`sub_80221A4`**,
   **`SpawnUnderwaterStartMarker`**, **`sub_80221D4`**, **`nullsub_23`**, **`DestroyEntitySpawner`**,
-  **`CreateEntitySpawner`**, **`InitLevelState`** (`src/graphics/graphics_loading_21d80.c`)
+  **`CreateEntitySpawner`**, **`InitLevelState`** (`src/level/spawn_pickups.c`)
   - the `gSpriteBankTable` record-indexed OAM-trio spawner family, the
   `SpawnStartMarker` trampolines, the `gPlayer` position writers, the
   `{table_base, count}` descriptor pair, and `InitLevelState` itself - the
   "origin point" that constructs nearly every hot IWRAM global this ROM
   region references. See
   [issue-33-0x08021bfc-graphics-loading.md](../matching/issue-33-0x08021bfc-graphics-loading.md).
-- **`SpawnStartMarker`** (`src/graphics/graphics_loading_1e990.c`) - the
+- **`SpawnStartMarker`** (`src/level/spawn_start_marker.c`) - the
   sound-trigger dispatch/position writer at the end of the
   `LoadGraphicsPackage` cluster's scratch-buffer-style helper family
   (issue #30). Was a NAKED transcription for a long time (see "Parked"
