@@ -2,6 +2,7 @@
 #include "actor_anim.h"
 #include "gba/dma_macros.h"
 #include "memory.h"
+#include "hud.h"
 
 /*
  * `InitActorCategory` - the category (re)initialization + loading-screen
@@ -69,8 +70,6 @@ extern s32 RunActorCategoryFrame(void);
 extern void TickLevelClock(void *arg0);
 extern void ResetObjVram(void *self);
 extern void RewindOamBuffer(void *arg0);
-extern void UpdateHudSlides(void *state);
-extern void UpdateHud(void *self);
 extern void FlushSpriteFrameOamQueue(void);
 extern void WaitForVBlank(void);
 extern void CommitActorBgScroll(void);
@@ -87,7 +86,6 @@ extern void FreeObjTileFreeList(void);
 extern s32 RunPauseMenu(void);
 extern void ResetCellAnimBg(void);
 extern void ReloadActorCategoryGraphics(void);
-extern void ShowHudCounters(void *arg0);
 extern void FreeCategorySpriteSheet(void);
 extern void nullsub_5(void);
 extern void nullsub_6(void);

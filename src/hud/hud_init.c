@@ -3,60 +3,24 @@
 
 /* Built with old_agbcc - see docs/matching/game-loop-old-agbcc.md. */
 
-/* Local views of the slot and record fields hud.h doesn't name yet. */
-struct hud_slot
-{
-    s32 x;                            // 0x00
-    s32 y;                            // 0x04
-    u8 unk_08[0x18];
-    struct hud_anim_data *anim_data;  // 0x20
-    u8 unk_24[5];
-    u8 palette:4;                     // 0x29
-    u8 unk_29_4:4;
-    u8 unk_2A[3];
-    u8 anim_index;                    // 0x2D
-    u8 unk_2E[2];
-    s32 frame_index;                  // 0x30
-    u8 unk_34[0xC];
-};
-
-struct hud_record
-{
-    u8 unk_00[0x14];
-    u8 tile_record;                   // 0x14
-    u8 unk_15;
-    u8 frame_count;                   // 0x16
-    u8 unk_17[5];
-};
-
-struct hud_pos
-{
-    s32 x;
-    s32 y;
-};
-
 extern void ***gSpriteBankSet;
 extern void *gLevelState;
 extern u8 *gPaletteCache;
-extern u32 gHudPartAnims[];
-extern struct hud_pos gHudPartPositions[];
 
 extern void *OperatorNewArray(s32 size);
-extern void InitHudPart(struct hud_slot *slot);
-extern void SetSpritePriority(struct hud_slot *slot, s32 value);
+extern void SetSpritePriority(struct hud_digit_part *slot, s32 value);
 extern s32 GetBossIndex(void *self);
-extern void ResetSpriteFrameTimer(struct hud_slot *slot);
-extern void ResetSpriteFrameIndex(struct hud_slot *slot);
-extern void SetSpriteAnimDone(struct hud_slot *slot, s32 arg);
-extern void SetEntityPixelPos(struct hud_slot *slot, s32 x, s32 y);
+extern void ResetSpriteFrameTimer(struct hud_digit_part *slot);
+extern void ResetSpriteFrameIndex(struct hud_digit_part *slot);
+extern void SetSpriteAnimDone(struct hud_digit_part *slot, s32 arg);
+extern void SetEntityPixelPos(struct hud_digit_part *slot, s32 x, s32 y);
 extern u8 GetPaletteSlot(u8 *cache, s32 recordId);
-extern void ConfigureHudParts(struct hud_counter *self, u8 iconFlag);
-extern s32 GetSpriteAnimPaletteSlot(struct hud_slot *slot);
+extern s32 GetSpriteAnimPaletteSlot(struct hud_digit_part *slot);
 
 #define HUD_ANIM(offset) ((struct hud_anim_data *)((u8 *)**gSpriteBankSet + (offset)))
-#define SLOT_RECORD(s) (((struct hud_record *)(s)->anim_data->records)[(s)->anim_index])
+#define SLOT_RECORD(s) ((s)->anim_data->records[(s)->anim_index])
 
-static inline void RestartSlot(struct hud_slot *slot)
+static inline void RestartSlot(struct hud_digit_part *slot)
 {
     ResetSpriteFrameTimer(slot);
     ResetSpriteFrameIndex(slot);
@@ -64,7 +28,7 @@ static inline void RestartSlot(struct hud_slot *slot)
 }
 
 /* Shows animation frame `frame`, clamped to the animation's last one. */
-static inline void SetSlotFrame(struct hud_slot *slot, s32 frame)
+static inline void SetSlotFrame(struct hud_digit_part *slot, s32 frame)
 {
     s32 n = SLOT_RECORD(slot).frame_count;
     if (frame >= n)
@@ -72,9 +36,7 @@ static inline void SetSlotFrame(struct hud_slot *slot, s32 frame)
     slot->frame_index = frame;
 }
 
-#define SLOTS(self) ((struct hud_slot *)(self)->parts)
-
-static inline void SetSlotPos(struct hud_slot *slot, struct hud_pos *pos)
+static inline void SetSlotPos(struct hud_digit_part *slot, const struct hud_pos *pos)
 {
     SetEntityPixelPos(slot, pos->x, pos->y);
 }
@@ -90,40 +52,40 @@ struct hud_counter *InitHud(struct hud_counter *self)
 
     {
         s32 *mem = OperatorNewArray(0x8C4);
-        struct hud_slot *slots;
-        struct hud_slot *slot;
+        struct hud_digit_part *slots;
+        struct hud_digit_part *slot;
         s32 n;
 
         *mem++ = 0x23;
-        slots = (struct hud_slot *)mem;
+        slots = (struct hud_digit_part *)mem;
         for (slot = slots, n = 0x22; n != -1; slot++, n--)
             InitHudPart(slot);
-        self->parts = (struct hud_digit_part *)slots;
+        self->parts = slots;
     }
     self->livesSlide = 0;
-    *(s32 *)&self->unknown_0c[4] = 0;
+    self->crateSlide = 0;
     self->wumpaSlide = 0;
     self->livesSlideTimer = 0;
-    *(s32 *)&self->unknown_0c[8] = 0;
-    *(s32 *)&self->unknown_0c[0] = 0;
+    self->crateSlideTimer = 0;
+    self->wumpaSlideTimer = 0;
 
     for (i = 0; i <= 0x22; i++)
     {
-        struct hud_slot *slot;
+        struct hud_digit_part *slot;
 
-        SetSpritePriority(&SLOTS(self)[i], 0);
+        SetSpritePriority(&self->parts[i], 0);
         {
             struct hud_anim_data *anim = HUD_ANIM(0x234);
 
-            slot = (struct hud_slot *)(i * sizeof(struct hud_slot) + (u32)SLOTS(self));
+            slot = (struct hud_digit_part *)(i * sizeof(struct hud_digit_part) + (u32)self->parts);
             slot->anim_data = anim;
         }
         if (i == 0x16)
         {
             s32 life = GetBossIndex(gLevelState);
 
-            slot = &SLOTS(self)[i];
-            SLOTS(self)[0x16].anim_index = life + 6;
+            slot = &self->parts[i];
+            self->parts[0x16].anim_index = life + 6;
             RestartSlot(slot);
         }
         else
@@ -131,31 +93,31 @@ struct hud_counter *InitHud(struct hud_counter *self)
             slot->anim_index = gHudPartAnims[i];
             RestartSlot(slot);
         }
-        SetSlotPos(&SLOTS(self)[i], &gHudPartPositions[i]);
+        SetSlotPos(&self->parts[i], &gHudPartPositions[i]);
     }
 
     {
         struct hud_anim_data *anim;
-        struct hud_slot *slot;
+        struct hud_digit_part *slot;
 
         i = 13;
         anim = HUD_ANIM(0x1A4);
-        slot = &SLOTS(self)[i];
+        slot = &self->parts[i];
         slot->anim_data = anim;
-        SLOTS(self)[13].anim_index = gHudPartAnims[13];
+        self->parts[13].anim_index = gHudPartAnims[13];
         RestartSlot(slot);
     }
     {
-        struct hud_record *records = (struct hud_record *)SLOTS(self)[13].anim_data->records;
-        struct hud_record *rec = &records[SLOTS(self)[13].anim_index];
+        struct hud_anim_record *records = self->parts[13].anim_data->records;
+        struct hud_anim_record *rec = &records[self->parts[13].anim_index];
         s32 palette = GetPaletteSlot(gPaletteCache, rec->tile_record);
 
-        SLOTS(self)[13].palette = palette;
+        self->parts[13].palette = palette;
     }
 
-    SetSlotFrame(&SLOTS(self)[16], 10);
-    SetSlotFrame(&SLOTS(self)[19], 11);
-    SetSlotFrame(&SLOTS(self)[21], 0);
+    SetSlotFrame(&self->parts[16], 10);
+    SetSlotFrame(&self->parts[19], 11);
+    SetSlotFrame(&self->parts[21], 0);
     ConfigureHudParts(self, 0);
     return self;
 }
@@ -180,7 +142,7 @@ struct hud_counter *InitHud(struct hud_counter *self)
  * survive cross-jumping; the 22/23/29 and 14..21 tests are `switch`es
  * (compare-tree order); slot 13 is indexed through a local `k`, and the
  * position table through a `tbl` local, to settle register ties. */
-static inline void SetPal(struct hud_slot *slot, s32 v)
+static inline void SetPal(struct hud_digit_part *slot, s32 v)
 {
     slot->palette = v;
 }
@@ -193,18 +155,18 @@ void ConfigureHudParts(struct hud_counter *self, u8 iconFlag)
     self->icon_flag = iconFlag;
     {
         struct hud_anim_data *anim;
-        struct hud_slot *slot;
+        struct hud_digit_part *slot;
         s32 k = 13;
 
         anim = HUD_ANIM(0x1A4);
-        slot = &SLOTS(self)[k];
+        slot = &self->parts[k];
 
         slot->anim_data = anim;
-        SLOTS(self)[13].anim_index = gHudPartAnims[13];
+        self->parts[13].anim_index = gHudPartAnims[13];
         RestartSlot(slot);
     }
-    base = GetSpriteAnimPaletteSlot(&SLOTS(self)[13]);
-    SLOTS(self)[13].palette = base;
+    base = GetSpriteAnimPaletteSlot(&self->parts[13]);
+    self->parts[13].palette = base;
 
     for (i = 0; i <= 0x22; i++)
     {
@@ -213,9 +175,9 @@ void ConfigureHudParts(struct hud_counter *self, u8 iconFlag)
         if (i == 0x16)
         {
             s32 life = GetBossIndex(gLevelState);
-            struct hud_slot *slot = &SLOTS(self)[i];
+            struct hud_digit_part *slot = &self->parts[i];
 
-            SLOTS(self)[0x16].anim_index = life + 6;
+            self->parts[0x16].anim_index = life + 6;
             RestartSlot(slot);
         }
         frame = 0;
@@ -229,11 +191,11 @@ void ConfigureHudParts(struct hud_counter *self, u8 iconFlag)
         case 0x1D:
             if (!self->icon_flag)
                 break;
-            frame = GetSpriteAnimPaletteSlot(&SLOTS(self)[i]);
+            frame = GetSpriteAnimPaletteSlot(&self->parts[i]);
             break;
         default:
         get:
-            frame = GetSpriteAnimPaletteSlot(&SLOTS(self)[i]);
+            frame = GetSpriteAnimPaletteSlot(&self->parts[i]);
             break;
         }
 
@@ -243,24 +205,24 @@ void ConfigureHudParts(struct hud_counter *self, u8 iconFlag)
             {
             case 0xE ... 0x15:
             {
-                struct hud_pos *tbl = gHudPartPositions;
-                struct hud_pos *pos = tbl + i;
+                const struct hud_pos *tbl = gHudPartPositions;
+                const struct hud_pos *pos = tbl + i;
 
-                SLOTS(self)[i].x = pos->x << 8;
-                SLOTS(self)[i].y = 0x1400;
-                SetPal(&SLOTS(self)[i], frame);
+                self->parts[i].x = pos->x << 8;
+                self->parts[i].y = 0x1400;
+                SetPal(&self->parts[i], frame);
                 break;
             }
             default:
                 if (frame == base)
-                    SetPal(&SLOTS(self)[i], 10);
+                    SetPal(&self->parts[i], 10);
                 else
-                    SetPal(&SLOTS(self)[i], frame);
+                    SetPal(&self->parts[i], frame);
                 break;
             }
         }
         else
-            SLOTS(self)[i].palette = frame;
+            self->parts[i].palette = frame;
     }
     DmaFill32(3, -1, &self->shownLives, 9 * 4);
 }

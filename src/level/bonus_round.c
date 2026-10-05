@@ -3,6 +3,7 @@
 #include "actor.h"
 #include "level_state.h"
 #include <agb_syscall.h>
+#include "hud.h"
 
 extern void *gPlayer;
 extern void *gEntityFlags;
@@ -16,7 +17,6 @@ extern void *MemCopy32(void *dest, void *src, s32 size);
 extern void SetBonusRoundDone(void *self);
 extern void ClearInBonusRound(void *self);
 extern void SetEntityPos(struct actor *self, s32 arg1, s32 arg2);
-extern void SetHudCrateTotal(void *state, s32 arg1);
 extern void SetCheckpointAtPlayer(struct level_state *self, u8 arg1);
 
 /* Called at level start/checkpoint-restore: `arg1` selects whether to

@@ -4,6 +4,7 @@
 #include "box_part.h"
 #include "bitmap_font.h"
 #include "text.h"
+#include "link.h"
 
 extern void ReadSaveSlot(void *handle, s32 rowIndex, void *buf);
 extern void WriteSaveSlot(void *handle, s32 rowIndex, void *buf);
@@ -103,7 +104,6 @@ extern void *PackSaveData(void *arg0);
 extern void SummarizeProgress(void *self, struct settings_row_stats *dest, void *src);
 extern void RefreshSaveSlotSummaries(struct save_menu *self, void *handle);
 extern void *IwramAlloc(s32 size);
-extern void *InitLinkSession(void *arg0);
 extern void FadeBrightness(u8 flags, s32 frameDelay, u8 sync);
 extern void ResetSaveData(struct save_data *self);
 
@@ -151,7 +151,6 @@ struct save_menu *InitSaveMenu(struct save_menu *arg0)
     return self;
 }
 
-extern void DestroyLinkSession(void *arg0, s32 arg1);
 extern void OperatorDelete(void *arg0);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 

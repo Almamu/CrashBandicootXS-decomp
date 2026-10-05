@@ -2,6 +2,7 @@
 #include "actor.h"
 #include "actor_self.h"
 #include "box_part.h"
+#include "hud.h"
 
 /* GitHub issue #9/#10, ROM 0x0800AB9C-0x0800AC2C (details in
  * docs/matching/issue-9-10-0x0800ab9c-graphics.md). Built with old_agbcc
@@ -275,7 +276,6 @@ extern u32 gRoomFrameCount;
 extern u8 *GetCurrentLevelFlags(void *game);
 extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
 extern void RequestRoomExit(void);
-extern void ShowHudCounters(void *arg0);
 extern void FreezeLevelClock(void *game, s32 n);
 extern void RequestBonusRound(void *game);
 extern void RequestGemPath(void *game);

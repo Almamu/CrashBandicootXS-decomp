@@ -1,6 +1,6 @@
 #include "core.h"
 #include "irq.h"
-#include "link_session.h"
+#include "link.h"
 
 /* The GBA multiplayer link-cable/SIO transport - see docs/rom_map.md's
  * SIO/link-cable section. `ResetLinkSessionState` resets a per-session object at
@@ -9,12 +9,7 @@
  * per-player 0xc8-byte sub-records live at session+playerIndex*0xc8. */
 
 extern void IrqClearHandler(s32 interruptIndex);
-extern u16 gCrc16Table[];
-extern void MakeLinkHandshakeId(u8 *self);
-extern u8 gLinkSessionReset;
 extern void IrqSetHandler(s32 interruptIndex, irq_handler_t *fn);
-extern void LinkSerialIntr(void);
-extern void LinkTimer3Intr(void);
 
 /* Fills `self`'s first 8 bytes with a fixed 0xEC pattern (byte 0 masked
  * to its low nibble, byte 1 zeroed), then hashes bytes 1-5 with a

@@ -1,4 +1,5 @@
 #include "core.h"
+#include "hud.h"
 
 /* GitHub issue #37 follow-up to `docs/matching/issue-37-game-loop-2375c.md`
  * (which matched this function's only caller, `PlayRoom`, in
@@ -320,7 +321,6 @@ extern u8 IsInGemPathRoom(struct gl_self *self);
 extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
 extern s32 _call_via_r2(void *self, s32 arg, void *fn);
 extern s32 _call_via_r1(void *self, void *fn);
-extern void ShowHudCounters(void *arg);
 extern void CullPartList(void *mgr);
 extern void UpdateRoomFrame(struct gl_self *self);
 extern void SetDispcntMode(s32 arg);
@@ -333,7 +333,6 @@ extern s32 RunPauseMenu(void);
 extern void ResumeRoomAfterPause(struct gl_self *self);
 extern void UpdatePartList(void *mgr);
 extern void UpdateCrateList(void *list);
-extern void UpdateHudSlides(void *arg);
 extern void TickLevelClock(struct gl_level *level);
 extern u8 IsRoomExitRequested(void);
 extern void FadePaletteToBlack(void);

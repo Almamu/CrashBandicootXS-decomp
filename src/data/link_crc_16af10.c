@@ -1,4 +1,5 @@
 #include "core.h"
+#include "link.h"
 
 /*
  * ROM 0x0816AF10-0x0816B138. Linked in ROM order between data/data.s

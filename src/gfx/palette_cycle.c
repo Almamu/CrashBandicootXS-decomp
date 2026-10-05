@@ -45,7 +45,6 @@ struct palette_cycler {
 COMPILE_TIME_ASSERT(sizeof(struct palette_cycler) == 0x48);
 
 extern void OperatorDelete(void *ptr);
-extern s32 gHudSlideOffset;
 extern void DrawSpriteWithOffset(struct actor *part, s32 arg1, s32 arg2);
 extern void DestroyUiSpriteObj(struct actor *part, u32 arg1);
 extern struct actor *InitUiSpriteObj(struct actor *part);
@@ -357,9 +356,9 @@ void sub_802710C(struct actor *part, u32 arg1)
  * include/hud.h): re-initializes it via `InitUiSpriteObj`, then overwrites
  * `table` with this widget family's own `gHudPartVtable` in
  * place of whatever `InitUiSpriteObj` set it to. */
-struct actor *InitHudPart(struct actor *part)
+struct hud_digit_part *InitHudPart(struct hud_digit_part *part)
 {
-    InitUiSpriteObj(part);
+    InitUiSpriteObj((struct actor *)part);
     part->table = gHudPartVtable;
     return part;
 }

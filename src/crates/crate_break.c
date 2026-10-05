@@ -1,6 +1,7 @@
 #include "core.h"
 #include "vram_pool.h"
 #include "crate.h"
+#include "hud.h"
 
 /* GitHub issue #12: 0x0800D040-0x0800FC70, the physics/collision
  * subsystem (see crate_hit.c's header comment and
@@ -2084,7 +2085,6 @@ void DropCratesAbove(struct crate *self)
 extern u8 gCrateListChanged;
 extern void RemoveCrateListAt(struct crate_list *list, s32 index);
 extern void *gHud;
-extern void ShowHudCrates(void *arg);
 extern void PressSwitchCrate(void *arg);
 extern void DetonateNitroCrates(void);
 extern void SolidifyOutlineCrate(struct crate *self);

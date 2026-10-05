@@ -18,6 +18,18 @@ generated code, and those cases need to be known before a batch starts.
 
 **Status:** phase 0 done: the audit tool, the apply tool, this plan, and the
 `text` subsystem as the pilot batch (`include/text.h`, see "Pilot" below).
+Batch 1 (link + hud) done: `include/link.h` and `include/hud.h`, see
+"Batch 1" below.
+
+Audit totals (`tools/extern_audit.py`) as the batches land:
+
+| | Pilot merged | After batch 1 |
+|---|---:|---:|
+| Declarations in `.c` files (symbols defined elsewhere) | 4,572 | 4,513 |
+| Unique symbols declared in a `.c` file | 2,317 | 2,284 |
+| - conflicting | 231 | 229 |
+| Local struct/union definitions in `.c` files | 548 | 538 |
+| Struct names defined in more than one `.c` file | 75 | 74 |
 
 ## Tools
 
@@ -227,8 +239,8 @@ Where the remaining declarations would go (after the pilot):
 
 | Header | Symbols | Conflicting | Declarations removed | Files touched |
 |---|---:|---:|---:|---:|
-| link | 12 | 2 | 19 | 7 |
-| hud | 19 | 0 | 35 | 17 |
+| link (**done**, batch 1) | 12 | 2 | 19 | 7 |
+| hud (**done**, batch 1) | 19 | 0 | 35 | 17 |
 | cutscene | 24 | 1 | 27 | 9 |
 | pickups | 28 | 3 | 33 | 10 |
 | enemies | 32 | 1 | 34 | 6 |
@@ -359,9 +371,9 @@ to hubs. Small, low-conflict headers come first, so the method is tested
 before the files that every subsystem touches.
 
 1. **Phase 0 (this PR):** tools, plan, `text` pilot, `aabb.h`.
-2. **link + hud:** 31 symbols, 2 conflicts (`LinkStop`/`ResetLinkSessionState`
+2. **link + hud (done):** 31 symbols, 2 conflicts (`LinkStop`/`ResetLinkSessionState`
    are declared `void (void)`/`void (u8 *)` in `link_sio.c` but defined
-   `s32 (struct link_session *)`).
+   `s32 (struct link_session *)`). See "Batch 1" below.
 3. **cutscene + pickups + enemies:** 84 symbols, 5 conflicts.
 4. **save, frontend:** 110 symbols, 4 conflicts.
 5. **util + `libgcc.h`:** `RandRange` (see above), `__modsi3`/`__umodsi3`
@@ -438,6 +450,70 @@ declared 8 of its functions unprototyped.
 No local declaration needed an exception, so the pilot added no `codegen:`
 comments.
 
+## Batch 1: link + hud
+
+- **`include/link.h`** (new) declares every function `src/link/`
+  defines, `gLinkSessionReset` and `const u16 gCrc16Table[256]`. It
+  includes `link_session.h`, and the four link files include `link.h` in
+  its place. 22 local declarations are gone (17 in `src/link/`, 5 in
+  save_menu_draw/input/ui.c).
+- **`gLinkSession` is not in `link.h` yet.** It is defined `void *` in
+  iwram_data.c, and save_transfer.c declares it as a `struct sio_session
+  *`, its own view of the session. It goes in with the save batch, once
+  `struct sio_session` is merged into `struct link_session` (rule 5).
+- **Definition fixes in link_sio.c**, all byte-identical:
+  `ResetLinkSession`/`DestroyLinkSession`/`InitLinkSession`/`LinkStart`
+  took `u8 *`/`void *` and now take `struct link_session *`.
+  `ResetLinkSession` passes `self` to `LinkStop` (the ROM already had it
+  in r0). `DestroyLinkSession`'s dead loop is the `players[4]` array's
+  empty destructor loop (`self->players` .. `&self->players[4]`, step
+  `q--`), and `InitLinkSession` stores `ring.field_84/88/8c` and
+  `field_5` by name; its per-player loop keeps the raw `0xc6 << 1`
+  offset, which is pinned in r6. `HandleLinkSerial` is called with
+  `(u16 *)REG_ADDR_SIODATA32`, and the two `IrqSetHandler` calls got the
+  `(irq_handler_t *)` casts link_session.c already used, which removes
+  link_sio.c's two incompatible-pointer warnings.
+- **`include/hud.h`** (extended) declares every function `src/hud/`
+  defines, plus `DrawHudPart`/`InitHudPart` (defined in
+  `src/gfx/palette_cycle.c`, which holds their ROM range),
+  `gHudSlideOffset` (iwram_data.c) and the const part tables
+  `gHudPartAnims[35]`/`gHudPartPositions[35]`. `gHud` stays for
+  `globals.h`. 42 local declarations are gone. 20 of them were in 11
+  callers in actor/, crates/, level/, pickups/ and player/, which
+  declared the HUD functions with `void *` parameters.
+  `InitHudPart` now takes and returns `struct hud_digit_part *` (it was
+  `struct actor *`; it casts for `InitUiSpriteObj`).
+- **Struct merges** (10 local definitions gone, 548 -> 538):
+  - `struct hud_counter` takes the fields of hud_counters.c's `struct
+    hud_score` and hud_slide.c's `struct hud_blink`/`struct blink_slot`:
+    `wumpaSlideTimer`, `crateSlide`/`crateSlideTimer`, `wumpa`,
+    `crateCount`, `crateTotal`, `value_d`/`value_e`, `shownWumpa`,
+    `shownCrateCount`/`shownCrateTotal`, `shown_d`/`shown_e`. The header
+    names won where both had one (`livesSlide`/`livesSlideTimer` over
+    hud_score's `mode`/`layout_value`). hud_blink's `slots[3]` array of
+    {state, timer} pairs became the named pairs (`slots[0]` lives,
+    `slots[1]` wumpa, `slots[2]` crates), and hud_init.c's
+    `*(s32 *)&self->unknown_0c[N]` stores became `wumpaSlideTimer`/
+    `crateSlide`/`crateSlideTimer`.
+  - `struct hud_digit_part` takes hud_init.c's `struct hud_slot`
+    (`palette:4` at 0x29), and `struct hud_anim_record` takes `struct
+    hud_record` (`tile_record` at 0x14).
+  - `struct hud_pos` (4 copies: hud_init.c, hud_counters.c,
+    hud_boss_clock.c, hud_fonts_174be0.c) is in `hud.h`.
+  - hud_slide.c's local `struct icon_slot` copy is `struct vtable_slot`
+    (vtable.h): `DestroyHud` calls slot 10 of the part's vtable
+    (`gHudPartVtable`).
+
+  The `slots[N].state` -> named-field change, the `selfArg`/cast pair
+  dropped from the three hud_counters.c functions and `parts[34]` in
+  place of `(u8 *)parts + 0x880` in hud.c were all identical (hud_init.c,
+  hud_counters.c and hud_boss_clock.c are old_agbcc).
+- iwram_data.c includes `hud.h` and `link.h`, and the two data files
+  include the header that declares their tables, so the compiler checks
+  each definition.
+
+No file needed an asm-label alias, so batch 1 adds no codegen exceptions.
+
 ## Codegen findings
 
 The pilot itself had **no codegen surprises**: every file's `.s` was
@@ -456,6 +532,12 @@ here (built with agbcc and, in `font_glyph.c`, `font_draw_text.c`,
 | member `s32 box[4]` -> `struct aabb box`, `box[0]`/`box[3]` -> `.x`/`.h` | `RunCutscenePlayer` (old_agbcc) | identical |
 | unprototyped `void f();` -> full prototype, in a data table | entity_vtables_7e3bec.c | identical |
 | local struct with `field_N` names -> shared `struct aabb` (`x`/`y`/`w`/`h`) | wrapped_text.c, text_box.c, aabb_setup.c | identical |
+| parameter `s32` -> `u8`, argument `x != 0` | `ConfigureHudParts` in actor_vram_pool.c | identical |
+| parameter `void *` -> `struct hud_counter *`/`struct link_session *`, return `void` -> `s32` (unused) | 11 HUD callers, save_menu_*.c | identical |
+| call with no argument -> passing the caller's own first argument | `LinkStop(self)` in `ResetLinkSession` | identical |
+| `struct { s32 state, timer; } slots[3]` with constant indices -> six named `s32` fields | hud_slide.c | identical |
+| `u8 *` byte offsets -> struct members / array elements, pointer step `-= 0xc8` -> `--` | link_sio.c, hud.c | identical |
+| local struct copy -> `const` table pointer (`const struct hud_pos *`) | hud_init.c (old_agbcc) | identical |
 
 Experiments for later batches (not applied in this PR):
 

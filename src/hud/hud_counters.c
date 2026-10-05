@@ -1,38 +1,6 @@
 #include "core.h"
 #include "hud.h"
 
-struct hud_pos
-{
-    s32 x;
-    s32 y;
-};
-
-/* `struct hud_counter` viewed with the fields these three widgets use. */
-struct hud_score
-{
-    s32 mode;                       /* +0x00 */
-    s32 layout_value;               /* +0x04 */
-    s32 wumpaSlide;                     /* +0x08 - UpdateHudWumpa's mode */
-    s32 wumpaSlideTimer;                   /* +0x0C */
-    s32 crateSlide;                     /* +0x10 - UpdateHudCrates's mode */
-    s32 crateSlideTimer;                   /* +0x14 */
-    u8 unk_18[8];
-    s32 wumpa;                    /* +0x20 */
-    s32 crateCount;                    /* +0x24 */
-    s32 crateTotal;                    /* +0x28 */
-    u8 unk_2C[0xC];
-    s32 value_d;                    /* +0x38 */
-    s32 value_e;                    /* +0x3C */
-    u8 unk_40[4];
-    s32 shownWumpa;                    /* +0x44 */
-    s32 shownCrateCount;                    /* +0x48 */
-    s32 shownCrateTotal;                    /* +0x4C */
-    u8 unk_50[0xC];
-    s32 shown_d;                    /* +0x5C */
-    s32 shown_e;                    /* +0x60 */
-    struct hud_digit_part *parts;   /* +0x64 */
-};
-
 /* The object `UpdateHudPercentCounters` reads its percentage from, called through a
  * gcc 2.x pointer-to-member (delta + function) slot in its vtable. */
 struct pct_vtable
@@ -49,15 +17,12 @@ struct pct_source
     struct pct_vtable *vtable;      /* +0x50 */
 };
 
-extern s32 gHudSlideOffset;
 extern struct pct_source *gActorList;
 extern s32 _call_via_r1(void *self, void *fn);
 extern s32 GetBossIndex(void *state);
 extern s32 GetAirshipHpPercent(void);
 extern void AdvanceSpriteAnim(struct hud_digit_part *part);
 extern void *gLevelState;
-extern struct hud_pos gHudPartPositions[];
-extern void DrawHudPart(struct hud_digit_part *part, s32 x, s32 y);
 extern s32 GetCrateCount(void *state);
 extern s32 GetWumpa(void *state);
 extern s32 __divsi3(s32 a, s32 b);
@@ -106,9 +71,8 @@ static inline void SetPartPos(s32 x, s32 y, struct hud_digit_part *part)
  * (`gHudPartPositions`-positioned, slot at `self->parts + 0xa0*4`)
  * whose x/y table index is picked from a 3-way digit-count check on the
  * first counter's value. */
-void UpdateHudCrates(struct hud_counter *selfArg)
+void UpdateHudCrates(struct hud_counter *self)
 {
-    struct hud_score *self = (struct hud_score *)selfArg;
     struct hud_digit_part *parts;
     s32 v;
     s32 digits;
@@ -227,9 +191,8 @@ void UpdateHudCrates(struct hud_counter *selfArg)
  * pair like the dispatcher's other callees - always refreshes one more
  * slot (`self->parts + 0xd0*4`) up front via `AdvanceSpriteAnim`/
  * `DrawHudPart` regardless of whether the value changed. */
-void UpdateHudWumpa(struct hud_counter *selfArg)
+void UpdateHudWumpa(struct hud_counter *self)
 {
-    struct hud_score *self = (struct hud_score *)selfArg;
     struct hud_digit_part *parts;
     s32 v;
 
@@ -286,9 +249,8 @@ void UpdateHudWumpa(struct hud_counter *selfArg)
  * change-detection triple, slots `0xe8*8` fixed-icon plus
  * `0xf0*8`/`0xf8*8`/`0x80<<4`/`0x84<<4` digit slots) - two independent
  * percent-style readouts sharing one function body. */
-void UpdateHudPercentCounters(struct hud_counter *selfArg)
+void UpdateHudPercentCounters(struct hud_counter *self)
 {
-    struct hud_score *self = (struct hud_score *)selfArg;
     struct hud_digit_part *parts;
     struct hud_digit_part *part;
     s32 v;

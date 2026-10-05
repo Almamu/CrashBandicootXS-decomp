@@ -2,9 +2,7 @@
 #include "hud.h"
 
 extern void *gLevelState;
-extern s32 gHudSlideOffset;
 
-extern void DrawHudPart(struct hud_digit_part *part, s32 x, s32 y);
 extern s32 __divsi3(s32 dividend, s32 divisor);
 extern s32 __modsi3(s32 dividend, s32 divisor);
 extern s32 GetLives(void *state);

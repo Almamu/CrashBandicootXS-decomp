@@ -1,6 +1,8 @@
 #include "core.h"
 #include "memory.h"
 #include "cutscene.h"
+#include "hud.h"
+#include "link.h"
 
 /*
  * IWRAM 0x030007CC-0x030009E8 (stored in ROM at 0x087E5DB0-0x087E5FCC):

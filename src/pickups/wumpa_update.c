@@ -1,6 +1,7 @@
 #include "core.h"
 #include "actor.h"
 #include "orbit_part.h"
+#include "hud.h"
 
 /* GitHub issue #12/#14 Phase 2, second parallel slice: the tail 6
  * functions of the still-large 24-function chunk past AddCollisionCandidate
@@ -28,7 +29,6 @@ extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
 extern void WorldToScreen(void *arg0, s32 arg1, s32 arg2, s32 *arg3, s32 *arg4);
 extern s32 FixedDiv(s32 arg0, s32 arg1);
 extern s32 FixedMul(s32 a, s32 b);
-extern void ShowHudWumpa(void *state);
 extern s16 gSineTable[];
 extern s32 rand(void);
 
