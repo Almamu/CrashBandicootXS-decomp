@@ -193,8 +193,10 @@ void SetHovercraftState(s32 a0, s32 a1)
     }
 }
 
-/* No-op stub. */
-void nullsub_36(void)
+/* gHovercraftStateFuncs[0]: the state CreateHovercraft sets before
+ * SpawnHovercraft starts the fight (state 1), the twin of
+ * AirshipStateInactive. Empty. */
+void HovercraftStateInactive(void)
 {
 }
 

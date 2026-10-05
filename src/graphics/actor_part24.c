@@ -5,8 +5,8 @@
  * docs/matching/issue-58-0x08030334-actor.md. */
 
 extern s32 __divsi3(s32 arg0, s32 arg1);
-extern s32 sub_8029EB4(void);
-extern s32 sub_8029E98(void);
+extern s32 GetActorBgCenterX(void);
+extern s32 GetActorBgCenterY(void);
 extern u8 gAirshipBg2PageFlip;
 extern s32 gAirshipBg2Page;
 extern s32 gAirshipDistance;
@@ -18,7 +18,7 @@ extern s32 gAirshipScreenY;
  * `gAirshipBg2Page`) and clears the latch. Either way, recomputes the
  * BG2 affine matrix (a uniform `scale` from `gAirshipDistance` via
  * `__divsi3`, offset by the screen-projection helpers
- * `sub_8029EB4`/`sub_8029E98`) so the effect stays centered while
+ * `GetActorBgCenterX`/`GetActorBgCenterY`) so the effect stays centered while
  * zooming. */
 void UpdateAirshipBg2(void)
 {
@@ -34,8 +34,8 @@ void UpdateAirshipBg2(void)
 
     {
         s32 scale = __divsi3(gAirshipDistance << 8, 0x3c00);
-        s32 dy = gAirshipScreenX + sub_8029EB4();
-        s32 dx = gAirshipScreenY + sub_8029E98();
+        s32 dy = gAirshipScreenX + GetActorBgCenterX();
+        s32 dx = gAirshipScreenY + GetActorBgCenterY();
 
         REG_BG2X = 0x8000 - ((dy * scale) >> 8);
         REG_BG2Y = 0x8000 - ((dx * scale) >> 8);

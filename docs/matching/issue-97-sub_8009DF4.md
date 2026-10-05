@@ -9,7 +9,7 @@ rather than fighting them via C-level register pins. Porting that same
 technique here - `vx` pinned to `r3`, `vy` left unpinned (both
 required; pinning them *together* is a separate gcc-2.9 miscompile
 `ApplyPlayerVelocity`'s own write-up covers), and the trailing
-`gUnknown_03001298` block emitted as one opaque `asm volatile` instead
+`gLastSpriteVelY` block emitted as one opaque `asm volatile` instead
 of a plain C `if`/store pair - closes `ApplySpriteVelocity` byte-for-byte. The
 old raw `asm/code_3_2_9.s` is retired. See `docs/status/actor.md`'s
 "Matched" entry for `ApplySpriteVelocity` and
@@ -32,7 +32,7 @@ clamping so it never overshoots. Builds a `self+0x24` direction-flags
 byte from the clamped velocities' signs, caches the pre-move position
 at `self+0x6c`/`self+0x70`, applies the velocity to `self+0`/`self+4`,
 and finally records the resulting Y velocity into
-`gUnknown_03001298` (with a genuinely redundant conditional early
+`gLastSpriteVelY` (with a genuinely redundant conditional early
 write the ROM performs before unconditionally overwriting it with the
 same value right after). Returns whether either axis is still moving.
 
@@ -65,7 +65,7 @@ the global write.
 The one thing that doesn't fully close is the same block `ApplyPlayerVelocity`
 itself remains parked on (see `docs/matching/issue-9-0x08007634-actor.md`,
 "Real gotchas found along the way", point 3): the final
-`gUnknown_03001298` read-compare-write block's address/value register
+`gLastSpriteVelY` read-compare-write block's address/value register
 roles. The ROM loads the global's *address* into `r0` and its *value*
 into `r2`; this compiler's natural allocation keeps the opposite
 (address in `r2`, value in `r0`) - functionally identical, same
@@ -93,7 +93,7 @@ consistent failure modes, both confirmed on `ApplySpriteVelocity` directly
    `vy` across the register reallocation the pin forces, the same
    knock-on-regression shape `ApplyPlayerVelocity`'s own doc entry describes.
 
-Using a plain, unpinned local pointer (`s32 *g = &gUnknown_03001298;`)
+Using a plain, unpinned local pointer (`s32 *g = &gLastSpriteVelY;`)
 avoids both failure modes and keeps the true-leaf shape, but lands on
 the ROM's opposite register assignment for that one block. Parked with
 that version - true leaf, every instruction correct, only the

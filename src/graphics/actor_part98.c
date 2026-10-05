@@ -54,11 +54,11 @@ void FillCellAnimTilemap(s32 arg0, s32 w, s32 h)
 }
 
 extern s32 gActorBgScrollType;
-extern s32 gUnknown_030013C0;
-extern s32 gUnknown_030013C4;
+extern s32 gActorNearClipDepth;
+extern s32 gActorFarClipDepth;
 extern s32 gUnknown_030013C8;
-extern s32 gUnknown_030013F8;
-extern s32 gUnknown_030013FC;
+extern s32 gActorBgWidth;
+extern s32 gActorBgHeight;
 extern s32 gActorBgScrollEaseShift;
 extern s32 gUnknown_030013E4;
 extern s32 gUnknown_030013E8;
@@ -80,21 +80,21 @@ void InitActorBgScroll(s32 arg0)
     gActorBgScrollType = arg0;
 
     if (arg0 == 0) {
-        gUnknown_030013C0 = 0x88 << 5;
-        gUnknown_030013C4 = 0xa0 << 8;
+        gActorNearClipDepth = 0x88 << 5;
+        gActorFarClipDepth = 0xa0 << 8;
         gUnknown_030013C8 = 0xbc << 6;
-        gUnknown_030013F8 = 0x98 << 9;
-        gUnknown_030013FC = 0xd0 << 8;
+        gActorBgWidth = 0x98 << 9;
+        gActorBgHeight = 0xd0 << 8;
         gActorBgScrollEaseShift = 2;
         gUnknown_030013E4 = 0x64;
         gUnknown_030013E8 = 0x51;
         gActorBg0VOffset = arg0;
     } else {
-        gUnknown_030013C0 = 0xd0 << 5;
-        gUnknown_030013C4 = 0xaa << 8;
+        gActorNearClipDepth = 0xd0 << 5;
+        gActorFarClipDepth = 0xaa << 8;
         gUnknown_030013C8 = 0xe0 << 5;
-        gUnknown_030013F8 = 0x98 << 9;
-        gUnknown_030013FC = 0xce << 8;
+        gActorBgWidth = 0x98 << 9;
+        gActorBgHeight = 0xce << 8;
         gActorBgScrollEaseShift = 3;
         gUnknown_030013E4 = 3 + 0xfd;
         gUnknown_030013E8 = 0x96;
@@ -114,10 +114,10 @@ void InitActorBgScroll(s32 arg0)
         register s32 *ecPtr asm("r0") = &gActorBgScrollMaxX;
         register s32 delta asm("r2") = (s32)0xFFFF1000;
 
-        v = gUnknown_030013F8 + delta;
+        v = gActorBgWidth + delta;
         *ecPtr = v;
     }
-    gActorBgScrollMaxY = gUnknown_030013FC + (s32)0xFFFF6000;
+    gActorBgScrollMaxY = gActorBgHeight + (s32)0xFFFF6000;
 
     {
         register s32 *d0Ptr asm("r2") = &gActorBgScrollX;
@@ -138,7 +138,7 @@ void InitActorBgScroll(s32 arg0)
     REG_BG1VOFS = 0;
 
     gActorBgShake = 0;
-    gUnknown_030013D8 = gUnknown_030013C4;
+    gUnknown_030013D8 = gActorFarClipDepth;
 }
 
 /* Eases the BG0/BG1 scroll accumulators (gActorBgScrollX/gActorBgScrollY)

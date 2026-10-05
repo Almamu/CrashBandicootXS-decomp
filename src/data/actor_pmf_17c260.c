@@ -7,8 +7,8 @@
  * between data/data.s sections by ldscript.txt - see docs/data.md.
  */
 
-extern void nullsub_28();
-extern void nullsub_29();
+extern void JetpackBomberStateDying();
+extern void JetpackBomberStateIdle();
 extern void JetpackPlaneStateFall();
 extern void sub_802FE1C();
 extern void sub_802FE58();
@@ -33,13 +33,13 @@ const struct actor_pmf gJetpackPlaneStateFuncs[4] = {
 
 /* Dispatched by UpdateJetpackBomber and RunJetpackBomberState (actor_part_2fbf0.c). */
 const struct actor_pmf gJetpackBomberStateFuncs[7] = {
-    ACTOR_PMF(nullsub_29),
+    ACTOR_PMF(JetpackBomberStateIdle),
     ACTOR_PMF(JetpackBomberStateHome),
     ACTOR_PMF(JetpackBomberStateBobVertical),
     ACTOR_PMF(JetpackBomberStateSwingHorizontal),
     ACTOR_PMF(JetpackBomberStateCircle),
     ACTOR_PMF(JetpackBomberStateDrop),
-    ACTOR_PMF(nullsub_28),
+    ACTOR_PMF(JetpackBomberStateDying),
 };
 
 /* Dispatched by UpdateAirshipFireball (actor_part20b.c) and RunAirshipFireballState

@@ -78,7 +78,7 @@ const u16 gYetiPalette[16] = {
 const struct anim_box gYetiBox = { -28, -24, -2, 56, 90, 4 };
 
 /* UpdateYeti's (actor_part74.c) hit box. */
-const struct anim_box gStaticData_0817AA98 = { -80, -40, -14, 160, 110, 16 };
+const struct anim_box gYetiCatchBox = { -80, -40, -14, 160, 110, 16 };
 
 /* The 256-colour OBJ palette InitActorCategory loads for these
  * categories. The second 0x200 bytes are zero; nothing reads them. */

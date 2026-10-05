@@ -26,8 +26,8 @@
  * introduces: the constructor's raw `part`/`b`/`c`/`d` arguments cached
  * at `self+0x30`/`self+0x1c`/`self+0x20`/`self+0x24`, a "movement"
  * threshold pair at `self+0x14`/`self+0x34` (an absolute-value/packed-
- * bitfield distance metric compared against `gUnknown_030013C0`/
- * `gUnknown_030013C4`, gating whether the object fires its `+0x50`
+ * bitfield distance metric compared against `gActorNearClipDepth`/
+ * `gActorFarClipDepth`, gating whether the object fires its `+0x50`
  * table's slot-3 trampoline instead of animating), a one-shot byte flag
  * at `self+0x2c`, and a 12-byte little vector block at `self+0x38`
  * (copied from `part+0x14..0x20`) whose first three `s16` slots are a
@@ -181,15 +181,15 @@ void *InitActorPart(void *selfArg, void *partArg, s32 b, s32 c, s32 d)
     return self;
 }
 
-extern s32 gUnknown_030013C4;
-extern s32 gUnknown_030013C0;
+extern s32 gActorFarClipDepth;
+extern s32 gActorNearClipDepth;
 extern s32 _call_via_r2(void *arg0, s32 arg1, void *fn);
 extern s32 GetAnimFrameBaseOffset(void *self);
 
 /* Recomputes `self`'s movement-threshold pair (`+0x34`/`+0x14`, same
  * formula as `InitActorPart`, using `self`'s own already-stored `+0x24`
  * in place of the constructor's `d` argument). If the result falls
- * outside `[gUnknown_030013C0-0x200, gUnknown_030013C4+0x200]`, fires
+ * outside `[gActorNearClipDepth-0x200, gActorFarClipDepth+0x200]`, fires
  * the `+0x50` event table's slot-3 trampoline instead of animating;
  * otherwise advances the frame counter (`+0x44`), applies the current
  * anim-frame delta (`+0x10`) to the position accumulator (`+8`), and -
@@ -229,8 +229,8 @@ void UpdateActor(void *selfArg)
         }
     }
 
-    if (self->depth > gUnknown_030013C4 + 0x200 ||
-        self->depth < gUnknown_030013C0 - 0x200) {
+    if (self->depth > gActorFarClipDepth + 0x200 ||
+        self->depth < gActorNearClipDepth - 0x200) {
         if (self != NULL) {
             struct actor_vtable *table = self->vtable;
             s32 offset = table->destroy.thisOffset;

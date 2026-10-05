@@ -21,7 +21,7 @@ extern void CtrlHandleEvent();
 extern void EffectCtrlHandleEvent();
 extern void nullsub_20();
 extern void DamageHovercraftCannonFlash();
-extern void nullsub_44();
+extern void DamageActor();
 extern void UpdateCtrl();
 extern void IsEntityNearCamera();
 extern void CheckEntityPlayerContact();
@@ -1316,7 +1316,7 @@ const struct vtable_slot gJetpackCheckpointTextVtable[7] = {
     VTABLE_SLOT(DestroyJetpackCheckpointText),
     VTABLE_SLOT(UpdateJetpackCheckpointText),
     VTABLE_SLOT(DrawJetpackCheckpointText),
-    VTABLE_SLOT(nullsub_44),
+    VTABLE_SLOT(DamageActor),
     VTABLE_SLOT(IsJetpackCheckpointTextUnshootable),
     VTABLE_SLOT(GetActorHp),
 };
@@ -1327,7 +1327,7 @@ const struct vtable_slot gJetpackExplosionVtable[7] = {
     VTABLE_SLOT(DestroyJetpackExplosion),
     VTABLE_SLOT(UpdateJetpackExplosion),
     VTABLE_SLOT(DrawActor),
-    VTABLE_SLOT(nullsub_44),
+    VTABLE_SLOT(DamageActor),
     VTABLE_SLOT(IsJetpackExplosionUnshootable),
     VTABLE_SLOT(GetActorHp),
 };
@@ -1349,7 +1349,7 @@ const struct vtable_slot gJetpackShotVtable[7] = {
     VTABLE_SLOT(DestroyJetpackShot),
     VTABLE_SLOT(UpdateJetpackShot),
     VTABLE_SLOT(DrawActor),
-    VTABLE_SLOT(nullsub_44),
+    VTABLE_SLOT(DamageActor),
     VTABLE_SLOT(IsJetpackShotUnshootable),
     VTABLE_SLOT(GetActorHp),
 };
@@ -1382,7 +1382,7 @@ const struct vtable_slot gJetpackCannonballVtable[7] = {
     VTABLE_SLOT(DestroyJetpackCannonball),
     VTABLE_SLOT(UpdateJetpackCannonball),
     VTABLE_SLOT(DrawActor),
-    VTABLE_SLOT(nullsub_44),
+    VTABLE_SLOT(DamageActor),
     VTABLE_SLOT(IsJetpackCannonballUnshootable),
     VTABLE_SLOT(GetActorHp),
 };
@@ -1485,7 +1485,7 @@ const struct vtable_slot gJetpackRingVtable[7] = {
     VTABLE_SLOT(DestroyJetpackRing),
     VTABLE_SLOT(UpdateJetpackRing),
     VTABLE_SLOT(DrawActor),
-    VTABLE_SLOT(nullsub_44),
+    VTABLE_SLOT(DamageActor),
     VTABLE_SLOT(IsJetpackRingUnshootable),
     VTABLE_SLOT(GetActorHp),
 };
@@ -1496,7 +1496,7 @@ const struct vtable_slot gJetpackCollectedWumpaVtable[7] = {
     VTABLE_SLOT(DestroyJetpackCollectedWumpa),
     VTABLE_SLOT(UpdateJetpackCollectedWumpa),
     VTABLE_SLOT(DrawJetpackCollectedWumpa),
-    VTABLE_SLOT(nullsub_44),
+    VTABLE_SLOT(DamageActor),
     VTABLE_SLOT(IsJetpackCollectedWumpaUnshootable),
     VTABLE_SLOT(GetActorHp),
 };

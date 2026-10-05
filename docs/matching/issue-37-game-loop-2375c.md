@@ -13,7 +13,7 @@ level object's own `+0xdc->+8` state field is `2`
 
 1. Fires two no-argument setup calls (`CreateEntitySpawner`, `ClearRoomExit`).
 2. Allocates the whole per-level widget set: five `dual_array_manager`s
-   (`gUnknown_030012E8`/`EC`/`F0`/`F8`/`F4`, the same struct
+   (`gUpdateOnlyPartList`/`EC`/`F0`/`F8`/`F4`, the same struct
    `actor_part11.c`'s `InitPartList` already returns) and one
    `pool_manager` (`gCrateList`, `InitCrateList`'s own type from
    `actor_part12.c`), a generic 0x18-byte block (`gCamera`),

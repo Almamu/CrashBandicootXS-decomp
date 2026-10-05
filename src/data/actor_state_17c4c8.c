@@ -6,7 +6,7 @@
  * sections by ldscript.txt - see docs/data.md.
  */
 
-extern void nullsub_36();
+extern void HovercraftStateInactive();
 extern void nullsub_37();
 extern void HovercraftStateCloseIn();
 extern void HovercraftStateFallBack();
@@ -23,7 +23,7 @@ extern void HovercraftLauncherStateWait();
  * through _call_via_r0 as `gHovercraftStateFuncs[gHovercraftState]` by
  * RunHovercraftState (actor_part130.c). */
 void (*const gHovercraftStateFuncs[6])() = {
-    nullsub_36,
+    HovercraftStateInactive,
     HovercraftStateApproach,
     HovercraftStateCloseIn,
     HovercraftStateFallBack,

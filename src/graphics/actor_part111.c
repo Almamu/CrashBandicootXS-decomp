@@ -42,7 +42,7 @@
  * this doc already gate on):
  *
  * - **mode == 3** ("just got hit" / stun-entry): every ~8 frames
- *   (`gRoomFrameCount & 7 == 0`) re-rolls `gUnknown_03000818` to
+ *   (`gRoomFrameCount & 7 == 0`) re-rolls `gAkuAkuInvincibleFrame` to
  *   `(u16)RandRange(2) + 2 - (mirrored ? 2 : 0)` (0/1 if mirrored,
  *   2/3 otherwise - which side the effect "starts" from, based on
  *   facing). Clamps that value against the child's own hitbox/variant
@@ -71,7 +71,7 @@
  *   `self+0xb4`, advancing the index mod 8.
  *
  * - **mode == 1 or mode == 2** (ongoing idle-orbit): every ~8 frames,
- *   random-walks `gUnknown_0300081C` by `RandRange(3) - 1` (-1/0/+1),
+ *   random-walks `gAkuAkuFollowFrame` by `RandRange(3) - 1` (-1/0/+1),
  *   clamped to `[0, 3]`. Clamps that value against the same child
  *   record's `+0x16` byte and stores it into the child's own `+0x30`
  *   (same clamp-and-store idiom as the mode-3 branch, different source
@@ -392,8 +392,8 @@ struct orbit_self {
     struct orbit_pos maskTrail[8];   // 0xB8
 };
 
-extern s32 gUnknown_03000818;
-extern s32 gUnknown_0300081C;
+extern s32 gAkuAkuInvincibleFrame;
+extern s32 gAkuAkuFollowFrame;
 extern void *gSpriteRenderer;
 extern s16 gSineTable[];
 extern s32 RandRange(s32 max);
@@ -461,14 +461,14 @@ void DrawPlayer(struct orbit_self *self)
              * the call; the locals keep `+ 2` from being folded into
              * the mirror term and load the mirror bit before the u16
              * mask, as in the ROM. */
-            gUnknown_03000818 = ({
+            gAkuAkuInvincibleFrame = ({
                 s32 r = RandRange(2);
                 s32 m = self->mirrorX;
                 s32 v = (u16)r + 2;
 
                 v - m * 2;
             });
-        ClampTick(self->child, gUnknown_03000818);
+        ClampTick(self->child, gAkuAkuInvincibleFrame);
         if (self->mirrorX)
             SetPos(self->x, self->y, self->child, -0x600, -0x1300);
         else
@@ -510,15 +510,15 @@ void DrawPlayer(struct orbit_self *self)
             if (!(gRoomFrameCount & 7)) {
                 s32 v;
 
-                gUnknown_0300081C = gUnknown_0300081C + (u16)RandRange(3) - 1;
-                v = gUnknown_0300081C;
+                gAkuAkuFollowFrame = gAkuAkuFollowFrame + (u16)RandRange(3) - 1;
+                v = gAkuAkuFollowFrame;
                 if (v > 3)
                     v = 3;
                 if (v < 0)
                     v = 0;
-                gUnknown_0300081C = v;
+                gAkuAkuFollowFrame = v;
             }
-            ClampTick(self->child, gUnknown_0300081C);
+            ClampTick(self->child, gAkuAkuFollowFrame);
             {
                 s32 idx = self->maskTrailIdx;
 

@@ -56,8 +56,8 @@ extern s32 SetMaskLevel(void *arg0, s32 arg1);
 extern void DispensePolarWumpa(void *selfArg);
 extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
 
-extern u8 gStaticData_0817A728[];
-extern u8 gStaticData_0817A748[];
+extern u8 gPolarPlayerShockPalette[];
+extern u8 gPolarPlayerShockBlinkPalette[];
 
 extern s32 gPolarFinishTimer;
 extern s32 gPolarSteerTime;
@@ -80,8 +80,8 @@ extern void QueueSpriteFrameOam(u32 attr01, u16 attr2, s32 priority);
 extern u8 IsActorMaskAssistDue(void);
 extern s32 GetCellAnimDistance(void);
 extern void UpdateActorBgScroll(s32 x, s32 y);
-extern s32 sub_8029E98(void);
-extern s32 sub_8029EB4(void);
+extern s32 GetActorBgCenterY(void);
+extern s32 GetActorBgCenterX(void);
 extern void *SpawnPolarAkuAku(s32 x, s32 y, s32 z, s32 tier);
 extern void MovePolarAkuAku(void *obj, s32 x, s32 y, s32 z);
 extern s32 AddPolarAkuAkuMask(void *obj);
@@ -208,16 +208,16 @@ void DrawPolarPlayer(struct actor_self *self)
     halfH = h * 4;
     if (self->depth == (*(struct cam_ref **)&self->record)->depth) {
         scale = 0x100;
-        sy = (self->y + sub_8029E98()) >> 8;
-        sx = (self->x + sub_8029EB4()) >> 8;
+        sy = (self->y + GetActorBgCenterY()) >> 8;
+        sx = (self->x + GetActorBgCenterX()) >> 8;
     } else {
         s32 depth = self->depth;
         s32 f;
 
         scale = (depth << 8) / (*(struct cam_ref **)&self->record)->depth;
         f = 0x2f00000 / depth;
-        sy = (((self->y * f) >> 12) + sub_8029E98()) >> 8;
-        sx = (((self->x * f) >> 12) + sub_8029EB4()) >> 8;
+        sy = (((self->y * f) >> 12) + GetActorBgCenterY()) >> 8;
+        sx = (((self->x * f) >> 12) + GetActorBgCenterX()) >> 8;
         attr1 = 0x100;
         if (scale <= 0xff) {
             attr1 |= 0x200;
@@ -288,7 +288,7 @@ s32 HurtPolarPlayer(void *selfArg)
 
         if (tier == 0) {
             PlaySfx(gAudioContext, 0x1b, 0x100);
-            QueueVramDmaTransfer(gStaticData_0817A728, (void *)OBJ_PLTT, 0x20, 0x10);
+            QueueVramDmaTransfer(gPolarPlayerShockPalette, (void *)OBJ_PLTT, 0x20, 0x10);
             {
                 register s32 state asm("r0") = 6;
                 register s32 idx asm("r1") = 5;
@@ -640,7 +640,7 @@ void PolarPlayerStateShocked(void *selfArg)
     s32 counter = self->stateTime;
 
     if (counter > 0x2c) {
-        QueueVramDmaTransfer(gStaticData_0817A728, (void *)OBJ_PLTT, 0x20, 0x10);
+        QueueVramDmaTransfer(gPolarPlayerShockPalette, (void *)OBJ_PLTT, 0x20, 0x10);
         gPolarPauseLocked = 1;
         {
             register s32 state asm("r0") = 6;
@@ -666,9 +666,9 @@ void PolarPlayerStateShocked(void *selfArg)
             LoseLife(gLevelState);
         }
     } else if (counter & 4) {
-        QueueVramDmaTransfer(gStaticData_0817A728, (void *)OBJ_PLTT, 0x20, 0x10);
+        QueueVramDmaTransfer(gPolarPlayerShockPalette, (void *)OBJ_PLTT, 0x20, 0x10);
     } else {
-        QueueVramDmaTransfer(gStaticData_0817A748, (void *)OBJ_PLTT, 0x20, 0x10);
+        QueueVramDmaTransfer(gPolarPlayerShockBlinkPalette, (void *)OBJ_PLTT, 0x20, 0x10);
     }
 }
 

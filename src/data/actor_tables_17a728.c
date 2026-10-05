@@ -8,12 +8,12 @@
 
 /* 16-colour palettes HurtPolarPlayer and PolarPlayerStateShocked (actor_part127.c)
  * queue for OBJ palette 0; PolarPlayerStateShocked blinks between the two. */
-const u16 gStaticData_0817A728[16] = {
+const u16 gPolarPlayerShockPalette[16] = {
     0x03E0, 0x768B, 0x7AF1, 0x4D83, 0x7586, 0x5D24, 0x3D04, 0x6E66,
     0x5589, 0x6A0B, 0x5DE5, 0x7A8F, 0x4231, 0x5B3A, 0x4EB5, 0x6BBE,
 };
 
-const u16 gStaticData_0817A748[16] = {
+const u16 gPolarPlayerShockBlinkPalette[16] = {
     0x03E0, 0x01DD, 0x00DE, 0x0050, 0x00B7, 0x3461, 0x0005, 0x31DB,
     0x18C8, 0x31B1, 0x294C, 0x52D8, 0x3E32, 0x5F3B, 0x4675, 0x6BBF,
 };

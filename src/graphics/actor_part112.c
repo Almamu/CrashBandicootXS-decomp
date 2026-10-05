@@ -41,10 +41,10 @@ extern void *gEntityFlags;
 extern void *gAudioContext;
 extern void *gEntitySpawner;
 extern struct level_layers *gLevelLayers;
-extern s32 gUnknown_030012A0;
-extern s32 gUnknown_030012A4;
-extern s32 gUnknown_030012A8;
-extern s32 gUnknown_030012AC;
+extern s32 gHomingEnemyX;
+extern s32 gHomingEnemyXSaved;
+extern s32 gHomingEnemyY;
+extern s32 gHomingEnemyYSaved;
 
 /* All of the following are still-raw siblings in this same cluster
  * (asm/code_3_2_17.s) - treated as opaque callees for this pass, per
@@ -295,17 +295,17 @@ void UpdateEnemyCtrl(struct part_ctrl *self)
         UpdateEnemyHop(self);
         break;
     case 9:
-        if (!gUnknown_030012A4) {
+        if (!gHomingEnemyXSaved) {
             s32 x = self->target->x;
 
-            gUnknown_030012A0 = x;
-            gUnknown_030012A4 = 1;
+            gHomingEnemyX = x;
+            gHomingEnemyXSaved = 1;
         }
-        if (!gUnknown_030012AC) {
+        if (!gHomingEnemyYSaved) {
             s32 y = self->target->y;
 
-            gUnknown_030012A8 = y;
-            gUnknown_030012AC = 1;
+            gHomingEnemyY = y;
+            gHomingEnemyYSaved = 1;
         }
         UpdateEnemyHomingX(self);
         UpdateEnemyOscillateX(self);
@@ -314,9 +314,9 @@ void UpdateEnemyCtrl(struct part_ctrl *self)
             s32 x, y;
 
             x = t->x;
-            gUnknown_030012A0 = x;
+            gHomingEnemyX = x;
             y = t->y;
-            gUnknown_030012A8 = y;
+            gHomingEnemyY = y;
         }
         break;
     case 11:

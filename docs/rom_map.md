@@ -868,8 +868,8 @@ new mechanisms not previously catalogued in this zone:
   `DrawPolarPlayer` are byte-for-byte identical logic operating on two
   different global sets (`gJetpackPlayerTileBuffer`/`14`/`18` vs.
   `030014A8`/`AC`/`B0` - plausibly a per-player pair). Both project a
-  record's position to screen space (new helpers `sub_8029E98`/
-  `sub_8029EB4`), pack an OAM attribute word via a new call
+  record's position to screen space (new helpers `GetActorBgCenterY`/
+  `GetActorBgCenterX`), pack an OAM attribute word via a new call
   `sub_8028DD8`, and only re-measure/redraw text (`_call_via_r2`) when
   the referenced source object has changed since last frame - a
   caching optimization on top of the already-documented text-drawing
@@ -3788,7 +3788,7 @@ A fork isolated `graphics_loading`'s truly-unsampled remainder - the
 `gSpriteBankTable` spawner family. Of 9 read, **5 turn out to be
 more slots of the unified 92-slot table** (confirmed via raw-pointer
 hits), extending its characterization further: a distinct constructor
-shape registering into a different list (`gUnknown_030012E8`, not the
+shape registering into a different list (`gUpdateOnlyPartList`, not the
 already-documented `EC`/`F0`/`F4`/`F8`), a setter extending
 `gPlayer`'s accessor family, a trampoline, a conditional
 `CreateCrate` type-selector, and a spawn call tying into the

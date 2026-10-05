@@ -63,7 +63,7 @@ neighborhood - the same fields `actor_part16.c`/`actor_part79.c`/
 - `self+0x38` - a one-shot flag, tested only at the very end.
 
 Two file-scope globals not previously declared anywhere in `src/`:
-`gUnknown_03000818`/`gUnknown_0300081C` (both plain `u32`, alongside
+`gAkuAkuInvincibleFrame`/`gAkuAkuFollowFrame` (both plain `u32`, alongside
 the already-`extern`'d `gRoomFrameCount` frame counter and
 `gSpriteRenderer`, a plain `void *` OAM-manager-style global several
 other files already pass to `DrawSprite`).
@@ -79,10 +79,10 @@ chain):
 1. **`mode == 3`** ("just got hit" / stun-entry) - runs a whole block
    skipped entirely for any other mode:
    - Every ~8 frames (`gRoomFrameCount & 7 == 0`), re-rolls
-     `gUnknown_03000818 = (u16)RandRange(2) + 2 - (mirrored ? 2 : 0)`
+     `gAkuAkuInvincibleFrame = (u16)RandRange(2) + 2 - (mirrored ? 2 : 0)`
      - `0`/`1` if `self` is mirrored, `2`/`3` otherwise: which side the
        effect "starts" from, tied to facing.
-   - Clamps `gUnknown_03000818` against the **child's own** hitbox/
+   - Clamps `gAkuAkuInvincibleFrame` against the **child's own** hitbox/
      variant record's `+0x16` byte (`child[0x20] -> *table + child[0x2d]*0x1c`,
      read `[+0x16]` - the same table-dereference chain
      `PlayerHasRoomForAnim`/`PlayerAnimWouldTouchCrate` and `actor_part79.c`'s `KillPlayer`
@@ -127,9 +127,9 @@ chain):
    since only one mode value is active at a time, but structurally
    independent gates):
    - Every ~8 frames (`gRoomFrameCount & 7 == 0`), random-walks
-     `gUnknown_0300081C += RandRange(3) - 1` (so `-1`/`0`/`+1`),
+     `gAkuAkuFollowFrame += RandRange(3) - 1` (so `-1`/`0`/`+1`),
      clamped to `[0, 3]`.
-   - Clamps `gUnknown_0300081C` against the **same child record's**
+   - Clamps `gAkuAkuFollowFrame` against the **same child record's**
      `+0x16` byte (identical clamp-and-store idiom as block 1, just a
      different source counter) and stores the result into the child's
      own `+0x30`.
@@ -221,7 +221,7 @@ conventions:
   every `ldr rX, N` reproduces the ROM's own choice of *which* literal
   pool slot to reload from at each of its (sometimes repeated) use
   sites - `gLevelState`, `gRoomFrameCount`, and
-  `gUnknown_03000818`/`gUnknown_0300081C` are each backed by two (or
+  `gAkuAkuInvincibleFrame`/`gAkuAkuFollowFrame` are each backed by two (or
   three, for `gLevelState`) *separate* pool entries at different
   addresses rather than one shared literal, exactly matching the ROM's
   own conservative-reload pattern (the same "reload from the literal

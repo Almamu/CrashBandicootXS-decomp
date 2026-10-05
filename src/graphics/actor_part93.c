@@ -1,7 +1,7 @@
 #include "core.h"
 
 /* A pair of "target minus current, halved toward zero" getters for this
- * BG2 affine scroll/zoom effect subsystem - gUnknown_030013FC/F8 are
+ * BG2 affine scroll/zoom effect subsystem - gActorBgHeight/F8 are
  * target extents, gActorBgScrollY/D0 the current position (both
  * written by InitActorBgScroll/UpdateActorBgScroll, still raw). The `/2` is written
  * as the ROM's own round-toward-zero shift idiom
@@ -10,17 +10,17 @@
  * division, matching this compiler's own signed-divide-by-2 codegen
  * either way - written explicitly since the standalone idiom is the
  * form seen used throughout this file's cluster. */
-extern s32 gUnknown_030013FC;
+extern s32 gActorBgHeight;
 extern s32 gActorBgScrollY;
-extern s32 gUnknown_030013F8;
+extern s32 gActorBgWidth;
 extern s32 gActorBgScrollX;
 
-s32 sub_8029E98(void)
+s32 GetActorBgCenterY(void)
 {
-    return (gUnknown_030013FC / 2) - gActorBgScrollY;
+    return (gActorBgHeight / 2) - gActorBgScrollY;
 }
 
-s32 sub_8029EB4(void)
+s32 GetActorBgCenterX(void)
 {
-    return (gUnknown_030013F8 / 2) - gActorBgScrollX;
+    return (gActorBgWidth / 2) - gActorBgScrollX;
 }

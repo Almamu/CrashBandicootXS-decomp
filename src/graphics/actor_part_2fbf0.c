@@ -336,7 +336,10 @@ void HomeJetpackBomber(struct jetpack_bomber *self)
     self->base.y += (player->y - self->base.y) >> 5;
 }
 
-void nullsub_28(struct jetpack_bomber *self)
+/* gJetpackBomberStateFuncs[6]: the dying state UpdateJetpackBomber and
+ * DamageJetpackBomber enter; UpdateJetpackBomber destroys the bomber once
+ * its animation is done. Empty. */
+void JetpackBomberStateDying(struct jetpack_bomber *self)
 {
 }
 
@@ -389,7 +392,9 @@ void JetpackBomberStateHome(struct jetpack_bomber *self)
     }
 }
 
-void nullsub_29(struct jetpack_bomber *self)
+/* gJetpackBomberStateFuncs[0], the state of kind-4 bombers: no movement
+ * of its own (UpdateJetpackBomber's common step still applies). Empty. */
+void JetpackBomberStateIdle(struct jetpack_bomber *self)
 {
 }
 

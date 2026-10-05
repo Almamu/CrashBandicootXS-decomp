@@ -12,7 +12,7 @@ of this chunk hit.
 
 ## Matched (real C)
 
-- `nullsub_6`, `CommitActorBgScroll`, `sub_8029E98`, `sub_8029EB4`
+- `nullsub_6`, `CommitActorBgScroll`, `GetActorBgCenterY`, `GetActorBgCenterX`
   (`actor_part92.c`/`actor_part99.c`/`actor_part93.c`) - the tail of
   the BG2-affine scroll/zoom subsystem: a no-op stub, committing the
   scroll accumulators to `REG_BG0*`/`REG_BG1*`, and two small target-

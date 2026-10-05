@@ -161,7 +161,7 @@ function's address (`..._d3a8.s`, `..._d7b0.s`, `..._dd9c.s`,
   slots confirmed" section). Not confidently understood well enough for
   a byte-exact reconstruction attempt without real risk of a wrong
   guess about the 12-byte AABB-record layouts involved (two different
-  shapes are read: a `gStaticData_0817AA98`-rooted static record and
+  shapes are read: a `gYetiCatchBox`-rooted static record and
   `self+0x38`'s own vector, combined via a `MemCopy32`-copied self-
   overlap check whose purpose isn't fully clear) - left raw.
 - **`UpdateYetiPalette`/`UpdateYetiBg2`** (`asm/code_3_2_20_28568_c99c_d7b0.s`)
@@ -172,7 +172,7 @@ function's address (`..._d3a8.s`, `..._d7b0.s`, `..._dd9c.s`,
   color gradient derived from `gYetiPalette` into BG palette RAM
   (`0x050001E0`); `UpdateYetiBg2` seeds/arms companion hardware sound
   registers (`0x0400000C`/`0x04000020`/`0x04000028`/`0x0400002C`) keyed
-  off `gUnknown_030014C1`/`030014C0`. Semantics are legible but the
+  off `gYetiBg2PageFlip`/`030014C0`. Semantics are legible but the
   exact palette-index-packing bit math isn't confidently understood -
   left raw.
 - **`UpdateYeti`'s the same shared AABB-overlap-test tail, factored
@@ -268,7 +268,7 @@ order (matching the ROM's own instruction order, not storage order) -
 the same shape as `struct aabb` (`src/graphics/aabb_util.c`) generalized
 from 2 axes to 3, just never previously named because it hadn't been
 read carefully enough end to end. `UpdateYeti`'s "static" box A is
-`gStaticData_0817AA98`, and `IsTouchingYeti`'s is `gYetiBox` -
+`gYetiCatchBox`, and `IsTouchingYeti`'s is `gYetiBox` -
 confirmed to be the same table, 0xC bytes apart (the record immediately
 before it), by their literal-pool addresses alone. Box A gets
 `gYetiX`/`030014C8` (the gauge object's own tracked X/Z
