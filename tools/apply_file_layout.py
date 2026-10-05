@@ -142,6 +142,7 @@ elif phase == 'refs':
         full[stem(o)[4:]] = stem(n)[4:]
     base = {os.path.basename(o): os.path.basename(n) for o, n in full.items()}
     all_old = [stem(o)[4:] for o, n, g, w in rows]
+    all_new = {stem(n)[4:] for o, n, g, w in rows}
     alt = lambda keys: '|'.join(sorted(map(re.escape, keys), key=len, reverse=True))
     # a C/shell/markdown line continuation: newline, indent, optional comment leader
     CONT = r'(?:[ \t]*\n[ \t]*(?:\*(?!/)|//|#)?[ \t]*)'
@@ -157,7 +158,9 @@ elif phase == 'refs':
     #    also right after another file name and a slash (a.c/b.c)
     pat_full = re.compile(r'(?<![\w.-])((?:[\w./]*/)?)(' + alt(full) + r')\.(c|o|s)\b')
     pat_base = re.compile(r'(?:(?<![\w./-])|(?<=\.[cos]/))(' + alt(base) + r')\.(c|o|s)\b')
-    pat_new = re.compile(r'`?(?<![\w-])(?:[\w./]*/)?(?:%s)\.[cos]\b`?'
+    full_by_base = {os.path.basename(o): n for o, n in full.items()}
+    pat_srcbase = re.compile(r'(?<![\w./-])src/(' + alt(base) + r')\.(c|o|s)\b')
+    pat_new = re.compile(r'[`"]?(?<![\w-])(?:(?:[\w-]+|\.\.?)/)*(?:%s)\.[cos]\b[`"]?'
                          % alt({os.path.basename(v) for v in full.values()}))
     # what may sit between two mentions of one file for the second to be a duplicate
     SEP = re.compile(r'[ \t]*(?:,|/|\band\b|\bor\b)' + CONT + r'?(?:[ \t]*(?:and|or)[ \t]+' + CONT + r'?)?[ \t]*'
@@ -168,7 +171,7 @@ elif phase == 'refs':
         out = []; last = 0; prev = None
         for m in pat_new.finditer(s):
             tok = m.group(0)
-            key = (os.path.basename(tok.strip('`')), tok.startswith('`'))
+            key = (os.path.basename(tok.strip('`"')), tok[0] if tok[0] in '`"' else '')
             if prev and prev[1] == key and SEP.fullmatch(s[prev[0]:m.start()]):
                 out.append(s[last:prev[0]]); last = m.end()
                 continue
@@ -184,10 +187,20 @@ elif phase == 'refs':
             if not hits or not all(h in full for h in hits):
                 return m.group(0)
             news = sorted({full[h] for h in hits})
+            dirs_ = {os.path.dirname(x) for x in news}
             if len(news) == 1:
+                nd, newpat = news[0], os.path.basename(news[0])
+            elif len(dirs_) == 1:
+                # a narrower glob over the new names, if it matches exactly them
                 nd = news[0]
+                newpat = os.path.commonprefix([os.path.basename(x) for x in news]) + '*'
+                if {x for x in all_new if fnmatch.fnmatch(x, os.path.dirname(nd) + '/' + newpat)} != set(news):
+                    nd = None
+            else:
+                nd = None
+            if nd:
                 pre = d[:len(d) - len(sub)] + os.path.dirname(nd) + '/' if sub else ''
-                return pre + os.path.basename(nd) + '.' + ext
+                return pre + newpat + '.' + ext
             warnings.append('%s: wildcard %r -> %s' % (f, m.group(0), ', '.join(x + '.c' for x in news)))
             return m.group(0)
         return pat_glob.sub(g, s)
@@ -202,6 +215,8 @@ elif phase == 'refs':
                 return m.group(0)
             return pre + full[m.group(2)] + '.' + m.group(3)
         s = pat_full.sub(f1, s)
+        # dir-less src/foo.c (a path that was already wrong): give it the new dir
+        s = pat_srcbase.sub(lambda m: 'src/' + full_by_base[m.group(1)] + '.' + m.group(2), s)
         s = pat_base.sub(lambda m: base[m.group(1)] + '.' + m.group(2), s)
         # merged files can now be listed several times in a row: keep one
         return dedupe(s)
@@ -223,7 +238,8 @@ elif phase == 'refs':
     for w in warnings:
         print('fix by hand:', w)
     # old names still followed by an extension, slash, star or backtick
-    left = re.compile(r'(?<![\w-])(' + alt(base) + r')(?=\.[cos]\b|[/*`])')
+    # (but not a same-named `struct foo`)
+    left = re.compile(r'(?<!struct )(?<![\w-])(' + alt(base) + r')(?=\.[cos]\b|[/*`])')
     for f in todo:
         try:
             for i, l in enumerate(open(f), 1):
