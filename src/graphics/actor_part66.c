@@ -4,7 +4,7 @@
  * comment and docs/matching/issue-63-0x08033ef4-actor.md. */
 
 /* Constructor: health defaults to `0x10`, or `0x18` if the
- * `gUnknown_030015AC` singleton hasn't been constructed yet
+ * `gHovercraft` singleton hasn't been constructed yet
  * (`sub_80338DC() == 0`). Forwards to `InitActorPart`, sets the event
  * table (`+0x50=&gStaticData_087E5554`), caches the constructor's 6th
  * (byte, stack-passed) argument at `+0x59`, selects table-index 0 or 1

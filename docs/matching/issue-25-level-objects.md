@@ -31,11 +31,11 @@ tables are gcc 2.x C++ vtables (`{s16 this-adjust; pad; fn}` entries,
 called through the `_call_via_r1`/`AD80`/`AD84`/`AD88` "call via
 r1/r2/r3/r4" thunks), like issue #21's `input_ctrl`.
 
-- **`sub_801A794`/`sub_801A824`/`sub_801A838`**: constructor/destructor
+- **`sub_801A794`/`DestroyDingodile`/`CreateDingodile`**: constructor/destructor
   bodies of two subclasses of the `sub_8017A8C` object family
   (`actor_part27.c`), method tables `gStaticData_087E490C` and
-  `gStaticData_087E4974` (`sub_801A824` is the latter's +0x4C destructor).
-  `sub_801A838` is called from `graphics_loading_21280.c`.
+  `gDingodileVtable` (`DestroyDingodile` is the latter's +0x4C destructor).
+  `CreateDingodile` is called from `graphics_loading_21280.c`.
   `sub_801A7AC` is `sub_8017F14`'s mirror-gated velocity copy, but taking
   its record index straight from `gStaticData_0816C418` (8-byte `{a, b}`
   pairs into the 12-byte `gStaticData_0816C3B8` vectors).

@@ -33,7 +33,7 @@ u8 sub_802C264(void)
  * the accumulator off by `loopThreshold - loopBase` and marks
  * `animDone`. Otherwise (the common per-frame case) just plays a sound
  * cue and fires the vtable's `destroy` method with 3. */
-void sub_802C270(void *selfArg)
+void UpdatePolarCollectedWumpa(void *selfArg)
 {
     struct moving_actor *self = selfArg;
     s32 x, y;

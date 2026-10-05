@@ -53,7 +53,7 @@ extern s32 gHudSlideOffset;
 extern struct pct_source *gActorList;
 extern s32 _call_via_r1(void *self, void *fn);
 extern s32 sub_80233B4(void *state);
-extern s32 sub_8031784(void);
+extern s32 GetAirshipHpPercent(void);
 extern void sub_8008044(struct hud_digit_part *part);
 extern void *gLevelState;
 extern struct hud_pos gHudPartPositions[];
@@ -282,7 +282,7 @@ void UpdateHudWumpa(struct hud_counter *selfArg)
  * 2-digit-vs-1-digit split runs (slots `0xc8*8`/`0xd0*8`/`0xd8*8`,
  * hiding the leading digit via `-1` past `0xe0*8` when unused). Runs a
  * second, independent instance of the same shape right after (guarded
- * by its own `sub_8031784`/`self->field_3c`/`self->field_60`
+ * by its own `GetAirshipHpPercent`/`self->field_3c`/`self->field_60`
  * change-detection triple, slots `0xe8*8` fixed-icon plus
  * `0xf0*8`/`0xf8*8`/`0x80<<4`/`0x84<<4` digit slots) - two independent
  * percent-style readouts sharing one function body. */
@@ -347,7 +347,7 @@ void sub_8027E88(struct hud_counter *selfArg)
 
     if (sub_80233B4(gLevelState) != -1)
         return;
-    if ((self->value_e = sub_8031784()) == -1)
+    if ((self->value_e = GetAirshipHpPercent()) == -1)
         return;
 
     SetPartPos(gHudPartPositions[29].x, gHudPartPositions[29].y, (part = &self->parts[29]));

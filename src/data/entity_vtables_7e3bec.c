@@ -124,14 +124,14 @@ extern void sub_8017AB0();
 extern void sub_8017F5C();
 extern void sub_8017F80();
 extern void sub_8017FD4();
-extern void sub_8018008();
+extern void UpdateTiny();
 extern void sub_80187FC();
 extern void sub_8018858();
 extern void sub_8018884();
 extern void sub_80188E8();
 extern void sub_80188FC();
 extern void sub_8018960();
-extern void sub_80189C4();
+extern void DestroyTiny();
 extern void sub_8018A30();
 extern void sub_8018E4C();
 extern void sub_8019324();
@@ -144,14 +144,14 @@ extern void sub_80196E4();
 extern void sub_8019730();
 extern void sub_8019744();
 extern void sub_80197C8();
-extern void sub_80197F8();
+extern void UpdateDingodile();
 extern void sub_801A114();
 extern void sub_801A2A8();
 extern void sub_801A64C();
 extern void sub_801A73C();
 extern void sub_801A750();
 extern void sub_801A780();
-extern void sub_801A824();
+extern void DestroyDingodile();
 extern void CheckPlatformContact();
 extern void UpdatePlatform();
 extern void sub_801B2C0();
@@ -200,79 +200,79 @@ extern void DestroyActor();
 extern void sub_802B364();
 extern void sub_802B5B4();
 extern void sub_802C19C();
-extern void sub_802C270();
-extern void sub_802C2FC();
-extern void sub_802C394();
-extern void sub_802C464();
-extern void sub_802C4C8();
-extern void sub_802C540();
-extern void sub_802C614();
-extern void sub_802C6C0();
-extern void sub_802C904();
-extern void sub_802C99C();
+extern void UpdatePolarCollectedWumpa();
+extern void DrawPolarCollectedWumpa();
+extern void DestroyPolarCollectedWumpa();
+extern void UpdatePolarWumpa();
+extern void UpdatePolarCrate();
+extern void UpdatePolarQuestionCrate();
+extern void UpdatePolarLifeCrate();
+extern void UpdatePolarNitroCrate();
+extern void UpdatePolarAkuAkuCrate();
+extern void UpdatePolarTimeCrate();
 extern void sub_802CA6C();
-extern void sub_802CAD0();
-extern void sub_802CC9C();
+extern void UpdatePolarBasicCrate();
+extern void UpdatePolarElectricFence();
 extern void sub_802CE10();
 extern void sub_802CE5C();
-extern void sub_802CF30();
-extern void sub_802D0F4();
-extern void sub_802D2DC();
+extern void UpdatePolarPenguin();
+extern void UpdatePolarIcicle();
+extern void UpdatePolarAkuAku();
 extern void sub_802D59C();
 extern void sub_802D600();
-extern void sub_802D6A0();
+extern void UpdatePolarCheckpointCrate();
 extern void sub_802E84C();
 extern void sub_802E9FC();
 extern void sub_802EB78();
 extern void sub_802F47C();
 extern void sub_802F6DC();
-extern void sub_802F97C();
+extern void UpdateJetpackShot();
 extern void sub_802FA34();
-extern void sub_802FA38();
-extern void sub_802FD1C();
+extern void UpdateJetpackPlane();
+extern void DamageJetpackPlane();
 extern void sub_802FF00();
-extern void sub_802FFB8();
-extern void sub_80301EC();
+extern void UpdateJetpackBomber();
+extern void DamageJetpackBomber();
 extern void sub_8030290();
-extern void sub_8030298();
+extern void UpdateJetpackCannonball();
 extern void sub_8030330();
 extern void sub_8030530();
 extern void sub_8030574();
 extern void sub_80306A4();
-extern void sub_80317E0();
-extern void sub_8031858();
+extern void UpdateJetpackBalloon();
+extern void DamageJetpackBalloon();
 extern void sub_8031A64();
-extern void sub_8031A6C();
-extern void sub_8031B0C();
-extern void sub_8031C0C();
-extern void sub_8031D04();
-extern void sub_8031D7C();
-extern void sub_8031E80();
-extern void sub_8031FE8();
+extern void UpdateJetpackBalloonCrate();
+extern void UpdateJetpackQuestionCrate();
+extern void DamageJetpackQuestionCrate();
+extern void UpdateJetpackHealthCrate();
+extern void UpdateJetpackTimeCrate();
+extern void DamageJetpackTimeCrate();
+extern void DamageJetpackHealthCrate();
 extern void sub_8032140();
-extern void sub_8032170();
-extern void sub_80321D0();
+extern void DamageJetpackBalloonCrate();
+extern void DestroyJetpackBalloonCrate();
 extern void sub_8032350();
-extern void sub_8032358();
-extern void sub_80323F4();
+extern void UpdateJetpackParachuteNitro();
+extern void DamageJetpackParachuteNitro();
 extern void sub_8032478();
-extern void sub_8032480();
-extern void sub_80325A4();
+extern void UpdateJetpackRocket();
+extern void DamageJetpackRocket();
 extern void sub_8032680();
-extern void sub_8032688();
+extern void UpdateJetpackRing();
 extern void sub_8032714();
-extern void sub_8032718();
-extern void sub_80327A4();
-extern void sub_803283C();
+extern void UpdateJetpackCollectedWumpa();
+extern void DrawJetpackCollectedWumpa();
+extern void DestroyJetpackCollectedWumpa();
 extern void sub_803290C();
 extern void sub_8032910();
 extern void sub_8032950();
 extern void sub_8032AF0();
-extern void sub_8033AE0();
-extern void sub_8033B44();
+extern void DamageHovercraftCannon();
+extern void UpdateHovercraftCannon();
 extern void sub_8033CF0();
-extern void sub_8033E18();
-extern void sub_8033E80();
+extern void DamageHovercraftLauncher();
+extern void UpdateHovercraftLauncher();
 extern void sub_8034050();
 extern void sub_8034110();
 extern void sub_8034188();
@@ -285,50 +285,50 @@ extern void DestroyLogoActor();
 extern void DestroyLargeFont();
 extern void DestroySmallFont();
 extern void sub_803B0C4();
-extern void sub_803B0F0();
-extern void sub_803B128();
-extern void sub_803B154();
-extern void sub_803B180();
-extern void sub_803B1AC();
-extern void sub_803B1D8();
-extern void sub_803B204();
-extern void sub_803B230();
+extern void UpdatePolarCheckpointText();
+extern void DestroyPolarCheckpointText();
+extern void DestroyPolarWumpa();
+extern void DestroyPolarTimeCrate();
+extern void DestroyPolarQuestionCrate();
+extern void DestroyPolarAkuAkuCrate();
+extern void DestroyPolarNitroCrate();
+extern void DestroyPolarLifeCrate();
 extern void sub_803B25C();
-extern void sub_803B288();
-extern void sub_803B2B4();
-extern void sub_803B2E0();
+extern void DestroyPolarBasicCrate();
+extern void DestroyPolarCrate();
+extern void DestroyPolarElectricFence();
 extern void sub_803B30C();
 extern void sub_803B338();
-extern void sub_803B364();
-extern void sub_803B390();
-extern void sub_803B3BC();
+extern void DestroyPolarPenguin();
+extern void DestroyPolarIcicle();
+extern void DestroyPolarAkuAku();
 extern void sub_803B3E8();
 extern void sub_803B414();
-extern void sub_803B440();
-extern void sub_803B46C();
-extern void sub_803B4EC();
+extern void DestroyPolarCheckpointCrate();
+extern void DrawJetpackCheckpointText();
+extern void UpdateJetpackCheckpointText();
 extern void sub_803B54C();
-extern void sub_803B550();
-extern void sub_803B57C();
+extern void DestroyJetpackCheckpointText();
+extern void UpdateJetpackExplosion();
 extern void sub_803B5AC();
-extern void sub_803B5B0();
-extern void sub_803B5DC();
+extern void DestroyJetpackExplosion();
+extern void GetActorHp();
 extern void sub_803B5E4();
-extern void sub_803B5E8();
-extern void sub_803B614();
-extern void sub_803B640();
-extern void sub_803B66C();
+extern void DestroyJetpackShot();
+extern void DestroyJetpackPlane();
+extern void DestroyJetpackBomber();
+extern void DestroyJetpackCannonball();
 extern void sub_803B698();
-extern void sub_803B6C4();
-extern void sub_803B6F0();
-extern void sub_803B710();
-extern void sub_803B730();
-extern void sub_803B750();
-extern void sub_803B77C();
-extern void sub_803B7A8();
+extern void DestroyJetpackBalloon();
+extern void DestroyJetpackHealthCrate();
+extern void DestroyJetpackTimeCrate();
+extern void DestroyJetpackQuestionCrate();
+extern void DestroyJetpackParachuteNitro();
+extern void DestroyJetpackRocket();
+extern void DestroyJetpackRing();
 extern void sub_803B7D4();
-extern void sub_803B800();
-extern void sub_803B82C();
+extern void DestroyHovercraftCannon();
+extern void DestroyHovercraftLauncher();
 extern void sub_803B858();
 extern void sub_803B884();
 
@@ -731,11 +731,11 @@ const struct vtable_slot gStaticData_087E44FC[13] = {
     VTABLE_SLOT(sub_800B704),
 };
 
-/* Used by actor_part_18008.c, actor_part_188d0.c (sub_80189C4,
- * sub_80189EC). */
-const struct vtable_slot gStaticData_087E4564[13] = {
+/* Used by actor_part_18008.c, actor_part_188d0.c (DestroyTiny,
+ * CreateTiny). */
+const struct vtable_slot gTinyVtable[13] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_8018008),
+    VTABLE_SLOT(UpdateTiny),
     VTABLE_SLOT(sub_8017A70),
     VTABLE_SLOT(sub_800B8A4),
     VTABLE_SLOT(sub_800B698),
@@ -743,7 +743,7 @@ const struct vtable_slot gStaticData_087E4564[13] = {
     VTABLE_SLOT(sub_800B6D0),
     VTABLE_SLOT(sub_800B734),
     VTABLE_SLOT(sub_800B6A0),
-    VTABLE_SLOT(sub_80189C4),
+    VTABLE_SLOT(DestroyTiny),
     VTABLE_SLOT(sub_800B86C),
     VTABLE_SLOT(sub_800B838),
     VTABLE_SLOT(sub_800B704),
@@ -903,11 +903,11 @@ const struct vtable_slot gStaticData_087E490C[13] = {
     VTABLE_SLOT(sub_800B704),
 };
 
-/* Used by actor_part_1967c.c, actor_part_1a794.c (sub_801A824),
+/* Used by actor_part_1967c.c, actor_part_1a794.c (DestroyDingodile),
  * gobj_1a794.h. */
-const struct vtable_slot gStaticData_087E4974[13] = {
+const struct vtable_slot gDingodileVtable[13] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_80197F8),
+    VTABLE_SLOT(UpdateDingodile),
     VTABLE_SLOT(sub_8017A70),
     VTABLE_SLOT(sub_800B8A4),
     VTABLE_SLOT(sub_800B698),
@@ -915,7 +915,7 @@ const struct vtable_slot gStaticData_087E4974[13] = {
     VTABLE_SLOT(sub_800B6D0),
     VTABLE_SLOT(sub_800B734),
     VTABLE_SLOT(sub_800B6A0),
-    VTABLE_SLOT(sub_801A824),
+    VTABLE_SLOT(DestroyDingodile),
     VTABLE_SLOT(sub_800B86C),
     VTABLE_SLOT(sub_800B838),
     VTABLE_SLOT(sub_800B704),
@@ -1114,14 +1114,14 @@ const struct vtable_slot gFontVtable[9] = {
  * before unlinking the actor.
  *
  * Used by counter_selector.c (DestroyLogoActor), actor_anim.c (sub_803B0C4,
- * sub_803B128, sub_803B154, sub_803B180, sub_803B1AC, sub_803B1D8,
- * sub_803B204, sub_803B230, sub_803B25C, sub_803B288, sub_803B2B4,
- * sub_803B2E0, sub_803B30C, sub_803B338, sub_803B364, sub_803B390,
- * sub_803B3BC, sub_803B3E8, sub_803B414, sub_803B440, sub_803B550,
- * sub_803B5B0, sub_803B5E8, sub_803B614, sub_803B640, sub_803B66C,
- * sub_803B698, sub_803B6C4, sub_803B750, sub_803B77C, sub_803B7A8,
- * sub_803B7D4, sub_803B800, sub_803B82C, sub_803B858, sub_803B884),
- * actor_part129.c, actor_part130.c (sub_803283C), actor_part19.c,
+ * DestroyPolarCheckpointText, DestroyPolarWumpa, DestroyPolarTimeCrate, DestroyPolarQuestionCrate, DestroyPolarAkuAkuCrate,
+ * DestroyPolarNitroCrate, DestroyPolarLifeCrate, sub_803B25C, DestroyPolarBasicCrate, DestroyPolarCrate,
+ * DestroyPolarElectricFence, sub_803B30C, sub_803B338, DestroyPolarPenguin, DestroyPolarIcicle,
+ * DestroyPolarAkuAku, sub_803B3E8, sub_803B414, DestroyPolarCheckpointCrate, DestroyJetpackCheckpointText,
+ * DestroyJetpackExplosion, DestroyJetpackShot, DestroyJetpackPlane, DestroyJetpackBomber, DestroyJetpackCannonball,
+ * sub_803B698, DestroyJetpackBalloon, DestroyJetpackParachuteNitro, DestroyJetpackRocket, DestroyJetpackRing,
+ * sub_803B7D4, DestroyHovercraftCannon, DestroyHovercraftLauncher, sub_803B858, sub_803B884),
+ * actor_part129.c, actor_part130.c (DestroyJetpackCollectedWumpa), actor_part19.c,
  * actor_part19c.c, actor_part44.c, actor_part50.c, actor_part52.c. */
 const struct vtable_slot gActorVtable[4] = {
     VTABLE_SLOT(NULL),
@@ -1138,11 +1138,11 @@ const struct vtable_slot gStaticData_087E4E14[4] = {
     VTABLE_SLOT(DrawActor),
 };
 
-/* Used by actor_part_2ac28.c (sub_802B12C). */
-const struct vtable_slot gStaticData_087E4E34[4] = {
+/* Used by actor_part_2ac28.c (CreatePolarCheckpointText). */
+const struct vtable_slot gPolarCheckpointTextVtable[4] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_803B128),
-    VTABLE_SLOT(sub_803B0F0),
+    VTABLE_SLOT(DestroyPolarCheckpointText),
+    VTABLE_SLOT(UpdatePolarCheckpointText),
     VTABLE_SLOT(DrawActor),
 };
 
@@ -1156,58 +1156,58 @@ const struct vtable_slot gStaticData_087E4E54[4] = {
 };
 
 /* Used by actor_part19.c, actor_part19c.c, actor_part19c2.c. */
-const struct vtable_slot gStaticData_087E4E74[4] = {
+const struct vtable_slot gPolarCollectedWumpaVtable[4] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_802C394),
-    VTABLE_SLOT(sub_802C270),
-    VTABLE_SLOT(sub_802C2FC),
+    VTABLE_SLOT(DestroyPolarCollectedWumpa),
+    VTABLE_SLOT(UpdatePolarCollectedWumpa),
+    VTABLE_SLOT(DrawPolarCollectedWumpa),
 };
 
 /* Used by actor_part19.c, actor_part19g.c, actor_part_2ac28.c. */
-const struct vtable_slot gStaticData_087E4E94[4] = {
+const struct vtable_slot gPolarWumpaVtable[4] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_803B154),
-    VTABLE_SLOT(sub_802C464),
+    VTABLE_SLOT(DestroyPolarWumpa),
+    VTABLE_SLOT(UpdatePolarWumpa),
     VTABLE_SLOT(DrawActor),
 };
 
 /* Used by actor_part19i.c, actor_part_2ac28.c. */
-const struct vtable_slot gStaticData_087E4EB4[4] = {
+const struct vtable_slot gPolarTimeCrateVtable[4] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_803B180),
-    VTABLE_SLOT(sub_802C99C),
+    VTABLE_SLOT(DestroyPolarTimeCrate),
+    VTABLE_SLOT(UpdatePolarTimeCrate),
     VTABLE_SLOT(DrawActor),
 };
 
 /* Used by actor_part19i.c, actor_part_2ac28.c. */
-const struct vtable_slot gStaticData_087E4ED4[4] = {
+const struct vtable_slot gPolarQuestionCrateVtable[4] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_803B1AC),
-    VTABLE_SLOT(sub_802C540),
+    VTABLE_SLOT(DestroyPolarQuestionCrate),
+    VTABLE_SLOT(UpdatePolarQuestionCrate),
     VTABLE_SLOT(DrawActor),
 };
 
 /* Used by actor_part19i.c, actor_part_2ac28.c. */
-const struct vtable_slot gStaticData_087E4EF4[4] = {
+const struct vtable_slot gPolarAkuAkuCrateVtable[4] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_803B1D8),
-    VTABLE_SLOT(sub_802C904),
+    VTABLE_SLOT(DestroyPolarAkuAkuCrate),
+    VTABLE_SLOT(UpdatePolarAkuAkuCrate),
     VTABLE_SLOT(DrawActor),
 };
 
 /* Used by actor_part19i.c, actor_part_2ac28.c. */
-const struct vtable_slot gStaticData_087E4F14[4] = {
+const struct vtable_slot gPolarNitroCrateVtable[4] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_803B204),
-    VTABLE_SLOT(sub_802C6C0),
+    VTABLE_SLOT(DestroyPolarNitroCrate),
+    VTABLE_SLOT(UpdatePolarNitroCrate),
     VTABLE_SLOT(DrawActor),
 };
 
 /* Used by actor_part19i.c, actor_part_2ac28.c. */
-const struct vtable_slot gStaticData_087E4F34[4] = {
+const struct vtable_slot gPolarLifeCrateVtable[4] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_803B230),
-    VTABLE_SLOT(sub_802C614),
+    VTABLE_SLOT(DestroyPolarLifeCrate),
+    VTABLE_SLOT(UpdatePolarLifeCrate),
     VTABLE_SLOT(DrawActor),
 };
 
@@ -1220,26 +1220,26 @@ const struct vtable_slot gStaticData_087E4F54[4] = {
 };
 
 /* Used by actor_part19i.c, actor_part_2ac28.c. */
-const struct vtable_slot gStaticData_087E4F74[4] = {
+const struct vtable_slot gPolarBasicCrateVtable[4] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_803B288),
-    VTABLE_SLOT(sub_802CAD0),
+    VTABLE_SLOT(DestroyPolarBasicCrate),
+    VTABLE_SLOT(UpdatePolarBasicCrate),
     VTABLE_SLOT(DrawActor),
 };
 
 /* Used by actor_part19i.c. */
-const struct vtable_slot gStaticData_087E4F94[4] = {
+const struct vtable_slot gPolarCrateVtable[4] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_803B2B4),
-    VTABLE_SLOT(sub_802C4C8),
+    VTABLE_SLOT(DestroyPolarCrate),
+    VTABLE_SLOT(UpdatePolarCrate),
     VTABLE_SLOT(DrawActor),
 };
 
 /* Used by actor_part126.c. */
-const struct vtable_slot gStaticData_087E4FB4[4] = {
+const struct vtable_slot gPolarElectricFenceVtable[4] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_803B2E0),
-    VTABLE_SLOT(sub_802CC9C),
+    VTABLE_SLOT(DestroyPolarElectricFence),
+    VTABLE_SLOT(UpdatePolarElectricFence),
     VTABLE_SLOT(DrawActor),
 };
 
@@ -1260,26 +1260,26 @@ const struct vtable_slot gStaticData_087E4FF4[4] = {
 };
 
 /* Used by actor_part126.c. */
-const struct vtable_slot gStaticData_087E5014[4] = {
+const struct vtable_slot gPolarPenguinVtable[4] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_803B364),
-    VTABLE_SLOT(sub_802CF30),
+    VTABLE_SLOT(DestroyPolarPenguin),
+    VTABLE_SLOT(UpdatePolarPenguin),
     VTABLE_SLOT(DrawActor),
 };
 
 /* Used by actor_part126.c. */
-const struct vtable_slot gStaticData_087E5034[4] = {
+const struct vtable_slot gPolarIcicleVtable[4] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_803B390),
-    VTABLE_SLOT(sub_802D0F4),
+    VTABLE_SLOT(DestroyPolarIcicle),
+    VTABLE_SLOT(UpdatePolarIcicle),
     VTABLE_SLOT(DrawActor),
 };
 
 /* Used by actor_part58.c. */
-const struct vtable_slot gStaticData_087E5054[4] = {
+const struct vtable_slot gPolarAkuAkuVtable[4] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_803B3BC),
-    VTABLE_SLOT(sub_802D2DC),
+    VTABLE_SLOT(DestroyPolarAkuAku),
+    VTABLE_SLOT(UpdatePolarAkuAku),
     VTABLE_SLOT(DrawActor),
 };
 
@@ -1300,33 +1300,33 @@ const struct vtable_slot gStaticData_087E5094[4] = {
 };
 
 /* Used by actor_part58.c. */
-const struct vtable_slot gStaticData_087E50B4[4] = {
+const struct vtable_slot gPolarCheckpointCrateVtable[4] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_803B440),
-    VTABLE_SLOT(sub_802D6A0),
+    VTABLE_SLOT(DestroyPolarCheckpointCrate),
+    VTABLE_SLOT(UpdatePolarCheckpointCrate),
     VTABLE_SLOT(DrawActor),
 };
 
-/* Used by actor_part128.c (sub_802E3CC). */
-const struct vtable_slot gStaticData_087E50D4[7] = {
+/* Used by actor_part128.c (CreateJetpackCheckpointText). */
+const struct vtable_slot gJetpackCheckpointTextVtable[7] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_803B550),
-    VTABLE_SLOT(sub_803B4EC),
-    VTABLE_SLOT(sub_803B46C),
+    VTABLE_SLOT(DestroyJetpackCheckpointText),
+    VTABLE_SLOT(UpdateJetpackCheckpointText),
+    VTABLE_SLOT(DrawJetpackCheckpointText),
     VTABLE_SLOT(nullsub_44),
     VTABLE_SLOT(sub_803B54C),
-    VTABLE_SLOT(sub_803B5DC),
+    VTABLE_SLOT(GetActorHp),
 };
 
-/* Used by actor_part128.c (sub_802E420). */
-const struct vtable_slot gStaticData_087E510C[7] = {
+/* Used by actor_part128.c (CreateJetpackExplosion). */
+const struct vtable_slot gJetpackExplosionVtable[7] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_803B5B0),
-    VTABLE_SLOT(sub_803B57C),
+    VTABLE_SLOT(DestroyJetpackExplosion),
+    VTABLE_SLOT(UpdateJetpackExplosion),
     VTABLE_SLOT(DrawActor),
     VTABLE_SLOT(nullsub_44),
     VTABLE_SLOT(sub_803B5AC),
-    VTABLE_SLOT(sub_803B5DC),
+    VTABLE_SLOT(GetActorHp),
 };
 
 /* Used by actor_part128.c (sub_802E710), actor_part44.c. */
@@ -1341,47 +1341,47 @@ const struct vtable_slot gStaticData_087E5144[7] = {
 };
 
 /* Used by actor_part45c.c. */
-const struct vtable_slot gStaticData_087E517C[7] = {
+const struct vtable_slot gJetpackShotVtable[7] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_803B5E8),
-    VTABLE_SLOT(sub_802F97C),
+    VTABLE_SLOT(DestroyJetpackShot),
+    VTABLE_SLOT(UpdateJetpackShot),
     VTABLE_SLOT(DrawActor),
     VTABLE_SLOT(nullsub_44),
     VTABLE_SLOT(sub_802FA34),
-    VTABLE_SLOT(sub_803B5DC),
+    VTABLE_SLOT(GetActorHp),
 };
 
-/* Used by actor_part_2fbf0.c (sub_802FD8C). */
-const struct vtable_slot gStaticData_087E51B4[7] = {
+/* Used by actor_part_2fbf0.c (CreateJetpackPlane). */
+const struct vtable_slot gJetpackPlaneVtable[7] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_803B614),
-    VTABLE_SLOT(sub_802FA38),
+    VTABLE_SLOT(DestroyJetpackPlane),
+    VTABLE_SLOT(UpdateJetpackPlane),
     VTABLE_SLOT(DrawActor),
-    VTABLE_SLOT(sub_802FD1C),
+    VTABLE_SLOT(DamageJetpackPlane),
     VTABLE_SLOT(sub_802FF00),
-    VTABLE_SLOT(sub_803B5DC),
+    VTABLE_SLOT(GetActorHp),
 };
 
-/* Used by actor_part_2fbf0.c (sub_802FF08). */
-const struct vtable_slot gStaticData_087E51EC[7] = {
+/* Used by actor_part_2fbf0.c (CreateJetpackBomber). */
+const struct vtable_slot gJetpackBomberVtable[7] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_803B640),
-    VTABLE_SLOT(sub_802FFB8),
+    VTABLE_SLOT(DestroyJetpackBomber),
+    VTABLE_SLOT(UpdateJetpackBomber),
     VTABLE_SLOT(DrawActor),
-    VTABLE_SLOT(sub_80301EC),
+    VTABLE_SLOT(DamageJetpackBomber),
     VTABLE_SLOT(sub_8030290),
-    VTABLE_SLOT(sub_803B5DC),
+    VTABLE_SLOT(GetActorHp),
 };
 
-/* Used by actor_part_2fbf0.c (sub_8030300). */
-const struct vtable_slot gStaticData_087E5224[7] = {
+/* Used by actor_part_2fbf0.c (CreateJetpackCannonball). */
+const struct vtable_slot gJetpackCannonballVtable[7] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_803B66C),
-    VTABLE_SLOT(sub_8030298),
+    VTABLE_SLOT(DestroyJetpackCannonball),
+    VTABLE_SLOT(UpdateJetpackCannonball),
     VTABLE_SLOT(DrawActor),
     VTABLE_SLOT(nullsub_44),
     VTABLE_SLOT(sub_8030330),
-    VTABLE_SLOT(sub_803B5DC),
+    VTABLE_SLOT(GetActorHp),
 };
 
 /* Used by actor_part20d.c. */
@@ -1392,110 +1392,110 @@ const struct vtable_slot gStaticData_087E525C[7] = {
     VTABLE_SLOT(DrawActor),
     VTABLE_SLOT(sub_8030530),
     VTABLE_SLOT(sub_80306A4),
-    VTABLE_SLOT(sub_803B5DC),
+    VTABLE_SLOT(GetActorHp),
 };
 
 /* Used by actor_part125.c. */
-const struct vtable_slot gStaticData_087E5294[7] = {
+const struct vtable_slot gJetpackBalloonVtable[7] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_803B6C4),
-    VTABLE_SLOT(sub_80317E0),
+    VTABLE_SLOT(DestroyJetpackBalloon),
+    VTABLE_SLOT(UpdateJetpackBalloon),
     VTABLE_SLOT(DrawActor),
-    VTABLE_SLOT(sub_8031858),
+    VTABLE_SLOT(DamageJetpackBalloon),
     VTABLE_SLOT(sub_8031A64),
-    VTABLE_SLOT(sub_803B5DC),
+    VTABLE_SLOT(GetActorHp),
 };
 
 /* Used by actor_part129.c. */
-const struct vtable_slot gStaticData_087E52CC[8] = {
+const struct vtable_slot gJetpackHealthCrateVtable[8] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_803B6F0),
-    VTABLE_SLOT(sub_8031D04),
+    VTABLE_SLOT(DestroyJetpackHealthCrate),
+    VTABLE_SLOT(UpdateJetpackHealthCrate),
     VTABLE_SLOT(DrawActor),
-    VTABLE_SLOT(sub_8031FE8),
+    VTABLE_SLOT(DamageJetpackHealthCrate),
     VTABLE_SLOT(sub_8032350),
-    VTABLE_SLOT(sub_803B5DC),
+    VTABLE_SLOT(GetActorHp),
     VTABLE_SLOT(sub_8032140),
 };
 
 /* Used by actor_part129.c. */
-const struct vtable_slot gStaticData_087E530C[8] = {
+const struct vtable_slot gJetpackTimeCrateVtable[8] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_803B710),
-    VTABLE_SLOT(sub_8031D7C),
+    VTABLE_SLOT(DestroyJetpackTimeCrate),
+    VTABLE_SLOT(UpdateJetpackTimeCrate),
     VTABLE_SLOT(DrawActor),
-    VTABLE_SLOT(sub_8031E80),
+    VTABLE_SLOT(DamageJetpackTimeCrate),
     VTABLE_SLOT(sub_8032350),
-    VTABLE_SLOT(sub_803B5DC),
+    VTABLE_SLOT(GetActorHp),
     VTABLE_SLOT(sub_8032140),
 };
 
 /* Used by actor_part129.c. */
-const struct vtable_slot gStaticData_087E534C[8] = {
+const struct vtable_slot gJetpackQuestionCrateVtable[8] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_803B730),
-    VTABLE_SLOT(sub_8031B0C),
+    VTABLE_SLOT(DestroyJetpackQuestionCrate),
+    VTABLE_SLOT(UpdateJetpackQuestionCrate),
     VTABLE_SLOT(DrawActor),
-    VTABLE_SLOT(sub_8031C0C),
+    VTABLE_SLOT(DamageJetpackQuestionCrate),
     VTABLE_SLOT(sub_8032350),
-    VTABLE_SLOT(sub_803B5DC),
+    VTABLE_SLOT(GetActorHp),
     VTABLE_SLOT(sub_8032140),
 };
 
 /* Used by actor_part129.c. */
-const struct vtable_slot gStaticData_087E538C[8] = {
+const struct vtable_slot gJetpackBalloonCrateVtable[8] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_80321D0),
-    VTABLE_SLOT(sub_8031A6C),
+    VTABLE_SLOT(DestroyJetpackBalloonCrate),
+    VTABLE_SLOT(UpdateJetpackBalloonCrate),
     VTABLE_SLOT(DrawActor),
-    VTABLE_SLOT(sub_8032170),
+    VTABLE_SLOT(DamageJetpackBalloonCrate),
     VTABLE_SLOT(sub_8032350),
-    VTABLE_SLOT(sub_803B5DC),
+    VTABLE_SLOT(GetActorHp),
     VTABLE_SLOT(sub_8032140),
 };
 
-/* Used by actor_part129.c (sub_8032440). */
-const struct vtable_slot gStaticData_087E53CC[7] = {
+/* Used by actor_part129.c (CreateJetpackParachuteNitro). */
+const struct vtable_slot gJetpackParachuteNitroVtable[7] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_803B750),
-    VTABLE_SLOT(sub_8032358),
+    VTABLE_SLOT(DestroyJetpackParachuteNitro),
+    VTABLE_SLOT(UpdateJetpackParachuteNitro),
     VTABLE_SLOT(DrawActor),
-    VTABLE_SLOT(sub_80323F4),
+    VTABLE_SLOT(DamageJetpackParachuteNitro),
     VTABLE_SLOT(sub_8032478),
-    VTABLE_SLOT(sub_803B5DC),
+    VTABLE_SLOT(GetActorHp),
 };
 
 /* Used by actor_part129.c. */
-const struct vtable_slot gStaticData_087E5404[7] = {
+const struct vtable_slot gJetpackRocketVtable[7] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_803B77C),
-    VTABLE_SLOT(sub_8032480),
+    VTABLE_SLOT(DestroyJetpackRocket),
+    VTABLE_SLOT(UpdateJetpackRocket),
     VTABLE_SLOT(DrawActor),
-    VTABLE_SLOT(sub_80325A4),
+    VTABLE_SLOT(DamageJetpackRocket),
     VTABLE_SLOT(sub_8032680),
-    VTABLE_SLOT(sub_803B5DC),
+    VTABLE_SLOT(GetActorHp),
 };
 
 /* Used by actor_part130.c. */
-const struct vtable_slot gStaticData_087E543C[7] = {
+const struct vtable_slot gJetpackRingVtable[7] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_803B7A8),
-    VTABLE_SLOT(sub_8032688),
+    VTABLE_SLOT(DestroyJetpackRing),
+    VTABLE_SLOT(UpdateJetpackRing),
     VTABLE_SLOT(DrawActor),
     VTABLE_SLOT(nullsub_44),
     VTABLE_SLOT(sub_8032714),
-    VTABLE_SLOT(sub_803B5DC),
+    VTABLE_SLOT(GetActorHp),
 };
 
-/* Used by actor_part130.c (sub_803283C). */
-const struct vtable_slot gStaticData_087E5474[7] = {
+/* Used by actor_part130.c (DestroyJetpackCollectedWumpa). */
+const struct vtable_slot gJetpackCollectedWumpaVtable[7] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_803283C),
-    VTABLE_SLOT(sub_8032718),
-    VTABLE_SLOT(sub_80327A4),
+    VTABLE_SLOT(DestroyJetpackCollectedWumpa),
+    VTABLE_SLOT(UpdateJetpackCollectedWumpa),
+    VTABLE_SLOT(DrawJetpackCollectedWumpa),
     VTABLE_SLOT(nullsub_44),
     VTABLE_SLOT(sub_803290C),
-    VTABLE_SLOT(sub_803B5DC),
+    VTABLE_SLOT(GetActorHp),
 };
 
 /* Used by actor_part130.c. */
@@ -1506,29 +1506,29 @@ const struct vtable_slot gStaticData_087E54AC[7] = {
     VTABLE_SLOT(DrawActor),
     VTABLE_SLOT(sub_8032910),
     VTABLE_SLOT(sub_8032AF0),
-    VTABLE_SLOT(sub_803B5DC),
+    VTABLE_SLOT(GetActorHp),
 };
 
 /* Used by actor_part32.c. */
-const struct vtable_slot gStaticData_087E54E4[7] = {
+const struct vtable_slot gHovercraftCannonVtable[7] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_803B800),
-    VTABLE_SLOT(sub_8033B44),
+    VTABLE_SLOT(DestroyHovercraftCannon),
+    VTABLE_SLOT(UpdateHovercraftCannon),
     VTABLE_SLOT(DrawActor),
-    VTABLE_SLOT(sub_8033AE0),
+    VTABLE_SLOT(DamageHovercraftCannon),
     VTABLE_SLOT(sub_8033CF0),
-    VTABLE_SLOT(sub_803B5DC),
+    VTABLE_SLOT(GetActorHp),
 };
 
 /* Used by actor_part63.c. */
-const struct vtable_slot gStaticData_087E551C[7] = {
+const struct vtable_slot gHovercraftLauncherVtable[7] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_803B82C),
-    VTABLE_SLOT(sub_8033E80),
+    VTABLE_SLOT(DestroyHovercraftLauncher),
+    VTABLE_SLOT(UpdateHovercraftLauncher),
     VTABLE_SLOT(DrawActor),
-    VTABLE_SLOT(sub_8033E18),
+    VTABLE_SLOT(DamageHovercraftLauncher),
     VTABLE_SLOT(sub_8034050),
-    VTABLE_SLOT(sub_803B5DC),
+    VTABLE_SLOT(GetActorHp),
 };
 
 /* Used by actor_part65.c, actor_part66.c (sub_8034058), actor_part67.c. */
@@ -1539,7 +1539,7 @@ const struct vtable_slot gStaticData_087E5554[7] = {
     VTABLE_SLOT(DrawActor),
     VTABLE_SLOT(sub_8034110),
     VTABLE_SLOT(sub_8034264),
-    VTABLE_SLOT(sub_803B5DC),
+    VTABLE_SLOT(GetActorHp),
 };
 
 /* Used by actor_part69.c. */
@@ -1550,7 +1550,7 @@ const struct vtable_slot gStaticData_087E558C[7] = {
     VTABLE_SLOT(DrawActor),
     VTABLE_SLOT(nullsub_38),
     VTABLE_SLOT(sub_803436C),
-    VTABLE_SLOT(sub_803B5DC),
+    VTABLE_SLOT(GetActorHp),
 };
 
 /* Used by counter_selector.c (DestroyLogoActor), graphics_loading_35780.c,

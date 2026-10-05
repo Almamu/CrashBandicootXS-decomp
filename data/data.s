@@ -26,7 +26,7 @@ gStaticData_0814174C:
 
 @ gStaticData_0815A050: src/data/rle_sprites_15a050.c
 
-@ gStaticData_08167AD4..gSineTable: src/data/boss_pictures_167ad4.c
+@ gAirshipPalette..gSineTable: src/data/boss_pictures_167ad4.c
 
 @ gSongTable: src/data/song_table_16aa20.c
 
@@ -104,13 +104,13 @@ gSfxTable:
 
 @ gStaticData_0817A728..gStaticData_0817A7F8: src/data/actor_tables_17a728.c
 
-@ gStaticData_0817A840: src/data/actor_state_fn_17a840.c
+@ gYetiStateFuncs: src/data/actor_state_fn_17a840.c
 
 @ gStaticData_0817A850: src/data/anim_frames_17a850.c
 
 @ gStaticData_0817A880: src/data/frame_table_17a880.c
 
-@ gStaticData_0817AA6C..0x0817C1C0 (categories 3-6 family data): src/data/anim_family_17aa6c.c
+@ gYetiPalette..0x0817C1C0 (categories 3-6 family data): src/data/anim_family_17aa6c.c
 
 @ gStaticData_0817C1C0: src/data/actor_pmf_17c1c0.c
 
@@ -120,7 +120,7 @@ gSfxTable:
 
 @ gStaticData_0817C2D0..gStaticData_0817C3E4: src/data/weapon_kind_17c2d0.c
 
-@ gStaticData_0817C3FC..gStaticData_0817C42C: src/data/actor_state_17c3fc.c
+@ gAirshipStateFuncs..gStaticData_0817C42C: src/data/actor_state_17c3fc.c
 
 @ gStaticData_0817C444: src/data/actor_box_17c444.c
 
@@ -128,7 +128,7 @@ gSfxTable:
 
 @ gStaticData_0817C460..gStaticData_0817C4BC: src/data/singleton_kind_17c460.c
 
-@ gStaticData_0817C4C8..gStaticData_0817C4F8: src/data/actor_state_17c4c8.c
+@ gHovercraftStateFuncs..gStaticData_0817C4F8: src/data/actor_state_17c4c8.c
 
 @ gStaticData_0817C510..gStaticData_0817C572: src/data/hud_palettes_17c510.c
 

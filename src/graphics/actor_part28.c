@@ -9,22 +9,22 @@
  * "part table" pointer at `+0`, and an event/trampoline table pointer
  * at `+0x50` - plus a health-like countdown at `+0x54` and a death/
  * "dead" byte flag at `+0x6c`. These functions also drive a *singleton*
- * object reached through the global pointer `gUnknown_030015AC` (not a
+ * object reached through the global pointer `gHovercraft` (not a
  * per-instance `self`) - see docs/rom_map.md, "Follow-up reads
- * `sub_80339DC`'s helper cluster and `sub_8033470`" and "`sub_80331BC`
+ * `sub_80339DC`'s helper cluster and `UpdateHovercraft`" and "`CreateHovercraft`
  * closes a long-open question: the missing singleton constructor". Most
- * of `gUnknown_030015AC`'s own accessors (`sub_8033880`-`sub_803390C`)
+ * of `gHovercraft`'s own accessors (`sub_8033880`-`sub_803390C`)
  * are trivial one-line getters for its fields; `sub_803390C`/
  * `sub_803395C` are the same state-transition/animation-frame-reset
  * sequence already documented for the boss cluster's
- * `sub_8030530`/`sub_8030C98`/`sub_803146C`. See
+ * `sub_8030530`/`AirshipStateFall`/`DamageAirship`. See
  * docs/matching/issue-62-0x08033804-actor.md. */
 
-extern struct actor_self *gUnknown_030015AC;
-extern s32 gUnknown_030015B0;
-extern s32 gUnknown_030015B4;
-extern s32 gUnknown_030015B8;
-extern s32 gUnknown_030015BC;
+extern struct actor_self *gHovercraft;
+extern s32 gHovercraftState;
+extern s32 gHovercraftX;
+extern s32 gHovercraftY;
+extern s32 gHovercraftZ;
 extern s32 gUnknown_030015C8;
 extern s32 gUnknown_030015CC;
 extern s32 gUnknown_030015D0;
@@ -114,47 +114,47 @@ void *sub_80338C4(void)
     return gUnknown_030015DC;
 }
 
-/* Constant getter - returns `gUnknown_030015B0` (the singleton's
+/* Constant getter - returns `gHovercraftState` (the singleton's
  * current animation "kind" index). */
 s32 sub_80338D0(void)
 {
-    return gUnknown_030015B0;
+    return gHovercraftState;
 }
 
 /* Constant getter - returns `gUnknown_030015D8` (set to the singleton
- * `self` pointer by its constructor, `sub_80331BC`). */
+ * `self` pointer by its constructor, `CreateHovercraft`). */
 void *sub_80338DC(void)
 {
     return gUnknown_030015D8;
 }
 
 /* Constant getter - returns the singleton's Z position field
- * (`gUnknown_030015BC`). */
+ * (`gHovercraftZ`). */
 s32 sub_80338E8(void)
 {
-    return gUnknown_030015BC;
+    return gHovercraftZ;
 }
 
 /* Constant getter - returns the singleton's Y position field
- * (`gUnknown_030015B8`). */
+ * (`gHovercraftY`). */
 s32 sub_80338F4(void)
 {
-    return gUnknown_030015B8;
+    return gHovercraftY;
 }
 
 /* Constant getter - returns the singleton's X position field
- * (`gUnknown_030015B4`). */
+ * (`gHovercraftX`). */
 s32 sub_8033900(void)
 {
-    return gUnknown_030015B4;
+    return gHovercraftX;
 }
 
-/* State-transition setter for the singleton (`gUnknown_030015AC`):
+/* State-transition setter for the singleton (`gHovercraft`):
  * selects animation "kind" `a0`, sets the table index to `a1`, resets
  * the anim-frame halfword/byte pair from the new table entry's first
  * field, and - once the current animation frame reaches the new
  * entry's duration (its `+4` halfword) - clears the accumulator at
- * `+8`. Same idiom as the boss cluster's `sub_8030530`/`sub_8030C98`.
+ * `+8`. Same idiom as the boss cluster's `sub_8030530`/`AirshipStateFall`.
  * The `*(T *)&self->...` stores (here and in sub_803395C) keep gcc from
  * treating them as struct-member accesses, which would let the scheduler
  * move the `anims[]` load below the zero constant. */
@@ -162,8 +162,8 @@ void sub_803390C(s32 a0, s32 a1)
 {
     struct actor_self *self;
 
-    gUnknown_030015B0 = a0;
-    self = gUnknown_030015AC;
+    gHovercraftState = a0;
+    self = gHovercraft;
     self->animIndex = a1;
 
     {
@@ -198,7 +198,7 @@ void nullsub_36(void)
 }
 
 /* State-transition setter for the singleton, gated by a depth
- * accumulator: advances `gUnknown_030015BC` by `gUnknown_030015D4`,
+ * accumulator: advances `gHovercraftZ` by `gUnknown_030015D4`,
  * and - only while `gUnknown_030015C8` is still under its `0x81FF`
  * threshold - resets `gUnknown_030015CC`/`gUnknown_030015D0`, selects
  * animation "kind" 2, and runs the same table-index-0 anim-frame-reset
@@ -207,7 +207,7 @@ void sub_803395C(void)
 {
     struct actor_self *self;
 
-    gUnknown_030015BC += gUnknown_030015D4;
+    gHovercraftZ += gUnknown_030015D4;
 
     if (gUnknown_030015C8 <= 0x81FF) {
         register s32 *pCC asm("r1") = &gUnknown_030015CC;
@@ -218,12 +218,12 @@ void sub_803395C(void)
         *pCC = zeroD0;
         {
             register s32 two asm("r1") = 2;
-            register s32 *pB0 asm("r0") = &gUnknown_030015B0;
+            register s32 *pB0 asm("r0") = &gHovercraftState;
 
             *pB0 = two;
         }
 
-        self = gUnknown_030015AC;
+        self = gHovercraft;
         self->animIndex = zeroD0;
 
         {

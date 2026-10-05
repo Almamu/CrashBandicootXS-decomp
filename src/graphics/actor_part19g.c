@@ -2,7 +2,7 @@
 #include "actor_self.h"
 
 /* Continuation of actor_part19.c's player/action-object family, right
- * after the parked `sub_802C3E8` (see actor_part19c2.c) - same `self`
+ * after the parked `CreatePolarCollectedWumpa` (see actor_part19c2.c) - same `self`
  * object (`struct actor_self`) and conventions documented there. The
  * animation-reset blocks (the `anim`/`zero1`/`zero2` register trios)
  * store through `*(T *)&self->field` casts: plain member stores let
@@ -16,7 +16,7 @@ struct vec3_words {
     s32 a, b, c;
 };
 
-/* `sub_802C614`'s class adds one field after the common prefix: an
+/* `UpdatePolarLifeCrate`'s class adds one field after the common prefix: an
  * object it hands to `sub_802AAB4`'s 15-entry list. */
 struct listed_actor {
     struct actor_self base;
@@ -27,7 +27,7 @@ extern void *gAudioContext;
 extern void *gLevelState;
 extern void *gActorList;
 
-extern u8 gStaticData_087E4E94[];
+extern u8 gPolarWumpaVtable[];
 extern u8 gStaticData_0817A768[];
 
 extern void InitActorPart(void *self, s32 a, s32 b, s32 c, s32 d);
@@ -40,17 +40,17 @@ extern void AddBrokenCrate(void *self);
 extern void sub_802AAB4(void *arg0);
 extern void sub_802B730(void *arg0);
 extern void sub_8029720(void);
-extern void sub_802C7A8(void *self);
+extern void DetonateNearbyPolarNitros(void *self);
 extern void sub_802C078(void *arg0, s32 delta);
 extern void sub_802C128(void *arg0);
 extern void sub_802C0A8(void *arg0);
-extern void sub_802C4C8(void *selfArg);
+extern void UpdatePolarCrate(void *selfArg);
 
 /* On proximity (`sub_802A6EC`), accumulates `1` into the shared
  * `gActorList`-targeted accumulator via `sub_802C078` then fires
  * the `vtable` trampoline (behind this family's `if (self)` guard);
  * otherwise tail-calls `UpdateActor(self)`. */
-void sub_802C464(void *selfArg)
+void UpdatePolarWumpa(void *selfArg)
 {
     struct actor_self *self = selfArg;
 
@@ -68,14 +68,14 @@ void sub_802C464(void *selfArg)
 /* Thin `InitActorPart`-based constructor: forwards its own `a`/`b`/`c`
  * parameters straight through (untouched, same registers) plus the
  * caller's last stack argument, then sets `vtable` to
- * `gStaticData_087E4E94` - one of the "spawn effect type N" family
+ * `gPolarWumpaVtable` - one of the "spawn effect type N" family
  * documented in docs/rom_map.md. */
-void *sub_802C4A4(void *selfArg, s32 a, s32 b, s32 c, s32 lastArg)
+void *CreatePolarWumpa(void *selfArg, s32 a, s32 b, s32 c, s32 lastArg)
 {
     struct actor_self *self = selfArg;
 
     InitActorPart(self, a, b, c, lastArg);
-    self->vtable = (struct actor_vtable *)gStaticData_087E4E94;
+    self->vtable = (struct actor_vtable *)gPolarWumpaVtable;
     return self;
 }
 
@@ -86,7 +86,7 @@ void *sub_802C4A4(void *selfArg, s32 a, s32 b, s32 c, s32 lastArg)
  * lap-counter tie `AddBrokenCrate`. Either way, fires the `vtable`
  * trampoline once state is (already, or now) 0x12 and `animDone` is
  * set; otherwise tail-calls `UpdateActor`. */
-void sub_802C4C8(void *selfArg)
+void UpdatePolarCrate(void *selfArg)
 {
     struct actor_self *self = selfArg;
 
@@ -119,13 +119,13 @@ void sub_802C4C8(void *selfArg)
 }
 
 /* Extends the shared "type-byte event dispatch" family
- * (`sub_8031D7C`/etc., per docs/rom_map.md) to value range `0x1c`-
+ * (`UpdateJetpackTimeCrate`/etc., per docs/rom_map.md) to value range `0x1c`-
  * `0x1f`, reading the type byte through one extra pointer indirection
  * (`self+0x30`). Ties into the wraparound-lap-counter system via
  * `AddBrokenCrate` and dispatches accumulator/lock-timer calls
  * (`sub_802C078`/`sub_802C128`) before tail-calling the shared cleanup
- * `sub_802C4C8`. */
-void sub_802C540(void *selfArg)
+ * `UpdatePolarCrate`. */
+void UpdatePolarQuestionCrate(void *selfArg)
 {
     struct actor_self *self = selfArg;
 
@@ -186,7 +186,7 @@ void sub_802C540(void *selfArg)
         }
     }
 
-    sub_802C4C8(self);
+    UpdatePolarCrate(self);
 }
 
 /* Extends the lap-counter/proximity-dispatch family: on proximity
@@ -195,8 +195,8 @@ void sub_802C540(void *selfArg)
  * `sub_802AAB4`, then (whether or not that first branch fired) on
  * `sub_802DD9C`'s overlap test transitions to the shared "used" state
  * a second time with its own sound cue - both branches finish with the
- * same state-0x12 transition block before tail-calling `sub_802C4C8`. */
-void sub_802C614(void *selfArg)
+ * same state-0x12 transition block before tail-calling `UpdatePolarCrate`. */
+void UpdatePolarLifeCrate(void *selfArg)
 {
     struct actor_self *self = selfArg;
 
@@ -236,18 +236,18 @@ void sub_802C614(void *selfArg)
         }
     }
 
-    sub_802C4C8(self);
+    UpdatePolarCrate(self);
 }
 
 /* Once already in the "used" state (0x12): refreshes `self+0x38`
  * (a 12-byte AABB, from `gStaticData_0817A768`) and, once
- * `stateTime` reaches `0x14`, calls `sub_802C7A8` (still raw - see
+ * `stateTime` reaches `0x14`, calls `DetonateNearbyPolarNitros` (still raw - see
  * docs/matching.md). Otherwise, while `depth` (a lap/lifetime
  * counter) exceeds `0xa000`, calls `sub_8029720` and fires the
  * `vtable` trampoline; else on proximity or overlap, plays a sound,
  * ties the lap counter and the homing-chase helper `sub_802B730`,
- * and transitions to the "used" state. Tail-calls `sub_802C4C8`. */
-void sub_802C6C0(void *selfArg)
+ * and transitions to the "used" state. Tail-calls `UpdatePolarCrate`. */
+void UpdatePolarNitroCrate(void *selfArg)
 {
     struct actor_self *self = selfArg;
 
@@ -312,11 +312,11 @@ usedState:
     *(struct vec3_words *)((u8 *)self + 0x38) = *(struct vec3_words *)gStaticData_0817A768;
 
     if (self->stateTime == 0x14) {
-        sub_802C7A8(self);
+        DetonateNearbyPolarNitros(self);
     }
 
 tail:
-    sub_802C4C8(self);
+    UpdatePolarCrate(self);
 }
 
 asm(".align 2, 0");

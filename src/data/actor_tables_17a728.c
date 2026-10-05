@@ -18,8 +18,8 @@ const u16 gStaticData_0817A748[16] = {
     0x18C8, 0x31B1, 0x294C, 0x52D8, 0x3E32, 0x5F3B, 0x4675, 0x6BBF,
 };
 
-/* Boxes (struct anim_box): the one sub_802C6C0 (actor_part19g.c) copies
- * into a part's +0x38 box, and the three sub_802CC9C (actor_part126.c)
+/* Boxes (struct anim_box): the one UpdatePolarNitroCrate (actor_part19g.c) copies
+ * into a part's +0x38 box, and the three UpdatePolarElectricFence (actor_part126.c)
  * picks from. */
 const struct anim_box gStaticData_0817A768 = { -15, -15, -2, 30, 30, 5 };
 const struct anim_box gStaticData_0817A774 = { -24, -25, 0, 10, 40, 1 };
@@ -28,7 +28,7 @@ const struct anim_box gStaticData_0817A78C = { -14, -25, 0, 28, 40, 1 };
 
 /* 16-colour palettes actor_part126.c queues for OBJ palette 14:
  * sub_802D204 takes gStaticData_0817A798 + (tier - 1) * 0x20, so the
- * higher tiers read the palettes after it; sub_802D2DC blinks
+ * higher tiers read the palettes after it; UpdatePolarAkuAku blinks
  * between gStaticData_0817A7D8 and gStaticData_0817A7B8. */
 const u16 gStaticData_0817A798[16] = {
     0x35AC, 0x2192, 0x14EF, 0x04F6, 0x1179, 0x023F, 0x03FF, 0x03E9,

@@ -26,7 +26,7 @@ s32 GetAnimFrameBaseOffset(struct anim_part_instance *self)
 asm(".align 2, 0");
 
 /* Reads the current keyframe record's `attr` halfword and returns it
- * pre-shifted into the high 16 bits - `sub_803B46C` ORs this straight
+ * pre-shifted into the high 16 bits - `DrawJetpackCheckpointText` ORs this straight
  * into an OAM attribute word it builds itself. */
 s32 GetAnimFrameAttr(struct anim_part_instance *self)
 {
@@ -133,7 +133,7 @@ extern void UpdateActor(void *self);
  * set, or tail-calls `UpdateActor(self)` otherwise - the same
  * `+0x50`-rooted `{s16 offset; void *fn}` trampoline convention
  * documented in actor_part19.c. */
-void sub_803B0F0(void *selfArg)
+void UpdatePolarCheckpointText(void *selfArg)
 {
     u8 *self = selfArg;
 
@@ -151,7 +151,7 @@ void sub_803B0F0(void *selfArg)
 
 asm(".align 2, 0");
 
-void sub_803B128(struct linked_node *self, u32 flags)
+void DestroyPolarCheckpointText(struct linked_node *self, u32 flags)
 {
     self->field_50 = gActorVtable;
     self->next->prev = self->prev;
@@ -163,7 +163,7 @@ void sub_803B128(struct linked_node *self, u32 flags)
 
 asm(".align 2, 0");
 
-void sub_803B154(struct linked_node *self, u32 flags)
+void DestroyPolarWumpa(struct linked_node *self, u32 flags)
 {
     self->field_50 = gActorVtable;
     self->next->prev = self->prev;
@@ -175,7 +175,7 @@ void sub_803B154(struct linked_node *self, u32 flags)
 
 asm(".align 2, 0");
 
-void sub_803B180(struct linked_node *self, u32 flags)
+void DestroyPolarTimeCrate(struct linked_node *self, u32 flags)
 {
     self->field_50 = gActorVtable;
     self->next->prev = self->prev;
@@ -187,7 +187,7 @@ void sub_803B180(struct linked_node *self, u32 flags)
 
 asm(".align 2, 0");
 
-void sub_803B1AC(struct linked_node *self, u32 flags)
+void DestroyPolarQuestionCrate(struct linked_node *self, u32 flags)
 {
     self->field_50 = gActorVtable;
     self->next->prev = self->prev;
@@ -199,7 +199,7 @@ void sub_803B1AC(struct linked_node *self, u32 flags)
 
 asm(".align 2, 0");
 
-void sub_803B1D8(struct linked_node *self, u32 flags)
+void DestroyPolarAkuAkuCrate(struct linked_node *self, u32 flags)
 {
     self->field_50 = gActorVtable;
     self->next->prev = self->prev;
@@ -211,7 +211,7 @@ void sub_803B1D8(struct linked_node *self, u32 flags)
 
 asm(".align 2, 0");
 
-void sub_803B204(struct linked_node *self, u32 flags)
+void DestroyPolarNitroCrate(struct linked_node *self, u32 flags)
 {
     self->field_50 = gActorVtable;
     self->next->prev = self->prev;
@@ -223,7 +223,7 @@ void sub_803B204(struct linked_node *self, u32 flags)
 
 asm(".align 2, 0");
 
-void sub_803B230(struct linked_node *self, u32 flags)
+void DestroyPolarLifeCrate(struct linked_node *self, u32 flags)
 {
     self->field_50 = gActorVtable;
     self->next->prev = self->prev;
@@ -247,7 +247,7 @@ void sub_803B25C(struct linked_node *self, u32 flags)
 
 asm(".align 2, 0");
 
-void sub_803B288(struct linked_node *self, u32 flags)
+void DestroyPolarBasicCrate(struct linked_node *self, u32 flags)
 {
     self->field_50 = gActorVtable;
     self->next->prev = self->prev;
@@ -259,7 +259,7 @@ void sub_803B288(struct linked_node *self, u32 flags)
 
 asm(".align 2, 0");
 
-void sub_803B2B4(struct linked_node *self, u32 flags)
+void DestroyPolarCrate(struct linked_node *self, u32 flags)
 {
     self->field_50 = gActorVtable;
     self->next->prev = self->prev;
@@ -271,7 +271,7 @@ void sub_803B2B4(struct linked_node *self, u32 flags)
 
 asm(".align 2, 0");
 
-void sub_803B2E0(struct linked_node *self, u32 flags)
+void DestroyPolarElectricFence(struct linked_node *self, u32 flags)
 {
     self->field_50 = gActorVtable;
     self->next->prev = self->prev;
@@ -307,7 +307,7 @@ void sub_803B338(struct linked_node *self, u32 flags)
 
 asm(".align 2, 0");
 
-void sub_803B364(struct linked_node *self, u32 flags)
+void DestroyPolarPenguin(struct linked_node *self, u32 flags)
 {
     self->field_50 = gActorVtable;
     self->next->prev = self->prev;
@@ -319,7 +319,7 @@ void sub_803B364(struct linked_node *self, u32 flags)
 
 asm(".align 2, 0");
 
-void sub_803B390(struct linked_node *self, u32 flags)
+void DestroyPolarIcicle(struct linked_node *self, u32 flags)
 {
     self->field_50 = gActorVtable;
     self->next->prev = self->prev;
@@ -331,7 +331,7 @@ void sub_803B390(struct linked_node *self, u32 flags)
 
 asm(".align 2, 0");
 
-void sub_803B3BC(struct linked_node *self, u32 flags)
+void DestroyPolarAkuAku(struct linked_node *self, u32 flags)
 {
     self->field_50 = gActorVtable;
     self->next->prev = self->prev;
@@ -367,7 +367,7 @@ void sub_803B414(struct linked_node *self, u32 flags)
 
 asm(".align 2, 0");
 
-void sub_803B440(struct linked_node *self, u32 flags)
+void DestroyPolarCheckpointCrate(struct linked_node *self, u32 flags)
 {
     self->field_50 = gActorVtable;
     self->next->prev = self->prev;
@@ -394,10 +394,10 @@ extern void SetupSpriteFrameOam(u8 *frame, u32 arg1, u32 arg2, s32 priority);
  * the `self+0x18` priority-nibble unpack, and the final
  * `SetupSpriteFrameOam` argument shuffle) matches the ROM's own
  * register roles once pinned to match, the same techniques worked out
- * for the near-identical twin `sub_802C2FC` (`actor_part19b.c`). Note
- * `sub_803B46C`'s own priority constant is `0x100`, not
- * `sub_802C2FC`'s `0x140` - the two twins differ here. */
-void sub_803B46C(void *selfArg)
+ * for the near-identical twin `DrawPolarCollectedWumpa` (`actor_part19b.c`). Note
+ * `DrawJetpackCheckpointText`'s own priority constant is `0x100`, not
+ * `DrawPolarCollectedWumpa`'s `0x140` - the two twins differ here. */
+void DrawJetpackCheckpointText(void *selfArg)
 {
     register u8 *self asm("r5") = selfArg;
     register s32 x asm("r4") = 120;
@@ -495,7 +495,7 @@ asm(".align 2, 0");
  * frame base offset reaches `loopThreshold`, `field_08` is stepped back
  * by `(loopThreshold - loopBase) << 8` and the `+0x12` "held" flag is
  * set (mirroring `SetActorAnim`'s use of the same halfword/byte pair). */
-void sub_803B4EC(void *selfArg)
+void UpdateJetpackCheckpointText(void *selfArg)
 {
     /* A single `self` pointer, not also a `struct anim_part_instance *`
      * local - keeping both alive at once costs this compiler an extra
@@ -553,8 +553,8 @@ asm(".align 2, 0");
  * table this project hasn't symbolized yet, not a readable `bl`. The
  * original disassembly never gave this address its own function label -
  * it sits as four bytes of real, coherent Thumb code (movs r0, #1;
- * bx lr) squeezed between sub_803B4EC's real return and the next
- * labelled function, sub_803B550 below (same pattern documented for
+ * bx lr) squeezed between UpdateJetpackCheckpointText's real return and the next
+ * labelled function, DestroyJetpackCheckpointText below (same pattern documented for
  * sub_800039C/strlen in docs/decomp_dev.md - see the matching split
  * entry in expected/corrections.txt for this address). A trivial
  * "return true" stub, plausibly a vtable slot default. */
@@ -568,10 +568,10 @@ asm(".align 2, 0");
 /* Another hidden function with no `thumb_func_start` label of its own
  * (see `sub_803B54C` above) - the standard "kind" teardown handler
  * shape already matched 20 times over in this file (`sub_803B0C4`
- * onward) and again below (`sub_803B5B0` onward): set `self->field_50`
+ * onward) and again below (`DestroyJetpackExplosion` onward): set `self->field_50`
  * to the shared "dead" table, unlink `self` from its `+0x48`/`+0x4c`
  * circular list, and free `self` when `flags & 1`. */
-void sub_803B550(struct linked_node *self, u32 flags)
+void DestroyJetpackCheckpointText(struct linked_node *self, u32 flags)
 {
     self->field_50 = gActorVtable;
     self->next->prev = self->prev;
@@ -584,11 +584,11 @@ void sub_803B550(struct linked_node *self, u32 flags)
 asm(".align 2, 0");
 
 /* A third hidden, unlabelled function (see `sub_803B54C` above) -
- * `sub_803B0F0`'s near-twin: advances `self+0x24` (a Q8 fixed-point
+ * `UpdatePolarCheckpointText`'s near-twin: advances `self+0x24` (a Q8 fixed-point
  * accumulator, `+170`/256 per call this time instead of `-0x180`/256)
  * and either fires the `+0x50` trampoline record if `self+0x12` is set,
  * or tail-calls `UpdateActor(self)` otherwise. */
-void sub_803B57C(void *selfArg)
+void UpdateJetpackExplosion(void *selfArg)
 {
     u8 *self = selfArg;
 
@@ -617,7 +617,7 @@ s32 sub_803B5AC(void)
 
 asm(".align 2, 0");
 
-void sub_803B5B0(struct linked_node *self, u32 flags)
+void DestroyJetpackExplosion(struct linked_node *self, u32 flags)
 {
     self->field_50 = gActorVtable;
     self->next->prev = self->prev;
@@ -638,7 +638,7 @@ struct actor_self_54 {
 /* A fourth hidden function with no thumb_func_start of its own (see
  * sub_803B54C above, including its "no direct reference found" caveat)
  * - a plain self->unk_54 getter. */
-s32 sub_803B5DC(struct actor_self_54 *self)
+s32 GetActorHp(struct actor_self_54 *self)
 {
     return self->unk_54;
 }
@@ -662,7 +662,7 @@ s32 sub_803B5E4(void)
 
 asm(".align 2, 0");
 
-void sub_803B5E8(struct linked_node *self, u32 flags)
+void DestroyJetpackShot(struct linked_node *self, u32 flags)
 {
     self->field_50 = gActorVtable;
     self->next->prev = self->prev;
@@ -674,7 +674,7 @@ void sub_803B5E8(struct linked_node *self, u32 flags)
 
 asm(".align 2, 0");
 
-void sub_803B614(struct linked_node *self, u32 flags)
+void DestroyJetpackPlane(struct linked_node *self, u32 flags)
 {
     self->field_50 = gActorVtable;
     self->next->prev = self->prev;
@@ -686,7 +686,7 @@ void sub_803B614(struct linked_node *self, u32 flags)
 
 asm(".align 2, 0");
 
-void sub_803B640(struct linked_node *self, u32 flags)
+void DestroyJetpackBomber(struct linked_node *self, u32 flags)
 {
     self->field_50 = gActorVtable;
     self->next->prev = self->prev;
@@ -698,7 +698,7 @@ void sub_803B640(struct linked_node *self, u32 flags)
 
 asm(".align 2, 0");
 
-void sub_803B66C(struct linked_node *self, u32 flags)
+void DestroyJetpackCannonball(struct linked_node *self, u32 flags)
 {
     self->field_50 = gActorVtable;
     self->next->prev = self->prev;
@@ -722,7 +722,7 @@ void sub_803B698(struct linked_node *self, u32 flags)
 
 asm(".align 2, 0");
 
-void sub_803B6C4(struct linked_node *self, u32 flags)
+void DestroyJetpackBalloon(struct linked_node *self, u32 flags)
 {
     self->field_50 = gActorVtable;
     self->next->prev = self->prev;
@@ -734,15 +734,15 @@ void sub_803B6C4(struct linked_node *self, u32 flags)
 
 asm(".align 2, 0");
 
-extern void sub_80321D0(void *arg0, s32 arg1);
+extern void DestroyJetpackBalloonCrate(void *arg0, s32 arg1);
 
 /* A different teardown shape from the `linked_node` handlers above -
- * tears down via `sub_80321D0(self, 0)` (still unmatched itself)
+ * tears down via `DestroyJetpackBalloonCrate(self, 0)` (still unmatched itself)
  * instead of the inline list-unlink, then frees `self` when
  * `flags & 1`, same as every other handler in this file. */
-void sub_803B6F0(void *self, u32 flags)
+void DestroyJetpackHealthCrate(void *self, u32 flags)
 {
-    sub_80321D0(self, 0);
+    DestroyJetpackBalloonCrate(self, 0);
     if (flags & 1) {
         mem_free(self);
     }
@@ -750,9 +750,9 @@ void sub_803B6F0(void *self, u32 flags)
 
 asm(".align 2, 0");
 
-void sub_803B710(void *self, u32 flags)
+void DestroyJetpackTimeCrate(void *self, u32 flags)
 {
-    sub_80321D0(self, 0);
+    DestroyJetpackBalloonCrate(self, 0);
     if (flags & 1) {
         mem_free(self);
     }
@@ -760,9 +760,9 @@ void sub_803B710(void *self, u32 flags)
 
 asm(".align 2, 0");
 
-void sub_803B730(void *self, u32 flags)
+void DestroyJetpackQuestionCrate(void *self, u32 flags)
 {
-    sub_80321D0(self, 0);
+    DestroyJetpackBalloonCrate(self, 0);
     if (flags & 1) {
         mem_free(self);
     }
@@ -770,7 +770,7 @@ void sub_803B730(void *self, u32 flags)
 
 asm(".align 2, 0");
 
-void sub_803B750(struct linked_node *self, u32 flags)
+void DestroyJetpackParachuteNitro(struct linked_node *self, u32 flags)
 {
     self->field_50 = gActorVtable;
     self->next->prev = self->prev;
@@ -782,7 +782,7 @@ void sub_803B750(struct linked_node *self, u32 flags)
 
 asm(".align 2, 0");
 
-void sub_803B77C(struct linked_node *self, u32 flags)
+void DestroyJetpackRocket(struct linked_node *self, u32 flags)
 {
     self->field_50 = gActorVtable;
     self->next->prev = self->prev;
@@ -794,7 +794,7 @@ void sub_803B77C(struct linked_node *self, u32 flags)
 
 asm(".align 2, 0");
 
-void sub_803B7A8(struct linked_node *self, u32 flags)
+void DestroyJetpackRing(struct linked_node *self, u32 flags)
 {
     self->field_50 = gActorVtable;
     self->next->prev = self->prev;
@@ -818,7 +818,7 @@ void sub_803B7D4(struct linked_node *self, u32 flags)
 
 asm(".align 2, 0");
 
-void sub_803B800(struct linked_node *self, u32 flags)
+void DestroyHovercraftCannon(struct linked_node *self, u32 flags)
 {
     self->field_50 = gActorVtable;
     self->next->prev = self->prev;
@@ -830,7 +830,7 @@ void sub_803B800(struct linked_node *self, u32 flags)
 
 asm(".align 2, 0");
 
-void sub_803B82C(struct linked_node *self, u32 flags)
+void DestroyHovercraftLauncher(struct linked_node *self, u32 flags)
 {
     self->field_50 = gActorVtable;
     self->next->prev = self->prev;

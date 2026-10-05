@@ -1,7 +1,7 @@
 #include "core.h"
 #include "memory.h"
 
-/* The `gUnknown_030014BC`-rooted position-tracking object with tier-
+/* The `gYeti`-rooted position-tracking object with tier-
  * threshold sound cues, already documented in docs/rom_map.md ("A
  * fourth vtable table, a third RAM-struct family" onward): an
  * accumulate-then-clamp-at-0xA000 pair on `gUnknown_030014C8`/`030014CC`
@@ -10,22 +10,22 @@
  * `PlaySfx`/`PlayAmbientSfx` tier cues depending on the current "tier"
  * value read from the object's own `+8` field, and a shared
  * kind/anim-reset "transition" tail gated on the object's `+0x12` done
- * flag. `sub_802DB2C` and `sub_802DCC0` are two of `gStaticData_0817A840`'s
+ * flag. `sub_802DB2C` and `sub_802DCC0` are two of `gYetiStateFuncs`'s
  * four vtable slots operating on this object (see
  * docs/matching/issue-54-actor-d3a8.md). */
 
 extern s32 sub_8029B98(void);
 extern s32 sub_8029B2C(void);
-extern s32 gUnknown_030014CC;
+extern s32 gYetiDistance;
 extern s32 gUnknown_030014C8;
-extern void *gUnknown_030014BC;
+extern void *gYeti;
 extern void *gAudioContext;
 extern s32 PlayAmbientSfx(void *arg0, s32 arg1, s32 arg2, s32 arg3);
 extern void sub_8029E28(s32 arg0);
 extern s32 gUnknown_030014D4;
 extern u8 gStaticData_0817A7F8[];
 extern s32 RandRange(s32 arg0);
-extern s32 gUnknown_030014D0;
+extern s32 gYetiState;
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 
 /* Re-derives `gUnknown_030014C8`/`030014CC` (a small per-frame ease
@@ -46,21 +46,21 @@ void sub_802DB2C(void)
     u8 dummyStack;
 
     if (sub_8029B98() == 0x24) {
-        gUnknown_030014C8 = (sub_8029B2C() << 8) - gUnknown_030014CC;
+        gUnknown_030014C8 = (sub_8029B2C() << 8) - gYetiDistance;
     } else {
         gUnknown_030014C8 += 0x99;
-        gUnknown_030014CC = (sub_8029B2C() << 8) - gUnknown_030014C8;
+        gYetiDistance = (sub_8029B2C() << 8) - gUnknown_030014C8;
     }
 
-    if (gUnknown_030014CC > 0xa000) {
-        gUnknown_030014CC = 0xa000;
-        gUnknown_030014C8 = (sub_8029B2C() << 8) - gUnknown_030014CC;
+    if (gYetiDistance > 0xa000) {
+        gYetiDistance = 0xa000;
+        gUnknown_030014C8 = (sub_8029B2C() << 8) - gYetiDistance;
     }
 
     {
-        s32 tier = *(s32 *)((u8 *)gUnknown_030014BC + 8) >> 8;
+        s32 tier = *(s32 *)((u8 *)gYeti + 8) >> 8;
 
-        if (gUnknown_030014CC <= 0x4FFF) {
+        if (gYetiDistance <= 0x4FFF) {
             if (tier == 0xc) {
                 void *a0 = gAudioContext;
                 s32 a2 = 0x3E8;
@@ -88,8 +88,8 @@ void sub_802DB2C(void)
     }
 
     {
-        if (((u8 *)gUnknown_030014BC)[0x12] != 0) {
-            if (gUnknown_030014CC > 0x5A00) {
+        if (((u8 *)gYeti)[0x12] != 0) {
+            if (gYetiDistance > 0x5A00) {
                 goto do_transition;
             }
 
@@ -121,9 +121,9 @@ void sub_802DB2C(void)
             }
 
         do_transition:
-            gUnknown_030014D0 = 1;
+            gYetiState = 1;
             {
-                u8 *bc = gUnknown_030014BC;
+                u8 *bc = gYeti;
 
                 *(s32 *)(bc + 0xc) = 1;
                 {
@@ -137,7 +137,7 @@ void sub_802DB2C(void)
                 }
             }
 
-            if (gUnknown_030014CC <= 0x7800) {
+            if (gYetiDistance <= 0x7800) {
                 PlaySfx(gAudioContext, 0x20, 0x100);
             }
         end_transition:
@@ -162,17 +162,17 @@ void sub_802DCC0(void)
     s32 idx = gUnknown_030014D4;
 
     *c8 += *(s32 *)(table + idx * 0xc);
-    gUnknown_030014CC = (sub_8029B2C() << 8) - gUnknown_030014C8;
+    gYetiDistance = (sub_8029B2C() << 8) - gUnknown_030014C8;
 
-    if (gUnknown_030014CC > 0xa000) {
-        gUnknown_030014CC = 0xa000;
-        gUnknown_030014C8 = (sub_8029B2C() << 8) - gUnknown_030014CC;
+    if (gYetiDistance > 0xa000) {
+        gYetiDistance = 0xa000;
+        gUnknown_030014C8 = (sub_8029B2C() << 8) - gYetiDistance;
     }
 
     {
-        s32 tier = *(s32 *)((u8 *)gUnknown_030014BC + 8) >> 8;
+        s32 tier = *(s32 *)((u8 *)gYeti + 8) >> 8;
 
-        if (gUnknown_030014CC <= 0x4FFF) {
+        if (gYetiDistance <= 0x4FFF) {
             if (tier == 0xb) {
                 PlaySfx(gAudioContext, 0x3f, 0x100);
                 asm volatile("" ::: "memory");
@@ -187,10 +187,10 @@ void sub_802DCC0(void)
     }
 
     {
-        u8 *bc = gUnknown_030014BC;
+        u8 *bc = gYeti;
 
         if (bc[0x12] != 0) {
-            s32 *d0 = &gUnknown_030014D0;
+            s32 *d0 = &gYetiState;
             register s32 zero asm("r1") = 0;
 
             *d0 = zero;

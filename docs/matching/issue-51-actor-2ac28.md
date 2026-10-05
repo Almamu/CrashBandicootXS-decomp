@@ -12,9 +12,9 @@ first seven functions, the whole of what was left in
 | function | what it is |
 |---|---|
 | `CreateActor` | the per-kind actor factory |
-| `sub_802B12C` | builds record 40 with `InitActorPart`, method table `gStaticData_087E4E34` |
-| `sub_802B174` | builds record 11 with `sub_802C3E8` (0x60 bytes) |
-| `sub_802B1A8` | builds record 27 with `sub_802D528`, passing a 4th argument through |
+| `CreatePolarCheckpointText` | builds record 40 with `InitActorPart`, method table `gPolarCheckpointTextVtable` |
+| `SpawnPolarCollectedWumpa` | builds record 11 with `CreatePolarCollectedWumpa` (0x60 bytes) |
+| `SpawnPolarAkuAku` | builds record 27 with `CreatePolarAkuAku`, passing a 4th argument through |
 | `ConstructAnimTableState` | category vtable slot 0: installs the animation table, builds the player |
 | `SpawnActor` | category vtable slot 1: spawn record -> factory call |
 | `ConstructActorPart` | the player constructor |
@@ -37,9 +37,9 @@ every record observed. The code still reads them.
 to x/y and then switches on `kind` (1-39, through a jump table). Every
 case body is an inlined C++ `new Foo(...)`. It allocates with
 `mem_alloc(size, MEM_HEAP_IWRAM)`, runs a base constructor
-(`InitActorPart`, `sub_802CB34`, or one of the class constructors
-`sub_802D764`/`sub_802CF0C`/`sub_802D648`/`sub_802D0C8`/`sub_802CDE4`/
-`sub_802D1B8`/`sub_802D5D4`/`sub_802CE38`), and, where the base constructor
+(`InitActorPart`, `InitPolarCrate`, or one of the class constructors
+`CreatePolarCheckpointCrate`/`sub_802CF0C`/`sub_802D648`/`CreatePolarPenguin`/`CreatePolarElectricFence`/
+`CreatePolarIcicle`/`sub_802D5D4`/`sub_802CE38`), and, where the base constructor
 is a shared one, stores the class's method table at +0x50. Points of
 note:
 
@@ -96,7 +96,7 @@ drive).
   sum gives the index-first order. The prologue and the direct
   class-constructor calls use the pointer-first order, so those stay
   `gActorAnimTable[kind]`/`gActorAnimTable + kind`.
-- **Return types from the epilogue.** `sub_802B12C`/`sub_802B174`/
+- **Return types from the epilogue.** `CreatePolarCheckpointText`/`SpawnPolarCollectedWumpa`/
   `ConstructAnimTableState` end in `pop {r0}; bx r0`, so they are
   `void`. The others end in `pop {r1}; bx r1` and return the object.
 - **`SpawnActor`**: `u8 kind` rather than a wider type. A narrower type

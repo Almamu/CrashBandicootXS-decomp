@@ -36,7 +36,7 @@ this same chunk that got closed out later.
   apply identically to this dispatcher's other four instances sharing
   this exact stride-8 shape: `sub_802F748` (issue #56,
   `src/graphics/actor_part44b.c`, `gStaticData_0817C1C0`),
-  `sub_8033B44`/`sub_8033C84`/`sub_8033E80` (issue #62,
+  `UpdateHovercraftCannon`/`sub_8033C84`/`UpdateHovercraftLauncher` (issue #62,
   `src/graphics/actor_part31.c`/`actor_part33.c`/`actor_part37.c`,
   `gStaticData_0817C4E0`/`gStaticData_0817C4F8`), and `sub_8033FE4`
   (issue #63, `src/graphics/actor_part64.c`, `gStaticData_0817C4F8`) -

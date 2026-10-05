@@ -14,12 +14,12 @@ const s32 gStaticData_0816C2D8[4][3] = {
     { 450, 32, 750 },
 };
 
-/* sub_8018008 / sub_8018400 (actor_part_18008.c): a value per round. */
+/* UpdateTiny / SetTinyState (actor_part_18008.c): a value per round. */
 const u8 gStaticData_0816C308[3] = {
     4, 1, 0,
 };
 
-/* sub_801865C (actor_part_18008.c): a sequence of 0-4 values. */
+/* PickTinyHopTarget (actor_part_18008.c): a sequence of 0-4 values. */
 const u8 gStaticData_0816C30B[77] = {
     1, 1, 2, 1, 1, 0, 2, 0, 3, 3, 0, 0, 0, 3, 3, 1,
     1, 2, 4, 4, 3, 3, 3, 3, 3, 1, 1, 2, 1, 1, 0, 2,
@@ -45,7 +45,7 @@ const u8 gStaticData_0816C362[3] = {
     2, 2, 2,
 };
 
-/* sub_80197F8 (actor_part_1967c.c): two pairs of threshold tables. */
+/* UpdateDingodile (actor_part_1967c.c): two pairs of threshold tables. */
 const s32 gStaticData_0816C368[4] = {
     0xF000, 0xA000, 0x4B00, 0x0,
 };

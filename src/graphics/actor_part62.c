@@ -25,7 +25,7 @@ extern s16 gSineTable[];
  * (`ox`/`oy`) so they are summed before the position is added, as the
  * ROM does, and the explicit `goto ease_y` reproduces the ROM sharing
  * one copy of the Y/Z easing between state 0 and the default case. */
-void sub_802D3A8(struct actor_self *self, s32 posX, s32 posY, s32 posZ)
+void MovePolarAkuAku(struct actor_self *self, s32 posX, s32 posY, s32 posZ)
 {
     s32 tx, ty, tz;
     s32 cur, d;

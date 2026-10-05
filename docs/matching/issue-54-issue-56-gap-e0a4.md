@@ -5,17 +5,17 @@ the whole of `asm/code_3_2_20_28568_c99c_e0a4.s` - sitting between
 issue #54's chunk (`actor_part61.c`, ending at `nullsub_27`/
 `sub_802E0A0`) and issue #56's chunk (`actor_part43.c`, starting at
 `sub_802F0DC`) - still completely raw. `docs/rom_map.md` had already
-partly read this range from disassembly alone: `sub_802E170` is "a
+partly read this range from disassembly alone: `CreateJetpackActor` is "a
 31-case jump table paired with a new stride-40 RAM table,
-`gUnknown_030014D8`, fetching a position-offset pair per case".
+`gJetpackAnimTable`, fetching a position-offset pair per case".
 
-25 functions total. `sub_802E170` is the dispatcher itself; the run of
+25 functions total. `CreateJetpackActor` is the dispatcher itself; the run of
 near-identical `mem_alloc`-plus-forwarding-call constructors
-(`sub_802E484`, `sub_802E504`, `sub_802E4B8`, `sub_802E538`,
-`sub_802E57C`, `sub_802E5B0`) are `sub_802E170`'s own per-"kind" case
+(`SpawnJetpackCollectedWumpa`, `sub_802E504`, `SpawnJetpackBalloon`, `sub_802E538`,
+`sub_802E57C`, `sub_802E5B0`) are `CreateJetpackActor`'s own per-"kind" case
 bodies, each allocating a fixed-size struct and forwarding to a
 different kind-specific initializer, indexed into
-`gUnknown_030014D8`'s array of per-kind data tables by a fixed byte
+`gJetpackAnimTable`'s array of per-kind data tables by a fixed byte
 offset. The rest of the range is a family of position-offset/physics
 helpers and hazard-timer functions on the usual `self` object (state/
 table-index/anim-frame fields at the established offsets) and a couple
@@ -25,25 +25,25 @@ of no-argument helpers reading a fixed global object (`gUnknown_
 ## Matched (4 of 25 functions)
 
 All four are the lowest-register-pressure members of the
-`sub_802E170` constructor family - just `r4`-`r6`, no `r8`/`sb`/`sl` -
+`CreateJetpackActor` constructor family - just `r4`-`r6`, no `r8`/`sb`/`sl` -
 in `src/graphics/actor_part128.c`:
 
 - **`sub_802E0A4`** - state-3 anim-frame edge reset: while `self`
-  (`gUnknown_030014BC`)'s table-index isn't already 3 and its anim-
+  (`gYeti`)'s table-index isn't already 3 and its anim-
   frame flag is set, resets it to table-index 3 (anim frame from the
   part table's `+0x24` field) - the same reset idiom used throughout
   this whole actor zone.
-- **`sub_802E484`** - `sub_802E170`'s kind-0 case body: allocates a
+- **`SpawnJetpackCollectedWumpa`** - `CreateJetpackActor`'s kind-0 case body: allocates a
   0x64-byte struct (`mem_alloc(0x64, 0x80000000)`) and forwards to
-  `sub_8032890` with the kind's own data-table entry
-  (`gUnknown_030014D8 + 0x6E0`) plus the three incoming position
+  `CreateJetpackCollectedWumpa` with the kind's own data-table entry
+  (`gJetpackAnimTable + 0x6E0`) plus the three incoming position
   arguments; the call's own return value is discarded (matching the
   `void` signature already established for this function elsewhere in
   the codebase, e.g. `actor_part44.c`).
 - **`sub_802E504`** - same shape, 0x5c-byte struct, table offset
   0x230, forwards to `sub_80342D4`.
 - **`sub_802E57C`**/**`sub_802E5B0`** - same shape, 0x70-byte struct,
-  table offsets 0x1E0/0x1B8, forward to `sub_8033EF4`/`sub_8033BB8`.
+  table offsets 0x1E0/0x1B8, forward to `CreateHovercraftLauncher`/`CreateHovercraftCannon`.
 
 All four needed the `mem_alloc(size, flags)` call's two arguments
 pinned to `r0`/`r1` explicitly (`register u32 size asm("r0") = ...;
@@ -59,7 +59,7 @@ address instead of clobbering the live `r0` return value) - but the
 ROM's own build uses the plain `pop {r0}; bx r0` idiom this whole
 codebase's `void` functions use everywhere else, confirming the
 original source never actually returned the forwarded call's result
-here (matching the already-established `void sub_802E484(s32 x, s32
+here (matching the already-established `void SpawnJetpackCollectedWumpa(s32 x, s32
 y, s32 amount);` extern declaration in `actor_part44.c`).
 
 ## Parked - NAKED transcription (byte-correct, not decompiled)
@@ -75,37 +75,37 @@ labels, plus unified-to-plain mnemonic translation) this project has
 used for other large NAKED batches, run once per function against the
 raw disassembly.
 
-- **`sub_802E0CC`** - kind-classification/spawn dispatch helper:
+- **`SpawnJetpackActor`** - kind-classification/spawn dispatch helper:
   reads a "kind" byte from one of `self`'s own three leading bytes
   (chosen by the current game-mode pause flag and a caller-supplied
-  gate), then tail-calls `sub_8031040` (kinds `0x10`-`0x12`),
-  `sub_802E170` (most other kinds - the 31-case dispatcher below), or
-  `sub_8033264` (kind `0xa`) with a position computed from `self`'s own
+  gate), then tail-calls `SpawnAirship` (kinds `0x10`-`0x12`),
+  `CreateJetpackActor` (most other kinds - the 31-case dispatcher below), or
+  `SpawnHovercraft` (kind `0xa`) with a position computed from `self`'s own
   `+4`/`+8`/`+0xc` fields.
-- **`sub_802E170`** - the 31-case jump-table dispatcher `docs/rom_map.md`
-  already flagged: indexes `gUnknown_030014D8` (a stride-40 per-"kind"
+- **`CreateJetpackActor`** - the 31-case jump-table dispatcher `docs/rom_map.md`
+  already flagged: indexes `gJetpackAnimTable` (a stride-40 per-"kind"
   data table) by `kind`, then forwards to one of the constructors
   matched above (reached only via `bl`, not inlined) or a small set of
   shared default cases. Parked outright rather than attempted as a
   `switch` - a 31-case dispatch's exact jump-table layout and bounds-
   check codegen carries too much risk of a subtly-wrong-but-plausible
   reconstruction for this gap's scope.
-- **`sub_802E3CC`**, **`sub_802E420`** - small helpers in the same
+- **`CreateJetpackCheckpointText`**, **`CreateJetpackExplosion`** - small helpers in the same
   family (established externs already exist for both:
-  `void sub_802E3CC(void);` and
-  `s32 sub_802E420(s32 x, s32 y, s32 z, s32 kind);`, `actor_part21f.c`).
-- **`sub_802E4B8`**, **`sub_802E538`**, **`sub_802E5E4`** (2-arg),
-  **`sub_802E62C`**, **`sub_802E674`**, **`sub_802E6CC`** - more of
-  `sub_802E170`'s own constructor-family case bodies and position-
+  `void CreateJetpackCheckpointText(void);` and
+  `s32 CreateJetpackExplosion(s32 x, s32 y, s32 z, s32 kind);`, `actor_part21f.c`).
+- **`SpawnJetpackBalloon`**, **`sub_802E538`**, **`sub_802E5E4`** (2-arg),
+  **`sub_802E62C`**, **`SpawnJetpackCannonball`**, **`SpawnJetpackShot`** - more of
+  `CreateJetpackActor`'s own constructor-family case bodies and position-
   offset helpers, each with `r8`/`sb` (and for `sub_802E9FC` below,
   `sl` too) simultaneously live across the whole function - the same
   register-pressure family this codebase's DMA/OAM functions are
   consistently NAKED-parked for. Established externs already exist for
-  `sub_802E5E4`, `sub_802E62C`, and `sub_802E674` (`actor_part67.c`,
+  `sub_802E5E4`, `sub_802E62C`, and `SpawnJetpackCannonball` (`actor_part67.c`,
   `actor_part21d.c`, `actor_part21e.c`/`actor_part29.c`/
   `actor_part46b.c`).
 - **`sub_802E710`** - stashes its first argument into
-  `gUnknown_030014D8` then allocates and forwards to `sub_8032ADC` with
+  `gJetpackAnimTable` then allocates and forwards to `sub_8032ADC` with
   a position derived from the player object (`gActorList`).
 - **`sub_802E740`** - a `self`-object physics/collision-react step.
 - **`sub_802E84C`**, **`sub_802E9FC`**, **`sub_802EB78`** - larger
@@ -139,7 +139,7 @@ matched/parked list this entry feeds into.
 
 All 21 NAKED functions above were promoted to real C, and the whole
 file now builds with old_agbcc (`sub_802E9FC` needs it). The reasons
-given for parking them didn't hold up. `sub_802E170` is a plain
+given for parking them didn't hold up. `CreateJetpackActor` is a plain
 `switch`. The "r8/sb pressure" constructors only needed the
 `AllocActor` inline wrapper, or an inline base constructor that takes
 the hit-point value as an argument. See

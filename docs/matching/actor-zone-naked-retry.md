@@ -8,22 +8,22 @@ closed as plain C with no register pins. Issue #54 has nothing left.
 
 | Function | File | Compiler | Was |
 |---|---|---|---|
-| `sub_802D7B0` | `actor_part74.c` | old_agbcc (file already on it) | 52 off |
+| `UpdateYeti` | `actor_part74.c` | old_agbcc (file already on it) | 52 off |
 | `sub_802DD9C` | `actor_part75.c` | old_agbcc (file moved) | 69 off |
-| `sub_802DE70` | `actor_part75.c` | both | 5 off |
-| `sub_8031378` | `actor_part24b.c` | old_agbcc (file moved) | 53 off |
-| `sub_8030D48` | `actor_part23b.c` | old_agbcc (file moved) | 11 off |
-| `sub_80330FC` | `actor_part130.c` | old_agbcc (whole file moved) | 11 off |
+| `LoadYetiGraphics` | `actor_part75.c` | both | 5 off |
+| `IsTouchingAirship` | `actor_part24b.c` | old_agbcc (file moved) | 53 off |
+| `DrawAirshipMap` | `actor_part23b.c` | old_agbcc (file moved) | 11 off |
+| `DrawHovercraftMap` | `actor_part130.c` | old_agbcc (whole file moved) | 11 off |
 | `sub_8030E08` | `actor_part23c.c` | both (file stays on agbcc) | 19 off |
 
 `actor_part130.c` was checked function by function under old_agbcc
 before the move: every function in it, the previously matched ones
-included, compiles to the ROM's bytes (the NAKED `sub_80336CC`
+included, compiles to the ROM's bytes (the NAKED `ConvertHovercraftTiles`
 assembles identically either way).
 
 ## The box-copy trio: one frame struct
 
-`sub_802D7B0`, `sub_802DD9C` and `sub_8031378` all build a static box,
+`UpdateYeti`, `sub_802DD9C` and `IsTouchingAirship` all build a static box,
 build a second box from an actor's `+0x38` vector plus its position,
 copy it into a third slot, run that slot through the `MemCopy32`
 self-copy, and compare. The ROM recomputes `add rX, sp, #0xc` after the
@@ -54,27 +54,27 @@ had to go too: returning into a struct member adds a fourth temporary.
 
 Two function-specific details:
 
-- `sub_802D7B0`'s hit block uses its own `g` local for the gauge object.
+- `UpdateYeti`'s hit block uses its own `g` local for the gauge object.
   The function-wide `obj` is live across calls, so it gets a
   callee-saved register there.
-- `sub_8031378` needs `goto hit; ... return 0; hit: return 1;` so the
+- `IsTouchingAirship` needs `goto hit; ... return 0; hit: return 1;` so the
   failure path falls through, plus a trailing `asm(".align 2, 0")`.
 
 Under current agbcc they are still off (25-31 halfwords for
-`sub_802DD9C`/`sub_8031378`), in the early box-A arithmetic.
+`sub_802DD9C`/`IsTouchingAirship`), in the early box-A arithmetic.
 
-## `sub_802DE70`: `CurFrame()` on the global
+## `LoadYetiGraphics`: `CurFrame()` on the global
 
 The three hoisted addresses have to land in r8/sb/sl as `...14BC`,
-`...14C0`, `...0898`. With a `struct actor_self *obj = gUnknown_030014BC`
-local, `&gUnknown_030014BC` came last. Passing the global straight into
+`...14C0`, `...0898`. With a `struct actor_self *obj = gYeti`
+local, `&gYeti` came last. Passing the global straight into
 the usual `CurFrame()` inline (`t = animTime >> 8` first, then
 `frameOffsets[anims[animIndex].frameIndex + t]`) gives the ROM's
 assignment under both compilers. The call through the
 `gUnpackNibbleTilesFunc` pointer needs `_call_via_r2` aliased to
 `_call_via_r2`.
 
-## `sub_8030D48` / `sub_80330FC`: bias narrowing and declaration order
+## `DrawAirshipMap` / `DrawHovercraftMap`: bias narrowing and declaration order
 
 Two changes, identical in both twins:
 
@@ -114,7 +114,7 @@ compilers.
 
 ## Not attempted
 
-- `sub_80336CC` (`actor_part130.c`) and its 4-row twin `sub_8031604`
+- `ConvertHovercraftTiles` (`actor_part130.c`) and its 4-row twin `ConvertAirshipTiles`
   (`actor_part26c.c`) are still NAKED with their drafts, 95-105 halfwords
   off (unchanged from issue-58-61-naked-retry.md). They are why issues
   #58 and #61 stay open.

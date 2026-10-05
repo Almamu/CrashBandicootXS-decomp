@@ -20,9 +20,9 @@ extern void sub_8033F48();
 extern void sub_8033F74();
 
 /* Per-kind animation step functions of the singleton object, called
- * through _call_via_r0 as `gStaticData_0817C4C8[gUnknown_030015B0]` by
+ * through _call_via_r0 as `gHovercraftStateFuncs[gHovercraftState]` by
  * sub_8032B6C (actor_part130.c). */
-void (*const gStaticData_0817C4C8[6])() = {
+void (*const gHovercraftStateFuncs[6])() = {
     nullsub_36,
     sub_803395C,
     sub_8032C0C,
@@ -31,7 +31,7 @@ void (*const gStaticData_0817C4C8[6])() = {
     sub_8033048,
 };
 
-/* Per-state handlers dispatched by sub_8033B44 (actor_part31.c) and
+/* Per-state handlers dispatched by UpdateHovercraftCannon (actor_part31.c) and
  * sub_8033C84 (actor_part33.c). */
 const struct actor_pmf gStaticData_0817C4E0[3] = {
     ACTOR_PMF(sub_8033C28),
@@ -39,7 +39,7 @@ const struct actor_pmf gStaticData_0817C4E0[3] = {
     ACTOR_PMF(sub_8033BFC),
 };
 
-/* Per-state handlers dispatched by sub_8033E80 (actor_part37.c) and
+/* Per-state handlers dispatched by UpdateHovercraftLauncher (actor_part37.c) and
  * sub_8033FE4 (actor_part64.c). */
 const struct actor_pmf gStaticData_0817C4F8[3] = {
     ACTOR_PMF(sub_8033F74),

@@ -27,7 +27,7 @@ extern u8 gUnknown_030014A3;
 extern u8 gUnknown_030014A0;
 extern u8 gUnknown_030014A1;
 extern s32 gUnknown_0300148C;
-extern void *gUnknown_03001494;
+extern void *gPolarAkuAku;
 extern void *gAudioContext;
 extern void *gLevelState;
 extern void *gActorList;
@@ -39,19 +39,19 @@ extern void *gUnknown_03001490;
 
 extern u8 gStaticData_087E4E54[];
 extern u8 gActorVtable[];
-extern u8 gStaticData_087E4E74[];
+extern u8 gPolarCollectedWumpaVtable[];
 extern u8 gStaticData_0817A6B8[];
 extern u8 gStaticData_0817A768[];
 
 extern void SetCellAnimSpeed(s32 arg0);
-extern void sub_802DFBC(void);
+extern void StopYeti(void);
 extern void sub_802D490(void *arg0);
-extern s32 sub_802D4EC(void *arg0);
+extern s32 AddPolarAkuAkuMask(void *arg0);
 extern s32 GetAnimFrameBaseOffset(void *self);
 extern u8 *GetAnimFrameData(void *self);
 extern void SetupSpriteFrameOam(u8 *frame, u32 arg1, u32 arg2, s32 priority);
 extern s32 GetAnimFrameAttr(void *self);
-extern u8 gStaticData_087E4E94[];
+extern u8 gPolarWumpaVtable[];
 extern s32 __divsi3(s32 arg0, s32 arg1);
 extern s32 sub_8029E98(void);
 extern s32 sub_8029EB4(void);
@@ -70,7 +70,7 @@ extern void sub_802AAB4(s32 arg0);
 extern void sub_802B730(void *arg0);
 extern void sub_8029720(void);
 extern void *CreateActor(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4);
-extern void sub_802C7A8(void *self);
+extern void DetonateNearbyPolarNitros(void *self);
 
 /* Accumulates `gUnknown_030014A4` into `y`, then drains
  * `gUnknown_030014A4` toward a fixed ceiling (`0x780`) - the same
@@ -201,7 +201,7 @@ void sub_802BFA0(void *selfArg)
 
 /* Once-only latch (`gUnknown_030014A0`): arms a countdown
  * (`gUnknown_0300148C = 0x16`), runs `SetCellAnimSpeed(0x24)`, clamps
- * `gUnknown_030014A4` to non-negative, then calls `sub_802DFBC` and
+ * `gUnknown_030014A4` to non-negative, then calls `StopYeti` and
  * marks both `gUnknown_030014A0` and `gUnknown_030014A3`. */
 void sub_802BFD4(void)
 {
@@ -211,14 +211,14 @@ void sub_802BFD4(void)
         if (gUnknown_030014A4 < 0) {
             gUnknown_030014A4 = 0;
         }
-        sub_802DFBC();
+        StopYeti();
         gUnknown_030014A0 = 1;
         gUnknown_030014A3 = 0;
     }
 }
 
 /* Resets the `gUnknown_030014A3`/`030014A1`/`030014A0` latch trio, runs
- * `sub_802D490` on `gUnknown_03001494`, and fires the state-7/table-
+ * `sub_802D490` on `gPolarAkuAku`, and fires the state-7/table-
  * index-6 transition (anim frame from `self`'s part-table pointer at
  * `+0x48`) plus a sound cue. */
 void sub_802C018(void *selfArg)
@@ -227,7 +227,7 @@ void sub_802C018(void *selfArg)
 
     gUnknown_030014A3 = 0;
     gUnknown_030014A1 = 1;
-    sub_802D490(gUnknown_03001494);
+    sub_802D490(gPolarAkuAku);
     gUnknown_030014A0 = 1;
 
     {
@@ -281,7 +281,7 @@ void sub_802C0A8(void *arg0)
 /* Only runs while `state` is 1-3: sets table-index 2, anim
  * frame from `self`'s part-table pointer at `+0x18`, and - once the
  * frame counter reaches the entry's threshold (the same `+4`-halfword-
- * of-a-0xc-stride-table shape as `sub_802C270` below) - resets the
+ * of-a-0xc-stride-table shape as `UpdatePolarCollectedWumpa` below) - resets the
  * `+8` accumulator. Stashes `arg1` into `x`, plays a
  * state-keyed sound cue (0x5a for state 2, 0x55 for state 1), and
  * transitions to state 3. */
@@ -338,12 +338,12 @@ void sub_802C0BC(void *selfArg, s32 arg1param)
     }
 }
 
-/* Lock-timer setter: while `sub_802D4EC(gUnknown_03001494)` returns 3,
+/* Lock-timer setter: while `AddPolarAkuAkuMask(gPolarAkuAku)` returns 3,
  * arms `gUnknown_0300149C = 500` - the same lock/active flag
  * `sub_802B7E0` gates on, per docs/rom_map.md. */
 void sub_802C128(void *arg0)
 {
-    if (sub_802D4EC(gUnknown_03001494) == 3) {
+    if (AddPolarAkuAkuMask(gPolarAkuAku) == 3) {
         gUnknown_0300149C = 500;
     }
 }

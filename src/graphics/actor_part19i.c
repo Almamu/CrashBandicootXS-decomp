@@ -1,9 +1,9 @@
 #include "core.h"
 #include "actor_self.h"
 
-/* Sits right after actor_part19d.c's `sub_802C904` and before the
+/* Sits right after actor_part19d.c's `UpdatePolarAkuAkuCrate` and before the
  * still-raw remainder of `asm/code_3_2_20_28568_c99c.s` (starting at
- * `sub_802CC9C`) - directly adjacent to `actor_part19d.c` now, closing
+ * `UpdatePolarElectricFence`) - directly adjacent to `actor_part19d.c` now, closing
  * part of GitHub issue #53's `0x0802C99C`-`0x0802D3A8` chunk. Same
  * `self` object (`struct actor_self`) and conventions documented in `actor_part19g.c` (the
  * `animIndex` state field, the `+0x10`/`+0x12`/`+8` anim-reset idiom,
@@ -17,28 +17,28 @@ extern u8 sub_802A6EC(void *self);
 extern void AddBrokenCrate(void *self);
 extern void FreezeLevelClock(void *arg0, s32 arg1);
 extern void sub_802C078(void *arg0, s32 delta);
-extern void sub_802C4C8(void *selfArg);
+extern void UpdatePolarCrate(void *selfArg);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void InitActorPart(void *self, s32 a, s32 b, s32 c, s32 d);
 extern s32 __divsi3(s32 arg0, s32 arg1);
 
-extern u8 gStaticData_087E4F94[];
-extern u8 gStaticData_087E4EB4[];
-extern u8 gStaticData_087E4ED4[];
-extern u8 gStaticData_087E4EF4[];
-extern u8 gStaticData_087E4F14[];
-extern u8 gStaticData_087E4F34[];
+extern u8 gPolarCrateVtable[];
+extern u8 gPolarTimeCrateVtable[];
+extern u8 gPolarQuestionCrateVtable[];
+extern u8 gPolarAkuAkuCrateVtable[];
+extern u8 gPolarNitroCrateVtable[];
+extern u8 gPolarLifeCrateVtable[];
 extern u8 gStaticData_087E4F54[];
-extern u8 gStaticData_087E4F74[];
+extern u8 gPolarBasicCrateVtable[];
 
-/* Extends the type-byte event dispatch family (`sub_8031D7C`/etc, per
- * docs/rom_map.md; the `sub_802C540` shape in actor_part19g.c) with
+/* Extends the type-byte event dispatch family (`UpdateJetpackTimeCrate`/etc, per
+ * docs/rom_map.md; the `UpdatePolarQuestionCrate` shape in actor_part19g.c) with
  * values `5`-`7`. On proximity (`sub_802A6EC`), plays a sound, ties the
  * lap counter, then dispatches `FreezeLevelClock` with a tier argument keyed
  * off `self+0x30`'s type byte (`5`->1, `6`->2, `7`->anything else
  * dispatches nothing) before the shared "used" state transition;
- * tail-calls `sub_802C4C8`. */
-void sub_802C99C(void *selfArg)
+ * tail-calls `UpdatePolarCrate`. */
+void UpdatePolarTimeCrate(void *selfArg)
 {
     struct actor_self *self = selfArg;
 
@@ -74,7 +74,7 @@ void sub_802C99C(void *selfArg)
         }
     }
 
-    sub_802C4C8(self);
+    UpdatePolarCrate(self);
 }
 
 /* Unconditional (no `sub_802A6EC` proximity guard) "used"-state
@@ -105,10 +105,10 @@ void sub_802CA28(void *selfArg)
     }
 }
 
-/* Same proximity-gated "used" transition shape as `sub_802C540`/
- * `sub_802C614` (actor_part19g.c), forwarding a fixed accumulator
+/* Same proximity-gated "used" transition shape as `UpdatePolarQuestionCrate`/
+ * `UpdatePolarLifeCrate` (actor_part19g.c), forwarding a fixed accumulator
  * delta of `4` to `sub_802C078(gActorList, ...)`; tail-calls
- * `sub_802C4C8`. */
+ * `UpdatePolarCrate`. */
 void sub_802CA6C(void *selfArg)
 {
     struct actor_self *self = selfArg;
@@ -129,12 +129,12 @@ void sub_802CA6C(void *selfArg)
         }
     }
 
-    sub_802C4C8(self);
+    UpdatePolarCrate(self);
 }
 
 /* Same shape as `sub_802CA6C` above, accumulator delta `1` instead of
  * `4`. */
-void sub_802CAD0(void *selfArg)
+void UpdatePolarBasicCrate(void *selfArg)
 {
     struct actor_self *self = selfArg;
 
@@ -154,24 +154,24 @@ void sub_802CAD0(void *selfArg)
         }
     }
 
-    sub_802C4C8(self);
+    UpdatePolarCrate(self);
 }
 
 /* `InitActorPart`-based constructor: forwards `a`/`b`/`c`/`lastArg`
- * straight through, installs `self+0x50 = gStaticData_087E4F94`, then
+ * straight through, installs `self+0x50 = gPolarCrateVtable`, then
  * classifies a "kind" (`animIndex`) from a `__divsi3`-scaled
  * function of `b` (clamped to `[0, 5]`) plus up to two `+6` bumps keyed
  * off `c`'s own range - selecting one of up to 18 per-kind anim
  * records from the part table (`self[0]`, stride `0xc`) to seed
  * `animTimer`/`animDone`/`self+8`, the same idiom as `sub_802D648`
  * (`src/graphics/actor_part58.c`). */
-void *sub_802CB34(void *selfArg, s32 a, s32 b, s32 c, s32 lastArg)
+void *InitPolarCrate(void *selfArg, s32 a, s32 b, s32 c, s32 lastArg)
 {
     struct actor_self *self = selfArg;
     s32 idx;
 
     InitActorPart(self, a, b, c, lastArg);
-    self->vtable = (struct actor_vtable *)gStaticData_087E4F94;
+    self->vtable = (struct actor_vtable *)gPolarCrateVtable;
 
     idx = __divsi3((b >> 8) + 0x3c, 0x14);
 
@@ -208,76 +208,76 @@ void *sub_802CB34(void *selfArg, s32 a, s32 b, s32 c, s32 lastArg)
     return self;
 }
 
-/* Thin `sub_802CB34`-forwarding constructor, `vtable` overridden to
- * `gStaticData_087E4EB4`. */
-void *sub_802CB9C(void *selfArg, s32 a, s32 b, s32 c, s32 lastArg)
+/* Thin `InitPolarCrate`-forwarding constructor, `vtable` overridden to
+ * `gPolarTimeCrateVtable`. */
+void *CreatePolarTimeCrate(void *selfArg, s32 a, s32 b, s32 c, s32 lastArg)
 {
     struct actor_self *self = selfArg;
 
-    sub_802CB34(self, a, b, c, lastArg);
-    self->vtable = (struct actor_vtable *)gStaticData_087E4EB4;
+    InitPolarCrate(self, a, b, c, lastArg);
+    self->vtable = (struct actor_vtable *)gPolarTimeCrateVtable;
     return self;
 }
 
-/* Same shape as `sub_802CB9C`, `self+0x50 = gStaticData_087E4ED4`. */
-void *sub_802CBC0(void *selfArg, s32 a, s32 b, s32 c, s32 lastArg)
+/* Same shape as `CreatePolarTimeCrate`, `self+0x50 = gPolarQuestionCrateVtable`. */
+void *CreatePolarQuestionCrate(void *selfArg, s32 a, s32 b, s32 c, s32 lastArg)
 {
     struct actor_self *self = selfArg;
 
-    sub_802CB34(self, a, b, c, lastArg);
-    self->vtable = (struct actor_vtable *)gStaticData_087E4ED4;
+    InitPolarCrate(self, a, b, c, lastArg);
+    self->vtable = (struct actor_vtable *)gPolarQuestionCrateVtable;
     return self;
 }
 
-/* Same shape as `sub_802CB9C`, `self+0x50 = gStaticData_087E4EF4`. */
-void *sub_802CBE4(void *selfArg, s32 a, s32 b, s32 c, s32 lastArg)
+/* Same shape as `CreatePolarTimeCrate`, `self+0x50 = gPolarAkuAkuCrateVtable`. */
+void *CreatePolarAkuAkuCrate(void *selfArg, s32 a, s32 b, s32 c, s32 lastArg)
 {
     struct actor_self *self = selfArg;
 
-    sub_802CB34(self, a, b, c, lastArg);
-    self->vtable = (struct actor_vtable *)gStaticData_087E4EF4;
+    InitPolarCrate(self, a, b, c, lastArg);
+    self->vtable = (struct actor_vtable *)gPolarAkuAkuCrateVtable;
     return self;
 }
 
-/* Same shape as `sub_802CB9C`, `self+0x50 = gStaticData_087E4F14`. */
-void *sub_802CC08(void *selfArg, s32 a, s32 b, s32 c, s32 lastArg)
+/* Same shape as `CreatePolarTimeCrate`, `self+0x50 = gPolarNitroCrateVtable`. */
+void *CreatePolarNitroCrate(void *selfArg, s32 a, s32 b, s32 c, s32 lastArg)
 {
     struct actor_self *self = selfArg;
 
-    sub_802CB34(self, a, b, c, lastArg);
-    self->vtable = (struct actor_vtable *)gStaticData_087E4F14;
+    InitPolarCrate(self, a, b, c, lastArg);
+    self->vtable = (struct actor_vtable *)gPolarNitroCrateVtable;
     return self;
 }
 
-/* Same shape as `sub_802CB9C`, `self+0x50 = gStaticData_087E4F34`, plus
+/* Same shape as `CreatePolarTimeCrate`, `self+0x50 = gPolarLifeCrateVtable`, plus
  * a 6th argument stashed straight into `self+0x54`. */
-void *sub_802CC2C(void *selfArg, s32 a, s32 b, s32 c, s32 lastArg, s32 arg6)
+void *CreatePolarLifeCrate(void *selfArg, s32 a, s32 b, s32 c, s32 lastArg, s32 arg6)
 {
     struct actor_self *self = selfArg;
 
-    sub_802CB34(self, a, b, c, lastArg);
-    self->vtable = (struct actor_vtable *)gStaticData_087E4F34;
+    InitPolarCrate(self, a, b, c, lastArg);
+    self->vtable = (struct actor_vtable *)gPolarLifeCrateVtable;
     *(s32 *)((u8 *)self + 0x54) = arg6;
     return self;
 }
 
-/* Same shape as `sub_802CB9C`, `self+0x50 = gStaticData_087E4F54`. */
+/* Same shape as `CreatePolarTimeCrate`, `self+0x50 = gStaticData_087E4F54`. */
 void *sub_802CC54(void *selfArg, s32 a, s32 b, s32 c, s32 lastArg)
 {
     struct actor_self *self = selfArg;
 
-    sub_802CB34(self, a, b, c, lastArg);
+    InitPolarCrate(self, a, b, c, lastArg);
     self->vtable = (struct actor_vtable *)gStaticData_087E4F54;
     return self;
 }
 
-/* Same shape as `sub_802CB9C`, `self+0x50 = gStaticData_087E4F74`. */
-void *sub_802CC78(void *selfArg, s32 a, s32 b, s32 c, s32 lastArg)
+/* Same shape as `CreatePolarTimeCrate`, `self+0x50 = gPolarBasicCrateVtable`. */
+void *CreatePolarBasicCrate(void *selfArg, s32 a, s32 b, s32 c, s32 lastArg)
 {
     struct actor_self *self = selfArg;
 
-    sub_802CB34(self, a, b, c, lastArg);
-    self->vtable = (struct actor_vtable *)gStaticData_087E4F74;
+    InitPolarCrate(self, a, b, c, lastArg);
+    self->vtable = (struct actor_vtable *)gPolarBasicCrateVtable;
     return self;
 }
 

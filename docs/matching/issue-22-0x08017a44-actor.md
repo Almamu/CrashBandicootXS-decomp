@@ -11,7 +11,7 @@ precedent already set for `actor_part18.o`/`actor_part18b.o` (also
 entries).
 
 15 of the 25 functions matched; the remaining 6 (`sub_8017AB0`,
-`sub_8018008`, `sub_8018400`, `sub_801865C`, `sub_80186F0`) were left
+`UpdateTiny`, `SetTinyState`, `PickTinyHopTarget`, `sub_80186F0`) were left
 raw - out of scope for this pass given their size (one ~500-instruction
 and one ~480-instruction jump-table state machine, plus two
 high-register-pressure helpers) - see "Left raw" below. Issue stays
@@ -42,7 +42,7 @@ avoid an add/add filename collision.
   `part+0x28` bit 4/bit 5 mirror-flag X/Z negation exactly like
   `sub_800B734`/`sub_800B7B0`/`sub_800B6A0`/`sub_800B6D0`.
 - `src/graphics/actor_part27c.c` (new file, ROM 0x080187FC-0x08018884,
-  non-adjacent to `actor_part27b.c` since the raw `sub_8018008`-
+  non-adjacent to `actor_part27b.c` since the raw `UpdateTiny`-
   `sub_80186F0` block sits between them): `sub_80187FC` (a two-state
   "charge" handler), `sub_8018858`/`sub_801886C` (another table-pointer
   reset pair, `gStaticData_087E442C`), `sub_8018884` (a struct-actor-
@@ -130,12 +130,12 @@ these, exactly as `docs/workflow.md` step 2/3 warns.
   trampolines). Semantics are broadly graspable but a byte-exact
   reconstruction of a function this size was out of scope for this
   pass; left completely untouched.
-- **`sub_8018008`/`sub_8018400`/`sub_801865C`/`sub_80186F0`**
+- **`UpdateTiny`/`SetTinyState`/`PickTinyHopTarget`/`sub_80186F0`**
   (`asm/code_3_2_17_18008.s`, ROM 0x08018008-0x080186F0) - a
   ~480-instruction jump-table player action-state machine
-  (`sub_8018008`, 16-case dispatch on `self+8`) together with its
-  companion sub-state handler (`sub_8018400`, 15-case dispatch) and two
-  high-register-pressure helpers it calls (`sub_801865C`, a
+  (`UpdateTiny`, 16-case dispatch on `self+8`) together with its
+  companion sub-state handler (`SetTinyState`, 15-case dispatch) and two
+  high-register-pressure helpers it calls (`PickTinyHopTarget`, a
   nearest-target scan over `gUnknown_030012EC`'s array using `r8`/
   `sl`/`sb`; `sub_80186F0`, a spawn-effect constructor also using
   `r8`/`sb`). Same reasoning as `sub_8017AB0` - left raw rather than

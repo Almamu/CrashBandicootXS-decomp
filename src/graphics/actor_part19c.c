@@ -3,10 +3,10 @@
 #include "actor_self.h"
 
 /* Continuation of actor_part19.c's player/action-object family, right
- * after the parked `sub_802C2FC` (see actor_part19b.c) - same `self`
+ * after the parked `DrawPolarCollectedWumpa` (see actor_part19b.c) - same `self`
  * object and conventions documented there. */
 
-/* The derived-class field `sub_802C394` reads: how many fruit the
+/* The derived-class field `DestroyPolarCollectedWumpa` reads: how many fruit the
  * object hands out (one `CollectWumpa` call each). */
 struct fruit_actor {
     struct actor_self base;
@@ -17,7 +17,7 @@ struct fruit_actor {
 extern void *gLevelState;
 
 extern u8 gActorVtable[];
-extern u8 gStaticData_087E4E74[];
+extern u8 gPolarCollectedWumpaVtable[];
 
 extern void CollectWumpa(void *self);
 
@@ -26,13 +26,13 @@ extern void CollectWumpa(void *self);
  * `+0x48`/`+0x4c` list, free on `arg1 & 1`" teardown shape as
  * `sub_802C19C` above, but with a plain iteration count instead of a
  * `gUnknown_03001488` global drain. */
-void sub_802C394(void *selfArg, u32 arg1)
+void DestroyPolarCollectedWumpa(void *selfArg, u32 arg1)
 {
     register u8 *self asm("r4") = selfArg;
     u32 arg1r = arg1;
     s32 i;
 
-    *(u8 **)(self + 0x50) = gStaticData_087E4E74;
+    *(u8 **)(self + 0x50) = gPolarCollectedWumpaVtable;
 
     for (i = 0; i < ((struct fruit_actor *)self)->fruit; i++) {
         CollectWumpa(gLevelState);

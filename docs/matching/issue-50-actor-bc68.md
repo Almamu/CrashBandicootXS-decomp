@@ -24,7 +24,7 @@ factory constructor with its own 39-case jump table, ~560 lines of
 disassembly by itself) through `sub_802BBE4` stays raw - the actor-
 part-factory dispatcher itself and the run of animation-table-state/
 actor-part-factory functions between it and this chunk
-(`sub_802B12C`-`sub_802BBE4`, including `ConstructAnimTableState`/
+(`CreatePolarCheckpointText`-`sub_802BBE4`, including `ConstructAnimTableState`/
 `ConstructActorPart` and the large `sub_802B364`/`sub_802B5B4` state
 machines). None of that is in scope here; `tools/report_units.py`'s
 `(0x0802AC28, None, "actor")` entry still covers it, with an updated
@@ -45,7 +45,7 @@ real matched C.
   "locked" flag `gUnknown_030014A0` is set, fully drains it via repeated
   `CollectWumpa` calls without spawning anything; otherwise, once the
   `gUnknown_03001484` cooldown elapses, dispenses one of four tiers of
-  reward (via `sub_802B174`, itself still raw but confirmed by
+  reward (via `SpawnPolarCollectedWumpa`, itself still raw but confirmed by
   docs/rom_map.md as a "spawn effect type N" family member) sized by the
   accumulator's own magnitude, and plays a cue. Docs/rom_map.md already
   read this as a structural twin of `actor_part44.c`'s `sub_802F3BC` -
@@ -58,7 +58,7 @@ real matched C.
   state-transition: latches `gUnknown_030014A3`, clears the hazard lock
   `gUnknown_030014A0`, and resets `self` to state 1/table-index 0 via
   the same state/table-index/anim-frame reset idiom already documented
-  for the boss cluster's `sub_8030530`/`sub_8030C98` and this family's
+  for the boss cluster's `sub_8030530`/`AirshipStateFall` and this family's
   own `sub_802C14C` (`actor_part19.c`), then fires `SetCellAnimSpeed(0x24)`.
 - **`sub_802BD64`**/**`sub_802BDD0`** - a per-axis hazard-threshold pair:
   drains a shared "camera catch-up" budget (`gUnknown_030014A4`) into

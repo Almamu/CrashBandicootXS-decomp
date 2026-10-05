@@ -62,7 +62,7 @@ COMPILE_TIME_ASSERT(sizeof(struct anim_table_record) == 0x28);
  *   - "absolute_rom": each entry is a real ROM pointer straight to a
  *     zero-run-compressed frame ({w, h, 0x30, 0} + u16 run stream,
  *     unpacked by the gUnpackRleSpriteFrameFunc IWRAM hook). Used only by record
- *     0 of both animation tables (and the sub_802DFDC singleton's table):
+ *     0 of both animation tables (and the CreateYeti singleton's table):
  *     the frame sets are rle_sprites_0c2758.c / rle_sprites_15a050.c,
  *     built from graphics/rle_sprites/ (docs/data.md, "Compressed sprite
  *     frames").

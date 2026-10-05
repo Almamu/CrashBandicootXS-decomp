@@ -1,6 +1,6 @@
 # Fourth mid-range NAKED retry
 
-This pass took `sub_8031604`, the twin of the just-closed `sub_80336CC`,
+This pass took `ConvertAirshipTiles`, the twin of the just-closed `ConvertHovercraftTiles`,
 and six NAKED functions with `#if NON_MATCHING` drafts that were
 42-300 halfwords off. It used the brute-force variant runner from
 the third near-miss sweep (`brute2.py`).
@@ -9,7 +9,7 @@ One now matches as real C:
 
 | Function | File | Compiler | Was | Technique |
 |---|---|---|---|---|
-| `sub_8031604` | `src/graphics/actor_part26c.c` | both | 56 | the `sub_80336CC` fixes, ported unchanged |
+| `ConvertAirshipTiles` | `src/graphics/actor_part26c.c` | both | 56 | the `ConvertHovercraftTiles` fixes, ported unchanged |
 
 `actor_part26c.c` holds only this function and isn't on
 `OLD_AGBCC_OBJS`. The C matches under both compilers, so no Makefile
@@ -17,8 +17,8 @@ change. With it, issue #58's range has no NAKED or raw functions left.
 
 ## What worked
 
-**Porting the twin's fixes (`sub_8031604`).** This is the four-row
-version of `sub_80336CC`'s meter builder. The draft already had the
+**Porting the twin's fixes (`ConvertAirshipTiles`).** This is the four-row
+version of `ConvertHovercraftTiles`'s meter builder. The draft already had the
 `"+m"` reload of `heights[k]` from #470. The changes from
 [near-miss-polish-3.md](near-miss-polish-3.md) went in unchanged:
 

@@ -6,7 +6,7 @@ region `0x0800AC2C`-`0x0800B270` `tools/report_units.py` tracked as
 parked (`base_object=None`, still raw). Its neighbor, `PlayerHandleEvent` (a
 38-case player action-state jump-table dispatcher directly above it),
 is out of scope and untouched - same standing exclusion this project
-already applies to `sub_8018008` (issue #22): a large jump-table
+already applies to `UpdateTiny` (issue #22): a large jump-table
 dispatcher calling a dozen still-unexamined state-transition helpers,
 left raw rather than guessed at.
 

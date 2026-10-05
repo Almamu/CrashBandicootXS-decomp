@@ -9,17 +9,17 @@
  * Zero-fills one 0x40-byte (8bpp) tile right before BG char block 3
  * (`BG_CHAR_ADDR(3) - 0x40`..`BG_CHAR_ADDR(3)`, a blank/transparent
  * filler tile), then DMA3-fills a 0xffff halfword into BG char block 3
- * itself and runs `sub_8031604`'s VRAM fill-level meter generator (see
+ * itself and runs `ConvertAirshipTiles`'s VRAM fill-level meter generator (see
  * docs/rom_map.md's "procedurally-generated VRAM fill-level meter"
- * finding). While the small tracker object (`gUnknown_03001534`)'s
- * state (`gUnknown_03001538`) is non-zero: forces a BG2CNT preset
+ * finding). While the small tracker object (`gAirship`)'s
+ * state (`gAirshipState`) is non-zero: forces a BG2CNT preset
  * toggle (via `gUnknown_03001524`/`gUnknown_03001520` and
- * `sub_80312C4`), looks up a keyframe-table tilemap pointer through the
+ * `UpdateAirshipBg2`), looks up a keyframe-table tilemap pointer through the
  * tracker object's own table-index (`+0xc`) and accumulator (`+8`,
- * `>>8`) fields and blits it via `sub_8030D48` (docs/rom_map.md's
+ * `>>8`) fields and blits it via `DrawAirshipMap` (docs/rom_map.md's
  * confirmed "rectangular BG-tilemap blit routine"), sets DISPCNT's
- * bit10 (the same window/mosaic-family bit `sub_8030C98` clears), and
- * DMAs a 0x10-halfword palette strip from `gStaticData_08167AD4` into
+ * bit10 (the same window/mosaic-family bit `AirshipStateFall` clears), and
+ * DMAs a 0x10-halfword palette strip from `gAirshipPalette` into
  * BG palette bank 1 (`0x05000020`). Once there, one of two mutually
  * exclusive tails run based on the tracker's state: state 5 mirrors
  * palette index 8/0/0xf (slots `+0x10`/`+8`/`+2`/`+0x1e`) all down to
@@ -34,18 +34,18 @@
  * standard `DmaFill16`/`DmaCopy16` macros, and the palette strip is
  * `vu16` - the state-5 blackout is one chained assignment, whose
  * volatile read-backs are the ROM's `ldrh`/`strh` ladder. */
-extern s32 gUnknown_03001538;
+extern s32 gAirshipState;
 extern u8 gUnknown_03001524;
 extern s32 gUnknown_03001520;
-extern struct actor_self *gUnknown_03001534;
+extern struct actor_self *gAirship;
 extern u32 gUnknown_0300153C;
-extern u16 gStaticData_08167AD4[];
+extern u16 gAirshipPalette[];
 
-extern void sub_8031604(void);
-extern void sub_8030D48(u16 *src);
-extern void sub_80312C4(void);
+extern void ConvertAirshipTiles(void);
+extern void DrawAirshipMap(u16 *src);
+extern void UpdateAirshipBg2(void);
 
-void sub_8031504(void)
+void LoadAirshipGraphics(void)
 {
     s32 i;
     s32 base = VRAM + 0xBFC0;
@@ -54,25 +54,25 @@ void sub_8031504(void)
     for (i = base + 0x3c; i >= base; i -= 4)
         *(u32 *)i = zero;
     DmaFill16(3, 0xFFFF, (void *)(VRAM + 0xC000), 0x1000);
-    sub_8031604();
-    if (gUnknown_03001538 != 0) {
+    ConvertAirshipTiles();
+    if (gAirshipState != 0) {
         struct actor_self *self;
         vu16 *pal;
 
         gUnknown_03001524 = 1;
         gUnknown_03001520 = 0;
-        self = gUnknown_03001534;
+        self = gAirship;
         {
             s32 t = self->animTime >> 8;
-            sub_8030D48((u16 *)self->frameOffsets[self->anims[self->animIndex].frameIndex + t]);
+            DrawAirshipMap((u16 *)self->frameOffsets[self->anims[self->animIndex].frameIndex + t]);
         }
         REG_DISPCNT |= 0x400;
-        sub_80312C4();
+        UpdateAirshipBg2();
         pal = (vu16 *)(PLTT + 0x20);
-        DmaCopy16(3, gStaticData_08167AD4, pal, 0x20);
-        if (gUnknown_03001538 == 5) {
+        DmaCopy16(3, gAirshipPalette, pal, 0x20);
+        if (gAirshipState == 5) {
             pal[15] = pal[1] = pal[4] = pal[8] = 0;
-        } else if (gUnknown_03001538 == 4) {
+        } else if (gAirshipState == 4) {
             if (gUnknown_0300153C > 9)
                 pal[15] = 0;
             if (gUnknown_0300153C > 0x31)

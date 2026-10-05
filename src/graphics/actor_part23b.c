@@ -24,7 +24,7 @@ extern s32 gUnknown_03001528;
 extern s32 gUnknown_0300152C;
 extern s32 gUnknown_03001530;
 
-void sub_8030D48(u16 *src)
+void DrawAirshipMap(u16 *src)
 {
     u8 *row = (u8 *)((gUnknown_03001520 + 0x18) << 11) + (VRAM + (0x20 - gUnknown_03001528) / 4 * 2) + ((0x20 - gUnknown_0300152C) / 2 * 32 + 2);
     s32 i, j;

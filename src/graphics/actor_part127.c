@@ -30,7 +30,7 @@ struct game_state {
 extern struct game_state *gLevelState;
 extern void *gAudioContext;
 extern void *gUnknown_03001490;
-extern void *gUnknown_03001494;
+extern void *gPolarAkuAku;
 extern s32 gUnknown_0300149C;
 extern s32 gUnknown_030014A4;
 extern u8 gUnknown_03001480;
@@ -47,8 +47,8 @@ extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern s32 QueueVramDmaTransfer(void *src, void *dest, u16 size, u16 unit);
 extern void SetCellAnimSpeed(s32 arg0);
 extern void LoseLife(void *arg0);
-extern void sub_802DFBC(void);
-extern s32 sub_802D4B0(void *self);
+extern void StopYeti(void);
+extern s32 RemovePolarAkuAkuMask(void *self);
 extern void *CreateActor(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4);
 extern void *AllocVramTileBlock(s32 size);
 extern s32 RandRange(s32 max);
@@ -82,9 +82,9 @@ extern s32 sub_8029B2C(void);
 extern void sub_8029D8C(s32 x, s32 y);
 extern s32 sub_8029E98(void);
 extern s32 sub_8029EB4(void);
-extern void *sub_802B1A8(s32 x, s32 y, s32 z, s32 tier);
-extern void sub_802D3A8(void *obj, s32 x, s32 y, s32 z);
-extern s32 sub_802D4EC(void *obj);
+extern void *SpawnPolarAkuAku(s32 x, s32 y, s32 z, s32 tier);
+extern void MovePolarAkuAku(void *obj, s32 x, s32 y, s32 z);
+extern s32 AddPolarAkuAkuMask(void *obj);
 
 static inline s32 Abs(s32 x)
 {
@@ -100,7 +100,7 @@ static inline s32 Abs(s32 x)
  * current state's handler from `gStaticData_0817A6B8` (a C++
  * pointer-to-member call), left/right steering while
  * `gUnknown_030014A3` is set, then drives - or first spawns - the
- * companion object in `gUnknown_03001494`. Same shape as
+ * companion object in `gPolarAkuAku`. Same shape as
  * `actor_part128.c`'s `sub_802E84C`. */
 void sub_802B364(struct actor_self *self)
 {
@@ -159,14 +159,14 @@ void sub_802B364(struct actor_self *self)
             }
         }
     }
-    if (gUnknown_03001494 != NULL) {
-        sub_802D3A8(gUnknown_03001494, self->x, self->y, self->z);
+    if (gPolarAkuAku != NULL) {
+        MovePolarAkuAku(gPolarAkuAku, self->x, self->y, self->z);
     } else {
         s32 tier = gLevelState->maskLevel;
 
-        gUnknown_03001494 = sub_802B1A8(self->x, self->y, self->z, tier);
+        gPolarAkuAku = SpawnPolarAkuAku(self->x, self->y, self->z, tier);
         if (sub_8029794())
-            sub_802D4EC(gUnknown_03001494);
+            AddPolarAkuAkuMask(gPolarAkuAku);
     }
 }
 
@@ -253,9 +253,9 @@ void sub_802B5B4(struct actor_self *self)
  * arms `gUnknown_03001480`, kicks the game-mode transition
  * (`LoseLife`) if not already paused, clears
  * `gUnknown_030014A3`/arms `gUnknown_030014A0`, and fires
- * `SetCellAnimSpeed(0)`/`sub_802DFBC()` - or, while a tier is already
+ * `SetCellAnimSpeed(0)`/`StopYeti()` - or, while a tier is already
  * active, arms a fixed `gUnknown_0300149C` countdown and forwards to
- * `sub_802D4B0` (the "remove a mask" helper, `actor_part58.c`)
+ * `RemovePolarAkuAkuMask` (the "remove a mask" helper, `actor_part58.c`)
  * instead. Either way reports "not yet used" (0).
  *
  * The ROM keeps the "already used" early return sharing the exact same
@@ -282,7 +282,7 @@ s32 sub_802B730(void *selfArg)
     }
 
     {
-        register void **effectAddr asm("r2") = &gUnknown_03001494;
+        register void **effectAddr asm("r2") = &gPolarAkuAku;
         void **playerAddr = (void **)&gLevelState;
         s32 tier = ((struct game_state *)*playerAddr)->maskLevel;
 
@@ -322,10 +322,10 @@ s32 sub_802B730(void *selfArg)
                 }
             }
             SetCellAnimSpeed(0);
-            sub_802DFBC();
+            StopYeti();
         } else {
             *usedTimer = 0x4b;
-            sub_802D4B0(*effectAddr);
+            RemovePolarAkuAkuMask(*effectAddr);
         }
     }
 
@@ -336,12 +336,12 @@ end:
 
 /* Same shape as `sub_802B730` (twin trigger, different reset target -
  * state 0xc/table-index 0xb): once-only spawn/reset gated the same way
- * on `gUnknown_0300149C`/mask level (`maskLevel`), or forwards to `sub_802D4B0`.
+ * on `gUnknown_0300149C`/mask level (`maskLevel`), or forwards to `RemovePolarAkuAkuMask`.
  *
  * Same `goto`-shared-tail idiom as `sub_802B730` above (single `return
  * result;` at one shared `end` label) and the same three
  * persistent-address-local shape, except here `effectAddr` itself
- * (`&gUnknown_03001494`, in r4) is the register reused for the
+ * (`&gPolarAkuAku`, in r4) is the register reused for the
  * unrelated `0` constant once its own address is no longer needed on
  * the tier-clear path (the tier-active path never touches that reuse,
  * since it reads through the original `effectAddr` before this
@@ -358,7 +358,7 @@ s32 sub_802B7E0(void *selfArg)
     }
 
     {
-        register void **effectAddr asm("r4") = &gUnknown_03001494;
+        register void **effectAddr asm("r4") = &gPolarAkuAku;
         void **playerAddr = (void **)&gLevelState;
         s32 tier = ((struct game_state *)*playerAddr)->maskLevel;
 
@@ -382,10 +382,10 @@ s32 sub_802B7E0(void *selfArg)
             }
             gUnknown_030014A0 = 1;
             SetCellAnimSpeed(0);
-            sub_802DFBC();
+            StopYeti();
         } else {
             *usedTimer = 0x4b;
-            sub_802D4B0(*effectAddr);
+            RemovePolarAkuAkuMask(*effectAddr);
         }
     }
 

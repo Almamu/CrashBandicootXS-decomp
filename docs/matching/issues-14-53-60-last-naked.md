@@ -21,7 +21,7 @@ across the loop. Those are gcc's own strength reduction of
 - The count reset sits inside `if (count != 0)`, and the final call
   spells its position `(self->records + best)->pos`.
 
-## `sub_802CC9C` (actor_part126.c, issue #53)
+## `UpdatePolarElectricFence` (actor_part126.c, issue #53)
 
 A hazard/proximity state machine that tests the part's own box and three
 `gStaticData_0817A7xx` boxes. The "heavy r5/r6/r7 reuse" in the old note
@@ -29,7 +29,7 @@ is gcc propagating the zero the hit blocks store. The hit block is a
 `HAZARD_HIT` macro wrapped in `if (1)`: `do { } while (0)` and an inline
 function both change the block layout. `sub_802B7E0` returns `u8`.
 
-## `sub_80327A4` (actor_part130.c, issue #60)
+## `DrawJetpackCollectedWumpa` (actor_part130.c, issue #60)
 
 A bounding-box-culled sprite draw with `DrawActor`'s shape.
 The doubling code stays in with the scale flag fixed at 0, followed by

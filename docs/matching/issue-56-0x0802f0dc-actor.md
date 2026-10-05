@@ -8,7 +8,7 @@ at `self+0xc`, an anim-frame halfword/byte pair at `self+0x10`/
 `self+0x12`, an accumulator at `self+8`, a "part table" pointer at
 `self+0`, and here also an event/trampoline table pointer at
 `self+0x50`), but driving a *different* singleton than issue #58's
-`gUnknown_03001534` cluster and issue #62's `gUnknown_030015AC`
+`gAirship` cluster and issue #62's `gHovercraft`
 cluster - this one's flags/counters live at `gUnknown_030014E0`-
 `gUnknown_03001518`.
 
@@ -168,11 +168,11 @@ are named by the lower 5 hex digits of their first function's address
   getter for the singleton's own flag.
 - **`sub_802FA34`** (`src/graphics/actor_part46.c`) - trivial
   constant-true predicate.
-- **`sub_802F97C`** (`src/graphics/actor_part45b.c`) - a physics-step-
+- **`UpdateJetpackShot`** (`src/graphics/actor_part45b.c`) - a physics-step-
   and-collision-react updater: advances `self`'s position by its
   velocity pair plus a fixed gravity-like Y offset and a fixed Z step,
   then reacts to a `sub_802A3AC` collision probe - firing a trampoline
-  on the hit object if any, else checking `sub_8031378` (an AABB
+  on the hit object if any, else checking `IsTouchingAirship` (an AABB
   overlap test) and a `self+0x34` depth threshold before firing
   `self`'s own `self+0x50`-table trampoline (index 8, no NULL-guard on
   that specific call) or, once past the threshold, falling back to
@@ -198,14 +198,14 @@ are named by the lower 5 hex digits of their first function's address
   declared local (`u8 *self = selfArg;`, this file's usual pattern) -
   only typing the parameter itself as `u8 *self` (dropping the
   `void *selfArg` indirection entirely) got the byte-exact result. Since
-  nothing calls `sub_802F97C` by name (only indirectly through a
+  nothing calls `UpdateJetpackShot` by name (only indirectly through a
   `void *`-typed function-pointer table entry), the parameter's own
   type here doesn't need to match the project's usual convention.
-- **`sub_802FA04`** (`src/graphics/actor_part45c.c`) - an
+- **`CreateJetpackShot`** (`src/graphics/actor_part45c.c`) - an
   `InitActorPart`-based constructor for this cluster's `self` object:
   forwards its first three real arguments plus one stack argument
   straight to `InitActorPart`, then marks `self+0x54` = 1, sets
-  `self+0x50`'s event/trampoline table to `gStaticData_087E517C`, and
+  `self+0x50`'s event/trampoline table to `gJetpackShotVtable`, and
   stashes its remaining two stack arguments into `self+0x58`/`self+0x5c`;
   now fully matched as real C, closing the gap the same 7-argument
   `InitActorPart`-wrapper shape is still parked on for `sub_80305F8`
@@ -236,12 +236,12 @@ are named by the lower 5 hex digits of their first function's address
   transcription of a substantial function doesn't count as "matched"
   under this project's current tracking policy, so
   `tools/report_units.py` keeps this address's `base_object` as `None`.
-- **`sub_802FA38`** (`src/graphics/actor_part46b.c`) - a
+- **`UpdateJetpackPlane`** (`src/graphics/actor_part46b.c`) - a
   ~150-instruction function combining a position update (via
   `self+0x60`/`0x64`/`0x68` velocity-like fields), a `self+0x2c`
   threshold flag, a `gStaticData_0817C260` stride-8 keyframe-table
   lookup/`_call_via_r3` dispatch, and a player-distance/push-out damage
-  calculation (`__divsi3`-scaled deltas feeding `sub_802E674`) plus
+  calculation (`__divsi3`-scaled deltas feeding `SpawnJetpackCannonball`) plus
   a `self+0x7c`-gated `sub_802A6EC`/`_call_via_r2` trampoline pair.
   Fully understood and every load/store, branch and call transcribed
   is confirmed correct; parked because the keyframe-table lookup is
@@ -250,7 +250,7 @@ are named by the lower 5 hex digits of their first function's address
   alive in `r7` for the whole function - see those entries), and the
   damage-calculation block that follows compounds this with `r8`/`sb`
   register pressure held live across two `__divsi3` calls and a
-  `sub_802E674` call - no C-level technique (register-variable pins,
+  `SpawnJetpackCannonball` call - no C-level technique (register-variable pins,
   local-copy barriers, splitting into helper calls) reached this exact
   allocation without either losing the ROM's registers or
   reintroducing the r7 hazard.
@@ -282,7 +282,7 @@ matched/parked list this entry feeds into.
 
 ## Later pass: member-pointer dispatch
 
-A later pass promoted `sub_802F748` (`actor_part44b.c`) and `sub_802FA38` (`actor_part46b.c`; its damage block needed plain `/` for `__divsi3` instead of explicit calls, and no register pins) from NAKED to real C. The "r7 table-base"
+A later pass promoted `sub_802F748` (`actor_part44b.c`) and `UpdateJetpackPlane` (`actor_part46b.c`; its damage block needed plain `/` for `__divsi3` instead of explicit calls, and no register pins) from NAKED to real C. The "r7 table-base"
 shape was gcc 2.x's pointer-to-member-function call
 `(this->*table[this->state])()`, which `ACTOR_PMF_CALL` in
 `include/actor_self.h` reproduces with no register pins. See

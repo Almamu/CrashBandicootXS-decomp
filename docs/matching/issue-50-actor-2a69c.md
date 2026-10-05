@@ -89,7 +89,7 @@ only the tail continuation `..._ac28.s` remains.
   the first byte of `self`'s part-table pointer.
 - **`sub_802A9DC`** (`src/graphics/actor_part56.c`) - the state/table-
   index/anim-frame reset idiom already documented for the boss
-  cluster's `sub_8030530`/`sub_8030C98`.
+  cluster's `sub_8030530`/`AirshipStateFall`.
 - **`sub_802AA00`/`sub_802AA04`/`sub_802AA08`** (`src/graphics/actor_part56.c`)
   - trivial `self+0x24`/`0x20`/`0x1c` getters.
 - **`sub_802AA4C`** (`src/graphics/actor_part52.c`) - trivial `self+0x2c`
@@ -203,7 +203,7 @@ that file into `actor_part52.c`/`actor_part54.c` - shifting every
 subsequent function's address by 4 bytes, caught only by the full-link
 `make compare` and the map-file address-shift diagnostic
 `docs/workflow.md` describes. This is the same failure mode already
-documented for `sub_8033BB8` (issue #62) and the `sub_8008C80`/
+documented for `CreateHovercraftCannon` (issue #62) and the `sub_8008C80`/
 `sub_8008D30` pair, now confirmed a third and fourth time: which other
 functions share a translation unit can change this compiler's own
 register allocation for a function whose *C source* never changed,

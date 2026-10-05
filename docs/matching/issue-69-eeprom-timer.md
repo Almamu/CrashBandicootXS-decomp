@@ -239,7 +239,7 @@ functions in issue #69's original range now matched (18 already, plus
 these 4, plus `EEPROMCompare`/`EEPROMWrite1_check` matched in the prior pass),
 **this closes issue #69**.
 
-## Division/modulo trio and sub_803B46C: same NAKED technique
+## Division/modulo trio and DrawJetpackCheckpointText: same NAKED technique
 
 The same pass also closed out three more parked functions that hit an
 identical class of gap, documented in their own issues:
@@ -258,8 +258,8 @@ identical class of gap, documented in their own issues:
   the same file, in ROM order - see docs/status/util.md. With all 10
   functions in issue #70's range now matched, **this closes issue
   #70** too.
-- **`sub_803B46C`** (`src/graphics/actor_anim.c`, GitHub issue #71) -
-  the near-identical twin of the still-parked `sub_802C2FC`, fixed-
+- **`DrawJetpackCheckpointText`** (`src/graphics/actor_anim.c`, GitHub issue #71) -
+  the near-identical twin of the still-parked `DrawPolarCollectedWumpa`, fixed-
   position OAM setup. One trailing-padding gotcha found while
   transcribing: the ROM disassembly's final `movs r0, r0` before the
   function's `.align 2, 0` is not a real instruction - it's the
@@ -271,7 +271,7 @@ identical class of gap, documented in their own issues:
   `matching_decomp_alignment_fix`, the fix was to drop the explicit
   instruction entirely and let the trailing `asm(".align 2, 0")`
   supply the correct zero-byte padding on its own, exactly as this
-  project's other trailing-padding gotchas were fixed. `sub_802C2FC`
+  project's other trailing-padding gotchas were fixed. `DrawPolarCollectedWumpa`
   itself is unaffected and stays parked - it hits a different pair of
   gaps (a genuinely-eliminated `| 0` dead store and a register-budget
   spill) that this pass didn't attempt.
@@ -313,7 +313,7 @@ identical class of gap, documented in their own issues:
   matched on its own with both division routines still fully raw in
   neighboring `asm/*.s` files, so the ordering within the `.c` file
   didn't matter yet); the now-unmatched `Ror32` helper removed.
-- `src/graphics/actor_anim.c` - `sub_803B46C` now `NAKED`, matched.
+- `src/graphics/actor_anim.c` - `DrawJetpackCheckpointText` now `NAKED`, matched.
 - `asm/code_3_2_20e_aa08.s`, `asm/code_3_2_20e_aa90.s`,
   `asm/code_3_2_20e_ab54.s`, `asm/code_3_2_20e_3adb4.s`,
   `asm/code_3_2_20e_3ae4c.s`, `asm/code_3_3_b46c.s` - all deleted

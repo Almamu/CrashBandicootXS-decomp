@@ -5,8 +5,8 @@ Second half of issue #59's Phase 2 gap - the 60 raw functions left after
 pass closed `0x08031784`-`0x08031A6C`. That Phase 2 gap
 (`0x08031A6C`-`0x08033804`, `asm/code_3_2_20_28568_c99c_31784_31a6c.s`)
 was split in half for parallel work: a sibling pass covers the first 30
-functions (`sub_8031A6C`-`sub_8032688`, `src/graphics/actor_part129.c`);
-this pass covers the last 30 (`sub_80326E4`-`nullsub_35`, new file
+functions (`UpdateJetpackBalloonCrate`-`UpdateJetpackRing`, `src/graphics/actor_part129.c`);
+this pass covers the last 30 (`CreateJetpackRing`-`nullsub_35`, new file
 `src/graphics/actor_part130.c`).
 
 ## What this pass closed: 16 matched, 14 NAKED, 0 left raw
@@ -22,14 +22,14 @@ have entries for this pass, cross-referencing this document).
 1. **The singleton system's own camera-follow/scroll-velocity RAM
    family, `gUnknown_030015A0`-`030015FF`.** `sub_8032C0C`/`sub_8032EA0`
    are the first functions in ROM order to touch most of this family's
-   fields (`gUnknown_030015B4`-`030015EC`, ~9 live fields across a
+   fields (`gHovercraftX`-`030015EC`, ~9 live fields across a
    ~0x38-byte span with a few gaps, plus a separate small cluster at
    `030015FC`-`030015FF`). A **later** ROM region (issue #62,
    `0x08033804`+, `src/graphics/actor_part28.c`-`actor_part37.c`,
    already matched in an earlier pass) also touches this exact family
    and had *already* established the naming and, more importantly, the
    **representation convention**: flat, independently-linked `extern`
-   globals (e.g. `extern s32 gUnknown_030015B4;`), not fields of a
+   globals (e.g. `extern s32 gHovercraftX;`), not fields of a
    struct reached through a common base pointer. This pass reuses that
    established convention verbatim (including the exact names already
    assigned by `actor_part28.c`'s own extern block) for consistency,
@@ -43,9 +43,9 @@ have entries for this pass, cross-referencing this document).
    worse outcome than following the a-priori guess. New fields this
    pass adds to the family (not touched by `actor_part28.c`):
    `gUnknown_030015A0`/`030015A4`/`030015A8` (P2-meter-shaped row/column
-   counts and fill level, seeded by `sub_80331BC` from
-   `gStaticData_08169CE8`), `gUnknown_03001600` (the row-pointer array
-   `sub_80330FC`/`sub_80336CC` fill, structurally identical to the boss
+   counts and fill level, seeded by `CreateHovercraft` from
+   `gHovercraftPicture`), `gUnknown_03001600` (the row-pointer array
+   `DrawHovercraftMap`/`ConvertHovercraftTiles` fill, structurally identical to the boss
    cluster's `gUnknown_03001580`), `gUnknown_030015C0`/`030015C4`
    (BG2-space dy/dx offsets), `gUnknown_030015C8` (projection-scale
    source, structurally identical to the boss cluster's
@@ -57,8 +57,8 @@ have entries for this pass, cross-referencing this document).
    `gUnknown_03001520`).
 
 2. **No new "singleton object" struct was introduced either**, for the
-   same reason: `sub_80331BC` (the constructor), `sub_8033264`,
-   `sub_8033470`, `sub_8033550`, `sub_8033604` all operate on the
+   same reason: `CreateHovercraft` (the constructor), `SpawnHovercraft`,
+   `UpdateHovercraft`, `UpdateHovercraftBg2`, `LoadHovercraftGraphics` all operate on the
    singleton object through raw `self+offset` casts, matching every
    neighboring `actor_part*.c` file's own convention for this same
    large per-instance object family (state at `+0x28`, table-index at
@@ -69,20 +69,20 @@ have entries for this pass, cross-referencing this document).
 
 ### A confirmed structural tie
 
-`sub_8033048`/`sub_80330FC`/`sub_8033470`/`sub_8033550`/`sub_8033604`
+`sub_8033048`/`DrawHovercraftMap`/`UpdateHovercraft`/`UpdateHovercraftBg2`/`LoadHovercraftGraphics`
 confirm the singleton is a **second, independent "unique object"**
 running machinery structurally parallel to the boss cluster (issue #58)
-end to end: a patrol/oscillation driver (mirrors `sub_8030734`), a
-BG-tilemap-blit tile consumer (mirrors `sub_8030D48`), a per-frame
-animate+project+tile-stream driver (mirrors `sub_8031504`), a BG2
-affine-matrix committer (mirrors `sub_80312C4`, pure scale - no
+end to end: a patrol/oscillation driver (mirrors `AirshipStateFireballs`), a
+BG-tilemap-blit tile consumer (mirrors `DrawAirshipMap`), a per-frame
+animate+project+tile-stream driver (mirrors `LoadAirshipGraphics`), a BG2
+affine-matrix committer (mirrors `UpdateAirshipBg2`, pure scale - no
 rotation, matching `docs/rom_map.md`'s prior finding), and a top-level
 per-frame driver that DMA-clears/fills a blank BG3 tile exactly like
-`sub_8031504` does before its own meter call. `sub_80336CC` is the
-P2-side twin of the already-matched VRAM fill-level meter `sub_8031604`
+`LoadAirshipGraphics` does before its own meter call. `ConvertHovercraftTiles` is the
+P2-side twin of the already-matched VRAM fill-level meter `ConvertAirshipTiles`
 (issue #58, `actor_part26c.c`), on this singleton's own per-level table
-(`gStaticData_08169AE8`) and row array (`gUnknown_03001600`) rather than
-the boss's (`gStaticData_08167AD4`/`gUnknown_03001580`).
+(`gHovercraftPalette`) and row array (`gUnknown_03001600`) rather than
+the boss's (`gAirshipPalette`/`gUnknown_03001580`).
 
 ### A corrected semantic reading
 
@@ -103,24 +103,24 @@ these were visible from the isolated per-function compile, only from
 the map-file address-shift check after cutting the whole batch into its
 real `.c` file and linking:
 
-- **`sub_80331BC`** (the singleton constructor) - a first plain-C
+- **`CreateHovercraft`** (the singleton constructor) - a first plain-C
   attempt kept the freshly `mem_alloc`'d pointer and
-  `&gUnknown_030015AC` in the same register (collapsing the ROM's own
+  `&gHovercraft` in the same register (collapsing the ROM's own
   `r4`(address)/`r5`(allocation) split) and used one shared "zero"
   register where the ROM keeps two independent ones (`r4` reused after
   the address store, plus a separate `r6` zero for the `self+0x12`
   byte store) - 4 bytes short of the ROM once linked. Transcribed
   NAKED instead of chasing the exact register split further.
-- **`sub_8033470`** (the per-frame animate+project+tile-stream driver)
+- **`UpdateHovercraft`** (the per-frame animate+project+tile-stream driver)
   - the mirror-image gap: a plain-C attempt produced 4 bytes *longer*
   than the ROM. Transcribed NAKED.
-- **`sub_8033604`** (the top-level per-frame driver) - a plain-C attempt
+- **`LoadHovercraftGraphics`** (the top-level per-frame driver) - a plain-C attempt
   using this codebase's `DmaSet()` macro (matching the exact
   store-then-readback pattern the ROM's own two DMA setups use) was 24
   bytes *short* of the ROM once linked - this compiler folds the two
   DMA setups' shared literal-pool addressing more aggressively than the
   ROM's own build did. Transcribed NAKED.
-- **`sub_803283C`** (a reward-dispensing teardown, same shared shape as
+- **`DestroyJetpackCollectedWumpa`** (a reward-dispensing teardown, same shared shape as
   the already-matched `sub_803B0C4`) - every instruction reproduced
   correctly except the very first two: this compiler's parameter-
   register prologue shuffle always copies the incoming `flags` (r1)
@@ -182,7 +182,7 @@ real `.c` file and linking:
 The remaining NAKED functions hit gaps already fully documented
 elsewhere in this project, re-confirmed rather than re-derived here:
 
-- **`sub_8032718`** - the shared anim-frame-advance-and-clamp idiom
+- **`UpdateJetpackCollectedWumpa`** - the shared anim-frame-advance-and-clamp idiom
   (this compiler schedules the `#4`/`#6` `ldrsh` constant loads one
   instruction earlier than the ROM's own build), same as
   `sub_80318D0`/`sub_8031954`/`sub_80319A0` (issue #59).
@@ -190,9 +190,9 @@ elsewhere in this project, re-confirmed rather than re-derived here:
   table lookup keeping the table's base address alive in `r7` across
   straight-line code with no call to piggyback a high-register relay
   on, the same categorical `r7`-never-self-allocated hazard as
-  `sub_8031A08` (issue #59)/`sub_8033B44`/`sub_8033C84`/`sub_8033E80`
+  `sub_8031A08` (issue #59)/`UpdateHovercraftCannon`/`sub_8033C84`/`UpdateHovercraftLauncher`
   (issue #62).
-- **`sub_80327A4`** - a bounding-box-culled sprite draw with an
+- **`DrawJetpackCollectedWumpa`** - a bounding-box-culled sprite draw with an
   `r8`-flag-across-calls shape, the same class of gap `DrawPowerDialog`/
   `DrawLanguageSelect`/`GAX2_init` and the hard-won `DrawActor`
   (issue #50, `actor_part55.c`) already needed elaborate register-pin/
@@ -207,12 +207,12 @@ elsewhere in this project, re-confirmed rather than re-derived here:
   to keep each branch's pointer reload from being merged into the shared
   tail) - see
   [issue-59-60-static-inline-cse-promotion.md](issue-59-60-static-inline-cse-promotion.md).
-- **`sub_8032C0C`/`sub_8032EA0`/`sub_80330FC`/`sub_8033264`/
-  `sub_80336CC`** - many-high-register (`ip`/`sb`/`sl`/`r8`)
+- **`sub_8032C0C`/`sub_8032EA0`/`DrawHovercraftMap`/`SpawnHovercraft`/
+  `ConvertHovercraftTiles`** - many-high-register (`ip`/`sb`/`sl`/`r8`)
   allocation, the same gcc-2.9 difficulty already documented
-  project-wide for `sub_8031604`/`DrawLanguageSelect`/`GAX2_init` and
-  others. `sub_80336CC` in particular is a near-identical twin of the
-  already-NAKED `sub_8031604` (issue #58) - same shape, different
+  project-wide for `ConvertAirshipTiles`/`DrawLanguageSelect`/`GAX2_init` and
+  others. `ConvertHovercraftTiles` in particular is a near-identical twin of the
+  already-NAKED `ConvertAirshipTiles` (issue #58) - same shape, different
   per-level table/row array.
 
 ## Verification
@@ -236,7 +236,7 @@ matched/parked list this entry feeds into.
 
 ## Later pass: member-pointer dispatch
 
-A later pass promoted `sub_8032718`, `sub_803283C`, `sub_8032950` and `sub_8032A94` (`actor_part130.c`). `sub_803283C`'s parameter-copy order came out right from a plain C destructor with no barrier; `sub_8032718`'s anim idiom needed per-field `anims[animIndex]` indexing. The other NAKED functions here (many-high-register, DMA/tile, constructor cases) were not retried from NAKED to real C. The "r7 table-base"
+A later pass promoted `UpdateJetpackCollectedWumpa`, `DestroyJetpackCollectedWumpa`, `sub_8032950` and `sub_8032A94` (`actor_part130.c`). `DestroyJetpackCollectedWumpa`'s parameter-copy order came out right from a plain C destructor with no barrier; `UpdateJetpackCollectedWumpa`'s anim idiom needed per-field `anims[animIndex]` indexing. The other NAKED functions here (many-high-register, DMA/tile, constructor cases) were not retried from NAKED to real C. The "r7 table-base"
 shape was gcc 2.x's pointer-to-member-function call
 `(this->*table[this->state])()`, which `ACTOR_PMF_CALL` in
 `include/actor_self.h` reproduces with no register pins. See
@@ -244,17 +244,17 @@ shape was gcc 2.x's pointer-to-member-function call
 
 ## Later pass: NAKED retry
 
-A later pass promoted `sub_8032C0C`, `sub_8032EA0`, `sub_80331BC`,
-`sub_8033264`, `sub_8033470` and `sub_8033604` to plain C, mostly by
+A later pass promoted `sub_8032C0C`, `sub_8032EA0`, `CreateHovercraft`,
+`SpawnHovercraft`, `UpdateHovercraft` and `LoadHovercraftGraphics` to plain C, mostly by
 porting fixes from their issue #58 twins. The link-time byte-count gaps
-noted above came from a reused `self` pseudo (`sub_8033470`) and the
-tile-clear loop's form (`sub_8033604`). `sub_80330FC` and `sub_80336CC`
+noted above came from a reused `self` pseudo (`UpdateHovercraft`) and the
+tile-clear loop's form (`LoadHovercraftGraphics`). `DrawHovercraftMap` and `ConvertHovercraftTiles`
 stay NAKED with `#if NON_MATCHING` drafts. See
 [issue-58-61-naked-retry.md](issue-58-61-naked-retry.md).
 
 ## Later pass: third near-miss sweep
 
-`sub_80336CC` is real C (matches under both compilers). The 0xf mask
+`ConvertHovercraftTiles` is real C (matches under both compilers). The 0xf mask
 is an opaque value (`asm("" : "=r"(m) : "0"(0xf))`) ANDed as `m & b`,
 the second byte of each pair has its own local, the second loop has its
 own counter, and the row header is written step by step in ROM order.

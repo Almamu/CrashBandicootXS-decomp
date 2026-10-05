@@ -46,7 +46,7 @@ at `self+0xc`, an anim-frame halfword/byte pair at `self+0x10`/
   alongside that restructuring, both found by isolated-compile diffing
   against `expected/code_3.s` instruction-by-instruction:
   - The three addresses this function keeps alive throughout
-    (`&gUnknown_0300149C`, `&gUnknown_03001494`, `&gLevelState`)
+    (`&gUnknown_0300149C`, `&gPolarAkuAku`, `&gLevelState`)
     each need their own persistent pointer local, read once and reused
     from there (`register s32 *usedTimer asm("r1")`, `register void
     **effectAddr asm("r2")`/`asm("r4")` in the two functions

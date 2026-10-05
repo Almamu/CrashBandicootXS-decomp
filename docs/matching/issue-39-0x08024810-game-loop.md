@@ -91,7 +91,7 @@ flat one:
   (`gBgStreamerVtable`/`gBgLayerBaseVtable`) for notifying a parent
   object of size/position changes, following the exact
   `self + *(s16 *)(mgr + N)`/`*(void **)(mgr + N + 4)` idiom
-  `src/graphics/actor_anim.c`'s `sub_803B0F0` already established;
+  `src/graphics/actor_anim.c`'s `UpdatePolarCheckpointText` already established;
   `sub_8024D58`/`sub_8024D5C`/`sub_8024D60`/`sub_8024D6C` are plain
   position accessors; `sub_8024DCC` clamps to `[-0x10, 0x10]`;
   `sub_8024DE0` clamps a position pair against an upper-bound pair;
