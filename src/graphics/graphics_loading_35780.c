@@ -31,7 +31,7 @@
 extern struct oam_shadow_buffer *gOamBuffer;
 extern struct AudioContext *gAudioContext;
 extern u8 gDispcnt[2];
-extern void *gUnknown_03001304;
+extern void *gInput;
 extern void *gLogoActorTiles[2];
 extern s32 gLogoActorTileBuffer;
 extern void *gLogoActorLastFrame;

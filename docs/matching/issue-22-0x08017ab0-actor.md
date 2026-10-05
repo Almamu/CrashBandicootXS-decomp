@@ -81,7 +81,7 @@ Dispatches on `self+8` (0/1/2; anything else returns immediately):
      `0x27`/`0x3b` box of `other`, and whose `entry+0x4d` byte has bit
      `0x7f` clear: a `entry+0x4e` tag of `0xe`/`0x13`/`0x14`/`0x15`/`0xa`
      calls `ExplodeCrate(entry, 0)`; any other tag instead gates
-     `BreakCrate(entry, 1)` behind `sub_8010908(entry, tag)`.
+     `BreakCrate(entry, 1)` behind `IsCrateKindBreakable(entry, tag)`.
 - **State 2** (`self+8==2`): if `other+0x30==8` and `other+0x34==0` and
   the same in-bounds Q8 check as state 1 step 5 passes, fires
   `_call_via_r4(player + player's-own-0x18-table[0x68].offset, 0, 1, 0)`

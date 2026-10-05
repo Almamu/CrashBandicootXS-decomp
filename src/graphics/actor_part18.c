@@ -98,7 +98,7 @@ void sub_80142B0(void *selfArg)
 extern u8 GetDpadDirection(void *dummy);
 extern u8 sub_8012A7C(void *self);
 extern void UpdatePlayerFacing(void *self);
-extern void *gUnknown_03001304;
+extern void *gInput;
 
 /* Queues action `next` on the +0x31/+0x2F/+0x27 trio; as inline
  * parameters, `cur`/`next` are materialized before the stores. */
@@ -145,7 +145,7 @@ void sub_801434C(void *selfArg)
     busy = sub_8012A7C(self);
     if (busy != 0)
         return;
-    dir = GetDpadDirection(gUnknown_03001304);
+    dir = GetDpadDirection(gInput);
     switch (dir)
     {
     case 0:

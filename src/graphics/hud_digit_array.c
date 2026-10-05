@@ -35,7 +35,7 @@ struct hud_pos
     s32 y;
 };
 
-extern void ***gUnknown_030012D0;
+extern void ***gSpriteBankSet;
 extern void *gLevelState;
 extern u8 *gPaletteCache;
 extern u32 gHudPartAnims[];
@@ -44,16 +44,16 @@ extern struct hud_pos gHudPartPositions[];
 extern void *OperatorNewArray(s32 size);
 extern void InitHudPart(struct hud_slot *slot);
 extern void SetSpritePriority(struct hud_slot *slot, s32 value);
-extern s32 sub_80233B4(void *self);
+extern s32 GetBossIndex(void *self);
 extern void ResetSpriteFrameTimer(struct hud_slot *slot);
 extern void ResetSpriteFrameIndex(struct hud_slot *slot);
 extern void SetSpriteAnimDone(struct hud_slot *slot, s32 arg);
-extern void sub_800737C(struct hud_slot *slot, s32 x, s32 y);
+extern void SetEntityPixelPos(struct hud_slot *slot, s32 x, s32 y);
 extern u8 GetPaletteSlot(u8 *cache, s32 recordId);
-extern void sub_802732C(struct hud_counter *self, u8 iconFlag);
+extern void ConfigureHudParts(struct hud_counter *self, u8 iconFlag);
 extern s32 GetSpriteAnimPaletteSlot(struct hud_slot *slot);
 
-#define HUD_ANIM(offset) ((struct hud_anim_data *)((u8 *)**gUnknown_030012D0 + (offset)))
+#define HUD_ANIM(offset) ((struct hud_anim_data *)((u8 *)**gSpriteBankSet + (offset)))
 #define SLOT_RECORD(s) (((struct hud_record *)(s)->anim_data->records)[(s)->anim_index])
 
 static inline void RestartSlot(struct hud_slot *slot)
@@ -76,14 +76,14 @@ static inline void SetSlotFrame(struct hud_slot *slot, s32 frame)
 
 static inline void SetSlotPos(struct hud_slot *slot, struct hud_pos *pos)
 {
-    sub_800737C(slot, pos->x, pos->y);
+    SetEntityPixelPos(slot, pos->x, pos->y);
 }
 
 /* Builds self->parts: a counted array of 35 HUD slots, each given the
  * shared HUD animation table, its frame (slot 22 shows the current mode's
  * life icon) and its position. Slot 13 gets the second table plus its
  * tile record's palette, slots 16/19/21 their starting frames, and
- * sub_802732C does the rest. */
+ * ConfigureHudParts does the rest. */
 struct hud_counter *InitHud(struct hud_counter *self)
 {
     s32 i;
@@ -120,7 +120,7 @@ struct hud_counter *InitHud(struct hud_counter *self)
         }
         if (i == 0x16)
         {
-            s32 life = sub_80233B4(gLevelState);
+            s32 life = GetBossIndex(gLevelState);
 
             slot = &SLOTS(self)[i];
             SLOTS(self)[0x16].anim_index = life + 6;
@@ -156,7 +156,7 @@ struct hud_counter *InitHud(struct hud_counter *self)
     SetSlotFrame(&SLOTS(self)[16], 10);
     SetSlotFrame(&SLOTS(self)[19], 11);
     SetSlotFrame(&SLOTS(self)[21], 0);
-    sub_802732C(self, 0);
+    ConfigureHudParts(self, 0);
     return self;
 }
 
@@ -170,7 +170,7 @@ struct hud_counter *InitHud(struct hud_counter *self)
  * remaining slots (index 0-34 again) repositioning/re-clamping a
  * handful of specific ones (13, 22, 29 - byte offsets `0x340`/`0x580`/
  * `0x740` off `self->parts`) depending on the current level/game-mode
- * (`sub_80233B4`) and `self->icon_flag`, before DMA-filling nine words
+ * (`GetBossIndex`) and `self->icon_flag`, before DMA-filling nine words
  * at `self+0x40` with `-1` (a raw `REG_DMA3SAD`/`DAD`/`CNT` poke, the
  * same low-level idiom `settings_menu8e.c`'s `ValidateSaveData` and
  * `link_cable.c` already document for this ROM).
@@ -185,7 +185,7 @@ static inline void SetPal(struct hud_slot *slot, s32 v)
     slot->palette = v;
 }
 
-void sub_802732C(struct hud_counter *self, u8 iconFlag)
+void ConfigureHudParts(struct hud_counter *self, u8 iconFlag)
 {
     s32 base;
     s32 i;
@@ -212,7 +212,7 @@ void sub_802732C(struct hud_counter *self, u8 iconFlag)
 
         if (i == 0x16)
         {
-            s32 life = sub_80233B4(gLevelState);
+            s32 life = GetBossIndex(gLevelState);
             struct hud_slot *slot = &SLOTS(self)[i];
 
             SLOTS(self)[0x16].anim_index = life + 6;
@@ -223,7 +223,7 @@ void sub_802732C(struct hud_counter *self, u8 iconFlag)
         {
         case 0x16:
         case 0x17:
-            if (sub_80233B4(gLevelState) == -1)
+            if (GetBossIndex(gLevelState) == -1)
                 break;
             goto get;
         case 0x1D:
@@ -237,7 +237,7 @@ void sub_802732C(struct hud_counter *self, u8 iconFlag)
             break;
         }
 
-        if (sub_80233B4(gLevelState) == -1 && self->icon_flag)
+        if (GetBossIndex(gLevelState) == -1 && self->icon_flag)
         {
             switch (i)
             {

@@ -48,7 +48,7 @@ extern s32 sub_8029EB4(void);
  * Unless `gYetiState == 3`, first eases `gYetiX`
  * toward the player's cached X position (`gActorList->+0x1c`,
  * divisor 32 - the same rsb/lsr/add/asr round-toward-zero idiom as
- * `MovePolarAkuAku`/`sub_80070EC`). Then advances the object's own anim
+ * `MovePolarAkuAku`/`SetEntitySize`). Then advances the object's own anim
  * frame (`+8` accumulator by the `+0x10` per-frame increment,
  * `GetAnimFrameBaseOffset` against the current part-table record's
  * `+4`/`+6` timing fields, latching the `+0x12` done flag and correcting

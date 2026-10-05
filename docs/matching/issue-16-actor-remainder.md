@@ -113,7 +113,7 @@ particular is the single widest jump-table dispatcher attempted in this
 codebase so far - 25 outer cases plus two independent 7-case inner
 tables), every one was transcribed instruction-for-instruction from the
 ROM disassembly instead, the same escape hatch used for
-`sub_8001CB8`/`sub_8001DB4` (`src/system/link_cable.c`) and
+`MakeLinkHandshakeId`/`ResetLinkSessionState` (`src/system/link_cable.c`) and
 `sub_801434C` (`actor_part18.c`).
 
 To keep a function this size transcription-error-free, `ActionCtrlHandleEvent`

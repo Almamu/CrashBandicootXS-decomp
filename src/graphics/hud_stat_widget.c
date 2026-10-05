@@ -7,13 +7,13 @@ extern s32 gHudSlideOffset;
 
 extern void DrawHudPart(struct hud_digit_part *part, s32 x, s32 y);
 extern void AdvanceSpriteAnim(struct actor *part);
-extern s32 sub_80233B4(void *self);
+extern s32 GetBossIndex(void *self);
 extern u8 IsInBonusRound(void *self);
 extern void UpdateHudLives(struct hud_counter *counter);
-extern void sub_8027E88(struct hud_counter *self);
-extern void sub_802757C(struct hud_counter *self);
+extern void UpdateHudPercentCounters(struct hud_counter *self);
+extern void UpdateHudBoss(struct hud_counter *self);
 extern void UpdateHudClock(struct hud_counter *self);
-extern void sub_8027940(struct hud_counter *self);
+extern void UpdateHudCrates(struct hud_counter *self);
 extern void UpdateHudWumpa(struct hud_counter *self);
 
 /* The HUD stat-widget family's dispatcher - see docs/rom_map.md's "full
@@ -21,16 +21,16 @@ extern void UpdateHudWumpa(struct hud_counter *self);
  * hud_counter` passed straight through to every callee here (including
  * `UpdateHudLives`, matched separately in hud_counter.c) - `sself->parts`
  * is the 35-slot OAM array `InitHud` builds. Runs the percentage
- * counter (`sub_8027E88`) when `icon_flag` is set, then the score
+ * counter (`UpdateHudPercentCounters`) when `icon_flag` is set, then the score
  * counter (`UpdateHudLives`) unconditionally, then branches on
- * `sub_80233B4`'s level-type/game-mode result: a non-"none" mode
+ * `GetBossIndex`'s level-type/game-mode result: a non-"none" mode
  * (!= -1) hands off entirely to the icon-indicator widget
- * (`sub_802757C`) and returns early, skipping the rest of the family;
+ * (`UpdateHudBoss`) and returns early, skipping the rest of the family;
  * otherwise it refreshes the last OAM slot's animation state whenever
  * `IsInBonusRound` says the mode changed, conditionally runs
  * `UpdateHudClock` while a "paused"-style central-state flag is set and
  * `mode`/`field_08` are both still zero, then unconditionally runs the
- * two remaining digit counters (`sub_8027940`, `UpdateHudWumpa`). */
+ * two remaining digit counters (`UpdateHudCrates`, `UpdateHudWumpa`). */
 void UpdateHud(struct hud_counter *self)
 {
     register struct hud_counter *sself asm("r5") = self;
@@ -38,13 +38,13 @@ void UpdateHud(struct hud_counter *self)
     gHudSlideOffset = 0;
 
     if (sself->icon_flag) {
-        sub_8027E88(sself);
+        UpdateHudPercentCounters(sself);
     }
 
     UpdateHudLives(sself);
 
-    if (sub_80233B4(gLevelState) != -1) {
-        sub_802757C(sself);
+    if (GetBossIndex(gLevelState) != -1) {
+        UpdateHudBoss(sself);
         return;
     }
 
@@ -58,6 +58,6 @@ void UpdateHud(struct hud_counter *self)
         UpdateHudClock(sself);
     }
 
-    sub_8027940(sself);
+    UpdateHudCrates(sself);
     UpdateHudWumpa(sself);
 }

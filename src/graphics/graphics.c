@@ -628,7 +628,7 @@ void InitPaletteCache(struct palette_cache *self)
     *dirtyAddr = 0;
 }
 
-void sub_8006FC8(void *arg0, u32 arg1)
+void DestroySpriteBankSet(void *arg0, u32 arg1)
 {
     if (arg1 & 1) {
         OperatorDelete(arg0);
@@ -772,7 +772,7 @@ void sub_80070D4(struct actor *self)
     _call_via_r1((u8 *)self + *(s16 *)((u8 *)table + 8), *(void **)((u8 *)table + 0xc));
 }
 
-void *sub_80070E8(struct actor *self)
+void *GetEntityBounds(struct actor *self)
 {
     return &self->halfW;
 }
@@ -781,7 +781,7 @@ void *sub_80070E8(struct actor *self)
  * s16 - the negate-then-divide-by-2 idiom below is C's `(-w) / 2`,
  * matched by the truncating-toward-zero integer division the ROM
  * itself performs (see docs/matching.md, "Matching decompilation"). */
-void sub_80070EC(struct actor *self, s32 w, s32 h)
+void SetEntitySize(struct actor *self, s32 w, s32 h)
 {
     self->halfW = -w / 2;
     self->halfH = -h / 2;
@@ -883,7 +883,7 @@ asm(".align 2, 0");
  * is the same one sub_8006FE4 reads, but as two raw s32 fields
  * (dx/dy) sign-extended from their low 24 bits, not the record table
  * sub_8006FE4 uses - a different part of the same object. */
-void sub_8007174(void *arg0, s32 arg1, s32 arg2, s32 *arg3, s32 *arg4)
+void WorldToScreen(void *arg0, s32 arg1, s32 arg2, s32 *arg3, s32 *arg4)
 {
     void *subObj;
     s32 dx, dy;
@@ -895,7 +895,7 @@ void sub_8007174(void *arg0, s32 arg1, s32 arg2, s32 *arg3, s32 *arg4)
     *arg4 = arg2 - dy;
 }
 
-void sub_800719C(void *arg0, s32 *arg1, s32 *arg2)
+void WorldPosToScreen(void *arg0, s32 *arg1, s32 *arg2)
 {
     void *subObj;
     s32 x, y;
@@ -922,16 +922,16 @@ void nullsub_12(void)
 asm(".align 2, 0");
 
 extern void *OperatorNew(s32 size);
-extern void sub_8007230(struct actor *self);
-extern u8 gStaticData_087E3BEC[];
+extern void ResetEntity(struct actor *self);
+extern u8 gEntityVtable[];
 
-struct actor *sub_80071E4(u16 arg0, u16 arg1, u16 arg2)
+struct actor *CreateEntity(u16 arg0, u16 arg1, u16 arg2)
 {
     struct actor *obj;
 
     obj = OperatorNew(sizeof(struct actor));
-    obj->table = gStaticData_087E3BEC;
-    sub_8007230(obj);
+    obj->table = gEntityVtable;
+    ResetEntity(obj);
     obj->field_08 = arg0;
     obj->x = (s32)arg1 << 8;
     obj->y = (s32)arg2 << 8;
@@ -944,10 +944,10 @@ s32 sub_800722C(void)
 }
 
 /* Clears self's bit1/bit0/bit3/bit4, sets bit2 - the actor-init step
- * called from sub_80071E4. 44-byte body isn't 4-aligned, so the
+ * called from CreateEntity. 44-byte body isn't 4-aligned, so the
  * trailing asm(".align 2, 0") is required (see the first entry in
  * docs/matching.md). */
-void sub_8007230(struct actor *self)
+void ResetEntity(struct actor *self)
 {
     /* `result` and `tmp` are pinned so the running result stays in
      * the constant's own register (r1) rather than the freshly-loaded
@@ -986,16 +986,16 @@ void sub_8007230(struct actor *self)
 }
 asm(".align 2, 0");
 
-struct actor *sub_800725C(struct actor *self)
+struct actor *InitEntity(struct actor *self)
 {
-    self->table = gStaticData_087E3BEC;
-    sub_8007230(self);
+    self->table = gEntityVtable;
+    ResetEntity(self);
     return self;
 }
 
 /* `result`/`tmp` pinned so the running result stays in the constant's
  * own register (r1) rather than the freshly-loaded byte's (r2) -
- * same pattern as sub_8007230 above (see docs/matching.md, "Matching
+ * same pattern as ResetEntity above (see docs/matching.md, "Matching
  * decompilation"). */
 void sub_8007278(struct actor *self)
 {
@@ -1008,7 +1008,7 @@ void sub_8007278(struct actor *self)
     self->flags = result;
 }
 
-/* Same accumulator-register pattern as sub_8007230/sub_8007278 above. */
+/* Same accumulator-register pattern as ResetEntity/sub_8007278 above. */
 void sub_8007284(struct actor *self)
 {
     register s32 result asm("r1");
@@ -1027,7 +1027,7 @@ u8 sub_8007290(struct actor *self)
 }
 asm(".align 2, 0");
 
-/* Same accumulator-register pattern as sub_8007230/sub_8007278/
+/* Same accumulator-register pattern as ResetEntity/sub_8007278/
  * sub_8007284 above. */
 void sub_800729C(struct actor *self)
 {
@@ -1040,7 +1040,7 @@ void sub_800729C(struct actor *self)
     self->flags = result;
 }
 
-/* Same accumulator-register pattern as sub_8007230/sub_8007278/
+/* Same accumulator-register pattern as ResetEntity/sub_8007278/
  * sub_8007284/sub_800729C above. */
 void sub_80072A8(struct actor *self)
 {
@@ -1076,7 +1076,7 @@ u8 sub_80072C0(struct actor *self)
 }
 asm(".align 2, 0");
 
-/* Same accumulator-register pattern as sub_8007230/sub_8007278/
+/* Same accumulator-register pattern as ResetEntity/sub_8007278/
  * sub_8007284/sub_800729C/sub_80072A8 above. */
 void sub_80072CC(struct actor *self)
 {
@@ -1148,7 +1148,7 @@ u8 sub_800731C(struct actor *self)
 }
 asm(".align 2, 0");
 
-/* Same accumulator-register pattern as sub_8007230/sub_8007278/
+/* Same accumulator-register pattern as ResetEntity/sub_8007278/
  * sub_8007284/sub_800729C/sub_80072A8/sub_80072CC above. */
 void sub_8007328(struct actor *self)
 {
@@ -1161,7 +1161,7 @@ void sub_8007328(struct actor *self)
     self->flags = result;
 }
 
-/* Same accumulator-register pattern as sub_8007230/sub_8007278/
+/* Same accumulator-register pattern as ResetEntity/sub_8007278/
  * sub_8007284/sub_800729C/sub_80072A8/sub_80072CC/sub_8007328 above. */
 void sub_8007334(struct actor *self)
 {
@@ -1181,7 +1181,7 @@ u8 sub_8007340(struct actor *self)
 }
 asm(".align 2, 0");
 
-/* Same accumulator-register pattern as sub_8007230/sub_8007278/
+/* Same accumulator-register pattern as ResetEntity/sub_8007278/
  * sub_8007284/sub_800729C/sub_80072A8/sub_80072CC/sub_8007328/
  * sub_8007334 above. */
 void sub_800734C(struct actor *self)
@@ -1195,7 +1195,7 @@ void sub_800734C(struct actor *self)
     self->flags = result;
 }
 
-/* Same accumulator-register pattern as sub_8007230/sub_8007278/
+/* Same accumulator-register pattern as ResetEntity/sub_8007278/
  * sub_8007284/sub_800729C/sub_80072A8/sub_80072CC/sub_8007328/
  * sub_8007334/sub_800734C above. */
 void sub_8007358(struct actor *self)
@@ -1210,48 +1210,48 @@ void sub_8007358(struct actor *self)
 }
 asm(".align 2, 0");
 
-s32 sub_8007364(struct actor *self)
+s32 GetEntityPixelY(struct actor *self)
 {
     return self->y >> 8;
 }
 
-s32 sub_800736C(struct actor *self)
+s32 GetEntityPixelX(struct actor *self)
 {
     return self->x >> 8;
 }
 
-s32 sub_8007374(struct actor *self)
+s32 GetEntityY(struct actor *self)
 {
     return self->y;
 }
 
-s32 sub_8007378(struct actor *self)
+s32 GetEntityX(struct actor *self)
 {
     return self->x;
 }
 
-void sub_800737C(struct actor *self, s32 arg1, s32 arg2)
+void SetEntityPixelPos(struct actor *self, s32 arg1, s32 arg2)
 {
     self->x = arg1 << 8;
     self->y = arg2 << 8;
 }
 asm(".align 2, 0");
 
-void sub_8007388(struct actor *self, s32 *arg1)
+void SetEntityPixelPosVec(struct actor *self, s32 *arg1)
 {
-    sub_800737C(self, arg1[0], arg1[1]);
+    SetEntityPixelPos(self, arg1[0], arg1[1]);
 }
 
-void sub_8007398(struct actor *self, s32 arg1, s32 arg2)
+void SetEntityPos(struct actor *self, s32 arg1, s32 arg2)
 {
     self->x = arg1;
     self->y = arg2;
 }
 asm(".align 2, 0");
 
-void sub_80073A0(struct actor *self, s32 *arg1)
+void SetEntityPosVec(struct actor *self, s32 *arg1)
 {
-    sub_8007398(self, arg1[0], arg1[1]);
+    SetEntityPos(self, arg1[0], arg1[1]);
 }
 
 void sub_80073B0(struct actor *self, u8 arg1)
@@ -1264,14 +1264,14 @@ u8 sub_80073B4(struct actor *self)
     return self->field_0A;
 }
 
-u16 sub_80073B8(struct actor *self)
+u16 GetEntityId(struct actor *self)
 {
     return self->field_08;
 }
 
-void sub_80073BC(struct actor *self, u32 arg1)
+void DestroyEntity(struct actor *self, u32 arg1)
 {
-    self->table = gStaticData_087E3BEC;
+    self->table = gEntityVtable;
     if (arg1 & 1) {
         OperatorDelete(self);
     }

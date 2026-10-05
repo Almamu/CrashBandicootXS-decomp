@@ -12,14 +12,14 @@ built with old_agbcc. Seven of the eight closures only match under it,
 so `game_loop52.o`, `game_loop53.o`, `game_loop54.o`, `actor_part83.o`
 and `actor_part84.o` moved to `OLD_AGBCC_OBJS`. Every other function in
 those files (real C or NAKED) compiles the same under either compiler.
-`game_loop50.c` stays on the current compiler (`sub_8010D54` matches
+`game_loop50.c` stays on the current compiler (`AddCollisionCandidate` matches
 under both).
 
 ## Structs
 
 - New `include/orbit_part.h`: `struct orbit_part`, the 0x54-byte part
   object `CreateExtraLife`/`CreateWumpa` spawn and
-  `UpdateExtraLife`/`UpdateWumpa`/`sub_8011248`/`sub_801192C` drive
+  `UpdateExtraLife`/`UpdateWumpa`/`UpdateExtraLifeHop`/`UpdateWumpaHop` drive
   (`struct actor` head, animation bank/tag/frame, timer, velocity,
   state/counter/mode/phase bytes, orbit anchor). The x/y head and the
   anchor are both `struct orbit_vec`, so the spawners' paired
@@ -33,13 +33,13 @@ under both).
 
 | Function | File | Compiler | Technique |
 |---|---|---|---|
-| `sub_8010D54` | game_loop50.c | both | The +0x04/+0x08 pair is one by-value `struct pos_pair` argument (the ROM copies it with `ldr; ldr; str; str`), and the two pointer fields are `s32`. The trailing byte arguments are read with `ldrb` straight from their stack words, both addresses first (`add r0, sp, #0x30; add r4, sp, #0x34; ldrb; ldrb`): a `u8` parameter always loads the whole word, so each slot's address goes through an empty `asm("" : "=r"(p) : "0"(&arg))`, with the second pinned to r4. |
-| `sub_8011248` | game_loop52.c | old | One reused sine local `sn` (`sn = table[..]; sn = FixedMul(sn, ..)`), which old_agbcc keeps in r2 across both calls; the old "operand order of the pointer add" note was the compiler, not the source. |
-| `sub_801192C` | game_loop53.c | old | Same as `sub_8011248` (0x3000 scale, `gStaticData_0816BF14`), plus a trailing `asm(".align 2, 0")`. |
+| `AddCollisionCandidate` | game_loop50.c | both | The +0x04/+0x08 pair is one by-value `struct pos_pair` argument (the ROM copies it with `ldr; ldr; str; str`), and the two pointer fields are `s32`. The trailing byte arguments are read with `ldrb` straight from their stack words, both addresses first (`add r0, sp, #0x30; add r4, sp, #0x34; ldrb; ldrb`): a `u8` parameter always loads the whole word, so each slot's address goes through an empty `asm("" : "=r"(p) : "0"(&arg))`, with the second pinned to r4. |
+| `UpdateExtraLifeHop` | game_loop52.c | old | One reused sine local `sn` (`sn = table[..]; sn = FixedMul(sn, ..)`), which old_agbcc keeps in r2 across both calls; the old "operand order of the pointer add" note was the compiler, not the source. |
+| `UpdateWumpaHop` | game_loop53.c | old | Same as `UpdateExtraLifeHop` (0x3000 scale, `gWumpaHopWidths`), plus a trailing `asm(".align 2, 0")`. |
 | `PickUpWumpa` | game_loop53.c | old | Plain C; the tag lands in r7 on its own under old_agbcc (the old r7-hazard note). The `+0x25 = 1` store goes through a `u8` local so the 1 is materialized before the field address. |
 | `SendWumpaToHud` | game_loop53.c | old | The fixed `-0x1000` offsets go through `OrbitOffset(pos, off)`, an inline taking the offset as a parameter: that makes old_agbcc reload `0xFFFFF000` from the pool for each axis (into r1, then r6) while `0x1400` stays shared in r4, as in the ROM. |
 | `CreateExtraLife` | game_loop54.c | old | Plain C: the r8 "zero sentinel" is just a `u8 zero` local stored to +0x49..+0x4B, the anchor copy is `ORBIT_POS`, and the +0x28 bit clears are `s32` 1-bit fields (the ROM's `-17`/`-33` masks). |
-| `sub_8012D24` | actor_part83.c | old | The pad object is loaded before `in` is spilled (`void *pad = gUnknown_03001304` first). The held-0x100 result is what `+0x29` is cleared with. The D-pad part sits after the first `UpdatePlayerFacing` tail, reached by a `goto`, matching the ROM layout. The 3..8 range `case` comes before `case 2`. `part->unk_100` is read through `PartByte(part, 0x100)`, an inline with the offset as a parameter, so the 0x100 is rematerialized instead of reused from the input test. |
+| `sub_8012D24` | actor_part83.c | old | The pad object is loaded before `in` is spilled (`void *pad = gInput` first). The held-0x100 result is what `+0x29` is cleared with. The D-pad part sits after the first `UpdatePlayerFacing` tail, reached by a `goto`, matching the ROM layout. The 3..8 range `case` comes before `case 2`. `part->unk_100` is read through `PartByte(part, 0x100)`, an inline with the offset as a parameter, so the 0x100 is rematerialized instead of reused from the input test. |
 | `sub_801283C` | actor_part84.c | old | Each distance test is two separate `if`s (a `\|\|` gets folded into one compare). The part/type chain is an `if` chain with a shared `goto hit`. The +0x0D bit-0 set in the charge path is a plain `\|= 1` (the `ActOrFlags0D` inline's 1 would be reused for the trio). The trios mix literal stores and parameter-passing inlines exactly where the ROM materializes constants early (`ActTrio28` for the second trio, `ActQueue27(self, 0, 0)` for the idle reset). |
 
 ## Not closed (7)
@@ -64,7 +64,7 @@ under both).
 - **`u8` stack arguments read with `ldrb`.** agbcc always loads a `u8`
   parameter's whole stack word. `*(u8 *)&arg` gives the `ldrb` (as
   `DropExtraLife` already did); to get both addresses formed before the
-  loads, hide them behind an empty asm (`sub_8010D54`).
+  loads, hide them behind an empty asm (`AddCollisionCandidate`).
 
 ## Tools
 

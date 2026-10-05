@@ -34,7 +34,7 @@
  *   `DestroyCutscenePlayer` is a plain two-argument forwarding trampoline to
  *   `DestroySlideshow` (game_loop20.c).
  *
- * - `DecodeLayerChunk` through `sub_8024E24` are the "visual scrolling
+ * - `DecodeLayerChunk` through `StepBgLayerScroll` are the "visual scrolling
  *   background streamer" docs/rom_map.md names: a circular 4x4-block
  *   (64 halfword columns x 32 rows, 0x1000 bytes total) ring-buffer
  *   tilemap fed by the same custom RLE/delta token-stream decoder
@@ -52,16 +52,16 @@
  *   `GetBgStreamerRow`/`GetBgStreamerCell` convert a world pixel position into the
  *   ring buffer's wrapped (col, row) address; `GetBgStreamerCell` combines
  *   both and returns the decoded halfword value directly.
- *   `SetBgStreamerSource`/`DestroyBgStreamer`/`InitBgStreamer`/`sub_8024D58`/
- *   `sub_8024D5C`/`sub_8024D60`/`sub_8024D6C`/`DestroyBgLayerBase`/
- *   `InitBgLayerBase`/`sub_8024DCC`/`sub_8024DE0`/`ScaleBgLayerScroll`/
- *   `sub_8024E24` round out the streamer object's own construction
+ *   `SetBgStreamerSource`/`DestroyBgStreamer`/`InitBgStreamer`/`GetBgStreamerHeight`/
+ *   `GetBgStreamerWidth`/`SetBgStreamerSizeVec`/`SetBgStreamerSize`/`DestroyBgLayerBase`/
+ *   `InitBgLayerBase`/`ClampBgLayerScrollStep`/`ClampBgLayerScrollMax`/`ScaleBgLayerScroll`/
+ *   `StepBgLayerScroll` round out the streamer object's own construction
  *   (allocates the 0x1000-byte ring buffer, wires up two
  *   `_call_via_r2`-style interworking-trampoline tables -
  *   `gBgStreamerVtable`/`gBgLayerBaseVtable` - for notifying a
  *   parent object of size/position changes), plain position/clamp
  *   accessors, and the Q8 scale/accumulate step
- *   (`ScaleBgLayerScroll`/`sub_8024E24`) game_loop3.c's `ScrollBgLayerBase`/
+ *   (`ScaleBgLayerScroll`/`StepBgLayerScroll`) game_loop3.c's `ScrollBgLayerBase`/
  *   `ResetBgLayerBase` already call into.
  *
  * The streamer functions use `struct bg_streamer` below, the layer
@@ -647,19 +647,19 @@ void *InitBgStreamer(void *self0)
 }
 
 /* Plain accessor: returns `self+0x1c`. */
-s32 sub_8024D58(void *self0)
+s32 GetBgStreamerHeight(void *self0)
 {
     return ((struct bg_streamer *)self0)->heightTiles;
 }
 
 /* Plain accessor: returns `self+0x18`. */
-s32 sub_8024D5C(void *self0)
+s32 GetBgStreamerWidth(void *self0)
 {
     return ((struct bg_streamer *)self0)->widthTiles;
 }
 
 /* Plain setter: copies `vec[0]/vec[1]` into `self+0x18`/`self+0x1c`. */
-void sub_8024D60(void *self0, void *vec0)
+void SetBgStreamerSizeVec(void *self0, void *vec0)
 {
     struct bg_streamer *self = self0;
     s32 *vec = (s32 *)vec0;
@@ -671,9 +671,9 @@ void sub_8024D60(void *self0, void *vec0)
 }
 
 /* Plain setter: stores `x`/`y` into `self+0x18`/`self+0x1c` directly
- * (same fields as `sub_8024D60` above, caller-supplied scalars instead
+ * (same fields as `SetBgStreamerSizeVec` above, caller-supplied scalars instead
  * of a vector). */
-void sub_8024D6C(void *self0, s32 x, s32 y)
+void SetBgStreamerSize(void *self0, s32 x, s32 y)
 {
     struct bg_streamer *self = self0;
 
@@ -722,7 +722,7 @@ void *InitBgLayerBase(void *self0)
 
 /* Clamps `value` to `[-0x10, 0x10]` - `self` (the first argument) is
  * unused. */
-s32 sub_8024DCC(void *self0, s32 value)
+s32 ClampBgLayerScrollStep(void *self0, s32 value)
 {
     if (value < -0x10) {
         value = -0x10;
@@ -735,7 +735,7 @@ s32 sub_8024DCC(void *self0, s32 value)
 
 /* Clamps `out[0]`/`out[1]` against `self+8`/`self+0xc` (an upper bound
  * pair), writing the smaller of each back into `out`. */
-void sub_8024DE0(void *self0, s32 *out)
+void ClampBgLayerScrollMax(void *self0, s32 *out)
 {
     struct bg_scroll_layer *self = self0;
     s32 a = self->maxX;
@@ -791,7 +791,7 @@ void ScaleBgLayerScroll(void *self0, void *vec20)
  * `_call_via_r2`-style convention `DestroyBgLayerBase`/`InitBgLayerBase` wire up),
  * then accumulates both trampoline results back into `self`'s own
  * position. */
-void sub_8024E24(void *self0, void *delta0)
+void StepBgLayerScroll(void *self0, void *delta0)
 {
     struct bg_scroll_layer *self = self0;
     s32 *delta = (s32 *)delta0;

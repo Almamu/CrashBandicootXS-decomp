@@ -6,7 +6,7 @@
  * gActionCtrlStateTable action-table handlers for the player/action object
  * (include/action_obj.h). Built with old_agbcc. */
 
-/* The object sub_8025B0C spawns for the 0x100 path, as far as it is used. */
+/* The object LaunchEffectPart spawns for the 0x100 path, as far as it is used. */
 struct spawned
 {
     u8 unk_00[0xC];
@@ -23,7 +23,7 @@ extern void *gAudioContext;
 extern void *gLevelState;
 extern u8 *gPlayer;
 extern void *gEntitySpawner;
-extern void *gUnknown_03001304;
+extern void *gInput;
 extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
 extern u8 GetDpadDirection(void *pad);
 extern u8 sub_8012A7C(struct act *self);
@@ -33,7 +33,7 @@ extern void sub_8015398(struct act *self);
 extern void sub_8015460(struct act *self);
 extern void sub_8015780(struct act *self, s32 a, s32 b, s32 c, s32 d);
 extern u8 HasTurboRun(void *self);
-extern struct spawned *sub_8025B0C(void *pool, s32 a, s32 b, s32 c, s32 d, s32 e, void *f);
+extern struct spawned *LaunchEffectPart(void *pool, s32 a, s32 b, s32 c, s32 d, s32 e, void *f);
 
 /* Stores to the two "next action" trios. As inline parameters, old_agbcc
  * materializes the values before the stores; the `Set` forms store a
@@ -106,12 +106,12 @@ static inline void ActSetContact(struct act_part *p, s32 v)
  *
  * The method calls use ACT_CALL (include/action_obj.h): with the
  * do/while form CSE doesn't carry the fire test's 1 (r7) into the +0x2F
- * stores after the calls. gUnknown_03001304's address is taken up front,
+ * stores after the calls. gInput's address is taken up front,
  * which is what keeps it in r8 across the calls, and the spawned object's
  * bits are bitfields so their masks come out as the ROM's -5/-4. */
 void sub_8012FBC(struct act *self)
 {
-    void **pad = &gUnknown_03001304;
+    void **pad = &gInput;
     u32 in = gKeys;
     u8 busy = sub_8012A7C(self);
 
@@ -148,7 +148,7 @@ void sub_8012FBC(struct act *self)
             ActQueue27(self, alt, 0x1E);
             gPlayer[0x94] = alt;
             gPlayer[0x94] = alt;
-            obj = sub_8025B0C(gEntitySpawner, 0x29, 1, 0, 0xA, alt, gPlayer);
+            obj = LaunchEffectPart(gEntitySpawner, 0x29, 1, 0, 0xA, alt, gPlayer);
             obj->unk_0C_2 = 0;
             obj->unk_28_0 = 1;
         }
@@ -311,7 +311,7 @@ void sub_8013228(struct act *self)
             }
         }
     }
-    if (GetDpadDirection(gUnknown_03001304) <= 2)
+    if (GetDpadDirection(gInput) <= 2)
     {
         if (gPlayer[0x100] == 0)
         {

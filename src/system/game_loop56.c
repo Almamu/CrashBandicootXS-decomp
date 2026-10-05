@@ -57,7 +57,7 @@
  * every call site's own `list_count` argument exactly. No further
  * struct needed.
  *
- * **Shared tail**: calls `SetupRoomBlend(self)`/`sub_802423C()` (the
+ * **Shared tail**: calls `SetupRoomBlend(self)`/`ResetObjBuffers()` (the
  * latter already matched in `game_loop9.c`), then re-reads the
  * level-state record's (`self->0x18`) own `+8` "widget kind" field
  * (the same field `PlayRoom` dispatched its own widget-construction
@@ -89,7 +89,7 @@
  * poll `IsRoomExitRequested` (the `gRoomExitRequested` readiness flag,
  * `game_loop9.c`) each iteration; while not ready and the player's
  * `+0xc` bit 0 is clear, run one more "outstanding work" pass
- * (`sub_802423C`/`UpdateRoomFrame`, a `RunPauseMenu` input-driven mini-
+ * (`ResetObjBuffers`/`UpdateRoomFrame`, a `RunPauseMenu` input-driven mini-
  * dispatch that can early-exit this whole function with return value
  * `1` or `2` via `ResumeRoomAfterPause`'s level-end teardown, a `gUnknown_
  * 030007E0` input-flag-gated `ShowHudCounters` ping, `UpdatePartList` on
@@ -108,7 +108,7 @@
  * entries whose `_call_via_r1` trampoline probe returns `3` *and* whose
  * own `+0x4e` tag is `0xa` (the same physics-subsystem state tag
  * `gCrateHitResponse` indexes, `docs/matching/
- * issue-12-physics-collision.md`), then calls `sub_8023140(gUnknown_
+ * issue-12-physics-collision.md`), then calls `AddPendingSwitchCrates(gUnknown_
  * 030012C0, count)`. **Final tail** (`_08023F92`, also every early-out
  * above): flushes all five hot IWRAM widget-manager globals
  * (`ClearPartList` on `030012E8`/`EC`/`F0`/`F8`/`F4`, `ResetCrateList` on
@@ -265,7 +265,7 @@ extern void *gUnknown_030012EC;
 extern void *gUnknown_030012F0;
 extern void *gUnknown_030012F8;
 extern void *gUnknown_030012E8;
-extern void *gUnknown_03001304;
+extern void *gInput;
 extern struct gl_entity_list *gCrateList;
 extern s32 gRoomFrameCount;
 extern union gl_input gKeys;
@@ -302,7 +302,7 @@ extern void AddPaletteCycle(void *queue, u16 *targets, u16 *lists, s32 rate, s32
     AddPaletteCycle(gPaletteCycles, PAL_RAM, (lists), (rate), (count), \
                 (struct fx_direction){ (dir) })
 extern void SetupRoomBlend(struct gl_self *self);
-extern void sub_802423C(void);
+extern void ResetObjBuffers(void);
 extern void ResetSpriteFrameTimer(void *part);
 extern void ResetSpriteFrameIndex(void *part);
 extern void SetSpriteAnimDone(void *part, s32 arg);
@@ -337,7 +337,7 @@ extern void FadePaletteToBlack(void);
 extern s32 *GetBonusPlatform(void *level);
 extern s32 sub_801B29C(s32 *arg);
 extern void SetCheckpoint(void *level, s32 arg, s32 *point);
-extern void sub_8023140(void *level, s32 count);
+extern void AddPendingSwitchCrates(void *level, s32 count);
 extern void ClearPartList(void *mgr);
 extern void ResetCrateList(void *list);
 extern void HideBg0(void);
@@ -431,7 +431,7 @@ s32 RunRoom(struct gl_self *self)
     }
 
     SetupRoomBlend(self);
-    sub_802423C();
+    ResetObjBuffers();
     if (self->widget->kind == 1)
     {
         RestartPlayerAnim(gPlayer, 0x1F);
@@ -473,9 +473,9 @@ s32 RunRoom(struct gl_self *self)
     {
         struct gl_player *p;
 
-        sub_802423C();
+        ResetObjBuffers();
         UpdateRoomFrame(self);
-        UpdateKeys(gUnknown_03001304);
+        UpdateKeys(gInput);
         if (!gPlayer->dead && (gKeys.half.hi & 8))
         {
             s32 r = RunPauseMenu();
@@ -483,7 +483,7 @@ s32 RunRoom(struct gl_self *self)
             if (r == 0)
             {
                 ResumeRoomAfterPause(self);
-                UpdateKeys(gUnknown_03001304);
+                UpdateKeys(gInput);
             }
             if (r == 1)
             {
@@ -565,7 +565,7 @@ fade:
                     i++;
                 } while (i < (*list)->count);
             }
-            sub_8023140(gLevelState, count);
+            AddPendingSwitchCrates(gLevelState, count);
         }
     }
     ClearPartList(gUnknown_030012E8);

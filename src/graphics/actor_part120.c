@@ -25,8 +25,8 @@
  * of `owner->0xd` and plays SFX `0x26`, or on `self->0x6c == 0xf` plays
  * SFX `9`; then unconditionally, if `self->0x6c == 0x17` and
  * `owner->0x30 == 9` and `owner->0x34 == 0`, spawns a part via
- * `sub_8025B0C(gEntitySpawner, 0x17, 4, -0x2d, 2, owner)` (the same
- * `sub_8025B0C(pool, kind, ..., z, src)` shape `game_loop14.c`
+ * `LaunchEffectPart(gEntitySpawner, 0x17, 4, -0x2d, 2, owner)` (the same
+ * `LaunchEffectPart(pool, kind, ..., z, src)` shape `game_loop14.c`
  * documents), tags the new part's `+0xc`/`+0xa` fields, and plays SFX
  * `0x1e`. Mode 5 mirrors mode 3's `owner->0x38` gate but triggers
  * `SetEnemyAnimMode(self,0)` and, only for `self->0x6c==0xf`, additionally
@@ -65,7 +65,7 @@
 
 extern s32 __modsi3(s32 a, s32 b);
 extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
-extern struct ctrl_target *sub_8025B0C(void *pool, s32 kind, s32 b, s32 margin, s32 z, s32 e, struct ctrl_target *src);
+extern struct ctrl_target *LaunchEffectPart(void *pool, s32 kind, s32 b, s32 margin, s32 z, s32 e, struct ctrl_target *src);
 extern u8 PlayerTouchesBox(struct ctrl_target *obj, struct part_aabb *box);
 extern void SetAabbPos(struct part_aabb *box, s32 x, s32 y);
 extern void SetAabbSize(struct part_aabb *box, s32 w, s32 h);
@@ -77,7 +77,7 @@ extern struct ctrl_target *gPlayer;
 /* `sub_800C9C8` (actor_part116.c), inlined. */
 static inline struct ctrl_target *SpawnPart(s32 a, s32 b, s32 c, s32 d, s32 e, struct ctrl_target *f)
 {
-    struct ctrl_target *obj = sub_8025B0C(gEntitySpawner, a, b, c, d, e, f);
+    struct ctrl_target *obj = LaunchEffectPart(gEntitySpawner, a, b, c, d, e, f);
     obj->visible = 1;
     obj->flag6 = 0;
     return obj;

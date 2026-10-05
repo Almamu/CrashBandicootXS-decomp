@@ -160,7 +160,7 @@ void *sub_8007CF8(void *dest, void *pt)
 extern void *GetSpriteHitbox(void *dest, void *part);
 extern u8 AabbOverlaps(void *buf1, void *buf2);
 extern void _call_via_r4(void *arg0, s32 arg1, s32 arg2, s32 arg3);
-extern void *sub_8025BAC(void *pool, s32 arg1, s32 kind, s32 x, s32 y, s32 arg5);
+extern void *SpawnEffectPart(void *pool, s32 arg1, s32 kind, s32 x, s32 y, s32 arg5);
 extern struct actor *gPlayer;
 extern void *gEntitySpawner;
 extern void *gEntityFlags;
@@ -173,7 +173,7 @@ extern void *gEntityFlags;
  * `part->field_0A` instead of `self->field_0A`) and marks itself
  * "collected" (`gEntityFlags` bitmap, same convention as
  * sub_80072D8). `part->field_0A - 0x1b` (0-7) then selects a "kind" to
- * spawn via `sub_8025BAC` at `part`'s own position - case 1 and any
+ * spawn via `SpawnEffectPart` at `part`'s own position - case 1 and any
  * out-of-range value spawn nothing. If something spawned, its
  * `+0x28`/`+0xc` flag bytes get tagged - kept as raw offsets since the
  * spawned object's own type isn't established yet.
@@ -216,7 +216,7 @@ struct collect_part {
 
 static inline struct collect_part *SpawnPickup(s32 kind, s32 x, s32 y)
 {
-    return sub_8025BAC(gEntitySpawner, 0x2b, kind, x, y, 0);
+    return SpawnEffectPart(gEntitySpawner, 0x2b, kind, x, y, 0);
 }
 
 s32 CheckSpritePickup(struct collect_part *part)

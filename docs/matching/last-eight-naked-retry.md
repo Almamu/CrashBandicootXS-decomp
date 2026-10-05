@@ -5,12 +5,12 @@ This pass retried four NAKED functions with C drafts under
 
 | Function | File | Before | Now | Status |
 |---|---|---|---|---|
-| `sub_8002E20` (#5) | `src/graphics/settings_menu8a2.c` | 14 | match (both compilers) | Real C |
+| `ReceiveSaveTransferChunk` (#5) | `src/graphics/settings_menu8a2.c` | 14 | match (both compilers) | Real C |
 | `SpawnFlamethrowerLabAssistant` (#31) | `src/graphics/graphics_loading_1feec.c` | 62 | 12 (same size, old_agbcc) | Draft updated |
 | `DrawPauseFraction` (#7) | `src/graphics/settings_menu16.c` | 73 (16 bytes long) | 45 (same size, both compilers) | Draft updated |
-| `sub_8001DB4` (#4) | `src/system/link_cable.c` | 136 | 136 (122 found, not adopted) | Note added |
+| `ResetLinkSessionState` (#4) | `src/system/link_cable.c` | 136 | 136 (122 found, not adopted) | Note added |
 
-## `sub_8002E20`: closed
+## `ReceiveSaveTransferChunk`: closed
 
 What was left was a register permutation in the wrap loop. The greg dump
 explains it:
@@ -120,7 +120,7 @@ Things that were worse:
   `+ 4` for posY): 70-72;
 - extra references on the pointer locals: 70.
 
-## `sub_8001DB4`: notes only
+## `ResetLinkSessionState`: notes only
 
 - **Inner copy destination.**
   `((struct link_player *)((u8 *)self + 8))[i + 1].id` reproduces the
@@ -145,8 +145,8 @@ Things that were worse:
 These are in the scratchpad's `last8/`:
 
 - `d.py`, `var.py`, `rtl.sh` and `fnrtl.py`, pointed at this worktree;
-- the variant specs `e1`-`e4` (`sub_8002E20`), `l1`-`l5`
-  (`sub_8001DB4`), `m1`-`m9` (`DrawPauseFraction`) and `g1`-`g6`
+- the variant specs `e1`-`e4` (`ReceiveSaveTransferChunk`), `l1`-`l5`
+  (`ResetLinkSessionState`), `m1`-`m9` (`DrawPauseFraction`) and `g1`-`g6`
   (`SpawnFlamethrowerLabAssistant`).
 
 ## Verification

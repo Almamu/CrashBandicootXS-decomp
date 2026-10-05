@@ -13,7 +13,7 @@ extern s32 UpdateGroundSprite(void *self);
 extern void *sub_8007CF8(void *dest, void *pt);
 extern u8 gPlayerVtable[];
 extern s32 _call_via_r2(void *arg0, void *arg1, void *fn);
-extern void sub_8010E14(void *arg0, s32 arg1);
+extern void DestroyCollisionQueue(void *arg0, s32 arg1);
 extern void DestroyGroundSprite(void *self, u32 unusedArg);
 
 /* `velB.z` (+0x5c) boolean getter (nonzero -> 1). */
@@ -86,7 +86,7 @@ u8 PlayerTouchesBox(void *selfArg, void *buf)
 /* Overwrites `self->table` with `gPlayerVtable`, then (if
  * `self+0xb0`'s child object is set) fires its `table+0x50/0x54`-
  * driven trampoline via `_call_via_r2` with constant arg `3`, then
- * calls `sub_8010E14(self+0x108, 2)` and tail-calls `DestroyGroundSprite`
+ * calls `DestroyCollisionQueue(self+0x108, 2)` and tail-calls `DestroyGroundSprite`
  * (already matched in `actor_part14.c`). */
 void DestroyPlayer(void *selfArg, u32 arg1)
 {
@@ -105,6 +105,6 @@ void DestroyPlayer(void *selfArg, u32 arg1)
             _call_via_r2(addr, (void *)3, fn);
         }
     }
-    sub_8010E14(self + 0x108, 2);
+    DestroyCollisionQueue(self + 0x108, 2);
     DestroyGroundSprite(self, arg1);
 }

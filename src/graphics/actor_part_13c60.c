@@ -17,7 +17,7 @@
 extern u32 gKeys;
 extern void *gAudioContext;
 extern void *gLevelState;
-extern void *gUnknown_03001304;
+extern void *gInput;
 extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
 extern u8 GetDpadDirection(void *pad);
 extern u8 HasTornadoSpin(void *self);
@@ -60,7 +60,7 @@ void sub_8013C60(struct act *self)
     u8 dir;
 
     {
-        void *pad = gUnknown_03001304;
+        void *pad = gInput;
 
         in = gKeys;
         dir = GetDpadDirection(pad);
@@ -155,7 +155,7 @@ void sub_8013EAC(struct act *self)
     u8 dir;
 
     {
-        void *pad = gUnknown_03001304;
+        void *pad = gInput;
 
         in = gKeys;
         dir = GetDpadDirection(pad);
@@ -248,7 +248,7 @@ void sub_8014084(struct act *self)
     s32 moved;
 
     {
-        void *pad = gUnknown_03001304;
+        void *pad = gInput;
 
         in = gKeys;
         dir = GetDpadDirection(pad);
@@ -299,7 +299,7 @@ turn_done:
     moved = 0;
     if (!turned)
     {
-        switch (GetDpadDirection(gUnknown_03001304))
+        switch (GetDpadDirection(gInput))
         {
         case 3:
         case 4:

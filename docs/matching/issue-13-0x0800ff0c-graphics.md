@@ -68,7 +68,7 @@ overrides described below).
    `arg3<<1`, same convention `SpawnBasicCrate` above uses): flag `0x40`
    forces `type = 2`, flag `0x80` forces `type = 1`, and - `0xf` path
    only - placement-record byte `+1` bit `0x1` forces `type = 9`.
-4. Sets `self+0x20 = ***gUnknown_030012D0 + 0x174` - the
+4. Sets `self+0x20 = ***gSpriteBankSet + 0x174` - the
    `self+0x20`-pointer-to-manager/`self+0x2d`-tag/0x1c-stride
    hitbox-record table every sibling in this subsystem
    (`sub_0800D18C`, `DrawCrate`, etc.) already establishes.

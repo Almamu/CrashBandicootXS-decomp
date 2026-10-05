@@ -7,7 +7,7 @@ clean `make compare` ("La suma coincide").
 
 ## The settings-sync protocol
 
-The chunk's first cluster (`ResetSaveData`-`sub_8002EFC`) turned out to
+The chunk's first cluster (`ResetSaveData`-`PollSaveTransfer`) turned out to
 be a multiplayer settings-sync protocol built on two small object
 types, both now named and documented in `include/settings_sync.h`:
 
@@ -15,7 +15,7 @@ types, both now named and documented in `include/settings_sync.h`:
   checksummed settings payload. `self->field_8c`/`field_90`
   (`pause_options_screen.h`) are two instances of this. Per-row
   "selected" flags at +0x1f4, two fixed marker bytes at +0x1f8/+0x1f9
-  (`ResetSaveData` stamps `'C'`/`0x12`; `sub_8002B94`, still raw, reads
+  (`ResetSaveData` stamps `'C'`/`0x12`; `GetSaveGameId`, still raw, reads
   the `0x1f9` high nibble as a protocol-version-ish value elsewhere),
   a bitmask at +0x1fa (`TestSaveFlags`/`ClearSaveFlags`/`SetSaveFlags`), and
   a running additive checksum at +0x1fc (`UpdateSaveChecksum`/`CheckSaveChecksum`,
@@ -23,25 +23,25 @@ types, both now named and documented in `include/settings_sync.h`:
 - **`struct settings_sync_pump`** (0x220 bytes) - a transient SIO
   send/receive envelope wrapping a `settings_sync_record` copy.
   Allocated per "connecting..." spinner-dialog session
-  (`sub_8003B40`, `src/graphics/settings_menu.c`, parked) via
-  `sub_8002FCC`/`sub_8002FD8` and torn down with it.
+  (`LinkExchangeSaveData`, `src/graphics/settings_menu.c`, parked) via
+  `SetSaveTransferRecord`/`ResetSaveTransfer` and torn down with it.
   `tmpl`/`cursor` stream a record's bytes out to the SIO session's
-  ring buffer (`sub_8002D44`); `data`/`writePtr` receive the remote
-  side's copy from its own ring buffer (`sub_8002E20`).
+  ring buffer (`SendSaveTransferChunk`); `data`/`writePtr` receive the remote
+  side's copy from its own ring buffer (`ReceiveSaveTransferChunk`).
 
-`sub_8002D44`/`sub_8002E20` both drain/fill through a still
+`SendSaveTransferChunk`/`ReceiveSaveTransferChunk` both drain/fill through a still
 partially-uncharacterized SIO session object (`*gLinkSession`) -
 a fixed 0x80-byte ring per direction, wrapping at index 0x7f, with a
 separate write-position/pending-count field pair per ring. The RX
 side additionally indexes a per-player sub-record at
 `session + playerIndex*0xc8` (matching `docs/rom_map.md`'s "resets 4
-per-player communication slot buffers" note about `sub_8001DB4` in
+per-player communication slot buffers" note about `ResetLinkSessionState` in
 the neighbouring SIO/link-cable cluster) - the exact field layout of
 that per-player sub-record beyond the two offsets these two functions
 touch (+0x10c data base, +0x18c avail count, +0x190 ring position)
 isn't pinned down yet.
 
-`sub_8002EFC` polls this pump once per frame: if the session isn't
+`PollSaveTransfer` polls this pump once per frame: if the session isn't
 "connected" (byte +7), it just tracks reset/completion of the pump
 and returns 1/0; once connected, it picks a role from the session's
 +0x3fc field, pumps RX/TX at most once each per call, and once both
@@ -69,7 +69,7 @@ picked up two more named fields from this chunk: `field_20` (a
 All six hit the same unresolved gcc-2.9 scratch-register
 nondeterminism this project has documented at length already
 (`DrawPowerDialog`/`src/graphics/oam_count.c`,
-`sub_80049CC`/`src/graphics/settings_menu.c`) - every load/store,
+`DrawSaveMenuTitle`/`src/graphics/settings_menu.c`) - every load/store,
 branch and call is semantically confirmed, real bytes stay in the
 `asm/code_3_1_10_3_*.s` fragments listed below wrapped
 `.if NON_MATCHING == 0`, C reconstructions stay in-tree under
@@ -86,16 +86,16 @@ branch and call is semantically confirmed, real bytes stay in the
   Its OR counterpart, `SetSaveFlags`, matched cleanly with the same
   `register ... asm("r3")`/`asm("r1")` pins - only the AND-NOT shape
   resists.
-- **`sub_8002D44`**, **`sub_8002E20`**, **`sub_8002EFC`**
+- **`SendSaveTransferChunk`**, **`ReceiveSaveTransferChunk`**, **`PollSaveTransfer`**
   (`asm/code_3_1_10_3_2d44.s`, C in `src/graphics/settings_menu8a2.c`)
   - the SIO send/receive pump trio. Every technique this project
   documents was tried (down-counting `for`/`do-while` loops matching
   the ROM's `n != -1` sentinel idiom, swapping the wrap/non-wrap
   branch order to match the ROM's fallthrough side, explicit
   register-variable pins on `self`/`remaining`/`session` and a `p`
-  alias for the final field-store pair) - `sub_8002D44` in particular
+  alias for the final field-store pair) - `SendSaveTransferChunk` in particular
   landed at the ROM's exact byte *size* (220 bytes) after all that,
-  but never byte-for-byte content; `sub_8002E20`/`sub_8002EFC` didn't
+  but never byte-for-byte content; `ReceiveSaveTransferChunk`/`PollSaveTransfer` didn't
   converge on size either.
 - **`SaveGameToSlot`** (`asm/code_3_1_10_3_3698.s`, C in
   `src/graphics/settings_menu8b.c`) - the shared "commit or refresh
@@ -105,7 +105,7 @@ branch and call is semantically confirmed, real bytes stay in the
   the ROM's exact byte size too, but not exact content.
 - **`DrawSaveMenuMain`** (`asm/code_3_1_10_3_3a60.s`, C in
   `src/graphics/settings_menu8c.c`) - the state-select label list
-  draw. Same measure-then-draw icon shape as `sub_80049CC`
+  draw. Same measure-then-draw icon shape as `DrawSaveMenuTitle`
   (`src/graphics/settings_menu.c`, already parked) - a cached
   `&gSmallFont` address pin (the same technique that worked for
   the constructor/destructor/dispatcher below) collided with a
@@ -123,7 +123,7 @@ branch and call is semantically confirmed, real bytes stay in the
   `asm(".align 2, 0")` after it: GAS's default Thumb padding filler is
   the `mov r8, r8` NOP (`0x46c0`), but the ROM pads this function's
   tail with a zero halfword instead (`src/graphics/settings_menu8a2.c`).
-- `sub_8002FCC`, `sub_8002FD4`, `sub_8002FD8` - the pump's
+- `SetSaveTransferRecord`, `GetSaveTransferData`, `ResetSaveTransfer` - the pump's
   template-attach/data-pointer/reset accessors.
 - `RunSaveMenu` - the spinner dialog's blocking modal input loop.
   Needed `gKeys` modelled as a `{u16 held; u16 pressed;}`
@@ -134,7 +134,7 @@ branch and call is semantically confirmed, real bytes stay in the
   dereference inlined at each call site (`DrawSaveMenu(*selfAddr)` etc.
   instead of assigning to a local first) to match the ROM's direct
   `ldr r0, [r4]` reload pattern, and a call site for the real
-  `sub_8004A64(void)` (matched elsewhere, in
+  `EndLinkSaveTransfer(void)` (matched elsewhere, in
   `src/graphics/settings_menu3.c`) that still passes `self` in r0 -
   the ROM's caller sets it up even though the callee never reads it.
 - `InitSaveMenu`, `DestroySaveMenu`, `SaveMenuInput` - the shared
@@ -180,8 +180,8 @@ lists.
 
 Issue #5 was reopened after an earlier PR closed it with 6 functions
 still parked. This pass matched 4 of those 6 (`ClearSaveFlags`,
-`SaveGameToSlot`, `DrawSaveMenuMain`, `sub_8002EFC`); `sub_8002D44`/
-`sub_8002E20` stay parked for a reason explained below that no C-level
+`SaveGameToSlot`, `DrawSaveMenuMain`, `PollSaveTransfer`); `SendSaveTransferChunk`/
+`ReceiveSaveTransferChunk` stay parked for a reason explained below that no C-level
 technique gets around.
 
 - **`ClearSaveFlags`** (bitmask-clear accessor, `src/graphics/
@@ -242,7 +242,7 @@ technique gets around.
   allocated that register for a real (non-asm) value, so `i`/`y`
   specifically have to stay genuine C locals (not register-pinned
   operand-only variables) for the prologue to come out right. Two
-  smaller gaps besides: `sub_8004A50`'s return value needs its
+  smaller gaps besides: `GetSaveMenuBlinkPalette`'s return value needs its
   ROM-visible `u8` truncation (`lsls`/`lsrs #0x18`) spelled out
   explicitly, since this compiler doesn't reproduce it from the C
   return type alone; and the final call's stack-passed `u8 flag`
@@ -259,7 +259,7 @@ technique gets around.
   gets deferred all the way to the function's tail instead of landing
   in the ROM's early slot.
 
-- **`sub_8002EFC`** (SIO pump per-frame poll, `src/graphics/
+- **`PollSaveTransfer`** (SIO pump per-frame poll, `src/graphics/
   settings_menu8a3.c`, new file) - matched the same way as
   `DrawSaveMenuMain` above, as one big `asm volatile` transcription of the
   ROM's instructions (this one genuinely doesn't need any real C
@@ -274,12 +274,12 @@ technique gets around.
   `pop {r4, r5, r6}; pop {r1}; bx r1` never has one either. Needed its
   own new file (`settings_menu8a3.c`) rather than joining
   `settings_menu8b.c`/`settings_menu8a2.c` because its real address
-  (`0x08002EFC`) sits between the still-parked `sub_8002D44`/
-  `sub_8002E20` (staying in `asm/code_3_1_10_3_2d44.s`) and
+  (`0x08002EFC`) sits between the still-parked `SendSaveTransferChunk`/
+  `ReceiveSaveTransferChunk` (staying in `asm/code_3_1_10_3_2d44.s`) and
   `settings_menu8b.c`'s first function - the usual "one `.c` file per
   contiguous ROM region" rule from `docs/workflow.md`.
 
-- **`sub_8002D44`/`sub_8002E20`** (SIO pump TX/RX drain-fill,
+- **`SendSaveTransferChunk`/`ReceiveSaveTransferChunk`** (SIO pump TX/RX drain-fill,
   `src/graphics/settings_menu8a2.c`) - still parked. Both need `r7` as
   a genuinely allocated scratch register (matching the ROM's own
   `sendLen`/sentinel usage there), and this exact agbcc build *never*
@@ -299,12 +299,12 @@ technique gets around.
   `docs/matching/issue-54-actor-d3a8.md`) and others (see
   `matching_decomp_register_pinning` memory point 10) - parked rather
   than keep chasing a compiler bug with no known workaround. The
-  third function of the trio, `sub_8002EFC`, doesn't touch `r7` at
+  third function of the trio, `PollSaveTransfer`, doesn't touch `r7` at
   all and has been matched (see above).
 
 ## NAKED-transcription pass
 
-`sub_8002D44`/`sub_8002E20` above were the only two functions left
+`SendSaveTransferChunk`/`ReceiveSaveTransferChunk` above were the only two functions left
 parked anywhere in this issue's scope, both blocked on the exact same
 categorical gcc-2.9 limitation described above: neither can get `r7`
 back into the automatic callee-save push/pop list from plain C, no
@@ -328,16 +328,16 @@ divided syntax `arm-none-eabi-as`'s default mode expects for
 hand-written text (`adds`→`add`, `movs`→`mov`, `muls`→`mul`,
 `lsls`→`lsl`, `subs`→`sub`, `rsbs rX, rX, #0`→`neg rX, rX`), and every
 real `_08XXXXXX:` ROM address label was renumbered to a GNU-as local
-numeric label (`1:`...`11:` for `sub_8002D44`, `1:`...`8:` for
-`sub_8002E20`, referenced `Nf`/`Nb`), since a `NAKED` function's asm
+numeric label (`1:`...`11:` for `SendSaveTransferChunk`, `1:`...`8:` for
+`ReceiveSaveTransferChunk`, referenced `Nf`/`Nb`), since a `NAKED` function's asm
 block can't reference the real ROM address as a label. Both functions
 keep their original prologue/epilogue written out literally -
-`sub_8002D44`'s `push {r4, r5, r6, r7, lr}` / `mov r7, sb` / `mov r6,
+`SendSaveTransferChunk`'s `push {r4, r5, r6, r7, lr}` / `mov r7, sb` / `mov r6,
 r8` / `push {r6, r7}` pair (and the matching `pop {r3, r4}` / `mov r8,
 r3` / `mov sb, r4` / `pop {r4, r5, r6, r7}` / `pop {r0}` / `bx r0`
-epilogue) and `sub_8002E20`'s smaller `mov r7, r8` / `push {r7}` pair -
+epilogue) and `ReceiveSaveTransferChunk`'s smaller `mov r7, r8` / `push {r7}` pair -
 exactly the callee-save sequence gcc could never reproduce from C for
-these two. `sub_8002D44` also keeps both of the ROM's separate
+these two. `SendSaveTransferChunk` also keeps both of the ROM's separate
 `gLinkSession` literal-pool copies (labels `3:`/`11:`) rather than
 merging them into one, matching the ROM's own pool placement byte for
 byte.
@@ -354,9 +354,9 @@ crashbandicootxs.elf crashbandicootxs.gba crashbandicootxs.map && make
 compare` both passed (`sha1sum`'s "La suma coincide"). Both functions
 are now matched, closing out the r7 limitation for this issue's scope.
 
-## Later pass: `sub_8002E20` matched
+## Later pass: `ReceiveSaveTransferChunk` matched
 
-The last-eight NAKED retry closed `sub_8002E20` as real C (see
+The last-eight NAKED retry closed `ReceiveSaveTransferChunk` as real C (see
 [last-eight-naked-retry.md](last-eight-naked-retry.md)). The 14-halfword
 register permutation left by the last-seven pass came from the channel
 pointer's copy preference for r2 (it was an `"+r"` escape of `c + 0x108`

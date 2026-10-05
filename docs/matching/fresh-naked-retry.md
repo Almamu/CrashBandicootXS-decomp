@@ -1,7 +1,7 @@
 # Fresh NAKED retry (issues #4, #7, #9, #10, #15, #16)
 
 This pass covered NAKED functions that earlier passes had skipped or barely
-touched: `sub_8001DB4` and `sub_8002114` (#4), `DrawPauseFraction` (#7),
+touched: `ResetLinkSessionState` and `HandleLinkSerial` (#4), `DrawPauseFraction` (#7),
 `UnlinkCrateFromGrid` and `UpdateCrateList` (#9), `UpdateEnemyCtrl` (#10), `UpdateExtraLife`,
 `UpdateWumpa` and `CreateWumpa` (#15), and `UpdateActionCtrl` and `sub_8012AF4`
 (#16).
@@ -38,7 +38,7 @@ touched: `sub_8001DB4` and `sub_8002114` (#4), `DrawPauseFraction` (#7),
   updated. The ROM holds 0x110 in r7, re-materializes 0x114 in the first
   reposition and derives it as `r7 + 4` (with an r7-to-r6 copy) in the
   second. No source shape tried reproduced that.
-- `sub_8001DB4`, `sub_8002114` (link_cable.c), `UpdateEnemyCtrl`
+- `ResetLinkSessionState`, `HandleLinkSerial` (link_cable.c), `UpdateEnemyCtrl`
   (actor_part112.c), `UpdateWumpa`, `CreateWumpa` (game_loop53.c),
   `UpdateActionCtrl` (actor_part84.c), `sub_8012AF4` (actor_part83.c): not
   reached this pass. Their existing notes and drafts are unchanged.

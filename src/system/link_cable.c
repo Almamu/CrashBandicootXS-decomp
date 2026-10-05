@@ -3,29 +3,29 @@
 #include "link_session.h"
 
 /* The GBA multiplayer link-cable/SIO transport - see docs/rom_map.md's
- * SIO/link-cable section. `sub_8001DB4` resets a per-session object at
+ * SIO/link-cable section. `ResetLinkSessionState` resets a per-session object at
  * `gLinkSession` (still uncharacterized beyond the offsets touched
  * here and in src/graphics/settings_menu8a2.c/settings_menu.c); 4
  * per-player 0xc8-byte sub-records live at session+playerIndex*0xc8. */
 
 extern void IrqClearHandler(s32 interruptIndex);
-extern u16 gStaticData_0816AF10[];
-extern void sub_8001CB8(u8 *self);
-extern u8 gUnknown_03000800;
+extern u16 gCrc16Table[];
+extern void MakeLinkHandshakeId(u8 *self);
+extern u8 gLinkSessionReset;
 extern void IrqSetHandler(s32 interruptIndex, irq_handler_t *fn);
 extern void LinkSerialIntr(void);
 extern void LinkTimer3Intr(void);
 
 /* Fills `self`'s first 8 bytes with a fixed 0xEC pattern (byte 0 masked
  * to its low nibble, byte 1 zeroed), then hashes bytes 1-5 with a
- * CRC-16-style table walk seeded at 0x1234 (`gStaticData_0816AF10`,
- * also used by `sub_8002114`), stores the 16-bit result
+ * CRC-16-style table walk seeded at 0x1234 (`gCrc16Table`,
+ * also used by `HandleLinkSerial`), stores the 16-bit result
  * into bytes 6-7, and folds its low nibble into byte 0's low nibble
  * (preserving byte 0's high nibble; that high nibble is always 0 at
  * this point from the earlier mask, which is why the ROM's own
  * `(self[0]>>4) + hash` tail - reconstructing `hash` from the just-
  * stored bytes 6/7 rather than reusing the register - reduces to plain
- * `hash & 0xF`). Called by `sub_8001DB4` on each per-player 8-byte
+ * `hash & 0xF`). Called by `ResetLinkSessionState` on each per-player 8-byte
  * sub-record - reads as generating a deterministic per-slot
  * handshake/session id.
  *
@@ -42,7 +42,7 @@ extern void LinkTimer3Intr(void);
  * (`w`) before the bitfield store, so the 15 is an SImode constant and
  * reload's move2add derives the -16 from it (`sub r0, #0x1f`); a QImode
  * 15 gives `mov #16; neg`. */
-void sub_8001CB8(u8 *self)
+void MakeLinkHandshakeId(u8 *self)
 {
     u8 *p;
     u32 hash;
@@ -61,7 +61,7 @@ void sub_8001CB8(u8 *self)
     hash = 0x1234;
     p = self + 1;
     for (i = 4; i != -1; i--) {
-        hash = (u16)(gStaticData_0816AF10[((hash >> 8) ^ *p) & 0xff] ^ (hash << 8));
+        hash = (u16)(gCrc16Table[((hash >> 8) ^ *p) & 0xff] ^ (hash << 8));
         p++;
     }
     {

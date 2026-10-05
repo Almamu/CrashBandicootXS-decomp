@@ -46,11 +46,11 @@ extern struct sio_session *gLinkSession;
 /* Drains up to 0x60 bytes per call from `self->cursor` (streaming a
  * settings_sync_record out of `self->tmpl`) into the SIO session's
  * outgoing ring, once the previous batch has been taken (`tx.count`
- * back to 0). Marks `field_214` once `remaining` is fully drained. The
+ * back to 0). Marks `sendDone` once `remaining` is fully drained. The
  * channel pointer has to be its own local: written as `s->tx.`
  * throughout, gcc keeps the first `&count` computation alive for both
  * fill loops instead of recomputing it as the ROM does. */
-void sub_8002D44(struct settings_sync_pump *self)
+void SendSaveTransferChunk(struct settings_sync_pump *self)
 {
     if (self->remaining != 0)
     {
@@ -92,13 +92,13 @@ void sub_8002D44(struct settings_sync_pump *self)
     }
     else if (gLinkSession->tx.count == 0)
     {
-        self->field_214 = 1;
+        self->sendDone = 1;
     }
 }
 
-/* Counterpart to sub_8002D44 above: drains whatever's available from
+/* Counterpart to SendSaveTransferChunk above: drains whatever's available from
  * `playerIndex`'s incoming channel (`gLinkSession->rx[playerIndex]`)
- * into `self->data` via `self->writePtr`, and marks `field_218` once
+ * into `self->data` via `self->writePtr`, and marks `receiveDone` once
  * `totalReceived` reaches a full record's worth.
  *
  * Matched in the last-eight pass (docs/matching/last-eight-naked-retry.md).
@@ -110,7 +110,7 @@ void sub_8002D44(struct settings_sync_pump *self)
  * the wrap loop's `old` out of r2. The wrap loop's count pointer is
  * pinned to r1 (the ROM's register), and the loop is an explicit
  * `if` + `do`/`while` so the pin is set after the zero-trip test. */
-void sub_8002E20(struct settings_sync_pump *self, s32 playerIndex)
+void ReceiveSaveTransferChunk(struct settings_sync_pump *self, s32 playerIndex)
 {
     struct sio_session *s = gLinkSession;
     s32 pi = playerIndex;
@@ -174,6 +174,6 @@ void sub_8002E20(struct settings_sync_pump *self, s32 playerIndex)
     }
     else if (self->totalReceived == 0x200)
     {
-        self->field_218 = 1;
+        self->receiveDone = 1;
     }
 }

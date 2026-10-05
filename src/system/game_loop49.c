@@ -18,13 +18,13 @@
  * NAKED-retry sections). */
 
 extern struct phys_obj_list *gCrateList;
-extern u8 gUnknown_030012B0;
+extern u8 gCrateListChanged;
 extern void ExplodeCrate(struct crate *self, u8 arg1);
 extern void RemoveCrateListAt(struct phys_obj_list *list, s32 index);
 extern void *gAudioContext;
 extern void *gHud;
 extern void PlaySfx(void *ctx, s32 id, s32 volume);
-extern void sub_8028474(void *arg);
+extern void ShowHudCrates(void *arg);
 extern void PressSwitchCrate(void *arg);
 extern void DetonateNitroCrates(void);
 extern void SolidifyOutlineCrate(struct crate *self);
@@ -249,8 +249,8 @@ void BlastNearbyCrates(struct crate *self, s32 dist)
  * (outside this issue's scope). First calls `DetonateNitroCrates` (below) to
  * settle any pending case-`0xa` collisions, then loops
  * `gCrateList` up to twice (an outer `do { ... } while
- * (gUnknown_030012B0)` driven by a one-shot re-scan flag stored at
- * `gUnknown_030012B0`): for every object whose `_call_via_r1`
+ * (gCrateListChanged)` driven by a one-shot re-scan flag stored at
+ * `gCrateListChanged`): for every object whose `_call_via_r1`
  * classification against `self` is `3` and whose `+0xc` bit `1` is set,
  * calls `RemoveCrateListAt(list, index)` (an already-elsewhere-matched
  * list-removal helper) and, if that object is still non-NULL
@@ -268,7 +268,7 @@ void UpdateCrates(void)
 
     DetonateNitroCrates();
     do {
-        gUnknown_030012B0 = 0;
+        gCrateListChanged = 0;
         for (i = 0; i < gCrateList->count; i++) {
             struct crate *o = gCrateList->items[i];
 
@@ -283,7 +283,7 @@ void UpdateCrates(void)
                 }
             }
         }
-    } while (gUnknown_030012B0);
+    } while (gCrateListChanged);
 }
 
 /* Takes no arguments. A short `gCrateList` list-scan: for every
@@ -333,7 +333,7 @@ void DetonateNitroCrates(void)
  * byte to compute a direction/animation nibble, folded into `self+0x29`
  * (low nibble replaced, high nibble kept - `(x & 0xf) | (old & ~0xf)`).
  * Calls `DetonateNitroCrates` (flush any pending case-0xa commits), then
- * `sub_8028474(gHud)` (external, unread - likely a score
+ * `ShowHudCrates(gHud)` (external, unread - likely a score
  * or combo-counter bump) and plays a fixed sound
  * (`gAudioContext`, id 4). Sets `self+0x48 = 1` (arms the sub-state
  * timer `BlastNearbyCrates` later drains back to `-1`) and calls
@@ -357,7 +357,7 @@ void ActivateNitroSwitchCrate(struct crate *self)
         rec = &recs[self->tag];
         self->slot = GetPaletteSlot(gPaletteCache, rec->unk_14);
         DetonateNitroCrates();
-        sub_8028474(gHud);
+        ShowHudCrates(gHud);
         PlaySfx(gAudioContext, 4, 0x100);
         self->u48.n = one;
         PressSwitchCrate(gLevelState);
@@ -650,7 +650,7 @@ void BreakCratesInArea(s32 x, s32 y, s32 dist, s32 height)
  * `self`'s `GetCrateBelow`/`GetCrateAbove` neighbor-list pointers
  * (`SetCrateBelow`/`SetCrateAbove`, already-elsewhere-matched splice
  * helpers) to remove `self` from the list. Unless `self+0x4e == 1`,
- * marks `self` "visited this frame" in `gUnknown_030012B0`'s per-cell
+ * marks `self` "visited this frame" in `gCrateListChanged`'s per-cell
  * bitmap (the same 32x32-grid convention `ExplodeCrate`/`ActivateIronSwitchCrate`
  * use, here against `gEntityFlags`) and walks
  * `gPlayer+0x94`'s "recently touched" ring buffer
@@ -658,7 +658,7 @@ void BreakCratesInArea(s32 x, s32 y, s32 dist, s32 height)
  * clearing each slot's `+0x94` re-visit flag once it matches `self`.
  *
  * If `self+0x38` was clear instead, and `self+0x4e != 1`, sets
- * `gUnknown_030012B0 = 1` (a one-shot "re-scan next pass" flag -
+ * `gCrateListChanged = 1` (a one-shot "re-scan next pass" flag -
  * `UpdateCrates`'s own outer loop condition above) unconditionally. */
 
 static inline struct crate *PhysRingAt(struct phys_player *p, s32 i)
@@ -693,7 +693,7 @@ void FinishBrokenCrate(struct crate *self)
 
         if (self->kind == 1)
             return;
-        gUnknown_030012B0 = 1;
+        gCrateListChanged = 1;
         PHYS_GONE(self) = 1;
         if (self->id != 0xffff)
             PHYS_SET_ID_BIT(self->id);
@@ -708,7 +708,7 @@ void FinishBrokenCrate(struct crate *self)
             } while (i < (*pp)->ringCount);
         }
     } else if (self->kind != 1) {
-        gUnknown_030012B0 = 1;
+        gCrateListChanged = 1;
     }
 }
 

@@ -16,9 +16,9 @@
  * - `InitLevelLayers` - constructor; `GetLevelLayers` - get-or-create.
  * - `DestroyLevelLayers(self, flags)` - destructor: frees the asset, destroys
  *   each layer through its method table (`destroy`, called with 3), the
- *   tile cache via `sub_8025444(.., 3)`, clears the singleton pointer,
+ *   tile cache via `DestroyTileCache(.., 3)`, clears the singleton pointer,
  *   and frees `self` when `flags & 1` - the same flags convention as
- *   `sub_8025444` and `DestroyPooledBgLayer`.
+ *   `DestroyTileCache` and `DestroyPooledBgLayer`.
  * - `LoadRoom(self, args)` - level load: unpacks or references the
  *   asset, feeds each layer and the tile cache its data from the level
  *   descriptor, sets the scroll limits to layer 0's size minus the
@@ -123,7 +123,7 @@ extern struct layer *InitPooledBgLayer(void *mem, s32 arg1);
 extern struct tile_cache *nullsub_4(void *mem);
 extern struct layer *InitBgLayer(void *mem, s32 bgIndex);
 extern s32 _call_via_r2(void *self, void *arg1, void *fn);
-extern void sub_8025444(struct tile_cache *self, u32 flags);
+extern void DestroyTileCache(struct tile_cache *self, u32 flags);
 extern void CommitBgLayerScroll(struct layer *layer);
 
 void LoadRoom(struct level_layers *self, struct level_load_args *args)
@@ -197,7 +197,7 @@ void DestroyLevelLayers(struct level_layers *self, u32 flags)
 
     DESTROY_LAYER(self->layer0);
     if (self->tiles != NULL)
-        sub_8025444(self->tiles, 3);
+        DestroyTileCache(self->tiles, 3);
     DESTROY_LAYER(self->layers[0]);
     DESTROY_LAYER(self->layers[1]);
     DESTROY_LAYER(self->layers[2]);

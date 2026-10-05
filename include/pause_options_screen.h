@@ -43,8 +43,8 @@ struct pause_options_screen {
     u32 state;           /* 0x0c - DrawSaveMenu's jump-table selector */
     s32 field_10;          /* 0x10 - per-row raw value; ==4 means "maxed out"; also wrap-inc/decremented
                              * as a signed row-cursor by SaveMenuMainInput/SaveMenuMoveCursor */
-    u32 field_14;            /* 0x14 - label1, passed to sub_8003BDC */
-    u32 field_18;              /* 0x18 - label2, passed to sub_8003BDC */
+    u32 field_14;            /* 0x14 - label1, passed to DrawSaveMenuMessageLines */
+    u32 field_18;              /* 0x18 - label2, passed to DrawSaveMenuMessageLines */
     /* 0x1c - read by CommitSaveMenuFrame as a u16, written straight to REG_DISPCNT
      * - a saved/pending DISPCNT value, paired with field_0 above. */
     u16 field_1c;

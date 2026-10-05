@@ -19,12 +19,12 @@ all three move into `OLD_AGBCC_OBJS`. This is the same region as
   - `FontMeasureChars` needs `u32 c`.
   - `FontMeasureText` returns `cur < maxWidth ? maxWidth : cur`.
 
-## Issue #5: `sub_8002D44`
+## Issue #5: `SendSaveTransferChunk`
 
 The SIO pump's TX fill step is plain C (under either compiler). It needs a
 `struct sio_channel *ch = &s->tx` local; written as `s->tx.` throughout, gcc
 keeps the first `&count` alive instead of recomputing it as the ROM does. The
-old "r7 can never be pushed" note was wrong. `sub_8002E20` stays NAKED (see
+old "r7 can never be pushed" note was wrong. `ReceiveSaveTransferChunk` stays NAKED (see
 its comment).
 
 ## Issue #63: `InitContinuePromptGraphics`

@@ -41,7 +41,7 @@ static inline void set_icon_mgr_pos(struct icon_manager *m, u32 x, u32 y)
  * Once a NAKED transcription; it matches as plain C under both
  * compilers, the draws written as `record->slots[n]` virtual calls
  * (`ICON_TEXT_CALL`). See docs/matching/issue-4-6-8-naked-retry.md. */
-void sub_8004914(struct pause_options_screen *self, s32 arg1, s32 arg2, u8 arg3)
+void DrawEmptySlotLabel(struct pause_options_screen *self, s32 arg1, s32 arg2, u8 arg3)
 {
     s32 x = arg1 + 0x1d;
     s32 y = arg2 + 0xc;
@@ -64,7 +64,7 @@ void sub_8004914(struct pause_options_screen *self, s32 arg1, s32 arg2, u8 arg3)
  * Once a NAKED transcription; it matches as plain C under both
  * compilers with the same `ICON_TEXT_CALL` virtual-call macro and no
  * pins. See docs/matching/issue-4-6-8-naked-retry.md. */
-void sub_80049CC(struct pause_options_screen *self, s32 labelIndex)
+void DrawSaveMenuTitle(struct pause_options_screen *self, s32 labelIndex)
 {
     s32 w;
 

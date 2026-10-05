@@ -51,7 +51,7 @@ extern void PlaySfx(void *bank, s32 arg1, s32 sfxId);
  * latter is semantically equivalent but makes gcc materialize the
  * value in a different temp register first, needing an extra `mov`
  * the ROM doesn't have. */
-void sub_801E990(u32 arg0, u16 x, u16 y, u16 z)
+void SpawnStartMarker(u32 arg0, u16 x, u16 y, u16 z)
 {
     if (GetSpawnAtStart(gLevelState)) {
         register struct level_entity_list *rec asm("r2");

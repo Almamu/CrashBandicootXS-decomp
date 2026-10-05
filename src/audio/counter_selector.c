@@ -26,7 +26,7 @@ extern void *OperatorNewArray(u32 size);
 extern void OperatorDeleteArray(void *ptr);
 extern void OperatorDelete(void *self);
 extern void WaitForVBlank(void);
-extern void *gUnknown_03001304;
+extern void *gInput;
 extern u16 gKeys;
 extern void *gAudioContext;
 extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
@@ -124,7 +124,7 @@ s32 RunLanguageSelect(void)
         u16 keys;
         u16 *addr;
 
-        UpdateKeys(gUnknown_03001304);
+        UpdateKeys(gInput);
         addr = &gKeys;
         keys = *(u16 *)((u8 *)addr + 2);
         LanguageSelectInput(gLanguageSelect, keys);

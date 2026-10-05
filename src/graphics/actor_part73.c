@@ -49,12 +49,12 @@ void UpdateStarfield(void *mgrArg)
 }
 
 extern void WaitForVBlank(void);
-extern void *gUnknown_03001304;
+extern void *gInput;
 extern void UpdateKeys(void *arg);
 extern u16 gKeys[];
 
 /* Busy-waits (yielding a frame via `WaitForVBlank`/`UpdateStarfield` each
- * time) until the input-poll result from `UpdateKeys(gUnknown_03001304)`
+ * time) until the input-poll result from `UpdateKeys(gInput)`
  * has either of bits 0/3 set in `gKeys`'s `+2` halfword. */
 void StarfieldWaitForButton(void *mgrArg)
 {
@@ -66,7 +66,7 @@ body:
     WaitForVBlank();
     UpdateStarfield(mgr);
 check:
-    UpdateKeys(gUnknown_03001304);
+    UpdateKeys(gInput);
     {
         register u8 *addr asm("r1") = (u8 *)gKeys;
         register s32 nine asm("r0") = 9;

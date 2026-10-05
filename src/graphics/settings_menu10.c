@@ -43,7 +43,7 @@ extern void DrawPowerDialog(struct sub_8006700_actor *arg0);
 extern void CommitPowerDialogFrame(struct sub_8006700_actor *arg0);
 extern void AnimatePowerDialog(struct sub_8006700_actor *arg0);
 extern void UpdateKeys(void *arg0);
-extern void *gUnknown_03001304;
+extern void *gInput;
 
 struct held_pressed_pair {
     u16 held;
@@ -63,7 +63,7 @@ void PowerDialogLoop(struct sub_8006700_actor *self)
         DrawPowerDialog(self);
         CommitPowerDialogFrame(self);
         AnimatePowerDialog(self);
-        UpdateKeys(gUnknown_03001304);
+        UpdateKeys(gInput);
     } while (!(gKeys.pressed & 8));
     while (self->field_24.level != 0x10) {
         self->field_24.level++;

@@ -14,7 +14,7 @@
 . = 0x000012A4; gUnknown_030012A4 = .;
 . = 0x000012A8; gUnknown_030012A8 = .;
 . = 0x000012AC; gUnknown_030012AC = .;
-. = 0x000012B0; gUnknown_030012B0 = .;
+. = 0x000012B0; gCrateListChanged = .;
 . = 0x000012B4; gEntityFlags = .;
 . = 0x000012B8; gPaletteCache = .;
 . = 0x000012BC; gAudioContext = .;
@@ -22,7 +22,7 @@
 . = 0x000012C4; gUnknown_030012C4 = .;
 . = 0x000012C8; gPaletteCycles = .;
 . = 0x000012CC; gSpriteRenderer = .;
-. = 0x000012D0; gUnknown_030012D0 = .;
+. = 0x000012D0; gSpriteBankSet = .;
 . = 0x000012D4; gCamera = .;
 . = 0x000012D8; gPlayer = .;
 . = 0x000012DC; gSmallFont = .;
@@ -35,11 +35,11 @@
 . = 0x000012F8; gUnknown_030012F8 = .;
 . = 0x000012FC; gObjVramCursor = .;
 . = 0x00001300; gOamBuffer = .;
-. = 0x00001304; gUnknown_03001304 = .;
+. = 0x00001304; gInput = .;
 . = 0x00001308; gLevelLayers = .;
 . = 0x0000130C; gCrateList = .;
 . = 0x00001310; gPlayerCtrl = .;
-. = 0x00001314; gUnknown_03001314 = .;
+. = 0x00001314; gSlideshowDispcnt = .;
 . = 0x00001318; gHud = .;
 . = 0x00001320; gVramTileBlockPool = .;
 . = 0x00001328; gVramTileBlockList = .;

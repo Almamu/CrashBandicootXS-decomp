@@ -188,17 +188,17 @@ void SaveMenuConfirmDeleteInput(struct pause_options_screen *self, u32 flags)
 
 extern struct icon_manager *gSmallFont;
 extern s32 FontSetPalette(void *mgr, s32 arg1);
-extern s32 sub_8004A50(struct pause_options_screen *self);
+extern s32 GetSaveMenuBlinkPalette(struct pause_options_screen *self);
 extern s32 GetUiText(s32 arg0);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
-extern void sub_8003F30(struct pause_options_screen *self, s32 label1, s32 label2, s32 rowIdx, u8 flag);
+extern void DrawSaveSlotStats(struct pause_options_screen *self, s32 label1, s32 label2, s32 rowIdx, u8 flag);
 extern s32 gSaveMenuOptions[];
 
 /* Draws the 5-entry state-select sub-menu label list (SaveMenuMainInput's
  * `field_10` states, gSaveMenuOptions's label table) into
  * gSmallFont, highlighting whichever row matches `field_10`,
- * then draws a final fixed label via the still-raw sub_8003F30. Same
- * measure-then-draw icon shape as sub_80049CC
+ * then draws a final fixed label via the still-raw DrawSaveSlotStats. Same
+ * measure-then-draw icon shape as DrawSaveMenuTitle
  * (src/graphics/settings_menu.c, parked) - see that function's doc
  * comment for the class of gcc register-allocation quirk this may hit
  * too. */
@@ -267,7 +267,7 @@ void DrawSaveMenuMain(struct pause_options_screen *self)
             "mov r0, %3\n"
             "ldr %0, [r0]\n"
             "mov r0, %2\n"
-            "bl sub_8004A50\n"
+            "bl GetSaveMenuBlinkPalette\n"
             "add r1, r0, #0\n"
             "lsl r1, r1, #0x18\n"
             "lsr r1, r1, #0x18\n"
@@ -364,7 +364,7 @@ void DrawSaveMenuMain(struct pause_options_screen *self)
             "movs r1, #0x5a\n"
             "movs r2, #0x21\n"
             "movs r3, #0\n"
-            "bl sub_8003F30\n"
+            "bl DrawSaveSlotStats\n"
             :
             : "r" (selfReg), "r" (&flag)
             : "r0", "r1", "r2", "r3", "r12", "lr", "cc", "memory"

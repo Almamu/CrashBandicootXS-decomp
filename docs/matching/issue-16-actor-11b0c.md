@@ -49,7 +49,7 @@ updated to place all three pieces (`code_3_2_17_e560.o`,
   always-true stub.
 - **`DestroyWumpa`**: sets `self->table = gWumpaVtable` then
   tail-calls `DestroySpriteObj` (already matched, `actor_part6.c`), which
-  unconditionally overwrites `table` again with `gStaticData_087E3BEC`
+  unconditionally overwrites `table` again with `gEntityVtable`
   - this function's own store is immediately clobbered by its callee,
   but kept faithfully since the compiler can't see through the opaque
   call to know the store is dead.

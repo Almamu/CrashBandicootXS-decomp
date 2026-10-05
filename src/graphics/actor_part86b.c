@@ -9,7 +9,7 @@
  * `>> 2` (`adds r5,r0,r5; adds r1,r5,#0; asrs r6,r1,#2`) that kept this
  * NAKED under the current agbcc is what old_agbcc emits for plain C. */
 
-/* the object sub_8025BAC returns */
+/* the object SpawnEffectPart returns */
 struct spawned
 {
     u8 unk_00[0xC];
@@ -18,19 +18,19 @@ struct spawned
     u8 unk_0C_3:5;
 };
 
-extern void *gUnknown_03001304;
+extern void *gInput;
 extern u32 gRoomFrameCount;
 extern void *gEntitySpawner;
 extern u8 GetDpadDirection(void *arg);
 extern s32 RandRange(s32 max);
-extern struct spawned *sub_8025BAC(void *pool, s32 arg1, s32 kind, s32 x, s32 y, s32 arg5);
+extern struct spawned *SpawnEffectPart(void *pool, s32 arg1, s32 kind, s32 x, s32 y, s32 arg5);
 extern void sub_80172D0(s32 a, s32 b, s32 c);
 extern void sub_8015FDC(s32 a, s32 b, s32 c);
 
 /* Picks three tuning values by `state` - `mag` (always 300), `valB` and
  * `valA` - reads the D-pad direction (GetDpadDirection), on a 1-in-128 frame
  * tick and a coin flip spawns a kind-4 object at the target's position via
- * sub_8025BAC (clearing its +0x0C bit 2), then feeds the direction's
+ * SpawnEffectPart (clearing its +0x0C bit 2), then feeds the direction's
  * (valB/valA, +-mag) pair, 3/4-scaled on the diagonals, to sub_80172D0 and
  * sub_8015FDC. `mag`/`valB`/`valA` are unsigned, so `x * 3 / 4` is a plain
  * shift and only `-mag * 3 / 4` rounds toward zero. */
@@ -60,14 +60,14 @@ void sub_8015DF8(struct player_ctrl *self)
         valA = 5;
     }
 
-    dir = GetDpadDirection(gUnknown_03001304);
+    dir = GetDpadDirection(gInput);
     if ((gRoomFrameCount & 0x7F) == 0 && (u16)RandRange(2) == 0)
     {
         struct pctrl_target *t = self->target;
         s32 x = t->x >> 8;
         s32 y = (t->y >> 8) - 20;
         s32 flip = t->f28.flipX;
-        struct spawned *obj = sub_8025BAC(gEntitySpawner, 40, 4, x, y, flip);
+        struct spawned *obj = SpawnEffectPart(gEntitySpawner, 40, 4, x, y, flip);
 
         if (obj != NULL)
             obj->unk_0C_2 = 0;

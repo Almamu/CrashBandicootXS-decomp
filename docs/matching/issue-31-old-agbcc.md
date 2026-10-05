@@ -46,7 +46,7 @@ Three functions keep their previous form:
   reconstruction spills the constant and `&gEntityFlags` instead.
 - `sub_8021280` stays NAKED. Plain C is 9 halfwords off. The ROM computes
   the `{x - 2, y - 0x1e}` point into fresh r2/r3, and the reconstruction
-  subtracts in place. This is the same gap as `sub_802209C`
+  subtracts in place. This is the same gap as `SpawnCrateGemMarker`
   (graphics_loading_21d80.c).
 
 ## Shared header

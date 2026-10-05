@@ -5,9 +5,9 @@ are plain C now, with no register pins, no asm in the function body and
 no NAKED, and all three match under both `agbcc` and `old_agbcc`. None of
 the files change compiler.
 
-## `sub_8010B6C` (game_loop28.c, issue #14)
+## `ResolveCollisionCandidates` (game_loop28.c, issue #14)
 
-The collision-candidate scan/resolve helper `sub_80106DC` calls once a
+The collision-candidate scan/resolve helper `ResolvePlayerCollisions` calls once a
 frame. The old park note blamed "up to twelve running pointers" live
 across the loop. Those are gcc's own strength reduction of
 `self->records[i].field`, and plain C reproduces them. What mattered:

@@ -3,16 +3,16 @@
 #include "link_session.h"
 
 /* The link-cable session's per-frame handshake driver and SIO data pump
- * (split from link_cable.c so sub_8001DB4 can sit in its own object;
+ * (split from link_cable.c so ResetLinkSessionState can sit in its own object;
  * see link_cable_01db4.c). */
 
 extern void IrqClearHandler(s32 interruptIndex);
-extern u16 gStaticData_0816AF10[];
+extern u16 gCrc16Table[];
 extern void IrqSetHandler(s32 interruptIndex, irq_handler_t *fn);
 extern void LinkSerialIntr(void);
 extern void LinkTimer3Intr(void);
 extern s32 LinkStop(struct link_session *self);
-extern s32 sub_8001DB4(struct link_session *self);
+extern s32 ResetLinkSessionState(struct link_session *self);
 
 /* Link-connection/handshake driver - see docs/rom_map.md's SIO/link-
  * cable section. Called repeatedly (once per frame) until the link is
@@ -40,7 +40,7 @@ extern s32 sub_8001DB4(struct link_session *self);
  * whether `self+0xfc`'s stored `s32` is negative), clamping it into
  * `self+7`/giving up (return 0, via the same early-exit path as the
  * top-of-function "still initializing" case) once it exceeds -15, or
- * resetting the session (`LinkStop`+`sub_8001DB4`) and retrying
+ * resetting the session (`LinkStop`+`ResetLinkSessionState`) and retrying
  * once it exceeds 14; either way it refreshes `self+0x10`/`self+0x14`
  * from each other (keeping the larger, with `self+0x18` forcing a
  * reset to 0) and, past a 0x1d threshold, resets the session again.
@@ -58,7 +58,7 @@ extern s32 sub_8001DB4(struct link_session *self);
  * - `asm("" : "+r"(arm3))` between the eor and the and stops combine
  *   from folding `(x ^ 1) & 1` into a `bic`, which the ROM doesn't have.
  * Both asm statements emit no code. Matches under both compilers. */
-s32 sub_8001F50(struct link_session *self)
+s32 UpdateLinkSession(struct link_session *self)
 {
     s32 arm3;
     u16 saved;
@@ -131,7 +131,7 @@ s32 sub_8001F50(struct link_session *self)
             return 0;
         } else {
             LinkStop(self);
-            sub_8001DB4(self);
+            ResetLinkSessionState(self);
         }
     }
     {
@@ -146,7 +146,7 @@ s32 sub_8001F50(struct link_session *self)
         self->field_18 = 0;
         if (b > 0x1d) {
             LinkStop(self);
-            sub_8001DB4(self);
+            ResetLinkSessionState(self);
         }
     }
     self->field_c++;
@@ -163,7 +163,7 @@ s32 sub_8001F50(struct link_session *self)
  * This pass read it further without reaching full per-branch
  * confidence, so it's recorded here as a best-effort guide for whoever
  * attempts a real C reconstruction next, not as a verified spec: if
- * `self+4` (a "connected" flag also touched by `sub_8001F50` above) is
+ * `self+4` (a "connected" flag also touched by `UpdateLinkSession` above) is
  * already set, it just mirrors the outgoing word into SIOMLT_SEND and
  * returns; otherwise, on the first call it seeds SIOMLT_SEND from
  * `self+0x20` and sets that flag, and on every call after that it
@@ -172,11 +172,11 @@ s32 sub_8001F50(struct link_session *self)
  * latching player-count-derived fields once that stabilizes across a
  * few frames (`self+0x1c`) and marking the link "ready" (`self+7`).
  * Past that point each call walks the 4 player sub-records
- * (`self+i*0xc8`, i=0..3, same region as `sub_8001DB4`'s struct above)
+ * (`self+i*0xc8`, i=0..3, same region as `ResetLinkSessionState`'s struct above)
  * and, once every 4 samples, runs the exact same CRC-16 table walk
- * `sub_8001CB8` uses (`gStaticData_0816AF10`) over each slot's 8-byte
+ * `MakeLinkHandshakeId` uses (`gCrc16Table`) over each slot's 8-byte
  * handshake-id mirror - this part is a confident read, since the loop
- * body is textually identical to `sub_8001CB8`'s - feeding the result
+ * body is textually identical to `MakeLinkHandshakeId`'s - feeding the result
  * into per-slot bookkeeping this pass did not fully trace (fields
  * around `self+0x30`/`self+0xc4`/`self+0xbc`/`self+0x36`/`self+0x38`/
  * `self+0x3c`), before deciding what to send out next over SIOMLT_SEND.
@@ -198,14 +198,14 @@ struct link_rx_word {
 
 #define LINK_NIB(p) (*(struct nibble_pair *)(p))
 
-/* The CRC-16 walk sub_8001CB8 also uses, over bytes 1-5 of an id. */
+/* The CRC-16 walk MakeLinkHandshakeId also uses, over bytes 1-5 of an id. */
 #define LINK_HASH(hash, p)                                                     \
     {                                                                          \
         s32 _k;                                                                \
         u8 *_p = (p);                                                          \
                                                                                \
         for (_k = 4; _k != -1; _k--) {                                         \
-            hash = gStaticData_0816AF10[((hash >> 8) ^ *_p) & 0xff] ^ (hash << 8); \
+            hash = gCrc16Table[((hash >> 8) ^ *_p) & 0xff] ^ (hash << 8); \
             _p++;                                                              \
         }                                                                      \
     }
@@ -253,7 +253,7 @@ static inline void LinkRingPop(struct link_ring *r, struct link_ring *rf, u8 *ds
     }
 }
 
-void sub_8002114(struct link_session *self, u16 *data)
+void HandleLinkSerial(struct link_session *self, u16 *data)
 {
     struct link_rx_word w[4];
     s32 i;

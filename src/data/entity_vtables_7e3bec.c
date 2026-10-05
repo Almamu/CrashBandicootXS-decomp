@@ -5,7 +5,7 @@
  * ROM 0x087E3BEC-0x087E55E4: the 93 virtual tables of the game's C++
  * object classes (docs/rom_map.md's "93 entity vtables"), in ROM order.
  * Constructors store one at the object's method-table pointer (e.g.
- * `obj->table = gStaticData_087E3BEC` in graphics.c, `self->vtable` in
+ * `obj->table = gEntityVtable` in graphics.c, `self->vtable` in
  * gobj_1a794.h); the code reads the slots through `struct method` /
  * `struct actor_method`. Tables of the same class family share their
  * leading slots, the ROM's own inheritance. Linked in ROM order between
@@ -26,12 +26,12 @@ extern void nullsub_9();
 extern void sub_8006FE4();
 extern void sub_8007048();
 extern void sub_80070D4();
-extern void sub_80070E8();
+extern void GetEntityBounds();
 extern void sub_800710C();
 extern void sub_8007110();
 extern void sub_8007114();
 extern void sub_800722C();
-extern void sub_80073BC();
+extern void DestroyEntity();
 extern void CheckSpritePickup();
 extern void IsSpriteObjOnScreen();
 extern void SpriteObjOverlapsRect();
@@ -170,7 +170,7 @@ extern void SetLevelSelectEntryPos();
 extern void DestroyLevelSelectEntry();
 extern void DestroyBgStreamer();
 extern void DestroyBgLayerBase();
-extern void sub_8024DCC();
+extern void ClampBgLayerScrollStep();
 extern void ScrollBgLayerBase();
 extern void ResetBgLayerBase();
 extern void ClipBgLayerColumns();
@@ -182,7 +182,7 @@ extern void ResetBgLayer();
 extern void LoadBgLayerTiles();
 extern void DestroyBgLayer();
 extern void DrawPooledBgLayerColumn();
-extern void sub_8026250();
+extern void ClampPooledBgLayerScrollStep();
 extern void ClipPooledBgLayerColumns();
 extern void ClipPooledBgLayerRows();
 extern void DrawPooledBgLayerRow();
@@ -334,11 +334,11 @@ extern void DestroyHovercraftCannonFlash();
 
 /* Used by actor_aabb_setup.c, actor_part124.c, actor_part39.c,
  * actor_part6.c (DestroySpriteObj), actor_part7.c, graphics.c (nullsub_12,
- * sub_8007230, sub_80073BC). */
-const struct vtable_slot gStaticData_087E3BEC[11] = {
+ * ResetEntity, DestroyEntity). */
+const struct vtable_slot gEntityVtable[11] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(sub_8007048),
-    VTABLE_SLOT(sub_80070E8),
+    VTABLE_SLOT(GetEntityBounds),
     VTABLE_SLOT(sub_80070D4),
     VTABLE_SLOT(nullsub_11),
     VTABLE_SLOT(sub_8007110),
@@ -346,7 +346,7 @@ const struct vtable_slot gStaticData_087E3BEC[11] = {
     VTABLE_SLOT(sub_8006FE4),
     VTABLE_SLOT(sub_8007114),
     VTABLE_SLOT(sub_800722C),
-    VTABLE_SLOT(sub_80073BC),
+    VTABLE_SLOT(DestroyEntity),
 };
 
 /* Used by actor_part6.c (GetSpriteObjPriority, DestroySpriteObj), actor_part7.c. */
@@ -479,7 +479,7 @@ const struct vtable_slot gEnemyCtrlVtable[13] = {
 const struct vtable_slot gPeriodicSpawnerVtable[11] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(sub_8007048),
-    VTABLE_SLOT(sub_80070E8),
+    VTABLE_SLOT(GetEntityBounds),
     VTABLE_SLOT(UpdatePeriodicSpawner),
     VTABLE_SLOT(nullsub_11),
     VTABLE_SLOT(sub_8007110),
@@ -1018,7 +1018,7 @@ const struct vtable_slot gBgLayerBaseVtable[5] = {
     VTABLE_SLOT(DestroyBgLayerBase),
     VTABLE_SLOT(ResetBgLayerBase),
     VTABLE_SLOT(ScrollBgLayerBase),
-    VTABLE_SLOT(sub_8024DCC),
+    VTABLE_SLOT(ClampBgLayerScrollStep),
 };
 
 /* Used by bg_scroll_layer_25fc8.c (DestroyBgLayer), game_loop15.c
@@ -1028,7 +1028,7 @@ const struct vtable_slot gBgLayerVtable[10] = {
     VTABLE_SLOT(DestroyBgLayer),
     VTABLE_SLOT(ResetBgLayer),
     VTABLE_SLOT(ScrollBgLayer),
-    VTABLE_SLOT(sub_8024DCC),
+    VTABLE_SLOT(ClampBgLayerScrollStep),
     VTABLE_SLOT(LoadBgLayerTiles),
     VTABLE_SLOT(DrawBgLayerRow),
     VTABLE_SLOT(DrawBgLayerColumn),
@@ -1043,7 +1043,7 @@ const struct vtable_slot gPooledBgLayerVtable[10] = {
     VTABLE_SLOT(DestroyPooledBgLayer),
     VTABLE_SLOT(ResetPooledBgLayer),
     VTABLE_SLOT(ScrollBgLayer),
-    VTABLE_SLOT(sub_8026250),
+    VTABLE_SLOT(ClampPooledBgLayerScrollStep),
     VTABLE_SLOT(LoadPooledBgLayerTiles),
     VTABLE_SLOT(DrawPooledBgLayerRow),
     VTABLE_SLOT(DrawPooledBgLayerColumn),
@@ -1052,7 +1052,7 @@ const struct vtable_slot gPooledBgLayerVtable[10] = {
 };
 
 /* Used by hud_icon_slot.c (sub_802710C). */
-const struct vtable_slot gStaticData_087E4CB4[13] = {
+const struct vtable_slot gHudPartVtable[13] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(CheckSpritePickup),
     VTABLE_SLOT(GetSpriteObjHitbox),

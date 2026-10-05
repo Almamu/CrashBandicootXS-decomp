@@ -41,7 +41,7 @@ and setting `toggle` to 1. This chunk adds:
   versus `RunSlideshow`'s 8) stays set. `self+0x24` feeds `__udivsi3`
   (value/divisor) to compute the per-call text-wrap `limit`.
 
-### The "visual scrolling background streamer" (`DecodeLayerChunk`-`sub_8024E24`)
+### The "visual scrolling background streamer" (`DecodeLayerChunk`-`StepBgLayerScroll`)
 
 `docs/rom_map.md`'s "A new find: a custom RLE/delta token-stream
 decoder" section and its two follow-ups ("Follow-up: resolved the
@@ -79,9 +79,9 @@ flat one:
   `GetBgStreamerColumn` returns the column-wrapped pointer and writes the row
   out by pointer, `GetBgStreamerRow` the reverse, `GetBgStreamerCell` combines both
   and returns the decoded halfword value directly (no out-param).
-- **`SetBgStreamerSource`/`DestroyBgStreamer`/`InitBgStreamer`/`sub_8024D58`/
-  `sub_8024D5C`/`sub_8024D60`/`sub_8024D6C`/`DestroyBgLayerBase`/`InitBgLayerBase`/
-  `sub_8024DCC`/`sub_8024DE0`/`ScaleBgLayerScroll`/`sub_8024E24`** round out
+- **`SetBgStreamerSource`/`DestroyBgStreamer`/`InitBgStreamer`/`GetBgStreamerHeight`/
+  `GetBgStreamerWidth`/`SetBgStreamerSizeVec`/`SetBgStreamerSize`/`DestroyBgLayerBase`/`InitBgLayerBase`/
+  `ClampBgLayerScrollStep`/`ClampBgLayerScrollMax`/`ScaleBgLayerScroll`/`StepBgLayerScroll`** round out
   construction/accessors: `SetBgStreamerSource` stores the room/level descriptor
   and derives a "decode base" from `gLevelLayers`'s own `+0x24`
   field, the same "camera offset + source field" shape as the
@@ -92,12 +92,12 @@ flat one:
   object of size/position changes, following the exact
   `self + *(s16 *)(mgr + N)`/`*(void **)(mgr + N + 4)` idiom
   `src/graphics/actor_anim.c`'s `UpdatePolarCheckpointText` already established;
-  `sub_8024D58`/`sub_8024D5C`/`sub_8024D60`/`sub_8024D6C` are plain
-  position accessors; `sub_8024DCC` clamps to `[-0x10, 0x10]`;
-  `sub_8024DE0` clamps a position pair against an upper-bound pair;
+  `GetBgStreamerHeight`/`GetBgStreamerWidth`/`SetBgStreamerSizeVec`/`SetBgStreamerSize` are plain
+  position accessors; `ClampBgLayerScrollStep` clamps to `[-0x10, 0x10]`;
+  `ClampBgLayerScrollMax` clamps a position pair against an upper-bound pair;
   `ScaleBgLayerScroll` applies the layer's per-axis scale (floor-dividing the
   Q8 product, matching `matching.md`'s established `+0xff`-before-`>>8`
-  floor-division idiom for negative products); `sub_8024E24` is a
+  floor-division idiom for negative products); `StepBgLayerScroll` is a
   two-line position-delta forward through the trampoline table,
   accumulating both axes' results back into the layer's own position.
 
@@ -105,7 +105,7 @@ None of this cluster's fields are given a named struct here, for the
 same reason `game_loop3.c`'s own viewport/parallax-layer object isn't:
 several fields are only ever written/read by functions on both sides of
 this ROM range (this file, `game_loop3.c`, and still-raw neighbors like
-`ScaleBgLayerScroll`/`sub_8024E24`/`FillBgStreamer`/`SetBgStreamerSource` that `game_loop3.c`'s
+`ScaleBgLayerScroll`/`StepBgLayerScroll`/`FillBgStreamer`/`SetBgStreamerSource` that `game_loop3.c`'s
 own header comment named before this issue closed them), so committing
 a struct now risks getting a field wrong that only surfaces once the
 rest is matched.
@@ -114,9 +114,9 @@ rest is matched.
 
 **Matched as real C (20):** `InitSlideshow`, `DestroyCutscenePlayer`, `InitCutscenePlayer`,
 `ScrollBgStreamer`, `GetBgStreamerColumn`, `GetBgStreamerRow`, `GetBgStreamerCell`, `SetBgStreamerSource`,
-`DestroyBgStreamer`, `InitBgStreamer`, `sub_8024D58`, `sub_8024D5C`, `sub_8024D60`,
-`sub_8024D6C`, `DestroyBgLayerBase`, `InitBgLayerBase`, `sub_8024DCC`, `sub_8024DE0`,
-`ScaleBgLayerScroll`, `sub_8024E24`.
+`DestroyBgStreamer`, `InitBgStreamer`, `GetBgStreamerHeight`, `GetBgStreamerWidth`, `SetBgStreamerSizeVec`,
+`SetBgStreamerSize`, `DestroyBgLayerBase`, `InitBgLayerBase`, `ClampBgLayerScrollStep`, `ClampBgLayerScrollMax`,
+`ScaleBgLayerScroll`, `StepBgLayerScroll`.
 
 `ScrollBgStreamer` (the per-frame axis-crossing dispatcher) matched on the
 first isolated-compile attempt with no register pins needed at all -
@@ -150,7 +150,7 @@ register problem:
   moved *before* the `self+0x2c` child-pointer load (the reverse of the
   most natural C statement order, but matching the ROM's own
   instruction sequence).
-- `sub_8024DE0` needed its second clamp's `self+0xc` load deferred into
+- `ClampBgLayerScrollMax` needed its second clamp's `self+0xc` load deferred into
   a nested scope (`{ s32 b = ...; ... }`) rather than declared alongside
   the first at the top of the function, so the load actually happens
   after the first clamp/store pair completes, matching the ROM.
@@ -161,7 +161,7 @@ register problem:
   shapes, since both orders produce the same instruction *count* and
   *mnemonics*, just swapped.
 
-**Trailing alignment gotcha:** `sub_8024E24` (the last function in the
+**Trailing alignment gotcha:** `StepBgLayerScroll` (the last function in the
 file) sits at a ROM address that isn't a multiple of 4 bytes past its
 own end, and the ROM's own raw block has a bare `.align 2, 0` after it
 (the `matching_decomp_alignment_fix` precedent). Unlike mid-file
@@ -211,7 +211,7 @@ above; the direct-byte-comparison technique against the fully-linked
 bugs an isolated compile could not have: `GetBgStreamerColumn`/`GetBgStreamerRow`'s
 buffer-base-load-before-shift ordering (both orders produce identical
 instruction counts and shapes, only a byte-level diff against the real
-linked ROM shows the swap) and `sub_8024E24`'s trailing alignment gap
+linked ROM shows the swap) and `StepBgLayerScroll`'s trailing alignment gap
 (invisible in an isolated per-function check, since it only manifests
 as the file's very last two bytes once fully linked).
 

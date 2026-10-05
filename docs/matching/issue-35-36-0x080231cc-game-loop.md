@@ -53,22 +53,22 @@ Building on `game_loop2.c`'s existing `self+2` flags byte and
   for three of them, set-to-1 setters) - the same shape as the `self+2`
   bitfield family, just laid out as whole bytes.
 - **`self+0xc4`**: a "current index" field, read by two dispatchers
-  (`sub_8023378`/`sub_80233B4`, see below), resolved to a slot address
+  (`GetBossHealth`/`GetBossIndex`, see below), resolved to a slot address
   by `GetLevelFlags`/`GetCurrentLevelFlags` (`self + idx*4 + 4`), and re-used as a
   `gLevelTable`-style level index by `PlayRoomMusic`
   (`game_loop18.c`) when `SetMaskLevel` forwards `self+0xc4`'s address
   into it.
 - **`self+0xc8`/`self+0x1c8`**: two more plain word fields
-  (`sub_8023324` getter, `sub_8023318` setter) - `self+0x1c8` sits right
+  (`sub_8023324` getter, `SetLevelBoss` setter) - `self+0x1c8` sits right
   after the `self+0x1c0`/`0x1c4` pair `CheckAllCratesBroken` reads.
 
 ## The two `self+0xc4` dispatchers
 
-`sub_8023378` and `sub_80233B4` both switch on `self+0xc4`'s value, but
+`GetBossHealth` and `GetBossIndex` both switch on `self+0xc4`'s value, but
 compile to different shapes and both needed to be reproduced exactly as
 the ROM's own compiler chose them:
 
-- **`sub_8023378`** (values `0x14`-`0x17`, only 4 live cases) compiles to
+- **`GetBossHealth`** (values `0x14`-`0x17`, only 4 live cases) compiles to
   a **binary comparison tree** (`cmp/beq`, `cmp/bgt`, `cmp/beq`...), not
   a jump table - and the ROM's own tree treats `0x16`/`0x17` as two
   *separate* explicit equality tests (`cmp r0,#0x16; beq ...; cmp
@@ -79,7 +79,7 @@ the ROM's own compiler chose them:
   `bgt`-based range check instead - reproduced by writing each of the
   three cases as its own separate (identical-bodied) `case` block, which
   keeps the compiler from ever noticing they're a contiguous range.
-- **`sub_80233B4`** (values `0x14`-`0x18`, 5 live cases) compiles to a
+- **`GetBossIndex`** (values `0x14`-`0x18`, 5 live cases) compiles to a
   genuine **5-slot jump table**, and slot 4 (`idx-0x14==4`, i.e.
   `idx==0x18`) points at the *exact same address* as the range-check's
   own "out of bounds" fallthrough target - the same cross-slot code

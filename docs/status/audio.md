@@ -32,7 +32,7 @@ for the full write-up.
   plain C since the early-ROM NAKED retry, see
   [early-rom-naked-retry.md](../matching/early-rom-naked-retry.md)), `GetCurrentSong`,
   `GetSfxVolume`, `GetMusicVolume`, `FadeOutMusic`, `FadeInMusic`,
-  `sub_8001AEC`, `sub_8001B00`, `sub_8001B14`, `SetMusicVolume`,
+  `FadeOutMasterVolume`, `FadeInMasterVolume`, `sub_8001B14`, `SetMusicVolume`,
   `SetSfxVolume`, `PlaySong`, `ResumeSong`, `PauseSong`,
   `StopSong`, `DestroyAudioContext`, `InitAudioContext` (constructor),
   `DisableMusicVCountIrq`.

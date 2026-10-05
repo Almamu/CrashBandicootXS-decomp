@@ -9,7 +9,7 @@ extern struct dual_array_manager *InitPartList(struct dual_array_manager *manage
 extern struct pool_manager *InitCrateList(struct pool_manager *manager, s32 count);
 extern void *GetLevelLayers(void);
 extern void *InitPlayer();
-extern void sub_8007398(struct actor *self, s32 arg1, s32 arg2);
+extern void SetEntityPos(struct actor *self, s32 arg1, s32 arg2);
 extern void OperatorDelete(void *self);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern void *InitActionCtrl(void *selfArg);
@@ -35,7 +35,7 @@ extern void *gCamera;
 extern void *gLevelLayers;
 extern void *gPlayer;
 extern void *gPlayerCtrl;
-extern void ***gUnknown_030012D0;
+extern void ***gSpriteBankSet;
 extern u8 gStaticData_0816B92C[];
 extern u8 gStaticData_0816B934[];
 extern u8 gStaticData_0816B93C[];
@@ -134,7 +134,7 @@ s32 PlayRoom(void *selfArg)
     *d8 = InitPlayer(OperatorNew(0x350), 0xffff, 0, 0, 0);
     {
         struct level_start_args *p = self;
-        sub_8007398((struct actor *)*d8, p->spawnX, p->spawnY);
+        SetEntityPos((struct actor *)*d8, p->spawnX, p->spawnY);
     }
 
     /* Register-pinned (rather than a plain `*p |= 0x10`) so the mask
@@ -186,7 +186,7 @@ s32 PlayRoom(void *selfArg)
 
         *((u8 *)*d8 + 0x88) = mode;
         {
-            void *val = **gUnknown_030012D0;
+            void *val = **gSpriteBankSet;
             u8 *pl = *d8;
             struct widget_vtable *w1c;
             s32 off;
@@ -212,7 +212,7 @@ s32 PlayRoom(void *selfArg)
 
         *((u8 *)*d8 + 0x88) = mode;
         {
-            void *val = (u8 *)**gUnknown_030012D0 + 0xc;
+            void *val = (u8 *)**gSpriteBankSet + 0xc;
             u8 *pl = *d8;
             *(void **)(pl + 0x20) = val;
             {
@@ -248,7 +248,7 @@ s32 PlayRoom(void *selfArg)
             pl[0x88] = v;
         }
         {
-            void *val = (u8 *)**gUnknown_030012D0 + 0x18;
+            void *val = (u8 *)**gSpriteBankSet + 0x18;
             u8 *pl = *d8;
             struct widget_vtable *w1c;
             s32 off;

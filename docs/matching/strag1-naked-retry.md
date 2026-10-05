@@ -7,7 +7,7 @@ None of them needs a register pin.
 | Function | File | Size | Before | Result |
 |---|---|---|---|---|
 | `DropWumpa` | `src/system/game_loop14.c` | 132 B | 5 hw (note) | **Closed** |
-| `sub_8025B0C` | `src/system/game_loop14.c` | 160 B | 61 hw (note), no draft | **Closed** |
+| `LaunchEffectPart` | `src/system/game_loop14.c` | 160 B | 61 hw (note), no draft | **Closed** |
 | `DecodeLayerChunk` | `src/system/game_loop57.c` | 320 B | 13 hw (note), no draft | **Closed** |
 | `RunCutscenePlayer` | `src/system/game_loop57.c` | 284 B | 77 hw (note), no draft | **Closed** |
 | `DrawSpritePieces` | `src/graphics/graphics_73dc.c` (new, split from `graphics.c`) | 600 B | draft removed long ago | **Closed** |
@@ -34,7 +34,7 @@ A plain C draft was 11 halfwords off. There were two parts to fix:
   is `CreateWumpa`'s `phase` trick. Either change alone leaves 3
   halfwords off.
 
-## sub_8025B0C
+## LaunchEffectPart
 
 The first draft was 67 halfwords off. Three source-shape changes closed
 it:

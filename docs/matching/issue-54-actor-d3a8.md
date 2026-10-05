@@ -124,7 +124,7 @@ function's address (`..._d3a8.s`, `..._d7b0.s`, `..._dd9c.s`,
   directly to a different table offset, any other state eases toward
   the raw caller-supplied position. "Easing" is a round-toward-zero
   divide (plain C division reproduces the ROM's own rsb/lsr/add/asr
-  idiom exactly, same as `sub_80070EC` in the frozen `docs/matching.md`).
+  idiom exactly, same as `SetEntitySize` in the frozen `docs/matching.md`).
   Logic, register choices (`self`→r5, `posX`→r6, `posY`→ip via
   `register s32 posY asm("ip")`, `posZ`→r7) and every individual
   instruction body are confirmed correct in isolation; parked on two
@@ -318,7 +318,7 @@ unified to this project's established plain/divided NAKED syntax
 GNU-as local numeric labels (`N:`, referenced `Nf`/`Nb`) via a small
 scratch-only Python script (mechanical mnemonic/label translation, not
 committed - the same approach `docs/matching/issue-4-sio-settings-
-sync.md` used for `sub_8002114`, to avoid hand-transcription typos at
+sync.md` used for `HandleLinkSerial`, to avoid hand-transcription typos at
 this instruction count). Each translated function's isolated compile
 was checked against the original ROM disassembly instruction-by-
 instruction before being cut into its real `.c` file, and the whole

@@ -32,7 +32,7 @@ most of the work was loop shape:
 - **A `void **bitmap = &gEntityFlags;` local set right before the
   attempt loop** gives the ROM's `mov sb, r4`. Only the uses the ROM
   reaches through `sb` go through `bitmap` (the save/allocate in the
-  check step and the clear in the "done" path). The two `sub_8025A44`
+  check step and the clear in the "done" path). The two `DestroyEntityFlags`
   blocks still name the global and load its address fresh, as the ROM
   does. This change also moved the status flag to `r8` and the zero to
   `r5`.

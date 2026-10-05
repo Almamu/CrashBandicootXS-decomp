@@ -8,15 +8,15 @@
 
 extern void *OperatorNew(s32 size);
 extern struct actor *InitUiSpriteObj(struct actor *part);
-extern void sub_800737C(struct actor *self, s32 arg1, s32 arg2);
+extern void SetEntityPixelPos(struct actor *self, s32 arg1, s32 arg2);
 extern s32 CountCrystals(void *arg0);
 extern s32 FormatDecimal(s32 value, void *dest);
-extern void ***gUnknown_030012D0;
+extern void ***gSpriteBankSet;
 extern struct icon_pos gStaticData_0816B1E4;
 
 /* Constructs the single icon at `field_88`: positions it from the fixed
  * `gStaticData_0816B1E4` pair, picks its starting keyframe-table entry
- * from a shared table (`gUnknown_030012D0`'s triple-indirected base,
+ * from a shared table (`gSpriteBankSet`'s triple-indirected base,
  * offset `0xde<<1`), and formats two small numbers - a row-stats
  * derived count into `buf2c` and the constant `0x14` into `buf46` -
  * as decimal strings. */
@@ -25,8 +25,8 @@ void InitPauseCrystalsPage(struct pause_screen_results *self)
     struct settings_icon_actor **dest = &self->field_88;
 
     *dest = (struct settings_icon_actor *)InitUiSpriteObj((struct actor *)OperatorNew(0x40));
-    (*dest)->field_20 = (void **)((u8 *)(**gUnknown_030012D0) + (0xde << 1));
-    sub_800737C(&(*dest)->base, gStaticData_0816B1E4.x, gStaticData_0816B1E4.y);
+    (*dest)->field_20 = (void **)((u8 *)(**gSpriteBankSet) + (0xde << 1));
+    SetEntityPixelPos(&(*dest)->base, gStaticData_0816B1E4.x, gStaticData_0816B1E4.y);
     UPDATE_ICON_FRAME_NIBBLE(*dest);
 
     FormatDecimal(CountCrystals(self->field_10), self->buf2c);
@@ -60,7 +60,7 @@ struct icon_frame_nibble {
 
 static inline void set_icon_pos(struct actor *a, struct icon_pos *p)
 {
-    sub_800737C(a, p->x, p->y);
+    SetEntityPixelPos(a, p->x, p->y);
 }
 
 extern u32 gStaticData_0816B20C[];
@@ -78,7 +78,7 @@ void InitPausePowersPage(struct pause_screen_results *self)
         struct settings_icon_actor *icon;
 
         self->icons8c[i] = NEW_ICON(icon);
-        icon->field_20 = (void **)((u8 *)(**gUnknown_030012D0) + (0xe4 << 1));
+        icon->field_20 = (void **)((u8 *)(**gSpriteBankSet) + (0xe4 << 1));
         icon->frameIndex = gStaticData_0816B20C[i];
         ResetSpriteFrameTimer(&icon->base);
         ResetSpriteFrameIndex(&icon->base);
@@ -108,7 +108,7 @@ void InitPauseGemsPage(struct pause_screen_results *self)
         struct settings_icon_actor *icon;
 
         self->icons9c[i] = NEW_ICON(icon);
-        icon->field_20 = (void **)((u8 *)(**gUnknown_030012D0) + (0xc0 << 1));
+        icon->field_20 = (void **)((u8 *)(**gSpriteBankSet) + (0xc0 << 1));
         icon->frameIndex = gStaticData_0816B244[i];
         ResetSpriteFrameTimer(&icon->base);
         ResetSpriteFrameIndex(&icon->base);
@@ -148,7 +148,7 @@ void InitPauseRelicsPage(struct pause_screen_results *self)
         struct settings_icon_actor *icon;
 
         self->iconsB0[i] = NEW_ICON(icon);
-        icon->field_20 = (void **)((u8 *)(**gUnknown_030012D0) + (0xc6 << 1));
+        icon->field_20 = (void **)((u8 *)(**gSpriteBankSet) + (0xc6 << 1));
         icon->frameIndex = gStaticData_0816B270[i];
         ResetSpriteFrameTimer(&icon->base);
         ResetSpriteFrameIndex(&icon->base);
@@ -231,7 +231,7 @@ void InitPauseTimeTrialPage(struct pause_screen_results *self)
 
     slot = &self->field_bc;
     *slot = (struct settings_icon_actor *)InitUiSpriteObj((struct actor *)OperatorNew(0x40));
-    (*slot)->field_20 = (void **)((u8 *)(**gUnknown_030012D0) + (0xc6 << 1));
+    (*slot)->field_20 = (void **)((u8 *)(**gSpriteBankSet) + (0xc6 << 1));
     set_icon_pos(&(*slot)->base, &gStaticData_0816B27C);
 
     if (time != 0) {

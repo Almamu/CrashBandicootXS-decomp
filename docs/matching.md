@@ -1710,7 +1710,7 @@ the ROM's `lsls r1,r1,#0x10; lsrs r7,r1,#0x10` is the truncation a
 16-bit parameter forces on its incoming (possibly dirty-upper-bits)
 register, absent entirely once the parameter was declared `u16`.
 
-**`sub_8006FC8`/`nullsub_1`**: `sub_8006FC8` is a small mirror of the
+**`DestroySpriteBankSet`/`nullsub_1`**: `DestroySpriteBankSet` is a small mirror of the
 already-matched `DestroyOamBuffer` (conditionally frees `arg0` based on an
 odd/even flag in `arg1`), matched on the first attempt.  `nullsub_1` is
 an empty stub whose 2-byte body isn't 4-aligned - the same
@@ -1780,7 +1780,7 @@ would otherwise insert for the implicit truncation check - fixed by
 routing the asm's output through an `s32` temporary instead of a `u8`
 one).
 
-**`nullsub_11`/`sub_80070D4`/`sub_80070E8`/`sub_80070EC`/`sub_800710C`/
+**`nullsub_11`/`sub_80070D4`/`GetEntityBounds`/`SetEntitySize`/`sub_800710C`/
 `sub_8007110`**: six small functions, all matched on the first or
 second attempt. `nullsub_11` needed the usual empty-stub alignment
 fix. `sub_80070D4` tail-calls `_call_via_r1` through the same
@@ -1789,7 +1789,7 @@ epilogue pops the saved LR into r0 (clobbering the call's return
 value on purpose), which only happens for a genuinely `void`-returning
 function; declaring it to return `void *` instead kept a pointless
 value alive in r0 across the pop, forcing a different register
-(`pop {r1}`) and breaking the match. `sub_80070EC` stores a
+(`pop {r1}`) and breaking the match. `SetEntitySize` stores a
 width/height pair both as raw bytes and as `-w/2`-style halved,
 negated `s16`s - plain C division by a negative constant reproduced
 the ROM's rsb/lsr/add/asr rounding idiom exactly, no tricks needed.
@@ -1825,14 +1825,14 @@ register wrangling so far in this cluster:
   file) - without it, `as` pads with NOP instead of the ROM's
   zero-fill.
 
-**`sub_8007174`**: matched on the first attempt. Ignores its own first
+**`WorldToScreen`**: matched on the first attempt. Ignores its own first
 parameter entirely (overwritten as scratch before ever being read),
 reads the same `gLevelLayers` sub-object `sub_8006FE4` uses but
 as two raw sign-extended-24-bit `s32` fields (dx/dy) rather than
 through the record table - a different part of the same object.
 
-**`sub_800719C`/`nullsub_12`**: `sub_800719C` is a close sibling of
-`sub_8007174` above, reading the same sub-object fields but through
+**`WorldPosToScreen`/`nullsub_12`**: `WorldPosToScreen` is a close sibling of
+`WorldToScreen` above, reading the same sub-object fields but through
 plain `<< 8` (no sign-extension this time) after a small per-axis
 rounding step. Needed the "compute both loads before either use"
 technique (see `matching_decomp_register_pinning` memory, point 4):
@@ -1842,10 +1842,10 @@ compute-both-then-use-both order - fixed by pulling both shifted
 values out into named locals (`subX`/`subY`) ahead of the two
 subtractions. `nullsub_12` is the usual empty-stub alignment fix.
 
-**`sub_80071E4`**: an object constructor - allocates 0x1c bytes via
+**`CreateEntity`**: an object constructor - allocates 0x1c bytes via
 `OperatorNew`, wires up a vtable-like pointer
-(`gStaticData_087E3BEC`) and calls an init function
-(`sub_8007230`), then stores its three `u16` parameters into the new
+(`gEntityVtable`) and calls an init function
+(`ResetEntity`), then stores its three `u16` parameters into the new
 object (one as a raw halfword, two left-shifted into fixed-point
 `s32` fields). Matched on the first attempt, including the `r8`
 push/save/restore dance for keeping `arg0` alive across both calls -
@@ -1853,8 +1853,8 @@ gcc reached for `r8` on its own here (three live parameters plus the
 allocated object exceeds what r4-r7 alone can hold), no pinning
 needed - see `matching_decomp_register_pinning` memory, point 8.
 
-**`sub_800722C`/`sub_8007230`**: `sub_800722C` is another unreferenced
-`return 0;` stub, same as `sub_800710C`/`sub_8007110`. `sub_8007230`
+**`sub_800722C`/`ResetEntity`**: `sub_800722C` is another unreferenced
+`return 0;` stub, same as `sub_800710C`/`sub_8007110`. `ResetEntity`
 clears/sets a handful of bits in self's flag byte plus a few other
 fields - the flag-byte math needed real register pinning:
 - The ROM builds its bitmask constants (-3, then later -2, -9, -17)
@@ -1877,16 +1877,16 @@ fields - the flag-byte math needed real register pinning:
 - 44-byte body, not 4-aligned - the usual trailing
   `asm(".align 2, 0")` fix.
 
-**`sub_800725C`**: another small constructor-style helper, wiring up
-the same `gStaticData_087E3BEC` vtable pointer and calling
-`sub_8007230` on an already-allocated object (rather than allocating
-one itself, unlike `sub_80071E4`). Matched on the first attempt.
+**`InitEntity`**: another small constructor-style helper, wiring up
+the same `gEntityVtable` vtable pointer and calling
+`ResetEntity` on an already-allocated object (rather than allocating
+one itself, unlike `CreateEntity`). Matched on the first attempt.
 
-### Cleanup pass: `struct actor` for the sub_8006FE4-sub_800725C cluster
+### Cleanup pass: `struct actor` for the sub_8006FE4-InitEntity cluster
 
 Retroactive cleanup pass (`make compare` re-checked after every edit
-below) over `sub_8006FE4`/`sub_8007048`/`sub_80070EC`/`sub_8007114`/
-`sub_80070D4`/`sub_80070E8`/`sub_80071E4`/`sub_8007230`/`sub_800725C`,
+below) over `sub_8006FE4`/`sub_8007048`/`SetEntitySize`/`sub_8007114`/
+`sub_80070D4`/`GetEntityBounds`/`CreateEntity`/`ResetEntity`/`InitEntity`,
 all of which had been left on raw `void *self` offsets - this should
 have happened per-function as each one was matched (docs/workflow.md
 step 7 is not a deferred batch step), not as a separate pass
@@ -1900,7 +1900,7 @@ matching the many similar actor-zone functions" comments - and
 `oam_count.c`'s `DestroyPowerDialog` (already-matched, `struct
 sub_8006700_actor.field_18`) turned out to be a pointer to exactly
 the same object, confirming it independently. New `struct actor` in
-`include/actor.h`, sized `0x1c` bytes (confirmed by `sub_80071E4`'s
+`include/actor.h`, sized `0x1c` bytes (confirmed by `CreateEntity`'s
 `OperatorNew(sizeof(struct actor))` allocation) with named fields for
 everything a function in this cluster actually reads/writes - `x`/`y`
 (Q8 fixed-point position), `field_08`/`field_0A` (role not yet
@@ -1912,7 +1912,7 @@ sub_8006700_actor.field_18` retyped from `void *` to `struct actor *`
 to match.
 
 One real regression caught by rebuilding after the edit (not assumed
-away): in `sub_8007230`, switching the five field *writes*
+away): in `ResetEntity`, switching the five field *writes*
 (`self->flags = result;` etc.) from raw pointer stores to struct
 field assignment moved the zero constant's materialization earlier
 and into a different register than the ROM uses - reverted those five
@@ -1925,14 +1925,14 @@ and inline asm blocks (pinning wraps whichever C expression computes
 the address/value, so the struct doesn't interact with it).
 
 `gLevelLayers`'s own sub-object (read by `sub_8006FE4`/
-`sub_8007174`/`sub_800719C`) is a *different*, still-unidentified
+`WorldToScreen`/`WorldPosToScreen`) is a *different*, still-unidentified
 object (looks camera/viewport-offset-shaped given how it's used, but
 that's not confirmed) - deliberately left untyped rather than folded
 into `struct actor` or guessed at.
 
 **`sub_8007278`**: clears `self->flags` bit4 (`&= ~16`), using
 `struct actor` from the cleanup pass above straight away rather than
-raw offsets. Same accumulator-register pattern as `sub_8007230`'s
+raw offsets. Same accumulator-register pattern as `ResetEntity`'s
 mask chain: the ROM computes the mask constant before loading the
 flag byte, and the AND's result lives in the *mask's* register, not
 the freshly-loaded byte's - plain C (even with the load reordered to
@@ -2035,14 +2035,14 @@ Same accumulator-register fix; already 4-aligned.
 `sub_800734C`. Same accumulator-register fix, plus the usual
 trailing-padding alignment fix.
 
-**`sub_8007364`/`sub_800736C`/`sub_8007374`/`sub_8007378`/
-`sub_800737C`**: five small position accessors, all matched on the
-first attempt - `sub_8007364`/`sub_800736C` return `self->y`/`self->x`
+**`GetEntityPixelY`/`GetEntityPixelX`/`GetEntityY`/`GetEntityX`/
+`SetEntityPixelPos`**: five small position accessors, all matched on the
+first attempt - `GetEntityPixelY`/`GetEntityPixelX` return `self->y`/`self->x`
 shifted right 8 (the integer part of the Q8 fixed-point position),
-`sub_8007374`/`sub_8007378` return the raw (still-fixed-point)
-`self->y`/`self->x`, and `sub_800737C` is the setter
+`GetEntityY`/`GetEntityX` return the raw (still-fixed-point)
+`self->y`/`self->x`, and `SetEntityPixelPos` is the setter
 (`self->x = arg1 << 8; self->y = arg2 << 8;`). One false start: the
-gap after `sub_8007364`'s 6-byte body initially looked like it needed
+gap after `GetEntityPixelY`'s 6-byte body initially looked like it needed
 a real `movs r0, r0` NOP (that's how `asm/code_3_2.s`'s disassembler
 rendered it) rather than the usual zero-fill - but a direct byte
 comparison against `baserom.gba` showed the real bytes there are
@@ -2053,32 +2053,32 @@ already zero-fills correctly here - no explicit padding fix was
 actually needed. Lesson: always confirm a disassembly gotcha against
 the raw ROM bytes, not just against how a tool chose to render them.
 
-**`sub_8007388`**: a thin wrapper unpacking a 2-`s32`-field pointer
-argument and forwarding to `sub_800737C`. Matched on the first
+**`SetEntityPixelPosVec`**: a thin wrapper unpacking a 2-`s32`-field pointer
+argument and forwarding to `SetEntityPixelPos`. Matched on the first
 attempt.
 
-**`sub_8007398`**: sets `self->x`/`self->y` directly (no `<<8` shift),
-the raw-value counterpart to `sub_800737C`. Matched on the first
+**`SetEntityPos`**: sets `self->x`/`self->y` directly (no `<<8` shift),
+the raw-value counterpart to `SetEntityPixelPos`. Matched on the first
 attempt, plus the usual alignment fix.
 
-**`sub_80073A0`**: the same unpack-and-forward wrapper shape as
-`sub_8007388`, this time calling `sub_8007398`. Matched on the first
+**`SetEntityPosVec`**: the same unpack-and-forward wrapper shape as
+`SetEntityPixelPosVec`, this time calling `SetEntityPos`. Matched on the first
 attempt.
 
 **`sub_80073B0`/`sub_80073B4`**: a trivial `self->field_0A`
 setter/getter pair. Both matched on the first attempt.
 
-**`sub_80073B8`**: a trivial `self->field_08` getter. Matched on the
+**`GetEntityId`**: a trivial `self->field_08` getter. Matched on the
 first attempt.
 
-**`sub_80073BC`**: rewires `self->table` to `gStaticData_087E3BEC`
-(the same vtable pointer `sub_80071E4`/`sub_800725C` wire up) and
+**`DestroyEntity`**: rewires `self->table` to `gEntityVtable`
+(the same vtable pointer `CreateEntity`/`InitEntity` wire up) and
 conditionally frees `self` if `arg1 & 1` - the same
-"conditionally-free" idiom as `DestroyOamBuffer`/`sub_8006FC8`. Matched on
+"conditionally-free" idiom as `DestroyOamBuffer`/`DestroySpriteBankSet`. Matched on
 the first attempt.
 
 **Parked, not matched: `DrawSpritePieces`** (ROM `0x080073DC`, right after
-`sub_80073BC`). A ~600-byte function building one OAM entry per
+`DestroyEntity`). A ~600-byte function building one OAM entry per
 visible sub-piece of an animated `part` object, plus queuing a
 combined VRAM tile upload for the whole part. `part` shares
 `struct actor`'s "field+0x18 table pointer" convention at the same
@@ -2154,7 +2154,7 @@ updated to interleave `actor_part.o` between them - see
 `docs/workflow.md` step 4's "needs its own new `.c` file" case).
 Resolves whether `(x, y)` are already screen-relative
 (`part+0x25 != 0`) or need the camera-relative conversion
-`sub_8007174` applies, then forwards the result to `DrawSpritePieces`
+`WorldToScreen` applies, then forwards the result to `DrawSpritePieces`
 (itself parked as `NON_MATCHING` - callable normally since only its
 *definition* is guarded, not a separate `extern` declaration). Matched
 on the first attempt; the usual alignment fix (58-byte body, last
@@ -2167,7 +2167,7 @@ fixed-point fields `struct actor` has at 0x00/0x04, integer-shifted by
 on the first attempt, plus the usual alignment fix.
 
 **`DestroySpriteRenderer`/`nullsub_2`**: the same conditionally-free idiom as
-`DestroyOamBuffer`/`sub_8006FC8`/`sub_80073BC` and another empty stub, both
+`DestroyOamBuffer`/`DestroySpriteBankSet`/`DestroyEntity` and another empty stub, both
 matched on the first attempt.
 
 **`ResetSpriteObj`**: a `part`-object field initializer, clearing/setting
@@ -2450,7 +2450,7 @@ sentinel - marks a bit in the `gEntityFlags` 32-bit-word bitmap at
 `+0x108` (identical to `sub_80072D8`'s convention). Finally,
 `part->field_0A - 0x1b` (0-7) selects one of six "kind" values (1, 6,
 5, 0, 3, 4 for cases 2/3, 6, 4, 7, 5, 0 respectively; case 1 and any
-out-of-range value spawn nothing) passed to `sub_8025BAC(gEntitySpawner,
+out-of-range value spawn nothing) passed to `SpawnEffectPart(gEntitySpawner,
 0x2b, kind, part->x>>8, part->y>>8, 0)` - "spawn an object from a pool
 at this position" is the working theory, not confirmed. If something
 spawned, its `+0x28` bits 0-1 get set to `01` and its `+0xc` bit 2
@@ -2472,13 +2472,13 @@ variables); caching `&gPlayer` in a local
 "load the global's address once, dereference it fresh each time"
 reuse pattern instead of gcc reloading the address from the literal
 pool at every access; and, for the six-case spawn switch, writing the
-`sub_8025BAC` call fully inline at each case (not hoisting `x`/`y`
+`SpawnEffectPart` call fully inline at each case (not hoisting `x`/`y`
 into shared locals before the switch) since the ROM recomputes
 `part->x>>8`/`part->y>>8` fresh in every case block rather than
 sharing one computation - plus reordering the case bodies in source to
 match the ROM's own (non-obvious) code layout: cases 2/3, then 6, 4,
 7, 5, and finally 0 (which falls straight into the shared
-`sub_8025BAC` call site with no trailing `break`/jump, unlike the
+`SpawnEffectPart` call site with no trailing `break`/jump, unlike the
 others) - a pattern arrived at by matching the observed block order
 directly rather than any predictive rule for how gcc lays out switch
 bodies.
@@ -2579,7 +2579,7 @@ Direct comparison of the 264-byte linked region (262 bytes of function
 plus two bytes of alignment) produced identical SHA-1 values
 (`e9e861b9af7201e179d747cc8afc019ed6b6bf4f`), and both the initial and
 post-cleanup `make compare` runs passed. `asm/code_3_2_17.s` was split at
-this exact location; its untouched remainder begins at `sub_8027940` in
+this exact location; its untouched remainder begins at `UpdateHudCrates` in
 new `asm/code_3_2_20.s`, with `hud_counter.o` interleaved between them in
 `ldscript.txt`. (The PR's own second matched function, `SetSpriteFrameIndex`,
 turned out to duplicate work already matched independently on `main` in
@@ -2991,8 +2991,8 @@ split at the `CreateSpriteObj` boundary into itself (now just the parked
 
 **`CreateSpriteObj`** (ROM `0x08008434`, right after `GetSpriteObjPriority`, same
 file): a `struct actor`-shaped object constructor - allocates via
-`OperatorNew(0x40)`, initializes it through `sub_800725C` (already
-matched in `graphics.c`, wires up `gStaticData_087E3BEC` and clears
+`OperatorNew(0x40)`, initializes it through `InitEntity` (already
+matched in `graphics.c`, wires up `gEntityVtable` and clears
 flags), then immediately overwrites its `table` with
 `gSpriteObjVtable` instead and clears its part-object fields via
 `ResetSpriteObj` (already matched in `actor_part.c`). The three `u16`
@@ -3004,13 +3004,13 @@ file): trivial always-true stub, `return 1;`. Matched on the first
 attempt.
 
 **`DestroySpriteObj`** (ROM `0x08008484`, right after `GetSpriteObjClassId`, same
-file): the same `gStaticData_087E3BEC`-table-swap-plus-conditional-
-`OperatorDelete` shape as `sub_80073BC` (already matched in
+file): the same `gEntityVtable`-table-swap-plus-conditional-
+`OperatorDelete` shape as `DestroyEntity` (already matched in
 `graphics.c`) - overwrites `self->table` unconditionally, then calls
 `OperatorDelete(self)` only if `arg1 & 1`. Matched on the first attempt.
 
 **`InitSpriteObj`** (ROM `0x080084A4`, right after `DestroySpriteObj`, same
-file): the same `sub_800725C`/table-swap-to-`gSpriteObjVtable`/
+file): the same `InitEntity`/table-swap-to-`gSpriteObjVtable`/
 `ResetSpriteObj` shape as `CreateSpriteObj` above, but re-initializes an
 existing `self` in place instead of allocating a fresh object via
 `OperatorNew`. Matched on the first attempt.
@@ -3365,7 +3365,7 @@ already isolates the top 2 bits).
 file): overwrites `part->table` with `gUiSpriteObjVtable`, then
 tail-calls `DestroySpriteObj` (already matched in `actor_part6.c`) with the
 same `arg1` - which immediately overwrites `table` again with
-`gStaticData_087E3BEC` before its own conditional `OperatorDelete` call.
+`gEntityVtable` before its own conditional `OperatorDelete` call.
 Reproduces the ROM's apparently-redundant double table write exactly
 as found; matched on the first attempt.
 
@@ -3947,7 +3947,7 @@ correct version.
 **Update: converted to `NAKED`.** Since every load, store, branch,
 field offset, and call argument was already confirmed correct, and
 this session established NAKED transcription as a reliable technique
-even for large, register-pressure-heavy functions (`sub_8010B6C`,
+even for large, register-pressure-heavy functions (`ResolveCollisionCandidates`,
 `sub_80096C0`, `CollidePartWithPlayer`/`CollidePartWithObject`/`sub_80099F0`), `sub_8009528`
 was hand-transcribed as literal Thumb asm instead of staying an
 unclosable `#if NON_MATCHING` C draft: the ROM's own ldr/str/lsl/asr
@@ -4552,12 +4552,12 @@ of the run:
   `gPlayerVtable` (a second static table alongside the
   already-matched `gMovingSpriteVtable`), fires a child object's own
   trampoline via `_call_via_r2` if one exists, then calls
-  `sub_8010E14(self+0x108, 2)` and tail-calls `DestroyGroundSprite`.
+  `DestroyCollisionQueue(self+0x108, 2)` and tail-calls `DestroyGroundSprite`.
 - **`InitPlayer`** (LEFT RAW - not reconstructed, given its own
   `asm/code_3_2_19.s`): a part-object constructor that calls three
   still-unexamined helpers (`ResetSpriteFrameTimer`, `ResetSpriteFrameIndex`,
   `SetSpriteAnimDone`) plus `ResetPlayer` (itself the start of a still-raw
-  94 KB span) and `CreateSpriteObj`/`sub_8010E2C`/`InitGroundSprite`. Sits
+  94 KB span) and `CreateSpriteObj`/`ResetCollisionQueue`/`InitGroundSprite`. Sits
   between `DestroyPlayer` and `sub_800B4A4` in ROM, so it splits this
   batch into `actor_part15.c` (up to `DestroyPlayer`) and
   `actor_part16.c` (`sub_800B4A4` onward).
@@ -4783,7 +4783,7 @@ full clean `make compare` after the five-way file split; `ldscript.txt`
 links them in real ROM order: `code_3_1_7.o`, `fade_screen_mode.o`,
 `code_3_1_8.o`, `fade_screen_mode2.o`, `code_3_1_9.o`.
 
-## `aabb_util.c` (`AabbOverlapsInclusiveX`-`sub_80016DC`)
+## `aabb_util.c` (`AabbOverlapsInclusiveX`-`IwramAlloc`)
 
 Right after the parked `CommitBlendRegs`, two AABB overlap tests plus two
 tiny `mem_free`/`mem_alloc` wrappers:
@@ -4808,12 +4808,12 @@ tiny `mem_free`/`mem_alloc` wrappers:
   showed a 4-byte address shift starting exactly at `AabbOverlaps`
   until this was caught by direct byte-diffing against the ROM instead
   of trusting a visual instruction-shape comparison.
-- **`sub_80016D0`/`sub_80016DC`**: trivial `mem_free`/`mem_alloc`
+- **`IwramFree`/`IwramAlloc`**: trivial `mem_free`/`mem_alloc`
   wrappers, the latter always requesting the `0x80000000` flag
   (IWRAM-preferring allocation, per `mem_alloc`'s own established
   `arg1` semantics in `src/system/memory.c`).
 
-Needed an explicit trailing `asm(".align 2, 0");` after `sub_80016DC`
+Needed an explicit trailing `asm(".align 2, 0");` after `IwramAlloc`
 (the last function in the file) - without it, the assembler's default
 NOP padding (`0xc046`, "mov r8,r8") mismatched the ROM's zero-padding
 before the next raw function - the same alignment fix already
@@ -5360,7 +5360,7 @@ chunk's biggest, least-understood cluster in one pass.
 - **`MainLoop`** (ROM `0x08026EEC`): the game's actual top-level loop,
   called once from `AgbMain` (`src/system/main.c`). Sets up the central
   per-level state object (`gLevelState`, via `GetLevelState`/
-  `sub_802369C`/`sub_8023674`/`sub_8023658` - none of those four are
+  `PlayBootCutscene`/`ShowCompanyLogos`/`PlayIntroCutscene` - none of those four are
   understood beyond "state setup", left as opaque `extern` calls), the
   on-screen counter widget (`OpenLanguageSelect`/`RunLanguageSelect`/`CloseLanguageSelect`,
   already-matched in `src/audio/counter_selector*.c`), then loops
@@ -5412,7 +5412,7 @@ pins or reordering needed.
   (`include/actor.h`) - both call the same generic `DestroyUiSpriteObj`/
   `InitUiSpriteObj` table-swap helpers already matched for the actor/part
   system (`actor_part7.c`), just with this widget family's own
-  `gStaticData_087E4CB4` table. `InitHudPart` is called 35 times in a
+  `gHudPartVtable` table. `InitHudPart` is called 35 times in a
   loop by the still-raw `InitHud` (stride `0x40` = `sizeof(struct
   hud_digit_part)`, confirming the struct size independently).
 
@@ -5431,7 +5431,7 @@ A 3-slot icon "blink" animation timer on the `gHud`
 object (already referenced as `void *` from `src/system/game_loop.c`/
 `game_loop2.c` - kept the same untyped convention here rather than
 naming a struct, since the object extends past this file's own fields,
-to at least `+0x28` per `sub_8028568`). Each slot is a `{state, timer}`
+to at least `+0x28` per `SetHudCrateTotal`). Each slot is a `{state, timer}`
 `s32` pair: state 0 idle, 1 counting up to a threshold then -> 2, 2
 counting down 0x14 frames then -> 3, 3 counting down its own timer
 then back to 0.
@@ -5440,7 +5440,7 @@ then back to 0.
   object's `+0x8c` flag - force-advances slots 0 and 1 out of a stuck
   1/2 state, then runs the generic advance (`StepHudSlide`) on all three
   slots unconditionally.
-- **`sub_8028474`**/**`ShowHudLives`**/**`ShowHudWumpa`**: per-slot
+- **`ShowHudCrates`**/**`ShowHudLives`**/**`ShowHudWumpa`**: per-slot
   triggers (slots 2/0/1 respectively) - start a fresh blink from idle
   or finished, or refresh the timer if already in the "on" phase; only
   runs while `+0x8c` is clear (opposite gating from the tick above).
@@ -5471,18 +5471,18 @@ in the source's own comments (`docs/workflow.md` step 7 convention):
   read these in detail (an angle field via `__divsi3`, suggesting a
   particle/projectile trajectory queue) but didn't reach byte-precision
   confidence.
-- **`InitHud`/`sub_802732C`** (new `asm/code_3_2_17_27138.s`, first
+- **`InitHud`/`ConfigureHudParts`** (new `asm/code_3_2_17_27138.s`, first
   half) - a 34/35-slot OAM array setup pair (calls `InitHudPart` in a
   loop, per above), heavy on interleaved `gHudPartAnims`/
   `gHudPartPositions` table indexing not chased down this pass.
-- **`UpdateHud`/`sub_802757C`/`UpdateHudClock`** (same file, second
+- **`UpdateHud`/`UpdateHudBoss`/`UpdateHudClock`** (same file, second
   half) - the HUD stat-widget dispatcher and its icon-indicator/digit-
   counter callees documented in `docs/rom_map.md`'s "full HUD
   stat-widget family" section; genuinely understood at the semantic
   level already, but matching them to the same register-pin precision
   `UpdateHudLives` needed (see its own PR #1 entry above) is a bigger job
   than fit in this pass.
-- **`sub_8027940`/`UpdateHudWumpa`/`sub_8027E88`** (`asm/code_3_2_20.s`,
+- **`UpdateHudCrates`/`UpdateHudWumpa`/`UpdateHudPercentCounters`** (`asm/code_3_2_20.s`,
   now truncated to just these three) - the rest of that same digit-
   counter family (score counter, a third cached counter, and the
   percentage counter) - same reason as above.
@@ -5493,8 +5493,8 @@ before `MainLoop`; followed by `main_loop.o`, the new raw
 the new raw `code_3_2_17_27138.s` (`InitHud` through
 `UpdateHudClock` - the original file's unchanged remainder), then the
 existing `hud_counter.o`. `asm/code_3_2_20.s` is now truncated to just
-`sub_8027940`/`UpdateHudWumpa`/`sub_8027E88`; followed by `hud_blink.o`,
-then the new raw `code_3_2_20_28568.s` (`sub_8028568` onward - the
+`UpdateHudCrates`/`UpdateHudWumpa`/`UpdateHudPercentCounters`; followed by `hud_blink.o`,
+then the new raw `code_3_2_20_28568.s` (`SetHudCrateTotal` onward - the
 original file's unchanged remainder). See `ldscript.txt` and
 `tools/report_units.py`'s `hud` category entries, both updated to
 match. Verified via a full clean `make compare` (`La suma coincide`)
@@ -5650,8 +5650,8 @@ Matched (`src/graphics/actor_part18.c`/`actor_part18b.c`):
   see the "negative-constant clear-mask"/boolean-materialization
   entries elsewhere in this file) instead of a `ldrh` + shift-and-mask
   sequence; the `GetDpadDirection(dummy)` call's dummy-argument load
-  (`gUnknown_03001304`, ignored by the real callee - same shape as
-  `WaitForKeyPress`'s `UpdateKeys(gUnknown_03001304)` in
+  (`gInput`, ignored by the real callee - same shape as
+  `WaitForKeyPress`'s `UpdateKeys(gInput)` in
   `src/system/input_util.c`) also had to be hoisted into its own
   statement *before* the boolean computation to match the ROM's literal
   instruction order, matching neither statement order alone reproduces
@@ -5869,21 +5869,21 @@ register-allocation difficulty `DrawPowerDialog` already hit, or (two of
 them) weren't understood confidently enough to force a reconstruction.
 
 **Matched** (`src/graphics/settings_menu2.c`, `src/graphics/settings_menu3.c`):
-`sub_80047F8` (BG-load helper - literally the same shape as
+`LoadSaveMenuBg` (BG-load helper - literally the same shape as
 `LoadLanguageSelectBg` in `src/audio/counter_selector_setup.c`, just at
 different field offsets and with an extra `field_0 = 0`),
 `RefreshSaveSlotSummaries`/`SummarizeProgress` (per-row stats gatherer/aggregator, sharing
 a five-function battery: `CountClearGems`/`CountRelics`/`GetProgressLives`/
-`CountCrystals`/`GetCompletionPercent`), `LoadSaveMenuData`, `sub_8004A50` (the
+`CountCrystals`/`GetCompletionPercent`), `LoadSaveMenuData`, `GetSaveMenuBlinkPalette` (the
 `(flags>>2)&1` bit test repeated throughout this whole chunk - note it
-shifts *arithmetically*, so the field is `s32` not `u32`), `sub_8004A64`/
-`sub_8004A80` (link-cancel-flag pair - the second doesn't cache the
+shifts *arithmetically*, so the field is `s32` not `u32`), `EndLinkSaveTransfer`/
+`BeginLinkSaveTransfer` (link-cancel-flag pair - the second doesn't cache the
 global's *value* across its call the way the first does, it re-reads
 the global fresh both times, a genuine ROM difference between two
 near-identical-looking functions), the six near-identical per-item
 wrappers `DrawSaveMenuConfirmDelete`/`DrawSaveMenuDelete`/`DrawSaveMenuOverwrite`/`DrawSaveMenuSave`/
 `DrawSaveMenuMessage`/`DrawSaveMenuLoadLink`/`DrawSaveMenuLoad` `docs/rom_map.md` already
-found call `sub_80041BC`, `DrawSaveMenu` (the state jump-table
+found call `DrawSaveSlots`, `DrawSaveMenu` (the state jump-table
 dispatcher - needed explicit `case 8:`/`case 10:` labels, even though
 both are empty, to keep gcc emitting an 11-entry jump table matching
 the ROM instead of collapsing to a 10-entry one with an extra bounds
@@ -5897,11 +5897,11 @@ established alignment-padding gotcha - gcc's own padding NOP encodes as
 
 **Parked** (`.if NON_MATCHING == 0` across `asm/code_3_1_10_3.s`/
 `asm/code_3_1_10_4.s`/`asm/code_3_1_10_5.s`, `#if NON_MATCHING` C
-reconstructions in `src/graphics/settings_menu.c`) - `sub_8003B40`,
-`sub_8003BDC`, `sub_8003C90`, `sub_8003D3C`, `sub_80041BC`,
-`sub_8004914`, `sub_80049CC`:
+reconstructions in `src/graphics/settings_menu.c`) - `LinkExchangeSaveData`,
+`DrawSaveMenuMessageLines`, `DrawSaveMenuCancel`, `DrawYesNoPrompt`, `DrawSaveSlots`,
+`DrawEmptySlotLabel`, `DrawSaveMenuTitle`:
 
-- **`sub_80049CC`** is the cleanest case and the template for the rest:
+- **`DrawSaveMenuTitle`** is the cleanest case and the template for the rest:
   a centered-label draw into `gLargeFont`'s icon pair, matching
   `DrawPowerDialog`'s shape. With `label`/`slot0`/`mgrAddr`/`mgr`/`recOff`
   pinned to `r9`/`r8`/`r6`/`r4`/`r5` (mirroring the ROM's own register
@@ -5918,40 +5918,40 @@ reconstructions in `src/graphics/settings_menu.c`) - `sub_8003B40`,
   spurious sign-extension pair gcc can't see through its own `ldrsh`
   already did). This is the same class of "last mile" gcc-2.9
   scratch-register nondeterminism `DrawPowerDialog` documents at length.
-- **`sub_8003C90`** is `sub_80049CC`'s sibling (fixed label `0x23`,
+- **`DrawSaveMenuCancel`** is `DrawSaveMenuTitle`'s sibling (fixed label `0x23`,
   `gSmallFont` not `E0`, plus a highlight/plain visibility
   branch) and came within one register-letter choice of matching after
   reordering the `half = (0xf0-width)>>1` computation ahead of the
   `mgr` reload it precedes in the ROM - the remaining gap is which
   scratch register that reload lands in (`r0` here, `r3` in the ROM).
-- **`sub_8003BDC`**/**`sub_8003D3C`**/**`sub_80041BC`**/**`sub_8004914`**
+- **`DrawSaveMenuMessageLines`**/**`DrawYesNoPrompt`**/**`DrawSaveSlots`**/**`DrawEmptySlotLabel`**
   are all built on the same centered-label/positioned-glyph primitive
   (semantics fully traced and mechanically reproduced) and hit the same
-  scratch-register nondeterminism; `sub_8003BDC` additionally spills a
+  scratch-register nondeterminism; `DrawSaveMenuMessageLines` additionally spills a
   constant through `ip` in the ROM (`mov ip, r1` / `mov r2, ip`), which
-  plain C has no way to request at all. `sub_80041BC` reconstructs the
+  plain C has no way to request at all. `DrawSaveSlots` reconstructs the
   ROM's 4x-unrolled per-row body as a small table + loop instead
   (semantically faithful, but can't reproduce four independent sets of
   per-occurrence register choices).
-- **`sub_8003B40`** is a distinct SIO-related function, not part of the
+- **`LinkExchangeSaveData`** is a distinct SIO-related function, not part of the
   icon-manager family: a "connecting..." spinner dialog that loops
-  `sub_8001F50` (the link-connection/handshake driver from
+  `UpdateLinkSession` (the link-connection/handshake driver from
   `docs/rom_map.md`'s SIO section) against the link-active flag
-  `gUnknown_03000800` and an allocated spinner object's own state.
+  `gLinkSessionReset` and an allocated spinner object's own state.
   Fully traced mechanically; not yet attempted for byte-exact register
   matching given the above pattern's track record.
 
 **Left completely untouched** (not confidently understood - raw in
 `asm/code_3_1_10_4.s`, no `#if NON_MATCHING` reconstruction):
 
-- **`sub_8003F30`** - a per-row `itoa`-based numeric renderer indexed
+- **`DrawSaveSlotStats`** - a per-row `itoa`-based numeric renderer indexed
   across three parallel 5-element object arrays
-  (`self->rowObjA`/`rowObjB`/`rowObjC`, the arrays `sub_800450C`
+  (`self->rowObjA`/`rowObjB`/`rowObjC`, the arrays `InitSaveMenuIcons`
   populates); the overall shape (measure via `_call_via_r2`, `itoa`,
   three positioned digit draws) is clear but several of the per-call
   offset/stride relationships weren't traced to full confidence in the
   time available.
-- **`sub_800450C`** - the screen's own init routine: resets the OAM
+- **`InitSaveMenuIcons`** - the screen's own init routine: resets the OAM
   shadow buffer/tile caches, copies the first four per-level
   `gStaticData_0816Bxxx` tables into `gPaletteCache`'s per-row
   arrays (the exact link `docs/rom_map.md` already found), and
@@ -5960,16 +5960,16 @@ reconstructions in `src/graphics/settings_menu.c`) - `sub_8003B40`,
   fixed Q8 width/height rects doesn't cleanly map onto the
   `rowObjA`/`rowObjB`/`rowObjC[0..4]` layout traced from the allocation
   loop above it, and a triple-pointer dereference through
-  `gUnknown_030012D0` in the middle wasn't independently confirmed.
+  `gSpriteBankSet` in the middle wasn't independently confirmed.
 
-**File structure:** `sub_8003C90` (parked) sits between `sub_8003BDC`
-and `sub_8003D3C`, appended to the end of `asm/code_3_1_10_3.s` (kept
+**File structure:** `DrawSaveMenuCancel` (parked) sits between `DrawSaveMenuMessageLines`
+and `DrawYesNoPrompt`, appended to the end of `asm/code_3_1_10_3.s` (kept
 in its original ROM position rather than moved, exactly like
 `DrawPowerDialog`) rather than getting cut out - since every function in
 `src/graphics/settings_menu.c` is `#if NON_MATCHING`-guarded, that file
 compiles to nothing in a default build and its ldscript slot is simply
-empty. `asm/code_3_1_10_4.s` (new: `sub_8003D3C` through `sub_800450C`)
-and `asm/code_3_1_10_5.s` (new: `sub_8004914`/`sub_80049CC`) hold the
+empty. `asm/code_3_1_10_4.s` (new: `DrawYesNoPrompt` through `InitSaveMenuIcons`)
+and `asm/code_3_1_10_5.s` (new: `DrawEmptySlotLabel`/`DrawSaveMenuTitle`) hold the
 other two parked/raw runs, and `asm/code_3_1_10_6.s` is the original
 file's unchanged remainder from `SaveMenuMessageInput` (outside this chunk) on.
 `include/pause_options_screen.h` holds the shared `struct
@@ -6175,7 +6175,7 @@ raw.
   a raw offset (no named struct) since this single call site doesn't
   give enough context to know the owning object's shape.
 - **`DestroyLargeFont`/`DestroySmallFont`** (same file) - two more members of the
-  `gStaticData_087E3BEC`-family per-type descriptor table documented at
+  `gEntityVtable`-family per-type descriptor table documented at
   length in `docs/rom_map.md` (`gLargeFontVtable`/`_4D64`/`_4DAC`,
   each 0x48 bytes): "set a field of a passed-in struct to a ROM data
   pointer, then conditionally call `OperatorDelete` based on a bit in the
@@ -6203,7 +6203,7 @@ in `asm/code_3_2_20e_3adb4.s`/`asm/code_3_2_20e_3ae4c.s`) - a trio of
 generic software division/modulo primitives (no hardware divide on this
 CPU): `__divsi3` is signed division (`a / b`, truncating toward
 zero - the "atan2-style angle helper" `math_util.c` already documents
-wrappers around, and the digit-splitter `sub_8027940` calls), and
+wrappers around, and the digit-splitter `UpdateHudCrates` calls), and
 `__modsi3`/`__umodsi3` are signed/unsigned modulo respectively
 (`__umodsi3` already had a `mod` note next to a not-yet-matched
 extern in `rand_util.c`/`time_util.c`). All three are classic
@@ -6288,7 +6288,7 @@ shared fallback `0xC` if either `IsGemPathDone(gLevelState)` is
 true or `gLevelState+0x8c` is nonzero. If clear, spawns a full
 visual effect instead: allocates a part-object via `CreateSpriteObj`,
 points its `+0x20` table pointer at `gSpriteBankTable`'s own first
-field (reached through `gUnknown_030012D0`'s pointer-to-pointer, the
+field (reached through `gSpriteBankSet`'s pointer-to-pointer, the
 same idiom `GetSpriteTileBase` in `actor_part5.c` already uses, just one
 `deref` deeper) plus a fixed `0x180` offset, tags it (`+0x2d` =
 7/5/6/8), builds it via the standard `ResetSpriteFrameTimer`/`ResetSpriteFrameIndex`/
@@ -6370,8 +6370,8 @@ quirk next.
 chunk - `SpawnShark`/`SpawnMorayEel`/`SpawnElectricEel`/`SpawnSquid`/
 `SpawnJellyfish`/`SpawnLaserBarrier`/`sub_8020138`/`sub_802026C`/`SpawnSaucerLabAssistant`/
 `SpawnPistonCrusher`/`SpawnFlamethrowerLabAssistant`/`sub_8020788`/`sub_80208C4`/`SpawnRat`/
-`SpawnFrog`/`SpawnSeaMine`/`SpawnWoodenCrusher`/`sub_8021280`/`sub_8021388`/
-`sub_8021480`/`SpawnCortexBoss`. `docs/rom_map.md` already has real
+`SpawnFrog`/`SpawnSeaMine`/`SpawnWoodenCrusher`/`sub_8021280`/`SpawnDingodile`/
+`SpawnTiny`/`SpawnCortexBoss`. `docs/rom_map.md` already has real
 characterization for several of these (`SpawnWoodenCrusher` as the 15-slot
 table's richer "two-line text popup" slot 0; `SpawnFlamethrowerLabAssistant`/
 `sub_8020788` as more instances of that same popup-spawner shape;
@@ -6404,7 +6404,7 @@ parked, 12 left untouched - see below for the split.
   padding into named fields for these two, per docs/workflow.md step 7.
 - **`CloseSaveMenu`/`OpenSaveMenu`** (`src/graphics/settings_menu4.c`) - a
   teardown/construct pair for the "connecting..." SIO-handshake spinner
-  object (`gSaveMenu`) sub_8003B40 (settings_menu3.c) already
+  object (`gSaveMenu`) LinkExchangeSaveData (settings_menu3.c) already
   documents allocating from. `OpenSaveMenu` needed its destination
   pointer's address-of computed in a separate statement, positioned
   between the two calls (matching the ROM's `ldr r4,=gSaveMenu`
@@ -6455,7 +6455,7 @@ parked, 12 left untouched - see below for the split.
   formatting a `" <NN%>"`-shaped scratch string and pushing it through
   the matching `AudioContext` setter. Fully understood; off by several
   register-letter choices in the digit-formatting tail, the same
-  unresolved class `sub_80049CC` (`settings_menu.c`) documents.
+  unresolved class `DrawSaveMenuTitle` (`settings_menu.c`) documents.
 
 **Left untouched (12, not attempted this pass):** `RunPauseMenu`,
 `InitPauseMenu`, `DestroyPauseMenu`, `PauseMenuLoop`, `AnimatePauseMenu`,

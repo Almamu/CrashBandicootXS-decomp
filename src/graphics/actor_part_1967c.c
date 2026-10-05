@@ -256,7 +256,7 @@ struct level_state
 extern struct part_list *gUnknown_030012EC;
 extern struct part_list *gUnknown_030012F0;
 extern struct part *gPlayer;
-extern void ***gUnknown_030012D0;
+extern void ***gSpriteBankSet;
 extern struct level_state *gEntityFlags;
 extern void *gAudioContext;
 extern void *gLevelState;
@@ -844,7 +844,7 @@ void sub_8019EBC(struct dingodile_boss *self, s32 mode, u16 x, u16 y, struct par
     u8 *bits;
 
     p->fl.b.shown = 0;
-    p->table = (void *)((u8 *)**gUnknown_030012D0 + 0x288);
+    p->table = (void *)((u8 *)**gSpriteBankSet + 0x288);
     switch (mode)
     {
     case 0:
@@ -902,7 +902,7 @@ void sub_801A03C(struct dingodile_boss *self, u16 x, u16 y, u8 facing)
     struct part *p = CreateMovingSprite(0xFFFF, x, y, 0);
     struct vobj *ctl;
 
-    p->table = (void *)((u8 *)**gUnknown_030012D0 + 0x30);
+    p->table = (void *)((u8 *)**gSpriteBankSet + 0x30);
     SetTag(p, 1);
     ResetSpriteFrameTimer(p);
     ResetSpriteFrameIndex(p);
@@ -1129,7 +1129,7 @@ void sub_801A584(struct obj_48a4 *self, u16 x, u16 y)
     struct obj_48a4 *c;
 
     p->fl.b.shown = 0;
-    p->table = (void *)((u8 *)**gUnknown_030012D0 + 0x288);
+    p->table = (void *)((u8 *)**gSpriteBankSet + 0x288);
     SetTag(p, 8);
     ResetSpriteFrameTimer(p);
     ResetSpriteFrameIndex(p);

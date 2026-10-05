@@ -1,8 +1,8 @@
 # Issue #6: 0x08003F30-0x08004D74 (overlay_ui, 2 functions)
 
 Issue #6's only two remaining functions on the composite pause/options
-screen (`src/graphics/settings_menu.c`): `sub_8003F30` and
-`sub_800450C`, both previously "left completely untouched" (raw in
+screen (`src/graphics/settings_menu.c`): `DrawSaveSlotStats` and
+`InitSaveMenuIcons`, both previously "left completely untouched" (raw in
 `asm/code_3_1_10_4.s`, no `#if NON_MATCHING` reconstruction at all) per
 `docs/matching.md`'s "Issue #6/#7 status" note and the follow-up
 `docs/matching/issue-8-0x080060ac-overlay-ui.md` write-up, which both
@@ -10,7 +10,7 @@ record that these two were reviewed but not attempted.
 
 ## Parked (`NON_MATCHING`, 1)
 
-- **`sub_8003F30`** (`src/graphics/settings_menu.c`, real bytes wrapped
+- **`DrawSaveSlotStats`** (`src/graphics/settings_menu.c`, real bytes wrapped
   `.if NON_MATCHING == 0` in `asm/code_3_1_10_4.s`) - a per-row numeric
   display: draws three of the row's `struct settings_row_stats` fields
   (`field_4`/`field_10`/`field_8` - `statPtr` is
@@ -19,10 +19,10 @@ record that these two were reviewed but not attempted.
   `RefreshSaveSlotSummaries`/`SummarizeProgress` in `src/graphics/settings_menu2.c`
   already establish for `rowStats`) as plain decimal strings via
   `itoa`, one each into `self->rowObjA[rowIdx]`/`rowObjC[rowIdx]`/
-  `rowObjB[rowIdx]` (small position objects `sub_800450C` below
+  `rowObjB[rowIdx]` (small position objects `InitSaveMenuIcons` below
   allocates), each drawn through `gSmallFont`'s `record->
   slots[2]` trampoline and preceded by the same highlight/dim
-  `FontSetPalette` call `sub_80041BC` (this file, already parked) uses for
+  `FontSetPalette` call `DrawSaveSlots` (this file, already parked) uses for
   its own selected-row highlight. A fourth value (`statPtr->field_0`)
   is formatted as `"NN%"` by `itoa`-ing then manually scanning for the
   NUL terminator and overwriting it with a literal `%` byte
@@ -32,7 +32,7 @@ record that these two were reviewed but not attempted.
   trampoline, right-aligned against the caller-supplied `label1`
   x-coordinate using the measured width (`posX = label1 - width +
   0x1f`) - the standard "measure, then right-align" idiom this ROM
-  region uses throughout (see `sub_8003C90`'s own write-up in this same
+  region uses throughout (see `DrawSaveMenuCancel`'s own write-up in this same
   file for another instance).
 
   Every load, store, and call is confirmed against the ROM (all four
@@ -42,8 +42,8 @@ record that these two were reviewed but not attempted.
   indices). **Not yet byte-matching** - this is the same "several
   near-identical unrolled blocks, each wanting the loop-carried
   registers in slightly different places" difficulty class this file's
-  other parked functions (`sub_8003BDC`/`sub_8003D3C`/`sub_80041BC`/
-  `sub_8004914`/`sub_80049CC`) already document at length, compounded
+  other parked functions (`DrawSaveMenuMessageLines`/`DrawYesNoPrompt`/`DrawSaveSlots`/
+  `DrawEmptySlotLabel`/`DrawSaveMenuTitle`) already document at length, compounded
   here by four blocks instead of two-to-three and by several
   cross-block-live locals (`highlight`, the running `buf[]` contents,
   the row object pointers) that would need the same kind of
@@ -56,7 +56,7 @@ record that these two were reviewed but not attempted.
 
 ## Left completely untouched (1)
 
-- **`sub_800450C`** (`asm/code_3_1_10_4.s`) - the screen's own init
+- **`InitSaveMenuIcons`** (`asm/code_3_1_10_4.s`) - the screen's own init
   routine: resets the OAM shadow buffer and two tile caches
   (`ResetOamBuffer`/`HideUnusedOamEntries`/`WaitForVBlank`/`CommitOamBuffer` on
   `gOamBuffer`, `FreeUnlockedPaletteSlots`/four `ClaimPaletteSlot` calls on
@@ -75,9 +75,9 @@ record that these two were reviewed but not attempted.
   reserve `field_12c<<5` bytes of VRAM via `ReserveObjVram`, copying
   `gSmallFont`'s `field_12c` into `gLargeFont`'s
   `field_108` in between), and finally allocates 15 objects (5 each
-  across `rowObjA`/`rowObjB`/`rowObjC`, the exact arrays `sub_8003F30`
+  across `rowObjA`/`rowObjB`/`rowObjC`, the exact arrays `DrawSaveSlotStats`
   above reads) in a `sl`/`sb`/`r8`-heavy loop, each one built via the
-  standard `OperatorNew(0x40)`/`InitUiSpriteObj` alloc, a `gUnknown_030012D0`
+  standard `OperatorNew(0x40)`/`InitUiSpriteObj` alloc, a `gSpriteBankSet`
   header-table pointer at three new offsets (`0xc0<<1`/`0xc6<<1`/
   `0xde<<1`, extending `docs/rom_map.md`'s "five confirmed
   header-relative offsets" note to eight), a fixed `type` byte (`1`/
@@ -109,7 +109,7 @@ record that these two were reviewed but not attempted.
      one function at a time - not done here given the size of the
      function already at risk from point 1.
 
-  Since `sub_800450C` already contains the exact same two-icon-manager
+  Since `InitSaveMenuIcons` already contains the exact same two-icon-manager
   block `ShowPowerDialog` does (confirmed byte-for-byte identical in the
   raw disassembly), it would very likely hit that block's own
   demonstrated register-allocation resistance too (see
@@ -123,19 +123,19 @@ this pass**.
 Verified via a full clean `rm -rf build && make NON_MATCHING=1 report`
 and `rm -rf build crashbandicootxs.elf crashbandicootxs.gba
 crashbandicootxs.map && make compare` (`La suma coincide`) after
-`sub_8003F30`'s parked reconstruction landed.
+`DrawSaveSlotStats`'s parked reconstruction landed.
 
-## Later pass: `sub_8003F30` converted to NAKED transcription (still tracked as parked)
+## Later pass: `DrawSaveSlotStats` converted to NAKED transcription (still tracked as parked)
 
 The "several near-identical unrolled blocks, each wanting the
 loop-carried registers in slightly different places" gap described
 above never had a plain-C fix - same class as `DrawPowerDialog`
 (`docs/status/graphics.md`). Since the semantics were already fully
-confirmed (this document's own derivation above), `sub_8003F30` was
+confirmed (this document's own derivation above), `DrawSaveSlotStats` was
 converted to a byte-verified NAKED asm transcription instead, the same
 pass that also converted this file's five sibling functions
-(`sub_8003B40`, `sub_8003BDC`, `sub_8003C90`, `sub_8003D3C`,
-`sub_80041BC` - all built on the same centered-label/positioned-glyph
+(`LinkExchangeSaveData`, `DrawSaveMenuMessageLines`, `DrawSaveMenuCancel`, `DrawYesNoPrompt`,
+`DrawSaveSlots` - all built on the same centered-label/positioned-glyph
 primitive, all hitting the identical difficulty class) - see
 `src/graphics/settings_menu.c`'s header comment and
 `src/util/printf_util.c`'s `FindSubstring` for the established NAKED-
@@ -147,36 +147,36 @@ are tracked as **parked** in `tools/report_units.py`/
 `docs/status/overlay_ui.md`, not matched, even though their bytes are
 provably correct.
 
-`sub_800450C` (this file's own init routine, still genuinely not
+`InitSaveMenuIcons` (this file's own init routine, still genuinely not
 understood with confidence - see the two open questions above) was not
 attempted this pass and stays fully raw in `asm/code_3_1_10_4.s`
 (trimmed to just this one function once its five siblings graduated
-out of the file). `sub_800450C` and issue #6 both stay open.
+out of the file). `InitSaveMenuIcons` and issue #6 both stay open.
 
 ## Later pass: 7 of 9 are real C
 
 The issue #4/#6/#8 retry ([issue-4-6-8-naked-retry.md](issue-4-6-8-naked-retry.md)) matched these as plain C:
 
-- `sub_8003B40`, `sub_8003BDC`, `sub_8003C90`, `sub_8003F30` and
-  `sub_80041BC` in `settings_menu.c`, which is now on `OLD_AGBCC_OBJS`
+- `LinkExchangeSaveData`, `DrawSaveMenuMessageLines`, `DrawSaveMenuCancel`, `DrawSaveSlotStats` and
+  `DrawSaveSlots` in `settings_menu.c`, which is now on `OLD_AGBCC_OBJS`
   (the matched functions compile the same under both compilers).
-- `sub_8004914` and `sub_80049CC` in `settings_menu23.c`.
+- `DrawEmptySlotLabel` and `DrawSaveMenuTitle` in `settings_menu23.c`.
 
-`sub_8003F30`'s byte argument is a packed one-byte struct.
-`sub_80041BC` inlines `sub_8004914`.
+`DrawSaveSlotStats`'s byte argument is a packed one-byte struct.
+`DrawSaveSlots` inlines `DrawEmptySlotLabel`.
 
 Two are left:
 
-- `sub_8003D3C` is still NAKED. Its draft is 9 halfwords off because
+- `DrawYesNoPrompt` is still NAKED. Its draft is 9 halfwords off because
   two constants' registers are swapped.
-- `sub_800450C` now has a C reconstruction under `NON_MATCHING`. It is
+- `InitSaveMenuIcons` now has a C reconstruction under `NON_MATCHING`. It is
   5 halfwords off under old_agbcc, in the loop pre-header only. Its raw
   bytes in `asm/code_3_1_10_4.s` are now guarded with
   `.if NON_MATCHING == 0`.
 
 ## Later pass: hard-register hold
 
-`sub_800450C` is now real C in `src/graphics/settings_menu.c` (old_agbcc)
+`InitSaveMenuIcons` is now real C in `src/graphics/settings_menu.c` (old_agbcc)
 and `asm/code_3_1_10_4.s` is gone. The loop pre-header was already fixed
 by plain `u8 *`/`u16 *` stores (early-rom-naked-retry-2.md). The last 6
 halfwords were the third icon: the frame-0 store takes its address in r0

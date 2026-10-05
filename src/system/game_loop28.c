@@ -1,10 +1,10 @@
 #include "core.h"
 
 /* GitHub issue #14: 0x08010A0C-0x08010D54, continuing the physics/
- * collision subsystem (game_loop17.c-game_loop27.c). `sub_8010B6C` is
+ * collision subsystem (game_loop17.c-game_loop27.c). `ResolveCollisionCandidates` is
  * this chunk's final and by far largest function - the collision-
- * candidate scan/resolve helper `sub_80106DC` (game_loop23.c) already
- * calls once a frame as `sub_8010B6C(gPlayer + 0x108)`. */
+ * candidate scan/resolve helper `ResolvePlayerCollisions` (game_loop23.c) already
+ * calls once a frame as `ResolveCollisionCandidates(gPlayer + 0x108)`. */
 
 /* A byte passed on the stack as a genuine byte (`strb`); a plain `u8`
  * parameter is widened to a word `str`. */
@@ -55,7 +55,7 @@ extern void sub_800E08C(void *neighbor, s32 kind, s32 field10, s32 field14,
  * The rest only compete for nearest. The nearest one is then resolved
  * too, told whether any forced resolve happened, and the list is
  * emptied. */
-void sub_8010B6C(struct candidate_list *self)
+void ResolveCollisionCandidates(struct candidate_list *self)
 {
     if (self->count != 0)
     {
@@ -123,5 +123,5 @@ void sub_8010B6C(struct candidate_list *self)
     }
 }
 
-/* Zero-fill the trailing halfword before sub_8010D54, as the ROM does. */
+/* Zero-fill the trailing halfword before AddCollisionCandidate, as the ROM does. */
 asm(".align 2, 0");

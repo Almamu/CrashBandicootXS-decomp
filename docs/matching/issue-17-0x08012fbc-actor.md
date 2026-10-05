@@ -79,11 +79,11 @@ child-object/action-table family (`actor_part79.o`/`actor_part83.o`/
   zeroes the player's `+0x94` byte (written twice - the same "no
   redundant-store folding across statements" quirk `docs/matching.md`
   already documents for this compiler), then spawns an object via
-  `sub_8025B0C(gEntitySpawner, 0x29, 1, 0, 0xa, 0,
+  `LaunchEffectPart(gEntitySpawner, 0x29, 1, 0, 0xa, 0,
   gPlayer)` and clears two bits (`~5` on `+0xc`, then a
   `(~4)|1` pack on `+0x28`) on the returned object. All three of these
   cases (and the "none of the above" fallthrough) then converge on a
-  shared tail: dispatching `GetDpadDirection(gUnknown_03001304)`'s result -
+  shared tail: dispatching `GetDpadDirection(gInput)`'s result -
   `2`, or `7..8` - resets `self+0x1c=0`, fires one more trampoline pair
   (ids `0x10`/`3`), and sets the trio to `0x1d`/`1`/`0` directly; `0`
   instead calls `sub_8015780(self, 0, 0x12, 0, 0)` then re-sets the same
@@ -113,7 +113,7 @@ child-object/action-table family (`actor_part79.o`/`actor_part83.o`/
   (ids `9`/`6`, or `7`/`0xc`) and, while `self+0x28==7`, resets the
   trio to one of `0xa`/`9`/`8` depending on those same bits. Finally,
   every path but the first converges on dispatching
-  `GetDpadDirection(gUnknown_03001304)`'s D-pad-remap result: `<=2` resets
+  `GetDpadDirection(gInput)`'s D-pad-remap result: `<=2` resets
   the trio to `0`/`1`/`0` while the player's `+0x100` flag is clear;
   otherwise, a `self+0x27` tag of `0x1b`/`0x1c` resets it to `1`/`1`/
   `0x1c`; a nonzero `self+0x18` (tag `!=0xd`) resets it to `0`/`1`/`0xd`;
@@ -142,7 +142,7 @@ child-object/action-table family (`actor_part79.o`/`actor_part83.o`/
   `sub_801283C` and resets `part+0x68`, while bit 3 (and `part->0x64
   >= 0`) arms `part+0xd` bit 0, clears `self+0x34`, and - for `self+8`
   in `0x18..0x19` - spawns two objects via
-  `sub_8025BAC(gEntitySpawner, 0x29, 1, x, y, tag)` at the player's
+  `SpawnEffectPart(gEntitySpawner, 0x29, 1, x, y, tag)` at the player's
   de-Q8'd `+0x14`-anchored position (`+0x14` and `-0x14` X offsets),
   packing bitmasked tag/flag bytes (`+0x28`, `+0xc`) into each spawned
   object via `sl`/`sb`/`r8`-cached negated-mask idioms, and clamping
@@ -182,7 +182,7 @@ child-object/action-table family (`actor_part79.o`/`actor_part83.o`/
   `0x100`: fires a further pair (ids `0x14`/`0`), resets `self+0x1c`,
   sets the trio to `0`/`1`/`3`, and tail-calls `sub_801434C(self)`
   (actor_part18.c); otherwise dispatches `GetDpadDirection`
-  (`gUnknown_03001304`) and `sub_800AAEC(part, 2)`: when both fire and
+  (`gInput`) and `sub_800AAEC(part, 2)`: when both fire and
   the D-pad result is `3`/`4`, gates `HasTurboRun(gLevelState)`
   behind a further bit test to either fire a trampoline pair (ids
   `4`/`0x18`) and set the trio to `0x1b`, or tail-call
@@ -196,10 +196,10 @@ Two of the five (`sub_8012FBC`, `sub_80134B8`) show the same
 "unexplained extended-register-budget" wall this table family already
 hit repeatedly (`docs/matching/issue-16-actor-remainder.md` and
 `docs/status/actor.md`'s "Parked - NAKED transcription" section):
-`sub_8012FBC` pushes `r8` (holding `&gUnknown_03001304` across a
+`sub_8012FBC` pushes `r8` (holding `&gInput` across a
 `sub_8012A7C` call) on top of the usual `r4-r7`; `sub_80134B8` goes
 further still, keeping `r8`/`sb`/`sl` all three live simultaneously
-through the object-spawn/tag-mask block around `sub_8025BAC` - by far
+through the object-spawn/tag-mask block around `SpawnEffectPart` - by far
 the most extreme register-budget shape seen in this table family so
 far. Both were recognized immediately from their prologues
 (`push {r4,r5,r6,r7,lr}` + `mov r7,r8`/`push {r7}`, and `push
@@ -435,7 +435,7 @@ compilers. `sub_8013994` differs in 35 bytes under the current agbcc.
   first spark's bit-2 clear is written twice. The second store folds
   away, but the extra use of the -5 mask gives it `sb` (and the -0x11
   mask `r8`), as in the ROM.
-- **Smaller shapes.** `sub_8012FBC` takes `&gUnknown_03001304` into a
+- **Smaller shapes.** `sub_8012FBC` takes `&gInput` into a
   local up front, which is what keeps the address in `r8` across the
   calls. `sub_80134B8` computes the spark coordinates as
   `x = pl->x; x >>= 8; x += 0x14;` and passes them through an inline

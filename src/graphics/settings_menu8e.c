@@ -115,7 +115,7 @@ void UpdateSaveChecksum(struct settings_sync_record *self)
 }
 
 /* `versionNibble`'s high-nibble accessor. */
-u32 sub_8002B94(struct settings_sync_record *self)
+u32 GetSaveGameId(struct settings_sync_record *self)
 {
     return self->versionNibble >> 4;
 }

@@ -9,7 +9,7 @@
  * UpdateGameFrame (game_loop55.c). See
  * docs/matching/gap-22354-game-context.md.
  *
- * - sub_8022354 (UNUSED): the destructor matching InitLevelState - frees every
+ * - DestroyLevelState (UNUSED): the destructor matching InitLevelState - frees every
  *   subsystem singleton that constructor built and clears the context
  *   pointer gLevelStateSingleton.
  * - PlayCutscene: plays cutscene `idx` (include/cutscene.h): blanks the
@@ -25,12 +25,12 @@ extern void *gLevelStateSingleton;
 extern u16 gDispcnt;
 extern void *gOamBuffer;
 extern void *gObjVramCursor;
-extern void *gUnknown_03001304;
+extern void *gInput;
 extern void *gAudioContext;
 extern struct icon_manager *gLargeFont;
 extern struct icon_manager *gSmallFont;
 extern void *gSpriteRenderer;
-extern void *gUnknown_030012D0;
+extern void *gSpriteBankSet;
 extern void *gPaletteCache;
 extern void *gEntityFlags;
 extern void *gPaletteCycles;
@@ -56,9 +56,9 @@ extern void OperatorDelete(void *p);
 extern void DisableMusicVCountIrq(void *audio);
 extern void DestroyAudioContext(void *audio, u32 flags);
 extern void DestroySpriteRenderer(void *self, u32 flags);
-extern void sub_8006FC8(void *self, u32 flags);
+extern void DestroySpriteBankSet(void *self, u32 flags);
 extern void DestroyPaletteCache(void *self, u32 flags);
-extern void sub_8025A44(void *self, s32 flags);
+extern void DestroyEntityFlags(void *self, s32 flags);
 extern void DestroyPaletteCycles(void *self, s32 flags);
 
 typedef void (*destroy_fn)(void *self, s32 flags);
@@ -81,15 +81,15 @@ typedef void (*destroy_fn)(void *self, s32 flags);
  * "delete" flags 3, clears the context pointer and - on bit 0 of
  * `flags`, gcc 2.x's deleting-destructor flag - frees `self`. The game
  * never leaves MainLoop, so it never runs. */
-void sub_8022354(void *self, s32 flags)
+void DestroyLevelState(void *self, s32 flags)
 {
     FreeVramDmaQueue();
     if (gOamBuffer != NULL)
         DestroyOamBuffer(gOamBuffer, 3);
     if (gObjVramCursor != NULL)
         DestroyObjVramCursor(gObjVramCursor, 3);
-    if (gUnknown_03001304 != NULL)
-        OperatorDelete(gUnknown_03001304);
+    if (gInput != NULL)
+        OperatorDelete(gInput);
     DisableMusicVCountIrq(gAudioContext);
     if (gAudioContext != NULL)
         DestroyAudioContext(gAudioContext, 3);
@@ -99,12 +99,12 @@ void sub_8022354(void *self, s32 flags)
         DESTROY_ICON_MANAGER(gSmallFont);
     if (gSpriteRenderer != NULL)
         DestroySpriteRenderer(gSpriteRenderer, 3);
-    if (gUnknown_030012D0 != NULL)
-        sub_8006FC8(gUnknown_030012D0, 3);
+    if (gSpriteBankSet != NULL)
+        DestroySpriteBankSet(gSpriteBankSet, 3);
     if (gPaletteCache != NULL)
         DestroyPaletteCache(gPaletteCache, 3);
     if (gEntityFlags != NULL)
-        sub_8025A44(gEntityFlags, 3);
+        DestroyEntityFlags(gEntityFlags, 3);
     if (gPaletteCycles != NULL)
         DestroyPaletteCycles(gPaletteCycles, 3);
     gLevelStateSingleton = NULL;
@@ -145,7 +145,7 @@ extern void FreeUnlockedPaletteSlots(void *cache);
 extern void UploadPaletteCache(void *cache);
 extern void FontResetPalette(struct icon_manager *self);
 extern void InitCutscenePlayer(struct text_pager *self);
-extern void sub_8024784(u32 value);
+extern void SetSlideshowDispcnt(u32 value);
 extern void RunCutscenePlayer(struct text_pager *self);
 extern void DestroyCutscenePlayer(struct text_pager *self, s32 flags);
 
@@ -227,7 +227,7 @@ void PlayCutscene(void *self, s32 idx)
         f.pager.box.size.x = x1;
         d[3] = y1;
     }
-    sub_8024784(*(u32 *)dispcnt);
+    SetSlideshowDispcnt(*(u32 *)dispcnt);
     f.pager.items = gCutscenes[idx].items;
     f.pager.count = gCutscenes[idx].count;
     f.pager.pages = (u32 *)gCutsceneTexts[gLanguage][idx];

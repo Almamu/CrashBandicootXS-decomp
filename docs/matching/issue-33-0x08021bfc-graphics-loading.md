@@ -30,9 +30,9 @@ function at the very end:
   manager via `AddToPartList`. `SpawnBlueGem` and `SpawnStopwatch` are gated
   (only spawn under a flag-bit/accessor test); `sub_80220C4` takes its
   record index, tag, and `+0xa` value as runtime parameters instead of
-  fixed constants (matches `sub_8025BAC`'s already-documented
+  fixed constants (matches `SpawnEffectPart`'s already-documented
   `param1*12` runtime-indexed access to the same array).
-- **`sub_802209C`**: a plain state-write slot - packs two args into a
+- **`SpawnCrateGemMarker`**: a plain state-write slot - packs two args into a
   stack `{x, y}` pair and calls `SetCrateGemPos` (already matched in
   `game_loop10.c`), storing them into `gLevelState->0x1c0`/
   `->0x1c4`.
@@ -43,7 +43,7 @@ function at the very end:
   fallback" convention already documented for the 42-slot action table
   and this same 92-slot array.
 - **`sub_802218C`/`sub_80221BC`**: plain tail-call trampolines to
-  `sub_801E990` - still raw, at the top of this same `asm/*.s` file,
+  `SpawnStartMarker` - still raw, at the top of this same `asm/*.s` file,
   out of this chunk's scope.
 - **`sub_80221A4`/`sub_80221D4`**: write a Q8.8 `{x, y}` position
   straight into `gPlayer` (the hot camera/viewport struct) -
@@ -51,16 +51,16 @@ function at the very end:
 - **`DestroyEntitySpawner`/`CreateEntitySpawner`**: the `{table_base, count}` descriptor
   constructor/consumer pair docs/rom_map.md's "local vtable copy"
   investigation resolved as generic (nothing table-specific) - allocate
-  an 8-byte object, zero it via `sub_8025D6C`, and hand it
-  `{&gEntitySpawnFuncs, 0x5c}` via `sub_8025D4C`.
+  an 8-byte object, zero it via `InitEntitySpawner`, and hand it
+  `{&gEntitySpawnFuncs, 0x5c}` via `SetEntitySpawnerTable`.
 - **`InitLevelState`** (292 B, the "origin point" - docs/rom_map.md,
   "Found the origin point"): the function `GetLevelState` calls once at
   the top of the game loop to construct essentially every hot IWRAM
   global this whole ROM region references - `gAudioContext` (an
-  8340-byte `AudioContext` allocation, `sub_80016DC`+`InitAudioContext`),
+  8340-byte `AudioContext` allocation, `IwramAlloc`+`InitAudioContext`),
   `030012CC`/`D0`/`B8`/`DC`/`E0`/`03001300`/`FC`/`03001304`/`030012B4`/
   `C8`, clears `gDispcnt`'s mode byte, and zeroes `self+0xc0`
-  before returning `self` unchanged. `gUnknown_030012D0` gets pointed
+  before returning `self` unchanged. `gSpriteBankSet` gets pointed
   at a freshly-allocated 4-byte pointer cell which itself is set to
   `&gSpriteBankTable` (the 729 KB master asset index).
 
@@ -70,8 +70,8 @@ function at the very end:
 fns): the `CreateCrate` trampoline family, types `1`-`7`.
 
 `src/graphics/graphics_loading_21d80.c` (`SpawnBodySlamPower`-`InitLevelState`,
-18 fns): the `gSpriteBankTable` spawner family, `sub_802209C`,
-`SpawnWumpa`, both `nullsub`s, the `sub_801E990` trampolines, the
+18 fns): the `gSpriteBankTable` spawner family, `SpawnCrateGemMarker`,
+`SpawnWumpa`, both `nullsub`s, the `SpawnStartMarker` trampolines, the
 `gPlayer` position writers, the descriptor pair, and
 `InitLevelState` itself.
 
@@ -119,17 +119,17 @@ fns): the `CreateCrate` trampoline family, types `1`-`7`.
   immediate, one off from the ROM's actual two's-complement value.
 - **`InitLevelState`'s five "void helper leaves the pointer in r0" calls**
   (`nullsub_2`, `nullsub_1`, `InitPaletteCache`, `ClearKeys`,
-  `sub_8025A5C`, and `CreateEntitySpawner`'s own `sub_8025D6C`): each is called
+  `InitEntityFlags`, and `CreateEntitySpawner`'s own `InitEntitySpawner`): each is called
   immediately after an allocation, and the ROM leaves the fresh
   pointer in `r0` across the call (valid only because each real callee
   never writes r0) instead of reloading/saving it - reproduced with the
   pointer pinned to `r0` across an inline-asm `bl`, the same technique
-  `sub_8023674`'s `nullsub_7` call already established (see
+  `ShowCompanyLogos`'s `nullsub_7` call already established (see
   `docs/matching/issue-37-game-loop-234e8.md`).
-- **`gUnknown_030012D0`'s triple pointer-to-pointer-to-pointer
-  dereference**: declaring it `void ***gUnknown_030012D0;` (matching
+- **`gSpriteBankSet`'s triple pointer-to-pointer-to-pointer
+  dereference**: declaring it `void ***gSpriteBankSet;` (matching
   `settings_menu6.c`'s already-confirmed-matching `InitPauseCrystalsPage`) and
-  writing `**gUnknown_030012D0` reproduces the ROM's exact 4-load
+  writing `**gSpriteBankSet` reproduces the ROM's exact 4-load
   chain (address load, then three register-indirect dereferences) in
   one expression, cleaner than the two-step `void *`-typed alias used
   in the still-parked `trigger_effect.c`.
@@ -178,7 +178,7 @@ correct against the ROM; the residual 4-byte CSE gap documented above
 never responded to further plain-C restructuring, so it was converted
 to `NAKED` and its ROM disassembly transcribed instruction-for-
 instruction - the same escape hatch this project already established
-for `sub_8001CB8`/`sub_8001DB4` (`src/system/link_cable.c`, see
+for `MakeLinkHandshakeId`/`ResetLinkSessionState` (`src/system/link_cable.c`, see
 `docs/matching/issue-4-sio-settings-sync.md`'s "The general strategy
 for the rest" section).
 
@@ -220,7 +220,7 @@ Full clean `rm -rf build crashbandicootxs.elf crashbandicootxs.gba
 crashbandicootxs.map && make compare` - `crashbandicootxs.gba: La suma
 coincide`.
 
-This doesn't yet extend to `sub_801E990`'s own copy of this same
+This doesn't yet extend to `SpawnStartMarker`'s own copy of this same
 `gEntityFlags -> *rec -> {+8, +0xc}` resolution shape
 (`src/graphics/graphics_loading_1e990.c`, issue #30) - that function's
 residual is a different register-choice/mask-derivation gap (`byte` in

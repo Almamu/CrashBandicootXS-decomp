@@ -17,13 +17,13 @@ compare` ("La suma coincide").
   handler that forwards into the music player's existing per-tick fade
   update (`UpdateAudio`, `src/audio/music_player.c`). That file's
   header comment already anticipated this pair by name. Matched.
-- **`sub_8001CB8`-`ReadSaveData`ish** (system) - the genuine GBA
+- **`MakeLinkHandshakeId`-`ReadSaveData`ish** (system) - the genuine GBA
   multiplayer link-cable/SIO transport this document's `rom_map.md`
-  already partially characterized (`sub_8001F50`/`sub_8001DB4` as the
+  already partially characterized (`UpdateLinkSession`/`ResetLinkSessionState` as the
   handshake driver/session-reset). This chunk adds the "stop"/"start"
   session steps (`LinkStop`/`LinkStart`), a per-player 8-byte
-  handshake-id CRC hash helper (`sub_8001CB8`), the session object
-  constructor (`sub_80027E8`), the Serial/Timer3 IRQ handlers
+  handshake-id CRC hash helper (`MakeLinkHandshakeId`), the session object
+  constructor (`InitLinkSession`), the Serial/Timer3 IRQ handlers
   (`LinkSerialIntr`/`LinkTimer3Intr`), and two EEPROM block-transfer loops
   (`ReadSaveData`/`WriteSaveData`) that turned out to be a **red herring**
   for SIO at first glance (stack buffer + polling loop looks like the
@@ -36,7 +36,7 @@ compare` ("La suma coincide").
   persistence layer: EEPROM load/save orchestrators with retry and
   music-mute guards (`LoadSaveData`/`StoreSaveData`), checksum
   compare/store (`CheckSaveChecksum`/`UpdateSaveChecksum`), the `versionNibble`
-  accessor (`sub_8002B94`), the checksum validate/DMA-repair function
+  accessor (`GetSaveGameId`), the checksum validate/DMA-repair function
   (`ValidateSaveData`), and three per-row helpers
   (`ReadSaveSlot`/`WriteSaveSlot`/`EraseSaveSlot`) that directly extend
   `struct settings_sync_record` from `include/settings_sync.h`
@@ -52,8 +52,8 @@ compare` ("La suma coincide").
 - `LinkStop` (`src/system/link_cable.c`) - link-session "stop":
   IME-guarded Serial/Timer3 IRQ disable, RCNT/SIOCNT/TM3CNT reset,
   IF acknowledge.
-- `LinkStart`, `sub_800276C`, `sub_8002798`, `sub_80027B0`,
-  `sub_80027E8`, `LinkSerialIntr`, `LinkTimer3Intr` (`src/system/link_cable2.c`)
+- `LinkStart`, `LinkSetupSio`, `ResetLinkSession`, `DestroyLinkSession`,
+  `InitLinkSession`, `LinkSerialIntr`, `LinkTimer3Intr` (`src/system/link_cable2.c`)
   - link-session "start" (counterpart to `LinkStop`), a small
   RCNT/SIOCNT reset helper, a reset-wrapper convenience function, a
   reset+conditional-teardown function (with an inert 4-iteration
@@ -63,7 +63,7 @@ compare` ("La suma coincide").
 - `LoadSaveData` (`src/graphics/settings_menu8d.c`) - EEPROM-load-with-
   retry (up to 3 tries) plus marker/checksum validation, muting the
   music player across the transfer.
-- `CheckSaveChecksum`, `UpdateSaveChecksum`, `sub_8002B94`, `StoreSaveData`,
+- `CheckSaveChecksum`, `UpdateSaveChecksum`, `GetSaveGameId`, `StoreSaveData`,
   `ReadSaveSlot`, `WriteSaveSlot`, `EraseSaveSlot` (`src/graphics/settings_menu8e.c`)
   - checksum compare/store, `versionNibble` accessor, EEPROM-save-with-
   retry (up to 5 tries, same music-mute pattern as `LoadSaveData`), and
@@ -101,7 +101,7 @@ project for most of these)
   `matching_decomp_alignment_fix`): `EraseSaveSlot` needed an explicit
   `asm(".align 2, 0")` since the ROM pads its tail with a zero halfword
   instead of GAS's default `mov r8, r8` NOP.
-- **A large-offset scratch-register choice**: `sub_80027E8`'s
+- **A large-offset scratch-register choice**: `InitLinkSession`'s
   `self + 0x18c` computation needed the `0xc6 << 1` intermediate value
   explicitly pinned to `r6` (matching the ROM's choice) instead of
   letting the compiler reuse whatever register was free at that point;
@@ -115,10 +115,10 @@ project for most of these)
 
 All five are fully understood; each hit a distinct flavor of this
 project's well-documented gcc-2.9 scratch-register/callee-saved-
-register-choice nondeterminism (see `DrawPowerDialog`/`sub_80049CC` for
+register-choice nondeterminism (see `DrawPowerDialog`/`DrawSaveMenuTitle` for
 the established pattern this project has hit many times before):
 
-- **`sub_8001CB8`** (`asm/code_3_1_10_3_1cb8.s`, C in
+- **`MakeLinkHandshakeId`** (`asm/code_3_1_10_3_1cb8.s`, C in
   `src/system/link_cable.c`) - the per-player CRC-16-style handshake-id
   hash helper. This project's first attempt at this specific table-walk
   idiom: the leading fill loop and the hash loop's setup match the
@@ -128,7 +128,7 @@ the established pattern this project has hit many times before):
   truncation dance or an unrelated r7/r8 round-trip, and pinning both
   `idx` and a separate byte-load temp simultaneously hits an internal
   compiler error (fixed register r0 spilled for class LO_REGS).
-- **`sub_8001DB4`** (`asm/code_3_1_10_3_1db4.s`, same C file) - the
+- **`ResetLinkSessionState`** (`asm/code_3_1_10_3_1db4.s`, same C file) - the
   link-session reset/init, a 400 B function with a 4-player nested
   loop. Every field/branch/call is semantically confirmed (this doc
   comment in the source walks the whole function), but this compiler's
@@ -156,21 +156,21 @@ the established pattern this project has hit many times before):
 
 ## Left untouched (2, raw `.s`, not parked)
 
-- **`sub_8001F50`** (452 B, `asm/code_3_1_10_3.s`) - the link-
+- **`UpdateLinkSession`** (452 B, `asm/code_3_1_10_3.s`) - the link-
   connection/handshake driver `docs/rom_map.md` already characterizes
   at a high level (configures SIOCNT/SIODATA32, sets up Timer 3 as a
-  handshake timeout, calls `LinkStop`/`sub_8001DB4` on timeout).
+  handshake timeout, calls `LinkStop`/`ResetLinkSessionState` on timeout).
   Not read to full per-branch confidence in the time available for
   this chunk - left raw rather than risk a low-confidence
   reconstruction or park.
-- **`sub_8002114`** (1488 B, same file) - the file's second-biggest
+- **`HandleLinkSerial`** (1488 B, same file) - the file's second-biggest
   function, the per-frame SIO data-exchange pump (called from the
   Serial IRQ handler `LinkSerialIntr` with the session object and
   SIODATA32's low half). Extremely register-heavy (`ip`/`r8`/`sb`/`sl`
   all live simultaneously across a large stack frame with deep nested
   branching); `docs/rom_map.md` already documents its broad shape but
   not every branch's exact bit-level semantics. Left raw for the same
-  reason as `sub_8001F50`.
+  reason as `UpdateLinkSession`.
 
 ## Struct/header changes
 
@@ -187,13 +187,13 @@ See `docs/status/system.md`, `docs/status/audio.md` and
 ## Third pass
 
 Closed out all 7 functions this issue still had open (the 5 parked
-above plus the 2 left raw) - `sub_8001CB8`, `sub_8001DB4`,
-`sub_8001F50`, `sub_8002114`, `ReadSaveData`, `WriteSaveData`,
+above plus the 2 left raw) - `MakeLinkHandshakeId`, `ResetLinkSessionState`,
+`UpdateLinkSession`, `HandleLinkSerial`, `ReadSaveData`, `WriteSaveData`,
 `ValidateSaveData` - all now byte-exact matched, confirmed by a full clean
 `make compare` ("La suma coincide"). All 25 functions in this issue's
 original range are now matched; see "Closing this issue" below.
 
-### `sub_8001CB8`: found the actual compiler bug, then worked around it
+### `MakeLinkHandshakeId`: found the actual compiler bug, then worked around it
 
 The second pass's writeup blamed the per-byte table-index computation
 for not reproducing the ROM's plain `lsrs r0,r1,#8`. Revisiting with a
@@ -202,7 +202,7 @@ intermediate and using a plain `s32 idx` instead of `u8`, avoiding an
 implicit 8-bit-truncation dance) got the loop body's *content* right,
 but exposed the real blocker underneath: an **inline-asm-free
 attempt's prologue still needs `r7` for one specific instruction (the
-`ldr r7,=gStaticData_0816AF10; mov ip,r7` pair), and this compiler
+`ldr r7,=gCrc16Table; mov ip,r7` pair), and this compiler
 will only allocate `r7` there if `r5`/`r6` are already busy with real
 values at that program point - but doing that also lets its scheduler
 hoist the `ldr` instruction all the way to the top of the function,
@@ -228,7 +228,7 @@ fight the compiler over one instruction's register.
 
 ### The general strategy for the rest: NAKED transcription, byte-verified
 
-`sub_8001DB4`, `ReadSaveData`/`WriteSaveData`, and `ValidateSaveData` were all
+`ResetLinkSessionState`, `ReadSaveData`/`WriteSaveData`, and `ValidateSaveData` were all
 already fully understood (their parked-pass doc comments walk every
 field/branch/call), just blocked by this same class of gcc-2.9
 register/stack-plan nondeterminism the project has hit many times
@@ -246,29 +246,29 @@ original's `_08XXXXXX:` labels renumbered to GNU-as local numeric
 labels (`N:`, referenced `Nf`/`Nb`) since a `NAKED` function's asm
 block can't use the real ROM address as a label.
 
-`sub_8001F50` (452 B) and `sub_8002114` (1488 B) were still completely
+`UpdateLinkSession` (452 B) and `HandleLinkSerial` (1488 B) were still completely
 raw going into this pass - the previous pass's call not to force a
 low-confidence *C* reconstruction was the right one, but that risk is
 specific to *inferring control flow from a guess at semantics*, which
 a mechanical, byte-verified asm transcription doesn't carry: nothing
 here is inferred, every instruction is transcribed from and checked
-against the ROM's own disassembly. `sub_8002114` (60 branch targets,
+against the ROM's own disassembly. `HandleLinkSerial` (60 branch targets,
 `ip`/`r8`/`sb`/`sl` all live at once, this project's biggest single
 raw function at 1488 B) was translated with a small Python script
 (scratch-only, not committed) rather than by hand, specifically to
 avoid the transcription-typo risk that scale invites - it renumbers
 labels and applies the mnemonic-translation table mechanically instead
-of by eye. `sub_8001F50`'s semantics were confirmed confidently enough
+of by eye. `UpdateLinkSession`'s semantics were confirmed confidently enough
 while transcribing it to write a real walkthrough in its doc comment
 (matching `docs/rom_map.md`'s existing high-level read: the
 link-connection/handshake driver, retry/timeout state machine and
-all); `sub_8002114`'s doc comment is explicit that its semantics
+all); `HandleLinkSerial`'s doc comment is explicit that its semantics
 *aren't* fully confirmed the way the other six are - only its bytes
 are - and says so, flagging it as a starting point for a future real
 C reconstruction rather than a finished answer.
 
 **Verification beyond the usual full clean `make compare`:** for both
-raw functions, and for the `sub_8002114` transcription especially
+raw functions, and for the `HandleLinkSerial` transcription especially
 given its size, the isolated compiled object was also byte-compared
 directly against the *original* `asm/code_3_1_10_3.s` reassembled
 standalone (`arm-none-eabi-objcopy -O binary` on each, sliced to the
@@ -317,16 +317,16 @@ The issue #4/#6/#8 retry ([issue-4-6-8-naked-retry.md](issue-4-6-8-naked-retry.m
 
 | Function | Halfwords off |
 |---|---|
-| `sub_8001CB8` | 49 (old_agbcc) |
-| `sub_8001DB4` | 136 (old_agbcc, same size as the ROM) |
-| `sub_8001F50` | 37 (same size as the ROM) |
+| `MakeLinkHandshakeId` | 49 (old_agbcc) |
+| `ResetLinkSessionState` | 136 (old_agbcc, same size as the ROM) |
+| `UpdateLinkSession` | 37 (same size as the ROM) |
 | `ValidateSaveData` | 18 |
 
 The link-cable drafts establish `struct link_session`,
 `struct link_player` and `struct link_ring`. `link_cable.c` is now on
 `OLD_AGBCC_OBJS`. `LinkStop` takes the session pointer its callers
 pass in r0; the parameter is unused and its code is unchanged.
-`sub_8002114` was not attempted. Nothing in this range closed, so the
+`HandleLinkSerial` was not attempted. Nothing in this range closed, so the
 issue stays open.
 
 ## Later pass: near-miss polish
@@ -338,7 +338,7 @@ global-alloc's priority order. See [near-miss-polish.md](near-miss-polish.md).
 
 ## Later pass: second near-miss sweep
 
-`sub_8001F50` is real C. The ROM loads two separate 1s after reading
+`UpdateLinkSession` is real C. The ROM loads two separate 1s after reading
 SIOCNT: one for `field_8`/IME, and one in r1 for the arm3 flag, which
 it computes with `eor` then `and`. An empty `asm("" : "+r"(one1))` keeps
 the flag's 1 from merging into `one`. The ready test uses a literal 1.
@@ -346,9 +346,9 @@ An empty `asm("" : "+r"(arm3))` between the `^` and the `&` stops
 combine from folding `(x ^ 1) & 1` into `bic`. Matches under both
 compilers. See [near-miss-polish-2.md](near-miss-polish-2.md).
 
-## Later pass: `sub_8001CB8` matched
+## Later pass: `MakeLinkHandshakeId` matched
 
-`sub_8001CB8` is plain C under old_agbcc now, with no pins or `asm`.
+`MakeLinkHandshakeId` is plain C under old_agbcc now, with no pins or `asm`.
 `hash` is a u32 that the loop truncates with a `(u16)` cast. The tail
 reads it back as `(u16)hash >> 8` into a u32 `hi`. With a u16 `hash`,
 CSE folds `hash >> 8` into `(x << 16) >> 24` of the loop's zero-extend
@@ -359,14 +359,14 @@ build the ROM's -16 from it (`sub r0, #0x1f`). See
 
 ## Later pass (last-four NAKED retry)
 
-`sub_8002114`'s draft went from 422 halfwords off to 16 (same size,
+`HandleLinkSerial`'s draft went from 422 halfwords off to 16 (same size,
 old_agbcc). What is left is the first receive loop's giv register order
-and one split `lsls`/`lsrs` pair. `sub_8001DB4` stays at 136. Both are
+and one split `lsls`/`lsrs` pair. `ResetLinkSessionState` stays at 136. Both are
 still NAKED. See [last-four-naked-retry.md](last-four-naked-retry.md).
 
-## Later pass: `sub_8002114` matched (last-seven NAKED retry)
+## Later pass: `HandleLinkSerial` matched (last-seven NAKED retry)
 
-`sub_8002114` is real C under old_agbcc now. The last 6 halfwords were
+`HandleLinkSerial` is real C under old_agbcc now. The last 6 halfwords were
 the first receive loop. The load goes through a pointer biv `p`, which
 loop.c doesn't strength-reduce, and the test address `t = &d2[i]` is
 taken first, which leaves the two reduced givs in the ROM's order.
@@ -376,7 +376,7 @@ are set before `p`, so they come before its init as in the ROM. See
 
 ## Later pass: last-eleven NAKED retry
 
-`sub_8001DB4` is real C now (`src/system/link_cable_01db4.c`, old_agbcc
+`ResetLinkSessionState` is real C now (`src/system/link_cable_01db4.c`, old_agbcc
 plus `-fno-rerun-loop-opt`). The 0x1234 magic moved into a
 function-scope local, so its pseudo lives across the whole loop, gets no
 register and is rematerialized at each store, which is the ROM's

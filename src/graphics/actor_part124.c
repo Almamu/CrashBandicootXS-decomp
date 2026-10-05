@@ -344,31 +344,31 @@ void UpdatePeriodicSpawner(struct periodic_spawner *self)
     }
 }
 
-extern u8 gStaticData_087E3BEC[];
+extern u8 gEntityVtable[];
 extern void OperatorDelete(void *self);
 
 /* Sets `self+0x18`'s table pointer (the struct-actor-shaped "table"
  * field role, per this file's own banner comment) to
- * `gStaticData_087E3BEC` - the same table `graphics.c`'s own
+ * `gEntityVtable` - the same table `graphics.c`'s own
  * constructors already use - then, only if bit 0 of `flags` is set,
  * fires `OperatorDelete(self)`. */
 void DestroyPeriodicSpawner(struct periodic_spawner *self, s32 flags)
 {
-    self->base.table = gStaticData_087E3BEC;
+    self->base.table = gEntityVtable;
     if (flags & 1) {
         OperatorDelete(self);
     }
 }
 
-extern struct actor *sub_800725C(struct actor *self);
+extern struct actor *InitEntity(struct actor *self);
 extern u8 gPeriodicSpawnerVtable[];
 
-/* Calls `sub_800725C(self)` (already matched, `graphics.c`) - its
+/* Calls `InitEntity(self)` (already matched, `graphics.c`) - its
  * return value discarded - then sets `self+0x18`'s table pointer to
  * `gPeriodicSpawnerVtable` and returns `self`. */
 void *CreatePeriodicSpawner(struct periodic_spawner *self)
 {
-    sub_800725C(&self->base);
+    InitEntity(&self->base);
     self->base.table = gPeriodicSpawnerVtable;
     return self;
 }

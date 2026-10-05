@@ -45,7 +45,7 @@ struct fx_part
     u8 tag;                     // 0x2D
     u8 unk_2E[0x16];
     struct manager *mgr;        // 0x44
-    s32 unk_48;                 // 0x48 - velocity fields seeded by sub_8025B0C
+    s32 unk_48;                 // 0x48 - velocity fields seeded by LaunchEffectPart
     s32 unk_4C;                 // 0x4C
     s32 unk_50;                 // 0x50
     u8 unk_54[0xC];
@@ -70,7 +70,7 @@ struct actor_flag_bits
 #define ACTOR_FLAG_BITS(a) ((struct actor_flag_bits *)&(a)->flags)
 
 extern struct level_info *gLevelLayers;
-extern void ***gUnknown_030012D0;
+extern void ***gSpriteBankSet;
 extern void *gUnknown_030012F0;
 
 extern struct fx_part *CreateMovingSprite(u16 arg0, u16 x, u16 y, u16 arg3);
@@ -83,7 +83,7 @@ extern struct manager *sub_800CCE0(void);
 extern s32 _call_via_r2(void *self, void *arg, void *fn);
 extern void AddToPartList(void *manager, void *value);
 
-/* Spawns a `sub_8025BAC` part next to `src` (at `src`'s tile X/Y, facing
+/* Spawns a `SpawnEffectPart` part next to `src` (at `src`'s tile X/Y, facing
  * its way), places it beside `src` by their two `GetSpriteHitbox` AABBs'
  * half-widths plus `margin`, offsets its Y by `z`, and seeds its
  * velocity fields (`+0x60`/`+0x48`/`+0x4c`/`+0x50`) from `speed`,
@@ -98,7 +98,7 @@ extern void AddToPartList(void *manager, void *value);
  * - the velocity seed goes through the `SetVel` inline, whose arguments
  *   (`-speed`, 0x40) are expanded before the stores, and the X offset is
  *   a `?:` so the flip byte is tested before `ox + dist`. */
-struct fx_part *sub_8025BAC(void *unused0, s32 anim, s32 tag, s32 x, s32 y, s32 mirror);
+struct fx_part *SpawnEffectPart(void *unused0, s32 anim, s32 tag, s32 x, s32 y, s32 mirror);
 extern void GetSpriteHitbox(struct fx_box *dest, void *obj);
 
 static inline void SetVel(struct fx_part *p, s32 v, s32 k)
@@ -109,7 +109,7 @@ static inline void SetVel(struct fx_part *p, s32 v, s32 k)
     p->unk_50 = v;
 }
 
-struct fx_part *sub_8025B0C(void *pool, s32 arg1, s32 kind, s32 margin, s32 z, s32 speed, struct fx_part *src)
+struct fx_part *LaunchEffectPart(void *pool, s32 arg1, s32 kind, s32 margin, s32 z, s32 speed, struct fx_part *src)
 {
     struct fx_part *part;
     s32 w1, w2, dist, x;
@@ -119,7 +119,7 @@ struct fx_part *sub_8025B0C(void *pool, s32 arg1, s32 kind, s32 margin, s32 z, s
         s32 y0 = src->base.y >> 8;
         s32 m = src->flipX;
 
-        part = sub_8025BAC(pool, arg1, kind, x0, y0, m);
+        part = SpawnEffectPart(pool, arg1, kind, x0, y0, m);
     }
     {
         struct { struct fx_box a, b; } f;
@@ -150,7 +150,7 @@ struct fx_part *sub_8025B0C(void *pool, s32 arg1, s32 kind, s32 margin, s32 z, s
  * level's bounds, facing left when `mirror` is set, with animation
  * record `anim` (12-byte stride) and tag `tag`. Attaches it to a fresh
  * sub_800CCE0 manager and registers it with gUnknown_030012F0. */
-struct fx_part *sub_8025BAC(void *unused0, s32 anim, s32 tag, s32 x, s32 y, s32 mirror)
+struct fx_part *SpawnEffectPart(void *unused0, s32 anim, s32 tag, s32 x, s32 y, s32 mirror)
 {
     struct fx_part *part;
     struct level_layer *layer;
@@ -168,7 +168,7 @@ struct fx_part *sub_8025BAC(void *unused0, s32 anim, s32 tag, s32 x, s32 y, s32 
         y = (layer->height << 8 >> 8) - 1;
     part = CreateMovingSprite(0xffff, x, y, 0);
     part->flipX = mirror != 0;
-    part->anim = (u8 *)**gUnknown_030012D0 + anim * 12;
+    part->anim = (u8 *)**gSpriteBankSet + anim * 12;
     part->tag = tag;
     ResetSpriteFrameTimer(part);
     ResetSpriteFrameIndex(part);
@@ -260,7 +260,7 @@ void SpawnEntity(void **table, void *self, u16 *rec)
 }
 
 /* Stores `{a, b}` into the two Q8 words at `self+0`/`self+4`. */
-void sub_8025D4C(void *self, s32 a, s32 b)
+void SetEntitySpawnerTable(void *self, s32 a, s32 b)
 {
     *(s32 *)((u8 *)self + 4) = b;
     *(s32 *)self = a;
@@ -269,8 +269,8 @@ void sub_8025D4C(void *self, s32 a, s32 b)
 extern void OperatorDelete(void *self);
 
 /* If bit 0 of `flags` is set, forwards to `OperatorDelete` - identical
- * body to `sub_8025A44` above (a second copy at a different ROM
- * address, same as `sub_8025A5C`/`sub_8025D6C` below). */
+ * body to `DestroyEntityFlags` above (a second copy at a different ROM
+ * address, same as `InitEntityFlags`/`InitEntitySpawner` below). */
 void sub_8025D54(void *self, s32 flags)
 {
     if (flags & 1) {
@@ -279,8 +279,8 @@ void sub_8025D54(void *self, s32 flags)
 }
 
 /* Zeroes the two Q8 position words at `self+0`/`self+4` - identical
- * body to `sub_8025A5C` above. */
-void sub_8025D6C(void *self)
+ * body to `InitEntityFlags` above. */
+void InitEntitySpawner(void *self)
 {
     *(s32 *)self = 0;
     *(s32 *)((u8 *)self + 4) = 0;

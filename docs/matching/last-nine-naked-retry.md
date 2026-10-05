@@ -9,7 +9,7 @@ drafts under `#if NON_MATCHING`.
 |---|---|---|---|---|
 | `SpawnFlamethrowerLabAssistant` (#31) | `src/graphics/graphics_loading_1feec.c` | 12 | 4 (same size, old_agbcc) | Draft updated |
 | `DrawPauseFraction` (#7) | `src/graphics/settings_menu16.c` | 45 | 14 (same size, both compilers) | Draft updated |
-| `sub_8001DB4` (#4) | `src/system/link_cable.c` | 136 | 136 | Note added |
+| `ResetLinkSessionState` (#4) | `src/system/link_cable.c` | 136 | 136 | Note added |
 
 ## `SpawnFlamethrowerLabAssistant`: 12 to 4
 
@@ -106,7 +106,7 @@ Things that didn't help:
 - extra `pdc` references (fix `pdc` but flip `pe0`/0x130);
 - `asm("" : : "r"(0x130))` (35+).
 
-## `sub_8001DB4`: notes only
+## `ResetLinkSessionState`: notes only
 
 `-fno-rerun-loop-opt` stops the inner copy loop's reversal: the counter
 counts up with pointer bivs, as in the ROM. That fits last-eight's
@@ -116,7 +116,7 @@ does three things that rule it out for now:
 - It un-reverses the first id loop, which the ROM does reverse.
 - Combine folds `w & 0xff` into a second `ldrb` (142 hw, 12 bytes
   short).
-- It changes `sub_8002114`, which already matches, in the same file.
+- It changes `HandleLinkSerial`, which already matches, in the same file.
 
 A hand-reversed first loop (`for (i = 3; i >= 0; i--)` over a
 `field_28` pointer) under the flag was 161-171 hw. If this function
@@ -132,7 +132,7 @@ These are in the scratchpad's `last9/`, pointed at this worktree:
   lreg dump);
 - `fcheck.sh` (a whole file with and without a flag);
 - the variant specs `a1`-`a5` (`SpawnFlamethrowerLabAssistant`), `m1`-`m9`/`n1`-`n6`
-  (`DrawPauseFraction`) and `l1` (`sub_8001DB4`).
+  (`DrawPauseFraction`) and `l1` (`ResetLinkSessionState`).
 
 ## Verification
 

@@ -25,7 +25,7 @@ extern u32 gKeys;
 extern void *gAudioContext;
 extern void *gLevelState;
 extern struct act_part *gPlayer;
-extern void *gUnknown_03001304;
+extern void *gInput;
 extern struct anim_rec gStaticData_0816B304[];
 extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
 extern void StopSfx(void *ctx, u32 id);
@@ -193,7 +193,7 @@ skip:
  * the 3..8 range case comes before case 2. */
 void sub_8012D24(struct act *self)
 {
-    void *pad = gUnknown_03001304;
+    void *pad = gInput;
     u32 in = gKeys;
     u8 dir = GetDpadDirection(pad);
     s32 frames;

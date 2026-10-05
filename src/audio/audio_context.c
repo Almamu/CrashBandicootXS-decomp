@@ -76,7 +76,7 @@ extern void GAX_resume(void);
 extern void GAX_play(void);
 extern void GAX_pause(void);
 extern void WaitForVBlank(void);
-extern void sub_80016D0(u8 *address);
+extern void IwramFree(u8 *address);
 extern void IrqRestoreHandler(s32 interruptIndex);
 extern void StartSong(struct AudioContext *self, u32 songIndex);
 
@@ -117,7 +117,7 @@ void FadeInMusic(struct AudioContext *self)
 }
 
 /* Arms a fade-out on the independent `musicVolCurrent`/`Target` pair. */
-void sub_8001AEC(struct AudioContext *self, u32 value)
+void FadeOutMasterVolume(struct AudioContext *self, u32 value)
 {
     self->musicVolTarget = value;
     self->musicVolFadeUpArmed = 0;
@@ -125,7 +125,7 @@ void sub_8001AEC(struct AudioContext *self, u32 value)
 }
 
 /* Arms a fade-in on the independent `musicVolCurrent`/`Target` pair. */
-void sub_8001B00(struct AudioContext *self, u32 value)
+void FadeInMasterVolume(struct AudioContext *self, u32 value)
 {
     self->musicVolTarget = value;
     self->musicVolFadeUpArmed = 1;
@@ -258,7 +258,7 @@ void DestroyAudioContext(struct AudioContext *self, u32 flags)
     StopSong(self);
     gGaxIrqEnabled = 0;
     if (flags & 1) {
-        sub_80016D0((u8 *)self);
+        IwramFree((u8 *)self);
     }
 }
 

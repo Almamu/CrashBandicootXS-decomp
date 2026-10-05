@@ -62,7 +62,7 @@ gap already catalogued for this cluster's siblings
 Both converted to `NAKED` functions whose body is a single `asm()`
 block transcribing the real ROM disassembly instruction-for-instruction,
 following the exact same conventions established earlier this session
-(`sub_8010B6C`, `game_loop28.c`; `naked-oam-actor-part-batch.md`):
+(`ResolveCollisionCandidates`, `game_loop28.c`; `naked-oam-actor-part-batch.md`):
 GNU-as local numeric labels in ROM order (`Nf`/`Nb`, reusable since
 each number is only ever defined once per function), the ROM's
 suffixed Thumb mnemonics (`movs`/`adds`/`subs`/`lsls`) written in their

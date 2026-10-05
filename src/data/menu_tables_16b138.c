@@ -11,10 +11,10 @@ struct icon_pos {
     s32 y;
 };
 
-/* The text sub_8003D3C (settings_menu.c) draws in an icon's text slot. */
-const u8 gStaticData_0816B138[] = ">";
+/* The text DrawYesNoPrompt (settings_menu.c) draws in an icon's text slot. */
+const u8 gMenuCursorText[] = ">";
 
-/* sub_800450C (settings_menu.c) fills palette-cache slot 0 from the
+/* InitSaveMenuIcons (settings_menu.c) fills palette-cache slot 0 from the
  * first two arrays and slot 2 from the last two, 16 halfwords of each
  * (the same four as actor_part88.c's gStaticData_0817C512 ... 0817C572). */
 const u16 gStaticData_0816B13A[16] = {

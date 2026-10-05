@@ -15,14 +15,14 @@ family already covered at length by
 - **`InitPlayer`** (`src/graphics/actor_part77.c`) - a part-object
   constructor: re-initializes `self` via `InitGroundSprite` (matched,
   `actor_part14.c`), overwrites its table with `gPlayerVtable`,
-  clears its trailing `+0x108`/`+0x10c` fields via `sub_8010E2C` (still
+  clears its trailing `+0x108`/`+0x10c` fields via `ResetCollisionQueue` (still
   raw, trivial - a 2-field clear), allocates a fresh `struct
   actor`-shaped child object via `CreateSpriteObj(0, 0, 0, 0)` (matched,
   `actor_part6.c` - called with the same "extra unused 4th zero
   argument" calling convention `graphics_loading_21d80.c`'s own callers
   already use) and hooks it up at `self+0xb0`: points its own `+0x20`
-  table-entry pointer at `gUnknown_030012D0`'s shared table (the same
-  `(u8 *)(**gUnknown_030012D0) + offset` idiom used throughout
+  table-entry pointer at `gSpriteBankSet`'s shared table (the same
+  `(u8 *)(**gSpriteBankSet) + offset` idiom used throughout
   `graphics_loading_21d80.c`), clears its `+0x2d` byte, and builds it
   via the standard `ResetSpriteFrameTimer`/`ResetSpriteFrameIndex`/`SetSpriteAnimDone` OAM trio.
   Clears `self+0xb4`, then calls `ResetPlayer` (matched,
@@ -260,7 +260,7 @@ family already covered at length by
 - **`CollidePlayerWithObjects`** (`asm/code_3_2_16.s`, ROM `0x0800AB9C`) - mostly
   built from already-matched/understood pieces
   (`sub_8007C30`/`MemCopy32`/`CollidePartList`/`CollidePlayerWithCrates`
-  [NAKED-parked]/`sub_8008D30`/`sub_80106DC`, all matched or
+  [NAKED-parked]/`sub_8008D30`/`ResolvePlayerCollisions`, all matched or
   understood elsewhere in this codebase now), gated on `self+0x105`/
   `self+0xc` flag bits. The most tractable of the four left-raw
   functions here; a reasonable next target for a future session, not
@@ -270,7 +270,7 @@ family already covered at length by
   `docs/status/actor.md` already flags as "left raw, out of scope" for
   `UpdateTiny`, GitHub issue #22); calls a dozen still-unexamined
   state-transition functions (`GetCurrentLevelFlags`, `StartTimeTrial`,
-  `sub_8025BAC`, `SetMaskLevel`, `AddDeath`, `RaiseMaskLevel`,
+  `SpawnEffectPart`, `SetMaskLevel`, `AddDeath`, `RaiseMaskLevel`,
   `FreezeLevelClock`, `RequestRoomExit`, `RequestBonusRound`, `RequestGemPath`,
   `ShowHudCounters`, and others). Left raw per this project's established
   policy for this exact dispatcher shape.
@@ -391,8 +391,8 @@ own trailing `.align 2, 0` (685 lines, matching the same "everything
 before, everything after" split `sub_8026628` itself used to get
 carved out of this same file). `src/system/game_loop44.c` (new file)
 holds the matched `sub_8026BC0`. The remainder - `sub_8026BF8` onward,
-still raw/unexamined this session (including `sub_8026C90`,
-`sub_8026D8C`, `SnapCamera`, `UpdateCamera` and others referencing
+still raw/unexamined this session (including `StepCameraDirectional`,
+`StepCameraFacing`, `SnapCamera`, `UpdateCamera` and others referencing
 `gLevelLayers` and per-object velocity-style fields) - moved
 unchanged to the new `asm/code_3_2_17_26bf8.s`, inserted between the
 two in `ldscript.txt`:

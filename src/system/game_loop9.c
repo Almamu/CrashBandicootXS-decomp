@@ -67,7 +67,7 @@ void ResumeRoomAfterPause(void *self)
  * buffer (`gOamBuffer`) - the tail end shared by both
  * `UpdateRoomFrame`'s "near start of level" path and `ResumeRoomAfterPause`'s
  * level-end teardown. */
-void sub_802423C(void)
+void ResetObjBuffers(void)
 {
     ResetObjVram(gObjVramCursor);
     ResetOamBuffer(gOamBuffer);

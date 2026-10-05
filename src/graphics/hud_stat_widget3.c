@@ -14,26 +14,26 @@ struct hud_score
     s32 layout_value;               /* +0x04 */
     s32 wumpaSlide;                     /* +0x08 - UpdateHudWumpa's mode */
     s32 wumpaSlideTimer;                   /* +0x0C */
-    s32 mode_a;                     /* +0x10 - sub_8027940's mode */
-    s32 layout_a;                   /* +0x14 */
+    s32 crateSlide;                     /* +0x10 - UpdateHudCrates's mode */
+    s32 crateSlideTimer;                   /* +0x14 */
     u8 unk_18[8];
     s32 wumpa;                    /* +0x20 */
-    s32 value_a;                    /* +0x24 */
-    s32 value_b;                    /* +0x28 */
+    s32 crateCount;                    /* +0x24 */
+    s32 crateTotal;                    /* +0x28 */
     u8 unk_2C[0xC];
     s32 value_d;                    /* +0x38 */
     s32 value_e;                    /* +0x3C */
     u8 unk_40[4];
     s32 shownWumpa;                    /* +0x44 */
-    s32 shown_a;                    /* +0x48 */
-    s32 shown_b;                    /* +0x4C */
+    s32 shownCrateCount;                    /* +0x48 */
+    s32 shownCrateTotal;                    /* +0x4C */
     u8 unk_50[0xC];
     s32 shown_d;                    /* +0x5C */
     s32 shown_e;                    /* +0x60 */
     struct hud_digit_part *parts;   /* +0x64 */
 };
 
-/* The object `sub_8027E88` reads its percentage from, called through a
+/* The object `UpdateHudPercentCounters` reads its percentage from, called through a
  * gcc 2.x pointer-to-member (delta + function) slot in its vtable. */
 struct pct_vtable
 {
@@ -52,7 +52,7 @@ struct pct_source
 extern s32 gHudSlideOffset;
 extern struct pct_source *gActorList;
 extern s32 _call_via_r1(void *self, void *fn);
-extern s32 sub_80233B4(void *state);
+extern s32 GetBossIndex(void *state);
 extern s32 GetAirshipHpPercent(void);
 extern void AdvanceSpriteAnim(struct hud_digit_part *part);
 extern void *gLevelState;
@@ -94,7 +94,7 @@ static inline void SetPartPos(s32 x, s32 y, struct hud_digit_part *part)
  * `-1` held in a local keeps the compare; the "100%" branches read
  * `self->parts` into their own block-local so its register differs from
  * the digit branches (the ROM does not cross-jump them); and
- * `sub_8027940`'s second counter reads value, cached value, then
+ * `UpdateHudCrates`'s second counter reads value, cached value, then
  * `self->parts`, in that order. */
 
 /* The two-digit score-style counter: two independent 3-digit displays
@@ -106,7 +106,7 @@ static inline void SetPartPos(s32 x, s32 y, struct hud_digit_part *part)
  * (`gHudPartPositions`-positioned, slot at `self->parts + 0xa0*4`)
  * whose x/y table index is picked from a 3-way digit-count check on the
  * first counter's value. */
-void sub_8027940(struct hud_counter *selfArg)
+void UpdateHudCrates(struct hud_counter *selfArg)
 {
     struct hud_score *self = (struct hud_score *)selfArg;
     struct hud_digit_part *parts;
@@ -115,16 +115,16 @@ void sub_8027940(struct hud_counter *selfArg)
     s32 w;
     s32 off;
 
-    if (self->mode_a == 0)
+    if (self->crateSlide == 0)
         return;
-    self->value_a = GetCrateCount(gLevelState);
-    if (self->mode_a == 1 || self->mode_a == 3)
-        gHudSlideOffset = self->layout_a * 2 - 0x28;
+    self->crateCount = GetCrateCount(gLevelState);
+    if (self->crateSlide == 1 || self->crateSlide == 3)
+        gHudSlideOffset = self->crateSlideTimer * 2 - 0x28;
     else
         gHudSlideOffset = 0;
 
-    v = self->value_a;
-    if (v != self->shown_a)
+    v = self->crateCount;
+    if (v != self->shownCrateCount)
     {
         if (v > 99)
         {
@@ -132,9 +132,9 @@ void sub_8027940(struct hud_counter *selfArg)
 
             parts = self->parts;
             CLAMP_FRAME(&parts[3], parts[3].anim_index, f);
-            f = __modsi3(__divsi3(self->value_a, 10), 10);
+            f = __modsi3(__divsi3(self->crateCount, 10), 10);
             CLAMP_FRAME(&parts[4], parts[4].anim_index, f);
-            f = __modsi3(self->value_a, 10);
+            f = __modsi3(self->crateCount, 10);
             CLAMP_FRAME(&parts[5], parts[5].anim_index, f);
         }
         else if (v > 9)
@@ -143,7 +143,7 @@ void sub_8027940(struct hud_counter *selfArg)
 
             parts = self->parts;
             CLAMP_FRAME(&parts[3], parts[3].anim_index, f);
-            f = __modsi3(self->value_a, 10);
+            f = __modsi3(self->crateCount, 10);
             CLAMP_FRAME(&parts[4], parts[4].anim_index, f);
             CLAMP_FRAME(&parts[5], parts[5].anim_index, -1);
         }
@@ -162,16 +162,16 @@ void sub_8027940(struct hud_counter *selfArg)
     DrawHudPart(&self->parts[4], 0, 0);
     DrawHudPart(&self->parts[5], 0, 0);
 
-    if (self->value_a > 99)
+    if (self->crateCount > 99)
         digits = 2;
-    else if (self->value_a > 9)
+    else if (self->crateCount > 9)
         digits = 1;
     else
         digits = 0;
     off = digits * 15;
 
-    v = self->value_b;
-    w = self->shown_b;
+    v = self->crateTotal;
+    w = self->shownCrateTotal;
     parts = self->parts;
     if (v != w)
     {
@@ -180,9 +180,9 @@ void sub_8027940(struct hud_counter *selfArg)
             s32 f = __divsi3(v, 100);
 
             CLAMP_FRAME(&parts[6], parts[6].anim_index, f);
-            f = __modsi3(__divsi3(self->value_b, 10), 10);
+            f = __modsi3(__divsi3(self->crateTotal, 10), 10);
             CLAMP_FRAME(&parts[7], parts[7].anim_index, f);
-            f = __modsi3(self->value_b, 10);
+            f = __modsi3(self->crateTotal, 10);
             CLAMP_FRAME(&parts[8], parts[8].anim_index, f);
         }
         else if (v > 9)
@@ -190,7 +190,7 @@ void sub_8027940(struct hud_counter *selfArg)
             s32 f = __divsi3(v, 10);
 
             CLAMP_FRAME(&parts[6], parts[6].anim_index, f);
-            f = __modsi3(self->value_b, 10);
+            f = __modsi3(self->crateTotal, 10);
             CLAMP_FRAME(&parts[7], parts[7].anim_index, f);
             CLAMP_FRAME(&parts[8], parts[8].anim_index, -1);
         }
@@ -216,13 +216,13 @@ void sub_8027940(struct hud_counter *selfArg)
         DrawHudPart(part, 0, 0);
     }
     DrawHudPart(&self->parts[9], 0, 0);
-    self->shown_b = self->value_b;
-    self->shown_a = self->value_a;
+    self->shownCrateTotal = self->crateTotal;
+    self->shownCrateCount = self->crateCount;
 }
 
-/* A smaller sibling of `sub_8027940` above: one 2-digit display
+/* A smaller sibling of `UpdateHudCrates` above: one 2-digit display
  * (`self->field_20`/`self->field_44` change-detection pair, slots
- * `0xb0*4`/`0xc0*4`), sourced from `GetWumpa` (`sub_8027940` used
+ * `0xb0*4`/`0xc0*4`), sourced from `GetWumpa` (`UpdateHudCrates` used
  * `GetCrateCount` for its own primary counter) rather than a mode/layout
  * pair like the dispatcher's other callees - always refreshes one more
  * slot (`self->parts + 0xd0*4`) up front via `AdvanceSpriteAnim`/
@@ -272,7 +272,7 @@ void UpdateHudWumpa(struct hud_counter *selfArg)
  * below): a single 3-digit-or-percent display sourced from
  * `_call_via_r1(gActorList's own x-position field + a halfword
  * read off a nested struct, y-position field)` rather than any of the
- * mode/layout-value or `sub_80233B4`-family sources the rest of the
+ * mode/layout-value or `GetBossIndex`-family sources the rest of the
  * dispatcher's callees use - this is the only counter in the family
  * driven by something resembling a screen coordinate.
  *
@@ -286,7 +286,7 @@ void UpdateHudWumpa(struct hud_counter *selfArg)
  * change-detection triple, slots `0xe8*8` fixed-icon plus
  * `0xf0*8`/`0xf8*8`/`0x80<<4`/`0x84<<4` digit slots) - two independent
  * percent-style readouts sharing one function body. */
-void sub_8027E88(struct hud_counter *selfArg)
+void UpdateHudPercentCounters(struct hud_counter *selfArg)
 {
     struct hud_score *self = (struct hud_score *)selfArg;
     struct hud_digit_part *parts;
@@ -345,7 +345,7 @@ void sub_8027E88(struct hud_counter *selfArg)
     DrawHudPart(&self->parts[28], 0, 0);
     self->shown_d = self->value_d;
 
-    if (sub_80233B4(gLevelState) != -1)
+    if (GetBossIndex(gLevelState) != -1)
         return;
     if ((self->value_e = GetAirshipHpPercent()) == -1)
         return;

@@ -17,8 +17,8 @@
  * different local structs, see the comment.
  */
 
-extern const char gStaticData_0816B110[];
-extern const char gStaticData_0816B124[];
+extern const char gCrash2LinkText[];
+extern const char gCrash3LinkText[];
 extern const u8 *const gUiTextEnglish[70];
 extern const u8 *const gUiTextFrench[70];
 extern const u8 *const gUiTextGerman[70];
@@ -75,14 +75,14 @@ u32 gSfxVoiceToggle = 0;
 /* Link cable (link_cable*.c, settings_menu*.c): gLinkSession is the
  * session object the link IRQ handlers work on. gEepromNeedsInit is the
  * save code's (settings_menu8d.c): set until its first EEPROMConfigure. */
-u8 gUnknown_03000800 = 1;
+u8 gLinkSessionReset = 1;
 void *gLinkSession = NULL;
 u8 gEepromNeedsInit = 1;
 void *gSaveMenu = NULL;
 /* The two link compatibility messages, stored after the CRC table
  * (src/data/link_crc_16af10.c): "crash 1 <-> crash 2", "crash 1 <-> crash 3". */
-const u8 *gUnknown_03000810 = (const u8 *)gStaticData_0816B110;
-const u8 *gUnknown_03000814 = (const u8 *)gStaticData_0816B124;
+const u8 *gCrash2LinkTextPtr = (const u8 *)gCrash2LinkText;
+const u8 *gCrash3LinkTextPtr = (const u8 *)gCrash3LinkText;
 
 s32 gUnknown_03000818 = 0;
 s32 gUnknown_0300081C = 0;

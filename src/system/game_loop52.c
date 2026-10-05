@@ -1,13 +1,13 @@
 #include "core.h"
 #include "orbit_part.h"
 
-/* GitHub issue #12/#14 Phase 2, "accessor cluster" group: `sub_8011248`
+/* GitHub issue #12/#14 Phase 2, "accessor cluster" group: `UpdateExtraLifeHop`
  * through `CheckWumpaPickup` (11 functions, `0x08011248`-`0x08011448`),
  * carved out of the middle of the still-unexamined 24-function tail
  * documented in docs/matching/issue-14-0x08010d54-physics-apply.md.
  * `self` here is a further, still-unnamed "part"-shaped object -
  * distinct from `struct actor` (only 0x1c bytes) and from the
- * `struct collision_queue` `sub_8010D54`/`sub_8010E14`/`sub_8010E2C`
+ * `struct collision_queue` `AddCollisionCandidate`/`DestroyCollisionQueue`/`ResetCollisionQueue`
  * (game_loop50.c) operate on - the same "big, mostly-uncharacterized
  * object, individual fields named only by offset" situation already
  * documented for this object family in `src/graphics/actor_part15.c`'s
@@ -26,27 +26,27 @@
  * - `self+0x4a` (u8)  - orbit "mode" (0 = inactive; 1/2 = which way the
  *                       orbit offset is applied to the anchor x; other
  *                       values leave x at the anchor) - set by
- *                       `sub_8011378`, tested by `sub_8011248`'s output
+ *                       `SetExtraLifeHop`, tested by `UpdateExtraLifeHop`'s output
  *                       branch and `CheckWumpaPickup`'s activity gate
  * - `self+0x4b` (u8)  - orbit phase/angle index into the shared sine
  *                       table `gSineTable`, reset to 0 by
- *                       `sub_8011378`, advanced elsewhere (not in this
- *                       group), read by `sub_8011248`/`CheckWumpaPickup`
+ *                       `SetExtraLifeHop`, advanced elsewhere (not in this
+ *                       group), read by `UpdateExtraLifeHop`/`CheckWumpaPickup`
  * - `self+0x4c` (s32) - orbit anchor x (Q8)
  * - `self+0x50` (s32) - orbit anchor y (Q8)
- * - `self+0x0`  (s32) - current x (Q8) - `sub_8011364` seeds it from
- *                       the anchor; `sub_8011248` never touches it
+ * - `self+0x0`  (s32) - current x (Q8) - `SetExtraLifePos` seeds it from
+ *                       the anchor; `UpdateExtraLifeHop` never touches it
  *                       (only rewrites `self+4`'s `y`, despite what its
  *                       own field-order might suggest - see below)
  * - `self+0x4`  (s32) - current y (Q8), recomputed every call by
- *                       `sub_8011248`
+ *                       `UpdateExtraLifeHop`
  *
  * Confirms this is a small "orbiting hazard" behavior mixed into the
  * same object type `CreateExtraLife`/`SendExtraLifeToHud` (game_loop29.c,
- * Phase 2's neighboring group) spawn/manage - `sub_8011364` seeds an
- * orbit anchor+start position, `sub_8011378` (re)starts the orbit at a
+ * Phase 2's neighboring group) spawn/manage - `SetExtraLifePos` seeds an
+ * orbit anchor+start position, `SetExtraLifeHop` (re)starts the orbit at a
  * given mode/phase 0, `sub_8011388` sets an adjacent still-unexamined
- * byte, `sub_8011248` is the per-frame orbit-position update,
+ * byte, `UpdateExtraLifeHop` is the per-frame orbit-position update,
  * `sub_8011330` fires a `self->table`-driven hit trampoline once the
  * object is "spawned" (`self+0x48 == 0`) and the player has a specific
  * flag set, `DrawExtraLife` re-derives visibility from a
@@ -77,7 +77,7 @@ extern struct actor *InitSpriteObj(struct actor *self);
 extern void DestroySpriteObj(struct actor *self, u32 arg1);
 extern s32 FixedMul(s32 a, s32 b);
 extern s16 gSineTable[];
-extern s32 gStaticData_0816BF08[3];
+extern s32 gExtraLifeHopWidths[3];
 extern u8 gExtraLifeVtable[];
 
 /* Phase 2's neighboring group (not read/matched this pass) - the
@@ -93,7 +93,7 @@ extern void PickUpWumpa(void *self, s32 mode);
  * and combines each with a scale factor via the overflow-avoiding
  * fixed-point multiply `FixedMul`: the y-offset always uses the
  * fixed scale `0x800`, while the x-offset's scale comes from a local
- * copy of the 3-entry table `gStaticData_0816BF08`, indexed by
+ * copy of the 3-entry table `gExtraLifeHopWidths`, indexed by
  * `self+0x4a - 1` (so `self+0x4a` must be 1-3 to select a scale; mode 3
  * yields an x-offset that's discarded - see below).
  *
@@ -101,7 +101,7 @@ extern void PickUpWumpa(void *self, s32 mode);
  * `self` (`x`) is `self+0x4c` (anchor x) minus the x-offset when
  * `self+0x4a == 1`, plus the x-offset when `self+0x4a == 2`, or just
  * the anchor x unchanged otherwise (`self+0x4a == 3`, or in practice
- * any other value - the local `gStaticData_0816BF08` lookup still runs
+ * any other value - the local `gExtraLifeHopWidths` lookup still runs
  * for mode 3, its result simply unused). */
 struct three_words {
     s32 a[3];
@@ -112,9 +112,9 @@ struct three_words {
  * both calls exactly like the ROM; current agbcc renumbers the first
  * lookup's registers. Every other function in this file compiles the
  * same under either compiler. */
-void sub_8011248(struct orbit_part *self)
+void UpdateExtraLifeHop(struct orbit_part *self)
 {
-    struct three_words scales = *(struct three_words *)gStaticData_0816BF08;
+    struct three_words scales = *(struct three_words *)gExtraLifeHopWidths;
     s32 dy;
     s32 sn;
 
@@ -216,7 +216,7 @@ s32 sub_8011330(void *selfArg)
 /* Sets `self`/`self+4` (`x`/`y`, Q8) from the raw `x`/`y` arguments
  * scaled by 8, and mirrors both into `self+0x4c`/`self+0x50` - seeding
  * an orbit anchor at the object's own starting position. */
-void sub_8011364(void *selfArg, s32 x, s32 y)
+void SetExtraLifePos(void *selfArg, s32 x, s32 y)
 {
     u8 *self = selfArg;
     s32 qx, qy;
@@ -231,7 +231,7 @@ void sub_8011364(void *selfArg, s32 x, s32 y)
 
 /* Sets the orbit mode (`self+0x4a`) and resets the orbit phase
  * (`self+0x4b`) to 0. */
-void sub_8011378(void *selfArg, u8 mode)
+void SetExtraLifeHop(void *selfArg, u8 mode)
 {
     u8 *self = selfArg;
     u8 *modePtr;

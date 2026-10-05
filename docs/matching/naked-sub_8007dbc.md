@@ -10,7 +10,7 @@ global `gPlayer` (via the already-matched `GetSpriteHitbox`/
 `part->field_0A`), marks itself in the `gEntityFlags` bitmap at
 `+0x108` (`sub_80072D8`'s convention), and finally
 `part->field_0A - 0x1b` selects one of six "kind" values passed to
-`sub_8025BAC(gEntitySpawner, 0x2b, kind, part->x>>8, part->y>>8, 0)`
+`SpawnEffectPart(gEntitySpawner, 0x2b, kind, part->x>>8, part->y>>8, 0)`
 to spawn an object at `part`'s position.
 
 The plain-C reconstruction (still readable in git history) got every
@@ -27,7 +27,7 @@ push/pop list" failure mode already documented at
 compiler outright with `internal error--unrecognizable insn`. This is
 the categorical r7-pin limitation cross-referenced from several other
 files in this ROM region (`GetSpriteBounds`, `MovePolarAkuAku`,
-`sub_8002D44`/`sub_8002E20`, `HitMovingSprite`'s neighborhood): this
+`SendSaveTransferChunk`/`ReceiveSaveTransferChunk`, `HitMovingSprite`'s neighborhood): this
 agbcc build cannot be made to keep a real, cross-block-live value in
 `r7` no matter how it's coaxed.
 

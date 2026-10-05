@@ -34,12 +34,12 @@ as of
   explicitly in the caller instead of inline in the callee.
 
   `self+0xc` bit 7: clears `self+0x108`/`self+0x10c` (the same fields
-  `sub_8010E2C` clears elsewhere in this object family, just written
+  `ResetCollisionQueue` clears elsewhere in this object family, just written
   directly here) and fires three teardown/notification calls:
   `CollidePlayerWithCrates` (NAKED-parked, `actor_part11d.c`) against
   `gCrateList`'s manager with selector `3`, `sub_8008D30`
   (`actor_part10.c`) against `gUnknown_030012EC`'s manager with
-  selector `4`, and `sub_80106DC` (`game_loop23.c`) with no arguments.
+  selector `4`, and `ResolvePlayerCollisions` (`game_loop23.c`) with no arguments.
   `CollidePlayerWithCrates` was previously declared with only one parameter
   (`manager`) since its only known call site at the time never
   exercised a second argument - this call site is the first one that

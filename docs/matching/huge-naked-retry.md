@@ -35,7 +35,7 @@ The draft names the fields through a local `struct d18c_player` view of
    set and one for it clear, and `sub_800FDC8` for slopes. It then
    corrects the position through a 9-entry table (edges 1/2, 4 and 8,
    with `GetBottomCrate`/`GetTopCrate` picking the neighbour for 4/8). It
-   ends by queueing the result with `sub_8010D54`.
+   ends by queueing the result with `AddCollisionCandidate`.
 
 ## What fixed the structure
 

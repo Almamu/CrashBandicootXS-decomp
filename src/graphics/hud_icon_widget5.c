@@ -4,7 +4,7 @@
 /* Sits between the parked InitFont (asm/code_3_2_20_8a78.s) and the
  * rest of the still-raw HUD text/icon-widget driver code
  * (asm/code_3_2_20_8b7c.s, out of GitHub issue #46's chunk scope) -
- * sub_8028AC4 through FontSetTileBase, GitHub issue #46. Same
+ * FontHeightToLines through FontSetTileBase, GitHub issue #46. Same
  * `struct icon_manager` as hud_icon_widget.c/hud_icon_widget2.c/
  * hud_icon_widget3.c/hud_icon_widget4.c.
  *
@@ -34,7 +34,7 @@ extern s32 __udivsi3(s32 value, s32 divisor);
 /* Divides `value` by the widget's own line height (`lineHeight`) - see
  * src/util/word_util.c's sub_8001214, which uses this same field as a
  * divisor for a line-count limit. */
-s32 sub_8028AC4(struct icon_manager *self, s32 value)
+s32 FontHeightToLines(struct icon_manager *self, s32 value)
 {
     return __udivsi3(value, self->lineHeight);
 }

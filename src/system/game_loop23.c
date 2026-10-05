@@ -22,7 +22,7 @@ struct aabb {
 /* GitHub issue #13: 0x0800FC70-0x08010A0C, continuing the physics/
  * collision subsystem (see game_loop17.c's header comment and
  * docs/matching/issue-13-graphics-fc70.md). `sub_8010674` prepended
- * ahead of the already-matched `sub_80106DC` run below - it's
+ * ahead of the already-matched `ResolvePlayerCollisions` run below - it's
  * immediately ROM-adjacent (no gap), so it joins this file rather
  * than getting its own per docs/workflow.md's "one file per
  * contiguous ROM region" rule. See
@@ -165,18 +165,18 @@ u32 sub_8010674(void *selfArg, struct aabb *boxArg)
 asm(".align 2, 0");
 
 extern void *gPlayer;
-extern void sub_8010B6C(void *arg);
+extern void ResolveCollisionCandidates(void *arg);
 
-/* Refreshes the viewport's own collision box (`sub_8010B6C` on
+/* Refreshes the viewport's own collision box (`ResolveCollisionCandidates` on
  * `gPlayer+0x108`), then increments its `+0x92` counter by
  * one as long as it isn't already zero (a saturating-at-zero
  * "recently hit" style counter, never incremented back up from 0). */
-void sub_80106DC(void)
+void ResolvePlayerCollisions(void)
 {
     u8 *p = (u8 *)gPlayer;
     u8 *p2;
 
-    sub_8010B6C(p + 0x108);
+    ResolveCollisionCandidates(p + 0x108);
     p2 = (u8 *)gPlayer + 0x92;
     if (*p2 != 0) {
         *p2 = *p2 + 1;

@@ -30,7 +30,7 @@ struct settings_icon_actor {
     u16 field_3c;                   /* 0x3c - InitPauseGemsPage/InitPauseRelicsPage only, set to 0x80 */
 };
 
-/* A fixed {x, y} screen-position pair, as consumed by sub_800737C. */
+/* A fixed {x, y} screen-position pair, as consumed by SetEntityPixelPos. */
 struct icon_pos {
     s32 x;
     s32 y;

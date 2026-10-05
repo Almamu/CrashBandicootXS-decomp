@@ -46,7 +46,7 @@ entity's own behavior.
   itself (`+0x94` counter, `+0x98`+ array), reads the
   `gCrateHitResponse` 22-row/28-byte-stride per-state table, and
   ends by handing an ~8-argument packed position/rect off to
-  `sub_8010D54` (the apply/commit step).
+  `AddCollisionCandidate` (the apply/commit step).
 - **`sub_800D040`** (matched to this issue's understanding, parked
   under `NON_MATCHING`) is a **self-vs-player AABB overlap check** that
   reuses the exact same `+0x20`-pointer-to-table/`+0x2d`-tag/28-byte-
@@ -194,7 +194,7 @@ syntax this project's other `NAKED` functions use -
 `asrs`->`asr`, `orrs`->`orr`, `rsbs rX,rX,#0`->`neg rX,rX` - with the
 original `_08XXXXXX:` labels renumbered to GNU-as local numeric
 labels), the same escape hatch this project already established for
-`sub_8001CB8`/`sub_8001DB4` (`src/system/link_cable.c`, see
+`MakeLinkHandshakeId`/`ResetLinkSessionState` (`src/system/link_cable.c`, see
 `docs/matching/issue-4-sio-settings-sync.md`'s "The general strategy
 for the rest" section). The semantics-understanding paragraphs in each
 function's doc comment were kept; the now-obsolete "here's exactly
@@ -308,7 +308,7 @@ three):
    by the same adjusted dispatch id (`sp+0x7c`), `bls`-gated at 8:
    - **Case 0, 3, 5, 6, 7**: all share the same target, `0800E00C` -
      effectively a no-op fast path straight to the function's shared
-     tail (apply-offset + `sub_8010D54` call).
+     tail (apply-offset + `AddCollisionCandidate` call).
    - **Case 1, 2** (`0800DEAC`): overlap-test `self`'s and a
      recomputed box (`AabbOverlapsInclusiveX`); on **no** overlap, calls
      **`sub_800E494(self)`** (already NAKED-matched, `game_loop7.c`)
@@ -327,14 +327,14 @@ three):
      `game_loop30.c`) to reselect `self`, similarly re-reads its
      `gCrateHitResponse` row, optionally resets
      `gPlayer`'s `+0x64`/`+0x54`/`+0x58`/`+0x5c` fields, and
-     calls **`sub_8007398`** (already matched, `graphics.c` - applies
+     calls **`SetEntityPos`** (already matched, `graphics.c` - applies
      the computed position offset).
    All paths converge on the shared tail at `0800E00C`, which
    conditionally calls **`LightTntCrate`** (already-matched-elsewhere
    leaf; gated on `gPlayer+0x88==1`, `self+0x4e==0xe`, and a
-   re-overlap test), then **`sub_8007398`** (apply the final offset)
+   re-overlap test), then **`SetEntityPos`** (apply the final offset)
    and, if a sound/effect id was set, **`_call_via_r4`** again, then
-   ends by calling **`sub_8010D54`** (already matched) with ~8 packed
+   ends by calling **`AddCollisionCandidate`** (already matched) with ~8 packed
    arguments - the actual apply/commit step.
 
 ### `sub_800E08C`'s jump table
@@ -362,7 +362,7 @@ rewrite to id 1 that also mutates `self+0x48`/state byte `+0x4e`):
 - **Case 4** (`0800E41C`): if `self+0x4d & 0x7f == 0`, calls
   **`ExplodeCrate(self, 1)`**.
 - **Case 5** (`0800E434`): calls **`OpenCheckpointCrate(self)`**.
-- Shared tail (`0800E43C`): calls `sub_8007398` (apply the accumulated
+- Shared tail (`0800E43C`): calls `SetEntityPos` (apply the accumulated
   offset, gated on `gPlayer+0x1084`'s `+4` byte) and, if a
   sound/effect id was set (`sp+0x38`), `_call_via_r4`.
 
@@ -447,7 +447,7 @@ functions, no more, no fewer, in this half.
   *other* dispatcher; the two are not actually the same handler despite
   sharing a case index - each dispatcher's 6-case table independently
   selects its own target per row). Spawns a particle-effect object
-  (`sub_8025BAC`, kind `0x2a`) at `self`'s position (minus 10 pixels on
+  (`SpawnEffectPart`, kind `0x2a`) at `self`'s position (minus 10 pixels on
   X), initializes its trajectory fields, switches `self` itself into
   hitbox tag `0x1b`, rebuilds its hitbox record, plays SFX `0x17`,
   notifies `sub_80259D4` unless `self+8` is the sentinel `0xffff`,
@@ -683,7 +683,7 @@ check is the full clean `make compare`, which passed outright.
   (flush pending case-`0xa` commits), then an up-to-twice
   `gCrateList` list scan removing/re-classifying objects via
   `RemoveCrateListAt`/`_call_via_r2`/`_call_via_r1`, driven by a
-  `gUnknown_030012B0` one-shot re-scan flag.
+  `gCrateListChanged` one-shot re-scan flag.
 - **`DetonateNitroCrates(void)`** - no arguments. Settles every
   `gCrateList` object stuck at `+0x4e==0xa`/`+0x4d&0x7f==0` via
   `ExplodeCrate(other, 0)`. Called by both `UpdateCrates` and
@@ -692,7 +692,7 @@ check is the full clean `make compare`, which passed outright.
   by `sub_0800D18C`'s/`sub_800E08C`'s case 0/1). Tags `self+0x2d=0x23`,
   runs the tag/refresh triplet plus a `GetPaletteSlot`-driven `self+0x29`
   nibble update, flushes via `DetonateNitroCrates`, bumps a combo counter
-  (`sub_8028474`), plays sound id 4, arms `self+0x48=1`.
+  (`ShowHudCrates`), plays sound id 4, arms `self+0x48=1`.
 - **`ActivateIronSwitchCrate(self)`** - per-edge dispatch id-row-`3` target (sibling
   of `ActivateNitroSwitchCrate`, same case). Tags `self+0x2d=0x22`, same triplet +
   nibble update, marks the collision bitmap (`sub_8025A0C`), then scans
@@ -726,7 +726,7 @@ check is the full clean `make compare`, which passed outright.
   Dispatches to `BlastNearbyCrates` per `self+0x30`/`gCrateKindExplosive`,
   unlinks `self` from its neighbor list when `self+0x38` is set
   (`SetCrateBelow`/`SetCrateAbove`), and marks/clears
-  `gUnknown_030012B0`/`gPlayer+0x94`'s ring-buffer re-visit
+  `gCrateListChanged`/`gPlayer+0x94`'s ring-buffer re-visit
   bookkeeping.
 - **`UpdateTntCountdown(self)`** - the `0x13`/`0x14`/`0x15` "settle" family's
   own small state cycle, guarded by `self+0x4f`'s cooldown throttle.

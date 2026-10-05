@@ -37,13 +37,13 @@
  *   that further classifies the collision via `GetBottomCrate`/
  *   `GetTopCrate` ("get next"/"get prev" neighbor-list-walk-and-filter
  *   helpers, matched in game_loop30.c) and `gCrateHitResponse`,
- *   computing a final corrected offset and calling `sub_8007398`
+ *   computing a final corrected offset and calling `SetEntityPos`
  *   (apply the offset) plus `_call_via_r4` (a `bx r4`
  *   register-indirect-call trampoline - see docs/rom_map.md's
  *   trampoline-table correction - used here to play a sound/particle
  *   effect through a caller-supplied function pointer).
  * - Ends by handing an ~8-argument packed position/rect off to
- *   `sub_8010D54` (the apply/commit step), unless the dispatch id was
+ *   `AddCollisionCandidate` (the apply/commit step), unless the dispatch id was
  *   6 (case skips the commit entirely) or `self+0x58` is set and
  *   `self+0x44` is clear (a very early return).
  *
@@ -100,7 +100,7 @@ struct d18c_player
 };
 
 #define D18C_P ((struct d18c_player *)gPlayer)
-/* sub_8010D54's queue, at player+0x108 (+4: "position committed"). */
+/* AddCollisionCandidate's queue, at player+0x108 (+4: "position committed"). */
 #define D18C_QUEUE(p) ((u8 *)(p) + 0x108)
 #define D18C_COMMIT()                                                          \
     if (1)                                                                     \
@@ -162,7 +162,7 @@ extern void LightTntCrate(struct crate *self);
 extern void BreakCrateInStack(struct crate *self, u32 a, u32 b, u32 c);
 extern void ExplodeCrate(struct crate *self, u8 a);
 extern void OpenCheckpointCrate(struct crate *self);
-extern void sub_8010D54(void *queue, struct crate *obj, s32 kind, s32 code,
+extern void AddCollisionCandidate(void *queue, struct crate *obj, s32 kind, s32 code,
                         s32 edge, s32 depth, struct d18c_pos pos, s32 hit,
                         struct d18c_flag8 f20, struct d18c_flag8 f21);
 
@@ -628,7 +628,7 @@ tail:
                 pp = &f.p1;
                 pp->y = y - ((dy - 1) << 8);
                 D18C_P->speedY = 0;
-                sub_8007398((struct gobj *)D18C_P, f.p1.x, pp->y);
+                SetEntityPos((struct gobj *)D18C_P, f.p1.x, pp->y);
                 D18C_COMMIT();
                 D18C_Hit(D18C_P, dirY);
                 return;
@@ -644,7 +644,7 @@ tail:
                     f.p2.x = (dx << 8) + f.p2.x;
                 else if (dirX == 1)
                     f.p2.x -= dx << 8;
-                sub_8007398((struct gobj *)D18C_P, f.p2.x, D18C_PosPtr(&f.p2)->y);
+                SetEntityPos((struct gobj *)D18C_P, f.p2.x, D18C_PosPtr(&f.p2)->y);
                 D18C_COMMIT();
                 D18C_CALL68(0, 0xc, dirX);
                 D18C_Hit(D18C_P, dirX);
@@ -664,7 +664,7 @@ tail:
                     pp->y = (dy << 8) + pp->y;
                 else if (dirX == 8)
                     pp->y -= dy << 8;
-                sub_8007398((struct gobj *)D18C_P, f.p3.x, pp->y);
+                SetEntityPos((struct gobj *)D18C_P, f.p3.x, pp->y);
                 D18C_COMMIT();
                 D18C_CALL68(0, 0xc, dirY);
                 D18C_Hit(D18C_P, dirY);
@@ -900,7 +900,7 @@ tail:
         {
             D18C_PosPtr(&f.pos)->y -= (dy - 1) << 8;
             D18C_PosPtr(&f.pos)->y &= ~0xff;
-            sub_8007398((struct gobj *)D18C_P, f.pos.x, D18C_PosPtr(&f.pos)->y);
+            SetEntityPos((struct gobj *)D18C_P, f.pos.x, D18C_PosPtr(&f.pos)->y);
             D18C_COMMIT();
         }
         else if (code == 0 || code == 2)
@@ -958,7 +958,7 @@ tail:
                 ok = 0;
             if (ok)
             {
-                sub_8007398((struct gobj *)D18C_P, f.pos.x, D18C_PosPtr(&f.pos)->y);
+                SetEntityPos((struct gobj *)D18C_P, f.pos.x, D18C_PosPtr(&f.pos)->y);
                 D18C_COMMIT();
             }
         }
@@ -967,7 +967,7 @@ tail:
     if (D18C_P->ringLocked == 1 && self->kind == 0xe && code <= 1
         && AabbOverlapsInclusiveX(&f.c, &f.b) == 1)
         LightTntCrate(tgt);
-    sub_8010D54(D18C_QUEUE(D18C_P), tgt, kind, code, edge, dy, f.pos, hit,
+    AddCollisionCandidate(D18C_QUEUE(D18C_P), tgt, kind, code, edge, dy, f.pos, hit,
                 (struct d18c_flag8){f20}, (struct d18c_flag8){f21});
 }
 
@@ -1197,7 +1197,7 @@ commit:
         u8 *q = (u8 *)p + 0x108;
 
         if (q[4] == 0)
-            sub_8007398((struct gobj *)p, pos.x, pos.y);
+            SetEntityPos((struct gobj *)p, pos.x, pos.y);
     }
     if (hit != 0)
     {

@@ -4,7 +4,7 @@
 
 extern void *gLevelState;
 extern void *gEntityFlags;
-extern void ***gUnknown_030012D0;
+extern void ***gSpriteBankSet;
 extern void *gUnknown_030012EC;
 extern void *gEntitySpawner;
 
@@ -57,7 +57,7 @@ void SpawnBodySlamPower(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     register u8 field0A asm("r6") = 0x25;
     struct actor *part = CreateSpriteObj(arg0, arg1, arg2, arg3);
 
-    *(void **)((u8 *)part + 0x20) = (u8 *)(**gUnknown_030012D0) + 0x1c8;
+    *(void **)((u8 *)part + 0x20) = (u8 *)(**gSpriteBankSet) + 0x1c8;
     *((u8 *)part + 0x2d) = tag;
     ResetSpriteFrameTimer(part);
     ResetSpriteFrameIndex(part);
@@ -74,7 +74,7 @@ void SpawnTornadoSpinPower(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     register u8 field0A asm("r6") = 0x24;
     struct actor *part = CreateSpriteObj(arg0, arg1, arg2, arg3);
 
-    *(void **)((u8 *)part + 0x20) = (u8 *)(**gUnknown_030012D0) + 0x1c8;
+    *(void **)((u8 *)part + 0x20) = (u8 *)(**gSpriteBankSet) + 0x1c8;
     *((u8 *)part + 0x2d) = tag;
     ResetSpriteFrameTimer(part);
     ResetSpriteFrameIndex(part);
@@ -91,7 +91,7 @@ void SpawnDoubleJumpPower(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     register u8 field0A asm("r6") = 0x23;
     struct actor *part = CreateSpriteObj(arg0, arg1, arg2, arg3);
 
-    *(void **)((u8 *)part + 0x20) = (u8 *)(**gUnknown_030012D0) + 0x1c8;
+    *(void **)((u8 *)part + 0x20) = (u8 *)(**gSpriteBankSet) + 0x1c8;
     *((u8 *)part + 0x2d) = tag;
     ResetSpriteFrameTimer(part);
     ResetSpriteFrameIndex(part);
@@ -108,7 +108,7 @@ void SpawnTurboRunPower(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     register u8 field0A asm("r6") = 0x26;
     struct actor *part = CreateSpriteObj(arg0, arg1, arg2, arg3);
 
-    *(void **)((u8 *)part + 0x20) = (u8 *)(**gUnknown_030012D0) + 0x1c8;
+    *(void **)((u8 *)part + 0x20) = (u8 *)(**gSpriteBankSet) + 0x1c8;
     *((u8 *)part + 0x2d) = tag;
     ResetSpriteFrameTimer(part);
     ResetSpriteFrameIndex(part);
@@ -132,7 +132,7 @@ void SpawnStopwatch(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     if (IsCrystalSaved(gLevelState)) {
         register struct actor *part asm("r4") = CreateStopwatch(arg0, arg1, arg2, arg3);
 
-        *(void **)((u8 *)part + 0x20) = (u8 *)(**gUnknown_030012D0) + 0x1b0;
+        *(void **)((u8 *)part + 0x20) = (u8 *)(**gSpriteBankSet) + 0x1b0;
         {
             register u8 tag asm("r0") = 0;
             register u8 *addr asm("r1") = (u8 *)part + 0x2d;
@@ -176,7 +176,7 @@ void SpawnBlueGem(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     tag = 4;
     field0A = 0x21;
     part = CreateSpriteObj(arg0, arg1, arg2, arg3);
-    *(void **)((u8 *)part + 0x20) = (u8 *)(**gUnknown_030012D0) + 0x180;
+    *(void **)((u8 *)part + 0x20) = (u8 *)(**gSpriteBankSet) + 0x180;
     *((u8 *)part + 0x2d) = tag;
     ResetSpriteFrameTimer(part);
     ResetSpriteFrameIndex(part);
@@ -203,7 +203,7 @@ extern void SetCrateGemPos(void *self, s32 *point);
  * elsewhere in this file) and the exact two-instruction-pair truncation
  * is spelled out via inline asm instead, forcing the ROM's register
  * choice directly. */
-void sub_802209C(u32 arg0, u32 arg1, u32 arg2, u16 arg3)
+void SpawnCrateGemMarker(u32 arg0, u32 arg1, u32 arg2, u16 arg3)
 {
     register u32 rx asm("r1") = arg1;
     register u32 ry asm("r2") = arg2;
@@ -225,14 +225,14 @@ void sub_802209C(u32 arg0, u32 arg1, u32 arg2, u16 arg3)
 /* Same overall spawn shape as `SpawnBodySlamPower`'s family above, but with
  * the master-table record index (`index`), tag (`+0x2d`) and `+0xa`
  * field all taken as *runtime* parameters instead of fixed constants
- * (matches `sub_8025BAC`'s already-documented `param1*12` runtime-
+ * (matches `SpawnEffectPart`'s already-documented `param1*12` runtime-
  * indexed access to `gSpriteBankTable`'s record array, docs/
  * rom_map.md). */
 void *sub_80220C4(u32 index, u32 tag, u32 field0A, u32 cx, u16 cy, u16 cw, u16 ch)
 {
     struct actor *part = CreateSpriteObj(cx, cy, cw, ch);
 
-    *(void **)((u8 *)part + 0x20) = (u8 *)(**gUnknown_030012D0) + index * 12;
+    *(void **)((u8 *)part + 0x20) = (u8 *)(**gSpriteBankSet) + index * 12;
     *((u8 *)part + 0x2d) = (u8)tag;
     ResetSpriteFrameTimer(part);
     ResetSpriteFrameIndex(part);
@@ -263,16 +263,16 @@ void nullsub_22(void)
 {
 }
 
-extern void *sub_801E990(u32 arg0, u16 arg1, u16 arg2, u16 arg3);
+extern void *SpawnStartMarker(u32 arg0, u16 arg1, u16 arg2, u16 arg3);
 extern struct actor *gPlayer;
 
-/* Plain tail-call trampoline to `sub_801E990` - still raw in this same
+/* Plain tail-call trampoline to `SpawnStartMarker` - still raw in this same
  * file (top of asm/code_3_2_17_1e990.s, out of this chunk's scope), a
  * position/state-write slot on the hot camera/viewport struct
  * (docs/rom_map.md's "unified ~92-slot table" writeup). */
 void sub_802218C(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    sub_801E990(arg0, arg1, arg2, arg3);
+    SpawnStartMarker(arg0, arg1, arg2, arg3);
 }
 
 /* Writes a Q8.8 `{x, y}` position straight into `gPlayer`
@@ -288,7 +288,7 @@ void sub_80221A4(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 /* Same trampoline as `sub_802218C` above. */
 void sub_80221BC(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    sub_801E990(arg0, arg1, arg2, arg3);
+    SpawnStartMarker(arg0, arg1, arg2, arg3);
 }
 
 /* Same shape as `sub_80221A4` above. */
@@ -315,8 +315,8 @@ void DestroyEntitySpawner(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     }
 }
 
-extern void sub_8025D6C(void *self);
-extern void sub_8025D4C(void *self, void *base, s32 count);
+extern void InitEntitySpawner(void *self);
+extern void SetEntitySpawnerTable(void *self, void *base, s32 count);
 extern u8 gEntitySpawnFuncs[];
 
 /* Allocates an 8-byte `{table_base, count}` descriptor
@@ -325,7 +325,7 @@ extern u8 gEntitySpawnFuncs[];
  * at the unified 92-slot dispatch array this whole chunk lives
  * inside. Ignores all its own parameters (matches the ROM, a
  * `push {r4, lr}` prologue with no truncation at all). Like
- * `InitLevelState`'s `nullsub_2`/`nullsub_1` calls, `sub_8025D6C` is
+ * `InitLevelState`'s `nullsub_2`/`nullsub_1` calls, `InitEntitySpawner` is
  * void and the ROM leaves the freshly-allocated pointer in `r0`
  * across the call rather than saving it - same inline-asm technique. */
 void CreateEntitySpawner(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
@@ -333,12 +333,12 @@ void CreateEntitySpawner(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     void **addr = &gEntitySpawner;
     register void *obj asm("r0") = OperatorNew(8);
 
-    asm volatile("bl sub_8025D6C" : "+r" (obj) :: "r1", "r2", "r3", "lr", "cc");
+    asm volatile("bl InitEntitySpawner" : "+r" (obj) :: "r1", "r2", "r3", "lr", "cc");
     *addr = obj;
-    sub_8025D4C(obj, gEntitySpawnFuncs, 0x5c);
+    SetEntitySpawnerTable(obj, gEntitySpawnFuncs, 0x5c);
 }
 
-extern void *sub_80016DC(u32 size);
+extern void *IwramAlloc(u32 size);
 extern struct AudioContext *InitAudioContext(struct AudioContext *self);
 extern void EnableMusicVCountIrq(void);
 extern void SetSfxVolume(void *arg0, u16 arg1);
@@ -357,7 +357,7 @@ extern struct oam_shadow_buffer *gOamBuffer;
 extern struct oam_shadow_buffer *InitOamBuffer(struct oam_shadow_buffer *arg0);
 extern struct vram_upload_cursor *gObjVramCursor;
 extern struct vram_upload_cursor *InitObjVramCursor(struct vram_upload_cursor *self, s32 count);
-extern void *gUnknown_03001304;
+extern void *gInput;
 extern struct hud_fx_queue *InitPaletteCycles(struct hud_fx_queue *self);
 extern u8 gDispcnt[2];
 extern void SetObjMapping1D(void);
@@ -377,19 +377,19 @@ extern u8 gSpriteBankTable[];
  *
  * Several of these constructions call a *void*-returning helper
  * (`nullsub_2`, `nullsub_1`, `InitPaletteCache`, `ClearKeys`,
- * `sub_8025A5C`) immediately after allocating the block, then store
+ * `InitEntityFlags`) immediately after allocating the block, then store
  * *that same allocation* without reloading it - relying on the real
  * ROM function leaving the allocated pointer in `r0` untouched (true
  * of each one's real body, which never writes r0 for anything else).
  * A plain C call can't assume that (any call conservatively clobbers
  * r0-r3), so each is spelled with the pointer pinned to r0 across an
- * inline-asm `bl`, the same technique used for `sub_8023674`'s
+ * inline-asm `bl`, the same technique used for `ShowCompanyLogos`'s
  * `nullsub_7` call (docs/matching/issue-37-game-loop-234e8.md). */
 void *InitLevelState(void *self)
 {
     {
         void **addr = (void **)&gAudioContext;
-        register void *audio asm("r0") = sub_80016DC(0x2094);
+        register void *audio asm("r0") = IwramAlloc(0x2094);
 
         asm volatile("bl InitAudioContext" : "+r" (audio) :: "r1", "r2", "r3", "lr", "cc");
         *addr = audio;
@@ -406,7 +406,7 @@ void *InitLevelState(void *self)
         *addr = tmp;
     }
     {
-        void ****addr = &gUnknown_030012D0;
+        void ****addr = &gSpriteBankSet;
         register void *tmp asm("r0") = OperatorNew(4);
 
         asm volatile("bl nullsub_1" : "+r" (tmp) :: "r1", "r2", "r3", "lr", "cc");
@@ -448,7 +448,7 @@ void *InitLevelState(void *self)
         *addr = InitObjVramCursor(OperatorNew(0xc), 0);
     }
     {
-        void **addr = (void **)&gUnknown_03001304;
+        void **addr = (void **)&gInput;
         register void *tmp asm("r0") = OperatorNew(4);
 
         asm volatile("bl ClearKeys" : "+r" (tmp) :: "r1", "r2", "r3", "lr", "cc");
@@ -458,7 +458,7 @@ void *InitLevelState(void *self)
         void **addr = (void **)&gEntityFlags;
         register void *tmp asm("r0") = OperatorNew(0x81 << 3);
 
-        asm volatile("bl sub_8025A5C" : "+r" (tmp) :: "r1", "r2", "r3", "lr", "cc");
+        asm volatile("bl InitEntityFlags" : "+r" (tmp) :: "r1", "r2", "r3", "lr", "cc");
         *addr = tmp;
     }
     {

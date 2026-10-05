@@ -135,7 +135,7 @@ extern const struct sprite_anim gSpriteBank09Anims[1];
 extern const struct sprite_frame *const gSpriteBank09Frames[14];
 
 /* The root of the system: InitLevelState (graphics_loading_21d80.c) points
- * *gUnknown_030012D0 here. GetSpriteTileBase returns tileBase;
+ * *gSpriteBankSet here. GetSpriteTileBase returns tileBase;
  * InitLevelState and RunPauseMenu (settings_menu15.c) build the tile-asset
  * cache from tilePool/tilePoolCount. */
 const struct sprite_bank_table gSpriteBankTable = {
@@ -146,7 +146,7 @@ const struct sprite_bank_table gSpriteBankTable = {
     .tilePoolCount = sizeof(gFixedObjTiles) / 32,
 };
 
-/* Bank N is `**gUnknown_030012D0 + 12 * N` in the code (a part's +0x20). */
+/* Bank N is `**gSpriteBankSet + 12 * N` in the code (a part's +0x20). */
 const struct sprite_bank gSpriteBanks[56] = {
     [0] = { gSpriteBank00Anims, gSpriteBank00Frames, 0, ARRAY_COUNT(gSpriteBank00Anims) },
     [1] = { gSpriteBank01Anims, gSpriteBank01Frames, 0, ARRAY_COUNT(gSpriteBank01Anims) },

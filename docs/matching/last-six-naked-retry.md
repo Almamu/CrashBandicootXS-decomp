@@ -6,12 +6,12 @@ in place.
 
 | Function | File | Before | Now | Status |
 |---|---|---|---|---|
-| `sub_8002114` (#4) | `src/system/link_cable.c` | 16 | 6 (old_agbcc) | Draft updated |
-| `sub_8002E20` (#5) | `src/graphics/settings_menu8a2.c` | 104 | 97 (4 bytes long) | Draft updated, both loops now match |
+| `HandleLinkSerial` (#4) | `src/system/link_cable.c` | 16 | 6 (old_agbcc) | Draft updated |
+| `ReceiveSaveTransferChunk` (#5) | `src/graphics/settings_menu8a2.c` | 104 | 97 (4 bytes long) | Draft updated, both loops now match |
 | `SpawnFlamethrowerLabAssistant` (#31) | `src/graphics/graphics_loading_1feec.c` | 62 | 62 | Draft unchanged, note added |
 | `DrawPauseFraction` (#7) | `src/graphics/settings_menu16.c` | 73 | 73 | Draft unchanged, note added |
 
-## `sub_8002114`: nibble test closed (16 to 6)
+## `HandleLinkSerial`: nibble test closed (16 to 6)
 
 The ROM's `lsls #28` for `q[0]`'s low nibble comes before the
 right-hand sum, and its `lsrs #28` comes right before the compare. The
@@ -55,10 +55,10 @@ What is left is the first receive loop (6 halfwords):
   for the counter insn, so the r7 must come from later in reload. This
   was not traced further.
 
-## `sub_8002E20`: loops matched (104 to 97)
+## `ReceiveSaveTransferChunk`: loops matched (104 to 97)
 
 Both copy loops now match instruction for instruction. That uses the
-same shapes as `sub_8002114`'s session pop: a `rd = &ch->readPos`
+same shapes as `HandleLinkSerial`'s session pop: a `rd = &ch->readPos`
 pointer for the bounds test and the wrap loop, and
 `nw = 0; if (old != 0x7f) nw = old + 1;` so the 0 is set inside the loop
 (the ROM's `movs r0, #0` before each `cmp #0x7f`). The count test is
@@ -112,5 +112,5 @@ uses into one pseudo.
 
 These are in the scratchpad's `last6/`: `d.py`, `var.py`, `rtl.sh` and
 `fnrtl.py` (copies of `last4/` pointed at this worktree), and the
-variant specs `s1`-`s11` (`sub_8002114`), `e1`-`e9` (`sub_8002E20`),
+variant specs `s1`-`s11` (`HandleLinkSerial`), `e1`-`e9` (`ReceiveSaveTransferChunk`),
 `g1` (`SpawnFlamethrowerLabAssistant`) and `m1` (`DrawPauseFraction`).

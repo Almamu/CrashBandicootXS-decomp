@@ -82,7 +82,7 @@ extern void OperatorDelete(void *self);
 /* If bit 0 of `flags` is set, forwards to `OperatorDelete` - same
  * conditional-destroy shape as `sub_8025D54`/game_loop4.c's
  * near-identical function. */
-void sub_8025A44(void *self, s32 flags)
+void DestroyEntityFlags(void *self, s32 flags)
 {
     if (flags & 1) {
         OperatorDelete(self);
@@ -90,7 +90,7 @@ void sub_8025A44(void *self, s32 flags)
 }
 
 /* Zeroes the two Q8 position words at `self+0`/`self+4`. */
-void sub_8025A5C(void *self)
+void InitEntityFlags(void *self)
 {
     *(s32 *)self = 0;
     *(s32 *)((u8 *)self + 4) = 0;

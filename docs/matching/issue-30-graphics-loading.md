@@ -45,7 +45,7 @@ REG_BG0CNT = GetBgSetupControl(buf);
 
 `FitScaledSprite`/`DrawScaledSprite` (the tile-cell-selection and viewport-
 centering helpers `docs/rom_map.md` already read) and the rest of the
-chunk - a sound-trigger dispatcher (`sub_801E990`) plus two more large
+chunk - a sound-trigger dispatcher (`SpawnStartMarker`) plus two more large
 families (a "trigger effect type N" twin family shaped just like the
 already-parked `SpawnRedGemPlatform`-`SpawnBlueGemPlatform` in `trigger_effect.c`, and
 the "text label as sprite tiles" family `SpawnPufferfish` anchors) - were
@@ -71,7 +71,7 @@ not attempted this pass; see "Left raw" below.
 - **`sub_801E964`**, **`sub_801E96C`**
   (`src/graphics/graphics_package_1e964.c`) - the last function in this
   object needed an explicit trailing `asm(".align 2, 0")` to zero-pad
-  the 2-byte gap up to `sub_801E990`'s 4-aligned start, instead of this
+  the 2-byte gap up to `SpawnStartMarker`'s 4-aligned start, instead of this
   compiler's default Thumb NOP-fill (`0x46C0`) for an implicit end-of-
   object pad - the `matching_decomp_alignment_fix` technique.
 
@@ -113,7 +113,7 @@ are visible in `sub_801E8F8`/`sub_801E96C`'s final C.
 `LoadGraphicsPackage`, `FitScaledSprite`, `DrawScaledSprite` (all three already
 characterized in `docs/rom_map.md`, real bytes now in
 `asm/code_3_2_17_188d0.s` and the new `asm/code_3_2_17_1e644.s`) plus
-`sub_801E990`, `SpawnCrystal`, `SpawnCrateGem`, `sub_801EBF0`,
+`SpawnStartMarker`, `SpawnCrystal`, `SpawnCrateGem`, `sub_801EBF0`,
 `SpawnRedGem`, `SpawnGreenGem`, `SpawnYellowGem`, `sub_801EF0C`,
 `SpawnVulture`, `SpawnVenusFlytrap`, `sub_801F2BC`, `SpawnBlowgunTribesman`,
 `SpawnPenguin`, `SpawnSeal`, `SpawnPolarBear`, `SpawnPufferfish` (real bytes
@@ -141,7 +141,7 @@ a one-instruction-shorter mask rematerialization for `sub_801E950`)
 never responded to further plain-C restructuring, so both were
 converted to `NAKED` and their ROM disassembly transcribed
 instruction-for-instruction - the same escape hatch this project
-already established for `sub_8001CB8`/`sub_8001DB4`
+already established for `MakeLinkHandshakeId`/`ResetLinkSessionState`
 (`src/system/link_cable.c`, see
 `docs/matching/issue-4-sio-settings-sync.md`'s "The general strategy
 for the rest" section).
@@ -307,7 +307,7 @@ crashbandicootxs.elf crashbandicootxs.gba crashbandicootxs.map && make
 compare` (`La suma coincide` - the guarded real bytes still assemble
 unchanged).
 
-`sub_801E990` (the sound-trigger dispatcher docs/rom_map.md already
+`SpawnStartMarker` (the sound-trigger dispatcher docs/rom_map.md already
 partially read - 3 Q8.8-shifted x/y/z args, a `gLevelState`-gated
 position/flag write into `gPlayer+0x28`, then a conditional
 `PlaySfx`) was read in full this pass too, but not attempted: its second
@@ -321,9 +321,9 @@ issue's "sound-trigger dispatch plus the trigger-effect/text-popup-
 spawner families" remainder (`SpawnCrystal` onward, unchanged from the
 third pass's characterization), for whoever picks this up next.
 
-## Fifth pass: `sub_801E990` - matched semantics, parked (NAKED transcription)
+## Fifth pass: `SpawnStartMarker` - matched semantics, parked (NAKED transcription)
 
-Picked up `sub_801E990` (the sound-trigger dispatcher the third pass
+Picked up `SpawnStartMarker` (the sound-trigger dispatcher the third pass
 flagged its unresolved helper calls for). All five previously-unread
 helpers turned out to already be matched elsewhere in the tree as
 plain one-line field accessors on the same `gLevelState`-rooted
@@ -393,7 +393,7 @@ the now-trimmed raw file (which starts at `SpawnCrystal` instead).
 remaining register-choice gap closed - see
 [naked-sub_801e990-matched.md](./naked-sub_801e990-matched.md) for the
 fix (modeling the r3-pinned local as the *address of*
-`gPlayer` rather than its dereferenced value). `sub_801E990`
+`gPlayer` rather than its dereferenced value). `SpawnStartMarker`
 is now real, fully matched C; the `NAKED` wrapper and `#if
 NON_MATCHING` toggle described above have been removed from
 `graphics_loading_1e990.c`.
@@ -417,13 +417,13 @@ next:
   byte-exact C** - `CreateMovingSprite` allocation, `CreateEnemyCtrl` style
   lookup, two `_call_via_r2` trampoline calls, and the same
   `gEntityFlags`-rooted "collected bits" pack this pass's
-  `sub_801E990` write-up above also resolves the table shape for. This
+  `SpawnStartMarker` write-up above also resolves the table shape for. This
   is the more promising real-C target of the two remaining families -
   `SpawnSquid`'s own matched C is the template to start from.
 
 Left raw for whoever picks this up next; `report_units.py`'s entry for
 this address range now points at `SpawnCrystal` (the new start of
-`asm/code_3_2_17_1e990.s`) instead of `sub_801E990` and calls out both
+`asm/code_3_2_17_1e990.s`) instead of `SpawnStartMarker` and calls out both
 families explicitly.
 
 Verified via a full clean `rm -rf build && make NON_MATCHING=1 report`
@@ -515,7 +515,7 @@ its correct, lower ROM address - the opposite of the pre-existing
 order, which had the asm file first back when it supplied both
 functions' bytes. `tools/report_units.py`'s single combined entry for
 this pair was split into two: `(0x0801E688, None, ...)` (matching the
-`InitBgSetup`/`sub_801E990` precedent - a NAKED transcription doesn't
+`InitBgSetup`/`SpawnStartMarker` precedent - a NAKED transcription doesn't
 count as "matched" for this project's per-file tracking, even though
 it's byte-correct) and `(0x0801E788, "src/graphics/graphics_package_1e688.o", ...)`
 (unchanged treatment, still pointing at the `.c` file's `#if
@@ -561,7 +561,7 @@ already fully correct per the third pass, so the ROM disassembly
 bytes) was transcribed directly into a `NAKED void LoadGraphicsPackage`
 function, reusing the exact hand-written `push`/`mov`-dance/`push`/
 `sub sp` prologue and `add sp`/`pop`/`mov`-dance/`pop`/`pop`/`bx`
-epilogue shape already established for `FitScaledSprite`/`sub_801E990` in
+epilogue shape already established for `FitScaledSprite`/`SpawnStartMarker` in
 this cluster. Verified via an isolated `cpp`+`agbcc` compile,
 `arm-none-eabi-as` assemble, and a direct `arm-none-eabi-objcopy
 --only-section=.text` byte comparison against the ROM bytes extracted
@@ -581,7 +581,7 @@ provides the real function (matching `FitScaledSprite`'s precedent, just
 without a reorder since this function was already the C file's sole
 export at that link position). `tools/report_units.py`'s entry for
 `0x0801E578` now points at `None` (NAKED, not "matched" - the
-`InitBgSetup`/`FitScaledSprite`/`sub_801E990` convention) instead of the
+`InitBgSetup`/`FitScaledSprite`/`SpawnStartMarker` convention) instead of the
 `.o` file.
 
 Verified via a full clean `rm -rf build && make NON_MATCHING=1 report`
@@ -645,7 +645,7 @@ correct position (immediately after `graphics_package_1e640.o`, before
 `graphics_package_1e8f8.o`) since it already supplied `FitScaledSprite`'s
 real bytes at that same link position. `tools/report_units.py`'s entry
 for `0x0801E788` now points at `None` (NAKED, not "matched" - the
-`InitBgSetup`/`FitScaledSprite`/`sub_801E990`/`LoadGraphicsPackage`
+`InitBgSetup`/`FitScaledSprite`/`SpawnStartMarker`/`LoadGraphicsPackage`
 convention) instead of the `.o` file.
 
 This closes out every function this issue's original 25-function list
@@ -687,15 +687,15 @@ spawners reached through the trigger dispatch table at
 - `SpawnCrystal`/`SpawnCrateGem`/`sub_801EBF0` test bit 0/1/2 of the byte
   `GetCurrentLevelFlags(gLevelState)` returns a pointer to. If it is clear
   they spawn a `CreateSpriteObj` part, point its animation bank at
-  `**gUnknown_030012D0 + 0x1BC` (`SpawnCrystal`) or `+ 0x180`, set its
+  `**gSpriteBankSet + 0x1BC` (`SpawnCrystal`) or `+ 0x180`, set its
   tag (+0x2D) and type byte (+0x0A: 0x1B/0x1D/0x1E), run the
   `ResetSpriteFrameTimer`/`ResetSpriteFrameIndex`/`SetSpriteAnimDone` trio, store `GetSpriteAnimPaletteSlot`'s
   frame nibble and register the part with the `gUnknown_030012EC`
   manager. `SpawnCrateGem` additionally spawns effect 0x2B through
-  `sub_8025BAC(gEntitySpawner, ...)` and sets bits 0-1 of its +0x28
+  `SpawnEffectPart(gEntitySpawner, ...)` and sets bits 0-1 of its +0x28
   to 1 and clears its "hidden" flag bit.
 - `SpawnRedGem`/`SpawnGreenGem`/`SpawnYellowGem` first call
-  `sub_80233B4(gLevelState)`; if that returns 1 they hand the
+  `GetBossIndex(gLevelState)`; if that returns 1 they hand the
   spawn to `sub_8018D70` (`actor_part_188d0.c`) with kind 0/1/2.
   Otherwise they test bit 0/2/1 of `gLevelState+2` and spawn the
   same way (tags 3/2/0, types 0x1F/0x20/0x22).
@@ -708,11 +708,11 @@ The only things the C has to get right:
   variable assigned before the call; a literal at the store site is
   loaded at the store instead.
 - **The bit's type.** `SpawnCrateGem`/`SpawnYellowGem` keep the tested bit
-  (it is stored as the tag, or passed on to `sub_8025BAC`) and the ROM
+  (it is stored as the tag, or passed on to `SpawnEffectPart`) and the ROM
   narrows it with `lsls #24; lsrs #24`, so it is `u8`; `SpawnCrystal`
   keeps it unnarrowed, so it is `s32` there.
 - **Branch layout of the mode-1 hand-off.** The ROM tests
-  `sub_80233B4(...) == 1` with a `beq` to the `sub_8018D70` call placed
+  `GetBossIndex(...) == 1` with a `beq` to the `sub_8018D70` call placed
   after the spawn body, which is `if (... != 1) { spawn } else {
   sub_8018D70(...); }` - the other nesting puts the hand-off first.
 

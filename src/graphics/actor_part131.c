@@ -347,7 +347,7 @@ extern void CommitCreditsFrame(void *unused);
 extern void UpdateStarfield(void *starfield);
 extern void FadeOutMusic(struct AudioContext *self, u32 value);
 extern struct AudioContext *gAudioContext;
-extern void *gUnknown_03001304;
+extern void *gInput;
 
 struct held_pressed_pair {
     u16 held;
@@ -369,7 +369,7 @@ void CreditsLoop(struct map_screen *self)
     s32 i;
 
     while (1) {
-        UpdateKeys(gUnknown_03001304);
+        UpdateKeys(gInput);
         {
             register struct held_pressed_pair *p asm("r1") = &gKeys;
             register s32 mask asm("r0") = 9;

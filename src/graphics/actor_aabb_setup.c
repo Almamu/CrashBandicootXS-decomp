@@ -47,7 +47,7 @@ extern void OperatorDelete(void *self);
  * constructors - the same "set one field of a passed-in struct to a
  * ROM data pointer, then conditionally call OperatorDelete based on a bit
  * in the second argument" shape documented at length in docs/rom_map.md
- * for the ~93-entry gStaticData_087E3BEC-family table (these three
+ * for the ~93-entry gEntityVtable-family table (these three
  * entries - gLargeFontVtable/4D64/4DAC, each 0x48 bytes - are
  * further members of that same family). Unusually, each writes to
  * `self+0x130` TWICE in a row with two DIFFERENT table pointers, the

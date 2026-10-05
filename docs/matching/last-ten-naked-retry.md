@@ -7,7 +7,7 @@ closed and one draft got much closer.
 | Function | File | Before | Now | Status |
 |---|---|---|---|---|
 | `DrawPauseFraction` (#7) | `src/graphics/settings_menu16.c` | 14 | match (both compilers) | **Closed** |
-| `sub_8001DB4` (#4) | `src/system/link_cable_01db4.c` (split) | 136 | 51 (same size, old_agbcc + `-fno-rerun-loop-opt`) | Draft updated |
+| `ResetLinkSessionState` (#4) | `src/system/link_cable_01db4.c` (split) | 136 | 51 (same size, old_agbcc + `-fno-rerun-loop-opt`) | Draft updated |
 | `SpawnFlamethrowerLabAssistant` (#31) | `src/graphics/graphics_loading_1feec.c` | 4 | 4 | Note added |
 
 ## `DrawPauseFraction`: closed
@@ -41,14 +41,14 @@ Things that didn't help (before the fix): hard-register holds on
 r0-r3 around `ox`'s birth (14-74 hw), a `u32 x` local for the second
 posX, and making `ox` global with a volatile `"+r"` tail.
 
-## `sub_8001DB4`: 136 to 51
+## `ResetLinkSessionState`: 136 to 51
 
-**Split.** `-fno-rerun-loop-opt` changes the matching `sub_8002114`, so
+**Split.** `-fno-rerun-loop-opt` changes the matching `HandleLinkSerial`, so
 `link_cable.c` is now three objects, all still on `OLD_AGBCC_OBJS`:
 
-- `link_cable.c`: `sub_8001CB8`, `LinkStop`
-- `link_cable_01db4.c`: `sub_8001DB4` only
-- `link_cable_01f50.c`: `sub_8001F50`, `sub_8002114`
+- `link_cable.c`: `MakeLinkHandshakeId`, `LinkStop`
+- `link_cable_01db4.c`: `ResetLinkSessionState` only
+- `link_cable_01f50.c`: `UpdateLinkSession`, `HandleLinkSerial`
 
 The structs moved to `include/link_session.h`. The Makefile's new
 `NO_RERUN_LOOP_OPT_OBJS` list gives `link_cable_01db4.o` the flag. The
@@ -64,7 +64,7 @@ NAKED body doesn't depend on it; the flag is there for the draft.
   it), with the destination as
   `((struct link_player *)((u8 *)self + 8))[i + 1].id[j * 2]`. That form
   gives the ROM's `i + 1` precompute and its per-pass `self + 0xd0`.
-- **Source pointer.** `id = self->id` is passed to `sub_8001CB8` and
+- **Source pointer.** `id = self->id` is passed to `MakeLinkHandshakeId` and
   copied into a `src` local inside the outer loop. Loop motion moves the
   copy out. That is the ROM's `str r4, [sp, #4]` after the hoisted
   invariants.
@@ -130,9 +130,9 @@ These are in the scratchpad's `last10/`:
 - `d.py`/`var.py`/`rtl.sh`, as before. `d.py` passes `-f...` flags
   through to the compiler.
 - `regs.sh`: local and global register dispositions per variant.
-- `l3.py`: the composable sub_8001DB4 variant generator. Filter it with
+- `l3.py`: the composable ResetLinkSessionState variant generator. Filter it with
   `FLT='key=a|b,...'`.
-- `w.c` and `w1.py`: the 51-hw sub_8001DB4 base and later experiments.
+- `w.c` and `w1.py`: the 51-hw ResetLinkSessionState base and later experiments.
 - `h5.py`/`h6.py`: the DrawPauseFraction spellings that matched.
 
 ## Verification

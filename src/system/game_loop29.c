@@ -26,7 +26,7 @@ struct level_state
 };
 
 extern struct level_state *gLevelState;
-extern void ***gUnknown_030012D0;
+extern void ***gSpriteBankSet;
 
 extern struct spawn_part *CreateExtraLife(u16 arg0, u16 arg1, u16 arg2, s32 arg3);
 extern void ResetSpriteFrameTimer(struct spawn_part *part);
@@ -58,7 +58,7 @@ struct spawn_part *DropExtraLife(void *unused0, u32 x, u32 y, u32 p3, u32 p5, u3
         part->unk_49 = p3;
         part->unk_4A = p5;
         part->unk_4B = state;
-        part->anim = (u8 *)**gUnknown_030012D0 + 0x8d * 4;
+        part->anim = (u8 *)**gSpriteBankSet + 0x8d * 4;
         SetPartTag(part, 0xa);
         ResetSpriteFrameTimer(part);
         ResetSpriteFrameIndex(part);

@@ -298,7 +298,7 @@ void sub_801AB98(struct gobj *selfArg, void *unused)
                 pos.x = gPlayer->x;
             }
         }
-        sub_8007398(gPlayer, pos.x, PosPtr(&pos)->y);
+        SetEntityPos(gPlayer, pos.x, PosPtr(&pos)->y);
         if (flags)
         {
             Call68(gPlayer, 0, 0xC, flags);

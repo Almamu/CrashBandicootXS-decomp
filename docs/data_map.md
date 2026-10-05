@@ -73,7 +73,7 @@ the appendix.
 | `082B91D0`-`082BF120` | 24,400 | per-room level data, 8 rooms | as block 1 | high | **done** (C) |
 | `082BF120`-`084A4660` | 1,987,904 | sprite tile pool for the 56 sprite banks | `graphics_7634.c`/`graphics_73dc.c` (`GetSpriteTileBase` + frame offset) | high | **done** (grit) |
 | `084A4660`-`084A5600` | 4,000 | 125 fixed 4bpp tiles | `RunPauseMenu` pool, `GetPaletteSlot` | high | **done** (grit) |
-| `084A5600`-`084C0006` | 109,062 | sprite-bank table ("master asset table"): header, 56 banks, 2,429 frames | `RunPauseMenu`, `InitLevelState`, every `**gUnknown_030012D0` user | high | **converted** (C) |
+| `084A5600`-`084C0006` | 109,062 | sprite-bank table ("master asset table"): header, 56 banks, 2,429 frames | `RunPauseMenu`, `InitLevelState`, every `**gSpriteBankSet` user | high | **converted** (C) |
 | `084C0006`-`0855BCB4` | 638,126 | GAX2 sound-effect data set: 88 instruments, 87 8-bit samples, sample table, the SFX voice handler type | `PlaySfx`/`GAX_fx_ex` voices via `GaxSongHeader.sfxTypes` (`StartSong`) | high | **converted** (`gax_audio.py --sfx`) |
 | `085A4C5C`-`086ECCD2` | 28,979 | 111 labels between the built intro/tileset1 LZ77 blobs: GAX2 tables and strings, libgcc `__clz_tab` x2, EEPROM tables, 23 intro palettes, 67 alignment pads | direct / slide packages | high | easy (the pads and palettes **done**) |
 | `086C127C`-`086D9CAC` | 100,912 | raw level asset (room `0825E7DC`) | `LoadRoom` -> `SetCollisionSource`/`SetBgStreamerSource` | high | **done** (decoded tilemaps) |
@@ -333,7 +333,7 @@ see [levels.md](./levels.md).
 This is the "master asset table" of docs/rom_map.md. Its structure,
 from the matched readers (`RunPauseMenu` in `settings_menu15.c`, `GetSpriteTileBase`/
 `GetSpriteFrame`/`GetSpriteAnimPaletteSlot`/`GetSpriteAnimPaletteId` in `actor_part4.c`-`actor_part6.c`,
-`graphics_7634.c`, and the `**gUnknown_030012D0 + N` users):
+`graphics_7634.c`, and the `**gSpriteBankSet + N` users):
 
 ```
 0x084A5600 header (0x10):
@@ -342,7 +342,7 @@ from the matched readers (`RunPauseMenu` in `settings_menu15.c`, `GetSpriteTileB
     u8 *tilePool            = 0x084A4660   (125 fixed tiles)
     u16 nbanks = 56, u16 npool = 125
 0x084A5610 bank_record[56] (12 B): { anim_record *anims; frame_desc **frames; u16 unk; u16 nanims; }
-    (every "**gUnknown_030012D0 + 0x27C"-style offset in src/ is 12*N: bank N)
+    (every "**gSpriteBankSet + 0x27C"-style offset in src/ is 12*N: bank N)
 per bank, back to back:
     anim_record[nanims] (0x1C): u16 *keyframes @0, two boxes @4/@0xC, u8 tileRecord @0x14 (GetPaletteSlot id),
                                 u8 duration @0x15, u8 frameCount @0x16, u8 flags @0x17 (bit 1 = loop)
@@ -641,12 +641,12 @@ vtable shapes).
 | `0816A810` | 0x10 | u8[16] d-pad direction lookup. **Converted** (`src/data/boss_pictures_167ad4.c`) | `GetDpadDirection` | medium | done |
 | `0816A820` | 0x200 | s16[256] sine/direction table (`s16` x 256). **Converted** (`src/data/boss_pictures_167ad4.c`) | `DrawPlayer`, `sub_800C8F8`, `UpdateEnemyBob` +16 | high | done |
 | `0816AA20` | 0x4C | song table: 19 pointers into the music block, `gGaxMusicData + GAX_SONG_<NAME>` from the generated `gax_songs.h`. **Converted** (`src/data/song_table_16aa20.c`) | `StartSong` | high | done |
-| `0816AF10` | 0x228 | CRC-16/CCITT lookup table (poly 0x1021, u16[256]) + the two link-cable pairing names "crash 1 <-> crash 2"/"crash 1 <-> crash 3" (`gStaticData_0816B110`/`0816B124`, which the IWRAM data `gUnknown_03000810`/`0814` points at). **Converted** (`src/data/link_crc_16af10.c`) | `sub_8001CB8`, `sub_8002114` | high | done |
-| `0816B138` | 0x2 | the text ">". **Converted** (`src/data/menu_tables_16b138.c`) | `sub_8003D3C` | medium | done |
-| `0816B13A` | 0x20 | table of u16; 1 word(s) look like ROM pointers (`u16` x 16). **Converted** (`src/data/menu_tables_16b138.c`) | `sub_800450C` | high | done |
-| `0816B15A` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16). **Converted** (`src/data/menu_tables_16b138.c`) | `sub_800450C` | high | done |
-| `0816B17A` | 0x20 | table of u16 (`u16` x 16). **Converted** (`src/data/menu_tables_16b138.c`) | `sub_800450C` | high | done |
-| `0816B19A` | 0x22 | table of u16 (`u16` x 17). **Converted** (`src/data/menu_tables_16b138.c`) | `sub_800450C` | high | done |
+| `0816AF10` | 0x228 | CRC-16/CCITT lookup table (poly 0x1021, u16[256]) + the two link-cable pairing names "crash 1 <-> crash 2"/"crash 1 <-> crash 3" (`gCrash2LinkText`/`0816B124`, which the IWRAM data `gCrash2LinkTextPtr`/`0814` points at). **Converted** (`src/data/link_crc_16af10.c`) | `MakeLinkHandshakeId`, `HandleLinkSerial` | high | done |
+| `0816B138` | 0x2 | the text ">". **Converted** (`src/data/menu_tables_16b138.c`) | `DrawYesNoPrompt` | medium | done |
+| `0816B13A` | 0x20 | table of u16; 1 word(s) look like ROM pointers (`u16` x 16). **Converted** (`src/data/menu_tables_16b138.c`) | `InitSaveMenuIcons` | high | done |
+| `0816B15A` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16). **Converted** (`src/data/menu_tables_16b138.c`) | `InitSaveMenuIcons` | high | done |
+| `0816B17A` | 0x20 | table of u16 (`u16` x 16). **Converted** (`src/data/menu_tables_16b138.c`) | `InitSaveMenuIcons` | high | done |
+| `0816B19A` | 0x22 | table of u16 (`u16` x 17). **Converted** (`src/data/menu_tables_16b138.c`) | `InitSaveMenuIcons` | high | done |
 | `0816B1BC` | 0x14 | table of s32 (`s32` x 5). **Converted** (`src/data/menu_tables_16b138.c`) | `DrawSaveMenuMain` | high | done |
 | `0816B1D0` | 0x14 | table of void* (`void*` x 5). **Converted** (`src/data/menu_tables_16b138.c`) | `DrawPauseMenuPageTitle` | high | done |
 | `0816B1E4` | 0x8 | table of struct icon_pos. **Converted** (`src/data/menu_tables_16b138.c`) | `InitPauseCrystalsPage`, `DrawPauseCrystalsPage` | high | done |
@@ -688,14 +688,14 @@ vtable shapes).
 | `0816BB6C` | 0x28 | entry set {entries, 0x100} + its 4 {a, b} entries (`gStaticData_0816BB74`). **Converted** (`src/data/object_tables_16bb6c.c`) | `ResetEnemyCtrl` | medium | done |
 | `0816BB94` | 0x4 | small constant (281e140a). **Converted** (`src/data/object_tables_16bb6c.c`) | `UpdateSlotCrate`, `CreateCrate` | medium | done |
 | `0816BB98` | 0x16 | table (element layout: see consumers). **Converted** (`src/data/object_tables_16bb6c.c`) | `OpenCheckpointCrate`, `BreakCrate`, `ExplodeCrate` | medium | done |
-| `0816BBAE` | 0x16 | table (element layout: see consumers). **Converted** (`src/data/object_tables_16bb6c.c`) | `BlastNearbyCrates`, `BreakCratesInArea`, `sub_8010908` | medium | done |
+| `0816BBAE` | 0x16 | table (element layout: see consumers). **Converted** (`src/data/object_tables_16bb6c.c`) | `BlastNearbyCrates`, `BreakCratesInArea`, `IsCrateKindBreakable` | medium | done |
 | `0816BBC4` | 0x16 | table (element layout: see consumers). **Converted** (`src/data/object_tables_16bb6c.c`) | `sub_800D040`, `DropCratesAbove`, `BlastNearbyCrates` +3 | medium | done |
 | `0816BBDA` | 0x16 | table (element layout: see consumers). **Converted** (`src/data/object_tables_16bb6c.c`) | `sub_0800D18C`, `BreakCrateInStack` | medium | done |
 | `0816BBF0` | 0xA8 | table of s32 (`s32` x 42). **Converted** (`src/data/object_tables_16bb6c.c`) | `sub_0800D18C` | high | done |
 | `0816BC98` | 0x268 | table of s32[7] (`s32[7]` x 22). **Converted** (`src/data/object_tables_16bb6c.c`) | `sub_0800D18C`, `sub_800E08C` | high | done |
 | `0816BF00` | 0x8 | small constant (0000010000000000). **Converted** (`src/data/object_tables_16bb6c.c`) | `sub_0800D18C` | medium | done |
-| `0816BF08` | 0xC | table of s32 (`s32` x 3). **Converted** (`src/data/object_tables_16bb6c.c`) | `sub_8011248` | high | done |
-| `0816BF14` | 0xC | table of struct three_words. **Converted** (`src/data/object_tables_16bb6c.c`) | `sub_801192C` | high | done |
+| `0816BF08` | 0xC | table of s32 (`s32` x 3). **Converted** (`src/data/object_tables_16bb6c.c`) | `UpdateExtraLifeHop` | high | done |
+| `0816BF14` | 0xC | table of struct three_words. **Converted** (`src/data/object_tables_16bb6c.c`) | `UpdateWumpaHop` | high | done |
 | `0816BF20` | 0x150 | pointer-to-member dispatch table: 42 x {0xFFFF0000, fn} (`struct act_pmf` x 42) | `UpdateActionCtrl` | high | easy |
 | `0816C070` | 0x20 | pointer table (8 data pointers) (`struct level_anim*` x 8) | `UpdatePlayerCtrl`, `sub_8016DDC`, `sub_80170EC` +2 | high | easy |
 | `0816C090` | 0x1C0 | `struct speed_table` (8 s32) + `struct level_anim[8][13]` (`gStaticData_0816C0B0`, the rows gStaticData_0816C070 points at). **Converted** (`src/data/speed_table_16c090.c`) | `sub_80159F8` | high | done |
@@ -719,7 +719,7 @@ vtable shapes).
 | `0816C418` | 0x40 | table of struct vec_pair | `sub_801A7AC` | high | easy |
 | `0816C458` | 0x8 | pointer table (1 data pointers) | `CreatePlatformMover` | high | easy |
 | `0816C460` | 0x24 | table of struct vec3. **Converted** (`src/data/velocity_16c460.c`) | `UpdatePlatformMover`, `sub_801B6EC`, `sub_801B734` +2 | high | done |
-| `0816C484` | 0x14 | table (element layout: see consumers); 3 word(s) look like ROM pointers | `sub_80047F8`, `InitPowerDialog`, `InitLevelSelect` +1 | medium | easy |
+| `0816C484` | 0x14 | table (element layout: see consumers); 3 word(s) look like ROM pointers | `LoadSaveMenuBg`, `InitPowerDialog`, `InitLevelSelect` +1 | medium | easy |
 | `0816C498` | 0x8 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c498.c`) | `InitLevelSelect` | high | done |
 | `0816C4A0` | 0x8 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c498.c`) | `InitLevelSelect` | high | done |
 | `0816C4A8` | 0x8 | table of struct xy_pair. **Converted** (`src/data/map_tables_16c498.c`) | `InitLevelSelect` | high | done |
@@ -756,8 +756,8 @@ vtable shapes).
 | `081725B4` (`gTerrainHeights1`) | 0x8 | name for heights[1] of terrain type 0 (alias). **Converted** (`src/data/terrain_1725a8.c`) | `GetSolidTerrainHeights` | medium | done |
 | `081725BC` (`gTerrainHeights2`) | 0x8 | name for heights[2] of terrain type 0 (alias). **Converted** (`src/data/terrain_1725a8.c`) | `GetSolidTerrainHeights` | medium | done |
 | `081725C4` (`gTerrainHeights3`) | 0x261C | heights[3] of terrain type 0 (alias); the old label ran on through the terrain table and then the game's UI text: 367 strings and the six 70-entry language tables `gUiTextEnglish`...`gUiTextDutch` (`src/data/ui_text_172cd4.c`). **Converted** (`src/data/terrain_1725a8.c, src/data/ui_text_172cd4.c`) | `GetSolidTerrainHeights` | medium | done |
-| `08174BE0` | 0x8C | table of u32 (`u32` x 35). **Converted** (`src/data/hud_fonts_174be0.c`) | `InitHud`, `sub_802732C` | high | done |
-| `08174C6C` | 0x118 | table of struct hud_pos. **Converted** (`src/data/hud_fonts_174be0.c`) | `InitHud`, `sub_802732C`, `sub_802757C` +2 | high | done |
+| `08174BE0` | 0x8C | table of u32 (`u32` x 35). **Converted** (`src/data/hud_fonts_174be0.c`) | `InitHud`, `ConfigureHudParts` | high | done |
+| `08174C6C` | 0x118 | table of struct hud_pos. **Converted** (`src/data/hud_fonts_174be0.c`) | `InitHud`, `ConfigureHudParts`, `UpdateHudBoss` +2 | high | done |
 | `08174D84` | 0x50 | HUD font A's characters in glyph order (a string, Latin-1). **Converted** (`src/data/hud_fonts_174be0.c`) | `InitSmallFont` | medium | done |
 | `08174DD4` | 0x3B4 | table (element layout: see consumers). **Converted** (`src/data/hud_fonts_174be0.c`) | `InitSmallFont` | medium | done |
 | `08175188` | 0x4C | HUD font B's characters in glyph order. **Converted** (`src/data/hud_fonts_174be0.c`) | `InitLargeFont` | medium | done |
@@ -949,7 +949,7 @@ vtable shapes).
 | `086E3541` | 0x3 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
 | `086EA0C9` | 0x3 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
 | `086ECCD2` | 0xF6F1A | 6 raw (unpacked) level assets, same format as 0x086C127C | `LoadRoom`, `SetCollisionSource`, `SetBgStreamerSource` +2 | high | **converted** (the 2 B pad is gbagfx's padding) |
-| `087E3BEC` | 0x58 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_80071E4`, `sub_800725C`, `sub_80073BC` +2 | high | easy |
+| `087E3BEC` | 0x58 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateEntity`, `InitEntity`, `DestroyEntity` +2 | high | easy |
 | `087E3C44` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateSpriteObj`, `InitSpriteObj` | high | easy |
 | `087E3CAC` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `DestroyUiSpriteObj`, `InitUiSpriteObj` | high | easy |
 | `087E3D14` | 0x78 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateMovingSprite`, `DestroyMovingSprite`, `InitMovingSprite` | high | easy |

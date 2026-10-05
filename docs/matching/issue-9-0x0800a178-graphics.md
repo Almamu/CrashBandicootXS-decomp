@@ -650,7 +650,7 @@ the `game_loop43.c`/`game_loop44.c` naming precedent already established
 for this exact ROM neighborhood (both matched in the same immediate
 area, both reusing `struct probe_pos`/`struct tile_cache` conventions
 this new file also reuses rather than redefining differently).
-`asm/code_3_2_17_26bf8.s` is trimmed to begin at `sub_8026C90` (the next
+`asm/code_3_2_17_26bf8.s` is trimmed to begin at `StepCameraDirectional` (the next
 still-raw function); `game_loop45.o` is inserted into `ldscript.txt`
 directly between `game_loop44.o` and the trimmed `code_3_2_17_26bf8.o`,
 exactly where these four functions' real bytes already sat.

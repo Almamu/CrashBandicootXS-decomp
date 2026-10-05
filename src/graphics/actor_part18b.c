@@ -7,7 +7,7 @@
  * (`self+0xc`/`self+0x10`/`+0x27`.."+0x32" etc.) these functions use. */
 
 extern u32 gKeys;
-extern void *gUnknown_03001304;
+extern void *gInput;
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern s32 _call_via_r3(void *arg0, void *arg1, void *arg2, void *arg3);
 extern u8 GetDpadDirection(void *dummy);
@@ -41,7 +41,7 @@ void sub_8014524(struct act *self)
     struct act_part *part = self->part;
 
     if (part->animDone != 0) {
-        void *dummy = gUnknown_03001304;
+        void *dummy = gInput;
         u16 m = gKeys & 0x100;
         u8 v = m != 0;
         s32 st = GetDpadDirection(dummy);

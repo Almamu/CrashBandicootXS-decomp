@@ -1,7 +1,7 @@
 #include "core.h"
 #include "phys_obj.h"
 
-extern u8 gUnknown_030012B0;
+extern u8 gCrateListChanged;
 extern void *gPaletteCache;
 extern void UpdateTntCountdown(struct crate *self);
 extern void UpdateSlotCrate(struct crate *self);
@@ -23,7 +23,7 @@ extern void UpdateCrateFall(struct crate *self);
  * nonzero, decrements it and, only for the frame it does so,
  * dispatches once more on `self+0x4e` (the settle-state byte):
  * - `0x13`-`0x15`: re-enters the edge-settle chain (`UpdateTntCountdown`),
- *   also arming the global one-shot rescan flag `gUnknown_030012B0`
+ *   also arming the global one-shot rescan flag `gCrateListChanged`
  *   (the same flag `UpdateCrateFall`, game_loop32.c, reads).
  * - `0xf`: re-triggers `UpdateSlotCrate` when `self+0x4d`'s low 7 bits
  *   are already 0.
@@ -76,7 +76,7 @@ void UpdateCrate(struct crate *self)
                 if (kind <= 0x15)
                 {
                     UpdateTntCountdown(self);
-                    gUnknown_030012B0 = 1;
+                    gCrateListChanged = 1;
                     goto done;
                 }
             }

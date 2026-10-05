@@ -30,66 +30,66 @@ static inline void set_icon_mgr_pos(struct icon_manager *m, u32 x, u32 y)
 
 /* The functions below (0x08003B40-0x080041BC) were NAKED
  * transcriptions until the issue #4/#6/#8 retry
- * (docs/matching/issue-4-6-8-naked-retry.md); sub_8003D3C followed in
- * docs/matching/early-rom-naked-retry.md, and the raw `sub_800450C` at
+ * (docs/matching/issue-4-6-8-naked-retry.md); DrawYesNoPrompt followed in
+ * docs/matching/early-rom-naked-retry.md, and the raw `InitSaveMenuIcons` at
  * the end of the file in docs/matching/hard-register-hold-retry.md.
  * All now match as plain C; the file is built with old_agbcc (Makefile
- * OLD_AGBCC_OBJS) because `sub_800450C` only matches under it - every
+ * OLD_AGBCC_OBJS) because `InitSaveMenuIcons` only matches under it - every
  * other function here compiles identically under both compilers. Their
- * siblings `sub_8004914`/`sub_80049CC` live in
+ * siblings `DrawEmptySlotLabel`/`DrawSaveMenuTitle` live in
  * `src/graphics/settings_menu23.c`. */
 
 extern void *OperatorNew(s32 size);
-extern void sub_8002FCC(void *newObj, void *tmpl);
-extern void sub_8002FD8(void *newObj);
+extern void SetSaveTransferRecord(void *newObj, void *tmpl);
+extern void ResetSaveTransfer(void *newObj);
 extern void WaitForVBlank(void);
 extern void UpdateKeys(void *arg0);
-extern void *gUnknown_03001304;
+extern void *gInput;
 extern u32 gKeys;
-extern u8 gUnknown_03000800;
+extern u8 gLinkSessionReset;
 extern void *gLinkSession;
-extern s32 sub_8001F50(void *arg0);
-extern s32 sub_8002EFC(void *newObj);
-extern s32 sub_8002FD4(void *newObj);
+extern s32 UpdateLinkSession(void *arg0);
+extern s32 PollSaveTransfer(void *newObj);
+extern s32 GetSaveTransferData(void *newObj);
 extern void MemCopy32(void *arg0, s32 arg1, s32 arg2);
 extern void OperatorDelete(void *newObj);
 
 /* A "connecting..." SIO-handshake spinner dialog: allocates a small
  * icon object from self->field_8c's template, then loops VBlank-
  * waiting while polling input (cancel -> state 3), the link-active
- * flag gUnknown_03000800, and sub_8001F50 (the link-connection/
+ * flag gLinkSessionReset, and UpdateLinkSession (the link-connection/
  * handshake driver documented in docs/rom_map.md's SIO/link-cable
- * section) until the spinner object's own state (sub_8002EFC) settles.
+ * section) until the spinner object's own state (PollSaveTransfer) settles.
  * Returns that state; when it settles at 0, also feeds a result value
  * through self->field_90 via MemCopy32.
  *
  * Once a NAKED transcription; it matches as plain C under both
  * compilers. The cancel test is `(u16)(keys & 2)`, whose known-zero
- * value the ROM reuses to clear `gUnknown_03000800`, and the
- * `sub_8002FD4` result is taken before `self->field_90` is loaded. */
-s32 sub_8003B40(struct pause_options_screen *self)
+ * value the ROM reuses to clear `gLinkSessionReset`, and the
+ * `GetSaveTransferData` result is taken before `self->field_90` is loaded. */
+s32 LinkExchangeSaveData(struct pause_options_screen *self)
 {
     void *spinner = OperatorNew(0x220);
     s32 state;
 
-    sub_8002FCC(spinner, self->field_8c);
-    sub_8002FD8(spinner);
+    SetSaveTransferRecord(spinner, self->field_8c);
+    ResetSaveTransfer(spinner);
     do {
         WaitForVBlank();
-        UpdateKeys(gUnknown_03001304);
+        UpdateKeys(gInput);
         if ((u16)(gKeys & 2)) {
             state = 3;
         } else {
-            if (gUnknown_03000800) {
-                gUnknown_03000800 = 0;
-                sub_8002FD8(spinner);
+            if (gLinkSessionReset) {
+                gLinkSessionReset = 0;
+                ResetSaveTransfer(spinner);
             }
-            sub_8001F50(gLinkSession);
-            state = sub_8002EFC(spinner);
+            UpdateLinkSession(gLinkSession);
+            state = PollSaveTransfer(spinner);
         }
     } while (state == 1);
     if (state == 0) {
-        s32 result = sub_8002FD4(spinner);
+        s32 result = GetSaveTransferData(spinner);
 
         MemCopy32(self->field_90, result, 0x200);
     }
@@ -103,7 +103,7 @@ s32 sub_8003B40(struct pause_options_screen *self)
  * Once a NAKED transcription; it matches as plain C under both
  * compilers once the centre X gets its own local (`x = (0xf0 - w) >> 1`),
  * which is what puts it in r3 and the Y constant in ip. */
-void sub_8003BDC(struct pause_options_screen *self, s32 label1, s32 label2)
+void DrawSaveMenuMessageLines(struct pause_options_screen *self, s32 label1, s32 label2)
 {
     s32 w, x;
 
@@ -122,13 +122,13 @@ void sub_8003BDC(struct pause_options_screen *self, s32 label1, s32 label2)
     }
 }
 
-/* Same centered-label shape as sub_80049CC (src/graphics/settings_menu20.c),
+/* Same centered-label shape as DrawSaveMenuTitle (src/graphics/settings_menu20.c),
  * but always label 0x23, drawn into gSmallFont (not E0) at
  * fixed Y=0x87, and with a highlight-dependent initial visibility call.
  *
  * Once a NAKED transcription; it matches as plain C under both
- * compilers (same shape as sub_8004914, src/graphics/settings_menu23.c). */
-void sub_8003C90(struct pause_options_screen *self, u8 highlight)
+ * compilers (same shape as DrawEmptySlotLabel, src/graphics/settings_menu23.c). */
+void DrawSaveMenuCancel(struct pause_options_screen *self, u8 highlight)
 {
     s32 w;
 
@@ -141,13 +141,13 @@ void sub_8003C90(struct pause_options_screen *self, u8 highlight)
     ICON_TEXT_CALL(gSmallFont, 2, GetUiText(0x23));
 }
 
-extern u8 gStaticData_0816B138[];
+extern u8 gMenuCursorText[];
 
 
 /* Draws `value`'s label centered at Y=0x87, then draws a
  * highlighted/plain pair of fixed labels (0x29/0x2a, purpose
  * unconfirmed) swapping Y=0x87 vs Y=0x91 depending on `self->field_10`
- * - each pair member's slot gets a `gStaticData_0816B138` draw at its
+ * - each pair member's slot gets a `gMenuCursorText` draw at its
  * *previous* position right before the real label, which reads as a
  * clear/overwrite step rather than a width probe (the return value is
  * never used).
@@ -157,7 +157,7 @@ extern u8 gStaticData_0816B138[];
  * constant 0x87 in sb: `y` is pinned to r9 and set after the
  * manager pointer is loaded (the unpinned draft swapped the two, as
  * global-alloc ranks 0x87 slightly above 0x130). */
-void sub_8003D3C(struct pause_options_screen *self, s32 value)
+void DrawYesNoPrompt(struct pause_options_screen *self, s32 value)
 {
     s32 w;
     register s32 y asm("r9");
@@ -174,12 +174,12 @@ void sub_8003D3C(struct pause_options_screen *self, s32 value)
     FontSetPalette(gSmallFont, ((self->flags >> 2) & 1) ? 1 : 2);
     if (!self->field_10) {
         set_icon_mgr_pos(gSmallFont, 0xa8, y);
-        ICON_TEXT_CALL(gSmallFont, 2, gStaticData_0816B138);
+        ICON_TEXT_CALL(gSmallFont, 2, gMenuCursorText);
         set_icon_mgr_pos(gSmallFont, 0xb0, y);
         ICON_TEXT_CALL(gSmallFont, 2, GetUiText(0x29));
     } else {
         set_icon_mgr_pos(gSmallFont, 0xa8, 0x91);
-        ICON_TEXT_CALL(gSmallFont, 2, gStaticData_0816B138);
+        ICON_TEXT_CALL(gSmallFont, 2, gMenuCursorText);
         set_icon_mgr_pos(gSmallFont, 0xb0, 0x91);
         ICON_TEXT_CALL(gSmallFont, 2, GetUiText(0x2a));
     }
@@ -199,7 +199,7 @@ extern s32 itoa(s32 value, u8 *buffer, s32 base);
 
 /* `rowObjA`/`rowObjB`/`rowObjC` entries (see pause_options_screen.h)
  * are small on-screen objects with just a Q8 `x`/`y` position at their
- * front - `sub_800450C` (this chunk's other remaining function,
+ * front - `InitSaveMenuIcons` (this chunk's other remaining function,
  * currently still fully raw) allocates and positions them. */
 struct row_obj {
     s32 x;
@@ -241,7 +241,7 @@ static inline void place_row_obj(void *p, s32 x, s32 y)
  * respectively (each drawn via `gSmallFont`'s `record->slots[2]`
  * trampoline, and each preceded by the same highlight/dim
  * `FontSetPalette` call this chunk's other row-label functions already
- * establish - `sub_80041BC`'s own `flag` parameter selects which row
+ * establish - `DrawSaveSlots`'s own `flag` parameter selects which row
  * is "selected", matching that shared idiom). A fourth value
  * (`statPtr->percent`) is formatted as `"NN%"` by `itoa`-ing then
  * manually scanning for the NUL terminator and overwriting it with a
@@ -258,7 +258,7 @@ static inline void place_row_obj(void *p, s32 x, s32 y)
  * stores it with `strb`. Each block keeps running `x`/`y` locals, and
  * the third block re-derives `y` the same way the second does, which
  * reproduces the ROM spilling it. See docs/matching/issue-4-6-8-naked-retry.md. */
-void sub_8003F30(struct pause_options_screen *self, s32 label1, s32 label2, s32 rowIdx, struct byte_arg flagArg)
+void DrawSaveSlotStats(struct pause_options_screen *self, s32 label1, s32 label2, s32 rowIdx, struct byte_arg flagArg)
 {
     u8 flag = flagArg.v;
     u8 buf[8];
@@ -312,7 +312,7 @@ void sub_8003F30(struct pause_options_screen *self, s32 label1, s32 label2, s32 
     ICON_TEXT_CALL(gLargeFont, 2, buf);
 }
 
-/* An inlined copy of sub_8004914 (src/graphics/settings_menu23.c): the
+/* An inlined copy of DrawEmptySlotLabel (src/graphics/settings_menu23.c): the
  * row's highlighted/dimmed 0x25 glyph centred at (arg1 + 0x1d, arg2 + 0xc). */
 static inline void draw_row_mark(struct pause_options_screen *self, s32 arg1, s32 arg2, u8 arg3)
 {
@@ -335,7 +335,7 @@ static inline void draw_row_mark(struct pause_options_screen *self, s32 arg1, s3
     } else {                                                                    \
         struct byte_arg sel;                                                    \
         sel.v = selectedIndex == (i);                                           \
-        sub_8003F30(self, (labelX), (labelY), (i) + 1, sel);                    \
+        DrawSaveSlotStats(self, (labelX), (labelY), (i) + 1, sel);                    \
     }
 
 /* Per docs/rom_map.md's "narrowed down which screen overlay_ui is"
@@ -344,16 +344,16 @@ static inline void draw_row_mark(struct pause_options_screen *self, s32 arg1, s3
  * src/graphics/settings_menu3.c). When `IsSaveSlotEmpty(handle, i)`
  * reports row `i` selected, draws a highlighted numeric glyph
  * (label 0x25) centered at the row's fixed position; otherwise draws
- * the row's normal label pair via sub_8003F30 (above in this file),
+ * the row's normal label pair via DrawSaveSlotStats (above in this file),
  * flagged if `selectedIndex == i`. The four rows' fixed anchors: row 0
  * = (0x43,0x2d)/labels(0x26,0x21)/idx 1; row 1 = (0x43,0x5f)/
  * (0x26,0x53)/idx 2; row 2 = (0xa3,0x2d)/(0x86,0x21)/idx 3; row 3 =
  * (0xa3,0x5f)/(0x86,0x53)/idx 4.
  *
  * Once a NAKED transcription; it matches as plain C under both
- * compilers. The "selected" branch is an inlined copy of sub_8004914
+ * compilers. The "selected" branch is an inlined copy of DrawEmptySlotLabel
  * (src/graphics/settings_menu23.c), `draw_row_mark` above. */
-void sub_80041BC(struct pause_options_screen *self, void *handle, s32 selectedIndex)
+void DrawSaveSlots(struct pause_options_screen *self, void *handle, s32 selectedIndex)
 {
     DRAW_ROW(0, 0x26, 0x21);
     DRAW_ROW(1, 0x26, 0x53);
@@ -378,7 +378,7 @@ extern struct actor *InitUiSpriteObj(struct actor *part);
 extern void ResetSpriteFrameTimer(struct actor *part);
 extern void ResetSpriteFrameIndex(struct actor *part);
 extern void SetSpriteAnimDone(struct actor *part, u8 val);
-extern void ***gUnknown_030012D0;
+extern void ***gSpriteBankSet;
 extern u16 gStaticData_0816B13A[16];
 extern u16 gStaticData_0816B15A[16];
 extern u16 gStaticData_0816B17A[16];
@@ -426,7 +426,7 @@ static inline void new_row_icon(struct settings_icon_actor **slot, u32 tblOff, u
 
     icon = (struct settings_icon_actor *)InitUiSpriteObj((struct actor *)OperatorNew(0x40));
     *slot = icon;
-    icon->field_20 = (void **)((u8 *)(**gUnknown_030012D0) + tblOff);
+    icon->field_20 = (void **)((u8 *)(**gSpriteBankSet) + tblOff);
     /* Plain `u8 *` store: old_agbcc's read-modify-write struct store
      * leaves a dead zero mask that the loop pass counts as a movable,
      * which kept 0x80 out of the loop pre-header. */
@@ -462,7 +462,7 @@ static inline void new_row_icon(struct settings_icon_actor **slot, u32 tblOff, u
     *(u16 *)&(*slot)->field_3c = 0x80;
 }
 
-/* sub_800450C, the screen's init routine: resets the OAM shadow buffer
+/* InitSaveMenuIcons, the screen's init routine: resets the OAM shadow buffer
  * and the tile cache, loads four 16-colour palettes into cache slots
  * 0-3, re-initialises both icon managers (the same IconSetup/
  * IconReserve sequence as ShowPowerDialog), builds the three 5-entry icon
@@ -474,7 +474,7 @@ static inline void new_row_icon(struct settings_icon_actor **slot, u32 tblOff, u
  * stores in new_row_icon fix the loop pre-header (see
  * docs/matching/early-rom-naked-retry-2.md); the frame-0 address pin,
  * the r1 hold and the padding below fix the last 6 halfwords. */
-void sub_800450C(struct pause_options_screen *self)
+void InitSaveMenuIcons(struct pause_options_screen *self)
 {
     u16 (*pal)[16];
     struct settings_icon_actor **a, **b, **c;

@@ -12,7 +12,7 @@ same ROM region rather than being part of the category system itself.
 - `SetupActorVramPool` (`actor_part104.c`) - pins the current category's
   tile-cache slots (2 for type-0 sprite families, 5 for type-1/2) from
   two still-unnamed ROM-side sub-tables, then (re)builds the category's
-  status-icon OAM row via `sub_802732C`.
+  status-icon OAM row via `ConfigureHudParts`.
 - `CountCategoryCrates` (`actor_part100.c`) - counts how many of the current
   category's `sub_effect_table` entries (`struct sub_effect_record`,
   `include/actor_anim.h`) match one of two fixed `variantA` byte sets,

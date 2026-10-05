@@ -14,7 +14,7 @@
  * docs/matching/issue-7-0x08004d74-overlay-ui.md. */
 
 extern void UpdateKeys(void *arg0);
-extern void *gUnknown_03001304;
+extern void *gInput;
 extern u32 gKeys;
 extern void PauseMenuCursorDown(struct pause_screen_results *self);
 extern s32 PauseMenuCursorUp(struct pause_screen_results *self);
@@ -107,7 +107,7 @@ s32 PauseMenuLoop(struct pause_screen_results *self)
         register u32 pressed asm("r1");
 
         draw_frame(self);
-        UpdateKeys(gUnknown_03001304);
+        UpdateKeys(gInput);
         if (KEYS.pressed & 0x40) {
             PauseMenuCursorUp(self);
             self->field_68 = 0x1e;

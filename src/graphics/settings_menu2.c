@@ -22,7 +22,7 @@ extern u8 gStaticData_0816C484[];
  * two bit-flag bytes, request a BG tile/map graphics package, set BG0's
  * control register from it - plus zeroing `field_0`, which LoadLanguageSelectBg's
  * counter_widget doesn't have. */
-void sub_80047F8(struct bg_widget *self)
+void LoadSaveMenuBg(struct bg_widget *self)
 {
     u8 buf[0x10];
     u32 zero = 0;

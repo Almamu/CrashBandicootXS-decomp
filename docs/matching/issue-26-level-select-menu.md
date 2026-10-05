@@ -35,7 +35,7 @@ functions):
   to the player.
 - **A 0x78-byte sprite subclass** (`sub_801B984`-`sub_801BAD0`, method
   table `gStaticData_087E4B34`) - a factory that inlines the constructor
-  and starts animation 0 of `**gUnknown_030012D0 + 0x150`, and a slot
+  and starts animation 0 of `**gSpriteBankSet + 0x150`, and a slot
   `+0x70` handler (`sub_801BA60`) that fires the player's method 13 with
   `(0, 0x19, 0)` when the player (flags bit 7 set) overlaps its hit box.
 - **`struct level_menu`** (`RunLevelSelect`-`LevelSelectCursorRight`, 0xAC bytes) - the
@@ -114,7 +114,7 @@ their method tables.
 - **`InitLevelSelect`** (constructor, 1052 bytes). With `AnimTable`/`SetAnim`
   and explicit blend/DISPCNT sequences the reconstruction has the ROM's
   instruction stream and `self` in `r7`, but the ROM keeps `0`/`1`/`2`/
-  `0x10` and `&gUnknown_030012D0` live in `sb`/`r3`/`r8`/`r5`/`sl`
+  `0x10` and `&gSpriteBankSet` live in `sb`/`r3`/`r8`/`r5`/`sl`
   across dozens of calls and picks a different scratch register at
   almost every store; matching it would mean pinning most of the
   function (including `r8`, which this compiler mishandles).

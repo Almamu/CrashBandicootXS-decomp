@@ -89,11 +89,11 @@ with the original's `_08XXXXXX:` labels renumbered to GNU-as local
 numeric labels (`N:`, referenced `Nf`/`Nb`) per
 `docs/matching/issue-4-sio-settings-sync.md`'s convention. Given this
 function's size (~380 real instructions, this project's second-largest
-NAKED transcription after that same doc's `sub_8002114`), a small
+NAKED transcription after that same doc's `HandleLinkSerial`), a small
 scratch Python script did the mechanical label-renumbering and
 mnemonic translation instead of doing it by hand, specifically to avoid
 the transcription-typo risk that scale invites (the same reasoning
-`sub_8002114`'s writeup gives for its own script).
+`HandleLinkSerial`'s writeup gives for its own script).
 
 **Verification beyond the usual full clean `make compare`:** the
 isolated compiled object's `.text` section was also byte-compared

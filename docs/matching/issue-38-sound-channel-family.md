@@ -106,10 +106,10 @@ branch condition and call argument is confirmed correct against the ROM.
 - **`ShowSlidePicture`** (`src/system/game_loop37.c`; real bytes in
   `asm/code_3_2_17_24708.s`) - toggles `self`'s VRAM-bank flip-flop and
   streams `self->items[idx]`'s tile asset to whichever bank the new state
-  selects, rebuilds `gUnknown_03001314`'s bit 4 (the same `& ~0x10 | bit`
+  selects, rebuilds `gSlideshowDispcnt`'s bit 4 (the same `& ~0x10 | bit`
   shadow-byte idiom `ShowSlidePicture`'s cousin in game_loop18.c uses for a
   *different* global - see that file's own write-up), DMA3-copies the
-  asset's first half into `BG_PLTT`, and commits `gUnknown_03001314`'s
+  asset's first half into `BG_PLTT`, and commits `gSlideshowDispcnt`'s
   low halfword to `REG_DISPCNT`. Confirmed byte-identical everywhere
   except one branch's address computation: `asset + 0x200` inside the
   `toggle != 0` case computes its `0x80 << 2` scratch offset into `r2` in

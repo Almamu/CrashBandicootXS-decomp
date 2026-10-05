@@ -7,8 +7,8 @@ inline asm.
 The issue listed 25 names. The old disassembly had two labelling errors in
 the middle of the file:
 
-- `0x0802612C` had no label. It followed `sub_8026108`'s `bx lr` and a
-  padding halfword, so the listing folded it into `sub_8026108`. It's a real
+- `0x0802612C` had no label. It followed `GetBgLayerScreenIndex`'s `bx lr` and a
+  padding halfword, so the listing folded it into `GetBgLayerScreenIndex`. It's a real
   function (`col % 32`), now `sub_802612C`.
 - `sub_802613E` really starts at `0x0802613C`. Its first instruction
   (`adds r0, r1, #0`) sat on the line above the label. Now `sub_802613C`, a
@@ -21,7 +21,7 @@ docs.
 
 This range was built with `tools/agbcc/bin/old_agbcc`. The object is on
 the Makefile's `OLD_AGBCC_OBJS` list. The BGnCNT bitfield setters
-(`sub_802614C`, `sub_8026160`, `sub_8026174`, `sub_8026190`) show the
+(`SetBgLayerScreenBase`, `SetBgLayerPriority`, `SetBgLayerColors256`, `SetBgLayerCharBase`) show the
 tell: `movs r2, #-K` (`movs`/`negs`) comes *before* the `ldrb` it's
 `and`ed with. With the final C, the current agbcc misses 7 of the 26:
 those four, plus `LoadBgLayerTiles`, `LoadBgLayer` and `LoadPooledBgLayerTiles`.
@@ -64,7 +64,7 @@ Method tables (`gBgLayerVtable` base / `gPooledBgLayerVtable` layer 0):
 | 0x08 destroy | `DestroyBgLayer` | `DestroyPooledBgLayer` |
 | 0x10 reset | `ResetBgLayer` | `ResetPooledBgLayer` |
 | 0x18 | `ScrollBgLayer` | `ScrollBgLayer` |
-| 0x20 | `sub_8024DCC` | `sub_8026250` (clamp to [-8, 8]) |
+| 0x20 | `ClampBgLayerScrollStep` | `ClampPooledBgLayerScrollStep` (clamp to [-8, 8]) |
 | 0x28 load tiles | `LoadBgLayerTiles` | `LoadPooledBgLayerTiles` |
 | 0x30 draw row | `DrawBgLayerRow` | `DrawPooledBgLayerRow` |
 | 0x38 draw column | `DrawBgLayerColumn` | `DrawPooledBgLayerColumn` |
@@ -82,13 +82,13 @@ just points the pool at the character block and the asset's tile data.
 `RedrawBgLayer` derives the resident ranges from the scroll position (a
 240x160 screen) and draws every row through the table.
 
-Unused (no caller, not in a method table): `sub_8026108`, `sub_802612C`,
-`sub_802613C`, `sub_802614C`-`sub_8026190` (BGnCNT setters/getter),
-`sub_80261A8`, `sub_80261B0` and `nullsub_26`.
+Unused (no caller, not in a method table): `GetBgLayerScreenIndex`, `sub_802612C`,
+`sub_802613C`, `SetBgLayerScreenBase`-`SetBgLayerCharBase` (BGnCNT setters/getter),
+`WriteBgLayerOffsetRegs`, `WriteBgLayerCntReg` and `nullsub_26`.
 
 ## Matching notes
 
-- **`Mod32` inline.** Writing `% 32` directly in `sub_8026108`, `DrawPooledBgLayerColumn`
+- **`Mod32` inline.** Writing `% 32` directly in `GetBgLayerScreenIndex`, `DrawPooledBgLayerColumn`
   and `DrawBgLayerRow` puts the wrong register or order on the first
   modulo. A `static inline s32 Mod32(s32)` fixes all three. (With
   `sub_802612C`/`sub_802613C` sitting right there, the original likely

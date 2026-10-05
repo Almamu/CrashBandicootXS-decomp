@@ -31,7 +31,7 @@ struct bg_layer_vtable
     struct bg_layer_method destroy;   // 0x08 - DestroyBgLayer / DestroyPooledBgLayer
     struct bg_layer_method reset;     // 0x10 - ResetBgLayer / ResetPooledBgLayer
     struct bg_layer_method method_18; // 0x18 - ScrollBgLayer
-    struct bg_layer_method method_20; // 0x20 - sub_8024DCC / sub_8026250
+    struct bg_layer_method method_20; // 0x20 - ClampBgLayerScrollStep / ClampPooledBgLayerScrollStep
     struct bg_layer_method loadTiles; // 0x28 - LoadBgLayerTiles / LoadPooledBgLayerTiles
     struct bg_layer_method drawRow;   // 0x30 - DrawBgLayerRow / DrawPooledBgLayerRow
     struct bg_layer_method drawCol;   // 0x38 - DrawBgLayerColumn / DrawPooledBgLayerColumn

@@ -18,18 +18,18 @@ and [graphics_loading.md](./graphics_loading.md).
   `ReserveObjVram`, `UploadObjVram`, `DestroyObjVramCursor`, `InitObjVramCursor`, `LoadPaletteSlot`,
   `BindPaletteSlot`, `ClaimPaletteSlot`, `UnlockPalette`, `LockPalette`, `UploadPaletteSlot`,
   `UploadPaletteCache`, `GetPaletteSlot`, `FreePaletteSlot`, `FreeUnlockedPaletteSlots`, `SetPaletteCacheSource`,
-  `ClearPaletteCache`, `DestroyPaletteCache`, `InitPaletteCache`, `sub_8006FC8`, `nullsub_1`,
-  `sub_8006FE4`, `sub_8007048`, `nullsub_11`, `sub_80070D4`, `sub_80070E8`,
-  `sub_80070EC`, `sub_800710C`, `sub_8007110`, `sub_8007114`,
-  `sub_8007174`, `sub_800719C`, `nullsub_12`, `sub_80071E4`,
-  `sub_800722C`, `sub_8007230`, `sub_800725C`, `sub_8007278`,
+  `ClearPaletteCache`, `DestroyPaletteCache`, `InitPaletteCache`, `DestroySpriteBankSet`, `nullsub_1`,
+  `sub_8006FE4`, `sub_8007048`, `nullsub_11`, `sub_80070D4`, `GetEntityBounds`,
+  `SetEntitySize`, `sub_800710C`, `sub_8007110`, `sub_8007114`,
+  `WorldToScreen`, `WorldPosToScreen`, `nullsub_12`, `CreateEntity`,
+  `sub_800722C`, `ResetEntity`, `InitEntity`, `sub_8007278`,
   `sub_8007284`, `sub_8007290`, `sub_800729C`, `sub_80072A8`,
   `sub_80072B4`, `sub_80072C0`, `sub_80072CC`, `sub_80072D8`,
   `sub_800731C`, `sub_8007328`, `sub_8007334`, `sub_8007340`,
-  `sub_800734C`, `sub_8007358`, `sub_8007364`, `sub_800736C`,
-  `sub_8007374`, `sub_8007378`, `sub_800737C`, `sub_8007388`,
-  `sub_8007398`, `sub_80073A0`, `sub_80073B0`, `sub_80073B4`,
-  `sub_80073B8`, `sub_80073BC`
+  `sub_800734C`, `sub_8007358`, `GetEntityPixelY`, `GetEntityPixelX`,
+  `GetEntityY`, `GetEntityX`, `SetEntityPixelPos`, `SetEntityPixelPosVec`,
+  `SetEntityPos`, `SetEntityPosVec`, `sub_80073B0`, `sub_80073B4`,
+  `GetEntityId`, `DestroyEntity`
 - `src/graphics/oam_count.c`: `AnimatePowerDialog`, `CommitPowerDialogFrame`, `DestroyPowerDialog`,
   `ShowTurboRunDialog`, `ShowTornadoSpinDialog`, `ShowDoubleJumpDialog`, `ShowSuperBodySlamDialog`, `GetProgressLives`,
   `CountPlatinumRelics`, `CountGoldRelics`, `CountSapphireRelics`, `CountRelics`, `CountGems`,
@@ -65,7 +65,7 @@ and [graphics_loading.md](./graphics_loading.md).
   opaque to the peephole fusion that otherwise always combines it into
   a `stmia` writeback, plus the ROM's own shift-based mask idiom - see
   [naked-CommitBlendRegs-matched.md](../matching/naked-CommitBlendRegs-matched.md)),
-  `AabbOverlapsInclusiveX`, `AabbOverlaps`, `sub_80016D0`, `sub_80016DC` - two AABB
+  `AabbOverlapsInclusiveX`, `AabbOverlaps`, `IwramFree`, `IwramAlloc` - two AABB
   overlap tests (one already referenced by name from `actor.md`'s
   `actor_part15.c`) plus `mem_free`/`mem_alloc` wrappers.
 
