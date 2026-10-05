@@ -2,6 +2,7 @@
 #include "vram_pool.h"
 #include "crate.h"
 #include "hud.h"
+#include "pickups.h"
 
 /* GitHub issue #12: 0x0800D040-0x0800FC70, the physics/collision
  * subsystem (see crate_hit.c's header comment and
@@ -2091,7 +2092,6 @@ extern void SolidifyOutlineCrate(struct crate *self);
 extern s32 GetSpriteAnimPaletteSlot(void *self);
 extern void OperatorDeleteArray(void *p);
 extern u8 gCrateKindBreakable[];
-extern void PickUpWumpa(struct crate *obj, s32 arg);
 extern void sub_8025A0C(u8 *bitmap, u16 id);
 extern void *OperatorNewArray(u32 size);
 extern void SetCrateBelow(void *obj, void *prev);
@@ -2283,7 +2283,7 @@ void BlastNearbyCrates(struct crate *self, s32 dist)
                 s32 dy = (t2 ^ (t2 >> 31)) - (t2 >> 31);
 
                 if (dx + dy <= dist) {
-                    PickUpWumpa(o, 1);
+                    PickUpWumpa((struct orbit_part *)o, 1);
                     o->flags |= 0x10;
                 }
             }

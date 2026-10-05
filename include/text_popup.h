@@ -11,6 +11,7 @@
  * old_agbcc (see docs/matching/old-agbcc-retry.md). */
 
 #include "actor.h"
+#include "enemies.h"
 
 /* The sprite part CreateMovingSprite returns. Same layout as cortex.c's
  * `struct gfx_part`. The +0x28 bits are declared on a 32-bit base type:
@@ -32,7 +33,7 @@ struct popup_part
     u8 animating;               // 0x2C - nonzero while the keyframe timer runs
     u8 tag;                     // 0x2D
     u8 unk_2E[0x16];
-    struct enemy_ctrl *hdr;      // 0x44
+    struct part_ctrl *hdr;      // 0x44
 };
 
 /* One level record, at `bytes + offsets[id]` in gEntityFlags's
@@ -56,45 +57,6 @@ struct level_record_table
     u8 *bytes;
 };
 
-/* A C++-style method slot: `this` adjustment plus function pointer. */
-struct popup_method
-{
-    s16 thisOffset;
-    u8 unk_2[2];
-    void *fn;
-};
-
-struct popup_vtable
-{
-    u8 unk_00[0x18];
-    struct popup_method attach; // 0x18
-};
-
-/* The enemy controller CreateEnemyCtrl constructs (part_ctrl.h's
- * `struct part_ctrl` is another view of the same object). */
-struct enemy_ctrl
-{
-    u8 unk_00[0xC];
-    struct popup_vtable *vtable; // 0x0C
-    u8 unk_10[0x10];
-    s32 boxL;                   // 0x20 - hit box, relative to the part
-    s32 boxT;                   // 0x24   (part_ctrl.boxL..boxB)
-    s32 boxR;                   // 0x28
-    s32 boxB;                   // 0x2C
-    s32 idleTime;               // 0x30 - attack cycle (part_ctrl.idleTime/
-    s32 attackTime;             // 0x34   attackTime/cycleOffset)
-    s32 cycleOffset;            // 0x38
-    s32 period;                 // 0x3C - oscillator (part_ctrl.period/
-    s32 phase;                  // 0x40   phase/amplitude, UpdateEnemyOscillateX)
-    s32 amplitude;              // 0x44
-    s32 shotPeriod;             // 0x48 - UpdateEnemyShooter fires every shotPeriod
-    s32 shotPhase;              // 0x4C   frames, offset by shotPhase
-    u8 unk_50[0x1C];
-    s32 kind;                   // 0x6C - the enemy kind (its sprite bank)
-    u8 unk_70[0x14];
-    void *animMap;              // 0x84 - anim mode -> bank anim (gEnemyDefaultAnimMap...)
-};
-
 extern void ***gSpriteBankSet;
 extern struct level_record_table **gEntityFlags;
 extern void *gCollidableList;
@@ -102,23 +64,18 @@ extern void *gCollidableList;
 extern struct popup_part *CreateMovingSprite(u16 arg0, u16 arg1, u16 arg2, u16 arg3);
 extern s32 GetSpriteAnimPaletteSlot(struct popup_part *part);
 extern void *OperatorNew(s32 size);
-extern struct enemy_ctrl *CreateEnemyCtrl(void);
 extern s32 _call_via_r2(void *self, void *arg, void *fn);
 extern void AddToPartList(void *manager, void *value);
-extern void SetEnemyState(struct enemy_ctrl *hdr, s32 arg1);
-extern void SetEnemyRangeXSpeed(struct enemy_ctrl *hdr, s32 arg1, s32 arg2, s32 arg3);
-extern void SetEnemyRangeYSpeed(struct enemy_ctrl *hdr, s32 arg1, s32 arg2, s32 arg3);
-extern void SetEnemyRangeX(struct enemy_ctrl *hdr, s32 arg1);
 extern void ResetSpriteFrameTimer(struct popup_part *part);
 extern void ResetSpriteFrameIndex(struct popup_part *part);
 extern void SetSpriteAnimDone(struct popup_part *part, s32 arg);
 
 #define POPUP_ANIM(offset) ((void *)((u8 *)**gSpriteBankSet + (offset)))
 
-/* hdr->attach(part), through _call_via_r2. */
+/* hdr->attach(part) (AttachEnemyCtrl), through _call_via_r2. */
 #define POPUP_ATTACH(hdr, part)                                                \
-    _call_via_r2((u8 *)(hdr) + (hdr)->vtable->attach.thisOffset, (part),       \
-                (hdr)->vtable->attach.fn)
+    _call_via_r2((u8 *)(hdr) + (hdr)->anchor->attach.thisOffset, (part),       \
+                (hdr)->anchor->attach.fn)
 
 #define LEVEL_RECORD(id)                                                       \
     ((struct level_record *)((*gEntityFlags)->bytes +                     \
@@ -132,9 +89,9 @@ static inline void SetPartField0A(struct popup_part *part, s32 value)
     part->base.field_0A = value;
 }
 
-static inline void SetEnemyAnimMap(struct enemy_ctrl *hdr, void *gfx)
+static inline void SetEnemyAnimMap(struct part_ctrl *hdr, const s32 *gfx)
 {
-    hdr->animMap = gfx;
+    hdr->anims = gfx;
 }
 
 static inline void SetPartTag(struct popup_part *part, s32 tag)
@@ -160,7 +117,7 @@ static inline void SetPartAnim(struct popup_part *part, s32 anim)
 
 /* The multi-field setters load every value before storing any, as the ROM
  * does; written as separate statements, each load/store pair interleaves. */
-static inline void SetEnemyHitBox(struct enemy_ctrl *hdr, s32 l, s32 t, s32 r, s32 b)
+static inline void SetEnemyHitBox(struct part_ctrl *hdr, s32 l, s32 t, s32 r, s32 b)
 {
     hdr->boxL = l;
     hdr->boxR = r;
@@ -168,14 +125,14 @@ static inline void SetEnemyHitBox(struct enemy_ctrl *hdr, s32 l, s32 t, s32 r, s
     hdr->boxB = b;
 }
 
-static inline void SetEnemyAttackCycle(struct enemy_ctrl *hdr, s32 idleTime, s32 attackTime, s32 cycleOffset)
+static inline void SetEnemyAttackCycle(struct part_ctrl *hdr, s32 idleTime, s32 attackTime, s32 cycleOffset)
 {
     hdr->idleTime = idleTime;
     hdr->attackTime = attackTime;
     hdr->cycleOffset = cycleOffset;
 }
 
-static inline void SetEnemyWave(struct enemy_ctrl *hdr, s32 period, s32 phase, s32 amplitude)
+static inline void SetEnemyWave(struct part_ctrl *hdr, s32 period, s32 phase, s32 amplitude)
 {
     hdr->period = period;
     hdr->phase = phase;

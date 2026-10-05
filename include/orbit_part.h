@@ -37,7 +37,9 @@ struct orbit_part
     u8 tag;                     // 0x2D - index into bank->records
     u8 unk_2E[2];
     s32 frame;                  // 0x30
-    u8 unk_34[8];
+    u8 unk_34[4];
+    u8 animDone;                // 0x38 - set once a non-looping animation ends (SetSpriteAnimDone)
+    u8 unk_39[3];
     u16 timer;                  // 0x3C
     u8 unk_3E[2];
     s32 velX;                   // 0x40 (Q8 per frame)

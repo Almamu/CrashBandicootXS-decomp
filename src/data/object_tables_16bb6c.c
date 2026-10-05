@@ -1,4 +1,6 @@
 #include "core.h"
+#include "pickups.h"
+#include "enemies.h"
 
 /*
  * ROM 0x0816BB6C-0x0816BF20. Linked in ROM order between data/data.s

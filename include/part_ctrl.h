@@ -1,12 +1,16 @@
 #ifndef GUARD_PART_CTRL_H
 #define GUARD_PART_CTRL_H
 
+#include "core.h"
 #include "box_part.h"
 
-/* The controller object of the 0x0800B8DC-0x0800CA60 cluster
- * (UpdateEnemyCtrl's own `self`, docs/matching/issue-9-10-0x0800b8dc-graphics.md)
- * and the part it steers (`self->target`, "owner" in the older docs).
- * Only the fields the cluster touches are named.
+/* The enemy controller of the 0x0800B8DC-0x0800CA60 cluster
+ * (src/enemies/, UpdateEnemyCtrl's own `self`,
+ * docs/matching/issue-9-10-0x0800b8dc-graphics.md) and the part it steers
+ * (`self->target`, "owner" in the older docs). CreateEnemyCtrl constructs
+ * the controller in a 0x8C-byte block, and the level spawners
+ * (include/text_popup.h) attach it to the sprite part they create. Only
+ * the fields the code touches are named.
  *
  * Built with old_agbcc: see docs/matching/issue-10-naked-retry.md. */
 
@@ -67,22 +71,28 @@ struct ctrl_target {
     u8 hitAxes;         // 0x68 - collision axes the terrain probe resolved (8: Y)
 };
 
-/* The record `self->anchor` points to; +0x50 is the method the mode
- * trigger (SetEnemyAnimMode) calls. */
+/* The controller's method table (`self->anchor`, gEnemyCtrlVtable for
+ * CreateEnemyCtrl's controllers); +0x50 is the method the mode trigger
+ * (SetEnemyAnimMode) calls. */
 struct ctrl_anchor {
     u8 unk_00[0x10];
     struct part_method bounce;  // 0x10
-    u8 unk_18[0x30];
+    struct part_method attach;  // 0x18 - AttachEnemyCtrl: hands the controller its part
+    u8 unk_20[0x28];
     struct part_method launch;  // 0x48
     struct part_method trigger; // 0x50
 };
 
 struct part_ctrl {
-    u8 unk_00[0xC];
+    u8 unk_00[4];
+    void *manager;      // 0x04 - the motion entry set StartCtrlTargetMotionXFromSet/
+                        //        StartCtrlTargetMotionYFromSet read (gEnemyCtrlMotionSet)
+    u8 unk_08[4];
     struct ctrl_anchor *anchor; // 0x0C
     s32 rangeX[2];      // 0x10 - homing bounds
     s32 rangeY[2];      // 0x18
-    s32 boxL;           // 0x20 - hit box, relative to the target
+    s32 boxL;           // 0x20 - hit/trigger box, relative to the target
+                        //        (UpdateEnemyTriggerBox, SetEnemyTriggerBox)
     s32 boxT;           // 0x24
     s32 boxR;           // 0x28
     s32 boxB;           // 0x2C
@@ -92,27 +102,28 @@ struct part_ctrl {
                         //        repeats every idleTime + attackTime frames of gRoomFrameCount
     s32 cycleOffset;    // 0x38 - where in the cycle the enemy starts (SetEnemyState starts it
                         //        attacking when cycleOffset >= idleTime)
-    s32 period;         // 0x3C - oscillator
+    s32 period;         // 0x3C - oscillator (SetEnemyOscillator, UpdateEnemyOscillateX)
     s32 phase;          // 0x40
     s32 amplitude;      // 0x44
-    u8 unk_48[0x10];
+    s32 shotPeriod;     // 0x48 - UpdateEnemyShooter fires every shotPeriod
+    s32 shotPhase;      // 0x4C   frames, offset by shotPhase
+    u8 unk_50[8];
     s32 speed;          // 0x58 - homing
     s32 accel;          // 0x5C
     s32 baseX;          // 0x60 - oscillator base / last target x
     s32 baseY;          // 0x64 - oscillator base / last target y
     s32 mode;           // 0x68 - see SetEnemyAnimMode
-    s32 kind;           // 0x6C
+    s32 kind;           // 0x6C - the enemy kind (its sprite bank)
     struct ctrl_target *target; // 0x70
     s32 state;          // 0x74 - UpdateEnemyCtrl's state
     s32 modeB;          // 0x78 - see SetEnemyMotionX
     s32 modeA;          // 0x7C - see SetEnemyMotionY
     s32 counter;        // 0x80
-    s32 *anims;         // 0x84 - per-mode argument of the trigger
+    const s32 *anims;   // 0x84 - per-mode argument of the trigger: anim mode ->
+                        //        bank anim (gEnemyDefaultAnimMap..., SetEnemyModeTable)
     struct ctrl_target *popup; // 0x88 - floating popup spawned in state 18
 };
 
-extern void SetEnemyMotionY(struct part_ctrl *self, s32 mode);
-extern void SetEnemyMotionX(struct part_ctrl *self, s32 mode);
-extern void SetEnemyAnimMode(struct part_ctrl *self, s32 mode);
+COMPILE_TIME_ASSERT(sizeof(struct part_ctrl) == 0x8C);
 
 #endif /* GUARD_PART_CTRL_H */

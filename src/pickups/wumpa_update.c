@@ -2,6 +2,7 @@
 #include "actor.h"
 #include "orbit_part.h"
 #include "hud.h"
+#include "pickups.h"
 
 /* GitHub issue #12/#14 Phase 2, second parallel slice: the tail 6
  * functions of the still-large 24-function chunk past AddCollisionCandidate
@@ -169,7 +170,6 @@ extern void CollectWumpa(void *state);
 extern struct actor *DropWumpa(void *unused0, u16 x, u16 y, u8 p3, u8 p4, u8 p5);
 typedef struct actor *(*OrbitSpawn4)(void *pool, s32 x, s32 y, u8 p3);
 
-extern void UpdateWumpaHop(struct orbit_part *self);
 extern void UpdateSpriteObj(struct actor *self);
 
 /* flags |= 1 and, unless the id is 0xffff, the id's bit in the
@@ -307,12 +307,8 @@ void UpdateWumpa(struct orbit_part *self)
     UpdateSpriteObj(&self->base);
 }
 
-/* CreateWumpa: the achievement/unlock-icon spawn helper (docs/rom_map.md),
- * extern-declared as `void CreateWumpa(u16 arg0)` in
- * src/level/spawn_pickups.c (that call site only ever reads
- * `arg0`, per its own doc comment - the other three args below are real
- * per this function's own body, just unused/garbage at that particular
- * call site) and called with all four real arguments from
+/* CreateWumpa: the wumpa spawner, called by SpawnWumpa
+ * (src/level/spawn_pickups.c) with its spawn-table slot's arguments and by
  * DropWumpa (entity_spawner.c, NAKED, already matched): `CreateWumpa(id,
  * x, y, special)` where `special` is `0xFFFF` or `0` selecting which of
  * two dual_array_manager lists (`gUnknown_030012F4` vs `gUnknown_030012EC`)
@@ -354,12 +350,9 @@ extern void *gUnknown_030012EC;
 extern void *gUnknown_030012F4;
 extern void ***gSpriteBankSet;
 extern void *gPaletteCache;
-extern u8 gWumpaVtable[];
 extern void *OperatorNew(s32 size);
 extern struct actor *InitSpriteObj(struct actor *self);
 extern void AddToPartList(void *manager, void *value);
-extern void ResetWumpaPickup(struct orbit_part *self);
-extern void StartWumpaPayout(struct actor *self);
 extern void ResetSpriteFrameTimer(struct orbit_part *part);
 extern void ResetSpriteFrameIndex(struct orbit_part *part);
 extern void SetSpriteAnimDone(struct orbit_part *part, u8 val);
@@ -374,7 +367,7 @@ struct orbit_part *CreateWumpa(u16 id, u16 x, u16 y, u16 special)
 
     self = OperatorNew(0x54);
     InitSpriteObj(&self->base);
-    self->base.table = gWumpaVtable;
+    self->base.table = (void *)gWumpaVtable;
     ResetWumpaPickup(self);
     self->base.field_08 = id;
     self->base.x = x << 8;
@@ -413,7 +406,7 @@ struct orbit_part *CreateWumpa(u16 id, u16 x, u16 y, u16 special)
     p->mode = mode;
     p->phase = phase;
     if (mode == 0xff)
-        StartWumpaPayout(&p->base);
+        StartWumpaPayout(p);
     p->slotNibble = GetPaletteSlot(gPaletteCache, p->bank->records->paletteId);
     return p;
 }
@@ -463,15 +456,12 @@ void SendWumpaToHud(struct orbit_part *self)
     ShowHudWumpa(gHud);
 }
 
-/* StartWumpaPayout: sibling of SendWumpaToHud above - sets self->0x48 = 3 (mode)
- * and self->0x49 = 0xa (a fixed countdown), no other side effects.
- * Already extern-declared as `void StartWumpaPayout(struct actor *self)` in
- * src/pickups/wumpa.c. Matched: trivial leaf, no push/pop, plain
- * field stores. */
-void StartWumpaPayout(struct actor *self)
+/* StartWumpaPayout: sibling of SendWumpaToHud above - sets `state` = 3
+ * and `counter` = 0xa (a fixed countdown), no other side effects. */
+void StartWumpaPayout(struct orbit_part *self)
 {
-    *((u8 *)self + 0x48) = 3;
-    *((u8 *)self + 0x49) = 0xa;
+    self->state = 3;
+    self->counter = 0xa;
 }
 
 /* UpdateWumpaHop: address-adjacent to StartWumpaPayout, a small self->0x4b/
@@ -490,15 +480,9 @@ void StartWumpaPayout(struct actor *self)
  * Same shape as UpdateExtraLifeHop (extra_life.c) with a 0x3000 y-scale: the
  * sine sample goes through one reused local, which old_agbcc keeps in r2
  * across both calls exactly like the ROM. */
-struct three_words {
-    s32 a[3];
-};
-
-extern struct three_words gWumpaHopWidths;
-
 void UpdateWumpaHop(struct orbit_part *self)
 {
-    struct three_words scales = gWumpaHopWidths;
+    struct three_words scales = *(const struct three_words *)gWumpaHopWidths;
     s32 dy;
     s32 sn;
 

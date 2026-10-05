@@ -33,6 +33,7 @@
  *  - The toggle reads the bit into a local first (`m = bit; bit = !m;`).
  */
 #include "part_ctrl.h"
+#include "enemies.h"
 
 void UpdateEnemyPatrol(struct part_ctrl *self)
 {

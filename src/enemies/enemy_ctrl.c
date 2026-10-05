@@ -2,6 +2,7 @@
 #include "actor.h"
 #include "actor_self.h"
 #include "part_ctrl.h"
+#include "enemies.h"
 
 /* GitHub issue #9/#10: the three small `(self, mode)`-shaped trigger
  * functions the Phase 1 investigation (docs/matching/issue-9-10-0x0800b8dc-graphics.md)
@@ -338,52 +339,12 @@ void *LaunchHarmfulEffectPart(s32 a, s32 b, s32 c, s32 d, s32 e, void *f)
  * suma coincide`). This fully consumes `asm/code_3_2_17_ca04.s`,
  * retired from `ldscript.txt`. */
 
-/* This cluster's controller object (the class of UpdateEnemyCtrl,
- * enemy_ctrl_update.c), as far as this file's accessors describe it. The
- * 0x30/0x34/0x38 triple is only ever set here - its readers (the
- * "blocking condition" checks in the docs) test the *owner's* fields at
- * the same offsets, so its own meaning is still unknown. */
-struct trigger_ctrl {
-    u8 unk_00[4];
-    void *manager;          // 0x04 - 8-byte-record array (StartCtrlTargetMotionYFromSet/StartCtrlTargetMotionXFromSet)
-    u8 unk_08[4];
-    void *vtable;           // 0x0C
-    u8 unk_10[0x10];
-    s32 boxX;               // 0x20 - trigger box (UpdateEnemyTriggerBox)
-    s32 boxY;               // 0x24
-    s32 boxW;               // 0x28
-    s32 boxH;               // 0x2C
-    s32 unk_30;             // 0x30
-    s32 unk_34;             // 0x34
-    s32 unk_38;             // 0x38
-    s32 oscDivisor;         // 0x3C - sine oscillator (UpdateEnemyOscillateX/UpdateEnemyBob/UpdateEnemyOscillateY)
-    s32 oscPhase;           // 0x40
-    s32 oscAmplitude;       // 0x44
-    s32 period;             // 0x48 - UpdateEnemyShooter's gate passes once every `period` frames...
-    s32 phase;              // 0x4C - ...at this offset
-    u8 unk_50[0x1C];
-    s32 unk_6c;             // 0x6C - state/anim id
-    void *owner;            // 0x70 - the controlled object
-    u8 unk_74[0x10];
-    void *triggerTable;     // 0x84 - mode-indexed (SetEnemyAnimMode/SetEnemyState)
-    void *popup;            // 0x88 - floating popup child
-};
-
-/* A periodic trigger actor (CreatePeriodicSpawner builds one on top of graphics.c's
- * `struct actor`): fires _call_via_r4 at its own position once every
- * `period` frames while near the camera (UpdatePeriodicSpawner). */
-struct periodic_spawner {
-    struct actor base;      // 0x00 - `base.table` is the method table
-    s32 unk_1c;             // 0x1C - read but unused by UpdatePeriodicSpawner
-    s32 period;             // 0x20
-    s32 phase;              // 0x24
-};
-
-/* `self+0x70` ("owner") setter - the first confirmed writer of this
- * field anywhere in the cluster (every other function only reads it). */
-void AttachEnemyCtrl(struct trigger_ctrl *self, void *owner)
+/* `target` setter - the first confirmed writer of this field anywhere in
+ * the cluster (every other function only reads it). The level spawners
+ * call it through the method table (`anchor->attach`). */
+void AttachEnemyCtrl(struct part_ctrl *self, struct ctrl_target *target)
 {
-    self->owner = owner;
+    self->target = target;
 }
 
 extern struct actor *gPlayer;
@@ -438,8 +399,6 @@ s32 GetSfxVolumeAt(s32 x, s32 y)
     return 0x100 - (d - 0x20) * 2;
 }
 
-extern u8 gEnemyCtrlMotionSet[];
-
 /* Resets `self+0x70` ("owner"), `self+0x84` (the per-instance
  * mode-indexed pointer table) and `self+0x88` (the floating-popup
  * child pointer) to null, and re-points `self+4` (the "manager"
@@ -447,15 +406,14 @@ extern u8 gEnemyCtrlMotionSet[];
  * table - an initializer/reset for this object's own extension
  * fields, called by `CreateEnemyCtrl` below as part of its own
  * construction sequence. */
-void ResetEnemyCtrl(struct trigger_ctrl *self)
+void ResetEnemyCtrl(struct part_ctrl *self)
 {
-    self->owner = NULL;
-    self->triggerTable = NULL;
-    self->manager = gEnemyCtrlMotionSet;
+    self->target = NULL;
+    self->anims = NULL;
+    self->manager = (void *)&gEnemyCtrlMotionSet;
     self->popup = NULL;
 }
 
-extern u8 gEnemyCtrlVtable[];
 extern void DestroyCtrl(void *self, s32 flags);
 extern void InitCtrl(void *self);
 
@@ -471,9 +429,9 @@ extern void InitCtrl(void *self);
  * never survives past the call - the same harmless double-set pattern
  * already established for `DestroyStompedHopPadCtrl`/`DestroyBossCtrl`/`DestroyMegaMixCtrl`/
  * `DestroyEffectCtrl`. */
-void DestroyEnemyCtrl(struct trigger_ctrl *self, s32 flags)
+void DestroyEnemyCtrl(struct part_ctrl *self, s32 flags)
 {
-    self->vtable = gEnemyCtrlVtable;
+    self->anchor = (struct ctrl_anchor *)gEnemyCtrlVtable;
     DestroyCtrl(self, flags);
 }
 
@@ -484,10 +442,10 @@ void DestroyEnemyCtrl(struct trigger_ctrl *self, s32 flags)
  * constructor shape already matched for `CreateStompedHopPadCtrl`/`DestroyStompedHopPadCtrl`/
  * `CreateKnockedEnemyCtrl`/`InitEffectCtrl`, with `ResetEnemyCtrl` playing the
  * `nullsub_N`-hook role those other constructors give a no-op. */
-void *CreateEnemyCtrl(struct trigger_ctrl *self)
+struct part_ctrl *CreateEnemyCtrl(struct part_ctrl *self)
 {
     InitCtrl(self);
-    self->vtable = gEnemyCtrlVtable;
+    self->anchor = (struct ctrl_anchor *)gEnemyCtrlVtable;
     ResetEnemyCtrl(self);
     return self;
 }
@@ -495,29 +453,30 @@ void *CreateEnemyCtrl(struct trigger_ctrl *self)
 /* `self+0x3c`/`0x40`/`0x44` setter - the sine-oscillator parameters
  * (divisor, phase offset, amplitude) `UpdateEnemyOscillateX`/`UpdateEnemyBob`/
  * `UpdateEnemyOscillateY` (`enemy_ctrl.c`) already consume. */
-void SetEnemyOscillator(struct trigger_ctrl *self, s32 a, s32 b, s32 c)
+void SetEnemyOscillator(struct part_ctrl *self, s32 period, s32 phase, s32 amplitude)
 {
-    self->oscDivisor = a;
-    self->oscPhase = b;
-    self->oscAmplitude = c;
+    self->period = period;
+    self->phase = phase;
+    self->amplitude = amplitude;
 }
 asm(".align 2, 0");
 
 /* `self+0x48`/`0x4c` setter - the fields `UpdateEnemyShooter`'s
  * (`enemy_shooter.c`) own `__modsi3` "close enough" gate reads. */
-void SetEnemyShotPeriod(struct trigger_ctrl *self, s32 a, s32 b)
+void SetEnemyShotPeriod(struct part_ctrl *self, s32 period, s32 phase)
 {
-    self->period = a;
-    self->phase = b;
+    self->shotPeriod = period;
+    self->shotPhase = phase;
 }
 
-/* `self+0x30`/`0x34`/`0x38` setter - the "blocking condition" pair
- * plus "enabled" byte the Phase 1 doc's field table already names. */
-void sub_800CAA4(struct trigger_ctrl *self, s32 a, s32 b, s32 c)
+/* Attack cycle setter (`idleTime`/`attackTime`/`cycleOffset`, read by
+ * UpdateEnemyAttackCycle/SetEnemyState in enemy_attack.c) - the same
+ * stores as text_popup.h's inline SetEnemyAttackCycle. */
+void sub_800CAA4(struct part_ctrl *self, s32 idleTime, s32 attackTime, s32 cycleOffset)
 {
-    self->unk_30 = a;
-    self->unk_34 = b;
-    self->unk_38 = c;
+    self->idleTime = idleTime;
+    self->attackTime = attackTime;
+    self->cycleOffset = cycleOffset;
 }
 
 /* `self+0x20`/`0x24`/`0x28`/`0x2c` full 4-corner setter - the
@@ -528,29 +487,29 @@ void sub_800CAA4(struct trigger_ctrl *self, s32 a, s32 b, s32 c)
  * argument arrives on the stack (only 3 fit in `r1`-`r3`); needed the
  * trailing `[[matching_decomp_alignment_fix]]` idiom since its own
  * 18-byte body isn't 4-byte-aligned. */
-void SetEnemyTriggerBox(struct trigger_ctrl *self, s32 a, s32 b, s32 c, s32 d)
+void SetEnemyTriggerBox(struct part_ctrl *self, s32 l, s32 t, s32 r, s32 b)
 {
-    self->boxX = a;
-    self->boxW = c;
-    self->boxY = b;
-    self->boxH = d;
+    self->boxL = l;
+    self->boxR = r;
+    self->boxT = t;
+    self->boxB = b;
 }
 asm(".align 2, 0");
 
 /* `self+0x84` setter - the per-instance mode-indexed pointer table
  * `SetEnemyAnimMode`/`SetEnemyState` (`enemy_ctrl.c`/`enemy_attack.c`)
  * both trigger through. */
-void SetEnemyModeTable(struct trigger_ctrl *self, void *a)
+void SetEnemyModeTable(struct part_ctrl *self, const s32 *anims)
 {
-    self->triggerTable = a;
+    self->anims = anims;
 }
 asm(".align 2, 0");
 
 /* `self+0x6c` setter - the "second, larger-range state/anim-id byte"
  * the Phase 1 doc's field table already names. */
-void sub_800CAC8(struct trigger_ctrl *self, s32 a)
+void sub_800CAC8(struct part_ctrl *self, s32 kind)
 {
-    self->unk_6c = a;
+    self->kind = kind;
 }
 
 extern s32 __modsi3(s32 a, s32 b);
@@ -565,18 +524,15 @@ extern void _call_via_r4(void *arg0, s32 arg1, s32 arg2, s32 arg3);
  * `_call_via_r4((void*)0xffff, (u16)selfX, (u16)(self->4 >> 8), 0)` -
  * the same "directional-target table trigger" primitive
  * `UpdateEnemyCtrl` state 11 and `HitEnemy` states 19-20
- * (`enemy_ctrl_update.c`) already call directly. `self+0x1c` (the Y-axis
- * homing bound `sub_800CB60` below sets) is read here too but its
- * value is never used for anything - a genuine dead read the ROM's own
- * compiled output still performs (confirmed by the ROM's own `ldr r4,
- * [r4, #0x1c]` sitting right before the call with no further use of
- * `r4` after it).
+ * (`enemy_ctrl_update.c`) already call directly. The function it calls
+ * is `callback` (`ldr r4, [r4, #0x1c]` right before the call;
+ * SpawnSealSpawner in spawn_objects.c installs SpawnSeal there):
+ * `_call_via_r4` branches to r4, so the load is the call target, not a
+ * dead read.
  *
- * Needed [[matching_decomp_register_pinning]] in one spot: the dead
- * `self+0x1c` read had to be pinned to `r4` explicitly (the register
- * `self` itself was already using, and free again by this point) -
- * unpinned, gcc picked a spare `r3` for it instead, a harmless but
- * byte-different register choice from the ROM's own. */
+ * Needed [[matching_decomp_register_pinning]] in one spot: the
+ * `callback` read is pinned to `r4` explicitly, since the thunk's
+ * declaration here takes the four arguments only. */
 void UpdatePeriodicSpawner(struct periodic_spawner *self)
 {
     s32 selfX = self->base.x >> 8;
@@ -591,10 +547,10 @@ void UpdatePeriodicSpawner(struct periodic_spawner *self)
             void *arg0 = (void *)0xFFFF;
             u32 arg1 = ((u32)selfX << 16) >> 16;
             u32 arg2 = ((u32)self->base.y << 8) >> 16;
-            register s32 dead asm("r4");
+            register s32 fn asm("r4");
 
-            dead = *(volatile s32 *)&self->unk_1c;
-            (void)dead;
+            fn = *(volatile s32 *)&self->callback;
+            (void)fn;
             _call_via_r4(arg0, arg1, arg2, 0);
         }
     }
@@ -610,41 +566,36 @@ extern void OperatorDelete(void *self);
  * fires `OperatorDelete(self)`. */
 void DestroyPeriodicSpawner(struct periodic_spawner *self, s32 flags)
 {
-    self->base.table = gEntityVtable;
+    self->base.table = (void *)gEntityVtable;
     if (flags & 1) {
         OperatorDelete(self);
     }
 }
 
 extern struct actor *InitEntity(struct actor *self);
-extern u8 gPeriodicSpawnerVtable[];
 
 /* Calls `InitEntity(self)` (already matched, `graphics.c`) - its
  * return value discarded - then sets `self+0x18`'s table pointer to
  * `gPeriodicSpawnerVtable` and returns `self`. */
-void *CreatePeriodicSpawner(struct periodic_spawner *self)
+struct periodic_spawner *CreatePeriodicSpawner(struct periodic_spawner *self)
 {
     InitEntity(&self->base);
-    self->base.table = gPeriodicSpawnerVtable;
+    self->base.table = (void *)gPeriodicSpawnerVtable;
     return self;
 }
 
-/* `self+0x20`/`0x24` partial (position-only) setter - the same AABB
- * trigger-box fields `SetEnemyTriggerBox` above sets all four corners of. */
-void SetPeriodicSpawnerPeriod(struct periodic_spawner *self, s32 a, s32 b)
+/* `period`/`phase` setter (UpdatePeriodicSpawner's gate). */
+void SetPeriodicSpawnerPeriod(struct periodic_spawner *self, s32 period, s32 phase)
 {
-    self->period = a;
-    self->phase = b;
+    self->period = period;
+    self->phase = phase;
 }
 asm(".align 2, 0");
 
-/* `self+0x1c` setter - the Y-axis homing bound `SetEnemyRangeYSpeed`/
- * `SetEnemyRangeX` (`enemy_attack.c`) already write, and the field
- * `UpdatePeriodicSpawner` above reads (but never uses) via its own dead
- * `self+0x1c` load. */
-void sub_800CB60(struct periodic_spawner *self, s32 a)
+/* `callback` setter (the function UpdatePeriodicSpawner calls). */
+void sub_800CB60(struct periodic_spawner *self, void (*callback)(void))
 {
-    self->unk_1c = a;
+    self->callback = callback;
 }
 
 extern void *gEntityFlags;
@@ -676,9 +627,9 @@ struct probe_vtable {
     struct actor_method m28;    // 0x28 - hit probe
 };
 
-void UpdateKnockedEnemyCtrl(void *selfArg, void *otherArg)
+void UpdateKnockedEnemyCtrl(void *selfArg, struct actor *otherArg)
 {
-    register u8 *other asm("r4") = otherArg;
+    register u8 *other asm("r4") = (u8 *)otherArg;
     struct probe_vtable *table = ((struct actor *)other)->table;
     s16 offset = table->m28.thisOffset;
     void *addr = other + offset;
@@ -723,17 +674,15 @@ void nullsub_14(void *self)
 }
 asm(".align 2, 0");
 
-extern u8 gKnockedEnemyCtrlVtable[];
-
 /* Same "double-set" shape as `DestroyEnemyCtrl` above: sets `self+0xc`'s
  * table pointer to `gKnockedEnemyCtrlVtable` - the same fixed anchor
  * table `CreateKnockedEnemyCtrl` (`enemy_ctrl.c`) itself re-points `self+0xc`
  * at - then tail-calls `DestroyCtrl`, which promptly resets `self+0xc`
  * right back to `gCtrlVtable` regardless (same harmless dead
  * store as `DestroyEnemyCtrl`). */
-void DestroyKnockedEnemyCtrl(struct trigger_ctrl *self, s32 flags)
+void DestroyKnockedEnemyCtrl(void *self, s32 flags)
 {
-    self->vtable = gKnockedEnemyCtrlVtable;
+    *(const void **)((u8 *)self + 0xc) = gKnockedEnemyCtrlVtable;
     DestroyCtrl(self, flags);
 }
 
@@ -757,14 +706,12 @@ void DestroyKnockedEnemyCtrl(struct trigger_ctrl *self, s32 flags)
  * `CreateStompedHopPadCtrl` (`src/player/player_flags.c`) and `DestroyStompedHopPadCtrl`
  * (`src/player/action_ctrl_states.c`), plus a `nullsub_14(self)` no-op
  * tail call specific to this object type. */
-extern void nullsub_14(void *self);
-
 void *CreateKnockedEnemyCtrl(void *selfArg)
 {
     u8 *self = selfArg;
 
     InitCtrl(self);
-    *(void **)(self + 0xc) = gKnockedEnemyCtrlVtable;
+    *(const void **)(self + 0xc) = gKnockedEnemyCtrlVtable;
     nullsub_14(self);
     return self;
 }

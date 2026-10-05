@@ -3,6 +3,7 @@
 #include "gba/dma_macros.h"
 #include "bitmap_font.h"
 #include "text.h"
+#include "cutscene.h"
 
 /* 0x08022354-0x080225A0, formerly asm/code_3_2_17_22354.s: the two
  * functions between issue #33's chunk (spawn_pickups.c, which
@@ -33,18 +34,7 @@ extern void *gSpriteBankSet;
 extern void *gPaletteCache;
 extern void *gEntityFlags;
 extern void *gPaletteCycles;
-extern u32 *gCutsceneTexts[];
 extern s32 gLanguage;
-
-/* gCutscenes: {list, count} headers, one per text list
- * (docs/rom_map.md, "gCutscenes is a header array of
- * variable-length lists"). */
-struct text_list
-{
-    void **items;
-    s32 count;
-};
-extern struct text_list gCutscenes[];
 
 extern void FreeVramDmaQueue(void);
 extern void DestroyOamBuffer(void *self, u32 flags);
@@ -123,29 +113,12 @@ struct text_rect
     struct text_vec size;
 };
 
-/* The text pager InitCutscenePlayer constructs and RunCutscenePlayer runs
- * (cutscene_player.c): the +0/+4 item list, the +0x10 per-item page table,
- * the font (an icon manager) at +0x14 and the text box at +0x18. */
-struct text_pager
-{
-    void **items;                   // 0x00
-    s32 count;                      // 0x04
-    u8 unk_08[8];
-    u32 *pages;                     // 0x10
-    struct bitmap_font *font;      // 0x14
-    struct text_rect box;           // 0x18
-};
-
 extern void SetDispcntMode(s32 val);
 extern void ShowBg2(void);
 extern void ShowObj(void);
 extern void CommitDispcnt(void);
 extern void FreeUnlockedPaletteSlots(void *cache);
 extern void UploadPaletteCache(void *cache);
-extern void InitCutscenePlayer(struct text_pager *self);
-extern void SetSlideshowDispcnt(u32 value);
-extern void RunCutscenePlayer(struct text_pager *self);
-extern void DestroyCutscenePlayer(struct text_pager *self, s32 flags);
 
 typedef void (*method_fn)(void *self);
 
@@ -168,7 +141,7 @@ void PlayCutscene(void *self, s32 idx)
     struct {
         struct text_rect box;
         u16 fill;
-        struct text_pager pager;
+        struct cutscene_player pager;
     } f;
     s32 zero;
     u16 mode;
@@ -215,20 +188,20 @@ void PlayCutscene(void *self, s32 idx)
          * register - see docs/matching/gap-22354-game-context.md. */
         s32 x0 = f.box.pos.x;
         s32 y0 = f.box.pos.y;
-        s32 *d = &f.pager.box.pos.x;
+        s32 *d = &f.pager.box.x;
         s32 x1, y1;
 
         d[0] = x0;
         d[1] = y0;
         x1 = f.box.size.x;
         y1 = f.box.size.y;
-        f.pager.box.size.x = x1;
+        f.pager.box.w = x1;
         d[3] = y1;
     }
     SetSlideshowDispcnt(*(u32 *)dispcnt);
-    f.pager.items = gCutscenes[idx].items;
+    f.pager.slides = gCutscenes[idx].slides;
     f.pager.count = gCutscenes[idx].count;
-    f.pager.pages = (u32 *)gCutsceneTexts[gLanguage][idx];
+    f.pager.pages = gCutsceneTexts[gLanguage][idx];
     RunCutscenePlayer(&f.pager);
     *dispcnt = mode;
     CommitDispcnt();

@@ -1,6 +1,8 @@
 #include "core.h"
 #include "vtable.h"
 #include "text.h"
+#include "pickups.h"
+#include "enemies.h"
 
 /*
  * ROM 0x087E3BEC-0x087E55E4: the 93 virtual tables of the game's C++
@@ -73,14 +75,6 @@ extern void StartCtrlTargetMotionXFromSet();
 extern void SetCtrlTargetAnim();
 extern void AttachCtrl();
 extern void DestroyCtrl();
-extern void UpdateEnemyCtrl();
-extern void HitEnemy();
-extern void AttachEnemyCtrl();
-extern void DestroyEnemyCtrl();
-extern void UpdatePeriodicSpawner();
-extern void DestroyPeriodicSpawner();
-extern void UpdateKnockedEnemyCtrl();
-extern void DestroyKnockedEnemyCtrl();
 extern void UpdateEffectCtrl();
 extern void DestroyEffectCtrl();
 extern void DrawCrate();
@@ -88,20 +82,6 @@ extern void UpdateCrate();
 extern void IsCrateInsideRect();
 extern void GetCrateClassId();
 extern void DestroyCrate();
-extern void CheckExtraLifePickup();
-extern void UpdateExtraLife();
-extern void DrawExtraLife();
-extern void GetExtraLifeClassId();
-extern void DestroyExtraLife();
-extern void CollideExtraLife();
-extern void CheckWumpaPickup();
-extern void UpdateWumpa();
-extern void DrawWumpa();
-extern void GetWumpaClassId();
-extern void DestroyWumpa();
-extern void CollideWumpa();
-extern void UpdateStopwatch();
-extern void DestroyStopwatch();
 extern void ActionCtrlHandleEvent();
 extern void UpdateActionCtrl();
 extern void SetActionCtrlMode();

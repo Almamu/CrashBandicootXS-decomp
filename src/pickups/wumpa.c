@@ -1,5 +1,6 @@
 #include "core.h"
 #include "actor.h"
+#include "pickups.h"
 
 extern void DrawSprite(void *self, void *part);
 extern void *gSpriteRenderer;
@@ -13,15 +14,15 @@ extern void *gSpriteRenderer;
  * negative-constant bit-clear idiom, see `matching.md`'s `& -5`/`& -2`/
  * `& -3` entries) to reproduce the ROM's runtime `movs`+`rsbs` instead
  * of a folded immediate AND. */
-void DrawWumpa(struct actor *part)
+void DrawWumpa(struct orbit_part *self)
 {
-    DrawSprite(gSpriteRenderer, part);
-    if (*((u8 *)part + 0x38) != 0) {
+    DrawSprite(gSpriteRenderer, self);
+    if (self->animDone != 0) {
         register s32 mask asm("r0") = -9;
-        register u8 flags asm("r1") = part->flags;
+        register u8 flags asm("r1") = self->base.flags;
 
         mask &= flags;
-        part->flags = mask;
+        self->base.flags = mask;
     }
 }
 
@@ -33,7 +34,6 @@ s32 GetWumpaClassId(void)
 }
 
 extern void DestroySpriteObj(struct actor *self, u32 arg1);
-extern u8 gWumpaVtable[];
 
 /* Sets `self->table` then tail-calls `DestroySpriteObj` (already matched in
  * `sprite_obj.c`), which unconditionally overwrites `table` again
@@ -41,21 +41,20 @@ extern u8 gWumpaVtable[];
  * immediately clobbered by the callee. Kept faithfully anyway; the
  * compiler can't see through the opaque call to know the store is
  * dead. */
-void DestroyWumpa(struct actor *self, u32 arg1)
+void DestroyWumpa(struct orbit_part *self, u32 flags)
 {
-    self->table = gWumpaVtable;
-    DestroySpriteObj(self, arg1);
+    self->base.table = (void *)gWumpaVtable;
+    DestroySpriteObj(&self->base, flags);
 }
 
-/* Sets flag bit 6, clears `self+0x48` (a field not yet characterized
- * in this ROM region - see the neighboring `DrawWumpa`'s `+0x38`). */
-void ResetWumpaPickup(struct actor *self)
+/* Sets flag bit 6 and clears `state`. */
+void ResetWumpaPickup(struct orbit_part *self)
 {
     register u8 mask asm("r1") = 0x40;
 
-    mask |= self->flags;
-    *(volatile u8 *)&self->flags = mask;
-    *((u8 *)self + 0x48) = 0;
+    mask |= self->base.flags;
+    *(volatile u8 *)&self->base.flags = mask;
+    self->state = 0;
 }
 
 extern struct actor *InitSpriteObj(struct actor *self);
@@ -63,10 +62,10 @@ extern struct actor *InitSpriteObj(struct actor *self);
 /* Re-initializes `self` via `InitSpriteObj` (already matched in
  * `sprite_obj.c`), then overwrites its table with
  * `gWumpaVtable` and runs `ResetWumpaPickup` on it. */
-struct actor *InitWumpa(struct actor *self)
+struct orbit_part *InitWumpa(struct orbit_part *self)
 {
-    InitSpriteObj(self);
-    self->table = gWumpaVtable;
+    InitSpriteObj(&self->base);
+    self->base.table = (void *)gWumpaVtable;
     ResetWumpaPickup(self);
     return self;
 }
@@ -74,17 +73,17 @@ struct actor *InitWumpa(struct actor *self)
 extern void *_call_via_r1(void *arg0, void *arg1);
 extern void *gPlayer;
 
-/* If `self+0x48` is zero and the player (`gPlayer`)'s top
+/* If `state` is zero and the player (`gPlayer`)'s top
  * flag bit is set, fires a `self->table+0x68`-driven trampoline (the
  * same idiom documented in `crate_list.c`/`player_contact.c`) on
  * `self` itself. Always returns 0. */
-s32 CollideWumpa(struct actor *self)
+s32 CollideWumpa(struct orbit_part *self)
 {
-    if (*((u8 *)self + 0x48) == 0) {
+    if (self->state == 0) {
         struct actor *player = gPlayer;
 
         if (player->flags >> 7) {
-            u8 *rec = (u8 *)self->table + 0x68;
+            u8 *rec = (u8 *)self->base.table + 0x68;
             s16 offset = *(s16 *)rec;
 
             _call_via_r1((u8 *)self + offset, *(void **)(rec + 4));
@@ -94,43 +93,38 @@ s32 CollideWumpa(struct actor *self)
 }
 
 /* Sets `self->x`/`self->y` (Q8 fixed-point) from raw pixel `x`/`y`,
- * and mirrors the result into a second `{x, y}` pair at `self+0x4c`/
- * `+0x50` (not otherwise characterized in this ROM region yet). */
-void SetWumpaPos(struct actor *self, s32 x, s32 y)
+ * and mirrors the result into the orbit `anchor`. */
+void SetWumpaPos(struct orbit_part *self, s32 x, s32 y)
 {
     s32 storedX, storedY;
 
-    self->x = x << 8;
-    self->y = y << 8;
-    storedX = *(volatile s32 *)&self->x;
-    storedY = *(volatile s32 *)&self->y;
-    *(s32 *)((u8 *)self + 0x4c) = storedX;
-    *(s32 *)((u8 *)self + 0x50) = storedY;
+    self->base.x = x << 8;
+    self->base.y = y << 8;
+    storedX = *(volatile s32 *)&self->base.x;
+    storedY = *(volatile s32 *)&self->base.y;
+    self->anchor.x = storedX;
+    self->anchor.y = storedY;
 }
 
-extern void StartWumpaPayout(struct actor *self);
-
-/* Sets `self+0x4a`/`+0x4b` (not otherwise characterized yet), and if
- * `value == 0xff` also calls `StartWumpaPayout` (still raw asm just above
- * this ROM region, `0x0801191C`) on `self`. */
-void SetWumpaHop(struct actor *self, s32 value)
+/* Sets the hop `mode` and resets its `phase`; mode 0xff instead starts
+ * the payout (`StartWumpaPayout`, wumpa_update.c). */
+void SetWumpaHop(struct orbit_part *self, s32 mode)
 {
-    u8 *p = (u8 *)self + 0x4a;
+    u8 *p = &self->mode;
     u8 zero = 0;
 
-    *p = value;
+    *p = mode;
     p++;
     *p = zero;
-    if (value == 0xff) {
+    if (mode == 0xff) {
         StartWumpaPayout(self);
     }
 }
 
-/* Trivial one-byte setter - `self+0x49` (not otherwise characterized
- * yet). */
-void SetWumpaCounter(struct actor *self, u8 value)
+/* Trivial one-byte setter of `counter`. */
+void SetWumpaCounter(struct orbit_part *self, u8 value)
 {
-    *((u8 *)self + 0x49) = value;
+    self->counter = value;
 }
 
 extern void UpdateSpriteObj(struct actor *part);
@@ -209,38 +203,38 @@ inRange:
 }
 
 extern void *OperatorNew(s32 size);
-extern void ResetStopwatch(void *self);
-extern u8 gStopwatchVtable[];
 
 /* Allocates a new `struct actor`-shaped object (`OperatorNew(0x40)`,
  * same size as `CreateSpriteObj`'s constructor in `sprite_obj.c`),
  * re-initializes it via `InitSpriteObj`, overwrites its table with
  * `gStopwatchVtable`, and runs the empty `ResetStopwatch` on it before
- * setting `field_08`/`x`/`y` from the raw pixel arguments. */
-struct actor *CreateStopwatch(u16 arg0, u16 arg1, u16 arg2)
+ * setting `field_08`/`x`/`y` from the raw pixel arguments. `unused` is
+ * the fourth argument of the spawn-table slot (SpawnStopwatch passes it
+ * in r3); the function never reads it. */
+struct actor *CreateStopwatch(u16 id, u16 x, u16 y, u16 unused)
 {
     struct actor *self = OperatorNew(0x40);
 
     InitSpriteObj(self);
-    self->table = gStopwatchVtable;
+    self->table = (void *)gStopwatchVtable;
     ResetStopwatch(self);
-    self->field_08 = arg0;
-    self->x = (s32)arg1 << 8;
-    self->y = (s32)arg2 << 8;
+    self->field_08 = id;
+    self->x = (s32)x << 8;
+    self->y = (s32)y << 8;
     return self;
 }
 
 /* Empty stub. */
-void ResetStopwatch(void *self)
+void ResetStopwatch(struct actor *self)
 {
 }
 
 /* Same `table`-set/tail-call-`DestroySpriteObj` shape as `DestroyWumpa`
  * above, with a different vtable. */
-void DestroyStopwatch(struct actor *self, u32 arg1)
+void DestroyStopwatch(struct actor *self, u32 flags)
 {
-    self->table = gStopwatchVtable;
-    DestroySpriteObj(self, arg1);
+    self->table = (void *)gStopwatchVtable;
+    DestroySpriteObj(self, flags);
 }
 
 /* Same re-init/table-set/`ResetStopwatch` shape as `CreateStopwatch` above,
@@ -250,7 +244,7 @@ void DestroyStopwatch(struct actor *self, u32 arg1)
 struct actor *InitStopwatch(struct actor *self)
 {
     InitSpriteObj(self);
-    self->table = gStopwatchVtable;
+    self->table = (void *)gStopwatchVtable;
     ResetStopwatch(self);
     return self;
 }
