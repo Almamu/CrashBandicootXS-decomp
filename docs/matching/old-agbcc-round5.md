@@ -27,7 +27,7 @@ keeps the first `&count` alive instead of recomputing it as the ROM does. The
 old "r7 can never be pushed" note was wrong. `sub_8002E20` stays NAKED (see
 its comment).
 
-## Issue #63: `sub_803487C`
+## Issue #63: `InitContinuePromptGraphics`
 
 Previously raw asm with a `NON_MATCHING` draft; now plain C in actor_part88.c
 under `old_agbcc`, and `asm/code_3_2_20_28568_c99c_31784_33ef4_3487c.s` is

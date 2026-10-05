@@ -46,7 +46,7 @@ struct level_progress {
 
 extern void *gEntityFlags;
 extern s32 CountCrateEntities(void *self, void *list);
-extern s32 sub_802968C(u16 catIndex);
+extern s32 CountCategoryCrates(u16 catIndex);
 
 struct AudioContext;
 
@@ -197,7 +197,7 @@ s32 CountRoomCrates(struct MedalListItem *item)
             v = CountCrateEntities(gEntityFlags, *(void **)((u8 *)item->linkedObj + 0x1c));
             break;
         case 3:
-            v = sub_802968C(item->catIndex);
+            v = CountCategoryCrates(item->catIndex);
             break;
     }
     return v;

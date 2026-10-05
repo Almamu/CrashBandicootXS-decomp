@@ -10,7 +10,7 @@ builds with no warnings for this file.
 region was built with the older compiler, `tools/agbcc/bin/old_agbcc`.
 The whole file now builds with it (Makefile `OLD_AGBCC_OBJS`), which
 closed the two functions that were NAKED under the current agbcc
-(`sub_8018A30`, `sub_801961C`) and made several of the workarounds below
+(`UpdateCortexBoss`, `sub_801961C`) and made several of the workarounds below
 unnecessary - they have been removed. The notes below describe the
 original agbcc pass; where a workaround has since gone, it is marked.
 
@@ -46,7 +46,7 @@ controller `+0x44`.
   bitmap bit).
 - `sub_8018978`: mirror the part towards `self+0x30`, reset two counters
   to 26 and store the part's offset from `self+0x30/0x34`.
-- `sub_8018A30` (table method) with `sub_8018BDC`/`sub_8018CB0`: a
+- `UpdateCortexBoss` (table method) with `sub_8018BDC`/`sub_8018CB0`: a
   two-part effect. State 0 spawns two child parts (tags 3 and 15, the
   second offset by `+0x2000,-0x4000`), state 1 sets the first child's tag
   from the second's height, mirrors both towards it and derives both
@@ -131,7 +131,7 @@ Fixes, all plain C plus pins/barriers unless noted:
 
 ## Formerly NAKED, matched under old_agbcc
 
-- **`sub_8018A30`**: under agbcc every operation and the 5-entry jump
+- **`UpdateCortexBoss`**: under agbcc every operation and the 5-entry jump
   table were reproduced, but the ROM keeps `self`/`part` in r5/r6 and
   uses r7 as a short-lived scratch register three times (the flip byte,
   the first frame clamp's tag, the `0x4000` constant), which agbcc never

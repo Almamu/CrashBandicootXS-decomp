@@ -7,7 +7,7 @@ actor_part19i.c`) and right before issue #54's chunk (`MovePolarAkuAku`,
 `src/graphics/actor_part62.c`) - still completely raw.
 `docs/matching/issue-53-actor-c7a8.md`'s "What's left" section had
 already flagged `UpdatePolarElectricFence` onward as "a larger,
-`sub_802DD9C`/`sub_802A6EC`/`sub_802B7E0`-calling state machine ... not
+`sub_802DD9C`/`IsTouchingPlayer`/`ShockPolarPlayer`-calling state machine ... not
 attempted this pass".
 
 13 functions total, all on the same `InitActorPart`/`gActorList`-
@@ -28,8 +28,8 @@ trampoline table).
   into `self+0x38` and runs `sub_802DD9C`'s player-overlap test against
   it, transitioning to "used" (index 1) on a hit; then, regardless,
   re-snapshots one of three static 12-byte `gStaticData_0817A7xx`
-  records into `self+0x38` and probes `sub_802A6EC` against each in
-  turn (the first via `sub_802B7E0` on the player object, the other two
+  records into `self+0x38` and probes `IsTouchingPlayer` against each in
+  turn (the first via `ShockPolarPlayer` on the player object, the other two
   plain proximity), each on a hit also transitioning to "used". Once
   already "used" (`self+0xc != 0`), skips all of that and just fires the
   `self+0x50` trampoline (index 3) while `self+0x12` is set, or falls
@@ -42,7 +42,7 @@ trampoline table).
 
   Every one of the three 12-byte record snapshots reuses the same
   `self+0x38` scratch pointer (kept live in `r6`) across an intervening
-  `sub_802A6EC`/`sub_802DD9C`/`sub_802B7E0` call, with `r5`/`r7` each
+  `IsTouchingPlayer`/`sub_802DD9C`/`ShockPolarPlayer` call, with `r5`/`r7` each
   also switching roles (old state, then a "confirmed zero" reused for
   every reset block's `self+0x44`/`self+8` clear) mid-function - the
   exact heavy register-reuse family this project has already NAKED-
@@ -65,10 +65,10 @@ All in `src/graphics/actor_part126.c`.
 - **`CreatePolarElectricFence`** - `InitActorPart`-based constructor: forwards
   `a`/`b`/`c`/`d` straight through, installs `self+0x50 =
   gPolarElectricFenceVtable`, and clears the `self+0x2c` one-shot flag.
-- **`sub_802CE10`** - on the `sub_802A6EC` trampoline-fire edge,
-  forwards to `sub_802B730(gActorList)` (the player object),
+- **`sub_802CE10`** - on the `IsTouchingPlayer` trampoline-fire edge,
+  forwards to `HurtPolarPlayer(gActorList)` (the player object),
   discarding its result; always tail-calls `UpdateActor`. Needed
-  `sub_802B730`'s extern declared as returning `u8` (not `s32`) even
+  `HurtPolarPlayer`'s extern declared as returning `u8` (not `s32`) even
   though the result is discarded here - the ROM's own boolean check
   at this call site (`lsls r0,r0,0x18; cmp r0,#0`, no accompanying
   `lsrs`) only appears when the callee's return type itself is
@@ -81,13 +81,13 @@ All in `src/graphics/actor_part126.c`.
   ROM's own three-way `beq`/`beq`/`b` dispatch at the top (an
   `if`/`else if` chain instead compiles to an inverted `bne`/`bne`
   pair, a different byte sequence even though behaviorally identical).
-  State 0: on `sub_802A6EC`'s fire edge, calls
+  State 0: on `IsTouchingPlayer`'s fire edge, calls
   `sub_802C14C(gActorList)`, plays a cue, and transitions to
   state 1/table-index 1; otherwise, on `sub_802DD9C`'s overlap test,
   transitions the same way. State 1: once `self+0x12` fires, dispatches
   the `self+0x50` trampoline (index 3) instead of the usual
   `UpdateActor` fallback. `state` pinned to `r5` and the
-  `sub_802A6EC`/`sub_802DD9C`-fired boolean pinned to `r6`, each reused
+  `IsTouchingPlayer`/`sub_802DD9C`-fired boolean pinned to `r6`, each reused
   directly as the "confirmed zero" for that branch's own `self+0x44`/
   `self+8` stores (matching the ROM's own register reuse) - without
   these pins, both branches' otherwise-identical `PlaySfx`+reset
@@ -100,11 +100,11 @@ All in `src/graphics/actor_part126.c`.
   (`self+0x54`/`0x58`/`0x5c`) to its position; while idle (`self+0x28 ==
   0`), counts down `self+0x60`, re-deriving a fresh velocity/homing
   target via `AimPolarPenguin` once it expires, then probes
-  `sub_802A6EC`+`sub_802B730` or `sub_802DD9C` - either hit re-arms a
+  `IsTouchingPlayer`+`HurtPolarPlayer` or `sub_802DD9C` - either hit re-arms a
   fixed outward X velocity (biased by `self+0x1c`'s sign), a random
   negative Y kick, bumps `self+0x5c`, plays a cue, and transitions to
   state 1/table-index 0. `state` (`self+0x28`'s old value) pinned to
-  `r6`, the `sub_802A6EC` result pinned to `r5`, each reused as the
+  `r6`, the `IsTouchingPlayer` result pinned to `r5`, each reused as the
   "confirmed zero" the same way as `sub_802CE5C` (and for the same
   cross-jump-merge reason). The Y-kick computation needed
   `-(s32)(u16)RandRange(0x300)` (an explicit 16-bit zero-extend
@@ -132,7 +132,7 @@ All in `src/graphics/actor_part126.c`.
   `self+0x50 = gPolarPenguinVtable`, then calls `AimPolarPenguin(self,
   e->0x10)`.
 - **`UpdatePolarIcicle`** - on the trampoline-fire edge, forwards to
-  `sub_802B730` on the player object; then, gated on `self+0x34`'s
+  `HurtPolarPlayer` on the player object; then, gated on `self+0x34`'s
   cached depth crossing one of two thresholds paired with `self+0x28`'s
   current tier, advances `self+0xc`'s table index and, once
   `GetAnimFrameBaseOffset` reaches the new record's own threshold,
@@ -193,7 +193,7 @@ All in `src/graphics/actor_part126.c`.
   hazard tier via `SetMaskLevel(gLevelState, 2)` then
   `sub_802D204(self, 0)`; independently re-fires `sub_802D204` once
   state 2's own `self+0x12` edge trips; always advances `self`'s own
-  anim frame (`sub_802A980`, frame-counter bump, and the usual
+  anim frame (`UpdateActorDepth`, frame-counter bump, and the usual
   wrap-around `GetAnimFrameBaseOffset` check). The final table-address
   computation (`idx*0xc + table`) needed an opaque
   `asm("add %0, %0, %1")` to pin the addition's operand order - even

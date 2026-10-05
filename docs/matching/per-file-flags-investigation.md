@@ -152,7 +152,7 @@ without the flag and compare the per-function assembly, labels
 normalized) finds changed code in matched real-C functions in 11
 old_agbcc files:
 
-- `actor_part88.c` (`sub_803487C`)
+- `actor_part88.c` (`InitContinuePromptGraphics`)
 - `actor_part_18008.c` (`PickTinyHopTarget`)
 - `actor_part_188d0.c` (`CreateTiny`)
 - `actor_part_1b85c.c` (`DestroyLevelSelect`)

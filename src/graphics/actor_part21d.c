@@ -9,7 +9,7 @@
  * `gAirshipZ` by its per-frame delta the same way, but also
  * ramps `gUnknown_03001560` itself toward a fixed target (`0x98`,
  * +-1/frame). Drives a small phase counter (`gUnknown_03001570`) that,
- * on its "armed" phase (0), spawns an effect via `sub_802E62C` centered
+ * on its "armed" phase (0), spawns an effect via `SpawnAirshipFireball` centered
  * on a fixed camera offset and advances a per-effect counter
  * (`gUnknown_03001574`) through a small weapon-kind table
  * (`gUnknown_03001568`)'s thresholds, otherwise just decrements the
@@ -18,16 +18,16 @@
  * `0x31FF` - re-arms the phase from the weapon table and fires the
  * state-3/table-index-0 transition on the tracker object
  * (`gAirship`), same shape as `AirshipStateApproach`. Always finishes
- * with `sub_803171C` (the palette bank-1 flash-color select).
+ * with `UpdateAirshipFlashColor` (the palette bank-1 flash-color select).
  *
  * The tracker transition is a `static inline` helper (state/table-index
  * as parameters): that is what makes the compiler materialize the
  * state constant right before its own store instead of hoisting its
  * address load ahead of it (the gap that kept this NAKED before). */
 extern s32 GetAnimFrameBaseOffset(void *self);
-extern void sub_803171C(void);
+extern void UpdateAirshipFlashColor(void);
 extern void sub_8030E08(void);
-extern s32 sub_802E62C(s32 x, s32 y, s32 z);
+extern s32 SpawnAirshipFireball(s32 x, s32 y, s32 z);
 
 extern s32 gAirshipZ;
 extern s32 gUnknown_03001560;
@@ -65,7 +65,7 @@ void AirshipStateFireballs(void)
         gUnknown_03001560 = v - 1;
 
     if (gUnknown_03001570 == 0) {
-        sub_802E62C(gAirshipX - 0xCDB, gAirshipY + 0x516D, gAirshipZ - 10);
+        SpawnAirshipFireball(gAirshipX - 0xCDB, gAirshipY + 0x516D, gAirshipZ - 10);
         if (++gUnknown_03001574 == gUnknown_03001568[2]) {
             gUnknown_03001574 = 0;
             gUnknown_03001570 = gUnknown_03001568[3];
@@ -81,5 +81,5 @@ void AirshipStateFireballs(void)
         gUnknown_03001574 = 0;
         BossSetState(3, 0);
     }
-    sub_803171C();
+    UpdateAirshipFlashColor();
 }

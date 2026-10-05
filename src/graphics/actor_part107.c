@@ -10,18 +10,18 @@
  * accumulator-drain/hazard-threshold helpers on the same `self` object
  * family documented in actor_part19.c/actor_part44.c, operating on the
  * `gUnknown_0300148x`/`gUnknown_030014Ax` global cluster those files
- * already established (`gUnknown_03001488`'s "reward" accumulator,
+ * already established (`gPolarQueuedWumpa`'s "reward" accumulator,
  * `gUnknown_030014A0`-`030014A4`'s lock/hazard-latch quintet). See
  * docs/rom_map.md's "boss's BG2 spin/zoom effect..." section, which
- * already reads `sub_802BC68` as one of a matched pair of accumulator-
- * drain/reward-dispenser functions (the other being `sub_802F3BC` in
+ * already reads `DispensePolarWumpa` as one of a matched pair of accumulator-
+ * drain/reward-dispenser functions (the other being `DispenseJetpackWumpa` in
  * actor_part44.c) and `SpawnPolarCollectedWumpa` as a "spawn effect type N" family
  * member - both confirmed here by this function's own body.
  *
  * `self` is `struct actor_self`; the animation-reset blocks store
  * through `*(T *)&self->field` casts, as in actor_part19.c. */
 
-extern s32 gUnknown_03001488;
+extern s32 gPolarQueuedWumpa;
 extern u8 gUnknown_030014A0;
 extern s32 gUnknown_03001484;
 extern void *gLevelState;
@@ -32,19 +32,19 @@ extern void SpawnPolarCollectedWumpa(s32 a, s32 b, s32 c);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void SetCellAnimSpeed(s32 arg0);
 
-/* Accumulator-drain/reward-dispenser for the `gUnknown_03001488`
- * accumulator (filled by `sub_802C078`, still raw): while the "locked"
+/* Accumulator-drain/reward-dispenser for the `gPolarQueuedWumpa`
+ * accumulator (filled by `QueuePolarWumpa`, still raw): while the "locked"
  * flag `gUnknown_030014A0` is set, fully drains it via repeated
  * `CollectWumpa` calls without spawning anything; otherwise, once the
  * `gUnknown_03001484` cooldown elapses, dispenses one of four tiers of
  * reward (via `SpawnPolarCollectedWumpa` at `self`'s position) sized by the
  * accumulator's own magnitude, and plays a cue. Exact structural twin
- * of `sub_802F3BC` (actor_part44.c) on a different accumulator/cooldown
+ * of `DispenseJetpackWumpa` (actor_part44.c) on a different accumulator/cooldown
  * pair - see docs/rom_map.md. */
-void sub_802BC68(void *selfArg)
+void DispensePolarWumpa(void *selfArg)
 {
     register struct actor_self *self asm("r1") = selfArg;
-    s32 acc = gUnknown_03001488;
+    s32 acc = gPolarQueuedWumpa;
 
     if (acc == 0) {
         return;
@@ -53,8 +53,8 @@ void sub_802BC68(void *selfArg)
     if (gUnknown_030014A0 != 0) {
         do {
             CollectWumpa(gLevelState);
-            gUnknown_03001488--;
-        } while (gUnknown_03001488 != 0);
+            gPolarQueuedWumpa--;
+        } while (gPolarQueuedWumpa != 0);
         return;
     }
 
@@ -67,16 +67,16 @@ void sub_802BC68(void *selfArg)
 
     if (acc <= 9) {
         SpawnPolarCollectedWumpa(self->x, self->y, 1);
-        gUnknown_03001488 -= 1;
+        gPolarQueuedWumpa -= 1;
     } else if (acc <= 0x13) {
         SpawnPolarCollectedWumpa(self->x, self->y, 2);
-        gUnknown_03001488 -= 2;
+        gPolarQueuedWumpa -= 2;
     } else if (acc <= 0x27) {
         SpawnPolarCollectedWumpa(self->x, self->y, 4);
-        gUnknown_03001488 -= 4;
+        gPolarQueuedWumpa -= 4;
     } else {
         SpawnPolarCollectedWumpa(self->x, self->y, 8);
-        gUnknown_03001488 -= 8;
+        gPolarQueuedWumpa -= 8;
     }
 
     PlaySfx(gAudioContext, 8, 0x100);
@@ -97,7 +97,7 @@ extern u8 gUnknown_030014A3;
  * exceeds 0x13, latches `gUnknown_030014A3`, clears the hazard lock
  * (`gUnknown_030014A0`), and resets `self` to state 1/table-index 0 -
  * the same state/table-index/anim-frame reset idiom already documented
- * for the boss cluster's `sub_8030530`/`AirshipStateFall` and this family's
+ * for the boss cluster's `DamageAirshipFireball`/`AirshipStateFall` and this family's
  * own `sub_802C14C` (actor_part19.c) - then fires `SetCellAnimSpeed(0x24)`. */
 void sub_802BD24(void *selfArg)
 {

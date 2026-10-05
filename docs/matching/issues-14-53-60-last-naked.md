@@ -27,7 +27,7 @@ A hazard/proximity state machine that tests the part's own box and three
 `gStaticData_0817A7xx` boxes. The "heavy r5/r6/r7 reuse" in the old note
 is gcc propagating the zero the hit blocks store. The hit block is a
 `HAZARD_HIT` macro wrapped in `if (1)`: `do { } while (0)` and an inline
-function both change the block layout. `sub_802B7E0` returns `u8`.
+function both change the block layout. `ShockPolarPlayer` returns `u8`.
 
 ## `DrawJetpackCollectedWumpa` (actor_part130.c, issue #60)
 

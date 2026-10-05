@@ -8,20 +8,20 @@
  * accumulator at `self+8`, state at `self+0x28`, a frame counter at
  * `self+0x44`, and a `+0x50`-rooted event/trampoline table fed through
  * `_call_via_r2`. This is the second object kind (constructed by the
- * parked `sub_8034058`, vtable `gStaticData_087E5554`), with a health-
+ * parked `CreateHovercraftSideGun`, vtable `gHovercraftSideGunVtable`), with a health-
  * like countdown at `self+0x54`, a "dead" byte flag at `self+0x58`, a
  * second one-shot byte flag at `self+0x2c`, the constructor's cached
  * gate byte at `self+0x59`, and a little "spawn/orbit" record at
  * `self+0x5c`/`self+0x60`/`self+0x64`/`self+0x68`/`self+0x6c` driving
- * `sub_8034188`'s position-plus-effect-spawn step. See
+ * `UpdateHovercraftSideGun`'s position-plus-effect-spawn step. See
  * docs/matching/issue-63-0x08033ef4-actor.md. */
 
-extern void sub_8033804(void);
-extern void sub_803388C(void);
+extern void StartHovercraftHitFlash(void);
+extern void LoseHovercraftPart(void);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void *gAudioContext;
 
-/* The second object kind (vtable gStaticData_087E5554). */
+/* The second object kind (vtable gHovercraftSideGunVtable). */
 struct actor_orbiter {
     struct actor_self base; // base.unk_2C[0]: the one-shot flag
     s32 hp;             // 0x54
@@ -46,15 +46,15 @@ struct orbit_table {
 /* Applies `dmg` damage to `self+0x54` and once it drops to zero (or
  * below): marks `self` dead (`+0x58=1`), sets the one-shot flag
  * (`+0x2c=1`), fires the singleton's own death transition
- * (`sub_803388C`), and switches `self` to state 1, table-index 0 or 1
+ * (`LoseHovercraftPart`), and switches `self` to state 1, table-index 0 or 1
  * depending on the constructor's cached gate byte (`+0x59`), resetting
  * the anim-frame pair and playing the death sound; otherwise just plays
  * a hit sound. Same shape as `DamageHovercraftCannon` (actor_part30.c). */
-void sub_8034110(void *selfArg, s32 dmg)
+void DamageHovercraftSideGun(void *selfArg, s32 dmg)
 {
     struct actor_orbiter *self = selfArg;
 
-    sub_8033804();
+    StartHovercraftHitFlash();
     self->hp -= dmg;
 
     if (self->hp <= 0) {
@@ -63,7 +63,7 @@ void sub_8034110(void *selfArg, s32 dmg)
         register s32 one asm("r1");
         s32 idx;
 
-        sub_803388C();
+        LoseHovercraftPart();
         flag = &self->dead;
         zero = 0;
         one = 1;
@@ -96,10 +96,10 @@ void sub_8034110(void *selfArg, s32 dmg)
 }
 
 extern void UpdateActor(void *self);
-extern s32 sub_8033900(void);
-extern s32 sub_80338F4(void);
-extern s32 sub_80338E8(void);
-extern void sub_802E5E4(s32 x, s32 y);
+extern s32 GetHovercraftX(void);
+extern s32 GetHovercraftY(void);
+extern s32 GetHovercraftZ(void);
+extern void SpawnHovercraftFireball(s32 x, s32 y);
 extern struct orbit_table *sub_80338C4(void);
 
 /* Per-frame position sync (`+0x1c`/`+0x20`/`+0x24` from the singleton's
@@ -107,19 +107,19 @@ extern struct orbit_table *sub_80338C4(void);
  * `UpdateActor(self)` first for the frame's regular update. While `self`
  * is still in state 0 and `+0x34` is over its `0x2800` threshold, drives
  * an "orbit" counter at `+0x68`: at zero, spawns an effect at the synced
- * position (`sub_802E5E4`) and advances a lap counter (`+0x6c`),
+ * position (`SpawnHovercraftFireball`) and advances a lap counter (`+0x6c`),
  * reseeding `+0x68` from the singleton table's `+4`/`+8`/`+0xc` fields
  * depending on whether the lap counter just reached the table's `+8`
  * entry; otherwise just decrements the orbit counter. */
-void sub_8034188(void *selfArg)
+void UpdateHovercraftSideGun(void *selfArg)
 {
     register struct actor_orbiter *self asm("r5") = selfArg;
 
     UpdateActor(self);
-    self->base.x = sub_8033900() + self->offX;
-    self->base.y = sub_80338F4() + self->offY;
+    self->base.x = GetHovercraftX() + self->offX;
+    self->base.y = GetHovercraftY() + self->offY;
     {
-        s32 base = sub_80338E8();
+        s32 base = GetHovercraftZ();
         register s32 field asm("r1") = self->offZ;
         register s32 z asm("r2") = base + field;
         self->base.z = z;
@@ -132,7 +132,7 @@ void sub_8034188(void *selfArg)
         if (origCounter == 0) {
             register s32 lap asm("r4");
 
-            sub_802E5E4(self->base.x, self->base.y);
+            SpawnHovercraftFireball(self->base.x, self->base.y);
             lap = self->lap + 1;
             self->lap = lap;
 
@@ -150,17 +150,17 @@ void sub_8034188(void *selfArg)
     }
 }
 
-/* Near-twin of `sub_8034188` (same position-sync/orbit-effect shape),
+/* Near-twin of `UpdateHovercraftSideGun` (same position-sync/orbit-effect shape),
  * but does not call `UpdateActor(self)` first - this object's regular
  * per-frame update is driven elsewhere. */
 void sub_80341F8(void *selfArg)
 {
     register struct actor_orbiter *self asm("r5") = selfArg;
 
-    self->base.x = sub_8033900() + self->offX;
-    self->base.y = sub_80338F4() + self->offY;
+    self->base.x = GetHovercraftX() + self->offX;
+    self->base.y = GetHovercraftY() + self->offY;
     {
-        s32 base = sub_80338E8();
+        s32 base = GetHovercraftZ();
         register s32 field asm("r1") = self->offZ;
         register s32 z asm("r2") = base + field;
         self->base.z = z;
@@ -173,7 +173,7 @@ void sub_80341F8(void *selfArg)
         if (origCounter == 0) {
             register s32 lap asm("r4");
 
-            sub_802E5E4(self->base.x, self->base.y);
+            SpawnHovercraftFireball(self->base.x, self->base.y);
             lap = self->lap + 1;
             self->lap = lap;
 
@@ -193,7 +193,7 @@ void sub_80341F8(void *selfArg)
 
 /* Constant getter - returns `self`'s death flag (`self+0x58`) for this
  * object kind. */
-u8 sub_8034264(void *selfArg)
+u8 IsHovercraftSideGunUnshootable(void *selfArg)
 {
     struct actor_orbiter *self = selfArg;
 

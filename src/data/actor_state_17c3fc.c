@@ -16,8 +16,8 @@ extern void AirshipStateExplode();
 extern void AirshipStateFall();
 extern void sub_8031954();
 extern void sub_80319A0();
-extern void sub_8032274();
-extern void sub_8032290();
+extern void JetpackBalloonCrateStateFall();
+extern void JetpackBalloonCrateStateHang();
 
 /* Per-state step functions of the weapon-kind tracker, called through
  * _call_via_r0 as `gAirshipStateFuncs[gAirshipState]` by
@@ -32,7 +32,7 @@ void (*const gAirshipStateFuncs[6])() = {
 };
 
 /* Per-state handlers dispatched by sub_8031A08 (actor_part125.c). */
-const struct actor_pmf gStaticData_0817C414[3] = {
+const struct actor_pmf gJetpackBalloonStateFuncs[3] = {
     ACTOR_PMF(nullsub_32),
     ACTOR_PMF(sub_80319A0),
     ACTOR_PMF(sub_8031954),
@@ -40,8 +40,8 @@ const struct actor_pmf gStaticData_0817C414[3] = {
 
 /* Per-state handlers dispatched by UpdateJetpackBalloonCrate and sub_80322F4
  * (actor_part129.c). */
-const struct actor_pmf gStaticData_0817C42C[3] = {
-    ACTOR_PMF(sub_8032290),
-    ACTOR_PMF(sub_8032274),
+const struct actor_pmf gJetpackBalloonCrateStateFuncs[3] = {
+    ACTOR_PMF(JetpackBalloonCrateStateHang),
+    ACTOR_PMF(JetpackBalloonCrateStateFall),
     ACTOR_PMF(nullsub_33),
 };

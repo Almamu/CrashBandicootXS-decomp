@@ -12,12 +12,12 @@ compared it against the ROM.
 
 | function | file | result |
 |---|---|---|
-| `sub_8018A30` | `actor_part_188d0.c` (#23) | **matched**, NON_MATCHING C unchanged |
+| `UpdateCortexBoss` | `actor_part_188d0.c` (#23) | **matched**, NON_MATCHING C unchanged |
 | `sub_801961C` | `actor_part_188d0.c` (#23) | **matched**, rewritten with the `CreatePlatform` stack-argument idiom |
 | `CreatePlatform` | `actor_part_1a878.c` (#25) | **matched**, after removing every register pin |
 | `sub_801AB98` | `actor_part_1ab98.c` (#25) | still NAKED |
 | `InitLevelSelect` | `actor_part_1b85c.c` (#26) | still NAKED here; real C since the #12/#24/#26 retry |
-| `sub_801C608` | `actor_part_1b85c.c` (#26) | still NAKED |
+| `LoadLevelSelectRecord` | `actor_part_1b85c.c` (#26) | still NAKED |
 | `LevelSelectLoop` | `actor_part_1b85c.c` (#26) | still NAKED |
 
 Issue #23 has no NAKED/NON_MATCHING functions left. Issue #25 still has
@@ -64,8 +64,8 @@ are removed from the tree.
   `sub_8018978`.
 - **Pins**: `SetTag`'s r0 pin, and those in `sub_80188FC`, `sub_8018978`
   (`ip`), `sub_8018BDC`, `sub_8019094`, `sub_80194E0`, `sub_8019324` (r8)
-  and `sub_8018E4C`'s `steps` (r8) (#23). In #26: `sub_801B8BC`,
-  `sub_801B984`, `UpdateLevelSelect`, `sub_801C364` and `sub_801C51C`'s
+  and `sub_8018E4C`'s `steps` (r8) (#23). In #26: `UpdateCameraLead`,
+  `sub_801B984`, `UpdateLevelSelect`, `DrawLevelSelectRecord` and `DrawLevelSelect`'s
   `asm volatile` self barrier.
 - **The zero-index `ldrsh` asm** (#23, see above).
 
@@ -106,7 +106,7 @@ write-ups, not applied.
   in every plain C placement. An `asm("" : "+r"(k.all))` barrier keeps it,
   but it either lands one block late (10 bytes off) or in the right place
   with `keys`/`k` in r3/r2 instead of r2/r1 (12 bytes off).
-- **`sub_801C608`** (#26), 846 vs 868 bytes. Taking `SetAnim`'s index as
+- **`LoadLevelSelectRecord`** (#26), 846 vs 868 bytes. Taking `SetAnim`'s index as
   `s32` (old_agbcc otherwise narrows the table load to `ldrb`),
   `*(u16 *)sv & 0xFFF8` for the saved-time test, and unsigned compares
   each fix part of it. Still left: the ROM's 12-byte frame (it spills
@@ -123,7 +123,7 @@ write-ups, not applied.
   the pins makes it worse.
 
 `SetAnim(s32)` keeps every matched function in `actor_part_1b85c.c`
-matching, so it is safe to adopt whenever `sub_801C608`/`InitLevelSelect` are
+matching, so it is safe to adopt whenever `LoadLevelSelectRecord`/`InitLevelSelect` are
 picked up again.
 
 ## Tools

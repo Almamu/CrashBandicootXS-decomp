@@ -10,39 +10,39 @@ extern void nullsub_36();
 extern void nullsub_37();
 extern void sub_8032C0C();
 extern void sub_8032EA0();
-extern void sub_8033048();
-extern void sub_803395C();
-extern void sub_80339DC();
-extern void sub_8033BFC();
-extern void sub_8033C28();
-extern void sub_8033CF8();
-extern void sub_8033F48();
-extern void sub_8033F74();
+extern void HovercraftStateFall();
+extern void HovercraftStateApproach();
+extern void HovercraftCannonStateFire();
+extern void HovercraftCannonStateDestroyed();
+extern void HovercraftCannonStateWait();
+extern void HovercraftLauncherStateLaunch();
+extern void HovercraftLauncherStateDestroyed();
+extern void HovercraftLauncherStateWait();
 
 /* Per-kind animation step functions of the singleton object, called
  * through _call_via_r0 as `gHovercraftStateFuncs[gHovercraftState]` by
- * sub_8032B6C (actor_part130.c). */
+ * RunHovercraftState (actor_part130.c). */
 void (*const gHovercraftStateFuncs[6])() = {
     nullsub_36,
-    sub_803395C,
+    HovercraftStateApproach,
     sub_8032C0C,
     sub_8032EA0,
     nullsub_37,
-    sub_8033048,
+    HovercraftStateFall,
 };
 
 /* Per-state handlers dispatched by UpdateHovercraftCannon (actor_part31.c) and
- * sub_8033C84 (actor_part33.c). */
-const struct actor_pmf gStaticData_0817C4E0[3] = {
-    ACTOR_PMF(sub_8033C28),
-    ACTOR_PMF(sub_80339DC),
-    ACTOR_PMF(sub_8033BFC),
+ * RunHovercraftCannonState (actor_part33.c). */
+const struct actor_pmf gHovercraftCannonStateFuncs[3] = {
+    ACTOR_PMF(HovercraftCannonStateWait),
+    ACTOR_PMF(HovercraftCannonStateFire),
+    ACTOR_PMF(HovercraftCannonStateDestroyed),
 };
 
 /* Per-state handlers dispatched by UpdateHovercraftLauncher (actor_part37.c) and
- * sub_8033FE4 (actor_part64.c). */
-const struct actor_pmf gStaticData_0817C4F8[3] = {
-    ACTOR_PMF(sub_8033F74),
-    ACTOR_PMF(sub_8033CF8),
-    ACTOR_PMF(sub_8033F48),
+ * RunHovercraftLauncherState (actor_part64.c). */
+const struct actor_pmf gHovercraftLauncherStateFuncs[3] = {
+    ACTOR_PMF(HovercraftLauncherStateWait),
+    ACTOR_PMF(HovercraftLauncherStateLaunch),
+    ACTOR_PMF(HovercraftLauncherStateDestroyed),
 };

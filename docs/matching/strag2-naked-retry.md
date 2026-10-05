@@ -13,8 +13,8 @@ This pass covered six unfinished functions that no open issue tracked:
 
 | Function | File | Was | Technique |
 |---|---|---|---|
-| `sub_80339DC` | `actor_part29.c` | raw asm (99 hw off) | real `/` via `__divsi3` alias (libcall keeps `self+0x24` CSE'd across it), divisor fixed to `-0x1AA`, one shared `store:` label for the new cooldown, a stored `count` local, `dx` then `dy` statement order, `"=r"`/`"0"` `u8` zero |
-| `sub_8033CF8` | `actor_part35.c` | raw asm (102 hw off) | same as `sub_80339DC`, plus `"=r"`/`"0"` escapes for the reset block's `0`/`2`, the `2` via `asm volatile` so it isn't sunk |
+| `HovercraftCannonStateFire` | `actor_part29.c` | raw asm (99 hw off) | real `/` via `__divsi3` alias (libcall keeps `self+0x24` CSE'd across it), divisor fixed to `-0x1AA`, one shared `store:` label for the new cooldown, a stored `count` local, `dx` then `dy` statement order, `"=r"`/`"0"` `u8` zero |
+| `HovercraftLauncherStateLaunch` | `actor_part35.c` | raw asm (102 hw off) | same as `HovercraftCannonStateFire`, plus `"=r"`/`"0"` escapes for the reset block's `0`/`2`, the `2` via `asm volatile` so it isn't sunk |
 | `sub_80156EC` | `actor_part38c.c` | NAKED | `u8 *self` parameter instead of a `selfArg` copy that GCSE left in the `else` arm |
 | `sub_80152F0` | `actor_part38b.c` | NAKED | `u8` locals for the table indices so they are loaded before the stores (moves `mode` to `r4`) |
 | `sub_8015238` | `actor_part38b.c` | NAKED | real `u8 *`/`u8` params (fixes the entry-copy order); `0x200` built in `m`, copied by an `"=r"`/`"0"` escape, and a volatile `"+r"(flags)`/`"r"(m)` use right after the `and` (stops combine and regmove from retargeting it); pointer local for `self+0x29` |

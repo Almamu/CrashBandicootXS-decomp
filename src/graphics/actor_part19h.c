@@ -77,7 +77,7 @@ static inline u8 ActorsOverlap(struct actor_self *pl, struct actor_self *self)
  * frames: walks the whole `self+0x4c`-rooted circular actor list
  * (rooted at `gActorList`, the same sentinel-head list every
  * other `self+0x4c`/`self+0x48` teardown/unlink helper in this ROM
- * region walks - `sub_802AA4C`/`sub_802C19C`/`DestroyPolarCollectedWumpa`) looking
+ * region walks - `sub_802AA4C`/`DestroyPolarPlayer`/`DestroyPolarCollectedWumpa`) looking
  * for every OTHER actor whose type byte (`*(u8*)(*(u8**)(node+0x30))`,
  * the same type-byte indirection `UpdatePolarQuestionCrate` dispatches on) is `4`
  * and that overlaps `self`'s own translated `self+0x38` AABB (both

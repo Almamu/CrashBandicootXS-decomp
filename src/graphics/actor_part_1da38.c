@@ -12,10 +12,10 @@
  *   (state 3) and zooms away on exit (states 4 -> 5). Four sprite parts
  *   ("twinkles") sit on top of it, each showing a random frame for a
  *   random time and blinking along with the wobble.
- * - GetZoomBgControl-sub_801DF98: `struct level_item`'s methods (method table
- *   gStaticData_087E4BAC: +0x08 sub_801DE30 bob, +0x10 sub_801DEA4
- *   set level, +0x18 sub_801DF70 set position, +0x20 nullsub_20, +0x28
- *   sub_801DF98 destructor; the constructor sub_801DFEC starts issue #29).
+ * - GetZoomBgControl-DestroyLevelSelectEntry: `struct level_item`'s methods (method table
+ *   gLevelSelectEntryVtable: +0x08 AnimateLevelSelectEntry bob, +0x10 SetLevelSelectEntryLevel
+ *   set level, +0x18 SetLevelSelectEntryPos set position, +0x20 nullsub_20, +0x28
+ *   DestroyLevelSelectEntry destructor; the constructor CreateLevelSelectEntry starts issue #29).
  *
  * This file is compiled with tools/agbcc/bin/old_agbcc (see Makefile and
  * docs/matching/issue-24-boss-actor.md). Every function is real C; see
@@ -332,7 +332,7 @@ s32 sub_801DE2C(struct level_item *self)
 /* Method +0x08: bobs the entry by `phase` (a byte; 0xA0-0xFF wrap to a
  * small upward offset), the icon 2 px lower while selected, and shows the
  * box's selected/unselected frame. */
-void sub_801DE30(struct level_item *self, s32 phase)
+void AnimateLevelSelectEntry(struct level_item *self, s32 phase)
 {
     s32 dy;
 
@@ -360,7 +360,7 @@ void sub_801DEA0(struct level_item *self, u8 selected)
 /* Method +0x10: entry `index` of world `world`. Indices 0-4 are levels
  * (icon frame = level id); anything past that is the world's extra entry
  * (level id 0x14 + world, its own icon animation). */
-void sub_801DEA4(struct level_item *self, s32 world, s32 index)
+void SetLevelSelectEntryLevel(struct level_item *self, s32 world, s32 index)
 {
     if (index <= 4)
     {
@@ -376,7 +376,7 @@ void sub_801DEA4(struct level_item *self, s32 world, s32 index)
 
 /* Sets the box's animation (gStaticData_0816C610[kind]) and refreshes
  * both parts' palettes. */
-void sub_801DF0C(struct level_item *self, s32 kind)
+void SetLevelSelectEntryBox(struct level_item *self, s32 kind)
 {
     SetAnim(self->frame, gStaticData_0816C610[kind]);
     self->frame->palette = sub_800815C(self->frame);
@@ -384,7 +384,7 @@ void sub_801DF0C(struct level_item *self, s32 kind)
 }
 
 /* Method +0x18: places the entry at pixel `pos` (x, y). */
-void sub_801DF70(struct level_item *self, s32 *pos)
+void SetLevelSelectEntryPos(struct level_item *self, s32 *pos)
 {
     SetPosQ8(self->icon, pos[0], pos[1] - 3);
     sub_800737C(self->frame, pos[0], pos[1]);
@@ -396,9 +396,9 @@ void nullsub_20(void)
 }
 
 /* Method +0x28: destructor. */
-void sub_801DF98(struct level_item *self, s32 flags)
+void DestroyLevelSelectEntry(struct level_item *self, s32 flags)
 {
-    self->vtable = gStaticData_087E4BAC;
+    self->vtable = gLevelSelectEntryVtable;
     DELETE_PART(self->icon);
     DELETE_PART(self->frame);
     if (flags & 1)

@@ -28,7 +28,7 @@ function in the file under old_agbcc:
   (which gcc normally folds) is now reproduced by setting `bld` before
   the `switch`. CSE can't see its constant from inside the case. The
   allocation didn't move.
-- **`sub_801C608`** (#26): identical except that the ROM also spills
+- **`LoadLevelSelectRecord`** (#26): identical except that the ROM also spills
   `info` (sp+0) and reloads it for the `time0` test. Declaration order
   and placement didn't help.
 - **`LevelSelectLoop`** (#26): identical except for one `adds r1, r2, #0`

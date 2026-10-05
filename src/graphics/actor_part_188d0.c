@@ -16,7 +16,7 @@
  * go through the _call_via_r2/AD84/AD88 call-via-register trampolines with
  * gcc 2.x's {this-adjust, fn} method entries.
  *
- * - sub_8018A30/sub_8018BDC/sub_8018CB0: a two-part effect that spawns two
+ * - UpdateCortexBoss/sub_8018BDC/sub_8018CB0: a two-part effect that spawns two
  *   child parts, aims them at each other and sinks off the bottom of the
  *   level.
  * - sub_8018D70/sub_8018E4C/sub_8019094/sub_8019214: a "mover" that glides
@@ -35,7 +35,7 @@
  * couple of per-site macros. Those were written against the current
  * agbcc; the ROM was built with the older compiler, and this file is
  * built with old_agbcc (Makefile OLD_AGBCC_OBJS,
- * docs/matching/old-agbcc-retry.md), under which sub_8018A30 and
+ * docs/matching/old-agbcc-retry.md), under which UpdateCortexBoss and
  * sub_801961C match as C and several of the workarounds were dropped.
  *
  * UNUSED - no caller anywhere in the ROM (checked the asm/ and expected/
@@ -78,7 +78,7 @@ struct gfx_squares
     s16 *squares;               // 0x48
 };
 
-/* sub_8018A30 */
+/* UpdateCortexBoss */
 struct gfx_pair_ctrl
 {
     u8 unk_00[8];
@@ -523,7 +523,7 @@ void *CreateTiny(struct gfx_squares *self)
  *
  * Parked as NAKED under the current agbcc (it put `self`/`part` in r6/r7
  * where the ROM uses r7 as scratch); matches unchanged under old_agbcc. */
-void sub_8018A30(struct gfx_pair_ctrl *self, struct gfx_part *part)
+void UpdateCortexBoss(struct gfx_pair_ctrl *self, struct gfx_part *part)
 {
     switch (self->state)
     {

@@ -15,7 +15,7 @@ extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern void *sub_801588C(void *selfArg);
 extern void sub_800B69C(void *selfArg, s32 val);
 extern void *sub_80174EC(void *arg0);
-extern void *sub_8017A00(void *arg0);
+extern void *CreateInputCtrl(void *arg0);
 extern void sub_80087C0(void *part);
 extern void sub_80087B4(void *part);
 extern void sub_800872C(void *part, u8 val);
@@ -238,7 +238,7 @@ s32 PlayRoom(void *selfArg)
         break;
     }
     case 2: {
-        u8 *widget = sub_8017A00(sub_8026EDC(0x28));
+        u8 *widget = CreateInputCtrl(sub_8026EDC(0x28));
 
         sub_800B69C(widget, (s32)gStaticData_0816B93C);
 

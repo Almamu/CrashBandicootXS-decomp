@@ -6,7 +6,7 @@
  */
 
 /* The BG palette-cycle animation: 32 frames of BG palettes 0-13
- * (0x1C0 bytes each). While it's armed, sub_802AB58 (actor_part53.c)
+ * (0x1C0 bytes each). While it's armed, UpdateActorPaletteCycle (actor_part53.c)
  * DMAs frame gUnknown_03001470 to BG palette RAM every call and every
  * 0x24 calls steps that cursor towards the bound gUnknown_03001474. */
 const u16 gStaticData_08175760[32][14 * 16] = {
@@ -524,7 +524,7 @@ const u16 gStaticData_08175760[32][14 * 16] = {
     },
 };
 
-/* The cursor start and bound sub_802ABC8 (actor_part54.c) seeds for each
+/* The cursor start and bound SetActorPaletteCycle (actor_part54.c) seeds for each
  * cycle: 0->15, 15->0, 16->31 and 31->16 (the first or second half of
  * the frames, forwards or backwards). */
 const s32 gStaticData_08178F60[4] = { 0, 15, 16, 31 };

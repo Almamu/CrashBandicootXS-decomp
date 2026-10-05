@@ -39,7 +39,7 @@
 
 extern s32 gUnknown_03001390;
 extern s32 gActorCategory;
-extern s32 gUnknown_03000878;
+extern s32 gActorCheckpoint;
 extern s32 gUnknown_03001384;
 extern s32 gUnknown_03001388;
 extern s32 gUnknown_0300138C;
@@ -53,15 +53,15 @@ extern u32 gKeys;
 extern void SetCheckpointAtPlayer(void *arg0);
 extern void DecompressCategorySpriteSheet(const u8 *sheet);
 extern void SetupActorVramPool(void);
-extern void sub_802AAFC(void);
-extern void sub_802ABFC(s32 flag);
+extern void ClearCollectedSpawns(void);
+extern void EnableActorPaletteCycle(s32 flag);
 extern void sub_8029C30(s32 kind);
 extern s32 GetLives(void *state);
 extern void RestoreCheckpoint(void *arg0);
 extern void FadeBrightness(s32 a, s32 b, s32 c);
 extern void InitCellAnim(s32 arg0, void *arg1, u32 arg2, s32 arg3);
 extern void LoadBgPicture(void);
-extern void sub_802AB08(void);
+extern void RestoreActorPaletteCycle(void);
 extern void SelectActorCategory(s32 type, void *subEffectTable, void *animTable, s32 activeFlag, s32 variant, s32 tick);
 extern void UpdateKeys(void *arg0);
 extern void AdvanceCellAnim(void);
@@ -91,7 +91,7 @@ extern void ShowHudCounters(void *arg0);
 extern void FreeCategorySpriteSheet(void);
 extern void nullsub_5(void);
 extern void nullsub_6(void);
-extern void sub_802A5E4(void);
+extern void DestroyAllActors(void);
 
 #define CUR_CATEGORY (gActorCategories[gActorCategory])
 #define PAUSED (gLevelState[0x8c])
@@ -112,14 +112,14 @@ s32 InitActorCategory(s32 category)
 
     gUnknown_03001390 = 0;
     gActorCategory = category;
-    gUnknown_03000878 = 0;
+    gActorCheckpoint = 0;
     gUnknown_03001384 = 0;
     gUnknown_03001388 = 0;
     SetCheckpointAtPlayer(gLevelState);
     DecompressCategorySpriteSheet(CUR_CATEGORY.sprite_sheet);
     SetupActorVramPool();
-    sub_802AAFC();
-    sub_802ABFC(CUR_CATEGORY.type == 0);
+    ClearCollectedSpawns();
+    EnableActorPaletteCycle(CUR_CATEGORY.type == 0);
     sub_8029C30(CUR_CATEGORY.type);
 
     do {
@@ -139,13 +139,13 @@ s32 InitActorCategory(s32 category)
         dma->cnt;
         FadeBrightness(0x80, 2, 1);
         InitCellAnim(CUR_CATEGORY.type, CUR_CATEGORY.cellAnim, CUR_CATEGORY.cellAnimSize,
-                    gUnknown_03000878);
+                    gActorCheckpoint);
         if (CUR_CATEGORY.bgPicture != NULL)
             LoadBgPicture();
-        sub_802AB08();
+        RestoreActorPaletteCycle();
         SelectActorCategory(CUR_CATEGORY.type, CUR_CATEGORY.spawnTable, CUR_CATEGORY.anim_table,
                             *activeCount >= (s32)CUR_CATEGORY.active_count_threshold, variant,
-                            gUnknown_03000878);
+                            gActorCheckpoint);
         dma->src = (u32)CUR_CATEGORY.palette;
         dma->dst = OBJ_PLTT;
         dma->cnt = 0x80000100;
@@ -234,7 +234,7 @@ s32 InitActorCategory(s32 category)
             break;
         }
     done:
-        sub_802A5E4();
+        DestroyAllActors();
         nullsub_5();
     } while (ret == 1 && GetLives(gLevelState) >= 0 && PAUSED == 0);
 

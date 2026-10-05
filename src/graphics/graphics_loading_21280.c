@@ -10,7 +10,7 @@ extern void *gUnknown_030012F4;
 extern struct enemy_ctrl *CreateDingodile(void *block, u16 arg1, u16 arg2);
 extern void sub_8023318(void *self, struct enemy_ctrl *hdr);
 extern struct enemy_ctrl *CreateTiny(void);
-extern struct enemy_ctrl *sub_80197DC(void);
+extern struct enemy_ctrl *CreateCortexBoss(void);
 
 struct level_guard
 {
@@ -135,10 +135,10 @@ void sub_8021480(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 }
 
 /* "Two-line text popup" variant with the OAM-trio setup: animation 1 at
- * +0x27c, header from sub_80197DC (after a 0x24-byte sub_8026EDC
+ * +0x27c, header from CreateCortexBoss (after a 0x24-byte sub_8026EDC
  * reservation), collected bits and flag bit 4, then registration with
  * gUnknown_030012F4's manager and the level controller. */
-void sub_802155C(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnCortexBoss(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = sub_8009ED0(arg0, arg1, arg2, arg3);
     struct enemy_ctrl *hdr;
@@ -151,7 +151,7 @@ void sub_802155C(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     sub_800872C(part, 0);
     part->frameNibble = sub_800815C(part);
     sub_8026EDC(0x24);
-    hdr = sub_80197DC();
+    hdr = CreateCortexBoss();
     part->hdr = hdr;
     POPUP_ATTACH(hdr, part);
     rec = LEVEL_RECORD(arg3);

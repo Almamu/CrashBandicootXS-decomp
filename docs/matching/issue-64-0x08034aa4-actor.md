@@ -8,7 +8,7 @@ real C or a NAKED transcription - with the whole raw span
 This picks up straight from
 [issue-63-final-raw-actor.md](issue-63-final-raw-actor.md): the first
 five functions here are more methods on that same `struct fade_overlay`
-"self" object (`InitContinuePrompt`/`sub_803487C`/`ContinuePromptLoop`,
+"self" object (`InitContinuePrompt`/`InitContinuePromptGraphics`/`ContinuePromptLoop`,
 actor_part87.c/88.c/89.c), which had already flagged `DrawContinuePrompt`/
 `CommitContinuePromptFrame` as its per-frame yield helpers before this pass started.
 The remaining eight operate on a completely different, previously
@@ -18,13 +18,13 @@ directly from `game_loop`'s level-load state machine (see
 
 ## `struct fade_overlay` gets two of its vague fields clarified
 
-`sub_8034C40`/`CommitContinuePromptFrame`/`DestroyContinuePrompt`/`RunContinuePrompt`/`DrawContinuePrompt` all
+`GetContinuePromptBlink`/`CommitContinuePromptFrame`/`DestroyContinuePrompt`/`RunContinuePrompt`/`DrawContinuePrompt` all
 operate on the fade overlay object actor_part87.c already named. Working
 through them pins down real meanings for two fields that file's own
 comment left vague:
 
 - `unused_1c` is actually a per-item blink/flash toggle counter,
-  advanced by `sub_8034C40` and read back as `(counter >> 1) & 2` - a
+  advanced by `GetContinuePromptBlink` and read back as `(counter >> 1) & 2` - a
   0/2 flicker mask consumed by `DrawContinuePrompt` to hide a Yes/No option's
   label every other frame-pair while it's the current selection.
 - `flag_20` - guessed in actor_part87.c as "which of two alternating
@@ -40,7 +40,7 @@ comment left vague:
 
 ### Matched, real C
 
-- **`sub_8034C40`** - the blink/toggle helper described above. This one
+- **`GetContinuePromptBlink`** - the blink/toggle helper described above. This one
   needed a genuinely interesting fix caught only by the full-ROM
   `make compare` (not the isolated compile, which "looked fine" every
   step of the way - exactly the class of trap `docs/workflow.md` warns
@@ -81,7 +81,7 @@ comment left vague:
 
 Draws the Yes/No dialog's three labels (icon-manager mode ids
 `0x28`/`0x29`/`0x2a`) via `self->icons->record->slots[6]`'s position,
-applying `sub_8034C40`'s blink mask to each option's own OAM-hide byte
+applying `GetContinuePromptBlink`'s blink mask to each option's own OAM-hide byte
 via `FontSetPalette` in between, and re-commits the OAM shadow buffer.
 `self` (r6), the OAM-shadow-buffer address (sl), the constant `0x87`
 (r7), and two `0x130`/`0x98<<1` index constants (r8/sb) all stay
@@ -176,7 +176,7 @@ the rest of what's understood without committing it to the struct.
   stay resident across a long run of `bl` sites, while r4/r6 each get
   rebound to a *different* global's address multiple times over that
   same span with several unrelated calls in between each rebinding - the
-  same shape `sub_803487C` (actor_part88.c, this cluster's own sibling
+  same shape `InitContinuePromptGraphics` (actor_part88.c, this cluster's own sibling
   constructor) hit, there closed only partially (parked NON_MATCHING
   over a single r7-pin bug). Given the similarity and this function's
   additional mid-function register-rebinding on top of that, transcribed
@@ -211,7 +211,7 @@ the rest of what's understood without committing it to the struct.
 
 ## Tally
 
-- **Real C, matched:** 8 (`sub_8034C40`, `CommitContinuePromptFrame`, `DestroyContinuePrompt`,
+- **Real C, matched:** 8 (`GetContinuePromptBlink`, `CommitContinuePromptFrame`, `DestroyContinuePrompt`,
   `RunContinuePrompt`, `CreditsLoop`, `CommitCreditsFrame`, `DestroyCredits`,
   `RunCredits`)
 - **NAKED (byte-exact, not real C):** 5 (`DrawContinuePrompt`, `InitCredits`,

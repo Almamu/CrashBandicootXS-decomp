@@ -27,7 +27,7 @@ attempted this pass.
 Called from `UpdatePolarNitroCrate` (`actor_part19g.c`) once a "used" pickup
 (`self`, state `self+0xc == 0x12`) has stayed used for `self+0x44 ==
 0x14` frames. It walks the whole `self+0x4c`-rooted circular actor
-list - the same sentinel-head list `sub_802AA4C`/`sub_802C19C`/
+list - the same sentinel-head list `sub_802AA4C`/`DestroyPolarPlayer`/
 `DestroyPolarCollectedWumpa` unlink from, rooted at `gActorList` (the player
 object) - looking for every *other* actor whose type byte
 (`*(u8*)(*(u8**)(node+0x30))`, the same type-byte indirection
@@ -125,16 +125,16 @@ functions of issue #53's own `0x0802C99C` chunk start are genuinely
 matched as plain C, in `src/graphics/actor_part19i.c`:
 
 - **`UpdatePolarTimeCrate`** - the type-byte-dispatch/proximity family
-  (`UpdatePolarQuestionCrate`'s shape, `actor_part19g.c`): on `sub_802A6EC`
+  (`UpdatePolarQuestionCrate`'s shape, `actor_part19g.c`): on `IsTouchingPlayer`
   proximity and `self+0xc != 0x12`, plays a sound, ties the lap
   counter, then `switch`es on `self+0x30`'s type byte (`5`/`6`/`7` each
   dispatch a different `FreezeLevelClock` tier) before the shared used-state
   transition; tail-calls `UpdatePolarCrate`.
 - **`sub_802CA28`** - the same used-state transition, unconditional
-  (no `sub_802A6EC` guard), also clearing `self+0x44`; no tail call.
+  (no `IsTouchingPlayer` guard), also clearing `self+0x44`; no tail call.
 - **`sub_802CA6C`**/**`UpdatePolarBasicCrate`** - the proximity-gated shape again,
   forwarding a fixed accumulator delta (`4`/`1`) to
-  `sub_802C078(gActorList, ...)`; each tail-calls `UpdatePolarCrate`.
+  `QueuePolarWumpa(gActorList, ...)`; each tail-calls `UpdatePolarCrate`.
 - **`InitPolarCrate`** - an `InitActorPart`-based constructor: installs
   `self+0x50 = gPolarCrateVtable`, then classifies a "kind"
   (`self+0xc`) from a `__divsi3`-scaled function of the `b`
@@ -201,7 +201,7 @@ crashbandicootxs.gba crashbandicootxs.map && make compare`), once for
 
 `UpdatePolarElectricFence` onward (the remainder of issue #53's own
 `0x0802C99C`-`0x0802D3A8` chunk, now `asm/code_3_2_20_28568_c99c_cc9c.s`)
-is a larger, `sub_802DD9C`/`sub_802A6EC`/`sub_802B7E0`-calling state
+is a larger, `sub_802DD9C`/`IsTouchingPlayer`/`ShockPolarPlayer`-calling state
 machine with three branches and heavy `r5`/`r6`/`r7` register reuse -
 not attempted this pass, issue #53 stays open. The wider raw actor
 spans this pass also looked at (`0x0802CC9C` onward before issue #54's

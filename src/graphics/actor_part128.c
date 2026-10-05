@@ -12,14 +12,14 @@
  *   record's kind byte and forwards to it, and the run of small
  *   `new Foo(...)` constructors (`CreateJetpackCheckpointText`-`SpawnJetpackShot`) each
  *   allocate one object and hand it a fixed record of the same table.
- * - The player's vehicle object (method table gStaticData_087E5144,
- *   built by `sub_802E710`/`sub_802E740`): its per-frame update
- *   (`sub_802E84C`), sprite draw (`sub_802E9FC`), damage handler
- *   (`sub_802EB78`), d-pad steering (`sub_802EC64`/`sub_802ED10`) and
- *   the per-state input steps (`sub_802EDBC`-`sub_802EFD8`). Its state
- *   lives in the `gUnknown_030014DC`-`gUnknown_03001518` singletons.
+ * - The player's vehicle object (method table gJetpackPlayerVtable,
+ *   built by `CreateJetpackPlayer`/`InitJetpackPlayer`): its per-frame update
+ *   (`UpdateJetpackPlayer`), sprite draw (`DrawJetpackPlayer`), damage handler
+ *   (`DamageJetpackPlayer`), d-pad steering (`SteerJetpackPlayerY`/`SteerJetpackPlayerX`) and
+ *   the per-state input steps (`JetpackPlayerStateFly`-`JetpackPlayerStateRollRight`). Its state
+ *   lives in the `gUnknown_030014DC`-`gJetpackPlayerTiles` singletons.
  *
- * Built with old_agbcc: `sub_802E9FC` only matches under it (current
+ * Built with old_agbcc: `DrawJetpackPlayer` only matches under it (current
  * agbcc loads its `attr` halfword straight into the callee-saved
  * register instead of via r0); every other function here compiles
  * identically under both. */
@@ -47,7 +47,7 @@ struct actor_hp {
     s32 hp;         // 0x54
 };
 
-/* The camera-ish object `sub_802E9FC` reads through `self+0x30`. */
+/* The camera-ish object `DrawJetpackPlayer` reads through `self+0x30`. */
 struct cam_ref {
     u8 unk_00[0x10];
     s32 depth;      // 0x10 - the depth at which sprites draw unscaled
@@ -79,9 +79,9 @@ extern void SetCellAnimSpeed(s32 a);
 extern void sub_8029D8C(s32 x, s32 y);
 extern s32 sub_8029E98(void);
 extern s32 sub_8029EB4(void);
-extern u8 sub_802AA80(void *spawn);
-extern void sub_802F338(void *self);
-extern void sub_802F3BC(void *self);
+extern u8 IsSpawnCollected(void *spawn);
+extern void AllocJetpackPlayerTiles(void *self);
+extern void DispenseJetpackWumpa(void *self);
 extern void sub_802F4CC(void *self);
 extern void SpawnAirship(s32 k, s32 x, s32 y, s32 z);
 extern void SpawnHovercraft(s32 k, s32 x, s32 y, s32 z);
@@ -95,12 +95,12 @@ extern s32 CreateJetpackRocket(void *obj, struct kind_entry *rec, s32 x, s32 y, 
 extern s32 CreateJetpackRing(void *obj, struct kind_entry *rec, s32 x, s32 y, s32 z);
 extern s32 CreateJetpackBalloon(void *obj, struct kind_entry *rec, s32 a, s32 b, s32 c, s32 d);
 extern s32 CreateJetpackCollectedWumpa(void *obj, struct kind_entry *rec, s32 a, s32 b, s32 c);
-extern s32 sub_80342D4(void *obj, struct kind_entry *rec, s32 a, s32 b, s32 c);
-extern void *sub_8034058(void *obj, struct kind_entry *rec, s32 a, s32 b, s32 c, struct byte_arg d);
+extern s32 CreateHovercraftCannonFlash(void *obj, struct kind_entry *rec, s32 a, s32 b, s32 c);
+extern void *CreateHovercraftSideGun(void *obj, struct kind_entry *rec, s32 a, s32 b, s32 c, struct byte_arg d);
 extern s32 CreateHovercraftLauncher(void *obj, struct kind_entry *rec, s32 a, s32 b, s32 c);
 extern s32 CreateHovercraftCannon(void *obj, struct kind_entry *rec, s32 a, s32 b, s32 c);
-extern void sub_80329D4(void *obj, struct kind_entry *rec, s32 a, s32 b, s32 c);
-extern void sub_80305F8(void *obj, struct kind_entry *rec, s32 a, s32 b, s32 c);
+extern void CreateHovercraftFireball(void *obj, struct kind_entry *rec, s32 a, s32 b, s32 c);
+extern void CreateAirshipFireball(void *obj, struct kind_entry *rec, s32 a, s32 b, s32 c);
 extern void CreateJetpackCannonball(void *obj, struct kind_entry *rec, s32 a, s32 b, s32 c, s32 d, s32 e);
 extern void CreateJetpackShot(void *obj, struct kind_entry *rec, s32 a, s32 b, s32 c, s32 d, s32 e);
 
@@ -113,27 +113,27 @@ extern void *gYeti;
 extern struct kind_entry *gJetpackAnimTable;
 extern s32 gUnknown_030014DC;
 extern s32 gUnknown_030014E0;
-extern s32 gUnknown_030014E4;
+extern s32 gJetpackPlayerMaxHp;
 extern u8 gUnknown_030014E8;
 extern s32 gUnknown_030014EC;
 extern s32 gUnknown_030014F0;
 extern s32 gUnknown_030014F4;
 extern s32 gUnknown_030014F8;
-extern s32 gUnknown_030014FC;
+extern s32 gJetpackQueuedWumpa;
 extern s32 gUnknown_03001500;
 extern u8 gUnknown_03001504;
 extern u8 gUnknown_03001505;
 extern u8 gUnknown_03001506;
 extern u8 gUnknown_03001507;
-extern s32 gUnknown_03001508;
-extern s32 gUnknown_0300150C;
+extern s32 gJetpackPlayerVelY;
+extern s32 gJetpackPlayerVelX;
 extern s32 gUnknown_03001510;
 extern u8 *gUnknown_03001514;
-extern u8 *gUnknown_03001518[2];
-extern struct actor_pmf gStaticData_0817C1C0[];
+extern u8 *gJetpackPlayerTiles[2];
+extern struct actor_pmf gJetpackPlayerStateFuncs[];
 extern u8 gJetpackCheckpointTextVtable[];
 extern u8 gJetpackExplosionVtable[];
-extern u8 gStaticData_087E5144[];
+extern u8 gJetpackPlayerVtable[];
 
 /* `operator new`: the ROM materializes the size before the heap flags. */
 static inline void *AllocActor(u32 size)
@@ -221,7 +221,7 @@ s32 SpawnJetpackActor(struct spawn_rec *rec, u8 alt, s32 dz)
 
 /* The spawn dispatcher: offsets the position by the kind's record and
  * constructs the kind's object. Kind 23 turns into kind 20's object
- * when `sub_802AA80` says so; kind 31 spawns a kind-43 companion first. */
+ * when `IsSpawnCollected` says so; kind 31 spawns a kind-43 companion first. */
 s32 CreateJetpackActor(u8 kind, s32 x, s32 y, s32 z, void *spawn)
 {
     x += gJetpackAnimTable[kind].dx;
@@ -239,7 +239,7 @@ s32 CreateJetpackActor(u8 kind, s32 x, s32 y, s32 z, void *spawn)
     case 19:
         return CreateJetpackHealthCrate(AllocActor(0x70), &gJetpackAnimTable[kind], x, y, z);
     case 23:
-        if (sub_802AA80(spawn))
+        if (IsSpawnCollected(spawn))
             return CreateJetpackQuestionCrate(AllocActor(0x74), &gJetpackAnimTable[20], x, y, z, spawn);
         /* fallthrough */
     case 20:
@@ -298,44 +298,44 @@ s32 SpawnJetpackBalloon(u8 kind, s32 a, s32 b, s32 c, s32 d)
 }
 
 /* Kind-14 constructor. */
-void sub_802E504(s32 a, s32 b, s32 c)
+void SpawnHovercraftCannonFlash(s32 a, s32 b, s32 c)
 {
-    sub_80342D4(AllocActor(0x5c), &gJetpackAnimTable[14], a, b, c);
+    CreateHovercraftCannonFlash(AllocActor(0x5c), &gJetpackAnimTable[14], a, b, c);
 }
 
 /* Kind-13 constructor; the last argument is passed as a single byte. */
-void sub_802E538(s32 a, s32 b, s32 c, u8 d)
+void SpawnHovercraftSideGun(s32 a, s32 b, s32 c, u8 d)
 {
     struct byte_arg arg;
 
     arg.v = d;
-    sub_8034058(AllocActor(0x70), &gJetpackAnimTable[13], a, b, c, arg);
+    CreateHovercraftSideGun(AllocActor(0x70), &gJetpackAnimTable[13], a, b, c, arg);
 }
 
 /* Kind-12 constructor. */
-void sub_802E57C(s32 a, s32 b, s32 c)
+void SpawnHovercraftLauncher(s32 a, s32 b, s32 c)
 {
     CreateHovercraftLauncher(AllocActor(0x70), &gJetpackAnimTable[12], a, b, c);
 }
 
 /* Kind-11 constructor. */
-void sub_802E5B0(s32 a, s32 b, s32 c)
+void SpawnHovercraftCannon(s32 a, s32 b, s32 c)
 {
     CreateHovercraftCannon(AllocActor(0x70), &gJetpackAnimTable[11], a, b, c);
 }
 
 /* Plays sfx 0x38 and spawns a kind-39 object. */
-void sub_802E5E4(s32 x, s32 y, s32 z)
+void SpawnHovercraftFireball(s32 x, s32 y, s32 z)
 {
     PlaySfx(gAudioContext, 0x38, 0x100);
-    sub_80329D4(AllocActor(0x6c), &gJetpackAnimTable[39], x, y, z);
+    CreateHovercraftFireball(AllocActor(0x6c), &gJetpackAnimTable[39], x, y, z);
 }
 
 /* Plays sfx 0x38 and spawns a kind-38 object. */
-void sub_802E62C(s32 x, s32 y, s32 z)
+void SpawnAirshipFireball(s32 x, s32 y, s32 z)
 {
     PlaySfx(gAudioContext, 0x38, 0x100);
-    sub_80305F8(AllocActor(0x6c), &gJetpackAnimTable[38], x, y, z);
+    CreateAirshipFireball(AllocActor(0x6c), &gJetpackAnimTable[38], x, y, z);
 }
 
 /* Plays sfx 0x30 and spawns a kind-3 object. */
@@ -345,22 +345,22 @@ void SpawnJetpackCannonball(s32 a, s32 b, s32 c, s32 d, s32 e)
     CreateJetpackCannonball(AllocActor(0x60), &gJetpackAnimTable[3], a, b, c, d, e);
 }
 
-/* Spawns a kind-2 object (the vehicle's shot - see `sub_802EDBC`). */
+/* Spawns a kind-2 object (the vehicle's shot - see `JetpackPlayerStateFly`). */
 void SpawnJetpackShot(s32 a, s32 b, s32 c, s32 d, s32 e)
 {
     CreateJetpackShot(AllocActor(0x60), &gJetpackAnimTable[2], a, b, c, d, e);
 }
 
-struct actor_hp *sub_802E740(struct actor_hp *self, struct kind_entry *rec, s32 z);
+struct actor_hp *InitJetpackPlayer(struct actor_hp *self, struct kind_entry *rec, s32 z);
 
 /* Installs the level's per-kind table and builds the player vehicle
  * from its first record, making it the (self-linked) player object. */
-void sub_802E710(struct kind_entry *table, s32 z)
+void CreateJetpackPlayer(struct kind_entry *table, s32 z)
 {
     struct actor_hp *p;
 
     gJetpackAnimTable = table;
-    gActorList = &(p = sub_802E740(AllocActor(0x58), gJetpackAnimTable, z))->base;
+    gActorList = &(p = InitJetpackPlayer(AllocActor(0x58), gJetpackAnimTable, z))->base;
     ((void **)p->base.unk_48)[0] = p;
     ((void **)p->base.unk_48)[1] = p;
 }
@@ -368,30 +368,30 @@ void sub_802E710(struct kind_entry *table, s32 z)
 /* The player vehicle's constructor: 100 hit points (0x78 when
  * `sub_8029794` says so), and a reset of all its singleton state. A
  * nonzero start depth starts it in state 7. */
-struct actor_hp *sub_802E740(struct actor_hp *self, struct kind_entry *rec, s32 z)
+struct actor_hp *InitJetpackPlayer(struct actor_hp *self, struct kind_entry *rec, s32 z)
 {
     s32 y = 0;
 
     if (z == 0)
         y = -0x9600;
     InitHpActor(self, rec, 0, y, z, 100);
-    self->base.vtable = (struct actor_vtable *)gStaticData_087E5144;
-    sub_802F338(self);
-    gUnknown_0300150C = 0;
+    self->base.vtable = (struct actor_vtable *)gJetpackPlayerVtable;
+    AllocJetpackPlayerTiles(self);
+    gJetpackPlayerVelX = 0;
     if (self->base.z != 0) {
-        gUnknown_03001508 = 0;
+        gJetpackPlayerVelY = 0;
         ACTOR_SET_STATE(&self->base, 7, 0);
         SetCellAnimSpeed(0x28);
     } else {
         SetCellAnimSpeed(0x1e);
-        gUnknown_03001508 = 0x180;
+        gJetpackPlayerVelY = 0x180;
     }
     gUnknown_03001507 = 0;
     gUnknown_03001506 = 1;
     gUnknown_03001500 = 0;
     gUnknown_03001505 = 0;
     gUnknown_03001504 = 0;
-    gUnknown_030014FC = 0;
+    gJetpackQueuedWumpa = 0;
     gUnknown_030014F8 = 0;
     gUnknown_030014F4 = 0;
     gUnknown_030014EC = -0xbe;
@@ -399,7 +399,7 @@ struct actor_hp *sub_802E740(struct actor_hp *self, struct kind_entry *rec, s32 
     gUnknown_030014E8 = 0;
     if (sub_8029794())
         self->hp = 0x78;
-    gUnknown_030014E4 = self->hp;
+    gJetpackPlayerMaxHp = self->hp;
     gUnknown_030014E0 = 0;
     gUnknown_030014DC = 0;
     return self;
@@ -408,8 +408,8 @@ struct actor_hp *sub_802E740(struct actor_hp *self, struct kind_entry *rec, s32 
 /* The vehicle's per-frame update: engine-sound throttle, fire cooldown,
  * movement by the steering speeds (clamped to the play area unless
  * `gUnknown_03001506` is set), depth, animation, then the current
- * state's handler from gStaticData_0817C1C0. */
-void sub_802E84C(struct actor_hp *self)
+ * state's handler from gJetpackPlayerStateFuncs. */
+void UpdateJetpackPlayer(struct actor_hp *self)
 {
     s32 x, y;
 
@@ -428,9 +428,9 @@ void sub_802E84C(struct actor_hp *self)
     if (gUnknown_03001500 != 0)
         gUnknown_03001500--;
     sub_802F4CC(self);
-    sub_802F3BC(self);
-    x = self->base.x += gUnknown_0300150C;
-    y = self->base.y += gUnknown_03001508;
+    DispenseJetpackWumpa(self);
+    x = self->base.x += gJetpackPlayerVelX;
+    y = self->base.y += gJetpackPlayerVelY;
     if (gUnknown_03001506 == 0) {
         self->base.x = x < -0x8000 ? -0x8000 : x;
         self->base.x = self->base.x > 0x8000 ? 0x8000 : self->base.x;
@@ -455,7 +455,7 @@ void sub_802E84C(struct actor_hp *self)
         self->base.animDone = 1;
     }
     sub_8029D8C(self->base.x, self->base.y);
-    ACTOR_PMF_CALL(&self->base, gStaticData_0817C1C0);
+    ACTOR_PMF_CALL(&self->base, gJetpackPlayerStateFuncs);
 }
 
 asm(".align 2, 0");
@@ -489,7 +489,7 @@ static inline s32 CurAttr(struct actor_self *self)
  * and double-sized when drawn behind the reference depth), culls
  * against the screen, uploads the frame's tiles into the other of the
  * two VRAM buffers when the frame changed, and queues the OAM entry. */
-void sub_802E9FC(struct actor_hp *self)
+void DrawJetpackPlayer(struct actor_hp *self)
 {
     s32 scale;
     s32 attr1 = 0;
@@ -530,12 +530,12 @@ void sub_802E9FC(struct actor_hp *self)
         attr1 |= (sy & 0xff) | ((sx & 0x1ff) << 16) | attr | GetSpriteShapeSizeBits(frame);
         if (frame != gUnknown_03001514) {
             gUnknown_03001510 ^= 1;
-            gUnpackRleSpriteFrameFunc(gUnknown_03001518[gUnknown_03001510], frame);
+            gUnpackRleSpriteFrameFunc(gJetpackPlayerTiles[gUnknown_03001510], frame);
             gUnknown_03001514 = frame;
         }
         {
             /* the ROM computes the tile number in r0 */
-            register u32 tile asm("r0") = GET_TILE_NUM(gUnknown_03001518[gUnknown_03001510]);
+            register u32 tile asm("r0") = GET_TILE_NUM(gJetpackPlayerTiles[gUnknown_03001510]);
 
             QueueSpriteFrameOam(attr1, tile | (self->base.palette << 12), scale);
         }
@@ -545,7 +545,7 @@ void sub_802E9FC(struct actor_hp *self)
 /* Damage handler: ignored during the first 16 frames of states 2/3.
  * Out of hit points, the vehicle enters state 4 (anim 3), input is
  * locked and the steering speeds are cut; otherwise sfx 0x42 plays. */
-void sub_802EB78(struct actor_hp *self, s32 dmg)
+void DamageJetpackPlayer(struct actor_hp *self, s32 dmg)
 {
     if ((u32)(self->base.state - 2) <= 1 && self->base.stateTime <= 0x10)
         return;
@@ -561,9 +561,9 @@ void sub_802EB78(struct actor_hp *self, s32 dmg)
         gUnknown_030014E8 = 1;
         gUnknown_03001506 = 1;
         SetCellAnimSpeed(0x1e);
-        gUnknown_03001508 = 0;
-        CLAMP_SPEED(gUnknown_0300150C);
-        gUnknown_0300150C /= 2;
+        gJetpackPlayerVelY = 0;
+        CLAMP_SPEED(gJetpackPlayerVelX);
+        gJetpackPlayerVelX /= 2;
     } else {
         PlaySfx(gAudioContext, 0x42, 0x100);
     }
@@ -590,44 +590,44 @@ static inline void DecaySpeed(s32 *p)
 }
 
 /* Vertical steering (a C++ method; `this` is unused): up/down change
- * `gUnknown_03001508` by 0x40 while input is enabled, otherwise it
+ * `gJetpackPlayerVelY` by 0x40 while input is enabled, otherwise it
  * decays to zero; clamped to +-0x240. */
-void sub_802EC64(void *self)
+void SteerJetpackPlayerY(void *self)
 {
     if (gUnknown_03001507 && (ReadKeys().held & 0x40))
-        gUnknown_03001508 -= 0x40;
+        gJetpackPlayerVelY -= 0x40;
     else if (gUnknown_03001507 && (ReadKeys().held & 0x80))
-        gUnknown_03001508 += 0x40;
+        gJetpackPlayerVelY += 0x40;
     else {
-        DecaySpeed(&gUnknown_03001508);
-        if (Abs(gUnknown_03001508) <= 0x40)
-            gUnknown_03001508 = 0;
+        DecaySpeed(&gJetpackPlayerVelY);
+        if (Abs(gJetpackPlayerVelY) <= 0x40)
+            gJetpackPlayerVelY = 0;
     }
-    CLAMP_SPEED(gUnknown_03001508);
+    CLAMP_SPEED(gJetpackPlayerVelY);
 }
 
 /* Horizontal steering, same shape with left/right and
- * `gUnknown_0300150C`. */
-void sub_802ED10(void *self)
+ * `gJetpackPlayerVelX`. */
+void SteerJetpackPlayerX(void *self)
 {
     if (gUnknown_03001507 && (ReadKeys().held & 0x20))
-        gUnknown_0300150C -= 0x40;
+        gJetpackPlayerVelX -= 0x40;
     else if (gUnknown_03001507 && (ReadKeys().held & 0x10))
-        gUnknown_0300150C += 0x40;
+        gJetpackPlayerVelX += 0x40;
     else {
-        DecaySpeed(&gUnknown_0300150C);
-        if (Abs(gUnknown_0300150C) <= 0x40)
-            gUnknown_0300150C = 0;
+        DecaySpeed(&gJetpackPlayerVelX);
+        if (Abs(gJetpackPlayerVelX) <= 0x40)
+            gJetpackPlayerVelX = 0;
     }
-    CLAMP_SPEED(gUnknown_0300150C);
+    CLAMP_SPEED(gJetpackPlayerVelX);
 }
 
 /* Normal-state step: steering, then R/L enter the roll states 2/3 and
  * A fires a shot (sfx 0x24, `SpawnJetpackShot`) when the cooldown allows. */
-void sub_802EDBC(struct actor_hp *self)
+void JetpackPlayerStateFly(struct actor_hp *self)
 {
-    sub_802EC64(self);
-    sub_802ED10(self);
+    SteerJetpackPlayerY(self);
+    SteerJetpackPlayerX(self);
     if (gUnknown_03001507) {
         struct keys_pair keys = gKeys;
 
@@ -656,22 +656,22 @@ void sub_802EDBC(struct actor_hp *self)
 /* Roll state 2: a quick leftward burst for 5 frames, then the horizontal
  * speed recovers; after 0x21 frames R/L may chain another roll, and the
  * animation's end returns to state 1. */
-void sub_802EED0(struct actor_hp *self)
+void JetpackPlayerStateRollLeft(struct actor_hp *self)
 {
-    sub_802EC64(self);
+    SteerJetpackPlayerY(self);
     if (self->base.stateTime <= 5) {
-        gUnknown_0300150C += -0x100;
-        if (gUnknown_0300150C < -0x500)
-            gUnknown_0300150C = -0x500;
+        gJetpackPlayerVelX += -0x100;
+        if (gJetpackPlayerVelX < -0x500)
+            gJetpackPlayerVelX = -0x500;
     } else {
-        gUnknown_0300150C += 0x2d;
-        if (Abs(gUnknown_0300150C) <= 0x2d)
-            gUnknown_0300150C = 0;
+        gJetpackPlayerVelX += 0x2d;
+        if (Abs(gJetpackPlayerVelX) <= 0x2d)
+            gJetpackPlayerVelX = 0;
     }
     if (self->base.stateTime > 0x21) {
         struct keys_pair keys;
 
-        sub_802ED10(self);
+        SteerJetpackPlayerX(self);
         keys = gKeys;
         if (keys.held & 0x200) {
             gUnknown_030014F4 = 0x12;
@@ -688,23 +688,23 @@ void sub_802EED0(struct actor_hp *self)
     }
 }
 
-/* Roll state 3: the rightward mirror of `sub_802EED0`. */
-void sub_802EFD8(struct actor_hp *self)
+/* Roll state 3: the rightward mirror of `JetpackPlayerStateRollLeft`. */
+void JetpackPlayerStateRollRight(struct actor_hp *self)
 {
-    sub_802EC64(self);
+    SteerJetpackPlayerY(self);
     if (self->base.stateTime <= 5) {
-        gUnknown_0300150C += 0x100;
-        if (gUnknown_0300150C > 0x500)
-            gUnknown_0300150C = 0x500;
+        gJetpackPlayerVelX += 0x100;
+        if (gJetpackPlayerVelX > 0x500)
+            gJetpackPlayerVelX = 0x500;
     } else {
-        gUnknown_0300150C -= 0x2d;
-        if (Abs(gUnknown_0300150C) <= 0x2d)
-            gUnknown_0300150C = 0;
+        gJetpackPlayerVelX -= 0x2d;
+        if (Abs(gJetpackPlayerVelX) <= 0x2d)
+            gJetpackPlayerVelX = 0;
     }
     if (self->base.stateTime > 0x21) {
         struct keys_pair keys;
 
-        sub_802ED10(self);
+        SteerJetpackPlayerX(self);
         keys = gKeys;
         if (keys.held & 0x200) {
             gUnknown_030014F4 = 0x12;

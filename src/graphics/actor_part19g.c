@@ -17,7 +17,7 @@ struct vec3_words {
 };
 
 /* `UpdatePolarLifeCrate`'s class adds one field after the common prefix: an
- * object it hands to `sub_802AAB4`'s 15-entry list. */
+ * object it hands to `MarkSpawnCollected`'s 15-entry list. */
 struct listed_actor {
     struct actor_self base;
     void *unk_54;               // 0x54
@@ -33,29 +33,29 @@ extern u8 gStaticData_0817A768[];
 extern void InitActorPart(void *self, s32 a, s32 b, s32 c, s32 d);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
-extern u8 sub_802A6EC(void *self);
+extern u8 IsTouchingPlayer(void *self);
 extern void UpdateActor(void *self);
 extern u8 sub_802DD9C(void *self);
 extern void AddBrokenCrate(void *self);
-extern void sub_802AAB4(void *arg0);
-extern void sub_802B730(void *arg0);
+extern void MarkSpawnCollected(void *arg0);
+extern void HurtPolarPlayer(void *arg0);
 extern void sub_8029720(void);
 extern void DetonateNearbyPolarNitros(void *self);
-extern void sub_802C078(void *arg0, s32 delta);
+extern void QueuePolarWumpa(void *arg0, s32 delta);
 extern void sub_802C128(void *arg0);
 extern void sub_802C0A8(void *arg0);
 extern void UpdatePolarCrate(void *selfArg);
 
-/* On proximity (`sub_802A6EC`), accumulates `1` into the shared
- * `gActorList`-targeted accumulator via `sub_802C078` then fires
+/* On proximity (`IsTouchingPlayer`), accumulates `1` into the shared
+ * `gActorList`-targeted accumulator via `QueuePolarWumpa` then fires
  * the `vtable` trampoline (behind this family's `if (self)` guard);
  * otherwise tail-calls `UpdateActor(self)`. */
 void UpdatePolarWumpa(void *selfArg)
 {
     struct actor_self *self = selfArg;
 
-    if (sub_802A6EC(self)) {
-        sub_802C078(gActorList, 1);
+    if (IsTouchingPlayer(self)) {
+        QueuePolarWumpa(gActorList, 1);
         if (self != 0) {
             struct actor_vtable *table = self->vtable;
             _call_via_r2((u8 *)self + table->destroy.thisOffset, (void *)3, table->destroy.fn);
@@ -123,13 +123,13 @@ void UpdatePolarCrate(void *selfArg)
  * `0x1f`, reading the type byte through one extra pointer indirection
  * (`self+0x30`). Ties into the wraparound-lap-counter system via
  * `AddBrokenCrate` and dispatches accumulator/lock-timer calls
- * (`sub_802C078`/`sub_802C128`) before tail-calling the shared cleanup
+ * (`QueuePolarWumpa`/`sub_802C128`) before tail-calling the shared cleanup
  * `UpdatePolarCrate`. */
 void UpdatePolarQuestionCrate(void *selfArg)
 {
     struct actor_self *self = selfArg;
 
-    if (self->animIndex != 0x12 && sub_802A6EC(self)) {
+    if (self->animIndex != 0x12 && IsTouchingPlayer(self)) {
         s32 typeByte;
 
         AddBrokenCrate(gLevelState);
@@ -157,17 +157,17 @@ void UpdatePolarQuestionCrate(void *selfArg)
 
     case_1c:
         PlaySfx(gAudioContext, 3, 0x100);
-        sub_802C078(gActorList, 1);
+        QueuePolarWumpa(gActorList, 1);
         goto state_block;
 
     case_1d:
         PlaySfx(gAudioContext, 3, 0x100);
-        sub_802C078(gActorList, 3);
+        QueuePolarWumpa(gActorList, 3);
         goto state_block;
 
     case_1e:
         PlaySfx(gAudioContext, 3, 0x100);
-        sub_802C078(gActorList, 5);
+        QueuePolarWumpa(gActorList, 5);
         goto state_block;
 
     case_1f:
@@ -190,9 +190,9 @@ void UpdatePolarQuestionCrate(void *selfArg)
 }
 
 /* Extends the lap-counter/proximity-dispatch family: on proximity
- * (`sub_802A6EC`), plays a sound, ties the lap counter, forwards the
+ * (`IsTouchingPlayer`), plays a sound, ties the lap counter, forwards the
  * global player pointer to `sub_802C0A8` and `unk_54` to
- * `sub_802AAB4`, then (whether or not that first branch fired) on
+ * `MarkSpawnCollected`, then (whether or not that first branch fired) on
  * `sub_802DD9C`'s overlap test transitions to the shared "used" state
  * a second time with its own sound cue - both branches finish with the
  * same state-0x12 transition block before tail-calling `UpdatePolarCrate`. */
@@ -201,11 +201,11 @@ void UpdatePolarLifeCrate(void *selfArg)
     struct actor_self *self = selfArg;
 
     if (self->animIndex != 0x12) {
-        if (sub_802A6EC(self)) {
+        if (IsTouchingPlayer(self)) {
             PlaySfx(gAudioContext, 7, 0x100);
             AddBrokenCrate(gLevelState);
             sub_802C0A8(gActorList);
-            sub_802AAB4(((struct listed_actor *)self)->unk_54);
+            MarkSpawnCollected(((struct listed_actor *)self)->unk_54);
             self->animIndex = 0x12;
             {
                 register u16 anim asm("r0") = *(u16 *)&self->anims[18].duration;
@@ -245,7 +245,7 @@ void UpdatePolarLifeCrate(void *selfArg)
  * docs/matching.md). Otherwise, while `depth` (a lap/lifetime
  * counter) exceeds `0xa000`, calls `sub_8029720` and fires the
  * `vtable` trampoline; else on proximity or overlap, plays a sound,
- * ties the lap counter and the homing-chase helper `sub_802B730`,
+ * ties the lap counter and the homing-chase helper `HurtPolarPlayer`,
  * and transitions to the "used" state. Tail-calls `UpdatePolarCrate`. */
 void UpdatePolarNitroCrate(void *selfArg)
 {
@@ -263,7 +263,7 @@ void UpdatePolarNitroCrate(void *selfArg)
         }
         return;
     } else {
-        register u32 raw asm("r0") = sub_802A6EC(self);
+        register u32 raw asm("r0") = IsTouchingPlayer(self);
         register u32 found asm("r5");
 
         raw = raw << 24;
@@ -272,7 +272,7 @@ void UpdatePolarNitroCrate(void *selfArg)
         if (found) {
             PlaySfx(gAudioContext, 4, 0x100);
             AddBrokenCrate(gLevelState);
-            sub_802B730(gActorList);
+            HurtPolarPlayer(gActorList);
             {
                 register s32 zero2 asm("r2") = 0;
 

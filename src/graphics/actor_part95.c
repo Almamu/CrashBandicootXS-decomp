@@ -6,25 +6,25 @@ extern s32 gUnknown_03001384;
 extern s32 gUnknown_03001388;
 extern s32 gUnknown_0300138C;
 extern s32 gUnknown_03001390;
-extern s32 gUnknown_03000878;
+extern s32 gActorCheckpoint;
 extern void *gLevelState;
 
 extern s32 sub_802A4E0(void);
 extern void SetCheckpointAtPlayer(void *arg0);
-extern void sub_802AB34(void);
+extern void SaveActorPaletteCycle(void);
 
 /* Re-bases the category's secondary tick counter from `arg0` (net of
  * `sub_802A4E0`'s current Q8.8 offset), resets the active-instance
  * counters, and re-syncs the frame-tick snapshot for a freshly
  * (re)selected category. */
-void sub_8029748(s32 arg0)
+void SetActorCheckpoint(s32 arg0)
 {
-    gUnknown_03000878 = arg0 - sub_802A4E0();
+    gActorCheckpoint = arg0 - sub_802A4E0();
     gUnknown_03001384 = 0;
     gUnknown_03001388 = 0;
     SetCheckpointAtPlayer(gLevelState);
     gUnknown_03001390 = gUnknown_0300138C;
-    sub_802AB34();
+    SaveActorPaletteCycle();
 }
 
 extern s32 gActorCategory;

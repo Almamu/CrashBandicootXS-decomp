@@ -130,7 +130,7 @@ s32 gHudSlideOffset = 0;
 /* Hooks into the ARM code (see sprite_arm.c). */
 s32 (*gLookupSpriteFrameCacheFunc)(u8 *frame) = LookupSpriteFrameCache;
 void (*gUnpackRleSpriteFrameFunc)(void *dst, u8 *frame) = UnpackRleSpriteFrame;
-s32 gUnknown_03000878 = 0;
+s32 gActorCheckpoint = 0;
 void (*gDrawMirroredTilemapFunc)(u8 *pal, s32 lowBlock, s32 w, s32 h) = DrawMirroredTilemap;
 void (*gHeapSortActorsByKeyFunc)(s32 n, void **list) = HeapSortActorsByKey;
 void *gActorList = NULL;

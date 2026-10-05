@@ -144,7 +144,7 @@ The rest of the chunk - `SpawnShark`, `SpawnMorayEel`, `SpawnElectricEel`,
 `SpawnSaucerLabAssistant`, `SpawnPistonCrusher`, `SpawnFlamethrowerLabAssistant`, `sub_8020788`,
 `sub_80208C4`, `SpawnRat`, `SpawnFrog`, `SpawnSeaMine`,
 `SpawnWoodenCrusher`, `sub_8021280`, `sub_8021388`, `sub_8021480`,
-`sub_802155C` - are all confirmed instances of the same "two-line text
+`SpawnCortexBoss` - are all confirmed instances of the same "two-line text
 popup" family `SpawnSquid` belongs to (semantics fully read for all of
 them this pass), several with their own tail variant (a second
 `header->0x84` rewrite plus a `{x, y, w}`-shaped struct-field copy into
@@ -232,12 +232,12 @@ at a different address. Every one of these 24 functions from
 old `asm/code_3_2_17_21280.s`) is now real, matched C, plus one more
 (`SpawnBonusPlatform`) as a NAKED transcription - see below. This retires
 `asm/code_3_2_17_21280.s` down to just its first 470 lines
-(`sub_8021280`-`sub_802155C`, the 4 remaining full popup-family
+(`sub_8021280`-`SpawnCortexBoss`, the 4 remaining full popup-family
 instances - see "Left raw" below).
 
 New file: `src/graphics/graphics_loading_21668.c`, inserted in
 `ldscript.txt` right after `asm/code_3_2_17_21280.o` (which now ends
-at `sub_802155C`'s literal pool) and before
+at `SpawnCortexBoss`'s literal pool) and before
 `src/graphics/graphics_loading_21bfc.o`.
 
 ### `sub_8021668` - the popup family's OAM-trio tail variant
@@ -389,17 +389,17 @@ pass's writeup carried forward:
   `SetCrateGemPos` with an offset `{x, y}` pair. Not attempted this pass -
   semantics read far enough to know it's not a popup-family sibling, but
   not worked through to a full C reconstruction.
-- **`sub_8021388`**, **`sub_8021480`**, **`sub_802155C`** genuinely
+- **`sub_8021388`**, **`sub_8021480`**, **`SpawnCortexBoss`** genuinely
   *are* 3 more popup-family instances (same `sub_8009ED0` constructor,
   `+0x20` table offset, `sub_800815C`/`UPDATE_PART_FRAME_NIBBLE` nibble
   update, `gEntityFlags` two-bit collected pack, `_call_via_r2`
   trampoline via an allocated header, tag/manager-register tail -
-  `sub_8021480`/`sub_802155C` skip the flags-mask step `sub_8021388`
-  has and use a plain `flags |= 0x10` instead, and `sub_802155C` adds
+  `sub_8021480`/`SpawnCortexBoss` skip the flags-mask step `sub_8021388`
+  has and use a plain `flags |= 0x10` instead, and `SpawnCortexBoss` adds
   the OAM trio like `sub_8021668`). All three additionally call a
   header-construction helper (`CreateDingodile(block, arg1, arg2)` for
-  `sub_8021388`, `CreateTiny()` for `sub_8021480`, `sub_80197DC()` for
-  `sub_802155C`) and a closing `sub_8023318(gLevelState, hdr)`
+  `sub_8021388`, `CreateTiny()` for `sub_8021480`, `CreateCortexBoss()` for
+  `SpawnCortexBoss`) and a closing `sub_8023318(gLevelState, hdr)`
   neither `SpawnSquid` nor `sub_8021668` have. `sub_8021388` got the
   furthest this pass: every instruction's *operation* matches the ROM
   (confirmed via isolated compile, using the same collected-bits-pack
@@ -410,7 +410,7 @@ pass's writeup carried forward:
   second `mov r8, r1` / `mov sb, r2` pair from the *truncated* values -
   i.e. the ROM spills the parameter twice) that no plain-C phrasing or
   register-pin tried this pass reproduced. Given `sub_8021480`/
-  `sub_802155C` likely share a close variant of the same gap
+  `SpawnCortexBoss` likely share a close variant of the same gap
   (unconfirmed - not attempted), this looks like the same class of
   gcc-2.9 parameter-lowering quirk documented elsewhere in this cluster,
   not a semantics problem - a good NAKED-transcription candidate for
@@ -422,7 +422,7 @@ pass's writeup carried forward:
 Verified via a full clean `make compare` (`La suma coincide`) and
 `make NON_MATCHING=1 report`.
 
-## Fifth pass: the final raw region (`sub_8021280`-`sub_802155C`) - 2 of 4 real C, 2 NAKED
+## Fifth pass: the final raw region (`sub_8021280`-`SpawnCortexBoss`) - 2 of 4 real C, 2 NAKED
 
 Picked up the "Left raw (4)" list the fourth pass left behind - the last
 still-raw stretch of `asm/code_3_2_17_21280.s`. All four are now real,
@@ -430,7 +430,7 @@ always-compiled code (2 matched, 2 NAKED), retiring the raw file entirely.
 New file: `src/graphics/graphics_loading_21280.c`, replacing
 `asm/code_3_2_17_21280.o` in `ldscript.txt` at the same point.
 
-### Matched: `sub_8021388`, `sub_802155C`
+### Matched: `sub_8021388`, `SpawnCortexBoss`
 
 Both are "two-line text popup" siblings, matched byte-exact (full clean
 `make compare`, `La suma coincide`). Confirms the fourth pass's guess that
@@ -449,7 +449,7 @@ reordered/CSE'd away; see "Two more compiler-codegen gotchas" below for
 the two extra spots this same class of gap turned up in `sub_8021388`
 itself, past the point the fourth pass had already diagnosed).
 
-`sub_802155C` (the OAM-trio tail variant, same shape as `sub_8021668`)
+`SpawnCortexBoss` (the OAM-trio tail variant, same shape as `sub_8021668`)
 needed the same "hand-spelled asm block covering the whole
 prologue-through-call" treatment for its own single-truncation prologue
 (`arg3`'s home is `r5` for the whole function, `part` is `r4`), plus a
@@ -458,7 +458,7 @@ field_2d = 1`, with a `0` cached into `sb` for a `part->field_2c = 0`
 write far later and a `1` cached into `r6` for the collected-bits pack -
 all materialized before the store itself, not after, the same "constant
 before store" ordering this cluster's other functions already needed).
-One more real gotcha specific to this instance: `hdr = sub_80197DC()`'s
+One more real gotcha specific to this instance: `hdr = CreateCortexBoss()`'s
 result is used for its own `+0xc` table dereference *before* getting
 aliased into `r8` (`hdr`'s durable home for later) - `r8` can't be an
 immediate-offset load's base register in Thumb (the same restriction
@@ -493,7 +493,7 @@ this) - both fixed with small `asm volatile` blocks:
 - **The `part->field_0A = 1;` / collected-bits-pack `1` write pair.**
   Same "two independent constant writes, ROM materializes both before
   the store" idiom this cluster has hit repeatedly (`sub_8021280`'s
-  argument prologue, `sub_802155C`'s `+0x2d` store above) - plain C
+  argument prologue, `SpawnCortexBoss`'s `+0x2d` store above) - plain C
   (even with the register-pinned `one` declared and assigned *before*
   the store) still let the compiler schedule the store between the two
   writes rather than after both. Fixed with the same 3-instruction
@@ -617,7 +617,7 @@ fix, confirmed by isolated-compile diff against the ROM disassembly:
   own `+0x20` table-offset constant. The identical fix was needed for
   both of `SpawnSeal`'s two trampoline calls (`hdr` lives in `r8`
   there, so the "avoid an immediate-offset load off a high-register
-  base" idiom `sub_802155C` established layers on top of the same
+  base" idiom `SpawnCortexBoss` established layers on top of the same
   constant-pin gotcha).
 - **A hard-pinned register still "reserved" after its C-level scope
   ends can't be reused for an unrelated later value in the same
@@ -721,7 +721,7 @@ this file needs. Reconstructed as real C using exactly those two
 functions' established idioms: `part` pinned in `r5`, `hdr` pinned in
 `r8` and dereferenced through its own fresh `r0` return value before
 being aliased into `r8` (the same "avoid an immediate-offset load off a
-high-register base" trick `SpawnSeal`/`sub_802155C` already
+high-register base" trick `SpawnSeal`/`SpawnCortexBoss` already
 established), a hand-spelled `asm volatile` island for the whole
 constructor-call prologue (raw-register truncation, the `arg3` stash
 into `r4`, and the `bl sub_8009ED0` itself), and the same

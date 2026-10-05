@@ -39,27 +39,27 @@
  * docs/matching/issue-50-actor-2a69c.md. */
 
 extern struct actor_self *gActorList;
-extern void sub_802F338(void *arg0);
+extern void AllocJetpackPlayerTiles(void *arg0);
 
 /* Trivial forwarder - ignores its own argument and calls
- * `sub_802F338(gActorList)` (the player object), discarding its
+ * `AllocJetpackPlayerTiles(gActorList)` (the player object), discarding its
  * return value. Same shape as `sub_802C0A8` in actor_part19.c. */
-void sub_802A69C(void *arg0)
+void JetpackReloadPlayerTiles(void *arg0)
 {
-    sub_802F338(gActorList);
+    AllocJetpackPlayerTiles(gActorList);
 }
 
-extern void sub_802B864(void *arg0);
+extern void AllocPolarPlayerTiles(void *arg0);
 
-/* Same forwarder shape as `sub_802A69C`, calling `sub_802B864` instead. */
-void sub_802A6B0(void *arg0)
+/* Same forwarder shape as `JetpackReloadPlayerTiles`, calling `AllocPolarPlayerTiles` instead. */
+void PolarReloadPlayerTiles(void *arg0)
 {
-    sub_802B864(gActorList);
+    AllocPolarPlayerTiles(gActorList);
 }
 
 extern void sub_802F0DC(void *arg0);
 
-/* Same forwarder shape as `sub_802A69C`, calling `sub_802F0DC` instead. */
+/* Same forwarder shape as `JetpackReloadPlayerTiles`, calling `sub_802F0DC` instead. */
 void sub_802A6C4(void *arg0)
 {
     sub_802F0DC(gActorList);
@@ -67,7 +67,7 @@ void sub_802A6C4(void *arg0)
 
 extern void sub_802BFD4(void *arg0);
 
-/* Same forwarder shape as `sub_802A69C`, calling `sub_802BFD4` (already
+/* Same forwarder shape as `JetpackReloadPlayerTiles`, calling `sub_802BFD4` (already
  * matched as a no-argument function in actor_part19.c) with the player
  * pointer anyway - the callee simply ignores it. */
 void sub_802A6D8(void *arg0)
@@ -81,7 +81,7 @@ extern s32 _call_via_r1(void *arg0, void *fn);
 /* Passes its own `self` argument through to `_call_via_r1`, alongside a
  * function pointer read from `gActorCategoryVtable`'s own `+0x24` field
  * (`gActorCategoryVtable` is itself a pointer to some shared record). */
-s32 sub_802A6EC(void *self)
+s32 IsTouchingPlayer(void *self)
 {
     void *tab = gActorCategoryVtable;
 

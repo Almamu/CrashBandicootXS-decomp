@@ -4,12 +4,12 @@
 /* Same singleton system as actor_part28.c - see that file's header
  * comment and docs/matching/issue-62-0x08033804-actor.md. */
 
-extern s32 sub_8033900(void);
-extern s32 sub_80338F4(void);
-extern s32 sub_80338E8(void);
+extern s32 GetHovercraftX(void);
+extern s32 GetHovercraftY(void);
+extern s32 GetHovercraftZ(void);
 extern struct spawn_timing_table *sub_80338C4(void);
 extern void SpawnJetpackCannonball(s32 x, s32 y, s32 z, s32 dx, s32 dy);
-extern void sub_802E504(s32 x, s32 y, s32 z);
+extern void SpawnHovercraftCannonFlash(s32 x, s32 y, s32 z);
 extern struct actor_self *gActorList;
 
 /* The singleton's per-spawner timing table (`sub_80338C4`): after each
@@ -42,7 +42,7 @@ struct spawner {
     u8 dead;            // 0x6C
 };
 
-/* sub_80339DC: a proximity-triggered effect/hazard detector. Syncs
+/* HovercraftCannonStateFire: a proximity-triggered effect/hazard detector. Syncs
  * `self`'s position fields to the singleton's current position (plus a
  * fixed offset), and - while the `cooldown` slot is zero -
  * measures `self`'s distance to the player; in range, it spawns a pair
@@ -56,14 +56,14 @@ struct spawner {
  * `base.z` stays CSE'd in `r6` across them - the divisor is -0x1AA
  * (not -0xAA), and the new cooldown value is stored at one shared
  * `store:` label from all three paths. */
-void sub_80339DC(struct spawner *self)
+void HovercraftCannonStateFire(struct spawner *self)
 {
     s32 slot;
     s32 next;
 
-    self->base.x = sub_8033900() + 0x2000;
-    self->base.y = sub_80338F4() + 0x3000;
-    self->base.z = sub_80338E8() - 0x100;
+    self->base.x = GetHovercraftX() + 0x2000;
+    self->base.y = GetHovercraftY() + 0x3000;
+    self->base.z = GetHovercraftZ() - 0x100;
 
     slot = self->cooldown;
     if (slot == 0) {
@@ -86,7 +86,7 @@ void sub_80339DC(struct spawner *self)
                 s32 count;
 
                 SpawnJetpackCannonball(self->base.x, self->base.y, self->base.z, dx, dy);
-                sub_802E504(self->base.x, self->base.y, self->base.z);
+                SpawnHovercraftCannonFlash(self->base.x, self->base.y, self->base.z);
 
                 count = self->count + 1;
                 self->count = count;

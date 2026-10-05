@@ -97,7 +97,7 @@ family. Filed under `src/graphics/` on disk, tracked as its own
   **`SpawnSquid`** (`graphics_loading_1fdec.c`), **`SpawnJellyfish`**-
   **`SpawnWoodenCrusher`** (`graphics_loading_1feec.c`; `SpawnFlamethrowerLabAssistant` closed in
   [last-eleven-naked-retry.md](../matching/last-eleven-naked-retry.md)),
-  **`sub_8021280`**-**`sub_802155C`** (`graphics_loading_21280.c`) and
+  **`sub_8021280`**-**`SpawnCortexBoss`** (`graphics_loading_21280.c`) and
   **`sub_8021668`**-**`SpawnIronCrate`** (`graphics_loading_21668.c`) - the
   "two-line text popup" spawners (issue #31) and the spawner-table
   entries that follow them. All five files are built with old_agbcc and

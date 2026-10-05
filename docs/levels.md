@@ -212,6 +212,7 @@ code it gives the object and where the levels place it:
 | 0x44 | `SpawnFrog` | enemy, bank 19 |
 | 0x45 | `sub_8021388` | Dingodile (`CreateDingodile`, bank 54) |
 | 0x47 | `sub_8021480` | Tiny Tiger (`CreateTiny`, bank 55) |
+| 0x48 | `SpawnCortexBoss` | the Neo Cortex fight's controller (`CreateCortexBoss`, bank 53); only the "neo cortex" level places it |
 | 0x4B, 0x4C | `SpawnSeaMine` | hazard, bank 6 |
 | 0x4D | `SpawnWoodenCrusher` | hazard, bank 18 |
 | 0x4E, 0x4F, 0x50 | `SpawnLargePlatform`, `SpawnSmallPlatform`, `SpawnMediumPlatform` | `CreatePlatform` kinds 0-2 (bank 39) |

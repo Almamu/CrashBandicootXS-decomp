@@ -36,7 +36,7 @@ struct MedalListItem {
     void *linkedObj;  /* +0x04 */
     s32 type;           /* +0x08: dispatch selector - see CountLevelCrates */
     u8 unused_0c[4];
-    u16 catIndex;          /* +0x10: category index passed to sub_802968C */
+    u16 catIndex;          /* +0x10: category index passed to CountCategoryCrates */
 };
 
 struct MedalItemList {
@@ -48,7 +48,7 @@ struct MedalItemList {
 
 extern void *gEntityFlags;
 extern s32 CountCrateEntities(void *self, void *list);
-extern s32 sub_802968C(u16 catIndex);
+extern s32 CountCategoryCrates(u16 catIndex);
 extern void sub_8026ED0(void *self);
 
 /* Wrapper: if bit 0 of `flags` is set, tears down `self` via
@@ -68,7 +68,7 @@ void nullsub_25(void)
 /* Per-level medal tally: sums, across `gLevelTable[idx]`'s
  * item list (`items[]`, plus the two extra single-item slots), a
  * per-item value - `CountCrateEntities(gEntityFlags, item->linkedObj's
- * +0x1c list)` for `type` 0-2, `sub_802968C(item->catIndex)` for
+ * +0x1c list)` for `type` 0-2, `CountCategoryCrates(item->catIndex)` for
  * `type == 3`, 0 otherwise (including `type < 0`). The same 4-branch
  * dispatch is inlined three times in the ROM (once per source: the
  * `items[]` array, `extra1`, `extra2`) rather than calling a shared
@@ -96,7 +96,7 @@ s32 CountLevelCrates(s32 idx)
                 v = CountCrateEntities(gEntityFlags, *(void **)((u8 *)item->linkedObj + 0x1c));
                 break;
             case 3:
-                v = sub_802968C(item->catIndex);
+                v = CountCategoryCrates(item->catIndex);
                 break;
         }
         total += v;
@@ -114,7 +114,7 @@ s32 CountLevelCrates(s32 idx)
                 v = CountCrateEntities(gEntityFlags, *(void **)((u8 *)item->linkedObj + 0x1c));
                 break;
             case 3:
-                v = sub_802968C(item->catIndex);
+                v = CountCategoryCrates(item->catIndex);
                 break;
         }
         total += v;
@@ -132,7 +132,7 @@ s32 CountLevelCrates(s32 idx)
                 v = CountCrateEntities(gEntityFlags, *(void **)((u8 *)item->linkedObj + 0x1c));
                 break;
             case 3:
-                v = sub_802968C(item->catIndex);
+                v = CountCategoryCrates(item->catIndex);
                 break;
         }
         total += v;

@@ -61,7 +61,7 @@ struct sprite
 COMPILE_TIME_ASSERT(sizeof(struct sprite) == 0x40);
 
 /* One level entry on the level-select page (0x14 bytes, constructor
- * sub_801DFEC, destructor sub_801DF98, method table gStaticData_087E4BAC).
+ * CreateLevelSelectEntry, destructor DestroyLevelSelectEntry, method table gLevelSelectEntryVtable).
  * `icon` shows the level's picture (or, past index 4, a per-world
  * animation), `frame` the surrounding box. */
 struct level_item
@@ -76,7 +76,7 @@ struct level_item
 
 extern void ***gUnknown_030012D0;
 extern void *gPaletteCache;
-extern u8 gStaticData_087E4BAC[];
+extern u8 gLevelSelectEntryVtable[];
 
 extern void *sub_8026EDC(u32 size);
 extern void sub_8026ED0(void *p);

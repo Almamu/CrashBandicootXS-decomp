@@ -21,7 +21,7 @@ struct actor_timed {
  * pinned). The `animTimer`/`animDone` stores go through a cast of the
  * field's address: a plain member store is marked as a struct access,
  * which lets the scheduler move the zero into a different register. */
-void sub_8030530(void *selfArg, s32 delta)
+void DamageAirshipFireball(void *selfArg, s32 delta)
 {
     struct actor_timed *self = selfArg;
 

@@ -20,13 +20,13 @@ struct spawner {
     u8 dead;            // 0x6C
 };
 
-extern void sub_8033804(void);
-extern void sub_803388C(void);
+extern void StartHovercraftHitFlash(void);
+extern void LoseHovercraftPart(void);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 
 /* Applies `dmg` damage to `hp`, and once it drops to zero (or
  * below), marks `self` dead (`dead = 1`), fires the singleton's own
- * death transition (`sub_803388C`), switches `self` to its death
+ * death transition (`LoseHovercraftPart`), switches `self` to its death
  * state/anim (state 2, table-index 2, anim frame from `self`'s part
  * table at `+0x18`), and plays the death sound; otherwise just plays a
  * hit sound. The `*(T *)&self->...` stores keep gcc from treating them as
@@ -34,7 +34,7 @@ extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 void DamageHovercraftCannon(struct spawner *self, s32 dmg)
 {
 
-    sub_8033804();
+    StartHovercraftHitFlash();
     self->hp -= dmg;
 
     if (self->hp <= 0) {
@@ -42,7 +42,7 @@ void DamageHovercraftCannon(struct spawner *self, s32 dmg)
         register s32 zero asm("r4") = 0;
 
         *deadFlag = 1;
-        sub_803388C();
+        LoseHovercraftPart();
         {
             register s32 stateVal asm("r0") = 2;
 

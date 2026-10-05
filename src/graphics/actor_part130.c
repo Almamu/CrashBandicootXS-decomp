@@ -51,24 +51,24 @@ extern s32 sub_8029E98(void);
 extern s32 sub_8029EB4(void);
 extern void sub_8029E34(s32 arg0);
 extern s32 sub_8029B2C(void);
-extern u8 sub_802A6EC(void *self);
+extern u8 IsTouchingPlayer(void *self);
 extern void sub_802A4EC(void);
 extern void sub_802A4F8(void);
 extern void sub_802F0DC(void *arg0);
 extern void CollectWumpa(void *self);
 extern u8 *mem_alloc(u32 size, s32 flags);
-extern struct actor_pmf gStaticData_0817C450[];
+extern struct actor_pmf gHovercraftFireballStateFuncs[];
 extern void mem_free(void *ptr);
-extern void sub_8032AF8(void);
-extern void sub_8032B6C(void);
+extern void UpdateHovercraftHitFlash(void);
+extern void RunHovercraftState(void);
 extern void _call_via_r0(void *fn);
 extern void DrawHovercraftMap(void *tileRow);
 extern void UpdateHovercraftBg2(void);
 extern void LoadHovercraftGraphics(void);
 extern void ConvertHovercraftTiles(void);
-extern void sub_802E538(s32 a, s32 b, s32 c, s32 d);
-extern void sub_802E57C(s32 a, s32 b, s32 c);
-extern void sub_802E5B0(s32 a, s32 b, s32 c);
+extern void SpawnHovercraftSideGun(s32 a, s32 b, s32 c, s32 d);
+extern void SpawnHovercraftLauncher(s32 a, s32 b, s32 c);
+extern void SpawnHovercraftCannon(s32 a, s32 b, s32 c);
 
 extern void *gAudioContext;
 extern void *gLevelState;
@@ -105,7 +105,7 @@ extern s32 gUnknown_030015E8;
 extern s32 gUnknown_030015EC;
 extern s32 gUnknown_030015F0;
 extern s32 gUnknown_030015F4;
-extern s32 gUnknown_030015F8;
+extern s32 gHovercraftPartsLeft;
 extern s16 gUnknown_030015FC;
 extern u8 gUnknown_030015FE;
 extern u8 gUnknown_030015FF;
@@ -115,7 +115,7 @@ extern s32 gUnknown_03001598;
 extern u8 gJetpackRingVtable[];
 extern u8 gJetpackCollectedWumpaVtable[];
 extern u8 gActorVtable[];
-extern u8 gStaticData_087E54AC[];
+extern u8 gHovercraftFireballVtable[];
 extern u16 gHovercraftPalette[];
 extern u8 gHovercraftPicture[];
 extern u8 gStaticData_0817C4BC[];
@@ -178,8 +178,8 @@ struct actor_2890 {
     s32 reward;         // 0x60 - the spawn parameter, see DestroyJetpackCollectedWumpa
 };
 
-/* The patrol object built by sub_80329D4 (method table
- * gStaticData_087E54AC). */
+/* The patrol object built by CreateHovercraftFireball (method table
+ * gHovercraftFireballVtable). */
 struct actor_29d4 {
     struct actor_self base;
     s32 hp;             // 0x54
@@ -194,7 +194,7 @@ struct actor_29d4 {
  * straight through (the 5th, `d`, is itself stack-passed), marks
  * `self+0x54 = 1` (health-like), sets `self+0x50`'s event/trampoline
  * table, and clears the `self+0x58` byte. Same shape as the
- * already-matched `sub_80305F8` (issue #58, `actor_part20d.c`), minus
+ * already-matched `CreateAirshipFireball` (issue #58, `actor_part20d.c`), minus
  * that function's extra `b`/`c` re-stash into `self+0x58`/`self+0x5c`. */
 void *CreateJetpackRing(void *selfArg, s32 a, s32 b, s32 c, s32 d)
 {
@@ -211,7 +211,7 @@ void *CreateJetpackRing(void *selfArg, s32 a, s32 b, s32 c, s32 d)
 }
 
 /* Trivial constant getter - always "true"/"ready". */
-s32 sub_8032714(void *self)
+s32 IsJetpackRingUnshootable(void *self)
 {
     return 1;
 }
@@ -386,8 +386,8 @@ void *CreateJetpackCollectedWumpa(void *selfArg, s32 a, s32 b, s32 c, s32 spawnP
 }
 
 /* Trivial constant getter - always "true"/"ready", same shape as
- * `sub_8032714` above. */
-s32 sub_803290C(void *self)
+ * `IsJetpackRingUnshootable` above. */
+s32 IsJetpackCollectedWumpaUnshootable(void *self)
 {
     return 1;
 }
@@ -397,7 +397,7 @@ s32 sub_803290C(void *self)
  * state/accumulator/anim-frame reset idiom already matched for
  * `sub_80318B4` (issue #59, `actor_part125.c`)/`DamageHovercraftCannon` (issue
  * #62, `actor_part30.c`). */
-void sub_8032910(void *selfArg, s32 delta)
+void DamageHovercraftFireball(void *selfArg, s32 delta)
 {
     struct actor_2890 *self = selfArg;
     s32 health = self->hp - delta;
@@ -430,15 +430,15 @@ void sub_8032910(void *selfArg, s32 delta)
     }
 }
 
-/* Per-state member-pointer dispatch, `(this->*gStaticData_0817C450
+/* Per-state member-pointer dispatch, `(this->*gHovercraftFireballStateFuncs
  * [this->state])()` (see `ACTOR_PMF_CALL`), then "destroy" once the
  * state-1 animation has played through, else the standard UpdateActor
  * step. */
-void sub_8032950(void *selfArg)
+void UpdateHovercraftFireball(void *selfArg)
 {
     struct actor_self *self = selfArg;
 
-    ACTOR_PMF_CALL(self, gStaticData_0817C450);
+    ACTOR_PMF_CALL(self, gHovercraftFireballStateFuncs);
 
     if (self->state == 1 && self->animDone != 0) {
         if (self != NULL) {
@@ -449,7 +449,7 @@ void sub_8032950(void *selfArg)
     }
 }
 
-/* Same shared shape as `sub_80329D4`/`CreateHovercraftCannon` (issue #62,
+/* Same shared shape as `CreateHovercraftFireball`/`CreateHovercraftCannon` (issue #62,
  * `actor_part32.c`): forwards `a`/`b`/`c` (the last two re-stashed into
  * `self+0x58`/`self+0x5c`, `c` pinned to the high register `r8`
  * matching `CreateHovercraftCannon`'s own documented gap - this compiler's
@@ -458,8 +458,8 @@ void sub_8032950(void *selfArg)
  * passed straight through to `InitActorPart`, plus the fixed
  * `self+0x54 = 2`/`self+0x50` event table/`self+0x64 = 0`/
  * `self+0x60 = 0x95`/`self+0x68 (byte) = 0` initialization already
- * matched verbatim for `sub_80305F8` (issue #58, `actor_part20d.c`). */
-void *sub_80329D4(void *selfArg, s32 a, s32 b, s32 c, s32 d)
+ * matched verbatim for `CreateAirshipFireball` (issue #58, `actor_part20d.c`). */
+void *CreateHovercraftFireball(void *selfArg, s32 a, s32 b, s32 c, s32 d)
 {
     struct actor_29d4 *self = selfArg;
     register s32 bReg asm("r6") = b;
@@ -469,7 +469,7 @@ void *sub_80329D4(void *selfArg, s32 a, s32 b, s32 c, s32 d)
 
     InitActorPart(self, a, b, c, dReg);
     self->hp = health;
-    self->base.vtable = (struct actor_vtable *)gStaticData_087E54AC;
+    self->base.vtable = (struct actor_vtable *)gHovercraftFireballVtable;
     self->unk_58 = bReg;
     self->unk_5C = cReg;
     self->unk_64 = 0;
@@ -488,12 +488,12 @@ void sub_8032A1C(void *selfArg)
 
 /* Patrol-speed decay plus a death transition: advances `self+0x24` by
  * `self+0x60`, decays `self+0x60` by 5 (floored at 0x14). If
- * `sub_802A6EC(self)` fires, draws a text popup on the orbiting
+ * `IsTouchingPlayer(self)` fires, draws a text popup on the orbiting
  * companion object (`gActorList`, via its own `+0x50`
  * trampoline-table pointer, same `{s16 offset; ...; void *arg}`
  * convention already documented at `self+0x50` elsewhere in this
  * cluster), then runs the exact same state/anim-frame reset tail as
- * `sub_8032910` above. */
+ * `DamageHovercraftFireball` above. */
 void sub_8032A24(void *selfArg)
 {
     register struct actor_29d4 *self asm("r4") = selfArg;
@@ -508,7 +508,7 @@ void sub_8032A24(void *selfArg)
         self->speed = 0x14;
     }
 
-    if (sub_802A6EC(self)) {
+    if (IsTouchingPlayer(self)) {
         struct actor_self *player = gActorList;
         struct actor_vtable *table = player->vtable;
 
@@ -538,24 +538,24 @@ void sub_8032A24(void *selfArg)
     }
 }
 
-/* `sub_8032950`'s dispatch without its tail: `(this->*gStaticData_
+/* `UpdateHovercraftFireball`'s dispatch without its tail: `(this->*gStaticData_
  * 0817C450[this->state])()` (see `ACTOR_PMF_CALL`). */
 void sub_8032A94(void *selfArg)
 {
     struct actor_self *self = selfArg;
 
-    ACTOR_PMF_CALL(self, gStaticData_0817C450);
+    ACTOR_PMF_CALL(self, gHovercraftFireballStateFuncs);
 }
 
 /* Trivial `self+0x68` byte getter. */
-u8 sub_8032AF0(void *selfArg)
+u8 IsHovercraftFireballUnshootable(void *selfArg)
 {
     u8 *self = selfArg;
     return self[0x68];
 }
 
 /* Palette blink/flash effect for the P2 VRAM fill-level meter, gated by
- * the one-shot latch `sub_8033804` (issue #62, `actor_part28.c`) arms
+ * the one-shot latch `StartHovercraftHitFlash` (issue #62, `actor_part28.c`) arms
  * (`gUnknown_030015FC`/`030015FE`): once armed, advances the counter
  * every call, flips the toggle byte every 4th call, wraps the counter
  * past 0xb, then rewrites the meter's 16-halfword palette strip
@@ -563,7 +563,7 @@ u8 sub_8032AF0(void *selfArg)
  * or restored from `gHovercraftPalette`'s own first 16 halfwords -
  * the same per-level table `ConvertHovercraftTiles` below reads for the meter's
  * fill-level heights. */
-void sub_8032AF8(void)
+void UpdateHovercraftHitFlash(void)
 {
     if (gUnknown_030015FC == 0) {
         return;
@@ -625,7 +625,7 @@ void sub_8032AF8(void)
  * a fresh register first, then copy - the `asm("" : "+r"(p))` barrier
  * between the pointer reload and the value assignment keeps that
  * reload from being folded into the shared tail the two call sites
- * below happen to converge on). Tail: runs `sub_8032AF8` (the meter
+ * below happen to converge on). Tail: runs `UpdateHovercraftHitFlash` (the meter
  * blink above) then dispatches the singleton's current animation
  * "kind" through the third table family (`gHovercraftStateFuncs`), the
  * same convention already documented for the entity/actor category
@@ -636,7 +636,7 @@ static inline void CommitSpeed(u8 *p, u16 val)
     *(u16 *)((u8 *)gFlashObjPalette + 0x1e) = val;
 }
 
-void sub_8032B6C(void)
+void RunHovercraftState(void)
 {
     s32 counter = gUnknown_030015F4 + 1;
     gUnknown_030015F4 = counter;
@@ -674,7 +674,7 @@ void sub_8032B6C(void)
         }
     }
 
-    sub_8032AF8();
+    UpdateHovercraftHitFlash();
     _call_via_r0(gHovercraftStateFuncs[gHovercraftState]);
 }
 
@@ -842,7 +842,7 @@ void sub_8032EA0(void)
         gUnknown_030015E4 = ((struct singleton_kind *)gUnknown_030015DC)->unk_10;
         gUnknown_030015E8 = 0;
         SingletonSetKind(2, 0);
-        if (gUnknown_030015F8 > 2) {
+        if (gHovercraftPartsLeft > 2) {
             gUnknown_030015EC = 1;
             gUnknown_030015D4 = 0x40;
         } else {
@@ -862,7 +862,7 @@ void sub_8032EA0(void)
  * 0x4b00, and a DISPCNT window/mosaic-bit clear once
  * `gUnknown_030015C8` drops below 0x1500 (setting the "dead" flag
  * `gUnknown_030015FF`). */
-void sub_8033048(void)
+void HovercraftStateFall(void)
 {
     if (gUnknown_030015FF == 0) {
         s32 v = gUnknown_030015D4;
@@ -932,8 +932,8 @@ void DrawHovercraftMap(void *tileRow)
  * everything else in this thread reads - resets its kind/anim-frame
  * fields, fires the per-frame update driver (`LoadHovercraftGraphics`) once, and
  * finishes by clearing the "apply now" BG2 latch and setting the
- * lifetime counter `gUnknown_030015F8 = 4` (the exact counter
- * `sub_803388C`, issue #62, decrements toward "dead").
+ * lifetime counter `gHovercraftPartsLeft = 4` (the exact counter
+ * `LoseHovercraftPart`, issue #62, decrements toward "dead").
  *
  * The boss tracker's constructor `CreateAirship` (actor_part23d.c) is its
  * twin and matched the same way: an inlined C++ `new` - destination
@@ -956,7 +956,7 @@ void CreateHovercraft(s32 level)
     SingletonSetKind(0, 0);
     LoadHovercraftGraphics();
     gUnknown_0300159C = 0;
-    gUnknown_030015F8 = 4;
+    gHovercraftPartsLeft = 4;
 }
 
 /* The animation-system-wired spawn/init step for the singleton - the
@@ -969,7 +969,7 @@ void CreateHovercraft(s32 level)
  * it for later accessors), sets DISPCNT's window bit, resets every
  * timing/lifetime field for a fresh spawn, recomputes the BG2 zoom, blits
  * the current tile row, and finishes by spawning two pairs of small
- * effect objects (`sub_802E538` x2, `sub_802E5B0`, `sub_802E57C`)
+ * effect objects (`SpawnHovercraftSideGun` x2, `SpawnHovercraftCannon`, `SpawnHovercraftLauncher`)
  * around the singleton - the "burst spawn... clustered around the
  * singleton" `docs/rom_map.md` documents. Plain C: the "six live
  * scratch values" blocker wasn't real; the zoom divide is an explicit
@@ -996,7 +996,7 @@ void SpawnHovercraft(s32 kind, s32 x, s32 y, s32 z)
     gUnknown_030015EC = 0;
     gUnknown_030015F4 = 0;
     gUnknown_030015F0 = 0;
-    gUnknown_030015F8 = 4;
+    gHovercraftPartsLeft = 4;
     gUnknown_030015FC = 0;
     gUnknown_030015FE = 0;
     gUnknown_030015C8 = gHovercraftZ - (sub_8029B2C() << 8);
@@ -1010,17 +1010,17 @@ void SpawnHovercraft(s32 kind, s32 x, s32 y, s32 z)
 
         DrawHovercraftMap((void *)self->frameOffsets[self->anims[self->animIndex].frameIndex + t]);
     }
-    sub_802E5B0(gHovercraftX + 0x2000, gHovercraftY + 0x3000, gHovercraftZ - 0x100);
-    sub_802E57C(gHovercraftX + 0x1e00, gHovercraftY - 0x3000, gHovercraftZ - 0x100);
-    sub_802E538(gHovercraftX - 0x4100, gHovercraftY + 0xa00, gHovercraftZ - 1, 1);
-    sub_802E538(gHovercraftX + 0x8400, gHovercraftY + 0xa00, gHovercraftZ - 1, 0);
+    SpawnHovercraftCannon(gHovercraftX + 0x2000, gHovercraftY + 0x3000, gHovercraftZ - 0x100);
+    SpawnHovercraftLauncher(gHovercraftX + 0x1e00, gHovercraftY - 0x3000, gHovercraftZ - 0x100);
+    SpawnHovercraftSideGun(gHovercraftX - 0x4100, gHovercraftY + 0xa00, gHovercraftZ - 1, 1);
+    SpawnHovercraftSideGun(gHovercraftX + 0x8400, gHovercraftY + 0xa00, gHovercraftZ - 1, 0);
     sub_802A4F8();
 }
 
 /* Per-frame animate+project+tile-stream update driver, the singleton's
  * twin of the boss cluster's `UpdateAirship` (actor_part23f.c) and
  * matched the same way: runs the P1/P2 speed-toggle dispatcher
- * (`sub_8032B6C`), and while the singleton's animation "kind"
+ * (`RunHovercraftState`), and while the singleton's animation "kind"
  * (`gHovercraftState`) is active, the usual anim-frame-advance-and-
  * clamp idiom; then recomputes the projection scale and BG2-space
  * offsets (`gUnknown_030015C0`/`030015C4`) from the current position
@@ -1036,7 +1036,7 @@ void UpdateHovercraft(void)
     s32 prev = gHovercraft->animTime >> 8;
     struct actor_self *self;
 
-    sub_8032B6C();
+    RunHovercraftState();
     if (gHovercraftState != 0) {
         s32 scale;
 
@@ -1098,7 +1098,7 @@ void UpdateHovercraftBg2(void)
 
 /* Top-level per-frame driver for the whole singleton system - fired
  * once by the constructor (`CreateHovercraft`) and, per `docs/rom_map.md`,
- * confirmed as the per-frame step `sub_8033048`/`UpdateHovercraftBg2` connect
+ * confirmed as the per-frame step `HovercraftStateFall`/`UpdateHovercraftBg2` connect
  * to. Copies the palette strip into BG palette bank 1, clears the tile
  * just before BG char block 3 and fills block 3 itself with a blank/
  * transparent tile (the exact same idiom the boss cluster's

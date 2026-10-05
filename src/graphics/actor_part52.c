@@ -16,7 +16,7 @@ u8 sub_802AA4C(void *selfArg)
 
 /* Teardown: marks `self` "dead" (`+0x50 = gActorVtable`), unlinks
  * it from the circular `+0x48`(next)/`+0x4c`(prev) list, and frees it
- * when `flags & 1`. Same shape as `sub_802C19C`'s unlink sequence in
+ * when `flags & 1`. Same shape as `DestroyPolarPlayer`'s unlink sequence in
  * actor_part19.c. */
 void DestroyActor(void *selfArg, s32 flags)
 {
@@ -45,7 +45,7 @@ extern void *gUnknown_03001428[];
 
 /* Linear-searches `gUnknown_03001428`'s first `gUnknown_03000888`
  * entries for `self`, returning whether it's present. */
-s32 sub_802AA80(void *selfArg)
+s32 IsSpawnCollected(void *selfArg)
 {
     u8 *self = selfArg;
     register s32 i asm("r2") = 0;
@@ -68,7 +68,7 @@ s32 sub_802AA80(void *selfArg)
 
 /* Appends `self` to `gUnknown_03001428` (capped at 15 entries), unless
  * it's `NULL`, the array is already full, or it's already present. */
-void sub_802AAB4(void *selfArg)
+void MarkSpawnCollected(void *selfArg)
 {
     register u8 *self asm("r3") = selfArg;
     s32 count = gUnknown_03000888;
@@ -103,7 +103,7 @@ void sub_802AAB4(void *selfArg)
 }
 
 /* Clears `gUnknown_03001428`'s entry count. */
-void sub_802AAFC(void)
+void ClearCollectedSpawns(void)
 {
     gUnknown_03000888 = 0;
 }
@@ -116,19 +116,19 @@ extern s32 gUnknown_03001474;
 extern s32 gUnknown_03001478;
 
 /* Loads the palette-cycle cursor/bound pair (`gUnknown_03001470`/
- * `gUnknown_03001474`, see `sub_802AB58` below) from their saved
+ * `gUnknown_03001474`, see `UpdateActorPaletteCycle` below) from their saved
  * counterparts (`gUnknown_03001468`/`gUnknown_0300146C`) and resets the
  * DMA-refresh counter `gUnknown_03001478`. */
-void sub_802AB08(void)
+void RestoreActorPaletteCycle(void)
 {
     gUnknown_03001470 = gUnknown_03001468;
     gUnknown_03001474 = gUnknown_0300146C;
     gUnknown_03001478 = 0;
 }
 
-/* The inverse of `sub_802AB08`: saves the current cursor/bound pair back
+/* The inverse of `RestoreActorPaletteCycle`: saves the current cursor/bound pair back
  * into `gUnknown_03001468`/`gUnknown_0300146C`. */
-void sub_802AB34(void)
+void SaveActorPaletteCycle(void)
 {
     gUnknown_03001468 = gUnknown_03001470;
     gUnknown_0300146C = gUnknown_03001474;

@@ -7,7 +7,7 @@
  * self+0x0C (per-frame update in slot +0x0C, destructor in slot +0x4C)
  * and a constructor/destructor pair here: gStaticData_087E4704
  * (sub_80196F8/sub_80196E4), 087E476C (sub_8019758/sub_8019744, update
- * sub_8019730), 087E47D4 (sub_80197DC/sub_80197C8), 087E483C
+ * sub_8019730), 087E47D4 (CreateCortexBoss/DestroyCortexBoss), 087E483C
  * (sub_801A724/sub_801A73C, update sub_801A64C), 087E48A4
  * (sub_801A768/sub_801A750, update sub_801A2A8), 087E490C (destructor
  * sub_801A780, update sub_801A114) and 087E4974 (update UpdateDingodile).
@@ -271,7 +271,7 @@ extern u8 gStaticData_0816C3E8[];
 extern u8 gStaticData_0816C3F4[];
 extern u8 gStaticData_087E4704[];
 extern u8 gStaticData_087E476C[];
-extern u8 gStaticData_087E47D4[];
+extern u8 gCortexBossVtable[];
 extern u8 gStaticData_087E483C[];
 extern u8 gStaticData_087E48A4[];
 extern u8 gStaticData_087E490C[];
@@ -485,16 +485,16 @@ void sub_8019770(struct obj_476c *self, s32 unused, s32 arg)
     VCALL1(self, m20, arg);
 }
 
-void sub_80197C8(struct vobj *self, s32 flags)
+void DestroyCortexBoss(struct vobj *self, s32 flags)
 {
-    self->vt = (struct vtable *)gStaticData_087E47D4;
+    self->vt = (struct vtable *)gCortexBossVtable;
     sub_8017A78(self, flags);
 }
 
-struct vobj *sub_80197DC(struct vobj *self)
+struct vobj *CreateCortexBoss(struct vobj *self)
 {
     sub_8017A8C(self);
-    self->vt = (struct vtable *)gStaticData_087E47D4;
+    self->vt = (struct vtable *)gCortexBossVtable;
     return self;
 }
 

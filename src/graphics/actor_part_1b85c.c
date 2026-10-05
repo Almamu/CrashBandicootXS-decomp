@@ -8,7 +8,7 @@
  * functions):
  *
  * - sub_801B85C-sub_801B980: `struct follow_child`, the 0x80-byte
- *   object (method table gStaticData_087E4ABC) sub_8017600
+ *   object (method table gCameraLeadVtable) sub_8017600
  *   (actor_part_17524.c) spawns for the input controller. It trails the
  *   player (gPlayer) at a horizontal offset that eases 2 px per
  *   frame toward a clamped target, and registers itself as
@@ -162,7 +162,7 @@ struct level_info
 COMPILE_TIME_ASSERT(sizeof(struct level_info) == 0x24);
 
 /* One level's saved record word (`level_menu.save + 4 + id * 4`; byte 2
- * of the save block itself holds four more flags sub_801C608 tests). */
+ * of the save block itself holds four more flags LoadLevelSelectRecord tests). */
 struct level_save
 {
     u16 cleared:1;
@@ -252,11 +252,11 @@ struct item_vtable
     struct method m08;          // 0x08 - per-frame update (UpdateLevelSelect)
     struct method m10;          // 0x10
     struct method m18;          // 0x18
-    struct method m20;          // 0x20 - draw (sub_801C51C)
+    struct method m20;          // 0x20 - draw (DrawLevelSelect)
     struct method m28;          // 0x28 - destructor (DestroyLevelSelect)
 };
 
-/* One level entry on the current page (sub_801DFEC, 0x14 bytes). */
+/* One level entry on the current page (CreateLevelSelectEntry, 0x14 bytes). */
 struct item
 {
     u8 unk_00[0x10];
@@ -274,10 +274,10 @@ struct level_menu
     s32 levelId;                // 0x10 - gLevelTable index
     s32 nameText;               // 0x14 - the level name's text
     struct xy_pair *positions;  // 0x18 - cursor position per index
-    void *bg1;                  // 0x1C - sub_801D7F8, BG1
+    void *bg1;                  // 0x1C - CreateLevelSelectPageBg, BG1
     void *bg2;                  // 0x20 - InitZoomBg, BG2 (icon layer)
     struct item *items[6];      // 0x24
-    void *panel;                // 0x3C - sub_801E04C, the cursor panel
+    void *panel;                // 0x3C - CreateLevelSelectCursor, the cursor panel
     struct sprite *sprites[10]; // 0x40
     char timeText[9];           // 0x68 - best time
     char recordText[9];         // 0x71 - next threshold to beat
@@ -289,7 +289,7 @@ struct level_menu
     s32 unk_8C;                 // 0x8C
     s32 unk_90;                 // 0x90
     s32 unk_94;                 // 0x94
-    s32 rank;                   // 0x98 - sub_801C608's classification, 5 = none
+    s32 rank;                   // 0x98 - LoadLevelSelectRecord's classification, 5 = none
     u8 *save;                   // 0x9C - PackSaveData's save block
     union blend blend;          // 0xA0 - REG_BLDCNT + REG_BLDALPHA
     struct bldy bldy;           // 0xA4 - REG_BLDY
@@ -339,7 +339,7 @@ extern void *gUnknown_03001304;
 extern struct level_menu *gLevelSelect;
 extern u8 gNewWorldOpened;
 extern union key_state gKeys;
-extern u8 gStaticData_087E4ABC[];
+extern u8 gCameraLeadVtable[];
 extern u8 gStaticData_087E4B34[];
 extern struct level_info gLevelTable[];
 extern u8 gStaticData_0816C56C[];
@@ -420,25 +420,25 @@ extern u8 sub_8023348(void *p, s32 id);
 extern u8 sub_802333C(void *p, s32 id);
 
 /* The level-select screen's sub-objects and siblings (0x0801CEE0 on). */
-extern void *sub_801D7F8(void *mem, s32 a, s32 b);
+extern void *CreateLevelSelectPageBg(void *mem, s32 a, s32 b);
 extern void *InitZoomBg(void *mem, s32 a, s32 b);
-extern void *sub_801E04C(void *mem);
-extern struct item *sub_801DFEC(void *mem);
+extern void *CreateLevelSelectCursor(void *mem);
+extern struct item *CreateLevelSelectEntry(void *mem);
 extern void sub_801D638(struct level_menu *self);
 extern void sub_801D5CC(struct level_menu *self);
 extern void sub_801D668(struct level_menu *self);
-extern void sub_801D730(struct level_menu *self);
-extern void sub_801D05C(struct level_menu *self);
+extern void ReloadLevelSelectPalette(struct level_menu *self);
+extern void WaitLevelSelectCursor(struct level_menu *self);
 extern void LevelSelectConfirm(struct level_menu *self);
 extern void LevelSelectExit(struct level_menu *self);
 extern u8 LevelSelectHasPrevWorld(struct level_menu *self);
 extern u8 LevelSelectIsNextWorldOpen(struct level_menu *self);
 extern void LevelSelectPrevWorld(struct level_menu *self);
 extern void LevelSelectNextWorld(struct level_menu *self);
-extern void sub_801D7AC(void *p);
+extern void ScrollLevelSelectPageBg(void *p);
 extern void sub_801D7D4(void *p);
 extern u32 sub_801D7D0(void *p);
-extern void sub_801D7E0(void *p, s32 flags);
+extern void DestroyLevelSelectPageBg(void *p, s32 flags);
 extern s32 sub_801D77C(void *p);
 extern u8 sub_801D780(void *p);
 extern void DestroyZoomBg(void *p, s32 flags);
@@ -455,22 +455,22 @@ extern u16 GetZoomBgControl(void *p);
 extern u8 sub_801DE28(struct item *p);
 extern s32 sub_801DE2C(struct item *it);
 extern void sub_801DEA0(struct item *it, s32 arg);
-extern void sub_801E190(void *p);
-extern void sub_801E2BC(void *p);
-extern void sub_801E408(void *p);
+extern void UpdateLevelSelectCursor(void *p);
+extern void DrawLevelSelectCursor(void *p);
+extern void ParkLevelSelectCursor(void *p);
 /* Returns a u8; the one caller that needs it tests only its low byte. */
-extern s32 sub_801E464(void *p);
-extern void sub_801E480(void *p, s32 x, s32 y);
-extern void sub_801E524(void *p, s32 flags);
+extern s32 HasLevelSelectCursorArrived(void *p);
+extern void MoveLevelSelectCursor(void *p, s32 x, s32 y);
+extern void DestroyLevelSelectCursor(void *p, s32 flags);
 extern u16 GetBgSetupControl(void *p);
 
 void sub_801BAC4(struct sprite *self);
 struct level_menu *InitLevelSelect(struct level_menu *self, s32 arg);
 void DestroyLevelSelect(struct level_menu *self, s32 flags);
-void sub_801C2B0(struct level_menu *self);
-void sub_801C364(struct level_menu *self);
-void sub_801C3E8(struct level_menu *self, u32 time);
-void sub_801C608(struct level_menu *self);
+void UpdateLevelSelectPageArrows(struct level_menu *self);
+void DrawLevelSelectRecord(struct level_menu *self);
+void DrawLevelSelectTime(struct level_menu *self, u32 time);
+void LoadLevelSelectRecord(struct level_menu *self);
 s32 LevelSelectLoop(struct level_menu *self);
 void LevelSelectCursorLeft(struct level_menu *self);
 void LevelSelectCursorRight(struct level_menu *self);
@@ -550,7 +550,7 @@ void sub_801B85C(struct follow_child *self)
  * the player's right with both offsets reset. The `visible` bit test/
  * toggle and the stores need register pins to keep the ROM's
  * allocation (see the doc for issue 26). */
-void sub_801B864(struct follow_child *self)
+void ResetCameraLead(struct follow_child *self)
 {
     u32 v = *((u8 *)self + 0x0D) >> 2;
     register u32 one asm("r1") = 1;
@@ -579,7 +579,7 @@ void sub_801B864(struct follow_child *self)
 
 /* Per-frame update (method table +0x18): base update, then ease `offset`
  * toward `targetOffset` by 0x200 per frame and follow the player. */
-void sub_801B8BC(struct follow_child *self)
+void UpdateCameraLead(struct follow_child *self)
 {
     s32 cur, tgt;
 
@@ -624,19 +624,19 @@ void sub_801B8BC(struct follow_child *self)
 
 /* Destructor (method table +0x50): hands gCamera's follow
  * target back to the player. */
-void sub_801B91C(struct follow_child *self, s32 flags)
+void DestroyCameraLead(struct follow_child *self, s32 flags)
 {
-    self->vtable = gStaticData_087E4ABC;
+    self->vtable = gCameraLeadVtable;
     gCamera->follow = gPlayer;
     sub_8009F1C(self, flags);
 }
 
 /* Constructor, called from sub_8017600 (actor_part_17524.c). */
-struct follow_child *sub_801B940(struct follow_child *self)
+struct follow_child *CreateCameraLead(struct follow_child *self)
 {
     sub_8009F90(self);
-    self->vtable = gStaticData_087E4ABC;
-    sub_801B864(self);
+    self->vtable = gCameraLeadVtable;
+    ResetCameraLead(self);
     return self;
 }
 
@@ -871,17 +871,17 @@ struct level_menu *InitLevelSelect(struct level_menu *self, s32 arg)
     self->nameText = 0;
     self->save = PackSaveData(gLevelState);
     self->result = 0;
-    self->bg1 = sub_801D7F8(sub_8026EDC(0x28), 0, 0x1D);
+    self->bg1 = CreateLevelSelectPageBg(sub_8026EDC(0x28), 0, 0x1D);
     InitBgSetup(bg0cnt, 2, 0x1E, 2, 3);
     LoadGraphicsPackage(bg0cnt, gStaticData_0816C484);
     self->scroll = 0;
-    self->panel = sub_801E04C(sub_8026EDC(0x54));
+    self->panel = CreateLevelSelectCursor(sub_8026EDC(0x54));
     self->bg2 = InitZoomBg(sub_8026EDC(0x8C), 3, 0x1F);
     {
         s32 j;
 
         for (j = 0; j < 6; j++)
-            self->items[j] = sub_801DFEC(sub_8026EDC(0x14));
+            self->items[j] = CreateLevelSelectEntry(sub_8026EDC(0x14));
     }
     sub_801D638(self);
     sub_801D5CC(self);
@@ -932,13 +932,13 @@ struct level_menu *InitLevelSelect(struct level_menu *self, s32 arg)
     sub_800737C(self->sprites[9], gStaticData_0816C4D0.x, gStaticData_0816C4D0.y);
     if (gNewWorldOpened && LevelSelectIsNextWorldOpen(self))
     {
-        sub_801E408(self->panel);
+        ParkLevelSelectCursor(self->panel);
     }
     else
     {
         struct xy_pair *pos = &self->positions[self->index];
 
-        sub_801E480(self->panel, pos->x, pos->y - 0x18);
+        MoveLevelSelectCursor(self->panel, pos->x, pos->y - 0x18);
     }
     *(vu32 *)REG_ADDR_BG0HOFS = 0;
     *(vu32 *)REG_ADDR_BG1HOFS = sub_801D7D0(self->bg1);
@@ -965,7 +965,7 @@ void DestroyLevelSelect(struct level_menu *self, s32 flags)
             SPRITE_CALL(s, 10, 3);
     }
     if (self->panel != NULL)
-        sub_801E524(self->panel, 3);
+        DestroyLevelSelectCursor(self->panel, 3);
     if (self->bg2 != NULL)
         DestroyZoomBg(self->bg2, 3);
     for (i = 0; i < 6; i++)
@@ -976,7 +976,7 @@ void DestroyLevelSelect(struct level_menu *self, s32 flags)
             _call_via_r2((u8 *)it + it->vtable->m28.thisOffset, 3, it->vtable->m28.fn);
     }
     if (self->bg1 != NULL)
-        sub_801D7E0(self->bg1, 3);
+        DestroyLevelSelectPageBg(self->bg1, 3);
     if (flags & 1)
         sub_8026ED0(self);
 }
@@ -992,7 +992,7 @@ void UpdateLevelSelect(struct level_menu *self)
 
     ResetOamBuffer(gOamBuffer);
     RewindObjVram(gObjVramCursor);
-    sub_801E2BC(self->panel);
+    DrawLevelSelectCursor(self->panel);
     if (IsZoomBgShown(self->bg2) && sub_801DE28(self->items[self->index]))
     {
         struct icon_slot *slot = &gLargeFont->record->slots[0];
@@ -1002,7 +1002,7 @@ void UpdateLevelSelect(struct level_menu *self)
         slot = &gLargeFont->record->slots[2];
         _call_via_r2((u8 *)gLargeFont + slot->offset, self->nameText, slot->ptr);
         if (self->index <= 4)
-            sub_801C364(self);
+            DrawLevelSelectRecord(self);
     }
     sub_801D7D4(self->bg1);
     for (i = 0; i <= self->lastIndex; i++)
@@ -1024,7 +1024,7 @@ void UpdateLevelSelect(struct level_menu *self)
             FontSetPalette(gSmallFont, 0xF);
             slot = &gSmallFont->record->slots[2];
             _call_via_r2((u8 *)gSmallFont + slot->offset, text, slot->ptr);
-            sub_801C2B0(self);
+            UpdateLevelSelectPageArrows(self);
         }
         DrawZoomBg(self->bg2);
     }
@@ -1049,7 +1049,7 @@ void UpdateLevelSelect(struct level_menu *self)
 
 /* Updates the two page-arrow sprites (8/9): palettes from sub_800815C,
  * frame 0/1 by whether the previous/next page is open. */
-void sub_801C2B0(struct level_menu *self)
+void UpdateLevelSelectPageArrows(struct level_menu *self)
 {
     register s32 lowMask asm("r5");
     register s32 highMask asm("r4");
@@ -1130,8 +1130,8 @@ void sub_801C2B0(struct level_menu *self)
 }
 
 /* Draws the record panel sprites 0-4 at their per-row offsets and, if
- * the level is cleared, its time readout (sub_801C3E8). */
-void sub_801C364(struct level_menu *self)
+ * the level is cleared, its time readout (DrawLevelSelectTime). */
+void DrawLevelSelectRecord(struct level_menu *self)
 {
     sub_8008890(self->sprites[0], -self->unk_80, 0);
     sub_8008890(self->sprites[1], -self->unk_80, 0);
@@ -1148,14 +1148,14 @@ void sub_801C364(struct level_menu *self)
 
         one &= b;
         if (one != 0)
-            sub_801C3E8(self, sv->time);
+            DrawLevelSelectTime(self, sv->time);
     }
 }
 
 /* Draws the time readout: just the best time if it beats the tightest
  * threshold (time2), otherwise sprite 7, the next threshold to beat and
  * the best time. */
-void sub_801C3E8(struct level_menu *self, u32 time)
+void DrawLevelSelectTime(struct level_menu *self, u32 time)
 {
     struct level_info *info;
 
@@ -1188,20 +1188,20 @@ void sub_801C3E8(struct level_menu *self, u32 time)
 
 /* Per-frame draw step: once the BG1 page has settled and the cursor
  * panel has arrived on a new entry, selects it and loads that level's
- * name and record (sub_801C608); then draws the six entries and record
+ * name and record (LoadLevelSelectRecord); then draws the six entries and record
  * sprites 2-7. */
-void sub_801C51C(struct level_menu *self)
+void DrawLevelSelect(struct level_menu *self)
 {
     struct item **items;
     struct sprite **sprites;
     s32 i;
 
-    sub_801D7AC(self->bg1);
-    sub_801E190(self->panel);
+    ScrollLevelSelectPageBg(self->bg1);
+    UpdateLevelSelectCursor(self->panel);
     if (!sub_801D780(self->bg1))
         return;
     {
-        s32 done = sub_801E464(self->panel) << 24;
+        s32 done = HasLevelSelectCursorArrived(self->panel) << 24;
         items = self->items;
         if (!done)
             goto draw;
@@ -1224,9 +1224,9 @@ void sub_801C51C(struct level_menu *self)
             self->unk_80 = 0;
             if (self->index <= 4)
             {
-                sub_801C608(self);
+                LoadLevelSelectRecord(self);
                 FreeUnlockedPaletteSlots(gPaletteCache);
-                sub_801D730(self);
+                ReloadLevelSelectPalette(self);
             }
             FontResetPalette(gLargeFont);
         }
@@ -1257,7 +1257,7 @@ draw:
  * index. The ROM spills a second copy of the record pointer to sp+0 and
  * reloads it for the `time0` test: that is the separate `entry` local,
  * which `info` copies (a single local keeps it in r5 throughout). */
-void sub_801C608(struct level_menu *self)
+void LoadLevelSelectRecord(struct level_menu *self)
 {
     s32 *rank = &self->rank;
     struct level_save *sv;
@@ -1421,10 +1421,10 @@ loop:
     UploadPaletteCache(gPaletteCache);
     CommitOamBuffer(gOamBuffer);
     CommitDisplay(self);
-    sub_801C51C(self);
+    DrawLevelSelect(self);
     if (!sub_801D780(self->bg1))
         goto loop;
-    if (!(u8)sub_801E464(self->panel))
+    if (!(u8)HasLevelSelectCursorArrived(self->panel))
         goto loop;
     UpdateKeys(gUnknown_03001304);
     {
@@ -1471,19 +1471,19 @@ end:
 
 /* Deselects the current entry and runs frames until BG2 and the cursor
  * panel settle. Called by the page-turn handlers (LevelSelectPrevWorld/D548). */
-void sub_801CCF8(struct level_menu *self)
+void SettleLevelSelectPage(struct level_menu *self)
 {
     sub_801DEA0(self->items[self->index], 0);
     ClearZoomBgPicture(self->bg2);
-    sub_801E408(self->panel);
-    while (IsZoomBgZoomingOut(self->bg2) || !(u8)sub_801E464(self->panel))
+    ParkLevelSelectCursor(self->panel);
+    while (IsZoomBgZoomingOut(self->bg2) || !(u8)HasLevelSelectCursorArrived(self->panel))
     {
         UpdateLevelSelect(self);
         WaitForVBlank();
         UploadPaletteCache(gPaletteCache);
         CommitOamBuffer(gOamBuffer);
         CommitDisplay(self);
-        sub_801E190(self->panel);
+        UpdateLevelSelectCursor(self->panel);
         UpdateZoomBg(self->bg2);
     }
     FreeUnlockedPaletteSlots(gPaletteCache);
@@ -1506,8 +1506,8 @@ void LevelSelectCursorLeft(struct level_menu *self)
 
         self->index--;
         pos = &self->positions[self->index];
-        sub_801E480(self->panel, pos->x, pos->y - 0x18);
-        sub_801D05C(self);
+        MoveLevelSelectCursor(self->panel, pos->x, pos->y - 0x18);
+        WaitLevelSelectCursor(self);
         UpdateKeys(gUnknown_03001304);
         if (!(gKeys.all & 0x20))
             return;
@@ -1531,8 +1531,8 @@ void LevelSelectCursorRight(struct level_menu *self)
 
         self->index++;
         pos = &self->positions[self->index];
-        sub_801E480(self->panel, pos->x, pos->y - 0x18);
-        sub_801D05C(self);
+        MoveLevelSelectCursor(self->panel, pos->x, pos->y - 0x18);
+        WaitLevelSelectCursor(self);
         UpdateKeys(gUnknown_03001304);
         if (!(gKeys.all & 0x10))
             return;

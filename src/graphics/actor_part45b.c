@@ -7,7 +7,7 @@
 /* A physics-step-and-collision-react updater: advances `self`'s
  * position by its `velX`/`velY` pair (with a fixed
  * gravity-like offset on Y) and a fixed Z step, then reacts to a
- * `sub_802A3AC` collision probe - firing a trampoline on the hit
+ * `FindShotTarget` collision probe - firing a trampoline on the hit
  * object if any (then falling into the same "own trampoline" tail as
  * below), else checking `IsTouchingAirship` (an AABB overlap test) and a
  * `depth` threshold before firing `self`'s own method-table
@@ -43,7 +43,7 @@
  * calls `UpdateJetpackShot` by name (only indirectly via a `void *`-typed
  * function-pointer table entry), so the parameter's own type here
  * doesn't need to match the usual `void *` convention. */
-extern void *sub_802A3AC(void *selfArg);
+extern void *FindShotTarget(void *selfArg);
 extern u8 IsTouchingAirship(void *selfArg);
 extern void DamageAirship(s32 delta);
 extern s32 _call_via_r2(void *pos, s32 arg1, void *table);
@@ -66,7 +66,7 @@ void UpdateJetpackShot(struct actor_falling *self)
     self->base.z += 0x400;
 
     {
-        struct actor_self *hit = sub_802A3AC(self);
+        struct actor_self *hit = FindShotTarget(self);
 
         if (hit != 0) {
             struct actor_vtable *hitTable = hit->vtable;

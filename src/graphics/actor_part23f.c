@@ -8,7 +8,7 @@
  * A large per-frame "advance this weapon-kind instance" driver: fires
  * a stride-4 trampoline (`gAirshipStateFuncs`, indexed by the
  * tracker's own state global `gAirshipState`) via `_call_via_r0`,
- * refreshes the palette-strip animation (`sub_8031744`), and advances
+ * refreshes the palette-strip animation (`AnimateAirshipPalette`), and advances
  * `gUnknown_0300153C`'s frame counter. While the tracker's state is
  * nonzero: advances its own anim-frame accumulator (`+8`, by its part-
  * table's `+0x10` halfword) and, once `GetAnimFrameBaseOffset` crosses
@@ -30,7 +30,7 @@ extern struct actor_self *gAirship;
 extern void *gAirshipStateFuncs[];
 extern s32 gAirshipState;
 extern s32 _call_via_r0(void *fn);
-extern void sub_8031744(void);
+extern void AnimateAirshipPalette(void);
 extern s32 gUnknown_0300153C;
 extern s32 GetAnimFrameBaseOffset(void *self);
 extern s32 gUnknown_03001554;
@@ -51,7 +51,7 @@ void UpdateAirship(void)
     struct actor_self *self;
 
     _call_via_r0(gAirshipStateFuncs[gAirshipState]);
-    sub_8031744();
+    AnimateAirshipPalette();
     gUnknown_0300153C++;
     if (gAirshipState != 0) {
         s32 scale;

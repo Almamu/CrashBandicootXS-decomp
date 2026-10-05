@@ -30,16 +30,16 @@ function, exactly the `sub_800039C`/`strlen` pattern documented in
 `expected/corrections.txt` so `report_units.py`/decomp.dev stop crediting
 their bytes to the preceding labelled function:
 
-- **`sub_803B54C`** (0x0803B54C, 4 bytes) - between `UpdateJetpackCheckpointText`'s real
+- **`IsJetpackCheckpointTextUnshootable`** (0x0803B54C, 4 bytes) - between `UpdateJetpackCheckpointText`'s real
   return and `DestroyJetpackCheckpointText` below. `movs r0,#1; bx lr` - a trivial
   "return true" stub.
 - **`DestroyJetpackCheckpointText`** (0x0803B550) - the standard `struct linked_node`
-  teardown handler shape (see below), between `sub_803B54C` and
+  teardown handler shape (see below), between `IsJetpackCheckpointTextUnshootable` and
   `UpdateJetpackExplosion`.
 - **`UpdateJetpackExplosion`** (0x0803B57C) - `UpdatePolarCheckpointText`'s near-twin (see
-  below), between `DestroyJetpackCheckpointText` and `sub_803B5AC`.
-- **`sub_803B5AC`** (0x0803B5AC, 4 bytes) - byte-identical to
-  `sub_803B54C`, between `UpdateJetpackExplosion` and `DestroyJetpackExplosion`.
+  below), between `DestroyJetpackCheckpointText` and `IsJetpackExplosionUnshootable`.
+- **`IsJetpackExplosionUnshootable`** (0x0803B5AC, 4 bytes) - byte-identical to
+  `IsJetpackCheckpointTextUnshootable`, between `UpdateJetpackExplosion` and `DestroyJetpackExplosion`.
 - **`GetActorHp`** (0x0803B5DC, 4 bytes) - between `DestroyJetpackExplosion`'s real
   return and `nullsub_44` below. `ldr r0,[r0,#0x54]; bx lr` - a plain
   `self->field_54` getter.
@@ -47,7 +47,7 @@ their bytes to the preceding labelled function:
   `bx lr` alone, a genuinely empty stub (same shape as `nullsub_16` in
   `src/graphics/actor_part39.c`) - next available `nullsub_N`, since
   `_call_via_lr` was already taken.
-- **`sub_803B5E4`** (0x0803B5E4, 4 bytes) - between `nullsub_44`'s
+- **`IsJetpackPlayerUnshootable`** (0x0803B5E4, 4 bytes) - between `nullsub_44`'s
   padding and `DestroyJetpackShot`. `movs r0,#0; bx lr` - a trivial "return
   false"/"return 0" stub.
 
@@ -76,9 +76,9 @@ All in `src/graphics/actor_anim.c`, in ROM order:
   by `(loopThreshold - loopBase) << 8` and the `+0x12` flag gets set -
   a loop-back/wrap mechanism for the animation's playback position.
 - **`DestroyJetpackCheckpointText`**/`DestroyJetpackExplosion`/`DestroyJetpackShot`/`DestroyJetpackPlane`/
-  `DestroyJetpackBomber`/`DestroyJetpackCannonball`/`sub_803B698`/`DestroyJetpackBalloon`/
-  `DestroyJetpackParachuteNitro`/`DestroyJetpackRocket`/`DestroyJetpackRing`/`sub_803B7D4`/
-  `DestroyHovercraftCannon`/`DestroyHovercraftLauncher`/`sub_803B858`/`sub_803B884` - 16 more
+  `DestroyJetpackBomber`/`DestroyJetpackCannonball`/`DestroyAirshipFireball`/`DestroyJetpackBalloon`/
+  `DestroyJetpackParachuteNitro`/`DestroyJetpackRocket`/`DestroyJetpackRing`/`DestroyHovercraftFireball`/
+  `DestroyHovercraftCannon`/`DestroyHovercraftLauncher`/`DestroyHovercraftSideGun`/`DestroyHovercraftCannonFlash` - 16 more
   byte-identical `struct linked_node` teardown handlers, the exact same
   shape as issue #71's 20: set `self->field_50` to
   `gActorVtable`, unlink `self` from its `+0x48`/`+0x4c`
@@ -92,7 +92,7 @@ All in `src/graphics/actor_anim.c`, in ROM order:
   shape: tear down via `DestroyJetpackBalloonCrate(self, 0)` (itself still unmatched)
   instead of the inline list-unlink, then free `self` when `flags & 1`
   - same as every other handler here.
-- **`GetActorHp`**/`nullsub_44`/`sub_803B5E4` - see "Seven more hidden
+- **`GetActorHp`**/`nullsub_44`/`IsJetpackPlayerUnshootable` - see "Seven more hidden
   functions" above.
 
 ### Compiler-codegen notes

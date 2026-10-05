@@ -18,7 +18,7 @@ Two loosely related families sharing the same ROM neighborhood:
    to a small `struct MedalItemList { count; items[]; extra1; extra2; }`
    header, `CountLevelCrates`). Each `items[]`/`extra1`/`extra2` entry is
    itself a `struct MedalListItem` with a `type` selector (0-2 dispatch
-   to `CountCrateEntities`, 3 to `sub_802968C`, matching CountLevelCrates's own
+   to `CountCrateEntities`, 3 to `CountCategoryCrates`, matching CountLevelCrates's own
    earlier-documented dispatch) and a nested `linkedObj->0x1c` pointer
    feeding both of those.
 2. **A sound-channel-handle helper family** (`BeginSlide`-
@@ -56,7 +56,7 @@ teardown wrapper), `ResetSlideshow` (trivial constructor).
 
 - **Dispatch-on-range compiles as a genuine `switch`, not if/else-if.**
   `CountLevelCrates`'s per-item `type` dispatch (`type<0`: skip; `type<=2`:
-  call `CountCrateEntities`; `type==3`: call `sub_802968C`) looked like a
+  call `CountCrateEntities`; `type==3`: call `CountCategoryCrates`) looked like a
   natural if/else-if chain, but that shape compiles with the *wrong*
   branch polarity (`bgt`/skip-forward instead of the ROM's `ble`/jump-
   into-handler). Writing it as an actual C `switch (type) { case 0:
@@ -158,9 +158,9 @@ left as a clear target for a future pass instead.
   sfx) reused standalone against a caller-supplied index, same shape and
   same open gap as the group above.
 
-## Note on `sub_802968C`
+## Note on `CountCategoryCrates`
 
-Several matched functions here call `sub_802968C` (category-index sfx/
+Several matched functions here call `CountCategoryCrates` (category-index sfx/
 effect resolver, already partially characterized in docs/rom_map.md's
 "Resolved category_descriptor.sub_effect_table's record layout"
 section) - it's declared `extern` with a `u16` parameter matching every

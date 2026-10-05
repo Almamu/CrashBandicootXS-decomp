@@ -5992,18 +5992,18 @@ offset here). New conventions confirmed by this chunk: a `+0x50`-rooted
 `{s16 offset; void *fn}` trampoline record (the same shape actor_part10/
 11.c already name at a different offset for a sibling object), and a
 `+0x48`/`+0x4c` circular doubly-linked list of these objects rooted at
-the player-pointer global `gActorList` (`sub_802C19C`/
+the player-pointer global `gActorList` (`DestroyPolarPlayer`/
 `DestroyPolarCollectedWumpa` unlink from it on teardown; `DetonateNearbyPolarNitros`, left raw,
 walks it for an AABB-overlap scan). Ties into `docs/rom_map.md`'s
 `gUnknown_030014xx` tier-threshold family (`sub_802BED8`/`sub_802BF30`/
-`sub_802BFD4`/`sub_802C018`/`sub_802C128`/`sub_802C14C`) and the shared
+`sub_802BFD4`/`CatchPolarPlayer`/`sub_802C128`/`sub_802C14C`) and the shared
 "type-byte event dispatch"/lap-counter families (`UpdatePolarQuestionCrate`/
 `UpdatePolarLifeCrate`/`UpdatePolarNitroCrate`/`UpdatePolarAkuAkuCrate`, all converging on the shared
 tail `UpdatePolarCrate`).
 
 **Matched (21 of 25):** `sub_802BED8`, `sub_802BF30`, `sub_802BFA0`,
-`sub_802BFD4`, `sub_802C018`, `sub_802C078`, `sub_802C0A8`,
-`sub_802C0BC`, `sub_802C128`, `sub_802C14C`, `sub_802C19C`,
+`sub_802BFD4`, `CatchPolarPlayer`, `QueuePolarWumpa`, `sub_802C0A8`,
+`sub_802C0BC`, `sub_802C128`, `sub_802C14C`, `DestroyPolarPlayer`,
 `sub_802C264`, `UpdatePolarCollectedWumpa`, `DestroyPolarCollectedWumpa`, `UpdatePolarWumpa`,
 `CreatePolarWumpa`, `UpdatePolarCrate`, `UpdatePolarQuestionCrate`, `UpdatePolarLifeCrate`,
 `UpdatePolarNitroCrate`, `UpdatePolarAkuAkuCrate`.
@@ -6025,7 +6025,7 @@ tail `UpdatePolarCrate`).
   transposed instruction order, an easy one-instruction-pair swap to
   miss by inspection alone (see "full clean rebuild required" below).
 - **Two-parameter functions taking `self` and a second argument**
-  (`sub_802C0BC`, `sub_802C19C`, `DestroyPolarCollectedWumpa`) needed *both*
+  (`sub_802C0BC`, `DestroyPolarPlayer`, `DestroyPolarCollectedWumpa`) needed *both*
   parameters register-pinned (`self` to its ROM register, the second
   argument to its own) to reproduce the ROM's parameter-copy order in
   the prologue - pinning only `self` still let the unpinned second
@@ -6050,12 +6050,12 @@ tail `UpdatePolarCrate`).
   early single-function check; only the full-ROM byte comparison caught
   it. `UpdatePolarCollectedWumpa`'s analogous, already-correct `if (frame >=
   entry[2])` was the tell that something was inverted.
-- **`UpdatePolarNitroCrate`'s `sub_802A6EC(self)` boolean result must be
+- **`UpdatePolarNitroCrate`'s `IsTouchingPlayer(self)` boolean result must be
   materialized into its own register with the ROM's exact `lsls
   rX,rX,#0x18` / `lsrs rY,rX,#0x18` double-shift truncation**, not just
   compared inline - the truncated value is reused, unmodified, as a
   known-zero fallback deep in the function's other branch (`self+0x44`/
-  `self+8`'s reset), so a plain `if (sub_802A6EC(self))` (which the
+  `self+8`'s reset), so a plain `if (IsTouchingPlayer(self))` (which the
   compiler happily optimizes to a single untruncated comparison) loses
   the persistent register value the later branch depends on. Forcing a
   `register u32 found asm("r5")` through an explicit `raw <<= 24; found
@@ -6085,7 +6085,7 @@ tail `UpdatePolarCrate`).
 **Parked (`NON_MATCHING`, 3):**
 
 - **`sub_802C208`** (`actor_part19e.c`, real bytes in
-  `asm/code_3_2_20_28568_c208.s`) - a `gStaticData_0817A6B8` stride-8
+  `asm/code_3_2_20_28568_c208.s`) - a `gPolarPlayerStateFuncs` stride-8
   trampoline-record dispatcher (`{s16 baseOff; s16 count; s16
   subOffset}`, count-gated between an inline fallback pair and a
   per-instance list's last entry). Every load/store, branch and call is
@@ -6130,7 +6130,7 @@ tail `UpdatePolarCrate`).
 
 **File structure:** `asm/code_3_2_20_28568.s` (truncated right before
 `sub_802BED8`) is followed, in ROM order, by `actor_part19.o`
-(`sub_802BED8`-`sub_802C19C`), the new raw `code_3_2_20_28568_c208.s`
+(`sub_802BED8`-`DestroyPolarPlayer`), the new raw `code_3_2_20_28568_c208.s`
 (parked `sub_802C208`), `actor_part19e.o` (`sub_802C208`'s
 `NON_MATCHING`-only twin), `actor_part19f.o` (`sub_802C264`/
 `UpdatePolarCollectedWumpa`), the new raw `code_3_2_20_28568_c2fc.s` (parked
@@ -6371,7 +6371,7 @@ chunk - `SpawnShark`/`SpawnMorayEel`/`SpawnElectricEel`/`SpawnSquid`/
 `SpawnJellyfish`/`SpawnLaserBarrier`/`sub_8020138`/`sub_802026C`/`SpawnSaucerLabAssistant`/
 `SpawnPistonCrusher`/`SpawnFlamethrowerLabAssistant`/`sub_8020788`/`sub_80208C4`/`SpawnRat`/
 `SpawnFrog`/`SpawnSeaMine`/`SpawnWoodenCrusher`/`sub_8021280`/`sub_8021388`/
-`sub_8021480`/`sub_802155C`. `docs/rom_map.md` already has real
+`sub_8021480`/`SpawnCortexBoss`. `docs/rom_map.md` already has real
 characterization for several of these (`SpawnWoodenCrusher` as the 15-slot
 table's richer "two-line text popup" slot 0; `SpawnFlamethrowerLabAssistant`/
 `sub_8020788` as more instances of that same popup-spawner shape;

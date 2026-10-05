@@ -14,22 +14,22 @@
  *
  * `UpdateJetpackQuestionCrate`/`DamageJetpackQuestionCrate`/`UpdateJetpackHealthCrate`/`UpdateJetpackTimeCrate`/`DamageJetpackTimeCrate`
  * are the "type-byte event dispatch" family already characterized by
- * `docs/rom_map.md`: a proximity check (`sub_802A6EC`) or a countdown
+ * `docs/rom_map.md`: a proximity check (`IsTouchingPlayer`) or a countdown
  * timer at `self+0x54` gates the transition, `PlaySfx(3, 0x100)` always
  * plays first, then a `self+0x30`-relative type byte selects between
- * `FreezeLevelClock`/`sub_802F540` calls - written as `goto`-chained `if`
+ * `FreezeLevelClock`/`QueueJetpackWumpa` calls - written as `goto`-chained `if`
  * blocks (not a plain `switch`) to match this family's already-matched
  * sibling `UpdatePolarQuestionCrate` (`actor_part19g.c`), whose last case does
  * something structurally different from the others and resists a plain
  * `switch`'s uniform codegen.
  *
  * `UpdateJetpackRocket` is the already-flagged orbital-motion consumer of the
- * shared trig table `gSineTable`; `sub_8032290` turned out to
+ * shared trig table `gSineTable`; `JetpackBalloonCrateStateHang` turned out to
  * be a second, closely-related consumer of the same table feeding the
  * same `x`/`y` position pair.
  *
  * `UpdateJetpackBalloonCrate`/`sub_80322F4` are the per-state member-pointer
- * dispatches through `gStaticData_0817C42C` (`ACTOR_PMF_CALL`,
+ * dispatches through `gJetpackBalloonCrateStateFuncs` (`ACTOR_PMF_CALL`,
  * include/actor_self.h) - once parked NAKED as an "r7 table-base-pin"
  * hazard, see docs/matching/pmf-dispatch-retry.md. */
 
@@ -37,19 +37,19 @@ extern void *gAudioContext;
 extern void *gLevelState;
 extern void *gActorList;
 
-extern u8 sub_802A6EC(void *self);
+extern u8 IsTouchingPlayer(void *self);
 extern void UpdateActor(void *self);
 extern void AddBrokenCrate(void *self);
 extern void FreezeLevelClock(void *arg0, s32 arg1);
 extern void StartTimeTrial(void *arg0);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
-extern void sub_802F50C(void *selfArg, s32 delta);
-extern void sub_802F540(void *selfArg, s32 delta);
+extern void HealJetpackPlayer(void *selfArg, s32 delta);
+extern void QueueJetpackWumpa(void *selfArg, s32 delta);
 extern void sub_802F164(void *selfArg, s32 x, s32 y);
-extern void sub_802AAB4(void *selfArg);
+extern void MarkSpawnCollected(void *selfArg);
 extern s32 AddLife(void *self);
 extern void sub_80318B4(void *selfArg);
-extern void sub_80318D0(void *selfArg, s32 a, s32 b, s32 c);
+extern void MoveJetpackBalloon(void *selfArg, s32 a, s32 b, s32 c);
 extern void InitActorPart(void *self, s32 a, s32 b, s32 c, s32 d);
 extern s32 RandRange(s32 max);
 extern s32 SpawnJetpackBalloon(s32 kind, s32 a1, s32 a2, s32 a3, void *selfArg);
@@ -58,7 +58,7 @@ extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
 extern void mem_free(void *ptr);
 
 extern u8 gSineTable[];
-extern struct actor_pmf gStaticData_0817C42C[];
+extern struct actor_pmf gJetpackBalloonCrateStateFuncs[];
 extern u8 gStaticData_0817C444[];
 extern u8 gActorVtable[];
 extern u8 gJetpackHealthCrateVtable[];
@@ -80,7 +80,7 @@ struct vec3_words {
  * `*(T *)&self->field` casts: plain member stores let gcc move the
  * zero loads (docs/workflow.md step 7). */
 
-/* `UpdateJetpackQuestionCrate`-`sub_8032350`: orbits `center` and carries a child
+/* `UpdateJetpackQuestionCrate`-`IsJetpackBalloonCrateUnshootable`: orbits `center` and carries a child
  * object (`SpawnJetpackBalloon`, released with `sub_80318B4`). */
 struct orbit_actor {
     struct actor_self base;
@@ -91,11 +91,11 @@ struct orbit_actor {
     s32 centerX;                // 0x60
     s32 centerY;                // 0x64
     s32 phase;                  // 0x68 - random, added to stateTime
-    s32 fallSpeed;              // 0x6c - sub_8032274, capped at 0x4c0
-    void *unk_70;               // 0x70 - handed to sub_802AAB4
+    s32 fallSpeed;              // 0x6c - JetpackBalloonCrateStateFall, capped at 0x4c0
+    void *unk_70;               // 0x70 - handed to MarkSpawnCollected
 };
 
-/* `UpdateJetpackParachuteNitro`-`sub_8032478`: climbs until it reaches `limitY`. */
+/* `UpdateJetpackParachuteNitro`-`IsJetpackParachuteNitroUnshootable`: climbs until it reaches `limitY`. */
 struct rising_actor {
     struct actor_self base;
     s32 health;                 // 0x54
@@ -104,7 +104,7 @@ struct rising_actor {
     s32 limitY;                 // 0x5c
 };
 
-/* `UpdateJetpackRocket`-`sub_8032680`: swings around `originX` while moving
+/* `UpdateJetpackRocket`-`IsJetpackRocketUnshootable`: swings around `originX` while moving
  * down by `stepY` until `limitY`. */
 struct swing_actor {
     struct actor_self base;
@@ -112,7 +112,7 @@ struct swing_actor {
     s32 originX;                // 0x58
     s32 limitY;                 // 0x5c
     s32 stepY;                  // 0x60
-    u8 triggered;               // 0x64 - set by the sub_803256C transition
+    u8 triggered;               // 0x64 - set by the LaunchJetpackRocket transition
     u8 hit;                     // 0x65
 };
 
@@ -123,9 +123,9 @@ struct trigger_actor {
     u8 cued;                    // 0x58
 };
 
-void sub_803256C(void *selfArg);
+void LaunchJetpackRocket(void *selfArg);
 
-/* Per-state member-pointer dispatch, `(this->*gStaticData_0817C42C
+/* Per-state member-pointer dispatch, `(this->*gJetpackBalloonCrateStateFuncs
  * [this->state])()` (see `ACTOR_PMF_CALL`), then "destroy" once state 1
  * has risen past a height or the state-2 animation has played through,
  * else the standard UpdateActor step. */
@@ -133,7 +133,7 @@ void UpdateJetpackBalloonCrate(void *selfArg)
 {
     struct actor_self *self = selfArg;
 
-    ACTOR_PMF_CALL(self, gStaticData_0817C42C);
+    ACTOR_PMF_CALL(self, gJetpackBalloonCrateStateFuncs);
 
     if (self->state == 1 && self->y > 0xE100) {
         if (self != NULL) {
@@ -151,16 +151,16 @@ void UpdateJetpackBalloonCrate(void *selfArg)
 /* Proximity-triggered member of the shared "type-byte event dispatch"
  * family: on trigger, transitions to state 2/table-index 1 (anim frame
  * from `self`'s own part table at `+0xc`), then dispatches on a
- * `self+0x30` type byte (`0x14`-`0x16` into `sub_802F540` at
+ * `self+0x30` type byte (`0x14`-`0x16` into `QueueJetpackWumpa` at
  * increasing tiers, `0x17` into a fixed sound cue plus
- * `sub_802AAB4`/`AddLife`), flushes a pending trampoline call at
+ * `MarkSpawnCollected`/`AddLife`), flushes a pending trampoline call at
  * `self+0x58`, marks `self+0x5c`, and tail-calls `UpdateJetpackBalloonCrate`. */
 void UpdateJetpackQuestionCrate(void *selfArg)
 {
     struct orbit_actor *self = selfArg;
     s32 kind = self->base.animIndex;
 
-    if (kind == 0 && sub_802A6EC(self)) {
+    if (kind == 0 && IsTouchingPlayer(self)) {
         register s32 state asm("r0") = 2;
         register s32 one asm("r1") = 1;
         s32 typeByte;
@@ -201,22 +201,22 @@ void UpdateJetpackQuestionCrate(void *selfArg)
 
     case_14:
         PlaySfx(gAudioContext, 3, 0x100);
-        sub_802F540(gActorList, 1);
+        QueueJetpackWumpa(gActorList, 1);
         goto after_dispatch;
 
     case_15:
         PlaySfx(gAudioContext, 3, 0x100);
-        sub_802F540(gActorList, 3);
+        QueueJetpackWumpa(gActorList, 3);
         goto after_dispatch;
 
     case_16:
         PlaySfx(gAudioContext, 3, 0x100);
-        sub_802F540(gActorList, 5);
+        QueueJetpackWumpa(gActorList, 5);
         goto after_dispatch;
 
     case_17:
         PlaySfx(gAudioContext, 7, 0x100);
-        sub_802AAB4(self->unk_70);
+        MarkSpawnCollected(self->unk_70);
         AddLife(gLevelState);
 
     after_dispatch:
@@ -290,22 +290,22 @@ gt_15:
 
 case_14:
     PlaySfx(gAudioContext, 3, 0x100);
-    sub_802F540(gActorList, 1);
+    QueueJetpackWumpa(gActorList, 1);
     goto after_dispatch;
 
 case_15:
     PlaySfx(gAudioContext, 3, 0x100);
-    sub_802F540(gActorList, 3);
+    QueueJetpackWumpa(gActorList, 3);
     goto after_dispatch;
 
 case_16:
     PlaySfx(gAudioContext, 3, 0x100);
-    sub_802F540(gActorList, 5);
+    QueueJetpackWumpa(gActorList, 5);
     goto after_dispatch;
 
 case_17:
     PlaySfx(gAudioContext, 7, 0x100);
-    sub_802AAB4(self->unk_70);
+    MarkSpawnCollected(self->unk_70);
     AddLife(gLevelState);
 
 after_dispatch:
@@ -318,14 +318,14 @@ after_dispatch:
 }
 
 /* Proximity-triggered transition with a single fixed downstream call
- * (`sub_802F50C(player, 0x14)`) rather than a type-byte dispatch, then
+ * (`HealJetpackPlayer(player, 0x14)`) rather than a type-byte dispatch, then
  * flushes `self+0x58` and tail-calls `UpdateJetpackBalloonCrate`. */
 void UpdateJetpackHealthCrate(void *selfArg)
 {
     struct orbit_actor *self = selfArg;
     s32 kind = self->base.animIndex;
 
-    if (kind == 0 && sub_802A6EC(self)) {
+    if (kind == 0 && IsTouchingPlayer(self)) {
         register s32 state asm("r0") = 2;
         register s32 one asm("r6") = 1;
 
@@ -341,7 +341,7 @@ void UpdateJetpackHealthCrate(void *selfArg)
         }
         self->base.animTime = kind;
 
-        sub_802F50C(gActorList, 0x14);
+        HealJetpackPlayer(gActorList, 0x14);
         PlaySfx(gAudioContext, 3, 0x100);
 
         if (self->child != NULL) {
@@ -366,7 +366,7 @@ void UpdateJetpackTimeCrate(void *selfArg)
     struct orbit_actor *self = selfArg;
     s32 kind = self->base.animIndex;
 
-    if (kind == 0 && sub_802A6EC(self)) {
+    if (kind == 0 && IsTouchingPlayer(self)) {
         register s32 state asm("r0") = 2;
         register s32 one asm("r1") = 1;
         s32 typeByte;
@@ -580,7 +580,7 @@ void DamageJetpackHealthCrate(void *selfArg, s32 delta)
             }
             *(s32 *)&self->base.animTime = zero2;
 
-            sub_802F50C(gActorList, 0x14);
+            HealJetpackPlayer(gActorList, 0x14);
             PlaySfx(gAudioContext, 3, 0x100);
 
             if (self->child != NULL) {
@@ -648,7 +648,7 @@ void sub_8032138(void *selfArg)
  * set to 1, anim frame re-synced from `self`'s own part table at `+0`
  * (not `+0xc`, unlike the boss cluster's usual reset block), lap-counter
  * tie (`AddBrokenCrate`), `self+0x58` cleared. */
-void sub_8032140(void *selfArg)
+void BreakJetpackBalloonCrate(void *selfArg)
 {
     struct orbit_actor *self = selfArg;
     register s32 zero asm("r5") = 0;
@@ -777,7 +777,7 @@ void nullsub_33(void *selfArg)
 /* Trivial accumulator: `y` advances by `self+0x6c`'s current
  * step, then the step itself advances by `0x12`/frame, clamped to
  * `0x4c0`. */
-void sub_8032274(void *selfArg)
+void JetpackBalloonCrateStateFall(void *selfArg)
 {
     struct orbit_actor *self = selfArg;
     s32 pos = self->base.y;
@@ -798,8 +798,8 @@ void sub_8032274(void *selfArg)
  * position pair from two phase-shifted table lookups around
  * `self+0x68 + self+0x44`, then - while `self+0x58` holds another
  * object - forwards the result into that object's own anim-frame-
- * advance-and-clamp step (`sub_80318D0`). */
-void sub_8032290(void *selfArg)
+ * advance-and-clamp step (`MoveJetpackBalloon`). */
+void JetpackBalloonCrateStateHang(void *selfArg)
 {
     struct orbit_actor *self = selfArg;
     s16 *trig = (s16 *)gSineTable;
@@ -819,7 +819,7 @@ void sub_8032290(void *selfArg)
     self->base.y = y;
 
     if (self->child != NULL) {
-        sub_80318D0(self->child, x, y + (s32)0xFFFFC24A, self->base.z);
+        MoveJetpackBalloon(self->child, x, y + (s32)0xFFFFC24A, self->base.z);
     }
 }
 
@@ -829,11 +829,11 @@ void sub_80322F4(void *selfArg)
 {
     struct actor_self *self = selfArg;
 
-    ACTOR_PMF_CALL(self, gStaticData_0817C42C);
+    ACTOR_PMF_CALL(self, gJetpackBalloonCrateStateFuncs);
 }
 
 /* Trivial `self+0x5c` byte getter. */
-u8 sub_8032350(void *selfArg)
+u8 IsJetpackBalloonCrateUnshootable(void *selfArg)
 {
     struct orbit_actor *self = selfArg;
     return self->done;
@@ -859,7 +859,7 @@ void UpdateJetpackParachuteNitro(void *selfArg)
         return;
     }
 
-    if (sub_802A6EC(self)) {
+    if (IsTouchingPlayer(self)) {
         struct actor_self *player = gActorList;
         struct actor_vtable *ptable = player->vtable;
 
@@ -987,7 +987,7 @@ void *CreateJetpackParachuteNitro(void *selfArg, s32 a, s32 b, s32 c, s32 d)
 asm(".align 2, 0\n1: .4byte 0xFFFF0600\n2: .4byte gJetpackParachuteNitroVtable\n");
 
 /* Trivial `self+0x58` byte getter. */
-u8 sub_8032478(void *selfArg)
+u8 IsJetpackParachuteNitroUnshootable(void *selfArg)
 {
     struct rising_actor *self = selfArg;
     return self->dead;
@@ -996,11 +996,11 @@ u8 sub_8032478(void *selfArg)
 /* The already-flagged orbital-motion consumer of the shared trig table
  * `gSineTable` (docs/rom_map.md): while idle (state 0),
  * checks proximity to fire an event-table call on the player plus a
- * state transition through `sub_803256C`, then drives the orbit itself
+ * state transition through `LaunchJetpackRocket`, then drives the orbit itself
  * (`x`) and either lets `y` coast forward by
  * `self+0x60` or, once it catches up to `self+0x5c`, re-seeds
  * `self+0x38`'s 3-word block from `gStaticData_0817C444` and re-fires
- * `sub_803256C`. Once no longer idle, either flushes a pending
+ * `LaunchJetpackRocket`. Once no longer idle, either flushes a pending
  * `vtable` trampoline call (state-1/table-index-1 shape) or repeats
  * the same player-proximity event once (latched via `self+0x65`).
  * Falls back to `UpdateActor` in both non-idle paths. */
@@ -1012,16 +1012,16 @@ void UpdateJetpackRocket(void *selfArg)
         goto state_nonzero;
     }
 
-    if (sub_802A6EC(self)) {
+    if (IsTouchingPlayer(self)) {
         struct actor_self *player = gActorList;
         struct actor_vtable *ptable = player->vtable;
 
         _call_via_r2((u8 *)player + ptable->m20.thisOffset, 0xe, ptable->m20.fn);
         self->hit = 1;
-        sub_803256C(self);
+        LaunchJetpackRocket(self);
     }
 
-    /* `sub_803256C` may have just transitioned the state away from 0 -
+    /* `LaunchJetpackRocket` may have just transitioned the state away from 0 -
      * the ROM re-checks and, if so, joins the state-nonzero handling
      * below instead of running the orbital-motion step on stale state. */
     if (self->base.animIndex != 0) {
@@ -1043,7 +1043,7 @@ void UpdateJetpackRocket(void *selfArg)
             self->base.y += self->stepY;
         } else {
             *(struct vec3_words *)((u8 *)self + 0x38) = *(struct vec3_words *)gStaticData_0817C444;
-            sub_803256C(self);
+            LaunchJetpackRocket(self);
         }
     }
 
@@ -1058,7 +1058,7 @@ state_nonzero:
         return;
     }
 
-    if (self->hit == 0 && sub_802A6EC(self)) {
+    if (self->hit == 0 && IsTouchingPlayer(self)) {
         struct actor_self *player = gActorList;
         struct actor_vtable *ptable = player->vtable;
 
@@ -1073,7 +1073,7 @@ tail:
 /* State transition setter: marks `self+0x64`, plays a fixed cue, sets
  * `self+0x18`, and the usual state-1/anim-reset block (anim frame from
  * `self`'s own part table at `+0xc`). */
-void sub_803256C(void *selfArg)
+void LaunchJetpackRocket(void *selfArg)
 {
     struct swing_actor *self = selfArg;
     u8 *statePtr = &self->triggered;
@@ -1174,7 +1174,7 @@ void *CreateJetpackRocket(void *selfArg, s32 a, s32 b, s32 c, s32 d)
 }
 
 /* Trivial `self+0x64` byte getter. */
-u8 sub_8032680(void *selfArg)
+u8 IsJetpackRocketUnshootable(void *selfArg)
 {
     struct swing_actor *self = selfArg;
     return self->triggered;
@@ -1189,7 +1189,7 @@ void UpdateJetpackRing(void *selfArg)
 {
     struct trigger_actor *self = selfArg;
 
-    if (*(u8 *)(*(u8 **)((u8 *)self + 0x30)) == 0x1f && sub_802A6EC(self)) {
+    if (*(u8 *)(*(u8 **)((u8 *)self + 0x30)) == 0x1f && IsTouchingPlayer(self)) {
         struct actor_self *player = gActorList;
         s32 *params = *(s32 **)((u8 *)self + 0x30);
         s32 x = self->base.x - params[8];

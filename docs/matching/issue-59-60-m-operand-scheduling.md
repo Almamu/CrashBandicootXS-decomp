@@ -123,7 +123,7 @@ both are now individually closeable:
   add (`cSaved += (s32)0xFFFFC24A;`, an in-place update rather than a
   fresh expression) also matches the ROM's own `add r6, r6, r0` reusing
   its permanent home register, the same idiom documented for
-  `sub_8032274`/others in
+  `JetpackBalloonCrateStateFall`/others in
   [issue-59-60-gap-31a6c-part1.md](issue-59-60-gap-31a6c-part1.md).
 - **"kind" byte truncation timing**: a plain `asm volatile` barrier on a
   `u8`-typed register variable (the originally-tried fix) doesn't force

@@ -11,8 +11,8 @@ partly read this range from disassembly alone: `CreateJetpackActor` is "a
 
 25 functions total. `CreateJetpackActor` is the dispatcher itself; the run of
 near-identical `mem_alloc`-plus-forwarding-call constructors
-(`SpawnJetpackCollectedWumpa`, `sub_802E504`, `SpawnJetpackBalloon`, `sub_802E538`,
-`sub_802E57C`, `sub_802E5B0`) are `CreateJetpackActor`'s own per-"kind" case
+(`SpawnJetpackCollectedWumpa`, `SpawnHovercraftCannonFlash`, `SpawnJetpackBalloon`, `SpawnHovercraftSideGun`,
+`SpawnHovercraftLauncher`, `SpawnHovercraftCannon`) are `CreateJetpackActor`'s own per-"kind" case
 bodies, each allocating a fixed-size struct and forwarding to a
 different kind-specific initializer, indexed into
 `gJetpackAnimTable`'s array of per-kind data tables by a fixed byte
@@ -40,9 +40,9 @@ in `src/graphics/actor_part128.c`:
   arguments; the call's own return value is discarded (matching the
   `void` signature already established for this function elsewhere in
   the codebase, e.g. `actor_part44.c`).
-- **`sub_802E504`** - same shape, 0x5c-byte struct, table offset
-  0x230, forwards to `sub_80342D4`.
-- **`sub_802E57C`**/**`sub_802E5B0`** - same shape, 0x70-byte struct,
+- **`SpawnHovercraftCannonFlash`** - same shape, 0x5c-byte struct, table offset
+  0x230, forwards to `CreateHovercraftCannonFlash`.
+- **`SpawnHovercraftLauncher`**/**`SpawnHovercraftCannon`** - same shape, 0x70-byte struct,
   table offsets 0x1E0/0x1B8, forward to `CreateHovercraftLauncher`/`CreateHovercraftCannon`.
 
 All four needed the `mem_alloc(size, flags)` call's two arguments
@@ -94,29 +94,29 @@ raw disassembly.
   family (established externs already exist for both:
   `void CreateJetpackCheckpointText(void);` and
   `s32 CreateJetpackExplosion(s32 x, s32 y, s32 z, s32 kind);`, `actor_part21f.c`).
-- **`SpawnJetpackBalloon`**, **`sub_802E538`**, **`sub_802E5E4`** (2-arg),
-  **`sub_802E62C`**, **`SpawnJetpackCannonball`**, **`SpawnJetpackShot`** - more of
+- **`SpawnJetpackBalloon`**, **`SpawnHovercraftSideGun`**, **`SpawnHovercraftFireball`** (2-arg),
+  **`SpawnAirshipFireball`**, **`SpawnJetpackCannonball`**, **`SpawnJetpackShot`** - more of
   `CreateJetpackActor`'s own constructor-family case bodies and position-
-  offset helpers, each with `r8`/`sb` (and for `sub_802E9FC` below,
+  offset helpers, each with `r8`/`sb` (and for `DrawJetpackPlayer` below,
   `sl` too) simultaneously live across the whole function - the same
   register-pressure family this codebase's DMA/OAM functions are
   consistently NAKED-parked for. Established externs already exist for
-  `sub_802E5E4`, `sub_802E62C`, and `SpawnJetpackCannonball` (`actor_part67.c`,
+  `SpawnHovercraftFireball`, `SpawnAirshipFireball`, and `SpawnJetpackCannonball` (`actor_part67.c`,
   `actor_part21d.c`, `actor_part21e.c`/`actor_part29.c`/
   `actor_part46b.c`).
-- **`sub_802E710`** - stashes its first argument into
+- **`CreateJetpackPlayer`** - stashes its first argument into
   `gJetpackAnimTable` then allocates and forwards to `sub_8032ADC` with
   a position derived from the player object (`gActorList`).
-- **`sub_802E740`** - a `self`-object physics/collision-react step.
-- **`sub_802E84C`**, **`sub_802E9FC`**, **`sub_802EB78`** - larger
+- **`InitJetpackPlayer`** - a `self`-object physics/collision-react step.
+- **`UpdateJetpackPlayer`**, **`DrawJetpackPlayer`**, **`DamageJetpackPlayer`** - larger
   `self`-object state-machine steps (frame-counter/hazard-timer driven
-  transitions); `sub_802E9FC` additionally has `r8`/`sb`/`sl` all
+  transitions); `DrawJetpackPlayer` additionally has `r8`/`sb`/`sl` all
   simultaneously live.
-- **`sub_802EC64`**, **`sub_802ED10`** - no-argument helpers reading
+- **`SteerJetpackPlayerY`**, **`SteerJetpackPlayerX`** - no-argument helpers reading
   `gUnknown_03001507`/`gKeys` directly.
-- **`sub_802EDBC`**, **`sub_802EED0`**, **`sub_802EFD8`** - `self`-
+- **`JetpackPlayerStateFly`**, **`JetpackPlayerStateRollLeft`**, **`JetpackPlayerStateRollRight`** - `self`-
   object frame-counter-threshold steps, each starting with a tail-call
-  into `sub_802EC64`/`sub_802ED10` above.
+  into `SteerJetpackPlayerY`/`SteerJetpackPlayerX` above.
 
 ## Verification
 
@@ -138,7 +138,7 @@ matched/parked list this entry feeds into.
 ## Later pass (issue #55 retry)
 
 All 21 NAKED functions above were promoted to real C, and the whole
-file now builds with old_agbcc (`sub_802E9FC` needs it). The reasons
+file now builds with old_agbcc (`DrawJetpackPlayer` needs it). The reasons
 given for parking them didn't hold up. `CreateJetpackActor` is a plain
 `switch`. The "r8/sb pressure" constructors only needed the
 `AllocActor` inline wrapper, or an inline base constructor that takes

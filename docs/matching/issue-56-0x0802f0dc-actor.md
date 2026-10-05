@@ -10,7 +10,7 @@ at `self+0xc`, an anim-frame halfword/byte pair at `self+0x10`/
 `self+0x50`), but driving a *different* singleton than issue #58's
 `gAirship` cluster and issue #62's `gHovercraft`
 cluster - this one's flags/counters live at `gUnknown_030014E0`-
-`gUnknown_03001518`.
+`gJetpackPlayerTiles`.
 
 The chunk generator's listed source file (`asm/code_3_2_17.s`) was
 stale by the time this issue was picked up - the real raw bytes for
@@ -26,9 +26,9 @@ are named by the lower 5 hex digits of their first function's address
 
 ## Matched (22 of 25 functions)
 
-- **`sub_802F338`** (`src/graphics/actor_part43b.c`) - computes two
+- **`AllocJetpackPlayerTiles`** (`src/graphics/actor_part43b.c`) - computes two
   keyframe-driven tile-cache sizes (`byte0*byte1`, scaled by 32) via
-  `AllocVramTileBlock`, storing them into the `gUnknown_03001518` pair;
+  `AllocVramTileBlock`, storing them into the `gJetpackPlayerTiles` pair;
   now fully matched as real C. The ROM's "materialize the multiply
   result into one register, copy it to a second, *then* shift" idiom
   (`adds r2,r3,#0; muls r2,r1,r2; adds r0,r2,#0; lsls r0,r0,#5`) closes
@@ -67,8 +67,8 @@ are named by the lower 5 hex digits of their first function's address
   register-pinned-block idiom already established throughout
   `actor_part43.c`/`actor_part44.c` (explicit `r0`/`r1`/`r2`/`r3`/`r4`
   pins matching the ROM's own scratch-register choices, including a
-  pinned pointer-typed pair - `r2`=`&gUnknown_03001508`,
-  `r1`=`&gUnknown_0300150C` - to get the ROM's specific "load both
+  pinned pointer-typed pair - `r2`=`&gJetpackPlayerVelY`,
+  `r1`=`&gJetpackPlayerVelX` - to get the ROM's specific "load both
   addresses before either store" scheduling instead of this compiler's
   default "reload the same register per store" pattern); the case-3
   accumulator-clamp arm needed its cap value re-read through the same
@@ -84,9 +84,9 @@ are named by the lower 5 hex digits of their first function's address
   sibling constants before either store, reset the anim frame via a
   `register`-pinned halfword/byte pair" idioms already used throughout
   `actor_part20.c`'s family - no new gotchas.
-- **`sub_802F3BC`** (`src/graphics/actor_part44.c`) - accumulator-
-  drain/reward-dispenser for the `gUnknown_030014FC` accumulator
-  `sub_802F540` fills: while the singleton flag is set, fully drains
+- **`DispenseJetpackWumpa`** (`src/graphics/actor_part44.c`) - accumulator-
+  drain/reward-dispenser for the `gJetpackQueuedWumpa` accumulator
+  `QueueJetpackWumpa` fills: while the singleton flag is set, fully drains
   it via repeated `CollectWumpa` calls; otherwise, once a
   `gUnknown_030014F8` cooldown elapses, dispenses one of four tiers of
   reward sized by the accumulator's own magnitude. Needed `self`
@@ -96,15 +96,15 @@ are named by the lower 5 hex digits of their first function's address
   in `r1` uniformly across all four tiers.
 - **`sub_802F46C`** (`src/graphics/actor_part44.c`) - trivial
   pre-increment counter accessor (`return ++gUnknown_030014E0;`).
-- **`sub_802F47C`** (`src/graphics/actor_part44.c`) - threshold check
-  on `self+0x54`'s accumulator against `gUnknown_030014E4`'s cap.
+- **`GetJetpackPlayerHpPercent`** (`src/graphics/actor_part44.c`) - threshold check
+  on `self+0x54`'s accumulator against `gJetpackPlayerMaxHp`'s cap.
   Needed the two-condition guard folded into one `if (r == 0 && v > 0)
   r = 1; return r;` rather than two early `return`s - the naive
   two-`return` form makes this compiler synthesize a spurious
   `mov r0, #0` for the "value already zero" fallthrough case that the
   ROM never emits (it just falls through with `r0` already zero).
-- **`sub_802F4AC`** (`src/graphics/actor_part44.c`) - forwards
-  `self+0x24` (z position) plus a fixed offset to `sub_8029748`,
+- **`SetJetpackCheckpoint`** (`src/graphics/actor_part44.c`) - forwards
+  `self+0x24` (z position) plus a fixed offset to `SetActorCheckpoint`,
   discarding the result; declared `void` (not `s32`) so this compiler
   reuses `r0` for the `pop {r0}; bx r0` epilogue instead of preserving
   a return value the ROM itself discards the same way.
@@ -113,15 +113,15 @@ are named by the lower 5 hex digits of their first function's address
 - **`sub_802F4CC`** (`src/graphics/actor_part44.c`) - countdown timer
   (`gUnknown_030014F4`) driving a palette-strip animation refresh,
   ping-ponging the frame index via `__divsi3` the same way
-  `sub_8031744` (actor_part26.c) does for its own strip.
-- **`sub_802F50C`** (`src/graphics/actor_part44.c`) - advances
+  `AnimateAirshipPalette` (actor_part26.c) does for its own strip.
+- **`HealJetpackPlayer`** (`src/graphics/actor_part44.c`) - advances
   `self+0x54`'s accumulator by a scaled `delta`, clamped to
-  `gUnknown_030014E4`'s cap. Needed the multiply written as
+  `gJetpackPlayerMaxHp`'s cap. Needed the multiply written as
   `delta * max` (not `max * delta`) - the classic "which operand goes
   first" gap - to get this compiler to pre-load `delta` into the
   multiply's destination register the way the ROM does.
-- **`sub_802F540`** (`src/graphics/actor_part44.c`) - feeds `delta`
-  into the `gUnknown_030014FC` reward accumulator, arming its
+- **`QueueJetpackWumpa`** (`src/graphics/actor_part44.c`) - feeds `delta`
+  into the `gJetpackQueuedWumpa` reward accumulator, arming its
   `gUnknown_030014F8` cooldown the first time it goes from zero. Its
   own `self` parameter is genuinely unused (dead) in the ROM.
 - **`sub_802F570`**/**`sub_802F69C`** (`src/graphics/actor_part44.c`)
@@ -134,7 +134,7 @@ are named by the lower 5 hex digits of their first function's address
   `self+0x12`, and a separate `self+0x44`-counter-driven state-1
   transition.
 - **`sub_802F5E4`** (`src/graphics/actor_part44.c`) - advances
-  `gUnknown_03001508`'s bounded oscillator by 9 (clamped to +0x140 by
+  `gJetpackPlayerVelY`'s bounded oscillator by 9 (clamped to +0x140 by
   absolute value via the standard `sign = v>>31; v ^= sign; v -=
   sign;` idiom, reusing `v`/`sign` in place rather than a separate
   `abs` local), then fires two one-shot threshold effects on
@@ -145,9 +145,9 @@ are named by the lower 5 hex digits of their first function's address
   as `sub_802F5E4`. Needed `self+0x24` re-read fresh from memory after
   the `sub_8029B2C()` call (rather than keeping the pre-call value in
   a local) to match the ROM's own redundant reload.
-- **`sub_802F6DC`** (`src/graphics/actor_part44.c`) - teardown/
+- **`DestroyJetpackPlayer`** (`src/graphics/actor_part44.c`) - teardown/
   destructor: marks `self` "dying", drains the reward accumulator,
-  frees the two keyframe-size tile allocations `sub_802F338` made,
+  frees the two keyframe-size tile allocations `AllocJetpackPlayerTiles` made,
   marks `self` fully "dead", unlinks it from its doubly-linked list
   (via two independent double-dereference statements, not cached
   `prev`/`next` locals - the ROM redundantly reloads `self+0x48`/
@@ -161,17 +161,17 @@ are named by the lower 5 hex digits of their first function's address
   list entirely (this compiler doesn't treat a plain low-register pin
   as needing callee-save unless another high register is also live in
   the function, the same quirk documented in `actor_part35.c` for
-  `sub_8033CF8`) - a real correctness gap this plain-local-copy form
+  `HovercraftLauncherStateLaunch`) - a real correctness gap this plain-local-copy form
   avoids by letting the compiler make its own (correct) callee-save
   decision.
 - **`sub_802F7A4`** (`src/graphics/actor_part45.c`) - trivial byte
   getter for the singleton's own flag.
-- **`sub_802FA34`** (`src/graphics/actor_part46.c`) - trivial
+- **`IsJetpackShotUnshootable`** (`src/graphics/actor_part46.c`) - trivial
   constant-true predicate.
 - **`UpdateJetpackShot`** (`src/graphics/actor_part45b.c`) - a physics-step-
   and-collision-react updater: advances `self`'s position by its
   velocity pair plus a fixed gravity-like Y offset and a fixed Z step,
-  then reacts to a `sub_802A3AC` collision probe - firing a trampoline
+  then reacts to a `FindShotTarget` collision probe - firing a trampoline
   on the hit object if any, else checking `IsTouchingAirship` (an AABB
   overlap test) and a `self+0x34` depth threshold before firing
   `self`'s own `self+0x50`-table trampoline (index 8, no NULL-guard on
@@ -208,7 +208,7 @@ are named by the lower 5 hex digits of their first function's address
   `self+0x50`'s event/trampoline table to `gJetpackShotVtable`, and
   stashes its remaining two stack arguments into `self+0x58`/`self+0x5c`;
   now fully matched as real C, closing the gap the same 7-argument
-  `InitActorPart`-wrapper shape is still parked on for `sub_80305F8`
+  `InitActorPart`-wrapper shape is still parked on for `CreateAirshipFireball`
   (`docs/matching/issue-58-0x08030334-actor.md`). Explicitly pinning `e`/
   `f` to their ROM registers (`r6`/`r7`) either adds a spurious extra
   `r8` push/pop (a relay attempt) or - for `r7` specifically - drops that
@@ -228,7 +228,7 @@ are named by the lower 5 hex digits of their first function's address
 ## NAKED transcription (byte-correct, not counted as matched)
 
 - **`sub_802F748`** (`src/graphics/actor_part44b.c`) - a
-  `gStaticData_0817C1C0` stride-8 trampoline-record dispatcher, same
+  `gJetpackPlayerStateFuncs` stride-8 trampoline-record dispatcher, same
   shape as `sub_802C208` (issue #52). Hits the same confirmed
   categorical gcc-2.9 r7-pin bug and is transcribed the same way - see
   docs/matching/issue-52-0x0802bed8-actor.md for the full account. The
@@ -239,14 +239,14 @@ are named by the lower 5 hex digits of their first function's address
 - **`UpdateJetpackPlane`** (`src/graphics/actor_part46b.c`) - a
   ~150-instruction function combining a position update (via
   `self+0x60`/`0x64`/`0x68` velocity-like fields), a `self+0x2c`
-  threshold flag, a `gStaticData_0817C260` stride-8 keyframe-table
+  threshold flag, a `gJetpackPlaneStateFuncs` stride-8 keyframe-table
   lookup/`_call_via_r3` dispatch, and a player-distance/push-out damage
   calculation (`__divsi3`-scaled deltas feeding `SpawnJetpackCannonball`) plus
-  a `self+0x7c`-gated `sub_802A6EC`/`_call_via_r2` trampoline pair.
+  a `self+0x7c`-gated `IsTouchingPlayer`/`_call_via_r2` trampoline pair.
   Fully understood and every load/store, branch and call transcribed
   is confirmed correct; parked because the keyframe-table lookup is
   the exact same categorical r7-hazard shape as `sub_802C208`/
-  `sub_802F748`/`sub_8030574` (the ROM keeps the table's base address
+  `sub_802F748`/`UpdateAirshipFireball` (the ROM keeps the table's base address
   alive in `r7` for the whole function - see those entries), and the
   damage-calculation block that follows compounds this with `r8`/`sb`
   register pressure held live across two `__divsi3` calls and a

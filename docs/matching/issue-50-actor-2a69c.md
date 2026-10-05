@@ -31,10 +31,10 @@ instead of animating), a one-shot byte flag at `self+0x2c`, and a
 12-byte little vector block at `self+0x38` (copied from `part+0x14..20`)
 whose first three `s16` slots are a position `sub_802AA0C` integrates a
 per-axis velocity into. A separate, unrelated `gUnknown_03001464`-gated
-palette-cycle DMA cluster (`sub_802AB08`/`sub_802AB34`/`sub_802AB58`/
-`sub_802ABC8`/`sub_802ABFC`) and a fixed 15-slot object registry
+palette-cycle DMA cluster (`RestoreActorPaletteCycle`/`SaveActorPaletteCycle`/`UpdateActorPaletteCycle`/
+`SetActorPaletteCycle`/`EnableActorPaletteCycle`) and a fixed 15-slot object registry
 (`gUnknown_03001428`/`gUnknown_03000888`, searched/appended by
-`sub_802AA80`/`sub_802AAB4`/`sub_802AAFC`) round out the chunk.
+`IsSpawnCollected`/`MarkSpawnCollected`/`ClearCollectedSpawns`) round out the chunk.
 
 The raw source file `asm/code_3_2_20_8b7c.s` (6522 lines, spanning far
 beyond this chunk - DestroyFont through past ConstructActorPart)
@@ -48,12 +48,12 @@ only the tail continuation `..._ac28.s` remains.
 
 ## Matched (25 of 25 functions)
 
-- **`sub_802A69C`/`sub_802A6B0`/`sub_802A6C4`/`sub_802A6D8`**
+- **`JetpackReloadPlayerTiles`/`PolarReloadPlayerTiles`/`sub_802A6C4`/`sub_802A6D8`**
   (`src/graphics/actor_part50.c`) - four trivial forwarders, the same
   shape as `sub_802C0A8` in `actor_part19.c`: each ignores its own
   argument and calls a different function with the player pointer
   (`gActorList`), discarding the return value.
-- **`sub_802A6EC`** (`src/graphics/actor_part50.c`) - passes its own
+- **`IsTouchingPlayer`** (`src/graphics/actor_part50.c`) - passes its own
   `self` argument through to `_call_via_r1`, alongside a function pointer
   read from `gActorCategoryVtable`'s own `+0x24` field.
 - **`InitActorPart`** (`src/graphics/actor_part50.c`) - the constructor.
@@ -82,37 +82,37 @@ only the tail continuation `..._ac28.s` remains.
   `table` (not the more natural `table` first) plus the resulting
   `table + idx*0xc` address pinned to `r1` to reproduce the ROM's
   register choice for the shared record pointer.
-- **`sub_802A980`** (`src/graphics/actor_part56.c`) - the same
+- **`UpdateActorDepth`** (`src/graphics/actor_part56.c`) - the same
   movement-threshold recompute as `UpdateActor`, with no trampoline-
   fire/frame-advance tail.
 - **`sub_802A9D4`** (`src/graphics/actor_part56.c`) - trivial getter:
   the first byte of `self`'s part-table pointer.
 - **`sub_802A9DC`** (`src/graphics/actor_part56.c`) - the state/table-
   index/anim-frame reset idiom already documented for the boss
-  cluster's `sub_8030530`/`AirshipStateFall`.
-- **`sub_802AA00`/`sub_802AA04`/`sub_802AA08`** (`src/graphics/actor_part56.c`)
+  cluster's `DamageAirshipFireball`/`AirshipStateFall`.
+- **`GetActorZ`/`GetActorY`/`GetActorX`** (`src/graphics/actor_part56.c`)
   - trivial `self+0x24`/`0x20`/`0x1c` getters.
 - **`sub_802AA4C`** (`src/graphics/actor_part52.c`) - trivial `self+0x2c`
   byte getter.
 - **`DestroyActor`** (`src/graphics/actor_part52.c`) - teardown: marks
   `self` "dead", unlinks it from the circular list (the same shape as
-  `sub_802C19C`'s unlink sequence in `actor_part19.c`), and frees it
+  `DestroyPolarPlayer`'s unlink sequence in `actor_part19.c`), and frees it
   when requested.
-- **`sub_802AA80`/`sub_802AAB4`/`sub_802AAFC`** (`src/graphics/actor_part52.c`)
+- **`IsSpawnCollected`/`MarkSpawnCollected`/`ClearCollectedSpawns`** (`src/graphics/actor_part52.c`)
   - the fixed 15-slot `gUnknown_03001428`/`gUnknown_03000888` registry's
   search/append/clear trio. Both search loops needed the counter/array-
-  pointer pinned to `r2`/`r1` (`sub_802AA80`) or `self` pinned to `r3`
+  pointer pinned to `r2`/`r1` (`IsSpawnCollected`) or `self` pinned to `r3`
   with the loop's final store re-reading `gUnknown_03000888` fresh
-  instead of reusing the already-checked value (`sub_802AAB4`) - a
+  instead of reusing the already-checked value (`MarkSpawnCollected`) - a
   register choice this compiler picked differently depending on how many
   *other* functions preceded it in the same translation unit, discovered
   only after the full link shifted these two functions by 4 bytes (see
   "A note on isolated-compile confidence" below).
-- **`sub_802AB08`/`sub_802AB34`** (`src/graphics/actor_part52.c`) - the
+- **`RestoreActorPaletteCycle`/`SaveActorPaletteCycle`** (`src/graphics/actor_part52.c`) - the
   palette-cycle cursor/bound save/restore pair.
-- **`sub_802ABC8`/`sub_802ABFC`** (`src/graphics/actor_part54.c`) - the
+- **`SetActorPaletteCycle`/`EnableActorPaletteCycle`** (`src/graphics/actor_part54.c`) - the
   palette-cycle cluster's remaining seed/arm-disarm pair, non-adjacent to
-  `actor_part52.c` since `sub_802AB58`'s own object (`actor_part53.o`)
+  `actor_part52.c` since `UpdateActorPaletteCycle`'s own object (`actor_part53.o`)
   sits between them.
 - **`DrawActor`** (`src/graphics/actor_part55.c`) - the OAM
   draw/scale routine: computes an OBJ scale factor and on-screen X/Y
@@ -160,7 +160,7 @@ only the tail continuation `..._ac28.s` remains.
   documented for `GetCompletionPercent`/`sub_8001214` in docs/matching.md. No
   caller of this function has been matched yet to confirm whether the
   return value is actually used.
-- **`sub_802AB58`** (`src/graphics/actor_part53.c`) - the palette-cycle
+- **`UpdateActorPaletteCycle`** (`src/graphics/actor_part53.c`) - the palette-cycle
   cursor-advance DMA step. Two gaps: the cursor-advance tail (no C
   phrasing tried - plain if/else-if/else, `goto`-linearized with an
   explicit `result` copy, cached-address locals, register-pinned address
@@ -195,7 +195,7 @@ padding gotcha as elsewhere in this project.
 
 ## A note on isolated-compile confidence
 
-`sub_802AA80`/`sub_802AAB4` both compiled to a register choice matching
+`IsSpawnCollected`/`MarkSpawnCollected` both compiled to a register choice matching
 the ROM when tested alone in an early combined file, then *silently*
 picked a different register (still correct, still the right size, just
 the wrong specific register) once later functions were split out of

@@ -7,7 +7,7 @@
  * `self+0x10`/`self+0x12`, an accumulator at `self+8`, a "part table"
  * pointer at `self+0`), part of a second boss-weapon "spawn/pre-
  * attack" singleton whose own flags/counters live at
- * `gUnknown_030014E0`-`gUnknown_03001518` - a different singleton
+ * `gUnknown_030014E0`-`gJetpackPlayerTiles` - a different singleton
  * cluster than issue #58's `gAirship` one and issue #62's
  * `gHovercraft` one. See docs/matching/issue-56-0x0802f0dc-actor.md
  * and docs/status/actor.md. */
@@ -23,17 +23,17 @@ extern void *gLevelState;
 extern u8 gUnknown_03001504;
 extern u8 gUnknown_03001506;
 extern u8 gUnknown_03001507;
-extern s32 gUnknown_03001508;
-extern s32 gUnknown_0300150C;
-extern s32 gUnknown_030014E4;
+extern s32 gJetpackPlayerVelY;
+extern s32 gJetpackPlayerVelX;
+extern s32 gJetpackPlayerMaxHp;
 extern s32 gUnknown_030014EC;
 extern s32 gUnknown_030014F0;
 extern s32 gUnknown_030014F8;
-extern s32 gUnknown_030014FC;
+extern s32 gJetpackQueuedWumpa;
 
 struct actor_hp {
     struct actor_self base;
-    s32 hp;             // 0x54 - refilled by sub_802F164, capped at gUnknown_030014E4
+    s32 hp;             // 0x54 - refilled by sub_802F164, capped at gJetpackPlayerMaxHp
 };
 
 /* Constructor/reset: while the singleton flag (`gUnknown_03001506`) is
@@ -50,8 +50,8 @@ void sub_802F0DC(void *selfArg)
         gUnknown_03001504 = 1;
         gUnknown_03001506 = 1;
         SetCellAnimSpeed(0x3c);
-        gUnknown_03001508 = zero;
-        gUnknown_0300150C = zero;
+        gJetpackPlayerVelY = zero;
+        gJetpackPlayerVelX = zero;
         {
             register s32 five asm("r0") = 5;
             register s32 four asm("r1") = 4;
@@ -84,9 +84,9 @@ void sub_802F0DC(void *selfArg)
  * flag at `gLevelState+0x8c` is clear and the `gUnknown_030014EC`
  * frame-timer has advanced far enough (>0x14 frames since the last pass),
  * drives a 5-case round-robin (`gUnknown_030014F0`, wrapping 0-4) once
- * every >0xbe-frame window: cases 0-2 feed the `gUnknown_030014FC` reward
+ * every >0xbe-frame window: cases 0-2 feed the `gJetpackQueuedWumpa` reward
  * accumulator (by 1/5/0x14) while not paused, case 3 advances `self+0x54`'s
- * own accumulator (clamped to `gUnknown_030014E4`) while the other
+ * own accumulator (clamped to `gJetpackPlayerMaxHp`) while the other
  * singleton flag is clear, and case 4 fires a one-shot effect plus a cue.
  * Every path through the round-robin (taken or not) re-samples the
  * frame timer and advances the round-robin index. */
@@ -124,8 +124,8 @@ void sub_802F164(void *selfArg, s32 xArg, s32 yArg)
     self->base.state = 6;
 
     {
-        register s32 *p1508 asm("r2") = &gUnknown_03001508;
-        register s32 *p150c asm("r1") = &gUnknown_0300150C;
+        register s32 *p1508 asm("r2") = &gJetpackPlayerVelY;
+        register s32 *p150c asm("r1") = &gJetpackPlayerVelX;
         register s32 zero asm("r0") = 0;
 
         *p150c = zero;
@@ -149,31 +149,31 @@ void sub_802F164(void *selfArg, s32 xArg, s32 yArg)
     switch (gUnknown_030014F0) {
     case 0:
         if (*((u8 *)gLevelState + 0x8c) == 0) {
-            if (gUnknown_030014FC == 0) {
+            if (gJetpackQueuedWumpa == 0) {
                 gUnknown_030014F8 = 0xf;
             }
-            gUnknown_030014FC += 1;
+            gJetpackQueuedWumpa += 1;
         }
         break;
     case 1:
         if (*((u8 *)gLevelState + 0x8c) == 0) {
-            if (gUnknown_030014FC == 0) {
+            if (gJetpackQueuedWumpa == 0) {
                 gUnknown_030014F8 = 0xf;
             }
-            gUnknown_030014FC += 5;
+            gJetpackQueuedWumpa += 5;
         }
         break;
     case 2:
         if (*((u8 *)gLevelState + 0x8c) == 0) {
-            if (gUnknown_030014FC == 0) {
+            if (gJetpackQueuedWumpa == 0) {
                 gUnknown_030014F8 = 0xf;
             }
-            gUnknown_030014FC += 0x14;
+            gJetpackQueuedWumpa += 0x14;
         }
         break;
     case 3:
         if (gUnknown_03001506 == 0) {
-            register s32 *maxPtr asm("r4") = &gUnknown_030014E4;
+            register s32 *maxPtr asm("r4") = &gJetpackPlayerMaxHp;
             register s32 max asm("r1") = *maxPtr;
             register s32 mul asm("r0") = 0x14;
             s32 v = self->hp + __divsi3(max * mul, 0x64);

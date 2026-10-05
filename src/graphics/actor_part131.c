@@ -8,7 +8,7 @@
 /* GitHub issue #64 (0x08034AA4-0x080354E0, 13 functions). Continues
  * straight on from issue #63's fade-overlay cluster (actor_part87.c/
  * actor_part88.c/actor_part89.c) - the first five functions here
- * (DrawContinuePrompt/sub_8034C40/CommitContinuePromptFrame/DestroyContinuePrompt/RunContinuePrompt) are more
+ * (DrawContinuePrompt/GetContinuePromptBlink/CommitContinuePromptFrame/DestroyContinuePrompt/RunContinuePrompt) are more
  * methods on that same `struct fade_overlay` "self" object, then the
  * chunk moves on to the credits screen (RunCredits, read at first as
  * a "between-level map/progress screen") (see docs/rom_map.md's
@@ -92,7 +92,7 @@ extern void FlushVramDmaQueue(void);
  * 0x28/0x29/0x2a) via `self->icons->record->slots[6]`'s position
  * (mode 0x28 twice - once for the plain label, once conditionally for
  * a highlighted "cursor" redraw keyed on `self->selection`), applying
- * `sub_8034C40`'s blink mask to each option's own OAM-hide byte via
+ * `GetContinuePromptBlink`'s blink mask to each option's own OAM-hide byte via
  * `FontSetPalette` in between, and finally re-commits the OAM shadow
  * buffer.
  *
@@ -110,7 +110,7 @@ extern void RewindObjVram(struct vram_upload_cursor *arg0);
 extern s32 FontSetPalette(void *mgr, u8 arg1);
 extern s32 GetUiText(s32 arg0);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
-s32 sub_8034C40(struct fade_overlay *self, s32 mode);
+s32 GetContinuePromptBlink(struct fade_overlay *self, s32 mode);
 
 /* `record->slots[n]` on an icon manager, called with `label` (slot 0
  * measures and returns the pixel width, slot 2 draws). */
@@ -137,7 +137,7 @@ void DrawContinuePrompt(struct fade_overlay *self)
     FontSetPalette(self->icons, 0);
     set_icon_mgr_pos(self->icons, 0x88 - w, 0x87);
     ICON_TEXT_CALL(self->icons, 2, GetUiText(0x28));
-    FontSetPalette(self->icons, sub_8034C40(self, 0));
+    FontSetPalette(self->icons, GetContinuePromptBlink(self, 0));
     if (self->selection == 0)
     {
         set_icon_mgr_pos(self->icons, 0x90, 0x87);
@@ -145,7 +145,7 @@ void DrawContinuePrompt(struct fade_overlay *self)
     }
     set_icon_mgr_pos(self->icons, 0x98, 0x87);
     ICON_TEXT_CALL(self->icons, 2, GetUiText(0x29));
-    FontSetPalette(self->icons, sub_8034C40(self, 1));
+    FontSetPalette(self->icons, GetContinuePromptBlink(self, 1));
     if (self->selection == 1)
     {
         set_icon_mgr_pos(self->icons, 0x90, 0x91);
@@ -159,13 +159,13 @@ void DrawContinuePrompt(struct fade_overlay *self)
 asm(".align 2, 0");
 
 /* --------------------------------------------------------------------
- * sub_8034C40 - blink/toggle helper: returns 1 immediately if `mode`
+ * GetContinuePromptBlink - blink/toggle helper: returns 1 immediately if `mode`
  * isn't the dialog's current selection; otherwise advances the
  * selected item's blink counter and returns bit 1 of its pre-advance
  * value (a 0/2 flicker mask consumed by DrawContinuePrompt to hide the label
  * every other frame-pair).
  * ------------------------------------------------------------------ */
-s32 sub_8034C40(struct fade_overlay *self, s32 mode)
+s32 GetContinuePromptBlink(struct fade_overlay *self, s32 mode)
 {
     register s32 result asm("r0");
     s32 counter;

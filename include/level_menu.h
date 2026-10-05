@@ -151,7 +151,7 @@ union dispcnt
     u16 raw;
 };
 
-/* Method table of a page entry (`struct item`, sub_801DFEC). */
+/* Method table of a page entry (`struct item`, CreateLevelSelectEntry). */
 struct item_vtable
 {
     struct method unk_00;
@@ -162,14 +162,14 @@ struct item_vtable
     struct method m28;          // 0x28 - destructor
 };
 
-/* One level entry on the current page (sub_801DFEC, 0x14 bytes). */
+/* One level entry on the current page (CreateLevelSelectEntry, 0x14 bytes). */
 struct item
 {
     u8 unk_00[0x10];
     struct item_vtable *vtable; // 0x10
 };
 
-/* BG1, the page strip (sub_801D7F8). The first 0x10 bytes are the
+/* BG1, the page strip (CreateLevelSelectPageBg). The first 0x10 bytes are the
  * InitBgSetup background descriptor (BGxCNT at +0x0C, GetBgSetupControl). */
 struct page_bg
 {
@@ -242,10 +242,10 @@ struct level_menu
     s32 levelId;                // 0x10 - gLevelTable index
     s32 nameText;               // 0x14 - the level name's text
     struct xy_pair *positions;  // 0x18 - cursor position per index
-    struct page_bg *bg1;        // 0x1C - sub_801D7F8, BG1
+    struct page_bg *bg1;        // 0x1C - CreateLevelSelectPageBg, BG1
     struct icon_bg *bg2;        // 0x20 - InitZoomBg, BG2 (icon layer)
     struct item *items[6];      // 0x24
-    void *panel;                // 0x3C - sub_801E04C, the cursor panel
+    void *panel;                // 0x3C - CreateLevelSelectCursor, the cursor panel
     struct sprite *sprites[10]; // 0x40
     char timeText[9];           // 0x68 - best time
     char recordText[9];         // 0x71 - next threshold to beat

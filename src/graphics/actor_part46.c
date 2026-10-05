@@ -4,7 +4,7 @@
  * file's header comment and docs/matching/issue-56-0x0802f0dc-actor.md. */
 
 /* Trivial constant predicate - always "true". */
-s32 sub_802FA34(void)
+s32 IsJetpackShotUnshootable(void)
 {
     return 1;
 }

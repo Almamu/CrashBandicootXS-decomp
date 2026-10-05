@@ -1,22 +1,22 @@
 #include "core.h"
 #include "actor_self.h"
 
-/* 0x0802FBF0-0x08030530 (issue #57, plus issue #58's sub_8030334/
- * sub_803044C): the methods of three small C++ actor classes built on
+/* 0x0802FBF0-0x08030530 (issue #57, plus issue #58's AirshipFireballStateOrbit/
+ * AirshipFireballStateSpiralIn): the methods of three small C++ actor classes built on
  * the shared `struct actor_self` object (include/actor_self.h), plus the
  * orbiting-companion position updaters that open issue #58's
  * boss-weapon cluster. Each class is identified by the method table its
  * constructor installs at +0x50:
  *
- * - gJetpackPlaneVtable (`struct jetpack_plane`, AimJetpackPlane-sub_802FF00):
+ * - gJetpackPlaneVtable (`struct jetpack_plane`, AimJetpackPlane-IsJetpackPlaneUnshootable):
  *   a hopping pickup/hazard that ballistically jumps between the
  *   level's sub-effect target points (`sub_802A5xx` accessors - see
  *   docs/rom_map.md), with a "dying" flag and 4 hit points.
- * - gJetpackBomberVtable (`struct jetpack_bomber`, CreateJetpackBomber-sub_8030290):
+ * - gJetpackBomberVtable (`struct jetpack_bomber`, CreateJetpackBomber-IsJetpackBomberUnshootable):
  *   a 2-hit-point object whose spawn kind (4-9) picks its initial
  *   state; its per-state movers circle a home point on the shared
  *   sine table gSineTable or drift toward the player.
- * - gJetpackCannonballVtable (`struct jetpack_cannonball`, UpdateJetpackCannonball-sub_8030330):
+ * - gJetpackCannonballVtable (`struct jetpack_cannonball`, UpdateJetpackCannonball-IsJetpackCannonballUnshootable):
  *   a straight-line projectile that damages the player on contact.
  *
  * Method-table and member-pointer calls are real indirect calls
@@ -32,7 +32,7 @@ extern s32 __divsi3(s32 a, s32 b);
 extern s32 GetAnimFrameBaseOffset(void *self);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void InitActorPart(void *self, void *part, s32 b, s32 c, s32 d);
-extern u8 sub_802A6EC(void *self);
+extern u8 IsTouchingPlayer(void *self);
 extern void UpdateActor(void *self);
 /* Defined as a no-argument counter in actor_part44.c, but the ROM passes
  * the player object here (a C++ method ignoring its `this`). */
@@ -42,8 +42,8 @@ extern s32 gUnknown_0300089C[];
 extern void *gAudioContext;
 extern struct actor_self *gActorList;
 extern s16 gSineTable[];
-extern struct actor_pmf gStaticData_0817C260[];
-extern struct actor_pmf gStaticData_0817C280[];
+extern struct actor_pmf gJetpackPlaneStateFuncs[];
+extern struct actor_pmf gJetpackBomberStateFuncs[];
 extern u8 gJetpackPlaneVtable[];
 extern u8 gJetpackBomberVtable[];
 extern u8 gJetpackCannonballVtable[];
@@ -193,7 +193,7 @@ void *CreateJetpackPlane(struct jetpack_plane *self, void *part, s32 b, s32 c, s
 }
 
 /* Applies Y acceleration, capped at 0x1400. */
-void sub_802FE04(struct jetpack_plane *self)
+void JetpackPlaneStateFall(struct jetpack_plane *self)
 {
     self->velY += self->accY;
     if (self->velY > 0x1400) {
@@ -230,7 +230,7 @@ void sub_802FE58(struct jetpack_plane *self)
 
 /* Integrates acceleration into velocity; aims the next hop once the
  * step count runs out. */
-void sub_802FE78(struct jetpack_plane *self)
+void JetpackPlaneStateFly(struct jetpack_plane *self)
 {
     self->velX += self->accX;
     self->velY += self->accY;
@@ -239,14 +239,14 @@ void sub_802FE78(struct jetpack_plane *self)
     }
 }
 
-/* Per-frame update: calls this state's gStaticData_0817C260 handler. */
+/* Per-frame update: calls this state's gJetpackPlaneStateFuncs handler. */
 void sub_802FEA4(struct jetpack_plane *self)
 {
-    ACTOR_PMF_CALL(&self->base, gStaticData_0817C260);
+    ACTOR_PMF_CALL(&self->base, gJetpackPlaneStateFuncs);
 }
 
 /* Getter for the dying flag. */
-u8 sub_802FF00(struct jetpack_plane *self)
+u8 IsJetpackPlaneUnshootable(struct jetpack_plane *self)
 {
     return self->dying;
 }
@@ -254,7 +254,7 @@ u8 sub_802FF00(struct jetpack_plane *self)
 /* Constructor: 2 hit points, home point = (b, c); the spawn record's
  * kind byte (4-9) selects the starting state (0-5). `part`/`b`/`c` and
  * the constant 2 are pinned to the ROM's r8/r5/r6/r4, the stack
- * argument to r0 after them (same fix as sub_80305F8), and the kind
+ * argument to r0 after them (same fix as CreateAirshipFireball), and the kind
  * byte is read through r1 as in the ROM (docs/workflow.md). */
 void *CreateJetpackBomber(struct jetpack_bomber *self, u8 *part, s32 b, s32 c, s32 d)
 {
@@ -300,14 +300,14 @@ void *CreateJetpackBomber(struct jetpack_bomber *self, u8 *part, s32 b, s32 c, s
 
 /* Per-frame update: while alive, ticks sub_802F46C and on player
  * contact damages the player (strength 10) and switches to the dying
- * state 6. Then runs this state's gStaticData_0817C280 handler; once
+ * state 6. Then runs this state's gJetpackBomberStateFuncs handler; once
  * the dying animation is done, calls its own "destroy" method,
  * otherwise sinks slightly and runs the standard UpdateActor step. */
 void UpdateJetpackBomber(struct jetpack_bomber *self)
 {
     if (self->base.state != 6) {
         sub_802F46C(gActorList);
-        if (self->base.state != 6 && sub_802A6EC(self)) {
+        if (self->base.state != 6 && IsTouchingPlayer(self)) {
             ACTOR_VCALL(gActorList, m20, 10);
             self->base.palette = 4;
             PlaySfx(gAudioContext, 4, 0x100);
@@ -315,7 +315,7 @@ void UpdateJetpackBomber(struct jetpack_bomber *self)
         }
     }
 
-    ACTOR_PMF_CALL(&self->base, gStaticData_0817C280);
+    ACTOR_PMF_CALL(&self->base, gJetpackBomberStateFuncs);
 
     if (self->base.state == 6 && self->base.animDone != 0) {
         if (self != NULL) {
@@ -328,7 +328,7 @@ void UpdateJetpackBomber(struct jetpack_bomber *self)
 }
 
 /* Eases `self` 1/32 of the way toward the player. */
-void sub_80300B0(struct jetpack_bomber *self)
+void HomeJetpackBomber(struct jetpack_bomber *self)
 {
     struct actor_self *player = gActorList;
 
@@ -341,14 +341,14 @@ void nullsub_28(struct jetpack_bomber *self)
 }
 
 /* Moves `self` down by 0x88. */
-void sub_80300D8(struct jetpack_bomber *self)
+void JetpackBomberStateDrop(struct jetpack_bomber *self)
 {
     self->base.z -= 0x88;
 }
 
 /* Circles `self` around its home point (radius 60) while above a depth
  * threshold, otherwise homes in on the player. */
-void sub_80300E0(struct jetpack_bomber *self)
+void JetpackBomberStateCircle(struct jetpack_bomber *self)
 {
     if (self->base.depth > 0x35ff) {
         s16 *sine = gSineTable;
@@ -357,35 +357,35 @@ void sub_80300E0(struct jetpack_bomber *self)
         self->base.x = self->homeX + sine[(angle + 0x40) & 0xff] * 60;
         self->base.y = self->homeY + sine[angle] * 60;
     } else {
-        sub_80300B0(self);
+        HomeJetpackBomber(self);
     }
 }
 
-/* Horizontal-only variant of sub_80300E0 (radius 80, slower phase). */
-void sub_803013C(struct jetpack_bomber *self)
+/* Horizontal-only variant of JetpackBomberStateCircle (radius 80, slower phase). */
+void JetpackBomberStateSwingHorizontal(struct jetpack_bomber *self)
 {
     if (self->base.depth > 0x35ff) {
         self->base.x = self->homeX + gSineTable[((((self->base.stateTime * 10) >> 4) & 0xff) + 0x40) & 0xff] * 80;
     } else {
-        sub_80300B0(self);
+        HomeJetpackBomber(self);
     }
 }
 
-/* Vertical-only variant of sub_80300E0. */
-void sub_8030188(struct jetpack_bomber *self)
+/* Vertical-only variant of JetpackBomberStateCircle. */
+void JetpackBomberStateBobVertical(struct jetpack_bomber *self)
 {
     if (self->base.depth > 0x35ff) {
         self->base.y = self->homeY + gSineTable[((self->base.stateTime << 4) >> 4) & 0xff] * 60;
     } else {
-        sub_80300B0(self);
+        HomeJetpackBomber(self);
     }
 }
 
 /* Homes in on the player only while at or below the depth threshold. */
-void sub_80301CC(struct jetpack_bomber *self)
+void JetpackBomberStateHome(struct jetpack_bomber *self)
 {
     if (self->base.depth <= 0x35ff) {
-        sub_80300B0(self);
+        HomeJetpackBomber(self);
     }
 }
 
@@ -403,14 +403,14 @@ void DamageJetpackBomber(struct jetpack_bomber *self, s32 damage)
     }
 }
 
-/* Calls this state's gStaticData_0817C280 handler. */
+/* Calls this state's gJetpackBomberStateFuncs handler. */
 void sub_8030234(struct jetpack_bomber *self)
 {
-    ACTOR_PMF_CALL(&self->base, gStaticData_0817C280);
+    ACTOR_PMF_CALL(&self->base, gJetpackBomberStateFuncs);
 }
 
 /* Getter for the +0x60 flag byte. */
-u8 sub_8030290(struct jetpack_bomber *self)
+u8 IsJetpackBomberUnshootable(struct jetpack_bomber *self)
 {
     return self->unk_60;
 }
@@ -423,7 +423,7 @@ void UpdateJetpackCannonball(struct jetpack_cannonball *self)
     self->base.x += self->velX;
     self->base.y += self->velY;
     self->base.z += -0x100;
-    if (sub_802A6EC(self)) {
+    if (IsTouchingPlayer(self)) {
         ACTOR_VCALL(gActorList, m20, 2);
         if (self != NULL) {
             ACTOR_VCALL(&self->base, destroy, 3);
@@ -452,7 +452,7 @@ void *CreateJetpackCannonball(struct jetpack_cannonball *self, void *part, s32 b
 }
 
 /* Constant-true predicate. */
-s32 sub_8030330(struct jetpack_cannonball *self)
+s32 IsJetpackCannonballUnshootable(struct jetpack_cannonball *self)
 {
     return 1;
 }
@@ -467,7 +467,7 @@ s32 sub_8030330(struct jetpack_cannonball *self)
  * sine-table pointer pinned to r3/r4/r5 so that gcc neither folds
  * `px - (cx - 0x600)` into `(px + 0x600) - cx` nor moves the loads
  * (docs/workflow.md). */
-void sub_8030334(struct actor_orbit *self)
+void AirshipFireballStateOrbit(struct actor_orbit *self)
 {
     s32 angle;
     s32 t;
@@ -506,7 +506,7 @@ void sub_8030334(struct actor_orbit *self)
         ACTOR_SET_STATE(&self->base, 1, 0);
         self->base.stateTime = t;
     }
-    if (sub_802A6EC(self)) {
+    if (IsTouchingPlayer(self)) {
         ACTOR_VCALL(gActorList, m20, 6);
         self->base.palette = 4;
         PlaySfx(gAudioContext, 4, 0x100);
@@ -514,10 +514,10 @@ void sub_8030334(struct actor_orbit *self)
     }
 }
 
-/* Spiral-in variant of sub_8030334 (issue #58): the radius shrinks by
+/* Spiral-in variant of AirshipFireballStateOrbit (issue #58): the radius shrinks by
  * 0x100 per frame down to 0, the centre eases 1/16 of the way, and
- * there is no depth check. Same register pins as sub_8030334. */
-void sub_803044C(struct actor_orbit *self)
+ * there is no depth check. Same register pins as AirshipFireballStateOrbit. */
+void AirshipFireballStateSpiralIn(struct actor_orbit *self)
 {
     s32 angle;
 
@@ -550,7 +550,7 @@ void sub_803044C(struct actor_orbit *self)
         self->base.x = cx + ((sine[(angle + 0x40) & 0xff] * self->radius) >> 8);
         self->base.y = cy + ((sine[angle] * self->radius) >> 8);
     }
-    if (sub_802A6EC(self)) {
+    if (IsTouchingPlayer(self)) {
         ACTOR_VCALL(gActorList, m20, 6);
         self->base.palette = 4;
         PlaySfx(gAudioContext, 4, 0x100);

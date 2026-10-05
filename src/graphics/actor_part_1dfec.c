@@ -5,9 +5,9 @@
 /* GitHub issue #29: 0x0801DFEC-0x0801E578, the whole of the former
  * asm/code_3_2_17_188d0_1dfec.s.
  *
- * - sub_801DFEC: `struct level_item`'s constructor (its methods end
+ * - CreateLevelSelectEntry: `struct level_item`'s constructor (its methods end
  *   issue #28, actor_part_1da38.c).
- * - sub_801E04C-sub_801E524: `struct cursor_panel`, the level-select
+ * - CreateLevelSelectCursor-DestroyLevelSelectCursor: `struct cursor_panel`, the level-select
  *   screen's cursor (`level_menu.panel`, 0x54 bytes). It glides between
  *   entries along a Bresenham line (two steps per frame), plays an idle
  *   animation cycle at random intervals, and grows in (state 4) / shrinks
@@ -20,10 +20,10 @@
  *
  * UNUSED - no `bl`/`.4byte` reference in asm/, data/ or src/, and no
  * Thumb pointer anywhere in the ROM: sub_801E3D4, sub_801E3E4,
- * sub_801E4E4 (sub_801E408 has it inlined). Matched anyway. */
+ * sub_801E4E4 (ParkLevelSelectCursor has it inlined). Matched anyway. */
 
 /* One hardware OAM entry. The matrix number is split in three because
- * the ROM writes it three bits + one + one (sub_801E2BC). */
+ * the ROM writes it three bits + one + one (DrawLevelSelectCursor). */
 struct oam_attrs
 {
     u32 y:8;            // 0x00
@@ -62,15 +62,15 @@ struct oam_shadow_buffer
     struct oam_entry entries[128];
 };
 
-/* The level-select cursor (sub_801E04C, 0x54 bytes). */
+/* The level-select cursor (CreateLevelSelectCursor, 0x54 bytes). */
 struct cursor_panel
 {
     struct bresenham_line line; // 0x00 - (x0, y0) is the position
     struct sprite *part;        // 0x28
     s32 timer;                  // 0x2C - frames to the next idle cycle
-    s32 state;                  // 0x30 - see sub_801E190
+    s32 state;                  // 0x30 - see UpdateLevelSelectCursor
     struct oam_attrs oam;       // 0x34
-    s32 speed;                  // 0x3C - zoom step (sub_801E480)
+    s32 speed;                  // 0x3C - zoom step (MoveLevelSelectCursor)
     s32 scale;                  // 0x40 - 0x100 = 1:1
     /* ObjAffineSet source */
     s16 sx;                     // 0x44
@@ -95,11 +95,11 @@ extern u8 gStaticData_086377C0[];
 extern void AddOamEntry(struct oam_shadow_buffer *buf, struct oam_attrs *oam);
 extern void ObjAffineSet(void *src, void *dst, s32 count, s32 stride);
 
-void sub_801E190(struct cursor_panel *self);
-void sub_801E3A4(struct cursor_panel *self);
-void sub_801E43C(struct cursor_panel *self);
-void sub_801E480(struct cursor_panel *self, s32 x, s32 y);
-void sub_801E4F4(struct cursor_panel *self, s32 x, s32 y);
+void UpdateLevelSelectCursor(struct cursor_panel *self);
+void SetLevelSelectCursorMatrix(struct cursor_panel *self);
+void GlideLevelSelectCursor(struct cursor_panel *self);
+void MoveLevelSelectCursor(struct cursor_panel *self, s32 x, s32 y);
+void SetLevelSelectCursorPos(struct cursor_panel *self, s32 x, s32 y);
 void sub_801E504(struct cursor_panel *self);
 
 static inline void ResetIdleTimer(struct cursor_panel *self)
@@ -109,7 +109,7 @@ static inline void ResetIdleTimer(struct cursor_panel *self)
 
 static inline void MoveToPos(struct cursor_panel *self, struct xy *pos)
 {
-    sub_801E480(self, pos->x, pos->y);
+    MoveLevelSelectCursor(self, pos->x, pos->y);
 }
 
 /* One affine parameter; OBJ matrix `m` is entries 4m..4m+3. An inline
@@ -119,9 +119,9 @@ static inline void SetAffineParam(struct oam_shadow_buffer *buf, s32 n, u16 v)
     buf->entries[n].affineParam = v;
 }
 
-struct level_item *sub_801DFEC(struct level_item *self)
+struct level_item *CreateLevelSelectEntry(struct level_item *self)
 {
-    self->vtable = gStaticData_087E4BAC;
+    self->vtable = gLevelSelectEntryVtable;
     self->selected = 0;
     self->frame = sub_8008904(sub_8026EDC(0x40));
     self->frame->anim = AnimTable(0x24C);
@@ -132,7 +132,7 @@ struct level_item *sub_801DFEC(struct level_item *self)
     return self;
 }
 
-struct cursor_panel *sub_801E04C(struct cursor_panel *self)
+struct cursor_panel *CreateLevelSelectCursor(struct cursor_panel *self)
 {
     struct sprite *p = sub_8008904(sub_8026EDC(0x40));
 
@@ -141,7 +141,7 @@ struct cursor_panel *sub_801E04C(struct cursor_panel *self)
     SetAnim(p, 0);
     self->part->palette = sub_800815C(self->part);
     LockPalette(gPaletteCache, PART_RECORD(self->part).tileRecord);
-    sub_801E4F4(self, 0x78, 0x35);
+    SetLevelSelectCursorPos(self, 0x78, 0x35);
     self->oam.y = self->line.y0 - 0x20;
     self->oam.affineMode = 1;
     self->oam.objMode = 0;
@@ -166,9 +166,9 @@ struct cursor_panel *sub_801E04C(struct cursor_panel *self)
 /* Per-frame update. Steps the glide; states 0-3 are the idle animation
  * cycle (0 waits for `timer`, then plays gStaticData_0816C634[1..3] and
  * back to [0]), 4 grows the cursor to 1:1, 5 shrinks it away. */
-void sub_801E190(struct cursor_panel *self)
+void UpdateLevelSelectCursor(struct cursor_panel *self)
 {
-    sub_801E43C(self);
+    GlideLevelSelectCursor(self);
     switch (self->state)
     {
     case 0:
@@ -232,7 +232,7 @@ void sub_801E190(struct cursor_panel *self)
 
 /* Draw step. While growing/shrinking the cursor is drawn by hand as an
  * affine OBJ with its own matrix; otherwise the sprite part draws it. */
-void sub_801E2BC(struct cursor_panel *self)
+void DrawLevelSelectCursor(struct cursor_panel *self)
 {
     sub_800737C(self->part, self->line.x0, self->line.y0);
     switch (self->state)
@@ -248,7 +248,7 @@ void sub_801E2BC(struct cursor_panel *self)
             self->oam.matrixLo = idx;
             self->oam.matrixBit3 = (idx >> 3) & 1;
             self->oam.matrixBit4 = (idx >> 4) & 1;
-            sub_801E3A4(self);
+            SetLevelSelectCursorMatrix(self);
             SetAffineParam(gOamBuffer, idx * 4 + 0, self->matrix[0]);
             SetAffineParam(gOamBuffer, idx * 4 + 1, self->matrix[1]);
             SetAffineParam(gOamBuffer, idx * 4 + 2, self->matrix[2]);
@@ -263,7 +263,7 @@ void sub_801E2BC(struct cursor_panel *self)
 }
 
 /* Builds the OBJ affine matrix for the current zoom. */
-void sub_801E3A4(struct cursor_panel *self)
+void SetLevelSelectCursorMatrix(struct cursor_panel *self)
 {
     u16 s = 0x10000 / self->scale;
 
@@ -285,16 +285,16 @@ u8 sub_801E3E4(struct cursor_panel *self)
 }
 
 /* Starts the shrink-away. */
-void sub_801E3F4(struct cursor_panel *self)
+void HideLevelSelectCursor(struct cursor_panel *self)
 {
     self->state = 5;
     self->scale = 0x100;
-    sub_801E190(self);
+    UpdateLevelSelectCursor(self);
 }
 
 /* Parks the cursor at the bottom-left or bottom-right corner, whichever
  * side of the screen it is on (page turn). */
-void sub_801E408(struct cursor_panel *self)
+void ParkLevelSelectCursor(struct cursor_panel *self)
 {
     struct xy pos;
 
@@ -308,7 +308,7 @@ void sub_801E408(struct cursor_panel *self)
 }
 
 /* Glide: two Bresenham steps per frame towards (x1, y1). */
-void sub_801E43C(struct cursor_panel *self)
+void GlideLevelSelectCursor(struct cursor_panel *self)
 {
     s32 i;
 
@@ -320,7 +320,7 @@ void sub_801E43C(struct cursor_panel *self)
 }
 
 /* Arrived at the glide target. */
-u8 sub_801E464(struct cursor_panel *self)
+u8 HasLevelSelectCursorArrived(struct cursor_panel *self)
 {
     u8 done = FALSE;
 
@@ -331,7 +331,7 @@ u8 sub_801E464(struct cursor_panel *self)
 
 /* Starts a glide to (x, y). The zoom step is derived from half the
  * distance along the major axis. */
-void sub_801E480(struct cursor_panel *self, s32 x, s32 y)
+void MoveLevelSelectCursor(struct cursor_panel *self, s32 x, s32 y)
 {
     self->line.x1 = x;
     self->line.y1 = y;
@@ -352,14 +352,14 @@ void sub_801E480(struct cursor_panel *self, s32 x, s32 y)
         ResetIdleTimer(self);
 }
 
-/* UNUSED (inlined into sub_801E408). */
+/* UNUSED (inlined into ParkLevelSelectCursor). */
 void sub_801E4E4(struct cursor_panel *self, struct xy *pos)
 {
     MoveToPos(self, pos);
 }
 
 /* Places the cursor at (x, y) at once. */
-void sub_801E4F4(struct cursor_panel *self, s32 x, s32 y)
+void SetLevelSelectCursorPos(struct cursor_panel *self, s32 x, s32 y)
 {
     self->line.x0 = x;
     self->line.y0 = y;
@@ -372,7 +372,7 @@ void sub_801E504(struct cursor_panel *self)
 }
 
 /* Destructor (`level_menu.panel`, called from DestroyLevelSelect). */
-void sub_801E524(struct cursor_panel *self, s32 flags)
+void DestroyLevelSelectCursor(struct cursor_panel *self, s32 flags)
 {
     UnlockPalette(gPaletteCache, PART_RECORD(self->part).tileRecord);
     DELETE_PART(self->part);

@@ -6,15 +6,15 @@
  * file's header comment and docs/matching/issue-56-0x0802f0dc-actor.md.
  * This file covers the whole contiguous run of accessors/accumulator-
  * drivers/state-transition helpers for the singleton and its `self`
- * object between the parked `sub_802F338` and `sub_802F748`.
+ * object between the parked `AllocJetpackPlayerTiles` and `sub_802F748`.
  *
  * The animation-reset blocks (`anim`/`zero1`/`zero2` register groups)
  * store through `*(T *)&self->field` casts: plain member stores let
  * gcc move the zero loads (docs/workflow.md step 7). */
 
 /* `self`: the common actor prefix plus a meter that fills up to
- * `gUnknown_030014E4` (`sub_802F50C`) and reads back as a percentage
- * of 120 (`sub_802F47C`). */
+ * `gJetpackPlayerMaxHp` (`HealJetpackPlayer`) and reads back as a percentage
+ * of 120 (`GetJetpackPlayerHpPercent`). */
 struct meter_actor {
     struct actor_self base;
     s32 meter;                  // 0x54
@@ -25,7 +25,7 @@ extern void SpawnJetpackCollectedWumpa(s32 x, s32 y, s32 amount);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern s32 __divsi3(s32 arg0, s32 arg1);
 extern void SetCellAnimSpeed(s32 arg0);
-extern s32 sub_8029748(s32 arg0);
+extern s32 SetActorCheckpoint(s32 arg0);
 extern s32 QueueVramDmaTransfer(void *arg0, void *arg1, u16 arg2, u16 arg3);
 extern s32 FadeBrightness(s32 a, s32 b, s32 c);
 extern s32 sub_802A668(s32 arg0);
@@ -39,28 +39,28 @@ extern u8 gUnknown_03001505;
 extern u8 gUnknown_03001506;
 extern u8 gUnknown_03001507;
 extern s32 gUnknown_030014E0;
-extern s32 gUnknown_030014E4;
+extern s32 gJetpackPlayerMaxHp;
 extern u8 gUnknown_030014E8;
 extern s32 gUnknown_030014F4;
 extern s32 gUnknown_030014F8;
-extern s32 gUnknown_030014FC;
-extern s32 gUnknown_03001508;
-extern void *gUnknown_03001518[2];
+extern s32 gJetpackQueuedWumpa;
+extern s32 gJetpackPlayerVelY;
+extern void *gJetpackPlayerTiles[2];
 extern u8 gStaticData_0817C200[];
-extern u8 gStaticData_087E5144[];
+extern u8 gJetpackPlayerVtable[];
 extern u8 gActorVtable[];
 
-/* Accumulator-drain/reward-dispenser for the `gUnknown_030014FC`
- * accumulator `sub_802F540` fills: while the singleton flag
+/* Accumulator-drain/reward-dispenser for the `gJetpackQueuedWumpa`
+ * accumulator `QueueJetpackWumpa` fills: while the singleton flag
  * (`gUnknown_03001506`) is set, fully drains it via repeated
  * `CollectWumpa` calls; otherwise, once a `gUnknown_030014F8` cooldown
  * elapses, dispenses one of four tiers of reward (via `SpawnJetpackCollectedWumpa` at
  * `self`'s position) sized by the accumulator's own magnitude, and
  * plays a cue. */
-void sub_802F3BC(void *selfArg)
+void DispenseJetpackWumpa(void *selfArg)
 {
     register struct meter_actor *self asm("r1") = selfArg;
-    s32 acc = gUnknown_030014FC;
+    s32 acc = gJetpackQueuedWumpa;
 
     if (acc == 0) {
         return;
@@ -69,8 +69,8 @@ void sub_802F3BC(void *selfArg)
     if (gUnknown_03001506 != 0) {
         do {
             CollectWumpa(gLevelState);
-            gUnknown_030014FC--;
-        } while (gUnknown_030014FC != 0);
+            gJetpackQueuedWumpa--;
+        } while (gJetpackQueuedWumpa != 0);
         return;
     }
 
@@ -83,16 +83,16 @@ void sub_802F3BC(void *selfArg)
 
     if (acc <= 9) {
         SpawnJetpackCollectedWumpa(self->base.x, self->base.y, 1);
-        gUnknown_030014FC -= 1;
+        gJetpackQueuedWumpa -= 1;
     } else if (acc <= 0x13) {
         SpawnJetpackCollectedWumpa(self->base.x, self->base.y, 2);
-        gUnknown_030014FC -= 2;
+        gJetpackQueuedWumpa -= 2;
     } else if (acc <= 0x27) {
         SpawnJetpackCollectedWumpa(self->base.x, self->base.y, 4);
-        gUnknown_030014FC -= 4;
+        gJetpackQueuedWumpa -= 4;
     } else {
         SpawnJetpackCollectedWumpa(self->base.x, self->base.y, 8);
-        gUnknown_030014FC -= 8;
+        gJetpackQueuedWumpa -= 8;
     }
 
     PlaySfx(gAudioContext, 8, 0x100);
@@ -105,14 +105,14 @@ s32 sub_802F46C(void)
 }
 
 /* Threshold check on the `meter` accumulator against
- * `gUnknown_030014E4`'s cap, used as a gate elsewhere in this cluster. */
-s32 sub_802F47C(void *selfArg)
+ * `gJetpackPlayerMaxHp`'s cap, used as a gate elsewhere in this cluster. */
+s32 GetJetpackPlayerHpPercent(void *selfArg)
 {
     struct meter_actor *self = selfArg;
     s32 v;
     s32 r;
 
-    if (gUnknown_030014E4 == 0x64) {
+    if (gJetpackPlayerMaxHp == 0x64) {
         return self->meter;
     }
 
@@ -125,12 +125,12 @@ s32 sub_802F47C(void *selfArg)
 }
 
 /* Forwards `z` plus a fixed offset to
- * `sub_8029748`, discarding the result. */
-void sub_802F4AC(void *selfArg)
+ * `SetActorCheckpoint`, discarding the result. */
+void SetJetpackCheckpoint(void *selfArg)
 {
     struct meter_actor *self = selfArg;
 
-    sub_8029748(self->base.z + 0x7800);
+    SetActorCheckpoint(self->base.z + 0x7800);
 }
 
 /* Trivial byte getter for `gUnknown_030014E8`. */
@@ -141,7 +141,7 @@ u8 sub_802F4C0(void)
 
 /* Countdown timer (`gUnknown_030014F4`) driving a palette-strip
  * animation refresh, ping-ponging the frame index via `__divsi3`
- * the same way `sub_8031744` (actor_part26.c) does for its own strip. */
+ * the same way `AnimateAirshipPalette` (actor_part26.c) does for its own strip. */
 void sub_802F4CC(void)
 {
     if (gUnknown_030014F4 != 0) {
@@ -157,13 +157,13 @@ void sub_802F4CC(void)
 }
 
 /* Advances the `meter` accumulator by a scaled `delta`, clamped to
- * `gUnknown_030014E4`'s cap, while the singleton flag is clear. */
-void sub_802F50C(void *selfArg, s32 delta)
+ * `gJetpackPlayerMaxHp`'s cap, while the singleton flag is clear. */
+void HealJetpackPlayer(void *selfArg, s32 delta)
 {
     struct meter_actor *self = selfArg;
 
     if (gUnknown_03001506 == 0) {
-        s32 max = gUnknown_030014E4;
+        s32 max = gJetpackPlayerMaxHp;
         s32 add = __divsi3(delta * max, 0x64);
         s32 v = self->meter + add;
 
@@ -174,17 +174,17 @@ void sub_802F50C(void *selfArg, s32 delta)
     }
 }
 
-/* Feeds `delta` into the `gUnknown_030014FC` reward accumulator (the
- * one `sub_802F3BC` drains), arming its `gUnknown_030014F8` cooldown
+/* Feeds `delta` into the `gJetpackQueuedWumpa` reward accumulator (the
+ * one `DispenseJetpackWumpa` drains), arming its `gUnknown_030014F8` cooldown
  * the first time it goes from zero - gated on the level state's
  * `timeTrial` flag. Its own first parameter (`self`) is unused. */
-void sub_802F540(void *selfArg, s32 delta)
+void QueueJetpackWumpa(void *selfArg, s32 delta)
 {
     if (gLevelState->timeTrial == 0) {
-        if (gUnknown_030014FC == 0) {
+        if (gJetpackQueuedWumpa == 0) {
             gUnknown_030014F8 = 0xf;
         }
-        gUnknown_030014FC += delta;
+        gJetpackQueuedWumpa += delta;
     }
 }
 
@@ -245,22 +245,22 @@ void sub_802F5AC(void *selfArg)
     }
 }
 
-/* Advances `gUnknown_03001508`'s bounded oscillator by 9 (clamped to
+/* Advances `gJetpackPlayerVelY`'s bounded oscillator by 9 (clamped to
  * +0x140 by absolute value), then fires two one-shot threshold
  * effects on `y` (screamed sfx cue + a `sub_802A668` hazard
  * call). */
 void sub_802F5E4(void *selfArg)
 {
     struct meter_actor *self = selfArg;
-    s32 v = gUnknown_03001508 + 9;
+    s32 v = gJetpackPlayerVelY + 9;
     s32 sign;
 
-    gUnknown_03001508 = v;
+    gJetpackPlayerVelY = v;
     sign = v >> 31;
     v ^= sign;
     v -= sign;
     if (v > 0x140) {
-        gUnknown_03001508 = 0x140;
+        gJetpackPlayerVelY = 0x140;
     }
 
     if (gUnknown_03001505 == 0 && self->base.y > 0x7080) {
@@ -325,28 +325,28 @@ void sub_802F69C(void *selfArg)
     }
 }
 
-/* Teardown/destructor: marks `self` "dying" (`gStaticData_087E5144`
- * table), fully drains the `gUnknown_030014FC` reward accumulator,
- * frees the two keyframe-size tile allocations `sub_802F338` made
- * (`gUnknown_03001518`), marks `self` fully "dead"
+/* Teardown/destructor: marks `self` "dying" (`gJetpackPlayerVtable`
+ * table), fully drains the `gJetpackQueuedWumpa` reward accumulator,
+ * frees the two keyframe-size tile allocations `AllocJetpackPlayerTiles` made
+ * (`gJetpackPlayerTiles`), marks `self` fully "dead"
  * (`gActorVtable`), unlinks it from its doubly-linked list,
  * and optionally frees it. */
-void sub_802F6DC(void *selfArg, s32 flags)
+void DestroyJetpackPlayer(void *selfArg, s32 flags)
 {
     u8 *self = selfArg;
     s32 flagsReg = flags;
 
-    *(void **)(self + 0x50) = gStaticData_087E5144;
+    *(void **)(self + 0x50) = gJetpackPlayerVtable;
 
-    if (gUnknown_030014FC != 0) {
+    if (gJetpackQueuedWumpa != 0) {
         do {
             CollectWumpa(gLevelState);
-            gUnknown_030014FC--;
-        } while (gUnknown_030014FC != 0);
+            gJetpackQueuedWumpa--;
+        } while (gJetpackQueuedWumpa != 0);
     }
 
-    FreeVramTileBlock(gUnknown_03001518[0]);
-    FreeVramTileBlock(gUnknown_03001518[1]);
+    FreeVramTileBlock(gJetpackPlayerTiles[0]);
+    FreeVramTileBlock(gJetpackPlayerTiles[1]);
 
     *(void **)(self + 0x50) = gActorVtable;
 

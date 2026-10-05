@@ -18,8 +18,8 @@ const struct xy_pair gStaticData_0816C5F0[4] = {
     { -4, 4 },
 };
 
-/* Animation ids: sub_801DF0C (actor_part_1da38.c) by kind, sub_801DEA4
- * by world, sub_801E190 (actor_part_1dfec.c). */
+/* Animation ids: SetLevelSelectEntryBox (actor_part_1da38.c) by kind, SetLevelSelectEntryLevel
+ * by world, UpdateLevelSelectCursor (actor_part_1dfec.c). */
 const u32 gStaticData_0816C610[5] = {
     0, 1, 4, 3, 2,
 };

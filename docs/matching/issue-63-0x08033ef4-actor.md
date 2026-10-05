@@ -31,38 +31,38 @@ anim-frame halfword/byte, `self+8` accumulator, `self+0x28` state,
 - **Kind 1** (`CreateHovercraftLauncher`, vtable `gHovercraftLauncherVtable`): health at
   `+0x54`, caches its own `b`/`c` constructor args at `+0x58`/`+0x5c`,
   a death flag at `+0x6c`.
-- **Kind 2** (`sub_8034058`, vtable `gStaticData_087E5554`): health at
+- **Kind 2** (`CreateHovercraftSideGun`, vtable `gHovercraftSideGunVtable`): health at
   `+0x54` (`0x10` or `0x18` depending on whether the
   `gHovercraft` singleton is already constructed), a death flag
   at `+0x58`, a second one-shot flag at `+0x2c`, the constructor's 6th
   (stack-passed byte) argument cached at `+0x59`, and a little
   "spawn/orbit" record at `+0x5c`/`+0x60`/`+0x64`/`+0x68`/`+0x6c`
-  driving `sub_8034188`'s position-plus-effect-spawn step.
-- **Kind 3** (`sub_80342D4`, vtable `gStaticData_087E558C`): a much
+  driving `UpdateHovercraftSideGun`'s position-plus-effect-spawn step.
+- **Kind 3** (`CreateHovercraftCannonFlash`, vtable `gHovercraftCannonFlashVtable`): a much
   smaller object reusing `+0x58` as a plain one-shot flag rather than a
   health countdown.
 
 ## Matched (19 of 25 functions)
 
-- **`CreateHovercraftLauncher`/`sub_8033F48`/`sub_8033F74`** (`src/graphics/actor_part63.c`)
+- **`CreateHovercraftLauncher`/`HovercraftLauncherStateDestroyed`/`HovercraftLauncherStateWait`** (`src/graphics/actor_part63.c`)
   - Kind 1's constructor, its trampoline-fire helper (same shape as
-  `sub_8033BFC`, actor_part32.c), and a position-sync/state-1-transition
+  `HovercraftCannonStateDestroyed`, actor_part32.c), and a position-sync/state-1-transition
   helper gated on the singleton's lifetime counter and animation "kind".
   The constructor needed the established two-distinct-zero-register
   reset idiom (`zero`/`zero2`, see below) plus an explicit `d`-parameter
   register pin (`r0`) placed *after* the `b`/`c` pins so this compiler
   fetches the 5th (stack) constructor argument in the same position the
   ROM's own build does, rather than up front with the others.
-- **`sub_8034050`** (`src/graphics/actor_part65.c`) - trivial Kind 1
+- **`IsHovercraftLauncherUnshootable`** (`src/graphics/actor_part65.c`) - trivial Kind 1
   death-flag getter (`self+0x6c`).
-- **`sub_8034110`/`sub_8034188`/`sub_80341F8`/`sub_8034264`/`nullsub_38`**
+- **`DamageHovercraftSideGun`/`UpdateHovercraftSideGun`/`sub_80341F8`/`IsHovercraftSideGunUnshootable`/`nullsub_38`**
   (`src/graphics/actor_part67.c`) - Kind 2's damage/death handler (same
   `DamageHovercraftCannon` shape, register-pinned `zero`/`one` reused across the
   `self+0x58`/`+0x2c`/`+0x28`/`+0x44`/`+8` stores and the gate-byte read
   at `self+0x59` - reachable only via a pointer-offset walk from
   `self+0x58`, since `0x2d` doesn't fit `ldrb`'s 5-bit immediate range
   and the ROM's own build visibly re-derives the address instead of
-  indexing), a position-sync/orbit-effect updater (`sub_8034188`, three
+  indexing), a position-sync/orbit-effect updater (`UpdateHovercraftSideGun`, three
   register-pinned locals - `field`/`z` for the Z-axis sum, `origCounter`/
   `result` for the orbit-counter decision - matching the ROM's exact
   `r6`-stays-immutable/`r0`-carries-the-final-value split), a near-twin
@@ -70,10 +70,10 @@ anim-frame halfword/byte, `self+8` accumulator, `self+0x28` state,
   (initially miscopied as a byte-identical twin - the map-file address-
   shift diagnostic caught the missing 4-byte call), a trivial death-flag
   getter, and a no-op stub.
-- **`sub_80342D4`** (`src/graphics/actor_part69.c`) - Kind 3's
+- **`CreateHovercraftCannonFlash`** (`src/graphics/actor_part69.c`) - Kind 3's
   constructor, same two-distinct-zero-register reset idiom as
   `CreateHovercraftLauncher`.
-- **`sub_803436C`** (`src/graphics/actor_part71.c`) - trivial Kind 3
+- **`IsHovercraftCannonFlashUnshootable`** (`src/graphics/actor_part71.c`) - trivial Kind 3
   one-shot-flag getter (`self+0x58`).
 - **`UpdateStarfield`/`StarfieldWaitForButton`/`DestroyStarfield`** (`src/graphics/actor_part73.c`)
   - a particle-spawn-budget driver (calls `DrawStarfield`, then spawns up
@@ -102,7 +102,7 @@ and it takes the real map-file address-shift check (function boundaries
 landing 4 bytes early) to catch it. Fixed throughout this chunk with a
 nested block introducing a second `register ... zero2` immediately
 before the `self+0x12` store, mirroring the established idiom already
-in `DamageHovercraftCannon`/`sub_803390C` (actor_part28.c/actor_part30.c).
+in `DamageHovercraftCannon`/`SetHovercraftState` (actor_part28.c/actor_part30.c).
 
 ### A note on isolated-compile confidence (again)
 
@@ -114,18 +114,18 @@ instances surfaced only once the whole chunk was linked and the ROM
 diffed byte-for-byte against `baserom.gba`:
 
 1. The missing-second-zero-register gap above (`CreateHovercraftLauncher`,
-   `sub_8033F74`, `sub_80342D4`) - each shrank its own function by 2-4
+   `HovercraftLauncherStateWait`, `CreateHovercraftCannonFlash`) - each shrank its own function by 2-4
    bytes, which a from-scratch isolated compile has nothing to compare
    its *size* against.
 2. `CreateHovercraftLauncher`'s `d` constructor argument being fetched from the stack
    in the wrong position relative to `b`/`c` - same total instruction
    count and mnemonics, just reordered, so it produced a real 6-byte
    content mismatch without shifting any function's address at all.
-3. `sub_80341F8` being copied as a "byte-identical twin" of `sub_8034188`
+3. `sub_80341F8` being copied as a "byte-identical twin" of `UpdateHovercraftSideGun`
    when it's actually missing the leading `UpdateActor(self)` call - a
    genuine 4-byte size difference that happened to exactly cancel the
    4-byte deficit inherited from the upstream `CreateHovercraftLauncher` bug, so the
-   *next* function (`sub_8034264`) landed back at its correct absolute
+   *next* function (`IsHovercraftSideGunUnshootable`) landed back at its correct absolute
    address by coincidence and briefly looked like proof nothing was
    wrong.
 
@@ -170,7 +170,7 @@ boundaries - not by re-reading the isolated compiles more carefully.
   (real bytes for the twin `DrawStarfield`) - that fragment is also retired
   now that `DrawStarfield` itself is matched (see below), so
   `actor_part85.c` is fully matched, closing the whole file.
-- **`sub_8034058`** (`src/graphics/actor_part66.c`) - Kind 2's
+- **`CreateHovercraftSideGun`** (`src/graphics/actor_part66.c`) - Kind 2's
   constructor. Now fully matched as real C, closing two gaps: the 6th
   (stack-passed, byte-sized) constructor argument needs the same
   stack-slot-address-then-`ldrb` `asm volatile` anchor already
@@ -184,7 +184,7 @@ boundaries - not by re-reading the isolated compiles more carefully.
   (`(self[0x59] != 0) ? 0xFFFFBF00 : 0x8400`) needed a second, separate
   fix: the ROM computes it as a genuine two-way branch diamond (a
   forward `beq`/`ldr`/`b` skipping a computed false branch, with
-  `gStaticData_087E5554`'s pending literal and `0xFFFFBF00` pooled
+  `gHovercraftSideGunVtable`'s pending literal and `0xFFFFBF00` pooled
   together right after the skip branch), but a plain ternary or if/else
   always collapses this compiler's output to an eager "compute one
   value, conditionally overwrite" shape instead (4 bytes short); and
@@ -199,13 +199,13 @@ boundaries - not by re-reading the isolated compiles more carefully.
   it as an operand reintroduces an extra, ROM-absent register copy),
   with a real `ldr r0, =0xFFFFBF00` assembler pseudo-op and a manual
   `.pool` directive right after the skip branch - and moving the
-  preceding `gStaticData_087E5554` store into its own tiny `asm
+  preceding `gHovercraftSideGunVtable` store into its own tiny `asm
   volatile` island too, since a real, respected `.pool` split only
   works for symbols whose literal load is itself opaque assembler text
   (this compiler's own C-driven pool placement for a plain `extern`
   global access always defers to the function's very end and ignores
   an `asm(".pool")` marker around it), the same gap already documented
-  for `sub_802AB58` in `actor_part53.c`. Retires the raw
+  for `UpdateActorPaletteCycle` in `actor_part53.c`. Retires the raw
   `asm/code_3_2_20_28568_c99c_31784_33ef4_34058.s`.
 
 - **`SpawnStar`/`PlotStarfieldPixel`** (`src/graphics/actor_part72.c`) - a
@@ -256,7 +256,7 @@ boundaries - not by re-reading the isolated compiles more carefully.
   The final residual gap - the ROM's own "materialize `cell` into `r4`
   via `bics`, then copy it back into `r0` before `orrs`/`strh`" idiom,
   the same class of redundant-copy-after-a-binary-op gcc-2.9 quirk
-  already seen for `sub_802F338`'s multiply-copy gap - is closed with
+  already seen for `AllocJetpackPlayerTiles`'s multiply-copy gap - is closed with
   one opaque `asm volatile` block emitting that exact instruction
   sequence verbatim, taking `shift` and `tileMapEntry` (itself pinned to
   `r2` via a nested `register ... asm("r2")` local initialized from a
@@ -309,10 +309,10 @@ boundaries - not by re-reading the isolated compiles more carefully.
 
 ## NAKED transcription (byte-correct, not counted as matched)
 
-- **`sub_8033FE4`** (`src/graphics/actor_part64.c`) - a
-  `gStaticData_0817C4F8` stride-8 trampoline-record dispatcher
+- **`RunHovercraftLauncherState`** (`src/graphics/actor_part64.c`) - a
+  `gHovercraftLauncherStateFuncs` stride-8 trampoline-record dispatcher
   returning a 0/1 result instead of tail-calling. Same `{s16 baseOff;
-  s16 count; void *fn}` record shape as `UpdateHovercraftCannon`/`sub_8033C84`/
+  s16 count; void *fn}` record shape as `UpdateHovercraftCannon`/`RunHovercraftCannonState`/
   `UpdateHovercraftLauncher` (issue #62) and `sub_802C208` (issue #52) - all hit
   the same confirmed categorical gcc-2.9 r7-pin bug (the ROM keeps the
   table's base address alive in `r7` for the whole function; an
@@ -329,7 +329,7 @@ boundaries - not by re-reading the isolated compiles more carefully.
 
 ## Parked (2 of 25 functions, `NON_MATCHING`)
 
-- **`sub_8034270`** (`asm/code_3_2_20_28568_c99c_31784_33ef4_34270.s`, C
+- **`UpdateHovercraftCannonFlash`** (`asm/code_3_2_20_28568_c99c_31784_33ef4_34270.s`, C
   in `src/graphics/actor_part68.c`) - position-sync/flag/trampoline
   updater for Kind 1. Semantics fully understood and every field/call
   confirmed correct; parked because the ROM computes a "should animate"
@@ -340,12 +340,12 @@ boundaries - not by re-reading the isolated compiles more carefully.
   step, the same class of gap already documented for `DrawPolarCollectedWumpa`
   (issue #52) and the dead `| 0` term in `DrawJetpackCheckpointText` (issue #71).
 - **`sub_8034314`** (`asm/code_3_2_20_28568_c99c_31784_33ef4_34314.s`, C
-  in `src/graphics/actor_part70.c`) - `sub_8034270`'s boolean-returning
+  in `src/graphics/actor_part70.c`) - `UpdateHovercraftCannonFlash`'s boolean-returning
   twin, parked on the identical gap.
 
 ## Left raw (3 of 25 functions, not attempted)
 
-- **`InitContinuePrompt`/`sub_803487C`/`ContinuePromptLoop`**
+- **`InitContinuePrompt`/`InitContinuePromptGraphics`/`ContinuePromptLoop`**
   (`asm/code_3_2_20_28568_c99c_31784_33ef4_3472c.s`) - a graphics-package
   loading setup (BG/window register packing, three `LoadGraphicsPackage`
   calls, heavy `sb`/`r8` register pressure), a larger orchestration
@@ -354,7 +354,7 @@ boundaries - not by re-reading the isolated compiles more carefully.
   left raw, out of scope for this pass. Picked up in a later pass - see
   [docs/matching/issue-63-final-raw-actor.md](issue-63-final-raw-actor.md),
   which matched `InitContinuePrompt` as real C (the `asm/..._3472c.s` file
-  referenced above is now gone), parked `sub_803487C`, and NAKED-
+  referenced above is now gone), parked `InitContinuePromptGraphics`, and NAKED-
   transcribed `ContinuePromptLoop`.
 
 See [docs/status/actor.md](../status/actor.md) for the running
@@ -362,7 +362,7 @@ matched/parked list this entry feeds into.
 
 ## Later pass: member-pointer dispatch
 
-A later pass promoted `sub_8033FE4` (`actor_part64.c`) from NAKED to real C. The "r7 table-base"
+A later pass promoted `RunHovercraftLauncherState` (`actor_part64.c`) from NAKED to real C. The "r7 table-base"
 shape was gcc 2.x's pointer-to-member-function call
 `(this->*table[this->state])()`, which `ACTOR_PMF_CALL` in
 `include/actor_self.h` reproduces with no register pins. See

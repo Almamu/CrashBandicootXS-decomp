@@ -9,14 +9,14 @@ extern void *gAudioContext;
 extern void *gLevelState;
 extern void *gActorList;
 
-extern u8 sub_802A6EC(void *self);
+extern u8 IsTouchingPlayer(void *self);
 extern u8 sub_802DD9C(void *self);
 extern void AddBrokenCrate(void *self);
 extern void sub_802C128(void *arg0);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void UpdatePolarCrate(void *selfArg);
 
-/* On proximity (`sub_802A6EC`), ties the lap counter and the lock-timer
+/* On proximity (`IsTouchingPlayer`), ties the lap counter and the lock-timer
  * setter `sub_802C128`, then transitions to the shared "used"
  * animation sequence 0x12. Whether or
  * not that fired, on `sub_802DD9C`'s overlap test transitions a second
@@ -30,7 +30,7 @@ extern void UpdatePolarCrate(void *selfArg);
  * it first); plain member stores reorder it. */
 void UpdatePolarAkuAkuCrate(struct actor_self *self)
 {
-    if (self->animIndex != 0x12 && sub_802A6EC(self)) {
+    if (self->animIndex != 0x12 && IsTouchingPlayer(self)) {
         AddBrokenCrate(gLevelState);
         sub_802C128(gActorList);
         self->animIndex = 0x12;

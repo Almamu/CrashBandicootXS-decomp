@@ -51,7 +51,7 @@ extern u16 gStaticData_0817C572[];
  * the up-counting trip counter (r7) the ROM has. Written with explicit
  * pointer increments, `i` has nothing left to do but count, and gcc
  * reverses it into a down-counter. */
-void sub_803487C(struct fade_overlay *self)
+void InitContinuePromptGraphics(struct fade_overlay *self)
 {
     struct icon_manager *icons;
     struct palette_cache *cache;

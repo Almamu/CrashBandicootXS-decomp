@@ -2,7 +2,7 @@
 
 25-function `decomp-chunk` covering `SetupActorVramPool`/`InitActorCategory`
 (the category (re)selection/loading-screen entry point), the
-`sub_effect_table` entry-counting helper `sub_802968C`, and an unrelated-
+`sub_effect_table` entry-counting helper `CountCategoryCrates`, and an unrelated-
 but-address-adjacent BG-tilemap double-buffer scroll-effect subsystem
 (`sub_8029720`-`sub_8029E40`) that turns out to sit interleaved in the
 same ROM region rather than being part of the category system itself.
@@ -13,13 +13,13 @@ same ROM region rather than being part of the category system itself.
   tile-cache slots (2 for type-0 sprite families, 5 for type-1/2) from
   two still-unnamed ROM-side sub-tables, then (re)builds the category's
   status-icon OAM row via `sub_802732C`.
-- `sub_802968C` (`actor_part100.c`) - counts how many of the current
+- `CountCategoryCrates` (`actor_part100.c`) - counts how many of the current
   category's `sub_effect_table` entries (`struct sub_effect_record`,
   `include/actor_anim.h`) match one of two fixed `variantA` byte sets,
   picked by the category's `type` field.
-- `sub_8029720`/`sub_8029730`/`sub_802973C` (`actor_part105.c`) - trivial
+- `sub_8029720`/`sub_8029730`/`GetActorCheckpoint` (`actor_part105.c`) - trivial
   frame-tick counter accessors.
-- `sub_8029748`/`sub_8029794` (`actor_part95.c`) - category tick
+- `SetActorCheckpoint`/`sub_8029794` (`actor_part95.c`) - category tick
   re-basing and an active-instance-count threshold test.
 - `nullsub_5`/`GetCellAnimFreeTile` (`actor_part106.c`), `FlipCellAnimPage`
   (`actor_part96.c`), `sub_8029B2C` (`actor_part90.c`), `AdvanceCellAnim`

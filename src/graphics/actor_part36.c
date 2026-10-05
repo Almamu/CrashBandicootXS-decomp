@@ -20,8 +20,8 @@ struct spawner {
     u8 dead;            // 0x6C
 };
 
-extern void sub_8033804(void);
-extern void sub_803388C(void);
+extern void StartHovercraftHitFlash(void);
+extern void LoseHovercraftPart(void);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 
 /* `DamageHovercraftCannon`'s gated twin: only applies damage while `self` is in
@@ -36,7 +36,7 @@ void DamageHovercraftLauncher(struct spawner *self, s32 dmg)
     s32 state = self->base.state;
 
     if (state == 1) {
-        sub_8033804();
+        StartHovercraftHitFlash();
         self->hp -= dmg;
 
         if (self->hp <= 0) {
@@ -44,7 +44,7 @@ void DamageHovercraftLauncher(struct spawner *self, s32 dmg)
             register s32 zero asm("r4") = 0;
 
             *deadFlag = state;
-            sub_803388C();
+            LoseHovercraftPart();
             {
                 register s32 stateVal asm("r0") = 2;
                 register s32 three asm("r1") = 3;

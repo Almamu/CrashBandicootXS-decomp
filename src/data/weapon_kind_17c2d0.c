@@ -29,7 +29,7 @@ const struct weapon_kind gStaticData_0817C2D0[6] = {
 };
 
 /* A 3-frame palette strip for BG palette 1: SpawnAirship (actor_part23e.c)
- * loads frame 0, sub_8031744 (actor_part26.c) ping-pongs through all
+ * loads frame 0, AnimateAirshipPalette (actor_part26.c) ping-pongs through all
  * three while its counter runs. */
 const u16 gStaticData_0817C378[3][16] = {
     {

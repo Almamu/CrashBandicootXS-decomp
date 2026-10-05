@@ -16,13 +16,13 @@
  * against `gAirshipX`/`gAirshipY`, scaled by the speed
  * term, `abs`-combined) and, while under a `0x7FF` threshold, spawns an
  * effect via `SpawnJetpackCannonball` (the 5-argument, velocity-carrying sibling of `AirshipStateFireballs`'s
- * `sub_802E62C`) and advances the same `gUnknown_03001574` counter
+ * `SpawnAirshipFireball`) and advances the same `gUnknown_03001574` counter
  * through the weapon table's next threshold slot (`+0x14`/`+0x18`/
  * `+0x10`). Otherwise the phase just decrements. Always re-runs
  * `sub_8030E08` and, past a higher position ceiling (`0x4300`),
  * re-arms the phase from the weapon table (`+4`) and fires the
  * state-2/table-index-0 transition on the tracker object, then always
- * finishes with `sub_803171C`.
+ * finishes with `UpdateAirshipFlashColor`.
  *
  * The distances are written `a - (b - K)`: gcc's `fold` reassociates
  * that into `(a + K) - b`, which is exactly what keeps the ROM from
@@ -46,7 +46,7 @@ extern s32 GetAnimFrameBaseOffset(void *self);
 extern s32 gAirshipState;
 extern s32 gUnknown_0300153C;
 extern void sub_8030E08(void);
-extern void sub_803171C(void);
+extern void UpdateAirshipFlashColor(void);
 
 static inline void BossSetState(s32 st, s32 idx)
 {
@@ -106,5 +106,5 @@ void AirshipStateCannon(void)
         gUnknown_03001574 = 0;
         BossSetState(2, 0);
     }
-    sub_803171C();
+    UpdateAirshipFlashColor();
 }

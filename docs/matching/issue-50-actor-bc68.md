@@ -11,9 +11,9 @@ out of GitHub issue #50's chunk scope" - the raw `.s` file issue #50's
 chunk was carved out of (`asm/code_3_2_20_8b7c_ac28.s`) runs well past
 the chunk's own upper bound, all the way to 0x0802BED8 where the
 already-matched `actor_part19.c` (issue #52) begins. This entry covers
-this raw file's own literal tail: `sub_802BC68` through `sub_802BE80`,
+this raw file's own literal tail: `DispensePolarWumpa` through `sub_802BE80`,
 the last 7 functions in the file (everything from that file's very end
-backwards to the start of `sub_802BC68`), the cleanest possible cut
+backwards to the start of `DispensePolarWumpa`), the cleanest possible cut
 since the raw file's last byte and this chunk's last byte are the same
 byte.
 
@@ -25,7 +25,7 @@ disassembly by itself) through `sub_802BBE4` stays raw - the actor-
 part-factory dispatcher itself and the run of animation-table-state/
 actor-part-factory functions between it and this chunk
 (`CreatePolarCheckpointText`-`sub_802BBE4`, including `ConstructAnimTableState`/
-`ConstructActorPart` and the large `sub_802B364`/`sub_802B5B4` state
+`ConstructActorPart` and the large `UpdatePolarPlayer`/`DrawPolarPlayer` state
 machines). None of that is in scope here; `tools/report_units.py`'s
 `(0x0802AC28, None, "actor")` entry still covers it, with an updated
 comment pointing at this entry for the now-matched tail.
@@ -40,15 +40,15 @@ had already read part of this cluster from disassembly alone (its "boss's
 BG2 spin/zoom effect..." section); this pass confirms those reads with
 real matched C.
 
-- **`sub_802BC68`** - accumulator-drain/reward-dispenser for
-  `gUnknown_03001488` (filled by `sub_802C078`, still raw): while the
+- **`DispensePolarWumpa`** - accumulator-drain/reward-dispenser for
+  `gPolarQueuedWumpa` (filled by `QueuePolarWumpa`, still raw): while the
   "locked" flag `gUnknown_030014A0` is set, fully drains it via repeated
   `CollectWumpa` calls without spawning anything; otherwise, once the
   `gUnknown_03001484` cooldown elapses, dispenses one of four tiers of
   reward (via `SpawnPolarCollectedWumpa`, itself still raw but confirmed by
   docs/rom_map.md as a "spawn effect type N" family member) sized by the
   accumulator's own magnitude, and plays a cue. Docs/rom_map.md already
-  read this as a structural twin of `actor_part44.c`'s `sub_802F3BC` -
+  read this as a structural twin of `actor_part44.c`'s `DispenseJetpackWumpa` -
   confirmed exactly: same `register u8 *self asm("r1")` pin, same
   branch/threshold shape, just a different accumulator/cooldown global
   pair.
@@ -58,7 +58,7 @@ real matched C.
   state-transition: latches `gUnknown_030014A3`, clears the hazard lock
   `gUnknown_030014A0`, and resets `self` to state 1/table-index 0 via
   the same state/table-index/anim-frame reset idiom already documented
-  for the boss cluster's `sub_8030530`/`AirshipStateFall` and this family's
+  for the boss cluster's `DamageAirshipFireball`/`AirshipStateFall` and this family's
   own `sub_802C14C` (`actor_part19.c`), then fires `SetCellAnimSpeed(0x24)`.
 - **`sub_802BD64`**/**`sub_802BDD0`** - a per-axis hazard-threshold pair:
   drains a shared "camera catch-up" budget (`gUnknown_030014A4`) into
@@ -129,7 +129,7 @@ real matched C.
 ## A note on isolated-compile confidence
 
 This chunk is a second confirmed instance (after issue #50's own
-`sub_802AA80`/`sub_802AAB4` register-choice regression, see
+`IsSpawnCollected`/`MarkSpawnCollected` register-choice regression, see
 issue-50-actor-2a69c.md) of docs/workflow.md's warning that an isolated
 per-function compile is a diagnostic tool, never proof of a match - but
 this time the gap wasn't a context-dependent register-allocation choice,

@@ -292,7 +292,7 @@ void SpawnIronArrowCrate(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 /* Plain `CreateCrate` trampoline, type `7`. Last function in this ROM
  * region - `asm/code_3_2_17_21280.s` (still-raw text past this point
  * used to continue here) now ends right before this file's span, at
- * `sub_802155C`'s literal pool. */
+ * `SpawnCortexBoss`'s literal pool. */
 void SpawnIronCrate(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     CreateCrate(arg0, arg1, arg2, arg3, 7);
