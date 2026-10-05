@@ -202,7 +202,7 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/graphics/actor_part.o \
                   $(C_BUILDDIR)/graphics/actor_part127.o \
                   $(C_BUILDDIR)/graphics/actor_part128.o \
                   $(C_BUILDDIR)/graphics/actor_part130.o \
-                  $(C_BUILDDIR)/graphics/actor_part131.o \
+                  $(C_BUILDDIR)/frontend/credits.o \
                   $(C_BUILDDIR)/graphics/actor_part18.o \
                   $(C_BUILDDIR)/graphics/actor_part19h.o \
                   $(C_BUILDDIR)/graphics/actor_part23b.o \
@@ -226,7 +226,7 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/graphics/actor_part.o \
                   $(C_BUILDDIR)/graphics/actor_part86.o \
                   $(C_BUILDDIR)/graphics/actor_part89.o \
                   $(C_BUILDDIR)/graphics/actor_part86b.o \
-                  $(C_BUILDDIR)/graphics/actor_part88.o \
+                  $(C_BUILDDIR)/menus/continue_prompt.o \
                   $(C_BUILDDIR)/graphics/actor_part_12fbc.o \
                   $(C_BUILDDIR)/graphics/actor_part_134b8.o \
                   $(C_BUILDDIR)/graphics/actor_part_138e8.o \
@@ -239,9 +239,9 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/graphics/actor_part.o \
                   $(C_BUILDDIR)/graphics/actor_part_1967c.o \
                   $(C_BUILDDIR)/graphics/actor_part_1a878.o \
                   $(C_BUILDDIR)/graphics/actor_part_1ab98.o \
-                  $(C_BUILDDIR)/graphics/actor_part_1b85c.o \
-                  $(C_BUILDDIR)/graphics/actor_part_1cee0.o \
-                  $(C_BUILDDIR)/graphics/actor_part_1da38.o \
+                  $(C_BUILDDIR)/menus/level_select.o \
+                  $(C_BUILDDIR)/menus/level_select_pages.o \
+                  $(C_BUILDDIR)/menus/level_select_widgets.o \
                   $(C_BUILDDIR)/graphics/actor_part_1dfec.o \
                   $(C_BUILDDIR)/graphics/graphics_loading_1e990.o \
                   $(C_BUILDDIR)/graphics/graphics_loading_1ea5c.o \
@@ -251,21 +251,21 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/graphics/actor_part.o \
                   $(C_BUILDDIR)/graphics/graphics_loading_21280.o \
                   $(C_BUILDDIR)/graphics/graphics_loading_21668.o \
                   $(C_BUILDDIR)/graphics/graphics_loading_35780.o \
-                  $(C_BUILDDIR)/graphics/graphics_loading_35d1c.o \
-                  $(C_BUILDDIR)/graphics/graphics_loading_3686c.o \
+                  $(C_BUILDDIR)/frontend/title_screen.o \
+                  $(C_BUILDDIR)/frontend/company_logos.o \
                   $(C_BUILDDIR)/gfx/graphics_package.o \
-                  $(C_BUILDDIR)/graphics/hud_digit_array.o \
+                  $(C_BUILDDIR)/hud/hud_init.o \
                   $(C_BUILDDIR)/text/font_glyph.o \
                   $(C_BUILDDIR)/text/font_draw_text.o \
                   $(C_BUILDDIR)/text/font_measure.o \
-                  $(C_BUILDDIR)/graphics/hud_stat_widget2.o \
-                  $(C_BUILDDIR)/graphics/hud_stat_widget3.o \
-                  $(C_BUILDDIR)/graphics/level_graphics.o \
-                  $(C_BUILDDIR)/graphics/settings_menu.o \
-                  $(C_BUILDDIR)/graphics/settings_menu10.o \
-                  $(C_BUILDDIR)/graphics/settings_menu20.o \
-                  $(C_BUILDDIR)/graphics/settings_menu22.o \
-                  $(C_BUILDDIR)/graphics/settings_menu6.o \
+                  $(C_BUILDDIR)/hud/hud_boss_clock.o \
+                  $(C_BUILDDIR)/hud/hud_counters.o \
+                  $(C_BUILDDIR)/frontend/title_screen_init.o \
+                  $(C_BUILDDIR)/save/save_menu_draw.o \
+                  $(C_BUILDDIR)/menus/power_dialog_loop.o \
+                  $(C_BUILDDIR)/menus/pause_menu_loop.o \
+                  $(C_BUILDDIR)/menus/pause_menu_gems.o \
+                  $(C_BUILDDIR)/menus/pause_menu_pages_init.o \
                   $(C_BUILDDIR)/graphics/trigger_effect.o \
                   $(C_BUILDDIR)/system/bg_scroll_layer_25fc8.o \
                   $(C_BUILDDIR)/system/game_loop14.o \
@@ -274,7 +274,7 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/graphics/actor_part.o \
                   $(C_BUILDDIR)/system/game_loop3.o \
                   $(C_BUILDDIR)/system/game_loop32.o \
                   $(C_BUILDDIR)/system/game_loop36.o \
-                  $(C_BUILDDIR)/system/game_loop37.o \
+                  $(C_BUILDDIR)/cutscene/slideshow.o \
                   $(C_BUILDDIR)/system/game_loop4.o \
                   $(C_BUILDDIR)/system/game_loop40.o \
                   $(C_BUILDDIR)/system/game_loop41.o \
@@ -289,7 +289,7 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/graphics/actor_part.o \
                   $(C_BUILDDIR)/system/game_loop54.o \
                   $(C_BUILDDIR)/system/game_loop55.o \
                   $(C_BUILDDIR)/system/game_loop56.o \
-                  $(C_BUILDDIR)/system/game_loop57.o \
+                  $(C_BUILDDIR)/cutscene/cutscene_player.o \
                   $(C_BUILDDIR)/system/game_loop6.o \
                   $(C_BUILDDIR)/system/game_loop7.o \
                   $(C_BUILDDIR)/system/game_loop8.o \
@@ -313,7 +313,7 @@ $(OLD_AGBCC_OBJS): CC1FLAGS := $(filter-out -fprologue-bugfix,$(CC1FLAGS))
 # listed: DrawVvLogoPieces's reversed header loop and reduced row pointer need
 # strength reduction on; the rest of that file also matches with it on
 # (docs/matching/sr65-naked-retry.md).
-NO_STRENGTH_REDUCE_OBJS := $(C_BUILDDIR)/graphics/graphics_loading_35d1c.o
+NO_STRENGTH_REDUCE_OBJS := $(C_BUILDDIR)/frontend/title_screen.o
 $(NO_STRENGTH_REDUCE_OBJS): CC1FLAGS += -fno-strength-reduce
 
 # Objects built with -fno-rerun-loop-opt (one loop-optimizer pass).
