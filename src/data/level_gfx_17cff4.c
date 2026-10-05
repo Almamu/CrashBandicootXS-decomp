@@ -162,7 +162,7 @@ const struct delta_record gTitleLogoPieceMotion8[6] = {
  * written with its own view here - index, keyframes, frames, header
  * byte, a word, a {x, y, z, w, h, d} box and the spawn offsets. The
  * keyframes and frames are record 0's of the categories 0-2 family
- * (Crash riding the polar bear), inside gStaticData_08178F80. */
+ * (Crash riding the polar bear), inside gPolarCategoryPalette. */
 struct anim_record_view
 {
     u32 index;
@@ -176,9 +176,9 @@ struct anim_record_view
     s32 spawnY;
 };
 
-extern const u8 gStaticData_08178F80[];
+extern const u8 gPolarCategoryPalette[];
 
 const struct anim_record_view gLogoActorAnim = {
-    0, gStaticData_08178F80 + 0x400, gStaticData_08178F80 + 0x49C,
+    0, gPolarCategoryPalette + 0x400, gPolarCategoryPalette + 0x49C,
     0, { 0 }, 0x100, { -10, -20, -1, 20, 44, 3 }, 0, 0,
 };

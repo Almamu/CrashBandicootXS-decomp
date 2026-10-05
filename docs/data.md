@@ -339,7 +339,7 @@ array a record points at; several records share arrays, and the
 partition has no leftover bytes (every table_A piece is a whole number
 of 12-byte keyframes). The descriptors in `actor_category_175558.c`
 point at the palettes and tables by symbol now instead of
-`gStaticData_08178F80 + 0x74c`-style offsets.
+`gPolarCategoryPalette + 0x74c`-style offsets.
 
 `struct anim_table_record`'s fields past `table_B` were typed from the
 data: `unknown_10` is a word (0 or 0x260C-0x36D5), `box_14` a `struct

@@ -351,10 +351,10 @@ extern u32 gLevelSelectWorldAnims[];
 extern u32 gLevelSelectRankAnims[];
 extern struct xy_pair gLevelSelectWorldPos;
 extern struct xy_pair gStaticData_0816C4A0;
-extern struct xy_pair gStaticData_0816C4A8;
-extern struct xy_pair gStaticData_0816C4B0;
-extern struct xy_pair gStaticData_0816C4B8;
-extern struct xy_pair gStaticData_0816C4C0;
+extern struct xy_pair gLevelSelectCrystalPos;
+extern struct xy_pair gLevelSelectGemPos;
+extern struct xy_pair gLevelSelectTrialIconPos;
+extern struct xy_pair gLevelSelectTimePos;
 extern struct xy_pair gStaticData_0816C4C8;
 extern struct xy_pair gStaticData_0816C4D0;
 
@@ -908,19 +908,19 @@ struct level_menu *InitLevelSelect(struct level_menu *self, s32 arg)
     SetAnim(self->sprites[1], 10);
     SetEntityPixelPos(self->sprites[1], gStaticData_0816C4A0.x, gStaticData_0816C4A0.y);
     self->sprites[2]->anim = AnimTable(0x1BC);
-    SetEntityPixelPos(self->sprites[2], gStaticData_0816C4A8.x, gStaticData_0816C4A8.y);
+    SetEntityPixelPos(self->sprites[2], gLevelSelectCrystalPos.x, gLevelSelectCrystalPos.y);
     self->sprites[3]->anim = AnimTable(0x180);
     SetAnim(self->sprites[3], 1);
-    SetEntityPixelPos(self->sprites[3], gStaticData_0816C4B0.x, gStaticData_0816C4B0.y);
+    SetEntityPixelPos(self->sprites[3], gLevelSelectGemPos.x, gLevelSelectGemPos.y);
     self->sprites[4]->anim = AnimTable(0x180);
     SetAnim(self->sprites[4], 1);
-    SetEntityPixelPos(self->sprites[4], gStaticData_0816C4B0.x, gStaticData_0816C4B0.y);
+    SetEntityPixelPos(self->sprites[4], gLevelSelectGemPos.x, gLevelSelectGemPos.y);
     self->sprites[5]->anim = AnimTable(0x18C);
-    SetEntityPixelPos(self->sprites[5], gStaticData_0816C4B8.x, gStaticData_0816C4B8.y);
+    SetEntityPixelPos(self->sprites[5], gLevelSelectTrialIconPos.x, gLevelSelectTrialIconPos.y);
     self->sprites[6]->anim = AnimTable(0x18C);
-    SetEntityPixelPos(self->sprites[6], gStaticData_0816C4B8.x, gStaticData_0816C4B8.y);
+    SetEntityPixelPos(self->sprites[6], gLevelSelectTrialIconPos.x, gLevelSelectTrialIconPos.y);
     self->sprites[7]->anim = AnimTable(0x18C);
-    SetEntityPixelPos(self->sprites[7], gStaticData_0816C4C0.x, gStaticData_0816C4C0.y);
+    SetEntityPixelPos(self->sprites[7], gLevelSelectTimePos.x, gLevelSelectTimePos.y);
     s = InitUiSpriteObj(OperatorNew(0x40));
     self->sprites[8] = s;
     SetSpritePriority(s, 1);
@@ -1169,7 +1169,7 @@ void DrawLevelSelectTime(struct level_menu *self, u32 time)
     {
         struct icon_slot *slot;
 
-        SetIconPos(gLargeFont, self->panelSlideX + gStaticData_0816C4C0.x + 10, gStaticData_0816C4C0.y - 8);
+        SetIconPos(gLargeFont, self->panelSlideX + gLevelSelectTimePos.x + 10, gLevelSelectTimePos.y - 8);
         slot = &gLargeFont->record->slots[2];
         _call_via_r2((u8 *)gLargeFont + slot->offset, (s32)self->timeText, slot->ptr);
     }
@@ -1179,11 +1179,11 @@ void DrawLevelSelectTime(struct level_menu *self, u32 time)
 
         DrawSpriteWithOffset(self->sprites[7], self->panelSlideX, 0);
         FontSetPalette(gLargeFont, self->sprites[7]->palette);
-        SetIconPos(gLargeFont, self->panelSlideX + gStaticData_0816C4C0.x + 10, gStaticData_0816C4C0.y - 8);
+        SetIconPos(gLargeFont, self->panelSlideX + gLevelSelectTimePos.x + 10, gLevelSelectTimePos.y - 8);
         slot = &gLargeFont->record->slots[2];
         _call_via_r2((u8 *)gLargeFont + slot->offset, (s32)self->recordText, slot->ptr);
         FontResetPalette(gLargeFont);
-        SetIconPos(gLargeFont, self->panelSlideX + gStaticData_0816C4C0.x + 10, gStaticData_0816C4C0.y + 8);
+        SetIconPos(gLargeFont, self->panelSlideX + gLevelSelectTimePos.x + 10, gLevelSelectTimePos.y + 8);
         slot = &gLargeFont->record->slots[2];
         _call_via_r2((u8 *)gLargeFont + slot->offset, (s32)self->timeText, slot->ptr);
     }

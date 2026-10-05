@@ -759,7 +759,7 @@ records against it:
   ...`, a constant stride of exactly `0x204` = `4 + 4*4*32` bytes - a
   plain non-overlapping sequential frame array, no dedup trick at all).
   Decompressing `0x080B2120` in Python and rendering these offsets with
-  the same category palette (`gStaticData_08178F80`) gives **completely
+  the same category palette (`gPolarCategoryPalette`) gives **completely
   clean, unambiguous art**:
   - Record 1 (`w=4,h=4`, 32x32 frames): a **rotating TNT crate** (the
     classic X-braced wooden crate), full clean rotation sequence.
@@ -787,7 +787,7 @@ checks out the same way** - `0x0814174C`, tag `0x10`, declared size
 "mask"), while records 1 and 2 are small offsets into this sheet's own
 decompressed buffer (stride `0x804` = `4+8*8*32` for record 1, `0x84` =
 `4+2*2*32` for record 2 - both plain non-overlapping arrays). Rendered
-with this category's palette (`gStaticData_0817AAA4`):
+with this category's palette (`gAirshipCategoryPalette`):
 
 - Record 1 (`w=8,h=8`, 64x64 frames): a rotating **mechanical/winged
   creature** - a central body with a beaked/helmeted head, wide

@@ -35,7 +35,7 @@ extern struct held_pressed_pair {
 extern u8 gTitleLogoPieceSeeds[];
 extern u8 gTitleArrowPieceOffsets[];
 extern u8 gLogoActorAnim[];
-extern u8 gStaticData_08178F80[];
+extern u8 gPolarCategoryPalette[];
 extern u8 gVvLogoEmblemObj[];
 extern u8 gVvLogoLettersObj[];
 extern u8 gVvLogoUrlObj[];
@@ -718,7 +718,7 @@ void RunCompanyLogos(u32 *self)
     part = InitLogoActor(New(0x54), gLogoActorAnim);
     {
         struct dma_regs *dma = (struct dma_regs *)REG_ADDR_DMA3SAD;
-        dma->src = (u32)gStaticData_08178F80;
+        dma->src = (u32)gPolarCategoryPalette;
         dma->dst = OBJ_PLTT;
         dma->cnt = 0x80000100;
         dma->cnt;

@@ -26,7 +26,7 @@ const u16 gLanguageSelectPalette3[16] = {
  */
 
 /* Tile set 1: 6638 tiles, used by 10 rooms' layer descriptors. */
-const TAGGED_RAW_ASSET(0x67B80) gStaticData_0817E7AC = {
+const TAGGED_RAW_ASSET(0x67B80) gJungleBg0Tiles = {
     TAGGED_RAW_HEADER(0x67B80),
     {
 #include "level_tilesets/tileset1_17e7ac.img.bin.inc"
@@ -34,7 +34,7 @@ const TAGGED_RAW_ASSET(0x67B80) gStaticData_0817E7AC = {
 };
 
 /* Tile set 2: 1707 tiles, 10 rooms. */
-const TAGGED_RAW_ASSET(0x1AAC0) gStaticData_081E6330 = {
+const TAGGED_RAW_ASSET(0x1AAC0) gSnowBg0Tiles = {
     TAGGED_RAW_HEADER(0x1AAC0),
     {
 #include "level_tilesets/tileset2_1e6330.img.bin.inc"
@@ -42,7 +42,7 @@ const TAGGED_RAW_ASSET(0x1AAC0) gStaticData_081E6330 = {
 };
 
 /* Tile set 3: 4769 tiles, 5 rooms. */
-const TAGGED_RAW_ASSET(0x4A840) gStaticData_08200DF4 = {
+const TAGGED_RAW_ASSET(0x4A840) gUnderwaterBg0Tiles = {
     TAGGED_RAW_HEADER(0x4A840),
     {
 #include "level_tilesets/tileset3_200df4.img.bin.inc"

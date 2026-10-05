@@ -3,10 +3,10 @@
   "asset": {"symbol": "gRoom27Asset", "packed": false},
   "symbols": {"desc": "gRoom27Desc", "palette": "gRoom27Palette", "entities": "gRoom27EntityList", "groups": "gRoom27EntityGroups", "param_offsets": "gRoom27ParamOffsets", "params": "gRoom27Params", "type_counts": "gRoom27TypeCounts", "layers": "gRoom27Layers", "items": "gRoom27Entities", "links": "gRoom27Links"},
   "layers": {
-    "bg1": {"map": "bg1.map.bin", "size_chunks": [63, 14], "size_tiles": [1000, 105], "tileset": "gStaticData_08640EF8", "scale": [128, 76], "cnt": 3, "unk_1E": 2, "grid_symbol": "gRoom27Bg1Grid"},
-    "bg2": {"map": "bg2.map.bin", "size_chunks": [80, 25], "size_tiles": [1275, 200], "tileset": "gStaticData_08640EF8", "scale": [256, 256], "cnt": 1, "unk_1E": 2, "grid_symbol": "gRoom27Bg2Grid"},
-    "bg3": {"map": "bg3.map.bin", "size_chunks": [83, 32], "size_tiles": [1325, 250], "tileset": "gStaticData_08640EF8", "scale": [384, 256], "cnt": 0, "unk_1E": 2, "grid_symbol": "gRoom27Bg3Grid"},
-    "bg0": {"map": "bg0.map.bin", "size_chunks": [80, 25], "size_tiles": [1275, 200], "tileset": "gStaticData_0817E7AC", "scale": [256, 256], "cnt": 2, "unk_1E": 2, "grid_symbol": "gRoom27Bg0Grid"},
+    "bg1": {"map": "bg1.map.bin", "size_chunks": [63, 14], "size_tiles": [1000, 105], "tileset": "gJungleBgTiles", "scale": [128, 76], "cnt": 3, "unk_1E": 2, "grid_symbol": "gRoom27Bg1Grid"},
+    "bg2": {"map": "bg2.map.bin", "size_chunks": [80, 25], "size_tiles": [1275, 200], "tileset": "gJungleBgTiles", "scale": [256, 256], "cnt": 1, "unk_1E": 2, "grid_symbol": "gRoom27Bg2Grid"},
+    "bg3": {"map": "bg3.map.bin", "size_chunks": [83, 32], "size_tiles": [1325, 250], "tileset": "gJungleBgTiles", "scale": [384, 256], "cnt": 0, "unk_1E": 2, "grid_symbol": "gRoom27Bg3Grid"},
+    "bg0": {"map": "bg0.map.bin", "size_chunks": [80, 25], "size_tiles": [1275, 200], "tileset": "gJungleBg0Tiles", "scale": [256, 256], "cnt": 2, "unk_1E": 2, "grid_symbol": "gRoom27Bg0Grid"},
     "collision": {"map": "collision.map.bin", "size_chunks": [80, 25], "size_tiles": [1275, 200], "tileset": null, "scale": [256, 256], "cnt": 0, "unk_1E": 2, "grid_symbol": "gRoom27CollisionGrid"}
   },
   "palette": [

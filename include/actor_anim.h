@@ -69,7 +69,7 @@ COMPILE_TIME_ASSERT(sizeof(struct anim_table_record) == 0x28);
  *
  *   - "pool_offset": each entry is a byte offset from the start of the
  *     category family's decompressed sprite sheet
- *     (gStaticData_080B2120 for categories 0-2, gStaticData_0814174C for
+ *     (gPolarSpriteSheet for categories 0-2, gJetpackSpriteSheet for
  *     3-6) to a struct sprite_frame. These frames *are* extracted - see
  *     graphics/unknown/<sheet>/<entity>/NN.png, one file per frame.
  *

@@ -3,9 +3,9 @@
   "asset": {"symbol": "gRoom38Asset", "packed": true},
   "symbols": {"desc": "gRoom38Desc", "palette": "gRoom38Palette", "entities": "gRoom38EntityList", "groups": "gRoom38EntityGroups", "param_offsets": "gRoom38ParamOffsets", "params": "gRoom38Params", "type_counts": "gRoom38TypeCounts", "layers": "gRoom38Layers", "items": "gRoom38Entities"},
   "layers": {
-    "bg1": {"map": "bg1.map.bin", "size_chunks": [3, 3], "size_tiles": [37, 21], "tileset": "gStaticData_0864D7E8", "scale": [128, 128], "cnt": 3, "unk_1E": 2, "grid_symbol": "gRoom38Bg1Grid"},
-    "bg2": {"map": "bg2.map.bin", "size_chunks": [3, 4], "size_tiles": [40, 25], "tileset": "gStaticData_0864D7E8", "scale": [256, 256], "cnt": 0, "unk_1E": 2, "grid_symbol": "gRoom38Bg2Grid"},
-    "bg0": {"map": "bg0.map.bin", "size_chunks": [3, 4], "size_tiles": [40, 25], "tileset": "gStaticData_08200DF4", "scale": [256, 256], "cnt": 2, "unk_1E": 2, "grid_symbol": "gRoom38Bg0Grid"},
+    "bg1": {"map": "bg1.map.bin", "size_chunks": [3, 3], "size_tiles": [37, 21], "tileset": "gUnderwaterBgTiles", "scale": [128, 128], "cnt": 3, "unk_1E": 2, "grid_symbol": "gRoom38Bg1Grid"},
+    "bg2": {"map": "bg2.map.bin", "size_chunks": [3, 4], "size_tiles": [40, 25], "tileset": "gUnderwaterBgTiles", "scale": [256, 256], "cnt": 0, "unk_1E": 2, "grid_symbol": "gRoom38Bg2Grid"},
+    "bg0": {"map": "bg0.map.bin", "size_chunks": [3, 4], "size_tiles": [40, 25], "tileset": "gUnderwaterBg0Tiles", "scale": [256, 256], "cnt": 2, "unk_1E": 2, "grid_symbol": "gRoom38Bg0Grid"},
     "collision": {"map": "collision.map.bin", "size_chunks": [3, 4], "size_tiles": [40, 25], "tileset": null, "scale": [256, 256], "cnt": 0, "unk_1E": 2, "grid_symbol": "gRoom38CollisionGrid"}
   },
   "palette": [

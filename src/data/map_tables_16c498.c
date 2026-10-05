@@ -16,10 +16,10 @@ struct xy_pair {
 
 const struct xy_pair gLevelSelectWorldPos = { 16, 32 };
 const struct xy_pair gStaticData_0816C4A0 = { 16, 60 };
-const struct xy_pair gStaticData_0816C4A8 = { 40, 33 };
-const struct xy_pair gStaticData_0816C4B0 = { 50, 32 };
-const struct xy_pair gStaticData_0816C4B8 = { 66, 34 };
-const struct xy_pair gStaticData_0816C4C0 = { 166, 34 };
+const struct xy_pair gLevelSelectCrystalPos = { 40, 33 };
+const struct xy_pair gLevelSelectGemPos = { 50, 32 };
+const struct xy_pair gLevelSelectTrialIconPos = { 66, 34 };
+const struct xy_pair gLevelSelectTimePos = { 166, 34 };
 const struct xy_pair gStaticData_0816C4C8 = { 201, 70 };
 const struct xy_pair gStaticData_0816C4D0 = { 201, 87 };
 

@@ -32,7 +32,7 @@ extern struct held_pressed_pair {
 extern u8 gTitleLogoPieceSeeds[];
 extern u8 gTitleArrowPieceOffsets[];
 extern u8 gLogoActorAnim[];
-extern u8 gStaticData_08178F80[];
+extern u8 gPolarCategoryPalette[];
 extern u8 gVvLogoEmblemObj[];
 extern u8 gVvLogoLettersObj[];
 extern u8 gVvLogoUrlObj[];
