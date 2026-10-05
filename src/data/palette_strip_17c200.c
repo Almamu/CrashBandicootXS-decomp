@@ -1,4 +1,5 @@
 #include "core.h"
+#include "vehicle.h"
 
 /*
  * ROM 0x0817C200-0x0817C260. Linked in ROM order between data/data.s

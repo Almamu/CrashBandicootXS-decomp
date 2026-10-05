@@ -19,6 +19,7 @@
 
 #include "rle_sprites/15a050_frames.h"
 #include "unknown/01_14174c_frames.h"
+#include "vehicle.h"
 
 extern const u8 gJetpackPlayerRleFrames[];
 

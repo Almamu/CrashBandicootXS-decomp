@@ -1,7 +1,10 @@
 #include "core.h"
 #include "actor_self.h"
+#include "actor_anim.h"
 #include "memory.h"
 #include <libgcc.h>
+#include "actor.h"
+#include "bosses.h"
 
 /* Same boss-weapon "self"/tracker object family as airship_fireball.c/
  * airship_fall.c - see airship_fireball.c's header comment and
@@ -22,14 +25,7 @@
  * set of fixed ranges/bias points (`0xa000`/`0x4FFF`, `0xFFFFD300`/
  * `0x13FF`) and a final `0x180`/`-0x180`, `0x100`/`-0x100` hard clamp.
  */
-extern s32 gAirshipX;
-extern s32 gAirshipVelX;
-extern s32 gAirshipY;
-extern s32 gAirshipVelY;
 extern struct actor_self *gActorList;
-extern s32 gAirshipScreenX;
-extern const s16 gAirshipBox[];
-extern s32 gAirshipScreenY;
 
 static inline s32 Abs(s32 x)
 {
@@ -56,10 +52,10 @@ void SteerAirship(void)
     pl = gActorList;
     px = pl->x;
     cx = gAirshipScreenX - 0x1200;
-    dx = px - cx - (gAirshipBox[0] + gAirshipBox[3] / 2);
+    dx = px - cx - (gAirshipBox.x + gAirshipBox.w / 2);
     py = pl->y;
     cy = gAirshipScreenY + 0x1800;
-    dy = py - cy - (gAirshipBox[1] + gAirshipBox[4] / 2);
+    dy = py - cy - (gAirshipBox.y + gAirshipBox.h / 2);
 
     if (Abs(dx) <= 0x2CFF) {
         s32 s = dx >> 10;
@@ -150,21 +146,7 @@ dy_done:
  * before the heap flags), and the part-table setup is an inlined
  * constructor taking its values as arguments (all loaded before the
  * stores). */
-extern s32 gAirshipCheckpointCount;
-extern s32 gAirshipMapCols;
-extern s32 gAirshipMapRows;
-extern struct actor_self *gAirship;
-extern s32 gAirshipState;
-extern s32 gAirshipStateTimer;
-extern u8 gAirshipBg2PageFlip;
-extern s32 gAirshipLevel;
-extern s32 GetActorCheckpoint(void);
-extern void SetActorAnim(void *self, s32 idx);
-extern s32 GetAnimFrameBaseOffset(void *self);
-extern void LoadAirshipGraphics(void);
 extern const s16 gAirshipPicture[];
-extern struct anim_frame_record gAirshipKeyframes[];
-extern u32 gAirshipMapFrames[];
 
 static inline void BossSetState(s32 st, s32 idx)
 {
@@ -204,7 +186,7 @@ void CreateAirship(s32 level)
     gAirshipMapRows = gAirshipPicture[1];
     slot = &gAirship;
     t = AllocActor(0x1c);
-    InitAnimPart(t, gAirshipKeyframes, gAirshipMapFrames, 1);
+    InitAnimPart(t, (struct anim_frame_record *)gAirshipKeyframes, (u32 *)gAirshipMapFrames, 1);
     *slot = t;
     BossSetState(0, 0);
     LoadAirshipGraphics();
@@ -235,32 +217,6 @@ void CreateAirship(s32 level)
  * libcall wouldn't force) and the record lookup is written `a - -b` (see
  * below). `gAirshipLevel` is the level index `CreateAirship` caches,
  * not an object pointer. */
-extern s32 gAirshipVelZ;
-extern s32 gAirshipZ;
-/* One 28-byte per-kind weapon record (`gAirshipAttacks`); only the
- * fields this file reads are meaningful names-wise. */
-struct weapon_kind {
-    s32 unk_00;
-    s32 unk_04;
-    s32 unk_08;
-    s32 unk_0C;
-    s32 unk_10;
-    s32 unk_14;
-    s32 unk_18;
-};
-extern struct weapon_kind *gAirshipAttack;
-extern struct weapon_kind gAirshipAttacks[];
-extern s32 gAirshipFireTimer;
-extern s32 gAirshipHp;
-extern s32 gAirshipVolleyCount;
-extern s32 gAirshipBg2Page;
-extern s32 gAirshipDistance;
-extern s32 GetCellAnimDistance(void);
-extern void sub_8029E34(s32 arg0);
-extern void DrawAirshipMap(u16 *src);
-extern void UpdateAirshipBg2(void);
-extern s32 gAirshipHitFlashTimer;
-extern u8 gAirshipHitFlashPalettes[];
 extern s32 QueueVramDmaTransfer(void *arg0, void *arg1, u16 arg2, u16 arg3);
 
 void SpawnAirship(s32 kind, s32 x, s32 y, s32 z)
@@ -276,7 +232,7 @@ void SpawnAirship(s32 kind, s32 x, s32 y, s32 z)
     /* `a - -b` rather than `a + b`: the latter lets fold reassociate the
      * constant table base out of `&table[kind]`, while the ROM adds the
      * level offset to the finished record address. */
-    gAirshipAttack = (struct weapon_kind *)(gAirshipLevel * (s32)sizeof(struct weapon_kind) - -(s32)&gAirshipAttacks[kind]);
+    gAirshipAttack = (const struct weapon_kind *)(gAirshipLevel * (s32)sizeof(struct weapon_kind) - -(s32)&gAirshipAttacks[kind]);
     gAirshipFireTimer = gAirshipAttack->unk_0C;
     gAirshipHp = gAirshipAttack->unk_00;
     gAirshipVolleyCount = 0;
@@ -323,9 +279,7 @@ void SpawnAirship(s32 kind, s32 x, s32 y, s32 z)
  * memory - the ROM reloads `gAirshipDistance` after it), and the
  * re-blit tail reads the tracker through a fresh local (a separate
  * pseudo from the head's own `self`). */
-extern void *gAirshipStateFuncs[];
 extern s32 _call_via_r0(void *fn);
-extern void AnimateAirshipPalette(void);
 
 void UpdateAirship(void)
 {
@@ -364,9 +318,6 @@ void UpdateAirship(void)
 /* Same boss-weapon subsystem as airship_fireball.c/airship_fall.c - see
  * airship_fireball.c's header comment and
  * docs/matching/issue-58-0x08030334-actor.md. */
-
-extern s32 GetActorBgCenterX(void);
-extern s32 GetActorBgCenterY(void);
 
 /* If `gAirshipBg2PageFlip` (an "apply now" latch) is set, toggles
  * `BG2CNT` between two palette/priority presets (tracked by

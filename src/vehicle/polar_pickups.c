@@ -3,6 +3,8 @@
 #include "memory.h"
 #include <libgcc.h>
 #include "audio.h"
+#include "actor.h"
+#include "vehicle.h"
 
 /* Continuation of polar_player_actions.c's player/action-object family, right
  * after `RunPolarPlayerState` (matched C, see polar_player_dispatch.c) - same `self`
@@ -16,10 +18,8 @@ struct moving_actor {
     s32 velY;                   // 0x58
 };
 
-extern u8 gPolarPlayerInactive;
 extern void *gAudioContext;
 
-extern s32 GetAnimFrameBaseOffset(void *self);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 
 /* Constant getter - returns `gPolarPlayerInactive`. */
@@ -69,7 +69,7 @@ frameBlock:
         self->base.animDone = 0;
     }
     {
-        s32 frame = GetAnimFrameBaseOffset(self);
+        s32 frame = GetAnimFrameBaseOffset((struct actor_self *)self);
         register s32 idx asm("r2") = self->base.animIndex;
         register u8 *table asm("r3") = (u8 *)self->base.anims;
         register u8 *entryPtr asm("r1") = (u8 *)(idx * 0xc);
@@ -112,9 +112,7 @@ asm(".align 2, 0");
  * choice (the `w`/`wShift`/`h`/`hShift` load/shift order, the
  * `x`/`y`-position-word pack, the `self+0x18` priority-nibble unpack)
  * matches the ROM's own register roles exactly once pinned to match. */
-extern u8 *GetAnimFrameData(void *self);
 extern void SetupSpriteFrameOam(u8 *frame, u32 arg1, u32 arg2, s32 priority);
-extern s32 GetAnimFrameAttr(void *self);
 
 void DrawPolarCollectedWumpa(void *selfArg)
 {
@@ -219,7 +217,6 @@ struct fruit_actor {
 extern void *gLevelState;
 
 extern u8 gActorVtable[];
-extern u8 gPolarCollectedWumpaVtable[];
 
 extern void CollectWumpa(void *self);
 
@@ -234,7 +231,7 @@ void DestroyPolarCollectedWumpa(void *selfArg, u32 arg1)
     u32 arg1r = arg1;
     s32 i;
 
-    *(u8 **)(self + 0x50) = gPolarCollectedWumpaVtable;
+    *(u8 **)(self + 0x50) = (u8 *)gPolarCollectedWumpaVtable;
 
     for (i = 0; i < ((struct fruit_actor *)self)->fruit; i++) {
         CollectWumpa(gLevelState);
@@ -278,9 +275,6 @@ asm(".align 2, 0");
  * statements earlier, a genuine correctness bug caught by a direct
  * byte compare against the ROM, not just a register-choice cosmetic
  * mismatch. */
-extern s32 GetActorBgCenterY(void);
-extern s32 GetActorBgCenterX(void);
-extern void InitActorPart(void *self, s32 a, s32 b, s32 c, s32 d);
 
 /* The seek effect (method table gPolarCollectedWumpaVtable). */
 struct polar_collected_wumpa {
@@ -291,14 +285,14 @@ struct polar_collected_wumpa {
                         // repeats its teardown drain this many times
 };
 
-void *CreatePolarCollectedWumpa(void *selfArg, s32 a, s32 b, s32 c, s32 spawnParam)
+void *CreatePolarCollectedWumpa(void *selfArg, void *part, s32 b, s32 c, s32 spawnParam)
 {
     struct polar_collected_wumpa *self = selfArg;
     register s32 dy asm("r3");
     s32 sum;
     s32 q;
 
-    InitActorPart(self, a, b, c, 1);
+    InitActorPart(self, part, b, c, 1);
     self->base.vtable = (struct actor_vtable *)gPolarCollectedWumpaVtable;
     self->count = spawnParam;
 
@@ -340,14 +334,6 @@ asm(".align 2, 0");
  * store through `*(T *)&self->field` casts: plain member stores let
  * gcc move the zero loads (docs/workflow.md step 7). */
 
-/* Anonymous 12-byte (3-word) copy unit - see the earlier copy of this
- * comment in this file for why this shape (rather than three separate
- * `s32` field copies) is needed to reproduce the ROM's `ldm`/`stm`
- * lowering for `self+0x38`'s refresh from `gPolarNitroCrateBox`. */
-struct vec3_words {
-    s32 a, b, c;
-};
-
 /* `UpdatePolarLifeCrate`'s class adds one field after the common prefix: an
  * object it hands to `MarkSpawnCollected`'s 15-entry list. */
 struct listed_actor {
@@ -357,21 +343,7 @@ struct listed_actor {
 
 extern void *gActorList;
 
-extern u8 gPolarWumpaVtable[];
-extern u8 gPolarNitroCrateBox[];
-
-extern u8 IsTouchingPlayer(void *self);
-extern void UpdateActor(void *self);
-extern u8 IsTouchingYeti(void *self);
 extern void AddBrokenCrate(void *self);
-extern void MarkSpawnCollected(void *arg0);
-extern void HurtPolarPlayer(void *arg0);
-extern void AddActorMissedNitro(void);
-extern void DetonateNearbyPolarNitros(void *self);
-extern void QueuePolarWumpa(void *arg0, s32 delta);
-extern void GivePolarPlayerMask(void *arg0);
-extern void GivePolarPlayerLife(void *arg0);
-extern void UpdatePolarCrate(void *selfArg);
 
 /* On proximity (`IsTouchingPlayer`), accumulates `1` into the shared
  * `gActorList`-targeted accumulator via `QueuePolarWumpa` then fires
@@ -381,7 +353,7 @@ void UpdatePolarWumpa(void *selfArg)
 {
     struct actor_self *self = selfArg;
 
-    if (IsTouchingPlayer(self)) {
+    if ((u8)IsTouchingPlayer(self)) {
         QueuePolarWumpa(gActorList, 1);
         if (self != 0) {
             struct actor_vtable *table = self->vtable;
@@ -397,11 +369,11 @@ void UpdatePolarWumpa(void *selfArg)
  * caller's last stack argument, then sets `vtable` to
  * `gPolarWumpaVtable` - one of the "spawn effect type N" family
  * documented in docs/rom_map.md. */
-void *CreatePolarWumpa(void *selfArg, s32 a, s32 b, s32 c, s32 lastArg)
+void *CreatePolarWumpa(void *selfArg, void *part, s32 b, s32 c, s32 lastArg)
 {
     struct actor_self *self = selfArg;
 
-    InitActorPart(self, a, b, c, lastArg);
+    InitActorPart(self, part, b, c, lastArg);
     self->vtable = (struct actor_vtable *)gPolarWumpaVtable;
     return self;
 }
@@ -456,7 +428,7 @@ void UpdatePolarQuestionCrate(void *selfArg)
 {
     struct actor_self *self = selfArg;
 
-    if (self->animIndex != 0x12 && IsTouchingPlayer(self)) {
+    if (self->animIndex != 0x12 && (u8)IsTouchingPlayer(self)) {
         s32 typeByte;
 
         AddBrokenCrate(gLevelState);
@@ -528,7 +500,7 @@ void UpdatePolarLifeCrate(void *selfArg)
     struct actor_self *self = selfArg;
 
     if (self->animIndex != 0x12) {
-        if (IsTouchingPlayer(self)) {
+        if ((u8)IsTouchingPlayer(self)) {
             PlaySfx(gAudioContext, 7, 0x100);
             AddBrokenCrate(gLevelState);
             GivePolarPlayerLife(gActorList);
@@ -590,7 +562,7 @@ void UpdatePolarNitroCrate(void *selfArg)
         }
         return;
     } else {
-        register u32 raw asm("r0") = IsTouchingPlayer(self);
+        register u32 raw asm("r0") = (u8)IsTouchingPlayer(self);
         register u32 found asm("r5");
 
         raw = raw << 24;
@@ -636,7 +608,7 @@ void UpdatePolarNitroCrate(void *selfArg)
     goto tail;
 
 usedState:
-    *(struct vec3_words *)((u8 *)self + 0x38) = *(struct vec3_words *)gPolarNitroCrateBox;
+    *(struct vec3_words *)((u8 *)self + 0x38) = *(const struct vec3_words *)&gPolarNitroCrateBox;
 
     if (self->stateTime == 0x14) {
         DetonateNearbyPolarNitros(self);

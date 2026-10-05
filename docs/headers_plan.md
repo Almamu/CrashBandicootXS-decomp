@@ -30,17 +30,19 @@ Batch 5 (system + audio) done: `include/system.h`, `irq.h`/`memory.h`/
 `audio.h` extended, the IRQ table typed as `irq_handler_t [14]`, see
 "Batch 5" below. Batch 6 (menus + crates + player, one PR) done:
 `include/menus.h`, `include/crates.h` and `include/player.h`, see
-"Batch 6" below.
+"Batch 6" below. Batch 7 (actor + bosses + vehicle, one PR) done:
+`include/actor.h` extended, `include/bosses.h` and `include/vehicle.h`,
+see "Batch 7" below.
 
 Audit totals (`tools/extern_audit.py`) as the batches land:
 
-| | Pilot merged | After batch 1 | After batch 2 | After batch 3 | After batch 4 | After batch 5 | After batch 6 |
-|---|---:|---:|---:|---:|---:|---:|---:|
-| Declarations in `.c` files (symbols defined elsewhere) | 4,572 | 4,513 | 4,436 | 4,279 | 4,159 | 3,897 | 3,474 |
-| Unique symbols declared in a `.c` file | 2,317 | 2,284 | 2,214 | 2,112 | 2,091 | 2,034 | 1,697 |
-| - conflicting | 231 | 229 | 226 | 222 | 210 | 196 | 167 |
-| Local struct/union definitions in `.c` files | 548 | 538 | 522 | 501 | 487 | 485 | 448 |
-| Struct names defined in more than one `.c` file | 75 | 74 | 68 | 63 | 62 | 62 | 51 |
+| | Pilot merged | After batch 1 | After batch 2 | After batch 3 | After batch 4 | After batch 5 | After batch 6 | After batch 7 |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| Declarations in `.c` files (symbols defined elsewhere) | 4,572 | 4,513 | 4,436 | 4,279 | 4,159 | 3,897 | 3,474 | 2,392 |
+| Unique symbols declared in a `.c` file | 2,317 | 2,284 | 2,214 | 2,112 | 2,091 | 2,034 | 1,697 | 986 |
+| - conflicting | 231 | 229 | 226 | 222 | 210 | 196 | 167 | 137 |
+| Local struct/union definitions in `.c` files | 548 | 538 | 522 | 501 | 487 | 485 | 448 | 412 |
+| Struct names defined in more than one `.c` file | 75 | 74 | 68 | 63 | 62 | 62 | 51 | 40 |
 
 ## Tools
 
@@ -189,9 +191,9 @@ The full list:
 
 | Subsystem | Header | Notes |
 |---|---|---|
-| actor | `actor.h` (extend) | |
+| actor | `actor.h` (**done**, batch 7) | includes `actor_self.h` and `vtable.h`; not `actor_anim.h` (see "Batch 7") |
 | audio | `audio.h` (**done**, batch 5) | includes `<gax.h>` and `byte_arg.h` |
-| bosses | `bosses.h` (new) | |
+| bosses | `bosses.h` (**done**, batch 7) | includes `actor.h` |
 | crates | `crates.h` (**done**, batch 6) | includes `aabb.h`, `byte_arg.h`, `vtable.h`; not `crate.h` (see "Batch 6") |
 | cutscene | `cutscene.h` (extend) | |
 | enemies | `enemies.h` (new) | |
@@ -209,7 +211,7 @@ The full list:
 | system | `system.h` (**done**, batch 5) | includes `irq.h` (the IRQ table and VBlank callbacks) and `memory.h` (the heap), which got the rest of irq.c's and memory.c's prototypes |
 | text | `text.h` (**done**, pilot) | |
 | util | `util.h` (**done**, batch 4) | includes `aabb.h` and `line_util.h` |
-| vehicle | `vehicle.h` (new) | |
+| vehicle | `vehicle.h` (**done**, batch 7) | includes `actor.h` |
 | (shared globals) | `globals.h` (new) | see below |
 | libgcc | `lib/libgcc/include/libgcc.h` (**done**, batch 4) | `__udivsi3`, `__divsi3`, `__modsi3`, `__umodsi3` and the three 64-bit routines; not `_call_via_rN` |
 | GAX2, AgbEeprom, SWI | `<gax.h>`, `<agb_eeprom.h>`, `<agb_syscall.h>` | already exist (docs/libraries.md) |
@@ -269,9 +271,9 @@ Where the remaining declarations would go (after the pilot):
 | gfx | 120 | 29 | 383 | 85 |
 | player (**done**, batch 6) | 129 | 13 | 173 | 33 |
 | menus (**done**, batch 6) | 152 | 8 | 185 | 26 |
-| actor | 197 | 6 | 365 | 49 |
-| bosses | 239 | 10 | 344 | 35 |
-| vehicle | 277 | 13 | 374 | 38 |
+| actor (**done**, batch 7) | 197 | 6 | 365 | 49 |
+| bosses (**done**, batch 7) | 239 | 10 | 344 | 35 |
+| vehicle (**done**, batch 7) | 277 | 13 | 374 | 38 |
 | level | 311 | 45 | 534 | 116 |
 | globals | 27 | 19 | 540 | 162 |
 | (data-only, stays) | 329 | 0 | 329 | 19 |
@@ -399,8 +401,8 @@ before the files that every subsystem touches.
    "Batch 5" below.
 7. **menus, crates, player (done):** one PR (batch 6). See "Batch 6"
    below.
-8. **actor, bosses, vehicle:** one PR each. These have many symbols but few
-   conflicts, and few files outside the subsystem use them.
+8. **actor, bosses, vehicle (done):** one PR (batch 7). See "Batch 7"
+   below.
 9. **objects, gfx, level:** the hubs, with 110 conflicting symbols between
    them (`SetSpriteAnimDone` has 13 variants). These may need two PRs each:
    consistent symbols first, conflicts after.
@@ -1010,6 +1012,149 @@ origin/main's, and so is every `.s` file except level_select.s, whose
 local label numbers (`.LCB`) differ. The build has the same 35 warnings
 as origin/main.
 
+## Batch 7: actor + bosses + vehicle
+
+One PR for the three subsystems. 1,082 local declarations are gone
+(3,474 -> 2,392; 88 `.c` files touched), and 36 local struct definitions
+(448 -> 412). One file needed an asm-label alias (`CreateHovercraftSideGun`
+in jetpack_spawn.c, see "Codegen exceptions").
+
+- **Ownership by subject.** The file layout put many functions in a
+  neighbour's file for ROM order: actor_anim.c holds the teardown
+  functions of every jetpack, polar and hovercraft object, actor.c,
+  actor_category_frame.c and actor_spawn.c the per-category hooks
+  (`JetpackIsTouchingPlayer`, `PolarIsPauseLocked`, ...),
+  jetpack_balloon.c the airship's `DestroyAirship`/`AirshipStateInactive`/
+  `GetAirshipHpPercent`, jetpack_plane.c the airship fireball's states,
+  jetpack_spawn.c the hovercraft spawners and `YetiStateStop`, hovercraft.c
+  the jetpack ring and collected wumpa. Each goes with its subject:
+  `Airship*`, `Hovercraft*`, `Cortex*`, `Dingodile*`, `Tiny*`, `MegaMix*`
+  and the one-shot/hop-pad controllers in bosses.h, `Jetpack*`, `Polar*`
+  and `Yeti*` in vehicle.h, the rest by directory.
+- **`include/actor.h`** (extended) keeps `struct actor` (the gfx entity)
+  and declares every other function of src/actor/, the actor zone's
+  sym_iwram.txt globals (`gActorBg*`, `gActorCategory*`, `gActorSpawn*`,
+  `gCellAnim*`, the palette cycle, `gCategorySpriteSheet`, ...), its
+  iwram_data.c words and the palette cycle tables. It includes
+  `actor_self.h` and `vtable.h`, **not `actor_anim.h`**: 58 files include
+  actor.h, and graphics.c and gobj_1a794.h define their own `struct
+  anim_box` (batch 6's `hitbox_quad`, gfx batch) and sprite_bank.h its own
+  `struct sprite_frame`. actor.h declares the actor_anim.h tags it needs;
+  the files that read `struct anim_box`/`anim_table_record` fields include
+  actor_anim.h themselves.
+- **`include/bosses.h`** (new) declares every bosses function, the
+  airship's and hovercraft's sym_iwram.txt globals, the boss vtables and
+  state tables (`const`), the boss data tables (`const`, the data files'
+  types) and `gFlashBgPalette`/`gFlashObjPalette`. `gAirshipPicture` and
+  `gHovercraftPicture` are defined with anonymous struct types sized by
+  the picture data, so their one user each keeps a local declaration.
+  gobj_1a794.h lost its copies of `CreateCortexBossPlatformMover`,
+  `SpawnDingodileShieldOrRocket`, `gDingodileShieldVtable` and
+  `gDingodileMotionRecords` (declared `struct vec3 []`; the data file
+  defines `const s32 [4][3]`) and includes bosses.h.
+- **`include/vehicle.h`** (new) declares every vehicle function, the
+  jetpack, polar and yeti globals, vtables, state tables and data tables.
+- The defining data files (entity vtables, state tables, palettes, boxes)
+  and iwram_data.c include the new headers, so each definition is checked.
+- **Struct merges** (36 local definitions gone):
+  - actor_anim.c's `struct anim_part_instance` (`frameTable`/`field_08`/
+    `frameIndex` are `anims`/`animTime`/`animIndex`) and `struct
+    linked_node` (the teardown functions' `prev`/`next`/`field_50`) are
+    `struct actor_self`. `SetActorAnim` keeps a raw `animDone` store (see
+    "Codegen findings").
+  - `struct cam_ref` (5 copies: company_logos.c, title_screen.c,
+    title_screen_init.c, jetpack_spawn.c, polar_player.c; batch 3's
+    deferral) was the actor's `record` read as a camera: its `depth` at
+    +0x10 is `anim_table_record.baseDepth`, so the three readers use
+    `self->record->baseDepth`.
+  - `struct box16` (actor_category_frame.c, polar_nitro.c, yeti_graphics.c,
+    yeti_update.c) and airship_touch.c's `struct box3` are `struct
+    anim_box`; `gAirshipBox`/`gHovercraftBox` reads use its `x`/`y`/`w`/`h`
+    in place of `[0]`/`[1]`/`[3]`/`[4]`.
+  - `struct weapon_kind` (airship.c, the data file) is in bosses.h;
+    airship_states.c read `gAirshipAttack` as an `s32 *` (`[2]` is
+    `unk_08`, ...).
+  - `struct singleton_kind` (hovercraft.c's and the data file's ten-word
+    view), the cannon's and launcher's `struct spawn_timing`/`struct
+    spawn_timing_table` and the side gun's `struct orbit_table` are one
+    `struct singleton_kind { unk_00; struct spawn_timing timing[3]; }` in
+    bosses.h. The side gun's `period`/`laps`/`cyclePeriod` are
+    `timing[0].delay`/`burst`/`burstDelay`, and hovercraft.c's `unk_0C`/
+    `unk_10` are `timing[0].burstDelay`/`timing[1].delay` (for #552: the
+    hovercraft reads them as its first fire timers). `GetHovercraftAttack`
+    returns `const struct singleton_kind *`.
+  - `struct spawner` (cannon, launcher) and hovercraft_cannon.c's `struct
+    health_actor` (`health`/`unk_58`/`unk_5c`/`unk_64`/`unk_68` are
+    `hp`/`spawnX`/`spawnY`/`cooldown`/`count`) are in bosses.h.
+  - `struct actor_hp` (jetpack_run.c, jetpack_spawn.c), `struct spawn_arg`
+    (jetpack_plane.c, polar_objects.c) and `struct vec3_words`
+    (jetpack_crates.c, polar_pickups.c, and polar_objects.c's `struct
+    box12`) are in vehicle.h. `vec3_words` stays: copying a fixed box as
+    three words is what gives the ROM's `ldm`/`stm`.
+  - The method records `struct gfx_method` (cortex.c), `struct vmethod`
+    (dingodile.c), `struct hop_method` (tiny_update.c) and `struct
+    ab_method` (mega_mix_update.c) are `struct actor_method`
+    (actor_self.h).
+  - dingodile.c's `struct part_list` is box_part.h's (`items` is `struct
+    box_part **`; the one reader casts), so dingodile.c includes
+    enemies.h and lost batch 2's local `CreateEnemyCtrl`/
+    `DestroyEnemyCtrl` declarations.
+- **Definition fixes**, all identical:
+  - an unused parameter, where the callers pass a value the ROM sets up:
+    `FinishPolarRun`, `CountJetpackBomber`, `IsJetpackPauseLocked`,
+    `IsPolarPauseLocked` (`gActorList`), `AnimateJetpackPlayerPalette`
+    (`self`), `nullsub_19` (`self`, `part`);
+  - `IsJetpackPauseLocked`/`IsPolarPauseLocked` return `s32` (their only
+    callers return the value as `s32`; with `u8` they add `lsl`/`lsr`);
+  - the 27 constructors that took the part record as `s32 a`
+    (`CreateJetpackTimeCrate`, `InitPolarCrate`, `CreatePolarPenguin`, ...)
+    take `void *part`, which they pass on to `InitActorPart`;
+  - `CreateJetpackActor`, `SpawnJetpackActor` and `SpawnJetpackBalloon`
+    return `void *` (they returned `s32`);
+  - `SelectActorCategory(type, table, void *animTable, u8 active, s32
+    variant, s32 checkpoint)` (was `s32 x, u8 variant, s32 arg4, s32 y`),
+    `InitCellAnim(arg0, void *cellAnim, u32 animSize, arg3)` (the category
+    descriptor's fields), `GetHovercraftLevel` returns `s32`
+    (`gHovercraftLevel`).
+- **Conflicts and callers**, all identical:
+  - `InitActorPart` is `void *(void *self, void *part, s32 b, s32 c, s32
+    d)`; 13 callers declared the part `s32`.
+  - The callers that declared `IsTouchingPlayer` (8 files),
+    `IsSpawnCollected`, `IsActorMaskAssistDue`, `HurtPolarPlayer`,
+    `ShockPolarPlayer` and `CanPauseActorCategory` as `u8` (the
+    definitions return `s32`) write `(u8)F(...)`, which keeps the
+    truncation.
+  - airship_load_graphics.c compared `gAirshipStateTimer` as `u32`; its
+    four tests cast.
+  - `LoadBgPicture(CUR_CATEGORY.bgPicture)`: the callers declared `(void)`
+    and the picture is already in r0. `CreateTiny(OperatorNew(0x4c))` and
+    `CreateCortexBoss(OperatorNew(0x24))` in spawn_bosses.c, and the side
+    gun's `SpawnHovercraftFireball(x, y, z)` (it passed two arguments).
+  - Vtable stores and palette DMA sources cast the `const` tables
+    (`(void *)gJetpackShotVtable`), and the category vtables in
+    actor_category_175558.c cast their prototyped entries to the slot type.
+- **Tools:** `apply_headers.py --adopt-all` adopts the header's type for
+  every symbol (a first pass over a big header; the build then shows the
+  call sites to check).
+- **Left for later:**
+  - `struct level_layer`/`level_layers`/`level_state` copies in
+    dingodile.c and tiny_hop_pad.c (level batch), `struct game_state` and
+    `struct held_pressed_pair` in polar_player.c/polar_objects.c
+    (`globals.h`), and `gActorList`/`gActorVtable`/`gJetpackPlayerInactive`/
+    `gSineTable`/`gCollidableList`/`gAudioContext` (`globals.h`);
+  - `gDingodileMotionEntries`/`gDingodileVtable` are still declared in
+    gobj_1a794.h, and `gHeapSortActorsByKeyFunc` is still `void (*)(s32,
+    void **)` (iwram batch; actor_category_frame.c casts the draw list);
+  - most actor-zone functions still take `void *self` or a file-local view
+    (`struct gfx_ctrl`, `struct obj_4704`, `struct jetpack_plane`, ...);
+    the headers declare those views by tag only.
+
+After a clean build every `.o` file in src/ and lib/ is identical to
+origin/main's, and so is every `.s` file except actor_category_init.s,
+whose local label numbers (`.LCB`) differ. The build has the same 35
+warnings as origin/main.
+
+
 ## Codegen findings
 
 The pilot itself had **no codegen surprises**: every file's `.s` was
@@ -1076,6 +1221,20 @@ here (built with agbcc and, in `font_glyph.c`, `font_draw_text.c`,
 | local `struct pmf`/`act_pmf` -> `struct actor_pmf`, `pmf_entry` -> `struct vtable_slot` | input_ctrl.c, swim_ctrl.c, action_ctrl_update.c (old_agbcc) | identical |
 | `struct flag8`/`d18c_flag8` -> `struct byte_arg` as a by-value stack argument | crate_break.c, collision_queue.c | identical |
 | `void *` view parameter -> `struct pause_menu *` | `PauseMenuCursorDown`/`Up`, `DrawPauseMenuPageTitle` | identical |
+| local `struct anim_part_instance`/`linked_node` -> `struct actor_self` fields | actor_anim.c | identical, except `SetActorAnim`'s `animDone = zero1` store: through the field the pinned zero in r2 is dropped (`mov r1, #0`), so it stays `*((u8 *)self + 0x12)` |
+| `(*(struct cam_ref **)&self->record)->depth` -> `self->record->baseDepth` | company_logos.c (old_agbcc), jetpack_spawn.c, polar_player.c | identical |
+| `s16 []`/`u8 []` box extern -> `const struct anim_box`, `[0]`/`[3]` -> `.x`/`.w`; local `box16`/`box3` -> `struct anim_box` | airship.c, airship_explode.c, airship_touch.c, hovercraft.c, actor_category_frame.c, polar_nitro.c, yeti_*.c | identical |
+| `s32 *` view of a const record table -> `const struct weapon_kind *` fields | airship_states.c | identical |
+| ten-word / `orbit_table` / `spawn_timing_table` views -> `struct singleton_kind` with `timing[3]` | hovercraft*.c, singleton_kind_17c460.c | identical |
+| caller's `u8` return -> definition's `s32`, call written `(u8)F(...)` | `IsTouchingPlayer` (8 files), `IsSpawnCollected`, `IsActorMaskAssistDue`, `HurtPolarPlayer`, `ShockPolarPlayer`, `CanPauseActorCategory` | identical |
+| definition return `u8` -> `s32` for a getter whose caller returns `s32` | `IsJetpackPauseLocked`, `IsPolarPauseLocked` | identical; with `u8` the callers add `lsl`/`lsr #0x18` |
+| `u32` global read as `s32` (header type), compares cast `(u32)` | `gAirshipStateTimer` in airship_load_graphics.c | identical; without the casts `bls` becomes `ble` |
+| parameter `s32 a` -> `void *part`, passed on to `InitActorPart` | 27 constructors (polar_crates.c, jetpack_crates.c, ...) | identical, including the pinned `register void *aReg asm("r1")` in CreateJetpackParachuteNitro |
+| call `f()` -> `f(value already in r0)` | `LoadBgPicture(CUR_CATEGORY.bgPicture)` | identical |
+| two-argument call -> three, for a three-parameter definition | `SpawnHovercraftFireball` in the side gun | identical |
+| `u8 []`/`void *` palette with byte offsets -> `const u16 [N][16]` and `[frame]` | `gJetpackFlashPalettes`, `gAirshipHitFlashPalettes` | identical; the byte offset `+ (f << 5)` on the `u16` array is `lsl #0xa`, so the index form is needed |
+| one-byte struct stack argument -> `u8` parameter | `CreateHovercraftSideGun` in SpawnHovercraftSideGun | **changes** (`add r2, sp, #4; strb` becomes `str`); kept as an alias |
+| local method records (`gfx_method`, `vmethod`, `hop_method`, `ab_method`) -> `struct actor_method` | cortex.c, dingodile.c, tiny_update.c, mega_mix_update.c | identical |
 
 Experiments for later batches:
 
@@ -1108,6 +1267,7 @@ adds its entries here.
 | src/vehicle/yeti_states.c | `PlayAmbientSfx` | `void PlayAmbientSfx_4(void *self, s32 id, s32 frameOffset, s32 volumeMul) asm("PlayAmbientSfx")`, the byte stored at sp through a pinned r4 | `void (struct AudioContext *, u32, u32, s32, struct byte_arg)` (audio.h) | passing a `struct byte_arg` schedules `mov r1, #1` before `mov r4, sp` in YetiStateChase |
 | src/menus/level_select.c | `gLevelSelectGemPos`, `gLevelSelectTrialIconPos` | `struct xy_pair gLevelSelectGemPos_rw asm("gLevelSelectGemPos")` (and `_rw` for the other) | `const struct xy_pair` (menus.h) | InitLevelSelect reads each twice across calls; through the const object gcc keeps the first loads (old_agbcc) |
 | src/player/action_ctrl_hang.c | `UpdatePlayerFacing` | `u8 UpdatePlayerFacing_u8(void *self) asm("UpdatePlayerFacing")`, used where ActionCtrlStateHangMove tests the result | `s32 (void *)` (player.h) | the test needs the `u8` return's `lsl #0x18`; the definition only matches as `s32` |
+| src/vehicle/jetpack_spawn.c | `CreateHovercraftSideGun` | `void *CreateHovercraftSideGun_b(void *self, void *part, s32 b, s32 c, s32 d, struct byte_arg e) asm("CreateHovercraftSideGun")`, called by SpawnHovercraftSideGun | `void *(void *self, void *part, s32 b, s32 c, s32 d, u8 eByte)` (bosses.h) | the ROM stores the one-byte stack argument with `add r2, sp, #4; strb`; through the `u8` prototype it is a `str` |
 
 Known permanent exceptions: `_call_via_rN` (rule 5 above), and the
 one-argument `LZ77UnCompVram`/`RLUnCompVram` in `src/system/asset.c`

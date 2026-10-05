@@ -3,6 +3,8 @@
 #include "util.h"
 #include <libgcc.h>
 #include "audio.h"
+#include "actor.h"
+#include "vehicle.h"
 
 /* Continues the `InitActorPart`/`gActorList`-rooted "self" object
  * family (state at `self+0x28`, table-index/"kind" at `self+0xc`, an
@@ -19,37 +21,10 @@
 
 extern void *gActorList;
 extern void *gAudioContext;
-extern s32 gPolarAkuAkuInvincibleTimer;
-extern s32 gUnknown_0300088C[];
 
-extern u8 IsTouchingPlayer(void *self);
-extern u8 IsTouchingYeti(void *self);
-extern u8 HurtPolarPlayer(void *arg0);
-extern u8 ShockPolarPlayer(void *arg0);
-extern void UpdateActor(void *self);
-extern void UpdateActorDepth(void *self);
-extern void InitActorPart(void *self, s32 a, s32 b, s32 c, s32 d);
-extern s32 GetAnimFrameBaseOffset(void *self);
 extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
 extern s32 SetMaskLevel(void *arg0, s32 arg1);
 extern s32 QueueVramDmaTransfer(void *src, void *dest, u16 size, u16 unit);
-extern s32 sub_802A570(s32 idx);
-extern s32 sub_802A51C(s32 idx);
-extern s32 sub_802A558(s32 idx);
-extern s32 sub_802A540(s32 idx);
-extern s32 sub_802A504(s32 idx);
-
-extern u8 gPolarElectricFenceWireBox[];
-extern u8 gPolarElectricFenceLeftPostBox[];
-extern u8 gPolarElectricFenceRightPostBox[];
-extern u8 gPolarAkuAkuPalette1[];
-extern u8 gPolarAkuAkuPalette3[];
-extern u8 gPolarAkuAkuPalette2[];
-extern u8 gPolarElectricFenceVtable[];
-extern u8 gStaticData_087E4FD4[];
-extern u8 gPolarLauncherVtable[];
-extern u8 gPolarPenguinVtable[];
-extern u8 gPolarIcicleVtable[];
 
 /* The gLevelState fields read here. */
 struct game_state {
@@ -69,21 +44,9 @@ struct polar_penguin {
     s32 targetZ;        // 0x64 - passed back to AimPolarPenguin on retarget
 };
 
-/* CreatePolarPenguin's spawn argument. */
-struct spawn_arg {
-    u8 unk_00[0x10];
-    s32 target;         // 0x10 - AimPolarPenguin's homing target index
-};
-
-/* A 12-byte AABB record (the same shape polar_pickups.c copies as
- * `struct vec3_words`). */
-struct box12 {
-    s32 a, b, c;
-};
-
 struct hazard_part {
     u8 unk_00[0x14];
-    struct box12 box;           // 0x14
+    struct vec3_words box;           // 0x14
 };
 
 /* actor_self with this class's own fields over its unk_ areas. */
@@ -105,7 +68,7 @@ struct hazard {
     u8 unk_2D[3];
     struct hazard_part *part;   // 0x30
     s32 depth;                  // 0x34
-    struct box12 box;           // 0x38
+    struct vec3_words box;           // 0x38
     s32 stateTime;              // 0x44
     u8 unk_48[8];
     struct actor_vtable *vtable; // 0x50
@@ -139,21 +102,21 @@ void UpdatePolarElectricFence(void *selfArg)
 
     if (self->animIndex == 0) {
         self->box = self->part->box;
-        if (IsTouchingYeti(self)) {
+        if (IsTouchingYeti((struct actor_self *)self)) {
             HAZARD_HIT(self);
         }
-        self->box = *(struct box12 *)gPolarElectricFenceWireBox;
-        if (IsTouchingPlayer(self)) {
-            if (ShockPolarPlayer(gActorList)) {
+        self->box = *(const struct vec3_words *)&gPolarElectricFenceWireBox;
+        if ((u8)IsTouchingPlayer(self)) {
+            if ((u8)ShockPolarPlayer(gActorList)) {
                 HAZARD_HIT(self);
             }
         } else {
-            self->box = *(struct box12 *)gPolarElectricFenceLeftPostBox;
-            if (IsTouchingPlayer(self)) {
+            self->box = *(const struct vec3_words *)&gPolarElectricFenceLeftPostBox;
+            if ((u8)IsTouchingPlayer(self)) {
                 HAZARD_HIT(self);
             }
-            self->box = *(struct box12 *)gPolarElectricFenceRightPostBox;
-            if (IsTouchingPlayer(self)) {
+            self->box = *(const struct vec3_words *)&gPolarElectricFenceRightPostBox;
+            if ((u8)IsTouchingPlayer(self)) {
                 HAZARD_HIT(self);
             }
         }
@@ -170,11 +133,11 @@ void UpdatePolarElectricFence(void *selfArg)
 /* `InitActorPart`-based constructor: forwards `a`/`b`/`c`/`d` straight
  * through, installs `self+0x50 = gPolarElectricFenceVtable`, and clears the
  * `self+0x2c` one-shot flag. */
-void *CreatePolarElectricFence(void *selfArg, s32 a, s32 b, s32 c, s32 d)
+void *CreatePolarElectricFence(void *selfArg, void *part, s32 b, s32 c, s32 d)
 {
     struct actor_self *self = selfArg;
 
-    InitActorPart(self, a, b, c, d);
+    InitActorPart(self, part, b, c, d);
     self->vtable = (struct actor_vtable *)gPolarElectricFenceVtable;
     self->visible = 0;
     return self;
@@ -187,19 +150,19 @@ void sub_802CE10(void *selfArg)
 {
     u8 *self = selfArg;
 
-    if (IsTouchingPlayer(self)) {
-        HurtPolarPlayer(gActorList);
+    if ((u8)IsTouchingPlayer(self)) {
+        (u8)HurtPolarPlayer(gActorList);
     }
     UpdateActor(self);
 }
 
 /* Same `InitActorPart`-based constructor shape as `CreatePolarElectricFence`, minus
  * the `self+0x2c` clear, `self+0x50 = gStaticData_087E4FD4`. */
-void *sub_802CE38(void *selfArg, s32 a, s32 b, s32 c, s32 d)
+void *sub_802CE38(void *selfArg, void *part, s32 b, s32 c, s32 d)
 {
     struct actor_self *self = selfArg;
 
-    InitActorPart(self, a, b, c, d);
+    InitActorPart(self, part, b, c, d);
     self->vtable = (struct actor_vtable *)gStaticData_087E4FD4;
     return self;
 }
@@ -212,7 +175,6 @@ void *sub_802CE38(void *selfArg, s32 a, s32 b, s32 c, s32 d)
  * `self+0x50` trampoline (index 3) instead of the usual
  * `UpdateActor` fallback. Any other state (and state 0/1's own
  * non-transition paths) falls through to `UpdateActor`. */
-extern void LaunchPolarPlayer(void *selfArg);
 
 void UpdatePolarLauncher(void *selfArg)
 {
@@ -229,7 +191,7 @@ void UpdatePolarLauncher(void *selfArg)
 
 case0:
     {
-        register s32 fired asm("r6") = IsTouchingPlayer(self);
+        register s32 fired asm("r6") = (u8)IsTouchingPlayer(self);
 
         if (fired) {
             LaunchPolarPlayer(gActorList);
@@ -279,11 +241,11 @@ done:
 
 /* Same `InitActorPart`-based constructor shape as `sub_802CE38`,
  * `self+0x50 = gPolarLauncherVtable`. */
-void *CreatePolarLauncher(void *selfArg, s32 a, s32 b, s32 c, s32 d)
+void *CreatePolarLauncher(void *selfArg, void *part, s32 b, s32 c, s32 d)
 {
     struct actor_self *self = selfArg;
 
-    InitActorPart(self, a, b, c, d);
+    InitActorPart(self, part, b, c, d);
     self->vtable = (struct actor_vtable *)gPolarLauncherVtable;
     return self;
 }
@@ -298,7 +260,6 @@ void *CreatePolarLauncher(void *selfArg, s32 a, s32 b, s32 c, s32 d)
  * biased by `self+0x1c`'s sign), a random negative Y kick
  * (`self+0x58`), bumps `self+0x5c`, plays a cue, and transitions to
  * state 1/table-index 0. Always tail-calls `UpdateActor`. */
-extern void AimPolarPenguin(void *selfArg, s32 arg1);
 
 void UpdatePolarPenguin(void *selfArg)
 {
@@ -318,10 +279,10 @@ void UpdatePolarPenguin(void *selfArg)
         }
 
         {
-            register s32 fired asm("r5") = IsTouchingPlayer(self);
+            register s32 fired asm("r5") = (u8)IsTouchingPlayer(self);
 
             if (fired) {
-                if (HurtPolarPlayer(gActorList)) {
+                if ((u8)HurtPolarPlayer(gActorList)) {
                     s32 velX = (self->base.x > 0) ? 0x600 : 0xFFFFFA00;
 
                     self->velX = velX;
@@ -340,7 +301,7 @@ void UpdatePolarPenguin(void *selfArg)
                     }
                     self->base.animTime = state;
                 }
-            } else if (IsTouchingYeti(self)) {
+            } else if (IsTouchingYeti((struct actor_self *)self)) {
                 s32 velX = (self->base.x > 0) ? 0x600 : 0xFFFFFA00;
 
                 self->velX = velX;
@@ -413,11 +374,11 @@ void AimPolarPenguin(void *selfArg, s32 target)
  * field feeds `AimPolarPenguin`'s homing target): installs
  * `self+0x50 = gPolarPenguinVtable`, then calls
  * `AimPolarPenguin(self, e->0x10)`. */
-void *CreatePolarPenguin(void *selfArg, s32 a, s32 b, s32 c, s32 d, struct spawn_arg *e)
+void *CreatePolarPenguin(void *selfArg, void *part, s32 b, s32 c, s32 d, struct spawn_arg *e)
 {
     struct actor_self *self = selfArg;
 
-    InitActorPart(self, a, b, c, d);
+    InitActorPart(self, part, b, c, d);
     self->vtable = (struct actor_vtable *)gPolarPenguinVtable;
     AimPolarPenguin(self, e->target);
     return self;
@@ -436,8 +397,8 @@ void UpdatePolarIcicle(void *selfArg)
     register s32 threshold1 asm("r0");
     register s32 depth asm("r1");
 
-    if (IsTouchingPlayer(self)) {
-        HurtPolarPlayer(gActorList);
+    if ((u8)IsTouchingPlayer(self)) {
+        (u8)HurtPolarPlayer(gActorList);
     }
 
     threshold1 = 0x6400;
@@ -517,7 +478,7 @@ void *CreatePolarIcicle(void *selfArg, u8 *b, s32 c, s32 d, s32 e)
     struct actor_self *self = selfArg;
     register s32 kind asm("r1");
 
-    InitActorPart(self, (s32)b, c, d, e);
+    InitActorPart(self, b, c, d, e);
     self->vtable = (struct actor_vtable *)gPolarIcicleVtable;
 
     kind = *b;
@@ -559,7 +520,7 @@ void RefreshPolarAkuAku(void *selfArg, s32 retriggerParam)
     } else {
         register s32 zero asm("r6");
 
-        QueueVramDmaTransfer(gPolarAkuAkuPalette1 + (tier - 1) * 0x20, (void *)(PLTT + 0x3C0), 0x20, 0x10);
+        QueueVramDmaTransfer((u8 *)gPolarAkuAkuPalette1 + (tier - 1) * 0x20, (void *)(PLTT + 0x3C0), 0x20, 0x10);
         {
             u8 *addr = &self->visible;
 
@@ -665,9 +626,9 @@ void UpdatePolarAkuAku(void *selfArg)
 
     if (gPolarAkuAkuInvincibleTimer != 0) {
         if (gPolarAkuAkuInvincibleTimer & 4) {
-            QueueVramDmaTransfer(gPolarAkuAkuPalette3, (void *)(PLTT + 0x3C0), 0x20, 0x10);
+            QueueVramDmaTransfer((void *)gPolarAkuAkuPalette3, (void *)(PLTT + 0x3C0), 0x20, 0x10);
         } else {
-            QueueVramDmaTransfer(gPolarAkuAkuPalette2, (void *)(PLTT + 0x3C0), 0x20, 0x10);
+            QueueVramDmaTransfer((void *)gPolarAkuAkuPalette2, (void *)(PLTT + 0x3C0), 0x20, 0x10);
         }
 
         gPolarAkuAkuInvincibleTimer -= 1;

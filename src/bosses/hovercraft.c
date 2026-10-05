@@ -1,8 +1,12 @@
 #include "core.h"
 #include "actor_self.h"
+#include "actor_anim.h"
 #include <libgcc.h>
 #include "system.h"
 #include "audio.h"
+#include "actor.h"
+#include "bosses.h"
+#include "vehicle.h"
 
 /* Second half of issue #59's Phase 2 gap (`CreateJetpackRing`-`nullsub_35`,
  * the tail of `asm/code_3_2_20_28568_c99c_31784_31a6c.s`) - see
@@ -40,97 +44,19 @@
  *    introducing a struct wrapper that wouldn't match the actual link
  *    layout - see the writeup doc for the fuller rationale. */
 
-extern void InitActorPart(void *self, s32 a, s32 b, s32 c, s32 d);
-extern s32 GetAnimFrameBaseOffset(void *self);
-extern u8 *GetAnimFrameData(void *self);
-extern s32 GetAnimFrameAttr(void *self);
 extern void SetupSpriteFrameOam(u8 *frame, u32 arg1, u32 arg2, s32 priority);
-extern void SetActorAnim(void *self, s32 idx);
 extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
-extern void UpdateActor(void *self);
-extern s32 GetActorBgCenterY(void);
-extern s32 GetActorBgCenterX(void);
-extern void sub_8029E34(s32 arg0);
-extern s32 GetCellAnimDistance(void);
-extern u8 IsTouchingPlayer(void *self);
-extern void ResumeActorSpawns(void);
-extern void PauseActorSpawns(void);
-extern void FinishJetpackRun(void *arg0);
 extern void CollectWumpa(void *self);
-extern struct actor_pmf gHovercraftFireballStateFuncs[];
-extern void UpdateHovercraftHitFlash(void);
-extern void RunHovercraftState(void);
 extern void _call_via_r0(void *fn);
-extern void DrawHovercraftMap(void *tileRow);
-extern void UpdateHovercraftBg2(void);
-extern void LoadHovercraftGraphics(void);
-extern void ConvertHovercraftTiles(void);
-extern void SpawnHovercraftSideGun(s32 a, s32 b, s32 c, s32 d);
-extern void SpawnHovercraftLauncher(s32 a, s32 b, s32 c);
-extern void SpawnHovercraftCannon(s32 a, s32 b, s32 c);
 
 extern void *gAudioContext;
 extern void *gLevelState;
 extern void *gActorList;
-extern void *gFlashBgPalette;
-extern void *gFlashObjPalette;
-extern u16 gHovercraftFlashSavedColor;
-extern s32 gHovercraftFlashColorSaved;
 
-/* The `gHovercraft` singleton system's own globals - names as
- * already established by `hovercraft_parts.c` (issue #62) for the ones it
- * also touches; the rest are new (first referenced anywhere in ROM
- * order by this file's functions). */
-extern struct actor_self *gHovercraft;
-extern s32 gHovercraftMapCols;
-extern s32 gHovercraftMapRows;
-extern s32 gHovercraftMapTileBase;
-extern void *gHovercraftMapFrames[];
-extern s32 gHovercraftState;
-extern s32 gHovercraftX;
-extern s32 gHovercraftY;
-extern s32 gHovercraftZ;
-extern s32 gHovercraftScreenX;
-extern s32 gHovercraftScreenY;
-extern s32 gHovercraftDistance;
-extern s32 gHovercraftVelX;
-extern s32 gHovercraftVelY;
-extern s32 gHovercraftVelZ;
-extern s32 gHovercraftLevel;
-extern void *gHovercraftAttack;
-extern s32 gUnknown_030015E0;
-extern s32 gUnknown_030015E4;
-extern s32 gUnknown_030015E8;
-extern s32 gHovercraftPhase;
-extern s32 gHovercraftOrbitRadius;
-extern s32 gHovercraftFrameCount;
-extern s32 gHovercraftPartsLeft;
-extern s16 gHovercraftHitFlashTimer;
-extern u8 gHovercraftHitFlashOn;
-extern u8 gHovercraftGone;
-extern u8 gHovercraftBg2PageFlip;
-extern s32 gHovercraftBg2Page;
-
-extern u8 gJetpackRingVtable[];
-extern u8 gJetpackCollectedWumpaVtable[];
 extern u8 gActorVtable[];
-extern u8 gHovercraftFireballVtable[];
-extern u16 gHovercraftPalette[];
 extern u8 gHovercraftPicture[];
-extern u8 gHovercraftKeyframes[];
-extern const s16 gHovercraftBox[];
 
-/* One 0x28-byte record of the singleton's per-kind table. */
-struct singleton_kind {
-    s32 unk_00;
-    u8 unk_04[8];
-    s32 unk_0C;
-    s32 unk_10;
-    u8 unk_14[0x14];
-};
-extern struct singleton_kind gHovercraftAttacks[];
 extern s16 gSineTable[];
-extern void *gHovercraftStateFuncs[];
 
 /* Shared inlines of the singleton system (see CreateHovercraft). */
 static inline struct actor_self *AllocActor(u32 size)
@@ -195,15 +121,15 @@ struct actor_29d4 {
  * table, and clears the `self+0x58` byte. Same shape as the
  * already-matched `CreateAirshipFireball` (issue #58, `airship_fireball.c`), minus
  * that function's extra `b`/`c` re-stash into `self+0x58`/`self+0x5c`. */
-void *CreateJetpackRing(void *selfArg, s32 a, s32 b, s32 c, s32 d)
+void *CreateJetpackRing(void *selfArg, void *part, s32 b, s32 c, s32 d)
 {
     u8 *self = selfArg;
     register s32 dReg asm("r0") = d;
     register s32 one asm("r5") = 1;
 
-    InitActorPart(self, a, b, c, dReg);
+    InitActorPart(self, part, b, c, dReg);
     *(s32 *)(self + 0x54) = one;
-    *(void **)(self + 0x50) = gJetpackRingVtable;
+    *(void **)(self + 0x50) = (void *)gJetpackRingVtable;
     self[0x58] = 0;
 
     return self;
@@ -240,7 +166,7 @@ void UpdateJetpackCollectedWumpa(void *selfArg)
     }
     self->base.animTime += *(s16 *)&self->base.animTimer;
     self->base.animDone = 0;
-    base = GetAnimFrameBaseOffset(self);
+    base = GetAnimFrameBaseOffset((struct actor_self *)self);
     if (base >= self->base.anims[self->base.animIndex].loopThreshold) {
         self->base.animTime -= (self->base.anims[self->base.animIndex].loopThreshold
                                 - self->base.anims[self->base.animIndex].loopBase) << 8;
@@ -323,7 +249,7 @@ void DestroyJetpackCollectedWumpa(struct actor_283c *self, u32 flags)
 {
     s32 i;
 
-    self->vtable = gJetpackCollectedWumpaVtable;
+    self->vtable = (void *)gJetpackCollectedWumpaVtable;
     for (i = 0; i < self->reward; i++) {
         CollectWumpa(gLevelState);
     }
@@ -343,14 +269,14 @@ void DestroyJetpackCollectedWumpa(struct actor_283c *self, u32 flags)
  * `self+0x54 = 1` health field separate from the computed velocity
  * (stored at `self+0x58`/`self+0x5c` here, vs. `self+0x54`/`self+0x58`
  * there), and stashes `spawnParam` at `self+0x60` rather than `0x5c`. */
-void *CreateJetpackCollectedWumpa(void *selfArg, s32 a, s32 b, s32 c, s32 spawnParam)
+void *CreateJetpackCollectedWumpa(void *selfArg, void *part, s32 b, s32 c, s32 spawnParam)
 {
     struct actor_2890 *self = selfArg;
     register s32 dy asm("r3");
     s32 sum;
     s32 q;
 
-    InitActorPart(self, a, b, c, 1);
+    InitActorPart(self, part, b, c, 1);
     self->hp = 1;
     self->base.vtable = (struct actor_vtable *)gJetpackCollectedWumpaVtable;
     self->reward = spawnParam;
@@ -458,7 +384,7 @@ void UpdateHovercraftFireball(void *selfArg)
  * `self+0x54 = 2`/`self+0x50` event table/`self+0x64 = 0`/
  * `self+0x60 = 0x95`/`self+0x68 (byte) = 0` initialization already
  * matched verbatim for `CreateAirshipFireball` (issue #58, `airship_fireball.c`). */
-void *CreateHovercraftFireball(void *selfArg, s32 a, s32 b, s32 c, s32 d)
+void *CreateHovercraftFireball(void *selfArg, void *part, s32 b, s32 c, s32 d)
 {
     struct actor_29d4 *self = selfArg;
     register s32 bReg asm("r6") = b;
@@ -466,7 +392,7 @@ void *CreateHovercraftFireball(void *selfArg, s32 a, s32 b, s32 c, s32 d)
     register s32 dReg asm("r0") = d;
     register s32 health asm("r5") = 2;
 
-    InitActorPart(self, a, b, c, dReg);
+    InitActorPart(self, part, b, c, dReg);
     self->hp = health;
     self->base.vtable = (struct actor_vtable *)gHovercraftFireballVtable;
     self->unk_58 = bReg;
@@ -507,7 +433,7 @@ void HovercraftFireballStateFly(void *selfArg)
         self->speed = 0x14;
     }
 
-    if (IsTouchingPlayer(self)) {
+    if ((u8)IsTouchingPlayer(self)) {
         struct actor_self *player = gActorList;
         struct actor_vtable *table = player->vtable;
 
@@ -592,7 +518,7 @@ void UpdateHovercraftHitFlash(void)
     {
         register u8 *flagAddr asm("r5") = &gHovercraftHitFlashOn;
         register u16 white asm("r4") = 0x7fff;
-        u16 *src = gHovercraftPalette;
+        const u16 *src = gHovercraftPalette;
         vu16 *dst = (vu16 *)(PLTT + 0x20);
         vu16 *end = (vu16 *)((u8 *)dst + 0x1e);
 
@@ -720,11 +646,11 @@ void HovercraftStateCloseIn(void)
         pl = gActorList;
         px = pl->x;
         cx = gHovercraftScreenX - 0x1200;
-        gHovercraftVelX -= (px - cx - (gHovercraftBox[0] + gHovercraftBox[3] / 2)) >> 12;
+        gHovercraftVelX -= (px - cx - (gHovercraftBox.x + gHovercraftBox.w / 2)) >> 12;
         vx = gHovercraftVelX;
         py = pl->y;
         cy = gHovercraftScreenY + 0x1800;
-        vy = gHovercraftVelY - ((py - cy - (gHovercraftBox[1] + gHovercraftBox[4] / 2)) >> 12);
+        vy = gHovercraftVelY - ((py - cy - (gHovercraftBox.y + gHovercraftBox.h / 2)) >> 12);
         gHovercraftVelY = vy;
 
         if (vx > 0x200)
@@ -770,7 +696,7 @@ void HovercraftStateCloseIn(void)
     }
 
     if (gHovercraftDistance <= 0x27ff) {
-        gUnknown_030015E4 = ((struct singleton_kind *)gHovercraftAttack)->unk_10;
+        gUnknown_030015E4 = gHovercraftAttack->timing[1].delay;
         gUnknown_030015E8 = 0;
         SingletonSetKind(3, 0);
         gHovercraftPhase = 0;
@@ -838,7 +764,7 @@ void HovercraftStateFallBack(void)
     if (gHovercraftPhase > 3 && gHovercraftDistance > 0x8000) {
         gHovercraftFrameCount = 0;
         gHovercraftOrbitRadius = 0;
-        gUnknown_030015E4 = ((struct singleton_kind *)gHovercraftAttack)->unk_10;
+        gUnknown_030015E4 = gHovercraftAttack->timing[1].delay;
         gUnknown_030015E8 = 0;
         SingletonSetKind(2, 0);
         if (gHovercraftPartsLeft > 2) {
@@ -985,9 +911,9 @@ void SpawnHovercraft(s32 kind, s32 x, s32 y, s32 z)
     /* `a - -b` rather than `a + b`: the latter lets fold reassociate the
      * constant table base out of `&table[kind]`, while the ROM adds the
      * level offset to the finished record address. */
-    gHovercraftAttack = (void *)(gHovercraftLevel * (s32)sizeof(struct singleton_kind) - -(s32)&gHovercraftAttacks[kind]);
-    gUnknown_030015E4 = ((struct singleton_kind *)gHovercraftAttack)->unk_0C;
-    gUnknown_030015E0 = ((struct singleton_kind *)gHovercraftAttack)->unk_00;
+    gHovercraftAttack = (const struct singleton_kind *)(gHovercraftLevel * (s32)sizeof(struct singleton_kind) - -(s32)&gHovercraftAttacks[kind]);
+    gUnknown_030015E4 = gHovercraftAttack->timing[0].burstDelay;
+    gUnknown_030015E0 = gHovercraftAttack->unk_00;
     gUnknown_030015E8 = 0;
     REG_DISPCNT |= 0x400;
     gHovercraftBg2PageFlip = 1;

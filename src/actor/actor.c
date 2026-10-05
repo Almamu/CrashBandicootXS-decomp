@@ -3,6 +3,9 @@
 #include "actor_self.h"
 #include "actor_anim.h"
 #include <libgcc.h>
+#include "actor.h"
+#include "bosses.h"
+#include "vehicle.h"
 
 /* Branchless absolute value, matching this ROM's own codegen for `abs()`
  * (`asrs`/`eors`/`subs` on the value's own sign-extended shift, updating
@@ -40,7 +43,6 @@
  * docs/matching/issue-50-actor-2a69c.md. */
 
 extern struct actor_self *gActorList;
-extern void AllocJetpackPlayerTiles(void *arg0);
 
 /* Trivial forwarder - ignores its own argument and calls
  * `AllocJetpackPlayerTiles(gActorList)` (the player object), discarding its
@@ -50,23 +52,17 @@ void JetpackReloadPlayerTiles(void *arg0)
     AllocJetpackPlayerTiles(gActorList);
 }
 
-extern void AllocPolarPlayerTiles(void *arg0);
-
 /* Same forwarder shape as `JetpackReloadPlayerTiles`, calling `AllocPolarPlayerTiles` instead. */
 void PolarReloadPlayerTiles(void *arg0)
 {
     AllocPolarPlayerTiles(gActorList);
 }
 
-extern void FinishJetpackRun(void *arg0);
-
 /* Same forwarder shape as `JetpackReloadPlayerTiles`, calling `FinishJetpackRun` instead. */
 void JetpackReachCourseEnd(void *arg0)
 {
     FinishJetpackRun(gActorList);
 }
-
-extern void FinishPolarRun(void *arg0);
 
 /* Same forwarder shape as `JetpackReloadPlayerTiles`, calling `FinishPolarRun` (already
  * matched as a no-argument function in polar_player_actions.c) with the player
@@ -76,7 +72,6 @@ void PolarReachCourseEnd(void *arg0)
     FinishPolarRun(gActorList);
 }
 
-extern void *gActorCategoryVtable;
 extern s32 _call_via_r1(void *arg0, void *fn);
 
 /* Passes its own `self` argument through to `_call_via_r1`, alongside a
@@ -84,15 +79,12 @@ extern s32 _call_via_r1(void *arg0, void *fn);
  * (`gActorCategoryVtable` is itself a pointer to some shared record). */
 s32 IsTouchingPlayer(void *self)
 {
-    void *tab = gActorCategoryVtable;
+    void *tab = (void *)gActorCategoryVtable;
 
     return _call_via_r1(self, *(void **)((u8 *)tab + 0x24));
 }
 
 extern u8 gActorVtable[];
-extern void SetActorAnim(void *self, s32 arg1);
-extern s32 GetCellAnimDistance(void);
-extern s32 sub_8029E40(void);
 
 /* The constructor every other actor file already forward-
  * declares: seeds `self`'s part-table pointer (`+0`/`+4`, copied from
@@ -182,10 +174,7 @@ void *InitActorPart(void *selfArg, void *partArg, s32 b, s32 c, s32 d)
     return self;
 }
 
-extern s32 gActorFarClipDepth;
-extern s32 gActorNearClipDepth;
 extern s32 _call_via_r2(void *arg0, s32 arg1, void *fn);
-extern s32 GetAnimFrameBaseOffset(void *self);
 
 /* Recomputes `self`'s movement-threshold pair (`+0x34`/`+0x14`, same
  * formula as `InitActorPart`, using `self`'s own already-stored `+0x24`
@@ -275,11 +264,6 @@ asm(".align 2, 0");
 /* Same "self" object family as above - see this file's header
  * comment and docs/matching/issue-50-actor-2a69c.md. */
 
-extern s32 gUnknown_030013C8;
-extern s32 GetActorBgCenterY(void);
-extern s32 GetActorBgCenterX(void);
-extern u8 *GetAnimFrameData(void *self);
-extern s32 GetAnimFrameAttr(void *self);
 extern void SetupSpriteFrameOam(u8 *frame, u32 arg1, u32 arg2, s32 priority);
 
 /* Computes an OBJ scale factor from `self->depth` and its animation
@@ -680,9 +664,6 @@ void DestroyActor(void *selfArg, s32 flags)
     }
 }
 
-extern s32 gCollectedSpawnCount;
-extern void *gCollectedSpawns[];
-
 /* Linear-searches `gCollectedSpawns`'s first `gCollectedSpawnCount`
  * entries for `self`, returning whether it's present. */
 s32 IsSpawnCollected(void *selfArg)
@@ -748,13 +729,6 @@ void ClearCollectedSpawns(void)
     gCollectedSpawnCount = 0;
 }
 
-extern u8 gActorPaletteCycleEnabled;
-extern s32 gSavedActorPaletteCycleFrame;
-extern s32 gSavedActorPaletteCycleTarget;
-extern s32 gActorPaletteCycleFrame;
-extern s32 gActorPaletteCycleTarget;
-extern s32 gActorPaletteCycleTimer;
-
 /* Loads the palette-cycle cursor/bound pair (`gActorPaletteCycleFrame`/
  * `gActorPaletteCycleTarget`, see `UpdateActorPaletteCycle` below) from their saved
  * counterparts (`gSavedActorPaletteCycleFrame`/`gSavedActorPaletteCycleTarget`) and resets the
@@ -779,7 +753,6 @@ asm(".align 2, 0");
 /* Same palette-cycle cluster as the functions around it - see
  * docs/matching/issue-50-actor-2a69c.md. */
 
-extern u8 gActorPaletteCycleFrames[];
 extern s32 QueueVramDmaTransfer(void *arg0, void *arg1, u16 arg2, u16 arg3);
 
 /* Per-frame palette-cycle DMA: while `gActorPaletteCycleEnabled` is set, DMAs one
@@ -877,9 +850,6 @@ asm(".align 2, 0");
  * (This was a separate file while `UpdateActorPaletteCycle`, above, was
  * still raw.) */
 
-extern s32 gActorPaletteCycleStartFrames[];
-extern s32 gActorPaletteCycleTargetFrames[];
-
 /* Seeds the palette-cycle cursor/bound pair from a per-category table
  * (`gActorPaletteCycleStartFrames`/`gActorPaletteCycleTargetFrames`, indexed by `idx`) and
  * resets the DMA-refresh counter. */
@@ -889,8 +859,6 @@ void SetActorPaletteCycle(s32 idx)
     gActorPaletteCycleTarget = gActorPaletteCycleTargetFrames[idx];
     gActorPaletteCycleTimer = 0;
 }
-
-extern void SaveActorPaletteCycle(void);
 
 /* Arms/disarms the palette-cycle system (`gActorPaletteCycleEnabled`), resets
  * the cursor/bound/DMA-refresh counter, and saves that reset state back

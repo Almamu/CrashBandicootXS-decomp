@@ -3,6 +3,7 @@
 #include "enemies.h"
 #include "menus.h"
 #include "crates.h"
+#include "bosses.h"
 
 /* Spawner table entries next to the text popups (ROM 0x08021668-0x08021BFC).
  * Built with old_agbcc; see include/text_popup.h. */
@@ -13,7 +14,6 @@ extern void *gUpdateOnlyPartList;
 extern void *gDecorationList;
 
 extern struct popup_part *CreateSpriteObj(u16 arg0, u16 arg1, u16 arg2, u16 arg3);
-extern struct part_ctrl *CreateMegaMixCtrl(void *mem);
 extern u8 GetPaletteSlot(void *cache, s32 recordId);
 extern u8 IsBonusRoundDone(void *self);
 extern s32 CreatePlatform(u16 x, u16 y, u16 w, u16 h, s32 id);

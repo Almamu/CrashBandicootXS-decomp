@@ -3,6 +3,8 @@
 #include "level_state.h"
 #include "actor_self.h"
 #include "audio.h"
+#include "actor.h"
+#include "vehicle.h"
 
 /* Continues the `InitActorPart`/`gActorList`-rooted "self" object
  * family documented in actor.c/polar_player_actions.c: a "part table"
@@ -22,24 +24,9 @@
 extern struct level_state *gLevelState;
 extern void *gAudioContext;
 extern s32 SetMaskLevel(struct level_state *arg0, s32 arg1);
-extern void RefreshPolarAkuAku(void *self, s32 arg1);
-extern void *InitActorPart(void *self, void *part, s32 b, s32 c, s32 d);
-extern u8 IsTouchingPlayer(void *self);
-extern void UpdateActor(void *self);
 extern void *gActorList;
-extern void FinishPolarRun(void *arg0);
-extern void BoostPolarPlayer(void *selfArg, s32 arg1);
-extern u8 IsTouchingYeti(void *self);
 extern void AddBrokenCrate(struct level_state *self);
-extern s32 SetActorCheckpoint(s32 arg0);
-extern void CreatePolarCheckpointText(s32 arg0, s32 arg1, s32 arg2);
 extern s32 _call_via_r2(void *arg0, s32 arg1, void *fn);
-extern s32 GetActorCheckpoint(void);
-
-extern u8 gPolarAkuAkuVtable[];
-extern u8 gPolarGoalVtable[];
-extern u8 gPolarBoostPadVtable[];
-extern u8 gPolarCheckpointCrateVtable[];
 
 /* `actor_self` plus the one-shot byte flag UpdatePolarBoostPad/CreatePolarBoostPad use.
  *
@@ -140,7 +127,7 @@ void UpdatePolarGoal(void *selfArg)
         self->visible = 1;
     }
 
-    if (IsTouchingPlayer(self)) {
+    if ((u8)IsTouchingPlayer(self)) {
         FinishPolarRun(gActorList);
     }
 
@@ -167,7 +154,7 @@ void UpdatePolarBoostPad(void *selfArg)
 {
     register struct actor_once *self asm("r4") = selfArg;
 
-    if (IsTouchingPlayer(self)) {
+    if ((u8)IsTouchingPlayer(self)) {
         BoostPolarPlayer(gActorList, self->base.x);
         {
             u8 *flag = &self->once;
@@ -243,7 +230,7 @@ void UpdatePolarCheckpointCrate(void *selfArg)
     s32 kind = self->animIndex;
 
     if (kind == 0) {
-        if (IsTouchingPlayer(self)) {
+        if ((u8)IsTouchingPlayer(self)) {
             self->animIndex = 1;
             {
                 struct anim_frame_record *table = self->anims;

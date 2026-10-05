@@ -3,6 +3,8 @@
 #include "actor_self.h"
 #include <libgcc.h>
 #include "audio.h"
+#include "actor.h"
+#include "vehicle.h"
 
 /* Continues the same player/action-object action-table family already
  * documented in ctrl.c/action_ctrl_states.c/action_ctrl_land.c - `self`
@@ -24,53 +26,19 @@
  * family" and "type-byte event dispatch" sections for the semantics
  * behind the individual functions below. */
 
-extern s32 gPolarPlayerVelY;
-extern u8 gPolarSteerEnabled;
-extern u8 gPolarPlayerInactive;
-extern u8 gPolarPlayerHalted;
-extern s32 gPolarFinishTimer;
-extern void *gPolarAkuAku;
 extern void *gAudioContext;
 extern void *gLevelState;
 extern void *gActorList;
-extern s32 gPolarQueuedWumpa;
-extern s32 gPolarWumpaDispenseTimer;
-extern s32 gPolarInvulnTimer;
-extern void *gPolarPlayerTiles[2];
-extern void *gRiderlessPolar;
 
-extern u8 gPolarPlayerVtable[];
 extern u8 gActorVtable[];
-extern u8 gPolarCollectedWumpaVtable[];
-extern u8 gPolarPlayerStateFuncs[];
-extern u8 gPolarNitroCrateBox[];
 
-extern void SetCellAnimSpeed(s32 arg0);
-extern void StopYeti(void);
-extern void ClearPolarAkuAkuMask(void *arg0);
-extern s32 AddPolarAkuAkuMask(void *arg0);
-extern s32 GetAnimFrameBaseOffset(void *self);
-extern u8 *GetAnimFrameData(void *self);
 extern void SetupSpriteFrameOam(u8 *frame, u32 arg1, u32 arg2, s32 priority);
-extern s32 GetAnimFrameAttr(void *self);
-extern u8 gPolarWumpaVtable[];
-extern s32 GetActorBgCenterY(void);
-extern s32 GetActorBgCenterX(void);
-extern void InitActorPart(void *self, s32 a, s32 b, s32 c, s32 d);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern s32 _call_via_r3(void *addr, void *arg1, void *tableEntry, void *fn);
-extern u8 IsTouchingPlayer(void *self);
-extern void UpdateActor(void *self);
-extern u8 IsTouchingYeti(void *self);
 extern void AddBrokenCrate(void *self);
 extern s32 AddLife(void *self);
 extern void CollectWumpa(void *self);
 extern void FreeVramTileBlock(void *arg0);
-extern void MarkSpawnCollected(s32 arg0);
-extern void HurtPolarPlayer(void *arg0);
-extern void AddActorMissedNitro(void);
-extern void *CreateActor(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4);
-extern void DetonateNearbyPolarNitros(void *self);
 
 /* Accumulates `gPolarPlayerVelY` into `y`, then drains
  * `gPolarPlayerVelY` toward a fixed ceiling (`0x780`) - the same
@@ -157,7 +125,7 @@ void PolarPlayerStateFinish(void *selfArg)
 
                 if (self->y > 0x2000) {
                     gRiderlessPolar = CreateActor(2, self->x, 0x2800,
-                                                     self->z, zero);
+                                                     self->z, (void *)zero);
                 }
             }
         }
@@ -202,8 +170,9 @@ void PolarPlayerStateLand(void *selfArg)
 /* Once-only latch (`gPolarPlayerInactive`): arms a countdown
  * (`gPolarFinishTimer = 0x16`), runs `SetCellAnimSpeed(0x24)`, clamps
  * `gPolarPlayerVelY` to non-negative, then calls `StopYeti` and
- * marks both `gPolarPlayerInactive` and `gPolarSteerEnabled`. */
-void FinishPolarRun(void)
+ * marks both `gPolarPlayerInactive` and `gPolarSteerEnabled`. `player`
+ * is unused; both callers pass gActorList. */
+void FinishPolarRun(void *player)
 {
     if (gPolarPlayerInactive == 0) {
         gPolarFinishTimer = 0x16;
@@ -397,7 +366,7 @@ void DestroyPolarPlayer(void *selfArg, u32 arg1param)
     register u8 *self asm("r5") = selfArg;
     u32 arg1 = arg1param;
 
-    *(u8 **)(self + 0x50) = gPolarPlayerVtable;
+    *(u8 **)(self + 0x50) = (u8 *)gPolarPlayerVtable;
 
     if (gPolarQueuedWumpa != 0) {
         do {

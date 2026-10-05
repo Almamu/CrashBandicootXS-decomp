@@ -1,19 +1,11 @@
 #include "core.h"
 #include "actor_self.h"
+#include "vehicle.h"
 
 /*
  * ROM 0x0817C1C0-0x0817C200. Linked in ROM order between data/data.s
  * sections by ldscript.txt - see docs/data.md.
  */
-
-extern void JetpackPlayerStateFly();
-extern void JetpackPlayerStateRollLeft();
-extern void JetpackPlayerStateRollRight();
-extern void JetpackPlayerStateResume();
-extern void JetpackPlayerStateBoost();
-extern void JetpackPlayerStateFall();
-extern void JetpackPlayerStateFinish();
-extern void JetpackPlayerStateEnter();
 
 /* Per-state handlers dispatched by UpdateJetpackPlayer (jetpack_spawn.c) and
  * RunJetpackPlayerState (jetpack_player.c). */

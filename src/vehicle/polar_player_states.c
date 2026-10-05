@@ -1,6 +1,8 @@
 #include "core.h"
 #include "actor_self.h"
 #include "audio.h"
+#include "actor.h"
+#include "vehicle.h"
 
 /* Tail continuation of GitHub issue #50's chunk
  * (asm/code_3_2_20_8b7c_ac28.s, ROM 0x0802AC28-0x0802BED8): the giant
@@ -22,15 +24,10 @@
  * `self` is `struct actor_self`; the animation-reset blocks store
  * through `*(T *)&self->field` casts, as in polar_player_actions.c. */
 
-extern s32 gPolarQueuedWumpa;
-extern u8 gPolarPlayerInactive;
-extern s32 gPolarWumpaDispenseTimer;
 extern void *gLevelState;
 extern void *gAudioContext;
 
 extern s32 CollectWumpa(void *self);
-extern void SpawnPolarCollectedWumpa(s32 a, s32 b, s32 c);
-extern void SetCellAnimSpeed(s32 arg0);
 
 /* Accumulator-drain/reward-dispenser for the `gPolarQueuedWumpa`
  * accumulator (filled by `QueuePolarWumpa`, still raw): while the "locked"
@@ -82,16 +79,12 @@ void DispensePolarWumpa(void *selfArg)
     PlaySfx(gAudioContext, 8, 0x100);
 }
 
-extern u8 gPolarPauseLocked;
-
-/* Trivial byte getter - `PolarIsPauseLocked` (actor_spawn.c) is a NAKED
- * trampoline that calls this through the player pointer. */
-u8 IsPolarPauseLocked(void)
+/* Trivial byte getter. `player` is unused; PolarIsPauseLocked
+ * (actor_spawn.c) passes gActorList. */
+s32 IsPolarPauseLocked(void *player)
 {
     return gPolarPauseLocked;
 }
-
-extern u8 gPolarSteerEnabled;
 
 /* Frame-counter-threshold state-transition idiom: once `stateTime`
  * exceeds 0x13, latches `gPolarSteerEnabled`, clears the hazard lock
@@ -126,11 +119,7 @@ void sub_802BD24(void *selfArg)
     }
 }
 
-extern s32 gPolarPlayerVelY;
-extern u8 gPolarFadeStarted;
-extern s32 GetCellAnimDistance(void);
 extern void FadeBrightness(u8 flags, s32 frameDelay, u8 sync);
-extern void SetActorCategoryExitStatus(s32 arg0);
 
 /* Per-axis hazard-threshold driver: drains a shared "camera catch-up"
  * budget (`gPolarPlayerVelY`) into `y`, advances `z`

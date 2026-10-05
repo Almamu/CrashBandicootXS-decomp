@@ -1,26 +1,13 @@
 #include "core.h"
 #include "actor_self.h"
+#include "bosses.h"
+#include "vehicle.h"
 
 /*
  * ROM 0x0817C260-0x0817C2D0: three per-state member-function-pointer
  * tables (ACTOR_PMF_CALL, include/actor_self.h). Linked in ROM order
  * between data/data.s sections by ldscript.txt - see docs/data.md.
  */
-
-extern void JetpackBomberStateDying();
-extern void JetpackBomberStateIdle();
-extern void JetpackPlaneStateFall();
-extern void sub_802FE1C();
-extern void sub_802FE58();
-extern void JetpackPlaneStateFly();
-extern void JetpackBomberStateDrop();
-extern void JetpackBomberStateCircle();
-extern void JetpackBomberStateSwingHorizontal();
-extern void JetpackBomberStateBobVertical();
-extern void JetpackBomberStateHome();
-extern void AirshipFireballStateOrbit();
-extern void AirshipFireballStateSpiralIn();
-extern void AirshipFireballStateExplode();
 
 /* Dispatched by UpdateJetpackPlane and RunJetpackPlaneState
  * (jetpack_plane.c). */

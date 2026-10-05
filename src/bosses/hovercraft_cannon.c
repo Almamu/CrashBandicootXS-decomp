@@ -1,47 +1,14 @@
 #include "core.h"
 #include "actor_self.h"
 #include "audio.h"
+#include "actor.h"
+#include "vehicle.h"
+#include "bosses.h"
 
 /* Same singleton system as hovercraft_parts.c - see that file's header
  * comment and docs/matching/issue-62-0x08033804-actor.md. */
 
-extern s32 GetHovercraftX(void);
-extern s32 GetHovercraftY(void);
-extern s32 GetHovercraftZ(void);
-extern struct spawn_timing_table *GetHovercraftAttack(void);
-extern void SpawnJetpackCannonball(s32 x, s32 y, s32 z, s32 dx, s32 dy);
-extern void SpawnHovercraftCannonFlash(s32 x, s32 y, s32 z);
 extern struct actor_self *gActorList;
-
-/* The singleton's per-spawner timing table (`GetHovercraftAttack`): after each
- * spawn a spawner waits `delay` frames, except every `burst`-th spawn,
- * which resets its count and waits `burstDelay` instead. One record per
- * spawner kind (hovercraft_side_gun.c reads [0], this file [1],
- * hovercraft_launcher.c [2]). */
-struct spawn_timing {
-    s32 delay;
-    s32 burst;
-    s32 burstDelay;
-};
-
-struct spawn_timing_table {
-    s32 unk_00;
-    struct spawn_timing timing[3];  // 0x04
-};
-
-/* A spawner object of the singleton system (hovercraft_parts.c):
- * `actor_self` plus a hit-point word, its spawn cooldown/count and a
- * "dead" flag. */
-struct spawner {
-    struct actor_self base;
-    s32 hp;             // 0x54
-    s32 spawnX;         // 0x58 - the constructor's `b`/`c` (CreateHovercraftLauncher)
-    s32 spawnY;         // 0x5C
-    u8 unk_60[4];
-    s32 cooldown;       // 0x64
-    s32 count;          // 0x68
-    u8 dead;            // 0x6C
-};
 
 /* HovercraftCannonStateFire: a proximity-triggered effect/hazard detector. Syncs
  * `self`'s position fields to the singleton's current position (plus a
@@ -83,7 +50,7 @@ void HovercraftCannonStateFire(struct spawner *self)
             s32 absDy = (dy ^ signDy) - signDy;
 
             if (absDx + absDy <= 0xFFF) {
-                struct spawn_timing_table *table;
+                const struct singleton_kind *table;
                 s32 count;
 
                 SpawnJetpackCannonball(self->base.x, self->base.y, self->base.z, dx, dy);
@@ -133,12 +100,6 @@ asm(".align 2, 0");
 
 extern void *gAudioContext;
 
-/* A spawner object of the singleton system (hovercraft_parts.c):
- * `actor_self` plus a hit-point word, its spawn cooldown/count and a
- * "dead" flag. */
-extern void StartHovercraftHitFlash(void);
-extern void LoseHovercraftPart(void);
-
 /* Applies `dmg` damage to `hp`, and once it drops to zero (or
  * below), marks `self` dead (`dead = 1`), fires the singleton's own
  * death transition (`LoseHovercraftPart`), switches `self` to its death
@@ -182,9 +143,6 @@ void DamageHovercraftCannon(struct spawner *self, s32 dmg)
 /* Same "self" object family as hovercraft_parts.c - see that file's header
  * comment and docs/matching/issue-62-0x08033804-actor.md. */
 
-extern struct actor_pmf gHovercraftCannonStateFuncs[];
-extern void UpdateActor(void *self);
-
 /* Per-state member-pointer dispatch, `(this->*gHovercraftCannonStateFuncs
  * [this->state])()` (see `ACTOR_PMF_CALL`), then the standard
  * UpdateActor step unless the state-2 animation has played through. */
@@ -208,25 +166,10 @@ void UpdateHovercraftCannon(struct actor_self *self)
 /* Same "self" object family as hovercraft_parts.c - see that file's header
  * comment and docs/matching/issue-62-0x08033804-actor.md. */
 
-/* This family's fields after the common `actor_self` prefix. The
- * animation-reset block stores through `*(T *)&self->field` casts:
- * plain member stores let gcc move the zero load (docs/workflow.md
- * step 7). */
-struct health_actor {
-    struct actor_self base;
-    s32 health;                 // 0x54
-    s32 unk_58;                 // 0x58 - constructor arg `b`
-    s32 unk_5c;                 // 0x5c - constructor arg `c`
-    u8 unk_60[4];
-    s32 unk_64;                 // 0x64
-    s32 unk_68;                 // 0x68
-    u8 dead;                    // 0x6c
-};
+/* The animation-reset blocks below store through `*(T *)&self->field`
+ * casts: plain member stores let gcc move the zero load
+ * (docs/workflow.md step 7). */
 
-extern u8 gHovercraftCannonVtable[];
-
-extern void InitActorPart(void *self, s32 a, s32 b, s32 c, s32 d);
-extern void ShakeActorBg(s32 arg0);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *fn);
 
 /* Constructor: forwards to `InitActorPart`, then sets `self`'s health
@@ -234,19 +177,19 @@ extern s32 _call_via_r2(void *arg0, void *arg1, void *fn);
  * and caches its own `b`/`c` constructor args at `+0x58`/`+0x5c`;
  * finally resets state (`+0x28=0`) and the death flag (`+0x6c=0`).
  * Returns `self`. */
-void *CreateHovercraftCannon(void *selfArg, s32 a, s32 b, s32 cParam, s32 d)
+void *CreateHovercraftCannon(void *selfArg, void *part, s32 b, s32 cParam, s32 d)
 {
-    struct health_actor *self = selfArg;
+    struct spawner *self = selfArg;
     register s32 bReg asm("r6") = b;
     register s32 c asm("r8") = cParam;
     register s32 dReg asm("r0") = d;
     register s32 health asm("r5") = 15;
 
-    InitActorPart(self, a, b, cParam, dReg);
-    self->health = health;
+    InitActorPart(self, part, b, cParam, dReg);
+    self->hp = health;
     self->base.vtable = (struct actor_vtable *)gHovercraftCannonVtable;
-    self->unk_58 = bReg;
-    self->unk_5c = c;
+    self->spawnX = bReg;
+    self->spawnY = c;
     self->base.state = 0;
     self->dead = 0;
 
@@ -258,7 +201,7 @@ void *CreateHovercraftCannon(void *selfArg, s32 a, s32 b, s32 cParam, s32 d)
  * trampoline at `self` offset by the table's `+8` halfword. */
 void HovercraftCannonStateDestroyed(void *selfArg)
 {
-    struct health_actor *self = selfArg;
+    struct spawner *self = selfArg;
 
     ShakeActorBg(0x400);
 
@@ -286,20 +229,20 @@ void HovercraftCannonStateDestroyed(void *selfArg)
  * `+0xc` field. */
 void HovercraftCannonStateWait(void *selfArg)
 {
-    struct health_actor *self = selfArg;
+    struct spawner *self = selfArg;
 
     self->base.x = GetHovercraftX() + 0x2000;
     self->base.y = GetHovercraftY() + 0x3000;
     self->base.z = GetHovercraftZ() - 0x100;
 
     if (self->base.depth <= 0x4AFF) {
-        struct spawn_timing_table *table = GetHovercraftAttack();
+        const struct singleton_kind *table = GetHovercraftAttack();
 
-        self->unk_64 = table->timing[1].delay;
+        self->cooldown = table->timing[1].delay;
         {
             register s32 zero asm("r2") = 0;
 
-            self->unk_68 = zero;
+            self->count = zero;
             {
                 register s32 one asm("r0") = 1;
 

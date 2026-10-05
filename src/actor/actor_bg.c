@@ -1,11 +1,8 @@
 #include "core.h"
 #include "gba/io_reg.h"
-
-/* BG2 affine reference-point (REG_BG2X/REG_BG2Y) target fields for this
- * scroll/zoom effect subsystem - written by UpdateActorBgScroll (still raw),
- * read by CommitActorBgScroll (still raw). */
-extern s32 gActorBgShake;
-extern s32 gUnknown_030013D8;
+#include "actor.h"
+#include "bosses.h"
+#include "vehicle.h"
 
 void ShakeActorBg(s32 arg0)
 {
@@ -33,10 +30,6 @@ void nullsub_6(void)
  * ROM's zero bytes (see matching_decomp_alignment_fix memory /
  * docs/matching.md). */
 asm(".align 2, 0");
-
-extern s32 gActorBgScrollX;
-extern s32 gActorBg0VOffset;
-extern s32 gActorBgScrollY;
 
 /* Commits the BG0/BG1 scroll accumulators to the actual hardware
  * scroll registers, then clears the per-axis bias (gActorBgShake)
@@ -76,8 +69,6 @@ void CommitActorBgScroll(void)
  * division, matching this compiler's own signed-divide-by-2 codegen
  * either way - written explicitly since the standalone idiom is the
  * form seen used throughout this file's cluster. */
-extern s32 gActorBgHeight;
-extern s32 gActorBgWidth;
 
 s32 GetActorBgCenterY(void)
 {

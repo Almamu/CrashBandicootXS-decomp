@@ -4,6 +4,8 @@
 #include <libgcc.h>
 #include "system.h"
 #include "audio.h"
+#include "actor.h"
+#include "vehicle.h"
 
 /* Same "spawn/pre-attack" singleton family as wumpa.c - see that
  * file's header comment and docs/matching/issue-56-0x0802f0dc-actor.md.
@@ -24,30 +26,13 @@ struct meter_actor {
 };
 
 extern s32 CollectWumpa(void *arg0);
-extern void SpawnJetpackCollectedWumpa(s32 x, s32 y, s32 amount);
-extern void SetCellAnimSpeed(s32 arg0);
-extern s32 SetActorCheckpoint(s32 arg0);
 extern s32 QueueVramDmaTransfer(void *arg0, void *arg1, u16 arg2, u16 arg3);
 extern s32 FadeBrightness(s32 a, s32 b, s32 c);
-extern s32 SetActorCategoryExitStatus(s32 arg0);
-extern s32 GetCellAnimDistance(void);
 extern void FreeVramTileBlock(void *arg0);
 
 extern struct level_state *gLevelState;
 extern void *gAudioContext;
-extern u8 gJetpackFadeStarted;
 extern u8 gJetpackPlayerInactive;
-extern u8 gJetpackInputEnabled;
-extern s32 gJetpackBomberCount;
-extern s32 gJetpackPlayerMaxHp;
-extern u8 gJetpackPauseLocked;
-extern s32 gJetpackFlashTimer;
-extern s32 gJetpackWumpaDispenseTimer;
-extern s32 gJetpackQueuedWumpa;
-extern s32 gJetpackPlayerVelY;
-extern void *gJetpackPlayerTiles[2];
-extern u8 gJetpackFlashPalettes[];
-extern u8 gJetpackPlayerVtable[];
 extern u8 gActorVtable[];
 
 /* Accumulator-drain/reward-dispenser for the `gJetpackQueuedWumpa`
@@ -98,8 +83,9 @@ void DispenseJetpackWumpa(void *selfArg)
     PlaySfx(gAudioContext, 8, 0x100);
 }
 
-/* Trivial pre-increment counter accessor. */
-s32 CountJetpackBomber(void)
+/* Trivial pre-increment counter accessor. `player` is unused; the caller
+ * passes gActorList. */
+s32 CountJetpackBomber(void *player)
 {
     return ++gJetpackBomberCount;
 }
@@ -133,16 +119,18 @@ void SetJetpackCheckpoint(void *selfArg)
     SetActorCheckpoint(self->base.z + 0x7800);
 }
 
-/* Trivial byte getter for `gJetpackPauseLocked`. */
-u8 IsJetpackPauseLocked(void)
+/* Trivial byte getter for `gJetpackPauseLocked`. `player` is unused;
+ * JetpackIsPauseLocked passes gActorList. */
+s32 IsJetpackPauseLocked(void *player)
 {
     return gJetpackPauseLocked;
 }
 
 /* Countdown timer (`gJetpackFlashTimer`) driving a palette-strip
  * animation refresh, ping-ponging the frame index via `__divsi3`
- * the same way `AnimateAirshipPalette` (airship_graphics.c) does for its own strip. */
-void AnimateJetpackPlayerPalette(void)
+ * the same way `AnimateAirshipPalette` (airship_graphics.c) does for its own strip.
+ * `self` is unused; UpdateJetpackPlayer passes the player. */
+void AnimateJetpackPlayerPalette(void *self)
 {
     if (gJetpackFlashTimer != 0) {
         s32 frame;
@@ -152,7 +140,7 @@ void AnimateJetpackPlayerPalette(void)
         if (frame > 2) {
             frame = 5 - frame;
         }
-        QueueVramDmaTransfer(gJetpackFlashPalettes + (frame << 5), (void *)OBJ_PLTT, 0x20, 0x10);
+        QueueVramDmaTransfer((void *)gJetpackFlashPalettes[frame], (void *)OBJ_PLTT, 0x20, 0x10);
     }
 }
 
@@ -336,7 +324,7 @@ void DestroyJetpackPlayer(void *selfArg, s32 flags)
     u8 *self = selfArg;
     s32 flagsReg = flags;
 
-    *(void **)(self + 0x50) = gJetpackPlayerVtable;
+    *(void **)(self + 0x50) = (void *)gJetpackPlayerVtable;
 
     if (gJetpackQueuedWumpa != 0) {
         do {
@@ -360,8 +348,6 @@ void DestroyJetpackPlayer(void *selfArg, s32 flags)
 
 /* Same "spawn/pre-attack" singleton family as wumpa.c - see that
  * file's header comment and docs/matching/issue-56-0x0802f0dc-actor.md. */
-
-extern struct actor_pmf gJetpackPlayerStateFuncs[];
 
 /* Per-state member-pointer dispatch, `(this->*gJetpackPlayerStateFuncs
  * [this->state])()` (see `ACTOR_PMF_CALL`). */

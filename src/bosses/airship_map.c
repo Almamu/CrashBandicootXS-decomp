@@ -1,4 +1,5 @@
 #include "core.h"
+#include "bosses.h"
 
 /* Same boss-weapon "self"/tracker object family as airship_fireball.c/
  * airship_fall.c - see airship_fireball.c's header comment and
@@ -19,10 +20,6 @@
  * is declared before `i`, so the loop optimizer creates the `row + 0x20`
  * pseudo after `i + 1` and `i + 1` wins the r7/ip tie as in the ROM
  * (docs/matching/issue-58-61-naked-retry.md). */
-extern s32 gAirshipBg2Page;
-extern s32 gAirshipMapCols;
-extern s32 gAirshipMapRows;
-extern s32 gAirshipMapTileBase;
 
 void DrawAirshipMap(u16 *src)
 {

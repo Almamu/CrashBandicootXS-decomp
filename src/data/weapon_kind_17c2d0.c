@@ -1,24 +1,15 @@
 #include "core.h"
 #include "actor_self.h"
 #include "actor_anim.h"
+#include "bosses.h"
 
 /*
  * ROM 0x0817C2D0-0x0817C3FC. Linked in ROM order between data/data.s
  * sections by ldscript.txt - see docs/data.md.
  */
 
-/* airship.c's `struct weapon_kind`: seven words per kind, none
- * named yet. SpawnAirship picks one by gAirshipLevel. */
-struct weapon_kind {
-    s32 unk_00;
-    s32 unk_04;
-    s32 unk_08;
-    s32 unk_0C;
-    s32 unk_10;
-    s32 unk_14;
-    s32 unk_18;
-};
-
+/* The airship's attack parameters (struct weapon_kind, bosses.h).
+ * SpawnAirship picks one by gAirshipLevel. */
 const struct weapon_kind gAirshipAttacks[6] = {
     { 30, 120, 1, 120, 15, 7, 90 },
     { 45, 90, 3, 120, 15, 8, 80 },

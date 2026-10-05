@@ -1,6 +1,9 @@
 #include "core.h"
 #include "memory.h"
 #include "actor_self.h"
+#include "actor.h"
+#include "bosses.h"
+#include "vehicle.h"
 
 /* gActorSpawnTable[] - the category's "spawnTable" runtime array,
  * category_descriptor.spawnTable (include/actor_anim.h, offset
@@ -30,12 +33,6 @@ struct sub_effect_record {
 };
 COMPILE_TIME_ASSERT(actor_spawn_c, sizeof(struct sub_effect_record) == 0x14);
 
-extern struct sub_effect_record *gActorSpawnTable;
-extern s32 gActorSpawnOffset;
-extern s32 gActorCategoryFrameCount;
-extern s32 gActorCategoryExitStatus;
-extern u8 gActorSpawnsPaused;
-extern u8 gUnknown_03001414;
 extern void *gLevelState;
 extern void *gActorList;
 /* The category vtable object (include/actor_anim.h's 13-fn-pointer
@@ -48,13 +45,9 @@ extern void *gActorList;
  * them into the `fn[13]` function-pointer typing, per docs/workflow.md
  * step 7 (don't force a struct/field guess where the shape isn't
  * actually known). Set by SelectActorCategory (still raw). */
-extern void *gActorCategoryVtable;
-extern void **gActorDrawList;
 
 extern s32 _call_via_r0(void *arg);
 extern void _call_via_r2(s32 self, s32 arg, s32 fn);
-extern s32 IsJetpackPauseLocked(void *arg);
-extern s32 IsPolarPauseLocked(void *arg);
 
 /* Trivial getter - the big loading-loop call counter set by
  * InitActorCategory's own loop tail (still raw). */

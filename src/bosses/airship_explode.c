@@ -1,7 +1,11 @@
 #include "core.h"
 #include "actor_self.h"
+#include "actor_anim.h"
 #include "util.h"
 #include "audio.h"
+#include "actor.h"
+#include "vehicle.h"
+#include "bosses.h"
 
 /* Same boss-weapon "self"/tracker object family as airship_fireball.c/
  * airship_states.c - see
@@ -32,27 +36,10 @@
  * the RNG `RandRange` is read back as a `u16` here (the ROM zero-
  * extends its result), and the seek spawn takes `&gActorList`
  * before the last lock check, as the ROM loads that address early. */
-extern s32 gAirshipX;
-extern s32 gAirshipVelX;
-extern s32 gAirshipY;
-extern s32 gAirshipVelY;
-extern s32 gAirshipZ;
-extern s32 gAirshipVelZ;
-extern s32 gAirshipHitFlashTimer;
-extern const s16 gAirshipBox[];
-extern s32 gAirshipStateTimer;
-extern void CreateJetpackExplosion(s32 x, s32 y, s32 z);
-extern void ResumeActorSpawns(void);
-extern s32 gAirshipState;
-extern struct actor_self *gAirship;
-extern s32 GetAnimFrameBaseOffset(void *self);
 extern void *gAudioContext;
 extern u8 *gLevelState;
-extern s32 gAirshipCheckpointCount;
 extern void *gActorList;
 extern u8 gJetpackPlayerInactive;
-extern s32 SetJetpackCheckpoint(void *arg0);
-extern void CreateJetpackCheckpointText(void);
 
 static inline void BossSetState(s32 st, s32 idx)
 {
@@ -68,8 +55,8 @@ static inline void BossSetState(s32 st, s32 idx)
 }
 
 /* One sub-projectile, jittered around (x, y) by the box's own +-range. */
-#define SPAWN(x, y) CreateJetpackExplosion((x) + RandRange(gAirshipBox[3] << 8),  \
-                                (y) + RandRange(gAirshipBox[4] << 8),  \
+#define SPAWN(x, y) CreateJetpackExplosion((x) + RandRange(gAirshipBox.w << 8),  \
+                                (y) + RandRange(gAirshipBox.h << 8),  \
                                 gAirshipZ - 0x100)
 
 void AirshipStateExplode(void)
@@ -82,8 +69,8 @@ void AirshipStateExplode(void)
     gAirshipZ += gAirshipVelZ;
     gAirshipHitFlashTimer = 0;
     pal = (u16 *)(BG_PLTT + 0x20);
-    x = gAirshipX + (gAirshipBox[0] << 8);
-    y = gAirshipY + (gAirshipBox[1] << 8);
+    x = gAirshipX + (gAirshipBox.x << 8);
+    y = gAirshipY + (gAirshipBox.y << 8);
 
     if (gAirshipStateTimer == 0xa) {
         pal[15] = 0;

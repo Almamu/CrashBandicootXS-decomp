@@ -1,6 +1,8 @@
 #include "core.h"
 #include "actor_self.h"
 #include "audio.h"
+#include "actor.h"
+#include "bosses.h"
 
 /* Same large per-instance "self" object as polar_player_actions.c/polar_pickups.c
  * (`struct actor_self`: state, anim index/timer/done flag, state timer,
@@ -55,9 +57,6 @@ void DamageAirshipFireball(void *selfArg, s32 delta)
 /* Same large per-instance "self" object family as above - see
  * this file's header comment and docs/matching/issue-58-0x08030334-actor.md. */
 
-extern struct actor_pmf gAirshipFireballStateFuncs[];
-extern void UpdateActor(void *self);
-
 /* Per-state member-pointer dispatch, `(this->*gAirshipFireballStateFuncs
  * [this->state])()` (see `ACTOR_PMF_CALL`), then either the "destroy"
  * virtual call once the state-2 animation has played through, or the
@@ -81,9 +80,6 @@ asm(".align 2, 0");
 /* Same large per-instance "self" object family as above - see this file's header comment and
  * docs/matching/issue-58-0x08030334-actor.md. */
 
-extern void InitActorPart(void *self, s32 a, s32 b, s32 c, s32 d);
-extern u8 gAirshipFireballVtable[];
-
 /* An `InitActorPart`-based constructor: forwards all 4 of its own real
  * arguments (the last stack-passed) straight to `InitActorPart`, then
  * marks `self+0x54 = 2`, sets `self+0x50`'s event/trampoline table to
@@ -99,7 +95,7 @@ extern u8 gAirshipFireballVtable[];
  * own build does - declaring it earlier reorders the fetch ahead of the
  * `r6`/`r8` parameter homes, which is the "4-instruction scheduling
  * permutation" this function previously resisted. */
-void *CreateAirshipFireball(void *selfArg, s32 a, s32 b, s32 c, s32 d)
+void *CreateAirshipFireball(void *selfArg, void *part, s32 b, s32 c, s32 d)
 {
     u8 *self = selfArg;
     register s32 bReg asm("r6") = b;
@@ -107,9 +103,9 @@ void *CreateAirshipFireball(void *selfArg, s32 a, s32 b, s32 c, s32 d)
     register s32 dReg asm("r0") = d;
     register s32 health asm("r5") = 2;
 
-    InitActorPart(self, a, b, c, dReg);
+    InitActorPart(self, part, b, c, dReg);
     *(s32 *)(self + 0x54) = health;
-    *(void **)(self + 0x50) = gAirshipFireballVtable;
+    *(void **)(self + 0x50) = (void *)gAirshipFireballVtable;
     *(s32 *)(self + 0x58) = bReg;
     *(s32 *)(self + 0x5c) = cReg;
     *(s32 *)(self + 0x64) = 0;

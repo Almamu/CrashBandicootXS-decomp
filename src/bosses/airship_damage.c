@@ -1,22 +1,15 @@
 #include "core.h"
 #include "actor_self.h"
 #include "audio.h"
+#include "actor.h"
+#include "bosses.h"
 
 /* Same boss-weapon subsystem as airship_fireball.c - see that file's header
  * comment and docs/matching/issue-58-0x08030334-actor.md.
  * `gAirship` is the same small tracker object airship_fall.c
  * documents. */
 
-extern s32 GetAnimFrameBaseOffset(void *self);
 extern void *gAudioContext;
-extern s32 gAirshipHp;
-extern s32 gAirshipHitFlashTimer;
-extern s32 gAirshipVelX;
-extern s32 gAirshipVelY;
-extern s32 gAirshipVelZ;
-extern s32 gAirshipState;
-extern s32 gAirshipStateTimer;
-extern void *gAirship;
 
 /* Countdown timer (`gAirshipHp -= delta`) driving the boss-
  * weapon's "charge" bar: while it's still running, just plays a tick

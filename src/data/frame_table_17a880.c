@@ -6,6 +6,7 @@
  */
 
 #include "rle_sprites/0da1d8_frames.h"
+#include "vehicle.h"
 
 extern const u8 gYetiRleFrames[];
 

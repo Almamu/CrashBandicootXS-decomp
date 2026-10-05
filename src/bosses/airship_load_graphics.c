@@ -1,5 +1,6 @@
 #include "core.h"
 #include "actor_self.h"
+#include "bosses.h"
 
 /* Same boss-weapon subsystem as airship_fireball.c - see that file's header
  * comment and docs/matching/issue-58-0x08030334-actor.md. Confirmed by
@@ -34,16 +35,6 @@
  * standard `DmaFill16`/`DmaCopy16` macros, and the palette strip is
  * `vu16` - the state-5 blackout is one chained assignment, whose
  * volatile read-backs are the ROM's `ldrh`/`strh` ladder. */
-extern s32 gAirshipState;
-extern u8 gAirshipBg2PageFlip;
-extern s32 gAirshipBg2Page;
-extern struct actor_self *gAirship;
-extern u32 gAirshipStateTimer;
-extern u16 gAirshipPalette[];
-
-extern void ConvertAirshipTiles(void);
-extern void DrawAirshipMap(u16 *src);
-extern void UpdateAirshipBg2(void);
 
 void LoadAirshipGraphics(void)
 {
@@ -73,13 +64,13 @@ void LoadAirshipGraphics(void)
         if (gAirshipState == 5) {
             pal[15] = pal[1] = pal[4] = pal[8] = 0;
         } else if (gAirshipState == 4) {
-            if (gAirshipStateTimer > 9)
+            if ((u32)gAirshipStateTimer > 9)
                 pal[15] = 0;
-            if (gAirshipStateTimer > 0x31)
+            if ((u32)gAirshipStateTimer > 0x31)
                 pal[1] = 0;
-            if (gAirshipStateTimer > 0x4f)
+            if ((u32)gAirshipStateTimer > 0x4f)
                 pal[4] = 0;
-            if (gAirshipStateTimer > 0x6d)
+            if ((u32)gAirshipStateTimer > 0x6d)
                 pal[8] = 0;
         }
     }

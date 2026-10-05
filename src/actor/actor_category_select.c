@@ -36,16 +36,9 @@
  * returned as a pointer so the load lands after the limit. */
 #include "memory.h"
 #include "actor_anim.h"
-
-extern const struct category_vtable *gActorCategoryVtable;
-extern u8 gUnknown_03001414;
-extern struct sub_effect_record *gActorSpawnTable;
-extern s32 gActorSpawnIndex;
-extern u8 gActorSpawnsPaused;
-extern s32 gActorSpawnOffset;
-extern u8 *gActorDrawList;
-extern s32 gActorCategoryFrameCount;
-extern s32 GetCellAnimDistance(void);
+#include "actor.h"
+#include "bosses.h"
+#include "vehicle.h"
 
 /* `table[idx + 1].field_00`, with the record-boundary constant added
  * to the base before the index (same shape as actor_spawn.c's
@@ -59,21 +52,21 @@ static inline s32 *NextThreshold(struct sub_effect_record *table, s32 idx)
     return (s32 *)(b + off);
 }
 
-void SelectActorCategory(s32 type, struct sub_effect_record *table, s32 x, u8 variant, s32 arg4, s32 y)
+void SelectActorCategory(s32 type, struct sub_effect_record *table, void *animTable, u8 active, s32 variant, s32 checkpoint)
 {
     struct sub_effect_record *t;
-    u8 **buf;
+    struct actor_self ***buf;
     s32 base;
     s32 *idx;
 
     gActorCategoryVtable = &gActorCategoryVtables[type];
-    gUnknown_03001414 = variant;
+    gUnknown_03001414 = active;
     gActorSpawnTable = table;
     idx = &gActorSpawnIndex;
     *idx = 0;
     gActorSpawnsPaused = 0;
     gActorSpawnOffset = 0;
-    ((void (*)(s32, s32))gActorCategoryVtable->fn[0])(x, y);
+    ((void (*)(void *, s32))gActorCategoryVtable->fn[0])(animTable, checkpoint);
     base = GetCellAnimDistance();
     asm("" : : "r"(idx)); /* extra reference: `idx` outranks `base` */
     t = gActorSpawnTable;
@@ -83,7 +76,7 @@ void SelectActorCategory(s32 type, struct sub_effect_record *table, s32 x, u8 va
     buf = &gActorDrawList;
     *buf = mem_alloc(0xc8, 0x80000000);
     if (gActorCategoryVtable->fn[2] != NULL)
-        ((void (*)(s32))gActorCategoryVtable->fn[2])(arg4);
+        ((void (*)(s32))gActorCategoryVtable->fn[2])(variant);
     while (gActorSpawnIndex < gActorSpawnTable->field_04
            && *NextThreshold(gActorSpawnTable, gActorSpawnIndex) <= (s32)gActorCategoryVtable->fn[7] + base) {
         ((void (*)(void *, s32, s32))gActorCategoryVtable->fn[1])((u8 *)gActorSpawnTable + (gActorSpawnIndex * 0x14 + 8),

@@ -1,4 +1,6 @@
 #include "core.h"
+#include "actor.h"
+#include "bosses.h"
 
 /* Same "self" object family as hovercraft_side_gun.c - see that file's header
  * comment and docs/matching/issue-63-0x08033ef4-actor.md. */
@@ -18,11 +20,7 @@
  * forcing the recheck to materialize - the same class of gap already
  * closed for `DrawPolarCollectedWumpa` (issue #52) and the `| 0`-with-a-zero-
  * valued-term case in `DrawJetpackCheckpointText` (issue #71). */
-extern s32 GetHovercraftZ(void);
-extern s32 GetHovercraftX(void);
-extern s32 GetHovercraftY(void);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *fn);
-extern void UpdateActor(void *self);
 
 void UpdateHovercraftCannonFlash(void *selfArg)
 {
@@ -61,9 +59,6 @@ asm(".align 2, 0");
  * reuses `self+0x58` as a plain one-shot flag rather than a health
  * countdown. See docs/matching/issue-63-0x08033ef4-actor.md. */
 
-extern void *InitActorPart(void *selfArg, void *part, s32 b, s32 c, s32 d);
-extern u8 gHovercraftCannonFlashVtable[];
-
 /* Constructor: forwards straight through to `InitActorPart`, then sets
  * health (`+0x54=1`), the event table (`+0x50=&gHovercraftCannonFlashVtable`),
  * resets state/frame-counter/table-index/anim/accumulator, and sets the
@@ -75,7 +70,7 @@ void *CreateHovercraftCannonFlash(void *selfArg, void *part, s32 b, s32 c, s32 d
 
     InitActorPart(self, part, b, c, d);
     *(s32 *)(self + 0x54) = one;
-    *(void **)(self + 0x50) = gHovercraftCannonFlashVtable;
+    *(void **)(self + 0x50) = (void *)gHovercraftCannonFlashVtable;
     {
         register s32 zero asm("r1") = 0;
 

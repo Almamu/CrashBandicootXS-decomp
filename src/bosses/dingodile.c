@@ -2,6 +2,8 @@
 #include "util.h"
 #include "audio.h"
 #include "player.h"
+#include "bosses.h"
+#include "enemies.h"
 
 /* GitHub issue #24: 0x0801967C-0x0801A794, formerly
  * asm/code_3_2_17_188d0_1967c.s.
@@ -43,27 +45,20 @@
  * UpdateDingodileShield is a NAKED transcription (its C is kept under
  * NON_MATCHING); everything else is real C. */
 
-struct vmethod
-{
-    s16 thisOffset;
-    u8 unk_2[2];
-    void *fn;
-};
-
 struct vtable
 {
     u8 unk_00[0x18];
-    struct vmethod m18; // 0x18
-    struct vmethod m20; // 0x20
-    struct vmethod m28; // 0x28
-    struct vmethod m30; // 0x30
-    struct vmethod m38; // 0x38
-    struct vmethod m40; // 0x40
-    struct vmethod m48; // 0x48
-    struct vmethod m50; // 0x50
-    struct vmethod m58; // 0x58
-    struct vmethod m60; // 0x60
-    struct vmethod m68; // 0x68
+    struct actor_method m18; // 0x18
+    struct actor_method m20; // 0x20
+    struct actor_method m28; // 0x28
+    struct actor_method m30; // 0x30
+    struct actor_method m38; // 0x38
+    struct actor_method m40; // 0x40
+    struct actor_method m48; // 0x48
+    struct actor_method m50; // 0x50
+    struct actor_method m58; // 0x58
+    struct actor_method m60; // 0x60
+    struct actor_method m68; // 0x68
 };
 
 struct anim_rec
@@ -225,14 +220,6 @@ struct obj_48a4
     struct part *target; // 0x1C
 };
 
-struct part_list
-{
-    u8 unk_00[4];
-    s32 count;            // 0x04
-    u8 unk_08[4];
-    struct part **items;  // 0x0C
-};
-
 struct level_layer
 {
     u8 unk_00[0x10];
@@ -262,28 +249,9 @@ extern struct level_state *gEntityFlags;
 extern void *gAudioContext;
 extern void *gLevelState;
 extern struct { u8 unk_00[0x10]; struct level_layer *layer; } *gLevelLayers;
-extern u8 gCortexTargetHopSteps[];
-extern s32 gDingodileStopXLeft[];
-extern s32 gDingodileStopXLeftHurt[];
-extern s32 gDingodileStopXRight[];
-extern s32 gDingodileStopXRightHurt[];
-extern s32 gDingodileMotionRecords[];
-extern u8 gDingodileRocketRiseMotion[];
-extern u8 gDingodileStalactiteFallMotion[];
-extern u8 gCortexTargetVtable[];
-extern u8 gCortexCannonVtable[];
-extern u8 gCortexBossVtable[];
-extern u8 gDingodileSharkVtable[];
-extern u8 gDingodileProjectileVtable[];
-extern u8 gDingodileShieldVtable[];
 
 extern void DestroyCtrl(void *self, s32 flags);
 extern void InitCtrl(void *self);
-/* As in enemies.h, which this file can't include yet: its local `struct
- * part_list` clashes with box_part.h's (bosses batch). */
-struct part_ctrl;
-extern void DestroyEnemyCtrl(struct part_ctrl *self, s32 flags);
-extern struct part_ctrl *CreateEnemyCtrl(struct part_ctrl *self);
 extern u8 HasSuperBodySlam(void *arg0);
 extern u8 HasTurboRun(void *arg0);
 extern void SpawnBodySlamPower(u32 arg0, s32 arg1, s32 arg2, s32 arg3);
@@ -301,15 +269,6 @@ extern void SetSpriteAnimDone(struct part *p, s32 arg1);
 extern void *OperatorNew(u32 size);
 extern s32 GetSpriteAnimPaletteSlot(struct part *p);
 extern void AddToPartList(struct part_list *list, struct part *p);
-extern void StartDingodileMotion(struct dingodile_boss *self, struct part *other, s32 arg2);
-
-void SetDingodileState(struct dingodile_boss *self, struct part *other, s32 next);
-void SpawnDingodileShieldOrRocket(struct dingodile_boss *self, s32 mode, u16 x, u16 y, struct part *arg);
-void SpawnDingodileShark(struct dingodile_boss *self, u16 x, u16 y, u8 facing);
-void SpawnDingodileStalactite(struct obj_48a4 *self, u16 x, u16 y);
-struct obj_490c *CreateDingodileShieldCtrl(void *mem);
-struct vobj *CreateDingodileSharkCtrl(void *mem);
-struct obj_48a4 *CreateDingodileProjectileCtrl(void *mem);
 
 typedef void (*method1_fn)(void *self, s32 a);
 typedef void (*method2_fn)(void *self, void *a, s32 b);
@@ -319,13 +278,13 @@ typedef u8 (*query_fn)(void *self);
 #define VCALL1(obj, m, a)                                                      \
     do                                                                         \
     {                                                                          \
-        struct vmethod *_m = &((struct vobj *)(obj))->vt->m;                   \
+        struct actor_method *_m = &((struct vobj *)(obj))->vt->m;                   \
         ((method1_fn)_m->fn)((u8 *)(obj) + _m->thisOffset, (s32)(a));          \
     } while (0)
 #define VCALL2(obj, m, a, b)                                                   \
     do                                                                         \
     {                                                                          \
-        struct vmethod *_m = &((struct vobj *)(obj))->vt->m;                   \
+        struct actor_method *_m = &((struct vobj *)(obj))->vt->m;                   \
         ((method2_fn)_m->fn)((u8 *)(obj) + _m->thisOffset, (void *)(a), (s32)(b)); \
     } while (0)
 
@@ -334,7 +293,7 @@ typedef u8 (*query_fn)(void *self);
  * match without it. */
 #define VCALL1_B(obj, m, a)                                                    \
     {                                                                          \
-        struct vmethod *_m = &((struct vobj *)(obj))->vt->m;                   \
+        struct actor_method *_m = &((struct vobj *)(obj))->vt->m;                   \
         ((method1_fn)_m->fn)((u8 *)(obj) + _m->thisOffset, (s32)(a));          \
     }
 
@@ -343,7 +302,7 @@ typedef u8 (*query_fn)(void *self);
 #define PREP_VCALL2(obj, m, a_)                                                \
     do                                                                         \
     {                                                                          \
-        struct vmethod *_m = &((struct vobj *)(obj))->vt->m;                   \
+        struct actor_method *_m = &((struct vobj *)(obj))->vt->m;                   \
         t = (u8 *)(obj) + _m->thisOffset;                                      \
         fn = _m->fn;                                                           \
         a = (a_);                                                              \
@@ -412,7 +371,7 @@ void sub_801967C(void *self, u8 flag)
 
     for (i = 0; i < n; i++)
     {
-        struct part *p = gUnknown_030012EC->items[i];
+        struct part *p = (struct part *)gUnknown_030012EC->items[i];
 
         if (flag)
             p->kind = 1;
@@ -560,7 +519,7 @@ void UpdateDingodile(struct dingodile_boss *self, struct part *other)
         {
             if (f->facing)
             {
-                s32 *tbl = gDingodileStopXLeft;
+                const s32 *tbl = gDingodileStopXLeft;
                 if (self->hits > 0)
                     tbl = gDingodileStopXLeftHurt;
                 if (x <= tbl[self->step])
@@ -572,7 +531,7 @@ void UpdateDingodile(struct dingodile_boss *self, struct part *other)
             }
             else
             {
-                s32 *tbl = gDingodileStopXRight;
+                const s32 *tbl = gDingodileStopXRight;
                 if (self->hits > 0)
                     tbl = gDingodileStopXRightHurt;
                 if (x >= tbl[self->step])
@@ -699,7 +658,7 @@ void UpdateDingodile(struct dingodile_boss *self, struct part *other)
             SetDingodileState(self, other, self->nextState);
         break;
     case 7:
-        StartDingodileMotion(self, other, 0);
+        StartDingodileMotion(self, (struct gobj *)other, 0);
         VCALL2(self, m50, other, 5);
         SetDingodileState(self, other, 8);
         break;
@@ -756,7 +715,7 @@ void UpdateDingodile(struct dingodile_boss *self, struct part *other)
 
         if (y >= LevelBottom() + 0x2000)
         {
-            StartDingodileMotion(self, other, 0);
+            StartDingodileMotion(self, (struct gobj *)other, 0);
             if (HasSuperBodySlam(gLevelState))
                 RequestRoomExit();
             SetDingodileState(self, other, 17);
@@ -786,7 +745,7 @@ void SetDingodileState(struct dingodile_boss *self, struct part *other, s32 next
     case 16:
         if (!HasSuperBodySlam(gLevelState))
             SpawnTurboRunPower(0xFFFF, 0xA0, 0xA9, 0);
-        StartDingodileMotion(self, other, 3);
+        StartDingodileMotion(self, (struct gobj *)other, 3);
         break;
     case 12:
         SpawnDingodileShark(self, gLevelLayers->layer->width, 0x28, 1);
@@ -795,7 +754,7 @@ void SetDingodileState(struct dingodile_boss *self, struct part *other, s32 next
     case 1:
     case 14:
         VCALL2(self, m50, other, 0);
-        StartDingodileMotion(self, other, 1);
+        StartDingodileMotion(self, (struct gobj *)other, 1);
         break;
     case 3:
     case 13:
@@ -814,7 +773,7 @@ void SetDingodileState(struct dingodile_boss *self, struct part *other, s32 next
     call:
         ((method2_fn)fn)(t, a, b);
     case 2:
-        StartDingodileMotion(self, other, 0);
+        StartDingodileMotion(self, (struct gobj *)other, 0);
         break;
     case 8:
         VCALL1(self->part->ctl, m20, 2);
@@ -831,7 +790,7 @@ void SetDingodileState(struct dingodile_boss *self, struct part *other, s32 next
             self->timer = 1;
         PlaySfx(gAudioContext, 0x15, 0x100);
         other->fl.b.shown = 0;
-        StartDingodileMotion(self, other, 2);
+        StartDingodileMotion(self, (struct gobj *)other, 2);
         VCALL2(self, m50, other, 1);
         break;
     }
@@ -946,7 +905,7 @@ void UpdateDingodileShield(struct obj_490c *self, struct part *other)
     register s32 hr6 asm("r6");
 
     {
-        struct vmethod *m = &other->vt->m28;
+        struct actor_method *m = &other->vt->m28;
         if (((query_fn)m->fn)((u8 *)other + m->thisOffset))
         {
             if (!gPlayer->busy)
@@ -970,7 +929,7 @@ void UpdateDingodileShield(struct obj_490c *self, struct part *other)
                 if (AabbOverlaps(&b, &a))
                 {
                     struct part *pl = gPlayer;
-                    struct vmethod *m2 = &pl->vt->m68;
+                    struct actor_method *m2 = &pl->vt->m68;
 
                     ((method3_fn)m2->fn)((u8 *)pl + m2->thisOffset, 0, other->kind, 0);
                 }
@@ -1061,7 +1020,7 @@ void UpdateDingodileProjectile(struct obj_48a4 *self, struct part *other)
             if (AabbOverlaps(&a, &b))
             {
                 struct part *pl = gPlayer;
-                struct vmethod *m2 = &pl->vt->m68;
+                struct actor_method *m2 = &pl->vt->m68;
 
                 ((method3_fn)m2->fn)((u8 *)pl + m2->thisOffset, 0, other->kind, 0);
                 if (self->state == 3)
@@ -1154,9 +1113,9 @@ void UpdateDingodileShark(struct obj_483c *self, struct part *other)
     case 0:
         if (other->f28.facing)
         {
-            s32 a = -gDingodileMotionRecords[9];
-            s32 c = -gDingodileMotionRecords[11];
-            s32 b = gDingodileMotionRecords[10];
+            s32 a = -gDingodileMotionRecords[3][0];
+            s32 c = -gDingodileMotionRecords[3][2];
+            s32 b = gDingodileMotionRecords[3][1];
             other->speedX = a;
             other->rampXStart = a;
             other->rampXStep = b;
@@ -1164,9 +1123,9 @@ void UpdateDingodileShark(struct obj_483c *self, struct part *other)
         }
         else
         {
-            s32 a = gDingodileMotionRecords[9];
-            s32 b = gDingodileMotionRecords[10];
-            s32 c = gDingodileMotionRecords[11];
+            s32 a = gDingodileMotionRecords[3][0];
+            s32 b = gDingodileMotionRecords[3][1];
+            s32 c = gDingodileMotionRecords[3][2];
             other->speedX = a;
             other->rampXStart = a;
             other->rampXStep = b;

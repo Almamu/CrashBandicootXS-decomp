@@ -1,7 +1,9 @@
 #include "core.h"
 #include "actor_self.h"
+#include "actor_anim.h"
 #include "system.h"
 #include "audio.h"
+#include "vehicle.h"
 
 /* Sits right after polar_pickups.c's `UpdatePolarNitroCrate` and before
  * polar_crates.c's `UpdatePolarAkuAkuCrate` - directly adjacent to both now,
@@ -21,19 +23,14 @@ extern void AddBrokenCrate(void *self);
 /* The actor_category_frame.c AABB helpers: the three scratch boxes live in
  * one frame struct so each box address is rematerialized from `sp`
  * (see that file and yeti_update.c). */
-struct box16 {
-    s16 x, y, z;
-    s16 w, h, d;
-};
-
-static inline void BoxMove(struct box16 *b, s32 x, s32 y, s32 z)
+static inline void BoxMove(struct anim_box *b, s32 x, s32 y, s32 z)
 {
     b->x += x;
     b->y += y;
     b->z += z;
 }
 
-static inline u8 BoxOverlap(struct box16 *b, struct box16 *a)
+static inline u8 BoxOverlap(struct anim_box *b, struct anim_box *a)
 {
     if (b->z < a->z + a->d && b->z + b->d > a->z
         && b->y < a->y + a->h && b->y + b->h > a->y
@@ -47,12 +44,12 @@ hit:
 static inline u8 ActorsOverlap(struct actor_self *pl, struct actor_self *self)
 {
     struct {
-        struct box16 a, t, s;
+        struct anim_box a, t, s;
     } f;
-    struct box16 *t;
+    struct anim_box *t;
     s32 x, y, z;
 
-    f.t = *(struct box16 *)pl->box;
+    f.t = *(struct anim_box *)pl->box;
     x = pl->x >> 8;
     y = pl->y >> 8;
     z = pl->z >> 8;
@@ -60,7 +57,7 @@ static inline u8 ActorsOverlap(struct actor_self *pl, struct actor_self *self)
     BoxMove(t, x, y, z);
     f.a = *t;
     MemCopy32(&f.a, &f.a, sizeof(f.a));
-    f.s = *(struct box16 *)self->box;
+    f.s = *(struct anim_box *)self->box;
     BoxMove(&f.s, self->x >> 8, self->y >> 8, self->z >> 8);
     *t = f.s;
     MemCopy32(t, t, sizeof(*t));

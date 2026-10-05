@@ -2,6 +2,9 @@
 #include "memory.h"
 #include "actor_anim.h"
 #include "actor_self.h"
+#include "actor.h"
+#include "bosses.h"
+#include "vehicle.h"
 
 /* 0x0802AC28-0x0802B364 (GitHub issue #51), formerly
  * asm/code_3_2_20_8b7c_ac28.s: the actor factory on top of the shared
@@ -27,37 +30,8 @@
  * with the current agbcc like the rest of this zone. See
  * docs/matching/issue-51-actor-2ac28.md. */
 
-extern struct anim_table_record *gActorAnimTable;
 extern struct actor_self *gActorList;
 extern void *gLevelState;
-
-extern u8 gRiderlessPolarVtable[];
-extern u8 gPolarCheckpointTextVtable[];
-extern u8 gPolarPlayerVtable[];
-extern u8 gPolarWumpaVtable[];
-extern u8 gPolarTimeCrateVtable[];
-extern u8 gPolarQuestionCrateVtable[];
-extern u8 gPolarAkuAkuCrateVtable[];
-extern u8 gPolarNitroCrateVtable[];
-extern u8 gPolarLifeCrateVtable[];
-extern u8 gStaticData_087E4F54[];
-extern u8 gPolarBasicCrateVtable[];
-
-extern struct actor_self *InitActorPart(struct actor_self *self, struct anim_table_record *rec, s32 x, s32 y, s32 z);
-extern struct actor_self *InitPolarCrate(struct actor_self *self, struct anim_table_record *rec, s32 x, s32 y, s32 z);
-extern struct actor_self *CreatePolarCheckpointCrate(struct actor_self *self, struct anim_table_record *rec, s32 x, s32 y, s32 z);
-extern struct actor_self *CreatePolarLauncher(struct actor_self *self, struct anim_table_record *rec, s32 x, s32 y, s32 z);
-extern struct actor_self *CreatePolarBoostPad(struct actor_self *self, struct anim_table_record *rec, s32 x, s32 y, s32 z);
-extern struct actor_self *CreatePolarPenguin(struct actor_self *self, struct anim_table_record *rec, s32 x, s32 y, s32 z, void *spawn);
-extern struct actor_self *CreatePolarElectricFence(struct actor_self *self, struct anim_table_record *rec, s32 x, s32 y, s32 z);
-extern struct actor_self *CreatePolarIcicle(struct actor_self *self, struct anim_table_record *rec, s32 x, s32 y, s32 z);
-extern struct actor_self *CreatePolarGoal(struct actor_self *self, struct anim_table_record *rec, s32 x, s32 y, s32 z);
-extern struct actor_self *sub_802CE38(struct actor_self *self, struct anim_table_record *rec, s32 x, s32 y, s32 z);
-extern struct actor_self *CreatePolarCollectedWumpa(struct actor_self *self, struct anim_table_record *rec, s32 x, s32 y, s32 z);
-extern struct actor_self *CreatePolarAkuAku(struct actor_self *self, struct anim_table_record *rec, s32 x, s32 y, s32 z, s32 arg);
-extern u8 IsSpawnCollected(void *spawn);
-extern void SetActorPaletteCycle(s32 idx);
-extern void AllocPolarPlayerTiles(struct actor_self *self);
 
 /* An inline wrapper rather than a macro: the ROM materializes the size
  * before the heap flags, i.e. evaluates it as an argument of its own. */
@@ -137,7 +111,7 @@ struct actor_self *CreateActor(u8 kind, s32 x, s32 y, s32 z, void *spawn)
     case 22:
         return CreatePolarLauncher(AllocActor(0x54), gActorAnimTable + kind, x, y, z);
     case 12:
-        return CreatePolarBoostPad(AllocActor(0x58), gActorAnimTable + kind, x, y, z);
+        return CreatePolarBoostPad((struct actor_once *)(AllocActor(0x58)), gActorAnimTable + kind, x, y, z);
     case 24:
         return CreatePolarPenguin(AllocActor(0x68), gActorAnimTable + kind, x, y, z, spawn);
     case 28:
@@ -146,13 +120,13 @@ struct actor_self *CreateActor(u8 kind, s32 x, s32 y, s32 z, void *spawn)
     case 31:
         NEW_CB34_ACTOR(0x54, REC_AT(kind), gPolarQuestionCrateVtable);
     case 35:
-        if (IsSpawnCollected(spawn))
+        if ((u8)IsSpawnCollected(spawn))
         {
             NEW_CB34_ACTOR(0x54, gActorAnimTable + 28, gPolarQuestionCrateVtable);
         }
         NEW_CB34_TRACKED_ACTOR(REC_AT(kind), gPolarLifeCrateVtable);
     case 8:
-        if (IsSpawnCollected(spawn))
+        if ((u8)IsSpawnCollected(spawn))
         {
             NEW_CB34_ACTOR(0x54, gActorAnimTable + 28, gPolarQuestionCrateVtable);
         }
@@ -166,7 +140,7 @@ struct actor_self *CreateActor(u8 kind, s32 x, s32 y, s32 z, void *spawn)
     case 16:
     case 18:
     case 20:
-        return CreatePolarIcicle(AllocActor(0x54), gActorAnimTable + kind, x, y, z);
+        return CreatePolarIcicle(AllocActor(0x54), (u8 *)(gActorAnimTable + kind), x, y, z);
     case 25:
     {
         struct actor_self *self = CreatePolarGoal(AllocActor(0x54), gActorAnimTable + 26, gActorAnimTable[26].spawnX, y, z);
@@ -211,8 +185,6 @@ struct actor_self *SpawnPolarAkuAku(s32 x, s32 y, s32 z, s32 arg)
     return CreatePolarAkuAku(AllocActor(0x54), &gActorAnimTable[27], x, y, z, arg);
 }
 
-extern struct actor_self *ConstructActorPart(struct actor_self *self, struct anim_table_record *rec, s32 z);
-
 void ConstructAnimTableState(struct anim_table_record *table, s32 z)
 {
     gActorAnimTable = table;
@@ -251,20 +223,6 @@ struct actor_self *SpawnActor(struct actor_spawn *spawn, u8 useBonus, s32 zOffse
         return NULL;
     return CreateActor(kind, spawn->x << 8, spawn->y << 8, (spawn->z << 8) + zOffset, spawn);
 }
-
-extern s32 gPolarPlayerVelY;
-extern s32 gRiderlessPolar;
-extern s32 gPolarAkuAku;
-extern u8 gPolarSteerEnabled;
-extern s32 gPolarInvulnTimer;
-extern s32 gPolarSteerTime;
-extern s32 gPolarFinishTimer;
-extern u8 gPolarPlayerInactive;
-extern u8 gPolarFadeStarted;
-extern u8 gPolarPlayerHalted;
-extern s32 gPolarQueuedWumpa;
-extern s32 gPolarWumpaDispenseTimer;
-extern u8 gPolarPauseLocked;
 
 struct actor_self *ConstructActorPart(struct actor_self *self, struct anim_table_record *rec, s32 z)
 {

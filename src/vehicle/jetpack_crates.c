@@ -4,6 +4,8 @@
 #include <libgcc.h>
 #include "system.h"
 #include "audio.h"
+#include "actor.h"
+#include "vehicle.h"
 
 /* First half of the `0x08031A6C`-`0x08032858` remainder issue #59's
  * foundational pass (docs/matching/issue-59-0x08031784-actor.md) left
@@ -41,39 +43,14 @@ extern void *gAudioContext;
 extern void *gLevelState;
 extern void *gActorList;
 
-extern u8 IsTouchingPlayer(void *self);
-extern void UpdateActor(void *self);
 extern void AddBrokenCrate(void *self);
 extern void FreezeLevelClock(void *arg0, s32 arg1);
 extern void StartTimeTrial(void *arg0);
-extern void HealJetpackPlayer(void *selfArg, s32 delta);
-extern void QueueJetpackWumpa(void *selfArg, s32 delta);
-extern void PassJetpackRing(void *selfArg, s32 x, s32 y);
-extern void MarkSpawnCollected(void *selfArg);
 extern s32 AddLife(void *self);
-extern void ReleaseJetpackBalloon(void *selfArg);
-extern void MoveJetpackBalloon(void *selfArg, s32 a, s32 b, s32 c);
-extern void InitActorPart(void *self, s32 a, s32 b, s32 c, s32 d);
-extern s32 SpawnJetpackBalloon(s32 kind, s32 a1, s32 a2, s32 a3, void *selfArg);
 extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
 
 extern u8 gSineTable[];
-extern struct actor_pmf gJetpackBalloonCrateStateFuncs[];
-extern u8 gJetpackRocketBox[];
 extern u8 gActorVtable[];
-extern u8 gJetpackHealthCrateVtable[];
-extern u8 gJetpackTimeCrateVtable[];
-extern u8 gJetpackQuestionCrateVtable[];
-extern u8 gJetpackBalloonCrateVtable[];
-extern u8 gJetpackParachuteNitroVtable[];
-extern u8 gJetpackRocketVtable[];
-
-/* Anonymous 12-byte (3-word) copy unit - see polar_pickups.c's own copy
- * of this comment for why this shape (rather than three separate `s32`
- * field copies) is needed to reproduce the ROM's `ldm`/`stm` lowering. */
-struct vec3_words {
-    s32 a, b, c;
-};
 
 /* The derived classes in this file, each the common `actor_self` prefix
  * plus its own fields. The animation-reset blocks store through
@@ -123,8 +100,6 @@ struct trigger_actor {
     u8 cued;                    // 0x58
 };
 
-void LaunchJetpackRocket(void *selfArg);
-
 /* Per-state member-pointer dispatch, `(this->*gJetpackBalloonCrateStateFuncs
  * [this->state])()` (see `ACTOR_PMF_CALL`), then "destroy" once state 1
  * has risen past a height or the state-2 animation has played through,
@@ -160,7 +135,7 @@ void UpdateJetpackQuestionCrate(void *selfArg)
     struct orbit_actor *self = selfArg;
     s32 kind = self->base.animIndex;
 
-    if (kind == 0 && IsTouchingPlayer(self)) {
+    if (kind == 0 && (u8)IsTouchingPlayer(self)) {
         register s32 state asm("r0") = 2;
         register s32 one asm("r1") = 1;
         s32 typeByte;
@@ -325,7 +300,7 @@ void UpdateJetpackHealthCrate(void *selfArg)
     struct orbit_actor *self = selfArg;
     s32 kind = self->base.animIndex;
 
-    if (kind == 0 && IsTouchingPlayer(self)) {
+    if (kind == 0 && (u8)IsTouchingPlayer(self)) {
         register s32 state asm("r0") = 2;
         register s32 one asm("r6") = 1;
 
@@ -366,7 +341,7 @@ void UpdateJetpackTimeCrate(void *selfArg)
     struct orbit_actor *self = selfArg;
     s32 kind = self->base.animIndex;
 
-    if (kind == 0 && IsTouchingPlayer(self)) {
+    if (kind == 0 && (u8)IsTouchingPlayer(self)) {
         register s32 state asm("r0") = 2;
         register s32 one asm("r1") = 1;
         s32 typeByte;
@@ -529,12 +504,12 @@ after_dispatch:
  * random 16-bit seed into `self+0x68`, then forwards to `SpawnJetpackBalloon`
  * (kind `0x28`) with `c` biased by `-15798` - one of the "spawn effect
  * type N" family's own per-kind constructors (docs/rom_map.md). */
-void *CreateJetpackTimeCrate(void *selfArg, s32 a, s32 b, s32 c, s32 d)
+void *CreateJetpackTimeCrate(void *selfArg, void *part, s32 b, s32 c, s32 d)
 {
     struct orbit_actor *self = selfArg;
     register s32 health asm("r8") = 2;
 
-    InitActorPart(self, a, b, c, d);
+    InitActorPart(self, part, b, c, d);
     self->health = health;
     self->base.vtable = (struct actor_vtable *)gJetpackBalloonCrateVtable;
     self->done = 0;
@@ -542,7 +517,7 @@ void *CreateJetpackTimeCrate(void *selfArg, s32 a, s32 b, s32 c, s32 d)
     self->centerY = c;
     self->phase = (u16)RandRange(0xff);
 
-    self->child = (void *)SpawnJetpackBalloon(0x28, b, c + (s32)0xFFFFC24A, d, self);
+    self->child = (void *)SpawnJetpackBalloon(0x28, b, c + (s32)0xFFFFC24A, d, (s32)self);
     self->base.vtable = (struct actor_vtable *)gJetpackTimeCrateVtable;
 
     return self;
@@ -595,12 +570,12 @@ void DamageJetpackHealthCrate(void *selfArg, s32 delta)
 
 /* Same `SpawnJetpackBalloon`-based constructor shape as `CreateJetpackTimeCrate`, kind
  * `0x2a`, final event table `gJetpackHealthCrateVtable`. */
-void *CreateJetpackHealthCrate(void *selfArg, s32 a, s32 b, s32 c, s32 d)
+void *CreateJetpackHealthCrate(void *selfArg, void *part, s32 b, s32 c, s32 d)
 {
     struct orbit_actor *self = selfArg;
     register s32 health asm("r8") = 2;
 
-    InitActorPart(self, a, b, c, d);
+    InitActorPart(self, part, b, c, d);
     self->health = health;
     self->base.vtable = (struct actor_vtable *)gJetpackBalloonCrateVtable;
     self->done = 0;
@@ -608,7 +583,7 @@ void *CreateJetpackHealthCrate(void *selfArg, s32 a, s32 b, s32 c, s32 d)
     self->centerY = c;
     self->phase = (u16)RandRange(0xff);
 
-    self->child = (void *)SpawnJetpackBalloon(0x2a, b, c + (s32)0xFFFFC24A, d, self);
+    self->child = (void *)SpawnJetpackBalloon(0x2a, b, c + (s32)0xFFFFC24A, d, (s32)self);
     self->base.vtable = (struct actor_vtable *)gJetpackHealthCrateVtable;
 
     return self;
@@ -617,12 +592,12 @@ void *CreateJetpackHealthCrate(void *selfArg, s32 a, s32 b, s32 c, s32 d)
 /* Same `SpawnJetpackBalloon`-based constructor shape again, kind `0x29`, final
  * event table `gJetpackQuestionCrateVtable`, plus a 6th argument stashed
  * verbatim into `self+0x70`. */
-void *CreateJetpackQuestionCrate(void *selfArg, s32 a, s32 b, s32 c, s32 d, s32 e)
+void *CreateJetpackQuestionCrate(void *selfArg, void *part, s32 b, s32 c, s32 d, s32 e)
 {
     struct orbit_actor *self = selfArg;
     register s32 health asm("r8") = 2;
 
-    InitActorPart(self, a, b, c, d);
+    InitActorPart(self, part, b, c, d);
     self->health = health;
     self->base.vtable = (struct actor_vtable *)gJetpackBalloonCrateVtable;
     self->done = 0;
@@ -630,7 +605,7 @@ void *CreateJetpackQuestionCrate(void *selfArg, s32 a, s32 b, s32 c, s32 d, s32 
     self->centerY = c;
     self->phase = (u16)RandRange(0xff);
 
-    self->child = (void *)SpawnJetpackBalloon(0x29, b, c + (s32)0xFFFFC24A, d, self);
+    self->child = (void *)SpawnJetpackBalloon(0x29, b, c + (s32)0xFFFFC24A, d, (s32)self);
     self->base.vtable = (struct actor_vtable *)gJetpackQuestionCrateVtable;
     self->unk_70 = (void *)e;
 
@@ -752,12 +727,12 @@ void DestroyJetpackBalloonCrate(void *selfArg, s32 flags)
  * form - `kind` declared `u8` and `health` an ordinary local - which
  * matches under both agbcc and old_agbcc (see
  * docs/matching/issue-59-60-m-operand-scheduling.md). */
-void *InitJetpackBalloonCrate(void *selfArg, s32 a, s32 b, s32 c, s32 d, u8 kind)
+void *InitJetpackBalloonCrate(void *selfArg, void *part, s32 b, s32 c, s32 d, u8 kind)
 {
     struct orbit_actor *self = selfArg;
     s32 health = 2;
 
-    InitActorPart(self, a, b, c, d);
+    InitActorPart(self, part, b, c, d);
     self->health = health;
     self->base.vtable = (struct actor_vtable *)gJetpackBalloonCrateVtable;
     self->done = 0;
@@ -765,7 +740,7 @@ void *InitJetpackBalloonCrate(void *selfArg, s32 a, s32 b, s32 c, s32 d, u8 kind
     self->centerY = c;
     self->phase = (u16)RandRange(0xff);
 
-    self->child = (void *)SpawnJetpackBalloon(kind, b, c + (s32)0xFFFFC24A, d, self);
+    self->child = (void *)SpawnJetpackBalloon(kind, b, c + (s32)0xFFFFC24A, d, (s32)self);
 
     return self;
 }
@@ -859,7 +834,7 @@ void UpdateJetpackParachuteNitro(void *selfArg)
         return;
     }
 
-    if (IsTouchingPlayer(self)) {
+    if ((u8)IsTouchingPlayer(self)) {
         struct actor_self *player = gActorList;
         struct actor_vtable *ptable = player->vtable;
 
@@ -944,10 +919,10 @@ void DamageJetpackParachuteNitro(void *selfArg, s32 delta)
  * its literal in the assembler's default pool location instead of
  * immediately after the function like this compiler's own `-fhex-asm`
  * literals. */
-void *CreateJetpackParachuteNitro(void *selfArg, s32 a, s32 b, s32 c, s32 d)
+void *CreateJetpackParachuteNitro(void *selfArg, void *part, s32 b, s32 c, s32 d)
 {
     struct rising_actor *self = selfArg;
-    register s32 aReg asm("r1") = a;
+    register void *aReg asm("r1") = part;
     register s32 bReg asm("r2") = b;
     register s32 dReg asm("r0") = d;
     register s32 health asm("r5") = 2;
@@ -963,7 +938,7 @@ void *CreateJetpackParachuteNitro(void *selfArg, s32 a, s32 b, s32 c, s32 d)
      * to just before the call. Manually writing the call's last few
      * instructions - the outgoing stack slot for `d`, `self`-into-r0,
      * the `0xFFFF0600` constant, and the `bl` itself - is what actually
-     * pins their position, matching the ROM's own order; `a`/`b` are
+     * pins their position, matching the ROM's own order; `part`/`b` are
      * passed through untouched via r1/r2, and the outgoing slot for `d`
      * is a plain local ("m" operand) so the compiler still owns its own
      * single stack-frame reservation instead of a hand-managed sp
@@ -1012,7 +987,7 @@ void UpdateJetpackRocket(void *selfArg)
         goto state_nonzero;
     }
 
-    if (IsTouchingPlayer(self)) {
+    if ((u8)IsTouchingPlayer(self)) {
         struct actor_self *player = gActorList;
         struct actor_vtable *ptable = player->vtable;
 
@@ -1042,7 +1017,7 @@ void UpdateJetpackRocket(void *selfArg)
         if (self->base.y > self->limitY) {
             self->base.y += self->stepY;
         } else {
-            *(struct vec3_words *)((u8 *)self + 0x38) = *(struct vec3_words *)gJetpackRocketBox;
+            *(struct vec3_words *)((u8 *)self + 0x38) = *(const struct vec3_words *)&gJetpackRocketBox;
             LaunchJetpackRocket(self);
         }
     }
@@ -1058,7 +1033,7 @@ state_nonzero:
         return;
     }
 
-    if (self->hit == 0 && IsTouchingPlayer(self)) {
+    if (self->hit == 0 && (u8)IsTouchingPlayer(self)) {
         struct actor_self *player = gActorList;
         struct actor_vtable *ptable = player->vtable;
 
@@ -1136,9 +1111,9 @@ void DamageJetpackRocket(void *selfArg, s32 delta)
  * before the stack arguments are stored, while an inline's parameter is
  * a register when the call is expanded and only becomes the constant
  * when the inline is integrated. */
-static inline void InitActorPartInline(void *self, s32 a, s32 b, s32 c, s32 d)
+static inline void InitActorPartInline(void *self, void *part, s32 b, s32 c, s32 d)
 {
-    InitActorPart(self, a, b, c, d);
+    InitActorPart(self, part, b, c, d);
 }
 
 /* `InitActorPart`-based constructor (kind `1`, `InitActorPart`'s own 4th
@@ -1147,12 +1122,12 @@ static inline void InitActorPartInline(void *self, s32 a, s32 b, s32 c, s32 d)
  * `self+0x58` (+-0x8000), and derives `self+0x60` from
  * `__divsi3(self+0x5c - 0xfa00, 0xc6)`. Once parked NAKED over the
  * `0xfa00` load's position (see InitActorPartInline above). */
-void *CreateJetpackRocket(void *selfArg, s32 a, s32 b, s32 c, s32 d)
+void *CreateJetpackRocket(void *selfArg, void *part, s32 b, s32 c, s32 d)
 {
     struct swing_actor *self = selfArg;
     s32 health = 1;
 
-    InitActorPartInline(self, a, b, 0xfa00, d);
+    InitActorPartInline(self, part, b, 0xfa00, d);
     self->health = health;
     self->base.vtable = (struct actor_vtable *)gJetpackRocketVtable;
     if (c > 0x3f00)
@@ -1189,7 +1164,7 @@ void UpdateJetpackRing(void *selfArg)
 {
     struct trigger_actor *self = selfArg;
 
-    if (*(u8 *)(*(u8 **)((u8 *)self + 0x30)) == 0x1f && IsTouchingPlayer(self)) {
+    if (*(u8 *)(*(u8 **)((u8 *)self + 0x30)) == 0x1f && (u8)IsTouchingPlayer(self)) {
         struct actor_self *player = gActorList;
         s32 *params = *(s32 **)((u8 *)self + 0x30);
         s32 x = self->base.x - params[8];
