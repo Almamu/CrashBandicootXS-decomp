@@ -1,18 +1,18 @@
-# Huge NAKED retry: `sub_0800D18C`
+# Huge NAKED retry: `QueueCratePlayerCollision`
 
-`sub_0800D18C` (issue #12, `src/system/game_loop47.c`) is the largest
+`QueueCratePlayerCollision` (issue #12, `src/system/game_loop47.c`) is the largest
 NAKED function in the project, at 3840 bytes. Before this pass it had no
 C draft. It still does not match, but it now has a draft that is the
 ROM's exact size.
 
 | Function | File | Issue | Size | Result |
 |---|---|---|---|---|
-| `sub_0800D18C` | `src/system/game_loop47.c` | #12 | 3840 bytes | still NAKED; first draft, size-exact under old_agbcc, 968 halfwords off |
+| `QueueCratePlayerCollision` | `src/system/game_loop47.c` | #12 | 3840 bytes | still NAKED; first draft, size-exact under old_agbcc, 968 halfwords off |
 
 Under the current agbcc the draft is 1629 halfwords off and 8 bytes
 long. The ROM loads masks before `ldrb` (`movs r0, #0x7f; ldrb r2, [r1];
 ands r0, r2`), which points to old_agbcc. `game_loop47.o` is not on
-`OLD_AGBCC_OBJS` yet; it would have to be, along with `sub_800E08C`
+`OLD_AGBCC_OBJS` yet; it would have to be, along with `ApplyCrateCollision`
 (49 halfwords off under old_agbcc).
 
 ## What the function does
@@ -21,7 +21,7 @@ The draft names the fields through a local `struct d18c_player` view of
 `gPlayer` and `struct crate`. In outline:
 
 1. It builds `self`'s box and the player's box. The player's hitbox quad
-   comes from the inlined `sub_8008518` switch. If the boxes overlap, it
+   comes from the inlined `GetSpriteFrameThirdBox` switch. If the boxes overlap, it
    picks the object that was hit: `self`, or the neighbour
    `sub_800CF70` finds. It then reads a response code from
    `gCrateHitResponse[obj->kind][kind]`.
@@ -32,7 +32,7 @@ The draft names the fields through a local `struct d18c_player` view of
 3. The rest runs after that dispatch and after every early out. It
    rebuilds the player's box and works out which side the player touches:
    `edge` is 1, 2, 4 or 8. This uses two paths, one for `self->fallDistance`
-   set and one for it clear, and `sub_800FDC8` for slopes. It then
+   set and one for it clear, and `FindLineCrossing` for slopes. It then
    corrects the position through a 9-entry table (edges 1/2, 4 and 8,
    with `GetBottomCrate`/`GetTopCrate` picking the neighbour for 4/8). It
    ends by queueing the result with `AddCollisionCandidate`.

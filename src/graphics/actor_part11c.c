@@ -12,14 +12,14 @@ extern void *gLevelLayers;
  * `struct pool_manager` (`actor_part12.c`), scoped to the 3-bucket
  * window `[baseIdx, baseIdx+2]` around `baseIdx` (the same
  * `max(gLevelLayers`'s sub-object's own `x >> 8`, `0)` bucket
- * index `DrawCrateList`/`sub_8009528` compute), plus the special "large
+ * index `DrawCrateList`/`CollideCrateGrid` compute), plus the special "large
  * object" bucket 255 in a second pass - not a full 0-255 sweep like
  * those two sibling functions.
  *
  * For each node's object (`part`) in the windowed buckets:
  *  - If `part->flags` bit 4 ("large object") is set and this node has
  *    no bucket-255 secondary link yet (`node+0xc == 0`), lazily creates
- *    one - an inline copy of `sub_8009150`'s own body (pop a node off
+ *    one - an inline copy of `LinkCrateToActiveBucket`'s own body (pop a node off
  *    the free list, wrap `part` in it, splice it into bucket 255's
  *    head/tail list, cross-link the two nodes via `+0xc`).
  *  - Otherwise, if `part->flags` bit 0 is set (a "pending removal"
@@ -33,7 +33,7 @@ extern void *gLevelLayers;
  *    sub-object's position, offset by fixed constants `-0x6400`/
  *    `-0x3C00` in Q8 and sized `0x1B8`x`0x118` in Q8 - an "extended"
  *    region wider than the plain 240x160 screen box `DrawCrateList`/
- *    `sub_8009528` use, meaning/purpose not yet confirmed) via a
+ *    `CollideCrateGrid` use, meaning/purpose not yet confirmed) via a
  *    `part->table+0x40/0x44`-driven trampoline; on a hit, fires a
  *    `part->table+0x18/0x1c`-driven trampoline and marks the node
  *    (`node+0x10 = 1`) so the bucket-255 second pass knows to skip a

@@ -41,7 +41,7 @@ struct phys_b48
  * every struct to a word, so it can't be embedded). */
 struct phys_flag_bits
 {
-    u8 gone:1;          // removed (see sub_80072D8)
+    u8 gone:1;          // removed (see MarkEntityGone)
     u8 unk_1:3;
     u8 bit4:1;          // set by BreakCrate (also `flags |= 0x10` elsewhere)
     u8 unk_5:3;
@@ -140,7 +140,7 @@ struct phys_player
     struct crate *ring[5]; // 0x98
     struct crate *carried; // 0xAC
     u8 unk_B0[0x5C];
-    u8 unk_10C;         // 0x10C - nonzero: sub_800E08C leaves the position alone
+    u8 unk_10C;         // 0x10C - nonzero: ApplyCrateCollision leaves the position alone
 };
 
 #define PHYS_PLAYER ((struct phys_player *)gPlayer)

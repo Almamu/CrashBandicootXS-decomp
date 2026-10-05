@@ -98,7 +98,7 @@ level object's own `+0xdc->+8` state field is `2`
   immediate load - one instruction short of the ROM's real `movs r0,
   #0x11 / rsbs r0, r0, #0` runtime negation. The established
   "negative-constant bit-clear idiom" (`docs/matching.md`,
-  `sub_800A70C` in `actor_part14.c`) fixes it, but *only* when the
+  `ClearSpriteObjFlag5` in `actor_part14.c`) fixes it, but *only* when the
   negative literal (`-0x11`) is bound to a `register ... asm("r0")`
   local first - a bare `*p & -0x11` inline still constant-folds despite
   being the "right" literal, since nothing forces the compiler to treat

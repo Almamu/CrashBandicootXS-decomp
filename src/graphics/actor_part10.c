@@ -114,7 +114,7 @@ void ClearPartList(void *manager)
  * `arg1` (a caller-supplied selector); skips unless `part->flags`
  * bit 2 is set; then fires a *second*, unconditional `table+8/0xc`
  * trampoline (return value discarded). */
-void sub_8008D30(void *manager, s32 arg1)
+void CollidePartsOfClass(void *manager, s32 arg1)
 {
     s32 i;
 

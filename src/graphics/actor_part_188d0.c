@@ -221,8 +221,8 @@ extern s32 __divsi3(s32 dividend, s32 divisor);
 extern s32 __udivsi3(s32 value, s32 divisor);
 extern u8 HasTurboRun(void *self);
 extern void RequestRoomExit(void);
-extern void *sub_8007CF8(void *dest, void *pt);
-extern void *sub_8007C30(void *dest, void *pt);
+extern void *GetSpriteBodyBox(void *dest, void *pt);
+extern void *GetSpriteAttackBox(void *dest, void *pt);
 extern void *GetSpriteHitbox(void *dest, void *pt);
 extern u8 AabbOverlaps(void *buf1, void *buf2);
 extern void DestroyPlatformMover(void *self, s32 flags);
@@ -367,7 +367,7 @@ static inline void SetFrame(struct gfx_part *part, s32 frame)
 
 /* "Mark part gone": set flags bit 0, then unless its id is 0xFFFF set the
  * id's bit in the gEntityFlags+0x108 bitmap - the same sequence as
- * sub_80072D8 (graphics.c) and sub_80178EC (actor_part_17524.c), inlined.
+ * MarkEntityGone (graphics.c) and sub_80178EC (actor_part_17524.c), inlined.
  * The id is re-read (`volatile`) after the 0xFFFF test, and the word index
  * is a *signed* division of that zero-extended value, which is what gives
  * the ROM's copy + `asr #5` + subtract. The register pins are
@@ -969,13 +969,13 @@ void sub_8019324(struct gfx_hit_ctrl *self, struct gfx_part *partArg)
 
     if (part->kind == 1)
     {
-        sub_8007CF8(&a, gPlayer);
+        GetSpriteBodyBox(&a, gPlayer);
         if (a.w == 0)
         {
-            sub_8007C30(&b, gPlayer);
+            GetSpriteAttackBox(&b, gPlayer);
             a = b;
         }
-        sub_8007C30(&b, part);
+        GetSpriteAttackBox(&b, part);
         if (AabbOverlaps(&a, &b))
         {
             struct gfx_player *p = gPlayer;

@@ -10,7 +10,7 @@
  * This resolves two of the Phase 1 doc's open questions at once:
  * `CreateKnockedEnemyCtrl` takes exactly **one** argument (`self`), not an
  * unconfirmed count as previously flagged; and `self+0xc` (the
- * "anchor" record read by `sub_800C8AC`/`sub_800C8BC`/`SetEnemyAnimMode`
+ * "anchor" record read by `SetEnemyMotionY`/`SetEnemyMotionX`/`SetEnemyAnimMode`
  * and by several of `UpdateEnemyCtrl`'s own dispatch states, per the
  * Phase 1/2 docs) is set here to the fixed global table
  * `gKnockedEnemyCtrlVtable` - i.e. every object constructed through this

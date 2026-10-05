@@ -7,7 +7,7 @@ than real decompiled C, they count as **parked**, not matched, in this
 project's tracking. `tools/report_units.py`'s `UNITS` list keeps each
 one's own address range at `base_object: None`, and
 `docs/status/actor.md` files them under the same NAKED-transcription
-write-up as `sub_80096C0`/`sub_80099F0` (the "### NAKED transcription"
+write-up as `CollideCrateGridPartWithPlayer`/`CollideCrateGridPartWithObject` (the "### NAKED transcription"
 list under "## Parked (`NON_MATCHING`, not yet byte-exact)").
 
 Both were previously `#if NON_MATCHING` C reconstructions in
@@ -89,7 +89,7 @@ an earlier batch, see `naked-spatial-grid-tail.md`). Since it's now a
 real (if `NAKED`) function, it no longer needs a guard at all - it's
 appended directly to `actor_part11.c`, right after the truly-matched
 `DrawPartList`-`InitPartList` functions and before the still-`#if
-NON_MATCHING`-guarded `sub_8009150` (owned by a parallel effort, left
+NON_MATCHING`-guarded `LinkCrateToActiveBucket` (owned by a parallel effort, left
 untouched). `asm/code_3_2_13.s` is retired entirely, and its
 `ldscript.txt` line removed - `actor_part11.o`'s own compiled output
 now ends exactly where that file used to begin, so no other reordering
@@ -98,15 +98,15 @@ is needed.
 `ResetCrateList` sat inside `asm/code_3_2_13_9914.s` (also already trimmed
 to just this one guard by the same earlier batch). Unlike `InitCrateList`,
 its real ROM address (`0x08009914`) does **not** sit adjacent to
-`actor_part11.c`'s own functions - `sub_8009150`, `UnlinkCrateFromGrid`,
-`UpdateCrateList`, `DrawCrateList`, `sub_8009528`, `sub_80096C0`, and
+`actor_part11.c`'s own functions - `LinkCrateToActiveBucket`, `UnlinkCrateFromGrid`,
+`UpdateCrateList`, `DrawCrateList`, `CollideCrateGrid`, `CollideCrateGridPartWithPlayer`, and
 `CollidePlayerWithCrates` all sit between them in ROM order, each already living in
 its own translation unit. Per `docs/workflow.md` step 4 ("a function
 whose real address isn't adjacent to an existing matched file's
 functions needs its own new `.c` file"), `ResetCrateList` moved to a new
 `src/graphics/actor_part11i.c` instead - the same reasoning that gave
-`sub_80096C0` its own `actor_part11e.c` earlier, `sub_8009528` its own
-`actor_part11f.c`, `sub_8009150` its own `actor_part11g.c`, and
+`CollideCrateGridPartWithPlayer` its own `actor_part11e.c` earlier, `CollideCrateGrid` its own
+`actor_part11f.c`, `LinkCrateToActiveBucket` its own `actor_part11g.c`, and
 `DrawCrateList` its own `actor_part11h.c` - `ResetCrateList` landed on "i"
 purely because all three of those letters were already claimed, by
 three separate parallel PRs, by the time this branch rebased onto them

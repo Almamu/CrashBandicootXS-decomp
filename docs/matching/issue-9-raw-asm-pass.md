@@ -11,7 +11,7 @@ two NAKED holdouts from #9. It removes `asm/code_3_2.s`,
 |---|---|---|---|
 | `PlayerHandleEvent` | `src/graphics/actor_part111.c` | old_agbcc | New plain-`switch` C, see below |
 | `UpdateEnemyBob` | `src/graphics/actor_part116.c` | either | Empty asm clobber of r5, plus pins |
-| `sub_800C97C` | `src/graphics/actor_part116.c` | either | Empty asm clobber of r8, one pin |
+| `UpdateEnemyOscillateY` | `src/graphics/actor_part116.c` | either | Empty asm clobber of r8, one pin |
 
 ### PlayerHandleEvent (formerly raw)
 
@@ -36,7 +36,7 @@ It matches only under old_agbcc (agbcc is 218 halfwords off), so
 switch, `movs #1; ldrb; orrs` in the ROM (constant before the byte) had
 already pointed to old_agbcc.
 
-### UpdateEnemyBob / sub_800C97C
+### UpdateEnemyBob / UpdateEnemyOscillateY
 
 The note on these functions said the ROM pushes a callee-saved register
 that it never uses (r5 in C940, r8 in C97C). The brief suggested
@@ -68,7 +68,7 @@ Each empty asm has a comment in the source.
   and `asm/code_3_2_16_a884.s` is gone. The old draft used register pins
   and two asm islands and was 137 halfwords off under both compilers,
   not the near match its comment described. It was replaced with plain C:
-  real virtual calls through `self+0x18`, `sub_80084C4` inlined, and empty
+  real virtual calls through `self+0x18`, `GetSpriteFrameAnchor` inlined, and empty
   cases so the switch is built as a jump table. The new draft is 127
   halfwords off under old_agbcc, which this function needs (`movs #0x40`
   and `movs #8` come before their `ldrb`). What's left: the ROM builds the

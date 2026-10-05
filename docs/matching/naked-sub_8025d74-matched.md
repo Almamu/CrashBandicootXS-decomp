@@ -17,7 +17,7 @@ adjacent bytes. Two independent gaps stood between a plain C
 reconstruction and a byte-exact match:
 
 1. **Negative-mask constant folding** (same class as `SetDispcntMode`/
-   `sub_80109A4`): `*addr35 & -0x20` and `*addr34 & -0xd` always
+   `CollideCrateWithPlayer`): `*addr35 & -0x20` and `*addr34 & -0xd` always
    compile to their positive byte-immediate equivalent (`& 0xe0`,
    `& 0xf3`) here, since this compiler recognizes `-0x20`/`-0xd` are
    representable as an 8-bit AND-immediate and folds them - where the
@@ -39,7 +39,7 @@ reconstruction and a byte-exact match:
 
 ### Gap 1: opaque inline-asm mask materialization
 
-Same technique as `SetDispcntMode`/`sub_80109A4`: each mask fold becomes
+Same technique as `SetDispcntMode`/`CollideCrateWithPlayer`: each mask fold becomes
 one `asm volatile` block computing the mask via `mov`+`neg` and doing
 the AND as a real instruction, opaque to the constant-folding pass
 that would otherwise recognize and fold it:

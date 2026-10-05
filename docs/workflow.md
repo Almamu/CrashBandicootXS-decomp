@@ -53,7 +53,7 @@ incomplete pass and should be finished before moving on.
    into matching.md/status docs, or commit it, on the strength of an
    isolated compile alone. Only step 6's full clean rebuild (the whole
    ROM, from a `rm -rf build`) is evidence of a match. This project has
-   hit this exact mistake more than once (`CullPartList`/`sub_8008D30`,
+   hit this exact mistake more than once (`CullPartList`/`CollidePartsOfClass`,
    and again `RemoveCrateListAt`/`LinkCrateInGrid` - both pairs looked identical
    to the ROM in isolation and both had real bugs step 6 caught, one of
    them a wrong-register byte load, the other a bogus return value)

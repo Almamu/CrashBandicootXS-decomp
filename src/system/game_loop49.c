@@ -6,7 +6,7 @@
  * docs/matching/issue-12-physics-collision.md). Phase 2, higher-address
  * half: the twelve functions from `ExplodeCrate` through `UpdateSlotCrate`
  * (0x0800EEF0-0x0800FC70, the end of this whole cluster), all direct or
- * transitive callees of `sub_0800D18C`'s and `sub_800E08C`'s per-edge
+ * transitive callees of `QueueCratePlayerCollision`'s and `ApplyCrateCollision`'s per-edge
  * jump table (game_loop47.c) - see that issue doc's "Phase 2 grouping
  * hint" for the confirmed dispatch map this group is built from. Real
  * bytes formerly the tail of asm/code_3_2_17_e560.s (from
@@ -36,7 +36,7 @@ extern void OpenCheckpointCrate(void *self);
 extern void PickUpWumpa(struct crate *obj, s32 arg);
 extern void ActivateIronSwitchCrate(struct crate *self);
 extern void ActivateNitroSwitchCrate(struct crate *self);
-extern void sub_8009150(struct crate_list *list, struct crate *obj);
+extern void LinkCrateToActiveBucket(struct crate_list *list, struct crate *obj);
 extern void sub_8025A0C(u8 *bitmap, u16 id);
 extern void *OperatorNewArray(u32 size);
 extern void *GetCrateBelow(void *obj);
@@ -53,8 +53,8 @@ extern u8 gSlotCrateTimers[];
 
 
 /* Per-edge jump table's **case 4 handler**
- * (`sub_0800D18C(self+0x4d & 0x7f == 0) -> ExplodeCrate(self, 1)`, and
- * `sub_800E08C`'s own case 4, per game_loop47.c's confirmed dispatch
+ * (`QueueCratePlayerCollision(self+0x4d & 0x7f == 0) -> ExplodeCrate(self, 1)`, and
+ * `ApplyCrateCollision`'s own case 4, per game_loop47.c's confirmed dispatch
  * map). Also called by several of this file's own sibling functions
  * (`BlastNearbyCrates`, `DetonateNitroCrates`, `BreakCratesInArea`, `UpdateTntCountdown`) whenever
  * their own overlap/state checks land on the same "commit an edge
@@ -64,7 +64,7 @@ extern u8 gSlotCrateTimers[];
  * `self+0x4f`, clears `self+0x4d`'s low 7 bits, resets
  * `gPlayer+0x80`, sets `self+0xc` bit `0x10` (a "collision
  * response active" render/update flag matched elsewhere in this
- * subsystem), and calls `sub_8009150(gCrateList, self)` (adds
+ * subsystem), and calls `LinkCrateToActiveBucket(gCrateList, self)` (adds
  * `self` back onto the shared active-object list). Sets `self+0x4d`'s
  * `0x80` bit unconditionally, then ORs in `arg1` on top of that -
  * `arg1` ends up as the low bit of `self+0x4d`.
@@ -84,7 +84,7 @@ extern u8 gSlotCrateTimers[];
  * likely a screen-shake/particle trigger). Sets a bit in
  * `gEntityFlags`'s 32x32 collision-cell bitmap from `self+8`'s
  * position (`>>5` row, `&0x1f` column - the same cell-grid convention
- * `sub_0800D18C` itself uses for `gPlayer`'s own state), then
+ * `QueueCratePlayerCollision` itself uses for `gPlayer`'s own state), then
  * plays a fixed sound (`gAudioContext`, id 4). Calls
  * `DropCratesAbove(self)` (already matched elsewhere in this cluster - a
  * sibling's territory).
@@ -120,7 +120,7 @@ void ExplodeCrate(struct crate *self, u8 near)
     self->state &= 0x7f;
     PHYS_PLAYER->busy = 0;
     self->flags |= 0x10;
-    sub_8009150(gCrateList, self);
+    LinkCrateToActiveBucket(gCrateList, self);
     one = 1;
     self->state = (self->state & 0x80) | one;
     if (self->kind == 0xa) {
@@ -316,7 +316,7 @@ void DetonateNitroCrates(void)
 }
 
 /* Per-edge jump table's **case 0/1 handler when the dispatch-id row is
- * 6** (`sub_0800D18C`'s/`sub_800E08C`'s shared case 0/1 target - see
+ * 6** (`QueueCratePlayerCollision`'s/`ApplyCrateCollision`'s shared case 0/1 target - see
  * game_loop47.c's confirmed dispatch map). Early-outs when `self+0x48`
  * is already nonzero (a pending sub-state timer, same field
  * `BlastNearbyCrates` resets to `-1`).
@@ -367,12 +367,12 @@ void ActivateNitroSwitchCrate(struct crate *self)
 /* Per-edge jump table's **case 0/1 handler when the dispatch-id row is
  * 3** (the sibling of `ActivateNitroSwitchCrate` above, same dispatch-map entry, and
  * also called directly by `BlastNearbyCrates`'s/`BreakCratesInArea`'s/
- * `sub_800D040`'s own dispatch). Early-outs when `self+0x48` is already
+ * `BreakCrateTouchedByPlayer`'s own dispatch). Early-outs when `self+0x48` is already
  * `-1` or `0` cleared to the "already handled" sentinels (i.e. only
  * proceeds while it's some other in-progress value) - the inverse
  * early-out shape from `ActivateNitroSwitchCrate`'s simple "nonzero" check.
  *
- * Sets `self+0xc` bit `0x10`, calls `sub_8009150(gCrateList,
+ * Sets `self+0xc` bit `0x10`, calls `LinkCrateToActiveBucket(gCrateList,
  * self)` (re-adds `self` to the active list, same call `ExplodeCrate`
  * makes), sets `self+0x4d` bit `0x80` and `gPlayer+0x80 = 1`,
  * tags `self+0x2d = 0x22` (this case's own state constant), and runs
@@ -408,7 +408,7 @@ void ActivateIronSwitchCrate(struct crate *self)
         return;
 
     self->flags |= 0x10;
-    sub_8009150(gCrateList, self);
+    LinkCrateToActiveBucket(gCrateList, self);
     self->state |= 0x80;
     {
         struct gobj *player = gPlayer;
@@ -654,7 +654,7 @@ void BreakCratesInArea(s32 x, s32 y, s32 dist, s32 height)
  * bitmap (the same 32x32-grid convention `ExplodeCrate`/`ActivateIronSwitchCrate`
  * use, here against `gEntityFlags`) and walks
  * `gPlayer+0x94`'s "recently touched" ring buffer
- * (`sub_0800D18C`'s own 5-slot buffer, per game_loop47.c's doc comment)
+ * (`QueueCratePlayerCollision`'s own 5-slot buffer, per game_loop47.c's doc comment)
  * clearing each slot's `+0x94` re-visit flag once it matches `self`.
  *
  * If `self+0x38` was clear instead, and `self+0x4e != 1`, sets

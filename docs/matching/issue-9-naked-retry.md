@@ -6,7 +6,7 @@ This pass retried the 21 NAKED functions in issue #9's range
 ## The main finding: this code was built with old_agbcc
 
 Every function closed here matches under `old_agbcc`. The only
-exception is `sub_800AAEC`, which matches under both compilers. For
+exception is `PlayerHasRoomForAnim`, which matches under both compilers. For
 each file we checked every function under old_agbcc. They all matched,
 including the ones that were already matched with register pins under
 the current compiler. So each touched object moved whole into
@@ -27,11 +27,11 @@ were really caused by building with the wrong compiler.
 | `CollidePartList` | actor_part7.c | old_agbcc; box **by value** in and out; the ROM copies it into one shared temporary with `MemCopy32` (memcpy) before each call - an explicit `MemCopy32(&tmp, &box, 16)` reproduces it (struct assignment copies inline with ldm/stm; calling `memcpy` by name gets inlined as a builtin) |
 | `CollidePartWithPlayer` | actor_part7.c | old_agbcc; box by value; empty `case 0:` for the `cmp #1; beq; cmp #1; ble; cmp #2` switch; player hit-flag OR through a `u8 *`; push-out reads `part->x` into a local first |
 | `CollidePartWithObject` | actor_part7b.c | old_agbcc; box by value (the "boxH left in its incoming stack slot" blocker is just the by-value ABI) |
-| `sub_80099F0` | actor_part12.c | `CollidePartWithObject`'s twin, same C |
-| `sub_80096C0` | actor_part11e.c | `CollidePartWithPlayer`'s twin, same C |
-| `sub_8009528` | actor_part11f.c | old_agbcc; box by value + `MemCopy32` copy as in `CollidePartList`; the duplicated per-node test as a `static inline` helper; `heads = m->gridHead` then `last = &m->gridHead[255]` computed up front |
+| `CollideCrateGridPartWithObject` | actor_part12.c | `CollidePartWithObject`'s twin, same C |
+| `CollideCrateGridPartWithPlayer` | actor_part11e.c | `CollidePartWithPlayer`'s twin, same C |
+| `CollideCrateGrid` | actor_part11f.c | old_agbcc; box by value + `MemCopy32` copy as in `CollidePartList`; the duplicated per-node test as a `static inline` helper; `heads = m->gridHead` then `last = &m->gridHead[255]` computed up front |
 | `CollidePlayerWithCrates` | actor_part11d.c | old_agbcc; plain C, camera x read before the `>> 8` |
-| `sub_800AAEC` | actor_part108.c | guarded do-while list walk (the "per-iteration literal reload"); position read as a struct copy; `rec += 4` as its own statement (the ROM's `adds r1, #4; adds r4, r1, #0`) |
+| `PlayerHasRoomForAnim` | actor_part108.c | guarded do-while list walk (the "per-iteration literal reload"); position read as a struct copy; `rec += 4` as its own statement (the ROM's `adds r1, #4; adds r4, r1, #0`) |
 
 The shared layout of these objects is in the new `include/box_part.h`:
 `struct box_part` (the collision/animation view of a part object),
@@ -46,10 +46,10 @@ The shared layout of these objects is in the new `include/box_part.h`:
 | `UpdatePartList` (actor_part7.c) | old_agbcc draft, 18 hw off. The ROM stores the screen box's x/y sp-relative and only then puts `&screen` in r0 for the w/h stores (kept in r8). This C gets the pointer in r2 before the x/y stores, which swaps r1/r2 for `count` and `i*4` in the loop. |
 | `InitCrateList` (actor_part11.c) | old_agbcc draft, 15 hw off, same size and shape as the ROM. The tail is an inline helper (`ResetCrateList` has the same tail), the grid clear is a goto loop, and the free-list loop is a guarded do-while. The ROM keeps the count in r3 and copies `&freeListArray` to ip from sb. This C keeps it live in r1 through the grid clear, which pushes the count to r6. |
 | `ResetCrateList` (actor_part11i.c) | not retried separately: its tail is `InitCrateList`'s and has the same gap. |
-| `sub_800A420` (actor_part110.c) | old_agbcc draft, 15 hw off. All of it is register choice in the first probe's hit path (masked y in r3 and the flags copy made after the bit test in the ROM). |
-| `ProbeGroundSpriteTerrain` (actor_part110.c) | not retried (0x2a8 bytes, calls `sub_800A420`). |
+| `ProbeGroundSpriteFloor` (actor_part110.c) | old_agbcc draft, 15 hw off. All of it is register choice in the first probe's hit path (masked y in r3 and the flags copy made after the bit test in the ROM). |
+| `ProbeGroundSpriteTerrain` (actor_part110.c) | not retried (0x2a8 bytes, calls `ProbeGroundSpriteFloor`). |
 | `sub_8009BE0` (actor_part12b.c) | old_agbcc attempt 61 hw off and 8 bytes short. The ROM recomputes `&origY` in the loop and keeps two copies of the tries pointer and `&pos`. Inline helpers and pointer locals didn't reproduce this. No draft kept. |
-| `UpdateCrateList` (actor_part11c.c) | tried inline versions of `sub_8009150`'s link and `RemoveCrateFromList`'s remove. The shape is close, but the frame and spill slots differ (~200 hw). No draft kept. |
+| `UpdateCrateList` (actor_part11c.c) | tried inline versions of `LinkCrateToActiveBucket`'s link and `RemoveCrateFromList`'s remove. The shape is close, but the frame and spill slots differ (~200 hw). No draft kept. |
 | `UnlinkCrateFromGrid` (actor_part11b.c) | not retried (two-phase unlink with an odd `0x100` reload). |
 | `DrawPlayer` (actor_part111.c) | first C attempt, ~170 hw: `self` in r6 instead of r7, and the orbit tail's address caching differs. No draft kept. |
 
@@ -57,7 +57,7 @@ The shared layout of these objects is in the new `include/box_part.h`:
 
 ## Later pass (issue #9-#11 NAKED retry)
 
-`CheckSpritePickup`, `UpdatePartList`, `InitCrateList`, `ResetCrateList`, `sub_8009BE0`, `ProbeGroundSpriteTerrain` and `sub_800A420` are real C now. `UnlinkCrateFromGrid`, `UpdateCrateList` and `DrawPlayer` are still NAKED (`DrawPlayer` now has a draft). See [issue-9-11-box-naked-retry.md](issue-9-11-box-naked-retry.md).
+`CheckSpritePickup`, `UpdatePartList`, `InitCrateList`, `ResetCrateList`, `sub_8009BE0`, `ProbeGroundSpriteTerrain` and `ProbeGroundSpriteFloor` are real C now. `UnlinkCrateFromGrid`, `UpdateCrateList` and `DrawPlayer` are still NAKED (`DrawPlayer` now has a draft). See [issue-9-11-box-naked-retry.md](issue-9-11-box-naked-retry.md).
 
 ## Later pass (fresh NAKED retry)
 

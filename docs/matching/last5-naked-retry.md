@@ -5,16 +5,16 @@ under `#if NON_MATCHING`. Two closed and two did not.
 
 | Function | Issue | Before (old_agbcc) | Result |
 |---|---|---|---|
-| `sub_800E08C` (`game_loop47.c`) | #12 | 49 hw | **matched**, old_agbcc |
+| `ApplyCrateCollision` (`game_loop47.c`) | #12 | 49 hw | **matched**, old_agbcc |
 | `sub_801AB98` (`actor_part_1ab98.c`) | #25 | 565 hw, 8 bytes short | **matched**, old_agbcc |
-| `sub_0800D18C` (`game_loop47.c`) | #12 | 938 hw | still NAKED |
+| `QueueCratePlayerCollision` (`game_loop47.c`) | #12 | 938 hw | still NAKED |
 | `DrawVvLogoPieces` (`graphics_loading_35d1c.c`) | #65 | 329 hw | still NAKED |
 
 `actor_part_1ab98.o` and `game_loop47.o` joined `OLD_AGBCC_OBJS`. Both
 address ranges are inside the span already confirmed to be old_agbcc
-code. `sub_0800D18C` is NAKED, so the compiler change doesn't affect it.
+code. `QueueCratePlayerCollision` is NAKED, so the compiler change doesn't affect it.
 
-## sub_800E08C: a one-byte struct argument
+## ApplyCrateCollision: a one-byte struct argument
 
 The ROM stores the first stack flag byte as a word (`ldrb r0, [r0]; str
 r0, [sp]`). In case 3 it reloads the byte with `mov r5, sp; ldrb r2,
@@ -54,11 +54,11 @@ the scratchpad). In order:
    asm("r8")`, defined at entry and used just before the first
    `AabbOverlaps`, keeps r8 busy while `self` is live. So `self` takes
    sb, and `result`, born after the hold, gets r8. (565 -> 550 hw.)
-2. **`px` as the sub_800FDC8 argument.** The ROM computes the third
+2. **`px` as the FindLineCrossing argument.** The ROM computes the third
    argument into r5 in both arms (`adds r5, r2, r0` / `adds r5, r2,
    #0`) and moves it to r2 before the call. That is the draft's `px`
    (pinned to r5), reassigned in each arm: `px = b.x + b.w; r =
-   sub_800FDC8(tx, ty, px, py, a.x)`. The pin had to go. (-> 348.)
+   FindLineCrossing(tx, ty, px, py, a.x)`. The pin had to go. (-> 348.)
 3. **One `r` for both classify blocks.** A function-level `r` makes the
    first block's call result take r2, as in the ROM. (-> 340.)
 4. **`pb = &b` hidden from cse** with `asm("" : "+r"(pb))`. The ROM
@@ -70,7 +70,7 @@ the scratchpad). In order:
 6. **`flags = hdir` in case 1/2.** The ROM reloads `hdir` into r5 (the
    flag register) in that case, so the draft's always-zero `flags` was
    wrong. `flags` is the commit's hit flag, as `hit = dirX` is in
-   `sub_0800D18C`.
+   `QueueCratePlayerCollision`.
 7. **No `pp` pointer.** The ROM's `&pos` register is a gcse copy inserted
    after the `&gPlayer` copy at the end of the block. A `pp =
    &pos` statement always puts its copy first. The fix is to write `pos`
@@ -80,19 +80,19 @@ the scratchpad). In order:
    (`Call68`), not the `OBJ_CALL68` macro with its r4-pinned `_fn`.
    Every call site had to change so they still cross-jump into one
    shared call. (243 -> 68.)
-9. **`u8 m = 8; q->hitAxes = m;`** (as `sub_0800D18C` writes
+9. **`u8 m = 8; q->hitAxes = m;`** (as `QueueCratePlayerCollision` writes
    `hitAxes`). It gives the ROM's `movs r1, #8` before the address and the
    `subs r0, #68` reuse of the `+0xAC` address. (-> 12.)
 10. **`y = gPlayer->y; ... = y - ((oy - 1) << 8)`** and
     **`(oy << 8) + pos.y`** / **`(ox << 8) + pos.x`** operand order, as
-    in `sub_0800D18C`.
+    in `QueueCratePlayerCollision`.
 11. **r5 hold over the `result == 0` test** of the second classify block,
     so the reload of `result` there takes r0.
 
 Holds tried and not needed: the draft's `register ... asm("r0")` and
 `asm("r3")` pins (removed), the constant-init form for `flags`.
 
-## sub_0800D18C: not closed
+## QueueCratePlayerCollision: not closed
 
 Findings, both kept as a note on the draft:
 - Writing the `dy > 2 || (dx <= 3 && sub_800B324(...))` arm as `goto

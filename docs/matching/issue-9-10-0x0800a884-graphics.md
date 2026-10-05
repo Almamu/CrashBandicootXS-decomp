@@ -67,7 +67,7 @@ family already covered at length by
   looks up the current keyframe record via `GetSpriteFrame` (already
   parked as `NAKED` in `actor_part5.c`) and picks a `{s16 x, s16 y}`
   offset table off its `+4` byte's upper nibble - **the exact same
-  case-to-block mapping `sub_80084C4` (`actor_part6.c`, already
+  case-to-block mapping `GetSpriteFrameAnchor` (`actor_part6.c`, already
   matched) uses**: `0` -> `info+0x24`, `6` -> `info+0x14`, everything
   else -> the fixed fallback `gEmptySpritePoint`. Applies that
   offset (mirrored by `self+0x28` bit 4) to `self`'s de-Q8'd position
@@ -84,11 +84,11 @@ family already covered at length by
   see "Real gotchas" below for the specific idioms this needed and
   where they came from). Both of the function's jump-table dispatches
   reproduce the ROM's own tables exactly as a plain dense C `switch`
-  (no case-scattering trick needed, unlike `sub_80084C4`'s own - this
+  (no case-scattering trick needed, unlike `GetSpriteFrameAnchor`'s own - this
   switch's case set is already dense enough on its own). The three
   `_call_via_r4` calls each also perform a "dead read" of the trampoline
   table's `+4` function-pointer field that's never actually passed
-  through `r0`-`r3` - the same established idiom as `sub_80096C0`'s own
+  through `r0`-`r3` - the same established idiom as `CollideCrateGridPartWithPlayer`'s own
   `_call_via_r4` calls in `actor_part11.c`
   (`register void *deadRead asm("r4") = *(void *volatile *)(...)`).
 
@@ -101,7 +101,7 @@ family already covered at length by
   function - the leading block, the 10-way "kind" dispatch (all ten
   case bodies plus both the `idx <= 9` range check and the jump table
   itself), and the keyframe-lookup/camera-probe tail (including its
-  own 7-entry `type` jump table sharing `sub_80084C4`'s case-to-block
+  own 7-entry `type` jump table sharing `GetSpriteFrameAnchor`'s case-to-block
   mapping) - through the same `arm-none-eabi-cpp`+`agbcc` diagnostic
   loop `docs/workflow.md` describes, iterating against the *whole*
   ROM disassembly (not a truncated prefix) after every change. That
@@ -190,7 +190,7 @@ family already covered at length by
   bit-4 test, the Y-snap re-association fix, and the matching-
   constraint technique that closed the `r7` self-overwrite gap without
   rippling). Real bytes stay in `asm/code_3_2_16_a884.s`
-  (`asm/code_3_2_16.o` trimmed to start at `sub_800AAEC`), following
+  (`asm/code_3_2_16.o` trimmed to start at `PlayerHasRoomForAnim`), following
   the same `.if NON_MATCHING == 0` pattern as `UpdateGroundSprite`'s own
   `asm/code_3_2_11_a528.s`. A future session picking this up should
   treat the `self+0x105` gap as a genuine compiler-fragility floor for
@@ -250,17 +250,17 @@ family already covered at length by
 
 ## Left raw (deeper, still-unexamined dependencies) - 4 functions + 1 large block
 
-- **`sub_800AAEC`** (`asm/code_3_2_16.s`, ROM `0x0800AAEC`) - iterates
+- **`PlayerHasRoomForAnim`** (`asm/code_3_2_16.s`, ROM `0x0800AAEC`) - iterates
   `gCrateList` (a count-prefixed pointer array), testing each
   entry via `_call_via_r1` (matched) and, on a hit (return code 3),
-  calling `sub_800CD00` (still fully unexamined) with the entry and
+  calling `PlayerAnimWouldTouchCrate` (still fully unexamined) with the entry and
   this function's own second argument; a `<= 1` return from that call
-  short-circuits the whole loop. Mechanically clear, but `sub_800CD00`
+  short-circuits the whole loop. Mechanically clear, but `PlayerAnimWouldTouchCrate`
   itself is genuinely unexamined - not attempted further this session.
 - **`CollidePlayerWithObjects`** (`asm/code_3_2_16.s`, ROM `0x0800AB9C`) - mostly
   built from already-matched/understood pieces
-  (`sub_8007C30`/`MemCopy32`/`CollidePartList`/`CollidePlayerWithCrates`
-  [NAKED-parked]/`sub_8008D30`/`ResolvePlayerCollisions`, all matched or
+  (`GetSpriteAttackBox`/`MemCopy32`/`CollidePartList`/`CollidePlayerWithCrates`
+  [NAKED-parked]/`CollidePartsOfClass`/`ResolvePlayerCollisions`, all matched or
   understood elsewhere in this codebase now), gated on `self+0x105`/
   `self+0xc` flag bits. The most tractable of the four left-raw
   functions here; a reasonable next target for a future session, not
@@ -285,16 +285,16 @@ family already covered at length by
 - **`UpdateEnemyCtrl`** (`asm/code_3_2_17.s`, ROM `0x0800B8DC`, 546 lines)
   - an 18-case jump-table state dispatcher over `self+0x74`, calling
   **18 entirely unexamined helper functions** (`UpdateEnemyPatrol`,
-  `UpdateEnemyAttackCycle`, `sub_800C314`, `UpdateEnemyHop`, `UpdateEnemyHomingX`,
-  `UpdateEnemyHomingY`, `sub_800C8F8`, `sub_800C97C`, `UpdateEnemyBob`,
-  `sub_800C5D4`, `sub_800C8AC`, `sub_800C8BC`, `SetEnemyAnimMode`,
-  `sub_800C9C8`, `sub_800BFA8`, plus already-matched
+  `UpdateEnemyAttackCycle`, `UpdateEnemyFlipCycle`, `UpdateEnemyHop`, `UpdateEnemyHomingX`,
+  `UpdateEnemyHomingY`, `UpdateEnemyOscillateX`, `UpdateEnemyOscillateY`, `UpdateEnemyBob`,
+  `UpdateEnemyTriggerBox`, `SetEnemyMotionY`, `SetEnemyMotionX`, `SetEnemyAnimMode`,
+  `LaunchHarmfulEffectPart`, `UpdateEnemyShooter`, plus already-matched
   `_call_via_r1`/`_call_via_r4`/`PlaySfx`) none of which have any
   existing write-up anywhere in this project. This function sits
   immediately before the already-flagged-out-of-scope physics/
-  collision subsystem (`sub_800D040` onward, GitHub issues #12/#13 -
+  collision subsystem (`BreakCrateTouchedByPlayer` onward, GitHub issues #12/#13 -
   see `docs/matching/issue-12-physics-collision.md`), and its own
-  callees (`HitEnemy`, `sub_800BFA8`, `UpdateEnemyPatrol`, etc.) are the
+  callees (`HitEnemy`, `UpdateEnemyShooter`, `UpdateEnemyPatrol`, etc.) are the
   *same* neighborhood - reconstructing `UpdateEnemyCtrl` with real
   confidence would require first understanding a dozen-plus completely
   fresh functions this session didn't have room for, each individually
@@ -417,7 +417,7 @@ body moved from opaque raw bytes to matched, documented C.
   `actor_part77.o`.
 - `docs/matching/issue-9-0x08007634-actor.md` - the original write-up
   for this whole neighborhood's prior pass, including the
-  `GetSpriteFrame`/`sub_80084C4` keyframe-lookup convention this session
+  `GetSpriteFrame`/`GetSpriteFrameAnchor` keyframe-lookup convention this session
   reused directly.
 - `docs/matching/issue-12-physics-collision.md` - the physics/collision
   subsystem `UpdateEnemyCtrl` leads into, already flagged out of scope for

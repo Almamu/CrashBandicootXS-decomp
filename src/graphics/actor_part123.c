@@ -3,11 +3,11 @@
 
 /* GitHub issue #9/#10, tail of the 0x0800B8DC-0x0800D040 cluster (see
  * docs/matching/issue-9-10-0x0800b8dc-graphics.md): the last raw file
- * in the cluster, `asm/code_3_2_17_cbf4.s` - `sub_800CBF4`,
- * `nullsub_15`, `nullsub_3`, `sub_800CCCC`, `sub_800CCE0`, ROM
+ * in the cluster, `asm/code_3_2_17_cbf4.s` - `UpdateEffectCtrl`,
+ * `EffectCtrlHandleEvent`, `nullsub_3`, `DestroyEffectCtrl`, `InitEffectCtrl`, ROM
  * 0x0800CBF4-0x0800CD00 (contiguous, no gap on either side -
  * `actor_part117.o`'s `CreateKnockedEnemyCtrl` ends exactly where this file
- * starts, and `actor_part109.o`'s already-matched `sub_800CD00`
+ * starts, and `actor_part109.o`'s already-matched `PlayerAnimWouldTouchCrate`
  * begins exactly where this file ends). Closes out the entire
  * 43-function cluster investigation that began with `UpdateEnemyCtrl`/
  * `HitEnemy`. */
@@ -81,7 +81,7 @@ static inline void MarkGone(struct cbf4_other *t)
         SET_ID_BIT(t->id);
 }
 
-void sub_800CBF4(void *self, struct cbf4_other *other)
+void UpdateEffectCtrl(void *self, struct cbf4_other *other)
 {
     if (!(u8)(s32)_call_via_r1((u8 *)other + other->table[5].delta, other->table[5].fn))
         MarkGone(other);
@@ -92,7 +92,7 @@ void sub_800CBF4(void *self, struct cbf4_other *other)
 }
 
 /* Genuine empty stubs (`bx lr`). */
-void nullsub_15(void *self)
+void EffectCtrlHandleEvent(void *self)
 {
 }
 
@@ -100,33 +100,33 @@ void nullsub_3(void *self)
 {
 }
 
-extern u8 gStaticData_087E400C[];
+extern u8 gEffectCtrlVtable[];
 extern void DestroyCtrl(void *self, s32 flags);
 
-/* Sets `self+0xc`'s table pointer to `gStaticData_087E400C`, then
+/* Sets `self+0xc`'s table pointer to `gEffectCtrlVtable`, then
  * tail-calls `DestroyCtrl` - same double-set pattern as
  * `sub_8018858`/`sub_8017A78`/`sub_8017FD4`. */
-void sub_800CCCC(void *selfArg, s32 flags)
+void DestroyEffectCtrl(void *selfArg, s32 flags)
 {
     u8 *self = selfArg;
 
-    *(void **)(self + 0xc) = gStaticData_087E400C;
+    *(void **)(self + 0xc) = gEffectCtrlVtable;
     DestroyCtrl(self, flags);
 }
 
 extern void InitCtrl(void *self);
 
 /* Resets via `InitCtrl`, re-points `self+0xc`'s table pointer at
- * `gStaticData_087E400C`, and runs `nullsub_3(self)` - the same
+ * `gEffectCtrlVtable`, and runs `nullsub_3(self)` - the same
  * "reset via `InitCtrl`, re-point `self+0xc`, return `self`"
  * constructor shape already matched for `sub_801886C`/`sub_8018858`/
  * `CreateKnockedEnemyCtrl`. */
-void *sub_800CCE0(void *selfArg)
+void *InitEffectCtrl(void *selfArg)
 {
     u8 *self = selfArg;
 
     InitCtrl(self);
-    *(void **)(self + 0xc) = gStaticData_087E400C;
+    *(void **)(self + 0xc) = gEffectCtrlVtable;
     nullsub_3(self);
     return self;
 }

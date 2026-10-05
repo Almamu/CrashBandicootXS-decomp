@@ -1,6 +1,6 @@
 #include "core.h"
 
-/* Sits between the still-parked sub_8000EE4 (asm/code_3_1_3.s) and
+/* Sits between the still-parked DrawWrappedText (asm/code_3_1_3.s) and
  * WaitForKeyPress (asm/code_3_1_4.s). */
 
 extern s32 __umodsi3(s32 value, s32 divisor);

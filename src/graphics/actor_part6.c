@@ -7,7 +7,7 @@ extern void *gLevelLayers;
  * `(gLevelLayers's sub-object)+0x34`'s low 2 bits minus 1;
  * otherwise returns those same low 2 bits unmodified. Same
  * `gLevelLayers` sub-object convention used throughout this ROM
- * region (see `IsSpriteObjOnScreen`/`sub_8006FE4`). */
+ * region (see `IsSpriteObjOnScreen`/`IsEntityNearCamera`). */
 s32 GetSpriteObjPriority(void)
 {
     if (*((u8 *)gLevelLayers + 0x2b) == 0) {
@@ -93,7 +93,7 @@ extern u8 gEmptySpritePoint[];
  * few simple range checks, so a source-level shape that *looks*
  * needlessly scattered is what is needed to match the ROM's own
  * jump table here. */
-void *sub_80084C4(void *part)
+void *GetSpriteFrameAnchor(void *part)
 {
     void *info = GetSpriteFrame(part);
     u8 type = *(u8 *)(*(void **)((u8 *)info + 4)) >> 4;
@@ -127,13 +127,13 @@ void *sub_80084C4(void *part)
 extern u8 gEmptySpriteBox[];
 
 /* Same `GetSpriteFrame`-derived-record-nibble-switch shape as
- * `sub_80084C4` above, with a different result mapping: 0 and 4
+ * `GetSpriteFrameAnchor` above, with a different result mapping: 0 and 4
  * select `info+0x1c`, anything else falls back to
- * `gEmptySpriteBox`. Unlike `sub_80084C4`, no case-scattering
+ * `gEmptySpriteBox`. Unlike `GetSpriteFrameAnchor`, no case-scattering
  * trick was needed here - 0 and 4 are already non-adjacent, which is
  * enough on its own to make gcc emit a jump table instead of a
  * compare chain. */
-void *sub_8008518(void *part)
+void *GetSpriteFrameThirdBox(void *part)
 {
     void *info = GetSpriteFrame(part);
     u8 type = *(u8 *)(*(void **)((u8 *)info + 4)) >> 4;
@@ -163,13 +163,13 @@ void *sub_8008518(void *part)
 }
 
 /* Same `GetSpriteFrame`-derived-record-nibble `switch` shape again, with
- * the exact same case-to-block mapping as `sub_8007C30` (already
+ * the exact same case-to-block mapping as `GetSpriteAttackBox` (already
  * matched in `actor_part2.c`) - 0/3/4 select `info+0x14`, 5 selects
  * `info+0xc`, and 1/2/6/anything-above-6 fall back to
  * `gEmptySpriteBox`. That mapping is non-contiguous on its own,
  * so plain ascending case order was enough for a jump table here too,
  * no scattering needed. */
-void *sub_8008564(void *part)
+void *GetSpriteFrameAttackBox(void *part)
 {
     void *info = GetSpriteFrame(part);
     u8 type = *(u8 *)(*(void **)((u8 *)info + 4)) >> 4;
@@ -199,7 +199,7 @@ void *sub_8008564(void *part)
 /* Same `GetSpriteFrame`-derived-record-nibble `switch` shape once more -
  * 0/2/3/4/6 select `info+0xc`, 1/5/anything-above-6 fall back to
  * `gEmptySpriteBox`. */
-void *sub_80085B8(void *part)
+void *GetSpriteFrameBodyBox(void *part)
 {
     void *info = GetSpriteFrame(part);
     u8 type = *(u8 *)(*(void **)((u8 *)info + 4)) >> 4;
@@ -360,13 +360,13 @@ void SetPartSolid(void *part)
 }
 
 /* `part->flags` bit-6 getter. */
-s32 sub_8008698(struct actor *part)
+s32 IsSpriteObjVulnerable(struct actor *part)
 {
     return (part->flags >> 6) & 1;
 }
 
 /* Clears `part->flags` bit 6. */
-void sub_80086A4(struct actor *part)
+void ClearSpriteObjVulnerable(struct actor *part)
 {
     register s32 mask asm("r1") = -0x41;
     register s32 byte asm("r2") = part->flags;
@@ -377,7 +377,7 @@ void sub_80086A4(struct actor *part)
 }
 
 /* Sets `part->flags` bit 6. */
-void sub_80086B0(struct actor *part)
+void SetSpriteObjVulnerable(struct actor *part)
 {
     register s32 mask asm("r1") = 0x40;
     register s32 byte asm("r2") = part->flags;
@@ -388,20 +388,20 @@ void sub_80086B0(struct actor *part)
 }
 
 /* Resets `part`'s frame index (`+0x2d`) to 0. */
-void sub_80086BC(void *part)
+void ResetSpriteAnimIndex(void *part)
 {
     *((u8 *)part + 0x2d) = 0;
 }
 
 /* `part->flags` bit-7 getter - no mask needed since the shift already
  * leaves only that bit in position 0 of an 8-bit value. */
-s32 sub_80086C4(struct actor *part)
+s32 IsSpriteObjCollisionEnabled(struct actor *part)
 {
     return part->flags >> 7;
 }
 
 /* Clears `part->flags` bit 7. */
-void sub_80086CC(struct actor *part)
+void DisableSpriteObjCollision(struct actor *part)
 {
     register s32 mask asm("r1") = 0x7f;
     register s32 byte asm("r2") = part->flags;
@@ -412,7 +412,7 @@ void sub_80086CC(struct actor *part)
 }
 
 /* Sets `part->flags` bit 7. */
-void sub_80086D8(struct actor *part)
+void EnableSpriteObjCollision(struct actor *part)
 {
     register s32 mask asm("r1") = 0x80;
     register s32 byte asm("r2") = part->flags;

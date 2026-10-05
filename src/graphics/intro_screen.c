@@ -2,7 +2,7 @@
 
 /* Sits right after src/system/irq.c's matched functions and before
  * src/util/math_util.c - the only function in this address range,
- * non-adjacent to boot_util.c's MemCopy32/nullsub_9 since
+ * non-adjacent to boot_util.c's MemCopy32/UpdateCtrl since
  * main.c/memory.c/irq.c sit between them. Replaced the raw
  * asm/code_3_1.s (now deleted - this was its only function). */
 

@@ -21,7 +21,7 @@ extern void *gInput;
 extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
 extern u8 GetDpadDirection(void *pad);
 extern u8 HasTornadoSpin(void *self);
-extern u8 sub_800AAEC(struct act_part *part, s32 action);
+extern u8 PlayerHasRoomForAnim(struct act_part *part, s32 action);
 extern u8 CheckActionCtrlLeftGround(struct act *self);
 extern void SteerActionCtrlSpin(struct act *self, u8 dir);
 extern void EndActionCtrlSpin(struct act *self, u8 dir, u32 in);
@@ -220,12 +220,12 @@ void ActionCtrlStateCrouchDown(struct act *self)
     }
 }
 
-/* On the "confirm" edge (sub_800AAEC(part, 0xB)) hands off to
+/* On the "confirm" edge (PlayerHasRoomForAnim(part, 0xB)) hands off to
  * StartActionCtrlHighJump like ActionCtrlStateCrawlStart (actor_part18.c); otherwise, unless
  * CheckActionCtrlLeftGround reports busy, turns the part to face the D-pad direction
  * (setting +0x2F), starts a walk (action 3) on a horizontal direction,
  * and - with neither shoulder button held - either starts action 2 on a
- * sub_800AAEC(part, 2) hit or falls back to idle.
+ * PlayerHasRoomForAnim(part, 2) hit or falls back to idle.
  *
  * old_agbcc. The facing block reads `self->part` each time (GCSE turns
  * the reloads into the ROM's r2 copy) and spells its two bit tests
@@ -253,7 +253,7 @@ void ActionCtrlStateCrouch(struct act *self)
         in = gKeys;
         dir = GetDpadDirection(pad);
     }
-    if ((INPUT_PRESSED(in) & 1) && sub_800AAEC(self->part, 0xB) == 1)
+    if ((INPUT_PRESSED(in) & 1) && PlayerHasRoomForAnim(self->part, 0xB) == 1)
     {
         PlaySfx(gAudioContext, 0xC, 0x100);
         ActAndFlags0D(self->part, -2);
@@ -318,7 +318,7 @@ turn_done:
 
         if (held == 0)
         {
-            u8 hit = sub_800AAEC(self->part, 2);
+            u8 hit = PlayerHasRoomForAnim(self->part, 2);
 
             if (hit == 1)
             {

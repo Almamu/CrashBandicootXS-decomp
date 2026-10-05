@@ -6,9 +6,9 @@
  * (`ActionCtrlStateSlide` etc.) call for their action codes `0xB`/`0x10` (see
  * docs/rom_map.md). Iterates the `gCrateList` object list (the
  * same count-prefixed `{count, unused_4, items}` layout already
- * established in `src/system/game_loop24.c`'s `sub_8010804`), testing
+ * established in `src/system/game_loop24.c`'s `ConvertCratesForTimeTrial`), testing
  * each entry's own `+0x18`-table `+0x48` trampoline via `_call_via_r1`
- * (matched elsewhere) and, on a hit (state `3`), calling `sub_800CD00`
+ * (matched elsewhere) and, on a hit (state `3`), calling `PlayerAnimWouldTouchCrate`
  * (this function's own companion, see `actor_part109.c`) with that
  * entry and `x`.
  *
@@ -43,10 +43,10 @@ struct pos {
 extern struct actor_list *gCrateList;
 extern void *gLevelLayers;
 extern s32 _call_via_r1(void *addr, void *fn);
-extern u8 sub_800CD00(void *entry, s32 x);
+extern u8 PlayerAnimWouldTouchCrate(void *entry, s32 x);
 extern u8 sub_8026628(void *player, s32 dir, struct pos *pos, s32 h, s32 *outY);
 
-u8 sub_800AAEC(struct box_part *self, s32 x)
+u8 PlayerHasRoomForAnim(struct box_part *self, s32 x)
 {
     u8 *rec;
     struct part_box *box;
@@ -78,7 +78,7 @@ u8 sub_800AAEC(struct box_part *self, s32 x)
         u8 *method = *(u8 **)(entry + 0x18) + 0x48;
 
         if (_call_via_r1(entry + *(s16 *)method, *(void **)(method + 4)) == 3) {
-            if (sub_800CD00(entry, x) == 1)
+            if (PlayerAnimWouldTouchCrate(entry, x) == 1)
                 return 0;
         }
         i++;

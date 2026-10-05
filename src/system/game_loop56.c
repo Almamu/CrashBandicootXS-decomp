@@ -276,7 +276,7 @@ extern u16 gThemePaletteCycle1B[];
 extern u16 gThemePaletteCycle3[];
 extern u16 gThemePaletteCycle5[];
 
-extern void sub_800A810(void *player);
+extern void ResetPlayerForRoom(void *player);
 extern void LoadRoom(void *box, void *widget);
 extern void CheckAllCratesBroken(void *level);
 extern u8 IsSwitchPressed(void *level);
@@ -394,7 +394,7 @@ s32 RunRoom(struct gl_self *self)
     s32 ret = 1;
     s32 i;
 
-    sub_800A810(gPlayer);
+    ResetPlayerForRoom(gPlayer);
     gCamera->player = gPlayer;
     gCamera->unk_14 = ret;
     LoadRoom(gLevelLayers, self->widget);

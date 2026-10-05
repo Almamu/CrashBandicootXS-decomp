@@ -112,7 +112,7 @@ here would just rediscover the same dead end at roughly 5x the scale:
    from the literal pool fresh on *every* loop-condition check and every
    loop-body entry (5 do-nothing-but-reload instructions, by the ROM's
    own choice, each time). This is the exact shape
-   `actor_part108.c`'s `sub_800AAEC` (`#if NON_MATCHING` branch's own
+   `actor_part108.c`'s `PlayerHasRoomForAnim` (`#if NON_MATCHING` branch's own
    doc comment) already tried three different phrasings against - a
    plain `for`, a cached-`&var`-inside-an-`if` idiom, and an explicit
    `goto`-loop with both the address and the dereferenced value pinned

@@ -23,13 +23,13 @@ void HitMovingSprite(struct gobj *self, s32 arg1, s32 arg2, s32 arg3)
     }
 }
 
-extern void *sub_8007C30(void *dest, void *pt);
-extern void *sub_8007CF8(void *dest, void *pt);
+extern void *GetSpriteAttackBox(void *dest, void *pt);
+extern void *GetSpriteBodyBox(void *dest, void *pt);
 
-/* Builds `part`'s primary AABB (`sub_8007C30`) and tests it against
+/* Builds `part`'s primary AABB (`GetSpriteAttackBox`) and tests it against
  * `region` (`AabbOverlaps`, the same collision-test function used by
  * `CheckSpritePickup`/`IsSpriteObjInsideRect`'s sibling); if that already overlaps,
- * returns 2. Otherwise builds the secondary AABB (`sub_8007CF8`) and
+ * returns 2. Otherwise builds the secondary AABB (`GetSpriteBodyBox`) and
  * re-tests; if that misses, returns 0. If it hits, returns 2 unless
  * `part->flags` bit 6 is set, in which case it returns the (nonzero)
  * hit-test result itself. Needed the flags byte loaded into `part`'s
@@ -37,12 +37,12 @@ extern void *sub_8007CF8(void *dest, void *pt);
  * self-overwrite - `part` is never used again afterward) and read
  * through a `u32` (not `s32`) intermediate so the `>> 6` compiles to
  * a logical `lsr` instead of an arithmetic `asr`. */
-s32 sub_8009FF4(void *part, void *region)
+s32 ClassifySpriteContact(void *part, void *region)
 {
     struct aabb box;
     s32 result;
 
-    sub_8007C30(&box, part);
+    GetSpriteAttackBox(&box, part);
     if ((u8)AabbOverlaps(&box, region) != 0) {
         goto returnTwo;
     }
@@ -50,7 +50,7 @@ s32 sub_8009FF4(void *part, void *region)
     {
         struct aabb box2;
 
-        sub_8007CF8(&box2, part);
+        GetSpriteBodyBox(&box2, part);
         box = box2;
 
         result = (u8)AabbOverlaps(&box, region);
@@ -96,36 +96,36 @@ s32 CollideMovingSprite(struct gobj *self)
 }
 
 /* `self+0x74` get/clear/OR-set accessors. */
-s32 sub_800A068(struct gobj *self)
+s32 GetGroundSpriteHitMask(struct gobj *self)
 {
     return self->hitMask;
 }
 
 /* `self+0x74 != 0`, via the branchless `(-x | x) >> 31` idiom rather
  * than a plain comparison. */
-s32 sub_800A06C(struct gobj *self)
+s32 HasGroundSpriteHitMask(struct gobj *self)
 {
     s32 val = self->hitMask;
     return (u32)(-val | val) >> 31;
 }
 
-void sub_800A078(struct gobj *self)
+void ClearGroundSpriteHitMask(struct gobj *self)
 {
     self->hitMask = 0;
 }
 
-void sub_800A080(struct gobj *self, s32 val)
+void AddGroundSpriteHitMask(struct gobj *self, s32 val)
 {
     self->hitMask |= val;
 }
 
 /* `self+0x68` byte get/set pair. */
-void sub_800A088(struct gobj *self, u8 val)
+void SetGroundSpriteHitAxes(struct gobj *self, u8 val)
 {
     self->hitAxes = val;
 }
 
-u8 sub_800A090(struct gobj *self)
+u8 GetGroundSpriteHitAxes(struct gobj *self)
 {
     return self->hitAxes;
 }
@@ -219,7 +219,7 @@ void SetSpriteMotionX(struct gobj *self, s32 a, s32 b, s32 c)
 
 /* `self+0x69` (cleared by `ResetMovingSprite`, set 0 by that same
  * initializer) getter. */
-u8 sub_800A0F4(struct gobj *self)
+u8 GetGroundSpriteProbeTries(struct gobj *self)
 {
     return self->probeTries;
 }

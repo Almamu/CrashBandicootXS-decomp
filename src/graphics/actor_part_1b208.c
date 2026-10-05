@@ -99,7 +99,7 @@ static inline struct vec3 *MoverVec(struct mover *self)
  * after the player lands and then wobbles the owner +-3px, kinds 6/7
  * freeze the owner's animation until its +0x38 trigger fires (kind 7 then
  * marks the owner gone in the gEntityFlags+0x108 bitmap, as
- * sub_80072D8 does). Finally MovePlayerWithPlatform drags the player along.
+ * MarkEntityGone does). Finally MovePlayerWithPlatform drags the player along.
  *
  * Every `register ... asm()` below pins a value to the register the ROM
  * uses for it; unpinned, this compiler picks a different low register at

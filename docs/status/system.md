@@ -9,7 +9,7 @@ category page - see [game_loop.md](./game_loop.md).
 
 - `src/system/main.c`: `AgbMain`
 - `src/system/memory.c`: `mem_heap_init`, `mem_collect`, `mem_free_bytes`,
-  `mem_alloc`, `mem_free`, `mem_heap_shutdown`, `sub_800039C` (unreachable -
+  `mem_alloc`, `mem_free`, `mem_heap_shutdown`, `mem_walk_heaps` (unreachable -
   see `docs/decomp_dev.md` for what it is and why it's kept)
 - `src/system/irq.c`: `IrqDisable`, `IrqSetup`, `IrqEmptyHandler`,
   `EnableVBlankHandler`, `DisableVBlankHandler`, `RemoveVBlankCallback`, `AddVBlankCallback` (2025,
@@ -31,7 +31,7 @@ category page - see [game_loop.md](./game_loop.md).
   the poll/confirm-check code (matching the ROM's own basic-block
   layout) instead of the natural top-to-bottom order - see
   [naked-sub_80010e0-matched.md](../matching/naked-sub_80010e0-matched.md).
-- `src/system/boot_util.c`: `DivMod`, `MemCopy32`, `nullsub_9` -
+- `src/system/boot_util.c`: `DivMod`, `MemCopy32`, `UpdateCtrl` -
   boot-adjacent BIOS wrappers right after `asm/crt0.s`'s permanent boot
   stub (`start`, left as hand-written asm, not tracked as a function to
   match); see `docs/matching.md`

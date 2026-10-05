@@ -3,7 +3,7 @@
 /* GitHub issue #9/#10: foundational investigation of the large, fully
  * raw 0x0800B8DC-0x0800D040 cluster (43 functions, ~5988 bytes) sitting
  * right after `actor_part17.c`'s span and right before the already-
- * documented physics/collision subsystem (`sub_800D040`,
+ * documented physics/collision subsystem (`BreakCrateTouchedByPlayer`,
  * game_loop6.c). See docs/matching/issue-9-10-0x0800b8dc-graphics.md
  * for the full semantic map this pass produced - the 18-case dispatch
  * table, `HitEnemy`'s own 22-case table, and field-layout notes for
@@ -55,14 +55,14 @@ extern void UpdateEnemyPatrol(void *self);
 extern void UpdateEnemyHomingX(void *self);
 extern void UpdateEnemyHomingY(void *self);
 extern void UpdateEnemyHop(void *self);
-extern void sub_800C314(void *self);
+extern void UpdateEnemyFlipCycle(void *self);
 extern void UpdateEnemyAttackCycle(void *self);
-extern void sub_800C5D4(void *self);
-extern void sub_800C8F8(void *self);
+extern void UpdateEnemyTriggerBox(void *self);
+extern void UpdateEnemyOscillateX(void *self);
 extern void UpdateEnemyBob(void *self);
-extern void sub_800C97C(void *self);
-extern void *sub_800C9C8(s32 a, s32 b, s32 c, s32 d, s32 e, void *f);
-extern void sub_800BFA8(void *self);
+extern void UpdateEnemyOscillateY(void *self);
+extern void *LaunchHarmfulEffectPart(s32 a, s32 b, s32 c, s32 d, s32 e, void *f);
+extern void UpdateEnemyShooter(void *self);
 extern void *CreateKnockedEnemyCtrl(void *mem); /* constructor: resets the fresh object and points its +0xC table at gKnockedEnemyCtrlVtable (actor_part117.c) */
 extern void *OperatorNew(s32 size);
 extern void *_call_via_r1(void *arg0, void *fn);
@@ -166,7 +166,7 @@ void UpdateEnemyCtrl(struct part_ctrl *self)
     case 17:
         if (self->target->y >= self->baseY) {
             if (self->target->speedX == 0 && self->target->speedY != 0) {
-                sub_800C8AC(self, 0);
+                SetEnemyMotionY(self, 0);
             } else if (self->target->speedX < 0) {
                 u8 done;
 
@@ -177,13 +177,13 @@ void UpdateEnemyCtrl(struct part_ctrl *self)
                     struct ctrl_target *t;
 
                     SetPos(self->target, self->baseX, self->baseY - 0x6400);
-                    sub_800C8BC(self, 0);
+                    SetEnemyMotionX(self, 0);
                     t = self->target;
                     SetVelY(t, 0x80, 0, 0x80);
                     t->flag4 = 1;
                 }
             } else {
-                sub_800C5D4(self);
+                UpdateEnemyTriggerBox(self);
             }
         }
         {
@@ -235,7 +235,7 @@ void UpdateEnemyCtrl(struct part_ctrl *self)
             PlayAmbientSfx(gAudioContext, 0x2b, 8, vol, zero);
         }
         if (self->target->animDone && self->mode == 3) {
-            struct ctrl_target *pop = sub_800C9C8(0x1d, 0, 0, 0x2b, 0, self->target);
+            struct ctrl_target *pop = LaunchHarmfulEffectPart(0x1d, 0, 0, 0x2b, 0, self->target);
 
             self->popup = pop;
             pop->kind = 3;
@@ -252,7 +252,7 @@ void UpdateEnemyCtrl(struct part_ctrl *self)
 
             t->mirror.u.x = !m;
             SetEnemyAnimMode(self, 0);
-            sub_800C8BC(self, 1);
+            SetEnemyMotionX(self, 1);
         } else if (self->mode == 6) {
             struct ctrl_target *t = self->target;
             u32 m = t->mirror.u.x;
@@ -264,13 +264,13 @@ void UpdateEnemyCtrl(struct part_ctrl *self)
 
                 t2->tick = (*t2->keyframes)[t2->frame].steps - 1;
             }
-            sub_800C8BC(self, 1);
+            SetEnemyMotionX(self, 1);
         }
         if (self->popup)
             self->popup->x = self->target->x;
         break;
     case 3:
-        sub_800C5D4(self);
+        UpdateEnemyTriggerBox(self);
         break;
     case 2:
         UpdateEnemyPatrol(self);
@@ -283,13 +283,13 @@ void UpdateEnemyCtrl(struct part_ctrl *self)
         break;
     case 14:
         UpdateEnemyAttackCycle(self);
-        sub_800C97C(self);
+        UpdateEnemyOscillateY(self);
         break;
     case 6:
         UpdateEnemyBob(self);
         break;
     case 7:
-        sub_800C314(self);
+        UpdateEnemyFlipCycle(self);
         break;
     case 8:
         UpdateEnemyHop(self);
@@ -308,7 +308,7 @@ void UpdateEnemyCtrl(struct part_ctrl *self)
             gUnknown_030012AC = 1;
         }
         UpdateEnemyHomingX(self);
-        sub_800C8F8(self);
+        UpdateEnemyOscillateX(self);
         {
             struct ctrl_target *t = self->target;
             s32 x, y;
@@ -337,7 +337,7 @@ void UpdateEnemyCtrl(struct part_ctrl *self)
         break;
     case 16:
         UpdateEnemyAttackCycle(self);
-        sub_800BFA8(self);
+        UpdateEnemyShooter(self);
         break;
     }
 }

@@ -12,7 +12,7 @@ extern void *gLevelState;
 extern void *gInput;
 extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
 extern u8 GetDpadDirection(void *pad);
-extern u8 sub_800AAEC(struct act_part *part, s32 action);
+extern u8 PlayerHasRoomForAnim(struct act_part *part, s32 action);
 extern u8 HasSuperBodySlam(void *self);
 extern u8 HasTurboRun(void *self);
 extern void StartActionCtrlHighJump(struct act *self);
@@ -69,11 +69,11 @@ void ActionCtrlStateFlipBodySlamStart(struct act *self)
 
 /* The "player input/action handling" reader of docs/rom_map.md. Out of
  * contact it queues idle (5); otherwise the confirm edge
- * (sub_800AAEC(part, 0xB)) hands off to StartActionCtrlHighJump and the alt edge
- * (sub_800AAEC(part, 0x10)) to StartActionCtrlSpin. Then it counts the animation
+ * (PlayerHasRoomForAnim(part, 0xB)) hands off to StartActionCtrlHighJump and the alt edge
+ * (PlayerHasRoomForAnim(part, 0x10)) to StartActionCtrlSpin. Then it counts the animation
  * (holding the part on frame 3 until +0x18 reaches +0x1C) and, once the
  * part's animation is done, dispatches on contact, the 0x100/0x200 held
- * bits, the D-pad and sub_800AAEC(part, 2).
+ * bits, the D-pad and PlayerHasRoomForAnim(part, 2).
  *
  * The +0x2F store of the alt path and the 0x1B path reuses the 1 already
  * in a register (the `held & 1` test's, then +0x29's); the two final
@@ -92,7 +92,7 @@ void ActionCtrlStateSlide(struct act *self)
         }
         else if (INPUT_HELD(in) & 1)
         {
-            if (sub_800AAEC(part, 0xB) == 1)
+            if (PlayerHasRoomForAnim(part, 0xB) == 1)
             {
                 PlaySfx(gAudioContext, 0xC, 0x100);
                 ActAndFlags0D(self->part, -2);
@@ -103,7 +103,7 @@ void ActionCtrlStateSlide(struct act *self)
         }
         else if (INPUT_PRESSED(in) & 2)
         {
-            if (sub_800AAEC(part, 0x10) == 1)
+            if (PlayerHasRoomForAnim(part, 0x10) == 1)
             {
                 StartActionCtrlSpin(self);
                 ActTrio27(self, 0, 1, 1);
@@ -158,7 +158,7 @@ void ActionCtrlStateSlide(struct act *self)
         {
             u8 dir = GetDpadDirection(gInput);
 
-            if (dir != 0 && sub_800AAEC(self->part, 2))
+            if (dir != 0 && PlayerHasRoomForAnim(self->part, 2))
             {
                 switch (dir)
                 {
@@ -181,7 +181,7 @@ void ActionCtrlStateSlide(struct act *self)
             }
             else
             {
-                u8 hit = sub_800AAEC(self->part, 2);
+                u8 hit = PlayerHasRoomForAnim(self->part, 2);
 
                 if (hit == 1)
                 {

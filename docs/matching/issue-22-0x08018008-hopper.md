@@ -42,7 +42,7 @@ list:
   the "set state" method at +0x20.
 - `UpdateTiny` (16-case jump table) first resets a stomped anchor's
   controller (a fresh `sub_801886C` object). It then runs the player
-  contact test: in state 8 a `sub_8007C30`/`sub_8007CF8` box overlap
+  contact test: in state 8 a `GetSpriteAttackBox`/`GetSpriteBodyBox` box overlap
   with the player in state 0x13 knocks the boss (state 9). Otherwise an
   overlap hurts the player through the player's +0x68 method. Last it
   steps the current hop or timer.
@@ -69,8 +69,8 @@ out-of-range exit goes to state 0's mirror-bit test, not to the
   it: the flag RMWs go through a raw byte pointer (`PART_FLAGS`, as in
   `actor_part_188d0.c`), and a named `one` local is used for the 1-stores
   in `UpdateTiny`'s case 0.
-- **Box builders by value.** `a = sub_8007C30(player)` gives the ROM's
-  stack slots. `UpdateTiny`'s else branch writes `b = sub_8007C30(..);
+- **Box builders by value.** `a = GetSpriteAttackBox(player)` gives the ROM's
+  stack slots. `UpdateTiny`'s else branch writes `b = GetSpriteAttackBox(..);
   a = b;`, as `sub_8019324` does. The `valid` word of `b` is read back
   through a `volatile` (`BOX_VALID`, from `actor_part_1967c.c`).
 - **`CollidePartList` takes the box by value.** The earlier NAKED note on

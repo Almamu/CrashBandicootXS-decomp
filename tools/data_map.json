@@ -344,9 +344,9 @@
    "name": "gSineTable",
    "consumers": [
     "DrawPlayer",
-    "sub_800C8F8",
+    "UpdateEnemyOscillateX",
     "UpdateEnemyBob",
-    "sub_800C97C",
+    "UpdateEnemyOscillateY",
     "UpdateExtraLife",
     "UpdateExtraLifeHop",
     "UpdateWumpa",
@@ -923,12 +923,12 @@
    "size": 8,
    "name": "gEmptySpriteBox",
    "consumers": [
-    "sub_0800D18C",
-    "sub_8007C30",
-    "sub_8007CF8",
-    "sub_8008518",
-    "sub_8008564",
-    "sub_80085B8"
+    "QueueCratePlayerCollision",
+    "GetSpriteAttackBox",
+    "GetSpriteBodyBox",
+    "GetSpriteFrameThirdBox",
+    "GetSpriteFrameAttackBox",
+    "GetSpriteFrameBodyBox"
    ],
    "consumer_files": [
     "graphics/actor_part2.c",
@@ -951,7 +951,7 @@
    "size": 4,
    "name": "gEmptySpritePoint",
    "consumers": [
-    "sub_80084C4",
+    "GetSpriteFrameAnchor",
     "CollidePlayer",
     "ActionCtrlHandleEvent",
     "ActionCtrlStateHangMove"
@@ -1566,7 +1566,7 @@
    "size": 22,
    "name": "gCrateKindExplosive",
    "consumers": [
-    "sub_800D040",
+    "BreakCrateTouchedByPlayer",
     "DropCratesAbove",
     "BlastNearbyCrates",
     "BreakCratesInArea",
@@ -1595,7 +1595,7 @@
    "size": 22,
    "name": "gCrateKindUnbreakable",
    "consumers": [
-    "sub_0800D18C",
+    "QueueCratePlayerCollision",
     "BreakCrateInStack"
    ],
    "consumer_files": [
@@ -1618,7 +1618,7 @@
    "size": 168,
    "name": "gActionCtrlStateAttackKinds",
    "consumers": [
-    "sub_0800D18C"
+    "QueueCratePlayerCollision"
    ],
    "consumer_files": [
     "system/game_loop47.c"
@@ -1642,8 +1642,8 @@
    "size": 616,
    "name": "gCrateHitResponse",
    "consumers": [
-    "sub_0800D18C",
-    "sub_800E08C"
+    "QueueCratePlayerCollision",
+    "ApplyCrateCollision"
    ],
    "consumer_files": [
     "system/game_loop47.c"
@@ -1667,7 +1667,7 @@
    "size": 8,
    "name": "gStaticData_0816BF00",
    "consumers": [
-    "sub_0800D18C"
+    "QueueCratePlayerCollision"
    ],
    "consumer_files": [
     "system/game_loop47.c"
@@ -7398,10 +7398,10 @@
   {
    "address": "0x087E400C",
    "size": 104,
-   "name": "gStaticData_087E400C",
+   "name": "gEffectCtrlVtable",
    "consumers": [
-    "sub_800CCCC",
-    "sub_800CCE0"
+    "DestroyEffectCtrl",
+    "InitEffectCtrl"
    ],
    "consumer_files": [
     "graphics/actor_part123.c"

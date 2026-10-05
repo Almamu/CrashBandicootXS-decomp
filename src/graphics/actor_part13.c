@@ -20,8 +20,8 @@ struct player_view
 extern struct level_state *gLevelState;
 extern void *gPlayer;
 extern u32 gRoomFrameCount;
-extern void *sub_8007C30(void *dest, void *pt);
-extern void *sub_8007CF8(void *dest, void *pt);
+extern void *GetSpriteAttackBox(void *dest, void *pt);
+extern void *GetSpriteBodyBox(void *dest, void *pt);
 extern u8 PlayerTouchesBox(void *arg0, void *buf);
 extern void _call_via_r4(void *arg0, s32 arg1, s32 arg2, s32 arg3);
 extern void ResolvePlayerContact(void *partArg);
@@ -33,10 +33,10 @@ extern void ResolvePlayerContact(void *partArg);
  * set and the player's `unk_8C` field is ahead of the frame counter
  * and `gLevelState`'s mode (`maskLevel`) is 3, or independently if
  * `part`'s `+0xd` byte bit 3 is set and the mode is 3, builds `part`'s
- * primary AABB via `sub_8007C30` and tests it against the player via
+ * primary AABB via `GetSpriteAttackBox` and tests it against the player via
  * `PlayerTouchesBox`; on a hit, calls `ResolvePlayerContact` and returns. If the
  * primary AABB has no region (`field_8` zero) or the hit test missed,
- * falls back to the secondary AABB via `sub_8007CF8` and repeats the
+ * falls back to the secondary AABB via `GetSpriteBodyBox` and repeats the
  * same hit test. */
 void CheckPlayerContact(void *partArg)
 {
@@ -89,7 +89,7 @@ gate2:
 doCheck:
     {
         struct aabb box;
-        sub_8007C30(&box, part);
+        GetSpriteAttackBox(&box, part);
         if (box.field_8 != 0) {
             if (PlayerTouchesBox(gPlayer, &box)) {
                 ResolvePlayerContact(part);
@@ -99,7 +99,7 @@ doCheck:
     }
     {
         struct aabb box2;
-        sub_8007CF8(&box2, part);
+        GetSpriteBodyBox(&box2, part);
         if (*(s32 volatile *)&box2.field_8 != 0) {
             if (PlayerTouchesBox(gPlayer, &box2)) {
                 ResolvePlayerContact(part);
@@ -110,7 +110,7 @@ doCheck:
 
 /* ROM 0x08009D5C - fires a `part->table+0x68`-driven trampoline (the
  * "dead read" idiom already established for
- * `CollidePartWithPlayer`/`CollidePartWithObject`/`sub_80099F0`) based on
+ * `CollidePartWithPlayer`/`CollidePartWithObject`/`CollideCrateGridPartWithObject`) based on
  * `gLevelState`'s mode (`+0x78`): mode 0 fires it on the player
  * with arguments `(0, part->field_0A, 0)`; modes 1-2 fire it on the
  * player with the same arguments, then again on `part` itself with

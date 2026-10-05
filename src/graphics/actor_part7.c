@@ -88,12 +88,12 @@ void IncSpriteFrameTimer(void *part)
 }
 
 /* `part+0x24` byte get/set pair. */
-void sub_8008804(void *part, u8 val)
+void SetSpriteMoveAxes(void *part, u8 val)
 {
     *((u8 *)part + 0x24) = val;
 }
 
-u8 sub_800880C(void *part)
+u8 GetSpriteMoveAxes(void *part)
 {
     return *((u8 *)part + 0x24);
 }
@@ -118,7 +118,7 @@ u8 GetSpriteAnim(void *part)
 
 /* `part+0x28` low-2-bit getter - same `(u32 << 30) >> 30` idiom used
  * by `GetSpriteObjPriority`'s 2-bit field extraction. */
-s32 sub_8008824(void *part)
+s32 GetSpriteGfxMode(void *part)
 {
     u32 byte = *((u8 *)part + 0x28);
     return (byte << 0x1e) >> 0x1e;
@@ -130,7 +130,7 @@ s32 sub_8008824(void *part)
  * operand fix as `SetSpritePalette`/`SetSpriteFlipX` to stop the mask
  * constant `-4` being computed relative to the leftover `3` register
  * value instead of via a fresh `movs`+`negs`. */
-void sub_8008830(void *part, s32 value)
+void SetSpriteGfxMode(void *part, s32 value)
 {
     register s32 val asm("r1") = value;
     register u8 *addr asm("r0") = (u8 *)part + 0x28;
@@ -174,14 +174,14 @@ u8 GetSpriteAnimDone(void *part)
 
 /* `part+0x28` bit-2 getter, same idiom as `GetSpriteFlipX`/`GetSpriteFlipY`
  * above. */
-s32 sub_8008864(void *part)
+s32 GetSpriteMosaic(void *part)
 {
     u32 byte = *((u8 *)part + 0x28);
     return (byte << 0x1d) >> 0x1f;
 }
 
 /* `part+0x29` low-nibble getter, same shape as `GetSpritePalette`. */
-s32 sub_8008870(void *part)
+s32 GetSpriteOamPalette(void *part)
 {
     u32 byte = *((u8 *)part + 0x29);
     return (byte << 0x1c) >> 0x1c;
@@ -189,19 +189,19 @@ s32 sub_8008870(void *part)
 
 /* `part+0x28` bit-3 getter, same idiom as the other single-bit getters
  * above. */
-s32 sub_800887C(void *part)
+s32 GetSpriteColorMode(void *part)
 {
     u32 byte = *((u8 *)part + 0x28);
     return (byte << 0x1c) >> 0x1f;
 }
 
 /* `affine` get/set pair. */
-u16 sub_8008888(struct box_part *part)
+u16 GetSpriteAffine(struct box_part *part)
 {
     return part->affine;
 }
 
-void sub_800888C(struct box_part *part, u16 val)
+void SetSpriteAffine(struct box_part *part, u16 val)
 {
     part->affine = val;
 }
@@ -441,9 +441,9 @@ struct game_state {
 
 extern struct game_state *gLevelState;
 extern void *gAudioContext;
-extern s32 sub_8009FF4(struct box_part *part, struct part_aabb *box);
+extern s32 ClassifySpriteContact(struct box_part *part, struct part_aabb *box);
 extern struct part_aabb GetSpriteHitbox(struct box_part *part);
-extern struct part_aabb sub_8007CF8(struct box_part *part);
+extern struct part_aabb GetSpriteBodyBox(struct box_part *part);
 extern u8 AabbOverlaps(struct part_aabb *a, struct part_aabb *b);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
 
@@ -458,12 +458,12 @@ extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
  * against the incoming box passed by CollidePartList (`list` is unused).
  *
  * In mode 3 (gLevelState->maskLevel): if `part` touches the box
- * (`sub_8009FF4`), calls its hit method with the player's kind.
+ * (`ClassifySpriteContact`), calls its hit method with the player's kind.
  * Otherwise, for a solid part (flags2 bit 3): builds the player's box
- * (GetSpriteHitbox) and the part's (sub_8007CF8); on overlap pushes the
+ * (GetSpriteHitbox) and the part's (GetSpriteBodyBox); on overlap pushes the
  * player's x out of `part` by the sum of both widths (<<7) on whichever
  * side it is, and calls the player's hit method (0, 0xc, side 2/1).
- * Otherwise, by `sub_8009FF4`'s result: 1 marks the player hit; a
+ * Otherwise, by `ClassifySpriteContact`'s result: 1 marks the player hit; a
  * player of kind 1 with a positive +0x64 counter calls both hit methods
  * and plays SFX 0x21, any other kind calls the part's hit method with
  * that kind. 2 marks the part hit, calls its hit method first when the
@@ -476,7 +476,7 @@ extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
 void CollidePartWithPlayer(struct part_list *list, struct part_aabb box, struct box_part *part)
 {
     if (gLevelState->maskLevel == 3) {
-        if (!sub_8009FF4(part, &box))
+        if (!ClassifySpriteContact(part, &box))
             return;
         CALL_HIT(part, 1, gPlayer->kind, 0);
     } else if ((part->flags2 >> 3) & 1) {
@@ -484,7 +484,7 @@ void CollidePartWithPlayer(struct part_list *list, struct part_aabb box, struct 
         s32 px;
 
         a = GetSpriteHitbox(gPlayer);
-        b = sub_8007CF8(part);
+        b = GetSpriteBodyBox(part);
         if (!AabbOverlaps(&a, &b))
             return;
         px = part->x;
@@ -498,7 +498,7 @@ void CollidePartWithPlayer(struct part_list *list, struct part_aabb box, struct 
     } else {
         u8 kind;
 
-        switch (sub_8009FF4(part, &box)) {
+        switch (ClassifySpriteContact(part, &box)) {
         case 0:
             break;
         case 1:
@@ -532,6 +532,6 @@ void CollidePartWithPlayer(struct part_list *list, struct part_aabb box, struct 
  * logic mirror for a non-default "compare viewport"), lives in
  * src/graphics/actor_part7b.c instead of here - its real ROM address
  * isn't adjacent to this file's functions (actor_part10.c's
- * CullPartList/ClearPartList/sub_8008D30 sit between CollidePartWithPlayer above and
+ * CullPartList/ClearPartList/CollidePartsOfClass sit between CollidePartWithPlayer above and
  * CollidePartWithObject in ROM order), so it needs its own translation unit per
  * docs/workflow.md step 4. */

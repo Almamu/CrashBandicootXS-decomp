@@ -4,7 +4,7 @@
 /* GitHub issue #13: 0x0800FC70-0x08010A0C, continuing the physics/
  * collision subsystem (see game_loop17.c's header comment and
  * docs/matching/issue-13-graphics-fc70.md). `GetTopCrate`/
- * `GetBottomCrate`/`sub_80109A4` right before this function are left
+ * `GetBottomCrate`/`CollideCrateWithPlayer` right before this function are left
  * untouched raw; `sub_8010A0C` right after it is outside this issue's
  * range and also stays raw. */
 

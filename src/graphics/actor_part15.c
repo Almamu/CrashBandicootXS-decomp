@@ -10,7 +10,7 @@
  * byte offsets. */
 
 extern s32 UpdateGroundSprite(void *self);
-extern void *sub_8007CF8(void *dest, void *pt);
+extern void *GetSpriteBodyBox(void *dest, void *pt);
 extern u8 gPlayerVtable[];
 extern s32 _call_via_r2(void *arg0, void *arg1, void *fn);
 extern void DestroyCollisionQueue(void *arg0, s32 arg1);
@@ -29,7 +29,7 @@ u8 sub_800B324(void *selfArg)
 }
 
 /* `speedY` (+0x64) clear. */
-void sub_800B334(void *selfArg)
+void ClearPlayerSpeedY(void *selfArg)
 {
     struct gobj *self = selfArg;
     self->speedY = 0;
@@ -65,9 +65,9 @@ void UpdatePlayer(void *selfArg)
 }
 
 /* The `gPlayer` collision check used throughout this whole
- * session (`CheckPlayerContact`/`sub_80096C0`/`sub_80099F0` etc all call
+ * session (`CheckPlayerContact`/`CollideCrateGridPartWithPlayer`/`CollideCrateGridPartWithObject` etc all call
  * this by name via an `extern` declaration, finally matched for
- * real): builds `selfArg`'s secondary AABB via `sub_8007CF8`
+ * real): builds `selfArg`'s secondary AABB via `GetSpriteBodyBox`
  * (already matched), and - only if it has a region (`field_8 > 0`) -
  * tests it against `buf` via `AabbOverlaps` (already matched),
  * returning the low byte of that result; otherwise returns 0. */
@@ -76,7 +76,7 @@ u8 PlayerTouchesBox(void *selfArg, void *buf)
     s32 tmp[4];
     u8 result = 0;
 
-    sub_8007CF8(tmp, selfArg);
+    GetSpriteBodyBox(tmp, selfArg);
     if (tmp[2] > 0) {
         result = AabbOverlaps((struct aabb *)tmp, buf);
     }

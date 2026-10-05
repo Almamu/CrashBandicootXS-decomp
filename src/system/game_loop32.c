@@ -144,7 +144,7 @@ void UpdateCrateFall(struct crate *self)
 }
 /* Trailing byte-padding mismatch fix: the function body is 342 bytes
  * (not 4-aligned), and the ROM pads the 2-byte gap before the next
- * function (sub_800FDC8) with a zero halfword rather than the
+ * function (FindLineCrossing) with a zero halfword rather than the
  * assembler's default `nop` (`mov r8, r8`) - see
  * matching_decomp_alignment_fix memory. */
 asm(".align 2, 0");

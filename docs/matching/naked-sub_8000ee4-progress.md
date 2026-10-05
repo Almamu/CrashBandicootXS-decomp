@@ -1,6 +1,6 @@
-# `sub_8000EE4` progress: 99.89% instruction match, still NAKED
+# `DrawWrappedText` progress: 99.89% instruction match, still NAKED
 
-`sub_8000EE4` (`src/graphics/text_layout.c`, a text-layout/word-wrap
+`DrawWrappedText` (`src/graphics/text_layout.c`, a text-layout/word-wrap
 renderer) is still a byte-correct NAKED asm transcription for the
 default build - see
 [naked-transcription-parked-functions.md](./naked-transcription-parked-functions.md)
@@ -256,7 +256,7 @@ semantic impact - the C reconstruction is fully correct, just not yet
 byte-identical. A future attempt could try: isolating the `/b` handler
 into its own tiny helper function (to give the register allocator a
 fresh, smaller scope to work with independently of the rest of
-`sub_8000EE4`), or a full permuter-style search over the last two
+`DrawWrappedText`), or a full permuter-style search over the last two
 sites now that everything else is nailed down.
 
 ## New technique attempts this session (matching-constraint asm operand)
@@ -338,7 +338,7 @@ its own matched unit (`tools/report_units.py`'s entry for `0x08000EE4`
 stays `base_object=None`, parked), the match percentage is obtained
 directly: `objdiff-cli diff -1
 build/expected/units/raw_08000EE4_08000EE4_target.o -2 <isolated
-NON_MATCHING build of sub_8000EE4> sub_8000EE4` reports
+NON_MATCHING build of DrawWrappedText> DrawWrappedText` reports
 `match_percent: 99.89011` (up from 99.86% before this session's
 default-case control-flow fix).
 
@@ -349,4 +349,4 @@ session's `#if NON_MATCHING`-only change.
 
 ## Later pass (strag3): matched
 
-`sub_8000EE4` is now real C in `src/graphics/text_layout.c`, built with old_agbcc (the object is on `OLD_AGBCC_OBJS`). A plain rewrite replaced the pinned draft above. It uses a `while` loop, a `switch` for the escapes, inline `set_pos`/`pos_x`/`pos_y` helpers, one extra-reference nudge on `len` and one r1 hold. See [strag3-naked-retry.md](strag3-naked-retry.md).
+`DrawWrappedText` is now real C in `src/graphics/text_layout.c`, built with old_agbcc (the object is on `OLD_AGBCC_OBJS`). A plain rewrite replaced the pinned draft above. It uses a `while` loop, a `switch` for the escapes, inline `set_pos`/`pos_x`/`pos_y` helpers, one extra-reference nudge on `len` and one r1 hold. See [strag3-naked-retry.md](strag3-naked-retry.md).

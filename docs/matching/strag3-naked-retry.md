@@ -6,7 +6,7 @@ retries, each with an open parked-function issue. Both are now real C.
 | Function | File | Size | Before | Compiler | Result |
 |---|---|---|---|---|---|
 | `DrawPowerDialog` | `src/graphics/oam_count.c` | 240 B | no draft in tree | agbcc (either) | **Closed** (#101) |
-| `sub_8000EE4` | `src/graphics/text_layout.c` | 384 B | heavily pinned draft, "2 residuals" | old_agbcc | **Closed** (#102) |
+| `DrawWrappedText` | `src/graphics/text_layout.c` | 384 B | heavily pinned draft, "2 residuals" | old_agbcc | **Closed** (#102) |
 
 ## DrawPowerDialog
 
@@ -31,7 +31,7 @@ way as in `settings_menu11.c` and `counter_selector_icons.c`.
   both compilers, with no pins or asm. It stays in `oam_count.c`, which
   is built with agbcc.
 
-## sub_8000EE4
+## DrawWrappedText
 
 This is the word-wrap text renderer. The in-tree `#if NON_MATCHING` draft
 was about 95 lines of register pins, `volatile` locals and asm moves.

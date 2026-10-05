@@ -32,7 +32,7 @@ extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
 extern u8 GetDpadDirection(void *pad);
 extern void UpdatePlayerFacing(struct act *self);
 extern void HandleActionCtrlAirInput(struct act *self);
-extern void sub_800B334(struct act_part *part);
+extern void ClearPlayerSpeedY(struct act_part *part);
 extern void DoSuperBodySlamShockwave(struct act *self);
 extern struct spark *SpawnEffectPart(void *pool, s32 a, s32 b, s32 x, s32 y, s32 mirror);
 
@@ -89,7 +89,7 @@ static inline void ActSetContact(struct act_part *p, s32 v)
  * the 42 slots: states 7, 9, 0xB, 0x18, 0x19 and 0x1A). The alt edge restarts the charge animation (as in
  * ActionCtrlStateJump); out of contact it ticks the +0x25 countdown and otherwise
  * queues action 4 from state 0x1A. On contact bit 2 it lands the part (frame
- * 2, sub_800B334); on contact bit 3 in states 0x18/0x19 it spawns two
+ * 2, ClearPlayerSpeedY); on contact bit 3 in states 0x18/0x19 it spawns two
  * sparks at the player (+-0x14 px, the first mirrored) and plays 0x16/0x11;
  * state 0xE queues from the shoulder bits; the rest plays 0x17/0x16.
  *
@@ -173,7 +173,7 @@ void ActionCtrlStateAirborne(struct act *self)
                         frame = count - 1;
                     part->frame = frame;
                 }
-                sub_800B334(self->part);
+                ClearPlayerSpeedY(self->part);
             }
             UpdatePlayerFacing(self);
             HandleActionCtrlAirInput(self);

@@ -8,10 +8,10 @@ now match as real C:
 
 | Function | File | Issue | Compiler | Was | Now |
 |---|---|---|---|---|---|
-| `sub_800CD00` | `src/graphics/actor_part109.c` | #11 | old_agbcc | 42 | match |
-| `sub_800D040` | `src/system/game_loop6.c` | #12 | old_agbcc | 151 | match |
-| `sub_0800D18C` | `src/system/game_loop47.c` | #12 | old_agbcc | 968 | 938, still NAKED |
-| `sub_800E08C` | `src/system/game_loop47.c` | #12 | old_agbcc | 49 | 49, still NAKED |
+| `PlayerAnimWouldTouchCrate` | `src/graphics/actor_part109.c` | #11 | old_agbcc | 42 | match |
+| `BreakCrateTouchedByPlayer` | `src/system/game_loop6.c` | #12 | old_agbcc | 151 | match |
+| `QueueCratePlayerCollision` | `src/system/game_loop47.c` | #12 | old_agbcc | 968 | 938, still NAKED |
+| `ApplyCrateCollision` | `src/system/game_loop47.c` | #12 | old_agbcc | 49 | 49, still NAKED |
 
 Each of `actor_part109.o` and `game_loop6.o` holds only its one
 function, and both joined `OLD_AGBCC_OBJS`. Under current agbcc the
@@ -20,7 +20,7 @@ closed C is 25 and 129 halfwords off. Both objects end with
 
 ## Where the shared pseudo comes from
 
-The RTL dumps (`-da`) for `sub_800CD00` show what happens. At expand
+The RTL dumps (`-da`) for `PlayerAnimWouldTouchCrate` show what happens. At expand
 time every `&f.b` is a separate pseudo holding
 `(plus frame-pointer 16)`. cse1 then replaces each later one with the
 first, since the value is still in that register. gcse copy-propagates
@@ -59,7 +59,7 @@ doesn't help either.
 
 Three more things matter:
 
-- **Every use needs the copy.** In `sub_800CD00` the macro goes on
+- **Every use needs the copy.** In `PlayerAnimWouldTouchCrate` the macro goes on
   both player-box builder calls and on `pb = BOX_ADDR(&f.b)` at the
   first overlap test. Dropping any one of the three leaves 2 to 32
   halfwords.
@@ -68,7 +68,7 @@ Three more things matter:
   Arguments are evaluated left to right, and the asm pins where the
   copy is computed. Written inline, the `add r0, sp, #16` comes before
   the x/y adds, while the ROM has it after them.
-- **`sub_800CD00`'s record pointer.** In the second block the ROM puts
+- **`PlayerAnimWouldTouchCrate`'s record pointer.** In the second block the ROM puts
   `rec` in r1, the register of the `frame * 28` offset, not in r0, the
   register of the table base. local-alloc ties a block-local `rec` to
   the base operand. With one function-scope `rec` shared by the first
@@ -76,11 +76,11 @@ Three more things matter:
   alloc and lands in r1. Sharing it with the third block, or sharing
   `q` instead, breaks other blocks.
 
-`sub_800D040` also needed `px`/`py` at function scope, shared by both
+`BreakCrateTouchedByPlayer` also needed `px`/`py` at function scope, shared by both
 blocks as the ROM's r7/r8. With per-block `px`/`py` and the macro, it
 was 45 halfwords off. With them shared, it matched.
 
-## `sub_0800D18C`: 968 to 938, still NAKED
+## `QueueCratePlayerCollision`: 968 to 938, still NAKED
 
 The first player box now matches the ROM. The builder calls use the
 macro, and a `bb` local, set with `bb = BOX_ADDR(&f.b)`, holds the
@@ -96,7 +96,7 @@ dropped. The draft therefore uses it only on the first box. What's left
 is low-register choice for constants and temps, and the `kind * 4`
 spill slot order (0x94/0x98).
 
-## `sub_800E08C`: 49, still NAKED
+## `ApplyCrateCollision`: 49, still NAKED
 
 The only real difference is the case-3 read of the first flag. The ROM
 has `mov r5, sp; ldrb r2, [r5]` from the flag's word-sized spill slot.

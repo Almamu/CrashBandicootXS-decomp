@@ -12,9 +12,9 @@ struct game_state {
 extern struct game_state *gLevelState;
 extern struct box_part *gPlayer;
 extern void *gAudioContext;
-extern s32 sub_8009FF4(struct box_part *part, struct part_aabb *box);
+extern s32 ClassifySpriteContact(struct box_part *part, struct part_aabb *box);
 extern struct part_aabb GetSpriteHitbox(struct box_part *part);
-extern struct part_aabb sub_8007CF8(struct box_part *part);
+extern struct part_aabb GetSpriteBodyBox(struct box_part *part);
 extern u8 AabbOverlaps(struct part_aabb *a, struct part_aabb *b);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
 
@@ -28,19 +28,19 @@ extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
 /* `CollidePartWithPlayer`'s twin, operating in this spatial-hash-grid cluster:
  * byte-identical collision-hit resolution logic (mode dispatch via
  * `gLevelState`, the AABB push-out via `GetSpriteHitbox`/
- * `sub_8007CF8`/`AabbOverlaps`, and the "hit" method calls) - see
+ * `GetSpriteBodyBox`/`AabbOverlaps`, and the "hit" method calls) - see
  * `CollidePartWithPlayer`'s own writeup in `actor_part7.c` for the branch-by-branch
  * semantics, identical here. `list` itself is never read.
  *
  * Matches under old_agbcc with the box passed by value, the same C as
  * CollidePartWithPlayer (see docs/matching/issue-9-naked-retry.md). Kept in its own
  * translation unit since its ROM address, 0x080096C0, sits between
- * `sub_8009528` (`actor_part11f.c`) and `CollidePlayerWithCrates` (`actor_part11d.c`)
+ * `CollideCrateGrid` (`actor_part11f.c`) and `CollidePlayerWithCrates` (`actor_part11d.c`)
  * in ROM order. */
-void sub_80096C0(struct part_list *list, struct part_aabb box, struct box_part *part)
+void CollideCrateGridPartWithPlayer(struct part_list *list, struct part_aabb box, struct box_part *part)
 {
     if (gLevelState->maskLevel == 3) {
-        if (!sub_8009FF4(part, &box))
+        if (!ClassifySpriteContact(part, &box))
             return;
         CALL_HIT(part, 1, gPlayer->kind, 0);
     } else if ((part->flags2 >> 3) & 1) {
@@ -48,7 +48,7 @@ void sub_80096C0(struct part_list *list, struct part_aabb box, struct box_part *
         s32 px;
 
         a = GetSpriteHitbox(gPlayer);
-        b = sub_8007CF8(part);
+        b = GetSpriteBodyBox(part);
         if (!AabbOverlaps(&a, &b))
             return;
         px = part->x;
@@ -62,7 +62,7 @@ void sub_80096C0(struct part_list *list, struct part_aabb box, struct box_part *
     } else {
         u8 kind;
 
-        switch (sub_8009FF4(part, &box)) {
+        switch (ClassifySpriteContact(part, &box)) {
         case 0:
             break;
         case 1:

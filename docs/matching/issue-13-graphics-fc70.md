@@ -51,18 +51,18 @@ too, continuing issue #12's precedent.
   (`ResolveCollisionCandidates` on `gPlayer+0x108`, then a saturating-at-
   zero `+0x92` hit counter), and the neighbor-list "get prev"/"get
   next"/"set prev"/"set next" accessor quartet (`self+0x60`/`+0x5c`)
-  `docs/rom_map.md` already ties to `sub_0800D18C`'s linked-list walk.
+  `docs/rom_map.md` already ties to `QueueCratePlayerCollision`'s linked-list walk.
   `GetCrateClassId` is a trivial `return 3;` constant accessor with no
   caller anywhere in the ROM (checked every `asm/*.s`, `expected/*.s`
   and `src/*.c` file) - tagged `UNUSED`. All six matched with no
   gotchas beyond `ResolvePlayerCollisions` needing its second `gPlayer`
   dereference kept as a separate local (not reusing the first) to get
   the post-call reload the ROM does.
-- **`sub_8010804`**/**`OpenAkuAkuCrate`** (`src/system/game_loop24.c`) -
+- **`ConvertCratesForTimeTrial`**/**`OpenAkuAkuCrate`** (`src/system/game_loop24.c`) -
   a state-3-countdown-expiry sweep over the `gCrateList` object
   list (same list/table layout `UpdateCrates`/`DetonateNitroCrates` elsewhere in
   this still-raw region read), and a viewport `+0x18`-table trampoline-
-  pair/cue-1 firer gated on `+0xc` bit 7. `sub_8010804` needed the
+  pair/cue-1 firer gated on `+0xc` bit 7. `ConvertCratesForTimeTrial` needed the
   `&gCrateList` address cached into its own local declared
   *inside* the `if` guard (not before it) to match the ROM's own
   "check with one register, cache into a second only once past the
@@ -84,7 +84,7 @@ too, continuing issue #12's precedent.
 
 ## Left untouched (14 of 25 functions)
 
-- **`UpdateCrateFall`**/**`sub_800FDC8`** (`asm/code_3_2_17_e560_fc70.s`) -
+- **`UpdateCrateFall`**/**`FindLineCrossing`** (`asm/code_3_2_17_e560_fc70.s`) -
   a position-wrap advance function with heavy `r8`/`sb` register
   pressure, and a Bresenham-line-style step algorithm. Readable at a
   high level but not attempted this pass.
@@ -92,7 +92,7 @@ too, continuing issue #12's precedent.
   (~660-instruction) projectile/hazard-spawn dispatcher with two big
   jump tables (19 and 23 cases) and packed bitfield arguments - out of
   scope for a single pass, would need its own dedicated chunk.
-- **`DrawCrate`**/**`UpdateCrate`**/**`sub_8010674`**
+- **`DrawCrate`**/**`UpdateCrate`**/**`IsCrateInsideRect`**
   (`asm/code_3_2_17_e560_ff0c.s`) - a moderate flag-dispatch function, a
   large (~195-instruction) state dispatcher calling several still-raw
   siblings, and an AABB-overlap check. Not attempted this pass.
@@ -100,16 +100,16 @@ too, continuing issue #12's precedent.
   - two part-object init helpers (`ResetSpriteFrameTimer`/`ResetSpriteFrameIndex`/
   `SetSpriteAnimDone` shape, same as several already-matched siblings in this
   file) - readable but not attempted this pass.
-- **`sub_8010784`**/**`sub_80107C4`** (`asm/code_3_2_17_e560_1071c.s`)
+- **`FindLineCrossingYMajor`**/**`FindLineCrossingXMajor`** (`asm/code_3_2_17_e560_1071c.s`)
   - two more Bresenham-line-style step algorithms (variants of
-  `sub_800FDC8`'s shape) - not attempted this pass.
+  `FindLineCrossing`'s shape) - not attempted this pass.
 - **`OpenLifeCrate`** (`asm/code_3_2_17_e560_1089c.s`) - a cue-3 SFX plus
   spawn-helper call; not attempted this pass.
 - **`GetTopCrate`**/**`GetBottomCrate`** (`asm/code_3_2_17_e560_10914.s`)
   - two neighbor-list-walk-and-filter helpers (built on
   `GetCrateBelow`/`GetCrateAbove`) - not attempted this pass.
-- **`sub_80109A4`** (`asm/code_3_2_17_e560_10914.s`) - a distance-gated
-  dispatcher calling `sub_0800D18C` (still-raw); not attempted this
+- **`CollideCrateWithPlayer`** (`asm/code_3_2_17_e560_10914.s`) - a distance-gated
+  dispatcher calling `QueueCratePlayerCollision` (still-raw); not attempted this
   pass.
 
 No functions were parked (`NON_MATCHING`) this pass - every function

@@ -1,8 +1,8 @@
-# Huge NAKED retry 3: `sub_0800D18C`
+# Huge NAKED retry 3: `QueueCratePlayerCollision`
 
 | Function | File | Issue | Before | After |
 |---|---|---|---|---|
-| `sub_0800D18C` | `src/system/game_loop47.c` | #12 | 33 hw, size-exact, NAKED | real C, matches |
+| `QueueCratePlayerCollision` | `src/system/game_loop47.c` | #12 | 33 hw, size-exact, NAKED | real C, matches |
 
 The function now builds under old_agbcc (`game_loop47.o` was already on
 `OLD_AGBCC_OBJS`). The NAKED copy and the `#if NON_MATCHING` split are

@@ -4,8 +4,8 @@
 /* GitHub issue #13: 0x0800FC70-0x08010A0C, continuing the physics/
  * collision subsystem (see game_loop17.c's header comment and
  * docs/matching/issue-13-graphics-fc70.md). `DestroyCrate`/
- * `InitCrate`/the two Bresenham-line helpers `sub_8010784`/
- * `sub_80107C4` right before `sub_8010804` are left untouched raw. */
+ * `InitCrate`/the two Bresenham-line helpers `FindLineCrossingYMajor`/
+ * `FindLineCrossingXMajor` right before `ConvertCratesForTimeTrial` are left untouched raw. */
 
 extern struct crate_list *gCrateList;
 extern s32 _call_via_r1(void *addr, void *fn);
@@ -17,7 +17,7 @@ extern void SolidifyOutlineCrate(void *self);
  * `unk_54` countdown isn't disabled (`-1`), truncates that countdown
  * into `u48` and fires `SolidifyOutlineCrate` on it - a "box countdown expiry"
  * sweep. */
-void sub_8010804(void)
+void ConvertCratesForTimeTrial(void)
 {
     s32 i = 0;
 

@@ -25,7 +25,7 @@ as of
   already-loaded 0 for their own writes rather than reloading a fresh
   constant, matching the ROM's own `r6` reuse).
 
-  `self+0xc` bit 1: relocates `self`'s primary AABB (`sub_8007C30`,
+  `self+0xc` bit 1: relocates `self`'s primary AABB (`GetSpriteAttackBox`,
   `actor_part9.c`'s own copy of the same helper) onto a second stack
   slot (`MemCopy32`, a plain `memcpy`) before unpacking it back out
   into scalars for `CollidePartList` (already NAKED-parked, `actor_part7.c`)
@@ -37,7 +37,7 @@ as of
   `ResetCollisionQueue` clears elsewhere in this object family, just written
   directly here) and fires three teardown/notification calls:
   `CollidePlayerWithCrates` (NAKED-parked, `actor_part11d.c`) against
-  `gCrateList`'s manager with selector `3`, `sub_8008D30`
+  `gCrateList`'s manager with selector `3`, `CollidePartsOfClass`
   (`actor_part10.c`) against `gUnknown_030012EC`'s manager with
   selector `4`, and `ResolvePlayerCollisions` (`game_loop23.c`) with no arguments.
   `CollidePlayerWithCrates` was previously declared with only one parameter
@@ -66,7 +66,7 @@ as of
      `self`'s own `r5` in place for the address (since `self` isn't
      read again afterward) instead of computing a fresh `r0`, matching
      the ROM's `adds r0, r5, r1` (a new register, `self` left intact).
-  3. **The leading `sub_8007C30`/`MemCopy32` relocate-then-unpack
+  3. **The leading `GetSpriteAttackBox`/`MemCopy32` relocate-then-unpack
      pair** needed the relocated box read back via a raw `u8
      boxCopy[0x10]` buffer and pointer casts (`*(s32 *)(boxCopy + N)`),
      not a `struct aabb boxCopy` with `.field_N` member access. A
@@ -157,7 +157,7 @@ as of
   than force-matched with a fragile hand-managed-stack asm splice.
 
   Real bytes stay in the new `asm/code_3_2_16_ab9c.s`. `asm/
-  code_3_2_16.s` now ends right after `sub_800AAEC` (trimmed from its
+  code_3_2_16.s` now ends right after `PlayerHasRoomForAnim` (trimmed from its
   previous end at `DrawPlayer`), and the remainder -
   `PlayerHandleEvent`/`DrawPlayer` - moved to the new
   `asm/code_3_2_16_ac2c.s`, keeping the same three-way "before /
@@ -166,13 +166,13 @@ as of
 
 ## Left raw (deeper, still-unexamined dependencies) - 3 functions + 1 large block
 
-- **`sub_800AAEC`** (`asm/code_3_2_16.s`, ROM `0x0800AAEC`) - unchanged
+- **`PlayerHasRoomForAnim`** (`asm/code_3_2_16.s`, ROM `0x0800AAEC`) - unchanged
   from the prior session's write-up: iterates `gCrateList`
   (a count-prefixed pointer array), testing each entry via
   `_call_via_r1` (matched) and, on a hit (return code 3), calling
-  `sub_800CD00` (still fully unexamined) with the entry and this
+  `PlayerAnimWouldTouchCrate` (still fully unexamined) with the entry and this
   function's own second argument. Mechanically clear, but
-  `sub_800CD00` itself wasn't examined this session either.
+  `PlayerAnimWouldTouchCrate` itself wasn't examined this session either.
 - **`PlayerHandleEvent`** (`asm/code_3_2_16_ac2c.s`, ROM `0x0800AC2C`,
   ~950 B) - unchanged: a 38-case jump-table player action-state
   dispatcher, calling a dozen still-unexamined state-transition
@@ -199,17 +199,17 @@ as of
 
 - `docs/status/actor.md` - `CollidePlayerWithObjects`'s `NON_MATCHING` entry added
   next to `CollidePlayer`'s own; the stale combined "`CollidePlayer`/
-  `sub_800AAEC`/`CollidePlayerWithObjects`/`PlayerHandleEvent`/`DrawPlayer`" left-raw
-  bullet split into `sub_800AAEC` (its own bullet) and
+  `PlayerHasRoomForAnim`/`CollidePlayerWithObjects`/`PlayerHandleEvent`/`DrawPlayer`" left-raw
+  bullet split into `PlayerHasRoomForAnim` (its own bullet) and
   `PlayerHandleEvent`/`DrawPlayer` (still combined, both blocked on the
   same class of unexamined state-transition callees).
 - `tools/report_units.py` - `0x0800AAEC` narrowed to just
-  `sub_800AAEC`; new `0x0800AB9C` entry pointing at
+  `PlayerHasRoomForAnim`; new `0x0800AB9C` entry pointing at
   `actor_part81.o` (`NON_MATCHING`); new `0x0800AC2C` entry for the
   remaining raw tail.
 - `docs/matching/issue-9-10-0x0800a884-graphics.md` - this session's
   starting point, including the exact function this write-up closes
-  (as far as it could be closed) and the `GetSpriteFrame`/`sub_80084C4`
+  (as far as it could be closed) and the `GetSpriteFrame`/`GetSpriteFrameAnchor`
   keyframe-lookup convention referenced above.
 - `src/graphics/actor_part7.c` - `CollidePartList`'s own doc comment
   (the "relocate then unpack" idiom this function's first branch
@@ -233,7 +233,7 @@ function had to be rechecked.
   `r0`. Under old_agbcc that "byte in r1, result in r0" shape comes from
   plain `(self->flags0C >> 1) & 1` / `self->flags0C >> 7`. It was the
   reason for the register pins in the first draft. This is some evidence
-  that the 0x0800Axxx neighborhood (`CollidePlayer`, `sub_800AAEC`) was
+  that the 0x0800Axxx neighborhood (`CollidePlayer`, `PlayerHasRoomForAnim`) was
   built with old_agbcc too. Nobody has retried those under it yet.
 - **The argument order.** `CollidePartList` takes the box by value, as
   PR #432 found for `sub_8017AB0` (`actor_part27a.c`). Three words go in
@@ -241,7 +241,7 @@ function had to be rechecked.
   argument after the plain stack arguments, which gives the ROM's order:
   6th, 7th, then the box's last word. The "gap" was never a scheduling
   quirk.
-- **The copy.** The ROM builds the AABB at `sp+0xC` (`sub_8007C30` with
+- **The copy.** The ROM builds the AABB at `sp+0xC` (`GetSpriteAttackBox` with
   a destination pointer) and `MemCopy32`-copies it to `sp+0x1C`. The
   copy is what gets passed. A separate `struct aabb` local at a nonzero
   frame offset fails, because its address counts as invalid for a

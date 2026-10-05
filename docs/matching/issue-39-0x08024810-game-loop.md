@@ -35,7 +35,7 @@ and setting `toggle` to 1. This chunk adds:
   pacing pattern `docs/matching.md` documents elsewhere) and a nested
   text-paging walk through the new `self+0x10` record array (each
   record `{void **strings; s32 count;}`), rendering each string via
-  `sub_8000EE4` (`text_layout.c`) against an `bitmap_font *` at
+  `DrawWrappedText` (`text_layout.c`) against an `bitmap_font *` at
   `self+0x14` and a 2-word "box" at `self+0x18`/`self+0x1c`, continuing
   to the next string in the current record while a held-input mask (9,
   versus `RunSlideshow`'s 8) stays set. `self+0x24` feeds `__udivsi3`

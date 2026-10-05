@@ -69,14 +69,14 @@ owning record's pool index for `FreeVramTileBlock`.
   and a `bl`/`.4byte` reference). Walks the spare-record stack to its end,
   then the free-block list all the way around, discarding both results -
   the same "list-walk with the result never stored" optimizer-leftover
-  shape already documented for `sub_800039C` in `src/system/memory.c`.
+  shape already documented for `mem_walk_heaps` in `src/system/memory.c`.
 - **`GetFreeVramTileBytes`** - matched, **UNUSED**. The original disassembly never
   gave this address its own `thumb_func_start`; it's a genuinely separate
   function starting right where `sub_8028D6C`'s real body ends (confirmed
   by there being no caller for the combined "one function" reading and by
   this half being a clean, self-contained "sum every free block's size"
   routine). Added a `split 0x08028D94 GetFreeVramTileBytes` correction, the same
-  pattern `sub_800039C` already established.
+  pattern `mem_walk_heaps` already established.
 
 ## The overflow OAM/affine queue (`src/graphics/sprite_frame_queue.c`)
 

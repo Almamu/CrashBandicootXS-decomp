@@ -165,7 +165,7 @@ u8 SetCtrlTargetAnim(void *unused, void *partArg, s32 newVal)
 }
 
 /* `self+0` word setter. */
-void sub_800B8A4(void *selfArg, s32 val)
+void AttachCtrl(void *selfArg, s32 val)
 {
     *(s32 *)selfArg = val;
 }

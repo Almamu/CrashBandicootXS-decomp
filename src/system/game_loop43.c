@@ -2,7 +2,7 @@
 
 /* GitHub issues #9/#10/#41's shared cross-reference: `sub_8009BE0`'s
  * physics/collision step-probe (`src/graphics/actor_part12b.c`, see
- * `docs/matching/naked-spatial-grid-tail.md`) and `sub_800AAEC`'s
+ * `docs/matching/naked-spatial-grid-tail.md`) and `PlayerHasRoomForAnim`'s
  * input-action-check gate (`src/graphics/actor_part108.c`, see
  * `docs/matching/issue-9-10-0x0800aaec-graphics.md`) both flagged this
  * function as "still unexamined" from their own call sites.
@@ -60,7 +60,7 @@
  *
  * Confirmed against both flagged call sites: `sub_8009BE0` passes a
  * plain-int (not Q8) `{x, y}` position it just computed via
- * `sub_8008278`, matching `pos`'s units here; `sub_800AAEC` passes
+ * `sub_8008278`, matching `pos`'s units here; `PlayerHasRoomForAnim` passes
  * `self+0x28` bit 4 (mirror flag) as a `1`/`2` selector - exactly this
  * function's `mode` values `1`/`2` (the X-axis/`sub_8026AE8` arms) -
  * confirming `mode` really is a small enumerated selector, not a

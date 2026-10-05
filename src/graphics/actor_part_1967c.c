@@ -288,8 +288,8 @@ extern void SpawnBodySlamPower(u32 arg0, s32 arg1, s32 arg2, s32 arg3);
 extern void SpawnTurboRunPower(u32 arg0, s32 arg1, s32 arg2, s32 arg3);
 /* These three return their box by value (gcc passes the hidden result
  * pointer in r0 and returns it). */
-extern struct box sub_8007C30(struct part *obj);
-extern struct box sub_8007CF8(struct part *obj);
+extern struct box GetSpriteAttackBox(struct part *obj);
+extern struct box GetSpriteBodyBox(struct part *obj);
 extern struct box GetSpriteHitbox(struct part *obj);
 extern u8 AabbOverlaps(struct box *a, struct box *b);
 extern void RequestRoomExit(void);
@@ -528,10 +528,10 @@ void UpdateDingodile(struct dingodile_boss *self, struct part *other)
         p->x = x - 0x600;
         p->y = y;
     }
-    hurt = sub_8007CF8(other);
+    hurt = GetSpriteBodyBox(other);
     if (self->state == 8 && gPlayer->kind == 0x13)
     {
-        box = sub_8007C30(gPlayer);
+        box = GetSpriteAttackBox(gPlayer);
         if (BOX_VALID(box) && AabbOverlaps(&box, &hurt))
         {
             self->hits++;
@@ -956,13 +956,13 @@ void sub_801A114(struct obj_490c *self, struct part *other)
                  * them. */
                 asm("" : "=r"(hr5));
                 asm("" : "=r"(hr6));
-                a = sub_8007C30(other);
-                b = sub_8007CF8(gPlayer);
+                a = GetSpriteAttackBox(other);
+                b = GetSpriteBodyBox(gPlayer);
                 if (!BOX_VALID(b))
                 {
                     struct box *pb = &b;
 
-                    *pb = sub_8007C30(gPlayer);
+                    *pb = GetSpriteAttackBox(gPlayer);
                 }
                 /* End of the hold. */
                 asm("" : : "r"(hr5));
@@ -1031,7 +1031,7 @@ void sub_801A2A8(struct obj_48a4 *self, struct part *other)
     struct box a;
     struct box b;
 
-    a = sub_8007C30(other);
+    a = GetSpriteAttackBox(other);
     if (a.valid)
     {
         if (self->state != 4 && self->state != 6)
@@ -1051,12 +1051,12 @@ void sub_801A2A8(struct obj_48a4 *self, struct part *other)
         }
         if (!gPlayer->busy)
         {
-            b = sub_8007CF8(gPlayer);
+            b = GetSpriteBodyBox(gPlayer);
             if (!BOX_VALID(b))
             {
                 struct box *pb = &b;
 
-                *pb = sub_8007C30(gPlayer);
+                *pb = GetSpriteAttackBox(gPlayer);
             }
             if (AabbOverlaps(&a, &b))
             {

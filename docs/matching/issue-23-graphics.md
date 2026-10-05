@@ -42,7 +42,7 @@ controller `+0x44`.
   pairs. `sub_8018948` has no caller anywhere (no `bl`, no Thumb pointer in
   the ROM) - **UNUSED**, matched anyway.
 - `sub_80188FC`: once the part's animation finishes, the inlined "mark
-  gone" sequence (`sub_80072D8`'s flags bit 0 + `gEntityFlags+0x108`
+  gone" sequence (`MarkEntityGone`'s flags bit 0 + `gEntityFlags+0x108`
   bitmap bit).
 - `sub_8018978`: mirror the part towards `self+0x30`, reset two counters
   to 26 and store the part's offset from `self+0x30/0x34`.
@@ -61,7 +61,7 @@ controller `+0x44`.
   across the level; the level config's `+0x10` index picks the height
   pattern and the per-config timings in
   `gStaticData_0816C358`/`35C`/`35F`/`362`.
-- `sub_8019324`: box-overlap hit test (`sub_8007CF8`/`sub_8007C30`/
+- `sub_8019324`: box-overlap hit test (`GetSpriteBodyBox`/`GetSpriteAttackBox`/
   `GetSpriteHitbox` boxes, `AabbOverlaps` overlap) of a part against the
   player (fires the player's `+0x68` method with code 9 unless it's busy)
   and against every entry of the `gCollidableList` list.

@@ -55,7 +55,7 @@ extern void RewindObjVram(struct vram_upload_cursor *arg0);
 extern void DrawSpriteWithOffset(void *arg0, s32 arg1, s32 arg2);
 extern void SetAabbPos(void *buf, s32 arg1, s32 arg2);
 extern void SetAabbSize(void *buf, s32 arg1, s32 arg2);
-extern s32 sub_8001214(void *arg0, void *arg1, void *buf, s32 arg3);
+extern s32 DrawWrappedTextInBox(void *arg0, void *arg1, void *buf, s32 arg3);
 extern s32 GetUiText(s32 arg0);
 extern struct vram_upload_cursor *gObjVramCursor;
 
@@ -71,7 +71,7 @@ static inline void set_icon_mgr_pos(struct bitmap_font *m, u32 x, u32 y)
     m->posY = y;
 }
 
-/* Positions two OAM icons flanking a number (drawn via sub_8001214 in
+/* Positions two OAM icons flanking a number (drawn via DrawWrappedTextInBox in
  * between) - centers each icon horizontally from its rendered pixel
  * width (the manager's `record->slots[0]` method, a gcc 2.x virtual call
  * through `_call_via_r2`), at fixed Y coordinates, then
@@ -99,7 +99,7 @@ void DrawPowerDialog(struct sub_8006700_actor *arg0)
     _call_via_r2((u8 *)gLargeFont + r->slots[2].offset, arg0->field_10, r->slots[2].ptr);
     SetAabbPos(buf, 0x10, 0x6a);
     SetAabbSize(buf, 0xd0, 0x35);
-    sub_8001214(arg0->field_14, gSmallFont, buf, 0);
+    DrawWrappedTextInBox(arg0->field_14, gSmallFont, buf, 0);
     n = GetUiText(0x2e);
     r = gSmallFont->record;
     w = _call_via_r2((u8 *)gSmallFont + r->slots[0].offset, n, r->slots[0].ptr);

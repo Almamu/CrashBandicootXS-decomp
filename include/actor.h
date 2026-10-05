@@ -5,7 +5,7 @@
  * width/height pair (both raw and pre-halved/negated for centering), and
  * a pointer to a per-category data table (offset/text record pairs read
  * at several different fixed offsets by src/graphics/graphics.c's
- * sub_8006FE4/sub_8007048/sub_8007114/sub_80070D4/ResetEntity/etc. and
+ * IsEntityNearCamera/CheckEntityPlayerContact/IsEntityInsideRect/UpdateEntity/ResetEntity/etc. and
  * by oam_count.c's DestroyPowerDialog - none of that table's own shape is
  * understood yet, so it stays a raw `void *` here). Exactly 0x1c bytes -
  * confirmed by CreateEntity's `OperatorNew(0x1c)` allocation. Several
@@ -16,10 +16,12 @@
 struct actor {
     s32 x;             // 0x00 - Q8 fixed-point screen position
     s32 y;              // 0x04 - Q8 fixed-point screen position
-    u16 field_08;         // 0x08 - an object/record id used as a 32-bit-word bitmap index (see sub_80072D8)
-    u8 field_0A;            // 0x0A - passed through to _call_via_r4 by sub_8007048
+    u16 field_08;         // 0x08 - an object/record id used as a 32-bit-word bitmap index (see MarkEntityGone)
+    u8 field_0A;            // 0x0A - the object kind sent to the player's hit method on contact (CheckEntityPlayerContact, Get/SetEntityKind)
     u8 unused_0B;             // 0x0B
-    u8 flags;                  // 0x0C - individual bits tested/set by several functions
+    u8 flags;                  // 0x0C - bit 0 gone (MarkEntityGone), 1 unknown, 2 player contact enabled,
+                               //        3 touched by the player, 4 always active (skips the camera tests);
+                               //        sprite objects add 5 unknown, 6 vulnerable, 7 collision enabled
     u8 unused_0D[3];             // 0x0D-0x0F
     s16 halfW;                     // 0x10 - -rawW/2, set by SetEntitySize/ResetEntity
     s16 halfH;                       // 0x12 - -rawH/2, set by SetEntitySize/ResetEntity

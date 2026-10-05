@@ -43,7 +43,7 @@
  * virtual-call macros take the method-table entry's address once; the
  * `SetAnimA`/`SetAnimB`/`SetChildSpeed` inline helpers reproduce the ROM
  * evaluating the stored constant before the store's own loads; the
- * "mark actor gone" bitmap sequence (sub_80072D8's, inlined twice) is
+ * "mark actor gone" bitmap sequence (MarkEntityGone's, inlined twice) is
  * MARK_GONE, actor_part_16048.c's MarkGone - its word index comes from a signed
  * division of the zero-extended id. */
 
@@ -80,9 +80,9 @@ struct ctrl_target
 {
     s32 x;            // 0x00
     s32 y;            // 0x04
-    u16 field_08;     // 0x08 - bitmap id (see sub_80072D8)
+    u16 field_08;     // 0x08 - bitmap id (see MarkEntityGone)
     u8 unk_0A[2];
-    u8 gone:1;        // 0x0C - bit 0: removed (see sub_80072D8)
+    u8 gone:1;        // 0x0C - bit 0: removed (see MarkEntityGone)
     u8 unk_0C_1:5;
     u8 flag6:1;
     u8 flag7:1;
@@ -195,7 +195,7 @@ extern void InitCtrl(void *self);
         _call_via_r3((u8 *)(obj) + _m->thisOffset, (a), (b), _m->fn);           \
     } else (void)0
 
-/* sub_80072D8's "set the id's bit in the gEntityFlags+0x108 bitmap"
+/* MarkEntityGone's "set the id's bit in the gEntityFlags+0x108 bitmap"
  * (see actor_part_16048.c: the do/while(0) loop notes are what reproduce
  * the id reload after the 0xFFFF test) */
 #define SET_ID_BIT(idExpr)                                                     \
@@ -211,7 +211,7 @@ extern void InitCtrl(void *self);
         *_slot |= 1 << (_id - _word * 32);                                     \
     } while (0)
 
-/* "Mark gone": sub_80072D8's sequence (graphics.c), inlined */
+/* "Mark gone": MarkEntityGone's sequence (graphics.c), inlined */
 #define MARK_GONE(t)                                                           \
     {                                                                          \
         (t)->gone = 1;                                                         \

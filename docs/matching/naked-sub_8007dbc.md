@@ -5,10 +5,10 @@
 `docs/matching.md`'s "Parked, not matched: `CheckSpritePickup`" entry: two
 `part->flags` bit tests gate an AABB collision test against the player
 global `gPlayer` (via the already-matched `GetSpriteHitbox`/
-`AabbOverlaps`), a hit plays a sound (the `sub_8007048`-style
+`AabbOverlaps`), a hit plays a sound (the `CheckEntityPlayerContact`-style
 `table+0x68` offset/`table+4` dead-read idiom keyed off
 `part->field_0A`), marks itself in the `gEntityFlags` bitmap at
-`+0x108` (`sub_80072D8`'s convention), and finally
+`+0x108` (`MarkEntityGone`'s convention), and finally
 `part->field_0A - 0x1b` selects one of six "kind" values passed to
 `SpawnEffectPart(gEntitySpawner, 0x2b, kind, part->x>>8, part->y>>8, 0)`
 to spawn an object at `part`'s position.

@@ -14,7 +14,7 @@
  * ("owner"), then fires `_call_via_r3(self + offset, owner, tableEntry,
  * fn)`.
  *
- * `sub_800C8AC`/`sub_800C8BC` are thin wrappers around the two
+ * `SetEnemyMotionY`/`SetEnemyMotionX` are thin wrappers around the two
  * already-matched `StartCtrlTargetMotionYFromSet`/`StartCtrlTargetMotionXFromSet` accessors
  * (src/graphics/actor_part17.c) - same "look up an 8-byte record from
  * self+4's array, translate its type word through the shared
@@ -33,7 +33,7 @@
  * guess, based on a different, unrelated caller elsewhere), but a
  * per-instance array of pointers, direct-indexed by `mode`, that plays
  * the same "table entry" role `gCtrlMotionRecords[type]` plays for
- * `sub_800C8AC`/`sub_800C8BC` - i.e. a per-object override table
+ * `SetEnemyMotionY`/`SetEnemyMotionX` - i.e. a per-object override table
  * parallel to the shared global one. */
 
 extern void StartCtrlTargetMotionYFromSet(void *selfArg, void *arg1, s32 index);
@@ -42,7 +42,7 @@ extern s32 _call_via_r3(void *arg0, void *arg1, void *arg2, void *arg3);
 
 /* Caches `mode` into `self->0x7c`, then delegates to `StartCtrlTargetMotionYFromSet`
  * (the anchor's part+0x30/+0x34 pair, record word 1 as type). */
-void sub_800C8AC(void *selfArg, s32 mode)
+void SetEnemyMotionY(void *selfArg, s32 mode)
 {
     u8 *self = selfArg;
 
@@ -50,10 +50,10 @@ void sub_800C8AC(void *selfArg, s32 mode)
     StartCtrlTargetMotionYFromSet(self, *(void **)(self + 0x70), mode);
 }
 
-/* Same shape as `sub_800C8AC`, caching into `self->0x78` and
+/* Same shape as `SetEnemyMotionY`, caching into `self->0x78` and
  * delegating to `StartCtrlTargetMotionXFromSet` instead (the anchor's part+0x28/+0x2c
  * pair, record word 0 as type). */
-void sub_800C8BC(void *selfArg, s32 mode)
+void SetEnemyMotionX(void *selfArg, s32 mode)
 {
     u8 *self = selfArg;
 

@@ -6,7 +6,7 @@
  * subsystem documented in docs/rom_map.md ("Confirmed: a shared
  * physics/collision subsystem, entered from multiple different entity
  * types"). This first function of that subsystem sits right after
- * already-matched `game_loop` code - `sub_0800D18C` and `sub_800E08C`
+ * already-matched `game_loop` code - `QueueCratePlayerCollision` and `ApplyCrateCollision`
  * immediately after it are two of the subsystem's largest, most
  * tangled functions and are left untouched for now; see
  * docs/matching/issue-12-physics-collision.md. */
@@ -47,7 +47,7 @@ extern void BreakCrateInStack(void *self, u8 arg1, u8 arg2, u8 arg3);
  * hides the value from cse, so each is its own single-use pseudo that
  * combine folds into the `add` right before the call. The first build's
  * x/y are computed first so that the `add r0, sp, #16` comes after them.
- * The same fix closed `sub_800CD00` (actor_part109.c); see
+ * The same fix closed `PlayerAnimWouldTouchCrate` (actor_part109.c); see
  * docs/matching/sp-box-retry.md. */
 
 /* `a` through a copy that an empty asm claims to modify (emits nothing):
@@ -55,7 +55,7 @@ extern void BreakCrateInStack(void *self, u8 arg1, u8 arg2, u8 arg3);
  * is its own pseudo instead of one held across calls. */
 #define BOX_ADDR(a) ({ struct part_aabb *_p = (a); asm("" : "+r"(_p)); _p; })
 
-void sub_800D040(struct box_part *self)
+void BreakCrateTouchedByPlayer(struct box_part *self)
 {
     struct {
         struct part_aabb a;

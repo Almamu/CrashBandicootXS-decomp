@@ -3,8 +3,8 @@
 /* GitHub issue #12: 0x0800D040-0x0800FC70, the physics/collision
  * subsystem (see game_loop6.c's header comment and
  * docs/matching/issue-12-physics-collision.md). These are the two
- * functions left untouched between game_loop6.c's `sub_800D040` and
- * game_loop7.c's `sub_800E494` - the subsystem's largest, most tangled
+ * functions left untouched between game_loop6.c's `BreakCrateTouchedByPlayer` and
+ * game_loop7.c's `ClearCrateStackTouched` - the subsystem's largest, most tangled
  * dispatchers. Real bytes formerly in asm/code_3_2_17_d18c.s (now
  * deleted, fully consumed). */
 
@@ -14,7 +14,7 @@
  * "Phase 1" appendix for the correction). Builds `self`'s and the
  * player's (`gPlayer`) AABBs via the shared
  * `self+0x20`-table/`self+0x2d`-tag/28-byte-stride hitbox-record
- * convention (`sub_800D040`'s own "AABB1" shape), then:
+ * convention (`BreakCrateTouchedByPlayer`'s own "AABB1" shape), then:
  *
  * - Looks up a per-state jump-table id from `self`'s hitbox tag (a
  *   7-case table selecting either the just-built self AABB or a
@@ -154,8 +154,8 @@ extern struct crate *GetBottomCrate(struct crate *obj);
 extern struct crate *GetTopCrate(struct crate *obj);
 extern u8 sub_800B324(void *self);
 extern void SetMaskLevel(void *self, s32 arg);
-extern void sub_800E494(struct crate *self);
-extern void sub_800E4E4(struct crate *self, struct aabb *box);
+extern void ClearCrateStackTouched(struct crate *self);
+extern void MarkCrateStackTouched(struct crate *self, struct aabb *box);
 extern void ActivateNitroSwitchCrate(struct crate *self);
 extern void ActivateIronSwitchCrate(struct crate *self);
 extern void LightTntCrate(struct crate *self);
@@ -169,7 +169,7 @@ extern void AddCollisionCandidate(void *queue, struct crate *obj, s32 kind, s32 
 #define D18C_CALL68(a, b, c) \
     PhysCall3(D18C_P, (struct method *)&D18C_P->vtable->m68, (a), (b), (c))
 
-/* sub_8008518 inlined: the player's current hitbox quad. */
+/* GetSpriteFrameThirdBox inlined: the player's current hitbox quad. */
 #define D18C_HITBOX(dst, part)                                                 \
     if (1)                                                                     \
     {                                                                          \
@@ -279,7 +279,7 @@ static inline s32 D18C_TimerOver(void)
  * is its own pseudo instead of one held across calls. */
 #define BOX_ADDR(a) ({ struct aabb *_p = (a); asm("" : "+r"(_p)); _p; })
 
-void sub_0800D18C(struct crate *self, s32 idx)
+void QueueCratePlayerCollision(struct crate *self, s32 idx)
 {
     struct
     {
@@ -536,7 +536,7 @@ tail:
         *pc = f.a;
     }
     if (kind != 6)
-        sub_800E4E4(self, &f.a);
+        MarkCrateStackTouched(self, &f.a);
     {
         u8 *rec = (u8 *)&D18C_P->anim->records[D18C_P->tag];
         s32 offX;
@@ -789,13 +789,13 @@ tail:
                     {
                         ax += q->xOff + q->w;
                         px = f.b.x + f.b.w;
-                        r = sub_800FDC8(ax, ay, px, py, f.a.x);
+                        r = FindLineCrossing(ax, ay, px, py, f.a.x);
                     }
                     else
                     {
                         ax += q->xOff;
                         px = f.b.x;
-                        r = sub_800FDC8(ax, ay, px, py, f.a.x + f.a.w);
+                        r = FindLineCrossing(ax, ay, px, py, f.a.x + f.a.w);
                     }
                     if ((r < 0 && f21 != 0 && dx > 4) || (r > 0 && r <= f.a.y))
                         edge = 8;
@@ -827,13 +827,13 @@ tail:
                     {
                         ax += q->xOff + q->w;
                         px = f.b.x + f.b.w;
-                        r = sub_800FDC8(ax, ay, px, py, f.a.x);
+                        r = FindLineCrossing(ax, ay, px, py, f.a.x);
                     }
                     else
                     {
                         ax += q->xOff;
                         px = f.b.x;
-                        r = sub_800FDC8(ax, ay, px, py, f.a.x + f.a.w);
+                        r = FindLineCrossing(ax, ay, px, py, f.a.x + f.a.w);
                     }
                     if (D18C_P->ctrlMode == 1)
                         r += 2;
@@ -913,7 +913,7 @@ tail:
         if (!AabbOverlapsInclusiveX(&f.c, &f.b))
         {
             code = 0;
-            sub_800E494(self);
+            ClearCrateStackTouched(self);
             hit = 0;
         }
         else
@@ -972,21 +972,21 @@ tail:
 }
 
 /* A further jump-table dispatcher in the same physics/collision
- * subsystem (1032 B), called only from `sub_0800D18C` (the 9-case
+ * subsystem (1032 B), called only from `QueueCratePlayerCollision` (the 9-case
  * dispatch's cases 1/2/4). Takes `self` plus a dispatch id (`arg1`),
  * an edge/side value (`arg2`), a third register arg (`arg3`), and 3
  * more stack-passed byte args (per docs/rom_map.md's existing read).
  * Reads/writes several `gPlayer+0x24`/`+0x88`/`+0x92`/`+0x94`
  * fields not otherwise touched outside this subsystem, and its own
  * 6-case jump table (case ids 0-5) dispatches to the exact same
- * handler family `sub_0800D18C` itself uses -
+ * handler family `QueueCratePlayerCollision` itself uses -
  * `ActivateNitroSwitchCrate`/`ActivateIronSwitchCrate`/`LightTntCrate`/`BounceWumpaCrate`/
  * `BreakCrateInStack`/`ExplodeCrate`/`OpenCheckpointCrate` - confirming these really
  * are the subsystem's shared per-edge collision-response leaves, not
  * distinct per-caller logic.
  *
  * Built with old_agbcc (this file is on OLD_AGBCC_OBJS; the NAKED
- * `sub_0800D18C` above is compiler-independent). Closed in the last-five
+ * `QueueCratePlayerCollision` above is compiler-independent). Closed in the last-five
  * NAKED retry (docs/matching/last5-naked-retry.md): the first flag byte
  * is a register union of a u32 and a one-byte struct, stored whole
  * (`str`) in the prologue, and passed as that one-byte struct to
@@ -1023,7 +1023,7 @@ struct flag8
  * struct, passed in QImode. */
 extern void sub_800E7A8_flag(struct crate *self, u32 a, struct flag8 b, u32 c) asm("BreakCrateInStack");
 
-void sub_800E08C(struct crate *self, s32 kind, s32 code, s32 edge, s32 depth,
+void ApplyCrateCollision(struct crate *self, s32 kind, s32 code, s32 edge, s32 depth,
                  struct e08c_pos pos, s32 hit, struct flag8 p20, struct flag8 p21,
                  struct flag8 pforced)
 {

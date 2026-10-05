@@ -5,13 +5,13 @@
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern void *gLevelLayers;
 
-/* Same shape as sub_8006FE4 (graphics.c) - `part+0x25 == 1` is a fast
+/* Same shape as IsEntityNearCamera (graphics.c) - `part+0x25 == 1` is a fast
  * "always visible" override; otherwise `part+0xd` bit 2 gates an
  * on-screen check via `_call_via_r2`, using a 4-word "region" of
  * `{gLevelLayers's sub-object's two Q8 fields, 240<<8, 160<<8}`
  * (the GBA's screen width/height) and the same
  * `table+N`/`table+N+4` offset/pointer slot pair convention
- * sub_8006FE4 reads at `table+0x40`, here at `table+0x30` (the
+ * IsEntityNearCamera reads at `table+0x40`, here at `table+0x30` (the
  * part's method-table entry, see PART_METHOD). */
 s32 IsSpriteObjOnScreen(struct box_part *part)
 {

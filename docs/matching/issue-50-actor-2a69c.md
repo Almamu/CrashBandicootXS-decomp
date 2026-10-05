@@ -157,7 +157,7 @@ only the tail continuation `..._ac28.s` remains.
   register, branch to it" step *because* `r0` is still live; declaring
   the return value real instead of `void` gets gcc to do the same, the
   same return-type-shapes-epilogue-register-choice gotcha already
-  documented for `GetCompletionPercent`/`sub_8001214` in docs/matching.md. No
+  documented for `GetCompletionPercent`/`DrawWrappedTextInBox` in docs/matching.md. No
   caller of this function has been matched yet to confirm whether the
   return value is actually used.
 - **`UpdateActorPaletteCycle`** (`src/graphics/actor_part53.c`) - the palette-cycle
@@ -204,7 +204,7 @@ subsequent function's address by 4 bytes, caught only by the full-link
 `make compare` and the map-file address-shift diagnostic
 `docs/workflow.md` describes. This is the same failure mode already
 documented for `CreateHovercraftCannon` (issue #62) and the `CullPartList`/
-`sub_8008D30` pair, now confirmed a third and fourth time: which other
+`CollidePartsOfClass` pair, now confirmed a third and fourth time: which other
 functions share a translation unit can change this compiler's own
 register allocation for a function whose *C source* never changed,
 so isolated-compile confidence never substitutes for the full-link

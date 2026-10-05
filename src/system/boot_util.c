@@ -45,7 +45,7 @@ void *MemCopy32(void *dst, const void *src, u32 byteCount)
     return dst;
 }
 
-void nullsub_9(void)
+void UpdateCtrl(void)
 {
 }
 asm(".align 2, 0");

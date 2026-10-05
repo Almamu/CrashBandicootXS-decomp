@@ -92,59 +92,59 @@ u8 sub_800B51C(void *selfArg)
  * (the same counter documented in `docs/rom_map.md`); this tests
  * whether it's still ahead of the counter (unsigned comparison - a
  * signed one here would be a real, previously-caught bug). */
-u8 sub_800B524(void *selfArg)
+u8 IsPlayerInvulnerable(void *selfArg)
 {
     struct gobj *self = selfArg;
     return self->deadline > gRoomFrameCount;
 }
 
-void sub_800B53C(void *selfArg)
+void ClearPlayerInvulnerability(void *selfArg)
 {
     struct gobj *self = selfArg;
     self->deadline = 0;
 }
 
 /* Sets `self+0x8c` to `gRoomFrameCount + arg1` - arming the
- * "ahead of the counter" check `sub_800B524` performs. */
-void sub_800B544(void *selfArg, s32 arg1)
+ * "ahead of the counter" check `IsPlayerInvulnerable` performs. */
+void SetPlayerInvulnerable(void *selfArg, s32 arg1)
 {
     struct gobj *self = selfArg;
     self->deadline = gRoomFrameCount + arg1;
 }
 
 /* `self+0x88` byte set/get accessors. */
-void sub_800B554(void *selfArg, u8 arg1)
+void SetPlayerControlMode(void *selfArg, u8 arg1)
 {
     struct gobj *self = selfArg;
     self->ctrlMode = arg1;
 }
 
-u8 sub_800B55C(void *selfArg)
+u8 GetPlayerControlMode(void *selfArg)
 {
     struct gobj *self = selfArg;
     return self->ctrlMode;
 }
 
 /* `self+0xac` pointer/word get/set accessors. */
-s32 sub_800B564(void *selfArg)
+s32 GetPlayerStandingOn(void *selfArg)
 {
     return (s32)((struct gobj *)selfArg)->carried;
 }
 
-void sub_800B56C(void *selfArg, s32 arg1)
+void SetPlayerStandingOn(void *selfArg, s32 arg1)
 {
     struct gobj *self = selfArg;
     self->carried = (struct gobj *)arg1;
 }
 
 /* `self+0x80` byte set/get accessors. */
-void sub_800B574(void *selfArg, u8 arg1)
+void SetPlayerBusy(void *selfArg, u8 arg1)
 {
     struct gobj *self = selfArg;
     self->busy = arg1;
 }
 
-u8 sub_800B57C(void *selfArg)
+u8 IsPlayerBusy(void *selfArg)
 {
     struct gobj *self = selfArg;
     return self->busy;
@@ -228,25 +228,25 @@ u8 sub_800B5E8(void *selfArg)
 /* `self+0x103`/`self+0x102`/`self+0x101`/`self+0x100` byte get/set
  * accessor pairs (`pushRight`/`pushLeft`: the standing player is moved
  * 1px per frame that way; +0x101/+0x100 not understood yet). */
-u8 sub_800B5F0(void *selfArg)
+u8 GetPlayerPushRight(void *selfArg)
 {
     struct gobj *self = selfArg;
     return self->pushRight;
 }
 
-void sub_800B5FC(void *selfArg, u8 arg1)
+void SetPlayerPushRight(void *selfArg, u8 arg1)
 {
     struct gobj *self = selfArg;
     self->pushRight = arg1;
 }
 
-u8 sub_800B608(void *selfArg)
+u8 GetPlayerPushLeft(void *selfArg)
 {
     struct gobj *self = selfArg;
     return self->pushLeft;
 }
 
-void sub_800B614(void *selfArg, u8 arg1)
+void SetPlayerPushLeft(void *selfArg, u8 arg1)
 {
     struct gobj *self = selfArg;
     self->pushLeft = arg1;

@@ -18,7 +18,7 @@
  *    wrapper entry back onto `manager->freeListHead`.
  *  - Phase 2 always runs unless phase 1 found a match *and* neither of
  *    two escape conditions hold (`item->field_8 == 0xFFFF`, or
- *    `item`'s flags byte bit 4 - the "large object" flag `sub_8009150`/
+ *    `item`'s flags byte bit 4 - the "large object" flag `LinkCrateToActiveBucket`/
  *    `LinkCrateInGrid` also test - is clear): it then walks every bucket
  *    from 255 down to 0 (the special "large object" bucket first,
  *    matching where `LinkCrateInGrid` links a second node for large objects),

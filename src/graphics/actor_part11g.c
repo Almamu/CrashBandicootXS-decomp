@@ -61,7 +61,7 @@ struct pool_manager {
  * Verified byte-identical via an isolated `agbcc` compile assembled
  * with `arm-none-eabi-as` and compared directly against the ROM's raw
  * bytes, then confirmed again by a full clean `make compare`. */
-void sub_8009150(struct pool_manager *manager, void *objArg)
+void LinkCrateToActiveBucket(struct pool_manager *manager, void *objArg)
 {
     register void *obj asm("r3") = objArg;
     s32 bucket;

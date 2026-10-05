@@ -124,7 +124,7 @@ void PickUpWumpa(struct orbit_part *self, u8 randomize)
  *    0x100), calls CollectWumpa(gLevelState) (a scoring/counter
  *    candidate per docs/rom_map.md), sets self->0xc bit 0, and - unless
  *    self->8 == 0xffff - sets self->8's bit in the gEntityFlags+
- *    0x108 collision bitmap (the same inline idiom sub_80072D8/
+ *    0x108 collision bitmap (the same inline idiom MarkEntityGone/
  *    DropExtraLife use on a struct actor).
  *  - mode 2: same integrate step, then wraps self->0x3c similarly but
  *    with different thresholds/direction, and on wrap-triggered falls

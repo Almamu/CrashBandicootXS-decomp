@@ -1,12 +1,12 @@
 #include "core.h"
 
-/* GitHub issue #9/#10: `UpdateEnemyAttackCycle` and `sub_800C5D4`, the last two of
+/* GitHub issue #9/#10: `UpdateEnemyAttackCycle` and `UpdateEnemyTriggerBox`, the last two of
  * the four `self+0x68`-dispatching siblings flagged in
  * docs/matching/issue-9-10-0x0800b8dc-graphics.md - `UpdateEnemyAttackCycle` is
  * the specific function that doc's own Phase 1 pass already flagged as
  * "the exact function docs/rom_map.md ties to sharing UpdateEnemyCtrl's own
  * self+0x68 field" (called from UpdateEnemyCtrl's states 4, 13, 14, 16);
- * `sub_800C5D4` is called from state 3 (and 13's fallthrough).
+ * `UpdateEnemyTriggerBox` is called from state 3 (and 13's fallthrough).
  *
  * `UpdateEnemyAttackCycle`: a 6-case dispatcher (modes 0, 3, 4, 5; anything else,
  * including 1/2, is a no-op). Modes 0 and 4 share an "impact
@@ -19,7 +19,7 @@
  * for mode 4) against a constant `8` to pick between two
  * `SetEnemyAnimMode` trigger constants. Mode 0 additionally clears bit 3 of
  * `owner->0xd` when `self->0x6c` is `0xf`/`0x12`/`0x1a` and re-triggers
- * `sub_800C8BC(self,0)`, or when `self->0x6c` is `0x12`/`0x1a`. Mode 3
+ * `SetEnemyMotionX(self,0)`, or when `self->0x6c` is `0x12`/`0x1a`. Mode 3
  * is the largest case: if `owner->0x38` is set, triggers
  * `SetEnemyAnimMode(self,4)`, then on `self->0x6c` `0x12`/`0x1a` sets bit 3
  * of `owner->0xd` and plays SFX `0x26`, or on `self->0x6c == 0xf` plays
@@ -30,14 +30,14 @@
  * documents), tags the new part's `+0xc`/`+0xa` fields, and plays SFX
  * `0x1e`. Mode 5 mirrors mode 3's `owner->0x38` gate but triggers
  * `SetEnemyAnimMode(self,0)` and, only for `self->0x6c==0xf`, additionally
- * `sub_800C8BC(self,1)`; a shared tail (also reached directly when
+ * `SetEnemyMotionX(self,1)`; a shared tail (also reached directly when
  * `owner->0x38` was clear) then plays SFX `0x23` when `self->0x6c==0xf`
  * and `owner->0x30==8` and `owner->0x34==0`.
  *
- * `sub_800C5D4`: a 3-case dispatcher (modes 0, 2; anything else falls
+ * `UpdateEnemyTriggerBox`: a 3-case dispatcher (modes 0, 2; anything else falls
  * to a shared tail). Unconditional prelude: if `self->0x6c==0xb` and
  * `owner->4 < self->0x64`, latches `owner->4 = self->0x64` and fires
- * `sub_800C8AC(self,0)`. Mode 0 builds an AABB at `owner`'s position
+ * `SetEnemyMotionY(self,0)`. Mode 0 builds an AABB at `owner`'s position
  * offset by `self->0x20`/`self->0x24` sized by `self->0x28-0x20`/
  * `self->0x2c-0x24` (via `SetAabbPos`/`SetAabbSize`, the same
  * `struct aabb` shape `actor_part4.c`/`actor_part15.c` already use),
@@ -51,14 +51,14 @@
  *
  * `UpdateEnemyAttackCycle` is real C under old_agbcc (issue #10 NAKED retry,
  * docs/matching/issue-10-naked-retry.md). Its spawn call is an inline
- * copy of `sub_800C9C8` (actor_part116.c): passing the arguments
+ * copy of `LaunchHarmfulEffectPart` (actor_part116.c): passing the arguments
  * through inline parameters is what materializes them in the ROM's
  * order, and the `+0xC` flag writes are bitfield stores (QImode `-0x41`/
  * `-9` masks). `__modsi3` is a remainder (`a % b`).
  *
- * `sub_800C5D4` is real C too (issue #9-#11 NAKED retry): holding
+ * `UpdateEnemyTriggerBox` is real C too (issue #9-#11 NAKED retry): holding
  * `self->target` in a block-local pinned to r1 reproduces the prelude's
- * load order and registers. `sub_800C5D4`'s trailing
+ * load order and registers. `UpdateEnemyTriggerBox`'s trailing
  * byte count needs the trailing `asm(".align 2, 0")` (the ROM
  * zero-pads its last 2 bytes to the next 4-byte boundary). */
 #include "part_ctrl.h"
@@ -74,7 +74,7 @@ extern void *gAudioContext;
 extern void *gEntitySpawner;
 extern struct ctrl_target *gPlayer;
 
-/* `sub_800C9C8` (actor_part116.c), inlined. */
+/* `LaunchHarmfulEffectPart` (actor_part116.c), inlined. */
 static inline struct ctrl_target *SpawnPart(s32 a, s32 b, s32 c, s32 d, s32 e, struct ctrl_target *f)
 {
     struct ctrl_target *obj = LaunchEffectPart(gEntitySpawner, a, b, c, d, e, f);
@@ -95,7 +95,7 @@ void UpdateEnemyAttackCycle(struct part_ctrl *self)
             else
                 SetEnemyAnimMode(self, 4);
             if (self->kind == 0xf) {
-                sub_800C8BC(self, 0);
+                SetEnemyMotionX(self, 0);
             } else if (self->kind == 0x12 || self->kind == 0x1a) {
                 self->target->solid = 0;
             }
@@ -131,7 +131,7 @@ void UpdateEnemyAttackCycle(struct part_ctrl *self)
             SetEnemyAnimMode(self, 0);
             if (self->kind != 0xf)
                 break;
-            sub_800C8BC(self, 1);
+            SetEnemyMotionX(self, 1);
         }
         if (self->kind == 0xf && self->target->tick == 8 && self->target->timer == 0)
             PlaySfx(gAudioContext, 0x23, 0x100);
@@ -139,7 +139,7 @@ void UpdateEnemyAttackCycle(struct part_ctrl *self)
     }
 }
 
-void sub_800C5D4(struct part_ctrl *self)
+void UpdateEnemyTriggerBox(struct part_ctrl *self)
 {
     s32 mode;
     struct part_aabb box;
@@ -150,7 +150,7 @@ void sub_800C5D4(struct part_ctrl *self)
         register struct ctrl_target *t asm("r1") = self->target;
         if (t->y < self->baseY) {
             t->y = self->baseY;
-            sub_800C8AC(self, 0);
+            SetEnemyMotionY(self, 0);
         }
     }
     switch (mode = self->mode) {

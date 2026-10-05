@@ -344,7 +344,7 @@ static inline void SetPlayerRecord(s32 a, s32 b, s32 c)
         *_slot |= 1 << (_id - _word * 32);                                     \
     } while (0)
 
-/* "Mark gone": sub_80072D8's sequence (graphics.c), inlined - set flags
+/* "Mark gone": MarkEntityGone's sequence (graphics.c), inlined - set flags
  * bit 0, then unless the id is 0xFFFF set its bit in the bitmap. */
 static inline void MarkGone(struct pctrl_target *t)
 {

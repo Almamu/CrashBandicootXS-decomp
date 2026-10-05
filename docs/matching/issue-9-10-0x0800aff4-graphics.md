@@ -85,7 +85,7 @@ chain):
    - Clamps `gUnknown_03000818` against the **child's own** hitbox/
      variant record's `+0x16` byte (`child[0x20] -> *table + child[0x2d]*0x1c`,
      read `[+0x16]` - the same table-dereference chain
-     `sub_800AAEC`/`sub_800CD00` and `actor_part79.c`'s `KillPlayer`
+     `PlayerHasRoomForAnim`/`PlayerAnimWouldTouchCrate` and `actor_part79.c`'s `KillPlayer`
      already established, just with a different single-byte field read
      out of the 28-byte record than either of those): `val = min(roll,
      limit) if roll < limit else limit - 1`, stored into the child's
@@ -99,7 +99,7 @@ chain):
      parity of `gRoomFrameCount` (`&4`) - a flicker - then fires the
      child's own `+0x18`-table `+0x20`/`+0x24` trampoline via
      `_call_via_r1` (a "refresh/notify" call, same convention
-     `sub_800AAEC` uses at its own `+0x18`-table `+0x48` slot - a
+     `PlayerHasRoomForAnim` uses at its own `+0x18`-table `+0x48` slot - a
      *different* vtable slot here, `+0x20`/`+0x24`).
 2. **Unconditionally** (any mode, using `self`'s own `self+0x8c`
    deadline): draws `self` itself via
@@ -186,7 +186,7 @@ index/base-pointer bookkeeping and the two trig-table lookups (`sb`/
 mode value, `ip` holds the saved `&self[0xb0]` child-pointer address) -
 the same class of shape this project has already proven resistant to
 gcc 2.9 C reconstruction on multiple sibling functions this session
-(`sub_800CD00`, `ProbeGroundSpriteTerrain`/`sub_800A420`,
+(`PlayerAnimWouldTouchCrate`, `ProbeGroundSpriteTerrain`/`ProbeGroundSpriteFloor`,
 `sub_8026AE8`/`sub_8026A18`). Per this session's own scoping ("don't
 over-invest fighting this if an early isolated-compile attempt shows a
 structurally different register allocation"), no C reconstruction
@@ -225,7 +225,7 @@ conventions:
   three, for `gLevelState`) *separate* pool entries at different
   addresses rather than one shared literal, exactly matching the ROM's
   own conservative-reload pattern (the same "reload from the literal
-  pool fresh every use" convention `sub_800AAEC`'s own doc comment
+  pool fresh every use" convention `PlayerHasRoomForAnim`'s own doc comment
   already names for `gCrateList`).
 
 Verified byte-exact via the isolated `cpp`/`agbcc`/`as` +

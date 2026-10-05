@@ -11,8 +11,8 @@ one's own address range at `base_object: None`, and
 These four were the last raw stretches inside the spatial-hash-grid/
 object-pool AI-collision cluster that `docs/rom_map.md`'s "Two big
 unnamed systems" section flagged, sitting interleaved with the
-already-parked `InitCrateList`/`sub_8009150`/`DrawCrateList`/`sub_8009528`/
-`sub_80096C0`/`ResetCrateList`/`sub_80099F0` (all `NON_MATCHING` C
+already-parked `InitCrateList`/`LinkCrateToActiveBucket`/`DrawCrateList`/`CollideCrateGrid`/
+`CollideCrateGridPartWithPlayer`/`ResetCrateList`/`CollideCrateGridPartWithObject` (all `NON_MATCHING` C
 reconstructions in `actor_part11.c`/`actor_part12.c`) and the already-
 matched functions around them. GitHub issue #9 tracked
 `UnlinkCrateFromGrid`/`UpdateCrateList`/`CollidePlayerWithCrates` (part of the `0x08009008`-
@@ -39,10 +39,10 @@ issue's still-open scope.
 - **`UpdateCrateList`** - a per-frame grid-maintenance pass, scoped to the
   3-bucket window `[baseIdx, baseIdx+2]` around `baseIdx`
   (`max(gLevelLayers`'s sub-object's own `x >> 8`, `0)`, the same
-  index `DrawCrateList`/`sub_8009528` compute), plus bucket 255 in a
+  index `DrawCrateList`/`CollideCrateGrid` compute), plus bucket 255 in a
   second pass - not a full 0-255 sweep like those two siblings. For
   each windowed object: if it's a "large object" without a bucket-255
-  link yet, lazily creates one (an inline copy of `sub_8009150`'s own
+  link yet, lazily creates one (an inline copy of `LinkCrateToActiveBucket`'s own
   body); else if its "pending removal" flag is set, removes it from
   the pool (search, `UnlinkCrateFromGrid` to unlink the grid node(s),
   `CpuSet`-compact the array) and fires the same `table+0x50/0x54`
@@ -54,9 +54,9 @@ issue's still-open scope.
   pass doesn't double-process it.
 - **`CollidePlayerWithCrates`** - another 3-bucket-window pass, reading the player
   (`gPlayer`) instead of writing to the grid: if the
-  player's `+0x88` byte is `3`, calls `sub_800D040(part)` for every
+  player's `+0x88` byte is `3`, calls `BreakCrateTouchedByPlayer(part)` for every
   windowed object; otherwise computes a dispatch value from the
-  player's state and calls `sub_80109A4(part, dispatchValue,
+  player's state and calls `CollideCrateWithPlayer(part, dispatchValue,
   player->x, player->y)` for each.
 - **`sub_8009BE0`** - a physics/collision step-probe: copies `self`'s
   position, runs it through `sub_8008278` (still unexamined), converts
@@ -83,7 +83,7 @@ catalogued for this exact cluster's siblings:
   terminates the *outer* loop) instead of preserving it across the
   `removedCount > 1` test the way any C-level loop naturally would -
   the same "gcc keeps a value the ROM discards, or vice versa" pattern
-  as `InitCrateList`/`sub_8009150`/`DrawCrateList`.
+  as `InitCrateList`/`LinkCrateToActiveBucket`/`DrawCrateList`.
 - `UpdateCrateList` - juggles more live cross-branch state across three
   high registers (`r8`/`sb`/`sl`, each reused for a different purpose
   in each of the three inner-loop branches) than any attempted C
@@ -113,20 +113,20 @@ own positions, including trailing padding).
 
 `UnlinkCrateFromGrid` sat inside `asm/code_3_2_13.s`, interleaved between the
 already-`.if NON_MATCHING == 0`-guarded raw bodies of
-`InitCrateList`/`sub_8009150`/`DrawCrateList`/`sub_8009528`/`sub_80096C0`/
-`ResetCrateList`/`sub_80099F0` (each of those seven stays exactly as
+`InitCrateList`/`LinkCrateToActiveBucket`/`DrawCrateList`/`CollideCrateGrid`/`CollideCrateGridPartWithPlayer`/
+`ResetCrateList`/`CollideCrateGridPartWithObject` (each of those seven stays exactly as
 parked as before - untouched by this batch). Since a `NAKED` function
 needs to be unconditionally compiled (not itself guarded), extracting
 these three raw bodies required splitting that one file into four:
 
 - `asm/code_3_2_13.s` (trimmed to just `InitCrateList`'s guard)
 - new `src/graphics/actor_part11b.c` (`UnlinkCrateFromGrid`)
-- `asm/code_3_2_13_9150.s` (`sub_8009150`'s guard)
+- `asm/code_3_2_13_9150.s` (`LinkCrateToActiveBucket`'s guard)
 - new `src/graphics/actor_part11c.c` (`UpdateCrateList`)
-- `asm/code_3_2_13_944c.s` (`DrawCrateList`/`sub_8009528`/`sub_80096C0`'s
+- `asm/code_3_2_13_944c.s` (`DrawCrateList`/`CollideCrateGrid`/`CollideCrateGridPartWithPlayer`'s
   guards)
 - new `src/graphics/actor_part11d.c` (`CollidePlayerWithCrates`)
-- `asm/code_3_2_13_9914.s` (`ResetCrateList`/`sub_80099F0`'s guards)
+- `asm/code_3_2_13_9914.s` (`ResetCrateList`/`CollideCrateGridPartWithObject`'s guards)
 
 `ldscript.txt` places each new object exactly where its raw block used
 to sit in link order. `asm/code_3_2_14.s` held only `sub_8009BE0` and

@@ -39,7 +39,7 @@ progress-tracking classification differs from an ordinary match.
   [naked-sub_8000cbc-matched.md](./naked-sub_8000cbc-matched.md); this
   entry is left as-is since it's a frozen historical record of why the
   function was originally parked (see `docs/matching.md`).
-- **`sub_8000EE4`** (`src/graphics/text_layout.c`) - a word-wrap text
+- **`DrawWrappedText`** (`src/graphics/text_layout.c`) - a word-wrap text
   renderer. The C reconstruction matched instruction-for-instruction
   except ~8 bytes from two non-semantic codegen details: agbcc always
   spills stack-homed incoming arguments before any register-pinned move

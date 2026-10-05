@@ -19,16 +19,16 @@ and [graphics_loading.md](./graphics_loading.md).
   `BindPaletteSlot`, `ClaimPaletteSlot`, `UnlockPalette`, `LockPalette`, `UploadPaletteSlot`,
   `UploadPaletteCache`, `GetPaletteSlot`, `FreePaletteSlot`, `FreeUnlockedPaletteSlots`, `SetPaletteCacheSource`,
   `ClearPaletteCache`, `DestroyPaletteCache`, `InitPaletteCache`, `DestroySpriteBankSet`, `nullsub_1`,
-  `sub_8006FE4`, `sub_8007048`, `DrawEntity`, `sub_80070D4`, `GetEntityBounds`,
-  `SetEntitySize`, `sub_800710C`, `sub_8007110`, `sub_8007114`,
+  `IsEntityNearCamera`, `CheckEntityPlayerContact`, `DrawEntity`, `UpdateEntity`, `GetEntityBounds`,
+  `SetEntitySize`, `EntityOverlapsRect`, `IsEntityOnScreen`, `IsEntityInsideRect`,
   `WorldToScreen`, `WorldPosToScreen`, `nullsub_12`, `CreateEntity`,
-  `sub_800722C`, `ResetEntity`, `InitEntity`, `sub_8007278`,
-  `sub_8007284`, `sub_8007290`, `sub_800729C`, `sub_80072A8`,
-  `sub_80072B4`, `sub_80072C0`, `sub_80072CC`, `sub_80072D8`,
-  `sub_800731C`, `sub_8007328`, `sub_8007334`, `sub_8007340`,
-  `sub_800734C`, `sub_8007358`, `GetEntityPixelY`, `GetEntityPixelX`,
+  `GetEntityClassId`, `ResetEntity`, `InitEntity`, `ClearEntityAlwaysActive`,
+  `SetEntityAlwaysActive`, `IsEntityAlwaysActive`, `ClearEntityTouched`, `SetEntityTouched`,
+  `IsEntityTouched`, `IsEntityGone`, `ClearEntityGone`, `MarkEntityGone`,
+  `IsEntityContactEnabled`, `DisableEntityContact`, `EnableEntityContact`, `GetEntityFlag1`,
+  `ClearEntityFlag1`, `SetEntityFlag1`, `GetEntityPixelY`, `GetEntityPixelX`,
   `GetEntityY`, `GetEntityX`, `SetEntityPixelPos`, `SetEntityPixelPosVec`,
-  `SetEntityPos`, `SetEntityPosVec`, `sub_80073B0`, `sub_80073B4`,
+  `SetEntityPos`, `SetEntityPosVec`, `SetEntityKind`, `GetEntityKind`,
   `GetEntityId`, `DestroyEntity`
 - `src/graphics/oam_count.c`: `AnimatePowerDialog`, `CommitPowerDialogFrame`, `DestroyPowerDialog`,
   `ShowTurboRunDialog`, `ShowTornadoSpinDialog`, `ShowDoubleJumpDialog`, `ShowSuperBodySlamDialog`, `GetProgressLives`,
@@ -54,7 +54,7 @@ and [graphics_loading.md](./graphics_loading.md).
   register roles plus inline-asm-materialized DMA-field writes for the
   fields the ROM recomputes fresh every loop iteration - see
   [naked-sub_80014a4-matched.md](../matching/naked-sub_80014a4-matched.md).
-- `src/graphics/text_layout.c`: `sub_8000EE4` (word-wrap text
+- `src/graphics/text_layout.c`: `DrawWrappedText` (word-wrap text
   renderer) - was NAKED, now matched as real C under old_agbcc (the
   object joined `OLD_AGBCC_OBJS`); see
   [strag3-naked-retry.md](../matching/strag3-naked-retry.md).
@@ -195,7 +195,7 @@ and [graphics_loading.md](./graphics_loading.md).
 - **Last-five NAKED retry:** `sub_801AB98` (`actor_part_1ab98.c`, issue
   #25, player-vs-object collision resolver) promoted from NAKED to real
   C under old_agbcc (object added to `OLD_AGBCC_OBJS`). An r8 hold gives
-  `result` r8 and `self` sb; the sub_800FDC8 calls pass a reassigned
+  `result` r8 and `self` sb; the FindLineCrossing calls pass a reassigned
   `px`; the player's position is read through a `PosPtr` inline instead
   of a `pp` pointer; the vtable call is an inline through the method's
   function pointer. See
@@ -206,7 +206,7 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
 
 ## Parked - NAKED asm transcriptions (byte-correct, not decompiled C)
 
-- **`sub_8000EE4` is now matched as real C (old_agbcc; see docs/matching/strag3-naked-retry.md); entry kept for history.** **`sub_8000EE4`** (`src/graphics/text_layout.c`) - word-wrap text
+- **`DrawWrappedText` is now matched as real C (old_agbcc; see docs/matching/strag3-naked-retry.md); entry kept for history.** **`DrawWrappedText`** (`src/graphics/text_layout.c`) - word-wrap text
   renderer. A full C reconstruction matched the ROM instruction-for-
   instruction except ~8 bytes from two small codegen details
   (incoming-argument spill ordering, and two loop-bound comparisons
@@ -224,7 +224,7 @@ see
 `docs/matching/naked-transcription-parked-functions.md` for the full
 derivation of each, and `docs/matching.md`'s original entries ("The
 `0x080014A4`-`0x08001624` fade/screen-mode cluster" and "Parked, not
-matched: `sub_8000EE4`") for the pre-NAKED gap analysis.
+matched: `DrawWrappedText`") for the pre-NAKED gap analysis.
 
 - **`DrawSpritePieces` is now matched as real C (split into `src/graphics/graphics_73dc.c`, old_agbcc; see docs/matching/strag1-naked-retry.md); `DrawPowerDialog` is now matched as real C too (see docs/matching/strag3-naked-retry.md); entry kept for history.** **`DrawPowerDialog`** (`src/graphics/oam_count.c`) and **`DrawSpritePieces`**
   (`src/graphics/graphics.c`) - this project's original reference cases

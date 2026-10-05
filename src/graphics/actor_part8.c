@@ -214,7 +214,7 @@ extern void DestroySpriteObj(struct actor *self, u32 arg1);
 /* Overwrites `self->table`, then (if `self+0x44`'s record is set)
  * fires a `record->table+0x48/0x4c`-driven trampoline with a constant
  * argument `3` via `_call_via_r2` (same convention as
- * `UpdatePartList`/`sub_8006FE4`), and finally tail-calls `DestroySpriteObj`
+ * `UpdatePartList`/`IsEntityNearCamera`), and finally tail-calls `DestroySpriteObj`
  * (already matched in `actor_part6.c`). The trampoline's `addr =
  * rec + offset` needed computing before the `fn` load (reusing
  * `rec`'s own dying register), matching the accumulator-register

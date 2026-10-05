@@ -1,7 +1,7 @@
 #include "core.h"
 #include "line_util.h"
 
-/* Sits right after sub_8001214 (ROM 0x08001214, in src/util/word_util.c)
+/* Sits right after DrawWrappedTextInBox (ROM 0x08001214, in src/util/word_util.c)
  * and before StepBrightnessFade (still raw in asm/code_3_1_7.s). Not adjacent
  * to InitBresenhamLine (src/util/line_util.c) in ROM address order - kept in its
  * own file purely because that file's object already links much

@@ -67,10 +67,10 @@ argument: case 12 ORs `r3` into the part's contact byte and tests
 other way round: the function returns *when* `self->state == 0x1D`.
 
 - **The nested keyframe lookup is a macro.** Case 23 uses
-  `sub_80084C4`'s nibble switch twice. As an inline function, the return
+  `GetSpriteFrameAnchor`'s nibble switch twice. As an inline function, the return
   value came back in `r0` and was then copied into `r7`. As a
   `PART_OFFSET(dst, part)` macro that assigns `dst` in each case, as
-  `sub_80084C4` itself assigns `result`, the ROM writes `r7` directly.
+  `GetSpriteFrameAnchor` itself assigns `result`, the ROM writes `r7` directly.
   516 -> 328.
 - **Fire-button cases (13/14/25).** The ROM materializes the trio's
   `1` (`flag30`) in `r5`, then a separate `1` for the `& 1` fire test.

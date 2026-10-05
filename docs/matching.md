@@ -566,11 +566,11 @@ HUD-icon-plus-number renderer: resets one OAM manager (`ResetOamBuffer`),
 calls `RewindObjVram` on another global, calls `DrawSpriteWithOffset`, positions a
 left icon by computing its centered X (`(240 - width) >> 1`, width from
 `_call_via_r2`) and a fixed Y, formats/draws a number via
-`SetAabbPos`/`SetAabbSize`/`sub_8001214` into a stack buffer, gets its
+`SetAabbPos`/`SetAabbSize`/`DrawWrappedTextInBox` into a stack buffer, gets its
 pixel width via `GetUiText`, then positions a second icon the same way
 - finally calls the already-matched `HideUnusedOamEntries` to hide unused OAM
 slots. None of `RewindObjVram`, `DrawSpriteWithOffset`, `_call_via_r2`,
-`SetAabbPos`, `SetAabbSize`, `sub_8001214`, `GetUiText` are matched or
+`SetAabbPos`, `SetAabbSize`, `DrawWrappedTextInBox`, `GetUiText` are matched or
 even confidently typed beyond the argument shapes this call site
 implies. Uses `struct icon_record`/`struct bitmap_font` for the two
 OAM-slot-record pairs it reads, and extends the existing `struct
@@ -1184,7 +1184,7 @@ function's raw bytes directly from `asm/code_3_1_3.s` (no further
 splitting needed) and added one more `ldscript.txt` line
 (`line_util.o`, between `rand_util.o` and `code_3_1_3.o`).
 
-**Parked, not matched: `sub_8000EE4`** (ROM `0x08000EE4`, right after `InitBresenhamLine`), in new
+**Parked, not matched: `DrawWrappedText`** (ROM `0x08000EE4`, right after `InitBresenhamLine`), in new
 file `src/graphics/text_layout.c`. A text-layout/word-wrap renderer: walks a
 NUL-terminated string one "token" at a time (`GetWordLength` returns each
 token's byte length - looks like it splits on word boundaries), drawing
@@ -1204,7 +1204,7 @@ string is consumed if `mode != 0`. Recognizes two escape sequences,
 `/n` (full newline - same drawing as an overflow-driven line advance),
 both introduced by a literal `/` byte in the text.
 
-Struct `sub_8000EE4_box` (the 3rd parameter) has only `field_0`/
+Struct `wrapped_text_box` (the 3rd parameter) has only `field_0`/
 `field_4` (the starting X/Y, copied into the render-target object's
 `0x110`/`0x114` fields before the loop starts) and `field_8` (the
 per-line pixel-width budget) named by use; the render-target object
@@ -1283,7 +1283,7 @@ compiles this C version in instead (verified this session to compile
 and link cleanly with no duplicate-symbol errors).
 
 Twenty-first matched function: `FormatCentiseconds` (ROM `0x0800106C`, right
-after the still-parked `sub_8000EE4`), in new file `src/util/time_util.c` -
+after the still-parked `DrawWrappedText`), in new file `src/util/time_util.c` -
 formats a centisecond count as `"MM:SS.X0"` into a 9-byte buffer (`void
 FormatCentiseconds(s32 value, u8 *buf)`); only one fractional digit is
 actually computed (`value % 10`) - the other is always `'0'`, so the
@@ -1300,7 +1300,7 @@ session.
 
 Extracting this one function required the same kind of split as
 `FindSubstring`'s and `CountNonSpaceChars`'s: `asm/code_3_1_3.s` was trimmed to
-end right after `sub_8000EE4`'s `.endif`, and everything from
+end right after `DrawWrappedText`'s `.endif`, and everything from
 `WaitForKeyPress` on moved to a new `asm/code_3_1_4.s`, with
 `src/util/time_util.c`'s object linked between them in `ldscript.txt`.
 (`asm/code_3_1_4.s` was later removed again - see `WaitForKeyPress`'s own
@@ -1405,7 +1405,7 @@ after `LoadBackgroundTileAndPalette`), in new file `src/util/word_util.c` - retu
 length of the next "word" starting at `s`: the count of characters up
 to and including the first space, or up to (but not including) the NUL
 terminator if no space comes first. This is exactly what the still-
-parked `sub_8000EE4` (`src/graphics/text_layout.c`) uses to walk text one token
+parked `DrawWrappedText` (`src/graphics/text_layout.c`) uses to walk text one token
 at a time. Needed a single shared `goto done;` return point (matching
 the ROM's one `bx lr`) rather than three separate `return` statements,
 which otherwise compile to three separate epilogues.
@@ -1413,20 +1413,20 @@ which otherwise compile to three separate epilogues.
 Extracting this one function needed the same kind of split as before:
 `asm/code_3_1_6.s` (which held only `GetWordLength`) was trimmed to
 nothing and removed, its ldscript slot going to `word_util.o`, with
-everything from `sub_8001214` on moved to a new `asm/code_3_1_7.s`.
+everything from `DrawWrappedTextInBox` on moved to a new `asm/code_3_1_7.s`.
 
-Twenty-fifth matched function: `sub_8001214` (ROM `0x08001214`, right
+Twenty-fifth matched function: `DrawWrappedTextInBox` (ROM `0x08001214`, right
 after `GetWordLength`), also in `src/util/word_util.c` - a thin wrapper around
-the still-parked `sub_8000EE4`: stashes one field from its `params`
+the still-parked `DrawWrappedText`: stashes one field from its `params`
 struct into the render-target object's own `field_118`, computes a
 line-count limit (`params->field_c / self->field_11c`), then forwards
-to `sub_8000EE4` with that limit and **returns its result** - genuinely
+to `DrawWrappedText` with that limit and **returns its result** - genuinely
 `s32`, not `void`, even though the one call site matched so far
 (`DrawPowerDialog` in `src/graphics/oam_count.c`, still parked) ignores it. Caught
 via the epilogue: an initial `void`-returning version compiled the
 final "restore LR and branch" step through `r0` (`pop {r0}; bx r0`),
 one register off from the ROM's `pop {r1}; bx r1` - changing the return
-type to `s32` and actually `return`ing `sub_8000EE4`'s result fixed it,
+type to `s32` and actually `return`ing `DrawWrappedText`'s result fixed it,
 since `r0` then holds a live value (the forwarded return) that the
 epilogue must preserve, forcing `r1` for the restore instead. Also
 needed the store to `self->field_118` split into two statements (`s32
@@ -1437,7 +1437,7 @@ constant plus 4 for the `field_11c` offset instead of recomputing it
 from scratch, incidentally also matching the ROM there).
 
 Twenty-sixth matched function: `StepBresenhamLine` (ROM `0x08001254`, right
-after `sub_8001214`), in new file `src/util/line_util2.c` - advances a
+after `DrawWrappedTextInBox`), in new file `src/util/line_util2.c` - advances a
 Bresenham line (set up by `InitBresenhamLine`, `src/util/line_util.c`) by one
 step: the "driving" axis (`x0` if `flag` is set, `y0` otherwise) always
 advances by its sign; the other axis advances only when the
@@ -1488,7 +1488,7 @@ registers `StepBrightnessFade` as a periodic callback (via the already-matched
 `AddVBlankCallback`) and returns immediately; otherwise it blocks here,
 looping through all 17 steps itself and busy-waiting `frameDelay`
 VBlanks (`WaitForVBlank`) between each. That inline loop needed the same
-"separate next-iteration variable" idiom seen in `sub_8000EE4`'s
+"separate next-iteration variable" idiom seen in `DrawWrappedText`'s
 notes - `i++` in place reuses one register for the whole loop, but the
 ROM computes `next = i + 1` into a *different* register partway
 through, then feeds it back as `i` only at the very end (freeing the
@@ -1607,15 +1607,15 @@ previous cleanup, again re-checking both `make compare` and
     directly on `icon_record`) moved to a new `include/bitmap_font.h`
     and `icon_record` was reshaped into `struct icon_slot { s16 offset;
     u8 unused[2]; void *ptr; } slots[6]` - an 8-byte-stride array,
-    confirmed by `sub_8000EE4` (`src/graphics/text_layout.c`, still parked)
+    confirmed by `DrawWrappedText` (`src/graphics/text_layout.c`, still parked)
     independently needing three *more* slots (`slots[1]`/`[3]`/`[5]`,
     at the offsets right in between the two `DrawPowerDialog` already used)
     for its own per-glyph and newline-marker OAM draws. `text_layout.c`
     now takes a real `struct bitmap_font *`/`struct icon_record *`
     instead of raw `u8 *self + <offset>` arithmetic throughout.
   - Checked for (but didn't find) a similar merge opportunity between
-    `sub_8000EE4`'s `struct sub_8000EE4_box` and `sub_8001214`'s
-    `struct sub_8001214_params` (`src/util/word_util.c`) - different field
+    `DrawWrappedText`'s `struct wrapped_text_box` and `DrawWrappedTextInBox`'s
+    `struct wrapped_text_box_params` (`src/util/word_util.c`) - different field
     layouts (offsets 0/4/8 vs. 0/0xc), not the same object.
   - Left `gKeys` (`src/system/irq.c`)/`gRandSeed`
     (`src/util/rand_util.c`)/`gBrightnessFade`+`gBrightnessFadeStep`+
@@ -1717,7 +1717,7 @@ an empty stub whose 2-byte body isn't 4-aligned - the same
 NOP-vs-zero-fill padding gotcha documented at the top of this file -
 fixed with `asm(".align 2, 0");` right after the function.
 
-**`sub_8006FE4`**: an actor-zone dispatch function (still
+**`IsEntityNearCamera`**: an actor-zone dispatch function (still
 struct-less, raw `self` offsets - the `field+0x18 -> {s16 offset; ...;
 void *text}` shape docs/rom_map.md has been seeing repeatedly in this
 zone) that early-returns a flag byte or otherwise builds a 4-word
@@ -1749,20 +1749,20 @@ instructions long, for two independent reasons:
   no branch instruction needed to skip it - two separate `return`
   statements had cost an extra unconditional `b`.
 
-**`sub_8007048`**: another actor-zone function, same raw `self`
-layout as `sub_8006FE4`. Builds an AABB into a stack buffer from a
+**`CheckEntityPlayerContact`**: another actor-zone function, same raw `self`
+layout as `IsEntityNearCamera`. Builds an AABB into a stack buffer from a
 record looked up via `_call_via_r1`, then (conditionally, gated by a
 flag bit and a `PlayerTouchesBox` collision-style check) sets another flag
 bit and fires off a `_call_via_r4` call using the same
 `field+0x18 -> {s16 offset; ...; void *text}` table convention seen in
-`sub_8006FE4` - except here the `text` field is read but genuinely
+`IsEntityNearCamera` - except here the `text` field is read but genuinely
 never used (no stack store, no argument register holds it after the
 call) - a dead load the ROM itself performs, kept via a `register
 void *asm("r4")` pin so the byte count matches. `PlayerTouchesBox`'s return
 type had to be `u8` (not `s32`) to reproduce the ROM's
 `lsls r0,r0,#0x18` truncation before the boolean test - the same
 pattern as `PlayerTouchesBox`'s sibling checks and `_call_via_r2` and
-`sub_8006FE4`'s own return value above.
+`IsEntityNearCamera`'s own return value above.
 
 Two flag-byte tests (`(byte >> 2) & 1`, and `byte | 8` stored back)
 each needed inline asm rather than plain C: gcc's register choice for
@@ -1780,10 +1780,10 @@ would otherwise insert for the implicit truncation check - fixed by
 routing the asm's output through an `s32` temporary instead of a `u8`
 one).
 
-**`DrawEntity`/`sub_80070D4`/`GetEntityBounds`/`SetEntitySize`/`sub_800710C`/
-`sub_8007110`**: six small functions, all matched on the first or
+**`DrawEntity`/`UpdateEntity`/`GetEntityBounds`/`SetEntitySize`/`EntityOverlapsRect`/
+`IsEntityOnScreen`**: six small functions, all matched on the first or
 second attempt. `DrawEntity` needed the usual empty-stub alignment
-fix. `sub_80070D4` tail-calls `_call_via_r1` through the same
+fix. `UpdateEntity` tail-calls `_call_via_r1` through the same
 field+0x18 table convention but discards its return value - the ROM's
 epilogue pops the saved LR into r0 (clobbering the call's return
 value on purpose), which only happens for a genuinely `void`-returning
@@ -1793,19 +1793,19 @@ value alive in r0 across the pop, forcing a different register
 width/height pair both as raw bytes and as `-w/2`-style halved,
 negated `s16`s - plain C division by a negative constant reproduced
 the ROM's rsb/lsr/add/asr rounding idiom exactly, no tricks needed.
-`sub_800710C`/`sub_8007110` are two identical `return 0;` stubs with
+`EntityOverlapsRect`/`IsEntityOnScreen` are two identical `return 0;` stubs with
 no callers found anywhere in the codebase (raw asm or already-matched
 C) - genuinely unreferenced, same as `GetObjVramFreeBytes`/`FreePaletteSlot`
 above.
 
-**`sub_8007114`**: an AABB-vs-rectangle containment test, same raw
+**`IsEntityInsideRect`**: an AABB-vs-rectangle containment test, same raw
 `self` layout as the actor-zone functions above. Needed the heaviest
 register wrangling so far in this cluster:
 - `self` and `box` both had to be pinned (`asm("r5")`/`asm("r6")`) -
   once anything else in the function was pinned, gcc stopped putting
   the plain parameters in the ROM's own registers on its own.
 - The width/height-to-min/max computation is one inline asm block
-  (mirroring `sub_8007048`'s halfW/halfH-in-place-vs-moved issue,
+  (mirroring `CheckEntityPlayerContact`'s halfW/halfH-in-place-vs-moved issue,
   same root cause) with its four outputs pinned to r4/r1/r5/r3.
 - **`r7` cannot be pinned in this toolchain, ever** - confirmed again
   here: pinning `result` to r7 for a merged single big asm block
@@ -1827,7 +1827,7 @@ register wrangling so far in this cluster:
 
 **`WorldToScreen`**: matched on the first attempt. Ignores its own first
 parameter entirely (overwritten as scratch before ever being read),
-reads the same `gLevelLayers` sub-object `sub_8006FE4` uses but
+reads the same `gLevelLayers` sub-object `IsEntityNearCamera` uses but
 as two raw sign-extended-24-bit `s32` fields (dx/dy) rather than
 through the record table - a different part of the same object.
 
@@ -1853,8 +1853,8 @@ gcc reached for `r8` on its own here (three live parameters plus the
 allocated object exceeds what r4-r7 alone can hold), no pinning
 needed - see `matching_decomp_register_pinning` memory, point 8.
 
-**`sub_800722C`/`ResetEntity`**: `sub_800722C` is another unreferenced
-`return 0;` stub, same as `sub_800710C`/`sub_8007110`. `ResetEntity`
+**`GetEntityClassId`/`ResetEntity`**: `GetEntityClassId` is another unreferenced
+`return 0;` stub, same as `EntityOverlapsRect`/`IsEntityOnScreen`. `ResetEntity`
 clears/sets a handful of bits in self's flag byte plus a few other
 fields - the flag-byte math needed real register pinning:
 - The ROM builds its bitmask constants (-3, then later -2, -9, -17)
@@ -1882,11 +1882,11 @@ the same `gEntityVtable` vtable pointer and calling
 `ResetEntity` on an already-allocated object (rather than allocating
 one itself, unlike `CreateEntity`). Matched on the first attempt.
 
-### Cleanup pass: `struct actor` for the sub_8006FE4-InitEntity cluster
+### Cleanup pass: `struct actor` for the IsEntityNearCamera-InitEntity cluster
 
 Retroactive cleanup pass (`make compare` re-checked after every edit
-below) over `sub_8006FE4`/`sub_8007048`/`SetEntitySize`/`sub_8007114`/
-`sub_80070D4`/`GetEntityBounds`/`CreateEntity`/`ResetEntity`/`InitEntity`,
+below) over `IsEntityNearCamera`/`CheckEntityPlayerContact`/`SetEntitySize`/`IsEntityInsideRect`/
+`UpdateEntity`/`GetEntityBounds`/`CreateEntity`/`ResetEntity`/`InitEntity`,
 all of which had been left on raw `void *self` offsets - this should
 have happened per-function as each one was matched (docs/workflow.md
 step 7 is not a deferred batch step), not as a separate pass
@@ -1924,13 +1924,13 @@ raw-pointer-cast form, including through the existing register pins
 and inline asm blocks (pinning wraps whichever C expression computes
 the address/value, so the struct doesn't interact with it).
 
-`gLevelLayers`'s own sub-object (read by `sub_8006FE4`/
+`gLevelLayers`'s own sub-object (read by `IsEntityNearCamera`/
 `WorldToScreen`/`WorldPosToScreen`) is a *different*, still-unidentified
 object (looks camera/viewport-offset-shaped given how it's used, but
 that's not confirmed) - deliberately left untyped rather than folded
 into `struct actor` or guessed at.
 
-**`sub_8007278`**: clears `self->flags` bit4 (`&= ~16`), using
+**`ClearEntityAlwaysActive`**: clears `self->flags` bit4 (`&= ~16`), using
 `struct actor` from the cleanup pass above straight away rather than
 raw offsets. Same accumulator-register pattern as `ResetEntity`'s
 mask chain: the ROM computes the mask constant before loading the
@@ -1939,21 +1939,21 @@ the freshly-loaded byte's - plain C (even with the load reordered to
 match) accumulated into the byte's register instead, fixed with the
 same `register ... asm("r1")`/`asm("r2")` pin pair.
 
-**`sub_8007284`**: sets `self->flags` bit4 (`|= 16`) - the mirror
-image of `sub_8007278`. Same accumulator-register fix, plus the usual
+**`SetEntityAlwaysActive`**: sets `self->flags` bit4 (`|= 16`) - the mirror
+image of `ClearEntityAlwaysActive`. Same accumulator-register fix, plus the usual
 trailing-padding alignment fix (10-byte body, not 4-aligned, last
 function in the translation unit right now).
 
-**`sub_8007290`**: a getter for `self->flags` bit4 - matched on the
+**`IsEntityAlwaysActive`**: a getter for `self->flags` bit4 - matched on the
 first attempt with plain struct field access (no accumulator-register
 issue here since there's no second operand needing a separate
 register). Usual alignment fix.
 
-**`sub_800729C`**: clears `self->flags` bit3 (`&= ~8`). Same
+**`ClearEntityTouched`**: clears `self->flags` bit3 (`&= ~8`). Same
 accumulator-register fix as the other single-bit-clear siblings above;
 body comes out already 4-aligned, no padding fix needed this time.
 
-**`sub_80072D8`**: always sets `self->flags` bit0; if `self->field_08`
+**`MarkEntityGone`**: always sets `self->flags` bit0; if `self->field_08`
 (an id) isn't the sentinel `0xFFFF`, also sets a bit in an external
 32-bit-word bitmap (`*gEntityFlags + 0x108`, word-indexed by
 `field_08 >> 5`, bit-indexed by `field_08 & 0x1F`) - looks like
@@ -1963,7 +1963,7 @@ most register-pin-heavy function in this cluster so far:
 - `self` needed pinning to r1 (not r2, where it naturally landed) -
   once the flags-OR block above it was pinned, gcc stopped placing
   the plain parameter in the ROM's own register on its own, the same
-  effect seen in `sub_8007114`.
+  effect seen in `IsEntityInsideRect`.
 - The ROM reads `field_08` twice - once into r4 for the sentinel
   comparison, once again into r3 for the bitmap computation - and r4
   is genuinely a *fourth* register here (needing `push {r4, lr}`),
@@ -1985,54 +1985,54 @@ most register-pin-heavy function in this cluster so far:
 - `word << 2` (the array-index offset) had to be computed *before*
   the `0x108` base offset was added, even though the base offset is
   added to the pointer first - same "compute early, use late"
-  ordering seen in `sub_8007114`'s width/height block.
+  ordering seen in `IsEntityInsideRect`'s width/height block.
 
-**`sub_80072A8`**: sets `self->flags` bit3 (`|= 8`) - the mirror of
-`sub_800729C`. Same accumulator-register fix, plus the usual
+**`SetEntityTouched`**: sets `self->flags` bit3 (`|= 8`) - the mirror of
+`ClearEntityTouched`. Same accumulator-register fix, plus the usual
 trailing-padding alignment fix.
 
-**`sub_80072B4`**: a getter for `self->flags` bit3, same shape as
-`sub_8007290`. Matched on the first attempt, plus the usual alignment
+**`IsEntityTouched`**: a getter for `self->flags` bit3, same shape as
+`IsEntityAlwaysActive`. Matched on the first attempt, plus the usual alignment
 fix.
 
-**`sub_80072C0`**: a getter for `self->flags` bit0 (`& 1`, no shift).
-Unlike `sub_8007290`/`sub_80072B4` (where plain field access matched
+**`IsEntityGone`**: a getter for `self->flags` bit0 (`& 1`, no shift).
+Unlike `IsEntityAlwaysActive`/`IsEntityTouched` (where plain field access matched
 immediately), the ROM here moves `self` into r1 before loading -
 gcc's own unforced allocator can `ldrb` straight through r0 (`self`'s
 own incoming register) instead, so there's no reason to move it -
 fixed by pinning `self` to r1. The AND itself also needed explicit
 register pins (constant in r0, loaded byte reusing r1 after `self`'s
 last use, same two-C-variables-one-hard-register technique as
-`sub_8007114`'s `minY`/`boxY1`) *and* an explicit
+`IsEntityInsideRect`'s `minY`/`boxY1`) *and* an explicit
 `result = result & flags; return result;` instead of `return result &
 flags;` directly - the direct-return form computed the AND into the
 loaded byte's register and needed an extra copy into r0, the assignment
 form didn't.
 
-**`sub_80072CC`**: clears `self->flags` bit1 (`&= ~2`). Same
+**`ClearEntityGone`**: clears `self->flags` bit1 (`&= ~2`). Same
 accumulator-register fix as the other single-bit-clear siblings;
 already 4-aligned, no padding fix needed.
 
-**`sub_800731C`**: a getter for `self->flags` bit2, same shape as
-`sub_8007290`/`sub_80072B4`. Matched on the first attempt.
+**`IsEntityContactEnabled`**: a getter for `self->flags` bit2, same shape as
+`IsEntityAlwaysActive`/`IsEntityTouched`. Matched on the first attempt.
 
-**`sub_8007328`**: clears `self->flags` bit2 (`&= ~4`). Same
+**`DisableEntityContact`**: clears `self->flags` bit2 (`&= ~4`). Same
 accumulator-register fix as the other single-bit-clear siblings;
 already 4-aligned.
 
-**`sub_8007334`**: sets `self->flags` bit2 (`|= 4`) - the mirror of
-`sub_8007328`. Same accumulator-register fix, plus the usual
+**`EnableEntityContact`**: sets `self->flags` bit2 (`|= 4`) - the mirror of
+`DisableEntityContact`. Same accumulator-register fix, plus the usual
 trailing-padding alignment fix.
 
-**`sub_8007340`**: a getter for `self->flags` bit1, same shape as the
+**`GetEntityFlag1`**: a getter for `self->flags` bit1, same shape as the
 other bit getters. Matched on the first attempt.
 
-**`sub_800734C`**: clears `self->flags` bit1 (`&= ~2`) - distinct
-from `sub_80072CC`'s bit0 clear despite the similar-looking mask.
+**`ClearEntityFlag1`**: clears `self->flags` bit1 (`&= ~2`) - distinct
+from `ClearEntityGone`'s bit0 clear despite the similar-looking mask.
 Same accumulator-register fix; already 4-aligned.
 
-**`sub_8007358`**: sets `self->flags` bit1 (`|= 2`) - the mirror of
-`sub_800734C`. Same accumulator-register fix, plus the usual
+**`SetEntityFlag1`**: sets `self->flags` bit1 (`|= 2`) - the mirror of
+`ClearEntityFlag1`. Same accumulator-register fix, plus the usual
 trailing-padding alignment fix.
 
 **`GetEntityPixelY`/`GetEntityPixelX`/`GetEntityY`/`GetEntityX`/
@@ -2065,7 +2065,7 @@ attempt, plus the usual alignment fix.
 `SetEntityPixelPosVec`, this time calling `SetEntityPos`. Matched on the first
 attempt.
 
-**`sub_80073B0`/`sub_80073B4`**: a trivial `self->field_0A`
+**`SetEntityKind`/`GetEntityKind`**: a trivial `self->field_0A`
 setter/getter pair. Both matched on the first attempt.
 
 **`GetEntityId`**: a trivial `self->field_08` getter. Matched on the
@@ -2122,7 +2122,7 @@ storage location to match) didn't converge on the exact original
 local-variable shape needed to reproduce the rest of the stack layout.
 Compiled only under `NON_MATCHING`, with the checked-in matching
 assembly (`asm/code_3_2.s`, guarded by `.if NON_MATCHING == 0`) used
-otherwise - same pattern as `DrawPowerDialog`/`sub_8000EE4` above.
+otherwise - same pattern as `DrawPowerDialog`/`DrawWrappedText` above.
 
 **`DrawAffineSpritePieces`**: left entirely untouched (still raw asm, no
 reconstruction attempted at all - a genuinely different situation from
@@ -2236,7 +2236,7 @@ byte load and the following `lsl` land in the same register here,
 where the ROM uses two) - the same gap documented at length in
 `GetSpriteHitbox`'s entry below, just two instances of it instead of ten.
 Parked as `NON_MATCHING` rather than continue chasing individual
-register choices - same call as `DrawPowerDialog`/`sub_8000EE4`/
+register choices - same call as `DrawPowerDialog`/`DrawWrappedText`/
 `DrawSpritePieces` above.
 
 **Follow-up session, extremely close now**: applying `GetSpriteHitbox`'s
@@ -2337,7 +2337,7 @@ helped one spot and broke another already-matching one. Parked as
 `NON_MATCHING` rather than keep chasing individual register letters -
 same call as `GetSpriteBounds` and the other parked functions above.
 
-**`sub_8007C30`** (ROM `0x08007C30`, right after `GetSpriteHitbox`, in the
+**`GetSpriteAttackBox`** (ROM `0x08007C30`, right after `GetSpriteHitbox`, in the
 new `src/graphics/actor_part2.c`): a third AABB-for-keyframe builder -
 same `SetAabbPos`/`SetAabbSize`-based shape as `GetSpriteBounds`/
 `GetSpriteHitbox`, but this time the 6-byte `{s16 x, s16 y, u8 w, u8 h}`
@@ -2385,34 +2385,34 @@ techniques per `docs/workflow.md` step 3, just combined for one
 instruction pair instead of a whole function.
 
 Getting this to link at its correct ROM address needed a second file
-split: `sub_8007C30` isn't ROM-adjacent to `actor_part.c` (the parked
+split: `GetSpriteAttackBox` isn't ROM-adjacent to `actor_part.c` (the parked
 `GetSpriteBounds`/`GetSpriteHitbox` sit raw, in `asm/code_3_2_2.s`, between
 them), so it needed its own new `.c` file - but naively appending it
 to the end of `actor_part.c` and rebuilding produced a byte-exact
 *function* that still broke the checksum, because `actor_part.o` links
-*before* `asm/code_3_2_2.o` in `ldscript.txt`: appending `sub_8007C30`
+*before* `asm/code_3_2_2.o` in `ldscript.txt`: appending `GetSpriteAttackBox`
 to `actor_part.c` placed its compiled bytes right after `ResetSpriteObj`,
 *before* `GetSpriteBounds`/`GetSpriteHitbox`'s raw bytes instead of after them,
 shifting everything downstream. Fixed by splitting `asm/code_3_2_2.s`
-itself a second time, at the `sub_8007CF8` boundary right after
+itself a second time, at the `GetSpriteBodyBox` boundary right after
 `GetSpriteHitbox`'s NON_MATCHING guard: `asm/code_3_2_2.s` now ends there,
 a new `asm/code_3_2_3.s` picks up the (unchanged) remainder starting
-at `sub_8007CF8`, and the new `src/graphics/actor_part2.c` (holding
-just `sub_8007C30`) is inserted between them in `ldscript.txt` - the
+at `GetSpriteBodyBox`, and the new `src/graphics/actor_part2.c` (holding
+just `GetSpriteAttackBox`) is inserted between them in `ldscript.txt` - the
 same "split file, new file for the non-adjacent function" pattern used
 for `DrawSpriteAt`/`actor_part.c` itself, just one level deeper. (The
-second split boundary moved to `CheckSpritePickup` once `sub_8007CF8`, right
-after `sub_8007C30`, matched too - see below.)
+second split boundary moved to `CheckSpritePickup` once `GetSpriteBodyBox`, right
+after `GetSpriteAttackBox`, matched too - see below.)
 
-**`sub_8007CF8`** (ROM `0x08007CF8`, right after `sub_8007C30`, same
+**`GetSpriteBodyBox`** (ROM `0x08007CF8`, right after `GetSpriteAttackBox`, same
 file): the fourth and last of the AABB-for-keyframe builders, identical
-shape to `sub_8007C30` with an even simpler `switch` - only two
+shape to `GetSpriteAttackBox` with an even simpler `switch` - only two
 outcomes, `info+0xc` (cases 0/2/3/4/6) or the `gEmptySpriteBox`
-fallback (cases 1/5). Copied `sub_8007C30`'s already-proven template
+fallback (cases 1/5). Copied `GetSpriteAttackBox`'s already-proven template
 directly and it matched on the first real attempt, with one genuine
 bug caught along the way: initially wrote the `default:` case as
 `info+0xc` (reusing the "everything unhandled falls to the first
-group" assumption from `sub_8007C30`, where that happened to be
+group" assumption from `GetSpriteAttackBox`, where that happened to be
 correct), which put the wrong code block at the jump table's
 out-of-range (`bhi`) target and reordered the two switch bodies
 relative to the ROM (`gEmptySpriteBox` first, `info+0xc` second,
@@ -2420,18 +2420,18 @@ where the ROM has it the other way around) - not just a register
 mismatch but a real behavioral difference for out-of-range `type`
 values. The ROM's own `bhi` target is the fallback block, confirmed by
 reading the raw disassembly directly rather than assuming symmetry
-with `sub_8007C30`; fixing `default:` to match (`gEmptySpriteBox`,
+with `GetSpriteAttackBox`; fixing `default:` to match (`gEmptySpriteBox`,
 same as cases 1/5) fixed both the byte-exact match and the switch's
 actual semantics in one edit. Also caught and fixed a copy-paste
-naming slip from working off `sub_8007C30`'s template: the function was
+naming slip from working off `GetSpriteAttackBox`'s template: the function was
 initially written and matched under the name `CheckSpritePickup` (the
 *next* function's real address) before being renamed to its correct
-`sub_8007CF8` prior to cutting it from the raw `.s` file - a reminder
+`GetSpriteBodyBox` prior to cutting it from the raw `.s` file - a reminder
 to check the ROM address in the disassembly comment, not just count
 `thumb_func_start` blocks, before naming a new function.
 
 **Parked, not matched: `CheckSpritePickup`** (ROM `0x08007DBC`, right after
-`sub_8007CF8`, same file): a real gameplay function rather than another
+`GetSpriteBodyBox`, same file): a real gameplay function rather than another
 AABB-builder clone - `part` (confirmed as a plain `struct actor`,
 matching `include/actor.h`) colliding with the player. Two flag-bit
 tests on `part->flags` (bits 3 and 2, both must be clear/set
@@ -2442,12 +2442,12 @@ new/unnamed collision-test function with the same "return a 0/1 byte"
 convention as `PlayerTouchesBox` in `graphics.c`). On collision: sets
 `part->flags` bit 3, plays a sound at the player's position (the
 `table+0x68` short-offset/dead-read idiom is *exactly*
-`sub_8007048`'s `_call_via_r4` call, just keyed off `part->field_0A`
+`CheckEntityPlayerContact`'s `_call_via_r4` call, just keyed off `part->field_0A`
 instead of `self->field_0A` - strong confirmation both functions share
 the same "table+0x68 offset, table+4 unused field" convention), sets
 `part->flags` bit 0, and - if `part->field_08` isn't the `0xFFFF`
 sentinel - marks a bit in the `gEntityFlags` 32-bit-word bitmap at
-`+0x108` (identical to `sub_80072D8`'s convention). Finally,
+`+0x108` (identical to `MarkEntityGone`'s convention). Finally,
 `part->field_0A - 0x1b` (0-7) selects one of six "kind" values (1, 6,
 5, 0, 3, 4 for cases 2/3, 6, 4, 7, 5, 0 respectively; case 1 and any
 out-of-range value spawn nothing) passed to `SpawnEffectPart(gEntitySpawner,
@@ -2457,11 +2457,11 @@ spawned, its `+0x28` bits 0-1 get set to `01` and its `+0xc` bit 2
 gets cleared - kept as raw offsets since the spawned object's own type
 isn't established.
 
-Needed: the exact same shift-then-mask idiom as `sub_8007048`'s
+Needed: the exact same shift-then-mask idiom as `CheckEntityPlayerContact`'s
 `flagTest` (a single `ldrb`+`lsl`+`lsr`+mask sequence, written as
 `asm volatile` since plain C register pins for this exact "byte load,
 shift twice, AND with a reused mask constant" shape kept getting
-discarded the same way documented for `GetSpriteHitbox`/`sub_8007C30`'s
+discarded the same way documented for `GetSpriteHitbox`/`GetSpriteAttackBox`'s
 single bit-tests - here it's the SAME loaded-and-shifted value (`r1`)
 feeding both tests, with a single `mask=1` constant (`r6`) reused for
 both ANDs, matching the ROM's own register reuse exactly once written
@@ -2501,12 +2501,12 @@ as `GetSpriteBounds`/`GetSpriteHitbox` above.
 
 **`IsSpriteObjOnScreen`** (ROM `0x08007F78`, right after `CheckSpritePickup`, new
 `src/graphics/actor_part3.c`): a visibility/on-screen check, the same
-shape as `sub_8006FE4` in `graphics.c` - `part+0x25 == 1` is a fast
+shape as `IsEntityNearCamera` in `graphics.c` - `part+0x25 == 1` is a fast
 "always visible" override; otherwise `part+0xd` bit 2 gates a call to
 `_call_via_r2` with a 4-word "region" built from
 `gLevelLayers`'s sub-object (two Q8 fields) plus the GBA's fixed
 screen width/height (`0xf0<<8`/`0xa0<<8`), using the same
-`table+N`/`table+N+4` offset/pointer slot convention `sub_8006FE4`
+`table+N`/`table+N+4` offset/pointer slot convention `IsEntityNearCamera`
 reads at `table+0x40` - here at `table+0x30`, a second confirmed slot
 in the same per-category table.
 
@@ -2521,7 +2521,7 @@ byte compiles to `asr` even though the value is always 0-255, so the
 `gLevelLayers` sub-object pointer to `r0` so it stays in the same
 register across all three of its dereferences (address-of-global,
 value, `+0x10` field) rather than moving to a fresh register, matching
-`sub_8006FE4`'s own single-register reuse; and grouping each pair of
+`IsEntityNearCamera`'s own single-register reuse; and grouping each pair of
 "compute two values, then store both" operations (the sub-object's two
 Q8 fields; the two screen-dimension constants) into their own nested
 block with local temporaries, rather than writing four independent
@@ -2539,7 +2539,7 @@ already holds a clean byte from the earlier masked call result or the
 literal `0`), even though every value actually stored in the
 register-pinned `result asm("r3")` local was already byte-clean.
 
-Same file-split lesson as `sub_8007C30` (see its entry above), one
+Same file-split lesson as `GetSpriteAttackBox` (see its entry above), one
 level deeper: `IsSpriteObjOnScreen` isn't ROM-adjacent to `actor_part2.c`
 either (the parked `CheckSpritePickup` sits raw, in `asm/code_3_2_3.s`,
 between them), so appending it to `actor_part2.c` compiled a
@@ -2699,8 +2699,8 @@ collision-test function `CheckSpritePickup` uses, confirming its signature.
 Also confirms `part+0x28` bits 4/5 read via the `((u32)(byte <<
 (31-N))) >> 31` idiom (materializing a clean `0`/`1` boolean for a
 LATER comparison) rather than the sign-branch `(s32)(byte << (31-N)) <
-0` form used in `GetSpriteBounds`/`GetSpriteHitbox`/`sub_8007C30`/
-`sub_8007CF8` (which only works when the value feeds an immediate
+0` form used in `GetSpriteBounds`/`GetSpriteHitbox`/`GetSpriteAttackBox`/
+`GetSpriteBodyBox` (which only works when the value feeds an immediate
 `if`, not when it must survive past intervening code like the
 `SetAabbPos`/`SetAabbSize` calls here).
 
@@ -2888,7 +2888,7 @@ plus `arm-none-eabi-as` assemble against the ROM's raw bytes at
 **`IsSpriteObjInsideRect`** (ROM `0x08008304`, right after `sub_8008278`, new
 `src/graphics/actor_part5.c`): `part+0x25 == 1` is the same fast
 override seen in `IsSpriteObjOnScreen`/`SpriteObjOverlapsRect`; otherwise defers entirely
-to `sub_8007114` (already matched in `graphics.c`), forwarding a `box`
+to `IsEntityInsideRect` (already matched in `graphics.c`), forwarding a `box`
 argument straight through untouched. Matched on the second attempt: the
 first draft let the compiler use `part`'s own register (`r0`) as
 scratch for the `part+0x25` address computation, forcing an extra
@@ -2908,8 +2908,8 @@ functions) and a new `asm/code_3_2_6.s`, with the new
 
 **`IsSpriteObjNearCamera`** (ROM `0x08008328`, right after `IsSpriteObjInsideRect`, same
 file): the same `part+0x25 == 1` fast-override shape, deferring to
-`sub_8006FE4` (already matched in `graphics.c`) instead of
-`sub_8007114` - a single-argument sibling, so the address-scratch
+`IsEntityNearCamera` (already matched in `graphics.c`) instead of
+`IsEntityInsideRect` - a single-argument sibling, so the address-scratch
 register naturally lands in `r1` instead of `r2` (no second call
 argument to avoid clobbering). Matched on the first attempt, applying
 the same `addr`/`byteVal` register-reuse pin from `IsSpriteObjInsideRect`
@@ -2975,7 +2975,7 @@ padding). Confirmed byte-identical via isolated compile plus
 **`GetSpriteObjPriority`** (ROM `0x08008408`, right after `GetSpriteFrame`, new
 `src/graphics/actor_part6.c`): the same `gLevelLayers` sub-object
 convention used throughout this ROM region (`IsSpriteObjOnScreen`/
-`sub_8006FE4`) - if `gLevelLayers+0x2b` is nonzero, returns the
+`IsEntityNearCamera`) - if `gLevelLayers+0x2b` is nonzero, returns the
 sub-object's `+0x34` byte's low 2 bits minus 1; otherwise returns
 those bits unmodified. Matched on the second attempt: the first draft
 had the compiler lay out the `if`/`else` bodies in the opposite order
@@ -3015,7 +3015,7 @@ file): the same `InitEntity`/table-swap-to-`gSpriteObjVtable`/
 existing `self` in place instead of allocating a fresh object via
 `OperatorNew`. Matched on the first attempt.
 
-**`sub_80084C4`** (ROM `0x080084C4`, right after `InitSpriteObj`, same
+**`GetSpriteFrameAnchor`** (ROM `0x080084C4`, right after `InitSpriteObj`, same
 file): looks up `part`'s keyframe record via `GetSpriteFrame` (parked as
 `NON_MATCHING` in `actor_part5.c`), then picks a pointer off it based
 on the record's `+4` byte's upper nibble - 0 selects `info+0x24`, 6
@@ -3033,7 +3033,7 @@ into the range group, or written as its own separate identical-body
 arm) - this compiler evidently only emits a jump table when the
 case-value-to-code-block mapping can't be expressed as a handful of
 contiguous range checks. Confirmed this experimentally by copying
-`sub_8007C30`'s already-matched switch (whose case values *are*
+`GetSpriteAttackBox`'s already-matched switch (whose case values *are*
 genuinely scattered: `0,3,4` / `1,2,6` / `5` / default) with dummy
 identical bodies - it produced a jump table purely from the scatter,
 independent of the actual values returned. The fix: since cases 1-5
@@ -3063,9 +3063,9 @@ byte offset the way a compiler-native jump table is. The native
 `switch` approach above avoids both problems entirely.) Matched on
 this attempt once the case-scatter trick was found.
 
-**`sub_8008518`** (ROM `0x08008518`, right after `sub_80084C4`, same
+**`GetSpriteFrameThirdBox`** (ROM `0x08008518`, right after `GetSpriteFrameAnchor`, same
 file): the same `GetSpriteFrame`-derived-record-nibble `switch` shape as
-`sub_80084C4` immediately above, with a different result mapping - 0
+`GetSpriteFrameAnchor` immediately above, with a different result mapping - 0
 and 4 select `info+0x1c`, everything else (1, 2, 3, 5, 6, or above 6)
 falls back to `gEmptySpriteBox`. No case-scattering trick was
 needed this time: writing the cases in plain ascending order (`case
@@ -3073,21 +3073,21 @@ needed this time: writing the cases in plain ascending order (`case
 `default:`) was already enough to produce a jump table, because 0 and
 4 mapping to the same result while everything between and after maps
 to a different one is *already* non-contiguous - confirming the
-theory from `sub_80084C4`'s entry above (gcc only falls back to a
+theory from `GetSpriteFrameAnchor`'s entry above (gcc only falls back to a
 compare chain when the case-to-block mapping actually can be expressed
 as a handful of simple range checks). Matched on the first attempt.
 
-**`sub_8008564`** (ROM `0x08008564`, right after `sub_8008518`, same
+**`GetSpriteFrameAttackBox`** (ROM `0x08008564`, right after `GetSpriteFrameThirdBox`, same
 file): the same `GetSpriteFrame`-derived-record-nibble `switch` shape
-again, this time reusing `sub_8007C30`'s exact case-to-block mapping
+again, this time reusing `GetSpriteAttackBox`'s exact case-to-block mapping
 (already matched in `actor_part2.c`) - 0/3/4 select `info+0x14`, 5
 selects `info+0xc`, and 1/2/6/anything-above-6 fall back to
 `gEmptySpriteBox`. That mapping is non-contiguous on its own
-(same reasoning as `sub_8008518`), so plain ascending case order
+(same reasoning as `GetSpriteFrameThirdBox`), so plain ascending case order
 produced the ROM's jump table with no scattering needed. Matched on
 the first attempt.
 
-**`sub_80085B8`** (ROM `0x080085B8`, right after `sub_8008564`, same
+**`GetSpriteFrameBodyBox`** (ROM `0x080085B8`, right after `GetSpriteFrameAttackBox`, same
 file): the same `GetSpriteFrame`-derived-record-nibble `switch` shape
 once more - 0/2/3/4/6 select `info+0xc`, 1/5/anything-above-6 fall
 back to `gEmptySpriteBox`. Non-contiguous enough on its own
@@ -3095,7 +3095,7 @@ back to `gEmptySpriteBox`. Non-contiguous enough on its own
 ascending case order produced the jump table directly. Matched on the
 first attempt.
 
-**`GetSpriteAnimRecord`** (ROM `0x08008604`, right after `sub_80085B8`, same
+**`GetSpriteAnimRecord`** (ROM `0x08008604`, right after `GetSpriteFrameBodyBox`, same
 file): the same keyframe-record-address lookup used throughout this
 ROM region (see `GetSpriteObjHitbox`) - `part`'s `+0x20` table pointer
 dereferenced twice, indexed by the `+0x2d` frame index times the
@@ -3166,14 +3166,14 @@ it via `movs r1, #9; negs r1, r1`. Fixed the same way as
 folding the negation into the `&=` compound assignment) was enough to
 force the fresh `mov`+`neg` pair. Matched after finding this.
 
-**`SetPartSolid`/`sub_8008698`/`sub_80086A4`/`sub_80086B0`/
-`sub_80086BC`/`sub_80086C4`/`sub_80086CC`/`sub_80086D8`** (ROM
+**`SetPartSolid`/`IsSpriteObjVulnerable`/`ClearSpriteObjVulnerable`/`SetSpriteObjVulnerable`/
+`ResetSpriteAnimIndex`/`IsSpriteObjCollisionEnabled`/`DisableSpriteObjCollision`/`EnableSpriteObjCollision`** (ROM
 `0x0800868C`-`0x080086D8`, right after `ClearPartSolid`, same file): a
 run of eight more trivial flag/byte accessors - `SetPartSolid` sets
-`part+0xd` bit 3, `sub_8008698`/`sub_80086A4`/`sub_80086B0` are the
-`part->flags` bit-6 getter/clearer/setter, `sub_80086BC` resets
-`part`'s frame index (`+0x2d`) to 0, and `sub_80086C4`/`sub_80086CC`/
-`sub_80086D8` are the `part->flags` bit-7 getter/clearer/setter (the
+`part+0xd` bit 3, `IsSpriteObjVulnerable`/`ClearSpriteObjVulnerable`/`SetSpriteObjVulnerable` are the
+`part->flags` bit-6 getter/clearer/setter, `ResetSpriteAnimIndex` resets
+`part`'s frame index (`+0x2d`) to 0, and `IsSpriteObjCollisionEnabled`/`DisableSpriteObjCollision`/
+`EnableSpriteObjCollision` are the `part->flags` bit-7 getter/clearer/setter (the
 getter needs no mask, since shifting an 8-bit value right by 7 already
 leaves only that bit).
 
@@ -3187,7 +3187,7 @@ though the two instructions are otherwise independent. All eight
 matched once this ordering fix was applied uniformly.
 
 **`GetSpriteAnimating`/`SetSpriteAnimating`** (ROM `0x080086E4`/`0x080086EC`, right
-after `sub_80086D8`, same file): a plain `part+0x2c` byte get/set
+after `EnableSpriteObjCollision`, same file): a plain `part+0x2c` byte get/set
 pair, no other logic. Both matched on the first attempt.
 
 **`SetSpriteFlipX`** (ROM `0x080086F4`, right after `SetSpriteAnimating`, same
@@ -3246,8 +3246,8 @@ get/set pair, no other logic. Both matched on the first attempt.
 
 **`GetSpriteAnimFrameCount`/`GetSpriteAnimDuration`/`ResetSpriteFrameIndex`/`SetSpriteFrameTimer`/
 `ResetSpriteFrameTimer`/`SetSpriteAnimIndex`/`SetSpriteAnim`/`IncSpriteFrameIndex`/`IncSpriteFrameTimer`/
-`sub_8008804`/`sub_800880C`/`GetSpriteFrameIndex`/`GetSpriteFrameTimer`/`GetSpriteAnim`/
-`sub_8008824`** (ROM `0x0800878C`-`0x08008824`, new
+`SetSpriteMoveAxes`/`GetSpriteMoveAxes`/`GetSpriteFrameIndex`/`GetSpriteFrameTimer`/`GetSpriteAnim`/
+`GetSpriteGfxMode`** (ROM `0x0800878C`-`0x08008824`, new
 `src/graphics/actor_part7.c`): two
 more `GetSpriteAnimPaletteId`-style keyframe-record byte lookups (`+0x16` frame
 count, `+0x15` duration) plus a run of plain `part+0x24`/`+0x28`/
@@ -3270,7 +3270,7 @@ code_3_2_7.s`, which links *after* all of `actor_part6.o` - so
 anything appended past the guard in `actor_part6.c` was landing
 *before* `IsSpriteAnimLooping` in the final ROM instead of after it. Fixed
 with the usual file split: `asm/code_3_2_7.s` split again at the
-`sub_8008830` boundary into itself (now holding just the parked
+`SetSpriteGfxMode` boundary into itself (now holding just the parked
 `IsSpriteAnimLooping`) and a new `asm/code_3_2_8.s`, with a new
 `src/graphics/actor_part7.c` holding this whole batch inserted between
 them in `ldscript.txt`.
@@ -3317,14 +3317,14 @@ it explicitly. Confirmed byte-identical via isolated compile plus
 `arm-none-eabi-as` assemble and a direct comparison against the ROM's
 raw bytes at `0x08008770`, then via full clean `make compare`.
 
-**`sub_8008830`** (ROM `0x08008830`, right after `sub_8008824`, new
+**`SetSpriteGfxMode`** (ROM `0x08008830`, right after `GetSpriteGfxMode`, new
 `src/graphics/actor_part7.c`): sets `part+0x28`'s low 2 bits to
 `value & 3`. Same accumulator-register pattern and `+r`-on-the-other-
 operand fix as `SetSpritePalette` above (mask `-4` computed via a fresh
 `movs`+`negs`, not relative to the leftover `3` register value).
 Matched after applying that fix.
 
-**`GetSpriteFlipX`/`GetSpriteFlipY`/`sub_8008864`/`sub_800887C`** (ROM
+**`GetSpriteFlipX`/`GetSpriteFlipY`/`GetSpriteMosaic`/`GetSpriteColorMode`** (ROM
 `0x08008844`/`0x08008850`/`0x08008864`/`0x0800887C`, interleaved with
 the functions below, same file): `part+0x28` bit-4/5/2/3 getters,
 using the `(u32 << N) >> 31` logical-shift idiom (see `GetSpriteBounds`'s
@@ -3335,15 +3335,15 @@ on the first attempt.
 flag, also written by `SetSpriteAnimDone`) getter. Matched on the first
 attempt.
 
-**`sub_8008870`** (ROM `0x08008870`, same file): `part+0x29` low-
+**`GetSpriteOamPalette`** (ROM `0x08008870`, same file): `part+0x29` low-
 nibble getter, same shape as `GetSpritePalette`. Matched on the first
 attempt.
 
-**`sub_8008888`/`sub_800888C`** (ROM `0x08008888`/`0x0800888C`, same
+**`GetSpriteAffine`/`SetSpriteAffine`** (ROM `0x08008888`/`0x0800888C`, same
 file): a plain `part+0x3c` (`u16`) get/set pair, no other logic. Both
 matched on the first attempt.
 
-**`DrawSpriteWithOffset`** (ROM `0x08008890`, right after `sub_800888C`, same
+**`DrawSpriteWithOffset`** (ROM `0x08008890`, right after `SetSpriteAffine`, same
 file): resolves `part`'s Q8 position plus a caller-supplied offset
 into a stack `{x, y}` pair, then dispatches to `DrawAffineSpritePieces` or
 `DrawSpritePieces` (both already matched/parked elsewhere in this ROM
@@ -3388,7 +3388,7 @@ Builds two `gLevelLayers`-sub-object-centered boxes first: an
 position (`boxB` - the GBA's exact visible area in Q8, `0xf0<<8` /
 `0xa0<<8`) - reusing the same `gLevelLayers+0x10` sub-object
 convention documented throughout this ROM region (see
-`IsSpriteObjOnScreen`/`sub_8006FE4`).
+`IsSpriteObjOnScreen`/`IsEntityNearCamera`).
 
 For each `part` in the array: if `part+0xc` bit 0 is set, and its
 index is still below `self+0x0`, removes it from the array via
@@ -3403,7 +3403,7 @@ table offset `0x50`/`0x54` with a constant argument `3` via
 `_call_via_r2` (confirmed in `docs/rom_map.md` to be a `bx r2`
 BLX-emulation trampoline calling `fn(arg0, arg1)` - the same
 `table+N`/`table+N+4` offset/function-pointer convention as
-`sub_8006FE4`/`IsSpriteObjOnScreen`/`UpdateSpriteObj`), and re-examines the same
+`IsEntityNearCamera`/`IsSpriteObjOnScreen`/`UpdateSpriteObj`), and re-examines the same
 index next iteration (`i--`) to account for the shift.
 
 Otherwise (bit 0 clear): tests the `part` against `boxA` through the
@@ -3585,21 +3585,21 @@ itself is never read - a dead parameter kept for a uniform call
 signature with `CollidePartWithObject`'s sibling.
 
 If `gLevelState`'s mode field (`+0x78`) is 3: tests `part`
-against the box via `sub_8009FF4` (already matched in
+against the box via `ClassifySpriteContact` (already matched in
 `actor_part9.c`); if it misses entirely, returns. Otherwise fires a
 `part->table+0x68`-driven trampoline via `_call_via_r4` with the
 player's `+0xa` byte as the third argument.
 
 Otherwise, if `part+0xd` bit 3 is set (a "large object" case): builds
 the player's AABB via `GetSpriteHitbox` (parked as `NON_MATCHING` in
-`actor_part.c`) and `part`'s secondary AABB via `sub_8007CF8` (already
+`actor_part.c`) and `part`'s secondary AABB via `GetSpriteBodyBox` (already
 matched), tests them via `AabbOverlaps`; on a hit, pushes the player's
 X position away from `part` by the sum of both boxes' widths (`<<7`,
 i.e. `*128`) in whichever direction `part` is relative to the player,
 then fires a `player->table+0x68` trampoline (direction encoded in
 the final argument, `2` or `1`).
 
-Otherwise: tests `part` against the box again via `sub_8009FF4`.
+Otherwise: tests `part` against the box again via `ClassifySpriteContact`.
 Result 1: sets the player's `flags` bit 3; if the player's `+0xa` byte
 is exactly 1 and its `+0x64` counter is positive, fires two
 trampolines (`part`'s own, then the player's) and plays SFX `0x21` via
@@ -3621,7 +3621,7 @@ every branch, field offset, and call argument confirmed correct. Two
 small structural gaps remain: (1) this compiler has no way to express
 "this scalar parameter is already sitting in the right stack position
 for the callee I'm about to build a struct pointer into" - the ROM's
-`box` argument to `sub_8009FF4`/`sub_8007CF8` leaves `boxH` untouched
+`box` argument to `ClassifySpriteContact`/`GetSpriteBodyBox` leaves `boxH` untouched
 in its own incoming stack slot (which happens to be the correct 4th
 word of the AABB purely from ABI stack-layout coincidence, the same
 trick confirmed for `CollidePartList`'s own box-passing above), while a
@@ -3675,7 +3675,7 @@ instruction order: load the base, *then* compute `i*4`, rather than
 the reverse) plus the usual `addr`-before-`fn` trampoline-argument
 fix. Matched after applying both.
 
-**`sub_8008D30`** (ROM `0x08008D30`, right after `ClearPartList`, same
+**`CollidePartsOfClass`** (ROM `0x08008D30`, right after `ClearPartList`, same
 file): iterates `manager`'s array (`manager+0x10` base, `manager+8`
 count): for each `part`, fires a `table+0x48/0x4c`-driven trampoline
 via `_call_via_r1` and skips unless the result equals `arg1` (a
@@ -3687,13 +3687,13 @@ another mismatch the isolated test missed and only the full clean
 build caught. Matched after fixing it.
 
 **Parked, not matched: `CollidePartWithObject`** (ROM `0x08008D80`, right after
-`sub_8008D30`, same file - `src/graphics/actor_part7.c`, since its
+`CollidePartsOfClass`, same file - `src/graphics/actor_part7.c`, since its
 real ROM address sits between the parked `CollidePartWithPlayer` and the raw,
 unclaimed `DrawPartList`). `CollidePartWithPlayer`'s sibling: resolves the same
 collision-hit logic when the "compare viewport" doesn't match the
 current one (see `CollidePartList` above) - `otherViewport` here plays
 the role `gPlayer` (the player) plays in `CollidePartWithPlayer`.
-Tests `part` against the incoming box via `sub_8009FF4`; on a hit,
+Tests `part` against the incoming box via `ClassifySpriteContact`; on a hit,
 fires a `part->table+0x68`-driven trampoline (same "dead read" idiom
 as `CollidePartWithPlayer`) with `otherViewport->field_0A` as the third
 argument, then sets `otherViewport->flags` bit 3.
@@ -3707,7 +3707,7 @@ correct), matching `CollidePartWithPlayer`'s own parking rationale.
 
 **Lesson reinforced by this whole batch**: an isolated per-function
 compile test that "matches ROM" is a *necessary*, not *sufficient*,
-check. `CullPartList` and `sub_8008D30` both passed their own isolated
+check. `CullPartList` and `CollidePartsOfClass` both passed their own isolated
 tests cleanly but still broke the full clean `make compare` when
 placed in the real file, because the surrounding context (other local
 variables live at the same time, or which registers a caller already
@@ -3772,7 +3772,7 @@ all six were matched rather than parked or skipped:
 
 All six were verified both in isolation and via a full recompile of
 `actor_part11.c` together, after this session's earlier
-`CullPartList`/`sub_8008D30` regressions showed isolated tests alone
+`CullPartList`/`CollidePartsOfClass` regressions showed isolated tests alone
 aren't sufficient proof.
 
 **Parked, not matched: `InitCrateList`** (ROM `0x08008F20`, right after
@@ -3806,7 +3806,7 @@ struct - it unlinks a node from potentially many grid buckets via a
 two-phase search whose higher-level "why" isn't recoverable without
 more context. Left raw rather than guess.
 
-**Parked, not matched: `sub_8009150`** (ROM `0x08009150`, right after
+**Parked, not matched: `LinkCrateToActiveBucket`** (ROM `0x08009150`, right after
 the raw `UnlinkCrateFromGrid`, `src/graphics/actor_part11.c`): searches every
 bucket (254 down to 0, i.e. every bucket except the special "large
 object" bucket 255) of `manager`'s spatial hash grid for a node whose
@@ -3905,20 +3905,20 @@ Moved into its own new translation unit, `src/graphics/actor_part11g.c`
 (also hoisting `struct pool_manager`'s definition there, mirroring the
 copy `actor_part12.c` and `actor_part11.c` each keep - `actor_part11g`
 rather than the more obvious `actor_part11f`, since a concurrent PR
-matched-as-NAKED `sub_8009528` into `actor_part11f.c` first). Its raw
+matched-as-NAKED `CollideCrateGrid` into `actor_part11f.c` first). Its raw
 `.if NON_MATCHING == 0` guard block was removed from
-`asm/code_3_2_13_944c.s`; once `sub_8009528` also moved out (see that
+`asm/code_3_2_13_944c.s`; once `CollideCrateGrid` also moved out (see that
 function's own "Update: converted to `NAKED`" entry below), the shared
 file held nothing at all and was deleted entirely. `ldscript.txt` got a
 new `actor_part11g.o` entry inserted between `actor_part11c.o` and
-`actor_part11f.o` (`sub_8009528`'s own new home), preserving ROM order.
+`actor_part11f.o` (`CollideCrateGrid`'s own new home), preserving ROM order.
 
-**Parked, not matched: `sub_8009528`** (ROM `0x08009528`, right after
+**Parked, not matched: `CollideCrateGrid`** (ROM `0x08009528`, right after
 the now-matched `DrawCrateList`, `src/graphics/actor_part11.c`): the same
 "extended screen box" grid-iteration shape as `DrawCrateList`, but
-dispatching each hit to `sub_80096C0` (when the box's "compare
+dispatching each hit to `CollideCrateGridPartWithPlayer` (when the box's "compare
 viewport" argument equals `gPlayer`, the player) or
-`sub_80099F0` (otherwise) - the spatial-grid-cluster analog of
+`CollideCrateGridPartWithObject` (otherwise) - the spatial-grid-cluster analog of
 `CollidePartList`'s own dispatch to `CollidePartWithPlayer`/`CollidePartWithObject`, right
 down to reconstructing the box via `MemCopy32` with the same
 "unavoidable extra `boxH` load" idiom (the incoming `boxH` argument
@@ -3948,14 +3948,14 @@ correct version.
 field offset, and call argument was already confirmed correct, and
 this session established NAKED transcription as a reliable technique
 even for large, register-pressure-heavy functions (`ResolveCollisionCandidates`,
-`sub_80096C0`, `CollidePartWithPlayer`/`CollidePartWithObject`/`sub_80099F0`), `sub_8009528`
+`CollideCrateGridPartWithPlayer`, `CollidePartWithPlayer`/`CollidePartWithObject`/`CollideCrateGridPartWithObject`), `CollideCrateGrid`
 was hand-transcribed as literal Thumb asm instead of staying an
 unclosable `#if NON_MATCHING` C draft: the ROM's own ldr/str/lsl/asr
 sequence, one-to-one, both grid passes byte-identical to each other.
 Moved out of `actor_part11.c` into its own new translation unit,
 `src/graphics/actor_part11f.c` (its real ROM address isn't adjacent to
 that file's other functions - it sits between `DrawCrateList`, still raw
-asm in `asm/code_3_2_13_944c.s`, and `sub_80096C0`,
+asm in `asm/code_3_2_13_944c.s`, and `CollideCrateGridPartWithPlayer`,
 `src/graphics/actor_part11e.c` - per docs/workflow.md step 4's "needs
 its own new .c file" case). Its raw `.if NON_MATCHING == 0` guard block
 was removed from `asm/code_3_2_13_944c.s` (which still carries
@@ -3967,21 +3967,21 @@ verified instruction stream and this transcription produced bit-for-
 bit identical `.text` bytes and relocations) plus a full clean `make
 compare` (`crashbandicootxs.gba: La suma coincide`). Per project policy
 a `NAKED` transcription doesn't count as "matched" the way real
-decompiled C does, so `sub_8009528` stays filed as parked (now "parked,
+decompiled C does, so `CollideCrateGrid` stays filed as parked (now "parked,
 NAKED" rather than "parked, NON_MATCHING").
 
-**Parked, not matched: `sub_80096C0`** (ROM `0x080096C0`, right after
-the parked `sub_8009528`, `src/graphics/actor_part11.c`): `CollidePartWithPlayer`'s
+**Parked, not matched: `CollideCrateGridPartWithPlayer`** (ROM `0x080096C0`, right after
+the parked `CollideCrateGrid`, `src/graphics/actor_part11.c`): `CollidePartWithPlayer`'s
 twin, confirmed by reading its disassembly directly against
 `CollidePartWithPlayer`'s own - byte-identical collision-hit resolution logic
 (mode dispatch via `gLevelState`, AABB push-out via
-`GetSpriteHitbox`/`sub_8007CF8`/`AabbOverlaps`, and `_call_via_r4`
+`GetSpriteHitbox`/`GetSpriteBodyBox`/`AabbOverlaps`, and `_call_via_r4`
 trampoline calls with the same "dead read" idiom), just called from
 this spatial-hash-grid cluster instead of the plain array manager.
 Reused `CollidePartWithPlayer`'s exact C body (renamed) rather than re-derive it
 from scratch, given the two are line-for-line identical in the
 disassembly. Parked on the exact same `boxH` stack-layout gap as
-`CollidePartWithPlayer`/`CollidePartWithObject`/`sub_80099F0` (confirmed by the resulting
+`CollidePartWithPlayer`/`CollidePartWithObject`/`CollideCrateGridPartWithObject` (confirmed by the resulting
 object being exactly 8 bytes short of the real ROM size, the same gap
 size as those three).
 
@@ -3989,17 +3989,17 @@ size as those three).
 computed delta was already confirmed correct (the ROM instruction
 stream turned out byte-identical to `CollidePartWithPlayer`'s own, down to the
 label offsets - only the branch target labels and the compiled symbol
-name differ), `sub_80096C0` was hand-transcribed as literal Thumb asm
+name differ), `CollideCrateGridPartWithPlayer` was hand-transcribed as literal Thumb asm
 instead of staying an unclosable `#if NON_MATCHING` C draft, the same
 technique already used for `CollidePartWithPlayer`, `CollidePartWithObject`, and
-`sub_80099F0`. Moved out of `actor_part11.c` into its own new
+`CollideCrateGridPartWithObject`. Moved out of `actor_part11.c` into its own new
 translation unit, `src/graphics/actor_part11e.c` (its real ROM
 address isn't adjacent to that file's other functions - it sits
-between `sub_8009528`, still raw asm in `asm/code_3_2_13_944c.s`, and
+between `CollideCrateGrid`, still raw asm in `asm/code_3_2_13_944c.s`, and
 `CollidePlayerWithCrates`, `actor_part11d.c` - per docs/workflow.md step 4's
 "needs its own new .c file" case). Its raw `.if NON_MATCHING == 0`
 guard block was removed from `asm/code_3_2_13_944c.s` (which still
-carries `DrawCrateList`/`sub_8009528`'s own still-parked guards,
+carries `DrawCrateList`/`CollideCrateGrid`'s own still-parked guards,
 untouched); `ldscript.txt` got a new `actor_part11e.o` entry inserted
 between `asm/code_3_2_13_944c.o` and `actor_part11d.o`. Verified
 byte-identical via `arm-none-eabi-as` isolated assemble (every
@@ -4008,13 +4008,13 @@ unresolved `bl` target or `.4byte` pool word, both necessarily zero in
 an isolated, unlinked object) plus a full clean `make compare`
 (`crashbandicootxs.gba: La suma coincide`). Per project policy a
 `NAKED` transcription doesn't count as "matched" the way real
-decompiled C does, so `sub_80096C0` stays filed as parked (now
+decompiled C does, so `CollideCrateGridPartWithPlayer` stays filed as parked (now
 "parked, NAKED" rather than "parked, NON_MATCHING"). `CollidePartWithPlayer`
 itself is untouched by this change and remains its own separate
 `NAKED` function in `actor_part7.c`.
 
-`CollidePlayerWithCrates` (right after the parked `sub_80096C0`) remains raw -
-calls still-unexamined helpers (`sub_800D040`, `sub_80109A4`) whose
+`CollidePlayerWithCrates` (right after the parked `CollideCrateGridPartWithPlayer`) remains raw -
+calls still-unexamined helpers (`BreakCrateTouchedByPlayer`, `CollideCrateWithPlayer`) whose
 higher-level purpose isn't recoverable without more context. Left raw
 rather than guess.
 
@@ -4042,7 +4042,7 @@ faithful attempt still only needs two. Parked for the same reason as
 
 ## Second tractable pocket: `actor_part12.c`
 
-Right after that raw span, `sub_80099F0` through `DestroyCrateList` turned
+Right after that raw span, `CollideCrateGridPartWithObject` through `DestroyCrateList` turned
 out to be another self-contained, clearly-understood run - the same
 active-object array/grid manipulation primitives seen in
 `actor_part11.c`/`actor_part10.c`, just operating on the pool-manager
@@ -4050,11 +4050,11 @@ struct's own fields (`+0`=active count, `+4`=capacity, `+8`=slot
 array, `+0xc`=node array, `+0x10`/`+0x410`=spatial grid head/tail
 tables, `+0x810`/`+0x814`=free-list array/head):
 
-- **`sub_80099F0`** turned out byte-identical in shape to the already-
+- **`CollideCrateGridPartWithObject`** turned out byte-identical in shape to the already-
   parked `CollidePartWithObject` (down to the label offsets) - the same
   collision-hit-resolve logic, called from elsewhere in this cluster.
   Parked immediately on the same `boxH` gap, reusing `CollidePartWithObject`'s
-  exact C body - see "Parked, not matched: `sub_80099F0`" below.
+  exact C body - see "Parked, not matched: `CollideCrateGridPartWithObject`" below.
 - **`RemoveCrateFromList`**: searches the active-object array for `target`
   (search bound = capacity, at `+4`); on a match, unlinks it from the
   grid via `UnlinkCrateFromGrid` and compacts the array (bound = active count,
@@ -4092,7 +4092,7 @@ tables, `+0x810`/`+0x814`=free-list array/head):
   returns the node; (2) the `obj->flags` bit-4 test needed the loaded
   byte pinned to `r1` (not the naturally-allocated `r0`) before the
   shift, the same register-letter idiom already established for
-  `sub_8008D30`'s own flags test.
+  `CollidePartsOfClass`'s own flags test.
 - **`AddCrateToList`**: appends `obj` to the active-object array if
   there's room, inserting it into the grid via `LinkCrateInGrid` first.
   Matched first-attempt.
@@ -4104,7 +4104,7 @@ tables, `+0x810`/`+0x814`=free-list array/head):
 **Lesson reinforced again**: `RemoveCrateListAt` and `LinkCrateInGrid` were both
 initially declared "matches" from isolated per-function compiles, the
 same mistake this project has hit before with `CullPartList`/
-`sub_8008D30`. Only a full clean `make compare` after integrating the
+`CollidePartsOfClass`. Only a full clean `make compare` after integrating the
 whole batch into `actor_part12.c` caught both regressions - the ROM
 size grew by 4 bytes and every address after the bug shifted, which is
 exactly the kind of failure an isolated test cannot surface. A
@@ -4119,7 +4119,7 @@ itself (a physics/collision step-probe calling still-unexamined
 `sub_8008278`/`sub_8026628`) was left raw rather than guessed at, so
 this remains a separate raw span for now.
 
-**Parked, not matched: `sub_80099F0`** (ROM `0x080099F0`, right after
+**Parked, not matched: `CollideCrateGridPartWithObject`** (ROM `0x080099F0`, right after
 the raw `UnlinkCrateFromGrid`-`ResetCrateList` span, `src/graphics/actor_part12.c`):
 byte-identical in shape to the already-parked `CollidePartWithObject` - the same
 `boxH` stack-layout gap applies. See "Parked, not matched:
@@ -4129,7 +4129,7 @@ byte-identical in shape to the already-parked `CollidePartWithObject` - the same
 computed delta was already confirmed correct (the ROM instruction
 stream turned out byte-identical to `CollidePartWithObject`'s, down to the label
 offsets - only the branch target label and the compiled symbol name
-differ), `sub_80099F0` was hand-transcribed as literal Thumb asm in
+differ), `CollideCrateGridPartWithObject` was hand-transcribed as literal Thumb asm in
 `src/graphics/actor_part12.c` instead of staying an unclosable
 `#if NON_MATCHING` C draft, the same technique already used for
 `CollidePartWithObject` (`src/graphics/actor_part7b.c`). Its raw `.if
@@ -4140,7 +4140,7 @@ after that object in `ldscript.txt`, so no linker-script change was
 needed. Verified byte-identical via `arm-none-eabi-as` isolated
 assemble plus a full clean `make compare` (`crashbandicootxs.gba: La
 suma coincide`). Per project policy a `NAKED` transcription doesn't
-count as "matched" the way real decompiled C does, so `sub_80099F0`
+count as "matched" the way real decompiled C does, so `CollideCrateGridPartWithObject`
 stays filed as parked (now "parked, NAKED" rather than "parked,
 NON_MATCHING"). `CollidePartWithObject` itself is untouched by this change and
 remains its own separate `NAKED` function in `actor_part7b.c`.
@@ -4163,11 +4163,11 @@ gated by a mix of flag bits and a periodic "fast path" check against
 comparison - using a signed one here produced a real, full-rebuild-
 caught mismatch) and `gLevelState`'s mode (`+0x78`) is 3, or
 independently if `part`'s `+0xd` byte bit 3 is set and the mode is 3,
-builds `part`'s primary AABB via `sub_8007C30` (already matched) and
+builds `part`'s primary AABB via `GetSpriteAttackBox` (already matched) and
 tests it against the player via `PlayerTouchesBox` (already matched); on a
 hit, calls `ResolvePlayerContact` and returns. If the primary AABB has no
 region, *or the hit test simply missed*, falls back to the secondary
-AABB via `sub_8007CF8` (already matched) and repeats the same hit
+AABB via `GetSpriteBodyBox` (already matched) and repeats the same hit
 test.
 
 That "or the hit test simply missed" clause was a genuine logic bug
@@ -4292,7 +4292,7 @@ arguments. Matched on the first attempt.
 file): overwrites `self->table`, then (if `self+0x44`'s record is
 set) fires a `record->table+0x48/0x4c`-driven trampoline with a
 constant argument `3` via `_call_via_r2` (same `table+N`/`table+N+4`
-convention as `sub_8006FE4`/`IsSpriteObjOnScreen`/`UpdateSpriteObj`), and finally
+convention as `IsEntityNearCamera`/`IsSpriteObjOnScreen`/`UpdateSpriteObj`), and finally
 tail-calls `DestroySpriteObj` (already matched in `actor_part6.c`). Needed
 the trampoline's `addr = rec + offset` computed *before* the `fn`
 load, both pinned to the same registers the ROM uses (`rec`/`fn`
@@ -4349,15 +4349,15 @@ straight through as `_call_via_r4`'s own `arg1`-`arg3`. Matched after
 applying the dead-read pattern; folded into the front of
 `actor_part9.c` (replacing what was `asm/code_3_2_10.o`, which held
 only this one function) since its own real ROM address comes right
-after the parked `ApplySpriteVelocity` and before `sub_8009FF4`.
+after the parked `ApplySpriteVelocity` and before `ClassifySpriteContact`.
 
-**`sub_8009FF4`** (ROM `0x08009FF4`, right after `HitMovingSprite`, same
+**`ClassifySpriteContact`** (ROM `0x08009FF4`, right after `HitMovingSprite`, same
 file): builds `part`'s
-primary AABB (`sub_8007C30`, already matched in `actor_part2.c`) and
+primary AABB (`GetSpriteAttackBox`, already matched in `actor_part2.c`) and
 tests it against `region` (`AabbOverlaps`, the same collision-test
 function already declared for `CheckSpritePickup`/`IsSpriteObjInsideRect`'s sibling
 in `actor_part.c`/`actor_part4.c`); if that already overlaps, returns
-2. Otherwise builds the secondary AABB (`sub_8007CF8`, also already
+2. Otherwise builds the secondary AABB (`GetSpriteBodyBox`, also already
 matched) and re-tests; if that misses, returns 0. If it hits, returns
 2 unless `part->flags` bit 6 is set, in which case it returns the
 (nonzero) hit-test result itself.
@@ -4374,23 +4374,23 @@ never read again afterward) and read through a `u32` intermediate so
 the `>> 6` compiles to a logical `lsr` instead of an arithmetic `asr`.
 Matched after applying both fixes.
 
-**`CollideMovingSprite`** (ROM `0x0800A050`, right after `sub_8009FF4`, same
+**`CollideMovingSprite`** (ROM `0x0800A050`, right after `ClassifySpriteContact`, same
 file): fires a `self->table+0x70/0x74`-driven trampoline via
 `_call_via_r1` and always returns 0. Same `addr`-before-`fn` register-
 aliasing fix as `DestroyMovingSprite`/`UpdateMovingSprite`/`AttachSpriteCtrl` (below).
 Matched after applying it.
 
-**`sub_800A068`/`sub_800A078`/`sub_800A080`** (ROM `0x0800A068`-
+**`GetGroundSpriteHitMask`/`ClearGroundSpriteHitMask`/`AddGroundSpriteHitMask`** (ROM `0x0800A068`-
 `0x0800A080`, same file): `self+0x74` get/clear/OR-set accessors, no
 other logic. All matched on the first attempt.
 
-**`sub_800A06C`** (ROM `0x0800A06C`, same file): `self+0x74 != 0`,
+**`HasGroundSpriteHitMask`** (ROM `0x0800A06C`, same file): `self+0x74 != 0`,
 via the branchless `(-x | x) >> 31` idiom (this compiler does not
 choose it automatically for a plain `!= 0` comparison - that compiles
 to a `cmp`/`beq`/`mov` branch instead) rather than a plain comparison.
 Matched by writing the idiom explicitly.
 
-**`sub_800A088`/`sub_800A090`** (ROM `0x0800A088`/`0x0800A090`, same
+**`SetGroundSpriteHitAxes`/`GetGroundSpriteHitAxes`** (ROM `0x0800A088`/`0x0800A090`, same
 file): a plain `self+0x68` byte get/set pair. Both matched on the
 first attempt.
 
@@ -4431,7 +4431,7 @@ file): the same "shared first write" bulk-setter shape as
 `self+0x48`/`self+0x4c`/`self+0x50` - the velocity/accel/max-velocity
 fields `ApplySpriteVelocity` clamps. Both matched on the first attempt.
 
-**`sub_800A0F4`** (ROM `0x0800A0F4`, right after `SetSpriteMotionX`, same
+**`GetGroundSpriteProbeTries`** (ROM `0x0800A0F4`, right after `SetSpriteMotionX`, same
 file): `self+0x69` (cleared by `ResetMovingSprite`) getter. Matched on the
 first attempt.
 
@@ -4442,7 +4442,7 @@ through `sub_800A590` (part-object update/collision dispatchers
 calling still-unexamined `ProbeGroundSpriteTerrain`/`sub_8009BE0`) remain a raw
 span in `code_3_2_11.s` - left raw rather than guess at semantics.
 
-Right after that span, `DrawGroundSprite` through `sub_800A730` turned out
+Right after that span, `DrawGroundSprite` through `GetMovingSpriteCtrl` turned out
 to be another self-contained, clearly-understood run: a small
 `gGroundSpriteVtable`-table family of part-object constructors,
 mirroring the already-matched `gMovingSpriteVtable`-table family
@@ -4490,17 +4490,17 @@ mirroring the already-matched `gMovingSpriteVtable`-table family
 - **`InitGroundSprite`**: same `InitMovingSprite`/table-swap/clearer shape as
   `CreateGroundSprite`, but re-initializes an existing `self` instead of
   allocating a new one.
-- **`sub_800A6C4`/`sub_800A6D0`/`sub_800A6DC`**: get/clear/set
+- **`IsGroundSpriteGrounded`/`ClearGroundSpriteGrounded`/`SetGroundSpriteGrounded`**: get/clear/set
   accessors for `self+0xd` bit 1.
-- **`sub_800A6E8`/`sub_800A6F4`/`sub_800A700`**: get/clear/set
-  accessors for `self+0xd` bit 0. `sub_800A6E8` needed the incoming
+- **`IsGroundSpriteFloorProbeEnabled`/`DisableGroundSpriteFloorProbe`/`EnableGroundSpriteFloorProbe`**: get/clear/set
+  accessors for `self+0xd` bit 0. `IsGroundSpriteFloorProbeEnabled` needed the incoming
   `self` pointer explicitly copied into `r1` before the load (the ROM
   has a seemingly-redundant `adds r1, r0, #0` this compiler otherwise
   optimizes away, reading directly through `r0` instead) - fixed via
   an unusual "declare in `r1`, initialize in `r0`, reassign" pattern
   that also forces the AND's result into `r0` matching the ROM's own
   register choice for the return value.
-- **`sub_800A70C`/`sub_800A718`/`sub_800A724`**: clear/set/get
+- **`ClearSpriteObjFlag5`/`SetSpriteObjFlag5`/`GetSpriteObjFlag5`**: clear/set/get
   accessors for `flags` bit 5. The clear masks (`-3`, `-2`, `-0x21`
   for the three clear functions above and here) match the established
   "negate a small positive constant" idiom this compiler uses for bit-
@@ -4508,7 +4508,7 @@ mirroring the already-matched `gMovingSpriteVtable`-table family
   writing the literal negative constant directly (not `&= ~mask`,
   which folds to a different immediate-load instruction) reproduces
   the ROM's `movs`+`rsbs`/`neg` pair exactly.
-- **`sub_800A730`**: `self+0x44` getter (the same "record" field
+- **`GetMovingSpriteCtrl`**: `self+0x44` getter (the same "record" field
   `DestroyMovingSprite`/`UpdateMovingSprite` fire their trampolines through).
 
 All 16 were verified via a full recompile of `actor_part14.c` together
@@ -4518,7 +4518,7 @@ that isolated per-function compiles aren't sufficient proof - and this
 batch caught two more real integration-only issues: `ResetGroundSprite`/
 `CreateGroundSprite` were initially placed in the wrong file order (matching
 their natural "helper defined before caller" writing order rather
-than their real ROM address order), and `sub_800A6E8`'s isolated test
+than their real ROM address order), and `IsGroundSpriteFloorProbeEnabled`'s isolated test
 initially passed with the redundant register copy already dropped
 (matching in isolation) but the full build caught the resulting
 4-byte size regression once the whole file was assembled together.
@@ -4546,7 +4546,7 @@ of the run:
 - **`PlayerTouchesBox`**: the `gPlayer` AABB-vs-buf collision
   check every earlier-matched pool/grid function in `actor_part11.c`
   calls by name - finally matched for real. Builds a secondary AABB
-  via the already-matched `sub_8007CF8`, and only tests it via
+  via the already-matched `GetSpriteBodyBox`, and only tests it via
   `AabbOverlaps` when it has a region (`field_8 > 0`).
 - **`DestroyPlayer`**: overwrites `self->table` with
   `gPlayerVtable` (a second static table alongside the
@@ -4566,7 +4566,7 @@ of the run:
   setters, countdown decrement/clear/increment/get, an unsigned
   "counter snapshot ahead of `gRoomFrameCount`" check, and four
   parallel byte accessor pairs at `+0x100`-`+0x103` that read like a
-  small per-phase flag array). One real gap: `sub_800B524`'s unsigned
+  small per-phase flag array). One real gap: `IsPlayerInvulnerable`'s unsigned
   `field > gRoomFrameCount` check needed to be written as a plain
   `return a > b;` rather than an explicit `if/else` - here the
   explicit form was the one that mismatched (the reverse of
@@ -4681,7 +4681,7 @@ respectively), and a handful of small `part`/table accessors:
   plain `part[0xc] &= -9` let the compiler fold the mask straight to
   the byte immediate `0xf7` and load-before-mask, instead of the ROM's
   `movs r0,#9; neg r0,r0` sequence.
-- **`sub_800B8A4`**: `self+0` word setter.
+- **`AttachCtrl`**: `self+0` word setter.
 - **`DestroyCtrl`**: resets `self+0xc`'s table pointer to
   `gCtrlVtable` (a third static table alongside
   `gMovingSpriteVtable`/`gCtrlMotionRecords`), then fires
@@ -4701,8 +4701,8 @@ left for a future pass - a background pass on it read the whole
 jump-table dispatcher and worked out most of its shape, but found a
 real structural contradiction (case 17 stores a pointer through
 `self+0x88` and later dereferences it as a `struct actor`, while the
-already-matched `sub_800B554`/`sub_800B55C` in `actor_part16.c` treat
-`self+0x88` as a plain byte) that needs `sub_800C9C8`'s own semantics
+already-matched `SetPlayerControlMode`/`GetPlayerControlMode` in `actor_part16.c` treat
+`self+0x88` as a plain byte) that needs `LaunchHarmfulEffectPart`'s own semantics
 pinned down first; left completely untouched rather than guess.
 
 ## The `0x080014A4`-`0x08001624` fade/screen-mode cluster, finally matched
@@ -4737,7 +4737,7 @@ cluster).
   address - no combination of local-variable placement, register
   pins, or inline-asm memory-clobber barriers landed on the ROM's
   exact "cache exactly one of three" split. Same root cause as
-  `sub_8009150`'s documented loop-invariant-hoisting gap, applied to
+  `LinkCrateToActiveBucket`'s documented loop-invariant-hoisting gap, applied to
   a memory-mapped-I/O DMA setup instead of a pointer computation.
 - **`IsBrightnessFadeActive`**: `gBrightnessFade.field_0 != -1` (the same
   "idle" fade sentinel documented on that struct in `fade_util.c`),
@@ -4840,7 +4840,7 @@ contribution workflow:
   converted to `CpuSet`'s 32-bit-word count field (masked to the low 23
   bits via `<<9`/`>>11`, then the 32-bit-transfer flag `0x04000000`
   set).
-- **`nullsub_9`**: empty function; needed the usual trailing
+- **`UpdateCtrl`**: empty function; needed the usual trailing
   `asm(".align 2, 0");` for the ROM's zero-fill padding before the next
   function.
 - **`ShowBitmapScreen`** (`src/graphics/intro_screen.c` - a separate file
@@ -5262,7 +5262,7 @@ register-allocation gap each), and 2 (`UpdateGameFrame` itself and
     branchless only when written as the `(-x | x) >> 31` idiom (for
     `!= 0`) or `(x << (31-N)) >> 31` (for a single bit), matching the
     already-established "this compiler doesn't choose the branchless
-    form for a plain comparison" pattern from `sub_800A06C`.
+    form for a plain comparison" pattern from `HasGroundSpriteHitMask`.
   - **OR-setters** (`GiveTornadoSpin`/`90`/`9C`/`80231A8`, and the `|= 2`
     step inside `AddBrokenCrate`/`PressSwitchCrate` above) all need the mask
     built into `r1` *before* the byte is loaded into `r2` - a plain
@@ -5329,7 +5329,7 @@ register-allocation gap each), and 2 (`UpdateGameFrame` itself and
   `ResetSpriteFrameTimer`/`ResetSpriteFrameIndex`/`SetSpriteAnimDone` when non-null, then walks
   `gUnknown_030012EC`'s array firing `_call_via_r1` table trampolines
   and setting bits in the `gEntityFlags` collision bitmap. Several
-  callees (`SetMaskLevel`, `sub_8010804`, `_call_via_r1`, `PickUpWumpa`)
+  callees (`SetMaskLevel`, `ConvertCratesForTimeTrial`, `_call_via_r1`, `PickUpWumpa`)
   aren't characterized precisely enough yet to commit a confident
   reconstruction.
 

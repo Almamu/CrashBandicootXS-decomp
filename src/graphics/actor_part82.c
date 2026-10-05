@@ -34,7 +34,7 @@ extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
 extern void FadeOutMusic(void *ctx, u32 value);
 extern void LoadPaletteSlot(void *cache, s32 slot, s32 kind);
 extern void *GetSpriteFrame(struct act_part *part);
-extern u8 sub_800AAEC(struct act_part *part, s32 action);
+extern u8 PlayerHasRoomForAnim(struct act_part *part, s32 action);
 extern void KillPlayer(struct act *self, s32 id);
 extern void ApplyActionCtrlMotion(struct act *self);
 extern void sub_8015558(struct act *self);
@@ -48,7 +48,7 @@ static inline void ActSetNext27(struct act *self, s32 next)
     self->next27 = next;
 }
 
-/* sub_80084C4 inlined: points `dst` at the part's current keyframe
+/* GetSpriteFrameAnchor inlined: points `dst` at the part's current keyframe
  * offset record. A macro so each case assigns `dst` itself. */
 #define PART_OFFSET(dst, part)                                                 \
     if (1) {                                                                   \
@@ -115,7 +115,7 @@ static inline void PartSetVelY(struct act_part *p, s32 a, s32 b, s32 c)
  *   with 0x1C and also reset the part's velocities and
  *   `gCamera->unk_14`;
  * - 11 calls `sub_8015558` once the player is in contact and
- *   `sub_800AAEC(part, 0xB)` reports 1;
+ *   `PlayerHasRoomForAnim(part, 0xB)` reports 1;
  * - 12 applies the contact bits `arg3` (and, for `arg3 & 3` == 1/2,
  *   the player's X mirror decides whether the queued action moves to
  *   +0x2C); in state 0xC with the player mid-keyframe it rewinds the
@@ -349,7 +349,7 @@ void ActionCtrlHandleEvent(struct act *self, s32 arg1, s32 arg2, s32 arg3)
         KillPlayer(self, 0x2a);
         break;
     case 11:
-        if ((gPlayer->contact & 8) && sub_800AAEC(self->part, 0xb) == 1) {
+        if ((gPlayer->contact & 8) && PlayerHasRoomForAnim(self->part, 0xb) == 1) {
             ActAndFlags0D(self->part, -2);
             ActAndFlags0D(self->part, -3);
             sub_8015558(self);

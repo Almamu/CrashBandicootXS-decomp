@@ -40,8 +40,8 @@ struct player {
     u8 state;           // 0x88
 };
 
-extern void sub_800D040(void *part);
-extern void sub_80109A4(void *part, s32 mode, s32 playerX, s32 playerY);
+extern void BreakCrateTouchedByPlayer(void *part);
+extern void CollideCrateWithPlayer(void *part, s32 mode, s32 playerX, s32 playerY);
 extern struct level_layers *gLevelLayers;
 extern struct player *gPlayer;
 
@@ -52,13 +52,13 @@ extern struct player *gPlayer;
  * (`gPlayer`) rather than writing to the grid.
  *
  * If the player's `+0x88` byte is `3`: for every windowed node, calls
- * `sub_800D040(part)`.
+ * `BreakCrateTouchedByPlayer(part)`.
  *
  * Otherwise: computes a dispatch value from the player (`*(void **)
  * (player+0x44) + 8`'s pointee by default; `0` if the player's `+0x88`
  * byte is `1`, further overridden to `0xd` if that byte is also `1`
  * *and* the player's `+0xa` byte is `0x13`), then for every windowed
- * node calls `sub_80109A4(part, dispatchValue, player->x, player->y)`.
+ * node calls `CollideCrateWithPlayer(part, dispatchValue, player->x, player->y)`.
  *
  * Matches under old_agbcc (see docs/matching/issue-9-naked-retry.md):
  * the "cross-branch register-role gap" this was parked for was the
@@ -81,7 +81,7 @@ void CollidePlayerWithCrates(struct pool_manager *m)
         do {
             struct grid_node *node;
             for (node = m->gridHead[i]; node != NULL; node = node->next)
-                sub_800D040(node->data);
+                BreakCrateTouchedByPlayer(node->data);
             i--;
         } while (i >= lo);
     } else {
@@ -97,7 +97,7 @@ void CollidePlayerWithCrates(struct pool_manager *m)
         do {
             struct grid_node *node;
             for (node = m->gridHead[i]; node != NULL; node = node->next)
-                sub_80109A4(node->data, mode, px, py);
+                CollideCrateWithPlayer(node->data, mode, px, py);
             i--;
         } while (i >= lo);
     }

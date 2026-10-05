@@ -555,7 +555,7 @@ asm(".align 2, 0");
  * it sits as four bytes of real, coherent Thumb code (movs r0, #1;
  * bx lr) squeezed between UpdateJetpackCheckpointText's real return and the next
  * labelled function, DestroyJetpackCheckpointText below (same pattern documented for
- * sub_800039C/strlen in docs/decomp_dev.md - see the matching split
+ * mem_walk_heaps/strlen in docs/decomp_dev.md - see the matching split
  * entry in expected/corrections.txt for this address). A trivial
  * "return true" stub, plausibly a vtable slot default. */
 s32 IsJetpackCheckpointTextUnshootable(void)

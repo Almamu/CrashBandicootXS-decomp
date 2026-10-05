@@ -13,13 +13,13 @@
  * `self+0x10`/`self+0x14` bounds, direction picked by `owner+0x28` bit
  * 4, the established mirror-flag convention) before triggering
  * `SetEnemyAnimMode` with a different constant (1 vs 6) and always calling
- * `sub_800C8BC(self, 0)`. Modes 1 and 6 both toggle `owner+0x28` bit 4
+ * `SetEnemyMotionX(self, 0)`. Modes 1 and 6 both toggle `owner+0x28` bit 4
  * (the "flag active + bitmap-set" idiom's own bit, an unconditional
  * flip via the mask-and-or idiom, not the position gate) when
- * `owner+0x38` is set, then trigger `SetEnemyAnimMode`/`sub_800C8BC` with
+ * `owner+0x38` is set, then trigger `SetEnemyAnimMode`/`SetEnemyMotionX` with
  * different constants; mode 1 additionally clamps `owner+0x30` against
  * a keyframe-record byte (`owner+0x20`-table[`owner+0x2d`]+0x16, the
- * `sub_800D040`-style 28-byte-stride record convention) when
+ * `BreakCrateTouchedByPlayer`-style 28-byte-stride record convention) when
  * `self+0x6c == 0xf`. Any other mode is a silent no-op.
  *
  * Real C under old_agbcc (issue #10 NAKED retry,
@@ -45,7 +45,7 @@ void UpdateEnemyPatrol(struct part_ctrl *self)
         if ((self->target->mirror.u.x && self->target->x < self->rangeX[0])
             || (!self->target->mirror.s.x && self->target->x > self->rangeX[1])) {
             SetEnemyAnimMode(self, 1);
-            sub_800C8BC(self, 0);
+            SetEnemyMotionX(self, 0);
         }
         break;
     case 1:
@@ -53,7 +53,7 @@ void UpdateEnemyPatrol(struct part_ctrl *self)
             u32 m = self->target->mirror.u.x;
             self->target->mirror.u.x = !m;
             SetEnemyAnimMode(self, 0);
-            sub_800C8BC(self, 1);
+            SetEnemyMotionX(self, 1);
             if (self->kind == 15) {
                 target = self->target;
                 t = 8;
@@ -68,7 +68,7 @@ void UpdateEnemyPatrol(struct part_ctrl *self)
         if ((self->target->mirror.u.x && self->target->x < self->rangeX[0])
             || (!self->target->mirror.s.x && self->target->x > self->rangeX[1])) {
             SetEnemyAnimMode(self, 6);
-            sub_800C8BC(self, 0);
+            SetEnemyMotionX(self, 0);
         }
         break;
     case 6:
@@ -76,7 +76,7 @@ void UpdateEnemyPatrol(struct part_ctrl *self)
             u32 m = self->target->mirror.u.x;
             self->target->mirror.u.x = !m;
             SetEnemyAnimMode(self, 4);
-            sub_800C8BC(self, 1);
+            SetEnemyMotionX(self, 1);
         }
         break;
     }

@@ -4,7 +4,7 @@
 /* GitHub issue #13: 0x0800FC70-0x08010A0C, continuing the physics/
  * collision subsystem (see game_loop17.c's header comment and
  * docs/matching/issue-13-graphics-fc70.md). `GetTopCrate`/
- * `GetBottomCrate`/`sub_80109A4` right after this function are matched in
+ * `GetBottomCrate`/`CollideCrateWithPlayer` right after this function are matched in
  * game_loop30.c. */
 
 extern void *gAudioContext;

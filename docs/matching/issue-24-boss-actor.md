@@ -65,14 +65,14 @@ pointer as an explicit argument) matters in two places:
 
 ### 3. The AABB builders return their box by value
 
-`sub_8007C30`/`sub_8007CF8`/`GetSpriteHitbox` are declared elsewhere as
+`GetSpriteAttackBox`/`GetSpriteBodyBox`/`GetSpriteHitbox` are declared elsewhere as
 `void *f(void *dest, void *part)`. They are really
 `struct box f(struct part *)`: gcc passes the hidden result pointer in r0
 and returns it. Declaring them this way reproduces the ROM's argument
 order: the player global is loaded into r1 *before* the temporary's
 address goes into r0. A plain pointer argument evaluates it the other way
 round. The fallback `if (!valid) box = playerBox` is
-`struct box *pb = &b; *pb = sub_8007C30(player);`: assigning through the
+`struct box *pb = &b; *pb = GetSpriteAttackBox(player);`: assigning through the
 pointer makes gcc build the result in a temporary (the ROM's third
 16-byte stack slot) and copy it with `ldmia`/`stmia`.
 
@@ -161,7 +161,7 @@ low nibble slot, `+0x2D` tag, `+0x30` frame, `+0x38` "animation done",
 - `sub_801A2A8`'s hit test is `(fl.raw >> 6) & 1`, a value extract rather
   than a bit test.
 - `sub_801A64C`/`sub_801A2A8`'s "mark gone" (`MarkCollected`, the
-  `sub_80072D8` bitmap idiom) matches as a plain inline under
+  `MarkEntityGone` bitmap idiom) matches as a plain inline under
   `old_agbcc`: `w /= 32` gives the ROM's `asr`, and loading the global
   before copying the id gives its register order. When `MarkCollected` is
   inlined twice, gcc cross-jumps the two copies into the ROM's shared

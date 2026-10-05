@@ -1,8 +1,8 @@
 #include "core.h"
 
 /* GitHub issue #9/#10 (0x0800B8DC-0x0800D040 cluster, see
- * docs/matching/issue-9-10-0x0800b8dc-graphics.md): `sub_800C8F8`/
- * `UpdateEnemyBob`/`sub_800C97C`, a family of three "sine-wave
+ * docs/matching/issue-9-10-0x0800b8dc-graphics.md): `UpdateEnemyOscillateX`/
+ * `UpdateEnemyBob`/`UpdateEnemyOscillateY`, a family of three "sine-wave
  * oscillator" writers sharing the same 256-entry sine-ish table
  * `gSineTable` (already established elsewhere in this ROM,
  * `src/graphics/actor_part72.c`/`actor_part111.c`) and the global
@@ -12,15 +12,15 @@
  * oscillation amplitude) - only the axis written, the phase-index
  * derivation, and the base field differ:
  *
- * - `sub_800C8F8`: X axis (`owner+0`), base `self->0x60`, phase index
+ * - `UpdateEnemyOscillateX`: X axis (`owner+0`), base `self->0x60`, phase index
  *   via `__udivsi3(gRoomFrameCount << 8, self->0x3c) -
  *   (self->0x40 - 0x100)`.
  * - `UpdateEnemyBob`: Y axis (`owner+4`), base `self->0x64`, phase index
  *   via `(gRoomFrameCount >> 1) - (self->0x40 - 0x100)` - *no*
  *   `__udivsi3` call, a plain half-rate frame-counter phase
  *   instead.
- * - `sub_800C97C`: Y axis (`owner+4`), base `self->0x64`, same
- *   `__udivsi3`-based phase index as `sub_800C8F8`.
+ * - `UpdateEnemyOscillateY`: Y axis (`owner+4`), base `self->0x64`, same
+ *   `__udivsi3`-based phase index as `UpdateEnemyOscillateX`.
  *
  * `__udivsi3` (already matched, `src/util/time_util.c`/
  * `src/graphics/hud_icon_widget5.c`) is `s32 __udivsi3(s32 value,
@@ -37,7 +37,7 @@
  * Thumb's 8-bit immediate `subs` range), while a natural `... - 0x100`
  * C expression here lets the compiler re-associate the subtraction
  * into a same-value-but-different-encoding form that avoids the extra
- * literal; and (2) `sub_800C8F8`/`sub_800C97C`'s final
+ * literal; and (2) `UpdateEnemyOscillateX`/`UpdateEnemyOscillateY`'s final
  * `tableVal * self->0x44` product needs a `mov`+`muls` register copy
  * to free up a register for `owner`, but which operand gets copied
  * (and to which register) depends on downstream allocator choices an
@@ -57,7 +57,7 @@
  * report` (no warnings) and `rm -rf build crashbandicootxs.elf
  * crashbandicootxs.gba crashbandicootxs.map && make compare`
  * (`crashbandicootxs.gba: La suma coincide`). */
-/* sub_800C8F8 is real C (issue #9-#11 NAKED retry): the product goes
+/* UpdateEnemyOscillateX is real C (issue #9-#11 NAKED retry): the product goes
  * into a fresh `v` pinned to r2 (the ROM's `mov r2, r1; mul r2, r0`),
  * which leaves r1 for the target. The phase bias goes through an inline
  * parameter (Wave) to keep the ROM's `phase + 0xFFFFFF00` literal
@@ -74,7 +74,7 @@ static inline s16 Wave(s16 *table, s32 t, s32 phase)
     return table[(t - phase) & 0xff];
 }
 
-void sub_800C8F8(struct part_ctrl *self)
+void UpdateEnemyOscillateX(struct part_ctrl *self)
 {
     s16 *table = gSineTable;
     s32 t = __udivsi3(gRoomFrameCount << 8, self->period);
@@ -88,7 +88,7 @@ void sub_800C8F8(struct part_ctrl *self)
     target->x = self->baseX + v;
 }
 
-/* UpdateEnemyBob and sub_800C97C are real C (issue #10 retry). The ROM
+/* UpdateEnemyBob and UpdateEnemyOscillateY are real C (issue #10 retry). The ROM
  * saves a callee-saved register neither body uses (r5 in C940, r8 in
  * C97C). -fprologue-bugfix is not the cause: agbcc with or without it
  * and old_agbcc all emit the same code for these. What reproduces it is
@@ -115,7 +115,7 @@ void UpdateEnemyBob(struct part_ctrl *self)
     target->y = self->baseY + Wave(table, t, ph + k) * self->amplitude;
 }
 
-void sub_800C97C(struct part_ctrl *self)
+void UpdateEnemyOscillateY(struct part_ctrl *self)
 {
     struct ctrl_target *target = self->target;
     register s16 *table asm("r6") = gSineTable;
@@ -127,7 +127,7 @@ void sub_800C97C(struct part_ctrl *self)
 }
 
 /* `UpdateEnemyCtrl` state 18's floating-popup spawner
- * (`sub_800C9C8(0x1D, 0, 0, 0x2B, 0, owner)`, per the Phase 1 doc) -
+ * (`LaunchHarmfulEffectPart(0x1D, 0, 0, 0x2B, 0, owner)`, per the Phase 1 doc) -
  * a thin wrapper around the already-matched `LaunchEffectPart`
  * (`src/system/game_loop14.c`, the AABB-aware "spawn part near src"
  * primitive): forwards all six arguments (`gEntitySpawner` as the
@@ -153,7 +153,7 @@ void sub_800C97C(struct part_ctrl *self)
 extern void *gEntitySpawner;
 extern void *LaunchEffectPart(void *pool, s32 a, s32 b, s32 c, s32 d, s32 e, void *f);
 
-void *sub_800C9C8(s32 a, s32 b, s32 c, s32 d, s32 e, void *f)
+void *LaunchHarmfulEffectPart(s32 a, s32 b, s32 c, s32 d, s32 e, void *f)
 {
     u8 *obj;
     s32 flags;

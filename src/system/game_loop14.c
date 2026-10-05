@@ -79,7 +79,7 @@ extern void ResetSpriteFrameIndex(struct fx_part *part);
 extern void SetSpriteAnimDone(struct fx_part *part, s32 val);
 extern s32 GetSpriteAnimPaletteSlot(struct fx_part *part);
 extern void *OperatorNew(s32 size);
-extern struct manager *sub_800CCE0(void);
+extern struct manager *InitEffectCtrl(void);
 extern s32 _call_via_r2(void *self, void *arg, void *fn);
 extern void AddToPartList(void *manager, void *value);
 
@@ -149,7 +149,7 @@ struct fx_part *LaunchEffectPart(void *pool, s32 arg1, s32 kind, s32 margin, s32
 /* Spawns a CreateMovingSprite effect part at (x, y) clamped into the current
  * level's bounds, facing left when `mirror` is set, with animation
  * record `anim` (12-byte stride) and tag `tag`. Attaches it to a fresh
- * sub_800CCE0 manager and registers it with gCollidableList. */
+ * InitEffectCtrl manager and registers it with gCollidableList. */
 struct fx_part *SpawnEffectPart(void *unused0, s32 anim, s32 tag, s32 x, s32 y, s32 mirror)
 {
     struct fx_part *part;
@@ -175,7 +175,7 @@ struct fx_part *SpawnEffectPart(void *unused0, s32 anim, s32 tag, s32 x, s32 y, 
     SetSpriteAnimDone(part, 0);
     part->frameNibble = GetSpriteAnimPaletteSlot(part);
     OperatorNew(0x10);
-    mgr = sub_800CCE0();
+    mgr = InitEffectCtrl();
     part->mgr = mgr;
     _call_via_r2((u8 *)mgr + mgr->vtable->attach.thisOffset, part, mgr->vtable->attach.fn);
     ACTOR_FLAG_BITS(&part->base)->bit2 = 0;
