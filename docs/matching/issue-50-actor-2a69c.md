@@ -25,7 +25,7 @@ forward-declares and calls) plus a handful of new fields it introduces:
 the constructor's raw `part`/`b`/`c`/`d` arguments cached at
 `self+0x30`/`self+0x1c`/`self+0x20`/`self+0x24`, a "movement" threshold
 pair at `self+0x14`/`self+0x34` (an absolute-value/packed-bitfield
-distance metric compared against `gUnknown_030013C0`/`gUnknown_030013C4`,
+distance metric compared against `gActorNearClipDepth`/`gActorFarClipDepth`,
 gating whether the object fires its `+0x50` table's slot-3 trampoline
 instead of animating), a one-shot byte flag at `self+0x2c`, and a
 12-byte little vector block at `self+0x38` (copied from `part+0x14..20`)

@@ -3522,7 +3522,7 @@
   {
    "address": "0x0817A728",
    "size": 32,
-   "name": "gStaticData_0817A728",
+   "name": "gPolarPlayerShockPalette",
    "consumers": [
     "HurtPolarPlayer",
     "PolarPlayerStateShocked"
@@ -3547,7 +3547,7 @@
   {
    "address": "0x0817A748",
    "size": 32,
-   "name": "gStaticData_0817A748",
+   "name": "gPolarPlayerShockBlinkPalette",
    "consumers": [
     "PolarPlayerStateShocked"
    ],
@@ -3863,7 +3863,7 @@
   {
    "address": "0x0817AA98",
    "size": 5928,
-   "name": "gStaticData_0817AA98",
+   "name": "gYetiCatchBox",
    "consumers": [
     "UpdateYeti"
    ],

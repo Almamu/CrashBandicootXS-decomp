@@ -41,13 +41,13 @@ their bytes to the preceding labelled function:
 - **`IsJetpackExplosionUnshootable`** (0x0803B5AC, 4 bytes) - byte-identical to
   `IsJetpackCheckpointTextUnshootable`, between `UpdateJetpackExplosion` and `DestroyJetpackExplosion`.
 - **`GetActorHp`** (0x0803B5DC, 4 bytes) - between `DestroyJetpackExplosion`'s real
-  return and `nullsub_44` below. `ldr r0,[r0,#0x54]; bx lr` - a plain
+  return and `DamageActor` below. `ldr r0,[r0,#0x54]; bx lr` - a plain
   `self->field_54` getter.
-- **`nullsub_44`** (0x0803B5E0, 2 bytes, 2-byte aligned pad after) -
+- **`DamageActor`** (0x0803B5E0, 2 bytes, 2-byte aligned pad after) -
   `bx lr` alone, a genuinely empty stub (same shape as `ResetStopwatch` in
   `src/graphics/actor_part39.c`) - next available `nullsub_N`, since
   `_call_via_lr` was already taken.
-- **`IsJetpackPlayerUnshootable`** (0x0803B5E4, 4 bytes) - between `nullsub_44`'s
+- **`IsJetpackPlayerUnshootable`** (0x0803B5E4, 4 bytes) - between `DamageActor`'s
   padding and `DestroyJetpackShot`. `movs r0,#0; bx lr` - a trivial "return
   false"/"return 0" stub.
 
@@ -92,7 +92,7 @@ All in `src/graphics/actor_anim.c`, in ROM order:
   shape: tear down via `DestroyJetpackBalloonCrate(self, 0)` (itself still unmatched)
   instead of the inline list-unlink, then free `self` when `flags & 1`
   - same as every other handler here.
-- **`GetActorHp`**/`nullsub_44`/`IsJetpackPlayerUnshootable` - see "Seven more hidden
+- **`GetActorHp`**/`DamageActor`/`IsJetpackPlayerUnshootable` - see "Seven more hidden
   functions" above.
 
 ### Compiler-codegen notes

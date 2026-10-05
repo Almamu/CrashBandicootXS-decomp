@@ -6,7 +6,7 @@
 
 extern void *gPaletteCache;
 extern u8 *gLevelState;
-extern void *gUnknown_030012E8;
+extern void *gUpdateOnlyPartList;
 extern void *gDecorationList;
 
 extern struct popup_part *CreateSpriteObj(u16 arg0, u16 arg1, u16 arg2, u16 arg3);
@@ -204,7 +204,7 @@ void nullsub_21(void)
 
 /* `new`s a 0x28-byte CreatePeriodicSpawner object, installs SpawnSeal as its
  * callback with +0x20 = 0x78, places it at (arg1, arg2) in Q8, sets
- * flags bit 4 and registers it with gUnknown_030012E8's manager. */
+ * flags bit 4 and registers it with gUpdateOnlyPartList's manager. */
 void SpawnSealSpawner(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct periodic_spawner *obj;
@@ -218,7 +218,7 @@ void SpawnSealSpawner(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     obj->base.x = arg1 << 8;
     obj->base.y = arg2 << 8;
     obj->base.flags |= 0x10;
-    AddToPartList(gUnknown_030012E8, obj);
+    AddToPartList(gUpdateOnlyPartList, obj);
 }
 
 /* Plain `CreateCrate` entity-constructor trampoline (docs/rom_map.md;

@@ -27,7 +27,7 @@ struct spawn_part
 
 extern struct level_guard gLevelTable[];
 extern u8 *gPlayer;
-extern void *gUnknown_030012E8;
+extern void *gUpdateOnlyPartList;
 extern u8 IsInGemPath(void *self);
 extern u8 IsInBonusRound(void *self);
 extern s32 sub_8023324(void *self);
@@ -58,7 +58,7 @@ void sub_8021280(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 
         SetEntitySize(part, 0x64, 0x64);
         part->field_0A = 0x12;
-        AddToPartList(gUnknown_030012E8, part);
+        AddToPartList(gUpdateOnlyPartList, part);
     }
     else if (gPlayer[0x88] == 0)
     {
@@ -82,7 +82,7 @@ void sub_8021280(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 
         SetEntitySize(part, 0x28, 0x28);
         part->field_0A = 0x12;
-        AddToPartList(gUnknown_030012E8, part);
+        AddToPartList(gUpdateOnlyPartList, part);
     }
 }
 

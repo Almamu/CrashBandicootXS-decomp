@@ -4240,7 +4240,7 @@ mirror-flag-style bit encoding used earlier in this ROM region for
 `GetSpriteBounds`). Caches the pre-move position at `self+0x6c`/`self+0x70`
 (read back by `GetSpritePrevPos`/`GetSpritePrevY`/`GetSpritePrevX` below), applies
 the clamped velocity to `self+0`/`self+4`, updates the global
-`gUnknown_03001298` with the Y velocity, and returns whether either
+`gLastSpriteVelY` with the Y velocity, and returns whether either
 axis is still moving.
 
 Every branch, comparison, and memory access is confirmed correct,
@@ -4257,7 +4257,7 @@ would be semantically equivalent but byte-different).
 The one remaining gap: the ROM is a genuine leaf function - no
 `push`/`pop` at all, needing only `r0`-`r3` for the whole body, with
 `self` naturally landing in `r2` and being freed for reuse (for the
-final `gUnknown_03001298` dereference) once its last use has passed.
+final `gLastSpriteVelY` dereference) once its last use has passed.
 Every arrangement tried here needs one extra register spilled to `r4`
 (a `push {r4, lr}`/`pop {r4}` pair the ROM doesn't have), including:
 pinning `self` to `r2` explicitly (fixes everything up through the

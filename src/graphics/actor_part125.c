@@ -22,7 +22,7 @@ extern s32 gAirshipState;
 extern s32 gAirshipHp;
 extern void *gAirshipAttack;
 extern void *gAirship;
-extern s32 gUnknown_030013C0;
+extern s32 gActorNearClipDepth;
 extern void RunJetpackBalloonState(struct actor_self *self);
 extern void *gAudioContext;
 extern u8 gJetpackBalloonVtable[];
@@ -82,7 +82,7 @@ void AirshipStateInactive(void)
 }
 
 /* Per-frame update: syncs via `UpdateActorDepth`; once `self` has fallen
- * behind the camera (`depth` below `gUnknown_030013C0 - 0x200`) it
+ * behind the camera (`depth` below `gActorNearClipDepth - 0x200`) it
  * releases its pending linked object (`ClearJetpackCrateBalloon`) and destroys
  * itself, as it also does once the state-2 animation has played through
  * or state 1 has sunk past a height; otherwise runs the member-pointer
@@ -91,7 +91,7 @@ void AirshipStateInactive(void)
 void UpdateJetpackBalloon(struct jetpack_balloon *self)
 {
     UpdateActorDepth(self);
-    if (self->base.depth < gUnknown_030013C0 - 0x200) {
+    if (self->base.depth < gActorNearClipDepth - 0x200) {
         if (self->pending != NULL) {
             ClearJetpackCrateBalloon(self->pending);
             self->pending = NULL;

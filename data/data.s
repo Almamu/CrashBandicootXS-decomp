@@ -102,7 +102,7 @@ gSfxTable:
 
 @ gPolarPlayerStateFuncs: src/data/actor_pmf_17a6b8.c
 
-@ gStaticData_0817A728..gYetiChargeParams: src/data/actor_tables_17a728.c
+@ gPolarPlayerShockPalette..gYetiChargeParams: src/data/actor_tables_17a728.c
 
 @ gYetiStateFuncs: src/data/actor_state_fn_17a840.c
 

@@ -4,7 +4,7 @@
 /* Thin `InitActorPart`-based constructor (constant last-arg `1`,
  * unlike `CreatePolarWumpa`'s forwarded one), then computes a velocity
  * vector aiming toward a fixed offset point via the screen-projection
- * helpers `sub_8029E98`/`sub_8029EB4` plus `__divsi3` division -
+ * helpers `GetActorBgCenterY`/`GetActorBgCenterX` plus `__divsi3` division -
  * the "homing/seek-toward-point effect" `CreateJetpackCollectedWumpa` byte-for-byte
  * twins, per docs/rom_map.md.
  *
@@ -13,7 +13,7 @@
  * `asr`/`eor`/`sub`) rather than a `(x < 0) ? -x : x` ternary, which
  * this compiler instead turns into a `cmp`/`bge`/`neg` branch. The
  * `x` (+0x1c) reload also needs pinning to `r1` and reading *after*
- * the `sub_8029EB4()` call (not before) - pinning it before the call
+ * the `GetActorBgCenterX()` call (not before) - pinning it before the call
  * let this compiler's optimizer silently skip the reload and reuse a
  * stale register value from the unrelated `y` (+0x20) computation two
  * statements earlier, a genuine correctness bug caught by a direct
@@ -21,8 +21,8 @@
  * mismatch. */
 extern u8 gPolarCollectedWumpaVtable[];
 extern s32 __divsi3(s32 arg0, s32 arg1);
-extern s32 sub_8029E98(void);
-extern s32 sub_8029EB4(void);
+extern s32 GetActorBgCenterY(void);
+extern s32 GetActorBgCenterX(void);
 extern void InitActorPart(void *self, s32 a, s32 b, s32 c, s32 d);
 
 /* The seek effect (method table gPolarCollectedWumpaVtable). */
@@ -45,10 +45,10 @@ void *CreatePolarCollectedWumpa(void *selfArg, s32 a, s32 b, s32 c, s32 spawnPar
     self->base.vtable = (struct actor_vtable *)gPolarCollectedWumpaVtable;
     self->count = spawnParam;
 
-    self->base.y += sub_8029E98();
+    self->base.y += GetActorBgCenterY();
 
     {
-        register s32 ebResult asm("r0") = sub_8029EB4();
+        register s32 ebResult asm("r0") = GetActorBgCenterX();
         register s32 old asm("r1") = self->base.x;
         dy = old + ebResult;
     }

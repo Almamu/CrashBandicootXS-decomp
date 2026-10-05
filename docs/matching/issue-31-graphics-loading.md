@@ -385,7 +385,7 @@ pass's writeup carried forward:
   `sub_8023324`/`GetCurrentLevel` (a `gLevelTable`-indexed guard
   check) into one of three arms: two calls to `CreateEntity` +
   `SetEntitySize` (a differently-sized spawn, tag `0x12`, registering into
-  `gUnknown_030012E8`), or a `CreatePlatform` position-probe feeding
+  `gUpdateOnlyPartList`), or a `CreatePlatform` position-probe feeding
   `SetCrateGemPos` with an offset `{x, y}` pair. Not attempted this pass -
   semantics read far enough to know it's not a popup-family sibling, but
   not worked through to a full C reconstruction.
@@ -525,7 +525,7 @@ from the ROM disassembly instead:
   `gLevelTable`-indexed threshold-table entry's guard field
   (offset `+4`, meaning not otherwise understood) is zero, spawns a
   `CreateEntity`-built part sized `0x64`x`0x64` tagged `0x12`, registering
-  into `gUnknown_030012E8`. Otherwise, if the byte at
+  into `gUpdateOnlyPartList`. Otherwise, if the byte at
   `gPlayer + 0x88` is zero, probes a position via
   `CreatePlatform(..., id=4)` (returning a pointer whose first two Q8.8
   fields line up with `struct actor`'s own `x`/`y`) and feeds

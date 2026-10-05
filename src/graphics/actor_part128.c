@@ -77,8 +77,8 @@ extern u8 IsActorMaskAssistDue(void);
 extern s32 GetCellAnimDistance(void);
 extern void SetCellAnimSpeed(s32 a);
 extern void UpdateActorBgScroll(s32 x, s32 y);
-extern s32 sub_8029E98(void);
-extern s32 sub_8029EB4(void);
+extern s32 GetActorBgCenterY(void);
+extern s32 GetActorBgCenterX(void);
 extern u8 IsSpawnCollected(void *spawn);
 extern void AllocJetpackPlayerTiles(void *self);
 extern void DispenseJetpackWumpa(void *self);
@@ -505,16 +505,16 @@ void DrawJetpackPlayer(struct actor_hp *self)
     halfH = h * 4;
     if (self->base.depth == (*(struct cam_ref **)&self->base.record)->depth) {
         scale = 0x100;
-        sy = (self->base.y + sub_8029E98()) >> 8;
-        sx = (self->base.x + sub_8029EB4()) >> 8;
+        sy = (self->base.y + GetActorBgCenterY()) >> 8;
+        sx = (self->base.x + GetActorBgCenterX()) >> 8;
     } else {
         s32 depth = self->base.depth;
         s32 f;
 
         scale = (depth << 8) / (*(struct cam_ref **)&self->base.record)->depth;
         f = 0x1c00000 / depth;
-        sy = (((self->base.y * f) >> 12) + sub_8029E98()) >> 8;
-        sx = (((self->base.x * f) >> 12) + sub_8029EB4()) >> 8;
+        sy = (((self->base.y * f) >> 12) + GetActorBgCenterY()) >> 8;
+        sx = (((self->base.x * f) >> 12) + GetActorBgCenterX()) >> 8;
         attr1 = 0x100;
         if (scale <= 0xff) {
             attr1 |= 0x200;

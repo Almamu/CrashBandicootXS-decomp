@@ -85,7 +85,7 @@ no caller).
   `sub_802E058`'s body. The clear loop is written as an `s32` address
   walk (`p >= base`, signed, with a separate `zero` local). Only the
   high-register assignment is wrong: the three hoisted addresses
-  (`&gUnknown_030014C0`, `&gUnpackNibbleTilesFunc`, `&gYeti`)
+  (`&gYetiBg2Page`, `&gUnpackNibbleTilesFunc`, `&gYeti`)
   land in r8/sb/sl in that order, where the ROM gives `...14BC` r8.
   Pinning sb/sl moves the loads to the declaration point, and pointer
   locals let gcc hoist the dereferences as well, so neither helps.

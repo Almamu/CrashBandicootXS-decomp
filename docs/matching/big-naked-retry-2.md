@@ -37,7 +37,7 @@ The first draft was 16 bytes short and 313 halfwords off.
 - **Values read into locals before stores.** State 5's height tests
   read `t->y` into a local first (the ROM loads it before the camera
   pointer). The second test goes through its own `t2`. State 9's global
-  stores go `x = target->x; gUnknown_030012A0 = x;`, which gives the
+  stores go `x = target->x; gHomingEnemyX = x;`, which gives the
   ROM's value-then-address order. State 18's volume is its own local.
   118 -> 27.
 - **The stack byte first.** State 18 passes a packed one-byte struct

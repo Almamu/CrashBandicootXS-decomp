@@ -96,7 +96,7 @@ split 0x0803B550 DestroyJetpackCheckpointText
 split 0x0803B57C UpdateJetpackExplosion
 split 0x0803B5AC IsJetpackExplosionUnshootable
 split 0x0803B5DC GetActorHp
-split 0x0803B5E0 nullsub_44
+split 0x0803B5E0 DamageActor
 split 0x0803B5E4 IsJetpackPlayerUnshootable
 
 # GitHub issue #47, graphics_loading (sprite frame VRAM pool/OAM queue
@@ -2602,3 +2602,25 @@ rename sub_8025588 ClearBitmapBit
 rename sub_80255A8 ClearBitmap
 rename sub_80255C4 InitBitmap
 rename sub_801EF0C SpawnLizard
+rename gUnknown_030012E8 gUpdateOnlyPartList
+rename gUnknown_03000818 gAkuAkuInvincibleFrame
+rename gUnknown_0300081C gAkuAkuFollowFrame
+rename gUnknown_03001298 gLastSpriteVelY
+rename gUnknown_030012A0 gHomingEnemyX
+rename gUnknown_030012A4 gHomingEnemyXSaved
+rename gUnknown_030012A8 gHomingEnemyY
+rename gUnknown_030012AC gHomingEnemyYSaved
+rename gUnknown_030014C0 gYetiBg2Page
+rename gUnknown_030014C1 gYetiBg2PageFlip
+rename gUnknown_030013C0 gActorNearClipDepth
+rename gUnknown_030013C4 gActorFarClipDepth
+rename gUnknown_030013F8 gActorBgWidth
+rename gUnknown_030013FC gActorBgHeight
+rename sub_8029E98 GetActorBgCenterY
+rename sub_8029EB4 GetActorBgCenterX
+rename nullsub_28 JetpackBomberStateDying
+rename nullsub_29 JetpackBomberStateIdle
+rename nullsub_36 HovercraftStateInactive
+rename gStaticData_0817AA98 gYetiCatchBox
+rename gStaticData_0817A728 gPolarPlayerShockPalette
+rename gStaticData_0817A748 gPolarPlayerShockBlinkPalette

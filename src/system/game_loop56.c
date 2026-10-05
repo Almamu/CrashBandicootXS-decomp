@@ -264,7 +264,10 @@ extern void *gUnknown_030012F4;
 extern void *gUnknown_030012EC;
 extern void *gCollidableList;
 extern void *gDecorationList;
-extern void *gUnknown_030012E8;
+/* Updated and cleared, but never culled or drawn: the invisible objects,
+ * the entity type 0x55 room-exit zones (graphics_loading_21280.c) and
+ * SpawnSealSpawner's spawner. */
+extern void *gUpdateOnlyPartList;
 extern void *gInput;
 extern struct gl_entity_list *gCrateList;
 extern s32 gRoomFrameCount;
@@ -499,7 +502,7 @@ s32 RunRoom(struct gl_self *self)
         if (gKeys.held & 4)
             ShowHudCounters(gHud);
         UpdatePartList(gUnknown_030012F4);
-        UpdatePartList(gUnknown_030012E8);
+        UpdatePartList(gUpdateOnlyPartList);
         if ((u8)PMF_CALL(gPlayer, m38))
             PMF_CALL(gPlayer, m18);
         UpdateCrateList(gCrateList);
@@ -568,7 +571,7 @@ fade:
             AddPendingSwitchCrates(gLevelState, count);
         }
     }
-    ClearPartList(gUnknown_030012E8);
+    ClearPartList(gUpdateOnlyPartList);
     ResetCrateList(gCrateList);
     ClearPartList(gUnknown_030012EC);
     ClearPartList(gCollidableList);

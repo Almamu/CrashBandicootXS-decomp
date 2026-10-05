@@ -7,8 +7,8 @@
 
 extern s32 gUnknown_030013C8;
 extern s32 __divsi3(s32 arg0, s32 arg1);
-extern s32 sub_8029E98(void);
-extern s32 sub_8029EB4(void);
+extern s32 GetActorBgCenterY(void);
+extern s32 GetActorBgCenterX(void);
 extern u8 *GetAnimFrameData(void *self);
 extern s32 GetAnimFrameAttr(void *self);
 extern void SetupSpriteFrameOam(u8 *frame, u32 arg1, u32 arg2, s32 priority);
@@ -16,7 +16,7 @@ extern void SetupSpriteFrameOam(u8 *frame, u32 arg1, u32 arg2, s32 priority);
 /* Computes an OBJ scale factor from `self->depth` and its animation
  * record's `baseDepth` (via `__divsi3`), then a second
  * scale from `gUnknown_030013C8` (via the same helper) used to project
- * `self`'s x/y position through `sub_8029E98`/`sub_8029EB4`'s
+ * `self`'s x/y position through `GetActorBgCenterY`/`GetActorBgCenterX`'s
  * screen-space offsets into on-screen X/Y. Fetches the current anim
  * frame (`GetAnimFrameData`), centers it (frame's own width/height
  * bytes, doubled if the first scale factor exceeds `0xff`), culls if
@@ -57,7 +57,7 @@ void DrawActor(void *selfArg)
     scaleY = __divsi3(gUnknown_030013C8 << 0xc, dist);
 
     {
-        s32 off = sub_8029E98();
+        s32 off = GetActorBgCenterY();
         register s32 tmp asm("r1") = self->y;
 
         posX = tmp * scaleY;
@@ -67,7 +67,7 @@ void DrawActor(void *selfArg)
     }
 
     {
-        s32 off = sub_8029EB4();
+        s32 off = GetActorBgCenterX();
         register s32 tmp asm("r1") = self->x;
 
         tmp = tmp * scaleY;

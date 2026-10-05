@@ -24,20 +24,20 @@ extern void (*gYetiStateFuncs[])(void);
 extern void _call_via_r0(void *fn);
 extern void (*gUnpackNibbleTilesFunc)(void *frame, s32 arg);
 extern void _call_via_r2(void *arg0, s32 arg1, void *fn);
-extern u8 gUnknown_030014C0;
-extern u8 gUnknown_030014C1;
+extern u8 gYetiBg2Page;
+extern u8 gYetiBg2PageFlip;
 extern s32 gYetiDistance;
 extern void sub_8029E34(s32 arg0);
 extern void UpdateYetiPalette(void);
-extern u8 gStaticData_0817AA98[];
+extern u8 gYetiCatchBox[];
 extern s32 gYetiPosition;
 extern u8 gPolarPlayerInactive;
 extern void *MemCopy32(void *dest, void *src, s32 size);
 extern void CatchPolarPlayer(void *self);
 extern void SetCellAnimSpeed(s32 arg0);
 extern u16 gYetiPalette[];
-extern s32 sub_8029E98(void);
-extern s32 sub_8029EB4(void);
+extern s32 GetActorBgCenterY(void);
+extern s32 GetActorBgCenterX(void);
 
 /* One of two confirmed slots (index 3, dispatched via
  * `gYetiStateFuncs[gYetiState]`) of the type-0
@@ -56,13 +56,13 @@ extern s32 sub_8029EB4(void);
  * `gYetiStateFuncs[gYetiState]` vtable slot via
  * `_call_via_r0`, and - only when the accumulator's `>>8` value actually
  * changed this frame - fires a `_call_via_r2` trampoline from the part
- * table's own `+2`-offset record (latching `gUnknown_030014C1`).
+ * table's own `+2`-offset record (latching `gYetiBg2PageFlip`).
  *
  * Finally, while `gYetiState <= 1`, runs a 3-axis AABB overlap
  * test between two 12-byte `{s16 x, y, z, sizeX, sizeY, sizeZ}` records
  * (axes compared Z, then Y, then X - matching the ROM's own instruction
  * order, not storage order) built the same way both times: a
- * `gStaticData_0817AA98`-rooted static record with `gYetiX`/
+ * `gYetiCatchBox`-rooted static record with `gYetiX`/
  * `030014C8` (both `>>8`) added into its `x`/`z` fields only (this
  * object tracks no Y), against the player's own `+0x38` 12-byte vector
  * with the player's `+0x1c`/`0x20`/`0x24` position (all `>>8`) added
@@ -134,12 +134,12 @@ void UpdateYeti(void)
     cur = obj->animTime >> 8;
     if (old != cur) {
         gUnpackNibbleTilesFunc((u8 *)obj->frameOffsets[obj->anims[obj->animIndex].frameIndex + cur] + 4,
-                          gUnknown_030014C0);
-        gUnknown_030014C1 = 1;
+                          gYetiBg2Page);
+        gYetiBg2PageFlip = 1;
     }
     sub_8029E34(gYetiDistance);
     UpdateYetiPalette();
-    f.a = *(struct box16 *)gStaticData_0817AA98;
+    f.a = *(struct box16 *)gYetiCatchBox;
     BoxMove(&f.a, gYetiX >> 8, 0, gYetiPosition >> 8);
     if ((u32)gYetiState <= 1) {
         struct actor_self **playerAddr = &gActorList;
@@ -213,12 +213,12 @@ void UpdateYetiPalette(void)
 }
 
 /* Companion to `UpdateYetiPalette` above: the gauge's affine BG2 setup. When
- * `gUnknown_030014C1` is set, flips `REG_BG2CNT` (`0x0400000C`) between
- * two screen-base words according to `gUnknown_030014C0`, clears `C1`
+ * `gYetiBg2PageFlip` is set, flips `REG_BG2CNT` (`0x0400000C`) between
+ * two screen-base words according to `gYetiBg2Page`, clears `C1`
  * and toggles `C0`. Then derives a zoom factor from `gYetiDistance`
  * (`/0x5500`), writes `REG_BG2X` (`0x04000028`) from
- * `gYetiX` and `sub_8029EB4()`, `REG_BG2Y` (`0x0400002C`)
- * from `sub_8029E98()`, and the `PA`/`PB`/`PC`/`PD` matrix at
+ * `gYetiX` and `GetActorBgCenterX()`, `REG_BG2Y` (`0x0400002C`)
+ * from `GetActorBgCenterY()`, and the `PA`/`PB`/`PC`/`PD` matrix at
  * `0x04000020` as `scale, 0, 0, scale`.
  *
  * Matches under old_agbcc. The flag addresses are copied into their own
@@ -227,14 +227,14 @@ void UpdateYetiPalette(void)
 void UpdateYetiBg2(void)
 {
     s32 scale, base, t;
-    u8 *p = &gUnknown_030014C1;
+    u8 *p = &gYetiBg2PageFlip;
     register s32 v asm("r1") = *p;
     u8 *changed = p;
 
     if (v != 0) {
         u8 *alt;
 
-        p = &gUnknown_030014C0;
+        p = &gYetiBg2Page;
         v = *p;
         alt = p;
         if (v != 0)
@@ -245,10 +245,10 @@ void UpdateYetiBg2(void)
         *alt ^= 1;
     }
     scale = (gYetiDistance << 8) / 0x5500;
-    base = sub_8029EB4();
+    base = GetActorBgCenterX();
     t = (gYetiX * 47 << 8) / gYetiDistance + base;
     *(vs32 *)REG_ADDR_BG2X = 0x4000 - ((t * scale) >> 8);
-    *(vs32 *)REG_ADDR_BG2Y = 0x4400 - ((sub_8029E98() * scale) >> 8);
+    *(vs32 *)REG_ADDR_BG2Y = 0x4400 - ((GetActorBgCenterY() * scale) >> 8);
     {
         vu16 *pa = (vu16 *)REG_ADDR_BG2PA;
 
