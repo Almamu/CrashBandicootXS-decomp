@@ -25,7 +25,7 @@ extern void DestroyPartList(struct dual_array_manager *manager, s32 flags);
 extern void DestroyCrateList(struct pool_manager *manager, s32 flags);
 extern void DestroyEntitySpawner(void);
 
-extern struct dual_array_manager *gUnknown_030012E8;
+extern struct dual_array_manager *gUpdateOnlyPartList;
 extern struct dual_array_manager *gUnknown_030012EC;
 extern struct pool_manager *gCrateList;
 extern struct dual_array_manager *gCollidableList;
@@ -73,7 +73,8 @@ struct widget {
  * level object's own `+0xdc->+8` state field is `2` (see
  * `asm/code_3_2_17_225a0.s`). Allocates the whole per-level widget set
  * (ring-buffer/pool object families already matched in
- * `actor_part11.c`/`actor_part12.c`: `gUnknown_030012E8/EC/F0/F8/F4` are
+ * `actor_part11.c`/`actor_part12.c`: `gUpdateOnlyPartList`, `gUnknown_030012EC`, `gCollidableList`,
+ * `gDecorationList` and `gUnknown_030012F4` are
  * `dual_array_manager`s, `gCrateList` a `pool_manager`), the
  * player actor itself (`gPlayer`, `InitPlayer`), and the
  * text-box singleton (`gLevelLayers`, `GetLevelLayers`). Dispatches on
@@ -100,7 +101,7 @@ s32 PlayRoom(void *selfArg)
     ClearRoomExit();
 
     {
-        struct dual_array_manager **slot = &gUnknown_030012E8;
+        struct dual_array_manager **slot = &gUpdateOnlyPartList;
         *slot = InitPartList(OperatorNew(0x14), 0x20);
     }
     {
@@ -294,8 +295,8 @@ s32 PlayRoom(void *selfArg)
     if (gUnknown_030012EC != NULL) {
         DestroyPartList(gUnknown_030012EC, 3);
     }
-    if (gUnknown_030012E8 != NULL) {
-        DestroyPartList(gUnknown_030012E8, 3);
+    if (gUpdateOnlyPartList != NULL) {
+        DestroyPartList(gUpdateOnlyPartList, 3);
     }
 
     DestroyEntitySpawner();

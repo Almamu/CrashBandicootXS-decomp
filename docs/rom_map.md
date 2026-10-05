@@ -868,8 +868,8 @@ new mechanisms not previously catalogued in this zone:
   `DrawPolarPlayer` are byte-for-byte identical logic operating on two
   different global sets (`gJetpackPlayerTileBuffer`/`14`/`18` vs.
   `030014A8`/`AC`/`B0` - plausibly a per-player pair). Both project a
-  record's position to screen space (new helpers `sub_8029E98`/
-  `sub_8029EB4`), pack an OAM attribute word via a new call
+  record's position to screen space (new helpers `GetActorBgCenterY`/
+  `GetActorBgCenterX`), pack an OAM attribute word via a new call
   `sub_8028DD8`, and only re-measure/redraw text (`_call_via_r2`) when
   the referenced source object has changed since last frame - a
   caching optimization on top of the already-documented text-drawing
@@ -1771,7 +1771,7 @@ subsection's claim by hand:
 Plus several of the core's largest individual functions read end-to-end
 regardless of which bucket they fell in (`ResolvePlatformCollision`, `UpdateEnemyCtrl`,
 `ActionCtrlStateAirborne`, `QueueCratePlayerCollision`, `UpdatePlayerCtrl`, `ActionCtrlHandleEvent`,
-`CreateCrate`, `UpdateChaser`, `InitLevelSelect`, `DrawAffineSpritePieces`,
+`CreateCrate`, `UpdateMegaMix`, `InitLevelSelect`, `DrawAffineSpritePieces`,
 `ApplyCrateCollision`, `LoadLevelSelectRecord`, `UpdatePlatformMover`, and - this round -
 `BreakCrate`, `UpdateSlotCrate`, `DrawPlayer`, `UpdateActionCtrl`,
 `UpdateDingodileProjectile`, `CollidePlayer`, `StartPlayerCtrlStroke`, `PlayerCtrlStateTurn`; see
@@ -1812,7 +1812,7 @@ family attached: **`CreateCrate`** (1396 B, entity constructor -
 allocates via `OperatorNew(100)`, sets `self+0x18 = &gCrateVtable`,
 a real address inside the documented 93-entry `gStaticData_087Exxx`
 family, but at a new `+0x18` convention rather than the previously-seen
-`+0xC`); **`UpdateChaser`** (1052 B, 3-state dispatch gated by
+`+0xC`); **`UpdateMegaMix`** (1052 B, 3-state dispatch gated by
 `gPlayer[0x104]` and a bit test); **`DrawAffineSpritePieces`** (1044 B,
 clamps a halfword at `self+0x3c`, min `0x40` - likely velocity/timer);
 **`ApplyCrateCollision`** (1032 B, takes 3 stack-passed byte args, extends
@@ -1821,7 +1821,7 @@ clamps a halfword at `self+0x3c`, min `0x40` - likely velocity/timer);
 sibling predicates `LevelHasGemPathGem`/`LevelHasRedGem`/`LevelHasGreenGem`/
 `LevelHasBlueGem`/`LevelHasYellowGem` in sequence, stores the index of the first
 true one into `self+0x98`); **`UpdatePlatformMover`** (800 B, indexes a new
-unlabeled 3-word-record table `gStaticData_0816C460` by
+unlabeled 3-word-record table `gPlatformMoverMotionRecords` by
 `(child_object+8)*3`, conditionally sign-flips the three values,
 writes into a target object's `+0x60`/`+0x48`/`+0x4c`/`+0x50` -
 reads as a per-object-type directional velocity/offset table).
@@ -1853,7 +1853,7 @@ same function tied to `overlay_ui`'s `ApplyActionCtrlMotion`/`ActionCtrlSetTarge
 callers - a new concrete `game_loop`<->`overlay_ui` call-graph link.
 **`UpdateDingodileProjectile`** (732 B) draws a two-part text label plus a
 `PlaySfx(0x39)` cue, then gates a second block on `gPlayer`
-byte `+0x104` - the same field `UpdateChaser` already gates on.
+byte `+0x104` - the same field `UpdateMegaMix` already gates on.
 
 Smaller reads, same known shapes: **`CollidePlayer`** (616 B) wraps
 `CollideGroundSprite` with a reentrancy-guard-shaped flag at
@@ -1863,7 +1863,7 @@ proves only "makes one indirect call," not real work there.
 **`StartPlayerCtrlStroke`** (628 B) and **`PlayerCtrlStateTurn`** (616 B) extend the
 directional-table/timed-state-machine shapes already found in this
 zone and in `actor` (`gStaticData_0816C090`, `gPlayerCtrlModeAnimRows` -
-two more unlabeled tables in the same family as `gStaticData_0816C460`).
+two more unlabeled tables in the same family as `gPlatformMoverMotionRecords`).
 None of the eight showed vtable-dispatch patterns in this pass (spot
 pattern, not exhaustively re-checked against `baserom.gba`).
 
@@ -2156,7 +2156,7 @@ to `overlay_ui` elsewhere - a caller-side confirmation of that link.
 **`SpawnCortexCannon`**/**`SpawnDingodileShark`** extend the master-table spawner
 family (the latter with a new near-header offset, `+0x30`).
 **`UpdateDingodileShark`** is a 6th+ confirmed site of the directional-target
-field convention, sourcing from a new table `gStaticData_0816C3B8`.
+field convention, sourcing from a new table `gDingodileMotionRecords`.
 **`UpdateEnemyShooter`** is a further instance of the `self+0x68`/`0x74`
 generic state-machine selector pattern. **`sub_800CF70`**, sitting
 144 bytes before the physics/collision subsystem's stated
@@ -3391,7 +3391,7 @@ screen plus a separate one-shot achievement-notification sequence.**
   round's framing suggested. Trigger: two call sites for
   `RunPauseMenu`, both in `game_loop` - one gated on a byte at
   `[base]+0x104==0` (plausibly the same `gPlayer[0x104]`
-  field `UpdateChaser` already gates on) plus a button-press bit,
+  field `UpdateMegaMix` already gates on) plus a button-press bit,
   reading as a **pause-menu-open trigger during normal gameplay**; the
   other sits in a different, level-init-adjacent context (near
   `SetupActorVramPool`), not fully characterized.
@@ -3574,15 +3574,15 @@ records, matching `gCutscenes`'s confirmed 36-slot count -
 independent confirmation of the medal/threshold-table reading.
 
 **New consumer found, extending the directional-vector-table family**:
-`SetChaserMotionYFromSet`/`SetChaserMotionXFromSet` index `gStaticData_0816C2D8` via the same
-double-indirection shape already noted for `gStaticData_0816C460`
+`SetMegaMixMotionYFromSet`/`SetMegaMixMotionXFromSet` index `gMegaMixMotionRecords` via the same
+double-indirection shape already noted for `gPlatformMoverMotionRecords`
 (`idx*8` intermediate lookup -> `value*3*4`), fetch a **3-word (x,y,z)
 vector record**, conditionally negate all three components based on a
 flag bit, and write them into `self+0x54`/`+0x58`/`+0x5c` or
 `self+0x48`/`+0x4c`/`+0x50` - the same "directional target" convention
-as `UpdatePlatformMover`/`StartPlayerCtrlStroke`/`HitEnemy`. `DestroyChaserCtrl` ties this
+as `UpdatePlatformMover`/`StartPlayerCtrlStroke`/`HitEnemy`. `DestroyMegaMixCtrl` ties this
 region directly to the 93-entry entity vtable family: stores
-`&gChaserCtrlVtable` into `self+0xc` then calls `sub_8017A78`.
+`&gMegaMixCtrlVtable` into `self+0xc` then calls `DestroyBossCtrl`.
 
 Not investigated further: `0x0816C6A4` (0x170B, the largest unread
 sub-blob in the small-tables span), the `0x0816C814`-`862` cluster,
@@ -3597,7 +3597,7 @@ remainder (68 still-unread functions) and `PlayCutscene`'s two requested
 siblings.
 
 **`SpawnGreenGemPlatform`/`SpawnBlueGemPlatform`** (256 B/260 B, consecutive in ROM) are
-**near-identical twins**. **Correction**: `sub_8021280` (264 B, right
+**near-identical twins**. **Correction**: `SpawnRoomExit` (264 B, right
 after them in ROM - originally guessed as a likely third twin on size/
 address grounds alone) is **not** part of this family - checked
 directly and it has a completely different structure (see below). The
@@ -3628,8 +3628,8 @@ pairing this time - a fourth table shape in this ROM's toolkit,
 alongside the paired vtables, the 42-slot action table, and the
 per-level header-of-lists), running right up to the already-known
 `gThemePaletteCycle2` label. This table includes `SpawnGreenGemPlatform`,
-`SpawnBlueGemPlatform`, **and `sub_8021280`** - so the earlier correction needs
-its own footnote: `sub_8021280` isn't part of the twins' *behavioral*
+`SpawnBlueGemPlatform`, **and `SpawnRoomExit`** - so the earlier correction needs
+its own footnote: `SpawnRoomExit` isn't part of the twins' *behavioral*
 pattern (it's a distinct bonus/reward spawner, correctly identified as
 such), but it **is** one of this same 15-slot table's entries - the
 table mixes genuinely different response types (sound+effect twins,
@@ -3663,9 +3663,9 @@ a plain array, no `{0,ptr}` pairing):
 | 1-3 | `SpawnLargePlatform`/`8021998`/`8021974` (36 B each) | Trivial `CreatePlatform(x,y,w,h,id)` trampolines, ids 0/1/2 - sound-cue-only. |
 | 4-5 | `SpawnRedGemPlatform`/`SpawnYellowGemPlatform` | Confirmed twin-shape siblings (prior round). |
 | 6-7 | `SpawnGreenGemPlatform`/`SpawnBlueGemPlatform` | Confirmed twin family, sounds `0xA`/`9`, fallback `0xC`, full OAM spawn on the "no bit set" path. |
-| 8 | `sub_8021280` | Confirmed distinct bonus/reward spawner - a real slot, not part of the twins' behavioral pattern. |
+| 8 | `SpawnRoomExit` | Confirmed distinct bonus/reward spawner - a real slot, not part of the twins' behavioral pattern. |
 | 9 | `SpawnBonusPlatform` (~104 B) | Sound-only variant with its own gate (`IsBonusRoundDone(gLevelState)` OR `gLevelState+0x8c`, the twins' own field) picking sound `7`/`5`, closing via a *different* accessor (`SetBonusPlatform` vs. the twins' `SetGemPlatform`). |
-| 10-11 | `sub_80218E8`/`SpawnRockPlatform` (36 B) | More `CreatePlatform` trampolines, ids 6/8. |
+| 10-11 | `SpawnFlipPlatform`/`SpawnRockPlatform` (36 B) | More `CreatePlatform` trampolines, ids 6/8. |
 | 12 | `SpawnCrateGemMarker` (40 B) | New shape: a plain state-write slot, no sound/spawn - packs two args and calls `SetCrateGemPos`, which just stores them into `gLevelState+0x1c0`/`+0x1c4`. |
 | 13-14 | `SpawnFlame`/`SpawnSeaweed` (136 B each) | Full-OAM-trio spawners, header offsets **`+0x210`**/**`+0x21C`** - two more `gSpriteBankTable` offsets, extending that family to at least 8 confirmed values (`0xd8`, `0x18C`, `0x1C8`, `0x210`, `0x21C`, `0x228`, `0x234`, `0x240`, `0x27C`). |
 
@@ -3692,7 +3692,7 @@ sprite/effect spawner (`SpawnCrystal`, record index 37, spawns via
 `CreateSpriteObj` instead of the usual `CreateMovingSprite`, then the standard
 OAM trio) and, more strikingly, **several more near-identical
 siblings of the two-line-text-popup spawner** (the 15-slot table's
-slot 0, `SpawnWoodenCrusher`) - `SpawnFlamethrowerLabAssistant` (record 23) and `sub_8020788`
+slot 0, `SpawnWoodenCrusher`) - `SpawnFlamethrowerLabAssistant` (record 23) and `SpawnHomingSewerEnemy`
 (record 22) share its exact shape (`CreateMovingSprite` → two `_call_via_r2`
 calls via `CreateEnemyCtrl`, a `gEntityFlags`-bit-selected pair of
 tables) but each with its own distinct record index and table pair -
@@ -3788,7 +3788,7 @@ A fork isolated `graphics_loading`'s truly-unsampled remainder - the
 `gSpriteBankTable` spawner family. Of 9 read, **5 turn out to be
 more slots of the unified 92-slot table** (confirmed via raw-pointer
 hits), extending its characterization further: a distinct constructor
-shape registering into a different list (`gUnknown_030012E8`, not the
+shape registering into a different list (`gUpdateOnlyPartList`, not the
 already-documented `EC`/`F0`/`F4`/`F8`), a setter extending
 `gPlayer`'s accessor family, a trampoline, a conditional
 `CreateCrate` type-selector, and a spawn call tying into the
@@ -3854,7 +3854,7 @@ silencing a specific sound, not starting a new one.
 
 The same fork that resolved the twin family kept going and found
 something bigger than any individual function read this session:
-**`sub_8021280` is not a third twin** of `SpawnGreenGemPlatform`/`SpawnBlueGemPlatform`
+**`SpawnRoomExit` is not a third twin** of `SpawnGreenGemPlatform`/`SpawnBlueGemPlatform`
 (corrected above) - it's a **conditional bonus/reward-object spawner**,
 checking three accessors on `gLevelState` and the 36-slot
 per-level table's `+0x4` field before spawning a 100×100 or 40×40

@@ -41,7 +41,7 @@ void RestartActionCtrl(void *selfArg)
 /* Sets `self+0xc`'s table pointer to `gActionCtrlVtable`, then
  * tail-calls `DestroyCtrl(self, flags)` - which promptly resets it back
  * to `gCtrlVtable` (see actor_part17.c) - same double-set
- * pattern as `sub_8017A78`. */
+ * pattern as `DestroyBossCtrl`. */
 void DestroyActionCtrl(void *selfArg, s32 flags)
 {
     u8 *self = selfArg;

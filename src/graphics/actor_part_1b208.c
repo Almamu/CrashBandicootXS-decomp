@@ -81,12 +81,12 @@ struct gobj *InitPlatform(struct gobj *self)
     return GobjInit(self);
 }
 
-/* &gStaticData_0816C460[self->set->entries[1].a], with the scaled index
+/* &gPlatformMoverMotionRecords[self->set->entries[1].a], with the scaled index
  * in r0 as the ROM computes it (docs/workflow.md step 7) */
 static inline struct vec3 *MoverVec(struct mover *self)
 {
     register u32 off asm("r0") = self->set->entries[1].a * sizeof(struct vec3);
-    register u32 base asm("r1") = (u32)gStaticData_0816C460;
+    register u32 base asm("r1") = (u32)gPlatformMoverMotionRecords;
 
     return (struct vec3 *)(off + base);
 }
@@ -186,7 +186,7 @@ void UpdatePlatformMover(struct mover *self, struct gobj *objArg)
             s32 sign;
 
             ABS32(v, sign);
-            if (v >= gStaticData_0816C460[self->set->entries[1].a].z)
+            if (v >= gPlatformMoverMotionRecords[self->set->entries[1].a].z)
                 self->distX = 0;
         }
     }
@@ -207,7 +207,7 @@ void UpdatePlatformMover(struct mover *self, struct gobj *objArg)
             s32 sign;
 
             ABS32(v, sign);
-            if (v >= gStaticData_0816C460[self->set->entries[1].a].z)
+            if (v >= gPlatformMoverMotionRecords[self->set->entries[1].a].z)
                 self->distY = 0;
         }
     }
@@ -420,7 +420,7 @@ void MovePlayerWithPlatform(struct mover *self, struct gobj *obj)
 
 void SetPlatformMoverMotionYFromSet(struct mover *self, struct gobj *part, s32 index)
 {
-    struct vec3 *e = &gStaticData_0816C460[self->set->entries[index].b];
+    struct vec3 *e = &gPlatformMoverMotionRecords[self->set->entries[index].b];
 
     if ((s32)(part->mirror << 26) < 0)
     {
@@ -446,7 +446,7 @@ void SetPlatformMoverMotionYFromSet(struct mover *self, struct gobj *part, s32 i
 
 void SetPlatformMoverMotionXFromSet(struct mover *self, struct gobj *part, s32 index)
 {
-    struct vec3 *e = &gStaticData_0816C460[self->set->entries[index].a];
+    struct vec3 *e = &gPlatformMoverMotionRecords[self->set->entries[index].a];
 
     if ((s32)(part->mirror << 27) < 0)
     {
@@ -472,12 +472,12 @@ void SetPlatformMoverMotionXFromSet(struct mover *self, struct gobj *part, s32 i
 
 void StartPlatformMoverMotionYFromSet(struct mover *self, struct gobj *part, s32 index)
 {
-    StartCtrlTargetMotionY(self, part, &gStaticData_0816C460[self->set->entries[index].b]);
+    StartCtrlTargetMotionY(self, part, &gPlatformMoverMotionRecords[self->set->entries[index].b]);
 }
 
 void StartPlatformMoverMotionXFromSet(struct mover *self, struct gobj *part, s32 index)
 {
-    StartCtrlTargetMotionX(self, part, &gStaticData_0816C460[self->set->entries[index].a]);
+    StartCtrlTargetMotionX(self, part, &gPlatformMoverMotionRecords[self->set->entries[index].a]);
 }
 
 void DestroyPlatformMover(struct mover *self, s32 flags)
@@ -511,7 +511,7 @@ struct mover *CreatePlatformMover(struct mover *self, s32 distX, s32 distY, u32 
     self->distX = distX;
     self->lastY = 0;
     self->distY = distY;
-    self->set = (void *)gStaticData_0816C458;
+    self->set = (void *)gPlatformMoverMotionSet;
     self->active = 0;
     self->kind = kind;
     self->timer = 0;

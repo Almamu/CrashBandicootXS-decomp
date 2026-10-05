@@ -2,7 +2,7 @@
 
 > **Superseded for the NAKED functions below:** this region was built with
 > old_agbcc, and the "r7 gap" passes here were fighting the wrong compiler.
-> All but `SpawnFlamethrowerLabAssistant` and `sub_8021280` are now plain C - see
+> All but `SpawnFlamethrowerLabAssistant` and `SpawnRoomExit` are now plain C - see
 > [issue-31-old-agbcc.md](issue-31-old-agbcc.md).
 
 Continues the first pass (PR #202, recorded in `docs/matching.md` under
@@ -18,7 +18,7 @@ This pass picks one of those 21 back up: `SpawnSquid`.
 "two-line text popup" spawners that occupies most of the still-raw part
 of this chunk (`docs/rom_map.md`'s "A family of 'trigger effect type N'
 functions" section already names this shape via `SpawnWoodenCrusher` and
-`SpawnFlamethrowerLabAssistant`/`sub_8020788`, but had not carried any instance through to
+`SpawnFlamethrowerLabAssistant`/`SpawnHomingSewerEnemy`, but had not carried any instance through to
 C before this pass). Every sibling shares the same skeleton, varying
 only in a handful of embedded constants:
 
@@ -140,10 +140,10 @@ match.
 ## Left raw (~20, not attempted this pass)
 
 The rest of the chunk - `SpawnShark`, `SpawnMorayEel`, `SpawnElectricEel`,
-`SpawnJellyfish`, `SpawnLaserBarrier`, `sub_8020138`, `sub_802026C`,
-`SpawnSaucerLabAssistant`, `SpawnPistonCrusher`, `SpawnFlamethrowerLabAssistant`, `sub_8020788`,
-`sub_80208C4`, `SpawnRat`, `SpawnFrog`, `SpawnSeaMine`,
-`SpawnWoodenCrusher`, `sub_8021280`, `SpawnDingodile`, `SpawnTiny`,
+`SpawnJellyfish`, `SpawnLaserBarrier`, `SpawnStationarySpaceEnemy`, `SpawnPatrollingSpaceEnemy`,
+`SpawnSaucerLabAssistant`, `SpawnPistonCrusher`, `SpawnFlamethrowerLabAssistant`, `SpawnHomingSewerEnemy`,
+`SpawnPatrollingSewerEnemy`, `SpawnRat`, `SpawnFrog`, `SpawnSeaMine`,
+`SpawnWoodenCrusher`, `SpawnRoomExit`, `SpawnDingodile`, `SpawnTiny`,
 `SpawnCortexBoss` - are all confirmed instances of the same "two-line text
 popup" family `SpawnSquid` belongs to (semantics fully read for all of
 them this pass), several with their own tail variant (a second
@@ -155,7 +155,7 @@ verification `SpawnSquid` needed. Given how much iteration a single
 instance needed to close (three separate inline-asm workarounds for
 three distinct compiler-scheduling/optimization quirks), and that at
 least one of the tail variants introduces genuinely new register
-pressure (`SpawnFlamethrowerLabAssistant`/`sub_8020788` already spill to `sl`/`sb`/stack
+pressure (`SpawnFlamethrowerLabAssistant`/`SpawnHomingSewerEnemy` already spill to `sl`/`sb`/stack
 in the raw disassembly, unlike `SpawnSquid`'s plain `r8` pin), these
 were left untouched rather than force a low-confidence match. The
 `asm volatile` technique established here (drop the unified-syntax
@@ -201,24 +201,24 @@ raw per "Left raw" above), removing it left a single object with a gap
 that needed filling, not just a line to delete - so
 `code_3_2_17_1feec.s` was split into two files at that point (the
 existing name keeps everything before `SpawnRedGemPlatform`; the new
-`code_3_2_17_21280.s` picks up at `sub_8021280` and keeps everything
+`code_3_2_17_21280.s` picks up at `SpawnRoomExit` and keeps everything
 after `SpawnBlueGemPlatform`, unchanged), with `trigger_effect.o` inserted
 between them in `ldscript.txt`. A first attempt that only deleted the
 guarded block in place (without this split) still built and linked
 without error, but silently shifted every ROM address from
-`sub_8021280` onward by the guarded block's byte count - caught by the
+`SpawnRoomExit` onward by the guarded block's byte count - caught by the
 post-build `arm-none-eabi-nm`/map-file address check against each
 function's own `sub_XXXXXXXX` name before ever diffing bytes, per
 `docs/workflow.md`'s warning about exactly this mistake.
 
-## Fourth pass: the whole tail of `asm/code_3_2_17_21280.s` (`sub_8021668`-`SpawnIronCrate`)
+## Fourth pass: the whole tail of `asm/code_3_2_17_21280.s` (`SpawnMegaMix`-`SpawnIronCrate`)
 
 Picked back up the remaining ~20 raw "two-line text popup" siblings the
 second pass identified but didn't attempt. Rather than working through
-them from the top (`sub_8021280` onward, all full popup-family
+them from the top (`SpawnRoomExit` onward, all full popup-family
 instances needing the heavy `asm volatile` treatment `SpawnSquid`
 needed), this pass started from the *other* end of
-`asm/code_3_2_17_21280.s` (`sub_8021668` onward), which turned out to
+`asm/code_3_2_17_21280.s` (`SpawnMegaMix` onward), which turned out to
 be a much easier mix: one more popup-family instance with a different
 tail shape, a small `gSpriteBankTable`-record spawner family
 (registering into a manager global `SpawnBodySlamPower`'s family in
@@ -228,11 +228,11 @@ constructor, and - closing out the file - 12 more plain `CreateCrate`
 entity-constructor trampolines (types `0x12` down to `7`) continuing
 the family `graphics_loading_21bfc.c` already covers for types `1`-`7`
 at a different address. Every one of these 24 functions from
-`sub_8021668` through `SpawnIronCrate` (the literal last function in the
+`SpawnMegaMix` through `SpawnIronCrate` (the literal last function in the
 old `asm/code_3_2_17_21280.s`) is now real, matched C, plus one more
 (`SpawnBonusPlatform`) as a NAKED transcription - see below. This retires
 `asm/code_3_2_17_21280.s` down to just its first 470 lines
-(`sub_8021280`-`SpawnCortexBoss`, the 4 remaining full popup-family
+(`SpawnRoomExit`-`SpawnCortexBoss`, the 4 remaining full popup-family
 instances - see "Left raw" below).
 
 New file: `src/graphics/graphics_loading_21668.c`, inserted in
@@ -240,7 +240,7 @@ New file: `src/graphics/graphics_loading_21668.c`, inserted in
 at `SpawnCortexBoss`'s literal pool) and before
 `src/graphics/graphics_loading_21bfc.o`.
 
-### `sub_8021668` - the popup family's OAM-trio tail variant
+### `SpawnMegaMix` - the popup family's OAM-trio tail variant
 
 Same `CreateMovingSprite` constructor and `+0x20` table-pointer setup as
 `SpawnSquid`, but a different tail: builds the part via the standard
@@ -302,10 +302,10 @@ whole function (a genuine `register u8 zero asm("r5")`), matching the
 ROM's own register reuse - assigning it only *after* the table-offset
 store (not at declaration) is what keeps the truncation-prologue
 instruction order matching the ROM's, the same declaration-vs-statement
-timing gotcha the fourth pass's `sub_8021668` bug above is another
+timing gotcha the fourth pass's `SpawnMegaMix` bug above is another
 instance of.
 
-### Plain trampolines: `SpawnRockPlatform`/`sub_80218E8`/`SpawnMediumPlatform`/`SpawnSmallPlatform`/`SpawnLargePlatform`/`SpawnLaunchPadEntity`/`SpawnTimeCrate3`-`SpawnIronCrate`
+### Plain trampolines: `SpawnRockPlatform`/`SpawnFlipPlatform`/`SpawnMediumPlatform`/`SpawnSmallPlatform`/`SpawnLargePlatform`/`SpawnLaunchPadEntity`/`SpawnTimeCrate3`-`SpawnIronCrate`
 
 18 functions, no iteration needed beyond the established call-signature
 patterns: 5 plain `CreatePlatform(arg0, arg1, arg2, arg3, id)` calls (ids
@@ -376,16 +376,16 @@ ranges within one real object file).
 ### Left raw (4, not fully attempted this pass)
 
 The remaining raw stretch, `asm/code_3_2_17_21280.s` (470 lines, ending
-right at `sub_8021668`'s start), is **not** all the same "two-line text
+right at `SpawnMegaMix`'s start), is **not** all the same "two-line text
 popup" family - checked this pass, correcting an assumption the second
 pass's writeup carried forward:
 
-- **`sub_8021280`** is a *different* function entirely - not part of
+- **`SpawnRoomExit`** is a *different* function entirely - not part of
   the popup family. It dispatches on `IsInGemPath`/`IsInBonusRound`/
   `sub_8023324`/`GetCurrentLevel` (a `gLevelTable`-indexed guard
   check) into one of three arms: two calls to `CreateEntity` +
   `SetEntitySize` (a differently-sized spawn, tag `0x12`, registering into
-  `gUnknown_030012E8`), or a `CreatePlatform` position-probe feeding
+  `gUpdateOnlyPartList`), or a `CreatePlatform` position-probe feeding
   `SetCrateGemPos` with an offset `{x, y}` pair. Not attempted this pass -
   semantics read far enough to know it's not a popup-family sibling, but
   not worked through to a full C reconstruction.
@@ -396,11 +396,11 @@ pass's writeup carried forward:
   trampoline via an allocated header, tag/manager-register tail -
   `SpawnTiny`/`SpawnCortexBoss` skip the flags-mask step `SpawnDingodile`
   has and use a plain `flags |= 0x10` instead, and `SpawnCortexBoss` adds
-  the OAM trio like `sub_8021668`). All three additionally call a
+  the OAM trio like `SpawnMegaMix`). All three additionally call a
   header-construction helper (`CreateDingodile(block, arg1, arg2)` for
   `SpawnDingodile`, `CreateTiny()` for `SpawnTiny`, `CreateCortexBoss()` for
   `SpawnCortexBoss`) and a closing `SetLevelBoss(gLevelState, hdr)`
-  neither `SpawnSquid` nor `sub_8021668` have. `SpawnDingodile` got the
+  neither `SpawnSquid` nor `SpawnMegaMix` have. `SpawnDingodile` got the
   furthest this pass: every instruction's *operation* matches the ROM
   (confirmed via isolated compile, using the same collected-bits-pack
   `asm volatile` block as `SpawnSquid`/`graphics_loading_21668.c`), but
@@ -422,7 +422,7 @@ pass's writeup carried forward:
 Verified via a full clean `make compare` (`La suma coincide`) and
 `make NON_MATCHING=1 report`.
 
-## Fifth pass: the final raw region (`sub_8021280`-`SpawnCortexBoss`) - 2 of 4 real C, 2 NAKED
+## Fifth pass: the final raw region (`SpawnRoomExit`-`SpawnCortexBoss`) - 2 of 4 real C, 2 NAKED
 
 Picked up the "Left raw (4)" list the fourth pass left behind - the last
 still-raw stretch of `asm/code_3_2_17_21280.s`. All four are now real,
@@ -449,7 +449,7 @@ reordered/CSE'd away; see "Two more compiler-codegen gotchas" below for
 the two extra spots this same class of gap turned up in `SpawnDingodile`
 itself, past the point the fourth pass had already diagnosed).
 
-`SpawnCortexBoss` (the OAM-trio tail variant, same shape as `sub_8021668`)
+`SpawnCortexBoss` (the OAM-trio tail variant, same shape as `SpawnMegaMix`)
 needed the same "hand-spelled asm block covering the whole
 prologue-through-call" treatment for its own single-truncation prologue
 (`arg3`'s home is `r5` for the whole function, `part` is `r4`), plus a
@@ -492,7 +492,7 @@ this) - both fixed with small `asm volatile` blocks:
   `asm volatile` block instead, forcing `r3` directly.
 - **The `part->field_0A = 1;` / collected-bits-pack `1` write pair.**
   Same "two independent constant writes, ROM materializes both before
-  the store" idiom this cluster has hit repeatedly (`sub_8021280`'s
+  the store" idiom this cluster has hit repeatedly (`SpawnRoomExit`'s
   argument prologue, `SpawnCortexBoss`'s `+0x2d` store above) - plain C
   (even with the register-pinned `one` declared and assigned *before*
   the store) still let the compiler schedule the store between the two
@@ -500,7 +500,7 @@ this) - both fixed with small `asm volatile` blocks:
   `asm volatile` idiom `SpawnSquid`'s own version of this pack already
   established (`mov r0, #1` / `mov r5, #1` / `strb r0, [r6, #0xa]`).
 
-### Parked as NAKED: `sub_8021280`, `SpawnTiny`
+### Parked as NAKED: `SpawnRoomExit`, `SpawnTiny`
 
 Both fully understood, every instruction's *content* confirmed matching
 via isolated compile, but both hit the confirmed `r7`-pin gap documented
@@ -509,7 +509,7 @@ this compiler only adds a hard-pinned register to a function's callee-saved
 push/pop set when it tracks that register as holding a value live across
 a *wider* span than a single inline-asm block, and `r7` in both of these
 functions is only ever used as scratch inside one `asm volatile` block
-(the position-probe offset marshalling for `sub_8021280`'s middle arm; the
+(the position-probe offset marshalling for `SpawnRoomExit`'s middle arm; the
 collected-bits pack's mask-byte reload for `SpawnTiny`). Every plain-C
 technique tried to force `r7`'s inclusion - an unused pinned local, capturing
 it as the asm's own output, a trailing "keep it alive" read spanning from
@@ -519,13 +519,13 @@ unconditional toolchain limitation for `r7` specifically, not something
 that responds to more C-level effort. Transcribed instruction-for-instruction
 from the ROM disassembly instead:
 
-- **`sub_8021280`** - a three-way dispatcher (not part of the "two-line
+- **`SpawnRoomExit`** - a three-way dispatcher (not part of the "two-line
   text popup" family): if `IsInGemPath`/`IsInBonusRound`/`sub_8023324`
   (`gLevelState`) all say "no" and the current level's
   `gLevelTable`-indexed threshold-table entry's guard field
   (offset `+4`, meaning not otherwise understood) is zero, spawns a
   `CreateEntity`-built part sized `0x64`x`0x64` tagged `0x12`, registering
-  into `gUnknown_030012E8`. Otherwise, if the byte at
+  into `gUpdateOnlyPartList`. Otherwise, if the byte at
   `gPlayer + 0x88` is zero, probes a position via
   `CreatePlatform(..., id=4)` (returning a pointer whose first two Q8.8
   fields line up with `struct actor`'s own `x`/`y`) and feeds
@@ -545,7 +545,7 @@ from the ROM disassembly instead:
 Full clean `make compare` (`La suma coincide`) and `make NON_MATCHING=1
 report`, both passing. Issue #31 stays open in the PR text (not every
 function across the whole issue's original scope is a real C match -
-`sub_8021280`/`SpawnTiny` here, plus every other NAKED/`NON_MATCHING`
+`SpawnRoomExit`/`SpawnTiny` here, plus every other NAKED/`NON_MATCHING`
 entry this issue accumulated across all five passes, don't count) but this
 retires the last raw bytes this issue's own scope covers - what's left
 open against #31 from here is exclusively already-parked functions
@@ -639,10 +639,10 @@ fix, confirmed by isolated-compile diff against the ROM disassembly:
 
 ### Parked as NAKED: the other nine
 
-`SpawnLizard`, `sub_801F2BC`, `SpawnBlowgunTribesman`, `SpawnPenguin`,
+`SpawnLizard`, `SpawnPatrollingJungleEnemy`, `SpawnBlowgunTribesman`, `SpawnPenguin`,
 `SpawnPolarBear`, `SpawnPufferfish`, `SpawnShark`, `SpawnMorayEel`,
 `SpawnElectricEel` all hit the confirmed `r7`-in-the-callee-saved-set gap
-`sub_8021280`/`SpawnTiny`/`SpawnBonusPlatform` already established for this
+`SpawnRoomExit`/`SpawnTiny`/`SpawnBonusPlatform` already established for this
 project: each one's ROM disassembly needs `r7` in its
 `push {..., r7, lr}`/`pop {..., r7}` prologue/epilogue, shadowing a
 third extra high register (`sl`, alongside `sb`/`r8`) through `r7`
@@ -657,7 +657,7 @@ technique was found for this pass (the same techniques that worked for
 `SpawnVulture`/`SpawnVenusFlytrap`/`SpawnSeal` above, and every real-C match
 elsewhere in this cluster, were tried first and consistently failed to
 get `r7` into the push/pop list here, exactly as documented for
-`sub_8021280`/`SpawnTiny` in the fifth pass above) - transcribed
+`SpawnRoomExit`/`SpawnTiny` in the fifth pass above) - transcribed
 instruction-for-instruction from the ROM disassembly instead, the same
 escape hatch used throughout this project. Two additional tail-shape
 variants get their first real writeup here (the rest reuse shapes
@@ -758,9 +758,9 @@ register assignment, not a blind copy from the nearest matched sibling.
 
 ### Parked as NAKED: the other twelve
 
-`SpawnJellyfish`, `SpawnLaserBarrier`, `sub_8020138`, `sub_802026C`,
-`SpawnSaucerLabAssistant`, `SpawnPistonCrusher`, `SpawnFlamethrowerLabAssistant`, `sub_8020788`,
-`sub_80208C4`, `SpawnRat`, `SpawnSeaMine`, `SpawnWoodenCrusher` all hit the
+`SpawnJellyfish`, `SpawnLaserBarrier`, `SpawnStationarySpaceEnemy`, `SpawnPatrollingSpaceEnemy`,
+`SpawnSaucerLabAssistant`, `SpawnPistonCrusher`, `SpawnFlamethrowerLabAssistant`, `SpawnHomingSewerEnemy`,
+`SpawnPatrollingSewerEnemy`, `SpawnRat`, `SpawnSeaMine`, `SpawnWoodenCrusher` all hit the
 confirmed r7-callee-saved-set gap this issue has now documented many
 times over: each one's ROM disassembly needs r7 in its
 `push {r4,r5,r6,r7,lr}`/`pop {...,r7}` prologue/epilogue (shadowing
@@ -771,7 +771,7 @@ collected-bits pack's mask-byte reload) - never a value this compiler's
 own allocator tracks as live across a wider span, which is the
 precondition every technique in this project's toolbox needs to get a
 register into the callee-saved set at all. No new technique was tried
-this pass beyond what `sub_8021280`/`SpawnTiny`/`SpawnBonusPlatform` and the
+this pass beyond what `SpawnRoomExit`/`SpawnTiny`/`SpawnBonusPlatform` and the
 nine `graphics_loading_1ef0c.c` functions already exhausted for this
 exact wall - transcribed instruction-for-instruction from the ROM
 disassembly instead, per this project's established NAKED escape hatch.
@@ -779,7 +779,7 @@ Every instruction's *operation* was confirmed matching via isolated
 compile before transcription for all twelve. Two tail-shape variants
 worth noting that hadn't appeared in quite this form before:
 
-- **`SpawnFlamethrowerLabAssistant`/`sub_8020788`** need all three extra high registers
+- **`SpawnFlamethrowerLabAssistant`/`SpawnHomingSewerEnemy`** need all three extra high registers
   (`sl`/`sb`/`r8`) simultaneously, the widest register footprint of any
   function in this file - `SpawnFlamethrowerLabAssistant` additionally spills its `+0x28`
   record address to a 4-byte stack slot (`sub sp, #4`) across the

@@ -4,15 +4,15 @@
 /* GitHub issue #25, ROM 0x0801A794-0x0801A878 (see include/gobj_1a794.h
  * and docs/matching/issue-25-level-objects.md). CreateDingodileShieldCtrl/DestroyDingodile/
  * CreateDingodile are constructor/destructor bodies of a subclass of the
- * sub_8017A8C object family (actor_part27.c), method tables
+ * CreateBossCtrl object family (actor_part27.c), method tables
  * gDingodileShieldVtable / gDingodileVtable; StartDingodileMotion is the same
- * mirror-gated velocity-record copy as SetChaserMotionXFromSet (actor_part27b.c) but
- * indexed straight into gStaticData_0816C418.
+ * mirror-gated velocity-record copy as SetMegaMixMotionXFromSet (actor_part27b.c) but
+ * indexed straight into gDingodileMotionEntries.
  *
  * UNUSED - no caller anywhere in the ROM (checked asm/ .s files, src/ .c files
  * and the ROM for Thumb pointers): SetDingodileStep, SetDingodileNextState. */
 
-/* The sub_8017A8C-family object (actor_part27.c): only the fields touched
+/* The CreateBossCtrl-family object (actor_part27.c): only the fields touched
  * here. */
 struct seq_obj
 {
@@ -26,7 +26,7 @@ struct seq_obj
 
 struct seq_obj *CreateDingodileShieldCtrl(struct seq_obj *self)
 {
-    sub_8017A8C(self);
+    CreateBossCtrl(self);
     self->vtable = gDingodileShieldVtable;
     return self;
 }
@@ -38,7 +38,7 @@ void StartDingodileMotion(void *self, struct gobj *partArg, s32 indexArg)
 {
     register struct gobj *part asm("r3") = partArg;
     register s32 index asm("r5") = indexArg;
-    struct vec3 *e = &gStaticData_0816C3B8[gStaticData_0816C418[index].a];
+    struct vec3 *e = &gDingodileMotionRecords[gDingodileMotionEntries[index].a];
 
     if ((s32)(part->mirror << 27) < 0)
     {
@@ -63,7 +63,7 @@ void StartDingodileMotion(void *self, struct gobj *partArg, s32 indexArg)
         part->rampX.target = z;
     }
     {
-        struct vec3 *e2 = &gStaticData_0816C3B8[gStaticData_0816C418[index].b];
+        struct vec3 *e2 = &gDingodileMotionRecords[gDingodileMotionEntries[index].b];
         s32 x = e2->x;
         s32 y = e2->y;
         s32 z = e2->z;
@@ -79,12 +79,12 @@ void StartDingodileMotion(void *self, struct gobj *partArg, s32 indexArg)
 void DestroyDingodile(struct seq_obj *self, s32 flags)
 {
     self->vtable = gDingodileVtable;
-    sub_8017A78(self, flags);
+    DestroyBossCtrl(self, flags);
 }
 
 struct seq_obj *CreateDingodile(struct seq_obj *self, u32 a, u32 b)
 {
-    sub_8017A8C(self);
+    CreateBossCtrl(self);
     self->vtable = gDingodileVtable;
     SpawnDingodileShieldOrRocket(self, 0, (u16)a, (u16)b, 0);
     return self;

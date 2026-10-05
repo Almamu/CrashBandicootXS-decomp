@@ -189,7 +189,7 @@ asm("" : : "r"(hold));`) to the two drafts above.
     With `self` in r6, r7 had been the reload register.
   - A value-first history store (`s32 x = self->x;` before
     `self->hist[self->histIdx].x = x;`) matches the ROM's load order.
-    `gUnknown_0300081C = gUnknown_0300081C + (u16)r - 1` gives its add
+    `gAkuAkuFollowFrame = gAkuAkuFollowFrame + (u16)r - 1` gives its add
     order. `self+0xc` bit 3 is a bitfield, which gives the ROM's
     `movs #9; negs` mask instead of `#0xf7`.
   - With those changes, the single spill came from a second r6 hold
@@ -200,7 +200,7 @@ asm("" : : "r"(hold));`) to the two drafts above.
     r8, which is the ROM's layout. The r6 reloads in the ROM are
     consistent with this.
   - What's left:
-    - `&gRoomFrameCount` and `&gUnknown_0300081C` are in r5/r4 where
+    - `&gRoomFrameCount` and `&gAkuAkuFollowFrame` are in r5/r4 where
       the ROM has r4/r5. Every r4/r5 hold window in the mode block adds
       spills.
     - The orbit tail builds `idx * 8` and the x/y history addresses

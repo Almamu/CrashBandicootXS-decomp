@@ -66,7 +66,7 @@ struct gfx_part
 };
 
 /* The whole flags byte at +0x0C, for the spots that update it as one
- * byte through register pins (see sub_80188FC). */
+ * byte through register pins (see UpdateUnusedOneShotAnimCtrl). */
 #define PART_FLAGS(p) (*((u8 *)(p) + 0xC))
 
 #endif /* GUARD_GFX_PART_H */

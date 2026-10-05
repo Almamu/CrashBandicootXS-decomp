@@ -20,7 +20,7 @@ extern void *MemCopy32(void *dest, void *src, s32 size);
  * shape and same self-copy-through-`MemCopy32` idiom as `UpdateYeti`
  * - see that function's doc comment for the full record-layout writeup.
  * Box A: `gYetiBox` (a record adjacent to `UpdateYeti`'s
- * own `gStaticData_0817AA98` - literal-pool-verified 0xC bytes apart)
+ * own `gYetiCatchBox` - literal-pool-verified 0xC bytes apart)
  * with `gYetiX`/`030014C8` (both `>>8`) added into its `x`/
  * `z` fields only. Box B: `self+0x38`'s own 12-byte vector, with
  * `self`'s own `+0x1c`/`0x20`/`0x24` position (all `>>8`) added into
@@ -73,10 +73,10 @@ u8 IsTouchingYeti(struct actor_self *self)
     return BoxOverlap(&f.a, b);
 }
 
-extern u8 gUnknown_030014C0;
+extern u8 gYetiBg2Page;
 extern void (*gUnpackNibbleTilesFunc)(void *frame, s32 arg);
 extern struct actor_self *gYeti;
-extern u8 gUnknown_030014C1;
+extern u8 gYetiBg2PageFlip;
 extern void UpdateYetiBg2(void);
 extern void UpdateYetiPalette(void);
 
@@ -90,9 +90,9 @@ extern void UpdateYetiPalette(void);
  * second to `0x0600D800` (`REG_DMA3SAD`/`DAD`/`CNT` at `0x040000D4`,
  * 0x80 words, 32-bit transfers). Then clears a third tile
  * (`0x0600BFC0`-`0x0600BFFC`) word-by-word, arms the object
- * (`gUnknown_030014C0 = 1`), passes the object's current frame data
+ * (`gYetiBg2Page = 1`), passes the object's current frame data
  * (past its 4-byte header) to the `gUnpackNibbleTilesFunc` hook, latches
- * `gUnknown_030014C1`, and
+ * `gYetiBg2PageFlip`, and
  * finally calls `UpdateYetiBg2`/`UpdateYetiPalette` (actor_part74.c) to prime
  * the gauge's sound/palette state immediately.
  *
@@ -138,9 +138,9 @@ void LoadYetiGraphics(void)
         for (p = base + 0x3c; p >= base; p -= 4)
             *(u32 *)p = zero;
     }
-    gUnknown_030014C0 = 1;
+    gYetiBg2Page = 1;
     gUnpackNibbleTilesFunc(CurFrame(gYeti) + 4, 1);
-    gUnknown_030014C1 = 1;
+    gYetiBg2PageFlip = 1;
     UpdateYetiBg2();
     UpdateYetiPalette();
 }

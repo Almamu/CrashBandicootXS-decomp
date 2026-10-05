@@ -2,7 +2,7 @@
 #include "actor.h"
 #include "gfx_part.h"
 
-extern s32 gUnknown_03001298;
+extern s32 gLastSpriteVelY;
 
 /* A velocity/position integrator: for each axis (X at `self+0x60`,
  * `self+0x50` max, `self+0x4c` accel; Y at `self+0x64`/`self+0x5c`/
@@ -13,7 +13,7 @@ extern s32 gUnknown_03001298;
  * `GetSpriteBounds`-style mirror-flag bit encoding). Caches the pre-move
  * position at `self+0x6c`/`self+0x70` (read back by `GetSpritePrevPos`/
  * `GetSpritePrevY`/`GetSpritePrevX`), then applies the clamped velocity to
- * `self+0`/`self+4`. Finally updates the global `gUnknown_03001298`
+ * `self+0`/`self+4`. Finally updates the global `gLastSpriteVelY`
  * with the Y velocity (a redundant-looking early write of 0 happens
  * only on the path where the Y velocity is already 0, so it's a
  * genuine no-op preserved as found) and returns whether either axis
@@ -26,7 +26,7 @@ extern s32 gUnknown_03001298;
  * `vx` pinned to `r3` while `vy` stays an unpinned local (it lands in
  * `r1` naturally - pinning both at once is the same gcc-2.9
  * register-pin miscompile documented for `ApplyPlayerVelocity`). The trailing
- * `gUnknown_03001298` block's "genuinely redundant" conditional store
+ * `gLastSpriteVelY` block's "genuinely redundant" conditional store
  * gets proven dead by this compiler regardless of C-level phrasing, so
  * it's emitted verbatim via one opaque `asm volatile` block instead,
  * reproducing the ROM's own address-in-`r0`/value-in-`r2` register
@@ -129,7 +129,7 @@ skipY:
             w[1] = y;
 
             {
-                register vs32 *g asm("r0") = &gUnknown_03001298;
+                register vs32 *g asm("r0") = &gLastSpriteVelY;
 
                 asm volatile(
                     "ldr r2, [%0, #0]\n\t"

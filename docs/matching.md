@@ -4240,7 +4240,7 @@ mirror-flag-style bit encoding used earlier in this ROM region for
 `GetSpriteBounds`). Caches the pre-move position at `self+0x6c`/`self+0x70`
 (read back by `GetSpritePrevPos`/`GetSpritePrevY`/`GetSpritePrevX` below), applies
 the clamped velocity to `self+0`/`self+4`, updates the global
-`gUnknown_03001298` with the Y velocity, and returns whether either
+`gLastSpriteVelY` with the Y velocity, and returns whether either
 axis is still moving.
 
 Every branch, comparison, and memory access is confirmed correct,
@@ -4257,7 +4257,7 @@ would be semantically equivalent but byte-different).
 The one remaining gap: the ROM is a genuine leaf function - no
 `push`/`pop` at all, needing only `r0`-`r3` for the whole body, with
 `self` naturally landing in `r2` and being freed for reuse (for the
-final `gUnknown_03001298` dereference) once its last use has passed.
+final `gLastSpriteVelY` dereference) once its last use has passed.
 Every arrangement tried here needs one extra register spilled to `r4`
 (a `push {r4, lr}`/`pop {r4}` pair the ROM doesn't have), including:
 pinning `self` to `r2` explicitly (fixes everything up through the
@@ -6368,14 +6368,14 @@ quirk next.
 
 **Left completely raw (21, not attempted this pass):** the rest of the
 chunk - `SpawnShark`/`SpawnMorayEel`/`SpawnElectricEel`/`SpawnSquid`/
-`SpawnJellyfish`/`SpawnLaserBarrier`/`sub_8020138`/`sub_802026C`/`SpawnSaucerLabAssistant`/
-`SpawnPistonCrusher`/`SpawnFlamethrowerLabAssistant`/`sub_8020788`/`sub_80208C4`/`SpawnRat`/
-`SpawnFrog`/`SpawnSeaMine`/`SpawnWoodenCrusher`/`sub_8021280`/`SpawnDingodile`/
+`SpawnJellyfish`/`SpawnLaserBarrier`/`SpawnStationarySpaceEnemy`/`SpawnPatrollingSpaceEnemy`/`SpawnSaucerLabAssistant`/
+`SpawnPistonCrusher`/`SpawnFlamethrowerLabAssistant`/`SpawnHomingSewerEnemy`/`SpawnPatrollingSewerEnemy`/`SpawnRat`/
+`SpawnFrog`/`SpawnSeaMine`/`SpawnWoodenCrusher`/`SpawnRoomExit`/`SpawnDingodile`/
 `SpawnTiny`/`SpawnCortexBoss`. `docs/rom_map.md` already has real
 characterization for several of these (`SpawnWoodenCrusher` as the 15-slot
 table's richer "two-line text popup" slot 0; `SpawnFlamethrowerLabAssistant`/
-`sub_8020788` as more instances of that same popup-spawner shape;
-`sub_8021280` as a confirmed bonus/reward-object spawner distinct from
+`SpawnHomingSewerEnemy` as more instances of that same popup-spawner shape;
+`SpawnRoomExit` as a confirmed bonus/reward-object spawner distinct from
 the twin family) but none were carried through to C this pass - left
 untouched in `asm/code_3_2_17_14674.s` rather than force a low-
 confidence match. Verified via a full clean `make compare` (`La suma

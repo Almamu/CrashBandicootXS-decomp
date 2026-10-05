@@ -7,9 +7,9 @@
 
 extern u8 gEnemyDefaultAnimMap[];
 extern u8 gFlamethrowerLabAssistantAnimMap[];
-extern u8 gStaticData_0816BACC[];
-extern u8 gStaticData_0816BAEC[];
-extern u8 gStaticData_0816BB0C[];
+extern u8 gStationarySpaceEnemyAnimMap[];
+extern u8 gPatrollingSpaceEnemyAnimMap[];
+extern u8 gPatrollingSewerEnemyAnimMap[];
 extern u8 gCrusherAnimMap[];
 extern u8 gSaucerLabAssistantAnimMap[];
 
@@ -75,11 +75,15 @@ void SpawnLaserBarrier(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     SetEnemyState(hdr, 1);
 }
 
-/* Text popup, tag 0x1b, anim +0x144. After registering the part it
- * switches the header's graphics to gStaticData_0816BACC, copies the
+/* Entity type 0x38: an enemy on sprite bank 27 (a shell that shoots out
+ * flaming spikes) that attacks in place (state 4, UpdateEnemyAttackCycle);
+ * placed only in space rooms. Species not identified.
+ *
+ * Text popup, tag 0x1b, anim +0x144. After registering the part it
+ * switches the header's graphics to gStationarySpaceEnemyAnimMap, copies the
  * level record's +8/+4/+0xc fields into header+0x30/0x34/0x38 and shows
  * it with style 4. */
-void sub_8020138(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnStationarySpaceEnemy(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = CreateMovingSprite(arg0, arg1, arg2, arg3);
     struct enemy_ctrl *hdr;
@@ -102,16 +106,19 @@ void sub_8020138(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     AddToPartList(gCollidableList, part);
     SetEnemyAnimMap(hdr, gEnemyDefaultAnimMap);
     rec2 = LEVEL_RECORD(arg3);
-    SetEnemyAnimMap(hdr, gStaticData_0816BACC);
+    SetEnemyAnimMap(hdr, gStationarySpaceEnemyAnimMap);
     SetEnemyAttackCycle(hdr, rec2->unk_08, rec2->unk_04, rec2->unk_0C);
     SetEnemyState(hdr, 4);
 }
 
-/* Text popup, tag 0x18, anim +0x120. After registering the part it
- * switches the header's graphics to gStaticData_0816BAEC, copies the
+/* Entity type 0x39: an enemy on sprite bank 24 that patrols and attacks
+ * (state 13); placed only in space rooms. Species not identified.
+ *
+ * Text popup, tag 0x18, anim +0x120. After registering the part it
+ * switches the header's graphics to gPatrollingSpaceEnemyAnimMap, copies the
  * level record's +8/+0xc/+0x10 fields into header+0x30/0x34/0x38, passes
  * the record's +4 to SetEnemyRangeX and shows the header with style 0xd. */
-void sub_802026C(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnPatrollingSpaceEnemy(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = CreateMovingSprite(arg0, arg1, arg2, arg3);
     struct enemy_ctrl *hdr;
@@ -134,7 +141,7 @@ void sub_802026C(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     AddToPartList(gCollidableList, part);
     SetEnemyAnimMap(hdr, gEnemyDefaultAnimMap);
     rec2 = LEVEL_RECORD(arg3);
-    SetEnemyAnimMap(hdr, gStaticData_0816BAEC);
+    SetEnemyAnimMap(hdr, gPatrollingSpaceEnemyAnimMap);
     SetEnemyAttackCycle(hdr, rec2->unk_08, rec2->unk_0C, rec2->unk_10);
     SetEnemyRangeX(hdr, rec2->unk_04);
     SetEnemyState(hdr, 0xd);
@@ -300,10 +307,14 @@ void SpawnFlamethrowerLabAssistant(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     SetEnemyState(hdr, 4);
 }
 
-/* Text popup, tag 0x16, anim +0x108. After registering the part it shows
+/* Entity type 0x41: an enemy on sprite bank 22 that follows the player's
+ * X within its range (state 9, UpdateEnemyHomingX/UpdateEnemyOscillateX);
+ * placed only in sewer rooms. Species not identified.
+ *
+ * Text popup, tag 0x16, anim +0x108. After registering the part it shows
  * the header with style 9, passes the level record's +4/+8/+0xc fields
  * to SetEnemyRangeXSpeed and sets header+0x3c/0x40/0x44 to {0x80, 0, 0x14}. */
-void sub_8020788(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnHomingSewerEnemy(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = CreateMovingSprite(arg0, arg1, arg2, arg3);
     struct enemy_ctrl *hdr;
@@ -331,10 +342,13 @@ void sub_8020788(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     SetEnemyWave(hdr, 0x80, 0, 0x14);
 }
 
-/* Text popup, tag 0x14, anim +0xf0. After registering the part it points
- * the header at gStaticData_0816BB0C, shows it with style 2 and passes
+/* Entity type 0x42: an enemy on sprite bank 20 that patrols (state 2);
+ * placed only in sewer rooms. Species not identified.
+ *
+ * Text popup, tag 0x14, anim +0xf0. After registering the part it points
+ * the header at gPatrollingSewerEnemyAnimMap, shows it with style 2 and passes
  * the level record's +4 field to SetEnemyRangeX. */
-void sub_80208C4(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnPatrollingSewerEnemy(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = CreateMovingSprite(arg0, arg1, arg2, arg3);
     struct enemy_ctrl *hdr;
@@ -357,7 +371,7 @@ void sub_80208C4(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     AddToPartList(gCollidableList, part);
     SetEnemyAnimMap(hdr, gEnemyDefaultAnimMap);
     rec2 = LEVEL_RECORD(arg3);
-    SetEnemyAnimMap(hdr, gStaticData_0816BB0C);
+    SetEnemyAnimMap(hdr, gPatrollingSewerEnemyAnimMap);
     SetEnemyState(hdr, 2);
     SetEnemyRangeX(hdr, rec2->unk_04);
 }
@@ -395,7 +409,7 @@ void SpawnRat(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 
 /* "Two-line text popup" spawner, tag 0x13. The tail points the header at
  * gEnemyDefaultAnimMap, switches the part's field_0A from 1 to 7, then
- * re-points the header at gStaticData_0816BB0C before showing it with
+ * re-points the header at gPatrollingSewerEnemyAnimMap before showing it with
  * SetEnemyState(hdr, 8). */
 void SpawnFrog(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
@@ -419,7 +433,7 @@ void SpawnFrog(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     AddToPartList(gCollidableList, part);
     SetEnemyAnimMap(hdr, gEnemyDefaultAnimMap);
     part->base.field_0A = 7;
-    hdr->animMap = gStaticData_0816BB0C;
+    hdr->animMap = gPatrollingSewerEnemyAnimMap;
     SetEnemyState(hdr, 8);
 }
 

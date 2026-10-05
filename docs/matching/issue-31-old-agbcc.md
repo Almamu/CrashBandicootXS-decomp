@@ -44,7 +44,7 @@ Three functions keep their previous form:
 - `SpawnFlamethrowerLabAssistant` stays NAKED. Plain C is 62 halfwords off. The ROM spills
   `part+0x28` to its one stack slot and keeps the constant 1 in r8. The
   reconstruction spills the constant and `&gEntityFlags` instead.
-- `sub_8021280` stays NAKED. Plain C is 9 halfwords off. The ROM computes
+- `SpawnRoomExit` stays NAKED. Plain C is 9 halfwords off. The ROM computes
   the `{x - 2, y - 0x1e}` point into fresh r2/r3, and the reconstruction
   subtracts in place. This is the same gap as `SpawnCrateGemMarker`
   (graphics_loading_21d80.c).
@@ -95,7 +95,7 @@ are good candidates for the same old_agbcc retry.
 
 ## Later pass: NAKED retry (mid45)
 
-`sub_8021280` is now C, using four register pins plus one empty `asm`
+`SpawnRoomExit` is now C, using four register pins plus one empty `asm`
 nudge for the fresh-register `{x - 2, y - 0x1e}` point. `SpawnFlamethrowerLabAssistant`
 stays NAKED at 62 halfwords, now with its draft under `#if NON_MATCHING`.
 See [naked-retry-mid45.md](naked-retry-mid45.md).

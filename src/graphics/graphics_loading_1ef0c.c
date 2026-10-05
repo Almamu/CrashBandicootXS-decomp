@@ -292,10 +292,14 @@ void SpawnVenusFlytrap(u32 arg0, u32 arg1, u32 arg2, u32 arg3)
         : "r0", "r1", "r2", "r5", "memory");
 }
 
-/* Text popup, tag 0xE. Same as SpawnLizard without the animation
+/* Entity type 0x2B: an enemy on sprite bank 14 that patrols (state 2,
+ * UpdateEnemyPatrol); placed only in the jungle rooms 15, 27 and 32. The
+ * species isn't identified, so the name is generic.
+ *
+ * Text popup, tag 0xE. Same as SpawnLizard without the animation
  * restart: draws the header with gEnemyDefaultAnimMap and hands it the
  * level record's +4 word through SetEnemyRangeX. */
-void sub_801F2BC(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnPatrollingJungleEnemy(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = CreateMovingSprite(arg0, arg1, arg2, arg3);
     struct enemy_ctrl *hdr;

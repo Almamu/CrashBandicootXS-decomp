@@ -32,13 +32,13 @@ called through the `_call_via_r1`/`AD80`/`AD84`/`AD88` "call via
 r1/r2/r3/r4" thunks), like issue #21's `input_ctrl`.
 
 - **`CreateDingodileShieldCtrl`/`DestroyDingodile`/`CreateDingodile`**: constructor/destructor
-  bodies of two subclasses of the `sub_8017A8C` object family
+  bodies of two subclasses of the `CreateBossCtrl` object family
   (`actor_part27.c`), method tables `gDingodileShieldVtable` and
   `gDingodileVtable` (`DestroyDingodile` is the latter's +0x4C destructor).
   `CreateDingodile` is called from `graphics_loading_21280.c`.
-  `StartDingodileMotion` is `SetChaserMotionXFromSet`'s mirror-gated velocity copy, but taking
-  its record index straight from `gStaticData_0816C418` (8-byte `{a, b}`
-  pairs into the 12-byte `gStaticData_0816C3B8` vectors).
+  `StartDingodileMotion` is `SetMegaMixMotionXFromSet`'s mirror-gated velocity copy, but taking
+  its record index straight from `gDingodileMotionEntries` (8-byte `{a, b}`
+  pairs into the 12-byte `gDingodileMotionRecords` vectors).
 - **`struct gobj`** (0x80 bytes, method table `gPlatformVtable`):
   `CreatePlatform(id, x, y, index, kind)` allocates and constructs one (it
   inlines the constructor `InitPlatform`), looks its spawn record up through
@@ -67,7 +67,7 @@ r1/r2/r3/r4" thunks), like issue #21's `input_ctrl`.
 - **`struct mover`** (0x38 bytes, method table `gPlatformMoverVtable`,
   constructor `CreatePlatformMover`, destructor `DestroyPlatformMover`): an oscillating
   platform driver. `UpdatePlatformMover` (+0x0C) starts each axis with velocity
-  record 1 of its `set` (12-byte records in `gStaticData_0816C460`,
+  record 1 of its `set` (12-byte records in `gPlatformMoverMotionRecords`,
   sign-flipped by `dirX`/`dirY`), accumulates the distance travelled and
   reverses once it exceeds `rangeX`/`rangeY` (twice the constructor's
   distance); kinds 5/6/7 add timed behaviour (see the function comment).

@@ -375,17 +375,17 @@ from "core" graphics.
 - `src/graphics/actor_part27.c` (new file, GitHub issue #22, ROM
   0x08017A44-0x08017AAC - numbered `27` rather than `20` since issue
   #58's parallel PR above independently claimed `actor_part20.c`-
-  `actor_part26.c` first): `sub_8017A44`-`GetCtrlTarget` (9 functions) -
+  `actor_part26.c` first): `IsInputCtrlMotionXPending`-`GetCtrlTarget` (9 functions) -
   the same player/action-object family as `actor_part18.c`/
   `actor_part19.c` (`self+0xc` table pointer, `self+0x10` part
   pointer); see `docs/matching/issue-22-0x08017a44-actor.md`.
 - `src/graphics/actor_part27b.c` (new file, GitHub issue #22, ROM
   0x08017ECC-0x08017FE8, non-adjacent to `actor_part27.c` since the
-  raw `UpdateChaser` sits between them): `SetChaserMotionYFromSet`, `SetChaserMotionXFromSet`,
-  `StartChaserMotionYFromSet`, `StartChaserMotionXFromSet`, `ResetChaserCtrl`, `DestroyChaserCtrl`,
-  `CreateChaserCtrl` - a `self+4` double-pointer-chain record lookup (same
+  raw `UpdateMegaMix` sits between them): `SetMegaMixMotionYFromSet`, `SetMegaMixMotionXFromSet`,
+  `StartMegaMixMotionYFromSet`, `StartMegaMixMotionXFromSet`, `ResetMegaMixCtrl`, `DestroyMegaMixCtrl`,
+  `CreateMegaMixCtrl` - a `self+4` double-pointer-chain record lookup (same
   shape as `StartCtrlTargetMotionYFromSet`/`StartCtrlTargetMotionXFromSet`) feeding the
-  `gStaticData_0816C2D8` per-vector-component trampoline table; see
+  `gMegaMixMotionRecords` per-vector-component trampoline table; see
   `docs/matching/issue-22-0x08017a44-actor.md`.
 - `src/graphics/actor_part27c.c` (new file, GitHub issue #22, ROM
   0x080187FC-0x08018884, non-adjacent to `actor_part27b.c` since the
@@ -393,7 +393,7 @@ from "core" graphics.
   `UpdateStompedHopPad`, `DestroyStompedHopPadCtrl`, `CreateStompedHopPadCtrl`, `UpdateOneShotAnimCtrl`; see
   `docs/matching/issue-22-0x08017a44-actor.md`.
 - `src/graphics/actor_part27a.c` (GitHub issue #22, ROM
-  0x08017AB0-0x08017ECC): `UpdateChaser` - the player-vs-part 3-state
+  0x08017AB0-0x08017ECC): `UpdateMegaMix` - the player-vs-part 3-state
   dispatcher, previously a NAKED transcription, now real C built with
   old_agbcc; see `docs/matching/issue-22-0x08018008-hopper.md`.
 - `src/graphics/actor_part_18008.c` (new file, GitHub issue #22, ROM
@@ -437,7 +437,7 @@ from "core" graphics.
   [docs/matching/issue-62-0x08033804-actor.md](../matching/issue-62-0x08033804-actor.md)):
   `StartHovercraftHitFlash`, `SetHovercraftFlashColor`, `GetHovercraftPartsLeft`, `LoseHovercraftPart`,
   `GetHovercraftAttack`, `GetHovercraftState`, `GetHovercraftLevel`, `GetHovercraftZ`,
-  `GetHovercraftY`, `GetHovercraftX`, `SetHovercraftState`, `nullsub_36`,
+  `GetHovercraftY`, `GetHovercraftX`, `SetHovercraftState`, `HovercraftStateInactive`,
   `HovercraftStateApproach`, `nullsub_37`, `DamageHovercraftCannon`,
   `CreateHovercraftCannon`, `HovercraftCannonStateDestroyed`, `HovercraftCannonStateWait`,
   `IsHovercraftCannonUnshootable`, `DamageHovercraftLauncher` - the
@@ -563,9 +563,9 @@ from "core" graphics.
   orbiting-companion updaters - `AimJetpackPlane`, `DamageJetpackPlane`,
   `CreateJetpackPlane`, `JetpackPlaneStateFall`, `sub_802FE1C`, `sub_802FE58`,
   `JetpackPlaneStateFly`, `RunJetpackPlaneState`, `IsJetpackPlaneUnshootable`, `CreateJetpackBomber`,
-  `UpdateJetpackBomber`, `HomeJetpackBomber`, `nullsub_28`, `JetpackBomberStateDrop`,
+  `UpdateJetpackBomber`, `HomeJetpackBomber`, `JetpackBomberStateDying`, `JetpackBomberStateDrop`,
   `JetpackBomberStateCircle`, `JetpackBomberStateSwingHorizontal`, `JetpackBomberStateBobVertical`, `JetpackBomberStateHome`,
-  `nullsub_29`, `DamageJetpackBomber`, `RunJetpackBomberState`, `IsJetpackBomberUnshootable`,
+  `JetpackBomberStateIdle`, `DamageJetpackBomber`, `RunJetpackBomberState`, `IsJetpackBomberUnshootable`,
   `UpdateJetpackCannonball`, `CreateJetpackCannonball`, `IsJetpackCannonballUnshootable`, `AirshipFireballStateOrbit`,
   `AirshipFireballStateSpiralIn` (all 27 real C, including the pointer-to-member
   dispatch shape parked NAKED elsewhere as the "r7 hazard"). First user
@@ -756,7 +756,7 @@ from "core" graphics.
   the original disassembly never gave their own `thumb_func_start` label
   for, sandwiched inside what looked like padding/literal-pool gaps
   between the labelled ones (`IsJetpackCheckpointTextUnshootable`, `DestroyJetpackCheckpointText`, `UpdateJetpackExplosion`,
-  `IsJetpackExplosionUnshootable`, `GetActorHp`, `nullsub_44`, `IsJetpackPlayerUnshootable` - see
+  `IsJetpackExplosionUnshootable`, `GetActorHp`, `DamageActor`, `IsJetpackPlayerUnshootable` - see
   `expected/corrections.txt`'s matching `split` entries, and
   `docs/matching/issue-72-0x0803b4ec-actor.md` for how each was found
   and confirmed via a from-scratch `arm-none-eabi-as`+`objdump`
@@ -778,7 +778,7 @@ from "core" graphics.
   [docs/matching/issue-48-0x080291a4-actor.md](../matching/issue-48-0x080291a4-actor.md).
 - `src/graphics/actor_part92.c`/`actor_part99.c`/`actor_part93.c`/
   `actor_part94.c` (GitHub issue #49, ROM 0x08029E4C-0x0802A69C):
-  `nullsub_6`, `CommitActorBgScroll`, `sub_8029E98`, `sub_8029EB4` (the
+  `nullsub_6`, `CommitActorBgScroll`, `GetActorBgCenterY`, `GetActorBgCenterX` (the
   BG2-affine scroll subsystem's tail), the `gActorSpawnTable`
   `sub_effect_table` record accessor family (`GetActorCategoryFrameCount`-
   `UpdateActorCategoryBg2`/`SetActorCategoryExitStatus`), and a circular-list marker-drawing pass
@@ -1296,7 +1296,7 @@ embedded as asm instead. They're tracked as parked, not matched.
   this compiler turns into a `cmp`/`bge`/`neg` branch instead. Also
   fixes a genuine correctness bug found while tightening the register
   match: pinning the `self+0x1c` reload to `r1` *before* the
-  `sub_8029EB4()` call it's actually meant to follow let this
+  `GetActorBgCenterX()` call it's actually meant to follow let this
   compiler's optimizer silently skip the reload and reuse a stale
   register value from an unrelated earlier computation - caught by a
   direct byte compare against the ROM, not just a register-choice
@@ -1384,7 +1384,7 @@ embedded as asm instead. They're tracked as parked, not matched.
   max by its accel amount (clamped so it never overshoots), builds a
   direction-flags byte from the clamped velocities' signs, caches the
   pre-move position, applies the velocity, and updates a global
-  (`gUnknown_03001298`) with the Y velocity; now fully matched as real
+  (`gLastSpriteVelY`) with the Y velocity; now fully matched as real
   C. Closed using the exact fix worked out for its near-identical twin
   `ApplyPlayerVelocity` above (same per-axis clamp shape, same field offsets):
   `vx` pinned to `r3` while `vy` stays unpinned, and the trailing

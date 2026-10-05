@@ -105,7 +105,7 @@ extern void DestroyCtrl(void *self, s32 flags);
 
 /* Sets `self+0xc`'s table pointer to `gEffectCtrlVtable`, then
  * tail-calls `DestroyCtrl` - same double-set pattern as
- * `DestroyStompedHopPadCtrl`/`sub_8017A78`/`DestroyChaserCtrl`. */
+ * `DestroyStompedHopPadCtrl`/`DestroyBossCtrl`/`DestroyMegaMixCtrl`. */
 void DestroyEffectCtrl(void *selfArg, s32 flags)
 {
     u8 *self = selfArg;

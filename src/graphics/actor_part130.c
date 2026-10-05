@@ -47,8 +47,8 @@ extern void SetActorAnim(void *self, s32 idx);
 extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
 extern void UpdateActor(void *self);
 extern s32 __divsi3(s32 dividend, s32 divisor);
-extern s32 sub_8029E98(void);
-extern s32 sub_8029EB4(void);
+extern s32 GetActorBgCenterY(void);
+extern s32 GetActorBgCenterX(void);
 extern void sub_8029E34(s32 arg0);
 extern s32 GetCellAnimDistance(void);
 extern u8 IsTouchingPlayer(void *self);
@@ -356,10 +356,10 @@ void *CreateJetpackCollectedWumpa(void *selfArg, s32 a, s32 b, s32 c, s32 spawnP
     self->base.vtable = (struct actor_vtable *)gJetpackCollectedWumpaVtable;
     self->reward = spawnParam;
 
-    self->base.y += sub_8029E98();
+    self->base.y += GetActorBgCenterY();
 
     {
-        register s32 ebResult asm("r0") = sub_8029EB4();
+        register s32 ebResult asm("r0") = GetActorBgCenterX();
         register s32 old asm("r1") = self->base.x;
         dy = old + ebResult;
     }
@@ -1085,8 +1085,8 @@ void UpdateHovercraftBg2(void)
     }
 
     scale = __divsi3(gHovercraftDistance << 8, 0x3c00);
-    dy = gHovercraftScreenX + sub_8029EB4();
-    dx = gHovercraftScreenY + sub_8029E98();
+    dy = gHovercraftScreenX + GetActorBgCenterX();
+    dx = gHovercraftScreenY + GetActorBgCenterY();
 
     REG_BG2X = 0x8000 - ((dy * scale) >> 8);
     REG_BG2Y = 0x8000 - ((dx * scale) >> 8);
