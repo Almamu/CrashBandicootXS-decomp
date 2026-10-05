@@ -125,7 +125,7 @@ extern s32 HasTurboRun(void *self);
  * needs the constant-copy escape below. */
 void sub_8015238(struct act *self, u8 mode, s32 flags)
 {
-    self->unk_26 = 0xc;
+    self->spinCooldown = 0xc;
     switch (mode) {
     case 3:
     case 4: {

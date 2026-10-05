@@ -72,7 +72,7 @@ the appendix.
 | `08270F08`-`082B91D0` | 295,624 | level tile sets 4-5 | as tile sets 1-3 | high | **done** (grit) |
 | `082B91D0`-`082BF120` | 24,400 | per-room level data, 8 rooms | as block 1 | high | **done** (C) |
 | `082BF120`-`084A4660` | 1,987,904 | sprite tile pool for the 56 sprite banks | `graphics_7634.c`/`graphics_73dc.c` (`GetSpriteTileBase` + frame offset) | high | **done** (grit) |
-| `084A4660`-`084A5600` | 4,000 | 125 fixed 4bpp tiles | `RunPauseMenu` pool, `GetPaletteSlot` | high | **done** (grit) |
+| `084A4660`-`084A5600` | 4,000 | 125 OBJ palettes (`gObjPalettes`) | `InitLevelState`/`RunPauseMenu` palette cache, `GetPaletteSlot` | high | **done** (grit) |
 | `084A5600`-`084C0006` | 109,062 | sprite-bank table ("master asset table"): header, 56 banks, 2,429 frames | `RunPauseMenu`, `InitLevelState`, every `**gSpriteBankSet` user | high | **converted** (C) |
 | `084C0006`-`0855BCB4` | 638,126 | GAX2 sound-effect data set: 88 instruments, 87 8-bit samples, sample table, the SFX voice handler type | `PlaySfx`/`GAX_fx_ex` voices via `GaxSongHeader.sfxTypes` (`StartSong`) | high | **converted** (`gax_audio.py --sfx`) |
 | `085A4C5C`-`086ECCD2` | 28,979 | 111 labels between the built intro/tileset1 LZ77 blobs: GAX2 tables and strings, libgcc `__clz_tab` x2, EEPROM tables, 23 intro palettes, 67 alignment pads | direct / slide packages | high | easy (the pads and palettes **done**) |
@@ -316,7 +316,7 @@ two room-data blocks (`0824B638`, `082B91D0`) are typed C
 | `08299DCC` | 0x1F404 | level tile set 5 (0x1F400 B) | 9 refs; ends where room block 2 starts | medium |
 | `082B91D0` | 0x5F50 | **room data, 8 rooms** (same shapes) | | **done** |
 | `082BF120` | 0x1E5540 | **sprite tile pool**: raw OBJ tiles, no header | see the next section: the 56 banks use disjoint, back-to-back tile ranges in bank order, and the last one ends at exactly `+0x1E5540` | medium |
-| `084A4660` | 0xFA0 | 125 x 32-byte 4bpp tiles | header `+0x08`/`+0x0E` of `gSpriteBankTable`; `RunPauseMenu` builds the 125-slot tile-asset cache from it | easy |
+| `084A4660` | 0xFA0 | 125 x 32-byte OBJ palettes (16 colours each) | header `+0x08`/`+0x0E` of `gSpriteBankTable`; `InitLevelState`/`RunPauseMenu` hand it to the palette cache, `GetPaletteSlot` copies one palette per `paletteId` | easy |
 
 **Conversion.** The sprite tile pool is plain tile data with known bank
 boundaries. One 4bpp PNG per bank through `gbagfx` is a lossless round
@@ -339,12 +339,12 @@ from the matched readers (`RunPauseMenu` in `settings_menu15.c`, `GetSpriteTileB
 0x084A5600 header (0x10):
     bank_record *banks      = 0x084A5610
     u8 *tileBase            = 0x082BF120   (sprite tile pool, in 0817E78C)
-    u8 *tilePool            = 0x084A4660   (125 fixed tiles)
-    u16 nbanks = 56, u16 npool = 125
+    u8 *palettes            = 0x084A4660   (125 OBJ palettes)
+    u16 nbanks = 56, u16 paletteCount = 125
 0x084A5610 bank_record[56] (12 B): { anim_record *anims; frame_desc **frames; u16 unk; u16 nanims; }
     (every "**gSpriteBankSet + 0x27C"-style offset in src/ is 12*N: bank N)
 per bank, back to back:
-    anim_record[nanims] (0x1C): u16 *keyframes @0, two boxes @4/@0xC, u8 tileRecord @0x14 (GetPaletteSlot id),
+    anim_record[nanims] (0x1C): u16 *keyframes @0, two boxes @4/@0xC, u8 paletteId @0x14 (GetPaletteSlot id),
                                 u8 duration @0x15, u8 frameCount @0x16, u8 flags @0x17 (bit 1 = loop)
     u16 keyframes[]             (frame indices, frameCount per anim)
     frame_desc *frames[nframes]

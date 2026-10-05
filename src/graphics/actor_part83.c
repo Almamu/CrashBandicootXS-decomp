@@ -94,15 +94,15 @@ void sub_8012AF4(struct act *self)
     struct act_part *p;
 
     p = gPlayer;
-    if (p->unk_102 == 0) {
-        if (p->unk_103 == 0)
+    if (p->pushLeft == 0) {
+        if (p->pushRight == 0)
             goto skip;
     }
     {
         if (self->part->contact == 8) {
-            if (p->unk_102)
+            if (p->pushLeft)
                 p->x -= 0x100;
-            else if (p->unk_103)
+            else if (p->pushRight)
                 p->x += 0x100;
             SetSpritePrevPos(gPlayer, gPlayer->x, gPlayer->y);
         }
@@ -110,14 +110,14 @@ void sub_8012AF4(struct act *self)
 skip:
     if (self->state == 0) {
         struct act_part *p = gPlayer;
-        if (p->unk_60 == 0 && p->bank->unk_0A != 0x12 && self->unk_33 == 0) {
+        if (p->speedX == 0 && p->bank->unk_0A != 0x12 && self->unk_33 == 0) {
             StopSfx(gAudioContext, 0x36);
             ACT_CALL2(self, m50, gPlayer, 0x12);
         }
     }
     if (self->state == 0 || self->state == 0x11) {
         struct act_part *p = gPlayer;
-        if (p->unk_60 != 0 && p->unk_100 == 0) {
+        if (p->speedX != 0 && p->unk_100 == 0) {
             self->next31 = 0;
             self->flag2F = 1;
             self->next27 = 0;
@@ -131,7 +131,7 @@ skip:
 
             rec = *(gStaticData_0816B304 + (*self->anims)[self->next27].first);
             q = gPlayer;
-            if (q->unk_100 && self->part->contact == 8 && q->unk_60 != 0) {
+            if (q->unk_100 && self->part->contact == 8 && q->speedX != 0) {
                 self->next31 = f;
                 /* Three extra references to `self` (no code): they raise its
                  * allocation priority so the ROM's register choice for the
@@ -260,7 +260,7 @@ skip:
             struct act_part *p = self->part;
             u8 *slot;
 
-            if (PartByte(p, 0x100) && *(slot = &self->next27) != 0x1F && p->unk_60 != 0)
+            if (PartByte(p, 0x100) && *(slot = &self->next27) != 0x1F && p->speedX != 0)
                 ActHold27P(self, slot, 0x1F);
         } else {
             u8 wait = self->unk_24[1];

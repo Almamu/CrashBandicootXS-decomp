@@ -54,7 +54,7 @@
  * time; it closed over three passes, see docs/matching/huge-naked-retry.md,
  * docs/matching/huge-naked-retry-2.md and docs/matching/huge-naked-retry-3.md
  * for what each step fixed. */
-#include "phys_obj.h"
+#include "crate.h"
 
 /* The player (gPlayer) as this function reads it. */
 struct d18c_player
@@ -82,13 +82,13 @@ struct d18c_player
     s32 velZ;           // 0x5C
     u8 unk_60[4];
     s32 speedY;         // 0x64
-    u8 standMode;       // 0x68
+    u8 hitAxes;         // 0x68
     u8 unk_69[0xB];
     u32 hitMask;        // 0x74
     u8 unk_78[8];
     u8 busy;            // 0x80
     u8 unk_81[7];
-    u8 ringLocked;      // 0x88
+    u8 ctrlMode;        // 0x88
     u8 unk_89[3];
     u32 timer;          // 0x8C
     u8 unk_90[2];
@@ -204,9 +204,9 @@ extern void AddCollisionCandidate(void *queue, struct crate *obj, s32 kind, s32 
 #define D18C_RING_PUSH(obj)                                                    \
     if (1)                                                                     \
     {                                                                          \
-        if (D18C_RingLocked() == 0 && D18C_P->ringCount <= 4)                 \
+        if (D18C_CtrlMode() == 0 && D18C_P->ringCount <= 4)                 \
             D18C_P->ring[D18C_P->ringCount] = (obj);                           \
-        if (D18C_P->ringLocked == 0)                                           \
+        if (D18C_P->ctrlMode == 0)                                           \
             D18C_P->ringCount++;                                               \
     }                                                                          \
     else                                                                       \
@@ -240,9 +240,9 @@ static inline s32 D18C_CodeIn(s32 (*t)[7], u8 *row, s32 k)
  * Written in place, both tests are the same expression and cse's jump
  * following sends a failed first test straight past the second one; the
  * ROM re-tests (its `bne` goes to the second load). */
-static inline s32 D18C_RingLocked(void)
+static inline s32 D18C_CtrlMode(void)
 {
-    return D18C_P->ringLocked;
+    return D18C_P->ctrlMode;
 }
 
 /* The ring count as an int. The first `!= 0` test then loads it with the
@@ -360,7 +360,7 @@ void sub_0800D18C(struct crate *self, s32 idx)
         if (s == 1)
             goto tail;
     }
-    if (self->unk_44 != 0)
+    if (self->fallDistance != 0)
         goto tail;
     {
         s32 empty;
@@ -417,7 +417,7 @@ void sub_0800D18C(struct crate *self, s32 idx)
         {
             struct crate *e;
 
-            if (D18C_P->ringLocked == 0 && (i <= 4 || i < D18C_P->ringCount))
+            if (D18C_P->ctrlMode == 0 && (i <= 4 || i < D18C_P->ringCount))
                 e = D18C_P->ring[i];
             else
                 e = NULL;
@@ -525,7 +525,7 @@ tail:
     if (self->touched != 0)
     {
         self->touched = 0;
-        if (self->unk_44 == 0)
+        if (self->fallDistance == 0)
             return;
     }
     {
@@ -567,7 +567,7 @@ tail:
     f21 = 0;
     if (f.b.y < f.a.y)
         f21 = 1;
-    if (self->unk_44 != 0)
+    if (self->fallDistance != 0)
     {
         if (!AabbOverlapsInclusiveX(&f.c, &f.b))
             return;
@@ -654,7 +654,7 @@ tail:
             {
                 s32 y;
 
-                if (D18C_P->ringLocked != 1)
+                if (D18C_P->ctrlMode != 1)
                     return;
                 f.p3.x = D18C_P->x;
                 y = D18C_P->y;
@@ -835,7 +835,7 @@ tail:
                         px = f.b.x;
                         r = sub_800FDC8(ax, ay, px, py, f.a.x + f.a.w);
                     }
-                    if (D18C_P->ringLocked == 1)
+                    if (D18C_P->ctrlMode == 1)
                         r += 2;
                     if ((r < 0 && f21 == 0 && dx > 5) || (r > 0 && r >= f.a.y + f.a.h))
                         edge = 4;
@@ -881,7 +881,7 @@ tail:
         {
             D18C_CALL68(0, 0xc, 4);
             D18C_Hit(D18C_P, 4);
-            if (D18C_P->standMode != 8)
+            if (D18C_P->hitAxes != 8)
                 D18C_PosPtr(&f.pos)->y = (dy << 8) + D18C_PosPtr(&f.pos)->y;
         }
         break;
@@ -964,7 +964,7 @@ tail:
         }
         break;
     }
-    if (D18C_P->ringLocked == 1 && self->kind == 0xe && code <= 1
+    if (D18C_P->ctrlMode == 1 && self->kind == 0xe && code <= 1
         && AabbOverlapsInclusiveX(&f.c, &f.b) == 1)
         LightTntCrate(tgt);
     AddCollisionCandidate(D18C_QUEUE(D18C_P), tgt, kind, code, edge, dy, f.pos, hit,
@@ -993,7 +993,7 @@ tail:
  * BreakCrateInStack in case 3. A one-byte struct argument goes in QImode, so
  * the spilled union's low byte is reloaded with `mov r5, sp; ldrb` in
  * argument order, as in the ROM. */
-#include "phys_obj.h"
+#include "crate.h"
 extern void PlaySfx(void *ctx, s32 id, s32 volume);
 extern void *gAudioContext;
 extern s32 gCrateHitResponse[][7];
@@ -1037,7 +1037,7 @@ void sub_800E08C(struct crate *self, s32 kind, s32 code, s32 edge, s32 depth,
     forcedIn = pforced.value;
     if ((self->state & 0x7f) != 0)
         goto commit;
-    if (PHYS_PLAYER->ringLocked == 1 && code > 2)
+    if (PHYS_PLAYER->ctrlMode == 1 && code > 2)
     {
         pos.x = PHYS_PLAYER->x;
         pos.y = PHYS_PLAYER->y;
@@ -1120,7 +1120,7 @@ void sub_800E08C(struct crate *self, s32 kind, s32 code, s32 edge, s32 depth,
                 {
                     u8 m = 8;
 
-                    PHYS_PLAYER->standMode = m;
+                    PHYS_PLAYER->hitAxes = m;
                 }
                 {
                     struct e08c_pos *pp = &pos;
@@ -1163,7 +1163,7 @@ void sub_800E08C(struct crate *self, s32 kind, s32 code, s32 edge, s32 depth,
     case 3:
         if ((u32)(kind - 5) <= 1)
             BreakCrateInStack(self, 0, 0, 0);
-        else if (self->unk_44 != 0)
+        else if (self->fallDistance != 0)
             BreakCrateInStack(self, 0, 0, 4);
         else if (kind == 2)
             sub_800E7A8_flag(self, 0, f20.s, edge);
@@ -1176,9 +1176,9 @@ void sub_800E08C(struct crate *self, s32 kind, s32 code, s32 edge, s32 depth,
             if (edge == 8 || edge == 4)
             {
                 BreakCrateInStack(self, 0, 0, edge);
-                if ((*pp)->ringLocked == 0 && (*pp)->ringCount <= 4)
+                if ((*pp)->ctrlMode == 0 && (*pp)->ringCount <= 4)
                     (*pp)->ring[(*pp)->ringCount] = self;
-                if (PHYS_PLAYER->ringLocked == 0)
+                if (PHYS_PLAYER->ctrlMode == 0)
                     PHYS_PLAYER->ringCount++;
             }
         }

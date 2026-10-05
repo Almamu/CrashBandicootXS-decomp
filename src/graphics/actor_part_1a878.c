@@ -156,7 +156,7 @@ struct gobj *CreatePlatform(u16 id, u16 x, u16 y, u16 index, s32 kind)
         s32 mask;
 
         r += obj->tag;
-        id = GetPaletteSlot(gPaletteCache, r->unk_14);
+        id = GetPaletteSlot(gPaletteCache, r->paletteId);
         p = &obj->slot;
         low = 0xF;
         /* hide 0xF from cse, which would build ~0xF as 0xF - 0x1F */

@@ -1,5 +1,5 @@
 #include "core.h"
-#include "phys_obj.h"
+#include "crate.h"
 
 /* GitHub issue #13: 0x0800FC70-0x08010A0C, continuing the physics/
  * collision subsystem (see game_loop17.c's header comment and

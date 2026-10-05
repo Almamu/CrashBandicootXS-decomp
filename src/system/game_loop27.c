@@ -1,5 +1,5 @@
 #include "core.h"
-#include "phys_obj.h"
+#include "crate.h"
 
 /* GitHub issue #14: 0x08010A0C-0x08010D54, continuing the physics/
  * collision subsystem (`game_loop17.c`-`game_loop26.c`, see
@@ -9,7 +9,7 @@
  * viewport's own "collision box" sub-record embedded at
  * `gPlayer+0x108` (confirmed by `ResolvePlayerCollisions` in
  * game_loop23.c, which already calls `ResolveCollisionCandidates(gPlayer +
- * 0x108)`). Its fields are `struct crate`'s (include/phys_obj.h). */
+ * 0x108)`). Its fields are `struct crate`'s (include/crate.h). */
 
 
 /* Getter for `self+0x48` bits 6-7 - already matched, game_loop26.c. */
@@ -103,12 +103,12 @@ u8 GetCrateKind(void *selfArg)
 
 void sub_8010ABC(void *selfArg, s32 val)
 {
-    ((struct crate *)selfArg)->unk_44 = val;
+    ((struct crate *)selfArg)->fallDistance = val;
 }
 
 s32 sub_8010AC0(void *selfArg)
 {
-    return ((struct crate *)selfArg)->unk_44;
+    return ((struct crate *)selfArg)->fallDistance;
 }
 
 /* Overwrites `self+0x4d`'s low 7 bits with `val`, preserving bit 7. */

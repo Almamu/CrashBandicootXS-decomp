@@ -174,7 +174,7 @@ void sub_8012238(void *selfArg)
         goto end;
 
     case_12:
-        if (player->unk_60 == 0)
+        if (player->speedX == 0)
             goto end;
         *typeAddr = 0x25;
         goto common;

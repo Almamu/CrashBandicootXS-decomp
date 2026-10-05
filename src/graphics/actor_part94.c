@@ -214,7 +214,7 @@ void DestroyAllActors(void)
             : "r"(addr)
         );
 
-        cur = ACTOR_LINK_PREV((struct actor_self *)head);
+        cur = ACTOR_LINK_NEXT((struct actor_self *)head);
         asm volatile(
             "add %0, %1, #0\n\t"
             : "=r"(headAddr)
@@ -223,7 +223,7 @@ void DestroyAllActors(void)
     }
     if (cur != head) {
         do {
-            next = ACTOR_LINK_PREV(cur);
+            next = ACTOR_LINK_NEXT(cur);
             if (cur != NULL) {
                 struct actor_vtable *rec = cur->vtable;
                 s32 x = (s32)cur + rec->destroy.thisOffset;

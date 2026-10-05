@@ -149,7 +149,7 @@ void UpdateYeti(void)
         if (gUnknown_030014A0 != 0)
             return;
         pl = *playerAddr;
-        f.t = *(struct box16 *)pl->unk_38;
+        f.t = *(struct box16 *)pl->box;
         BoxMove(&f.t, pl->x >> 8, pl->y >> 8, pl->z >> 8);
         f.b = f.t;
         b = &f.b;

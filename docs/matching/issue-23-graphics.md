@@ -111,7 +111,7 @@ Fixes, all plain C plus pins/barriers unless noted:
   was a narrow `asm("ldrsh %0, [%1, %2]")` with the index pinned.
   *Gone under old_agbcc*: both are plain `CALL3`s now.
 - **Hoisted zero**: `sub_8019094` case 1 keeps a 0 in r4 across two calls
-  (loaded between the `unk_2C` store's address and the store itself) -
+  (loaded between the `animating` store's address and the store itself) -
   reproduced with an r4 pin. *Under old_agbcc* the pin is gone; the
   `zero` local itself is still needed.
 - *Removed under old_agbcc* as well: the `SetTag` r0 pin/barrier, the

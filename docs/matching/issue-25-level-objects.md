@@ -93,7 +93,7 @@ ROM): `sub_801A870`, `sub_801A874`, `sub_801B2E4` (inlined instead),
 - **`CreatePlatformMover`'s stack-passed byte**: the ROM reads it with
   `add r0, sp, #0x18; ldrb r7, [r0]`. Only the address is computed in asm;
   the byte load is C.
-- **`MovePlayerWithPlatform`** writes `p->unk_68` through `&p->carried - 0x44` (the
+- **`MovePlayerWithPlatform`** writes `p->hitAxes` through `&p->carried - 0x44` (the
   ROM reuses that address register), written that way explicitly.
 - **`UpdatePlatformMover`**: gcc's `abs()` expands to a branch here; the ROM's
   `asr/eor/sub` is the in-place `ABS32` macro (as in `actor_part50.c`).

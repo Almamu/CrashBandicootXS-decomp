@@ -15,7 +15,7 @@ u8 sub_802AA4C(void *selfArg)
 }
 
 /* Teardown: marks `self` "dead" (`+0x50 = gActorVtable`), unlinks
- * it from the circular `+0x48`(next)/`+0x4c`(prev) list, and frees it
+ * it from the circular `+0x48`(prev)/`+0x4c`(next) list, and frees it
  * when `flags & 1`. Same shape as `DestroyPolarPlayer`'s unlink sequence in
  * actor_part19.c. */
 void DestroyActor(void *selfArg, s32 flags)
@@ -25,14 +25,14 @@ void DestroyActor(void *selfArg, s32 flags)
     *(u8 **)(self + 0x50) = gActorVtable;
 
     {
-        u8 *prev = *(u8 **)(self + 0x4c);
-        u8 *next = *(u8 **)(self + 0x48);
-        *(u8 **)(prev + 0x48) = next;
+        u8 *next = *(u8 **)(self + 0x4c);
+        u8 *prev = *(u8 **)(self + 0x48);
+        *(u8 **)(next + 0x48) = prev;
     }
     {
-        u8 *next = *(u8 **)(self + 0x48);
-        u8 *prev = *(u8 **)(self + 0x4c);
-        *(u8 **)(next + 0x4c) = prev;
+        u8 *prev = *(u8 **)(self + 0x48);
+        u8 *next = *(u8 **)(self + 0x4c);
+        *(u8 **)(prev + 0x4c) = next;
     }
 
     if (flags & 1) {

@@ -106,7 +106,7 @@ void sub_80134B8(struct act *self)
 
     if (state != 0xE)
     {
-        u8 busy = self->unk_26;
+        u8 busy = self->spinCooldown;
 
         if (busy == 0 && (INPUT_PRESSED(in) & 2) && (u32)(state - 0x18) > 1)
         {
@@ -187,7 +187,7 @@ void sub_80134B8(struct act *self)
             self->part->contact = bit4;
             return;
         }
-        if ((contact & 8) && self->part->unk_64 >= 0)
+        if ((contact & 8) && self->part->speedY >= 0)
         {
             s32 st;
 

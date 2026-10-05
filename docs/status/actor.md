@@ -1073,7 +1073,7 @@ See [docs/matching/category-driver-naked-retry.md](../matching/category-driver-n
 
 - `src/graphics/actor_part84.c` - `UpdateActionCtrl` (issue #16), old_agbcc
   (the file's compiler). Each `self->part` re-read has its own local and
-  both camera tests read `y` into a local first; `unk_94` goes through
+  both camera tests read `y` into a local first; `listCount` goes through
   an `s32` (keeps the signed `bgt`); the queued-state store is
   `ActQueue27`; the input mask is an opaque 0x100; the switch bodies are
   in ROM order. The PMF method record then gets its 8-byte stack slot

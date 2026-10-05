@@ -88,7 +88,7 @@ struct part
     s32 x;                 // 0x00
     s32 y;                 // 0x04
     u16 id;                // 0x08
-    u8 unk_0A;             // 0x0A
+    u8 kind;               // 0x0A - object kind passed to the hit handlers (0x13: attacking player)
     u8 unk_0B;
     union
     {
@@ -415,9 +415,9 @@ void sub_801967C(void *self, u8 flag)
         struct part *p = gUnknown_030012EC->items[i];
 
         if (flag)
-            p->unk_0A = 1;
+            p->kind = 1;
         else
-            p->unk_0A = flag;
+            p->kind = flag;
     }
 }
 
@@ -529,7 +529,7 @@ void UpdateDingodile(struct dingodile_boss *self, struct part *other)
         p->y = y;
     }
     hurt = sub_8007CF8(other);
-    if (self->state == 8 && gPlayer->unk_0A == 0x13)
+    if (self->state == 8 && gPlayer->kind == 0x13)
     {
         box = sub_8007C30(gPlayer);
         if (BOX_VALID(box) && AabbOverlaps(&box, &hurt))
@@ -546,7 +546,7 @@ void UpdateDingodile(struct dingodile_boss *self, struct part *other)
         SetDingodileState(self, other, 1);
         self->step = 0;
         self->passes = 0;
-        other->unk_0A = 0;
+        other->kind = 0;
         other->fl.b.shown = 0;
         other->fl.b.hit = 0;
         break;
@@ -856,7 +856,7 @@ void sub_8019EBC(struct dingodile_boss *self, s32 mode, u16 x, u16 y, struct par
             ResetSpriteFrameTimer(p);
             ResetSpriteFrameIndex(p);
             SetSpriteAnimDone(p, 0);
-            p->unk_0A = kind;
+            p->kind = kind;
         }
         ctl = (struct vobj *)sub_801A794(OperatorNew(0x28));
         ((struct obj_490c *)ctl)->target = arg;
@@ -868,7 +868,7 @@ void sub_8019EBC(struct dingodile_boss *self, s32 mode, u16 x, u16 y, struct par
         ResetSpriteFrameTimer(p);
         ResetSpriteFrameIndex(p);
         SetSpriteAnimDone(p, 0);
-        p->unk_0A = 4;
+        p->kind = 4;
         ctl = (struct vobj *)sub_801A768(OperatorNew(0x20));
         ((struct obj_48a4 *)ctl)->target = arg;
         break;
@@ -890,7 +890,7 @@ void sub_8019EBC(struct dingodile_boss *self, s32 mode, u16 x, u16 y, struct par
 }
 
 /* Spawns one of the boss's floor-tile parts (record index 1 of the
- * `+0x30` table, `unk_0A` 6) at (x, y), with a gStaticData_087E483C
+ * `+0x30` table, `kind` 6) at (x, y), with a gStaticData_087E483C
  * controller, facing `facing`, and registers it with gUnknown_030012F0.
  *
  * The two virtual calls are written as plain blocks, not VCALL1's
@@ -907,7 +907,7 @@ void sub_801A03C(struct dingodile_boss *self, u16 x, u16 y, u8 facing)
     ResetSpriteFrameTimer(p);
     ResetSpriteFrameIndex(p);
     SetSpriteAnimDone(p, 0);
-    p->unk_0A = 6;
+    p->kind = 6;
     ctl = sub_801A724(OperatorNew(0x8C));
     p->slot = GetSpriteAnimPaletteSlot(p);
     p->ctl = ctl;
@@ -924,7 +924,7 @@ void sub_801A03C(struct dingodile_boss *self, u16 x, u16 y, u8 facing)
  * (gPlayer+0x104) and `other` reports a hit (its own table
  * slot +0x28), overlaps `other`'s box with the player's hurt box (falling
  * back to the player's plain box) and on contact fires the player's slot
- * +0x68 method with `other->unk_0A`. Then: state 0 writes BLDCNT/
+ * +0x68 method with `other->kind`. Then: state 0 writes BLDCNT/
  * BLDALPHA (1st target OBJ, 2nd target BG0-3+OBJ, EVA=EVB=16) and moves
  * to state 5; states 1/2 arm a two-blink countdown and move to 3/4;
  * states 3/4 toggle `other`'s blink bit every 20 frames until the
@@ -972,7 +972,7 @@ void sub_801A114(struct obj_490c *self, struct part *other)
                     struct part *pl = gPlayer;
                     struct vmethod *m2 = &pl->vt->m68;
 
-                    ((method3_fn)m2->fn)((u8 *)pl + m2->thisOffset, 0, other->unk_0A, 0);
+                    ((method3_fn)m2->fn)((u8 *)pl + m2->thisOffset, 0, other->kind, 0);
                 }
             }
         }
@@ -1063,7 +1063,7 @@ void sub_801A2A8(struct obj_48a4 *self, struct part *other)
                 struct part *pl = gPlayer;
                 struct vmethod *m2 = &pl->vt->m68;
 
-                ((method3_fn)m2->fn)((u8 *)pl + m2->thisOffset, 0, other->unk_0A, 0);
+                ((method3_fn)m2->fn)((u8 *)pl + m2->thisOffset, 0, other->kind, 0);
                 if (self->state == 3)
                 {
                     VCALL1(self, m20, 6);
@@ -1134,7 +1134,7 @@ void sub_801A584(struct obj_48a4 *self, u16 x, u16 y)
     ResetSpriteFrameTimer(p);
     ResetSpriteFrameIndex(p);
     SetSpriteAnimDone(p, 0);
-    p->unk_0A = 1;
+    p->kind = 1;
     c = OperatorNew(0x20);
     sub_8017A8C(c);
     c->vt = (struct vtable *)gStaticData_087E48A4;

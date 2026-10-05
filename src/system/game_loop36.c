@@ -112,7 +112,7 @@
  *   comes before the tag address, as in the ROM.
  * - Three extra references to `type` at the end give it r7 and slot*2
  *   r8. */
-#include "phys_obj.h"
+#include "crate.h"
 extern void *OperatorNew(u32 size);
 extern void InitSpriteObj(void *self);
 extern void ResetCrate(struct crate *self);
@@ -152,7 +152,7 @@ void *CreateCrate(u16 id, u16 x, u16 y, u16 slot, u8 type)
 
         InitSpriteObj(obj);
         ((struct crate *)obj)->vtable = &gCrateVtable;
-        ((struct crate *)obj)->unk_59 = 0;
+        ((struct crate *)obj)->groupAllocated = 0;
         ResetCrate(obj);
         self = obj;
     }
@@ -303,7 +303,7 @@ void *CreateCrate(u16 id, u16 x, u16 y, u16 slot, u8 type)
             {
                 struct anim_rec *ar = &self->anim->records[8];
 
-                GetPaletteSlot(gPaletteCache, ar->unk_14);
+                GetPaletteSlot(gPaletteCache, ar->paletteId);
             }
             self->u48.n &= 0x3f;
             self->u48.n &= 0xf8;

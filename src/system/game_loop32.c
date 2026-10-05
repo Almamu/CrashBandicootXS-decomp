@@ -1,5 +1,5 @@
 #include "core.h"
-#include "phys_obj.h"
+#include "crate.h"
 
 extern u8 gCrateListChanged;
 extern u8 gCrateKindExplosive[];
@@ -38,11 +38,11 @@ extern void LightTntCrate(struct crate *self);
  * speed byte is re-read through `self->unk_4C` each time (GCSE keeps
  * its address in sb), `speed--` is written in both step arms, the
  * neighbour walk skips the first neighbour, and one temporary `t` both
- * carries `unk_40` into `y` and re-reads `x` at the bottom of the loop
+ * carries `fallTargetY` into `y` and re-reads `x` at the bottom of the loop
  * (the ROM's r1). */
 void UpdateCrateFall(struct crate *self)
 {
-    s32 remaining = self->unk_44;
+    s32 remaining = self->fallDistance;
     s32 speed;
     s32 acc;
     s32 t;
@@ -70,7 +70,7 @@ void UpdateCrateFall(struct crate *self)
         {
             if (remaining > 0)
             {
-                if (PHYS_PLAYER->ringLocked == 1)
+                if (PHYS_PLAYER->ctrlMode == 1)
                 {
                     acc += 0x40;
                     remaining -= 0x40;
@@ -89,10 +89,10 @@ void UpdateCrateFall(struct crate *self)
                 u8 kind;
 
                 speed = 1;
-                t = self->unk_40;
+                t = self->fallTargetY;
                 self->y = t;
                 acc = 0;
-                self->unk_44 = remaining;
+                self->fallDistance = remaining;
                 if (gCrateKindExplosive[kind = self->kind])
                 {
                     if (self->u48.n != 0 || kind == 10)
@@ -131,7 +131,7 @@ void UpdateCrateFall(struct crate *self)
         self->x = t;
         self->y = y;
     }
-    self->unk_44 = remaining;
+    self->fallDistance = remaining;
     if (remaining == 0)
         self->unk_4C = 0;
     else

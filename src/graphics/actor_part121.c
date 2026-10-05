@@ -93,7 +93,7 @@ void sub_800BFA8(void *selfArg)
     }
 
     owner = self->owner;
-    if (owner->unk_38 != 0) {
+    if (owner->animDone != 0) {
         switch (self->mode) {
         case 2:
             SetEnemyAnimMode(self, 0);
@@ -108,11 +108,11 @@ void sub_800BFA8(void *selfArg)
     record = NULL;
     switch (self->mode) {
     case 2:
-        if (owner->frame == 0xa && owner->unk_34 == 0)
+        if (owner->frame == 0xa && owner->stepTimer == 0)
             record = sub_800C9C8(0xc, 6, 0, -0xa, 0x400, owner);
         break;
     case 7:
-        if (owner->frame == 8 && owner->unk_34 == 0)
+        if (owner->frame == 8 && owner->stepTimer == 0)
             record = sub_800C9C8(0xc, 6, 0, 8, 0x400, owner);
         break;
     }

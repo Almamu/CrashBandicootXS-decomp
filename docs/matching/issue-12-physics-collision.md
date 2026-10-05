@@ -756,8 +756,8 @@ the `ldrb`" gap documented above is that compiler's usual instruction
 order, not a scheduling quirk. `game_loop7.c`, `game_loop48.c` and
 `game_loop49.c` now sit on the Makefile's `OLD_AGBCC_OBJS`.
 `LightTntCrate`, the one function already in C, matches under both
-compilers. The object layout is named in `include/phys_obj.h`
-(`struct crate`, `phys_obj_list`, `phys_player`, the
+compilers. The object layout is named in `include/crate.h`
+(`struct crate`, `crate_list`, `phys_player`, the
 `PHYS_CALL`/`PhysSetTag`/`PHYS_SET_ID_BIT` helpers).
 
 **Closed (18):**
@@ -822,7 +822,7 @@ compilers. The object layout is named in `include/phys_obj.h`
   and its register set (~280 halfwords).
 - `sub_0800D18C` (~3840 B) and `sub_800E08C` (1032 B): too large for
   this pass. These are the next candidates for a C draft under
-  old_agbcc; the helpers in `include/phys_obj.h` cover most of their
+  old_agbcc; the helpers in `include/crate.h` cover most of their
   callee patterns.
 
 ## Cross-references
@@ -847,7 +847,7 @@ compilers. The object layout is named in `include/phys_obj.h`
 ## Later pass (issue #12/#24/#26 NAKED retry)
 
 `DropCratesAbove` is real C under old_agbcc. The "triple accumulator" shape
-was not the blocker; `spread = n->unk_40; spread -= n->y;` (two steps)
+was not the blocker; `spread = n->fallTargetY; spread -= n->y;` (two steps)
 puts `self`/`spread`/`carry`/`base` in r8/r7/r9/r10 like the ROM. See
 [issue-24-26-12-naked-retry.md](issue-24-26-12-naked-retry.md) for the
 remaining source-shape details.

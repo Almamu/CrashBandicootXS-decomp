@@ -59,7 +59,7 @@ void SpawnCrystal(u32 a0, u16 a1, u16 a2, u16 a3)
         ResetSpriteFrameIndex(part);
         SetSpriteAnimDone(part, 0);
         part->frameNibble = GetSpriteAnimPaletteSlot(part);
-        part->unk_0A = type;
+        part->kind = type;
         AddToPartList(gUnknown_030012EC, part);
     }
 }
@@ -80,7 +80,7 @@ void SpawnCrateGem(u32 a0, u16 a1, u16 a2, u16 a3)
         ResetSpriteFrameIndex(part);
         SetSpriteAnimDone(part, 0);
         part->frameNibble = GetSpriteAnimPaletteSlot(part);
-        part->unk_0A = type;
+        part->kind = type;
         AddToPartList(gUnknown_030012EC, part);
 
         {
@@ -105,7 +105,7 @@ void sub_801EBF0(u32 a0, u16 a1, u16 a2, u16 a3)
         ResetSpriteFrameIndex(part);
         SetSpriteAnimDone(part, 0);
         part->frameNibble = GetSpriteAnimPaletteSlot(part);
-        part->unk_0A = type;
+        part->kind = type;
         AddToPartList(gUnknown_030012EC, part);
     }
 }
@@ -126,7 +126,7 @@ void SpawnRedGem(u32 a0, u16 a1, u16 a2, u16 a3)
             ResetSpriteFrameIndex(part);
             SetSpriteAnimDone(part, 0);
             part->frameNibble = GetSpriteAnimPaletteSlot(part);
-            part->unk_0A = type;
+            part->kind = type;
             AddToPartList(gUnknown_030012EC, part);
         }
     }
@@ -152,7 +152,7 @@ void SpawnGreenGem(u32 a0, u16 a1, u16 a2, u16 a3)
             ResetSpriteFrameIndex(part);
             SetSpriteAnimDone(part, 0);
             part->frameNibble = GetSpriteAnimPaletteSlot(part);
-            part->unk_0A = type;
+            part->kind = type;
             AddToPartList(gUnknown_030012EC, part);
         }
     }
@@ -179,7 +179,7 @@ void SpawnYellowGem(u32 a0, u16 a1, u16 a2, u16 a3)
             ResetSpriteFrameIndex(part);
             SetSpriteAnimDone(part, 0);
             part->frameNibble = GetSpriteAnimPaletteSlot(part);
-            part->unk_0A = type;
+            part->kind = type;
             AddToPartList(gUnknown_030012EC, part);
         }
     }

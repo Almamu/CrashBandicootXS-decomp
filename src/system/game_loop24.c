@@ -1,5 +1,5 @@
 #include "core.h"
-#include "phys_obj.h"
+#include "crate.h"
 
 /* GitHub issue #13: 0x0800FC70-0x08010A0C, continuing the physics/
  * collision subsystem (see game_loop17.c's header comment and
@@ -7,7 +7,7 @@
  * `InitCrate`/the two Bresenham-line helpers `sub_8010784`/
  * `sub_80107C4` right before `sub_8010804` are left untouched raw. */
 
-extern struct phys_obj_list *gCrateList;
+extern struct crate_list *gCrateList;
 extern s32 _call_via_r1(void *addr, void *fn);
 extern void SolidifyOutlineCrate(void *self);
 
@@ -22,7 +22,7 @@ void sub_8010804(void)
     s32 i = 0;
 
     if (i < gCrateList->count) {
-        struct phys_obj_list **listAddr = &gCrateList;
+        struct crate_list **listAddr = &gCrateList;
         do {
             struct crate *e = (*listAddr)->items[i];
             struct method *rec = &e->vtable->m48;

@@ -152,9 +152,9 @@ static inline void SetFlipX(struct pctrl_target *t, u32 value)
     t->f28.flipX = value;
 }
 
-static inline void SetUnk68(struct pctrl_target *t, s32 value)
+static inline void SetHitAxes(struct pctrl_target *t, s32 value)
 {
-    t->unk_68 = value;
+    t->hitAxes = value;
 }
 
 static inline void SetA(struct player_ctrl *self, s32 value)
@@ -263,7 +263,7 @@ void PlayerCtrlKillPlayer(struct player_ctrl *self, s32 anim)
     self->target->dead = 1;
     LoseLife(gLevelState);
     LoadPaletteSlot(gPaletteCache, self->target->slot,
-                self->target->anim->records[self->target->tag].unk_14);
+                self->target->anim->records[self->target->tag].paletteId);
 }
 
 /* Runs the pointer-to-member handler for the current state. */
@@ -309,22 +309,22 @@ static inline void SetPlayerRecord(s32 a, s32 b, s32 c)
     absC = (c ^ signC) - signC;
     if (absV > absC)
     {
-        p->unk_48 = a;
-        p->unk_4C = t;
+        p->velAX = a;
+        p->velAY = t;
     }
     else if (v * c < 0)
     {
         s32 sum = t + b;
 
-        p->unk_48 = a;
-        p->unk_4C = sum;
+        p->velAX = a;
+        p->velAY = sum;
     }
     else
     {
-        p->unk_48 = a;
-        p->unk_4C = b;
+        p->velAX = a;
+        p->velAY = b;
     }
-    p->unk_50 = c;
+    p->velAZ = c;
 }
 
 /* Sets bit `id` of the gEntityFlags+0x108 bitmap. Kept a
@@ -365,7 +365,7 @@ static inline void ClampFrame(struct pctrl_target *t, s32 frame)
 static inline void RestoreFrame(struct pctrl_target *t, s32 frame, s32 f34)
 {
     ClampFrame(t, frame);
-    t->unk_34 = f34;
+    t->stepTimer = f34;
 }
 
 /* Re-applies the animation for the current mode/level; the out-of-line
@@ -378,7 +378,7 @@ static inline void ApplyLevel(struct player_ctrl *self)
     if (*tag != 0x20 && *tag != 0x1D && *tag != 0x1F)
     {
         s32 frame = t->frame;
-        s32 f34 = t->unk_34;
+        s32 f34 = t->stepTimer;
 
         *tag = gStaticData_0816C070[self->mode][self->level].anim;
         ResetSpriteFrameTimer(t);
@@ -397,7 +397,7 @@ static inline void ApplyLevel(struct player_ctrl *self)
         case 41:
         {
             s32 frame = self->target->frame;
-            s32 f34 = self->target->unk_34;
+            s32 f34 = self->target->stepTimer;
 
             ResetMode(self);
             RestoreFrame(self->target, frame, f34);
@@ -496,18 +496,18 @@ void UpdatePlayerCtrl(struct player_ctrl *self)
         }
 
         PMF_DISPATCH(self);
-        if (self->target->unk_74 & 3)
+        if (self->target->hitMask & 3)
             self->target->speedX = 0;
-        if (self->target->unk_74 & 0xC)
+        if (self->target->hitMask & 0xC)
             self->target->speedY = 0;
-        SetUnk68(self->target, 0);
+        SetHitAxes(self->target, 0);
         sub_8015DF8(self);
     }
 
     if (self->state == 3 || self->mode == 5 || self->mode == 7)
-        self->target->unk_0A = 0x13;
+        self->target->kind = 0x13;
     else
-        self->target->unk_0A = 1;
+        self->target->kind = 1;
 }
 
 /* The register pins are load-bearing (docs/workflow.md step 7): the ROM
@@ -563,7 +563,7 @@ void sub_8016B1C(struct player_ctrl *self)
         SetB(self, 2);
         self->counter = 0;
     }
-    if (self->target->unk_38)
+    if (self->target->animDone)
         SET_ANIM(self, self->target, 0x1F);
     if (k.pressed & A_BUTTON)
     {
@@ -616,7 +616,7 @@ void sub_8016C94(struct player_ctrl *self)
         sub_8015C6C(self);
         return;
     }
-    if (self->target->unk_38 || gRoomFrameCount > self->unk_28)
+    if (self->target->animDone || gRoomFrameCount > self->deadline)
     {
         u8 dir = GetDpadDirection(inp);
 
@@ -639,7 +639,7 @@ void sub_8016D5C(struct player_ctrl *self)
 {
     u8 dir = GetDpadDirection(gInput);
 
-    if (++self->timer >= self->timerMax || self->target->unk_38)
+    if (++self->timer >= self->timerMax || self->target->animDone)
     {
         gPlayer->unk_92 = 0;
         self->cooldown = 0xC;
@@ -699,7 +699,7 @@ void sub_8016DDC(struct player_ctrl *self)
     }
     if (k.pressed & A_BUTTON)
         sub_80159F8(self);
-    if (self->target->unk_38 == 0)
+    if (self->target->animDone == 0)
         return;
     switch (self->mode)
     {
@@ -736,7 +736,7 @@ void sub_8017044(struct player_ctrl *self)
         sub_8015C6C(self);
         return;
     }
-    if (self->target->unk_38)
+    if (self->target->animDone)
     {
         u8 dir = GetDpadDirection(inp);
 
@@ -767,7 +767,7 @@ void sub_80170EC(struct player_ctrl *self)
         sub_8015C6C(self);
         return;
     }
-    if (self->target->unk_38)
+    if (self->target->animDone)
     {
         self->mode = 0;
         SetState(self, 0, 0, 0, 0);
@@ -779,7 +779,7 @@ void sub_8017184(struct player_ctrl *self)
 {
     sub_8015FDC(0, 5, 0);
     SetPlayerRecord(0, 5, 0);
-    if (self->target->unk_38)
+    if (self->target->animDone)
         MarkGone(self->target);
 }
 

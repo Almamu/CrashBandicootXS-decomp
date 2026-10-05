@@ -112,9 +112,9 @@ void UpdatePolarPlayer(struct actor_self *self)
     }
     if (gUnknown_0300149C != 0 && --gUnknown_0300149C != 0 && gUnknown_030014A0 == 0
         && gLevelState->maskLevel != 3)
-        self->unk_2C[0] = ((u32)gUnknown_0300149C >> 2) & 1;
+        self->visible = ((u32)gUnknown_0300149C >> 2) & 1;
     else
-        self->unk_2C[0] = 1;
+        self->visible = 1;
     if (gUnknown_030014A1 == 0) {
         self->depth = 0x2f00;
         self->z = (sub_8029B2C() << 8) - self->depth;
@@ -206,7 +206,7 @@ void DrawPolarPlayer(struct actor_self *self)
     halfW = w * 4;
     h = frame[1];
     halfH = h * 4;
-    if (self->depth == (*(struct cam_ref **)&self->unk_2C[4])->depth) {
+    if (self->depth == (*(struct cam_ref **)&self->record)->depth) {
         scale = 0x100;
         sy = (self->y + sub_8029E98()) >> 8;
         sx = (self->x + sub_8029EB4()) >> 8;
@@ -214,7 +214,7 @@ void DrawPolarPlayer(struct actor_self *self)
         s32 depth = self->depth;
         s32 f;
 
-        scale = (depth << 8) / (*(struct cam_ref **)&self->unk_2C[4])->depth;
+        scale = (depth << 8) / (*(struct cam_ref **)&self->record)->depth;
         f = 0x2f00000 / depth;
         sy = (((self->y * f) >> 12) + sub_8029E98()) >> 8;
         sx = (((self->x * f) >> 12) + sub_8029EB4()) >> 8;

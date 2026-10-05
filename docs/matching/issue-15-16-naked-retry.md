@@ -26,8 +26,8 @@ under both).
   `ldr; ldr; str; str` anchor copy is a struct copy (`ORBIT_POS`).
 - `include/action_obj.h` gained named fields only: `act.anims`
   (+0x04), the method slots `m10`/`m28`..`m48`, `act_part` fields
-  (`unk_48`/`unk_4C`/`unk_50`/`unk_60`/`unk_8C`/`unk_90`/`unk_94`/
-  `unk_100`/`unk_102`/`unk_103`) and `act_anim_bank.unk_0A`.
+  (`velAX`/`velAY`/`velAZ`/`speedX`/`deadline`/`unk_90`/`listCount`/
+  `unk_100`/`pushLeft`/`pushRight`) and `act_anim_bank.unk_0A`.
 
 ## Closed (8)
 

@@ -123,7 +123,7 @@ checkC18:
     goto rearm;
 
 case12:
-    if (player->unk_60 == 0) {
+    if (player->speedX == 0) {
         goto tail;
     }
     mode = 0x25;

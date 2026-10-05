@@ -590,7 +590,7 @@ void sub_8018BDC(struct gfx_pair_ctrl *self, struct gfx_part *part)
 
     c->bank = (struct anim_bank *)(**gSpriteBankSet + 0x27C);
     SetTag(c, 3);
-    c->unk_2C = 0;
+    c->animating = 0;
     ctrl = sub_8019758(OperatorNew(0x10));
     SetFrameNibble(c, GetSpriteAnimPaletteSlot(c));
     c->ctrl = ctrl;
@@ -669,7 +669,7 @@ void sub_8018D70(u32 a0, u16 a1, u16 a2, u16 a3, s32 kind)
     ctrl = sub_80195EC(OperatorNew(0x14), kind);
     c->ctrl = ctrl;
     _call_via_r2((u8 *)ctrl + ctrl->vtable->method_18.thisOffset, (s32)c, ctrl->vtable->method_18.fn);
-    c->unk_0A = 0;
+    c->kind = 0;
     {
         s32 m = -5;
         m &= PART_FLAGS(c);
@@ -761,14 +761,14 @@ void sub_8018E4C(struct gfx_mover *self, struct gfx_part *partArg)
         if (self->timer == gStaticData_0816C35F[self->cfg->index])
         {
             PlaySfx(gAudioContext, 0x5C, 0x100);
-            part->unk_2C = left;
+            part->animating = left;
             CALL3(self, method_50, part, 0x10);
             *blinking = 1;
             self->blink = left;
         }
         if (self->timer == gStaticData_0816C362[self->cfg->index])
         {
-            part->unk_2C = left;
+            part->animating = left;
             CALL3(self, method_50, part, 0x10);
             *blinking = left;
             SET_FRAME_R(part, 1, "r3", "r4");
@@ -861,7 +861,7 @@ void sub_8019094(struct gfx_mover *self, struct gfx_part *part, s32 mode)
 
         sub_801967C(self, 0);
         {
-            u8 *p = &part->unk_2C;
+            u8 *p = &part->animating;
 
             zero = 0;
             *p = mode;
@@ -948,7 +948,7 @@ void sub_8019214(struct gfx_mover *self, struct gfx_part *partArg, s32 kindArg)
         b = PART_FLAGS(c);
         m &= b;
         b = 1;
-        c->unk_0A = b;
+        c->kind = b;
         b = 0x10;
         m |= b;
         PART_FLAGS(c) = m;
@@ -967,7 +967,7 @@ void sub_8019324(struct gfx_hit_ctrl *self, struct gfx_part *partArg)
     struct gfx_box b;
     struct gfx_box c;
 
-    if (part->unk_0A == 1)
+    if (part->kind == 1)
     {
         sub_8007CF8(&a, gPlayer);
         if (a.w == 0)
@@ -997,7 +997,7 @@ void sub_8019324(struct gfx_hit_ctrl *self, struct gfx_part *partArg)
                 register struct gfx_part *q asm("r4") = part;
 
                 asm("" : "+r"(q));
-                q->unk_0A = zero;
+                q->kind = zero;
             }
         }
         else if (self->enabled)
@@ -1013,13 +1013,13 @@ void sub_8019324(struct gfx_hit_ctrl *self, struct gfx_part *partArg)
                 if (AabbOverlaps(&c, &b))
                 {
                     CALL2(self->owner, method_20, 2);
-                    e->unk_0A = 1;
+                    e->kind = 1;
                     {
                         register s32 zero asm("r2") = 0;
                         register struct gfx_part *q asm("r1") = part;
 
                         asm("" : "+r"(q));
-                        q->unk_0A = zero;
+                        q->kind = zero;
                     }
                 }
             }
@@ -1056,16 +1056,16 @@ void sub_8019464(struct gfx_ctrl *self, struct gfx_part *part)
         self->state = 1;
     }
     target = 0x1A;
-    if (part->unk_0A == 1)
+    if (part->kind == 1)
         target = 10;
     if (part->frame == target)
     {
-        part->unk_2C = 0;
+        part->animating = 0;
     }
     else
     {
         register s32 one asm("r1") = 1;
-        register u8 *p asm("r0") = &part->unk_2C;
+        register u8 *p asm("r0") = &part->animating;
 
         *p = one;
         p += 0x38 - 0x2C;
@@ -1082,7 +1082,7 @@ void sub_80194E0(struct gfx_kind_ctrl *self, struct gfx_part *partArg)
     switch (self->state)
     {
     case 0:
-        if (part->unk_0A == 1)
+        if (part->kind == 1)
         {
             part->bank = (struct anim_bank *)(**gSpriteBankSet + 0x27C);
             switch (self->kind)

@@ -1,5 +1,5 @@
 #include "core.h"
-#include "phys_obj.h"
+#include "crate.h"
 
 /* GitHub issue #12: 0x0800D040-0x0800FC70, the physics/collision
  * subsystem (see game_loop6.c's header comment and
@@ -17,10 +17,10 @@
  * are real C (see docs/matching/issue-12-physics-collision.md's
  * NAKED-retry sections). */
 
-extern struct phys_obj_list *gCrateList;
+extern struct crate_list *gCrateList;
 extern u8 gCrateListChanged;
 extern void ExplodeCrate(struct crate *self, u8 arg1);
-extern void RemoveCrateListAt(struct phys_obj_list *list, s32 index);
+extern void RemoveCrateListAt(struct crate_list *list, s32 index);
 extern void *gAudioContext;
 extern void *gHud;
 extern void PlaySfx(void *ctx, s32 id, s32 volume);
@@ -36,7 +36,7 @@ extern void OpenCheckpointCrate(void *self);
 extern void PickUpWumpa(struct crate *obj, s32 arg);
 extern void ActivateIronSwitchCrate(struct crate *self);
 extern void ActivateNitroSwitchCrate(struct crate *self);
-extern void sub_8009150(struct phys_obj_list *list, struct crate *obj);
+extern void sub_8009150(struct crate_list *list, struct crate *obj);
 extern void sub_8025A0C(u8 *bitmap, u16 id);
 extern void *OperatorNewArray(u32 size);
 extern void *GetCrateBelow(void *obj);
@@ -301,7 +301,7 @@ void DetonateNitroCrates(void)
     s32 i = 0;
 
     if (i < gCrateList->count) {
-        struct phys_obj_list **list = &gCrateList;
+        struct crate_list **list = &gCrateList;
 
         do {
             struct crate *o = (*list)->items[i];
@@ -350,12 +350,12 @@ void ActivateNitroSwitchCrate(struct crate *self)
         {
             struct gobj *player = gPlayer;
             one = 1;
-            player->unk_80 = one;
+            player->busy = one;
         }
         PhysSetTag(self, 0x23);
         recs = self->anim->records;
         rec = &recs[self->tag];
-        self->slot = GetPaletteSlot(gPaletteCache, rec->unk_14);
+        self->slot = GetPaletteSlot(gPaletteCache, rec->paletteId);
         DetonateNitroCrates();
         ShowHudCrates(gHud);
         PlaySfx(gAudioContext, 4, 0x100);
@@ -413,14 +413,14 @@ void ActivateIronSwitchCrate(struct crate *self)
     {
         struct gobj *player = gPlayer;
         u8 one = 1;
-        player->unk_80 = one;
+        player->busy = one;
     }
     PhysSetTag(self, 0x22);
     {
         struct anim_rec *recs = self->anim->records;
         struct anim_rec *rec = &recs[self->tag];
 
-        self->slot = GetPaletteSlot(gPaletteCache, rec->unk_14);
+        self->slot = GetPaletteSlot(gPaletteCache, rec->paletteId);
     }
     sub_8025A0C(gEntityFlags, self->id);
 
@@ -444,7 +444,7 @@ void ActivateIronSwitchCrate(struct crate *self)
     if (n != 0) {
         struct crate_group *g = OperatorNewArray((n + 1) * 4);
 
-        self->unk_59 = 1;
+        self->groupAllocated = 1;
         g->count = n;
         for (i = 0; i < n; i++)
             ((struct crate **)g)[i + 1] = found[i];
@@ -487,7 +487,7 @@ void SolidifyOutlineCrates(struct crate *self)
         if (PHYS_HAS_GROUP(g)) {
             if (g != NULL)
                 OperatorDeleteArray(g);
-            self->unk_59 = 0;
+            self->groupAllocated = 0;
         }
         self->u48.group = PHYS_NO_GROUP;
         {
@@ -663,21 +663,21 @@ void BreakCratesInArea(s32 x, s32 y, s32 dist, s32 height)
 
 static inline struct crate *PhysRingAt(struct phys_player *p, s32 i)
 {
-    if (p->ringLocked == 0 && (i <= 4 || i < p->ringCount))
+    if (p->ctrlMode == 0 && (i <= 4 || i < p->ringCount))
         return p->ring[i];
     return NULL;
 }
 
 void FinishBrokenCrate(struct crate *self)
 {
-    if (gCrateKindExplosive[self->kind] && self->unk_34 == 0) {
+    if (gCrateKindExplosive[self->kind] && self->stepTimer == 0) {
         if (self->frame == 3)
             BlastNearbyCrates(self, 0x14);
         else if (self->frame == 6)
             BlastNearbyCrates(self, 0x28);
     }
 
-    if (self->unk_38) {
+    if (self->animDone) {
         struct crate *prev = GetCrateBelow(self);
         struct crate *next = GetCrateAbove(self);
         s32 i;
@@ -921,7 +921,7 @@ void UpdateSlotCrate(struct crate *self)
             struct anim_rec *recs = self->anim->records;
             struct anim_rec *rec = &recs[self->tag];
 
-            self->slot = GetPaletteSlot(gPaletteCache, rec->unk_14);
+            self->slot = GetPaletteSlot(gPaletteCache, rec->paletteId);
         }
         {
             s32 d = (s32)((u32)(self->u48.n & 0xc0) >> 6);
@@ -962,7 +962,7 @@ void UpdateSlotCrate(struct crate *self)
             struct anim_rec *recs = self->anim->records;
             struct anim_rec *rec = &recs[self->tag];
 
-            self->slot = GetPaletteSlot(gPaletteCache, rec->unk_14);
+            self->slot = GetPaletteSlot(gPaletteCache, rec->paletteId);
         }
         if (self->u48.n & 0xc0)
             PlaySfx(gAudioContext, 0x10, 0x100);

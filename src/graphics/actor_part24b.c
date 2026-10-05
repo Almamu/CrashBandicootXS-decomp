@@ -51,7 +51,7 @@ u8 IsTouchingAirship(void *selfArg)
 
         f.a = *(struct box3 *)gStaticData_0817C3D8;
         BoxOffset(&f.a, gAirshipX >> 8, gAirshipY >> 8, gAirshipZ >> 8);
-        f.t = *(struct box3 *)self->unk_38;
+        f.t = *(struct box3 *)self->box;
         BoxOffset(&f.t, self->x >> 8, self->y >> 8, self->z >> 8);
         f.c = f.t;
         pc = &f.c;

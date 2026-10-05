@@ -31,7 +31,7 @@ The draft names the fields through a local `struct d18c_player` view of
    `BreakCrateInStack` plus the ring push, `ExplodeCrate` or `OpenCheckpointCrate`.
 3. The rest runs after that dispatch and after every early out. It
    rebuilds the player's box and works out which side the player touches:
-   `edge` is 1, 2, 4 or 8. This uses two paths, one for `self->unk_44`
+   `edge` is 1, 2, 4 or 8. This uses two paths, one for `self->fallDistance`
    set and one for it clear, and `sub_800FDC8` for slopes. It then
    corrects the position through a 9-entry table (edges 1/2, 4 and 8,
    with `GetBottomCrate`/`GetTopCrate` picking the neighbour for 4/8). It
@@ -66,7 +66,7 @@ there:
 - **The timer test is an inline returning the comparison.** This gives
   the ROM's `movs r3, #0; ...; movs r3, #1; cmp r3, #0` flag.
 - **The dead `ldr r1, [sp, #0x70]`** after `GetSpritePrevX` in the
-  `unk_44` path is a copy of the other path's `side = 2; if (px > ax)
+  `fallDistance` path is a copy of the other path's `side = 2; if (px > ax)
   side = 1;`, whose result is never used. Flow deletes the sets, and
   jump2 deletes the compare only after reload has loaded px.
 - **`goto edge_x`** for the three "too far" rejects (`ay == py && ax == px

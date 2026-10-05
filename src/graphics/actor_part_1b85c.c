@@ -97,7 +97,7 @@ struct follow_owner
 struct anim_record
 {
     u8 unk_00[0x14];
-    u8 tileRecord;          // 0x14 - GetPaletteSlot record id
+    u8 paletteId;          // 0x14 - GetPaletteSlot record id
     u8 unk_15;
     u8 frameCount;          // 0x16
     u8 unk_17[5];
@@ -695,7 +695,7 @@ struct sprite *sub_801B984(u16 id, u16 x, u16 y)
         struct anim_record *recs = obj->anim->records;
         u32 idx = obj->animIndex;
         struct anim_record *rec = &recs[idx];
-        s32 pal = (u8)GetPaletteSlot(gPaletteCache, rec->tileRecord);
+        s32 pal = (u8)GetPaletteSlot(gPaletteCache, rec->paletteId);
         s32 m;
         u8 *p = (u8 *)obj + 0x29;
         u8 b;

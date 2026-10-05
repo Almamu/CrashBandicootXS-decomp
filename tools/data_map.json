@@ -5066,7 +5066,7 @@
     {
      "address": "0x084A4660",
      "size": 4000,
-     "format": "125 x 32-byte 4bpp tiles (header +0x08/+0x0E of gSpriteBankTable; the tile-asset cache SetPaletteCacheSource/GetPaletteSlot serves them)",
+     "format": "125 x 32-byte OBJ palettes (header +0x08/+0x0E of gSpriteBankTable; the palette cache SetPaletteCacheSource/GetPaletteSlot serves them)",
      "effort": "easy"
     }
    ]
@@ -5107,7 +5107,7 @@
     {
      "address": "0x084A5600",
      "size": 16,
-     "format": "struct sprite_bank_table {banks=0x084A5610, tileBase=0x082BF120, tilePool=0x084A4660, bankCount=56, tilePoolCount=125}",
+     "format": "struct sprite_bank_table {banks=0x084A5610, tileBase=0x082BF120, palettes=0x084A4660, bankCount=56, paletteCount=125}",
      "effort": "easy",
      "status": "converted: src/data/sprite_banks_4a5600.c"
     },

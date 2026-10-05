@@ -704,7 +704,7 @@ rename gStaticData_081756C4 gActorCategoryVtables
 rename gStaticData_081796CC gCategoryFamily0AnimTable
 rename gStaticData_0817B2A4 gCategoryFamily1AnimTable
 rename gStaticData_084A5600 gSpriteBankTable
-rename gStaticData_084A4660 gFixedObjTiles
+rename gStaticData_084A4660 gObjPalettes
 rename gStaticData_080B1444 gCategory0SpawnTable
 rename gStaticData_080C0C38 gCategory1SpawnTable
 rename gStaticData_080C19F0 gCategory2SpawnTable

@@ -99,14 +99,14 @@ Thumb pointers:
 | `gStaticData_087E490C` | `sub_801A794` (issue #25) | `sub_801A780` | `sub_801A114` (update) |
 | `gDingodileVtable` | (issue #25 range) | `DestroyDingodile` (issue #25) | `UpdateDingodile` (update) |
 
-`sub_801967C` sets `unk_0A` on every part in `gUnknown_030012EC`'s list.
+`sub_801967C` sets `kind` (+0x0A) on every part in `gUnknown_030012EC`'s list.
 `sub_8019718`/`sub_80197F4` are **UNUSED**: no `bl`, no `.4byte` and no
 Thumb pointer anywhere in the ROM. They are matched anyway.
 
 The `087E4974` object (`struct dingodile_boss`) is a boss-like state machine.
 `UpdateDingodile` keeps a companion part 6 px ahead of the boss, counts hits
 (overlap of the player's box with the boss's hurt box while the player's
-`unk_0A` is 0x13), walks the boss along the level using the approach
+`kind` is 0x13), walks the boss along the level using the approach
 tables `gStaticData_0816C368/78` (facing) and `0816C390/A0`, turns it
 round at either level edge, spawns projectiles (`sub_8019EBC` mode 1)
 on animation frame 0x14, and finally, once the part falls below the
@@ -152,7 +152,7 @@ low nibble slot, `+0x2D` tag, `+0x30` frame, `+0x38` "animation done",
   r0), and `SetTag()` (a setter parameter makes old_agbcc load the tag
   constant before the address).
 - `sub_8019EBC` case 0 holds the constant 1 in r5 across three calls for
-  the `unk_0A` store: an `s32 kind = 1` local does this; a `u8` or a
+  the `kind` store: an `s32 kind = 1` local does this; a `u8` or a
   literal does not. `mode`/`kind` otherwise match via a `switch`, not an
   if-chain (the ROM puts the default block first).
 - `sub_8019EBC` mode 0 attaches a new `087E490C` controller

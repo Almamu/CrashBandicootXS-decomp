@@ -32,7 +32,7 @@ struct orbit_part
     u32 slotNibble:4;           // 0x29 - palette slot
     u32 unk_29_4:4;
     u32 unk_2A:16;
-    u8 unk_2C;
+    u8 animating;               // 0x2C - nonzero while the keyframe timer runs
     u8 tag;                     // 0x2D - index into bank->records
     u8 unk_2E[2];
     s32 frame;                  // 0x30

@@ -361,8 +361,8 @@ void CreateJetpackPlayer(struct kind_entry *table, s32 z)
 
     gJetpackAnimTable = table;
     gActorList = &(p = InitJetpackPlayer(AllocActor(0x58), gJetpackAnimTable, z))->base;
-    ((void **)p->base.unk_48)[0] = p;
-    ((void **)p->base.unk_48)[1] = p;
+    *(void **)&p->base.prev = p;
+    *(void **)&p->base.next = p;
 }
 
 /* The player vehicle's constructor: 100 hit points (0x78 when
@@ -503,7 +503,7 @@ void DrawJetpackPlayer(struct actor_hp *self)
     halfW = w * 4;
     h = frame[1];
     halfH = h * 4;
-    if (self->base.depth == (*(struct cam_ref **)&self->base.unk_2C[4])->depth) {
+    if (self->base.depth == (*(struct cam_ref **)&self->base.record)->depth) {
         scale = 0x100;
         sy = (self->base.y + sub_8029E98()) >> 8;
         sx = (self->base.x + sub_8029EB4()) >> 8;
@@ -511,7 +511,7 @@ void DrawJetpackPlayer(struct actor_hp *self)
         s32 depth = self->base.depth;
         s32 f;
 
-        scale = (depth << 8) / (*(struct cam_ref **)&self->base.unk_2C[4])->depth;
+        scale = (depth << 8) / (*(struct cam_ref **)&self->base.record)->depth;
         f = 0x1c00000 / depth;
         sy = (((self->base.y * f) >> 12) + sub_8029E98()) >> 8;
         sx = (((self->base.x * f) >> 12) + sub_8029EB4()) >> 8;

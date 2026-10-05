@@ -1,5 +1,5 @@
-#ifndef GUARD_PHYS_OBJ_H
-#define GUARD_PHYS_OBJ_H
+#ifndef GUARD_CRATE_H
+#define GUARD_CRATE_H
 
 #include "gobj_1a794.h"
 
@@ -26,7 +26,7 @@ struct crate_vtable
 
 struct crate;
 
-/* UpdateSlotCrate's view of phys_obj.u48: this compiler pads the struct to a
+/* UpdateSlotCrate's view of crate.u48: this compiler pads the struct to a
  * word, so a copy of it lives in one register and its bitfields are
  * updated with word-sized masks. */
 struct phys_b48
@@ -37,7 +37,7 @@ struct phys_b48
 };
 
 
-/* Bit view of phys_obj.flags (a separate struct: this compiler pads
+/* Bit view of crate.flags (a separate struct: this compiler pads
  * every struct to a word, so it can't be embedded). */
 struct phys_flag_bits
 {
@@ -79,15 +79,17 @@ struct crate
     u32 slot:4;         // 0x29 - palette/tile slot
     u32 unk_29_4:4;
     u32 unk_2A:16;
-    u8 unk_2C;
+    u8 animating;       // 0x2C - nonzero while the keyframe timer runs (box_part.h)
     u8 tag;             // 0x2D
     u8 unk_2E[2];
     s32 frame;          // 0x30
-    s32 unk_34;         // 0x34
-    u8 unk_38;          // 0x38 - nonzero: reset `frame` once the busy bit is seen
+    s32 stepTimer;      // 0x34 - ticks spent on the current step (FinishBrokenCrate blasts on its first tick)
+    u8 animDone;        // 0x38 - set once the animation ends; UpdateCrate then resets `frame`
+                        //        and clears the busy bit
     u8 unk_39[7];
-    s32 unk_40;         // 0x40
-    s32 unk_44;         // 0x44
+    s32 fallTargetY;    // 0x40 - Q8 y the crate lands at (DropCratesAbove sets it; UpdateCrateFall
+                        //        snaps `y` to it when the fall ends)
+    s32 fallDistance;   // 0x44 - Q8 distance still to fall, 0: resting
     union {
         s32 n;
         struct crate_group *group; // NULL or PHYS_NO_GROUP: none
@@ -102,7 +104,7 @@ struct crate
     u8 unk_52[2];
     s32 unk_54;         // 0x54
     u8 touched;         // 0x58
-    u8 unk_59;          // 0x59
+    u8 groupAllocated;  // 0x59 - ActivateIronSwitchCrate allocated `u48.group` (freed when it fires)
 };
 
 /* The fields of the player object (gPlayer, a `struct gobj`)
@@ -121,13 +123,14 @@ struct phys_player
     s32 velZ;           // 0x5C
     u8 unk_60[4];
     s32 speedY;         // 0x64
-    u8 standMode;       // 0x68 - 8: standing on `carried`
+    u8 hitAxes;         // 0x68 - struct gobj.hitAxes; 8: standing (on `carried`)
     u8 unk_69[0xB];
     u32 hitMask;        // 0x74
     u8 unk_78[8];
     u8 busy;            // 0x80
     u8 unk_81[7];
-    u8 ringLocked;      // 0x88
+    u8 ctrlMode;        // 0x88 - struct gobj.ctrlMode; 1: crates fall at quarter speed, touched
+                        //        enemies just vanish; nonzero stops the ring recording
     u8 unk_89[8];
     u8 handled;         // 0x91
     u8 bounce;          // 0x92
@@ -143,7 +146,7 @@ struct phys_player
 #define PHYS_PLAYER ((struct phys_player *)gPlayer)
 
 /* gCrateList: the active-object list these functions scan. */
-struct phys_obj_list
+struct crate_list
 {
     s32 count;
     s32 capacity;
@@ -222,4 +225,4 @@ static inline void PhysSetFrame(struct crate *obj, s32 idx)
         *_slot |= 1 << (_id - _word * 32);                                     \
     } while (0)
 
-#endif // GUARD_PHYS_OBJ_H
+#endif // GUARD_CRATE_H

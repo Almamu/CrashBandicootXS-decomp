@@ -258,7 +258,7 @@ void sub_801AB98(struct gobj *selfArg, void *unused)
             {
                 struct gobj *q = gPlayer;
 
-                if (!(q->unk_68 & 8))
+                if (!(q->hitAxes & 8))
                 {
                     Call68(q, 0, 0xC, 4);
                     PosPtr(&pos)->y = (oy << 8) + PosPtr(&pos)->y;
@@ -287,7 +287,7 @@ void sub_801AB98(struct gobj *selfArg, void *unused)
                 {
                     u8 m = 8;
 
-                    q->unk_68 = m;
+                    q->hitAxes = m;
                 }
                 {
                     s32 y = gPlayer->y;
@@ -302,7 +302,7 @@ void sub_801AB98(struct gobj *selfArg, void *unused)
         if (flags)
         {
             Call68(gPlayer, 0, 0xC, flags);
-            gPlayer->unk_74 |= flags;
+            gPlayer->hitMask |= flags;
         }
         if (result == 8)
         {
@@ -354,7 +354,7 @@ void sub_801AB98(struct gobj *selfArg, void *unused)
                 {
                     u8 m = 8;
 
-                    q->unk_68 = m;
+                    q->hitAxes = m;
                 }
             }
             break;

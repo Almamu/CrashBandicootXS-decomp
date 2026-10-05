@@ -243,7 +243,7 @@ void sub_8013228(struct act *self)
     }
     {
         u32 in = gKeys;
-        u8 busy = self->unk_26;
+        u8 busy = self->spinCooldown;
 
         if (busy == 0 && (INPUT_PRESSED(in) & 2))
         {

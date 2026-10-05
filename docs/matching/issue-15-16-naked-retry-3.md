@@ -37,13 +37,13 @@ and then a match.
 ### `UpdateActionCtrl` (issue #16)
 
 The previous pass noted three problems: the PMF method record's stack
-slot, the order of the `part->y` reads, and the signed `unk_94`
+slot, the order of the `part->y` reads, and the signed `listCount`
 compare. Everything else was register choice. What fixed it:
 
 - `s32 py = part->y` before each camera test (the ROM loads `y` first),
   with the second test reading `self->part` into its own local; the
   flag-clear block in between also gets its own local;
-- `unk_94` read into an `s32` before the `<= 1` test (a direct `u8`
+- `listCount` read into an `s32` before the `<= 1` test (a direct `u8`
   compare is shortened to unsigned, giving `bhi` instead of `bgt`);
 - the queued-state update is `ActQueue27(self, left, self->unk_2A[2])`:
   as an inline parameter, the queued byte is read before the three

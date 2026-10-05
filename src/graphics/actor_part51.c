@@ -28,7 +28,7 @@ void *sub_802AA0C(void *outArg, void *selfArg)
     struct blob0xc { u32 w0, w1, w2; };
 
     struct actor_self *self = selfArg;
-    struct blob0xc buf = *(struct blob0xc *)self->unk_38;
+    struct blob0xc buf = *(struct blob0xc *)self->box;
     register s32 d0 asm("r3");
     register s32 d1 asm("r5");
     register s32 d2 asm("r4");

@@ -80,8 +80,8 @@ the scratchpad). In order:
    (`Call68`), not the `OBJ_CALL68` macro with its r4-pinned `_fn`.
    Every call site had to change so they still cross-jump into one
    shared call. (243 -> 68.)
-9. **`u8 m = 8; q->unk_68 = m;`** (as `sub_0800D18C` writes the stand
-   mode). It gives the ROM's `movs r1, #8` before the address and the
+9. **`u8 m = 8; q->hitAxes = m;`** (as `sub_0800D18C` writes
+   `hitAxes`). It gives the ROM's `movs r1, #8` before the address and the
    `subs r0, #68` reuse of the `+0xAC` address. (-> 12.)
 10. **`y = gPlayer->y; ... = y - ((oy - 1) << 8)`** and
     **`(oy << 8) + pos.y`** / **`(ox << 8) + pos.x`** operand order, as

@@ -80,7 +80,7 @@ void sub_8013C60(struct act *self)
         self->part->contact = 0;
         return;
     }
-    if (HasTornadoSpin(gLevelState) && (INPUT_PRESSED(in) & 2) && self->unk_26 == 0)
+    if (HasTornadoSpin(gLevelState) && (INPUT_PRESSED(in) & 2) && self->spinCooldown == 0)
     {
         if (++self->charge > 3)
             self->charge = 3;
@@ -103,7 +103,7 @@ void sub_8013D94(struct act *self)
     in = gKeys;
     part = self->part;
 
-    if ((part->contact & 8) && part->unk_64 > 0)
+    if ((part->contact & 8) && part->speedY > 0)
     {
         ActOrFlags0D(part, 1);
         self->unk_34 = 0;
@@ -114,7 +114,7 @@ void sub_8013D94(struct act *self)
         sub_8013C60(self);
         return;
     }
-    if (HasTornadoSpin(gLevelState) && (INPUT_PRESSED(in) & 2) && self->unk_26 == 0)
+    if (HasTornadoSpin(gLevelState) && (INPUT_PRESSED(in) & 2) && self->spinCooldown == 0)
     {
         if (++self->charge > 3)
             self->charge = 3;
@@ -138,7 +138,7 @@ void sub_8013D94(struct act *self)
         }
         else
         {
-            self->unk_26 = 0xC;
+            self->spinCooldown = 0xC;
             ACT_VCALL1(self, m20, 0x1A);
             ACT_VCALL2(self, m50, self->part, 0x15);
             self->frame = charge;
@@ -181,7 +181,7 @@ void sub_8013EAC(struct act *self)
         self->part->contact = 0;
         return;
     }
-    if (HasTornadoSpin(gLevelState) && (INPUT_PRESSED(in) & 2) && self->unk_26 == 0)
+    if (HasTornadoSpin(gLevelState) && (INPUT_PRESSED(in) & 2) && self->spinCooldown == 0)
     {
         if (++self->charge > 3)
             self->charge = 3;

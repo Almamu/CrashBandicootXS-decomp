@@ -176,7 +176,7 @@ void *CreatePolarElectricFence(void *selfArg, s32 a, s32 b, s32 c, s32 d)
 
     InitActorPart(self, a, b, c, d);
     self->vtable = (struct actor_vtable *)gPolarElectricFenceVtable;
-    self->unk_2C[0] = 0;
+    self->visible = 0;
     return self;
 }
 
@@ -555,13 +555,13 @@ void sub_802D204(void *selfArg, s32 retriggerParam)
     register s32 tier asm("r5") = gLevelState->maskLevel;
 
     if (tier == 0 && retrigger == 0) {
-        self->unk_2C[0] = tier;
+        self->visible = tier;
     } else {
         register s32 zero asm("r6");
 
         QueueVramDmaTransfer(gStaticData_0817A798 + (tier - 1) * 0x20, (void *)(PLTT + 0x3C0), 0x20, 0x10);
         {
-            u8 *addr = &self->unk_2C[0];
+            u8 *addr = &self->visible;
 
             zero = 0;
             *addr = 1;
