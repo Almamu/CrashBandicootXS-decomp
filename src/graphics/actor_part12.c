@@ -3,14 +3,14 @@
 #include "actor_self.h"
 #include "box_part.h"
 
-/* The fixed-slot object-pool manager struct `sub_8008F20`
+/* The fixed-slot object-pool manager struct `InitCrateList`
  * (`actor_part11.c`) initializes: `slotArray` holds the active
  * objects (bounded by `activeCount`, up to `capacity`); `nodeArray`
  * is a flat array of `capacity` 0x14-byte pool nodes; `gridHead`/
  * `gridTail` are a 256-bucket spatial hash grid, each bucket a
  * singly-linked list of pool nodes (head set once when a bucket
  * leaves empty, tail always updated for O(1) append - see
- * `sub_8009AF0`); `freeListArray` is `capacity` 8-byte {node, next}
+ * `AddCrateGridNode`); `freeListArray` is `capacity` 8-byte {node, next}
  * pairs threaded into a singly-linked free list, `freeListHead`
  * pointing at its first still-free entry. */
 struct pool_manager {
@@ -24,18 +24,18 @@ struct pool_manager {
     void *freeListHead;                           // +0x814
 };
 
-extern void sub_8009008(struct pool_manager *manager, void *item);
+extern void UnlinkCrateFromGrid(struct pool_manager *manager, void *item);
 extern void CpuSet(void *src, void *dst, s32 control);
-extern void *sub_8009AF0(struct pool_manager *manager, void *data, s32 bucket, s32 extra);
-extern void sub_8009B3C(struct pool_manager *manager, void *obj);
-extern void sub_8026EB4(void *ptr);
-extern void sub_8026ED0(void *manager);
+extern void *AddCrateGridNode(struct pool_manager *manager, void *data, s32 bucket, s32 extra);
+extern void LinkCrateInGrid(struct pool_manager *manager, void *obj);
+extern void OperatorDeleteArray(void *ptr);
+extern void OperatorDelete(void *manager);
 
 typedef void (*part_method3_fn)(void *self, s32 a, s32 b, s32 c);
 
 extern s32 sub_8009FF4(struct box_part *part, struct part_aabb *box);
 
-/* `sub_8008D80`'s twin (actor_part7b.c): the same collision-hit
+/* `CollidePartWithObject`'s twin (actor_part7b.c): the same collision-hit
  * resolver, called from elsewhere in this AI/collision cluster (`list`
  * is never read). Tests `part` against the incoming box via
  * `sub_8009FF4`; on a hit, calls `part`'s method-table +0x68 method
@@ -58,11 +58,11 @@ asm(".align 2, 0");
 
 /* Searches `manager->slotArray` (bounded by `capacity`, for the
  * search) for `target`; if found, removes it from the collision grid
- * and returns its pool node to the free list via `sub_8009008`, then
+ * and returns its pool node to the free list via `UnlinkCrateFromGrid`, then
  * compacts the array (bounded this time by `activeCount`) via the
  * same CpuSet-based shift used throughout this cluster, decrementing
  * `activeCount`. */
-void sub_8009A30(struct pool_manager *manager, void *target)
+void RemoveCrateFromList(struct pool_manager *manager, void *target)
 {
     s32 i = 0;
     s32 searchCount = manager->capacity;
@@ -91,7 +91,7 @@ void sub_8009A30(struct pool_manager *manager, void *target)
         s32 off = i * 4;
         void *item = base[i];
 
-        sub_8009008(manager, item);
+        UnlinkCrateFromGrid(manager, item);
 
         {
             s32 srcOff = off + 4;
@@ -117,16 +117,16 @@ done:
 }
 
 /* Removes the entry at `index` from `manager`'s active-object array
- * the same way `sub_8009A30` does after its own search - unlinks it
- * from the grid via `sub_8009008`, then compacts via `CpuSet`. */
-void sub_8009AA0(struct pool_manager *manager, s32 index)
+ * the same way `RemoveCrateFromList` does after its own search - unlinks it
+ * from the grid via `UnlinkCrateFromGrid`, then compacts via `CpuSet`. */
+void RemoveCrateListAt(struct pool_manager *manager, s32 index)
 {
     if (index < manager->capacity) {
         void **base = manager->slotArray;
         s32 off = index * 4;
         void *item = base[index];
 
-        sub_8009008(manager, item);
+        UnlinkCrateFromGrid(manager, item);
 
         {
             s32 srcOff = off + 4;
@@ -157,7 +157,7 @@ void sub_8009AA0(struct pool_manager *manager, s32 index)
  * pointer (always updated, chaining the previous tail's `+4` "next"
  * field to the new node). Returns the
  * node. */
-void *sub_8009AF0(struct pool_manager *manager, void *data, s32 bucket, s32 extra)
+void *AddCrateGridNode(struct pool_manager *manager, void *data, s32 bucket, s32 extra)
 {
     void **headField = &manager->freeListHead;
     void **entry = *headField;
@@ -193,19 +193,19 @@ void *sub_8009AF0(struct pool_manager *manager, void *data, s32 bucket, s32 extr
     return node;
 }
 
-/* Inserts `obj` into the grid via `sub_8009AF0`, bucketed by
+/* Inserts `obj` into the grid via `AddCrateGridNode`, bucketed by
  * `obj`'s own `+2` field. If `obj->flags` bit 4 is set (a "large
  * object" case, spanning more than one cell), also inserts it into
  * the special bucket 0xff (using the first node as the second
  * insertion's "extra" argument), linking the first node's `+0xc`
  * field to the second node - the two nodes referencing each other.
  * The ROM never sets up a return value here (its only caller,
- * `sub_8009B70`, ignores it), so this is `void` despite `sub_8009AF0`
+ * `AddCrateToList`, ignores it), so this is `void` despite `AddCrateGridNode`
  * itself returning the node. */
-void sub_8009B3C(struct pool_manager *manager, void *obj)
+void LinkCrateInGrid(struct pool_manager *manager, void *obj)
 {
     s16 bucket = *(s16 *)((u8 *)obj + 2);
-    void *node1 = sub_8009AF0(manager, obj, bucket, 0);
+    void *node1 = AddCrateGridNode(manager, obj, bucket, 0);
 
     {
         register u8 byte asm("r1") = *((u8 *)obj + 0xc);
@@ -219,20 +219,20 @@ void sub_8009B3C(struct pool_manager *manager, void *obj)
         }
     }
     {
-        void *node2 = sub_8009AF0(manager, obj, 0xff, (s32)node1);
+        void *node2 = AddCrateGridNode(manager, obj, 0xff, (s32)node1);
         *(void **)((u8 *)node1 + 0xc) = node2;
     }
 }
 
 /* Appends `obj` to `manager->slotArray` if there's room below
- * `capacity`, inserting it into the collision grid via `sub_8009B3C`
+ * `capacity`, inserting it into the collision grid via `LinkCrateInGrid`
  * first. */
-void sub_8009B70(struct pool_manager *manager, void *obj)
+void AddCrateToList(struct pool_manager *manager, void *obj)
 {
     if (manager->activeCount < manager->capacity) {
         s32 idx;
 
-        sub_8009B3C(manager, obj);
+        LinkCrateInGrid(manager, obj);
 
         idx = manager->activeCount;
         {
@@ -244,23 +244,23 @@ void sub_8009B70(struct pool_manager *manager, void *obj)
 }
 
 /* Tears down a pool manager: frees `freeListArray`, `nodeArray`, and
- * `slotArray`, each via `sub_8026EB4` if non-`NULL`; resets `capacity`
+ * `slotArray`, each via `OperatorDeleteArray` if non-`NULL`; resets `capacity`
  * to 0; and, if a flags bit is set, frees the manager itself via
- * `sub_8026ED0`. */
-void sub_8009B9C(struct pool_manager *manager, s32 flags)
+ * `OperatorDelete`. */
+void DestroyCrateList(struct pool_manager *manager, s32 flags)
 {
     if (manager->freeListArray != 0) {
-        sub_8026EB4(manager->freeListArray);
+        OperatorDeleteArray(manager->freeListArray);
     }
     if (manager->nodeArray != 0) {
-        sub_8026EB4(manager->nodeArray);
+        OperatorDeleteArray(manager->nodeArray);
     }
     if (manager->slotArray != 0) {
-        sub_8026EB4(manager->slotArray);
+        OperatorDeleteArray(manager->slotArray);
     }
     manager->capacity = 0;
     if (flags & 1) {
-        sub_8026ED0(manager);
+        OperatorDelete(manager);
     }
 }
 asm(".align 2, 0");

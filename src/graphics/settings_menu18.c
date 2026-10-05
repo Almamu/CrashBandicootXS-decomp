@@ -3,12 +3,12 @@
 #include "icon_manager.h"
 #include "pause_screen_results.h"
 
-extern void sub_8008890(void *arg0, s32 arg1, s32 arg2);
+extern void DrawSpriteWithOffset(void *arg0, s32 arg1, s32 arg2);
 extern s32 GetUiText(s32 arg0);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern struct icon_manager *gSmallFont;
 
-/* Shows (`sub_8008890(icon, 0, 0)`) whichever of `icons8c[0..3]` has a
+/* Shows (`DrawSpriteWithOffset(icon, 0, 0)`) whichever of `icons8c[0..3]` has a
  * matching bit set in `self->field_10`'s byte at offset 2 (a flag byte
  * on the row-stats handle RefreshSaveSlotSummaries/SummarizeProgress - src/graphics/
  * settings_menu2.c - already fill; bits 0x20/0x80/0x40/0x10, one per
@@ -25,7 +25,7 @@ void DrawPausePowersPage(struct pause_screen_results *self)
         byte = *p;
         mask &= byte;
         if (mask) {
-            sub_8008890(self->icons8c[0], 0, 0);
+            DrawSpriteWithOffset(self->icons8c[0], 0, 0);
             none = 0;
         }
     }
@@ -36,7 +36,7 @@ void DrawPausePowersPage(struct pause_screen_results *self)
         byte = *p;
         mask &= byte;
         if (mask) {
-            sub_8008890(self->icons8c[1], 0, 0);
+            DrawSpriteWithOffset(self->icons8c[1], 0, 0);
             none = 0;
         }
     }
@@ -47,7 +47,7 @@ void DrawPausePowersPage(struct pause_screen_results *self)
         byte = *p;
         mask &= byte;
         if (mask) {
-            sub_8008890(self->icons8c[2], 0, 0);
+            DrawSpriteWithOffset(self->icons8c[2], 0, 0);
             none = 0;
         }
     }
@@ -58,7 +58,7 @@ void DrawPausePowersPage(struct pause_screen_results *self)
         byte = *p;
         mask &= byte;
         if (mask) {
-            sub_8008890(self->icons8c[3], 0, 0);
+            DrawSpriteWithOffset(self->icons8c[3], 0, 0);
             none = 0;
         }
     }

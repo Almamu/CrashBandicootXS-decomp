@@ -13,7 +13,7 @@
 
 extern void SetAabbPos(void *buf, s32 arg1, s32 arg2);
 extern void SetAabbSize(void *buf, s32 arg1, s32 arg2);
-extern u8 sub_8001688(void *buf1, void *buf2);
+extern u8 AabbOverlaps(void *buf1, void *buf2);
 extern void *gPlayer;
 #define gPlayerPart (*(struct box_part **)&gPlayer)
 extern u8 gCrateKindExplosive[];
@@ -22,15 +22,15 @@ extern void BreakCrateInStack(void *self, u8 arg1, u8 arg2, u8 arg3);
 
 /* Builds two AABBs - one for `self`, one for the player
  * (`gPlayer`) - from the shared "keyframe/hitbox record"
- * table convention already established by `sub_8007B00`/`sub_8007B98`
+ * table convention already established by `GetSpriteBounds`/`GetSpriteHitbox`
  * in actor_part.c (`self+0x20` -> a pointer-to-table, indexed by
  * `self+0x2d` at 0x1c/28-byte stride; here the {s16 xOff, s16 yOff, u8
  * w, u8 h} quad sits at the record's `+4`/`+6`/`+8`/`+9` instead of
  * `+0xc`/`+0xe`/`+0x10`/`+0x11`, the same "differently laid out"
- * variance `sub_8007B98`'s doc comment already flags). `self+0x28`
+ * variance `GetSpriteHitbox`'s doc comment already flags). `self+0x28`
  * bits 4/5 mirror each box horizontally/vertically around its own
  * object's position, exactly like the `actor_part.c` pair. If the two
- * boxes overlap (`sub_8001688`), dispatches to `ExplodeCrate` or
+ * boxes overlap (`AabbOverlaps`), dispatches to `ExplodeCrate` or
  * `BreakCrateInStack` depending on a per-state-id lookup in
  * `gCrateKindExplosive`.
  *
@@ -115,7 +115,7 @@ void sub_800D040(struct box_part *self)
         if (gPlayerPart->mirrorY)
             f.b.y = py * 2 - (f.b.y + f.b.h);
     }
-    if (sub_8001688(&f.a, BOX_ADDR(&f.b)))
+    if (AabbOverlaps(&f.a, BOX_ADDR(&f.b)))
     {
         if (gCrateKindExplosive[self->state] == 1)
             ExplodeCrate(self, 1);

@@ -627,33 +627,33 @@ void SetCurrentLevel(struct level_state *self, s32 value)
     self->level = value;
 }
 
-extern s32 sub_8024428(s32 idx);
-extern s32 sub_8024434(s32 idx);
-extern s32 sub_8024440(s32 idx);
-extern s32 sub_802444C(s32 idx);
+extern s32 LevelHasYellowGemEntity(s32 idx);
+extern s32 LevelHasBlueGemEntity(s32 idx);
+extern s32 LevelHasGreenGemEntity(s32 idx);
+extern s32 LevelHasRedGemEntity(s32 idx);
 extern s32 sub_8024458(s32 idx);
 
 /* Five thin two-argument wrappers that drop `self` entirely and forward
- * straight to one of `sub_8024428`/`34`/`40`/`4C`/`58` (the medal
+ * straight to one of `LevelHasYellowGemEntity`/`34`/`40`/`4C`/`58` (the medal
  * "flag index" wrappers, `game_loop18.c`). */
-s32 sub_802333C(void *self, s32 idx)
+s32 LevelHasYellowGem(void *self, s32 idx)
 {
-    return sub_8024428(idx);
+    return LevelHasYellowGemEntity(idx);
 }
 
-s32 sub_8023348(void *self, s32 idx)
+s32 LevelHasBlueGem(void *self, s32 idx)
 {
-    return sub_8024434(idx);
+    return LevelHasBlueGemEntity(idx);
 }
 
-s32 sub_8023354(void *self, s32 idx)
+s32 LevelHasGreenGem(void *self, s32 idx)
 {
-    return sub_8024440(idx);
+    return LevelHasGreenGemEntity(idx);
 }
 
-s32 sub_8023360(void *self, s32 idx)
+s32 LevelHasRedGem(void *self, s32 idx)
 {
-    return sub_802444C(idx);
+    return LevelHasRedGemEntity(idx);
 }
 
 s32 sub_802336C(void *self, s32 idx)

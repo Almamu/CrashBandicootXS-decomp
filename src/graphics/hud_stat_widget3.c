@@ -54,7 +54,7 @@ extern struct pct_source *gActorList;
 extern s32 _call_via_r1(void *self, void *fn);
 extern s32 sub_80233B4(void *state);
 extern s32 GetAirshipHpPercent(void);
-extern void sub_8008044(struct hud_digit_part *part);
+extern void AdvanceSpriteAnim(struct hud_digit_part *part);
 extern void *gLevelState;
 extern struct hud_pos gHudPartPositions[];
 extern void DrawHudPart(struct hud_digit_part *part, s32 x, s32 y);
@@ -225,7 +225,7 @@ void sub_8027940(struct hud_counter *selfArg)
  * `0xb0*4`/`0xc0*4`), sourced from `GetWumpa` (`sub_8027940` used
  * `GetCrateCount` for its own primary counter) rather than a mode/layout
  * pair like the dispatcher's other callees - always refreshes one more
- * slot (`self->parts + 0xd0*4`) up front via `sub_8008044`/
+ * slot (`self->parts + 0xd0*4`) up front via `AdvanceSpriteAnim`/
  * `DrawHudPart` regardless of whether the value changed. */
 void UpdateHudWumpa(struct hud_counter *selfArg)
 {
@@ -240,7 +240,7 @@ void UpdateHudWumpa(struct hud_counter *selfArg)
     else
         gHudSlideOffset = 0;
     self->wumpa = GetWumpa(gLevelState);
-    sub_8008044(&self->parts[13]);
+    AdvanceSpriteAnim(&self->parts[13]);
     DrawHudPart(&self->parts[13], 0, 0);
 
     v = self->wumpa;

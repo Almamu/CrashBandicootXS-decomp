@@ -51,7 +51,7 @@ touches (`x`/`y`, `vtable`, `dir`, the velocity words, `standMode`,
   `&gPlayer` into the wrong registers. No `-f` flag changes
   it. Frame structs, arrays, macros, inline builders (by pointer or by
   value) and px/py scoping didn't help either.
-- **`sub_800F990`** (#12, `game_loop49.c`): 58 halfwords off under
+- **`UpdateSlotCrate`** (#12, `game_loop49.c`): 58 halfwords off under
   old_agbcc, same size. `u48` is handled as a word with explicit byte
   masks (`& 0x3f`, `& 0xc7`, `& 0xf8`), the direction switch as
   `(u32)(w & 0xc0) >> 6`, and the |dx| test as `d = a; d -= b`. What is

@@ -19,7 +19,7 @@ void UpdatePlatform(struct gobj *self)
 
     if ((u8)_call_via_r1((u8 *)self + m->thisOffset, m->fn))
     {
-        sub_8008044(self);
+        AdvanceSpriteAnim(self);
         OBJ_CALL1(self, m60);
         if (self->type == 6 && self->frame > 0x12)
         {
@@ -66,7 +66,7 @@ s32 sub_801B2C0(void)
 void DestroyPlatform(struct gobj *self, s32 flags)
 {
     self->vtable = (struct gobj_vtable *)gPlatformVtable;
-    sub_8009F1C(self, flags);
+    DestroyMovingSprite(self, flags);
 }
 
 void sub_801B2D8(struct gobj *self)
@@ -400,7 +400,7 @@ void MovePlayerWithPlatform(struct mover *self, struct gobj *obj)
                 py += dy;
                 q->x = px << 8;
                 q->y = py << 8;
-                sub_8009EA8(q);
+                SetSpritePrevPos(q);
             }
             dir = (*pp)->dir;
             if (obj->speedX > 0)
@@ -472,18 +472,18 @@ void sub_801B734(struct mover *self, struct gobj *part, s32 index)
 
 void sub_801B77C(struct mover *self, struct gobj *part, s32 index)
 {
-    sub_800B6D0(self, part, &gStaticData_0816C460[self->set->entries[index].b]);
+    StartCtrlTargetMotionY(self, part, &gStaticData_0816C460[self->set->entries[index].b]);
 }
 
 void sub_801B7A0(struct mover *self, struct gobj *part, s32 index)
 {
-    sub_800B7B0(self, part, &gStaticData_0816C460[self->set->entries[index].a]);
+    StartCtrlTargetMotionX(self, part, &gStaticData_0816C460[self->set->entries[index].a]);
 }
 
 void DestroyPlatformMover(struct mover *self, s32 flags)
 {
     self->vtable = (struct mover_vtable *)gPlatformMoverVtable;
-    sub_800B8A8(self, flags);
+    DestroyCtrl(self, flags);
 }
 
 /* struct mover's constructor. The 5th argument arrives on the stack as a
@@ -500,7 +500,7 @@ struct mover *CreatePlatformMover(struct mover *self, s32 distX, s32 distY, u32 
     dirX = dirXArg;
     dy = *dyp;
 
-    sub_800B8C8(self);
+    InitCtrl(self);
     self->vtable = (struct mover_vtable *)gPlatformMoverVtable;
     if ((u32)(kind - 6) <= 1)
     {

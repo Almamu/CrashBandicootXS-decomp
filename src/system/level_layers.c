@@ -107,10 +107,10 @@ struct level_layers
 extern struct level_layers *gLevelLayersSingleton;
 extern void *gEntityFlags;
 
-extern void *sub_8026EC0(u32 size);
-extern void *sub_8026EDC(u32 size);
-extern void sub_8026EB4(void *ptr);
-extern void sub_8026ED0(void *ptr);
+extern void *OperatorNewArray(u32 size);
+extern void *OperatorNew(u32 size);
+extern void OperatorDeleteArray(void *ptr);
+extern void OperatorDelete(void *ptr);
 extern void LoadTaggedAsset(void *asset, void *dest);
 extern void LoadBgLayer(struct layer *layer, void *data);
 extern void SetCollisionSource(struct tile_cache *self, void *source);
@@ -139,7 +139,7 @@ void LoadRoom(struct level_layers *self, struct level_load_args *args)
     }
     else
     {
-        self->asset = sub_8026EC0(*desc->asset >> 8);
+        self->asset = OperatorNewArray(*desc->asset >> 8);
         LoadTaggedAsset(args->desc->asset, self->asset);
         self->assetOwned = 1;
     }
@@ -173,11 +173,11 @@ void LoadRoom(struct level_layers *self, struct level_load_args *args)
 
 struct level_layers *InitLevelLayers(struct level_layers *self)
 {
-    self->layer0 = InitPooledBgLayer(sub_8026EDC(0x60), 0);
-    self->tiles = nullsub_4(sub_8026EDC(0x1064));
-    self->layers[0] = InitBgLayer(sub_8026EDC(0x5C), 1);
-    self->layers[1] = InitBgLayer(sub_8026EDC(0x5C), 2);
-    self->layers[2] = InitBgLayer(sub_8026EDC(0x5C), 3);
+    self->layer0 = InitPooledBgLayer(OperatorNew(0x60), 0);
+    self->tiles = nullsub_4(OperatorNew(0x1064));
+    self->layers[0] = InitBgLayer(OperatorNew(0x5C), 1);
+    self->layers[1] = InitBgLayer(OperatorNew(0x5C), 2);
+    self->layers[2] = InitBgLayer(OperatorNew(0x5C), 3);
     self->unk_29 = 0;
     self->asset = NULL;
     self->assetOwned = 0;
@@ -193,7 +193,7 @@ struct level_layers *InitLevelLayers(struct level_layers *self)
 void DestroyLevelLayers(struct level_layers *self, u32 flags)
 {
     if ((self->assetOwned != 0 || self->asset != NULL) && self->asset != NULL)
-        sub_8026EB4(self->asset);
+        OperatorDeleteArray(self->asset);
 
     DESTROY_LAYER(self->layer0);
     if (self->tiles != NULL)
@@ -204,13 +204,13 @@ void DestroyLevelLayers(struct level_layers *self, u32 flags)
 
     gLevelLayersSingleton = NULL;
     if (flags & 1)
-        sub_8026ED0(self);
+        OperatorDelete(self);
 }
 
 struct level_layers *GetLevelLayers(void)
 {
     if (gLevelLayersSingleton == NULL)
-        gLevelLayersSingleton = InitLevelLayers(sub_8026EDC(sizeof(struct level_layers)));
+        gLevelLayersSingleton = InitLevelLayers(OperatorNew(sizeof(struct level_layers)));
     return gLevelLayersSingleton;
 }
 

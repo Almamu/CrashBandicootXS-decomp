@@ -6,7 +6,7 @@ closed; two got new or better drafts; three were not attempted.
 | Function | File | Result |
 | --- | --- | --- |
 | `sub_8012AF4` | `actor_part83.c` | **Real C**, old_agbcc |
-| `sub_8012420` | `actor_part84.c` | **Real C**, old_agbcc |
+| `UpdateActionCtrl` | `actor_part84.c` | **Real C**, old_agbcc |
 | `CreateWumpa` | `game_loop53.c` | Still NAKED, analysis added to the draft's note |
 | `UpdateWumpa` | `game_loop53.c` | Still NAKED, first C draft under `NON_MATCHING` |
 | `sub_8001DB4` | `link_cable.c` | Still NAKED, note on the draft extended |
@@ -34,7 +34,7 @@ changes were needed:
 A per-variant brute-force search went from 169 halfwords off to 18, 7, 4
 and then a match.
 
-### `sub_8012420` (issue #16)
+### `UpdateActionCtrl` (issue #16)
 
 The previous pass noted three problems: the PMF method record's stack
 slot, the order of the `part->y` reads, and the signed `unk_94`
@@ -103,7 +103,7 @@ themselves. So did the first draft's "temporaries in r6".
 - **`u8` compared against a constant.** gcc shortens the compare to
   unsigned. Going through an `s32` local keeps it signed.
 - **A struct-copy stack slot can be a side effect.** The PMF method
-  record's stack slot in `sub_8012420` needed no special handling once
+  record's stack slot in `UpdateActionCtrl` needed no special handling once
   the rest of the function matched.
 
 ## Tools

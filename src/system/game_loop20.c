@@ -6,14 +6,14 @@
  * This is the tail of the chunk, right after EndSlide (parked/left
  * in asm/code_3_2_17_24790.s). */
 
-extern void sub_8026ED0(void *self);
+extern void OperatorDelete(void *self);
 
 /* Same wrapper shape as sub_802425C (game_loop17.c): tears `self` down
- * via sub_8026ED0 if bit 0 of `flags` is set. */
+ * via OperatorDelete if bit 0 of `flags` is set. */
 void DestroySlideshow(void *self, s32 flags)
 {
     if (flags & 1) {
-        sub_8026ED0(self);
+        OperatorDelete(self);
     }
 }
 

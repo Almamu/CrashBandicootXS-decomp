@@ -86,7 +86,7 @@ impact.
 **Update (later session): both follow-up ideas tried, both ruled
 out.** A self-contained `asm volatile` block per read (the exact
 technique that closed the identical "compiler won't spend a register
-on a literal offset immediate for an `ldrsh`" gap for `sub_800A528`/
+on a literal offset immediate for an `ldrsh`" gap for `UpdateGroundSprite`/
 `sub_800A590` and `CountCrateEntities` elsewhere in this project) makes both
 residual instructions byte-correct in isolation, but reliably
 reproduces the same ripple into the earlier clamp blocks - confirmed

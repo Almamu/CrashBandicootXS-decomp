@@ -35,9 +35,9 @@ behavior. This pass worked those three:
   palette banks (`gTitleMenuPalette`/`_054`/`_074`) into palette RAM
   at `0x050003A0`/`_C0`/`_E0`; calls `LoadTitleScreenBg`/
   `LoadTitleScreenObjTiles`; allocates and constructs a 0x14-byte object via
-  `InitStarfield(sub_8026EDC(0x14))` (the exact same allocate-then-construct
+  `InitStarfield(OperatorNew(0x14))` (the exact same allocate-then-construct
   pairing already confirmed in `src/audio/counter_selector_setup.c`'s
-  `self->field_10 = InitStarfield(sub_8026EDC(0x14))`) into the scratch
+  `self->field_10 = InitStarfield(OperatorNew(0x14))`) into the scratch
   object's `+0x208` field; runs a fixed fade/audio-reset sequence
   (`SetObjMapping1D`/`ShowObj`/`SetDispcntMode(1)`/`CommitDispcnt` - the same
   quartet already matched in `src/graphics/fade_screen_mode2.c`); zeroes
@@ -67,7 +67,7 @@ behavior. This pass worked those three:
     derives `0x200` from the address offset via a cheap `ADD` instead of
     materializing it independently, producing a different (if
     value-equivalent) instruction sequence than the ROM's.
-  - `self[0x82] = (u32)InitStarfield(sub_8026EDC(0x14));` has to be split
+  - `self[0x82] = (u32)InitStarfield(OperatorNew(0x14));` has to be split
     into a named `u32 *dest = &self[0x82];` computed *before* the two
     calls, then `*dest = ...;` after - the ROM computes this destination
     address first and holds it live across both calls (`r4`), while the

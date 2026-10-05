@@ -54,7 +54,7 @@ Body:
 1. Tests `gPlayer`-the-player's own `+0x90` byte (dereferences
    the global pointer, then reads `+0x90`). This offset isn't documented
    anywhere else under this project's naming - the closest confirmed
-   neighbors are `+0x92`/`+0x94`, a state-byte pair `sub_8015350`
+   neighbors are `+0x92`/`+0x94`, a state-byte pair `SetActionCtrlMode`
    clears together (`docs/matching/issue-18-0x08014f8c-actor.md`), and
    `+0x94`/`+0x98` is the physics subsystem's own 5-slot "recently
    touched" ring buffer inside the player object
@@ -73,7 +73,7 @@ Body:
    `actor_part17.c` already establish, just keyed off the player's flags
    here since the box represents the player's shape, not `self`'s).
 4. Tests the mirrored local AABB against `box` (`self`'s own real AABB)
-   via `sub_8001688` (the strict/non-touching overlap variant) and
+   via `AabbOverlaps` (the strict/non-touching overlap variant) and
    returns the boolean result.
 
 Read together: "would a player-shaped hitbox, standing where `self`
@@ -110,7 +110,7 @@ Body:
    convention (indexed by `prev`'s own `+0x2d` tag, quad at record `+4`,
    offset by `prev.x>>8`/`prev.y>>8`, mirrored per `prev`'s own `+0x28`
    flags) - the exact "AABB1" shape again, just for `prev` instead of
-   `self`. Test it against `box` via `sub_8001688`; on overlap, return
+   `self`. Test it against `box` via `AabbOverlaps`; on overlap, return
    `prev` instead of `self`.
 6. Return whichever of `self`/`prev` was selected.
 
@@ -134,12 +134,12 @@ action-dispatch gate), these two have no caller outside the subsystem.
 ## Matching: both NAKED transcription, not real C
 
 Neither was attempted as a plain-C reconstruction. Both are the same
-single-inlined-AABB-build primitive `sub_8007B98`
+single-inlined-AABB-build primitive `GetSpriteHitbox`
 (`src/graphics/actor_part.c`) already documents as resistant to gcc
 2.9's register allocation *even in its simplest, unbranched, single-call
 form* ("about 10 of ~73 instructions... which anonymous scratch
 register" gaps) - a shape this project has now independently hit and
-NAKED-transcribed four times (`sub_8007B98` itself, `sub_800D040`'s two
+NAKED-transcribed four times (`GetSpriteHitbox` itself, `sub_800D040`'s two
 inlined copies, `sub_800CD00`'s three inlined copies). Both of this
 session's functions compound that established-resistant core further
 rather than simplifying it:

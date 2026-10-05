@@ -121,7 +121,7 @@ void DestroyZoomBg(struct zoom_bg *self, s32 flags)
     DELETE_PART(self->twinkles[1].part);
     DELETE_PART(self->twinkles[0].part);
     if (flags & 1)
-        sub_8026ED0(self);
+        OperatorDelete(self);
 }
 
 /* Per-frame state machine:
@@ -289,7 +289,7 @@ void SetZoomBgPicture(struct zoom_bg *self, s32 image)
 void MoveZoomBgTwinkle(struct zoom_bg *self, struct twinkle *t)
 {
     if (t->blink > 0 && (t->timer & 4))
-        sub_8008890(t->part, self->dx, self->dy);
+        DrawSpriteWithOffset(t->part, self->dx, self->dy);
 }
 
 /* Picks a new random frame, duration and blink window for a twinkle. */
@@ -342,14 +342,14 @@ void AnimateLevelSelectEntry(struct level_item *self, s32 phase)
     else
         dy = 0x100 - phase;
     if (self->selected)
-        sub_8008890(self->icon, 0, dy + 2);
+        DrawSpriteWithOffset(self->icon, 0, dy + 2);
     else
-        sub_8008890(self->icon, 0, dy);
+        DrawSpriteWithOffset(self->icon, 0, dy);
     if (self->selected)
         SetFrame(self->frame, 1);
     else
         SetFrame(self->frame, 0);
-    sub_8008890(self->frame, 0, dy);
+    DrawSpriteWithOffset(self->frame, 0, dy);
 }
 
 void sub_801DEA0(struct level_item *self, u8 selected)
@@ -379,8 +379,8 @@ void SetLevelSelectEntryLevel(struct level_item *self, s32 world, s32 index)
 void SetLevelSelectEntryBox(struct level_item *self, s32 kind)
 {
     SetAnim(self->frame, gStaticData_0816C610[kind]);
-    self->frame->palette = sub_800815C(self->frame);
-    self->icon->palette = sub_800815C(self->icon);
+    self->frame->palette = GetSpriteAnimPaletteSlot(self->frame);
+    self->icon->palette = GetSpriteAnimPaletteSlot(self->icon);
 }
 
 /* Method +0x18: places the entry at pixel `pos` (x, y). */
@@ -402,5 +402,5 @@ void DestroyLevelSelectEntry(struct level_item *self, s32 flags)
     DELETE_PART(self->icon);
     DELETE_PART(self->frame);
     if (flags & 1)
-        sub_8026ED0(self);
+        OperatorDelete(self);
 }

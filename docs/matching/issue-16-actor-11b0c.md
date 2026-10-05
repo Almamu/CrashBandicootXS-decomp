@@ -3,7 +3,7 @@
 Category label was `graphics`, but the chunk splits cleanly into two
 different systems by content, not by address contiguity:
 
-- **The leading 15 functions (`DrawWumpa`-`sub_8011B90`, matched
+- **The leading 15 functions (`DrawWumpa`-`ResetActionCtrl`, matched
   here)** all operate on plain `struct actor` (`table@0x18`,
   `flags@0xc`, `field_08@8`, `x@0`, `y@4` - the exact layout
   `include/actor.h`/`actor_part*.c` already established), extended
@@ -12,7 +12,7 @@ different systems by content, not by address contiguity:
   `actor`, matching `docs/status/README.md`'s note that several
   `graphics`-labeled chunks turn out to be `actor` on inspection
   (issues #17/#18/#22/#52/#58/#62 already established this pattern).
-- **The remaining 10 functions (`sub_8011BD4` onward, left raw)**
+- **The remaining 10 functions (`ActionCtrlHandleEvent` onward, left raw)**
   belong to a different, still-unnamed "child object" struct
   (`self+0xc`/`+0x10`/`+0x18` hold *pointers* to further sub-records,
   not `struct actor` fields at all) - `docs/rom_map.md`'s own
@@ -28,7 +28,7 @@ a new `src/graphics/actor_part39.c` (numbered `39` - the next free
 number after `actor_part38d.c`, this repo's highest existing
 `actor_part*.c` at the time this chunk was picked up). A new
 `asm/code_3_2_17_11bd4.s` picks up the unexamined remainder starting at
-`sub_8011BD4` (0x08011BD4) through the end of this chunk's range
+`ActionCtrlHandleEvent` (0x08011BD4) through the end of this chunk's range
 (0x08012FBC, where `sub_8012FBC` - outside this issue's function list -
 begins); `ldscript.txt` and `tools/report_units.py`'s `UNITS` list were
 updated to place all three pieces (`code_3_2_17_e560.o`,
@@ -45,24 +45,24 @@ updated to place all three pieces (`code_3_2_17_e560.o`,
   (`mask &= flags; part->flags = mask;`) so the `ands` instruction's
   result lands back in `r0` (matching the ROM) instead of the operand
   the compiler would otherwise pick as destination.
-- **`sub_80119D4`**: always-2 stub, same shape as `sub_8008480`'s
+- **`GetWumpaClassId`**: always-2 stub, same shape as `GetSpriteObjClassId`'s
   always-true stub.
 - **`DestroyWumpa`**: sets `self->table = gWumpaVtable` then
-  tail-calls `sub_8008484` (already matched, `actor_part6.c`), which
+  tail-calls `DestroySpriteObj` (already matched, `actor_part6.c`), which
   unconditionally overwrites `table` again with `gStaticData_087E3BEC`
   - this function's own store is immediately clobbered by its callee,
   but kept faithfully since the compiler can't see through the opaque
   call to know the store is dead.
-- **`sub_80119EC`**: sets flag bit 6, clears `self+0x48`. Needed the
+- **`ResetWumpaPickup`**: sets flag bit 6, clears `self+0x48`. Needed the
   mask register-pinned to `r1` (loaded *before* the `flags` byte read,
   matching the ROM's instruction order) and a `volatile` store to
   `self->flags` to stop the compiler hoisting the second field's zero
   constant into the same store's dead window - a plain sequential
   statement pair let it reorder the loads across the two independent
   stores.
-- **`InitWumpa`**: re-inits `self` via `sub_80084A4`, overwrites
-  `table` with `gWumpaVtable`, runs `sub_80119EC` on it.
-- **`sub_8011A1C`**: if `self+0x48` is zero and the player
+- **`InitWumpa`**: re-inits `self` via `InitSpriteObj`, overwrites
+  `table` with `gWumpaVtable`, runs `ResetWumpaPickup` on it.
+- **`CollideWumpa`**: if `self+0x48` is zero and the player
   (`gPlayer`)'s flags top bit is set, fires a
   `self->table+0x68`-driven trampoline (same idiom documented in
   `actor_part12.c`/`actor_part13.c`) on `self` via `_call_via_r1`.
@@ -85,8 +85,8 @@ updated to place all three pieces (`code_3_2_17_e560.o`,
   the original C evidently never narrowed it either (the whole
   parameter is compared and stored as-is).
 - **`sub_8011A84`**: trivial one-byte setter at `self+0x49`.
-- **`sub_8011A8C`**: distance-gate - if the player is within 0x180
-  (384 px) of `self` on both axes, calls `sub_8008364` (already
+- **`UpdateStopwatch`**: distance-gate - if the player is within 0x180
+  (384 px) of `self` on both axes, calls `UpdateSpriteObj` (already
   matched, `actor_part5.c`); otherwise sets `self->flags` bit 0 and,
   unless `self->field_08 == 0xFFFF`, marks its bit in the same
   `gEntityFlags+0x108` bitmap `actor_part2.c` already writes,
@@ -104,20 +104,20 @@ updated to place all three pieces (`code_3_2_17_e560.o`,
   rather than a nested `if`, which the compiler would otherwise invert
   into the opposite branch-target/condition-code pairing.
 - **`CreateStopwatch`**: constructor - allocates a `struct actor`-shaped
-  object (`sub_8026EDC(0x40)`, same size as `sub_8008434`'s constructor
+  object (`OperatorNew(0x40)`, same size as `CreateSpriteObj`'s constructor
   in `actor_part6.c`), re-inits it, sets `table = gStopwatchVtable`,
   runs the empty `nullsub_16` on it, then sets `field_08`/`x`/`y` from
   the raw pixel arguments.
 - **`nullsub_16`**: empty stub.
-- **`DestroyStopwatch`**: same `table`-set/tail-call-`sub_8008484` shape as
+- **`DestroyStopwatch`**: same `table`-set/tail-call-`DestroySpriteObj` shape as
   `DestroyWumpa`, different vtable (`gStopwatchVtable`).
 - **`InitStopwatch`**: same re-init/table-set/`nullsub_16` shape as
   `CreateStopwatch`, but re-initializing an existing `self` rather than
   allocating a new one.
-- **`sub_8011B90`**: zeroes/initializes a run of fields from
+- **`ResetActionCtrl`**: zeroes/initializes a run of fields from
   `self+0x25` through `+0x34`, plus `self+8`/`+0x10`/`+0x14`/`+0x18`/
   `+0x1c`, setting `+0x2f`/`+0x30` to 1. Its only caller in this ROM
-  (`sub_801588C`, still raw at `0x0801588C`) stores its own vtable
+  (`InitActionCtrl`, still raw at `0x0801588C`) stores its own vtable
   pointer at `self+0xc`, not `+0x18` the way `struct actor` does -
   proof `self` here is a genuinely different, still-unnamed "child
   object" struct, so this function takes `void *` rather than
@@ -131,30 +131,30 @@ updated to place all three pieces (`code_3_2_17_e560.o`,
   `make compare` fail on a completely unrelated early data pointer that
   merely happened to reference something past this shift).
 
-## Left raw (10/25) - `sub_8011BD4` onward
+## Left raw (10/25) - `ActionCtrlHandleEvent` onward
 
-`sub_8011BD4`, `KillPlayer`, `sub_8012238`, `sub_80122CC`,
-`sub_8012420`, `sub_8012694`, `sub_801283C`, `sub_8012A7C`,
+`ActionCtrlHandleEvent`, `KillPlayer`, `sub_8012238`, `UpdatePlayerFacing`,
+`UpdateActionCtrl`, `sub_8012694`, `sub_801283C`, `sub_8012A7C`,
 `sub_8012AF4`, `sub_8012D24` (ROM 0x08011BD4-0x08012FBC, now
 `asm/code_3_2_17_11bd4.s`) were left completely untouched. All ten
 operate on the same still-unnamed "child object" struct
-`sub_8011B90`'s caller hinted at above (`self+0xc`/`+0x10`/`+0x18` as
+`ResetActionCtrl`'s caller hinted at above (`self+0xc`/`+0x10`/`+0x18` as
 pointers to further sub-records with their own `+0x20`/`+0x24`/
 `+0x50`/`+0x54` fields, `self+0x27`-`0x35` as a state/flag/table-index
 block) - none of it is `struct actor`. `docs/rom_map.md`'s own
 "Undifferentiated core" investigation already read several of these
 functions in detail and reached the same conclusion:
 
-- `sub_8011BD4` (1420 B) is explicitly documented there as a 25-case
+- `ActionCtrlHandleEvent` (1420 B) is explicitly documented there as a 25-case
   jump table with a further 7-case sub-dispatch, sharing a type-ID gate
-  (`self+0x8 == 0x1d`) with `sub_8016288` (also still raw) - "a
+  (`self+0x8 == 0x1d`) with `UpdatePlayerCtrl` (also still raw) - "a
   companion state machine" to that function, not independently
   understood.
-- `sub_8012420`, `sub_8012694`, `sub_801283C` are all documented as
+- `UpdateActionCtrl`, `sub_8012694`, `sub_801283C` are all documented as
   members of the 42-slot action-dispatch table family
-  (`gStaticData_0816BF20`) - real, cross-referenced coverage, but not
+  (`gActionCtrlStateTable`) - real, cross-referenced coverage, but not
   matched to byte-exact precision by that investigation either.
-- The remaining functions (`KillPlayer`, `sub_8012238`, `sub_80122CC`,
+- The remaining functions (`KillPlayer`, `sub_8012238`, `UpdatePlayerFacing`,
   `sub_8012A7C`, `sub_8012AF4`, `sub_8012D24`) are direct siblings/
   callees of the above, sharing the same struct and calling
   conventions.

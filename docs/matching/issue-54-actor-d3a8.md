@@ -144,7 +144,7 @@ function's address (`..._d3a8.s`, `..._d7b0.s`, `..._dd9c.s`,
      top - every variant produced the exact same `mov r7, #0` /
      `ldr r7, .Lxx` scratch-reuse bug overwriting the live position
      value before its real use). This is the same categorical `r7`-pin
-     limitation already documented for `sub_8007DBC` in
+     limitation already documented for `CheckSpritePickup` in
      `actor_part2.c` and `matching_decomp_register_pinning` memory
      point 10 ("r7 cannot be pinned in this toolchain, ever") - not
      something more C-level rephrasing is likely to fix, so parked here
@@ -225,7 +225,7 @@ and register-role analysis (self→r5, posX→r6, posY→ip, posZ→r7) were
 already fully correct - what blocked it was this project's confirmed,
 categorical `r7`-pin limitation (`matching_decomp_register_pinning`
 memory point 10: "r7 cannot be pinned in this toolchain, ever"), the
-same bug already on file for `sub_8007DBC` in `actor_part2.c` and, per
+same bug already on file for `CheckSpritePickup` in `actor_part2.c` and, per
 `docs/matching/issue-4-sio-settings-sync.md`'s third pass, the general
 escape hatch this project uses once a function's semantics are fully
 understood but no further C-level rephrasing is likely to help: convert
@@ -296,7 +296,7 @@ one's doc comment in `src/graphics/actor_part74.c`/`75.c`/`76.c` walks
 the whole thing), but all 6 share a family of problems this project has
 hit many times before and already has an established answer for
 (`docs/matching/issue-4-sio-settings-sync.md`'s "general strategy",
-itself citing the original `sub_8007DBC`/`MovePolarAkuAku` cases): heavy,
+itself citing the original `CheckSpritePickup`/`MovePolarAkuAku` cases): heavy,
 overlapping stack-buffer use (`UpdateYeti`/`sub_802DD9C` each build two
 12-byte scratch AABB records inside one larger frame via raw `ldm`/`stm`
 block copies), registers reused for genuinely unrelated values across

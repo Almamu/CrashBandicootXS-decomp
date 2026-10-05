@@ -1,7 +1,7 @@
 # Last-four NAKED retry
 
 This pass retried four NAKED functions that had C drafts under
-`#if NON_MATCHING`: `sub_800A884` (#9), `DrawAffineSpritePieces` (#9),
+`#if NON_MATCHING`: `CollidePlayer` (#9), `DrawAffineSpritePieces` (#9),
 `sub_8001DB4` (#4) and `sub_8002114` (#4). One closed. `sub_8002114`
 went from 422 halfwords off to 16.
 
@@ -9,7 +9,7 @@ went from 422 halfwords off to 16.
 
 | Function | File | Compiler | What it took |
 |---|---|---|---|
-| `sub_800A884` | `src/graphics/actor_part78.c` (object added to `OLD_AGBCC_OBJS`; only function in the file) | old_agbcc | Was 127 halfwords off. The ROM's "walking" flag offsets (`adds r1, #3`, `subs r2, #3`) are reload's move2add: a constant is reloaded into a register that already holds a nearby constant. That only happens when reload's round-robin keeps landing on the same registers. An r3 hold (no code) over the `self+0x70` method lookup puts the `ldrsh` index reload in r2. A second r3 hold, from the busy-flag clear to after the kind switch, keeps the flag resets and all switch cases rotating through r0-r2. The case-1 method call needs its own r3 hold (the call in between ends the outer one). Three smaller fixes: the kind-5/7/10 `= 1` stores set the 1 with the constant-init asm (`asm("" : "=r"(v) : "0"(1))`) so it comes before the address, which also stops the kind-5 tail being cross-jumped; the case-1 `unk_8c = 0` stores an r0 register variable through a pointer taken first; and the offset-table switch result is an r3 register variable. |
+| `CollidePlayer` | `src/graphics/actor_part78.c` (object added to `OLD_AGBCC_OBJS`; only function in the file) | old_agbcc | Was 127 halfwords off. The ROM's "walking" flag offsets (`adds r1, #3`, `subs r2, #3`) are reload's move2add: a constant is reloaded into a register that already holds a nearby constant. That only happens when reload's round-robin keeps landing on the same registers. An r3 hold (no code) over the `self+0x70` method lookup puts the `ldrsh` index reload in r2. A second r3 hold, from the busy-flag clear to after the kind switch, keeps the flag resets and all switch cases rotating through r0-r2. The case-1 method call needs its own r3 hold (the call in between ends the outer one). Three smaller fixes: the kind-5/7/10 `= 1` stores set the 1 with the constant-init asm (`asm("" : "=r"(v) : "0"(1))`) so it comes before the address, which also stops the kind-5 tail being cross-jumped; the case-1 `unk_8c = 0` stores an r0 register variable through a pointer taken first; and the offset-table switch result is an r3 register variable. |
 
 ## Not closed (3)
 
@@ -86,7 +86,7 @@ What is left (16 halfwords):
 
 Helper scripts (not committed) are in the scratchpad's `last4/`: `d.py`
 (one-function diff), `var.py` (parallel variant runner), `rtl.sh`,
-`fnrtl.py`, and variant specs `s*.py` (sub_800A884: s1-s14,
+`fnrtl.py`, and variant specs `s*.py` (CollidePlayer: s1-s14,
 sub_8002114: s21-s52, sub_8001DB4: sdb*.py, DrawAffineSpritePieces: s31-s32,
 `f7634.c`).
 

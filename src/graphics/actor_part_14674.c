@@ -5,7 +5,7 @@
  * asm/code_3_2_17_14674.s (details in
  * docs/matching/issue-17-0x08012fbc-actor.md, "Second pass").
  *
- * More gStaticData_0816BF20 action-table handlers for the player/action
+ * More gActionCtrlStateTable action-table handlers for the player/action
  * object (include/action_obj.h). Built with old_agbcc. */
 
 extern u32 gKeys;
@@ -21,11 +21,11 @@ extern void sub_8015398(struct act *self);
 extern void sub_8015780(struct act *self, s32 a, s32 b, s32 c, s32 d);
 extern void LoadPaletteSlot(void *cache, s32 slot, s32 kind);
 extern void sub_80153FC(struct act *self);
-extern u8 sub_80122CC(struct act *self);
+extern u8 UpdatePlayerFacing(struct act *self);
 extern void *GetSpriteFrame(struct act_part *part);
-extern void sub_80087C0(struct act_part *p);
-extern void sub_80087B4(struct act_part *p);
-extern void sub_800872C(struct act_part *p, s32 arg1);
+extern void ResetSpriteFrameTimer(struct act_part *p);
+extern void ResetSpriteFrameIndex(struct act_part *p);
+extern void SetSpriteAnimDone(struct act_part *p, s32 arg1);
 
 void sub_8014B54(struct act *self);
 
@@ -49,9 +49,9 @@ static inline void ActQueue27(struct act *self, s32 cur, s32 next)
 static inline void SetTag(struct act_part *part, s32 tag)
 {
     part->tag = tag;
-    sub_80087C0(part);
-    sub_80087B4(part);
-    sub_800872C(part, 0);
+    ResetSpriteFrameTimer(part);
+    ResetSpriteFrameIndex(part);
+    SetSpriteAnimDone(part, 0);
 }
 
 static inline void ActTrio28(struct act *self, s32 a, s32 b, s32 c)
@@ -313,11 +313,11 @@ void sub_8014A3C(struct act *self)
     if (INPUT_PRESSED(in) & 2)
     {
         sub_80153FC(self);
-        sub_80122CC(self);
+        UpdatePlayerFacing(self);
     }
     else
     {
-        sub_80122CC(self);
+        UpdatePlayerFacing(self);
     }
 }
 
@@ -335,7 +335,7 @@ void sub_8014AEC(struct act *self)
     if (INPUT_PRESSED(in) & 2)
     {
         sub_80153FC(self);
-        sub_80122CC(self);
+        UpdatePlayerFacing(self);
         self->next31 = fire;
         self->flag2F = 1;
         self->next27 = fire;
@@ -395,7 +395,7 @@ void sub_8014BCC(struct act *self)
     if (INPUT_PRESSED(in) & 2)
     {
         sub_80153FC(self);
-        sub_80122CC(self);
+        UpdatePlayerFacing(self);
         self->next31 = 0;
         self->flag2F = 1;
         self->next27 = 0;
@@ -441,12 +441,12 @@ void sub_8014BCC(struct act *self)
             ActQueue27(self, zero, 0x20);
         }
     }
-    sub_80122CC(self);
+    UpdatePlayerFacing(self);
 }
 
 /* Walk handler: retags a finished part (0x21), handles fire/alt like
  * sub_8014BCC, steps a 4-frame idle timer that picks animation 0x22/0x23
- * from the part's frame, and while sub_80122CC reports a step moves the
+ * from the part's frame, and while UpdatePlayerFacing reports a step moves the
  * part by the GetSpriteFrame record's (or gStaticData_0816B300's) X offset,
  * mirrored by part+0x28 bit 4.
  *
@@ -479,7 +479,7 @@ void sub_8014D18(struct act *self)
     if (alt)
     {
         sub_80153FC(self);
-        sub_80122CC(self);
+        UpdatePlayerFacing(self);
         self->next31 = fire;
         self->flag2F = 1;
         self->next27 = fire;
@@ -530,7 +530,7 @@ void sub_8014D18(struct act *self)
         self->frame = alt;
         ActQueue27(self, alt, 0x20);
     }
-    if (sub_80122CC(self))
+    if (UpdatePlayerFacing(self))
     {
         u8 *info = GetSpriteFrame(self->part);
         s32 x;
@@ -591,7 +591,7 @@ void sub_8014EE0(struct act *self)
     if (alt)
     {
         sub_80153FC(self);
-        sub_80122CC(self);
+        UpdatePlayerFacing(self);
         self->next31 = fire;
         self->flag2F = 1;
         self->next27 = fire;

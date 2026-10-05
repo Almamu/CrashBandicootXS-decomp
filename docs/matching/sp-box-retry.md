@@ -84,11 +84,11 @@ was 45 halfwords off. With them shared, it matched.
 
 The first player box now matches the ROM. The builder calls use the
 macro, and a `bb` local, set with `bb = BOX_ADDR(&f.b)`, holds the
-box from `sub_8001688` to `sub_800CF70` in r4. The draft is still
+box from `AabbOverlaps` to `sub_800CF70` in r4. The draft is still
 exactly 3840 bytes.
 
 The same fix on the rebuilt box (builder calls plus
-`bb = BOX_ADDR(&f.b)` for its `sub_8001640`) also makes that block
+`bb = BOX_ADDR(&f.b)` for its `AabbOverlapsInclusiveX`) also makes that block
 match. It puts the `&gPlayer` temp in r6, as in the ROM, but
 other low registers shift elsewhere and the draft comes out 8 bytes
 short: a copy gets coalesced and the dead `ldr r1, [sp, #0x70]` is

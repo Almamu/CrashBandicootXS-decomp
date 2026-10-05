@@ -87,7 +87,7 @@ their method tables.
   evaluating an argument before the rest of a call: `IconSetup`/
   `IconReserve`/`LoadMenuPalette` (`RunLevelSelect`), `SetIconPos`
   (`UpdateLevelSelect`, `DrawLevelSelectTime` - it also puts `posY`'s constant ahead of
-  the stores), `AnimTable`/`SetAnim` (the inlined `sub_80087D0`), and
+  the stores), `AnimTable`/`SetAnim` (the inlined `SetSpriteAnim`), and
   `CommitDisplay`. `RunLevelSelect` also needed the global's address taken
   first (`struct level_menu **menuAddr = &gLevelSelect;`, the same
   idiom as `settings_menu8b.c`'s `RunSaveMenu`) and was previously the
@@ -174,10 +174,10 @@ none of the three matches, but two got much closer with small changes
 
 - `struct level_menu` (0xAC) is fully laid out; `unk_80`-`unk_94` are the
   record panel's slide offset and per-row y offsets (0 or 0x1C),
-  `rank` is the first of `sub_802336C`/`sub_8023360`/`sub_8023354`/
-  `sub_8023348`/`sub_802333C` that holds for the level (5 = none), and
+  `rank` is the first of `sub_802336C`/`LevelHasRedGem`/`LevelHasGreenGem`/
+  `LevelHasBlueGem`/`LevelHasYellowGem` that holds for the level (5 = none), and
   byte 2 of the save block holds four more flags tested per rank.
-- `struct sprite` is the 0x40-byte part `sub_8008904` constructs
+- `struct sprite` is the 0x40-byte part `InitUiSpriteObj` constructs
   (`+0x20` animation table, `+0x29` palette nibble, `+0x2D` animation
   index, `+0x30` frame, `+0x3C`); `struct anim_record` is 28 bytes with
   the tile-cache record id at `+0x14` and the frame count at `+0x16`.

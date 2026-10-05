@@ -52,7 +52,7 @@ the scratchpad). In order:
 1. **r8 hold** (brief item on hard-register holds). The draft had `self`
    in r8 and `result` in sb, the ROM the reverse. `register s32 hold8
    asm("r8")`, defined at entry and used just before the first
-   `sub_8001688`, keeps r8 busy while `self` is live. So `self` takes
+   `AabbOverlaps`, keeps r8 busy while `self` is live. So `self` takes
    sb, and `result`, born after the hold, gets r8. (565 -> 550 hw.)
 2. **`px` as the sub_800FDC8 argument.** The ROM computes the third
    argument into r5 in both arms (`adds r5, r2, r0` / `adds r5, r2,

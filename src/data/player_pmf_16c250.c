@@ -34,7 +34,7 @@ const struct actor_pmf gStaticData_0816C250[8] = {
     ACTOR_PMF(sub_8017184),
 };
 
-/* Per-state handlers dispatched by sub_8017650 (actor_part_17524.c). */
+/* Per-state handlers dispatched by UpdateInputCtrl (actor_part_17524.c). */
 const struct actor_pmf gStaticData_0816C290[4] = {
     ACTOR_PMF(sub_8017600),
     ACTOR_PMF(sub_801796C),

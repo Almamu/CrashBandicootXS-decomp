@@ -41,26 +41,26 @@ extern u8 *gPaletteCache;
 extern u32 gHudPartAnims[];
 extern struct hud_pos gHudPartPositions[];
 
-extern void *sub_8026EC0(s32 size);
+extern void *OperatorNewArray(s32 size);
 extern void InitHudPart(struct hud_slot *slot);
-extern void sub_80088D8(struct hud_slot *slot, s32 value);
+extern void SetSpritePriority(struct hud_slot *slot, s32 value);
 extern s32 sub_80233B4(void *self);
-extern void sub_80087C0(struct hud_slot *slot);
-extern void sub_80087B4(struct hud_slot *slot);
-extern void sub_800872C(struct hud_slot *slot, s32 arg);
+extern void ResetSpriteFrameTimer(struct hud_slot *slot);
+extern void ResetSpriteFrameIndex(struct hud_slot *slot);
+extern void SetSpriteAnimDone(struct hud_slot *slot, s32 arg);
 extern void sub_800737C(struct hud_slot *slot, s32 x, s32 y);
 extern u8 GetPaletteSlot(u8 *cache, s32 recordId);
 extern void sub_802732C(struct hud_counter *self, u8 iconFlag);
-extern s32 sub_800815C(struct hud_slot *slot);
+extern s32 GetSpriteAnimPaletteSlot(struct hud_slot *slot);
 
 #define HUD_ANIM(offset) ((struct hud_anim_data *)((u8 *)**gUnknown_030012D0 + (offset)))
 #define SLOT_RECORD(s) (((struct hud_record *)(s)->anim_data->records)[(s)->anim_index])
 
 static inline void RestartSlot(struct hud_slot *slot)
 {
-    sub_80087C0(slot);
-    sub_80087B4(slot);
-    sub_800872C(slot, 0);
+    ResetSpriteFrameTimer(slot);
+    ResetSpriteFrameIndex(slot);
+    SetSpriteAnimDone(slot, 0);
 }
 
 /* Shows animation frame `frame`, clamped to the animation's last one. */
@@ -89,7 +89,7 @@ struct hud_counter *InitHud(struct hud_counter *self)
     s32 i;
 
     {
-        s32 *mem = sub_8026EC0(0x8C4);
+        s32 *mem = OperatorNewArray(0x8C4);
         struct hud_slot *slots;
         struct hud_slot *slot;
         s32 n;
@@ -111,7 +111,7 @@ struct hud_counter *InitHud(struct hud_counter *self)
     {
         struct hud_slot *slot;
 
-        sub_80088D8(&SLOTS(self)[i], 0);
+        SetSpritePriority(&SLOTS(self)[i], 0);
         {
             struct hud_anim_data *anim = HUD_ANIM(0x234);
 
@@ -165,7 +165,7 @@ struct hud_counter *InitHud(struct hud_counter *self)
  * position/frame-index pair from a shared table, then the same
  * `field_29`-low-nibble update `settings_menu6.c`'s
  * `UPDATE_ICON_FRAME_NIBBLE` macro names for the unrelated
- * `struct settings_icon_actor` family - `sub_800815C`'s result feeds the
+ * `struct settings_icon_actor` family - `GetSpriteAnimPaletteSlot`'s result feeds the
  * same low-nibble-preserving update here too), then loops over the
  * remaining slots (index 0-34 again) repositioning/re-clamping a
  * handful of specific ones (13, 22, 29 - byte offsets `0x340`/`0x580`/
@@ -203,7 +203,7 @@ void sub_802732C(struct hud_counter *self, u8 iconFlag)
         SLOTS(self)[13].anim_index = gHudPartAnims[13];
         RestartSlot(slot);
     }
-    base = sub_800815C(&SLOTS(self)[13]);
+    base = GetSpriteAnimPaletteSlot(&SLOTS(self)[13]);
     SLOTS(self)[13].palette = base;
 
     for (i = 0; i <= 0x22; i++)
@@ -229,11 +229,11 @@ void sub_802732C(struct hud_counter *self, u8 iconFlag)
         case 0x1D:
             if (!self->icon_flag)
                 break;
-            frame = sub_800815C(&SLOTS(self)[i]);
+            frame = GetSpriteAnimPaletteSlot(&SLOTS(self)[i]);
             break;
         default:
         get:
-            frame = sub_800815C(&SLOTS(self)[i]);
+            frame = GetSpriteAnimPaletteSlot(&SLOTS(self)[i]);
             break;
         }
 

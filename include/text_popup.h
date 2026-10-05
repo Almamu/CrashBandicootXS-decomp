@@ -6,14 +6,14 @@
  * graphics_loading_1feec.c, graphics_loading_21280.c and
  * graphics_loading_21668.c (ROM 0x0801EF0C-0x08021BFC; they were read as
  * "two-line text popup" spawners at first, hence the file name). Each
- * builds a sprite part with sub_8009ED0, attaches a freshly constructed
+ * builds a sprite part with CreateMovingSprite, attaches a freshly constructed
  * enemy controller (CreateEnemyCtrl) to it, and fills the part's two "collected" bits
  * from the level's record table. This ROM region was built with
  * old_agbcc (see docs/matching/old-agbcc-retry.md). */
 
 #include "actor.h"
 
-/* The sprite part sub_8009ED0 returns. Same layout as actor_part_188d0.c's
+/* The sprite part CreateMovingSprite returns. Same layout as actor_part_188d0.c's
  * `struct gfx_part`. The +0x28 bits are declared on a 32-bit base type:
  * with `u8` bitfields the shared `1` constant is a QImode pseudo that CSE
  * merges with `field_0A = 1`, and the allocator no longer matches. */
@@ -99,19 +99,19 @@ extern void ***gUnknown_030012D0;
 extern struct level_record_table **gEntityFlags;
 extern void *gUnknown_030012F0;
 
-extern struct popup_part *sub_8009ED0(u16 arg0, u16 arg1, u16 arg2, u16 arg3);
-extern s32 sub_800815C(struct popup_part *part);
-extern void *sub_8026EDC(s32 size);
+extern struct popup_part *CreateMovingSprite(u16 arg0, u16 arg1, u16 arg2, u16 arg3);
+extern s32 GetSpriteAnimPaletteSlot(struct popup_part *part);
+extern void *OperatorNew(s32 size);
 extern struct enemy_ctrl *CreateEnemyCtrl(void);
 extern s32 _call_via_r2(void *self, void *arg, void *fn);
-extern void sub_8008E94(void *manager, void *value);
+extern void AddToPartList(void *manager, void *value);
 extern void SetEnemyState(struct enemy_ctrl *hdr, s32 arg1);
 extern void SetEnemyRangeXSpeed(struct enemy_ctrl *hdr, s32 arg1, s32 arg2, s32 arg3);
 extern void SetEnemyRangeYSpeed(struct enemy_ctrl *hdr, s32 arg1, s32 arg2, s32 arg3);
 extern void SetEnemyRangeX(struct enemy_ctrl *hdr, s32 arg1);
-extern void sub_80087C0(struct popup_part *part);
-extern void sub_80087B4(struct popup_part *part);
-extern void sub_800872C(struct popup_part *part, s32 arg);
+extern void ResetSpriteFrameTimer(struct popup_part *part);
+extern void ResetSpriteFrameIndex(struct popup_part *part);
+extern void SetSpriteAnimDone(struct popup_part *part, s32 arg);
 
 #define POPUP_ANIM(offset) ((void *)((u8 *)**gUnknown_030012D0 + (offset)))
 
@@ -153,9 +153,9 @@ static inline void AndPartFlags(struct popup_part *part, s32 mask)
 static inline void SetPartAnim(struct popup_part *part, s32 anim)
 {
     part->tag = anim;
-    sub_80087C0(part);
-    sub_80087B4(part);
-    sub_800872C(part, 0);
+    ResetSpriteFrameTimer(part);
+    ResetSpriteFrameIndex(part);
+    SetSpriteAnimDone(part, 0);
 }
 
 /* The multi-field setters load every value before storing any, as the ROM

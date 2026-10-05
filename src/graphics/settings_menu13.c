@@ -14,7 +14,7 @@
 /* Same small per-widget object `src/graphics/oam_count.c`/
  * `src/graphics/settings_menu10.c` already name `struct
  * sub_8006700_actor` (redeclared locally per this project's minimal-
- * local-type convention) - allocated here via `sub_8026EDC(0x2c)`,
+ * local-type convention) - allocated here via `OperatorNew(0x2c)`,
  * exactly the struct's own size, and returned by `InitPowerDialog` to feed
  * straight into `PowerDialogLoop`'s (the fade/confirm driver) and
  * `DestroyPowerDialog`'s (the on-hit teardown/sound helper) existing
@@ -33,24 +33,24 @@ struct sub_8006700_actor {
 
 /* Same `struct settings_icon_actor` shape `src/graphics/settings_menu6.c`
  * already documents (a `struct actor`-derived on-screen icon, allocated
- * the same way via `sub_8008904(sub_8026EDC(0x40))`) - redeclared
+ * the same way via `InitUiSpriteObj(OperatorNew(0x40))`) - redeclared
  * locally per this project's convention. */
 struct settings_icon_actor {
     struct actor base;    /* 0x00-0x1b */
     u8 unused_1c[0x20 - 0x1c];
     void **field_20;        /* 0x20 - keyframe-table pointer */
     u8 unused_24[0x29 - 0x24];
-    u8 field_29;               /* 0x29 - low nibble set from sub_800815C's result */
+    u8 field_29;               /* 0x29 - low nibble set from GetSpriteAnimPaletteSlot's result */
     u8 unused_2a[0x2d - 0x2a];
     u8 frameIndex;                /* 0x2d - current keyframe index */
 };
 
-extern void *sub_8026EDC(s32 size);
-extern struct actor *sub_8008904(struct actor *part);
-extern void sub_80087C0(struct actor *part);
-extern void sub_80087B4(struct actor *part);
-extern void sub_800872C(struct actor *part, u8 val);
-extern s32 sub_800815C(struct actor *part);
+extern void *OperatorNew(s32 size);
+extern struct actor *InitUiSpriteObj(struct actor *part);
+extern void ResetSpriteFrameTimer(struct actor *part);
+extern void ResetSpriteFrameIndex(struct actor *part);
+extern void SetSpriteAnimDone(struct actor *part, u8 val);
+extern s32 GetSpriteAnimPaletteSlot(struct actor *part);
 extern void *InitBgSetup(void *buf, s32 arg1, s32 arg2, s32 arg3, s32 arg4);
 extern void LoadGraphicsPackage(void *buf, void *asset);
 extern s32 GetBgSetupControl(void *buf);
@@ -70,12 +70,12 @@ extern void *gAudioContext;
  * pointers at `field_10`/`field_14`, loads `gStaticData_0816C484`'s
  * background package, and builds the background icon the same way
  * `settings_menu6.c`'s icon-constructor family does (allocate via
- * `sub_8008904(sub_8026EDC(0x40))`, point `field_20` at the shared
+ * `InitUiSpriteObj(OperatorNew(0x40))`, point `field_20` at the shared
  * `gUnknown_030012D0` header table at a new `0xe4<<1` offset - see
  * docs/rom_map.md's "five confirmed header-relative offsets" note,
- * frame index from `type`, the standard `sub_80087C0`/`sub_80087B4`/
- * `sub_800872C` OAM trio, positioned at a fixed (0xf0<<7, 0xa0<<7)
- * point, `field_29`'s low nibble from `sub_800815C`). Finally sets
+ * frame index from `type`, the standard `ResetSpriteFrameTimer`/`ResetSpriteFrameIndex`/
+ * `SetSpriteAnimDone` OAM trio, positioned at a fixed (0xf0<<7, 0xa0<<7)
+ * point, `field_29`'s low nibble from `GetSpriteAnimPaletteSlot`). Finally sets
  * `REG_BG0CNT` from `GetBgSetupControl(self)`, clears `REG_BG0HOFS`/
  * `REG_BG0VOFS` (one 32-bit write), and restores the last-played song
  * via `PlaySong(gAudioContext, 0xf)`.
@@ -204,7 +204,7 @@ struct sub_8006700_actor *InitPowerDialog(struct sub_8006700_actor *selfArg, s32
     LoadGraphicsPackage(self, gStaticData_0816C484);
     self->field_1c = 0;
 
-    icon = (struct settings_icon_actor *)sub_8008904((struct actor *)sub_8026EDC(0x40));
+    icon = (struct settings_icon_actor *)InitUiSpriteObj((struct actor *)OperatorNew(0x40));
     self->field_18 = icon;
     icon->field_20 = (void **)((u8 *)(**gUnknown_030012D0) + (0xe4 << 1));
     {
@@ -215,9 +215,9 @@ struct sub_8006700_actor *InitPowerDialog(struct sub_8006700_actor *selfArg, s32
         asm volatile("" : "=r"(t3) : "0"((u8)type));
         *addr = t3;
     }
-    sub_80087C0(&icon->base);
-    sub_80087B4(&icon->base);
-    sub_800872C(&icon->base, 0);
+    ResetSpriteFrameTimer(&icon->base);
+    ResetSpriteFrameIndex(&icon->base);
+    SetSpriteAnimDone(&icon->base, 0);
 
     {
         register struct actor *iconAddr asm("r0");
@@ -230,7 +230,7 @@ struct sub_8006700_actor *InitPowerDialog(struct sub_8006700_actor *selfArg, s32
         iconAddr->y = v;
 
         {
-            register s32 ret asm("r0") = sub_800815C(iconAddr);
+            register s32 ret asm("r0") = GetSpriteAnimPaletteSlot(iconAddr);
             register u8 *addr asm("r2") = &self->field_18->field_29;
             register s32 mask asm("r1");
             register u8 byte asm("r3");

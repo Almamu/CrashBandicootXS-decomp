@@ -22,12 +22,12 @@ function at the very end:
 - **`SpawnBodySlamPower`/`SpawnTornadoSpinPower`/`SpawnDoubleJumpPower`/`SpawnTurboRunPower`/
   `SpawnBlueGem`/`SpawnStopwatch`/`sub_80220C4`**: the `gSpriteBankTable`
   record-indexed OAM-trio spawner shape (docs/rom_map.md's "master
-  12-byte record array") - allocate via `sub_8008434` (or `CreateStopwatch`
+  12-byte record array") - allocate via `CreateSpriteObj` (or `CreateStopwatch`
   for `SpawnStopwatch`), point `+0x20` at `table_base + record*12`, tag
-  `+0x2d`, build via the standard `sub_80087C0`/`sub_80087B4`/
-  `sub_800872C` OAM trio, update the `+0x29` bitfield via
-  `sub_800815C`, set `+0xa`, and register into `gUnknown_030012EC`'s
-  manager via `sub_8008E94`. `SpawnBlueGem` and `SpawnStopwatch` are gated
+  `+0x2d`, build via the standard `ResetSpriteFrameTimer`/`ResetSpriteFrameIndex`/
+  `SetSpriteAnimDone` OAM trio, update the `+0x29` bitfield via
+  `GetSpriteAnimPaletteSlot`, set `+0xa`, and register into `gUnknown_030012EC`'s
+  manager via `AddToPartList`. `SpawnBlueGem` and `SpawnStopwatch` are gated
   (only spawn under a flag-bit/accessor test); `sub_80220C4` takes its
   record index, tag, and `+0xa` value as runtime parameters instead of
   fixed constants (matches `sub_8025BAC`'s already-documented

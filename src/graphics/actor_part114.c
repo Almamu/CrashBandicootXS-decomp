@@ -1,8 +1,8 @@
 #include "core.h"
 
 /* GitHub issue #9/#10 (0x0800B8DC-0x0800D040 cluster, see
- * docs/matching/issue-9-10-0x0800b8dc-graphics.md): `sub_800C18C`/
- * `sub_800C1E8`, the X-axis/Y-axis "homing velocity-target setter"
+ * docs/matching/issue-9-10-0x0800b8dc-graphics.md): `UpdateEnemyHomingX`/
+ * `UpdateEnemyHomingY`, the X-axis/Y-axis "homing velocity-target setter"
  * pair the Phase 1 doc's own priority list flagged as the cluster's
  * next likely-real-C win. Both take only `self` and write into
  * `self+0x70` ("owner"): given `owner`'s position on the relevant
@@ -41,7 +41,7 @@ extern struct ctrl_target *gPlayer;
         (v)[2] = a;        \
     }
 
-void sub_800C18C(struct part_ctrl *self)
+void UpdateEnemyHomingX(struct part_ctrl *self)
 {
     struct ctrl_target *target = self->target;
     s32 x = target->x;
@@ -62,9 +62,9 @@ void sub_800C18C(struct part_ctrl *self)
     }
 }
 
-/* Y-axis mirror of `sub_800C18C` above: `target->y`, `velB`, and the
+/* Y-axis mirror of `UpdateEnemyHomingX` above: `target->y`, `velB`, and the
  * `rangeY` bounds tested in the opposite order. */
-void sub_800C1E8(struct part_ctrl *self)
+void UpdateEnemyHomingY(struct part_ctrl *self)
 {
     struct ctrl_target *target = self->target;
     s32 y = target->y;

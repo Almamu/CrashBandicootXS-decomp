@@ -3,7 +3,7 @@
 
 /* GitHub issue #17, ROM 0x080138E8-0x08013C60 (details in
  * docs/matching/issue-17-0x08012fbc-actor.md, "Third pass"). Two more
- * gStaticData_0816BF20 action-table handlers for the player/action object
+ * gActionCtrlStateTable action-table handlers for the player/action object
  * (include/action_obj.h). Built with old_agbcc. */
 
 extern u32 gKeys;

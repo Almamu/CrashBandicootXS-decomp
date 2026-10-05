@@ -48,8 +48,8 @@ patterns hit repeatedly across this whole chunk.
   stack-spilled loop-state variable threaded through many non-adjacent
   gotos, on a ~230-instruction, 20+-call, four-state loop body - a much
   larger instance of the same "many-high-register-difficulty" gap this
-  project has already hit and parked elsewhere (`sub_80091D4`/
-  `sub_8009868`). Verified byte-for-byte identical to the original raw
+  project has already hit and parked elsewhere (`UpdateCrateList`/
+  `CollidePlayerWithCrates`). Verified byte-for-byte identical to the original raw
   disassembly by assembling both independently and comparing the raw
   `.text` bytes directly (not just against `baserom.gba`).
 - **`UploadCellAnimFrame`/`InitCellAnim`/`ResetCellAnimBg`** (`actor_part95.c`) - a

@@ -73,13 +73,13 @@ out-of-range exit goes to state 0's mirror-bit test, not to the
   stack slots. `UpdateTiny`'s else branch writes `b = sub_8007C30(..);
   a = b;`, as `sub_8019324` does. The `valid` word of `b` is read back
   through a `volatile` (`BOX_VALID`, from `actor_part_1967c.c`).
-- **`sub_8008A40` takes the box by value.** The earlier NAKED note on
+- **`CollidePartList` takes the box by value.** The earlier NAKED note on
   `sub_8017AB0` called its stack-argument order (6th, 7th, then 5th)
   unclosable from C. With the prototype
-  `sub_8008A40(void *, struct box, s32, void *)`, it closes. The 16-byte
+  `CollidePartList(void *, struct box, s32, void *)`, it closes. The 16-byte
   box goes three words in r1-r3 and one on the stack, gcc stores the two
   scalar stack arguments first, and that is the ROM's order. The same
-  prototype probably closes `actor_part81.c`'s parked `sub_800AB9C`,
+  prototype probably closes `actor_part81.c`'s parked `CollidePlayerWithObjects`,
   which the NAKED note cites for the identical order. It has not been
   tried there.
 - **The `gCrateList` list walk.** The "per-iteration literal

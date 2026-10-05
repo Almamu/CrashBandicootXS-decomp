@@ -121,7 +121,7 @@ All in `src/graphics/actor_anim.c`, in ROM order:
   plain-C phrasing tried (compound assignment, a separate `s16 delta`
   local declared before/after the `s32` accumulator, a `register s32
   off asm("r3") = 0x10` pin - discarded by constant propagation exactly
-  like the precedent in `docs/matching.md`'s `sub_8007B98` entry) landed
+  like the precedent in `docs/matching.md`'s `GetSpriteHitbox` entry) landed
   the constant in `r0` where the ROM has `r3`. A two-instruction inline
   `asm("mov r3, #0x10\n\tldrsh r1, [r4, r3]" : "=r"(delta) : : "r3")`
   anchor, with `delta` declared `s32` (not `s16`, to avoid a redundant

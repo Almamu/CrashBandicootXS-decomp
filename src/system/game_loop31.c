@@ -6,13 +6,13 @@
  * docs/matching/issue-13-graphics-fc70.md). */
 
 extern u8 gCrateVtable[];
-extern void sub_8026EB4(void *ptr);
-extern void sub_8008484(struct actor *self, u32 arg1);
+extern void OperatorDeleteArray(void *ptr);
+extern void DestroySpriteObj(struct actor *self, u32 arg1);
 
 /* Sets `self->table`, then - if `self`'s own `+0x4e` state byte is 3 -
  * frees `self+0x48` (a heap pointer, unless it's the sentinel `-1` or
  * already `NULL`) and clears `self+0x59`, before tail-calling
- * `sub_8008484` (already matched, `actor_part6.c`) - same table-set/
+ * `DestroySpriteObj` (already matched, `actor_part6.c`) - same table-set/
  * tail-call shape as `DestroyWumpa` (`actor_part39.c`). */
 void DestroyCrate(struct actor *self, u32 arg1)
 {
@@ -22,25 +22,25 @@ void DestroyCrate(struct actor *self, u32 arg1)
         void *p = *(void **)((u8 *)self + 0x48);
         if ((u32)((u8 *)p + 1) > 1) {
             if (p != NULL) {
-                sub_8026EB4(p);
+                OperatorDeleteArray(p);
             }
             *((u8 *)self + 0x59) = 0;
         }
     }
 
-    sub_8008484(self, arg1);
+    DestroySpriteObj(self, arg1);
 }
 
-extern struct actor *sub_80084A4(struct actor *self);
+extern struct actor *InitSpriteObj(struct actor *self);
 extern void ResetCrate(void *selfArg);
 
-/* Re-initializes `self` via `sub_80084A4` (already matched,
+/* Re-initializes `self` via `InitSpriteObj` (already matched,
  * `actor_part6.c`), sets `self->table`, clears `self+0x59`, then
  * resets `self`'s own collision-response state via `ResetCrate`
  * (`game_loop22.c`). */
 struct actor *InitCrate(struct actor *self)
 {
-    sub_80084A4(self);
+    InitSpriteObj(self);
     self->table = gCrateVtable;
     *((u8 *)self + 0x59) = 0;
     ResetCrate(self);

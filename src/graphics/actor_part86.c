@@ -32,9 +32,9 @@ extern const struct speed_table gStaticData_0816C090;
 
 extern u8 GetDpadDirection(void *arg);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
-extern void sub_80087C0(struct pctrl_target *t);
-extern void sub_80087B4(struct pctrl_target *t);
-extern void sub_800872C(struct pctrl_target *t, s32 a);
+extern void ResetSpriteFrameTimer(struct pctrl_target *t);
+extern void ResetSpriteFrameIndex(struct pctrl_target *t);
+extern void SetSpriteAnimDone(struct pctrl_target *t, s32 a);
 extern void sub_8017264(struct player_ctrl *self, s32 a, s32 mode, s32 timer, s32 timerMax);
 
 /* `v`, mirrored when the target faces left */
@@ -63,9 +63,9 @@ void sub_80159F8(struct player_ctrl *self)
     /* the ROM re-stores the byte it just read (ldrb/strb); a plain
      * self-assignment is deleted by the optimizer */
     *(volatile u8 *)&t->tag = t->tag;
-    sub_80087C0(t);
-    sub_80087B4(t);
-    sub_800872C(t, 0);
+    ResetSpriteFrameTimer(t);
+    ResetSpriteFrameIndex(t);
+    SetSpriteAnimDone(t, 0);
     sub_8017264(self, 2, 2, KEEP, KEEP);
 
     switch (self->level)

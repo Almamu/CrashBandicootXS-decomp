@@ -50,17 +50,17 @@ class with method table `gPlayerCtrlVtable`:
 
 | slot | function |
 |---|---|
-| +0x0C | `sub_8016288` per-frame update |
-| +0x14 | `sub_8016128` message handler |
-| +0x1C | `sub_8017218` set target |
-| +0x4C | `sub_80174D8` destructor |
+| +0x0C | `UpdatePlayerCtrl` per-frame update |
+| +0x14 | `PlayerCtrlHandleEvent` message handler |
+| +0x1C | `AttachPlayerCtrl` set target |
+| +0x4C | `DestroyPlayerCtrl` destructor |
 
-The constructor is `sub_80174EC`, called from `game_loop39.c`. Its field
-reset is `actor_part57.c`'s `sub_8015958`. The #19 dispatchers
+The constructor is `InitPlayerCtrl`, called from `game_loop39.c`. Its field
+reset is `actor_part57.c`'s `ResetPlayerCtrl`. The #19 dispatchers
 `sub_80159F8`/`sub_8015C6C`/`sub_8015DF8` and `sub_8015FDC` are methods of
 the same class. The target (`+0x10`) is the player object.
 
-- `sub_8016288` counts down `cooldown`. With D-pad up/down (or in state 2)
+- `UpdatePlayerCtrl` counts down `cooldown`. With D-pad up/down (or in state 2)
   it steps `level` (0..12) with a 3-frame auto-repeat (`repeat`).
   Otherwise `level` drifts back towards 6. On each step it re-applies the
   target's animation (`ApplyLevel`; its out-of-line copy is
@@ -134,7 +134,7 @@ pointer anywhere in the ROM, for `sub_8016AB0`, `sub_801721C`,
 - **Code order.** `ApplyLevel` tests `tag != 0x20 && != 0x1D && != 0x1F`
   so that the retag branch comes first. It restores the frame through a
   fresh `self->target` (`RestoreFrame`), which keeps the two tails in
-  different registers. `sub_8016128`'s cases follow the ROM's body order,
+  different registers. `PlayerCtrlHandleEvent`'s cases follow the ROM's body order,
   with an empty `case 13:` for the 13-entry jump table. `sub_8016DDC`'s
   timer switch lists `case 7` before `case 5`, and each case has its own
   `ClampFrame`, which cross-jumping merges. A shared clamp after the

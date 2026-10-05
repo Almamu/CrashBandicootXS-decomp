@@ -65,7 +65,7 @@ there:
   evaluation order again.
 - **The timer test is an inline returning the comparison.** This gives
   the ROM's `movs r3, #0; ...; movs r3, #1; cmp r3, #0` flag.
-- **The dead `ldr r1, [sp, #0x70]`** after `sub_8009EC4` in the
+- **The dead `ldr r1, [sp, #0x70]`** after `GetSpritePrevX` in the
   `unk_44` path is a copy of the other path's `side = 2; if (px > ax)
   side = 1;`, whose result is never used. Flow deletes the sets, and
   jump2 deletes the compare only after reload has loaded px.
@@ -85,7 +85,7 @@ there:
 The draft still gave `self` r9 and `px` sl. In the ROM `self` is in sl
 and `px` is on the stack. The greg dump (`-dg`, "Registers to be
 allocated in sorted order") showed the cause. `ay` (the
-`sub_8009EBC` result) is just below the player hitbox pointer `q` in
+`GetSpritePrevY` result) is just below the player hitbox pointer `q` in
 priority (0.2115 against 0.225). `q` therefore took r7, `ay` fell to
 ip, and everything after it shifted up by one register.
 
@@ -101,7 +101,7 @@ made the draft exactly 3840 bytes.
   two builder calls (`SetAabbPos`/`SetAabbSize`) into one pseudo. That
   pseudo lives across the first call and gets r6 or r4. The ROM
   recomputes `add r0, sp, #0x3c` before each call and only holds the
-  pointer (in r4) from `sub_8001688` to `sub_800CF70`. In the rebuild
+  pointer (in r4) from `AabbOverlaps` to `sub_800CF70`. In the rebuild
   this pushes w/h into r5/r6 instead of r4/r5. The
   `&gPlayer` GCSE temp then lands in sb instead of r6, which
   adds four `mov rX, sb` instructions. Things that did not stop the
@@ -141,7 +141,7 @@ The helpers are in the scratch area `huge/`. They were not committed.
 
 The `&f.b` blocker is fixed for the first player box. Its builder calls
 take the address through an empty `asm("" : "+r")` copy (`BOX_ADDR`),
-and a `bb` local holds it (also from `BOX_ADDR`) from `sub_8001688` to
+and a `bb` local holds it (also from `BOX_ADDR`) from `AabbOverlaps` to
 `sub_800CF70`. That block now matches the ROM, including `r4`, and the
 draft is 938 halfwords off at the exact size. The same fix on the
 rebuilt box matches that block too, and puts the `&gPlayer`

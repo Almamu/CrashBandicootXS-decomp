@@ -15,7 +15,7 @@ raw.
 ## The level-layers singleton (`level_layers.c`)
 
 `gLevelLayersSingleton` is a 0x2C-byte singleton created on first use by
-`GetLevelLayers` (`sub_8026EDC(0x2C)` then the constructor `InitLevelLayers`).
+`GetLevelLayers` (`OperatorNew(0x2C)` then the constructor `InitLevelLayers`).
 It's the same object `gLevelLayers` points at: the camera
 (`gCamera`, issue #44) clamps into its scroll fields via
 `SetLevelScroll(gLevelLayers, ...)`, and `sub_8026BF8`/`sub_8026C3C`

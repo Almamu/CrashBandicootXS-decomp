@@ -25,7 +25,7 @@ struct hud_anim_data {
  * field at +0x18 match `struct actor` (include/actor.h) byte for byte -
  * sub_802710C/InitHudPart (src/graphics/hud_icon_slot.c) construct each
  * slot by calling the same generic `struct actor`-based table-swap
- * helpers (sub_80088F0/sub_8008904) already used by the actor/part
+ * helpers (DestroyUiSpriteObj/InitUiSpriteObj) already used by the actor/part
  * system, treating this object as one. The rest of the fields
  * (animation state) are specific to this widget family. */
 struct hud_digit_part {

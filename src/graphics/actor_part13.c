@@ -22,9 +22,9 @@ extern void *gPlayer;
 extern u32 gRoomFrameCount;
 extern void *sub_8007C30(void *dest, void *pt);
 extern void *sub_8007CF8(void *dest, void *pt);
-extern u8 sub_800B37C(void *arg0, void *buf);
+extern u8 PlayerTouchesBox(void *arg0, void *buf);
 extern void _call_via_r4(void *arg0, s32 arg1, s32 arg2, s32 arg3);
-extern void sub_8009D5C(void *partArg);
+extern void ResolvePlayerContact(void *partArg);
 
 /* Tests `part` for a collision-grid hit against the player
  * (`gPlayer`), gated by a mix of flag bits and a periodic
@@ -34,11 +34,11 @@ extern void sub_8009D5C(void *partArg);
  * and `gLevelState`'s mode (`maskLevel`) is 3, or independently if
  * `part`'s `+0xd` byte bit 3 is set and the mode is 3, builds `part`'s
  * primary AABB via `sub_8007C30` and tests it against the player via
- * `sub_800B37C`; on a hit, calls `sub_8009D5C` and returns. If the
+ * `PlayerTouchesBox`; on a hit, calls `ResolvePlayerContact` and returns. If the
  * primary AABB has no region (`field_8` zero) or the hit test missed,
  * falls back to the secondary AABB via `sub_8007CF8` and repeats the
  * same hit test. */
-void sub_8009CA0(void *partArg)
+void CheckPlayerContact(void *partArg)
 {
     register struct actor *part asm("r4") = partArg;
     register u8 flagsByte asm("r1") = part->flags;
@@ -91,8 +91,8 @@ doCheck:
         struct aabb box;
         sub_8007C30(&box, part);
         if (box.field_8 != 0) {
-            if (sub_800B37C(gPlayer, &box)) {
-                sub_8009D5C(part);
+            if (PlayerTouchesBox(gPlayer, &box)) {
+                ResolvePlayerContact(part);
                 return;
             }
         }
@@ -101,8 +101,8 @@ doCheck:
         struct aabb box2;
         sub_8007CF8(&box2, part);
         if (*(s32 volatile *)&box2.field_8 != 0) {
-            if (sub_800B37C(gPlayer, &box2)) {
-                sub_8009D5C(part);
+            if (PlayerTouchesBox(gPlayer, &box2)) {
+                ResolvePlayerContact(part);
             }
         }
     }
@@ -110,7 +110,7 @@ doCheck:
 
 /* ROM 0x08009D5C - fires a `part->table+0x68`-driven trampoline (the
  * "dead read" idiom already established for
- * `sub_8008AD8`/`sub_8008D80`/`sub_80099F0`) based on
+ * `CollidePartWithPlayer`/`CollidePartWithObject`/`sub_80099F0`) based on
  * `gLevelState`'s mode (`+0x78`): mode 0 fires it on the player
  * with arguments `(0, part->field_0A, 0)`; modes 1-2 fire it on the
  * player with the same arguments, then again on `part` itself with
@@ -140,7 +140,7 @@ doCheck:
  * there (it doesn't need the same hint in `mode1or2`, where the ABI
  * call to `_call_via_r4` already forces player's address into `r0`).
  * Matched. */
-void sub_8009D5C(void *partArg)
+void ResolvePlayerContact(void *partArg)
 {
     register struct actor *part asm("r5") = partArg;
     s32 mode;

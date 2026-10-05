@@ -18,7 +18,7 @@ void DestroyFont(struct icon_manager *self, u32 flags)
 {
     self->record = (struct icon_record *)gFontVtable;
     if (flags & 1) {
-        sub_8026ED0(self);
+        OperatorDelete(self);
     }
 }
 ```
@@ -29,7 +29,7 @@ void DestroyFont(struct icon_manager *self, u32 flags)
 `record` field at, for a different self object each time - part of the
 `gStaticData_087E3BEC`-family "per-type descriptor" convention
 `docs/rom_map.md` documents at length, and the same conditional
-`sub_8026ED0(self)` "register for teardown if bit 0 of flags is set"
+`OperatorDelete(self)` "register for teardown if bit 0 of flags is set"
 idiom used throughout this codebase.
 
 Matched byte-exact on the **first try**, with plain struct field

@@ -28,7 +28,7 @@ struct pause_screen_results {
     void *field_bc;
 };
 
-extern void sub_8008890(void *arg0, s32 arg1, s32 arg2);
+extern void DrawSpriteWithOffset(void *arg0, s32 arg1, s32 arg2);
 extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
 extern struct icon_manager *gSmallFont;
 
@@ -70,7 +70,7 @@ void DrawPauseTimeTrialPage(struct pause_screen_results *self)
     u32 w;
 
     if (self->field_6c)
-        sub_8008890(self->field_bc, 0, 0);
+        DrawSpriteWithOffset(self->field_bc, 0, 0);
     w = MEASURE_ICON_TEXT(gSmallFont, self->timeBuf);
     set_icon_mgr_pos(gSmallFont, gStaticData_0816B27C.x - (w >> 1) - 2, gStaticData_0816B27C.y - 0x23);
     DRAW_ICON_TEXT(gSmallFont, self->timeBuf);
@@ -87,7 +87,7 @@ extern void DrawPauseFraction(struct pause_screen_results *self, void *buf1, voi
 
 void DrawPauseCrystalsPage(struct pause_screen_results *self)
 {
-    sub_8008890(self->field_88, 0, 0);
+    DrawSpriteWithOffset(self->field_88, 0, 0);
     set_icon_mgr_pos(gSmallFont, gStaticData_0816B1E4.x - 0x2c, gStaticData_0816B1E4.y - 8);
     DrawPauseFraction(self, self->buf2c, self->buf46);
 }

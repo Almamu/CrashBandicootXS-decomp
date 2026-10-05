@@ -4,7 +4,7 @@
 extern u8 gUnknown_030012B0;
 extern void *gPaletteCache;
 extern void UpdateTntCountdown(struct crate *self);
-extern void sub_800F990(struct crate *self);
+extern void UpdateSlotCrate(struct crate *self);
 extern void SolidifyOutlineCrates(struct crate *self);
 extern void FinishBrokenCrate(struct crate *self);
 extern void UpdateCrateFall(struct crate *self);
@@ -25,7 +25,7 @@ extern void UpdateCrateFall(struct crate *self);
  * - `0x13`-`0x15`: re-enters the edge-settle chain (`UpdateTntCountdown`),
  *   also arming the global one-shot rescan flag `gUnknown_030012B0`
  *   (the same flag `UpdateCrateFall`, game_loop32.c, reads).
- * - `0xf`: re-triggers `sub_800F990` when `self+0x4d`'s low 7 bits
+ * - `0xf`: re-triggers `UpdateSlotCrate` when `self+0x4d`'s low 7 bits
  *   are already 0.
  * - `0xc`: once `self+0x4f` has reached 0 this frame, clears
  *   `self+0x50`.
@@ -40,12 +40,12 @@ extern void UpdateCrateFall(struct crate *self);
  * `self+0x4d`'s bit 7, and clears the "recently touched" object's
  * (`gPlayer`) own `+0x80` byte - then, depending on
  * `self+0x4e`: state 6 settles to state 7, tags `self+0x2d = 0x20`,
- * runs the `sub_80087C0`/`sub_80087B4`/`sub_800872C` triplet, then
+ * runs the `ResetSpriteFrameTimer`/`ResetSpriteFrameIndex`/`SetSpriteAnimDone` triplet, then
  * folds the low nibble of a `GetPaletteSlot` tile-cache lookup (keyed by
  * the freshly-retagged hitbox record's own `+0x14`) into `self+0x29`;
  * state 3 just tags `0x20` and runs the same triplet. If bit 7 was
  * clear instead, `self+0x4d`'s low 7 bits == 1 triggers
- * `FinishBrokenCrate`. Finally, unconditionally, calls `sub_8008044` and
+ * `FinishBrokenCrate`. Finally, unconditionally, calls `AdvanceSpriteAnim` and
  * hands `self+0x18`'s table's own `+0x60`/`+0x64` offset/function-
  * pointer pair off to the `_call_via_r1` table-trampoline (the same
  * convention `sub_8007048`/`sub_80070D4`, graphics.c, establish).
@@ -85,7 +85,7 @@ void UpdateCrate(struct crate *self)
         {
             if ((self->state & 0x7f) == 0)
             {
-                sub_800F990(self);
+                UpdateSlotCrate(self);
                 goto done;
             }
         }
@@ -116,9 +116,9 @@ void UpdateCrate(struct crate *self)
 
                 self->kind = 7;
                 self->tag = 0x20;
-                sub_80087C0(self);
-                sub_80087B4(self);
-                sub_800872C(self, 0);
+                ResetSpriteFrameTimer(self);
+                ResetSpriteFrameIndex(self);
+                SetSpriteAnimDone(self, 0);
                 recs = self->anim->records;
                 rec = &recs[self->tag];
                 self->slot = GetPaletteSlot(gPaletteCache, rec->unk_14);
@@ -126,14 +126,14 @@ void UpdateCrate(struct crate *self)
             else if (self->kind == 3)
             {
                 self->tag = 0x20;
-                sub_80087C0(self);
-                sub_80087B4(self);
-                sub_800872C(self, 0);
+                ResetSpriteFrameTimer(self);
+                ResetSpriteFrameIndex(self);
+                SetSpriteAnimDone(self, 0);
             }
         }
     }
     else if ((self->state & 0x7f) == 1)
         FinishBrokenCrate(self);
-    sub_8008044((struct gobj *)self);
+    AdvanceSpriteAnim((struct gobj *)self);
     PHYS_CALL(self, m60);
 }

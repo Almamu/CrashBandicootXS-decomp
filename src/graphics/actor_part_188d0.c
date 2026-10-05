@@ -7,10 +7,10 @@
  *
  * Small method-table ("vtable" at self+0x0C) objects of the same C++-style
  * family as actor_part_17524.c/actor_part27*.c: each class here is a
- * constructor (base sub_800B8C8/sub_8017A8C/CreatePlatformMover, then its own
+ * constructor (base InitCtrl/sub_8017A8C/CreatePlatformMover, then its own
  * table pointer) plus a destructor (table pointer, then the base
  * destructor), and a handful of per-frame update methods that drive one
- * "part" - a sub_8009ED0-built on-screen object (struct gfx_part below)
+ * "part" - a CreateMovingSprite-built on-screen object (struct gfx_part below)
  * whose animation tag/frame, mirror bit and flags they set
  * (include/gfx_part.h). Virtual calls
  * go through the _call_via_r2/AD84/AD88 call-via-register trampolines with
@@ -25,7 +25,7 @@
  *   by the level config (gStaticData_0816C358-0816C362 per-config timings),
  *   and spawns hit effects (sub_8019214).
  * - sub_8019324: hit test of a part against the player and the
- *   gUnknown_030012F0 list (sub_8007xxx boxes, sub_8001688 overlap).
+ *   gUnknown_030012F0 list (sub_8007xxx boxes, AabbOverlaps overlap).
  * - CreateTiny: allocates a 257-entry table of i*i>>8 squares.
  *
  * Matching notes: this code materializes a byte-RMW's constant/mask
@@ -201,19 +201,19 @@ extern u8 gStaticData_0816C35F[];
 extern u8 gStaticData_0816C362[];
 
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
-extern void sub_800B8A8(void *self, s32 flags);
-extern void sub_800B8C8(void *self);
+extern void DestroyCtrl(void *self, s32 flags);
+extern void InitCtrl(void *self);
 extern void sub_8017A78(void *self, s32 flags);
 extern void *sub_8017A8C(void *self);
-extern void sub_8026EB4(void *ptr);
-extern void *sub_8026EC0(u32 size);
-extern void *sub_8026EDC(u32 size);
-extern struct gfx_part *sub_8009ED0(u16 arg0, u16 arg1, u16 arg2, u16 arg3);
-extern void sub_80087C0(void *part);
-extern void sub_80087B4(void *part);
-extern void sub_800872C(void *part, u8 val);
-extern s32 sub_800815C(void *part);
-extern void sub_8008E94(void *manager, void *value);
+extern void OperatorDeleteArray(void *ptr);
+extern void *OperatorNewArray(u32 size);
+extern void *OperatorNew(u32 size);
+extern struct gfx_part *CreateMovingSprite(u16 arg0, u16 arg1, u16 arg2, u16 arg3);
+extern void ResetSpriteFrameTimer(void *part);
+extern void ResetSpriteFrameIndex(void *part);
+extern void SetSpriteAnimDone(void *part, u8 val);
+extern s32 GetSpriteAnimPaletteSlot(void *part);
+extern void AddToPartList(void *manager, void *value);
 extern s32 _call_via_r2(void *self, s32 arg, void *fn);
 extern s32 _call_via_r3(void *self, void *arg1, s32 arg2, void *fn);
 extern void _call_via_r4(void *arg0, s32 arg1, s32 arg2, s32 arg3);
@@ -223,8 +223,8 @@ extern u8 HasTurboRun(void *self);
 extern void RequestRoomExit(void);
 extern void *sub_8007CF8(void *dest, void *pt);
 extern void *sub_8007C30(void *dest, void *pt);
-extern void *sub_8007B98(void *dest, void *pt);
-extern u8 sub_8001688(void *buf1, void *buf2);
+extern void *GetSpriteHitbox(void *dest, void *pt);
+extern u8 AabbOverlaps(void *buf1, void *buf2);
 extern void DestroyPlatformMover(void *self, s32 flags);
 extern void *sub_8019758(void *mem);
 extern void *sub_80196F8(void *mem, void *owner);
@@ -255,9 +255,9 @@ void *sub_8019660(void *self, void *cfg);
 static inline void SetTag(struct gfx_part *part, s32 tag)
 {
     part->tag = tag;
-    sub_80087C0(part);
-    sub_80087B4(part);
-    sub_800872C(part, 0);
+    ResetSpriteFrameTimer(part);
+    ResetSpriteFrameIndex(part);
+    SetSpriteAnimDone(part, 0);
 }
 
 /* Read-modify-write helpers for the byte-wide bitfields at +0x0C/+0x28/
@@ -430,7 +430,7 @@ static inline void SetFrame(struct gfx_part *part, s32 frame)
 
 void *sub_80188D0(struct gfx_ctrl *self)
 {
-    sub_800B8C8(self);
+    InitCtrl(self);
     self->vtable = (struct gfx_vtable *)gStaticData_087E4494;
     return self;
 }
@@ -438,7 +438,7 @@ void *sub_80188D0(struct gfx_ctrl *self)
 void sub_80188E8(struct gfx_ctrl *self, s32 flags)
 {
     self->vtable = (struct gfx_vtable *)gStaticData_087E4494;
-    sub_800B8A8(self, flags);
+    DestroyCtrl(self, flags);
 }
 
 void sub_80188FC(struct gfx_ctrl *self, struct gfx_part *part)
@@ -450,7 +450,7 @@ void sub_80188FC(struct gfx_ctrl *self, struct gfx_part *part)
 /* UNUSED - see the top-of-file comment. */
 void *sub_8018948(struct gfx_ctrl *self)
 {
-    sub_800B8C8(self);
+    InitCtrl(self);
     self->vtable = (struct gfx_vtable *)gStaticData_087E44FC;
     return self;
 }
@@ -458,7 +458,7 @@ void *sub_8018948(struct gfx_ctrl *self)
 void sub_8018960(struct gfx_ctrl *self, s32 flags)
 {
     self->vtable = (struct gfx_vtable *)gStaticData_087E44FC;
-    sub_800B8A8(self, flags);
+    DestroyCtrl(self, flags);
 }
 
 void nullsub_19(void)
@@ -496,7 +496,7 @@ void DestroyTiny(struct gfx_squares *self, s32 flags)
 {
     self->vtable = (struct gfx_vtable *)gTinyVtable;
     if (self->squares != NULL)
-        sub_8026EB4(self->squares);
+        OperatorDeleteArray(self->squares);
     sub_8017A78(self, flags);
 }
 
@@ -507,7 +507,7 @@ void *CreateTiny(struct gfx_squares *self)
     sub_8017A8C(self);
     self->vtable = (struct gfx_vtable *)gTinyVtable;
     self->unk_24 = -1;
-    self->squares = sub_8026EC0(0x202);
+    self->squares = OperatorNewArray(0x202);
     for (i = 0; i <= 0x100; i++)
         self->squares[i] = (i * i) >> 8;
     return self;
@@ -585,26 +585,26 @@ void UpdateCortexBoss(struct gfx_pair_ctrl *self, struct gfx_part *part)
 
 void sub_8018BDC(struct gfx_pair_ctrl *self, struct gfx_part *part)
 {
-    struct gfx_part *c = sub_8009ED0(0xFFFF, 0, 0, 0);
+    struct gfx_part *c = CreateMovingSprite(0xFFFF, 0, 0, 0);
     struct gfx_ctrl *ctrl;
 
     c->bank = (struct anim_bank *)(**gUnknown_030012D0 + 0x27C);
     SetTag(c, 3);
     c->unk_2C = 0;
-    ctrl = sub_8019758(sub_8026EDC(0x10));
-    SetFrameNibble(c, sub_800815C(c));
+    ctrl = sub_8019758(OperatorNew(0x10));
+    SetFrameNibble(c, GetSpriteAnimPaletteSlot(c));
     c->ctrl = ctrl;
     _call_via_r2((u8 *)ctrl + ctrl->vtable->method_18.thisOffset, (s32)c, ctrl->vtable->method_18.fn);
     c->pos = part->pos;
     CopyFlipX(c, part);
     OrFlags(c, 0x10);
-    sub_8008E94(gUnknown_030012F4, c);
+    AddToPartList(gUnknown_030012F4, c);
     self->childA = c;
 }
 
 void sub_8018CB0(struct gfx_pair_ctrl *self, struct gfx_part *part)
 {
-    struct gfx_part *c = sub_8009ED0(0xFFFF, 0, 0, 0);
+    struct gfx_part *c = CreateMovingSprite(0xFFFF, 0, 0, 0);
     struct gfx_ctrl *ctrl;
     s32 x, y;
 
@@ -623,12 +623,12 @@ void sub_8018CB0(struct gfx_pair_ctrl *self, struct gfx_part *part)
             asm("" : "+r"(k));
             *p = t;
         }
-        sub_80087C0(c);
-        sub_80087B4(c);
-        sub_800872C(c, 0);
-        SetFrameNibbleM(c, sub_800815C(c), k);
+        ResetSpriteFrameTimer(c);
+        ResetSpriteFrameIndex(c);
+        SetSpriteAnimDone(c, 0);
+        SetFrameNibbleM(c, GetSpriteAnimPaletteSlot(c), k);
     }
-    ctrl = sub_80196F8(sub_8026EDC(0x40), self);
+    ctrl = sub_80196F8(OperatorNew(0x40), self);
     c->ctrl = ctrl;
     _call_via_r2((u8 *)ctrl + ctrl->vtable->method_18.thisOffset, (s32)c, ctrl->vtable->method_18.fn);
     x = part->pos.x;
@@ -638,7 +638,7 @@ void sub_8018CB0(struct gfx_pair_ctrl *self, struct gfx_part *part)
     c->pos.x = x;
     c->pos.y = y;
     OrFlags(c, 0x10);
-    sub_8008E94(gUnknown_030012F4, c);
+    AddToPartList(gUnknown_030012F4, c);
     {
         register struct gfx_pair_ctrl *s asm("r2") = self;
 
@@ -649,7 +649,7 @@ void sub_8018CB0(struct gfx_pair_ctrl *self, struct gfx_part *part)
 
 void sub_8018D70(u32 a0, u16 a1, u16 a2, u16 a3, s32 kind)
 {
-    struct gfx_part *c = sub_8009ED0(a0, a1, a2, a3);
+    struct gfx_part *c = CreateMovingSprite(a0, a1, a2, a3);
     struct gfx_ctrl *ctrl;
 
     c->bank = (struct anim_bank *)(**gUnknown_030012D0 + 0x180);
@@ -665,8 +665,8 @@ void sub_8018D70(u32 a0, u16 a1, u16 a2, u16 a3, s32 kind)
         SetTag(c, 0);
         break;
     }
-    SetFrameNibble(c, sub_800815C(c));
-    ctrl = sub_80195EC(sub_8026EDC(0x14), kind);
+    SetFrameNibble(c, GetSpriteAnimPaletteSlot(c));
+    ctrl = sub_80195EC(OperatorNew(0x14), kind);
     c->ctrl = ctrl;
     _call_via_r2((u8 *)ctrl + ctrl->vtable->method_18.thisOffset, (s32)c, ctrl->vtable->method_18.fn);
     c->unk_0A = 0;
@@ -675,7 +675,7 @@ void sub_8018D70(u32 a0, u16 a1, u16 a2, u16 a3, s32 kind)
         m &= PART_FLAGS(c);
         PART_FLAGS(c) = m | 0x10;
     }
-    sub_8008E94(gUnknown_030012F0, c);
+    AddToPartList(gUnknown_030012F0, c);
 }
 
 void sub_8018E4C(struct gfx_mover *self, struct gfx_part *partArg)
@@ -923,7 +923,7 @@ void sub_8019214(struct gfx_mover *self, struct gfx_part *partArg, s32 kindArg)
     /* pinned so `self` is left the ROM's r7 (see the file comment) */
     register struct gfx_part *part asm("r6") = partArg;
     register s32 kind asm("r5") = kindArg;
-    struct gfx_part *c = sub_8009ED0(0xFFFF, 0, 0, 0);
+    struct gfx_part *c = CreateMovingSprite(0xFFFF, 0, 0, 0);
     struct { u8 unk_00[0xC]; struct gfx_vtable *vtable; u8 fast; } *ctrl;
 
     c->bank = (struct anim_bank *)(**gUnknown_030012D0 + 0x27C);
@@ -936,8 +936,8 @@ void sub_8019214(struct gfx_mover *self, struct gfx_part *partArg, s32 kindArg)
         SetTag(c, 0x11);
         break;
     }
-    SetFrameNibble(c, sub_800815C(c));
-    ctrl = sub_8019660(sub_8026EDC(0x18), self->cfg);
+    SetFrameNibble(c, GetSpriteAnimPaletteSlot(c));
+    ctrl = sub_8019660(OperatorNew(0x18), self->cfg);
     ctrl->fast = kind == 1;
     c->ctrl = ctrl;
     _call_via_r2((u8 *)ctrl + ctrl->vtable->method_18.thisOffset, (s32)c, ctrl->vtable->method_18.fn);
@@ -953,7 +953,7 @@ void sub_8019214(struct gfx_mover *self, struct gfx_part *partArg, s32 kindArg)
         m |= b;
         PART_FLAGS(c) = m;
     }
-    sub_8008E94(gUnknown_030012F4, c);
+    AddToPartList(gUnknown_030012F4, c);
     if (kind == 1)
         PlaySfx(gAudioContext, 0x31, 0x100);
     else
@@ -976,7 +976,7 @@ void sub_8019324(struct gfx_hit_ctrl *self, struct gfx_part *partArg)
             a = b;
         }
         sub_8007C30(&b, part);
-        if (sub_8001688(&a, &b))
+        if (AabbOverlaps(&a, &b))
         {
             struct gfx_player *p = gPlayer;
 
@@ -1009,8 +1009,8 @@ void sub_8019324(struct gfx_hit_ctrl *self, struct gfx_part *partArg)
             {
                 struct gfx_part *e = gUnknown_030012F0->items[i];
 
-                sub_8007B98(&c, e);
-                if (sub_8001688(&c, &b))
+                GetSpriteHitbox(&c, e);
+                if (AabbOverlaps(&c, &b))
                 {
                     CALL2(self->owner, method_20, 2);
                     e->unk_0A = 1;
@@ -1097,7 +1097,7 @@ void sub_80194E0(struct gfx_kind_ctrl *self, struct gfx_part *partArg)
                 CALL3(self, method_50, part, 0xD);
                 break;
             }
-            SetFrameNibble(part, sub_800815C(part));
+            SetFrameNibble(part, GetSpriteAnimPaletteSlot(part));
             CALL2(self, method_20, 1);
         }
         break;
@@ -1111,14 +1111,14 @@ void sub_80194E0(struct gfx_kind_ctrl *self, struct gfx_part *partArg)
 void sub_80195D8(struct gfx_ctrl *self, s32 flags)
 {
     self->vtable = (struct gfx_vtable *)gStaticData_087E45CC;
-    sub_800B8A8(self, flags);
+    DestroyCtrl(self, flags);
 }
 
 void *sub_80195EC(void *selfArg, s32 kind)
 {
     struct gfx_kind_ctrl *self = selfArg;
 
-    sub_800B8C8(self);
+    InitCtrl(self);
     self->vtable = (struct gfx_vtable *)gStaticData_087E45CC;
     self->kind = kind;
     return self;
@@ -1152,14 +1152,14 @@ void *sub_801961C(struct gfx_ctrl *self)
 void sub_801964C(struct gfx_ctrl *self, s32 flags)
 {
     self->vtable = (struct gfx_vtable *)gStaticData_087E469C;
-    sub_800B8A8(self, flags);
+    DestroyCtrl(self, flags);
 }
 
 void *sub_8019660(void *selfArg, void *cfg)
 {
     struct { u8 unk_00[0xC]; struct gfx_vtable *vtable; u8 unk_10[4]; void *cfg; } *self = selfArg;
 
-    sub_800B8C8(self);
+    InitCtrl(self);
     self->vtable = (struct gfx_vtable *)gStaticData_087E469C;
     self->cfg = cfg;
     return self;

@@ -15,19 +15,19 @@ void *sub_800B4A4(void *selfArg)
 }
 
 /* `dead` (+0x104) clear/set/get accessors. */
-void sub_800B4AC(void *selfArg)
+void ClearPlayerDead(void *selfArg)
 {
     struct gobj *self = selfArg;
     self->dead = 0;
 }
 
-void sub_800B4B8(void *selfArg)
+void SetPlayerDead(void *selfArg)
 {
     struct gobj *self = selfArg;
     self->dead = 1;
 }
 
-u8 sub_800B4C4(void *selfArg)
+u8 IsPlayerDead(void *selfArg)
 {
     struct gobj *self = selfArg;
     return self->dead;
@@ -330,13 +330,13 @@ void sub_800B678(void *selfArg, s32 val)
 }
 
 /* `self+8`/`self+4` word set accessors. */
-void sub_800B698(void *selfArg, s32 val)
+void SetCtrlMode(void *selfArg, s32 val)
 {
     u8 *self = selfArg;
     *(s32 *)(self + 8) = val;
 }
 
-void sub_800B69C(void *selfArg, s32 val)
+void SetCtrlAnimSet(void *selfArg, s32 val)
 {
     u8 *self = selfArg;
     *(s32 *)(self + 4) = val;
@@ -353,7 +353,7 @@ void sub_800B69C(void *selfArg, s32 val)
  * X, then Z, then Y last in the negated branch (`v[1]`'s load is what
  * finally overwrites `v`'s own register, so it has to come after `Z`'s
  * load, not before it, even though the source lists them X/Y/Z). */
-void sub_800B6A0(void *unused, void *selfArg, struct vec3 *vec)
+void SetCtrlTargetMotionY(void *unused, void *selfArg, struct vec3 *vec)
 {
     register struct gobj *self asm("r3") = selfArg;
     register s32 *v asm("r2") = (s32 *)vec;
@@ -377,10 +377,10 @@ void sub_800B6A0(void *unused, void *selfArg, struct vec3 *vec)
     }
 }
 
-/* Same mirror-flag-gated copy as `sub_800B6A0`, also duplicating the
+/* Same mirror-flag-gated copy as `SetCtrlTargetMotionY`, also duplicating the
  * (possibly negated) X component into `self+0x64`. Matched the same
  * way. */
-void sub_800B6D0(void *unused, void *selfArg, struct vec3 *vec)
+void StartCtrlTargetMotionY(void *unused, void *selfArg, struct vec3 *vec)
 {
     register struct gobj *self asm("r3") = selfArg;
     register s32 *v asm("r2") = (s32 *)vec;

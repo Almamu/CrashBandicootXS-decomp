@@ -33,7 +33,7 @@ struct fade_overlay {
     u32 flag_20; /* 0x20 - which of two alternating cue sfx last fired */
 };
 
-extern void *sub_8026EDC(s32 size);
+extern void *OperatorNew(s32 size);
 extern void InitBgSetup(u8 *self, u32 arg1, u32 arg2, u32 arg3, u32 arg5);
 extern u16 GetBgSetupControl(u8 *self);
 extern void LoadGraphicsPackage(u8 *selfArg, struct bg_package *pkgArg);
@@ -93,15 +93,15 @@ void *InitContinuePrompt(void *selfArg)
     register struct fade_overlay *self asm("r5") = selfArg;
     register u8 *buf asm("r0");
 
-    buf = sub_8026EDC(0x10);
+    buf = OperatorNew(0x10);
     InitBgSetup(buf, 0, 0x1f, 0, 3);
     self->bg0Buf = buf;
 
-    buf = sub_8026EDC(0x10);
+    buf = OperatorNew(0x10);
     InitBgSetup(buf, 3, 0x1e, 0, 1);
     self->bg1Buf = buf;
 
-    buf = sub_8026EDC(0x10);
+    buf = OperatorNew(0x10);
     InitBgSetup(buf, 2, 0x1d, 1, 2);
     self->bg2Buf = buf;
 

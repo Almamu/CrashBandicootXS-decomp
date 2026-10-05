@@ -606,10 +606,10 @@ void SetBgStreamerSource(void *self0, void *source0)
     self->records = (u16 *)(*(u8 **)((u8 *)gLevelLayers + 0x24) + source->assetOffset);
 }
 
-extern void sub_8026EB4(void *ptr);
-extern void sub_8026ED0(void *self);
-extern void *sub_8026EC0(u32 size);
-extern void *sub_8026EDC(s32 size);
+extern void OperatorDeleteArray(void *ptr);
+extern void OperatorDelete(void *self);
+extern void *OperatorNewArray(u32 size);
+extern void *OperatorNew(s32 size);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern u8 gBgStreamerVtable[];
 extern u8 gBgLayerBaseVtable[];
@@ -617,7 +617,7 @@ extern u8 gBgLayerBaseVtable[];
 /* Wires up `self+0x20`'s `_call_via_r2`-style interworking-trampoline
  * table (a fixed `gBgStreamerVtable`), then tears down `self+8`'s
  * ring buffer (if already allocated - `InitBgStreamer` below is the
- * matching constructor) and/or notifies via `sub_8026ED0` if bit 0 of
+ * matching constructor) and/or notifies via `OperatorDelete` if bit 0 of
  * `flags` is set - the same conditional-teardown shape this project
  * sees a lot of (e.g. `DestroySlideshow`, game_loop20.c). */
 void DestroyBgStreamer(void *self0, s32 flags)
@@ -626,10 +626,10 @@ void DestroyBgStreamer(void *self0, s32 flags)
 
     self->vtable = (struct streamer_vtable *)gBgStreamerVtable;
     if (self->ring != NULL) {
-        sub_8026EB4(self->ring);
+        OperatorDeleteArray(self->ring);
     }
     if (flags & 1) {
-        sub_8026ED0(self);
+        OperatorDelete(self);
     }
 }
 
@@ -642,7 +642,7 @@ void *InitBgStreamer(void *self0)
     struct bg_streamer *self = self0;
 
     self->vtable = (struct streamer_vtable *)gBgStreamerVtable;
-    self->ring = sub_8026EC0(0x1000);
+    self->ring = OperatorNewArray(0x1000);
     return self;
 }
 
@@ -686,7 +686,7 @@ void sub_8024D6C(void *self0, s32 x, s32 y)
  * `DestroyBgStreamer`'s), then - if `self+0x2c`'s child object is already
  * set (per `InitBgLayerBase` below) - notifies it via its own `+0x20`
  * trampoline table with a fixed action code `3`, before the same
- * conditional `sub_8026ED0` teardown notify `DestroyBgStreamer` has. */
+ * conditional `OperatorDelete` teardown notify `DestroyBgStreamer` has. */
 void DestroyBgLayerBase(void *self0, s32 flags)
 {
     struct bg_scroll_layer *self = self0;
@@ -702,7 +702,7 @@ void DestroyBgLayerBase(void *self0, s32 flags)
     }
 
     if (flags & 1) {
-        sub_8026ED0(self);
+        OperatorDelete(self);
     }
 }
 
@@ -716,7 +716,7 @@ void *InitBgLayerBase(void *self0)
     struct bg_scroll_layer *self = self0;
 
     self->vtable = (struct bg_layer_vtable *)gBgLayerBaseVtable;
-    self->streamer = InitBgStreamer(sub_8026EDC(0x24));
+    self->streamer = InitBgStreamer(OperatorNew(0x24));
     return self;
 }
 

@@ -12,9 +12,9 @@ from "core" graphics.
 ## Matched
 
 - **Issue #9-#11 box/collision NAKED retry** ([docs/matching/issue-9-11-box-naked-retry.md](../matching/issue-9-11-box-naked-retry.md)):
-  `sub_8007DBC` (`actor_part2.c`), `sub_800891C` (`actor_part7.c`),
-  `sub_8008F20` (`actor_part11.c`), `sub_8009914` (`actor_part11i.c`),
-  `sub_8009BE0` (`actor_part12b.c`) and `sub_800A178`/`sub_800A420`
+  `CheckSpritePickup` (`actor_part2.c`), `UpdatePartList` (`actor_part7.c`),
+  `InitCrateList` (`actor_part11.c`), `ResetCrateList` (`actor_part11i.c`),
+  `sub_8009BE0` (`actor_part12b.c`) and `ProbeGroundSpriteTerrain`/`sub_800A420`
   (`actor_part110.c`) are real C now; they were NAKED. `actor_part2.o`
   and `actor_part110.o` moved to old_agbcc (whole-file matches).
 
@@ -46,7 +46,7 @@ from "core" graphics.
 
 - **`sub_8012D24`** (`src/graphics/actor_part83.c`) and **`sub_801283C`**
   (`src/graphics/actor_part84.c`) - issue #16: two
-  `gStaticData_0816BF20` action-table helpers on the player/action object
+  `gActionCtrlStateTable` action-table helpers on the player/action object
   (`include/action_obj.h`). Plain C under old_agbcc (both files moved to
   `OLD_AGBCC_OBJS`); they were NAKED transcriptions. See
   [issue-15-16-naked-retry.md](../matching/issue-15-16-naked-retry.md).
@@ -73,10 +73,10 @@ from "core" graphics.
   box and three `gStaticData_0817A7xx` boxes. Plain C; it was NAKED. See
   [issues-14-53-60-last-naked.md](../matching/issues-14-53-60-last-naked.md).
 - **Issue #9 NAKED retry** ([docs/matching/issue-9-naked-retry.md](../matching/issue-9-naked-retry.md)):
-  `sub_8007B00`/`sub_8007B98` (`actor_part.c`), `sub_8008044`
-  (`actor_part3.c`), `sub_8008A40`/`sub_8008AD8` (`actor_part7.c`),
-  `sub_8008D80` (`actor_part7b.c`), `sub_8009528` (`actor_part11f.c`),
-  `sub_80096C0` (`actor_part11e.c`), `sub_8009868` (`actor_part11d.c`),
+  `GetSpriteBounds`/`GetSpriteHitbox` (`actor_part.c`), `AdvanceSpriteAnim`
+  (`actor_part3.c`), `CollidePartList`/`CollidePartWithPlayer` (`actor_part7.c`),
+  `CollidePartWithObject` (`actor_part7b.c`), `sub_8009528` (`actor_part11f.c`),
+  `sub_80096C0` (`actor_part11e.c`), `CollidePlayerWithCrates` (`actor_part11d.c`),
   `sub_80099F0` (`actor_part12.c`) - all under old_agbcc (the whole
   objects moved to `OLD_AGBCC_OBJS`), mostly by passing the collision
   box by value - and `sub_800AAEC` (`actor_part108.c`, either compiler,
@@ -86,138 +86,138 @@ from "core" graphics.
   address isn't adjacent to `graphics.c`'s matched functions, since
   `DrawAffineSpritePieces` sits unclaimed between them; see
   `docs/matching.md`): `DrawSpriteAt`, `DrawSprite`, `DestroySpriteRenderer`,
-  `nullsub_2`, `sub_8007AB4`
+  `nullsub_2`, `ResetSpriteObj`
 - `src/graphics/actor_part2.c` (new file - `sub_8007C30`'s real ROM
   address isn't adjacent to `actor_part.c`'s matched functions either,
-  since the parked `sub_8007B00`/`sub_8007B98` sit raw between them;
+  since the parked `GetSpriteBounds`/`GetSpriteHitbox` sit raw between them;
   see `docs/matching.md`): `sub_8007C30`, `sub_8007CF8`. (This file's
-  `sub_8007DBC` is a NAKED transcription tracked as parked, not matched
+  `CheckSpritePickup` is a NAKED transcription tracked as parked, not matched
   - see below and `docs/matching/naked-sub_8007dbc.md`.)
 - `src/graphics/actor_part3.c` (new file - directly adjacent to
-  `actor_part2.c`'s matched functions now that `sub_8007DBC` is
+  `actor_part2.c`'s matched functions now that `CheckSpritePickup` is
   byte-exact too, closing the old raw gap between them):
-  `sub_8007F78`, `sub_8007FD8`
+  `IsSpriteObjOnScreen`, `SpriteObjOverlapsRect`
 - `src/graphics/actor_part4.c` (new file, now directly adjacent to
-  `actor_part3.c`'s matched functions): `sub_80080C0`, `sub_800815C`,
+  `actor_part3.c`'s matched functions): `SpriteHitboxOverlaps`, `GetSpriteAnimPaletteSlot`,
   `sub_8008188`, `sub_8008200`, `sub_8008278` (the latter three
   originally a NAKED transcription, matched to real C in a later
   session - see `docs/matching.md`'s "Parked, not matched: sub_8008188"
   entry and its "Update" note)
 - `src/graphics/actor_part5.c` (new file, now directly adjacent to
-  `actor_part4.c`'s matched functions): `sub_8008304`,
-  `sub_8008328`, `sub_800834C`, `sub_8008350`, `sub_8008364`,
-  `sub_8008394`, `GetSpriteTileBase`, `GetSpriteFrame` (the latter originally a
+  `actor_part4.c`'s matched functions): `IsSpriteObjInsideRect`,
+  `IsSpriteObjNearCamera`, `sub_800834C`, `DrawSpriteObj`, `UpdateSpriteObj`,
+  `GetSpriteObjHitbox`, `GetSpriteTileBase`, `GetSpriteFrame` (the latter originally a
   NAKED transcription, matched to real C in a later session - see
   `docs/matching.md`'s "Parked, not matched: GetSpriteFrame" entry and its
   "Update" note)
 - `src/graphics/actor_part6.c` (new file, now directly adjacent to
-  `actor_part5.c`'s matched functions): `sub_8008408`, `sub_8008434`, `sub_8008480`,
-  `sub_8008484`, `sub_80084A4`, `sub_80084C4`, `sub_8008518`,
-  `sub_8008564`, `sub_80085B8`, `sub_8008604`, `sub_8008618`,
-  `sub_8008640`, `sub_8008648`, `sub_8008650`, `sub_800865C`,
-  `sub_8008674`, `sub_8008680`, `sub_800868C`, `sub_8008698`,
+  `actor_part5.c`'s matched functions): `GetSpriteObjPriority`, `CreateSpriteObj`, `GetSpriteObjClassId`,
+  `DestroySpriteObj`, `InitSpriteObj`, `sub_80084C4`, `sub_8008518`,
+  `sub_8008564`, `sub_80085B8`, `GetSpriteAnimRecord`, `SetSpriteFrameIndex`,
+  `GetSpriteScreenSpace`, `SetSpriteScreenSpace`, `IsSpriteHidden`, `ToggleSpriteHidden`,
+  `IsPartSolid`, `ClearPartSolid`, `SetPartSolid`, `sub_8008698`,
   `sub_80086A4`, `sub_80086B0`, `sub_80086BC`, `sub_80086C4`,
-  `sub_80086CC`, `sub_80086D8`, `sub_80086E4`, `sub_80086EC`,
-  `sub_80086F4`, `sub_8008710`, `sub_800872C`, `sub_8008734`,
-  `sub_8008748`, `sub_8008754`, `sub_8008768`, `sub_800876C`,
-  `sub_8008770`
+  `sub_80086CC`, `sub_80086D8`, `GetSpriteAnimating`, `SetSpriteAnimating`,
+  `SetSpriteFlipX`, `SetSpriteFlipY`, `SetSpriteAnimDone`, `GetSpriteAnimPaletteId`,
+  `GetSpritePalette`, `SetSpritePalette`, `SetSpriteAnimTable`, `GetSpriteAnimTable`,
+  `IsSpriteAnimLooping`
 - `src/graphics/actor_part7.c` (new file, now directly adjacent to
-  `actor_part6.c`'s matched functions): `sub_800878C`, `sub_80087A0`, `sub_80087B4`,
-  `sub_80087BC`, `sub_80087C0`, `sub_80087C8`, `sub_80087D0`,
-  `sub_80087F4`, `sub_80087FC`, `sub_8008804`, `sub_800880C`,
-  `sub_8008814`, `sub_8008818`, `sub_800881C`, `sub_8008824`,
-  `sub_8008830`, `sub_8008844`, `sub_8008850`, `sub_800885C`,
+  `actor_part6.c`'s matched functions): `GetSpriteAnimFrameCount`, `GetSpriteAnimDuration`, `ResetSpriteFrameIndex`,
+  `SetSpriteFrameTimer`, `ResetSpriteFrameTimer`, `SetSpriteAnimIndex`, `SetSpriteAnim`,
+  `IncSpriteFrameIndex`, `IncSpriteFrameTimer`, `sub_8008804`, `sub_800880C`,
+  `GetSpriteFrameIndex`, `GetSpriteFrameTimer`, `GetSpriteAnim`, `sub_8008824`,
+  `sub_8008830`, `GetSpriteFlipX`, `GetSpriteFlipY`, `GetSpriteAnimDone`,
   `sub_8008864`, `sub_8008870`, `sub_800887C`, `sub_8008888`,
-  `sub_800888C`, `sub_8008890`, `sub_80088D8`, `sub_80088E8`,
-  `sub_80088F0`, `sub_8008904`
+  `sub_800888C`, `DrawSpriteWithOffset`, `SetSpritePriority`, `GetSpritePriority`,
+  `DestroyUiSpriteObj`, `InitUiSpriteObj`
 
 - `src/graphics/actor_part10.c` (new file, now directly adjacent to
-  `actor_part7.c`'s matched functions): `sub_8008C80`, `sub_8008CEC`, `sub_8008D30`
+  `actor_part7.c`'s matched functions): `CullPartList`, `ClearPartList`, `sub_8008D30`
 
 - `src/graphics/actor_part11.c` (new file, now directly adjacent to
-  `actor_part7b.c`'s `sub_8008D80` range): `sub_8008DC0`, `sub_8008DEC`, `sub_8008E50`,
-  `sub_8008E94`, `sub_8008EB4`, `sub_8008EE4`. (This file's `sub_8008F20`,
+  `actor_part7b.c`'s `CollidePartWithObject` range): `DrawPartList`, `RemoveFromPartList`, `RemovePartListAt`,
+  `AddToPartList`, `DestroyPartList`, `InitPartList`. (This file's `InitCrateList`,
   compiled right after these, is a NAKED transcription tracked as
   parked, not matched - see below and
-  `docs/matching/naked-sub_8008f20-sub_8009914-freelist.md`.)
+  `docs/matching/naked-sub_8008f20-ResetCrateList-freelist.md`.)
 
 - `src/graphics/actor_part11b.c`/`actor_part11c.c`/`actor_part11f.c`/
   `actor_part11e.c`/`actor_part11d.c` (new files, NAKED-transcription-
   only - see "Parked - NAKED transcription" below for what each one
-  holds): `sub_8009008`, `sub_80091D4`, `sub_8009528`, `sub_80096C0`,
-  `sub_8009868` respectively, each dropped into `ldscript.txt` between
+  holds): `UnlinkCrateFromGrid`, `UpdateCrateList`, `sub_8009528`, `sub_80096C0`,
+  `CollidePlayerWithCrates` respectively, each dropped into `ldscript.txt` between
   the remaining `asm/code_3_2_13*.s` guard splits at its own real ROM
   address
 
 - `src/graphics/actor_part11g.c` (new file - `sub_8009150`'s real ROM
-  address sits between the NAKED `sub_8009008` (`actor_part11b.c`) and
-  `sub_80091D4` (`actor_part11c.c`), replacing the retired
+  address sits between the NAKED `UnlinkCrateFromGrid` (`actor_part11b.c`) and
+  `UpdateCrateList` (`actor_part11c.c`), replacing the retired
   `asm/code_3_2_13_9150.s` guard; named `actor_part11g.c` since
   `sub_8009528`'s own NAKED conversion claimed `actor_part11f.c` first):
   `sub_8009150` - see
   `docs/matching/sub_8009150-loop-invariant-hoist-matched.md`
 
-- `src/graphics/actor_part11h.c` (new file - `sub_800944C`'s real ROM
+- `src/graphics/actor_part11h.c` (new file - `DrawCrateList`'s real ROM
   address isn't adjacent to `actor_part11.c`'s matched functions,
-  since the NAKED `sub_8008F20` and `sub_8009008`/`sub_80091D4` plus
+  since the NAKED `InitCrateList` and `UnlinkCrateFromGrid`/`UpdateCrateList` plus
   the now-matched `sub_8009150` (`actor_part11g.c`) sit between them;
   named `actor_part11h.c` since `actor_part11f.c`/`actor_part11g.c`
-  were both already claimed by the time this landed): `sub_800944C`
+  were both already claimed by the time this landed): `DrawCrateList`
 
 - `src/graphics/actor_part11i.c` (new file, NAKED-transcription-only,
-  `sub_8009914`'s real ROM address isn't adjacent to `actor_part11.c`'s
-  own functions - see `docs/matching/naked-sub_8008f20-sub_8009914-freelist.md`.
+  `ResetCrateList`'s real ROM address isn't adjacent to `actor_part11.c`'s
+  own functions - see `docs/matching/naked-sub_8008f20-ResetCrateList-freelist.md`.
   Named "i" - `sub_8009528` claimed `actor_part11f.c`, the now-matched
   `sub_8009150` claimed `actor_part11g.c`, and the now-matched
-  `sub_800944C` claimed `actor_part11h.c`, all in parallel PRs merged
+  `DrawCrateList` claimed `actor_part11h.c`, all in parallel PRs merged
   first), dropped into `ldscript.txt` in place of the retired
   `asm/code_3_2_13_9914.s`
 
-- `src/graphics/actor_part12.c` (new file - `sub_8009A30`'s real ROM
+- `src/graphics/actor_part12.c` (new file - `RemoveCrateFromList`'s real ROM
   address isn't adjacent to `actor_part11.c`'s matched functions
-  either, since the NAKED `sub_8008F20`, the now-matched `sub_8009150`
-  (`actor_part11g.c`) and `sub_800944C` (`actor_part11h.c`), the NAKED
-  `sub_8009008`/`sub_80091D4`/`sub_8009528`/`sub_80096C0`/`sub_8009868`/`sub_8009914`,
+  either, since the NAKED `InitCrateList`, the now-matched `sub_8009150`
+  (`actor_part11g.c`) and `DrawCrateList` (`actor_part11h.c`), the NAKED
+  `UnlinkCrateFromGrid`/`UpdateCrateList`/`sub_8009528`/`sub_80096C0`/`CollidePlayerWithCrates`/`ResetCrateList`,
   all sit between them; see `docs/matching.md`):
-  `sub_8009A30`, `sub_8009AA0`, `sub_8009AF0`, `sub_8009B3C`,
-  `sub_8009B70`, `sub_8009B9C`
+  `RemoveCrateFromList`, `RemoveCrateListAt`, `AddCrateGridNode`, `LinkCrateInGrid`,
+  `AddCrateToList`, `DestroyCrateList`
 
 - `src/graphics/actor_part12b.c` (new file, NAKED-transcription-only -
   `sub_8009BE0`, see "Parked - NAKED transcription" below)
 
-- `src/graphics/actor_part13.c` (new file - `sub_8009CA0`'s real ROM
+- `src/graphics/actor_part13.c` (new file - `CheckPlayerContact`'s real ROM
   address isn't adjacent to `actor_part12.c`'s matched functions
   either, since NAKED `sub_8009BE0` (`actor_part12b.c`) sits between
-  them; see `docs/matching.md`): `sub_8009CA0`
+  them; see `docs/matching.md`): `CheckPlayerContact`
 
-- `src/graphics/actor_part8.c` (new file - `sub_8009DF4`'s real ROM
+- `src/graphics/actor_part8.c` (new file - `ApplySpriteVelocity`'s real ROM
   address isn't adjacent to `code_3_2_15.o`'s raw content either, since
   NAKED `sub_8009BE0` (before that) was already handled separately; see
   `docs/matching.md`):
-  `sub_8009DF4`, `sub_8009EA8`, `sub_8009EB0`, `sub_8009EBC`,
-  `sub_8009EC4`, `sub_8009ECC`, `sub_8009ED0`, `sub_8009F1C`,
-  `sub_8009F50`, `sub_8009F90`, `sub_8009FB0`
-- `src/graphics/actor_part9.c` (new file - `sub_8009FD4`'s real ROM
+  `ApplySpriteVelocity`, `SetSpritePrevPos`, `GetSpritePrevPos`, `GetSpritePrevY`,
+  `GetSpritePrevX`, `GetMovingSpriteClassId`, `CreateMovingSprite`, `DestroyMovingSprite`,
+  `ResetMovingSprite`, `InitMovingSprite`, `UpdateMovingSprite`
+- `src/graphics/actor_part9.c` (new file - `HitMovingSprite`'s real ROM
   address is adjacent to `actor_part8.c`'s matched functions; see
-  `docs/matching.md`): `sub_8009FD4`, `sub_8009FF4`, `sub_800A050`,
+  `docs/matching.md`): `HitMovingSprite`, `sub_8009FF4`, `CollideMovingSprite`,
   `sub_800A068`, `sub_800A06C`, `sub_800A078`, `sub_800A080`,
-  `sub_800A088`, `sub_800A090`, `sub_800A098`, `sub_800A09C`,
-  `sub_800A0A0`, `sub_800A0A4`, `sub_800A0A8`, `sub_800A0AC`,
-  `sub_800A0CC`, `sub_800A0D8`, `sub_800A0E0`, `sub_800A0EC`,
+  `sub_800A088`, `sub_800A090`, `SetSpriteSpeedY`, `SetSpriteSpeedX`,
+  `GetSpriteSpeedX`, `GetSpriteSpeedY`, `GetSpriteCtrl`, `AttachSpriteCtrl`,
+  `StartSpriteMotionY`, `SetSpriteMotionY`, `StartSpriteMotionX`, `SetSpriteMotionX`,
   `sub_800A0F4`
 
 - `src/graphics/actor_part110.c` (issue #9/#10 follow-up - see
   [docs/matching/issue-9-0x0800a178-graphics.md](../matching/issue-9-0x0800a178-graphics.md)):
-  `sub_800A0FC` - the part-object physics dispatcher, the sole caller
-  of `sub_800A178` (both now share this file). Was left raw the first
+  `CollideGroundSprite` - the part-object physics dispatcher, the sole caller
+  of `ProbeGroundSpriteTerrain` (both now share this file). Was left raw the first
   pass since its own gate logic calls `sub_8009BE0`, then still-
   unresolved; `sub_8009BE0` is now fully understood (see "Parked -
   NAKED transcription" below), which was enough to close this one as
   real, byte-exact matched C. Returns `self+0x68` (a persistent,
   cumulative per-object collision-axis mask, distinct from
-  `sub_800A178`'s own per-call `self+0x74` scratch mask) unchanged
-  unless `self+0xc` bit 7 is set; if set, calls `sub_800A178` and OR's
-  its result into `self+0x68`, fires the already-matched `sub_800A050`
+  `ProbeGroundSpriteTerrain`'s own per-call `self+0x74` scratch mask) unchanged
+  unless `self+0xc` bit 7 is set; if set, calls `ProbeGroundSpriteTerrain` and OR's
+  its result into `self+0x68`, fires the already-matched `CollideMovingSprite`
   trampoline, then - if `self+0x68` bit 3 (the Y-axis bit) is now set -
   clears `self+0xc` bits 0/5 and, unless `self+0xd` bit 1 is already
   set, cross-checks the Y-axis hit via a second, independent
@@ -227,23 +227,23 @@ from "core" graphics.
   ROM's exact register choices (a `flags`/`bit7` pair for the leading
   gate test, the established negative-constant-mask idiom for the
   `&= ~0x21` clear, a 4-register chain for the `(self+0xd>>1)&1` gate,
-  `sub_800A050`'s own addr-before-fn trampoline ordering reused for
+  `CollideMovingSprite`'s own addr-before-fn trampoline ordering reused for
   `self->table+0x10/0x14`, and two more mask/byte/result pairs for the
   trailing `|= 0x20`/`&= 7` writes). Retires `asm/code_3_2_11.s`
   entirely (it held only this function).
 
-- `src/graphics/actor_part14.c` (new file - `sub_800A5F4`'s real ROM
+- `src/graphics/actor_part14.c` (new file - `DrawGroundSprite`'s real ROM
   address isn't adjacent to `actor_part9.c`'s matched functions
-  either, since a raw/parked span (`sub_800A178`-`sub_800A590`,
-  `sub_800A178`/`sub_800A420` NAKED-parked but `sub_800A528`/
+  either, since a raw/parked span (`ProbeGroundSpriteTerrain`-`sub_800A590`,
+  `ProbeGroundSpriteTerrain`/`sub_800A420` NAKED-parked but `UpdateGroundSprite`/
   `sub_800A590` matched in `actor_part47.c`) sits between them; see
-  `docs/matching.md`): `sub_800A5F4`, `sub_800A600`,
-  `sub_800A604`, `sub_800A650`, `sub_800A664`, `sub_800A6A4`,
+  `docs/matching.md`): `DrawGroundSprite`, `GetGroundSpriteClassId`,
+  `CreateGroundSprite`, `DestroyGroundSprite`, `ResetGroundSprite`, `InitGroundSprite`,
   `sub_800A6C4`, `sub_800A6D0`, `sub_800A6DC`, `sub_800A6E8`,
   `sub_800A6F4`, `sub_800A700`, `sub_800A70C`, `sub_800A718`,
   `sub_800A724`, `sub_800A730`
 
-- `src/graphics/actor_part47.c` (new file, GitHub issue #9): `sub_800A528`/
+- `src/graphics/actor_part47.c` (new file, GitHub issue #9): `UpdateGroundSprite`/
   `sub_800A590` - a moving-platform "ride along" hookup, nudging `self->y`
   by the delta between a cached and current position-record lookup.
   Matches the ROM's register roles for `self`/the record pointer
@@ -255,7 +255,7 @@ from "core" graphics.
   `asm/code_3_2_11_a528.s`. See
   [docs/matching/issue-9-0x08007634-actor.md](../matching/issue-9-0x08007634-actor.md).
 
-- `src/graphics/actor_part48.c` (GitHub issue #9): `sub_800A734` - a
+- `src/graphics/actor_part48.c` (GitHub issue #9): `ResetPlayer` - a
   part-object velocity/state reset+constructor that hooks up a child
   object at `self+0xb0` (closed a gap an earlier session parked on -
   needed interleaved running-pointer cursors, several register-pinned
@@ -267,9 +267,9 @@ from "core" graphics.
 - `src/graphics/actor_part15.c`/`src/graphics/actor_part16.c` (new
   files, split around the raw untouched `InitPlayer` - see
   `docs/matching.md`): a new not-yet-named big object's accessors -
-  `sub_800B324`, `sub_800B334`, `sub_800B33C`, `sub_800B360`,
-  `sub_800B37C`, `DestroyPlayer`, `sub_800B4A4`, `sub_800B4AC`,
-  `sub_800B4B8`, `sub_800B4C4`, `sub_800B4D0`, `sub_800B4F0`,
+  `sub_800B324`, `sub_800B334`, `sub_800B33C`, `UpdatePlayer`,
+  `PlayerTouchesBox`, `DestroyPlayer`, `sub_800B4A4`, `ClearPlayerDead`,
+  `SetPlayerDead`, `IsPlayerDead`, `sub_800B4D0`, `sub_800B4F0`,
   `sub_800B4F8`, `sub_800B508`, `sub_800B510`, `sub_800B51C`,
   `sub_800B524`, `sub_800B53C`, `sub_800B544`, `sub_800B554`,
   `sub_800B55C`, `sub_800B564`, `sub_800B56C`, `sub_800B574`,
@@ -278,34 +278,34 @@ from "core" graphics.
   `sub_800B5CC`, `sub_800B5D8`, `sub_800B5E0`, `sub_800B5E8`,
   `sub_800B5F0`, `sub_800B5FC`, `sub_800B608`, `sub_800B614`,
   `sub_800B620`, `sub_800B62C`, `sub_800B638`, `sub_800B644`,
-  `sub_800B650`, `sub_800B678`, `sub_800B698`, `sub_800B69C`,
-  `sub_800B6A0`, `sub_800B6D0` (issues #84/#85 - see
-  [docs/matching/issue-84-85-sub_800B6A0.md](../matching/issue-84-85-sub_800B6A0.md);
+  `sub_800B650`, `sub_800B678`, `SetCtrlMode`, `SetCtrlAnimSet`,
+  `SetCtrlTargetMotionY`, `StartCtrlTargetMotionY` (issues #84/#85 - see
+  [docs/matching/issue-84-85-SetCtrlTargetMotionY.md](../matching/issue-84-85-SetCtrlTargetMotionY.md);
   matched with `self`/`vec` pinned to `r3`/`r2` and each branch's X/Y/Z
   locals pinned to their own ABI registers in the ROM's actual load
   order, avoiding the callee-saved spill three earlier attempts hit)
 
 - `src/graphics/actor_part77.c` (new file, GitHub issue #9/#10, ROM
   `0x0800B3F0`, non-adjacent to `actor_part48.c` since the matched
-  `actor_part15.c`/`sub_800B270`/`actor_part16.c` sit between
+  `actor_part15.c`/`ApplyPlayerVelocity`/`actor_part16.c` sit between
   them): `InitPlayer` - a part-object constructor re-initializing
-  `self` via `sub_800A6A4`, allocating a child `struct actor` via
-  `sub_8008434`, hooking it up at `self+0xb0` via the standard
-  `sub_80087C0`/`sub_80087B4`/`sub_800872C` OAM trio, then calling
-  `sub_800A734` to finish the reset and setting `self`'s `field_08`/
+  `self` via `InitGroundSprite`, allocating a child `struct actor` via
+  `CreateSpriteObj`, hooking it up at `self+0xb0` via the standard
+  `ResetSpriteFrameTimer`/`ResetSpriteFrameIndex`/`SetSpriteAnimDone` OAM trio, then calling
+  `ResetPlayer` to finish the reset and setting `self`'s `field_08`/
   `x`/`y` from its three `u16` arguments; see
   [docs/matching/issue-9-10-0x0800a884-graphics.md](../matching/issue-9-10-0x0800a884-graphics.md).
 
 - `src/graphics/actor_part17.c` (new file - see `docs/matching.md`):
-  `sub_800B704`, `sub_800B734`, `sub_800B7B0`, `sub_800B838`,
-  `nullsub_13`, `sub_800B86C`, `sub_800B8A4`, `sub_800B8A8`,
-  `sub_800B8C8`, `sub_800B8D8`
+  `StartCtrlTargetMotionYFromSet`, `SetCtrlTargetMotionX`, `StartCtrlTargetMotionX`, `StartCtrlTargetMotionXFromSet`,
+  `nullsub_13`, `SetCtrlTargetAnim`, `sub_800B8A4`, `DestroyCtrl`,
+  `InitCtrl`, `GetCtrlMode`
 
 - `src/graphics/actor_part18.c`/`actor_part18b.c` (new files, non-
   adjacent since `sub_801434C` sits between them - see
   `docs/matching.md`, issue #17): `sub_801426C`, `sub_80142B0`,
   `sub_801434C`, `sub_80144E0`, `sub_8014524`, `sub_80145E4` - six
-  entries of the `gStaticData_0816BF20` 42-slot action dispatch table
+  entries of the `gActionCtrlStateTable` 42-slot action dispatch table
   (`sub_801434C`/`sub_80145E4` were NAKED until the second issue
   #15/#16/#17 retry)
 
@@ -384,7 +384,7 @@ from "core" graphics.
   raw `sub_8017AB0` sits between them): `sub_8017ECC`, `sub_8017F14`,
   `sub_8017F5C`, `sub_8017F80`, `sub_8017FA4`, `sub_8017FD4`,
   `sub_8017FE8` - a `self+4` double-pointer-chain record lookup (same
-  shape as `sub_800B704`/`sub_800B838`) feeding the
+  shape as `StartCtrlTargetMotionYFromSet`/`StartCtrlTargetMotionXFromSet`) feeding the
   `gStaticData_0816C2D8` per-vector-component trampoline table; see
   `docs/matching/issue-22-0x08017a44-actor.md`.
 - `src/graphics/actor_part27c.c` (new file, GitHub issue #22, ROM
@@ -405,7 +405,7 @@ from "core" graphics.
 - `src/graphics/actor_part_13c60.c` (new file, GitHub issue #17, ROM
   0x08013C60-0x08014084, built with old_agbcc): `sub_8013C60`,
   `sub_8013D94`, `sub_8013EAC`, `sub_8013FD4` - four more
-  `gStaticData_0816BF20` action-table handlers (`sub_8014084`, in the
+  `gActionCtrlStateTable` action-table handlers (`sub_8014084`, in the
   same file, is parked below); see
   `docs/matching/issue-17-0x08012fbc-actor.md`, "Second pass".
 - `src/graphics/actor_part_14674.c` (new file, GitHub issue #17, ROM
@@ -423,9 +423,9 @@ from "core" graphics.
   handlers, formerly NAKED; see
   `docs/matching/issue-17-0x08012fbc-actor.md`, "Third pass".
 - `src/graphics/actor_part81.c` (GitHub issue #9/#10, ROM
-  0x0800AB9C-0x0800AC2C, now built with old_agbcc): `sub_800AB9C`, the
+  0x0800AB9C-0x0800AC2C, now built with old_agbcc): `CollidePlayerWithObjects`, the
   big object's teardown/notification step, formerly parked
-  NON_MATCHING. The box goes to `sub_8008A40` by value; see
+  NON_MATCHING. The box goes to `CollidePartList` by value; see
   `docs/matching/issue-9-10-0x0800ab9c-graphics.md`.
 - `src/graphics/actor_part28.c`/`actor_part30.c`/`actor_part32.c`/
   `actor_part34.c`/`actor_part36.c` (new files, GitHub issue #62, ROM
@@ -461,8 +461,8 @@ from "core" graphics.
 - `src/graphics/actor_part38c.c` (new file, GitHub issue #18, ROM
   0x08015350-0x080156B4, non-adjacent to `actor_part38b.c` since
   `sub_8015238`/`sub_80152F0` sit between them):
-  `sub_8015350`, `sub_8015398`, `sub_80153FC`, `sub_8015460`,
-  `sub_8015508`, `sub_8015558`, `sub_80155A8`, `sub_80155AC`,
+  `SetActionCtrlMode`, `sub_8015398`, `sub_80153FC`, `sub_8015460`,
+  `sub_8015508`, `sub_8015558`, `AttachActionCtrl`, `sub_80155AC`,
   `sub_80155B8`, `sub_80155F8`, `sub_8015650`, `sub_8015690`,
   `sub_80156B4` - more of the same self+0xc/self+0x10 trampoline-pair
   family, including two near-identical self+0x29-keyed mgr-trampoline
@@ -473,11 +473,11 @@ from "core" graphics.
   0x0801574C-0x08015840, non-adjacent to `actor_part38c.c` since
   `sub_80156EC` sits between them): `nullsub_17`,
   `sub_8015750`, `nullsub_18`, `sub_8015774`, `sub_8015780`,
-  `sub_80157C4` - two nullsubs, two tail-call wrappers, the shared
+  `ActionCtrlSetTargetAnim` - two nullsubs, two tail-call wrappers, the shared
   trampoline-pair-plus-sentinel-store helper called by
-  `actor_part18.c`'s `sub_801426C`/`sub_80142B0`, and `sub_80157C4`
+  `actor_part18.c`'s `sub_801426C`/`sub_80142B0`, and `ActionCtrlSetTargetAnim`
   (player's `+0x100`-flag-gated `mode` remapper tail-calling
-  `sub_800B86C`, reinterpreted through a `s32`-returning function-
+  `SetCtrlTargetAnim`, reinterpreted through a `s32`-returning function-
   pointer cast to steer the epilogue's `pop`/`bx` scratch register
   choice - see
   [docs/matching/naked-sub_80157c4-matched.md](../matching/naked-sub_80157c4-matched.md));
@@ -503,14 +503,14 @@ from "core" graphics.
   `DrawJetpackCheckpointText` (fixed-position OAM setup for one sprite frame) - see
   [docs/matching/issue-71-0x0803b060-actor.md](../matching/issue-71-0x0803b060-actor.md).
 - `src/graphics/actor_part39.c` (new file, GitHub issue #16, ROM
-  0x080119A8-0x08011BD4): `DrawWumpa`, `sub_80119D4`, `DestroyWumpa`,
-  `sub_80119EC`, `InitWumpa`, `sub_8011A1C`, `sub_8011A50`,
-  `sub_8011A64`, `sub_8011A84`, `sub_8011A8C`, `CreateStopwatch`,
-  `nullsub_16`, `DestroyStopwatch`, `InitStopwatch`, `sub_8011B90` - a run of
+  0x080119A8-0x08011BD4): `DrawWumpa`, `GetWumpaClassId`, `DestroyWumpa`,
+  `ResetWumpaPickup`, `InitWumpa`, `CollideWumpa`, `sub_8011A50`,
+  `sub_8011A64`, `sub_8011A84`, `UpdateStopwatch`, `CreateStopwatch`,
+  `nullsub_16`, `DestroyStopwatch`, `InitStopwatch`, `ResetActionCtrl` - a run of
   `struct actor` vtable-swap constructor helpers (same
-  `sub_80084A4`/`sub_8008484`/`nullsub` shape as `actor_part6.c`), a
+  `InitSpriteObj`/`DestroySpriteObj`/`nullsub` shape as `actor_part6.c`), a
   handful of small setters/getters on offsets beyond `struct actor`'s
-  own 0x1c bytes, and a distance-gate (`sub_8011A8C`) reusing
+  own 0x1c bytes, and a distance-gate (`UpdateStopwatch`) reusing
   `actor_part2.c`'s `gEntityFlags+0x108` bitmap idiom verbatim.
   Recategorized `graphics`->`actor` from the issue's label: every
   matched function here operates on `struct actor` via the same
@@ -520,20 +520,20 @@ from "core" graphics.
   functions. See
   [docs/matching/issue-16-actor-11b0c.md](../matching/issue-16-actor-11b0c.md).
 - `src/graphics/actor_part79.c` (new file, GitHub issue #16, ROM
-  0x08012160-0x08012420): `KillPlayer`, `sub_8012238`, `sub_80122CC` -
+  0x08012160-0x08012420): `KillPlayer`, `sub_8012238`, `UpdatePlayerFacing` -
   three more members of the 42-slot action-dispatch-table family
-  (`gStaticData_0816BF20`), operating on the same still-unnamed "child
+  (`gActionCtrlStateTable`), operating on the same still-unnamed "child
   object" struct (`self+0xc`/`self+0x10` sub-record pointers, the
   `+0x27`-`+0x32` state/flag/table-index trio) `actor_part18.c`/
   `actor_part18b.c` already established conventions for. Not
-  ROM-adjacent to those files (the raw `sub_8012420`/`sub_8012694`/
-  `sub_801283C` and the still-raw `sub_8011BD4` sit between them), so
+  ROM-adjacent to those files (the raw `UpdateActionCtrl`/`sub_8012694`/
+  `sub_801283C` and the still-raw `ActionCtrlHandleEvent` sit between them), so
   a new file. See
   [docs/matching/issue-16-actor-12160.md](../matching/issue-16-actor-12160.md).
 - `src/graphics/actor_part80.c` (new file, GitHub issue #16, ROM
   0x08012A7C-0x08012AF4): `sub_8012A7C` - another member of the same
   action-dispatch-table family, not ROM-adjacent to `actor_part79.c`'s
-  functions either (the raw `sub_8012420`/`sub_8012694`/`sub_801283C`
+  functions either (the raw `UpdateActionCtrl`/`sub_8012694`/`sub_801283C`
   sit in between). See
   [docs/matching/issue-16-actor-12160.md](../matching/issue-16-actor-12160.md).
 - `src/graphics/actor_part43.c`/`actor_part44.c`/`actor_part45.c`/
@@ -630,13 +630,13 @@ from "core" graphics.
   0x08015840-0x080159A4 - recategorized `graphics`->`actor` from the
   issue's label, same self+0xc/self+0x10 trampoline-pair and state/
   counter/table-index-trio family as actor_part38c.c/actor_part38d.c;
-  immediately adjacent to actor_part38d.c's matched span): `sub_8015840`, `sub_8015878`,
-  `sub_801588C`, `sub_80158AC`, `sub_80158B4`, `sub_80158BC`,
+  immediately adjacent to actor_part38d.c's matched span): `sub_8015840`, `DestroyActionCtrl`,
+  `InitActionCtrl`, `sub_80158AC`, `sub_80158B4`, `sub_80158BC`,
   `sub_80158C4`, `sub_80158CC`, `sub_80158D4`, `sub_80158DC`,
   `sub_80158E4`, `sub_80158EC`, `sub_80158F4`, `sub_8015908`,
-  `sub_8015920`, `sub_8015938`, `sub_8015950`, `sub_8015958`,
+  `sub_8015920`, `sub_8015938`, `sub_8015950`, `ResetPlayerCtrl`,
   `sub_80159A4` - a run of small accessors/resetters on the state-trio
-  bytes, the `gStaticData_087E4224` double-table-set idiom already seen
+  bytes, the `gActionCtrlVtable` double-table-set idiom already seen
   in `actor_part27.c`, and a larger field-reset pair; see
   [docs/matching/issue-19-0x08015840-actor.md](../matching/issue-19-0x08015840-actor.md).
 - `src/graphics/actor_part86.c`/`actor_part86b.c` (GitHub issue #19, ROM
@@ -785,7 +785,7 @@ from "core" graphics.
   (`DestroyAllActors`) - see
   [docs/matching/issue-49-0x08029e4c-actor.md](../matching/issue-49-0x08029e4c-actor.md).
 
-- **`sub_8009D5C`** (`src/graphics/actor_part13.c`) - fires a
+- **`ResolvePlayerContact`** (`src/graphics/actor_part13.c`) - fires a
   `part->table+0x68`-driven trampoline based on `gLevelState`'s
   mode, on the player and/or `part` depending on the mode value. A
   `switch` reproduces the ROM's exact 3-way mode dispatch, and explicit
@@ -978,7 +978,7 @@ See [docs/matching/strag2-naked-retry.md](../matching/strag2-naked-retry.md).
 
 ### Matched in the last-four NAKED retry
 
-- `src/graphics/actor_part78.c` - `sub_800A884` (the per-frame
+- `src/graphics/actor_part78.c` - `CollidePlayer` (the per-frame
   "kind" dispatcher with the camera-probe tail), old_agbcc
   (`actor_part78.o` joined `OLD_AGBCC_OBJS`; it is the only function in
   the file). The ROM's walking flag offsets (`adds r1, #3`,
@@ -1007,7 +1007,7 @@ See [docs/matching/strag2-naked-retry.md](../matching/strag2-naked-retry.md).
 
 ### Matched in the issue #9 hold pass
 
-- `src/graphics/actor_part11c.c` - `sub_80091D4` (the 3-bucket grid
+- `src/graphics/actor_part11c.c` - `UpdateCrateList` (the 3-bucket grid
   maintenance pass), old_agbcc (`actor_part11c.o` joined
   `OLD_AGBCC_OBJS`; it is the only function in the file). A
   hard-register hold on r2, only in the first loop's inlined search
@@ -1062,7 +1062,7 @@ See [docs/matching/category-driver-naked-retry.md](../matching/category-driver-n
 
 ### Matched in the fresh NAKED retry
 
-- `src/graphics/actor_part11b.c` - `sub_8009008` (the grid-removal
+- `src/graphics/actor_part11b.c` - `UnlinkCrateFromGrid` (the grid-removal
   primitive, issue #9), old_agbcc (the object was added to
   `OLD_AGBCC_OBJS`). The ROM sets the phase-2 bucket index to 0x100
   after each removal, so the C does that too. The free-list head is
@@ -1071,7 +1071,7 @@ See [docs/matching/category-driver-naked-retry.md](../matching/category-driver-n
 
 ### Matched in the third issue #15/#16 NAKED retry
 
-- `src/graphics/actor_part84.c` - `sub_8012420` (issue #16), old_agbcc
+- `src/graphics/actor_part84.c` - `UpdateActionCtrl` (issue #16), old_agbcc
   (the file's compiler). Each `self->part` re-read has its own local and
   both camera tests read `y` into a local first; `unk_94` goes through
   an `s32` (keeps the signed `bgt`); the queued-state store is
@@ -1103,7 +1103,7 @@ See [docs/matching/near-miss-polish-3.md](../matching/near-miss-polish-3.md).
 
 ### Matched in the second big NAKED retry
 
-- `src/graphics/actor_part82.c` - `sub_8011BD4` (issue #16, 1420 bytes,
+- `src/graphics/actor_part82.c` - `ActionCtrlHandleEvent` (issue #16, 1420 bytes,
   the 25-case action dispatcher with two nested 7-case keyframe
   lookups), old_agbcc (object added to `OLD_AGBCC_OBJS`). First C
   draft; the nested lookup is a macro that assigns its destination in
@@ -1164,7 +1164,7 @@ doesn't advance that even when byte-correct. See
 established convention, and each entry's linked write-up for why
 plain C didn't converge.
 
-- **Now matched as real C (issue #9 hold pass, see Matched and docs/matching/issue-9-raw-asm-pass.md); entry kept for history.** **`sub_80091D4`** (`src/graphics/actor_part11c.c`) - a per-frame
+- **Now matched as real C (issue #9 hold pass, see Matched and docs/matching/issue-9-raw-asm-pass.md); entry kept for history.** **`UpdateCrateList`** (`src/graphics/actor_part11c.c`) - a per-frame
   grid-maintenance pass over the 3-bucket window around the tracked
   sub-object's own column (plus bucket 255): lazily links newly-large
   objects into bucket 255 (`sub_8009150`'s own body, inlined), removes
@@ -1181,7 +1181,7 @@ plain C didn't converge.
   the mix NAKED retry 5, `docs/matching/mix-naked-retry-5.md`, and
   `sub_8014084` since the third near-miss sweep.) See
   `docs/matching/issue-17-0x08012fbc-actor.md`, "Third pass".
-- **Now matched as real C (issue #9 NAKED retry, see Matched and docs/matching/issue-9-naked-retry.md); entry kept for history.** **`sub_8009868`** (`src/graphics/actor_part11d.c`) - another
+- **Now matched as real C (issue #9 NAKED retry, see Matched and docs/matching/issue-9-naked-retry.md); entry kept for history.** **`CollidePlayerWithCrates`** (`src/graphics/actor_part11d.c`) - another
   3-bucket-window grid pass, this one reading the player's state to
   dispatch `sub_800D040`/`sub_80109A4` per object. Fully understood;
   parked on a cross-branch register-role gap (`r8` reused for two
@@ -1206,19 +1206,19 @@ plain C didn't converge.
   register-reuse pattern across AABB blocks) - not re-attempted as C
   here; transcribed directly as byte-exact NAKED asm instead. See
   [docs/matching/issue-9-10-0x0800aaec-graphics.md](../matching/issue-9-10-0x0800aaec-graphics.md).
-- **Now matched as real C (issue #9-#11 NAKED retry, see Matched and docs/matching/issue-9-11-box-naked-retry.md); entry kept for history.** **`sub_800A178`/`sub_800A420`** (`src/graphics/actor_part110.c`,
+- **Now matched as real C (issue #9-#11 NAKED retry, see Matched and docs/matching/issue-9-11-box-naked-retry.md); entry kept for history.** **`ProbeGroundSpriteTerrain`/`sub_800A420`** (`src/graphics/actor_part110.c`,
   GitHub issue #9/#10) - the part-object movement-resolution pair
   `docs/matching/issue-9-0x08007634-actor.md` flagged as built on
   `sub_8008200`/`sub_8026628`/`sub_8026C3C`/`sub_8026BF8` (the first
   two now matched, see `actor_part4.c`/`game_loop43.c`). `sub_800A420`
-  is a single Y-axis "floor" probe via `sub_8026BF8`; `sub_800A178` is
+  is a single Y-axis "floor" probe via `sub_8026BF8`; `ProbeGroundSpriteTerrain` is
   the larger orchestrator - two gate checks, an unconditional
   `self+0x74` zero (confirming and completing `docs/rom_map.md`'s own
   partial note: `self+0x74` accumulates which movement axes/directions
   collided this call), a fast quad-based floor/wall probe via
   `sub_800A420`/`sub_8026C3C`, then a per-axis fallback through the
   already-matched `sub_8026628` tile-scan API. Both keep `sb`/`sl`/`r8`
-  (and, for `sub_800A178`, `r7` too) live simultaneously across many
+  (and, for `ProbeGroundSpriteTerrain`, `r7` too) live simultaneously across many
   `bl` calls, reused for different values block to block - the same
   `r7`/`r8`/`sb` cross-block register-reuse shape this exact ROM
   neighborhood already established as gcc-2.9-resistant (`sub_8009BE0`,
@@ -1239,7 +1239,7 @@ plain C didn't converge.
   `docs/matching/issue-18-0x08014f8c-actor.md`.
 - **Now matched as real C (strag2 retry, see Matched); entry kept for history.** **`sub_80152F0`** (`src/graphics/actor_part38b.c`) -
   `self+0x27`/`self+0x2b`/`mode`-gated state/counter/table-index trio
-  reset, tail-calling `sub_80122CC`. See
+  reset, tail-calling `UpdatePlayerFacing`. See
   `docs/matching/issue-18-0x08014f8c-actor.md`.
 - **Now matched as real C (strag2 retry, see Matched); entry kept for history.** **`sub_80156EC`** (`src/graphics/actor_part38c.c`) -
   `part+0x38`/`HasSuperBodySlam`-gated mgr-trampoline dispatcher. See
@@ -1264,7 +1264,7 @@ entire function body is hand-transcribed disassembly wrapped in inline
 `asm()` - the C-level matching attempt failed and the raw bytes got
 embedded as asm instead. They're tracked as parked, not matched.
 
-- **Now matched as real C (issue #9-#11 NAKED retry, see Matched and docs/matching/issue-9-11-box-naked-retry.md); entry kept for history.** **`sub_8007DBC`** (`src/graphics/actor_part2.c`) - the player-collision
+- **Now matched as real C (issue #9-#11 NAKED retry, see Matched and docs/matching/issue-9-11-box-naked-retry.md); entry kept for history.** **`CheckSpritePickup`** (`src/graphics/actor_part2.c`) - the player-collision
   "kind" spawner. Hits this project's confirmed categorical r7-pin
   compiler bug. GitHub issue not tracked separately, see
   `docs/matching/naked-sub_8007dbc.md`.
@@ -1358,7 +1358,7 @@ embedded as asm instead. They're tracked as parked, not matched.
   then `f`, schedules the loads in the ROM's own self/d/e/f/constant
   order. Retires the old raw `asm/code_3_2_20_28568_c99c_2fa04.s`. See
   `docs/matching/issue-56-0x0802f0dc-actor.md`.
-- **`sub_800B270`** (`src/graphics/actor_part49.c`, GitHub issue #9) -
+- **`ApplyPlayerVelocity`** (`src/graphics/actor_part49.c`, GitHub issue #9) -
   a per-frame velocity integrator moving `self+0x60`/`self+0x64`
   toward `self+0x50`/`self+0x5c` by `self+0x4c`/`self+0x58` each call,
   deriving a `self+0x24` direction-flag byte and applying the result to
@@ -1379,21 +1379,21 @@ embedded as asm instead. They're tracked as parked, not matched.
   local (it lands in `r1` naturally anyway). Retires the raw
   `asm/code_3_2_16_b270.s`. See
   `docs/matching/issue-9-0x08007634-actor.md`.
-- **`sub_8009DF4`** (`src/graphics/actor_part8.c`, issue #97) - a
+- **`ApplySpriteVelocity`** (`src/graphics/actor_part8.c`, issue #97) - a
   velocity/position integrator: steps each axis's velocity toward its
   max by its accel amount (clamped so it never overshoots), builds a
   direction-flags byte from the clamped velocities' signs, caches the
   pre-move position, applies the velocity, and updates a global
   (`gUnknown_03001298`) with the Y velocity; now fully matched as real
   C. Closed using the exact fix worked out for its near-identical twin
-  `sub_800B270` above (same per-axis clamp shape, same field offsets):
+  `ApplyPlayerVelocity` above (same per-axis clamp shape, same field offsets):
   `vx` pinned to `r3` while `vy` stays unpinned, and the trailing
   global-update block's "genuinely redundant" conditional store emitted
   verbatim via one opaque `asm volatile` block instead of fighting this
   compiler's dead-store-elimination proof, reproducing the ROM's own
   address-in-`r0`/value-in-`r2` register choice directly. Retires the
   old raw `asm/code_3_2_9.s`. See
-  [docs/matching/issue-97-sub_8009DF4.md](../matching/issue-97-sub_8009DF4.md).
+  [docs/matching/issue-97-ApplySpriteVelocity.md](../matching/issue-97-ApplySpriteVelocity.md).
 - **`InitStarfield`** (`src/graphics/actor_part85.c`) - constructs the
   particle-trail BG0 object; now fully matched as real C. The ROM
   builds a 4-bit-palette-bank tile-index mask (0xFFFFF000) by loading
@@ -1502,7 +1502,7 @@ embedded as asm instead. They're tracked as parked, not matched.
   the raw `asm/code_3_2_20_28568_c99c_31784_33ef4_34058.s`. See
   `docs/matching/issue-63-0x08033ef4-actor.md`.
 
-- **Now matched as real C (last-four NAKED retry, see Matched and docs/matching/last-four-naked-retry.md); entry kept for history.** **`sub_800A884`** (`src/graphics/actor_part78.c`, GitHub issue
+- **Now matched as real C (last-four NAKED retry, see Matched and docs/matching/last-four-naked-retry.md); entry kept for history.** **`CollidePlayer`** (`src/graphics/actor_part78.c`, GitHub issue
   #9/#10; NAKED in that file since the issue #9 raw-asm pass, which also
   replaced the draft - see `docs/matching/issue-9-raw-asm-pass.md`) - a per-frame
   reentrancy-guard-shaped wrapper dispatching a pending-action "kind"
@@ -1531,7 +1531,7 @@ embedded as asm instead. They're tracked as parked, not matched.
   [docs/matching/issue-9-10-0x0800a884-graphics.md](../matching/issue-9-10-0x0800a884-graphics.md).
 - **Now matched as real C (issue #9 NAKED retry, see Matched and docs/matching/issue-9-naked-retry.md); entry kept for history.** **`sub_800AAEC`** (`src/graphics/actor_part108.c`, GitHub issue
   #9/#10) - the input-action-check function the 42-slot
-  `gStaticData_0816BF20` action-dispatch table's entries call: gates a
+  `gActionCtrlStateTable` action-dispatch table's entries call: gates a
   `sub_8026628` proximity probe against the player, then walks
   `gCrateList`'s object list, testing each entry via
   `_call_via_r1` and calling `sub_800CD00` (now examined and closed,
@@ -1546,7 +1546,7 @@ embedded as asm instead. They're tracked as parked, not matched.
   callee-saved register). Default build uses a byte-exact NAKED
   transcription instead - see
   [docs/matching/issue-9-10-0x0800aaec-graphics.md](../matching/issue-9-10-0x0800aaec-graphics.md).
-- **`sub_800B6A0`/`sub_800B6D0`** (`src/graphics/actor_part16.c`) -
+- **`SetCtrlTargetMotionY`/`StartCtrlTargetMotionY`** (`src/graphics/actor_part16.c`) -
   mirror-flag-gated 3-vector copies. This compiler unconditionally
   spills the `vec` pointer to a callee-saved register (`push
   {r4,lr}`/`pop {r4}`) whenever it's referenced in both branches of an
@@ -1556,10 +1556,10 @@ embedded as asm instead. They're tracked as parked, not matched.
   `goto`-based flow) all produced an identical 8-byte-larger result -
   see `docs/matching.md`, "A new unnamed object:
   `actor_part15.c`/`actor_part16.c`".
-- **Now matched as real C (issue #9 NAKED retry, see Matched and docs/matching/issue-9-naked-retry.md); entry kept for history.** **`sub_8007B00`/`sub_8007B98`** (`src/graphics/actor_part.c`),
-  **`sub_8008044`** (`src/graphics/actor_part3.c`), and
-  **`sub_800891C`/`sub_8008A40`/`sub_8008AD8`**
-  (`src/graphics/actor_part7.c`) / **`sub_8008D80`**
+- **Now matched as real C (issue #9 NAKED retry, see Matched and docs/matching/issue-9-naked-retry.md); entry kept for history.** **`GetSpriteBounds`/`GetSpriteHitbox`** (`src/graphics/actor_part.c`),
+  **`AdvanceSpriteAnim`** (`src/graphics/actor_part3.c`), and
+  **`UpdatePartList`/`CollidePartList`/`CollidePartWithPlayer`**
+  (`src/graphics/actor_part7.c`) / **`CollidePartWithObject`**
   (`src/graphics/actor_part7b.c`) - stayed parked here for a long time
   on exactly the register-canonicalization/stack-layout classes of gap
   documented at length throughout this page (`r7`-pin hazards and a
@@ -1572,15 +1572,15 @@ embedded as asm instead. They're tracked as parked, not matched.
   function's register-allocation gap doesn't count as "matched" the way
   real decompiled C does, so all seven stay filed here rather than in
   "Matched" above, and `tools/report_units.py` tracks their address
-  ranges as unmatched (`base_object: None`). `sub_8008770`
+  ranges as unmatched (`base_object: None`). `IsSpriteAnimLooping`
   (`src/graphics/actor_part6.c`) and `sub_8008188`/`sub_8008200`/
   `sub_8008278`/`GetSpriteFrame` (`src/graphics/actor_part4.c`/
   `actor_part5.c`), which shared this list in earlier versions of this
   page, were converted back to real C and matched in later sessions -
   see "Matched" above and `docs/matching.md`'s "Parked, not matched:
-  sub_8008770"/"Parked, not matched: sub_8008188" entries (and the
+  IsSpriteAnimLooping"/"Parked, not matched: sub_8008188" entries (and the
   latter's siblings) for those accounts.
-- **Now matched as real C (issue #9-#11 NAKED retry, see Matched and docs/matching/issue-9-11-box-naked-retry.md); entry kept for history.** **`sub_8008F20`** (`src/graphics/actor_part11.c`) - initializes a
+- **Now matched as real C (issue #9-#11 NAKED retry, see Matched and docs/matching/issue-9-11-box-naked-retry.md); entry kept for history.** **`InitCrateList`** (`src/graphics/actor_part11.c`) - initializes a
   fixed-slot object-pool manager struct: two big 256-word zeroed
   tables (likely a pair of spatial-partition/collision grids), plus a
   singly-linked free list built over an allocated node array. Every
@@ -1593,16 +1593,16 @@ embedded as asm instead. They're tracked as parked, not matched.
   (byte-exact, confirmed via a full clean `make compare`), rather than
   a derived C reconstruction, compiled directly into `actor_part11.o`
   alongside the matched functions above it (no separate object needed,
-  same as `sub_8008044`/`actor_part3.c`'s precedent for a NAKED
+  same as `AdvanceSpriteAnim`/`actor_part3.c`'s precedent for a NAKED
   function sharing a file with matched ones). Per project policy this
   doesn't count as "matched" the way real decompiled C does, so it
   stays filed here rather than in "Matched" above - see
-  `docs/matching/naked-sub_8008f20-sub_8009914-freelist.md`.
+  `docs/matching/naked-sub_8008f20-ResetCrateList-freelist.md`.
 - **Now matched as real C (issue #9 NAKED retry, see Matched and docs/matching/issue-9-naked-retry.md); entry kept for history.** **`sub_8009528`** (`src/graphics/actor_part11f.c`) - the spatial-
-  hash-grid-cluster analog of `sub_8008A40`: the same grid-iteration
-  shape as `sub_800944C`, dispatching each hit to `sub_80096C0`/
-  `sub_80099F0` exactly like `sub_8008A40` dispatches to
-  `sub_8008AD8`/`sub_8008D80`. Every branch, field offset, and call
+  hash-grid-cluster analog of `CollidePartList`: the same grid-iteration
+  shape as `DrawCrateList`, dispatching each hit to `sub_80096C0`/
+  `sub_80099F0` exactly like `CollidePartList` dispatches to
+  `CollidePartWithPlayer`/`CollidePartWithObject`. Every branch, field offset, and call
   argument was confirmed correct, but the `#if NON_MATCHING` C
   reconstruction's compiled size stayed larger than the real ROM
   function (a bigger gap than the established `boxH` issue alone), so
@@ -1613,30 +1613,30 @@ embedded as asm instead. They're tracked as parked, not matched.
   real decompiled C does, so it stays filed here rather than in
   "Matched" above - see `docs/matching.md`, "Parked, not matched:
   `sub_8009528`".
-- **Now matched as real C (issue #9 NAKED retry, see Matched and docs/matching/issue-9-naked-retry.md); entry kept for history.** **`sub_80096C0`** (`src/graphics/actor_part11e.c`) - `sub_8008AD8`'s
+- **Now matched as real C (issue #9 NAKED retry, see Matched and docs/matching/issue-9-naked-retry.md); entry kept for history.** **`sub_80096C0`** (`src/graphics/actor_part11e.c`) - `CollidePartWithPlayer`'s
   twin: byte-identical collision-hit resolution logic, operating in
   this spatial-hash-grid cluster instead of the plain array manager -
-  in fact its instruction stream is byte-identical to `sub_8008AD8`'s,
+  in fact its instruction stream is byte-identical to `CollidePartWithPlayer`'s,
   down to the label offsets. Same `boxH` stack-layout gap as
-  `sub_8008AD8`/`sub_8008D80`/`sub_80099F0`, so converted to `NAKED`
+  `CollidePartWithPlayer`/`CollidePartWithObject`/`sub_80099F0`, so converted to `NAKED`
   the same way: a literal instruction-for-instruction transcription of
   the ROM's own assembly (byte-exact, confirmed via a full clean `make
   compare`), rather than a derived C reconstruction. Per project
   policy this doesn't count as "matched" the way real decompiled C
   does, so it stays filed here rather than in "Matched" above - see
   `docs/matching.md`, "Parked, not matched: `sub_80096C0`".
-  `sub_8008AD8` itself (`src/graphics/actor_part7.c`) is unaffected by
+  `CollidePartWithPlayer` itself (`src/graphics/actor_part7.c`) is unaffected by
   this change and remains its own separate `NAKED` function.
-- **Now matched as real C (issue #9-#11 NAKED retry, see Matched and docs/matching/issue-9-11-box-naked-retry.md); entry kept for history.** **`sub_8009914`** (`src/graphics/actor_part11i.c`, new file - its
+- **Now matched as real C (issue #9-#11 NAKED retry, see Matched and docs/matching/issue-9-11-box-naked-retry.md); entry kept for history.** **`ResetCrateList`** (`src/graphics/actor_part11i.c`, new file - its
   real ROM address, `0x08009914`, doesn't sit adjacent to
   `actor_part11.c`'s own functions, the same reason `sub_80096C0`
   above got its own `actor_part11e.c` (named "i" - `sub_8009528`
   claimed `actor_part11f.c`, the now-matched `sub_8009150` claimed
-  `actor_part11g.c`, and the now-matched `sub_800944C` claimed
+  `actor_part11g.c`, and the now-matched `DrawCrateList` claimed
   `actor_part11h.c`, all in parallel PRs merged first)) - resets a
   pool manager to empty: tears down every active object, then rebuilds the grid and
   free list from scratch. The teardown loop was confirmed correct on
-  its own; the rebuild loop is a byte-for-byte copy of `sub_8008F20`'s
+  its own; the rebuild loop is a byte-for-byte copy of `InitCrateList`'s
   own tail and hit the identical many-register allocation gap, closed
   via the same `NAKED` transcription technique - a literal
   instruction-for-instruction transcription of the ROM's own assembly
@@ -1644,19 +1644,19 @@ embedded as asm instead. They're tracked as parked, not matched.
   a derived C reconstruction. Per project policy this doesn't count as
   "matched" the way real decompiled C does, so it stays filed here
   rather than in "Matched" above - see
-  `docs/matching/naked-sub_8008f20-sub_8009914-freelist.md`.
-- **Now matched as real C (issue #9 NAKED retry, see Matched and docs/matching/issue-9-naked-retry.md); entry kept for history.** **`sub_80099F0`** (`src/graphics/actor_part12.c`) - `sub_8008D80`'s
+  `docs/matching/naked-sub_8008f20-ResetCrateList-freelist.md`.
+- **Now matched as real C (issue #9 NAKED retry, see Matched and docs/matching/issue-9-naked-retry.md); entry kept for history.** **`sub_80099F0`** (`src/graphics/actor_part12.c`) - `CollidePartWithObject`'s
   twin: byte-identical in shape (same collision-hit-resolve logic,
   same "dead read" trampoline call), called from elsewhere in this
   cluster - in fact its instruction stream is byte-identical to
-  `sub_8008D80`'s, down to the label offsets. Same `boxH` stack-layout
+  `CollidePartWithObject`'s, down to the label offsets. Same `boxH` stack-layout
   gap, so converted to `NAKED` the same way: a literal
   instruction-for-instruction transcription of the ROM's own assembly
   (byte-exact, confirmed via a full clean `make compare`), rather than
   a derived C reconstruction. Per project policy this doesn't count as
   "matched" the way real decompiled C does, so it stays filed here
   rather than in "Matched" above - see `docs/matching.md`, "Parked,
-  not matched: `sub_80099F0`". `sub_8008D80` itself
+  not matched: `sub_80099F0`". `CollidePartWithObject` itself
   (`src/graphics/actor_part7b.c`) is unaffected by this change and
   remains its own separate `NAKED` function.
 - **Now matched as real C (strag2 retry, see Matched); entry kept for history.** **`HovercraftCannonStateFire`** (`asm/code_3_2_20_28568_c99c_31784_339dc.s`, C in

@@ -41,11 +41,11 @@ s32 GetLives(struct level_state *self)
 extern u8 gLargeFontVtable[];
 extern u8 gSmallFontVtable[];
 extern u8 gFontVtable[];
-extern void sub_8026ED0(void *self);
+extern void OperatorDelete(void *self);
 
 /* Both DestroyLargeFont/DestroySmallFont below are per-type descriptor
  * constructors - the same "set one field of a passed-in struct to a
- * ROM data pointer, then conditionally call sub_8026ED0 based on a bit
+ * ROM data pointer, then conditionally call OperatorDelete based on a bit
  * in the second argument" shape documented at length in docs/rom_map.md
  * for the ~93-entry gStaticData_087E3BEC-family table (these three
  * entries - gLargeFontVtable/4D64/4DAC, each 0x48 bytes - are
@@ -70,7 +70,7 @@ void DestroyLargeFont(void *self, u32 flags)
     asm volatile("mov r0, #0x98\n\tlsl r0, r0, #1\n\tadd %0, %1, r0" : "=r"(addr) : "r"(self) : "r0");
     *addr = gFontVtable;
     if (flags & 1) {
-        sub_8026ED0(self);
+        OperatorDelete(self);
     }
 }
 
@@ -84,6 +84,6 @@ void DestroySmallFont(void *self, u32 flags)
     asm volatile("mov r0, #0x98\n\tlsl r0, r0, #1\n\tadd %0, %1, r0" : "=r"(addr) : "r"(self) : "r0");
     *addr = gFontVtable;
     if (flags & 1) {
-        sub_8026ED0(self);
+        OperatorDelete(self);
     }
 }

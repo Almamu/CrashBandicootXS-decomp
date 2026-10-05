@@ -4,7 +4,7 @@ GitHub issue #14 (`decomp-chunk`, labeled `graphics` by the chunk
 generator) listed 25 raw functions in `asm/code_3_2_17.s`'s
 `asm/code_3_2_17_e560_10a0c.s` fragment, right past issue #13's own
 range. This is the write-up for the work done against that list, plus
-a follow-up pass on the previously-parked `sub_800A734` from GitHub
+a follow-up pass on the previously-parked `ResetPlayer` from GitHub
 issue #9.
 
 ## Category correction: `graphics` -> `game_loop`
@@ -62,7 +62,7 @@ covering:
 largest function (488 bytes), and the one `sub_80106DC`
 (game_loop23.c) already calls by name - was originally parked here
 under `NON_MATCHING`. A later pass in the same session that closed
-`sub_800A734` below (see the next "Follow-up" section) closed this one
+`ResetPlayer` below (see the next "Follow-up" section) closed this one
 too, as a byte-exact `NAKED` transcription rather than real decompiled
 C. It scans `self`'s neighbor-candidate list - `self`'s own `+8`
 onward is an array of 0x24-byte "candidate" records (`neighbor`
@@ -96,7 +96,7 @@ incremented by `0x24` once per loop iteration, with up to twelve of
 them (`r8`/`sb`/`sl` among them) live across a single `0x68`-byte
 stack frame. This is the same "long, non-uniform stretch of field
 accesses via running-pointer increments" gap already parked for
-`sub_800A734`/`sub_800A528` in the issue #9 write-up
+`ResetPlayer`/`UpdateGroundSprite` in the issue #9 write-up
 (`docs/matching/issue-9-0x08007634-actor.md`), just at a larger scale
 (three times the live-cursor count, on a stack frame twice the size)
 - well beyond what C-level register pins can realistically express,
@@ -120,9 +120,9 @@ function) is removed entirely, `ldscript.txt`'s now-redundant
 `tools/report_units.py`'s `0x08010B6C` unit now points at
 `src/system/game_loop28.o` instead of `None`.
 
-## Follow-up: GitHub issue #9's `sub_800A734` - now matched
+## Follow-up: GitHub issue #9's `ResetPlayer` - now matched
 
-`sub_800A734` (`src/graphics/actor_part48.c`) was previously parked
+`ResetPlayer` (`src/graphics/actor_part48.c`) was previously parked
 (see this same repo's `issue-9-0x08007634-actor.md` for its original
 write-up) on exactly the same shape of gap `sub_8010B6C` above hit -
 the ROM building several field addresses as a running pointer
@@ -162,7 +162,7 @@ techniques that got it over the line, in the order they were needed:
    (`str r0, [r1, #0x24]`) instead of reproducing the ROM's separate
    `adds r1, #0x24` pointer update followed by an offset-0 store.
 6. **Keeping `self+0xb0`'s *address* (not the loaded child pointer)
-   live across the `bl sub_800815C`**, reloading the child pointer
+   live across the `bl GetSpriteAnimPaletteSlot`**, reloading the child pointer
    fresh afterward - `r0` gets clobbered by the call's return value, so
    caching the loaded `child` pointer across the call (this compiler's
    natural choice, since it's cheaper by one instruction) needs an
@@ -200,14 +200,14 @@ techniques that got it over the line, in the order they were needed:
 existing `actor_part48.o` entry (base object, not `None`) since both
 functions in that file are matched and the old `asm/code_3_2_16_a734.s`
 fragment has been removed entirely - `docs/status/actor.md`'s "Parked"
-section entry for `sub_800A734` is removed accordingly.
+section entry for `ResetPlayer` is removed accordingly.
 
 ## Cross-references
 
 - `docs/status/game_loop.md` - matched/parked lists updated for this
   issue's functions; `sub_8010B6C` moved from "Parked (NON_MATCHING)"
   to the "Parked - NAKED transcription" section.
-- `docs/status/actor.md` - `sub_800A734` moved from "Parked" to
+- `docs/status/actor.md` - `ResetPlayer` moved from "Parked" to
   "Matched".
 - `tools/report_units.py` - `UNITS` list split for
   `0x08010A0C`-`0x08010D54`, recategorized `graphics` -> `game_loop`;
@@ -219,7 +219,7 @@ section entry for `sub_800A734` is removed accordingly.
   removed (the function moved into the already-present
   `game_loop28.o(.text);` line just above it).
 - `docs/matching/issue-9-0x08007634-actor.md` - the original write-up
-  for `sub_800A734`'s first (parked) pass; this file's "Follow-up"
+  for `ResetPlayer`'s first (parked) pass; this file's "Follow-up"
   section above is the second pass that closed the gap.
 - `docs/matching/issue-13-graphics-fc70.md` - the immediately-preceding
   chunk in the same physics/collision subsystem file family, and the

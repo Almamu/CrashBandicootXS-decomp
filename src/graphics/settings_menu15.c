@@ -22,7 +22,7 @@ extern void CpuSet(const void *src, void *dst, u32 cnt);
 extern void FontResetPalette(struct icon_manager *self);
 extern void *_call_via_r1(void *arg0, void *fn);
 extern void ResetObjVram(struct vram_upload_cursor *self);
-extern void *sub_8026EDC(s32 size);
+extern void *OperatorNew(s32 size);
 extern struct pause_screen_results *InitPauseMenu(struct pause_screen_results *self);
 extern s32 PauseMenuLoop(struct pause_screen_results *self);
 extern void DestroyPauseMenu(struct pause_screen_results *self, u32 flags);
@@ -101,7 +101,7 @@ s32 RunPauseMenu(void)
     *(vu16 *)REG_ADDR_DISPCNT = 0;
 
     oldCache = gPaletteCache;
-    gPaletteCache = InitPaletteCache(sub_8026EDC(sizeof(struct palette_cache)));
+    gPaletteCache = InitPaletteCache(OperatorNew(sizeof(struct palette_cache)));
     SetPaletteCacheSource(gPaletteCache, ((struct pause_gfx_pkg *)gSpriteBankTable)->count,
                 ((struct pause_gfx_pkg *)gSpriteBankTable)->records);
     ClaimPaletteSlot(gPaletteCache, 0xf);
@@ -123,7 +123,7 @@ s32 RunPauseMenu(void)
         ResetObjVram(gObjVramCursor);
     }
 
-    screen = InitPauseMenu(sub_8026EDC(0xd4));
+    screen = InitPauseMenu(OperatorNew(0xd4));
     result = PauseMenuLoop(screen);
     if (screen != NULL)
         DestroyPauseMenu(screen, 3);
@@ -143,7 +143,7 @@ extern void *gLevelState;
 extern void ***gUnknown_030012D0;
 extern void *PackSaveData(void *arg0);
 extern void InitPauseMenuInfo(struct pause_screen_results *self);
-extern struct actor *sub_8008904(struct actor *part);
+extern struct actor *InitUiSpriteObj(struct actor *part);
 extern s32 RandRange(s32 max);
 extern u8 gStaticData_0816B284[];
 extern u8 gPauseMenuRows[];
@@ -236,7 +236,7 @@ struct pause_screen_results *InitPauseMenu(struct pause_screen_results *self)
 
         {
             register struct settings_icon_actor **field_c0_addr asm("r4") = (struct settings_icon_actor **)((u8 *)c8Addr - 8);
-            struct settings_icon_actor *icon = (struct settings_icon_actor *)sub_8008904((struct actor *)sub_8026EDC(0x40));
+            struct settings_icon_actor *icon = (struct settings_icon_actor *)InitUiSpriteObj((struct actor *)OperatorNew(0x40));
 
             *field_c0_addr = icon;
             {
@@ -245,7 +245,7 @@ struct pause_screen_results *InitPauseMenu(struct pause_screen_results *self)
                 icon->field_20 = (void **)base;
             }
             {
-                register s32 _ret asm("r0") = sub_800815C((struct actor *)icon);
+                register s32 _ret asm("r0") = GetSpriteAnimPaletteSlot((struct actor *)icon);
                 register u8 *_addr asm("r2") = &(*field_c0_addr)->field_29;
                 register s32 _mask asm("r1");
                 register u8 _byte asm("r3");
@@ -290,7 +290,7 @@ struct pause_screen_results *InitPauseMenu(struct pause_screen_results *self)
 }
 
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
-extern void sub_8026ED0(void *arg0);
+extern void OperatorDelete(void *arg0);
 
 /* Same "re-probe an actor's own category-table slot 0x50/0x54" shape
  * already established by DestroyPowerDialog (src/graphics/oam_count.c) -
@@ -349,7 +349,7 @@ void DestroyPauseMenu(struct pause_screen_results *selfArg, u32 flagsArg)
     REFRESH_ICON_WIDGET(*field88Addr);
 
     if (flags & 1) {
-        sub_8026ED0(self);
+        OperatorDelete(self);
     }
 }
 /* Trailing byte-padding gotcha (see docs/matching.md/

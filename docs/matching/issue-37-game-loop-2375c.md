@@ -14,8 +14,8 @@ level object's own `+0xdc->+8` state field is `2`
 1. Fires two no-argument setup calls (`CreateEntitySpawner`, `ClearRoomExit`).
 2. Allocates the whole per-level widget set: five `dual_array_manager`s
    (`gUnknown_030012E8`/`EC`/`F0`/`F8`/`F4`, the same struct
-   `actor_part11.c`'s `sub_8008EE4` already returns) and one
-   `pool_manager` (`gCrateList`, `sub_8008F20`'s own type from
+   `actor_part11.c`'s `InitPartList` already returns) and one
+   `pool_manager` (`gCrateList`, `InitCrateList`'s own type from
    `actor_part12.c`), a generic 0x18-byte block (`gCamera`),
    the text-box singleton (`gLevelLayers`, lazily built by the
    still-raw `GetLevelLayers`), and the player actor itself
@@ -29,19 +29,19 @@ level object's own `+0xdc->+8` state field is `2`
 4. Reads the level-state record's (`self->0x18`) own `+8` "widget kind"
    field and dispatches on it (0/1/2) to construct one of three HUD
    counter/ring-buffer widgets, each via
-   `sub_801588C`/`sub_80174EC`/`CreateInputCtrl` (three different
+   `InitActionCtrl`/`InitPlayerCtrl`/`CreateInputCtrl` (three different
    constructors, still raw) plus a `gStaticData_0816B92C`/`0816B934`/
    `0816B93C` action-table pointer stashed at `widget+4`
-   (`sub_800B69C`). Widget kind `1` additionally builds an OAM entry via
-   the standard `sub_80087C0`/`sub_80087B4`/`sub_800872C` trio. All
+   (`SetCtrlAnimSet`). Widget kind `1` additionally builds an OAM entry via
+   the standard `ResetSpriteFrameTimer`/`ResetSpriteFrameIndex`/`SetSpriteAnimDone` trio. All
    three cases finish by pointing `player+0x20`/`0x44` at the freshly
    built table/widget and firing `_call_via_r2` on it.
 5. Unconditionally calls `RunRoom` (see below) and stashes its
    return value.
 6. Tears the per-frame update queues back down: `DestroyLevelLayers` on the
-   text-box singleton if non-NULL, `sub_8026ED0` on the 0x18-byte
+   text-box singleton if non-NULL, `OperatorDelete` on the 0x18-byte
    block, a `_call_via_r2` call on the player object if non-NULL, then
-   `sub_8008EB4`/`sub_8009B9C` on each of the six widget-manager
+   `DestroyPartList`/`DestroyCrateList` on each of the six widget-manager
    globals if non-NULL, and finally `DestroyEntitySpawner`.
 7. Returns `RunRoom`'s result.
 
@@ -129,7 +129,7 @@ level object's own `+0xdc->+8` state field is `2`
   than hand-writing the comparison order.
 - **`InitPlayer`'s 5th argument**: the matched 4-parameter signature in
   `actor_part77.c` never reads a 5th argument, but this call site (and,
-  per that file's own doc comment, `sub_8008434` elsewhere in the same
+  per that file's own doc comment, `CreateSpriteObj` elsewhere in the same
   neighborhood) passes one anyway - a real stack argument (`str r2,
   [sp]` sitting *before* the register arguments are even fully loaded,
   reusing whichever register already held `0`). Declared here with an
@@ -234,8 +234,8 @@ one tail: `SetupRoomBlend(self)`/`sub_802423C()`, then a widget-kind check
 (`self->0x18->+8`, the same field `PlayRoom` dispatched its own
 widget-construction switch on) that - if `1` - re-stamps the player's
 `+0x2d` byte to `0x1f` and refreshes its OAM entry
-(`sub_80087C0`/`sub_80087B4`/`sub_800872C`), then unconditionally
-recomputes the player's `+0x29` low nibble from `sub_800815C(player)`
+(`ResetSpriteFrameTimer`/`ResetSpriteFrameIndex`/`SetSpriteAnimDone`), then unconditionally
+recomputes the player's `+0x29` low nibble from `GetSpriteAnimPaletteSlot(player)`
 (the established negative-constant bit-clear idiom) and fires
 `LoadPaletteSlot` against the tile-asset cache using a `player+0x20`-table
 lookup indexed by `player+0x2d * 7` (0x1c-byte stride), then flushes
@@ -251,7 +251,7 @@ fires the `player+0x44`-table's `_call_via_r2` trampoline (mode
 `0x29`), repeats the same `LoadPaletteSlot` tile-cache call, and pings
 `gHud` (`ShowHudCounters`).
 
-Either way: flushes the four HUD ring-buffer managers (`sub_8008C80`
+Either way: flushes the four HUD ring-buffer managers (`CullPartList`
 on `030012F4`/`EC`/`F0`/`F8`), a `UpdateRoomFrame(self)` refresh, and the
 fade-cluster `SetDispcntMode(0)`/`ShowObj`/`CommitDispcnt`/`CommitBlendRegs`
 reset quartet, landing at the **wait loop** (confirming and completing
@@ -260,9 +260,9 @@ while not ready and the player's `+0xc` bit 0 is clear, run one more
 pass (`sub_802423C`/`UpdateRoomFrame`, a `RunPauseMenu` input-driven mini-
 dispatch that can early-exit the whole function with return value `1`
 or `2` after firing `ResumeRoomAfterPause`'s level-end teardown, a
-`gKeys` input-flag-gated `ShowHudCounters` ping, `sub_800891C`
+`gKeys` input-flag-gated `ShowHudCounters` ping, `UpdatePartList`
 on three ring-buffer managers, two `_call_via_r1` trampoline probes
-against the player's own `+0x18`/`+0x38`/`+0x18` tables, `sub_80091D4`
+against the player's own `+0x18`/`+0x38`/`+0x18` tables, `UpdateCrateList`
 on `gCrateList`, `UpdateHudSlides`, and a `gLevelState+0x8c`-
 gated `TickLevelClock` call) before looping back. Once ready: fires the
 fade (`FadePaletteToBlack`).
@@ -279,8 +279,8 @@ own `+0x4e` tag is `0xa` (the physics-subsystem state tag
 then calls `sub_8023140(gLevelState, count)`.
 
 **Final tail** (every path converges here): flushes all five hot IWRAM
-widget-manager globals (`sub_8008CEC` on `030012E8`/`EC`/`F0`/`F8`/`F4`,
-`sub_8009914` on `0300130C`), resets the fade cluster's own bitfield
+widget-manager globals (`ClearPartList` on `030012E8`/`EC`/`F0`/`F8`/`F4`,
+`ResetCrateList` on `0300130C`), resets the fade cluster's own bitfield
 accessors (`HideBg0`/`HideBg1`/`HideBg2`/`HideBg3`/
 `HideObj`/`WaitForVBlank`/`CommitDispcnt`), and returns `sl` - `1` by
 default, `2` from the wait-loop's `RunPauseMenu`-driven early exit, or

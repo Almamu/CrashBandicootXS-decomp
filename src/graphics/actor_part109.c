@@ -42,7 +42,7 @@
  *     argument, the caller's target action index) instead of the
  *     player's `+0x2d` - the player's hitbox FOR the target action.
  *
- * If AABB1 overlaps AABB2 (`sub_8001640`, the inclusive/touching-counts
+ * If AABB1 overlaps AABB2 (`AabbOverlapsInclusiveX`, the inclusive/touching-counts
  * variant - `src/graphics/aabb_util.c`), bails out and returns `0`
  * immediately: `self`'s hitbox already overlaps the player's CURRENT
  * hitbox, so this is not a fresh trigger. Otherwise, returns `1` only
@@ -73,7 +73,7 @@
 
 extern void SetAabbPos(struct part_aabb *buf, s32 x, s32 y);
 extern void SetAabbSize(struct part_aabb *buf, s32 w, s32 h);
-extern u8 sub_8001640(struct part_aabb *a, struct part_aabb *b);
+extern u8 AabbOverlapsInclusiveX(struct part_aabb *a, struct part_aabb *b);
 extern struct box_part *gPlayer;
 
 /* `a` through a copy that an empty asm claims to modify (emits nothing):
@@ -140,7 +140,7 @@ u8 sub_800CD00(struct box_part *self, s32 action)
             f.b.y = py * 2 - (f.b.y + f.b.h);
     }
     pb = BOX_ADDR(&f.b);
-    if (sub_8001640(&f.a, pb))
+    if (AabbOverlapsInclusiveX(&f.a, pb))
         return 0;
     {
         u8 *rec = (u8 *)&(*gPlayer->keyframes)[action];
@@ -159,7 +159,7 @@ u8 sub_800CD00(struct box_part *self, s32 action)
         if (gPlayer->mirrorY)
             f.b.y = py * 2 - (f.b.y + f.b.h);
     }
-    if (sub_8001640(&f.a, pb) != 1)
+    if (AabbOverlapsInclusiveX(&f.a, pb) != 1)
         return 0;
     return 1;
 }

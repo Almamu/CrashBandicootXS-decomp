@@ -2,14 +2,14 @@
 
 /* Built with old_agbcc - see docs/matching/game-loop-old-agbcc.md. */
 
-extern void sub_8026ED0(void *self);
+extern void OperatorDelete(void *self);
 
-/* If bit 0 of `flags` is set, forwards to `sub_8026ED0` - identical
+/* If bit 0 of `flags` is set, forwards to `OperatorDelete` - identical
  * shape to `sub_8006FC8` (src/graphics/graphics.c). */
 void sub_8025444(void *self, u32 flags)
 {
     if (flags & 1) {
-        sub_8026ED0(self);
+        OperatorDelete(self);
     }
 }
 

@@ -88,9 +88,9 @@ extern struct entity_list *gUnknown_030012EC;
 extern struct collision_map *gEntityFlags;
 
 extern void SetMaskLevel(struct level_state *self, s32 arg1);
-extern void sub_80087C0(struct slot_part *part);
-extern void sub_80087B4(struct slot_part *part);
-extern void sub_800872C(struct slot_part *part, s32 arg);
+extern void ResetSpriteFrameTimer(struct slot_part *part);
+extern void ResetSpriteFrameIndex(struct slot_part *part);
+extern void SetSpriteAnimDone(struct slot_part *part, s32 arg);
 extern void LoadPaletteSlot(void *cache, s32 palette, u8 record);
 extern void sub_8010804(void);
 extern s32 _call_via_r1(void *self, void *fn);
@@ -130,17 +130,17 @@ void StartTimeTrial(struct level_state *self)
     if (part != NULL)
     {
         SetPartTag(part, 7);
-        sub_80087C0(part);
-        sub_80087B4(part);
-        sub_800872C(part, 0);
+        ResetSpriteFrameTimer(part);
+        ResetSpriteFrameIndex(part);
+        SetSpriteAnimDone(part, 0);
     }
     part = self->gemPlatform;
     if (part != NULL)
     {
         SetPartTag(part, 0xc);
-        sub_80087C0(part);
-        sub_80087B4(part);
-        sub_800872C(part, 0);
+        ResetSpriteFrameTimer(part);
+        ResetSpriteFrameIndex(part);
+        SetSpriteAnimDone(part, 0);
         LoadPaletteSlot(gPaletteCache, self->gemPlatform->frameNibble,
                     self->gemPlatform->anim->records[self->gemPlatform->tag].tileRecord);
     }

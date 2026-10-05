@@ -2,17 +2,17 @@
 #include "box_part.h"
 
 /* Dedicated deep investigation (GitHub issue #9/#10,
- * docs/matching/issue-9-0x0800a178-graphics.md): `sub_800A178`/
- * `sub_800A420`, the last two functions in the `sub_800A0FC`-through-
+ * docs/matching/issue-9-0x0800a178-graphics.md): `ProbeGroundSpriteTerrain`/
+ * `sub_800A420`, the last two functions in the `CollideGroundSprite`-through-
  * `sub_800A420` still-raw span `tools/report_units.py` tracked as
- * parked. `sub_800A0FC` itself (the caller of `sub_800A178`, see
+ * parked. `CollideGroundSprite` itself (the caller of `ProbeGroundSpriteTerrain`, see
  * `asm/code_3_2_11.s`) stays raw/unexamined - its own gate logic still
  * depends on the also-still-raw `sub_8009BE0` (parked NAKED,
- * `actor_part12b.c`), so closing `sub_800A178`/`sub_800A420` alone
+ * `actor_part12b.c`), so closing `ProbeGroundSpriteTerrain`/`sub_800A420` alone
  * doesn't unblock it.
  *
  * `docs/rom_map.md` (line ~2624) had already partially flagged
- * `sub_800A178`: "mid-function, unconditionally zeroes `self+0x74` -
+ * `ProbeGroundSpriteTerrain`: "mid-function, unconditionally zeroes `self+0x74` -
  * the same field `UpdateGameFrame`'s level-load branch sets once from
  * `RunTitleScreen`'s return value ... consistent with 'total for this
  * level' being cleared and presumably recomputed under some condition,
@@ -31,7 +31,7 @@
  * session additionally reads `sub_8026C3C`/`sub_8026BF8` (still raw,
  * `asm/code_3_2_17_266bc.s`) far enough to place them precisely.
  *
- * ## What `sub_800A178`/`sub_800A420` actually do
+ * ## What `ProbeGroundSpriteTerrain`/`sub_800A420` actually do
  *
  * Both operate on the same "hitbox quad" pointer - `self->table[0x10]`/
  * `[0x14]`'s own `_call_via_r1(self + addr, fn)` trampoline result,
@@ -55,7 +55,7 @@
  *   entirely) - `self+0xd` bit 1 always ends up cleared on any
  *   all-miss path. Returns whichever probe's hit boolean was last
  *   computed.
- * - **`sub_800A178(self)`**: the larger orchestrator. Gated on two
+ * - **`ProbeGroundSpriteTerrain(self)`**: the larger orchestrator. Gated on two
  *   guard checks (a `_call_via_r1(self->table[0x38]/[0x3c])`
  *   trampoline truthiness test, then `self+0xc` bit 7) - either
  *   failing returns `0` immediately with no other effect. Once past
@@ -92,8 +92,8 @@
  *
  * Read together: this is the part-object movement/collision
  * *resolution* step - once some other function (still-raw
- * `sub_800A0FC`) has decided a part object needs a physics update,
- * `sub_800A178` runs a layered probe (fast quad-based floor/wall test
+ * `CollideGroundSprite`) has decided a part object needs a physics update,
+ * `ProbeGroundSpriteTerrain` runs a layered probe (fast quad-based floor/wall test
  * first via `sub_800A420`/`sub_8026C3C`, then falling back to the
  * general tile-scan `sub_8026628` API per axis) and snaps the object's
  * position to whatever solid surface each probe finds, recording which
@@ -128,7 +128,7 @@
  *   signed byte is negative, `1` otherwise, with the same
  *   `(tileY<<3)+byte-pos->y` delta accumulation.
  *
- * Both are Y-axis (floor-height) probes, matching how `sub_800A178`
+ * Both are Y-axis (floor-height) probes, matching how `ProbeGroundSpriteTerrain`
  * uses them (against `self.y`/`self->y`, never `self.x`). Full byte-
  * exact matching for either wasn't attempted this session - see
  * docs/matching/issue-9-0x0800a178-graphics.md for why (same
@@ -146,9 +146,9 @@
  * compiler it falls out of plain C; the few source-shape details that
  * mattered are noted next to each function. */
 
-/* Follow-up (same investigation): `sub_800A0FC`, the only caller of
- * `sub_800A178` (both live right next to each other, `sub_800A0FC`
- * immediately before `sub_800A178` in ROM and formerly the sole
+/* Follow-up (same investigation): `CollideGroundSprite`, the only caller of
+ * `ProbeGroundSpriteTerrain` (both live right next to each other, `CollideGroundSprite`
+ * immediately before `ProbeGroundSpriteTerrain` in ROM and formerly the sole
  * remaining content of `asm/code_3_2_11.s`). It stayed raw the first
  * pass through this cluster because its own gate logic calls
  * `sub_8009BE0` (parked NAKED, `src/graphics/actor_part12b.c`, see
@@ -160,36 +160,36 @@
  * more times on a miss by nudging Y down), which is enough to close
  * this function's own dispatch logic as real, byte-exact matched C:
  *
- * `sub_800A0FC(self)` returns early with `self+0x68` unchanged unless
- * `self+0xc` bit 7 is set (the same gate `sub_800A178` itself re-checks
- * internally). If set: calls `sub_800A178(self)` and OR's its result
+ * `CollideGroundSprite(self)` returns early with `self+0x68` unchanged unless
+ * `self+0xc` bit 7 is set (the same gate `ProbeGroundSpriteTerrain` itself re-checks
+ * internally). If set: calls `ProbeGroundSpriteTerrain(self)` and OR's its result
  * bitmask into `self+0x68` (a persistent, cumulative per-object
  * collision-axis mask - distinct from `self+0x74`'s own per-call
- * scratch mask `sub_800A178` zeroes and rebuilds every call), then
- * unconditionally fires `sub_800A050(self)` (the already-matched
+ * scratch mask `ProbeGroundSpriteTerrain` zeroes and rebuilds every call), then
+ * unconditionally fires `CollideMovingSprite(self)` (the already-matched
  * `self->table+0x70/0x74` trampoline, `src/graphics/actor_part9.c` -
  * a side-effect-only call, its always-`0` return discarded). If
- * `self+0x68` bit 3 (the "Y-axis/mode-8" collision bit `sub_800A178`
+ * `self+0x68` bit 3 (the "Y-axis/mode-8" collision bit `ProbeGroundSpriteTerrain`
  * just OR'd in, if it hit) is now set: clears `self+0xc` bits 0 and 5,
  * then - unless `self+0xd` bit 1 is already set (ground already
  * snapped this call, `sub_800A420`'s own convention) - fires the same
- * `self->table+0x10/0x14` "hitbox quad" trampoline `sub_800A178`
+ * `self->table+0x10/0x14` "hitbox quad" trampoline `ProbeGroundSpriteTerrain`
  * itself uses, and runs a `mode == 8` (Y-axis/floor) step-probe via
  * `sub_8009BE0(self, 8, quad)`. If that step-probe does *not* report
  * immediate success (either a full miss, or only succeeding via one of
  * its internal retries - see `sub_8009BE0`'s own doc comment), sets
  * `self+0xc` bit 5 and clears `self+0x68` bit 3 back out - rolling
- * back the "Y axis resolved" bit `sub_800A178`'s cheaper probe had
+ * back the "Y axis resolved" bit `ProbeGroundSpriteTerrain`'s cheaper probe had
  * just set, since the more thorough step-probe didn't confirm it
  * cleanly. Returns the (possibly rolled-back) `self+0x68` byte either
  * way.
  *
- * Read together with `sub_800A178`/`sub_800A420`: this is the
- * part-object physics dispatcher - `sub_800A0FC` is the entry point
- * (called by `sub_800A884`'s per-frame reentrancy-guarded wrapper,
- * `docs/rom_map.md` line ~1835), `sub_800A178` does the actual
+ * Read together with `ProbeGroundSpriteTerrain`/`sub_800A420`: this is the
+ * part-object physics dispatcher - `CollideGroundSprite` is the entry point
+ * (called by `CollidePlayer`'s per-frame reentrancy-guarded wrapper,
+ * `docs/rom_map.md` line ~1835), `ProbeGroundSpriteTerrain` does the actual
  * layered collision resolution and reports which axes it resolved,
- * and `sub_800A0FC`'s own tail cross-checks the Y-axis result against
+ * and `CollideGroundSprite`'s own tail cross-checks the Y-axis result against
  * a second, independent step-probe (`sub_8009BE0`) before trusting it
  * enough to leave the bit set in the persistent `self+0x68` mask.
  *
@@ -202,19 +202,19 @@
  * (`~0x20`), not `~0x21` as the older notes had it. */
 
 extern s32 _call_via_r1(void *addr, void *fn);
-extern s32 sub_800A178(struct box_part *self);
-extern s32 sub_800A050(void *self);
+extern s32 ProbeGroundSpriteTerrain(struct box_part *self);
+extern s32 CollideMovingSprite(void *self);
 extern u8 sub_8009BE0(void *self, s32 mode, void *quad);
 
-u8 sub_800A0FC(struct box_part *self)
+u8 CollideGroundSprite(struct box_part *self)
 {
     u8 *p = &self->hitAxes;
     u8 val = *p;
 
     if (self->flags >> 7) {
-        val |= sub_800A178(self);
+        val |= ProbeGroundSpriteTerrain(self);
         *p = val;
-        sub_800A050(self);
+        CollideMovingSprite(self);
         if (*p & 8) {
             {
                 s32 f = self->flags & ~0x20;
@@ -263,7 +263,7 @@ u8 sub_800A420(struct box_part *self, struct part_box *quad, u8 *outFlag);
  * sub_800A420 are separate `u8` locals (sp+4 and sp+5, the second
  * addressed as `sp + 5`, not `&arr[1]`). The Y-axis block stores
  * `origX` too although it probes with `&origY`, as the ROM does. */
-s32 sub_800A178(struct box_part *self)
+s32 ProbeGroundSpriteTerrain(struct box_part *self)
 {
     s32 origX;
     s32 origY;
@@ -388,7 +388,7 @@ done:
 /* See the file-level header comment above for this function's
  * semantics. `self`'s a part object, `quad` its `{s16 xOff, s16 yOff,
  * u8 w, u8 h}` hitbox quad pointer (the `self->table[0x10]/[0x14]`
- * trampoline result `sub_800A178` also uses), `outFlag` a caller-owned
+ * trampoline result `ProbeGroundSpriteTerrain` also uses), `outFlag` a caller-owned
  * byte set to `1` only on the specific all-miss-with-bit-1-already-set
  * path described above. Returns the final probe's hit boolean.
  *

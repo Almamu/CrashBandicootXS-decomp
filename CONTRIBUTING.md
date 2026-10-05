@@ -60,7 +60,7 @@ function level, not just the whole-issue level:
 
 - **Claiming the whole issue:** comment saying you're starting it.
 - **Claiming a subset:** comment naming which functions you're taking
-  (e.g. "taking `sub_8001640`-`sub_8001688`"), and check their boxes in
+  (e.g. "taking `AabbOverlapsInclusiveX`-`AabbOverlaps`"), and check their boxes in
   the issue body as you go (anyone with write access can edit a task
   list; if you don't have that, ask in a comment and a maintainer will
   check them off, or just leave a comment - the checkboxes are a

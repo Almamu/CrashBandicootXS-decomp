@@ -45,7 +45,7 @@ struct sprite_f28
     u8 unk_6:2;
 } __attribute__((packed));
 
-/* The 0x40-byte animated sprite part `sub_8008904` constructs. */
+/* The 0x40-byte animated sprite part `InitUiSpriteObj` constructs. */
 struct sprite
 {
     s32 x;                    // 0x00

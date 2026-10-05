@@ -52,19 +52,19 @@ extern s32 gUnknown_030012AC;
  * semantics are the next phase's job). Signatures are inferred purely
  * from the registers each call site sets. */
 extern void UpdateEnemyPatrol(void *self);
-extern void sub_800C18C(void *self);
-extern void sub_800C1E8(void *self);
-extern void sub_800C244(void *self);
+extern void UpdateEnemyHomingX(void *self);
+extern void UpdateEnemyHomingY(void *self);
+extern void UpdateEnemyHop(void *self);
 extern void sub_800C314(void *self);
 extern void UpdateEnemyAttackCycle(void *self);
 extern void sub_800C5D4(void *self);
 extern void sub_800C8F8(void *self);
-extern void sub_800C940(void *self);
+extern void UpdateEnemyBob(void *self);
 extern void sub_800C97C(void *self);
 extern void *sub_800C9C8(s32 a, s32 b, s32 c, s32 d, s32 e, void *f);
 extern void sub_800BFA8(void *self);
 extern void *CreateKnockedEnemyCtrl(void *mem); /* constructor: resets the fresh object and points its +0xC table at gKnockedEnemyCtrlVtable (actor_part117.c) */
-extern void *sub_8026EDC(s32 size);
+extern void *OperatorNew(s32 size);
 extern void *_call_via_r1(void *arg0, void *fn);
 extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
 extern void PlayAmbientSfx(void *ctx, s32 id, s32 frame, s32 vol, struct byte_arg force);
@@ -286,13 +286,13 @@ void UpdateEnemyCtrl(struct part_ctrl *self)
         sub_800C97C(self);
         break;
     case 6:
-        sub_800C940(self);
+        UpdateEnemyBob(self);
         break;
     case 7:
         sub_800C314(self);
         break;
     case 8:
-        sub_800C244(self);
+        UpdateEnemyHop(self);
         break;
     case 9:
         if (!gUnknown_030012A4) {
@@ -307,7 +307,7 @@ void UpdateEnemyCtrl(struct part_ctrl *self)
             gUnknown_030012A8 = y;
             gUnknown_030012AC = 1;
         }
-        sub_800C18C(self);
+        UpdateEnemyHomingX(self);
         sub_800C8F8(self);
         {
             struct ctrl_target *t = self->target;
@@ -320,8 +320,8 @@ void UpdateEnemyCtrl(struct part_ctrl *self)
         }
         break;
     case 11:
-        sub_800C18C(self);
-        sub_800C1E8(self);
+        UpdateEnemyHomingX(self);
+        UpdateEnemyHomingY(self);
         if (TargetHit(self->target) && self->kind == 6) {
             struct part_method *m = &self->anchor->bounce;
 
@@ -333,7 +333,7 @@ void UpdateEnemyCtrl(struct part_ctrl *self)
         UpdateEnemyPatrol(self);
         /* fallthrough */
     case 10:
-        sub_800C1E8(self);
+        UpdateEnemyHomingY(self);
         break;
     case 16:
         UpdateEnemyAttackCycle(self);
@@ -453,7 +453,7 @@ void HitEnemy(struct part_ctrl *self, s32 unused, s32 state)
     case 19:
     case 20:
         {
-            struct launch_obj *obj = CreateKnockedEnemyCtrl(sub_8026EDC(0x10));
+            struct launch_obj *obj = CreateKnockedEnemyCtrl(OperatorNew(0x10));
             struct part_method *m;
             struct ctrl_target *t;
             s32 a, v;

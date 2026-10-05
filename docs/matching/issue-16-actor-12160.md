@@ -5,22 +5,22 @@ Continuation of
 chunk's leading 15 `struct actor` functions and left the remaining 10
 completely untouched, citing `docs/rom_map.md`'s own conclusion that
 this "child object" family (a per-level 42-slot action dispatch table,
-`gStaticData_0816BF20`) "isn't understood with byte-exact precision
+`gActionCtrlStateTable`) "isn't understood with byte-exact precision
 yet." This pass picked that remainder back up: 4 of the 10 turned out
 tractable with the same base+offset+fn-pointer trampoline and
 state/flag/table-index-trio conventions `actor_part18.c`/
 `actor_part18b.c` already established for other members of the same
-table; the other 6 (including the two hardest - `sub_8011BD4`'s
+table; the other 6 (including the two hardest - `ActionCtrlHandleEvent`'s
 25-case/7-case nested jump table and `sub_8012AF4`'s stack-array/`r8`
 usage) were left raw again, still out of scope.
 
 ## New files
 
-`asm/code_3_2_17_11bd4.s` is trimmed to just `sub_8011BD4` (unchanged
+`asm/code_3_2_17_11bd4.s` is trimmed to just `ActionCtrlHandleEvent` (unchanged
 start address, 0x08011BD4-0x08012160). `KillPlayer`/`sub_8012238`/
-`sub_80122CC` (contiguous, 0x08012160-0x08012420) move to a new
+`UpdatePlayerFacing` (contiguous, 0x08012160-0x08012420) move to a new
 `src/graphics/actor_part79.c`. A new `asm/code_3_2_17_12420.s` picks up
-`sub_8012420`/`sub_8012694`/`sub_801283C` (0x08012420-0x08012A7C).
+`UpdateActionCtrl`/`sub_8012694`/`sub_801283C` (0x08012420-0x08012A7C).
 `sub_8012A7C` alone (0x08012A7C-0x08012AF4, not ROM-adjacent to either
 matched group) moves to a new `src/graphics/actor_part80.c`. A final
 new `asm/code_3_2_17_12af4.s` picks up `sub_8012AF4` onward - this file
@@ -38,7 +38,7 @@ order.
   `+0x54` trampoline pair with the function's second argument as the
   "part" object, then the `+0x20`/`+0x24` pair (id `0x1d`), resets
   both halves of the state/flag/table-index trio via a single walked
-  pointer (the `sub_8011B90`-style idiom from `actor_part39.c`), runs
+  pointer (the `ResetActionCtrl`-style idiom from `actor_part39.c`), runs
   `sub_8012AF4`, clears/sets a few more `self+0x10`-record bytes
   (`+0x100`/`+0x102`/`+0x103`/`+0x104`, and two bits of `+0xc` via the
   established negative-constant-mask idiom), calls `LoseLife`, then
@@ -62,20 +62,20 @@ order.
 - **`sub_8012238`**: if the player (`gPlayer`)'s `+0x100`
   flag is set, dispatches on the player's `+0x2d` type byte - `0x12`
   (only when `+0x60` is nonzero) or `0xd`/`0x18` re-tag the player
-  `0x25`/`0x26` and fire the standard `sub_80087C0`/`sub_80087B4`/
-  `sub_800872C(..., 0)` teardown trio; otherwise, while the flag is
+  `0x25`/`0x26` and fire the standard `ResetSpriteFrameTimer`/`ResetSpriteFrameIndex`/
+  `SetSpriteAnimDone(..., 0)` teardown trio; otherwise, while the flag is
   clear, a player type of `0x25`/`0x26` plays a sound and resets the
   trio via `sub_8015780`. The `type > 0x12` branch needed an explicit
   `goto check_18:` block (rather than a nested `if`) to keep the
   compiler from inverting it into the opposite branch/fallthrough pair,
   the same "goto forces exact fall-through shape" technique
-  `actor_part39.c`'s `sub_8011A8C` already used, plus a `s32` (not
+  `actor_part39.c`'s `UpdateStopwatch` already used, plus a `s32` (not
   `u8`) type for the compared byte to get the ROM's signed `bgt`
   instead of an unsigned `bhi`. The final `type2 == 0x25 || type2 ==
   0x26` check needed splitting into two literal `if`/`goto` comparisons
   - the natural `||` form gets optimized into a single `(u8)(type2 -
   0x25) <= 1` range check, which the ROM doesn't do.
-- **`sub_80122CC`**: reads D-pad input (via `GetDpadDirection`, kept only
+- **`UpdatePlayerFacing`**: reads D-pad input (via `GetDpadDirection`, kept only
   for its side effect on register allocation - the result feeds later
   comparisons) and dispatches `self+8`'s type through a 39-entry jump
   table (values 0-0x26; anything higher returns 0 directly without
@@ -111,16 +111,16 @@ order.
 
 ## Left raw (6/10)
 
-`sub_8011BD4`, `sub_8012420`, `sub_8012694`, `sub_801283C`,
+`ActionCtrlHandleEvent`, `UpdateActionCtrl`, `sub_8012694`, `sub_801283C`,
 `sub_8012AF4`, `sub_8012D24` stay exactly as
 [issue-16-actor-11b0c.md](./issue-16-actor-11b0c.md) already
 characterized them:
 
-- `sub_8011BD4` (1420 B) is the documented 25-case jump table with a
+- `ActionCtrlHandleEvent` (1420 B) is the documented 25-case jump table with a
   further 7-case sub-dispatch, sharing the type-`0x1d` gate with
-  `sub_8016288` (also still raw) - a substantial companion state
+  `UpdatePlayerCtrl` (also still raw) - a substantial companion state
   machine, not attempted this pass.
-- `sub_8012420`/`sub_8012694`/`sub_801283C` are further members of the
+- `UpdateActionCtrl`/`sub_8012694`/`sub_801283C` are further members of the
   42-slot action-dispatch table, real coverage in `docs/rom_map.md` but
   not read closely enough here to attempt byte-exact matching.
 - `sub_8012AF4` (284 B of ROM, the widest of the six by instruction
@@ -130,7 +130,7 @@ characterized them:
   complexity from the four matched functions above.
 - `sub_8012D24` is a further sibling/callee of the same family.
 
-Given the two hardest members of this remainder (`sub_8011BD4`,
+Given the two hardest members of this remainder (`ActionCtrlHandleEvent`,
 `sub_8012AF4`) are exactly the kind of function `docs/rom_map.md`
 already flagged as needing a dedicated pass, and this session's four
 matches already represent real, verified progress, these six stay raw

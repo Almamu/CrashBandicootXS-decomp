@@ -33,7 +33,7 @@ matches both.
     r1, `tag` in r5, `idx` in r3), nested in blocks that close each
     pin's scope right as its value dies so a later value can safely
     reuse the same register - the same "which anonymous scratch
-    register" gap that forced `sub_8007B00`/`sub_8007B98`
+    register" gap that forced `GetSpriteBounds`/`GetSpriteHitbox`
     (`actor_part.c`) fully NAKED, but tractable here with explicit
     pins since this function's register pressure is much lower (no
     `SetAabbPos`/`SetAabbSize` calls in the middle). The final
@@ -79,7 +79,7 @@ matches both.
     allocated register-resident variable *does* get correctly tracked
     for save/restore.
   - **AABB-build "which anonymous scratch register" gap**: the same
-    class of gap `sub_8007B00`/`sub_8007B98` (`actor_part.c`) went
+    class of gap `GetSpriteBounds`/`GetSpriteHitbox` (`actor_part.c`) went
     NAKED over. Anchored as one literal `asm volatile` block (self/rec
     passed as inputs purely to mark them live; left/right/top/bottom as
     fixed-register outputs) rather than plain C, which kept letting

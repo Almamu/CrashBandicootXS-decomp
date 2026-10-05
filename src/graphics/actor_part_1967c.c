@@ -276,8 +276,8 @@ extern u8 gStaticData_087E483C[];
 extern u8 gStaticData_087E48A4[];
 extern u8 gStaticData_087E490C[];
 
-extern void sub_800B8A8(void *self, s32 flags);
-extern void sub_800B8C8(void *self);
+extern void DestroyCtrl(void *self, s32 flags);
+extern void InitCtrl(void *self);
 extern void sub_8017A78(void *self, s32 flags);
 extern void sub_8017A8C(void *self);
 extern void DestroyEnemyCtrl(void *self, s32 flags);
@@ -290,17 +290,17 @@ extern void SpawnTurboRunPower(u32 arg0, s32 arg1, s32 arg2, s32 arg3);
  * pointer in r0 and returns it). */
 extern struct box sub_8007C30(struct part *obj);
 extern struct box sub_8007CF8(struct part *obj);
-extern struct box sub_8007B98(struct part *obj);
-extern u8 sub_8001688(struct box *a, struct box *b);
+extern struct box GetSpriteHitbox(struct part *obj);
+extern u8 AabbOverlaps(struct box *a, struct box *b);
 extern void RequestRoomExit(void);
 extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
-extern struct part *sub_8009ED0(u32 arg0, u16 x, u16 y, u32 arg3);
-extern void sub_80087C0(struct part *p);
-extern void sub_80087B4(struct part *p);
-extern void sub_800872C(struct part *p, s32 arg1);
-extern void *sub_8026EDC(u32 size);
-extern s32 sub_800815C(struct part *p);
-extern void sub_8008E94(struct part_list *list, struct part *p);
+extern struct part *CreateMovingSprite(u32 arg0, u16 x, u16 y, u32 arg3);
+extern void ResetSpriteFrameTimer(struct part *p);
+extern void ResetSpriteFrameIndex(struct part *p);
+extern void SetSpriteAnimDone(struct part *p, s32 arg1);
+extern void *OperatorNew(u32 size);
+extern s32 GetSpriteAnimPaletteSlot(struct part *p);
+extern void AddToPartList(struct part_list *list, struct part *p);
 extern void sub_801A7AC(struct dingodile_boss *self, struct part *other, s32 arg2);
 
 void SetDingodileState(struct dingodile_boss *self, struct part *other, s32 next);
@@ -437,12 +437,12 @@ void sub_80196B8(struct obj_4704 *self, s32 *origin, s32 x, s32 y)
 void sub_80196E4(struct obj_4704 *self, s32 flags)
 {
     self->vt = (struct vtable *)gStaticData_087E4704;
-    sub_800B8A8(self, flags);
+    DestroyCtrl(self, flags);
 }
 
 struct obj_4704 *sub_80196F8(struct obj_4704 *self, void *src)
 {
-    sub_800B8C8(self);
+    InitCtrl(self);
     self->vt = (struct vtable *)gStaticData_087E4704;
     self->unk_24 = 0;
     self->src = src;
@@ -464,12 +464,12 @@ void sub_8019730(struct obj_476c *self, struct part *other)
 void sub_8019744(struct obj_476c *self, s32 flags)
 {
     self->vt = (struct vtable *)gStaticData_087E476C;
-    sub_800B8A8(self, flags);
+    DestroyCtrl(self, flags);
 }
 
 struct obj_476c *sub_8019758(struct obj_476c *self)
 {
-    sub_800B8C8(self);
+    InitCtrl(self);
     self->vt = (struct vtable *)gStaticData_087E476C;
     return self;
 }
@@ -532,7 +532,7 @@ void UpdateDingodile(struct dingodile_boss *self, struct part *other)
     if (self->state == 8 && gPlayer->unk_0A == 0x13)
     {
         box = sub_8007C30(gPlayer);
-        if (BOX_VALID(box) && sub_8001688(&box, &hurt))
+        if (BOX_VALID(box) && AabbOverlaps(&box, &hurt))
         {
             self->hits++;
             SetDingodileState(self, other, 11);
@@ -839,7 +839,7 @@ void SetDingodileState(struct dingodile_boss *self, struct part *other, s32 next
 
 void sub_8019EBC(struct dingodile_boss *self, s32 mode, u16 x, u16 y, struct part *arg)
 {
-    struct part *p = sub_8009ED0(0xFFFF, x, y, 0);
+    struct part *p = CreateMovingSprite(0xFFFF, x, y, 0);
     struct vobj *ctl;
     u8 *bits;
 
@@ -853,30 +853,30 @@ void sub_8019EBC(struct dingodile_boss *self, s32 mode, u16 x, u16 y, struct par
 
             p->f28.mode = kind;
             SetTag(p, 3);
-            sub_80087C0(p);
-            sub_80087B4(p);
-            sub_800872C(p, 0);
+            ResetSpriteFrameTimer(p);
+            ResetSpriteFrameIndex(p);
+            SetSpriteAnimDone(p, 0);
             p->unk_0A = kind;
         }
-        ctl = (struct vobj *)sub_801A794(sub_8026EDC(0x28));
+        ctl = (struct vobj *)sub_801A794(OperatorNew(0x28));
         ((struct obj_490c *)ctl)->target = arg;
         self->part = p;
         break;
     case 1:
         PlaySfx(gAudioContext, 0x29, 0x100);
         SetTag(p, 7);
-        sub_80087C0(p);
-        sub_80087B4(p);
-        sub_800872C(p, 0);
+        ResetSpriteFrameTimer(p);
+        ResetSpriteFrameIndex(p);
+        SetSpriteAnimDone(p, 0);
         p->unk_0A = 4;
-        ctl = (struct vobj *)sub_801A768(sub_8026EDC(0x20));
+        ctl = (struct vobj *)sub_801A768(OperatorNew(0x20));
         ((struct obj_48a4 *)ctl)->target = arg;
         break;
     default:
         ctl = NULL;
         break;
     }
-    p->slot = sub_800815C(p);
+    p->slot = GetSpriteAnimPaletteSlot(p);
     p->ctl = ctl;
     VCALL1(ctl, m18, p);
     bits = &gEntityFlags->info->bits[*gEntityFlags->info->offset];
@@ -884,9 +884,9 @@ void sub_8019EBC(struct dingodile_boss *self, s32 mode, u16 x, u16 y, struct par
     p->f28.flag5 = (*bits >> 2) & 1;
     p->fl.b.active = 1;
     if (mode == 0)
-        sub_8008E94(gUnknown_030012EC, p);
+        AddToPartList(gUnknown_030012EC, p);
     else
-        sub_8008E94(gUnknown_030012F0, p);
+        AddToPartList(gUnknown_030012F0, p);
 }
 
 /* Spawns one of the boss's floor-tile parts (record index 1 of the
@@ -899,23 +899,23 @@ void sub_8019EBC(struct dingodile_boss *self, s32 mode, u16 x, u16 y, struct par
  * explicit `& 1` makes the tag store reuse the held constant 1). */
 void sub_801A03C(struct dingodile_boss *self, u16 x, u16 y, u8 facing)
 {
-    struct part *p = sub_8009ED0(0xFFFF, x, y, 0);
+    struct part *p = CreateMovingSprite(0xFFFF, x, y, 0);
     struct vobj *ctl;
 
     p->table = (void *)((u8 *)**gUnknown_030012D0 + 0x30);
     SetTag(p, 1);
-    sub_80087C0(p);
-    sub_80087B4(p);
-    sub_800872C(p, 0);
+    ResetSpriteFrameTimer(p);
+    ResetSpriteFrameIndex(p);
+    SetSpriteAnimDone(p, 0);
     p->unk_0A = 6;
-    ctl = sub_801A724(sub_8026EDC(0x8C));
-    p->slot = sub_800815C(p);
+    ctl = sub_801A724(OperatorNew(0x8C));
+    p->slot = GetSpriteAnimPaletteSlot(p);
     p->ctl = ctl;
     VCALL1_B(ctl, m18, p)
     p->f28.facing = facing;
     p->fl.b.active = 1;
     VCALL1_B(ctl, m18, p)
-    sub_8008E94(gUnknown_030012F0, p);
+    AddToPartList(gUnknown_030012F0, p);
 }
 
 /* gStaticData_087E490C's per-frame update (this controller is created
@@ -967,7 +967,7 @@ void sub_801A114(struct obj_490c *self, struct part *other)
                 /* End of the hold. */
                 asm("" : : "r"(hr5));
                 asm("" : : "r"(hr6));
-                if (sub_8001688(&b, &a))
+                if (AabbOverlaps(&b, &a))
                 {
                     struct part *pl = gPlayer;
                     struct vmethod *m2 = &pl->vt->m68;
@@ -1039,8 +1039,8 @@ void sub_801A2A8(struct obj_48a4 *self, struct part *other)
             struct part *t = self->target;
             if ((t->fl.raw >> 6) & 1)
             {
-                b = sub_8007B98(t);
-                if (sub_8001688(&a, &b))
+                b = GetSpriteHitbox(t);
+                if (AabbOverlaps(&a, &b))
                 {
                     VCALL1(self->target->ctl, m20, 7);
                     VCALL1(self, m20, 6);
@@ -1058,7 +1058,7 @@ void sub_801A2A8(struct obj_48a4 *self, struct part *other)
 
                 *pb = sub_8007C30(gPlayer);
             }
-            if (sub_8001688(&a, &b))
+            if (AabbOverlaps(&a, &b))
             {
                 struct part *pl = gPlayer;
                 struct vmethod *m2 = &pl->vt->m68;
@@ -1088,7 +1088,7 @@ void sub_801A2A8(struct obj_48a4 *self, struct part *other)
             other->unk_58 = 0;
             other->unk_5C = 0;
             VCALL2(self, m50, other, 8);
-            other->slot = sub_800815C(other);
+            other->slot = GetSpriteAnimPaletteSlot(other);
             sub_801A584(self, other->x >> 8, other->y >> 8);
             VCALL1(self, m20, 2);
         }
@@ -1125,26 +1125,26 @@ void sub_801A2A8(struct obj_48a4 *self, struct part *other)
 
 void sub_801A584(struct obj_48a4 *self, u16 x, u16 y)
 {
-    struct part *p = sub_8009ED0(0xFFFF, x, y, 0);
+    struct part *p = CreateMovingSprite(0xFFFF, x, y, 0);
     struct obj_48a4 *c;
 
     p->fl.b.shown = 0;
     p->table = (void *)((u8 *)**gUnknown_030012D0 + 0x288);
     SetTag(p, 8);
-    sub_80087C0(p);
-    sub_80087B4(p);
-    sub_800872C(p, 0);
+    ResetSpriteFrameTimer(p);
+    ResetSpriteFrameIndex(p);
+    SetSpriteAnimDone(p, 0);
     p->unk_0A = 1;
-    c = sub_8026EDC(0x20);
+    c = OperatorNew(0x20);
     sub_8017A8C(c);
     c->vt = (struct vtable *)gStaticData_087E48A4;
     c->target = self->target;
     VCALL1(c, m20, 5);
-    p->slot = sub_800815C(p);
+    p->slot = GetSpriteAnimPaletteSlot(p);
     p->ctl = c;
     VCALL1(c, m18, p);
     p->fl.b.active = 1;
-    sub_8008E94(gUnknown_030012F0, p);
+    AddToPartList(gUnknown_030012F0, p);
 }
 
 void sub_801A64C(struct obj_483c *self, struct part *other)

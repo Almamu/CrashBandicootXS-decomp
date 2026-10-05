@@ -6,7 +6,7 @@
  * object family as `actor_part15.c`/`actor_part48.c`; raw offset casts
  * throughout for the same reason those files give. */
 
-extern void sub_800A0FC(void *self);
+extern void CollideGroundSprite(void *self);
 extern void SetMaskLevel(void *arg0, s32 arg1);
 extern void *GetSpriteFrame(void *part);
 extern s32 sub_8026BC0(void *arg0, s32 x, s32 y);
@@ -54,7 +54,7 @@ struct a884_method {
 
 /* A per-frame "reentrancy guard"-shaped wrapper (only runs if
  * `self+0xc` bit 7 is set): fires `self->table+0x70`'s trampoline via
- * `_call_via_r1`, then calls `sub_800A0FC` (still raw) with the global
+ * `_call_via_r1`, then calls `CollideGroundSprite` (still raw) with the global
  * `gLevelLayers+0x2a` flag held set for the duration. If
  * `self+0xac` (a pointer, cleared here) was non-null, sets `self+0x68`
  * bit 3 and clears the `+0x100`/`+0x102`/`+0x103` flag bytes. Then
@@ -156,7 +156,7 @@ static inline s16 *A884Offset(void *part)
     return result;
 }
 
-u8 sub_800A884(struct a884_part *self)
+u8 CollidePlayer(struct a884_part *self)
 {
     if (self->flags >> 7) {
         u8 kind;
@@ -172,7 +172,7 @@ u8 sub_800A884(struct a884_part *self)
         CALL_M70H(self);
         self->f105 = 1;
         ((struct a884_game *)gLevelLayers)->busy = 1;
-        sub_800A0FC(self);
+        CollideGroundSprite(self);
         /* r3 hold (no code) over the flag resets and the kind switch:
          * the ROM's reloads rotate through r0-r2 only, so the flag
          * offsets reuse one register (`adds r1, #3`, `subs r2, #3`). */

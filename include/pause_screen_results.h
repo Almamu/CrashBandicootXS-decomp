@@ -10,20 +10,20 @@
 /* A small `struct actor`-derived on-screen icon: the first 0x1c bytes
  * are a plain `struct actor` (see actor.h), then a second keyframe-
  * table pointer at +0x20 and a frame index at +0x2d - both already
- * established by the already-matched sub_800815C/sub_80080C0
+ * established by the already-matched GetSpriteAnimPaletteSlot/SpriteHitboxOverlaps
  * (src/graphics/actor_part4.c), which read this exact same object
  * through raw offsets. +0x29's low nibble and +0x3c are new fields this
  * chunk's functions write but don't otherwise interpret. Allocated with
- * `sub_8026EDC(0x40)` - bigger than plain `struct actor` (0x1c), so it
+ * `OperatorNew(0x40)` - bigger than plain `struct actor` (0x1c), so it
  * has more trailing fields this chunk's functions never touch. */
 struct settings_icon_actor {
     struct actor base;    /* 0x00-0x1b */
     u8 unused_1c[0x20 - 0x1c];
-    void **field_20;        /* 0x20 - keyframe-table pointer, see sub_800815C */
+    void **field_20;        /* 0x20 - keyframe-table pointer, see GetSpriteAnimPaletteSlot */
     u8 unused_24[0x29 - 0x24];
-    u8 field_29;               /* 0x29 - low nibble set from sub_800815C's result */
+    u8 field_29;               /* 0x29 - low nibble set from GetSpriteAnimPaletteSlot's result */
     u8 unused_2a[0x2d - 0x2a];
-    u8 frameIndex;                /* 0x2d - current keyframe index, see sub_800815C */
+    u8 frameIndex;                /* 0x2d - current keyframe index, see GetSpriteAnimPaletteSlot */
     u8 unused_2e[0x38 - 0x2e];
     u8 field_38;                    /* 0x38 - AnimatePauseMenu: "currently highlighted/armed" flag */
     u8 unused_39[0x3c - 0x39];
@@ -46,7 +46,7 @@ struct icon_pos {
  * historical name. This
  * reconciles three previously-separate partial views of the exact same
  * 0xd4-byte allocation (confirmed by the real call chain: RunPauseMenu
- * allocates it with `sub_8026EDC(0xd4)`, passes it to InitPauseMenu,
+ * allocates it with `OperatorNew(0xd4)`, passes it to InitPauseMenu,
  * which passes the same pointer to InitPauseMenuInfo, which passes it to
  * the five Init*Page functions - and separately InitPauseMenu also passes
  * it to CommitPauseMenuFrame/PauseMenuLoop, which is the settings_menu12.c/
@@ -110,9 +110,9 @@ struct pause_screen_results {
 };
 COMPILE_TIME_ASSERT(sizeof(struct pause_screen_results) == 0xd4);
 
-extern s32 sub_800815C(struct actor *part);
+extern s32 GetSpriteAnimPaletteSlot(struct actor *part);
 
-/* Sets `field_29`'s low nibble from sub_800815C's result, keeping the
+/* Sets `field_29`'s low nibble from GetSpriteAnimPaletteSlot's result, keeping the
  * high nibble - the recurring last step of every icon constructor that
  * touches a `struct settings_icon_actor` (see src/graphics/
  * settings_menu6.c and src/graphics/settings_menu13.c). Written with
@@ -123,7 +123,7 @@ extern s32 sub_800815C(struct actor *part);
  * 0xf mask, which the ROM never does. */
 #define UPDATE_ICON_FRAME_NIBBLE(iconExpr) \
     do { \
-        register s32 _ret asm("r0") = sub_800815C(&(iconExpr)->base); \
+        register s32 _ret asm("r0") = GetSpriteAnimPaletteSlot(&(iconExpr)->base); \
         register u8 *_addr asm("r2") = &(iconExpr)->field_29; \
         register s32 _mask asm("r1"); \
         register u8 _byte asm("r3"); \

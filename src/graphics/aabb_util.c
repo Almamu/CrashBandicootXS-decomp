@@ -50,9 +50,9 @@ struct aabb {
 };
 
 /* Axis-aligned box overlap test, X-axis edges inclusive (touching
- * counts as overlap) - the `sub_800B37C`-family collision checks in
- * actor_part*.c use the stricter `sub_8001688` below instead. */
-u8 sub_8001640(struct aabb *a, struct aabb *b)
+ * counts as overlap) - the `PlayerTouchesBox`-family collision checks in
+ * actor_part*.c use the stricter `AabbOverlaps` below instead. */
+u8 AabbOverlapsInclusiveX(struct aabb *a, struct aabb *b)
 {
     u8 result = 0;
 
@@ -74,12 +74,12 @@ u8 sub_8001640(struct aabb *a, struct aabb *b)
     return result;
 }
 
-/* Same axis-aligned box overlap test as `sub_8001640`, but with the
+/* Same axis-aligned box overlap test as `AabbOverlapsInclusiveX`, but with the
  * X-axis edges exclusive too (touching does not count) - this is the
  * variant already referenced by name from `actor_part15.c`'s
- * `sub_800B37C` and the pool/grid collision functions in
+ * `PlayerTouchesBox` and the pool/grid collision functions in
  * `actor_part11.c`. */
-u8 sub_8001688(struct aabb *a, struct aabb *b)
+u8 AabbOverlaps(struct aabb *a, struct aabb *b)
 {
     u8 result = 0;
 

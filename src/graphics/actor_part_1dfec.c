@@ -123,23 +123,23 @@ struct level_item *CreateLevelSelectEntry(struct level_item *self)
 {
     self->vtable = gLevelSelectEntryVtable;
     self->selected = 0;
-    self->frame = sub_8008904(sub_8026EDC(0x40));
+    self->frame = InitUiSpriteObj(OperatorNew(0x40));
     self->frame->anim = AnimTable(0x24C);
-    sub_80088D8(self->frame, 1);
-    self->icon = sub_8008904(sub_8026EDC(0x40));
+    SetSpritePriority(self->frame, 1);
+    self->icon = InitUiSpriteObj(OperatorNew(0x40));
     self->icon->anim = AnimTable(0x264);
-    sub_80088D8(self->icon, 1);
+    SetSpritePriority(self->icon, 1);
     return self;
 }
 
 struct cursor_panel *CreateLevelSelectCursor(struct cursor_panel *self)
 {
-    struct sprite *p = sub_8008904(sub_8026EDC(0x40));
+    struct sprite *p = InitUiSpriteObj(OperatorNew(0x40));
 
     self->part = p;
     p->anim = AnimTable(0x240);
     SetAnim(p, 0);
-    self->part->palette = sub_800815C(self->part);
+    self->part->palette = GetSpriteAnimPaletteSlot(self->part);
     LockPalette(gPaletteCache, PART_RECORD(self->part).tileRecord);
     SetLevelSelectCursorPos(self, 0x78, 0x35);
     self->oam.y = self->line.y0 - 0x20;
@@ -172,7 +172,7 @@ void UpdateLevelSelectCursor(struct cursor_panel *self)
     switch (self->state)
     {
     case 0:
-        sub_8008044(self->part);
+        AdvanceSpriteAnim(self->part);
         if (self->timer != 0)
         {
             self->timer--;
@@ -185,7 +185,7 @@ void UpdateLevelSelectCursor(struct cursor_panel *self)
         }
         break;
     case 1:
-        sub_8008044(self->part);
+        AdvanceSpriteAnim(self->part);
         if (self->part->animDone)
         {
             self->state = 2;
@@ -193,7 +193,7 @@ void UpdateLevelSelectCursor(struct cursor_panel *self)
         }
         break;
     case 2:
-        sub_8008044(self->part);
+        AdvanceSpriteAnim(self->part);
         if (self->part->animDone)
         {
             self->state = 3;
@@ -201,7 +201,7 @@ void UpdateLevelSelectCursor(struct cursor_panel *self)
         }
         break;
     case 3:
-        sub_8008044(self->part);
+        AdvanceSpriteAnim(self->part);
         if (self->part->animDone)
         {
             self->state = 0;
@@ -257,7 +257,7 @@ void DrawLevelSelectCursor(struct cursor_panel *self)
         }
         break;
     default:
-        sub_8008890(self->part, 0, 0);
+        DrawSpriteWithOffset(self->part, 0, 0);
         break;
     }
 }
@@ -377,5 +377,5 @@ void DestroyLevelSelectCursor(struct cursor_panel *self, s32 flags)
     UnlockPalette(gPaletteCache, PART_RECORD(self->part).tileRecord);
     DELETE_PART(self->part);
     if (flags & 1)
-        sub_8026ED0(self);
+        OperatorDelete(self);
 }

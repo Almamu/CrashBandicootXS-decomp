@@ -1,23 +1,23 @@
-# Issue #97: `sub_8009DF4` (closed in a later session)
+# Issue #97: `ApplySpriteVelocity` (closed in a later session)
 
 **UPDATE: matched in a later session.** The same address/value
 register-role gap this doc describes below was independently closed
-for `sub_800B270` (its sibling) via an opaque `asm volatile` block
+for `ApplyPlayerVelocity` (its sibling) via an opaque `asm volatile` block
 that emits the final `gUnknown_0300129C`-style read-compare-write
 sequence verbatim, sidestepping both failure modes this doc documents
 rather than fighting them via C-level register pins. Porting that same
 technique here - `vx` pinned to `r3`, `vy` left unpinned (both
 required; pinning them *together* is a separate gcc-2.9 miscompile
-`sub_800B270`'s own write-up covers), and the trailing
+`ApplyPlayerVelocity`'s own write-up covers), and the trailing
 `gUnknown_03001298` block emitted as one opaque `asm volatile` instead
-of a plain C `if`/store pair - closes `sub_8009DF4` byte-for-byte. The
+of a plain C `if`/store pair - closes `ApplySpriteVelocity` byte-for-byte. The
 old raw `asm/code_3_2_9.s` is retired. See `docs/status/actor.md`'s
-"Matched" entry for `sub_8009DF4` and
+"Matched" entry for `ApplySpriteVelocity` and
 `docs/matching/issue-9-0x08007634-actor.md`'s "Real gotchas" point 3
 for the twin fix. The rest of this document is preserved as the
 original parking write-up.
 
-`parked-function` issue against `sub_8009DF4` in
+`parked-function` issue against `ApplySpriteVelocity` in
 `src/graphics/actor_part8.c` (real bytes in `asm/code_3_2_9.s`). Not
 closed this session, but the reconstruction was rewritten and the
 remaining gap is now much narrower and more precisely understood than
@@ -43,17 +43,17 @@ spills one extra value to `r4`... for every register-pin arrangement
 tried", including pinning `self` to `r2` directly, and accepted an
 8-byte-larger leaf-with-frame version as unavoidable.
 
-This turned out not to be quite right. `sub_8009DF4` is structurally
-almost identical to `sub_800B270` (issue #9, `src/graphics/
+This turned out not to be quite right. `ApplySpriteVelocity` is structurally
+almost identical to `ApplyPlayerVelocity` (issue #9, `src/graphics/
 actor_part49.c`) - same per-axis clamp shape, same field offsets
 (`+0x60`/`+0x50`/`+0x4c`, `+0x64`/`+0x5c`/`+0x58`, `+0x24`, `+0`/`+4`),
 same true-leaf-function ROM shape, differing only in which global gets
-the final Y-velocity write. `sub_800B270` had already been worked out
+the final Y-velocity write. `ApplyPlayerVelocity` had already been worked out
 in enough detail (per-axis `goto`-based clamp with explicit register
 pins, `vs32`-forced reloads for the redundant `self->x`/`self->y`
 re-reads) to reproduce the ROM one-for-one through the position-update
 store, with **no stack frame at all**. Porting that exact structure to
-`sub_8009DF4` (register `self` pinned to `r2`, `vx` pinned to `r3`,
+`ApplySpriteVelocity` (register `self` pinned to `r2`, `vx` pinned to `r3`,
 `vy` and the clamp temporaries left as plain locals so the compiler's
 own allocation - not a source-level pin - lands them correctly)
 reproduces the same true-leaf shape here too, closing the "always
@@ -62,7 +62,7 @@ the global write.
 
 ## What's still gapped
 
-The one thing that doesn't fully close is the same block `sub_800B270`
+The one thing that doesn't fully close is the same block `ApplyPlayerVelocity`
 itself remains parked on (see `docs/matching/issue-9-0x08007634-actor.md`,
 "Real gotchas found along the way", point 3): the final
 `gUnknown_03001298` read-compare-write block's address/value register
@@ -72,8 +72,8 @@ into `r2`; this compiler's natural allocation keeps the opposite
 instruction count, wrong register letters.
 
 Every register-pin variant tried on this block reproduces one of two
-consistent failure modes, both confirmed on `sub_8009DF4` directly
-(not just inferred from `sub_800B270`):
+consistent failure modes, both confirmed on `ApplySpriteVelocity` directly
+(not just inferred from `ApplyPlayerVelocity`):
 
 1. **Pinning the loaded value** to a specific register (either
    `register s32 gval asm("r2") = *g;` or pinning the whole pointer
@@ -91,7 +91,7 @@ consistent failure modes, both confirmed on `sub_8009DF4` directly
    avoids that elimination but reintroduces a `push {r4, lr}`/
    `pop {r4}` pair elsewhere in the function - this time to preserve
    `vy` across the register reallocation the pin forces, the same
-   knock-on-regression shape `sub_800B270`'s own doc entry describes.
+   knock-on-regression shape `ApplyPlayerVelocity`'s own doc entry describes.
 
 Using a plain, unpinned local pointer (`s32 *g = &gUnknown_03001298;`)
 avoids both failure modes and keeps the true-leaf shape, but lands on
@@ -101,12 +101,12 @@ address/value register letters swapped in the trailing block.
 
 ## Cross-references
 
-- `docs/status/actor.md` - `sub_8009DF4`'s entry rewritten to describe
+- `docs/status/actor.md` - `ApplySpriteVelocity`'s entry rewritten to describe
   the narrowed gap.
-- `docs/matching/issue-9-0x08007634-actor.md` - `sub_800B270`'s own
+- `docs/matching/issue-9-0x08007634-actor.md` - `ApplyPlayerVelocity`'s own
   parking write-up, the sibling function this reconstruction was
   modeled on and shares its exact remaining gap with.
-- `docs/matching.md` - the frozen "Parked, not matched: `sub_8009DF4`"
+- `docs/matching.md` - the frozen "Parked, not matched: `ApplySpriteVelocity`"
   entry is now stale (its "always spills r4" claim doesn't hold once
-  the reconstruction is modeled on `sub_800B270`'s shape) but is left
+  the reconstruction is modeled on `ApplyPlayerVelocity`'s shape) but is left
   unedited per that file's own header.

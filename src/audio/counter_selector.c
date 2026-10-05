@@ -22,9 +22,9 @@ struct counter_widget {
     void *starfield;
 };
 
-extern void *sub_8026EC0(u32 size);
-extern void sub_8026EB4(void *ptr);
-extern void sub_8026ED0(void *self);
+extern void *OperatorNewArray(u32 size);
+extern void OperatorDeleteArray(void *ptr);
+extern void OperatorDelete(void *self);
 extern void WaitForVBlank(void);
 extern void *gUnknown_03001304;
 extern u16 gKeys;
@@ -50,7 +50,7 @@ void LoadTaggedAssetBuffered(void *unused, void *asset, void *dest)
     u32 cnt;
 
     val >>= 8;
-    buf = sub_8026EC0(val);
+    buf = OperatorNewArray(val);
     LoadTaggedAsset(asset, buf);
     dma = (struct dma_regs *)REG_ADDR_DMA3SAD;
     dma->src = (u32)buf;
@@ -59,7 +59,7 @@ void LoadTaggedAssetBuffered(void *unused, void *asset, void *dest)
     dma->cnt = val | 0x80000000;
     cnt = dma->cnt;
     if (buf != NULL) {
-        sub_8026EB4(buf);
+        OperatorDeleteArray(buf);
     }
 }
 
@@ -70,7 +70,7 @@ void nullsub_7(void)
 void DestroyCompanyLogos(void *self, u32 flags)
 {
     if (flags & 1) {
-        sub_8026ED0(self);
+        OperatorDelete(self);
     }
 }
 

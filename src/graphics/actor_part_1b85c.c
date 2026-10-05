@@ -110,7 +110,7 @@ struct anim_table
     struct anim_record *records;
 };
 
-/* The 0x40-byte animated sprite part `sub_8008904` constructs, and the
+/* The 0x40-byte animated sprite part `InitUiSpriteObj` constructs, and the
  * base of the 0x78-byte `sub_801B984` object. */
 struct sprite
 {
@@ -138,7 +138,7 @@ struct sprite
 
 COMPILE_TIME_ASSERT(sizeof(struct sprite) == 0x40);
 
-/* sub_8007B98's output box. */
+/* GetSpriteHitbox's output box. */
 struct hit_box
 {
     s32 unk_00;
@@ -356,11 +356,11 @@ extern struct xy_pair gStaticData_0816C4C8;
 extern struct xy_pair gStaticData_0816C4D0;
 
 /* Base class and runtime. */
-extern void sub_8009F90(void *self);
-extern void sub_8009F1C(void *self, s32 flags);
-extern void sub_8009FB0(void *self);
-extern void *sub_8026EDC(u32 size);
-extern void sub_8026ED0(void *p);
+extern void InitMovingSprite(void *self);
+extern void DestroyMovingSprite(void *self, s32 flags);
+extern void UpdateMovingSprite(void *self);
+extern void *OperatorNew(u32 size);
+extern void OperatorDelete(void *p);
 extern s32 __divsi3(s32 a, s32 b);
 extern s32 __modsi3(s32 a, s32 b);
 extern void _call_via_r1(void *self, void *fn);
@@ -371,21 +371,21 @@ extern void _call_via_r4(void *self, s32 a, s32 b, s32 c);
 extern s32 mem_free_bytes(s32 flags);
 
 /* Sprite parts. */
-extern struct sprite *sub_8008904(void *mem);
-extern void sub_8008E94(void *manager, void *value);
-extern void sub_80087C0(void *part);
-extern void sub_80087B4(void *part);
-extern void sub_800872C(void *part, s32 arg);
-extern void sub_80088D8(void *part, s32 value);
+extern struct sprite *InitUiSpriteObj(void *mem);
+extern void AddToPartList(void *manager, void *value);
+extern void ResetSpriteFrameTimer(void *part);
+extern void ResetSpriteFrameIndex(void *part);
+extern void SetSpriteAnimDone(void *part, s32 arg);
+extern void SetSpritePriority(void *part, s32 value);
 extern void sub_800737C(void *part, s32 x, s32 y);
-extern void sub_8008890(void *part, s32 dx, s32 dy);
-extern s32 sub_800815C(void *part);
-extern void sub_8008044(void *p);
+extern void DrawSpriteWithOffset(void *part, s32 dx, s32 dy);
+extern s32 GetSpriteAnimPaletteSlot(void *part);
+extern void AdvanceSpriteAnim(void *p);
 /* Really returns a u8 (src/graphics/graphics.c), but the call site
  * re-zero-extends the result, as it would through a wider return type. */
 extern s32 GetPaletteSlot(void *cache, u8 recordId);
-extern void sub_8007B98(struct hit_box *dest, void *part);
-extern u8 sub_800B37C(void *actor, struct hit_box *box);
+extern void GetSpriteHitbox(struct hit_box *dest, void *part);
+extern u8 PlayerTouchesBox(void *actor, struct hit_box *box);
 
 /* Display, VRAM and sound. */
 extern void WaitForVBlank(void);
@@ -414,10 +414,10 @@ extern void FormatCentiseconds(s32 value, char *buf);
 /* Save data. */
 extern u8 *PackSaveData(void *p);
 extern u8 sub_802336C(void *p, s32 id);
-extern u8 sub_8023360(void *p, s32 id);
-extern u8 sub_8023354(void *p, s32 id);
-extern u8 sub_8023348(void *p, s32 id);
-extern u8 sub_802333C(void *p, s32 id);
+extern u8 LevelHasRedGem(void *p, s32 id);
+extern u8 LevelHasGreenGem(void *p, s32 id);
+extern u8 LevelHasBlueGem(void *p, s32 id);
+extern u8 LevelHasYellowGem(void *p, s32 id);
 
 /* The level-select screen's sub-objects and siblings (0x0801CEE0 on). */
 extern void *CreateLevelSelectPageBg(void *mem, s32 a, s32 b);
@@ -486,13 +486,13 @@ static inline s32 Opaque(s32 v)
     return v;
 }
 
-/* sub_80087D0, inlined: select animation `idx` and restart it. */
+/* SetSpriteAnim, inlined: select animation `idx` and restart it. */
 static inline void SetAnim(struct sprite *s, s32 idx)
 {
     s->animIndex = idx;
-    sub_80087C0(s);
-    sub_80087B4(s);
-    sub_800872C(s, 0);
+    ResetSpriteFrameTimer(s);
+    ResetSpriteFrameIndex(s);
+    SetSpriteAnimDone(s, 0);
 }
 
 static inline struct anim_table *AnimTable(s32 offset)
@@ -583,7 +583,7 @@ void UpdateCameraLead(struct follow_child *self)
 {
     s32 cur, tgt;
 
-    sub_8009FB0(self);
+    UpdateMovingSprite(self);
     {
         s32 one = 1;
         s32 zero;
@@ -628,13 +628,13 @@ void DestroyCameraLead(struct follow_child *self, s32 flags)
 {
     self->vtable = gCameraLeadVtable;
     gCamera->follow = gPlayer;
-    sub_8009F1C(self, flags);
+    DestroyMovingSprite(self, flags);
 }
 
 /* Constructor, called from sub_8017600 (actor_part_17524.c). */
 struct follow_child *CreateCameraLead(struct follow_child *self)
 {
-    sub_8009F90(self);
+    InitMovingSprite(self);
     self->vtable = gCameraLeadVtable;
     ResetCameraLead(self);
     return self;
@@ -669,20 +669,20 @@ s32 sub_801B980(struct follow_child *self)
  * already in registers. */
 struct sprite *sub_801B984(u16 id, u16 x, u16 y)
 {
-    struct sprite *obj = sub_8026EDC(0x78);
+    struct sprite *obj = OperatorNew(0x78);
 
-    sub_8009F90(obj);
+    InitMovingSprite(obj);
     obj->vtable = (struct method *)gStaticData_087E4B34;
     sub_801BAC4(obj);
     obj->id = id;
     obj->x = x << 8;
     obj->y = y << 8;
-    sub_8008E94(gUnknown_030012F0, obj);
+    AddToPartList(gUnknown_030012F0, obj);
     obj->anim = (struct anim_table *)(**gUnknown_030012D0 + 0x150);
     obj->animIndex = 0;
-    sub_80087C0(obj);
-    sub_80087B4(obj);
-    sub_800872C(obj, 0);
+    ResetSpriteFrameTimer(obj);
+    ResetSpriteFrameIndex(obj);
+    SetSpriteAnimDone(obj, 0);
     {
         u8 *p28 = (u8 *)obj + 0x28;
         s32 m;
@@ -717,8 +717,8 @@ void sub_801BA60(void *self)
 
     if (gPlayer->flags >> 7)
     {
-        sub_8007B98(&box, self);
-        if (box.unk_08 != 0 && sub_800B37C(gPlayer, &box))
+        GetSpriteHitbox(&box, self);
+        if (box.unk_08 != 0 && PlayerTouchesBox(gPlayer, &box))
         {
             struct player *p = gPlayer;
             struct method *m = &p->vtable[13];
@@ -735,7 +735,7 @@ void sub_801BA60(void *self)
 void sub_801BAB0(struct sprite *self, s32 flags)
 {
     self->vtable = (struct method *)gStaticData_087E4B34;
-    sub_8009F1C(self, flags);
+    DestroyMovingSprite(self, flags);
 }
 
 /* Clears flags bit 6. */
@@ -749,7 +749,7 @@ void sub_801BAC4(struct sprite *self)
  * Constructor. */
 struct sprite *sub_801BAD0(struct sprite *self)
 {
-    sub_8009F90(self);
+    InitMovingSprite(self);
     self->vtable = (struct method *)gStaticData_087E4B34;
     sub_801BAC4(self);
     return self;
@@ -812,7 +812,7 @@ u8 RunLevelSelect(s32 *arg)
     {
         struct level_menu **menuAddr = &gLevelSelect;
 
-        *menuAddr = InitLevelSelect(sub_8026EDC(0xAC), *arg);
+        *menuAddr = InitLevelSelect(OperatorNew(0xAC), *arg);
         *arg = LevelSelectLoop(*menuAddr);
         menu = *menuAddr;
         result = menu->result;
@@ -871,17 +871,17 @@ struct level_menu *InitLevelSelect(struct level_menu *self, s32 arg)
     self->nameText = 0;
     self->save = PackSaveData(gLevelState);
     self->result = 0;
-    self->bg1 = CreateLevelSelectPageBg(sub_8026EDC(0x28), 0, 0x1D);
+    self->bg1 = CreateLevelSelectPageBg(OperatorNew(0x28), 0, 0x1D);
     InitBgSetup(bg0cnt, 2, 0x1E, 2, 3);
     LoadGraphicsPackage(bg0cnt, gStaticData_0816C484);
     self->scroll = 0;
-    self->panel = CreateLevelSelectCursor(sub_8026EDC(0x54));
-    self->bg2 = InitZoomBg(sub_8026EDC(0x8C), 3, 0x1F);
+    self->panel = CreateLevelSelectCursor(OperatorNew(0x54));
+    self->bg2 = InitZoomBg(OperatorNew(0x8C), 3, 0x1F);
     {
         s32 j;
 
         for (j = 0; j < 6; j++)
-            self->items[j] = CreateLevelSelectEntry(sub_8026EDC(0x14));
+            self->items[j] = CreateLevelSelectEntry(OperatorNew(0x14));
     }
     sub_801D638(self);
     sub_801D5CC(self);
@@ -891,9 +891,9 @@ struct level_menu *InitLevelSelect(struct level_menu *self, s32 arg)
 
         for (i = 0, v = 0x80; i < 8; i++)
         {
-            s = sub_8008904(sub_8026EDC(0x40));
+            s = InitUiSpriteObj(OperatorNew(0x40));
             self->sprites[i] = s;
-            sub_80088D8(s, 1);
+            SetSpritePriority(s, 1);
             if (i > 1)
                 self->sprites[i]->unk_3C = v;
         }
@@ -918,15 +918,15 @@ struct level_menu *InitLevelSelect(struct level_menu *self, s32 arg)
     sub_800737C(self->sprites[6], gStaticData_0816C4B8.x, gStaticData_0816C4B8.y);
     self->sprites[7]->anim = AnimTable(0x18C);
     sub_800737C(self->sprites[7], gStaticData_0816C4C0.x, gStaticData_0816C4C0.y);
-    s = sub_8008904(sub_8026EDC(0x40));
+    s = InitUiSpriteObj(OperatorNew(0x40));
     self->sprites[8] = s;
-    sub_80088D8(s, 1);
+    SetSpritePriority(s, 1);
     self->sprites[8]->anim = AnimTable(0x270);
     SetAnim(self->sprites[8], 1);
     sub_800737C(self->sprites[8], gStaticData_0816C4C8.x, gStaticData_0816C4C8.y);
-    s = sub_8008904(sub_8026EDC(0x40));
+    s = InitUiSpriteObj(OperatorNew(0x40));
     self->sprites[9] = s;
-    sub_80088D8(s, 1);
+    SetSpritePriority(s, 1);
     self->sprites[9]->anim = AnimTable(0x270);
     SetAnim(self->sprites[9], 0);
     sub_800737C(self->sprites[9], gStaticData_0816C4D0.x, gStaticData_0816C4D0.y);
@@ -978,7 +978,7 @@ void DestroyLevelSelect(struct level_menu *self, s32 flags)
     if (self->bg1 != NULL)
         DestroyLevelSelectPageBg(self->bg1, 3);
     if (flags & 1)
-        sub_8026ED0(self);
+        OperatorDelete(self);
 }
 
 /* Per-frame update: draws the selected level's name centred at the top
@@ -1047,7 +1047,7 @@ void UpdateLevelSelect(struct level_menu *self)
     HideUnusedOamEntries(gOamBuffer);
 }
 
-/* Updates the two page-arrow sprites (8/9): palettes from sub_800815C,
+/* Updates the two page-arrow sprites (8/9): palettes from GetSpriteAnimPaletteSlot,
  * frame 0/1 by whether the previous/next page is open. */
 void UpdateLevelSelectPageArrows(struct level_menu *self)
 {
@@ -1055,7 +1055,7 @@ void UpdateLevelSelectPageArrows(struct level_menu *self)
     register s32 highMask asm("r4");
 
     {
-        register s32 pal asm("r0") = sub_800815C(self->sprites[8]);
+        register s32 pal asm("r0") = GetSpriteAnimPaletteSlot(self->sprites[8]);
         u8 *p = (u8 *)self->sprites[8] + 0x29;
         register s32 m asm("r1");
         register s32 b asm("r3");
@@ -1071,7 +1071,7 @@ void UpdateLevelSelectPageArrows(struct level_menu *self)
         *p = m;
     }
     {
-        register s32 pal asm("r0") = sub_800815C(self->sprites[9]);
+        register s32 pal asm("r0") = GetSpriteAnimPaletteSlot(self->sprites[9]);
         u8 *p = (u8 *)self->sprites[9] + 0x29;
         register s32 b asm("r5");
 
@@ -1108,7 +1108,7 @@ void UpdateLevelSelectPageArrows(struct level_menu *self)
             if (f >= n)
                 f = n - 1;
             t->frame = f;
-            sub_8008890(t, 0, 0);
+            DrawSpriteWithOffset(t, 0, 0);
         }
     }
     if (LevelSelectHasPrevWorld(self))
@@ -1125,7 +1125,7 @@ void UpdateLevelSelectPageArrows(struct level_menu *self)
         if (f >= n)
             f = n - 1;
         s->frame = f;
-        sub_8008890(s, 0, 0);
+        DrawSpriteWithOffset(s, 0, 0);
     }
 }
 
@@ -1133,12 +1133,12 @@ void UpdateLevelSelectPageArrows(struct level_menu *self)
  * the level is cleared, its time readout (DrawLevelSelectTime). */
 void DrawLevelSelectRecord(struct level_menu *self)
 {
-    sub_8008890(self->sprites[0], -self->unk_80, 0);
-    sub_8008890(self->sprites[1], -self->unk_80, 0);
-    sub_8008890(self->sprites[2], -self->unk_80, self->unk_84);
-    sub_8008890(self->sprites[3], -self->unk_80, self->unk_88);
+    DrawSpriteWithOffset(self->sprites[0], -self->unk_80, 0);
+    DrawSpriteWithOffset(self->sprites[1], -self->unk_80, 0);
+    DrawSpriteWithOffset(self->sprites[2], -self->unk_80, self->unk_84);
+    DrawSpriteWithOffset(self->sprites[3], -self->unk_80, self->unk_88);
     if (self->rank != 5)
-        sub_8008890(self->sprites[4], -self->unk_80, self->unk_8C);
+        DrawSpriteWithOffset(self->sprites[4], -self->unk_80, self->unk_8C);
     {
         u8 **ps = &self->save;
         s32 off = self->levelId * 4 + 4;
@@ -1159,8 +1159,8 @@ void DrawLevelSelectTime(struct level_menu *self, u32 time)
 {
     struct level_info *info;
 
-    sub_8008890(self->sprites[5], -self->unk_80, self->unk_90);
-    sub_8008890(self->sprites[6], -self->unk_80, self->unk_94);
+    DrawSpriteWithOffset(self->sprites[5], -self->unk_80, self->unk_90);
+    DrawSpriteWithOffset(self->sprites[6], -self->unk_80, self->unk_94);
     info = &gLevelTable[self->levelId];
     if (time != 0 && time <= info->time2)
     {
@@ -1174,7 +1174,7 @@ void DrawLevelSelectTime(struct level_menu *self, u32 time)
     {
         struct icon_slot *slot;
 
-        sub_8008890(self->sprites[7], self->unk_80, 0);
+        DrawSpriteWithOffset(self->sprites[7], self->unk_80, 0);
         FontSetPalette(gLargeFont, self->sprites[7]->palette);
         SetIconPos(gLargeFont, self->unk_80 + gStaticData_0816C4C0.x + 10, gStaticData_0816C4C0.y - 8);
         slot = &gLargeFont->record->slots[2];
@@ -1245,7 +1245,7 @@ draw:
         struct sprite **p = sprites + 2;
 
         for (i = 5; i >= 0; i--)
-            sub_8008044(*p++);
+            AdvanceSpriteAnim(*p++);
     }
 }
 
@@ -1265,13 +1265,13 @@ void LoadLevelSelectRecord(struct level_menu *self)
     *rank = 5;
     if (sub_802336C(gLevelState, self->levelId))
         *rank = 0;
-    if (sub_8023360(gLevelState, self->levelId))
+    if (LevelHasRedGem(gLevelState, self->levelId))
         *rank = 1;
-    if (sub_8023354(gLevelState, self->levelId))
+    if (LevelHasGreenGem(gLevelState, self->levelId))
         *rank = 2;
-    if (sub_8023348(gLevelState, self->levelId))
+    if (LevelHasBlueGem(gLevelState, self->levelId))
         *rank = 3;
-    if (sub_802333C(gLevelState, self->levelId))
+    if (LevelHasYellowGem(gLevelState, self->levelId))
         *rank = 4;
     self->unk_84 = 0;
     self->unk_88 = 0;

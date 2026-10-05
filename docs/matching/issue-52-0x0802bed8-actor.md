@@ -17,7 +17,7 @@ this same chunk that got closed out later.
   `gPolarPlayerStateFuncs`'s base address alive in `r7` for the whole
   function (a plain `adds r7, r1, #0`, not a high-register relay) -
   this is this project's confirmed categorical gcc-2.9 r7-pin bug (see
-  docs/matching.md's `sub_8007DBC`/`DrawPowerDialog` entries): an explicit
+  docs/matching.md's `CheckSpritePickup`/`DrawPowerDialog` entries): an explicit
   `register T x asm("r7")` compiles the right instructions but never
   makes it into the prologue/epilogue `push`/`pop` list, and this
   compiler's own *unforced* allocator never reaches r7 here either

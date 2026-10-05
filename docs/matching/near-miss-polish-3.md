@@ -15,7 +15,7 @@ Five now match as real C:
 
 | Function | File | Compiler | Was | Technique |
 |---|---|---|---|---|
-| `sub_800F990` | `src/system/game_loop49.c` | old_agbcc | 7 | count update split into in-place steps on a fresh local; one earlier `"+r"` barrier dropped |
+| `UpdateSlotCrate` | `src/system/game_loop49.c` | old_agbcc | 7 | count update split into in-place steps on a fresh local; one earlier `"+r"` barrier dropped |
 | `sub_8014084` | `src/graphics/actor_part_13c60.c` | old_agbcc | 1 insn | scoped `volatile u8 *` for the facing block's second read-modify-write |
 | `LoadLevelSelectRecord` | `src/graphics/actor_part_1b85c.c` | old_agbcc | spill | a second local for the record pointer (the ROM's spilled copy) |
 | `UpdateExtraLife` | `src/system/game_loop54.c` | old_agbcc | 22 | plain re-reads instead of `volatile` ones; two extra references per velocity |
@@ -27,7 +27,7 @@ its use.
 
 ## What worked
 
-**Writing an update as separate in-place statements (`sub_800F990`).**
+**Writing an update as separate in-place statements (`UpdateSlotCrate`).**
 The ROM's count update is `t = (r - 1) << 24; w &= 0xc7; t >>= 21;
 w |= t` with the `&` writing the reloaded word's register and the shift
 writing `t`'s. One expression, `(w & 0xc7) | ((u8)(r - 1) << 3)`, gets
@@ -101,7 +101,7 @@ take the same changes.
 
 - When a draft computes the right instructions but ties a result to the
   wrong input, try writing each operation as its own statement on a
-  fresh local before reaching for `asm`. It worked for `sub_800F990`,
+  fresh local before reaching for `asm`. It worked for `UpdateSlotCrate`,
   and the header order in `ConvertHovercraftTiles`.
 - A load after a constant (`movs; ldrh; cmp`) with no local in the ROM
   is a pseudo set once and used once. Reproduce it with a plain re-read,

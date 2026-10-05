@@ -42,7 +42,7 @@
  * `self->0x2c-0x24` (via `SetAabbPos`/`SetAabbSize`, the same
  * `struct aabb` shape `actor_part4.c`/`actor_part15.c` already use),
  * mirrors it per `owner->0x28` bit 4, then tests it against the player
- * (`gPlayer`) via `sub_800B37C` - on overlap, triggers
+ * (`gPlayer`) via `PlayerTouchesBox` - on overlap, triggers
  * `SetEnemyAnimMode(self,2)` and, if `self->0x6c==0xb`, seeds `owner`'s
  * `0x48`-`0x64` velocity-target fields with fixed constants (a
  * "knockback impulse" shape, same family as `UpdateEnemyCtrl` state 17's
@@ -66,7 +66,7 @@
 extern s32 __modsi3(s32 a, s32 b);
 extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
 extern struct ctrl_target *sub_8025B0C(void *pool, s32 kind, s32 b, s32 margin, s32 z, s32 e, struct ctrl_target *src);
-extern u8 sub_800B37C(struct ctrl_target *obj, struct part_aabb *box);
+extern u8 PlayerTouchesBox(struct ctrl_target *obj, struct part_aabb *box);
 extern void SetAabbPos(struct part_aabb *box, s32 x, s32 y);
 extern void SetAabbSize(struct part_aabb *box, s32 w, s32 h);
 extern u32 gRoomFrameCount;
@@ -163,7 +163,7 @@ void sub_800C5D4(struct part_ctrl *self)
         SetAabbSize(&box, w, h);
         if (self->target->mirror.u.x)
             box.x = (self->target->x >> 8) * 2 - (box.x + box.w);
-        if (sub_800B37C(gPlayer, &box)) {
+        if (PlayerTouchesBox(gPlayer, &box)) {
             SetEnemyAnimMode(self, 2);
             if (self->kind == 0xb) {
                 struct ctrl_target *target = self->target;

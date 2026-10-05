@@ -58,7 +58,7 @@ void sub_8021280(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 
         sub_80070EC(part, 0x64, 0x64);
         part->field_0A = 0x12;
-        sub_8008E94(gUnknown_030012E8, part);
+        AddToPartList(gUnknown_030012E8, part);
     }
     else if (gPlayer[0x88] == 0)
     {
@@ -82,7 +82,7 @@ void sub_8021280(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 
         sub_80070EC(part, 0x28, 0x28);
         part->field_0A = 0x12;
-        sub_8008E94(gUnknown_030012E8, part);
+        AddToPartList(gUnknown_030012E8, part);
     }
 }
 
@@ -92,37 +92,37 @@ void sub_8021280(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
  * header with the level controller via sub_8023318. */
 void sub_8021388(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    struct popup_part *part = sub_8009ED0(arg0, arg1, arg2, arg3);
+    struct popup_part *part = CreateMovingSprite(arg0, arg1, arg2, arg3);
     struct enemy_ctrl *hdr;
     struct level_record *rec;
 
     part->anim = POPUP_ANIM(0x288);
-    part->frameNibble = sub_800815C(part);
+    part->frameNibble = GetSpriteAnimPaletteSlot(part);
     part->base.flags |= 0x10;
     SetPartField0A(part, 1);
     rec = LEVEL_RECORD(arg3);
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
     part->unk_28_5 = rec->flags >> 2 & 1;
-    sub_8008E94(gUnknown_030012F0, part);
-    hdr = CreateDingodile(sub_8026EDC(0x30), arg1, arg2);
+    AddToPartList(gUnknown_030012F0, part);
+    hdr = CreateDingodile(OperatorNew(0x30), arg1, arg2);
     part->hdr = hdr;
     POPUP_ATTACH(hdr, part);
     sub_8023318(gLevelState, hdr);
 }
 
 /* "Two-line text popup" variant whose header comes from CreateTiny
- * (after a 0x4c-byte sub_8026EDC reservation). Attaches the part once,
+ * (after a 0x4c-byte OperatorNew reservation). Attaches the part once,
  * packs the collected bits, sets flag bit 4, and registers the part and
  * the header with the manager and the level controller. */
 void sub_8021480(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    struct popup_part *part = sub_8009ED0(arg0, arg1, arg2, arg3);
+    struct popup_part *part = CreateMovingSprite(arg0, arg1, arg2, arg3);
     struct enemy_ctrl *hdr;
     struct level_record *rec;
 
     part->anim = POPUP_ANIM(0x294);
-    part->frameNibble = sub_800815C(part);
-    sub_8026EDC(0x4c);
+    part->frameNibble = GetSpriteAnimPaletteSlot(part);
+    OperatorNew(0x4c);
     hdr = CreateTiny();
     part->hdr = hdr;
     POPUP_ATTACH(hdr, part);
@@ -130,27 +130,27 @@ void sub_8021480(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
     part->unk_28_5 = rec->flags >> 2 & 1;
     part->base.flags |= 0x10;
-    sub_8008E94(gUnknown_030012F0, part);
+    AddToPartList(gUnknown_030012F0, part);
     sub_8023318(gLevelState, hdr);
 }
 
 /* "Two-line text popup" variant with the OAM-trio setup: animation 1 at
- * +0x27c, header from CreateCortexBoss (after a 0x24-byte sub_8026EDC
+ * +0x27c, header from CreateCortexBoss (after a 0x24-byte OperatorNew
  * reservation), collected bits and flag bit 4, then registration with
  * gUnknown_030012F4's manager and the level controller. */
 void SpawnCortexBoss(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    struct popup_part *part = sub_8009ED0(arg0, arg1, arg2, arg3);
+    struct popup_part *part = CreateMovingSprite(arg0, arg1, arg2, arg3);
     struct enemy_ctrl *hdr;
     struct level_record *rec;
 
     part->anim = POPUP_ANIM(0x27c);
     SetPartTag(part, 1);
-    sub_80087C0(part);
-    sub_80087B4(part);
-    sub_800872C(part, 0);
-    part->frameNibble = sub_800815C(part);
-    sub_8026EDC(0x24);
+    ResetSpriteFrameTimer(part);
+    ResetSpriteFrameIndex(part);
+    SetSpriteAnimDone(part, 0);
+    part->frameNibble = GetSpriteAnimPaletteSlot(part);
+    OperatorNew(0x24);
     hdr = CreateCortexBoss();
     part->hdr = hdr;
     POPUP_ATTACH(hdr, part);
@@ -158,7 +158,7 @@ void SpawnCortexBoss(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
     part->unk_28_5 = rec->flags >> 2 & 1;
     part->base.flags |= 0x10;
-    sub_8008E94(gUnknown_030012F4, part);
+    AddToPartList(gUnknown_030012F4, part);
     part->unk_2A[2] = 0;
     sub_8023318(gLevelState, hdr);
 }

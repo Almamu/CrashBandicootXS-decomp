@@ -24,19 +24,19 @@ extern void *gUnknown_030012EC;
 extern void *gHud;
 
 extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
-extern void *sub_8007B98(void *dest, void *pt);
-extern u8 sub_8001688(void *buf1, void *buf2);
+extern void *GetSpriteHitbox(void *dest, void *pt);
+extern u8 AabbOverlaps(void *buf1, void *buf2);
 extern void sub_8007174(void *arg0, s32 arg1, s32 arg2, s32 *arg3, s32 *arg4);
 extern s32 FixedDiv(s32 arg0, s32 arg1);
 extern s32 FixedMul(s32 a, s32 b);
 extern s32 AddLife(void *self);
 extern void ShowHudLives(void *state);
-extern void *sub_8026EDC(s32 size);
-extern struct actor *sub_80084A4(struct actor *self);
-extern void sub_8008E94(void *manager, void *value);
+extern void *OperatorNew(s32 size);
+extern struct actor *InitSpriteObj(struct actor *self);
+extern void AddToPartList(void *manager, void *value);
 extern void sub_8011308(void *self);
 extern void sub_8011248(void *self);
-extern void sub_8008364(struct actor *part);
+extern void UpdateSpriteObj(struct actor *part);
 extern s16 gSineTable[];
 extern u8 gExtraLifeVtable[];
 
@@ -68,7 +68,7 @@ void PickUpExtraLife(void *selfArg, u8 randomize);
  * (`game_loop52.c`) already uses. Once past that gate, proceeds only
  * when flags bit 3 is clear and flags bit 2 is set (same bit-test idiom
  * as `CheckWumpaPickup`), builds both `self`'s and the player's AABB via
- * `sub_8007B98` (unlike `CheckWumpaPickup`, always the "secondary" AABB
+ * `GetSpriteHitbox` (unlike `CheckWumpaPickup`, always the "secondary" AABB
  * build for both sides - no `player+0xa == 0x13` branch here), and on
  * overlap sets flags bit 3 and calls `PickUpExtraLife(self, 0)` (the fixed,
  * non-randomized despawn-offset path). */
@@ -97,11 +97,11 @@ void CheckExtraLifePickup(void *selfArg)
         }
     }
 
-    sub_8007B98(selfBox, self);
+    GetSpriteHitbox(selfBox, self);
     player = gPlayer;
-    sub_8007B98(playerBox, player);
+    GetSpriteHitbox(playerBox, player);
 
-    if (sub_8001688(playerBox, selfBox)) {
+    if (AabbOverlaps(playerBox, selfBox)) {
         register s32 bit asm("r0") = 8;
 
         bit |= self[0xc];
@@ -198,7 +198,7 @@ void PickUpExtraLife(void *selfArg, u8 randomize)
  * `gSineTable[(self->0x49 & 0x7f)]` and `FixedMul` added
  * into `self->0x50`, storing to `self->y` (when `self->0x4a` is clear),
  * or calls `sub_8011248` (`game_loop52.c`'s own orbit-position updater)
- * when `self->0x4a` is set - then always tail-calls `sub_8008364`
+ * when `self->0x4a` is set - then always tail-calls `UpdateSpriteObj`
  * (already matched, `actor_part5.c`).
  *
  *
@@ -302,7 +302,7 @@ void UpdateExtraLife(struct orbit_part *self)
             sub_8011248(self);
         }
     }
-    sub_8008364(&self->base);
+    UpdateSpriteObj(&self->base);
 }
 
 /* `struct actor *CreateExtraLife(u16 arg0, u16 arg1, u16 arg2, s32 arg3)` -
@@ -310,29 +310,29 @@ void UpdateExtraLife(struct orbit_part *self)
  * `arg3` is never actually read (the ROM hardcodes the field it would
  * feed - `self+0x29`/`+0x2a`/`+0x2b` - to a compile-time `0`
  * regardless), matching the extern's own always-`0` call sites.
- * Allocates a `0x54`-byte object (`sub_8026EDC`), re-initializes it
- * (`sub_80084A4`), repoints `self->table` (`self+0x18`) at
+ * Allocates a `0x54`-byte object (`OperatorNew`), re-initializes it
+ * (`InitSpriteObj`), repoints `self->table` (`self+0x18`) at
  * `gExtraLifeVtable`, clears the "spawned/active" gate byte via
  * `sub_8011308` (`game_loop52.c`), stores `arg0` at `self+8` and
  * `arg1`/`arg2` (Q8-scaled) at `self+0`/`self+4`, mirrored into
  * `self+0x4c`/`self+0x50` (the orbit anchor `sub_8011364`/
  * `sub_8011248` also use), joins the `gUnknown_030012EC`
- * `dual_array_manager` list (`sub_8008E94`), derives `self+0x30` from
+ * `dual_array_manager` list (`AddToPartList`), derives `self+0x30` from
  * the same `table[self->0x2d]->+0x16` clamp idiom `PickUpWumpa`/
  * `SendWumpaToHud` (`game_loop53.c`) use, clears bits 0/5 of `self+0x28`,
  * and always tags `self+0x29`/`+0x2a`/`+0x2b` all `0`, returning the
  * new part.
  *
  * Under old_agbcc this is plain C: the `0` sentinel held in `r8` across
- * sub_8008E94 is just the `zero` local below, and the anchor copy is a
+ * AddToPartList is just the `zero` local below, and the anchor copy is a
  * struct copy of the head x/y pair (`ORBIT_POS`). */
 struct orbit_part *CreateExtraLife(u16 id, u16 x, u16 y, s32 unused)
 {
     struct orbit_part *self;
     u8 zero;
 
-    self = sub_8026EDC(0x54);
-    sub_80084A4(&self->base);
+    self = OperatorNew(0x54);
+    InitSpriteObj(&self->base);
     self->base.table = gExtraLifeVtable;
     sub_8011308(self);
     zero = 0;
@@ -340,7 +340,7 @@ struct orbit_part *CreateExtraLife(u16 id, u16 x, u16 y, s32 unused)
     self->base.x = x << 8;
     self->base.y = y << 8;
     self->anchor = ORBIT_POS(self);
-    sub_8008E94(gUnknown_030012EC, self);
+    AddToPartList(gUnknown_030012EC, self);
     OrbitClampFrame(self);
     self->flipX = 0;
     self->flipY = 0;

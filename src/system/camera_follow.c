@@ -186,22 +186,22 @@ void UpdateCamera(struct camera *cam)
     SetLevelScroll(gLevelLayers, cam->x - (120 << 8), cam->y - (80 << 8));
 }
 
-void sub_8026EB4(u8 *ptr)
+void OperatorDeleteArray(u8 *ptr)
 {
     mem_free(ptr);
 }
 
-u8 *sub_8026EC0(u32 size)
+u8 *OperatorNewArray(u32 size)
 {
     return mem_alloc(size, MEM_HEAP_EWRAM);
 }
 
-void sub_8026ED0(u8 *ptr)
+void OperatorDelete(u8 *ptr)
 {
     mem_free(ptr);
 }
 
-u8 *sub_8026EDC(u32 size)
+u8 *OperatorNew(u32 size)
 {
     return mem_alloc(size, MEM_HEAP_EWRAM);
 }

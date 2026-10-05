@@ -15,11 +15,11 @@ every bucket (254 down to 0, i.e. every bucket except the special
 pointer equals `obj`. On the first match: if the object's `+0xc` flags
 byte bit 4 isn't set, returns immediately (nothing to do). If it IS set
 but the node already has a bucket-255 secondary link (`node->field_0xc
-!= 0`, the same field `sub_8009AF0`/`sub_8009B3C` set up), also returns
+!= 0`, the same field `AddCrateGridNode`/`LinkCrateInGrid` set up), also returns
 immediately - the link already exists. Otherwise, pops a fresh node off
-the free list (the same `sub_8009AF0` pop idiom), wraps `obj` in it, and
+the free list (the same `AddCrateGridNode` pop idiom), wraps `obj` in it, and
 inserts that new node into bucket 255's head/tail list, finally linking
-the two nodes together via the original node's `field_0xc`. `sub_8009B3C`
+the two nodes together via the original node's `field_0xc`. `LinkCrateInGrid`
 only creates this link when `obj->flags` bit 4 is already set at insert
 time; `sub_8009150` looks like the retroactive counterpart, called when
 an object transitions to "large" status after insertion.
@@ -160,15 +160,15 @@ crashbandicootxs.gba crashbandicootxs.map && make compare` -
 the standalone `asm/code_3_2_13_9150.s`, guarded by `.if NON_MATCHING ==
 0`) into its own new `src/graphics/actor_part11g.c` - its real ROM
 address isn't adjacent to `actor_part11.c`'s own matched functions
-(`sub_8008DC0`-`sub_8008EE4`), sitting instead between the NAKED
-`sub_8009008` (`actor_part11b.c`) and `sub_80091D4` (`actor_part11c.c`),
+(`DrawPartList`-`InitPartList`), sitting instead between the NAKED
+`UnlinkCrateFromGrid` (`actor_part11b.c`) and `UpdateCrateList` (`actor_part11c.c`),
 per `docs/workflow.md` step 4's "needs its own new `.c` file" case.
 `asm/code_3_2_13_9150.s` held only this one function and is retired
 entirely; `ldscript.txt`'s `code_3_2_13_9150.o` line is replaced with
 `actor_part11g.o` at the same link-order position. The `struct
 pool_manager` definition that block relied on is still needed by the
 three other `#if NON_MATCHING` blocks remaining in `actor_part11.c`
-(`sub_8009914`/`sub_800944C`/`sub_8009528`), so it stays there too,
+(`ResetCrateList`/`DrawCrateList`/`sub_8009528`), so it stays there too,
 duplicated (matching this codebase's existing convention of a
 per-translation-unit local copy of shared structs like this one - see
 also `actor_part12.c`'s own copy).

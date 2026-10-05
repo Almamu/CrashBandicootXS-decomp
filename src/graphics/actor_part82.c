@@ -109,7 +109,7 @@ static inline void PartSetVelY(struct act_part *p, s32 a, s32 b, s32 c)
 
 /* docs/rom_map.md's "25-case jump table on a second parameter, with a
  * further 7-case sub-dispatch on a nibble of a child object's `+4`
- * byte": the companion of `sub_8016288`. Does nothing for an object in
+ * byte": the companion of `UpdatePlayerCtrl`. Does nothing for an object in
  * state 0x1D; otherwise dispatches on `arg2` (1-25):
  * - 2/3/7/8/9/10 call `KillPlayer` with a fixed id; 1/4/6 do the same
  *   with 0x1C and also reset the part's velocities and
@@ -140,7 +140,7 @@ static inline void PartSetVelY(struct act_part *p, s32 a, s32 b, s32 c)
  *   materialized before the offset), the part's Y read into a local
  *   before the subtraction, and 1/4/6's zero as a local assigned
  *   before the `unk_100` test. */
-void sub_8011BD4(struct act *self, s32 arg1, s32 arg2, s32 arg3)
+void ActionCtrlHandleEvent(struct act *self, s32 arg1, s32 arg2, s32 arg3)
 {
     if (self->state == 0x1d)
         return;

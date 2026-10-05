@@ -23,7 +23,7 @@ struct gobj *CreatePlatform(u16 id, u16 x, u16 y, u16 index, s32 kind)
     struct mover_stack_args args;
     struct mover *m;
 
-    obj = GobjInit(sub_8026EDC(0x80));
+    obj = GobjInit(OperatorNew(0x80));
     obj->id = id;
     obj->x = x << 8;
     obj->y = y << 8;
@@ -67,7 +67,7 @@ struct gobj *CreatePlatform(u16 id, u16 x, u16 y, u16 index, s32 kind)
 
             obj->type = one;
             {
-                void *mem = sub_8026EDC(0x38);
+                void *mem = OperatorNew(0x38);
                 s32 dX = rec->distX;
                 s32 dY = rec->distY;
                 u32 fX = rec->dirX != 0;
@@ -96,7 +96,7 @@ struct gobj *CreatePlatform(u16 id, u16 x, u16 y, u16 index, s32 kind)
     case 5:
         obj->type = 5;
         {
-            void *mem = sub_8026EDC(0x38);
+            void *mem = OperatorNew(0x38);
 
             *(volatile u8 *)&args.dirY = 0;
             *(volatile s32 *)&args.kind = 5;
@@ -109,21 +109,21 @@ struct gobj *CreatePlatform(u16 id, u16 x, u16 y, u16 index, s32 kind)
         obj->type = 6;
         if (sub_80233B4(gLevelState) != 1)
         {
-            void *mem = sub_8026EDC(0x38);
+            void *mem = OperatorNew(0x38);
 
             *(volatile u8 *)&args.dirY = 0;
             *(volatile s32 *)&args.kind = 6;
             m = MOVER_NEW(mem, 0, 0, 0);
         }
         else
-            m = sub_801961C(sub_8026EDC(0x38));
+            m = sub_801961C(OperatorNew(0x38));
         obj->mover = m;
         MOVER_CALL2(m, m18, obj);
         break;
     case 7:
         obj->type = 7;
         {
-            void *mem = sub_8026EDC(0x38);
+            void *mem = OperatorNew(0x38);
 
             *(volatile u8 *)&args.dirY = 0;
             *(volatile s32 *)&args.kind = 7;
@@ -133,12 +133,12 @@ struct gobj *CreatePlatform(u16 id, u16 x, u16 y, u16 index, s32 kind)
         MOVER_CALL2(m, m18, obj);
         break;
     }
-    sub_8008E94(gUnknown_030012EC, obj);
+    AddToPartList(gUnknown_030012EC, obj);
     obj->anim = (void *)(**gUnknown_030012D0 + 0x1D4);
     obj->tag = kind;
-    sub_80087C0(obj);
-    sub_80087B4(obj);
-    sub_800872C(obj, 0);
+    ResetSpriteFrameTimer(obj);
+    ResetSpriteFrameIndex(obj);
+    SetSpriteAnimDone(obj, 0);
     {
         /* two separate bit clears in the ROM */
         u8 *p = &obj->mirror;

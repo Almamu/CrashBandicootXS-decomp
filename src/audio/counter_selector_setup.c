@@ -25,9 +25,9 @@ extern void FlushVramDmaQueue(void);
 
 extern u8 gStaticData_0816C484[];
 
-extern void *sub_8026EDC(s32 size);
+extern void *OperatorNew(s32 size);
 extern void DestroyStarfield(void *self, s32 arg1);
-extern void sub_8026ED0(void *self);
+extern void OperatorDelete(void *self);
 extern void *InitStarfield(void *arg0);
 extern void LoadGraphicsPackage(void *buf, void *asset);
 extern void *InitBgSetup(void *buf, s32 arg1, s32 arg2, s32 arg3, s32 arg4);
@@ -107,7 +107,7 @@ void DestroyLanguageSelect(void *self, u32 flags)
         DestroyStarfield(field10, 3);
     }
     if (flags & 1) {
-        sub_8026ED0(self);
+        OperatorDelete(self);
     }
 }
 
@@ -118,7 +118,7 @@ void *InitLanguageSelect(struct counter_widget *self)
     FreeUnlockedPaletteSlots(gPaletteCache);
     InitLanguageSelectGraphics(self);
     LoadLanguageSelectBg(self);
-    self->starfield = InitStarfield(sub_8026EDC(0x14));
+    self->starfield = InitStarfield(OperatorNew(0x14));
     FadeBrightness(0x80, 1, 0);
     SetObjMapping1D();
     ShowObj();
@@ -140,5 +140,5 @@ void CloseLanguageSelect(void)
 void OpenLanguageSelect(void)
 {
     FreeUnlockedPaletteSlots(gPaletteCache);
-    gLanguageSelect = InitLanguageSelect(sub_8026EDC(0x14));
+    gLanguageSelect = InitLanguageSelect(OperatorNew(0x14));
 }

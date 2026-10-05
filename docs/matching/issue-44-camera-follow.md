@@ -43,8 +43,8 @@ level bounds.
   (`game_loop56.c`).
 - **`UpdateCamera`** - the per-frame update: dispatch on `mode`, then
   publish. Caller: `UpdateRoomFrame` (`game_loop8.c`).
-- **`sub_8026EB4`/`sub_8026ED0`** - `mem_free(ptr)` wrappers;
-  **`sub_8026EC0`/`sub_8026EDC`** - `mem_alloc(size, MEM_HEAP_EWRAM)`
+- **`OperatorDeleteArray`/`OperatorDelete`** - `mem_free(ptr)` wrappers;
+  **`OperatorNewArray`/`OperatorNew`** - `mem_alloc(size, MEM_HEAP_EWRAM)`
   wrappers. Two byte-identical pairs, each with its own set of callers.
 
 Function names stay `sub_XXXXXXXX` (see `docs/naming.md`) - the

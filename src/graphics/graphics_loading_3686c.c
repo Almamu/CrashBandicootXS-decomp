@@ -57,9 +57,9 @@ extern void *_call_via_r1(void *arg0, void *fn);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern void ShowBg2(void);
 extern s32 RandRange(s32 arg0);
-extern void *sub_8026EC0(u32 size);
-extern void sub_8026EB4(void *ptr);
-extern void *sub_8026EDC(s32 size);
+extern void *OperatorNewArray(u32 size);
+extern void OperatorDeleteArray(void *ptr);
+extern void *OperatorNew(s32 size);
 extern void *InitStarfield(void *arg0);
 extern void LoadTaggedAsset(void *asset, void *dest);
 extern void LoadTaggedAssetBuffered(void *self, void *asset, void *dest);
@@ -77,7 +77,7 @@ extern void FreeCategorySpriteSheet(void);
 extern void FlushVramDmaQueue(void);
 extern s32 QueueVramDmaTransfer(void *src, void *dest, u16 size, u16 unit);
 extern void UpdateKeys(void *arg0);
-extern void sub_8026ED0(void *self);
+extern void OperatorDelete(void *self);
 extern s32 __modsi3(void *self, s32 arg1);
 extern void DestroyStarfield(void *self, s32 arg1);
 extern void InitActorPart(void *self, s32 a, s32 b, s32 c, s32 d);
@@ -409,7 +409,7 @@ void DrawVvLogoPieces(struct logo_screen *self)
  * `LoadTitleScreenBg`/`LoadTitleScreenObjTiles` already established), here
  * for `gUniversalLogoBg`'s own package: loads its palette (DMA'd to
  * `0x05000002`), tileset (`0x06008000`), and tilemap (into a freshly
- * `sub_8026EC0`-allocated scratch buffer), remaps every tile's palette
+ * `OperatorNewArray`-allocated scratch buffer), remaps every tile's palette
  * nibble into `0x0600F000`, then sets `REG_BG2CNT` (256-color, 8x8
  * screen, priority/base built from the same bit pattern
  * `LoadTitleScreenBg` uses) and marks the icon-manager/HUD blend flags
@@ -430,7 +430,7 @@ void LoadUniversalLogoBg(u32 *self)
     s32 y;
     union bgcnt bg2cnt;
 
-    palBuf = sub_8026EC0(0x200);
+    palBuf = OperatorNewArray(0x200);
     LoadTaggedAsset(pkg->paletteAsset, palBuf);
     {
         struct dma_regs *dma = (struct dma_regs *)REG_ADDR_DMA3SAD;
@@ -440,9 +440,9 @@ void LoadUniversalLogoBg(u32 *self)
         dma->cnt;
     }
     if (palBuf != NULL)
-        sub_8026EB4(palBuf);
+        OperatorDeleteArray(palBuf);
     LoadTaggedAsset(pkg->tileAsset, (void *)(VRAM + 0x8000));
-    mapBuf = sub_8026EC0((s32)pkg->height * (s32)pkg->width * 2);
+    mapBuf = OperatorNewArray((s32)pkg->height * (s32)pkg->width * 2);
     LoadTaggedAsset(pkg->mapAsset, mapBuf);
     dest = (u16 *)(VRAM + 0xF000);
     for (y = 0; y <= 0x1f; y++)
@@ -470,7 +470,7 @@ void LoadUniversalLogoBg(u32 *self)
     ((struct dispcnt_bits *)gDispcnt)->bg2 = 1;
     ((struct dispcnt_bits *)gDispcnt)->mode = 1;
     if (mapBuf != NULL)
-        sub_8026EB4(mapBuf);
+        OperatorDeleteArray(mapBuf);
 }
 
 /* Constructs an actor-part object via `InitActorPart(self, ?, 0, 0,

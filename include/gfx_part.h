@@ -1,9 +1,9 @@
 #ifndef GUARD_GFX_PART_H
 #define GUARD_GFX_PART_H
 
-/* A sub_8009ED0/sub_8008434-built on-screen "part" object and its
+/* A CreateMovingSprite/CreateSpriteObj-built on-screen "part" object and its
  * animation bank, as driven by the per-frame helpers
- * sub_80087C0/sub_80087B4/sub_800872C/sub_800815C. First written for
+ * ResetSpriteFrameTimer/ResetSpriteFrameIndex/SetSpriteAnimDone/GetSpriteAnimPaletteSlot. First written for
  * src/graphics/actor_part_188d0.c (issue #23); also used by the
  * "trigger effect type N" spawners in
  * src/graphics/graphics_loading_1ea5c.c. The same object is described
@@ -60,7 +60,7 @@ struct gfx_part
     u8 unk_39[0xB];
     void *ctrl;             // 0x44
     u8 unk_48[0x24];
-    s32 prevX;              // 0x6C - previous position (Q8), cached by sub_8009DF4
+    s32 prevX;              // 0x6C - previous position (Q8), cached by ApplySpriteVelocity
     s32 prevY;              // 0x70
 };
 

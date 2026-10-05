@@ -120,12 +120,12 @@ characterized in `docs/rom_map.md`, real bytes now in
 now in the new `asm/code_3_2_17_1e990.s`) - not attempted this pass,
 left untouched rather than force a low-confidence match. Two families
 worth flagging for whoever picks this up next: `SpawnCrystal` through
-`SpawnYellowGem` share the exact bit-test/`sub_8008434`-spawn shape already
+`SpawnYellowGem` share the exact bit-test/`CreateSpriteObj`-spawn shape already
 parked as `SpawnRedGemPlatform`-`SpawnBlueGemPlatform` in `trigger_effect.c` (issue #31)
 - the same register-rotation gap that resisted parking there is likely
 to resist here too; `sub_801EF0C` through `SpawnPufferfish` are all "text
 label as sprite tiles" constructors sharing `SpawnPufferfish`'s already-read
-shape (`sub_8009ED0` allocation, `CreateEnemyCtrl` style lookup, two
+shape (`CreateMovingSprite` allocation, `CreateEnemyCtrl` style lookup, two
 `_call_via_r2` calls).
 
 Verified via a full clean `rm -rf build && make compare` (`La suma
@@ -169,7 +169,7 @@ whether a struct for the same object already exists elsewhere first" rule,
 rather than re-declaring it a third time. It loads a palette
 (`LoadTaggedAsset` into `0x05000000` + a bank offset from the `self+8`
 scratch-buffer field), a tileset (`LoadTaggedAsset` into `0x06000000` + a
-char-block offset from `self+0`), and a tilemap into a `sub_8026EC0`
+char-block offset from `self+0`), and a tilemap into a `OperatorNewArray`
 scratch buffer, then remaps the tilemap's per-tile entries - OR-ing in a
 palette-bank nibble derived from `self+8` - into `0x06000000` + a
 screen-block offset from `self+4`, one fixed 0x40-byte-wide (32-tile) row
@@ -336,8 +336,8 @@ a normal function at all - it's the `bx r4` register-trampoline from
 `reg_trampolines.c` (`src/system/reg_trampolines.c`'s
 `_call_via_r0`-`_call_via_r7` "call through register" family) - the ROM
 loads the real callee's address into `r4` right before the `bl`, and
-this project's established convention (`sub_8009FD4` in
-`actor_part9.c`, `sub_8007DBC`) is to model that load as a genuine
+this project's established convention (`HitMovingSprite` in
+`actor_part9.c`, `CheckSpritePickup`) is to model that load as a genuine
 "dead read" (`register void *x asm("r4") = ...; (void)x;`) immediately
 before an ordinary-looking `_call_via_r4(addr, arg1, arg2, arg3)` call.
 
@@ -404,7 +404,7 @@ two families, both worth flagging precisely for whoever picks this up
 next:
 
 - **`SpawnCrystal`-`SpawnYellowGem`** (5 functions): the same "trigger
-  effect type N" bit-test (`GetCurrentLevelFlags`)/`sub_8008434`-spawn shape
+  effect type N" bit-test (`GetCurrentLevelFlags`)/`CreateSpriteObj`-spawn shape
   already parked as `NAKED` in `trigger_effect.c`
   (`SpawnRedGemPlatform`-`SpawnBlueGemPlatform`, issue #31/#33) - the same register-
   rotation gap that resisted plain C there is likely to resist here
@@ -414,7 +414,7 @@ next:
   `SpawnElectricEel`, ~10 functions): further instances of the "text label
   as sprite tiles" spawner family whose shape `SpawnSquid`
   (`graphics_loading_1fdec.c`, issue #31) already matched as **real,
-  byte-exact C** - `sub_8009ED0` allocation, `CreateEnemyCtrl` style
+  byte-exact C** - `CreateMovingSprite` allocation, `CreateEnemyCtrl` style
   lookup, two `_call_via_r2` trampoline calls, and the same
   `gEntityFlags`-rooted "collected bits" pack this pass's
   `sub_801E990` write-up above also resolves the table shape for. This
@@ -566,7 +566,7 @@ this cluster. Verified via an isolated `cpp`+`agbcc` compile,
 `arm-none-eabi-as` assemble, and a direct `arm-none-eabi-objcopy
 --only-section=.text` byte comparison against the ROM bytes extracted
 from `baserom.gba` at `0x0801E578`: every halfword matched except the
-5 `bl` call sites (`LoadTaggedAsset` x3, `sub_8026EC0`, `sub_8026EB4`),
+5 `bl` call sites (`LoadTaggedAsset` x3, `OperatorNewArray`, `OperatorDeleteArray`),
 which differ only because the isolated object is unlinked - the exact
 expected relocation-placeholder pattern, not a real mismatch.
 
@@ -686,10 +686,10 @@ spawners reached through the trigger dispatch table at
 
 - `SpawnCrystal`/`SpawnCrateGem`/`sub_801EBF0` test bit 0/1/2 of the byte
   `GetCurrentLevelFlags(gLevelState)` returns a pointer to. If it is clear
-  they spawn a `sub_8008434` part, point its animation bank at
+  they spawn a `CreateSpriteObj` part, point its animation bank at
   `**gUnknown_030012D0 + 0x1BC` (`SpawnCrystal`) or `+ 0x180`, set its
   tag (+0x2D) and type byte (+0x0A: 0x1B/0x1D/0x1E), run the
-  `sub_80087C0`/`sub_80087B4`/`sub_800872C` trio, store `sub_800815C`'s
+  `ResetSpriteFrameTimer`/`ResetSpriteFrameIndex`/`SetSpriteAnimDone` trio, store `GetSpriteAnimPaletteSlot`'s
   frame nibble and register the part with the `gUnknown_030012EC`
   manager. `SpawnCrateGem` additionally spawns effect 0x2B through
   `sub_8025BAC(gEntitySpawner, ...)` and sets bits 0-1 of its +0x28
@@ -703,7 +703,7 @@ spawners reached through the trigger dispatch table at
 The only things the C has to get right:
 
 - **`tag`/`type` as locals.** The ROM loads both constants into
-  callee-saved registers (`r8`/`sb`) before the `sub_8008434` call and
+  callee-saved registers (`r8`/`sb`) before the `CreateSpriteObj` call and
   stores them from there afterwards. That is how this compiler treats a
   variable assigned before the call; a literal at the store site is
   loaded at the store instead.

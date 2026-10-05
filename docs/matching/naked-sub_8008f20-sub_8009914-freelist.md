@@ -1,4 +1,4 @@
-# `sub_8008F20`/`sub_8009914`: NAKED asm transcription (byte-exact, tracked as parked)
+# `InitCrateList`/`ResetCrateList`: NAKED asm transcription (byte-exact, tracked as parked)
 
 **Tracking note**: same convention as `naked-spatial-grid-tail.md` -
 these two are byte-exact (confirmed by a full clean `make compare`)
@@ -12,27 +12,27 @@ list under "## Parked (`NON_MATCHING`, not yet byte-exact)").
 
 Both were previously `#if NON_MATCHING` C reconstructions in
 `actor_part11.c` (see `docs/matching.md`, "Parked, not matched:
-`sub_8008F20`"/"`sub_8009914`", the original write-ups, for the full
+`InitCrateList`"/"`ResetCrateList`", the original write-ups, for the full
 semantic breakdown - unchanged here). They share the exact same
-free-list-build loop shape (`sub_8009914`'s own tail is a byte-for-byte
-copy of `sub_8008F20`'s), and hit the identical compiler gap, so both
+free-list-build loop shape (`ResetCrateList`'s own tail is a byte-for-byte
+copy of `InitCrateList`'s), and hit the identical compiler gap, so both
 close via the same technique in one pass.
 
 ## What each function does
 
-- **`sub_8008F20`** - a fixed-slot object-pool initializer: sets
+- **`InitCrateList`** - a fixed-slot object-pool initializer: sets
   `activeCount = 0`, `capacity = count`, allocates `slotArray`
   (`count` pointers, zero-filled), `nodeArray` (`count` 0x14-byte
   nodes), and `freeListArray` (`count` 8-byte `{node, next}` pairs) via
-  `sub_8026EC0`, zeros the two 256-word `gridHead`/`gridTail` tables,
+  `OperatorNewArray`, zeros the two 256-word `gridHead`/`gridTail` tables,
   then builds a singly-linked free list threading every `nodeArray`
   entry through its own `freeListArray` wrapper slot.
-- **`sub_8009914`** - resets a pool manager to empty: tears down every
+- **`ResetCrateList`** - resets a pool manager to empty: tears down every
   active object (`slotArray[0..activeCount)`, firing each one's
   `table+0x50/0x54` "destroy" trampoline via `_call_via_r2` if
   non-`NULL`, then clearing the slot), resets `activeCount` to 0, zeros
   the grid tables, and rebuilds the free list from scratch over the
-  existing `nodeArray` - identical tail logic to `sub_8008F20`.
+  existing `nodeArray` - identical tail logic to `InitCrateList`.
 
 ## Why plain C didn't converge
 
@@ -55,7 +55,7 @@ high-register save/restore prologue/epilogue) but a different concrete
 register assignment for several of the four long-lived scalars - the
 same "gcc allocates a many-live-value loop differently than the ROM"
 gap already catalogued for this cluster's siblings
-(`sub_8009008`/`sub_80091D4`, `naked-spatial-grid-tail.md`).
+(`UnlinkCrateFromGrid`/`UpdateCrateList`, `naked-spatial-grid-tail.md`).
 
 ## The fix
 
@@ -70,7 +70,7 @@ suffix-less forms (`mov`/`add`/`sub`/`lsl`) - this project's assembler
 invocation (divided syntax, no `.syntax unified`) accepts these
 identically to the suffixed originals, and a trailing `.align 2, 0`
 reproduced at the ROM's own position (mid-function, right after
-`sub_8008F20`/`sub_8009914`'s shared `b 7f`/`b 8f` branch, holding the
+`InitCrateList`/`ResetCrateList`'s shared `b 7f`/`b 8f` branch, holding the
 `0x814` field-offset literal) plus after the function body itself.
 
 Each transcription was verified in isolation before touching the real
@@ -83,31 +83,31 @@ NAKED C instead) - identical for both.
 
 ## File/link-order changes
 
-`sub_8008F20` sat inside `asm/code_3_2_13.s`, the sole remaining
+`InitCrateList` sat inside `asm/code_3_2_13.s`, the sole remaining
 content of that file (already trimmed down to just this one guard by
 an earlier batch, see `naked-spatial-grid-tail.md`). Since it's now a
 real (if `NAKED`) function, it no longer needs a guard at all - it's
 appended directly to `actor_part11.c`, right after the truly-matched
-`sub_8008DC0`-`sub_8008EE4` functions and before the still-`#if
+`DrawPartList`-`InitPartList` functions and before the still-`#if
 NON_MATCHING`-guarded `sub_8009150` (owned by a parallel effort, left
 untouched). `asm/code_3_2_13.s` is retired entirely, and its
 `ldscript.txt` line removed - `actor_part11.o`'s own compiled output
 now ends exactly where that file used to begin, so no other reordering
 is needed.
 
-`sub_8009914` sat inside `asm/code_3_2_13_9914.s` (also already trimmed
-to just this one guard by the same earlier batch). Unlike `sub_8008F20`,
+`ResetCrateList` sat inside `asm/code_3_2_13_9914.s` (also already trimmed
+to just this one guard by the same earlier batch). Unlike `InitCrateList`,
 its real ROM address (`0x08009914`) does **not** sit adjacent to
-`actor_part11.c`'s own functions - `sub_8009150`, `sub_8009008`,
-`sub_80091D4`, `sub_800944C`, `sub_8009528`, `sub_80096C0`, and
-`sub_8009868` all sit between them in ROM order, each already living in
+`actor_part11.c`'s own functions - `sub_8009150`, `UnlinkCrateFromGrid`,
+`UpdateCrateList`, `DrawCrateList`, `sub_8009528`, `sub_80096C0`, and
+`CollidePlayerWithCrates` all sit between them in ROM order, each already living in
 its own translation unit. Per `docs/workflow.md` step 4 ("a function
 whose real address isn't adjacent to an existing matched file's
-functions needs its own new `.c` file"), `sub_8009914` moved to a new
+functions needs its own new `.c` file"), `ResetCrateList` moved to a new
 `src/graphics/actor_part11i.c` instead - the same reasoning that gave
 `sub_80096C0` its own `actor_part11e.c` earlier, `sub_8009528` its own
 `actor_part11f.c`, `sub_8009150` its own `actor_part11g.c`, and
-`sub_800944C` its own `actor_part11h.c` - `sub_8009914` landed on "i"
+`DrawCrateList` its own `actor_part11h.c` - `ResetCrateList` landed on "i"
 purely because all three of those letters were already claimed, by
 three separate parallel PRs, by the time this branch rebased onto them
 (three times, in fact - this file was renamed during each rebase:
@@ -119,10 +119,10 @@ exact same link-order slot the old guard file occupied (between
 
 `tools/report_units.py` gained two new `base_object: None` entries at
 `0x08008F20` and `0x08009914` (splitting `actor_part11.o`'s own entry
-right before the first, and `actor_part11d.o`'s neighbor `sub_8009868`
+right before the first, and `actor_part11d.o`'s neighbor `CollidePlayerWithCrates`
 entry right before the second) - the same "NAKED function embedded in
 an otherwise-matched file still gets its own address-boundary report
-entry" convention already established for `sub_8008044`
+entry" convention already established for `AdvanceSpriteAnim`
 (`actor_part3.c`)/`UpdateHovercraftCannon`(`actor_part31.c`)-style cases.
 
 Full clean `rm -rf build crashbandicootxs.elf crashbandicootxs.gba

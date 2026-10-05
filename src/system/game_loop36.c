@@ -20,7 +20,7 @@
  * reference makes possible, plus the register-allocation reasons this
  * stayed `NAKED`.
  *
- * Allocates a 0x64 (100)-byte object via `sub_8026EDC`, sets
+ * Allocates a 0x64 (100)-byte object via `OperatorNew`, sets
  * `self+0x18` to `&gCrateVtable` (a real address inside the
  * documented 93-entry `gStaticData_087Exxx` vtable family, but at a
  * `+0x18` offset - every other constructor this project has matched so
@@ -75,12 +75,12 @@
  *   between this constructor family and that subsystem.
  * - `type == 0xf` (case `_0801028E`): the largest single case - looks
  *   up a tile/graphics asset via `GetPaletteSlot`, masks `self+0x48`,
- *   tags `self+0x2d = 7`, looks up `gStaticData_0816BB94[(self->0x48 &
+ *   tags `self+0x2d = 7`, looks up `gSlotCrateTimers[(self->0x48 &
  *   0x38) >> 3]` for `self+0x4f`, and folds three placement-record
  *   `+1` flag bits (`0x2`/`0x4`/`0x8`) into `self+0x50`.
  *
  * **Common tail**: clears `self+0x28` bits `0x10`/`0x20`, folds
- * `sub_800815C(self)`'s low nibble into `self+0x29`'s low nibble,
+ * `GetSpriteAnimPaletteSlot(self)`'s low nibble into `self+0x29`'s low nibble,
  * writes `self+0/+4` (position) from `arg1<<8`/`arg2<<8`. If the
  * placement record confirms presence and `type` was `0xb` or `0xf`,
  * checks placement-record flag `0x80` to force `type = 1`. If `type ==
@@ -92,7 +92,7 @@
  * low bit into `self+0x4d` bit 0 (keeping bit 7). Writes
  * `self+0x4e = type` unconditionally. If `type == 5` and the placement
  * record confirms presence, calls `SolidifyOutlineCrate(self)` (see above).
- * Finally registers `self` via `sub_8009B70(gCrateList, self)`
+ * Finally registers `self` via `AddCrateToList(gCrateList, self)`
  * and returns `self`.
  *
  * Built with old_agbcc (the file is on the Makefile's OLD_AGBCC_OBJS;
@@ -107,23 +107,23 @@
  * - Case 15 masks `u48` with two `&=` statements (the ROM keeps both
  *   ands), passes the anim record through a pointer local (the ROM
  *   computes its address before loading gPaletteCache) and indexes
- *   gStaticData_0816BB94 through an `idx` local (index before table).
+ *   gSlotCrateTimers through an `idx` local (index before table).
  * - Case 11 builds its tag 0 with the constant-init asm so the `movs`
  *   comes before the tag address, as in the ROM.
  * - Three extra references to `type` at the end give it r7 and slot*2
  *   r8. */
 #include "phys_obj.h"
-extern void *sub_8026EDC(u32 size);
-extern void sub_80084A4(void *self);
+extern void *OperatorNew(u32 size);
+extern void InitSpriteObj(void *self);
 extern void ResetCrate(struct crate *self);
 extern u8 sub_802599C(void *level, s32 id);
 extern s32 GetDeaths(void *self);
 extern s32 sub_8023128(void *self);
-extern s32 sub_800815C(struct crate *self);
-extern void sub_8009B70(void *list, struct crate *self);
+extern s32 GetSpriteAnimPaletteSlot(struct crate *self);
+extern void AddCrateToList(void *list, struct crate *self);
 extern void SolidifyOutlineCrate(struct crate *self);
 extern struct crate_vtable gCrateVtable;
-extern u8 gStaticData_0816BB94[];
+extern u8 gSlotCrateTimers[];
 extern void *gCrateList;
 
 struct placement_level
@@ -148,9 +148,9 @@ void *CreateCrate(u16 id, u16 x, u16 y, u16 slot, u8 type)
     s32 flagged;
 
     {
-        void *obj = sub_8026EDC(0x64);
+        void *obj = OperatorNew(0x64);
 
-        sub_80084A4(obj);
+        InitSpriteObj(obj);
         ((struct crate *)obj)->vtable = &gCrateVtable;
         ((struct crate *)obj)->unk_59 = 0;
         ResetCrate(obj);
@@ -311,7 +311,7 @@ void *CreateCrate(u16 id, u16 x, u16 y, u16 slot, u8 type)
             {
                 u32 idx = (u32)(self->u48.n & 0x38) >> 3;
 
-                self->timer = gStaticData_0816BB94[idx];
+                self->timer = gSlotCrateTimers[idx];
             }
             self->unk_51 = rec[6];
             self->unk_50 = 0;
@@ -335,7 +335,7 @@ void *CreateCrate(u16 id, u16 x, u16 y, u16 slot, u8 type)
     }
     self->flipX = 0;
     self->flipY = 0;
-    self->slot = sub_800815C(self);
+    self->slot = GetSpriteAnimPaletteSlot(self);
     self->x = x << 8;
     self->y = y << 8;
     if (sub_802599C(gEntityFlags, id) && (type == 0xb || type == 0xf)
@@ -356,6 +356,6 @@ void *CreateCrate(u16 id, u16 x, u16 y, u16 slot, u8 type)
     asm("" : : "r"(type));
     if (type == 5 && sub_802599C(gEntityFlags, id))
         SolidifyOutlineCrate(self);
-    sub_8009B70(gCrateList, self);
+    AddCrateToList(gCrateList, self);
     return self;
 }

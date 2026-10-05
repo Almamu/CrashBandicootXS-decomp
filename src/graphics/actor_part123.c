@@ -101,31 +101,31 @@ void nullsub_3(void *self)
 }
 
 extern u8 gStaticData_087E400C[];
-extern void sub_800B8A8(void *self, s32 flags);
+extern void DestroyCtrl(void *self, s32 flags);
 
 /* Sets `self+0xc`'s table pointer to `gStaticData_087E400C`, then
- * tail-calls `sub_800B8A8` - same double-set pattern as
+ * tail-calls `DestroyCtrl` - same double-set pattern as
  * `sub_8018858`/`sub_8017A78`/`sub_8017FD4`. */
 void sub_800CCCC(void *selfArg, s32 flags)
 {
     u8 *self = selfArg;
 
     *(void **)(self + 0xc) = gStaticData_087E400C;
-    sub_800B8A8(self, flags);
+    DestroyCtrl(self, flags);
 }
 
-extern void sub_800B8C8(void *self);
+extern void InitCtrl(void *self);
 
-/* Resets via `sub_800B8C8`, re-points `self+0xc`'s table pointer at
+/* Resets via `InitCtrl`, re-points `self+0xc`'s table pointer at
  * `gStaticData_087E400C`, and runs `nullsub_3(self)` - the same
- * "reset via `sub_800B8C8`, re-point `self+0xc`, return `self`"
+ * "reset via `InitCtrl`, re-point `self+0xc`, return `self`"
  * constructor shape already matched for `sub_801886C`/`sub_8018858`/
  * `CreateKnockedEnemyCtrl`. */
 void *sub_800CCE0(void *selfArg)
 {
     u8 *self = selfArg;
 
-    sub_800B8C8(self);
+    InitCtrl(self);
     *(void **)(self + 0xc) = gStaticData_087E400C;
     nullsub_3(self);
     return self;

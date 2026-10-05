@@ -26,7 +26,7 @@ struct crate_vtable
 
 struct crate;
 
-/* sub_800F990's view of phys_obj.u48: this compiler pads the struct to a
+/* UpdateSlotCrate's view of phys_obj.u48: this compiler pads the struct to a
  * word, so a copy of it lives in one register and its bitfields are
  * updated with word-sized masks. */
 struct phys_b48
@@ -188,9 +188,9 @@ static inline void PhysCall3(void *obj, struct method *m, s32 a, s32 b, s32 c)
 static inline void PhysSetTag(struct crate *self, u8 tag)
 {
     self->tag = tag;
-    sub_80087C0(self);
-    sub_80087B4(self);
-    sub_800872C(self, 0);
+    ResetSpriteFrameTimer(self);
+    ResetSpriteFrameIndex(self);
+    SetSpriteAnimDone(self, 0);
 }
 
 /* Sets `frame` to `idx`, clamped to the current tag's frame count. `idx`

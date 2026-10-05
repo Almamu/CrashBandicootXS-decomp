@@ -50,14 +50,14 @@ extern void LockPalette(void *cache, s32 record);
 extern void FlushVramDmaQueue(void);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void LoadGraphicsPackage(void *dst, void *pkg);
-extern void *sub_8026EDC(u32 size);
-extern void sub_8026ED0(void *p);
-extern struct sprite *sub_8008904(void *mem);
-extern void sub_80087C0(void *part);
-extern void sub_80087B4(void *part);
-extern void sub_800872C(void *part, s32 arg);
-extern void sub_80088D8(void *part, s32 value);
-extern s32 sub_800815C(void *part);
+extern void *OperatorNew(u32 size);
+extern void OperatorDelete(void *p);
+extern struct sprite *InitUiSpriteObj(void *mem);
+extern void ResetSpriteFrameTimer(void *part);
+extern void ResetSpriteFrameIndex(void *part);
+extern void SetSpriteAnimDone(void *part, s32 arg);
+extern void SetSpritePriority(void *part, s32 value);
+extern s32 GetSpriteAnimPaletteSlot(void *part);
 extern void InitBgSetup(void *self, s32 a, s32 b, s32 c, s32 d);
 
 extern void UpdateLevelSelect(struct level_menu *self);
@@ -309,13 +309,13 @@ u8 LevelSelectIsNextWorldOpen(struct level_menu *self)
     return r;
 }
 
-/* sub_80087D0, inlined: select animation `idx` and restart it. */
+/* SetSpriteAnim, inlined: select animation `idx` and restart it. */
 static inline void SetAnim(struct sprite *s, u32 idx)
 {
     s->animIndex = idx;
-    sub_80087C0(s);
-    sub_80087B4(s);
-    sub_800872C(s, 0);
+    ResetSpriteFrameTimer(s);
+    ResetSpriteFrameIndex(s);
+    SetSpriteAnimDone(s, 0);
 }
 
 /* Page changed: switch the page title sprite's animation and put the
@@ -422,7 +422,7 @@ void ReloadLevelSelectPalette(struct level_menu *self)
 
     ClaimPaletteSlot(gPaletteCache, 0xF);
     for (i = 0; i <= 7; i++)
-        self->sprites[i]->palette = sub_800815C(self->sprites[i]);
+        self->sprites[i]->palette = GetSpriteAnimPaletteSlot(self->sprites[i]);
     sub_801D668(self);
 }
 
@@ -475,7 +475,7 @@ void sub_801D7D4(struct page_bg *p)
 void DestroyLevelSelectPageBg(struct page_bg *p, s32 flags)
 {
     if (flags & 1)
-        sub_8026ED0(p);
+        OperatorDelete(p);
 }
 
 struct page_bg *CreateLevelSelectPageBg(struct page_bg *self, s32 charBlock, s32 screenBlock)
@@ -564,12 +564,12 @@ struct icon_bg *InitZoomBg(struct icon_bg *self, s32 charBlock, s32 screenBlock)
     self->unk_48 = 0;
     for (i = 0; i <= 3; i++)
     {
-        self->slots[i].sprite = sub_8008904(sub_8026EDC(0x40));
+        self->slots[i].sprite = InitUiSpriteObj(OperatorNew(0x40));
         self->slots[i].sprite->anim = (struct anim_table *)((u8 *)**gUnknown_030012D0 + 0x258);
         SetMode(self->slots[i].sprite, 1);
         SetPos(self->slots[i].sprite, self->x + gStaticData_0816C5F0[i].x, self->y + gStaticData_0816C5F0[i].y);
-        sub_80088D8(self->slots[i].sprite, 1);
-        SetPalette(self->slots[i].sprite, sub_800815C(self->slots[0].sprite));
+        SetSpritePriority(self->slots[i].sprite, 1);
+        SetPalette(self->slots[i].sprite, GetSpriteAnimPaletteSlot(self->slots[0].sprite));
         RandomizeZoomBgTwinkle(self, &self->slots[i]);
     }
     LockPalette(gPaletteCache, self->slots[0].sprite->anim->records[self->slots[0].sprite->animIndex].tileRecord);

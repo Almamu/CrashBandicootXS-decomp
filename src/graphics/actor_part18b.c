@@ -1,7 +1,7 @@
 #include "core.h"
 #include "action_obj.h"
 
-/* Continuation of actor_part18.c's `gStaticData_0816BF20` action-table
+/* Continuation of actor_part18.c's `gActionCtrlStateTable` action-table
  * entries. See actor_part18.c's own
  * top-of-file comment for the shared field-offset conventions
  * (`self+0xc`/`self+0x10`/`+0x27`.."+0x32" etc.) these functions use. */

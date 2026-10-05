@@ -10,7 +10,7 @@ two NAKED holdouts from #9. It removes `asm/code_3_2.s`,
 | Function | File | Compiler | Technique |
 |---|---|---|---|
 | `PlayerHandleEvent` | `src/graphics/actor_part111.c` | old_agbcc | New plain-`switch` C, see below |
-| `sub_800C940` | `src/graphics/actor_part116.c` | either | Empty asm clobber of r5, plus pins |
+| `UpdateEnemyBob` | `src/graphics/actor_part116.c` | either | Empty asm clobber of r5, plus pins |
 | `sub_800C97C` | `src/graphics/actor_part116.c` | either | Empty asm clobber of r8, one pin |
 
 ### PlayerHandleEvent (formerly raw)
@@ -36,7 +36,7 @@ It matches only under old_agbcc (agbcc is 218 halfwords off), so
 switch, `movs #1; ldrb; orrs` in the ROM (constant before the byte) had
 already pointed to old_agbcc.
 
-### sub_800C940 / sub_800C97C
+### UpdateEnemyBob / sub_800C97C
 
 The note on these functions said the ROM pushes a callee-saved register
 that it never uses (r5 in C940, r8 in C97C). The brief suggested
@@ -64,7 +64,7 @@ Each empty asm has a comment in the source.
   (1032 bytes under agbcc and 1024 under old_agbcc, against the ROM's
   1044). The ROM spills nearly every local into a 0x48-byte frame, the
   same obstacle that parks `DrawSpritePieces`.
-- **`sub_800A884`**'s NAKED body moved into `src/graphics/actor_part78.c`,
+- **`CollidePlayer`**'s NAKED body moved into `src/graphics/actor_part78.c`,
   and `asm/code_3_2_16_a884.s` is gone. The old draft used register pins
   and two asm islands and was 137 halfwords off under both compilers,
   not the near match its comment described. It was replaced with plain C:
@@ -85,7 +85,7 @@ Each empty asm has a comment in the source.
   file. It is 256 halfwords off (624 bytes against 636); `self` is in r6
   and the frame is 8 bytes where the ROM uses 4. It was not pursued past
   the triage.
-- **`sub_80091D4`**: 215 halfwords off under both compilers. Adding
+- **`UpdateCrateList`**: 215 halfwords off under both compilers. Adding
   extra-reference nudges (`asm("" : : "r"(manager/node))`) at the loop
   head, the loop tail and after the outer loop brings the best case to
   210. `manager` and `node` still land in r8/sb instead of r7/r8. Brief
@@ -94,11 +94,11 @@ Each empty asm has a comment in the source.
 
 ## Later pass: the four holdouts again (nothing closed)
 
-A second pass retried `sub_80091D4`, `DrawPlayer`, `sub_800A884` and
+A second pass retried `UpdateCrateList`, `DrawPlayer`, `CollidePlayer` and
 `DrawAffineSpritePieces`. None closed. Two drafts got closer and were updated in
 place; the NAKED bodies are unchanged.
 
-- **`sub_80091D4`: 215 → 7 halfwords** (old_agbcc; agbcc 35). The r8/sb
+- **`UpdateCrateList`: 215 → 7 halfwords** (old_agbcc; agbcc 35). The r8/sb
   problem was not about loop shape. It came from how the removal is
   inlined:
   - `pool_destroy(manager, obj)` wraps the search/compaction and the
@@ -139,7 +139,7 @@ place; the NAKED bodies are unchanged.
   What's left: `self` is in r6, not r7, and the history section spills
   twice. As a result the reload registers rotate differently, and gcc
   cross-jumps the shared `-0x1300` add of the two mirror branches.
-- **`sub_800A884`: unchanged (127).** The ROM's "walking" offset
+- **`CollidePlayer`: unchanged (127).** The ROM's "walking" offset
   register is not a source-level pointer. gcc folds `self + 0x10x`
   into one add with a large constant, reload puts the constant in a
   reload register, and `reload_cse_move2add` turns the next constant
@@ -159,13 +159,13 @@ place; the NAKED bodies are unchanged.
   tried. Matching by spilling means reproducing global-alloc's choices
   across the whole function, which didn't fit the budget.
 
-## Hold pass: `sub_80091D4` closed, `DrawPlayer` 246 → 40
+## Hold pass: `UpdateCrateList` closed, `DrawPlayer` 246 → 40
 
 This pass applied the hard-register hold from #489
 (`register s32 hold asm("rN"); asm("" : "=r"(hold)); ...
 asm("" : : "r"(hold));`) to the two drafts above.
 
-- **`sub_80091D4`: matched** (old_agbcc; `actor_part11c.o` joined
+- **`UpdateCrateList`: matched** (old_agbcc; `actor_part11c.o` joined
   `OLD_AGBCC_OBJS`. It is the only function in that file, and it is
   still 28 halfwords off under agbcc).
   - The `(s32)gridHeadBase + (i << 2)` byte-offset form fixes the

@@ -16,7 +16,7 @@
  * file already documents. It is the base font's destructor (vtable
  * slot 1 of gFontVtable; it was once read as a constructor):
  * (`record = &gFontVtable`, then the same conditional
- * `sub_8026ED0(self)` teardown-registration idiom
+ * `OperatorDelete(self)` teardown-registration idiom
  * DestroyLargeFont/DestroySmallFont (src/graphics/actor_aabb_setup.c) and
  * InitFont above use elsewhere for the same table). Matched
  * byte-exact via plain struct field access - unlike InitFont's own
@@ -26,7 +26,7 @@
  * else contends for it), gcc's own codegen already lands the `self+
  * offsetof(record)` add in r2 exactly like the ROM. */
 extern u8 gFontVtable[];
-extern void sub_8026ED0(void *manager);
+extern void OperatorDelete(void *manager);
 
 extern void *_call_via_r1(void *arg0, void *arg1);
 extern s32 __udivsi3(s32 value, s32 divisor);
@@ -95,6 +95,6 @@ void DestroyFont(struct icon_manager *self, u32 flags)
 {
     self->record = (struct icon_record *)gFontVtable;
     if (flags & 1) {
-        sub_8026ED0(self);
+        OperatorDelete(self);
     }
 }

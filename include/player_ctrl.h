@@ -3,11 +3,11 @@
 
 /* The player-input controller object of src/graphics/actor_part_16048.c
  * (GitHub issues #19/#20, ROM 0x08016048-0x08017524): a C++-style class
- * with gcc 2.x method table gPlayerCtrlVtable (+0x0C sub_8016288
- * per-frame update, +0x14 sub_8016128 message handler, +0x1C sub_8017218
- * set target, +0x4C sub_80174D8 destructor; the rest are base-class
- * sub_800B6xx/sub_800B8xx functions). Constructor sub_80174EC (called from
- * game_loop39.c), whose field reset is actor_part57.c's sub_8015958.
+ * with gcc 2.x method table gPlayerCtrlVtable (+0x0C UpdatePlayerCtrl
+ * per-frame update, +0x14 PlayerCtrlHandleEvent message handler, +0x1C AttachPlayerCtrl
+ * set target, +0x4C DestroyPlayerCtrl destructor; the rest are base-class
+ * sub_800B6xx/sub_800B8xx functions). Constructor InitPlayerCtrl (called from
+ * game_loop39.c), whose field reset is actor_part57.c's ResetPlayerCtrl.
  * The dispatchers sub_80159F8/sub_8015C6C/sub_8015DF8 (actor_part86.c/
  * actor_part86b.c) and sub_8015FDC (actor_part57b.c) are methods of the
  * same class. */

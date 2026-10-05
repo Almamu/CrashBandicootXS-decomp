@@ -11,16 +11,16 @@ struct aabb {
 
 extern void SetAabbPos(void *buf, s32 arg1, s32 arg2);
 extern void SetAabbSize(void *buf, s32 arg1, s32 arg2);
-extern u8 sub_8001688(void *buf1, void *buf2);
+extern u8 AabbOverlaps(void *buf1, void *buf2);
 
 /* Builds `part`'s AABB (same keyframe-table shape/record layout as
- * sub_8007B98, inlined directly here rather than calling it - this
+ * GetSpriteHitbox, inlined directly here rather than calling it - this
  * function needs the box on the stack for the final overlap test, not
  * written out through a `dest` pointer) and mirrors it per
  * `part+0x28` bits 4/5, then tests it for overlap against `region` via
- * `sub_8001688` - the same collision-test function `sub_8007DBC`
+ * `AabbOverlaps` - the same collision-test function `CheckSpritePickup`
  * uses. */
-s32 sub_80080C0(struct actor *part, void *region)
+s32 SpriteHitboxOverlaps(struct actor *part, void *region)
 {
     struct aabb buf_;
     void **tablePtr;
@@ -67,7 +67,7 @@ s32 sub_80080C0(struct actor *part, void *region)
         buf_.field_4 = ypos * 2 - (buf_.field_4 + buf_.field_c);
     }
 
-    return (u8)sub_8001688(&buf_, region);
+    return (u8)AabbOverlaps(&buf_, region);
 }
 
 extern u8 GetPaletteSlot(struct palette_cache *self, s32 recordId);
@@ -76,7 +76,7 @@ extern struct palette_cache *gPaletteCache;
 /* Reads `part`'s current keyframe record's `+0x14` byte as a
  * `GetPaletteSlot` record id, looked up against the global tile-asset
  * cache `gPaletteCache`. */
-s32 sub_800815C(struct actor *part)
+s32 GetSpriteAnimPaletteSlot(struct actor *part)
 {
     struct palette_cache *cache = gPaletteCache;
     void **tablePtr;

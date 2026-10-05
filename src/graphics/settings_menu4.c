@@ -56,7 +56,7 @@ void CloseSaveMenu(void)
     FreeUnlockedPaletteSlots(gPaletteCache);
 }
 
-extern void *sub_8026EDC(s32 size);
+extern void *OperatorNew(s32 size);
 extern void *InitSaveMenu(void *arg0);
 
 /* Allocates and constructs a fresh SIO-handshake spinner object (the
@@ -68,5 +68,5 @@ void OpenSaveMenu(void)
 
     FreeUnlockedPaletteSlots(gPaletteCache);
     dest = &gSaveMenu;
-    *dest = InitSaveMenu(sub_8026EDC(0xe4));
+    *dest = InitSaveMenu(OperatorNew(0xe4));
 }

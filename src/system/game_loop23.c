@@ -78,7 +78,7 @@ u32 sub_8010674(void *selfArg, struct aabb *boxArg)
          * hoist the `self->y` load ahead of the still-pending
          * `rec[5] << 7` shift, stealing r3/r0 from each other (the
          * same "which anonymous scratch register" gap already
-         * NAKED-parked for `sub_8007B00`/`sub_8007B98`,
+         * NAKED-parked for `GetSpriteBounds`/`GetSpriteHitbox`,
          * actor_part.c) - anchored as one literal block instead,
          * matching `self`'s own register (r5, reused here for `top`
          * once `self` is dead) and `rec`'s (r0, reused for the

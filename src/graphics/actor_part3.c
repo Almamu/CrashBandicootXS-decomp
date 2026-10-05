@@ -13,7 +13,7 @@ extern void *gLevelLayers;
  * `table+N`/`table+N+4` offset/pointer slot pair convention
  * sub_8006FE4 reads at `table+0x40`, here at `table+0x30` (the
  * part's method-table entry, see PART_METHOD). */
-s32 sub_8007F78(struct box_part *part)
+s32 IsSpriteObjOnScreen(struct box_part *part)
 {
     register s32 result asm("r3") = 0;
 
@@ -55,12 +55,12 @@ s32 sub_8007F78(struct box_part *part)
     return result;
 }
 
-extern void sub_8007B00(void *dest, void *part);
+extern void GetSpriteBounds(void *dest, void *part);
 
-/* Same `part+0x25`/`part+0xd` bit-2 fast-path shape as sub_8007F78
+/* Same `part+0x25`/`part+0xd` bit-2 fast-path shape as IsSpriteObjOnScreen
  * above, but the real check is an AABB-overlap test: `part`'s own box
- * (via sub_8007B00) against `region`'s `{s32 x, y, w, h}`. */
-s32 sub_8007FD8(struct actor *part, struct part_aabb *region)
+ * (via GetSpriteBounds) against `region`'s `{s32 x, y, w, h}`. */
+s32 SpriteObjOverlapsRect(struct actor *part, struct part_aabb *region)
 {
     register s32 earlyResult asm("r3") = 0;
 
@@ -84,7 +84,7 @@ s32 sub_8007FD8(struct actor *part, struct part_aabb *region)
         s32 x1, y1, x2, y2;
         s32 result;
 
-        sub_8007B00(&box, part);
+        GetSpriteBounds(&box, part);
 
         x1 = box.x << 8;
         y1 = box.y << 8;
@@ -121,7 +121,7 @@ asm(".align 2, 0");
  * local and then `*keyframes` once into `kf` (reused by the flag test,
  * while `frame` is re-read each time), and `animDone` is stored from a
  * local (`movs r1, #1` before the address, not after). */
-void sub_8008044(struct box_part *part)
+void AdvanceSpriteAnim(struct box_part *part)
 {
     if (part->animating) {
         s32 timer = part->timer;

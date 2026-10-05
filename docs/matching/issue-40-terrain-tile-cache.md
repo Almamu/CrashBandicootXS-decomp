@@ -38,7 +38,7 @@ issue is where they got turned into (attempted) byte-exact C.
   functions `ScaleBgLayerScroll`/`sub_8024E24`/`FillBgStreamer`/`SetBgStreamerSource`,
   out of scope for this issue).
 - **`sub_8025444`** is the exact same "`flags & 1` -> forward to
-  `sub_8026ED0`" shape already matched as `sub_8006FC8` in
+  `OperatorDelete`" shape already matched as `sub_8006FC8` in
   `src/graphics/graphics.c`.
 - **`sub_8025554`/`sub_8025588`** are a floor-divide-by-32 bitmap
   set/clear pair on an arbitrary `void *self` array - unrelated to the

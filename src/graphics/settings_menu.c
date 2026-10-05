@@ -39,7 +39,7 @@ static inline void set_icon_mgr_pos(struct icon_manager *m, u32 x, u32 y)
  * siblings `sub_8004914`/`sub_80049CC` live in
  * `src/graphics/settings_menu23.c`. */
 
-extern void *sub_8026EDC(s32 size);
+extern void *OperatorNew(s32 size);
 extern void sub_8002FCC(void *newObj, void *tmpl);
 extern void sub_8002FD8(void *newObj);
 extern void WaitForVBlank(void);
@@ -52,7 +52,7 @@ extern s32 sub_8001F50(void *arg0);
 extern s32 sub_8002EFC(void *newObj);
 extern s32 sub_8002FD4(void *newObj);
 extern void MemCopy32(void *arg0, s32 arg1, s32 arg2);
-extern void sub_8026ED0(void *newObj);
+extern void OperatorDelete(void *newObj);
 
 /* A "connecting..." SIO-handshake spinner dialog: allocates a small
  * icon object from self->field_8c's template, then loops VBlank-
@@ -69,7 +69,7 @@ extern void sub_8026ED0(void *newObj);
  * `sub_8002FD4` result is taken before `self->field_90` is loaded. */
 s32 sub_8003B40(struct pause_options_screen *self)
 {
-    void *spinner = sub_8026EDC(0x220);
+    void *spinner = OperatorNew(0x220);
     s32 state;
 
     sub_8002FCC(spinner, self->field_8c);
@@ -93,7 +93,7 @@ s32 sub_8003B40(struct pause_options_screen *self)
 
         MemCopy32(self->field_90, result, 0x200);
     }
-    sub_8026ED0(spinner);
+    OperatorDelete(spinner);
     return state;
 }
 
@@ -194,7 +194,7 @@ void sub_8003D3C(struct pause_options_screen *self, s32 value)
 }
 
 extern u8 IsSaveSlotEmpty(void *handle, s32 rowIndex);
-extern void sub_8008890(void *arg0, s32 arg1, s32 arg2);
+extern void DrawSpriteWithOffset(void *arg0, s32 arg1, s32 arg2);
 extern s32 itoa(s32 value, u8 *buffer, s32 base);
 
 /* `rowObjA`/`rowObjB`/`rowObjC` entries (see pause_options_screen.h)
@@ -219,7 +219,7 @@ static inline void place_row_obj(void *p, s32 x, s32 y)
 
     o->x = x << 8;
     o->y = y << 8;
-    sub_8008890(o, 0, 0);
+    DrawSpriteWithOffset(o, 0, 0);
 }
 
 /* The shared highlight/dim state call: selected rows draw in the
@@ -374,10 +374,10 @@ extern void ResetObjVram(struct vram_upload_cursor *self);
 extern s32 ReserveObjVram(struct vram_upload_cursor *self, s32 size);
 extern void MarkObjVram(struct vram_upload_cursor *self);
 extern void _call_via_r1(void *addr, void *fn);
-extern struct actor *sub_8008904(struct actor *part);
-extern void sub_80087C0(struct actor *part);
-extern void sub_80087B4(struct actor *part);
-extern void sub_800872C(struct actor *part, u8 val);
+extern struct actor *InitUiSpriteObj(struct actor *part);
+extern void ResetSpriteFrameTimer(struct actor *part);
+extern void ResetSpriteFrameIndex(struct actor *part);
+extern void SetSpriteAnimDone(struct actor *part, u8 val);
 extern void ***gUnknown_030012D0;
 extern u16 gStaticData_0816B13A[16];
 extern u16 gStaticData_0816B15A[16];
@@ -390,7 +390,7 @@ struct icon_frame_nibble {
 };
 
 #define SET_ICON_FRAME_NIBBLE(iconExpr) \
-    (((struct icon_frame_nibble *)&(iconExpr)->field_29)->lo = sub_800815C(&(iconExpr)->base))
+    (((struct icon_frame_nibble *)&(iconExpr)->field_29)->lo = GetSpriteAnimPaletteSlot(&(iconExpr)->base))
 
 static inline void IconSetup(struct icon_manager *m, u32 v)
 {
@@ -424,7 +424,7 @@ static inline void new_row_icon(struct settings_icon_actor **slot, u32 tblOff, u
 {
     struct settings_icon_actor *icon;
 
-    icon = (struct settings_icon_actor *)sub_8008904((struct actor *)sub_8026EDC(0x40));
+    icon = (struct settings_icon_actor *)InitUiSpriteObj((struct actor *)OperatorNew(0x40));
     *slot = icon;
     icon->field_20 = (void **)((u8 *)(**gUnknown_030012D0) + tblOff);
     /* Plain `u8 *` store: old_agbcc's read-modify-write struct store
@@ -438,11 +438,11 @@ static inline void new_row_icon(struct settings_icon_actor **slot, u32 tblOff, u
         register u8 *fp asm("r0") = &icon->frameIndex;
         *fp = 0;
     }
-    sub_80087C0(&icon->base);
-    sub_80087B4(&icon->base);
-    sub_800872C(&icon->base, 0);
+    ResetSpriteFrameTimer(&icon->base);
+    ResetSpriteFrameIndex(&icon->base);
+    SetSpriteAnimDone(&icon->base, 0);
     {
-        s32 lo = sub_800815C(&(*slot)->base);
+        s32 lo = GetSpriteAnimPaletteSlot(&(*slot)->base);
         u8 *p = &(*slot)->field_29;
         s32 m = -16;
 

@@ -12,8 +12,8 @@
  * CreatePlatform with a per-slot id, or the shared id 0xC when
  * IsGemPathDone says so or the record's +0x8C byte is set, handed to
  * SetGemPlatform. Otherwise it spawns the full visual effect: a
- * sub_8008434 part on anim bank offset 0x180, with a per-slot tag,
- * built through the sub_80087C0/sub_80087B4/sub_800872C OAM trio, and
+ * CreateSpriteObj part on anim bank offset 0x180, with a per-slot tag,
+ * built through the ResetSpriteFrameTimer/ResetSpriteFrameIndex/SetSpriteAnimDone OAM trio, and
  * registered with the gUnknown_030012EC manager.
  *
  *   function     bit  sound  tag
@@ -48,14 +48,14 @@ extern void *gUnknown_030012EC;
 extern u8 IsGemPathDone(struct level_progress *self);
 extern void *CreatePlatform(u16 x, u16 y, u16 w, u16 h, s32 id);
 extern void SetGemPlatform(struct level_progress *self, void *handle);
-extern struct gfx_part *sub_8008434(u16 a0, u16 a1, u16 a2, u16 a3);
-extern void sub_80087C0(struct gfx_part *part);
-extern void sub_80087B4(struct gfx_part *part);
-extern void sub_800872C(struct gfx_part *part, s32 val);
-extern s32 sub_800815C(struct gfx_part *part);
-extern void sub_8008E94(void *manager, struct gfx_part *part);
+extern struct gfx_part *CreateSpriteObj(u16 a0, u16 a1, u16 a2, u16 a3);
+extern void ResetSpriteFrameTimer(struct gfx_part *part);
+extern void ResetSpriteFrameIndex(struct gfx_part *part);
+extern void SetSpriteAnimDone(struct gfx_part *part, s32 val);
+extern s32 GetSpriteAnimPaletteSlot(struct gfx_part *part);
+extern void AddToPartList(void *manager, struct gfx_part *part);
 
-/* The `tag` locals are set before the sub_8008434 call on purpose: the
+/* The `tag` locals are set before the CreateSpriteObj call on purpose: the
  * ROM loads the constant into a callee-saved register up front and
  * stores it from there afterwards. */
 void SpawnRedGemPlatform(u32 a0, u16 a1, u16 a2, u16 a3)
@@ -75,16 +75,16 @@ void SpawnRedGemPlatform(u32 a0, u16 a1, u16 a2, u16 a3)
     else
     {
         u8 tag = 7;
-        struct gfx_part *part = sub_8008434(a0, a1, a2, a3);
+        struct gfx_part *part = CreateSpriteObj(a0, a1, a2, a3);
 
         part->bank = (struct anim_bank *)(**gUnknown_030012D0 + 0x180);
         part->tag = tag;
-        sub_80087C0(part);
-        sub_80087B4(part);
-        sub_800872C(part, 0);
-        part->frameNibble = sub_800815C(part);
+        ResetSpriteFrameTimer(part);
+        ResetSpriteFrameIndex(part);
+        SetSpriteAnimDone(part, 0);
+        part->frameNibble = GetSpriteAnimPaletteSlot(part);
         part->unk_0A = bit;
-        sub_8008E94(gUnknown_030012EC, part);
+        AddToPartList(gUnknown_030012EC, part);
         part->hidden = 0;
     }
 }
@@ -106,16 +106,16 @@ void SpawnYellowGemPlatform(u32 a0, u16 a1, u16 a2, u16 a3)
     else
     {
         u8 tag = 5;
-        struct gfx_part *part = sub_8008434(a0, a1, a2, a3);
+        struct gfx_part *part = CreateSpriteObj(a0, a1, a2, a3);
 
         part->bank = (struct anim_bank *)(**gUnknown_030012D0 + 0x180);
         part->tag = tag;
-        sub_80087C0(part);
-        sub_80087B4(part);
-        sub_800872C(part, 0);
-        part->frameNibble = sub_800815C(part);
+        ResetSpriteFrameTimer(part);
+        ResetSpriteFrameIndex(part);
+        SetSpriteAnimDone(part, 0);
+        part->frameNibble = GetSpriteAnimPaletteSlot(part);
         part->unk_0A = bit;
-        sub_8008E94(gUnknown_030012EC, part);
+        AddToPartList(gUnknown_030012EC, part);
         part->hidden = 0;
     }
 }
@@ -137,16 +137,16 @@ void SpawnGreenGemPlatform(u32 a0, u16 a1, u16 a2, u16 a3)
     else
     {
         u8 tag = 6;
-        struct gfx_part *part = sub_8008434(a0, a1, a2, a3);
+        struct gfx_part *part = CreateSpriteObj(a0, a1, a2, a3);
 
         part->bank = (struct anim_bank *)(**gUnknown_030012D0 + 0x180);
         part->tag = tag;
-        sub_80087C0(part);
-        sub_80087B4(part);
-        sub_800872C(part, 0);
-        part->frameNibble = sub_800815C(part);
+        ResetSpriteFrameTimer(part);
+        ResetSpriteFrameIndex(part);
+        SetSpriteAnimDone(part, 0);
+        part->frameNibble = GetSpriteAnimPaletteSlot(part);
         part->unk_0A = bit;
-        sub_8008E94(gUnknown_030012EC, part);
+        AddToPartList(gUnknown_030012EC, part);
         part->hidden = 0;
     }
 }
@@ -170,16 +170,16 @@ void SpawnBlueGemPlatform(u32 a0, u16 a1, u16 a2, u16 a3)
     else
     {
         u8 tag = 8;
-        struct gfx_part *part = sub_8008434(a0, a1, a2, a3);
+        struct gfx_part *part = CreateSpriteObj(a0, a1, a2, a3);
 
         part->bank = (struct anim_bank *)(**gUnknown_030012D0 + 0x180);
         part->tag = tag;
-        sub_80087C0(part);
-        sub_80087B4(part);
-        sub_800872C(part, 0);
-        part->frameNibble = sub_800815C(part);
+        ResetSpriteFrameTimer(part);
+        ResetSpriteFrameIndex(part);
+        SetSpriteAnimDone(part, 0);
+        part->frameNibble = GetSpriteAnimPaletteSlot(part);
         part->unk_0A = bit;
-        sub_8008E94(gUnknown_030012EC, part);
+        AddToPartList(gUnknown_030012EC, part);
         part->hidden = 0;
     }
 }

@@ -3,24 +3,24 @@
 
 /* GitHub issue #9: 0x08007634-0x0800B3F0, game_loop-labeled chunk that
  * turned out to be part of the `actor` category's "part" object family
- * (see docs/matching/issue-9-0x08007634-actor.md). `sub_800A734`/
+ * (see docs/matching/issue-9-0x08007634-actor.md). `ResetPlayer`/
  * `sub_800A810` sit right after already-matched actor_part14.c
- * (`sub_800A5F4`-`sub_800A730`). */
+ * (`DrawGroundSprite`-`sub_800A730`). */
 
-extern s32 sub_800815C(void *part);
+extern s32 GetSpriteAnimPaletteSlot(void *part);
 extern void sub_8015840(void *arg0);
 extern void sub_80159A4(void *arg0);
 extern void sub_8017994(void *arg0);
 
 /* `part`-object constructor/reset: clears the velocity/accel fields
- * `sub_800A590`/`sub_8009DF4` consume, resets state (`+0x68`) to 8,
+ * `sub_800A590`/`ApplySpriteVelocity` consume, resets state (`+0x68`) to 8,
  * snapshots the current frame counter (`gRoomFrameCount`) into
  * `+0x8c` (the same "periodic check" field documented elsewhere in
  * this ROM), zeroes the `+0x100`-`+0x105` per-phase flag bytes
  * `actor_part15.c`'s doc comment already describes, and hooks up a
- * child/"owner" object at `+0xb0`: calls `sub_800815C(child)` and packs
+ * child/"owner" object at `+0xb0`: calls `GetSpriteAnimPaletteSlot(child)` and packs
  * its low nibble into `child+0x29`'s own low nibble (preserving the
- * high nibble) - the same field `sub_800A734`'s sibling constructors in
+ * high nibble) - the same field `ResetPlayer`'s sibling constructors in
  * actor_part14.c already touch at a different bit.
  *
  * Matched after a second pass closed the gap an earlier session parked
@@ -41,7 +41,7 @@ extern void sub_8017994(void *arg0);
  * materialize in a register (`self+0x8c`'s write) where this compiler
  * would otherwise fold a `+= N` straight into the next store's
  * addressing mode; keeping `self+0xb0`'s *address* (not the loaded
- * child pointer) live across the `bl sub_800815C` and reloading the
+ * child pointer) live across the `bl GetSpriteAnimPaletteSlot` and reloading the
  * pointer fresh afterward, since the ROM does the same rather than
  * spend an extra register caching it across the call; and, for the
  * trailing `self+0x100`-`self+0x105` writes, three independent
@@ -49,7 +49,7 @@ extern void sub_8017994(void *arg0);
  * deliberately narrow scopes so this compiler's allocator doesn't pick
  * a different (but equally "free") register than the ROM's own choice.
  * See docs/matching/issue-9-0x08007634-actor.md for the full write-up. */
-void sub_800A734(void *selfArg)
+void ResetPlayer(void *selfArg)
 {
     u8 *self = selfArg;
     u8 flags;
@@ -163,7 +163,7 @@ void sub_800A734(void *selfArg)
          * extra register/copy the ROM doesn't have. */
         register void **childAddr asm("r5") = (void **)(self + 0xb0);
 
-        ret = sub_800815C(*childAddr);
+        ret = GetSpriteAnimPaletteSlot(*childAddr);
 
         {
             /* Register-pinned to mirror the ROM's exact instruction
@@ -268,7 +268,7 @@ asm(".align 2, 0");
  * `+0x2d` cleared, `+0xc` bit 3 cleared/bit 6 set), then dispatches on
  * a sub-state byte at `+0x88` to one of three per-state teardown
  * helpers (each called with the same single `+0x44` "record" argument
- * `sub_800A730`/`sub_8009F1C` already established): state 0 ->
+ * `sub_800A730`/`DestroyMovingSprite` already established): state 0 ->
  * `sub_8015840`, state 1 -> `sub_80159A4`, state 3 -> `sub_8017994`;
  * state 2 and anything else is a no-op.
  *

@@ -89,8 +89,8 @@ struct pooled_layer
 
 extern void *InitBgLayer(void *self, s32 bgIndex);
 extern void DestroyBgLayerBase(void *self, u32 flags);
-extern void *sub_8026EDC(u32 size);
-extern void sub_8026ED0(void *ptr);
+extern void *OperatorNew(u32 size);
+extern void OperatorDelete(void *ptr);
 extern s32 QueueVramDmaTransfer(void *src, void *dest, u16 size, u16 unit);
 extern u8 gPooledBgLayerVtable[];
 extern u8 gBgLayerVtable[];
@@ -126,7 +126,7 @@ void DestroyPooledBgLayer(struct pooled_layer *self, u32 flags)
 {
     self->vtable = gPooledBgLayerVtable;
     if (self->pool != NULL)
-        sub_8026ED0(self->pool);
+        OperatorDelete(self->pool);
     self->vtable = gBgLayerVtable;
     DestroyBgLayerBase(self, flags);
 }
@@ -152,7 +152,7 @@ struct pooled_layer *InitPooledBgLayer(struct pooled_layer *self, s32 bgIndex)
             "strb r0, [%0]\n\t"
             : : "r"(bits) : "r0", "r1", "r3", "memory");
     }
-    self->pool = sub_8026EDC(sizeof(struct tile_slot_pool));
+    self->pool = OperatorNew(sizeof(struct tile_slot_pool));
     return self;
 }
 

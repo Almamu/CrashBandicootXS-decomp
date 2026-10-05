@@ -2,7 +2,7 @@
 
 /* GitHub issue #9/#10: single-point terrain-height ("floor") probes,
  * split out of `docs/matching/issue-9-0x0800a178-graphics.md`'s existing
- * write-up - both callers (`sub_800A178`/`sub_800A420`, GitHub issue
+ * write-up - both callers (`ProbeGroundSpriteTerrain`/`sub_800A420`, GitHub issue
  * #9/#10, `src/graphics/actor_part110.c`) already fully placed their
  * argument roles: `s32 fn(void *player, struct probe_pos *pos, s32
  * *outValue)`, computing `pos->x >> 3`/`pos->y >> 3` tile coords from
@@ -28,7 +28,7 @@
  * established. Returns `0` if the returned signed byte is negative, `1`
  * otherwise, with the same `(tileY<<3)+byte-pos->y` delta accumulation.
  *
- * Both are Y-axis (floor-height) probes - matching how `sub_800A178`
+ * Both are Y-axis (floor-height) probes - matching how `ProbeGroundSpriteTerrain`
  * only ever uses them against `self.y`/`self->y`, never `self.x`.
  * `struct probe_pos` reuses `game_loop43.c`'s own plain-int (not Q8)
  * probe-position layout unchanged (same "duplicate only what's needed,

@@ -1,4 +1,4 @@
-# Issues #84/#85: `sub_800B6A0`/`sub_800B6D0`
+# Issues #84/#85: `SetCtrlTargetMotionY`/`StartCtrlTargetMotionY`
 
 Two `parked-function` issues, both against the same pair of sibling
 functions in `src/graphics/actor_part16.c` (real bytes previously in
@@ -7,10 +7,10 @@ since they share the exact same gap and fix.
 
 ## What they do
 
-`sub_800B6A0`/`sub_800B6D0` copy a 3-vector (`vec`) into
+`SetCtrlTargetMotionY`/`StartCtrlTargetMotionY` copy a 3-vector (`vec`) into
 `self+0x54`/`+0x58`/`+0x5c`, negating the X and Z components when
 `self+0x28` bit 5 (a mirror-flag bit, the same encoding convention used
-throughout this ROM for X/Z axis flips) is set. `sub_800B6D0`
+throughout this ROM for X/Z axis flips) is set. `StartCtrlTargetMotionY`
 additionally duplicates the (possibly negated) X component into
 `self+0x64`.
 

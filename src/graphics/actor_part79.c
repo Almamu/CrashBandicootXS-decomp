@@ -28,9 +28,9 @@ extern s32 _call_via_r3(void *arg0, void *arg1, void *arg2, void *arg3);
 extern void sub_8012AF4(void *self);
 extern void LoseLife(void *arg0);
 extern void LoadPaletteSlot(struct palette_cache *self, s32 slot, s32 recordId);
-extern void sub_80087C0(void *part);
-extern void sub_80087B4(void *part);
-extern void sub_800872C(void *part, u8 val);
+extern void ResetSpriteFrameTimer(void *part);
+extern void ResetSpriteFrameIndex(void *part);
+extern void SetSpriteAnimDone(void *part, u8 val);
 extern void StopSfx(struct AudioContext *self, u32 id);
 extern void sub_8015780(void *self, s32 a, s32 b, s32 c, s32 d);
 extern u8 GetDpadDirection(void *dummy);
@@ -144,7 +144,7 @@ void KillPlayer(void *selfArg, void *arg1)
  * on tag `0x12` (only if `unk_60` is nonzero) or tag `0xd`/`0x18`,
  * re-tags the player as `0x25` (type `0x12`) or `0x26` (the other two,
  * re-reading the global fresh first) and fires the standard
- * `sub_80087C0`/`sub_80087B4`/`sub_800872C(..., 0)` teardown trio.
+ * `ResetSpriteFrameTimer`/`ResetSpriteFrameIndex`/`SetSpriteAnimDone(..., 0)` teardown trio.
  * Otherwise (flag clear), on player type `0x25`/`0x26`, plays a sound
  * and resets the state/flag/table-index trio via `sub_8015780`. */
 void sub_8012238(void *selfArg)
@@ -189,9 +189,9 @@ case_set_26: {
 }
 
 common:
-    sub_80087C0(player);
-    sub_80087B4(player);
-    sub_800872C(player, 0);
+    ResetSpriteFrameTimer(player);
+    ResetSpriteFrameIndex(player);
+    SetSpriteAnimDone(player, 0);
     goto end;
 
 flag_zero:
@@ -218,7 +218,7 @@ end:
  * setting bit `0x10` back (D-pad remap `3`/`5`/`7`), in both cases also
  * setting the state/flag pair `self+0x2f`=1/`self+0x29`=0 and
  * returning 1; every other value/path returns 0. */
-s32 sub_80122CC(void *selfArg)
+s32 UpdatePlayerFacing(void *selfArg)
 {
     u8 *self = selfArg;
     register s32 dpad asm("r3") = GetDpadDirection(gUnknown_03001304);

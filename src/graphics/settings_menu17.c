@@ -3,16 +3,16 @@
 #include "icon_manager.h"
 #include "pause_screen_results.h"
 
-extern void sub_8008044(struct actor *part);
+extern void AdvanceSpriteAnim(struct actor *part);
 extern s32 __modsi3(s32 dividend, s32 divisor);
-extern void sub_80087C0(struct actor *part);
-extern void sub_80087B4(struct actor *part);
-extern void sub_800872C(struct actor *part, u8 val);
+extern void ResetSpriteFrameTimer(struct actor *part);
+extern void ResetSpriteFrameIndex(struct actor *part);
+extern void SetSpriteAnimDone(struct actor *part, u8 val);
 extern s32 RandRange(s32 max);
 
 /* A slow reveal/cycle animation over the results screen's icon groups:
  * `field_24` (0-4) selects which group to hide this call (a plain
- * `sub_8008044` per icon, no fade), advancing to the next group every
+ * `AdvanceSpriteAnim` per icon, no fade), advancing to the next group every
  * `field_28` (180) calls, wrapping mod 5. Independently, `field_c0`
  * (the row-cursor icon) blinks on its own countdown (`field_c4`):
  * while it's ticking down, just decrement it; once it hits 0, either
@@ -22,13 +22,13 @@ void AnimatePauseMenu(struct pause_screen_results *self)
 {
     switch (self->field_24) {
     case 0:
-        sub_8008044((struct actor *)self->field_88);
+        AdvanceSpriteAnim((struct actor *)self->field_88);
         break;
     case 1: {
         struct settings_icon_actor **p = self->icons8c;
         s32 i;
         for (i = 3; i >= 0; i--) {
-            sub_8008044((struct actor *)*p);
+            AdvanceSpriteAnim((struct actor *)*p);
             p++;
         }
         break;
@@ -37,7 +37,7 @@ void AnimatePauseMenu(struct pause_screen_results *self)
         struct settings_icon_actor **p = self->icons9c;
         s32 i;
         for (i = 4; i >= 0; i--) {
-            sub_8008044((struct actor *)*p);
+            AdvanceSpriteAnim((struct actor *)*p);
             p++;
         }
         break;
@@ -46,13 +46,13 @@ void AnimatePauseMenu(struct pause_screen_results *self)
         struct settings_icon_actor **p = self->iconsB0;
         s32 i;
         for (i = 2; i >= 0; i--) {
-            sub_8008044((struct actor *)*p);
+            AdvanceSpriteAnim((struct actor *)*p);
             p++;
         }
         break;
     }
     case 4:
-        sub_8008044((struct actor *)self->field_bc);
+        AdvanceSpriteAnim((struct actor *)self->field_bc);
         break;
     }
 
@@ -75,13 +75,13 @@ void AnimatePauseMenu(struct pause_screen_results *self)
 
             if (icon->field_38 != 0) {
                 icon->frameIndex = 0;
-                sub_80087C0((struct actor *)icon);
-                sub_80087B4((struct actor *)icon);
-                sub_800872C((struct actor *)icon, 0);
+                ResetSpriteFrameTimer((struct actor *)icon);
+                ResetSpriteFrameIndex((struct actor *)icon);
+                SetSpriteAnimDone((struct actor *)icon, 0);
                 result = (u16)RandRange(0x78) + 0x78;
                 goto store;
             } else {
-                sub_8008044((struct actor *)icon);
+                AdvanceSpriteAnim((struct actor *)icon);
                 goto done;
             }
         }

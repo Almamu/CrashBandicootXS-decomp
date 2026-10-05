@@ -4,25 +4,25 @@
 
 extern void CreateEntitySpawner(void);
 extern void ClearRoomExit(void);
-extern void *sub_8026EDC(s32 size);
-extern struct dual_array_manager *sub_8008EE4(struct dual_array_manager *manager, s32 count);
-extern struct pool_manager *sub_8008F20(struct pool_manager *manager, s32 count);
+extern void *OperatorNew(s32 size);
+extern struct dual_array_manager *InitPartList(struct dual_array_manager *manager, s32 count);
+extern struct pool_manager *InitCrateList(struct pool_manager *manager, s32 count);
 extern void *GetLevelLayers(void);
 extern void *InitPlayer();
 extern void sub_8007398(struct actor *self, s32 arg1, s32 arg2);
-extern void sub_8026ED0(void *self);
+extern void OperatorDelete(void *self);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
-extern void *sub_801588C(void *selfArg);
-extern void sub_800B69C(void *selfArg, s32 val);
-extern void *sub_80174EC(void *arg0);
+extern void *InitActionCtrl(void *selfArg);
+extern void SetCtrlAnimSet(void *selfArg, s32 val);
+extern void *InitPlayerCtrl(void *arg0);
 extern void *CreateInputCtrl(void *arg0);
-extern void sub_80087C0(void *part);
-extern void sub_80087B4(void *part);
-extern void sub_800872C(void *part, u8 val);
+extern void ResetSpriteFrameTimer(void *part);
+extern void ResetSpriteFrameIndex(void *part);
+extern void SetSpriteAnimDone(void *part, u8 val);
 extern s32 RunRoom(void *self);
 extern void DestroyLevelLayers(void *self, s32 flag);
-extern void sub_8008EB4(struct dual_array_manager *manager, s32 flags);
-extern void sub_8009B9C(struct pool_manager *manager, s32 flags);
+extern void DestroyPartList(struct dual_array_manager *manager, s32 flags);
+extern void DestroyCrateList(struct pool_manager *manager, s32 flags);
 extern void DestroyEntitySpawner(void);
 
 extern struct dual_array_manager *gUnknown_030012E8;
@@ -101,37 +101,37 @@ s32 PlayRoom(void *selfArg)
 
     {
         struct dual_array_manager **slot = &gUnknown_030012E8;
-        *slot = sub_8008EE4(sub_8026EDC(0x14), 0x20);
+        *slot = InitPartList(OperatorNew(0x14), 0x20);
     }
     {
         struct dual_array_manager **slot = &gUnknown_030012EC;
-        *slot = sub_8008EE4(sub_8026EDC(0x14), 0xc0);
+        *slot = InitPartList(OperatorNew(0x14), 0xc0);
     }
     {
         struct pool_manager **slot = &gCrateList;
-        *slot = sub_8008F20(sub_8026EDC(0x818), 0xc0);
+        *slot = InitCrateList(OperatorNew(0x818), 0xc0);
     }
     {
         struct dual_array_manager **slot = &gUnknown_030012F0;
-        *slot = sub_8008EE4(sub_8026EDC(0x14), 0x80);
+        *slot = InitPartList(OperatorNew(0x14), 0x80);
     }
     {
         struct dual_array_manager **slot = &gUnknown_030012F8;
-        *slot = sub_8008EE4(sub_8026EDC(0x14), 0x40);
+        *slot = InitPartList(OperatorNew(0x14), 0x40);
     }
     {
         struct dual_array_manager **slot = &gUnknown_030012F4;
-        *slot = sub_8008EE4(sub_8026EDC(0x14), 0x40);
+        *slot = InitPartList(OperatorNew(0x14), 0x40);
     }
     {
         void **slot = &gCamera;
-        *slot = sub_8026EDC(0x18);
+        *slot = OperatorNew(0x18);
     }
 
     gLevelLayers = GetLevelLayers();
 
     d8 = &gPlayer;
-    *d8 = InitPlayer(sub_8026EDC(0x350), 0xffff, 0, 0, 0);
+    *d8 = InitPlayer(OperatorNew(0x350), 0xffff, 0, 0, 0);
     {
         struct level_start_args *p = self;
         sub_8007398((struct actor *)*d8, p->spawnX, p->spawnY);
@@ -180,9 +180,9 @@ s32 PlayRoom(void *selfArg)
 
     switch (mode) {
     case 0: {
-        u8 *widget = sub_801588C(sub_8026EDC(0x38));
+        u8 *widget = InitActionCtrl(OperatorNew(0x38));
 
-        sub_800B69C(widget, (s32)gStaticData_0816B92C);
+        SetCtrlAnimSet(widget, (s32)gStaticData_0816B92C);
 
         *((u8 *)*d8 + 0x88) = mode;
         {
@@ -206,9 +206,9 @@ s32 PlayRoom(void *selfArg)
 
         {
             void **slot = &gPlayerCtrl;
-            *slot = sub_80174EC(sub_8026EDC(0x30));
+            *slot = InitPlayerCtrl(OperatorNew(0x30));
         }
-        sub_800B69C(gPlayerCtrl, (s32)gStaticData_0816B934);
+        SetCtrlAnimSet(gPlayerCtrl, (s32)gStaticData_0816B934);
 
         *((u8 *)*d8 + 0x88) = mode;
         {
@@ -219,9 +219,9 @@ s32 PlayRoom(void *selfArg)
                 u8 v = 0x1f;
                 pl[0x2d] = v;
             }
-            sub_80087C0(pl);
-            sub_80087B4(pl);
-            sub_800872C(pl, 0);
+            ResetSpriteFrameTimer(pl);
+            ResetSpriteFrameIndex(pl);
+            SetSpriteAnimDone(pl, 0);
         }
         {
             u8 *pl = *d8;
@@ -238,9 +238,9 @@ s32 PlayRoom(void *selfArg)
         break;
     }
     case 2: {
-        u8 *widget = CreateInputCtrl(sub_8026EDC(0x28));
+        u8 *widget = CreateInputCtrl(OperatorNew(0x28));
 
-        sub_800B69C(widget, (s32)gStaticData_0816B93C);
+        SetCtrlAnimSet(widget, (s32)gStaticData_0816B93C);
 
         {
             u8 *pl = *d8;
@@ -270,7 +270,7 @@ s32 PlayRoom(void *selfArg)
     if (gLevelLayers != NULL) {
         DestroyLevelLayers(gLevelLayers, 3);
     }
-    sub_8026ED0(gCamera);
+    OperatorDelete(gCamera);
 
     if (gPlayer != NULL) {
         u8 *p = *(u8 **)((u8 *)gPlayer + 0x18) + 0x50;
@@ -280,22 +280,22 @@ s32 PlayRoom(void *selfArg)
     }
 
     if (gUnknown_030012F4 != NULL) {
-        sub_8008EB4(gUnknown_030012F4, 3);
+        DestroyPartList(gUnknown_030012F4, 3);
     }
     if (gUnknown_030012F8 != NULL) {
-        sub_8008EB4(gUnknown_030012F8, 3);
+        DestroyPartList(gUnknown_030012F8, 3);
     }
     if (gUnknown_030012F0 != NULL) {
-        sub_8008EB4(gUnknown_030012F0, 3);
+        DestroyPartList(gUnknown_030012F0, 3);
     }
     if (gCrateList != NULL) {
-        sub_8009B9C(gCrateList, 3);
+        DestroyCrateList(gCrateList, 3);
     }
     if (gUnknown_030012EC != NULL) {
-        sub_8008EB4(gUnknown_030012EC, 3);
+        DestroyPartList(gUnknown_030012EC, 3);
     }
     if (gUnknown_030012E8 != NULL) {
-        sub_8008EB4(gUnknown_030012E8, 3);
+        DestroyPartList(gUnknown_030012E8, 3);
     }
 
     DestroyEntitySpawner();

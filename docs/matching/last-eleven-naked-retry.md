@@ -66,7 +66,7 @@ off and 16 bytes long.
 
 Two changes on top of the last-ten draft.
 
-**r3 hold after the call.** Between `sub_8008E94` and the second flip,
+**r3 hold after the call.** Between `AddToPartList` and the second flip,
 the ROM reloads &gEntityFlags out of sb through r1
 (`mov r1, sb`). The draft used r3. A hard-register hold on r3 from after
 the call's `"m"` asm to the end of the `rec2` lookup removes r3 from
@@ -90,7 +90,7 @@ side effect of argument evaluation comes before the hard-register moves.
 A copy of `part` that an empty asm keeps as its own pseudo fixes that:
 
 ```c
-sub_8008E94(gUnknown_030012F0, ({
+AddToPartList(gUnknown_030012F0, ({
     struct popup_part *t = part;
 
     asm("" : "+r"(t));

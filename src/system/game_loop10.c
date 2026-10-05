@@ -23,7 +23,7 @@ extern void SetCheckpointAtPlayer(void *self, u8 arg1);
 extern void PlayCutscene(void *self, s32 mode);
 struct AudioContext;
 extern void StopSfx(struct AudioContext *self, u32 id);
-extern void *sub_8026EDC(s32 size);
+extern void *OperatorNew(s32 size);
 extern void nullsub_7(void);
 extern s32 RunCompanyLogos(void);
 extern void DestroyCompanyLogos(void *self, u32 flags);
@@ -174,7 +174,7 @@ void sub_8023674(void)
      * originally). Spelling the call as inline asm that doesn't clobber
      * r0 reproduces the ROM's exact (and, here, still safe) delayed
      * move. */
-    register void *tmp asm("r0") = sub_8026EDC(0x44c);
+    register void *tmp asm("r0") = OperatorNew(0x44c);
     void *block;
 
     asm volatile("bl nullsub_7" : "+r"(tmp) :: "r1", "r2", "r3", "lr", "cc");

@@ -6,10 +6,10 @@
 extern s32 sub_8007114(struct actor *self, void *box);
 
 /* `part+0x25 == 1` is the same fast override seen in
- * sub_8007F78/sub_8007FD8; otherwise defers to `sub_8007114` (already
+ * IsSpriteObjOnScreen/SpriteObjOverlapsRect; otherwise defers to `sub_8007114` (already
  * matched in graphics.c), forwarding `box` straight through
  * unmodified. */
-s32 sub_8008304(struct actor *part, void *box)
+s32 IsSpriteObjInsideRect(struct actor *part, void *box)
 {
     s32 result = 0;
     register u8 *addr asm("r2") = (u8 *)part + 0x25;
@@ -26,12 +26,12 @@ s32 sub_8008304(struct actor *part, void *box)
 
 extern u8 sub_8006FE4(struct actor *self);
 
-/* Same `part+0x25` fast-override shape as `sub_8008304` above,
+/* Same `part+0x25` fast-override shape as `IsSpriteObjInsideRect` above,
  * deferring to `sub_8006FE4` (already matched in `graphics.c`)
  * instead - a single-argument sibling, so the address scratch
  * naturally lands in `r1` instead of `r2` (no second call argument to
  * keep out of the way). */
-s32 sub_8008328(struct actor *part)
+s32 IsSpriteObjNearCamera(struct actor *part)
 {
     s32 result = 0;
     register u8 *addr asm("r1") = (u8 *)part + 0x25;
@@ -57,21 +57,21 @@ extern void *gSpriteRenderer;
 
 /* Tail-calls `DrawSprite` (already matched in `actor_part.c`) with
  * the global `gSpriteRenderer` as `self`. */
-void sub_8008350(void *part)
+void DrawSpriteObj(void *part)
 {
     DrawSprite(gSpriteRenderer, part);
 }
 
-extern void sub_8008044(struct actor *part);
+extern void AdvanceSpriteAnim(struct actor *part);
 extern void *_call_via_r1(void *arg0, void *arg1);
 
-/* Advances `part`'s animation timer (`sub_8008044`), then resolves two
+/* Advances `part`'s animation timer (`AdvanceSpriteAnim`), then resolves two
  * `table+N`/`table+N+4` offset/pointer slot pairs (the same convention
- * documented for `sub_8006FE4`/`sub_8007F78`) into `_call_via_r1` calls
+ * documented for `sub_8006FE4`/`IsSpriteObjOnScreen`) into `_call_via_r1` calls
  * - table+0x60/+0x64 first, then table+8/+0xc. */
-void sub_8008364(struct actor *part)
+void UpdateSpriteObj(struct actor *part)
 {
-    sub_8008044(part);
+    AdvanceSpriteAnim(part);
 
     {
         void *table = part->table;
@@ -94,7 +94,7 @@ void sub_8008364(struct actor *part)
 
 /* Returns a pointer to `part`'s current keyframe record's `+4` field -
  * the same keyframe-table lookup used throughout this ROM region. */
-void *sub_8008394(struct actor *part)
+void *GetSpriteObjHitbox(struct actor *part)
 {
     register void **tablePtr asm("r2") = *(void ***)((u8 *)part + 0x20);
     register u8 idx asm("r3") = *((u8 *)part + 0x2d);
@@ -118,7 +118,7 @@ s32 GetSpriteTileBase(void *part)
 
 /* Looks up `part`'s current keyframe record (same convention as
  * elsewhere in this ROM region). If `part+0x38` ("done", set by
- * `sub_8008044`) is set and the record's `+0x17` flags byte bit 1 is
+ * `AdvanceSpriteAnim`) is set and the record's `+0x17` flags byte bit 1 is
  * clear (not looping), clamps `part`'s frame index (`+0x30`) to the
  * last frame (`record+0x16 - 1`) and resets the sub-counter
  * (`+0x34`) to the record's duration (`record+0x15`). Either way,
@@ -138,7 +138,7 @@ s32 GetSpriteTileBase(void *part)
  * technique that had backfired inside those functions' shared case
  * blocks - works here with no caveats. Needed a trailing
  * `asm(".align 2, 0")` since it's the last function in this file (the
- * ROM has 2 bytes of zero padding here before `sub_8008408` in
+ * ROM has 2 bytes of zero padding here before `GetSpriteObjPriority` in
  * `actor_part6.c`, and a plain compiled function's own natural
  * alignment produces a `0x46c0` nop-fill instead - the standard
  * `matching_decomp_alignment_fix` gotcha). */

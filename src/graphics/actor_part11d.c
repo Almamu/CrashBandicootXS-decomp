@@ -47,7 +47,7 @@ extern struct player *gPlayer;
 
 /* Another per-frame spatial-hash-grid pass over `manager`, scoped to
  * the same 3-bucket window `[baseIdx, baseIdx+2]` (`baseIdx` computed
- * the same way as `sub_80091D4`'s: `max(gLevelLayers`'s
+ * the same way as `UpdateCrateList`'s: `max(gLevelLayers`'s
  * sub-object's own `x >> 8`, `0)`), reading the player
  * (`gPlayer`) rather than writing to the grid.
  *
@@ -64,7 +64,7 @@ extern struct player *gPlayer;
  * the "cross-branch register-role gap" this was parked for was the
  * newer compiler; the only shaping detail is reading the camera x
  * before the `>> 8`. */
-void sub_8009868(struct pool_manager *m)
+void CollidePlayerWithCrates(struct pool_manager *m)
 {
     s32 lo = gLevelLayers->layer0->x;
     s32 i;

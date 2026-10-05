@@ -73,18 +73,18 @@ extern struct level_info *gLevelLayers;
 extern void ***gUnknown_030012D0;
 extern void *gUnknown_030012F0;
 
-extern struct fx_part *sub_8009ED0(u16 arg0, u16 x, u16 y, u16 arg3);
-extern void sub_80087C0(struct fx_part *part);
-extern void sub_80087B4(struct fx_part *part);
-extern void sub_800872C(struct fx_part *part, s32 val);
-extern s32 sub_800815C(struct fx_part *part);
-extern void *sub_8026EDC(s32 size);
+extern struct fx_part *CreateMovingSprite(u16 arg0, u16 x, u16 y, u16 arg3);
+extern void ResetSpriteFrameTimer(struct fx_part *part);
+extern void ResetSpriteFrameIndex(struct fx_part *part);
+extern void SetSpriteAnimDone(struct fx_part *part, s32 val);
+extern s32 GetSpriteAnimPaletteSlot(struct fx_part *part);
+extern void *OperatorNew(s32 size);
 extern struct manager *sub_800CCE0(void);
 extern s32 _call_via_r2(void *self, void *arg, void *fn);
-extern void sub_8008E94(void *manager, void *value);
+extern void AddToPartList(void *manager, void *value);
 
 /* Spawns a `sub_8025BAC` part next to `src` (at `src`'s tile X/Y, facing
- * its way), places it beside `src` by their two `sub_8007B98` AABBs'
+ * its way), places it beside `src` by their two `GetSpriteHitbox` AABBs'
  * half-widths plus `margin`, offsets its Y by `z`, and seeds its
  * velocity fields (`+0x60`/`+0x48`/`+0x4c`/`+0x50`) from `speed`,
  * negated when `src` is mirrored.
@@ -99,7 +99,7 @@ extern void sub_8008E94(void *manager, void *value);
  *   (`-speed`, 0x40) are expanded before the stores, and the X offset is
  *   a `?:` so the flip byte is tested before `ox + dist`. */
 struct fx_part *sub_8025BAC(void *unused0, s32 anim, s32 tag, s32 x, s32 y, s32 mirror);
-extern void sub_8007B98(struct fx_box *dest, void *obj);
+extern void GetSpriteHitbox(struct fx_box *dest, void *obj);
 
 static inline void SetVel(struct fx_part *p, s32 v, s32 k)
 {
@@ -124,9 +124,9 @@ struct fx_part *sub_8025B0C(void *pool, s32 arg1, s32 kind, s32 margin, s32 z, s
     {
         struct { struct fx_box a, b; } f;
 
-        sub_8007B98(&f.a, part);
+        GetSpriteHitbox(&f.a, part);
         w1 = f.a.w;
-        sub_8007B98(&f.b, src);
+        GetSpriteHitbox(&f.b, src);
         w2 = f.b.w;
     }
     dist = w1 / 2 + w2 / 2 + margin;
@@ -146,7 +146,7 @@ struct fx_part *sub_8025B0C(void *pool, s32 arg1, s32 kind, s32 margin, s32 z, s
     return part;
 }
 
-/* Spawns a sub_8009ED0 effect part at (x, y) clamped into the current
+/* Spawns a CreateMovingSprite effect part at (x, y) clamped into the current
  * level's bounds, facing left when `mirror` is set, with animation
  * record `anim` (12-byte stride) and tag `tag`. Attaches it to a fresh
  * sub_800CCE0 manager and registers it with gUnknown_030012F0. */
@@ -166,21 +166,21 @@ struct fx_part *sub_8025BAC(void *unused0, s32 anim, s32 tag, s32 x, s32 y, s32 
         y = 0;
     if (y >= (s32)(layer->height << 8) >> 8)
         y = (layer->height << 8 >> 8) - 1;
-    part = sub_8009ED0(0xffff, x, y, 0);
+    part = CreateMovingSprite(0xffff, x, y, 0);
     part->flipX = mirror != 0;
     part->anim = (u8 *)**gUnknown_030012D0 + anim * 12;
     part->tag = tag;
-    sub_80087C0(part);
-    sub_80087B4(part);
-    sub_800872C(part, 0);
-    part->frameNibble = sub_800815C(part);
-    sub_8026EDC(0x10);
+    ResetSpriteFrameTimer(part);
+    ResetSpriteFrameIndex(part);
+    SetSpriteAnimDone(part, 0);
+    part->frameNibble = GetSpriteAnimPaletteSlot(part);
+    OperatorNew(0x10);
     mgr = sub_800CCE0();
     part->mgr = mgr;
     _call_via_r2((u8 *)mgr + mgr->vtable->attach.thisOffset, part, mgr->vtable->attach.fn);
     ACTOR_FLAG_BITS(&part->base)->bit2 = 0;
     ACTOR_FLAG_BITS(&part->base)->bit1 = 0;
-    sub_8008E94(gUnknown_030012F0, part);
+    AddToPartList(gUnknown_030012F0, part);
     return part;
 }
 
@@ -266,15 +266,15 @@ void sub_8025D4C(void *self, s32 a, s32 b)
     *(s32 *)self = a;
 }
 
-extern void sub_8026ED0(void *self);
+extern void OperatorDelete(void *self);
 
-/* If bit 0 of `flags` is set, forwards to `sub_8026ED0` - identical
+/* If bit 0 of `flags` is set, forwards to `OperatorDelete` - identical
  * body to `sub_8025A44` above (a second copy at a different ROM
  * address, same as `sub_8025A5C`/`sub_8025D6C` below). */
 void sub_8025D54(void *self, s32 flags)
 {
     if (flags & 1) {
-        sub_8026ED0(self);
+        OperatorDelete(self);
     }
 }
 

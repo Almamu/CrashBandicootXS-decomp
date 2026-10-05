@@ -95,7 +95,7 @@ picks up the other three next.
 
 ## What's still unmatched (11 bytes)
 
-- **Argument-marshalling order for the `CreatePlatform`/`sub_8008434`
+- **Argument-marshalling order for the `CreatePlatform`/`CreateSpriteObj`
   calls.** The ROM fills the stack slot (`id`) and `r1`/`r2`
   (`arg1`/`arg2`) *before* `r3` (the hard-pinned `a3`), but this
   compiler always moves `a3`'s already-pinned register into its call
@@ -211,7 +211,7 @@ bytes regardless of correctness, matching this project's own documented
 caveat):
 
 1. **Argument-marshalling order** for *both* call sites now
-   (`CreatePlatform` **and** `sub_8008434` - `SpawnRedGemPlatform` only has the one
+   (`CreatePlatform` **and** `CreateSpriteObj` - `SpawnRedGemPlatform` only has the one
    `CreatePlatform` call site affected, since its spawn branch doesn't pass
    a `a3`-shaped hard-pinned register through the same marshal pattern
    in a way that exposes it... actually it does, structurally identical
@@ -266,7 +266,7 @@ alone reaches r7 for `a3` without spilling:
 - **`a1`+`a2` both pinned (r5/r6), `maskTag` pinned (r10), `a3`
   unpinned** (the version actually committed): natural allocation puts
   `a3` in r7 *for the spawn branch* (matches ROM, `add r3, r7, #0`
-  before `bl sub_8008434`), but for the `if`-branch's `do_call` path
+  before `bl CreateSpriteObj`), but for the `if`-branch's `do_call` path
   (which crosses the `IsGemPathDone` call), the allocator doesn't trust
   r7 survives the call on its own and spills `a3` to a stack slot
   instead (`sub sp, #8` instead of the ROM's `sub sp, #4`, plus a `str
@@ -306,7 +306,7 @@ alone reaches r7 for `a3` without spilling:
   version has, even though this shape fixes the argument register
   consistency issue.
 - **A fully hand-spelled `asm volatile` marshal-through-call block for
-  both `CreatePlatform` and `sub_8008434`**, treating r7 purely as
+  both `CreatePlatform` and `CreateSpriteObj`**, treating r7 purely as
   raw-text-only scratch space (never bound to any C variable via
   `register T x asm("r7")`, specifically to avoid the categorical r7-pin
   bug, only ever named literally inside `asm volatile` text and listed
@@ -353,7 +353,7 @@ Under old_agbcc the pinned drafts that were kept under `#if NON_MATCHING`
 were further off, not closer, so they were thrown away. The file was
 rewritten as the obvious C. It follows `graphics_loading_1ea5c.c`'s
 conventions: `struct gfx_part` from `include/gfx_part.h`, and a `u8 tag`
-local set before the `sub_8008434` call.
+local set before the `CreateSpriteObj` call.
 
 Only one thing needed care. The sound arm is two separate `CreatePlatform`
 calls, one per sound id:

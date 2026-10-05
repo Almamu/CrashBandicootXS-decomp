@@ -1,19 +1,19 @@
-# Issue #9/#10: `sub_800A178`/`sub_800A420` (graphics)
+# Issue #9/#10: `ProbeGroundSpriteTerrain`/`sub_800A420` (graphics)
 
 Dedicated deep-investigation session against the last two functions in
-the `tools/report_units.py`-tracked `sub_800A0FC`-through-`sub_800A420`
-still-raw span (`base_object=None`): `sub_800A178` (ROM `0x0800A178`,
+the `tools/report_units.py`-tracked `CollideGroundSprite`-through-`sub_800A420`
+still-raw span (`base_object=None`): `ProbeGroundSpriteTerrain` (ROM `0x0800A178`,
 680 bytes) and `sub_800A420` (ROM `0x0800A420`, 264 bytes).
-`sub_800A0FC` itself, the only caller of `sub_800A178` (both live in
+`CollideGroundSprite` itself, the only caller of `ProbeGroundSpriteTerrain` (both live in
 `asm/code_3_2_11.s`), stays raw - its own gate logic depends on
 `sub_8009BE0` (parked NAKED, `actor_part12b.c`,
 [naked-spatial-grid-tail.md](./naked-spatial-grid-tail.md)), so closing
-`sub_800A178`/`sub_800A420` alone doesn't unblock it.
+`ProbeGroundSpriteTerrain`/`sub_800A420` alone doesn't unblock it.
 
 ## Starting point
 
 `docs/rom_map.md` (line ~2624) had already partially flagged
-`sub_800A178`: "mid-function, unconditionally zeroes `self+0x74` - the
+`ProbeGroundSpriteTerrain`: "mid-function, unconditionally zeroes `self+0x74` - the
 same field `UpdateGameFrame`'s level-load branch sets once from
 `RunTitleScreen`'s return value ... consistent with 'total for this level'
 being cleared and presumably recomputed under some condition, not fully
@@ -27,9 +27,9 @@ only `sub_8026C3C`/`sub_8026BF8` genuinely unexamined.
 ## Reading the real bytes
 
 Both functions sit in `asm/code_3_2_11.s`, immediately after the
-still-raw `sub_800A0FC` and immediately before the already-matched
-`sub_800A528`/`sub_800A590` (`src/graphics/actor_part47.c`, which
-itself already notes "still-raw `sub_800A0FC`/`sub_800A178`/
+still-raw `CollideGroundSprite` and immediately before the already-matched
+`UpdateGroundSprite`/`sub_800A590` (`src/graphics/actor_part47.c`, which
+itself already notes "still-raw `CollideGroundSprite`/`ProbeGroundSpriteTerrain`/
 `sub_800A420`" as its own neighbors). `sub_8026C3C`/`sub_8026BF8`
 themselves live in `asm/code_3_2_17_266bc.s` (the file `sub_8026628`
 was split out of, right after it).
@@ -60,7 +60,7 @@ s32 *outValue)`, computing `pos->x >> 3`/`pos->y >> 3` tile coords from
   Returns `0` if the returned signed byte is negative, `1` otherwise,
   with the same `(tileY<<3)+byte-pos->y` delta accumulation.
 
-Both are Y-axis (floor-height) probes - matching how `sub_800A178`
+Both are Y-axis (floor-height) probes - matching how `ProbeGroundSpriteTerrain`
 only ever uses them against `self.y`/`self->y`, never `self.x`. Neither
 was attempted as a byte-exact C match this session (see "Matching"
 below); this account is only deep enough to place both callers'
@@ -99,7 +99,7 @@ sequential `if (!(flags & 2))` checks in the natural C source shape,
 the second one simply re-testing a flag that didn't change in between,
 not a compiler artifact.)
 
-### `sub_800A178(void *self)`
+### `ProbeGroundSpriteTerrain(void *self)`
 
 The larger orchestrator, gated on two checks - a
 `_call_via_r1(self->table[0x38]/[0x3c])` trampoline truthiness test,
@@ -150,7 +150,7 @@ OR'd with a `mode` value (`1`/`2`/`4`/`8`, `self+0x24`'s own per-axis
 bits) at each of the three `sub_8026628` probe blocks in step 5, each
 time gated on that probe actually reporting a hit. So `self+0x74` is a
 **per-call bitmask of which movement axes/directions actually resolved
-a collision this call** - zeroed at the top of every `sub_800A178`
+a collision this call** - zeroed at the top of every `ProbeGroundSpriteTerrain`
 invocation and rebuilt bit by bit as each axis probe fires, exactly
 matching `docs/rom_map.md`'s "'total for this level' being cleared and
 presumably recomputed" framing in spirit (the "presumably recomputed"
@@ -163,7 +163,7 @@ per-physics-call).
 ## Matching
 
 Neither function was attempted as a byte-exact C reconstruction.
-Both keep `sb`/`sl`/`r8` (and, for `sub_800A178`, `r7` too) live
+Both keep `sb`/`sl`/`r8` (and, for `ProbeGroundSpriteTerrain`, `r7` too) live
 simultaneously across many `bl` calls, reused for genuinely different
 values block to block:
 
@@ -172,7 +172,7 @@ values block to block:
   idiom, not a straight cached value) rather than re-fetching the
   literal pool address each time; `sb` holds `outFlag` for the whole
   function despite only being dereferenced once, right at the end.
-- `sub_800A178`'s `sb` accumulates a result bitmask across five
+- `ProbeGroundSpriteTerrain`'s `sb` accumulates a result bitmask across five
   different probe blocks while `sl` independently tracks the "found
   ground" boolean and `r8` holds the quad pointer for the entire
   function; `r7` gets reused three separate times for three different
@@ -215,11 +215,11 @@ resolve correctly once linked.
 ## Build layout
 
 New object `src/graphics/actor_part110.c` holds both functions,
-inserted in `ldscript.txt` exactly where `sub_800A178`/`sub_800A420`'s
+inserted in `ldscript.txt` exactly where `ProbeGroundSpriteTerrain`/`sub_800A420`'s
 real bytes used to sit: between the trimmed `asm/code_3_2_11.o` (now
-ending right after `sub_800A0FC`'s own trailing `bx r1`) and the
-already-matched `src/graphics/actor_part47.o` (`sub_800A528` onward).
-`asm/code_3_2_11.s` is trimmed accordingly - `sub_800A0FC` unchanged,
+ending right after `CollideGroundSprite`'s own trailing `bx r1`) and the
+already-matched `src/graphics/actor_part47.o` (`UpdateGroundSprite` onward).
+`asm/code_3_2_11.s` is trimmed accordingly - `CollideGroundSprite` unchanged,
 everything after it removed.
 
 ## Full-ROM verification
@@ -248,35 +248,35 @@ coincide` (checksum matches).
 
 ## Cross-references
 
-- `docs/status/actor.md` - `sub_800A178`/`sub_800A420` moved from
-  "Left raw" into "Parked - NAKED transcription"; the `sub_800A0FC`
+- `docs/status/actor.md` - `ProbeGroundSpriteTerrain`/`sub_800A420` moved from
+  "Left raw" into "Parked - NAKED transcription"; the `CollideGroundSprite`
   "Left raw" entry narrowed to cover only itself.
 - `tools/report_units.py` - new unit at `0x0800A178` (`base_object:
   None`, category `graphics`); the `0x0800A0FC` unit's comment
-  narrowed to describe only `sub_800A0FC` itself.
+  narrowed to describe only `CollideGroundSprite` itself.
 - `docs/matching/issue-9-0x08007634-actor.md` - the original "Left
   untouched (raw)" entries for both functions (left as-is, per this
   project's append-only convention for per-investigation docs already
   published - this doc supersedes them going forward).
 
-## Follow-up: `sub_800A0FC`, closing the whole span (issue #9/#10)
+## Follow-up: `CollideGroundSprite`, closing the whole span (issue #9/#10)
 
-A second dedicated session against the immediate follow-up: `sub_800A0FC`
-(ROM `0x0800A0FC`, 124 bytes), `sub_800A178`'s only caller and, until
+A second dedicated session against the immediate follow-up: `CollideGroundSprite`
+(ROM `0x0800A0FC`, 124 bytes), `ProbeGroundSpriteTerrain`'s only caller and, until
 now, the sole remaining content of `asm/code_3_2_11.s`. It stayed raw
 the first pass through this cluster because its own gate logic calls
 `sub_8009BE0` (parked NAKED, `src/graphics/actor_part12b.c`, see
 [naked-spatial-grid-tail.md](./naked-spatial-grid-tail.md)) - at the
 time that function's own semantics were still unresolved, so closing
-`sub_800A178`/`sub_800A420` alone didn't unblock this one. Both facts
+`ProbeGroundSpriteTerrain`/`sub_800A420` alone didn't unblock this one. Both facts
 changed since: `sub_8009BE0` is now fully understood (a physics/
 collision step-probe, confirmed above and in its own doc), and
-`sub_800A178` itself is now fully understood too - together, that's
-enough to close `sub_800A0FC`'s own dispatch logic.
+`ProbeGroundSpriteTerrain` itself is now fully understood too - together, that's
+enough to close `CollideGroundSprite`'s own dispatch logic.
 
 ### Reading the real bytes
 
-`sub_800A0FC` is short enough to read in full directly from
+`CollideGroundSprite` is short enough to read in full directly from
 `asm/code_3_2_11.s` (now deleted - it held only this function):
 
 ```
@@ -290,11 +290,11 @@ lsrs r0, r1, #7
 cmp r0, #0
 beq _0800A16C
 adds r0, r4, #0
-bl sub_800A178
+bl ProbeGroundSpriteTerrain
 orrs r5, r0
 strb r5, [r6]
 adds r0, r4, #0
-bl sub_800A050
+bl CollideMovingSprite
 movs r0, #8
 ldrb r2, [r6]
 ands r0, r2
@@ -342,34 +342,34 @@ bx r1
 ```
 
 There's a third callee alongside the two flagged in the task ticket:
-`sub_800A050` (already matched, `src/graphics/actor_part9.c`) - a
+`CollideMovingSprite` (already matched, `src/graphics/actor_part9.c`) - a
 fire-and-forget `self->table+0x70/0x74` trampoline call, its always-`0`
-return discarded. It sits between the `sub_800A178` call and the
+return discarded. It sits between the `ProbeGroundSpriteTerrain` call and the
 `self+0x68` bit-3 recheck, with no other effect on this function's
 control flow.
 
 ### Semantics
 
-`sub_800A0FC(self)` returns `self+0x68` (a byte) unchanged unless
-`self+0xc` bit 7 is set - the same gate `sub_800A178` itself
+`CollideGroundSprite(self)` returns `self+0x68` (a byte) unchanged unless
+`self+0xc` bit 7 is set - the same gate `ProbeGroundSpriteTerrain` itself
 re-checks internally as its own second gate. Once past it:
 
-1. Calls `sub_800A178(self)` and OR's its result bitmask into
+1. Calls `ProbeGroundSpriteTerrain(self)` and OR's its result bitmask into
    `self+0x68`. This is a **persistent, cumulative per-object
    collision-axis mask** - distinct from `self+0x74`'s own per-call
-   scratch mask that `sub_800A178` zeroes and rebuilds every call (see
+   scratch mask that `ProbeGroundSpriteTerrain` zeroes and rebuilds every call (see
    above). `self+0x68` just accumulates whatever axis bits
-   `sub_800A178` reports, call after call, with nothing in this
+   `ProbeGroundSpriteTerrain` reports, call after call, with nothing in this
    function ever clearing it back out except the one narrow rollback
    in step 3 below.
-2. Fires `sub_800A050(self)` unconditionally - a side-effect-only call,
+2. Fires `CollideMovingSprite(self)` unconditionally - a side-effect-only call,
    its return value never used.
-3. If `self+0x68` bit 3 (the Y-axis/"mode 8" bit `sub_800A178` just
+3. If `self+0x68` bit 3 (the Y-axis/"mode 8" bit `ProbeGroundSpriteTerrain` just
    OR'd in, if its own probes hit) is now set: clears `self+0xc` bits 0
    and 5, then - unless `self+0xd` bit 1 is already set (ground
    already snapped this call, `sub_800A420`'s own convention, see
    above) - fires the *same* `self->table+0x10/0x14` "hitbox quad"
-   trampoline `sub_800A178` itself uses (confirmed identical: table
+   trampoline `ProbeGroundSpriteTerrain` itself uses (confirmed identical: table
    pointer read, signed-halfword offset at `+0x10`, function pointer at
    `+0x14`, `_call_via_r1(self+offset, fn)`), and runs a `mode == 8`
    (Y-axis/floor, confirmed by `game_loop43.c`'s own `sub_8026628` mode
@@ -378,19 +378,19 @@ re-checks internally as its own second gate. Once past it:
    or only succeeding via one of its own internal retries - see
    `sub_8009BE0`'s doc comment), sets `self+0xc` bit 5 and clears
    `self+0x68` bit 3 back out - **rolling back the "Y axis resolved"
-   bit `sub_800A178`'s own probes had just set**, since the more
+   bit `ProbeGroundSpriteTerrain`'s own probes had just set**, since the more
    thorough, independent step-probe didn't confirm it cleanly.
 4. Returns the (possibly rolled-back) `self+0x68` byte either way.
 
-Read together with `sub_800A178`/`sub_800A420`: this is the
-part-object physics dispatcher. `sub_800A0FC` is the entry point
-(called by `sub_800A884`'s per-frame reentrancy-guarded wrapper,
-`docs/rom_map.md` line ~1835 - `sub_800A884` itself fires its own
+Read together with `ProbeGroundSpriteTerrain`/`sub_800A420`: this is the
+part-object physics dispatcher. `CollideGroundSprite` is the entry point
+(called by `CollidePlayer`'s per-frame reentrancy-guarded wrapper,
+`docs/rom_map.md` line ~1835 - `CollidePlayer` itself fires its own
 `self->table+0x70` trampoline before calling in, a *different* `self`
-than `sub_800A050`'s own table+0x70/0x74 call operates on, so these
+than `CollideMovingSprite`'s own table+0x70/0x74 call operates on, so these
 aren't the same trampoline invocation despite sharing an offset
-convention). `sub_800A178` does the actual layered collision
-resolution and reports which axes it resolved this call; `sub_800A0FC`
+convention). `ProbeGroundSpriteTerrain` does the actual layered collision
+resolution and reports which axes it resolved this call; `CollideGroundSprite`
 cross-checks the Y-axis result specifically against a second,
 independent step-probe (`sub_8009BE0`) before trusting it enough to
 leave the bit set in the persistent `self+0x68` mask - a "cheap probe,
@@ -415,7 +415,7 @@ first, only fall back if it's a genuine structural gap" order:
   different explicit registers" technique already used throughout this
   ROM neighborhood.
 - **`self+0xc &= ~0x21`**: the established "negative-constant
-  register-pinned mask" idiom already confirmed for `sub_800A734`
+  register-pinned mask" idiom already confirmed for `ResetPlayer`
   (`register s32 mask asm("r0") = -0x21`, `actor_part48.c`) reused
   unchanged here - the ROM materializes `-0x21` via `movs`+`rsbs`
   rather than folding the AND mask to a literal, since Thumb's `ANDS`
@@ -438,7 +438,7 @@ first, only fall back if it's a genuine structural gap" order:
   every step. Closed with a 4-register chain (`dByte` r2, `shifted` r0,
   `one` r1, `bit1` r0) reproducing the ROM's exact
   `ldrb r2,.../lsrs r0,r2,#1/movs r1,#1/ands r0,r1` sequence.
-- **`self->table+0x10/0x14` trampoline**: reused `sub_800A050`'s own
+- **`self->table+0x10/0x14` trampoline**: reused `CollideMovingSprite`'s own
   already-established "compute the trampoline address before loading
   the function pointer" register-pinned ordering (`addr` r0 computed
   first, `fn` r1 loaded second, reusing the dying `table` pointer
@@ -456,7 +456,7 @@ first, only fall back if it's a genuine structural gap" order:
   guaranteed clean in the upper bits at the call site). This fell out
   automatically once `sub_8009BE0` was locally declared returning `u8`
   (matching how `sub_800A420` is itself declared `u8` despite the same
-  narrowing dance appearing at *its* own call sites in `sub_800A178`) -
+  narrowing dance appearing at *its* own call sites in `ProbeGroundSpriteTerrain`) -
   declaring it `s32` instead skipped the narrowing entirely and
   produced a plain `cmp r0,#0` with no `lsl`, an immediate byte
   mismatch.
@@ -491,12 +491,12 @@ coincide` (checksum matches).
 
 ### Build layout
 
-`sub_800A0FC` was added directly to `src/graphics/actor_part110.c`
-(prepended before `sub_800A178`), the same translation unit as the
-NAKED `sub_800A178`/`sub_800A420` - the same "NAKED function sharing a
-file with matched ones" precedent already established for `sub_8008044`/
+`CollideGroundSprite` was added directly to `src/graphics/actor_part110.c`
+(prepended before `ProbeGroundSpriteTerrain`), the same translation unit as the
+NAKED `ProbeGroundSpriteTerrain`/`sub_800A420` - the same "NAKED function sharing a
+file with matched ones" precedent already established for `AdvanceSpriteAnim`/
 `actor_part3.c`. `asm/code_3_2_11.s` is retired entirely (it held only
-`sub_800A0FC`) and removed from `ldscript.txt`; `actor_part110.o` now
+`CollideGroundSprite`) and removed from `ldscript.txt`; `actor_part110.o` now
 sits directly between the trimmed `actor_part9.o` and `actor_part47.o`
 in link order, with no raw `.s` gap between `actor_part9.o` and
 `actor_part110.o` any more.
@@ -504,14 +504,14 @@ in link order, with no raw `.s` gap between `actor_part9.o` and
 ### Cross-references (follow-up)
 
 - `docs/status/actor.md` - new `src/graphics/actor_part110.c` bullet
-  in "Matched" for `sub_800A0FC`; the stale "Left raw" entry for it
+  in "Matched" for `CollideGroundSprite`; the stale "Left raw" entry for it
   removed; the `actor_part14.c` bullet's "large raw span" note
-  corrected (that span was never fully raw - `sub_800A528`/
+  corrected (that span was never fully raw - `UpdateGroundSprite`/
   `sub_800A590` were already matched in `actor_part47.c`).
 - `tools/report_units.py` - the `0x0800A0FC` unit's `base_object`
   changed from `None` to `"src/graphics/actor_part110.o"` (matched);
   the `0x0800A178` unit's comment updated to note it now shares that
-  object with the matched `sub_800A0FC`.
+  object with the matched `CollideGroundSprite`.
 - `ldscript.txt` - `asm/code_3_2_11.o` line removed.
 
 ## Second follow-up: `sub_8026BF8`/`sub_8026C3C`, closing the last two
@@ -533,7 +533,7 @@ accumulated into `*outValue` - this pass just closes them as real C.
 
 Both matched as real C, no `NON_MATCHING` gap and no NAKED fallback
 needed - the earlier "same resistant multi-high-register shape this ROM
-neighborhood already hit four times" caution (about `sub_800A178`/
+neighborhood already hit four times" caution (about `ProbeGroundSpriteTerrain`/
 `sub_800A420` themselves) turned out not to apply to these two smaller
 leaf functions, which only ever need `r0`-`r6`, matching the ROM's own
 register choices directly once the right C shape was found:
@@ -672,8 +672,8 @@ exactly where these four functions' real bytes already sat.
 
 `sub_800A420` now has an old_agbcc C draft under `NON_MATCHING` that is
 15 halfwords off. All of the gap is register choice in the first probe's
-hit path. `sub_800A178` was not retried. See [issue-9-naked-retry.md](./issue-9-naked-retry.md) for details.
+hit path. `ProbeGroundSpriteTerrain` was not retried. See [issue-9-naked-retry.md](./issue-9-naked-retry.md) for details.
 
 ## Later pass (issue #9-#11 NAKED retry)
 
-`sub_800A178` and `sub_800A420` (and the formerly pinned `sub_800A0FC`) are plain C under old_agbcc; `actor_part110.o` is in `OLD_AGBCC_OBJS`. See [issue-9-11-box-naked-retry.md](issue-9-11-box-naked-retry.md).
+`ProbeGroundSpriteTerrain` and `sub_800A420` (and the formerly pinned `CollideGroundSprite`) are plain C under old_agbcc; `actor_part110.o` is in `OLD_AGBCC_OBJS`. See [issue-9-11-box-naked-retry.md](issue-9-11-box-naked-retry.md).

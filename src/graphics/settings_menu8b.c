@@ -86,7 +86,7 @@ u8 RunSaveMenu(u32 state, u32 field10)
     return ((struct pause_options_screen *)gSaveMenu)->field_20;
 }
 
-extern void *sub_8026EDC(s32 size);
+extern void *OperatorNew(s32 size);
 extern void *gAudioContext;
 extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
 extern u8 CheckSaveChecksum(void *arg0);
@@ -123,12 +123,12 @@ struct pause_options_screen *InitSaveMenu(struct pause_options_screen *arg0)
     register void *obj asm("r4");
     extern void *gLinkSession;
 
-    obj = sub_8026EDC(size);
+    obj = OperatorNew(size);
     ResetSaveData(obj);
     *field8cAddr = obj;
 
     field90Addr = &self->field_90;
-    obj = sub_8026EDC(size);
+    obj = OperatorNew(size);
     ResetSaveData(obj);
     *field90Addr = obj;
 
@@ -150,7 +150,7 @@ struct pause_options_screen *InitSaveMenu(struct pause_options_screen *arg0)
 }
 
 extern void sub_80027B0(void *arg0, s32 arg1);
-extern void sub_8026ED0(void *arg0);
+extern void OperatorDelete(void *arg0);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 
 /* Tears down the composite screen's (or spinner dialog's) field_8c/
@@ -170,8 +170,8 @@ void DestroySaveMenu(struct pause_options_screen *self, u32 flags)
         sub_80027B0(gLinkSession, 3);
     }
 
-    sub_8026ED0(*(void **)((u8 *)self + 0x90));
-    sub_8026ED0(*(void **)((u8 *)self + 0x8c));
+    OperatorDelete(*(void **)((u8 *)self + 0x90));
+    OperatorDelete(*(void **)((u8 *)self + 0x8c));
 
     c = (void **)self->rowObjC;
     b = (void **)self->rowObjB;
@@ -209,7 +209,7 @@ void DestroySaveMenu(struct pause_options_screen *self, u32 flags)
     } while (n >= 0);
 
     if (flags & 1) {
-        sub_8026ED0(self);
+        OperatorDelete(self);
     }
 }
 

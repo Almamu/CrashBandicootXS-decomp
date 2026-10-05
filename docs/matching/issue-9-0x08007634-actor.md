@@ -6,7 +6,7 @@ generator) listed 18 raw functions across `asm/code_3_2.s`,
 `asm/code_3_2_16.s`. This is the write-up for the work done against
 that list.
 
-**Update**: `sub_8009008`/`sub_80091D4`/`sub_8009868`/`sub_8009BE0`,
+**Update**: `UnlinkCrateFromGrid`/`UpdateCrateList`/`CollidePlayerWithCrates`/`sub_8009BE0`,
 left raw below, were later NAKED-transcribed (byte-exact, tracked as
 parked, not matched) - see
 `docs/matching/naked-spatial-grid-tail.md`. The "left raw" entries for
@@ -40,22 +40,22 @@ name, from earlier sessions working the surrounding `actor_part11.c`-
   untouched - real GBA hardware affine (rotation/scaling) sprite-matrix
   setup, judged too large and unexamined to reconstruct with confidence
   in a single pass (`docs/matching.md`'s `DrawAffineSpritePieces` entry).
-- `sub_8009008`/`sub_80091D4`/`sub_8009868`/`sub_8009BE0`: each
+- `UnlinkCrateFromGrid`/`UpdateCrateList`/`CollidePlayerWithCrates`/`sub_8009BE0`: each
   previously read and explicitly left raw - "complex spatial-hash-grid
   removal logic ... higher-level why isn't recoverable without more
-  context" (`sub_8009008`), "complex list-management logic" 
-  (`sub_80091D4`), "calls still-unexamined helpers" (`sub_8009868`), "a
+  context" (`UnlinkCrateFromGrid`), "complex list-management logic" 
+  (`UpdateCrateList`), "calls still-unexamined helpers" (`CollidePlayerWithCrates`), "a
   physics/collision step-probe ... left raw rather than guess"
   (`sub_8009BE0`).
-- `sub_800A0FC`-`sub_800A590`: flagged as "a raw span ... left raw
+- `CollideGroundSprite`-`sub_800A590`: flagged as "a raw span ... left raw
   rather than guess at semantics" when `actor_part14.c` was matched.
-- `sub_800A734` onward: flagged as "the start of a still-raw 94 KB
+- `ResetPlayer` onward: flagged as "the start of a still-raw 94 KB
   span" in the same pass.
 
 This session re-read all 18 with the additional context accumulated
 since (the `+0x8c`/`gRoomFrameCount` frame-counter convention, the
 `+0x88`/`+0xac`/`+0xb0` field family cross-referenced across
-`sub_800A734`/`sub_800A810`/`DrawPlayer`/`sub_800A884`, and the
+`ResetPlayer`/`sub_800A810`/`DrawPlayer`/`CollidePlayer`, and the
 established register-pin/goto idioms this file family needs) and found
 6 of the 18 tractable enough to fully understand and reconstruct in C.
 The other 12 remain genuinely hard for the reasons the prior sessions
@@ -64,7 +64,7 @@ already gave - see "Left untouched" below.
 ## Matched - 3 functions
 
 - **`sub_800A810`** (`src/graphics/actor_part48.c`, right after the
-  still-parked `sub_800A734` in the same file): dispatches a sub-state
+  still-parked `ResetPlayer` in the same file): dispatches a sub-state
   byte (`self+0x88`) to one of three teardown helpers
   (`sub_8015840`/`sub_80159A4`/`sub_8017994`), each called with the
   same `self+0x44` "record" argument `sub_800A730` already established,
@@ -87,7 +87,7 @@ already gave - see "Left untouched" below.
   collapsed the branch polarity to `bne`-skip and let the compiler's CSE
   drop the redundant copy entirely (see "Real gotchas" below for the
   general form of this pin-scope lesson).
-- **`sub_800B270`** (`src/graphics/actor_part49.c`) - a per-frame
+- **`ApplyPlayerVelocity`** (`src/graphics/actor_part49.c`) - a per-frame
   velocity integrator. Moves `self+0x60`/`self+0x64` (current X/Y
   velocity) toward `self+0x50`/`self+0x5c` (target X/Y velocity) by up
   to `self+0x4c`/`self+0x58` (X/Y acceleration step) each call,
@@ -115,13 +115,13 @@ already gave - see "Left untouched" below.
   fold to an unconditional `mov r0, #1` - fixed by pinning only `vx`
   and leaving `vy` an unpinned local, which lands in `r1` naturally
   anyway. Retires the raw `asm/code_3_2_16_b270.s`.
-- **`sub_800A528`/`sub_800A590`** (`src/graphics/actor_part47.c`) - a
+- **`UpdateGroundSprite`/`sub_800A590`** (`src/graphics/actor_part47.c`) - a
   moving-platform "ride along" hookup: looks up a position record via a
   `self->table+0x10/0x14` trampoline and, if it changed since the last
   call, nudges `self->y` by the delta between the old and new record's
   position (interpreted differently depending on `self+0x68`'s state,
-  8 or 4). `sub_800A528` is the same body with an extra unconditional
-  `sub_8009FB0(self)` call first. `self` and the returned record
+  8 or 4). `UpdateGroundSprite` is the same body with an extra unconditional
+  `UpdateMovingSprite(self)` call first. `self` and the returned record
   pointer pinned to `r4`/`r3` matched the ROM directly; the remaining
   gap was the ROM's inner scratch-register use for the record's
   `+2`/`+5` field reads, which needs a genuine *fifth* register (`r5`)
@@ -149,14 +149,14 @@ Fully understood (every field offset, branch, and call confirmed
 against the ROM) but doesn't yet produce byte-identical output as of
 this file's original writing - see the update note on the entry below.
 
-- **`sub_800A734`** - **UPDATE: matched in a later session, see
+- **`ResetPlayer`** - **UPDATE: matched in a later session, see
   `docs/matching/issue-14-0x08010a0c-graphics.md`'s "Follow-up"
   section** for the techniques that closed the gap described below.
   (`src/graphics/actor_part48.c`; real bytes were in
   `asm/code_3_2_16_a734.s`, now removed) - a part-object velocity/state
   reset that
   additionally hooks up a child object at `self+0xb0` (calls
-  `sub_800815C` on it, packs the result's low nibble into the child's
+  `GetSpriteAnimPaletteSlot` on it, packs the result's low nibble into the child's
   `+0x29` byte) and zeroes the `+0x100`-`+0x105` per-phase flag bytes
   `actor_part15.c`'s doc comment already describes. Field writes
   confirmed correct one-for-one against the ROM; the ROM builds several
@@ -166,7 +166,7 @@ this file's original writing - see the update note on the entry below.
   right after it in ROM order, *was* matched this way (a `u8 *p` cursor
   plus register-pinned negative-constant masks) - see "Matched" above -
   but that technique only closed `sub_800A810`'s gap; re-applying the
-  same cursor idea to `sub_800A734`'s much longer, less uniform stretch
+  same cursor idea to `ResetPlayer`'s much longer, less uniform stretch
   of field writes (`+0x24`/`+0x44`/`+0x78`/`+0x1c`/`+0x90`/`+0xac`/
   `+0x80`/`+0x88`/`+0x8c`, several via `subs` as well as `adds`) did not
   reproduce the ROM's exact increment sequence in the same pass; left
@@ -182,14 +182,14 @@ this file's original writing - see the update note on the entry below.
   of its own; not attempted again here for the same reason - a guessed
   reconstruction of real-time affine-matrix math risks leaving wrong
   documentation behind, worse than leaving it unclaimed.
-- **`sub_8009008`** (`asm/code_3_2_13.s`, ROM `0x08009008`) - spatial-
-  hash-grid node removal built on the `sub_8008F20` pool-manager struct;
+- **`UnlinkCrateFromGrid`** (`asm/code_3_2_13.s`, ROM `0x08009008`) - spatial-
+  hash-grid node removal built on the `InitCrateList` pool-manager struct;
   a two-phase bucket search whose higher-level "why" (as opposed to the
   mechanical "what") isn't recoverable without more context on the
   manager struct's callers.
-- **`sub_80091D4`** (`asm/code_3_2_13.s`, ROM `0x080091D4`) - list-
+- **`UpdateCrateList`** (`asm/code_3_2_13.s`, ROM `0x080091D4`) - list-
   management logic in the same still-unclear manager struct family.
-- **`sub_8009868`** (`asm/code_3_2_13.s`, ROM `0x08009868`) - calls
+- **`CollidePlayerWithCrates`** (`asm/code_3_2_13.s`, ROM `0x08009868`) - calls
   still-unexamined `sub_800D040`/`sub_80109A4`; per
   `docs/matching/issue-12-physics-collision.md`, `sub_80109A4` leads
   into the large, still-mostly-raw physics/collision subsystem
@@ -199,24 +199,24 @@ this file's original writing - see the update note on the entry below.
 - **`sub_8009BE0`** (`asm/code_3_2_14.s`, ROM `0x08009BE0`) - a
   physics/collision step-probe calling still-unexamined
   `sub_8008278`/`sub_8026628`.
-- **`sub_800A0FC`** (`asm/code_3_2_11.s`, ROM `0x0800A0FC`) - calls the
-  raw `sub_800A178` and the parked `sub_8009BE0`; left raw since its
+- **`CollideGroundSprite`** (`asm/code_3_2_11.s`, ROM `0x0800A0FC`) - calls the
+  raw `ProbeGroundSpriteTerrain` and the parked `sub_8009BE0`; left raw since its
   own correctness depends on functions whose exact behavior isn't
   pinned down.
-- **`sub_800A178`** (`asm/code_3_2_11.s`, ROM `0x0800A178`, ~680 B) - a
+- **`ProbeGroundSpriteTerrain`** (`asm/code_3_2_11.s`, ROM `0x0800A178`, ~680 B) - a
   movement-resolution function built on `sub_8008200`/`sub_8026628`/
   `sub_8026C3C`/`sub_8026BF8`, none of which are matched or precisely
   understood yet.
 - **`sub_800A420`** (`asm/code_3_2_11.s`, ROM `0x0800A420`, ~264 B) -
-  the same `sub_8008200`/`sub_8026BF8` dependency as `sub_800A178`.
-- **`sub_800A884`** (`asm/code_3_2_16.s`, ROM `0x0800A884`, ~616 B) - a
-  reentrancy-guard-shaped wrapper around `sub_800A0FC` with a two-level
+  the same `sub_8008200`/`sub_8026BF8` dependency as `ProbeGroundSpriteTerrain`.
+- **`CollidePlayer`** (`asm/code_3_2_16.s`, ROM `0x0800A884`, ~616 B) - a
+  reentrancy-guard-shaped wrapper around `CollideGroundSprite` with a two-level
   jump-table dispatch; calls the unexamined `sub_8026BC0`.
 - **`sub_800AAEC`** (`asm/code_3_2_16.s`, ROM `0x0800AAEC`) - iterates
   a global list (`gCrateList`) calling the unexamined
   `sub_8026628`/`sub_800CD00`.
-- **`sub_800AB9C`** (`asm/code_3_2_16.s`, ROM `0x0800AB9C`) - calls the
-  raw `sub_8009868` and the unexamined `sub_80106DC`.
+- **`CollidePlayerWithObjects`** (`asm/code_3_2_16.s`, ROM `0x0800AB9C`) - calls the
+  raw `CollidePlayerWithCrates` and the unexamined `sub_80106DC`.
 - **`PlayerHandleEvent`** (`asm/code_3_2_16.s`, ROM `0x0800AC2C`, ~950 B) - a
   38-case jump-table player action-state dispatcher (the same shape
   `docs/status/actor.md` already flags as "left raw, out of scope" for
@@ -240,21 +240,21 @@ documentation behind.
 ## Real gotchas found along the way (useful beyond this issue)
 
 1. **`-N` as a bit-clear mask clears the bits of `N-1`, not `N`** (the
-   `-N == ~(N-1)` identity) - confirmed again here for `sub_800A734`
+   `-N == ~(N-1)` identity) - confirmed again here for `ResetPlayer`
    (`-0x11` clears only bit 4, since `0x11-1 = 0x10`) and `sub_800A810`
    (`-9` clears only bit 3, since `9-1 = 8`). Already documented
    elsewhere in this project but easy to mis-read at a glance if you
    assume `-N` simply clears `N`'s own bit pattern.
 2. **A plain `if (cond) *p |= mask;` compiles to a full independent
    read-modify-write per branch**, not a shared one, even when both
-   branches funnel into logically the same store - `sub_800B270`'s
+   branches funnel into logically the same store - `ApplyPlayerVelocity`'s
    Y-axis flag write needed an explicit `goto`-based merge (compute the
    mask conditionally, fall through to *one* shared `*p |= mask;`) to
    match the ROM's single reload.
 3. **A pinned base-pointer register variable (`register T *p asm("rN")`)
    claims that register for its entire lexical scope**, which can push
    a *later*, logically-unrelated local out of the register the ROM
-   uses for it - `sub_800B270`'s trailing `0x0300129C` read/write block
+   uses for it - `ApplyPlayerVelocity`'s trailing `0x0300129C` read/write block
    needs the global's address in `r0` and its value in `r2`, but every
    attempt to pin those two registers directly produced either the
    ROM's own address/value swapped (address in `r2`, value in `r0` -
@@ -270,7 +270,7 @@ documentation behind.
    `vx` alone) miscompiles the function's own trailing `return`
    statement to an unconditional `mov r0, #1` - a genuine gcc-2.9
    register-pin correctness bug, not a cosmetic mismatch. See
-   `docs/status/actor.md`'s "Matched" entry for `sub_800B270`.
+   `docs/status/actor.md`'s "Matched" entry for `ApplyPlayerVelocity`.
 
 ## Cross-references
 
@@ -284,7 +284,7 @@ documentation behind.
   above for the specific entries.
 - `docs/matching/issue-12-physics-collision.md` - the neighboring
   physics/collision subsystem several of this issue's left-raw
-  functions (`sub_8009868` via `sub_80109A4`, `DrawPlayer`) eventually
+  functions (`CollidePlayerWithCrates` via `sub_80109A4`, `DrawPlayer`) eventually
   lead into.
 
 ## Later pass (issue #9 NAKED retry)

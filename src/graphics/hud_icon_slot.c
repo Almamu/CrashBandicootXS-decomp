@@ -3,7 +3,7 @@
 #include "hud.h"
 
 /* Up to three palette colour cycles, at `gPaletteCycles`
- * (`sub_8026EDC(0x48)`, matching this struct's size). game_loop56.c
+ * (`OperatorNew(0x48)`, matching this struct's size). game_loop56.c
  * adds them with `targets` = BG palette RAM and `lists` = the palette
  * indices to cycle; every `periods[i]` = 60 / rate frames,
  * `TickPaletteCycles` shifts the colours at those indices by one
@@ -44,11 +44,11 @@ struct hud_fx_queue {
 
 COMPILE_TIME_ASSERT(sizeof(struct hud_fx_queue) == 0x48);
 
-extern void sub_8026ED0(void *ptr);
+extern void OperatorDelete(void *ptr);
 extern s32 gHudSlideOffset;
-extern void sub_8008890(struct actor *part, s32 arg1, s32 arg2);
-extern void sub_80088F0(struct actor *part, u32 arg1);
-extern struct actor *sub_8008904(struct actor *part);
+extern void DrawSpriteWithOffset(struct actor *part, s32 arg1, s32 arg2);
+extern void DestroyUiSpriteObj(struct actor *part, u32 arg1);
+extern struct actor *InitUiSpriteObj(struct actor *part);
 extern u8 gStaticData_087E4CB4[];
 
 extern u32 gRoomFrameCount;
@@ -304,17 +304,17 @@ void ClearPaletteCycles(struct hud_fx_queue *self)
 }
 
 /* Teardown counterpart to `InitPaletteCycles` below: frees `self` via
- * `sub_8026ED0` when bit 0 of `flags` is set. */
+ * `OperatorDelete` when bit 0 of `flags` is set. */
 void DestroyPaletteCycles(void *self, s32 flags)
 {
     if (flags & 1) {
-        sub_8026ED0(self);
+        OperatorDelete(self);
     }
 }
 
 /* Same reset as `ClearPaletteCycles` (minus the entry-count clear - freshly
  * `mem_alloc`'d memory doesn't need it) but returns `self` - this is
- * the queue's constructor, called right after its `sub_8026EDC(0x48)`
+ * the queue's constructor, called right after its `OperatorNew(0x48)`
  * allocation. */
 struct hud_fx_queue *InitPaletteCycles(struct hud_fx_queue *self)
 {
@@ -336,30 +336,30 @@ struct hud_fx_queue *InitPaletteCycles(struct hud_fx_queue *self)
 void DrawHudPart(struct hud_digit_part *part, s32 arg1, s32 arg2)
 {
     if (part->frame_index != -1) {
-        sub_8008890((struct actor *)part, arg1, arg2 + gHudSlideOffset);
+        DrawSpriteWithOffset((struct actor *)part, arg1, arg2 + gHudSlideOffset);
     }
 }
 
 /* UNUSED - no caller anywhere in the ROM (checked asm/*.s,
  * expected/*.s, every src/*.c file). A `struct actor`-table-swap constructor
  * variant of `InitHudPart` below: sets `table` directly instead of
- * going through `sub_8008904`, then forwards to `sub_80088F0` (which
+ * going through `InitUiSpriteObj`, then forwards to `DestroyUiSpriteObj` (which
  * immediately overwrites `table` again as part of its own two-step
  * table swap - see actor_part7.c). */
 void sub_802710C(struct actor *part, u32 arg1)
 {
     part->table = gStaticData_087E4CB4;
-    sub_80088F0(part, arg1);
+    DestroyUiSpriteObj(part, arg1);
 }
 
 /* Constructs one `struct hud_digit_part` slot as a `struct actor`
  * (the two share the same first 0x18 bytes plus `table` at +0x18 - see
- * include/hud.h): re-initializes it via `sub_8008904`, then overwrites
+ * include/hud.h): re-initializes it via `InitUiSpriteObj`, then overwrites
  * `table` with this widget family's own `gStaticData_087E4CB4` in
- * place of whatever `sub_8008904` set it to. */
+ * place of whatever `InitUiSpriteObj` set it to. */
 struct actor *InitHudPart(struct actor *part)
 {
-    sub_8008904(part);
+    InitUiSpriteObj(part);
     part->table = gStaticData_087E4CB4;
     return part;
 }

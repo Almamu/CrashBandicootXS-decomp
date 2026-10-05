@@ -28,13 +28,13 @@ end); the pins and barriers described under "Matching notes" are gone.
 | 0x20/0x24 | a left-hold flag and timer |
 
 Found by scanning the ROM for Thumb pointers: the method table holds
-`sub_8017650` (+0x0C, per-frame update), `sub_80179D4` (+0x14),
+`UpdateInputCtrl` (+0x0C, per-frame update), `sub_80179D4` (+0x14),
 `AttachInputCtrl` (+0x1C, set target) and `DestroyInputCtrl` (+0x4C, destroy); the
 slots this code calls through (+0x24 ... +0x54) are all base-class
 `sub_800B6xx`/`sub_800B8xx` functions, and `CreateInputCtrl` (constructor,
-called from `game_loop39.c`) chains to the base constructor `sub_800B8C8`.
+called from `game_loop39.c`) chains to the base constructor `InitCtrl`.
 
-`sub_8017650` reads the held keys (`gKeys`): up/down pick
+`UpdateInputCtrl` reads the held keys (`gKeys`): up/down pick
 channel B's pair (3/5, back to 0 when neither is held), left/right channel
 A's (7 with speed 0x3200 while the left-hold flag lasts - it expires after
 30 frames held, then re-arms once a 10-frame countdown has run out with
@@ -44,7 +44,7 @@ and `RequestRoomExit` is signalled. `sub_8017808` then applies any dirty
 channel through the method table using `gStaticData_0816B8C0`'s 12-byte
 records.
 
-The state dispatch at the end of `sub_8017650` goes through
+The state dispatch at the end of `UpdateInputCtrl` goes through
 `gStaticData_0816C290`, a table of gcc 2.x pointer-to-member-functions
 (`{s16 delta; s16 index; union {fn, s16 vtable offset}}`): state 0
 `sub_8017600` (reset the pairs, spawn the child), 1 `sub_801796C`,
@@ -73,7 +73,7 @@ Thumb pointer scan): the six byte accessors and `sub_8017A20`-
   /`SetChildSpeed` reproduce this - the argument is evaluated before the
   inlined body runs. The same idea as `tile_slot_pool.c`'s (#43) helpers.
 - **The "mark actor gone" sequence** (`sub_80072D8`'s, inlined in
-  `sub_80178EC` and `sub_8017650`). Earlier matches of this sequence
+  `sub_80178EC` and `UpdateInputCtrl`). Earlier matches of this sequence
   (`actor_part27c.c`, `actor_part39.c`, `actor_part124.c`, ...) needed an
   inline-asm `add`/`asr` pair. Here it's plain C: the ROM's copy +
   `asr #5` + subtract is gcc's **signed** `/ 32` and `% 32` of the
@@ -94,7 +94,7 @@ Thumb pointer scan): the six byte accessors and `sub_8017A20`-
 - **`InputCtrlKillPlayer`** loads `gPaletteCache` and computes the tag byte's
   address before loading the record table - done with explicit
   statements; `+0x29`'s slot is a 4-bit bitfield (`lsl #28/lsr #28`).
-- **`sub_8017650`'s PMF dispatch** re-indexes `gStaticData_0816C290[state]`
+- **`UpdateInputCtrl`'s PMF dispatch** re-indexes `gStaticData_0816C290[state]`
   for each field and copies the virtual entry through a stack struct,
   which is what gives the ROM's `sub sp, #8` frame; the up/down `else if`
   chain is written with a pinned `dirState` read and a `goto` (the only
@@ -113,13 +113,13 @@ All 25 functions still match. What became unnecessary:
   `LoadPaletteSlot` call reads `t->table->records[t->tag * 28 + 0x14]`
   directly. The two `asm("" : "+r")` barriers are gone. What remains is
   the ordering `cache = gPaletteCache;` before `t = self->target;`.
-- **The "mark gone" sequence** (`sub_80178EC` and `sub_8017650`): no pins
+- **The "mark gone" sequence** (`sub_80178EC` and `UpdateInputCtrl`): no pins
   and no `volatile` id re-read. It is `MARK_GONE(t)` - `t->gone = 1`, then
   `SET_ID_BIT(t->field_08)` unless the id is `0xFFFF` - the same
   sequence as `actor_part_16048.c`'s `MarkGone`. `SET_ID_BIT` stays a
   `do`/`while (0)` on purpose: its loop notes are what reproduce the id
   reload. The target/child pointer is loaded into a local first.
-- **`sub_8017650`'s up/down chain**: the pinned `dirState` read and the
+- **`UpdateInputCtrl`'s up/down chain**: the pinned `dirState` read and the
   `goto` are gone. It is an ordinary `if`/`else if` chain.
 - **`sub_8017808`**: all pins and both `asm("" : "+r")` barriers. The
   record is `gStaticData_0816B8C0 + self->animSet->entries[idx].a * 12`,
@@ -131,7 +131,7 @@ All 25 functions still match. What became unnecessary:
 Still needed under old_agbcc: `sub_80179D4`'s `s32 lo = 1` lower bound
 (with a literal `1`, gcc folds `>= 1` into `> 0`), and the
 `SetAnimA`/`SetAnimB`/`SetChildSpeed` inline helpers (written inline,
-`sub_8017650` and `sub_801793C` stop matching).
+`UpdateInputCtrl` and `sub_801793C` stop matching).
 
 `tools/patch_expected_target.py`/`expected/corrections.txt` need nothing
 here: the frozen disassembly labels all 25 correctly.

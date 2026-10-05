@@ -210,7 +210,7 @@ ahead of the byte-fill loop, which doesn't match the ROM's order
 either.** This is a genuinely different failure mode than the
 project's well-documented "explicit `r7` register-variable pin
 compiles correct instructions/order but silently drops `r7` from the
-push/pop list" bug (`docs/matching.md`'s `sub_8007DBC`-area entries) -
+push/pop list" bug (`docs/matching.md`'s `CheckSpritePickup`-area entries) -
 here *neither* instruction order *nor* register choice can be gotten
 right simultaneously through plain C, pinned or not.
 

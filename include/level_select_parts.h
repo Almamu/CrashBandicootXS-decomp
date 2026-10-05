@@ -5,7 +5,7 @@
  * (GitHub issues #28/#29, ROM 0x0801DA38-0x0801E578): the level-select
  * screen's (actor_part_1b85c.c's `struct level_menu`) sub-objects - the
  * zooming BG2 picture, the per-level page entries and the cursor panel.
- * All of them own animated sprite parts built by sub_8008904. */
+ * All of them own animated sprite parts built by InitUiSpriteObj. */
 
 struct vmethod
 {
@@ -37,7 +37,7 @@ struct anim_table
     struct anim_record *records;
 };
 
-/* The 0x40-byte animated sprite part `sub_8008904` constructs. */
+/* The 0x40-byte animated sprite part `InitUiSpriteObj` constructs. */
 struct sprite
 {
     s32 x;                        // 0x00 - Q8
@@ -78,17 +78,17 @@ extern void ***gUnknown_030012D0;
 extern void *gPaletteCache;
 extern u8 gLevelSelectEntryVtable[];
 
-extern void *sub_8026EDC(u32 size);
-extern void sub_8026ED0(void *p);
-extern struct sprite *sub_8008904(void *mem);
-extern void sub_80088D8(struct sprite *part, s32 value);
-extern void sub_80087C0(struct sprite *part);
-extern void sub_80087B4(struct sprite *part);
-extern void sub_800872C(struct sprite *part, s32 arg);
-extern s32 sub_800815C(struct sprite *part);
+extern void *OperatorNew(u32 size);
+extern void OperatorDelete(void *p);
+extern struct sprite *InitUiSpriteObj(void *mem);
+extern void SetSpritePriority(struct sprite *part, s32 value);
+extern void ResetSpriteFrameTimer(struct sprite *part);
+extern void ResetSpriteFrameIndex(struct sprite *part);
+extern void SetSpriteAnimDone(struct sprite *part, s32 arg);
+extern s32 GetSpriteAnimPaletteSlot(struct sprite *part);
 extern void sub_800737C(struct sprite *part, s32 x, s32 y);
-extern void sub_8008890(struct sprite *part, s32 dx, s32 dy);
-extern void sub_8008044(struct sprite *part);
+extern void DrawSpriteWithOffset(struct sprite *part, s32 dx, s32 dy);
+extern void AdvanceSpriteAnim(struct sprite *part);
 extern void UnlockPalette(void *cache, u8 record);
 extern void LockPalette(void *cache, u8 record);
 extern s32 RandRange(s32 max);
@@ -129,9 +129,9 @@ static inline void SetFrame(struct sprite *p, s32 frame)
 static inline void SetAnim(struct sprite *p, s32 anim)
 {
     p->animIndex = anim;
-    sub_80087C0(p);
-    sub_80087B4(p);
-    sub_800872C(p, 0);
+    ResetSpriteFrameTimer(p);
+    ResetSpriteFrameIndex(p);
+    SetSpriteAnimDone(p, 0);
 }
 
 #endif // GUARD_LEVEL_SELECT_PARTS_H

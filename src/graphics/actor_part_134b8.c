@@ -30,7 +30,7 @@ extern void *gEntitySpawner;
 extern void *gUnknown_03001304;
 extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
 extern u8 GetDpadDirection(void *pad);
-extern void sub_80122CC(struct act *self);
+extern void UpdatePlayerFacing(struct act *self);
 extern void sub_801283C(struct act *self);
 extern void sub_800B334(struct act_part *part);
 extern void sub_8014F8C(struct act *self);
@@ -130,7 +130,7 @@ void sub_80134B8(struct act *self)
     {
         u8 *timer;
 
-        sub_80122CC(self);
+        UpdatePlayerFacing(self);
         timer = &self->unk_24[1];
         if (*timer != 0)
         {
@@ -175,14 +175,14 @@ void sub_80134B8(struct act *self)
                 }
                 sub_800B334(self->part);
             }
-            sub_80122CC(self);
+            UpdatePlayerFacing(self);
             sub_801283C(self);
             ActSetContact(self->part, 0);
             return;
         }
         if (contact == 1 || contact == 2)
         {
-            sub_80122CC(self);
+            UpdatePlayerFacing(self);
             sub_801283C(self);
             self->part->contact = bit4;
             return;

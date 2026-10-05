@@ -24,7 +24,7 @@ extern void DrawPauseTimeTrialPage(struct pause_screen_results *self);
 extern void DrawPausePowersPage(struct pause_screen_results *self);
 extern void DrawPauseGemsPage(struct pause_screen_results *self);
 extern void DrawPauseRelicsPage(struct pause_screen_results *self);
-extern void sub_8008890(void *icon, s32 dx, s32 dy);
+extern void DrawSpriteWithOffset(void *icon, s32 dx, s32 dy);
 extern u32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern struct vram_upload_cursor *gObjVramCursor;
 extern struct icon_manager *gSmallFont;
@@ -137,7 +137,7 @@ void DrawPauseMenu(struct pause_screen_results *self)
         break;
     }
     if (self->field_c4 == 0)
-        sub_8008890(self->field_c0, 0, 0);
+        DrawSpriteWithOffset(self->field_c0, 0, 0);
     HideUnusedOamEntries(gOamBuffer);
 }
 

@@ -46,7 +46,7 @@ hole:
 gStaticData_0816BF14:
 	.incbin "baserom.gba", 0x0016BF14, 0x0000000C
 
-@ gStaticData_0816BF20..gStaticData_0816C070: src/data/action_table_16bf20.c
+@ gActionCtrlStateTable..gStaticData_0816C070: src/data/action_table_16bf20.c
 
 .section .rodata.0816C090
 

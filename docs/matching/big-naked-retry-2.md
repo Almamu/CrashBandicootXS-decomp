@@ -1,4 +1,4 @@
-# Second big NAKED retry: `UpdateEnemyCtrl` and `sub_8011BD4`
+# Second big NAKED retry: `UpdateEnemyCtrl` and `ActionCtrlHandleEvent`
 
 Two large NAKED functions that had never had a C draft kept in the
 tree. Both closed as real C under old_agbcc.
@@ -6,13 +6,13 @@ tree. Both closed as real C under old_agbcc.
 | Function | File | Issue | Size | Compiler | Result |
 |---|---|---|---|---|---|
 | `UpdateEnemyCtrl` | `src/graphics/actor_part112.c` | #10 | 1132 bytes | old_agbcc (object added to `OLD_AGBCC_OBJS`) | matched |
-| `sub_8011BD4` | `src/graphics/actor_part82.c` | #16 | 1420 bytes | old_agbcc (object added to `OLD_AGBCC_OBJS`) | matched |
+| `ActionCtrlHandleEvent` | `src/graphics/actor_part82.c` | #16 | 1420 bytes | old_agbcc (object added to `OLD_AGBCC_OBJS`) | matched |
 
 Under the current agbcc the final C is 43 halfwords off for
-`UpdateEnemyCtrl` and 36 for `sub_8011BD4`. The other function in
+`UpdateEnemyCtrl` and 36 for `ActionCtrlHandleEvent`. The other function in
 `actor_part112.c`, `HitEnemy`, is still NAKED, so the whole file
 builds the same under old_agbcc. `actor_part82.c` holds only
-`sub_8011BD4`.
+`ActionCtrlHandleEvent`.
 
 Neither function needed loop work: both are a single `switch`. Both
 first drafts were written from the ROM disassembly, with the case
@@ -58,7 +58,7 @@ States 1 and 12 are explicit empty cases (the table is indexed by
 file, and `HitEnemy`'s kept draft now uses the shared copies. That
 draft is still 21 halfwords off.
 
-## `sub_8011BD4` (516 -> 0 halfwords)
+## `ActionCtrlHandleEvent` (516 -> 0 halfwords)
 
 The first draft was 16 bytes short and 516 halfwords off. It found one
 thing the old doc comment had wrong. The function takes a fourth

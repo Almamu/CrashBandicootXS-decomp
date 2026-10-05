@@ -232,12 +232,12 @@ void AddOamEntry(struct oam_shadow_buffer *arg0, u32 *arg1)
     *(s32 *)arg0 = n2;
 }
 
-extern void sub_8026ED0(void *arg0);
+extern void OperatorDelete(void *arg0);
 
 void DestroyOamBuffer(void *arg0, u32 arg1)
 {
     if (arg1 & 1) {
-        sub_8026ED0(arg0);
+        OperatorDelete(arg0);
     }
 }
 
@@ -320,7 +320,7 @@ s32 AllocVramDmaQueue(void)
 }
 
 extern void SetObjMapping1D(void);
-extern void *sub_8026EC0(u32 size);
+extern void *OperatorNewArray(u32 size);
 
 void RewindObjVram(struct vram_upload_cursor *self)
 {
@@ -380,7 +380,7 @@ s32 UploadObjVram(struct vram_upload_cursor *self, void *src, s32 size)
 void DestroyObjVramCursor(struct vram_upload_cursor *self, u32 flags)
 {
     if (flags & 1) {
-        sub_8026ED0(self);
+        OperatorDelete(self);
     }
 }
 
@@ -571,7 +571,7 @@ void SetPaletteCacheSource(struct palette_cache *self, u16 count, const u8 *reco
     s32 i;
 
     if (self->slotOf != NULL) {
-        sub_8026ED0(self->slotOf);
+        OperatorDelete(self->slotOf);
     }
     self->slotOf = NULL;
     self->count = 0;
@@ -582,7 +582,7 @@ void SetPaletteCacheSource(struct palette_cache *self, u16 count, const u8 *reco
     }
     self->count = count;
     self->palettes = records;
-    self->slotOf = (u8 *)sub_8026EC0(self->count);
+    self->slotOf = (u8 *)OperatorNewArray(self->count);
     for (i = 0; i < self->count; i++) {
         self->slotOf[i] = 0xFF;
     }
@@ -593,7 +593,7 @@ void ClearPaletteCache(struct palette_cache *self)
     s32 i;
 
     if (self->slotOf != NULL) {
-        sub_8026ED0(self->slotOf);
+        OperatorDelete(self->slotOf);
     }
     self->slotOf = NULL;
     self->count = 0;
@@ -608,7 +608,7 @@ void DestroyPaletteCache(struct palette_cache *self, u32 flags)
 {
     ClearPaletteCache(self);
     if (flags & 1) {
-        sub_8026ED0(self);
+        OperatorDelete(self);
     }
 }
 
@@ -631,7 +631,7 @@ void InitPaletteCache(struct palette_cache *self)
 void sub_8006FC8(void *arg0, u32 arg1)
 {
     if (arg1 & 1) {
-        sub_8026ED0(arg0);
+        OperatorDelete(arg0);
     }
 }
 
@@ -682,7 +682,7 @@ u8 sub_8006FE4(struct actor *self)
 extern void *_call_via_r1(void *arg0, void *arg1);
 extern void SetAabbPos(void *buf, s32 arg1, s32 arg2);
 extern void SetAabbSize(void *buf, s32 arg1, s32 arg2);
-extern u8 sub_800B37C(void *arg0, void *buf);
+extern u8 PlayerTouchesBox(void *arg0, void *buf);
 extern void _call_via_r4(void *arg0, s32 arg1, s32 arg2, s32 arg3);
 extern struct actor *gPlayer;
 
@@ -738,7 +738,7 @@ s32 sub_8007048(struct actor *self)
         flagTest = flagTestR0;
     }
     if (flagTest) {
-        if (sub_800B37C(gPlayer, buf)) {
+        if (PlayerTouchesBox(gPlayer, buf)) {
             asm volatile(
                 "mov r0, #8\n\t"
                 "ldrb r2, [%0, #0xc]\n\t"
@@ -921,7 +921,7 @@ void nullsub_12(void)
 }
 asm(".align 2, 0");
 
-extern void *sub_8026EDC(s32 size);
+extern void *OperatorNew(s32 size);
 extern void sub_8007230(struct actor *self);
 extern u8 gStaticData_087E3BEC[];
 
@@ -929,7 +929,7 @@ struct actor *sub_80071E4(u16 arg0, u16 arg1, u16 arg2)
 {
     struct actor *obj;
 
-    obj = sub_8026EDC(sizeof(struct actor));
+    obj = OperatorNew(sizeof(struct actor));
     obj->table = gStaticData_087E3BEC;
     sub_8007230(obj);
     obj->field_08 = arg0;
@@ -1273,6 +1273,6 @@ void sub_80073BC(struct actor *self, u32 arg1)
 {
     self->table = gStaticData_087E3BEC;
     if (arg1 & 1) {
-        sub_8026ED0(self);
+        OperatorDelete(self);
     }
 }

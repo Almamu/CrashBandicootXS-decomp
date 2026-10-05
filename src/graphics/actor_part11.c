@@ -4,17 +4,17 @@
 
 extern void *_call_via_r1(void *arg0, void *fn);
 extern void CpuSet(void *src, void *dst, s32 control);
-extern void sub_8026EB4(void *ptr);
-extern void sub_8026ED0(void *manager);
-extern void *sub_8026EC0(u32 size);
+extern void OperatorDeleteArray(void *ptr);
+extern void OperatorDelete(void *manager);
+extern void *OperatorNewArray(u32 size);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *fn);
 extern void *gLevelLayers;
 
 /* The "filter into a second array" manager struct also used by
- * `sub_8008C80`/`sub_8008CEC`/`sub_8008D30` in `actor_part10.c` -
+ * `CullPartList`/`ClearPartList`/`sub_8008D30` in `actor_part10.c` -
  * `array1` is the primary list (bounded by `count1`, up to
  * `capacity`), `array2` a filtered/derived list built from it
- * (bounded by `count2`). `sub_8008EE4` below is this struct's own
+ * (bounded by `count2`). `InitPartList` below is this struct's own
  * initializer. */
 struct dual_array_manager {
     s32 capacity;     // +0x0
@@ -40,7 +40,7 @@ struct listed_obj {
 
 /* Calls the `m20` virtual method (via the `_call_via_r1` call thunk) of
  * every object in `manager->array2` (bounded by `count2`). */
-void sub_8008DC0(struct dual_array_manager *manager)
+void DrawPartList(struct dual_array_manager *manager)
 {
     s32 i;
 
@@ -59,10 +59,10 @@ void sub_8008DC0(struct dual_array_manager *manager)
  * equal to `target`; if found, compacts the array by shifting every
  * following entry down by one slot via the BIOS `CpuSet` wrapper
  * `CpuSet`, decrements `count1`, and clears the now-unused
- * trailing slot. Same removal logic as `sub_8008E50` below, but
+ * trailing slot. Same removal logic as `RemovePartListAt` below, but
  * locates the index by value instead of taking it directly as an
  * argument. */
-void sub_8008DEC(struct dual_array_manager *manager, void *target)
+void RemoveFromPartList(struct dual_array_manager *manager, void *target)
 {
     s32 i = 0;
     s32 count = manager->capacity;
@@ -107,9 +107,9 @@ done:
 }
 
 /* Removes the entry at `index` from `manager->array1`, compacting via
- * `CpuSet` the same way `sub_8008DEC` does after its own
+ * `CpuSet` the same way `RemoveFromPartList` does after its own
  * search. */
-void sub_8008E50(struct dual_array_manager *manager, s32 index)
+void RemovePartListAt(struct dual_array_manager *manager, s32 index)
 {
     if (index < manager->capacity) {
         s32 off = index * 4;
@@ -134,7 +134,7 @@ void sub_8008E50(struct dual_array_manager *manager, s32 index)
 
 /* Appends `value` to `manager->array1` if there's room (`count1` <
  * `capacity`). */
-void sub_8008E94(struct dual_array_manager *manager, void *value)
+void AddToPartList(struct dual_array_manager *manager, void *value)
 {
     s32 count = manager->count1;
 
@@ -145,26 +145,26 @@ void sub_8008E94(struct dual_array_manager *manager, void *value)
 }
 
 /* Tears down a manager: frees both of its arrays (`array2` and
- * `array1`, each via `sub_8026EB4` if non-`NULL`), and, if bit 0 of
+ * `array1`, each via `OperatorDeleteArray` if non-`NULL`), and, if bit 0 of
  * `flags` is set, frees the manager struct itself via
- * `sub_8026ED0`. */
-void sub_8008EB4(struct dual_array_manager *manager, s32 flags)
+ * `OperatorDelete`. */
+void DestroyPartList(struct dual_array_manager *manager, s32 flags)
 {
     if (manager->array2 != 0) {
-        sub_8026EB4(manager->array2);
+        OperatorDeleteArray(manager->array2);
     }
     if (manager->array1 != 0) {
-        sub_8026EB4(manager->array1);
+        OperatorDeleteArray(manager->array1);
     }
     if (flags & 1) {
-        sub_8026ED0(manager);
+        OperatorDelete(manager);
     }
 }
 
 /* Initializes a manager: sets `count1`/`count2` to 0, `capacity` to
- * `count`, allocates two `count`-word arrays via `sub_8026EC0` for
+ * `count`, allocates two `count`-word arrays via `OperatorNewArray` for
  * `array1`/`array2`, and zero-fills `array1`. Returns `manager`. */
-struct dual_array_manager *sub_8008EE4(struct dual_array_manager *manager, s32 count)
+struct dual_array_manager *InitPartList(struct dual_array_manager *manager, s32 count)
 {
     s32 i;
     void **arr;
@@ -175,8 +175,8 @@ struct dual_array_manager *sub_8008EE4(struct dual_array_manager *manager, s32 c
     manager->capacity = count;
 
     allocSize = count * 4;
-    manager->array1 = sub_8026EC0(allocSize);
-    manager->array2 = sub_8026EC0(allocSize);
+    manager->array1 = OperatorNewArray(allocSize);
+    manager->array2 = OperatorNewArray(allocSize);
 
     i = manager->capacity;
     if (i > 0) {
@@ -192,17 +192,17 @@ struct dual_array_manager *sub_8008EE4(struct dual_array_manager *manager, s32 c
     return manager;
 }
 
-/* sub_8008F20 initializes a fixed-slot object pool "manager" struct:
+/* InitCrateList initializes a fixed-slot object pool "manager" struct:
  *  +0x0: s32 activeCount (0)
  *  +0x4: s32 capacity (= count)
  *  +0x8: void **slotArray - `count` pointers, allocated via
- *        sub_8026EC0(count*4), zero-filled
+ *        OperatorNewArray(count*4), zero-filled
  *  +0xc: u8 *nodeArray - `count` 0x14-byte nodes, allocated via
- *        sub_8026EC0(count*0x14)
+ *        OperatorNewArray(count*0x14)
  *  +0x10..0x40F: a 256-word (0x400-byte) table, zeroed
  *  +0x410..0x80F: a second 256-word (0x400-byte) table, zeroed
  *  +0x810: void *freeListArray - `count` 8-byte {node, next} pairs,
- *          allocated via sub_8026EC0(count*8)
+ *          allocated via OperatorNewArray(count*8)
  *  +0x814: void *freeListHead - set to `freeListArray` itself at the
  *          very end
  *
@@ -220,7 +220,7 @@ struct dual_array_manager *sub_8008EE4(struct dual_array_manager *manager, s32 c
  * all confirmed correct.
  *
  * Real C (issue #9-#11 NAKED retry; matches under both compilers). The
- * tail is the `PoolResetFreeList` inline (sub_8009914 ends with the same
+ * tail is the `PoolResetFreeList` inline (ResetCrateList ends with the same
  * code). Two source details carry the register assignment the old
  * notes blamed on the allocator: the grid clear is a plain indexed
  * `for` loop (gcc reverses it into the ROM's `i = 255 .. 0` countdown
@@ -291,15 +291,15 @@ static inline void PoolResetFreeList(struct pool_init *m)
     *freeHead = *freeList;
 }
 
-struct pool_init *sub_8008F20(struct pool_init *m, s32 count)
+struct pool_init *InitCrateList(struct pool_init *m, s32 count)
 {
     m->activeCount = 0;
     m->capacity = count;
-    m->slotArray = sub_8026EC0(count * 4);
-    m->nodeArray = sub_8026EC0(m->capacity * sizeof(struct pool_init_node));
+    m->slotArray = OperatorNewArray(count * 4);
+    m->nodeArray = OperatorNewArray(m->capacity * sizeof(struct pool_init_node));
     {
         struct pool_init_link **p = &m->freeListArray;
-        *p = sub_8026EC0(m->capacity * sizeof(struct pool_init_link));
+        *p = OperatorNewArray(m->capacity * sizeof(struct pool_init_link));
     }
     {
         s32 j = m->capacity;
@@ -318,7 +318,7 @@ struct pool_init *sub_8008F20(struct pool_init *m, s32 count)
 }
 asm(".align 2, 0");
 
-/* Same pool-manager struct sub_8008F20 initializes and actor_part12.c
+/* Same pool-manager struct InitCrateList initializes and actor_part12.c
  * operates on - see that file for the full field writeup. Also used by
  * the now-matched `sub_8009150` (`actor_part11g.c`). */
 struct pool_manager {
@@ -332,24 +332,24 @@ struct pool_manager {
     void *freeListHead;
 };
 
-/* sub_8009914 is reconstructed (semantics fully understood, and now
+/* ResetCrateList is reconstructed (semantics fully understood, and now
  * matched) as a NAKED transcription in its own translation unit,
  * `src/graphics/actor_part11i.c` - not appended here since its real
  * ROM address, 0x08009914, doesn't sit adjacent to this file's own
- * functions (it comes right after `sub_8009868`, `actor_part11d.c`,
+ * functions (it comes right after `CollidePlayerWithCrates`, `actor_part11d.c`,
  * and right before `sub_80099F0`/`actor_part12.c`), per
  * docs/workflow.md step 4's "needs its own new .c file" case - the
  * same reason `sub_80096C0` above got its own file
  * (`actor_part11e.c`), `sub_8009528` got `actor_part11f.c`, the
  * now-matched `sub_8009150` got `actor_part11g.c`, and the now-matched
- * `sub_800944C` got `actor_part11h.c`. */
+ * `DrawCrateList` got `actor_part11h.c`. */
 
-/* sub_800944C is now matched as real C in its own translation unit,
+/* DrawCrateList is now matched as real C in its own translation unit,
  * `src/graphics/actor_part11h.c`; sub_8009528 is a NAKED transcription
  * in `src/graphics/actor_part11f.c`; sub_80096C0 likewise in
  * `src/graphics/actor_part11e.c` - none appended here since their real
  * ROM addresses don't sit adjacent to this file's own functions (they
- * come right after `sub_8009150` above and right before `sub_8009868`,
+ * come right after `sub_8009150` above and right before `CollidePlayerWithCrates`,
  * `actor_part11d.c`), per docs/workflow.md step 4's "needs its own new
  * .c file" case. */
 asm(".align 2, 0");

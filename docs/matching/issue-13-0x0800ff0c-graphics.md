@@ -42,7 +42,7 @@ overrides described below).
 
 `void *CreateCrate(u16 arg0, u16 arg1, u16 arg2, u16 arg3, u8 type)`
 
-1. Allocates a `0x64` (100)-byte object via `sub_8026EDC(0x64)`
+1. Allocates a `0x64` (100)-byte object via `OperatorNew(0x64)`
    (`self`), zero-initializes `self+0x59`, then calls
    `ResetCrate(self)` (already matched, game_loop22.c - clears the
    collision-response state/countdown/neighbor-list-pointer block).
@@ -88,19 +88,19 @@ overrides described below).
 7. **Second jump table** (index `type`, `0`-`0x12`) - see the table
    below.
 8. **Common tail**: clears `self+0x28` bits `0x10`/`0x20`, folds
-   `sub_800815C(self)`'s low nibble into `self+0x29`'s low nibble,
+   `GetSpriteAnimPaletteSlot(self)`'s low nibble into `self+0x29`'s low nibble,
    writes `self+0`/`+4` (position) from `arg1<<8`/`arg2<<8`. If the
    placement record confirms presence and `type` was `0xb` or `0xf`,
    checks placement-record flag `0x80` to force `type = 1`. If
    `type == 1` and `arg0 != 0xFFFF` and the placement record confirms
    presence, re-tags `self+0x2d = 0x1b` (27), reruns the
-   `sub_80087C0`/`sub_80087B4`/`sub_800872C` sprite/animation trio, and
+   `ResetSpriteFrameTimer`/`ResetSpriteFrameIndex`/`SetSpriteAnimDone` sprite/animation trio, and
    initializes `self+0x30` from the 28-byte-stride hitbox-record
    table's own `+0x16` count minus one; also folds `type`'s low bit
    into `self+0x4d` bit 0 (keeping bit 7). Writes `self+0x4e = type`
    unconditionally. If `type == 5` and the placement record confirms
    presence, calls `SolidifyOutlineCrate(self)` - see below. Finally registers
-   `self` via `sub_8009B70(*gCrateList, self)` and returns
+   `self` via `AddCrateToList(*gCrateList, self)` and returns
    `self`.
 
 ## Type-code table
@@ -122,7 +122,7 @@ overrides described below).
 | `0xc` | `SpawnBouncyWumpaCrate` | `0x19` (25) | `self+0x48 = -42`; table-1 `special` |
 | `0xd` | `sub_8021B00` | `6` | |
 | `0xe` | `SpawnTntCrate` | `0x11` (17) | |
-| `0xf` | `sub_8021AB8` | `7` | largest single case - see below; table-1 `special`; also a demotion source (step 3) |
+| `0xf` | `SpawnSlotCrate` | `7` | largest single case - see below; table-1 `special`; also a demotion source (step 3) |
 | `0x10` | `SpawnTimeCrate1` | `0xe` (14) | |
 | `0x11` | `SpawnTimeCrate2` | `0xf` (15) | |
 | `0x12` | `SpawnTimeCrate3` | `0x10` (16) | only case whose tag-write isn't reached via the shared jump-to-`0x2d`-write tail (falls straight through - already-optimal in the ROM's own codegen) |
@@ -130,7 +130,7 @@ overrides described below).
 `type == 0xf`'s case (`_0801028E` in the original disassembly, the
 largest of the 19) also: looks up a tile/graphics asset via
 `GetPaletteSlot(*gPaletteCache, byte)`, masks `self+0x48` down to its
-`0x38` bits, looks up `gStaticData_0816BB94[(self->0x48 & 0x38) >> 3]`
+`0x38` bits, looks up `gSlotCrateTimers[(self->0x48 & 0x38) >> 3]`
 for `self+0x4f`, writes `self+0x51` from the placement record's `[6]`
 byte, and folds three placement-record `+1` flag bits
 (`0x2`/`0x4`/`0x8`) into `self+0x50`.

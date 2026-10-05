@@ -2,7 +2,7 @@
 #include "text_popup.h"
 
 /* "Two-line text popup" spawners, ROM 0x0801EF0C-0x0801FDEC. Each builds
- * a sub_8009ED0 part, attaches a CreateEnemyCtrl popup header and fills the
+ * a CreateMovingSprite part, attaches a CreateEnemyCtrl popup header and fills the
  * part's collected bits from its level record; the tails differ. Built
  * with old_agbcc; see include/text_popup.h. */
 
@@ -16,7 +16,7 @@ extern u8 gSharkAnimMap[];
 extern u8 gElectricEelAnimMap[];
 extern void *gAudioContext;
 
-extern struct popup_part *sub_800A604(u16 arg0, u16 arg1, u16 arg2, u16 arg3);
+extern struct popup_part *CreateGroundSprite(u16 arg0, u16 arg1, u16 arg2, u16 arg3);
 extern void PlaySfx(void *bank, s32 sfxId, s32 volume);
 
 /* Inline so the lookup's result gets its own register copy, as the ROM
@@ -43,14 +43,14 @@ static inline void SetPartFlipX(struct popup_part *part, u8 value)
  * the level record's +4 word to the header through SetEnemyRangeX. */
 void sub_801EF0C(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    struct popup_part *part = sub_8009ED0(arg0, arg1, arg2, arg3);
+    struct popup_part *part = CreateMovingSprite(arg0, arg1, arg2, arg3);
     struct enemy_ctrl *hdr;
     struct level_record *rec;
     struct level_record *rec2;
 
     part->anim = POPUP_ANIM(0x9c);
-    part->frameNibble = sub_800815C(part);
-    sub_8026EDC(0x8c);
+    part->frameNibble = GetSpriteAnimPaletteSlot(part);
+    OperatorNew(0x8c);
     hdr = CreateEnemyCtrl();
     POPUP_ATTACH(hdr, part);
     hdr->kind = 0xd;
@@ -61,13 +61,13 @@ void sub_801EF0C(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     rec = LEVEL_RECORD(arg3);
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
     part->unk_28_5 = rec->flags >> 2 & 1;
-    sub_8008E94(gUnknown_030012F0, part);
+    AddToPartList(gUnknown_030012F0, part);
     SetEnemyAnimMap(hdr, gEnemyDefaultAnimMap);
     rec2 = LEVEL_RECORD(arg3);
     part->tag = 0;
-    sub_80087C0(part);
-    sub_80087B4(part);
-    sub_800872C(part, 0);
+    ResetSpriteFrameTimer(part);
+    ResetSpriteFrameIndex(part);
+    SetSpriteAnimDone(part, 0);
     SetEnemyState(hdr, 2);
     SetEnemyRangeX(hdr, rec2->unk_04);
 }
@@ -77,13 +77,13 @@ void sub_801EF0C(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
  * 100x50 box at the origin. */
 void SpawnVulture(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    struct popup_part *part = sub_8009ED0(arg0, arg1, arg2, arg3);
+    struct popup_part *part = CreateMovingSprite(arg0, arg1, arg2, arg3);
     struct enemy_ctrl *hdr;
     struct level_record *rec;
 
     part->anim = POPUP_ANIM(0x84);
-    part->frameNibble = sub_800815C(part);
-    sub_8026EDC(0x8c);
+    part->frameNibble = GetSpriteAnimPaletteSlot(part);
+    OperatorNew(0x8c);
     hdr = CreateEnemyCtrl();
     POPUP_ATTACH(hdr, part);
     hdr->kind = 0xb;
@@ -94,7 +94,7 @@ void SpawnVulture(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     rec = LEVEL_RECORD(arg3);
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
     part->unk_28_5 = rec->flags >> 2 & 1;
-    sub_8008E94(gUnknown_030012F0, part);
+    AddToPartList(gUnknown_030012F0, part);
     SetEnemyAnimMap(hdr, gEnemyDefaultAnimMap);
     SetEnemyState(hdr, 0x11);
     hdr->animMap = gVultureAnimMap;
@@ -136,7 +136,7 @@ void SpawnVenusFlytrap(u32 arg0, u32 arg1, u32 arg2, u32 arg3)
         "lsl r0, r0, #0x10\n\t"
         "lsr r0, r0, #0x10\n\t"
         "add r3, r5, #0\n\t"
-        "bl sub_8009ED0\n\t"
+        "bl CreateMovingSprite\n\t"
         "add r4, r0, #0\n\t"
         : "=r" (part), "=r" (idx)
         : "r" (raw0), "r" (raw1), "r" (raw2), "r" (raw3)
@@ -147,7 +147,7 @@ void SpawnVenusFlytrap(u32 arg0, u32 arg1, u32 arg2, u32 arg3)
     *(void **)((u8 *)part + 0x20) = (u8 *)p3 + 0x78;
 
     {
-        register s32 result asm("r0") = sub_800815C(part);
+        register s32 result asm("r0") = GetSpriteAnimPaletteSlot(part);
         register u8 *addr asm("r2") = (u8 *)part + 0x29;
         register s32 acc asm("r1");
         result &= 0xf;
@@ -157,7 +157,7 @@ void SpawnVenusFlytrap(u32 arg0, u32 arg1, u32 arg2, u32 arg3)
         *addr = acc;
     }
 
-    sub_8026EDC(0x8c);
+    OperatorNew(0x8c);
 
     hdr = CreateEnemyCtrl();
     table = hdr->vtable;
@@ -250,7 +250,7 @@ void SpawnVenusFlytrap(u32 arg0, u32 arg1, u32 arg2, u32 arg3)
     }
   }
 
-    sub_8008E94(gUnknown_030012F0, part);
+    AddToPartList(gUnknown_030012F0, part);
 
     {
         register void *val asm("r0") = gEnemyDefaultAnimMap;
@@ -263,9 +263,9 @@ void SpawnVenusFlytrap(u32 arg0, u32 arg1, u32 arg2, u32 arg3)
             *addr2d = tagVal2;
         }
 
-        sub_80087C0(part);
-        sub_80087B4(part);
-        sub_800872C(part, 0);
+        ResetSpriteFrameTimer(part);
+        ResetSpriteFrameIndex(part);
+        SetSpriteAnimDone(part, 0);
 
         {
             register s32 six asm("r0") = 6;
@@ -297,14 +297,14 @@ void SpawnVenusFlytrap(u32 arg0, u32 arg1, u32 arg2, u32 arg3)
  * level record's +4 word through SetEnemyRangeX. */
 void sub_801F2BC(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    struct popup_part *part = sub_8009ED0(arg0, arg1, arg2, arg3);
+    struct popup_part *part = CreateMovingSprite(arg0, arg1, arg2, arg3);
     struct enemy_ctrl *hdr;
     struct level_record *rec;
     struct level_record *rec2;
 
     part->anim = POPUP_ANIM(0xa8);
-    part->frameNibble = sub_800815C(part);
-    sub_8026EDC(0x8c);
+    part->frameNibble = GetSpriteAnimPaletteSlot(part);
+    OperatorNew(0x8c);
     hdr = CreateEnemyCtrl();
     POPUP_ATTACH(hdr, part);
     hdr->kind = 0xe;
@@ -315,7 +315,7 @@ void sub_801F2BC(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     rec = LEVEL_RECORD(arg3);
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
     part->unk_28_5 = rec->flags >> 2 & 1;
-    sub_8008E94(gUnknown_030012F0, part);
+    AddToPartList(gUnknown_030012F0, part);
     SetEnemyAnimMap(hdr, gEnemyDefaultAnimMap);
     rec2 = LEVEL_RECORD(arg3);
     SetEnemyState(hdr, 2);
@@ -327,15 +327,15 @@ void sub_801F2BC(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
  * +0x4C is +0xC plus a quarter of that midpoint. */
 void SpawnBlowgunTribesman(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    struct popup_part *part = sub_8009ED0(arg0, arg1, arg2, arg3);
+    struct popup_part *part = CreateMovingSprite(arg0, arg1, arg2, arg3);
     struct enemy_ctrl *hdr;
     struct level_record *rec;
     struct level_record *rec2;
     s32 mid;
 
     part->anim = POPUP_ANIM(0x90);
-    part->frameNibble = sub_800815C(part);
-    sub_8026EDC(0x8c);
+    part->frameNibble = GetSpriteAnimPaletteSlot(part);
+    OperatorNew(0x8c);
     hdr = CreateEnemyCtrl();
     POPUP_ATTACH(hdr, part);
     hdr->kind = 0xc;
@@ -346,7 +346,7 @@ void SpawnBlowgunTribesman(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     rec = LEVEL_RECORD(arg3);
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
     part->unk_28_5 = rec->flags >> 2 & 1;
-    sub_8008E94(gUnknown_030012F0, part);
+    AddToPartList(gUnknown_030012F0, part);
     SetEnemyAnimMap(hdr, gEnemyDefaultAnimMap);
     rec2 = GetLevelRecord(arg3);
     SetEnemyAnimMap(hdr, gBlowgunTribesmanAnimMap);
@@ -361,14 +361,14 @@ void SpawnBlowgunTribesman(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
  * +0xC/+8/+0x10 words into it before SetEnemyRangeX gets the +4 word. */
 void SpawnPenguin(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    struct popup_part *part = sub_8009ED0(arg0, arg1, arg2, arg3);
+    struct popup_part *part = CreateMovingSprite(arg0, arg1, arg2, arg3);
     struct enemy_ctrl *hdr;
     struct level_record *rec;
     struct level_record *rec2;
 
     part->anim = POPUP_ANIM(0xb4);
-    part->frameNibble = sub_800815C(part);
-    sub_8026EDC(0x8c);
+    part->frameNibble = GetSpriteAnimPaletteSlot(part);
+    OperatorNew(0x8c);
     hdr = CreateEnemyCtrl();
     POPUP_ATTACH(hdr, part);
     hdr->kind = 0xf;
@@ -379,31 +379,31 @@ void SpawnPenguin(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     rec = LEVEL_RECORD(arg3);
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
     part->unk_28_5 = rec->flags >> 2 & 1;
-    sub_8008E94(gUnknown_030012F0, part);
+    AddToPartList(gUnknown_030012F0, part);
     SetEnemyAnimMap(hdr, gEnemyDefaultAnimMap);
     rec2 = LEVEL_RECORD(arg3);
     part->tag = 0;
-    sub_80087C0(part);
-    sub_80087B4(part);
-    sub_800872C(part, 0);
+    ResetSpriteFrameTimer(part);
+    ResetSpriteFrameIndex(part);
+    SetSpriteAnimDone(part, 0);
     SetEnemyAnimMap(hdr, gPenguinAnimMap);
     SetPopupSpan(hdr, rec2->unk_0C, rec2->unk_08, rec2->unk_10);
     SetEnemyRangeX(hdr, rec2->unk_04);
     SetEnemyState(hdr, 0xd);
 }
 
-/* Popup spawner, tag 0x11, built with sub_800A604 instead of
- * sub_8009ED0. Resets the part's animation (tag 0 plus the OAM trio)
+/* Popup spawner, tag 0x11, built with CreateGroundSprite instead of
+ * CreateMovingSprite. Resets the part's animation (tag 0 plus the OAM trio)
  * before attaching it, sets flag bit 4, and plays sound 0x27. */
 void SpawnSeal(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    struct popup_part *part = sub_800A604(arg0, arg1, arg2, arg3);
+    struct popup_part *part = CreateGroundSprite(arg0, arg1, arg2, arg3);
     struct enemy_ctrl *hdr;
     struct level_record *rec;
 
     part->anim = POPUP_ANIM(0xcc);
-    part->frameNibble = sub_800815C(part);
-    sub_8026EDC(0x8c);
+    part->frameNibble = GetSpriteAnimPaletteSlot(part);
+    OperatorNew(0x8c);
     hdr = CreateEnemyCtrl();
     POPUP_ATTACH(hdr, part);
     hdr->kind = 0x11;
@@ -416,7 +416,7 @@ void SpawnSeal(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
     part->unk_28_5 = rec->flags >> 2 & 1;
     part->base.flags |= 0x10;
-    sub_8008E94(gUnknown_030012F0, part);
+    AddToPartList(gUnknown_030012F0, part);
     SetEnemyAnimMap(hdr, gEnemyDefaultAnimMap);
     SetEnemyState(hdr, 5);
     PlaySfx(gAudioContext, 0x27, 0x100);
@@ -427,14 +427,14 @@ void SpawnSeal(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
  * header via SetEnemyRangeX. */
 void SpawnPolarBear(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    struct popup_part *part = sub_8009ED0(arg0, arg1, arg2, arg3);
+    struct popup_part *part = CreateMovingSprite(arg0, arg1, arg2, arg3);
     struct enemy_ctrl *hdr;
     struct level_record *rec;
     struct level_record *rec2;
 
     part->anim = POPUP_ANIM(0xc0);
-    part->frameNibble = sub_800815C(part);
-    sub_8026EDC(0x8c);
+    part->frameNibble = GetSpriteAnimPaletteSlot(part);
+    OperatorNew(0x8c);
     hdr = CreateEnemyCtrl();
     POPUP_ATTACH(hdr, part);
     hdr->kind = 0x10;
@@ -445,7 +445,7 @@ void SpawnPolarBear(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     rec = LEVEL_RECORD(arg3);
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
     part->unk_28_5 = rec->flags >> 2 & 1;
-    sub_8008E94(gUnknown_030012F0, part);
+    AddToPartList(gUnknown_030012F0, part);
     SetEnemyAnimMap(hdr, gEnemyDefaultAnimMap);
     rec2 = LEVEL_RECORD(arg3);
     part->base.field_0A = 6;
@@ -459,14 +459,14 @@ void SpawnPolarBear(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
  * the header before SetEnemyState(hdr, 14). */
 void SpawnPufferfish(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    struct popup_part *part = sub_8009ED0(arg0, arg1, arg2, arg3);
+    struct popup_part *part = CreateMovingSprite(arg0, arg1, arg2, arg3);
     struct enemy_ctrl *hdr;
     struct level_record *rec;
     struct level_record *rec2;
 
     part->anim = POPUP_ANIM(0x3c);
-    part->frameNibble = sub_800815C(part);
-    sub_8026EDC(0x8c);
+    part->frameNibble = GetSpriteAnimPaletteSlot(part);
+    OperatorNew(0x8c);
     hdr = CreateEnemyCtrl();
     POPUP_ATTACH(hdr, part);
     hdr->kind = 5;
@@ -477,7 +477,7 @@ void SpawnPufferfish(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     rec = LEVEL_RECORD(arg3);
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
     part->unk_28_5 = rec->flags >> 2 & 1;
-    sub_8008E94(gUnknown_030012F0, part);
+    AddToPartList(gUnknown_030012F0, part);
     SetEnemyAnimMap(hdr, gEnemyDefaultAnimMap);
     rec2 = LEVEL_RECORD(arg3);
     SetPartAnim(part, 2);
@@ -493,14 +493,14 @@ void SpawnPufferfish(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
  * +4..+0x10 words straight to SetEnemyRangeX/SetEnemyRangeYSpeed. */
 void SpawnShark(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    struct popup_part *part = sub_8009ED0(arg0, arg1, arg2, arg3);
+    struct popup_part *part = CreateMovingSprite(arg0, arg1, arg2, arg3);
     struct enemy_ctrl *hdr;
     struct level_record *rec;
     struct level_record *rec2;
 
     part->anim = POPUP_ANIM(0x30);
-    part->frameNibble = sub_800815C(part);
-    sub_8026EDC(0x8c);
+    part->frameNibble = GetSpriteAnimPaletteSlot(part);
+    OperatorNew(0x8c);
     hdr = CreateEnemyCtrl();
     POPUP_ATTACH(hdr, part);
     hdr->kind = 4;
@@ -511,7 +511,7 @@ void SpawnShark(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     rec = LEVEL_RECORD(arg3);
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
     part->unk_28_5 = rec->flags >> 2 & 1;
-    sub_8008E94(gUnknown_030012F0, part);
+    AddToPartList(gUnknown_030012F0, part);
     SetEnemyAnimMap(hdr, gEnemyDefaultAnimMap);
     rec2 = LEVEL_RECORD(arg3);
     part->base.field_0A = 6;
@@ -526,13 +526,13 @@ void SpawnShark(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
  * to 6 before SetEnemyState(hdr, 1). */
 void SpawnMorayEel(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    struct popup_part *part = sub_8009ED0(arg0, arg1, arg2, arg3);
+    struct popup_part *part = CreateMovingSprite(arg0, arg1, arg2, arg3);
     struct enemy_ctrl *hdr;
     struct level_record *rec;
 
     part->anim = POPUP_ANIM(0x24);
-    part->frameNibble = sub_800815C(part);
-    sub_8026EDC(0x8c);
+    part->frameNibble = GetSpriteAnimPaletteSlot(part);
+    OperatorNew(0x8c);
     hdr = CreateEnemyCtrl();
     POPUP_ATTACH(hdr, part);
     hdr->kind = 3;
@@ -543,7 +543,7 @@ void SpawnMorayEel(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     rec = LEVEL_RECORD(arg3);
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
     part->unk_28_5 = rec->flags >> 2 & 1;
-    sub_8008E94(gUnknown_030012F0, part);
+    AddToPartList(gUnknown_030012F0, part);
     SetEnemyAnimMap(hdr, gEnemyDefaultAnimMap);
     SetPartAnim(part, 0);
     {
@@ -560,14 +560,14 @@ void SpawnMorayEel(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
  * SetEnemyRangeX before SetEnemyState(hdr, 13). */
 void SpawnElectricEel(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    struct popup_part *part = sub_8009ED0(arg0, arg1, arg2, arg3);
+    struct popup_part *part = CreateMovingSprite(arg0, arg1, arg2, arg3);
     struct enemy_ctrl *hdr;
     struct level_record *rec;
     struct level_record *rec2;
 
     part->anim = POPUP_ANIM(0x60);
-    part->frameNibble = sub_800815C(part);
-    sub_8026EDC(0x8c);
+    part->frameNibble = GetSpriteAnimPaletteSlot(part);
+    OperatorNew(0x8c);
     hdr = CreateEnemyCtrl();
     POPUP_ATTACH(hdr, part);
     hdr->kind = 8;
@@ -578,7 +578,7 @@ void SpawnElectricEel(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     rec = LEVEL_RECORD(arg3);
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
     part->unk_28_5 = rec->flags >> 2 & 1;
-    sub_8008E94(gUnknown_030012F0, part);
+    AddToPartList(gUnknown_030012F0, part);
     SetEnemyAnimMap(hdr, gEnemyDefaultAnimMap);
     rec2 = LEVEL_RECORD(arg3);
     part->base.field_0A = 3;

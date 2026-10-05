@@ -65,7 +65,7 @@ pointer as an explicit argument) matters in two places:
 
 ### 3. The AABB builders return their box by value
 
-`sub_8007C30`/`sub_8007CF8`/`sub_8007B98` are declared elsewhere as
+`sub_8007C30`/`sub_8007CF8`/`GetSpriteHitbox` are declared elsewhere as
 `void *f(void *dest, void *part)`. They are really
 `struct box f(struct part *)`: gcc passes the hidden result pointer in r0
 and returns it. Declaring them this way reproduces the ROM's argument
@@ -114,7 +114,7 @@ level, signals `RequestRoomExit` (the "entity ready" barrier in
 `docs/rom_map.md`). `SetDingodileState` is its "enter state N" routine: it
 calls the object's slot +0x20 method and then runs the state's
 animation, spawns and sounds. `sub_8019EBC`, `sub_801A03C` and
-`sub_801A584` spawn parts through `sub_8009ED0`. `sub_8019EBC` reads the
+`sub_801A584` spawn parts through `CreateMovingSprite`. `sub_8019EBC` reads the
 level's "collected" bits (`gEntityFlags->info`) into the new part's
 `+0x28` flags.
 

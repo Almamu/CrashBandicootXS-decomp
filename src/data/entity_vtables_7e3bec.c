@@ -32,49 +32,49 @@ extern void sub_8007110();
 extern void sub_8007114();
 extern void sub_800722C();
 extern void sub_80073BC();
-extern void sub_8007DBC();
-extern void sub_8007F78();
-extern void sub_8007FD8();
-extern void sub_8008304();
-extern void sub_8008328();
+extern void CheckSpritePickup();
+extern void IsSpriteObjOnScreen();
+extern void SpriteObjOverlapsRect();
+extern void IsSpriteObjInsideRect();
+extern void IsSpriteObjNearCamera();
 extern void sub_800834C();
-extern void sub_8008350();
-extern void sub_8008364();
-extern void sub_8008394();
-extern void sub_8008408();
-extern void sub_8008480();
-extern void sub_8008484();
-extern void sub_80088E8();
-extern void sub_80088F0();
-extern void sub_8009CA0();
-extern void sub_8009DF4();
-extern void sub_8009ECC();
-extern void sub_8009F1C();
-extern void sub_8009FB0();
-extern void sub_8009FD4();
-extern void sub_800A050();
-extern void sub_800A0FC();
-extern void sub_800A528();
-extern void sub_800A5F4();
-extern void sub_800A600();
-extern void sub_800A650();
-extern void sub_800A884();
-extern void sub_800AB9C();
+extern void DrawSpriteObj();
+extern void UpdateSpriteObj();
+extern void GetSpriteObjHitbox();
+extern void GetSpriteObjPriority();
+extern void GetSpriteObjClassId();
+extern void DestroySpriteObj();
+extern void GetSpritePriority();
+extern void DestroyUiSpriteObj();
+extern void CheckPlayerContact();
+extern void ApplySpriteVelocity();
+extern void GetMovingSpriteClassId();
+extern void DestroyMovingSprite();
+extern void UpdateMovingSprite();
+extern void HitMovingSprite();
+extern void CollideMovingSprite();
+extern void CollideGroundSprite();
+extern void UpdateGroundSprite();
+extern void DrawGroundSprite();
+extern void GetGroundSpriteClassId();
+extern void DestroyGroundSprite();
+extern void CollidePlayer();
+extern void CollidePlayerWithObjects();
 extern void PlayerHandleEvent();
 extern void DrawPlayer();
-extern void sub_800B270();
-extern void sub_800B360();
+extern void ApplyPlayerVelocity();
+extern void UpdatePlayer();
 extern void DestroyPlayer();
-extern void sub_800B698();
-extern void sub_800B6A0();
-extern void sub_800B6D0();
-extern void sub_800B704();
-extern void sub_800B734();
-extern void sub_800B7B0();
-extern void sub_800B838();
-extern void sub_800B86C();
+extern void SetCtrlMode();
+extern void SetCtrlTargetMotionY();
+extern void StartCtrlTargetMotionY();
+extern void StartCtrlTargetMotionYFromSet();
+extern void SetCtrlTargetMotionX();
+extern void StartCtrlTargetMotionX();
+extern void StartCtrlTargetMotionXFromSet();
+extern void SetCtrlTargetAnim();
 extern void sub_800B8A4();
-extern void sub_800B8A8();
+extern void DestroyCtrl();
 extern void UpdateEnemyCtrl();
 extern void HitEnemy();
 extern void AttachEnemyCtrl();
@@ -99,22 +99,22 @@ extern void sub_8011330();
 extern void CheckWumpaPickup();
 extern void UpdateWumpa();
 extern void DrawWumpa();
-extern void sub_80119D4();
+extern void GetWumpaClassId();
 extern void DestroyWumpa();
-extern void sub_8011A1C();
-extern void sub_8011A8C();
+extern void CollideWumpa();
+extern void UpdateStopwatch();
 extern void DestroyStopwatch();
-extern void sub_8011BD4();
-extern void sub_8012420();
-extern void sub_8015350();
-extern void sub_80155A8();
-extern void sub_80157C4();
-extern void sub_8015878();
-extern void sub_8016128();
-extern void sub_8016288();
-extern void sub_8017218();
-extern void sub_80174D8();
-extern void sub_8017650();
+extern void ActionCtrlHandleEvent();
+extern void UpdateActionCtrl();
+extern void SetActionCtrlMode();
+extern void AttachActionCtrl();
+extern void ActionCtrlSetTargetAnim();
+extern void DestroyActionCtrl();
+extern void PlayerCtrlHandleEvent();
+extern void UpdatePlayerCtrl();
+extern void AttachPlayerCtrl();
+extern void DestroyPlayerCtrl();
+extern void UpdateInputCtrl();
 extern void sub_80179D4();
 extern void AttachInputCtrl();
 extern void DestroyInputCtrl();
@@ -333,7 +333,7 @@ extern void DestroyHovercraftSideGun();
 extern void DestroyHovercraftCannonFlash();
 
 /* Used by actor_aabb_setup.c, actor_part124.c, actor_part39.c,
- * actor_part6.c (sub_8008484), actor_part7.c, graphics.c (nullsub_12,
+ * actor_part6.c (DestroySpriteObj), actor_part7.c, graphics.c (nullsub_12,
  * sub_8007230, sub_80073BC). */
 const struct vtable_slot gStaticData_087E3BEC[11] = {
     VTABLE_SLOT(NULL),
@@ -349,113 +349,113 @@ const struct vtable_slot gStaticData_087E3BEC[11] = {
     VTABLE_SLOT(sub_80073BC),
 };
 
-/* Used by actor_part6.c (sub_8008408, sub_8008484), actor_part7.c. */
-const struct vtable_slot gStaticData_087E3C44[13] = {
+/* Used by actor_part6.c (GetSpriteObjPriority, DestroySpriteObj), actor_part7.c. */
+const struct vtable_slot gSpriteObjVtable[13] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_8007DBC),
-    VTABLE_SLOT(sub_8008394),
-    VTABLE_SLOT(sub_8008364),
-    VTABLE_SLOT(sub_8008350),
-    VTABLE_SLOT(sub_8007F78),
-    VTABLE_SLOT(sub_8007FD8),
-    VTABLE_SLOT(sub_8008328),
-    VTABLE_SLOT(sub_8008304),
-    VTABLE_SLOT(sub_8008480),
-    VTABLE_SLOT(sub_8008484),
-    VTABLE_SLOT(sub_8008408),
+    VTABLE_SLOT(CheckSpritePickup),
+    VTABLE_SLOT(GetSpriteObjHitbox),
+    VTABLE_SLOT(UpdateSpriteObj),
+    VTABLE_SLOT(DrawSpriteObj),
+    VTABLE_SLOT(IsSpriteObjOnScreen),
+    VTABLE_SLOT(SpriteObjOverlapsRect),
+    VTABLE_SLOT(IsSpriteObjNearCamera),
+    VTABLE_SLOT(IsSpriteObjInsideRect),
+    VTABLE_SLOT(GetSpriteObjClassId),
+    VTABLE_SLOT(DestroySpriteObj),
+    VTABLE_SLOT(GetSpriteObjPriority),
     VTABLE_SLOT(sub_800834C),
 };
 
-/* Used by actor_part7.c (sub_80088F0). */
-const struct vtable_slot gStaticData_087E3CAC[13] = {
+/* Used by actor_part7.c (DestroyUiSpriteObj). */
+const struct vtable_slot gUiSpriteObjVtable[13] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_8007DBC),
-    VTABLE_SLOT(sub_8008394),
-    VTABLE_SLOT(sub_8008364),
-    VTABLE_SLOT(sub_8008350),
-    VTABLE_SLOT(sub_8007F78),
-    VTABLE_SLOT(sub_8007FD8),
-    VTABLE_SLOT(sub_8008328),
-    VTABLE_SLOT(sub_8008304),
-    VTABLE_SLOT(sub_8008480),
-    VTABLE_SLOT(sub_80088F0),
-    VTABLE_SLOT(sub_80088E8),
+    VTABLE_SLOT(CheckSpritePickup),
+    VTABLE_SLOT(GetSpriteObjHitbox),
+    VTABLE_SLOT(UpdateSpriteObj),
+    VTABLE_SLOT(DrawSpriteObj),
+    VTABLE_SLOT(IsSpriteObjOnScreen),
+    VTABLE_SLOT(SpriteObjOverlapsRect),
+    VTABLE_SLOT(IsSpriteObjNearCamera),
+    VTABLE_SLOT(IsSpriteObjInsideRect),
+    VTABLE_SLOT(GetSpriteObjClassId),
+    VTABLE_SLOT(DestroyUiSpriteObj),
+    VTABLE_SLOT(GetSpritePriority),
     VTABLE_SLOT(sub_800834C),
 };
 
-/* Used by actor_part14.c, actor_part8.c (sub_8009ECC, sub_8009F1C,
- * sub_8009F50). */
-const struct vtable_slot gStaticData_087E3D14[15] = {
+/* Used by actor_part14.c, actor_part8.c (GetMovingSpriteClassId, DestroyMovingSprite,
+ * ResetMovingSprite). */
+const struct vtable_slot gMovingSpriteVtable[15] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_800A050),
-    VTABLE_SLOT(sub_8008394),
-    VTABLE_SLOT(sub_8009FB0),
-    VTABLE_SLOT(sub_8008350),
-    VTABLE_SLOT(sub_8007F78),
-    VTABLE_SLOT(sub_8007FD8),
-    VTABLE_SLOT(sub_8008328),
-    VTABLE_SLOT(sub_8008304),
-    VTABLE_SLOT(sub_8009ECC),
-    VTABLE_SLOT(sub_8009F1C),
-    VTABLE_SLOT(sub_8008408),
-    VTABLE_SLOT(sub_8009DF4),
-    VTABLE_SLOT(sub_8009FD4),
-    VTABLE_SLOT(sub_8009CA0),
+    VTABLE_SLOT(CollideMovingSprite),
+    VTABLE_SLOT(GetSpriteObjHitbox),
+    VTABLE_SLOT(UpdateMovingSprite),
+    VTABLE_SLOT(DrawSpriteObj),
+    VTABLE_SLOT(IsSpriteObjOnScreen),
+    VTABLE_SLOT(SpriteObjOverlapsRect),
+    VTABLE_SLOT(IsSpriteObjNearCamera),
+    VTABLE_SLOT(IsSpriteObjInsideRect),
+    VTABLE_SLOT(GetMovingSpriteClassId),
+    VTABLE_SLOT(DestroyMovingSprite),
+    VTABLE_SLOT(GetSpriteObjPriority),
+    VTABLE_SLOT(ApplySpriteVelocity),
+    VTABLE_SLOT(HitMovingSprite),
+    VTABLE_SLOT(CheckPlayerContact),
 };
 
-/* Used by actor_part14.c (sub_800A600, sub_800A650, sub_800A664). */
-const struct vtable_slot gStaticData_087E3D8C[15] = {
+/* Used by actor_part14.c (GetGroundSpriteClassId, DestroyGroundSprite, ResetGroundSprite). */
+const struct vtable_slot gGroundSpriteVtable[15] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_800A0FC),
-    VTABLE_SLOT(sub_8008394),
-    VTABLE_SLOT(sub_800A528),
-    VTABLE_SLOT(sub_800A5F4),
-    VTABLE_SLOT(sub_8007F78),
-    VTABLE_SLOT(sub_8007FD8),
-    VTABLE_SLOT(sub_8008328),
-    VTABLE_SLOT(sub_8008304),
-    VTABLE_SLOT(sub_800A600),
-    VTABLE_SLOT(sub_800A650),
-    VTABLE_SLOT(sub_8008408),
-    VTABLE_SLOT(sub_8009DF4),
-    VTABLE_SLOT(sub_8009FD4),
-    VTABLE_SLOT(sub_8009CA0),
+    VTABLE_SLOT(CollideGroundSprite),
+    VTABLE_SLOT(GetSpriteObjHitbox),
+    VTABLE_SLOT(UpdateGroundSprite),
+    VTABLE_SLOT(DrawGroundSprite),
+    VTABLE_SLOT(IsSpriteObjOnScreen),
+    VTABLE_SLOT(SpriteObjOverlapsRect),
+    VTABLE_SLOT(IsSpriteObjNearCamera),
+    VTABLE_SLOT(IsSpriteObjInsideRect),
+    VTABLE_SLOT(GetGroundSpriteClassId),
+    VTABLE_SLOT(DestroyGroundSprite),
+    VTABLE_SLOT(GetSpriteObjPriority),
+    VTABLE_SLOT(ApplySpriteVelocity),
+    VTABLE_SLOT(HitMovingSprite),
+    VTABLE_SLOT(CheckPlayerContact),
 };
 
 /* Used by actor_part15.c, actor_part77.c. */
 const struct vtable_slot gPlayerVtable[15] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_800A884),
-    VTABLE_SLOT(sub_8008394),
-    VTABLE_SLOT(sub_800B360),
+    VTABLE_SLOT(CollidePlayer),
+    VTABLE_SLOT(GetSpriteObjHitbox),
+    VTABLE_SLOT(UpdatePlayer),
     VTABLE_SLOT(DrawPlayer),
-    VTABLE_SLOT(sub_8007F78),
-    VTABLE_SLOT(sub_8007FD8),
-    VTABLE_SLOT(sub_8008328),
-    VTABLE_SLOT(sub_8008304),
-    VTABLE_SLOT(sub_800A600),
+    VTABLE_SLOT(IsSpriteObjOnScreen),
+    VTABLE_SLOT(SpriteObjOverlapsRect),
+    VTABLE_SLOT(IsSpriteObjNearCamera),
+    VTABLE_SLOT(IsSpriteObjInsideRect),
+    VTABLE_SLOT(GetGroundSpriteClassId),
     VTABLE_SLOT(DestroyPlayer),
-    VTABLE_SLOT(sub_8008408),
-    VTABLE_SLOT(sub_800B270),
+    VTABLE_SLOT(GetSpriteObjPriority),
+    VTABLE_SLOT(ApplyPlayerVelocity),
     VTABLE_SLOT(PlayerHandleEvent),
-    VTABLE_SLOT(sub_800AB9C),
+    VTABLE_SLOT(CollidePlayerWithObjects),
 };
 
 /* Used by actor_part124.c, actor_part17.c, actor_part27.c, actor_part57.c. */
-const struct vtable_slot gStaticData_087E3E7C[13] = {
+const struct vtable_slot gCtrlVtable[13] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(nullsub_9),
     VTABLE_SLOT(nullsub_13),
     VTABLE_SLOT(sub_800B8A4),
-    VTABLE_SLOT(sub_800B698),
-    VTABLE_SLOT(sub_800B7B0),
-    VTABLE_SLOT(sub_800B6D0),
-    VTABLE_SLOT(sub_800B734),
-    VTABLE_SLOT(sub_800B6A0),
-    VTABLE_SLOT(sub_800B8A8),
-    VTABLE_SLOT(sub_800B86C),
-    VTABLE_SLOT(sub_800B838),
-    VTABLE_SLOT(sub_800B704),
+    VTABLE_SLOT(SetCtrlMode),
+    VTABLE_SLOT(StartCtrlTargetMotionX),
+    VTABLE_SLOT(StartCtrlTargetMotionY),
+    VTABLE_SLOT(SetCtrlTargetMotionX),
+    VTABLE_SLOT(SetCtrlTargetMotionY),
+    VTABLE_SLOT(DestroyCtrl),
+    VTABLE_SLOT(SetCtrlTargetAnim),
+    VTABLE_SLOT(StartCtrlTargetMotionXFromSet),
+    VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
 };
 
 /* Used by actor_part112.c, actor_part124.c. */
@@ -464,15 +464,15 @@ const struct vtable_slot gEnemyCtrlVtable[13] = {
     VTABLE_SLOT(UpdateEnemyCtrl),
     VTABLE_SLOT(HitEnemy),
     VTABLE_SLOT(AttachEnemyCtrl),
-    VTABLE_SLOT(sub_800B698),
-    VTABLE_SLOT(sub_800B7B0),
-    VTABLE_SLOT(sub_800B6D0),
-    VTABLE_SLOT(sub_800B734),
-    VTABLE_SLOT(sub_800B6A0),
+    VTABLE_SLOT(SetCtrlMode),
+    VTABLE_SLOT(StartCtrlTargetMotionX),
+    VTABLE_SLOT(StartCtrlTargetMotionY),
+    VTABLE_SLOT(SetCtrlTargetMotionX),
+    VTABLE_SLOT(SetCtrlTargetMotionY),
     VTABLE_SLOT(DestroyEnemyCtrl),
-    VTABLE_SLOT(sub_800B86C),
-    VTABLE_SLOT(sub_800B838),
-    VTABLE_SLOT(sub_800B704),
+    VTABLE_SLOT(SetCtrlTargetAnim),
+    VTABLE_SLOT(StartCtrlTargetMotionXFromSet),
+    VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
 };
 
 /* Used by actor_part124.c. */
@@ -496,15 +496,15 @@ const struct vtable_slot gKnockedEnemyCtrlVtable[13] = {
     VTABLE_SLOT(UpdateKnockedEnemyCtrl),
     VTABLE_SLOT(nullsub_13),
     VTABLE_SLOT(sub_800B8A4),
-    VTABLE_SLOT(sub_800B698),
-    VTABLE_SLOT(sub_800B7B0),
-    VTABLE_SLOT(sub_800B6D0),
-    VTABLE_SLOT(sub_800B734),
-    VTABLE_SLOT(sub_800B6A0),
+    VTABLE_SLOT(SetCtrlMode),
+    VTABLE_SLOT(StartCtrlTargetMotionX),
+    VTABLE_SLOT(StartCtrlTargetMotionY),
+    VTABLE_SLOT(SetCtrlTargetMotionX),
+    VTABLE_SLOT(SetCtrlTargetMotionY),
     VTABLE_SLOT(DestroyKnockedEnemyCtrl),
-    VTABLE_SLOT(sub_800B86C),
-    VTABLE_SLOT(sub_800B838),
-    VTABLE_SLOT(sub_800B704),
+    VTABLE_SLOT(SetCtrlTargetAnim),
+    VTABLE_SLOT(StartCtrlTargetMotionXFromSet),
+    VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
 };
 
 /* Used by actor_part123.c. */
@@ -513,31 +513,31 @@ const struct vtable_slot gStaticData_087E400C[13] = {
     VTABLE_SLOT(sub_800CBF4),
     VTABLE_SLOT(nullsub_15),
     VTABLE_SLOT(sub_800B8A4),
-    VTABLE_SLOT(sub_800B698),
-    VTABLE_SLOT(sub_800B7B0),
-    VTABLE_SLOT(sub_800B6D0),
-    VTABLE_SLOT(sub_800B734),
-    VTABLE_SLOT(sub_800B6A0),
+    VTABLE_SLOT(SetCtrlMode),
+    VTABLE_SLOT(StartCtrlTargetMotionX),
+    VTABLE_SLOT(StartCtrlTargetMotionY),
+    VTABLE_SLOT(SetCtrlTargetMotionX),
+    VTABLE_SLOT(SetCtrlTargetMotionY),
     VTABLE_SLOT(sub_800CCCC),
-    VTABLE_SLOT(sub_800B86C),
-    VTABLE_SLOT(sub_800B838),
-    VTABLE_SLOT(sub_800B704),
+    VTABLE_SLOT(SetCtrlTargetAnim),
+    VTABLE_SLOT(StartCtrlTargetMotionXFromSet),
+    VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
 };
 
 /* Used by game_loop31.c (DestroyCrate), game_loop36.c (CreateCrate). */
 const struct vtable_slot gCrateVtable[13] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_8007DBC),
-    VTABLE_SLOT(sub_8008394),
+    VTABLE_SLOT(CheckSpritePickup),
+    VTABLE_SLOT(GetSpriteObjHitbox),
     VTABLE_SLOT(UpdateCrate),
     VTABLE_SLOT(DrawCrate),
-    VTABLE_SLOT(sub_8007F78),
-    VTABLE_SLOT(sub_8007FD8),
-    VTABLE_SLOT(sub_8008328),
+    VTABLE_SLOT(IsSpriteObjOnScreen),
+    VTABLE_SLOT(SpriteObjOverlapsRect),
+    VTABLE_SLOT(IsSpriteObjNearCamera),
     VTABLE_SLOT(sub_8010674),
     VTABLE_SLOT(GetCrateClassId),
     VTABLE_SLOT(DestroyCrate),
-    VTABLE_SLOT(sub_8008408),
+    VTABLE_SLOT(GetSpriteObjPriority),
     VTABLE_SLOT(sub_800834C),
 };
 
@@ -545,105 +545,105 @@ const struct vtable_slot gCrateVtable[13] = {
 const struct vtable_slot gExtraLifeVtable[14] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(sub_8011330),
-    VTABLE_SLOT(sub_8008394),
+    VTABLE_SLOT(GetSpriteObjHitbox),
     VTABLE_SLOT(UpdateExtraLife),
     VTABLE_SLOT(DrawExtraLife),
-    VTABLE_SLOT(sub_8007F78),
-    VTABLE_SLOT(sub_8007FD8),
-    VTABLE_SLOT(sub_8008328),
-    VTABLE_SLOT(sub_8008304),
+    VTABLE_SLOT(IsSpriteObjOnScreen),
+    VTABLE_SLOT(SpriteObjOverlapsRect),
+    VTABLE_SLOT(IsSpriteObjNearCamera),
+    VTABLE_SLOT(IsSpriteObjInsideRect),
     VTABLE_SLOT(sub_80112F0),
     VTABLE_SLOT(DestroyExtraLife),
-    VTABLE_SLOT(sub_8008408),
+    VTABLE_SLOT(GetSpriteObjPriority),
     VTABLE_SLOT(sub_800834C),
     VTABLE_SLOT(CheckExtraLifePickup),
 };
 
-/* Used by actor_part39.c (DestroyWumpa, sub_80119EC), game_loop53.c
+/* Used by actor_part39.c (DestroyWumpa, ResetWumpaPickup), game_loop53.c
  * (UpdateWumpa). */
 const struct vtable_slot gWumpaVtable[14] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_8011A1C),
-    VTABLE_SLOT(sub_8008394),
+    VTABLE_SLOT(CollideWumpa),
+    VTABLE_SLOT(GetSpriteObjHitbox),
     VTABLE_SLOT(UpdateWumpa),
     VTABLE_SLOT(DrawWumpa),
-    VTABLE_SLOT(sub_8007F78),
-    VTABLE_SLOT(sub_8007FD8),
-    VTABLE_SLOT(sub_8008328),
-    VTABLE_SLOT(sub_8008304),
-    VTABLE_SLOT(sub_80119D4),
+    VTABLE_SLOT(IsSpriteObjOnScreen),
+    VTABLE_SLOT(SpriteObjOverlapsRect),
+    VTABLE_SLOT(IsSpriteObjNearCamera),
+    VTABLE_SLOT(IsSpriteObjInsideRect),
+    VTABLE_SLOT(GetWumpaClassId),
     VTABLE_SLOT(DestroyWumpa),
-    VTABLE_SLOT(sub_8008408),
+    VTABLE_SLOT(GetSpriteObjPriority),
     VTABLE_SLOT(sub_800834C),
     VTABLE_SLOT(CheckWumpaPickup),
 };
 
-/* Used by actor_part39.c (sub_8011A8C, DestroyStopwatch). */
+/* Used by actor_part39.c (UpdateStopwatch, DestroyStopwatch). */
 const struct vtable_slot gStopwatchVtable[13] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_8007DBC),
-    VTABLE_SLOT(sub_8008394),
-    VTABLE_SLOT(sub_8011A8C),
-    VTABLE_SLOT(sub_8008350),
-    VTABLE_SLOT(sub_8007F78),
-    VTABLE_SLOT(sub_8007FD8),
-    VTABLE_SLOT(sub_8008328),
-    VTABLE_SLOT(sub_8008304),
-    VTABLE_SLOT(sub_8008480),
+    VTABLE_SLOT(CheckSpritePickup),
+    VTABLE_SLOT(GetSpriteObjHitbox),
+    VTABLE_SLOT(UpdateStopwatch),
+    VTABLE_SLOT(DrawSpriteObj),
+    VTABLE_SLOT(IsSpriteObjOnScreen),
+    VTABLE_SLOT(SpriteObjOverlapsRect),
+    VTABLE_SLOT(IsSpriteObjNearCamera),
+    VTABLE_SLOT(IsSpriteObjInsideRect),
+    VTABLE_SLOT(GetSpriteObjClassId),
     VTABLE_SLOT(DestroyStopwatch),
-    VTABLE_SLOT(sub_8008408),
+    VTABLE_SLOT(GetSpriteObjPriority),
     VTABLE_SLOT(sub_800834C),
 };
 
 /* Used by actor_part39.c, actor_part57.c. */
-const struct vtable_slot gStaticData_087E4224[13] = {
+const struct vtable_slot gActionCtrlVtable[13] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_8012420),
-    VTABLE_SLOT(sub_8011BD4),
-    VTABLE_SLOT(sub_80155A8),
-    VTABLE_SLOT(sub_8015350),
-    VTABLE_SLOT(sub_800B7B0),
-    VTABLE_SLOT(sub_800B6D0),
-    VTABLE_SLOT(sub_800B734),
-    VTABLE_SLOT(sub_800B6A0),
-    VTABLE_SLOT(sub_8015878),
-    VTABLE_SLOT(sub_80157C4),
-    VTABLE_SLOT(sub_800B838),
-    VTABLE_SLOT(sub_800B704),
+    VTABLE_SLOT(UpdateActionCtrl),
+    VTABLE_SLOT(ActionCtrlHandleEvent),
+    VTABLE_SLOT(AttachActionCtrl),
+    VTABLE_SLOT(SetActionCtrlMode),
+    VTABLE_SLOT(StartCtrlTargetMotionX),
+    VTABLE_SLOT(StartCtrlTargetMotionY),
+    VTABLE_SLOT(SetCtrlTargetMotionX),
+    VTABLE_SLOT(SetCtrlTargetMotionY),
+    VTABLE_SLOT(DestroyActionCtrl),
+    VTABLE_SLOT(ActionCtrlSetTargetAnim),
+    VTABLE_SLOT(StartCtrlTargetMotionXFromSet),
+    VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
 };
 
-/* Used by actor_part_16048.c (sub_80174D8), player_ctrl.h. */
+/* Used by actor_part_16048.c (DestroyPlayerCtrl), player_ctrl.h. */
 const struct vtable_slot gPlayerCtrlVtable[13] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_8016288),
-    VTABLE_SLOT(sub_8016128),
-    VTABLE_SLOT(sub_8017218),
-    VTABLE_SLOT(sub_800B698),
-    VTABLE_SLOT(sub_800B7B0),
-    VTABLE_SLOT(sub_800B6D0),
-    VTABLE_SLOT(sub_800B734),
-    VTABLE_SLOT(sub_800B6A0),
-    VTABLE_SLOT(sub_80174D8),
-    VTABLE_SLOT(sub_800B86C),
-    VTABLE_SLOT(sub_800B838),
-    VTABLE_SLOT(sub_800B704),
+    VTABLE_SLOT(UpdatePlayerCtrl),
+    VTABLE_SLOT(PlayerCtrlHandleEvent),
+    VTABLE_SLOT(AttachPlayerCtrl),
+    VTABLE_SLOT(SetCtrlMode),
+    VTABLE_SLOT(StartCtrlTargetMotionX),
+    VTABLE_SLOT(StartCtrlTargetMotionY),
+    VTABLE_SLOT(SetCtrlTargetMotionX),
+    VTABLE_SLOT(SetCtrlTargetMotionY),
+    VTABLE_SLOT(DestroyPlayerCtrl),
+    VTABLE_SLOT(SetCtrlTargetAnim),
+    VTABLE_SLOT(StartCtrlTargetMotionXFromSet),
+    VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
 };
 
 /* Used by actor_part_17524.c (DestroyInputCtrl). */
 const struct vtable_slot gInputCtrlVtable[13] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_8017650),
+    VTABLE_SLOT(UpdateInputCtrl),
     VTABLE_SLOT(sub_80179D4),
     VTABLE_SLOT(AttachInputCtrl),
-    VTABLE_SLOT(sub_800B698),
-    VTABLE_SLOT(sub_800B7B0),
-    VTABLE_SLOT(sub_800B6D0),
-    VTABLE_SLOT(sub_800B734),
-    VTABLE_SLOT(sub_800B6A0),
+    VTABLE_SLOT(SetCtrlMode),
+    VTABLE_SLOT(StartCtrlTargetMotionX),
+    VTABLE_SLOT(StartCtrlTargetMotionY),
+    VTABLE_SLOT(SetCtrlTargetMotionX),
+    VTABLE_SLOT(SetCtrlTargetMotionY),
     VTABLE_SLOT(DestroyInputCtrl),
-    VTABLE_SLOT(sub_800B86C),
-    VTABLE_SLOT(sub_800B838),
-    VTABLE_SLOT(sub_800B704),
+    VTABLE_SLOT(SetCtrlTargetAnim),
+    VTABLE_SLOT(StartCtrlTargetMotionXFromSet),
+    VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
 };
 
 /* Used by actor_part27.c. */
@@ -652,15 +652,15 @@ const struct vtable_slot gStaticData_087E435C[13] = {
     VTABLE_SLOT(nullsub_9),
     VTABLE_SLOT(sub_8017A70),
     VTABLE_SLOT(sub_800B8A4),
-    VTABLE_SLOT(sub_800B698),
-    VTABLE_SLOT(sub_800B7B0),
-    VTABLE_SLOT(sub_800B6D0),
-    VTABLE_SLOT(sub_800B734),
-    VTABLE_SLOT(sub_800B6A0),
+    VTABLE_SLOT(SetCtrlMode),
+    VTABLE_SLOT(StartCtrlTargetMotionX),
+    VTABLE_SLOT(StartCtrlTargetMotionY),
+    VTABLE_SLOT(SetCtrlTargetMotionX),
+    VTABLE_SLOT(SetCtrlTargetMotionY),
     VTABLE_SLOT(sub_8017A78),
-    VTABLE_SLOT(sub_800B86C),
-    VTABLE_SLOT(sub_800B838),
-    VTABLE_SLOT(sub_800B704),
+    VTABLE_SLOT(SetCtrlTargetAnim),
+    VTABLE_SLOT(StartCtrlTargetMotionXFromSet),
+    VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
 };
 
 /* Used by actor_part27b.c. */
@@ -669,13 +669,13 @@ const struct vtable_slot gStaticData_087E43C4[13] = {
     VTABLE_SLOT(sub_8017AB0),
     VTABLE_SLOT(sub_8017A70),
     VTABLE_SLOT(sub_800B8A4),
-    VTABLE_SLOT(sub_800B698),
-    VTABLE_SLOT(sub_800B7B0),
-    VTABLE_SLOT(sub_800B6D0),
-    VTABLE_SLOT(sub_800B734),
-    VTABLE_SLOT(sub_800B6A0),
+    VTABLE_SLOT(SetCtrlMode),
+    VTABLE_SLOT(StartCtrlTargetMotionX),
+    VTABLE_SLOT(StartCtrlTargetMotionY),
+    VTABLE_SLOT(SetCtrlTargetMotionX),
+    VTABLE_SLOT(SetCtrlTargetMotionY),
     VTABLE_SLOT(sub_8017FD4),
-    VTABLE_SLOT(sub_800B86C),
+    VTABLE_SLOT(SetCtrlTargetAnim),
     VTABLE_SLOT(sub_8017F80),
     VTABLE_SLOT(sub_8017F5C),
 };
@@ -686,15 +686,15 @@ const struct vtable_slot gStaticData_087E442C[13] = {
     VTABLE_SLOT(sub_80187FC),
     VTABLE_SLOT(nullsub_13),
     VTABLE_SLOT(sub_800B8A4),
-    VTABLE_SLOT(sub_800B698),
-    VTABLE_SLOT(sub_800B7B0),
-    VTABLE_SLOT(sub_800B6D0),
-    VTABLE_SLOT(sub_800B734),
-    VTABLE_SLOT(sub_800B6A0),
+    VTABLE_SLOT(SetCtrlMode),
+    VTABLE_SLOT(StartCtrlTargetMotionX),
+    VTABLE_SLOT(StartCtrlTargetMotionY),
+    VTABLE_SLOT(SetCtrlTargetMotionX),
+    VTABLE_SLOT(SetCtrlTargetMotionY),
     VTABLE_SLOT(sub_8018858),
-    VTABLE_SLOT(sub_800B86C),
-    VTABLE_SLOT(sub_800B838),
-    VTABLE_SLOT(sub_800B704),
+    VTABLE_SLOT(SetCtrlTargetAnim),
+    VTABLE_SLOT(StartCtrlTargetMotionXFromSet),
+    VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
 };
 
 /* Used by actor_part_188d0.c (sub_80188D0, sub_80188E8). */
@@ -703,15 +703,15 @@ const struct vtable_slot gStaticData_087E4494[13] = {
     VTABLE_SLOT(sub_8018884),
     VTABLE_SLOT(nullsub_13),
     VTABLE_SLOT(sub_800B8A4),
-    VTABLE_SLOT(sub_800B698),
-    VTABLE_SLOT(sub_800B7B0),
-    VTABLE_SLOT(sub_800B6D0),
-    VTABLE_SLOT(sub_800B734),
-    VTABLE_SLOT(sub_800B6A0),
+    VTABLE_SLOT(SetCtrlMode),
+    VTABLE_SLOT(StartCtrlTargetMotionX),
+    VTABLE_SLOT(StartCtrlTargetMotionY),
+    VTABLE_SLOT(SetCtrlTargetMotionX),
+    VTABLE_SLOT(SetCtrlTargetMotionY),
     VTABLE_SLOT(sub_80188E8),
-    VTABLE_SLOT(sub_800B86C),
-    VTABLE_SLOT(sub_800B838),
-    VTABLE_SLOT(sub_800B704),
+    VTABLE_SLOT(SetCtrlTargetAnim),
+    VTABLE_SLOT(StartCtrlTargetMotionXFromSet),
+    VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
 };
 
 /* Used by actor_part_188d0.c (sub_8018948, sub_8018960). */
@@ -720,15 +720,15 @@ const struct vtable_slot gStaticData_087E44FC[13] = {
     VTABLE_SLOT(sub_80188FC),
     VTABLE_SLOT(nullsub_13),
     VTABLE_SLOT(sub_800B8A4),
-    VTABLE_SLOT(sub_800B698),
-    VTABLE_SLOT(sub_800B7B0),
-    VTABLE_SLOT(sub_800B6D0),
-    VTABLE_SLOT(sub_800B734),
-    VTABLE_SLOT(sub_800B6A0),
+    VTABLE_SLOT(SetCtrlMode),
+    VTABLE_SLOT(StartCtrlTargetMotionX),
+    VTABLE_SLOT(StartCtrlTargetMotionY),
+    VTABLE_SLOT(SetCtrlTargetMotionX),
+    VTABLE_SLOT(SetCtrlTargetMotionY),
     VTABLE_SLOT(sub_8018960),
-    VTABLE_SLOT(sub_800B86C),
-    VTABLE_SLOT(sub_800B838),
-    VTABLE_SLOT(sub_800B704),
+    VTABLE_SLOT(SetCtrlTargetAnim),
+    VTABLE_SLOT(StartCtrlTargetMotionXFromSet),
+    VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
 };
 
 /* Used by actor_part_18008.c, actor_part_188d0.c (DestroyTiny,
@@ -738,15 +738,15 @@ const struct vtable_slot gTinyVtable[13] = {
     VTABLE_SLOT(UpdateTiny),
     VTABLE_SLOT(sub_8017A70),
     VTABLE_SLOT(sub_800B8A4),
-    VTABLE_SLOT(sub_800B698),
-    VTABLE_SLOT(sub_800B7B0),
-    VTABLE_SLOT(sub_800B6D0),
-    VTABLE_SLOT(sub_800B734),
-    VTABLE_SLOT(sub_800B6A0),
+    VTABLE_SLOT(SetCtrlMode),
+    VTABLE_SLOT(StartCtrlTargetMotionX),
+    VTABLE_SLOT(StartCtrlTargetMotionY),
+    VTABLE_SLOT(SetCtrlTargetMotionX),
+    VTABLE_SLOT(SetCtrlTargetMotionY),
     VTABLE_SLOT(DestroyTiny),
-    VTABLE_SLOT(sub_800B86C),
-    VTABLE_SLOT(sub_800B838),
-    VTABLE_SLOT(sub_800B704),
+    VTABLE_SLOT(SetCtrlTargetAnim),
+    VTABLE_SLOT(StartCtrlTargetMotionXFromSet),
+    VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
 };
 
 /* Used by actor_part_188d0.c (sub_80195D8, sub_80195EC). */
@@ -755,15 +755,15 @@ const struct vtable_slot gStaticData_087E45CC[13] = {
     VTABLE_SLOT(sub_80194E0),
     VTABLE_SLOT(nullsub_13),
     VTABLE_SLOT(sub_800B8A4),
-    VTABLE_SLOT(sub_800B698),
-    VTABLE_SLOT(sub_800B7B0),
-    VTABLE_SLOT(sub_800B6D0),
-    VTABLE_SLOT(sub_800B734),
-    VTABLE_SLOT(sub_800B6A0),
+    VTABLE_SLOT(SetCtrlMode),
+    VTABLE_SLOT(StartCtrlTargetMotionX),
+    VTABLE_SLOT(StartCtrlTargetMotionY),
+    VTABLE_SLOT(SetCtrlTargetMotionX),
+    VTABLE_SLOT(SetCtrlTargetMotionY),
     VTABLE_SLOT(sub_80195D8),
-    VTABLE_SLOT(sub_800B86C),
-    VTABLE_SLOT(sub_800B838),
-    VTABLE_SLOT(sub_800B704),
+    VTABLE_SLOT(SetCtrlTargetAnim),
+    VTABLE_SLOT(StartCtrlTargetMotionXFromSet),
+    VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
 };
 
 /* Used by actor_part_188d0.c (sub_8019608, sub_801961C). */
@@ -772,13 +772,13 @@ const struct vtable_slot gStaticData_087E4634[13] = {
     VTABLE_SLOT(sub_8019464),
     VTABLE_SLOT(nullsub_13),
     VTABLE_SLOT(sub_800B8A4),
-    VTABLE_SLOT(sub_800B698),
-    VTABLE_SLOT(sub_800B7B0),
-    VTABLE_SLOT(sub_800B6D0),
-    VTABLE_SLOT(sub_800B734),
-    VTABLE_SLOT(sub_800B6A0),
+    VTABLE_SLOT(SetCtrlMode),
+    VTABLE_SLOT(StartCtrlTargetMotionX),
+    VTABLE_SLOT(StartCtrlTargetMotionY),
+    VTABLE_SLOT(SetCtrlTargetMotionX),
+    VTABLE_SLOT(SetCtrlTargetMotionY),
     VTABLE_SLOT(sub_8019608),
-    VTABLE_SLOT(sub_800B86C),
+    VTABLE_SLOT(SetCtrlTargetAnim),
     VTABLE_SLOT(sub_801B7A0),
     VTABLE_SLOT(sub_801B77C),
 };
@@ -789,15 +789,15 @@ const struct vtable_slot gStaticData_087E469C[13] = {
     VTABLE_SLOT(sub_8019324),
     VTABLE_SLOT(nullsub_13),
     VTABLE_SLOT(sub_800B8A4),
-    VTABLE_SLOT(sub_800B698),
-    VTABLE_SLOT(sub_800B7B0),
-    VTABLE_SLOT(sub_800B6D0),
-    VTABLE_SLOT(sub_800B734),
-    VTABLE_SLOT(sub_800B6A0),
+    VTABLE_SLOT(SetCtrlMode),
+    VTABLE_SLOT(StartCtrlTargetMotionX),
+    VTABLE_SLOT(StartCtrlTargetMotionY),
+    VTABLE_SLOT(SetCtrlTargetMotionX),
+    VTABLE_SLOT(SetCtrlTargetMotionY),
     VTABLE_SLOT(sub_801964C),
-    VTABLE_SLOT(sub_800B86C),
-    VTABLE_SLOT(sub_800B838),
-    VTABLE_SLOT(sub_800B704),
+    VTABLE_SLOT(SetCtrlTargetAnim),
+    VTABLE_SLOT(StartCtrlTargetMotionXFromSet),
+    VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
 };
 
 /* Used by actor_part_1967c.c (sub_80196E4). */
@@ -806,15 +806,15 @@ const struct vtable_slot gStaticData_087E4704[13] = {
     VTABLE_SLOT(sub_8018E4C),
     VTABLE_SLOT(nullsub_13),
     VTABLE_SLOT(sub_800B8A4),
-    VTABLE_SLOT(sub_800B698),
-    VTABLE_SLOT(sub_800B7B0),
-    VTABLE_SLOT(sub_800B6D0),
-    VTABLE_SLOT(sub_800B734),
-    VTABLE_SLOT(sub_800B6A0),
+    VTABLE_SLOT(SetCtrlMode),
+    VTABLE_SLOT(StartCtrlTargetMotionX),
+    VTABLE_SLOT(StartCtrlTargetMotionY),
+    VTABLE_SLOT(SetCtrlTargetMotionX),
+    VTABLE_SLOT(SetCtrlTargetMotionY),
     VTABLE_SLOT(sub_80196E4),
-    VTABLE_SLOT(sub_800B86C),
-    VTABLE_SLOT(sub_800B838),
-    VTABLE_SLOT(sub_800B704),
+    VTABLE_SLOT(SetCtrlTargetAnim),
+    VTABLE_SLOT(StartCtrlTargetMotionXFromSet),
+    VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
 };
 
 /* Used by actor_part_1967c.c (sub_8019744). */
@@ -823,15 +823,15 @@ const struct vtable_slot gStaticData_087E476C[13] = {
     VTABLE_SLOT(sub_8019730),
     VTABLE_SLOT(nullsub_13),
     VTABLE_SLOT(sub_800B8A4),
-    VTABLE_SLOT(sub_800B698),
-    VTABLE_SLOT(sub_800B7B0),
-    VTABLE_SLOT(sub_800B6D0),
-    VTABLE_SLOT(sub_800B734),
-    VTABLE_SLOT(sub_800B6A0),
+    VTABLE_SLOT(SetCtrlMode),
+    VTABLE_SLOT(StartCtrlTargetMotionX),
+    VTABLE_SLOT(StartCtrlTargetMotionY),
+    VTABLE_SLOT(SetCtrlTargetMotionX),
+    VTABLE_SLOT(SetCtrlTargetMotionY),
     VTABLE_SLOT(sub_8019744),
-    VTABLE_SLOT(sub_800B86C),
-    VTABLE_SLOT(sub_800B838),
-    VTABLE_SLOT(sub_800B704),
+    VTABLE_SLOT(SetCtrlTargetAnim),
+    VTABLE_SLOT(StartCtrlTargetMotionXFromSet),
+    VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
 };
 
 /* Used by actor_part_1967c.c (DestroyCortexBoss). */
@@ -840,15 +840,15 @@ const struct vtable_slot gCortexBossVtable[13] = {
     VTABLE_SLOT(UpdateCortexBoss),
     VTABLE_SLOT(sub_8017A70),
     VTABLE_SLOT(sub_800B8A4),
-    VTABLE_SLOT(sub_800B698),
-    VTABLE_SLOT(sub_800B7B0),
-    VTABLE_SLOT(sub_800B6D0),
-    VTABLE_SLOT(sub_800B734),
-    VTABLE_SLOT(sub_800B6A0),
+    VTABLE_SLOT(SetCtrlMode),
+    VTABLE_SLOT(StartCtrlTargetMotionX),
+    VTABLE_SLOT(StartCtrlTargetMotionY),
+    VTABLE_SLOT(SetCtrlTargetMotionX),
+    VTABLE_SLOT(SetCtrlTargetMotionY),
     VTABLE_SLOT(DestroyCortexBoss),
-    VTABLE_SLOT(sub_800B86C),
-    VTABLE_SLOT(sub_800B838),
-    VTABLE_SLOT(sub_800B704),
+    VTABLE_SLOT(SetCtrlTargetAnim),
+    VTABLE_SLOT(StartCtrlTargetMotionXFromSet),
+    VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
 };
 
 /* Used by actor_part_1967c.c (sub_801A64C, sub_801A73C). */
@@ -857,15 +857,15 @@ const struct vtable_slot gStaticData_087E483C[13] = {
     VTABLE_SLOT(sub_801A64C),
     VTABLE_SLOT(HitEnemy),
     VTABLE_SLOT(AttachEnemyCtrl),
-    VTABLE_SLOT(sub_800B698),
-    VTABLE_SLOT(sub_800B7B0),
-    VTABLE_SLOT(sub_800B6D0),
-    VTABLE_SLOT(sub_800B734),
-    VTABLE_SLOT(sub_800B6A0),
+    VTABLE_SLOT(SetCtrlMode),
+    VTABLE_SLOT(StartCtrlTargetMotionX),
+    VTABLE_SLOT(StartCtrlTargetMotionY),
+    VTABLE_SLOT(SetCtrlTargetMotionX),
+    VTABLE_SLOT(SetCtrlTargetMotionY),
     VTABLE_SLOT(sub_801A73C),
-    VTABLE_SLOT(sub_800B86C),
-    VTABLE_SLOT(sub_800B838),
-    VTABLE_SLOT(sub_800B704),
+    VTABLE_SLOT(SetCtrlTargetAnim),
+    VTABLE_SLOT(StartCtrlTargetMotionXFromSet),
+    VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
 };
 
 /* Used by actor_part_1967c.c (sub_801A584, sub_801A750). */
@@ -874,15 +874,15 @@ const struct vtable_slot gStaticData_087E48A4[13] = {
     VTABLE_SLOT(sub_801A2A8),
     VTABLE_SLOT(sub_8017A70),
     VTABLE_SLOT(sub_800B8A4),
-    VTABLE_SLOT(sub_800B698),
-    VTABLE_SLOT(sub_800B7B0),
-    VTABLE_SLOT(sub_800B6D0),
-    VTABLE_SLOT(sub_800B734),
-    VTABLE_SLOT(sub_800B6A0),
+    VTABLE_SLOT(SetCtrlMode),
+    VTABLE_SLOT(StartCtrlTargetMotionX),
+    VTABLE_SLOT(StartCtrlTargetMotionY),
+    VTABLE_SLOT(SetCtrlTargetMotionX),
+    VTABLE_SLOT(SetCtrlTargetMotionY),
     VTABLE_SLOT(sub_801A750),
-    VTABLE_SLOT(sub_800B86C),
-    VTABLE_SLOT(sub_800B838),
-    VTABLE_SLOT(sub_800B704),
+    VTABLE_SLOT(SetCtrlTargetAnim),
+    VTABLE_SLOT(StartCtrlTargetMotionXFromSet),
+    VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
 };
 
 /* Used by actor_part_1967c.c (sub_801A780), actor_part_1a794.c,
@@ -892,15 +892,15 @@ const struct vtable_slot gStaticData_087E490C[13] = {
     VTABLE_SLOT(sub_801A114),
     VTABLE_SLOT(sub_8017A70),
     VTABLE_SLOT(sub_800B8A4),
-    VTABLE_SLOT(sub_800B698),
-    VTABLE_SLOT(sub_800B7B0),
-    VTABLE_SLOT(sub_800B6D0),
-    VTABLE_SLOT(sub_800B734),
-    VTABLE_SLOT(sub_800B6A0),
+    VTABLE_SLOT(SetCtrlMode),
+    VTABLE_SLOT(StartCtrlTargetMotionX),
+    VTABLE_SLOT(StartCtrlTargetMotionY),
+    VTABLE_SLOT(SetCtrlTargetMotionX),
+    VTABLE_SLOT(SetCtrlTargetMotionY),
     VTABLE_SLOT(sub_801A780),
-    VTABLE_SLOT(sub_800B86C),
-    VTABLE_SLOT(sub_800B838),
-    VTABLE_SLOT(sub_800B704),
+    VTABLE_SLOT(SetCtrlTargetAnim),
+    VTABLE_SLOT(StartCtrlTargetMotionXFromSet),
+    VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
 };
 
 /* Used by actor_part_1967c.c, actor_part_1a794.c (DestroyDingodile),
@@ -910,34 +910,34 @@ const struct vtable_slot gDingodileVtable[13] = {
     VTABLE_SLOT(UpdateDingodile),
     VTABLE_SLOT(sub_8017A70),
     VTABLE_SLOT(sub_800B8A4),
-    VTABLE_SLOT(sub_800B698),
-    VTABLE_SLOT(sub_800B7B0),
-    VTABLE_SLOT(sub_800B6D0),
-    VTABLE_SLOT(sub_800B734),
-    VTABLE_SLOT(sub_800B6A0),
+    VTABLE_SLOT(SetCtrlMode),
+    VTABLE_SLOT(StartCtrlTargetMotionX),
+    VTABLE_SLOT(StartCtrlTargetMotionY),
+    VTABLE_SLOT(SetCtrlTargetMotionX),
+    VTABLE_SLOT(SetCtrlTargetMotionY),
     VTABLE_SLOT(DestroyDingodile),
-    VTABLE_SLOT(sub_800B86C),
-    VTABLE_SLOT(sub_800B838),
-    VTABLE_SLOT(sub_800B704),
+    VTABLE_SLOT(SetCtrlTargetAnim),
+    VTABLE_SLOT(StartCtrlTargetMotionXFromSet),
+    VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
 };
 
 /* Used by actor_part_1b208.c (DestroyPlatform), gobj_1a794.h. */
 const struct vtable_slot gPlatformVtable[15] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(CheckPlatformContact),
-    VTABLE_SLOT(sub_8008394),
+    VTABLE_SLOT(GetSpriteObjHitbox),
     VTABLE_SLOT(UpdatePlatform),
-    VTABLE_SLOT(sub_8008350),
-    VTABLE_SLOT(sub_8007F78),
-    VTABLE_SLOT(sub_8007FD8),
-    VTABLE_SLOT(sub_8008328),
-    VTABLE_SLOT(sub_8008304),
+    VTABLE_SLOT(DrawSpriteObj),
+    VTABLE_SLOT(IsSpriteObjOnScreen),
+    VTABLE_SLOT(SpriteObjOverlapsRect),
+    VTABLE_SLOT(IsSpriteObjNearCamera),
+    VTABLE_SLOT(IsSpriteObjInsideRect),
     VTABLE_SLOT(sub_801B2C0),
     VTABLE_SLOT(DestroyPlatform),
-    VTABLE_SLOT(sub_8008408),
-    VTABLE_SLOT(sub_8009DF4),
-    VTABLE_SLOT(sub_8009FD4),
-    VTABLE_SLOT(sub_8009CA0),
+    VTABLE_SLOT(GetSpriteObjPriority),
+    VTABLE_SLOT(ApplySpriteVelocity),
+    VTABLE_SLOT(HitMovingSprite),
+    VTABLE_SLOT(CheckPlayerContact),
 };
 
 /* Used by actor_part_1b208.c (DestroyPlatformMover), gobj_1a794.h. */
@@ -946,13 +946,13 @@ const struct vtable_slot gPlatformMoverVtable[13] = {
     VTABLE_SLOT(UpdatePlatformMover),
     VTABLE_SLOT(nullsub_13),
     VTABLE_SLOT(sub_800B8A4),
-    VTABLE_SLOT(sub_800B698),
-    VTABLE_SLOT(sub_800B7B0),
-    VTABLE_SLOT(sub_800B6D0),
-    VTABLE_SLOT(sub_800B734),
-    VTABLE_SLOT(sub_800B6A0),
+    VTABLE_SLOT(SetCtrlMode),
+    VTABLE_SLOT(StartCtrlTargetMotionX),
+    VTABLE_SLOT(StartCtrlTargetMotionY),
+    VTABLE_SLOT(SetCtrlTargetMotionX),
+    VTABLE_SLOT(SetCtrlTargetMotionY),
     VTABLE_SLOT(DestroyPlatformMover),
-    VTABLE_SLOT(sub_800B86C),
+    VTABLE_SLOT(SetCtrlTargetAnim),
     VTABLE_SLOT(sub_801B7A0),
     VTABLE_SLOT(sub_801B77C),
 };
@@ -960,38 +960,38 @@ const struct vtable_slot gPlatformMoverVtable[13] = {
 /* Used by actor_part_1b85c.c (DestroyCameraLead). */
 const struct vtable_slot gCameraLeadVtable[15] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_800A050),
-    VTABLE_SLOT(sub_8008394),
+    VTABLE_SLOT(CollideMovingSprite),
+    VTABLE_SLOT(GetSpriteObjHitbox),
     VTABLE_SLOT(UpdateCameraLead),
-    VTABLE_SLOT(sub_8008350),
-    VTABLE_SLOT(sub_8007F78),
-    VTABLE_SLOT(sub_8007FD8),
-    VTABLE_SLOT(sub_8008328),
-    VTABLE_SLOT(sub_8008304),
-    VTABLE_SLOT(sub_8009ECC),
+    VTABLE_SLOT(DrawSpriteObj),
+    VTABLE_SLOT(IsSpriteObjOnScreen),
+    VTABLE_SLOT(SpriteObjOverlapsRect),
+    VTABLE_SLOT(IsSpriteObjNearCamera),
+    VTABLE_SLOT(IsSpriteObjInsideRect),
+    VTABLE_SLOT(GetMovingSpriteClassId),
     VTABLE_SLOT(DestroyCameraLead),
-    VTABLE_SLOT(sub_8008408),
-    VTABLE_SLOT(sub_8009DF4),
-    VTABLE_SLOT(sub_8009FD4),
-    VTABLE_SLOT(sub_8009CA0),
+    VTABLE_SLOT(GetSpriteObjPriority),
+    VTABLE_SLOT(ApplySpriteVelocity),
+    VTABLE_SLOT(HitMovingSprite),
+    VTABLE_SLOT(CheckPlayerContact),
 };
 
 /* Used by actor_part_1b85c.c (sub_801B980, sub_801BAB0, sub_801BAC4). */
 const struct vtable_slot gStaticData_087E4B34[15] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_800A050),
-    VTABLE_SLOT(sub_8008394),
-    VTABLE_SLOT(sub_8009FB0),
-    VTABLE_SLOT(sub_8008350),
-    VTABLE_SLOT(sub_8007F78),
-    VTABLE_SLOT(sub_8007FD8),
-    VTABLE_SLOT(sub_8008328),
-    VTABLE_SLOT(sub_8008304),
-    VTABLE_SLOT(sub_8009ECC),
+    VTABLE_SLOT(CollideMovingSprite),
+    VTABLE_SLOT(GetSpriteObjHitbox),
+    VTABLE_SLOT(UpdateMovingSprite),
+    VTABLE_SLOT(DrawSpriteObj),
+    VTABLE_SLOT(IsSpriteObjOnScreen),
+    VTABLE_SLOT(SpriteObjOverlapsRect),
+    VTABLE_SLOT(IsSpriteObjNearCamera),
+    VTABLE_SLOT(IsSpriteObjInsideRect),
+    VTABLE_SLOT(GetMovingSpriteClassId),
     VTABLE_SLOT(sub_801BAB0),
-    VTABLE_SLOT(sub_8008408),
-    VTABLE_SLOT(sub_8009DF4),
-    VTABLE_SLOT(sub_8009FD4),
+    VTABLE_SLOT(GetSpriteObjPriority),
+    VTABLE_SLOT(ApplySpriteVelocity),
+    VTABLE_SLOT(HitMovingSprite),
     VTABLE_SLOT(sub_801BA60),
 };
 
@@ -1054,17 +1054,17 @@ const struct vtable_slot gPooledBgLayerVtable[10] = {
 /* Used by hud_icon_slot.c (sub_802710C). */
 const struct vtable_slot gStaticData_087E4CB4[13] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_8007DBC),
-    VTABLE_SLOT(sub_8008394),
-    VTABLE_SLOT(sub_8008364),
-    VTABLE_SLOT(sub_8008350),
-    VTABLE_SLOT(sub_8007F78),
-    VTABLE_SLOT(sub_8007FD8),
-    VTABLE_SLOT(sub_8008328),
-    VTABLE_SLOT(sub_8008304),
-    VTABLE_SLOT(sub_8008480),
+    VTABLE_SLOT(CheckSpritePickup),
+    VTABLE_SLOT(GetSpriteObjHitbox),
+    VTABLE_SLOT(UpdateSpriteObj),
+    VTABLE_SLOT(DrawSpriteObj),
+    VTABLE_SLOT(IsSpriteObjOnScreen),
+    VTABLE_SLOT(SpriteObjOverlapsRect),
+    VTABLE_SLOT(IsSpriteObjNearCamera),
+    VTABLE_SLOT(IsSpriteObjInsideRect),
+    VTABLE_SLOT(GetSpriteObjClassId),
     VTABLE_SLOT(sub_802710C),
-    VTABLE_SLOT(sub_80088E8),
+    VTABLE_SLOT(GetSpritePriority),
     VTABLE_SLOT(sub_800834C),
 };
 

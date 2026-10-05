@@ -130,7 +130,7 @@ of it.
   large pair of functions (the second taking 5 register arguments via
   `sb`/`sl`/`r8`) that allocate/construct another icon widget and wire
   it into the composite screen via `LoadGraphicsPackage`/
-  `InitBgSetup`/`sub_8026EDC`. The overall shape is visible (another
+  `InitBgSetup`/`OperatorNew`. The overall shape is visible (another
   `settings_icon_actor`-style construction plus a
   `mem_free_bytes(MEM_HEAP_BOTH)` pair bracketing the whole thing,
   mirroring `ShowPowerDialog`'s own bracket), but several field offsets and
@@ -207,7 +207,7 @@ untouched" functions, `ShowPowerDialog`/`InitPowerDialog` (previously raw in
   already name, allocated by the caller at exactly its own `0x2c`-byte
   size) plus one `struct settings_icon_actor`-shaped background icon
   owned via `field_18`, built the same way `settings_menu6.c`'s icon
-  constructors are (`sub_8008904(sub_8026EDC(0x40))`, `field_20`
+  constructors are (`InitUiSpriteObj(OperatorNew(0x40))`, `field_20`
   pointed at the shared `gUnknown_030012D0` header table at a new
   `0xe4<<1` offset). **Matched byte-exact**, but only after the same
   class of heavy register pinning `oam_count.c`'s `SUB_8006600_*`

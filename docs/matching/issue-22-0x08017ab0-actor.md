@@ -73,8 +73,8 @@ Dispatches on `self+8` (0/1/2; anything else returns immediately):
      `sub_8017F14(self, other, 0)`, the `0x20`-indexed trampoline
      (mode 2), and the `0x50`-indexed one (mode 1), then returns.
   6. **Out of bounds - "spawn + scan" cluster**: builds an AABB via
-     `sub_8007B98(&box, other)`, unpacks it into
-     `sub_8008A40(gUnknown_030012F0, box.x, box.y, box.w, box.h, 0,
+     `GetSpriteHitbox(&box, other)`, unpacks it into
+     `CollidePartList(gUnknown_030012F0, box.x, box.y, box.w, box.h, 0,
      other)`, then walks the entire `gCrateList` object list. For
      each `entry` whose own table (`entry+0x18`, offset 0x48) probes
      `==3` via `_call_via_r1`, and whose Q8>>8 position is within a
@@ -120,10 +120,10 @@ here would just rediscover the same dead end at roughly 5x the scale:
    reload (gcc hoists the address as loop-invariant, unlike the ROM's
    own compiler here) or matched the reload but swapped which register
    won.
-2. **The `sub_8008A40(manager, boxX, boxY, boxW, boxH, unused,
+2. **The `CollidePartList(manager, boxX, boxY, boxW, boxH, unused,
    compareViewport)` call** (7 args, 3 on the stack) reproduces the
    exact "which order the compiler batches its outgoing stack-argument
-   stores in" gap `actor_part81.c`'s `sub_800AB9C` (`#if NON_MATCHING`
+   stores in" gap `actor_part81.c`'s `CollidePlayerWithObjects` (`#if NON_MATCHING`
    branch) already documents as unclosable from *any* C-level phrasing
    tried (inlined values, named locals in ROM source order, an
    `asm volatile("":::"memory")` scheduling barrier - all failed the
@@ -145,11 +145,11 @@ Transcribed mechanically from `asm/code_3_2_17_17ab0.s` (now retired -
 its one function moved to the new `src/graphics/actor_part27a.c`),
 keeping the ROM's own `_0XXXXXXX` hex-address labels verbatim as plain,
 file-local asm symbols (safe since each is a unique ROM address) - the
-same approach `actor_part82.c`'s `sub_8011BD4`, `actor_part_12fbc.c`'s
+same approach `actor_part82.c`'s `ActionCtrlHandleEvent`, `actor_part_12fbc.c`'s
 five functions, and `actor_part18.c`'s `sub_801434C` all already use.
 Register/argument roles for every external call (`_call_via_r2`/
 `_call_via_r3`/`_call_via_r1`/`_call_via_r4`'s base+offset+fn-pointer
-trampoline convention, `sub_8007B98`/`sub_8008A40`'s AABB-relocate-then-
+trampoline convention, `GetSpriteHitbox`/`CollidePartList`'s AABB-relocate-then-
 unpack idiom) were cross-checked against their existing signatures in
 `actor_part18.c`/`actor_part81.c`/`actor_part.c` before transcription,
 confirming the semantic read above rather than leaving it a guess.

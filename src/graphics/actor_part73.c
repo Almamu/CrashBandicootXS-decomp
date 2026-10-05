@@ -82,24 +82,24 @@ check:
     }
 }
 
-extern void sub_8026EB4(void *ptr);
-extern void sub_8026ED0(void *self);
+extern void OperatorDeleteArray(void *ptr);
+extern void OperatorDelete(void *self);
 
 /* Releases `self+0x10`/`self+8`'s dynamically-allocated buffers (each,
- * if non-NULL, via `sub_8026EB4`) and, if bit 0 of `flags` is set, also
- * releases `self` itself via `sub_8026ED0`. */
+ * if non-NULL, via `OperatorDeleteArray`) and, if bit 0 of `flags` is set, also
+ * releases `self` itself via `OperatorDelete`. */
 void DestroyStarfield(void *selfArg, s32 flags)
 {
     u8 *self = selfArg;
 
     if (*(void **)(self + 0x10) != NULL) {
-        sub_8026EB4(*(void **)(self + 0x10));
+        OperatorDeleteArray(*(void **)(self + 0x10));
     }
     if (*(void **)(self + 8) != NULL) {
-        sub_8026EB4(*(void **)(self + 8));
+        OperatorDeleteArray(*(void **)(self + 8));
     }
     if ((flags & 1) != 0) {
-        sub_8026ED0(self);
+        OperatorDelete(self);
     }
 }
 

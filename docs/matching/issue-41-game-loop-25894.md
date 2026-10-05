@@ -63,7 +63,7 @@ r0" through "bx sp"). *Which* trampoline gets used is not something
 the C source picks - it falls out purely of which register this
 compiler's allocator happens to land the function pointer in for that
 particular call, matching `_call_via_r2`'s existing use in
-`actor_part8.c`'s `sub_8009F1C` (there, naturally in `r2`, the 3rd
+`actor_part8.c`'s `DestroyMovingSprite` (there, naturally in `r2`, the 3rd
 AAPCS argument register). For `SpawnEntity`'s case the ROM picked
 `r5`/`_call_via_r5`, which required:
 
@@ -139,7 +139,7 @@ everything after" rule:
 
 Each parked function's `NON_MATCHING` C reconstruction lives in the
 `.c` file holding the *adjacent* matched run (following the existing
-`sub_8008770`/`sub_800E494` "widens this unit" convention documented
+`IsSpriteAnimLooping`/`sub_800E494` "widens this unit" convention documented
 in `tools/report_units.py`) rather than in a standalone file: under
 the real (`NON_MATCHING=0`) build each `.c` file only contributes its
 matched functions' bytes (the guarded parked block compiles to

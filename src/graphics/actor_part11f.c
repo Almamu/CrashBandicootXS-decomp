@@ -32,8 +32,8 @@ extern void *MemCopy32(void *dst, const void *src, s32 size);
 extern void sub_80096C0(struct pool_manager *m, struct part_aabb box, struct box_part *part);
 extern void sub_80099F0(struct pool_manager *m, struct part_aabb box, struct box_part *part, struct box_part *other);
 
-/* The spatial-hash-grid-cluster analog of `sub_8008A40`: the same
- * "extended screen box" filter shape as `sub_800944C` (iterating
+/* The spatial-hash-grid-cluster analog of `CollidePartList`: the same
+ * "extended screen box" filter shape as `DrawCrateList` (iterating
  * `manager`'s grid buckets from `baseIdx+2` down to 0, then the
  * special "large object" bucket 255), but instead of firing a simple
  * action trampoline on a box hit, additionally tests `part->flags`
@@ -41,10 +41,10 @@ extern void sub_80099F0(struct pool_manager *m, struct part_aabb box, struct box
  * `_call_via_r1`; if that result is greater than 4, reconstructs the
  * caller's original `{boxX, boxY, boxW, boxH}` box (via
  * `MemCopy32`, the same "unavoidable extra `boxH` load" idiom
- * established for `sub_8008A40`) and dispatches to `sub_80096C0`
+ * established for `CollidePartList`) and dispatches to `sub_80096C0`
  * (when `compareViewport` is the player, `gPlayer`) or
- * `sub_80099F0` (otherwise) - the exact same dispatch `sub_8008A40`
- * makes to `sub_8008AD8`/`sub_8008D80`. See `sub_8008A40`'s own
+ * `sub_80099F0` (otherwise) - the exact same dispatch `CollidePartList`
+ * makes to `CollidePartWithPlayer`/`CollidePartWithObject`. See `CollidePartList`'s own
  * writeup (`actor_part7.c`) for the full branch-by-branch semantics,
  * identical here.
  *
@@ -52,10 +52,10 @@ extern void sub_80099F0(struct pool_manager *m, struct part_aabb box, struct box
  * The size gap the old draft had was the newer compiler plus the box
  * copy: the box arrives by value and is copied into one shared
  * temporary with MemCopy32 (memcpy) before each dispatch, exactly as
- * in sub_8008A40. The duplicated per-node test is an inline helper;
+ * in CollidePartList. The duplicated per-node test is an inline helper;
  * `heads`/`last` (gridHead / &gridHead[255]) are computed up front, in
  * that order, as the ROM does. Kept in its own translation unit since
- * its ROM address, 0x08009528, sits between `sub_800944C`
+ * its ROM address, 0x08009528, sits between `DrawCrateList`
  * (`actor_part11h.c`) and `sub_80096C0` (`actor_part11e.c`). */
 static inline void CheckPart(struct pool_manager *m, struct box_part *part, struct part_aabb *screen,
                              struct part_aabb *box, struct part_aabb *tmp, struct box_part *other)
