@@ -1,5 +1,7 @@
 #include "core.h"
 #include "action_obj.h"
+#include "system.h"
+#include "audio.h"
 
 /* GitHub issue #17, ROM 0x080134B8-0x080138E8 (details in
  * docs/matching/issue-17-0x08012fbc-actor.md, "Third pass"). Built with
@@ -28,8 +30,6 @@ extern void *gAudioContext;
 extern struct act_part *gPlayer;
 extern void *gEntitySpawner;
 extern void *gInput;
-extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
-extern u8 GetDpadDirection(void *pad);
 extern void UpdatePlayerFacing(struct act *self);
 extern void HandleActionCtrlAirInput(struct act *self);
 extern void ClearPlayerSpeedY(struct act_part *part);
@@ -806,7 +806,6 @@ asm(".align 2, 0");
  * are pinned down yet, so every access here stays a raw offset rather
  * than a guessed struct. */
 
-extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern s32 _call_via_r3(void *arg0, void *arg1, void *arg2, void *arg3);
 extern void SetActionCtrlModeAnim(void *self, s32 a, s32 b, s32 c, s32 d);
@@ -877,8 +876,6 @@ void ActionCtrlStateCrawlStart(void *selfArg)
         ActionCtrlStateCrawl(self);
     }
 }
-
-extern u8 GetDpadDirection(void *dummy);
 
 /* The shared handler `ActionCtrlStateCrawlStart` tail-calls: same "confirm" edge check
  * (short-circuits before reaching `CheckActionCtrlLeftGround` when it fires), then

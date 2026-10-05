@@ -1,6 +1,8 @@
 #include "core.h"
 #include "actor_self.h"
 #include <libgcc.h>
+#include "system.h"
+#include "audio.h"
 
 /* Second half of issue #59's Phase 2 gap (`CreateJetpackRing`-`nullsub_35`,
  * the tail of `asm/code_3_2_20_28568_c99c_31784_31a6c.s`) - see
@@ -39,7 +41,6 @@
  *    layout - see the writeup doc for the fuller rationale. */
 
 extern void InitActorPart(void *self, s32 a, s32 b, s32 c, s32 d);
-extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern s32 GetAnimFrameBaseOffset(void *self);
 extern u8 *GetAnimFrameData(void *self);
 extern s32 GetAnimFrameAttr(void *self);
@@ -56,9 +57,7 @@ extern void ResumeActorSpawns(void);
 extern void PauseActorSpawns(void);
 extern void FinishJetpackRun(void *arg0);
 extern void CollectWumpa(void *self);
-extern u8 *mem_alloc(u32 size, s32 flags);
 extern struct actor_pmf gHovercraftFireballStateFuncs[];
-extern void mem_free(void *ptr);
 extern void UpdateHovercraftHitFlash(void);
 extern void RunHovercraftState(void);
 extern void _call_via_r0(void *fn);

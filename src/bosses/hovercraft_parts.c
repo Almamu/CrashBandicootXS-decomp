@@ -1,5 +1,6 @@
 #include "core.h"
 #include "actor_self.h"
+#include "audio.h"
 
 /* A second per-instance "self" object family sharing the exact same
  * layout convention already documented for the boss-weapon cluster
@@ -41,7 +42,6 @@ extern void *gFlashBgPalette;
 extern void *gFlashObjPalette;
 extern void *gAudioContext;
 
-extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern s32 GetAnimFrameBaseOffset(void *self);
 
 /* One-shot latch: if neither `gHovercraftHitFlashOn` nor `gHovercraftHitFlashTimer`

@@ -4,6 +4,7 @@
 #include "text.h"
 #include "pickups.h"
 #include "util.h"
+#include "audio.h"
 
 extern void *gLevelState;
 extern void *gEntityFlags;
@@ -335,10 +336,6 @@ void CreateEntitySpawner(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     SetEntitySpawnerTable(obj, gEntitySpawnFuncs, 0x5c);
 }
 
-extern struct AudioContext *InitAudioContext(struct AudioContext *self);
-extern void EnableMusicVCountIrq(void);
-extern void SetSfxVolume(void *arg0, u16 arg1);
-extern void SetMusicVolume(void *arg0, u16 arg1);
 extern void *gAudioContext;
 extern void *gSpriteRenderer;
 extern void *gPaletteCycles;

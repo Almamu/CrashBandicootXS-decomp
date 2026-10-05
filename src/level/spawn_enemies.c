@@ -1,5 +1,6 @@
 #include "core.h"
 #include "text_popup.h"
+#include "audio.h"
 
 /* codegen: CreateEnemyCtrl takes the 0x8C-byte block OperatorNew
  * returns (enemies.h). In 11 of the 26 spawners below the registers only
@@ -24,7 +25,6 @@ extern const s32 gElectricEelAnimMap[8];
 extern void *gAudioContext;
 
 extern struct popup_part *CreateGroundSprite(u16 arg0, u16 arg1, u16 arg2, u16 arg3);
-extern void PlaySfx(void *bank, s32 sfxId, s32 volume);
 
 /* Inline so the lookup's result gets its own register copy, as the ROM
  * does. */

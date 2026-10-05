@@ -1,5 +1,6 @@
 #include "core.h"
 #include "actor_self.h"
+#include "system.h"
 
 /* Sits right after yeti_states.c's `YetiStateCharge` and before
  * yeti.c's `StopYeti` - the whole contiguous range that used
@@ -10,7 +11,6 @@
 extern u8 gYetiBox[];
 extern s32 gYetiX;
 extern s32 gYetiPosition;
-extern void *MemCopy32(void *dest, void *src, s32 size);
 
 /* `UpdateYeti`'s (yeti_update.c) shared AABB-overlap-test tail,
  * factored out as its own function taking `self` explicitly instead of

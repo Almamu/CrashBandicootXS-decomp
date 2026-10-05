@@ -3,6 +3,7 @@
 #include "level_state.h"
 #include "level_data.h"
 #include "util.h"
+#include "audio.h"
 
 extern struct level_state *gLevelState;
 extern void *gEntityFlags;
@@ -14,7 +15,6 @@ extern s32 GetDeaths(void *self);
 extern s32 GetMaskAssistDeaths(void *self);
 extern u8 IsInBonusRound(void *self);
 extern void _call_via_r4(void *arg0, s32 arg1, s32 arg2, s32 arg3);
-extern void PlaySfx(void *bank, s32 arg1, s32 sfxId);
 
 /* Sound-trigger dispatch/position writer - the last of the
  * `LoadGraphicsPackage` cluster's scratch-buffer-style helper family

@@ -1,6 +1,8 @@
 #include "core.h"
 #include "byte_arg.h"
 #include "actor_self.h"
+#include "system.h"
+#include "audio.h"
 
 /* Covers the 0x0802E0A4-0x0802F0DC gap between issue #54's chunk
  * (`yeti.c`, ending at `YetiStateCaught`/`sub_802E0A0`) and issue
@@ -59,13 +61,10 @@ struct keys_pair {
     u16 pressed;
 };
 
-extern u8 *mem_alloc(u32 size, s32 flags);
-extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void InitActorPart(void *self, void *part, s32 b, s32 c, s32 d);
 extern s32 GetAnimFrameBaseOffset(void *self);
 extern u32 GetSpriteShapeSizeBits(u8 *frame);
 extern void QueueSpriteFrameOam(u32 attr01, u16 attr2, s32 priority);
-extern void PlayAmbientSfx(void *ctx, s32 id, s32 frame, s32 vol, struct byte_arg force);
 extern u8 IsCrystalSaved(void *self);
 extern void LoseLife(void *self);
 extern u8 IsActorMaskAssistDue(void);

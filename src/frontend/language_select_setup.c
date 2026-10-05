@@ -1,13 +1,12 @@
 #include "core.h"
 #include "vram_pool.h"
 #include "gba/dma_macros.h"
-#include "memory.h"
+#include "system.h"
 #include "frontend.h"
 
 extern struct oam_shadow_buffer *gOamBuffer;
 extern struct palette_cache *gPaletteCache;
 
-extern void WaitForVBlank(void);
 extern void FreeUnlockedPaletteSlots(struct palette_cache *self);
 extern void CommitOamBuffer(struct oam_shadow_buffer *arg0);
 extern void UploadPaletteCache(struct palette_cache *arg0);

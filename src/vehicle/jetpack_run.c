@@ -1,6 +1,7 @@
 #include "core.h"
 #include "actor_self.h"
 #include <libgcc.h>
+#include "audio.h"
 
 /* Same large per-instance "self" object family as ctrl.c/
  * action_ctrl_states.c/polar_player_actions.c/airship_fireball.c (state at `self+0x28`,
@@ -14,7 +15,6 @@
  * and docs/status/actor.md. */
 
 extern void SetCellAnimSpeed(s32 arg0);
-extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void FreezeLevelClock(void *arg0, s32 arg1);
 extern s32 GetActorCategoryFrameCount(void);
 extern s32 AddLife(void *self);

@@ -4,6 +4,8 @@
 #include "box_part.h"
 #include <agb_syscall.h>
 #include "util.h"
+#include "system.h"
+#include "audio.h"
 
 extern void *GetSpriteFrame(void *part);
 
@@ -396,7 +398,6 @@ void UpdatePartList(struct part_list *list)
     }
 }
 
-extern void *MemCopy32(void *dst, const void *src, s32 size); /* memcpy (asm/crt0.s) */
 extern void CollidePartWithPlayer(struct part_list *list, struct aabb box, struct box_part *part);
 extern void CollidePartWithObject(struct part_list *list, struct aabb box, struct box_part *part, struct box_part *other);
 extern struct box_part *gPlayer;
@@ -445,7 +446,6 @@ extern void *gAudioContext;
 extern s32 ClassifySpriteContact(struct box_part *part, struct aabb *box);
 extern struct aabb GetSpriteHitbox(struct box_part *part);
 extern struct aabb GetSpriteBodyBox(struct box_part *part);
-extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
 
 /* obj->vtable[0x68](a, b, c) - the part's "hit" method. */
 #define CALL_HIT(obj, a, b, c)                                                 \

@@ -46,9 +46,24 @@ import extern_audit as ea  # noqa: E402
 ROOT = ea.ROOT
 
 
-def header_decls(header):
-    fs = ea.scan_c(header, is_header=True)
+def header_decls(header, seen=None):
+    """The header's declarations, plus those of the headers it includes
+    with `#include "..."` (a file that includes system.h also gets irq.h
+    and memory.h). The header's own declaration wins over an included
+    one."""
+    seen = set() if seen is None else seen
+    if header in seen:
+        return {}
+    seen.add(header)
     out = {}
+    with open(os.path.join(ROOT, header), encoding='utf-8') as f:
+        text = f.read()
+    for inc in re.findall(r'^\s*#\s*include\s+"([^"]+)"', text, re.M):
+        for cand in (os.path.join(os.path.dirname(header), inc), os.path.join('include', inc)):
+            if os.path.isfile(os.path.join(ROOT, cand)):
+                out.update(header_decls(os.path.normpath(cand), seen))
+                break
+    fs = ea.scan_c(header, is_header=True)
     for d in fs.decls:
         out[d['asm'] or d['name']] = d
     return out

@@ -1,5 +1,7 @@
 #include "core.h"
 #include "level_menu.h"
+#include "system.h"
+#include "audio.h"
 
 /* GitHub issue #27: 0x0801CEE0-0x0801DA38, the whole of the former
  * asm/code_3_2_17_188d0_1cee0.s. The rest of the level-select screen
@@ -41,14 +43,11 @@ extern u32 gLevelSelectWorldAnims[];
 extern u8 gLevelSelectPageBg[];
 extern struct xy_pair gZoomBgSlotOffsets[];
 
-extern void WaitForVBlank(void);
-extern void UpdateKeys(void *p);
 extern void UploadPaletteCache(void *p);
 extern void CommitOamBuffer(void *p);
 extern void ClaimPaletteSlot(void *cache, s32 arg);
 extern void LockPalette(void *cache, s32 record);
 extern void FlushVramDmaQueue(void);
-extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void LoadGraphicsPackage(void *dst, void *pkg);
 extern void *OperatorNew(u32 size);
 extern void OperatorDelete(void *p);

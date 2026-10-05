@@ -4,7 +4,7 @@
 #include "pause_menu.h"
 #include "audio.h"
 #include "vram_pool.h"
-#include "memory.h"
+#include "system.h"
 #include "text.h"
 #include "util.h"
 #include <libgcc.h>
@@ -125,7 +125,6 @@ extern void DrawPauseRelicsPage(struct pause_menu *self);
 extern void DrawSpriteWithOffset(void *icon, s32 dx, s32 dy);
 extern u32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern struct vram_upload_cursor *gObjVramCursor;
-extern void *GetUiText(s32 id);
 
 static inline void set_icon_mgr_pos(struct bitmap_font *m, u32 x, u32 y)
 {
@@ -271,7 +270,7 @@ void DrawPauseMenuRows(struct pause_menu *self)
             FontSetPalette(gSmallFont, 0xf);
         else
             FontResetPalette(gSmallFont);
-        label = GetUiText(((struct pause_screen_row_record *)self->field_14)[i].labelId);
+        label = (void *)GetUiText(((struct pause_screen_row_record *)self->field_14)[i].labelId);
         x = 0x32 - (ICON_SLOT_CALL(gSmallFont, 0, label) >> 1);
         switch (((struct pause_screen_row_record *)self->field_14)[i].typeTag) {
         case 4:

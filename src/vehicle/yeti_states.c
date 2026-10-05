@@ -1,6 +1,7 @@
 #include "core.h"
 #include "memory.h"
 #include "util.h"
+#include "audio.h"
 
 /* The `gYeti`-rooted position-tracking object with tier-
  * threshold sound cues, already documented in docs/rom_map.md ("A
@@ -21,12 +22,16 @@ extern s32 gYetiDistance;
 extern s32 gYetiPosition;
 extern void *gYeti;
 extern void *gAudioContext;
-extern s32 PlayAmbientSfx(void *arg0, s32 arg1, s32 arg2, s32 arg3);
+/* codegen: PlayAmbientSfx takes a fifth argument, a one-byte struct on
+ * the stack (audio.h). YetiStateChase stores the byte at sp itself
+ * (`mov r4, sp; mov r1, #1; strb r1, [r4]`); passing a `struct byte_arg`
+ * schedules the `mov r1, #1` before the `mov r4, sp`.
+ * docs/headers_plan.md */
+extern void PlayAmbientSfx_4(void *self, s32 id, s32 frameOffset, s32 volumeMul) asm("PlayAmbientSfx");
 extern void ShakeActorBg(s32 arg0);
 extern s32 gYetiParamsIndex;
 extern u8 gYetiChargeParams[];
 extern s32 gYetiState;
-extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 
 /* Re-derives `gYetiPosition`/`030014CC` (a small per-frame ease
  * toward a `GetCellAnimDistance()`-driven target, with a `+0x99` nudge on the
@@ -69,7 +74,7 @@ void YetiStateChase(void)
                 register u8 one asm("r1") = 1;
 
                 *stackPtr = one;
-                PlayAmbientSfx(a0, 0x3f, a2, a3);
+                PlayAmbientSfx_4(a0, 0x3f, a2, a3);
                 ShakeActorBg(0x200);
             } else if (tier == 0x1c) {
                 void *a0 = gAudioContext;
@@ -79,7 +84,7 @@ void YetiStateChase(void)
                 register u8 one asm("r1") = 1;
 
                 *stackPtr = one;
-                PlayAmbientSfx(a0, 0x40, a2, a3);
+                PlayAmbientSfx_4(a0, 0x40, a2, a3);
                 ShakeActorBg(0x200);
             } else if (tier == 0xd || tier == 0x1d) {
                 ShakeActorBg(0x100);

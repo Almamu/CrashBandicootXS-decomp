@@ -3,6 +3,7 @@
 #include "enemies.h"
 #include "util.h"
 #include <libgcc.h>
+#include "audio.h"
 
 /* GitHub issue #9/#10: `UpdateEnemyAttackCycle` and `UpdateEnemyTriggerBox`, the last two of
  * the four `self+0x68`-dispatching siblings flagged in
@@ -66,7 +67,6 @@
  * byte count needs the trailing `asm(".align 2, 0")` (the ROM
  * zero-pads its last 2 bytes to the next 4-byte boundary). */
 
-extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
 extern struct ctrl_target *LaunchEffectPart(void *pool, s32 kind, s32 b, s32 margin, s32 z, s32 e, struct ctrl_target *src);
 extern u8 PlayerTouchesBox(struct ctrl_target *obj, struct aabb *box);
 extern u32 gRoomFrameCount;

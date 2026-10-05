@@ -1,12 +1,5 @@
 #include "core.h"
-#include "memory.h"
-
-s32 mem_heap_init(u32);
-extern void mem_heap_shutdown();                                    /* extern */
-extern void IrqDisable();                                    /* extern */
-extern u32 IrqSetup();                                  /* extern */
-extern void EnableVBlankHandler();                                    /* extern */
-extern s32 MainLoop();                                  /* extern */
+#include "system.h"
 
 
 s32 AgbMain(void) {

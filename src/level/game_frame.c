@@ -5,6 +5,8 @@
 #include "save.h"
 #include "frontend.h"
 #include "util.h"
+#include "system.h"
+#include "audio.h"
 
 /* UpdateGameFrame - the main per-frame game-loop driver at the head of
  * the UpdateGameFrame-MainLoop cluster (GitHub issue #34,
@@ -111,7 +113,6 @@ extern void ResetCrateCount(struct level_state *self);
 extern void sub_8023120(struct level_state *self, s32 n);
 extern void SetMaskAssistDeaths(struct level_state *self, s32 n);
 extern void SetCrateAssistDeaths(struct level_state *self, s32 n);
-extern void *MemCopy32(void *dest, void *src, s32 size);
 extern void *OperatorNew(u32 size);
 extern void PlayCutscene(struct level_state *self, s32 screen);
 extern u8 HasSuperBodySlam(struct level_state *self);
@@ -142,12 +143,10 @@ extern void ArmStartSpawn(struct level_state *self);
 extern void FreeUnlockedPaletteSlots(void *cache);
 extern void SetLevelBoss(struct level_state *self, s32 arg1);
 extern void PlayRoomMusic(s32 *progress);
-extern s32 mem_free_bytes(s32 arg0);
 extern s32 PlayRoom(s32 *progress);
 extern s32 InitActorCategory(u16 category);
 extern s32 GetActorMissedNitros(void);
 extern void AddPendingSwitchCrates(struct level_state *self, s32 arg1);
-extern void ResetAmbientSfx(void *arg0);
 extern void SetMaskLevel(struct level_state *self, s32 tier);
 extern u8 IsInBonusRoom(s32 *progress);
 extern u8 IsInGemPathRoom(s32 *progress);

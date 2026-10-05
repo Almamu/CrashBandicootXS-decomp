@@ -2,6 +2,8 @@
 #include "bitmap_font.h"
 #include "vram_pool.h"
 #include "text.h"
+#include "system.h"
+#include "audio.h"
 
 /* Same continue prompt ("fade overlay") self object as `continue_prompt_init.c` (`InitContinuePrompt`) -
  * redeclared locally here per this project's minimal-local-type
@@ -35,7 +37,6 @@ extern void UploadPaletteCache(struct palette_cache *self);
 extern struct oam_shadow_buffer *gOamBuffer;
 extern void ResetOamBuffer(struct oam_shadow_buffer *arg0);
 extern void HideUnusedOamEntries(struct oam_shadow_buffer *arg0);
-extern void WaitForVBlank(void);
 extern void CommitOamBuffer(struct oam_shadow_buffer *arg0);
 extern u16 gContinuePromptPalette0[];
 extern u16 gContinuePromptPalette1[];
@@ -143,8 +144,6 @@ struct keys89 {
     u16 pressed;
 };
 
-extern void UpdateKeys(void *arg0);
-extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void *gInput;
 extern u32 gKeys;
 extern void *gAudioContext;

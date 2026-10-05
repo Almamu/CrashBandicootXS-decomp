@@ -1,6 +1,8 @@
 #include "core.h"
 #include "hud.h"
 #include "util.h"
+#include "system.h"
+#include "audio.h"
 
 /* GitHub issue #37 follow-up to `docs/matching/issue-37-game-loop-2375c.md`
  * (which matched this function's only caller, `PlayRoom`, in
@@ -319,7 +321,6 @@ extern u8 IsInBonusRound(void *level);
 extern u8 IsInGemPath(void *level);
 extern u8 IsInBonusRoom(struct gl_self *self);
 extern u8 IsInGemPathRoom(struct gl_self *self);
-extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
 extern s32 _call_via_r2(void *self, s32 arg, void *fn);
 extern s32 _call_via_r1(void *self, void *fn);
 extern void CullPartList(void *mgr);
@@ -328,7 +329,6 @@ extern void SetDispcntMode(s32 arg);
 extern void SetObjMapping1D(void);
 extern void ShowObj(void);
 extern void CommitDispcnt(void);
-extern void UpdateKeys(void *arg);
 extern s32 RunPauseMenu(void);
 extern void ResumeRoomAfterPause(struct gl_self *self);
 extern void UpdatePartList(void *mgr);
@@ -347,7 +347,6 @@ extern void HideBg1(void);
 extern void HideBg2(void);
 extern void HideBg3(void);
 extern void HideObj(void);
-extern void WaitForVBlank(void);
 
 #define PAL_RAM ((u16 *)PLTT)
 

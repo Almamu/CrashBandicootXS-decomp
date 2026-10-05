@@ -1,5 +1,6 @@
 #include "core.h"
 #include "action_obj.h"
+#include "system.h"
 
 /* Continuation of action_ctrl_states.c's `gActionCtrlStateTable` action-table
  * entries. See action_ctrl_states.c's own
@@ -10,7 +11,6 @@ extern u32 gKeys;
 extern void *gInput;
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern s32 _call_via_r3(void *arg0, void *arg1, void *arg2, void *arg3);
-extern u8 GetDpadDirection(void *dummy);
 extern void SetActionCtrlModeAnim(void *self, s32 a, s32 b, s32 c, s32 d);
 
 /* Same shape as `ActionCtrlStateStandUp` (action_ctrl_states.c) - resets the same

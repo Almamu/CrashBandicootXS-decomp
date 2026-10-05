@@ -1,5 +1,7 @@
 #include "core.h"
 #include "action_obj.h"
+#include "system.h"
+#include "audio.h"
 
 /* Part of GitHub issue #16's remainder (0x08011BD4-0x08012D24): three
  * gActionCtrlStateTable action-table helpers for the player/action object
@@ -47,8 +49,6 @@ extern struct act_part *gPlayer;
 extern void *gInput;
 extern struct cam *gLevelLayers;
 extern struct act_pmf gActionCtrlStateTable[];
-extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
-extern u8 GetDpadDirection(void *pad);
 extern void sub_8012238(struct act *self);
 extern void ApplyActionCtrlMotion(struct act *self);
 extern void ActionCtrlStateFlipBodySlamStart(struct act *self);

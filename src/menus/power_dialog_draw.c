@@ -4,6 +4,7 @@
 #include "actor.h"
 #include "text.h"
 #include "util.h"
+#include "system.h"
 
 /* A small per-category threshold table: CountSapphireRelics/CountGoldRelics/
  * CountPlatinumRelics each count how many of a caller's 20 records fall between
@@ -55,7 +56,6 @@ struct sub_8006700_actor {
 
 extern void RewindObjVram(struct vram_upload_cursor *arg0);
 extern void DrawSpriteWithOffset(void *arg0, s32 arg1, s32 arg2);
-extern s32 GetUiText(s32 arg0);
 extern struct vram_upload_cursor *gObjVramCursor;
 
 /* Sets an icon manager's draw position. Both coordinates are inline
@@ -106,8 +106,6 @@ void DrawPowerDialog(struct sub_8006700_actor *arg0)
     HideUnusedOamEntries(gOamBuffer);
 }
 
-extern void WaitForVBlank(void *arg0);
-
 void AnimatePowerDialog(struct sub_8006700_actor *arg0)
 {
     arg0->field_1c++;
@@ -116,7 +114,7 @@ void AnimatePowerDialog(struct sub_8006700_actor *arg0)
 
 void CommitPowerDialogFrame(struct sub_8006700_actor *arg0)
 {
-    WaitForVBlank(arg0);
+    WaitForVBlank();
     UploadPaletteCache(gPaletteCache);
     CommitOamBuffer(gOamBuffer);
     FlushVramDmaQueue();

@@ -4,6 +4,7 @@
 #include "actor.h"
 #include "pause_menu.h"
 #include "text.h"
+#include "system.h"
 
 /* The three functions below are companion "draw a label centered on an
  * icon widget" steps. Once NAKED transcriptions; they match as plain C
@@ -88,7 +89,6 @@ struct pause_screen_category_state {
     s32 field_24;
 };
 
-extern s32 GetUiText(s32 arg0);
 extern void *gPauseMenuPageTitles[];
 
 void DrawPauseMenuPageTitle(struct pause_screen_category_state *self)
@@ -109,7 +109,6 @@ void DrawPauseMenuPageTitle(struct pause_screen_category_state *self)
  * already-matched `CommitPowerDialogFrame` uses for the same job at different
  * offsets. */
 
-extern void WaitForVBlank(void *arg0);
 extern void UploadPaletteCache(void *arg0);
 extern void CommitOamBuffer(void *arg0);
 extern void FlushVramDmaQueue(void);
@@ -127,7 +126,7 @@ extern void *gOamBuffer;
  * gets for free from plain field access). */
 void CommitPauseMenuFrame(struct pause_menu *self)
 {
-    WaitForVBlank(self);
+    WaitForVBlank();
     UploadPaletteCache(gPaletteCache);
     CommitOamBuffer(gOamBuffer);
     FlushVramDmaQueue();

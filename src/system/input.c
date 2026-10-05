@@ -1,10 +1,9 @@
 #include "core.h"
+#include "system.h"
 
 /* Sits between FormatCentiseconds (ROM 0x0800106C, in src/util/time_format.c) and
  * LoadTaggedAsset (still raw in asm/code_3_1_5.s). */
 
-extern void WaitForVBlank(void);
-extern s32 UpdateKeys(void *arg0);
 extern void *gInput;
 extern u16 gKeys;
 
@@ -20,13 +19,9 @@ extern u16 gKeys;
  * all. Reads the "newly pressed this frame" keys (`gKeys`'s
  * companion u16 at +2, see `UpdateKeys`'s own notes in
  * `src/system/irq.c`) fresh each poll (no caching across polls, since
- * `UpdateKeys`'s call in between could change it). The
- * `UpdateKeys(gInput)` calls pass an argument the real,
- * already-matched `UpdateKeys(void)` (in `src/system/irq.c`) never
- * reads - same "ROM sets up an arg the callee ignores" shape as
- * `WaitForVBlank` itself; declared here with a dummy `void *` parameter
- * purely so this call site's leftover r0 setup matches the ROM's
- * bytes. `keys` is pinned to r1 and set via an inline-asm copy of
+ * `UpdateKeys`'s call in between could change it). `UpdateKeys`
+ * takes the input object (`gInput`, in r0 at every call) but never
+ * reads it (system.h). `keys` is pinned to r1 and set via an inline-asm copy of
  * `mask` (rather than a plain `keys = mask & ...`) to reproduce the
  * ROM's redundant `adds r1, mask, #0` before the load - gcc's own
  * codegen for the combined expression instead loads straight into r1

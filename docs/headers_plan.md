@@ -26,16 +26,19 @@ Batch 1 (link + hud) done: `include/link.h` and `include/hud.h`, see
 "Batch 3" below. Batch 4 (util + libgcc) done: `include/util.h`,
 `lib/libgcc/include/libgcc.h`, every `struct aabb` copy merged into
 `aabb.h`, and `COMPILE_TIME_ASSERT` takes a tag, see "Batch 4" below.
+Batch 5 (system + audio) done: `include/system.h`, `irq.h`/`memory.h`/
+`audio.h` extended, the IRQ table typed as `irq_handler_t [14]`, see
+"Batch 5" below.
 
 Audit totals (`tools/extern_audit.py`) as the batches land:
 
-| | Pilot merged | After batch 1 | After batch 2 | After batch 3 | After batch 4 |
-|---|---:|---:|---:|---:|---:|
-| Declarations in `.c` files (symbols defined elsewhere) | 4,572 | 4,513 | 4,436 | 4,279 | 4,159 |
-| Unique symbols declared in a `.c` file | 2,317 | 2,284 | 2,214 | 2,112 | 2,091 |
-| - conflicting | 231 | 229 | 226 | 222 | 210 |
-| Local struct/union definitions in `.c` files | 548 | 538 | 522 | 501 | 487 |
-| Struct names defined in more than one `.c` file | 75 | 74 | 68 | 63 | 62 |
+| | Pilot merged | After batch 1 | After batch 2 | After batch 3 | After batch 4 | After batch 5 |
+|---|---:|---:|---:|---:|---:|---:|
+| Declarations in `.c` files (symbols defined elsewhere) | 4,572 | 4,513 | 4,436 | 4,279 | 4,159 | 3,897 |
+| Unique symbols declared in a `.c` file | 2,317 | 2,284 | 2,214 | 2,112 | 2,091 | 2,034 |
+| - conflicting | 231 | 229 | 226 | 222 | 210 | 196 |
+| Local struct/union definitions in `.c` files | 548 | 538 | 522 | 501 | 487 | 485 |
+| Struct names defined in more than one `.c` file | 75 | 74 | 68 | 63 | 62 | 62 |
 
 ## Tools
 
@@ -63,7 +66,9 @@ Audit totals (`tools/extern_audit.py`) as the batches land:
   declaration too. Files that define one of the header's symbols are only
   converted when named on the command line. The tool prints the trailing
   comments it drops and the comment blocks a deletion may leave orphaned.
-  It doesn't build anything.
+  It doesn't build anything. The header's declarations include those of
+  the headers it includes with `#include "..."` (batch 5), so applying
+  `system.h` also removes local copies of `irq.h`/`memory.h` symbols.
 
 A quick per-file check before the full build: delete the file's `.o`, run
 `make build/crashbandicootxs/src/<dir>/<file>.o` and diff the generated `.s`
@@ -183,7 +188,7 @@ The full list:
 | Subsystem | Header | Notes |
 |---|---|---|
 | actor | `actor.h` (extend) | |
-| audio | `audio.h` (extend) | already includes `<gax.h>` |
+| audio | `audio.h` (**done**, batch 5) | includes `<gax.h>` and `byte_arg.h` |
 | bosses | `bosses.h` (new) | |
 | crates | `crates.h` (new) | includes `crate.h` (types) |
 | cutscene | `cutscene.h` (extend) | |
@@ -199,7 +204,7 @@ The full list:
 | pickups | `pickups.h` (new) | |
 | player | `player.h` (new) | |
 | save | `save.h` (new) | |
-| system | `system.h` (new) | `memory.h` and `irq.h` stay as they are (already real headers) |
+| system | `system.h` (**done**, batch 5) | includes `irq.h` (the IRQ table and VBlank callbacks) and `memory.h` (the heap), which got the rest of irq.c's and memory.c's prototypes |
 | text | `text.h` (**done**, pilot) | |
 | util | `util.h` (**done**, batch 4) | includes `aabb.h` and `line_util.h` |
 | vehicle | `vehicle.h` (new) | |
@@ -250,9 +255,9 @@ Where the remaining declarations would go (after the pilot):
 | cutscene (**done**, batch 2) | 24 | 1 | 27 | 9 |
 | pickups (**done**, batch 2) | 28 | 3 | 33 | 10 |
 | enemies (**done**, batch 2) | 32 | 1 | 34 | 6 |
-| system | 33 | 6 | 135 | 73 |
+| system (**done**, batch 5) | 33 | 6 | 135 | 73 |
 | util (**done**, batch 4) | 17 | 9 | 69 | 49 |
-| audio | 22 | 8 | 117 | 80 |
+| audio (**done**, batch 5) | 22 | 8 | 117 | 80 |
 | libgcc (without `_call_via_rN`) (**done**, batch 4) | 8 | 2 | 53 | 39 |
 | lib/gax (internal) | 43 | 3 | 74 | 22 |
 | save (**done**, batch 3) | 50 | 2 | 62 | 9 |
@@ -387,8 +392,9 @@ before the files that every subsystem touches.
 5. **util + `libgcc.h` (done):** `RandRange`, `__modsi3`/`__umodsi3`
    variants, and every `struct aabb` copy into `aabb.h`. See "Batch 4"
    below.
-6. **system, audio:** `WaitForVBlank` (27 files), `PlaySfx` (66 files, 3
-   variants). Big include fan-out but few distinct symbols.
+6. **system, audio (done):** `WaitForVBlank` (27 files), `PlaySfx` (66
+   files, 3 variants). Big include fan-out but few distinct symbols. See
+   "Batch 5" below.
 7. **menus, crates, player:** one PR each.
 8. **actor, bosses, vehicle:** one PR each. These have many symbols but few
    conflicts, and few files outside the subsystem use them.
@@ -786,6 +792,95 @@ definitions (501 -> 487). One file needed an asm-label alias
 Every touched object file and every `.s` file is identical to the clean
 build's, and no file has a new warning.
 
+## Batch 5: system + audio
+
+262 local declarations are gone (4,159 -> 3,897) and 120 `.c` files are
+touched. 2 local struct definitions are gone (487 -> 485). One file
+needed an asm-label alias (`PlayAmbientSfx` in yeti_states.c, see
+"Codegen exceptions").
+
+- **`include/system.h`** (new) declares every function of asset.c,
+  boot.c, input.c, main.c, main_loop.c and the non-IRQ half of irq.c
+  (`WaitForVBlank`, the frame limit, `UpdateKeys`, `ClearKeys`,
+  `GetDpadDirection`), plus `LoadTaggedAssetBuffered` (defined in
+  language_select.c for ROM order; batch 3 deferred it here), the frame
+  limit globals, `gLanguage`, `gUiTextTables` and `gDpadDirectionTable`.
+  It includes `irq.h` and `memory.h`, so a file includes `system.h` alone
+  (12 files that had both lost their `irq.h`/`memory.h` line).
+- **`include/irq.h`** (extended) declares every IRQ and VBlank-callback
+  function, `struct vblank_callbacks` (moved from irq.c), the tables and
+  `IntrMain_Buffer`. `gIntrTableTimer2` (batch 3's deferral) is here: it
+  is `gIntrTable[INTR_INDEX_TIMER2]` under its own sym_iwram.txt name,
+  and save_data.c lost its local declaration.
+  - **The IRQ table is `irq_handler_t gIntrTable[14]`** (and
+    `gPrevIntrTable`). It was declared `irq_handler_t *[5]`, a pointer to
+    a function pointer per entry, which needed `&IrqEmptyHandler` and
+    `(irq_handler_t *)` casts everywhere. IrqSetup fills 14 entries and
+    gPrevIntrTable sits 0x38 bytes after gIntrTable, so 14 it is.
+    `IrqSetHandler` takes an `irq_handler_t`; link_sio.c and
+    link_session.c lost their casts and audio.c's
+    `IrqSetHandler(..., MusicVCountIrqHandler)` warning is gone.
+    `AddVBlankCallback` takes `void (*fn)(void)` (fade.c passed
+    `StepBrightnessFade` as `void *`; the slot array stays `s32`).
+- **`include/memory.h`** (extended) gets `mem_heap_init`, `mem_collect` and
+  `mem_heap_shutdown`. `mem_alloc` now returns `void *` and takes `u32
+  flags` (was `u8 *`/`s32 arg1`), and `mem_free` takes `void *` (was
+  `u8 *`): the allocator's real types. The frontend callers declared
+  `void *(u32, u32)`, and the vehicle/bosses callers `void (void *)`.
+- **`include/audio.h`** (extended) declares every audio.c function,
+  `gGaxMusicData`, `gSongTable` (`const void *const [19]`, the data
+  file's type; audio.c stores them through `const void **`),
+  `gGaxIrqEnabled` and `gSfxVoiceToggle`. audio.c's `struct
+  sfx_byte_arg` was `struct byte_arg` (`byte_arg.h`, which audio.h now
+  includes). `gAudioContext` stays for `globals.h`.
+- **Definition fixes**, all identical:
+  - `WaitForVBlank(void)`: it took an unused `void *arg0`, and 25 of its
+    27 callers declared it `(void)`. The other two
+    (`CommitPauseMenuFrame`, `CommitPowerDialogFrame`) passed their own
+    first argument, already in r0, and now pass nothing.
+  - `UpdateKeys(void *input)` and `GetDpadDirection(void *input)`: the
+    reverse. They were defined `(void)`, but every caller (25 files)
+    passes `gInput` in r0 (input.c's comment called its
+    declaration a dummy for this). The parameter is unused.
+  - `DisableMusicVCountIrq(struct AudioContext *self)`, unused:
+    DestroyLevelState passes `gAudioContext`, and dropping it changes
+    the bytes. `EnableMusicVCountIrq` stays `(void)`; its caller passes
+    nothing.
+  - `GetSfxVolume`/`GetMusicVolume` return `s32`, the type of the fields
+    they return (they returned `u32`). pause_menu_info.c's declarations
+    were right: it divides the result by 256, and with `u32` that
+    becomes `lsr` in place of the signed rounding sequence.
+  - `LoadTaggedAsset`, `LoadBackgroundTileAndPalette` and
+    `LoadTaggedAssetBuffered` take `const void *asset`.
+  - `GetUiText` keeps its `s32` return (its 14 callers store it in `s32`
+    fields); main_loop.c reads `gUiTextTables` with iwram_data.c's type
+    and casts. A `const u8 *` return is a later cleanup across menus,
+    save and frontend.
+- **Conflicts**, all identical with the header's type: `PlaySfx` (64
+  callers declared `(void *, s32, s32)`), `PlaySong`, `StopSfx`,
+  `FadeOutMusic`, `SetMusicVolume`/`SetSfxVolume` (spawn_pickups.c and
+  save_menu_input.c declared a `u16` value), `ResetAmbientSfx`,
+  `DestroyAudioContext`, `MemCopy32` (6 variants: save_data.c's `void`
+  return, save_menu_draw.c's `s32` source, now passed as `(void *)`),
+  `UpdateKeys` (`void` return in 14 callers), `mem_alloc`/`mem_free`,
+  `GetUiText` (`void *` in pause_menu_draw.c, now cast at the one use),
+  `LoadTaggedAsset`/`LoadTaggedAssetBuffered`, and the unprototyped
+  `UpdateCtrl` in entity_vtables_7e3bec.c.
+- **Tools:** `apply_headers.py` follows a header's `#include "..."`
+  lines, so applying `system.h` also replaces declarations of `irq.h` and
+  `memory.h` symbols.
+- iwram_data.c, song_table_16aa20.c and boss_pictures_167ad4.c include the
+  headers that declare their globals.
+- Left for later batches: `gAudioContext`, `gKeys`, `gInput` and
+  `gRoomFrameCount` (globals.h); `GetLevelState`, `PlayBootCutscene`,
+  `ShowCompanyLogos`, `PlayIntroCutscene` and `UpdateGameFrame`, which
+  main_loop.c calls (level). The one-argument `LZ77UnCompVram`/
+  `RLUnCompVram` in asset.c stay (docs/libraries.md).
+
+After a clean build, every `.o` and `.s` file in src/ and lib/ is
+identical to origin/main's, and the build has 7 fewer warnings (6 in
+irq.c, 1 in audio.c) and no new ones.
+
 ## Codegen findings
 
 The pilot itself had **no codegen surprises**: every file's `.s` was
@@ -831,6 +926,16 @@ here (built with agbcc and, in `font_glyph.c`, `font_draw_text.c`,
 | parameter `void *`/`u8 [16]`/`s32 [4]`/local box struct -> `struct aabb *`, stack buffers -> `struct aabb` | `AabbOverlaps`/`SetAabbPos`/`SetAabbSize` callers, extra_life.c (old_agbcc), graphics.c | identical |
 | `field_0`..`field_c`/`valid`/`unk_08` -> `x`/`y`/`w`/`h`, including through `*(vs32 *)&box.w` | crate.c (pinned registers), crate_hit.c, sprite_obj.c, player_contact.c, dingodile.c (old_agbcc) | identical |
 | `COMPILE_TIME_ASSERT` typedef renamed | every file with an assert | identical (typedefs emit nothing) |
+| unused `void *` parameter removed from a definition; two callers stop passing their own r0 | `WaitForVBlank` (irq.c), CommitPauseMenuFrame, CommitPowerDialogFrame | identical |
+| unused `void *` parameter added to a `(void)` definition whose callers pass `gInput` | `UpdateKeys` (pinned r0-r3 locals), `GetDpadDirection` | identical |
+| unused parameter added to a `(void)` definition; caller keeps passing `gAudioContext` | `DisableMusicVCountIrq` | identical; dropping the argument at the call changes 17 lines |
+| return `u32` -> `s32` for a getter of an `s32` field | `GetSfxVolume`/`GetMusicVolume` | identical in audio.c; pause_menu_info.c **changes** with `u32` (signed `/ 256` becomes `lsr`) |
+| `irq_handler_t *gIntrTable[5]` with `&fn` and casts -> `irq_handler_t gIntrTable[14]` and plain function names | irq.c, link_sio.c, link_session.c, audio.c | identical |
+| parameter `s32` -> function pointer, stored with an `(s32)` cast | `AddVBlankCallback` | identical |
+| parameter `void *` -> `const void *`, reads through `const u32 *` | `LoadTaggedAsset`, `LoadTaggedAssetBuffered` and their callers | identical |
+| return `u8 *` -> `void *`, parameter `s32` -> `u32` (`&` test only), `u8 *` -> `void *` | `mem_alloc`/`mem_free` (memory.c) and callers | identical |
+| parameters `void *, s32, s32` -> `struct AudioContext *, u32, u32`; `u16` -> `u32` value | `PlaySfx` in 64 files, `SetMusicVolume`/`SetSfxVolume` | identical |
+| one-byte struct argument written through a pinned `&dummyStack` -> a `struct byte_arg` local | `PlayAmbientSfx` in YetiStateChase | **changes** (`mov r1, #1` moves before `mov r4, sp`); kept as an alias |
 
 Experiments for later batches:
 
@@ -860,6 +965,7 @@ adds its entries here.
 |---|---|---|---|---|
 | src/frontend/title_screen_init.c | `RandRange` | `s32 RandRange_s32(s32 max) asm("RandRange")` | `u16 RandRange(s32 max)` (util.h) | with the `u16` return, InitTitleScreen's two stack slots (`[sp, #0x20]`/`[sp, #0x24]`) swap (old_agbcc) |
 | src/level/spawn_enemies.c | `CreateEnemyCtrl` | `CreateEnemyCtrl_r0(void) asm("CreateEnemyCtrl")`, called after a bare `OperatorNew(0x8c);` | `struct part_ctrl *(struct part_ctrl *self)` | in 11 of the 26 spawners (old_agbcc) the registers only match with the block left in r0 by the previous call; the other 15 use the header's prototype |
+| src/vehicle/yeti_states.c | `PlayAmbientSfx` | `void PlayAmbientSfx_4(void *self, s32 id, s32 frameOffset, s32 volumeMul) asm("PlayAmbientSfx")`, the byte stored at sp through a pinned r4 | `void (struct AudioContext *, u32, u32, s32, struct byte_arg)` (audio.h) | passing a `struct byte_arg` schedules `mov r1, #1` before `mov r4, sp` in YetiStateChase |
 
 Known permanent exceptions: `_call_via_rN` (rule 5 above), and the
 one-argument `LZ77UnCompVram`/`RLUnCompVram` in `src/system/asset.c`

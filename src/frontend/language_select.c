@@ -1,10 +1,11 @@
 #include "core.h"
 #include "gba/dma_macros.h"
-#include "memory.h"
+#include "system.h"
 #include "bitmap_font.h"
 #include "vram_pool.h"
 #include "text.h"
 #include "frontend.h"
+#include "audio.h"
 
 /* The language menu shown at boot (OpenLanguageSelect/RunLanguageSelect/
  * CloseLanguageSelect, called from MainLoop): up/down cycles `language`
@@ -19,20 +20,16 @@
 extern void *OperatorNewArray(u32 size);
 extern void OperatorDeleteArray(void *ptr);
 extern void OperatorDelete(void *self);
-extern void WaitForVBlank(void);
 extern void *gInput;
 extern u16 gKeys;
 extern void *gAudioContext;
-extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
-extern s32 UpdateKeys(void *arg0);
-extern void LoadTaggedAsset(void *asset, void *dest);
 
 /* Loads a "tagged" asset (see LoadTaggedAsset, src/system/asset.c)
  * into a freshly allocated buffer, then queues a DMA3 transfer from that
  * buffer out to `dest` - `unused` (r0) is never read. */
-void LoadTaggedAssetBuffered(void *unused, void *asset, void *dest)
+void LoadTaggedAssetBuffered(void *unused, const void *asset, void *dest)
 {
-    u32 val = *(u32 *)asset;
+    u32 val = *(const u32 *)asset;
     struct dma_regs *dma;
     void *buf;
     u32 cnt;

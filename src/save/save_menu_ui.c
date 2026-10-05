@@ -3,6 +3,7 @@
 #include "text.h"
 #include "link.h"
 #include "save.h"
+#include "system.h"
 
 extern void *InitBgSetup(void *buf, s32 arg1, s32 arg2, s32 arg3, s32 arg4);
 extern void LoadGraphicsPackage(void *buf, void *asset);
@@ -91,7 +92,6 @@ void SummarizeProgress(struct save_menu *self, struct settings_row_stats *dest, 
     dest->percent = GetCompletionPercent(src);
 }
 
-extern s32 GetUiText(s32 arg0);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 
 static inline void set_icon_mgr_pos(struct bitmap_font *m, u32 x, u32 y)

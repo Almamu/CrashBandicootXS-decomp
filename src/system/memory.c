@@ -195,7 +195,7 @@ s32 mem_free_bytes(s32 arg0) {
     return free_bytes;
 }
 
-u8* mem_alloc(u32 requestedSize, s32 arg1) {
+void *mem_alloc(u32 requestedSize, u32 flags) {
     struct mem_block* current;
     struct mem_block* end;
     struct mem_heap* heap;
@@ -203,7 +203,7 @@ u8* mem_alloc(u32 requestedSize, s32 arg1) {
     u32 alignedSize = requestedSize;
     s32 freeBytesAfterReservation;
 
-    if (MEM_HEAP_IWRAM & arg1) {
+    if (MEM_HEAP_IWRAM & flags) {
         heap = mem_iwram_heap_pointer;
     } else {
         heap = mem_ewram_heap_pointer;
@@ -246,7 +246,7 @@ u8* mem_alloc(u32 requestedSize, s32 arg1) {
     return current->buffer;
 }
 
-void mem_free(u8* address) {
+void mem_free(void *address) {
     struct mem_heap* heap;
     struct mem_block* tmp;
     struct mem_block* adjacent;

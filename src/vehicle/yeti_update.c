@@ -1,5 +1,6 @@
 #include "core.h"
 #include "actor_self.h"
+#include "system.h"
 
 /* Sits right after polar_aku_aku.c's `CreatePolarCheckpointCrate` and before
  * yeti_states.c's `YetiStateChase`/`YetiStateCharge` - the whole contiguous
@@ -32,7 +33,6 @@ extern void UpdateYetiPalette(void);
 extern u8 gYetiCatchBox[];
 extern s32 gYetiPosition;
 extern u8 gPolarPlayerInactive;
-extern void *MemCopy32(void *dest, void *src, s32 size);
 extern void CatchPolarPlayer(void *self);
 extern void SetCellAnimSpeed(s32 arg0);
 extern u16 gYetiPalette[];

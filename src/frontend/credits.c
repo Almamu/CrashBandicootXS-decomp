@@ -7,6 +7,7 @@
 #include <agb_syscall.h>
 #include "text.h"
 #include "frontend.h"
+#include "system.h"
 
 /* GitHub issue #64 (0x08034AA4-0x080354E0, 13 functions). Continues
  * straight on from issue #63's fade-overlay cluster (continue_prompt_init.c/
@@ -46,7 +47,6 @@ struct continue_prompt {
 
 extern struct oam_shadow_buffer *gOamBuffer;
 extern void CommitOamBuffer(struct oam_shadow_buffer *arg0);
-extern void WaitForVBlank(void);
 extern void FlushVramDmaQueue(void);
 
 /* Another instance of the by-now-familiar "refresh OAM + center text"
@@ -71,7 +71,6 @@ extern u8 gContinuePromptCursorText[];
 extern void ResetOamBuffer(struct oam_shadow_buffer *arg0);
 extern void HideUnusedOamEntries(struct oam_shadow_buffer *arg0);
 extern void RewindObjVram(struct vram_upload_cursor *arg0);
-extern s32 GetUiText(s32 arg0);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 s32 GetContinuePromptBlink(struct continue_prompt *self, s32 mode);
 
@@ -172,7 +171,6 @@ void DestroyContinuePrompt(struct continue_prompt *self, s32 mode)
 }
 
 extern void *OperatorNew(s32 size);
-extern s32 mem_free_bytes(s32 flags);
 extern void *InitContinuePrompt(void *selfArg);
 extern s32 ContinuePromptLoop(void *selfArg);
 
@@ -235,7 +233,6 @@ extern s32 ReserveObjVram(struct vram_upload_cursor *self, s32 size);
 extern void MarkObjVram(struct vram_upload_cursor *self);
 extern void _call_via_r1(void *self, void *fn);
 extern void CommitDispcnt(void);
-extern void PlaySong(struct AudioContext *self, u32 id);
 extern struct palette_cache *gPaletteCache;
 extern u8 gDispcnt[2];
 extern struct AudioContext *gAudioContext;
@@ -297,8 +294,6 @@ struct credits_screen *InitCredits(struct credits_screen *self)
 
 asm(".align 2, 0");
 
-extern void UpdateKeys(void *arg0);
-extern void FadeOutMusic(struct AudioContext *self, u32 value);
 extern struct AudioContext *gAudioContext;
 extern void *gInput;
 
@@ -707,7 +702,6 @@ struct popup_glyph_src {
 
 extern void *OperatorNewArray(u32 size);
 extern void OperatorDeleteArray(void *ptr);
-extern void LoadTaggedAsset(const void *asset, void *dest);
 extern s32 ClaimPaletteSlot(struct palette_cache *cache, s32 index);
 
 void LoadCreditsLogos(struct credits_screen *self)

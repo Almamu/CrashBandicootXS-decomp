@@ -2,6 +2,7 @@
 #include "actor_self.h"
 #include "memory.h"
 #include <libgcc.h>
+#include "audio.h"
 
 /* Continuation of polar_player_actions.c's player/action-object family, right
  * after `RunPolarPlayerState` (matched C, see polar_player_dispatch.c) - same `self`
@@ -19,7 +20,6 @@ extern u8 gPolarPlayerInactive;
 extern void *gAudioContext;
 
 extern s32 GetAnimFrameBaseOffset(void *self);
-extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 
 /* Constant getter - returns `gPolarPlayerInactive`. */

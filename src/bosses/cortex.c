@@ -3,6 +3,7 @@
 #include "gfx_part.h"
 #include "util.h"
 #include <libgcc.h>
+#include "audio.h"
 
 /* GitHub issue #23: 0x080188D0-0x0801967C, formerly
  * asm/code_3_2_17_188d0.s (details in docs/matching/issue-23-graphics.md).
@@ -204,7 +205,6 @@ extern u8 gCortexTargetChaseSteps[];
 extern u8 gCortexTargetBlinkStartTimes[];
 extern u8 gCortexTargetBlinkStopTimes[];
 
-extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void DestroyCtrl(void *self, s32 flags);
 extern void InitCtrl(void *self);
 extern void DestroyBossCtrl(void *self, s32 flags);

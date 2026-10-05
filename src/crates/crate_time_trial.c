@@ -1,5 +1,6 @@
 #include "core.h"
 #include "crate.h"
+#include "audio.h"
 
 /* GitHub issue #13: 0x0800FC70-0x08010A0C, continuing the physics/
  * collision subsystem (see crate_reset.c's header comment and
@@ -43,7 +44,6 @@ void ConvertCratesForTimeTrial(void)
 }
 
 extern void *gAudioContext;
-extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
 extern void _call_via_r4(void *arg0, s32 arg1, s32 arg2, s32 arg3);
 
 /* If the viewport's `+0xc` bit 7 flag is set, fires its own `+0x18`

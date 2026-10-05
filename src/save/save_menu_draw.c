@@ -7,8 +7,8 @@
 #include "link.h"
 #include "save.h"
 #include "util.h"
+#include "system.h"
 
-extern s32 GetUiText(s32 arg0);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 
 static inline void set_icon_mgr_pos(struct bitmap_font *m, u32 x, u32 y)
@@ -40,11 +40,8 @@ static inline void set_icon_mgr_pos(struct bitmap_font *m, u32 x, u32 y)
  * `src/save/save_menu_ui.c`. */
 
 extern void *OperatorNew(s32 size);
-extern void WaitForVBlank(void);
-extern void UpdateKeys(void *arg0);
 extern void *gInput;
 extern u32 gKeys;
-extern void MemCopy32(void *arg0, s32 arg1, s32 arg2);
 extern void OperatorDelete(void *newObj);
 
 /* A "connecting..." SIO-handshake spinner dialog: allocates a small
@@ -84,7 +81,7 @@ s32 LinkExchangeSaveData(struct save_menu *self)
     if (state == 0) {
         s32 result = (s32)GetSaveTransferData(spinner);
 
-        MemCopy32(self->field_90, result, 0x200);
+        MemCopy32(self->field_90, (void *)result, 0x200);
     }
     OperatorDelete(spinner);
     return state;

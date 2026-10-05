@@ -1,8 +1,7 @@
 #include "core.h"
-#include "memory.h"
+#include "system.h"
 
 extern void *gCategorySpriteSheet; /* decompressed category sprite sheet buffer */
-extern void LoadTaggedAsset(void *asset, void *dest);
 extern s32 QueueVramDmaTransfer(void *src, void *dest, u16 size, u16 unit);
 
 /* A meta-node for a doubly-linked, address-ordered free-block list that

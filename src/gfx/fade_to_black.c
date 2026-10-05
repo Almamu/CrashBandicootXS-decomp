@@ -1,4 +1,5 @@
 #include "core.h"
+#include "system.h"
 
 /* Sits right after the still-raw remainder of asm/code_3_1_6.s'
  * SIO/link-cable and overlay_ui functions and before the small
@@ -8,7 +9,6 @@
  * docs/matching.md for the full split. */
 
 extern void DarkenPalette(s32 factor);
-extern void WaitForVBlank(void);
 extern u16 gPaletteBackup[512];
 extern u16 gPaletteFadeBuffer[512];
 

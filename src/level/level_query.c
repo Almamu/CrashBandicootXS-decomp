@@ -1,5 +1,6 @@
 #include "core.h"
 #include "level_state.h"
+#include "audio.h"
 
 /* GitHub issue #38: 0x0802425C-0x08024810 (game_loop). Continues the
  * medal-results tally chain documented in docs/rom_map.md ("A per-level
@@ -321,7 +322,6 @@ s32 CountRoomCrates(struct MedalListItem *item)
 
 extern struct level_state *gLevelState;
 extern void *gAudioContext;
-extern void PlaySong(struct AudioContext *self, u32 id);
 extern u8 gThemeMusicCues[];
 
 /* Resolves which sound cue to play for a medal-results screen event:

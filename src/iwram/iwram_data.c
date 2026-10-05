@@ -1,11 +1,12 @@
 #include "core.h"
-#include "memory.h"
+#include "system.h"
 #include "cutscene.h"
 #include "hud.h"
 #include "link.h"
 #include "save.h"
 #include "frontend.h"
 #include "util.h"
+#include "audio.h"
 
 /*
  * IWRAM 0x030007CC-0x030009E8 (stored in ROM at 0x087E5DB0-0x087E5FCC):

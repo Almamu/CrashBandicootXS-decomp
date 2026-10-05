@@ -2,6 +2,8 @@
 #include "box_part.h"
 #include "actor_self.h"
 #include "util.h"
+#include "system.h"
+#include "audio.h"
 
 struct grid_node {
     struct box_part *data;
@@ -30,7 +32,6 @@ extern struct level_layers *gLevelLayers;
 extern struct box_part *gPlayer;
 extern s32 _call_via_r2(void *self, void *arg, void *fn);
 extern s32 _call_via_r1(void *self, void *fn);
-extern void *MemCopy32(void *dst, const void *src, s32 size);
 extern void CollideCrateGridPartWithPlayer(struct part_list *list, struct aabb box, struct box_part *part);
 extern void CollideCrateGridPartWithObject(struct pool_manager *m, struct aabb box, struct box_part *part, struct box_part *other);
 
@@ -133,7 +134,6 @@ extern void *gAudioContext;
 extern s32 ClassifySpriteContact(struct box_part *part, struct aabb *box);
 extern struct aabb GetSpriteHitbox(struct box_part *part);
 extern struct aabb GetSpriteBodyBox(struct box_part *part);
-extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
 
 /* obj->vtable[0x68](a, b, c) - the part's "hit" method. */
 #define CALL_HIT(obj, a, b, c)                                                 \

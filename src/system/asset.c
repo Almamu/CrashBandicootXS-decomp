@@ -1,4 +1,5 @@
 #include "core.h"
+#include "system.h"
 
 /* Sits right after the still-parked WaitForKeyPress (asm/code_3_1_5.s) and
  * before whatever's still raw in asm/code_3_1_6.s. */
@@ -20,9 +21,9 @@ extern void RLUnCompVram(void *src);
  * check order or case-value order - the ROM's own case-0 body sits
  * physically first, right after the compare chain, with case 1's body
  * coming after it. */
-void LoadTaggedAsset(void *asset, void *dest)
+void LoadTaggedAsset(const void *asset, void *dest)
 {
-    u32 header = *(u32 *)asset;
+    u32 header = *(const u32 *)asset;
     u32 type = (header << 24) >> 28;
 
     switch (type) {
@@ -31,32 +32,30 @@ void LoadTaggedAsset(void *asset, void *dest)
         u32 size;
         dma->src = (u32)asset + 4;
         dma->dst = (u32)dest;
-        size = *(u32 *)asset;
+        size = *(const u32 *)asset;
         dma->cnt = ((size >> 8) - 4) >> 2 | 0x84000000;
         size = dma->cnt;
         break;
     }
     case 1:
-        LZ77UnCompVram(asset);
+        LZ77UnCompVram((void *)asset);
         break;
     case 3:
-        RLUnCompVram(asset);
+        RLUnCompVram((void *)asset);
         break;
     }
 }
-
-extern void WaitForVBlank(void);
 
 /* Loads a specific background's tile/tileset data (tagged asset at
  * `asset + 0x200`) into the start of `VRAM`, then DMAs the first 0x200
  * bytes of `asset` (a raw palette, 256 halfwords) straight into palette
  * RAM (`PLTT`). */
-void LoadBackgroundTileAndPalette(void *asset)
+void LoadBackgroundTileAndPalette(const void *asset)
 {
     struct dma_regs *dma;
     u32 val;
 
-    LoadTaggedAsset((u8 *)asset + 0x200, (void *)VRAM);
+    LoadTaggedAsset((const u8 *)asset + 0x200, (void *)VRAM);
     WaitForVBlank();
     dma = (struct dma_regs *)REG_ADDR_DMA3SAD;
     dma->src = (u32)asset;

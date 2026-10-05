@@ -4,7 +4,7 @@
 #include "bitmap_font.h"
 #include "vram_pool.h"
 #include "pause_menu.h"
-#include "memory.h"
+#include "system.h"
 
 /* PauseMenuLoop alone: ROM-address-adjacent to pause_menu.c's
  * DestroyPauseMenu on one side and the already-matched AnimatePauseMenu
@@ -13,7 +13,6 @@
  * step 4's "one .c file per contiguous ROM region" rule) - see
  * docs/matching/issue-7-0x08004d74-overlay-ui.md. */
 
-extern void UpdateKeys(void *arg0);
 extern void *gInput;
 extern u32 gKeys;
 extern void PauseMenuCursorDown(struct pause_menu *self);
@@ -22,7 +21,6 @@ extern void PauseMenuVolumeDown(struct pause_menu *self);
 extern void PauseMenuVolumeUp(struct pause_menu *self);
 extern void CommitPauseMenuFrame(struct pause_menu *self);
 extern void AnimatePauseMenu(struct pause_menu *self);
-extern void PlaySfx(struct AudioContext *self, u32 id, u32 volumeParam);
 
 /* The composite pause/options screen's blocking cursor/confirm/cancel
  * driver (docs/rom_map.md's overlay_ui section) - runs until the user

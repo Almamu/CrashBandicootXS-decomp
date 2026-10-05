@@ -2,6 +2,7 @@
 #include "level_select_parts.h"
 #include <agb_syscall.h>
 #include "util.h"
+#include "audio.h"
 
 /* GitHub issue #28: 0x0801DA38-0x0801DFEC, the whole of the former
  * asm/code_3_2_17_188d0_1da38.s. Two of the level-select screen's
@@ -99,8 +100,6 @@ extern s16 gSineTable[];
 extern struct image_pair gLevelSelectPictures[];
 extern u32 gLevelSelectEntryBoxAnims[];
 extern u32 gLevelSelectEntryWorldAnims[];
-
-extern void PlaySfx(void *ctx, s32 sfx, s32 volume);
 
 void TickZoomBgTwinkle(struct zoom_bg *self, struct twinkle *t);
 u8 IsZoomBgShown(struct zoom_bg *self);

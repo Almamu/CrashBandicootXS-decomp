@@ -1,5 +1,6 @@
 #include "core.h"
 #include "actor_self.h"
+#include "audio.h"
 
 /* Same "self" object family as hovercraft_launcher.c - see that file's header
  * comment and docs/matching/issue-63-0x08033ef4-actor.md. */
@@ -166,7 +167,6 @@ void *CreateHovercraftSideGun(void *selfArg, void *part, s32 b, s32 cParam, s32 
 
 extern void StartHovercraftHitFlash(void);
 extern void LoseHovercraftPart(void);
-extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void *gAudioContext;
 
 /* The second object kind (vtable gHovercraftSideGunVtable). */

@@ -1,5 +1,6 @@
 #include "core.h"
 #include "util.h"
+#include "audio.h"
 
 /* GitHub issue #24: 0x0801967C-0x0801A794, formerly
  * asm/code_3_2_17_188d0_1967c.s.
@@ -294,7 +295,6 @@ extern struct aabb GetSpriteAttackBox(struct part *obj);
 extern struct aabb GetSpriteBodyBox(struct part *obj);
 extern struct aabb GetSpriteHitbox(struct part *obj);
 extern void RequestRoomExit(void);
-extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
 extern struct part *CreateMovingSprite(u32 arg0, u16 x, u16 y, u32 arg3);
 extern void ResetSpriteFrameTimer(struct part *p);
 extern void ResetSpriteFrameIndex(struct part *p);

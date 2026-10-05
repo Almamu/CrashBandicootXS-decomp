@@ -1,13 +1,10 @@
 #include "core.h"
-#include "irq.h"
+#include "system.h"
 #include "link.h"
 
 /* The link-cable session's per-frame handshake driver and SIO data pump
  * (split from link_handshake.c so ResetLinkSessionState can sit in its own object;
  * see link_session_reset.c). */
-
-extern void IrqClearHandler(s32 interruptIndex);
-extern void IrqSetHandler(s32 interruptIndex, irq_handler_t *fn);
 
 /* Link-connection/handshake driver - see docs/rom_map.md's SIO/link-
  * cable section. Called repeatedly (once per frame) until the link is
@@ -95,10 +92,10 @@ s32 UpdateLinkSession(struct link_session *self)
         REG_IE &= ~0x40;
         REG_IME = saved;
         IrqClearHandler(INTR_INDEX_TIMER3);
-        IrqSetHandler(INTR_INDEX_SERIAL, (irq_handler_t *)LinkSerialIntr);
+        IrqSetHandler(INTR_INDEX_SERIAL, LinkSerialIntr);
         REG_IE |= 0x80;
         if (arm3) {
-            IrqSetHandler(INTR_INDEX_TIMER3, (irq_handler_t *)LinkTimer3Intr);
+            IrqSetHandler(INTR_INDEX_TIMER3, LinkTimer3Intr);
             REG_IE |= 0x40;
             REG_TM3CNT = 0x00C0BBBC;
         }

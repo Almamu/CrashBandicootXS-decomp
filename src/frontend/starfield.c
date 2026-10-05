@@ -2,6 +2,7 @@
 #include "gba/dma_macros.h"
 #include "frontend.h"
 #include "util.h"
+#include "system.h"
 
 /* Same "self" object family as hovercraft_side_gun.c - see docs/matching/issue-63-0x08033ef4-actor.md. This is
  * the 0x14-byte constructor (`InitStarfield`, called by `InitTitleScreen` as
@@ -546,9 +547,7 @@ void UpdateStarfield(void *mgrArg)
     }
 }
 
-extern void WaitForVBlank(void);
 extern void *gInput;
-extern void UpdateKeys(void *arg);
 extern u16 gKeys[];
 
 /* Busy-waits (yielding a frame via `WaitForVBlank`/`UpdateStarfield` each

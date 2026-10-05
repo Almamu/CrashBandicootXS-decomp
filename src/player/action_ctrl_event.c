@@ -12,6 +12,7 @@
  * current agbcc the same C is 36 halfwords off. */
 
 #include "action_obj.h"
+#include "audio.h"
 
 /* A keyframe record's `{s16 x, s16 y}` offset (see sprite.c). */
 struct part_offset {
@@ -30,8 +31,6 @@ extern void *gAudioContext;
 extern struct follow_state *gCamera;
 extern struct act_part *gPlayer;
 extern u8 gEmptySpritePoint[];
-extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
-extern void FadeOutMusic(void *ctx, u32 value);
 extern void LoadPaletteSlot(void *cache, s32 slot, s32 kind);
 extern void *GetSpriteFrame(struct act_part *part);
 extern u8 PlayerHasRoomForAnim(struct act_part *part, s32 action);

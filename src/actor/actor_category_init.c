@@ -1,7 +1,7 @@
 #include "core.h"
 #include "actor_anim.h"
 #include "gba/dma_macros.h"
-#include "memory.h"
+#include "system.h"
 #include "hud.h"
 #include "util.h"
 
@@ -64,14 +64,12 @@ extern void InitCellAnim(s32 arg0, void *arg1, u32 arg2, s32 arg3);
 extern void LoadBgPicture(void);
 extern void RestoreActorPaletteCycle(void);
 extern void SelectActorCategory(s32 type, void *subEffectTable, void *animTable, s32 activeFlag, s32 variant, s32 tick);
-extern void UpdateKeys(void *arg0);
 extern void AdvanceCellAnim(void);
 extern s32 RunActorCategoryFrame(void);
 extern void TickLevelClock(void *arg0);
 extern void ResetObjVram(void *self);
 extern void RewindOamBuffer(void *arg0);
 extern void FlushSpriteFrameOamQueue(void);
-extern void WaitForVBlank(void);
 extern void CommitActorBgScroll(void);
 extern void CommitOamBuffer(void *arg0);
 extern void FlushVramDmaQueue(void);

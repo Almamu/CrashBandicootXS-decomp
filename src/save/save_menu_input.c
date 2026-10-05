@@ -5,6 +5,8 @@
 #include "link.h"
 #include "save.h"
 #include "util.h"
+#include "system.h"
+#include "audio.h"
 
 void SetSaveTransferRecord(struct settings_sync_pump *self, struct save_data *tmpl)
 {
@@ -41,8 +43,6 @@ struct held_pressed_pair {
     u16 pressed;
 };
 extern struct held_pressed_pair gKeys;
-extern void UpdateKeys(void *arg0);
-extern void WaitForVBlank(void);
 
 /* The "connecting..." spinner dialog's blocking modal loop: sets up
  * `gSaveMenu`'s `state`/`field_10`/`flags`/`field_8`/`field_20`,
@@ -83,10 +83,8 @@ u8 RunSaveMenu(u32 state, u32 field10)
 
 extern void *OperatorNew(s32 size);
 extern void *gAudioContext;
-extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
 extern struct palette_cache *gPaletteCache;
 extern void FreeUnlockedPaletteSlots(struct palette_cache *self);
-extern void PlaySong(void *arg0, s32 arg1);
 extern void *gLevelState;
 extern void *PackSaveData(void *arg0);
 extern void FadeBrightness(u8 flags, s32 frameDelay, u8 sync);
@@ -266,8 +264,6 @@ void SaveMenuInput(struct save_menu *self, u32 keys)
     self->field_0 += 1;
 }
 
-extern s32 GetUiText(s32 arg0);
-
 /* State 0's input handler: cancel/confirm-combo (bits 1/3) requests an
  * exit; confirm (bit 0) advances through this state's own little
  * sub-menu (`field_10` 0-4, mirroring the DrawSaveMenu states each
@@ -378,8 +374,6 @@ void SaveMenuMoveCursor(struct save_menu *self, u32 flags)
 
 extern void UnpackSaveData(void *cache, void *buf);
 extern void SetCurrentLevel(void *cache, u8 arg1);
-extern void SetSfxVolume(void *arg0, u16 arg1);
-extern void SetMusicVolume(void *arg0, u16 arg1);
 
 /* States 1/2's input handler (the two icon slider rows, `handle` =
  * field_8c/field_90 respectively): confirm/cancel-combo either resets
@@ -481,10 +475,7 @@ void SaveMenuLinkInput(struct save_menu *self)
     self->field_18 = GetUiText(0x2e);
 }
 
-extern void MemCopy32(void *dst, const void *src, s32 size);
 extern s32 GetCurrentLevel(void *arg0);
-extern s32 GetSfxVolume(void *arg0);
-extern s32 GetMusicVolume(void *arg0);
 
 /* Shared "commit or refresh row `rowIndex`" step used by states 5-9
  * below: pulls the row's stats/name/icon scratch data, feeds it through

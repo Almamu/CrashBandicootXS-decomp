@@ -1,6 +1,8 @@
 #include "core.h"
 #include "actor_self.h"
 #include <libgcc.h>
+#include "system.h"
+#include "audio.h"
 
 /* Start of the boss-weapon/singleton-object cluster's next raw range
  * (issue #58/#62's shared "self" object family continues here - state
@@ -11,10 +13,8 @@
  * docs/matching/issue-62-0x08033804-actor.md and this range's own
  * write-up in docs/matching/. */
 
-extern void mem_free(void *ptr);
 extern void InitActorPart(void *self, s32 a, s32 b, s32 c, s32 d);
 extern s32 GetAnimFrameBaseOffset(void *self);
-extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void UpdateActorDepth(void *self);
 extern void ClearJetpackCrateBalloon(void *obj);
 

@@ -1,4 +1,5 @@
 #include "core.h"
+#include "system.h"
 
 /* The same small per-widget object `src/menus/power_dialog_draw.c` already
  * names `struct sub_8006700_actor` (redeclared locally here per this
@@ -42,7 +43,6 @@ struct sub_8006700_actor {
 extern void DrawPowerDialog(struct sub_8006700_actor *arg0);
 extern void CommitPowerDialogFrame(struct sub_8006700_actor *arg0);
 extern void AnimatePowerDialog(struct sub_8006700_actor *arg0);
-extern void UpdateKeys(void *arg0);
 extern void *gInput;
 
 struct held_pressed_pair {

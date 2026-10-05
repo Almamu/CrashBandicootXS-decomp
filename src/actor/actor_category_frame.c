@@ -1,6 +1,7 @@
 #include "core.h"
 #include "actor_self.h"
 #include "actor_anim.h"
+#include "system.h"
 
 /* This cluster (`PolarIsTouchingPlayer`, `JetpackIsTouchingPlayer`, `RunActorCategoryFrame`, `FindShotTarget`,
  * ROM 0x0802A018-0x0802A4D4) sits inside the "actor" chunk starting at
@@ -34,8 +35,6 @@
 extern struct actor_self *gActorList;
 extern u8 gPolarPlayerInactive;
 extern u8 gJetpackPlayerInactive;
-
-extern void *MemCopy32(void *dst, const void *src, u32 byteCount);
 
 /* Method slot 0x28 of the actor method table (`self+0x50`), which
  * `struct actor_vtable` still lumps into padding. */

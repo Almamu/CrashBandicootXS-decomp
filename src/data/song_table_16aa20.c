@@ -1,4 +1,5 @@
-#include "gba/types.h"
+#include "core.h"
+#include "audio.h"
 #include "gax_songs.h"
 
 /*
@@ -8,8 +9,6 @@
  * builds from sound/; the offsets come from its generated gax_songs.h,
  * so a song can change size.
  */
-
-extern const u8 gGaxMusicData[];
 
 const void *const gSongTable[19] = {
     gGaxMusicData + GAX_SONG_JUNGLE,

@@ -2,6 +2,7 @@
 #include "memory.h"
 #include "actor_self.h"
 #include <libgcc.h>
+#include "audio.h"
 
 /* Continues the same player/action-object action-table family already
  * documented in ctrl.c/action_ctrl_states.c/action_ctrl_land.c - `self`
@@ -56,7 +57,6 @@ extern u8 gPolarWumpaVtable[];
 extern s32 GetActorBgCenterY(void);
 extern s32 GetActorBgCenterX(void);
 extern void InitActorPart(void *self, s32 a, s32 b, s32 c, s32 d);
-extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern s32 _call_via_r3(void *addr, void *arg1, void *tableEntry, void *fn);
 extern u8 IsTouchingPlayer(void *self);

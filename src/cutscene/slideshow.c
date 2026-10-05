@@ -1,6 +1,8 @@
 #include "core.h"
 #include "gba/dma_macros.h"
 #include "cutscene.h"
+#include "system.h"
+#include "audio.h"
 
 /* GitHub issue #38: 0x08024590-0x08024783 (game_loop), the sound-channel-
  * handle helper family - see docs/matching/issue-38-medal-results-tally.md
@@ -11,15 +13,7 @@
 struct AudioContext;
 
 extern struct AudioContext *gAudioContext;
-extern u32 GetCurrentSong(struct AudioContext *self);
-extern void PlaySong(struct AudioContext *self, u32 id);
-extern void FadeOutMusic(struct AudioContext *self, u32 value);
-extern void StopSfx(struct AudioContext *self, u32 id);
 extern void FadeBrightness(u8 flags, s32 frameDelay, u8 sync);
-extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
-extern s32 WaitForKeyPress(s32 count, u8 checkButtons, s32 mask);
-extern void LoadTaggedAsset(void *asset, void *dest);
-extern void WaitForVBlank(void);
 
 /* Starts sound cue `slides[idx]->cue` on the audio context. If the
  * channel already reports that cue, plays the item's secondary sfx

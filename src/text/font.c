@@ -2,13 +2,13 @@
 #include "text.h"
 #include <agb_syscall.h>
 #include <libgcc.h>
+#include "system.h"
 
 /* Sits between FontMeasureText (src/text/font_measure.c) and
  * InitFont (src/text/font.c) - FontUploadTiles/
  * FontSetPalette/FontResetPalette, GitHub issue #46. Same `struct bitmap_font`
  * as hud_slide.c and the other src/text/font*.c files. */
 
-extern void LoadTaggedAsset(void *asset, void *dest);
 extern u8 *gPaletteCache;
 extern void ***gSpriteBankSet;
 extern s32 GetPaletteSlot(u8 *cache, s32 recordId);

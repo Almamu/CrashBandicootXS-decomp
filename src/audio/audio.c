@@ -1,6 +1,6 @@
 #include "core.h"
 #include "audio.h"
-#include "irq.h"
+#include "system.h"
 #include "util.h"
 
 /* The first matched code in the Shin'en GAX2 wrapper layer (the engine
@@ -11,13 +11,6 @@
  * is the per-tick fade update, `StartSong` starts a song. `PlaySfx`
  * (the very next function in ROM order) stays raw here - see
  * src/audio/audio.c's doc comment. */
-
-extern void TickAmbientSfx(struct AudioContext *self);
-extern u8 gGaxIrqEnabled;
-extern void *gSongTable[19];
-extern u8 gGaxMusicData[];
-extern void FadeInMusic(struct AudioContext *self);
-void StartSong(struct AudioContext *self, u32 songIndex);
 
 /* Per-tick (called off `EnableMusicVCountIrq`'s installed callback, a few
  * functions after this chunk) update of both fade-envelope pairs:
@@ -120,13 +113,13 @@ void StartSong(struct AudioContext *self, u32 songIndex)
         GAX2_new(gaxState);
         *(void **)((u8 *)self + 0x58) = (u8 *)self + 0x94;
         *(u32 *)((u8 *)self + 0x5c) = 0x2000;
-        *(void **)((u8 *)self + 0x88) = gSongTable[songIndex];
+        *(const void **)((u8 *)self + 0x88) = gSongTable[songIndex];
         {
             u16 *p = (u16 *)((u8 *)self + 0x66);
             u8 zero2 = 0;
 
             *p = 3;
-            *(void **)((u8 *)self + 0x84) = gGaxMusicData;
+            *(const void **)((u8 *)self + 0x84) = gGaxMusicData;
             *((u8 *)self + 0x90) = zero2;
         }
         if (GAX2_init((struct GaxSongHeader *)gaxState)) {
@@ -141,8 +134,6 @@ void StartSong(struct AudioContext *self, u32 songIndex)
 
 /* `PlaySfx` sits right after the matched `StartSong` (src/audio/
  * audio.c) and before the other functions this file holds. */
-
-extern u32 gSfxVoiceToggle;
 
 /* `PlaySfx(context, sfxId, volumeParam)` - see docs/audio.md's "Sound
  * effects" section (identified there as `sub_8001854`, called ~264
@@ -318,11 +309,7 @@ asm(".align 2, 0");
  * `gSfxTable[id].baseVolume`, whose `base+8+offset` address
  * is simply what gcc emits for a non-zero field offset - the earlier
  * note blamed a CSE decision that is not there. */
-struct sfx_byte_arg {
-    u8 v;
-} __attribute__((packed));
-
-void PlayAmbientSfx(struct AudioContext *self, u32 id, u32 frameOffset, s32 volumeMul, struct sfx_byte_arg force)
+void PlayAmbientSfx(struct AudioContext *self, u32 id, u32 frameOffset, s32 volumeMul, struct byte_arg force)
 {
     u8 forceFlag = force.v;
     u32 handle = gSfxTable[id].slotId;
@@ -360,10 +347,6 @@ void PlayAmbientSfx(struct AudioContext *self, u32 id, u32 frameOffset, s32 volu
     }
 }
 
-extern void WaitForVBlank(void);
-extern void IrqRestoreHandler(s32 interruptIndex);
-extern void StartSong(struct AudioContext *self, u32 songIndex);
-
 /* currentSong getter. */
 u32 GetCurrentSong(struct AudioContext *self)
 {
@@ -371,13 +354,13 @@ u32 GetCurrentSong(struct AudioContext *self)
 }
 
 /* sfxVolume getter. */
-u32 GetSfxVolume(struct AudioContext *self)
+s32 GetSfxVolume(struct AudioContext *self)
 {
     return self->sfxVolume;
 }
 
 /* duckVolDefault getter. */
-u32 GetMusicVolume(struct AudioContext *self)
+s32 GetMusicVolume(struct AudioContext *self)
 {
     return self->duckVolDefault;
 }
@@ -570,8 +553,9 @@ struct AudioContext *InitAudioContext(struct AudioContext *self)
 }
 
 /* Disables the GBA's V-Count interrupt - a counterpart to
- * `DisableVBlankHandler` (VBlank) in src/system/irq.c. */
-void DisableMusicVCountIrq(void)
+ * `DisableVBlankHandler` (VBlank) in src/system/irq.c. `self` is unused;
+ * DestroyLevelState passes gAudioContext in r0. */
+void DisableMusicVCountIrq(struct AudioContext *self)
 {
     register vu8 *dispstat asm("r1") = (vu8 *)REG_ADDR_DISPSTAT;
     u8 tmp = DISPSTAT_VCOUNT_INTR;
@@ -581,11 +565,7 @@ void DisableMusicVCountIrq(void)
 }
 asm(".align 2, 0");
 
-extern void IrqSetHandler(s32 interruptIndex, irq_handler_t *fn);
 extern struct AudioContext *gAudioContext;
-extern void UpdateAudio(struct AudioContext *self);
-
-void MusicVCountIrqHandler(void);
 
 /* Installs `MusicVCountIrqHandler` as the VCount-IRQ handler and arms VCount IRQs
  * with a fixed trigger line (`0x35`) - the music player's per-tick fade
