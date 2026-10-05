@@ -70,24 +70,22 @@
  * block-local, so local-alloc can't tie it to the record base and it
  * lands in r1 as in the ROM. See docs/matching/sp-box-retry.md. */
 #include "box_part.h"
+#include "util.h"
 
-extern void SetAabbPos(struct part_aabb *buf, s32 x, s32 y);
-extern void SetAabbSize(struct part_aabb *buf, s32 w, s32 h);
-extern u8 AabbOverlapsInclusiveX(struct part_aabb *a, struct part_aabb *b);
 extern struct box_part *gPlayer;
 
 /* `a` through a copy that an empty asm claims to modify (emits nothing):
  * it hides the copy's value from cse, so each use of a stack box address
  * is its own pseudo instead of one held across calls. */
-#define BOX_ADDR(a) ({ struct part_aabb *_p = (a); asm("" : "+r"(_p)); _p; })
+#define BOX_ADDR(a) ({ struct aabb *_p = (a); asm("" : "+r"(_p)); _p; })
 
 u8 PlayerAnimWouldTouchCrate(struct box_part *self, s32 action)
 {
     struct {
-        struct part_aabb a;
-        struct part_aabb b;
+        struct aabb a;
+        struct aabb b;
     } f;
-    struct part_aabb *pb;
+    struct aabb *pb;
     s32 px, py;
     u8 *rec;
     u8 state = self->state;

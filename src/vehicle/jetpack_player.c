@@ -1,6 +1,7 @@
 #include "core.h"
 #include "actor_self.h"
 #include "level_state.h"
+#include <libgcc.h>
 
 /* Same "spawn/pre-attack" singleton family as wumpa.c - see that
  * file's header comment and docs/matching/issue-56-0x0802f0dc-actor.md.
@@ -23,7 +24,6 @@ struct meter_actor {
 extern s32 CollectWumpa(void *arg0);
 extern void SpawnJetpackCollectedWumpa(s32 x, s32 y, s32 amount);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
-extern s32 __divsi3(s32 arg0, s32 arg1);
 extern void SetCellAnimSpeed(s32 arg0);
 extern s32 SetActorCheckpoint(s32 arg0);
 extern s32 QueueVramDmaTransfer(void *arg0, void *arg1, u16 arg2, u16 arg3);

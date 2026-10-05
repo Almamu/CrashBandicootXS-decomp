@@ -163,7 +163,7 @@ struct collision_candidate {
     u8 field21;                   // 0x21 - the other flag byte
 };
 
-COMPILE_TIME_ASSERT(sizeof(struct collision_candidate) == 0x24);
+COMPILE_TIME_ASSERT(collision_queue_c, sizeof(struct collision_candidate) == 0x24);
 
 /* The player's own small append-only queue of pending collision
  * candidates, embedded inside the same per-entity collision-state

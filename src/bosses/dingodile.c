@@ -1,4 +1,5 @@
 #include "core.h"
+#include "util.h"
 
 /* GitHub issue #24: 0x0801967C-0x0801A794, formerly
  * asm/code_3_2_17_188d0_1967c.s.
@@ -70,14 +71,6 @@ struct anim_rec
     u8 unk_17[5];
 };
 
-struct box
-{
-    s32 unk_00;
-    s32 unk_04;
-    s32 valid; // 0x08
-    s32 unk_0C;
-};
-
 /* The bitfield byte at part+0x28. `facing` is a signed field: the ROM
  * tests it with `lsl #27` / sign branch. */
 struct part_f28
@@ -143,12 +136,12 @@ struct part
 };
 
 #define PART_OFFSET(f) ((u32)&((struct part *)0)->f)
-COMPILE_TIME_ASSERT(PART_OFFSET(vt) == 0x18);
-COMPILE_TIME_ASSERT(PART_OFFSET(f28) == 0x28);
-COMPILE_TIME_ASSERT(PART_OFFSET(tag) == 0x2D);
-COMPILE_TIME_ASSERT(PART_OFFSET(frame) == 0x30);
-COMPILE_TIME_ASSERT(PART_OFFSET(ctl) == 0x44);
-COMPILE_TIME_ASSERT(PART_OFFSET(busy) == 0x104);
+COMPILE_TIME_ASSERT(dingodile_c, PART_OFFSET(vt) == 0x18);
+COMPILE_TIME_ASSERT(dingodile_c, PART_OFFSET(f28) == 0x28);
+COMPILE_TIME_ASSERT(dingodile_c, PART_OFFSET(tag) == 0x2D);
+COMPILE_TIME_ASSERT(dingodile_c, PART_OFFSET(frame) == 0x30);
+COMPILE_TIME_ASSERT(dingodile_c, PART_OFFSET(ctl) == 0x44);
+COMPILE_TIME_ASSERT(dingodile_c, PART_OFFSET(busy) == 0x104);
 
 /* Every class in this file keeps its method table at +0x0C. */
 struct vobj
@@ -297,10 +290,9 @@ extern void SpawnBodySlamPower(u32 arg0, s32 arg1, s32 arg2, s32 arg3);
 extern void SpawnTurboRunPower(u32 arg0, s32 arg1, s32 arg2, s32 arg3);
 /* These three return their box by value (gcc passes the hidden result
  * pointer in r0 and returns it). */
-extern struct box GetSpriteAttackBox(struct part *obj);
-extern struct box GetSpriteBodyBox(struct part *obj);
-extern struct box GetSpriteHitbox(struct part *obj);
-extern u8 AabbOverlaps(struct box *a, struct box *b);
+extern struct aabb GetSpriteAttackBox(struct part *obj);
+extern struct aabb GetSpriteBodyBox(struct part *obj);
+extern struct aabb GetSpriteHitbox(struct part *obj);
 extern void RequestRoomExit(void);
 extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
 extern struct part *CreateMovingSprite(u32 arg0, u16 x, u16 y, u32 arg3);
@@ -358,11 +350,11 @@ typedef u8 (*query_fn)(void *self);
         a = (a_);                                                              \
     } while (0)
 
-/* The ROM re-reads a just-filled box's `valid` word straight from its
- * stack slot rather than through the register already holding the
- * box's address; a volatile read is what stops gcc's CSE from
- * rewriting the address. */
-#define BOX_VALID(bx) (*(vs32 *)&(bx).valid)
+/* The ROM re-reads a just-filled box's `w` (a box with no width is
+ * empty) straight from its stack slot rather than through the register
+ * already holding the box's address; a volatile read is what stops
+ * gcc's CSE from rewriting the address. */
+#define BOX_VALID(bx) (*(vs32 *)&(bx).w)
 
 /* Right edge of the level, in Q8 units. */
 static inline s32 LevelRight(void)
@@ -515,8 +507,8 @@ s32 GetDingodileHits(struct dingodile_boss *self)
 
 void UpdateDingodile(struct dingodile_boss *self, struct part *other)
 {
-    struct box hurt;
-    struct box box;
+    struct aabb hurt;
+    struct aabb box;
     u32 state;
 
     if (other->f28.facing)
@@ -949,8 +941,8 @@ void SpawnDingodileShark(struct dingodile_boss *self, u16 x, u16 y, u8 facing)
  * the orr chain is neither folded nor reordered, reproduces it. */
 void UpdateDingodileShield(struct obj_490c *self, struct part *other)
 {
-    struct box a;
-    struct box b;
+    struct aabb a;
+    struct aabb b;
     register s32 hr5 asm("r5");
     register s32 hr6 asm("r6");
 
@@ -969,7 +961,7 @@ void UpdateDingodileShield(struct obj_490c *self, struct part *other)
                 b = GetSpriteBodyBox(gPlayer);
                 if (!BOX_VALID(b))
                 {
-                    struct box *pb = &b;
+                    struct aabb *pb = &b;
 
                     *pb = GetSpriteAttackBox(gPlayer);
                 }
@@ -1037,11 +1029,11 @@ void UpdateDingodileShield(struct obj_490c *self, struct part *other)
 
 void UpdateDingodileProjectile(struct obj_48a4 *self, struct part *other)
 {
-    struct box a;
-    struct box b;
+    struct aabb a;
+    struct aabb b;
 
     a = GetSpriteAttackBox(other);
-    if (a.valid)
+    if (a.w)
     {
         if (self->state != 4 && self->state != 6)
         {
@@ -1063,7 +1055,7 @@ void UpdateDingodileProjectile(struct obj_48a4 *self, struct part *other)
             b = GetSpriteBodyBox(gPlayer);
             if (!BOX_VALID(b))
             {
-                struct box *pb = &b;
+                struct aabb *pb = &b;
 
                 *pb = GetSpriteAttackBox(gPlayer);
             }

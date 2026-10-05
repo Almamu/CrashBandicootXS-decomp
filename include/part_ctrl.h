@@ -124,6 +124,6 @@ struct part_ctrl {
     struct ctrl_target *popup; // 0x88 - floating popup spawned in state 18
 };
 
-COMPILE_TIME_ASSERT(sizeof(struct part_ctrl) == 0x8C);
+COMPILE_TIME_ASSERT(part_ctrl_h, sizeof(struct part_ctrl) == 0x8C);
 
 #endif /* GUARD_PART_CTRL_H */

@@ -3,6 +3,7 @@
 #include "crate.h"
 #include "hud.h"
 #include "pickups.h"
+#include "util.h"
 
 /* GitHub issue #12: 0x0800D040-0x0800FC70, the physics/collision
  * subsystem (see crate_hit.c's header comment and
@@ -140,15 +141,12 @@ struct d18c_flag8
     u8 value;
 } __attribute__((packed));
 
-extern void SetAabbPos(void *buf, s32 x, s32 y);
-extern void SetAabbSize(void *buf, s32 w, s32 h);
 extern s32 gActionCtrlStateAttackKinds[];
 extern u8 gCrateKindUnbreakable[];
 extern u8 gStaticData_0816BF00[];
 extern u8 gEmptySpriteBox[];
 extern s32 gCrateHitResponse[][7];
 extern void *GetSpriteFrame(void *part);
-extern u8 AabbOverlapsInclusiveX(struct aabb *a, struct aabb *b);
 extern u8 sub_800CEAC(void *self, struct d18c_quad *quad, struct aabb *box, s32 x, s32 y);
 extern struct crate *sub_800CF70(struct crate *self, struct aabb *box, u8 *found);
 extern struct crate *GetCrateBelow(struct crate *obj);
@@ -1311,7 +1309,6 @@ extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void *gEntitySpawner;
 extern u8 gCrateKindCounted[];
 extern u8 gCrateKindExplosive[];
-extern u16 rand(void);
 extern void AddBrokenCrate(void *self);
 extern void SetCheckpointAtPlayer(void *self, u8 arg1);
 extern void FreezeLevelClock(void *arg, s32 n);

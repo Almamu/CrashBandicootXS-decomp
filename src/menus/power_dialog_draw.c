@@ -3,6 +3,7 @@
 #include "vram_pool.h"
 #include "actor.h"
 #include "text.h"
+#include "util.h"
 
 /* A small per-category threshold table: CountSapphireRelics/CountGoldRelics/
  * CountPlatinumRelics each count how many of a caller's 20 records fall between
@@ -21,7 +22,7 @@ struct threshold_table_entry {
     u32 threshold_10;
     u8 unused_14[0x24 - 0x14];
 };
-COMPILE_TIME_ASSERT(sizeof(struct threshold_table_entry) == 0x24);
+COMPILE_TIME_ASSERT(power_dialog_draw_c, sizeof(struct threshold_table_entry) == 0x24);
 
 extern struct threshold_table_entry gLevelTable[];
 extern void ShowPowerDialog(s32 arg0, s32 arg1, s32 arg2);
@@ -54,8 +55,6 @@ struct sub_8006700_actor {
 
 extern void RewindObjVram(struct vram_upload_cursor *arg0);
 extern void DrawSpriteWithOffset(void *arg0, s32 arg1, s32 arg2);
-extern void SetAabbPos(void *buf, s32 arg1, s32 arg2);
-extern void SetAabbSize(void *buf, s32 arg1, s32 arg2);
 extern s32 GetUiText(s32 arg0);
 extern struct vram_upload_cursor *gObjVramCursor;
 

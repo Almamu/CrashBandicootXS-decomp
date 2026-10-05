@@ -34,6 +34,6 @@ struct actor {
 
 
 
-COMPILE_TIME_ASSERT(sizeof(struct actor) == 0x1c);
+COMPILE_TIME_ASSERT(actor_h, sizeof(struct actor) == 0x1c);
 
 #endif /* !__ACTOR_H__ */

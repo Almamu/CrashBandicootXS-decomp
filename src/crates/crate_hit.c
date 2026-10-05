@@ -1,6 +1,7 @@
 #include "core.h"
 #include "actor.h"
 #include "box_part.h"
+#include "util.h"
 
 /* Dedicated deep investigation (docs/matching/issue-9-10-0x0800ceac-graphics.md):
  * these two functions sit in the still-raw span `tools/report_units.py`
@@ -23,19 +24,9 @@
  * exactly (see its own doc comment below) and additionally reveals its
  * sibling `sub_800CEAC`, entirely unremarked anywhere until now. */
 
-extern void SetAabbPos(void *buf, s32 arg1, s32 arg2);
-extern void SetAabbSize(void *buf, s32 arg1, s32 arg2);
-extern u8 AabbOverlaps(void *buf1, void *buf2);
 extern void *gPlayer;
 extern void *GetCrateAbove(void *obj); /* "get next" */
 extern void *GetCrateBelow(void *obj); /* "get prev" */
-
-struct aabb {
-    s32 field_0;
-    s32 field_4;
-    s32 field_8;
-    s32 field_c;
-};
 
 /* Same `+4`/`+6`/`+8`/`+9` `{s16 xOff, s16 yOff, u8 w, u8 h}` hitbox
  * quad layout `BreakCrateTouchedByPlayer`/`PlayerAnimWouldTouchCrate` already document, but here
@@ -133,9 +124,9 @@ u8 sub_800CEAC(void *self, struct hitbox_quad *quad, struct aabb *box,
         SetAabbSize(&b, w, h);
     }
     if (((struct ceac_player *)gPlayer)->mirrorX)
-        b.field_0 = xOffset * 2 - (b.field_0 + b.field_8);
+        b.x = xOffset * 2 - (b.x + b.w);
     if (((struct ceac_player *)gPlayer)->mirrorY)
-        b.field_4 = yOffset * 2 - (b.field_4 + b.field_c);
+        b.y = yOffset * 2 - (b.y + b.h);
     if (AabbOverlaps(box, &b))
         return 1;
     return 0;
@@ -212,9 +203,9 @@ struct box_part *sub_800CF70(struct box_part *selfArg, struct aabb *box, u8 *fou
         SetAabbPos(&b, x + px, y + py);
         SetAabbSize(&b, w, h);
         if (self->mirrorX)
-            b.field_0 = px * 2 - (b.field_0 + b.field_8);
+            b.x = px * 2 - (b.x + b.w);
         if (self->mirrorY)
-            b.field_4 = py * 2 - (b.field_4 + b.field_c);
+            b.y = py * 2 - (b.y + b.h);
         if (AabbOverlaps(&b, box))
             self = prev;
     }
@@ -272,13 +263,13 @@ extern void BreakCrateInStack(void *self, u8 arg1, u8 arg2, u8 arg3);
 /* `a` through a copy that an empty asm claims to modify (emits nothing):
  * it hides the copy's value from cse, so each use of a stack box address
  * is its own pseudo instead of one held across calls. */
-#define BOX_ADDR(a) ({ struct part_aabb *_p = (a); asm("" : "+r"(_p)); _p; })
+#define BOX_ADDR(a) ({ struct aabb *_p = (a); asm("" : "+r"(_p)); _p; })
 
 void BreakCrateTouchedByPlayer(struct box_part *self)
 {
     struct {
-        struct part_aabb a;
-        struct part_aabb b;
+        struct aabb a;
+        struct aabb b;
     } f;
     s32 px;
     s32 py;

@@ -2,6 +2,8 @@
 #include "bitmap_font.h"
 #include <agb_syscall.h>
 #include "text.h"
+#include "util.h"
+#include <libgcc.h>
 
 /* GitHub issue #26: 0x0801B85C-0x0801CEE0, the whole of the former
  * asm/code_3_2_17_188d0_1b85c.s. Three objects, all gcc 2.x C++ classes
@@ -77,7 +79,7 @@ struct follow_child
     s32 offset;         // 0x7C - eases toward targetOffset
 };
 
-COMPILE_TIME_ASSERT(sizeof(struct follow_child) == 0x80);
+COMPILE_TIME_ASSERT(level_select_c, sizeof(struct follow_child) == 0x80);
 
 /* gPlayer, only the fields used here. */
 struct player
@@ -108,7 +110,7 @@ struct anim_record
     u8 unk_17[5];
 };
 
-COMPILE_TIME_ASSERT(sizeof(struct anim_record) == 0x1C);
+COMPILE_TIME_ASSERT(level_select_c, sizeof(struct anim_record) == 0x1C);
 
 struct anim_table
 {
@@ -141,16 +143,7 @@ struct sprite
     u8 unk_3E[2];
 };
 
-COMPILE_TIME_ASSERT(sizeof(struct sprite) == 0x40);
-
-/* GetSpriteHitbox's output box. */
-struct hit_box
-{
-    s32 unk_00;
-    s32 unk_04;
-    s32 unk_08;
-    s32 unk_0C;
-};
+COMPILE_TIME_ASSERT(level_select_c, sizeof(struct sprite) == 0x40);
 
 /* One level's fixed data (`gLevelTable`, 36-byte records,
  * indexed by level id). */
@@ -164,7 +157,7 @@ struct level_info
     u8 unk_14[0x10];
 };
 
-COMPILE_TIME_ASSERT(sizeof(struct level_info) == 0x24);
+COMPILE_TIME_ASSERT(level_select_c, sizeof(struct level_info) == 0x24);
 
 /* One level's saved record word (`level_menu.save + 4 + id * 4`; byte 2
  * of the save block itself holds four more flags LoadLevelSelectRecord tests). */
@@ -301,7 +294,7 @@ struct level_menu
     union dispcnt dispcnt;      // 0xA8 - REG_DISPCNT
 };
 
-COMPILE_TIME_ASSERT(sizeof(struct level_menu) == 0xAC);
+COMPILE_TIME_ASSERT(level_select_c, sizeof(struct level_menu) == 0xAC);
 
 struct vram_cursor
 {
@@ -364,8 +357,6 @@ extern void DestroyMovingSprite(void *self, s32 flags);
 extern void UpdateMovingSprite(void *self);
 extern void *OperatorNew(u32 size);
 extern void OperatorDelete(void *p);
-extern s32 __divsi3(s32 a, s32 b);
-extern s32 __modsi3(s32 a, s32 b);
 extern void _call_via_r1(void *self, void *fn);
 extern s32 _call_via_r2(void *self, s32 arg, void *fn);
 /* Calls the function in r4 with r0-r3 (see the `register ... asm("r4")`
@@ -387,8 +378,8 @@ extern void AdvanceSpriteAnim(void *p);
 /* Really returns a u8 (src/gfx/graphics.c), but the call site
  * re-zero-extends the result, as it would through a wider return type. */
 extern s32 GetPaletteSlot(void *cache, u8 recordId);
-extern void GetSpriteHitbox(struct hit_box *dest, void *part);
-extern u8 PlayerTouchesBox(void *actor, struct hit_box *box);
+extern void GetSpriteHitbox(struct aabb *dest, void *part);
+extern u8 PlayerTouchesBox(void *actor, struct aabb *box);
 
 /* Display, VRAM and sound. */
 extern void WaitForVBlank(void);
@@ -409,7 +400,6 @@ extern void LoadGraphicsPackage(void *dst, void *pkg);
 extern void PlaySong(void *arg0, s32 arg1);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern s32 GetUiText(s32 id);
-extern void FormatCentiseconds(s32 value, char *buf);
 
 /* Save data. */
 extern u8 *PackSaveData(void *p);
@@ -713,12 +703,12 @@ struct sprite *SpawnLaunchPad(u16 id, u16 x, u16 y)
  * this sprite's hit box, fires the player's method 13 with (0, 0x19, 0). */
 void CheckLaunchPadContact(void *self)
 {
-    struct hit_box box;
+    struct aabb box;
 
     if (gPlayer->flags >> 7)
     {
         GetSpriteHitbox(&box, self);
-        if (box.unk_08 != 0 && PlayerTouchesBox(gPlayer, &box))
+        if (box.w != 0 && PlayerTouchesBox(gPlayer, &box))
         {
             struct player *p = gPlayer;
             struct method *m = &p->vtable[13];

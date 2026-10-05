@@ -1,13 +1,7 @@
 #include "core.h"
 #include "actor.h"
 #include "level_state.h"
-
-struct aabb {
-    s32 field_0;
-    s32 field_4;
-    s32 field_8;
-    s32 field_c;
-};
+#include "aabb.h"
 
 /* The one player-object field (gPlayer, a `struct gobj`)
  * this file reads. */
@@ -35,7 +29,7 @@ extern void ResolvePlayerContact(void *partArg);
  * `part`'s `+0xd` byte bit 3 is set and the mode is 3, builds `part`'s
  * primary AABB via `GetSpriteAttackBox` and tests it against the player via
  * `PlayerTouchesBox`; on a hit, calls `ResolvePlayerContact` and returns. If the
- * primary AABB has no region (`field_8` zero) or the hit test missed,
+ * primary AABB has no region (`w` zero) or the hit test missed,
  * falls back to the secondary AABB via `GetSpriteBodyBox` and repeats the
  * same hit test. */
 void CheckPlayerContact(void *partArg)
@@ -90,7 +84,7 @@ doCheck:
     {
         struct aabb box;
         GetSpriteAttackBox(&box, part);
-        if (box.field_8 != 0) {
+        if (box.w != 0) {
             if (PlayerTouchesBox(gPlayer, &box)) {
                 ResolvePlayerContact(part);
                 return;
@@ -100,7 +94,7 @@ doCheck:
     {
         struct aabb box2;
         GetSpriteBodyBox(&box2, part);
-        if (*(s32 volatile *)&box2.field_8 != 0) {
+        if (*(s32 volatile *)&box2.w != 0) {
             if (PlayerTouchesBox(gPlayer, &box2)) {
                 ResolvePlayerContact(part);
             }

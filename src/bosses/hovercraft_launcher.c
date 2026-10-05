@@ -1,5 +1,6 @@
 #include "core.h"
 #include "actor_self.h"
+#include "util.h"
 
 /* Same "self" object family as hovercraft_parts.c - see that file's header
  * comment and docs/matching/issue-62-0x08033804-actor.md. */
@@ -9,7 +10,6 @@ extern s32 GetHovercraftY(void);
 extern s32 GetHovercraftZ(void);
 extern struct spawn_timing_table *GetHovercraftAttack(void);
 extern s32 GetHovercraftState(void);
-extern s32 RandRange(s32 arg0);
 extern void CreateJetpackActor(s32 kind, s32 x, s32 y, s32 z, s32 arg4);
 extern struct actor_self *gActorList;
 

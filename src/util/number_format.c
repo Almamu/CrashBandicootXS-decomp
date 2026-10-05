@@ -1,4 +1,5 @@
 #include "core.h"
+#include "util.h"
 
 extern s32 DivMod(s32 value, s32 base, s32 *remainder);
 

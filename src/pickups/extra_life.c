@@ -2,6 +2,7 @@
 #include "orbit_part.h"
 #include "hud.h"
 #include "pickups.h"
+#include "util.h"
 
 /* GitHub issue #12/#14 Phase 2 mop-up: the last 5 raw functions of the
  * still-large 24-function tail past `AddCollisionCandidate`
@@ -27,10 +28,7 @@ extern void *gHud;
 
 extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
 extern void *GetSpriteHitbox(void *dest, void *pt);
-extern u8 AabbOverlaps(void *buf1, void *buf2);
 extern void WorldToScreen(void *arg0, s32 arg1, s32 arg2, s32 *arg3, s32 *arg4);
-extern s32 FixedDiv(s32 arg0, s32 arg1);
-extern s32 FixedMul(s32 a, s32 b);
 extern s32 AddLife(void *self);
 extern void *OperatorNew(s32 size);
 extern struct actor *InitSpriteObj(struct actor *self);
@@ -53,7 +51,6 @@ static inline void OrbitClampFrame(struct orbit_part *self)
         frame = count - 1;
     self->frame = frame;
 }
-extern s32 rand(void);
 
 /* Called from `PickUpExtraLife` below only (the "randomized-behavior"
  * family's own bounds-check gate). No existing cross-reference
@@ -71,8 +68,8 @@ extern s32 rand(void);
 void CheckExtraLifePickup(struct orbit_part *selfArg)
 {
     u8 *self = (u8 *)selfArg;
-    u8 selfBox[16];
-    u8 playerBox[16];
+    struct aabb selfBox;
+    struct aabb playerBox;
     u8 *player;
 
     if (self[0x4a] != 0 && self[0x4b] <= 0x16) {
@@ -93,11 +90,11 @@ void CheckExtraLifePickup(struct orbit_part *selfArg)
         }
     }
 
-    GetSpriteHitbox(selfBox, self);
+    GetSpriteHitbox(&selfBox, self);
     player = gPlayer;
-    GetSpriteHitbox(playerBox, player);
+    GetSpriteHitbox(&playerBox, player);
 
-    if (AabbOverlaps(playerBox, selfBox)) {
+    if (AabbOverlaps(&playerBox, &selfBox)) {
         register s32 bit asm("r0") = 8;
 
         bit |= self[0xc];
@@ -632,8 +629,8 @@ void SetExtraLifeCounter(struct orbit_part *self, u8 val)
 void CheckWumpaPickup(struct orbit_part *selfArg)
 {
     u8 *self = (u8 *)selfArg;
-    u8 selfBox[16];
-    u8 playerBox[16];
+    struct aabb selfBox;
+    struct aabb playerBox;
     u8 *player;
 
     if (self[0x4a] != 0 && self[0x4b] <= 0x16) {
@@ -654,12 +651,12 @@ void CheckWumpaPickup(struct orbit_part *selfArg)
         }
     }
 
-    GetSpriteHitbox(selfBox, self);
+    GetSpriteHitbox(&selfBox, self);
     player = gPlayer;
 
     if (player[0xa] == 0x13) {
-        GetSpriteAttackBox(playerBox, player);
-        if (AabbOverlaps(playerBox, selfBox)) {
+        GetSpriteAttackBox(&playerBox, player);
+        if (AabbOverlaps(&playerBox, &selfBox)) {
             register s32 bit asm("r0") = 8;
 
             bit |= self[0xc];
@@ -668,8 +665,8 @@ void CheckWumpaPickup(struct orbit_part *selfArg)
             PlaySfx(gAudioContext, 6, 0x80);
         }
     } else {
-        GetSpriteHitbox(playerBox, player);
-        if (AabbOverlaps(playerBox, selfBox)) {
+        GetSpriteHitbox(&playerBox, player);
+        if (AabbOverlaps(&playerBox, &selfBox)) {
             register s32 bit asm("r0") = 8;
 
             bit |= self[0xc];

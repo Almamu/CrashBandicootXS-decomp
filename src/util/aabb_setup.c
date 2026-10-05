@@ -1,6 +1,6 @@
 #include "core.h"
 #include "level_state.h"
-#include "aabb.h"
+#include "util.h"
 #include "text.h"
 
 /* Set-size primitive - already referenced by name from several other

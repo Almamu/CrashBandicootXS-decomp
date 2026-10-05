@@ -1,6 +1,8 @@
 #ifndef GUARD_BOX_PART_H
 #define GUARD_BOX_PART_H
 
+#include "aabb.h"
+
 /* The collision/animation view of a `part` object (the same object as
  * include/gfx_part.h's `struct gfx_part` / include/gobj_1a794.h's
  * `struct gobj` / include/actor.h's `struct actor`), as read by the
@@ -83,15 +85,6 @@ struct part_box {
     s16 offY;
     u8 w;
     u8 h;
-};
-
-/* The {x, y, w, h} box the collision functions build and pass around,
- * mostly by value (the same layout as `struct aabb` elsewhere). */
-struct part_aabb {
-    s32 x;
-    s32 y;
-    s32 w;
-    s32 h;
 };
 
 /* The part list the per-frame collision passes walk (UpdatePartList

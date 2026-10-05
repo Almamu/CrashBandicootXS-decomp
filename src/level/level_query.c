@@ -26,7 +26,7 @@ struct MedalTableEntry {
     u8 unused_08[0x18];
     void *itemList; /* +0x20: -> struct MedalItemList, see CountLevelCrates */
 };
-COMPILE_TIME_ASSERT(sizeof(struct MedalTableEntry) == 0x24);
+COMPILE_TIME_ASSERT(level_query_c, sizeof(struct MedalTableEntry) == 0x24);
 
 extern struct MedalTableEntry gLevelTable[];
 

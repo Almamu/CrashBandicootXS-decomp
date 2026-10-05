@@ -1,6 +1,7 @@
 #include "core.h"
 #include "actor_anim.h"
 #include "gba/io_reg.h"
+#include <libgcc.h>
 
 extern s32 gActorCategoryDeaths;
 extern s32 gUnknown_03001388;
@@ -89,7 +90,6 @@ extern s32 gCellAnimDistance;
 extern s32 gCellAnimSpeed;
 extern s32 gCellAnimFrameStep;
 extern void ResetCellAnimBg(void);
-extern s32 __divsi3(s32 a, s32 b);
 
 /* (Re)configures the console/text-plane cell geometry from a fresh
  * cell record at `arg1` (a `struct cell_anim_header`: its `cols`/`rows`) - cell pixel area, its DMA-scroll-wrap threshold, and the

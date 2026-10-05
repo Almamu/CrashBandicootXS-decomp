@@ -6,6 +6,8 @@
 #include "actor_self.h"
 #include "text.h"
 #include "frontend.h"
+#include "util.h"
+#include <libgcc.h>
 
 /* GitHub issue #65's chunk (0x080354E0-0x08037110) starts here, right at
  * the 40.4 KB actor-per-type-behavior zone's own end (docs/rom_map.md's
@@ -313,13 +315,15 @@ extern struct held_pressed_pair {
 
 extern void AddOamEntry(struct oam_shadow_buffer *self, void *record);
 extern void RewindOamBuffer(struct oam_shadow_buffer *arg0);
-extern s32 __divsi3(s32 arg0, s32 arg1);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void PlaySong(struct AudioContext *self, u32 id);
 extern s32 GetUiText(s32 arg0);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern void ShowBg2(void);
-extern s32 RandRange(s32 arg0);
+/* codegen: RandRange returns u16 (util.h), but InitTitleScreen was matched
+ * against an s32 return: with the u16 prototype its two stack slots
+ * ([sp, #0x20]/[sp, #0x24]) swap. docs/headers_plan.md */
+extern s32 RandRange_s32(s32 max) asm("RandRange");
 extern void LoadTaggedAssetBuffered(void *self, void *asset, void *dest);
 extern void *AllocVramTileBlock(u32 size);
 extern void *mem_alloc(u32 size, u32 flags);
@@ -336,7 +340,6 @@ extern void FlushVramDmaQueue(void);
 extern s32 QueueVramDmaTransfer(void *src, void *dest, u16 size, u16 unit);
 extern void UpdateKeys(void *arg0);
 extern void OperatorDelete(void *self);
-extern s32 __modsi3(void *self, s32 arg1);
 extern void InitActorPart(void *self, s32 a, s32 b, s32 c, s32 d);
 extern s32 GetAnimFrameBaseOffset(void *self);
 extern s32 GetSpriteShapeSizeBits(void *self);
@@ -851,12 +854,12 @@ void DrawTitleLogoPieces(u32 *self)
             {
                 --*shake;
                 {
-                    s32 r = RandRange(10);
+                    s32 r = RandRange_s32(10);
                     s32 t = a - 5;
                     a = t + (u16)r;
                 }
                 {
-                    s32 r = RandRange(10);
+                    s32 r = RandRange_s32(10);
                     s32 t = b - 5;
                     b = t + (u16)r;
                 }

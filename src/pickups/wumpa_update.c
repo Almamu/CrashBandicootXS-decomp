@@ -3,6 +3,7 @@
 #include "orbit_part.h"
 #include "hud.h"
 #include "pickups.h"
+#include "util.h"
 
 /* GitHub issue #12/#14 Phase 2, second parallel slice: the tail 6
  * functions of the still-large 24-function chunk past AddCollisionCandidate
@@ -28,10 +29,7 @@ extern void *gHud;
 extern void *gLevelState;
 extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
 extern void WorldToScreen(void *arg0, s32 arg1, s32 arg2, s32 *arg3, s32 *arg4);
-extern s32 FixedDiv(s32 arg0, s32 arg1);
-extern s32 FixedMul(s32 a, s32 b);
 extern s16 gSineTable[];
-extern s32 rand(void);
 
 /* Built with old_agbcc (Makefile OLD_AGBCC_OBJS) since the issue #15
  * NAKED retry: PickUpWumpa and UpdateWumpaHop match only under it, and the

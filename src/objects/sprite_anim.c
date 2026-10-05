@@ -3,6 +3,7 @@
 #include "actor_self.h"
 #include "box_part.h"
 #include <agb_syscall.h>
+#include "util.h"
 
 extern void *GetSpriteFrame(void *part);
 
@@ -325,11 +326,11 @@ extern s32 _call_via_r1(void *self, void *fn);
  * after them - that pointer is the one the loop keeps in r8. */
 void UpdatePartList(struct part_list *list)
 {
-    struct { struct part_aabb near; struct part_aabb screen; } f;
+    struct { struct aabb near; struct aabb screen; } f;
     struct bg_scroll_layer *cam;
     s32 i;
     s32 zero;
-    struct part_aabb *ps;
+    struct aabb *ps;
 
     {
         s32 w = 440 << 8;
@@ -396,8 +397,8 @@ void UpdatePartList(struct part_list *list)
 }
 
 extern void *MemCopy32(void *dst, const void *src, s32 size); /* memcpy (asm/crt0.s) */
-extern void CollidePartWithPlayer(struct part_list *list, struct part_aabb box, struct box_part *part);
-extern void CollidePartWithObject(struct part_list *list, struct part_aabb box, struct box_part *part, struct box_part *other);
+extern void CollidePartWithPlayer(struct part_list *list, struct aabb box, struct box_part *part);
+extern void CollidePartWithObject(struct part_list *list, struct aabb box, struct box_part *part, struct box_part *other);
 extern struct box_part *gPlayer;
 
 /* Walks `list`'s visible parts. For each: asks its method-table +0x48
@@ -411,10 +412,10 @@ extern struct box_part *gPlayer;
  * what the explicit call reproduces (a plain struct assignment is
  * copied inline with ldm/stm instead). `unused` is the caller's padding
  * argument. Matches under old_agbcc. */
-void CollidePartList(struct part_list *list, struct part_aabb box, s32 unused, struct box_part *other)
+void CollidePartList(struct part_list *list, struct aabb box, s32 unused, struct box_part *other)
 {
     s32 i;
-    struct part_aabb tmp;
+    struct aabb tmp;
 
     for (i = 0; i < list->visibleCount; i++) {
         struct box_part *part = list->visible[i];
@@ -441,10 +442,9 @@ struct game_state {
 
 extern struct game_state *gLevelState;
 extern void *gAudioContext;
-extern s32 ClassifySpriteContact(struct box_part *part, struct part_aabb *box);
-extern struct part_aabb GetSpriteHitbox(struct box_part *part);
-extern struct part_aabb GetSpriteBodyBox(struct box_part *part);
-extern u8 AabbOverlaps(struct part_aabb *a, struct part_aabb *b);
+extern s32 ClassifySpriteContact(struct box_part *part, struct aabb *box);
+extern struct aabb GetSpriteHitbox(struct box_part *part);
+extern struct aabb GetSpriteBodyBox(struct box_part *part);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
 
 /* obj->vtable[0x68](a, b, c) - the part's "hit" method. */
@@ -473,14 +473,14 @@ extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
  * scalar in its incoming stack slot" blocker); the empty `case 0` gives
  * the ROM's `cmp #1; beq; cmp #1; ble; cmp #2` switch; the player's
  * hit-flag update goes through a pointer to keep the ROM's registers. */
-void CollidePartWithPlayer(struct part_list *list, struct part_aabb box, struct box_part *part)
+void CollidePartWithPlayer(struct part_list *list, struct aabb box, struct box_part *part)
 {
     if (gLevelState->maskLevel == 3) {
         if (!ClassifySpriteContact(part, &box))
             return;
         CALL_HIT(part, 1, gPlayer->kind, 0);
     } else if ((part->flags2 >> 3) & 1) {
-        struct part_aabb a, b;
+        struct aabb a, b;
         s32 px;
 
         a = GetSpriteHitbox(gPlayer);

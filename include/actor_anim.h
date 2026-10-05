@@ -26,7 +26,7 @@ struct anim_box {
     s16 x, y, z;
     s16 w, h, d;
 }; // 0xC
-COMPILE_TIME_ASSERT(sizeof(struct anim_box) == 0xC);
+COMPILE_TIME_ASSERT(actor_anim_h, sizeof(struct anim_box) == 0xC);
 
 struct anim_frame_record; /* actor_self.h */
 
@@ -46,7 +46,7 @@ struct anim_table_record {
     s32 spawnX;                  // 0x20 - added to the spawn X by CreateActor (the per-kind actor factory)
     s32 spawnY;                  // 0x24 - added to the spawn Y by CreateActor
 }; // 0x28
-COMPILE_TIME_ASSERT(sizeof(struct anim_table_record) == 0x28);
+COMPILE_TIME_ASSERT(actor_anim_h, sizeof(struct anim_table_record) == 0x28);
 
 /* table_A is an array of struct anim_frame_record (actor_self.h): one
  * entry per keyframe, {duration, frameIndex (into table_B), loop
@@ -134,7 +134,7 @@ struct sub_effect_record {
     s32 offsetX;    // 0x0c - Q8.8 after sub_802A558's <<8
     s32 offsetY;    // 0x10 - Q8.8 after sub_802A540's <<8
 }; // 0x14
-COMPILE_TIME_ASSERT(sizeof(struct sub_effect_record) == 0x14);
+COMPILE_TIME_ASSERT(actor_anim_h, sizeof(struct sub_effect_record) == 0x14);
 
 /* The 12 bytes after a table's last record: the first three words of a
  * record that isn't there, which the one-record-ahead accessors
@@ -148,7 +148,7 @@ struct sub_effect_table_end {
     u8 bonusKind;
     u8 pad_0b;
 }; // 0xC
-COMPILE_TIME_ASSERT(sizeof(struct sub_effect_table_end) == 0xC);
+COMPILE_TIME_ASSERT(actor_anim_h, sizeof(struct sub_effect_table_end) == 0xC);
 
 /* A whole spawnTable as the ROM stores it (src/data/). */
 #define SUB_EFFECT_TABLE(n) struct { struct sub_effect_record records[n]; struct sub_effect_table_end end; }
@@ -193,7 +193,7 @@ struct category_descriptor {
     u32 position_offset_flag;       // 0x2C - zero/nonzero selects between two fixed position-offset constants (0xFFFFB000 / 0x2800) applied to a spawned part's vertical anchor
     u32 unknown_30;                 // 0x30
 }; // 0x34
-COMPILE_TIME_ASSERT(sizeof(struct category_descriptor) == 0x34);
+COMPILE_TIME_ASSERT(actor_anim_h, sizeof(struct category_descriptor) == 0x34);
 
 /* gActorCategoryVtables - 3 entries, type-indexed (see category_descriptor
  * above), not category-indexed - categories that share a type share one
@@ -214,7 +214,7 @@ COMPILE_TIME_ASSERT(sizeof(struct category_descriptor) == 0x34);
 struct category_vtable {
     void (*fn[13])(void);
 }; // 0x34
-COMPILE_TIME_ASSERT(sizeof(struct category_vtable) == 0x34);
+COMPILE_TIME_ASSERT(actor_anim_h, sizeof(struct category_vtable) == 0x34);
 
 /* Both tables are defined in src/data/actor_category_175558.c (7*0x34 =
  * 0x16C bytes of descriptors, then gActorCategoryVtables). The latter

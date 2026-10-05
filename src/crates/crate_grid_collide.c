@@ -1,6 +1,7 @@
 #include "core.h"
 #include "box_part.h"
 #include "actor_self.h"
+#include "util.h"
 
 struct grid_node {
     struct box_part *data;
@@ -30,8 +31,8 @@ extern struct box_part *gPlayer;
 extern s32 _call_via_r2(void *self, void *arg, void *fn);
 extern s32 _call_via_r1(void *self, void *fn);
 extern void *MemCopy32(void *dst, const void *src, s32 size);
-extern void CollideCrateGridPartWithPlayer(struct part_list *list, struct part_aabb box, struct box_part *part);
-extern void CollideCrateGridPartWithObject(struct pool_manager *m, struct part_aabb box, struct box_part *part, struct box_part *other);
+extern void CollideCrateGridPartWithPlayer(struct part_list *list, struct aabb box, struct box_part *part);
+extern void CollideCrateGridPartWithObject(struct pool_manager *m, struct aabb box, struct box_part *part, struct box_part *other);
 
 /* The spatial-hash-grid-cluster analog of `CollidePartList`: the same
  * "extended screen box" filter shape as `DrawCrateList` (iterating
@@ -58,8 +59,8 @@ extern void CollideCrateGridPartWithObject(struct pool_manager *m, struct part_a
  * that order, as the ROM does. Its ROM address, 0x08009528, sits
  * between `DrawCrateList` (`crate_list_draw.c`) and
  * `CollideCrateGridPartWithPlayer` (below). */
-static inline void CheckPart(struct pool_manager *m, struct box_part *part, struct part_aabb *screen,
-                             struct part_aabb *box, struct part_aabb *tmp, struct box_part *other)
+static inline void CheckPart(struct pool_manager *m, struct box_part *part, struct aabb *screen,
+                             struct aabb *box, struct aabb *tmp, struct box_part *other)
 {
     struct part_method *m1 = PART_METHOD(part, 0x30);
 
@@ -79,10 +80,10 @@ static inline void CheckPart(struct pool_manager *m, struct box_part *part, stru
     }
 }
 
-void CollideCrateGrid(struct pool_manager *m, struct part_aabb box, s32 unused, struct box_part *other)
+void CollideCrateGrid(struct pool_manager *m, struct aabb box, s32 unused, struct box_part *other)
 {
-    struct part_aabb screen;
-    struct part_aabb tmp;
+    struct aabb screen;
+    struct aabb tmp;
     struct bg_scroll_layer *cam;
     s32 lo;
     s32 i;
@@ -129,10 +130,9 @@ struct game_state {
 
 extern struct game_state *gLevelState;
 extern void *gAudioContext;
-extern s32 ClassifySpriteContact(struct box_part *part, struct part_aabb *box);
-extern struct part_aabb GetSpriteHitbox(struct box_part *part);
-extern struct part_aabb GetSpriteBodyBox(struct box_part *part);
-extern u8 AabbOverlaps(struct part_aabb *a, struct part_aabb *b);
+extern s32 ClassifySpriteContact(struct box_part *part, struct aabb *box);
+extern struct aabb GetSpriteHitbox(struct box_part *part);
+extern struct aabb GetSpriteBodyBox(struct box_part *part);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
 
 /* obj->vtable[0x68](a, b, c) - the part's "hit" method. */
@@ -153,14 +153,14 @@ extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
  * CollidePartWithPlayer (see docs/matching/issue-9-naked-retry.md). Its
  * ROM address, 0x080096C0, sits between `CollideCrateGrid` (above) and
  * `CollidePlayerWithCrates` (`crate_player_collide.c`) in ROM order. */
-void CollideCrateGridPartWithPlayer(struct part_list *list, struct part_aabb box, struct box_part *part)
+void CollideCrateGridPartWithPlayer(struct part_list *list, struct aabb box, struct box_part *part)
 {
     if (gLevelState->maskLevel == 3) {
         if (!ClassifySpriteContact(part, &box))
             return;
         CALL_HIT(part, 1, gPlayer->kind, 0);
     } else if ((part->flags2 >> 3) & 1) {
-        struct part_aabb a, b;
+        struct aabb a, b;
         s32 px;
 
         a = GetSpriteHitbox(gPlayer);

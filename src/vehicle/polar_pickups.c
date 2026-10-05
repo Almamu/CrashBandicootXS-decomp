@@ -1,6 +1,7 @@
 #include "core.h"
 #include "actor_self.h"
 #include "memory.h"
+#include <libgcc.h>
 
 /* Continuation of polar_player_actions.c's player/action-object family, right
  * after `RunPolarPlayerState` (matched C, see polar_player_dispatch.c) - same `self`
@@ -277,7 +278,6 @@ asm(".align 2, 0");
  * statements earlier, a genuine correctness bug caught by a direct
  * byte compare against the ROM, not just a register-choice cosmetic
  * mismatch. */
-extern s32 __divsi3(s32 arg0, s32 arg1);
 extern s32 GetActorBgCenterY(void);
 extern s32 GetActorBgCenterX(void);
 extern void InitActorPart(void *self, s32 a, s32 b, s32 c, s32 d);

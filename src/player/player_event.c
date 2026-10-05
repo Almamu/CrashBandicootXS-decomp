@@ -3,6 +3,7 @@
 #include "actor_self.h"
 #include "box_part.h"
 #include "hud.h"
+#include "util.h"
 
 /* GitHub issue #9/#10, ROM 0x0800AB9C-0x0800AC2C (details in
  * docs/matching/issue-9-10-0x0800ab9c-graphics.md). Built with old_agbcc
@@ -11,14 +12,6 @@
  * A two-flag-gated teardown/notification step on the still-unnamed "big
  * object" (at least 0x110 bytes) player_update.c/player_init.c work on,
  * guarded by its +0x105 "torn down already" latch. */
-
-struct aabb
-{
-    s32 x;
-    s32 y;
-    s32 w;
-    s32 h;
-};
 
 /* GetSpriteAttackBox's result and the copy of it that goes to CollidePartList. As two
  * members of one frame object, the copy is addressed as a frame offset, so
@@ -487,7 +480,6 @@ extern s32 gAkuAkuInvincibleFrame;
 extern s32 gAkuAkuFollowFrame;
 extern void *gSpriteRenderer;
 extern s16 gSineTable[];
-extern s32 RandRange(s32 max);
 extern void DrawSprite(void *self, void *part);
 extern s32 _call_via_r1(void *addr, void *fn);
 

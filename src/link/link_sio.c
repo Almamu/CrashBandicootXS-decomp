@@ -1,10 +1,10 @@
 #include "core.h"
 #include "irq.h"
 #include "link.h"
+#include "util.h"
 
 extern void IrqClearHandler(s32 interruptIndex);
 extern void IrqSetHandler(s32 interruptIndex, irq_handler_t *fn);
-extern void IwramFree(u8 *address);
 
 /* "Start" step of the link session - counterpart to `LinkStop`
  * above. Disables the Serial/Timer3 IRQ lines (same IME-guarded

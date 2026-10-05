@@ -66,7 +66,7 @@ struct AudioContext {
     u8 pad_55[3];                                         // 0x55-0x57
 };
 
-COMPILE_TIME_ASSERT(sizeof(struct AudioContext) == 0x58);
+COMPILE_TIME_ASSERT(audio_h, sizeof(struct AudioContext) == 0x58);
 
 /* One record of the 99-entry sound-effect trigger table at ROM
  * `0x0816AA6C` (`sound/sfx_table.json`) - see docs/audio.md's "Sound

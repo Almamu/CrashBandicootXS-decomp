@@ -6,13 +6,13 @@
 #include "vram_pool.h"
 #include "memory.h"
 #include "text.h"
+#include "util.h"
+#include <libgcc.h>
 
 extern void AdvanceSpriteAnim(struct actor *part);
-extern s32 __modsi3(s32 dividend, s32 divisor);
 extern void ResetSpriteFrameTimer(struct actor *part);
 extern void ResetSpriteFrameIndex(struct actor *part);
 extern void SetSpriteAnimDone(struct actor *part, u8 val);
-extern s32 RandRange(s32 max);
 
 /* A slow reveal/cycle animation over the results screen's icon groups:
  * `field_24` (0-4) selects which group to hide this call (a plain

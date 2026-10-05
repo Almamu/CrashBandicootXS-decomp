@@ -3,6 +3,7 @@
 #include "bitmap_font.h"
 #include "pause_menu.h"
 #include "text.h"
+#include <libgcc.h>
 
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 
@@ -181,8 +182,6 @@ struct row_counter_widget {
     s32 field_1c;
 };
 
-extern s32 __modsi3(s32 arg0, s32 arg1);
-
 /* Bumps `field_18` by one, then re-clamps it against `field_1c` via
  * __modsi3 (still raw - reads like a generic "wrap/clamp counter"
  * helper, seen throughout this chunk). */
@@ -204,9 +203,6 @@ s32 PauseMenuCursorUp(struct row_counter_widget *self)
     self->field_18 = v;
     return v;
 }
-
-extern s32 __modsi3(s32 dividend, s32 divisor);
-extern s32 __divsi3(s32 dividend, s32 divisor);
 
 /* Decimal `itoa`: writes `value`'s decimal digits (unsigned, most
  * significant first) to `dest`, NUL-terminated, and returns the digit

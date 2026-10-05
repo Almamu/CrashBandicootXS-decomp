@@ -1,6 +1,7 @@
 #include "core.h"
 #include "actor_self.h"
 #include "memory.h"
+#include <libgcc.h>
 
 /* Same boss-weapon "self"/tracker object family as airship_fireball.c/
  * airship_fall.c - see airship_fireball.c's header comment and
@@ -262,8 +263,6 @@ extern s32 gAirshipHitFlashTimer;
 extern u8 gAirshipHitFlashPalettes[];
 extern s32 QueueVramDmaTransfer(void *arg0, void *arg1, u16 arg2, u16 arg3);
 
-extern s32 __divsi3(s32 num, s32 den);
-
 void SpawnAirship(s32 kind, s32 x, s32 y, s32 z)
 {
     s32 scale;
@@ -327,7 +326,6 @@ void SpawnAirship(s32 kind, s32 x, s32 y, s32 z)
 extern void *gAirshipStateFuncs[];
 extern s32 _call_via_r0(void *fn);
 extern void AnimateAirshipPalette(void);
-extern s32 __divsi3(s32 arg0, s32 arg1);
 
 void UpdateAirship(void)
 {

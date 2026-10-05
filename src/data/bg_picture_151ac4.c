@@ -17,7 +17,7 @@ struct bg_picture_151ac4 {
     u8 tiles[237 * 32];
     u8 banks[(38 * 16 + 1) / 2];
 };
-COMPILE_TIME_ASSERT(sizeof(struct bg_picture_151ac4) == 0x208 + 608 * 2 + 237 * 32 + 608 / 2);
+COMPILE_TIME_ASSERT(bg_picture_151ac4_c, sizeof(struct bg_picture_151ac4) == 0x208 + 608 * 2 + 237 * 32 + 608 / 2);
 
 const struct bg_picture_151ac4 gCategory4BgPicture = {
     {
@@ -286,7 +286,7 @@ struct bg_picture_155260 {
     u8 tiles[374 * 32];
     u8 banks[(38 * 16 + 1) / 2];
 };
-COMPILE_TIME_ASSERT(sizeof(struct bg_picture_155260) == 0x208 + 608 * 2 + 374 * 32 + 608 / 2);
+COMPILE_TIME_ASSERT(bg_picture_151ac4_c, sizeof(struct bg_picture_155260) == 0x208 + 608 * 2 + 374 * 32 + 608 / 2);
 
 const struct bg_picture_155260 gCategory5BgPicture = {
     {

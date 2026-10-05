@@ -1,5 +1,6 @@
 #include "core.h"
 #include "actor_self.h"
+#include <libgcc.h>
 
 /* Continuation of polar_player_actions.c's player/action-object family, right
  * after the still-raw `DetonateNearbyPolarNitros` (see docs/matching.md) - same
@@ -79,7 +80,6 @@ asm(".align 2, 0");
 extern void FreezeLevelClock(void *arg0, s32 arg1);
 extern void QueuePolarWumpa(void *arg0, s32 delta);
 extern void InitActorPart(void *self, s32 a, s32 b, s32 c, s32 d);
-extern s32 __divsi3(s32 arg0, s32 arg1);
 
 extern u8 gPolarCrateVtable[];
 extern u8 gPolarTimeCrateVtable[];

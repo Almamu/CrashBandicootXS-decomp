@@ -1,5 +1,6 @@
 #include "core.h"
 #include "hud.h"
+#include "util.h"
 
 /* GitHub issue #37 follow-up to `docs/matching/issue-37-game-loop-2375c.md`
  * (which matched this function's only caller, `PlayRoom`, in
@@ -327,7 +328,6 @@ extern void SetDispcntMode(s32 arg);
 extern void SetObjMapping1D(void);
 extern void ShowObj(void);
 extern void CommitDispcnt(void);
-extern void CommitBlendRegs(void);
 extern void UpdateKeys(void *arg);
 extern s32 RunPauseMenu(void);
 extern void ResumeRoomAfterPause(struct gl_self *self);

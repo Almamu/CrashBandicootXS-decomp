@@ -21,7 +21,7 @@ struct cell_anim_0ff1b0 {
         u8 tiles[38 * 10 * 32];
     } frames[21];
 };
-COMPILE_TIME_ASSERT(sizeof(struct cell_anim_0ff1b0) == 0x3E784);
+COMPILE_TIME_ASSERT(cell_anim_0ff1b0_c, sizeof(struct cell_anim_0ff1b0) == 0x3E784);
 
 const struct cell_anim_0ff1b0 gCategoryFamily1CellAnim = {
     {
@@ -45,7 +45,7 @@ struct bg_picture_13d934 {
     u8 tiles[357 * 32];
     u8 banks[(38 * 16 + 1) / 2];
 };
-COMPILE_TIME_ASSERT(sizeof(struct bg_picture_13d934) == 0x208 + 608 * 2 + 357 * 32 + 608 / 2);
+COMPILE_TIME_ASSERT(cell_anim_0ff1b0_c, sizeof(struct bg_picture_13d934) == 0x208 + 608 * 2 + 357 * 32 + 608 / 2);
 
 const struct bg_picture_13d934 gCategory3BgPicture = {
     {

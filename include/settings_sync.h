@@ -26,7 +26,7 @@ struct save_data {
     u8 field_1fb;             /* 0x1fb - zeroed by ResetSaveData, otherwise untouched in this chunk */
     u32 checksum;               /* 0x1fc - UpdateSaveChecksum/CheckSaveChecksum (still raw) */
 };
-COMPILE_TIME_ASSERT(sizeof(struct save_data) == 0x200);
+COMPILE_TIME_ASSERT(settings_sync_h, sizeof(struct save_data) == 0x200);
 
 /* A transient SIO send/receive envelope wrapping a save_data
  * copy - allocated per "connecting..." spinner-dialog session
@@ -48,6 +48,6 @@ struct settings_sync_pump {
     u32 receiveDone;                                       /* 0x218 - set 1 once `totalReceived` reaches sizeof(data) (receive complete) */
     u32 settleTimer;                                         /* 0x21c - elapsed-poll counter, PollSaveTransfer */
 };
-COMPILE_TIME_ASSERT(sizeof(struct settings_sync_pump) == 0x220);
+COMPILE_TIME_ASSERT(settings_sync_h, sizeof(struct settings_sync_pump) == 0x220);
 
 #endif /* __SETTINGS_SYNC_H__ */

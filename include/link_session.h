@@ -73,7 +73,7 @@ struct link_session {
     u8 unused_402[2];
     s32 field_404;
 };
-COMPILE_TIME_ASSERT(sizeof(struct link_player) == 0xc8);
-COMPILE_TIME_ASSERT(sizeof(struct link_session) == 0x408);
+COMPILE_TIME_ASSERT(link_session_h, sizeof(struct link_player) == 0xc8);
+COMPILE_TIME_ASSERT(link_session_h, sizeof(struct link_session) == 0x408);
 
 #endif /* GUARD_LINK_SESSION_H */

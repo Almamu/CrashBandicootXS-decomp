@@ -2,6 +2,7 @@
 #include "memory.h"
 #include "actor_self.h"
 #include "actor_anim.h"
+#include <libgcc.h>
 
 /* Branchless absolute value, matching this ROM's own codegen for `abs()`
  * (`asrs`/`eors`/`subs` on the value's own sign-extended shift, updating
@@ -275,7 +276,6 @@ asm(".align 2, 0");
  * comment and docs/matching/issue-50-actor-2a69c.md. */
 
 extern s32 gUnknown_030013C8;
-extern s32 __divsi3(s32 arg0, s32 arg1);
 extern s32 GetActorBgCenterY(void);
 extern s32 GetActorBgCenterX(void);
 extern u8 *GetAnimFrameData(void *self);

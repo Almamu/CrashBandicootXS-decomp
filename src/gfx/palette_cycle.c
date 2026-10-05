@@ -1,6 +1,7 @@
 #include "core.h"
 #include "actor.h"
 #include "hud.h"
+#include <libgcc.h>
 
 /* Up to three palette colour cycles, at `gPaletteCycles`
  * (`OperatorNew(0x48)`, matching this struct's size). run_room.c
@@ -42,7 +43,7 @@ struct palette_cycler {
     u8 unknown_45[3];
 };
 
-COMPILE_TIME_ASSERT(sizeof(struct palette_cycler) == 0x48);
+COMPILE_TIME_ASSERT(palette_cycle_c, sizeof(struct palette_cycler) == 0x48);
 
 extern void OperatorDelete(void *ptr);
 extern void DrawSpriteWithOffset(struct actor *part, s32 arg1, s32 arg2);
@@ -51,8 +52,6 @@ extern struct actor *InitUiSpriteObj(struct actor *part);
 extern u8 gHudPartVtable[];
 
 extern u32 gRoomFrameCount;
-extern s32 __divsi3(s32 arg0, s32 arg1);
-extern u32 __umodsi3(u32 a, u32 b);
 
 /* Per-frame consumer: for each active slot whose period has elapsed
  * this frame, rotates `targets[i]` by one position along the order

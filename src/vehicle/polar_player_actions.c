@@ -1,6 +1,7 @@
 #include "core.h"
 #include "memory.h"
 #include "actor_self.h"
+#include <libgcc.h>
 
 /* Continues the same player/action-object action-table family already
  * documented in ctrl.c/action_ctrl_states.c/action_ctrl_land.c - `self`
@@ -52,7 +53,6 @@ extern u8 *GetAnimFrameData(void *self);
 extern void SetupSpriteFrameOam(u8 *frame, u32 arg1, u32 arg2, s32 priority);
 extern s32 GetAnimFrameAttr(void *self);
 extern u8 gPolarWumpaVtable[];
-extern s32 __divsi3(s32 arg0, s32 arg1);
 extern s32 GetActorBgCenterY(void);
 extern s32 GetActorBgCenterX(void);
 extern void InitActorPart(void *self, s32 a, s32 b, s32 c, s32 d);

@@ -1,5 +1,6 @@
 #include "core.h"
 #include "memory.h"
+#include "util.h"
 
 /* The `gYeti`-rooted position-tracking object with tier-
  * threshold sound cues, already documented in docs/rom_map.md ("A
@@ -24,7 +25,6 @@ extern s32 PlayAmbientSfx(void *arg0, s32 arg1, s32 arg2, s32 arg3);
 extern void ShakeActorBg(s32 arg0);
 extern s32 gYetiParamsIndex;
 extern u8 gYetiChargeParams[];
-extern s32 RandRange(s32 arg0);
 extern s32 gYetiState;
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 

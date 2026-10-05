@@ -1,5 +1,6 @@
 #include "core.h"
 #include "player_ctrl.h"
+#include "util.h"
 
 /* GitHub issue #19: 0x080159F8-0x08015DF8, the first two of the three
  * jump-table dispatchers of the player-input controller class
@@ -234,7 +235,6 @@ struct spawned
 };
 
 extern void *gEntitySpawner;
-extern s32 RandRange(s32 max);
 extern struct spawned *SpawnEffectPart(void *pool, s32 arg1, s32 kind, s32 x, s32 y, s32 arg5);
 extern void SetPlayerSwimDriftX(s32 a, s32 b, s32 c);
 extern void SetPlayerSwimDriftY(s32 a, s32 b, s32 c);

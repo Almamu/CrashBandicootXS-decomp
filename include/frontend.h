@@ -101,7 +101,7 @@ struct credits_screen {
     struct popup_glyph glyphs[5]; /* 0x1c */
     u32 frameParity;          /* 0x94 */
 };
-COMPILE_TIME_ASSERT(sizeof(struct credits_screen) == 0x98);
+COMPILE_TIME_ASSERT(frontend_h, sizeof(struct credits_screen) == 0x98);
 
 /* The language select, between OpenLanguageSelect and
  * CloseLanguageSelect (src/iwram/iwram_data.c). */

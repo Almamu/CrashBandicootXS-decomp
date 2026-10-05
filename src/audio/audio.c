@@ -1,6 +1,7 @@
 #include "core.h"
 #include "audio.h"
 #include "irq.h"
+#include "util.h"
 
 /* The first matched code in the Shin'en GAX2 wrapper layer (the engine
  * itself is still raw in asm/code_3.s - see docs/audio.md). These two
@@ -360,7 +361,6 @@ void PlayAmbientSfx(struct AudioContext *self, u32 id, u32 frameOffset, s32 volu
 }
 
 extern void WaitForVBlank(void);
-extern void IwramFree(u8 *address);
 extern void IrqRestoreHandler(s32 interruptIndex);
 extern void StartSong(struct AudioContext *self, u32 songIndex);
 

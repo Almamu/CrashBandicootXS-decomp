@@ -4,6 +4,7 @@
 #include "text.h"
 #include "link.h"
 #include "save.h"
+#include "util.h"
 
 void SetSaveTransferRecord(struct settings_sync_pump *self, struct save_data *tmpl)
 {
@@ -88,7 +89,6 @@ extern void FreeUnlockedPaletteSlots(struct palette_cache *self);
 extern void PlaySong(void *arg0, s32 arg1);
 extern void *gLevelState;
 extern void *PackSaveData(void *arg0);
-extern void *IwramAlloc(s32 size);
 extern void FadeBrightness(u8 flags, s32 frameDelay, u8 sync);
 
 /* The composite pause/options screen's (and the spinner dialog's, via

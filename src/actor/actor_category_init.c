@@ -3,6 +3,7 @@
 #include "gba/dma_macros.h"
 #include "memory.h"
 #include "hud.h"
+#include "util.h"
 
 /*
  * `InitActorCategory` - the category (re)initialization + loading-screen
@@ -57,7 +58,6 @@ extern void SetupActorVramPool(void);
 extern void ClearCollectedSpawns(void);
 extern void EnableActorPaletteCycle(s32 flag);
 extern void InitActorBgScroll(s32 kind);
-extern s32 GetLives(void *state);
 extern void RestoreCheckpoint(void *arg0);
 extern void FadeBrightness(s32 a, s32 b, s32 c);
 extern void InitCellAnim(s32 arg0, void *arg1, u32 arg2, s32 arg3);
@@ -234,7 +234,7 @@ s32 InitActorCategory(s32 category)
     done:
         DestroyAllActors();
         nullsub_5();
-    } while (ret == 1 && GetLives(gLevelState) >= 0 && PAUSED == 0);
+    } while (ret == 1 && GetLives((struct level_state *)gLevelState) >= 0 && PAUSED == 0);
 
     nullsub_6();
     FreeSpriteFrameCache();

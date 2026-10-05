@@ -1,5 +1,6 @@
 #include "core.h"
 #include "actor_self.h"
+#include "util.h"
 
 /* Continues the `InitActorPart`/`gUnknown_0300148x`-`gUnknown_030014Bx`
  * cluster already established in `src/vehicle/polar_player_states.c`
@@ -51,7 +52,6 @@ extern void StopYeti(void);
 extern s32 RemovePolarAkuAkuMask(void *self);
 extern void *CreateActor(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4);
 extern void *AllocVramTileBlock(s32 size);
-extern s32 RandRange(s32 max);
 extern s32 SetMaskLevel(void *arg0, s32 arg1);
 extern void DispensePolarWumpa(void *selfArg);
 extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);

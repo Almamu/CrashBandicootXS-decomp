@@ -1,4 +1,5 @@
 #include "core.h"
+#include "util.h"
 
 /* GitHub issue #22, ROM 0x08018008-0x080187FC, formerly
  * asm/code_3_2_17_18008.s (details in
@@ -97,14 +98,6 @@ struct hop_list
     struct hop_part **items;      // 0x0C
 };
 
-struct hop_box
-{
-    s32 x;
-    s32 y;
-    s32 w;
-    s32 h;
-};
-
 struct hop_level
 {
     u8 unk_00[0x10];
@@ -182,9 +175,8 @@ extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
 extern void *OperatorNew(u32 size);
 extern struct hop_vobj *CreateStompedHopPadCtrl(void *mem);
 extern struct hop_vobj *CreateOneShotAnimCtrl(void *mem);
-extern struct hop_box GetSpriteAttackBox(void *obj);
-extern struct hop_box GetSpriteBodyBox(void *obj);
-extern u8 AabbOverlaps(struct hop_box *a, struct hop_box *b);
+extern struct aabb GetSpriteAttackBox(void *obj);
+extern struct aabb GetSpriteBodyBox(void *obj);
 extern u8 HasTornadoSpin(void *self);
 extern void RequestRoomExit(void);
 extern void StartTinyHop(struct tiny_tiger *self, struct hop_part *part);
@@ -236,8 +228,8 @@ void SpawnTinyFallingLeaves(struct tiny_tiger *self, struct hop_part *part, s32 
 
 void UpdateTiny(struct tiny_tiger *self, struct hop_part *part)
 {
-    struct hop_box a;
-    struct hop_box b;
+    struct aabb a;
+    struct aabb b;
     s32 state;
 
     if (self->stomped != -1)

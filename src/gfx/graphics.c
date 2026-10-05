@@ -3,6 +3,9 @@
 #include "vram_pool.h"
 #include "actor.h"
 #include "vtable.h"
+#include "aabb.h"
+#include "util.h"
+#include <libgcc.h>
 
 /* The collision box an actor's vtable slot 2 returns (gobj_1a794.h's
  * `struct anim_box`): an offset from the actor's position and a size. */
@@ -12,14 +15,6 @@ struct anim_box
     s16 offY;   // 0x02
     u8 padX;    // 0x04
     u8 padY;    // 0x05
-};
-
-struct aabb
-{
-    s32 x;
-    s32 y;
-    s32 w;
-    s32 h;
 };
 
 struct dma_queue_entry {
@@ -45,7 +40,6 @@ extern s32 CountGems(void *arg0);
 extern s32 CountSapphireRelics(void *arg0);
 extern s32 CountGoldRelics(void *arg0);
 extern s32 CountPlatinumRelics(void *arg0);
-extern s32 __divsi3(s32 arg0, s32 arg1);
 
 /* The register pins below (and in several functions further down) match
  * the ROM's own register allocation exactly - required for a byte-exact
@@ -126,7 +120,7 @@ struct oam_shadow_buffer {
     s32 matrixCount;
     union oam_shadow_entry table[0x80];
 };
-COMPILE_TIME_ASSERT(sizeof(struct oam_shadow_buffer) == 0x40C);
+COMPILE_TIME_ASSERT(graphics_c, sizeof(struct oam_shadow_buffer) == 0x40C);
 
 void AppendOamEntries(struct oam_shadow_buffer *arg0, void *arg1, s32 arg2)
 {
@@ -680,8 +674,6 @@ u8 IsEntityNearCamera(struct actor *self)
 }
 
 extern void *_call_via_r1(void *arg0, void *arg1);
-extern void SetAabbPos(void *buf, s32 arg1, s32 arg2);
-extern void SetAabbSize(void *buf, s32 arg1, s32 arg2);
 extern u8 PlayerTouchesBox(void *arg0, void *buf);
 extern void _call_via_r4(void *arg0, s32 arg1, s32 arg2, s32 arg3);
 extern struct actor *gPlayer;
@@ -705,7 +697,7 @@ s32 CheckEntityPlayerContact(struct actor *self)
     s32 x, rx;
     s32 y, ry;
     u8 rw, rh;
-    s32 buf[4];
+    struct aabb buf;
     void *table2;
     void *addr;
     u8 field0a;
@@ -722,8 +714,8 @@ s32 CheckEntityPlayerContact(struct actor *self)
     rh = rec->padY;
     x += rx;
     y += ry;
-    SetAabbPos(buf, x, y);
-    SetAabbSize(buf, rw, rh);
+    SetAabbPos(&buf, x, y);
+    SetAabbSize(&buf, rw, rh);
 
     {
         register s32 flagTestR0 asm("r0");
@@ -738,7 +730,7 @@ s32 CheckEntityPlayerContact(struct actor *self)
         flagTest = flagTestR0;
     }
     if (flagTest) {
-        if (PlayerTouchesBox(gPlayer, buf)) {
+        if (PlayerTouchesBox(gPlayer, &buf)) {
             asm volatile(
                 "mov r0, #8\n\t"
                 "ldrb r2, [%0, #0xc]\n\t"

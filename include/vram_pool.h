@@ -33,6 +33,6 @@ struct palette_cache {
     u8 dirty;                           // 0x22C
     u8 pad_22d[3];
 };
-COMPILE_TIME_ASSERT(sizeof(struct palette_cache) == 0x230);
+COMPILE_TIME_ASSERT(vram_pool_h, sizeof(struct palette_cache) == 0x230);
 
 #endif /* __VRAM_POOL_H__ */
