@@ -149,7 +149,7 @@ void EndGemPath(struct level_state *self, u8 flag)
     }
 }
 
-void sub_802364C(void *self)
+void PlayNewGameCutscene(void *self)
 {
     PlayCutscene(self, 2);
 }

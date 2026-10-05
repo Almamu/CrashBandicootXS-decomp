@@ -6,23 +6,23 @@
  * 'hit' test against the constant 6 is used" from its own camera-
  * probe tail; `DrawAffineSpritePieces`'s original write-up
  * (`docs/matching/issue-9-0x08007634-actor.md`, line ~214) separately
- * flags it as "the unexamined `sub_8026BC0`" from a jump-table
+ * flags it as "the unexamined `GetTerrainFlagsAt`" from a jump-table
  * dispatch context. Neither caller needed anything more than the
  * return value, so it was never examined on its own until now.
  *
- * `sub_8026BC0(arg0, x, y)` is a small wrapper around the already-
+ * `GetTerrainFlagsAt(arg0, x, y)` is a small wrapper around the already-
  * matched terrain-tile-cache lookup `GetTerrainType` (`src/system/
  * game_loop4.c`, GitHub issue #40): it takes `arg0+0x20`'s pointed-to
  * `struct tile_cache`, converts `x`/`y` into that cache's own lookup
  * units via a plain `>>3` (clamped to a minimum of 0 on each axis
- * independently - `sub_8026628`'s own bounds-clamp neighbors use the
+ * independently - `ProbeTerrain`'s own bounds-clamp neighbors use the
  * same "clamp each axis, don't just floor a negative tile index"
  * shape), and calls `GetTerrainType(cache, x>>3, y>>3, &flags, &hi)`.
  * `flags` and `hi` are both zero-initialized locals whose addresses
  * are handed to `GetTerrainType` purely as out-parameters - `hi` (the
  * decoded cell's top nibble, per `GetTerrainType`'s own doc comment) is
  * never read back here, exactly the "discarded outValue" idiom
- * `sub_8026628`'s own `sub_8026AE8`/`sub_8026A18` calls already
+ * `ProbeTerrain`'s own `ProbeTerrainX`/`ProbeTerrainY` calls already
  * established for this ROM neighborhood. Only `flags` (the u8 return
  * value `GetTerrainType` also returns directly) is returned - matching
  * both known call sites, which only ever compare the return code
@@ -39,7 +39,7 @@
  * `game_loop4.c`.
  *
  * Matched as real C on the first isolated-compile attempt - no
- * register pins or opaque asm needed, following `sub_8026628`'s own
+ * register pins or opaque asm needed, following `ProbeTerrain`'s own
  * "matched on the first attempt" precedent right next door. Confirmed
  * byte-identical to the ROM's own instructions (register for
  * register, operand for operand) via the isolated `cpp`/`agbcc`/`as`
@@ -51,7 +51,7 @@
  * crashbandicootxs.gba crashbandicootxs.map && make compare`
  * (`crashbandicootxs.gba: La suma coincide`). Already flush to a
  * 4-byte boundary (56 bytes total) - no trailing `.align 2, 0` gap,
- * unlike `sub_8026628`'s own end-of-function padding quirk.
+ * unlike `ProbeTerrain`'s own end-of-function padding quirk.
  *
  * See docs/matching/issue-9-10-0x0800a884-graphics.md for the full
  * write-up of this closure, appended to the section that originally
@@ -59,7 +59,7 @@
 
 extern u16 GetTerrainType(void *self, s32 x, s32 y, u8 *flagsOut, s32 *hiOut);
 
-s32 sub_8026BC0(void *arg0, s32 x, s32 y)
+s32 GetTerrainFlagsAt(void *arg0, s32 x, s32 y)
 {
     u8 flagsOut = 0;
     s32 hiOut = 0;

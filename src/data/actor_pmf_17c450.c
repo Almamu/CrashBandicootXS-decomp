@@ -6,12 +6,12 @@
  * sections by ldscript.txt - see docs/data.md.
  */
 
-extern void sub_8032A1C();
-extern void sub_8032A24();
+extern void HovercraftFireballStateExplode();
+extern void HovercraftFireballStateFly();
 
 /* Per-state handlers dispatched by UpdateHovercraftFireball and RunHovercraftFireballState
  * (actor_part130.c). */
 const struct actor_pmf gHovercraftFireballStateFuncs[2] = {
-    ACTOR_PMF(sub_8032A24),
-    ACTOR_PMF(sub_8032A1C),
+    ACTOR_PMF(HovercraftFireballStateFly),
+    ACTOR_PMF(HovercraftFireballStateExplode),
 };

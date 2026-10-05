@@ -38,7 +38,7 @@ Two loosely related families sharing the same ROM neighborhood:
 `src/system/game_loop18.c` (`IsInGemPathRoom`-`SelectRoom`, 13 fns):
 `IsInGemPathRoom`/`IsInBonusRoom` (medal item-list `extra2`/`extra1`-matches-
 cached-value checks), `LevelHasYellowGemEntity`/`LevelHasBlueGemEntity`/`LevelHasGreenGemEntity`/
-`LevelHasRedGemEntity`/`sub_8024458` (thin wrappers over `LevelHasEntityType` with a
+`LevelHasRedGemEntity`/`LevelHasGemPathGemEntity` (thin wrappers over `LevelHasEntityType` with a
 baked-in flag-index constant - `LevelHasEntityType` itself is left raw, see
 below), `CountRoomCrates` (standalone instance of `CountLevelCrates`'s per-item
 dispatch body), `PlayRoomMusic` (medal-results sound-cue resolver),

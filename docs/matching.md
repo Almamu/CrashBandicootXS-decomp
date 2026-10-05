@@ -4116,7 +4116,7 @@ recommendation.
 `sub_8009BE0` through `ResolvePlayerContact` (~3 functions) sits between this
 pocket and the already-matched `ApplySpriteVelocity` boundary; `sub_8009BE0`
 itself (a physics/collision step-probe calling still-unexamined
-`sub_8008278`/`sub_8026628`) was left raw rather than guessed at, so
+`sub_8008278`/`ProbeTerrain`) was left raw rather than guessed at, so
 this remains a separate raw span for now.
 
 **Parked, not matched: `CollideCrateGridPartWithObject`** (ROM `0x080099F0`, right after
@@ -4146,7 +4146,7 @@ NON_MATCHING"). `CollidePartWithObject` itself is untouched by this change and
 remains its own separate `NAKED` function in `actor_part7b.c`.
 
 `sub_8009BE0` (right after `DestroyCrateList`) is a physics/collision step-
-probe function calling still-unexamined `sub_8008278`/`sub_8026628`
+probe function calling still-unexamined `sub_8008278`/`ProbeTerrain`
 (a Q8->int conversion via `>>8`, an up-to-4-attempt probe loop, and
 mysterious `+0x2a` flag toggling on `gPlayer`) - left raw
 rather than guess at semantics.
@@ -5995,16 +5995,16 @@ offset here). New conventions confirmed by this chunk: a `+0x50`-rooted
 the player-pointer global `gActorList` (`DestroyPolarPlayer`/
 `DestroyPolarCollectedWumpa` unlink from it on teardown; `DetonateNearbyPolarNitros`, left raw,
 walks it for an AABB-overlap scan). Ties into `docs/rom_map.md`'s
-`gUnknown_030014xx` tier-threshold family (`sub_802BED8`/`sub_802BF30`/
-`sub_802BFD4`/`CatchPolarPlayer`/`sub_802C128`/`sub_802C14C`) and the shared
+`gUnknown_030014xx` tier-threshold family (`PolarPlayerStateLaunched`/`PolarPlayerStateFinish`/
+`FinishPolarRun`/`CatchPolarPlayer`/`GivePolarPlayerMask`/`LaunchPolarPlayer`) and the shared
 "type-byte event dispatch"/lap-counter families (`UpdatePolarQuestionCrate`/
 `UpdatePolarLifeCrate`/`UpdatePolarNitroCrate`/`UpdatePolarAkuAkuCrate`, all converging on the shared
 tail `UpdatePolarCrate`).
 
-**Matched (21 of 25):** `sub_802BED8`, `sub_802BF30`, `sub_802BFA0`,
-`sub_802BFD4`, `CatchPolarPlayer`, `QueuePolarWumpa`, `sub_802C0A8`,
-`sub_802C0BC`, `sub_802C128`, `sub_802C14C`, `DestroyPolarPlayer`,
-`sub_802C264`, `UpdatePolarCollectedWumpa`, `DestroyPolarCollectedWumpa`, `UpdatePolarWumpa`,
+**Matched (21 of 25):** `PolarPlayerStateLaunched`, `PolarPlayerStateFinish`, `PolarPlayerStateLand`,
+`FinishPolarRun`, `CatchPolarPlayer`, `QueuePolarWumpa`, `GivePolarPlayerLife`,
+`BoostPolarPlayer`, `GivePolarPlayerMask`, `LaunchPolarPlayer`, `DestroyPolarPlayer`,
+`IsPolarPlayerInactive`, `UpdatePolarCollectedWumpa`, `DestroyPolarCollectedWumpa`, `UpdatePolarWumpa`,
 `CreatePolarWumpa`, `UpdatePolarCrate`, `UpdatePolarQuestionCrate`, `UpdatePolarLifeCrate`,
 `UpdatePolarNitroCrate`, `UpdatePolarAkuAkuCrate`.
 
@@ -6025,12 +6025,12 @@ tail `UpdatePolarCrate`).
   transposed instruction order, an easy one-instruction-pair swap to
   miss by inspection alone (see "full clean rebuild required" below).
 - **Two-parameter functions taking `self` and a second argument**
-  (`sub_802C0BC`, `DestroyPolarPlayer`, `DestroyPolarCollectedWumpa`) needed *both*
+  (`BoostPolarPlayer`, `DestroyPolarPlayer`, `DestroyPolarCollectedWumpa`) needed *both*
   parameters register-pinned (`self` to its ROM register, the second
   argument to its own) to reproduce the ROM's parameter-copy order in
   the prologue - pinning only `self` still let the unpinned second
   parameter get materialized first.
-- **`sub_802C0BC`'s `entry = table + idx*0xc` pointer computation**
+- **`BoostPolarPlayer`'s `entry = table + idx*0xc` pointer computation**
   needed a literal `asm("add %0, %0, %1" : "+r"(entryPtr) :
   "r"(table))` (the same extended-asm idiom already used in
   `actor_part17.c`/`actor_part6.c`/`actor_part7.c` for this exact
@@ -6042,7 +6042,7 @@ tail `UpdatePolarCrate`).
   choice, only forcing the instruction directly did. The same technique
   reproduces `UpdatePolarCollectedWumpa`'s identical `table + idx*0xc` computation in
   its own frame-threshold block.
-- **`sub_802C0BC`'s frame-vs-threshold comparison direction was
+- **`BoostPolarPlayer`'s frame-vs-threshold comparison direction was
   initially miscoded backwards** (`if (frame < val)` instead of `if
   (frame >= val)` for the `self+8` accumulator reset) - an isolated
   compile of the function in the wrong direction still produced a
@@ -6129,10 +6129,10 @@ tail `UpdatePolarCrate`).
   byte-exact attempt this pass - left untouched rather than guess.
 
 **File structure:** `asm/code_3_2_20_28568.s` (truncated right before
-`sub_802BED8`) is followed, in ROM order, by `actor_part19.o`
-(`sub_802BED8`-`DestroyPolarPlayer`), the new raw `code_3_2_20_28568_c208.s`
+`PolarPlayerStateLaunched`) is followed, in ROM order, by `actor_part19.o`
+(`PolarPlayerStateLaunched`-`DestroyPolarPlayer`), the new raw `code_3_2_20_28568_c208.s`
 (parked `RunPolarPlayerState`), `actor_part19e.o` (`RunPolarPlayerState`'s
-`NON_MATCHING`-only twin), `actor_part19f.o` (`sub_802C264`/
+`NON_MATCHING`-only twin), `actor_part19f.o` (`IsPolarPlayerInactive`/
 `UpdatePolarCollectedWumpa`), the new raw `code_3_2_20_28568_c2fc.s` (parked
 `DrawPolarCollectedWumpa`), `actor_part19b.o` (its `NON_MATCHING`-only twin),
 `actor_part19c.o` (`DestroyPolarCollectedWumpa`), the new raw

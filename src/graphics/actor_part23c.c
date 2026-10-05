@@ -42,7 +42,7 @@ static inline s32 Abs(s32 x)
  * `vx -+ 3` result once, the Y step stores in each branch. That makes
  * the Y address the higher-priority pseudo for global-alloc, as in the
  * ROM (docs/matching/issue-58-61-naked-retry.md). */
-void sub_8030E08(void)
+void SteerAirship(void)
 {
     s32 vx;
     s32 dx, dy, cx, cy, px, py;

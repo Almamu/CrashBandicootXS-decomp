@@ -17,7 +17,7 @@
  * Matches under old_agbcc (current agbcc is 3 halfwords off in the
  * option-screen block). What the old NAKED note called "four high-register
  * pins" is loop.c's own invariant hoisting; the shape that reproduces it:
- *  - `activeCount`/`variantCount` point at gUnknown_03001384/03001388
+ *  - `activeCount`/`variantCount` point at gActorCategoryDeaths/03001388
  *    and are (re)assigned at the top of the outer loop. They end up
  *    spilled, and every use rematerializes the address, which is what
  *    puts the ROM's reload registers (r3/r7 in the prologue, r5 in the
@@ -30,19 +30,19 @@
  *  - The exit-state tests are an if/else chain (a switch builds a
  *    balanced compare tree); the "option screen" branch ends in
  *    `continue` so the inner loop is not rotated.
- *  - `-sub_802A5AC() < 0` gives the ROM's `neg; lsr #31` (`!= 0` adds
+ *  - `-CanPauseActorCategory() < 0` gives the ROM's `neg; lsr #31` (`!= 0` adds
  *    an `orr`), and the new-press test is `(keys >> 16) & 8` so it shares
  *    the gKeys literal with the `& 4` word test.
  *  - `zero` is volatile, as in the DmaFill16 idiom (address before the
  *    `strh`).
  */
 
-extern s32 gUnknown_03001390;
+extern s32 gActorCheckpointMissedNitros;
 extern s32 gActorCategory;
 extern s32 gActorCheckpoint;
-extern s32 gUnknown_03001384;
+extern s32 gActorCategoryDeaths;
 extern s32 gUnknown_03001388;
-extern s32 gUnknown_0300138C;
+extern s32 gActorMissedNitros;
 extern u8 *gLevelState;
 extern void *gOamBuffer;
 extern void *gInput;
@@ -55,7 +55,7 @@ extern void DecompressCategorySpriteSheet(const u8 *sheet);
 extern void SetupActorVramPool(void);
 extern void ClearCollectedSpawns(void);
 extern void EnableActorPaletteCycle(s32 flag);
-extern void sub_8029C30(s32 kind);
+extern void InitActorBgScroll(s32 kind);
 extern s32 GetLives(void *state);
 extern void RestoreCheckpoint(void *arg0);
 extern void FadeBrightness(s32 a, s32 b, s32 c);
@@ -73,20 +73,20 @@ extern void UpdateHudSlides(void *state);
 extern void UpdateHud(void *self);
 extern void FlushSpriteFrameOamQueue(void);
 extern void WaitForVBlank(void);
-extern void sub_8029E50(void);
+extern void CommitActorBgScroll(void);
 extern void CommitOamBuffer(void *arg0);
 extern void FlushVramDmaQueue(void);
 extern void FlipCellAnimPage(void);
-extern void sub_802A650(void);
+extern void UpdateActorCategoryBg2(void);
 extern void AgeSpriteFrameCache(void);
 extern u8 IsBrightnessFadeActive(void);
-extern u8 sub_802A5AC(void);
+extern u8 CanPauseActorCategory(void);
 extern void FreeSpriteFrameCache(void);
 extern void FreeSpriteFrameOamQueue(void);
 extern void FreeObjTileFreeList(void);
 extern s32 RunPauseMenu(void);
 extern void ResetCellAnimBg(void);
-extern void sub_802A5C4(void);
+extern void ReloadActorCategoryGraphics(void);
 extern void ShowHudCounters(void *arg0);
 extern void FreeCategorySpriteSheet(void);
 extern void nullsub_5(void);
@@ -110,22 +110,22 @@ s32 InitActorCategory(s32 category)
     u8 open;
     void *buf;
 
-    gUnknown_03001390 = 0;
+    gActorCheckpointMissedNitros = 0;
     gActorCategory = category;
     gActorCheckpoint = 0;
-    gUnknown_03001384 = 0;
+    gActorCategoryDeaths = 0;
     gUnknown_03001388 = 0;
     SetCheckpointAtPlayer(gLevelState);
     DecompressCategorySpriteSheet(CUR_CATEGORY.sprite_sheet);
     SetupActorVramPool();
     ClearCollectedSpawns();
     EnableActorPaletteCycle(CUR_CATEGORY.type == 0);
-    sub_8029C30(CUR_CATEGORY.type);
+    InitActorBgScroll(CUR_CATEGORY.type);
 
     do {
-        activeCount = &gUnknown_03001384;
+        activeCount = &gActorCategoryDeaths;
         variantCount = &gUnknown_03001388;
-        gUnknown_0300138C = gUnknown_03001390;
+        gActorMissedNitros = gActorCheckpointMissedNitros;
         RestoreCheckpoint(gLevelState);
         if (*variantCount >= (s32)CUR_CATEGORY.unknown_28)
             variant = CUR_CATEGORY.unknown_30;
@@ -164,11 +164,11 @@ s32 InitActorCategory(s32 category)
             UpdateHud(gHud);
             FlushSpriteFrameOamQueue();
             WaitForVBlank();
-            sub_8029E50();
+            CommitActorBgScroll();
             CommitOamBuffer(gOamBuffer);
             FlushVramDmaQueue();
             FlipCellAnimPage();
-            sub_802A650();
+            UpdateActorCategoryBg2();
             AgeSpriteFrameCache();
 
             if (status != 0) {
@@ -192,7 +192,7 @@ s32 InitActorCategory(s32 category)
             } else {
                 open = 0;
                 if (IsBrightnessFadeActive() == 0 && ((gKeys >> 16) & 8))
-                    open = -sub_802A5AC() < 0;
+                    open = -CanPauseActorCategory() < 0;
                 if (open) {
                     buf = mem_alloc(0x200, 0x80000000);
                     dma->src = OBJ_PLTT;
@@ -213,7 +213,7 @@ s32 InitActorCategory(s32 category)
                     ResetCellAnimBg();
                     if (CUR_CATEGORY.bgPicture != NULL)
                         LoadBgPicture();
-                    sub_802A5C4();
+                    ReloadActorCategoryGraphics();
                     if (result == 2) {
                         ret = 2;
                         goto done;

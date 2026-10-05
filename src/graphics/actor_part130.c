@@ -27,7 +27,7 @@
  *    machinery (issue #58) but on a completely separate global family
  *    (`0x030015A0`-`0x030015FF`, plus the P1/P2-mirror pair
  *    `gFlashBgPalette`/`030008B8` and the row-pointer array
- *    `gUnknown_03001600`). Every global in that family already has a
+ *    `gHovercraftMapFrames`). Every global in that family already has a
  *    real name from `actor_part28.c`'s own extern block where this
  *    file's functions are the ones that *first* reference it in ROM
  *    order - reused verbatim here for consistency rather than
@@ -50,11 +50,11 @@ extern s32 __divsi3(s32 dividend, s32 divisor);
 extern s32 sub_8029E98(void);
 extern s32 sub_8029EB4(void);
 extern void sub_8029E34(s32 arg0);
-extern s32 sub_8029B2C(void);
+extern s32 GetCellAnimDistance(void);
 extern u8 IsTouchingPlayer(void *self);
-extern void sub_802A4EC(void);
-extern void sub_802A4F8(void);
-extern void sub_802F0DC(void *arg0);
+extern void ResumeActorSpawns(void);
+extern void PauseActorSpawns(void);
+extern void FinishJetpackRun(void *arg0);
 extern void CollectWumpa(void *self);
 extern u8 *mem_alloc(u32 size, s32 flags);
 extern struct actor_pmf gHovercraftFireballStateFuncs[];
@@ -75,8 +75,8 @@ extern void *gLevelState;
 extern void *gActorList;
 extern void *gFlashBgPalette;
 extern void *gFlashObjPalette;
-extern u16 gUnknown_03001590;
-extern s32 gUnknown_03001594;
+extern u16 gHovercraftFlashSavedColor;
+extern s32 gHovercraftFlashColorSaved;
 
 /* The `gHovercraft` singleton system's own globals - names as
  * already established by `actor_part28.c` (issue #62) for the ones it
@@ -85,8 +85,8 @@ extern s32 gUnknown_03001594;
 extern struct actor_self *gHovercraft;
 extern s32 gHovercraftMapCols;
 extern s32 gHovercraftMapRows;
-extern s32 gUnknown_030015A8;
-extern void *gUnknown_03001600[];
+extern s32 gHovercraftMapTileBase;
+extern void *gHovercraftMapFrames[];
 extern s32 gHovercraftState;
 extern s32 gHovercraftX;
 extern s32 gHovercraftY;
@@ -102,13 +102,13 @@ extern void *gHovercraftAttack;
 extern s32 gUnknown_030015E0;
 extern s32 gUnknown_030015E4;
 extern s32 gUnknown_030015E8;
-extern s32 gUnknown_030015EC;
-extern s32 gUnknown_030015F0;
-extern s32 gUnknown_030015F4;
+extern s32 gHovercraftPhase;
+extern s32 gHovercraftOrbitRadius;
+extern s32 gHovercraftFrameCount;
 extern s32 gHovercraftPartsLeft;
-extern s16 gUnknown_030015FC;
-extern u8 gUnknown_030015FE;
-extern u8 gUnknown_030015FF;
+extern s16 gHovercraftHitFlashTimer;
+extern u8 gHovercraftHitFlashOn;
+extern u8 gHovercraftGone;
 extern u8 gHovercraftBg2PageFlip;
 extern s32 gHovercraftBg2Page;
 
@@ -187,7 +187,7 @@ struct actor_29d4 {
     s32 unk_5C;         // 0x5C - the constructor's `c`
     s32 speed;          // 0x60 - Z step, decays by 5 down to 0x14
     s32 unk_64;         // 0x64
-    u8 unk_68;          // 0x68 - set by sub_8032A1C
+    u8 unk_68;          // 0x68 - set by HovercraftFireballStateExplode
 };
 
 /* An `InitActorPart`-based constructor: forwards its 4 real arguments
@@ -305,7 +305,7 @@ void DrawJetpackCollectedWumpa(void *selfArg)
 
 /* Destructor: dispenses `reward` score increments via `CollectWumpa`
  * while temporarily wearing `gJetpackCollectedWumpaVtable` (`CreateJetpackCollectedWumpa`'s
- * constructor table), then runs the same teardown as `sub_803B0C4`
+ * constructor table), then runs the same teardown as `DestroyRiderlessPolar`
  * (actor_anim.c): retag to the shared "dead" table, unlink from the
  * `+0x48`/`+0x4c` circular list, and free `self` if `flags & 1`. The
  * parameter-copy order the earlier NAKED note blamed on the compiler
@@ -395,7 +395,7 @@ s32 IsJetpackCollectedWumpaUnshootable(void *self)
 /* Damage/health countdown: subtracts `delta` from `self+0x54`, and once
  * it drops to zero (or below) plays the death sound and runs the full
  * state/accumulator/anim-frame reset idiom already matched for
- * `sub_80318B4` (issue #59, `actor_part125.c`)/`DamageHovercraftCannon` (issue
+ * `ReleaseJetpackBalloon` (issue #59, `actor_part125.c`)/`DamageHovercraftCannon` (issue
  * #62, `actor_part30.c`). */
 void DamageHovercraftFireball(void *selfArg, s32 delta)
 {
@@ -480,7 +480,7 @@ void *CreateHovercraftFireball(void *selfArg, s32 a, s32 b, s32 c, s32 d)
 }
 
 /* Trivial `self+0x68` byte setter. */
-void sub_8032A1C(void *selfArg)
+void HovercraftFireballStateExplode(void *selfArg)
 {
     struct actor_29d4 *self = selfArg;
     self->unk_68 = 1;
@@ -494,7 +494,7 @@ void sub_8032A1C(void *selfArg)
  * convention already documented at `self+0x50` elsewhere in this
  * cluster), then runs the exact same state/anim-frame reset tail as
  * `DamageHovercraftFireball` above. */
-void sub_8032A24(void *selfArg)
+void HovercraftFireballStateFly(void *selfArg)
 {
     register struct actor_29d4 *self asm("r4") = selfArg;
     s32 sum = self->base.z;
@@ -556,7 +556,7 @@ u8 IsHovercraftFireballUnshootable(void *selfArg)
 
 /* Palette blink/flash effect for the P2 VRAM fill-level meter, gated by
  * the one-shot latch `StartHovercraftHitFlash` (issue #62, `actor_part28.c`) arms
- * (`gUnknown_030015FC`/`030015FE`): once armed, advances the counter
+ * (`gHovercraftHitFlashTimer`/`030015FE`): once armed, advances the counter
  * every call, flips the toggle byte every 4th call, wraps the counter
  * past 0xb, then rewrites the meter's 16-halfword palette strip
  * (`0x05000020`) either solid white (`0x7fff`, while the toggle is set)
@@ -565,19 +565,19 @@ u8 IsHovercraftFireballUnshootable(void *selfArg)
  * fill-level heights. */
 void UpdateHovercraftHitFlash(void)
 {
-    if (gUnknown_030015FC == 0) {
+    if (gHovercraftHitFlashTimer == 0) {
         return;
     }
 
-    gUnknown_030015FC += 1;
+    gHovercraftHitFlashTimer += 1;
     {
         register s32 three asm("r0") = 3;
-        register s32 cur asm("r1") = *(vu16 *)&gUnknown_030015FC;
+        register s32 cur asm("r1") = *(vu16 *)&gHovercraftHitFlashTimer;
         register s32 result asm("r0");
 
         result = three & cur;
         if (result == 0) {
-            register u8 *addr asm("r1") = &gUnknown_030015FE;
+            register u8 *addr asm("r1") = &gHovercraftHitFlashOn;
             register u8 one asm("r0") = 1;
             register u8 old asm("r3") = *addr;
 
@@ -586,12 +586,12 @@ void UpdateHovercraftHitFlash(void)
         }
     }
 
-    if (gUnknown_030015FC > 0xb) {
-        gUnknown_030015FC = 0;
+    if (gHovercraftHitFlashTimer > 0xb) {
+        gHovercraftHitFlashTimer = 0;
     }
 
     {
-        register u8 *flagAddr asm("r5") = &gUnknown_030015FE;
+        register u8 *flagAddr asm("r5") = &gHovercraftHitFlashOn;
         register u16 white asm("r4") = 0x7fff;
         u16 *src = gHovercraftPalette;
         vu16 *dst = (vu16 *)(PLTT + 0x20);
@@ -609,14 +609,14 @@ void UpdateHovercraftHitFlash(void)
     }
 }
 
-/* A frame counter (`gUnknown_030015F4`) drives the same P1/P2-mirrored
- * speed-override toggle already matched for `sub_8033828` (issue #62,
+/* A frame counter (`gHovercraftFrameCount`) drives the same P1/P2-mirrored
+ * speed-override toggle already matched for `SetHovercraftFlashColor` (issue #62,
  * `actor_part28.c`) - inlined twice here (once forcing "max speed"
  * every 16th frame, once restoring the cached normal speed every
  * 8th-but-not-16th frame) rather than calling that function, matching
- * the ROM exactly (the ROM's own build never emits a `bl sub_8033828`
+ * the ROM exactly (the ROM's own build never emits a `bl SetHovercraftFlashColor`
  * here, so the original source duplicated the logic rather than
- * sharing it). `sub_8033828`'s own body confirms the same "reload
+ * sharing it). `SetHovercraftFlashColor`'s own body confirms the same "reload
  * `gFlashBgPalette`'s pointer value through a register-pinned `p`,
  * assign the register-pinned `val` in its own statement" idiom closes
  * the exact register split this compiler otherwise collapses (loading
@@ -638,15 +638,15 @@ static inline void CommitSpeed(u8 *p, u16 val)
 
 void RunHovercraftState(void)
 {
-    s32 counter = gUnknown_030015F4 + 1;
-    gUnknown_030015F4 = counter;
+    s32 counter = gHovercraftFrameCount + 1;
+    gHovercraftFrameCount = counter;
 
     if ((counter & 0xf) == 0)
     {
-        if (gUnknown_03001594 == 0)
+        if (gHovercraftFlashColorSaved == 0)
         {
-            gUnknown_03001590 = ((u16 *)gFlashBgPalette)[15];
-            gUnknown_03001594 = 1;
+            gHovercraftFlashSavedColor = ((u16 *)gFlashBgPalette)[15];
+            gHovercraftFlashColorSaved = 1;
         }
         {
             register u8 *p asm("r0") = gFlashBgPalette;
@@ -659,17 +659,17 @@ void RunHovercraftState(void)
     }
     else if ((counter & 7) == 0)
     {
-        if (gUnknown_03001594 == 0)
+        if (gHovercraftFlashColorSaved == 0)
         {
-            gUnknown_03001590 = ((u16 *)gFlashBgPalette)[15];
-            gUnknown_03001594 = 1;
+            gHovercraftFlashSavedColor = ((u16 *)gFlashBgPalette)[15];
+            gHovercraftFlashColorSaved = 1;
         }
         {
             register u8 *p asm("r0") = gFlashBgPalette;
             register u16 val asm("r1");
 
             asm("" : "+r"(p));
-            val = gUnknown_03001590;
+            val = gHovercraftFlashSavedColor;
             CommitSpeed(p, val);
         }
     }
@@ -680,7 +680,7 @@ void RunHovercraftState(void)
 
 /* Opens the singleton's own camera-follow/scroll-velocity smoothing
  * computation (`gHovercraftX`-`030015EC`) - the twin of the boss
- * cluster's `sub_8030E08` (actor_part23c.c). Ramps the Z velocity
+ * cluster's `SteerAirship` (actor_part23c.c). Ramps the Z velocity
  * toward a per-phase target, then by patrol phase: phase 0 steers the
  * X/Y velocities toward the player (`gActorList`) relative to a
  * camera-offset target box (`gHovercraftBox`), clamped to +-0x200
@@ -692,15 +692,15 @@ void RunHovercraftState(void)
  * reads as separate locals (so `(a - b) - c` isn't reassociated),
  * updating the velocities with `-=` and taking the orbit's destination
  * and table pointers before the angle is computed. */
-void sub_8032C0C(void)
+void HovercraftStateCloseIn(void)
 {
     gHovercraftZ += gHovercraftVelZ;
-    if (gUnknown_030015EC == 0) {
+    if (gHovercraftPhase == 0) {
         if (gHovercraftVelZ <= 0x98)
             gHovercraftVelZ = gHovercraftVelZ + 1;
         else
             gHovercraftVelZ = gHovercraftVelZ - 1;
-    } else if (gUnknown_030015EC == 1) {
+    } else if (gHovercraftPhase == 1) {
         if (gHovercraftVelZ <= 0x3f)
             gHovercraftVelZ = gHovercraftVelZ + 1;
         else if (gHovercraftVelZ > 0x40)
@@ -712,7 +712,7 @@ void sub_8032C0C(void)
             gHovercraftVelZ = gHovercraftVelZ - 1;
     }
 
-    if (gUnknown_030015EC == 0) {
+    if (gHovercraftPhase == 0) {
         struct actor_self *pl;
         s32 vx, vy, px, py, cx, cy;
 
@@ -749,7 +749,7 @@ void sub_8032C0C(void)
             gHovercraftVelY = 0x200;
         if (gHovercraftScreenY > 0x2bff)
             gHovercraftVelY = -0x200;
-    } else if (gUnknown_030015EC == 1) {
+    } else if (gHovercraftPhase == 1) {
         gHovercraftX += gHovercraftVelX;
         if (gHovercraftX > 0xffff && gHovercraftVelX > 0)
             gHovercraftVelX = -0x400;
@@ -758,15 +758,15 @@ void sub_8032C0C(void)
     } else {
         s32 a;
 
-        if ((gUnknown_030015F0 += 0x180) > 0x8000)
-            gUnknown_030015F0 = 0x8000;
+        if ((gHovercraftOrbitRadius += 0x180) > 0x8000)
+            gHovercraftOrbitRadius = 0x8000;
         {
             s32 *px = &gHovercraftX;
             s16 *tbl = gSineTable;
 
-            a = ((gUnknown_030015F4 * 30) >> 4) & 0xff;
-            *px = (tbl[(a + 0x40) & 0xff] * gUnknown_030015F0) >> 8;
-            gHovercraftY = (tbl[a] * gUnknown_030015F0) >> 8;
+            a = ((gHovercraftFrameCount * 30) >> 4) & 0xff;
+            *px = (tbl[(a + 0x40) & 0xff] * gHovercraftOrbitRadius) >> 8;
+            gHovercraftY = (tbl[a] * gHovercraftOrbitRadius) >> 8;
         }
     }
 
@@ -774,15 +774,15 @@ void sub_8032C0C(void)
         gUnknown_030015E4 = ((struct singleton_kind *)gHovercraftAttack)->unk_10;
         gUnknown_030015E8 = 0;
         SingletonSetKind(3, 0);
-        gUnknown_030015EC = 0;
+        gHovercraftPhase = 0;
         gHovercraftVelZ = 0xae;
     }
 }
 
-/* `sub_8032C0C`'s sibling half of the same camera-follow/scroll-
+/* `HovercraftStateCloseIn`'s sibling half of the same camera-follow/scroll-
  * velocity smoothing computation: integrates the singleton's position
  * (`gHovercraftX`/`B8`/`BC`) by its velocities, damps the Y
- * velocity toward 0, and - while the patrol phase `gUnknown_030015EC`
+ * velocity toward 0, and - while the patrol phase `gHovercraftPhase`
  * is still in its first legs (<= 3) - ramps the Z velocity toward
  * 0xae and bounces the X velocity at +-0x8000, counting legs; later
  * legs ramp Z toward 0x1d4 and steer X back to 0. Once past leg 3 and
@@ -790,7 +790,7 @@ void sub_8032C0C(void)
  * reloads `gUnknown_030015E4` from the owner, switches the singleton to
  * kind 2 and re-arms the next patrol phase from the lifetime counter.
  * Plain C (the documented "register gap" was never real). */
-void sub_8032EA0(void)
+void HovercraftStateFallBack(void)
 {
     s32 y;
 
@@ -805,7 +805,7 @@ void sub_8032EA0(void)
     else
         gHovercraftVelY = 0;
 
-    if (gUnknown_030015EC <= 3) {
+    if (gHovercraftPhase <= 3) {
         s32 v = gHovercraftVelZ;
 
         if (v <= 0xad)
@@ -815,10 +815,10 @@ void sub_8032EA0(void)
 
         if (gHovercraftX > 0x7fff && gHovercraftVelX > 0) {
             gHovercraftVelX = -0x200;
-            gUnknown_030015EC++;
+            gHovercraftPhase++;
         } else if (gHovercraftX <= -0x8000 && gHovercraftVelX < 0) {
             gHovercraftVelX = 0x200;
-            gUnknown_030015EC++;
+            gHovercraftPhase++;
         }
     } else {
         s32 v = gHovercraftVelZ;
@@ -836,17 +836,17 @@ void sub_8032EA0(void)
             gHovercraftVelX = 0;
     }
 
-    if (gUnknown_030015EC > 3 && gHovercraftDistance > 0x8000) {
-        gUnknown_030015F4 = 0;
-        gUnknown_030015F0 = 0;
+    if (gHovercraftPhase > 3 && gHovercraftDistance > 0x8000) {
+        gHovercraftFrameCount = 0;
+        gHovercraftOrbitRadius = 0;
         gUnknown_030015E4 = ((struct singleton_kind *)gHovercraftAttack)->unk_10;
         gUnknown_030015E8 = 0;
         SingletonSetKind(2, 0);
         if (gHovercraftPartsLeft > 2) {
-            gUnknown_030015EC = 1;
+            gHovercraftPhase = 1;
             gHovercraftVelZ = 0x40;
         } else {
-            gUnknown_030015EC = 2;
+            gHovercraftPhase = 2;
             gHovercraftVelZ = 0x6a;
         }
         gHovercraftVelX = -0xa00;
@@ -858,13 +858,13 @@ void sub_8032EA0(void)
  * `gHovercraftVelZ` (converging on 0x99) and `gHovercraftVelY`
  * (bouncing 0-0x100), applied to the singleton's own position
  * (`gHovercraftZ`/`030015B8`), with a reward trigger
- * (`sub_802A4EC`/`sub_802F0DC`) once `gHovercraftY` crosses
+ * (`ResumeActorSpawns`/`FinishJetpackRun`) once `gHovercraftY` crosses
  * 0x4b00, and a DISPCNT window/mosaic-bit clear once
  * `gHovercraftDistance` drops below 0x1500 (setting the "dead" flag
- * `gUnknown_030015FF`). */
+ * `gHovercraftGone`). */
 void HovercraftStateFall(void)
 {
-    if (gUnknown_030015FF == 0) {
+    if (gHovercraftGone == 0) {
         s32 v = gHovercraftVelZ;
         s32 d;
 
@@ -885,14 +885,14 @@ void HovercraftStateFall(void)
         gHovercraftY += gHovercraftVelY;
 
         if (gHovercraftY > 0x4b00) {
-            sub_802A4EC();
-            sub_802F0DC(gActorList);
+            ResumeActorSpawns();
+            FinishJetpackRun(gActorList);
         }
     }
 
     if (gHovercraftDistance <= 0x14ff) {
         REG_DISPCNT &= 0xfbff;
-        gUnknown_030015FF = 1;
+        gHovercraftGone = 1;
     }
 }
 
@@ -912,7 +912,7 @@ void DrawHovercraftMap(void *tileRow)
 
     for (i = 0; i < gHovercraftMapRows; i++) {
         for (j = 0; j < gHovercraftMapCols / 2; j++) {
-            u8 bias = gUnknown_030015A8;
+            u8 bias = gHovercraftMapTileBase;
             u16 lo = *src++ + bias;
             u16 hi = *src++ + bias;
             ((u16 *)row)[j] = lo | (hi << 8);
@@ -928,7 +928,7 @@ void DrawHovercraftMap(void *tileRow)
  * `gHovercraftMapRows`) from a per-level table (`gHovercraftPicture`), allocates
  * the singleton object itself (part table `gHovercraftKeyframes`,
  * "frame offsets" field re-using the row-pointer array
- * `gUnknown_03001600`), stores it into `gHovercraft` - the pointer
+ * `gHovercraftMapFrames`), stores it into `gHovercraft` - the pointer
  * everything else in this thread reads - resets its kind/anim-frame
  * fields, fires the per-frame update driver (`LoadHovercraftGraphics`) once, and
  * finishes by clearing the "apply now" BG2 latch and setting the
@@ -951,7 +951,7 @@ void CreateHovercraft(s32 level)
     gHovercraftMapRows = ((s16 *)gHovercraftPicture)[1];
     slot = &gHovercraft;
     t = AllocActor(0x1c);
-    InitAnimPart(t, (struct anim_frame_record *)gHovercraftKeyframes, (u32 *)gUnknown_03001600, 1);
+    InitAnimPart(t, (struct anim_frame_record *)gHovercraftKeyframes, (u32 *)gHovercraftMapFrames, 1);
     *slot = t;
     SingletonSetKind(0, 0);
     LoadHovercraftGraphics();
@@ -993,13 +993,13 @@ void SpawnHovercraft(s32 kind, s32 x, s32 y, s32 z)
     REG_DISPCNT |= 0x400;
     gHovercraftBg2PageFlip = 1;
     gHovercraftBg2Page = 0;
-    gUnknown_030015EC = 0;
-    gUnknown_030015F4 = 0;
-    gUnknown_030015F0 = 0;
+    gHovercraftPhase = 0;
+    gHovercraftFrameCount = 0;
+    gHovercraftOrbitRadius = 0;
     gHovercraftPartsLeft = 4;
-    gUnknown_030015FC = 0;
-    gUnknown_030015FE = 0;
-    gHovercraftDistance = gHovercraftZ - (sub_8029B2C() << 8);
+    gHovercraftHitFlashTimer = 0;
+    gHovercraftHitFlashOn = 0;
+    gHovercraftDistance = gHovercraftZ - (GetCellAnimDistance() << 8);
     scale = __divsi3(0x1C00000, gHovercraftDistance);
     gHovercraftScreenX = (gHovercraftX * scale) >> 12;
     gHovercraftScreenY = (scale * gHovercraftY) >> 12;
@@ -1014,7 +1014,7 @@ void SpawnHovercraft(s32 kind, s32 x, s32 y, s32 z)
     SpawnHovercraftLauncher(gHovercraftX + 0x1e00, gHovercraftY - 0x3000, gHovercraftZ - 0x100);
     SpawnHovercraftSideGun(gHovercraftX - 0x4100, gHovercraftY + 0xa00, gHovercraftZ - 1, 1);
     SpawnHovercraftSideGun(gHovercraftX + 0x8400, gHovercraftY + 0xa00, gHovercraftZ - 1, 0);
-    sub_802A4F8();
+    PauseActorSpawns();
 }
 
 /* Per-frame animate+project+tile-stream update driver, the singleton's
@@ -1047,7 +1047,7 @@ void UpdateHovercraft(void)
             self->animTime -= (self->anims[self->animIndex].loopThreshold - self->anims[self->animIndex].loopBase) << 8;
             self->animDone = 1;
         }
-        gHovercraftDistance = gHovercraftZ - (sub_8029B2C() << 8);
+        gHovercraftDistance = gHovercraftZ - (GetCellAnimDistance() << 8);
         scale = __divsi3(0x1C00000, gHovercraftDistance);
         gHovercraftScreenX = (gHovercraftX * scale) >> 12;
         gHovercraftScreenY = (scale * gHovercraftY) >> 12;
@@ -1142,7 +1142,7 @@ void LoadHovercraftGraphics(void)
 /* The P2-side VRAM fill-level meter, a near-identical twin of
  * `ConvertAirshipTiles` (issue #58, `actor_part26c.c`), applied to this
  * cluster's own per-level table (`gHovercraftPalette`) and row-pointer
- * array (`gUnknown_03001600`). */
+ * array (`gHovercraftMapFrames`). */
 /* The one-row twin of `ConvertAirshipTiles` (actor_part26c.c). The height is
  * re-read after the row-pointer store (the `"+m"` asm) and the second
  * loop has its own counter (sharing `k` makes the first loop's reversed
@@ -1168,7 +1168,7 @@ void ConvertHovercraftTiles(void)
     s32 k;
     s32 row_i;
     u32 *dst;
-    u8 **rows = (u8 **)gUnknown_03001600;
+    u8 **rows = (u8 **)gHovercraftMapFrames;
     u32 m;
 
     stride = (u32)(gHovercraftMapCols * gHovercraftMapRows + 1) >> 1 << 2;
@@ -1183,7 +1183,7 @@ void ConvertHovercraftTiles(void)
         off += stride;
         off += heights[k] << 5;
     }
-    gUnknown_030015A8 = 0xFF - sum;
+    gHovercraftMapTileBase = 0xFF - sum;
     dst = (u32 *)(((0xFF - sum) << 6) + (VRAM + 0x8000));
     for (row_i = 0; row_i <= 0; row_i++) {
         u8 *src;
@@ -1193,7 +1193,7 @@ void ConvertHovercraftTiles(void)
         s32 j;
         u32 *d;
 
-        row = (u8 *)gUnknown_03001600[row_i];
+        row = (u8 *)gHovercraftMapFrames[row_i];
         hp = &heights[row_i];
         d = dst;
         src = row + stride;

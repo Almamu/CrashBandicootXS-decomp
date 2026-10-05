@@ -15,7 +15,7 @@
  * the current keyframe-table entry's threshold, both re-arms the
  * accumulator against the *next* entry's own delta and sets the "loop"
  * flag (`+0x12`). Always recomputes the BG2 zoom scale/offset the same
- * way `SpawnAirship` (actor_part23e.c) does (`sub_8029B2C`/
+ * way `SpawnAirship` (actor_part23e.c) does (`GetCellAnimDistance`/
  * `__divsi3`/`sub_8029E34`), and - only when the tracker's
  * accumulator (`+8`, `>>8`) actually crossed to a new keyframe-table
  * index this frame - re-blits its box via `DrawAirshipMap` and re-arms
@@ -34,7 +34,7 @@ extern void AnimateAirshipPalette(void);
 extern s32 gAirshipStateTimer;
 extern s32 GetAnimFrameBaseOffset(void *self);
 extern s32 gAirshipDistance;
-extern s32 sub_8029B2C(void);
+extern s32 GetCellAnimDistance(void);
 extern s32 gAirshipZ;
 extern s32 __divsi3(s32 arg0, s32 arg1);
 extern s32 gAirshipScreenX;
@@ -63,7 +63,7 @@ void UpdateAirship(void)
             self->animTime -= (self->anims[self->animIndex].loopThreshold - self->anims[self->animIndex].loopBase) << 8;
             self->animDone = 1;
         }
-        gAirshipDistance = gAirshipZ - (sub_8029B2C() << 8);
+        gAirshipDistance = gAirshipZ - (GetCellAnimDistance() << 8);
         scale = __divsi3(0x1C00000, gAirshipDistance);
         gAirshipScreenX = (gAirshipX * scale) >> 12;
         gAirshipScreenY = (scale * gAirshipY) >> 12;

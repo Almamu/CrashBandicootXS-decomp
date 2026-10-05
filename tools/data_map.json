@@ -360,7 +360,7 @@
     "AirshipFireballStateSpiralIn",
     "JetpackBalloonCrateStateHang",
     "UpdateJetpackRocket",
-    "sub_8032C0C",
+    "HovercraftStateCloseIn",
     "SpawnStar"
    ],
    "consumer_files": [
@@ -1114,7 +1114,7 @@
    "size": 32,
    "name": "gEnemyDefaultAnimMap",
    "consumers": [
-    "sub_801EF0C",
+    "SpawnLizard",
     "SpawnVulture",
     "SpawnVenusFlytrap",
     "sub_801F2BC",
@@ -3008,7 +3008,7 @@
    "element_type": "struct level_info",
    "element_size": 36,
    "element_count": 25,
-   "format": "level table: 25 x 0x24 struct level_info (name text id, theme, 3 time-trial thresholds, 2 words for SetMaskAssistDeaths/sub_8023110, a flag, room list), then 25 x 0x10 struct level_room_list {count, rooms**, extra1, extra2}",
+   "format": "level table: 25 x 0x24 struct level_info (name text id, theme, 3 time-trial thresholds, 2 words for SetMaskAssistDeaths/SetCrateAssistDeaths, a flag, room list), then 25 x 0x10 struct level_room_list {count, rooms**, extra1, extra2}",
    "effort": "medium",
    "confidence": "high",
    "notes": "The first word (1) is record 0's name text id, not a header. The five local struct views in src are listed on struct level_info (include/level_data.h).",
@@ -3318,7 +3318,7 @@
     "InitActorCategory",
     "SetupActorVramPool",
     "CountCategoryCrates",
-    "sub_8029794"
+    "IsActorMaskAssistDue"
    ],
    "consumer_files": [
     "graphics/actor_part100.c",
@@ -3525,7 +3525,7 @@
    "name": "gStaticData_0817A728",
    "consumers": [
     "HurtPolarPlayer",
-    "sub_802BB4C"
+    "PolarPlayerStateShocked"
    ],
    "consumer_files": [
     "graphics/actor_part127.c"
@@ -3549,7 +3549,7 @@
    "size": 32,
    "name": "gStaticData_0817A748",
    "consumers": [
-    "sub_802BB4C"
+    "PolarPlayerStateShocked"
    ],
    "consumer_files": [
     "graphics/actor_part127.c"
@@ -3657,7 +3657,7 @@
    "size": 32,
    "name": "gPolarAkuAkuPalette1",
    "consumers": [
-    "sub_802D204"
+    "RefreshPolarAkuAku"
    ],
    "consumer_files": [
     "graphics/actor_part126.c"
@@ -3727,10 +3727,10 @@
   {
    "address": "0x0817A7F8",
    "size": 72,
-   "name": "gStaticData_0817A7F8",
+   "name": "gYetiChargeParams",
    "consumers": [
-    "sub_802DB2C",
-    "sub_802DCC0"
+    "YetiStateChase",
+    "YetiStateCharge"
    ],
    "consumer_files": [
     "graphics/actor_part59.c"
@@ -3842,9 +3842,9 @@
   {
    "address": "0x0817AA8C",
    "size": 12,
-   "name": "gStaticData_0817AA8C",
+   "name": "gYetiBox",
    "consumers": [
-    "sub_802DD9C"
+    "IsTouchingYeti"
    ],
    "consumer_files": [
     "graphics/actor_part75.c"
@@ -3911,9 +3911,9 @@
   {
    "address": "0x0817C200",
    "size": 96,
-   "name": "gStaticData_0817C200",
+   "name": "gJetpackFlashPalettes",
    "consumers": [
-    "sub_802F4CC"
+    "AnimateJetpackPlayerPalette"
    ],
    "consumer_files": [
     "graphics/actor_part44.c"
@@ -4065,7 +4065,7 @@
    "name": "gAirshipBox",
    "consumers": [
     "AirshipStateExplode",
-    "sub_8030E08",
+    "SteerAirship",
     "IsTouchingAirship"
    ],
    "consumer_files": [
@@ -4260,7 +4260,7 @@
    "size": 12,
    "name": "gHovercraftBox",
    "consumers": [
-    "sub_8032C0C"
+    "HovercraftStateCloseIn"
    ],
    "consumer_files": [
     "graphics/actor_part130.c"
@@ -8359,7 +8359,7 @@
     "DestroyJetpackBalloonCrate",
     "DestroyJetpackCollectedWumpa",
     "DestroyLogoActor",
-    "sub_803B0C4",
+    "DestroyRiderlessPolar",
     "DestroyPolarCheckpointText",
     "DestroyPolarWumpa",
     "DestroyPolarTimeCrate",
@@ -8372,12 +8372,12 @@
     "DestroyPolarCrate",
     "DestroyPolarElectricFence",
     "sub_803B30C",
-    "sub_803B338",
+    "DestroyPolarLauncher",
     "DestroyPolarPenguin",
     "DestroyPolarIcicle",
     "DestroyPolarAkuAku",
-    "sub_803B3E8",
-    "sub_803B414",
+    "DestroyPolarGoal",
+    "DestroyPolarBoostPad",
     "DestroyPolarCheckpointCrate",
     "DestroyJetpackCheckpointText",
     "DestroyJetpackExplosion",
@@ -8424,7 +8424,7 @@
   {
    "address": "0x087E4E14",
    "size": 32,
-   "name": "gStaticData_087E4E14",
+   "name": "gRiderlessPolarVtable",
    "consumers": [
     "CreateActor"
    ],
@@ -8804,9 +8804,9 @@
   {
    "address": "0x087E4FF4",
    "size": 32,
-   "name": "gStaticData_087E4FF4",
+   "name": "gPolarLauncherVtable",
    "consumers": [
-    "sub_802CF0C"
+    "CreatePolarLauncher"
    ],
    "consumer_files": [
     "graphics/actor_part126.c"
@@ -8900,9 +8900,9 @@
   {
    "address": "0x087E5074",
    "size": 32,
-   "name": "gStaticData_087E5074",
+   "name": "gPolarGoalVtable",
    "consumers": [
-    "sub_802D5D4"
+    "CreatePolarGoal"
    ],
    "consumer_files": [
     "graphics/actor_part58.c"
@@ -8924,9 +8924,9 @@
   {
    "address": "0x087E5094",
    "size": 32,
-   "name": "gStaticData_087E5094",
+   "name": "gPolarBoostPadVtable",
    "consumers": [
-    "sub_802D648"
+    "CreatePolarBoostPad"
    ],
    "consumer_files": [
     "graphics/actor_part58.c"

@@ -19,8 +19,8 @@
  * docs/matching/issue-28-29-level-select-parts.md.
  *
  * UNUSED - no `bl`/`.4byte` reference in asm/, data/ or src/, and no
- * Thumb pointer anywhere in the ROM: sub_801E3D4, sub_801E3E4,
- * sub_801E4E4 (ParkLevelSelectCursor has it inlined). Matched anyway. */
+ * Thumb pointer anywhere in the ROM: IsLevelSelectCursorHidden, IsLevelSelectCursorGrowing,
+ * MoveLevelSelectCursorTo (ParkLevelSelectCursor has it inlined). Matched anyway. */
 
 /* One hardware OAM entry. The matrix number is split in three because
  * the ROM writes it three bits + one + one (DrawLevelSelectCursor). */
@@ -100,7 +100,7 @@ void SetLevelSelectCursorMatrix(struct cursor_panel *self);
 void GlideLevelSelectCursor(struct cursor_panel *self);
 void MoveLevelSelectCursor(struct cursor_panel *self, s32 x, s32 y);
 void SetLevelSelectCursorPos(struct cursor_panel *self, s32 x, s32 y);
-void sub_801E504(struct cursor_panel *self);
+void ResetLevelSelectCursorIdleTimer(struct cursor_panel *self);
 
 static inline void ResetIdleTimer(struct cursor_panel *self)
 {
@@ -206,7 +206,7 @@ void UpdateLevelSelectCursor(struct cursor_panel *self)
         {
             self->state = 0;
             SetAnim(self->part, gLevelSelectCursorAnims[0]);
-            sub_801E504(self);
+            ResetLevelSelectCursorIdleTimer(self);
         }
         break;
     case 4:
@@ -218,7 +218,7 @@ void UpdateLevelSelectCursor(struct cursor_panel *self)
         {
             self->scale = 0x100;
             self->state = 0;
-            sub_801E504(self);
+            ResetLevelSelectCursorIdleTimer(self);
         }
         break;
     case 5:
@@ -273,13 +273,13 @@ void SetLevelSelectCursorMatrix(struct cursor_panel *self)
 }
 
 /* UNUSED. Shrunk away (state 5). */
-u8 sub_801E3D4(struct cursor_panel *self)
+u8 IsLevelSelectCursorHidden(struct cursor_panel *self)
 {
     return self->state == 5;
 }
 
 /* UNUSED. Growing (state 4). */
-u8 sub_801E3E4(struct cursor_panel *self)
+u8 IsLevelSelectCursorGrowing(struct cursor_panel *self)
 {
     return self->state == 4;
 }
@@ -353,7 +353,7 @@ void MoveLevelSelectCursor(struct cursor_panel *self, s32 x, s32 y)
 }
 
 /* UNUSED (inlined into ParkLevelSelectCursor). */
-void sub_801E4E4(struct cursor_panel *self, struct xy *pos)
+void MoveLevelSelectCursorTo(struct cursor_panel *self, struct xy *pos)
 {
     MoveToPos(self, pos);
 }
@@ -366,7 +366,7 @@ void SetLevelSelectCursorPos(struct cursor_panel *self, s32 x, s32 y)
     SetEntityPixelPos(self->part, x, y);
 }
 
-void sub_801E504(struct cursor_panel *self)
+void ResetLevelSelectCursorIdleTimer(struct cursor_panel *self)
 {
     ResetIdleTimer(self);
 }

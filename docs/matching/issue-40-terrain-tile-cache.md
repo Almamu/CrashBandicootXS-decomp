@@ -40,10 +40,10 @@ issue is where they got turned into (attempted) byte-exact C.
 - **`DestroyTileCache`** is the exact same "`flags & 1` -> forward to
   `OperatorDelete`" shape already matched as `DestroySpriteBankSet` in
   `src/graphics/graphics.c`.
-- **`sub_8025554`/`sub_8025588`** are a floor-divide-by-32 bitmap
+- **`SetBitmapBit`/`ClearBitmapBit`** are a floor-divide-by-32 bitmap
   set/clear pair on an arbitrary `void *self` array - unrelated to the
   tile cache, just adjacent in ROM.
-- **`sub_80255A8`/`sub_80255C4`** are a `CpuSet`-based 32-halfword
+- **`ClearBitmap`/`InitBitmap`** are a `CpuSet`-based 32-halfword
   (one palette bank) zero-fill wrapper and its return-self variant.
 - **`SpawnRoomEntities`** - left completely untouched (see "Left raw" below).
 
@@ -53,8 +53,8 @@ issue is where they got turned into (attempted) byte-exact C.
 `IsBgLayerEnabled`, `GetBgLayerY`, `GetBgLayerX`, `GetBgLayerHeightTiles`,
 `GetBgLayerWidthTiles`, `GetBgLayerHeight`, `GetBgLayerWidth`.
 `src/system/game_loop4.c`: `DestroyTileCache`, `nullsub_4`.
-`src/system/game_loop5.c`: `GetCollisionCell`, `SetCollisionSource`, `sub_8025554`,
-`sub_8025588`, `sub_80255A8`, `sub_80255C4`.
+`src/system/game_loop5.c`: `GetCollisionCell`, `SetCollisionSource`, `SetBitmapBit`,
+`ClearBitmapBit`, `ClearBitmap`, `InitBitmap`.
 
 ## Closed as NAKED - 6 functions
 

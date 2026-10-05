@@ -13,7 +13,7 @@
  * on a fixed camera offset and advances a per-effect counter
  * (`gAirshipVolleyCount`) through a small weapon-kind table
  * (`gAirshipAttack`)'s thresholds, otherwise just decrements the
- * phase. Always re-runs the position-easing helper `sub_8030E08`, and -
+ * phase. Always re-runs the position-easing helper `SteerAirship`, and -
  * while `gAirshipDistance` hasn't crossed its (lower) ceiling
  * `0x31FF` - re-arms the phase from the weapon table and fires the
  * state-3/table-index-0 transition on the tracker object
@@ -26,7 +26,7 @@
  * address load ahead of it (the gap that kept this NAKED before). */
 extern s32 GetAnimFrameBaseOffset(void *self);
 extern void UpdateAirshipFlashColor(void);
-extern void sub_8030E08(void);
+extern void SteerAirship(void);
 extern s32 SpawnAirshipFireball(s32 x, s32 y, s32 z);
 
 extern s32 gAirshipZ;
@@ -75,7 +75,7 @@ void AirshipStateFireballs(void)
     } else {
         gAirshipFireTimer--;
     }
-    sub_8030E08();
+    SteerAirship();
     if (gAirshipDistance <= 0x31FF) {
         gAirshipFireTimer = gAirshipAttack[4];
         gAirshipVolleyCount = 0;

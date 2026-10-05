@@ -53,31 +53,31 @@ void FillCellAnimTilemap(s32 arg0, s32 w, s32 h)
     }
 }
 
-extern s32 gUnknown_030013DC;
+extern s32 gActorBgScrollType;
 extern s32 gUnknown_030013C0;
 extern s32 gUnknown_030013C4;
 extern s32 gUnknown_030013C8;
 extern s32 gUnknown_030013F8;
 extern s32 gUnknown_030013FC;
-extern s32 gUnknown_030013E0;
+extern s32 gActorBgScrollEaseShift;
 extern s32 gUnknown_030013E4;
 extern s32 gUnknown_030013E8;
-extern s32 gUnknown_030013F4;
-extern s32 gUnknown_030013EC;
-extern s32 gUnknown_030013F0;
-extern s32 gUnknown_030013D0;
-extern s32 gUnknown_030013CC;
-extern s32 gUnknown_030013D4;
+extern s32 gActorBg0VOffset;
+extern s32 gActorBgScrollMaxX;
+extern s32 gActorBgScrollMaxY;
+extern s32 gActorBgScrollX;
+extern s32 gActorBgScrollY;
+extern s32 gActorBgShake;
 extern s32 gUnknown_030013D8;
 
 /* Selects one of two fixed BG0/BG1 scroll-effect parameter sets
  * (arg0 == 0 vs nonzero), then derives the shared initial scroll
  * position/register state from them. */
-void sub_8029C30(s32 arg0)
+void InitActorBgScroll(s32 arg0)
 {
     register s32 v asm("r1");
 
-    gUnknown_030013DC = arg0;
+    gActorBgScrollType = arg0;
 
     if (arg0 == 0) {
         gUnknown_030013C0 = 0x88 << 5;
@@ -85,47 +85,47 @@ void sub_8029C30(s32 arg0)
         gUnknown_030013C8 = 0xbc << 6;
         gUnknown_030013F8 = 0x98 << 9;
         gUnknown_030013FC = 0xd0 << 8;
-        gUnknown_030013E0 = 2;
+        gActorBgScrollEaseShift = 2;
         gUnknown_030013E4 = 0x64;
         gUnknown_030013E8 = 0x51;
-        gUnknown_030013F4 = arg0;
+        gActorBg0VOffset = arg0;
     } else {
         gUnknown_030013C0 = 0xd0 << 5;
         gUnknown_030013C4 = 0xaa << 8;
         gUnknown_030013C8 = 0xe0 << 5;
         gUnknown_030013F8 = 0x98 << 9;
         gUnknown_030013FC = 0xce << 8;
-        gUnknown_030013E0 = 3;
+        gActorBgScrollEaseShift = 3;
         gUnknown_030013E4 = 3 + 0xfd;
         gUnknown_030013E8 = 0x96;
-        gUnknown_030013F4 = 2;
+        gActorBg0VOffset = 2;
     }
 
     /* `v` is register-pinned to `r1` from the moment it's first computed
-     * (as `gUnknown_030013EC`'s new value) through the sign-rounded
+     * (as `gActorBgScrollMaxX`'s new value) through the sign-rounded
      * `/2`/`>>9`/`>>9` triple below, all reusing that same register in
-     * place rather than reloading `gUnknown_030013EC` fresh - matching
+     * place rather than reloading `gActorBgScrollMaxX` fresh - matching
      * the ROM's own single, unbroken chain of `r1` uses (see
      * docs/workflow.md step 3). `REG_BG0VOFS` is just
-     * `gUnknown_030013F4` alone here, NOT
-     * `gUnknown_030013F4 + (v >> 9)` - there's no addition in the ROM's
+     * `gActorBg0VOffset` alone here, NOT
+     * `gActorBg0VOffset + (v >> 9)` - there's no addition in the ROM's
      * own instructions for this store. */
     {
-        register s32 *ecPtr asm("r0") = &gUnknown_030013EC;
+        register s32 *ecPtr asm("r0") = &gActorBgScrollMaxX;
         register s32 delta asm("r2") = (s32)0xFFFF1000;
 
         v = gUnknown_030013F8 + delta;
         *ecPtr = v;
     }
-    gUnknown_030013F0 = gUnknown_030013FC + (s32)0xFFFF6000;
+    gActorBgScrollMaxY = gUnknown_030013FC + (s32)0xFFFF6000;
 
     {
-        register s32 *d0Ptr asm("r2") = &gUnknown_030013D0;
+        register s32 *d0Ptr asm("r2") = &gActorBgScrollX;
 
         v = v + (s32)((u32)v >> 31);
         *d0Ptr = v >> 1;
     }
-    gUnknown_030013CC = 0;
+    gActorBgScrollY = 0;
 
     {
         register vu16 *bg0hofsPtr asm("r0") = &REG_BG0HOFS;
@@ -133,34 +133,34 @@ void sub_8029C30(s32 arg0)
         v >>= 9;
         *bg0hofsPtr = v;
     }
-    REG_BG0VOFS = gUnknown_030013F4;
+    REG_BG0VOFS = gActorBg0VOffset;
     REG_BG1HOFS = v;
     REG_BG1VOFS = 0;
 
-    gUnknown_030013D4 = 0;
+    gActorBgShake = 0;
     gUnknown_030013D8 = gUnknown_030013C4;
 }
 
-/* Eases the BG0/BG1 scroll accumulators (gUnknown_030013D0/gUnknown_030013CC)
+/* Eases the BG0/BG1 scroll accumulators (gActorBgScrollX/gActorBgScrollY)
  * toward their per-axis target/scale-derived offsets
- * (gUnknown_030013EC/gUnknown_030013F0), clamping each to
+ * (gActorBgScrollMaxX/gActorBgScrollMaxY), clamping each to
  * [0, target]. arg0/arg1 are the two axes' own driving values. */
-void sub_8029D8C(s32 arg0, s32 arg1)
+void UpdateActorBgScroll(s32 arg0, s32 arg1)
 {
     s32 target;
     register s32 delta asm("r0");
     s32 cur;
     s32 shift;
 
-    target = gUnknown_030013EC;
+    target = gActorBgScrollMaxX;
     delta = __divsi3(arg0 * (target >> 8), gUnknown_030013E4);
     delta += target / 2;
-    cur = gUnknown_030013D0;
+    cur = gActorBgScrollX;
     delta -= cur;
-    shift = gUnknown_030013E0;
+    shift = gActorBgScrollEaseShift;
     delta >>= shift;
     cur += delta;
-    gUnknown_030013D0 = cur;
+    gActorBgScrollX = cur;
     if (cur < 0) {
         cur = 0;
     }
@@ -171,17 +171,17 @@ void sub_8029D8C(s32 arg0, s32 arg1)
         }
         cur = clamped;
     }
-    gUnknown_030013D0 = cur;
+    gActorBgScrollX = cur;
 
-    target = gUnknown_030013F0;
+    target = gActorBgScrollMaxY;
     delta = __divsi3(arg1 * (target >> 8), gUnknown_030013E8);
     delta += target / 2;
-    cur = gUnknown_030013CC;
+    cur = gActorBgScrollY;
     delta -= cur;
     delta >>= shift;
-    delta -= gUnknown_030013D4;
+    delta -= gActorBgShake;
     cur += delta;
-    gUnknown_030013CC = cur;
+    gActorBgScrollY = cur;
     if (cur < 0) {
         cur = 0;
     }
@@ -195,5 +195,5 @@ void sub_8029D8C(s32 arg0, s32 arg1)
         }
         cur = clamped;
     }
-    gUnknown_030013CC = cur;
+    gActorBgScrollY = cur;
 }

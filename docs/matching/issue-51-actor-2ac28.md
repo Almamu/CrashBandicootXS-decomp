@@ -1,9 +1,9 @@
 # Issue #51: 0x0802AC28-0x0802B364 - the actor factory
 
 GitHub issue #51 covers `0x0802AC28`-`0x0802BED8`. Its tail was already
-done: `UpdatePolarPlayer`-`sub_802BBE4` in `actor_part127.c`
+done: `UpdatePolarPlayer`-`PolarPlayerStateCaught` in `actor_part127.c`
 ([issue-52-gap-b364.md](./issue-52-gap-b364.md), four real C, seven
-NAKED) and `DispensePolarWumpa`-`sub_802BE80` in `actor_part107.c`
+NAKED) and `DispensePolarWumpa`-`PolarPlayerStateBoost` in `actor_part107.c`
 ([issue-50-actor-bc68.md](./issue-50-actor-bc68.md)). This pass did the
 first seven functions, the whole of what was left in
 `asm/code_3_2_20_8b7c_ac28.s`. They are now real C in
@@ -38,8 +38,8 @@ to x/y and then switches on `kind` (1-39, through a jump table). Every
 case body is an inlined C++ `new Foo(...)`. It allocates with
 `mem_alloc(size, MEM_HEAP_IWRAM)`, runs a base constructor
 (`InitActorPart`, `InitPolarCrate`, or one of the class constructors
-`CreatePolarCheckpointCrate`/`sub_802CF0C`/`sub_802D648`/`CreatePolarPenguin`/`CreatePolarElectricFence`/
-`CreatePolarIcicle`/`sub_802D5D4`/`sub_802CE38`), and, where the base constructor
+`CreatePolarCheckpointCrate`/`CreatePolarLauncher`/`CreatePolarBoostPad`/`CreatePolarPenguin`/`CreatePolarElectricFence`/
+`CreatePolarIcicle`/`CreatePolarGoal`/`sub_802CE38`), and, where the base constructor
 is a shared one, stores the class's method table at +0x50. Points of
 note:
 
@@ -72,7 +72,7 @@ clears the player pointer `gActorList`, and builds the player from
 record 0 with `ConstructActorPart`. That function runs `InitActorPart`
 (y = `z ? 0x2800 : -0x5000`), installs `gPolarPlayerVtable`, calls
 `AllocPolarPlayerTiles`, and starts either state 0xD/anim 0xC (when z != 0) or anim
-8. It then resets the `gUnknown_03001480`-`gUnknown_030014A4` player-state
+8. It then resets the `gPolarPauseLocked`-`gPolarPlayerVelY` player-state
 globals (the ones `actor_part19.c`/`actor_part44.c`/`actor_part107.c`
 drive).
 
@@ -111,7 +111,7 @@ drive).
   flag, time) then cross-jumps into one copy, as in the ROM.
 
 Issue #51 stays open: `UpdatePolarPlayer`, `DrawPolarPlayer`, `AllocPolarPlayerTiles`,
-`sub_802B8E8`, `sub_802BA5C`, `sub_802BAD0` and `sub_802BBE4`
+`PolarPlayerStateMount`, `PolarPlayerStateJump`, `PolarPlayerStateDash` and `PolarPlayerStateCaught`
 (`actor_part127.c`) are still NAKED.
 
 Verified via a full clean `rm -rf build && make NON_MATCHING=1 report`

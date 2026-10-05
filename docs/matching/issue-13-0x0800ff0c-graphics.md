@@ -60,7 +60,7 @@ overrides described below).
    record slot occupied/confirmed" check used throughout) is true,
    `type` is forced to `0`.
 3. **Resource-pressure demotion**: unless `gLevelState+0x8c` is
-   set, or `GetDeaths(gLevelState) >= sub_8023128(gLevelState)`
+   set, or `GetDeaths(gLevelState) >= GetCrateAssistDeaths(gLevelState)`
    (both take the same argument - read as "how many of this entity
    kind currently exist" vs. some capacity/threshold, i.e. the pool is
    already at or over capacity), `type == 0xb` or `type == 0xf` gets

@@ -200,11 +200,13 @@ code it gives the object and where the levels place it:
 |---|---|---|
 | 0x06 | `SpawnWumpa` | a wumpa fruit (bank 35) |
 | 0x07 | `SpawnCrystal` | the level's crystal (bank 37) |
+| 0x08 | `SpawnGemPathGem` | the gem-path clear gem (bank 32, kind 0x1E, level flag bit 2); placed only in the gem-path rooms |
 | 0x09, 0x0A, 0x0B, 0x0C | `SpawnBlueGem`, `SpawnRedGem`, `SpawnGreenGem`, `SpawnYellowGem` | the coloured gems (bank 32) |
 | 0x10 | `SpawnStopwatch` | the time-trial stopwatch (bank 36) |
 | 0x12, 0x13, 0x14, 0x4A | `SpawnTurboRunPower`, `SpawnDoubleJumpPower`, `SpawnBodySlamPower`, `SpawnTornadoSpinPower` | the four power pictures (bank 38); no level places them |
 | 0x15-0x27 | `SpawnBasicCrate` .. `SpawnTimeCrate3` | crates: `CreateCrate` types 0-18 (bank 31), see `include/crate.h` |
 | 0x51-0x54 | `SpawnRedGemPlatform`, `SpawnYellowGemPlatform`, `SpawnGreenGemPlatform`, `SpawnBlueGemPlatform` | a gem outline over a platform (bank 32) |
+| 0x28 | `SpawnLizard` | enemy, bank 13 |
 | 0x29 | `SpawnVulture` | enemy, bank 11 |
 | 0x2A | `SpawnVenusFlytrap` | enemy, bank 10 |
 | 0x2C | `SpawnBlowgunTribesman` | enemy, bank 12 |
@@ -220,7 +222,7 @@ code it gives the object and where the levels place it:
 | 0x37 | `SpawnLaserBarrier` | hazard, bank 25 |
 | 0x3A, 0x3F | `SpawnSaucerLabAssistant` | enemy, bank 29 |
 | 0x3B | `SpawnPistonCrusher` | hazard, bank 26 |
-| 0x3D | `sub_80219E0` | the green launch pad (`SpawnLaunchPad`, bank 28) |
+| 0x3D | `SpawnLaunchPadEntity` | the green launch pad (`SpawnLaunchPad`, bank 28) |
 | 0x40 | `SpawnFlamethrowerLabAssistant` | enemy, bank 23 |
 | 0x43 | `SpawnRat` | enemy, bank 21 |
 | 0x44 | `SpawnFrog` | enemy, bank 19 |

@@ -6,7 +6,7 @@
  *
  * Computes two `self`-keyframe-driven sizes (byte0*byte1, scaled by
  * 32) via `AllocVramTileBlock`, storing them into the `gJetpackPlayerTiles`
- * pair, then arms `gUnknown_03001510`/clears `gUnknown_03001514`. Both
+ * pair, then arms `gJetpackPlayerTileBuffer`/clears `gJetpackPlayerLastFrame`. Both
  * keyframe-size sub-blocks are literally identical computations,
  * matching the ROM's own duplication.
  *
@@ -27,8 +27,8 @@
  * the exact registers the ROM's `ldrb` pair uses. */
 extern void *AllocVramTileBlock(s32 size);
 extern void *gJetpackPlayerTiles[2];
-extern s32 gUnknown_03001510;
-extern s32 gUnknown_03001514;
+extern s32 gJetpackPlayerTileBuffer;
+extern s32 gJetpackPlayerLastFrame;
 
 void AllocJetpackPlayerTiles(void *selfArg)
 {
@@ -91,8 +91,8 @@ void AllocJetpackPlayerTiles(void *selfArg)
         }
     }
 
-    gUnknown_03001510 = 1;
-    gUnknown_03001514 = 0;
+    gJetpackPlayerTileBuffer = 1;
+    gJetpackPlayerLastFrame = 0;
 }
 
 asm(".align 2, 0");

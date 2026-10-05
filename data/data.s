@@ -102,7 +102,7 @@ gSfxTable:
 
 @ gPolarPlayerStateFuncs: src/data/actor_pmf_17a6b8.c
 
-@ gStaticData_0817A728..gStaticData_0817A7F8: src/data/actor_tables_17a728.c
+@ gStaticData_0817A728..gYetiChargeParams: src/data/actor_tables_17a728.c
 
 @ gYetiStateFuncs: src/data/actor_state_fn_17a840.c
 
@@ -114,7 +114,7 @@ gSfxTable:
 
 @ gJetpackPlayerStateFuncs: src/data/actor_pmf_17c1c0.c
 
-@ gStaticData_0817C200: src/data/palette_strip_17c200.c
+@ gJetpackFlashPalettes: src/data/palette_strip_17c200.c
 
 @ gJetpackPlaneStateFuncs..gAirshipFireballStateFuncs: src/data/actor_pmf_17c260.c
 

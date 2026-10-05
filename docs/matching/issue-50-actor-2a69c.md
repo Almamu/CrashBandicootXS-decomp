@@ -48,9 +48,9 @@ only the tail continuation `..._ac28.s` remains.
 
 ## Matched (25 of 25 functions)
 
-- **`JetpackReloadPlayerTiles`/`PolarReloadPlayerTiles`/`sub_802A6C4`/`sub_802A6D8`**
+- **`JetpackReloadPlayerTiles`/`PolarReloadPlayerTiles`/`JetpackReachCourseEnd`/`PolarReachCourseEnd`**
   (`src/graphics/actor_part50.c`) - four trivial forwarders, the same
-  shape as `sub_802C0A8` in `actor_part19.c`: each ignores its own
+  shape as `GivePolarPlayerLife` in `actor_part19.c`: each ignores its own
   argument and calls a different function with the player pointer
   (`gActorList`), discarding the return value.
 - **`IsTouchingPlayer`** (`src/graphics/actor_part50.c`) - passes its own
@@ -85,14 +85,14 @@ only the tail continuation `..._ac28.s` remains.
 - **`UpdateActorDepth`** (`src/graphics/actor_part56.c`) - the same
   movement-threshold recompute as `UpdateActor`, with no trampoline-
   fire/frame-advance tail.
-- **`sub_802A9D4`** (`src/graphics/actor_part56.c`) - trivial getter:
+- **`GetActorRecordIndex`** (`src/graphics/actor_part56.c`) - trivial getter:
   the first byte of `self`'s part-table pointer.
-- **`sub_802A9DC`** (`src/graphics/actor_part56.c`) - the state/table-
+- **`SetActorState`** (`src/graphics/actor_part56.c`) - the state/table-
   index/anim-frame reset idiom already documented for the boss
   cluster's `DamageAirshipFireball`/`AirshipStateFall`.
 - **`GetActorZ`/`GetActorY`/`GetActorX`** (`src/graphics/actor_part56.c`)
   - trivial `self+0x24`/`0x20`/`0x1c` getters.
-- **`sub_802AA4C`** (`src/graphics/actor_part52.c`) - trivial `self+0x2c`
+- **`IsActorVisible`** (`src/graphics/actor_part52.c`) - trivial `self+0x2c`
   byte getter.
 - **`DestroyActor`** (`src/graphics/actor_part52.c`) - teardown: marks
   `self` "dead", unlinks it from the circular list (the same shape as

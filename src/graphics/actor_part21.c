@@ -5,7 +5,7 @@
 
 /* Trivial setter: marks `self+0x68` (a small state/flag byte, meaning
  * not yet understood beyond its offset). */
-void sub_8030640(void *selfArg)
+void AirshipFireballStateExplode(void *selfArg)
 {
     u8 *self = selfArg;
     self[0x68] = 1;

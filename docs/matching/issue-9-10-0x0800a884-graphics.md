@@ -71,7 +71,7 @@ family already covered at length by
   matched) uses**: `0` -> `info+0x24`, `6` -> `info+0x14`, everything
   else -> the fixed fallback `gEmptySpritePoint`. Applies that
   offset (mirrored by `self+0x28` bit 4) to `self`'s de-Q8'd position
-  and probes the result via `sub_8026BC0` (still raw, only its return
+  and probes the result via `GetTerrainFlagsAt` (still raw, only its return
   code's meaning as an opaque "hit" test against the constant `6` is
   used here, not its internals). A hit snaps `self`'s Y position down
   to the next multiple of 8 (unless `+0x101` is already set) and fires
@@ -309,17 +309,17 @@ None of the left-raw functions were force-matched or guessed at; each
 is blocked on genuinely unexamined callees, exactly the reasoning the
 original issue-9 write-up already gave for this same neighborhood.
 
-## Follow-up: `sub_8026BC0` closed (dedicated deep investigation)
+## Follow-up: `GetTerrainFlagsAt` closed (dedicated deep investigation)
 
-The camera-probe tail above flagged `sub_8026BC0` as "still raw, only
+The camera-probe tail above flagged `GetTerrainFlagsAt` as "still raw, only
 its return value matters". A follow-up dedicated investigation session
 closed it, independently confirming both this doc's own reference and
 [issue-9-0x08007634-actor.md](./issue-9-0x08007634-actor.md) (line
-~214, "the unexamined `sub_8026BC0`" from a jump-table dispatch
+~214, "the unexamined `GetTerrainFlagsAt`" from a jump-table dispatch
 context - that second reference turned out to be the same call site
 this doc already covers, not a separate one).
 
-`sub_8026BC0` sat right after the already-matched `sub_8026628`
+`GetTerrainFlagsAt` sat right after the already-matched `ProbeTerrain`
 (`docs/matching/issue-9-10-41-0x08026628-game-loop.md`) in
 `asm/code_3_2_17_266bc.s`, exactly 56 bytes
 (`0x08026BC0`-`0x08026BF8`). Reading its ~14 instructions directly
@@ -328,7 +328,7 @@ resolved the whole function:
 ```c
 extern u16 GetTerrainType(void *self, s32 x, s32 y, u8 *flagsOut, s32 *hiOut);
 
-s32 sub_8026BC0(void *arg0, s32 x, s32 y)
+s32 GetTerrainFlagsAt(void *arg0, s32 x, s32 y)
 {
     u8 flagsOut = 0;
     s32 hiOut = 0;
@@ -357,21 +357,21 @@ clamp - each axis can hit zero on its own), and the two out-parameters
 initialized locals. Only `flagsOut` - which `GetTerrainType` also returns
 directly as its own `u16` return value - is returned here; `hiOut`
 (the decoded cell's top nibble) is written but never read back,
-exactly the "discarded outValue" idiom `sub_8026628`'s own
-`sub_8026AE8`/`sub_8026A18` calls already established right next door
+exactly the "discarded outValue" idiom `ProbeTerrain`'s own
+`ProbeTerrainX`/`ProbeTerrainY` calls already established right next door
 in this same neighborhood.
 
 This confirms the caller-side reading above: the "camera-probe" in
 `CollidePlayer`'s tail passes an already-pixel-unit `{x, y}` (de-Q8'd via
-`>>8`, same convention as `sub_8026628`'s own `pos`), and
-`sub_8026BC0` itself does the pixel-to-tile-cache-lookup-unit
+`>>8`, same convention as `ProbeTerrain`'s own `pos`), and
+`GetTerrainFlagsAt` itself does the pixel-to-tile-cache-lookup-unit
 conversion, so the `code == 6` test in the caller really is just
 "did `GetTerrainType` report terrain type 6 at this tile" - an opaque
 enum comparison, not a geometric hit-test of its own.
 
 Matched as real C on the **first isolated-compile attempt** - no
 register pins, opaque `asm volatile`, or statement-order juggling
-needed, following `sub_8026628`'s own "matched on the first attempt"
+needed, following `ProbeTerrain`'s own "matched on the first attempt"
 precedent right next door in the same file. Confirmed byte-identical
 to the ROM's own instructions (register for register, operand for
 operand) via the isolated `cpp`/`agbcc`/`as` + `objcopy`/`cmp`
@@ -382,15 +382,15 @@ make NON_MATCHING=1 report` (no warnings) and `rm -rf build
 crashbandicootxs.elf crashbandicootxs.gba crashbandicootxs.map && make
 compare` (`crashbandicootxs.gba: La suma coincide`). Already flush to
 a 4-byte boundary (56 bytes total) with no trailing `.align 2, 0` gap
-in the ROM, unlike `sub_8026628`'s own end-of-function padding quirk.
+in the ROM, unlike `ProbeTerrain`'s own end-of-function padding quirk.
 
 ### Build layout
 
-`asm/code_3_2_17_266bc.s` is trimmed to end right after `sub_8026AE8`'s
+`asm/code_3_2_17_266bc.s` is trimmed to end right after `ProbeTerrainX`'s
 own trailing `.align 2, 0` (685 lines, matching the same "everything
-before, everything after" split `sub_8026628` itself used to get
+before, everything after" split `ProbeTerrain` itself used to get
 carved out of this same file). `src/system/game_loop44.c` (new file)
-holds the matched `sub_8026BC0`. The remainder - `sub_8026BF8` onward,
+holds the matched `GetTerrainFlagsAt`. The remainder - `sub_8026BF8` onward,
 still raw/unexamined this session (including `StepCameraDirectional`,
 `StepCameraFacing`, `SnapCamera`, `UpdateCamera` and others referencing
 `gLevelLayers` and per-object velocity-style fields) - moved
@@ -404,7 +404,7 @@ asm/code_3_2_17_26bf8.o(.text);
 ```
 
 `CollidePlayer` itself (this doc's own primary subject) is unaffected -
-it still calls `sub_8026BC0` exactly as before; only the callee's own
+it still calls `GetTerrainFlagsAt` exactly as before; only the callee's own
 body moved from opaque raw bytes to matched, documented C.
 
 ## Cross-references

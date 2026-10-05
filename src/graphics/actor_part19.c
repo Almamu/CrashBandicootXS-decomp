@@ -22,20 +22,20 @@
  * family" and "type-byte event dispatch" sections for the semantics
  * behind the individual functions below. */
 
-extern s32 gUnknown_030014A4;
-extern u8 gUnknown_030014A3;
-extern u8 gUnknown_030014A0;
-extern u8 gUnknown_030014A1;
-extern s32 gUnknown_0300148C;
+extern s32 gPolarPlayerVelY;
+extern u8 gPolarSteerEnabled;
+extern u8 gPolarPlayerInactive;
+extern u8 gPolarPlayerHalted;
+extern s32 gPolarFinishTimer;
 extern void *gPolarAkuAku;
 extern void *gAudioContext;
 extern void *gLevelState;
 extern void *gActorList;
 extern s32 gPolarQueuedWumpa;
-extern s32 gUnknown_03001484;
-extern s32 gUnknown_0300149C;
+extern s32 gPolarWumpaDispenseTimer;
+extern s32 gPolarInvulnTimer;
 extern void *gPolarPlayerTiles[2];
-extern void *gUnknown_03001490;
+extern void *gRiderlessPolar;
 
 extern u8 gPolarPlayerVtable[];
 extern u8 gActorVtable[];
@@ -45,7 +45,7 @@ extern u8 gPolarNitroCrateBox[];
 
 extern void SetCellAnimSpeed(s32 arg0);
 extern void StopYeti(void);
-extern void sub_802D490(void *arg0);
+extern void ClearPolarAkuAkuMask(void *arg0);
 extern s32 AddPolarAkuAkuMask(void *arg0);
 extern s32 GetAnimFrameBaseOffset(void *self);
 extern u8 *GetAnimFrameData(void *self);
@@ -61,38 +61,38 @@ extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern s32 _call_via_r3(void *addr, void *arg1, void *tableEntry, void *fn);
 extern u8 IsTouchingPlayer(void *self);
 extern void UpdateActor(void *self);
-extern u8 sub_802DD9C(void *self);
+extern u8 IsTouchingYeti(void *self);
 extern void AddBrokenCrate(void *self);
 extern s32 AddLife(void *self);
 extern void CollectWumpa(void *self);
 extern void FreeVramTileBlock(void *arg0);
 extern void MarkSpawnCollected(s32 arg0);
 extern void HurtPolarPlayer(void *arg0);
-extern void sub_8029720(void);
+extern void AddActorMissedNitro(void);
 extern void *CreateActor(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 arg4);
 extern void DetonateNearbyPolarNitros(void *self);
 
-/* Accumulates `gUnknown_030014A4` into `y`, then drains
- * `gUnknown_030014A4` toward a fixed ceiling (`0x780`) - the same
+/* Accumulates `gPolarPlayerVelY` into `y`, then drains
+ * `gPolarPlayerVelY` toward a fixed ceiling (`0x780`) - the same
  * "lazy-singleton accumulator" shape documented in docs/rom_map.md for
- * `sub_802B8E8`. Once `y` crosses a threshold (`0x2800`),
+ * `PolarPlayerStateMount`. Once `y` crosses a threshold (`0x2800`),
  * clamps it and fires the state-1/table-index-4 transition (anim frame
  * taken from `self`'s own part-table pointer at `+0x30`). */
-void sub_802BED8(void *selfArg)
+void PolarPlayerStateLaunched(void *selfArg)
 {
     struct actor_self *self = selfArg;
-    s32 total = self->y + gUnknown_030014A4;
+    s32 total = self->y + gPolarPlayerVelY;
 
     self->y = total;
-    gUnknown_030014A4 += 0x60;
-    if (gUnknown_030014A4 > 0x780) {
-        gUnknown_030014A4 = 0x780;
+    gPolarPlayerVelY += 0x60;
+    if (gPolarPlayerVelY > 0x780) {
+        gPolarPlayerVelY = 0x780;
     }
 
     if (total > 0x2800) {
         self->y = 0x2800;
         {
-            register u8 *addr asm("r1") = &gUnknown_030014A3;
+            register u8 *addr asm("r1") = &gPolarSteerEnabled;
             register u8 val asm("r0") = 1;
             *addr = val;
         }
@@ -122,19 +122,19 @@ void sub_802BED8(void *selfArg)
 }
 
 /* On the "confirm" input edge (`animDone` set), plays a sound, resets
- * `gUnknown_030014A4` to a large negative "cooldown" value, and fires
+ * `gPolarPlayerVelY` to a large negative "cooldown" value, and fires
  * the state-11/table-index-7 transition (anim frame from `self`'s
  * part-table pointer at `+0x54`). While `y` (the accumulator
- * `sub_802BED8` above drives) exceeds a threshold, additionally spawns
+ * `PolarPlayerStateLaunched` above drives) exceeds a threshold, additionally spawns
  * an effect object via `CreateActor` and stashes it into
- * `gUnknown_03001490`. */
-void sub_802BF30(void *selfArg)
+ * `gRiderlessPolar`. */
+void PolarPlayerStateFinish(void *selfArg)
 {
     struct actor_self *self = selfArg;
 
     if (self->animDone != 0) {
         PlaySfx(gAudioContext, 0x3c, 0x100);
-        gUnknown_030014A4 = 0xFFFFF980;
+        gPolarPlayerVelY = 0xFFFFF980;
         {
             register s32 stateVal asm("r0") = 0xb;
             register s32 idxVal asm("r1") = 7;
@@ -146,7 +146,7 @@ void sub_802BF30(void *selfArg)
                 self->stateTime = zero;
                 self->animIndex = idxVal;
                 {
-                    /* Casts as in sub_802BED8. */
+                    /* Casts as in PolarPlayerStateLaunched. */
                     register u16 anim asm("r0") = *(u16 *)&self->anims[7].duration;
                     register u8 zero2 asm("r1") = 0;
 
@@ -156,7 +156,7 @@ void sub_802BF30(void *selfArg)
                 self->animTime = zero;
 
                 if (self->y > 0x2000) {
-                    gUnknown_03001490 = CreateActor(2, self->x, 0x2800,
+                    gRiderlessPolar = CreateActor(2, self->x, 0x2800,
                                                      self->z, zero);
                 }
             }
@@ -164,18 +164,18 @@ void sub_802BF30(void *selfArg)
     }
 }
 
-/* On the "confirm" input edge, sets `gUnknown_030014A3`/state-1/
+/* On the "confirm" input edge, sets `gPolarSteerEnabled`/state-1/
  * table-index-0 (anim frame from `self`'s own part-table pointer at
  * `+0`) and fires `SetCellAnimSpeed(0x24)` - the state-transition counterpart
- * to `sub_802BED8`, entered directly rather than through the
+ * to `PolarPlayerStateLaunched`, entered directly rather than through the
  * accumulator threshold. */
-void sub_802BFA0(void *selfArg)
+void PolarPlayerStateLand(void *selfArg)
 {
     register struct actor_self *self asm("r3") = selfArg;
 
     if (self->animDone != 0) {
         {
-            register u8 *addr asm("r1") = &gUnknown_030014A3;
+            register u8 *addr asm("r1") = &gPolarSteerEnabled;
             register u8 val asm("r0") = 1;
             *addr = val;
         }
@@ -199,36 +199,36 @@ void sub_802BFA0(void *selfArg)
     }
 }
 
-/* Once-only latch (`gUnknown_030014A0`): arms a countdown
- * (`gUnknown_0300148C = 0x16`), runs `SetCellAnimSpeed(0x24)`, clamps
- * `gUnknown_030014A4` to non-negative, then calls `StopYeti` and
- * marks both `gUnknown_030014A0` and `gUnknown_030014A3`. */
-void sub_802BFD4(void)
+/* Once-only latch (`gPolarPlayerInactive`): arms a countdown
+ * (`gPolarFinishTimer = 0x16`), runs `SetCellAnimSpeed(0x24)`, clamps
+ * `gPolarPlayerVelY` to non-negative, then calls `StopYeti` and
+ * marks both `gPolarPlayerInactive` and `gPolarSteerEnabled`. */
+void FinishPolarRun(void)
 {
-    if (gUnknown_030014A0 == 0) {
-        gUnknown_0300148C = 0x16;
+    if (gPolarPlayerInactive == 0) {
+        gPolarFinishTimer = 0x16;
         SetCellAnimSpeed(0x24);
-        if (gUnknown_030014A4 < 0) {
-            gUnknown_030014A4 = 0;
+        if (gPolarPlayerVelY < 0) {
+            gPolarPlayerVelY = 0;
         }
         StopYeti();
-        gUnknown_030014A0 = 1;
-        gUnknown_030014A3 = 0;
+        gPolarPlayerInactive = 1;
+        gPolarSteerEnabled = 0;
     }
 }
 
-/* Resets the `gUnknown_030014A3`/`030014A1`/`030014A0` latch trio, runs
- * `sub_802D490` on `gPolarAkuAku`, and fires the state-7/table-
+/* Resets the `gPolarSteerEnabled`/`030014A1`/`030014A0` latch trio, runs
+ * `ClearPolarAkuAkuMask` on `gPolarAkuAku`, and fires the state-7/table-
  * index-6 transition (anim frame from `self`'s part-table pointer at
  * `+0x48`) plus a sound cue. */
 void CatchPolarPlayer(void *selfArg)
 {
     struct actor_self *self = selfArg;
 
-    gUnknown_030014A3 = 0;
-    gUnknown_030014A1 = 1;
-    sub_802D490(gPolarAkuAku);
-    gUnknown_030014A0 = 1;
+    gPolarSteerEnabled = 0;
+    gPolarPlayerHalted = 1;
+    ClearPolarAkuAkuMask(gPolarAkuAku);
+    gPolarPlayerInactive = 1;
 
     {
         register s32 stateVal asm("r0") = 7;
@@ -255,7 +255,7 @@ void CatchPolarPlayer(void *selfArg)
 }
 
 /* Accumulator: while `gLevelState+0x8c` is clear, arms
- * `gUnknown_03001484` (once, on the first accumulation) and adds
+ * `gPolarWumpaDispenseTimer` (once, on the first accumulation) and adds
  * `delta` into `gPolarQueuedWumpa`. Ignores its own first (player-
  * pointer) argument entirely - see docs/rom_map.md's correction on
  * this function. */
@@ -263,7 +263,7 @@ void QueuePolarWumpa(void *arg0, s32 delta)
 {
     if (*((u8 *)gLevelState + 0x8c) == 0) {
         if (gPolarQueuedWumpa == 0) {
-            gUnknown_03001484 = 0xf;
+            gPolarWumpaDispenseTimer = 0xf;
         }
         gPolarQueuedWumpa += delta;
     }
@@ -273,7 +273,7 @@ void QueuePolarWumpa(void *arg0, s32 delta)
  * `AddLife(gLevelState)`, per docs/rom_map.md's correction
  * (the ROM's own tail-call epilogue clobbers r0/the call's result, so
  * this is void, not passed through as a return value). */
-void sub_802C0A8(void *arg0)
+void GivePolarPlayerLife(void *arg0)
 {
     AddLife(gLevelState);
 }
@@ -285,7 +285,7 @@ void sub_802C0A8(void *arg0)
  * `+8` accumulator. Stashes `arg1` into `x`, plays a
  * state-keyed sound cue (0x5a for state 2, 0x55 for state 1), and
  * transitions to state 3. */
-void sub_802C0BC(void *selfArg, s32 arg1param)
+void BoostPolarPlayer(void *selfArg, s32 arg1param)
 {
     register struct actor_self *self asm("r4") = selfArg;
     register s32 arg1 asm("r5") = arg1param;
@@ -295,7 +295,7 @@ void sub_802C0BC(void *selfArg, s32 arg1param)
 
         self->animIndex = 2;
         {
-            /* Casts as in sub_802BED8. */
+            /* Casts as in PolarPlayerStateLaunched. */
             register u16 anim asm("r0") = *(u16 *)&self->anims[2].duration;
             register u8 zero1 asm("r1") = 0;
 
@@ -334,34 +334,34 @@ void sub_802C0BC(void *selfArg, s32 arg1param)
 
         self->state = 3;
         self->stateTime = 0;
-        gUnknown_030014A3 = 0;
+        gPolarSteerEnabled = 0;
     }
 }
 
 /* Lock-timer setter: while `AddPolarAkuAkuMask(gPolarAkuAku)` returns 3,
- * arms `gUnknown_0300149C = 500` - the same lock/active flag
+ * arms `gPolarInvulnTimer = 500` - the same lock/active flag
  * `ShockPolarPlayer` gates on, per docs/rom_map.md. */
-void sub_802C128(void *arg0)
+void GivePolarPlayerMask(void *arg0)
 {
     if (AddPolarAkuAkuMask(gPolarAkuAku) == 3) {
-        gUnknown_0300149C = 500;
+        gPolarInvulnTimer = 500;
     }
 }
 
-/* While `state` is 1-3 and `gUnknown_0300149C` (the same
+/* While `state` is 1-3 and `gPolarInvulnTimer` (the same
  * lock/active flag `ShockPolarPlayer` gates on, per docs/rom_map.md) is
  * clear: transitions to state 5/table-index 3 (anim frame from
  * `self`'s part-table pointer at `+0x24`), resets
- * `gUnknown_030014A4` to `-0x780`, and fires `SetCellAnimSpeed(0x1c)`. */
-void sub_802C14C(void *selfArg)
+ * `gPolarPlayerVelY` to `-0x780`, and fires `SetCellAnimSpeed(0x1c)`. */
+void LaunchPolarPlayer(void *selfArg)
 {
     register struct actor_self *self asm("r2") = selfArg;
 
     if ((u32)(self->state - 1) <= 2) {
-        register s32 flag asm("r3") = gUnknown_0300149C;
+        register s32 flag asm("r3") = gPolarInvulnTimer;
 
         if (flag == 0) {
-            gUnknown_030014A3 = flag;
+            gPolarSteerEnabled = flag;
             {
                 register s32 stateVal asm("r0") = 5;
                 register s32 idxVal asm("r1") = 3;
@@ -370,7 +370,7 @@ void sub_802C14C(void *selfArg)
                 self->stateTime = flag;
                 self->animIndex = idxVal;
                 {
-                    /* Casts as in sub_802BED8. */
+                    /* Casts as in PolarPlayerStateLaunched. */
                     register u16 anim asm("r0") = *(u16 *)&self->anims[3].duration;
                     register u8 zero2 asm("r1") = 0;
 
@@ -379,7 +379,7 @@ void sub_802C14C(void *selfArg)
                 }
                 self->animTime = flag;
             }
-            gUnknown_030014A4 = 0xFFFFF880;
+            gPolarPlayerVelY = 0xFFFFF880;
             SetCellAnimSpeed(0x1c);
         }
     }

@@ -4,57 +4,57 @@
 /* The `gYeti`-rooted position-tracking object with tier-
  * threshold sound cues, already documented in docs/rom_map.md ("A
  * fourth vtable table, a third RAM-struct family" onward): an
- * accumulate-then-clamp-at-0xA000 pair on `gUnknown_030014C8`/`030014CC`
- * driven from `gStaticData_0817A7F8` (a table of `{s32,s32,s32}`,
- * stride 0xc, indexed by `gUnknown_030014D4`), branching to different
+ * accumulate-then-clamp-at-0xA000 pair on `gYetiPosition`/`030014CC`
+ * driven from `gYetiChargeParams` (a table of `{s32,s32,s32}`,
+ * stride 0xc, indexed by `gYetiParamsIndex`), branching to different
  * `PlaySfx`/`PlayAmbientSfx` tier cues depending on the current "tier"
  * value read from the object's own `+8` field, and a shared
  * kind/anim-reset "transition" tail gated on the object's `+0x12` done
- * flag. `sub_802DB2C` and `sub_802DCC0` are two of `gYetiStateFuncs`'s
+ * flag. `YetiStateChase` and `YetiStateCharge` are two of `gYetiStateFuncs`'s
  * four vtable slots operating on this object (see
  * docs/matching/issue-54-actor-d3a8.md). */
 
-extern s32 sub_8029B98(void);
-extern s32 sub_8029B2C(void);
+extern s32 GetCellAnimSpeed(void);
+extern s32 GetCellAnimDistance(void);
 extern s32 gYetiDistance;
-extern s32 gUnknown_030014C8;
+extern s32 gYetiPosition;
 extern void *gYeti;
 extern void *gAudioContext;
 extern s32 PlayAmbientSfx(void *arg0, s32 arg1, s32 arg2, s32 arg3);
-extern void sub_8029E28(s32 arg0);
-extern s32 gUnknown_030014D4;
-extern u8 gStaticData_0817A7F8[];
+extern void ShakeActorBg(s32 arg0);
+extern s32 gYetiParamsIndex;
+extern u8 gYetiChargeParams[];
 extern s32 RandRange(s32 arg0);
 extern s32 gYetiState;
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 
-/* Re-derives `gUnknown_030014C8`/`030014CC` (a small per-frame ease
- * toward a `sub_8029B2C()`-driven target, with a `+0x99` nudge on the
+/* Re-derives `gYetiPosition`/`030014CC` (a small per-frame ease
+ * toward a `GetCellAnimDistance()`-driven target, with a `+0x99` nudge on the
  * "already settled" branch), clamps `030014CC` to `0xA000`, then - only
  * while `030014CC <= 0x4FFF` - fires a tier-keyed cue off the object's
  * own `+8`-field-derived "tier": tiers `0xc`/`0x1c` call the
  * `PlaySfx`-sibling `PlayAmbientSfx` (id `0x3E8`, volume `0x100`, plus a
- * byte flag passed via the stack) followed by `sub_8029E28(0x200)`;
- * tiers `0xd`/`0x1d` call `sub_8029E28(0x100)` alone. Finally, while the
+ * byte flag passed via the stack) followed by `ShakeActorBg(0x200)`;
+ * tiers `0xd`/`0x1d` call `ShakeActorBg(0x100)` alone. Finally, while the
  * object's `+0x12` done flag is set, runs a two-stage
- * `sub_8029B98()`/`RandRange()`-gated check against
- * `gStaticData_0817A7F8[gUnknown_030014D4]`'s `+4`/`+8` thresholds to
+ * `GetCellAnimSpeed()`/`RandRange()`-gated check against
+ * `gYetiChargeParams[gYetiParamsIndex]`'s `+4`/`+8` thresholds to
  * decide whether to fire the kind-1/anim-reset transition (plus a sound
  * cue while `030014CC <= 0x7800`). */
-void sub_802DB2C(void)
+void YetiStateChase(void)
 {
     u8 dummyStack;
 
-    if (sub_8029B98() == 0x24) {
-        gUnknown_030014C8 = (sub_8029B2C() << 8) - gYetiDistance;
+    if (GetCellAnimSpeed() == 0x24) {
+        gYetiPosition = (GetCellAnimDistance() << 8) - gYetiDistance;
     } else {
-        gUnknown_030014C8 += 0x99;
-        gYetiDistance = (sub_8029B2C() << 8) - gUnknown_030014C8;
+        gYetiPosition += 0x99;
+        gYetiDistance = (GetCellAnimDistance() << 8) - gYetiPosition;
     }
 
     if (gYetiDistance > 0xa000) {
         gYetiDistance = 0xa000;
-        gUnknown_030014C8 = (sub_8029B2C() << 8) - gYetiDistance;
+        gYetiPosition = (GetCellAnimDistance() << 8) - gYetiDistance;
     }
 
     {
@@ -70,7 +70,7 @@ void sub_802DB2C(void)
 
                 *stackPtr = one;
                 PlayAmbientSfx(a0, 0x3f, a2, a3);
-                sub_8029E28(0x200);
+                ShakeActorBg(0x200);
             } else if (tier == 0x1c) {
                 void *a0 = gAudioContext;
                 s32 a2 = 0x3E8;
@@ -80,9 +80,9 @@ void sub_802DB2C(void)
 
                 *stackPtr = one;
                 PlayAmbientSfx(a0, 0x40, a2, a3);
-                sub_8029E28(0x200);
+                ShakeActorBg(0x200);
             } else if (tier == 0xd || tier == 0x1d) {
-                sub_8029E28(0x100);
+                ShakeActorBg(0x100);
             }
         }
     }
@@ -93,10 +93,10 @@ void sub_802DB2C(void)
                 goto do_transition;
             }
 
-            if (sub_8029B98() > 0x24) {
+            if (GetCellAnimSpeed() > 0x24) {
                 s32 v = (u16)RandRange(0x100);
-                u8 *tableBase = gStaticData_0817A7F8;
-                s32 offset = gUnknown_030014D4 * 0xc;
+                u8 *tableBase = gYetiChargeParams;
+                s32 offset = gYetiParamsIndex * 0xc;
                 u8 *tablePlus4 = tableBase + 4;
                 s32 threshold = *(s32 *)(tablePlus4 + offset);
 
@@ -105,13 +105,13 @@ void sub_802DB2C(void)
                 }
             }
 
-            if (sub_8029B98() > 0x24) {
+            if (GetCellAnimSpeed() > 0x24) {
                 goto end_transition;
             }
             {
                 s32 v = (u16)RandRange(0x100);
-                u8 *tableBase = gStaticData_0817A7F8;
-                s32 offset = gUnknown_030014D4 * 0xc;
+                u8 *tableBase = gYetiChargeParams;
+                s32 offset = gYetiParamsIndex * 0xc;
                 u8 *tablePlus8 = tableBase + 8;
                 s32 threshold = *(s32 *)(tablePlus8 + offset);
 
@@ -146,27 +146,27 @@ void sub_802DB2C(void)
     }
 }
 
-/* Sibling to `sub_802DB2C` above, on the same object: instead of the
- * ease/settle pair, directly nudges `gUnknown_030014C8` by
- * `gStaticData_0817A7F8[gUnknown_030014D4]`'s own `+0` field before
+/* Sibling to `YetiStateChase` above, on the same object: instead of the
+ * ease/settle pair, directly nudges `gYetiPosition` by
+ * `gYetiChargeParams[gYetiParamsIndex]`'s own `+0` field before
  * re-deriving `030014CC`/clamping. The tier cues use plain `PlaySfx`
  * (ids `0x3f`/`0x40`) instead of `PlayAmbientSfx`, keyed off tiers
- * `0xb`/`0x1b` (with `0xc`/`0x1c` sharing the `sub_8029E28(0x100)`-only
+ * `0xb`/`0x1b` (with `0xc`/`0x1c` sharing the `ShakeActorBg(0x100)`-only
  * branch this time). The done-flag tail is a plain unconditional
  * kind-0/anim-reset (no threshold gate, no sound cue) - the counterpart
- * "settle" step to `sub_802DB2C`'s tier-1 "arm" step. */
-void sub_802DCC0(void)
+ * "settle" step to `YetiStateChase`'s tier-1 "arm" step. */
+void YetiStateCharge(void)
 {
-    s32 *c8 = &gUnknown_030014C8;
-    u8 *table = gStaticData_0817A7F8;
-    s32 idx = gUnknown_030014D4;
+    s32 *c8 = &gYetiPosition;
+    u8 *table = gYetiChargeParams;
+    s32 idx = gYetiParamsIndex;
 
     *c8 += *(s32 *)(table + idx * 0xc);
-    gYetiDistance = (sub_8029B2C() << 8) - gUnknown_030014C8;
+    gYetiDistance = (GetCellAnimDistance() << 8) - gYetiPosition;
 
     if (gYetiDistance > 0xa000) {
         gYetiDistance = 0xa000;
-        gUnknown_030014C8 = (sub_8029B2C() << 8) - gYetiDistance;
+        gYetiPosition = (GetCellAnimDistance() << 8) - gYetiDistance;
     }
 
     {
@@ -176,12 +176,12 @@ void sub_802DCC0(void)
             if (tier == 0xb) {
                 PlaySfx(gAudioContext, 0x3f, 0x100);
                 asm volatile("" ::: "memory");
-                sub_8029E28(0x200);
+                ShakeActorBg(0x200);
             } else if (tier == 0x1b) {
                 PlaySfx(gAudioContext, 0x40, 0x100);
-                sub_8029E28(0x200);
+                ShakeActorBg(0x200);
             } else if (tier == 0xc || tier == 0x1c) {
-                sub_8029E28(0x100);
+                ShakeActorBg(0x100);
             }
         }
     }

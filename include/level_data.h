@@ -131,7 +131,7 @@ struct level_info
     u32 times[3];       // 0x08 - time-trial thresholds, centiseconds,
                         //        loosest first
     s32 maskAssistDeaths;  // 0x14 - level_state.maskAssistDeaths (SetMaskAssistDeaths)
-    s32 crateAssistDeaths; // 0x18 - level_state.crateAssistDeaths (sub_8023110)
+    s32 crateAssistDeaths; // 0x18 - level_state.crateAssistDeaths (SetCrateAssistDeaths)
     u8 isBoss;          // 0x1C - 1 for the five boss levels (tiny, dingodile,
                         //        n. gin, neo cortex, mega-mix); RunRoom runs
                         //        CheckAllCratesBroken at level start only if 0

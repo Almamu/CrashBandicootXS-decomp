@@ -25,12 +25,12 @@ All in `src/graphics/actor_anim.c`, in ROM order:
 - **`SetActorAnim`** - selects a new keyframe: sets `frameIndex`, copies
   that record's `duration` field into `self+0x10`, and resets the
   `+0x12` flag byte and the `field_08` playback accumulator to 0.
-- **20 byte-identical "kind" teardown handlers** (`sub_803B0C4`,
+- **20 byte-identical "kind" teardown handlers** (`DestroyRiderlessPolar`,
   `DestroyPolarCheckpointText`, `DestroyPolarWumpa`, `DestroyPolarTimeCrate`, `DestroyPolarQuestionCrate`,
   `DestroyPolarAkuAkuCrate`, `DestroyPolarNitroCrate`, `DestroyPolarLifeCrate`, `sub_803B25C`,
   `DestroyPolarBasicCrate`, `DestroyPolarCrate`, `DestroyPolarElectricFence`, `sub_803B30C`,
-  `sub_803B338`, `DestroyPolarPenguin`, `DestroyPolarIcicle`, `DestroyPolarAkuAku`,
-  `sub_803B3E8`, `sub_803B414`, `DestroyPolarCheckpointCrate`) - every one of these
+  `DestroyPolarLauncher`, `DestroyPolarPenguin`, `DestroyPolarIcicle`, `DestroyPolarAkuAku`,
+  `DestroyPolarGoal`, `DestroyPolarBoostPad`, `DestroyPolarCheckpointCrate`) - every one of these
   compiles to byte-identical bytes in the ROM (confirmed: each
   function's embedded literal pointer resolves to the same
   `gActorVtable` symbol, and the surrounding unlink/free

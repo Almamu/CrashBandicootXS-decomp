@@ -3,13 +3,13 @@
 /* Same "spawn/pre-attack" singleton family as actor_part39.c - see that
  * file's header comment and docs/matching/issue-56-0x0802f0dc-actor.md. */
 
-extern u8 gUnknown_03001506;
+extern u8 gJetpackPlayerInactive;
 
-/* Trivial byte getter for the singleton's own flag, `sub_802F570`/
- * `sub_802F69C`'s read counterpart. */
-u8 sub_802F7A4(void)
+/* Trivial byte getter for the singleton's own flag, `JetpackPlayerStateResume`/
+ * `JetpackPlayerStateEnter`'s read counterpart. */
+u8 IsJetpackPlayerInactive(void)
 {
-    return gUnknown_03001506;
+    return gJetpackPlayerInactive;
 }
 
 asm(".align 2, 0");

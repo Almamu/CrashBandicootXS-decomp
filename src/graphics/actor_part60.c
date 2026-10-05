@@ -23,23 +23,23 @@ void DestroyYeti(void)
     mem_free(gYeti);
 }
 
-extern s32 gUnknown_030014D4;
+extern s32 gYetiParamsIndex;
 extern s32 gYetiX;
 extern s32 gYetiDistance;
-extern s32 gUnknown_030014C8;
+extern s32 gYetiPosition;
 extern u8 gYetiKeyframes[];
 extern u8 gYetiFrames[];
 extern void SetActorAnim(void *self, s32 idx);
-extern s32 sub_8029B2C(void);
+extern s32 GetCellAnimDistance(void);
 extern void sub_8029E34(s32 arg0);
 extern void LoadYetiGraphics(void);
 
-/* Constructor: stashes the caller's argument in `gUnknown_030014D4`,
+/* Constructor: stashes the caller's argument in `gYetiParamsIndex`,
  * allocates and wires up a fresh instance (part table
  * `gYetiKeyframes`/`0817A880`, header byte `0xf`, reset via
  * `SetActorAnim`) into `gYeti`, resets the position-tracking
  * pair (`gYetiX` to 0, `030014CC` to `0xA000`,
- * `030014C8` derived the same way `sub_802DB2C`/`sub_802DCC0` do),
+ * `030014C8` derived the same way `YetiStateChase`/`YetiStateCharge` do),
  * primes `sub_8029E34`, clears `gYetiState`, and finally calls
  * `LoadYetiGraphics` (the object's own initial VRAM-pattern/DMA setup,
  * parked separately - see docs/matching/issue-54-actor-d3a8.md). */
@@ -50,7 +50,7 @@ void CreateYeti(void *arg0)
     register s32 flags asm("r1");
     register void **bcAddr asm("r5");
 
-    gUnknown_030014D4 = (s32)arg0;
+    gYetiParamsIndex = (s32)arg0;
     bcAddr = &gYeti;
     asm volatile("mov %0, #0x1c" : "=r"(size));
     asm volatile("mov %0, #0x80\n\tlsl %0, %0, #0x18" : "=r"(flags));
@@ -69,7 +69,7 @@ void CreateYeti(void *arg0)
 
     gYetiX = 0;
     gYetiDistance = 0xa000;
-    gUnknown_030014C8 = (sub_8029B2C() << 8) - gYetiDistance;
+    gYetiPosition = (GetCellAnimDistance() << 8) - gYetiDistance;
     sub_8029E34(gYetiDistance);
 
     gYetiState = 0;

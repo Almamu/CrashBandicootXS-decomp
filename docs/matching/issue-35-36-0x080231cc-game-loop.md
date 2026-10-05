@@ -16,7 +16,7 @@ continuation of the exact same `self` type `game_loop2.c` already
 established: the `gLevelState`-pointed "level" object (confirmed
 by `RunRoom`/`game_loop56.c`, whose own opening dispatch reads
 `*gLevelState` and passes it as `self` to `SetMaskAssistDeaths`/
-`sub_8023110`/`CheckAllCratesBroken`). Rather than open a new file (which would
+`SetCrateAssistDeaths`/`CheckAllCratesBroken`). Rather than open a new file (which would
 need a new `ldscript.txt` entry and a fresh struct-convention writeup),
 all 49 were appended directly to `game_loop2.c`, in ROM address order,
 keeping the existing object boundary and the existing `self+2`/

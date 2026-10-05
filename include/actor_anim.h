@@ -188,7 +188,7 @@ struct category_descriptor {
     struct anim_table_record *anim_table; // 0x18 - this category's animation table base (gCategoryFamily0AnimTable or gCategoryFamily1AnimTable)
     const u8 *sprite_sheet;         // 0x1C - this category family's LZ77-compressed sprite sheet
     u32 unknown_20;                 // 0x20
-    u32 active_count_threshold;     // 0x24 - compared against a running "how many of this category are active" counter (gUnknown_03001384) to gate spawning an extra sub-effect instance
+    u32 active_count_threshold;     // 0x24 - compared against a running "how many of this category are active" counter (gActorCategoryDeaths) to gate spawning an extra sub-effect instance
     u32 unknown_28;                 // 0x28
     u32 position_offset_flag;       // 0x2C - zero/nonzero selects between two fixed position-offset constants (0xFFFFB000 / 0x2800) applied to a spawned part's vertical anchor
     u32 unknown_30;                 // 0x30

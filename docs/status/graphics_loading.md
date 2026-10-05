@@ -62,7 +62,7 @@ family. Filed under `src/graphics/` on disk, tracked as its own
   all matched (`SpawnBasicCrate`, type `0`, closed via register-pinning the
   table-resolution chain to the ROM's own registers) - see
   [issue-33-0x08021bfc-graphics-loading.md](../matching/issue-33-0x08021bfc-graphics-loading.md).
-- **`SpawnCrystal`**, **`SpawnCrateGem`**, **`sub_801EBF0`**,
+- **`SpawnCrystal`**, **`SpawnCrateGem`**, **`SpawnGemPathGem`**,
   **`SpawnRedGem`**, **`SpawnGreenGem`**, **`SpawnYellowGem`**
   (`src/graphics/graphics_loading_1ea5c.c`) - issue #30: six "trigger
   effect type N" spawners (a `GetCurrentLevelFlags`/`gLevelState+2`
@@ -93,7 +93,7 @@ family. Filed under `src/graphics/` on disk, tracked as its own
   Real C, current agbcc (both compilers match). Retires
   `asm/code_3_2_17_22354.s`. See
   [gap-22354-game-context.md](../matching/gap-22354-game-context.md).
-- **`sub_801EF0C`**-**`SpawnElectricEel`** (`src/graphics/graphics_loading_1ef0c.c`),
+- **`SpawnLizard`**-**`SpawnElectricEel`** (`src/graphics/graphics_loading_1ef0c.c`),
   **`SpawnSquid`** (`graphics_loading_1fdec.c`), **`SpawnJellyfish`**-
   **`SpawnWoodenCrusher`** (`graphics_loading_1feec.c`; `SpawnFlamethrowerLabAssistant` closed in
   [last-eleven-naked-retry.md](../matching/last-eleven-naked-retry.md)),

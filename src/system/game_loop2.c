@@ -260,7 +260,7 @@ void *GetBonusPlatform(struct level_state *self)
     return (void *)self->bonusPlatform;
 }
 
-void sub_8023110(struct level_state *self, s32 value)
+void SetCrateAssistDeaths(struct level_state *self, s32 value)
 {
     self->crateAssistDeaths = value;
 }
@@ -275,7 +275,7 @@ void sub_8023120(struct level_state *self, s32 value)
     self->unk_80 = value;
 }
 
-s32 sub_8023128(struct level_state *self)
+s32 GetCrateAssistDeaths(struct level_state *self)
 {
     return self->crateAssistDeaths;
 }
@@ -631,7 +631,7 @@ extern s32 LevelHasYellowGemEntity(s32 idx);
 extern s32 LevelHasBlueGemEntity(s32 idx);
 extern s32 LevelHasGreenGemEntity(s32 idx);
 extern s32 LevelHasRedGemEntity(s32 idx);
-extern s32 sub_8024458(s32 idx);
+extern s32 LevelHasGemPathGemEntity(s32 idx);
 
 /* Five thin two-argument wrappers that drop `self` entirely and forward
  * straight to one of `LevelHasYellowGemEntity`/`34`/`40`/`4C`/`58` (the medal
@@ -656,9 +656,9 @@ s32 LevelHasRedGem(void *self, s32 idx)
     return LevelHasRedGemEntity(idx);
 }
 
-s32 sub_802336C(void *self, s32 idx)
+s32 LevelHasGemPathGem(void *self, s32 idx)
 {
-    return sub_8024458(idx);
+    return LevelHasGemPathGemEntity(idx);
 }
 
 extern s32 GetHovercraftPartsLeft(void);

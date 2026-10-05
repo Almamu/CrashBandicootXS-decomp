@@ -9,11 +9,11 @@ extern void nullsub_21();
 extern void nullsub_22();
 extern void SpawnStartMarker();
 extern void SpawnCrystal();
-extern void sub_801EBF0();
+extern void SpawnGemPathGem();
 extern void SpawnRedGem();
 extern void SpawnGreenGem();
 extern void SpawnYellowGem();
-extern void sub_801EF0C();
+extern void SpawnLizard();
 extern void SpawnVulture();
 extern void SpawnVenusFlytrap();
 extern void sub_801F2BC();
@@ -55,7 +55,7 @@ extern void SpawnBonusPlatform();
 extern void SpawnMediumPlatform();
 extern void SpawnSmallPlatform();
 extern void SpawnLargePlatform();
-extern void sub_80219E0();
+extern void SpawnLaunchPadEntity();
 extern void SpawnSealSpawner();
 extern void SpawnTimeCrate3();
 extern void SpawnTimeCrate2();
@@ -104,7 +104,7 @@ void (*const gEntitySpawnFuncs[92])() = {
     nullsub_22,
     SpawnWumpa,
     SpawnCrystal,
-    sub_801EBF0,
+    SpawnGemPathGem,
     SpawnBlueGem,
     SpawnRedGem,
     SpawnGreenGem,
@@ -136,7 +136,7 @@ void (*const gEntitySpawnFuncs[92])() = {
     SpawnTimeCrate1,
     SpawnTimeCrate2,
     SpawnTimeCrate3,
-    sub_801EF0C,
+    SpawnLizard,
     SpawnVulture,
     SpawnVenusFlytrap,
     sub_801F2BC,
@@ -157,7 +157,7 @@ void (*const gEntitySpawnFuncs[92])() = {
     SpawnSaucerLabAssistant,
     SpawnPistonCrusher,
     nullsub_21,
-    sub_80219E0,
+    SpawnLaunchPadEntity,
     nullsub_21,
     SpawnSaucerLabAssistant,
     SpawnFlamethrowerLabAssistant,

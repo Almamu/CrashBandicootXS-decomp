@@ -106,7 +106,7 @@ extern void ResetWumpa(struct level_state *self);
 extern void ResetCrateCount(struct level_state *self);
 extern void sub_8023120(struct level_state *self, s32 n);
 extern void SetMaskAssistDeaths(struct level_state *self, s32 n);
-extern void sub_8023110(struct level_state *self, s32 n);
+extern void SetCrateAssistDeaths(struct level_state *self, s32 n);
 extern void *MemCopy32(void *dest, void *src, s32 size);
 extern void *OperatorNew(u32 size);
 extern void *InitTitleScreen(void *mem);
@@ -151,7 +151,7 @@ extern void PlayRoomMusic(s32 *progress);
 extern s32 mem_free_bytes(s32 arg0);
 extern s32 PlayRoom(s32 *progress);
 extern s32 InitActorCategory(u16 category);
-extern s32 sub_8029730(void);
+extern s32 GetActorMissedNitros(void);
 extern void AddPendingSwitchCrates(struct level_state *self, s32 arg1);
 extern void ResetAmbientSfx(void *arg0);
 extern void SetMaskLevel(struct level_state *self, s32 tier);
@@ -188,7 +188,7 @@ void UpdateGameFrame(struct level_state *self)
     ResetCrateCount(self);
     sub_8023120(self, 5);
     SetMaskAssistDeaths(self, 5);
-    sub_8023110(self, 5);
+    SetCrateAssistDeaths(self, 5);
     self->level = 0;
     self->unk_e0 = 0;
     {
@@ -325,7 +325,7 @@ void UpdateGameFrame(struct level_state *self)
                 status = InitActorCategory(self->cat->category);
                 if (status == 0)
                 {
-                    AddPendingSwitchCrates(self, sub_8029730());
+                    AddPendingSwitchCrates(self, GetActorMissedNitros());
                     SetCheckpointAtPlayer(self, 0);
                 }
                 break;

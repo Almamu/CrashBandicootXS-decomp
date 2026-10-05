@@ -6,7 +6,7 @@
  * and docs/matching/issue-58-0x08030334-actor.md. */
 
 extern s32 GetAnimFrameBaseOffset(void *self);
-extern void sub_802A4F8(void);
+extern void PauseActorSpawns(void);
 extern s32 gAirshipZ;
 extern s32 gAirshipVelZ;
 extern s32 gAirshipDistance;
@@ -23,7 +23,7 @@ extern struct actor_self *gAirship;
  * `gAirshipVelX`) and fires the state-2/table-index-0 transition
  * on the small tracker object (`gAirship`, anim frame from
  * its own part-table pointer at `+0`), then always calls
- * `sub_802A4F8`. Same "pin the zero constant so it's loaded before its
+ * `PauseActorSpawns`. Same "pin the zero constant so it's loaded before its
  * address" idiom as `AirshipStateFall` (actor_part23.c) - the value is
  * reused across four stores that would otherwise get reordered ahead
  * of the address loads that consume them. The `*(T *)&self->...` stores keep
@@ -74,6 +74,6 @@ void AirshipStateApproach(void)
             }
         }
 
-        sub_802A4F8();
+        PauseActorSpawns();
     }
 }

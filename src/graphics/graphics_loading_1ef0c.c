@@ -41,7 +41,7 @@ static inline void SetPartFlipX(struct popup_part *part, u8 value)
 
 /* Text popup, tag 0xD. Restarts the part's animation (tag 0) and hands
  * the level record's +4 word to the header through SetEnemyRangeX. */
-void sub_801EF0C(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnLizard(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = CreateMovingSprite(arg0, arg1, arg2, arg3);
     struct enemy_ctrl *hdr;
@@ -292,7 +292,7 @@ void SpawnVenusFlytrap(u32 arg0, u32 arg1, u32 arg2, u32 arg3)
         : "r0", "r1", "r2", "r5", "memory");
 }
 
-/* Text popup, tag 0xE. Same as sub_801EF0C without the animation
+/* Text popup, tag 0xE. Same as SpawnLizard without the animation
  * restart: draws the header with gEnemyDefaultAnimMap and hands it the
  * level record's +4 word through SetEnemyRangeX. */
 void sub_801F2BC(u32 arg0, u16 arg1, u16 arg2, u16 arg3)

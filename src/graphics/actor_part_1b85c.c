@@ -416,7 +416,7 @@ extern void FormatCentiseconds(s32 value, char *buf);
 
 /* Save data. */
 extern u8 *PackSaveData(void *p);
-extern u8 sub_802336C(void *p, s32 id);
+extern u8 LevelHasGemPathGem(void *p, s32 id);
 extern u8 LevelHasRedGem(void *p, s32 id);
 extern u8 LevelHasGreenGem(void *p, s32 id);
 extern u8 LevelHasBlueGem(void *p, s32 id);
@@ -1266,7 +1266,7 @@ void LoadLevelSelectRecord(struct level_menu *self)
     struct level_save *sv;
 
     *rank = 5;
-    if (sub_802336C(gLevelState, self->levelId))
+    if (LevelHasGemPathGem(gLevelState, self->levelId))
         *rank = 0;
     if (LevelHasRedGem(gLevelState, self->levelId))
         *rank = 1;

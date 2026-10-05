@@ -45,10 +45,10 @@ extern void StartTimeTrial(void *arg0);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void HealJetpackPlayer(void *selfArg, s32 delta);
 extern void QueueJetpackWumpa(void *selfArg, s32 delta);
-extern void sub_802F164(void *selfArg, s32 x, s32 y);
+extern void PassJetpackRing(void *selfArg, s32 x, s32 y);
 extern void MarkSpawnCollected(void *selfArg);
 extern s32 AddLife(void *self);
-extern void sub_80318B4(void *selfArg);
+extern void ReleaseJetpackBalloon(void *selfArg);
 extern void MoveJetpackBalloon(void *selfArg, s32 a, s32 b, s32 c);
 extern void InitActorPart(void *self, s32 a, s32 b, s32 c, s32 d);
 extern s32 RandRange(s32 max);
@@ -81,7 +81,7 @@ struct vec3_words {
  * zero loads (docs/workflow.md step 7). */
 
 /* `UpdateJetpackQuestionCrate`-`IsJetpackBalloonCrateUnshootable`: orbits `center` and carries a child
- * object (`SpawnJetpackBalloon`, released with `sub_80318B4`). */
+ * object (`SpawnJetpackBalloon`, released with `ReleaseJetpackBalloon`). */
 struct orbit_actor {
     struct actor_self base;
     s32 health;                 // 0x54
@@ -222,7 +222,7 @@ void UpdateJetpackQuestionCrate(void *selfArg)
     after_dispatch:
         if (self->child != NULL) {
             AddBrokenCrate(gLevelState);
-            sub_80318B4(self->child);
+            ReleaseJetpackBalloon(self->child);
             self->child = NULL;
         }
         self->done = 1;
@@ -311,7 +311,7 @@ case_17:
 after_dispatch:
     if (self->child != NULL) {
         AddBrokenCrate(gLevelState);
-        sub_80318B4(self->child);
+        ReleaseJetpackBalloon(self->child);
         self->child = NULL;
     }
     self->done = 1;
@@ -346,7 +346,7 @@ void UpdateJetpackHealthCrate(void *selfArg)
 
         if (self->child != NULL) {
             AddBrokenCrate(gLevelState);
-            sub_80318B4(self->child);
+            ReleaseJetpackBalloon(self->child);
             self->child = (void *)kind;
         }
         self->done = one;
@@ -429,7 +429,7 @@ void UpdateJetpackTimeCrate(void *selfArg)
             if (*(u8 *)(*(u8 **)((u8 *)self + 0x30)) != 0x1d) {
                 AddBrokenCrate(gLevelState);
             }
-            sub_80318B4(self->child);
+            ReleaseJetpackBalloon(self->child);
             self->child = NULL;
         }
         self->done = 1;
@@ -518,7 +518,7 @@ after_dispatch:
         if (*(u8 *)(*(u8 **)((u8 *)self + 0x30)) != 0x1d) {
             AddBrokenCrate(gLevelState);
         }
-        sub_80318B4(self->child);
+        ReleaseJetpackBalloon(self->child);
         self->child = NULL;
     }
     self->done = 1;
@@ -585,7 +585,7 @@ void DamageJetpackHealthCrate(void *selfArg, s32 delta)
 
             if (self->child != NULL) {
                 AddBrokenCrate(gLevelState);
-                sub_80318B4(self->child);
+                ReleaseJetpackBalloon(self->child);
                 self->child = (void *)zero2;
             }
             self->done = one;
@@ -638,7 +638,7 @@ void *CreateJetpackQuestionCrate(void *selfArg, s32 a, s32 b, s32 c, s32 d, s32 
 }
 
 /* Trivial `self+0x58` clearing setter. */
-void sub_8032138(void *selfArg)
+void ClearJetpackCrateBalloon(void *selfArg)
 {
     struct orbit_actor *self = selfArg;
     self->child = NULL;
@@ -704,7 +704,7 @@ void DamageJetpackBalloonCrate(void *selfArg, s32 delta)
             if (self->child != NULL) {
                 PlaySfx(gAudioContext, 3, 0x100);
                 AddBrokenCrate(gLevelState);
-                sub_80318B4(self->child);
+                ReleaseJetpackBalloon(self->child);
                 self->child = (void *)zero2;
             }
             self->done = one;
@@ -1182,7 +1182,7 @@ u8 IsJetpackRocketUnshootable(void *selfArg)
 
 /* Type-byte-gated (`self+0x30`'s type byte `== 0x1f`) proximity check:
  * on trigger, feeds the offset between `x` and the type-byte
- * table's own `+0x20` field, plus `y`, into `sub_802F164`, then
+ * table's own `+0x20` field, plus `y`, into `PassJetpackRing`, then
  * latches a one-shot cue via `self+0x58`. Tail-calls `UpdateActor`
  * unconditionally. */
 void UpdateJetpackRing(void *selfArg)
@@ -1195,7 +1195,7 @@ void UpdateJetpackRing(void *selfArg)
         s32 x = self->base.x - params[8];
         s32 y = self->base.y;
 
-        sub_802F164(player, x, y);
+        PassJetpackRing(player, x, y);
 
         if (self->cued == 0) {
             self->cued = 1;

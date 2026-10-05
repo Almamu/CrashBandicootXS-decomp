@@ -7,7 +7,7 @@ struct probe_pos {
 };
 
 extern s32 sub_8008278(void *posQ8, s32 kind, void *rec);
-extern u8 sub_8026628(void *player, s32 mode, void *posInt, s32 span, void *outY);
+extern u8 ProbeTerrain(void *player, s32 mode, void *posInt, s32 span, void *outY);
 extern void *gLevelLayers;
 
 /* A physics/collision "step probe": makes a working copy of `self`'s
@@ -15,7 +15,7 @@ extern void *gLevelLayers;
  * (still unexamined - some kind of movement/gravity step, taking the
  * position pointer and `arg1` alongside it), converts the result from
  * Q8 fixed-point to plain integers, resets `self+0x69` (an attempt
- * counter) to 0, then probes the position via `sub_8026628` (also
+ * counter) to 0, then probes the position via `ProbeTerrain` (also
  * still unexamined - takes `gLevelLayers`, `arg1`, the working
  * integer position, `arg2` - `*(u8 *)(arg2+4)` - and a pointer to
  * `self`'s original Q8 `y`).
@@ -68,7 +68,7 @@ s32 sub_8009BE0(struct box_part *self, s32 mode, struct part_box *quad)
     f.y >>= 8;
     tries = &self->probeTries;
     *tries = 0;
-    hit = sub_8026628(gLevelLayers, mode, &f, span, &f.origY);
+    hit = ProbeTerrain(gLevelLayers, mode, &f, span, &f.origY);
     if (hit) {
         self->y = f.origY;
         return 1;
@@ -84,7 +84,7 @@ s32 sub_8009BE0(struct box_part *self, s32 mode, struct part_box *quad)
         do {
             (*t2)++;
             pp->y += 8;
-            if (sub_8026628(gLevelLayers, mode, &f, span, &f.origY)) {
+            if (ProbeTerrain(gLevelLayers, mode, &f, span, &f.origY)) {
                 ((struct probe_world *)gLevelLayers)->probeFlag = saved;
                 return 0;
             }

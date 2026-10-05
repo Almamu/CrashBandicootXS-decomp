@@ -9,7 +9,7 @@
  * (+0x0A) and registers it with the gUnknown_030012EC manager, unless
  * the level's "already collected" bit for it is set:
  *
- * - SpawnCrystal/SpawnCrateGem/sub_801EBF0 test bits 0/1/2 of the byte
+ * - SpawnCrystal/SpawnCrateGem/SpawnGemPathGem test bits 0/1/2 of the byte
  *   GetCurrentLevelFlags(gLevelState) points at; SpawnCrateGem also spawns a
  *   second (0x2B) effect through SpawnEffectPart.
  * - SpawnRedGem/SpawnGreenGem/SpawnYellowGem first ask GetBossIndex whether
@@ -91,7 +91,7 @@ void SpawnCrateGem(u32 a0, u16 a1, u16 a2, u16 a3)
     }
 }
 
-void sub_801EBF0(u32 a0, u16 a1, u16 a2, u16 a3)
+void SpawnGemPathGem(u32 a0, u16 a1, u16 a2, u16 a3)
 {
     if ((*GetCurrentLevelFlags(gLevelState) & 4) == 0)
     {

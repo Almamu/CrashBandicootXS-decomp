@@ -11,12 +11,12 @@
 extern void ConstructAnimTableState();
 extern void PolarIsTouchingPlayer();
 extern void JetpackIsTouchingPlayer();
-extern void sub_802A674();
-extern void sub_802A688();
+extern void JetpackIsPauseLocked();
+extern void PolarIsPauseLocked();
 extern void JetpackReloadPlayerTiles();
 extern void PolarReloadPlayerTiles();
-extern void sub_802A6C4();
-extern void sub_802A6D8();
+extern void JetpackReachCourseEnd();
+extern void PolarReachCourseEnd();
 extern void SpawnActor();
 extern void UpdateYeti();
 extern void UpdateYetiBg2();
@@ -180,9 +180,9 @@ const struct category_vtable gActorCategoryVtables[3] = {
         (void (*)(void))0xffffffef,
         (void (*)(void))0xffffffd1,
         PolarIsTouchingPlayer,
-        sub_802A6D8,
+        PolarReachCourseEnd,
         PolarReloadPlayerTiles,
-        sub_802A688,
+        PolarIsPauseLocked,
     } },
     /* 1 */ { {
         CreateJetpackPlayer,
@@ -195,9 +195,9 @@ const struct category_vtable gActorCategoryVtables[3] = {
         (void (*)(void))0xa9,
         (void (*)(void))0x1c,
         JetpackIsTouchingPlayer,
-        sub_802A6C4,
+        JetpackReachCourseEnd,
         JetpackReloadPlayerTiles,
-        sub_802A674,
+        JetpackIsPauseLocked,
     } },
     /* 2 */ { {
         CreateJetpackPlayer,
@@ -210,8 +210,8 @@ const struct category_vtable gActorCategoryVtables[3] = {
         (void (*)(void))0xa9,
         (void (*)(void))0x1c,
         JetpackIsTouchingPlayer,
-        sub_802A6C4,
+        JetpackReachCourseEnd,
         JetpackReloadPlayerTiles,
-        sub_802A674,
+        JetpackIsPauseLocked,
     } },
 };

@@ -1,14 +1,14 @@
 #include "core.h"
 
 /* BG2 affine reference-point (REG_BG2X/REG_BG2Y) target fields for this
- * scroll/zoom effect subsystem - written by sub_8029D8C (still raw),
- * read by sub_8029E50 (still raw). */
-extern s32 gUnknown_030013D4;
+ * scroll/zoom effect subsystem - written by UpdateActorBgScroll (still raw),
+ * read by CommitActorBgScroll (still raw). */
+extern s32 gActorBgShake;
 extern s32 gUnknown_030013D8;
 
-void sub_8029E28(s32 arg0)
+void ShakeActorBg(s32 arg0)
 {
-    gUnknown_030013D4 = arg0;
+    gActorBgShake = arg0;
 }
 
 void sub_8029E34(s32 arg0)

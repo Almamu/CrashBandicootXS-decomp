@@ -9,7 +9,7 @@
 extern u8 gActorVtable[];
 
 /* Trivial getter: `self+0x2c` (the constructor's one-shot byte flag). */
-u8 sub_802AA4C(void *selfArg)
+u8 IsActorVisible(void *selfArg)
 {
     return *((u8 *)selfArg + 0x2c);
 }

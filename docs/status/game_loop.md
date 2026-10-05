@@ -27,7 +27,7 @@ system from "core" system startup/init code.
   the on-screen counter widget, then runs `UpdateGameFrame` forever) -
   and `GetUiText`, the UI string lookup in the current language
 - `src/system/game_loop2.c`: `AddBrokenCrate`, `PressSwitchCrate`, `GetBonusPlatform`,
-  `sub_8023110`, `SetMaskAssistDeaths`, `sub_8023120`, `sub_8023128`,
+  `SetCrateAssistDeaths`, `SetMaskAssistDeaths`, `sub_8023120`, `GetCrateAssistDeaths`,
   `GetMaskAssistDeaths`, `sub_8023138`, `AddPendingSwitchCrates`, `sub_802314C`,
   `sub_8023158`, `ClearPowers`, `GiveTornadoSpin`, `GiveSuperBodySlam`,
   `GiveTurboRun`, `GiveDoubleJump`, `HasTornadoSpin`, `HasSuperBodySlam`,
@@ -75,15 +75,15 @@ system from "core" system startup/init code.
   `nullsub_4`, `GetTerrainType` (plain C, built with old_agbcc - see
   [game-loop-old-agbcc.md](../matching/game-loop-old-agbcc.md))
 - `src/system/game_loop5.c` (GitHub issue #40): `GetCollisionCell`,
-  `SetCollisionSource`, `sub_8025554`, `sub_8025588`, `sub_80255A8`,
-  `sub_80255C4` - the terrain tile-record decode cache's constructor,
+  `SetCollisionSource`, `SetBitmapBit`, `ClearBitmapBit`, `ClearBitmap`,
+  `InitBitmap` - the terrain tile-record decode cache's constructor,
   a raw-cell-lookup variant, a floor-div-by-32 bitmap set/clear pair,
   and a `CpuSet`-based palette-bank zero-fill wrapper pair
 - `src/system/game_loop10.c` (GitHub issue #37 - numbered `10` rather
   than `6` since issue #12's parallel PR independently claimed
   `game_loop6.c`/`game_loop7.c` first): `SetGemPlatform`,
   `SetBonusPlatform`, `SetCrateGemPos`, `RequestGemPath`, `RequestBonusRound`,
-  `RestoreCheckpoint`, `SetCheckpoint`, `EndGemPath`, `sub_802364C`,
+  `RestoreCheckpoint`, `SetCheckpoint`, `EndGemPath`, `PlayNewGameCutscene`,
   `PlayIntroCutscene`, `ShowCompanyLogos`, `PlayBootCutscene`, `nullsub_24`,
   `UnpackSaveData`, `PackSaveData` - camera-position setters,
   checkpoint/level-transition snapshot helpers, the `PlayCutscene`
@@ -156,7 +156,7 @@ system from "core" system startup/init code.
   wrapper, an empty stub, and the medal-table per-level tally
 - `src/system/game_loop18.c` (GitHub issue #38): `IsInGemPathRoom`,
   `IsInBonusRoom`, `LevelHasYellowGemEntity`, `LevelHasBlueGemEntity`, `LevelHasGreenGemEntity`,
-  `LevelHasRedGemEntity`, `sub_8024458`, `CountRoomCrates`, `PlayRoomMusic`,
+  `LevelHasRedGemEntity`, `LevelHasGemPathGemEntity`, `CountRoomCrates`, `PlayRoomMusic`,
   `NextRoom`, `EnterGemPathRoom`, `EnterBonusRoom`, `SelectRoom` -
   medal-table entry/item-list field accessors, the sound-cue resolver,
   and the `LevelHasEntityType` constant wrappers (`LevelHasEntityType` itself is left
@@ -296,17 +296,17 @@ system from "core" system startup/init code.
   digit-cascade rewrites for `TickLevelClock`'s front half and `else`
   branch). Real bytes formerly in `asm/code_3_2_17_22ea8.s` (now
   removed, folded into `src/system/game_loop2.o`).
-- **`sub_8026628`** (`src/system/game_loop43.c`, new file - dedicated
+- **`ProbeTerrain`** (`src/system/game_loop43.c`, new file - dedicated
   deep investigation) - independently flagged "still unexamined" from
   two other closed call sites this session (`sub_8009BE0`'s physics/
   collision step-probe and `PlayerHasRoomForAnim`'s input-action-check gate) and
   sketched in `docs/rom_map.md` as an umbrella dispatcher unifying
-  `sub_8026AE8`/`sub_8026A18` under one API. A small (148 B) 4-arm
+  `ProbeTerrainX`/`ProbeTerrainY` under one API. A small (148 B) 4-arm
   `switch` on `mode`, matched on the first isolated-compile attempt
   with no register pins needed - see
   [docs/matching/issue-9-10-41-0x08026628-game-loop.md](../matching/issue-9-10-41-0x08026628-game-loop.md).
-- **`sub_8026A18`**/**`sub_8026AE8`** (`src/system/game_loop46.c`) -
-  `sub_8026628`'s Y-axis (floor/ceiling) and X-axis (wall) tile-scan
+- **`ProbeTerrainY`**/**`ProbeTerrainX`** (`src/system/game_loop46.c`) -
+  `ProbeTerrain`'s Y-axis (floor/ceiling) and X-axis (wall) tile-scan
   resolvers, 208/216 B. Plain C, built with old_agbcc - see [game-loop-old-agbcc.md](../matching/game-loop-old-agbcc.md) and
   [docs/matching/issue-9-10-41-0x08026628-game-loop.md](../matching/issue-9-10-41-0x08026628-game-loop.md).
 - **`DrawBgLayerRow`/`RedrawBgLayer`/`ResetBgLayer`/`LoadBgLayerTiles`/`LoadBgLayer`/`GetBgLayerScreenIndex`/`sub_802612C`/`sub_802613C`/`SetBgLayerScreenBase`/`SetBgLayerPriority`/`SetBgLayerColors256`/`GetBgLayerCharBase`/`SetBgLayerCharBase`/`WriteBgLayerOffsetRegs`/`WriteBgLayerCntReg`/`DestroyBgLayer`/`DrawPooledBgLayerColumn`/`ClampPooledBgLayerScrollStep`/`ReleasePooledBgLayerColumn`/`ReleasePooledBgLayerRow`/`ClipPooledBgLayerColumns`/`ClipPooledBgLayerRows`/`DrawPooledBgLayerRow`/`ResetPooledBgLayer`/`LoadPooledBgLayerTiles`/`nullsub_26`**
@@ -340,7 +340,7 @@ system from "core" system startup/init code.
   scroll clamp (`SetLevelScroll`), per-layer method-table passes, and two
   identical predicates. All plain C; only `SetLevelScroll` needed separate
   per-axis temps. `asm/code_3_2_17_266bc.s` removed.
-- **`sub_8026BC0`** (`src/system/game_loop44.c`, new file - dedicated
+- **`GetTerrainFlagsAt`** (`src/system/game_loop44.c`, new file - dedicated
   deep investigation) - independently flagged "still raw" by two
   already-documented callers (`CollidePlayer`'s camera-probe tail and a
   jump-table dispatch context in `DrawAffineSpritePieces`'s own write-up). A

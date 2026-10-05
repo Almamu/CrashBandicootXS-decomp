@@ -13,23 +13,23 @@ struct moving_actor {
     s32 velY;                   // 0x58
 };
 
-extern u8 gUnknown_030014A0;
+extern u8 gPolarPlayerInactive;
 extern void *gAudioContext;
 
 extern s32 GetAnimFrameBaseOffset(void *self);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 
-/* Constant getter - returns `gUnknown_030014A0`. */
-u8 sub_802C264(void)
+/* Constant getter - returns `gPolarPlayerInactive`. */
+u8 IsPolarPlayerInactive(void)
 {
-    return gUnknown_030014A0;
+    return gPolarPlayerInactive;
 }
 
 /* Sets `sortKey`, advances `x`/`y` by the velocity pair, and once both
  * exceed `0x1000`: adds the (signed) `animTimer` into the `animTime`
  * accumulator and, once the frame counter reaches the current anim
- * record's `loopThreshold` (the same test `sub_802C0BC` uses), backs
+ * record's `loopThreshold` (the same test `BoostPolarPlayer` uses), backs
  * the accumulator off by `loopThreshold - loopBase` and marks
  * `animDone`. Otherwise (the common per-frame case) just plays a sound
  * cue and fires the vtable's `destroy` method with 3. */
