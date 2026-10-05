@@ -245,8 +245,19 @@ elif phase == 'refs':
         # dir-less src/foo.c (a path that was already wrong): give it the new dir
         s = pat_srcbase.sub(lambda m: 'src/' + full_by_base[m.group(1)] + '.' + m.group(2), s)
         s = pat_base.sub(lambda m: base[m.group(1)] + '.' + m.group(2), s)
+        # a path split by a line break (`src/graphics/` + newline + `foo.c`):
+        # the name was rewritten above as a bare basename, so fix the dir
+        s = pat_split.sub(split_dir, s)
         # merged files can now be listed several times in a row: keep one
         return dedupe(s)
+    new_by_base = {os.path.basename(n): n for n in all_new}
+    pat_split = re.compile(r'src/(\w+)/(' + CONT + r')(\w+)\.c\b')
+    def split_dir(m):
+        d, gap, name = m.groups()
+        n = new_by_base.get(name)
+        if not n or n == d + '/' + name or os.path.dirname(n) == d:
+            return m.group(0)
+        return 'src/%s/%s%s.c' % (os.path.dirname(n), gap, name)
     files = subprocess.run(['git', 'ls-files'], capture_output=True, text=True, check=True).stdout.split()
     skip = {'tools/file_layout_plan.tsv', 'docs/file_layout_plan.md', 'tools/apply_file_layout.py'}
     exts = ('.c', '.h', '.s', '.md', '.txt', '.py', '.mk', '.inc', '.yml', '.json')
