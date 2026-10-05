@@ -1158,7 +1158,7 @@ this doc.
 - **`DestroyEffectCtrl(void *self, s32 flags)`** (20 B) - sets `self+0xc`'s
   table pointer to `gEffectCtrlVtable`, then tail-calls
   `DestroyCtrl(self, flags)` - the exact same "double-set" constructor
-  shape as `DestroyStompedHopPadCtrl`/`sub_8017A78`/`DestroyChaserCtrl`.
+  shape as `DestroyStompedHopPadCtrl`/`DestroyBossCtrl`/`DestroyMegaMixCtrl`.
 - **`InitEffectCtrl(void *self)`** (32 B) - resets via `InitCtrl`,
   re-points `self+0xc` at the same `gEffectCtrlVtable` table, calls
   `nullsub_3(self)`, returns `self` - the exact same "reset, re-point,
@@ -1365,7 +1365,7 @@ idiom already matched elsewhere in this cluster:
   then tail-call `DestroyCtrl`, which unconditionally resets
   `self+0xc` right back to `gCtrlVtable` regardless - the same
   harmless dead-store double-set pattern already established for
-  `DestroyStompedHopPadCtrl`/`sub_8017A78`/`DestroyChaserCtrl`/`DestroyEffectCtrl`.
+  `DestroyStompedHopPadCtrl`/`DestroyBossCtrl`/`DestroyMegaMixCtrl`/`DestroyEffectCtrl`.
 - **`CreateEnemyCtrl(self)`**: the "reset, re-point, hook, return self"
   constructor shape already matched for `CreateStompedHopPadCtrl`/`DestroyStompedHopPadCtrl`/
   `CreateKnockedEnemyCtrl`/`InitEffectCtrl` - resets via `InitCtrl`, re-points

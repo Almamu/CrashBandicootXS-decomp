@@ -10,7 +10,7 @@ extern void *gUpdateOnlyPartList;
 extern void *gDecorationList;
 
 extern struct popup_part *CreateSpriteObj(u16 arg0, u16 arg1, u16 arg2, u16 arg3);
-extern struct enemy_ctrl *CreateChaserCtrl(void *mem);
+extern struct enemy_ctrl *CreateMegaMixCtrl(void *mem);
 extern u8 GetPaletteSlot(void *cache, s32 recordId);
 extern u8 IsBonusRoundDone(void *self);
 extern s32 CreatePlatform(u16 x, u16 y, u16 w, u16 h, s32 id);
@@ -63,12 +63,12 @@ static inline void SetFrameNibble(struct popup_part *part, s32 frame)
     part->frameNibble = frame;
 }
 
-/* Popup-family variant: builds a CreateMovingSprite part on animation table
- * +0x168 at (arg1, arg2) in Q8, takes its frame from the tile cache
+/* Entity type 0x49, Mega-Mix (see actor_part27a.c). Popup-family variant:
+ * builds a CreateMovingSprite part on animation table +0x168 at (arg1, arg2) in Q8, takes its frame from the tile cache
  * record of the first animation, clears the collected bits, attaches a
- * newly allocated CreateChaserCtrl header, then shows it (flags: clear bits 7/2/6, set
+ * newly allocated CreateMegaMixCtrl header, then shows it (flags: clear bits 7/2/6, set
  * bit 4) and registers it with gCollidableList's manager. */
-void sub_8021668(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnMegaMix(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     struct popup_part *part = CreateMovingSprite(arg0, arg1, arg2, arg3);
     struct enemy_ctrl *hdr;
@@ -84,7 +84,7 @@ void sub_8021668(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
         ((struct anim_table_21668 *)part->anim)->records->paletteId));
     part->flipX = 0;
     part->unk_28_5 = 0;
-    hdr = CreateChaserCtrl(OperatorNew(0x24));
+    hdr = CreateMegaMixCtrl(OperatorNew(0x24));
     part->hdr = hdr;
     POPUP_ATTACH(hdr, part);
     part->base.field_0A = 1;
@@ -153,8 +153,12 @@ void SpawnRockPlatform(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     CreatePlatform(arg0, arg1, arg2, arg3, 8);
 }
 
-/* Plain `CreatePlatform` trampoline, id `6`. */
-void sub_80218E8(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+/* Entity type 0x57: plain `CreatePlatform` trampoline, kind `6` - bank 39
+ * anim 6, a green pad that turns red and tips over; its mover
+ * (UpdatePlatformMover kind 6) brings it back 120 frames after the
+ * animation ends. In the Neo Cortex fight the mover is
+ * CreateCortexBossPlatformMover. */
+void SpawnFlipPlatform(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     CreatePlatform(arg0, arg1, arg2, arg3, 6);
 }

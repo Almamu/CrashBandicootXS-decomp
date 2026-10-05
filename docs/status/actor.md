@@ -375,17 +375,17 @@ from "core" graphics.
 - `src/graphics/actor_part27.c` (new file, GitHub issue #22, ROM
   0x08017A44-0x08017AAC - numbered `27` rather than `20` since issue
   #58's parallel PR above independently claimed `actor_part20.c`-
-  `actor_part26.c` first): `sub_8017A44`-`GetCtrlTarget` (9 functions) -
+  `actor_part26.c` first): `IsInputCtrlMotionXPending`-`GetCtrlTarget` (9 functions) -
   the same player/action-object family as `actor_part18.c`/
   `actor_part19.c` (`self+0xc` table pointer, `self+0x10` part
   pointer); see `docs/matching/issue-22-0x08017a44-actor.md`.
 - `src/graphics/actor_part27b.c` (new file, GitHub issue #22, ROM
   0x08017ECC-0x08017FE8, non-adjacent to `actor_part27.c` since the
-  raw `UpdateChaser` sits between them): `SetChaserMotionYFromSet`, `SetChaserMotionXFromSet`,
-  `StartChaserMotionYFromSet`, `StartChaserMotionXFromSet`, `ResetChaserCtrl`, `DestroyChaserCtrl`,
-  `CreateChaserCtrl` - a `self+4` double-pointer-chain record lookup (same
+  raw `UpdateMegaMix` sits between them): `SetMegaMixMotionYFromSet`, `SetMegaMixMotionXFromSet`,
+  `StartMegaMixMotionYFromSet`, `StartMegaMixMotionXFromSet`, `ResetMegaMixCtrl`, `DestroyMegaMixCtrl`,
+  `CreateMegaMixCtrl` - a `self+4` double-pointer-chain record lookup (same
   shape as `StartCtrlTargetMotionYFromSet`/`StartCtrlTargetMotionXFromSet`) feeding the
-  `gStaticData_0816C2D8` per-vector-component trampoline table; see
+  `gMegaMixMotionRecords` per-vector-component trampoline table; see
   `docs/matching/issue-22-0x08017a44-actor.md`.
 - `src/graphics/actor_part27c.c` (new file, GitHub issue #22, ROM
   0x080187FC-0x08018884, non-adjacent to `actor_part27b.c` since the
@@ -393,7 +393,7 @@ from "core" graphics.
   `UpdateStompedHopPad`, `DestroyStompedHopPadCtrl`, `CreateStompedHopPadCtrl`, `UpdateOneShotAnimCtrl`; see
   `docs/matching/issue-22-0x08017a44-actor.md`.
 - `src/graphics/actor_part27a.c` (GitHub issue #22, ROM
-  0x08017AB0-0x08017ECC): `UpdateChaser` - the player-vs-part 3-state
+  0x08017AB0-0x08017ECC): `UpdateMegaMix` - the player-vs-part 3-state
   dispatcher, previously a NAKED transcription, now real C built with
   old_agbcc; see `docs/matching/issue-22-0x08018008-hopper.md`.
 - `src/graphics/actor_part_18008.c` (new file, GitHub issue #22, ROM

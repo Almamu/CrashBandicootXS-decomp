@@ -6368,14 +6368,14 @@ quirk next.
 
 **Left completely raw (21, not attempted this pass):** the rest of the
 chunk - `SpawnShark`/`SpawnMorayEel`/`SpawnElectricEel`/`SpawnSquid`/
-`SpawnJellyfish`/`SpawnLaserBarrier`/`sub_8020138`/`sub_802026C`/`SpawnSaucerLabAssistant`/
-`SpawnPistonCrusher`/`SpawnFlamethrowerLabAssistant`/`sub_8020788`/`sub_80208C4`/`SpawnRat`/
-`SpawnFrog`/`SpawnSeaMine`/`SpawnWoodenCrusher`/`sub_8021280`/`SpawnDingodile`/
+`SpawnJellyfish`/`SpawnLaserBarrier`/`SpawnStationarySpaceEnemy`/`SpawnPatrollingSpaceEnemy`/`SpawnSaucerLabAssistant`/
+`SpawnPistonCrusher`/`SpawnFlamethrowerLabAssistant`/`SpawnHomingSewerEnemy`/`SpawnPatrollingSewerEnemy`/`SpawnRat`/
+`SpawnFrog`/`SpawnSeaMine`/`SpawnWoodenCrusher`/`SpawnRoomExit`/`SpawnDingodile`/
 `SpawnTiny`/`SpawnCortexBoss`. `docs/rom_map.md` already has real
 characterization for several of these (`SpawnWoodenCrusher` as the 15-slot
 table's richer "two-line text popup" slot 0; `SpawnFlamethrowerLabAssistant`/
-`sub_8020788` as more instances of that same popup-spawner shape;
-`sub_8021280` as a confirmed bonus/reward-object spawner distinct from
+`SpawnHomingSewerEnemy` as more instances of that same popup-spawner shape;
+`SpawnRoomExit` as a confirmed bonus/reward-object spawner distinct from
 the twin family) but none were carried through to C this pass - left
 untouched in `asm/code_3_2_17_14674.s` rather than force a low-
 confidence match. Verified via a full clean `make compare` (`La suma

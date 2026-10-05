@@ -21,7 +21,7 @@ The same C++-style object family as `actor_part_17524.c` and
 `self+0xc`, gcc 2.x `{s16 this-adjust, pad, fn}` method entries called
 through the `_call_via_r2`/`AD84`/`AD88` call-via-register trampolines.
 Every class has a constructor (base constructor `InitCtrl`,
-`sub_8017A8C` or `CreatePlatformMover`, then its own table pointer, returns
+`CreateBossCtrl` or `CreatePlatformMover`, then its own table pointer, returns
 `self`) and a destructor (table pointer, then the base destructor).
 
 The objects drive a "part": an on-screen object built by `CreateMovingSprite`
@@ -33,15 +33,15 @@ animation tag `+0x2d`, frame `+0x30`, "animation finished" `+0x38`,
 controller `+0x44`.
 
 - `CreateOneShotAnimCtrl`/`DestroyOneShotAnimCtrl` (`gOneShotAnimCtrlVtable`),
-  `sub_8018948`/`sub_8018960` (`gStaticData_087E44FC`),
+  `CreateUnusedOneShotAnimCtrl`/`DestroyUnusedOneShotAnimCtrl` (`gUnusedOneShotAnimCtrlVtable`),
   `CreateCortexBossGemCtrl`/`DestroyCortexBossGemCtrl` (`gCortexBossGemVtable`),
   `CreateCortexBossPlatformMover`/`DestroyCortexBossPlatformMover` (`gCortexBossPlatformMoverVtable`),
   `CreateCortexShotCtrl`/`DestroyCortexShotCtrl` (`gCortexShotVtable`),
   `CreateTiny`/`DestroyTiny` (`gTinyVtable`, frees/allocates a
   257-entry `i*i >> 8` squares table at `+0x48`): constructor/destructor
-  pairs. `sub_8018948` has no caller anywhere (no `bl`, no Thumb pointer in
+  pairs. `CreateUnusedOneShotAnimCtrl` has no caller anywhere (no `bl`, no Thumb pointer in
   the ROM) - **UNUSED**, matched anyway.
-- `sub_80188FC`: once the part's animation finishes, the inlined "mark
+- `UpdateUnusedOneShotAnimCtrl`: once the part's animation finishes, the inlined "mark
   gone" sequence (`MarkEntityGone`'s flags bit 0 + `gEntityFlags+0x108`
   bitmap bit).
 - `StartTinyHop`: mirror the part towards `self+0x30`, reset two counters
@@ -60,7 +60,7 @@ controller `+0x44`.
   (`target - delta*remaining/steps`), and the state setter bounces it
   across the level; the level config's `+0x10` index picks the height
   pattern and the per-config timings in
-  `gStaticData_0816C358`/`35C`/`35F`/`362`.
+  `gCortexTargetHopSteps`/`35C`/`35F`/`362`.
 - `UpdateCortexShot`: box-overlap hit test (`GetSpriteBodyBox`/`GetSpriteAttackBox`/
   `GetSpriteHitbox` boxes, `AabbOverlaps` overlap) of a part against the
   player (fires the player's `+0x68` method with code 9 unless it's busy)
@@ -116,7 +116,7 @@ Fixes, all plain C plus pins/barriers unless noted:
   `zero` local itself is still needed.
 - *Removed under old_agbcc* as well: the `SetTag` r0 pin/barrier, the
   `AndFlags`/`OrFlags` barriers (the inline helper's parameter is
-  enough), the pins and barriers in `sub_80188FC`, `StartTinyHop`,
+  enough), the pins and barriers in `UpdateUnusedOneShotAnimCtrl`, `StartTinyHop`,
   `SpawnCortexCannon`, `SpawnCortexBossGem`, `SetCortexTargetState` and `UpdateCortexBossGem`, the
   barriers in `UpdateCortexTarget`/`FireCortexShot`, `UpdateCortexTarget`'s r8 pin and
   `UpdateCortexShot`'s r8 pin on `part`.

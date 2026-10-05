@@ -292,7 +292,7 @@ and returns this value unmodified.
 Not attempted as real C. Beyond the ~650-instruction size (already
 past this project's demonstrated C-reconstruction ceiling for
 `game_loop`-neighborhood jump-table functions - `UpdateGameFrame`,
-`UpdateChaser`), the state 1/6 <-> state 5 shared-tail quirk documented
+`UpdateMegaMix`), the state 1/6 <-> state 5 shared-tail quirk documented
 above is a *cross-jump-table-target* code-sharing decision, not the
 *within-one-switch* `goto`-fallthrough shape this project's toolbox is
 built to reproduce - forcing it from plain C would mean fighting the

@@ -118,19 +118,19 @@ extern void UpdateInputCtrl();
 extern void InputCtrlHandleEvent();
 extern void AttachInputCtrl();
 extern void DestroyInputCtrl();
-extern void sub_8017A70();
-extern void sub_8017A78();
-extern void UpdateChaser();
-extern void StartChaserMotionYFromSet();
-extern void StartChaserMotionXFromSet();
-extern void DestroyChaserCtrl();
+extern void BossCtrlHandleEvent();
+extern void DestroyBossCtrl();
+extern void UpdateMegaMix();
+extern void StartMegaMixMotionYFromSet();
+extern void StartMegaMixMotionXFromSet();
+extern void DestroyMegaMixCtrl();
 extern void UpdateTiny();
 extern void UpdateStompedHopPad();
 extern void DestroyStompedHopPadCtrl();
 extern void UpdateOneShotAnimCtrl();
 extern void DestroyOneShotAnimCtrl();
-extern void sub_80188FC();
-extern void sub_8018960();
+extern void UpdateUnusedOneShotAnimCtrl();
+extern void DestroyUnusedOneShotAnimCtrl();
 extern void DestroyTiny();
 extern void UpdateCortexBoss();
 extern void UpdateCortexTarget();
@@ -646,38 +646,41 @@ const struct vtable_slot gInputCtrlVtable[13] = {
     VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
 };
 
-/* Used by actor_part27.c. */
-const struct vtable_slot gStaticData_087E435C[13] = {
+/* Used by actor_part27.c. The bosses' controller base class: Mega-Mix,
+ * Tiny, the Neo Cortex fight's controller, Dingodile and his shield and
+ * rocket/stalactite derive from it and keep its event slot
+ * (BossCtrlHandleEvent). */
+const struct vtable_slot gBossCtrlVtable[13] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(UpdateCtrl),
-    VTABLE_SLOT(sub_8017A70),
+    VTABLE_SLOT(BossCtrlHandleEvent),
     VTABLE_SLOT(AttachCtrl),
     VTABLE_SLOT(SetCtrlMode),
     VTABLE_SLOT(StartCtrlTargetMotionX),
     VTABLE_SLOT(StartCtrlTargetMotionY),
     VTABLE_SLOT(SetCtrlTargetMotionX),
     VTABLE_SLOT(SetCtrlTargetMotionY),
-    VTABLE_SLOT(sub_8017A78),
+    VTABLE_SLOT(DestroyBossCtrl),
     VTABLE_SLOT(SetCtrlTargetAnim),
     VTABLE_SLOT(StartCtrlTargetMotionXFromSet),
     VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
 };
 
 /* Used by actor_part27b.c. */
-const struct vtable_slot gChaserCtrlVtable[13] = {
+const struct vtable_slot gMegaMixCtrlVtable[13] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(UpdateChaser),
-    VTABLE_SLOT(sub_8017A70),
+    VTABLE_SLOT(UpdateMegaMix),
+    VTABLE_SLOT(BossCtrlHandleEvent),
     VTABLE_SLOT(AttachCtrl),
     VTABLE_SLOT(SetCtrlMode),
     VTABLE_SLOT(StartCtrlTargetMotionX),
     VTABLE_SLOT(StartCtrlTargetMotionY),
     VTABLE_SLOT(SetCtrlTargetMotionX),
     VTABLE_SLOT(SetCtrlTargetMotionY),
-    VTABLE_SLOT(DestroyChaserCtrl),
+    VTABLE_SLOT(DestroyMegaMixCtrl),
     VTABLE_SLOT(SetCtrlTargetAnim),
-    VTABLE_SLOT(StartChaserMotionXFromSet),
-    VTABLE_SLOT(StartChaserMotionYFromSet),
+    VTABLE_SLOT(StartMegaMixMotionXFromSet),
+    VTABLE_SLOT(StartMegaMixMotionYFromSet),
 };
 
 /* Used by actor_part27c.c. */
@@ -714,10 +717,10 @@ const struct vtable_slot gOneShotAnimCtrlVtable[13] = {
     VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
 };
 
-/* Used by actor_part_188d0.c (sub_8018948, sub_8018960). */
-const struct vtable_slot gStaticData_087E44FC[13] = {
+/* Used by actor_part_188d0.c (CreateUnusedOneShotAnimCtrl, DestroyUnusedOneShotAnimCtrl). */
+const struct vtable_slot gUnusedOneShotAnimCtrlVtable[13] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_80188FC),
+    VTABLE_SLOT(UpdateUnusedOneShotAnimCtrl),
     VTABLE_SLOT(CtrlHandleEvent),
     VTABLE_SLOT(AttachCtrl),
     VTABLE_SLOT(SetCtrlMode),
@@ -725,7 +728,7 @@ const struct vtable_slot gStaticData_087E44FC[13] = {
     VTABLE_SLOT(StartCtrlTargetMotionY),
     VTABLE_SLOT(SetCtrlTargetMotionX),
     VTABLE_SLOT(SetCtrlTargetMotionY),
-    VTABLE_SLOT(sub_8018960),
+    VTABLE_SLOT(DestroyUnusedOneShotAnimCtrl),
     VTABLE_SLOT(SetCtrlTargetAnim),
     VTABLE_SLOT(StartCtrlTargetMotionXFromSet),
     VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
@@ -736,7 +739,7 @@ const struct vtable_slot gStaticData_087E44FC[13] = {
 const struct vtable_slot gTinyVtable[13] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(UpdateTiny),
-    VTABLE_SLOT(sub_8017A70),
+    VTABLE_SLOT(BossCtrlHandleEvent),
     VTABLE_SLOT(AttachCtrl),
     VTABLE_SLOT(SetCtrlMode),
     VTABLE_SLOT(StartCtrlTargetMotionX),
@@ -838,7 +841,7 @@ const struct vtable_slot gCortexCannonVtable[13] = {
 const struct vtable_slot gCortexBossVtable[13] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(UpdateCortexBoss),
-    VTABLE_SLOT(sub_8017A70),
+    VTABLE_SLOT(BossCtrlHandleEvent),
     VTABLE_SLOT(AttachCtrl),
     VTABLE_SLOT(SetCtrlMode),
     VTABLE_SLOT(StartCtrlTargetMotionX),
@@ -872,7 +875,7 @@ const struct vtable_slot gDingodileSharkVtable[13] = {
 const struct vtable_slot gDingodileProjectileVtable[13] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(UpdateDingodileProjectile),
-    VTABLE_SLOT(sub_8017A70),
+    VTABLE_SLOT(BossCtrlHandleEvent),
     VTABLE_SLOT(AttachCtrl),
     VTABLE_SLOT(SetCtrlMode),
     VTABLE_SLOT(StartCtrlTargetMotionX),
@@ -890,7 +893,7 @@ const struct vtable_slot gDingodileProjectileVtable[13] = {
 const struct vtable_slot gDingodileShieldVtable[13] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(UpdateDingodileShield),
-    VTABLE_SLOT(sub_8017A70),
+    VTABLE_SLOT(BossCtrlHandleEvent),
     VTABLE_SLOT(AttachCtrl),
     VTABLE_SLOT(SetCtrlMode),
     VTABLE_SLOT(StartCtrlTargetMotionX),
@@ -908,7 +911,7 @@ const struct vtable_slot gDingodileShieldVtable[13] = {
 const struct vtable_slot gDingodileVtable[13] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(UpdateDingodile),
-    VTABLE_SLOT(sub_8017A70),
+    VTABLE_SLOT(BossCtrlHandleEvent),
     VTABLE_SLOT(AttachCtrl),
     VTABLE_SLOT(SetCtrlMode),
     VTABLE_SLOT(StartCtrlTargetMotionX),

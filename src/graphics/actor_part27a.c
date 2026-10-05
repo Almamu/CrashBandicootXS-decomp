@@ -1,9 +1,15 @@
 #include "core.h"
 
-/* UpdateChaser: the update of the chaser that entity type 0x49 spawns
- * (sub_8021668, sprite bank 30: a running, grabbing character; only
- * room 37 places one, at its left end among 34 nitro and 21 TNT
- * crates). State 0 waits while the player is dead, state 1 runs after
+/* UpdateMegaMix: the update of Mega-Mix, the boss that entity type 0x49
+ * spawns (SpawnMegaMix, sprite bank 30). Only room 37 places one, at its
+ * left end among 34 nitro and 21 TNT crates; room 37 is the only room of
+ * level 24, the last of the five one-room boss levels (rooms 37-40, each
+ * placing a single boss spawner: Mega-Mix, Dingodile, Tiny, Neo Cortex),
+ * and "mega-mix" is the one boss name of the level-name list that none of
+ * the others take. Bank 30 renders as a running fusion of the bosses
+ * (Dingodile's tail, Tiny's orange body, N. Gin's helmet), and the game's
+ * ending has Mega-Mix chase Crash down the space station's hallway, as
+ * this class does in a space-themed room. State 0 waits while the player is dead, state 1 runs after
  * the player, turning to face him and blowing up or breaking every
  * crate it reaches, and within range state 2 grabs him (player event 1
  * on frame 8 of anim 1).
@@ -28,7 +34,7 @@
  * immediately, matching docs/rom_map.md's existing read):
  *
  * - Prelude (every state): if `self+0x1c` (a signed timestamp/flag
- *   word) is the sentinel `-1`, fires `SetChaserMotionXFromSet(self, other, 1)`
+ *   word) is the sentinel `-1`, fires `SetMegaMixMotionXFromSet(self, other, 1)`
  *   and resets it to `0`.
  * - **State 0**: bails if the player's `+0x104` busy gate is set;
  *   otherwise falls into the same "activate/deactivate table entry 3"
@@ -41,12 +47,12 @@
  *   `self+0x20`'s latch and re-stamping `self+0x1c` from the tick
  *   counter `gRoomFrameCount` on a transition), a timeout check
  *   (`gRoomFrameCount - self+0x1c > 0x3c` ticks re-fires
- *   `SetChaserMotionXFromSet` with a mode selected by `other+0x28` bit 4 and
+ *   `SetMegaMixMotionXFromSet` with a mode selected by `other+0x28` bit 4 and
  *   `self+0x20`), then a screen-relative "reset entry 3's flags"
  *   double gate (X `< `/`>` viewport, mirroring `other+0x28` bits
  *   `0x10`/`0x11`) and finally an in-bounds check (`abs(dx) <=
  *   0x27FF && abs(dy) <= 0x31FF` in the player/other Q8 delta) that
- *   fires `SetChaserMotionXFromSet(self, other, 0)` plus two more trampoline
+ *   fires `SetMegaMixMotionXFromSet(self, other, 0)` plus two more trampoline
  *   calls, or - out of bounds - falls into a "spawn + scan" cluster:
  *   builds an AABB via `GetSpriteHitbox(&box, other)`, unpacks it into
  *   `CollidePartList(gCollidableList, box.x, box.y, box.w, box.h, 0,
@@ -65,7 +71,7 @@
  *   exits): gated on `other+0x38` (state-2-only) and the player's
  *   `+0x104` busy bit, either fires the `0x58`-indexed trampoline with
  *   mode 3 then the `0x50`/`0x20` pair with modes 0/1 (the "activate"
- *   shape, also `SetChaserMotionXFromSet(self, other, 1)` in place of the `0x58`
+ *   shape, also `SetMegaMixMotionXFromSet(self, other, 1)` in place of the `0x58`
  *   call when the busy bit was never set), or - only reachable from
  *   state 2's busy-bit-set path - the `0x50`/`0x20`/`0x58` trio with
  *   modes 2/0/0 (the "deactivate" shape).
@@ -217,20 +223,20 @@ extern u32 gRoomFrameCount;
 extern struct ab_player *gPlayer;
 extern void *gCollidableList;
 extern struct ab_list *gCrateList;
-extern void SetChaserMotionXFromSet(void *self, void *part, s32 index);
+extern void SetMegaMixMotionXFromSet(void *self, void *part, s32 index);
 extern struct ab_box GetSpriteHitbox(void *obj);
 extern void CollidePartList(void *manager, struct ab_box box, s32 unused, void *compareViewport);
 extern void ExplodeCrate(struct ab_part *p, s32 arg);
 extern u8 IsCrateKindBreakable(struct ab_part *p, s32 kind);
 extern void BreakCrate(struct ab_part *p, s32 arg);
 
-void UpdateChaser(struct ab_self *self, struct ab_part *other)
+void UpdateMegaMix(struct ab_self *self, struct ab_part *other)
 {
     struct ab_box box;
 
     if (self->stamp == -1)
     {
-        SetChaserMotionXFromSet(self, other, 1);
+        SetMegaMixMotionXFromSet(self, other, 1);
         self->stamp = 0;
     }
 
@@ -275,12 +281,12 @@ void UpdateChaser(struct ab_self *self, struct ab_part *other)
             if ((s8)(other->flags28 << 3) >= 0)
             {
                 if (self->latch != 0)
-                    SetChaserMotionXFromSet(self, other, 1);
+                    SetMegaMixMotionXFromSet(self, other, 1);
                 else
-                    SetChaserMotionXFromSet(self, other, 2);
+                    SetMegaMixMotionXFromSet(self, other, 2);
             }
             else
-                SetChaserMotionXFromSet(self, other, 3);
+                SetMegaMixMotionXFromSet(self, other, 3);
         }
         if (gPlayer->x < other->x)
         {
@@ -316,7 +322,7 @@ void UpdateChaser(struct ab_self *self, struct ab_part *other)
 
             if (Abs(pl->x - other->x) <= 0x27FF && Abs(pl->y - other->y) <= 0x31FF)
             {
-                SetChaserMotionXFromSet(self, other, 0);
+                SetMegaMixMotionXFromSet(self, other, 0);
                 VCALL1(self, m20, 2);
                 VCALL2(self, m50, other, 1);
                 return;
@@ -389,7 +395,7 @@ void UpdateChaser(struct ab_self *self, struct ab_part *other)
             else
             {
             plain:
-                SetChaserMotionXFromSet(self, other, 1);
+                SetMegaMixMotionXFromSet(self, other, 1);
             }
             VCALL2(self, m50, other, 0);
             VCALL1(self, m20, 1);

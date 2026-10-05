@@ -266,11 +266,10 @@ void nullsub_22(void)
 extern void *SpawnStartMarker(u32 arg0, u16 arg1, u16 arg2, u16 arg3);
 extern struct actor *gPlayer;
 
-/* Plain tail-call trampoline to `SpawnStartMarker` - still raw in this same
- * file (top of asm/code_3_2_17_1e990.s, out of this chunk's scope), a
- * position/state-write slot on the hot camera/viewport struct
- * (docs/rom_map.md's "unified ~92-slot table" writeup). */
-void sub_802218C(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+/* Entity type 0x04: the player start of the kind-2 (hover vehicle) room
+ * 16, the only room that places it. Forwards to `SpawnStartMarker`
+ * (type 0x00, the start of the kind-0 rooms). */
+void SpawnHoverStartMarker(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     SpawnStartMarker(arg0, arg1, arg2, arg3);
 }
@@ -285,8 +284,10 @@ void sub_80221A4(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     gPlayer->y = (s32)arg2 << 8;
 }
 
-/* Same trampoline as `sub_802218C` above. */
-void sub_80221BC(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+/* Entity type 0x02: the player start of the kind-1 (underwater) rooms;
+ * every kind-1 room places one and no other room does. Same trampoline
+ * as `SpawnHoverStartMarker` above. */
+void SpawnUnderwaterStartMarker(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     SpawnStartMarker(arg0, arg1, arg2, arg3);
 }

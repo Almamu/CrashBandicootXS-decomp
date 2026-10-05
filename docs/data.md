@@ -25,7 +25,7 @@ the file's `.rodata` at the table's ROM address, between the raw parts of
   `gStaticData_XXXXXXXX`, and so does the frozen `expected/` assembly the
   code report diffs against, so a converted table keeps its label. The
   meaning goes into the type and a comment naming the consumer. A new
-  label is fine where a table had none (`gStaticData_0816C2B0`), and a
+  label is fine where a table had none (`gMegaMixMotionEntries`), and a
   label nothing references can be dropped when a C table spans it (see
   `actor_category_175558.c`).
 - **Types come from the code's headers** when there is one:

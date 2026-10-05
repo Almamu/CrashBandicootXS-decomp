@@ -37,7 +37,12 @@ extern void SetEntitySize(struct spawn_part *part, s32 w, s32 h);
 extern s32 *CreatePlatform(u16 x, u16 y, u16 w, u16 h, s32 id);
 extern void SetCrateGemPos(void *self, s32 *point);
 
-/* Three-way spawner. While the level controller reports nothing pending
+/* Entity type 0x55, the room's exit. Every room but room 16 and the boss
+ * rooms places exactly one. The tag-0x12 zone is collision class 0x12,
+ * the player event that PlayerHandleEvent answers with RequestRoomExit;
+ * the kind-4 platform is bank 39's glowing exit pad.
+ *
+ * Three-way spawner. While the level controller reports nothing pending
  * and the current level's table entry has no guard, spawns a 0x64x0x64
  * CreateEntity part tagged 0x12. Otherwise, unless gPlayer's
  * +0x88 flag is set, hands SetCrateGemPos a point just above-left of a
@@ -48,7 +53,7 @@ extern void SetCrateGemPos(void *self, s32 *point);
  * (graphics_loading_21d80.c). Pinning the four temporaries plus an empty
  * `asm("" : "+r" (x))` - which stops combine folding `x` back into its
  * input before `y` is loaded - reproduces it. */
-void sub_8021280(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnRoomExit(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     if (!IsInGemPath(gLevelState) && !IsInBonusRound(gLevelState)
         && !sub_8023324(gLevelState)

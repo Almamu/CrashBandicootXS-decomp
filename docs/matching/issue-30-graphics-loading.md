@@ -115,7 +115,7 @@ characterized in `docs/rom_map.md`, real bytes now in
 `asm/code_3_2_17_188d0.s` and the new `asm/code_3_2_17_1e644.s`) plus
 `SpawnStartMarker`, `SpawnCrystal`, `SpawnCrateGem`, `SpawnGemPathGem`,
 `SpawnRedGem`, `SpawnGreenGem`, `SpawnYellowGem`, `SpawnLizard`,
-`SpawnVulture`, `SpawnVenusFlytrap`, `sub_801F2BC`, `SpawnBlowgunTribesman`,
+`SpawnVulture`, `SpawnVenusFlytrap`, `SpawnPatrollingJungleEnemy`, `SpawnBlowgunTribesman`,
 `SpawnPenguin`, `SpawnSeal`, `SpawnPolarBear`, `SpawnPufferfish` (real bytes
 now in the new `asm/code_3_2_17_1e990.s`) - not attempted this pass,
 left untouched rather than force a low-confidence match. Two families

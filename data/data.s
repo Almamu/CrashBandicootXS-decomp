@@ -66,13 +66,13 @@ gSfxTable:
 
 @ gStaticData_0816C090..gPlayerCtrlModeLevelAnims: src/data/speed_table_16c090.c
 
-@ gPlayerCtrlStateFuncs..gStaticData_0816C2D0: src/data/player_pmf_16c250.c
+@ gPlayerCtrlStateFuncs..gMegaMixMotionSet: src/data/player_pmf_16c250.c
 
-@ gStaticData_0816C2D8..gStaticData_0816C3F4: src/data/actor_tables_16c2d8.c
+@ gMegaMixMotionRecords..gDingodileStalactiteFallMotion: src/data/actor_tables_16c2d8.c
 
-@ gStaticData_0816C418..gStaticData_0816C458: src/data/entry_set_16c418.c
+@ gDingodileMotionEntries..gPlatformMoverMotionSet: src/data/entry_set_16c418.c
 
-@ gStaticData_0816C460: src/data/velocity_16c460.c
+@ gPlatformMoverMotionRecords: src/data/velocity_16c460.c
 
 @ gMenuSkyBg: src/data/bg_package_16c484.c
 

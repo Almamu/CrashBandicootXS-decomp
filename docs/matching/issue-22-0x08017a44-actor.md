@@ -10,7 +10,7 @@ precedent already set for `actor_part18.o`/`actor_part18b.o` (also
 `graphics`-labeled-but-actor-shaped, see their own `tools/report_units.py`
 entries).
 
-15 of the 25 functions matched; the remaining 6 (`UpdateChaser`,
+15 of the 25 functions matched; the remaining 6 (`UpdateMegaMix`,
 `UpdateTiny`, `SetTinyState`, `PickTinyHopTarget`, `SpawnTinyFallingLeaves`) were left
 raw - out of scope for this pass given their size (one ~500-instruction
 and one ~480-instruction jump-table state machine, plus two
@@ -27,18 +27,18 @@ avoid an add/add filename collision.
 ## Matched
 
 - `src/graphics/actor_part27.c` (new file, ROM 0x08017A44-0x08017AAC):
-  `sub_8017A44`-`GetCtrlTarget` (9 functions) - trivial `self+0x14`/
+  `IsInputCtrlMotionXPending`-`GetCtrlTarget` (9 functions) - trivial `self+0x14`/
   `self+0x17`/`self+0x18` byte/word accessors, plus the
-  `sub_8017A78`/`sub_8017A8C` table-pointer-reset pair (same
-  `gStaticData_087E435C`/`DestroyCtrl`/`InitCtrl` double-set pattern
+  `DestroyBossCtrl`/`CreateBossCtrl` table-pointer-reset pair (same
+  `gBossCtrlVtable`/`DestroyCtrl`/`InitCtrl` double-set pattern
   seen throughout this object family).
 - `src/graphics/actor_part27b.c` (new file, ROM 0x08017ECC-0x08017FE8,
-  non-adjacent to `actor_part27.c` since the raw `UpdateChaser` sits
-  between them): `SetChaserMotionYFromSet`, `SetChaserMotionXFromSet`, `StartChaserMotionYFromSet`,
-  `StartChaserMotionXFromSet`, `ResetChaserCtrl`, `DestroyChaserCtrl`, `CreateChaserCtrl` - a
+  non-adjacent to `actor_part27.c` since the raw `UpdateMegaMix` sits
+  between them): `SetMegaMixMotionYFromSet`, `SetMegaMixMotionXFromSet`, `StartMegaMixMotionYFromSet`,
+  `StartMegaMixMotionXFromSet`, `ResetMegaMixCtrl`, `DestroyMegaMixCtrl`, `CreateMegaMixCtrl` - a
   `self+4` double-pointer-chain record lookup (same shape as
   `StartCtrlTargetMotionYFromSet`/`StartCtrlTargetMotionXFromSet` in `actor_part17.c`) feeding the
-  `gStaticData_0816C2D8` per-vector-component trampoline table, with
+  `gMegaMixMotionRecords` per-vector-component trampoline table, with
   `part+0x28` bit 4/bit 5 mirror-flag X/Z negation exactly like
   `SetCtrlTargetMotionX`/`StartCtrlTargetMotionX`/`SetCtrlTargetMotionY`/`StartCtrlTargetMotionY`.
 - `src/graphics/actor_part27c.c` (new file, ROM 0x080187FC-0x08018884,
@@ -57,7 +57,7 @@ order choice" class of gap documented throughout `docs/matching.md`,
 but every instance here was chased down and fixed rather than parked -
 worth recording since the techniques generalize:
 
-- **`SetChaserMotionYFromSet`/`SetChaserMotionXFromSet`** (record lookup + type-indexed table
+- **`SetMegaMixMotionYFromSet`/`SetMegaMixMotionXFromSet`** (record lookup + type-indexed table
   entry): this compiler naturally puts the intermediate `rec` pointer
   and the final `tableEntry` pointer in *different* registers than the
   ROM's single reused register, and picks operand order for the
@@ -68,13 +68,13 @@ worth recording since the techniques generalize:
   combines (`rec = recOffset + arr`, `tableEntry = typeOffset + base`)
   - a plain C `+` reliably picked the wrong operand order or CSE'd the
     two into one register regardless of source statement order.
-- **`StartChaserMotionYFromSet`/`StartChaserMotionXFromSet`** (same lookup, tail-calling
+- **`StartMegaMixMotionYFromSet`/`StartMegaMixMotionXFromSet`** (same lookup, tail-calling
   `StartCtrlTargetMotionY`/`StartCtrlTargetMotionX`): same fix, but here the ROM reuses a
   *single* register (`r2`) as the accumulator across the whole
   computation (`recOffset` -> `rec` -> `type*12` -> `tableEntry`) with
   `r3` as the transient "current source" - modeled with one
   `register s32 acc asm("r2")` local reused across all four steps.
-- **`ResetChaserCtrl`**: ROM computes `self[0x1c] = -1` via `subs r0, #1`
+- **`ResetMegaMixCtrl`**: ROM computes `self[0x1c] = -1` via `subs r0, #1`
   reusing the `r0 = 0` already sitting in the register from the
   preceding `self[0x20] = 0` store (cheaper than a fresh `movs r0,
   #-1`/`ldr` sequence) - reproduced with a single `register s32 zero
@@ -123,7 +123,7 @@ these, exactly as `docs/workflow.md` step 2/3 warns.
 
 ## Left raw (out of scope this pass)
 
-- **`UpdateChaser`** (`asm/code_3_2_17_17ab0.s`, ROM 0x08017AB0-
+- **`UpdateMegaMix`** (`asm/code_3_2_17_17ab0.s`, ROM 0x08017AB0-
   0x08017ECC) - a ~500-instruction player-vs-camera-viewport state
   dispatcher (branches on `self+8`'s 0-2 state, does AABB/screen-bound
   checks against `gPlayer`, and fires the usual table
@@ -138,7 +138,7 @@ these, exactly as `docs/workflow.md` step 2/3 warns.
   high-register-pressure helpers it calls (`PickTinyHopTarget`, a
   nearest-target scan over `gUnknown_030012EC`'s array using `r8`/
   `sl`/`sb`; `SpawnTinyFallingLeaves`, a spawn-effect constructor also using
-  `r8`/`sb`). Same reasoning as `UpdateChaser` - left raw rather than
+  `r8`/`sb`). Same reasoning as `UpdateMegaMix` - left raw rather than
   force a low-confidence reconstruction of this much control flow in
   one pass.
 

@@ -97,22 +97,22 @@ family. Filed under `src/graphics/` on disk, tracked as its own
   **`SpawnSquid`** (`graphics_loading_1fdec.c`), **`SpawnJellyfish`**-
   **`SpawnWoodenCrusher`** (`graphics_loading_1feec.c`; `SpawnFlamethrowerLabAssistant` closed in
   [last-eleven-naked-retry.md](../matching/last-eleven-naked-retry.md)),
-  **`sub_8021280`**-**`SpawnCortexBoss`** (`graphics_loading_21280.c`) and
-  **`sub_8021668`**-**`SpawnIronCrate`** (`graphics_loading_21668.c`) - the
+  **`SpawnRoomExit`**-**`SpawnCortexBoss`** (`graphics_loading_21280.c`) and
+  **`SpawnMegaMix`**-**`SpawnIronCrate`** (`graphics_loading_21668.c`) - the
   "two-line text popup" spawners (issue #31) and the spawner-table
   entries that follow them. All five files are built with old_agbcc and
   share `include/text_popup.h`. 33 functions were rewritten as plain C with no pins or
   asm; 22 of them were NAKED under agbcc, parked on the "r7 in the
   callee-saved set" gap, which was really a compiler mismatch.
   `SpawnVenusFlytrap` keeps its agbcc-era pinned C (plain C is 5 halfwords
-  off). `sub_8021280` was NAKED until the NAKED retry pass; it needs four
+  off). `SpawnRoomExit` was NAKED until the NAKED retry pass; it needs four
   register pins and an empty `asm` nudge (see
   [naked-retry-mid45.md](../matching/naked-retry-mid45.md)). See
   [issue-31-old-agbcc.md](../matching/issue-31-old-agbcc.md).
 - **`SpawnBodySlamPower`**, **`SpawnTornadoSpinPower`**, **`SpawnDoubleJumpPower`**, **`SpawnTurboRunPower`**,
   **`SpawnStopwatch`**, **`SpawnBlueGem`**, **`sub_80220C4`**, **`SpawnCrateGemMarker`**,
-  **`SpawnWumpa`**, **`nullsub_22`**, **`sub_802218C`**, **`sub_80221A4`**,
-  **`sub_80221BC`**, **`sub_80221D4`**, **`nullsub_23`**, **`DestroyEntitySpawner`**,
+  **`SpawnWumpa`**, **`nullsub_22`**, **`SpawnHoverStartMarker`**, **`sub_80221A4`**,
+  **`SpawnUnderwaterStartMarker`**, **`sub_80221D4`**, **`nullsub_23`**, **`DestroyEntitySpawner`**,
   **`CreateEntitySpawner`**, **`InitLevelState`** (`src/graphics/graphics_loading_21d80.c`)
   - the `gSpriteBankTable` record-indexed OAM-trio spawner family, the
   `SpawnStartMarker` trampolines, the `gPlayer` position writers, the

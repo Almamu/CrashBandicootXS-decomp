@@ -104,7 +104,7 @@ and [graphics_loading.md](./graphics_loading.md).
 - `src/graphics/actor_part_188d0.c` (new file - GitHub issue #23):
   all 25 functions in `CreateOneShotAnimCtrl`-`CreateCortexShotCtrl` as real C -
   method-table ("vtable" at `self+0xc`) constructor/destructor pairs
-  (`sub_8018948` is UNUSED; `CreateCortexBossPlatformMover` base-constructs through
+  (`CreateUnusedOneShotAnimCtrl` is UNUSED; `CreateCortexBossPlatformMover` base-constructs through
   `CreatePlatformMover`), a part-gone bitmap setter, the squares-table
   constructor `CreateTiny`, the two-part effect (state machine
   `UpdateCortexBoss`, child spawners `SpawnCortexCannon`/`SpawnCortexTarget`), the "mover"

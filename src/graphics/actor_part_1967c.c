@@ -13,7 +13,7 @@
  * DestroyDingodileShieldCtrl, update UpdateDingodileShield) and 087E4974 (update UpdateDingodile).
  *
  * The 087E4974 object is a boss-like state machine: UpdateDingodile steers
- * its part along the level (approach tables gStaticData_0816C368/78/90/
+ * its part along the level (approach tables gDingodileStopXLeft/78/90/
  * A0, turning round at either level edge), counts hits the player lands
  * on it, and spawns helper parts through SpawnDingodileShieldOrRocket/SpawnDingodileShark;
  * SetDingodileState is its "enter state N" transition (animation + follow-up
@@ -267,14 +267,14 @@ extern struct level_state *gEntityFlags;
 extern void *gAudioContext;
 extern void *gLevelState;
 extern struct { u8 unk_00[0x10]; struct level_layer *layer; } *gLevelLayers;
-extern u8 gStaticData_0816C358[];
-extern s32 gStaticData_0816C368[];
-extern s32 gStaticData_0816C378[];
-extern s32 gStaticData_0816C390[];
-extern s32 gStaticData_0816C3A0[];
-extern s32 gStaticData_0816C3B8[];
-extern u8 gStaticData_0816C3E8[];
-extern u8 gStaticData_0816C3F4[];
+extern u8 gCortexTargetHopSteps[];
+extern s32 gDingodileStopXLeft[];
+extern s32 gDingodileStopXLeftHurt[];
+extern s32 gDingodileStopXRight[];
+extern s32 gDingodileStopXRightHurt[];
+extern s32 gDingodileMotionRecords[];
+extern u8 gDingodileRocketRiseMotion[];
+extern u8 gDingodileStalactiteFallMotion[];
 extern u8 gCortexTargetVtable[];
 extern u8 gCortexCannonVtable[];
 extern u8 gCortexBossVtable[];
@@ -284,8 +284,8 @@ extern u8 gDingodileShieldVtable[];
 
 extern void DestroyCtrl(void *self, s32 flags);
 extern void InitCtrl(void *self);
-extern void sub_8017A78(void *self, s32 flags);
-extern void sub_8017A8C(void *self);
+extern void DestroyBossCtrl(void *self, s32 flags);
+extern void CreateBossCtrl(void *self);
 extern void DestroyEnemyCtrl(void *self, s32 flags);
 extern void CreateEnemyCtrl(void *self);
 extern u8 HasSuperBodySlam(void *arg0);
@@ -435,7 +435,7 @@ void SetCortexTargetDest(struct obj_4704 *self, s32 *origin, s32 x, s32 y)
     self->y = y;
     self->dx = x - origin[0];
     self->dy = y - origin[1];
-    v = *(self->src->index + gStaticData_0816C358);
+    v = *(self->src->index + gCortexTargetHopSteps);
     self->unk_28 = v;
     self->unk_24 = v;
 }
@@ -494,12 +494,12 @@ void SetCortexBossState(struct obj_476c *self, s32 unused, s32 arg)
 void DestroyCortexBoss(struct vobj *self, s32 flags)
 {
     self->vt = (struct vtable *)gCortexBossVtable;
-    sub_8017A78(self, flags);
+    DestroyBossCtrl(self, flags);
 }
 
 struct vobj *CreateCortexBoss(struct vobj *self)
 {
-    sub_8017A8C(self);
+    CreateBossCtrl(self);
     self->vt = (struct vtable *)gCortexBossVtable;
     return self;
 }
@@ -566,9 +566,9 @@ void UpdateDingodile(struct dingodile_boss *self, struct part *other)
         {
             if (f->facing)
             {
-                s32 *tbl = gStaticData_0816C368;
+                s32 *tbl = gDingodileStopXLeft;
                 if (self->hits > 0)
-                    tbl = gStaticData_0816C378;
+                    tbl = gDingodileStopXLeftHurt;
                 if (x <= tbl[self->step])
                 {
                     Approach(self, other, gPlayer->x - x);
@@ -578,9 +578,9 @@ void UpdateDingodile(struct dingodile_boss *self, struct part *other)
             }
             else
             {
-                s32 *tbl = gStaticData_0816C390;
+                s32 *tbl = gDingodileStopXRight;
                 if (self->hits > 0)
-                    tbl = gStaticData_0816C3A0;
+                    tbl = gDingodileStopXRightHurt;
                 if (x >= tbl[self->step])
                 {
                     Approach(self, other, x - gPlayer->x);
@@ -1083,7 +1083,7 @@ void UpdateDingodileProjectile(struct obj_48a4 *self, struct part *other)
     switch (self->state)
     {
     case 0:
-        VCALL2(self, m30, other, gStaticData_0816C3E8);
+        VCALL2(self, m30, other, gDingodileRocketRiseMotion);
         VCALL1(self, m20, 1);
         break;
     case 1:
@@ -1101,7 +1101,7 @@ void UpdateDingodileProjectile(struct obj_48a4 *self, struct part *other)
         break;
     case 5:
         VCALL2(self, m50, other, 9);
-        VCALL2(self, m30, other, gStaticData_0816C3F4);
+        VCALL2(self, m30, other, gDingodileStalactiteFallMotion);
         VCALL1(self, m20, 3);
         break;
     case 3:
@@ -1142,7 +1142,7 @@ void SpawnDingodileStalactite(struct obj_48a4 *self, u16 x, u16 y)
     SetSpriteAnimDone(p, 0);
     p->kind = 1;
     c = OperatorNew(0x20);
-    sub_8017A8C(c);
+    CreateBossCtrl(c);
     c->vt = (struct vtable *)gDingodileProjectileVtable;
     c->target = self->target;
     VCALL1(c, m20, 5);
@@ -1160,9 +1160,9 @@ void UpdateDingodileShark(struct obj_483c *self, struct part *other)
     case 0:
         if (other->f28.facing)
         {
-            s32 a = -gStaticData_0816C3B8[9];
-            s32 c = -gStaticData_0816C3B8[11];
-            s32 b = gStaticData_0816C3B8[10];
+            s32 a = -gDingodileMotionRecords[9];
+            s32 c = -gDingodileMotionRecords[11];
+            s32 b = gDingodileMotionRecords[10];
             other->unk_60 = a;
             other->unk_48 = a;
             other->unk_4C = b;
@@ -1170,9 +1170,9 @@ void UpdateDingodileShark(struct obj_483c *self, struct part *other)
         }
         else
         {
-            s32 a = gStaticData_0816C3B8[9];
-            s32 b = gStaticData_0816C3B8[10];
-            s32 c = gStaticData_0816C3B8[11];
+            s32 a = gDingodileMotionRecords[9];
+            s32 b = gDingodileMotionRecords[10];
+            s32 c = gDingodileMotionRecords[11];
             other->unk_60 = a;
             other->unk_48 = a;
             other->unk_4C = b;
@@ -1215,14 +1215,14 @@ void DestroyDingodileProjectileCtrl(struct obj_48a4 *self, s32 flags)
 {
     self->vt = (struct vtable *)gDingodileProjectileVtable;
     self->target = NULL;
-    sub_8017A78(self, flags);
+    DestroyBossCtrl(self, flags);
 }
 
 struct obj_48a4 *CreateDingodileProjectileCtrl(void *mem)
 {
     struct obj_48a4 *self = mem;
 
-    sub_8017A8C(self);
+    CreateBossCtrl(self);
     self->vt = (struct vtable *)gDingodileProjectileVtable;
     return self;
 }
@@ -1230,5 +1230,5 @@ struct obj_48a4 *CreateDingodileProjectileCtrl(void *mem)
 void DestroyDingodileShieldCtrl(struct vobj *self, s32 flags)
 {
     self->vt = (struct vtable *)gDingodileShieldVtable;
-    sub_8017A78(self, flags);
+    DestroyBossCtrl(self, flags);
 }

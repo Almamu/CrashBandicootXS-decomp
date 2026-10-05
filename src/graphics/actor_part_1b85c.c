@@ -665,10 +665,10 @@ s32 GetCameraLeadOffset(struct follow_child *self)
 /* Factory for the 0x78-byte sprite (method table gLaunchPadVtable,
  * constructor inlined): places it at (x, y) pixels with record id `id`,
  * registers it with gCollidableList, and starts animation 0 of the
- * table at `**gSpriteBankSet + 0x150`. Called from sub_8021668's
+ * table at `**gSpriteBankSet + 0x150`. Called from SpawnMegaMix's
  * family (graphics_loading_21668.c). The two mask constants are
  * materialized with `mov/neg` asm like graphics_loading_21668.c's
- * sub_8021668, since the compiler otherwise derives them from constants
+ * SpawnMegaMix, since the compiler otherwise derives them from constants
  * already in registers. */
 struct sprite *SpawnLaunchPad(u16 id, u16 x, u16 y)
 {

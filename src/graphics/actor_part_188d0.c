@@ -7,7 +7,7 @@
  *
  * Small method-table ("vtable" at self+0x0C) objects of the same C++-style
  * family as actor_part_17524.c/actor_part27*.c: each class here is a
- * constructor (base InitCtrl/sub_8017A8C/CreatePlatformMover, then its own
+ * constructor (base InitCtrl/CreateBossCtrl/CreatePlatformMover, then its own
  * table pointer) plus a destructor (table pointer, then the base
  * destructor), and a handful of per-frame update methods that drive one
  * "part" - a CreateMovingSprite-built on-screen object (struct gfx_part below)
@@ -32,7 +32,7 @@
  * - SpawnCortexBossGem/UpdateCortexTarget/SetCortexTargetState/FireCortexShot: a "mover" that glides
  *   its part between targets (SetCortexTargetDest sets the target, UpdateCortexTarget
  *   interpolates it), bouncing across the level in a height pattern chosen
- *   by the level config (gStaticData_0816C358-0816C362 per-config timings),
+ *   by the level config (gCortexTargetHopSteps-0816C362 per-config timings),
  *   and spawns hit effects (FireCortexShot).
  * - UpdateCortexShot: hit test of a part against the player and the
  *   gCollidableList list (sub_8007xxx boxes, AabbOverlaps overlap).
@@ -50,7 +50,7 @@
  *
  * UNUSED - no caller anywhere in the ROM (checked the asm/ and expected/
  * sources, every .c file under src/, and every word-aligned Thumb pointer
- * in baserom.gba): sub_8018948 (the gStaticData_087E44FC class's
+ * in baserom.gba): CreateUnusedOneShotAnimCtrl (the gUnusedOneShotAnimCtrlVtable class's
  * constructor). Matched anyway. */
 
 struct gfx_method
@@ -201,20 +201,20 @@ extern struct gfx_list *gCollidableList;
 extern void *gUnknown_030012F4;
 extern struct gfx_level *gLevelLayers;
 extern u8 gOneShotAnimCtrlVtable[];
-extern u8 gStaticData_087E44FC[];
+extern u8 gUnusedOneShotAnimCtrlVtable[];
 extern u8 gTinyVtable[];
 extern u8 gCortexBossGemVtable[];
 extern u8 gCortexBossPlatformMoverVtable[];
 extern u8 gCortexShotVtable[];
-extern u8 gStaticData_0816C35C[];
-extern u8 gStaticData_0816C35F[];
-extern u8 gStaticData_0816C362[];
+extern u8 gCortexTargetChaseSteps[];
+extern u8 gCortexTargetBlinkStartTimes[];
+extern u8 gCortexTargetBlinkStopTimes[];
 
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void DestroyCtrl(void *self, s32 flags);
 extern void InitCtrl(void *self);
-extern void sub_8017A78(void *self, s32 flags);
-extern void *sub_8017A8C(void *self);
+extern void DestroyBossCtrl(void *self, s32 flags);
+extern void *CreateBossCtrl(void *self);
 extern void OperatorDeleteArray(void *ptr);
 extern void *OperatorNewArray(u32 size);
 extern void *OperatorNew(u32 size);
@@ -451,23 +451,27 @@ void DestroyOneShotAnimCtrl(struct gfx_ctrl *self, s32 flags)
     DestroyCtrl(self, flags);
 }
 
-void sub_80188FC(struct gfx_ctrl *self, struct gfx_part *part)
+/* gUnusedOneShotAnimCtrlVtable's class does what gOneShotAnimCtrlVtable's
+ * does (UpdateOneShotAnimCtrl, actor_part27c.c): once the part's animation
+ * is done, mark it gone. Its constructor has no caller, so it is never
+ * instantiated. */
+void UpdateUnusedOneShotAnimCtrl(struct gfx_ctrl *self, struct gfx_part *part)
 {
     if (part->animDone)
         MARK_GONE(part, "r2", "r4", "r2");
 }
 
 /* UNUSED - see the top-of-file comment. */
-void *sub_8018948(struct gfx_ctrl *self)
+void *CreateUnusedOneShotAnimCtrl(struct gfx_ctrl *self)
 {
     InitCtrl(self);
-    self->vtable = (struct gfx_vtable *)gStaticData_087E44FC;
+    self->vtable = (struct gfx_vtable *)gUnusedOneShotAnimCtrlVtable;
     return self;
 }
 
-void sub_8018960(struct gfx_ctrl *self, s32 flags)
+void DestroyUnusedOneShotAnimCtrl(struct gfx_ctrl *self, s32 flags)
 {
-    self->vtable = (struct gfx_vtable *)gStaticData_087E44FC;
+    self->vtable = (struct gfx_vtable *)gUnusedOneShotAnimCtrlVtable;
     DestroyCtrl(self, flags);
 }
 
@@ -507,14 +511,14 @@ void DestroyTiny(struct gfx_squares *self, s32 flags)
     self->vtable = (struct gfx_vtable *)gTinyVtable;
     if (self->squares != NULL)
         OperatorDeleteArray(self->squares);
-    sub_8017A78(self, flags);
+    DestroyBossCtrl(self, flags);
 }
 
 void *CreateTiny(struct gfx_squares *self)
 {
     s32 i;
 
-    sub_8017A8C(self);
+    CreateBossCtrl(self);
     self->vtable = (struct gfx_vtable *)gTinyVtable;
     self->unk_24 = -1;
     self->squares = OperatorNewArray(0x202);
@@ -768,7 +772,7 @@ void UpdateCortexTarget(struct gfx_mover *self, struct gfx_part *partArg)
             FireCortexShot(self, part, 1);
             break;
         }
-        if (self->timer == gStaticData_0816C35F[self->cfg->index])
+        if (self->timer == gCortexTargetBlinkStartTimes[self->cfg->index])
         {
             PlaySfx(gAudioContext, 0x5C, 0x100);
             part->animating = left;
@@ -776,7 +780,7 @@ void UpdateCortexTarget(struct gfx_mover *self, struct gfx_part *partArg)
             *blinking = 1;
             self->blink = left;
         }
-        if (self->timer == gStaticData_0816C362[self->cfg->index])
+        if (self->timer == gCortexTargetBlinkStopTimes[self->cfg->index])
         {
             part->animating = left;
             CALL3(self, method_50, part, 0x10);
@@ -787,7 +791,7 @@ void UpdateCortexTarget(struct gfx_mover *self, struct gfx_part *partArg)
         {
             s32 i = self->cfg->index;
 
-            self->stepsLeft = self->steps = gStaticData_0816C35C[i];
+            self->stepsLeft = self->steps = gCortexTargetChaseSteps[i];
         }
         break;
     }

@@ -22,7 +22,7 @@
  *   +0x0C UpdatePlatformMover per-frame move, +0x4C DestroyPlatformMover destructor,
  *   +0x5C StartPlatformMoverMotionXFromSet / +0x64 StartPlatformMoverMotionYFromSet velocity setters) that
  *   oscillates its owner back and forth over `rangeX`/`rangeY` pixels
- *   using the 12-byte velocity records of gStaticData_0816C460, and drags
+ *   using the 12-byte velocity records of gPlatformMoverMotionRecords, and drags
  *   the player along while it is `active` (MovePlayerWithPlatform). */
 
 struct vec3
@@ -215,17 +215,17 @@ extern void *gUnknown_030012EC;
 extern u8 *gEntityFlags;
 extern u8 ***gSpriteBankSet;
 extern u32 gRoomFrameCount;
-extern struct vec_pair gStaticData_0816C418[];
-extern struct vec3 gStaticData_0816C3B8[];
-extern struct vec3 gStaticData_0816C460[];
-extern u8 gStaticData_0816C458[];
+extern struct vec_pair gDingodileMotionEntries[];
+extern struct vec3 gDingodileMotionRecords[];
+extern struct vec3 gPlatformMoverMotionRecords[];
+extern u8 gPlatformMoverMotionSet[];
 extern u8 gDingodileShieldVtable[];
 extern u8 gDingodileVtable[];
 extern u8 gPlatformVtable[];
 extern u8 gPlatformMoverVtable[];
 
-extern void *sub_8017A8C(void *self);
-extern void sub_8017A78(void *self, s32 flags);
+extern void *CreateBossCtrl(void *self);
+extern void DestroyBossCtrl(void *self, s32 flags);
 extern void SpawnDingodileShieldOrRocket(void *self, s32 a, u16 b, u16 c, s32 d);
 extern void *OperatorNew(u32 size);
 extern void InitMovingSprite(void *self);
