@@ -8,6 +8,8 @@
 #include "audio.h"
 #include "menus.h"
 #include "player.h"
+#include "gfx.h"
+#include "objects.h"
 
 /* GitHub issue #26: 0x0801B85C-0x0801CEE0, the whole of the former
  * asm/code_3_2_17_188d0_1b85c.s. Three objects, all gcc 2.x C++ classes
@@ -218,24 +220,6 @@ struct bldy_byte
     u8 unk_5:3;
 } __attribute__((packed));
 
-struct dispcnt_bits
-{
-    u16 mode:3;
-    u16 cgbMode:1;
-    u16 frame:1;
-    u16 hblankFree:1;
-    u16 obj1d:1;
-    u16 forcedBlank:1;
-    u16 bg0:1;
-    u16 bg1:1;
-    u16 bg2:1;
-    u16 bg3:1;
-    u16 obj:1;
-    u16 win0:1;
-    u16 win1:1;
-    u16 objWin:1;
-};
-
 union dispcnt
 {
     u16 raw;
@@ -296,19 +280,6 @@ struct level_menu
 
 COMPILE_TIME_ASSERT(level_select_c, sizeof(struct level_menu) == 0xAC);
 
-struct vram_cursor
-{
-    u8 unk_00[8];
-    u32 baseTile;
-};
-
-/* gPaletteCache, only the field used here. */
-struct tile_cache
-{
-    u8 unk_000[0x20C];
-    u16 palette[16];        // 0x20C
-};
-
 /* Held keys in the low half, newly-pressed keys in the high half. */
 struct held_pressed_pair
 {
@@ -326,10 +297,10 @@ extern struct player *gPlayer;
 extern struct follow_owner *gCamera;
 extern void ***gSpriteBankSet;
 extern void *gCollidableList;
-extern struct tile_cache *gPaletteCache;
+extern struct palette_cache *gPaletteCache;
 extern void *gAudioContext;
 extern void *gLevelState;
-extern struct vram_cursor *gObjVramCursor;
+extern struct vram_upload_cursor *gObjVramCursor;
 extern void *gOamBuffer;
 extern void *gInput;
 extern union key_state gKeys;
@@ -341,50 +312,13 @@ extern struct level_info gLevelTable[];
  * keeps the first loads in registers. docs/headers_plan.md */
 extern struct xy_pair gLevelSelectGemPos_rw asm("gLevelSelectGemPos");
 extern struct xy_pair gLevelSelectTrialIconPos_rw asm("gLevelSelectTrialIconPos");
-extern u8 gMenuSkyBg[];
 
 /* Base class and runtime. */
-extern void InitMovingSprite(void *self);
-extern void DestroyMovingSprite(void *self, s32 flags);
-extern void UpdateMovingSprite(void *self);
-extern void *OperatorNew(u32 size);
-extern void OperatorDelete(void *p);
 extern void _call_via_r1(void *self, void *fn);
 extern s32 _call_via_r2(void *self, s32 arg, void *fn);
 /* Calls the function in r4 with r0-r3 (see the `register ... asm("r4")`
  * pin at the call site). */
 extern void _call_via_r4(void *self, s32 a, s32 b, s32 c);
-
-/* Sprite parts. */
-extern struct sprite *InitUiSpriteObj(void *mem);
-extern void AddToPartList(void *manager, void *value);
-extern void ResetSpriteFrameTimer(void *part);
-extern void ResetSpriteFrameIndex(void *part);
-extern void SetSpriteAnimDone(void *part, s32 arg);
-extern void SetSpritePriority(void *part, s32 value);
-extern void SetEntityPixelPos(void *part, s32 x, s32 y);
-extern void DrawSpriteWithOffset(void *part, s32 dx, s32 dy);
-extern s32 GetSpriteAnimPaletteSlot(void *part);
-extern void AdvanceSpriteAnim(void *p);
-/* Really returns a u8 (src/gfx/graphics.c), but the call site
- * re-zero-extends the result, as it would through a wider return type. */
-extern s32 GetPaletteSlot(void *cache, u8 recordId);
-extern void GetSpriteHitbox(struct aabb *dest, void *part);
-
-/* Display, VRAM and sound. */
-extern void FreeUnlockedPaletteSlots(void *cache);
-extern void ClaimPaletteSlot(void *cache, s32 arg);
-extern void UploadPaletteCache(void *p);
-extern void CommitOamBuffer(void *p);
-extern void ResetOamBuffer(void *p);
-extern void HideUnusedOamEntries(void *p);
-extern void ResetObjVram(struct vram_cursor *self);
-extern s32 ReserveObjVram(struct vram_cursor *self, s32 size);
-extern void MarkObjVram(struct vram_cursor *self);
-extern void RewindObjVram(struct vram_cursor *p);
-extern void FlushVramDmaQueue(void);
-extern void InitBgSetup(void *dst, s32 a, s32 b, s32 c, s32 d);
-extern void LoadGraphicsPackage(void *dst, void *pkg);
 
 /* Save data. */
 extern u8 *PackSaveData(void *p);
@@ -395,8 +329,6 @@ extern u8 LevelHasBlueGem(void *p, s32 id);
 extern u8 LevelHasYellowGem(void *p, s32 id);
 
 /* The level-select screen's sub-objects and siblings (0x0801CEE0 on). */
-/* Returns a u8; the one caller that needs it tests only its low byte. */
-extern u16 GetBgSetupControl(void *p);
 
 /* Returns `v` unchanged. gcc's tree folder moves a constant operand of a
  * commutative operator second, so `mask & *p` loads `*p` before building
@@ -506,7 +438,7 @@ void UpdateCameraLead(struct follow_child *self)
 {
     s32 cur, tgt;
 
-    UpdateMovingSprite(self);
+    UpdateMovingSprite((struct actor *)self);
     {
         s32 one = 1;
         s32 zero;
@@ -551,13 +483,13 @@ void DestroyCameraLead(struct follow_child *self, s32 flags)
 {
     self->vtable = gCameraLeadVtable;
     gCamera->follow = gPlayer;
-    DestroyMovingSprite(self, flags);
+    DestroyMovingSprite((struct actor *)self, flags);
 }
 
 /* Constructor, called from InputCtrlStateStart (input_ctrl.c). */
 struct follow_child *CreateCameraLead(struct follow_child *self)
 {
-    InitMovingSprite(self);
+    InitMovingSprite((struct actor *)self);
     self->vtable = gCameraLeadVtable;
     ResetCameraLead(self);
     return self;
@@ -594,7 +526,7 @@ struct sprite *SpawnLaunchPad(u16 id, u16 x, u16 y, u16 unused)
 {
     struct sprite *obj = OperatorNew(0x78);
 
-    InitMovingSprite(obj);
+    InitMovingSprite((struct actor *)obj);
     obj->vtable = (struct method *)gLaunchPadVtable;
     sub_801BAC4(obj);
     obj->id = id;
@@ -640,7 +572,7 @@ void CheckLaunchPadContact(void *self)
 
     if (gPlayer->flags >> 7)
     {
-        GetSpriteHitbox(&box, self);
+        box = GetSpriteHitbox(self);
         if (box.w != 0 && PlayerTouchesBox(gPlayer, &box))
         {
             struct player *p = gPlayer;
@@ -658,7 +590,7 @@ void CheckLaunchPadContact(void *self)
 void DestroyLaunchPad(struct sprite *self, s32 flags)
 {
     self->vtable = (struct method *)gLaunchPadVtable;
-    DestroyMovingSprite(self, flags);
+    DestroyMovingSprite((struct actor *)self, flags);
 }
 
 /* Clears flags bit 6. */
@@ -672,7 +604,7 @@ void sub_801BAC4(struct sprite *self)
  * Constructor. */
 struct sprite *InitLaunchPad(struct sprite *self)
 {
-    InitMovingSprite(self);
+    InitMovingSprite((struct actor *)self);
     self->vtable = (struct method *)gLaunchPadVtable;
     sub_801BAC4(self);
     return self;
@@ -696,14 +628,14 @@ static inline void IconSetup(struct bitmap_font *m, u32 v)
 
 static inline void IconReserve(struct bitmap_font **m)
 {
-    struct vram_cursor *c = gObjVramCursor;
+    struct vram_upload_cursor *c = gObjVramCursor;
 
     ReserveObjVram(c, (*m)->tileCount << 5);
 }
 
-static inline void LoadMenuPalette(struct tile_cache *cache)
+static inline void LoadMenuPalette(struct palette_cache *cache)
 {
-    CpuSet(gLevelSelectPalette, cache->palette, 0x10);
+    CpuSet(gLevelSelectPalette, cache->slots[15], 0x10);
 }
 
 s32 RunLevelSelect(s32 *arg)
@@ -760,7 +692,7 @@ s32 RunLevelSelect(s32 *arg)
  * for the ROM's register choice and hoisted constant. */
 struct level_menu *InitLevelSelect(struct level_menu *self, s32 arg)
 {
-    u8 bg0cnt[0x10];
+    struct bg_setup bg0cnt;
     s32 i;
     struct sprite *s;
 
@@ -776,7 +708,7 @@ struct level_menu *InitLevelSelect(struct level_menu *self, s32 arg)
     *(vu32 *)REG_ADDR_BLDCNT = self->blend.raw;
     *(vu16 *)REG_ADDR_BLDY = self->bldy.evy;
     self->dispcnt.raw = 0;
-    self->dispcnt.bits.obj1d = 1;
+    self->dispcnt.bits.objMap1D = 1;
     self->dispcnt.bits.mode = 1;
     self->dispcnt.bits.bg0 = 1;
     self->dispcnt.bits.bg1 = 1;
@@ -795,8 +727,8 @@ struct level_menu *InitLevelSelect(struct level_menu *self, s32 arg)
     self->save = PackSaveData(gLevelState);
     self->result = 0;
     self->bg1 = CreateLevelSelectPageBg(OperatorNew(0x28), 0, 0x1D);
-    InitBgSetup(bg0cnt, 2, 0x1E, 2, 3);
-    LoadGraphicsPackage(bg0cnt, gMenuSkyBg);
+    InitBgSetup(&bg0cnt, 2, 0x1E, 2, 3);
+    LoadGraphicsPackage(&bg0cnt, &gMenuSkyBg);
     self->scroll = 0;
     self->panel = CreateLevelSelectCursor(OperatorNew(0x54));
     self->bg2 = InitZoomBg(OperatorNew(0x8C), 3, 0x1F);
@@ -814,7 +746,7 @@ struct level_menu *InitLevelSelect(struct level_menu *self, s32 arg)
 
         for (i = 0, v = 0x80; i < 8; i++)
         {
-            s = InitUiSpriteObj(OperatorNew(0x40));
+            s = (struct sprite *)InitUiSpriteObj(OperatorNew(0x40));
             self->sprites[i] = s;
             SetSpritePriority(s, 1);
             if (i > 1)
@@ -823,36 +755,36 @@ struct level_menu *InitLevelSelect(struct level_menu *self, s32 arg)
     }
     self->sprites[0]->anim = AnimTable(0x234);
     SetAnim(self->sprites[0], gLevelSelectWorldAnims[self->world]);
-    SetEntityPixelPos(self->sprites[0], gLevelSelectWorldPos.x, gLevelSelectWorldPos.y);
+    SetEntityPixelPos((struct actor *)self->sprites[0], gLevelSelectWorldPos.x, gLevelSelectWorldPos.y);
     self->sprites[1]->anim = AnimTable(0x234);
     SetAnim(self->sprites[1], 10);
-    SetEntityPixelPos(self->sprites[1], gStaticData_0816C4A0.x, gStaticData_0816C4A0.y);
+    SetEntityPixelPos((struct actor *)self->sprites[1], gStaticData_0816C4A0.x, gStaticData_0816C4A0.y);
     self->sprites[2]->anim = AnimTable(0x1BC);
-    SetEntityPixelPos(self->sprites[2], gLevelSelectCrystalPos.x, gLevelSelectCrystalPos.y);
+    SetEntityPixelPos((struct actor *)self->sprites[2], gLevelSelectCrystalPos.x, gLevelSelectCrystalPos.y);
     self->sprites[3]->anim = AnimTable(0x180);
     SetAnim(self->sprites[3], 1);
-    SetEntityPixelPos(self->sprites[3], gLevelSelectGemPos_rw.x, gLevelSelectGemPos_rw.y);
+    SetEntityPixelPos((struct actor *)self->sprites[3], gLevelSelectGemPos_rw.x, gLevelSelectGemPos_rw.y);
     self->sprites[4]->anim = AnimTable(0x180);
     SetAnim(self->sprites[4], 1);
-    SetEntityPixelPos(self->sprites[4], gLevelSelectGemPos_rw.x, gLevelSelectGemPos_rw.y);
+    SetEntityPixelPos((struct actor *)self->sprites[4], gLevelSelectGemPos_rw.x, gLevelSelectGemPos_rw.y);
     self->sprites[5]->anim = AnimTable(0x18C);
-    SetEntityPixelPos(self->sprites[5], gLevelSelectTrialIconPos_rw.x, gLevelSelectTrialIconPos_rw.y);
+    SetEntityPixelPos((struct actor *)self->sprites[5], gLevelSelectTrialIconPos_rw.x, gLevelSelectTrialIconPos_rw.y);
     self->sprites[6]->anim = AnimTable(0x18C);
-    SetEntityPixelPos(self->sprites[6], gLevelSelectTrialIconPos_rw.x, gLevelSelectTrialIconPos_rw.y);
+    SetEntityPixelPos((struct actor *)self->sprites[6], gLevelSelectTrialIconPos_rw.x, gLevelSelectTrialIconPos_rw.y);
     self->sprites[7]->anim = AnimTable(0x18C);
-    SetEntityPixelPos(self->sprites[7], gLevelSelectTimePos.x, gLevelSelectTimePos.y);
-    s = InitUiSpriteObj(OperatorNew(0x40));
+    SetEntityPixelPos((struct actor *)self->sprites[7], gLevelSelectTimePos.x, gLevelSelectTimePos.y);
+    s = (struct sprite *)InitUiSpriteObj(OperatorNew(0x40));
     self->sprites[8] = s;
     SetSpritePriority(s, 1);
     self->sprites[8]->anim = AnimTable(0x270);
     SetAnim(self->sprites[8], 1);
-    SetEntityPixelPos(self->sprites[8], gStaticData_0816C4C8.x, gStaticData_0816C4C8.y);
-    s = InitUiSpriteObj(OperatorNew(0x40));
+    SetEntityPixelPos((struct actor *)self->sprites[8], gStaticData_0816C4C8.x, gStaticData_0816C4C8.y);
+    s = (struct sprite *)InitUiSpriteObj(OperatorNew(0x40));
     self->sprites[9] = s;
     SetSpritePriority(s, 1);
     self->sprites[9]->anim = AnimTable(0x270);
     SetAnim(self->sprites[9], 0);
-    SetEntityPixelPos(self->sprites[9], gStaticData_0816C4D0.x, gStaticData_0816C4D0.y);
+    SetEntityPixelPos((struct actor *)self->sprites[9], gStaticData_0816C4D0.x, gStaticData_0816C4D0.y);
     if (gNewWorldOpened && LevelSelectIsNextWorldOpen(self))
     {
         ParkLevelSelectCursor(self->panel);
@@ -865,7 +797,7 @@ struct level_menu *InitLevelSelect(struct level_menu *self, s32 arg)
     }
     *(vu32 *)REG_ADDR_BG0HOFS = 0;
     *(vu32 *)REG_ADDR_BG1HOFS = GetLevelSelectPageBgOffsets(self->bg1);
-    *(vu16 *)REG_ADDR_BG0CNT = GetBgSetupControl(bg0cnt);
+    *(vu16 *)REG_ADDR_BG0CNT = GetBgSetupControl(&bg0cnt);
     *(vu16 *)REG_ADDR_BG1CNT = GetBgSetupControl(self->bg1);
     *(vu16 *)REG_ADDR_BG2CNT = GetZoomBgControl(self->bg2);
     return self;
@@ -978,7 +910,7 @@ void UpdateLevelSelectPageArrows(struct level_menu *self)
     register s32 highMask asm("r4");
 
     {
-        register s32 pal asm("r0") = GetSpriteAnimPaletteSlot(self->sprites[8]);
+        register s32 pal asm("r0") = GetSpriteAnimPaletteSlot((struct actor *)self->sprites[8]);
         u8 *p = (u8 *)self->sprites[8] + 0x29;
         register s32 m asm("r1");
         register s32 b asm("r3");
@@ -994,7 +926,7 @@ void UpdateLevelSelectPageArrows(struct level_menu *self)
         *p = m;
     }
     {
-        register s32 pal asm("r0") = GetSpriteAnimPaletteSlot(self->sprites[9]);
+        register s32 pal asm("r0") = GetSpriteAnimPaletteSlot((struct actor *)self->sprites[9]);
         u8 *p = (u8 *)self->sprites[9] + 0x29;
         register s32 b asm("r5");
 
@@ -1031,7 +963,7 @@ void UpdateLevelSelectPageArrows(struct level_menu *self)
             if (f >= n)
                 f = n - 1;
             t->frame = f;
-            DrawSpriteWithOffset(t, 0, 0);
+            DrawSpriteWithOffset((struct actor *)t, 0, 0);
         }
     }
     if (LevelSelectHasPrevWorld(self))
@@ -1048,7 +980,7 @@ void UpdateLevelSelectPageArrows(struct level_menu *self)
         if (f >= n)
             f = n - 1;
         s->frame = f;
-        DrawSpriteWithOffset(s, 0, 0);
+        DrawSpriteWithOffset((struct actor *)s, 0, 0);
     }
 }
 
@@ -1056,12 +988,12 @@ void UpdateLevelSelectPageArrows(struct level_menu *self)
  * the level is cleared, its time readout (DrawLevelSelectTime). */
 void DrawLevelSelectRecord(struct level_menu *self)
 {
-    DrawSpriteWithOffset(self->sprites[0], -self->panelSlideX, 0);
-    DrawSpriteWithOffset(self->sprites[1], -self->panelSlideX, 0);
-    DrawSpriteWithOffset(self->sprites[2], -self->panelSlideX, self->clearedIconY);
-    DrawSpriteWithOffset(self->sprites[3], -self->panelSlideX, self->flag1IconY);
+    DrawSpriteWithOffset((struct actor *)self->sprites[0], -self->panelSlideX, 0);
+    DrawSpriteWithOffset((struct actor *)self->sprites[1], -self->panelSlideX, 0);
+    DrawSpriteWithOffset((struct actor *)self->sprites[2], -self->panelSlideX, self->clearedIconY);
+    DrawSpriteWithOffset((struct actor *)self->sprites[3], -self->panelSlideX, self->flag1IconY);
     if (self->rank != 5)
-        DrawSpriteWithOffset(self->sprites[4], -self->panelSlideX, self->gemIconY);
+        DrawSpriteWithOffset((struct actor *)self->sprites[4], -self->panelSlideX, self->gemIconY);
     {
         u8 **ps = &self->save;
         s32 off = self->levelId * 4 + 4;
@@ -1082,8 +1014,8 @@ void DrawLevelSelectTime(struct level_menu *self, u32 time)
 {
     struct level_info *info;
 
-    DrawSpriteWithOffset(self->sprites[5], -self->panelSlideX, self->trialIconY);
-    DrawSpriteWithOffset(self->sprites[6], -self->panelSlideX, self->trialIcon2Y);
+    DrawSpriteWithOffset((struct actor *)self->sprites[5], -self->panelSlideX, self->trialIconY);
+    DrawSpriteWithOffset((struct actor *)self->sprites[6], -self->panelSlideX, self->trialIcon2Y);
     info = &gLevelTable[self->levelId];
     if (time != 0 && time <= info->time2)
     {
@@ -1097,7 +1029,7 @@ void DrawLevelSelectTime(struct level_menu *self, u32 time)
     {
         struct icon_slot *slot;
 
-        DrawSpriteWithOffset(self->sprites[7], self->panelSlideX, 0);
+        DrawSpriteWithOffset((struct actor *)self->sprites[7], self->panelSlideX, 0);
         FontSetPalette(gLargeFont, self->sprites[7]->palette);
         SetIconPos(gLargeFont, self->panelSlideX + gLevelSelectTimePos.x + 10, gLevelSelectTimePos.y - 8);
         slot = &gLargeFont->record->slots[2];
@@ -1168,7 +1100,7 @@ draw:
         struct sprite **p = sprites + 2;
 
         for (i = 5; i >= 0; i--)
-            AdvanceSpriteAnim(*p++);
+            AdvanceSpriteAnim((struct box_part *)*p++);
     }
 }
 
@@ -1384,7 +1316,7 @@ loop:
     LevelSelectConfirm(self);
 end:
     self->dispcnt.raw = 0;
-    self->dispcnt.bits.obj1d = 1;
+    self->dispcnt.bits.objMap1D = 1;
     WaitForVBlank();
     UploadPaletteCache(gPaletteCache);
     CommitOamBuffer(gOamBuffer);

@@ -12,6 +12,8 @@
 #include "actor.h"
 #include "bosses.h"
 #include "vehicle.h"
+#include "gfx.h"
+#include "iwram.h"
 
 /*
  * IWRAM 0x030007CC-0x030009E8 (stored in ROM at 0x087E5DB0-0x087E5FCC):
@@ -28,25 +30,6 @@
  * different local structs, see the comment.
  */
 
-extern const char gCrash2LinkText[];
-extern const char gCrash3LinkText[];
-extern const u8 *const gUiTextEnglish[70];
-extern const u8 *const gUiTextFrench[70];
-extern const u8 *const gUiTextGerman[70];
-extern const u8 *const gUiTextSpanish[70];
-extern const u8 *const gUiTextItalian[70];
-extern const u8 *const gUiTextDutch[70];
-extern const u8 gTitleBandicootObj[];
-extern const u8 gTitleCrashObj[];
-extern const u8 gTitleArrow1Obj[];
-extern const u8 gTitleArrow2Obj[];
-
-/* The ARM routines the Thumb code calls through the pointers below. */
-extern s32 LookupSpriteFrameCache(u8 *frame);
-extern void UnpackRleSpriteFrame(void *dst, u8 *frame);
-extern void DrawMirroredTilemap(u8 *pal, s32 lowBlock, s32 w, s32 h);
-extern void HeapSortActorsByKey(s32 n, void **list);
-extern void UnpackNibbleTiles(void *src, s32 lowBlock);
 
 /* src/system/memory.c's heaps, and their free space right after
  * mem_heap_init (checked by mem_heap_shutdown). */
@@ -72,12 +55,8 @@ struct {
 /* rand.c's seed. */
 u32 gRandSeed = 1;
 
-/* fade.c's `struct unk_030007E8`: the brightness fade state. */
-struct {
-    s32 field_0;
-    s32 field_4;
-    u8 field_8;
-} gBrightnessFade = { -1, -1, 0 };
+/* fade.c's brightness fade state. */
+struct brightness_fade gBrightnessFade = { -1, -1, 0 };
 
 s32 gBrightnessFadeStep = 0;
 s32 gBrightnessFadeTimer = 0;
@@ -108,12 +87,6 @@ u8 gRoomExitRequested = 0;
 
 /* The cutscene text of each language, indexed by gLanguage
  * (src/data/cutscenes_16d1c8.c, level_cutscene.c). */
-extern const struct cutscene_page *const gCutsceneTextEnglish[11];
-extern const struct cutscene_page *const gCutsceneTextFrench[11];
-extern const struct cutscene_page *const gCutsceneTextGerman[11];
-extern const struct cutscene_page *const gCutsceneTextSpanish[11];
-extern const struct cutscene_page *const gCutsceneTextItalian[11];
-extern const struct cutscene_page *const gCutsceneTextDutch[11];
 const struct cutscene_page *const *gCutsceneTexts[6] = {
     gCutsceneTextEnglish,
     gCutsceneTextFrench,
@@ -143,15 +116,15 @@ s32 gHudSlideOffset = 0;
 
 /* Hooks into the ARM code (see sprite_arm.c). */
 s32 (*gLookupSpriteFrameCacheFunc)(u8 *frame) = LookupSpriteFrameCache;
-void (*gUnpackRleSpriteFrameFunc)(void *dst, u8 *frame) = UnpackRleSpriteFrame;
+void (*gUnpackRleSpriteFrameFunc)(u16 *dst, struct rle_frame *frame) = UnpackRleSpriteFrame;
 s32 gActorCheckpoint = 0;
 void (*gDrawMirroredTilemapFunc)(u8 *pal, s32 lowBlock, s32 w, s32 h) = DrawMirroredTilemap;
-void (*gHeapSortActorsByKeyFunc)(s32 n, void **list) = HeapSortActorsByKey;
+void (*gHeapSortActorsByKeyFunc)(s32 n, struct actor_self **list) = HeapSortActorsByKey;
 void *gActorList = NULL;
 s32 gCollectedSpawnCount = 0;
 /* Speeds, indexed by sub_802A570 (polar_objects.c). */
 s32 gUnknown_0300088C[3] = { 0x40, 0x62, 0x95 };
-void (*gUnpackNibbleTilesFunc)(void *src, s32 lowBlock) = UnpackNibbleTiles;
+void (*gUnpackNibbleTilesFunc)(u16 *src, s32 lowBlock) = UnpackNibbleTiles;
 /* Speeds, indexed by sub_802A570 (jetpack_plane.c). */
 s32 gUnknown_0300089C[6] = { 0x1555, 0x1155, 0xD55, 0x955, 0x555, 0x155 };
 
@@ -162,10 +135,10 @@ void *gFlashObjPalette = (void *)(PLTT + 0x340);
 /* title_screen_init.c: the four OBJ sprite packages of
  * src/data/level_gfx_17cff4.c. */
 const void *gTitleObjPackages[4] = {
-    gTitleCrashObj,
-    gTitleArrow2Obj,
-    gTitleArrow1Obj,
-    gTitleBandicootObj,
+    &gTitleCrashObj,
+    &gTitleArrow2Obj,
+    &gTitleArrow1Obj,
+    &gTitleBandicootObj,
 };
 
 struct language_select *gLanguageSelect = NULL;

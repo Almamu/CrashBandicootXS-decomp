@@ -1,5 +1,6 @@
 #include "core.h"
 #include "menus.h"
+#include "gfx.h"
 
 /*
  * ROM 0x0816C5F0-0x0816C6A4. Linked in ROM order between data/data.s

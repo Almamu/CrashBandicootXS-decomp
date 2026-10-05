@@ -5,6 +5,8 @@
 #include "hud.h"
 #include "system.h"
 #include "crates.h"
+#include "gfx.h"
+#include "objects.h"
 
 /* Built with old_agbcc - see docs/matching/game-loop-old-agbcc.md. */
 
@@ -14,7 +16,6 @@ struct oam_shadow_buffer;
 
 extern void *gPlayer;
 extern void *gCamera;
-extern void *gPaletteCycles;
 extern void *gOamBuffer;
 extern u8 *gLevelLayers;
 extern void *gHud;
@@ -26,16 +27,10 @@ extern void *gCrateList;
 extern union blend gBlendRegs;
 extern struct palette_cache *gPaletteCache;
 
-extern void UploadPaletteCache(struct palette_cache *self);
 extern void UpdateCamera(void *self);
 extern void ScrollLevelLayers(void *self);
-extern void TickPaletteCycles(void *self);
-extern void DrawPartList(struct dual_array_manager *manager);
 extern void *_call_via_r1(void *arg0, void *arg1);
-extern void HideUnusedOamEntries(struct oam_shadow_buffer *arg0);
-extern void CommitOamBuffer(struct oam_shadow_buffer *arg0);
 extern void CommitLevelScroll(void *self);
-extern void FlushVramDmaQueue(void);
 
 /* Runs the DMA3/`UploadPaletteCache`+`ResetLevelLayers` refresh pass over every
  * currently-active dual-array manager, then flushes the VRAM DMA

@@ -5,20 +5,12 @@
 #include "system.h"
 #include "audio.h"
 #include "menus.h"
+#include "gfx.h"
 
 extern struct vram_upload_cursor *gObjVramCursor;
-extern void ResetObjVram(struct vram_upload_cursor *self);
 extern void *_call_via_r1(void *arg0, void *arg1);
-extern s32 ReserveObjVram(struct vram_upload_cursor *self, s32 size);
-extern void MarkObjVram(struct vram_upload_cursor *self);
 extern struct palette_cache *gPaletteCache;
-extern void FreeUnlockedPaletteSlots(struct palette_cache *self);
-extern s32 ClaimPaletteSlot(struct palette_cache *self, s32 index);
-extern void UploadPaletteCache(struct palette_cache *self);
 extern struct oam_shadow_buffer *gOamBuffer;
-extern void ResetOamBuffer(struct oam_shadow_buffer *arg0);
-extern void HideUnusedOamEntries(struct oam_shadow_buffer *arg0);
-extern void CommitOamBuffer(struct oam_shadow_buffer *arg0);
 
 /* The other half of the continue prompt's setup, called from
  * `InitContinuePrompt` (continue_prompt_init.c): flushes the shared VRAM upload cursor

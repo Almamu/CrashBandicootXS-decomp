@@ -7,6 +7,7 @@
 #include "actor.h"
 #include "bosses.h"
 #include "vehicle.h"
+#include "gfx.h"
 
 /* Second half of issue #59's Phase 2 gap (`CreateJetpackRing`-`nullsub_35`,
  * the tail of `asm/code_3_2_20_28568_c99c_31784_31a6c.s`) - see
@@ -44,7 +45,6 @@
  *    introducing a struct wrapper that wouldn't match the actual link
  *    layout - see the writeup doc for the fuller rationale. */
 
-extern void SetupSpriteFrameOam(u8 *frame, u32 arg1, u32 arg2, s32 priority);
 extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
 extern void CollectWumpa(void *self);
 extern void _call_via_r0(void *fn);

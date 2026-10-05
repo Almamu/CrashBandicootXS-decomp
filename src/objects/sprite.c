@@ -2,10 +2,9 @@
 #include "actor.h"
 #include "box_part.h"
 #include "util.h"
-
-extern void WorldToScreen(void *arg0, s32 arg1, s32 arg2, s32 *arg3, s32 *arg4);
-extern void DrawSpritePieces(void *unused, void *part, s32 *posPtr);
-extern void OperatorDelete(void *arg0);
+#include "gfx.h"
+#include "objects.h"
+#include "memory.h"
 
 /* `part+0x25` selects whether (x, y) are already screen-relative
  * (nonzero - used as-is) or need the camera-relative conversion
@@ -124,7 +123,7 @@ struct aabb GetSpriteBounds(struct box_part *part)
 {
     struct aabb box;
     u8 *rec = (u8 *)&(*part->keyframes)[part->frame];
-    struct part_box *pb = (struct part_box *)(rec + 0xc);
+    struct hitbox_quad *pb = (struct hitbox_quad *)(rec + 0xc);
     s32 px = part->x >> 8;
     s32 offX = pb->offX;
     s32 py = part->y >> 8;
@@ -148,7 +147,7 @@ struct aabb GetSpriteHitbox(struct box_part *part)
 {
     struct aabb box;
     u8 *rec = (u8 *)&(*part->keyframes)[part->frame];
-    struct part_box *pb = (struct part_box *)(rec + 4);
+    struct hitbox_quad *pb = (struct hitbox_quad *)(rec + 4);
     s32 px = part->x >> 8;
     s32 offX = pb->offX;
     s32 py = part->y >> 8;
@@ -165,9 +164,6 @@ struct aabb GetSpriteHitbox(struct box_part *part)
     return box;
 }
 asm(".align 2, 0");
-
-extern void *GetSpriteFrame(void *part);
-extern u8 gEmptySpriteBox[];
 
 /* A third AABB-for-keyframe builder (see GetSpriteBounds/GetSpriteHitbox
  * above), this time selecting its 6-byte
@@ -199,13 +195,13 @@ void *GetSpriteAttackBox(void *dest, void *pt)
     case 1:
     case 2:
     case 6:
-        rec = gEmptySpriteBox;
+        rec = (void *)&gEmptySpriteBox;
         break;
     case 5:
         rec = (u8 *)info + 0xc;
         break;
     default:
-        rec = gEmptySpriteBox;
+        rec = (void *)&gEmptySpriteBox;
         break;
     }
 
@@ -271,10 +267,10 @@ void *GetSpriteBodyBox(void *dest, void *pt)
         break;
     case 1:
     case 5:
-        rec = gEmptySpriteBox;
+        rec = (void *)&gEmptySpriteBox;
         break;
     default:
-        rec = gEmptySpriteBox;
+        rec = (void *)&gEmptySpriteBox;
         break;
     }
 

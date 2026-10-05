@@ -4,6 +4,16 @@
 #include "player.h"
 #include "bosses.h"
 #include "enemies.h"
+#include "objects.h"
+#include "memory.h"
+#include "crates.h"
+
+/* codegen: GetSpriteAttackBox/GetSpriteBodyBox take the destination as
+ * their first argument (objects.h); this file was matched against the
+ * same calls written as a struct return, which gives a different stack
+ * frame. docs/headers_plan.md */
+extern struct aabb GetSpriteAttackBox_s(void *part) asm("GetSpriteAttackBox");
+extern struct aabb GetSpriteBodyBox_s(void *part) asm("GetSpriteBodyBox");
 
 /* GitHub issue #24: 0x0801967C-0x0801A794, formerly
  * asm/code_3_2_17_188d0_1967c.s.
@@ -250,25 +260,11 @@ extern void *gAudioContext;
 extern void *gLevelState;
 extern struct { u8 unk_00[0x10]; struct level_layer *layer; } *gLevelLayers;
 
-extern void DestroyCtrl(void *self, s32 flags);
-extern void InitCtrl(void *self);
 extern u8 HasSuperBodySlam(void *arg0);
 extern u8 HasTurboRun(void *arg0);
 extern void SpawnBodySlamPower(u32 arg0, s32 arg1, s32 arg2, s32 arg3);
 extern void SpawnTurboRunPower(u32 arg0, s32 arg1, s32 arg2, s32 arg3);
-/* These three return their box by value (gcc passes the hidden result
- * pointer in r0 and returns it). */
-extern struct aabb GetSpriteAttackBox(struct part *obj);
-extern struct aabb GetSpriteBodyBox(struct part *obj);
-extern struct aabb GetSpriteHitbox(struct part *obj);
 extern void RequestRoomExit(void);
-extern struct part *CreateMovingSprite(u32 arg0, u16 x, u16 y, u32 arg3);
-extern void ResetSpriteFrameTimer(struct part *p);
-extern void ResetSpriteFrameIndex(struct part *p);
-extern void SetSpriteAnimDone(struct part *p, s32 arg1);
-extern void *OperatorNew(u32 size);
-extern s32 GetSpriteAnimPaletteSlot(struct part *p);
-extern void AddToPartList(struct part_list *list, struct part *p);
 
 typedef void (*method1_fn)(void *self, s32 a);
 typedef void (*method2_fn)(void *self, void *a, s32 b);
@@ -487,10 +483,10 @@ void UpdateDingodile(struct dingodile_boss *self, struct part *other)
         p->x = x - 0x600;
         p->y = y;
     }
-    hurt = GetSpriteBodyBox(other);
+    hurt = GetSpriteBodyBox_s(other);
     if (self->state == 8 && gPlayer->kind == 0x13)
     {
-        box = GetSpriteAttackBox(gPlayer);
+        box = GetSpriteAttackBox_s(gPlayer);
         if (BOX_VALID(box) && AabbOverlaps(&box, &hurt))
         {
             self->hits++;
@@ -835,7 +831,7 @@ void SpawnDingodileShieldOrRocket(struct dingodile_boss *self, s32 mode, u16 x, 
         ctl = NULL;
         break;
     }
-    p->slot = GetSpriteAnimPaletteSlot(p);
+    p->slot = GetSpriteAnimPaletteSlot((struct actor *)p);
     p->ctl = ctl;
     VCALL1(ctl, m18, p);
     bits = &gEntityFlags->info->bits[*gEntityFlags->info->offset];
@@ -843,9 +839,9 @@ void SpawnDingodileShieldOrRocket(struct dingodile_boss *self, s32 mode, u16 x, 
     p->f28.flag5 = (*bits >> 2) & 1;
     p->fl.b.active = 1;
     if (mode == 0)
-        AddToPartList(gUnknown_030012EC, p);
+        AddToPartList((struct dual_array_manager *)gUnknown_030012EC, p);
     else
-        AddToPartList(gCollidableList, p);
+        AddToPartList((struct dual_array_manager *)gCollidableList, p);
 }
 
 /* Spawns one of the boss's floor-tile parts (record index 1 of the
@@ -868,13 +864,13 @@ void SpawnDingodileShark(struct dingodile_boss *self, u16 x, u16 y, u8 facing)
     SetSpriteAnimDone(p, 0);
     p->kind = 6;
     ctl = CreateDingodileSharkCtrl(OperatorNew(0x8C));
-    p->slot = GetSpriteAnimPaletteSlot(p);
+    p->slot = GetSpriteAnimPaletteSlot((struct actor *)p);
     p->ctl = ctl;
     VCALL1_B(ctl, m18, p)
     p->f28.facing = facing;
     p->fl.b.active = 1;
     VCALL1_B(ctl, m18, p)
-    AddToPartList(gCollidableList, p);
+    AddToPartList((struct dual_array_manager *)gCollidableList, p);
 }
 
 /* gDingodileShieldVtable's per-frame update (this controller is created
@@ -915,13 +911,13 @@ void UpdateDingodileShield(struct obj_490c *self, struct part *other)
                  * them. */
                 asm("" : "=r"(hr5));
                 asm("" : "=r"(hr6));
-                a = GetSpriteAttackBox(other);
-                b = GetSpriteBodyBox(gPlayer);
+                a = GetSpriteAttackBox_s(other);
+                b = GetSpriteBodyBox_s(gPlayer);
                 if (!BOX_VALID(b))
                 {
                     struct aabb *pb = &b;
 
-                    *pb = GetSpriteAttackBox(gPlayer);
+                    *pb = GetSpriteAttackBox_s(gPlayer);
                 }
                 /* End of the hold. */
                 asm("" : : "r"(hr5));
@@ -990,7 +986,7 @@ void UpdateDingodileProjectile(struct obj_48a4 *self, struct part *other)
     struct aabb a;
     struct aabb b;
 
-    a = GetSpriteAttackBox(other);
+    a = GetSpriteAttackBox_s(other);
     if (a.w)
     {
         if (self->state != 4 && self->state != 6)
@@ -998,7 +994,7 @@ void UpdateDingodileProjectile(struct obj_48a4 *self, struct part *other)
             struct part *t = self->target;
             if ((t->fl.raw >> 6) & 1)
             {
-                b = GetSpriteHitbox(t);
+                b = GetSpriteHitbox((struct box_part *)t);
                 if (AabbOverlaps(&a, &b))
                 {
                     VCALL1(self->target->ctl, m20, 7);
@@ -1010,12 +1006,12 @@ void UpdateDingodileProjectile(struct obj_48a4 *self, struct part *other)
         }
         if (!gPlayer->busy)
         {
-            b = GetSpriteBodyBox(gPlayer);
+            b = GetSpriteBodyBox_s(gPlayer);
             if (!BOX_VALID(b))
             {
                 struct aabb *pb = &b;
 
-                *pb = GetSpriteAttackBox(gPlayer);
+                *pb = GetSpriteAttackBox_s(gPlayer);
             }
             if (AabbOverlaps(&a, &b))
             {
@@ -1047,7 +1043,7 @@ void UpdateDingodileProjectile(struct obj_48a4 *self, struct part *other)
             other->rampYStep = 0;
             other->rampYTarget = 0;
             VCALL2(self, m50, other, 8);
-            other->slot = GetSpriteAnimPaletteSlot(other);
+            other->slot = GetSpriteAnimPaletteSlot((struct actor *)other);
             SpawnDingodileStalactite(self, other->x >> 8, other->y >> 8);
             VCALL1(self, m20, 2);
         }
@@ -1099,11 +1095,11 @@ void SpawnDingodileStalactite(struct obj_48a4 *self, u16 x, u16 y)
     c->vt = (struct vtable *)gDingodileProjectileVtable;
     c->target = self->target;
     VCALL1(c, m20, 5);
-    p->slot = GetSpriteAnimPaletteSlot(p);
+    p->slot = GetSpriteAnimPaletteSlot((struct actor *)p);
     p->ctl = c;
     VCALL1(c, m18, p);
     p->fl.b.active = 1;
-    AddToPartList(gCollidableList, p);
+    AddToPartList((struct dual_array_manager *)gCollidableList, p);
 }
 
 void UpdateDingodileShark(struct obj_483c *self, struct part *other)

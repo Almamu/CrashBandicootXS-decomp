@@ -1,8 +1,8 @@
 #include "core.h"
 #include "actor.h"
 #include "gfx_part.h"
-
-extern s32 gLastSpriteVelY;
+#include "objects.h"
+#include "memory.h"
 
 /* A velocity/position integrator: for each axis (X at `self+0x60`,
  * `self+0x50` max, `self+0x4c` accel; Y at `self+0x64`/`self+0x5c`/
@@ -184,23 +184,18 @@ s32 GetMovingSpriteClassId(void)
     return 5;
 }
 
-extern void *OperatorNew(s32 size);
-extern struct actor *InitSpriteObj(struct actor *self);
-extern u8 gMovingSpriteVtable[];
-extern void ResetMovingSprite(void *part);
-
 /* Same shape as `CreateSpriteObj`/`CreateMovingSprite`'s siblings elsewhere in
  * this ROM region: allocates a bigger (0x78-byte) part-object,
  * initializes it via `InitSpriteObj`, overwrites its table with
  * `gMovingSpriteVtable`, clears its extra fields via `ResetMovingSprite`
  * (see below), then sets `field_08` and the Q8 `x`/`y` position from
  * the three `u16` arguments. */
-struct actor *CreateMovingSprite(u16 arg0, u16 arg1, u16 arg2)
+void *CreateMovingSprite(u16 arg0, u16 arg1, u16 arg2, u16 unused)
 {
     struct actor *part = OperatorNew(0x78);
 
     InitSpriteObj(part);
-    part->table = gMovingSpriteVtable;
+    part->table = (void *)gMovingSpriteVtable;
     ResetMovingSprite(part);
     part->field_08 = arg0;
     part->x = (s32)arg1 << 8;
@@ -209,7 +204,6 @@ struct actor *CreateMovingSprite(u16 arg0, u16 arg1, u16 arg2)
 }
 
 extern s32 _call_via_r2(void *arg0, void *arg1, void *fn);
-extern void DestroySpriteObj(struct actor *self, u32 arg1);
 
 /* Overwrites `self->table`, then (if `self+0x44`'s record is set)
  * fires a `record->table+0x48/0x4c`-driven trampoline with a constant
@@ -223,7 +217,7 @@ extern void DestroySpriteObj(struct actor *self, u32 arg1);
  * silently corrupts the address. */
 void DestroyMovingSprite(struct actor *self, u32 arg1)
 {
-    self->table = gMovingSpriteVtable;
+    self->table = (void *)gMovingSpriteVtable;
 
     {
         register void *rec asm("r2") = *(void **)((u8 *)self + 0x44);
@@ -291,12 +285,10 @@ void ResetMovingSprite(void *self)
 struct actor *InitMovingSprite(struct actor *part)
 {
     InitSpriteObj(part);
-    part->table = gMovingSpriteVtable;
+    part->table = (void *)gMovingSpriteVtable;
     ResetMovingSprite(part);
     return part;
 }
-
-extern void UpdateSpriteObj(struct actor *part);
 
 /* Calls `UpdateSpriteObj` (already matched in `sprite_obj.c`), then (if
  * `self+0x44`'s record is set) fires a `record->table+8/0xc`-driven

@@ -1,5 +1,6 @@
 #include "core.h"
 #include "system.h"
+#include "gfx.h"
 
 /* Sits right after the still-raw remainder of asm/code_3_1_6.s'
  * SIO/link-cable and overlay_ui functions and before the small
@@ -7,10 +8,6 @@
  * docs/rom_map.md "A fourth thing in this file". This cluster's
  * parked functions interleave with the matched ones - see
  * docs/matching.md for the full split. */
-
-extern void DarkenPalette(s32 factor);
-extern u16 gPaletteBackup[512];
-extern u16 gPaletteFadeBuffer[512];
 
 /* Backs the real palette (`PLTT`) up into `gPaletteBackup`,
  * then, for each factor 0/2/4/.../16, blends it toward black via the
@@ -108,13 +105,9 @@ void FadePaletteToBlack(void)
     }
 }
 
-/* `gBrightnessFade.field_0 != -1` - the same "idle" sentinel
- * documented on the struct in fade.c, exposed here as a plain
- * s32 read (this file doesn't share that struct definition, per this
- * project's per-file raw-offset convention). */
-extern s32 gBrightnessFade;
+/* `gBrightnessFade.field_0 != -1`: the "idle" sentinel (gfx.h). */
 
 s32 IsBrightnessFadeActive(void)
 {
-    return gBrightnessFade != -1;
+    return gBrightnessFade.field_0 != -1;
 }

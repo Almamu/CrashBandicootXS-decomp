@@ -1,6 +1,7 @@
 #include "core.h"
 #include "gfx_part.h"
 #include "bosses.h"
+#include "objects.h"
 
 /* 0x0801EA5C-0x0801EF0C (GitHub issue #30), formerly
  * asm/code_3_2_17_1e990.s: six of the "trigger effect type N" spawners
@@ -32,12 +33,6 @@ extern void *gUnknown_030012EC;
 
 extern u8 *GetCurrentLevelFlags(void *self);
 extern s32 GetBossIndex(void *self);
-extern struct gfx_part *CreateSpriteObj(u16 a0, u16 a1, u16 a2, u16 a3);
-extern void ResetSpriteFrameTimer(struct gfx_part *part);
-extern void ResetSpriteFrameIndex(struct gfx_part *part);
-extern void SetSpriteAnimDone(struct gfx_part *part, s32 val);
-extern s32 GetSpriteAnimPaletteSlot(struct gfx_part *part);
-extern void AddToPartList(void *manager, struct gfx_part *part);
 extern struct gfx_part *SpawnEffectPart(void *pool, s32 arg1, s32 kind, s32 x, s32 y, s32 arg5);
 
 /* The `tag`/`type` locals are not just naming: the ROM loads both
@@ -58,7 +53,7 @@ void SpawnCrystal(u32 a0, u16 a1, u16 a2, u16 a3)
         ResetSpriteFrameTimer(part);
         ResetSpriteFrameIndex(part);
         SetSpriteAnimDone(part, 0);
-        part->frameNibble = GetSpriteAnimPaletteSlot(part);
+        part->frameNibble = GetSpriteAnimPaletteSlot((struct actor *)part);
         part->kind = type;
         AddToPartList(gUnknown_030012EC, part);
     }
@@ -79,7 +74,7 @@ void SpawnCrateGem(u32 a0, u16 a1, u16 a2, u16 a3)
         ResetSpriteFrameTimer(part);
         ResetSpriteFrameIndex(part);
         SetSpriteAnimDone(part, 0);
-        part->frameNibble = GetSpriteAnimPaletteSlot(part);
+        part->frameNibble = GetSpriteAnimPaletteSlot((struct actor *)part);
         part->kind = type;
         AddToPartList(gUnknown_030012EC, part);
 
@@ -104,7 +99,7 @@ void SpawnGemPathGem(u32 a0, u16 a1, u16 a2, u16 a3)
         ResetSpriteFrameTimer(part);
         ResetSpriteFrameIndex(part);
         SetSpriteAnimDone(part, 0);
-        part->frameNibble = GetSpriteAnimPaletteSlot(part);
+        part->frameNibble = GetSpriteAnimPaletteSlot((struct actor *)part);
         part->kind = type;
         AddToPartList(gUnknown_030012EC, part);
     }
@@ -125,7 +120,7 @@ void SpawnRedGem(u32 a0, u16 a1, u16 a2, u16 a3)
             ResetSpriteFrameTimer(part);
             ResetSpriteFrameIndex(part);
             SetSpriteAnimDone(part, 0);
-            part->frameNibble = GetSpriteAnimPaletteSlot(part);
+            part->frameNibble = GetSpriteAnimPaletteSlot((struct actor *)part);
             part->kind = type;
             AddToPartList(gUnknown_030012EC, part);
         }
@@ -151,7 +146,7 @@ void SpawnGreenGem(u32 a0, u16 a1, u16 a2, u16 a3)
             ResetSpriteFrameTimer(part);
             ResetSpriteFrameIndex(part);
             SetSpriteAnimDone(part, 0);
-            part->frameNibble = GetSpriteAnimPaletteSlot(part);
+            part->frameNibble = GetSpriteAnimPaletteSlot((struct actor *)part);
             part->kind = type;
             AddToPartList(gUnknown_030012EC, part);
         }
@@ -178,7 +173,7 @@ void SpawnYellowGem(u32 a0, u16 a1, u16 a2, u16 a3)
             ResetSpriteFrameTimer(part);
             ResetSpriteFrameIndex(part);
             SetSpriteAnimDone(part, 0);
-            part->frameNibble = GetSpriteAnimPaletteSlot(part);
+            part->frameNibble = GetSpriteAnimPaletteSlot((struct actor *)part);
             part->kind = type;
             AddToPartList(gUnknown_030012EC, part);
         }

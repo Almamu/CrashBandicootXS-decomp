@@ -5,11 +5,8 @@
 #include "save.h"
 #include "system.h"
 #include "menus.h"
+#include "gfx.h"
 
-extern void *InitBgSetup(void *buf, s32 arg1, s32 arg2, s32 arg3, s32 arg4);
-extern void LoadGraphicsPackage(void *buf, void *asset);
-extern s32 GetBgSetupControl(void *buf);
-extern u8 gMenuSkyBg[];
 
 /* Same shape as LoadLanguageSelectBg (src/frontend/language_select_setup.c) - reset
  * the DISPCNT shadow (`field_1c`) and set its two bytes one at a time,
@@ -18,7 +15,7 @@ extern u8 gMenuSkyBg[];
  * language_select doesn't have. */
 void LoadSaveMenuBg(struct save_menu *self)
 {
-    u8 buf[0x10];
+    struct bg_setup buf;
     u32 zero = 0;
     s32 a;
     register s32 b asm("r1");
@@ -35,14 +32,12 @@ void LoadSaveMenuBg(struct save_menu *self)
     b |= 0x10;
     ((u8 *)&self->field_1c)[1] = b;
 
-    InitBgSetup(buf, 2, 0x1e, 1, 3);
-    LoadGraphicsPackage(buf, gMenuSkyBg);
+    InitBgSetup(&buf, 2, 0x1e, 1, 3);
+    LoadGraphicsPackage(&buf, &gMenuSkyBg);
     self->field_0 = 0;
-    REG_BG0CNT = GetBgSetupControl(buf);
+    REG_BG0CNT = GetBgSetupControl(&buf);
     *(vu32 *)REG_ADDR_BG0HOFS = zero;
 }
-
-extern s32 GetCompletionPercent(void *arg0);
 
 /* Refreshes each of the 4 settings rows' aggregate stats from `handle`,
  * skipping any row IsSaveSlotEmpty reports as inactive/hidden. */
@@ -232,9 +227,6 @@ void DrawSaveMenuLoad(struct save_menu *self)
     DrawSaveMenuCancel(self, self->field_10 == 4);
 }
 
-extern void ResetOamBuffer(void *arg0);
-extern void HideUnusedOamEntries(void *arg0);
-extern void RewindObjVram(void *arg0);
 extern void *gOamBuffer;
 extern void *gObjVramCursor;
 

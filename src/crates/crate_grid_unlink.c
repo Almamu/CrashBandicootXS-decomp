@@ -35,12 +35,6 @@
  * C below does it too. Matches under old_agbcc (the object is on the
  * Makefile's OLD_AGBCC_OBJS list); see
  * docs/matching/issue-9-naked-retry.md. */
-struct pool_node {
-    void *data;
-    struct pool_node *next;
-    struct pool_node *wrap;
-};
-
 struct pool_item {
     u8 unused_00[2];
     s16 bucket;
@@ -50,24 +44,13 @@ struct pool_item {
     u8 flags;
 };
 
-struct pool_manager {
-    s32 activeCount;
-    s32 capacity;
-    void **slotArray;
-    void *nodeArray;
-    struct pool_node *gridHead[256];
-    struct pool_node *gridTail[256];
-    void *freeListArray;
-    struct pool_node *freeListHead;
-};
-
 /* Pushes a removed node's wrapper back onto the free list. The ROM
  * loads the free-list head into r1 before it loads `node->wrap` into
  * r0; the r1 pin reproduces that (unpinned, gcc gives the head r0 and
  * the wrapper r1, or loads the wrapper first). */
 #define POOL_FREE_NODE(m, node)                                         \
     {                                                                   \
-        register struct pool_node *_head asm("r1") = (m)->freeListHead; \
+        register struct pool_link *_head asm("r1") = (m)->freeListHead; \
         (node)->wrap->next = _head;                                     \
         (m)->freeListHead = (node)->wrap;                               \
     }
@@ -82,7 +65,7 @@ void UnlinkCrateFromGrid(struct pool_manager *manager, struct pool_item *item)
     s32 i;
 
     for (; found != NULL; prev = found, found = found->next) {
-        if (found->data == item) {
+        if (found->data == (struct box_part *)item) {
             found->data = NULL;
             count++;
             if (found == manager->gridHead[bucket]) {
@@ -114,7 +97,7 @@ void UnlinkCrateFromGrid(struct pool_manager *manager, struct pool_item *item)
     for (i = 0xFF; i >= 0; i--) {
         prev = NULL;
         for (node = manager->gridHead[i]; node != NULL; prev = node, node = node->next) {
-            if (node->data == item) {
+            if (node->data == (struct box_part *)item) {
                 found = node;
                 node->data = NULL;
                 count++;

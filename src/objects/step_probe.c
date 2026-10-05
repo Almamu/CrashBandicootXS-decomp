@@ -1,12 +1,12 @@
 #include "core.h"
 #include "actor.h"
+#include "objects.h"
 
 struct probe_pos {
     s32 x;
     s32 y;
 };
 
-extern s32 sub_8008278(void *posQ8, s32 kind, void *rec);
 extern u8 ProbeTerrain(void *player, s32 mode, void *posInt, s32 span, void *outY);
 extern void *gLevelLayers;
 
@@ -50,7 +50,7 @@ struct probe_world {
     u8 probeFlag;       // 0x2A
 };
 
-s32 sub_8009BE0(struct box_part *self, s32 mode, struct part_box *quad)
+s32 sub_8009BE0(struct box_part *self, s32 mode, struct hitbox_quad *quad)
 {
     struct {
         s32 x;

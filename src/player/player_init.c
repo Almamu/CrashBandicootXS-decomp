@@ -1,6 +1,7 @@
 #include "core.h"
 #include "actor.h"
 #include "player.h"
+#include "objects.h"
 
 /* GitHub issue #9/#10: 0x0800B3F0 - a part-object constructor on the
  * same big, still-unnamed "part" object (at least 0x108 bytes)
@@ -8,12 +9,6 @@
  * used throughout for the same reason that file gives: most individual
  * fields' meaning isn't confirmed beyond "a byte/word at this offset". */
 
-extern struct actor *InitGroundSprite(struct actor *self);
-extern void ResetCollisionQueue(void *arg0);
-extern struct actor *CreateSpriteObj(u16 arg0, u16 arg1, u16 arg2, u16 arg3);
-extern void ResetSpriteFrameTimer(void *part);
-extern void ResetSpriteFrameIndex(void *part);
-extern void SetSpriteAnimDone(void *part, u8 val);
 extern void ***gSpriteBankSet;
 
 /* Re-initializes `self` (via `InitGroundSprite`, already matched in

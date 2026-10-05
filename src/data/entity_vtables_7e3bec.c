@@ -11,6 +11,8 @@
 #include "actor.h"
 #include "bosses.h"
 #include "vehicle.h"
+#include "gfx.h"
+#include "objects.h"
 
 /*
  * ROM 0x087E3BEC-0x087E55E4: the 93 virtual tables of the game's C++
@@ -23,61 +25,6 @@
  * data/data.s sections by ldscript.txt - see docs/data.md.
  */
 
-extern void DrawEntity();
-extern void CtrlHandleEvent();
-extern void EffectCtrlHandleEvent();
-extern void IsEntityNearCamera();
-extern void CheckEntityPlayerContact();
-extern void UpdateEntity();
-extern void GetEntityBounds();
-extern void EntityOverlapsRect();
-extern void IsEntityOnScreen();
-extern void IsEntityInsideRect();
-extern void GetEntityClassId();
-extern void DestroyEntity();
-extern void CheckSpritePickup();
-extern void IsSpriteObjOnScreen();
-extern void SpriteObjOverlapsRect();
-extern void IsSpriteObjInsideRect();
-extern void IsSpriteObjNearCamera();
-extern void ApplySpriteObjVelocity();
-extern void DrawSpriteObj();
-extern void UpdateSpriteObj();
-extern void GetSpriteObjHitbox();
-extern void GetSpriteObjPriority();
-extern void GetSpriteObjClassId();
-extern void DestroySpriteObj();
-extern void GetSpritePriority();
-extern void DestroyUiSpriteObj();
-extern void CheckPlayerContact();
-extern void ApplySpriteVelocity();
-extern void GetMovingSpriteClassId();
-extern void DestroyMovingSprite();
-extern void UpdateMovingSprite();
-extern void HitMovingSprite();
-extern void CollideMovingSprite();
-extern void CollideGroundSprite();
-extern void UpdateGroundSprite();
-extern void DrawGroundSprite();
-extern void GetGroundSpriteClassId();
-extern void DestroyGroundSprite();
-extern void StartCtrlTargetMotionYFromSet();
-extern void SetCtrlTargetMotionX();
-extern void StartCtrlTargetMotionX();
-extern void StartCtrlTargetMotionXFromSet();
-extern void SetCtrlTargetAnim();
-extern void AttachCtrl();
-extern void DestroyCtrl();
-extern void UpdateEffectCtrl();
-extern void DestroyEffectCtrl();
-extern void CheckPlatformContact();
-extern void UpdatePlatform();
-extern void GetPlatformClassId();
-extern void DestroyPlatform();
-extern void UpdatePlatformMover();
-extern void StartPlatformMoverMotionYFromSet();
-extern void StartPlatformMoverMotionXFromSet();
-extern void DestroyPlatformMover();
 extern void DestroyBgStreamer();
 extern void DestroyBgLayerBase();
 extern void ClampBgLayerScrollStep();
@@ -99,7 +46,6 @@ extern void DrawPooledBgLayerRow();
 extern void ResetPooledBgLayer();
 extern void LoadPooledBgLayerTiles();
 extern void DestroyPooledBgLayer();
-extern void sub_802710C();
 
 /* Used by aabb_setup.c, enemy_ctrl.c, wumpa.c,
  * sprite_obj.c (DestroySpriteObj), sprite_anim.c, graphics.c (nullsub_12,

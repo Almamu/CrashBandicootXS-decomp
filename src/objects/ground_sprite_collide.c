@@ -1,5 +1,6 @@
 #include "core.h"
 #include "box_part.h"
+#include "objects.h"
 
 /* Dedicated deep investigation (GitHub issue #9/#10,
  * docs/matching/issue-9-0x0800a178-graphics.md): `ProbeGroundSpriteTerrain`/
@@ -202,9 +203,6 @@
  * (`~0x20`), not `~0x21` as the older notes had it. */
 
 extern s32 _call_via_r1(void *addr, void *fn);
-extern s32 ProbeGroundSpriteTerrain(struct box_part *self);
-extern s32 CollideMovingSprite(void *self);
-extern u8 sub_8009BE0(void *self, s32 mode, void *quad);
 
 u8 CollideGroundSprite(struct box_part *self)
 {
@@ -214,7 +212,7 @@ u8 CollideGroundSprite(struct box_part *self)
     if (self->flags >> 7) {
         val |= ProbeGroundSpriteTerrain(self);
         *p = val;
-        CollideMovingSprite(self);
+        CollideMovingSprite((struct gobj *)self);
         if (*p & 8) {
             {
                 s32 f = self->flags & ~0x20;
@@ -225,7 +223,7 @@ u8 CollideGroundSprite(struct box_part *self)
                 struct part_method *m = PART_METHOD(self, 0x10);
                 void *quad = (void *)_call_via_r1((u8 *)self + m->thisOffset, m->fn);
 
-                if (!sub_8009BE0(self, 8, quad)) {
+                if (!(u8)sub_8009BE0(self, 8, quad)) {
                     self->flags |= 0x20;
                     *p &= 7;
                 }
@@ -236,8 +234,6 @@ u8 CollideGroundSprite(struct box_part *self)
 }
 
 extern s32 _call_via_r1(void *addr, void *fn);
-extern s32 sub_8008200(void *dest, s32 kind, void *rec);
-extern s32 sub_8008278(void *dest, s32 kind, void *rec);
 extern s32 ProbeTerrain(void *player, s32 mode, void *pos, s32 span, void *outValue);
 extern s32 sub_8026C3C(void *player, void *pos, void *outValue);
 extern s32 sub_8026BF8(void *player, void *pos, void *outValue);
@@ -247,8 +243,6 @@ struct probe_pos {
     s32 x;
     s32 y;
 };
-
-u8 ProbeGroundSpriteFloor(struct box_part *self, struct part_box *quad, u8 *outFlag);
 
 /* See the file-level header comment above for this function's
  * semantics. `self`'s only argument; returns the accumulated result
@@ -272,7 +266,7 @@ s32 ProbeGroundSpriteTerrain(struct box_part *self)
     u8 floorMiss;
     s32 result;
     u8 hit;
-    struct part_box *quad;
+    struct hitbox_quad *quad;
     u8 *axes;
     struct part_method *m;
     s32 mode;
@@ -294,7 +288,7 @@ s32 ProbeGroundSpriteTerrain(struct box_part *self)
     }
     self->hitMask = 0;
     m = PART_METHOD(self, 0x10);
-    quad = (struct part_box *)_call_via_r1((u8 *)self + m->thisOffset, m->fn);
+    quad = (struct hitbox_quad *)_call_via_r1((u8 *)self + m->thisOffset, m->fn);
     if (self->flags2 & 1)
         hit = ProbeGroundSpriteFloor(self, quad, &floorMiss);
     if (hit && result == 0)
@@ -399,7 +393,7 @@ done:
  * r2 for the `0xFFFFFF00` literal. The shared final `strb` to +0xd is a
  * common store (`val`) the three exits jump to. */
 
-u8 ProbeGroundSpriteFloor(struct box_part *self, struct part_box *quad, u8 *outFlag)
+u8 ProbeGroundSpriteFloor(struct box_part *self, struct hitbox_quad *quad, u8 *outFlag)
 {
     s32 origY = self->y;
     struct probe_pos pos;

@@ -27,7 +27,7 @@
 
 extern void *gPlayer;
 
-/* `struct hitbox_quad` (crates.h): the caller (`QueueCratePlayerCollision`)
+/* `struct hitbox_quad` (gfx.h): the caller (`QueueCratePlayerCollision`)
  * passes a pointer directly to the quad itself (`playerRecordBase + 4`),
  * not the 28-byte record's own base - so this function only ever sees
  * the 4-byte-wide quad and never reads the record's own leading word. */
@@ -53,7 +53,7 @@ struct ceac_player {
  * - the same convention `BreakCrateTouchedByPlayer`'s "AABB1" documents).
  *
  * Builds a *hybrid* AABB - the player's hitbox dimensions, positioned
- * at `self`'s location (`quad->xOff + xOffset`, `quad->yOff +
+ * at `self`'s location (`quad->offX + xOffset`, `quad->offY +
  * yOffset`) - i.e. "if a player-shaped box were standing where `self`
  * currently is". When `gPlayer+0x90` (an unconfirmed player
  * state/mode byte, not documented elsewhere under this exact offset -
@@ -94,8 +94,8 @@ u8 sub_800CEAC(void *self, struct hitbox_quad *quad, struct aabb *box,
     struct aabb b;
 
     if (((struct ceac_player *)gPlayer)->wide) {
-        s32 x = quad->xOff;
-        s32 y = quad->yOff;
+        s32 x = quad->offX;
+        s32 y = quad->offY;
         u8 h = quad->h;
         s32 w;
 
@@ -106,8 +106,8 @@ u8 sub_800CEAC(void *self, struct hitbox_quad *quad, struct aabb *box,
         SetAabbPos(&b, x, y);
         SetAabbSize(&b, w, h);
     } else {
-        s32 x = quad->xOff;
-        s32 y = quad->yOff;
+        s32 x = quad->offX;
+        s32 y = quad->offY;
         u8 w = quad->w;
         u8 h = quad->h;
 
@@ -186,8 +186,8 @@ struct box_part *sub_800CF70(struct box_part *selfArg, struct aabb *box, u8 *fou
         struct aabb b;
         s32 px = prev->x >> 8;
         s32 py = prev->y >> 8;
-        s32 x = q->xOff;
-        s32 y = q->yOff;
+        s32 x = q->offX;
+        s32 y = q->offY;
         u8 w = q->w;
         u8 h = q->h;
 
@@ -222,7 +222,7 @@ asm(".align 2, 0");
  * (`gPlayer`) - from the shared "keyframe/hitbox record"
  * table convention already established by `GetSpriteBounds`/`GetSpriteHitbox`
  * in sprite.c (`self+0x20` -> a pointer-to-table, indexed by
- * `self+0x2d` at 0x1c/28-byte stride; here the {s16 xOff, s16 yOff, u8
+ * `self+0x2d` at 0x1c/28-byte stride; here the {s16 offX, s16 offY, u8
  * w, u8 h} quad sits at the record's `+4`/`+6`/`+8`/`+9` instead of
  * `+0xc`/`+0xe`/`+0x10`/`+0x11`, the same "differently laid out"
  * variance `GetSpriteHitbox`'s doc comment already flags). `self+0x28`
@@ -266,14 +266,14 @@ void BreakCrateTouchedByPlayer(struct box_part *self)
         return;
     {
         u8 *rec;
-        struct part_box *pb;
+        struct hitbox_quad *pb;
         s32 offX;
         s32 offY;
         u8 w;
         u8 h;
 
         rec = (u8 *)&(*self->keyframes)[self->frame];
-        pb = (struct part_box *)(rec + 4);
+        pb = (struct hitbox_quad *)(rec + 4);
         px = self->x >> 8;
         py = self->y >> 8;
         offX = pb->offX;
@@ -289,7 +289,7 @@ void BreakCrateTouchedByPlayer(struct box_part *self)
     }
     {
         u8 *rec;
-        struct part_box *pb;
+        struct hitbox_quad *pb;
         s32 offX;
         s32 offY;
         u8 w;
@@ -298,7 +298,7 @@ void BreakCrateTouchedByPlayer(struct box_part *self)
         px = gPlayerPart->x >> 8;
         py = gPlayerPart->y >> 8;
         rec = (u8 *)&(*gPlayerPart->keyframes)[gPlayerPart->frame];
-        pb = (struct part_box *)(rec + 4);
+        pb = (struct hitbox_quad *)(rec + 4);
         offX = pb->offX;
         offY = pb->offY;
         w = pb->w;

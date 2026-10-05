@@ -3,22 +3,16 @@
 #include "level_data.h"
 #include "crates.h"
 #include "player.h"
+#include "gfx.h"
+#include "objects.h"
+#include "memory.h"
 
 extern void CreateEntitySpawner(void);
 extern void ClearRoomExit(void);
-extern void *OperatorNew(s32 size);
-extern struct dual_array_manager *InitPartList(struct dual_array_manager *manager, s32 count);
-extern struct pool_manager *InitCrateList(struct pool_manager *manager, s32 count);
 extern void *GetLevelLayers(void);
-extern void SetEntityPos(struct actor *self, s32 arg1, s32 arg2);
-extern void OperatorDelete(void *self);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
-extern void ResetSpriteFrameTimer(void *part);
-extern void ResetSpriteFrameIndex(void *part);
-extern void SetSpriteAnimDone(void *part, u8 val);
 extern s32 RunRoom(void *self);
 extern void DestroyLevelLayers(void *self, s32 flag);
-extern void DestroyPartList(struct dual_array_manager *manager, s32 flags);
 extern void DestroyEntitySpawner(void);
 
 extern struct dual_array_manager *gUpdateOnlyPartList;
@@ -32,9 +26,6 @@ extern void *gLevelLayers;
 extern void *gPlayer;
 extern void *gPlayerCtrl;
 extern void ***gSpriteBankSet;
-extern u8 gActionCtrlMotionSet[];
-extern u8 gPlayerCtrlMotionSet[];
-extern u8 gInputCtrlMotionSet[];
 
 /* PlayRoom's argument (game_frame.c passes `&self->level`; the same
  * record run_room.c's RunRoom reads as `struct gl_self`). */
@@ -179,7 +170,7 @@ s32 PlayRoom(void *selfArg)
     case 0: {
         u8 *widget = InitActionCtrl(OperatorNew(0x38));
 
-        SetCtrlAnimSet(widget, (s32)gActionCtrlMotionSet);
+        SetCtrlAnimSet(widget, (s32)&gActionCtrlMotionSet);
 
         *((u8 *)*d8 + 0x88) = mode;
         {
@@ -205,7 +196,7 @@ s32 PlayRoom(void *selfArg)
             void **slot = &gPlayerCtrl;
             *slot = InitPlayerCtrl(OperatorNew(0x30));
         }
-        SetCtrlAnimSet(gPlayerCtrl, (s32)gPlayerCtrlMotionSet);
+        SetCtrlAnimSet(gPlayerCtrl, (s32)&gPlayerCtrlMotionSet);
 
         *((u8 *)*d8 + 0x88) = mode;
         {
@@ -237,7 +228,7 @@ s32 PlayRoom(void *selfArg)
     case 2: {
         u8 *widget = (u8 *)CreateInputCtrl(OperatorNew(0x28));
 
-        SetCtrlAnimSet(widget, (s32)gInputCtrlMotionSet);
+        SetCtrlAnimSet(widget, (s32)&gInputCtrlMotionSet);
 
         {
             u8 *pl = *d8;

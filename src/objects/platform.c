@@ -1,5 +1,11 @@
 #include "core.h"
 #include "gobj_1a794.h"
+#include "objects.h"
+
+/* codegen: SetSpritePrevPos takes (part, x, y) (objects.h), but
+ * MovePlayerWithPlatform passes only the part and leaves r1/r2 as they
+ * are. docs/headers_plan.md */
+extern void SetSpritePrevPos_1(struct gobj *self) asm("SetSpritePrevPos");
 
 /* GitHub issue #25, ROM 0x0801B208-0x0801B85C: the rest of struct gobj's
  * methods and all of struct mover's (see include/gobj_1a794.h and
@@ -19,7 +25,7 @@ void UpdatePlatform(struct gobj *self)
 
     if ((u8)_call_via_r1((u8 *)self + m->thisOffset, m->fn))
     {
-        AdvanceSpriteAnim(self);
+        AdvanceSpriteAnim((struct box_part *)self);
         OBJ_CALL1(self, m60);
         if (self->type == 6 && self->frame > 0x12)
         {
@@ -39,7 +45,7 @@ void UpdatePlatform(struct gobj *self)
     }
 }
 
-u8 sub_801B29C(struct gobj *self)
+s32 sub_801B29C(struct gobj *self)
 {
     return (self->flags2 >> 4) & 1;
 }
@@ -66,7 +72,7 @@ s32 GetPlatformClassId(void)
 void DestroyPlatform(struct gobj *self, s32 flags)
 {
     self->vtable = (struct gobj_vtable *)gPlatformVtable;
-    DestroyMovingSprite(self, flags);
+    DestroyMovingSprite((struct actor *)self, flags);
 }
 
 void sub_801B2D8(struct gobj *self)
@@ -400,7 +406,7 @@ void MovePlayerWithPlatform(struct mover *self, struct gobj *obj)
                 py += dy;
                 q->x = px << 8;
                 q->y = py << 8;
-                SetSpritePrevPos(q);
+                SetSpritePrevPos_1(q);
             }
             dir = (*pp)->dir;
             if (obj->speedX > 0)
@@ -420,7 +426,7 @@ void MovePlayerWithPlatform(struct mover *self, struct gobj *obj)
 
 void SetPlatformMoverMotionYFromSet(struct mover *self, struct gobj *part, s32 index)
 {
-    struct vec3 *e = &gPlatformMoverMotionRecords[self->set->entries[index].b];
+    const struct vec3 *e = &gPlatformMoverMotionRecords[self->set->entries[index].b];
 
     if ((s32)(part->mirror << 26) < 0)
     {
@@ -446,7 +452,7 @@ void SetPlatformMoverMotionYFromSet(struct mover *self, struct gobj *part, s32 i
 
 void SetPlatformMoverMotionXFromSet(struct mover *self, struct gobj *part, s32 index)
 {
-    struct vec3 *e = &gPlatformMoverMotionRecords[self->set->entries[index].a];
+    const struct vec3 *e = &gPlatformMoverMotionRecords[self->set->entries[index].a];
 
     if ((s32)(part->mirror << 27) < 0)
     {
@@ -472,12 +478,12 @@ void SetPlatformMoverMotionXFromSet(struct mover *self, struct gobj *part, s32 i
 
 void StartPlatformMoverMotionYFromSet(struct mover *self, struct gobj *part, s32 index)
 {
-    StartCtrlTargetMotionY(self, part, &gPlatformMoverMotionRecords[self->set->entries[index].b]);
+    StartCtrlTargetMotionY(self, part, (struct vec3 *)&gPlatformMoverMotionRecords[self->set->entries[index].b]);
 }
 
 void StartPlatformMoverMotionXFromSet(struct mover *self, struct gobj *part, s32 index)
 {
-    StartCtrlTargetMotionX(self, part, &gPlatformMoverMotionRecords[self->set->entries[index].a]);
+    StartCtrlTargetMotionX(self, part, (s32 *)&gPlatformMoverMotionRecords[self->set->entries[index].a]);
 }
 
 void DestroyPlatformMover(struct mover *self, s32 flags)
@@ -511,7 +517,7 @@ struct mover *CreatePlatformMover(struct mover *self, s32 distX, s32 distY, u32 
     self->distX = distX;
     self->lastY = 0;
     self->distY = distY;
-    self->set = (void *)gPlatformMoverMotionSet;
+    self->set = (void *)&gPlatformMoverMotionSet;
     self->active = 0;
     self->kind = kind;
     self->timer = 0;

@@ -3,6 +3,7 @@
 #include "audio.h"
 #include "actor.h"
 #include "vehicle.h"
+#include "gfx.h"
 
 /* Tail continuation of GitHub issue #50's chunk
  * (asm/code_3_2_20_8b7c_ac28.s, ROM 0x0802AC28-0x0802BED8): the giant
@@ -118,8 +119,6 @@ void sub_802BD24(void *selfArg)
         SetCellAnimSpeed(0x24);
     }
 }
-
-extern void FadeBrightness(u8 flags, s32 frameDelay, u8 sync);
 
 /* Per-axis hazard-threshold driver: drains a shared "camera catch-up"
  * budget (`gPolarPlayerVelY`) into `y`, advances `z`

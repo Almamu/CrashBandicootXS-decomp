@@ -8,6 +8,7 @@
 #include "actor.h"
 #include "bosses.h"
 #include "vehicle.h"
+#include "gfx.h"
 
 /*
  * `InitActorCategory` - the category (re)initialization + loading-screen
@@ -51,21 +52,8 @@ extern void *gHud;
 extern u32 gKeys;
 
 extern void SetCheckpointAtPlayer(void *arg0);
-extern void DecompressCategorySpriteSheet(const u8 *sheet);
 extern void RestoreCheckpoint(void *arg0);
-extern void FadeBrightness(s32 a, s32 b, s32 c);
 extern void TickLevelClock(void *arg0);
-extern void ResetObjVram(void *self);
-extern void RewindOamBuffer(void *arg0);
-extern void FlushSpriteFrameOamQueue(void);
-extern void CommitOamBuffer(void *arg0);
-extern void FlushVramDmaQueue(void);
-extern void AgeSpriteFrameCache(void);
-extern u8 IsBrightnessFadeActive(void);
-extern void FreeSpriteFrameCache(void);
-extern void FreeSpriteFrameOamQueue(void);
-extern void FreeObjTileFreeList(void);
-extern void FreeCategorySpriteSheet(void);
 
 #define CUR_CATEGORY (gActorCategories[gActorCategory])
 #define PAUSED (gLevelState[0x8c])
@@ -165,7 +153,7 @@ s32 InitActorCategory(s32 category)
                 }
             } else {
                 open = 0;
-                if (IsBrightnessFadeActive() == 0 && ((gKeys >> 16) & 8))
+                if ((u8)IsBrightnessFadeActive() == 0 && ((gKeys >> 16) & 8))
                     open = -(u8)CanPauseActorCategory() < 0;
                 if (open) {
                     buf = mem_alloc(0x200, 0x80000000);

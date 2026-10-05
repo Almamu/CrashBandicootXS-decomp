@@ -4,6 +4,7 @@
 #include "cutscene.h"
 #include <libgcc.h>
 #include "system.h"
+#include "gfx.h"
 
 /* GitHub issue #39: 0x08024810-0x08024E68 (game_loop) - the remainder of
  * the UpdateGameFrame-MainLoop cluster between the sound-channel-handle
@@ -125,9 +126,6 @@ struct cutscene_player *InitSlideshow(struct cutscene_player *self)
  * prologue reads the box word and `font` into locals before the
  * store, and the page loop is a plain `for` with `j++`. */
 extern void *gOamBuffer;
-extern void ResetOamBuffer(void *oam);
-extern void HideUnusedOamEntries(void *oam);
-extern void CommitOamBuffer(void *oam);
 
 void RunCutscenePlayer(struct cutscene_player *self)
 {
@@ -558,10 +556,6 @@ void SetBgStreamerSource(void *self0, void *source0)
     self->records = (u16 *)(*(u8 **)((u8 *)gLevelLayers + 0x24) + source->assetOffset);
 }
 
-extern void OperatorDeleteArray(void *ptr);
-extern void OperatorDelete(void *self);
-extern void *OperatorNewArray(u32 size);
-extern void *OperatorNew(s32 size);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern u8 gBgStreamerVtable[];
 extern u8 gBgLayerBaseVtable[];

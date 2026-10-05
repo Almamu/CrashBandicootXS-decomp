@@ -3,14 +3,14 @@
 #include "pause_menu.h"
 #include "util.h"
 #include "menus.h"
+#include "gfx.h"
+#include "objects.h"
+#include "memory.h"
 
 /* Built with old_agbcc (Makefile OLD_AGBCC_OBJS): the four icon-group
  * constructors below only match under it, and InitPauseCrystalsPage compiles
  * identically under both compilers. */
 
-extern void *OperatorNew(s32 size);
-extern struct actor *InitUiSpriteObj(struct actor *part);
-extern void SetEntityPixelPos(struct actor *self, s32 arg1, s32 arg2);
 extern void ***gSpriteBankSet;
 
 /* Constructs the single icon at `field_88`: positions it from the fixed
@@ -31,10 +31,6 @@ void InitPauseCrystalsPage(struct pause_menu *self)
     FormatDecimal(CountCrystals(self->field_10), self->buf2c);
     FormatDecimal(0x14, (u8 *)self + 0x46);
 }
-
-extern void ResetSpriteFrameTimer(struct actor *part);
-extern void ResetSpriteFrameIndex(struct actor *part);
-extern void SetSpriteAnimDone(struct actor *part, u8 val);
 
 /* Allocates and constructs a fresh 0x40-byte icon into `icon`, yielding
  * it. Used as the right-hand side of the `self->iconsXX[i] = ...`

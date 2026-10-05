@@ -186,22 +186,22 @@ void UpdateCamera(struct camera *cam)
     SetLevelScroll(gLevelLayers, cam->x - (120 << 8), cam->y - (80 << 8));
 }
 
-void OperatorDeleteArray(u8 *ptr)
+void OperatorDeleteArray(void *ptr)
 {
     mem_free(ptr);
 }
 
-u8 *OperatorNewArray(u32 size)
+void *OperatorNewArray(u32 size)
 {
     return mem_alloc(size, MEM_HEAP_EWRAM);
 }
 
-void OperatorDelete(u8 *ptr)
+void OperatorDelete(void *ptr)
 {
     mem_free(ptr);
 }
 
-u8 *OperatorNew(u32 size)
+void *OperatorNew(u32 size)
 {
     return mem_alloc(size, MEM_HEAP_EWRAM);
 }

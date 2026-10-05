@@ -10,13 +10,13 @@
  * for codegen keeps it as an asm-label alias with a `codegen:` comment
  * (docs/headers_plan.md).
  *
- * The crate list's `struct pool_manager` (and `pool_init`, the same
- * object as ResetCrateList sees it) is defined in each file that walks
- * it; the objects batch merges the copies with src/objects/part_list.c's.
- * InitCrateList is in that file. */
+ * The crate list (`struct pool_manager`, below) is set up by InitCrateList,
+ * which src/objects/part_list.c holds for ROM order. */
 
 #include "core.h"
 #include "aabb.h"
+#include "gfx.h"
+#include "objects.h"
 #include "byte_arg.h"
 #include "vtable.h"
 
@@ -24,27 +24,47 @@ struct actor;
 struct box_part;
 struct crate;
 struct part_list;
-struct pool_init;
 struct pool_item;
-struct pool_manager;
 
-/* The position ApplyCrateCollision takes by value (a collision
- * candidate's, src/objects/collision_queue.c). */
-struct e08c_pos
-{
-    s32 x;
-    s32 y;
+/* One entry of the crate list's free list: a grid node not in use. */
+struct pool_link {
+    struct pool_node *node;     // 0x00
+    struct pool_link *next;     // 0x04
 };
 
-/* A sprite frame's hitbox quad, `{s16 xOff, s16 yOff, u8 w, u8 h}` at
- * +4..+9 of its 28-byte record (BreakCrateTouchedByPlayer,
- * PlayerAnimWouldTouchCrate). sub_800CEAC is handed a pointer to the quad
- * itself. graphics.c's `struct anim_box` is the same layout. */
-struct hitbox_quad {
-    s16 xOff;
-    s16 yOff;
-    u8 w;
-    u8 h;
+/* One node of the crate list's grid (0x14 bytes): a listed part, the
+ * next node in its bucket, and the free-list entry it was taken from.
+ * UpdateCrateList also files a large part in bucket 255 under a second
+ * node (`link`), and DrawCrateList/UpdateCrateList mark the nodes they
+ * have handled. */
+struct pool_node {
+    struct box_part *data;      // 0x00
+    struct pool_node *next;     // 0x04
+    struct pool_link *wrap;     // 0x08
+    struct pool_node *link;     // 0x0C
+    u8 mark;                    // 0x10
+    u8 mark2;                   // 0x11
+};
+
+/* The crate list (`gCrateList`): a fixed-slot pool of the crates and
+ * other collidable parts, set up by InitCrateList. `slotArray` holds the
+ * active objects (bounded by `activeCount`, up to `capacity`);
+ * `nodeArray` is a flat array of `capacity` grid nodes; `gridHead`/
+ * `gridTail` are a 256-bucket spatial hash grid, each bucket a
+ * singly-linked list of nodes (head set once when a bucket leaves empty,
+ * tail always updated for O(1) append - see AddCrateGridNode);
+ * `freeListArray` is `capacity` free-list entries threaded into a
+ * singly-linked list, `freeListHead` pointing at its first still-free
+ * entry. ResetCrateList and InitCrateList saw it as `struct pool_init`. */
+struct pool_manager {
+    s32 activeCount;                    // 0x000
+    s32 capacity;                       // 0x004
+    struct box_part **slotArray;        // 0x008
+    struct pool_node *nodeArray;        // 0x00C
+    struct pool_node *gridHead[256];    // 0x010
+    struct pool_node *gridTail[256];    // 0x410
+    struct pool_link *freeListArray;    // 0x810
+    struct pool_link *freeListHead;     // 0x814
 };
 
 /* The method table (src/data/entity_vtables_7e3bec.c). */
@@ -138,7 +158,10 @@ extern void DestroyCrateList(struct pool_manager *manager, s32 flags);
 extern void DrawCrateList(void *manager);
 
 /* src/crates/crate_list_reset.c */
-extern void ResetCrateList(struct pool_init *m);
+extern void ResetCrateList(struct pool_manager *m);
+
+/* src/objects/part_list.c (for ROM order) */
+extern struct pool_manager *InitCrateList(struct pool_manager *m, s32 count);
 
 /* src/crates/crate_list_update.c */
 extern void UpdateCrateList(struct pool_manager *manager);

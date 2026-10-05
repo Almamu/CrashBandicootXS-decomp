@@ -6,6 +6,8 @@
 #include "text.h"
 #include "system.h"
 #include "menus.h"
+#include "gfx.h"
+#include "objects.h"
 
 /* The three functions below are companion "draw a label centered on an
  * icon widget" steps. Once NAKED transcriptions; they match as plain C
@@ -22,7 +24,6 @@
  * `gPauseTimeTrialIconPos` position pair InitPauseTimeTrialPage itself positions
  * the icon with. */
 
-extern void DrawSpriteWithOffset(void *arg0, s32 arg1, s32 arg2);
 extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
 
 static inline void set_icon_mgr_pos(struct bitmap_font *m, u32 x, u32 y)
@@ -53,7 +54,7 @@ void DrawPauseTimeTrialPage(struct pause_menu *self)
     u32 w;
 
     if (self->field_6c)
-        DrawSpriteWithOffset(self->field_bc, 0, 0);
+        DrawSpriteWithOffset((struct actor *)self->field_bc, 0, 0);
     w = MEASURE_ICON_TEXT(gSmallFont, self->timeBuf);
     set_icon_mgr_pos(gSmallFont, gPauseTimeTrialIconPos.x - (w >> 1) - 2, gPauseTimeTrialIconPos.y - 0x23);
     DRAW_ICON_TEXT(gSmallFont, self->timeBuf);
@@ -67,7 +68,7 @@ void DrawPauseTimeTrialPage(struct pause_menu *self)
  * strings. */
 void DrawPauseCrystalsPage(struct pause_menu *self)
 {
-    DrawSpriteWithOffset(self->field_88, 0, 0);
+    DrawSpriteWithOffset((struct actor *)self->field_88, 0, 0);
     set_icon_mgr_pos(gSmallFont, gPauseCrystalIconPos.x - 0x2c, gPauseCrystalIconPos.y - 8);
     DrawPauseFraction(self, self->buf2c, self->buf46);
 }
@@ -97,9 +98,6 @@ void DrawPauseMenuPageTitle(struct pause_menu *self)
  * already-matched `CommitPowerDialogFrame` uses for the same job at different
  * offsets. */
 
-extern void UploadPaletteCache(void *arg0);
-extern void CommitOamBuffer(void *arg0);
-extern void FlushVramDmaQueue(void);
 extern void *gPaletteCache;
 extern void *gOamBuffer;
 

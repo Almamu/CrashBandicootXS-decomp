@@ -4,6 +4,7 @@
 #include "actor.h"
 #include "bosses.h"
 #include "vehicle.h"
+#include "gfx.h"
 
 s32 GetAnimFrameBaseOffset(struct actor_self *self)
 {
@@ -351,8 +352,6 @@ void DestroyPolarCheckpointCrate(struct actor_self *self, u32 flags)
 }
 
 asm(".align 2, 0");
-
-extern void SetupSpriteFrameOam(u8 *frame, u32 arg1, u32 arg2, s32 priority);
 
 /* Screen-space visibility test and OAM setup for one sprite frame drawn
  * at the fixed screen position (120, 106): builds the OAM attribute

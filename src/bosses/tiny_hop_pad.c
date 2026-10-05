@@ -1,5 +1,6 @@
 #include "core.h"
 #include "bosses.h"
+#include "objects.h"
 
 /* GitHub issue #22, ROM 0x080187FC-0x08018884 - non-adjacent to
  * airship_fireball.c since the raw `UpdateTiny`/`SetTinyState`/
@@ -33,8 +34,6 @@ struct level_layers {
 extern struct level_layers *gLevelLayers;
 extern void *gEntityFlags;
 extern s32 _call_via_r3(void *addr, void *arg1, void *arg2, void *fn);
-extern void DestroyCtrl(void *self, s32 flags);
-extern void InitCtrl(void *self);
 
 /* A two-state (`obj+8`: 0 then 1 then 2) "charge" handler. State 0
  * fires the usual table-trampoline pair (action 8) and advances to

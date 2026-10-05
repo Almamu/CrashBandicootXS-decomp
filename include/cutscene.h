@@ -79,6 +79,13 @@ extern const struct cutscene_slides gCutscenes[11];
 /* Every cutscene's pages, per language (gLanguage), each indexed like
  * gCutscenes. Defined in src/iwram/iwram_data.c. */
 extern const struct cutscene_page *const *gCutsceneTexts[6];
+/* The tables gCutsceneTexts points at (src/data/cutscenes_16d1c8.c). */
+extern const struct cutscene_page *const gCutsceneTextEnglish[11];
+extern const struct cutscene_page *const gCutsceneTextFrench[11];
+extern const struct cutscene_page *const gCutsceneTextGerman[11];
+extern const struct cutscene_page *const gCutsceneTextSpanish[11];
+extern const struct cutscene_page *const gCutsceneTextItalian[11];
+extern const struct cutscene_page *const gCutsceneTextDutch[11];
 
 /* The DISPCNT value the slideshow shows its pictures with:
  * SetSlideshowDispcnt sets it and ShowSlidePicture sets its bit 4 (the

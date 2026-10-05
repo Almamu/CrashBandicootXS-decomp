@@ -148,6 +148,11 @@ extern const u16 gTitleMenuSelectedPalette[16];
 extern const u16 gTitleMenuBlinkPalette[16];
 extern const struct bg_package gTitleScreenBg;
 extern const void *gTitleObjPackages[4];
+/* The four packages gTitleObjPackages points at (src/data/level_gfx_17cff4.c). */
+extern const struct bg_package gTitleCrashObj;
+extern const struct bg_package gTitleArrow2Obj;
+extern const struct bg_package gTitleArrow1Obj;
+extern const struct bg_package gTitleBandicootObj;
 
 /* The company logos' graphics (src/data/slot_seeds_17d6c0.c,
  * countdown_17d7a4.c). */

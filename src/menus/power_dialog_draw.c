@@ -7,6 +7,8 @@
 #include "system.h"
 #include "pause_menu.h"
 #include "menus.h"
+#include "gfx.h"
+#include "objects.h"
 
 /* A small per-category threshold table: CountSapphireRelics/CountGoldRelics/
  * CountPlatinumRelics each count how many of a caller's 20 records fall between
@@ -29,19 +31,9 @@ COMPILE_TIME_ASSERT(power_dialog_draw_c, sizeof(struct threshold_table_entry) ==
 
 extern struct threshold_table_entry gLevelTable[];
 extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
-extern void OperatorDelete(void *arg0);
-extern void UploadPaletteCache(struct palette_cache *arg0);
-extern void CommitOamBuffer(void *arg0);
-extern void ResetOamBuffer(void *arg0);
-extern void HideUnusedOamEntries(void *arg0);
-extern void FlushVramDmaQueue(void);
 extern struct palette_cache *gPaletteCache;
 extern void *gOamBuffer;
 
-extern void AdvanceSpriteAnim(void *arg0);
-
-extern void RewindObjVram(struct vram_upload_cursor *arg0);
-extern void DrawSpriteWithOffset(void *arg0, s32 arg1, s32 arg2);
 extern struct vram_upload_cursor *gObjVramCursor;
 
 /* Sets an icon manager's draw position. Both coordinates are inline
@@ -72,7 +64,7 @@ void DrawPowerDialog(struct sub_8006700_actor *arg0)
 
     ResetOamBuffer(gOamBuffer);
     RewindObjVram(gObjVramCursor);
-    DrawSpriteWithOffset(arg0->field_18, 0, 0);
+    DrawSpriteWithOffset((struct actor *)arg0->field_18, 0, 0);
     r = gLargeFont->record;
     w = _call_via_r2((u8 *)gLargeFont + r->slots[0].offset, arg0->field_10, r->slots[0].ptr);
     x = (u32)(240 - w) >> 1;
@@ -95,7 +87,7 @@ void DrawPowerDialog(struct sub_8006700_actor *arg0)
 void AnimatePowerDialog(struct sub_8006700_actor *arg0)
 {
     arg0->field_1c++;
-    AdvanceSpriteAnim(arg0->field_18);
+    AdvanceSpriteAnim((struct box_part *)arg0->field_18);
 }
 
 void CommitPowerDialogFrame(struct sub_8006700_actor *arg0)

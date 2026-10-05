@@ -1,4 +1,5 @@
 #include "core.h"
+#include "gfx.h"
 #include "memory.h"
 #include "vram_pool.h"
 #include "actor.h"
@@ -8,16 +9,6 @@
 #include <libgcc.h>
 #include "menus.h"
 #include "player.h"
-
-/* The collision box an actor's vtable slot 2 returns (gobj_1a794.h's
- * `struct anim_box`): an offset from the actor's position and a size. */
-struct anim_box
-{
-    s16 offX;   // 0x00
-    s16 offY;   // 0x02
-    u8 padX;    // 0x04
-    u8 padY;    // 0x05
-};
 
 struct dma_queue_entry {
     void *dest;
@@ -31,7 +22,6 @@ struct dma_queue {
     s32 count;
 };
 
-extern struct dma_queue gVramDmaQueue;
 #define DMA3 (*(struct dma_regs *)REG_ADDR_DMA3SAD)
 #define QUEUE_COUNT (((volatile struct dma_queue *)&gVramDmaQueue)->count)
 /* Allocated capacity of gVramDmaQueue.entries. */
@@ -93,30 +83,6 @@ void SetOamAffineScales(void *arg0, u16 *arg1, s32 arg2)
         arg2--;
     } while (arg2 != 0);
 }
-
-/* Manages a shadow copy of a chunk of the 128-entry hardware OAM table:
- * a count of active entries, the `base` count RewindOamBuffer goes
- * back to (entries kept from frame to frame, set by MarkOamBufferBase),
- * the number of affine matrices handed out this frame, then the
- * 1024-byte shadow table itself (128 entries * 8 bytes) starting right
- * after. Functions below that need volatile or register-pinned access
- * to `count`/the table still use raw pointer casts on purpose (see
- * docs/matching.md, "Matching decompilation") - this type exists so
- * call sites can be typed meaningfully instead of passing `void *`. */
-/* One shadow OAM entry: attributes 0-2, then the affine-parameter
- * halfword the hardware interleaves between entries. */
-union oam_shadow_entry {
-    u32 words[2];
-    u16 attr[4];    // [3] is the affine parameter
-};
-
-struct oam_shadow_buffer {
-    s32 count;
-    s32 base;
-    s32 matrixCount;
-    union oam_shadow_entry table[0x80];
-};
-COMPILE_TIME_ASSERT(graphics_c, sizeof(struct oam_shadow_buffer) == 0x40C);
 
 void AppendOamEntries(struct oam_shadow_buffer *arg0, void *arg1, s32 arg2)
 {
@@ -194,7 +160,7 @@ void CommitOamBuffer(struct oam_shadow_buffer *arg0)
 /* Inserts one record (arg1[0]/arg1[1]) into the shadow OAM table at the
  * current count, preserving the padding halfword at +0x12 that overlaps
  * the tail of arg1[1] on real hardware (see docs/matching.md). */
-void AddOamEntry(struct oam_shadow_buffer *arg0, u32 *arg1)
+void AddOamEntry(struct oam_shadow_buffer *arg0, const void *entry)
 {
     register s32 n1 asm("r2");
     register u16 saved asm("r3");
@@ -211,8 +177,8 @@ void AddOamEntry(struct oam_shadow_buffer *arg0, u32 *arg1)
      * `table[0]` is entry `count`. */
     n1 = (s32)arg0 + (n1 << 3);
     saved = ((struct oam_shadow_buffer *)n1)->table[0].attr[3];
-    v0 = arg1[0];
-    v1 = arg1[1];
+    v0 = ((const u32 *)entry)[0];
+    v1 = ((const u32 *)entry)[1];
     ((struct oam_shadow_buffer *)n1)->table[0].words[0] = v0;
     ((struct oam_shadow_buffer *)n1)->table[0].words[1] = v1;
     n2 = *(vs32 *)arg0;
@@ -222,9 +188,7 @@ void AddOamEntry(struct oam_shadow_buffer *arg0, u32 *arg1)
     *(s32 *)arg0 = n2;
 }
 
-extern void OperatorDelete(void *arg0);
-
-void DestroyOamBuffer(void *arg0, u32 arg1)
+void DestroyOamBuffer(struct oam_shadow_buffer *arg0, u32 arg1)
 {
     if (arg1 & 1) {
         OperatorDelete(arg0);
@@ -308,9 +272,6 @@ s32 AllocVramDmaQueue(void)
     gVramDmaQueue.count = 0;
     return 0;
 }
-
-extern void SetObjMapping1D(void);
-extern void *OperatorNewArray(u32 size);
 
 void RewindObjVram(struct vram_upload_cursor *self)
 {
@@ -605,7 +566,7 @@ void DestroyPaletteCache(struct palette_cache *self, u32 flags)
 /* The inline asm pins the ROM's `add r1, r0, r3` (self-plus-constant,
  * not in-place) operand order/register choice - see docs/matching.md,
  * "Matching decompilation". */
-void InitPaletteCache(struct palette_cache *self)
+struct palette_cache *InitPaletteCache(struct palette_cache *self)
 {
     register s32 offset asm("r3");
     register u8 *dirtyAddr asm("r1");
@@ -616,6 +577,7 @@ void InitPaletteCache(struct palette_cache *self)
     offset = 0x8b << 2;
     asm volatile("add %0, %1, %2" : "=r"(dirtyAddr) : "r"(self), "r"(offset));
     *dirtyAddr = 0;
+    return self;
 }
 
 void DestroySpriteBankSet(void *arg0, u32 arg1)
@@ -688,7 +650,7 @@ extern struct actor *gPlayer;
 s32 CheckEntityPlayerContact(struct actor *self)
 {
     struct vtable_slot *table;
-    struct anim_box *rec;
+    struct hitbox_quad *rec;
     s32 x, rx;
     s32 y, ry;
     u8 rw, rh;
@@ -705,8 +667,8 @@ s32 CheckEntityPlayerContact(struct actor *self)
     rx = rec->offX;
     y = self->y >> 8;
     ry = rec->offY;
-    rw = rec->padX;
-    rh = rec->padY;
+    rw = rec->w;
+    rh = rec->h;
     x += rx;
     y += ry;
     SetAabbPos(&buf, x, y);
@@ -884,7 +846,7 @@ void WorldToScreen(void *arg0, s32 arg1, s32 arg2, s32 *arg3, s32 *arg4)
     *arg4 = arg2 - dy;
 }
 
-void WorldPosToScreen(void *arg0, s32 *arg1, s32 *arg2)
+void WorldPosToScreen(s32 *arg0, s32 *arg1, s32 *arg2)
 {
     void *subObj;
     s32 x, y;
@@ -910,11 +872,9 @@ void nullsub_12(void)
 }
 asm(".align 2, 0");
 
-extern void *OperatorNew(s32 size);
-extern void ResetEntity(struct actor *self);
 extern u8 gEntityVtable[];
 
-struct actor *CreateEntity(u16 arg0, u16 arg1, u16 arg2)
+struct actor *CreateEntity(u16 arg0, u16 arg1, u16 arg2, u16 unused)
 {
     struct actor *obj;
 

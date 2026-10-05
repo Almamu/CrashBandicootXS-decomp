@@ -6,6 +6,7 @@
 #include "actor.h"
 #include "bosses.h"
 #include "vehicle.h"
+#include "gfx.h"
 
 /* Branchless absolute value, matching this ROM's own codegen for `abs()`
  * (`asrs`/`eors`/`subs` on the value's own sign-extended shift, updating
@@ -263,8 +264,6 @@ asm(".align 2, 0");
 
 /* Same "self" object family as above - see this file's header
  * comment and docs/matching/issue-50-actor-2a69c.md. */
-
-extern void SetupSpriteFrameOam(u8 *frame, u32 arg1, u32 arg2, s32 priority);
 
 /* Computes an OBJ scale factor from `self->depth` and its animation
  * record's `baseDepth` (via `__divsi3`), then a second
@@ -752,8 +751,6 @@ asm(".align 2, 0");
 
 /* Same palette-cycle cluster as the functions around it - see
  * docs/matching/issue-50-actor-2a69c.md. */
-
-extern s32 QueueVramDmaTransfer(void *arg0, void *arg1, u16 arg2, u16 arg3);
 
 /* Per-frame palette-cycle DMA: while `gActorPaletteCycleEnabled` is set, DMAs one
  * `0x1c0`-byte palette-animation "frame" (`gActorPaletteCycleFrames +

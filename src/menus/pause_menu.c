@@ -9,17 +9,14 @@
 #include "text.h"
 #include "util.h"
 #include "menus.h"
+#include "gfx.h"
+#include "objects.h"
 
 extern struct palette_cache *gPaletteCache;
 extern struct AudioContext *gAudioContext;
 extern struct vram_upload_cursor *gObjVramCursor;
 extern u8 gSpriteBankTable[];
-extern void SetPaletteCacheSource(struct palette_cache *self, u16 count, const u8 *records);
-extern s32 ClaimPaletteSlot(struct palette_cache *self, s32 index);
-extern void DestroyPaletteCache(struct palette_cache *self, u32 flags);
 extern void *_call_via_r1(void *arg0, void *fn);
-extern void ResetObjVram(struct vram_upload_cursor *self);
-extern void *OperatorNew(s32 size);
 
 /* The composite pause/options screen's own constructor/driver
  * (docs/rom_map.md's "overlay_ui" section, "one composite pause/options
@@ -47,7 +44,6 @@ extern void *OperatorNew(s32 size);
  * read into a local before `gPauseMenuPalette`'s address, both to
  * match the ROM's load order. The two `0`s still come from
  * inline-function parameters, which CSE shares into r8. */
-extern struct palette_cache *InitPaletteCache(void *mem);
 
 /* Fires an icon manager's slot-6 method (a gcc 2.x virtual call). */
 #define ICON_SLOT6_CALL(mgr)                                                   \
@@ -130,13 +126,9 @@ s32 RunPauseMenu(void)
     return result;
 }
 
-extern void *InitBgSetup(void *buf, s32 arg1, s32 arg2, s32 arg3, s32 arg4);
-extern void LoadGraphicsPackage(void *buf, void *asset);
-extern s32 GetBgSetupControl(void *buf);
 extern void *gLevelState;
 extern void ***gSpriteBankSet;
 extern void *PackSaveData(void *arg0);
-extern struct actor *InitUiSpriteObj(struct actor *part);
 
 /* Same "recurring screen-constructor shape" docs/rom_map.md's overlay_ui
  * section documents for InitPauseMenu/InitPowerDialog/InitPauseTimeTrialPage: `self`
@@ -154,7 +146,7 @@ struct pause_menu *InitPauseMenu(struct pause_menu *self)
 {
     register s32 zero asm("r6");
 
-    InitBgSetup(self, 0, 0x1f, 0, 3);
+    InitBgSetup(&self->bg, 0, 0x1f, 0, 3);
 
     {
         register u32 *c8Addr asm("r4") = &self->field_c8;
@@ -220,7 +212,7 @@ struct pause_menu *InitPauseMenu(struct pause_menu *self)
             *hi = one;
         }
 
-        LoadGraphicsPackage(self, (void *)&gPauseMenuBg);
+        LoadGraphicsPackage(&self->bg, (void *)&gPauseMenuBg);
         self->field_10 = PackSaveData(gLevelState);
         InitPauseMenuInfo(self);
 
@@ -273,14 +265,13 @@ struct pause_menu *InitPauseMenu(struct pause_menu *self)
     self->field_24 = 0;
     self->field_28 = 0xb4;
 
-    REG_BG0CNT = GetBgSetupControl(self);
+    REG_BG0CNT = GetBgSetupControl(&self->bg);
     *(vu32 *)REG_ADDR_BG0HOFS = 0;
 
     return self;
 }
 
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
-extern void OperatorDelete(void *arg0);
 
 /* Same "re-probe an actor's own category-table slot 0x50/0x54" shape
  * already established by DestroyPowerDialog (src/menus/power_dialog_draw.c) -

@@ -5,6 +5,7 @@
 #include "audio.h"
 #include "actor.h"
 #include "vehicle.h"
+#include "gfx.h"
 
 /* Continues the same player/action-object action-table family already
  * documented in ctrl.c/action_ctrl_states.c/action_ctrl_land.c - `self`
@@ -32,13 +33,11 @@ extern void *gActorList;
 
 extern u8 gActorVtable[];
 
-extern void SetupSpriteFrameOam(u8 *frame, u32 arg1, u32 arg2, s32 priority);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern s32 _call_via_r3(void *addr, void *arg1, void *tableEntry, void *fn);
 extern void AddBrokenCrate(void *self);
 extern s32 AddLife(void *self);
 extern void CollectWumpa(void *self);
-extern void FreeVramTileBlock(void *arg0);
 
 /* Accumulates `gPolarPlayerVelY` into `y`, then drains
  * `gPolarPlayerVelY` toward a fixed ceiling (`0x780`) - the same

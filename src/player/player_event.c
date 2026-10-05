@@ -8,6 +8,7 @@
 #include "audio.h"
 #include "crates.h"
 #include "player.h"
+#include "objects.h"
 
 /* GitHub issue #9/#10, ROM 0x0800AB9C-0x0800AC2C (details in
  * docs/matching/issue-9-10-0x0800ab9c-graphics.md). Built with old_agbcc
@@ -45,9 +46,6 @@ struct ab9c_obj
     struct ab9c_link link; // 0x108
 };
 
-extern void GetSpriteAttackBox(struct aabb *dest, void *obj);
-extern void CollidePartList(void *manager, struct aabb box, s32 unused, void *compareViewport);
-extern void CollidePartsOfClass(void *manager, s32 arg1);
 extern void *gCollidableList;
 extern void *gCrateList;
 extern void *gUnknown_030012EC;
@@ -74,7 +72,7 @@ void CollidePlayerWithObjects(struct ab9c_obj *self)
         GetSpriteAttackBox(&b.src, self);
         manager = gCollidableList;
         MemCopy32(&b.copy, &b.src, sizeof(b.src));
-        CollidePartList(manager, b.copy, self->unk_24, self);
+        CollidePartList(manager, b.copy, self->unk_24, (struct box_part *)self);
     }
 
     if (self->flags0C >> 7)
@@ -478,7 +476,6 @@ struct orbit_self {
 
 extern void *gSpriteRenderer;
 extern s16 gSineTable[];
-extern void DrawSprite(void *self, void *part);
 extern s32 _call_via_r1(void *addr, void *fn);
 
 static inline s32 BlinkArmed(struct orbit_self *self)

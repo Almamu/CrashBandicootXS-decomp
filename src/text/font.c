@@ -3,6 +3,8 @@
 #include <agb_syscall.h>
 #include <libgcc.h>
 #include "system.h"
+#include "gfx.h"
+#include "crates.h"
 
 /* Sits between FontMeasureText (src/text/font_measure.c) and
  * InitFont (src/text/font.c) - FontUploadTiles/
@@ -11,7 +13,10 @@
 
 extern u8 *gPaletteCache;
 extern void ***gSpriteBankSet;
-extern s32 GetPaletteSlot(u8 *cache, s32 recordId);
+/* codegen: GetPaletteSlot returns u8 (gfx.h); with the u8 return
+ * FontUploadTiles adds `lsl #0x18; lsr #0x14` where the ROM has one
+ * `lsl #4`. docs/headers_plan.md */
+extern s32 GetPaletteSlot_s32(u8 *cache, s32 recordId) asm("GetPaletteSlot");
 
 /* Uploads `tiles`'s referenced tile data to the OBJ VRAM slot
  * selected by `tileBase`, recording the resulting tile-count-derived
@@ -51,7 +56,7 @@ void FontResetPalette(struct bitmap_font *self)
     u8 *cache = gPaletteCache;
     void *rec = *(void **)((u8 *)(**gSpriteBankSet) + (0xD2 << 1));
     u8 field = ((u8 *)rec)[0x14];
-    s32 slot = GetPaletteSlot(cache, field);
+    s32 slot = GetPaletteSlot_s32(cache, field);
     u32 shifted = slot << 4;
     register u8 mask asm("r1");
     register u8 b asm("r2");
@@ -130,7 +135,6 @@ struct bitmap_font *InitFont(struct bitmap_font *selfArg)
  * only one address computation total in the whole function (nothing
  * else contends for it), gcc's own codegen already lands the `self+
  * offsetof(record)` add in r2 exactly like the ROM. */
-extern void OperatorDelete(void *manager);
 
 extern void *_call_via_r1(void *arg0, void *arg1);
 

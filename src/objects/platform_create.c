@@ -1,5 +1,6 @@
 #include "core.h"
 #include "gobj_1a794.h"
+#include "objects.h"
 
 /* GitHub issue #25, ROM 0x0801A878-0x0801AB34: CreatePlatform, the level
  * object spawner (`new` + inlined constructor InitPlatform, spawn-record

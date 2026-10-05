@@ -1,19 +1,12 @@
 #include "core.h"
+#include "objects.h"
+#include "bosses.h"
 
 /*
  * ROM 0x0816C418-0x0816C460: an entry table and the entry set that
  * points into it. Linked in ROM order between data/data.s sections by
  * ldscript.txt - see docs/data.md.
  */
-
-/* An entry set as gobj_1a794.h's `struct mover` points at it (`set`,
- * +0x04): the {a, b} entries (`struct vec_pair`) and a word the code
- * doesn't read, 0x100 in every set in the ROM. */
-struct entry_set
-{
-    const u32 (*entries)[2];
-    u32 unk_04;
-};
 
 /* {a, b} vec3-table index pairs (`struct vec_pair`, gobj_1a794.h):
  * dingodile_create.c indexes gDingodileMotionRecords with entries 0-3;

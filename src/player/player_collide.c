@@ -2,14 +2,13 @@
 #include "actor.h"
 #include "actor_self.h"
 #include "player.h"
+#include "objects.h"
 
 /* GitHub issue #9/#10: 0x0800A884 - the same big, still-unnamed "part"
  * object family as `player_update.c`/`player_reset.c`; raw offset casts
  * throughout for the same reason those files give. */
 
-extern void CollideGroundSprite(void *self);
 extern void SetMaskLevel(void *arg0, s32 arg1);
-extern void *GetSpriteFrame(void *part);
 extern s32 GetTerrainFlagsAt(void *arg0, s32 x, s32 y);
 extern void *gLevelLayers;
 extern void *gLevelState;
@@ -173,7 +172,7 @@ u8 CollidePlayer(struct a884_part *self)
         CALL_M70H(self);
         self->f105 = 1;
         ((struct a884_game *)gLevelLayers)->busy = 1;
-        CollideGroundSprite(self);
+        CollideGroundSprite((struct box_part *)self);
         /* r3 hold (no code) over the flag resets and the kind switch:
          * the ROM's reloads rotate through r0-r2 only, so the flag
          * offsets reuse one register (`adds r1, #3`, `subs r2, #3`). */

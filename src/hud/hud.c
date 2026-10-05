@@ -1,10 +1,10 @@
 #include "core.h"
 #include "actor.h"
 #include "hud.h"
+#include "objects.h"
 
 extern void *gLevelState;
 
-extern void AdvanceSpriteAnim(struct actor *part);
 extern s32 GetBossIndex(void *self);
 extern u8 IsInBonusRound(void *self);
 
@@ -42,7 +42,7 @@ void UpdateHud(struct hud_counter *self)
 
     if (IsInBonusRound(gLevelState)) {
         gHudSlideOffset = 0;
-        AdvanceSpriteAnim((struct actor *)&sself->parts[34]);
+        AdvanceSpriteAnim((struct box_part *)(struct actor *)&sself->parts[34]);
         DrawHudPart(&sself->parts[34], 0, 0);
     }
 

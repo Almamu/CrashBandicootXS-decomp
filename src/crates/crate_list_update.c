@@ -43,31 +43,6 @@ extern void *gLevelLayers;
  *
  * Built with old_agbcc (see `OLD_AGBCC_OBJS` in the Makefile).
  * docs/matching/issue-9-raw-asm-pass.md has how it was matched. */
-struct pool_node {
-    struct box_part *data;
-    struct pool_node *next;
-    void *wrap;
-    struct pool_node *link;
-    u8 mark;
-    u8 mark2;
-};
-
-struct pool_entry {
-    struct pool_node *node;
-    struct pool_entry *next;
-};
-
-struct pool_manager {
-    s32 activeCount;
-    s32 capacity;
-    struct box_part **slotArray;
-    void *nodeArray;
-    struct pool_node *gridHead[256];
-    struct pool_node *gridTail[256];
-    void *freeListArray;
-    struct pool_entry *freeListHead;
-};
-
 struct track_obj {
     u8 unused_00[0x10];
     s32 *pos;
@@ -204,7 +179,7 @@ void UpdateCrateList(struct pool_manager *manager)
             struct box_part *part = node->data;
 
             if (large && node->link == NULL) {
-                struct pool_entry *entry = manager->freeListHead;
+                struct pool_link *entry = manager->freeListHead;
                 struct pool_node *newNode = entry->node;
 
                 manager->freeListHead = entry->next;

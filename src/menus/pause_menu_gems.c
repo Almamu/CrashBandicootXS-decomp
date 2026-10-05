@@ -7,6 +7,7 @@
 #include "memory.h"
 #include "text.h"
 #include "menus.h"
+#include "objects.h"
 
 /* DrawPauseGemsPage + DrawPauseRelicsPage: mutually address-adjacent, bracketed by
  * the already-matched DrawPausePowersPage (pause_menu_powers.c) before and
@@ -17,7 +18,6 @@
  * Built with old_agbcc (Makefile OLD_AGBCC_OBJS): its mask-before-ldrb
  * order shows in DrawPauseGemsPage's flag tests. */
 
-extern void DrawSpriteWithOffset(void *arg0, s32 arg1, s32 arg2);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 
 static inline void set_icon_mgr_pos(struct bitmap_font *m, u32 x, u32 y)
@@ -50,14 +50,14 @@ static inline void set_icon_mgr_pos(struct bitmap_font *m, u32 x, u32 y)
 void DrawPauseGemsPage(struct pause_menu *self)
 {
     if (((u8 *)self->field_10)[2] & 1)
-        DrawSpriteWithOffset(self->icons9c[1], 0, 0);
+        DrawSpriteWithOffset((struct actor *)self->icons9c[1], 0, 0);
     if (((u8 *)self->field_10)[2] & 4)
-        DrawSpriteWithOffset(self->icons9c[2], 0, 0);
+        DrawSpriteWithOffset((struct actor *)self->icons9c[2], 0, 0);
     if (((u8 *)self->field_10)[2] & 8)
-        DrawSpriteWithOffset(self->icons9c[3], 0, 0);
+        DrawSpriteWithOffset((struct actor *)self->icons9c[3], 0, 0);
     if (((u8 *)self->field_10)[2] & 2)
-        DrawSpriteWithOffset(self->icons9c[4], 0, 0);
-    DrawSpriteWithOffset(self->icons9c[0], 0, 0);
+        DrawSpriteWithOffset((struct actor *)self->icons9c[4], 0, 0);
+    DrawSpriteWithOffset((struct actor *)self->icons9c[0], 0, 0);
 
     set_icon_mgr_pos(gSmallFont, gPauseGemIconPos[0].x - 0x14, gPauseGemIconPos[0].y - 4);
     DRAW_ICON_TEXT(gSmallFont, self->buf2f);
@@ -79,7 +79,7 @@ void DrawPauseRelicsPage(struct pause_menu *self)
     s32 i;
 
     for (i = 0; i <= 2; i++)
-        DrawSpriteWithOffset(self->iconsB0[i], 0, 0);
+        DrawSpriteWithOffset((struct actor *)self->iconsB0[i], 0, 0);
 
     set_icon_mgr_pos(gSmallFont, gPauseRelicIconPos[2].x - 4, gPauseRelicIconPos[2].y + 0xe);
     DRAW_ICON_TEXT(gSmallFont, self->buf38);

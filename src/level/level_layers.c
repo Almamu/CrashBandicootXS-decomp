@@ -1,6 +1,7 @@
 #include "core.h"
 #include "gba/dma_macros.h"
 #include "system.h"
+#include "gfx.h"
 
 /* GitHub issue #43: the level-layers singleton (`gLevelLayersSingleton`,
  * 0x2C bytes, created on first use by `GetLevelLayers`) - the object
@@ -108,16 +109,8 @@ struct level_layers
 extern struct level_layers *gLevelLayersSingleton;
 extern void *gEntityFlags;
 
-extern void *OperatorNewArray(u32 size);
-extern void *OperatorNew(u32 size);
-extern void OperatorDeleteArray(void *ptr);
-extern void OperatorDelete(void *ptr);
 extern void LoadBgLayer(struct layer *layer, void *data);
 extern void SetCollisionSource(struct tile_cache *self, void *source);
-extern void ShowBg0(void);
-extern void ShowBg1(void);
-extern void ShowBg2(void);
-extern void ShowBg3(void);
 extern void SpawnRoomEntities(void *self, void *arg1, void *arg2, s32 arg3, s32 arg4);
 extern struct layer *InitPooledBgLayer(void *mem, s32 arg1);
 extern struct tile_cache *nullsub_4(void *mem);

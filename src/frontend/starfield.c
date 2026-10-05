@@ -3,6 +3,7 @@
 #include "frontend.h"
 #include "util.h"
 #include "system.h"
+#include "gfx.h"
 
 /* Same "self" object family as hovercraft_side_gun.c - see docs/matching/issue-63-0x08033ef4-actor.md. This is
  * the 0x14-byte constructor (`InitStarfield`, called by `InitTitleScreen` as
@@ -48,10 +49,6 @@ struct particle_slot {
     s32 dy;
 };
 
-extern void *OperatorNewArray(u32 size);
-extern void SetDispcntMode(s32 val);
-extern void ShowBg0(void);
-extern void CommitDispcnt(void);
 extern u8 gDispcnt[2];
 
 /* Constructs the particle-trail BG0 object. Fully matched as real C.
@@ -578,9 +575,6 @@ check:
         goto body;
     }
 }
-
-extern void OperatorDeleteArray(void *ptr);
-extern void OperatorDelete(void *self);
 
 /* Releases `self+0x10`/`self+8`'s dynamically-allocated buffers (each,
  * if non-NULL, via `OperatorDeleteArray`) and, if bit 0 of `flags` is set, also

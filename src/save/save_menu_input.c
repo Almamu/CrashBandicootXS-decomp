@@ -7,6 +7,7 @@
 #include "util.h"
 #include "system.h"
 #include "audio.h"
+#include "gfx.h"
 
 void SetSaveTransferRecord(struct settings_sync_pump *self, struct save_data *tmpl)
 {
@@ -81,13 +82,10 @@ u8 RunSaveMenu(u32 state, u32 field10)
     return ((struct save_menu *)gSaveMenu)->field_20;
 }
 
-extern void *OperatorNew(s32 size);
 extern void *gAudioContext;
 extern struct palette_cache *gPaletteCache;
-extern void FreeUnlockedPaletteSlots(struct palette_cache *self);
 extern void *gLevelState;
 extern void *PackSaveData(void *arg0);
-extern void FadeBrightness(u8 flags, s32 frameDelay, u8 sync);
 
 /* The composite pause/options screen's (and the spinner dialog's, via
  * InitSaveMenu above) `field_8c`/`field_90` constructor: allocates and
@@ -132,7 +130,6 @@ struct save_menu *InitSaveMenu(struct save_menu *arg0)
     return self;
 }
 
-extern void OperatorDelete(void *arg0);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 
 /* Tears down the composite screen's (or spinner dialog's) field_8c/

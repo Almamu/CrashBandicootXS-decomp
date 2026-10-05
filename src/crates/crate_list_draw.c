@@ -10,17 +10,6 @@ extern void *gLevelLayers;
 /* The spatial-hash-grid pool manager struct `InitCrateList` initializes
  * and `crate_list.c` operates on - see that file (and
  * `part_list.c`) for the full field writeup. */
-struct pool_manager {
-    s32 activeCount;
-    s32 capacity;
-    void **slotArray;
-    void *nodeArray;
-    void *gridHead[256];
-    void *gridTail[256];
-    void *freeListArray;
-    void *freeListHead;
-};
-
 /* Same "extended screen box" filter shape as `CullPartList` (the plain
  * 240x160 GBA screen region, in Q8, at the `gLevelLayers`
  * sub-object's own position), but instead of filtering into a second
@@ -89,8 +78,8 @@ void DrawCrateList(void *managerArg)
 
     bucket = baseIdx + 2;
     {
-        void **gridHeadBase = manager->gridHead;
-        register void **gridHead255 asm("r8") = &manager->gridHead[255];
+        void **gridHeadBase = (void **)manager->gridHead;
+        register void **gridHead255 asm("r8") = (void **)&manager->gridHead[255];
 
         do {
             s32 off = bucket << 2;

@@ -194,7 +194,7 @@ s32 RunActorCategoryFrame(void)
             gActorDrawList[gActorDrawCount++] = n;
         n = ACTOR_NEXT(n);
     } while (n != gActorList);
-    gHeapSortActorsByKeyFunc(gActorDrawCount, (void **)gActorDrawList);
+    gHeapSortActorsByKeyFunc(gActorDrawCount, gActorDrawList);
 
     for (i = 0; i < gActorDrawCount; i++) {
         struct actor_self *a = gActorDrawList[i];

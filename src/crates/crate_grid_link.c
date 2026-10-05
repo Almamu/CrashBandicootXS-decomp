@@ -5,17 +5,6 @@
 /* Same fixed-slot object-pool/spatial-hash-grid struct `InitCrateList`
  * initializes (`part_list.c`) and `crate_list.c` operates on - see
  * that file for the full field writeup. */
-struct pool_manager {
-    s32 activeCount;
-    s32 capacity;
-    void **slotArray;
-    void *nodeArray;
-    void *gridHead[256];
-    void *gridTail[256];
-    void *freeListArray;
-    void *freeListHead;
-};
-
 /* Searches every bucket (254 down to 0, i.e. every bucket except the
  * special "large object" bucket 255) of `manager`'s spatial hash grid
  * for a node whose data pointer equals `obj`. On the first match: if
@@ -82,7 +71,7 @@ void LinkCrateToActiveBucket(struct pool_manager *manager, void *objArg)
              * it above the outer `for` loop - see the function-level
              * comment above. */
             asm volatile("" : "+r"(manager));
-            headField = &manager->freeListHead;
+            headField = (void **)&manager->freeListHead;
 
             for (;;) {
                 register void *data asm("r5") = *(void **)node;

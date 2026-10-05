@@ -5,14 +5,10 @@
 #include "actor.h"
 #include "bosses.h"
 #include "vehicle.h"
+#include "gfx.h"
 
-extern void InitObjTileFreeList(void *addr);
-extern void InitSpriteFrameOamQueue(void);
-extern void InitSpriteFrameCache(void);
 extern void ***gSpriteBankSet;
 extern struct palette_cache *gPaletteCache;
-extern void FreeUnlockedPaletteSlots(struct palette_cache *self);
-extern void BindPaletteSlot(struct palette_cache *self, s32 slot, s32 index);
 extern void *gHud;
 
 /* Pins the current category's tile-cache slots that every actor part

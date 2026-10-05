@@ -3,6 +3,8 @@
 #include "system.h"
 #include "audio.h"
 #include "player.h"
+#include "gfx.h"
+#include "objects.h"
 
 /* GitHub issues #19 (its last raw function, CheckPlayerCtrlTurn) and #20
  * (0x08016128-0x08017524): the player-input controller class of
@@ -61,16 +63,8 @@ extern void *gLevelState;
 extern void *gPaletteCache;
 extern u8 *gEntityFlags;
 extern struct pctrl_target *gPlayer;
-extern struct pctrl_anim gPlayerCtrlMotionRecords[];
 
 extern void LoseLife(void *arg0);
-extern void LoadPaletteSlot(void *cache, s32 slot, s32 recordId);
-extern void ResetSpriteFrameTimer(struct pctrl_target *t);
-extern void ResetSpriteFrameIndex(struct pctrl_target *t);
-extern void SetSpriteAnimDone(struct pctrl_target *t, s32 a);
-extern void StartCtrlTargetMotionX(void *self, struct pctrl_target *t, struct pctrl_anim *rec);
-extern void DestroyCtrl(void *self, s32 flags);
-extern void InitCtrl(void *self);
 
 typedef void (*pctrl_fn1)(void *self, s32 a);
 typedef void (*pctrl_fn2)(void *self, struct pctrl_target *t, s32 a);
@@ -489,27 +483,27 @@ void ApplyPlayerCtrlMotion(struct player_ctrl *self)
 {
     if (self->motionXPending == 1)
     {
-        struct pctrl_anim *rec;
+        struct motion_rec *rec;
 
         self->motionXPending = 0;
         {
             register u32 i asm("r1") = self->animSet->entries[self->motionX].a;
-            register u32 off asm("r0") = i * sizeof(struct pctrl_anim);
+            register u32 off asm("r0") = i * sizeof(struct motion_rec);
 
-            rec = (struct pctrl_anim *)(off + (u32)gPlayerCtrlMotionRecords);
+            rec = (struct motion_rec *)(off + (u32)gPlayerCtrlMotionRecords);
         }
-        StartCtrlTargetMotionX(self, self->target, rec);
+        StartCtrlTargetMotionX(self, self->target, (s32 *)rec);
     }
     if (self->motionYPending == 1)
     {
-        struct pctrl_anim *rec;
+        struct motion_rec *rec;
 
         self->motionYPending = 0;
         {
             register u32 i asm("r1") = self->animSet->entries[self->motionY].b;
-            register u32 off asm("r0") = i * sizeof(struct pctrl_anim);
+            register u32 off asm("r0") = i * sizeof(struct motion_rec);
 
-            rec = (struct pctrl_anim *)(off + (u32)gPlayerCtrlMotionRecords);
+            rec = (struct motion_rec *)(off + (u32)gPlayerCtrlMotionRecords);
         }
         StartCtrlTargetMotionY(self, self->target, (struct vec3 *)rec);
     }
@@ -768,7 +762,7 @@ void StartPlayerCtrlMotionYFromSet(struct player_ctrl *self, struct pctrl_target
 /* UNUSED */
 void StartPlayerCtrlMotionXFromSet(struct player_ctrl *self, struct pctrl_target *target, s32 idx)
 {
-    StartCtrlTargetMotionX(self, target, &gPlayerCtrlMotionRecords[self->animSet->entries[idx].a]);
+    StartCtrlTargetMotionX(self, target, (s32 *)&gPlayerCtrlMotionRecords[self->animSet->entries[idx].a]);
 }
 
 void SetPlayerCtrlState(struct player_ctrl *self, s32 a, s32 mode, s32 timer, s32 timerMax)

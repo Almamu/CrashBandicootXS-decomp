@@ -39,7 +39,7 @@ void StartDingodileMotion(void *self, struct gobj *partArg, s32 indexArg)
 {
     register struct gobj *part asm("r3") = partArg;
     register s32 index asm("r5") = indexArg;
-    const struct vec3 *e = (const struct vec3 *)gDingodileMotionRecords[gDingodileMotionEntries[index].a];
+    const struct vec3 *e = (const struct vec3 *)gDingodileMotionRecords[gDingodileMotionEntries[index][0]];
 
     if ((s32)(part->mirror << 27) < 0)
     {
@@ -64,7 +64,7 @@ void StartDingodileMotion(void *self, struct gobj *partArg, s32 indexArg)
         part->rampX.target = z;
     }
     {
-        const struct vec3 *e2 = (const struct vec3 *)gDingodileMotionRecords[gDingodileMotionEntries[index].b];
+        const struct vec3 *e2 = (const struct vec3 *)gDingodileMotionRecords[gDingodileMotionEntries[index][1]];
         s32 x = e2->x;
         s32 y = e2->y;
         s32 z = e2->z;
@@ -79,14 +79,14 @@ void StartDingodileMotion(void *self, struct gobj *partArg, s32 indexArg)
 
 void DestroyDingodile(struct seq_obj *self, s32 flags)
 {
-    self->vtable = gDingodileVtable;
+    self->vtable = (void *)gDingodileVtable;
     DestroyBossCtrl(self, flags);
 }
 
 struct seq_obj *CreateDingodile(struct seq_obj *self, u32 a, u32 b)
 {
     CreateBossCtrl(self);
-    self->vtable = gDingodileVtable;
+    self->vtable = (void *)gDingodileVtable;
     SpawnDingodileShieldOrRocket((struct dingodile_boss *)self, 0, (u16)a, (u16)b, 0);
     return self;
 }

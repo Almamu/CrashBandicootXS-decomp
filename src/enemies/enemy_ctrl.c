@@ -4,6 +4,9 @@
 #include "part_ctrl.h"
 #include "enemies.h"
 #include <libgcc.h>
+#include "gfx.h"
+#include "objects.h"
+#include "memory.h"
 
 /* GitHub issue #9/#10: the three small `(self, mode)`-shaped trigger
  * functions the Phase 1 investigation (docs/matching/issue-9-10-0x0800b8dc-graphics.md)
@@ -41,8 +44,6 @@
  * `SetEnemyMotionY`/`SetEnemyMotionX` - i.e. a per-object override table
  * parallel to the shared global one. */
 
-extern void StartCtrlTargetMotionYFromSet(void *selfArg, void *arg1, s32 index);
-extern void StartCtrlTargetMotionXFromSet(void *selfArg, void *arg1, s32 index);
 extern s32 _call_via_r3(void *arg0, void *arg1, void *arg2, void *arg3);
 
 /* Caches `mode` into `self->0x7c`, then delegates to `StartCtrlTargetMotionYFromSet`
@@ -414,9 +415,6 @@ void ResetEnemyCtrl(struct part_ctrl *self)
     self->popup = NULL;
 }
 
-extern void DestroyCtrl(void *self, s32 flags);
-extern void InitCtrl(void *self);
-
 /* Sets `self+0xc`'s table pointer to `gEnemyCtrlVtable` - the
  * same 93-vtable-family record `UpdateEnemyCtrl`/`HitEnemy`
  * (`enemy_ctrl_update.c`) themselves live in, per the Phase 1 doc's own
@@ -556,7 +554,6 @@ void UpdatePeriodicSpawner(struct periodic_spawner *self)
 }
 
 extern u8 gEntityVtable[];
-extern void OperatorDelete(void *self);
 
 /* Sets `self+0x18`'s table pointer (the struct-actor-shaped "table"
  * field role, per this file's own banner comment) to
@@ -570,8 +567,6 @@ void DestroyPeriodicSpawner(struct periodic_spawner *self, s32 flags)
         OperatorDelete(self);
     }
 }
-
-extern struct actor *InitEntity(struct actor *self);
 
 /* Calls `InitEntity(self)` (already matched, `graphics.c`) - its
  * return value discarded - then sets `self+0x18`'s table pointer to

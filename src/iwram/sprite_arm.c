@@ -1,4 +1,7 @@
 #include "core.h"
+#include "iwram.h"
+#include "gfx.h"
+#include "actor_self.h"
 
 /*
  * IWRAM 0x0300024C-0x030007CC (stored in ROM at 0x087E5830): the ARM
@@ -147,8 +150,9 @@ static inline void SiftDown(struct sort_entry **a, s32 root, s32 n)
  * hoisted and in the wrong order) and sweeps of -O1/-O2/-O3 with ~50
  * single flags also failed. The same compiler built itoa_arm and
  * LookupSpriteFrameCache, which provably aren't agbcc_arm output. */
-void HeapSortActorsByKey(s32 n, struct sort_entry **a)
+void HeapSortActorsByKey(s32 n, struct actor_self **list)
 {
+    struct sort_entry **a = (struct sort_entry **)list;
     s32 i;
     struct sort_entry *t;
 
@@ -163,7 +167,7 @@ void HeapSortActorsByKey(s32 n, struct sort_entry **a)
     }
 }
 #else
-NAKED void HeapSortActorsByKey(s32 n, struct sort_entry **a)
+NAKED void HeapSortActorsByKey(s32 n, struct actor_self **list)
 {
     asm(".syntax unified\n"
         "\tpush {r4, r5, r6, r7, r8, r9, r10, lr}\n"
@@ -294,17 +298,6 @@ NAKED void HeapSortActorsByKey(s32 n, struct sort_entry **a)
 }
 #endif
 
-/* A zero-run-compressed OBJ frame (docs/data.md "Compressed sprite
- * frames"): the size in tiles, then u16 counts alternating between a run
- * of zero halfwords and a run of literal halfwords that follow it. */
-struct rle_frame {
-    u8 w;
-    u8 h;
-    u8 unk_2;
-    u8 unk_3;
-    u16 data[0];
-};
-
 /* gUnpackRleSpriteFrameFunc(dst, frame): unpacks a frame's w*h tiles into `dst`,
  * zero runs with a DMA3 fill and literal runs with a DMA3 copy. Called
  * by polar_player.c, jetpack_spawn.c and company_logos.c. */
@@ -325,17 +318,6 @@ void UnpackRleSpriteFrame(u16 *dst, struct rle_frame *frame)
         dst += n;
     }
 }
-
-/* Same layout as sprite_frame.c's copy. */
-struct sprite_frame_cache_node {
-    struct sprite_frame_cache_node *next;
-    struct sprite_frame_cache_node *prev;
-    u8 *frame;
-    void *vramAddr;
-};
-
-extern struct sprite_frame_cache_node gSpriteFrameCacheCurrent;
-extern struct sprite_frame_cache_node gSpriteFrameCachePrevious;
 
 #define OBJ_TILE_INDEX(addr) (((u32)(addr) - (u32)OBJ_VRAM0) >> 5)
 

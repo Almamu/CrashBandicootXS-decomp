@@ -6,6 +6,7 @@
 #include "text.h"
 #include "frontend.h"
 #include "audio.h"
+#include "gfx.h"
 
 /* The language menu shown at boot (OpenLanguageSelect/RunLanguageSelect/
  * CloseLanguageSelect, called from MainLoop): up/down cycles `language`
@@ -17,9 +18,6 @@
  * GAX2 engine, but is game-side code that merely uses PlaySfx.
  * `struct language_select` is in frontend.h. */
 
-extern void *OperatorNewArray(u32 size);
-extern void OperatorDeleteArray(void *ptr);
-extern void OperatorDelete(void *self);
 extern void *gInput;
 extern u16 gKeys;
 extern void *gAudioContext;
@@ -66,7 +64,6 @@ void DestroyCompanyLogos(void *self, u32 flags)
  * gActorVtable, unlinks the actor from the actor ring and frees it on
  * flags bit 0 - the same shape as DestroyActor. */
 
-extern void FreeVramTileBlock(void *arg0);
 extern u8 gActorVtable[];
 
 void DestroyLogoActor(struct actor_self *self, u32 flags)
@@ -143,9 +140,6 @@ void LanguageSelectInput(struct language_select *self, u32 flags)
 
 extern void *gOamBuffer;
 extern void *gObjVramCursor;
-extern void ResetOamBuffer(void *arg0);
-extern void RewindObjVram(void *arg0);
-extern void HideUnusedOamEntries(void *arg0);
 /* `_call_via_r2`: calls `fn(self, arg)` (an bitmap_font method). */
 extern s32 _call_via_r2(void *self, void *arg, void *fn);
 
@@ -207,12 +201,6 @@ void DrawLanguageSelect(struct language_select *self)
  * `zero` local shared by the `field_8`/`tileBase` stores - the 0 the
  * ROM keeps in r8. Matches under both compilers. */
 extern struct palette_cache *gPaletteCache;
-extern void CommitOamBuffer(void *arg0);
-extern void FreeUnlockedPaletteSlots(struct palette_cache *cache);
-extern s32 ClaimPaletteSlot(struct palette_cache *cache, s32 index);
-extern void ResetObjVram(void *cursor);
-extern s32 ReserveObjVram(void *cursor, s32 size);
-extern void MarkObjVram(void *cursor);
 extern void _call_via_r1(void *self, void *fn);
 
 static inline void IconSetBase(struct bitmap_font *m, u32 base)

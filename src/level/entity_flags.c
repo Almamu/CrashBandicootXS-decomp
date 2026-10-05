@@ -1,4 +1,5 @@
 #include "core.h"
+#include "memory.h"
 
 /* GitHub issue #41: 0x08025894-0x08025FC8. Counts, across every group
  * in `list` (a `{count:u16 @2, groups:ptr @4}` header) and every item
@@ -239,8 +240,6 @@ void sub_8025A3C(void *self, s32 val)
 {
     *(s32 *)((u8 *)self + 4) = val >> 8;
 }
-
-extern void OperatorDelete(void *self);
 
 /* If bit 0 of `flags` is set, forwards to `OperatorDelete` - same
  * conditional-destroy shape as entity_spawner.c's

@@ -5,6 +5,9 @@
 #include "pickups.h"
 #include "util.h"
 #include "audio.h"
+#include "gfx.h"
+#include "objects.h"
+#include "memory.h"
 
 /* GitHub issue #12/#14 Phase 2, second parallel slice: the tail 6
  * functions of the still-large 24-function chunk past AddCollisionCandidate
@@ -28,7 +31,6 @@
 extern void *gAudioContext;
 extern void *gHud;
 extern void *gLevelState;
-extern void WorldToScreen(void *arg0, s32 arg1, s32 arg2, s32 *arg3, s32 *arg4);
 extern s16 gSineTable[];
 
 /* Built with old_agbcc (Makefile OLD_AGBCC_OBJS) since the issue #15
@@ -167,8 +169,6 @@ extern struct orbit_part *gPlayer;
 extern void CollectWumpa(void *state);
 extern struct actor *DropWumpa(void *unused0, u16 x, u16 y, u8 p3, u8 p4, u8 p5);
 typedef struct actor *(*OrbitSpawn4)(void *pool, s32 x, s32 y, u8 p3);
-
-extern void UpdateSpriteObj(struct actor *self);
 
 /* flags |= 1 and, unless the id is 0xffff, the id's bit in the
  * collision bitmap. The three copies are merged by cross-jumping. */
@@ -348,13 +348,6 @@ extern void *gUnknown_030012EC;
 extern void *gUnknown_030012F4;
 extern void ***gSpriteBankSet;
 extern void *gPaletteCache;
-extern void *OperatorNew(s32 size);
-extern struct actor *InitSpriteObj(struct actor *self);
-extern void AddToPartList(void *manager, void *value);
-extern void ResetSpriteFrameTimer(struct orbit_part *part);
-extern void ResetSpriteFrameIndex(struct orbit_part *part);
-extern void SetSpriteAnimDone(struct orbit_part *part, u8 val);
-extern u8 GetPaletteSlot(void *cache, u8 record);
 
 struct orbit_part *CreateWumpa(u16 id, u16 x, u16 y, u16 special)
 {

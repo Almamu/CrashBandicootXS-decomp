@@ -1,5 +1,6 @@
 #include "core.h"
 #include "gfx_part.h"
+#include "objects.h"
 
 /* 0x08020E84-0x08021280 (GitHub issue #31): four of the "trigger effect
  * type N" spawners reached through the 15-slot dispatch table at
@@ -46,14 +47,7 @@ extern u8 ***gSpriteBankSet;
 extern void *gUnknown_030012EC;
 
 extern u8 IsGemPathDone(struct level_progress *self);
-extern void *CreatePlatform(u16 x, u16 y, u16 w, u16 h, s32 id);
 extern void SetGemPlatform(struct level_progress *self, void *handle);
-extern struct gfx_part *CreateSpriteObj(u16 a0, u16 a1, u16 a2, u16 a3);
-extern void ResetSpriteFrameTimer(struct gfx_part *part);
-extern void ResetSpriteFrameIndex(struct gfx_part *part);
-extern void SetSpriteAnimDone(struct gfx_part *part, s32 val);
-extern s32 GetSpriteAnimPaletteSlot(struct gfx_part *part);
-extern void AddToPartList(void *manager, struct gfx_part *part);
 
 /* The `tag` locals are set before the CreateSpriteObj call on purpose: the
  * ROM loads the constant into a callee-saved register up front and
@@ -82,7 +76,7 @@ void SpawnRedGemPlatform(u32 a0, u16 a1, u16 a2, u16 a3)
         ResetSpriteFrameTimer(part);
         ResetSpriteFrameIndex(part);
         SetSpriteAnimDone(part, 0);
-        part->frameNibble = GetSpriteAnimPaletteSlot(part);
+        part->frameNibble = GetSpriteAnimPaletteSlot((struct actor *)part);
         part->kind = bit;
         AddToPartList(gUnknown_030012EC, part);
         part->hidden = 0;
@@ -113,7 +107,7 @@ void SpawnYellowGemPlatform(u32 a0, u16 a1, u16 a2, u16 a3)
         ResetSpriteFrameTimer(part);
         ResetSpriteFrameIndex(part);
         SetSpriteAnimDone(part, 0);
-        part->frameNibble = GetSpriteAnimPaletteSlot(part);
+        part->frameNibble = GetSpriteAnimPaletteSlot((struct actor *)part);
         part->kind = bit;
         AddToPartList(gUnknown_030012EC, part);
         part->hidden = 0;
@@ -144,7 +138,7 @@ void SpawnGreenGemPlatform(u32 a0, u16 a1, u16 a2, u16 a3)
         ResetSpriteFrameTimer(part);
         ResetSpriteFrameIndex(part);
         SetSpriteAnimDone(part, 0);
-        part->frameNibble = GetSpriteAnimPaletteSlot(part);
+        part->frameNibble = GetSpriteAnimPaletteSlot((struct actor *)part);
         part->kind = bit;
         AddToPartList(gUnknown_030012EC, part);
         part->hidden = 0;
@@ -177,7 +171,7 @@ void SpawnBlueGemPlatform(u32 a0, u16 a1, u16 a2, u16 a3)
         ResetSpriteFrameTimer(part);
         ResetSpriteFrameIndex(part);
         SetSpriteAnimDone(part, 0);
-        part->frameNibble = GetSpriteAnimPaletteSlot(part);
+        part->frameNibble = GetSpriteAnimPaletteSlot((struct actor *)part);
         part->kind = bit;
         AddToPartList(gUnknown_030012EC, part);
         part->hidden = 0;

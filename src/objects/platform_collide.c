@@ -1,5 +1,13 @@
 #include "core.h"
 #include "gobj_1a794.h"
+#include "gfx.h"
+#include "objects.h"
+
+/* codegen: GetSpriteHitbox returns the box by value (objects.h); this
+ * file was matched against the same call written with the destination
+ * as an explicit first argument, and through the struct return gcc adds
+ * a temporary on the stack. docs/headers_plan.md */
+extern void GetSpriteHitbox_p(struct aabb *dest, void *part) asm("GetSpriteHitbox");
 
 /* GitHub issue #25, ROM 0x0801AB98-0x0801B208: ResolvePlatformCollision, the
  * player-vs-object collision resolver (see include/gobj_1a794.h and
@@ -66,7 +74,7 @@ void ResolvePlatformCollision(struct gobj *selfArg, void *unused)
     s32 py;
     s32 tx;
     s32 ty;
-    struct anim_box *box;
+    struct hitbox_quad *box;
     s32 result;
     s32 flags;
     struct aabb *pb;
@@ -76,7 +84,7 @@ void ResolvePlatformCollision(struct gobj *selfArg, void *unused)
     /* Emits nothing: keeps r8 live up to the first overlap test, so
      * `self` goes to sb and `result` gets r8, as in the ROM. */
     asm("" : "=r"(hold8));
-    GetSpriteHitbox(&a, self);
+    GetSpriteHitbox_p(&a, self);
     {
         s32 t = gPlayer->x;
 
@@ -87,13 +95,13 @@ void ResolvePlatformCollision(struct gobj *selfArg, void *unused)
     /* Emits nothing: hides `pb`'s value from cse, so `&b` stays in a
      * register (r4) instead of being re-added to sp at each use. */
     asm("" : "+r"(pb));
-    GetSpriteHitbox(pb, gPlayer);
+    GetSpriteHitbox_p(pb, gPlayer);
     {
         struct gobj *q = gPlayer;
         struct anim_table *anim = q->anim;
         u32 tag = q->tag;
 
-        box = (struct anim_box *)&anim->records[tag].offX;
+        box = (struct hitbox_quad *)&anim->records[tag].offX;
     }
     /* Emits nothing: end of the r8 hold. */
     asm("" : : "r"(hold8));
@@ -103,8 +111,8 @@ void ResolvePlatformCollision(struct gobj *selfArg, void *unused)
         above = 0;
         if (b.y < a.y)
             above = 1;
-        tx = GetSpritePrevX(gPlayer);
-        ty = GetSpritePrevY(gPlayer);
+        tx = GetSpritePrevX((struct gfx_part *)gPlayer);
+        ty = GetSpritePrevY((struct gfx_part *)gPlayer);
         side = 2;
         if (px > tx)
             side = 1;
@@ -139,13 +147,13 @@ void ResolvePlatformCollision(struct gobj *selfArg, void *unused)
                         result = 8;
                     goto classified;
                 }
-                if (GetSpritePrevY(self) == (self->y >> 8) && oy > 2)
+                if (GetSpritePrevY((struct gfx_part *)self) == (self->y >> 8) && oy > 2)
                 {
                     result = hdir;
                     goto classified;
                 }
             }
-            if (tx == px && GetSpritePrevX(self) == (self->x >> 8))
+            if (tx == px && GetSpritePrevX((struct gfx_part *)self) == (self->x >> 8))
                 result = vdir;
         }
     classified:
@@ -153,7 +161,7 @@ void ResolvePlatformCollision(struct gobj *selfArg, void *unused)
         {
             if (result == 0)
             {
-                ty += box->offY + box->padY;
+                ty += box->offY + box->h;
                 if (ty <= a.y + a.h)
                 {
                     if (side == 1)
@@ -168,10 +176,10 @@ void ResolvePlatformCollision(struct gobj *selfArg, void *unused)
                     }
                     if (result == 0)
                     {
-                        py += box->offY + box->padY;
+                        py += box->offY + box->h;
                         if (hdir == 1)
                         {
-                            tx += box->offX + box->padX;
+                            tx += box->offX + box->w;
                             px = b.x + b.w;
                             r = FindLineCrossing(tx, ty, px, py, a.x);
                         }
@@ -219,7 +227,7 @@ void ResolvePlatformCollision(struct gobj *selfArg, void *unused)
                         py += box->offY;
                         if (hdir == 1)
                         {
-                            tx += box->offX + box->padX;
+                            tx += box->offX + box->w;
                             px = b.x + b.w;
                             r = FindLineCrossing(tx, ty, px, py, a.x);
                         }
@@ -298,7 +306,7 @@ void ResolvePlatformCollision(struct gobj *selfArg, void *unused)
                 pos.x = gPlayer->x;
             }
         }
-        SetEntityPos(gPlayer, pos.x, PosPtr(&pos)->y);
+        SetEntityPos((struct actor *)gPlayer, pos.x, PosPtr(&pos)->y);
         if (flags)
         {
             Call68(gPlayer, 0, 0xC, flags);

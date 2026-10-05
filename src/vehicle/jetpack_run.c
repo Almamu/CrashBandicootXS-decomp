@@ -4,6 +4,7 @@
 #include "audio.h"
 #include "actor.h"
 #include "vehicle.h"
+#include "gfx.h"
 
 /* Same large per-instance "self" object family as ctrl.c/
  * action_ctrl_states.c/polar_player_actions.c/airship_fireball.c (state at `self+0x28`,
@@ -213,7 +214,6 @@ void PassJetpackRing(void *selfArg, s32 xArg, s32 yArg)
  * gcc constant-folds the literal and freely picks its own register),
  * and the final byte-load pair (`rec[0]`/`rec[1]`) pinned per-block to
  * the exact registers the ROM's `ldrb` pair uses. */
-extern void *AllocVramTileBlock(s32 size);
 
 void AllocJetpackPlayerTiles(void *selfArg)
 {

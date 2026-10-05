@@ -5,6 +5,7 @@
 #include <libgcc.h>
 #include "actor.h"
 #include "bosses.h"
+#include "gfx.h"
 
 /* Same boss-weapon "self"/tracker object family as airship_fireball.c/
  * airship_fall.c - see airship_fireball.c's header comment and
@@ -217,7 +218,6 @@ void CreateAirship(s32 level)
  * libcall wouldn't force) and the record lookup is written `a - -b` (see
  * below). `gAirshipLevel` is the level index `CreateAirship` caches,
  * not an object pointer. */
-extern s32 QueueVramDmaTransfer(void *arg0, void *arg1, u16 arg2, u16 arg3);
 
 void SpawnAirship(s32 kind, s32 x, s32 y, s32 z)
 {

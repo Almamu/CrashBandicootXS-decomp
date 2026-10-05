@@ -1,6 +1,7 @@
 #include "core.h"
 #include <libgcc.h>
 #include "bosses.h"
+#include "gfx.h"
 
 /* Same boss-weapon subsystem as airship_fireball.c/airship_load_graphics.c - see
  * airship_fireball.c's header comment and
@@ -116,8 +117,6 @@ void UpdateAirshipFlashColor(void)
         bank1[0xf] = 0x1f;
     }
 }
-
-extern s32 QueueVramDmaTransfer(void *arg0, void *arg1, u16 arg2, u16 arg3);
 
 /* While `gAirshipHitFlashTimer`'s DMA-refresh counter is armed, decrements
  * it and re-queues one "frame" of `gAirshipHitFlashPalettes`'s palette

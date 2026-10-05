@@ -399,6 +399,7 @@ extern const struct vtable_slot gCortexTargetVtable[13];
 extern const struct vtable_slot gDingodileProjectileVtable[13];
 extern const struct vtable_slot gDingodileSharkVtable[13];
 extern const struct vtable_slot gDingodileShieldVtable[13];
+extern const struct vtable_slot gDingodileVtable[13];
 extern const struct vtable_slot gHovercraftCannonFlashVtable[7];
 extern const struct vtable_slot gHovercraftCannonVtable[7];
 extern const struct vtable_slot gHovercraftFireballVtable[7];
@@ -455,5 +456,10 @@ extern const struct actor_pmf gHovercraftFireballStateFuncs[2];
 
 /* src/data/player_pmf_16c250.c */
 extern const struct entry_set gMegaMixMotionSet;
+
+/* The {a, b} motion record index pairs (src/data/entry_set_16c418.c):
+ * CreateDingodile and friends index gDingodileMotionRecords with entries
+ * 0-3; 4-7 are gPlatformMoverMotionSet's (objects.h). */
+extern const u32 gDingodileMotionEntries[8][2];
 
 #endif /* !GUARD_BOSSES_H */

@@ -3,6 +3,8 @@
 #include "system.h"
 #include "audio.h"
 #include "menus.h"
+#include "gfx.h"
+#include "objects.h"
 
 /* GitHub issue #27: 0x0801CEE0-0x0801DA38, the whole of the former
  * asm/code_3_2_17_188d0_1cee0.s. The rest of the level-select screen
@@ -37,24 +39,6 @@ extern void *gOamBuffer;
 extern void *gInput;
 extern u32 gKeys;     // held keys (low half), newly pressed (high half)
 
-extern void UploadPaletteCache(void *p);
-extern void CommitOamBuffer(void *p);
-extern void ClaimPaletteSlot(void *cache, s32 arg);
-extern void LockPalette(void *cache, s32 record);
-extern void FlushVramDmaQueue(void);
-extern void LoadGraphicsPackage(void *dst, void *pkg);
-extern void *OperatorNew(u32 size);
-extern void OperatorDelete(void *p);
-extern struct sprite *InitUiSpriteObj(void *mem);
-extern void ResetSpriteFrameTimer(void *part);
-extern void ResetSpriteFrameIndex(void *part);
-extern void SetSpriteAnimDone(void *part, s32 arg);
-extern void SetSpritePriority(void *part, s32 value);
-extern s32 GetSpriteAnimPaletteSlot(void *part);
-extern void InitBgSetup(void *self, s32 a, s32 b, s32 c, s32 d);
-
-extern u16 GetBgSetupControl(void *p);
-
 typedef void (*item_load_fn)(void *self, s32 world, s32 slot);
 typedef void (*item_place_fn)(void *self, const struct xy_pair *pos);
 
@@ -67,7 +51,7 @@ static inline void CommitDisplay(struct level_menu *self)
     self->scroll++;
     *(vu16 *)REG_ADDR_BG0HOFS = self->scroll >> 3;
     *(vu32 *)REG_ADDR_BG1HOFS = GetLevelSelectPageBgOffsets(self->bg1);
-    *(vu16 *)REG_ADDR_BG1CNT = GetBgSetupControl(self->bg1);
+    *(vu16 *)REG_ADDR_BG1CNT = GetBgSetupControl(&self->bg1->bg);
     *(vu16 *)REG_ADDR_BG2CNT = GetZoomBgControl(self->bg2);
     *(vu16 *)PLTT = 0;
     *(vu32 *)REG_ADDR_BLDCNT = self->blend.raw;
@@ -387,7 +371,7 @@ void ReloadLevelSelectPalette(struct level_menu *self)
 
     ClaimPaletteSlot(gPaletteCache, 0xF);
     for (i = 0; i <= 7; i++)
-        self->sprites[i]->palette = GetSpriteAnimPaletteSlot(self->sprites[i]);
+        self->sprites[i]->palette = GetSpriteAnimPaletteSlot((struct actor *)self->sprites[i]);
     SetLevelSelectEntryBoxes(self);
 }
 
@@ -445,9 +429,9 @@ void DestroyLevelSelectPageBg(struct page_bg *p, s32 flags)
 
 struct page_bg *CreateLevelSelectPageBg(struct page_bg *self, s32 charBlock, s32 screenBlock)
 {
-    InitBgSetup(self, charBlock, screenBlock, 0, 2);
+    InitBgSetup(&self->bg, charBlock, screenBlock, 0, 2);
     self->scroll = self->target = 0x300;
-    LoadGraphicsPackage(self, (void *)&gLevelSelectPageBg);
+    LoadGraphicsPackage(&self->bg, (void *)&gLevelSelectPageBg);
     return self;
 }
 
@@ -529,12 +513,12 @@ struct zoom_bg *InitZoomBg(struct zoom_bg *self, s32 charBlock, s32 screenBlock)
     self->alpha = 0;
     for (i = 0; i <= 3; i++)
     {
-        self->twinkles[i].part = InitUiSpriteObj(OperatorNew(0x40));
+        self->twinkles[i].part = (struct sprite *)InitUiSpriteObj(OperatorNew(0x40));
         self->twinkles[i].part->anim = (struct anim_table *)((u8 *)**gSpriteBankSet + 0x258);
         SetMode(self->twinkles[i].part, 1);
         SetPos(self->twinkles[i].part, self->x + gZoomBgSlotOffsets[i].x, self->y + gZoomBgSlotOffsets[i].y);
         SetSpritePriority(self->twinkles[i].part, 1);
-        SetPalette(self->twinkles[i].part, GetSpriteAnimPaletteSlot(self->twinkles[0].part));
+        SetPalette(self->twinkles[i].part, GetSpriteAnimPaletteSlot((struct actor *)self->twinkles[0].part));
         RandomizeZoomBgTwinkle(self, &self->twinkles[i]);
     }
     LockPalette(gPaletteCache, self->twinkles[0].part->anim->records[self->twinkles[0].part->animIndex].tileRecord);

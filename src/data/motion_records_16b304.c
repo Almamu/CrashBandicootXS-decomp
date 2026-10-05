@@ -1,19 +1,11 @@
 #include "core.h"
+#include "objects.h"
+#include "player.h"
 
 /*
  * ROM 0x0816B304-0x0816B92C. Linked in ROM order between data/data.s
  * sections by ldscript.txt - see docs/data.md.
  */
-
-/* 12-byte {s32, s32, s32} motion records (action_ctrl_idle.c's
- * `struct anim_rec`, player_ctrl.h's `struct pctrl_anim`) and the {a, b}
- * index pairs the entry sets of entry_set_16b92c.c point at, which pick
- * two records per state. */
-struct motion_rec {
-    s32 a;
-    s32 b;
-    s32 c;
-};
 
 /* Read by StartCtrlTargetMotionYFromSet/StartCtrlTargetMotionXFromSet (ctrl.c) and ApplyActionCtrlMotion
  * (action_ctrl_idle.c). */

@@ -2,6 +2,7 @@
 #include "actor_self.h"
 #include "player.h"
 #include "bosses.h"
+#include "objects.h"
 
 /*
  * ROM 0x0816C250-0x0816C2D8: two per-state member-function-pointer
@@ -29,16 +30,6 @@ const struct actor_pmf gInputCtrlStateFuncs[4] = {
     ACTOR_PMF(sub_801796C),
     ACTOR_PMF(sub_801793C),
     ACTOR_PMF(InputCtrlStateDead),
-};
-
-/* An entry set as gobj_1a794.h's `struct mover` points at it (`set`,
- * +0x04): the {a, b} entries (`struct vec_pair`) and a word the code
- * doesn't read, 0x100 in every set in the ROM. mega_mix.c stores
- * gMegaMixMotionSet there. */
-struct entry_set
-{
-    const u32 (*entries)[2];
-    u32 unk_04;
 };
 
 /* gMegaMixMotionSet's four entries. */

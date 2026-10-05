@@ -2,6 +2,7 @@
 #include "action_obj.h"
 #include "audio.h"
 #include "player.h"
+#include "objects.h"
 
 /* Continuation of action_ctrl_moves.c (issue #18's chunk, the last one) -
  * covers `nullsub_17` through `ActionCtrlSetTargetAnim` (all matched); non-adjacent
@@ -62,7 +63,6 @@ void SetActionCtrlModeAnim(void *selfArg, s32 a, s32 b, s32 c, s32 d)
 
 extern void *gAudioContext;
 extern void *gPlayer;
-extern u8 SetCtrlTargetAnim(void *unused, void *partArg, s32 newVal);
 
 /* If the player's `+0x100` flag is set: picks a replacement `mode` for
  * a handful of special values (`0x12` when the player's `+0x60` is
@@ -151,9 +151,6 @@ tail:
  * chunk's other matched file) since the left-raw
  * `StartPlayerCtrlStroke`/`StartPlayerCtrlSpin`/`ApplyPlayerCtrlSwimDrift` sit between them (see
  * asm/code_3_2_17_159f8.s). */
-
-extern void DestroyCtrl(void *selfArg, s32 flags);
-extern void InitCtrl(void *selfArg);
 
 /* Fires the mgr trampoline pair (actions `0`/`0x12`), then resets the
  * `0x27`/`0x2f`/`0x31` and `0x28`/`0x30`/`0x32` state/counter/table-index

@@ -8,6 +8,9 @@
  * All of them own animated sprite parts built by InitUiSpriteObj. */
 
 #include "menus.h"
+#include "gfx.h"
+#include "objects.h"
+#include "memory.h"
 
 struct vmethod
 {
@@ -79,19 +82,6 @@ struct level_item
 extern void ***gSpriteBankSet;
 extern void *gPaletteCache;
 
-extern void *OperatorNew(u32 size);
-extern void OperatorDelete(void *p);
-extern struct sprite *InitUiSpriteObj(void *mem);
-extern void SetSpritePriority(struct sprite *part, s32 value);
-extern void ResetSpriteFrameTimer(struct sprite *part);
-extern void ResetSpriteFrameIndex(struct sprite *part);
-extern void SetSpriteAnimDone(struct sprite *part, s32 arg);
-extern s32 GetSpriteAnimPaletteSlot(struct sprite *part);
-extern void SetEntityPixelPos(struct sprite *part, s32 x, s32 y);
-extern void DrawSpriteWithOffset(struct sprite *part, s32 dx, s32 dy);
-extern void AdvanceSpriteAnim(struct sprite *part);
-extern void UnlockPalette(void *cache, u8 record);
-extern void LockPalette(void *cache, u8 record);
 extern void LoadTaggedAsset(const void *asset, void *dest);
 
 typedef void (*dtor_fn)(void *self, s32 flags);

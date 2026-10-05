@@ -4,6 +4,9 @@
 #include "pickups.h"
 #include "util.h"
 #include "audio.h"
+#include "gfx.h"
+#include "objects.h"
+#include "memory.h"
 
 /* GitHub issue #12/#14 Phase 2 mop-up: the last 5 raw functions of the
  * still-large 24-function tail past `AddCollisionCandidate`
@@ -27,13 +30,7 @@ extern void *gEntityFlags;
 extern void *gUnknown_030012EC;
 extern void *gHud;
 
-extern void *GetSpriteHitbox(void *dest, void *pt);
-extern void WorldToScreen(void *arg0, s32 arg1, s32 arg2, s32 *arg3, s32 *arg4);
 extern s32 AddLife(void *self);
-extern void *OperatorNew(s32 size);
-extern struct actor *InitSpriteObj(struct actor *self);
-extern void AddToPartList(void *manager, void *value);
-extern void UpdateSpriteObj(struct actor *part);
 extern s16 gSineTable[];
 
 /* Built with old_agbcc (Makefile OLD_AGBCC_OBJS) since the issue #15
@@ -90,9 +87,9 @@ void CheckExtraLifePickup(struct orbit_part *selfArg)
         }
     }
 
-    GetSpriteHitbox(&selfBox, self);
+    selfBox = GetSpriteHitbox((struct box_part *)self);
     player = gPlayer;
-    GetSpriteHitbox(&playerBox, player);
+    playerBox = GetSpriteHitbox((struct box_part *)player);
 
     if (AabbOverlaps(&playerBox, &selfBox)) {
         register s32 bit asm("r0") = 8;
@@ -448,10 +445,7 @@ void SendExtraLifeToHud(struct orbit_part *selfArg)
 
 extern void *gSpriteRenderer;
 
-extern void DrawSprite(void *self, void *part);
-extern void *GetSpriteAttackBox(void *dest, void *pt);
 extern void *_call_via_r1(void *arg0, void *fn);
-extern void DestroySpriteObj(struct actor *self, u32 arg1);
 
 /* Per-frame orbit-position update. Reads the current orbit phase
  * (`self+0x4b`) twice, at two different scales into the shared sine
@@ -650,7 +644,7 @@ void CheckWumpaPickup(struct orbit_part *selfArg)
         }
     }
 
-    GetSpriteHitbox(&selfBox, self);
+    selfBox = GetSpriteHitbox((struct box_part *)self);
     player = gPlayer;
 
     if (player[0xa] == 0x13) {
@@ -664,7 +658,7 @@ void CheckWumpaPickup(struct orbit_part *selfArg)
             PlaySfx(gAudioContext, 6, 0x80);
         }
     } else {
-        GetSpriteHitbox(&playerBox, player);
+        playerBox = GetSpriteHitbox((struct box_part *)player);
         if (AabbOverlaps(&playerBox, &selfBox)) {
             register s32 bit asm("r0") = 8;
 

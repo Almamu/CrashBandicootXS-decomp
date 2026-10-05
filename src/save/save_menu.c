@@ -2,6 +2,8 @@
 #include "gba/io_reg.h"
 #include "save.h"
 #include "audio.h"
+#include "gfx.h"
+#include "memory.h"
 
 extern void *gAudioContext;
 
@@ -22,9 +24,6 @@ void SaveMenuMessageInput(struct save_menu *self, u32 flags)
 
 extern struct palette_cache *gPaletteCache;
 extern struct oam_shadow_buffer *gOamBuffer;
-extern void UploadPaletteCache(struct palette_cache *arg0);
-extern void CommitOamBuffer(struct oam_shadow_buffer *arg0);
-extern void FlushVramDmaQueue(void);
 
 /* Restores the saved BG0HOFS/DISPCNT pair (see field_0/field_1c's doc
  * comments in save_menu.h) and flushes the VRAM/OAM commit
@@ -39,8 +38,6 @@ void CommitSaveMenuFrame(struct save_menu *self)
     FlushVramDmaQueue();
 }
 
-extern void FreeUnlockedPaletteSlots(struct palette_cache *self);
-
 /* Tears down the "connecting..." SIO-handshake spinner object (see
  * LinkExchangeSaveData, src/save/save_menu_ui.c, for the object this
  * pointer comes from) if one is active, then re-requests the tile
@@ -53,8 +50,6 @@ void CloseSaveMenu(void)
     gSaveMenu = NULL;
     FreeUnlockedPaletteSlots(gPaletteCache);
 }
-
-extern void *OperatorNew(s32 size);
 
 /* Allocates and constructs a fresh SIO-handshake spinner object (the
  * counterpart to CloseSaveMenu's teardown above), stashing it in the same

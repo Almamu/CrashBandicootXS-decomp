@@ -7,6 +7,8 @@
 #include "audio.h"
 #include "crates.h"
 #include "player.h"
+#include "objects.h"
+#include "memory.h"
 
 /* GitHub issue #12: 0x0800D040-0x0800FC70, the physics/collision
  * subsystem (see crate_hit.c's header comment and
@@ -107,6 +109,13 @@ struct d18c_player
 };
 
 #define D18C_P ((struct d18c_player *)gPlayer)
+/* codegen: AddCollisionCandidate's two trailing byte arguments are s32
+ * in its definition (objects.h), which reads them back with `ldrb`; the
+ * ROM stores them here with `strb`, as one-byte structs. docs/headers_plan.md */
+extern void AddCollisionCandidate_b(void *queue, struct crate *obj, s32 kind, s32 code,
+                                    s32 edge, s32 depth, struct e08c_pos pos, s32 hit,
+                                    struct byte_arg f20, struct byte_arg f21) asm("AddCollisionCandidate");
+
 /* AddCollisionCandidate's queue, at player+0x108 (+4: "position committed"). */
 #define D18C_QUEUE(p) ((u8 *)(p) + 0x108)
 #define D18C_COMMIT()                                                          \
@@ -125,12 +134,7 @@ struct d18c_level
     s32 mode;           // 0x78
 };
 
-extern u8 gEmptySpriteBox[];
-extern void *GetSpriteFrame(void *part);
 extern void SetMaskLevel(void *self, s32 arg);
-extern void AddCollisionCandidate(void *queue, struct crate *obj, s32 kind, s32 code,
-                        s32 edge, s32 depth, struct e08c_pos pos, s32 hit,
-                        struct byte_arg f20, struct byte_arg f21);
 
 #define D18C_CALL68(a, b, c) \
     PhysCall3(D18C_P, (struct method *)&D18C_P->vtable->m68, (a), (b), (c))
@@ -139,7 +143,7 @@ extern void AddCollisionCandidate(void *queue, struct crate *obj, s32 kind, s32 
 #define D18C_HITBOX(dst, part)                                                 \
     if (1)                                                                     \
     {                                                                          \
-        u8 *_info = GetSpriteFrame(part);                                         \
+        u8 *_info = GetSpriteFrame((struct gfx_part *)(part));                    \
                                                                                \
         switch (**(u8 **)(_info + 4) >> 4)                                     \
         {                                                                      \
@@ -149,17 +153,17 @@ extern void AddCollisionCandidate(void *queue, struct crate *obj, s32 kind, s32 
         case 1:                                                                \
         case 2:                                                                \
         case 3:                                                                \
-            (dst) = (struct hitbox_quad *)gEmptySpriteBox;                  \
+            (dst) = (struct hitbox_quad *)&gEmptySpriteBox;                  \
             break;                                                             \
         case 4:                                                                \
             (dst) = (struct hitbox_quad *)(_info + 0x1c);                        \
             break;                                                             \
         case 5:                                                                \
         case 6:                                                                \
-            (dst) = (struct hitbox_quad *)gEmptySpriteBox;                  \
+            (dst) = (struct hitbox_quad *)&gEmptySpriteBox;                  \
             break;                                                             \
         default:                                                               \
-            (dst) = (struct hitbox_quad *)gEmptySpriteBox;                  \
+            (dst) = (struct hitbox_quad *)&gEmptySpriteBox;                  \
             break;                                                             \
         }                                                                      \
     }                                                                          \
@@ -295,8 +299,8 @@ void QueueCratePlayerCollision(struct crate *self, s32 idx)
 
         px = self->x >> 8;
         py = self->y >> 8;
-        offX = pb->xOff;
-        offY = pb->yOff;
+        offX = pb->offX;
+        offY = pb->offY;
         w = pb->w;
         h = pb->h;
         SetAabbPos(&f.a, offX + px, offY + py);
@@ -345,8 +349,8 @@ void QueueCratePlayerCollision(struct crate *self, s32 idx)
         u8 w;
         u8 h;
 
-        offX = hb->xOff;
-        offY = hb->yOff;
+        offX = hb->offX;
+        offY = hb->offY;
         w = hb->w;
         h = hb->h;
         {
@@ -511,8 +515,8 @@ tail:
         u8 h;
 
         q = (struct hitbox_quad *)(rec + 4);
-        offX = q->xOff;
-        offY = q->yOff;
+        offX = q->offX;
+        offY = q->offY;
         w = q->w;
         h = q->h;
         {
@@ -544,7 +548,7 @@ tail:
              * call: a leftover of a compare deleted after reload. The empty
              * asm emits nothing; it only uses ax and px, which gives the
              * same reload into r1. */
-            s32 ax = GetSpritePrevX((struct gobj *)D18C_P);
+            s32 ax = GetSpritePrevX((struct gfx_part *)(struct gobj *)D18C_P);
 
             asm("" : : "r"(ax), "r"(px));
             if ((D18C_P->x >> 8) < (self->x >> 8))
@@ -594,7 +598,7 @@ tail:
                 pp = &f.p1;
                 pp->y = y - ((dy - 1) << 8);
                 D18C_P->speedY = 0;
-                SetEntityPos((struct gobj *)D18C_P, f.p1.x, pp->y);
+                SetEntityPos((struct actor *)D18C_P, f.p1.x, pp->y);
                 D18C_COMMIT();
                 D18C_Hit(D18C_P, dirY);
                 return;
@@ -610,7 +614,7 @@ tail:
                     f.p2.x = (dx << 8) + f.p2.x;
                 else if (dirX == 1)
                     f.p2.x -= dx << 8;
-                SetEntityPos((struct gobj *)D18C_P, f.p2.x, D18C_PosPtr(&f.p2)->y);
+                SetEntityPos((struct actor *)D18C_P, f.p2.x, D18C_PosPtr(&f.p2)->y);
                 D18C_COMMIT();
                 D18C_CALL68(0, 0xc, dirX);
                 D18C_Hit(D18C_P, dirX);
@@ -630,7 +634,7 @@ tail:
                     pp->y = (dy << 8) + pp->y;
                 else if (dirX == 8)
                     pp->y -= dy << 8;
-                SetEntityPos((struct gobj *)D18C_P, f.p3.x, pp->y);
+                SetEntityPos((struct actor *)D18C_P, f.p3.x, pp->y);
                 D18C_COMMIT();
                 D18C_CALL68(0, 0xc, dirY);
                 D18C_Hit(D18C_P, dirY);
@@ -658,8 +662,8 @@ tail:
     }
     else
     {
-        s32 ax = GetSpritePrevX((struct gobj *)D18C_P);
-        s32 ay = GetSpritePrevY((struct gobj *)D18C_P);
+        s32 ax = GetSpritePrevX((struct gfx_part *)(struct gobj *)D18C_P);
+        s32 ay = GetSpritePrevY((struct gfx_part *)(struct gobj *)D18C_P);
         s32 side = 2;
 
         if (px > ax)
@@ -727,11 +731,11 @@ tail:
         }
         else if (ay <= py && f21 != 0)
         {
-            ay += q->yOff + q->h;
+            ay += q->offY + q->h;
             /* An `if`/`else edge = dirX` (not a `goto edge_x`): the `else`
              * is the last code of this arm in the RTL. Its reload of dirX
              * takes r0 and moves reload's round-robin on, so the second
-             * slope check's `ay += q->yOff` loads into r1 with r0 as the
+             * slope check's `ay += q->offY` loads into r1 with r0 as the
              * scratch, as in the ROM. Cross-jumping then merges the `else`
              * into edge_x, which also reloads dirX into r0. */
             if (ay <= f.a.y + f.a.h)
@@ -746,20 +750,20 @@ tail:
                     edge = 8;
                 if (edge == 0)
                 {
-                    py += q->yOff + q->h;
+                    py += q->offY + q->h;
                     /* The call is in each arm (cross-jumping merges the
                      * tails): the stack argument is stored before the join
                      * and px is passed from the register it was just
                      * computed in, as in the ROM. */
                     if (dirX == 1)
                     {
-                        ax += q->xOff + q->w;
+                        ax += q->offX + q->w;
                         px = f.b.x + f.b.w;
                         r = FindLineCrossing(ax, ay, px, py, f.a.x);
                     }
                     else
                     {
-                        ax += q->xOff;
+                        ax += q->offX;
                         px = f.b.x;
                         r = FindLineCrossing(ax, ay, px, py, f.a.x + f.a.w);
                     }
@@ -774,7 +778,7 @@ tail:
         }
         else
         {
-            ay += q->yOff;
+            ay += q->offY;
             if (ay < f.a.y)
                 goto edge_x;
             {
@@ -788,16 +792,16 @@ tail:
                     edge = 4;
                 if (edge == 0)
                 {
-                    py += q->yOff;
+                    py += q->offY;
                     if (dirX == 1)
                     {
-                        ax += q->xOff + q->w;
+                        ax += q->offX + q->w;
                         px = f.b.x + f.b.w;
                         r = FindLineCrossing(ax, ay, px, py, f.a.x);
                     }
                     else
                     {
-                        ax += q->xOff;
+                        ax += q->offX;
                         px = f.b.x;
                         r = FindLineCrossing(ax, ay, px, py, f.a.x + f.a.w);
                     }
@@ -866,7 +870,7 @@ tail:
         {
             D18C_PosPtr(&f.pos)->y -= (dy - 1) << 8;
             D18C_PosPtr(&f.pos)->y &= ~0xff;
-            SetEntityPos((struct gobj *)D18C_P, f.pos.x, D18C_PosPtr(&f.pos)->y);
+            SetEntityPos((struct actor *)D18C_P, f.pos.x, D18C_PosPtr(&f.pos)->y);
             D18C_COMMIT();
         }
         else if (code == 0 || code == 2)
@@ -924,7 +928,7 @@ tail:
                 ok = 0;
             if (ok)
             {
-                SetEntityPos((struct gobj *)D18C_P, f.pos.x, D18C_PosPtr(&f.pos)->y);
+                SetEntityPos((struct actor *)D18C_P, f.pos.x, D18C_PosPtr(&f.pos)->y);
                 D18C_COMMIT();
             }
         }
@@ -933,7 +937,7 @@ tail:
     if (D18C_P->ctrlMode == 1 && self->kind == 0xe && code <= 1
         && AabbOverlapsInclusiveX(&f.c, &f.b) == 1)
         LightTntCrate(tgt);
-    AddCollisionCandidate(D18C_QUEUE(D18C_P), tgt, kind, code, edge, dy, f.pos, hit,
+    AddCollisionCandidate_b(D18C_QUEUE(D18C_P), tgt, kind, code, edge, dy, f.pos, hit,
                 (struct byte_arg){f20}, (struct byte_arg){f21});
 }
 
@@ -1142,7 +1146,7 @@ commit:
         u8 *q = (u8 *)p + 0x108;
 
         if (q[4] == 0)
-            SetEntityPos((struct gobj *)p, pos.x, pos.y);
+            SetEntityPos((struct actor *)p, pos.x, pos.y);
     }
     if (hit != 0)
     {
@@ -2015,10 +2019,7 @@ void DropCratesAbove(struct crate *self)
 
 extern void *gHud;
 extern void PressSwitchCrate(void *arg);
-extern s32 GetSpriteAnimPaletteSlot(void *self);
-extern void OperatorDeleteArray(void *p);
 extern void sub_8025A0C(u8 *bitmap, u16 id);
-extern void *OperatorNewArray(u32 size);
 extern void AddBrokenCrate(void *arg);
 
 /* Per-edge jump table's **case 4 handler**
@@ -2555,7 +2556,7 @@ void SolidifyOutlineCrate(struct crate *self)
         PhysSetTag(self, 0x10);
         break;
     }
-    self->slot = GetSpriteAnimPaletteSlot(self);
+    self->slot = GetSpriteAnimPaletteSlot((struct actor *)self);
 }
 
 /* `BreakCratesInArea(s32 x, s32 y, s32 arg2, s32 arg3)` - the one function in

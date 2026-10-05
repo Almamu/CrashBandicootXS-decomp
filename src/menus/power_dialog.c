@@ -7,6 +7,8 @@
 #include "audio.h"
 #include "pause_menu.h"
 #include "menus.h"
+#include "gfx.h"
+#include "objects.h"
 
 /* `ShowPowerDialog` (GitHub issue #8) - the higher-level dialog spawner:
  * resets palette color 0 and `REG_DISPCNT`, re-initializes the popup-
@@ -35,11 +37,6 @@
  * (src/menus/level_select.c) uses, and `FontResetPalette` takes one
  * argument. See docs/matching/issue-4-6-8-naked-retry.md. */
 
-extern void *OperatorNew(s32 size);
-extern void FreeUnlockedPaletteSlots(struct palette_cache *self);
-extern void ResetObjVram(struct vram_upload_cursor *self);
-extern s32 ReserveObjVram(struct vram_upload_cursor *self, s32 size);
-extern void MarkObjVram(struct vram_upload_cursor *self);
 extern void _call_via_r1(void *addr, void *fn);
 
 extern struct palette_cache *gPaletteCache;
@@ -108,17 +105,7 @@ void ShowPowerDialog(s32 label1, s32 label2, s32 type)
  * fade/confirm driver) and `DestroyPowerDialog`'s (the on-hit
  * teardown/sound helper) existing signatures. */
 
-extern struct actor *InitUiSpriteObj(struct actor *part);
-extern void ResetSpriteFrameTimer(struct actor *part);
-extern void ResetSpriteFrameIndex(struct actor *part);
-extern void SetSpriteAnimDone(struct actor *part, u8 val);
-extern s32 GetSpriteAnimPaletteSlot(struct actor *part);
-extern void *InitBgSetup(void *buf, s32 arg1, s32 arg2, s32 arg3, s32 arg4);
-extern void LoadGraphicsPackage(void *buf, void *asset);
-extern s32 GetBgSetupControl(void *buf);
-
 extern void ***gSpriteBankSet;
-extern u8 gMenuSkyBg[];
 extern void *gAudioContext;
 
 /* Builds the actual two-string dialog/message box object: a small
@@ -179,7 +166,7 @@ struct sub_8006700_actor *InitPowerDialog(struct sub_8006700_actor *selfArg, s32
     register s32 sixteen asm("r4");
     struct settings_icon_actor *icon;
 
-    InitBgSetup(self, 0, 0x1f, 0, 3);
+    InitBgSetup(&self->bg, 0, 0x1f, 0, 3);
 
     self->field_20 = 0;
     {
@@ -262,7 +249,7 @@ struct sub_8006700_actor *InitPowerDialog(struct sub_8006700_actor *selfArg, s32
         self->field_14 = t2;
     }
 
-    LoadGraphicsPackage(self, gMenuSkyBg);
+    LoadGraphicsPackage(&self->bg, &gMenuSkyBg);
     self->field_1c = 0;
 
     icon = (struct settings_icon_actor *)InitUiSpriteObj((struct actor *)OperatorNew(0x40));
@@ -306,7 +293,7 @@ struct sub_8006700_actor *InitPowerDialog(struct sub_8006700_actor *selfArg, s32
         }
     }
 
-    REG_BG0CNT = GetBgSetupControl(self);
+    REG_BG0CNT = GetBgSetupControl(&self->bg);
     *(vu32 *)REG_ADDR_BG0HOFS = 0;
     PlaySong(gAudioContext, 0xf);
 

@@ -6,6 +6,8 @@
 #include "audio.h"
 #include "player.h"
 #include "bosses.h"
+#include "objects.h"
+#include "memory.h"
 
 /* GitHub issue #23: 0x080188D0-0x0801967C, formerly
  * asm/code_3_2_17_188d0.s (details in docs/matching/issue-23-graphics.md).
@@ -191,26 +193,11 @@ extern struct gfx_list *gCollidableList;
 extern void *gUnknown_030012F4;
 extern struct gfx_level *gLevelLayers;
 
-extern void DestroyCtrl(void *self, s32 flags);
-extern void InitCtrl(void *self);
-extern void OperatorDeleteArray(void *ptr);
-extern void *OperatorNewArray(u32 size);
-extern void *OperatorNew(u32 size);
-extern struct gfx_part *CreateMovingSprite(u16 arg0, u16 arg1, u16 arg2, u16 arg3);
-extern void ResetSpriteFrameTimer(void *part);
-extern void ResetSpriteFrameIndex(void *part);
-extern void SetSpriteAnimDone(void *part, u8 val);
-extern s32 GetSpriteAnimPaletteSlot(void *part);
-extern void AddToPartList(void *manager, void *value);
 extern s32 _call_via_r2(void *self, s32 arg, void *fn);
 extern s32 _call_via_r3(void *self, void *arg1, s32 arg2, void *fn);
 extern void _call_via_r4(void *arg0, s32 arg1, s32 arg2, s32 arg3);
 extern u8 HasTurboRun(void *self);
 extern void RequestRoomExit(void);
-extern void *GetSpriteBodyBox(void *dest, void *pt);
-extern void *GetSpriteAttackBox(void *dest, void *pt);
-extern void *GetSpriteHitbox(void *dest, void *pt);
-extern void DestroyPlatformMover(void *self, s32 flags);
 
 #define CALL2(obj, m, a)                                                       \
     do                                                                         \
@@ -569,7 +556,7 @@ void SpawnCortexCannon(struct gfx_pair_ctrl *self, struct gfx_part *part)
     SetTag(c, 3);
     c->animating = 0;
     ctrl = (struct gfx_ctrl *)CreateCortexCannonCtrl(OperatorNew(0x10));
-    SetFrameNibble(c, GetSpriteAnimPaletteSlot(c));
+    SetFrameNibble(c, GetSpriteAnimPaletteSlot((struct actor *)c));
     c->ctrl = ctrl;
     _call_via_r2((u8 *)ctrl + ctrl->vtable->method_18.thisOffset, (s32)c, ctrl->vtable->method_18.fn);
     c->pos = part->pos;
@@ -603,7 +590,7 @@ void SpawnCortexTarget(struct gfx_pair_ctrl *self, struct gfx_part *part)
         ResetSpriteFrameTimer(c);
         ResetSpriteFrameIndex(c);
         SetSpriteAnimDone(c, 0);
-        SetFrameNibbleM(c, GetSpriteAnimPaletteSlot(c), k);
+        SetFrameNibbleM(c, GetSpriteAnimPaletteSlot((struct actor *)c), k);
     }
     ctrl = (struct gfx_ctrl *)CreateCortexTargetCtrl(OperatorNew(0x40), self);
     c->ctrl = ctrl;
@@ -642,7 +629,7 @@ void SpawnCortexBossGem(u32 a0, u16 a1, u16 a2, u16 a3, s32 kind)
         SetTag(c, 0);
         break;
     }
-    SetFrameNibble(c, GetSpriteAnimPaletteSlot(c));
+    SetFrameNibble(c, GetSpriteAnimPaletteSlot((struct actor *)c));
     ctrl = CreateCortexBossGemCtrl(OperatorNew(0x14), kind);
     c->ctrl = ctrl;
     _call_via_r2((u8 *)ctrl + ctrl->vtable->method_18.thisOffset, (s32)c, ctrl->vtable->method_18.fn);
@@ -652,7 +639,7 @@ void SpawnCortexBossGem(u32 a0, u16 a1, u16 a2, u16 a3, s32 kind)
         m &= PART_FLAGS(c);
         PART_FLAGS(c) = m | 0x10;
     }
-    AddToPartList(gCollidableList, c);
+    AddToPartList((struct dual_array_manager *)gCollidableList, c);
 }
 
 void UpdateCortexTarget(struct gfx_mover *self, struct gfx_part *partArg)
@@ -913,7 +900,7 @@ void FireCortexShot(struct gfx_mover *self, struct gfx_part *partArg, s32 kindAr
         SetTag(c, 0x11);
         break;
     }
-    SetFrameNibble(c, GetSpriteAnimPaletteSlot(c));
+    SetFrameNibble(c, GetSpriteAnimPaletteSlot((struct actor *)c));
     ctrl = CreateCortexShotCtrl(OperatorNew(0x18), self->cfg);
     ctrl->fast = kind == 1;
     c->ctrl = ctrl;
@@ -986,7 +973,7 @@ void UpdateCortexShot(struct gfx_hit_ctrl *self, struct gfx_part *partArg)
             {
                 struct gfx_part *e = gCollidableList->items[i];
 
-                GetSpriteHitbox(&c, e);
+                c = GetSpriteHitbox((struct box_part *)e);
                 if (AabbOverlaps(&c, &b))
                 {
                     CALL2(self->owner, method_20, 2);
@@ -1074,7 +1061,7 @@ void UpdateCortexBossGem(struct gfx_kind_ctrl *self, struct gfx_part *partArg)
                 CALL3(self, method_50, part, 0xD);
                 break;
             }
-            SetFrameNibble(part, GetSpriteAnimPaletteSlot(part));
+            SetFrameNibble(part, GetSpriteAnimPaletteSlot((struct actor *)part));
             CALL2(self, method_20, 1);
         }
         break;
@@ -1104,7 +1091,7 @@ void *CreateCortexBossGemCtrl(void *selfArg, s32 kind)
 void DestroyCortexBossPlatformMover(struct gfx_ctrl *self, s32 flags)
 {
     self->vtable = (struct gfx_vtable *)gCortexBossPlatformMoverVtable;
-    DestroyPlatformMover(self, flags);
+    DestroyPlatformMover((struct mover *)self, flags);
 }
 
 /* Constructor: base-constructs through CreatePlatformMover(self, 0, 0, 0, {0}, 6)

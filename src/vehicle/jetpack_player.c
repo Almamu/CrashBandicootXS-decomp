@@ -6,6 +6,7 @@
 #include "audio.h"
 #include "actor.h"
 #include "vehicle.h"
+#include "gfx.h"
 
 /* Same "spawn/pre-attack" singleton family as wumpa.c - see that
  * file's header comment and docs/matching/issue-56-0x0802f0dc-actor.md.
@@ -26,9 +27,6 @@ struct meter_actor {
 };
 
 extern s32 CollectWumpa(void *arg0);
-extern s32 QueueVramDmaTransfer(void *arg0, void *arg1, u16 arg2, u16 arg3);
-extern s32 FadeBrightness(s32 a, s32 b, s32 c);
-extern void FreeVramTileBlock(void *arg0);
 
 extern struct level_state *gLevelState;
 extern void *gAudioContext;

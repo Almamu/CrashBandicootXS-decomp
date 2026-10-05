@@ -4,6 +4,8 @@
 #include "system.h"
 #include "audio.h"
 #include "player.h"
+#include "gfx.h"
+#include "objects.h"
 
 /* Part of GitHub issue #16's remainder (0x08011BD4-0x08012D24) - the
  * "child object" family docs/rom_map.md's "Undifferentiated core"
@@ -28,10 +30,6 @@ struct palette_cache;
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern s32 _call_via_r3(void *arg0, void *arg1, void *arg2, void *arg3);
 extern void LoseLife(void *arg0);
-extern void LoadPaletteSlot(struct palette_cache *self, s32 slot, s32 recordId);
-extern void ResetSpriteFrameTimer(void *part);
-extern void ResetSpriteFrameIndex(void *part);
-extern void SetSpriteAnimDone(void *part, u8 val);
 
 extern struct AudioContext *gAudioContext;
 extern void *gLevelState;

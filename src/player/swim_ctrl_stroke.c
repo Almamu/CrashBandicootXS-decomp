@@ -4,6 +4,7 @@
 #include "system.h"
 #include "audio.h"
 #include "player.h"
+#include "objects.h"
 
 /* GitHub issue #19: 0x080159F8-0x08015DF8, the first two of the three
  * jump-table dispatchers of the player-input controller class
@@ -26,10 +27,6 @@
 extern u32 gRoomFrameCount;
 extern void *gAudioContext;
 extern void *gInput;
-
-extern void ResetSpriteFrameTimer(struct pctrl_target *t);
-extern void ResetSpriteFrameIndex(struct pctrl_target *t);
-extern void SetSpriteAnimDone(struct pctrl_target *t, s32 a);
 
 /* `v`, mirrored when the target faces left */
 #define SIGNED_X(t, v) ((t)->f28.flipX ? -(v) : (v))

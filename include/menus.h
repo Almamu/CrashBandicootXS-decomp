@@ -20,6 +20,7 @@
 
 #include "core.h"
 #include "vtable.h"
+#include "graphics_package.h"
 
 struct bg_package;
 struct bitmap_font;
@@ -69,9 +70,9 @@ struct image_pair
  * ContinuePromptLoop runs it, and DrawContinuePrompt..DestroyContinuePrompt
  * (src/frontend/credits.c) draw, commit and free it. */
 struct continue_prompt {
-    u8 *bg1Buf;   /* 0x00 - LoadGraphicsPackage scratch for BG1 */
-    u8 *bg0Buf;   /* 0x04 - ditto for BG0 */
-    u8 *bg2Buf;   /* 0x08 - ditto for BG2 */
+    struct bg_setup *bg1Buf; /* 0x00 - BG1 */
+    struct bg_setup *bg0Buf; /* 0x04 - BG0 */
+    struct bg_setup *bg2Buf; /* 0x08 - BG2 */
     u16 dispcnt;  /* 0x0c - written as one halfword to REG_DISPCNT; bytes
                    * accessed individually via ((u8 *)&dispcnt)[n] */
     u8 unused_0e[2];
@@ -103,7 +104,7 @@ COMPILE_TIME_ASSERT(menus_h, sizeof(struct continue_prompt) == 0x24);
  * description over a scrolling background, faded in and out through
  * BLDY. */
 struct sub_8006700_actor {
-    u8 unused_00[0x10];
+    struct bg_setup bg; /* 0x00 - BG0 (InitBgSetup) */
     s32 field_10;       /* 0x10 - the title's text */
     void *field_14;     /* 0x14 - the description's text */
     struct settings_icon_actor *field_18; /* 0x18 - the power's icon */

@@ -21,6 +21,7 @@
 #include "core.h"
 #include "actor_self.h"
 #include "vtable.h"
+#include "objects.h"
 
 struct a884_part;
 struct ab9c_obj;
@@ -78,6 +79,18 @@ extern const struct speed_table gStaticData_0816C090;
 /* Aku Aku's orbit frame counters (DrawPlayer, src/iwram/iwram_data.c). */
 extern s32 gAkuAkuInvincibleFrame;
 extern s32 gAkuAkuFollowFrame;
+
+/* The player controller's and the input controller's motion records
+ * (src/data/motion_records_16b304.c; `struct motion_rec`, objects.h). */
+extern const struct motion_rec gPlayerCtrlMotionRecords[31];
+extern const struct motion_rec gInputCtrlMotionRecords[9];
+
+/* The entry sets PlayRoom gives the action, player and input controllers
+ * through SetCtrlAnimSet (src/data/entry_set_16b92c.c,
+ * src/data/entry_set_16b93c.c). */
+extern const struct entry_set gActionCtrlMotionSet;
+extern const struct entry_set gPlayerCtrlMotionSet;
+extern const struct entry_set gInputCtrlMotionSet;
 
 /* src/pickups/wumpa.c */
 extern void ResetActionCtrl(void *self);

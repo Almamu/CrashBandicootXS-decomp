@@ -94,12 +94,12 @@ u8 PlayerAnimWouldTouchCrate(struct box_part *self, s32 action)
     if (state == 5 || state == 0xa)
         return 0;
     {
-        struct part_box *q;
+        struct hitbox_quad *q;
         s32 offX, offY;
         u8 w, h;
 
         rec = (u8 *)&(*self->keyframes)[self->frame];
-        q = (struct part_box *)(rec + 4);
+        q = (struct hitbox_quad *)(rec + 4);
 
         px = self->x >> 8;
         py = self->y >> 8;
@@ -116,14 +116,14 @@ u8 PlayerAnimWouldTouchCrate(struct box_part *self, s32 action)
     }
     {
         struct box_part *pl = gPlayer;
-        struct part_box *q;
+        struct hitbox_quad *q;
         s32 offX, offY;
         u8 w, h;
 
         px = pl->x >> 8;
         py = pl->y >> 8;
         rec = (u8 *)&(*pl->keyframes)[pl->frame];
-        q = (struct part_box *)(rec + 4);
+        q = (struct hitbox_quad *)(rec + 4);
         offX = q->offX;
         offY = q->offY;
         w = q->w;
@@ -143,7 +143,7 @@ u8 PlayerAnimWouldTouchCrate(struct box_part *self, s32 action)
         return 0;
     {
         u8 *rec = (u8 *)&(*gPlayer->keyframes)[action];
-        struct part_box *q = (struct part_box *)(rec + 4);
+        struct hitbox_quad *q = (struct hitbox_quad *)(rec + 4);
         s32 offX, offY;
         u8 w, h;
 

@@ -1,4 +1,5 @@
 #include "core.h"
+#include "gfx.h"
 #include "util.h"
 #include "system.h"
 

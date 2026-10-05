@@ -7,6 +7,9 @@
 #include "crates.h"
 #include "player.h"
 #include "bosses.h"
+#include "gfx.h"
+#include "objects.h"
+#include "memory.h"
 
 /* Shared by src/bosses/dingodile_create.c and src/objects/platform_create.c/
  * platform_contact.c/platform_collide.c/platform.c (GitHub issue #25,
@@ -63,20 +66,10 @@ struct method
     void *fn;
 };
 
-/* anim_rec's 0x04-0x09 collision box, accessed through a pointer to it
- * (not embedded: this compiler pads every struct to a word multiple) */
-struct anim_box
-{
-    s16 offX;   // 0x00
-    s16 offY;   // 0x02
-    u8 padX;    // 0x04
-    u8 padY;    // 0x05
-};
-
 struct anim_rec
 {
     u8 unk_00[4];
-    s16 offX;   // 0x04 - struct anim_box
+    s16 offX;   // 0x04 - a struct hitbox_quad (gfx.h)
     s16 offY;   // 0x06
     u8 padX;    // 0x08
     u8 padY;    // 0x09
@@ -233,16 +226,9 @@ extern void *gUnknown_030012EC;
 extern u8 *gEntityFlags;
 extern u8 ***gSpriteBankSet;
 extern u32 gRoomFrameCount;
-extern struct vec_pair gDingodileMotionEntries[];
-extern struct vec3 gPlatformMoverMotionRecords[];
-extern u8 gPlatformMoverMotionSet[];
-extern u8 gDingodileVtable[];
-extern u8 gPlatformVtable[];
-extern u8 gPlatformMoverVtable[];
+/* src/data/velocity_16c460.c defines it as `const s32 [3][3]`. */
+extern const struct vec3 gPlatformMoverMotionRecords[3];
 
-extern void *OperatorNew(u32 size);
-extern void InitMovingSprite(void *self);
-extern void DestroyMovingSprite(void *self, s32 flags);
 extern s32 _call_via_r1(void *self, void *fn);
 extern s32 _call_via_r2(void *self, void *arg, void *fn);
 extern s32 _call_via_r3(void *self, void *arg1, s32 arg2, void *fn);
@@ -250,35 +236,16 @@ extern void _call_via_r4(void *self, s32 a, s32 b, s32 c);
 extern s32 GetBossIndex(void *arg);
 extern u8 IsBonusRoundDone(void *arg);
 extern u8 IsGemPathDone(void *arg);
-extern void AddToPartList(void *manager, void *value);
-extern void ResetSpriteFrameTimer(void *self);
-extern void ResetSpriteFrameIndex(void *self);
-extern void SetSpriteAnimDone(void *self, s32 a);
-extern u8 GetPaletteSlot(void *cache, u8 id);
-extern void GetSpriteHitbox(struct aabb *dest, struct gobj *obj);
-extern s32 GetSpritePrevY(struct gobj *obj);
-extern s32 GetSpritePrevX(struct gobj *obj);
-extern void SetEntityPos(struct gobj *obj, s32 x, s32 y);
-extern void AdvanceSpriteAnim(struct gobj *obj);
-extern void SetSpritePrevPos(struct gobj *obj);
-extern void StartCtrlTargetMotionX(void *self, void *part, struct vec3 *vec);
-extern void DestroyCtrl(void *self, s32 flags);
-extern void InitCtrl(void *self);
-
-void sub_801B2D8(struct gobj *self);
 
 /* The object's constructor body (InitPlatform), which CreatePlatform inlines
  * into its `new`. */
 static inline struct gobj *GobjInit(struct gobj *self)
 {
-    InitMovingSprite(self);
+    InitMovingSprite((struct actor *)self);
     self->vtable = (struct gobj_vtable *)gPlatformVtable;
     sub_801B2D8(self);
     return self;
 }
-void sub_801B2A8(struct gobj *self, u8 value);
-void ResolvePlatformCollision(struct gobj *self, void *unused);
-void MovePlayerWithPlatform(struct mover *self, struct gobj *obj);
 
 /* Branchless absolute value, updating `x` in place (same helper as
  * actor.c) - the ROM's asr/eor/sub sequence. */

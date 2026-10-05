@@ -1,6 +1,9 @@
 #include "core.h"
 #include "text_popup.h"
 #include "bosses.h"
+#include "gfx.h"
+#include "actor.h"
+#include "objects.h"
 
 /* Text-popup variants with their own header constructors, ROM
  * 0x08021280-0x08021668. Built with old_agbcc; see include/text_popup.h. */
@@ -17,12 +20,6 @@ struct level_guard
     u8 unk_08[0x1C];
 };
 
-struct spawn_part
-{
-    u8 unk_00[0xA];
-    u8 field_0A;
-};
-
 extern struct level_guard gLevelTable[];
 extern u8 *gPlayer;
 extern void *gUpdateOnlyPartList;
@@ -30,9 +27,6 @@ extern u8 IsInGemPath(void *self);
 extern u8 IsInBonusRound(void *self);
 extern s32 sub_8023324(void *self);
 extern s32 GetCurrentLevel(void *self);
-extern struct spawn_part *CreateEntity(u16 arg0, u16 arg1, u16 arg2, u16 arg3);
-extern void SetEntitySize(struct spawn_part *part, s32 w, s32 h);
-extern s32 *CreatePlatform(u16 x, u16 y, u16 w, u16 h, s32 id);
 extern void SetCrateGemPos(void *self, s32 *point);
 
 /* Entity type 0x55, the room's exit. Every room but room 16 and the boss
@@ -57,7 +51,7 @@ void SpawnRoomExit(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
         && !sub_8023324(gLevelState)
         && gLevelTable[GetCurrentLevel(gLevelState)].guard == 0)
     {
-        struct spawn_part *part = CreateEntity(arg0, arg1, arg2, arg3);
+        struct actor *part = CreateEntity(arg0, arg1, arg2, arg3);
 
         SetEntitySize(part, 0x64, 0x64);
         part->field_0A = 0x12;
@@ -65,7 +59,7 @@ void SpawnRoomExit(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     }
     else if (gPlayer[0x88] == 0)
     {
-        s32 *pos = CreatePlatform(arg0, arg1, arg2, arg3, 4);
+        s32 *pos = (s32 *)CreatePlatform(arg0, arg1, arg2, arg3, 4);
         register s32 px asm("r1") = pos[0] >> 8;
         register s32 x asm("r2") = px - 2;
         register s32 py asm("r0");
@@ -81,7 +75,7 @@ void SpawnRoomExit(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     }
     else
     {
-        struct spawn_part *part = CreateEntity(arg0, arg1, arg2, arg3);
+        struct actor *part = CreateEntity(arg0, arg1, arg2, arg3);
 
         SetEntitySize(part, 0x28, 0x28);
         part->field_0A = 0x12;
@@ -100,7 +94,7 @@ void SpawnDingodile(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     struct level_record *rec;
 
     part->anim = POPUP_ANIM(0x288);
-    part->frameNibble = GetSpriteAnimPaletteSlot(part);
+    part->frameNibble = GetSpriteAnimPaletteSlot((struct actor *)part);
     part->base.flags |= 0x10;
     SetPartField0A(part, 1);
     rec = LEVEL_RECORD(arg3);
@@ -124,7 +118,7 @@ void SpawnTiny(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     struct level_record *rec;
 
     part->anim = POPUP_ANIM(0x294);
-    part->frameNibble = GetSpriteAnimPaletteSlot(part);
+    part->frameNibble = GetSpriteAnimPaletteSlot((struct actor *)part);
     hdr = CreateTiny(OperatorNew(0x4c));
     part->hdr = hdr;
     POPUP_ATTACH(hdr, part);
@@ -151,7 +145,7 @@ void SpawnCortexBoss(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     ResetSpriteFrameTimer(part);
     ResetSpriteFrameIndex(part);
     SetSpriteAnimDone(part, 0);
-    part->frameNibble = GetSpriteAnimPaletteSlot(part);
+    part->frameNibble = GetSpriteAnimPaletteSlot((struct actor *)part);
     hdr = (struct part_ctrl *)CreateCortexBoss(OperatorNew(0x24));
     part->hdr = hdr;
     POPUP_ATTACH(hdr, part);

@@ -25,6 +25,11 @@ extern u8 gLinkSessionReset;
  * (src/data/link_crc_16af10.c). */
 extern const u16 gCrc16Table[256];
 
+/* The link-up texts (src/data/link_crc_16af10.c), pointed at by save.h's
+ * gCrash2LinkTextPtr/gCrash3LinkTextPtr. */
+extern const char gCrash2LinkText[];
+extern const char gCrash3LinkText[];
+
 /* src/link/link_sio.c */
 extern s32 LinkStart(struct link_session *self, u32 flags);
 extern s32 LinkSetupSio(void);

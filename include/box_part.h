@@ -2,6 +2,7 @@
 #define GUARD_BOX_PART_H
 
 #include "aabb.h"
+#include "gfx.h"
 
 /* The collision/animation view of a `part` object (the same object as
  * include/gfx_part.h's `struct gfx_part` / include/gobj_1a794.h's
@@ -14,7 +15,7 @@
  * as the ROM does (a `u8` container gives `movs #0x10; ands`). */
 
 /* One KEYFRAME_SIZE-byte keyframe record. The {offX, offY, w, h}
- * collision box (struct part_box below) sits at +0x4 or +0xc depending
+ * collision box (struct hitbox_quad, gfx.h) sits at +0x4 or +0xc depending
  * on which table the part uses. */
 struct keyframe {
     u8 unk_00[0x15];
@@ -73,18 +74,6 @@ struct box_part {
     u8 probeTries;      // 0x69 - sub_8009BE0's retry counter
     u8 unk_6A[0xa];
     u32 hitMask;        // 0x74 - probe axes ProbeGroundSpriteTerrain hit this call
-};
-
-/* A keyframe record's {offX, offY, w, h} collision box, reached through
- * a pointer to it (this compiler pads every struct to a word multiple,
- * so it can't be embedded in the record). Sits at record+0xc for the
- * table GetSpriteBounds reads and at record+0x4 for the one GetSpriteHitbox/
- * PlayerHasRoomForAnim read (include/gobj_1a794.h's `struct anim_box`). */
-struct part_box {
-    s16 offX;
-    s16 offY;
-    u8 w;
-    u8 h;
 };
 
 /* The part list the per-frame collision passes walk (UpdatePartList

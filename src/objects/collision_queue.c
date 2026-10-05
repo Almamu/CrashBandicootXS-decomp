@@ -1,5 +1,7 @@
 #include "core.h"
 #include "crates.h"
+#include "objects.h"
+#include "memory.h"
 
 /* GitHub issue #14: 0x08010A0C-0x08010D54, continuing the physics/
  * collision subsystem (crate_reset.c-slot_crate.c). `ResolveCollisionCandidates` is
@@ -143,7 +145,7 @@ struct pos_pair {
 
 struct collision_candidate {
     void *neighbor; // 0x00 - the other entity involved in the collision
-    struct pos_pair pos; // 0x04 - position pair
+    struct e08c_pos pos; // 0x04 - position pair (one 8-byte struct copy)
     s32 kind;          // 0x0c - a collision-state/dispatch id
     s32 field10;         // 0x10
     s32 field14;           // 0x14
@@ -197,7 +199,7 @@ struct collision_queue {
 #define STACK_ARG_U8_ADDR(ptr, arg) asm("" : "=r"(ptr) : "0"(&(arg)))
 
 void AddCollisionCandidate(struct collision_queue *self, void *neighbor, s32 kind,
-                 s32 field10, s32 field14, s32 field18, struct pos_pair pos,
+                 s32 field10, s32 field14, s32 field18, struct e08c_pos pos,
                  s32 field1c, s32 field20, s32 field21)
 {
     u8 *p20;
@@ -235,7 +237,6 @@ void AddCollisionCandidate(struct collision_queue *self, void *neighbor, s32 kin
  * sibling before being read branch-by-branch - turns out to be this
  * simpler shape instead, `arg1` gates a VRAM-manager refresh rather
  * than selecting an insert mode). */
-extern void OperatorDelete(void *arg0);
 
 void DestroyCollisionQueue(void *arg0, s32 arg1)
 {

@@ -1,6 +1,7 @@
 #include "core.h"
 #include "actor.h"
 #include "pickups.h"
+#include "objects.h"
 
 /* Built with old_agbcc - see docs/matching/game-loop-old-agbcc.md. */
 
@@ -12,11 +13,6 @@ struct level_state
 
 extern struct level_state *gLevelState;
 extern void ***gSpriteBankSet;
-
-extern void ResetSpriteFrameTimer(struct orbit_part *part);
-extern void ResetSpriteFrameIndex(struct orbit_part *part);
-extern void SetSpriteAnimDone(struct orbit_part *part, u8 val);
-extern s32 GetSpriteAnimPaletteSlot(struct orbit_part *part);
 
 static inline void SetPartTag(struct orbit_part *part, s32 tag)
 {
@@ -46,7 +42,7 @@ struct orbit_part *DropExtraLife(void *unused0, u32 x, u32 y, u32 p3, u32 p5, u3
         ResetSpriteFrameTimer(part);
         ResetSpriteFrameIndex(part);
         SetSpriteAnimDone(part, 0);
-        part->slotNibble = GetSpriteAnimPaletteSlot(part);
+        part->slotNibble = GetSpriteAnimPaletteSlot((struct actor *)part);
         if (f)
             SendExtraLifeToHud(part);
     }

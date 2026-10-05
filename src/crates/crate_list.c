@@ -4,34 +4,10 @@
 #include "box_part.h"
 #include <agb_syscall.h>
 #include "crates.h"
-
-/* The fixed-slot object-pool manager struct `InitCrateList`
- * (`part_list.c`) initializes: `slotArray` holds the active
- * objects (bounded by `activeCount`, up to `capacity`); `nodeArray`
- * is a flat array of `capacity` 0x14-byte pool nodes; `gridHead`/
- * `gridTail` are a 256-bucket spatial hash grid, each bucket a
- * singly-linked list of pool nodes (head set once when a bucket
- * leaves empty, tail always updated for O(1) append - see
- * `AddCrateGridNode`); `freeListArray` is `capacity` 8-byte {node, next}
- * pairs threaded into a singly-linked free list, `freeListHead`
- * pointing at its first still-free entry. */
-struct pool_manager {
-    s32 activeCount;         // +0x0
-    s32 capacity;               // +0x4
-    void **slotArray;              // +0x8
-    void *nodeArray;                  // +0xc
-    void *gridHead[256];                 // +0x10
-    void *gridTail[256];                    // +0x410
-    void *freeListArray;                       // +0x810
-    void *freeListHead;                           // +0x814
-};
-
-extern void OperatorDeleteArray(void *ptr);
-extern void OperatorDelete(void *manager);
+#include "objects.h"
+#include "memory.h"
 
 typedef void (*part_method3_fn)(void *self, s32 a, s32 b, s32 c);
-
-extern s32 ClassifySpriteContact(struct box_part *part, struct aabb *box);
 
 /* `CollidePartWithObject`'s twin (part_collide.c): the same collision-hit
  * resolver, called from elsewhere in this AI/collision cluster (`list`
@@ -70,7 +46,7 @@ void RemoveCrateFromList(struct pool_manager *manager, void *target)
         goto done;
     }
     {
-        void **p0 = manager->slotArray;
+        void **p0 = (void **)manager->slotArray;
         void *val = *p0;
         base = p0;
         if (val != target) {
@@ -93,7 +69,7 @@ void RemoveCrateFromList(struct pool_manager *manager, void *target)
 
         {
             s32 srcOff = off + 4;
-            void **base2 = manager->slotArray;
+            void **base2 = (void **)manager->slotArray;
             void *src = (u8 *)base2 + srcOff;
             void *dst = (u8 *)base2 + off;
             s32 control = (manager->activeCount - i) & 0x1FFFFF;
@@ -104,7 +80,7 @@ void RemoveCrateFromList(struct pool_manager *manager, void *target)
             CpuSet(src, dst, control);
 
             cnt = manager->activeCount;
-            base3 = manager->slotArray;
+            base3 = (void **)manager->slotArray;
             *(void **)((u8 *)base3 + cnt * 4 - 4) = 0;
             cnt -= 1;
             manager->activeCount = cnt;
@@ -120,7 +96,7 @@ done:
 void RemoveCrateListAt(struct pool_manager *manager, s32 index)
 {
     if (index < manager->capacity) {
-        void **base = manager->slotArray;
+        void **base = (void **)manager->slotArray;
         s32 off = index * 4;
         void *item = base[index];
 
@@ -128,7 +104,7 @@ void RemoveCrateListAt(struct pool_manager *manager, s32 index)
 
         {
             s32 srcOff = off + 4;
-            void **base2 = manager->slotArray;
+            void **base2 = (void **)manager->slotArray;
             void *src = (u8 *)base2 + srcOff;
             void *dst = (u8 *)base2 + off;
             s32 control = (manager->activeCount - index) & 0x1FFFFF;
@@ -139,7 +115,7 @@ void RemoveCrateListAt(struct pool_manager *manager, s32 index)
             CpuSet(src, dst, control);
 
             cnt = manager->activeCount;
-            base3 = manager->slotArray;
+            base3 = (void **)manager->slotArray;
             *(void **)((u8 *)base3 + cnt * 4 - 4) = 0;
             cnt -= 1;
             manager->activeCount = cnt;
@@ -157,7 +133,7 @@ void RemoveCrateListAt(struct pool_manager *manager, s32 index)
  * node. */
 void *AddCrateGridNode(struct pool_manager *manager, void *data, s32 bucket, s32 extra)
 {
-    void **headField = &manager->freeListHead;
+    void **headField = (void **)&manager->freeListHead;
     void **entry = *headField;
     void *node = *(void **)entry;
 
@@ -172,13 +148,13 @@ void *AddCrateGridNode(struct pool_manager *manager, void *data, s32 bucket, s32
 
     {
         s32 off = bucket * 4;
-        void **gridABase = manager->gridHead;
+        void **gridABase = (void **)manager->gridHead;
         void **gridASlot = (void **)((u8 *)gridABase + off);
         if (*gridASlot == 0) {
             *gridASlot = node;
         }
         {
-            void **gridBBase = manager->gridTail;
+            void **gridBBase = (void **)manager->gridTail;
             void **gridBSlot = (void **)((u8 *)gridBBase + off);
             void *tail = *gridBSlot;
             if (tail != 0) {
@@ -234,7 +210,7 @@ void AddCrateToList(struct pool_manager *manager, void *obj)
 
         idx = manager->activeCount;
         {
-            void **base = manager->slotArray;
+            void **base = (void **)manager->slotArray;
             base[idx] = obj;
         }
         manager->activeCount = idx + 1;
