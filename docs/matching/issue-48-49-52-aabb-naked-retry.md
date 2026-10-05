@@ -42,7 +42,7 @@ struct {
 struct box16 *t;
 s32 x, y, z;
 
-f.t = *(struct box16 *)pl->unk_38;
+f.t = *(struct box16 *)pl->box;
 x = pl->x >> 8;
 y = pl->y >> 8;
 z = pl->z >> 8;
@@ -50,7 +50,7 @@ t = &f.t;
 BoxMove(t, x, y, z);
 f.a = *t;
 MemCopy32(&f.a, &f.a, sizeof(f.a));
-f.s = *(struct box16 *)self->unk_38;
+f.s = *(struct box16 *)self->box;
 BoxMove(&f.s, self->x >> 8, self->y >> 8, self->z >> 8);
 *t = f.s;
 MemCopy32(t, t, sizeof(*t));

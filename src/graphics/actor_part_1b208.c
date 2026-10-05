@@ -311,7 +311,7 @@ void UpdatePlatformMover(struct mover *self, struct gobj *objArg)
         if ((kind == 7 && obj->frame <= 1 && !self->active)
          || (kind == 6 && obj->frame <= 1 && gRoomFrameCount < self->time))
             goto clamp;
-        if (kind == 7 && obj->unk_38)
+        if (kind == 7 && obj->animDone)
         {
             register u32 bit asm("r0") = 1;
 
@@ -337,7 +337,7 @@ void UpdatePlatformMover(struct mover *self, struct gobj *objArg)
                 }
             }
         }
-        else if (kind == 6 && obj->unk_38)
+        else if (kind == 6 && obj->animDone)
         {
             self->time = gRoomFrameCount + 120;
         clamp:

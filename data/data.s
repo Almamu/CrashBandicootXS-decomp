@@ -153,7 +153,7 @@ gSfxTable:
 @ 0x0824B638..0x08270F08 (33 rooms' level data): src/data/level_rooms_24b638.c
 @ gStaticData_08270F08..gStaticData_08299DCC: src/data/level_tilesets_270f08.c
 @ 0x082B91D0..0x082BF120 (8 rooms' level data): src/data/level_rooms_2b91d0.c
-@ gSpriteBank00Tiles..gFixedObjTiles: src/data/sprite_tiles_2bf120.c
+@ gSpriteBank00Tiles..gObjPalettes: src/data/sprite_tiles_2bf120.c
 
 @ gSpriteBankTable..gSpriteBank55: src/data/sprite_banks_4a5600.c,
 @ sprite_banks_4b0ae0.c, sprite_banks_4b414c.c, sprite_banks_4b9d7c.c

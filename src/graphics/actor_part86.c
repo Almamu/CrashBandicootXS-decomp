@@ -47,7 +47,7 @@ void sub_80159F8(struct player_ctrl *self)
 {
     struct pctrl_target *t;
 
-    self->unk_28 = gRoomFrameCount + 16;
+    self->deadline = gRoomFrameCount + 16;
     if (self->state == 4)
     {
         struct speed_table tbl = gStaticData_0816C090;
@@ -152,7 +152,7 @@ void sub_8015C6C(struct player_ctrl *self)
     speed = 960;
     flag = 0;
     PlaySfx(gAudioContext, 9, 256);
-    if ((self->target->unk_68 & 3) && GetDpadDirection(gInput) <= 2)
+    if ((self->target->hitAxes & 3) && GetDpadDirection(gInput) <= 2)
         flag = 1;
 
     if (self->state == 4)

@@ -98,36 +98,36 @@ s32 CollideMovingSprite(struct gobj *self)
 /* `self+0x74` get/clear/OR-set accessors. */
 s32 sub_800A068(struct gobj *self)
 {
-    return self->unk_74;
+    return self->hitMask;
 }
 
 /* `self+0x74 != 0`, via the branchless `(-x | x) >> 31` idiom rather
  * than a plain comparison. */
 s32 sub_800A06C(struct gobj *self)
 {
-    s32 val = self->unk_74;
+    s32 val = self->hitMask;
     return (u32)(-val | val) >> 31;
 }
 
 void sub_800A078(struct gobj *self)
 {
-    self->unk_74 = 0;
+    self->hitMask = 0;
 }
 
 void sub_800A080(struct gobj *self, s32 val)
 {
-    self->unk_74 |= val;
+    self->hitMask |= val;
 }
 
 /* `self+0x68` byte get/set pair. */
 void sub_800A088(struct gobj *self, u8 val)
 {
-    self->unk_68 = val;
+    self->hitAxes = val;
 }
 
 u8 sub_800A090(struct gobj *self)
 {
-    return self->unk_68;
+    return self->hitAxes;
 }
 
 /* `self+0x64`/`self+0x60` setters. */
@@ -221,6 +221,6 @@ void SetSpriteMotionX(struct gobj *self, s32 a, s32 b, s32 c)
  * initializer) getter. */
 u8 sub_800A0F4(struct gobj *self)
 {
-    return self->unk_69[0];
+    return self->probeTries;
 }
 asm(".align 2, 0");

@@ -300,7 +300,7 @@ void sub_800A810(void *selfArg)
         self->speedX = zero;
         self->speedY = zero;
         {
-            u8 *p = &self->unk_68;
+            u8 *p = &self->hitAxes;
             *p = 8;
             self->dir = zero;
             p -= 0x40; /* &self->mirror */
@@ -327,7 +327,7 @@ void sub_800A810(void *selfArg)
         self->flags = result;
     }
 
-    state = self->unk_88;
+    state = self->ctrlMode;
     {
         register s32 state2 asm("r1") = state;
 

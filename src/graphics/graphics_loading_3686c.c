@@ -617,7 +617,7 @@ void DrawLogoActor(struct actor_self *self)
         h = frame[1];
         halfH = h * 4;
         depth = self->z;
-        scale = (depth << 8) / (*(struct cam_ref **)&self->unk_2C[4])->depth;
+        scale = (depth << 8) / (*(struct cam_ref **)&self->record)->depth;
         f = 0x100000 / depth;
         sy = (((self->y * f) >> 12) + 0x5000) >> 8;
         sx = (((self->x * f) >> 12) + 0x7800) >> 8;

@@ -72,7 +72,7 @@ void UpdateGroundSprite(struct gobj *self)
     if (prev == rec) goto skip;
     if (prev == NULL) goto skip;
 
-    if (self->unk_68 == 8) {
+    if (self->hitAxes == 8) {
         register s32 prevSum asm("r2");
         register s32 newSum asm("r1");
 
@@ -94,7 +94,7 @@ void UpdateGroundSprite(struct gobj *self)
         );
         if (prevSum == newSum) goto skip;
         delta = prevSum - newSum;
-    } else if (self->unk_68 == 4) {
+    } else if (self->hitAxes == 4) {
         register s32 prevVal asm("r0");
         register s32 newVal asm("r1");
 
@@ -138,7 +138,7 @@ void sub_800A590(struct gobj *self)
     if (prev == rec) goto skip;
     if (prev == NULL) goto skip;
 
-    if (self->unk_68 == 8) {
+    if (self->hitAxes == 8) {
         register s32 prevSum asm("r2");
         register s32 newSum asm("r1");
 
@@ -157,7 +157,7 @@ void sub_800A590(struct gobj *self)
         );
         if (prevSum == newSum) goto skip;
         delta = prevSum - newSum;
-    } else if (self->unk_68 == 4) {
+    } else if (self->hitAxes == 4) {
         register s32 prevVal asm("r0");
         register s32 newVal asm("r1");
 

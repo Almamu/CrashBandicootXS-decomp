@@ -239,7 +239,7 @@ void sub_8014940(struct act *self)
 {
     struct act_part *part = self->part;
 
-    if (part->tag == 0x2F && part->frame == 3 && part->unk_34 == 0)
+    if (part->tag == 0x2F && part->frame == 3 && part->stepTimer == 0)
         PlaySfx(gAudioContext, 0x2E, 0x100);
     part = self->part;
     if (part->animDone)
@@ -286,7 +286,7 @@ void sub_80149BC(struct act *self)
         self->flag30 = 1;
         self->next28 = 0;
         LoadPaletteSlot(gPaletteCache, self->part->slotNibble,
-                    self->part->bank->records[self->part->tag].unk_14);
+                    self->part->bank->records[self->part->tag].paletteId);
     }
 }
 

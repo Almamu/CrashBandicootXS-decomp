@@ -18,8 +18,8 @@
  * table-index/"kind" field at `self+0xc`, an anim-frame halfword/byte
  * pair at `self+0x10`/`self+0x12`, an accumulator at `self+8`, state at
  * `self+0x28`, a frame counter at `self+0x44`, a `+0x50`-rooted event/
- * trampoline table fed through `_call_via_r2`, and the `+0x48`(next)/
- * `+0x4c`(prev) circular doubly-linked list rooted at the player-pointer
+ * trampoline table fed through `_call_via_r2`, and the `+0x48`(prev)/
+ * `+0x4c`(next) circular doubly-linked list rooted at the player-pointer
  * global `gActorList`. This file additionally pins down
  * `InitActorPart` itself (the constructor every other actor_part*.c file
  * already forward-declares and calls) plus a handful of new fields it
@@ -129,11 +129,11 @@ void *InitActorPart(void *selfArg, void *partArg, s32 b, s32 c, s32 d)
     self->y = cReg;
     self->z = d;
     ACTOR_RECORD(self) = part;
-    *(struct anim_box *)self->unk_38 = part->box_14;
+    *(struct anim_box *)self->box = part->box_14;
 
     self->state = 0;
     self->stateTime = 0;
-    self->unk_2C[0] = 1;
+    self->visible = 1;
 
     {
         register s32 value asm("r2") = self->z - (sub_8029B2C() << 8);
@@ -168,13 +168,13 @@ void *InitActorPart(void *selfArg, void *partArg, s32 b, s32 c, s32 d)
         struct actor_self *head = gActorList;
 
         if (head != NULL) {
-            ACTOR_LINK_PREV(self) = head;
-            ACTOR_LINK_NEXT(self) = ACTOR_LINK_NEXT(head);
-            ACTOR_LINK_NEXT(head) = self;
-            ACTOR_LINK_PREV(ACTOR_LINK_NEXT(self)) = self;
+            ACTOR_LINK_NEXT(self) = head;
+            ACTOR_LINK_PREV(self) = ACTOR_LINK_PREV(head);
+            ACTOR_LINK_PREV(head) = self;
+            ACTOR_LINK_NEXT(ACTOR_LINK_PREV(self)) = self;
         } else {
-            ACTOR_LINK_PREV(self) = self;
             ACTOR_LINK_NEXT(self) = self;
+            ACTOR_LINK_PREV(self) = self;
         }
     }
 

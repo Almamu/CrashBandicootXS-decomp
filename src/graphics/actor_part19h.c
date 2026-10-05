@@ -52,7 +52,7 @@ static inline u8 ActorsOverlap(struct actor_self *pl, struct actor_self *self)
     struct box16 *t;
     s32 x, y, z;
 
-    f.t = *(struct box16 *)pl->unk_38;
+    f.t = *(struct box16 *)pl->box;
     x = pl->x >> 8;
     y = pl->y >> 8;
     z = pl->z >> 8;
@@ -60,7 +60,7 @@ static inline u8 ActorsOverlap(struct actor_self *pl, struct actor_self *self)
     BoxMove(t, x, y, z);
     f.a = *t;
     MemCopy32(&f.a, &f.a, sizeof(f.a));
-    f.s = *(struct box16 *)self->unk_38;
+    f.s = *(struct box16 *)self->box;
     BoxMove(&f.s, self->x >> 8, self->y >> 8, self->z >> 8);
     *t = f.s;
     MemCopy32(t, t, sizeof(*t));
@@ -69,8 +69,8 @@ static inline u8 ActorsOverlap(struct actor_self *pl, struct actor_self *self)
 
 /* `+0x4c`: next node of the circular actor list rooted at
  * `gActorList`; `+0x30`: pointer whose first byte is the type. */
-#define ACTOR_NEXT(a) (*(struct actor_self **)&(a)->unk_48[4])
-#define ACTOR_TYPE(a) (**(u8 **)&(a)->unk_2C[4])
+#define ACTOR_NEXT(a) (*(struct actor_self **)&(a)->next)
+#define ACTOR_TYPE(a) (**(u8 **)&(a)->record)
 
 /* Called from `UpdatePolarNitroCrate` (actor_part19g.c) once `self` (a "used"
  * pickup, state `0x12`) has stayed used for `self+0x44 == 0x14`

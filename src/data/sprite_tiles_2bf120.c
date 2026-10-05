@@ -1,13 +1,13 @@
 #include "gba/types.h"
 
 /*
- * ROM 0x082BF120-0x084A5600: the sprite tile pool and the 125 fixed OBJ
- * tiles. Linked in ROM order between data/data.s sections by ldscript.txt -
+ * ROM 0x082BF120-0x084A5600: the sprite tile pool and the 125 OBJ
+ * palettes. Linked in ROM order between data/data.s sections by ldscript.txt -
  * see docs/data.md and docs/data_map.md ("gStaticData_0817E78C").
  *
  * The sprite-bank table gSpriteBankTable (sprite_banks_4a5600.c) starts
- * with {banks, tileBase = gSpriteBank00Tiles, tilePool =
- * gFixedObjTiles, 56, 125}. GetSpriteTileBase returns tileBase, and
+ * with {banks, tileBase = gSpriteBank00Tiles, palettes =
+ * gObjPalettes, 56, 125}. GetSpriteTileBase returns tileBase, and
  * graphics_73dc.c/graphics_7634.c upload a frame's pieces from tileBase +
  * (frame.tiles & 0xFFFFFF). The 56 banks own disjoint, back-to-back ranges
  * of that pool in bank order (banks 42 and 47 also reuse one frame of bank
@@ -306,8 +306,12 @@ const u8 gSpriteBank55Tiles[0x394c0] = {
 #include "sprites/bank55_46b1a0.img.bin.inc"
 };
 
-/* The 125 fixed 4bpp tiles, the header's tilePool/npool: RunPauseMenu
- * builds the 125-slot tile-asset cache (SetPaletteCacheSource/GetPaletteSlot) from them. */
-const u8 gFixedObjTiles[0xfa0] = {
+/* The 125 16-colour OBJ palettes (32 bytes each), the header's
+ * palettes/paletteCount: InitLevelState and RunPauseMenu hand them to the
+ * palette cache (SetPaletteCacheSource), and GetPaletteSlot copies palette
+ * `paletteId` into a free OBJ palette slot. Still stored as a 4bpp tile PNG
+ * (graphics/sprites/tile_pool_4a4660.png, one tile per palette); the bytes
+ * are the same. */
+const u8 gObjPalettes[0xfa0] = {
 #include "sprites/tile_pool_4a4660.img.bin.inc"
 };

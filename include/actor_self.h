@@ -65,6 +65,8 @@ struct actor_pmf {
  * the (Thumb) code address. Used by the src/data tables (docs/data.md). */
 #define ACTOR_PMF(func) { 0, -1, { .fn = (void *)(func) } }
 
+struct anim_table_record;
+
 struct actor_self {
     struct anim_frame_record *anims; // 0x00
     u32 *frameOffsets;          // 0x04
@@ -80,22 +82,26 @@ struct actor_self {
     s32 y;                      // 0x20
     s32 z;                      // 0x24
     s32 state;                  // 0x28
-    u8 unk_2C[8];
+    u8 visible;                 // 0x2C - nonzero: drawn (RunActorCategoryFrame only puts these in
+                                //        gActorDrawList); InitActorPart sets it to 1
+    u8 unk_2D[3];
+    struct anim_table_record *record; // 0x30 - the record InitActorPart was given (actor_anim.h);
+                                //        the draw functions scale by its baseDepth
     s32 depth;                  // 0x34
-    u8 unk_38[0xC];
+    u8 box[0xC];                // 0x38 - collision box, copied from record->box_14 by InitActorPart
+                                //        (ActorsOverlap and friends read it as a struct box16)
     s32 stateTime;              // 0x44 - frames spent in `state`
-    u8 unk_48[8];
+    struct actor_self *prev;    // 0x48 - circular actor list (rooted at the player, gActorList):
+    struct actor_self *next;    // 0x4C   InitActorPart appends before the head; the draw and
+                                //        teardown loops walk `next` from the head
     struct actor_vtable *vtable; // 0x50
 };
 
-/* Words inside the byte arrays above, which other files still index
- * directly: the `struct anim_table_record` InitActorPart was given
- * (+0x30, actor_anim.h) and the circular list links it sets up (+0x48
- * next, +0x4C prev; the list is rooted at the player, gActorList). */
-struct anim_table_record;
-#define ACTOR_RECORD(self) (*(struct anim_table_record **)&(self)->unk_2C[4])
-#define ACTOR_LINK_NEXT(self) (((struct actor_self **)(self)->unk_48)[0])
-#define ACTOR_LINK_PREV(self) (((struct actor_self **)(self)->unk_48)[1])
+/* The record and list links as the files that read them through casts
+ * spell them. */
+#define ACTOR_RECORD(self) (*(struct anim_table_record **)&(self)->record)
+#define ACTOR_LINK_PREV(self) (*(struct actor_self **)&(self)->prev)
+#define ACTOR_LINK_NEXT(self) (*(struct actor_self **)&(self)->next)
 
 /* The statement macros below are wrapped in `if (1) { ... } else (void)0`
  * rather than the usual `do { ... } while (0)`: agbcc treats the latter

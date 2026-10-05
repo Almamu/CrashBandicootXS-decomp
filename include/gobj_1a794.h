@@ -63,7 +63,7 @@ struct anim_rec
     u8 padX;    // 0x08
     u8 padY;    // 0x09
     u8 unk_0A[0xA];
-    u8 unk_14;  // 0x14
+    u8 paletteId; // 0x14 - GetPaletteSlot(gPaletteCache, paletteId) gives the OBJ palette slot
     u8 unk_15;
     u8 frames;  // 0x16
     u8 unk_17[5];
@@ -104,28 +104,31 @@ struct gobj
     u8 mirror;          // 0x28 - bit 4: X mirrored, bit 5: Y mirrored
     u8 slot;            // 0x29 - low nibble: palette/tile slot
     u8 unk_2A[2];
-    u8 unk_2C;
+    u8 animating;       // 0x2C - nonzero while the keyframe timer runs (box_part.h)
     u8 tag;             // 0x2D
     u8 unk_2E[2];
     s32 frame;          // 0x30
-    s32 unk_34;         // 0x34
-    u8 unk_38;          // 0x38
+    s32 stepTimer;      // 0x34 - ticks spent on the current step (ResetSpriteFrameTimer)
+    u8 animDone;        // 0x38 - set once a non-looping animation ends (SetSpriteAnimDone)
     u8 unk_39[0xB];
     struct mover *mover; // 0x44
     struct vec3 velA;   // 0x48
     struct vec3 velB;   // 0x54
     s32 speedX;         // 0x60
     s32 speedY;         // 0x64
-    u8 unk_68;          // 0x68
-    u8 unk_69[3];
+    u8 hitAxes;         // 0x68 - collision axes the terrain probe resolved (8: Y, standing; 4: X)
+    u8 probeTries;      // 0x69
+    u8 unk_6A[2];
     s32 prevX;          // 0x6C - previous position (Q8), cached by ApplySpriteVelocity
     s32 prevY;          // 0x70
-    s32 unk_74;         // 0x74
+    s32 hitMask;        // 0x74 - probe axes hit this frame (OR-accumulated, see box_part.h)
     s32 type;           // 0x78
     u8 unk_7C[4];
-    u8 unk_80;          // 0x80
+    u8 busy;            // 0x80 - set while a triggered crate animation runs (the crate's state
+                        //        bit 7), cleared when it ends; enemies skip the player meanwhile
     u8 unk_81[7];
-    u8 unk_88;          // 0x88 - nonzero freezes `list` (sub_800B58C/sub_800B650/sub_800B678)
+    u8 ctrlMode;        // 0x88 - player control mode 0-3: picks the `mover` controller update
+                        //        (actor_part48.c); nonzero freezes `list` (sub_800B58C/sub_800B650/sub_800B678)
     u8 unk_89[3];
     u32 deadline;       // 0x8C - gRoomFrameCount frame sub_800B524 tests against
     u8 unk_90;          // 0x90
@@ -141,8 +144,8 @@ struct gobj
     u8 unk_B0[0x50];
     u8 unk_100;         // 0x100 - nonzero stops sub_800B4D0 from setting speedX
     u8 unk_101;         // 0x101
-    u8 unk_102;         // 0x102
-    u8 unk_103;         // 0x103
+    u8 pushLeft;        // 0x102 - nonzero: moves the standing player 1px left per frame
+    u8 pushRight;       // 0x103 - nonzero: moves the standing player 1px right per frame
     u8 dead;            // 0x104 - the player died (KillPlayer and the other controllers' kill handlers); blocks pause and further hits
     u8 unk_105[3];
     u8 unk_108[4];      // 0x108 - an embedded object (sub_800B4A4 returns its address)

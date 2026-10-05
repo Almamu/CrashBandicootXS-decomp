@@ -421,9 +421,9 @@ void *InitLevelState(void *self)
         *addr = cache;
         {
             register u16 count asm("r1") =
-                ((const struct sprite_bank_table *)gSpriteBankTable)->tilePoolCount;
+                ((const struct sprite_bank_table *)gSpriteBankTable)->paletteCount;
             register const u8 *records asm("r2") =
-                ((const struct sprite_bank_table *)gSpriteBankTable)->tilePool;
+                ((const struct sprite_bank_table *)gSpriteBankTable)->palettes;
 
             SetPaletteCacheSource(cache, count, records);
         }

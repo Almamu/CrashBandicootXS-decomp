@@ -23,7 +23,7 @@ extern void *CreateCrate(u16 arg0, u16 arg1, u16 arg2, u16 arg3, u8 type);
 struct anim_record_21668
 {
     u8 unk_00[0x14];
-    u8 tileRecord; // 0x14
+    u8 paletteId; // 0x14
 };
 
 struct anim_table_21668
@@ -81,7 +81,7 @@ void sub_8021668(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     ResetSpriteFrameIndex(part);
     SetSpriteAnimDone(part, 0);
     SetFrameNibble(part, GetPaletteSlot(gPaletteCache,
-        ((struct anim_table_21668 *)part->anim)->records->tileRecord));
+        ((struct anim_table_21668 *)part->anim)->records->paletteId));
     part->flipX = 0;
     part->unk_28_5 = 0;
     hdr = sub_8017FE8(OperatorNew(0x24));

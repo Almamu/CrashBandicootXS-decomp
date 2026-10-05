@@ -85,10 +85,10 @@ were branch targets that asmdiff never showed.
    clobbers r0 between the output reload and the inherited use.
 
 4. **Ring-push re-test (4 -> 2).** In `D18C_RING_PUSH`, a failed first
-   `ringLocked == 0` test jumped straight past the second test. cse's
+   `ctrlMode == 0` test jumped straight past the second test. cse's
    jump following knew its outcome. The ROM's `bne` goes to the second
    test's load. The first test now reads the byte through an `s32`
-   inline (`D18C_RingLocked()`), so the two tests are no longer the
+   inline (`D18C_CtrlMode()`), so the two tests are no longer the
    same expression. Two branches changed, one in case 3 and one in its
    `n` loop.
 

@@ -10,7 +10,7 @@
  * `_call_via_r2`. This is the second object kind (constructed by the
  * parked `CreateHovercraftSideGun`, vtable `gHovercraftSideGunVtable`), with a health-
  * like countdown at `self+0x54`, a "dead" byte flag at `self+0x58`, a
- * second one-shot byte flag at `self+0x2c`, the constructor's cached
+ * `visible` byte at `self+0x2c`, the constructor's cached
  * gate byte at `self+0x59`, and a little "spawn/orbit" record at
  * `self+0x5c`/`self+0x60`/`self+0x64`/`self+0x68`/`self+0x6c` driving
  * `UpdateHovercraftSideGun`'s position-plus-effect-spawn step. See
@@ -23,7 +23,7 @@ extern void *gAudioContext;
 
 /* The second object kind (vtable gHovercraftSideGunVtable). */
 struct actor_orbiter {
-    struct actor_self base; // base.unk_2C[0]: the one-shot flag
+    struct actor_self base;
     s32 hp;             // 0x54
     u8 dead;            // 0x58
     u8 gate;            // 0x59 - the constructor's cached gate byte
@@ -44,7 +44,7 @@ struct orbit_table {
 };
 
 /* Applies `dmg` damage to `self+0x54` and once it drops to zero (or
- * below): marks `self` dead (`+0x58=1`), sets the one-shot flag
+ * below): marks `self` dead (`+0x58=1`), sets `visible`
  * (`+0x2c=1`), fires the singleton's own death transition
  * (`LoseHovercraftPart`), and switches `self` to state 1, table-index 0 or 1
  * depending on the constructor's cached gate byte (`+0x59`), resetting

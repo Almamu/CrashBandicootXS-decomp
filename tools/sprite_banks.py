@@ -140,12 +140,12 @@ def emit_bank(rom, ranges, i, em, out, decls):
     for k in range(nanims):
         a = anims + 0x1C * k
         seq, count = rom.w(a), rom.b(a + 0x16)
-        tile_record, duration, flags = rom.b(a + 0x14), rom.b(a + 0x15), rom.b(a + 0x17)
+        palette_id, duration, flags = rom.b(a + 0x14), rom.b(a + 0x15), rom.b(a + 0x17)
         assert rom.w(a + 0x18) == 0 and flags & ~2 == 0
         values = [rom.h(seq + 2 * j) for j in range(count)]
         assert all(v < nframes for v in values)
         an.append(dict(seq=seq, count=count, values=values, boxes=(box(rom, a + 4), box(rom, a + 12)),
-                       tile_record=tile_record, duration=duration, flags=flags,
+                       palette_id=palette_id, duration=duration, flags=flags,
                        name=f"{B}Anim{k:02}Seq"))
     assert len({x["seq"] for x in an}) == nanims
 
@@ -181,7 +181,7 @@ def emit_bank(rom, ranges, i, em, out, decls):
         out.append(f"    [{k}] = {{")
         out.append(f"        .seq = {x['name']},")
         out.append(f"        .box = {{ {x['boxes'][0]}, {x['boxes'][1]} }},")
-        out.append(f"        .tileRecord = {x['tile_record']},")
+        out.append(f"        .paletteId = {x['palette_id']},")
         out.append(f"        .duration = {x['duration']},")
         out.append(f"        .frameCount = ARRAY_COUNT({x['name']}),")
         out.append(f"        .flags = {flags},")
@@ -295,7 +295,7 @@ def main():
         out.append(FILE_COMMENT.format(start=start, end=end, first=lo, last=hi))
         if lo == 0:
             out.append("extern const u8 gSpriteBank00Tiles[];  /* sprite_tiles_2bf120.c, bank 0's tiles */")
-            out.append("extern const u8 gFixedObjTiles[0xfa0];")
+            out.append("extern const u8 gObjPalettes[0xfa0];")
             out.append("extern const struct sprite_bank gSpriteBanks[56];")
             for i in range(nbanks):
                 if not (lo <= i <= hi):
@@ -307,14 +307,14 @@ def main():
             out.append("")
             out.append("/* The root of the system: InitLevelState (graphics_loading_21d80.c) points")
             out.append(" * *gSpriteBankSet here. GetSpriteTileBase returns tileBase;")
-            out.append(" * InitLevelState and RunPauseMenu (settings_menu15.c) build the tile-asset")
-            out.append(" * cache from tilePool/tilePoolCount. */")
+            out.append(" * InitLevelState and RunPauseMenu (settings_menu15.c) build the palette")
+            out.append(" * cache from palettes/paletteCount. */")
             out.append("const struct sprite_bank_table gSpriteBankTable = {")
             out.append("    .banks = gSpriteBanks,")
             out.append("    .tileBase = gSpriteBank00Tiles,")
-            out.append("    .tilePool = gFixedObjTiles,")
+            out.append("    .palettes = gObjPalettes,")
             out.append("    .bankCount = ARRAY_COUNT(gSpriteBanks),")
-            out.append("    .tilePoolCount = sizeof(gFixedObjTiles) / 32,")
+            out.append("    .paletteCount = sizeof(gObjPalettes) / 32,")
             out.append("};")
             out.append("")
             out.append("/* Bank N is `**gSpriteBankSet + 12 * N` in the code (a part's +0x20). */")

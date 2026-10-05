@@ -12,7 +12,7 @@
  * Readers: GetSpriteTileBase (tileBase), GetSpriteFrame (anim -> seq -> frame),
  * DrawAffineSpritePieces/DrawSpritePieces (the pieces), sub_8007C30/sub_8007CF8 and
  * sub_80084C4-sub_80085B8 (the frame's boxes and anchor, picked by the
- * layout type), RunPauseMenu (the fixed tile pool). Older files read the
+ * layout type), GetPaletteSlot (the OBJ palettes). Older files read the
  * same records through local views with only the fields they use
  * (struct anim_record in gfx_part.h/level_menu.h/level_select_parts.h,
  * struct act_anim_record in action_obj.h, struct anim_rec in
@@ -177,7 +177,7 @@ struct sprite_frame_3box_anchor {
 struct sprite_anim {
     const u16 *seq;                     /* 0x00 - [frameCount] frame indices */
     struct sprite_box box[2];           /* 0x04, 0x0C */
-    u8 tileRecord;                      /* 0x14 - GetPaletteSlot/LockPalette record id */
+    u8 paletteId;                       /* 0x14 - index into the table's `palettes` (GetPaletteSlot/LockPalette) */
     u8 duration;                        /* 0x15 - ticks per step */
     u8 frameCount;                      /* 0x16 - steps in `seq` */
     u8 flags;                           /* 0x17 - SPRITE_ANIM_LOOP */
@@ -196,9 +196,10 @@ struct sprite_bank {
 struct sprite_bank_table {
     const struct sprite_bank *banks;    /* 0x00 - [bankCount] */
     const u8 *tileBase;                 /* 0x04 - sprite tile pool, GetSpriteTileBase */
-    const u8 *tilePool;                 /* 0x08 - the fixed 4bpp tiles, RunPauseMenu */
+    const u8 *palettes;                 /* 0x08 - the 16-colour OBJ palettes (32 bytes each) GetPaletteSlot
+                                         *        copies into the palette cache; InitLevelState/RunPauseMenu */
     u16 bankCount;                      /* 0x0C */
-    u16 tilePoolCount;                  /* 0x0E - in tiles */
+    u16 paletteCount;                   /* 0x0E - 125 */
 };
 
 #endif /* GUARD_SPRITE_BANK_H */

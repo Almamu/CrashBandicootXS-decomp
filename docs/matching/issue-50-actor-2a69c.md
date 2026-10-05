@@ -17,7 +17,7 @@ constructor's `part` argument's own `+4` field), a table-index/"kind"
 field at `self+0xc`, an anim-frame halfword/byte pair at `self+0x10`/
 `self+0x12`, an accumulator at `self+8`, state at `self+0x28`, a frame
 counter at `self+0x44`, a `+0x50`-rooted event/trampoline table fed
-through `_call_via_r2`, and the `+0x48`(next)/`+0x4c`(prev) circular
+through `_call_via_r2`, and the `+0x48`(prev)/`+0x4c`(next) circular
 doubly-linked list rooted at the player-pointer global
 `gActorList`. This chunk additionally pins down `InitActorPart`
 itself (the constructor every other `actor_part*.c` file already

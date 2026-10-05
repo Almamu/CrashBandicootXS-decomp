@@ -39,7 +39,7 @@ the ROM one region at a time and kept the exact size, except where noted.
    gets enough references by itself. The nudge now put ay ahead of dx,
    which swapped r5/r7. (Register-level diff 166 -> 85 instructions.)
 7. **`asm("" : : "r"(ax), "r"(px))` after `GetSpritePrevX` in the
-   `unk_44` path.** This replaces the dead `side` code. The ROM reloads px
+   `fallDistance` path.** This replaces the dead `side` code. The ROM reloads px
    into r1 there and never uses it (a leftover of a compare deleted after
    reload). An empty asm that uses both values gives the same reload.
    (1035 -> 209.)

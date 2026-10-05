@@ -190,17 +190,17 @@ void UpdateActionCtrl(struct act *self)
                 struct act_part *q = self->part;
 
                 if (PartByte(q, 0x100) == 0)
-                    q->unk_60 = 0;
-                q->unk_48 = 0;
-                q->unk_4C = 0;
-                q->unk_50 = 0;
+                    q->speedX = 0;
+                q->velAX = 0;
+                q->velAY = 0;
+                q->velAZ = 0;
             }
             {
                 struct act_part *r = self->part;
                 s32 py2 = r->y;
 
                 if (py2 > (gLevelLayers->target->y << 8) + 0x1400) {
-                    r->unk_8C = 0;
+                    r->deadline = 0;
                     SetMaskLevel(gLevelState, 0);
                     {
                         struct act_method *m = &self->vt->m10;
@@ -211,13 +211,13 @@ void UpdateActionCtrl(struct act *self)
             }
         }
     }
-    if (self->unk_26)
-        self->unk_26--;
+    if (self->spinCooldown)
+        self->spinCooldown--;
     {
         u8 t = self->unk_2A[1];
         s32 v94;
 
-        if (t != 0 && (v94 = self->part->unk_94, v94 <= 1)) {
+        if (t != 0 && (v94 = self->part->listCount, v94 <= 1)) {
             u8 left = --self->unk_2A[1];
 
             if (left == 0) {
@@ -269,10 +269,10 @@ void UpdateActionCtrl(struct act *self)
 
         if (top == 0) {
             if (PartByte(part, 0x100) == 0)
-                part->unk_60 = top;
-            part->unk_48 = top;
-            part->unk_4C = top;
-            part->unk_50 = top;
+                part->speedX = top;
+            part->velAX = top;
+            part->velAY = top;
+            part->velAZ = top;
         }
     }
     switch (self->state) {
@@ -280,19 +280,19 @@ void UpdateActionCtrl(struct act *self)
     case 0xE:
     case 0xF:
     case 0x21:
-        self->part->unk_0A[0] = 0x13;
+        self->part->kind = 0x13;
         break;
     case 0xC:
-        self->part->unk_0A[0] = 0x14;
+        self->part->kind = 0x14;
         break;
     case 0x18:
-        self->part->unk_0A[0] = 0x15;
+        self->part->kind = 0x15;
         break;
     case 0x19:
-        self->part->unk_0A[0] = 0x16;
+        self->part->kind = 0x16;
         break;
     default:
-        self->part->unk_0A[0] = 1;
+        self->part->kind = 1;
         break;
     }
 }
@@ -377,7 +377,7 @@ void sub_801283C(struct act *self)
     u8 near = 0;
     u32 in;
 
-    if (self->part->unk_64 <= 0x27F) {
+    if (self->part->speedY <= 0x27F) {
         near = 1;
         if (sub_8012694(self))
             return;
@@ -388,23 +388,23 @@ void sub_801283C(struct act *self)
 
         if (self->state == 7) {
             part = self->part;
-            if (-part->unk_64 > 0x1BF)
+            if (-part->speedY > 0x1BF)
                 goto done;
-            if (-part->unk_64 > 0x17F)
+            if (-part->speedY > 0x17F)
                 goto done;
             goto hit;
         } else if (self->state == 9) {
             part = self->part;
-            if (-part->unk_64 > 0x1BF)
+            if (-part->speedY > 0x1BF)
                 goto done;
-            if (-part->unk_64 > 0x7F)
+            if (-part->speedY > 0x7F)
                 goto done;
             goto hit;
         } else if (self->state == 0xB) {
             part = self->part;
-            if (-part->unk_64 > 0xFF)
+            if (-part->speedY > 0xFF)
                 goto done;
-            if (-part->unk_64 > 0x1F)
+            if (-part->speedY > 0x1F)
                 goto done;
         hit:
             ActOrFlags0D(part, 1);
@@ -414,7 +414,7 @@ void sub_801283C(struct act *self)
                 s32 x;
 
                 part = self->part;
-                x = part->unk_64;
+                x = part->speedY;
                 if (-x <= 0x7F)
                     ActOrFlags0D(part, 1);
                 if (x > 0)

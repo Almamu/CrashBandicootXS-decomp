@@ -62,12 +62,12 @@ struct box_part {
     s32 timer;          // 0x34 - ticks spent on the current step
     u8 animDone;        // 0x38
     u8 unk_39[3];
-    u16 unk_3C;         // 0x3C - nonzero: DrawSpriteWithOffset resolves through DrawAffineSpritePieces
+    u16 affine;         // 0x3C - nonzero: DrawSpriteWithOffset draws through DrawAffineSpritePieces
     u8 unk_3E[0xf];
     u8 physMode;        // 0x4D - low 7 bits 1: skipped by the physics AABB tests
     u8 state;           // 0x4E - sub_800CD00 skips 5 and 0xA
     u8 unk_4F[0x15];
-    s32 unk_64;         // 0x64
+    s32 speedY;         // 0x64 - struct gobj.speedY (> 0: falling, so a touch stomps)
     u8 hitAxes;         // 0x68 - collision axes ProbeGroundSpriteTerrain resolved (bit 3: Y)
     u8 probeTries;      // 0x69 - sub_8009BE0's retry counter
     u8 unk_6A[0xa];

@@ -45,7 +45,7 @@ struct pctrl_anim_pair
 struct pctrl_anim_rec
 {
     u8 unk_00[0x14];
-    u8 unk_14;      // 0x14
+    u8 paletteId;   // 0x14 - LoadPaletteSlot record id
     u8 unk_15;
     u8 frames;      // 0x16
     u8 unk_17[5];
@@ -69,7 +69,7 @@ struct pctrl_target
     s32 x;              // 0x00
     s32 y;              // 0x04
     u16 id;             // 0x08 - bitmap id (see sub_80072D8)
-    u8 unk_0A;          // 0x0A
+    u8 kind;            // 0x0A - object kind passed to the hit handlers (0x13 while attacking, else 1)
     u8 unk_0B;
     u8 gone:1;          // 0x0C - bit 0: removed (see sub_80072D8)
     u8 unk_0C_1:5;
@@ -85,18 +85,18 @@ struct pctrl_target
     u8 tag;             // 0x2D
     u8 unk_2E[2];
     s32 frame;          // 0x30
-    s32 unk_34;         // 0x34
-    u8 unk_38;          // 0x38
+    s32 stepTimer;      // 0x34 - ticks spent on the current step
+    u8 animDone;        // 0x38 - set once a non-looping animation ends
     u8 unk_39[0xF];
-    s32 unk_48;         // 0x48
-    s32 unk_4C;         // 0x4C
-    s32 unk_50;         // 0x50
+    s32 velAX;          // 0x48 - struct gobj.velA
+    s32 velAY;          // 0x4C
+    s32 velAZ;          // 0x50
     u8 unk_54[0xC];
     s32 speedX;         // 0x60
     s32 speedY;         // 0x64
-    u8 unk_68;          // 0x68
+    u8 hitAxes;         // 0x68 - collision axes the terrain probe resolved
     u8 unk_69[0xB];
-    s32 unk_74;         // 0x74 - contact flags
+    s32 hitMask;        // 0x74 - probe axes hit this frame (bits 0-1: X, 2-3: Y)
     u8 unk_78[0x1A];
     u8 unk_92;          // 0x92
     u8 unk_93[0x71];
@@ -121,7 +121,7 @@ struct player_ctrl
     u8 valueB;                    // 0x25
     u8 unk_26;                    // 0x26
     u8 counter;                   // 0x27
-    u32 unk_28;                   // 0x28
+    u32 deadline;                 // 0x28 - gRoomFrameCount + 16 (sub_80159F8); the state waits until it passes or the anim ends
     u8 hasA;                      // 0x2C
     u8 hasB;                      // 0x2D
 };

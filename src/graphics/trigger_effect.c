@@ -83,7 +83,7 @@ void SpawnRedGemPlatform(u32 a0, u16 a1, u16 a2, u16 a3)
         ResetSpriteFrameIndex(part);
         SetSpriteAnimDone(part, 0);
         part->frameNibble = GetSpriteAnimPaletteSlot(part);
-        part->unk_0A = bit;
+        part->kind = bit;
         AddToPartList(gUnknown_030012EC, part);
         part->hidden = 0;
     }
@@ -114,7 +114,7 @@ void SpawnYellowGemPlatform(u32 a0, u16 a1, u16 a2, u16 a3)
         ResetSpriteFrameIndex(part);
         SetSpriteAnimDone(part, 0);
         part->frameNibble = GetSpriteAnimPaletteSlot(part);
-        part->unk_0A = bit;
+        part->kind = bit;
         AddToPartList(gUnknown_030012EC, part);
         part->hidden = 0;
     }
@@ -145,7 +145,7 @@ void SpawnGreenGemPlatform(u32 a0, u16 a1, u16 a2, u16 a3)
         ResetSpriteFrameIndex(part);
         SetSpriteAnimDone(part, 0);
         part->frameNibble = GetSpriteAnimPaletteSlot(part);
-        part->unk_0A = bit;
+        part->kind = bit;
         AddToPartList(gUnknown_030012EC, part);
         part->hidden = 0;
     }
@@ -178,7 +178,7 @@ void SpawnBlueGemPlatform(u32 a0, u16 a1, u16 a2, u16 a3)
         ResetSpriteFrameIndex(part);
         SetSpriteAnimDone(part, 0);
         part->frameNibble = GetSpriteAnimPaletteSlot(part);
-        part->unk_0A = bit;
+        part->kind = bit;
         AddToPartList(gUnknown_030012EC, part);
         part->hidden = 0;
     }

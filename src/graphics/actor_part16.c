@@ -116,13 +116,13 @@ void sub_800B544(void *selfArg, s32 arg1)
 void sub_800B554(void *selfArg, u8 arg1)
 {
     struct gobj *self = selfArg;
-    self->unk_88 = arg1;
+    self->ctrlMode = arg1;
 }
 
 u8 sub_800B55C(void *selfArg)
 {
     struct gobj *self = selfArg;
-    return self->unk_88;
+    return self->ctrlMode;
 }
 
 /* `self+0xac` pointer/word get/set accessors. */
@@ -141,13 +141,13 @@ void sub_800B56C(void *selfArg, s32 arg1)
 void sub_800B574(void *selfArg, u8 arg1)
 {
     struct gobj *self = selfArg;
-    self->unk_80 = arg1;
+    self->busy = arg1;
 }
 
 u8 sub_800B57C(void *selfArg)
 {
     struct gobj *self = selfArg;
-    return self->unk_80;
+    return self->busy;
 }
 
 /* `self+0x94` byte clear/increment(gated by `self+0x88`)/get
@@ -164,7 +164,7 @@ void sub_800B58C(void *selfArg)
 {
     struct gobj *self = selfArg;
 
-    if (self->unk_88 == 0) {
+    if (self->ctrlMode == 0) {
         self->listCount += 1;
     }
 }
@@ -226,30 +226,30 @@ u8 sub_800B5E8(void *selfArg)
 }
 
 /* `self+0x103`/`self+0x102`/`self+0x101`/`self+0x100` byte get/set
- * accessor pairs - likely a small array of per-difficulty or
- * per-phase flag bytes given the identical shape and adjacency. */
+ * accessor pairs (`pushRight`/`pushLeft`: the standing player is moved
+ * 1px per frame that way; +0x101/+0x100 not understood yet). */
 u8 sub_800B5F0(void *selfArg)
 {
     struct gobj *self = selfArg;
-    return self->unk_103;
+    return self->pushRight;
 }
 
 void sub_800B5FC(void *selfArg, u8 arg1)
 {
     struct gobj *self = selfArg;
-    self->unk_103 = arg1;
+    self->pushRight = arg1;
 }
 
 u8 sub_800B608(void *selfArg)
 {
     struct gobj *self = selfArg;
-    return self->unk_102;
+    return self->pushLeft;
 }
 
 void sub_800B614(void *selfArg, u8 arg1)
 {
     struct gobj *self = selfArg;
-    self->unk_102 = arg1;
+    self->pushLeft = arg1;
 }
 
 u8 sub_800B620(void *selfArg)
@@ -283,7 +283,7 @@ s32 sub_800B650(void *selfArg, s32 idx)
     struct gobj *self = selfArg;
     s32 result;
 
-    if (self->unk_88 != 0) {
+    if (self->ctrlMode != 0) {
         goto ret0;
     }
     if (idx > 4) {
@@ -313,7 +313,7 @@ void sub_800B678(void *selfArg, s32 val)
     register struct gobj *self asm("r2") = selfArg;
     register s32 val3 asm("r3") = val;
 
-    if (self->unk_88 == 0) {
+    if (self->ctrlMode == 0) {
         register u8 *p94 asm("r0") = &self->listCount;
         register u32 idx asm("r1") = *p94;
 

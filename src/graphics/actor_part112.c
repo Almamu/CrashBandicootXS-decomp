@@ -207,7 +207,7 @@ void UpdateEnemyCtrl(struct part_ctrl *self)
                     if (y > (gLevelLayers->layer0->heightPx << 8) + 0x1E00)
                         MarkGone(t2);
                 }
-            } else if (t->unk_68 == 8) {
+            } else if (t->hitAxes == 8) {
                 SetVelY(t, 0, 0, 0);
             } else {
                 SetVelY(t, 0x400, 0, 0x400);
@@ -375,7 +375,7 @@ void UpdateEnemyCtrl(struct part_ctrl *self)
  *   asm after the shift count, so it doesn't reuse `one`. */
 struct player_ring {
     u8 unk_00[0x88];
-    u8 ringLocked;      // 0x88
+    u8 ctrlMode;        // 0x88 - struct gobj.ctrlMode
 };
 
 struct launch_obj {
@@ -441,7 +441,7 @@ static inline void MarkGoneFreshBit(struct ctrl_target *t)
 
 void HitEnemy(struct part_ctrl *self, s32 unused, s32 state)
 {
-    if (((struct player_ring *)gPlayer)->ringLocked == 1) {
+    if (((struct player_ring *)gPlayer)->ctrlMode == 1) {
         MarkGoneHeld(self->target);
         SpawnAt(0x28, self->target->x >> 8, self->target->y >> 8);
         PlaySfx(gAudioContext, 0x5a, 0x80);

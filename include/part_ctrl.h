@@ -53,7 +53,7 @@ struct ctrl_target {
             s32 unk_6:2;
         } s;
     } mirror;           // 0x28
-    u8 unk_2C;
+    u8 animating;       // 0x2C - nonzero while the keyframe timer runs
     u8 frame;           // 0x2D - current keyframe index
     u8 unk_2E[2];
     s32 tick;           // 0x30
@@ -64,7 +64,7 @@ struct ctrl_target {
     s32 velB[3];        // 0x54 - Y velocity targets
     s32 speedX;         // 0x60
     s32 speedY;         // 0x64
-    u8 unk_68;          // 0x68
+    u8 hitAxes;         // 0x68 - collision axes the terrain probe resolved (8: Y)
 };
 
 /* The record `self->anchor` points to; +0x50 is the method the mode

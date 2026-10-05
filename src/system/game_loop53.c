@@ -414,7 +414,7 @@ struct orbit_part *CreateWumpa(u16 id, u16 x, u16 y, u16 special)
     p->phase = phase;
     if (mode == 0xff)
         sub_801191C(&p->base);
-    p->slotNibble = GetPaletteSlot(gPaletteCache, p->bank->records->unk_14);
+    p->slotNibble = GetPaletteSlot(gPaletteCache, p->bank->records->paletteId);
     return p;
 }
 

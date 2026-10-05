@@ -36,7 +36,7 @@ struct act_vtable
 struct act_anim_record
 {
     u8 unk_00[0x14];
-    u8 unk_14;             // 0x14
+    u8 paletteId;          // 0x14 - LoadPaletteSlot/GetPaletteSlot record id
     u8 unk_15;
     u8 frameCount;         // 0x16
     u8 unk_17[5];
@@ -54,7 +54,9 @@ struct act_part
     s32 x;                 // 0x00 (Q8)
     s32 y;                 // 0x04 (Q8)
     u16 id;                // 0x08
-    u8 unk_0A[2];
+    u8 kind;               // 0x0A - object kind passed to the hit handlers (0x13: player;
+                           //        0x14-0x16 during some attack actions)
+    u8 unk_0B;
     u8 flags0C;            // 0x0C
     u8 flags0D;            // 0x0D
     u8 unk_0E[0x12];
@@ -67,28 +69,28 @@ struct act_part
     u8 tag;                // 0x2D
     u8 unk_2E[2];
     s32 frame;             // 0x30
-    s32 unk_34;            // 0x34
+    s32 stepTimer;         // 0x34 - ticks spent on the current step
     u8 animDone;           // 0x38
     u8 unk_39[0xF];
-    s32 unk_48;            // 0x48
-    s32 unk_4C;            // 0x4C
-    s32 unk_50;            // 0x50
-    s32 unk_54;            // 0x54
-    s32 unk_58;            // 0x58
-    s32 unk_5C;            // 0x5C
-    s32 unk_60;            // 0x60
-    s32 unk_64;            // 0x64
+    s32 velAX;             // 0x48 - struct gobj's velA/velB/speedX/speedY, as
+    s32 velAY;             // 0x4C   separate words
+    s32 velAZ;             // 0x50
+    s32 velBX;             // 0x54
+    s32 velBY;             // 0x58
+    s32 velBZ;             // 0x5C
+    s32 speedX;            // 0x60
+    s32 speedY;            // 0x64
     u8 contact;            // 0x68
     u8 unk_69[0x23];
-    s32 unk_8C;            // 0x8C
+    s32 deadline;          // 0x8C - struct gobj.deadline
     u8 unk_90;             // 0x90
     u8 unk_91[3];
-    u8 unk_94;             // 0x94
+    u8 listCount;          // 0x94 - struct gobj.listCount
     u8 unk_95[0x6B];
     u8 unk_100;            // 0x100
     u8 unk_101;            // 0x101
-    u8 unk_102;            // 0x102
-    u8 unk_103;            // 0x103
+    u8 pushLeft;           // 0x102 - nonzero: moves the standing player 1px left per frame
+    u8 pushRight;          // 0x103 - nonzero: moves the standing player 1px right per frame
 };
 
 /* One entry of the per-object table `act.anims` points at: indices into
@@ -114,7 +116,7 @@ struct act
     u8 unk_22;             // 0x22
     u8 unk_23;             // 0x23
     u8 unk_24[2];
-    u8 unk_26;             // 0x26
+    u8 spinCooldown;       // 0x26 - frames until the next spin is allowed (set to 12, counts down)
     u8 next27;             // 0x27
     u8 next28;             // 0x28
     u8 unk_29;             // 0x29

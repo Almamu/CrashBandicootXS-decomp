@@ -118,7 +118,7 @@ void sub_8013994(struct act *self)
         s32 frame;
         s32 count;
 
-        part->unk_34 = 0;
+        part->stepTimer = 0;
         frame = 3;
         count = part->bank->records[part->tag].frameCount;
         if (frame >= count)

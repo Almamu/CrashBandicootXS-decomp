@@ -41,14 +41,14 @@ void DestroyPolarCollectedWumpa(void *selfArg, u32 arg1)
     *(u8 **)(self + 0x50) = gActorVtable;
 
     {
-        u8 *prev = *(u8 **)(self + 0x4c);
-        u8 *next = *(u8 **)(self + 0x48);
-        *(u8 **)(prev + 0x48) = next;
+        u8 *next = *(u8 **)(self + 0x4c);
+        u8 *prev = *(u8 **)(self + 0x48);
+        *(u8 **)(next + 0x48) = prev;
     }
     {
-        u8 *next = *(u8 **)(self + 0x48);
-        u8 *prev = *(u8 **)(self + 0x4c);
-        *(u8 **)(next + 0x4c) = prev;
+        u8 *prev = *(u8 **)(self + 0x48);
+        u8 *next = *(u8 **)(self + 0x4c);
+        *(u8 **)(prev + 0x4c) = next;
     }
 
     if (arg1r & 1) {

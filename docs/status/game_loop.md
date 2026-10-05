@@ -391,7 +391,7 @@ system from "core" system startup/init code.
   `ActivateIronSwitchCrate`/`SolidifyOutlineCrates`/`SolidifyOutlineCrate`/`BreakCratesInArea`/`FinishBrokenCrate`/
   `UpdateTntCountdown` (`src/system/game_loop49.c`) promoted from NAKED to real
   C - all three files moved to `OLD_AGBCC_OBJS`, the shared object
-  layout named in `include/phys_obj.h`. See
+  layout named in `include/crate.h`. See
   [docs/matching/issue-12-physics-collision.md](../matching/issue-12-physics-collision.md)'s
   NAKED-retry section.
 - **`LightTntCrate`** (`src/system/game_loop48.c`, new file

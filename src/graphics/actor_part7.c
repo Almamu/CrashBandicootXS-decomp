@@ -195,15 +195,15 @@ s32 sub_800887C(void *part)
     return (byte << 0x1c) >> 0x1f;
 }
 
-/* `unk_3C` get/set pair. */
+/* `affine` get/set pair. */
 u16 sub_8008888(struct box_part *part)
 {
-    return part->unk_3C;
+    return part->affine;
 }
 
 void sub_800888C(struct box_part *part, u16 val)
 {
-    part->unk_3C = val;
+    part->affine = val;
 }
 
 extern void *gSpriteRenderer;
@@ -221,7 +221,7 @@ void DrawSpriteWithOffset(struct actor *part, s32 arg1, s32 arg2)
     pos[0] = (part->x >> 8) + arg1;
     pos[1] = (part->y >> 8) + arg2;
 
-    if (((struct box_part *)part)->unk_3C != 0) {
+    if (((struct box_part *)part)->affine != 0) {
         DrawAffineSpritePieces(gSpriteRenderer, part, pos);
     } else {
         DrawSpritePieces(gSpriteRenderer, part, pos);
@@ -508,7 +508,7 @@ void CollidePartWithPlayer(struct part_list *list, struct part_aabb box, struct 
         }
             kind = gPlayer->kind;
             if (kind == 1) {
-                if (gPlayer->unk_64 > 0) {
+                if (gPlayer->speedY > 0) {
                     CALL_HIT(part, 1, 1, 0);
                     CALL_HIT(gPlayer, 0, 0xd, 0);
                     PlaySfx(gAudioContext, 0x21, 0x100);

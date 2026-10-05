@@ -33,7 +33,8 @@ struct gfx_part
 {
     struct gfx_vec pos;     // 0x00
     u16 id;                 // 0x08
-    u8 unk_0A;              // 0x0A
+    u8 kind;                // 0x0A - object kind passed to the hit handlers (box_part.h `kind`);
+                            //        the effect spawners store their type here
     u8 unk_0B;
     u8 gone:1;              // 0x0C bit 0
     u8 flags_1:1;
@@ -51,7 +52,7 @@ struct gfx_part
     u8 frameNibble:4;       // 0x29
     u8 unk_29_4:4;
     u8 unk_2A[2];
-    u8 unk_2C;              // 0x2C
+    u8 animating;           // 0x2C - nonzero while the keyframe timer runs
     u8 tag;                 // 0x2D
     u8 unk_2E[2];
     s32 frame;              // 0x30 - step within the animation

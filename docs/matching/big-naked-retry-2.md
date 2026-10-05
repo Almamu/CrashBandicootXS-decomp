@@ -101,7 +101,7 @@ other way round: the function returns *when* `self->state == 0x1D`.
     test.
 
 `include/action_obj.h`'s unused `unk_54[0xC]` became three named `s32`s
-(`unk_54`/`unk_58`/`unk_5C`) for the velocity triple. No other file
+(now `velBX`/`velBY`/`velBZ`) for the velocity triple. No other file
 used it.
 
 ## Tools

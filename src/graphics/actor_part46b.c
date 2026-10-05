@@ -34,9 +34,9 @@ struct actor_fa38 {
 void UpdateJetpackPlane(struct actor_fa38 *self)
 {
     if (self->base.depth > 0x1B00) {
-        self->base.unk_2C[0] = 1;
+        self->base.visible = 1;
     } else {
-        self->base.unk_2C[0] = 0;
+        self->base.visible = 0;
     }
     self->base.x += self->velX >> 4;
     self->base.y += self->velY >> 4;

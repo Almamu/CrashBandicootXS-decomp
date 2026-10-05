@@ -72,7 +72,7 @@ void sub_80096C0(struct part_list *list, struct part_aabb box, struct box_part *
         }
             kind = gPlayer->kind;
             if (kind == 1) {
-                if (gPlayer->unk_64 > 0) {
+                if (gPlayer->speedY > 0) {
                     CALL_HIT(part, 1, 1, 0);
                     CALL_HIT(gPlayer, 0, 0xd, 0);
                     PlaySfx(gAudioContext, 0x21, 0x100);

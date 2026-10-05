@@ -39,7 +39,7 @@ struct {
     struct box16 a, b, t;
 } f;
 ...
-f.t = *(struct box16 *)self->unk_38;
+f.t = *(struct box16 *)self->box;
 BoxMove(&f.t, self->x >> 8, self->y >> 8, self->z >> 8);
 f.b = f.t;
 b = &f.b;

@@ -190,7 +190,7 @@ code it gives the object and where the levels place it:
 | 0x09, 0x0A, 0x0B, 0x0C | `SpawnBlueGem`, `SpawnRedGem`, `SpawnGreenGem`, `SpawnYellowGem` | the coloured gems (bank 32) |
 | 0x10 | `SpawnStopwatch` | the time-trial stopwatch (bank 36) |
 | 0x12, 0x13, 0x14, 0x4A | `SpawnTurboRunPower`, `SpawnDoubleJumpPower`, `SpawnBodySlamPower`, `SpawnTornadoSpinPower` | the four power pictures (bank 38); no level places them |
-| 0x15-0x27 | `SpawnBasicCrate` .. `SpawnTimeCrate3` | crates: `CreateCrate` types 0-18 (bank 31), see `include/phys_obj.h` |
+| 0x15-0x27 | `SpawnBasicCrate` .. `SpawnTimeCrate3` | crates: `CreateCrate` types 0-18 (bank 31), see `include/crate.h` |
 | 0x51-0x54 | `SpawnRedGemPlatform`, `SpawnYellowGemPlatform`, `SpawnGreenGemPlatform`, `SpawnBlueGemPlatform` | a gem outline over a platform (bank 32) |
 | 0x29 | `SpawnVulture` | enemy, bank 11 |
 | 0x2A | `SpawnVenusFlytrap` | enemy, bank 10 |

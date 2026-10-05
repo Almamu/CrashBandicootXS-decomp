@@ -128,8 +128,8 @@ s32 sub_802D590(void)
     return gLevelState->maskLevel;
 }
 
-/* Once `self`'s frame counter (`+0x44`) exceeds 5, latches the one-shot
- * flag at `+0x2c`. Then, on `IsTouchingPlayer`'s trampoline-fire edge, calls
+/* Once `self`'s frame counter (`+0x44`) exceeds 5, sets `visible`
+ * (+0x2c), so the part appears after 5 frames. Then, on `IsTouchingPlayer`'s trampoline-fire edge, calls
  * `sub_802BFD4(gActorList)` (the player object), and always
  * advances via `UpdateActor`. */
 void sub_802D59C(void *selfArg)
@@ -137,7 +137,7 @@ void sub_802D59C(void *selfArg)
     register struct actor_self *self asm("r4") = selfArg;
 
     if (self->stateTime > 5) {
-        self->unk_2C[0] = 1;
+        self->visible = 1;
     }
 
     if (IsTouchingPlayer(self)) {
@@ -148,14 +148,14 @@ void sub_802D59C(void *selfArg)
 }
 
 /* Plain `InitActorPart` passthrough constructor (no offset applied)
- * installing the `gStaticData_087E5074` event table and clearing the
- * one-shot flag at `+0x2c` (rather than setting it, unlike
+ * installing the `gStaticData_087E5074` event table and clearing
+ * `visible` (+0x2c) (rather than setting it, unlike
  * `InitActorPart`'s own default of `1`). */
 void *sub_802D5D4(struct actor_self *self, void *part, s32 b, s32 c, s32 d)
 {
     InitActorPart(self, part, b, c, d);
     self->vtable = (struct actor_vtable *)gStaticData_087E5074;
-    self->unk_2C[0] = 0;
+    self->visible = 0;
     return self;
 }
 

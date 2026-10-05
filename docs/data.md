@@ -245,7 +245,7 @@ The first batch (all pointer tables, all byte-exact):
 | `level_rooms_24b638.c` | `0x0824B638` | the level data of 33 rooms, generated from `data/levels/` (see "Level data") |
 | `level_tilesets_270f08.c` | `0x08270F08` | level BG tile sets 4-5 (grit) |
 | `level_rooms_2b91d0.c` | `0x082B91D0` | the level data of the other 8 rooms (same) |
-| `sprite_tiles_2bf120.c` | `0x082BF120` | the sprite tile pool (56 banks) and the 125 fixed OBJ tiles (grit) |
+| `sprite_tiles_2bf120.c` | `0x082BF120` | the sprite tile pool (56 banks) and the 125 OBJ palettes (grit, stored as a tile PNG) |
 | `sprite_banks_4a5600.c` | `0x084A5600` | the sprite-bank table header, 56 `struct sprite_bank`, banks 0-9 (see "Sprite banks" below) |
 | `sprite_banks_4b0ae0.c` | `0x084B0AE0` | sprite banks 10-21 |
 | `sprite_banks_4b414c.c` | `0x084B414C` | sprite banks 22-38 |
@@ -524,7 +524,7 @@ C (see "Level data").
 | `level_rooms_24b638.c` | room data, 33 rooms | `data/levels/` via `tools/levels.py` (see "Level data") |
 | `level_tilesets_270f08.c` | tile sets 4-5 | `graphics/level_tilesets/tileset{4,5}_*.png` |
 | `level_rooms_2b91d0.c` | room data, 8 rooms | same |
-| `sprite_tiles_2bf120.c` | 56 sprite banks, 125 fixed tiles | `graphics/sprites/bankNN_*.png`, `tile_pool_4a4660.png` |
+| `sprite_tiles_2bf120.c` | 56 sprite banks, 125 OBJ palettes | `graphics/sprites/bankNN_*.png`, `tile_pool_4a4660.png` |
 
 - **Sprite banks.** The pool at `0x082BF120` has no header. Each of the 56
   banks of `gSpriteBankTable` owns one back-to-back range of it, in

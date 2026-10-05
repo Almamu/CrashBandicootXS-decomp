@@ -1,5 +1,5 @@
 #include "core.h"
-#include "phys_obj.h"
+#include "crate.h"
 
 extern u8 gCrateListChanged;
 extern void *gPaletteCache;
@@ -15,7 +15,7 @@ extern void UpdateCrateFall(struct crate *self);
  * `DrawCrate` (game_loop35.c) and `sub_8010674` (game_loop23.c) in
  * ROM, so it needs its own file - see docs/workflow.md's "one file
  * per contiguous ROM region" rule. `self` throughout is the same
- * "collision box" object (`struct crate`, include/phys_obj.h) every
+ * "collision box" object (`struct crate`, include/crate.h) every
  * other function in this subsystem operates on.
  *
  * A per-frame state-machine tick. While `self+0x4f` (a per-object
@@ -60,7 +60,7 @@ extern void UpdateCrateFall(struct crate *self);
  *   gcc merge the two adjacent byte compares into one word compare);
  * - the frame clamp is the PhysSetFrame inline, taking the index as a
  *   parameter, which keeps the constant 0 in its own register (r3) for
- *   the later `unk_38`/`busy` stores;
+ *   the later `animDone`/`busy` stores;
  * - the tile-cache key's record is indexed from a local copy of the
  *   records pointer, which loads the table before the tag. */
 void UpdateCrate(struct crate *self)
@@ -103,10 +103,10 @@ void UpdateCrate(struct crate *self)
     UpdateCrateFall(self);
     if (self->state & 0x80)
     {
-        if (self->unk_38 != 0)
+        if (self->animDone != 0)
         {
             PhysSetFrame(self, 0);
-            self->unk_38 = 0;
+            self->animDone = 0;
             self->state &= 0x7f;
             PHYS_PLAYER->busy = 0;
             if (self->kind == 6)
@@ -121,7 +121,7 @@ void UpdateCrate(struct crate *self)
                 SetSpriteAnimDone(self, 0);
                 recs = self->anim->records;
                 rec = &recs[self->tag];
-                self->slot = GetPaletteSlot(gPaletteCache, rec->unk_14);
+                self->slot = GetPaletteSlot(gPaletteCache, rec->paletteId);
             }
             else if (self->kind == 3)
             {

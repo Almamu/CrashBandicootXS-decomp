@@ -48,7 +48,7 @@ typedef u8 (*actor_query_fn)(void *self);
 
 /* `+0x4c`: next node of the circular actor list rooted at
  * `gActorList`. */
-#define ACTOR_NEXT(a) (*(struct actor_self **)&(a)->unk_48[4])
+#define ACTOR_NEXT(a) (*(struct actor_self **)&(a)->next)
 
 struct box16 {
     s16 x, y, z;
@@ -81,7 +81,7 @@ static inline u8 ActorsOverlap(struct actor_self *pl, struct actor_self *self)
     struct box16 *t;
     s32 x, y, z;
 
-    f.t = *(struct box16 *)pl->unk_38;
+    f.t = *(struct box16 *)pl->box;
     x = pl->x >> 8;
     y = pl->y >> 8;
     z = pl->z >> 8;
@@ -89,7 +89,7 @@ static inline u8 ActorsOverlap(struct actor_self *pl, struct actor_self *self)
     BoxMove(t, x, y, z);
     f.a = *t;
     MemCopy32(&f.a, &f.a, sizeof(f.a));
-    f.s = *(struct box16 *)self->unk_38;
+    f.s = *(struct box16 *)self->box;
     BoxMove(&f.s, self->x >> 8, self->y >> 8, self->z >> 8);
     *t = f.s;
     MemCopy32(t, t, sizeof(*t));
@@ -208,7 +208,7 @@ s32 RunActorCategoryFrame(void)
     gActorDrawCount = 0;
     n = gActorList;
     do {
-        if (n->unk_2C[0] != 0)
+        if (n->visible != 0)
             gActorDrawList[gActorDrawCount++] = n;
         n = ACTOR_NEXT(n);
     } while (n != gActorList);

@@ -1,6 +1,6 @@
 #include "core.h"
 #include "vram_pool.h"
-#include "phys_obj.h"
+#include "crate.h"
 
 /* GitHub issue #12 Phase 2: 0x0800E560-0x0800EEF0, the lower-address
  * half of the remaining tail of the physics/collision subsystem's
@@ -9,12 +9,12 @@
  * sub_0800D18C/sub_800E08C, src/system/game_loop47.c, dispatch into).
  * `self` throughout is the same "collision box" object every other
  * function in this subsystem operates on (`struct crate`,
- * include/phys_obj.h). Compiled with old_agbcc (the Makefile's
+ * include/crate.h). Compiled with old_agbcc (the Makefile's
  * OLD_AGBCC_OBJS) - see docs/matching/issue-12-physics-collision.md's
  * NAKED-retry section. */
 
-extern void sub_8009150(struct phys_obj_list *list, struct crate *obj);
-extern struct phys_obj_list *gCrateList;
+extern void sub_8009150(struct crate_list *list, struct crate *obj);
+extern struct crate_list *gCrateList;
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void *gAudioContext;
 extern void *gEntitySpawner;
@@ -468,7 +468,7 @@ void BreakCrate(struct crate *self, u32 arg1)
         struct anim_rec *recs = self->anim->records;
         struct anim_rec *rec = &recs[self->tag];
 
-        self->slot = GetPaletteSlot(gPaletteCache, rec->unk_14);
+        self->slot = GetPaletteSlot(gPaletteCache, rec->paletteId);
     }
     PhysSetFrame(self, 3);
     if (gCrateKindCounted[self->kind])
@@ -709,7 +709,7 @@ void OpenSlotCrate(struct crate *self, u32 arg1)
  * choice come out), the record lookup takes the anim table
  * first and the byte offset second, `spread` is built in two steps, the
  * step delta is widened into its own int before the add, and
- * `n->unk_40` is written in both arms of an if/else. */
+ * `n->fallTargetY` is written in both arms of an if/else. */
 void DropCratesAbove(struct crate *self)
 {
     s8 delta = -2;
@@ -722,15 +722,15 @@ void DropCratesAbove(struct crate *self)
     s32 carry;
     u8 *tbl = gCrateKindExplosive;
 
-    if (self->unk_44 != 0)
+    if (self->fallDistance != 0)
         delta = -4;
     if (n == NULL || self == NULL)
         return;
-    if (self->unk_44 != 0)
-        n->unk_40 = self->unk_40;
+    if (self->fallDistance != 0)
+        n->fallTargetY = self->fallTargetY;
     else
-        n->unk_40 = self->y;
-    spread = n->unk_40;
+        n->fallTargetY = self->y;
+    spread = n->fallTargetY;
     spread -= n->y;
     if (spread < 0)
         spread = 0;
@@ -739,15 +739,15 @@ void DropCratesAbove(struct crate *self)
     {
         s32 t;
 
-        if (n->unk_44 != 0)
+        if (n->fallDistance != 0)
         {
-            n->unk_44 = spread + carry;
-            n->unk_40 = n->unk_40 + carry;
+            n->fallDistance = spread + carry;
+            n->fallTargetY = n->fallTargetY + carry;
         }
         else
         {
-            n->unk_44 = spread;
-            n->unk_40 = n->y + base;
+            n->fallDistance = spread;
+            n->fallTargetY = n->y + base;
         }
         t = n->unk_4C;
         if (t > 0)
@@ -759,7 +759,7 @@ void DropCratesAbove(struct crate *self)
         }
         n->flags |= 0x10;
         sub_8009150(gCrateList, n);
-        if (tbl[n->kind] && self->u48.n == 0 && n->unk_44 > 0x1600)
+        if (tbl[n->kind] && self->u48.n == 0 && n->fallDistance > 0x1600)
         {
             struct crate *next = GetCrateAbove(n);
             struct crate *prev = GetCrateBelow(n);

@@ -101,10 +101,10 @@ static inline void ActTrio28(struct act *self, s32 a, s32 b, s32 c)
 
 static inline void PartSetVelY(struct act_part *p, s32 a, s32 b, s32 c)
 {
-    p->unk_64 = a;
-    p->unk_54 = a;
-    p->unk_58 = b;
-    p->unk_5C = c;
+    p->speedY = a;
+    p->velBX = a;
+    p->velBY = b;
+    p->velBZ = c;
 }
 
 /* docs/rom_map.md's "25-case jump table on a second parameter, with a
@@ -175,7 +175,7 @@ void ActionCtrlHandleEvent(struct act *self, s32 arg1, s32 arg2, s32 arg3)
             ActSetNext27(self, 0);
             self->unk_2A[2] = 0;
             self->part->contact |= arg3;
-            self->part->unk_60 = 0;
+            self->part->speedX = 0;
             break;
         }
         {
@@ -185,7 +185,7 @@ void ActionCtrlHandleEvent(struct act *self, s32 arg1, s32 arg2, s32 arg3)
                 if (self->next27 != 0 && (s8)(gPlayer->flags28 << 3) < 0) {
                     self->unk_2A[2] = self->next27;
                     ActSetNext27(self, 0);
-                    self->part->unk_60 = 0;
+                    self->part->speedX = 0;
                 }
             } else if (m == 1) {
                 if (self->next27 != 0 && !((u32)(gPlayer->flags28 << 27) >> 31)) {
@@ -193,7 +193,7 @@ void ActionCtrlHandleEvent(struct act *self, s32 arg1, s32 arg2, s32 arg3)
                     self->next31 = 0;
                     self->flag2F = m;
                     self->next27 = 0;
-                    self->part->unk_60 = 0;
+                    self->part->speedX = 0;
                 }
             } else {
                 goto check_c;
@@ -213,7 +213,7 @@ void ActionCtrlHandleEvent(struct act *self, s32 arg1, s32 arg2, s32 arg3)
             break;
         }
         self->part->contact |= arg3;
-        self->part->unk_60 = 0;
+        self->part->speedX = 0;
         break;
     case 13:
         {
@@ -229,11 +229,11 @@ void ActionCtrlHandleEvent(struct act *self, s32 arg1, s32 arg2, s32 arg3)
             fire = held & 1;
             if (fire) {
                 sub_8015780(self, 5, 0x13, 0x7FFFFFFF, 0x7FFFFFFF);
-                self->part->unk_64 = 0;
+                self->part->speedY = 0;
                 ActTrio28(self, 0, one, 0x10);
             } else {
                 sub_8015780(self, 5, 0x13, 0x7FFFFFFF, 0x7FFFFFFF);
-                self->part->unk_64 = fire;
+                self->part->speedY = fire;
                 ActTrio28(self, 0, one, 0xf);
             }
         }
@@ -253,11 +253,11 @@ void ActionCtrlHandleEvent(struct act *self, s32 arg1, s32 arg2, s32 arg3)
             fire = held & 1;
             if (fire) {
                 sub_8015780(self, 5, 0x13, 0x7FFFFFFF, 0x7FFFFFFF);
-                self->part->unk_64 = 0;
+                self->part->speedY = 0;
                 ActTrio28(self, 0, one, 0x12);
             } else {
                 sub_8015780(self, 5, 0x13, 0x7FFFFFFF, 0x7FFFFFFF);
-                self->part->unk_64 = fire;
+                self->part->speedY = fire;
                 ActTrio28(self, 0, one, 0x11);
             }
         }
@@ -279,7 +279,7 @@ void ActionCtrlHandleEvent(struct act *self, s32 arg1, s32 arg2, s32 arg3)
                 self->unk_23 = 0;
                 self->unk_24[0] = 0;
                 self->charge = 3;
-                self->part->unk_64 = 0;
+                self->part->speedY = 0;
                 ActTrio28(self, 0, one, 0x14);
             } else {
                 sub_8015780(self, 0xe, 0x10, 0, 0x18);
@@ -287,7 +287,7 @@ void ActionCtrlHandleEvent(struct act *self, s32 arg1, s32 arg2, s32 arg3)
                 self->unk_23 = fire;
                 self->unk_24[0] = fire;
                 self->charge = 3;
-                self->part->unk_64 = fire;
+                self->part->speedY = fire;
                 ActTrio28(self, 0, one, 0x13);
             }
             sub_8012AF4(self);
@@ -307,7 +307,7 @@ void ActionCtrlHandleEvent(struct act *self, s32 arg1, s32 arg2, s32 arg3)
         }
         sub_8015780(self, 0x1e, 0x24, 0x7FFFFFFF, 0x7FFFFFFF);
         LoadPaletteSlot(gPaletteCache, self->part->slotNibble,
-                    self->part->bank->records[self->part->tag].unk_14);
+                    self->part->bank->records[self->part->tag].paletteId);
         ActSetNext27(self, 0);
         ActSetNext(self, 0);
         break;
@@ -337,10 +337,10 @@ void ActionCtrlHandleEvent(struct act *self, s32 arg1, s32 arg2, s32 arg3)
             p = self->part;
             z = 0;
             if (p->unk_100 == 0)
-                p->unk_60 = z;
-            p->unk_48 = z;
-            p->unk_4C = z;
-            p->unk_50 = z;
+                p->speedX = z;
+            p->velAX = z;
+            p->velAY = z;
+            p->velAZ = z;
             PartSetVelY(self->part, -0x100, 0, -0x100);
             gCamera->unk_14 = 3;
         }

@@ -273,7 +273,7 @@ void sub_80155F8(void *selfArg)
     self->frame += 1;
     if (self->frame >= self->frames || self->part->animDone != 0) {
         register s32 zero asm("r4");
-        u8 *p26 = &self->unk_26;
+        u8 *p26 = &self->spinCooldown;
         struct act_method *m;
 
         zero = 0;
