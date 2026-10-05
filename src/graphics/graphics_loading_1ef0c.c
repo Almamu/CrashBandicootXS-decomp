@@ -61,7 +61,7 @@ void sub_801EF0C(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     rec = LEVEL_RECORD(arg3);
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
     part->unk_28_5 = rec->flags >> 2 & 1;
-    AddToPartList(gUnknown_030012F0, part);
+    AddToPartList(gCollidableList, part);
     SetEnemyAnimMap(hdr, gEnemyDefaultAnimMap);
     rec2 = LEVEL_RECORD(arg3);
     part->tag = 0;
@@ -94,7 +94,7 @@ void SpawnVulture(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     rec = LEVEL_RECORD(arg3);
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
     part->unk_28_5 = rec->flags >> 2 & 1;
-    AddToPartList(gUnknown_030012F0, part);
+    AddToPartList(gCollidableList, part);
     SetEnemyAnimMap(hdr, gEnemyDefaultAnimMap);
     SetEnemyState(hdr, 0x11);
     hdr->animMap = gVultureAnimMap;
@@ -250,7 +250,7 @@ void SpawnVenusFlytrap(u32 arg0, u32 arg1, u32 arg2, u32 arg3)
     }
   }
 
-    AddToPartList(gUnknown_030012F0, part);
+    AddToPartList(gCollidableList, part);
 
     {
         register void *val asm("r0") = gEnemyDefaultAnimMap;
@@ -315,7 +315,7 @@ void sub_801F2BC(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     rec = LEVEL_RECORD(arg3);
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
     part->unk_28_5 = rec->flags >> 2 & 1;
-    AddToPartList(gUnknown_030012F0, part);
+    AddToPartList(gCollidableList, part);
     SetEnemyAnimMap(hdr, gEnemyDefaultAnimMap);
     rec2 = LEVEL_RECORD(arg3);
     SetEnemyState(hdr, 2);
@@ -346,7 +346,7 @@ void SpawnBlowgunTribesman(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     rec = LEVEL_RECORD(arg3);
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
     part->unk_28_5 = rec->flags >> 2 & 1;
-    AddToPartList(gUnknown_030012F0, part);
+    AddToPartList(gCollidableList, part);
     SetEnemyAnimMap(hdr, gEnemyDefaultAnimMap);
     rec2 = GetLevelRecord(arg3);
     SetEnemyAnimMap(hdr, gBlowgunTribesmanAnimMap);
@@ -379,7 +379,7 @@ void SpawnPenguin(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     rec = LEVEL_RECORD(arg3);
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
     part->unk_28_5 = rec->flags >> 2 & 1;
-    AddToPartList(gUnknown_030012F0, part);
+    AddToPartList(gCollidableList, part);
     SetEnemyAnimMap(hdr, gEnemyDefaultAnimMap);
     rec2 = LEVEL_RECORD(arg3);
     part->tag = 0;
@@ -416,7 +416,7 @@ void SpawnSeal(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
     part->unk_28_5 = rec->flags >> 2 & 1;
     part->base.flags |= 0x10;
-    AddToPartList(gUnknown_030012F0, part);
+    AddToPartList(gCollidableList, part);
     SetEnemyAnimMap(hdr, gEnemyDefaultAnimMap);
     SetEnemyState(hdr, 5);
     PlaySfx(gAudioContext, 0x27, 0x100);
@@ -445,7 +445,7 @@ void SpawnPolarBear(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     rec = LEVEL_RECORD(arg3);
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
     part->unk_28_5 = rec->flags >> 2 & 1;
-    AddToPartList(gUnknown_030012F0, part);
+    AddToPartList(gCollidableList, part);
     SetEnemyAnimMap(hdr, gEnemyDefaultAnimMap);
     rec2 = LEVEL_RECORD(arg3);
     part->base.field_0A = 6;
@@ -477,7 +477,7 @@ void SpawnPufferfish(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     rec = LEVEL_RECORD(arg3);
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
     part->unk_28_5 = rec->flags >> 2 & 1;
-    AddToPartList(gUnknown_030012F0, part);
+    AddToPartList(gCollidableList, part);
     SetEnemyAnimMap(hdr, gEnemyDefaultAnimMap);
     rec2 = LEVEL_RECORD(arg3);
     SetPartAnim(part, 2);
@@ -511,7 +511,7 @@ void SpawnShark(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     rec = LEVEL_RECORD(arg3);
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
     part->unk_28_5 = rec->flags >> 2 & 1;
-    AddToPartList(gUnknown_030012F0, part);
+    AddToPartList(gCollidableList, part);
     SetEnemyAnimMap(hdr, gEnemyDefaultAnimMap);
     rec2 = LEVEL_RECORD(arg3);
     part->base.field_0A = 6;
@@ -543,7 +543,7 @@ void SpawnMorayEel(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     rec = LEVEL_RECORD(arg3);
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
     part->unk_28_5 = rec->flags >> 2 & 1;
-    AddToPartList(gUnknown_030012F0, part);
+    AddToPartList(gCollidableList, part);
     SetEnemyAnimMap(hdr, gEnemyDefaultAnimMap);
     SetPartAnim(part, 0);
     {
@@ -578,7 +578,7 @@ void SpawnElectricEel(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     rec = LEVEL_RECORD(arg3);
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
     part->unk_28_5 = rec->flags >> 2 & 1;
-    AddToPartList(gUnknown_030012F0, part);
+    AddToPartList(gCollidableList, part);
     SetEnemyAnimMap(hdr, gEnemyDefaultAnimMap);
     rec2 = LEVEL_RECORD(arg3);
     part->base.field_0A = 3;

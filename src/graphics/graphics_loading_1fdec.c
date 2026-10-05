@@ -27,7 +27,7 @@ void SpawnSquid(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     rec = LEVEL_RECORD(arg3);
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
     part->unk_28_5 = rec->flags >> 2 & 1;
-    AddToPartList(gUnknown_030012F0, part);
+    AddToPartList(gCollidableList, part);
     hdr->animMap = gSquidAnimMap;
     SetEnemyState(hdr, 7);
 }

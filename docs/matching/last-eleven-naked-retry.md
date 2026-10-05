@@ -90,7 +90,7 @@ side effect of argument evaluation comes before the hard-register moves.
 A copy of `part` that an empty asm keeps as its own pseudo fixes that:
 
 ```c
-AddToPartList(gUnknown_030012F0, ({
+AddToPartList(gCollidableList, ({
     struct popup_part *t = part;
 
     asm("" : "+r"(t));

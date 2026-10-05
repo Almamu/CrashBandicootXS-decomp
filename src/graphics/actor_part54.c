@@ -5,35 +5,35 @@
  * actor_part41.c since the parked `UpdateActorPaletteCycle` (actor_part42.c) sits
  * raw between them. */
 
-extern s32 gUnknown_03001470;
-extern s32 gUnknown_03001474;
-extern s32 gUnknown_03001478;
+extern s32 gActorPaletteCycleFrame;
+extern s32 gActorPaletteCycleTarget;
+extern s32 gActorPaletteCycleTimer;
 
-extern s32 gStaticData_08178F60[];
-extern s32 gStaticData_08178F70[];
+extern s32 gActorPaletteCycleStartFrames[];
+extern s32 gActorPaletteCycleTargetFrames[];
 
 /* Seeds the palette-cycle cursor/bound pair from a per-category table
- * (`gStaticData_08178F60`/`gStaticData_08178F70`, indexed by `idx`) and
+ * (`gActorPaletteCycleStartFrames`/`gActorPaletteCycleTargetFrames`, indexed by `idx`) and
  * resets the DMA-refresh counter. */
 void SetActorPaletteCycle(s32 idx)
 {
-    gUnknown_03001470 = gStaticData_08178F60[idx];
-    gUnknown_03001474 = gStaticData_08178F70[idx];
-    gUnknown_03001478 = 0;
+    gActorPaletteCycleFrame = gActorPaletteCycleStartFrames[idx];
+    gActorPaletteCycleTarget = gActorPaletteCycleTargetFrames[idx];
+    gActorPaletteCycleTimer = 0;
 }
 
-extern u8 gUnknown_03001464;
+extern u8 gActorPaletteCycleEnabled;
 extern void SaveActorPaletteCycle(void);
 
-/* Arms/disarms the palette-cycle system (`gUnknown_03001464`), resets
+/* Arms/disarms the palette-cycle system (`gActorPaletteCycleEnabled`), resets
  * the cursor/bound/DMA-refresh counter, and saves that reset state back
  * via `SaveActorPaletteCycle`. */
 void EnableActorPaletteCycle(u8 flag)
 {
-    gUnknown_03001464 = flag;
-    gUnknown_03001470 = 0;
-    gUnknown_03001474 = 0;
-    gUnknown_03001478 = 0;
+    gActorPaletteCycleEnabled = flag;
+    gActorPaletteCycleFrame = 0;
+    gActorPaletteCycleTarget = 0;
+    gActorPaletteCycleTimer = 0;
     SaveActorPaletteCycle();
 }
 

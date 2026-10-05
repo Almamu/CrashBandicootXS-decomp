@@ -25,7 +25,7 @@
  *   by the level config (gStaticData_0816C358-0816C362 per-config timings),
  *   and spawns hit effects (sub_8019214).
  * - sub_8019324: hit test of a part against the player and the
- *   gUnknown_030012F0 list (sub_8007xxx boxes, AabbOverlaps overlap).
+ *   gCollidableList list (sub_8007xxx boxes, AabbOverlaps overlap).
  * - CreateTiny: allocates a 257-entry table of i*i>>8 squares.
  *
  * Matching notes: this code materializes a byte-RMW's constant/mask
@@ -187,7 +187,7 @@ extern void *gAudioContext;
 extern void *gLevelState;
 extern u8 ***gSpriteBankSet;
 extern struct gfx_player *gPlayer;
-extern struct gfx_list *gUnknown_030012F0;
+extern struct gfx_list *gCollidableList;
 extern void *gUnknown_030012F4;
 extern struct gfx_level *gLevelLayers;
 extern u8 gStaticData_087E4494[];
@@ -675,7 +675,7 @@ void sub_8018D70(u32 a0, u16 a1, u16 a2, u16 a3, s32 kind)
         m &= PART_FLAGS(c);
         PART_FLAGS(c) = m | 0x10;
     }
-    AddToPartList(gUnknown_030012F0, c);
+    AddToPartList(gCollidableList, c);
 }
 
 void sub_8018E4C(struct gfx_mover *self, struct gfx_part *partArg)
@@ -1002,12 +1002,12 @@ void sub_8019324(struct gfx_hit_ctrl *self, struct gfx_part *partArg)
         }
         else if (self->enabled)
         {
-            s32 n = gUnknown_030012F0->count;
+            s32 n = gCollidableList->count;
             register s32 i asm("r5");
 
             for (i = 0; i < n; i++)
             {
-                struct gfx_part *e = gUnknown_030012F0->items[i];
+                struct gfx_part *e = gCollidableList->items[i];
 
                 GetSpriteHitbox(&c, e);
                 if (AabbOverlaps(&c, &b))

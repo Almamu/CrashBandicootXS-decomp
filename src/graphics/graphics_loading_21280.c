@@ -103,7 +103,7 @@ void SpawnDingodile(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     rec = LEVEL_RECORD(arg3);
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
     part->unk_28_5 = rec->flags >> 2 & 1;
-    AddToPartList(gUnknown_030012F0, part);
+    AddToPartList(gCollidableList, part);
     hdr = CreateDingodile(OperatorNew(0x30), arg1, arg2);
     part->hdr = hdr;
     POPUP_ATTACH(hdr, part);
@@ -130,7 +130,7 @@ void SpawnTiny(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
     part->unk_28_5 = rec->flags >> 2 & 1;
     part->base.flags |= 0x10;
-    AddToPartList(gUnknown_030012F0, part);
+    AddToPartList(gCollidableList, part);
     SetLevelBoss(gLevelState, hdr);
 }
 

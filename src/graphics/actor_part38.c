@@ -8,7 +8,7 @@
  * table, `self+0x10` a `struct actor *` sub-object, `self+0x27`-`0x32` a
  * shared state/flag/table-index trio) - `sub_8015508`/`sub_8015780` are
  * both called directly by `sub_801426C`/`sub_80142B0` there, confirming
- * the same object shapes carry over. `gUnknown_030012F0` (only touched
+ * the same object shapes carry over. `gCollidableList` (only touched
  * by `sub_8014F8C` here) is a small list object - `+4` a count, `+0xc`
  * a `struct actor **` array - not referenced by any already-matched
  * code yet, so it stays raw-offset rather than a guessed struct. This
@@ -17,7 +17,7 @@
  * issue-18-0x08014f8c-actor.md for the full write-up. */
 
 extern void *gAudioContext;
-extern void *gUnknown_030012F0;
+extern void *gCollidableList;
 extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
 extern s32 _call_via_r1(void *addr, void *fn);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
@@ -25,7 +25,7 @@ extern s32 _call_via_r3(void *arg0, void *arg1, void *arg2, void *arg3);
 extern void _call_via_r4(void *arg0, s32 arg1, s32 arg2, s32 arg3);
 extern void BreakCratesInArea(s32 x, s32 y, s32 arg2, s32 arg3);
 
-/* For each `struct actor *` in the `gUnknown_030012F0` list: skips
+/* For each `struct actor *` in the `gCollidableList` list: skips
  * entries whose `+0x48` trampoline (`_call_via_r1`) reports a width of 4
  * or less, entries further than 0x40 (Manhattan distance) from `self`'s
  * own part, entries without their `+0xc` bit 6 flag set, and entries
@@ -62,7 +62,7 @@ loop_body:
         register s32 dx asm("r1");
         register s32 dy asm("r2");
 
-        /* Anti-CSE: a plain re-read of `gUnknown_030012F0` here would
+        /* Anti-CSE: a plain re-read of `gCollidableList` here would
          * let gcc reuse the register value the loop condition below
          * just loaded, across the branch - the ROM reloads it again
          * from scratch inside the body instead (see matching.md's
@@ -145,7 +145,7 @@ loop_cond:
         }
     }
 }
-asm(".align 2, 0\n\t.Lgu12f0_8014f8c: .word gUnknown_030012F0");
+asm(".align 2, 0\n\t.Lgu12f0_8014f8c: .word gCollidableList");
 
 
 extern void *gAudioContext;

@@ -298,7 +298,7 @@ from "core" graphics.
 
 - `src/graphics/actor_part17.c` (new file - see `docs/matching.md`):
   `StartCtrlTargetMotionYFromSet`, `SetCtrlTargetMotionX`, `StartCtrlTargetMotionX`, `StartCtrlTargetMotionXFromSet`,
-  `nullsub_13`, `SetCtrlTargetAnim`, `sub_800B8A4`, `DestroyCtrl`,
+  `CtrlHandleEvent`, `SetCtrlTargetAnim`, `sub_800B8A4`, `DestroyCtrl`,
   `InitCtrl`, `GetCtrlMode`
 
 - `src/graphics/actor_part18.c`/`actor_part18b.c` (new files, non-
@@ -436,7 +436,7 @@ from "core" graphics.
   between them; see
   [docs/matching/issue-62-0x08033804-actor.md](../matching/issue-62-0x08033804-actor.md)):
   `StartHovercraftHitFlash`, `sub_8033828`, `GetHovercraftPartsLeft`, `LoseHovercraftPart`,
-  `sub_80338C4`, `GetHovercraftState`, `sub_80338DC`, `GetHovercraftZ`,
+  `GetHovercraftAttack`, `GetHovercraftState`, `GetHovercraftLevel`, `GetHovercraftZ`,
   `GetHovercraftY`, `GetHovercraftX`, `SetHovercraftState`, `nullsub_36`,
   `HovercraftStateApproach`, `nullsub_37`, `DamageHovercraftCannon`,
   `CreateHovercraftCannon`, `HovercraftCannonStateDestroyed`, `HovercraftCannonStateWait`,
@@ -448,7 +448,7 @@ from "core" graphics.
 - `src/graphics/actor_part38.c` (new file, GitHub issue #18, ROM
   0x08014F8C - numbered `38` rather than `28` since issue #62's
   parallel PR above independently claimed `actor_part28.c` first):
-  `sub_8014F8C` - a `gUnknown_030012F0`-list proximity-
+  `sub_8014F8C` - a `gCollidableList`-list proximity-
   trigger scan for the same "self" action-table object family as
   `actor_part18.c`, and `sub_8015038` (matched in the strag4 retry,
   see Matched); see
@@ -585,8 +585,8 @@ from "core" graphics.
   `SetActorPaletteCycle`, `EnableActorPaletteCycle` - the `InitActorPart` constructor itself
   (previously only forward-declared by every other `actor_part*.c`
   file), its movement-threshold recompute pair, the fixed 15-slot
-  object registry (`gUnknown_03001428`/`gUnknown_03000888`), and the
-  `gUnknown_03001464`-gated palette-cycle DMA cluster's members - plus
+  object registry (`gCollectedSpawns`/`gCollectedSpawnCount`), and the
+  `gActorPaletteCycleEnabled`-gated palette-cycle DMA cluster's members - plus
   `DrawActor`, `sub_802AA0C`, and `UpdateActorPaletteCycle`, all three
   matched in a later pass that closed the register-pinning/pool-split
   gaps documented in that same writeup (all 25 of this chunk's functions
@@ -718,7 +718,7 @@ from "core" graphics.
   [docs/matching/issue-63-0x08033ef4-actor.md](../matching/issue-63-0x08033ef4-actor.md)):
   `CreateHovercraftLauncher`, `HovercraftLauncherStateDestroyed`, `HovercraftLauncherStateWait`, `IsHovercraftLauncherUnshootable`,
   `DamageHovercraftSideGun`, `UpdateHovercraftSideGun`, `sub_80341F8`, `IsHovercraftSideGunUnshootable`,
-  `nullsub_38`, `CreateHovercraftCannonFlash`, `IsHovercraftCannonFlashUnshootable`, `SpawnStar`,
+  `DamageHovercraftCannonFlash`, `CreateHovercraftCannonFlash`, `IsHovercraftCannonFlashUnshootable`, `SpawnStar`,
   `PlotStarfieldPixel`, `UpdateStarfield`, `StarfieldWaitForButton`, `DestroyStarfield` - two
   constructors, a trampoline-fire helper, a position-sync/state-transition
   helper, a damage/death handler, a position-sync/orbit-effect updater and
@@ -811,7 +811,7 @@ from "core" graphics.
   Phase 1 of the boss-weapon/singleton cluster's gap between issue #58
   and issue #62): `GetAirshipHpPercent` (tracker "ready" check scaling the
   countdown via `__divsi3`), `DestroyAirship` (tracker destructor,
-  `CreateAirship`'s counterpart), `nullsub_30`/`nullsub_31`/`nullsub_32`
+  `CreateAirship`'s counterpart), `nullsub_30`/`AirshipStateInactive`/`nullsub_32`
   (no-op stubs), `sub_8031850` (trivial `self+0x58` setter),
   `sub_80318B4` (full state/accumulator/anim-frame reset idiom),
   `CreateJetpackBalloon` (`InitActorPart`-based constructor), and `IsJetpackBalloonUnshootable`
@@ -867,7 +867,7 @@ from "core" graphics.
   `DestroyHovercraft`/`nullsub_34`/`sub_80337FC`/`nullsub_35` (singleton
   destructor, no-op stub, trivial "false" getter, no-op stub) - opens
   the singleton's own camera-follow/scroll-velocity RAM family
-  (`gUnknown_030015A0`-`030015FF`, reusing `actor_part28.c`'s existing
+  (`gHovercraftMapCols`-`030015FF`, reusing `actor_part28.c`'s existing
   naming for the fields that family already touches) - see
   [docs/matching/issue-60-61-gap-31a6c-part2.md](../matching/issue-60-61-gap-31a6c-part2.md).
   `RunHovercraftState` (the P1/P2 speed-toggle dispatcher + category-vtable

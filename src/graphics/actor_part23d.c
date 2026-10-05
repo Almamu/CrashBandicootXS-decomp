@@ -7,20 +7,20 @@
  * docs/matching/issue-58-0x08030334-actor.md.
  *
  * Constructor for the small tracker object (`gAirship`):
- * stashes its level-index argument into `gUnknown_03001564`, and - if
+ * stashes its level-index argument into `gAirshipLevel`, and - if
  * `GetActorCheckpoint` (a level-index/mode query) returns zero - clears
  * `gUnknown_0300157C`'s spawn-budget counter. Seeds the row/column
- * dimensions (`gUnknown_03001528`/`gUnknown_0300152C`) from
+ * dimensions (`gAirshipMapCols`/`gAirshipMapRows`) from
  * `gAirshipPicture`'s first two halfwords, allocates the 0x1c-byte
  * tracker object, wires its event table (`gStaticData_0817C3E4`) and
  * part table (`gUnknown_03001580`) pointers plus a fixed `+0x18` flag,
  * registers it via `SetActorAnim`, and stores it into
  * `gAirship`. Resets both boss-weapon state globals
- * (`gAirshipState`/`gUnknown_0300153C`) and fires the tracker's own
+ * (`gAirshipState`/`gAirshipStateTimer`) and fires the tracker's own
  * state-0/table-index-0 transition (anim frame from its own part-table
  * pointer at `+0`). Finishes by running `LoadAirshipGraphics` once (the DMA/
  * tile-cache setup + palette fade, actor_part26b.c) and clearing
- * `gUnknown_03001524`'s "apply now" latch.
+ * `gAirshipBg2PageFlip`'s "apply now" latch.
  *
  * Matched as the inlined C++ `gAirship = new Tracker(...)`:
  * the destination's address is taken before the allocation, the size
@@ -29,13 +29,13 @@
  * constructor taking its values as arguments (all loaded before the
  * stores). */
 extern s32 gUnknown_0300157C;
-extern s32 gUnknown_03001528;
-extern s32 gUnknown_0300152C;
+extern s32 gAirshipMapCols;
+extern s32 gAirshipMapRows;
 extern struct actor_self *gAirship;
 extern s32 gAirshipState;
-extern s32 gUnknown_0300153C;
-extern u8 gUnknown_03001524;
-extern s32 gUnknown_03001564;
+extern s32 gAirshipStateTimer;
+extern u8 gAirshipBg2PageFlip;
+extern s32 gAirshipLevel;
 extern s32 GetActorCheckpoint(void);
 extern void SetActorAnim(void *self, s32 idx);
 extern s32 GetAnimFrameBaseOffset(void *self);
@@ -48,7 +48,7 @@ static inline void BossSetState(s32 st, s32 idx)
 {
     struct actor_self *self;
     gAirshipState = st;
-    gUnknown_0300153C = 0;
+    gAirshipStateTimer = 0;
     self = gAirship;
     self->animIndex = idx;
     self->animTimer = self->anims[idx].duration;
@@ -75,16 +75,16 @@ void CreateAirship(s32 level)
     struct actor_self *t;
     struct actor_self **slot;
 
-    gUnknown_03001564 = level;
+    gAirshipLevel = level;
     if (GetActorCheckpoint() == 0)
         gUnknown_0300157C = 0;
-    gUnknown_03001528 = gAirshipPicture[0];
-    gUnknown_0300152C = gAirshipPicture[1];
+    gAirshipMapCols = gAirshipPicture[0];
+    gAirshipMapRows = gAirshipPicture[1];
     slot = &gAirship;
     t = AllocActor(0x1c);
     InitAnimPart(t, gStaticData_0817C3E4, gUnknown_03001580, 1);
     *slot = t;
     BossSetState(0, 0);
     LoadAirshipGraphics();
-    gUnknown_03001524 = 0;
+    gAirshipBg2PageFlip = 0;
 }

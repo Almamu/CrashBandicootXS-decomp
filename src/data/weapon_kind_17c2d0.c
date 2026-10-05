@@ -8,7 +8,7 @@
  */
 
 /* actor_part23e.c's `struct weapon_kind`: seven words per kind, none
- * named yet. SpawnAirship picks one by gUnknown_03001564. */
+ * named yet. SpawnAirship picks one by gAirshipLevel. */
 struct weapon_kind {
     s32 unk_00;
     s32 unk_04;
@@ -19,7 +19,7 @@ struct weapon_kind {
     s32 unk_18;
 };
 
-const struct weapon_kind gStaticData_0817C2D0[6] = {
+const struct weapon_kind gAirshipAttacks[6] = {
     { 30, 120, 1, 120, 15, 7, 90 },
     { 45, 90, 3, 120, 15, 8, 80 },
     { 60, 60, 5, 120, 15, 9, 70 },
@@ -31,7 +31,7 @@ const struct weapon_kind gStaticData_0817C2D0[6] = {
 /* A 3-frame palette strip for BG palette 1: SpawnAirship (actor_part23e.c)
  * loads frame 0, AnimateAirshipPalette (actor_part26.c) ping-pongs through all
  * three while its counter runs. */
-const u16 gStaticData_0817C378[3][16] = {
+const u16 gAirshipHitFlashPalettes[3][16] = {
     {
         0x03E0, 0x30E7, 0x3549, 0x41AC, 0x46C5, 0x3222, 0x1DA0, 0x033F,
         0x02BF, 0x3AB9, 0x05F7, 0x0194, 0x5B3B, 0x29B0, 0x14BF, 0x7FFF,
@@ -49,7 +49,7 @@ const u16 gStaticData_0817C378[3][16] = {
 /* The boss's box (struct anim_box), read by AirshipStateExplode
  * (actor_part21f.c), sub_8030E08 (actor_part23c.c) and IsTouchingAirship
  * (actor_part24b.c). */
-const struct anim_box gStaticData_0817C3D8 = { -102, -12, -2, 51, 68, 4 };
+const struct anim_box gAirshipBox = { -102, -12, -2, 51, 68, 4 };
 
 /* The two keyframes CreateAirship (actor_part23d.c) gives its tracker part. */
 const struct anim_frame_record gStaticData_0817C3E4[2] = {

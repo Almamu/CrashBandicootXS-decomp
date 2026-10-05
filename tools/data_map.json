@@ -3403,7 +3403,7 @@
   {
    "address": "0x08175760",
    "size": 14336,
-   "name": "gStaticData_08175760",
+   "name": "gActorPaletteCycleFrames",
    "consumers": [
     "UpdateActorPaletteCycle"
    ],
@@ -3425,7 +3425,7 @@
   {
    "address": "0x08178F60",
    "size": 16,
-   "name": "gStaticData_08178F60",
+   "name": "gActorPaletteCycleStartFrames",
    "consumers": [
     "SetActorPaletteCycle"
    ],
@@ -3449,7 +3449,7 @@
   {
    "address": "0x08178F70",
    "size": 16,
-   "name": "gStaticData_08178F70",
+   "name": "gActorPaletteCycleTargetFrames",
    "consumers": [
     "SetActorPaletteCycle"
    ],
@@ -4012,7 +4012,7 @@
   {
    "address": "0x0817C2D0",
    "size": 168,
-   "name": "gStaticData_0817C2D0",
+   "name": "gAirshipAttacks",
    "consumers": [
     "SpawnAirship"
    ],
@@ -4036,7 +4036,7 @@
   {
    "address": "0x0817C378",
    "size": 96,
-   "name": "gStaticData_0817C378",
+   "name": "gAirshipHitFlashPalettes",
    "consumers": [
     "SpawnAirship",
     "AnimateAirshipPalette"
@@ -4062,7 +4062,7 @@
   {
    "address": "0x0817C3D8",
    "size": 12,
-   "name": "gStaticData_0817C3D8",
+   "name": "gAirshipBox",
    "consumers": [
     "AirshipStateExplode",
     "sub_8030E08",
@@ -4234,7 +4234,7 @@
   {
    "address": "0x0817C460",
    "size": 80,
-   "name": "gStaticData_0817C460",
+   "name": "gHovercraftAttacks",
    "consumers": [
     "SpawnHovercraft"
    ],
@@ -4258,7 +4258,7 @@
   {
    "address": "0x0817C4B0",
    "size": 12,
-   "name": "gStaticData_0817C4B0",
+   "name": "gHovercraftBox",
    "consumers": [
     "sub_8032C0C"
    ],

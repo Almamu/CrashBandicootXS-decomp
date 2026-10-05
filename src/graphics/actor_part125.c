@@ -20,7 +20,7 @@ extern void sub_8032138(void *obj);
 
 extern s32 gAirshipState;
 extern s32 gAirshipHp;
-extern void *gUnknown_03001568;
+extern void *gAirshipAttack;
 extern void *gAirship;
 extern s32 gUnknown_030013C0;
 extern void sub_8031A08(struct actor_self *self);
@@ -42,7 +42,7 @@ struct jetpack_balloon {
  * is inactive (`gAirshipState == 0`), reports "not ready" (-1).
  * Otherwise scales the countdown `gAirshipHp` by 100 through
  * `__divsi3` against the weapon table's own first field
- * (`*gUnknown_03001568`, a `void *` pointing at the small weapon-kind
+ * (`*gAirshipAttack`, a `void *` pointing at the small weapon-kind
  * table already characterized in actor_part21d.c), and reports "ready"
  * (1) once that scaled ratio is exactly zero and the countdown is still
  * running (`> 0`); otherwise passes the scaled ratio straight through. */
@@ -56,7 +56,7 @@ s32 GetAirshipHpPercent(void)
     }
 
     countdown = gAirshipHp;
-    result = __divsi3(countdown * 100, *(s32 *)gUnknown_03001568);
+    result = __divsi3(countdown * 100, *(s32 *)gAirshipAttack);
     if (result == 0 && countdown > 0) {
         result = 1;
     }
@@ -75,7 +75,9 @@ void nullsub_30(void)
 {
 }
 
-void nullsub_31(void)
+/* gAirshipStateFuncs[0]: no airship is active (AirshipStateFall goes back
+ * to state 0). Empty. */
+void AirshipStateInactive(void)
 {
 }
 

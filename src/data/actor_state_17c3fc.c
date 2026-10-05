@@ -6,7 +6,7 @@
  * sections by ldscript.txt - see docs/data.md.
  */
 
-extern void nullsub_31();
+extern void AirshipStateInactive();
 extern void nullsub_32();
 extern void nullsub_33();
 extern void AirshipStateApproach();
@@ -23,7 +23,7 @@ extern void JetpackBalloonCrateStateHang();
  * _call_via_r0 as `gAirshipStateFuncs[gAirshipState]` by
  * UpdateAirship (actor_part23f.c). */
 void (*const gAirshipStateFuncs[6])() = {
-    nullsub_31,
+    AirshipStateInactive,
     AirshipStateApproach,
     AirshipStateFireballs,
     AirshipStateCannon,

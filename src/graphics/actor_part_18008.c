@@ -173,7 +173,7 @@ extern void *gLevelState;
 extern u8 ***gSpriteBankSet;
 extern struct hop_player *gPlayer;
 extern struct hop_list *gUnknown_030012EC;
-extern void *gUnknown_030012F0;
+extern void *gCollidableList;
 extern struct hop_level *gLevelLayers;
 extern u8 gStaticData_0816C308[];
 extern u8 gStaticData_0816C30B[];
@@ -576,7 +576,7 @@ s32 PickTinyHopTarget(struct tiny_tiger *self)
     return gStaticData_0816C30B[self->target * 5 + nearest + self->round * 25];
 }
 
-/* Spawns a falling hazard (a gUnknown_030012F0 part driven by a
+/* Spawns a falling hazard (a gCollidableList part driven by a
  * sub_80188D0 object) at the `n`th third of the way from `part` towards
  * the player. */
 void sub_80186F0(struct tiny_tiger *self, struct hop_part *part, s32 n)
@@ -610,7 +610,7 @@ void sub_80186F0(struct tiny_tiger *self, struct hop_part *part, s32 n)
     p->ctrl = ctrl;
     VCALL1P(ctrl, m18, p);
     OrFlags(p, 0x10);
-    AddToPartList(gUnknown_030012F0, p);
+    AddToPartList(gCollidableList, p);
     {
         /* the ROM materializes 0x80 before re-reading `zero` */
         s32 k = 0x80;

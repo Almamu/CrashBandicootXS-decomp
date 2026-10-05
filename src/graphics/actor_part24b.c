@@ -7,7 +7,7 @@
  * shape as `sub_802DD9C`/`UpdateYeti` (actor_part75.c/actor_part74.c,
  * see docs/matching/issue-54-actor-d3a8.md) - only runs while the small
  * tracker object's state global (`gAirshipState`) is 2 or 3. Box A:
- * `gStaticData_0817C3D8` (a fixed keyframe-table box) with the boss-
+ * `gAirshipBox` (a fixed keyframe-table box) with the boss-
  * weapon's own screen-space accumulators (`gAirshipX`/`0x1544`/
  * `0x1548`, all `>>8`) added into its `x`/`y`/`z`. Box B: `self+0x38`'s
  * own 12-byte vector, with `self`'s own `+0x1c`/`0x20`/`0x24` position
@@ -20,7 +20,7 @@
  * rematerialized from sp, and only the copied box's address stays live
  * across the `MemCopy32` call. Built with old_agbcc
  * (docs/matching/issue-58-61-naked-retry.md). */
-extern u8 gStaticData_0817C3D8[];
+extern u8 gAirshipBox[];
 extern s32 gAirshipState;
 extern s32 gAirshipX;
 extern s32 gAirshipY;
@@ -49,7 +49,7 @@ u8 IsTouchingAirship(void *selfArg)
         } f;
         struct box3 *pa, *pc;
 
-        f.a = *(struct box3 *)gStaticData_0817C3D8;
+        f.a = *(struct box3 *)gAirshipBox;
         BoxOffset(&f.a, gAirshipX >> 8, gAirshipY >> 8, gAirshipZ >> 8);
         f.t = *(struct box3 *)self->box;
         BoxOffset(&f.t, self->x >> 8, self->y >> 8, self->z >> 8);

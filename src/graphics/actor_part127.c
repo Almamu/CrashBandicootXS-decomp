@@ -65,8 +65,8 @@ extern u8 gUnknown_030014A1;
 extern struct actor_pmf gPolarPlayerStateFuncs[];
 extern void (*gUnpackRleSpriteFrameFunc)(void *dst, u8 *frame);
 extern void *gPolarPlayerTiles[2];     // the two VRAM tile buffers
-extern s32 gUnknown_030014A8;          // which buffer holds the current frame
-extern u8 *gUnknown_030014AC;          // the frame last uploaded
+extern s32 gPolarPlayerTileBuffer;          // which buffer holds the current frame
+extern u8 *gPolarPlayerLastFrame;          // the frame last uploaded
 
 /* The camera object `self+0x30` points at. */
 struct cam_ref {
@@ -231,13 +231,13 @@ void DrawPolarPlayer(struct actor_self *self)
         u32 attr = CurAttr(self);
 
         attr1 |= (sy & 0xff) | ((sx & 0x1ff) << 16) | attr | GetSpriteShapeSizeBits(frame);
-        if (frame != gUnknown_030014AC) {
-            gUnknown_030014A8 ^= 1;
-            gUnpackRleSpriteFrameFunc(gPolarPlayerTiles[gUnknown_030014A8], frame);
-            gUnknown_030014AC = frame;
+        if (frame != gPolarPlayerLastFrame) {
+            gPolarPlayerTileBuffer ^= 1;
+            gUnpackRleSpriteFrameFunc(gPolarPlayerTiles[gPolarPlayerTileBuffer], frame);
+            gPolarPlayerLastFrame = frame;
         }
         {
-            register u32 tile asm("r0") = GET_TILE_NUM(gPolarPlayerTiles[gUnknown_030014A8]);
+            register u32 tile asm("r0") = GET_TILE_NUM(gPolarPlayerTiles[gPolarPlayerTileBuffer]);
 
             QueueSpriteFrameOam(attr1, tile | (self->palette << 12), scale);
         }
@@ -400,7 +400,7 @@ end:
  * `self+0xc`, offset by `self+8`'s frame accumulator, into a *second*
  * pointer array at `self+4`) already established for `AllocJetpackPlayerTiles`
  * (`actor_part43b.c`, `docs/matching/issue-56-0x0802f0dc-actor.md`);
- * arms `gUnknown_030014A8`, clears `gUnknown_030014AC`. The ROM's
+ * arms `gPolarPlayerTileBuffer`, clears `gPolarPlayerLastFrame`. The ROM's
  * "multiply into a copy, copy again, then shift" sequence is simply
  * old_agbcc's code for `h * w * 32` - no register forcing needed. */
 void AllocPolarPlayerTiles(struct actor_self *self)
@@ -411,8 +411,8 @@ void AllocPolarPlayerTiles(struct actor_self *self)
     gPolarPlayerTiles[0] = AllocVramTileBlock(f[1] * f[0] * 32);
     f = CurFrame(self);
     gPolarPlayerTiles[1] = AllocVramTileBlock(f[1] * f[0] * 32);
-    gUnknown_030014A8 = 1;
-    gUnknown_030014AC = 0;
+    gPolarPlayerTileBuffer = 1;
+    gPolarPlayerLastFrame = 0;
 }
 
 /* Spawn-once trigger for a secondary effect object

@@ -761,7 +761,9 @@ s32 sub_8007048(struct actor *self)
     return 0;
 }
 
-void nullsub_11(void)
+/* gEntityVtable slot 4, the entity base class's draw: empty (the sprite
+ * classes override it with DrawSpriteObj). */
+void DrawEntity(void)
 {
 }
 asm(".align 2, 0");

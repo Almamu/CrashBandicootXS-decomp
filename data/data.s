@@ -96,7 +96,7 @@ gSfxTable:
 
 @ gActorCategories..gActorCategoryVtables: src/data/actor_category_175558.c
 
-@ gStaticData_08175760..gStaticData_08178F70: src/data/palette_cycle_175760.c
+@ gActorPaletteCycleFrames..gActorPaletteCycleTargetFrames: src/data/palette_cycle_175760.c
 
 @ gStaticData_08178F80..0x0817A6B8 (categories 0-2 family data): src/data/anim_family_178f80.c
 
@@ -118,7 +118,7 @@ gSfxTable:
 
 @ gJetpackPlaneStateFuncs..gAirshipFireballStateFuncs: src/data/actor_pmf_17c260.c
 
-@ gStaticData_0817C2D0..gStaticData_0817C3E4: src/data/weapon_kind_17c2d0.c
+@ gAirshipAttacks..gStaticData_0817C3E4: src/data/weapon_kind_17c2d0.c
 
 @ gAirshipStateFuncs..gJetpackBalloonCrateStateFuncs: src/data/actor_state_17c3fc.c
 
@@ -126,7 +126,7 @@ gSfxTable:
 
 @ gHovercraftFireballStateFuncs: src/data/actor_pmf_17c450.c
 
-@ gStaticData_0817C460..gStaticData_0817C4BC: src/data/singleton_kind_17c460.c
+@ gHovercraftAttacks..gStaticData_0817C4BC: src/data/singleton_kind_17c460.c
 
 @ gHovercraftStateFuncs..gHovercraftLauncherStateFuncs: src/data/actor_state_17c4c8.c
 

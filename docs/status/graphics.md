@@ -19,7 +19,7 @@ and [graphics_loading.md](./graphics_loading.md).
   `BindPaletteSlot`, `ClaimPaletteSlot`, `UnlockPalette`, `LockPalette`, `UploadPaletteSlot`,
   `UploadPaletteCache`, `GetPaletteSlot`, `FreePaletteSlot`, `FreeUnlockedPaletteSlots`, `SetPaletteCacheSource`,
   `ClearPaletteCache`, `DestroyPaletteCache`, `InitPaletteCache`, `DestroySpriteBankSet`, `nullsub_1`,
-  `sub_8006FE4`, `sub_8007048`, `nullsub_11`, `sub_80070D4`, `GetEntityBounds`,
+  `sub_8006FE4`, `sub_8007048`, `DrawEntity`, `sub_80070D4`, `GetEntityBounds`,
   `SetEntitySize`, `sub_800710C`, `sub_8007110`, `sub_8007114`,
   `WorldToScreen`, `WorldPosToScreen`, `nullsub_12`, `CreateEntity`,
   `sub_800722C`, `ResetEntity`, `InitEntity`, `sub_8007278`,

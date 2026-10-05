@@ -5,7 +5,7 @@
 
 /* Constructor: health defaults to `0x10`, or `0x18` if the
  * `gHovercraft` singleton hasn't been constructed yet
- * (`sub_80338DC() == 0`). Forwards to `InitActorPart`, sets the event
+ * (`GetHovercraftLevel() == 0`). Forwards to `InitActorPart`, sets the event
  * table (`+0x50=&gHovercraftSideGunVtable`), caches the constructor's 6th
  * (byte, stack-passed) argument at `+0x59`, selects table-index 0 or 1
  * depending on whether that byte is set, resets the usual state/frame-
@@ -28,7 +28,7 @@
  *   into an `"=l"`-constrained (lo-register) temp, then copied into
  *   the `register u32 eByteVal asm("r9")` pin that mirrors the ROM's
  *   own `sb`/r9 cache (needed since it survives the following
- *   `sub_80338DC()` call).
+ *   `GetHovercraftLevel()` call).
  * - The `+0x5c` spawn-record ternary (`(self[0x59] != 0) ? 0xFFFFBF00
  *   : 0x8400`): the ROM computes this as a genuine two-way diamond (a
  *   forward `beq`/`ldr`/`b` skipping a `movs`/`lsls` false-branch,
@@ -66,10 +66,10 @@
  *   which cached zero" register-pinning treatment, each in its own
  *   narrowly-scoped block so the pin doesn't widen past where the ROM
  *   actually needs that register reserved. */
-extern void *sub_80338DC(void);
+extern void *GetHovercraftLevel(void);
 extern void *InitActorPart(void *selfArg, void *part, s32 b, s32 c, s32 d);
 extern u8 gHovercraftSideGunVtable[];
-extern void *sub_80338C4(void);
+extern void *GetHovercraftAttack(void);
 
 void *CreateHovercraftSideGun(void *selfArg, void *part, s32 b, s32 cParam, s32 d, u8 eByte)
 {
@@ -86,7 +86,7 @@ void *CreateHovercraftSideGun(void *selfArg, void *part, s32 b, s32 cParam, s32 
     asm volatile ("add %0, sp, #0x24\n\tldrb %0, [%0]" : "=l" (t));
     eByteVal = t;
 
-    health = (sub_80338DC() == 0) ? 0x18 : 0x10;
+    health = (GetHovercraftLevel() == 0) ? 0x18 : 0x10;
 
     InitActorPart(self, part, b, cParam, d);
     *(s32 *)(self + 0x54) = health;
@@ -141,7 +141,7 @@ void *CreateHovercraftSideGun(void *selfArg, void *part, s32 b, s32 cParam, s32 
         u8 *p2c = self + 0x2c;
         zero2 = 0;
         *p2c = (u8)zero2;
-        *(s32 *)(self + 0x68) = *(s32 *)((u8 *)sub_80338C4() + 4);
+        *(s32 *)(self + 0x68) = *(s32 *)((u8 *)GetHovercraftAttack() + 4);
         *(s32 *)(self + 0x6c) = zero2;
     }
 

@@ -13,7 +13,7 @@
  * docs/rom_map.md's "procedurally-generated VRAM fill-level meter"
  * finding). While the small tracker object (`gAirship`)'s
  * state (`gAirshipState`) is non-zero: forces a BG2CNT preset
- * toggle (via `gUnknown_03001524`/`gUnknown_03001520` and
+ * toggle (via `gAirshipBg2PageFlip`/`gAirshipBg2Page` and
  * `UpdateAirshipBg2`), looks up a keyframe-table tilemap pointer through the
  * tracker object's own table-index (`+0xc`) and accumulator (`+8`,
  * `>>8`) fields and blits it via `DrawAirshipMap` (docs/rom_map.md's
@@ -24,7 +24,7 @@
  * exclusive tails run based on the tracker's state: state 5 mirrors
  * palette index 8/0/0xf (slots `+0x10`/`+8`/`+2`/`+0x1e`) all down to
  * black; state 4 clears individual palette slots (`+0x1e`/`+2`/`+8`/
- * `+0x10`) as `gUnknown_0300153C` (a frame/flags counter) crosses four
+ * `+0x10`) as `gAirshipStateTimer` (a frame/flags counter) crosses four
  * successive thresholds (9, 0x31, 0x4f, 0x6d) - a fade/flash-out
  * sequence for the effect's palette strip.
  *
@@ -35,10 +35,10 @@
  * `vu16` - the state-5 blackout is one chained assignment, whose
  * volatile read-backs are the ROM's `ldrh`/`strh` ladder. */
 extern s32 gAirshipState;
-extern u8 gUnknown_03001524;
-extern s32 gUnknown_03001520;
+extern u8 gAirshipBg2PageFlip;
+extern s32 gAirshipBg2Page;
 extern struct actor_self *gAirship;
-extern u32 gUnknown_0300153C;
+extern u32 gAirshipStateTimer;
 extern u16 gAirshipPalette[];
 
 extern void ConvertAirshipTiles(void);
@@ -59,8 +59,8 @@ void LoadAirshipGraphics(void)
         struct actor_self *self;
         vu16 *pal;
 
-        gUnknown_03001524 = 1;
-        gUnknown_03001520 = 0;
+        gAirshipBg2PageFlip = 1;
+        gAirshipBg2Page = 0;
         self = gAirship;
         {
             s32 t = self->animTime >> 8;
@@ -73,13 +73,13 @@ void LoadAirshipGraphics(void)
         if (gAirshipState == 5) {
             pal[15] = pal[1] = pal[4] = pal[8] = 0;
         } else if (gAirshipState == 4) {
-            if (gUnknown_0300153C > 9)
+            if (gAirshipStateTimer > 9)
                 pal[15] = 0;
-            if (gUnknown_0300153C > 0x31)
+            if (gAirshipStateTimer > 0x31)
                 pal[1] = 0;
-            if (gUnknown_0300153C > 0x4f)
+            if (gAirshipStateTimer > 0x4f)
                 pal[4] = 0;
-            if (gUnknown_0300153C > 0x6d)
+            if (gAirshipStateTimer > 0x6d)
                 pal[8] = 0;
         }
     }

@@ -15,9 +15,9 @@ extern void *gPaletteCycles;
 extern void *gOamBuffer;
 extern u8 *gLevelLayers;
 extern void *gHud;
-extern void *gUnknown_030012F0;
+extern void *gCollidableList;
 extern void *gUnknown_030012F4;
-extern void *gUnknown_030012F8;
+extern void *gDecorationList;
 extern void *gUnknown_030012EC;
 extern void *gCrateList;
 extern union blend gBlendRegs;
@@ -62,10 +62,10 @@ void UpdateRoomFrame(void *self)
             }
         }
 
-        DrawPartList(gUnknown_030012F0);
+        DrawPartList(gCollidableList);
         DrawPartList(gUnknown_030012EC);
         DrawCrateList(gCrateList);
-        DrawPartList(gUnknown_030012F8);
+        DrawPartList(gDecorationList);
 
         HideUnusedOamEntries(gOamBuffer);
         WaitForVBlank();

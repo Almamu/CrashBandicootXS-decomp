@@ -468,7 +468,7 @@ independent-expressions version instead computed a fresh base in `r2`
 for the `+0x50` read and cost one extra 2-byte instruction. Also needed
 a trailing `asm(".align 2, 0")` after `SetEnemyAnimMode` (following the
 `matching_decomp_alignment_fix` convention, same idiom already used
-after `nullsub_13` in `actor_part17.c`): the ROM zero-pads
+after `CtrlHandleEvent` in `actor_part17.c`): the ROM zero-pads
 `SetEnemyAnimMode`'s trailing 2 bytes to the next 4-byte boundary, but
 without an explicit trailing align directive the linker instead filled
 that gap with its default NOP-fill (`0xc046`) when placing the next
@@ -631,7 +631,7 @@ local labels, `.pool` directives placed at the ROM's own literal-flush
 points). `sub_800C5D4` additionally needed the
 `matching_decomp_alignment_fix` trailing `asm(".align 2, 0")` idiom (its
 own trailing 2 bytes zero-pad to the next 4-byte boundary, same as
-`nullsub_13`/`SetEnemyAnimMode`). Two multi-word `.pool` placement bugs were
+`CtrlHandleEvent`/`SetEnemyAnimMode`). Two multi-word `.pool` placement bugs were
 caught and fixed during this pass (both in `UpdateEnemyAttackCycle`): the ROM
 places each `.pool` *after* the full conditional block that follows the
 literal's use (not immediately after the `ldr =`/`bl` pair that

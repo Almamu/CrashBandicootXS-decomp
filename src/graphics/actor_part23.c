@@ -9,18 +9,18 @@
 
 extern s32 GetAnimFrameBaseOffset(void *self);
 extern s32 gAirshipX;
-extern s32 gUnknown_03001558;
+extern s32 gAirshipVelX;
 extern s32 gAirshipY;
-extern s32 gUnknown_0300155C;
+extern s32 gAirshipVelY;
 extern s32 gAirshipZ;
-extern s32 gUnknown_03001560;
+extern s32 gAirshipVelZ;
 extern s32 gAirshipState;
-extern s32 gUnknown_0300153C;
+extern s32 gAirshipStateTimer;
 extern void *gAirship;
 
 /* Advances the boss-weapon's screen-space accumulators
  * (`gAirshipX`/`gAirshipY`/`gAirshipZ`) by
- * their per-frame deltas, clamps the `gUnknown_0300155C` ramp to
+ * their per-frame deltas, clamps the `gAirshipVelY` ramp to
  * `0x140`, and - once `gAirshipY` exceeds a threshold - resets
  * the small tracker object at `gAirship` to state 0 (table-
  * index 0) and clears `DISPCNT`'s bit 10 (window/mosaic-family bit not
@@ -30,17 +30,17 @@ void AirshipStateFall(void)
     s32 total;
     s32 delta;
 
-    gAirshipX += gUnknown_03001558;
+    gAirshipX += gAirshipVelX;
 
-    total = gAirshipY + gUnknown_0300155C;
+    total = gAirshipY + gAirshipVelY;
     gAirshipY = total;
 
-    gAirshipZ += gUnknown_03001560;
+    gAirshipZ += gAirshipVelZ;
 
-    delta = gUnknown_0300155C + 7;
-    gUnknown_0300155C = delta;
+    delta = gAirshipVelY + 7;
+    gAirshipVelY = delta;
     if (delta > 0x140) {
-        gUnknown_0300155C = 0x140;
+        gAirshipVelY = 0x140;
     }
 
     if (total > 0xbb80) {
@@ -48,7 +48,7 @@ void AirshipStateFall(void)
         register s32 zero asm("r5") = 0;
 
         gAirshipState = zero;
-        gUnknown_0300153C = zero;
+        gAirshipStateTimer = zero;
 
         self = gAirship;
         self->animIndex = zero;

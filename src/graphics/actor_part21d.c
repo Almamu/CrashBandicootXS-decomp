@@ -7,14 +7,14 @@
  *
  * `AirshipStateApproach`'s (actor_part21c.c) companion: advances
  * `gAirshipZ` by its per-frame delta the same way, but also
- * ramps `gUnknown_03001560` itself toward a fixed target (`0x98`,
- * +-1/frame). Drives a small phase counter (`gUnknown_03001570`) that,
+ * ramps `gAirshipVelZ` itself toward a fixed target (`0x98`,
+ * +-1/frame). Drives a small phase counter (`gAirshipFireTimer`) that,
  * on its "armed" phase (0), spawns an effect via `SpawnAirshipFireball` centered
  * on a fixed camera offset and advances a per-effect counter
- * (`gUnknown_03001574`) through a small weapon-kind table
- * (`gUnknown_03001568`)'s thresholds, otherwise just decrements the
+ * (`gAirshipVolleyCount`) through a small weapon-kind table
+ * (`gAirshipAttack`)'s thresholds, otherwise just decrements the
  * phase. Always re-runs the position-easing helper `sub_8030E08`, and -
- * while `gUnknown_03001554` hasn't crossed its (lower) ceiling
+ * while `gAirshipDistance` hasn't crossed its (lower) ceiling
  * `0x31FF` - re-arms the phase from the weapon table and fires the
  * state-3/table-index-0 transition on the tracker object
  * (`gAirship`), same shape as `AirshipStateApproach`. Always finishes
@@ -30,14 +30,14 @@ extern void sub_8030E08(void);
 extern s32 SpawnAirshipFireball(s32 x, s32 y, s32 z);
 
 extern s32 gAirshipZ;
-extern s32 gUnknown_03001560;
-extern s32 gUnknown_03001554;
+extern s32 gAirshipVelZ;
+extern s32 gAirshipDistance;
 extern s32 gAirshipState;
-extern s32 gUnknown_0300153C;
+extern s32 gAirshipStateTimer;
 extern struct actor_self *gAirship;
-extern s32 gUnknown_03001570;
-extern s32 gUnknown_03001574;
-extern s32 *gUnknown_03001568;
+extern s32 gAirshipFireTimer;
+extern s32 gAirshipVolleyCount;
+extern s32 *gAirshipAttack;
 extern s32 gAirshipX;
 extern s32 gAirshipY;
 
@@ -45,7 +45,7 @@ static inline void BossSetState(s32 st, s32 idx)
 {
     struct actor_self *self;
     gAirshipState = st;
-    gUnknown_0300153C = 0;
+    gAirshipStateTimer = 0;
     self = gAirship;
     self->animIndex = idx;
     self->animTimer = self->anims[idx].duration;
@@ -57,28 +57,28 @@ static inline void BossSetState(s32 st, s32 idx)
 void AirshipStateFireballs(void)
 {
     s32 v;
-    gAirshipZ += gUnknown_03001560;
-    v = gUnknown_03001560;
+    gAirshipZ += gAirshipVelZ;
+    v = gAirshipVelZ;
     if (v <= 0x98)
-        gUnknown_03001560 = v + 1;
+        gAirshipVelZ = v + 1;
     else
-        gUnknown_03001560 = v - 1;
+        gAirshipVelZ = v - 1;
 
-    if (gUnknown_03001570 == 0) {
+    if (gAirshipFireTimer == 0) {
         SpawnAirshipFireball(gAirshipX - 0xCDB, gAirshipY + 0x516D, gAirshipZ - 10);
-        if (++gUnknown_03001574 == gUnknown_03001568[2]) {
-            gUnknown_03001574 = 0;
-            gUnknown_03001570 = gUnknown_03001568[3];
+        if (++gAirshipVolleyCount == gAirshipAttack[2]) {
+            gAirshipVolleyCount = 0;
+            gAirshipFireTimer = gAirshipAttack[3];
         } else {
-            gUnknown_03001570 = gUnknown_03001568[1];
+            gAirshipFireTimer = gAirshipAttack[1];
         }
     } else {
-        gUnknown_03001570--;
+        gAirshipFireTimer--;
     }
     sub_8030E08();
-    if (gUnknown_03001554 <= 0x31FF) {
-        gUnknown_03001570 = gUnknown_03001568[4];
-        gUnknown_03001574 = 0;
+    if (gAirshipDistance <= 0x31FF) {
+        gAirshipFireTimer = gAirshipAttack[4];
+        gAirshipVolleyCount = 0;
         BossSetState(3, 0);
     }
     UpdateAirshipFlashColor();

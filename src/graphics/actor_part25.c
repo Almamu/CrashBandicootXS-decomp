@@ -10,19 +10,19 @@ extern s32 GetAnimFrameBaseOffset(void *self);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void *gAudioContext;
 extern s32 gAirshipHp;
-extern s32 gUnknown_03001578;
-extern s32 gUnknown_03001558;
-extern s32 gUnknown_0300155C;
-extern s32 gUnknown_03001560;
+extern s32 gAirshipHitFlashTimer;
+extern s32 gAirshipVelX;
+extern s32 gAirshipVelY;
+extern s32 gAirshipVelZ;
 extern s32 gAirshipState;
-extern s32 gUnknown_0300153C;
+extern s32 gAirshipStateTimer;
 extern void *gAirship;
 
 /* Countdown timer (`gAirshipHp -= delta`) driving the boss-
  * weapon's "charge" bar: while it's still running, just plays a tick
- * sound and re-arms `gUnknown_03001578`'s DMA-refresh counter; once it
+ * sound and re-arms `gAirshipHitFlashTimer`'s DMA-refresh counter; once it
  * expires, resets the whole accumulator/velocity group
- * (`gUnknown_03001558`/`gUnknown_0300155C`/`gUnknown_03001560`) and
+ * (`gAirshipVelX`/`gAirshipVelY`/`gAirshipVelZ`) and
  * fires the state-4/table-index-1 transition on the small tracker
  * object at `gAirship`. */
 void DamageAirship(s32 delta)
@@ -30,21 +30,21 @@ void DamageAirship(s32 delta)
     s32 remaining = gAirshipHp - delta;
 
     gAirshipHp = remaining;
-    gUnknown_03001578 = 0x12;
+    gAirshipHitFlashTimer = 0x12;
 
     if (remaining <= 0) {
         struct actor_self *self;
 
         gAirshipHp = 0;
-        gUnknown_03001558 = 0;
-        gUnknown_0300155C = 0;
-        gUnknown_03001560 = 0xaa;
+        gAirshipVelX = 0;
+        gAirshipVelY = 0;
+        gAirshipVelZ = 0xaa;
         {
             register s32 four asm("r1") = 4;
             register s32 one asm("r2") = 1;
 
             gAirshipState = four;
-            gUnknown_0300153C = 0;
+            gAirshipStateTimer = 0;
 
             self = gAirship;
             self->animIndex = one;

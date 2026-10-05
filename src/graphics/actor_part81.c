@@ -51,7 +51,7 @@ extern void CollidePartList(void *manager, struct aabb box, s32 unused, void *co
 extern void CollidePlayerWithCrates(void *manager, s32 arg1);
 extern void sub_8008D30(void *manager, s32 arg1);
 extern void ResolvePlayerCollisions(void);
-extern void *gUnknown_030012F0;
+extern void *gCollidableList;
 extern void *gCrateList;
 extern void *gUnknown_030012EC;
 
@@ -75,7 +75,7 @@ void CollidePlayerWithObjects(struct ab9c_obj *self)
         void *manager;
 
         sub_8007C30(&b.src, self);
-        manager = gUnknown_030012F0;
+        manager = gCollidableList;
         MemCopy32(&b.copy, &b.src, sizeof(b.src));
         CollidePartList(manager, b.copy, self->unk_24, self);
     }

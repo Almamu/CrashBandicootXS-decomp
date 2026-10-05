@@ -327,7 +327,7 @@ union key_state
 extern struct player *gPlayer;
 extern struct follow_owner *gCamera;
 extern void ***gSpriteBankSet;
-extern void *gUnknown_030012F0;
+extern void *gCollidableList;
 extern struct tile_cache *gPaletteCache;
 extern void *gAudioContext;
 extern void *gLevelState;
@@ -661,7 +661,7 @@ s32 sub_801B980(struct follow_child *self)
 
 /* Factory for the 0x78-byte sprite (method table gStaticData_087E4B34,
  * constructor inlined): places it at (x, y) pixels with record id `id`,
- * registers it with gUnknown_030012F0, and starts animation 0 of the
+ * registers it with gCollidableList, and starts animation 0 of the
  * table at `**gSpriteBankSet + 0x150`. Called from sub_8021668's
  * family (graphics_loading_21668.c). The two mask constants are
  * materialized with `mov/neg` asm like graphics_loading_21668.c's
@@ -677,7 +677,7 @@ struct sprite *sub_801B984(u16 id, u16 x, u16 y)
     obj->id = id;
     obj->x = x << 8;
     obj->y = y << 8;
-    AddToPartList(gUnknown_030012F0, obj);
+    AddToPartList(gCollidableList, obj);
     obj->anim = (struct anim_table *)(**gSpriteBankSet + 0x150);
     obj->animIndex = 0;
     ResetSpriteFrameTimer(obj);

@@ -7,35 +7,35 @@
 extern s32 __divsi3(s32 arg0, s32 arg1);
 extern s32 sub_8029EB4(void);
 extern s32 sub_8029E98(void);
-extern u8 gUnknown_03001524;
-extern s32 gUnknown_03001520;
-extern s32 gUnknown_03001554;
-extern s32 gUnknown_0300154C;
-extern s32 gUnknown_03001550;
+extern u8 gAirshipBg2PageFlip;
+extern s32 gAirshipBg2Page;
+extern s32 gAirshipDistance;
+extern s32 gAirshipScreenX;
+extern s32 gAirshipScreenY;
 
-/* If `gUnknown_03001524` (an "apply now" latch) is set, toggles
+/* If `gAirshipBg2PageFlip` (an "apply now" latch) is set, toggles
  * `BG2CNT` between two palette/priority presets (tracked by
- * `gUnknown_03001520`) and clears the latch. Either way, recomputes the
- * BG2 affine matrix (a uniform `scale` from `gUnknown_03001554` via
+ * `gAirshipBg2Page`) and clears the latch. Either way, recomputes the
+ * BG2 affine matrix (a uniform `scale` from `gAirshipDistance` via
  * `__divsi3`, offset by the screen-projection helpers
  * `sub_8029EB4`/`sub_8029E98`) so the effect stays centered while
  * zooming. */
 void UpdateAirshipBg2(void)
 {
-    if (gUnknown_03001524 != 0) {
-        if (gUnknown_03001520 == 0) {
+    if (gAirshipBg2PageFlip != 0) {
+        if (gAirshipBg2Page == 0) {
             REG_BG2CNT = 0x5809;
         } else {
             REG_BG2CNT = 0x5909;
         }
-        gUnknown_03001524 = 0;
-        gUnknown_03001520 ^= 1;
+        gAirshipBg2PageFlip = 0;
+        gAirshipBg2Page ^= 1;
     }
 
     {
-        s32 scale = __divsi3(gUnknown_03001554 << 8, 0x3c00);
-        s32 dy = gUnknown_0300154C + sub_8029EB4();
-        s32 dx = gUnknown_03001550 + sub_8029E98();
+        s32 scale = __divsi3(gAirshipDistance << 8, 0x3c00);
+        s32 dy = gAirshipScreenX + sub_8029EB4();
+        s32 dx = gAirshipScreenY + sub_8029E98();
 
         REG_BG2X = 0x8000 - ((dy * scale) >> 8);
         REG_BG2Y = 0x8000 - ((dx * scale) >> 8);

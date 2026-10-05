@@ -16,11 +16,11 @@ extern void DestroyFont();
 extern void FontMeasureText();
 extern void DrawActor();
 extern void FontUploadTiles();
-extern void nullsub_11();
-extern void nullsub_13();
+extern void DrawEntity();
+extern void CtrlHandleEvent();
 extern void nullsub_15();
 extern void nullsub_20();
-extern void nullsub_38();
+extern void DamageHovercraftCannonFlash();
 extern void nullsub_44();
 extern void nullsub_9();
 extern void sub_8006FE4();
@@ -340,7 +340,7 @@ const struct vtable_slot gEntityVtable[11] = {
     VTABLE_SLOT(sub_8007048),
     VTABLE_SLOT(GetEntityBounds),
     VTABLE_SLOT(sub_80070D4),
-    VTABLE_SLOT(nullsub_11),
+    VTABLE_SLOT(DrawEntity),
     VTABLE_SLOT(sub_8007110),
     VTABLE_SLOT(sub_800710C),
     VTABLE_SLOT(sub_8006FE4),
@@ -445,7 +445,7 @@ const struct vtable_slot gPlayerVtable[15] = {
 const struct vtable_slot gCtrlVtable[13] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(nullsub_9),
-    VTABLE_SLOT(nullsub_13),
+    VTABLE_SLOT(CtrlHandleEvent),
     VTABLE_SLOT(sub_800B8A4),
     VTABLE_SLOT(SetCtrlMode),
     VTABLE_SLOT(StartCtrlTargetMotionX),
@@ -481,7 +481,7 @@ const struct vtable_slot gPeriodicSpawnerVtable[11] = {
     VTABLE_SLOT(sub_8007048),
     VTABLE_SLOT(GetEntityBounds),
     VTABLE_SLOT(UpdatePeriodicSpawner),
-    VTABLE_SLOT(nullsub_11),
+    VTABLE_SLOT(DrawEntity),
     VTABLE_SLOT(sub_8007110),
     VTABLE_SLOT(sub_800710C),
     VTABLE_SLOT(sub_8006FE4),
@@ -494,7 +494,7 @@ const struct vtable_slot gPeriodicSpawnerVtable[11] = {
 const struct vtable_slot gKnockedEnemyCtrlVtable[13] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(UpdateKnockedEnemyCtrl),
-    VTABLE_SLOT(nullsub_13),
+    VTABLE_SLOT(CtrlHandleEvent),
     VTABLE_SLOT(sub_800B8A4),
     VTABLE_SLOT(SetCtrlMode),
     VTABLE_SLOT(StartCtrlTargetMotionX),
@@ -684,7 +684,7 @@ const struct vtable_slot gStaticData_087E43C4[13] = {
 const struct vtable_slot gStaticData_087E442C[13] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(sub_80187FC),
-    VTABLE_SLOT(nullsub_13),
+    VTABLE_SLOT(CtrlHandleEvent),
     VTABLE_SLOT(sub_800B8A4),
     VTABLE_SLOT(SetCtrlMode),
     VTABLE_SLOT(StartCtrlTargetMotionX),
@@ -701,7 +701,7 @@ const struct vtable_slot gStaticData_087E442C[13] = {
 const struct vtable_slot gStaticData_087E4494[13] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(sub_8018884),
-    VTABLE_SLOT(nullsub_13),
+    VTABLE_SLOT(CtrlHandleEvent),
     VTABLE_SLOT(sub_800B8A4),
     VTABLE_SLOT(SetCtrlMode),
     VTABLE_SLOT(StartCtrlTargetMotionX),
@@ -718,7 +718,7 @@ const struct vtable_slot gStaticData_087E4494[13] = {
 const struct vtable_slot gStaticData_087E44FC[13] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(sub_80188FC),
-    VTABLE_SLOT(nullsub_13),
+    VTABLE_SLOT(CtrlHandleEvent),
     VTABLE_SLOT(sub_800B8A4),
     VTABLE_SLOT(SetCtrlMode),
     VTABLE_SLOT(StartCtrlTargetMotionX),
@@ -753,7 +753,7 @@ const struct vtable_slot gTinyVtable[13] = {
 const struct vtable_slot gStaticData_087E45CC[13] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(sub_80194E0),
-    VTABLE_SLOT(nullsub_13),
+    VTABLE_SLOT(CtrlHandleEvent),
     VTABLE_SLOT(sub_800B8A4),
     VTABLE_SLOT(SetCtrlMode),
     VTABLE_SLOT(StartCtrlTargetMotionX),
@@ -770,7 +770,7 @@ const struct vtable_slot gStaticData_087E45CC[13] = {
 const struct vtable_slot gStaticData_087E4634[13] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(sub_8019464),
-    VTABLE_SLOT(nullsub_13),
+    VTABLE_SLOT(CtrlHandleEvent),
     VTABLE_SLOT(sub_800B8A4),
     VTABLE_SLOT(SetCtrlMode),
     VTABLE_SLOT(StartCtrlTargetMotionX),
@@ -787,7 +787,7 @@ const struct vtable_slot gStaticData_087E4634[13] = {
 const struct vtable_slot gStaticData_087E469C[13] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(sub_8019324),
-    VTABLE_SLOT(nullsub_13),
+    VTABLE_SLOT(CtrlHandleEvent),
     VTABLE_SLOT(sub_800B8A4),
     VTABLE_SLOT(SetCtrlMode),
     VTABLE_SLOT(StartCtrlTargetMotionX),
@@ -804,7 +804,7 @@ const struct vtable_slot gStaticData_087E469C[13] = {
 const struct vtable_slot gStaticData_087E4704[13] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(sub_8018E4C),
-    VTABLE_SLOT(nullsub_13),
+    VTABLE_SLOT(CtrlHandleEvent),
     VTABLE_SLOT(sub_800B8A4),
     VTABLE_SLOT(SetCtrlMode),
     VTABLE_SLOT(StartCtrlTargetMotionX),
@@ -821,7 +821,7 @@ const struct vtable_slot gStaticData_087E4704[13] = {
 const struct vtable_slot gStaticData_087E476C[13] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(sub_8019730),
-    VTABLE_SLOT(nullsub_13),
+    VTABLE_SLOT(CtrlHandleEvent),
     VTABLE_SLOT(sub_800B8A4),
     VTABLE_SLOT(SetCtrlMode),
     VTABLE_SLOT(StartCtrlTargetMotionX),
@@ -944,7 +944,7 @@ const struct vtable_slot gPlatformVtable[15] = {
 const struct vtable_slot gPlatformMoverVtable[13] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(UpdatePlatformMover),
-    VTABLE_SLOT(nullsub_13),
+    VTABLE_SLOT(CtrlHandleEvent),
     VTABLE_SLOT(sub_800B8A4),
     VTABLE_SLOT(SetCtrlMode),
     VTABLE_SLOT(StartCtrlTargetMotionX),
@@ -1548,7 +1548,7 @@ const struct vtable_slot gHovercraftCannonFlashVtable[7] = {
     VTABLE_SLOT(DestroyHovercraftCannonFlash),
     VTABLE_SLOT(UpdateHovercraftCannonFlash),
     VTABLE_SLOT(DrawActor),
-    VTABLE_SLOT(nullsub_38),
+    VTABLE_SLOT(DamageHovercraftCannonFlash),
     VTABLE_SLOT(IsHovercraftCannonFlashUnshootable),
     VTABLE_SLOT(GetActorHp),
 };

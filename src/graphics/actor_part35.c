@@ -7,13 +7,13 @@
 extern s32 GetHovercraftX(void);
 extern s32 GetHovercraftY(void);
 extern s32 GetHovercraftZ(void);
-extern struct spawn_timing_table *sub_80338C4(void);
+extern struct spawn_timing_table *GetHovercraftAttack(void);
 extern s32 GetHovercraftState(void);
 extern s32 RandRange(s32 arg0);
 extern void CreateJetpackActor(s32 kind, s32 x, s32 y, s32 z, s32 arg4);
 extern struct actor_self *gActorList;
 
-/* The singleton's per-spawner timing table (`sub_80338C4`): after each
+/* The singleton's per-spawner timing table (`GetHovercraftAttack`): after each
  * spawn a spawner waits `delay` frames, except every `burst`-th spawn,
  * which resets its count and waits `burstDelay` instead. One record per
  * spawner kind (actor_part67.c reads [0], actor_part29.c [1],
@@ -49,7 +49,7 @@ struct spawner {
  * distance to the player the same way; in range, it picks one of three
  * spawn "kinds" (5/6/8, via `RandRange(3)`) and calls `CreateJetpackActor`
  * at `self`'s position, then cycles `count` against a threshold
- * from `sub_80338C4`'s table. Once `base.depth` passes `0x4B00` and the
+ * from `GetHovercraftAttack`'s table. Once `base.depth` passes `0x4B00` and the
  * singleton's own "kind" (`GetHovercraftState`) is 3, resets `self` back to
  * its idle animation state.
  *
@@ -97,13 +97,13 @@ void HovercraftLauncherStateLaunch(struct spawner *self)
 
                 count = self->count + 1;
                 self->count = count;
-                table = sub_80338C4();
+                table = GetHovercraftAttack();
                 if (count == table->timing[2].burst) {
                     self->count = 0;
-                    table = sub_80338C4();
+                    table = GetHovercraftAttack();
                     next = table->timing[2].burstDelay;
                 } else {
-                    table = sub_80338C4();
+                    table = GetHovercraftAttack();
                     next = table->timing[2].delay;
                 }
                 goto store;

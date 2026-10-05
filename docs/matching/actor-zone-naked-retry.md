@@ -93,18 +93,18 @@ pseudo number.
 
 ## `sub_8030E08`: store count per branch
 
-The ROM gives the `&gUnknown_03001558` copy r6 and the
-`&gUnknown_0300155C` copy r4. Both copies are made by the same pass
+The ROM gives the `&gAirshipVelX` copy r6 and the
+`&gAirshipVelY` copy r4. Both copies are made by the same pass
 right before the first branch, and with equal refs (10 each) the 1558
 copy's shorter live range gave it priority and r4. Instruction-level
 changes can't help there; the reference counts before cross-jumping
 can:
 
 - The X step stores its `vx -+ 3` result once, through a temporary
-  (`t = vx - 3; ... else t = vx + 3; gUnknown_03001558 = t;`). That
+  (`t = vx - 3; ... else t = vx + 3; gAirshipVelX = t;`). That
   leaves the 1558 copy with 9 refs.
-- The Y step stores in each branch (`gUnknown_0300155C = v - 2;` and
-  `v = gUnknown_0300155C; gUnknown_0300155C = v + 2;`). Cross-jumping
+- The Y step stores in each branch (`gAirshipVelY = v - 2;` and
+  `v = gAirshipVelY; gAirshipVelY = v + 2;`). Cross-jumping
   merges the two stores later, but global-alloc sees 11 refs.
 
 That makes the 155C copy the higher-priority pseudo. Making `v` a

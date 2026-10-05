@@ -1780,9 +1780,9 @@ would otherwise insert for the implicit truncation check - fixed by
 routing the asm's output through an `s32` temporary instead of a `u8`
 one).
 
-**`nullsub_11`/`sub_80070D4`/`GetEntityBounds`/`SetEntitySize`/`sub_800710C`/
+**`DrawEntity`/`sub_80070D4`/`GetEntityBounds`/`SetEntitySize`/`sub_800710C`/
 `sub_8007110`**: six small functions, all matched on the first or
-second attempt. `nullsub_11` needed the usual empty-stub alignment
+second attempt. `DrawEntity` needed the usual empty-stub alignment
 fix. `sub_80070D4` tail-calls `_call_via_r1` through the same
 field+0x18 table convention but discards its return value - the ROM's
 epilogue pops the saved LR into r0 (clobbering the call's return
@@ -4667,7 +4667,7 @@ respectively), and a handful of small `part`/table accessors:
   the `self->field4->field4` chain expression repeated inline for each
   of the three `FixedMul` calls (not hoisted into a local) - the
   ROM genuinely reloads it three times.
-- **`nullsub_13`**: empty stub.
+- **`CtrlHandleEvent`**: empty stub.
 - **`SetCtrlTargetAnim`**: sets `part+0x2d` (frame index) to `newVal`, but
   only if it actually changed; on a real change, resets the sub-
   counter/frame-counter/"done" flag exactly like the already-matched

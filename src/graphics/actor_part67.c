@@ -35,7 +35,7 @@ struct actor_orbiter {
     s32 lap;            // 0x6C
 };
 
-/* The singleton table sub_80338C4 returns. */
+/* The singleton table GetHovercraftAttack returns. */
 struct orbit_table {
     s32 unk_00;
     s32 period;         // 0x04 - orbitTimer reload within a lap cycle
@@ -100,7 +100,7 @@ extern s32 GetHovercraftX(void);
 extern s32 GetHovercraftY(void);
 extern s32 GetHovercraftZ(void);
 extern void SpawnHovercraftFireball(s32 x, s32 y);
-extern struct orbit_table *sub_80338C4(void);
+extern struct orbit_table *GetHovercraftAttack(void);
 
 /* Per-frame position sync (`+0x1c`/`+0x20`/`+0x24` from the singleton's
  * position plus `self`'s own `+0x5c`/`+0x60`/`+0x64` offsets), calling
@@ -136,11 +136,11 @@ void UpdateHovercraftSideGun(void *selfArg)
             lap = self->lap + 1;
             self->lap = lap;
 
-            if (lap == sub_80338C4()->laps) {
+            if (lap == GetHovercraftAttack()->laps) {
                 self->lap = origCounter;
-                result = sub_80338C4()->cyclePeriod;
+                result = GetHovercraftAttack()->cyclePeriod;
             } else {
-                result = sub_80338C4()->period;
+                result = GetHovercraftAttack()->period;
             }
         } else {
             result = origCounter - 1;
@@ -177,11 +177,11 @@ void sub_80341F8(void *selfArg)
             lap = self->lap + 1;
             self->lap = lap;
 
-            if (lap == sub_80338C4()->laps) {
+            if (lap == GetHovercraftAttack()->laps) {
                 self->lap = origCounter;
-                result = sub_80338C4()->cyclePeriod;
+                result = GetHovercraftAttack()->cyclePeriod;
             } else {
-                result = sub_80338C4()->period;
+                result = GetHovercraftAttack()->period;
             }
         } else {
             result = origCounter - 1;
@@ -200,8 +200,9 @@ u8 IsHovercraftSideGunUnshootable(void *selfArg)
     return self->dead;
 }
 
-/* No-op stub. */
-void nullsub_38(void)
+/* gHovercraftCannonFlashVtable slot 4, the damage handler: empty (the
+ * cannon's muzzle flash can't be hurt). */
+void DamageHovercraftCannonFlash(void)
 {
 }
 

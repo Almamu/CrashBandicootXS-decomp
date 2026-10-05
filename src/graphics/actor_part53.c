@@ -3,18 +3,18 @@
 /* Same palette-cycle cluster as actor_part41.c/actor_part43.c - see
  * docs/matching/issue-50-actor-2a69c.md. */
 
-extern u8 gUnknown_03001464;
-extern s32 gUnknown_03001470;
-extern s32 gUnknown_03001474;
-extern s32 gUnknown_03001478;
-extern u8 gStaticData_08175760[];
+extern u8 gActorPaletteCycleEnabled;
+extern s32 gActorPaletteCycleFrame;
+extern s32 gActorPaletteCycleTarget;
+extern s32 gActorPaletteCycleTimer;
+extern u8 gActorPaletteCycleFrames[];
 extern s32 QueueVramDmaTransfer(void *arg0, void *arg1, u16 arg2, u16 arg3);
 
-/* Per-frame palette-cycle DMA: while `gUnknown_03001464` is set, DMAs one
- * `0x1c0`-byte palette-animation "frame" (`gStaticData_08175760 +
+/* Per-frame palette-cycle DMA: while `gActorPaletteCycleEnabled` is set, DMAs one
+ * `0x1c0`-byte palette-animation "frame" (`gActorPaletteCycleFrames +
  * cursor*0x1c0`) to BG palette RAM. Every `0x24` calls (the
- * `gUnknown_03001478` counter), advances the cursor (`gUnknown_03001470`)
- * toward `gUnknown_03001474`: increments while still below the bound,
+ * `gActorPaletteCycleTimer` counter), advances the cursor (`gActorPaletteCycleFrame`)
+ * toward `gActorPaletteCycleTarget`: increments while still below the bound,
  * decrements once past it, and holds steady exactly at the bound -
  * `SaveActorPaletteCycle`/`SetActorPaletteCycle` flip which end is "the bound" to make this
  * ping-pong.
@@ -48,16 +48,16 @@ extern s32 QueueVramDmaTransfer(void *arg0, void *arg1, u16 arg2, u16 arg3);
 void UpdateActorPaletteCycle(void)
 {
     asm volatile(
-        "ldr r0, =gUnknown_03001464\n"
+        "ldr r0, =gActorPaletteCycleEnabled\n"
         "ldrb r0, [r0]\n"
         "cmp r0, #0\n"
         "beq .Lsub802AB58_end\n"
-        "ldr r4, =gUnknown_03001470\n"
+        "ldr r4, =gActorPaletteCycleFrame\n"
         "ldr r1, [r4]\n"
         "lsl r0, r1, #3\n"
         "sub r0, r0, r1\n"
         "lsl r0, r0, #6\n"
-        "ldr r1, =gStaticData_08175760\n"
+        "ldr r1, =gActorPaletteCycleFrames\n"
         "add r0, r0, r1\n"
         "mov r1, #0xa0\n"
         "lsl r1, r1, #19\n"
@@ -65,7 +65,7 @@ void UpdateActorPaletteCycle(void)
         "lsl r2, r2, #1\n"
         "mov r3, #0x10\n"
         "bl QueueVramDmaTransfer\n"
-        "ldr r1, =gUnknown_03001478\n"
+        "ldr r1, =gActorPaletteCycleTimer\n"
         "ldr r0, [r1]\n"
         "add r0, r0, #1\n"
         "str r0, [r1]\n"
@@ -74,7 +74,7 @@ void UpdateActorPaletteCycle(void)
         "mov r0, #0\n"
         "str r0, [r1]\n"
         "add r1, r4, #0\n"
-        "ldr r0, =gUnknown_03001474\n"
+        "ldr r0, =gActorPaletteCycleTarget\n"
         "ldr r3, [r0]\n"
         "ldr r2, [r1]\n"
         "sub r0, r3, r2\n"
