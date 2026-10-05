@@ -16,10 +16,10 @@ struct entry_set
 };
 
 /* {a, b} vec3-table index pairs (`struct vec_pair`, gobj_1a794.h):
- * actor_part_1a794.c indexes gStaticData_0816C3B8 with entries 0-3;
- * entries 4-7 are gStaticData_0816C458's, indexing gStaticData_0816C460
+ * actor_part_1a794.c indexes gDingodileMotionRecords with entries 0-3;
+ * entries 4-7 are gPlatformMoverMotionSet's, indexing gPlatformMoverMotionRecords
  * (actor_part_1b208.c). */
-const u32 gStaticData_0816C418[8][2] = {
+const u32 gDingodileMotionEntries[8][2] = {
     { 0, 0 },
     { 1, 0 },
     { 2, 0 },
@@ -32,6 +32,6 @@ const u32 gStaticData_0816C418[8][2] = {
 
 /* The entry set DestroyPlatformMover (actor_part_1b208.c) stores in its
  * object's `set`. */
-const struct entry_set gStaticData_0816C458 = {
-    &gStaticData_0816C418[4], 0x100,
+const struct entry_set gPlatformMoverMotionSet = {
+    &gDingodileMotionEntries[4], 0x100,
 };

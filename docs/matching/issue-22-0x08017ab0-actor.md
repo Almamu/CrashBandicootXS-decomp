@@ -1,4 +1,4 @@
-# Issue #22: 0x08017AB0-0x08017ECC (`UpdateChaser`)
+# Issue #22: 0x08017AB0-0x08017ECC (`UpdateMegaMix`)
 
 Follow-up to `docs/matching/issue-22-0x08017a44-actor.md`, which left
 this one function - the whole gap between `actor_part27.c` (ends
@@ -11,8 +11,8 @@ semantic account.
 
 ## Callers
 
-No caller in already-decompiled `src/` calls `UpdateChaser` directly
-(`grep -rn "UpdateChaser("` over `src/` is empty) - it's presumably
+No caller in already-decompiled `src/` calls `UpdateMegaMix` directly
+(`grep -rn "UpdateMegaMix("` over `src/` is empty) - it's presumably
 invoked through a function-pointer table still raw/unexamined
 elsewhere, the same "no free caller-side context" situation as most of
 this large action-table family.
@@ -31,7 +31,7 @@ already names - its `+0x104` byte is a "player busy" gate, and its own
 `+0x18`-table feeds two more trampoline calls.
 
 **Prelude (every state)**: if `self+0x1c` (a signed word - timestamp or
-sentinel) equals `-1`, fires `SetChaserMotionXFromSet(self, other, 1)` and resets it
+sentinel) equals `-1`, fires `SetMegaMixMotionXFromSet(self, other, 1)` and resets it
 to `0`.
 
 Dispatches on `self+8` (0/1/2; anything else returns immediately):
@@ -59,8 +59,8 @@ Dispatches on `self+8` (0/1/2; anything else returns immediately):
   3. **Timeout re-fire**: if `self+0x1c != 0` and
      `gRoomFrameCount - self+0x1c > 0x3c` ticks, resets `self+0x1c` to
      `0`, then - keyed on `other+0x28` bit 4 and `self+0x20` - either
-     does nothing (bit 4 set), calls `SetChaserMotionXFromSet(self, other, 2)`
-     (bit 4 clear, `self+0x20==0`), or `SetChaserMotionXFromSet(self, other, 1)`
+     does nothing (bit 4 set), calls `SetMegaMixMotionXFromSet(self, other, 2)`
+     (bit 4 clear, `self+0x20==0`), or `SetMegaMixMotionXFromSet(self, other, 1)`
      (bit 4 clear, `self+0x20!=0`).
   4. **Screen-relative flag reset (entry 3)**: two independent gates,
      each comparing the player's X position against `other`'s X
@@ -70,7 +70,7 @@ Dispatches on `self+8` (0/1/2; anything else returns immediately):
      second) and firing the `0x58`-indexed trampoline (modes 3, then 1).
   5. **In-bounds check**: `abs(player.x - other.x) <= 0x27FF` and
      `abs(player.y - other.y) <= 0x31FF` (Q8 fixed point) fires
-     `SetChaserMotionXFromSet(self, other, 0)`, the `0x20`-indexed trampoline
+     `SetMegaMixMotionXFromSet(self, other, 0)`, the `0x20`-indexed trampoline
      (mode 2), and the `0x50`-indexed one (mode 1), then returns.
   6. **Out of bounds - "spawn + scan" cluster**: builds an AABB via
      `GetSpriteHitbox(&box, other)`, unpacks it into
@@ -94,7 +94,7 @@ straight past it) and the player's `+0x104` busy bit:
 
 - `other+0x38==0`: return (state-2-only path).
 - Busy bit clear, `other+0x28` bit 4 clear: fires the `0x58`-indexed
-  trampoline (mode 3), *or* - bit 4 set - `SetChaserMotionXFromSet(self, other, 1)`
+  trampoline (mode 3), *or* - bit 4 set - `SetMegaMixMotionXFromSet(self, other, 1)`
   instead; either way then the `0x50`-indexed trampoline (mode 0) and
   the `0x20`-indexed one (mode 1). (The "activate" shape.)
 - Busy bit set (state-2-only path): the `0x50`-indexed trampoline

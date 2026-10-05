@@ -62,7 +62,7 @@ are removed from the tree.
   still loads first. Also removed: the barriers in `SpawnCortexBossGem`,
   `UpdateCortexTarget`, `SetCortexTargetState`, `FireCortexShot`, `SpawnCortexCannon` and
   `StartTinyHop`.
-- **Pins**: `SetTag`'s r0 pin, and those in `sub_80188FC`, `StartTinyHop`
+- **Pins**: `SetTag`'s r0 pin, and those in `UpdateUnusedOneShotAnimCtrl`, `StartTinyHop`
   (`ip`), `SpawnCortexCannon`, `SetCortexTargetState`, `UpdateCortexBossGem`, `UpdateCortexShot` (r8)
   and `UpdateCortexTarget`'s `steps` (r8) (#23). In #26: `UpdateCameraLead`,
   `SpawnLaunchPad`, `UpdateLevelSelect`, `DrawLevelSelectRecord` and `DrawLevelSelect`'s

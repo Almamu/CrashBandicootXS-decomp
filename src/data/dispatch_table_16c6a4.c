@@ -16,7 +16,7 @@ extern void SpawnYellowGem();
 extern void SpawnLizard();
 extern void SpawnVulture();
 extern void SpawnVenusFlytrap();
-extern void sub_801F2BC();
+extern void SpawnPatrollingJungleEnemy();
 extern void SpawnBlowgunTribesman();
 extern void SpawnPenguin();
 extern void SpawnPolarBear();
@@ -27,13 +27,13 @@ extern void SpawnElectricEel();
 extern void SpawnSquid();
 extern void SpawnJellyfish();
 extern void SpawnLaserBarrier();
-extern void sub_8020138();
-extern void sub_802026C();
+extern void SpawnStationarySpaceEnemy();
+extern void SpawnPatrollingSpaceEnemy();
 extern void SpawnSaucerLabAssistant();
 extern void SpawnPistonCrusher();
 extern void SpawnFlamethrowerLabAssistant();
-extern void sub_8020788();
-extern void sub_80208C4();
+extern void SpawnHomingSewerEnemy();
+extern void SpawnPatrollingSewerEnemy();
 extern void SpawnRat();
 extern void SpawnFrog();
 extern void SpawnSeaMine();
@@ -42,15 +42,15 @@ extern void SpawnRedGemPlatform();
 extern void SpawnYellowGemPlatform();
 extern void SpawnGreenGemPlatform();
 extern void SpawnBlueGemPlatform();
-extern void sub_8021280();
+extern void SpawnRoomExit();
 extern void SpawnDingodile();
 extern void SpawnTiny();
 extern void SpawnCortexBoss();
-extern void sub_8021668();
+extern void SpawnMegaMix();
 extern void SpawnSeaweed();
 extern void SpawnFlame();
 extern void SpawnRockPlatform();
-extern void sub_80218E8();
+extern void SpawnFlipPlatform();
 extern void SpawnBonusPlatform();
 extern void SpawnMediumPlatform();
 extern void SpawnSmallPlatform();
@@ -84,9 +84,9 @@ extern void SpawnStopwatch();
 extern void SpawnBlueGem();
 extern void SpawnCrateGemMarker();
 extern void SpawnWumpa();
-extern void sub_802218C();
+extern void SpawnHoverStartMarker();
 extern void sub_80221A4();
-extern void sub_80221BC();
+extern void SpawnUnderwaterStartMarker();
 extern void sub_80221D4();
 
 /* The unified 92-slot function-pointer dispatch array (docs/rom_map.md
@@ -98,9 +98,9 @@ extern void sub_80221D4();
 void (*const gEntitySpawnFuncs[92])() = {
     SpawnStartMarker,
     sub_80221D4,
-    sub_80221BC,
+    SpawnUnderwaterStartMarker,
     sub_80221A4,
-    sub_802218C,
+    SpawnHoverStartMarker,
     nullsub_22,
     SpawnWumpa,
     SpawnCrystal,
@@ -139,7 +139,7 @@ void (*const gEntitySpawnFuncs[92])() = {
     SpawnLizard,
     SpawnVulture,
     SpawnVenusFlytrap,
-    sub_801F2BC,
+    SpawnPatrollingJungleEnemy,
     SpawnBlowgunTribesman,
     SpawnPenguin,
     SpawnSealSpawner,
@@ -152,8 +152,8 @@ void (*const gEntitySpawnFuncs[92])() = {
     SpawnJellyfish,
     nullsub_21,
     SpawnLaserBarrier,
-    sub_8020138,
-    sub_802026C,
+    SpawnStationarySpaceEnemy,
+    SpawnPatrollingSpaceEnemy,
     SpawnSaucerLabAssistant,
     SpawnPistonCrusher,
     nullsub_21,
@@ -161,15 +161,15 @@ void (*const gEntitySpawnFuncs[92])() = {
     nullsub_21,
     SpawnSaucerLabAssistant,
     SpawnFlamethrowerLabAssistant,
-    sub_8020788,
-    sub_80208C4,
+    SpawnHomingSewerEnemy,
+    SpawnPatrollingSewerEnemy,
     SpawnRat,
     SpawnFrog,
     SpawnDingodile,
     nullsub_21,
     SpawnTiny,
     SpawnCortexBoss,
-    sub_8021668,
+    SpawnMegaMix,
     SpawnTornadoSpinPower,
     SpawnSeaMine,
     SpawnSeaMine,
@@ -181,9 +181,9 @@ void (*const gEntitySpawnFuncs[92])() = {
     SpawnYellowGemPlatform,
     SpawnGreenGemPlatform,
     SpawnBlueGemPlatform,
-    sub_8021280,
+    SpawnRoomExit,
     SpawnBonusPlatform,
-    sub_80218E8,
+    SpawnFlipPlatform,
     SpawnRockPlatform,
     SpawnCrateGemMarker,
     SpawnFlame,

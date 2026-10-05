@@ -42,7 +42,7 @@ function at the very end:
 - **`nullsub_22`/`nullsub_23`**: empty stubs, the same "shared no-op
   fallback" convention already documented for the 42-slot action table
   and this same 92-slot array.
-- **`sub_802218C`/`sub_80221BC`**: plain tail-call trampolines to
+- **`SpawnHoverStartMarker`/`SpawnUnderwaterStartMarker`**: plain tail-call trampolines to
   `SpawnStartMarker` - still raw, at the top of this same `asm/*.s` file,
   out of this chunk's scope.
 - **`sub_80221A4`/`sub_80221D4`**: write a Q8.8 `{x, y}` position

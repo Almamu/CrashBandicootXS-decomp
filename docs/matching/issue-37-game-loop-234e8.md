@@ -296,7 +296,7 @@ compiler silently dropped it from both the push and pop list
 `push {r4, r5, r6, lr}` / `pop {r4, r5, r6}`, r7 missing from both).
 This is the same "gcc-2.9 r7-pin bug" already documented project-wide
 (`src/graphics/oam_count.c`'s `DrawPowerDialog`,
-`src/graphics/graphics_loading_21280.c`'s `sub_8021280`, among
+`src/graphics/graphics_loading_21280.c`'s `SpawnRoomExit`, among
 others) - an explicit `register T x asm("r7")` pin doesn't reliably
 survive here either. The fix was the same project-wide escape hatch
 those functions already use: mark the function `NAKED` and write the

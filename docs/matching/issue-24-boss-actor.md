@@ -91,10 +91,10 @@ Thumb pointers:
 
 | table | ctor | dtor | other methods |
 |---|---|---|---|
-| `gCortexTargetVtable` | `CreateCortexTargetCtrl` | `DestroyCortexTargetCtrl` | `SetCortexTargetDest` (position/delta setter, `gStaticData_0816C358` byte lookup) |
+| `gCortexTargetVtable` | `CreateCortexTargetCtrl` | `DestroyCortexTargetCtrl` | `SetCortexTargetDest` (position/delta setter, `gCortexTargetHopSteps` byte lookup) |
 | `gCortexCannonVtable` | `CreateCortexCannonCtrl` | `DestroyCortexCannonCtrl` | `UpdateCortexCannon` (update), `SetCortexBossState` (set-state wrapper; state 3 also pokes its part's controller and `SpawnBodySlamPower`) |
 | `gCortexBossVtable` | `CreateCortexBoss` | `DestroyCortexBoss` | - |
-| `gDingodileSharkVtable` | `CreateDingodileSharkCtrl` | `DestroyDingodileSharkCtrl` | `UpdateDingodileShark` (update: sets the part's velocity from `gStaticData_0816C3B8`, removes it past either level edge) |
+| `gDingodileSharkVtable` | `CreateDingodileSharkCtrl` | `DestroyDingodileSharkCtrl` | `UpdateDingodileShark` (update: sets the part's velocity from `gDingodileMotionRecords`, removes it past either level edge) |
 | `gDingodileProjectileVtable` | `CreateDingodileProjectileCtrl` | `DestroyDingodileProjectileCtrl` | `UpdateDingodileProjectile` (update) |
 | `gDingodileShieldVtable` | `CreateDingodileShieldCtrl` (issue #25) | `DestroyDingodileShieldCtrl` | `UpdateDingodileShield` (update) |
 | `gDingodileVtable` | (issue #25 range) | `DestroyDingodile` (issue #25) | `UpdateDingodile` (update) |
@@ -107,7 +107,7 @@ The `087E4974` object (`struct dingodile_boss`) is a boss-like state machine.
 `UpdateDingodile` keeps a companion part 6 px ahead of the boss, counts hits
 (overlap of the player's box with the boss's hurt box while the player's
 `kind` is 0x13), walks the boss along the level using the approach
-tables `gStaticData_0816C368/78` (facing) and `0816C390/A0`, turns it
+tables `gDingodileStopXLeft/78` (facing) and `0816C390/A0`, turns it
 round at either level edge, spawns projectiles (`SpawnDingodileShieldOrRocket` mode 1)
 on animation frame 0x14, and finally, once the part falls below the
 level, signals `RequestRoomExit` (the "entity ready" barrier in

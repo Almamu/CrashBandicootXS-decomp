@@ -2,13 +2,13 @@
 #include "vtable.h"
 
 /* GitHub issue #22, ROM 0x08017ECC-0x08017FE8 - non-adjacent to
- * actor_part20.c since `UpdateChaser` (NAKED-parked, see
+ * actor_part20.c since `UpdateMegaMix` (NAKED-parked, see
  * actor_part27a.c) sits between them. `self` uses the same `self+4` double-
  * pointer-chain record lookup as `StartCtrlTargetMotionYFromSet`/`StartCtrlTargetMotionXFromSet`
  * (actor_part17.c): `self+4` is a manager pointer whose own first
  * word is an array of 8-byte records, indexed here by `index`. Each
  * record's word (offset 0 or 4, depending on the function) is a type
- * id into the 12-byte-stride `gStaticData_0816C2D8` table - the same
+ * id into the 12-byte-stride `gMegaMixMotionRecords` table - the same
  * base+offset+fn-pointer-table family already named in
  * actor_part18.c, just a per-vector-component variant instead of the
  * per-action variant. `part+0x28` bit 4/bit 5 mirror flags negate the
@@ -16,25 +16,25 @@
  * `SetCtrlTargetMotionY`/`StartCtrlTargetMotionY`. `self+0xc`'s table convention and
  * `self+0x1c`/`self+0x20` also match actor_part20.c's group.
  *
- * `SetChaserMotionYFromSet`/`SetChaserMotionXFromSet` pin `part`/`tableEntry` to r3/r2 and read
+ * `SetMegaMixMotionYFromSet`/`SetMegaMixMotionXFromSet` pin `part`/`tableEntry` to r3/r2 and read
  * the table entry's Z component before Y - without this, this compiler
  * spills `part` to a callee-saved register across the branch (an
  * unneeded push/pop the true-leaf ROM function doesn't have), the same
  * class of gap documented for `SetCtrlTargetMotionY`/`StartCtrlTargetMotionY`
  * (actor_part16.c). */
 
-extern u8 gStaticData_0816C2D8[];
-extern u8 gStaticData_0816C2D0[];
-extern u8 gChaserCtrlVtable[];
+extern u8 gMegaMixMotionRecords[];
+extern u8 gMegaMixMotionSet[];
+extern u8 gMegaMixCtrlVtable[];
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern void StartCtrlTargetMotionY(void *unused, void *selfArg, s32 *vec);
 extern void StartCtrlTargetMotionX(void *selfArg, void *partArg, s32 *vec);
-extern void sub_8017A78(void *selfArg, s32 flags);
-extern void *sub_8017A8C(void *selfArg);
+extern void DestroyBossCtrl(void *selfArg, s32 flags);
+extern void *CreateBossCtrl(void *selfArg);
 
 /* Reads `rec+4` as the type id (bit 5 mirror test), writes into
  * `part+0x54`/`+0x58`/`+0x5c`. */
-void SetChaserMotionYFromSet(void *selfArg, void *partArg, s32 index)
+void SetMegaMixMotionYFromSet(void *selfArg, void *partArg, s32 index)
 {
     u8 *self = selfArg;
     register u8 *part asm("r3") = partArg;
@@ -51,7 +51,7 @@ void SetChaserMotionYFromSet(void *selfArg, void *partArg, s32 index)
     rec = (u8 *)recOffset;
     type = *(s32 *)(rec + 4);
     typeOffset = type * 12;
-    base = gStaticData_0816C2D8;
+    base = gMegaMixMotionRecords;
     asm("add %0, %1, %2" : "=r" (tableEntry) : "r" (typeOffset), "r" (base));
 
     if ((s32)(part[0x28] << 26) < 0) {
@@ -73,9 +73,9 @@ void SetChaserMotionYFromSet(void *selfArg, void *partArg, s32 index)
     }
 }
 
-/* Same shape as `SetChaserMotionYFromSet`, reading `rec+0` as the type id (bit 4
+/* Same shape as `SetMegaMixMotionYFromSet`, reading `rec+0` as the type id (bit 4
  * mirror test) and writing into `part+0x48`/`+0x4c`/`+0x50` instead. */
-void SetChaserMotionXFromSet(void *selfArg, void *partArg, s32 index)
+void SetMegaMixMotionXFromSet(void *selfArg, void *partArg, s32 index)
 {
     u8 *self = selfArg;
     register u8 *part asm("r3") = partArg;
@@ -92,7 +92,7 @@ void SetChaserMotionXFromSet(void *selfArg, void *partArg, s32 index)
     rec = (u8 *)recOffset;
     type = *(s32 *)(rec + 0);
     typeOffset = type * 12;
-    base = gStaticData_0816C2D8;
+    base = gMegaMixMotionRecords;
     asm("add %0, %1, %2" : "=r" (tableEntry) : "r" (typeOffset), "r" (base));
 
     if ((s32)(part[0x28] << 27) < 0) {
@@ -114,10 +114,10 @@ void SetChaserMotionXFromSet(void *selfArg, void *partArg, s32 index)
     }
 }
 
-/* Resolves the same `rec+4`-typed `gStaticData_0816C2D8` table entry
- * as `SetChaserMotionYFromSet`, then tail-calls `StartCtrlTargetMotionY` (actor_part16.c,
+/* Resolves the same `rec+4`-typed `gMegaMixMotionRecords` table entry
+ * as `SetMegaMixMotionYFromSet`, then tail-calls `StartCtrlTargetMotionY` (actor_part16.c,
  * still parked) to do the mirror-gated copy itself. */
-void StartChaserMotionYFromSet(void *selfArg, void *partArg, s32 index)
+void StartMegaMixMotionYFromSet(void *selfArg, void *partArg, s32 index)
 {
     register u8 *arr asm("r3") = *(u8 **)(*(void ***)((u8 *)selfArg + 4));
     register s32 acc asm("r2") = index * 8;
@@ -127,15 +127,15 @@ void StartChaserMotionYFromSet(void *selfArg, void *partArg, s32 index)
     asm("add %0, %0, %1" : "+r" (acc) : "r" (arr));
     type = *(s32 *)((u8 *)acc + 4);
     acc = type * 12;
-    base = gStaticData_0816C2D8;
+    base = gMegaMixMotionRecords;
     asm("add %0, %0, %1" : "+r" (acc) : "r" (base));
 
     StartCtrlTargetMotionY(selfArg, partArg, (s32 *)acc);
 }
 
-/* Resolves the `rec+0`-typed table entry like `SetChaserMotionXFromSet`, then
+/* Resolves the `rec+0`-typed table entry like `SetMegaMixMotionXFromSet`, then
  * tail-calls `StartCtrlTargetMotionX` (actor_part17.c). */
-void StartChaserMotionXFromSet(void *selfArg, void *partArg, s32 index)
+void StartMegaMixMotionXFromSet(void *selfArg, void *partArg, s32 index)
 {
     register u8 *arr asm("r3") = *(u8 **)(*(void ***)((u8 *)selfArg + 4));
     register s32 acc asm("r2") = index * 8;
@@ -145,7 +145,7 @@ void StartChaserMotionXFromSet(void *selfArg, void *partArg, s32 index)
     asm("add %0, %0, %1" : "+r" (acc) : "r" (arr));
     type = *(s32 *)((u8 *)acc + 0);
     acc = type * 12;
-    base = gStaticData_0816C2D8;
+    base = gMegaMixMotionRecords;
     asm("add %0, %0, %1" : "+r" (acc) : "r" (base));
 
     StartCtrlTargetMotionX(selfArg, partArg, (s32 *)acc);
@@ -154,8 +154,8 @@ void StartChaserMotionXFromSet(void *selfArg, void *partArg, s32 index)
 /* Fires the usual `self+0xc`-table base+offset+fn-pointer trampoline
  * (action `1`) via `_call_via_r2`, clears `self+0x20`'s byte, resets
  * `self+0x1c` to `-1`, and re-points `self+4` at
- * `gStaticData_0816C2D0`. */
-void ResetChaserCtrl(void *selfArg)
+ * `gMegaMixMotionSet`. */
+void ResetMegaMixCtrl(void *selfArg)
 {
     u8 *self = selfArg;
     struct vtable_slot *table = *(struct vtable_slot **)(self + 0xc);
@@ -168,29 +168,29 @@ void ResetChaserCtrl(void *selfArg)
     zero = 0;
     *p = zero;
     *(s32 *)(self + 0x1c) = zero - 1;
-    *(void **)(self + 4) = gStaticData_0816C2D0;
+    *(void **)(self + 4) = gMegaMixMotionSet;
 }
 
-/* Re-points `self+0xc`'s table pointer at `gChaserCtrlVtable`, then
- * tail-calls `sub_8017A78` (which promptly overwrites it again via
- * `DestroyCtrl` - same double-set pattern as `sub_8017A78` itself). */
-void DestroyChaserCtrl(void *selfArg, s32 flags)
+/* Re-points `self+0xc`'s table pointer at `gMegaMixCtrlVtable`, then
+ * tail-calls `DestroyBossCtrl` (which promptly overwrites it again via
+ * `DestroyCtrl` - same double-set pattern as `DestroyBossCtrl` itself). */
+void DestroyMegaMixCtrl(void *selfArg, s32 flags)
 {
     u8 *self = selfArg;
 
-    *(void **)(self + 0xc) = gChaserCtrlVtable;
-    sub_8017A78(self, flags);
+    *(void **)(self + 0xc) = gMegaMixCtrlVtable;
+    DestroyBossCtrl(self, flags);
 }
 
-/* `sub_8017A8C`-style init, but re-pointing the table at
- * `gChaserCtrlVtable` and finishing with `ResetChaserCtrl` instead of
+/* `CreateBossCtrl`-style init, but re-pointing the table at
+ * `gMegaMixCtrlVtable` and finishing with `ResetMegaMixCtrl` instead of
  * zeroing `self+0x10`/`+0x14`/`+0x18` directly. Returns `self`. */
-void *CreateChaserCtrl(void *selfArg)
+void *CreateMegaMixCtrl(void *selfArg)
 {
     u8 *self = selfArg;
 
-    sub_8017A8C(self);
-    *(void **)(self + 0xc) = gChaserCtrlVtable;
-    ResetChaserCtrl(self);
+    CreateBossCtrl(self);
+    *(void **)(self + 0xc) = gMegaMixCtrlVtable;
+    ResetMegaMixCtrl(self);
     return self;
 }
