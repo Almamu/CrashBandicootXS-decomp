@@ -7,7 +7,7 @@ actor_part19i.c`) and right before issue #54's chunk (`MovePolarAkuAku`,
 `src/graphics/actor_part62.c`) - still completely raw.
 `docs/matching/issue-53-actor-c7a8.md`'s "What's left" section had
 already flagged `UpdatePolarElectricFence` onward as "a larger,
-`sub_802DD9C`/`IsTouchingPlayer`/`ShockPolarPlayer`-calling state machine ... not
+`IsTouchingYeti`/`IsTouchingPlayer`/`ShockPolarPlayer`-calling state machine ... not
 attempted this pass".
 
 13 functions total, all on the same `InitActorPart`/`gActorList`-
@@ -25,7 +25,7 @@ trampoline table).
   hazard/proximity state machine: latches `self+0x2c` once `self+0x34`
   (a cached depth) exceeds `0x15FF`. If not already "used" (`self+0xc
   == 0`), snapshots the owning part table's own `+0x14` 12-byte record
-  into `self+0x38` and runs `sub_802DD9C`'s player-overlap test against
+  into `self+0x38` and runs `IsTouchingYeti`'s player-overlap test against
   it, transitioning to "used" (index 1) on a hit; then, regardless,
   re-snapshots one of three static 12-byte `gStaticData_0817A7xx`
   records into `self+0x38` and probes `IsTouchingPlayer` against each in
@@ -42,11 +42,11 @@ trampoline table).
 
   Every one of the three 12-byte record snapshots reuses the same
   `self+0x38` scratch pointer (kept live in `r6`) across an intervening
-  `IsTouchingPlayer`/`sub_802DD9C`/`ShockPolarPlayer` call, with `r5`/`r7` each
+  `IsTouchingPlayer`/`IsTouchingYeti`/`ShockPolarPlayer` call, with `r5`/`r7` each
   also switching roles (old state, then a "confirmed zero" reused for
   every reset block's `self+0x44`/`self+8` clear) mid-function - the
   exact heavy register-reuse family this project has already NAKED-
-  parked for `UpdateYeti`/`sub_802DD9C`
+  parked for `UpdateYeti`/`IsTouchingYeti`
   (`docs/matching/issue-54-actor-d3a8.md`) and `DetonateNearbyPolarNitros`
   (`docs/matching/issue-53-actor-c7a8.md`). Semantics are fully
   understood; transcribed instruction-for-instruction from the ROM
@@ -76,36 +76,36 @@ All in `src/graphics/actor_part126.c`.
 - **`sub_802CE38`** - same `InitActorPart`-based constructor shape as
   `CreatePolarElectricFence`, minus the `self+0x2c` clear, `self+0x50 =
   gStaticData_087E4FD4`.
-- **`sub_802CE5C`** - 3-way `self+0x28` state dispatch, written with
+- **`UpdatePolarLauncher`** - 3-way `self+0x28` state dispatch, written with
   explicit `goto`s to a `case0`/`case1`/`done` label set matching the
   ROM's own three-way `beq`/`beq`/`b` dispatch at the top (an
   `if`/`else if` chain instead compiles to an inverted `bne`/`bne`
   pair, a different byte sequence even though behaviorally identical).
   State 0: on `IsTouchingPlayer`'s fire edge, calls
-  `sub_802C14C(gActorList)`, plays a cue, and transitions to
-  state 1/table-index 1; otherwise, on `sub_802DD9C`'s overlap test,
+  `LaunchPolarPlayer(gActorList)`, plays a cue, and transitions to
+  state 1/table-index 1; otherwise, on `IsTouchingYeti`'s overlap test,
   transitions the same way. State 1: once `self+0x12` fires, dispatches
   the `self+0x50` trampoline (index 3) instead of the usual
   `UpdateActor` fallback. `state` pinned to `r5` and the
-  `IsTouchingPlayer`/`sub_802DD9C`-fired boolean pinned to `r6`, each reused
+  `IsTouchingPlayer`/`IsTouchingYeti`-fired boolean pinned to `r6`, each reused
   directly as the "confirmed zero" for that branch's own `self+0x44`/
   `self+8` stores (matching the ROM's own register reuse) - without
   these pins, both branches' otherwise-identical `PlaySfx`+reset
   sequences get cross-jump-merged by this compiler into one shared
   tail the ROM's own build never has (the ROM duplicates the whole
   sequence twice, once per branch, each with its own register).
-- **`sub_802CF0C`** - same `InitActorPart`-based constructor shape as
-  `sub_802CE38`, `self+0x50 = gStaticData_087E4FF4`.
+- **`CreatePolarLauncher`** - same `InitActorPart`-based constructor shape as
+  `sub_802CE38`, `self+0x50 = gPolarLauncherVtable`.
 - **`UpdatePolarPenguin`** - applies `self`'s own velocity
   (`self+0x54`/`0x58`/`0x5c`) to its position; while idle (`self+0x28 ==
   0`), counts down `self+0x60`, re-deriving a fresh velocity/homing
   target via `AimPolarPenguin` once it expires, then probes
-  `IsTouchingPlayer`+`HurtPolarPlayer` or `sub_802DD9C` - either hit re-arms a
+  `IsTouchingPlayer`+`HurtPolarPlayer` or `IsTouchingYeti` - either hit re-arms a
   fixed outward X velocity (biased by `self+0x1c`'s sign), a random
   negative Y kick, bumps `self+0x5c`, plays a cue, and transitions to
   state 1/table-index 0. `state` (`self+0x28`'s old value) pinned to
   `r6`, the `IsTouchingPlayer` result pinned to `r5`, each reused as the
-  "confirmed zero" the same way as `sub_802CE5C` (and for the same
+  "confirmed zero" the same way as `UpdatePolarLauncher` (and for the same
   cross-jump-merge reason). The Y-kick computation needed
   `-(s32)(u16)RandRange(0x300)` (an explicit 16-bit zero-extend
   before negation) to reproduce the ROM's `lsls #0x10; lsrs #0x10;
@@ -161,15 +161,15 @@ All in `src/graphics/actor_part126.c`.
   to match the ROM's own deferred-dereference order, and `kind` needed
   pinning to `r1` to match the ROM's specific register choice for the
   table-address multiply.
-- **`sub_802D204`** - VRAM-gauge/state-transition driver for a
-  `gUnknown_030014B8`-counted effect: while the current hazard tier
+- **`RefreshPolarAkuAku`** - VRAM-gauge/state-transition driver for a
+  `gPolarAkuAkuInvincibleTimer`-counted effect: while the current hazard tier
   (`gLevelState->0x78`) and the `retrigger` argument are both
   zero, just clears `self+0x2c`; otherwise DMAs one of four
   `gPolarAkuAkuPalette1`-indexed gauge strips and resets `self`'s table
   index/anim, arming `self+0x2c`. Then: tier 3 arms a long
-  `gUnknown_030014B8` countdown and transitions to state 1; tier 0 with
+  `gPolarAkuAkuInvincibleTimer` countdown and transitions to state 1; tier 0 with
   `retrigger` set transitions to state 2/table-index 1 instead; any
-  other combination clears `gUnknown_030014B8` and, if `self+0x28` was
+  other combination clears `gPolarAkuAkuInvincibleTimer` and, if `self+0x28` was
   already non-zero, resets `self` back to state 0/table-index 0 - the
   tier-3 branch and this last "reset" branch converge on one real
   shared tail block (not duplicated C - both fall through to the same
@@ -188,10 +188,10 @@ All in `src/graphics/actor_part126.c`.
   and a two-constant "state store" needing both registers materialized
   before either store) needed matching one at a time against the ROM
   disassembly.
-- **`UpdatePolarAkuAku`** - drives `gUnknown_030014B8`'s countdown, DMAing one
+- **`UpdatePolarAkuAku`** - drives `gPolarAkuAkuInvincibleTimer`'s countdown, DMAing one
   of two gauge strips per frame and, once it expires, resetting the
   hazard tier via `SetMaskLevel(gLevelState, 2)` then
-  `sub_802D204(self, 0)`; independently re-fires `sub_802D204` once
+  `RefreshPolarAkuAku(self, 0)`; independently re-fires `RefreshPolarAkuAku` once
   state 2's own `self+0x12` edge trips; always advances `self`'s own
   anim frame (`UpdateActorDepth`, frame-counter bump, and the usual
   wrap-around `GetAnimFrameBaseOffset` check). The final table-address

@@ -15,7 +15,7 @@
  * argument) and copies several of its fields into
  * `gAirshipFireTimer`/`gAirshipHp`, resets the DMA-refresh/
  * palette-strip counters, recomputes the BG2 zoom scale/offset via
- * `sub_8029B2C`/`__divsi3`/`sub_8029E34`, blits the tracker's
+ * `GetCellAnimDistance`/`__divsi3`/`sub_8029E34`, blits the tracker's
  * current keyframe-table box via `DrawAirshipMap`, sets DISPCNT's bit10,
  * recomputes the BG2 affine matrix (`UpdateAirshipBg2`), and finally queues
  * a palette-strip DMA transfer (`QueueVramDmaTransfer`).
@@ -53,7 +53,7 @@ extern s32 gAirshipVolleyCount;
 extern u8 gAirshipBg2PageFlip;
 extern s32 gAirshipBg2Page;
 extern s32 gAirshipDistance;
-extern s32 sub_8029B2C(void);
+extern s32 GetCellAnimDistance(void);
 extern s32 gAirshipScreenX;
 extern s32 gAirshipScreenY;
 extern void sub_8029E34(s32 arg0);
@@ -97,7 +97,7 @@ void SpawnAirship(s32 kind, s32 x, s32 y, s32 z)
     gAirshipVolleyCount = 0;
     gAirshipBg2PageFlip = 1;
     gAirshipBg2Page = 0;
-    gAirshipDistance = gAirshipZ - (sub_8029B2C() << 8);
+    gAirshipDistance = gAirshipZ - (GetCellAnimDistance() << 8);
     scale = __divsi3(0x1C00000, gAirshipDistance);
     gAirshipScreenX = (gAirshipX * scale) >> 12;
     gAirshipScreenY = (scale * gAirshipY) >> 12;

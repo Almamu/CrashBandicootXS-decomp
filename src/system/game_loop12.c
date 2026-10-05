@@ -86,7 +86,7 @@ s32 CountCrateEntities(void *self, void *list)
 asm(".align 2, 0");
 
 /* Sets bit `n` (floor-divided into a 32-bit-word row, same idiom as
- * `sub_8025554` in game_loop5.c) of the bitmap array that starts 8
+ * `SetBitmapBit` in game_loop5.c) of the bitmap array that starts 8
  * bytes into `self` - the first of a family of three overlapping
  * bitmap arrays this ROM region reads/writes at `self+8`/`self+0x208`/
  * `self+0x308` (see `sub_8025968`/`sub_802599C`/`sub_80259D4`/

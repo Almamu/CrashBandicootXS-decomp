@@ -34,7 +34,7 @@
  *
  * Unless `gLevelState+0x8c` is set, or the level's "how many of
  * this entity kind currently exist" counters (`GetDeaths`/
- * `sub_8023128`, both called on `gLevelState`) show the pool
+ * `GetCrateAssistDeaths`, both called on `gLevelState`) show the pool
  * isn't already at/over capacity, `type == 0xb` or `type == 0xf` gets
  * demoted via a placement-record flags byte (the `gEntityFlags ->
  * *P -> {+8 array, +0xc base}` indexed-by-`arg3<<1` convention
@@ -118,7 +118,7 @@ extern void InitSpriteObj(void *self);
 extern void ResetCrate(struct crate *self);
 extern u8 sub_802599C(void *level, s32 id);
 extern s32 GetDeaths(void *self);
-extern s32 sub_8023128(void *self);
+extern s32 GetCrateAssistDeaths(void *self);
 extern s32 GetSpriteAnimPaletteSlot(struct crate *self);
 extern void AddCrateToList(void *list, struct crate *self);
 extern void SolidifyOutlineCrate(struct crate *self);
@@ -160,7 +160,7 @@ void *CreateCrate(u16 id, u16 x, u16 y, u16 slot, u8 type)
     if (type == 9 && id != 0xffff && sub_802599C(gEntityFlags, id))
         type = 0;
     if (*((u8 *)gLevelState + 0x8c) == 0
-        && GetDeaths(gLevelState) >= sub_8023128(gLevelState))
+        && GetDeaths(gLevelState) >= GetCrateAssistDeaths(gLevelState))
     {
         if (type == 0xb)
         {

@@ -1,18 +1,18 @@
 #include "core.h"
 
-/* GitHub issues #9/#10/#41's remaining piece of `sub_8026628`'s own
+/* GitHub issues #9/#10/#41's remaining piece of `ProbeTerrain`'s own
  * "umbrella 5-mode dispatcher" cluster (`game_loop43.c`,
  * docs/matching/issue-9-10-41-0x08026628-game-loop.md): that pass fully
  * derived both of these axis resolvers' semantics from their own raw
- * bytes (see that doc's "`sub_8026AE8`/`sub_8026A18`: which axis each
+ * bytes (see that doc's "`ProbeTerrainX`/`ProbeTerrainY`: which axis each
  * one actually resolves" section). Both are plain C, built with
  * old_agbcc - see docs/matching/game-loop-old-agbcc.md.
  *
  * `s32 fn(struct collider *self, struct probe_pos *pos, s32 span, s32 *outValue,
  * s32 submode)`:
  *
- *   - `sub_8026A18` (the Y-axis/floor-ceiling resolver, `mode ==
- *     4`/`8` in `sub_8026628`): scans `pos->x` over `[x, x+span-1]>>3`
+ *   - `ProbeTerrainY` (the Y-axis/floor-ceiling resolver, `mode ==
+ *     4`/`8` in `ProbeTerrain`): scans `pos->x` over `[x, x+span-1]>>3`
  *     at a fixed `pos->y>>3` tile row, clamping the start index up to
  *     0 if it computes to exactly -1 and the end index down by one if
  *     it lands exactly on `(*(struct tile_cache **)(self+0x20))+0x10`
@@ -24,18 +24,18 @@
  *     range is exhausted. On a hit, accumulates into `*outValue` using
  *     `pos->y & 7`: `submode == 2` adds `(8-(y&7))<<8`, `submode == 0`
  *     subtracts `(y&7)<<8` (any other submode value leaves `*outValue`
- *     untouched on a hit - dead code in practice, since `sub_8026628`
+ *     untouched on a hit - dead code in practice, since `ProbeTerrain`
  *     only ever passes `0`/`2` here).
- *   - `sub_8026AE8` (the X-axis/wall resolver, `mode == 1`/`2`): the
+ *   - `ProbeTerrainX` (the X-axis/wall resolver, `mode == 1`/`2`): the
  *     same shape, scanning `pos->y` over the same span at a fixed
  *     `pos->x>>3` tile column, clamped against `unk014` (the cache's
  *     cached height-in-tiles field) instead of `unk010`. On a hit,
  *     using `pos->x & 7`: `submode == 3` adds `1+(8-(x&7))<<8`
  *     (`(*outValue+1)` is read before the shift-add, giving the extra
- *     `+1` epsilon term `sub_8026628`'s own doc flagged as this
+ *     `+1` epsilon term `ProbeTerrain`'s own doc flagged as this
  *     resolver's asymmetry versus the Y-axis one), `submode == 1`
  *     subtracts `(x&7)<<8` from `(*outValue-1)` (any other submode
- *     value again leaves `*outValue` untouched - `sub_8026628` only
+ *     value again leaves `*outValue` untouched - `ProbeTerrain` only
  *     ever passes `1`/`3` here).
  *   - Both finish with the same tail: if `self+0x2a` (the "flag held
  *     set" byte `docs/matching/issue-9-10-0x0800a884-graphics.md`
@@ -75,7 +75,7 @@ extern void *GetSolidTerrainHeights(struct tile_cache *self, s32 x, s32 y, s32 m
  * pos->y's row until GetSolidTerrainHeights reports a hit. On a hit, moves
  * *outValue to the tile edge (down for submode 2, up for submode 0).
  * Returns whether anything was hit. */
-s32 sub_8026A18(struct collider *self, struct probe_pos *pos, s32 span, s32 *outValue, s32 submode)
+s32 ProbeTerrainY(struct collider *self, struct probe_pos *pos, s32 span, s32 *outValue, s32 submode)
 {
     s32 hit = 0;
     u8 flag = hit;
@@ -116,7 +116,7 @@ s32 sub_8026A18(struct collider *self, struct probe_pos *pos, s32 span, s32 *out
  * pos->x's column until GetSolidTerrainHeights reports a hit. On a hit, moves
  * *outValue to the tile edge (right for submode 3, left for submode 1),
  * one unit past it. Returns whether anything was hit. */
-s32 sub_8026AE8(struct collider *self, struct probe_pos *pos, s32 span, s32 *outValue, s32 submode)
+s32 ProbeTerrainX(struct collider *self, struct probe_pos *pos, s32 span, s32 *outValue, s32 submode)
 {
     s32 hit = 0;
     u8 flag = hit;

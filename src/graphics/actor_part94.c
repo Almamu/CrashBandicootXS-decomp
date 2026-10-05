@@ -34,10 +34,10 @@ COMPILE_TIME_ASSERT(sizeof(struct sub_effect_record) == 0x14);
 #include "actor_self.h"
 
 extern struct sub_effect_record *gActorSpawnTable;
-extern s32 gUnknown_03001420;
-extern s32 gUnknown_03001424;
-extern s32 gUnknown_03001410;
-extern u8 gUnknown_0300141C;
+extern s32 gActorSpawnOffset;
+extern s32 gActorCategoryFrameCount;
+extern s32 gActorCategoryExitStatus;
+extern u8 gActorSpawnsPaused;
 extern u8 gUnknown_03001414;
 extern void *gLevelState;
 extern void *gActorList;
@@ -56,30 +56,30 @@ extern void **gActorDrawList;
 
 extern s32 _call_via_r0(void *arg);
 extern void _call_via_r2(s32 self, s32 arg, s32 fn);
-extern s32 sub_802F4C0(void *arg);
-extern s32 sub_802BD18(void *arg);
+extern s32 IsJetpackPauseLocked(void *arg);
+extern s32 IsPolarPauseLocked(void *arg);
 
 /* Trivial getter - the big loading-loop call counter set by
  * InitActorCategory's own loop tail (still raw). */
-s32 sub_802A4D4(void)
+s32 GetActorCategoryFrameCount(void)
 {
-    return gUnknown_03001424;
+    return gActorCategoryFrameCount;
 }
 
 /* Trivial getter, Q8.8-converted. */
-s32 sub_802A4E0(void)
+s32 GetActorSpawnOffset(void)
 {
-    return gUnknown_03001420 << 8;
+    return gActorSpawnOffset << 8;
 }
 
-void sub_802A4EC(void)
+void ResumeActorSpawns(void)
 {
-    gUnknown_0300141C = 0;
+    gActorSpawnsPaused = 0;
 }
 
-void sub_802A4F8(void)
+void PauseActorSpawns(void)
 {
-    gUnknown_0300141C = 1;
+    gActorSpawnsPaused = 1;
 }
 
 /* Reads the *next* record's field_04 (see struct comment above). Written
@@ -96,7 +96,7 @@ s32 sub_802A504(s32 idx)
     return *(s32 *)(base + off);
 }
 
-/* Reads the *next* record's field_00, offset by gUnknown_03001420,
+/* Reads the *next* record's field_00, offset by gActorSpawnOffset,
  * Q8.8-converted. Same instruction-order shape as sub_802A504. */
 s32 sub_802A51C(s32 idx)
 {
@@ -104,7 +104,7 @@ s32 sub_802A51C(s32 idx)
     s32 off = idx * 0x14;
 
     base = base + 0x14;
-    return (*(s32 *)(base + off) + gUnknown_03001420) << 8;
+    return (*(s32 *)(base + off) + gActorSpawnOffset) << 8;
 }
 
 s32 sub_802A540(s32 idx)
@@ -153,14 +153,14 @@ s32 sub_802A570(s32 idx)
  * result) directly as the EOR destination. Anchored with inline asm
  * for the exact two-instruction ROM sequence, per docs/workflow.md
  * step 3. */
-s32 sub_802A5AC(void)
+s32 CanPauseActorCategory(void)
 {
     s32 result = _call_via_r0(*(void **)((u8 *)gActorCategoryVtable + 0x30));
     asm volatile("movs r1, #1\n\teor r0, r1" : "+r"(result) :: "r1");
     return result;
 }
 
-void sub_802A5C4(void)
+void ReloadActorCategoryGraphics(void)
 {
     _call_via_r0(*(void **)((u8 *)gActorCategoryVtable + 0x18));
     _call_via_r0(*(void **)((u8 *)gActorCategoryVtable + 0x2c));
@@ -245,16 +245,16 @@ void DestroyAllActors(void)
     mem_free((u8 *)gActorDrawList);
 }
 
-void sub_802A650(void)
+void UpdateActorCategoryBg2(void)
 {
     if (*(void **)((u8 *)gActorCategoryVtable + 0x10) != NULL) {
         _call_via_r0(*(void **)((u8 *)gActorCategoryVtable + 0x10));
     }
 }
 
-void sub_802A668(s32 arg0)
+void SetActorCategoryExitStatus(s32 arg0)
 {
-    gUnknown_03001410 = arg0;
+    gActorCategoryExitStatus = arg0;
 }
 
 /* Both forward the callee's result untouched: the callees are `u8`
@@ -262,12 +262,12 @@ void sub_802A668(s32 arg0)
  * returning `int`, so there is no re-narrowing and the epilogue returns
  * through `pop {r1}`. The old NAKED note blamed a TU-wide allocator
  * quirk; it was just the missing return value. */
-s32 sub_802A674(void)
+s32 JetpackIsPauseLocked(void)
 {
-    return sub_802F4C0(gActorList);
+    return IsJetpackPauseLocked(gActorList);
 }
 
-s32 sub_802A688(void)
+s32 PolarIsPauseLocked(void)
 {
-    return sub_802BD18(gActorList);
+    return IsPolarPauseLocked(gActorList);
 }

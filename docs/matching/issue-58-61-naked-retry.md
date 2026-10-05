@@ -13,7 +13,7 @@ register pin.
 The two clusters are twins, and most fixes carried straight across:
 `UpdateAirship` <-> `UpdateHovercraft`, `LoadAirshipGraphics` <-> `LoadHovercraftGraphics`,
 `CreateAirship` <-> `CreateHovercraft`, `SpawnAirship` <-> `SpawnHovercraft`,
-`sub_8030E08` <-> `sub_8032C0C`, `DrawAirshipMap` <-> `DrawHovercraftMap`,
+`SteerAirship` <-> `HovercraftStateCloseIn`, `DrawAirshipMap` <-> `DrawHovercraftMap`,
 `ConvertAirshipTiles` <-> `ConvertHovercraftTiles`.
 
 **Compiler:** every closed function builds the same under agbcc and
@@ -30,8 +30,8 @@ old_agbcc. The files stay on current agbcc, and no file was split.
 | `SpawnAirship` (`actor_part23e.c`) | The zoom divide is an explicit `__divsi3(...)` call, not `/`. The libcall is treated as not clobbering memory, but the ROM reloads `gAirshipDistance` after it. The record lookup is `level * 28 - -(s32)&table[kind]`. Written as `a + b`, `fold` pulls the constant table base out of `&table[kind]`. The ROM adds the level offset to the finished record address. |
 | `UpdateAirship` (`actor_part23f.c`) | The same explicit divide. The re-blit tail reads the tracker through a fresh local, a separate pseudo from the head's `self`. Otherwise it is the usual anim advance written with `anims[animIndex]` indexing. |
 | `LoadAirshipGraphics` (`actor_part26b.c`) | No pins; the first pass abandoned an `r7` pin. The filler-tile clear walks an `s32` address downward, which gives the signed `bge`, with its zero hoisted into a local. The fill and copy are the stock `DmaFill16`/`DmaCopy16` macros. The palette is `vu16`, and the state-5 blackout is a chained assignment `pal[15] = pal[1] = pal[4] = pal[8] = 0`, whose volatile read-backs are the ROM's `ldrh`/`strh` ladder. |
-| `sub_8032C0C` (`actor_part130.c`) | Twin of `sub_8030E08`. The player and camera reads are separate locals (`px = pl->x; cx = cam - 0x1200; px - cx - ...`) so `fold` can't reassociate them. The X velocity updates with `-=` and the Y velocity as `v = g - ...`. The orbit's destination and table pointers are taken before the angle is computed. |
-| `sub_8032EA0` (`actor_part130.c`) | Straight C on the first try, with a shared `SingletonSetKind(kind, idx)` inline. |
+| `HovercraftStateCloseIn` (`actor_part130.c`) | Twin of `SteerAirship`. The player and camera reads are separate locals (`px = pl->x; cx = cam - 0x1200; px - cx - ...`) so `fold` can't reassociate them. The X velocity updates with `-=` and the Y velocity as `v = g - ...`. The orbit's destination and table pointers are taken before the angle is computed. |
+| `HovercraftStateFallBack` (`actor_part130.c`) | Straight C on the first try, with a shared `SingletonSetKind(kind, idx)` inline. |
 | `CreateHovercraft` (`actor_part130.c`) | Twin of `CreateAirship`, same recipe. The "two zero registers" come from the `SingletonSetKind` inline. `gHovercraftLevel` is a level index (`s32`), not an owner pointer. |
 | `SpawnHovercraft` (`actor_part130.c`) | Twin of `SpawnAirship`, same recipe (explicit divide, `- -` record lookup). |
 | `UpdateHovercraft` (`actor_part130.c`) | Twin of `UpdateAirship`. The earlier "4 extra bytes" was the tail reusing `self`. |
@@ -42,23 +42,23 @@ old_agbcc. The files stay on current agbcc, and no file was split.
 | Function | What's left |
 |---|---|
 | `DrawAirshipMap` (`actor_part23b.c`), `DrawHovercraftMap` (`actor_part130.c`) | 11 halfwords off under old_agbcc (35 under agbcc). The row setup and loops are right. The next-row pointer and the hoisted `&bias` copy get `r3`/`ip` swapped. No loop form, index-vs-pointer store, `register` hint or bias-access form moved it. |
-| `sub_8030E08` (`actor_part23c.c`) | 19 halfwords off under both compilers, all of it the `&gAirshipVelX`/`&gAirshipVelY` copies landing in `r4`/`r6` swapped. Every instruction is otherwise right. The fixes that make the rest match are the `px`/`cx` split, a `goto` form for the Y nudge, and a `ClampHi`-style pointer for the first clamp store. |
+| `SteerAirship` (`actor_part23c.c`) | 19 halfwords off under both compilers, all of it the `&gAirshipVelX`/`&gAirshipVelY` copies landing in `r4`/`r6` swapped. Every instruction is otherwise right. The fixes that make the rest match are the `px`/`cx` split, a `goto` form for the Y nudge, and a `ClampHi`-style pointer for the first clamp store. |
 | `IsTouchingAirship` (`actor_part24b.c`) | About 50 halfwords off. The shape is right (inline `BoxOffset`, a struct-returning `SelfBox`, the self-`MemCopy32` copy), but `&c` gets hoisted into `r4` before the box copy and costs an extra `r6` push. |
 | `ConvertAirshipTiles` (`actor_part26c.c`), `ConvertHovercraftTiles` (`actor_part130.c`) | About 95-105 halfwords off. These are the 4-row and 1-row versions of the same meter builder, so a shared inline is likely. The ROM re-reads each height from the stack after the row-pointer store (`ldm r1!`), which suggests the store can alias the height array. It also allocates the nibble-expansion temporaries differently. |
 
 ### Later pass: four more closed
 
 [actor-zone-naked-retry.md](actor-zone-naked-retry.md) closed
-`DrawAirshipMap`, `DrawHovercraftMap`, `sub_8030E08` and `IsTouchingAirship`:
+`DrawAirshipMap`, `DrawHovercraftMap`, `SteerAirship` and `IsTouchingAirship`:
 
 - The blit twins read the bias as `u8 bias = <s32 global>;` and declare
   `row` before `i`, which breaks the global-alloc tie between `row + 0x20`
   and `i + 1` the ROM's way. `actor_part23b.c` and `actor_part130.c`
   moved to old_agbcc.
-- `sub_8030E08` stores the X step once and the Y step once per branch.
+- `SteerAirship` stores the X step once and the Y step once per branch.
   The reference counts that global-alloc sees then give the Y velocity
   copy r4. It matches under both compilers.
-- `IsTouchingAirship` uses the frame-struct box layout from `sub_802DD9C`
+- `IsTouchingAirship` uses the frame-struct box layout from `IsTouchingYeti`
   (old_agbcc; `actor_part24b.c` moved).
 
 `ConvertAirshipTiles` and `ConvertHovercraftTiles` are still NAKED, so issues #58 and #61

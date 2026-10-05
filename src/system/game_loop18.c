@@ -176,7 +176,7 @@ s32 LevelHasRedGemEntity(s32 idx)
     return LevelHasEntityType(idx, 0xa);
 }
 
-s32 sub_8024458(s32 idx)
+s32 LevelHasGemPathGemEntity(s32 idx)
 {
     return LevelHasEntityType(idx, 8);
 }

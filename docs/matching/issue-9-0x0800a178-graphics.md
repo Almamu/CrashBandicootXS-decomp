@@ -19,8 +19,8 @@ same field `UpdateGameFrame`'s level-load branch sets once from
 being cleared and presumably recomputed under some condition, not fully
 traced here." `docs/matching/issue-9-0x08007634-actor.md` (line ~206)
 had also already flagged both functions as built on `sub_8008200`/
-`sub_8026628`/`sub_8026C3C`/`sub_8026BF8` - two of those four
-(`sub_8008200`, `sub_8026628`) are already matched this session
+`ProbeTerrain`/`sub_8026C3C`/`sub_8026BF8` - two of those four
+(`sub_8008200`, `ProbeTerrain`) are already matched this session
 (`src/graphics/actor_part4.c`, `src/system/game_loop43.c`), leaving
 only `sub_8026C3C`/`sub_8026BF8` genuinely unexamined.
 
@@ -31,14 +31,14 @@ still-raw `CollideGroundSprite` and immediately before the already-matched
 `UpdateGroundSprite`/`sub_800A590` (`src/graphics/actor_part47.c`, which
 itself already notes "still-raw `CollideGroundSprite`/`ProbeGroundSpriteTerrain`/
 `ProbeGroundSpriteFloor`" as its own neighbors). `sub_8026C3C`/`sub_8026BF8`
-themselves live in `asm/code_3_2_17_266bc.s` (the file `sub_8026628`
+themselves live in `asm/code_3_2_17_266bc.s` (the file `ProbeTerrain`
 was split out of, right after it).
 
 ### `sub_8026C3C`/`sub_8026BF8`: single-point terrain-height probes
 
 `docs/rom_map.md`'s "15 more reads" pass (line ~2581) had already
 placed these as "single-point collision-test siblings of
-`sub_8026A18`/`sub_8026AE8` [the axis resolvers `sub_8026628` already
+`ProbeTerrainY`/`ProbeTerrainX` [the axis resolvers `ProbeTerrain` already
 dispatches to], one via the raw terrain streamer and one via the
 `CheckTerrainFlag` API." Reading their bytes directly confirms and
 sharpens that: both are `s32 fn(void *player, struct probe_pos *pos,
@@ -54,7 +54,7 @@ s32 *outValue)`, computing `pos->x >> 3`/`pos->y >> 3` tile coords from
 - **`sub_8026C3C`** is the exact same shape, but the height byte comes
   from `sub_8025228(terrainPtr, tileX, tileY, 0, &scratch)` instead of
   a direct row-pointer byte read - the "CheckTerrainFlag"-style API
-  `sub_8026A18`/`sub_8026AE8` already use via their own `GetSolidTerrainHeights`
+  `ProbeTerrainY`/`ProbeTerrainX` already use via their own `GetSolidTerrainHeights`
   calls (same argument shape: base pointer, tile coords, a submode, an
   out-parameter - see [issue-9-10-41-0x08026628-game-loop.md](./issue-9-10-41-0x08026628-game-loop.md)).
   Returns `0` if the returned signed byte is negative, `1` otherwise,
@@ -131,14 +131,14 @@ other effect. Once past both:
    (`& 3` for the X-axis modes `1`/`2`, `& 0xc` for the Y-axis modes
    `4`/`8`) and on `sl` still being `0`: build a plain int `{x, y}`
    position via the already-matched `sub_8008278(dest, mode, quad)`,
-   probe it through the already-matched `sub_8026628(player, mode,
+   probe it through the already-matched `ProbeTerrain(player, mode,
    pos, span, outValue)` tile-scan API, with `span` taken from the
    quad's own `h`/`w` byte - **three deliberately different probe
    geometries**, not a shared constant: `quad->h - 16` for the first
    X-axis block, `quad->w` for the Y-axis block, `quad->h` (full) for
    the second X-axis block. On a hit, OR's `mode` into both
    `self+0x74` and the running result mask, and restores whichever
-   coordinate `sub_8026628` didn't touch (`sub_8026628`'s own
+   coordinate `ProbeTerrain` didn't touch (`ProbeTerrain`'s own
    `outValue` only ever carries the probed axis; the other axis is
    restored from a stack-cached original).
 6. Returns the final result mask.
@@ -147,7 +147,7 @@ other effect. Once past both:
 
 `self+0x74` starts this call zeroed (step 1), then only ever gets
 OR'd with a `mode` value (`1`/`2`/`4`/`8`, `self+0x24`'s own per-axis
-bits) at each of the three `sub_8026628` probe blocks in step 5, each
+bits) at each of the three `ProbeTerrain` probe blocks in step 5, each
 time gated on that probe actually reporting a hit. So `self+0x74` is a
 **per-call bitmask of which movement axes/directions actually resolved
 a collision this call** - zeroed at the top of every `ProbeGroundSpriteTerrain`
@@ -208,7 +208,7 @@ Verified byte-exact via the isolated `cpp`/`agbcc`/`as` +
 `0x0800A178`-`0x0800A528` (944 bytes, both functions together): the
 only differing bytes fell into exactly the expected relocation-site
 set - 16 `bl` calls (`_call_via_r1` x2, `ProbeGroundSpriteFloor` x3, `sub_8008200`
-x2, `sub_8026C3C` x1, `sub_8026628` x3, `sub_8008278` x3, `sub_8026BF8`
+x2, `sub_8026C3C` x1, `ProbeTerrain` x3, `sub_8008278` x3, `sub_8026BF8`
 x2) plus 3 `.4byte gLevelLayers` literal-pool words, all of which
 resolve correctly once linked.
 
@@ -241,7 +241,7 @@ coincide` (checksum matches).
   to match them) just far enough to pin down both callers' argument
   roles precisely, the same "read the callee enough to place the
   caller" approach `issue-9-10-41-0x08026628-game-loop.md` used for
-  `sub_8026AE8`/`sub_8026A18`.
+  `ProbeTerrainX`/`ProbeTerrainY`.
 - Cross-referencing `docs/rom_map.md`'s own partial `self+0x74` note
   against the fully-read function body to confirm and complete it,
   rather than leaving the "presumably recomputed" half unresolved.
@@ -372,7 +372,7 @@ re-checks internally as its own second gate. Once past it:
    trampoline `ProbeGroundSpriteTerrain` itself uses (confirmed identical: table
    pointer read, signed-halfword offset at `+0x10`, function pointer at
    `+0x14`, `_call_via_r1(self+offset, fn)`), and runs a `mode == 8`
-   (Y-axis/floor, confirmed by `game_loop43.c`'s own `sub_8026628` mode
+   (Y-axis/floor, confirmed by `game_loop43.c`'s own `ProbeTerrain` mode
    table) step-probe via `sub_8009BE0(self, 8, quad)`. If that
    step-probe does *not* report immediate success (either a full miss,
    or only succeeding via one of its own internal retries - see
@@ -663,7 +663,7 @@ exactly where these four functions' real bytes already sat.
 - `tools/report_units.py` - new unit at `0x08026BF8`
   (`"src/system/game_loop45.o"`, category `game_loop`); the `0x0800A178`
   unit's comment updated to note all four of `sub_8008200`/
-  `sub_8026628`/`sub_8026C3C`/`sub_8026BF8` are now matched, not just
+  `ProbeTerrain`/`sub_8026C3C`/`sub_8026BF8` are now matched, not just
   the first two.
 - `ldscript.txt` - `build/crashbandicootxs/src/system/game_loop45.o(.text);`
   line added, between `game_loop44.o` and `code_3_2_17_26bf8.o`.

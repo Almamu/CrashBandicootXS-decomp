@@ -2,28 +2,28 @@
 #include "actor_anim.h"
 #include "gba/io_reg.h"
 
-extern s32 gUnknown_03001384;
+extern s32 gActorCategoryDeaths;
 extern s32 gUnknown_03001388;
-extern s32 gUnknown_0300138C;
-extern s32 gUnknown_03001390;
+extern s32 gActorMissedNitros;
+extern s32 gActorCheckpointMissedNitros;
 extern s32 gActorCheckpoint;
 extern void *gLevelState;
 
-extern s32 sub_802A4E0(void);
+extern s32 GetActorSpawnOffset(void);
 extern void SetCheckpointAtPlayer(void *arg0);
 extern void SaveActorPaletteCycle(void);
 
 /* Re-bases the category's secondary tick counter from `arg0` (net of
- * `sub_802A4E0`'s current Q8.8 offset), resets the active-instance
+ * `GetActorSpawnOffset`'s current Q8.8 offset), resets the active-instance
  * counters, and re-syncs the frame-tick snapshot for a freshly
  * (re)selected category. */
 void SetActorCheckpoint(s32 arg0)
 {
-    gActorCheckpoint = arg0 - sub_802A4E0();
-    gUnknown_03001384 = 0;
+    gActorCheckpoint = arg0 - GetActorSpawnOffset();
+    gActorCategoryDeaths = 0;
     gUnknown_03001388 = 0;
     SetCheckpointAtPlayer(gLevelState);
-    gUnknown_03001390 = gUnknown_0300138C;
+    gActorCheckpointMissedNitros = gActorMissedNitros;
     SaveActorPaletteCycle();
 }
 
@@ -36,9 +36,9 @@ extern s32 gActorCategory;
  * unsigned usual-arithmetic-conversion comparison that produces
  * compiles to the unsigned `bcc` instead (see docs/workflow.md
  * step 3). */
-s32 sub_8029794(void)
+s32 IsActorMaskAssistDue(void)
 {
-    return gUnknown_03001384 >= (s32)gActorCategories[gActorCategory].unknown_20;
+    return gActorCategoryDeaths >= (s32)gActorCategories[gActorCategory].unknown_20;
 }
 
 extern s32 gCellAnimTime;
@@ -85,7 +85,7 @@ void UploadCellAnimFrame(void)
 
 extern s32 gCellAnimLength;
 extern s32 gUnknown_030013C8;
-extern s32 gUnknown_030013A8;
+extern s32 gCellAnimDistance;
 extern s32 gCellAnimSpeed;
 extern s32 gCellAnimFrameStep;
 extern void ResetCellAnimBg(void);
@@ -136,9 +136,9 @@ void InitCellAnim(s32 arg0, s32 arg1, s32 arg2, s32 arg3)
     ResetCellAnimBg();
     gCellAnimSpeed = 0;
     if (gCellAnimHasBanks == 0)
-        gUnknown_030013A8 = (arg3 - gUnknown_030013C8) >> 8;
+        gCellAnimDistance = (arg3 - gUnknown_030013C8) >> 8;
     else
-        gUnknown_030013A8 = (arg3 + gUnknown_030013C8) >> 8;
+        gCellAnimDistance = (arg3 + gUnknown_030013C8) >> 8;
     gCellAnimFrameStep = 0;
 }
 

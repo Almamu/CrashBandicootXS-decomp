@@ -7,7 +7,7 @@
  * argument roles: `s32 fn(void *player, struct probe_pos *pos, s32
  * *outValue)`, computing `pos->x >> 3`/`pos->y >> 3` tile coords from
  * `player+0x20`'s terrain-data pointer (the same `struct tile_cache *`
- * field `sub_8026BC0` (`game_loop44.c`) already established that offset
+ * field `GetTerrainFlagsAt` (`game_loop44.c`) already established that offset
  * for on the same `player`/`arg0` global, `gLevelLayers`).
  *
  * `sub_8026BF8` looks the tile row up via the already-matched
@@ -21,7 +21,7 @@
  * `sub_8026C3C` is the exact same shape, but the height byte comes from
  * the already-matched `sub_8025228(terrainPtr, tileX, tileY, 0,
  * &scratch)` instead - the "CheckTerrainFlag"-style API
- * `sub_8026A18`/`sub_8026AE8` already use via their own `GetSolidTerrainHeights`
+ * `ProbeTerrainY`/`ProbeTerrainX` already use via their own `GetSolidTerrainHeights`
  * calls (`game_loop3.c`, same issue #40). `scratch` is a caller-local
  * flag-nibble out-parameter nothing here ever reads back, the same
  * "discarded outValue" idiom `game_loop3.c`'s own siblings already

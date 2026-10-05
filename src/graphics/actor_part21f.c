@@ -20,7 +20,7 @@
  * fires the state-5/table-index-1 transition on the tracker object,
  * plays a sound, and - gated by a lock byte
  * (`gLevelState+0x8c`) and a spawn-budget counter
- * (`gUnknown_0300157C`) - spawns a homing/seek effect via
+ * (`gAirshipCheckpointCount`) - spawns a homing/seek effect via
  * `SetJetpackCheckpoint`/`CreateJetpackCheckpointText`.
  *
  * Matching notes: the box table is `const` (so its jitter ranges stay
@@ -41,16 +41,16 @@ extern const s16 gAirshipBox[];
 extern s32 gAirshipStateTimer;
 extern u16 RandRange(s32 max);
 extern void CreateJetpackExplosion(s32 x, s32 y, s32 z);
-extern void sub_802A4EC(void);
+extern void ResumeActorSpawns(void);
 extern s32 gAirshipState;
 extern struct actor_self *gAirship;
 extern s32 GetAnimFrameBaseOffset(void *self);
 extern void *gAudioContext;
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern u8 *gLevelState;
-extern s32 gUnknown_0300157C;
+extern s32 gAirshipCheckpointCount;
 extern void *gActorList;
-extern u8 gUnknown_03001506;
+extern u8 gJetpackPlayerInactive;
 extern s32 SetJetpackCheckpoint(void *arg0);
 extern void CreateJetpackCheckpointText(void);
 
@@ -104,16 +104,16 @@ void AirshipStateExplode(void)
         SPAWN(x, y);
         SPAWN(x, y);
     } else if (gAirshipStateTimer == 0xaa) {
-        sub_802A4EC();
+        ResumeActorSpawns();
         BossSetState(5, 1);
         PlaySfx(gAudioContext, 0x42, 0x100);
         gAirshipVelZ = 0x9d;
-        if (gLevelState[0x8c] == 0 && gUnknown_0300157C <= 1) {
+        if (gLevelState[0x8c] == 0 && gAirshipCheckpointCount <= 1) {
             void **pl = &gActorList;
-            if (gUnknown_03001506 == 0) {
+            if (gJetpackPlayerInactive == 0) {
                 SetJetpackCheckpoint(*pl);
                 CreateJetpackCheckpointText();
-                gUnknown_0300157C++;
+                gAirshipCheckpointCount++;
             }
         }
     }

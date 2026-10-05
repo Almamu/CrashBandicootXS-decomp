@@ -305,7 +305,7 @@ instruction order matching the ROM's, the same declaration-vs-statement
 timing gotcha the fourth pass's `sub_8021668` bug above is another
 instance of.
 
-### Plain trampolines: `SpawnRockPlatform`/`sub_80218E8`/`SpawnMediumPlatform`/`SpawnSmallPlatform`/`SpawnLargePlatform`/`sub_80219E0`/`SpawnTimeCrate3`-`SpawnIronCrate`
+### Plain trampolines: `SpawnRockPlatform`/`sub_80218E8`/`SpawnMediumPlatform`/`SpawnSmallPlatform`/`SpawnLargePlatform`/`SpawnLaunchPadEntity`/`SpawnTimeCrate3`-`SpawnIronCrate`
 
 18 functions, no iteration needed beyond the established call-signature
 patterns: 5 plain `CreatePlatform(arg0, arg1, arg2, arg3, id)` calls (ids
@@ -318,7 +318,7 @@ of these matched from the very first isolated compile - the 5-argument
 call shape (4 register args plus a stack-passed 5th) reliably puts the
 constant on the stack before the register args regardless of source
 order, so there was nothing to fight here. `nullsub_21` (an empty
-`bx lr` stub sitting between `sub_80219E0` and `SpawnSealSpawner`) is also
+`bx lr` stub sitting between `SpawnLaunchPadEntity` and `SpawnSealSpawner`) is also
 in this file for the same reason - it has to be, to keep the file's ROM
 range contiguous.
 
@@ -551,10 +551,10 @@ retires the last raw bytes this issue's own scope covers - what's left
 open against #31 from here is exclusively already-parked functions
 (NAKED or `NON_MATCHING`), tracked in docs/status/graphics_loading.md.
 
-## Sixth pass: `sub_801EF0C`-`SpawnElectricEel` (12 more, the range before `SpawnSquid`)
+## Sixth pass: `SpawnLizard`-`SpawnElectricEel` (12 more, the range before `SpawnSquid`)
 
 The fifth pass's "last raw bytes this issue's own scope covers" claim
-above turned out to miss one stretch: `sub_801EF0C`-`SpawnElectricEel`, 12
+above turned out to miss one stretch: `SpawnLizard`-`SpawnElectricEel`, 12
 more "two-line text popup" siblings sitting in the *original*
 `asm/code_3_2_17_1e990.s` (the file `SpawnSquid` itself was extracted
 from, back in the second pass) rather than the
@@ -639,7 +639,7 @@ fix, confirmed by isolated-compile diff against the ROM disassembly:
 
 ### Parked as NAKED: the other nine
 
-`sub_801EF0C`, `sub_801F2BC`, `SpawnBlowgunTribesman`, `SpawnPenguin`,
+`SpawnLizard`, `sub_801F2BC`, `SpawnBlowgunTribesman`, `SpawnPenguin`,
 `SpawnPolarBear`, `SpawnPufferfish`, `SpawnShark`, `SpawnMorayEel`,
 `SpawnElectricEel` all hit the confirmed `r7`-in-the-callee-saved-set gap
 `sub_8021280`/`SpawnTiny`/`SpawnBonusPlatform` already established for this
@@ -684,7 +684,7 @@ Full clean `make compare` (`La suma coincide`) and `make NON_MATCHING=1
 report`, both passing. This retires `asm/code_3_2_17_1e990.s` down to
 just `SpawnCrystal`-`SpawnYellowGem` (the still-raw "trigger effect type N"
 twin-family shape, a separate already-parked wall per this issue's own
-scope note at the top of this document) - the whole `sub_801EF0C`-
+scope note at the top of this document) - the whole `SpawnLizard`-
 `SpawnElectricEel` stretch is now real, always-compiled code (3 matched, 9
 NAKED), tracked in `docs/status/graphics_loading.md`.
 

@@ -5,13 +5,13 @@
  * (asm/code_3_2_20_8b7c_ac28.s, ROM 0x0802AC28-0x0802BED8): the giant
  * `CreateActor` kind-dispatch constructor and the run of "actor part
  * factory"/animation-table-state functions between it and here
- * (`CreatePolarCheckpointText`-`sub_802BBE4`) are still raw - this file only covers
+ * (`CreatePolarCheckpointText`-`PolarPlayerStateCaught`) are still raw - this file only covers
  * the literal tail of that raw `.s` file, a self-contained run of
  * accumulator-drain/hazard-threshold helpers on the same `self` object
  * family documented in actor_part19.c/actor_part44.c, operating on the
  * `gUnknown_0300148x`/`gUnknown_030014Ax` global cluster those files
  * already established (`gPolarQueuedWumpa`'s "reward" accumulator,
- * `gUnknown_030014A0`-`030014A4`'s lock/hazard-latch quintet). See
+ * `gPolarPlayerInactive`-`030014A4`'s lock/hazard-latch quintet). See
  * docs/rom_map.md's "boss's BG2 spin/zoom effect..." section, which
  * already reads `DispensePolarWumpa` as one of a matched pair of accumulator-
  * drain/reward-dispenser functions (the other being `DispenseJetpackWumpa` in
@@ -22,8 +22,8 @@
  * through `*(T *)&self->field` casts, as in actor_part19.c. */
 
 extern s32 gPolarQueuedWumpa;
-extern u8 gUnknown_030014A0;
-extern s32 gUnknown_03001484;
+extern u8 gPolarPlayerInactive;
+extern s32 gPolarWumpaDispenseTimer;
 extern void *gLevelState;
 extern void *gAudioContext;
 
@@ -34,9 +34,9 @@ extern void SetCellAnimSpeed(s32 arg0);
 
 /* Accumulator-drain/reward-dispenser for the `gPolarQueuedWumpa`
  * accumulator (filled by `QueuePolarWumpa`, still raw): while the "locked"
- * flag `gUnknown_030014A0` is set, fully drains it via repeated
+ * flag `gPolarPlayerInactive` is set, fully drains it via repeated
  * `CollectWumpa` calls without spawning anything; otherwise, once the
- * `gUnknown_03001484` cooldown elapses, dispenses one of four tiers of
+ * `gPolarWumpaDispenseTimer` cooldown elapses, dispenses one of four tiers of
  * reward (via `SpawnPolarCollectedWumpa` at `self`'s position) sized by the
  * accumulator's own magnitude, and plays a cue. Exact structural twin
  * of `DispenseJetpackWumpa` (actor_part44.c) on a different accumulator/cooldown
@@ -50,7 +50,7 @@ void DispensePolarWumpa(void *selfArg)
         return;
     }
 
-    if (gUnknown_030014A0 != 0) {
+    if (gPolarPlayerInactive != 0) {
         do {
             CollectWumpa(gLevelState);
             gPolarQueuedWumpa--;
@@ -58,12 +58,12 @@ void DispensePolarWumpa(void *selfArg)
         return;
     }
 
-    if (gUnknown_03001484 != 0) {
-        gUnknown_03001484--;
+    if (gPolarWumpaDispenseTimer != 0) {
+        gPolarWumpaDispenseTimer--;
         return;
     }
 
-    gUnknown_03001484 = 0xf;
+    gPolarWumpaDispenseTimer = 0xf;
 
     if (acc <= 9) {
         SpawnPolarCollectedWumpa(self->x, self->y, 1);
@@ -82,30 +82,30 @@ void DispensePolarWumpa(void *selfArg)
     PlaySfx(gAudioContext, 8, 0x100);
 }
 
-extern u8 gUnknown_03001480;
+extern u8 gPolarPauseLocked;
 
-/* Trivial byte getter - `sub_802A688` (actor_part94.c) is a NAKED
+/* Trivial byte getter - `PolarIsPauseLocked` (actor_part94.c) is a NAKED
  * trampoline that calls this through the player pointer. */
-u8 sub_802BD18(void)
+u8 IsPolarPauseLocked(void)
 {
-    return gUnknown_03001480;
+    return gPolarPauseLocked;
 }
 
-extern u8 gUnknown_030014A3;
+extern u8 gPolarSteerEnabled;
 
 /* Frame-counter-threshold state-transition idiom: once `stateTime`
- * exceeds 0x13, latches `gUnknown_030014A3`, clears the hazard lock
- * (`gUnknown_030014A0`), and resets `self` to state 1/table-index 0 -
+ * exceeds 0x13, latches `gPolarSteerEnabled`, clears the hazard lock
+ * (`gPolarPlayerInactive`), and resets `self` to state 1/table-index 0 -
  * the same state/table-index/anim-frame reset idiom already documented
  * for the boss cluster's `DamageAirshipFireball`/`AirshipStateFall` and this family's
- * own `sub_802C14C` (actor_part19.c) - then fires `SetCellAnimSpeed(0x24)`. */
+ * own `LaunchPolarPlayer` (actor_part19.c) - then fires `SetCellAnimSpeed(0x24)`. */
 void sub_802BD24(void *selfArg)
 {
     register struct actor_self *self asm("r3") = selfArg;
 
     if (self->stateTime > 0x13) {
-        gUnknown_030014A3 = 1;
-        gUnknown_030014A0 = 0;
+        gPolarSteerEnabled = 1;
+        gPolarPlayerInactive = 0;
         {
             register s32 state asm("r0") = 1;
             register s32 zero asm("r2") = 0;
@@ -126,80 +126,80 @@ void sub_802BD24(void *selfArg)
     }
 }
 
-extern s32 gUnknown_030014A4;
-extern u8 gUnknown_030014A2;
-extern s32 sub_8029B2C(void);
+extern s32 gPolarPlayerVelY;
+extern u8 gPolarFadeStarted;
+extern s32 GetCellAnimDistance(void);
 extern void FadeBrightness(u8 flags, s32 frameDelay, u8 sync);
-extern void sub_802A668(s32 arg0);
+extern void SetActorCategoryExitStatus(s32 arg0);
 
 /* Per-axis hazard-threshold driver: drains a shared "camera catch-up"
- * budget (`gUnknown_030014A4`) into `y`, advances `z`
+ * budget (`gPolarPlayerVelY`) into `y`, advances `z`
  * by a fixed step, and derives a camera-relative depth
- * (`depth`, via `sub_8029B2C`) - the same shape as `sub_802F5E4`/
- * `sub_802F640` (actor_part44.c). Once that depth drops to/below the
+ * (`depth`, via `GetCellAnimDistance`) - the same shape as `JetpackPlayerStateFall`/
+ * `JetpackPlayerStateFinish` (actor_part44.c). Once that depth drops to/below the
  * far threshold, triggers a screen-flash (`FadeBrightness`) once (latched
- * via `gUnknown_030014A2`) and also latches `gUnknown_03001480` (this
- * axis's own one-shot flag, see `sub_802BD18`); once it drops to/below
- * the near threshold, arms hazard direction 1 via `sub_802A668`. */
-void sub_802BD64(void *selfArg)
+ * via `gPolarFadeStarted`) and also latches `gPolarPauseLocked` (this
+ * axis's own one-shot flag, see `IsPolarPauseLocked`); once it drops to/below
+ * the near threshold, arms hazard direction 1 via `SetActorCategoryExitStatus`. */
+void PolarPlayerStateFinishLeap(void *selfArg)
 {
     struct actor_self *self = selfArg;
 
-    self->y += gUnknown_030014A4;
-    gUnknown_030014A4 += 0x2d;
+    self->y += gPolarPlayerVelY;
+    gPolarPlayerVelY += 0x2d;
     self->z += 0x3c;
-    self->depth = (sub_8029B2C() << 8) - self->z;
+    self->depth = (GetCellAnimDistance() << 8) - self->z;
 
-    if (gUnknown_030014A2 == 0 && self->depth <= 0x16FF) {
+    if (gPolarFadeStarted == 0 && self->depth <= 0x16FF) {
         FadeBrightness(0, 2, 1);
-        gUnknown_03001480 = 1;
-        gUnknown_030014A2 = 1;
+        gPolarPauseLocked = 1;
+        gPolarFadeStarted = 1;
     }
 
     if (self->depth <= 0x3FF) {
-        sub_802A668(1);
+        SetActorCategoryExitStatus(1);
     }
 }
 
-/* Same shape as `sub_802BD64` above (same axis budget/threshold pair),
- * but doesn't touch `gUnknown_03001480` and arms hazard direction 2
+/* Same shape as `PolarPlayerStateFinishLeap` above (same axis budget/threshold pair),
+ * but doesn't touch `gPolarPauseLocked` and arms hazard direction 2
  * instead of 1. */
-void sub_802BDD0(void *selfArg)
+void PolarPlayerStateCarriedOff(void *selfArg)
 {
     struct actor_self *self = selfArg;
 
-    self->y += gUnknown_030014A4;
-    gUnknown_030014A4 += 0x2d;
+    self->y += gPolarPlayerVelY;
+    gPolarPlayerVelY += 0x2d;
     self->z += 0x3c;
-    self->depth = (sub_8029B2C() << 8) - self->z;
+    self->depth = (GetCellAnimDistance() << 8) - self->z;
 
-    if (gUnknown_030014A2 == 0 && self->depth <= 0x16FF) {
+    if (gPolarFadeStarted == 0 && self->depth <= 0x16FF) {
         FadeBrightness(0, 2, 1);
-        gUnknown_030014A2 = 1;
+        gPolarFadeStarted = 1;
     }
 
     if (self->depth <= 0x3FF) {
-        sub_802A668(2);
+        SetActorCategoryExitStatus(2);
     }
 }
 
-/* Third axis of the same hazard-threshold family as `sub_802BD64`/
- * `sub_802BDD0`, but driven directly off `y` (no shared
+/* Third axis of the same hazard-threshold family as `PolarPlayerStateFinishLeap`/
+ * `PolarPlayerStateCarriedOff`, but driven directly off `y` (no shared
  * accumulator/no `z`/`depth` derivation) and arming hazard
  * direction 3. */
-void sub_802BE34(void *selfArg)
+void PolarPlayerStateKnockedOff(void *selfArg)
 {
     struct actor_self *self = selfArg;
 
     self->y += -0x100;
 
-    if (gUnknown_030014A2 == 0 && self->y < (s32)0xFFFFC000) {
+    if (gPolarFadeStarted == 0 && self->y < (s32)0xFFFFC000) {
         FadeBrightness(0, 2, 1);
-        gUnknown_030014A2 = 1;
+        gPolarFadeStarted = 1;
     }
 
     if (self->y < (s32)0xFFFF8E00) {
-        sub_802A668(3);
+        SetActorCategoryExitStatus(3);
     }
 }
 
@@ -207,16 +207,16 @@ extern u32 gKeys;
 
 /* Frame-counter-threshold state-transition idiom, structural twin of
  * `sub_802BD24` above: once `stateTime` reaches 0x1e, latches
- * `gUnknown_030014A3`, then either (if input bit 1 of
+ * `gPolarSteerEnabled`, then either (if input bit 1 of
  * `gKeys` is clear) resets `self` to state 1/table-index 0
  * via the same reset idiom and fires `SetCellAnimSpeed(0x24)`, or (bit set)
  * transitions to state 2 and fires `SetCellAnimSpeed(0x38)` instead. */
-void sub_802BE80(void *selfArg)
+void PolarPlayerStateBoost(void *selfArg)
 {
     register struct actor_self *self asm("r2") = selfArg;
 
     if (self->stateTime == 0x1e) {
-        gUnknown_030014A3 = 1;
+        gPolarSteerEnabled = 1;
 
         {
             u16 bit = gKeys & 2;

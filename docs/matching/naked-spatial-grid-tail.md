@@ -60,7 +60,7 @@ issue's still-open scope.
   player->x, player->y)` for each.
 - **`sub_8009BE0`** - a physics/collision step-probe: copies `self`'s
   position, runs it through `sub_8008278` (still unexamined), converts
-  to plain integers, then probes it via `sub_8026628` (also still
+  to plain integers, then probes it via `ProbeTerrain` (also still
   unexamined). If the first probe succeeds, restores `self->y` to its
   original value and returns `1`; otherwise clears
   `gLevelLayers`'s `+0x2a` flag and retries up to 3 more times,

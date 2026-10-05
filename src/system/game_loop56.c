@@ -10,7 +10,7 @@
  * `settings_menu19.c`/`oam_count.c`/`game_loop17.c`'s own struct views
  * of it) - here indexed by `self+0`, reading its `+0x1c` `isBoss`
  * byte (calls `CheckAllCratesBroken` if clear), then
- * `+0x14`/`+0x18` (`maskAssistDeaths`/`crateAssistDeaths`, fed to `SetMaskAssistDeaths`/`sub_8023110`)
+ * `+0x14`/`+0x18` (`maskAssistDeaths`/`crateAssistDeaths`, fed to `SetMaskAssistDeaths`/`SetCrateAssistDeaths`)
  * and finally `+4`, the **state field the 6-case jump table below
  * dispatches on**.
  *
@@ -282,7 +282,7 @@ extern void CheckAllCratesBroken(void *level);
 extern u8 IsSwitchPressed(void *level);
 extern void UpdateCrates(void);
 extern void SetMaskAssistDeaths(void *level, s32 value);
-extern void sub_8023110(void *level, s32 value);
+extern void SetCrateAssistDeaths(void *level, s32 value);
 extern void ClearPaletteCycles(void *queue);
 /* The direction flag travels as a one-byte struct by value - the ROM
  * stores it into its stack slot with `strb`. The zero-length `pad`
@@ -403,7 +403,7 @@ s32 RunRoom(struct gl_self *self)
     if (IsSwitchPressed(gLevelState))
         UpdateCrates();
     SetMaskAssistDeaths(gLevelState, gLevelTable[self->level].maskAssistDeaths);
-    sub_8023110(gLevelState, gLevelTable[self->level].crateAssistDeaths);
+    SetCrateAssistDeaths(gLevelState, gLevelTable[self->level].crateAssistDeaths);
 
     switch (gLevelTable[self->level].state)
     {

@@ -3,7 +3,7 @@
 
 /* Covers the 0x0802E0A4-0x0802F0DC gap between issue #54's chunk
  * (`actor_part61.c`, ending at `YetiStateCaught`/`sub_802E0A0`) and issue
- * #56's chunk (`actor_part43.c`, starting at `sub_802F0DC`). Two things
+ * #56's chunk (`actor_part43.c`, starting at `FinishJetpackRun`). Two things
  * live here:
  *
  * - The level's spawn dispatcher `CreateJetpackActor` (a 31-case `switch` over
@@ -17,7 +17,7 @@
  *   (`UpdateJetpackPlayer`), sprite draw (`DrawJetpackPlayer`), damage handler
  *   (`DamageJetpackPlayer`), d-pad steering (`SteerJetpackPlayerY`/`SteerJetpackPlayerX`) and
  *   the per-state input steps (`JetpackPlayerStateFly`-`JetpackPlayerStateRollRight`). Its state
- *   lives in the `gUnknown_030014DC`-`gJetpackPlayerTiles` singletons.
+ *   lives in the `gJetpackBomberSfxTimer`-`gJetpackPlayerTiles` singletons.
  *
  * Built with old_agbcc: `DrawJetpackPlayer` only matches under it (current
  * agbcc loads its `attr` halfword straight into the callee-saved
@@ -73,16 +73,16 @@ extern void QueueSpriteFrameOam(u32 attr01, u16 attr2, s32 priority);
 extern void PlayAmbientSfx(void *ctx, s32 id, s32 frame, s32 vol, struct byte_arg force);
 extern u8 IsCrystalSaved(void *self);
 extern void LoseLife(void *self);
-extern u8 sub_8029794(void);
-extern s32 sub_8029B2C(void);
+extern u8 IsActorMaskAssistDue(void);
+extern s32 GetCellAnimDistance(void);
 extern void SetCellAnimSpeed(s32 a);
-extern void sub_8029D8C(s32 x, s32 y);
+extern void UpdateActorBgScroll(s32 x, s32 y);
 extern s32 sub_8029E98(void);
 extern s32 sub_8029EB4(void);
 extern u8 IsSpawnCollected(void *spawn);
 extern void AllocJetpackPlayerTiles(void *self);
 extern void DispenseJetpackWumpa(void *self);
-extern void sub_802F4CC(void *self);
+extern void AnimateJetpackPlayerPalette(void *self);
 extern void SpawnAirship(s32 k, s32 x, s32 y, s32 z);
 extern void SpawnHovercraft(s32 k, s32 x, s32 y, s32 z);
 extern s32 CreateJetpackPlane(void *obj, struct kind_entry *rec, s32 x, s32 y, s32 z, void *spawn);
@@ -111,24 +111,24 @@ extern void *gAudioContext;
 extern u8 *gLevelState;
 extern void *gYeti;
 extern struct kind_entry *gJetpackAnimTable;
-extern s32 gUnknown_030014DC;
-extern s32 gUnknown_030014E0;
+extern s32 gJetpackBomberSfxTimer;
+extern s32 gJetpackBomberCount;
 extern s32 gJetpackPlayerMaxHp;
-extern u8 gUnknown_030014E8;
-extern s32 gUnknown_030014EC;
-extern s32 gUnknown_030014F0;
-extern s32 gUnknown_030014F4;
-extern s32 gUnknown_030014F8;
+extern u8 gJetpackPauseLocked;
+extern s32 gJetpackRingLastFrame;
+extern s32 gJetpackRingChain;
+extern s32 gJetpackFlashTimer;
+extern s32 gJetpackWumpaDispenseTimer;
 extern s32 gJetpackQueuedWumpa;
-extern s32 gUnknown_03001500;
-extern u8 gUnknown_03001504;
-extern u8 gUnknown_03001505;
-extern u8 gUnknown_03001506;
-extern u8 gUnknown_03001507;
+extern s32 gJetpackShotCooldown;
+extern u8 gJetpackPlayerHalted;
+extern u8 gJetpackFadeStarted;
+extern u8 gJetpackPlayerInactive;
+extern u8 gJetpackInputEnabled;
 extern s32 gJetpackPlayerVelY;
 extern s32 gJetpackPlayerVelX;
-extern s32 gUnknown_03001510;
-extern u8 *gUnknown_03001514;
+extern s32 gJetpackPlayerTileBuffer;
+extern u8 *gJetpackPlayerLastFrame;
 extern u8 *gJetpackPlayerTiles[2];
 extern struct actor_pmf gJetpackPlayerStateFuncs[];
 extern u8 gJetpackCheckpointTextVtable[];
@@ -366,7 +366,7 @@ void CreateJetpackPlayer(struct kind_entry *table, s32 z)
 }
 
 /* The player vehicle's constructor: 100 hit points (0x78 when
- * `sub_8029794` says so), and a reset of all its singleton state. A
+ * `IsActorMaskAssistDue` says so), and a reset of all its singleton state. A
  * nonzero start depth starts it in state 7. */
 struct actor_hp *InitJetpackPlayer(struct actor_hp *self, struct kind_entry *rec, s32 z)
 {
@@ -386,60 +386,60 @@ struct actor_hp *InitJetpackPlayer(struct actor_hp *self, struct kind_entry *rec
         SetCellAnimSpeed(0x1e);
         gJetpackPlayerVelY = 0x180;
     }
-    gUnknown_03001507 = 0;
-    gUnknown_03001506 = 1;
-    gUnknown_03001500 = 0;
-    gUnknown_03001505 = 0;
-    gUnknown_03001504 = 0;
+    gJetpackInputEnabled = 0;
+    gJetpackPlayerInactive = 1;
+    gJetpackShotCooldown = 0;
+    gJetpackFadeStarted = 0;
+    gJetpackPlayerHalted = 0;
     gJetpackQueuedWumpa = 0;
-    gUnknown_030014F8 = 0;
-    gUnknown_030014F4 = 0;
-    gUnknown_030014EC = -0xbe;
-    gUnknown_030014F0 = 0;
-    gUnknown_030014E8 = 0;
-    if (sub_8029794())
+    gJetpackWumpaDispenseTimer = 0;
+    gJetpackFlashTimer = 0;
+    gJetpackRingLastFrame = -0xbe;
+    gJetpackRingChain = 0;
+    gJetpackPauseLocked = 0;
+    if (IsActorMaskAssistDue())
         self->hp = 0x78;
     gJetpackPlayerMaxHp = self->hp;
-    gUnknown_030014E0 = 0;
-    gUnknown_030014DC = 0;
+    gJetpackBomberCount = 0;
+    gJetpackBomberSfxTimer = 0;
     return self;
 }
 
 /* The vehicle's per-frame update: engine-sound throttle, fire cooldown,
  * movement by the steering speeds (clamped to the play area unless
- * `gUnknown_03001506` is set), depth, animation, then the current
+ * `gJetpackPlayerInactive` is set), depth, animation, then the current
  * state's handler from gJetpackPlayerStateFuncs. */
 void UpdateJetpackPlayer(struct actor_hp *self)
 {
     s32 x, y;
 
-    if (gUnknown_030014E0 != 0) {
-        if (gUnknown_030014DC-- <= 0) {
+    if (gJetpackBomberCount != 0) {
+        if (gJetpackBomberSfxTimer-- <= 0) {
             s32 vol;
 
-            gUnknown_030014DC = 0x16;
-            vol = gUnknown_030014E0 * 48;
+            gJetpackBomberSfxTimer = 0x16;
+            vol = gJetpackBomberCount * 48;
             if (vol > 0x100)
                 vol = 0x100;
             PlaySfx(gAudioContext, 0x37, vol);
         }
-        gUnknown_030014E0 = 0;
+        gJetpackBomberCount = 0;
     }
-    if (gUnknown_03001500 != 0)
-        gUnknown_03001500--;
-    sub_802F4CC(self);
+    if (gJetpackShotCooldown != 0)
+        gJetpackShotCooldown--;
+    AnimateJetpackPlayerPalette(self);
     DispenseJetpackWumpa(self);
     x = self->base.x += gJetpackPlayerVelX;
     y = self->base.y += gJetpackPlayerVelY;
-    if (gUnknown_03001506 == 0) {
+    if (gJetpackPlayerInactive == 0) {
         self->base.x = x < -0x8000 ? -0x8000 : x;
         self->base.x = self->base.x > 0x8000 ? 0x8000 : self->base.x;
         self->base.y = y < -0x4b00 ? -0x4b00 : y;
         self->base.y = self->base.y > 0x4b00 ? 0x4b00 : self->base.y;
     }
-    if (gUnknown_03001504 == 0) {
+    if (gJetpackPlayerHalted == 0) {
         self->base.depth = 0x1c00;
-        self->base.z = (sub_8029B2C() << 8) + self->base.depth;
+        self->base.z = (GetCellAnimDistance() << 8) + self->base.depth;
     }
     {
         s32 d = (self->base.depth >> 1) & 0x7f80;
@@ -454,7 +454,7 @@ void UpdateJetpackPlayer(struct actor_hp *self)
                                 - self->base.anims[self->base.animIndex].loopBase) << 8;
         self->base.animDone = 1;
     }
-    sub_8029D8C(self->base.x, self->base.y);
+    UpdateActorBgScroll(self->base.x, self->base.y);
     ACTOR_PMF_CALL(&self->base, gJetpackPlayerStateFuncs);
 }
 
@@ -528,14 +528,14 @@ void DrawJetpackPlayer(struct actor_hp *self)
         u32 attr = CurAttr(&self->base);
 
         attr1 |= (sy & 0xff) | ((sx & 0x1ff) << 16) | attr | GetSpriteShapeSizeBits(frame);
-        if (frame != gUnknown_03001514) {
-            gUnknown_03001510 ^= 1;
-            gUnpackRleSpriteFrameFunc(gJetpackPlayerTiles[gUnknown_03001510], frame);
-            gUnknown_03001514 = frame;
+        if (frame != gJetpackPlayerLastFrame) {
+            gJetpackPlayerTileBuffer ^= 1;
+            gUnpackRleSpriteFrameFunc(gJetpackPlayerTiles[gJetpackPlayerTileBuffer], frame);
+            gJetpackPlayerLastFrame = frame;
         }
         {
             /* the ROM computes the tile number in r0 */
-            register u32 tile asm("r0") = GET_TILE_NUM(gJetpackPlayerTiles[gUnknown_03001510]);
+            register u32 tile asm("r0") = GET_TILE_NUM(gJetpackPlayerTiles[gJetpackPlayerTileBuffer]);
 
             QueueSpriteFrameOam(attr1, tile | (self->base.palette << 12), scale);
         }
@@ -550,16 +550,16 @@ void DamageJetpackPlayer(struct actor_hp *self, s32 dmg)
     if ((u32)(self->base.state - 2) <= 1 && self->base.stateTime <= 0x10)
         return;
     self->hp -= dmg;
-    gUnknown_030014F4 = 0x12;
+    gJetpackFlashTimer = 0x12;
     if (self->hp <= 0) {
         self->hp = 0;
         PlaySfx(gAudioContext, 0x3a, 0x100);
         ACTOR_SET_STATE(&self->base, 4, 3);
         if (gLevelState[0x8c] == 0)
             LoseLife(gLevelState);
-        gUnknown_03001507 = 0;
-        gUnknown_030014E8 = 1;
-        gUnknown_03001506 = 1;
+        gJetpackInputEnabled = 0;
+        gJetpackPauseLocked = 1;
+        gJetpackPlayerInactive = 1;
         SetCellAnimSpeed(0x1e);
         gJetpackPlayerVelY = 0;
         CLAMP_SPEED(gJetpackPlayerVelX);
@@ -594,9 +594,9 @@ static inline void DecaySpeed(s32 *p)
  * decays to zero; clamped to +-0x240. */
 void SteerJetpackPlayerY(void *self)
 {
-    if (gUnknown_03001507 && (ReadKeys().held & 0x40))
+    if (gJetpackInputEnabled && (ReadKeys().held & 0x40))
         gJetpackPlayerVelY -= 0x40;
-    else if (gUnknown_03001507 && (ReadKeys().held & 0x80))
+    else if (gJetpackInputEnabled && (ReadKeys().held & 0x80))
         gJetpackPlayerVelY += 0x40;
     else {
         DecaySpeed(&gJetpackPlayerVelY);
@@ -610,9 +610,9 @@ void SteerJetpackPlayerY(void *self)
  * `gJetpackPlayerVelX`. */
 void SteerJetpackPlayerX(void *self)
 {
-    if (gUnknown_03001507 && (ReadKeys().held & 0x20))
+    if (gJetpackInputEnabled && (ReadKeys().held & 0x20))
         gJetpackPlayerVelX -= 0x40;
-    else if (gUnknown_03001507 && (ReadKeys().held & 0x10))
+    else if (gJetpackInputEnabled && (ReadKeys().held & 0x10))
         gJetpackPlayerVelX += 0x40;
     else {
         DecaySpeed(&gJetpackPlayerVelX);
@@ -628,22 +628,22 @@ void JetpackPlayerStateFly(struct actor_hp *self)
 {
     SteerJetpackPlayerY(self);
     SteerJetpackPlayerX(self);
-    if (gUnknown_03001507) {
+    if (gJetpackInputEnabled) {
         struct keys_pair keys = gKeys;
 
         if (keys.held & 0x200) {
-            gUnknown_030014F4 = 0x12;
+            gJetpackFlashTimer = 0x12;
             PlaySfx(gAudioContext, 0xa, 0x100);
             ACTOR_SET_STATE(&self->base, 2, 1);
         } else if (keys.held & 0x100) {
-            gUnknown_030014F4 = 0x12;
+            gJetpackFlashTimer = 0x12;
             PlaySfx(gAudioContext, 0xa, 0x100);
             ACTOR_SET_STATE(&self->base, 3, 2);
-        } else if (gUnknown_03001500 == 0 && (keys.held & 1)) {
+        } else if (gJetpackShotCooldown == 0 && (keys.held & 1)) {
             struct byte_arg one;
             s32 x, y;
 
-            gUnknown_03001500 = 0x12;
+            gJetpackShotCooldown = 0x12;
             one.v = 1;
             PlayAmbientSfx(gAudioContext, 0x24, 1000, 0xa0, one);
             x = self->base.x + 0x1200;
@@ -674,11 +674,11 @@ void JetpackPlayerStateRollLeft(struct actor_hp *self)
         SteerJetpackPlayerX(self);
         keys = gKeys;
         if (keys.held & 0x200) {
-            gUnknown_030014F4 = 0x12;
+            gJetpackFlashTimer = 0x12;
             PlaySfx(gAudioContext, 0xa, 0x100);
             ACTOR_SET_STATE(&self->base, 2, 1);
         } else if (keys.held & 0x100) {
-            gUnknown_030014F4 = 0x12;
+            gJetpackFlashTimer = 0x12;
             PlaySfx(gAudioContext, 0xa, 0x100);
             ACTOR_SET_STATE(&self->base, 3, 2);
         }
@@ -707,11 +707,11 @@ void JetpackPlayerStateRollRight(struct actor_hp *self)
         SteerJetpackPlayerX(self);
         keys = gKeys;
         if (keys.held & 0x200) {
-            gUnknown_030014F4 = 0x12;
+            gJetpackFlashTimer = 0x12;
             PlaySfx(gAudioContext, 0xa, 0x100);
             ACTOR_SET_STATE(&self->base, 2, 1);
         } else if (keys.held & 0x100) {
-            gUnknown_030014F4 = 0x12;
+            gJetpackFlashTimer = 0x12;
             PlaySfx(gAudioContext, 0xa, 0x100);
             ACTOR_SET_STATE(&self->base, 3, 2);
         }

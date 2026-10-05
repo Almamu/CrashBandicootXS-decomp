@@ -12,7 +12,7 @@
  * (this function's own companion, see `actor_part109.c`) with that
  * entry and `x`.
  *
- * Before the loop, gates the whole call on a `sub_8026628` proximity/
+ * Before the loop, gates the whole call on a `ProbeTerrain` proximity/
  * position probe against the player (`gLevelLayers`): builds an
  * integer `{x, y}` position from `self`'s own Q8 position plus the
  * target action `x`'s own keyframe record's box `offY` (added in Q8
@@ -44,7 +44,7 @@ extern struct actor_list *gCrateList;
 extern void *gLevelLayers;
 extern s32 _call_via_r1(void *addr, void *fn);
 extern u8 PlayerAnimWouldTouchCrate(void *entry, s32 x);
-extern u8 sub_8026628(void *player, s32 dir, struct pos *pos, s32 h, s32 *outY);
+extern u8 ProbeTerrain(void *player, s32 dir, struct pos *pos, s32 h, s32 *outY);
 
 u8 PlayerHasRoomForAnim(struct box_part *self, s32 x)
 {
@@ -69,7 +69,7 @@ u8 PlayerHasRoomForAnim(struct box_part *self, s32 x)
     pos.y = pos.y + (box->offY << 8);
     pos.x >>= 8;
     pos.y >>= 8;
-    if (sub_8026628(gLevelLayers, dir, &pos, h, &origY))
+    if (ProbeTerrain(gLevelLayers, dir, &pos, h, &origY))
         return 0;
 
     i = 0;

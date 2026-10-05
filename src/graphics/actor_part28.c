@@ -32,11 +32,11 @@ extern s32 gHovercraftVelZ;
 extern void *gHovercraftLevel;
 extern void *gHovercraftAttack;
 extern s32 gHovercraftPartsLeft;
-extern s16 gUnknown_030015FC;
-extern u8 gUnknown_030015FE;
-extern u8 gUnknown_030015FF;
-extern u16 gUnknown_03001590;
-extern s32 gUnknown_03001594;
+extern s16 gHovercraftHitFlashTimer;
+extern u8 gHovercraftHitFlashOn;
+extern u8 gHovercraftGone;
+extern u16 gHovercraftFlashSavedColor;
+extern s32 gHovercraftFlashColorSaved;
 extern void *gFlashBgPalette;
 extern void *gFlashObjPalette;
 extern void *gAudioContext;
@@ -44,28 +44,28 @@ extern void *gAudioContext;
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern s32 GetAnimFrameBaseOffset(void *self);
 
-/* One-shot latch: if neither `gUnknown_030015FE` nor `gUnknown_030015FC`
+/* One-shot latch: if neither `gHovercraftHitFlashOn` nor `gHovercraftHitFlashTimer`
  * has been set yet, arms both. */
 void StartHovercraftHitFlash(void)
 {
-    if (gUnknown_030015FE == 0 && gUnknown_030015FC == 0) {
-        gUnknown_030015FC = 1;
-        gUnknown_030015FE = 1;
+    if (gHovercraftHitFlashOn == 0 && gHovercraftHitFlashTimer == 0) {
+        gHovercraftHitFlashTimer = 1;
+        gHovercraftHitFlashOn = 1;
     }
 }
 
 /* Palette flash toggle: `gFlashBgPalette`/`gFlashObjPalette` point
  * into palette RAM (BG palette 1 and OBJ palette 10, iwram_data.c), and
  * this sets color 15 of both. The first call caches the original color
- * into `gUnknown_03001590`; from then on, `flag` picks between white
+ * into `gHovercraftFlashSavedColor`; from then on, `flag` picks between white
  * (`0x7FFF`) and the cached color. */
-void sub_8033828(u8 flag)
+void SetHovercraftFlashColor(u8 flag)
 {
     register u16 val asm("r1");
 
-    if (gUnknown_03001594 == 0) {
-        gUnknown_03001590 = ((u16 *)gFlashBgPalette)[15];
-        gUnknown_03001594 = 1;
+    if (gHovercraftFlashColorSaved == 0) {
+        gHovercraftFlashSavedColor = ((u16 *)gFlashBgPalette)[15];
+        gHovercraftFlashColorSaved = 1;
     }
 
     if (flag != 0) {
@@ -76,7 +76,7 @@ void sub_8033828(u8 flag)
     } else {
         register u16 *p asm("r2") = gFlashBgPalette;
 
-        val = gUnknown_03001590;
+        val = gHovercraftFlashSavedColor;
         p[15] = val;
     }
 
@@ -94,7 +94,7 @@ extern void SetHovercraftState(s32 a0, s32 a1);
 
 /* The singleton's death/reset transition: plays the death sound, then
  * decrements the lifetime counter `gHovercraftPartsLeft`, and once it
- * reaches zero clears `gUnknown_030015FF` and fires the state-5/
+ * reaches zero clears `gHovercraftGone` and fires the state-5/
  * table-index-0 transition via `SetHovercraftState`. */
 void LoseHovercraftPart(void)
 {
@@ -102,7 +102,7 @@ void LoseHovercraftPart(void)
 
     gHovercraftPartsLeft -= 1;
     if (gHovercraftPartsLeft == 0) {
-        gUnknown_030015FF = gHovercraftPartsLeft;
+        gHovercraftGone = gHovercraftPartsLeft;
         SetHovercraftState(5, 0);
     }
 }

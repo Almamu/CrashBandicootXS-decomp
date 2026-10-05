@@ -192,7 +192,7 @@ void SpawnLargePlatform(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 }
 
 /* Plain tail-call trampoline to `SpawnLaunchPad` (still raw). */
-void sub_80219E0(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnLaunchPadEntity(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     SpawnLaunchPad(arg0, arg1, arg2, arg3);
 }

@@ -12,7 +12,7 @@
  * `memcpy(dst,dst,0xc)` self-copy - see src/graphics/actor_part74.c's own
  * definition/doc comment), then run the same 3-axis (Z,Y,X order) overlap
  * test already established throughout this ROM
- * (UpdateYeti/sub_802DD9C/DetonateNearbyPolarNitros/IsTouchingAirship etc - see
+ * (UpdateYeti/IsTouchingYeti/DetonateNearbyPolarNitros/IsTouchingAirship etc - see
  * docs/matching/issue-53-actor-c7a8.md, issue-54-actor-d3a8.md,
  * issue-58-0x08030574-actor.md). `FindShotTarget` is the same test wrapped in
  * an outer walk of the whole `gActorList`-rooted circular list
@@ -32,8 +32,8 @@
  * old_agbcc as well. */
 
 extern struct actor_self *gActorList;
-extern u8 gUnknown_030014A0;
-extern u8 gUnknown_03001506;
+extern u8 gPolarPlayerInactive;
+extern u8 gJetpackPlayerInactive;
 
 extern void *MemCopy32(void *dst, const void *src, u32 byteCount);
 
@@ -100,7 +100,7 @@ s32 PolarIsTouchingPlayer(struct actor_self *self)
 {
     struct actor_self **plAddr = &gActorList;
 
-    if (gUnknown_030014A0 != 0)
+    if (gPolarPlayerInactive != 0)
         return 0;
     return ActorsOverlap(*plAddr, self);
 }
@@ -109,7 +109,7 @@ s32 JetpackIsTouchingPlayer(struct actor_self *self)
 {
     struct actor_self **plAddr = &gActorList;
 
-    if (gUnknown_03001506 != 0)
+    if (gJetpackPlayerInactive != 0)
         return 0;
     return ActorsOverlap(*plAddr, self);
 }
@@ -137,20 +137,20 @@ s32 JetpackIsTouchingPlayer(struct actor_self *self)
  * Matches under old_agbcc, this file's compiler. */
 
 extern struct category_vtable *gActorCategoryVtable;
-extern s32 gUnknown_03001410;
-extern s32 gUnknown_03001420;
+extern s32 gActorCategoryExitStatus;
+extern s32 gActorSpawnOffset;
 extern struct sub_effect_record *gActorSpawnTable;
-extern u8 gUnknown_0300141C;
+extern u8 gActorSpawnsPaused;
 extern s32 gActorSpawnIndex;
 extern u8 gUnknown_03001414;
 extern struct actor_self **gActorDrawList;
 extern s32 gActorDrawCount;
 extern void (*gHeapSortActorsByKeyFunc)(s32 count, struct actor_self **list);
-extern s32 gUnknown_03001424;
+extern s32 gActorCategoryFrameCount;
 
 extern void _call_via_r0(void *fn);
-extern s32 sub_8029B2C(void);
-extern s32 sub_8029B8C(void);
+extern s32 GetCellAnimDistance(void);
+extern s32 GetCellAnimFrameStep(void);
 
 /* Method slots 0x10 ("draw") and 0x18 ("draw overlay") of the actor
  * method table. */
@@ -163,12 +163,12 @@ struct actor_draw_methods {
 typedef void (*actor_draw_fn)(void *self);
 
 /* "The next sub-effect record's threshold has scrolled into view":
- * `gActorSpawnTable[idx + 1].field_00 + gUnknown_03001420 <= scroll +
+ * `gActorSpawnTable[idx + 1].field_00 + gActorSpawnOffset <= scroll +
  * vtable slot 7` (read as a value), bounded by record 0's entry count. */
 #define SUB_EFFECT_DUE()                                                       \
     (gActorSpawnIndex < gActorSpawnTable->field_04                           \
      && (off = gActorSpawnIndex * 0x14, tb = (u8 *)gActorSpawnTable + 0x14, \
-         *(s32 *)(tb + off)) + gUnknown_03001420                              \
+         *(s32 *)(tb + off)) + gActorSpawnOffset                              \
             <= scroll + (s32)gActorCategoryVtable->fn[7])
 
 s32 RunActorCategoryFrame(void)
@@ -181,17 +181,17 @@ s32 RunActorCategoryFrame(void)
 
     if (gActorCategoryVtable->fn[3] != NULL)
         _call_via_r0(gActorCategoryVtable->fn[3]);
-    gUnknown_03001410 = 0;
-    scroll = sub_8029B2C();
-    if (scroll - gUnknown_03001420 > gActorSpawnTable->field_00)
+    gActorCategoryExitStatus = 0;
+    scroll = GetCellAnimDistance();
+    if (scroll - gActorSpawnOffset > gActorSpawnTable->field_00)
         _call_via_r0(gActorCategoryVtable->fn[10]);
-    if (gUnknown_0300141C != 0) {
-        gUnknown_03001420 += sub_8029B8C();
+    if (gActorSpawnsPaused != 0) {
+        gActorSpawnOffset += GetCellAnimFrameStep();
     } else {
         while (SUB_EFFECT_DUE()) {
             ((void (*)(void *, s32, s32))gActorCategoryVtable->fn[1])(
                 (u8 *)gActorSpawnTable + (gActorSpawnIndex * 0x14 + 8),
-                gUnknown_03001414, gUnknown_03001420 << 8);
+                gUnknown_03001414, gActorSpawnOffset << 8);
             gActorSpawnIndex++;
         }
     }
@@ -220,8 +220,8 @@ s32 RunActorCategoryFrame(void)
 
         ((actor_draw_fn)vt->m18.fn)((u8 *)a + vt->m18.thisOffset);
     }
-    gUnknown_03001424++;
-    return gUnknown_03001410;
+    gActorCategoryFrameCount++;
+    return gActorCategoryExitStatus;
 }
 
 /* `FindShotTarget`: walks the whole `gActorList`-rooted circular

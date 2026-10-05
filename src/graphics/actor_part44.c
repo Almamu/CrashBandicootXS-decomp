@@ -28,32 +28,32 @@ extern void SetCellAnimSpeed(s32 arg0);
 extern s32 SetActorCheckpoint(s32 arg0);
 extern s32 QueueVramDmaTransfer(void *arg0, void *arg1, u16 arg2, u16 arg3);
 extern s32 FadeBrightness(s32 a, s32 b, s32 c);
-extern s32 sub_802A668(s32 arg0);
-extern s32 sub_8029B2C(void);
+extern s32 SetActorCategoryExitStatus(s32 arg0);
+extern s32 GetCellAnimDistance(void);
 extern void FreeVramTileBlock(void *arg0);
 extern void mem_free(void *ptr);
 
 extern struct level_state *gLevelState;
 extern void *gAudioContext;
-extern u8 gUnknown_03001505;
-extern u8 gUnknown_03001506;
-extern u8 gUnknown_03001507;
-extern s32 gUnknown_030014E0;
+extern u8 gJetpackFadeStarted;
+extern u8 gJetpackPlayerInactive;
+extern u8 gJetpackInputEnabled;
+extern s32 gJetpackBomberCount;
 extern s32 gJetpackPlayerMaxHp;
-extern u8 gUnknown_030014E8;
-extern s32 gUnknown_030014F4;
-extern s32 gUnknown_030014F8;
+extern u8 gJetpackPauseLocked;
+extern s32 gJetpackFlashTimer;
+extern s32 gJetpackWumpaDispenseTimer;
 extern s32 gJetpackQueuedWumpa;
 extern s32 gJetpackPlayerVelY;
 extern void *gJetpackPlayerTiles[2];
-extern u8 gStaticData_0817C200[];
+extern u8 gJetpackFlashPalettes[];
 extern u8 gJetpackPlayerVtable[];
 extern u8 gActorVtable[];
 
 /* Accumulator-drain/reward-dispenser for the `gJetpackQueuedWumpa`
  * accumulator `QueueJetpackWumpa` fills: while the singleton flag
- * (`gUnknown_03001506`) is set, fully drains it via repeated
- * `CollectWumpa` calls; otherwise, once a `gUnknown_030014F8` cooldown
+ * (`gJetpackPlayerInactive`) is set, fully drains it via repeated
+ * `CollectWumpa` calls; otherwise, once a `gJetpackWumpaDispenseTimer` cooldown
  * elapses, dispenses one of four tiers of reward (via `SpawnJetpackCollectedWumpa` at
  * `self`'s position) sized by the accumulator's own magnitude, and
  * plays a cue. */
@@ -66,7 +66,7 @@ void DispenseJetpackWumpa(void *selfArg)
         return;
     }
 
-    if (gUnknown_03001506 != 0) {
+    if (gJetpackPlayerInactive != 0) {
         do {
             CollectWumpa(gLevelState);
             gJetpackQueuedWumpa--;
@@ -74,12 +74,12 @@ void DispenseJetpackWumpa(void *selfArg)
         return;
     }
 
-    if (gUnknown_030014F8 != 0) {
-        gUnknown_030014F8--;
+    if (gJetpackWumpaDispenseTimer != 0) {
+        gJetpackWumpaDispenseTimer--;
         return;
     }
 
-    gUnknown_030014F8 = 0xf;
+    gJetpackWumpaDispenseTimer = 0xf;
 
     if (acc <= 9) {
         SpawnJetpackCollectedWumpa(self->base.x, self->base.y, 1);
@@ -99,9 +99,9 @@ void DispenseJetpackWumpa(void *selfArg)
 }
 
 /* Trivial pre-increment counter accessor. */
-s32 sub_802F46C(void)
+s32 CountJetpackBomber(void)
 {
-    return ++gUnknown_030014E0;
+    return ++gJetpackBomberCount;
 }
 
 /* Threshold check on the `meter` accumulator against
@@ -133,26 +133,26 @@ void SetJetpackCheckpoint(void *selfArg)
     SetActorCheckpoint(self->base.z + 0x7800);
 }
 
-/* Trivial byte getter for `gUnknown_030014E8`. */
-u8 sub_802F4C0(void)
+/* Trivial byte getter for `gJetpackPauseLocked`. */
+u8 IsJetpackPauseLocked(void)
 {
-    return gUnknown_030014E8;
+    return gJetpackPauseLocked;
 }
 
-/* Countdown timer (`gUnknown_030014F4`) driving a palette-strip
+/* Countdown timer (`gJetpackFlashTimer`) driving a palette-strip
  * animation refresh, ping-ponging the frame index via `__divsi3`
  * the same way `AnimateAirshipPalette` (actor_part26.c) does for its own strip. */
-void sub_802F4CC(void)
+void AnimateJetpackPlayerPalette(void)
 {
-    if (gUnknown_030014F4 != 0) {
+    if (gJetpackFlashTimer != 0) {
         s32 frame;
 
-        gUnknown_030014F4--;
-        frame = __divsi3(gUnknown_030014F4, 3);
+        gJetpackFlashTimer--;
+        frame = __divsi3(gJetpackFlashTimer, 3);
         if (frame > 2) {
             frame = 5 - frame;
         }
-        QueueVramDmaTransfer(gStaticData_0817C200 + (frame << 5), (void *)OBJ_PLTT, 0x20, 0x10);
+        QueueVramDmaTransfer(gJetpackFlashPalettes + (frame << 5), (void *)OBJ_PLTT, 0x20, 0x10);
     }
 }
 
@@ -162,7 +162,7 @@ void HealJetpackPlayer(void *selfArg, s32 delta)
 {
     struct meter_actor *self = selfArg;
 
-    if (gUnknown_03001506 == 0) {
+    if (gJetpackPlayerInactive == 0) {
         s32 max = gJetpackPlayerMaxHp;
         s32 add = __divsi3(delta * max, 0x64);
         s32 v = self->meter + add;
@@ -175,23 +175,23 @@ void HealJetpackPlayer(void *selfArg, s32 delta)
 }
 
 /* Feeds `delta` into the `gJetpackQueuedWumpa` reward accumulator (the
- * one `DispenseJetpackWumpa` drains), arming its `gUnknown_030014F8` cooldown
+ * one `DispenseJetpackWumpa` drains), arming its `gJetpackWumpaDispenseTimer` cooldown
  * the first time it goes from zero - gated on the level state's
  * `timeTrial` flag. Its own first parameter (`self`) is unused. */
 void QueueJetpackWumpa(void *selfArg, s32 delta)
 {
     if (gLevelState->timeTrial == 0) {
         if (gJetpackQueuedWumpa == 0) {
-            gUnknown_030014F8 = 0xf;
+            gJetpackWumpaDispenseTimer = 0xf;
         }
         gJetpackQueuedWumpa += delta;
     }
 }
 
 /* If `animDone` is set, resets `self` to state 1/table-index 0
- * (an idle transition) and arms the singleton's `gUnknown_03001507`/
- * clears `gUnknown_03001506` flags, playing a cue. */
-void sub_802F570(void *selfArg)
+ * (an idle transition) and arms the singleton's `gJetpackInputEnabled`/
+ * clears `gJetpackPlayerInactive` flags, playing a cue. */
+void JetpackPlayerStateResume(void *selfArg)
 {
     register struct meter_actor *self asm("r2") = selfArg;
 
@@ -210,8 +210,8 @@ void sub_802F570(void *selfArg)
             *(u8 *)&self->base.animDone = zero2;
             self->base.animTime = zero;
             SetCellAnimSpeed(0x28);
-            gUnknown_03001507 = state;
-            gUnknown_03001506 = zero2;
+            gJetpackInputEnabled = state;
+            gJetpackPlayerInactive = zero2;
         }
     }
 }
@@ -220,7 +220,7 @@ void sub_802F570(void *selfArg)
  * index-5 with the `animDone` flag set, resets its table index/anim
  * state; separately, once `stateTime` hits `0x32`, sets `state` to 1
  * and plays a cue. */
-void sub_802F5AC(void *selfArg)
+void JetpackPlayerStateBoost(void *selfArg)
 {
     register struct meter_actor *self asm("r3") = selfArg;
 
@@ -247,9 +247,9 @@ void sub_802F5AC(void *selfArg)
 
 /* Advances `gJetpackPlayerVelY`'s bounded oscillator by 9 (clamped to
  * +0x140 by absolute value), then fires two one-shot threshold
- * effects on `y` (screamed sfx cue + a `sub_802A668` hazard
+ * effects on `y` (screamed sfx cue + a `SetActorCategoryExitStatus` hazard
  * call). */
-void sub_802F5E4(void *selfArg)
+void JetpackPlayerStateFall(void *selfArg)
 {
     struct meter_actor *self = selfArg;
     s32 v = gJetpackPlayerVelY + 9;
@@ -263,44 +263,44 @@ void sub_802F5E4(void *selfArg)
         gJetpackPlayerVelY = 0x140;
     }
 
-    if (gUnknown_03001505 == 0 && self->base.y > 0x7080) {
+    if (gJetpackFadeStarted == 0 && self->base.y > 0x7080) {
         FadeBrightness(0, 2, 1);
-        gUnknown_03001505 = 1;
+        gJetpackFadeStarted = 1;
     }
 
     if (self->base.y > 0xE100) {
-        sub_802A668(3);
+        SetActorCategoryExitStatus(3);
     }
 }
 
 /* Advances `z` by a fixed step, derives `depth` (a camera-relative
- * depth) via `sub_8029B2C`, and fires
- * the same one-shot threshold pair as `sub_802F5E4` off that derived
- * value instead, additionally latching `gUnknown_030014E8`. */
-void sub_802F640(void *selfArg)
+ * depth) via `GetCellAnimDistance`, and fires
+ * the same one-shot threshold pair as `JetpackPlayerStateFall` off that derived
+ * value instead, additionally latching `gJetpackPauseLocked`. */
+void JetpackPlayerStateFinish(void *selfArg)
 {
     struct meter_actor *self = selfArg;
     s32 v;
 
     self->base.z += 0x200;
 
-    v = self->base.z - (sub_8029B2C() << 8);
+    v = self->base.z - (GetCellAnimDistance() << 8);
     self->base.depth = v;
 
-    if (gUnknown_03001505 == 0 && v > 0x8200) {
+    if (gJetpackFadeStarted == 0 && v > 0x8200) {
         FadeBrightness(0, 2, 1);
-        gUnknown_03001505 = 1;
-        gUnknown_030014E8 = 1;
+        gJetpackFadeStarted = 1;
+        gJetpackPauseLocked = 1;
     }
 
     if (self->base.depth > 0xA000) {
-        sub_802A668(1);
+        SetActorCategoryExitStatus(1);
     }
 }
 
-/* `y`-threshold-gated twin of `sub_802F570`/`sub_802F69C`'s own
+/* `y`-threshold-gated twin of `JetpackPlayerStateResume`/`JetpackPlayerStateEnter`'s own
  * idle-reset idiom. */
-void sub_802F69C(void *selfArg)
+void JetpackPlayerStateEnter(void *selfArg)
 {
     register struct meter_actor *self asm("r2") = selfArg;
 
@@ -319,8 +319,8 @@ void sub_802F69C(void *selfArg)
             *(u8 *)&self->base.animDone = zero2;
             self->base.animTime = zero;
             SetCellAnimSpeed(0x28);
-            gUnknown_03001507 = state;
-            gUnknown_03001506 = zero2;
+            gJetpackInputEnabled = state;
+            gJetpackPlayerInactive = zero2;
         }
     }
 }

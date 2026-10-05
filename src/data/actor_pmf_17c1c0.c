@@ -9,21 +9,21 @@
 extern void JetpackPlayerStateFly();
 extern void JetpackPlayerStateRollLeft();
 extern void JetpackPlayerStateRollRight();
-extern void sub_802F570();
-extern void sub_802F5AC();
-extern void sub_802F5E4();
-extern void sub_802F640();
-extern void sub_802F69C();
+extern void JetpackPlayerStateResume();
+extern void JetpackPlayerStateBoost();
+extern void JetpackPlayerStateFall();
+extern void JetpackPlayerStateFinish();
+extern void JetpackPlayerStateEnter();
 
 /* Per-state handlers dispatched by UpdateJetpackPlayer (actor_part128.c) and
  * RunJetpackPlayerState (actor_part44b.c). */
 const struct actor_pmf gJetpackPlayerStateFuncs[8] = {
-    ACTOR_PMF(sub_802F69C),
+    ACTOR_PMF(JetpackPlayerStateEnter),
     ACTOR_PMF(JetpackPlayerStateFly),
     ACTOR_PMF(JetpackPlayerStateRollLeft),
     ACTOR_PMF(JetpackPlayerStateRollRight),
-    ACTOR_PMF(sub_802F5E4),
-    ACTOR_PMF(sub_802F640),
-    ACTOR_PMF(sub_802F5AC),
-    ACTOR_PMF(sub_802F570),
+    ACTOR_PMF(JetpackPlayerStateFall),
+    ACTOR_PMF(JetpackPlayerStateFinish),
+    ACTOR_PMF(JetpackPlayerStateBoost),
+    ACTOR_PMF(JetpackPlayerStateResume),
 };

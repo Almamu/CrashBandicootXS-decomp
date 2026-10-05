@@ -11,7 +11,7 @@
  * actor_part39.c since the parked `DrawActor`
  * (actor_part44.c) sits raw between them. */
 
-extern s32 sub_8029B2C(void);
+extern s32 GetCellAnimDistance(void);
 extern s32 sub_8029E40(void);
 
 /* Same movement-threshold computation as `InitActorPart`/`UpdateActor`
@@ -19,7 +19,7 @@ extern s32 sub_8029E40(void);
  * update tail - just refreshes `depth`/`sortKey`. */
 void UpdateActorDepth(struct actor_self *self)
 {
-    register s32 value asm("r2") = self->z - (sub_8029B2C() << 8);
+    register s32 value asm("r2") = self->z - (GetCellAnimDistance() << 8);
     s32 sign;
 
     ABS32(value, sign);
@@ -49,7 +49,7 @@ void UpdateActorDepth(struct actor_self *self)
 
 /* Trivial getter: the `index` of `self`'s animation record (`+0x30`,
  * InitActorPart's `part`), read as a byte. */
-u8 sub_802A9D4(struct actor_self *self)
+u8 GetActorRecordIndex(struct actor_self *self)
 {
     return *(u8 *)&ACTOR_RECORD(self)->index;
 }
@@ -62,7 +62,7 @@ u8 sub_802A9D4(struct actor_self *self)
  * pair (`+0x10`/`+0x12`) from `self`'s part-table's `kind`th record. The
  * `*(T *)&self->...` stores keep gcc from treating them as struct-member
  * accesses, which changes where the byte zero is built. */
-void sub_802A9DC(struct actor_self *self, s32 a, s32 kind)
+void SetActorState(struct actor_self *self, s32 a, s32 kind)
 {
     register s32 zero asm("r4");
 

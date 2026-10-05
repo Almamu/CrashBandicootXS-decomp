@@ -31,7 +31,7 @@ their action codes `0xB`/`0x10` (`docs/rom_map.md` line 1713).
    `actor_part17.c` already read) as a `1`/`2` selector, the record's
    own `+9` byte as a third scalar, and a pointer to `self`'s original
    (untruncated) Q8 `y` for the callee to restore/report through, to
-   `sub_8026628(player, arg1, posInt, arg3, outY)` (prototype already
+   `ProbeTerrain(player, arg1, posInt, arg3, outY)` (prototype already
    established from its two other NAKED call sites,
    `actor_part12b.c`/`game_loop6.c`... actually `actor_part12b.c`'s
    `sub_8009BE0`). If the low byte of the result is nonzero, returns
@@ -150,7 +150,7 @@ the `volatile` re-read for the original untruncated `y` (the ROM
 issues a genuinely redundant second `ldr` the natural CSE would
 otherwise eliminate), the Q8-to-int conversion's exact "compute the Y
 sum first, finish X, then finish Y" reordering, and the `(u8)` result-
-truncation casts on both the `sub_8026628` and `PlayerAnimWouldTouchCrate` call
+truncation casts on both the `ProbeTerrain` and `PlayerAnimWouldTouchCrate` call
 results (the ROM explicitly narrows to a byte via `lsl r0,r0,#0x18` /
 `lsl+lsr` before each comparison; a bare `!= 0`/`== 1` on the full
 `s32` drops those shifts entirely even though it's behaviorally

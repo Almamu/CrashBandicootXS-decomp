@@ -101,7 +101,7 @@
  * child-record clamp blocks) and the same shape this project has
  * already proven resistant to gcc 2.9 reconstruction on several other
  * functions this session (`PlayerAnimWouldTouchCrate`, `ProbeGroundSpriteTerrain`/`ProbeGroundSpriteFloor`,
- * `sub_8026AE8`/`sub_8026A18`) - transcribed directly as byte-exact
+ * `ProbeTerrainX`/`ProbeTerrainY`) - transcribed directly as byte-exact
  * NAKED asm instead, verified instruction-for-instruction against the
  * ROM disassembly (`asm/code_3_2_16_ac2c.s`'s own former content at
  * this address) and confirmed byte-exact via the isolated

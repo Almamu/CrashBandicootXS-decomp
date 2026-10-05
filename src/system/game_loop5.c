@@ -72,7 +72,7 @@ void SetCollisionSource(struct tile_cache *self, struct level_layer_desc *source
  * `self`, floor-dividing `n` by 32 to find the word (so it behaves
  * correctly for negative `n` too). Returns 1 if the bit was previously
  * clear (newly set), 0 if it was already set. */
-s32 sub_8025554(void *self, s32 n)
+s32 SetBitmapBit(void *self, s32 n)
 {
     s32 t = n;
     s32 result = 0;
@@ -94,8 +94,8 @@ s32 sub_8025554(void *self, s32 n)
     return result;
 }
 
-/* Clears bit `n & 0x1f` of the same bitmap array `sub_8025554` sets. */
-void sub_8025588(void *self, s32 n)
+/* Clears bit `n & 0x1f` of the same bitmap array `SetBitmapBit` sets. */
+void ClearBitmapBit(void *self, s32 n)
 {
     s32 t = n;
     s32 wordIndex, bitIndex, mask;
@@ -116,16 +116,16 @@ extern void CpuSet(void *src, void *dst, s32 control);
 
 /* Zero-fills 32 words (128 bytes) at `dst` via the BIOS `CpuSet`
  * wrapper, 32-bit fixed-source mode. */
-void sub_80255A8(void *dst)
+void ClearBitmap(void *dst)
 {
     s32 zero = 0;
 
     CpuSet(&zero, dst, CPU_SET_32BIT | CPU_SET_SRC_FIXED | 0x20);
 }
 
-/* `sub_80255A8` wrapper that returns the same pointer it clears. */
-void *sub_80255C4(void *self)
+/* `ClearBitmap` wrapper that returns the same pointer it clears. */
+void *InitBitmap(void *self)
 {
-    sub_80255A8(self);
+    ClearBitmap(self);
     return self;
 }

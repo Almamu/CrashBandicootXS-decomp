@@ -11,16 +11,16 @@
  * at `CreatePolarBasicCrate`) and `actor_part62.c` (issue #54, starting at
  * `MovePolarAkuAku`) - the whole `0x0802CC9C`-`0x0802D3A8` gap
  * docs/matching/issue-53-actor-c7a8.md's "What's left" section
- * described as "a larger, sub_802DD9C/IsTouchingPlayer/ShockPolarPlayer-calling
+ * described as "a larger, IsTouchingYeti/IsTouchingPlayer/ShockPolarPlayer-calling
  * state machine ... not attempted this pass". */
 
 extern void *gActorList;
 extern void *gAudioContext;
-extern s32 gUnknown_030014B8;
+extern s32 gPolarAkuAkuInvincibleTimer;
 extern s32 gUnknown_0300088C[];
 
 extern u8 IsTouchingPlayer(void *self);
-extern u8 sub_802DD9C(void *self);
+extern u8 IsTouchingYeti(void *self);
 extern u8 HurtPolarPlayer(void *arg0);
 extern u8 ShockPolarPlayer(void *arg0);
 extern void UpdateActor(void *self);
@@ -47,7 +47,7 @@ extern u8 gPolarAkuAkuPalette3[];
 extern u8 gPolarAkuAkuPalette2[];
 extern u8 gPolarElectricFenceVtable[];
 extern u8 gStaticData_087E4FD4[];
-extern u8 gStaticData_087E4FF4[];
+extern u8 gPolarLauncherVtable[];
 extern u8 gPolarPenguinVtable[];
 extern u8 gPolarIcicleVtable[];
 
@@ -126,7 +126,7 @@ struct hazard {
 
 /* Once-per-frame hazard/proximity update. Latches `deep` once `depth`
  * passes 0x15FF. While unused (sequence 0) it tests the part table's own
- * box with sub_802DD9C, then gPolarElectricFenceWireBox's box with IsTouchingPlayer
+ * box with IsTouchingYeti, then gPolarElectricFenceWireBox's box with IsTouchingPlayer
  * (a hit there only counts if ShockPolarPlayer agrees), or failing that the
  * 0817A774 and 0817A780 boxes; any hit switches to sequence 1. Once used,
  * fires method 0x08 with 3 when the sequence has played through. */
@@ -139,7 +139,7 @@ void UpdatePolarElectricFence(void *selfArg)
 
     if (self->animIndex == 0) {
         self->box = self->part->box;
-        if (sub_802DD9C(self)) {
+        if (IsTouchingYeti(self)) {
             HAZARD_HIT(self);
         }
         self->box = *(struct box12 *)gPolarElectricFenceWireBox;
@@ -205,16 +205,16 @@ void *sub_802CE38(void *selfArg, s32 a, s32 b, s32 c, s32 d)
 }
 
 /* 3-way `self+0x28` state dispatch. State 0: on `IsTouchingPlayer`'s
- * trampoline-fire edge, calls `sub_802C14C(gActorList)` (the
+ * trampoline-fire edge, calls `LaunchPolarPlayer(gActorList)` (the
  * player object), plays a cue, and transitions to state 1/table-index
- * 1; otherwise, on `sub_802DD9C`'s player-overlap test, transitions the
+ * 1; otherwise, on `IsTouchingYeti`'s player-overlap test, transitions the
  * same way. State 1: once `self+0x12` fires, dispatches the
  * `self+0x50` trampoline (index 3) instead of the usual
  * `UpdateActor` fallback. Any other state (and state 0/1's own
  * non-transition paths) falls through to `UpdateActor`. */
-extern void sub_802C14C(void *selfArg);
+extern void LaunchPolarPlayer(void *selfArg);
 
-void sub_802CE5C(void *selfArg)
+void UpdatePolarLauncher(void *selfArg)
 {
     struct actor_self *self = selfArg;
     register s32 state asm("r5") = self->state;
@@ -232,7 +232,7 @@ case0:
         register s32 fired asm("r6") = IsTouchingPlayer(self);
 
         if (fired) {
-            sub_802C14C(gActorList);
+            LaunchPolarPlayer(gActorList);
             PlaySfx(gAudioContext, 4, 0x100);
             self->state = 1;
             self->stateTime = state;
@@ -247,7 +247,7 @@ case0:
             self->animTime = state;
             goto done;
         }
-        if (sub_802DD9C(self)) {
+        if (IsTouchingYeti(self)) {
             PlaySfx(gAudioContext, 4, 0x100);
             self->state = 1;
             self->stateTime = fired;
@@ -278,13 +278,13 @@ done:
 }
 
 /* Same `InitActorPart`-based constructor shape as `sub_802CE38`,
- * `self+0x50 = gStaticData_087E4FF4`. */
-void *sub_802CF0C(void *selfArg, s32 a, s32 b, s32 c, s32 d)
+ * `self+0x50 = gPolarLauncherVtable`. */
+void *CreatePolarLauncher(void *selfArg, s32 a, s32 b, s32 c, s32 d)
 {
     struct actor_self *self = selfArg;
 
     InitActorPart(self, a, b, c, d);
-    self->vtable = (struct actor_vtable *)gStaticData_087E4FF4;
+    self->vtable = (struct actor_vtable *)gPolarLauncherVtable;
     return self;
 }
 
@@ -293,7 +293,7 @@ void *sub_802CF0C(void *selfArg, s32 a, s32 b, s32 c, s32 d)
  * `self+0x60`, re-deriving a fresh velocity/homing target via
  * `AimPolarPenguin` once it expires. While idle, also probes
  * `IsTouchingPlayer`'s trampoline-fire edge against the player
- * (`HurtPolarPlayer`) or, failing that, `sub_802DD9C`'s player-overlap
+ * (`HurtPolarPlayer`) or, failing that, `IsTouchingYeti`'s player-overlap
  * test - either hit re-arms a fixed outward velocity (`self+0x54`
  * biased by `self+0x1c`'s sign), a random negative Y kick
  * (`self+0x58`), bumps `self+0x5c`, plays a cue, and transitions to
@@ -340,7 +340,7 @@ void UpdatePolarPenguin(void *selfArg)
                     }
                     self->base.animTime = state;
                 }
-            } else if (sub_802DD9C(self)) {
+            } else if (IsTouchingYeti(self)) {
                 s32 velX = (self->base.x > 0) ? 0x600 : 0xFFFFFA00;
 
                 self->velX = velX;
@@ -538,17 +538,17 @@ void *CreatePolarIcicle(void *selfArg, u8 *b, s32 c, s32 d, s32 e)
     return self;
 }
 
-/* VRAM-gauge/state-transition driver for a `gUnknown_030014B8`-counted
+/* VRAM-gauge/state-transition driver for a `gPolarAkuAkuInvincibleTimer`-counted
  * effect: while the current mask level (`maskLevel`) (`gLevelState->0x78`)
  * and the `retrigger` flag are both zero, just clears `self+0x2c`;
  * otherwise DMAs one of four `gPolarAkuAkuPalette1`-indexed gauge
  * strips and resets `self`'s table index/anim, arming `self+0x2c`.
- * Then: tier 3 arms a long `gUnknown_030014B8` countdown and
+ * Then: tier 3 arms a long `gPolarAkuAkuInvincibleTimer` countdown and
  * transitions to state 1; tier 0 with `retrigger` set transitions to
  * state 2/table-index 1 instead; any other combination just clears
- * `gUnknown_030014B8` and, if `self+0x28` was already non-zero, resets
+ * `gPolarAkuAkuInvincibleTimer` and, if `self+0x28` was already non-zero, resets
  * `self` back to state 0/table-index 0. */
-void sub_802D204(void *selfArg, s32 retriggerParam)
+void RefreshPolarAkuAku(void *selfArg, s32 retriggerParam)
 {
     struct actor_self *self = selfArg;
     u8 retrigger = (u8)retriggerParam;
@@ -587,7 +587,7 @@ void sub_802D204(void *selfArg, s32 retriggerParam)
 
     if (tier == 3) {
         {
-            register s32 *addr asm("r1") = &gUnknown_030014B8;
+            register s32 *addr asm("r1") = &gPolarAkuAkuInvincibleTimer;
             register s32 val asm("r0") = 0x1F4;
 
             *addr = val;
@@ -613,7 +613,7 @@ void sub_802D204(void *selfArg, s32 retriggerParam)
         register s32 two asm("r0");
         register s32 one asm("r1");
 
-        gUnknown_030014B8 = tier;
+        gPolarAkuAkuInvincibleTimer = tier;
         two = 2;
         one = 1;
         self->state = two;
@@ -629,7 +629,7 @@ void sub_802D204(void *selfArg, s32 retriggerParam)
         self->animTime = tier;
         return;
     } else {
-        register s32 *addr asm("r0") = &gUnknown_030014B8;
+        register s32 *addr asm("r0") = &gPolarAkuAkuInvincibleTimer;
         register s32 zero asm("r2") = 0;
 
         *addr = zero;
@@ -651,11 +651,11 @@ void sub_802D204(void *selfArg, s32 retriggerParam)
     }
 }
 
-/* Drives `gUnknown_030014B8`'s countdown, DMAing one of two gauge
+/* Drives `gPolarAkuAkuInvincibleTimer`'s countdown, DMAing one of two gauge
  * strips per frame (`gPolarAkuAkuPalette3` on the low bit set,
  * `gPolarAkuAkuPalette2` otherwise) and, once it expires, resetting
  * the mask level (`maskLevel`) via `SetMaskLevel(gLevelState, 2)` then
- * `sub_802D204(self, 0)`. Independently re-fires `sub_802D204` once
+ * `RefreshPolarAkuAku(self, 0)`. Independently re-fires `RefreshPolarAkuAku` once
  * state 2's own `self+0x12` edge trips. Always advances `self`'s own
  * anim frame (`UpdateActorDepth`, frame-counter bump, and the usual
  * wrap-around `GetAnimFrameBaseOffset` check). */
@@ -663,22 +663,22 @@ void UpdatePolarAkuAku(void *selfArg)
 {
     struct actor_self *self = selfArg;
 
-    if (gUnknown_030014B8 != 0) {
-        if (gUnknown_030014B8 & 4) {
+    if (gPolarAkuAkuInvincibleTimer != 0) {
+        if (gPolarAkuAkuInvincibleTimer & 4) {
             QueueVramDmaTransfer(gPolarAkuAkuPalette3, (void *)(PLTT + 0x3C0), 0x20, 0x10);
         } else {
             QueueVramDmaTransfer(gPolarAkuAkuPalette2, (void *)(PLTT + 0x3C0), 0x20, 0x10);
         }
 
-        gUnknown_030014B8 -= 1;
-        if (gUnknown_030014B8 == 0) {
+        gPolarAkuAkuInvincibleTimer -= 1;
+        if (gPolarAkuAkuInvincibleTimer == 0) {
             SetMaskLevel(gLevelState, 2);
-            sub_802D204(self, 0);
+            RefreshPolarAkuAku(self, 0);
         }
     }
 
     if (self->state == 2 && self->animDone != 0) {
-        sub_802D204(self, 0);
+        RefreshPolarAkuAku(self, 0);
     }
 
     UpdateActorDepth(self);

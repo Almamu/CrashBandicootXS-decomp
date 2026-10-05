@@ -27,7 +27,7 @@ attempted this pass.
 Called from `UpdatePolarNitroCrate` (`actor_part19g.c`) once a "used" pickup
 (`self`, state `self+0xc == 0x12`) has stayed used for `self+0x44 ==
 0x14` frames. It walks the whole `self+0x4c`-rooted circular actor
-list - the same sentinel-head list `sub_802AA4C`/`DestroyPolarPlayer`/
+list - the same sentinel-head list `IsActorVisible`/`DestroyPolarPlayer`/
 `DestroyPolarCollectedWumpa` unlink from, rooted at `gActorList` (the player
 object) - looking for every *other* actor whose type byte
 (`*(u8*)(*(u8**)(node+0x30))`, the same type-byte indirection
@@ -48,7 +48,7 @@ definition lives in `src/system/boot_util.c`, a real `CpuSet`-wrapper
 `memcpy`) - kept byte-faithful, not simplified away. The 3-axis overlap
 test itself compares Z, then Y, then X (matching the ROM's own
 instruction order, not storage order), exactly like `UpdateYeti`/
-`sub_802DD9C`'s player-overlap test.
+`IsTouchingYeti`'s player-overlap test.
 
 On overlap, and only while the candidate node isn't already in the used
 state (`node+0xc != 0x12`), fires the same shared "used"-state
@@ -72,7 +72,7 @@ check (since `self` is itself a member of the same list).
 ## Why NAKED, not plain C
 
 This is the exact same heavy-stack-AABB-plus-register-reuse shape this
-project already NAKED-parked twice for `UpdateYeti`/`sub_802DD9C`
+project already NAKED-parked twice for `UpdateYeti`/`IsTouchingYeti`
 (`src/graphics/actor_part74.c`/`75.c`, `docs/matching/issue-54-actor-
 d3a8.md`) - two 12-byte scratch AABB records built via raw `ldm`/`stm`
 block copies inside one 0x24-byte stack frame, with the second box's
@@ -142,7 +142,7 @@ matched as plain C, in `src/graphics/actor_part19i.c`:
   the `c` parameter's own range (`<= 0x2b`, `<= 6`) - selecting one of
   up to 18 per-kind anim records from the part table (`self[0]`, stride
   `0xc`) to seed `self+0x10`/`self+0x12`/`self+8`, the same idiom as
-  `sub_802D648` (`src/graphics/actor_part58.c`).
+  `CreatePolarBoostPad` (`src/graphics/actor_part58.c`).
 - **`CreatePolarTimeCrate`**, **`CreatePolarQuestionCrate`**, **`CreatePolarAkuAkuCrate`**,
   **`CreatePolarNitroCrate`**, **`sub_802CC54`**, **`CreatePolarBasicCrate`** - thin
   `InitPolarCrate`-forwarding constructors, each installing a different
@@ -201,7 +201,7 @@ crashbandicootxs.gba crashbandicootxs.map && make compare`), once for
 
 `UpdatePolarElectricFence` onward (the remainder of issue #53's own
 `0x0802C99C`-`0x0802D3A8` chunk, now `asm/code_3_2_20_28568_c99c_cc9c.s`)
-is a larger, `sub_802DD9C`/`IsTouchingPlayer`/`ShockPolarPlayer`-calling state
+is a larger, `IsTouchingYeti`/`IsTouchingPlayer`/`ShockPolarPlayer`-calling state
 machine with three branches and heavy `r5`/`r6`/`r7` register reuse -
 not attempted this pass, issue #53 stays open. The wider raw actor
 spans this pass also looked at (`0x0802CC9C` onward before issue #54's

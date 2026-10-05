@@ -44,7 +44,7 @@ pass's scope, so left completely untouched.
 `RestoreCheckpoint`/`SetCheckpoint` (checkpoint snapshot restore/stash pair,
 the latter also flushing two spans of the `gEntityFlags` bitmap
 via the `CpuSet` wrapper), `EndGemPath` (progress-accumulate-or-reset
-dispatcher), `sub_802364C`/`PlayIntroCutscene`/`PlayBootCutscene` (the
+dispatcher), `PlayNewGameCutscene`/`PlayIntroCutscene`/`PlayBootCutscene` (the
 `PlayCutscene` mode-trampoline family, one of them also playing a fixed
 SFX), `ShowCompanyLogos` (allocates a `0x44c`-byte block and hands it to
 `DestroyCompanyLogos`), `nullsub_24` (empty stub), `UnpackSaveData` (bitfield
@@ -232,7 +232,7 @@ bytes) is deleted; its `ldscript.txt` line is removed.
   `pop {r1}; bx r1` (instead of the `pop {r0}; bx r0` the earlier
   `void`-returning attempt got) with no extra hint needed, exactly the
   "epilogue register choice follows the function's real shape" pattern
-  documented for `sub_802A674`/`sub_802A688` in
+  documented for `JetpackIsPauseLocked`/`PolarIsPauseLocked` in
   [issue-49-0x08029e4c-actor.md](./issue-49-0x08029e4c-actor.md).
 - **`self` pinned to r3 for the whole function**, matching the ROM
   (natural codegen instead folds `self` into each field access as an

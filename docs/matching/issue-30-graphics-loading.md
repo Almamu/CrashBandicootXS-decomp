@@ -113,8 +113,8 @@ are visible in `sub_801E8F8`/`sub_801E96C`'s final C.
 `LoadGraphicsPackage`, `FitScaledSprite`, `DrawScaledSprite` (all three already
 characterized in `docs/rom_map.md`, real bytes now in
 `asm/code_3_2_17_188d0.s` and the new `asm/code_3_2_17_1e644.s`) plus
-`SpawnStartMarker`, `SpawnCrystal`, `SpawnCrateGem`, `sub_801EBF0`,
-`SpawnRedGem`, `SpawnGreenGem`, `SpawnYellowGem`, `sub_801EF0C`,
+`SpawnStartMarker`, `SpawnCrystal`, `SpawnCrateGem`, `SpawnGemPathGem`,
+`SpawnRedGem`, `SpawnGreenGem`, `SpawnYellowGem`, `SpawnLizard`,
 `SpawnVulture`, `SpawnVenusFlytrap`, `sub_801F2BC`, `SpawnBlowgunTribesman`,
 `SpawnPenguin`, `SpawnSeal`, `SpawnPolarBear`, `SpawnPufferfish` (real bytes
 now in the new `asm/code_3_2_17_1e990.s`) - not attempted this pass,
@@ -123,7 +123,7 @@ worth flagging for whoever picks this up next: `SpawnCrystal` through
 `SpawnYellowGem` share the exact bit-test/`CreateSpriteObj`-spawn shape already
 parked as `SpawnRedGemPlatform`-`SpawnBlueGemPlatform` in `trigger_effect.c` (issue #31)
 - the same register-rotation gap that resisted parking there is likely
-to resist here too; `sub_801EF0C` through `SpawnPufferfish` are all "text
+to resist here too; `SpawnLizard` through `SpawnPufferfish` are all "text
 label as sprite tiles" constructors sharing `SpawnPufferfish`'s already-read
 shape (`CreateMovingSprite` allocation, `CreateEnemyCtrl` style lookup, two
 `_call_via_r2` calls).
@@ -410,7 +410,7 @@ next:
   rotation gap that resisted plain C there is likely to resist here
   too, so NAKED transcription is the expected outcome, not another
   fresh matching attempt.
-- **`sub_801EF0C`-`SpawnPufferfish`** (through `SpawnShark`/`SpawnMorayEel`/
+- **`SpawnLizard`-`SpawnPufferfish`** (through `SpawnShark`/`SpawnMorayEel`/
   `SpawnElectricEel`, ~10 functions): further instances of the "text label
   as sprite tiles" spawner family whose shape `SpawnSquid`
   (`graphics_loading_1fdec.c`, issue #31) already matched as **real,
@@ -652,7 +652,7 @@ This closes out every function this issue's original 25-function list
 named in `asm/code_3_2_17_188d0.s`/`asm/code_3_2_17_1e644.s` except the
 two families already flagged as left raw for a future pass
 (`SpawnCrystal`-`SpawnYellowGem`'s "trigger effect type N" siblings and
-`sub_801EF0C`-`SpawnPufferfish`'s "text label as sprite tiles" siblings, per
+`SpawnLizard`-`SpawnPufferfish`'s "text label as sprite tiles" siblings, per
 the fifth pass above) - `asm/code_3_2_17_1e644.s` no longer exists, and
 the only object left un-real-C'd immediately around this cluster is
 `asm/code_3_2_17_1e990.s`, starting at `SpawnCrystal`.
@@ -684,7 +684,7 @@ spawners reached through the trigger dispatch table at
 `gStaticData_0816C6C0`; `SpawnCrateGem` is also called directly from
 `game_loop2.c`):
 
-- `SpawnCrystal`/`SpawnCrateGem`/`sub_801EBF0` test bit 0/1/2 of the byte
+- `SpawnCrystal`/`SpawnCrateGem`/`SpawnGemPathGem` test bit 0/1/2 of the byte
   `GetCurrentLevelFlags(gLevelState)` returns a pointer to. If it is clear
   they spawn a `CreateSpriteObj` part, point its animation bank at
   `**gSpriteBankSet + 0x1BC` (`SpawnCrystal`) or `+ 0x180`, set its

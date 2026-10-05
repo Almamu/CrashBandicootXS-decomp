@@ -5,9 +5,9 @@
  * sections by ldscript.txt - see docs/data.md.
  */
 
-/* A 3-frame palette strip: sub_802F4CC (actor_part44.c) queues frame
+/* A 3-frame palette strip: AnimateJetpackPlayerPalette (actor_part44.c) queues frame
  * 0-2-1 (a ping-pong) to OBJ palette 0 while its countdown runs. */
-const u16 gStaticData_0817C200[3][16] = {
+const u16 gJetpackFlashPalettes[3][16] = {
     {
         0x03E0, 0x00BD, 0x004A, 0x035D, 0x0071, 0x069A, 0x0DBB, 0x3C43,
         0x0823, 0x198E, 0x2210, 0x10E8, 0x194A, 0x4337, 0x36B4, 0x0C64,

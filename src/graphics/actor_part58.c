@@ -16,20 +16,20 @@
  * helpers operating on the unrelated `gLevelState`-rooted "player"
  * object's `+0x78` counter field (an Aku-Aku-mask-style add/remove
  * pair, `RemovePolarAkuAkuMask`/`AddPolarAkuAkuMask`) and a `gPolarAkuAku`-rooted
- * sibling object (`sub_802D490`). See docs/matching/issue-54-actor-d3a8.md. */
+ * sibling object (`ClearPolarAkuAkuMask`). See docs/matching/issue-54-actor-d3a8.md. */
 
 extern struct level_state *gLevelState;
 extern void *gAudioContext;
 extern s32 SetMaskLevel(struct level_state *arg0, s32 arg1);
-extern void sub_802D204(void *self, s32 arg1);
+extern void RefreshPolarAkuAku(void *self, s32 arg1);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void *InitActorPart(void *self, void *part, s32 b, s32 c, s32 d);
 extern u8 IsTouchingPlayer(void *self);
 extern void UpdateActor(void *self);
 extern void *gActorList;
-extern void sub_802BFD4(void *arg0);
-extern void sub_802C0BC(void *selfArg, s32 arg1);
-extern u8 sub_802DD9C(void *self);
+extern void FinishPolarRun(void *arg0);
+extern void BoostPolarPlayer(void *selfArg, s32 arg1);
+extern u8 IsTouchingYeti(void *self);
 extern void AddBrokenCrate(struct level_state *self);
 extern s32 SetActorCheckpoint(s32 arg0);
 extern void CreatePolarCheckpointText(s32 arg0, s32 arg1, s32 arg2);
@@ -37,11 +37,11 @@ extern s32 _call_via_r2(void *arg0, s32 arg1, void *fn);
 extern s32 GetActorCheckpoint(void);
 
 extern u8 gPolarAkuAkuVtable[];
-extern u8 gStaticData_087E5074[];
-extern u8 gStaticData_087E5094[];
+extern u8 gPolarGoalVtable[];
+extern u8 gPolarBoostPadVtable[];
 extern u8 gPolarCheckpointCrateVtable[];
 
-/* `actor_self` plus the one-shot byte flag sub_802D600/sub_802D648 use.
+/* `actor_self` plus the one-shot byte flag UpdatePolarBoostPad/CreatePolarBoostPad use.
  *
  * The `*(u8 *)&self->...animDone = zero` stores below are deliberate: as
  * plain struct-member stores gcc rebuilds the byte zero in r0 instead of
@@ -52,19 +52,19 @@ struct actor_once {
 };
 
 /* Passes its argument through to `SetMaskLevel(gLevelState, 0)`,
- * then `sub_802D204(self, 0)` - a trivial reset pair on a different,
+ * then `RefreshPolarAkuAku(self, 0)` - a trivial reset pair on a different,
  * `gPolarAkuAku`-rooted object family, unrelated to this file's
  * `self` (see `actor_part19.c`'s `CatchPolarPlayer`, which calls this with
  * `gPolarAkuAku`). */
-void sub_802D490(void *self)
+void ClearPolarAkuAkuMask(void *self)
 {
     SetMaskLevel(gLevelState, 0);
-    sub_802D204(self, 0);
+    RefreshPolarAkuAku(self, 0);
 }
 
 /* "Remove a mask": plays a sound, decrements `gLevelState`'s
  * `+0x78` counter (floored at 0), pushes the new count via
- * `SetMaskLevel`, and always calls `sub_802D204(self, 1)`. Returns the
+ * `SetMaskLevel`, and always calls `RefreshPolarAkuAku(self, 1)`. Returns the
  * (possibly unchanged) counter. */
 s32 RemovePolarAkuAkuMask(void *self)
 {
@@ -76,12 +76,12 @@ s32 RemovePolarAkuAkuMask(void *self)
         count -= 1;
         SetMaskLevel(gLevelState, count);
     }
-    sub_802D204(self, 1);
+    RefreshPolarAkuAku(self, 1);
     return count;
 }
 
 /* "Add a mask" - the increment counterpart to `RemovePolarAkuAkuMask` above,
- * capped at 3, `sub_802D204(self, 0)` instead of `1`. */
+ * capped at 3, `RefreshPolarAkuAku(self, 0)` instead of `1`. */
 s32 AddPolarAkuAkuMask(void *self)
 {
     s32 count;
@@ -92,7 +92,7 @@ s32 AddPolarAkuAkuMask(void *self)
         count += 1;
         SetMaskLevel(gLevelState, count);
     }
-    sub_802D204(self, 0);
+    RefreshPolarAkuAku(self, 0);
     return count;
 }
 
@@ -102,37 +102,37 @@ s32 AddPolarAkuAkuMask(void *self)
  * "spawn at scatter offset" helper feeding that function), installs the
  * `gPolarAkuAkuVtable` event table, then pushes the caller's own
  * 6th argument through `SetMaskLevel` before resetting state via
- * `sub_802D204(self, 0)`. */
+ * `RefreshPolarAkuAku(self, 0)`. */
 void *CreatePolarAkuAku(struct actor_self *self, void *part, s32 b, s32 c, s32 d, s32 sixth)
 {
     InitActorPart(self, part, b - 0x1000, c - 0x1E00, d - 0x200);
     self->vtable = (struct actor_vtable *)gPolarAkuAkuVtable;
     SetMaskLevel(gLevelState, sixth);
-    sub_802D204(self, 0);
+    RefreshPolarAkuAku(self, 0);
     return self;
 }
 
 /* Trivial forwarder: `SetMaskLevel(gLevelState, arg1)`, where
  * `arg1` is this function's own second parameter, passed straight
  * through in `r1` (the same "ignore my own first argument, forward my
- * second" shape as `sub_802BFD4` in actor_part50.c). */
-void sub_802D57C(void *arg0, s32 arg1)
+ * second" shape as `FinishPolarRun` in actor_part50.c). */
+void SetPolarMaskLevel(void *arg0, s32 arg1)
 {
     SetMaskLevel(gLevelState, arg1);
 }
 
 /* Trivial getter: `gLevelState`'s `+0x78` counter (the same field
  * `RemovePolarAkuAkuMask`/`AddPolarAkuAkuMask` above adjust). */
-s32 sub_802D590(void)
+s32 GetPolarMaskLevel(void)
 {
     return gLevelState->maskLevel;
 }
 
 /* Once `self`'s frame counter (`+0x44`) exceeds 5, sets `visible`
  * (+0x2c), so the part appears after 5 frames. Then, on `IsTouchingPlayer`'s trampoline-fire edge, calls
- * `sub_802BFD4(gActorList)` (the player object), and always
+ * `FinishPolarRun(gActorList)` (the player object), and always
  * advances via `UpdateActor`. */
-void sub_802D59C(void *selfArg)
+void UpdatePolarGoal(void *selfArg)
 {
     register struct actor_self *self asm("r4") = selfArg;
 
@@ -141,34 +141,34 @@ void sub_802D59C(void *selfArg)
     }
 
     if (IsTouchingPlayer(self)) {
-        sub_802BFD4(gActorList);
+        FinishPolarRun(gActorList);
     }
 
     UpdateActor(self);
 }
 
 /* Plain `InitActorPart` passthrough constructor (no offset applied)
- * installing the `gStaticData_087E5074` event table and clearing
+ * installing the `gPolarGoalVtable` event table and clearing
  * `visible` (+0x2c) (rather than setting it, unlike
  * `InitActorPart`'s own default of `1`). */
-void *sub_802D5D4(struct actor_self *self, void *part, s32 b, s32 c, s32 d)
+void *CreatePolarGoal(struct actor_self *self, void *part, s32 b, s32 c, s32 d)
 {
     InitActorPart(self, part, b, c, d);
-    self->vtable = (struct actor_vtable *)gStaticData_087E5074;
+    self->vtable = (struct actor_vtable *)gPolarGoalVtable;
     self->visible = 0;
     return self;
 }
 
 /* On `IsTouchingPlayer`'s trampoline-fire edge, forwards `self+0x1c` to
- * `sub_802C0BC(gActorList, ...)` (the player object) and, the
+ * `BoostPolarPlayer(gActorList, ...)` (the player object) and, the
  * first time through (guarded by a one-shot byte flag at `self+0x54`),
  * plays a sound. Always advances via `UpdateActor`. */
-void sub_802D600(void *selfArg)
+void UpdatePolarBoostPad(void *selfArg)
 {
     register struct actor_once *self asm("r4") = selfArg;
 
     if (IsTouchingPlayer(self)) {
-        sub_802C0BC(gActorList, self->base.x);
+        BoostPolarPlayer(gActorList, self->base.x);
         {
             u8 *flag = &self->once;
 
@@ -183,18 +183,18 @@ void sub_802D600(void *selfArg)
 }
 
 /* Constructor: `InitActorPart` passthrough (`b`==own `posY` argument,
- * reused below), installs `gStaticData_087E5094`, then classifies
+ * reused below), installs `gPolarBoostPadVtable`, then classifies
  * `posY>>8` into a 3-way "kind" (`self+0xc`: 0 if `< -0x14`, 1 if
  * `<= 0x14`, else 2) that selects which of the part table's three
  * 0xc-stride anim records seeds `self+0x10`/`0x12`, and resets the
  * accumulator (`+8`) and the `+0x54` one-shot flag both to 0. */
-void *sub_802D648(struct actor_once *self, void *part, s32 posY, s32 c, s32 d)
+void *CreatePolarBoostPad(struct actor_once *self, void *part, s32 posY, s32 c, s32 d)
 {
     s32 classify = posY;
     s32 idx;
 
     InitActorPart(self, part, posY, c, d);
-    self->base.vtable = (struct actor_vtable *)gStaticData_087E5094;
+    self->base.vtable = (struct actor_vtable *)gPolarBoostPadVtable;
 
     classify >>= 8;
 
@@ -231,7 +231,7 @@ void *sub_802D648(struct actor_once *self, void *part, s32 posY, s32 c, s32 d)
  * anim from the part table's `+0xc` record, plays a sound, refreshes
  * the player via `AddBrokenCrate`, and fires `SetActorCheckpoint`/`CreatePolarCheckpointText`
  * position-tied calls), then - only if still kind 0 - checks
- * `sub_802DD9C`'s AABB-overlap test (transitions to kind 3, seeds anim
+ * `IsTouchingYeti`'s AABB-overlap test (transitions to kind 3, seeds anim
  * from the `+0x24` record, arms `self+0x18`, plays a different sound,
  * and refreshes the player again). Finally, once kind==3 and the
  * anim-done flag (`+0x12`) is set, fires the `+0x50` table's slot-3
@@ -262,7 +262,7 @@ void UpdatePolarCheckpointCrate(void *selfArg)
         }
 
         kind = self->animIndex;
-        if (kind == 0 && sub_802DD9C(self)) {
+        if (kind == 0 && IsTouchingYeti(self)) {
             self->animIndex = 3;
             {
                 struct anim_frame_record *table = self->anims;

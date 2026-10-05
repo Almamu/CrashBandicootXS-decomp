@@ -9,12 +9,12 @@ closed as plain C with no register pins. Issue #54 has nothing left.
 | Function | File | Compiler | Was |
 |---|---|---|---|
 | `UpdateYeti` | `actor_part74.c` | old_agbcc (file already on it) | 52 off |
-| `sub_802DD9C` | `actor_part75.c` | old_agbcc (file moved) | 69 off |
+| `IsTouchingYeti` | `actor_part75.c` | old_agbcc (file moved) | 69 off |
 | `LoadYetiGraphics` | `actor_part75.c` | both | 5 off |
 | `IsTouchingAirship` | `actor_part24b.c` | old_agbcc (file moved) | 53 off |
 | `DrawAirshipMap` | `actor_part23b.c` | old_agbcc (file moved) | 11 off |
 | `DrawHovercraftMap` | `actor_part130.c` | old_agbcc (whole file moved) | 11 off |
-| `sub_8030E08` | `actor_part23c.c` | both (file stays on agbcc) | 19 off |
+| `SteerAirship` | `actor_part23c.c` | both (file stays on agbcc) | 19 off |
 
 `actor_part130.c` was checked function by function under old_agbcc
 before the move: every function in it, the previously matched ones
@@ -23,7 +23,7 @@ assembles identically either way).
 
 ## The box-copy trio: one frame struct
 
-`UpdateYeti`, `sub_802DD9C` and `IsTouchingAirship` all build a static box,
+`UpdateYeti`, `IsTouchingYeti` and `IsTouchingAirship` all build a static box,
 build a second box from an actor's `+0x38` vector plus its position,
 copy it into a third slot, run that slot through the `MemCopy32`
 self-copy, and compare. The ROM recomputes `add rX, sp, #0xc` after the
@@ -61,7 +61,7 @@ Two function-specific details:
   failure path falls through, plus a trailing `asm(".align 2, 0")`.
 
 Under current agbcc they are still off (25-31 halfwords for
-`sub_802DD9C`/`IsTouchingAirship`), in the early box-A arithmetic.
+`IsTouchingYeti`/`IsTouchingAirship`), in the early box-A arithmetic.
 
 ## `LoadYetiGraphics`: `CurFrame()` on the global
 
@@ -78,8 +78,8 @@ assignment under both compilers. The call through the
 
 Two changes, identical in both twins:
 
-1. Read the bias byte as `u8 bias = gUnknown_03001530;` (a narrowing of
-   the `s32` global), not `*(u8 *)&gUnknown_03001530`. That turns the
+1. Read the bias byte as `u8 bias = gAirshipMapTileBase;` (a narrowing of
+   the `s32` global), not `*(u8 *)&gAirshipMapTileBase`. That turns the
    hoisted `&bias` copy into the ROM's `mov r3, sb` in the outer loop.
    This got the drafts down to 6 halfwords.
 2. Declare `row` before `i`. The loop optimizer creates the `row + 0x20`
@@ -91,7 +91,7 @@ The `-dg` dump (`Register N, refs = R, live_length = L`) is how the tie
 showed up. Priority is `floor_log2(R) * R / L`, and ties go to the lower
 pseudo number.
 
-## `sub_8030E08`: store count per branch
+## `SteerAirship`: store count per branch
 
 The ROM gives the `&gAirshipVelX` copy r6 and the
 `&gAirshipVelY` copy r4. Both copies are made by the same pass

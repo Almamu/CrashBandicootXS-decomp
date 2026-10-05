@@ -108,7 +108,7 @@ crashbandicootxs.gba crashbandicootxs.map && make compare` ->
 
 ## Closed: `RunHovercraftState` (`src/graphics/actor_part130.c`)
 
-Lower initial confidence (flagged as "fully inlines `sub_8033828`'s own
+Lower initial confidence (flagged as "fully inlines `SetHovercraftFlashColor`'s own
 P1/P2 speed-toggle shape twice... the same cross-jump-merging register-
 pin hazard that function's own writeup documents, doubled"), but this
 one turned out to respond well to the same family of fixes, since its
@@ -119,16 +119,16 @@ The function is a frame-counter-gated dispatcher: every 16th frame it
 forces max speed (0x7FFF) on a P1/P2 object pair; every 8th-but-not-16th
 frame it restores a cached "normal" speed instead; both paths, plus a
 "do nothing" fallthrough, converge on `UpdateHovercraftHitFlash()` + a category-vtable
-animation dispatch. The already-matched `sub_8033828`
+animation dispatch. The already-matched `SetHovercraftFlashColor`
 (`src/graphics/actor_part28.c`) implements the identical toggle as a
 real, standalone function - but the ROM's own build of `RunHovercraftState`
-never calls it (no `bl sub_8033828` anywhere in the disassembly), so the
+never calls it (no `bl SetHovercraftFlashColor` anywhere in the disassembly), so the
 original source duplicated the logic inline twice rather than sharing it
 via a call.
 
-`sub_8033828`'s own already-matched body was the key reference: it
+`SetHovercraftFlashColor`'s own already-matched body was the key reference: it
 declares `register u16 val asm("r1");` (no initializer) once, then
-*assigns* `val = 0x7FFF;`/`val = gUnknown_03001590;` as a separate
+*assigns* `val = 0x7FFF;`/`val = gHovercraftFlashSavedColor;` as a separate
 statement inside each branch, rather than declaring-and-initializing a
 fresh local per branch. Reproducing that exact shape - a register-pinned
 variable declared without an initializer, assigned in its own statement
@@ -164,7 +164,7 @@ static inline void CommitSpeed(u8 *p, u16 val)
     register u16 val asm("r1");
 
     asm("" : "+r"(p));
-    val = 0x7FFF;               /* or gUnknown_03001590 in the other branch */
+    val = 0x7FFF;               /* or gHovercraftFlashSavedColor in the other branch */
     CommitSpeed(p, val);
 }
 ```
@@ -176,9 +176,9 @@ crashbandicootxs.gba crashbandicootxs.map && make compare` ->
 
 `tools/report_units.py`'s single combined entry for
 `0x08032B6C`-`0x08032C0C` (previously `None`, covering
-`RunHovercraftState`/`sub_8032C0C`/`sub_8032EA0` together) is split: `0x08032B6C`
+`RunHovercraftState`/`HovercraftStateCloseIn`/`HovercraftStateFallBack` together) is split: `0x08032B6C`
 now points at `actor_part130.o` (matched), `0x08032C0C` keeps `None`
-(`sub_8032C0C`/`sub_8032EA0` remain parked - unrelated many-high-register
+(`HovercraftStateCloseIn`/`HovercraftStateFallBack` remain parked - unrelated many-high-register
 gap, untouched by this pass).
 
 ## Did not close: `TitleScreenCheatInput` (`src/graphics/graphics_loading_35780.c`)

@@ -187,7 +187,7 @@ mode value, `ip` holds the saved `&self[0xb0]` child-pointer address) -
 the same class of shape this project has already proven resistant to
 gcc 2.9 C reconstruction on multiple sibling functions this session
 (`PlayerAnimWouldTouchCrate`, `ProbeGroundSpriteTerrain`/`ProbeGroundSpriteFloor`,
-`sub_8026AE8`/`sub_8026A18`). Per this session's own scoping ("don't
+`ProbeTerrainX`/`ProbeTerrainY`). Per this session's own scoping ("don't
 over-invest fighting this if an early isolated-compile attempt shows a
 structurally different register allocation"), no C reconstruction
 attempt was made - the function was transcribed directly, instruction-

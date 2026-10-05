@@ -7,7 +7,7 @@
  * Per docs/rom_map.md ("a rectangular BG-tilemap blit routine"):
  * streams 16-bit tile-index-pair values from `self`'s own data
  * (`self+0x1c`/`0x1e`, `0x20`, ...) two at a time, adds a per-call bias
- * byte (`gUnknown_03001530`) to each, and packs each pair into one
+ * byte (`gAirshipMapTileBase`) to each, and packs each pair into one
  * 16-bit VRAM write. Row stride is `0x20` halfwords - a standard
  * 32-tile-wide GBA BG tilemap row; row/column counts (both capped near
  * 32) come from `gAirshipMapCols`/`gAirshipMapRows`, write base
@@ -22,7 +22,7 @@
 extern s32 gAirshipBg2Page;
 extern s32 gAirshipMapCols;
 extern s32 gAirshipMapRows;
-extern s32 gUnknown_03001530;
+extern s32 gAirshipMapTileBase;
 
 void DrawAirshipMap(u16 *src)
 {
@@ -31,7 +31,7 @@ void DrawAirshipMap(u16 *src)
 
     for (i = 0; i < gAirshipMapRows; i++) {
         for (j = 0; j < gAirshipMapCols / 2; j++) {
-            u8 bias = gUnknown_03001530;
+            u8 bias = gAirshipMapTileBase;
             u16 lo = *src++ + bias;
             u16 hi = *src++ + bias;
             ((u16 *)row)[j] = lo | (hi << 8);

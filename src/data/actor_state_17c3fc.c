@@ -14,8 +14,8 @@ extern void AirshipStateFireballs();
 extern void AirshipStateCannon();
 extern void AirshipStateExplode();
 extern void AirshipStateFall();
-extern void sub_8031954();
-extern void sub_80319A0();
+extern void JetpackBalloonStatePop();
+extern void JetpackBalloonStateFloatAway();
 extern void JetpackBalloonCrateStateFall();
 extern void JetpackBalloonCrateStateHang();
 
@@ -34,8 +34,8 @@ void (*const gAirshipStateFuncs[6])() = {
 /* Per-state handlers dispatched by RunJetpackBalloonState (actor_part125.c). */
 const struct actor_pmf gJetpackBalloonStateFuncs[3] = {
     ACTOR_PMF(nullsub_32),
-    ACTOR_PMF(sub_80319A0),
-    ACTOR_PMF(sub_8031954),
+    ACTOR_PMF(JetpackBalloonStateFloatAway),
+    ACTOR_PMF(JetpackBalloonStatePop),
 };
 
 /* Per-state handlers dispatched by UpdateJetpackBalloonCrate and RunJetpackBalloonCrateState

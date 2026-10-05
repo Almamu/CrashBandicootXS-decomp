@@ -8,8 +8,8 @@
 
 extern void nullsub_36();
 extern void nullsub_37();
-extern void sub_8032C0C();
-extern void sub_8032EA0();
+extern void HovercraftStateCloseIn();
+extern void HovercraftStateFallBack();
 extern void HovercraftStateFall();
 extern void HovercraftStateApproach();
 extern void HovercraftCannonStateFire();
@@ -25,8 +25,8 @@ extern void HovercraftLauncherStateWait();
 void (*const gHovercraftStateFuncs[6])() = {
     nullsub_36,
     HovercraftStateApproach,
-    sub_8032C0C,
-    sub_8032EA0,
+    HovercraftStateCloseIn,
+    HovercraftStateFallBack,
     nullsub_37,
     HovercraftStateFall,
 };

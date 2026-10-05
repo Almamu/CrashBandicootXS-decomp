@@ -39,7 +39,7 @@ and closed:
 |---|---|---|
 | `UpdateJetpackBalloon` | `actor_part125.c` | per-frame update; its dispatch is a call to `RunJetpackBalloonState` |
 | `DamageJetpackBalloon` | `actor_part125.c` | damage handler: releases a linked object through its `m38` method, then `ACTOR_SET_STATE` |
-| `MoveJetpackBalloon`, `sub_8031954`, `sub_80319A0` | `actor_part125.c` | the shared anim-frame-advance-and-clamp idiom |
+| `MoveJetpackBalloon`, `JetpackBalloonStatePop`, `JetpackBalloonStateFloatAway` | `actor_part125.c` | the shared anim-frame-advance-and-clamp idiom |
 | `UpdateJetpackCollectedWumpa` | `actor_part130.c` | the same idiom, gated by an out-of-bounds check |
 | `DestroyJetpackCollectedWumpa` | `actor_part130.c` | reward-dispensing destructor |
 
@@ -66,8 +66,8 @@ and closed:
   `player->z - (self->base.z - 10)`, so `z - 10` is computed once and
   reused as the `SpawnJetpackCannonball` argument. The absolute values are two
   named locals, in the order `signDx, absDx, signDy, absDy`.
-- **The anim-frame-advance idiom** (`MoveJetpackBalloon`/`sub_8031954`/
-  `sub_80319A0`/`UpdateJetpackCollectedWumpa`) had been parked three times on the
+- **The anim-frame-advance idiom** (`MoveJetpackBalloon`/`JetpackBalloonStatePop`/
+  `JetpackBalloonStateFloatAway`/`UpdateJetpackCollectedWumpa`) had been parked three times on the
   "`#4`/`#6` constants scheduled one instruction early" gap. The ROM
   re-indexes `self->anims[self->animIndex]` for each of
   `loopThreshold`/`loopBase`. Going through a
@@ -101,7 +101,7 @@ and closed:
   that parameter-order claims like these can be wrong, so both are
   worth a later look.
 - `actor_part130.c`: `DrawJetpackCollectedWumpa` (sprite draw with an
-  `r8`-flag-across-calls shape), `sub_8032C0C`/`sub_8032EA0`/
+  `r8`-flag-across-calls shape), `HovercraftStateCloseIn`/`HovercraftStateFallBack`/
   `DrawHovercraftMap`/`ConvertHovercraftTiles` (many-high-register `ip`/`sb`/`sl`/`r8`
   loops), `CreateHovercraft`/`SpawnHovercraft` (singleton constructors),
   `UpdateHovercraft`/`LoadHovercraftGraphics` (per-frame drivers with DMA/tile

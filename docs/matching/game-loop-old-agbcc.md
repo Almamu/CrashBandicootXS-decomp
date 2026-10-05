@@ -27,7 +27,7 @@ No register pins, no asm in a function body and no NAKED.
 | `DropExtraLife` | `game_loop29.c` |
 | `SpawnEffectPart` | `game_loop14.c` |
 | `ScrollBgLayer`, `DrawBgLayerColumn` | `game_loop16.c` |
-| `sub_8026A18`, `sub_8026AE8` | `game_loop46.c` |
+| `ProbeTerrainY`, `ProbeTerrainX` | `game_loop46.c` |
 | `InitHud` | `hud_digit_array.c` |
 
 All eleven files move to `OLD_AGBCC_OBJS` whole.

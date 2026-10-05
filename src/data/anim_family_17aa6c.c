@@ -74,8 +74,8 @@ const u16 gYetiPalette[16] = {
     0x5A70, 0x62B2, 0x66D3, 0x6F15, 0x7757, 0x7FB9, 0x7FFC, 0x0000,
 };
 
-/* sub_802DD9C's (actor_part75.c) hit box. */
-const struct anim_box gStaticData_0817AA8C = { -28, -24, -2, 56, 90, 4 };
+/* IsTouchingYeti's (actor_part75.c) hit box. */
+const struct anim_box gYetiBox = { -28, -24, -2, 56, 90, 4 };
 
 /* UpdateYeti's (actor_part74.c) hit box. */
 const struct anim_box gStaticData_0817AA98 = { -80, -40, -14, 160, 110, 16 };

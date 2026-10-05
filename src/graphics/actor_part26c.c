@@ -11,20 +11,20 @@
  * Indexes `gAirshipPalette`'s per-level table via the
  * `gAirshipMapCols`/`gAirshipMapRows` fields (row/column counts,
  * both capped near 32), sums four rows' worth of heights into
- * `gUnknown_03001530`, computes `0xFF - sum` as a fill level, and DMAs
+ * `gAirshipMapTileBase`, computes `0xFF - sum` as a fill level, and DMAs
  * the result - packed two nibbles per byte from each row's raw byte
  * data - as 4-bit tile data into VRAM (`0x06008000`), a health-bar/
  * water-level-style meter built fresh per frame from up to 4 rows of
- * `gUnknown_03001580`-indexed level data.
+ * `gAirshipMapFrames`-indexed level data.
  *
  * Matched as plain C with the fixes that closed the one-row twin
  * `ConvertHovercraftTiles` (actor_part130.c, see
  * docs/matching/near-miss-polish-3.md). */
 extern s32 gAirshipMapCols;
 extern s32 gAirshipMapRows;
-extern s32 gUnknown_03001530;
+extern s32 gAirshipMapTileBase;
 extern u8 gAirshipPalette[];
-extern u8 *gUnknown_03001580[];
+extern u8 *gAirshipMapFrames[];
 
 /* The height is re-read after the row-pointer store (the ROM's `ldm
  * r1!`), the second loop has its own counter, its header is written in
@@ -48,7 +48,7 @@ void ConvertAirshipTiles(void)
     s32 k;
     s32 row_i;
     u32 *dst;
-    u8 **rows = gUnknown_03001580;
+    u8 **rows = gAirshipMapFrames;
     u32 m;
 
     stride = (u32)(gAirshipMapCols * gAirshipMapRows + 1) >> 1 << 2;
@@ -63,7 +63,7 @@ void ConvertAirshipTiles(void)
         off += stride;
         off += heights[k] << 5;
     }
-    gUnknown_03001530 = 0xFF - sum;
+    gAirshipMapTileBase = 0xFF - sum;
     dst = (u32 *)(((0xFF - sum) << 6) + BG_CHAR_ADDR(2));
     for (row_i = 0; row_i <= 3; row_i++) {
         u8 *src;
@@ -73,7 +73,7 @@ void ConvertAirshipTiles(void)
         s32 j;
         u32 *d;
 
-        row = gUnknown_03001580[row_i];
+        row = gAirshipMapFrames[row_i];
         hp = &heights[row_i];
         d = dst;
         src = row + stride;
