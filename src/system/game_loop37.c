@@ -191,7 +191,7 @@ s32 SkipSlides(struct SoundChannelList *self, s32 startIdx, u8 condFlag)
  *   identical-shaped computation) - an `asm volatile("mov r2, #0x80\n\t
  *   lsl r2, r2, #2\n\tadd %0, %1, r2" : "=r"(addr) : "r"(asset) : "r2")`
  *   anchor (the same "hardcode the scratch register, let the output land
- *   wherever" idiom `hud_icon_widget_8a78.c` uses) forces it.
+ *   wherever" idiom `font.c` uses) forces it.
  * - The `gSlideshowDispcnt` shadow-byte rebuild needed its own two-part
  *   fix: gcc's front end always schedules the `& ~0x10` mask/byte-read
  *   pair *before* the toggle-bit `& 1 << 4` shift-and-mask when both are

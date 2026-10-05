@@ -106,7 +106,7 @@ void AddCollisionCandidate(struct collision_queue *self, void *neighbor, s32 kin
 }
 
 /* Already matched/documented elsewhere in the codebase (graphics.c's
- * `DestroyOamBuffer`, `src/graphics/graphics.c`) as the exact same
+ * `DestroyOamBuffer`, `src/gfx/graphics.c`) as the exact same
  * one-line "conditional call on bit 0" shape: `OperatorDelete` (VRAM
  * upload manager, matched in graphics.c) only fires when `arg1`'s low
  * bit is set. `src/graphics/actor_part15.c` already externs this

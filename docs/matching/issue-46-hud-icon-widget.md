@@ -19,7 +19,7 @@ object family:
   just adjacent in ROM.
 - **Everything else** (`FontDrawGlyph` through `FontSetTileBase`) operates on
   `struct bitmap_font` (`include/bitmap_font.h`), an object
-  `src/graphics/oam_count.c`/`src/graphics/text_layout.c` had already
+  `src/graphics/oam_count.c`/`src/text/wrapped_text.c` had already
   partially characterized (an OAM icon positioner with `posX`/`posY`/
   `record` fields) but left most of its leading `unused_00`/`unused_10c`/
   `unused_118` byte ranges opaque. This chunk's functions read and write
@@ -37,7 +37,7 @@ object family:
     12 bytes/entry, indexed by `charLookup`.
   - `field_118`/`field_11c`/`spaceWidth`/`field_124`/`field_128` (was
     `unused_118`) - left margin X, line height (confirmed against
-    `src/util/word_util.c`'s existing `DrawWrappedTextInBox`, which already used
+    `src/text/text_box.c`'s existing `DrawWrappedTextInBox`, which already used
     this same field as a divisor), space-character advance width, a
     per-glyph OAM-attribute stride, and a pointer to the widget's own
     upload asset table respectively.
@@ -57,11 +57,11 @@ object family:
 
 `src/graphics/hud_blink.c` (appended): `SetHudCrateTotal`, `IncHudCrateTotal`.
 `src/graphics/hud_icon_widget.c`: `DestroyHud`.
-`src/graphics/hud_icon_widget2.c`: `FontDrawChars`.
-`src/graphics/hud_icon_widget3.c`: `FontTextHeight`.
-`src/graphics/hud_icon_widget4.c`: `FontUploadTiles`, `FontSetPalette`,
+`src/text/font_draw_chars.c`: `FontDrawChars`.
+`src/text/font_height.c`: `FontTextHeight`.
+`src/text/font.c`: `FontUploadTiles`, `FontSetPalette`,
 `FontResetPalette`.
-`src/graphics/hud_icon_widget5.c`: `FontHeightToLines`, `FontGetTileCount`,
+`src/text/font.c`: `FontHeightToLines`, `FontGetTileCount`,
 `FontSetPos`, `FontNewLineAt`, `FontGetMargin`, `FontSetMargin`,
 `FontGetY`, `FontGetX`, `FontSetTileBase`.
 
@@ -81,13 +81,13 @@ C reconstructions in four matching `hud_icon_widget_*.c` files:
 
 - **`asm/code_3_2_20_85c4.s`** (`FontDrawGlyph`, `InitSmallFont`,
   `InitLargeFont`, `FontPutChar`) - reconstructions in
-  `src/graphics/hud_icon_widget_85c4.c`.
+  `src/text/font_glyph.c`.
 - **`asm/code_3_2_20_8890.s`** (`FontDrawText`, `FontMeasureChars`) -
-  reconstructions in `src/graphics/hud_icon_widget_8890.c`.
+  reconstructions in `src/text/font_draw_text.c`.
 - **`asm/code_3_2_20_8994.s`** (`FontMeasureText`) - reconstruction in
-  `src/graphics/hud_icon_widget_8994.c`.
+  `src/text/font_measure.c`.
 - **`asm/code_3_2_20_8a78.s`** (`InitFont`) - reconstruction in
-  `src/graphics/hud_icon_widget_8a78.c`.
+  `src/text/font.c`.
 
 Two distinct residual gaps, both already-known classes of gcc-2.9
 difficulty in this codebase:
@@ -132,7 +132,7 @@ difficulty in this codebase:
 
 1. **Trailing function-alignment padding is compiler-fill, not
    zero-fill, unless forced.** `DestroyHud` (`hud_icon_widget.c`) and
-   `FontTextHeight` (`hud_icon_widget3.c`) both end 2 bytes short of a
+   `FontTextHeight` (`font_height.c`) both end 2 bytes short of a
    4-byte boundary, immediately followed by a raw `.s` fragment whose
    `.align 2, 0` directive (correctly) zero-fills the gap. Left alone,
    `tools/agbcc` fills the same gap with its own trailing alignment
@@ -171,7 +171,7 @@ difficulty in this codebase:
 - `src/audio/counter_selector_setup.c` - `InitLanguageSelectGraphics`'s own comment
   documents the same r8/r9-register-pressure class of gap hit by
   `FontMeasureChars`/`FontMeasureText` here.
-- `src/graphics/actor_aabb_setup.c` - `DestroyLargeFont`/`DestroySmallFont`
+- `src/util/aabb_setup.c` - `DestroyLargeFont`/`DestroySmallFont`
   document the identical "two `self+0x130` stores in a row, the first
   genuinely dead" pattern reused by `InitSmallFont`/
   `InitLargeFont`/`InitFont` here.
@@ -183,7 +183,7 @@ parked, working the remaining GitHub issue #46 scope.
 
 ### Matched (3 of 8) - full clean `make compare` passing
 
-- **`FontPutChar`** (`src/graphics/hud_icon_widget_85c4.c`, now split
+- **`FontPutChar`** (`src/text/font_glyph.c`, now split
   out of the still-parked `FontDrawGlyph`/`InitSmallFont`/
   `InitLargeFont` at the end of the same file - `#if NON_MATCHING`
   now only wraps those three). The documented `if`/`else if`/`else`
@@ -197,7 +197,7 @@ parked, working the remaining GitHub issue #46 scope.
   taking `charByte` as a raw `u32` (sidestepping the byte-promotion
   invariant that forces the early widen) and writing the three-
   instruction prologue as one literal `asm volatile` block.
-- **`FontDrawText`** (`src/graphics/hud_icon_widget_8890.c`, split out of
+- **`FontDrawText`** (`src/text/font_draw_text.c`, split out of
   the still-parked `FontMeasureChars` at the top of the same file). Same
   `goto`-based block-order fix as `FontPutChar`, plus explicit register
   pins for `self`/`str`/the cached `&posX` (`r4`/`r5`/`r6`) - `&posY`
@@ -206,7 +206,7 @@ parked, working the remaining GitHub issue #46 scope.
   bytes short of a 4-byte boundary; this compiler's own padding `nop`
   isn't the ROM's zero-fill) - fixed with the standard
   `asm(".align 2, 0")` following statement.
-- **`InitFont`** (`src/graphics/hud_icon_widget_8a78.c`) - no
+- **`InitFont`** (`src/text/font.c`) - no
   charLookup-building loop like its `InitSmallFont`/`B` siblings,
   so once the shared preamble's inline-asm address anchors were right,
   this one reached a full match with nothing left over. The file no
@@ -227,7 +227,7 @@ different order than they were computed. Fixed by writing the ROM's
 literal instruction sequence as `asm volatile` blocks with generic
 `"=r"` outputs (letting the register allocator still pick freely,
 avoiding the r7 hazard below) - the same address-anchor idiom
-`actor_aabb_setup.c`'s `DestroyLargeFont`/`DestroySmallFont` already established,
+`aabb_setup.c`'s `DestroyLargeFont`/`DestroySmallFont` already established,
 just scaled up to a longer shared sequence. `InitFont` applies this
 whole; `InitSmallFont`/`B` apply it too but the loop past it (next
 section) still blocks a full match.
@@ -328,7 +328,7 @@ workarounds around a confirmed compiler bug, this pass transcribed all
 five directly as `NAKED` asm functions instead - the same technique this
 project already uses elsewhere for this exact class of problem
 (`lib/libgcc/lib1funcs.s`'s `__div0`, `lib/gax/src/gax_swi.c`'s
-`GaxHuffUnComp`, `src/system/link_cable.c`'s `MakeLinkHandshakeId`/`UpdateLinkSession`).
+`GaxHuffUnComp`, `src/link/link_handshake.c`'s `MakeLinkHandshakeId`/`UpdateLinkSession`).
 A NAKED function has no compiler-generated prologue/epilogue or
 register allocation at all, so the r7 bug (and any other codegen
 mismatch) is moot - the instructions are typed in verbatim, checked
@@ -343,14 +343,14 @@ are now gone entirely, and the ldscript entries removed with them:
 
 - `asm/code_3_2_20_85c4.s` deleted; `FontDrawGlyph`, `InitSmallFont`,
   `InitLargeFont` now live as `NAKED` functions in
-  `src/graphics/hud_icon_widget_85c4.c`, ahead of the already-matched
+  `src/text/font_glyph.c`, ahead of the already-matched
   plain-C `FontPutChar`. No `#if NON_MATCHING` guard anywhere in the
   file any more.
 - `asm/code_3_2_20_8890.s` deleted; `FontMeasureChars` now lives as a
-  `NAKED` function in `src/graphics/hud_icon_widget_8890.c`, after the
+  `NAKED` function in `src/text/font_draw_text.c`, after the
   already-matched plain-C `FontDrawText`.
 - `asm/code_3_2_20_8994.s` deleted; `FontMeasureText` now lives as a
-  `NAKED` function, alone, in `src/graphics/hud_icon_widget_8994.c`.
+  `NAKED` function, alone, in `src/text/font_measure.c`.
 
 This brings issue #46 to full completion: all 25 functions in the
 original chunk are matched, closing the issue.

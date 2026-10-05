@@ -2,11 +2,10 @@
 #include "bitmap_font.h"
 
 /* Sits between FontDrawGlyph/InitSmallFont/InitLargeFont/
- * FontPutChar (src/graphics/hud_icon_widget_85c4.c) and FontDrawText/
- * FontMeasureChars (src/graphics/hud_icon_widget_8890.c) - just FontDrawChars
+ * FontPutChar (src/text/font_glyph.c) and FontDrawText/
+ * FontMeasureChars (src/text/font_draw_text.c) - just FontDrawChars
  * here, GitHub issue #46. Same `struct bitmap_font` text/icon-glyph
- * renderer as hud_icon_widget.c/hud_icon_widget3.c/hud_icon_widget4.c/
- * hud_icon_widget5.c. */
+ * renderer as hud_icon_widget.c and the other src/text/font*.c files. */
 
 extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
 

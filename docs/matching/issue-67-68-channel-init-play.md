@@ -89,7 +89,7 @@ every combination of which one or two of the three get an explicit
 r6`. `chanArg` can't be pinned to force the issue further: pinning it to
 `r7` hits this toolchain's already-documented pin bug (an explicit
 `register T x asm("r7")` compiles with no push/pop of `r7` at all - see
-`hud_icon_widget_85c4.c`'s `InitSmallFont`/`B` write-up for the same
+`font_glyph.c`'s `InitSmallFont`/`B` write-up for the same
 conclusion on an unrelated function), so only fully-unpinned allocation can
 safely put a value in `r7` at all, and that path's own ordering choice never
 matches the ROM's. Transcribed instruction-for-instruction instead.

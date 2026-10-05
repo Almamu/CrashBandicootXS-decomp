@@ -44,7 +44,7 @@ just the `x`/`y`/`z` fields (the `sizeX`/`sizeY`/`sizeZ` half stays raw
 - these are extents, not absolute coordinates). Both boxes are then run
 through `MemCopy32` - the same confirmed no-op `memcpy(dst, dst,
 0xc)` self-copy documented in `actor_part74.c` (`MemCopy32`'s own
-definition lives in `src/system/boot_util.c`, a real `CpuSet`-wrapper
+definition lives in `src/system/boot.c`, a real `CpuSet`-wrapper
 `memcpy`) - kept byte-faithful, not simplified away. The 3-axis overlap
 test itself compares Z, then Y, then X (matching the ROM's own
 instruction order, not storage order), exactly like `UpdateYeti`/

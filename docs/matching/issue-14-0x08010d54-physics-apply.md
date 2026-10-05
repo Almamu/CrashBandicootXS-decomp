@@ -275,7 +275,7 @@ Phase 1's own pass (see above). Reading the raw bytes confirmed:
   }
   ```
   This is **byte-identical in shape** to an already-matched function
-  elsewhere in the codebase - `src/graphics/graphics.c`'s own
+  elsewhere in the codebase - `src/gfx/graphics.c`'s own
   `DestroyOamBuffer(void *arg0, u32 arg1) { if (arg1 & 1) { OperatorDelete(arg0); } }`.
   Not a "mode-parameterized insert" after all (Phase 1's own guess,
   written before this function was read branch-by-branch) - `arg1`
@@ -311,7 +311,7 @@ object (distinct from `struct actor`'s own 0x1c bytes and from
 
 | Function | Size | Role |
 |---|---|---|
-| `UpdateExtraLifeHop` | 124B | Per-frame orbit-position update: two lookups into the shared sine table `gSineTable` (`self+0x4b`'s phase, at strides `*4` and `*2`), combined via the overflow-avoiding fixed-point multiply `FixedMul` (already matched, `math_util.c`) - `self+4` (`y`) is always anchor-y minus the y-offset; `self` (`x`) is anchor-x minus/plus the x-offset depending on `self+0x4a` (mode 1/2), or just the anchor x unchanged for any other mode value. |
+| `UpdateExtraLifeHop` | 124B | Per-frame orbit-position update: two lookups into the shared sine table `gSineTable` (`self+0x4b`'s phase, at strides `*4` and `*2`), combined via the overflow-avoiding fixed-point multiply `FixedMul` (already matched, `fixed_math.c`) - `self+4` (`y`) is always anchor-y minus the y-offset; `self` (`x`) is anchor-x minus/plus the x-offset depending on `self+0x4a` (mode 1/2), or just the anchor x unchanged for any other mode value. |
 | `DrawExtraLife` | 44B | Re-derives visibility via `DrawSprite(gSpriteRenderer, self)` (already matched), clears flags bit 3 when `self+0x38` is nonzero. |
 | `GetExtraLifeClassId` | 4B | Trivial - always returns 2. |
 | `DestroyExtraLife` | 20B | Repoints `self->table` at `gExtraLifeVtable`, tail-calls `DestroySpriteObj` (already matched) with `self`+its own 2nd argument passed through. |
@@ -394,7 +394,7 @@ the `QueueCratePlayerCollision`/`ApplyCrateCollision` dispatch chain.
   external call-site confirmation for `DestroyCollisionQueue`/`ResetCollisionQueue`
   already used in Phase 1, re-verified against the actual instruction
   bytes this pass.
-- `src/graphics/graphics.c` - `DestroyOamBuffer`, the already-matched twin
+- `src/gfx/graphics.c` - `DestroyOamBuffer`, the already-matched twin
   shape that confirmed `DestroyCollisionQueue`'s own semantics.
 
 ## Phase 2, second parallel slice: `PickUpWumpa`-`UpdateWumpaHop` (the chunk's tail 6)

@@ -109,7 +109,7 @@ void FadePaletteToBlack(void)
 }
 
 /* `gBrightnessFade.field_0 != -1` - the same "idle" sentinel
- * documented on the struct in fade_util.c, exposed here as a plain
+ * documented on the struct in fade.c, exposed here as a plain
  * s32 read (this file doesn't share that struct definition, per this
  * project's per-file raw-offset convention). */
 extern s32 gBrightnessFade;

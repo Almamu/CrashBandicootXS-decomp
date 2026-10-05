@@ -14,7 +14,7 @@ system from "core" graphics.
   required a split of what's now `asm/code_3_2_17.s`/`asm/code_3_2_20.s`
   right around it): `UpdateHudLives`
 
-- `src/graphics/hud_icon_slot.c` (new file, GitHub issue #45, non-
+- `src/gfx/palette_cycle.c` (new file, GitHub issue #45, non-
   adjacent to `hud_counter.c` since `InitHud`-`UpdateHudClock` sit raw
   between them): `TickPaletteCycles`/`AddPaletteCycle` (the fx ring-buffer's
   per-frame consumer/producer pair - see
@@ -41,30 +41,30 @@ system from "core" graphics.
 - `src/graphics/hud_icon_widget.c` (new file, GitHub issue #46):
   `DestroyHud` - a `struct hud_counter`'s `parts`-array destructor.
 
-- `src/graphics/hud_icon_widget_85c4.c` (GitHub issue #46, second pass):
+- `src/text/font_glyph.c` (GitHub issue #46, second pass):
   `FontPutChar` - the per-character newline/space/glyph-dispatch
   trampoline.
 
-- `src/graphics/hud_icon_widget2.c` (new file, GitHub issue #46):
+- `src/text/font_draw_chars.c` (new file, GitHub issue #46):
   `FontDrawChars` - draws a fixed-count run of characters via the
   `struct bitmap_font` widget's own record trampoline.
 
-- `src/graphics/hud_icon_widget_8890.c` (GitHub issue #46, second pass):
+- `src/text/font_draw_text.c` (GitHub issue #46, second pass):
   `FontDrawText`.
 
-- `src/graphics/hud_icon_widget3.c` (new file, GitHub issue #46):
+- `src/text/font_height.c` (new file, GitHub issue #46):
   `FontTextHeight` - total text-block-height helper.
 
-- `src/graphics/hud_icon_widget4.c` (new file, GitHub issue #46):
+- `src/text/font.c` (new file, GitHub issue #46):
   `FontUploadTiles`, `FontSetPalette`, `FontResetPalette` - glyph-sheet VRAM
   upload and two OAM-attribute-nibble setters.
 
-- `src/graphics/hud_icon_widget_8a78.c` (GitHub issue #46, second pass):
+- `src/text/font.c` (GitHub issue #46, second pass):
   `InitFont` - the "no data tables of its own" widget constructor
   variant; now fully byte-exact, so this file (unlike the other two
   above) carries no `#if NON_MATCHING` guard at all any more.
 
-- `src/graphics/hud_icon_widget5.c` (new file, GitHub issue #46):
+- `src/text/font.c` (new file, GitHub issue #46):
   `FontHeightToLines`, `FontGetTileCount`, `FontSetPos`, `FontNewLineAt`,
   `FontGetMargin`, `FontSetMargin`, `FontGetY`, `FontGetX`,
   `FontSetTileBase` - trivial `struct bitmap_font` getter/setter/
@@ -107,8 +107,8 @@ why the rest of the family stayed raw) is
 [docs/matching/issue-45-hud-stat-widget-dispatcher.md](../matching/issue-45-hud-stat-widget-dispatcher.md).
 
 - **`FontDrawGlyph`**, **`InitSmallFont`**, **`InitLargeFont`**
-  (`src/graphics/hud_icon_widget_85c4.c`), **`FontMeasureChars`**
-  (`hud_icon_widget_8890.c`) and **`FontMeasureText`** (`hud_icon_widget_8994.c`)
+  (`src/text/font_glyph.c`), **`FontMeasureChars`**
+  (`font_draw_text.c`) and **`FontMeasureText`** (`font_measure.c`)
   - GitHub issue #46's last five, the glyph writer, the two icon-manager
   constructors and the text walkers. Plain C, built with old_agbcc (all
   three files move to it); they were NAKED. See [old-agbcc-round5.md](../matching/old-agbcc-round5.md).

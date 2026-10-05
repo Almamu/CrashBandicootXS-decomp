@@ -53,8 +53,8 @@ not attempted this pass; see "Left raw" below.
 
 ## Matched (4 functions, full clean `make compare` passing)
 
-- **`GetBgSetupControl`** (`src/graphics/graphics_package_1e640.c`)
-- **`sub_801E8F8`** (`src/graphics/graphics_package_1e8f8.c`) - the DMA3
+- **`GetBgSetupControl`** (`src/gfx/graphics_package.c`)
+- **`sub_801E8F8`** (`src/gfx/graphics_package.c`) - the DMA3
   tile-fill. Getting this one byte-exact needed two real fixes beyond
   the arithmetic itself: the DAD constant (`0x06017800`) has to be
   loaded into its own local *before* the stack scratch halfword's
@@ -69,7 +69,7 @@ not attempted this pass; see "Left raw" below.
   compare` caught it - see `docs/workflow.md`'s standing warning about
   isolated compiles not being proof.
 - **`sub_801E964`**, **`sub_801E96C`**
-  (`src/graphics/graphics_package_1e964.c`) - the last function in this
+  (`src/gfx/graphics_package.c`) - the last function in this
   object needed an explicit trailing `asm(".align 2, 0")` to zero-pad
   the 2-byte gap up to `SpawnStartMarker`'s 4-aligned start, instead of this
   compiler's default Thumb NOP-fill (`0x46C0`) for an implicit end-of-
@@ -91,7 +91,7 @@ are visible in `sub_801E8F8`/`sub_801E96C`'s final C.
 
 ## Parked (`NON_MATCHING`) - 2 functions
 
-- **`InitBgSetup`** (`src/graphics/graphics_package_1e640.c`, real bytes
+- **`InitBgSetup`** (`src/gfx/graphics_package.c`, real bytes
   in `asm/code_3_2_17_1e644.s` under `.if NON_MATCHING == 0`): every
   instruction's operation matches the ROM and every technique above was
   tried (explicit local copies for each mask, matching statement order,
@@ -99,7 +99,7 @@ are visible in `sub_801E8F8`/`sub_801E96C`'s final C.
   register copies away, and pushes/pops one extra callee-saved register
   (`r7`) in every phrasing tried that got the copies back. Parked rather
   than keep guessing.
-- **`sub_801E950`** (`src/graphics/graphics_package_1e8f8.c`, real bytes
+- **`sub_801E950`** (`src/gfx/graphics_package.c`, real bytes
   in `asm/code_3_2_17_1e950.s` under `.if NON_MATCHING == 0`): matches
   in full shape except one instruction - the ROM reloads the `-0xd` mask
   constant fresh (`movs r2,#0xd; rsbs r2,r2,#0`), while this compiler
@@ -142,7 +142,7 @@ never responded to further plain-C restructuring, so both were
 converted to `NAKED` and their ROM disassembly transcribed
 instruction-for-instruction - the same escape hatch this project
 already established for `MakeLinkHandshakeId`/`ResetLinkSessionState`
-(`src/system/link_cable.c`, see
+(`src/link/link_handshake.c`, see
 `docs/matching/issue-4-sio-settings-sync.md`'s "The general strategy
 for the rest" section).
 
@@ -225,7 +225,7 @@ wasn't rushed this pass. Left raw for whoever picks this up next.
 
 Picked up the pair the third pass deliberately left alone. Both are now
 real, semantically-confident C in the new
-`src/graphics/graphics_package_1e688.c` (real bytes still guarded at
+`src/gfx/graphics_package.c` (real bytes still guarded at
 `asm/code_3_2_17_1e644.s` under `.if NON_MATCHING == 0`).
 
 **`FitScaledSprite`** (`self`, `arg1`, `arg2`) is a best-fit box selector: it
@@ -330,7 +330,7 @@ plain one-line field accessors on the same `gLevelState`-rooted
 player struct: `GetSpawnAtStart`/`GetDeaths`/`GetMaskAssistDeaths`/`GetLives`
 (`+0xa8`/`+0x7c`/`+0x84`/`+0x74` respectively - the first three in
 `asm/code_3_2_17_231cc.s`'s still-raw accessor cluster, the fourth
-already matched in `actor_aabb_setup.c`) and `IsInBonusRound` (`+0xa4`,
+already matched in `aabb_setup.c`) and `IsInBonusRound` (`+0xa4`,
 matched in `game_loop10.c`/`game_loop2.c`). `_call_via_r4` itself is not
 a normal function at all - it's the `bx r4` register-trampoline from
 `lib1funcs.s` (`lib/libgcc/lib1funcs.s`'s
@@ -445,7 +445,7 @@ the second one materialized via the same `mov #N; neg` opaque-asm
 negative-mask idiom `UPDATE_ICON_FRAME_NIBBLE` already uses) matches
 100% on the first isolated-compile attempt. `tools/report_units.py`'s
 entry for `0x0801E950` now points at
-`src/graphics/graphics_package_1e8f8.o`. Verified via `rm -rf build &&
+`src/gfx/graphics_package.o`. Verified via `rm -rf build &&
 make NON_MATCHING=1 report` + `objdiff-cli diff` (100%) and a full
 clean `rm -rf build crashbandicootxs.elf crashbandicootxs.gba
 crashbandicootxs.map && make compare` (`La suma coincide`).
@@ -509,7 +509,7 @@ leading block and re-opening the `.if NON_MATCHING == 0` guard right
 before `DrawScaledSprite`, which is now the file's only function).
 `ldscript.txt`'s two entries for this pair had to swap order:
 `FitScaledSprite` is now a real (always-compiled) object in
-`graphics_package_1e688.o`, so it must link *before*
+`graphics_package.o`, so it must link *before*
 `code_3_2_17_1e644.o` (which now holds only `DrawScaledSprite`) to land at
 its correct, lower ROM address - the opposite of the pre-existing
 order, which had the asm file first back when it supplied both
@@ -517,7 +517,7 @@ functions' bytes. `tools/report_units.py`'s single combined entry for
 this pair was split into two: `(0x0801E688, None, ...)` (matching the
 `InitBgSetup`/`SpawnStartMarker` precedent - a NAKED transcription doesn't
 count as "matched" for this project's per-file tracking, even though
-it's byte-correct) and `(0x0801E788, "src/graphics/graphics_package_1e688.o", ...)`
+it's byte-correct) and `(0x0801E788, "src/gfx/graphics_package.o", ...)`
 (unchanged treatment, still pointing at the `.c` file's `#if
 NON_MATCHING` reconstruction for its NON_MATCHING=1 diffable
 percentage, the same convention `LoadGraphicsPackage` above uses).
@@ -547,7 +547,7 @@ whole outer loop. This is the exact same "compiler drops a genuinely
 live register from its own auto-generated prologue/epilogue list under
 register pressure" limitation already closed this session for
 `SetupRoomBlend` (`src/system/game_loop8.c`, PR #334) and `FitScaledSprite`
-(`src/graphics/graphics_package_1e688.c`, PR #336, "Seventh pass"
+(`src/gfx/graphics_package.c`, PR #336, "Seventh pass"
 above), and documented as still-open for `LoadTitleScreenBg`
 (`src/graphics/level_graphics.c`, issue #65) - given the extensive
 prior iteration already recorded in the third pass's write-up (every
@@ -574,8 +574,8 @@ Cut the guarded `LoadGraphicsPackage` block out of the tail of
 `asm/code_3_2_17_188d0.s` entirely (it was the last thing in the file,
 so this was a pure truncation, no mid-file split needed) - the file now
 ends at `DestroyLevelSelectCursor`'s trailing literal pool. No `ldscript.txt` changes
-were needed: `graphics_package_1e578.o` already linked immediately
-after `code_3_2_17_188d0.o` and before `graphics_package_1e688.o`, which
+were needed: `graphics_package.o` already linked immediately
+after `code_3_2_17_188d0.o` and before `graphics_package.o`, which
 is still the correct order now that the `.c` file unconditionally
 provides the real function (matching `FitScaledSprite`'s precedent, just
 without a reorder since this function was already the C file's sole
@@ -609,7 +609,7 @@ sidesteps this compiler's addressing-mode-folding pass entirely: there
 is no C-level codegen left to fight, since every instruction is
 written literally with its own explicit register and immediate-offset
 encoding. This is the exact same escape hatch this cluster's sibling
-`FitScaledSprite` (`src/graphics/graphics_package_1e688.c`, "Seventh pass"
+`FitScaledSprite` (`src/gfx/graphics_package.c`, "Seventh pass"
 above) was just closed with earlier today, for the same underlying
 `r7`-addressing-mode-folding bug class (just reached via a different
 mechanism there - `r7` never entering the compiler's own synthesized
@@ -640,9 +640,9 @@ and marking `.pool` at the ROM's own split points.
 this point (its other two functions, `InitBgSetup` and `FitScaledSprite`,
 were already cut out by earlier passes), so the file is now deleted
 entirely, with its `ldscript.txt` line dropped - `DrawScaledSprite`'s bytes
-now come from `graphics_package_1e688.o`, which already links at the
-correct position (immediately after `graphics_package_1e640.o`, before
-`graphics_package_1e8f8.o`) since it already supplied `FitScaledSprite`'s
+now come from `graphics_package.o`, which already links at the
+correct position (immediately after `graphics_package.o`, before
+`graphics_package.o`) since it already supplied `FitScaledSprite`'s
 real bytes at that same link position. `tools/report_units.py`'s entry
 for `0x0801E788` now points at `None` (NAKED, not "matched" - the
 `InitBgSetup`/`FitScaledSprite`/`SpawnStartMarker`/`LoadGraphicsPackage`

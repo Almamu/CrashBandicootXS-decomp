@@ -1,7 +1,7 @@
 #include "core.h"
 #include "line_util.h"
 
-/* Sits right after rand (ROM 0x08000E4C, in src/util/rand_util.c)
+/* Sits right after rand (ROM 0x08000E4C, in src/util/rand.c)
  * and before DrawWrappedText (still raw in asm/code_3_1_3.s). */
 
 /* Bresenham-line setup: computes the deltas/signs/error terms for

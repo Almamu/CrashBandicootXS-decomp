@@ -10,15 +10,15 @@ None of them needs a register pin.
 | `LaunchEffectPart` | `src/system/game_loop14.c` | 160 B | 61 hw (note), no draft | **Closed** |
 | `DecodeLayerChunk` | `src/system/game_loop57.c` | 320 B | 13 hw (note), no draft | **Closed** |
 | `RunCutscenePlayer` | `src/system/game_loop57.c` | 284 B | 77 hw (note), no draft | **Closed** |
-| `DrawSpritePieces` | `src/graphics/graphics_73dc.c` (new, split from `graphics.c`) | 600 B | draft removed long ago | **Closed** |
+| `DrawSpritePieces` | `src/gfx/sprite_pieces.c` (new, split from `graphics.c`) | 600 B | draft removed long ago | **Closed** |
 
 `game_loop14.c` and `game_loop57.c` were already on `OLD_AGBCC_OBJS`.
 `DrawSpritePieces` was the last function in `graphics.c`, which is built with
 agbcc. Its loop loads the `0xf` mask before the `ldrb` it is combined
 with, which is the old_agbcc tell. It now lives in its own
-`graphics_73dc.c` on `OLD_AGBCC_OBJS`. `0x080073DC` is 4-byte aligned,
+`sprite_pieces.c` on `OLD_AGBCC_OBJS`. `0x080073DC` is 4-byte aligned,
 and `ldscript.txt` places the file between `graphics.o` and
-`graphics_7634.o`.
+`affine_sprite_pieces.o`.
 
 ## DropWumpa
 
@@ -89,7 +89,7 @@ every other value in the ROM's register. After that:
 ## DrawSpritePieces
 
 The non-affine sibling of `DrawAffineSpritePieces` (#509). The draft was written
-directly in `graphics_7634.c`'s matched shape and matched on the first
+directly in `affine_sprite_pieces.c`'s matched shape and matched on the first
 compile under old_agbcc. Under agbcc it is 37 halfwords off. It uses the
 same structures and techniques as `DrawAffineSpritePieces`:
 

@@ -51,7 +51,7 @@ Game code includes a library's public header and nothing else from it:
   `EEPROMWrite`, `EEPROMCompare`, `EEPROMWrite1_check`, `struct
   EepromConfig` and `gEepromConfig`. The timer state and helpers are in
   `lib/agb_eeprom/src/agb_eeprom_internal.h`.
-- `<agb_syscall.h>`: the SWI wrappers. `src/system/asset_util.c` keeps its
+- `<agb_syscall.h>`: the SWI wrappers. `src/system/asset.c` keeps its
   own one-argument `LZ77UnCompVram`/`RLUnCompVram` declarations: its
   callers leave the destination in r1 from their own argument, and the
   two-argument call compiles differently.
@@ -102,10 +102,9 @@ No library object uses old_agbcc, agbcc_arm, `-fno-strength-reduce` or
   `gGaxDefaultSong`, the engine's default handler layout: it sits at the
   end of the music block and `tools/gax_audio.py` builds it with the songs
   (docs/audio.md).
-- **The game-side audio code**: the audio manager (`src/audio/
-  audio_context.c`, `music_player.c`, `sfx_ambient.c`, `music_irq.c`),
-  the song table (`src/data/song_table_16aa20.c`) and the sound-effect
-  table (`sound/sfx_table.json`). They call GAX2 through `<gax.h>`.
+- **The game-side audio code**: the audio manager (`src/audio/audio.c`), the song
+  table (`src/data/song_table_16aa20.c`) and the sound-effect table
+  (`sound/sfx_table.json`). They call GAX2 through `<gax.h>`.
 - **GAX2's IWRAM variables**: `gGaxIrqEnabled` is the game's flag (its
   VBlank handler calls `GAX_irq` while it is set). `gGaxHaltFont`, the
   fatal-error screen's font, is GAX2 data, but it sits in the middle of

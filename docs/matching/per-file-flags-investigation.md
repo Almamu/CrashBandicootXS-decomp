@@ -157,16 +157,16 @@ old_agbcc files:
 - `actor_part_188d0.c` (`CreateTiny`)
 - `actor_part_1b85c.c` (`DestroyLevelSelect`)
 - `actor_part_1cee0.c` (`LevelSelectTurnPage`, `PlaceLevelSelectEntries`, `InitZoomBg`)
-- `graphics_package_1e578.c` (`LoadGraphicsPackage`)
-- `graphics_package_1e688.c` (`FitScaledSprite`)
+- `graphics_package.c` (`LoadGraphicsPackage`)
+- `graphics_package.c` (`FitScaledSprite`)
 - `hud_digit_array.c` (`InitHud`)
 - `level_graphics.c` (`LoadTitleScreenBg`)
 - `settings_menu22.c` (`DrawPauseRelicsPage`)
 - `game_loop49.c` (`SolidifyOutlineCrates`)
 
 Those are all byte-exact today, so each change is a break. Among the
-current-agbcc objects, 8 files change (`sfx_ambient.c`,
-`actor_part100.c`, `graphics.c`, `hud_icon_slot.c`, `game_loop28.c`,
+current-agbcc objects, 8 files change (`audio.c`,
+`actor_part100.c`, `graphics.c`, `palette_cycle.c`, `game_loop28.c`,
 `game_loop5.c`, `irq.c`, `tile_slot_pool.c`). The flag is **not** a
 property of the old_agbcc build as a whole, nor of the whole ROM. Of the
 old_agbcc objects, `graphics_loading_35780.o` is one where it changes

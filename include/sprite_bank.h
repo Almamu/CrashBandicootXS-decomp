@@ -16,7 +16,7 @@
  * same records through local views with only the fields they use
  * (struct anim_record in gfx_part.h/level_menu.h/level_select_parts.h,
  * struct act_anim_record in action_obj.h, struct anim_rec in
- * gobj_1a794.h, struct kf_record/piece_info in graphics_7634.c).
+ * gobj_1a794.h, struct kf_record/piece_info in affine_sprite_pieces.c).
  */
 
 #ifndef ARRAY_COUNT

@@ -20,7 +20,7 @@ extern void (*gIntrTableTimer2)(void);
  * The IME-save/IE-clear/IME-restore snippet (repeated once per exit
  * path) matches the ROM's exact "no extra copy" shape here as plain
  * C (`u16 savedIme = REG_IME; ...`), the same phrasing already proven
- * for `LinkStop` (src/system/link_cable.c) - the previously
+ * for `LinkStop` (src/link/link_handshake.c) - the previously
  * suspected register-pressure gap didn't reproduce with this
  * function's actual field/loop structure. Byte-identical to the ROM,
  * confirmed via a direct `.text`-section `cmp` against
@@ -144,7 +144,7 @@ extern u32 CheckSaveChecksum(struct save_data *self);
 
 /* Loads the settings record from EEPROM (`ReadSaveData`, retried up to
  * 3 times), muting the music player across the transfer (stop before,
- * resume after, matching `src/audio/audio_context.c`'s established
+ * resume after, matching `src/audio/audio.c`'s established
  * `AudioContext` helpers), then validates the loaded record's two
  * marker bytes and checksum. Returns 4 (EEPROM read failed after
  * retries), 2 (bad `magic` marker), 1 (bad `versionNibble`

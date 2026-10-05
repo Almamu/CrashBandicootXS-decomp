@@ -48,7 +48,7 @@ int *mem_initial_free_bytes = NULL;
 u32 gVBlankCounter = 0;
 u8 gFrameLimitEnabled = 0;
 /* Set while the music player's per-frame update is installed
- * (music_player.c, audio_context.c). */
+ * (audio.c). */
 u8 gGaxIrqEnabled = 0;
 
 /* Held keys and newly pressed keys (irq.c's UpdateKeys; the users
@@ -58,10 +58,10 @@ struct {
     u16 pressed;
 } gKeys = { 0, 0 };
 
-/* rand_util.c's seed. */
+/* rand.c's seed. */
 u32 gRandSeed = 1;
 
-/* fade_util.c's `struct unk_030007E8`: the brightness fade state. */
+/* fade.c's `struct unk_030007E8`: the brightness fade state. */
 struct {
     s32 field_0;
     s32 field_4;
@@ -72,7 +72,7 @@ s32 gBrightnessFadeStep = 0;
 s32 gBrightnessFadeTimer = 0;
 u32 gSfxVoiceToggle = 0;
 
-/* Link cable (link_cable*.c, settings_menu*.c): gLinkSession is the
+/* Link cable (src/link/*.c, settings_menu*.c): gLinkSession is the
  * session object the link IRQ handlers work on. gEepromNeedsInit is the
  * save code's (settings_menu8d.c): set until its first EEPROMConfigure. */
 u8 gLinkSessionReset = 1;

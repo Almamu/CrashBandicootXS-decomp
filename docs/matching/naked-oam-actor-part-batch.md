@@ -53,7 +53,7 @@ converted to a `NAKED` function whose body is a single `asm()` block
 transcribing the real ROM disassembly instruction-for-instruction, the
 same technique already used for `CheckSpritePickup`
 (`naked-sub_8007dbc.md`) and several functions in
-`src/system/link_cable.c`/`lib/gax/src/gax_swi.c`. Since this is a
+`src/link/link_handshake.c`/`lib/gax/src/gax_swi.c`. Since this is a
 literal byte-for-byte transcription rather than a derived
 reconstruction, it reproduces the ROM's own register choices, operand
 order, and padding directly and needs no register-allocation coaxing
@@ -166,7 +166,7 @@ is still NAKED, with a C draft 18 halfwords off. See [issue-9-naked-retry.md](./
 ## Later pass (strag1)
 
 `DrawSpritePieces` is now real C. It moved out of `graphics.c` into
-`src/graphics/graphics_73dc.c` (old_agbcc, on `OLD_AGBCC_OBJS`), written
+`src/gfx/sprite_pieces.c` (old_agbcc, on `OLD_AGBCC_OBJS`), written
 in the same shape as its matched affine sibling `DrawAffineSpritePieces`. See
 [strag1-naked-retry.md](strag1-naked-retry.md).
 

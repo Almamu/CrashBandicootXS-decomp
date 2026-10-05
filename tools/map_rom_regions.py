@@ -20,7 +20,7 @@ knowing before trusting the output:
   counts for exactly this reason.
 - **This only sees calls made from *other raw asm functions***. A call
   from an already-matched src/*.c file into raw asm (like
-  src/system/asset_util.c's LZ77UnCompVram/RLUnCompVram calls) is
+  src/system/asset.c's LZ77UnCompVram/RLUnCompVram calls) is
   invisible here - re-check callers by hand (grep src/) before trusting
   an "isolated, no callers found" result.
 

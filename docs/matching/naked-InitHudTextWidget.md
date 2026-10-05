@@ -3,13 +3,13 @@
 `DestroyFont` (ROM `0x08028B7C`, real bytes previously in
 `asm/code_3_2_20_8b7c.s`) has no tracked GitHub issue - it sits
 immediately after GitHub issue #46's fully-matched
-`FontHeightToLines`-`FontSetTileBase` run (`src/graphics/hud_icon_widget5.c`,
+`FontHeightToLines`-`FontSetTileBase` run (`src/text/font.c`,
 "trivial `struct bitmap_font` getter/setter/trampoline-forwarder
 family") and was explicitly called out in that chunk's own write-up as
 next-but-out-of-scope.
 
 It's a minimal constructor for the same `struct bitmap_font` (see
-`include/bitmap_font.h`) that `hud_icon_widget5.c`'s whole file
+`include/bitmap_font.h`) that `font.c`'s whole file
 already operates on: it points the manager's `record` field at a fixed
 ROM table, then optionally registers the object for teardown -
 
@@ -24,8 +24,8 @@ void DestroyFont(struct bitmap_font *self, u32 flags)
 ```
 
 `gFontVtable` is the same ROM table
-`src/graphics/actor_aabb_setup.c`'s `DestroyLargeFont`/`DestroySmallFont` and
-`src/graphics/hud_icon_widget_8a78.c`'s `InitFont` already point a
+`src/util/aabb_setup.c`'s `DestroyLargeFont`/`DestroySmallFont` and
+`src/text/font.c`'s `InitFont` already point a
 `record` field at, for a different self object each time - part of the
 `gEntityVtable`-family "per-type descriptor" convention
 `docs/rom_map.md` documents at length, and the same conditional
@@ -44,14 +44,14 @@ codegen already lands the address add in `r2` exactly like the ROM.
 
 ## File structure
 
-Folded into `src/graphics/hud_icon_widget5.c` (immediately after
+Folded into `src/text/font.c` (immediately after
 `FontSetTileBase`) rather than getting its own object file, since it's
 directly contiguous with that file's existing ROM range and shares the
 same `struct bitmap_font`/`gEntityVtable`-family conventions -
 see `docs/workflow.md`'s "one `.c` file per contiguous ROM region"
 rule. The function's block was cut out of `asm/code_3_2_20_8b7c.s`,
 which now starts at `InitObjTileFreeList` (`0x08028BA0`) instead;
-`ldscript.txt` needed no change since `hud_icon_widget5.o` already
+`ldscript.txt` needed no change since `font.o` already
 linked directly before `code_3_2_20_8b7c.o`. `tools/report_units.py`'s
 `hud` category entry for `0x08028AC4` updated to note the extended
 range; the old standalone `0x08028B7C` entry removed.

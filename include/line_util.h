@@ -1,8 +1,8 @@
 #ifndef __LINE_UTIL_H__
 #define __LINE_UTIL_H__
 
-/* Bresenham-line state: set up by InitBresenhamLine (src/util/line_util.c) and
- * advanced one step at a time by StepBresenhamLine (src/util/line_util2.c).
+/* Bresenham-line state: set up by InitBresenhamLine (src/util/line.c) and
+ * advanced one step at a time by StepBresenhamLine (src/util/line_step.c).
  * Field names beyond the four input coordinates are left as `field_N`
  * (offsets, not purposes) until a caller clarifies them. */
 struct bresenham_line {

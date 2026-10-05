@@ -22,8 +22,8 @@
  * - `UpdateEnemyOscillateY`: Y axis (`owner+4`), base `self->0x64`, same
  *   `__udivsi3`-based phase index as `UpdateEnemyOscillateX`.
  *
- * `__udivsi3` (already matched, `src/util/time_util.c`/
- * `src/graphics/hud_icon_widget5.c`) is `s32 __udivsi3(s32 value,
+ * `__udivsi3` (already matched, `src/util/time_format.c`/
+ * `src/text/font.c`) is `s32 __udivsi3(s32 value,
  * s32 divisor)` elsewhere - here it's re-used with `self->0x3c` as
  * the "divisor" slot, most plausibly for some angle/period-wrapping
  * role given the caller context, not resolved further in this pass.

@@ -1,6 +1,6 @@
 # `FadePaletteToBlack` converted from NAKED transcription to real matched C
 
-`FadePaletteToBlack` (`src/graphics/fade_screen_mode.c`, the fade-to-black
+`FadePaletteToBlack` (`src/gfx/fade_to_black.c`, the fade-to-black
 palette DMA loop) had been parked as a byte-correct NAKED asm
 transcription since an early pass - see
 [naked-transcription-parked-functions.md](./naked-transcription-parked-functions.md)
@@ -155,6 +155,6 @@ diff` against `build/expected/units/fade_screen_mode_target.o` for
 `FadePaletteToBlack`: 100% match. Full clean `rm -rf build
 crashbandicootxs.elf crashbandicootxs.gba crashbandicootxs.map && make
 compare` - `crashbandicootxs.gba: La suma coincide`. `FadePaletteToBlack` is
-folded into the same `src/graphics/fade_screen_mode.o` unit as the
+folded into the same `src/gfx/fade_to_black.o` unit as the
 already-matched `IsBrightnessFadeActive` in `tools/report_units.py`, since it's
 the same object file.

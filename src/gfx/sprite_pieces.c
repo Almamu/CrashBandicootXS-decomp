@@ -1,7 +1,7 @@
 #include "core.h"
 
 /* DrawSpritePieces (0x080073DC-0x08007634), the plain (non-affine) sibling of
- * `DrawAffineSpritePieces` (graphics_7634.c). Split out of graphics.c: it is the
+ * `DrawAffineSpritePieces` (affine_sprite_pieces.c). Split out of graphics.c: it is the
  * last function there, and it needs old_agbcc (Makefile OLD_AGBCC_OBJS)
  * while the rest of graphics.c is built with agbcc - the ROM loads the
  * piece id's `0xf` mask before the `ldrb` it is combined with.

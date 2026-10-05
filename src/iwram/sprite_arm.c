@@ -326,7 +326,7 @@ void UnpackRleSpriteFrame(u16 *dst, struct rle_frame *frame)
     }
 }
 
-/* Same layout as sprite_frame_queue.c's copy. */
+/* Same layout as sprite_frame.c's copy. */
 struct sprite_frame_cache_node {
     struct sprite_frame_cache_node *next;
     struct sprite_frame_cache_node *prev;
@@ -341,7 +341,7 @@ extern struct sprite_frame_cache_node gSpriteFrameCachePrevious;
 
 #if NON_MATCHING
 /* gLookupSpriteFrameCacheFunc(frame), LoadSpriteFrameTiles's override hook (see
- * sprite_frame_queue.c): returns the OBJ tile index of `frame` if it is
+ * sprite_frame.c): returns the OBJ tile index of `frame` if it is
  * already in VRAM, or -1. Hits in this frame's list are returned as they
  * are; a hit in last frame's list is moved to the head of this frame's
  * list first.

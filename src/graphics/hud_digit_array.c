@@ -173,7 +173,7 @@ struct hud_counter *InitHud(struct hud_counter *self)
  * (`GetBossIndex`) and `self->icon_flag`, before DMA-filling nine words
  * at `self+0x40` with `-1` (a raw `REG_DMA3SAD`/`DAD`/`CNT` poke, the
  * same low-level idiom `settings_menu8e.c`'s `ValidateSaveData` and
- * `link_cable.c` already document for this ROM).
+ * `link_handshake.c` already document for this ROM).
  *
  * Matching notes (old_agbcc): the two inner palette stores go through
  * the `SetPal` inline so the ROM's three separate nibble-insert copies

@@ -37,7 +37,7 @@ static inline void format_pct(u8 *buf, s32 value)
  * non-zero, decrements it, formats the " <NN%>" scratch string into
  * `musicVolumeText`/`soundVolumeText`, and pushes the new level (`(count << 8 | 1) / 20`)
  * through the matching AudioContext setter (`SetMusicVolume`/`SetSfxVolume`
- * - see src/audio/audio_context.c). Only the type-5/`soundVolume` branch
+ * - see src/audio/audio.c). Only the type-5/`soundVolume` branch
  * also plays the standard SFX cue. */
 void PauseMenuVolumeDown(struct pause_menu *self)
 {

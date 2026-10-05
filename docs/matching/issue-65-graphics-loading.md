@@ -27,7 +27,7 @@ behavior. This pass worked those three:
   `ResetOamBuffer`/`HideUnusedOamEntries`/`WaitForVBlank`/`CommitOamBuffer`; clears
   `REG_BLDCNT`/`REG_BLDALPHA` (one 32-bit store), sets `REG_BLDY` to
   `0x10`, and clears `REG_DISPCNT`; calls `FontSetPalette` (the icon-manager
-  accessor from issue #46, `src/graphics/hud_icon_widget4.c`) with `0xe`;
+  accessor from issue #46, `src/text/font.c`) with `0xe`;
   sets the icon manager's `field_108` to `0x200` and fires its
   `record->slots[6]` trampoline via `_call_via_r1` (the same
   `(u8 *)obj + slot->offset, slot->ptr` pattern already established
@@ -40,10 +40,10 @@ behavior. This pass worked those three:
   `self->field_10 = InitStarfield(OperatorNew(0x14))`) into the scratch
   object's `+0x208` field; runs a fixed fade/audio-reset sequence
   (`SetObjMapping1D`/`ShowObj`/`SetDispcntMode(1)`/`CommitDispcnt` - the same
-  quartet already matched in `src/graphics/fade_screen_mode2.c`); zeroes
+  quartet already matched in `src/gfx/display.c`); zeroes
   the scratch object's first two words; and starts song `0xb` via
   `StartSong(gAudioContext, 0xb)` (`gAudioContext` is the
-  `struct AudioContext *` from `include/audio.h`/`src/audio/music_player.c`).
+  `struct AudioContext *` from `include/audio.h`/`src/audio/audio.c`).
   Returns the same scratch object pointer it was given.
 
   The 0x220-byte scratch object stays a raw `u32 *` rather than a named
@@ -54,7 +54,7 @@ behavior. This pass worked those three:
   works through those, not this one (see `matching_decomp_prefer_structs`:
   a fully-opaque scratch buffer with only a few fields understood stays
   raw-offset with a comment, same precedent as
-  `graphics_package_1e640.c`'s scratch buffer).
+  `graphics_package.c`'s scratch buffer).
 
   Two ordering-sensitive compiler quirks came up matching this one, both
   now confirmed via the full clean `make compare`, not just an isolated

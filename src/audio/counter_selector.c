@@ -39,7 +39,7 @@ extern void LoadTaggedAsset(void *asset, void *dest);
 
 void LanguageSelectInput(struct language_select *self, u32 flags);
 
-/* Loads a "tagged" asset (see LoadTaggedAsset, src/system/asset_util.c)
+/* Loads a "tagged" asset (see LoadTaggedAsset, src/system/asset.c)
  * into a freshly allocated buffer, then queues a DMA3 transfer from that
  * buffer out to `dest` - `unused` (r0) is never read. */
 void LoadTaggedAssetBuffered(void *unused, void *asset, void *dest)

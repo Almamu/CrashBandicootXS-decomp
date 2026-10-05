@@ -62,7 +62,7 @@ grained and more heavily caveated than what a progress bar can show.
 | `menu_ui` (per-level text/dialog display, dispatch table confirmed) | 9.1 KB | 3.8% | high - one function read in full, 29/31 siblings confirmed as real dispatch-table entries in ROM data |
 | `fx`? (particle/trajectory queue, tentative) | 0.3 KB | 0.1% | low - two small functions read |
 | `system` (incl. 1.5 KB SIO/link-cable handling, newly found) | 5.7 KB | 2.4% | matched or matched-caller-confirmed, plus one directly-read SIO cluster |
-| `graphics` (incl. a 0.3 KB fade-to-black cluster, newly found) | 2.4 KB | 1.0% | matched, plus one directly-read fade-effect cluster tied to matched `palette_blend.c`/`fade_util.c` |
+| `graphics` (incl. a 0.3 KB fade-to-black cluster, newly found) | 2.4 KB | 1.0% | matched, plus one directly-read fade-effect cluster tied to matched `fade.c` |
 | `util` | 1.8 KB | 0.8% | matched |
 | *(unlabeled remainder)* | ~0.9 KB | 0.4% | none - a small timer-ish cluster from the old `fx` split, not folded into anything |
 
@@ -176,7 +176,7 @@ calls it. More telling: **`AddPaletteCycle`**, one of the gap's own
 functions, takes a self-pointer with an internal counter at `+0x40` and
 appends an entry to what looks like a small ring buffer - storing two
 input values plus a third computed via `__divsi3(0x3C, arg3)` (the
-same atan2-style angle helper `math_util.c` already documents as
+same atan2-style angle helper `fixed_math.c` already documents as
 "looks like an atan2-style angle lookup"). Fixed first argument, varying
 second, stored as one of three fields per queue entry - this reads far
 more like a **particle or projectile trajectory queue** (an angle
@@ -447,7 +447,7 @@ one sample read.
 | `0x08029ED0`-`0x0802B348`ish | ~5.6 KB | actor system | high | `SelectActorCategory`, `InitActorPart`, `DrawActor`, `ConstructAnimTableState`, `ConstructActorPart` - the vtable/animation system documented in `docs/graphics.md` |
 | `0x080354E0`-`0x08035780`ish | ~0.7 KB | graphics loading | high | `InitTitleScreen`, `LoadTitleScreenBg`, `LoadTitleScreenObjTiles` |
 | `0x08037110`-~`0x0803A950` | ~14 KB | audio (GAX2) | medium, **narrowed this pass** | see "Narrowing the GAX2 boundary" below |
-| `0x0803A950`-`0x0803B058` | ~1.5 KB | `system` (asset loading) | high | `LZ77UnCompVram`/`RLUnCompVram`, confirmed called from the already-matched `src/system/asset_util.c` |
+| `0x0803A950`-`0x0803B058` | ~1.5 KB | `system` (asset loading) | high | `LZ77UnCompVram`/`RLUnCompVram`, confirmed called from the already-matched `src/system/asset.c` |
 | `0x0803B058`-`0x0803B060` | 8 B | `graphics` | **matched** | `src/graphics/actor_anim.c` |
 | `0x0803B060`-`0x0803B8B0` | ~2.1 KB | actor system | medium | `GetAnimFrameData`, 43 other still-unnamed neighbors in `code_3_3.s` |
 
@@ -500,7 +500,7 @@ closely-related "run one frame of \[mode/level-type A vs B\]"
 entry points). Given a struct pointer (fields observed out to at least
 `+0xA8`, so the struct is at least 0xAC bytes), it: calls
 `FlushVramDmaQueue` (draining the queued VRAM DMA transfers - already
-matched, `src/graphics/graphics.c`), then assembles and writes **every
+matched, `src/gfx/graphics.c`), then assembles and writes **every
 core PPU register that isn't already owned by a matched file** in one
 pass - `REG_BG0HOFS` (`0x04000010`, driven by a monotonically
 incrementing per-object counter at `+0x7C` shifted right 3 - a fixed-rate
@@ -641,7 +641,7 @@ them directly:
   neighborhood.
 - **New finding: several of these runs also call `_call_via_r2`/
   `_call_via_r3`** - the text-drawing helpers already matched in
-  `src/graphics/text_layout.c`/`oam_count.c` (`_call_via_r2` measures a
+  `src/text/wrapped_text.c`/`oam_count.c` (`_call_via_r2` measures a
   string's pixel width, `_call_via_r3` draws one). Meaning: at least some
   actor types render text as part of their behavior - a floating score,
   a countdown, a crate-contents readout, something along those lines.
@@ -650,7 +650,7 @@ them directly:
 - **A concrete link back to the 94 KB zone's own finding**: one of the
   IWRAM globals in that zone's hot cluster, `gOamBuffer`, is
   passed as the `struct oam_shadow_buffer *` argument to `HideUnusedOamEntries`
-  (matched, `src/graphics/graphics.c`) - and `HideUnusedOamEntries` shows up
+  (matched, `src/gfx/graphics.c`) - and `HideUnusedOamEntries` shows up
   repeatedly as an outgoing call from these leftover actor runs too, as
   does `WaitForVBlank` (matched, `src/system/irq.c`'s region). So the same
   OAM-shadow-buffer singleton and the same low-level sync helper get
@@ -3433,14 +3433,14 @@ The ~0.4 KB of tiny leaf singletons left unlabeled by the split above
 noise. **`FadePaletteToBlack`**, the very first function in the entire file,
 loops calling **`DarkenPalette`** at increasing factors (`0, 2, 4, ...,
 0x10`) - and `DarkenPalette` is not raw asm at all, it's **already matched**
-(`src/graphics/palette_blend.c`), documented there as blending the whole
+(`src/gfx/fade.c`), documented there as blending the whole
 512-entry palette toward black by `factor/16` per channel. Between each
 step, `FadePaletteToBlack` calls `WaitForVBlank` (matched, `src/system/irq.c`'s
 region - a VBlank-wait/commit helper used throughout this document) and
 DMAs the result out - the textbook shape of a **fade-to-black effect**,
-one step per frame. `palette_blend.c`'s own header comment already
+one step per frame. `fade.c`'s own header comment already
 anticipated this: *"Sits right after `FadeBrightness`
-(`src/graphics/fade_util.c`) and before whatever's still raw in
+(`src/gfx/fade.c`) and before whatever's still raw in
 `asm/code_3_1_7.s`"* - this is that continuation, finally identified.
 
 The other 12 functions in the cluster (16-24 B each) are get/set
@@ -4022,7 +4022,7 @@ concrete evidence: `LZ77UnCompVram`/`RLUnCompVram` sit at
 `0x0803A950`, only ~630 bytes after the last address `docs/audio.md`
 names as GAX2-internal (`0x0803A325`) - and those two wrapper functions
 are **confirmed non-audio**, directly referenced by
-`src/system/asset_util.c`'s already-matched `LoadTaggedAsset`. Since
+`src/system/asset.c`'s already-matched `LoadTaggedAsset`. Since
 functions from one original source file are contiguous in this ROM, GAX2
 can't extend past wherever its last real function ends, somewhere at or
 before `0x0803A950` - **at least 1.5 KB less than previously estimated**,

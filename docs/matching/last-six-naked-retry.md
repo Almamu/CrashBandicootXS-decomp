@@ -6,7 +6,7 @@ in place.
 
 | Function | File | Before | Now | Status |
 |---|---|---|---|---|
-| `HandleLinkSerial` (#4) | `src/system/link_cable.c` | 16 | 6 (old_agbcc) | Draft updated |
+| `HandleLinkSerial` (#4) | `src/link/link_handshake.c` | 16 | 6 (old_agbcc) | Draft updated |
 | `ReceiveSaveTransferChunk` (#5) | `src/graphics/settings_menu8a2.c` | 104 | 97 (4 bytes long) | Draft updated, both loops now match |
 | `SpawnFlamethrowerLabAssistant` (#31) | `src/graphics/graphics_loading_1feec.c` | 62 | 62 | Draft unchanged, note added |
 | `DrawPauseFraction` (#7) | `src/graphics/settings_menu16.c` | 73 | 73 | Draft unchanged, note added |

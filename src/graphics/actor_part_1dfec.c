@@ -52,7 +52,7 @@ struct oam_entry
     s16 affineParam;
 };
 
-/* Same 0x40C-byte OAM shadow buffer src/graphics/graphics.c names
+/* Same 0x40C-byte OAM shadow buffer src/gfx/graphics.c names
  * `struct oam_shadow_buffer`; `matrixCount` counts the affine matrices
  * handed out this frame. */
 struct oam_shadow_buffer

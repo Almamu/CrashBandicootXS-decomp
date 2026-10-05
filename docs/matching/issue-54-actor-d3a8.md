@@ -265,7 +265,7 @@ records involved. Reading both functions' disassembly side by side
 resolved it: both use the exact same 6-halfword layout,
 `{s16 x, y, z, sizeX, sizeY, sizeZ}`, compared axis-by-axis in Z/Y/X
 order (matching the ROM's own instruction order, not storage order) -
-the same shape as `struct aabb` (`src/graphics/aabb_util.c`) generalized
+the same shape as `struct aabb` (`src/util/aabb.c`) generalized
 from 2 axes to 3, just never previously named because it hadn't been
 read carefully enough end to end. `UpdateYeti`'s "static" box A is
 `gYetiCatchBox`, and `IsTouchingYeti`'s is `gYetiBox` -
@@ -281,7 +281,7 @@ position at the same field offsets) - `self` being whatever
 
 Both functions then run box B through `MemCopy32` before comparing -
 which turned out to be a real, confirmed `memcpy` (`MemCopy32`'s own
-definition in `src/system/boot_util.c`, already matched: a `CpuSet`
+definition in `src/system/boot.c`, already matched: a `CpuSet`
 SWI wrapper) called with `dst == src`, i.e. a genuine no-op self-copy,
 not a disassembly artifact or a sign of some hidden second buffer. Kept
 byte-faithful rather than "simplified away" since it's really in the

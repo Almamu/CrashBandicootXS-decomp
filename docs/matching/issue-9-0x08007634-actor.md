@@ -293,8 +293,8 @@ This pass closed 11 of this range's 21 NAKED functions. See [issue-9-naked-retry
 
 ## Later pass (issue #9/#10 raw-asm pass)
 
-`DrawAffineSpritePieces` is no longer raw. It moved out of `asm/code_3_2.s` into `src/graphics/graphics_7634.c` as NAKED, with a NON_MATCHING C draft 468 halfwords off. See [issue-9-raw-asm-pass.md](issue-9-raw-asm-pass.md).
+`DrawAffineSpritePieces` is no longer raw. It moved out of `asm/code_3_2.s` into `src/gfx/affine_sprite_pieces.c` as NAKED, with a NON_MATCHING C draft 468 halfwords off. See [issue-9-raw-asm-pass.md](issue-9-raw-asm-pass.md).
 
 ## Later pass (DrawAffineSpritePieces retry)
 
-`DrawAffineSpritePieces` is matched as real C under old_agbcc (`graphics_7634.o` joined `OLD_AGBCC_OBJS`). The key was reload's register rotation, not the frame: taking the size-table addresses before reading `pos` makes reload spill r7, as in the ROM. See [graphics-7634-retry.md](graphics-7634-retry.md).
+`DrawAffineSpritePieces` is matched as real C under old_agbcc (`affine_sprite_pieces.o` joined `OLD_AGBCC_OBJS`). The key was reload's register rotation, not the frame: taking the size-table addresses before reading `pos` makes reload spill r7, as in the ROM. See [graphics-7634-retry.md](graphics-7634-retry.md).

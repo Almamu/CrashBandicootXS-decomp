@@ -194,7 +194,7 @@ syntax this project's other `NAKED` functions use -
 `asrs`->`asr`, `orrs`->`orr`, `rsbs rX,rX,#0`->`neg rX,rX` - with the
 original `_08XXXXXX:` labels renumbered to GNU-as local numeric
 labels), the same escape hatch this project already established for
-`MakeLinkHandshakeId`/`ResetLinkSessionState` (`src/system/link_cable.c`, see
+`MakeLinkHandshakeId`/`ResetLinkSessionState` (`src/link/link_handshake.c`, see
 `docs/matching/issue-4-sio-settings-sync.md`'s "The general strategy
 for the rest" section). The semantics-understanding paragraphs in each
 function's doc comment were kept; the now-obsolete "here's exactly

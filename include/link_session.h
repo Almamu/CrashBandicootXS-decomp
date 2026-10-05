@@ -3,7 +3,7 @@
 
 #include "core.h"
 
-/* The link-cable session layouts (src/system/link_cable*.c), as the
+/* The link-cable session layouts (src/link/*.c), as the
  * NON_MATCHING drafts of MakeLinkHandshakeId/ResetLinkSessionState/UpdateLinkSession establish
  * (docs/matching/issue-4-6-8-naked-retry.md). */
 struct nibble_pair {

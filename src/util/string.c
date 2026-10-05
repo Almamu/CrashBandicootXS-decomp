@@ -2,7 +2,7 @@
 
 /* Sits right after FindSubstring (ROM 0x08000CBC), which is not yet
  * byte-matching and is still parked in asm/code_3_1_2.s - kept in its
- * own translation unit (rather than string_util.c, thematically the
+ * own translation unit (rather than number_format.c, thematically the
  * better fit) purely so ldscript.txt can place this one function's
  * object between code_3_1_2.o and code_3_1_3.o and preserve ROM address
  * order. */

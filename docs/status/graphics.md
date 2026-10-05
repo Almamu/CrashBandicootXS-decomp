@@ -10,7 +10,7 @@ and [graphics_loading.md](./graphics_loading.md).
 
 ## Matched
 
-- `src/graphics/graphics.c`: `AllocVramDmaQueue`, `QueueVramDmaTransfer`,
+- `src/gfx/graphics.c`: `AllocVramDmaQueue`, `QueueVramDmaTransfer`,
   `FreeVramDmaQueue`, `FlushVramDmaQueue`, `InitOamBuffer`, `DestroyOamBuffer`,
   `AddOamEntry`, `CommitOamBuffer`, `RewindOamBuffer`, `MarkOamBufferBase`, `ResetOamBuffer`,
   `HideUnusedOamEntries`, `AppendOamEntries`, `SetOamAffineScales`, `GetCompletionPercent`,
@@ -34,12 +34,12 @@ and [graphics_loading.md](./graphics_loading.md).
   `ShowTurboRunDialog`, `ShowTornadoSpinDialog`, `ShowDoubleJumpDialog`, `ShowSuperBodySlamDialog`, `GetProgressLives`,
   `CountPlatinumRelics`, `CountGoldRelics`, `CountSapphireRelics`, `CountRelics`, `CountGems`,
   `CountClearGems`, `CountCrystals`
-- `src/graphics/fade_util.c`: `StepBrightnessFade`, `FadeBrightness`
-- `src/graphics/palette_blend.c`: `DarkenPalette`
+- `src/gfx/fade.c`: `StepBrightnessFade`, `FadeBrightness`
+- `src/gfx/fade.c`: `DarkenPalette`
 - `src/graphics/actor_anim.c`: `GetAnimFrameBaseOffset`
-- `src/graphics/fade_screen_mode.c` (new file - `FadePaletteToBlack`,
+- `src/gfx/fade_to_black.c` (new file - `FadePaletteToBlack`,
   `IsBrightnessFadeActive`) and
-  `src/graphics/fade_screen_mode2.c` (new file - `SetDispcntMode`,
+  `src/gfx/display.c` (new file - `SetDispcntMode`,
   `HideBg3`,
   `HideBg2`, `HideBg1`, `HideBg0`, `HideObj`,
   `ShowBg3`, `ShowBg2`, `ShowBg1`, `ShowBg0`,
@@ -54,12 +54,12 @@ and [graphics_loading.md](./graphics_loading.md).
   register roles plus inline-asm-materialized DMA-field writes for the
   fields the ROM recomputes fresh every loop iteration - see
   [naked-sub_80014a4-matched.md](../matching/naked-sub_80014a4-matched.md).
-- `src/graphics/text_layout.c`: `DrawWrappedText` (word-wrap text
+- `src/text/wrapped_text.c`: `DrawWrappedText` (word-wrap text
   renderer) - was NAKED, now matched as real C under old_agbcc (the
   object joined `OLD_AGBCC_OBJS`); see
   [strag3-naked-retry.md](../matching/strag3-naked-retry.md).
 
-- `src/graphics/aabb_util.c` (new file): `CommitBlendRegs` (BLDCNT/
+- `src/util/aabb.c` (new file): `CommitBlendRegs` (BLDCNT/
   BLDALPHA/BLDY shadow commit - was previously NAKED, now matched as
   real C via an inline-asm-materialized store-and-increment pair
   opaque to the peephole fusion that otherwise always combines it into
@@ -69,8 +69,8 @@ and [graphics_loading.md](./graphics_loading.md).
   overlap tests (one already referenced by name from `actor.md`'s
   `actor_part15.c`) plus `mem_free`/`mem_alloc` wrappers.
 
-- `src/graphics/intro_screen.c` (new file, replacing `asm/code_3_1.s` -
-  boot-adjacent but not part of `src/system/boot_util.c` since
+- `src/gfx/bitmap_screen.c` (new file, replacing `asm/code_3_1.s` -
+  boot-adjacent but not part of `src/system/boot.c` since
   `main.c`/`memory.c`/`irq.c` sit between them in ROM order):
   `ShowBitmapScreen` - BG2 affine setup for a full-screen intro image; see
   `docs/matching.md` for the statement-ordering gotchas.
@@ -206,7 +206,7 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
 
 ## Parked - NAKED asm transcriptions (byte-correct, not decompiled C)
 
-- **`DrawWrappedText` is now matched as real C (old_agbcc; see docs/matching/strag3-naked-retry.md); entry kept for history.** **`DrawWrappedText`** (`src/graphics/text_layout.c`) - word-wrap text
+- **`DrawWrappedText` is now matched as real C (old_agbcc; see docs/matching/strag3-naked-retry.md); entry kept for history.** **`DrawWrappedText`** (`src/text/wrapped_text.c`) - word-wrap text
   renderer. A full C reconstruction matched the ROM instruction-for-
   instruction except ~8 bytes from two small codegen details
   (incoming-argument spill ordering, and two loop-bound comparisons
@@ -226,8 +226,8 @@ derivation of each, and `docs/matching.md`'s original entries ("The
 `0x080014A4`-`0x08001624` fade/screen-mode cluster" and "Parked, not
 matched: `DrawWrappedText`") for the pre-NAKED gap analysis.
 
-- **`DrawSpritePieces` is now matched as real C (split into `src/graphics/graphics_73dc.c`, old_agbcc; see docs/matching/strag1-naked-retry.md); `DrawPowerDialog` is now matched as real C too (see docs/matching/strag3-naked-retry.md); entry kept for history.** **`DrawPowerDialog`** (`src/graphics/oam_count.c`) and **`DrawSpritePieces`**
-  (`src/graphics/graphics.c`) - this project's original reference cases
+- **`DrawSpritePieces` is now matched as real C (split into `src/gfx/sprite_pieces.c`, old_agbcc; see docs/matching/strag1-naked-retry.md); `DrawPowerDialog` is now matched as real C too (see docs/matching/strag3-naked-retry.md); entry kept for history.** **`DrawPowerDialog`** (`src/graphics/oam_count.c`) and **`DrawSpritePieces`**
+  (`src/gfx/graphics.c`) - this project's original reference cases
   for the register-allocation-gap class documented above (several
   `overlay_ui`/`actor` functions elsewhere still hit the same class,
   see [overlay_ui.md](./overlay_ui.md) and [actor.md](./actor.md)).

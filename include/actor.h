@@ -4,7 +4,7 @@
 /* A small, moving on-screen object: position, a handful of flag bits, a
  * width/height pair (both raw and pre-halved/negated for centering), and
  * a pointer to a per-category data table (offset/text record pairs read
- * at several different fixed offsets by src/graphics/graphics.c's
+ * at several different fixed offsets by src/gfx/graphics.c's
  * IsEntityNearCamera/CheckEntityPlayerContact/IsEntityInsideRect/UpdateEntity/ResetEntity/etc. and
  * by oam_count.c's DestroyPowerDialog - none of that table's own shape is
  * understood yet, so it stays a raw `void *` here). Exactly 0x1c bytes -

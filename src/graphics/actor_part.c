@@ -10,7 +10,7 @@ extern void OperatorDelete(void *arg0);
  * (nonzero - used as-is) or need the camera-relative conversion
  * WorldToScreen applies (zero - the common case). Either way, the
  * resolved {x, y} pair is forwarded to DrawSpritePieces (parked as
- * NON_MATCHING in src/graphics/graphics.c) to build/queue this part's
+ * NON_MATCHING in src/gfx/graphics.c) to build/queue this part's
  * OAM entries. */
 void DrawSpriteAt(void *self, void *part, s32 x, s32 y)
 {

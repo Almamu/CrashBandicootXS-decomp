@@ -162,7 +162,7 @@ untouched (see "Still untouched - all 9 remaining functions" above).
 
 ### Matched: `TickPaletteCycles`/`AddPaletteCycle` (the fx ring-buffer pair)
 
-Both now live in `src/graphics/hud_icon_slot.c`, placed at the top of
+Both now live in `src/gfx/palette_cycle.c`, placed at the top of
 the file (ROM order puts them immediately before `ClearPaletteCycles`, which
 this file already held). `struct palette_cycler` (previously a stub with
 two named `s32[3]` arrays and unlabelled padding, in this same file)
@@ -289,7 +289,7 @@ documented for this same function family:
   through a direct pin.
 
 Verified via a full clean `make compare` (`La suma coincide`) with both
-functions cut into `src/graphics/hud_icon_slot.c` and their
+functions cut into `src/gfx/palette_cycle.c` and their
 `asm/code_3_2_17_26f54.s` fragment (now empty) removed from
 `ldscript.txt`.
 
@@ -416,7 +416,7 @@ parked above. Both are now byte-exact matched, converted from their
 `NON_MATCHING`-guarded plain-C reconstructions to `NAKED` functions
 whose bodies are a direct instruction-for-instruction transcription of
 the ROM's own disassembly, following this project's established escape
-hatch for this exact class of problem (`src/system/link_cable.c`'s
+hatch for this exact class of problem (`src/link/link_handshake.c`'s
 several `NAKED` functions, `lib/gax/src/gax_swi.c`'s `GaxHuffUnComp`,
 `docs/matching/issue-4-sio-settings-sync.md`'s "NAKED transcription,
 byte-verified" section for the worked-out general method).
@@ -520,7 +520,7 @@ register-pin tricks here first would have just re-derived the same
 negative result at several times the cost. Both groups went straight to
 full `NAKED` instruction-for-instruction transcription instead -
 this project's established escape hatch for this exact class of problem
-(`src/system/link_cable.c`'s several `NAKED` functions,
+(`src/link/link_handshake.c`'s several `NAKED` functions,
 `docs/matching/issue-4-sio-settings-sync.md`'s "NAKED transcription,
 byte-verified" section for the general method, and this same doc's own
 "NAKED-transcription pass" above for the worked example on this

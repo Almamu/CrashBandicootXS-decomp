@@ -149,7 +149,7 @@ Its real bytes now live in `asm/code_3_2_17_23a1c.s` (renamed from
 6-case jump table, the `gLevelTable` per-level table it indexes,
 and its wait-loop/fade/post-fade structure. `AddPaletteCycle`'s exact
 6-argument call shape (self, targets, lists, angle, list_count,
-direction - matched in `hud_icon_slot.c`) is now confirmed against all
+direction - matched in `palette_cycle.c`) is now confirmed against all
 four of this function's own call sites, closing one of the previously
 open questions; the `gThemePaletteCycle1A`/`0816C830`/`0816C842`/
 `0816C862` tables it points at are still just `u16*`/opaque data,
@@ -184,7 +184,7 @@ still clear), feed its `+0x14`/`+0x18` fields (`maskAssistDeaths`/`crateAssistDe
 | 5 | 6 | `_08023B20` (shared with index 0) |
 
 Every non-default case resets `gPaletteCycles` (the `palette_cycler`
-`hud_icon_slot.c` documents) via `ClearPaletteCycles`, then fires
+`palette_cycle.c` documents) via `ClearPaletteCycles`, then fires
 `AddPaletteCycle(queue, targets, lists, angle, list_count, direction)`:
 
 - **state 1 or 6**: *two* calls -

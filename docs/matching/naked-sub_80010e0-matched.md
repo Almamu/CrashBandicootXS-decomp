@@ -1,6 +1,6 @@
 # `WaitForKeyPress` converted from NAKED transcription to real matched C
 
-`WaitForKeyPress` (`src/system/input_util.c`) had been parked as a
+`WaitForKeyPress` (`src/system/input.c`) had been parked as a
 byte-correct NAKED asm transcription - see
 [naked-transcription-parked-functions.md](./naked-transcription-parked-functions.md)
 for the original parking rationale. It's now genuinely matched as real
@@ -99,4 +99,4 @@ Full clean `rm -rf build && make NON_MATCHING=1 report`, then full
 clean `rm -rf build crashbandicootxs.elf crashbandicootxs.gba
 crashbandicootxs.map && make compare` - `crashbandicootxs.gba: La suma
 coincide`. `tools/report_units.py`'s entry now points at the real
-`src/system/input_util.o`.
+`src/system/input.o`.

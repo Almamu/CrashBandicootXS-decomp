@@ -3,8 +3,8 @@
 #include "link_session.h"
 
 /* The link-cable session's per-frame handshake driver and SIO data pump
- * (split from link_cable.c so ResetLinkSessionState can sit in its own object;
- * see link_cable_01db4.c). */
+ * (split from link_handshake.c so ResetLinkSessionState can sit in its own object;
+ * see link_session_reset.c). */
 
 extern void IrqClearHandler(s32 interruptIndex);
 extern u16 gCrc16Table[];
@@ -26,7 +26,7 @@ extern s32 ResetLinkSessionState(struct link_session *self);
  * player 0 / arm3" flag from `REG_SIOCNT` bits, resets `REG_SIODATA32`
  * (via `REG_TM3CNT`/`0x04000208` toggling, matching
  * `LinkStart`-family's RCNT/SIOCNT reset shape in
- * src/system/link_cable2.c), installs the Serial IRQ handler
+ * src/link/link_sio.c), installs the Serial IRQ handler
  * (`LinkSerialIntr`) always and the Timer3 IRQ handler (`LinkTimer3Intr`)
  * only when the "arm3" flag is set, programs Timer3 as a running
  * countdown timeout (`0x00C0BBBC`) in that case, and resets several
@@ -155,7 +155,7 @@ s32 UpdateLinkSession(struct link_session *self)
 
 /* Per-frame SIO data-exchange pump - see docs/rom_map.md's SIO/link-
  * cable section (called from the Serial IRQ handler `LinkSerialIntr` in
- * src/system/link_cable2.c, with the session object and SIODATA32's
+ * src/link/link_sio.c, with the session object and SIODATA32's
  * low half as the two arguments). `docs/rom_map.md` confirms the
  * high-level shape: manipulates `REG_SIOCNT`/`SIODATA8`
  * (`0x04000128`/`0x0400012A`), checking specific control bits before
@@ -182,13 +182,13 @@ s32 UpdateLinkSession(struct link_session *self)
  * `self+0x3c`), before deciding what to send out next over SIOMLT_SEND.
  *
  * Once a NAKED transcription (1488 bytes, this project's biggest); it
- * now matches as plain C under old_agbcc (link_cable.o is on the
+ * now matches as plain C under old_agbcc (link_handshake.o is on the
  * Makefile's OLD_AGBCC_OBJS). History: docs/matching/big-naked-retry-3.md,
  * early-rom-naked-retry-2.md, last-four-naked-retry.md,
  * last-six-naked-retry.md and last-seven-naked-retry.md (the first
  * receive loop, closed last: the load goes through a pointer biv and
  * the compare constants use the constant-init form).
- * `data` is SIOMULTI0-3 (link_cable2.c passes 0x04000120). */
+ * `data` is SIOMULTI0-3 (link_sio.c passes 0x04000120). */
 /* A received SIOMULTI word, read back from a stack copy. */
 struct link_rx_word {
     u32 lo:4;

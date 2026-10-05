@@ -19,7 +19,7 @@
  *
  * - **state 1 or 6** (cases 0 and 5 share one code block): resets the
  *   `gPaletteCycles` "fx queue" (`ClearPaletteCycles`, the `palette_cycler`
- *   struct `hud_icon_slot.c` documents) then fires it **twice** via
+ *   struct `palette_cycle.c` documents) then fires it **twice** via
  *   `AddPaletteCycle(queue, (u16 *)0x05000000, gThemePaletteCycle1A, 0x10,
  *   9, 0)` and `AddPaletteCycle(queue, (u16 *)0x05000000, gStaticData_
  *   0816C830, 0x14, 9, 0)` - `(u16 *)0x05000000` is GBA palette RAM

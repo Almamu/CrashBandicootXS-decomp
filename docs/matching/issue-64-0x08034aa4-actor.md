@@ -132,7 +132,7 @@ the rest of what's understood without committing it to the struct.
     before calling it, even though `CommitCreditsFrame`'s own body never
     touches r0 - the same "caller passes a value the callee's ABI slot
     never consumes" shape already noted for `FontResetPalette`'s second
-    parameter (hud_icon_widget4.c) elsewhere in this codebase. Keeping
+    parameter (font.c) elsewhere in this codebase. Keeping
     the parameter (rather than dropping it and hoping the caller's
     `self` argument silently disappears) is what reproduces those two
     `adds r0, r5, #0` instructions exactly.

@@ -8,16 +8,16 @@ family. Filed under `src/graphics/` on disk, tracked as its own
 
 ## Matched
 
-- **`InitObjTileFreeList`**, **`FreeVramTileBlock`** (`src/graphics/sprite_frame_pool.c`,
+- **`InitObjTileFreeList`**, **`FreeVramTileBlock`** (`src/gfx/sprite_frame.c`,
   the OBJ-tile VRAM free-list allocator's init/free pair) - matched.
-- **`AllocVramTileBlock`** (`src/graphics/sprite_frame_queue.c`) - matched.
+- **`AllocVramTileBlock`** (`src/gfx/sprite_frame.c`) - matched.
   The `mem_alloc`-shaped next-fit search over that same free list, closed
   via one continuous `asm volatile` island spanning the search loop
   through the free-list split - see
   [issue-47-graphics-loading.md](../matching/issue-47-graphics-loading.md)
   for the full writeup of the gcc-2.9 cross-jump/tail-merging gap this
   closed and the technique used.
-- **`sub_8028D6C`**, **`GetFreeVramTileBytes`** (`src/graphics/sprite_frame_queue.c`) -
+- **`sub_8028D6C`**, **`GetFreeVramTileBytes`** (`src/gfx/sprite_frame.c`) -
   matched, both `UNUSED` (no caller anywhere in the ROM). `GetFreeVramTileBytes`
   never had its own `thumb_func_start` in the original disassembly - see
   `expected/corrections.txt`'s `split 0x08028D94` entry.
@@ -26,13 +26,13 @@ family. Filed under `src/graphics/` on disk, tracked as its own
   **`LoadSpriteFrameTiles`**, **`SetupSpriteFrameOam`**, **`FreeSpriteFrameCache`**,
   **`AgeSpriteFrameCache`**, **`InitSpriteFrameCache`**, **`GetSpriteShapeSizeBits`**,
   **`FreeCategorySpriteSheet`**, **`DecompressCategorySpriteSheet`**
-  (`src/graphics/sprite_frame_queue.c`) - the per-frame overflow OAM/affine
+  (`src/gfx/sprite_frame.c`) - the per-frame overflow OAM/affine
   queue and the sprite-frame VRAM cache built on top of the allocator
   above; matched. See
   [issue-47-graphics-loading.md](../matching/issue-47-graphics-loading.md)
   for the full write-up (issue #47).
 
-- **`LoadGraphicsPackage`**-**`sub_801E96C`** (`src/graphics/graphics_package_1e578.c`,
+- **`LoadGraphicsPackage`**-**`sub_801E96C`** (`src/gfx/graphics_package.c`,
   `_1e640.c`, `_1e688.c`, `_1e8f8.c`, `_1e964.c`) - issue #30's BG
   loader and its `struct bg_setup` accessors (`include/graphics_package.h`)
   and the sprite-box fitter `FitScaledSprite`/`DrawScaledSprite`. All built with
@@ -210,7 +210,7 @@ they don't count as "matched" for this project's tracking - the goal
 is readable C, and an asm blob wrapped in a C function signature
 doesn't advance that even when byte-correct. See
 [docs/workflow.md](../workflow.md)'s NAKED-transcription escape hatch
-(`MakeLinkHandshakeId`/`ResetLinkSessionState` in `src/system/link_cable.c`) for the
+(`MakeLinkHandshakeId`/`ResetLinkSessionState` in `src/link/link_handshake.c`) for the
 established convention, and each entry's linked write-up for why
 plain C didn't converge.
 

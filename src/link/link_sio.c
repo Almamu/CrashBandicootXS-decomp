@@ -72,7 +72,7 @@ s32 ResetLinkSession(u8 *self)
  * unused - reads as a leftover/inlined bounds-check artifact rather
  * than anything with an observable effect), then - only if `flags` bit
  * 0 is set - tears the session down (`IwramFree`, matched in
- * src/graphics/aabb_util.c, also used by src/audio/audio_context.c's
+ * src/util/aabb.c, also used by src/audio/audio.c's
  * `DestroyAudioContext` on an unrelated object - a generic free/release call).
  */
 void DestroyLinkSession(u8 *self, u32 flags)

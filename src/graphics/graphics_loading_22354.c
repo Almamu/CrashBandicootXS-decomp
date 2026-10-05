@@ -51,7 +51,7 @@ extern void FreeVramDmaQueue(void);
 extern void DestroyOamBuffer(void *self, u32 flags);
 extern void DestroyObjVramCursor(void *self, u32 flags);
 extern void OperatorDelete(void *p);
-/* Takes no argument (audio_context.c), but the ROM loads the audio
+/* Takes no argument (audio.c), but the ROM loads the audio
  * context into r0 before calling it anyway. */
 extern void DisableMusicVCountIrq(void *audio);
 extern void DestroyAudioContext(void *audio, u32 flags);
