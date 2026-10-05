@@ -212,7 +212,7 @@ extern void InitCtrl(void *self);
  * unconditionally resets `self+0xc` right back to
  * `gCtrlVtable` on every call, so this function's own store
  * never survives past the call - the same harmless double-set pattern
- * already established for `DestroyStompedHopPadCtrl`/`sub_8017A78`/`DestroyChaserCtrl`/
+ * already established for `DestroyStompedHopPadCtrl`/`DestroyBossCtrl`/`DestroyMegaMixCtrl`/
  * `DestroyEffectCtrl`. */
 void DestroyEnemyCtrl(struct trigger_ctrl *self, s32 flags)
 {

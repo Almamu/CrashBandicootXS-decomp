@@ -1117,7 +1117,7 @@
     "SpawnLizard",
     "SpawnVulture",
     "SpawnVenusFlytrap",
-    "sub_801F2BC",
+    "SpawnPatrollingJungleEnemy",
     "SpawnBlowgunTribesman",
     "SpawnPenguin",
     "SpawnSeal",
@@ -1128,13 +1128,13 @@
     "SpawnElectricEel",
     "SpawnJellyfish",
     "SpawnLaserBarrier",
-    "sub_8020138",
-    "sub_802026C",
+    "SpawnStationarySpaceEnemy",
+    "SpawnPatrollingSpaceEnemy",
     "SpawnSaucerLabAssistant",
     "SpawnPistonCrusher",
     "SpawnFlamethrowerLabAssistant",
-    "sub_8020788",
-    "sub_80208C4",
+    "SpawnHomingSewerEnemy",
+    "SpawnPatrollingSewerEnemy",
     "SpawnRat",
     "SpawnFrog",
     "SpawnSeaMine",
@@ -1359,9 +1359,9 @@
   {
    "address": "0x0816BACC",
    "size": 32,
-   "name": "gStaticData_0816BACC",
+   "name": "gStationarySpaceEnemyAnimMap",
    "consumers": [
-    "sub_8020138"
+    "SpawnStationarySpaceEnemy"
    ],
    "consumer_files": [
     "graphics/graphics_loading_1feec.c"
@@ -1380,9 +1380,9 @@
   {
    "address": "0x0816BAEC",
    "size": 32,
-   "name": "gStaticData_0816BAEC",
+   "name": "gPatrollingSpaceEnemyAnimMap",
    "consumers": [
-    "sub_802026C"
+    "SpawnPatrollingSpaceEnemy"
    ],
    "consumer_files": [
     "graphics/graphics_loading_1feec.c"
@@ -1404,9 +1404,9 @@
   {
    "address": "0x0816BB0C",
    "size": 32,
-   "name": "gStaticData_0816BB0C",
+   "name": "gPatrollingSewerEnemyAnimMap",
    "consumers": [
-    "sub_80208C4",
+    "SpawnPatrollingSewerEnemy",
     "SpawnFrog"
    ],
    "consumer_files": [
@@ -1856,9 +1856,9 @@
   {
    "address": "0x0816C2D0",
    "size": 8,
-   "name": "gStaticData_0816C2D0",
+   "name": "gMegaMixMotionSet",
    "consumers": [
-    "ResetChaserCtrl"
+    "ResetMegaMixCtrl"
    ],
    "consumer_files": [
     "graphics/actor_part27b.c"
@@ -1876,12 +1876,12 @@
   {
    "address": "0x0816C2D8",
    "size": 48,
-   "name": "gStaticData_0816C2D8",
+   "name": "gMegaMixMotionRecords",
    "consumers": [
-    "SetChaserMotionYFromSet",
-    "SetChaserMotionXFromSet",
-    "StartChaserMotionYFromSet",
-    "StartChaserMotionXFromSet"
+    "SetMegaMixMotionYFromSet",
+    "SetMegaMixMotionXFromSet",
+    "StartMegaMixMotionYFromSet",
+    "StartMegaMixMotionXFromSet"
    ],
    "consumer_files": [
     "graphics/actor_part27b.c"
@@ -1943,7 +1943,7 @@
   {
    "address": "0x0816C358",
    "size": 4,
-   "name": "gStaticData_0816C358",
+   "name": "gCortexTargetHopSteps",
    "consumers": [
     "SetCortexTargetDest"
    ],
@@ -1964,7 +1964,7 @@
   {
    "address": "0x0816C35C",
    "size": 3,
-   "name": "gStaticData_0816C35C",
+   "name": "gCortexTargetChaseSteps",
    "consumers": [
     "UpdateCortexTarget"
    ],
@@ -1985,7 +1985,7 @@
   {
    "address": "0x0816C35F",
    "size": 3,
-   "name": "gStaticData_0816C35F",
+   "name": "gCortexTargetBlinkStartTimes",
    "consumers": [
     "UpdateCortexTarget"
    ],
@@ -2006,7 +2006,7 @@
   {
    "address": "0x0816C362",
    "size": 6,
-   "name": "gStaticData_0816C362",
+   "name": "gCortexTargetBlinkStopTimes",
    "consumers": [
     "UpdateCortexTarget"
    ],
@@ -2027,7 +2027,7 @@
   {
    "address": "0x0816C368",
    "size": 16,
-   "name": "gStaticData_0816C368",
+   "name": "gDingodileStopXLeft",
    "consumers": [
     "UpdateDingodile"
    ],
@@ -2051,7 +2051,7 @@
   {
    "address": "0x0816C378",
    "size": 24,
-   "name": "gStaticData_0816C378",
+   "name": "gDingodileStopXLeftHurt",
    "consumers": [
     "UpdateDingodile"
    ],
@@ -2075,7 +2075,7 @@
   {
    "address": "0x0816C390",
    "size": 16,
-   "name": "gStaticData_0816C390",
+   "name": "gDingodileStopXRight",
    "consumers": [
     "UpdateDingodile"
    ],
@@ -2099,7 +2099,7 @@
   {
    "address": "0x0816C3A0",
    "size": 24,
-   "name": "gStaticData_0816C3A0",
+   "name": "gDingodileStopXRightHurt",
    "consumers": [
     "UpdateDingodile"
    ],
@@ -2123,7 +2123,7 @@
   {
    "address": "0x0816C3B8",
    "size": 48,
-   "name": "gStaticData_0816C3B8",
+   "name": "gDingodileMotionRecords",
    "consumers": [
     "UpdateDingodileShark",
     "StartDingodileMotion"
@@ -2150,7 +2150,7 @@
   {
    "address": "0x0816C3E8",
    "size": 12,
-   "name": "gStaticData_0816C3E8",
+   "name": "gDingodileRocketRiseMotion",
    "consumers": [
     "UpdateDingodileProjectile"
    ],
@@ -2171,7 +2171,7 @@
   {
    "address": "0x0816C3F4",
    "size": 36,
-   "name": "gStaticData_0816C3F4",
+   "name": "gDingodileStalactiteFallMotion",
    "consumers": [
     "UpdateDingodileProjectile"
    ],
@@ -2192,7 +2192,7 @@
   {
    "address": "0x0816C418",
    "size": 64,
-   "name": "gStaticData_0816C418",
+   "name": "gDingodileMotionEntries",
    "consumers": [
     "StartDingodileMotion"
    ],
@@ -2215,7 +2215,7 @@
   {
    "address": "0x0816C458",
    "size": 8,
-   "name": "gStaticData_0816C458",
+   "name": "gPlatformMoverMotionSet",
    "consumers": [
     "CreatePlatformMover"
    ],
@@ -2235,7 +2235,7 @@
   {
    "address": "0x0816C460",
    "size": 36,
-   "name": "gStaticData_0816C460",
+   "name": "gPlatformMoverMotionRecords",
    "consumers": [
     "UpdatePlatformMover",
     "SetPlatformMoverMotionYFromSet",
@@ -2972,7 +2972,7 @@
     "DrawLevelSelect",
     "LoadLevelSelectRecord",
     "LevelSelectLoop",
-    "sub_8021280",
+    "SpawnRoomExit",
     "RunRoom",
     "CountLevelCrates",
     "LevelHasEntityType",
@@ -7606,10 +7606,10 @@
   {
    "address": "0x087E435C",
    "size": 104,
-   "name": "gStaticData_087E435C",
+   "name": "gBossCtrlVtable",
    "consumers": [
-    "sub_8017A78",
-    "sub_8017A8C"
+    "DestroyBossCtrl",
+    "CreateBossCtrl"
    ],
    "consumer_files": [
     "graphics/actor_part27.c"
@@ -7631,10 +7631,10 @@
   {
    "address": "0x087E43C4",
    "size": 104,
-   "name": "gChaserCtrlVtable",
+   "name": "gMegaMixCtrlVtable",
    "consumers": [
-    "DestroyChaserCtrl",
-    "CreateChaserCtrl"
+    "DestroyMegaMixCtrl",
+    "CreateMegaMixCtrl"
    ],
    "consumer_files": [
     "graphics/actor_part27b.c"
@@ -7706,10 +7706,10 @@
   {
    "address": "0x087E44FC",
    "size": 104,
-   "name": "gStaticData_087E44FC",
+   "name": "gUnusedOneShotAnimCtrlVtable",
    "consumers": [
-    "sub_8018948",
-    "sub_8018960"
+    "CreateUnusedOneShotAnimCtrl",
+    "DestroyUnusedOneShotAnimCtrl"
    ],
    "consumer_files": [
     "graphics/actor_part_188d0.c"

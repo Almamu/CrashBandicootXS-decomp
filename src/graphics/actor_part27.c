@@ -1,30 +1,40 @@
 #include "core.h"
 
-/* GitHub issue #22, ROM 0x08017A44-0x08017AAC. `self` is the same
- * large per-level "player/action" object documented in
- * actor_part18.c's top-of-file comment - not the small (0x1c-byte)
- * `struct actor` from include/actor.h. `self+0xc` is the per-category
- * table pointer that convention documents; `self+0x10` is the "part"
- * sub-object pointer. `self+0x14`/`self+0x18` are each a packed 4-byte
- * field written both as a whole word (`sub_8017A70`) and as individual
- * bytes elsewhere in this group - the exact sub-byte meanings aren't
- * pinned down yet, so every access here stays a raw offset rather than
- * a guessed struct, matching the rest of this object family. */
+/* GitHub issue #22, ROM 0x08017A44-0x08017AAC. Two groups of methods
+ * share this file:
+ *
+ * - IsInputCtrlMotionXPending .. QueueInputCtrlMotionX (0x08017A44-
+ *   0x08017A6C) finish the input_ctrl accessor run that ends
+ *   actor_part_17524.c (SetInputCtrlMotionYPending .. IsInputCtrlMotionYPending,
+ *   0x08017A20-0x08017A40): the bytes they touch are input_ctrl's motion
+ *   queue (`+0x14` motionX, `+0x15` motionY, `+0x17`/`+0x18`
+ *   motionX/YPending, `+0x19`/`+0x1A` motionX/YKeepSpeed). Nothing calls
+ *   them.
+ * - BossCtrlHandleEvent/DestroyBossCtrl/CreateBossCtrl are the
+ *   gBossCtrlVtable class, the controller base of the bosses: Mega-Mix
+ *   (gMegaMixCtrlVtable), Tiny, the Neo Cortex fight's controller and
+ *   Dingodile with his shield and rocket/stalactite. Its event slot keeps
+ *   the event's msg and arg words at `+0x14`/`+0x18`; no subclass reads
+ *   them (they leave `+0x14`-`+0x1B` alone).
+ *
+ * `self` is the per-level "player/action" ctrl object documented in
+ * actor_part18.c's top-of-file comment; `self+0xc` is its method table
+ * and `self+0x10` the "part" it drives. The accesses stay raw offsets. */
 
-extern u8 gStaticData_087E435C[];
+extern u8 gBossCtrlVtable[];
 extern void DestroyCtrl(void *self, s32 flags);
 extern void InitCtrl(void *self);
 
-/* `self+0x17` byte getter. */
-u8 sub_8017A44(void *selfArg)
+/* input_ctrl.motionXPending (`+0x17`). */
+u8 IsInputCtrlMotionXPending(void *selfArg)
 {
     u8 *self = selfArg;
     return self[0x17];
 }
 
-/* Sets the `self+0x18`-word's byte0/byte2 flags and the `self+0x14`-
- * word's byte1 to `val`. */
-void sub_8017A48(void *selfArg, u8 val)
+/* Queues Y motion entry `val` (input_ctrl.motionY, `+0x15`), pending,
+ * applied with the speed kept (motionYPending/motionYKeepSpeed). */
+void QueueInputCtrlMotionYKeepSpeed(void *selfArg, u8 val)
 {
     u8 *self = selfArg;
 
@@ -33,9 +43,9 @@ void sub_8017A48(void *selfArg, u8 val)
     self[0x15] = val;
 }
 
-/* Sets the `self+0x18`-word's byte1 flag, the `self+0x14`-word's
- * byte3 flag, and the `self+0x14`-word's byte0 to `val`. */
-void sub_8017A54(void *selfArg, u8 val)
+/* Queues X motion entry `val` (input_ctrl.motionX, `+0x14`), pending,
+ * applied with the speed kept (motionXPending/motionXKeepSpeed). */
+void QueueInputCtrlMotionXKeepSpeed(void *selfArg, u8 val)
 {
     u8 *self = selfArg;
 
@@ -44,9 +54,8 @@ void sub_8017A54(void *selfArg, u8 val)
     self[0x14] = val;
 }
 
-/* Single-flag version of `sub_8017A48`: sets `self+0x18`'s byte0 flag
- * and `self+0x14`'s byte1 to `val`. */
-void sub_8017A60(void *selfArg, u8 val)
+/* Queues Y motion entry `val` (motionY + motionYPending). */
+void QueueInputCtrlMotionY(void *selfArg, u8 val)
 {
     u8 *self = selfArg;
 
@@ -54,9 +63,8 @@ void sub_8017A60(void *selfArg, u8 val)
     self[0x15] = val;
 }
 
-/* Single-flag version of `sub_8017A54`: sets `self+0x14`'s byte3 flag
- * and `self+0x14`'s byte0 to `val`. */
-void sub_8017A68(void *selfArg, u8 val)
+/* Queues X motion entry `val` (motionX + motionXPending). */
+void QueueInputCtrlMotionX(void *selfArg, u8 val)
 {
     u8 *self = selfArg;
 
@@ -64,11 +72,10 @@ void sub_8017A68(void *selfArg, u8 val)
     self[0x14] = val;
 }
 
-/* Raw whole-word setter for the two packed fields `sub_8017A48`/
- * `sub_8017A54`/`sub_8017A60`/`sub_8017A68` otherwise update one byte
- * at a time - `arg1` is taken but unused (register-only pass-through,
- * confirmed unread anywhere in the ROM body). */
-void sub_8017A70(void *selfArg, s32 arg1, s32 a, s32 b)
+/* gBossCtrlVtable's event slot (slot 2, CtrlHandleEvent in the base
+ * class): stores the event's msg (`a`) and arg (`b`) at `+0x14`/`+0x18`.
+ * The sender word `arg1` is unused. Nothing reads the stored words back. */
+void BossCtrlHandleEvent(void *selfArg, s32 arg1, s32 a, s32 b)
 {
     u8 *self = selfArg;
 
@@ -77,27 +84,27 @@ void sub_8017A70(void *selfArg, s32 arg1, s32 a, s32 b)
     *(s32 *)(self + 0x18) = b;
 }
 
-/* Sets `self+0xc`'s table pointer to `gStaticData_087E435C`, then
+/* Sets `self+0xc`'s table pointer to `gBossCtrlVtable`, then
  * tail-calls `DestroyCtrl(self, flags)` - which promptly resets it
  * back to `gCtrlVtable` (see actor_part17.c) and, if
  * `flags` bit 0 is set, fires `OperatorDelete`. */
-void sub_8017A78(void *selfArg, s32 flags)
+void DestroyBossCtrl(void *selfArg, s32 flags)
 {
     u8 *self = selfArg;
 
-    *(void **)(self + 0xc) = gStaticData_087E435C;
+    *(void **)(self + 0xc) = gBossCtrlVtable;
     DestroyCtrl(self, flags);
 }
 
 /* Resets via `InitCtrl` (table pointer to `gCtrlVtable`,
- * `self+8` cleared), then re-points the table at `gStaticData_087E435C`
+ * `self+8` cleared), then re-points the table at `gBossCtrlVtable`
  * and zeroes `self+0x10`/`self+0x14`/`self+0x18`. Returns `self`. */
-void *sub_8017A8C(void *selfArg)
+void *CreateBossCtrl(void *selfArg)
 {
     u8 *self = selfArg;
 
     InitCtrl(self);
-    *(void **)(self + 0xc) = gStaticData_087E435C;
+    *(void **)(self + 0xc) = gBossCtrlVtable;
     *(s32 *)(self + 0x10) = 0;
     *(s32 *)(self + 0x14) = 0;
     *(s32 *)(self + 0x18) = 0;

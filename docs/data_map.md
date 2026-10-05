@@ -680,9 +680,9 @@ vtable shapes).
 | `0816BA6C` | 0x20 | table (element layout: see consumers). **Converted** (`src/data/popup_tables_16b98c.c`) | `SpawnSquid` | medium | done |
 | `0816BA8C` | 0x20 | table (element layout: see consumers). **Converted** (`src/data/popup_tables_16b98c.c`) | `SpawnElectricEel` | medium | done |
 | `0816BAAC` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16). **Converted** (`src/data/popup_tables_16b98c.c`) | `SpawnFlamethrowerLabAssistant` | high | done |
-| `0816BACC` | 0x20 | table (element layout: see consumers). **Converted** (`src/data/popup_tables_16b98c.c`) | `sub_8020138` | medium | done |
-| `0816BAEC` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16). **Converted** (`src/data/popup_tables_16b98c.c`) | `sub_802026C` | high | done |
-| `0816BB0C` | 0x20 | table (element layout: see consumers). **Converted** (`src/data/popup_tables_16b98c.c`) | `sub_80208C4`, `SpawnFrog` | medium | done |
+| `0816BACC` | 0x20 | table (element layout: see consumers). **Converted** (`src/data/popup_tables_16b98c.c`) | `SpawnStationarySpaceEnemy` | medium | done |
+| `0816BAEC` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16). **Converted** (`src/data/popup_tables_16b98c.c`) | `SpawnPatrollingSpaceEnemy` | high | done |
+| `0816BB0C` | 0x20 | table (element layout: see consumers). **Converted** (`src/data/popup_tables_16b98c.c`) | `SpawnPatrollingSewerEnemy`, `SpawnFrog` | medium | done |
 | `0816BB2C` | 0x20 | table (element layout: see consumers). **Converted** (`src/data/popup_tables_16b98c.c`) | `SpawnPistonCrusher`, `SpawnWoodenCrusher` | medium | done |
 | `0816BB4C` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16). **Converted** (`src/data/popup_tables_16b98c.c`) | `SpawnSaucerLabAssistant` | high | done |
 | `0816BB6C` | 0x28 | entry set {entries, 0x100} + its 4 {a, b} entries (`gEnemyCtrlMotionEntries`). **Converted** (`src/data/object_tables_16bb6c.c`) | `ResetEnemyCtrl` | medium | done |
@@ -701,8 +701,8 @@ vtable shapes).
 | `0816C090` | 0x1C0 | `struct speed_table` (8 s32) + `struct level_anim[8][13]` (`gPlayerCtrlModeLevelAnims`, the rows gPlayerCtrlModeAnimRows points at). **Converted** (`src/data/speed_table_16c090.c`) | `StartPlayerCtrlStroke` | high | done |
 | `0816C250` | 0x40 | function-pointer / pointer-to-member table (8 code pointers) | `UpdatePlayerCtrl` | high | easy |
 | `0816C290` | 0x40 | table of struct pmf; 4 word(s) look like ROM pointers | `UpdateInputCtrl` | high | easy |
-| `0816C2D0` | 0x8 | pointer table (1 data pointers) | `ResetChaserCtrl` | high | easy |
-| `0816C2D8` | 0x30 | table (element layout: see consumers). **Converted** (`src/data/actor_tables_16c2d8.c`) | `SetChaserMotionYFromSet`, `SetChaserMotionXFromSet`, `StartChaserMotionYFromSet` +1 | medium | done |
+| `0816C2D0` | 0x8 | pointer table (1 data pointers) | `ResetMegaMixCtrl` | high | easy |
+| `0816C2D8` | 0x30 | table (element layout: see consumers). **Converted** (`src/data/actor_tables_16c2d8.c`) | `SetMegaMixMotionYFromSet`, `SetMegaMixMotionXFromSet`, `StartMegaMixMotionYFromSet` +1 | medium | done |
 | `0816C308` | 0x3 | small constant (040100). **Converted** (`src/data/actor_tables_16c2d8.c`) | `UpdateTiny`, `SetTinyState` | medium | done |
 | `0816C30B` | 0x4D | table (element layout: see consumers). **Converted** (`src/data/actor_tables_16c2d8.c`) | `PickTinyHopTarget` | medium | done |
 | `0816C358` | 0x4 | small constant (100e0a20). **Converted** (`src/data/actor_tables_16c2d8.c`) | `SetCortexTargetDest` | medium | done |
@@ -967,11 +967,11 @@ vtable shapes).
 | `087E4224` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `DestroyActionCtrl`, `InitActionCtrl` | high | easy |
 | `087E428C` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `DestroyPlayerCtrl`, `InitPlayerCtrl` | high | easy |
 | `087E42F4` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `DestroyInputCtrl`, `CreateInputCtrl` | high | easy |
-| `087E435C` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_8017A78`, `sub_8017A8C` | high | easy |
-| `087E43C4` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `DestroyChaserCtrl`, `CreateChaserCtrl` | high | easy |
+| `087E435C` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `DestroyBossCtrl`, `CreateBossCtrl` | high | easy |
+| `087E43C4` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `DestroyMegaMixCtrl`, `CreateMegaMixCtrl` | high | easy |
 | `087E442C` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `DestroyStompedHopPadCtrl`, `CreateStompedHopPadCtrl` | high | easy |
 | `087E4494` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateOneShotAnimCtrl`, `DestroyOneShotAnimCtrl` | high | easy |
-| `087E44FC` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_8018948`, `sub_8018960` | high | easy |
+| `087E44FC` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateUnusedOneShotAnimCtrl`, `DestroyUnusedOneShotAnimCtrl` | high | easy |
 | `087E4564` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `DestroyTiny`, `CreateTiny` | high | easy |
 | `087E45CC` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `DestroyCortexBossGemCtrl`, `CreateCortexBossGemCtrl` | high | easy |
 | `087E4634` | 0x68 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `DestroyCortexBossPlatformMover`, `CreateCortexBossPlatformMover` | high | easy |

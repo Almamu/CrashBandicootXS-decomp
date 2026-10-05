@@ -198,6 +198,8 @@ code it gives the object and where the levels place it:
 
 | Type | Spawner | What |
 |---|---|---|
+| 0x00, 0x02, 0x04 | `SpawnStartMarker`, `SpawnUnderwaterStartMarker`, `SpawnHoverStartMarker` | the player's start; every room places exactly one: 0x02 in the kind-1 (underwater) rooms, 0x04 in the kind-2 (hover vehicle) room 16, 0x00 in the others. 0x02 and 0x04 forward to `SpawnStartMarker` |
+| 0x01, 0x03 | `sub_80221D4`, `sub_80221A4` | set the player's position to the entity's; no level places them |
 | 0x06 | `SpawnWumpa` | a wumpa fruit (bank 35) |
 | 0x07 | `SpawnCrystal` | the level's crystal (bank 37) |
 | 0x08 | `SpawnGemPathGem` | the gem-path clear gem (bank 32, kind 0x1E, level flag bit 2); placed only in the gem-path rooms |
@@ -209,6 +211,7 @@ code it gives the object and where the levels place it:
 | 0x28 | `SpawnLizard` | enemy, bank 13 |
 | 0x29 | `SpawnVulture` | enemy, bank 11 |
 | 0x2A | `SpawnVenusFlytrap` | enemy, bank 10 |
+| 0x2B | `SpawnPatrollingJungleEnemy` | enemy, bank 14, patrols (`UpdateEnemyPatrol`); jungle rooms 15, 27, 32. Species not identified |
 | 0x2C | `SpawnBlowgunTribesman` | enemy, bank 12 |
 | 0x2D | `SpawnPenguin` | enemy, bank 15 |
 | 0x2E | `SpawnSealSpawner` | sends a seal (`SpawnSeal`, bank 17) every 0x78 frames |
@@ -220,20 +223,26 @@ code it gives the object and where the levels place it:
 | 0x34 | `SpawnSquid` | enemy, bank 7 |
 | 0x35 | `SpawnJellyfish` | enemy, bank 9 |
 | 0x37 | `SpawnLaserBarrier` | hazard, bank 25 |
+| 0x38 | `SpawnStationarySpaceEnemy` | enemy, bank 27 (a shell that shoots out flaming spikes), attacks in place (`UpdateEnemyAttackCycle`); space rooms 30, 33, 36, 37. Species not identified |
+| 0x39 | `SpawnPatrollingSpaceEnemy` | enemy, bank 24, patrols and attacks; space rooms 33, 36, 37. Species not identified |
 | 0x3A, 0x3F | `SpawnSaucerLabAssistant` | enemy, bank 29 |
 | 0x3B | `SpawnPistonCrusher` | hazard, bank 26 |
 | 0x3D | `SpawnLaunchPadEntity` | the green launch pad (`SpawnLaunchPad`, bank 28) |
 | 0x40 | `SpawnFlamethrowerLabAssistant` | enemy, bank 23 |
+| 0x41 | `SpawnHomingSewerEnemy` | enemy, bank 22, follows the player's X within its range (`UpdateEnemyHomingX`); sewer rooms 14, 22, 25, 35. Species not identified |
+| 0x42 | `SpawnPatrollingSewerEnemy` | enemy, bank 20, patrols; sewer rooms 14, 25, 35. Species not identified |
 | 0x43 | `SpawnRat` | enemy, bank 21 |
 | 0x44 | `SpawnFrog` | enemy, bank 19 |
 | 0x45 | `SpawnDingodile` | Dingodile (`CreateDingodile`, bank 54) |
 | 0x47 | `SpawnTiny` | Tiny Tiger (`CreateTiny`, bank 55) |
 | 0x48 | `SpawnCortexBoss` | the Neo Cortex fight's controller (`CreateCortexBoss`, bank 53); only the "neo cortex" level places it |
-| 0x49 | `sub_8021668` | the chaser (`UpdateChaser`, bank 30); only room 37 places it |
+| 0x49 | `SpawnMegaMix` | Mega-Mix, the boss that chases the player (`UpdateMegaMix`, bank 30); only room 37 (level 24, "mega-mix") places it |
 | 0x4B, 0x4C | `SpawnSeaMine` | hazard, bank 6 |
 | 0x4D | `SpawnWoodenCrusher` | hazard, bank 18 |
 | 0x4E, 0x4F, 0x50 | `SpawnLargePlatform`, `SpawnSmallPlatform`, `SpawnMediumPlatform` | `CreatePlatform` kinds 0-2 (bank 39) |
+| 0x55 | `SpawnRoomExit` | the room's exit: an invisible class-0x12 zone (player event 18, `RequestRoomExit`), or in the gem-path/bonus rooms the glowing exit pad (`CreatePlatform` kind 4); every non-boss room but room 16 places one |
 | 0x56 | `SpawnBonusPlatform` | the "?" platform (bank 39 anim 5) |
+| 0x57 | `SpawnFlipPlatform` | `CreatePlatform` kind 6 (bank 39 anim 6, a green pad that turns red and tips over, then comes back 120 frames later); space rooms 30, 33, 36 and the Neo Cortex room |
 | 0x58 | `SpawnRockPlatform` | `CreatePlatform` kind 8 (bank 39) |
 | 0x5A | `SpawnFlame` | a flame (bank 44) |
 | 0x5B | `SpawnSeaweed` | seaweed (bank 45) |

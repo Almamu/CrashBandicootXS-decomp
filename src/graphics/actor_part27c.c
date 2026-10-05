@@ -98,7 +98,7 @@ end:
 
 /* Sets `self+0xc`'s table pointer to `gStompedHopPadVtable`, then
  * tail-calls `DestroyCtrl` - same double-set pattern as
- * `sub_8017A78`/`DestroyChaserCtrl`. */
+ * `DestroyBossCtrl`/`DestroyMegaMixCtrl`. */
 void DestroyStompedHopPadCtrl(void *selfArg, s32 flags)
 {
     u8 *self = selfArg;

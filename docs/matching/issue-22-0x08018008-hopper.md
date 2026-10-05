@@ -1,8 +1,8 @@
-# Issue #22: 0x08018008-0x080187FC, and `UpdateChaser` retried
+# Issue #22: 0x08018008-0x080187FC, and `UpdateMegaMix` retried
 
 This pass finishes issue #22. The last raw block, `asm/code_3_2_17_18008.s`
 (`UpdateTiny`, `SetTinyState`, `PickTinyHopTarget`, `SpawnTinyFallingLeaves`), is now
-`src/graphics/actor_part_18008.c`. `UpdateChaser`
+`src/graphics/actor_part_18008.c`. `UpdateMegaMix`
 (`src/graphics/actor_part27a.c`), which was a NAKED transcription, is
 now real C too. All five match under the older compiler, old_agbcc, and
 both files are on the Makefile's `OLD_AGBCC_OBJS` list.
@@ -13,11 +13,11 @@ old_agbcc was already confirmed for `0x080188D0`-`0x0801E578`, which
 starts right after this range. The same holds here. Compiled with the
 current agbcc, the final C matches only `PickTinyHopTarget`: `UpdateTiny`
 comes out 4 bytes short and `SpawnTinyFallingLeaves` 4 bytes long, while
-`SetTinyState` and `UpdateChaser` have the right size but differ in 22 and
+`SetTinyState` and `UpdateMegaMix` have the right size but differ in 22 and
 6 bytes. Under old_agbcc all five are byte-exact. The ROM also shows old_agbcc's signature: the constant
 loaded before the byte it is combined with (`movs r0, #0x10; ldrb r3,
 [r4, #0xc]; orrs r0, r3` in `SpawnTinyFallingLeaves`, `movs r0, #0x7f; ldrb r1,
-[r1]; ands r0, r1` in `UpdateChaser`).
+[r1]; ands r0, r1` in `UpdateMegaMix`).
 
 The other #22 files (`actor_part27.c`, `actor_part27b.c`,
 `actor_part27c.c`) also match byte for byte under old_agbcc as they are,
@@ -54,7 +54,7 @@ list:
   the boss towards the player. `UpdateTiny` calls it on a 0x46-frame
   timer while in state 13.
 
-`UpdateChaser` is described in `docs/matching/issue-22-0x08017ab0-actor.md`.
+`UpdateMegaMix` is described in `docs/matching/issue-22-0x08017ab0-actor.md`.
 That description still holds, with one correction: state 2's
 out-of-range exit goes to state 0's mirror-bit test, not to the
 `animDone` check.
@@ -74,7 +74,7 @@ out-of-range exit goes to state 0's mirror-bit test, not to the
   a = b;`, as `UpdateCortexShot` does. The `valid` word of `b` is read back
   through a `volatile` (`BOX_VALID`, from `actor_part_1967c.c`).
 - **`CollidePartList` takes the box by value.** The earlier NAKED note on
-  `UpdateChaser` called its stack-argument order (6th, 7th, then 5th)
+  `UpdateMegaMix` called its stack-argument order (6th, 7th, then 5th)
   unclosable from C. With the prototype
   `CollidePartList(void *, struct box, s32, void *)`, it closes. The 16-byte
   box goes three words in r1-r3 and one on the stack, gcc stores the two
@@ -92,7 +92,7 @@ out-of-range exit goes to state 0's mirror-bit test, not to the
   it for `== 7`. A plain if-chain reloads `sb` into a rotating register
   for each test. An `asm("" : "+r"(s))` copy reproduces the ROM.
 - **Reload-register rotation.** gcc picks reload registers in rotation.
-  In `UpdateChaser` the ROM's rotation is one step away from the one this
+  In `UpdateMegaMix` the ROM's rotation is one step away from the one this
   C gets, so every later `movs rX, #off; ldrsh` reload index was r2 where
   the ROM has r3, and the other way round. Spelling out the registers of
   two of the three `+0x104` busy-byte reads (`Busy()`, r3 offset / r0
@@ -101,7 +101,7 @@ out-of-range exit goes to state 0's mirror-bit test, not to the
 - **Pins that remain.** `SetTinyState` pins `anchor`/`x` to r2/r1.
   `SpawnTinyFallingLeaves` pins the new part to r4, the tag value to r0, and a
   barriered zero (the ROM keeps it in r8 across the calls, like
-  `SpawnCortexTarget`'s 0xF). `UpdateChaser` pins the kind byte to r1 and keeps
+  `SpawnCortexTarget`'s 0xF). `UpdateMegaMix` pins the kind byte to r1 and keeps
   a barriered copy of the list entry. Each has a comment in the source.
 - `PickTinyHopTarget`'s nearest-anchor loop needed the player's x/y read into
   locals first, in that order, before the anchor's own x/y. With any
@@ -110,4 +110,4 @@ out-of-range exit goes to state 0's mirror-bit test, not to the
 ## Status
 
 Issue #22 has no raw, NAKED or `NON_MATCHING` functions left:
-`sub_8017A44`-`UpdateOneShotAnimCtrl` (0x08017A44-0x080188D0) are all real C.
+`IsInputCtrlMotionXPending`-`UpdateOneShotAnimCtrl` (0x08017A44-0x080188D0) are all real C.
