@@ -59,7 +59,7 @@ extern void mem_free(void *ptr);
 
 extern u8 gSineTable[];
 extern struct actor_pmf gJetpackBalloonCrateStateFuncs[];
-extern u8 gStaticData_0817C444[];
+extern u8 gJetpackRocketBox[];
 extern u8 gActorVtable[];
 extern u8 gJetpackHealthCrateVtable[];
 extern u8 gJetpackTimeCrateVtable[];
@@ -999,7 +999,7 @@ u8 IsJetpackParachuteNitroUnshootable(void *selfArg)
  * state transition through `LaunchJetpackRocket`, then drives the orbit itself
  * (`x`) and either lets `y` coast forward by
  * `self+0x60` or, once it catches up to `self+0x5c`, re-seeds
- * `self+0x38`'s 3-word block from `gStaticData_0817C444` and re-fires
+ * `self+0x38`'s 3-word block from `gJetpackRocketBox` and re-fires
  * `LaunchJetpackRocket`. Once no longer idle, either flushes a pending
  * `vtable` trampoline call (state-1/table-index-1 shape) or repeats
  * the same player-proximity event once (latched via `self+0x65`).
@@ -1042,7 +1042,7 @@ void UpdateJetpackRocket(void *selfArg)
         if (self->base.y > self->limitY) {
             self->base.y += self->stepY;
         } else {
-            *(struct vec3_words *)((u8 *)self + 0x38) = *(struct vec3_words *)gStaticData_0817C444;
+            *(struct vec3_words *)((u8 *)self + 0x38) = *(struct vec3_words *)gJetpackRocketBox;
             LaunchJetpackRocket(self);
         }
     }

@@ -79,13 +79,13 @@ struct actor *InitSpriteObj(struct actor *self)
 }
 
 extern void *GetSpriteFrame(void *part);
-extern u8 gStaticData_0816B300[];
+extern u8 gEmptySpritePoint[];
 
 /* Looks up `part`'s keyframe record via `GetSpriteFrame` (already parked
  * as `NON_MATCHING` in `actor_part5.c`), then picks a pointer off it
  * per the record's `+4` byte's upper nibble: 0 -> `info+0x24`, 6 ->
  * `info+0x14`, anything else (1-5, or above 6) -> the fixed fallback
- * table `gStaticData_0816B300`. Needed the case labels scattered
+ * table `gEmptySpritePoint`. Needed the case labels scattered
  * out of numeric order (rather than grouped into the obvious
  * contiguous "0 / 1-5 / 6" ranges) to get gcc to emit a real jump
  * table instead of a compare chain - this compiler only builds a
@@ -105,31 +105,31 @@ void *sub_80084C4(void *part)
         break;
     case 3:
     case 4:
-        result = gStaticData_0816B300;
+        result = gEmptySpritePoint;
         break;
     case 1:
     case 2:
-        result = gStaticData_0816B300;
+        result = gEmptySpritePoint;
         break;
     case 5:
-        result = gStaticData_0816B300;
+        result = gEmptySpritePoint;
         break;
     case 6:
         result = (u8 *)info + 0x14;
         break;
     default:
-        result = gStaticData_0816B300;
+        result = gEmptySpritePoint;
         break;
     }
     return result;
 }
 
-extern u8 gStaticData_0816B2F8[];
+extern u8 gEmptySpriteBox[];
 
 /* Same `GetSpriteFrame`-derived-record-nibble-switch shape as
  * `sub_80084C4` above, with a different result mapping: 0 and 4
  * select `info+0x1c`, anything else falls back to
- * `gStaticData_0816B2F8`. Unlike `sub_80084C4`, no case-scattering
+ * `gEmptySpriteBox`. Unlike `sub_80084C4`, no case-scattering
  * trick was needed here - 0 and 4 are already non-adjacent, which is
  * enough on its own to make gcc emit a jump table instead of a
  * compare chain. */
@@ -146,17 +146,17 @@ void *sub_8008518(void *part)
     case 1:
     case 2:
     case 3:
-        result = gStaticData_0816B2F8;
+        result = gEmptySpriteBox;
         break;
     case 4:
         result = (u8 *)info + 0x1c;
         break;
     case 5:
     case 6:
-        result = gStaticData_0816B2F8;
+        result = gEmptySpriteBox;
         break;
     default:
-        result = gStaticData_0816B2F8;
+        result = gEmptySpriteBox;
         break;
     }
     return result;
@@ -166,7 +166,7 @@ void *sub_8008518(void *part)
  * the exact same case-to-block mapping as `sub_8007C30` (already
  * matched in `actor_part2.c`) - 0/3/4 select `info+0x14`, 5 selects
  * `info+0xc`, and 1/2/6/anything-above-6 fall back to
- * `gStaticData_0816B2F8`. That mapping is non-contiguous on its own,
+ * `gEmptySpriteBox`. That mapping is non-contiguous on its own,
  * so plain ascending case order was enough for a jump table here too,
  * no scattering needed. */
 void *sub_8008564(void *part)
@@ -184,13 +184,13 @@ void *sub_8008564(void *part)
     case 1:
     case 2:
     case 6:
-        result = gStaticData_0816B2F8;
+        result = gEmptySpriteBox;
         break;
     case 5:
         result = (u8 *)info + 0xc;
         break;
     default:
-        result = gStaticData_0816B2F8;
+        result = gEmptySpriteBox;
         break;
     }
     return result;
@@ -198,7 +198,7 @@ void *sub_8008564(void *part)
 
 /* Same `GetSpriteFrame`-derived-record-nibble `switch` shape once more -
  * 0/2/3/4/6 select `info+0xc`, 1/5/anything-above-6 fall back to
- * `gStaticData_0816B2F8`. */
+ * `gEmptySpriteBox`. */
 void *sub_80085B8(void *part)
 {
     void *info = GetSpriteFrame(part);
@@ -210,7 +210,7 @@ void *sub_80085B8(void *part)
         result = (u8 *)info + 0xc;
         break;
     case 1:
-        result = gStaticData_0816B2F8;
+        result = gEmptySpriteBox;
         break;
     case 2:
     case 3:
@@ -218,13 +218,13 @@ void *sub_80085B8(void *part)
         result = (u8 *)info + 0xc;
         break;
     case 5:
-        result = gStaticData_0816B2F8;
+        result = gEmptySpriteBox;
         break;
     case 6:
         result = (u8 *)info + 0xc;
         break;
     default:
-        result = gStaticData_0816B2F8;
+        result = gEmptySpriteBox;
         break;
     }
     return result;

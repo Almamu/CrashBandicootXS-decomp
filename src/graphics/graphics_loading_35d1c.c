@@ -36,9 +36,9 @@ extern u8 gTitleLogoPieceSeeds[];
 extern u8 gTitleArrowPieceOffsets[];
 extern u8 gLogoActorAnim[];
 extern u8 gStaticData_08178F80[];
-extern u8 gStaticData_0817D768[];
-extern u8 gStaticData_0817D77C[];
-extern u8 gStaticData_0817D790[];
+extern u8 gVvLogoEmblemObj[];
+extern u8 gVvLogoLettersObj[];
+extern u8 gVvLogoUrlObj[];
 extern u8 gVvLogoPieceSeeds[];
 extern u8 gUniversalLogoBg[];
 extern u8 gLogoActorVtable[];
@@ -877,16 +877,16 @@ void RunCompanyLogos(u32 *self)
 
 /* BG2's own tileset/palette loader for this subsystem: allocates 3
  * VRAM tile blocks (`self+0x424`/`0x428`/`0x42c`), loads 3 palette
- * banks (`gStaticData_0817D768`/`_77c`/`_790`'s packages) to
+ * banks (`gVvLogoEmblemObj`/`gVvLogoLettersObj`/`gVvLogoUrlObj`'s packages) to
  * `0x050003E0`/`_C0`/`_A0` and two packages' tile data (`LoadTaggedAssetBuffered`)
  * into the first two blocks, then allocates a buffer sized from the
  * first package's tile-asset header (`self+0x430`) and unpacks into it,
  * plus a 0x1000-byte scratch buffer (`self+0x434`). The last two
  * stores go through a destination pointer taken before the allocation
  * call, as the ROM computes the address first. */
-#define PKG_A ((struct bg_package *)gStaticData_0817D768)
-#define PKG_B ((struct bg_package *)gStaticData_0817D77C)
-#define PKG_C ((struct bg_package *)gStaticData_0817D790)
+#define PKG_A ((struct bg_package *)gVvLogoEmblemObj)
+#define PKG_B ((struct bg_package *)gVvLogoLettersObj)
+#define PKG_C ((struct bg_package *)gVvLogoUrlObj)
 
 void LoadVvLogoGraphics(u32 *self)
 {

@@ -29,7 +29,7 @@ extern void *gPaletteCache;
 extern void *gAudioContext;
 extern struct follow_state *gCamera;
 extern struct act_part *gPlayer;
-extern u8 gStaticData_0816B300[];
+extern u8 gEmptySpritePoint[];
 extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
 extern void FadeOutMusic(void *ctx, u32 value);
 extern void LoadPaletteSlot(void *cache, s32 slot, s32 kind);
@@ -59,25 +59,25 @@ static inline void ActSetNext27(struct act *self, s32 next)
             (dst) = (struct part_offset *)(_info + 0x24);                      \
             break;                                                             \
         case 1:                                                                \
-            (dst) = (struct part_offset *)gStaticData_0816B300;                \
+            (dst) = (struct part_offset *)gEmptySpritePoint;                \
             break;                                                             \
         case 2:                                                                \
-            (dst) = (struct part_offset *)gStaticData_0816B300;                \
+            (dst) = (struct part_offset *)gEmptySpritePoint;                \
             break;                                                             \
         case 3:                                                                \
-            (dst) = (struct part_offset *)gStaticData_0816B300;                \
+            (dst) = (struct part_offset *)gEmptySpritePoint;                \
             break;                                                             \
         case 4:                                                                \
-            (dst) = (struct part_offset *)gStaticData_0816B300;                \
+            (dst) = (struct part_offset *)gEmptySpritePoint;                \
             break;                                                             \
         case 5:                                                                \
-            (dst) = (struct part_offset *)gStaticData_0816B300;                \
+            (dst) = (struct part_offset *)gEmptySpritePoint;                \
             break;                                                             \
         case 6:                                                                \
             (dst) = (struct part_offset *)(_info + 0x14);                      \
             break;                                                             \
         default:                                                               \
-            (dst) = (struct part_offset *)gStaticData_0816B300;                \
+            (dst) = (struct part_offset *)gEmptySpritePoint;                \
             break;                                                             \
         }                                                                      \
     } else (void)0

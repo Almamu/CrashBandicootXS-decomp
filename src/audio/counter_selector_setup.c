@@ -23,7 +23,7 @@ extern void CommitOamBuffer(struct oam_shadow_buffer *arg0);
 extern void UploadPaletteCache(struct palette_cache *arg0);
 extern void FlushVramDmaQueue(void);
 
-extern u8 gStaticData_0816C484[];
+extern u8 gMenuSkyBg[];
 
 extern void *OperatorNew(s32 size);
 extern void DestroyStarfield(void *self, s32 arg1);
@@ -77,7 +77,7 @@ void LoadLanguageSelectBg(struct language_select *self)
     self->field_d = b;
 
     InitBgSetup(buf, 2, 0x1e, 1, 3);
-    LoadGraphicsPackage(buf, gStaticData_0816C484);
+    LoadGraphicsPackage(buf, gMenuSkyBg);
     REG_BG0CNT = GetBgSetupControl(buf);
     *(vu32 *)REG_ADDR_BG0HOFS = zero;
 }

@@ -21,7 +21,7 @@ happens to ship in").
   operands' magnitude (tracking overall sign as an all-0s/all-1s XOR
   word), then runs a three-block unsigned 64/64 long-division core
   built from repeated `__umodsi3`/`__udivsi3` calls against
-  16-bit-digit chunks, normalized via `gStaticData_085A4C70` (a
+  16-bit-digit chunks, normalized via `__clz_tab_divdi3` (a
   256-entry leading-zero-count table), and restores the sign on the
   64-bit quotient at the end. **UNUSED** - confirmed no caller anywhere
   in the ROM (every `asm/*.s`, `expected/code_3.s`, `expected/
@@ -33,7 +33,7 @@ happens to ship in").
 - **`__udivdi3`** - unsigned 64-bit division, the 64-bit counterpart
   of `__umodsi3`: the exact same three-block long-division core as
   `__divdi3`, minus the sign handling, with its own copy of the
-  normalization table (`gStaticData_085A4D70`).
+  normalization table (`__clz_tab_udivdi3`).
 - **`__udivsi3`** - unsigned 32-bit division (quotient only, no
   remainder-correction mask) - the 64-bit division routines' own
   workhorse, called from both of them (and, project-wide, already

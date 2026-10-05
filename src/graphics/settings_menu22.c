@@ -16,7 +16,7 @@
  * order shows in DrawPauseGemsPage's flag tests. */
 
 extern void DrawSpriteWithOffset(void *arg0, s32 arg1, s32 arg2);
-extern struct icon_pos gStaticData_0816B21C[];
+extern struct icon_pos gPauseGemIconPos[];
 extern void DrawPauseFraction(struct pause_menu *self, void *label1, void *label2);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern struct bitmap_font *gSmallFont;
@@ -43,7 +43,7 @@ static inline void set_icon_mgr_pos(struct bitmap_font *m, u32 x, u32 y)
  * `self->field_10`'s flag byte (bits 1/4/8/2 - a different bit set
  * than DrawPausePowersPage's, same handle), always shows `icons9c[0]`
  * unconditionally, then draws a fixed "x/28"-shaped fraction readout:
- * first `gStaticData_0816B21C[0]`'s position (offset by -0x14/-4) with
+ * first `gPauseGemIconPos[0]`'s position (offset by -0x14/-4) with
  * `self->buf2f` at a fixed slot, then repositions to (0xb4, 0x80) and
  * calls `DrawPauseFraction` with `self->buf32`/`self->buf49` (the count/total
  * buffers `InitPauseGemsPage` - src/graphics/settings_menu6.c - already fills
@@ -60,18 +60,18 @@ void DrawPauseGemsPage(struct pause_menu *self)
         DrawSpriteWithOffset(self->icons9c[4], 0, 0);
     DrawSpriteWithOffset(self->icons9c[0], 0, 0);
 
-    set_icon_mgr_pos(gSmallFont, gStaticData_0816B21C[0].x - 0x14, gStaticData_0816B21C[0].y - 4);
+    set_icon_mgr_pos(gSmallFont, gPauseGemIconPos[0].x - 0x14, gPauseGemIconPos[0].y - 4);
     DRAW_ICON_TEXT(gSmallFont, self->buf2f);
     set_icon_mgr_pos(gSmallFont, 0xb4, 0x80);
     DrawPauseFraction(self, self->buf32, self->buf49);
 }
 
-extern struct icon_pos gStaticData_0816B258[];
+extern struct icon_pos gPauseRelicIconPos[];
 
 /* Same shape as DrawPauseGemsPage above for the `iconsB0[3]` row: shows all
  * three icons unconditionally (no per-bit gating this time), then
  * draws three fixed "x/20"-shaped fraction readouts at
- * `gStaticData_0816B258[2]/[1]/[0]`'s positions (offset -4/+0xe, same
+ * `gPauseRelicIconPos[2]/[1]/[0]`'s positions (offset -4/+0xe, same
  * pattern as DrawPauseGemsPage's single readout) with `self->buf38`/
  * `buf3b`/`buf3e`, then a final one at (0xb4, 0x80) via `DrawPauseFraction`
  * with `self->buf35`/`buf4c` (the total/threshold buffers
@@ -84,11 +84,11 @@ void DrawPauseRelicsPage(struct pause_menu *self)
     for (i = 0; i <= 2; i++)
         DrawSpriteWithOffset(self->iconsB0[i], 0, 0);
 
-    set_icon_mgr_pos(gSmallFont, gStaticData_0816B258[2].x - 4, gStaticData_0816B258[2].y + 0xe);
+    set_icon_mgr_pos(gSmallFont, gPauseRelicIconPos[2].x - 4, gPauseRelicIconPos[2].y + 0xe);
     DRAW_ICON_TEXT(gSmallFont, self->buf38);
-    set_icon_mgr_pos(gSmallFont, gStaticData_0816B258[1].x - 4, gStaticData_0816B258[1].y + 0xe);
+    set_icon_mgr_pos(gSmallFont, gPauseRelicIconPos[1].x - 4, gPauseRelicIconPos[1].y + 0xe);
     DRAW_ICON_TEXT(gSmallFont, self->buf3b);
-    set_icon_mgr_pos(gSmallFont, gStaticData_0816B258[0].x - 4, gStaticData_0816B258[0].y + 0xe);
+    set_icon_mgr_pos(gSmallFont, gPauseRelicIconPos[0].x - 4, gPauseRelicIconPos[0].y + 0xe);
     DRAW_ICON_TEXT(gSmallFont, self->buf3e);
     set_icon_mgr_pos(gSmallFont, 0xb4, 0x80);
     DrawPauseFraction(self, self->buf35, self->buf4c);

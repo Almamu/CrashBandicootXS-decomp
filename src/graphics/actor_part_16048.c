@@ -78,7 +78,7 @@ struct level_anim
 };
 
 extern struct level_anim *gPlayerCtrlModeAnimRows[];
-extern struct pctrl_anim gStaticData_0816B61C[];
+extern struct pctrl_anim gPlayerCtrlMotionRecords[];
 extern u8 gPlayerCtrlVtable[];
 
 extern u8 GetDpadDirection(void *arg);
@@ -525,7 +525,7 @@ void sub_8016AB0(struct player_ctrl *self)
             register u32 i asm("r1") = self->animSet->entries[self->valueA].a;
             register u32 off asm("r0") = i * sizeof(struct pctrl_anim);
 
-            rec = (struct pctrl_anim *)(off + (u32)gStaticData_0816B61C);
+            rec = (struct pctrl_anim *)(off + (u32)gPlayerCtrlMotionRecords);
         }
         StartCtrlTargetMotionX(self, self->target, rec);
     }
@@ -538,7 +538,7 @@ void sub_8016AB0(struct player_ctrl *self)
             register u32 i asm("r1") = self->animSet->entries[self->valueB].b;
             register u32 off asm("r0") = i * sizeof(struct pctrl_anim);
 
-            rec = (struct pctrl_anim *)(off + (u32)gStaticData_0816B61C);
+            rec = (struct pctrl_anim *)(off + (u32)gPlayerCtrlMotionRecords);
         }
         StartCtrlTargetMotionY(self, self->target, rec);
     }
@@ -791,13 +791,13 @@ void AttachPlayerCtrl(struct player_ctrl *self, struct pctrl_target *target)
 /* UNUSED */
 void sub_801721C(struct player_ctrl *self, struct pctrl_target *target, s32 idx)
 {
-    StartCtrlTargetMotionY(self, target, &gStaticData_0816B61C[self->animSet->entries[idx].b]);
+    StartCtrlTargetMotionY(self, target, &gPlayerCtrlMotionRecords[self->animSet->entries[idx].b]);
 }
 
 /* UNUSED */
 void sub_8017240(struct player_ctrl *self, struct pctrl_target *target, s32 idx)
 {
-    StartCtrlTargetMotionX(self, target, &gStaticData_0816B61C[self->animSet->entries[idx].a]);
+    StartCtrlTargetMotionX(self, target, &gPlayerCtrlMotionRecords[self->animSet->entries[idx].a]);
 }
 
 void sub_8017264(struct player_ctrl *self, s32 a, s32 mode, s32 timer, s32 timerMax)

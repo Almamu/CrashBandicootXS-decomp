@@ -31,7 +31,7 @@ shape `DrawPowerDialog` uses on the same two globals.
 (`gOamBuffer`/`gPaletteCache`), then hand-fills
 `gPaletteCache`'s (`struct palette_cache`, `include/vram_pool.h`)
 `slots[0]`-`slots[3]` with 4 fixed 32-byte OBJ tiles copied from
-`gStaticData_0817E72C`/`_74C`/`_76C`/`_78C` (two tiles filled per loop
+`gLanguageSelectPalette0`/`_74C`/`_76C`/`_78C` (two tiles filled per loop
 iteration via a doubled offset, 16 iterations), and finally threads
 `gSmallFont`'s/`gLargeFont`'s `record->slots[6]`
 trampoline (`_call_via_r1`) and VRAM-reserve (`ReserveObjVram`) pair -

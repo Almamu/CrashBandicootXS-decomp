@@ -13,7 +13,7 @@ typedef unsigned char UQItype;
  * bundled two of those (src/util/math_div64_util.c): `__divdi3`
  * (`__divdi3`) reads the first as its `CLZ_TAB`, `__udivdi3`
  * (`__udivdi3`) the second. Written the way libgcc2.c writes it. */
-const UQItype gStaticData_085A4C70[256] =
+const UQItype __clz_tab_divdi3[256] =
 {
     0,1,2,2,3,3,3,3,4,4,4,4,4,4,4,4,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,
     6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,
@@ -25,7 +25,7 @@ const UQItype gStaticData_085A4C70[256] =
     8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,
 };
 
-const UQItype gStaticData_085A4D70[256] =
+const UQItype __clz_tab_udivdi3[256] =
 {
     0,1,2,2,3,3,3,3,4,4,4,4,4,4,4,4,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,
     6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,

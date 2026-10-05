@@ -25,7 +25,7 @@ already shows a caller building up field-by-field before passing it to
 ```c
 u8 buf[0x10];
 InitBgSetup(buf, 2, 0x1e, 1, 3);
-LoadGraphicsPackage(buf, gStaticData_0816C484);
+LoadGraphicsPackage(buf, gMenuSkyBg);
 REG_BG0CNT = GetBgSetupControl(buf);
 ```
 

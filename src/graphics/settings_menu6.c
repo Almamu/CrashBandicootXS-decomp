@@ -12,10 +12,10 @@ extern void SetEntityPixelPos(struct actor *self, s32 arg1, s32 arg2);
 extern s32 CountCrystals(void *arg0);
 extern s32 FormatDecimal(s32 value, void *dest);
 extern void ***gSpriteBankSet;
-extern struct icon_pos gStaticData_0816B1E4;
+extern struct icon_pos gPauseCrystalIconPos;
 
 /* Constructs the single icon at `field_88`: positions it from the fixed
- * `gStaticData_0816B1E4` pair, picks its starting keyframe-table entry
+ * `gPauseCrystalIconPos` pair, picks its starting keyframe-table entry
  * from a shared table (`gSpriteBankSet`'s triple-indirected base,
  * offset `0xde<<1`), and formats two small numbers - a row-stats
  * derived count into `buf2c` and the constant `0x14` into `buf46` -
@@ -26,7 +26,7 @@ void InitPauseCrystalsPage(struct pause_menu *self)
 
     *dest = (struct settings_icon_actor *)InitUiSpriteObj((struct actor *)OperatorNew(0x40));
     (*dest)->field_20 = (void **)((u8 *)(**gSpriteBankSet) + (0xde << 1));
-    SetEntityPixelPos(&(*dest)->base, gStaticData_0816B1E4.x, gStaticData_0816B1E4.y);
+    SetEntityPixelPos(&(*dest)->base, gPauseCrystalIconPos.x, gPauseCrystalIconPos.y);
     UPDATE_ICON_FRAME_NIBBLE(*dest);
 
     FormatDecimal(CountCrystals(self->field_10), self->buf2c);
@@ -63,12 +63,12 @@ static inline void set_icon_pos(struct actor *a, struct icon_pos *p)
     SetEntityPixelPos(a, p->x, p->y);
 }
 
-extern u32 gStaticData_0816B20C[];
-extern struct icon_pos gStaticData_0816B1EC[];
+extern u32 gPausePowerIconFrames[];
+extern struct icon_pos gPausePowerIconPos[];
 
-/* Builds the 4-icon array at `icons8c`: one per `gStaticData_0816B1EC`
+/* Builds the 4-icon array at `icons8c`: one per `gPausePowerIconPos`
  * position entry, keyframe-table base `0xe4<<1` off the same shared
- * table `InitPauseCrystalsPage` uses, frame index from `gStaticData_0816B20C`,
+ * table `InitPauseCrystalsPage` uses, frame index from `gPausePowerIconFrames`,
  * then the standard sub-counter/frame-counter/"done"-flag reset trio. */
 void InitPausePowersPage(struct pause_menu *self)
 {
@@ -79,23 +79,23 @@ void InitPausePowersPage(struct pause_menu *self)
 
         self->icons8c[i] = NEW_ICON(icon);
         icon->field_20 = (void **)((u8 *)(**gSpriteBankSet) + (0xe4 << 1));
-        icon->frameIndex = gStaticData_0816B20C[i];
+        icon->frameIndex = gPausePowerIconFrames[i];
         ResetSpriteFrameTimer(&icon->base);
         ResetSpriteFrameIndex(&icon->base);
         SetSpriteAnimDone(&icon->base, 0);
-        set_icon_pos(&self->icons8c[i]->base, &gStaticData_0816B1EC[i]);
+        set_icon_pos(&self->icons8c[i]->base, &gPausePowerIconPos[i]);
         SET_ICON_FRAME_NIBBLE(self->icons8c[i]);
     }
 }
 
 extern s32 CountClearGems(void *arg0);
 extern s32 CountGems(void *arg0);
-extern u32 gStaticData_0816B244[];
-extern struct icon_pos gStaticData_0816B21C[];
+extern u32 gPauseGemIconFrames[];
+extern struct icon_pos gPauseGemIconPos[];
 
 /* Same shape as InitPausePowersPage above for the 5-icon array at `icons9c`
  * (keyframe-table base `0xc0<<1`, positions/frame indices from
- * `gStaticData_0816B21C`/`gStaticData_0816B244`), plus each icon's
+ * `gPauseGemIconPos`/`gPauseGemIconFrames`), plus each icon's
  * `field_3c = 0x80`. After the loop, formats two more row-stats
  * derived numbers (`CountClearGems`/`CountGems` on `field_10`) into
  * `buf2f`/`buf32`, and the constant `0x1c` into `buf49`. */
@@ -109,11 +109,11 @@ void InitPauseGemsPage(struct pause_menu *self)
 
         self->icons9c[i] = NEW_ICON(icon);
         icon->field_20 = (void **)((u8 *)(**gSpriteBankSet) + (0xc0 << 1));
-        icon->frameIndex = gStaticData_0816B244[i];
+        icon->frameIndex = gPauseGemIconFrames[i];
         ResetSpriteFrameTimer(&icon->base);
         ResetSpriteFrameIndex(&icon->base);
         SetSpriteAnimDone(&icon->base, 0);
-        set_icon_pos(&self->icons9c[i]->base, &gStaticData_0816B21C[i]);
+        set_icon_pos(&self->icons9c[i]->base, &gPauseGemIconPos[i]);
         SET_ICON_FRAME_NIBBLE(self->icons9c[i]);
         self->icons9c[i]->field_3c = 0x80;
     }
@@ -129,12 +129,12 @@ extern s32 CountSapphireRelics(void *arg0);
 extern s32 CountGoldRelics(void *arg0);
 extern s32 CountPlatinumRelics(void *arg0);
 extern s32 CountRelics(void *arg0);
-extern u32 gStaticData_0816B270[];
-extern struct icon_pos gStaticData_0816B258[];
+extern u32 gPauseRelicIconFrames[];
+extern struct icon_pos gPauseRelicIconPos[];
 
 /* Same shape as InitPausePowersPage/InitPauseGemsPage above for the 3-icon array at
  * `iconsB0` (keyframe-table base `0xc6<<1`, positions/frame indices
- * from `gStaticData_0816B258`/`gStaticData_0816B270`), each icon's
+ * from `gPauseRelicIconPos`/`gPauseRelicIconFrames`), each icon's
  * `field_3c = 0x80`. After the loop, formats four category counts
  * (`CountSapphireRelics`/`CountGoldRelics`/`CountPlatinumRelics`/`CountRelics` on
  * `field_10` - the same four functions src/graphics/oam_count.c
@@ -149,11 +149,11 @@ void InitPauseRelicsPage(struct pause_menu *self)
 
         self->iconsB0[i] = NEW_ICON(icon);
         icon->field_20 = (void **)((u8 *)(**gSpriteBankSet) + (0xc6 << 1));
-        icon->frameIndex = gStaticData_0816B270[i];
+        icon->frameIndex = gPauseRelicIconFrames[i];
         ResetSpriteFrameTimer(&icon->base);
         ResetSpriteFrameIndex(&icon->base);
         SetSpriteAnimDone(&icon->base, 0);
-        set_icon_pos(&self->iconsB0[i]->base, &gStaticData_0816B258[i]);
+        set_icon_pos(&self->iconsB0[i]->base, &gPauseRelicIconPos[i]);
         SET_ICON_FRAME_NIBBLE(self->iconsB0[i]);
         self->iconsB0[i]->field_3c = 0x80;
     }
@@ -184,7 +184,7 @@ struct threshold_table_entry {
 COMPILE_TIME_ASSERT(sizeof(struct threshold_table_entry) == 0x24);
 
 extern struct threshold_table_entry gLevelTable[];
-extern struct icon_pos gStaticData_0816B27C;
+extern struct icon_pos gPauseTimeTrialIconPos;
 
 /* Tags `icon` with medal frame `frame` and restarts its animation. The
  * frame is a word parameter (not u8) so the table word is loaded after
@@ -204,7 +204,7 @@ static inline void set_icon_frame(struct settings_icon_actor *icon, u32 frame)
  * `time:13`), formats it via FormatCentiseconds, then compares it
  * against `gLevelTable[levelIdx]`'s bronze/silver/gold
  * thresholds and constructs the icon at `field_bc`, tagged with each
- * medal (from `gStaticData_0816B270`, the same table InitPauseRelicsPage uses)
+ * medal (from `gPauseRelicIconFrames`, the same table InitPauseRelicsPage uses)
  * whose threshold was met. `field_6c` is an "earned" flag. */
 void InitPauseTimeTrialPage(struct pause_menu *self)
 {
@@ -232,15 +232,15 @@ void InitPauseTimeTrialPage(struct pause_menu *self)
     slot = &self->field_bc;
     *slot = (struct settings_icon_actor *)InitUiSpriteObj((struct actor *)OperatorNew(0x40));
     (*slot)->field_20 = (void **)((u8 *)(**gSpriteBankSet) + (0xc6 << 1));
-    set_icon_pos(&(*slot)->base, &gStaticData_0816B27C);
+    set_icon_pos(&(*slot)->base, &gPauseTimeTrialIconPos);
 
     if (time != 0) {
         if (time <= entry->threshold_08)
-            set_icon_frame(*slot, gStaticData_0816B270[2]);
+            set_icon_frame(*slot, gPauseRelicIconFrames[2]);
         if (time <= entry->threshold_0C)
-            set_icon_frame(*slot, gStaticData_0816B270[1]);
+            set_icon_frame(*slot, gPauseRelicIconFrames[1]);
         if (time <= entry->threshold_10)
-            set_icon_frame(*slot, gStaticData_0816B270[0]);
+            set_icon_frame(*slot, gPauseRelicIconFrames[0]);
         SET_ICON_FRAME_NIBBLE(*slot);
     }
 }

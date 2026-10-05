@@ -41,7 +41,7 @@ extern u8 gPolarPlayerVtable[];
 extern u8 gActorVtable[];
 extern u8 gPolarCollectedWumpaVtable[];
 extern u8 gPolarPlayerStateFuncs[];
-extern u8 gStaticData_0817A768[];
+extern u8 gPolarNitroCrateBox[];
 
 extern void SetCellAnimSpeed(s32 arg0);
 extern void StopYeti(void);

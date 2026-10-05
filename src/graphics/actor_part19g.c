@@ -11,7 +11,7 @@
 /* Anonymous 12-byte (3-word) copy unit - see actor_part19c.c's own
  * copy of this comment for why this shape (rather than three separate
  * `s32` field copies) is needed to reproduce the ROM's `ldm`/`stm`
- * lowering for `self+0x38`'s refresh from `gStaticData_0817A768`. */
+ * lowering for `self+0x38`'s refresh from `gPolarNitroCrateBox`. */
 struct vec3_words {
     s32 a, b, c;
 };
@@ -28,7 +28,7 @@ extern void *gLevelState;
 extern void *gActorList;
 
 extern u8 gPolarWumpaVtable[];
-extern u8 gStaticData_0817A768[];
+extern u8 gPolarNitroCrateBox[];
 
 extern void InitActorPart(void *self, s32 a, s32 b, s32 c, s32 d);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
@@ -240,7 +240,7 @@ void UpdatePolarLifeCrate(void *selfArg)
 }
 
 /* Once already in the "used" state (0x12): refreshes `self+0x38`
- * (a 12-byte AABB, from `gStaticData_0817A768`) and, once
+ * (a 12-byte AABB, from `gPolarNitroCrateBox`) and, once
  * `stateTime` reaches `0x14`, calls `DetonateNearbyPolarNitros` (still raw - see
  * docs/matching.md). Otherwise, while `depth` (a lap/lifetime
  * counter) exceeds `0xa000`, calls `sub_8029720` and fires the
@@ -309,7 +309,7 @@ void UpdatePolarNitroCrate(void *selfArg)
     goto tail;
 
 usedState:
-    *(struct vec3_words *)((u8 *)self + 0x38) = *(struct vec3_words *)gStaticData_0817A768;
+    *(struct vec3_words *)((u8 *)self + 0x38) = *(struct vec3_words *)gPolarNitroCrateBox;
 
     if (self->stateTime == 0x14) {
         DetonateNearbyPolarNitros(self);

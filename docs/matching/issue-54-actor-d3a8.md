@@ -107,7 +107,7 @@ function's address (`..._d3a8.s`, `..._d7b0.s`, `..._dd9c.s`,
   into `r1`) each written as a single combined `asm volatile` block per
   group to force this compiler's argument-register-copy order to match
   the ROM's (it otherwise processes `r0`-`r3` in a fixed, source-order-
-  independent sequence) - and the `gStaticData_0817A850`/`0817A880`/
+  independent sequence) - and the `gYetiKeyframes`/`0817A880`/
   `0xf` triple written as three named locals assigned before any of the
   three stores, so all three loads happen before any store (this
   project's established "compute both loads before either use"

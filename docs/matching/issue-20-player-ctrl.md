@@ -78,7 +78,7 @@ the same class. The target (`+0x10`) is the player object.
   speed. It is the `+0x54` twin of `sub_8015FDC`. `sub_8017330` is its
   `v * v / 0x4000 + 4` term on its own.
 - `sub_8016AB0`/`sub_801721C`/`sub_8017240` apply animation pairs through
-  `gStaticData_0816B61C` (12-byte records). They are the same shape as
+  `gPlayerCtrlMotionRecords` (12-byte records). They are the same shape as
   #21's `sub_8017808`.
 
 UNUSED: there is no reference in `asm/`, `src/` or `data/`, and no Thumb

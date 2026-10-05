@@ -165,7 +165,7 @@ All in `src/graphics/actor_part126.c`.
   `gUnknown_030014B8`-counted effect: while the current hazard tier
   (`gLevelState->0x78`) and the `retrigger` argument are both
   zero, just clears `self+0x2c`; otherwise DMAs one of four
-  `gStaticData_0817A798`-indexed gauge strips and resets `self`'s table
+  `gPolarAkuAkuPalette1`-indexed gauge strips and resets `self`'s table
   index/anim, arming `self+0x2c`. Then: tier 3 arms a long
   `gUnknown_030014B8` countdown and transitions to state 1; tier 0 with
   `retrigger` set transitions to state 2/table-index 1 instead; any

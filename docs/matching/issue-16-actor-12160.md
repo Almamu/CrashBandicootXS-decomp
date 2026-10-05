@@ -125,7 +125,7 @@ characterized them:
   not read closely enough here to attempt byte-exact matching.
 - `ApplyActionCtrlMotion` (284 B of ROM, the widest of the six by instruction
   count) uses a `struct { s16; s16; s16 }`-shaped stack-local record
-  copied via `ldm`/`stm` from `gStaticData_0816B304`, plus `r8` for a
+  copied via `ldm`/`stm` from `gCtrlMotionRecords`, plus `r8` for a
   cross-call-preserved value - a real step up in register-allocation
   complexity from the four matched functions above.
 - `ActionCtrlStateIdle` is a further sibling/callee of the same family.

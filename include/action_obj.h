@@ -94,7 +94,7 @@ struct act_part
 };
 
 /* One entry of the per-object table `act.anims` points at: indices into
- * gStaticData_0816B304's 12-byte records for the +0x27 and +0x28 actions. */
+ * gCtrlMotionRecords's 12-byte records for the +0x27 and +0x28 actions. */
 struct act_anim_pair
 {
     s32 first;

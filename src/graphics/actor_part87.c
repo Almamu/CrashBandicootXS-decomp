@@ -37,9 +37,9 @@ extern void *OperatorNew(s32 size);
 extern void InitBgSetup(u8 *self, u32 arg1, u32 arg2, u32 arg3, u32 arg5);
 extern u16 GetBgSetupControl(u8 *self);
 extern void LoadGraphicsPackage(u8 *selfArg, struct bg_package *pkgArg);
-extern u8 gStaticData_0817C5BC[];
-extern u8 gStaticData_0817C594[];
-extern u8 gStaticData_0817C5A8[];
+extern u8 gContinuePromptUkaUkaBg[];
+extern u8 gContinuePromptSmokeBg[];
+extern u8 gContinuePromptGlowBg[];
 extern struct AudioContext *gAudioContext;
 extern void FadeOutMusic(struct AudioContext *self, u32 value);
 extern struct continue_prompt *InitContinuePromptGraphics(struct continue_prompt *self);
@@ -106,9 +106,9 @@ void *InitContinuePrompt(void *selfArg)
     self->bg2Buf = buf;
 
     buf = self->bg1Buf;
-    LoadGraphicsPackage(buf, (struct bg_package *)gStaticData_0817C5BC);
-    LoadGraphicsPackage(self->bg0Buf, (struct bg_package *)gStaticData_0817C594);
-    LoadGraphicsPackage(self->bg2Buf, (struct bg_package *)gStaticData_0817C5A8);
+    LoadGraphicsPackage(buf, (struct bg_package *)gContinuePromptUkaUkaBg);
+    LoadGraphicsPackage(self->bg0Buf, (struct bg_package *)gContinuePromptSmokeBg);
+    LoadGraphicsPackage(self->bg2Buf, (struct bg_package *)gContinuePromptGlowBg);
 
     *(vu16 *)PLTT = 0;
 

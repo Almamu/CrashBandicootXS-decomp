@@ -15,12 +15,12 @@ const s32 gStaticData_0816C2D8[4][3] = {
 };
 
 /* UpdateTiny / SetTinyState (actor_part_18008.c): a value per round. */
-const u8 gStaticData_0816C308[3] = {
+const u8 gTinyRoundAnchors[3] = {
     4, 1, 0,
 };
 
 /* PickTinyHopTarget (actor_part_18008.c): a sequence of 0-4 values. */
-const u8 gStaticData_0816C30B[77] = {
+const u8 gTinyHopTargets[77] = {
     1, 1, 2, 1, 1, 0, 2, 0, 3, 3, 0, 0, 0, 3, 3, 1,
     1, 2, 4, 4, 3, 3, 3, 3, 3, 1, 1, 2, 1, 1, 0, 2,
     0, 3, 3, 0, 0, 0, 3, 3, 1, 1, 2, 2, 3, 3, 3, 3,

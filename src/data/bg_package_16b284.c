@@ -6,15 +6,15 @@
  * sections by ldscript.txt - see docs/data.md.
  */
 
-extern const u8 gStaticData_0861BB04[];
-extern const u8 gStaticData_0861E5F8[];
-extern const u8 gStaticData_0862FFF4[];
+extern const u8 gPauseMenuBgPalette[];
+extern const u8 gPauseMenuBgTiles[];
+extern const u8 gPauseMenuBgMap[];
 
 /* BG graphics package loaded by RunPauseMenu (settings_menu15.c). */
-const struct bg_package gStaticData_0816B284 = {
+const struct bg_package gPauseMenuBg = {
     0x1e,
     0x14,
-    (void *)gStaticData_0861BB04,
-    (void *)gStaticData_0861E5F8,
-    (void *)gStaticData_0862FFF4,
+    (void *)gPauseMenuBgPalette,
+    (void *)gPauseMenuBgTiles,
+    (void *)gPauseMenuBgMap,
 };
