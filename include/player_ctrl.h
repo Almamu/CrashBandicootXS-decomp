@@ -27,7 +27,7 @@ struct pctrl_vtable
     struct pctrl_method setAnim;  // 0x50
 };
 
-/* one gStaticData_0816B61C record */
+/* one gPlayerCtrlMotionRecords record */
 struct pctrl_anim
 {
     s32 a;

@@ -221,12 +221,12 @@ picture):
   positive** in this range: a generic 64-bit software division routine,
   read in full - normalizes the dividend via a 256-entry bit-
   normalization/leading-zero-count lookup table
-  (`gStaticData_085A4D70`, sitting right next to the `gStaticData_
+  (`__clz_tab_udivdi3`, sitting right next to the `gStaticData_
   085A4C5C` instrument-selector data above) before doing long division
   via `__umodsi3`/`__udivsi3`. Worth noting explicitly: the small
   data cluster right after the audio block is itself mixed -
   `gGaxDefaultSong` plausibly audio-related,
-  `gStaticData_085A4D70` confirmed unrelated - so proximity to
+  `__clz_tab_udivdi3` confirmed unrelated - so proximity to
   known-audio data doesn't settle the question either, only reading
   the consuming function does.
 - **`sub_803A608` isn't really a function to characterize - it's a

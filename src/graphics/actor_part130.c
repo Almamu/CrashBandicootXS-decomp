@@ -118,7 +118,7 @@ extern u8 gActorVtable[];
 extern u8 gHovercraftFireballVtable[];
 extern u16 gHovercraftPalette[];
 extern u8 gHovercraftPicture[];
-extern u8 gStaticData_0817C4BC[];
+extern u8 gHovercraftKeyframes[];
 extern const s16 gStaticData_0817C4B0[];
 
 /* One 0x28-byte record of the singleton's per-kind table. */
@@ -926,7 +926,7 @@ void DrawHovercraftMap(void *tileRow)
  * section. Caches its own incoming argument into `gUnknown_030015D8`,
  * seeds the P2-meter-shaped row/column counts (`gUnknown_030015A0`/
  * `030015A4`) from a per-level table (`gHovercraftPicture`), allocates
- * the singleton object itself (part table `gStaticData_0817C4BC`,
+ * the singleton object itself (part table `gHovercraftKeyframes`,
  * "frame offsets" field re-using the row-pointer array
  * `gUnknown_03001600`), stores it into `gHovercraft` - the pointer
  * everything else in this thread reads - resets its kind/anim-frame
@@ -951,7 +951,7 @@ void CreateHovercraft(s32 level)
     gUnknown_030015A4 = ((s16 *)gHovercraftPicture)[1];
     slot = &gHovercraft;
     t = AllocActor(0x1c);
-    InitAnimPart(t, (struct anim_frame_record *)gStaticData_0817C4BC, (u32 *)gUnknown_03001600, 1);
+    InitAnimPart(t, (struct anim_frame_record *)gHovercraftKeyframes, (u32 *)gUnknown_03001600, 1);
     *slot = t;
     SingletonSetKind(0, 0);
     LoadHovercraftGraphics();

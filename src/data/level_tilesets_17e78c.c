@@ -2,15 +2,15 @@
 
 /*
  * ROM 0x0817E78C-0x0824B638: the first 0x20 bytes of the old
- * gStaticData_0817E78C blob, then level BG tile sets 1-3. Linked in ROM
+ * gLanguageSelectPalette3 blob, then level BG tile sets 1-3. Linked in ROM
  * order between data/data.s sections by ldscript.txt - see docs/data.md
- * and docs/data_map.md ("gStaticData_0817E78C").
+ * and docs/data_map.md ("gLanguageSelectPalette3").
  */
 
 /* 16 BGR555 colours: InitLanguageSelectGraphics (counter_selector_icons.c) copies them
  * into tile-asset cache slot 2 (+0x20), after its three siblings
- * gStaticData_0817E72C/0817E74C/0817E76C (still in data/data.s). */
-const u16 gStaticData_0817E78C[16] = {
+ * gLanguageSelectPalette0/1/2 (palettes_17e72c.c). */
+const u16 gLanguageSelectPalette3[16] = {
     0x0000, 0x001F, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0x0000, 0xFFFF,
     0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF,
 };

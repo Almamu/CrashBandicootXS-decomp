@@ -34,7 +34,7 @@ already-matched `actor_part79.c`, `actor_part84.c` between
   `0..0x18`) through a 25-case jump table: several cases are thin
   `KillPlayer` wrappers with a fixed id; case 22 and case 23 each run
   a shared 7-case inner dispatch on `GetSpriteFrame(part)`'s nibble result
-  to compute a Q8 position delta from a `gStaticData_0816B300` record
+  to compute a Q8 position delta from a `gEmptySpritePoint` record
   (or the object's own `+0x24`/`+0x14` fields as a nibble-1-5
   fallback), then reset the state/flag/table-index trio via
   `sub_8015780`; case 24 plays sound(s) gated on `gKeys`
@@ -75,7 +75,7 @@ already-matched `actor_part79.c`, `actor_part84.c` between
   delta and calls `SetSpritePrevPos` when `part+0x68` is busy and a flag
   just changed; plays a sound and fires the `+0x50`/`+0x54` trampoline
   (id `0x12`) when `self+8==0`; then, keyed on `self+0x2f`, looks up a
-  per-tag `gStaticData_0816B304` record (`(*(self+4))[tag]`), copies 12
+  per-tag `gCtrlMotionRecords` record (`(*(self+4))[tag]`), copies 12
   bytes of it to the stack, optionally rescales two fields via
   `FixedMul` (busy part + active player), special-cases tag `0x1e`,
   fires one of two `_call_via_r3` trampoline calls with the stack record

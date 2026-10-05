@@ -741,7 +741,7 @@ smaller, thread of its own: **`UpdateCreditsText`** (520 B) is a **linked-list
 countdown/expiry walker** - decrements a timer pair, unlinks and frees
 (`OperatorDelete`, confirmed `mem_free`) on expiry, then walks a string
 byte-by-byte computing width via a new symbol,
-**`FontTextHeight(char, gStaticData_0817CF3C)`**, against the same hot
+**`FontTextHeight(char, gCreditsEmptyText)`**, against the same hot
 text-centering globals (`gSmallFont`/`gLargeFont`) used
 elsewhere. Reads as a **queued/expiring text-message manager** -
 plausibly the thing underneath `game_loop`'s "message type N" dispatcher
@@ -768,7 +768,7 @@ the zone.
 uncatalogued table** - `gYetiStateFuncs`, a plain 4-entry array of
 raw function pointers (matching the `menu_ui`/trigger-effect
 convention, not the `{0,ptr}` pairing), with neighboring scalar-only
-records (`gStaticData_0817A850`, `gStaticData_0817A7F8` - the latter
+records (`gYetiKeyframes`, `gStaticData_0817A7F8` - the latter
 reading as a lookup table of `{const, varying, tier}` triples). The
 function itself opens a **third RAM-struct family**:
 `gYeti`/`030014C8`/`030014CC` - distinct from both the
@@ -860,7 +860,7 @@ new mechanisms not previously catalogued in this zone:
   (0/1/2/3/0xA=terminator) at `self+8` and drawing text via
   `_call_via_r3` positioned relative to `gSmallFont`/
   `gLargeFont` (likely P1/P2 structs), indexed into a new table
-  `gStaticData_0817CF3C` (stride 8, 3 entries/state). `LoadCreditsLogos`
+  `gCreditsEmptyText` (stride 8, 3 entries/state). `LoadCreditsLogos`
   (416 B) is its asset loader: iterates a 5-entry table
   `gCreditsLogos` (stride `0x14`) and DMA3-transfers custom
   glyph tile data via `LoadTaggedAsset` into `gPaletteCache+0x2c`.
@@ -951,7 +951,7 @@ into a much larger 18-field consecutive run
 references a run of 5 unread sibling functions
 (`sub_802A504`/`51C`/`540`/`558`/`570`); `InitContinuePromptGraphics` is an asset/
 screen refresh function touching known hot globals plus a new table
-cluster `gStaticData_0817C512`/`532`/`552`/`572`.
+cluster `gContinuePromptPalette0`/`532`/`552`/`572`.
 
 ### The `sub_802A5xx` siblings pin down `sub_effect_table`'s runtime shape; `RunContinuePrompt` is a separate screen trigger
 
@@ -1303,7 +1303,7 @@ shape as `AirshipFireballStateOrbit`, but with a *shrinking* radius (decremented
 other consumers. **`sub_802D204`** is a mode-driven palette/state
 transition keyed on the recurring `gLevelState+0x78` "mode"
 field: DMA-loads a mode-indexed 32-byte palette chunk from a new
-table `gStaticData_0817A798` into Palette RAM, and touches a newly-
+table `gPolarAkuAkuPalette1` into Palette RAM, and touches a newly-
 seen field in the `gUnknown_030014xx` tier-threshold family
 (`gUnknown_030014B8`, tied to a ~500-frame timer) - reads as a
 palette-swap-driven mode/phase change (a power-up or similar).
@@ -1892,7 +1892,7 @@ Genuine new coverage (~1.75 KB): **`SetTinyState`** (636 B) and
 `sub_8018E4C` are a linked pair driving large jump tables (15/11
 cases) that draw text at varying priorities and reference a new
 global-record-array `gUnknown_030012EC` plus a new table family
-(`gStaticData_0816C308`/`35F`/`5F0`, more members of the
+(`gTinyRoundAnchors`/`35F`/`5F0`, more members of the
 `0x0816Cxxx` directional/state-table family already seen this
 session) - reads as a floating combo-text/score-popup state machine,
 distinct from the earlier-documented map-screen popup-text system
@@ -2108,7 +2108,7 @@ popup-text spawner: `sub_80186F0` uses a **new record index 55**
 further), `sub_80194E0` reuses the already-confirmed record 53.
 **`UpdateLevelSelectCursor`** (300 B) is a recurring spawn/despawn cycling
 dispenser with idle bounce animation, tagging a child object from
-`gStaticData_0816C634` - not previously catalogued as its own
+`gLevelSelectCursorAnims` - not previously catalogued as its own
 behavior, though built entirely from known toolkit pieces (OAM trio,
 per-level table lookup). **`UpdateEnemyPatrol`**/**`sub_800C314`** are a
 5th+ instance of the recurring `self+0x68`/`self+0x74` generic
@@ -3245,7 +3245,7 @@ a level.
 label table is RAM-resident) - but did find one more concrete tie:
 `InitSaveMenuIcons` copies from **the very first four tables in the
 documented per-level `gStaticData_0816Bxxx` family**
-(`gStaticData_0816B13A`/`15A`/`17A`/`19A`) into this screen's own
+(`gSaveMenuPalette0`/`15A`/`17A`/`19A`) into this screen's own
 per-item arrays. A real, direct link between this settings screen and
 the same central per-level data region `menu_ui`, the 36-slot table,
 and the 42-slot action table all bottom out in - four different
@@ -3326,7 +3326,7 @@ pause-menu screens sharing one constructor toolkit**:
   against three thresholds in a new per-level table
   `gLevelTable` (`+8`/`+0xc`/`+0x10` - a bronze/silver/gold
   shape), and tags a new object with an icon selected from
-  `gStaticData_0816B270[0]`/`[4]`/`[8]`. Runs the standard OAM trio.
+  `gPauseRelicIconFrames[0]`/`[4]`/`[8]`. Runs the standard OAM trio.
 - **`InitPowerDialog` builds a two-string dialog/message box**
   (parameterized by two label pointers and a type tag), called by
   **`ShowPowerDialog`**, a higher-level constructor that resets palette
@@ -3348,7 +3348,7 @@ pause-menu screens sharing one constructor toolkit**:
   *local* blend-register setup at `0x04000050` (same field-offset
   convention as `InitLevelSelect`/`SettleLevelSelectPage`, but per-screen rather
   than shared) → `LoadGraphicsPackage` with a per-screen package
-  (`gStaticData_0816B284` for `InitPauseMenu`, `gStaticData_0816C484`
+  (`gPauseMenuBg` for `InitPauseMenu`, `gMenuSkyBg`
   for `InitPowerDialog`) → allocate an object → reach through
   `gSpriteBankSet`'s triple-dereference into `gSpriteBankTable`
   at a **new header-relative offset each time**. New offsets this
@@ -3949,7 +3949,7 @@ index - both just read the same fixed header fields. Whether the
 remaining ~729 KB past this header is itself a repeating-record array
 is still open - not established either way. One live lead left
 unexplored: `RunPauseMenu` calls `CpuSet`/`ClaimPaletteSlot`
-immediately after, with `gStaticData_0816B2C0` (an already-documented
+immediately after, with `gPauseMenuPalette` (an already-documented
 per-level symbol) - a real, concrete tie between this table and the
 per-level data region, worth following if anyone continues this
 specific thread.

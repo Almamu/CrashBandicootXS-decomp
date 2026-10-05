@@ -36,9 +36,9 @@ extern void *gLevelLayers;
 extern void *gPlayer;
 extern void *gPlayerCtrl;
 extern void ***gSpriteBankSet;
-extern u8 gStaticData_0816B92C[];
-extern u8 gStaticData_0816B934[];
-extern u8 gStaticData_0816B93C[];
+extern u8 gActionCtrlMotionSet[];
+extern u8 gPlayerCtrlMotionSet[];
+extern u8 gInputCtrlMotionSet[];
 
 /* PlayRoom's argument (game_loop55.c passes `&self->level`; the same
  * record game_loop56.c's RunRoom reads as `struct gl_self`). */
@@ -79,7 +79,7 @@ struct widget {
  * text-box singleton (`gLevelLayers`, `GetLevelLayers`). Dispatches on
  * the level-state record's (`self->0x18`) own `+8` "widget kind" field
  * to construct one of three HUD counter/ring-buffer widgets
- * (`gStaticData_0816B92C`/`0816B934`/`0816B93C`, still-uncharacterized
+ * (`gActionCtrlMotionSet`/`0816B934`/`0816B93C`, still-uncharacterized
  * per-widget action tables), then unconditionally hands off to
  * `RunRoom` and tears the per-frame update queues back down before
  * returning its status code. */
@@ -182,7 +182,7 @@ s32 PlayRoom(void *selfArg)
     case 0: {
         u8 *widget = InitActionCtrl(OperatorNew(0x38));
 
-        SetCtrlAnimSet(widget, (s32)gStaticData_0816B92C);
+        SetCtrlAnimSet(widget, (s32)gActionCtrlMotionSet);
 
         *((u8 *)*d8 + 0x88) = mode;
         {
@@ -208,7 +208,7 @@ s32 PlayRoom(void *selfArg)
             void **slot = &gPlayerCtrl;
             *slot = InitPlayerCtrl(OperatorNew(0x30));
         }
-        SetCtrlAnimSet(gPlayerCtrl, (s32)gStaticData_0816B934);
+        SetCtrlAnimSet(gPlayerCtrl, (s32)gPlayerCtrlMotionSet);
 
         *((u8 *)*d8 + 0x88) = mode;
         {
@@ -240,7 +240,7 @@ s32 PlayRoom(void *selfArg)
     case 2: {
         u8 *widget = CreateInputCtrl(OperatorNew(0x28));
 
-        SetCtrlAnimSet(widget, (s32)gStaticData_0816B93C);
+        SetCtrlAnimSet(widget, (s32)gInputCtrlMotionSet);
 
         {
             u8 *pl = *d8;

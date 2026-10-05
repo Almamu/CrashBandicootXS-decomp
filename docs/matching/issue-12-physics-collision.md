@@ -265,9 +265,9 @@ three):
    by `(self's hitbox-record byte at +4) >> 4`, `bhi`-gated at 6:
    - Cases 0, 4: use `self`'s own just-built AABB (`r2+0x1c`).
    - Cases 1, 2, 3, 5, 6: fall back to a fixed box,
-     `gStaticData_0816B2F8`.
+     `gEmptySpriteBox`.
    The selected box is tested for a zero width/height
-   (`gStaticData_0816B2F8+4`/`+5` both 0 => treated as "no box", early
+   (`gEmptySpriteBox+4`/`+5` both 0 => treated as "no box", early
    return) then overlap-tested against the player's own hitbox record
    (`SetAabbPos`/`SetAabbSize` + `AabbOverlaps`). No overlap => early
    return before either of the other two tables is reached.

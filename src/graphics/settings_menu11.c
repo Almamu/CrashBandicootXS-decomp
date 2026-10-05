@@ -14,7 +14,7 @@
  * companion label draw: formats `self->timeBuf` (already filled in by
  * InitPauseTimeTrialPage) centered on the medal icon via the shared
  * `gSmallFont` icon manager, using the same fixed
- * `gStaticData_0816B27C` position pair InitPauseTimeTrialPage itself positions
+ * `gPauseTimeTrialIconPos` position pair InitPauseTimeTrialPage itself positions
  * the icon with. */
 struct pause_menu {
     u8 unused_00[0x2c];
@@ -63,7 +63,7 @@ struct icon_pos {
     s32 x;
     s32 y;
 };
-extern struct icon_pos gStaticData_0816B27C;
+extern struct icon_pos gPauseTimeTrialIconPos;
 
 void DrawPauseTimeTrialPage(struct pause_menu *self)
 {
@@ -72,23 +72,23 @@ void DrawPauseTimeTrialPage(struct pause_menu *self)
     if (self->field_6c)
         DrawSpriteWithOffset(self->field_bc, 0, 0);
     w = MEASURE_ICON_TEXT(gSmallFont, self->timeBuf);
-    set_icon_mgr_pos(gSmallFont, gStaticData_0816B27C.x - (w >> 1) - 2, gStaticData_0816B27C.y - 0x23);
+    set_icon_mgr_pos(gSmallFont, gPauseTimeTrialIconPos.x - (w >> 1) - 2, gPauseTimeTrialIconPos.y - 0x23);
     DRAW_ICON_TEXT(gSmallFont, self->timeBuf);
 }
 
 /* Same self object, `InitPauseCrystalsPage`'s (the `field_88` icon widget)
  * companion label draw - the "results count" pair (`buf2c`/`buf46`,
  * already formatted by `InitPauseCrystalsPage` itself) centered on that icon at
- * the fixed `gStaticData_0816B1E4` position, via `DrawPauseFraction`
+ * the fixed `gPauseCrystalIconPos` position, via `DrawPauseFraction`
  * (src/graphics/settings_menu16.c) that actually draws the two small
  * strings. */
-extern struct icon_pos gStaticData_0816B1E4;
+extern struct icon_pos gPauseCrystalIconPos;
 extern void DrawPauseFraction(struct pause_menu *self, void *buf1, void *buf2);
 
 void DrawPauseCrystalsPage(struct pause_menu *self)
 {
     DrawSpriteWithOffset(self->field_88, 0, 0);
-    set_icon_mgr_pos(gSmallFont, gStaticData_0816B1E4.x - 0x2c, gStaticData_0816B1E4.y - 8);
+    set_icon_mgr_pos(gSmallFont, gPauseCrystalIconPos.x - 0x2c, gPauseCrystalIconPos.y - 8);
     DrawPauseFraction(self, self->buf2c, self->buf46);
 }
 

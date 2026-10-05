@@ -175,8 +175,8 @@ extern struct hop_player *gPlayer;
 extern struct hop_list *gUnknown_030012EC;
 extern void *gUnknown_030012F0;
 extern struct hop_level *gLevelLayers;
-extern u8 gStaticData_0816C308[];
-extern u8 gStaticData_0816C30B[];
+extern u8 gTinyRoundAnchors[];
+extern u8 gTinyHopTargets[];
 
 extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
 extern void *OperatorNew(u32 size);
@@ -418,7 +418,7 @@ void UpdateTiny(struct tiny_tiger *self, struct hop_part *part)
             SetTinyState(self, part, self->nextState);
         break;
     case 12:
-        self->stomped = gStaticData_0816C308[self->round - 1];
+        self->stomped = gTinyRoundAnchors[self->round - 1];
         SetTinyState(self, part, 3);
         break;
     case 9:
@@ -453,7 +453,7 @@ void SetTinyState(struct tiny_tiger *self, struct hop_part *part, s32 next)
         self->nextState = 0;
         self->timer = 4;
     case 11:
-        self->target = gStaticData_0816C308[self->round - 1];
+        self->target = gTinyRoundAnchors[self->round - 1];
     case 1:
     case 2:
     {
@@ -551,7 +551,7 @@ static inline s32 Abs(s32 v)
 }
 
 /* Picks the hop target: the anchor nearest the player selects a column
- * of this round's/current anchor's gStaticData_0816C30B row. */
+ * of this round's/current anchor's gTinyHopTargets row. */
 s32 PickTinyHopTarget(struct tiny_tiger *self)
 {
     s32 nearest = 0;
@@ -573,7 +573,7 @@ s32 PickTinyHopTarget(struct tiny_tiger *self)
             nearest = i;
         }
     }
-    return gStaticData_0816C30B[self->target * 5 + nearest + self->round * 25];
+    return gTinyHopTargets[self->target * 5 + nearest + self->round * 25];
 }
 
 /* Spawns a falling hazard (a gUnknown_030012F0 part driven by a

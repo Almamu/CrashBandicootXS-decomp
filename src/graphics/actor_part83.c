@@ -13,7 +13,7 @@
  * matches as plain C under it, and `sub_8012AF4` followed in the
  * issue #15/#16 NAKED retry 2 (docs/matching/issue-15-16-naked-retry.md). */
 
-/* One 12-byte gStaticData_0816B304 animation parameter record. */
+/* One 12-byte gCtrlMotionRecords animation parameter record. */
 struct anim_rec
 {
     s32 a;
@@ -26,7 +26,7 @@ extern void *gAudioContext;
 extern void *gLevelState;
 extern struct act_part *gPlayer;
 extern void *gInput;
-extern struct anim_rec gStaticData_0816B304[];
+extern struct anim_rec gCtrlMotionRecords[];
 extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
 extern void StopSfx(void *ctx, u32 id);
 extern s32 FixedMul(s32 a, s32 b);
@@ -70,7 +70,7 @@ static inline u8 PartByte(struct act_part *part, s32 offset)
  * `+0x50`/`+0x54` trampoline pair with id `0x12`. Then, keyed on
  * `self+0x2f`'s value (whether `1` or something else), either sets it
  * from the player's `+0x60`/`+0x100` state or reads it as-is; when it's
- * `1`, looks up a per-tag record in `gStaticData_0816B304` (indexed
+ * `1`, looks up a per-tag record in `gCtrlMotionRecords` (indexed
  * `(*(self+4))[tag]`, `tag = self+0x27`), copies a 12-byte stretch of
  * it onto the stack, optionally rescales two of its three fields
  * (halving one, doubling the other) via `FixedMul` when the part is
@@ -129,7 +129,7 @@ skip:
         if (f == 1) {
             struct act_part *q;
 
-            rec = *(gStaticData_0816B304 + (*self->anims)[self->next27].first);
+            rec = *(gCtrlMotionRecords + (*self->anims)[self->next27].first);
             q = gPlayer;
             if (q->unk_100 && self->part->contact == 8 && q->speedX != 0) {
                 self->next31 = f;
@@ -158,7 +158,7 @@ skip:
     }
     {
         if (self->flag30 == 1) {
-            rec = *(gStaticData_0816B304 + (*self->anims)[self->next28].second);
+            rec = *(gCtrlMotionRecords + (*self->anims)[self->next28].second);
             if (self->next32)
                 ACT_CALL2(self, m40, self->part, &rec);
             else

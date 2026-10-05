@@ -14,7 +14,7 @@ extern void *gPaletteCache;
 extern void *gAudioContext;
 extern struct act_part *gPlayer;
 extern void *gInput;
-extern u8 gStaticData_0816B300[];
+extern u8 gEmptySpritePoint[];
 extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
 extern u8 GetDpadDirection(void *pad);
 extern void sub_8015398(struct act *self);
@@ -447,7 +447,7 @@ void sub_8014BCC(struct act *self)
 /* Walk handler: retags a finished part (0x21), handles fire/alt like
  * sub_8014BCC, steps a 4-frame idle timer that picks animation 0x22/0x23
  * from the part's frame, and while UpdatePlayerFacing reports a step moves the
- * part by the GetSpriteFrame record's (or gStaticData_0816B300's) X offset,
+ * part by the GetSpriteFrame record's (or gEmptySpritePoint's) X offset,
  * mirrored by part+0x28 bit 4.
  *
  * The idle dispatch is written out per case: the ROM's one shared
@@ -542,25 +542,25 @@ void sub_8014D18(struct act *self)
             info += 0x24;
             break;
         case 1:
-            info = gStaticData_0816B300;
+            info = gEmptySpritePoint;
             break;
         case 2:
-            info = gStaticData_0816B300;
+            info = gEmptySpritePoint;
             break;
         case 3:
-            info = gStaticData_0816B300;
+            info = gEmptySpritePoint;
             break;
         case 4:
-            info = gStaticData_0816B300;
+            info = gEmptySpritePoint;
             break;
         case 5:
-            info = gStaticData_0816B300;
+            info = gEmptySpritePoint;
             break;
         case 6:
             info += 0x14;
             break;
         default:
-            info = gStaticData_0816B300;
+            info = gEmptySpritePoint;
             break;
         }
         x = self->part->x >> 8;

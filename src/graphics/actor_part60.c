@@ -27,8 +27,8 @@ extern s32 gUnknown_030014D4;
 extern s32 gYetiX;
 extern s32 gYetiDistance;
 extern s32 gUnknown_030014C8;
-extern u8 gStaticData_0817A850[];
-extern u8 gStaticData_0817A880[];
+extern u8 gYetiKeyframes[];
+extern u8 gYetiFrames[];
 extern void SetActorAnim(void *self, s32 idx);
 extern s32 sub_8029B2C(void);
 extern void sub_8029E34(s32 arg0);
@@ -36,7 +36,7 @@ extern void LoadYetiGraphics(void);
 
 /* Constructor: stashes the caller's argument in `gUnknown_030014D4`,
  * allocates and wires up a fresh instance (part table
- * `gStaticData_0817A850`/`0817A880`, header byte `0xf`, reset via
+ * `gYetiKeyframes`/`0817A880`, header byte `0xf`, reset via
  * `SetActorAnim`) into `gYeti`, resets the position-tracking
  * pair (`gYetiX` to 0, `030014CC` to `0xA000`,
  * `030014C8` derived the same way `sub_802DB2C`/`sub_802DCC0` do),
@@ -56,8 +56,8 @@ void CreateYeti(void *arg0)
     asm volatile("mov %0, #0x80\n\tlsl %0, %0, #0x18" : "=r"(flags));
     obj = mem_alloc(size, flags);
     {
-        u8 *v0 = gStaticData_0817A850;
-        u8 *v1 = gStaticData_0817A880;
+        u8 *v0 = gYetiKeyframes;
+        u8 *v1 = gYetiFrames;
         s32 v2 = 0xf;
 
         *(u8 **)obj = v0;

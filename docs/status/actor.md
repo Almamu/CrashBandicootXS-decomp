@@ -1082,7 +1082,7 @@ See [docs/matching/category-driver-naked-retry.md](../matching/category-driver-n
   (the file's compiler). No flag/tag pointer locals: `self->flag2F` and
   `self->next27` are read through `self` each time and old_agbcc's GCSE
   makes the ROM's address copies; the record lookup is
-  `*(gStaticData_0816B304 + i)`; three empty `asm("" : : "r"(self))`
+  `*(gCtrlMotionRecords + i)`; three empty `asm("" : : "r"(self))`
   extra references settle the remaining register ties.
 
 See [docs/matching/issue-15-16-naked-retry-3.md](../matching/issue-15-16-naked-retry-3.md).

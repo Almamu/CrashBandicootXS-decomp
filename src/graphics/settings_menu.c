@@ -379,10 +379,10 @@ extern void ResetSpriteFrameTimer(struct actor *part);
 extern void ResetSpriteFrameIndex(struct actor *part);
 extern void SetSpriteAnimDone(struct actor *part, u8 val);
 extern void ***gSpriteBankSet;
-extern u16 gStaticData_0816B13A[16];
-extern u16 gStaticData_0816B15A[16];
-extern u16 gStaticData_0816B17A[16];
-extern u16 gStaticData_0816B19A[16];
+extern u16 gSaveMenuPalette0[16];
+extern u16 gSaveMenuPalette1[16];
+extern u16 gSaveMenuPalette2[16];
+extern u16 gSaveMenuPalette3[16];
 
 struct icon_frame_nibble {
     u8 lo:4;
@@ -498,10 +498,10 @@ void InitSaveMenuIcons(struct save_menu *self)
     ClaimPaletteSlot(gPaletteCache, 3);
     pal = (u16 (*)[16])gPaletteCache->slots;
     for (i = 0; i < 16; i++) {
-        pal[0][i] = gStaticData_0816B13A[i];
-        pal[1][i] = gStaticData_0816B15A[i];
-        pal[2][i] = gStaticData_0816B17A[i];
-        pal[3][i] = gStaticData_0816B19A[i];
+        pal[0][i] = gSaveMenuPalette0[i];
+        pal[1][i] = gSaveMenuPalette1[i];
+        pal[2][i] = gSaveMenuPalette2[i];
+        pal[3][i] = gSaveMenuPalette3[i];
     }
     FontSetPalette(gSmallFont, 0);
     FontSetPalette(gLargeFont, 0);

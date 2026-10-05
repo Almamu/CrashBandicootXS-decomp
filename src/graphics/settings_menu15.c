@@ -14,7 +14,7 @@ extern struct bitmap_font *gSmallFont;
 extern struct bitmap_font *gLargeFont;
 extern struct vram_upload_cursor *gObjVramCursor;
 extern u8 gSpriteBankTable[];
-extern u8 gStaticData_0816B2C0[];
+extern u8 gPauseMenuPalette[];
 extern void SetPaletteCacheSource(struct palette_cache *self, u16 count, const u8 *records);
 extern s32 ClaimPaletteSlot(struct palette_cache *self, s32 index);
 extern void DestroyPaletteCache(struct palette_cache *self, u32 flags);
@@ -33,7 +33,7 @@ extern void DestroyPauseMenu(struct pause_menu *self, u32 flags);
  * pending heap bytes, resets the audio channel, clears palette color 0
  * and DISPCNT, swaps `gPaletteCache` for a fresh 16-slot tile cache
  * sized for this screen's icon graphics (seeding slot 15 from
- * `gStaticData_0816B2C0`), re-inits both icon managers (copying
+ * `gPauseMenuPalette`), re-inits both icon managers (copying
  * `tileCount` between them and firing each one's slot-6 trampoline, the
  * same `_call_via_r1` pattern documented throughout `bitmap_font.h`),
  * builds the screen object (`InitPauseMenu`) and hands it to the blocking
@@ -50,7 +50,7 @@ extern void DestroyPauseMenu(struct pause_menu *self, u32 flags);
  * &gObjVramCursor land in r6/r4/r5/r7 as in the ROM. The two
  * `tileCount` reads for the VRAM reservation are taken into locals
  * before `gObjVramCursor` is loaded, and the tile cache's base is
- * read into a local before `gStaticData_0816B2C0`'s address, both to
+ * read into a local before `gPauseMenuPalette`'s address, both to
  * match the ROM's load order. The two `0`s still come from
  * inline-function parameters, which CSE shares into r8. */
 extern struct palette_cache *InitPaletteCache(void *mem);
@@ -108,7 +108,7 @@ s32 RunPauseMenu(void)
     {
         u8 *dst = (u8 *)gPaletteCache;
 
-        CpuSet(gStaticData_0816B2C0, dst + (0x83 << 2), 0x10);
+        CpuSet(gPauseMenuPalette, dst + (0x83 << 2), 0x10);
     }
 
     FontResetPalette(gSmallFont);
@@ -145,7 +145,7 @@ extern void *PackSaveData(void *arg0);
 extern void InitPauseMenuInfo(struct pause_menu *self);
 extern struct actor *InitUiSpriteObj(struct actor *part);
 extern s32 RandRange(s32 max);
-extern u8 gStaticData_0816B284[];
+extern u8 gPauseMenuBg[];
 extern u8 gPauseMenuRows[];
 
 /* Same "recurring screen-constructor shape" docs/rom_map.md's overlay_ui
@@ -230,7 +230,7 @@ struct pause_menu *InitPauseMenu(struct pause_menu *self)
             *hi = one;
         }
 
-        LoadGraphicsPackage(self, gStaticData_0816B284);
+        LoadGraphicsPackage(self, gPauseMenuBg);
         self->field_10 = PackSaveData(gLevelState);
         InitPauseMenuInfo(self);
 

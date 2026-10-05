@@ -8,39 +8,39 @@
  * docs/data.md.
  */
 
-extern const u8 gStaticData_0861BF30[];
-extern const u8 gStaticData_0861BF58[];
-extern const u8 gStaticData_0861BF80[];
-extern const u8 gStaticData_08628C50[];
-extern const u8 gStaticData_0862A958[];
-extern const u8 gStaticData_0862B34C[];
-extern const u8 gStaticData_086308F0[];
-extern const u8 gStaticData_08630E1C[];
-extern const u8 gStaticData_08631158[];
+extern const u8 gContinuePromptSmokeBgPalette[];
+extern const u8 gContinuePromptGlowBgPalette[];
+extern const u8 gContinuePromptUkaUkaBgPalette[];
+extern const u8 gContinuePromptSmokeBgTiles[];
+extern const u8 gContinuePromptGlowBgTiles[];
+extern const u8 gContinuePromptUkaUkaBgTiles[];
+extern const u8 gContinuePromptSmokeBgMap[];
+extern const u8 gContinuePromptGlowBgMap[];
+extern const u8 gContinuePromptUkaUkaBgMap[];
 
 /* BG0. */
-const struct bg_package gStaticData_0817C594 = {
+const struct bg_package gContinuePromptSmokeBg = {
     0x1e,
     0x14,
-    (void *)gStaticData_0861BF30,
-    (void *)gStaticData_08628C50,
-    (void *)gStaticData_086308F0,
+    (void *)gContinuePromptSmokeBgPalette,
+    (void *)gContinuePromptSmokeBgTiles,
+    (void *)gContinuePromptSmokeBgMap,
 };
 
 /* BG2. */
-const struct bg_package gStaticData_0817C5A8 = {
+const struct bg_package gContinuePromptGlowBg = {
     0x1e,
     0x14,
-    (void *)gStaticData_0861BF58,
-    (void *)gStaticData_0862A958,
-    (void *)gStaticData_08630E1C,
+    (void *)gContinuePromptGlowBgPalette,
+    (void *)gContinuePromptGlowBgTiles,
+    (void *)gContinuePromptGlowBgMap,
 };
 
 /* BG1. */
-const struct bg_package gStaticData_0817C5BC = {
+const struct bg_package gContinuePromptUkaUkaBg = {
     0x1e,
     0x14,
-    (void *)gStaticData_0861BF80,
-    (void *)gStaticData_0862B34C,
-    (void *)gStaticData_08631158,
+    (void *)gContinuePromptUkaUkaBgPalette,
+    (void *)gContinuePromptUkaUkaBgTiles,
+    (void *)gContinuePromptUkaUkaBgMap,
 };

@@ -30,7 +30,7 @@ built with a different compiler, flags or instruction set.
   source compiles to them byte-for-byte (`__divdi3`, `__udivdi3`,
   `__muldi3`; generic `longlong.h` macros, `UDIV_NEEDS_NORMALIZATION`,
   a static `__clz_tab` per object - the two tables are
-  `gStaticData_085A4C70`/`085A4D70`). `math_div64_util.o` is now built
+  `__clz_tab_divdi3`/`085A4D70`). `math_div64_util.o` is now built
   with `-mthumb-interwork` filtered out (Makefile `NO_INTERWORK_OBJS`);
   every function in that object matches with it (`__udivsi3` is
   NAKED, so unaffected), and `GaxZeroFill` - the one function in the

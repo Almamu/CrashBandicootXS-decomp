@@ -69,7 +69,7 @@ family already covered at length by
   offset table off its `+4` byte's upper nibble - **the exact same
   case-to-block mapping `sub_80084C4` (`actor_part6.c`, already
   matched) uses**: `0` -> `info+0x24`, `6` -> `info+0x14`, everything
-  else -> the fixed fallback `gStaticData_0816B300`. Applies that
+  else -> the fixed fallback `gEmptySpritePoint`. Applies that
   offset (mirrored by `self+0x28` bit 4) to `self`'s de-Q8'd position
   and probes the result via `sub_8026BC0` (still raw, only its return
   code's meaning as an opaque "hit" test against the constant `6` is

@@ -34,12 +34,12 @@ extern void *gOamBuffer;
 extern void *gInput;
 extern u8 gNewWorldOpened;
 extern u32 gKeys;     // held keys (low half), newly pressed (high half)
-extern struct xy_pair gStaticData_0816C4D8[];
-extern struct xy_pair gStaticData_0816C508[];
-extern u32 gStaticData_0816C538[];
-extern u32 gStaticData_0816C548[];
-extern u8 gStaticData_0816C58C[];
-extern struct xy_pair gStaticData_0816C5F0[];
+extern struct xy_pair gLevelSelectEntryPositions[];
+extern struct xy_pair gLevelSelectEntryPositionsAllCleared[];
+extern u32 gLevelSelectWorldEntryBoxAnims[];
+extern u32 gLevelSelectWorldAnims[];
+extern u8 gLevelSelectPageBg[];
+extern struct xy_pair gZoomBgSlotOffsets[];
 
 extern void WaitForVBlank(void);
 extern void UpdateKeys(void *p);
@@ -155,12 +155,12 @@ static inline void PlaceItems(struct level_menu *self)
     }
     if (n == 5)
     {
-        self->positions = gStaticData_0816C508;
+        self->positions = gLevelSelectEntryPositionsAllCleared;
         self->lastIndex = n;
     }
     else
     {
-        self->positions = gStaticData_0816C4D8;
+        self->positions = gLevelSelectEntryPositions;
         self->lastIndex = 4;
     }
     for (i = 0; i <= 5; i++)
@@ -178,7 +178,7 @@ static inline void SkinItems(struct level_menu *self)
     s32 i;
 
     for (i = 0; i <= 5; i++)
-        SetLevelSelectEntryBox(self->items[i], gStaticData_0816C538[self->world]);
+        SetLevelSelectEntryBox(self->items[i], gLevelSelectWorldEntryBoxAnims[self->world]);
 }
 
 /* Runs the page-turn animation: steps BG1's scroll toward its target one
@@ -322,7 +322,7 @@ static inline void SetAnim(struct sprite *s, u32 idx)
  * cursor panel back on the (clamped) cursor. */
 void RefreshLevelSelectPage(struct level_menu *self)
 {
-    SetAnim(self->sprites[0], gStaticData_0816C548[self->world]);
+    SetAnim(self->sprites[0], gLevelSelectWorldAnims[self->world]);
     if (self->index > self->lastIndex)
         self->index = self->lastIndex;
     {
@@ -482,7 +482,7 @@ struct page_bg *CreateLevelSelectPageBg(struct page_bg *self, s32 charBlock, s32
 {
     InitBgSetup(self, charBlock, screenBlock, 0, 2);
     self->scroll = self->target = 0x300;
-    LoadGraphicsPackage(self, gStaticData_0816C58C);
+    LoadGraphicsPackage(self, gLevelSelectPageBg);
     return self;
 }
 
@@ -520,7 +520,7 @@ static inline void SetPos(struct sprite *s, s32 x, s32 y)
  * cleared screen block with an 8x4 block of tile entries at its top
  * left, and four corner sprites (animation bank `+0x258` of the level
  * graphics, mirrored per corner) positioned around (x, y) = (0x78, 0x35)
- * by gStaticData_0816C5F0. */
+ * by gZoomBgSlotOffsets. */
 struct zoom_bg *InitZoomBg(struct zoom_bg *self, s32 charBlock, s32 screenBlock)
 {
     s32 i;
@@ -567,7 +567,7 @@ struct zoom_bg *InitZoomBg(struct zoom_bg *self, s32 charBlock, s32 screenBlock)
         self->twinkles[i].part = InitUiSpriteObj(OperatorNew(0x40));
         self->twinkles[i].part->anim = (struct anim_table *)((u8 *)**gSpriteBankSet + 0x258);
         SetMode(self->twinkles[i].part, 1);
-        SetPos(self->twinkles[i].part, self->x + gStaticData_0816C5F0[i].x, self->y + gStaticData_0816C5F0[i].y);
+        SetPos(self->twinkles[i].part, self->x + gZoomBgSlotOffsets[i].x, self->y + gZoomBgSlotOffsets[i].y);
         SetSpritePriority(self->twinkles[i].part, 1);
         SetPalette(self->twinkles[i].part, GetSpriteAnimPaletteSlot(self->twinkles[0].part));
         RandomizeZoomBgTwinkle(self, &self->twinkles[i]);

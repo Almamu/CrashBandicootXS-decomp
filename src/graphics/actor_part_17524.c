@@ -14,7 +14,7 @@
  * `sub_800B6xx`/`sub_800B8xx` function). Each frame (`UpdateInputCtrl`, table
  * slot +0x0C) it reads the held D-pad bits from `gKeys` and
  * picks animation pairs for its target (`+0x10`) through
- * `gStaticData_0816B8C0`'s 12-byte records: up/down select one channel
+ * `gInputCtrlMotionRecords`'s 12-byte records: up/down select one channel
  * (`animB`), left/right the other (`animA`), which also sets a speed-like
  * value at the child object's `+0x78` (`+0x1C`, spawned on demand by
  * `sub_8017600`). Once the target passes the level's right edge
@@ -164,7 +164,7 @@ extern void *gUnknown_030012F0;
 extern u32 gKeys; /* low half: held keys */
 extern struct { u8 unk_00[0x10]; struct { u8 unk_00[0x10]; s32 width; } *layer0; } *gLevelLayers;
 extern struct pmf gStaticData_0816C290[];
-extern u8 gStaticData_0816B8C0[];
+extern u8 gInputCtrlMotionRecords[];
 extern u8 gInputCtrlVtable[];
 
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
@@ -406,7 +406,7 @@ void sub_8017808(struct input_ctrl *self)
 {
     if (self->dirtyA == 1)
     {
-        u8 *rec = gStaticData_0816B8C0 + self->animSet->entries[self->animA].a * 12;
+        u8 *rec = gInputCtrlMotionRecords + self->animSet->entries[self->animA].a * 12;
 
         if (self->altA)
             CTRL_CALL3(self, method_38, self->target, rec);
@@ -417,7 +417,7 @@ void sub_8017808(struct input_ctrl *self)
     }
     if (self->dirtyB == 1)
     {
-        u8 *rec = gStaticData_0816B8C0 + self->animSet->entries[self->animB].b * 12;
+        u8 *rec = gInputCtrlMotionRecords + self->animSet->entries[self->animB].b * 12;
 
         if (self->altB)
             CTRL_CALL3(self, method_40, self->target, rec);

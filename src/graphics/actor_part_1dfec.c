@@ -89,7 +89,7 @@ struct xy
 };
 
 extern struct oam_shadow_buffer *gOamBuffer;
-extern u32 gStaticData_0816C634[];
+extern u32 gLevelSelectCursorAnims[];
 extern u8 gStaticData_086377C0[];
 
 extern void AddOamEntry(struct oam_shadow_buffer *buf, struct oam_attrs *oam);
@@ -164,7 +164,7 @@ struct cursor_panel *CreateLevelSelectCursor(struct cursor_panel *self)
 }
 
 /* Per-frame update. Steps the glide; states 0-3 are the idle animation
- * cycle (0 waits for `timer`, then plays gStaticData_0816C634[1..3] and
+ * cycle (0 waits for `timer`, then plays gLevelSelectCursorAnims[1..3] and
  * back to [0]), 4 grows the cursor to 1:1, 5 shrinks it away. */
 void UpdateLevelSelectCursor(struct cursor_panel *self)
 {
@@ -181,7 +181,7 @@ void UpdateLevelSelectCursor(struct cursor_panel *self)
         if (self->part->frame == 0)
         {
             self->state = 1;
-            SetAnim(self->part, gStaticData_0816C634[1]);
+            SetAnim(self->part, gLevelSelectCursorAnims[1]);
         }
         break;
     case 1:
@@ -189,7 +189,7 @@ void UpdateLevelSelectCursor(struct cursor_panel *self)
         if (self->part->animDone)
         {
             self->state = 2;
-            SetAnim(self->part, gStaticData_0816C634[2]);
+            SetAnim(self->part, gLevelSelectCursorAnims[2]);
         }
         break;
     case 2:
@@ -197,7 +197,7 @@ void UpdateLevelSelectCursor(struct cursor_panel *self)
         if (self->part->animDone)
         {
             self->state = 3;
-            SetAnim(self->part, gStaticData_0816C634[3]);
+            SetAnim(self->part, gLevelSelectCursorAnims[3]);
         }
         break;
     case 3:
@@ -205,7 +205,7 @@ void UpdateLevelSelectCursor(struct cursor_panel *self)
         if (self->part->animDone)
         {
             self->state = 0;
-            SetAnim(self->part, gStaticData_0816C634[0]);
+            SetAnim(self->part, gLevelSelectCursorAnims[0]);
             sub_801E504(self);
         }
         break;
