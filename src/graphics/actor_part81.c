@@ -17,7 +17,7 @@ struct aabb
     s32 h;
 };
 
-/* sub_8007C30's result and the copy of it that goes to CollidePartList. As two
+/* GetSpriteAttackBox's result and the copy of it that goes to CollidePartList. As two
  * members of one frame object, the copy is addressed as a frame offset, so
  * its by-value words load straight from sp (a separate `struct aabb`
  * local's address is kept in a callee-saved register instead). */
@@ -45,17 +45,17 @@ struct ab9c_obj
     struct ab9c_link link; // 0x108
 };
 
-extern void sub_8007C30(struct aabb *dest, void *obj);
+extern void GetSpriteAttackBox(struct aabb *dest, void *obj);
 extern void *MemCopy32(void *dest, void *src, s32 size);
 extern void CollidePartList(void *manager, struct aabb box, s32 unused, void *compareViewport);
 extern void CollidePlayerWithCrates(void *manager, s32 arg1);
-extern void sub_8008D30(void *manager, s32 arg1);
+extern void CollidePartsOfClass(void *manager, s32 arg1);
 extern void ResolvePlayerCollisions(void);
 extern void *gCollidableList;
 extern void *gCrateList;
 extern void *gUnknown_030012EC;
 
-/* Bit 1 of +0x0C: builds the object's AABB (sub_8007C30), copies it
+/* Bit 1 of +0x0C: builds the object's AABB (GetSpriteAttackBox), copies it
  * (MemCopy32, a CpuSet memcpy) and hands the copy to CollidePartList by value
  * - three words in r1-r3, the fourth on the stack, which is what gives the
  * ROM's stack-argument order (6th, 7th, then the box's last word). Bit 7:
@@ -74,7 +74,7 @@ void CollidePlayerWithObjects(struct ab9c_obj *self)
         struct aabb_copy b;
         void *manager;
 
-        sub_8007C30(&b.src, self);
+        GetSpriteAttackBox(&b.src, self);
         manager = gCollidableList;
         MemCopy32(&b.copy, &b.src, sizeof(b.src));
         CollidePartList(manager, b.copy, self->unk_24, self);
@@ -87,7 +87,7 @@ void CollidePlayerWithObjects(struct ab9c_obj *self)
         link->unk_0 = cleared;
         link->unk_4 = cleared;
         CollidePlayerWithCrates(gCrateList, 3);
-        sub_8008D30(gUnknown_030012EC, 4);
+        CollidePartsOfClass(gUnknown_030012EC, 4);
         ResolvePlayerCollisions();
     }
 }

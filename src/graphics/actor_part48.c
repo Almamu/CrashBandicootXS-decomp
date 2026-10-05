@@ -4,8 +4,8 @@
 /* GitHub issue #9: 0x08007634-0x0800B3F0, game_loop-labeled chunk that
  * turned out to be part of the `actor` category's "part" object family
  * (see docs/matching/issue-9-0x08007634-actor.md). `ResetPlayer`/
- * `sub_800A810` sit right after already-matched actor_part14.c
- * (`DrawGroundSprite`-`sub_800A730`). */
+ * `ResetPlayerForRoom` sit right after already-matched actor_part14.c
+ * (`DrawGroundSprite`-`GetMovingSpriteCtrl`). */
 
 extern s32 GetSpriteAnimPaletteSlot(void *part);
 extern void sub_8015840(void *arg0);
@@ -29,7 +29,7 @@ extern void sub_8017994(void *arg0);
  * two running-pointer cursors (`p1`/`p0` here, matching its own r1/r0)
  * incremented/decremented by the literal relative offset between each
  * field, rather than recomputing `self + N` fresh each time - the same
- * cursor idiom `sub_800A810` right below already needed for its own,
+ * cursor idiom `ResetPlayerForRoom` right below already needed for its own,
  * shorter `self+0x68`-to-`self+0x28` chain. Getting the remaining gap
  * closed needed a cluster of further techniques, all documented inline
  * at their exact spot below: separate statements (not one folded
@@ -108,7 +108,7 @@ void ResetPlayer(void *selfArg)
     /* The ROM builds these field addresses as two running-pointer
      * cursors (r1/r0) incremented/decremented by the literal relative
      * offset between each field, rather than recomputing `self + N`
-     * fresh each time - the same idiom `sub_800A810` needed a single
+     * fresh each time - the same idiom `ResetPlayerForRoom` needed a single
      * `u8 *p` cursor for, just with two cursors interleaved here. */
     {
         register u8 *pinnedP1 asm("r1") = self + 0x28;
@@ -268,7 +268,7 @@ asm(".align 2, 0");
  * `+0x2d` cleared, `+0xc` bit 3 cleared/bit 6 set), then dispatches on
  * a sub-state byte at `+0x88` to one of three per-state teardown
  * helpers (each called with the same single `+0x44` "record" argument
- * `sub_800A730`/`DestroyMovingSprite` already established): state 0 ->
+ * `GetMovingSpriteCtrl`/`DestroyMovingSprite` already established): state 0 ->
  * `sub_8015840`, state 1 -> `sub_80159A4`, state 3 -> `sub_8017994`;
  * state 2 and anything else is a no-op.
  *
@@ -289,7 +289,7 @@ asm(".align 2, 0");
  * arm, always collapsed the branch polarity to `bne`-skip instead of
  * this `beq`-take shape and let the CSE pass drop the `state`/`state2`
  * copy entirely). See docs/matching/issue-9-0x08007634-actor.md. */
-void sub_800A810(void *selfArg)
+void ResetPlayerForRoom(void *selfArg)
 {
     register struct gobj *self asm("r3") = selfArg;
     s32 state;

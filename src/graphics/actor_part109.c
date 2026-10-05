@@ -1,7 +1,7 @@
 #include "core.h"
 
-/* GitHub issue #9/#10: 0x0800CD00, `sub_800AAEC`'s (`actor_part108.c`)
- * only caller/callee companion - `sub_800AAEC` calls this once per
+/* GitHub issue #9/#10: 0x0800CD00, `PlayerHasRoomForAnim`'s (`actor_part108.c`)
+ * only caller/callee companion - `PlayerHasRoomForAnim` calls this once per
  * `gCrateList` list entry whose own `+0x18`-table `+0x48`
  * trampoline (`_call_via_r1`) reports state `3`, passing that entry as
  * `self` and its own `x` (the target "action" index) straight through.
@@ -15,7 +15,7 @@
  * `SetAabbSize`(set-size) primitive (`struct aabb` from
  * `actor_part.c`/`src/system/game_loop6.c`), all from the same
  * "keyframe/hitbox record" table convention documented at length in
- * `game_loop6.c`'s own `sub_800D040` header comment: `+0x20` is a
+ * `game_loop6.c`'s own `BreakCrateTouchedByPlayer` header comment: `+0x20` is a
  * pointer-to-table, indexed by a `+0x2d` tag byte at 28-byte stride
  * (`docs/rom_map.md`'s own cross-reference from this exact function:
  * "matching `gCrateHitResponse`'s stride exactly, but clearly a
@@ -48,9 +48,9 @@
  * hitbox, so this is not a fresh trigger. Otherwise, returns `1` only
  * if AABB1 overlaps AABB3 - `self`'s hitbox overlaps the player's
  * hitbox for the action `x` the caller is testing. Read together with
- * `sub_800AAEC`, this is a "would performing action `x` right now hit
+ * `PlayerHasRoomForAnim`, this is a "would performing action `x` right now hit
  * `self`, given the player isn't already touching it in its current
- * pose" gate - consistent with `sub_800AAEC`'s own role gating the
+ * pose" gate - consistent with `PlayerHasRoomForAnim`'s own role gating the
  * 42-slot action-dispatch table's action codes `0xB`/`0x10`.
  *
  * Real C (issue #11 NAKED retry, old_agbcc - so this object is on the
@@ -81,7 +81,7 @@ extern struct box_part *gPlayer;
  * is its own pseudo instead of one held across calls. */
 #define BOX_ADDR(a) ({ struct part_aabb *_p = (a); asm("" : "+r"(_p)); _p; })
 
-u8 sub_800CD00(struct box_part *self, s32 action)
+u8 PlayerAnimWouldTouchCrate(struct box_part *self, s32 action)
 {
     struct {
         struct part_aabb a;

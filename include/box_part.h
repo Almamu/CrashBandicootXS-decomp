@@ -65,7 +65,7 @@ struct box_part {
     u16 affine;         // 0x3C - nonzero: DrawSpriteWithOffset draws through DrawAffineSpritePieces
     u8 unk_3E[0xf];
     u8 physMode;        // 0x4D - low 7 bits 1: skipped by the physics AABB tests
-    u8 state;           // 0x4E - sub_800CD00 skips 5 and 0xA
+    u8 state;           // 0x4E - PlayerAnimWouldTouchCrate skips 5 and 0xA
     u8 unk_4F[0x15];
     s32 speedY;         // 0x64 - struct gobj.speedY (> 0: falling, so a touch stomps)
     u8 hitAxes;         // 0x68 - collision axes ProbeGroundSpriteTerrain resolved (bit 3: Y)
@@ -78,7 +78,7 @@ struct box_part {
  * a pointer to it (this compiler pads every struct to a word multiple,
  * so it can't be embedded in the record). Sits at record+0xc for the
  * table GetSpriteBounds reads and at record+0x4 for the one GetSpriteHitbox/
- * sub_800AAEC read (include/gobj_1a794.h's `struct anim_box`). */
+ * PlayerHasRoomForAnim read (include/gobj_1a794.h's `struct anim_box`). */
 struct part_box {
     s16 offX;
     s16 offY;

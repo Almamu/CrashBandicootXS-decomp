@@ -30,13 +30,13 @@ compilers and diffing each against the ROM:
   constant 1 lives in r6 (pinned) and the `gone` OR reuses it. The
   spawned part's `mode = 1` goes through a `u32` local, which puts the
   1 before the `-4` mask.
-- **Bitfield vs byte views of the same flags byte** (`sub_800CBF4`):
+- **Bitfield vs byte views of the same flags byte** (`UpdateEffectCtrl`):
   set the gone bit through a bitfield view and test bit 3 through the
   byte view. The union has to be 4 bytes (ARM structs are word-sized);
   a packed 1-byte union compiles differently.
 - **Register pins** (never r7/r8), where the allocator tie didn't
-  move otherwise: `sub_800C5D4` (target r1), `UpdateEnemyHop` (`baseY`
-  r1), `sub_800C8F8` (product r2), `sub_800A420` (flags r2, its copy
+  move otherwise: `UpdateEnemyTriggerBox` (target r1), `UpdateEnemyHop` (`baseY`
+  r1), `UpdateEnemyOscillateX` (product r2), `ProbeGroundSpriteFloor` (flags r2, its copy
   r1), `sub_8009BE0` (tries pointer r6), `CheckSpritePickup` (constant r6).
 
 ## Closed (13)
@@ -48,12 +48,12 @@ compilers and diffing each against the ROM:
 | `InitCrateList` | actor_part11.c | both | grid clear as a plain indexed `for` (gcc reverses it); free-list loop reads the array through `fl = freeList` taken inside the guard. |
 | `ResetCrateList` | actor_part11i.c | both | same tail as `InitCrateList`; the teardown loop is plain C. |
 | `sub_8009BE0` | actor_part12b.c | both | pos + origY as one frame struct; loop increments through a `t2 = tries` copy and tests through `tries` (pinned r6); `pos.y` bumped through `&pos`; `u8` first-probe result in a local; the in-loop hit restores the flag and returns on its own (reloads the global from the pool; cross-jumping shares the `strb`). |
-| `ProbeGroundSpriteTerrain` | actor_part110.c | old | `s32` result set by `? 8 : result` (expands to `-(x != 0)` into the result then `&= 8`); `self+0x24` pointer taken after its test value; the two out-bytes for `sub_800A420` are separate `u8` locals. File moved to old_agbcc. |
-| `sub_800A420` | actor_part110.c | old | first hit path: bit-1 test into its own local, then the copy `v = f`, with `f` pinned r2 and `v` r1. |
+| `ProbeGroundSpriteTerrain` | actor_part110.c | old | `s32` result set by `? 8 : result` (expands to `-(x != 0)` into the result then `&= 8`); `self+0x24` pointer taken after its test value; the two out-bytes for `ProbeGroundSpriteFloor` are separate `u8` locals. File moved to old_agbcc. |
+| `ProbeGroundSpriteFloor` | actor_part110.c | old | first hit path: bit-1 test into its own local, then the copy `v = f`, with `f` pinned r2 and `v` r1. |
 | `UpdateEnemyHop` | actor_part119.c | both | target held in a local after the two calls, `baseY` pinned to r1 for the store. |
-| `sub_800C5D4` | actor_part120.c | both | the `kind == 0xB` prelude's target in a block local pinned to r1. |
-| `sub_800C8F8` | actor_part116.c | both | product into a fresh `v` pinned to r2, then the target load. |
-| `sub_800CBF4` | actor_part123.c | old | inline `MarkGone` with the do/while(0) `SET_ID_BIT`; gone bit via a bitfield view, bit 3 tested via the byte view (4-byte union). File moved to old_agbcc. |
+| `UpdateEnemyTriggerBox` | actor_part120.c | both | the `kind == 0xB` prelude's target in a block local pinned to r1. |
+| `UpdateEnemyOscillateX` | actor_part116.c | both | product into a fresh `v` pinned to r2, then the target load. |
+| `UpdateEffectCtrl` | actor_part123.c | old | inline `MarkGone` with the do/while(0) `SET_ID_BIT`; gone bit via a bitfield view, bit 3 tested via the byte view (4-byte union). File moved to old_agbcc. |
 | `sub_800CEAC` | game_loop42.c | both | the wide-mode x as `x += xOffset; x -= 2;`. |
 | `sub_800CF70` | game_loop42.c | old | local copy of the `self` parameter. File moved to old_agbcc. |
 
@@ -76,8 +76,8 @@ the older notes said.
 | `DrawPlayer` (actor_part111.c) | new old_agbcc draft under `NON_MATCHING`, not converged (624 bytes vs 636): `self` in r6 instead of r7 and one spill slot too many. The child repositioning goes through an inline whose argument order (x, y, child) gives the ROM's load order. |
 | `UpdateEnemyCtrl` (actor_part112.c) | not retried (1132 bytes). |
 | `HitEnemy` (actor_part112.c) | draft unchanged, 21 hw (old). In states 1/21/22 the ROM loads the layer's 1 before the `-4` mask and reuses that register as the `gone` OR's operand and destination; a `u32` local gets the order but costs a copy (4 bytes over). The rest is reload scratch registers. |
-| `UpdateEnemyBob` / `sub_800C97C` (actor_part116.c) | drafts unchanged (10 / 27 hw). The ROM saves a callee-saved register it never uses (r5, and r8 with r7 skipped). |
-| `sub_800CD00` (actor_part109.c) | new old_agbcc draft under `NON_MATCHING`, 42 hw: the player box's address is held in r6 from its first build (CSE, including through `-fno-cse-follow-jumps`/`-fno-cse-skip-blocks`) where the ROM rematerializes it from sp until the first overlap test. |
+| `UpdateEnemyBob` / `UpdateEnemyOscillateY` (actor_part116.c) | drafts unchanged (10 / 27 hw). The ROM saves a callee-saved register it never uses (r5, and r8 with r7 skipped). |
+| `PlayerAnimWouldTouchCrate` (actor_part109.c) | new old_agbcc draft under `NON_MATCHING`, 42 hw: the player box's address is held in r6 from its first build (CSE, including through `-fno-cse-follow-jumps`/`-fno-cse-skip-blocks`) where the ROM rematerializes it from sp until the first overlap test. |
 
 The raw-asm functions `DrawAffineSpritePieces`, `CollidePlayer` and `PlayerHandleEvent`
 (still in `asm/*.s`) were not attempted.

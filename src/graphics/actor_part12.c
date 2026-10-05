@@ -33,21 +33,21 @@ extern void OperatorDelete(void *manager);
 
 typedef void (*part_method3_fn)(void *self, s32 a, s32 b, s32 c);
 
-extern s32 sub_8009FF4(struct box_part *part, struct part_aabb *box);
+extern s32 ClassifySpriteContact(struct box_part *part, struct part_aabb *box);
 
 /* `CollidePartWithObject`'s twin (actor_part7b.c): the same collision-hit
  * resolver, called from elsewhere in this AI/collision cluster (`list`
  * is never read). Tests `part` against the incoming box via
- * `sub_8009FF4`; on a hit, calls `part`'s method-table +0x68 method
+ * `ClassifySpriteContact`; on a hit, calls `part`'s method-table +0x68 method
  * with `other->kind` as the second argument, then sets `other`'s hit
  * flag (bit 3).
  *
  * The box arrives by value (three words in r1-r3, one on the stack) -
  * the old "leave one scalar in its incoming stack slot" blocker was
  * just that. See docs/matching/issue-9-naked-retry.md. */
-void sub_80099F0(struct part_list *list, struct part_aabb box, struct box_part *part, struct box_part *other)
+void CollideCrateGridPartWithObject(struct part_list *list, struct part_aabb box, struct box_part *part, struct box_part *other)
 {
-    if (sub_8009FF4(part, &box)) {
+    if (ClassifySpriteContact(part, &box)) {
         struct part_method *m = PART_METHOD(part, 0x68);
 
         ((part_method3_fn)m->fn)((u8 *)part + m->thisOffset, 1, other->kind, 0);

@@ -101,15 +101,15 @@ struct part_ctrl {
     s32 kind;           // 0x6C
     struct ctrl_target *target; // 0x70
     s32 state;          // 0x74 - UpdateEnemyCtrl's state
-    s32 modeB;          // 0x78 - see sub_800C8BC
-    s32 modeA;          // 0x7C - see sub_800C8AC
+    s32 modeB;          // 0x78 - see SetEnemyMotionX
+    s32 modeA;          // 0x7C - see SetEnemyMotionY
     s32 counter;        // 0x80
     s32 *anims;         // 0x84 - per-mode argument of the trigger
     struct ctrl_target *popup; // 0x88 - floating popup spawned in state 18
 };
 
-extern void sub_800C8AC(struct part_ctrl *self, s32 mode);
-extern void sub_800C8BC(struct part_ctrl *self, s32 mode);
+extern void SetEnemyMotionY(struct part_ctrl *self, s32 mode);
+extern void SetEnemyMotionX(struct part_ctrl *self, s32 mode);
 extern void SetEnemyAnimMode(struct part_ctrl *self, s32 mode);
 
 #endif /* GUARD_PART_CTRL_H */

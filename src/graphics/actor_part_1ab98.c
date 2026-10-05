@@ -11,7 +11,7 @@
  * `set_hdir` arm):
  * - A hard-register hold on r8 up to the first overlap test, so `self`
  *   can't take r8 and `result` gets it (the ROM has self in sb).
- * - Both sub_800FDC8 calls pass `px` as the third argument, reassigned
+ * - Both FindLineCrossing calls pass `px` as the third argument, reassigned
  *   in each arm (`px = b.x + b.w` / `px = b.x`), and `r` is one
  *   function-level local shared by both classify blocks.
  * - `&b` goes through a `pb` local hidden from cse, so it stays in r4
@@ -173,13 +173,13 @@ void sub_801AB98(struct gobj *selfArg, void *unused)
                         {
                             tx += box->offX + box->padX;
                             px = b.x + b.w;
-                            r = sub_800FDC8(tx, ty, px, py, a.x);
+                            r = FindLineCrossing(tx, ty, px, py, a.x);
                         }
                         else
                         {
                             tx += box->offX;
                             px = b.x;
-                            r = sub_800FDC8(tx, ty, px, py, a.x + a.w);
+                            r = FindLineCrossing(tx, ty, px, py, a.x + a.w);
                         }
                         if ((r < 0 && above && oy <= 1) || (r > 0 && r <= a.y))
                             result = 8;
@@ -221,13 +221,13 @@ void sub_801AB98(struct gobj *selfArg, void *unused)
                         {
                             tx += box->offX + box->padX;
                             px = b.x + b.w;
-                            r = sub_800FDC8(tx, ty, px, py, a.x);
+                            r = FindLineCrossing(tx, ty, px, py, a.x);
                         }
                         else
                         {
                             tx += box->offX;
                             px = b.x;
-                            r = sub_800FDC8(tx, ty, px, py, a.x + a.w);
+                            r = FindLineCrossing(tx, ty, px, py, a.x + a.w);
                         }
                         if ((r < 0 && !above && ox > 3) || (r > 0 && r >= a.y + a.h))
                             result = 4;

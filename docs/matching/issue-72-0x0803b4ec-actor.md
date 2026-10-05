@@ -25,7 +25,7 @@ Doing this full address walk (rather than trusting the visible
 `thumb_func_start` labels alone) surfaced seven functions the original
 disassembly never gave their own label - each one sits inside what
 looks like trailing padding/literal-pool space after a labelled
-function, exactly the `sub_800039C`/`strlen` pattern documented in
+function, exactly the `mem_walk_heaps`/`strlen` pattern documented in
 `docs/decomp_dev.md`. Recorded via `split ADDRESS NAME` entries in
 `expected/corrections.txt` so `report_units.py`/decomp.dev stop crediting
 their bytes to the preceding labelled function:

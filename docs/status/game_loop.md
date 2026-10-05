@@ -9,8 +9,8 @@ system from "core" system startup/init code.
 ## Matched
 
 - **Issue #9-#11 box/collision NAKED retry** ([docs/matching/issue-9-11-box-naked-retry.md](../matching/issue-9-11-box-naked-retry.md)):
-  `UpdateEnemyHop` (`actor_part119.c`), `sub_800C5D4` (`actor_part120.c`),
-  `sub_800C8F8` (`actor_part116.c`), `sub_800CBF4` (`actor_part123.c`)
+  `UpdateEnemyHop` (`actor_part119.c`), `UpdateEnemyTriggerBox` (`actor_part120.c`),
+  `UpdateEnemyOscillateX` (`actor_part116.c`), `UpdateEffectCtrl` (`actor_part123.c`)
   and `sub_800CEAC`/`sub_800CF70` (`game_loop42.c`) are real C now; they
   were NAKED. `actor_part123.o` and `game_loop42.o` moved to old_agbcc
   (whole-file matches).
@@ -172,7 +172,7 @@ system from "core" system startup/init code.
   `self`'s collision-response state/timer/neighbor-list-pointer block
   on reset
 - `src/system/game_loop23.c` (GitHub issue #13, third pass for
-  `sub_8010674`): `sub_8010674` (AABB-overlap test between `self`'s
+  `IsCrateInsideRect`): `IsCrateInsideRect` (AABB-overlap test between `self`'s
   own table-driven half-width/half-height box and a caller-supplied
   box, prepended ahead of the rest since it's immediately
   ROM-adjacent), `ResolvePlayerCollisions` (viewport collision-box refresh),
@@ -180,8 +180,8 @@ system from "core" system startup/init code.
   `SetCrateBelow`/`SetCrateAbove` ("set prev"/"set next"), `GetCrateClassId`
   (UNUSED trivial constant). See
   [docs/matching/issue-13-fc70-second-continuation.md](../matching/issue-13-fc70-second-continuation.md)
-  for `sub_8010674`'s register-pinning/toolchain-bug notes.
-- `src/system/game_loop24.c` (GitHub issue #13): `sub_8010804` (a
+  for `IsCrateInsideRect`'s register-pinning/toolchain-bug notes.
+- `src/system/game_loop24.c` (GitHub issue #13): `ConvertCratesForTimeTrial` (a
   state-3-countdown-expiry sweep over `gCrateList`),
   `OpenAkuAkuCrate` (viewport trampoline-pair/cue-1 firing)
 - `src/system/game_loop25.c` (GitHub issue #13): `IsCrateKindBreakable` -
@@ -198,17 +198,17 @@ system from "core" system startup/init code.
   as real C via source-order block placement matching the ROM's own
   layout plus an inline-asm-materialized mask check - see
   [naked-GetTopCrate-matched.md](../matching/naked-GetTopCrate-matched.md))
-  and `sub_80109A4` - a distance-gated `sub_0800D18C` dispatcher
+  and `CollideCrateWithPlayer` - a distance-gated `QueueCratePlayerCollision` dispatcher
   clearing `self+0xc` bit 3. See
   [docs/matching/issue-13-fc70-continuation.md](../matching/issue-13-fc70-continuation.md).
 - `src/system/game_loop31.c` (GitHub issue #13, second pass): `DestroyCrate`/
   `InitCrate` (a part-object table-set/tail-call-`DestroySpriteObj` helper
-  pair) and `sub_8010784`/`sub_80107C4` (two fixed single-octant
+  pair) and `FindLineCrossingYMajor`/`FindLineCrossingXMajor` (two fixed single-octant
   Bresenham-line-style step algorithms). See
   [docs/matching/issue-13-fc70-continuation.md](../matching/issue-13-fc70-continuation.md).
-- `src/system/game_loop33.c` (GitHub issue #13, third pass): `sub_800FDC8`
-  - the full 4-octant Bresenham-line-style line-stepper `sub_8010784`/
-  `sub_80107C4` (game_loop31.c) are fixed single-octant variants of -
+- `src/system/game_loop33.c` (GitHub issue #13, third pass): `FindLineCrossing`
+  - the full 4-octant Bresenham-line-style line-stepper `FindLineCrossingYMajor`/
+  `FindLineCrossingXMajor` (game_loop31.c) are fixed single-octant variants of -
   previously NAKED, now matched as real C via the same source-order
   block-placement technique as `GetTopCrate`/`GetBottomCrate` (a `goto`
   to a physically-earlier shared-return label) plus an opaque-asm
@@ -232,8 +232,8 @@ system from "core" system startup/init code.
   (game_loop49.c, issue #12) for `type == 5`. `NAKED` transcription
   (byte-correct, not real decompiled C): three extended registers
   (`r8`/`sb`/`sl`) live across the whole function, the same
-  gcc-2.9-resistant shape already established for `sub_0800D18C`/
-  `sub_800E08C` (game_loop47.c/game_loop48.c). See
+  gcc-2.9-resistant shape already established for `QueueCratePlayerCollision`/
+  `ApplyCrateCollision` (game_loop47.c/game_loop48.c). See
   [docs/matching/issue-13-0x0800ff0c-graphics.md](../matching/issue-13-0x0800ff0c-graphics.md)
   for the full type-code-to-behavior table. *Later pass (size2 NAKED
   retry):* real C under old_agbcc (`game_loop36.o` joined
@@ -247,7 +247,7 @@ system from "core" system startup/init code.
   so it can't join either neighbor's file): `DrawCrate` - a
   `self+0x4d`-gated reset of `self+0x30`/`self+0x38` via the
   `self+0x20`-pointer-to-manager/`self+0x2d`-tag/0x1c-stride
-  hitbox-record convention `sub_800D040` (game_loop6.c) also uses,
+  hitbox-record convention `BreakCrateTouchedByPlayer` (game_loop6.c) also uses,
   then a tail call to `DrawSprite`. See
   [docs/matching/issue-13-fc70-second-continuation.md](../matching/issue-13-fc70-second-continuation.md).
 - `src/system/game_loop18.c` (GitHub issue #38, follow-up pass): `LevelHasEntityType`
@@ -299,7 +299,7 @@ system from "core" system startup/init code.
 - **`sub_8026628`** (`src/system/game_loop43.c`, new file - dedicated
   deep investigation) - independently flagged "still unexamined" from
   two other closed call sites this session (`sub_8009BE0`'s physics/
-  collision step-probe and `sub_800AAEC`'s input-action-check gate) and
+  collision step-probe and `PlayerHasRoomForAnim`'s input-action-check gate) and
   sketched in `docs/rom_map.md` as an umbrella dispatcher unifying
   `sub_8026AE8`/`sub_8026A18` under one API. A small (148 B) 4-arm
   `switch` on `mode`, matched on the first isolated-compile attempt
@@ -356,7 +356,7 @@ system from "core" system startup/init code.
   (`src/system/game_loop45.c`, new file - GitHub issue #9/#10, matching
   pass on functions already fully understood from
   `docs/matching/issue-9-0x0800a178-graphics.md`) - the single-point
-  terrain-height ("floor") probes `ProbeGroundSpriteTerrain`/`sub_800A420`
+  terrain-height ("floor") probes `ProbeGroundSpriteTerrain`/`ProbeGroundSpriteFloor`
   (`src/graphics/actor_part110.c`) call. Both `s32 fn(void *player,
   struct probe_pos *pos, s32 *outValue)`: `sub_8026BF8` reads a signed
   height byte via the raw terrain streamer `GetTerrainHeights`; `sub_8026C3C`
@@ -384,7 +384,7 @@ system from "core" system startup/init code.
   `asm(".align 2, 0")` - see
   [docs/matching/issue-44-camera-follow.md](../matching/issue-44-camera-follow.md).
   `asm/code_3_2_17_26bf8.s` removed.
-- **Issue #12 NAKED retry (old_agbcc)**: `sub_800E494`/`sub_800E4E4`
+- **Issue #12 NAKED retry (old_agbcc)**: `ClearCrateStackTouched`/`MarkCrateStackTouched`
   (`src/system/game_loop7.c`), `BounceWumpaCrate`/`OpenCheckpointCrate`/`BreakCrateInStack`/
   `OpenMysteryCrate`/`OpenSlotCrate` (`src/system/game_loop48.c`) and
   `ExplodeCrate`/`BlastNearbyCrates`/`UpdateCrates`/`DetonateNitroCrates`/`ActivateNitroSwitchCrate`/
@@ -396,7 +396,7 @@ system from "core" system startup/init code.
   NAKED-retry section.
 - **`LightTntCrate`** (`src/system/game_loop48.c`, new file
   - GitHub issue #12 Phase 2, lower-address half) - two of
-  `sub_0800D18C`'s/`sub_800E08C`'s per-edge jump-table dispatch
+  `QueueCratePlayerCollision`'s/`ApplyCrateCollision`'s per-edge jump-table dispatch
   targets, matched as real C: `LightTntCrate` (dispatch id `0xe`)
   switches `self` into hitbox tag `0x14`, rebuilds its hitbox record,
   and re-derives a low-nibble sub-animation value via the shared
@@ -422,7 +422,7 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   old_agbcc" - 17 former `NAKED` transcriptions in 0x08022D50-0x08026BC0,
   now plain C. This ROM region was built with old_agbcc; see [game-loop-old-agbcc.md](../matching/game-loop-old-agbcc.md).
 - **Issue #10 NAKED retry**: `UpdateEnemyHomingX`/`UpdateEnemyHomingY`
-  (`actor_part114.c`), `sub_800C314` (`actor_part115.c`), `UpdateEnemyPatrol`
+  (`actor_part114.c`), `UpdateEnemyFlipCycle` (`actor_part115.c`), `UpdateEnemyPatrol`
   (`actor_part118.c`, old_agbcc), `UpdateEnemyAttackCycle` (`actor_part120.c`,
   old_agbcc) and `SetEnemyState` (`actor_part122.c`, old_agbcc) promoted
   from NAKED to real C. `actor_part118.o`, `actor_part120.o` and
@@ -439,8 +439,8 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   `UpdateCrateFall` (`game_loop32.c`, the position-wrap advance) and
   `UpdateCrate` (`game_loop51.c`, the per-frame state tick) promoted
   from NAKED to real C, all under old_agbcc (`game_loop32.o` and
-  `game_loop51.o` joined `OLD_AGBCC_OBJS`). `sub_800D040`,
-  `sub_800E08C`, `UpdateSlotCrate` and `CreateCrate` stay NAKED with new
+  `game_loop51.o` joined `OLD_AGBCC_OBJS`). `BreakCrateTouchedByPlayer`,
+  `ApplyCrateCollision`, `UpdateSlotCrate` and `CreateCrate` stay NAKED with new
   C drafts under `#if NON_MATCHING`. See
   [docs/matching/issue-12-13-25-naked-retry.md](../matching/issue-12-13-25-naked-retry.md).
 - **Big NAKED retry:** `UpdateGameFrame` (`game_loop55.c`, GitHub issue
@@ -482,7 +482,7 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   test, so the searches leave with `goto`. See
   [docs/matching/big-naked-retry-3.md](../matching/big-naked-retry-3.md).
 
-- **Stack-box NAKED retry:** `sub_800D040` (`game_loop6.c`, GitHub
+- **Stack-box NAKED retry:** `BreakCrateTouchedByPlayer` (`game_loop6.c`, GitHub
   issue #12, the self/player box overlap dispatch) promoted from NAKED
   to real C under old_agbcc (`game_loop6.o` joined `OLD_AGBCC_OBJS`).
   Each use of the player box's address goes through an empty
@@ -502,15 +502,15 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   entity constructor behind the trampoline family) promoted from NAKED
   to real C under old_agbcc (`game_loop36.o` joined `OLD_AGBCC_OBJS`).
   See [docs/matching/size2-naked-retry.md](../matching/size2-naked-retry.md).
-- **Last-five NAKED retry:** `sub_800E08C` (`game_loop47.c`, issue #12,
+- **Last-five NAKED retry:** `ApplyCrateCollision` (`game_loop47.c`, issue #12,
   the second per-edge dispatcher) promoted from NAKED to real C under
   old_agbcc (`game_loop47.o` joined `OLD_AGBCC_OBJS`; the NAKED
-  `sub_0800D18C` beside it is compiler-independent). The first flag
+  `QueueCratePlayerCollision` beside it is compiler-independent). The first flag
   byte is a register union of a u32 and a one-byte struct, passed to
   `BreakCrateInStack` as that struct, so it goes in QImode and its spill slot
   is reloaded with `mov r5, sp; ldrb`. See
   [docs/matching/last5-naked-retry.md](../matching/last5-naked-retry.md).
-- **Huge NAKED retry 3:** `sub_0800D18C` (`game_loop47.c`, issue #12,
+- **Huge NAKED retry 3:** `QueueCratePlayerCollision` (`game_loop47.c`, issue #12,
   the 3840-byte collision-response commit) promoted from NAKED to real
   C under old_agbcc, from the 33-halfword draft the second pass left.
   A `u8 *st = &self->state` local declared last fixes the swapped spill
@@ -563,7 +563,7 @@ doesn't advance that even when byte-correct. See
 established convention, and each entry's linked write-up for why
 plain C didn't converge.
 
-- **Now matched as real C (stack-box NAKED retry, see Matched and docs/matching/sp-box-retry.md); entry kept for history.** **`sub_800D040`** (`src/system/game_loop6.c`, GitHub issue #12) -
+- **Now matched as real C (stack-box NAKED retry, see Matched and docs/matching/sp-box-retry.md); entry kept for history.** **`BreakCrateTouchedByPlayer`** (`src/system/game_loop6.c`, GitHub issue #12) -
   builds `self`'s and the player's AABB from the shared
   `+0x20`-table-pointer/`+0x2d`-tag hitbox-record convention
   (`GetSpriteBounds`/`GetSpriteHitbox` in `actor_part.c`), dispatches to
@@ -572,25 +572,25 @@ plain C didn't converge.
   The issue #12/#13/#25 retry left a near-miss C draft (old_agbcc: gcc
   keeps the player box's `sp+0x10` in a register), see
   [docs/matching/issue-12-13-25-naked-retry.md](../matching/issue-12-13-25-naked-retry.md).
-- **`sub_0800D18C`/`sub_800E08C`** (`src/system/game_loop47.c`, new
+- **`QueueCratePlayerCollision`/`ApplyCrateCollision`** (`src/system/game_loop47.c`, new
   file - GitHub issue #12 Phase 1) - the physics/collision subsystem's
   two largest, most tangled dispatchers, closed by NAKED transcription
-  rather than real C: `sub_0800D18C` (~3840 B, not the ~1960 B this
+  rather than real C: `QueueCratePlayerCollision` (~3840 B, not the ~1960 B this
   issue's original read-only pass estimated) is the subsystem's
   collision-response commit - three nested jump tables (a 7-case hitbox
   selector, the 6-case per-edge handler dispatch
   `docs/rom_map.md`/this issue's write-up already described, and a
   9-case post-processing dispatch), a 5-slot "recently touched" ring
   buffer inside `gPlayer`, and ~30 distinct callees.
-  `sub_800E08C` (1032 B) is a further 6-case jump-table dispatcher
-  `sub_0800D18C` itself calls into, sharing the exact same per-edge
+  `ApplyCrateCollision` (1032 B) is a further 6-case jump-table dispatcher
+  `QueueCratePlayerCollision` itself calls into, sharing the exact same per-edge
   handler family. Both verified byte-exact via a full clean
   `make compare`. `asm/code_3_2_17_d18c.s` is now gone entirely - see
   [docs/matching/issue-12-physics-collision.md](../matching/issue-12-physics-collision.md)'s
   Phase 1 appendix for the confirmed dispatch maps (the basis for this
   issue's Phase 2 parallel split of the remaining 18 leaf functions).
-  `sub_800E08C` is now real C (last-five NAKED retry, see Matched);
-  `sub_0800D18C` is now real C too (huge NAKED retry 3, see Matched);
+  `ApplyCrateCollision` is now real C (last-five NAKED retry, see Matched);
+  `QueueCratePlayerCollision` is now real C too (huge NAKED retry 3, see Matched);
   entry kept for history.
 - **Now matched as real C (issue #12/#13/#25 NAKED retry, see Matched); entry kept for history.** **`BreakCrate`** (`src/system/game_loop48.c`; `DropCratesAbove` was
   promoted by the issue #12/#24/#26 retry; the
@@ -598,13 +598,13 @@ plain C didn't converge.
   Matched) (originally with `BounceWumpaCrate`/`OpenCheckpointCrate`/`BreakCrateInStack`/
   `OpenMysteryCrate`,, new file -
   GitHub issue #12 Phase 2, lower-address half) - NAKED transcriptions
-  of the direct dispatch targets both `sub_0800D18C`'s and
-  `sub_800E08C`'s per-edge jump tables call (`BounceWumpaCrate`,
+  of the direct dispatch targets both `QueueCratePlayerCollision`'s and
+  `ApplyCrateCollision`'s per-edge jump tables call (`BounceWumpaCrate`,
   `OpenCheckpointCrate`, `BreakCrateInStack`) plus their own transitive callees
   (`BreakCrate`, called from `BreakCrateInStack`; `OpenMysteryCrate`/
   `DropCratesAbove`, called from `BreakCrate`) - jump-table-heavy
   (`BreakCrate`'s own 23-case table is the largest in this subsystem
-  after `sub_0800D18C`'s three) and/or built on this subsystem's
+  after `QueueCratePlayerCollision`'s three) and/or built on this subsystem's
   confirmed `r8`/`sb`/`sl`-triple-accumulator-resistant shape
   (`DropCratesAbove`). See
   [docs/matching/issue-12-physics-collision.md](../matching/issue-12-physics-collision.md)'s
@@ -616,7 +616,7 @@ plain C didn't converge.
   `BreakCratesInArea`, `FinishBrokenCrate`, `UpdateTntCountdown`, `UpdateSlotCrate` -
   `src/system/game_loop49.c`, new file - GitHub issue #12 Phase 2,
   higher-address half, sibling pass) - the direct/transitive callees of
-  `sub_0800D18C`'s and `sub_800E08C`'s per-edge jump table reachable
+  `QueueCratePlayerCollision`'s and `ApplyCrateCollision`'s per-edge jump table reachable
   from `ExplodeCrate` up through the end of this whole cluster
   (0x0800EEF0-0x0800FC70). All twelve closed by NAKED transcription for
   the same gcc-2.9-resistant register-shape reasons as Phase 1's two
@@ -630,9 +630,9 @@ plain C didn't converge.
   Phase 2 appendix for the confirmed per-function roles.
 - **Now matched as real C (issue #9-#11 NAKED retry, see Matched and docs/matching/issue-9-11-box-naked-retry.md); entry kept for history.** **`sub_800CEAC`/`sub_800CF70`** (`src/system/game_loop42.c`, new
   file - dedicated deep investigation) - the two functions formerly
-  tracked as unexamined raw bytes between `sub_800CD00` (issue #9/#10)
-  and `sub_800D040` (issue #12); recategorized `graphics` -> `game_loop`
-  since both are called only from `sub_0800D18C`. `sub_800CF70` walks
+  tracked as unexamined raw bytes between `PlayerAnimWouldTouchCrate` (issue #9/#10)
+  and `BreakCrateTouchedByPlayer` (issue #12); recategorized `graphics` -> `game_loop`
+  since both are called only from `QueueCratePlayerCollision`. `sub_800CF70` walks
   `self`'s `GetCrateAbove`/`GetCrateBelow` neighbor list, sets a caller
   out-param when either exists, and - for the "prev" neighbor, gated by
   the subsystem's own `self+0x4d&0x7f==1` exclusion - builds its AABB
@@ -642,12 +642,12 @@ plain C didn't converge.
   AABB (the player's hitbox quad positioned at `self`'s location,
   optionally widened when player state byte `+0x90` is set) and tests
   it the same way. Both NAKED: the same single-inlined-AABB-build shape
-  `sub_800D040`/`sub_800CD00` already document as gcc-2.9-resistant. See
+  `BreakCrateTouchedByPlayer`/`PlayerAnimWouldTouchCrate` already document as gcc-2.9-resistant. See
   [docs/matching/issue-9-10-0x0800ceac-graphics.md](../matching/issue-9-10-0x0800ceac-graphics.md).
 - **Now matched as real C (issue #12/#13/#25 NAKED retry, see Matched); entry kept for history.** **`UpdateCrateFall`** (`src/system/game_loop32.c`, GitHub issue #13,
   second pass) - a per-frame position-wrap advance keeping `sb`/`r8`
   live as two extra callee-saved accumulators throughout, the same gap
-  as `sub_800D040` above. See
+  as `BreakCrateTouchedByPlayer` above. See
   [docs/matching/issue-13-fc70-continuation.md](../matching/issue-13-fc70-continuation.md).
 - **Now matched as real C (late NAKED retry 3, see docs/matching/late-naked-retry-3.md); entry kept for history.** **`HitEnemy`** (`src/graphics/actor_part112.c`, new file - GitHub
   issue #9/#10, foundational investigation of the large still-raw
@@ -663,14 +663,14 @@ plain C didn't converge.
   [issue-10-naked-retry.md](../matching/issue-10-naked-retry.md).) See
   [docs/matching/issue-9-10-0x0800b8dc-graphics.md](../matching/issue-9-10-0x0800b8dc-graphics.md)
   for the 22-case dispatch map.
-- **`sub_800C8AC`/`sub_800C8BC`/`SetEnemyAnimMode`** (`src/graphics/actor_part113.c`,
+- **`SetEnemyMotionY`/`SetEnemyMotionX`/`SetEnemyAnimMode`** (`src/graphics/actor_part113.c`,
   new file - GitHub issue #9/#10, Phase 2 of the `0x0800B8DC`-cluster
   investigation above, tackling the three `(self, mode)`-shaped trigger
   primitives that pass's own doc flagged as shared by nearly every
   dispatch state). All three real C, matched clean - much smaller and,
   unlike `UpdateEnemyCtrl`/`HitEnemy`, free of the `self`/`owner`
-  register-allocation gap (straight-line, no branches). `sub_800C8AC`/
-  `sub_800C8BC` cache `mode` into `self+0x7c`/`self+0x78` and delegate
+  register-allocation gap (straight-line, no branches). `SetEnemyMotionY`/
+  `SetEnemyMotionX` cache `mode` into `self+0x7c`/`self+0x78` and delegate
   to the already-matched `StartCtrlTargetMotionYFromSet`/`StartCtrlTargetMotionXFromSet`
   (`actor_part17.c`); `SetEnemyAnimMode` caches into `self+0x68` and fires
   `_call_via_r3` directly, indexing `self+0x84`'s own pointer array by
@@ -678,18 +678,18 @@ plain C didn't converge.
   table the other two use. See
   [docs/matching/issue-9-10-0x0800b8dc-graphics.md](../matching/issue-9-10-0x0800b8dc-graphics.md)'s
   "Phase 2" section for the full writeup.
-- **`sub_800C8F8` now matched as real C (issue #9-#11 NAKED retry, see docs/matching/issue-9-11-box-naked-retry.md); `UpdateEnemyBob`/`sub_800C97C` are real C too since the issue #9/#10 raw-asm pass (docs/matching/issue-9-raw-asm-pass.md).** **`sub_800C8F8`/`UpdateEnemyBob`/`sub_800C97C`** (still NAKED after the
+- **`UpdateEnemyOscillateX` now matched as real C (issue #9-#11 NAKED retry, see docs/matching/issue-9-11-box-naked-retry.md); `UpdateEnemyBob`/`UpdateEnemyOscillateY` are real C too since the issue #9/#10 raw-asm pass (docs/matching/issue-9-raw-asm-pass.md).** **`UpdateEnemyOscillateX`/`UpdateEnemyBob`/`UpdateEnemyOscillateY`** (still NAKED after the
   issue #10 NAKED retry, drafts under `NON_MATCHING`; `UpdateEnemyHomingX`/
-  `UpdateEnemyHomingY`/`sub_800C314` are now real C, see Matched) - originally
-  **`UpdateEnemyHomingX`/`UpdateEnemyHomingY`/`sub_800C314`/`sub_800C8F8`/
-  `UpdateEnemyBob`/`sub_800C97C`/`sub_800C9C8`/`CreateKnockedEnemyCtrl`**
+  `UpdateEnemyHomingY`/`UpdateEnemyFlipCycle` are now real C, see Matched) - originally
+  **`UpdateEnemyHomingX`/`UpdateEnemyHomingY`/`UpdateEnemyFlipCycle`/`UpdateEnemyOscillateX`/
+  `UpdateEnemyBob`/`UpdateEnemyOscillateY`/`LaunchHarmfulEffectPart`/`CreateKnockedEnemyCtrl`**
   (`src/graphics/actor_part114.c`-`actor_part117.c`, new files - GitHub
   issue #9/#10, Phase 3 of the `0x0800B8DC`-cluster investigation, the
   "remaining leaves" the Phase 1 doc's priority list named). `UpdateEnemyHomingX`/
   `UpdateEnemyHomingY` are the X-axis/Y-axis "homing velocity-target setter"
-  pair; `sub_800C314` is state 7's `self+0x68`-dispatched callee (a
+  pair; `UpdateEnemyFlipCycle` is state 7's `self+0x68`-dispatched callee (a
   mirror-flag toggle plus a wrapping 0-3 counter advance);
-  `sub_800C8F8`/`UpdateEnemyBob`/`sub_800C97C` are a `gSineTable`
+  `UpdateEnemyOscillateX`/`UpdateEnemyBob`/`UpdateEnemyOscillateY` are a `gSineTable`
   sine-wave-oscillator family. All six matched as NAKED - each hit a
   *different* gcc-2.9/this-agbcc-build code-selection gap (branch-
   polarity/cross-jump-merging differences for the first pair, bit-
@@ -698,7 +698,7 @@ plain C didn't converge.
   isolated real-C attempts getting the full branch/dispatch structure
   and even established idioms like the `(s32)(x<<27)<0` mirror-flag
   test right - see the doc's own "Phase 3" section for the full
-  per-function breakdown. `sub_800C9C8` (a thin `LaunchEffectPart` wrapper,
+  per-function breakdown. `LaunchHarmfulEffectPart` (a thin `LaunchEffectPart` wrapper,
   state 18's floating-popup spawner) and `CreateKnockedEnemyCtrl` (`HitEnemy`
   states 19-20's child-object allocator, resolving `self+0xc` to the
   fixed `gKnockedEnemyCtrlVtable` table) both matched as real C. See
@@ -713,7 +713,7 @@ plain C didn't converge.
   dispatch-table entries - despite the "menu_ui" framing it turns out to
   run on the exact same `self`/`owner`/`self+0xc`-anchor/`self+0x84`-table
   object shape as the rest of this cluster, and its case bodies manually
-  re-inline `sub_800C8AC`/`sub_800C8BC`/`SetEnemyAnimMode`'s own `bl` targets
+  re-inline `SetEnemyMotionY`/`SetEnemyMotionX`/`SetEnemyAnimMode`'s own `bl` targets
   rather than calling those three wrapper functions - confirming these
   are literal instances of the same object type, not merely a
   structurally-similar sibling. NAKED: several case groups compile the
@@ -728,25 +728,25 @@ plain C didn't converge.
   "load owner field, then shift the radius" instruction order. See
   [docs/matching/issue-9-10-0x0800b8dc-graphics.md](../matching/issue-9-10-0x0800b8dc-graphics.md)'s
   "Phase 4" section for the full writeup.
-- **`sub_800CBF4` now matched as real C (issue #9-#11 NAKED retry, see Matched and docs/matching/issue-9-11-box-naked-retry.md); entry kept for history.** **`sub_800CBF4`/`nullsub_15`/`nullsub_3`/`sub_800CCCC`/`sub_800CCE0`**
+- **`UpdateEffectCtrl` now matched as real C (issue #9-#11 NAKED retry, see Matched and docs/matching/issue-9-11-box-naked-retry.md); entry kept for history.** **`UpdateEffectCtrl`/`EffectCtrlHandleEvent`/`nullsub_3`/`DestroyEffectCtrl`/`InitEffectCtrl`**
   (`src/graphics/actor_part123.c`, new file - GitHub issue #9/#10, the
   final piece of the `0x0800B8DC`-cluster investigation, closing out
-  the entire 43-function cluster). `sub_800CBF4` (NAKED) inlines the
+  the entire 43-function cluster). `UpdateEffectCtrl` (NAKED) inlines the
   "flag active + bitmap-set" idiom (`actor_part27c.c`'s `sub_8018884`)
   three times over, each independently gated (a `_call_via_r1` hit-probe
   reporting no hit, a flags-bit-3 test, and a `+0x38` byte test).
-  `nullsub_15`/`nullsub_3` are genuine empty stubs, matched as real C.
-  `sub_800CCCC`/`sub_800CCE0` (both real C) are two more constructors in
+  `EffectCtrlHandleEvent`/`nullsub_3` are genuine empty stubs, matched as real C.
+  `DestroyEffectCtrl`/`InitEffectCtrl` (both real C) are two more constructors in
   the `sub_801886C`/`sub_8018858`/`CreateKnockedEnemyCtrl` family, both re-pointing
-  `self+0xc` at `gStaticData_087E400C`. `sub_800CCE0` sits right at the
+  `self+0xc` at `gEffectCtrlVtable`. `InitEffectCtrl` sits right at the
   physics/collision subsystem's own boundary
   ([docs/matching/issue-12-physics-collision.md](../matching/issue-12-physics-collision.md))
   but is confirmed to still be a plain entity constructor in this
   cluster, immediately followed with no gap by the already-matched
-  `sub_800CD00` (`actor_part109.c`). See
+  `PlayerAnimWouldTouchCrate` (`actor_part109.c`). See
   [docs/matching/issue-9-10-0x0800b8dc-graphics.md](../matching/issue-9-10-0x0800b8dc-graphics.md)'s
   final section for the full writeup.
-- **`sub_800BFA8`** (`src/graphics/actor_part121.c`, new file - GitHub
+- **`UpdateEnemyShooter`** (`src/graphics/actor_part121.c`, new file - GitHub
   issue #9/#10) - the last raw function in the cluster's own
   `asm/code_3_2_17_bfa8.s` chunk, called only from `UpdateEnemyCtrl` state
   15. A small `self+0x68`-keyed 2-way dispatcher gated by a
@@ -757,7 +757,7 @@ plain C didn't converge.
   On failure, re-dispatches through `owner` (`self->0x70`):
   `owner->0x38` set triggers `SetEnemyAnimMode(self,0)`/`SetEnemyAnimMode(self,4)`
   for `self->0x68==2`/`7`; `owner->0x38` clear instead gates a
-  `sub_800C9C8(0xc,6,0,d,0x400,owner)` call (`d=-0xa` for mode 2,
+  `LaunchHarmfulEffectPart(0xc,6,0,d,0x400,owner)` call (`d=-0xa` for mode 2,
   `d=8` for mode 7) behind an `owner->0x30`/`owner->0x34` magic-constant
   check, tagging the returned record's `+0xa` byte with `8` on success.
   Small enough to avoid this cluster's usual `self`/`owner`
@@ -769,7 +769,7 @@ plain C didn't converge.
   reorders vs. the ROM). This fully consumes `asm/code_3_2_17_bfa8.s` -
   retired from `ldscript.txt` entirely. See
   [docs/matching/issue-9-10-0x0800b8dc-graphics.md](../matching/issue-9-10-0x0800b8dc-graphics.md)'s
-  "`sub_800BFA8`" entry.
+  "`UpdateEnemyShooter`" entry.
 - **Now matched as real C (see docs/matching/strag1-naked-retry.md); entry kept for history.** **`LaunchEffectPart`/`DropWumpa`** (`src/system/game_loop14.c`, GitHub
   issue #41) - two part-object spawn helpers. Under old_agbcc, plain C
   is 61 and 5 halfwords off (register allocation, and one constant
@@ -831,7 +831,7 @@ plain C didn't converge.
   0x1c-stride hitbox-record clamp `DrawCrate` (`game_loop35.c`)
   uses and settles state 6/3, or otherwise re-triggers `FinishBrokenCrate`;
   finally hands off to the `_call_via_r1` table-trampoline convention
-  `sub_8007048`/`sub_80070D4` (`graphics.c`) establish. A plain-C
+  `CheckEntityPlayerContact`/`UpdateEntity` (`graphics.c`) establish. A plain-C
   attempt (the same register-pin-per-nested-scope technique that
   matched `DrawCrate`'s near-identical hitbox-record clamp) matched
   the first ~10 instructions but diverged once a *second* field
@@ -842,7 +842,7 @@ plain C didn't converge.
   through r0/r1/r6/r2/r5/r8/ip across many `bl` calls with an
   inconsistent reuse pattern (sometimes recomputed fresh a few
   instructions after an equivalent address was already live) - the
-  same "which anonymous scratch register" gap as `sub_800D040`/
+  same "which anonymous scratch register" gap as `BreakCrateTouchedByPlayer`/
   `ResolveCollisionCandidates` above, at a finer grain spread across the whole
   function rather than one isolated block. Replaces
   `asm/code_3_2_17_e560_104e4.o` in `ldscript.txt`, sitting between
@@ -855,7 +855,7 @@ plain C didn't converge.
 - **`AddCollisionCandidate`** (`src/system/game_loop50.c`, new file - Phase 1 of
   the next still-unexamined chunk past issue #14's own range) - the
   physics/collision subsystem's **apply/commit step**, the call
-  `sub_0800D18C` (`game_loop47.c`) makes at the very end of its own
+  `QueueCratePlayerCollision` (`game_loop47.c`) makes at the very end of its own
   per-edge dispatch. Appends one 0x24-byte "collision candidate" record
   to a per-entity queue at `self->candidates[self->count]` (`self` is
   the caller's own `entity+0x108` - the player's
@@ -933,7 +933,7 @@ plain C didn't converge.
   table helper. All but `sub_801191C` (trivial, real C) closed as NAKED
   transcription - this neighborhood reconfirms the same gcc-2.9
   register-pressure hazards (r7/r8/sb) already documented at length for
-  `sub_800D040`/`sub_0800D18C`/`ResolveCollisionCandidates` and the already-NAKED
+  `BreakCrateTouchedByPlayer`/`QueueCratePlayerCollision`/`ResolveCollisionCandidates` and the already-NAKED
   `DropExtraLife`/`DropWumpa` wrappers. Matched, confirmed by a full
   clean `make compare`. `CheckExtraLifePickup`/`PickUpExtraLife`/`UpdateExtraLife`/
   `SendExtraLifeToHud` were also read and isolated-verified this pass but left

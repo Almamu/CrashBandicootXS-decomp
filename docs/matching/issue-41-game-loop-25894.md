@@ -139,7 +139,7 @@ everything after" rule:
 
 Each parked function's `NON_MATCHING` C reconstruction lives in the
 `.c` file holding the *adjacent* matched run (following the existing
-`IsSpriteAnimLooping`/`sub_800E494` "widens this unit" convention documented
+`IsSpriteAnimLooping`/`ClearCrateStackTouched` "widens this unit" convention documented
 in `tools/report_units.py`) rather than in a standalone file: under
 the real (`NON_MATCHING=0`) build each `.c` file only contributes its
 matched functions' bytes (the guarded parked block compiles to

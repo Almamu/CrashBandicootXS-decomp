@@ -1,14 +1,14 @@
-# Issue #9/#10: `ProbeGroundSpriteTerrain`/`sub_800A420` (graphics)
+# Issue #9/#10: `ProbeGroundSpriteTerrain`/`ProbeGroundSpriteFloor` (graphics)
 
 Dedicated deep-investigation session against the last two functions in
-the `tools/report_units.py`-tracked `CollideGroundSprite`-through-`sub_800A420`
+the `tools/report_units.py`-tracked `CollideGroundSprite`-through-`ProbeGroundSpriteFloor`
 still-raw span (`base_object=None`): `ProbeGroundSpriteTerrain` (ROM `0x0800A178`,
-680 bytes) and `sub_800A420` (ROM `0x0800A420`, 264 bytes).
+680 bytes) and `ProbeGroundSpriteFloor` (ROM `0x0800A420`, 264 bytes).
 `CollideGroundSprite` itself, the only caller of `ProbeGroundSpriteTerrain` (both live in
 `asm/code_3_2_11.s`), stays raw - its own gate logic depends on
 `sub_8009BE0` (parked NAKED, `actor_part12b.c`,
 [naked-spatial-grid-tail.md](./naked-spatial-grid-tail.md)), so closing
-`ProbeGroundSpriteTerrain`/`sub_800A420` alone doesn't unblock it.
+`ProbeGroundSpriteTerrain`/`ProbeGroundSpriteFloor` alone doesn't unblock it.
 
 ## Starting point
 
@@ -30,7 +30,7 @@ Both functions sit in `asm/code_3_2_11.s`, immediately after the
 still-raw `CollideGroundSprite` and immediately before the already-matched
 `UpdateGroundSprite`/`sub_800A590` (`src/graphics/actor_part47.c`, which
 itself already notes "still-raw `CollideGroundSprite`/`ProbeGroundSpriteTerrain`/
-`sub_800A420`" as its own neighbors). `sub_8026C3C`/`sub_8026BF8`
+`ProbeGroundSpriteFloor`" as its own neighbors). `sub_8026C3C`/`sub_8026BF8`
 themselves live in `asm/code_3_2_17_266bc.s` (the file `sub_8026628`
 was split out of, right after it).
 
@@ -66,7 +66,7 @@ was attempted as a byte-exact C match this session (see "Matching"
 below); this account is only deep enough to place both callers'
 argument roles precisely.
 
-### `sub_800A420(void *self, struct hitbox_quad *quad, u8 *outFlag)`
+### `ProbeGroundSpriteFloor(void *self, struct hitbox_quad *quad, u8 *outFlag)`
 
 A single Y-axis "floor" probe. Builds an int `{x, y}` position at the
 *bottom* of `quad` (`self.x`/`self.y + (quad->yOff + quad->h) << 8`,
@@ -114,18 +114,18 @@ other effect. Once past both:
 2. Computes a starting result mask: `self+0xd` bit 0 expanded to `8`,
    but only when `self+0x24 & 0xc` is clear (otherwise the mask starts
    at `0`).
-3. If `self+0xd` bit 0 is set, calls `sub_800A420` once (with a
+3. If `self+0xd` bit 0 is set, calls `ProbeGroundSpriteFloor` once (with a
    stack-local `u8` initialized `0` as `outFlag`) and keeps its return
    value as a "found ground already" flag (`sl`). If that flag is set
    and the result mask is still `0`, forces the mask to `8`.
-4. If the `sub_800A420` call's `outFlag` came back `1`: builds an int
+4. If the `ProbeGroundSpriteFloor` call's `outFlag` came back `1`: builds an int
    position at the bottom of the quad (same mirrored-half-width
-   adjustment as `sub_800A420`'s own), probes it via
+   adjustment as `ProbeGroundSpriteFloor`'s own), probes it via
    `sub_8026C3C(player, pos, &origY)`. On a hit: snaps `self->y` to the
    probed value and nudges `self->x` by ±1 pixel depending on
    `self+0x24 & 3` (`2` -> left, any other nonzero -> right, `0` -> no
    nudge). On a miss: nudges `self->y` down one pixel instead. Either
-   way, calls `sub_800A420` again afterward to refresh the "found
+   way, calls `ProbeGroundSpriteFloor` again afterward to refresh the "found
    ground" flag (`sl`).
 5. Three more blocks, each gated on `self+0x24`'s own 2-bit sub-fields
    (`& 3` for the X-axis modes `1`/`2`, `& 0xc` for the Y-axis modes
@@ -167,7 +167,7 @@ Both keep `sb`/`sl`/`r8` (and, for `ProbeGroundSpriteTerrain`, `r7` too) live
 simultaneously across many `bl` calls, reused for genuinely different
 values block to block:
 
-- `sub_800A420`'s `r8` holds `&gLevelLayers` across two separate
+- `ProbeGroundSpriteFloor`'s `r8` holds `&gLevelLayers` across two separate
   `sub_8026BF8` calls (a conservative re-derive-via-cached-address
   idiom, not a straight cached value) rather than re-fetching the
   literal pool address each time; `sb` holds `outFlag` for the whole
@@ -182,12 +182,12 @@ This is the exact `r7`/`r8`/`sb` cross-block register-reuse shape this
 immediate ROM neighborhood has already independently established as
 resistant to gcc 2.9 C reconstruction, four times over: `sub_8009BE0`
 ([naked-spatial-grid-tail.md](./naked-spatial-grid-tail.md)),
-`sub_800CD00`, `sub_800CEAC`, `sub_800CF70`
+`PlayerAnimWouldTouchCrate`, `sub_800CEAC`, `sub_800CF70`
 ([issue-9-10-0x0800aaec-graphics.md](./issue-9-10-0x0800aaec-graphics.md),
 [issue-9-10-0x0800ceac-graphics.md](./issue-9-10-0x0800ceac-graphics.md)).
 Rather than re-litigating that from scratch across two more, larger
 functions, this session ran a single honest isolated-compile attempt
-against `sub_800A420` (the smaller of the two, with the cleanest
+against `ProbeGroundSpriteFloor` (the smaller of the two, with the cleanest
 worked-out C-level logic of the pair - see the `outFlag`/bit-1 aside
 above) as a direct confirmation: the straightforward C reconstruction
 compiled cleanly, but this compiler's natural register allocation used
@@ -207,7 +207,7 @@ Verified byte-exact via the isolated `cpp`/`agbcc`/`as` +
 `objcopy`/`cmp` pipeline against `baserom.gba`'s own bytes at
 `0x0800A178`-`0x0800A528` (944 bytes, both functions together): the
 only differing bytes fell into exactly the expected relocation-site
-set - 16 `bl` calls (`_call_via_r1` x2, `sub_800A420` x3, `sub_8008200`
+set - 16 `bl` calls (`_call_via_r1` x2, `ProbeGroundSpriteFloor` x3, `sub_8008200`
 x2, `sub_8026C3C` x1, `sub_8026628` x3, `sub_8008278` x3, `sub_8026BF8`
 x2) plus 3 `.4byte gLevelLayers` literal-pool words, all of which
 resolve correctly once linked.
@@ -215,7 +215,7 @@ resolve correctly once linked.
 ## Build layout
 
 New object `src/graphics/actor_part110.c` holds both functions,
-inserted in `ldscript.txt` exactly where `ProbeGroundSpriteTerrain`/`sub_800A420`'s
+inserted in `ldscript.txt` exactly where `ProbeGroundSpriteTerrain`/`ProbeGroundSpriteFloor`'s
 real bytes used to sit: between the trimmed `asm/code_3_2_11.o` (now
 ending right after `CollideGroundSprite`'s own trailing `bx r1`) and the
 already-matched `src/graphics/actor_part47.o` (`UpdateGroundSprite` onward).
@@ -248,7 +248,7 @@ coincide` (checksum matches).
 
 ## Cross-references
 
-- `docs/status/actor.md` - `ProbeGroundSpriteTerrain`/`sub_800A420` moved from
+- `docs/status/actor.md` - `ProbeGroundSpriteTerrain`/`ProbeGroundSpriteFloor` moved from
   "Left raw" into "Parked - NAKED transcription"; the `CollideGroundSprite`
   "Left raw" entry narrowed to cover only itself.
 - `tools/report_units.py` - new unit at `0x0800A178` (`base_object:
@@ -268,7 +268,7 @@ the first pass through this cluster because its own gate logic calls
 `sub_8009BE0` (parked NAKED, `src/graphics/actor_part12b.c`, see
 [naked-spatial-grid-tail.md](./naked-spatial-grid-tail.md)) - at the
 time that function's own semantics were still unresolved, so closing
-`ProbeGroundSpriteTerrain`/`sub_800A420` alone didn't unblock this one. Both facts
+`ProbeGroundSpriteTerrain`/`ProbeGroundSpriteFloor` alone didn't unblock this one. Both facts
 changed since: `sub_8009BE0` is now fully understood (a physics/
 collision step-probe, confirmed above and in its own doc), and
 `ProbeGroundSpriteTerrain` itself is now fully understood too - together, that's
@@ -367,7 +367,7 @@ re-checks internally as its own second gate. Once past it:
 3. If `self+0x68` bit 3 (the Y-axis/"mode 8" bit `ProbeGroundSpriteTerrain` just
    OR'd in, if its own probes hit) is now set: clears `self+0xc` bits 0
    and 5, then - unless `self+0xd` bit 1 is already set (ground
-   already snapped this call, `sub_800A420`'s own convention, see
+   already snapped this call, `ProbeGroundSpriteFloor`'s own convention, see
    above) - fires the *same* `self->table+0x10/0x14` "hitbox quad"
    trampoline `ProbeGroundSpriteTerrain` itself uses (confirmed identical: table
    pointer read, signed-halfword offset at `+0x10`, function pointer at
@@ -382,7 +382,7 @@ re-checks internally as its own second gate. Once past it:
    thorough, independent step-probe didn't confirm it cleanly.
 4. Returns the (possibly rolled-back) `self+0x68` byte either way.
 
-Read together with `ProbeGroundSpriteTerrain`/`sub_800A420`: this is the
+Read together with `ProbeGroundSpriteTerrain`/`ProbeGroundSpriteFloor`: this is the
 part-object physics dispatcher. `CollideGroundSprite` is the entry point
 (called by `CollidePlayer`'s per-frame reentrancy-guarded wrapper,
 `docs/rom_map.md` line ~1835 - `CollidePlayer` itself fires its own
@@ -431,7 +431,7 @@ first, only fall back if it's a genuine structural gap" order:
   just `0x0800A0FC`-`0x0800A178` caught it directly too, once checked
   carefully - see "Verification" below).
 - **`(self+0xd >> 1) & 1` gate**: the same bit-1 accessor shape as the
-  already-matched `sub_800A6C4` (`actor_part14.c`, `return
+  already-matched `IsGroundSpriteGrounded` (`actor_part14.c`, `return
   (self[0xd]>>1)&1;`, no pinning needed there since it's a standalone
   function) - but inlined here alongside other already-pinned locals,
   this compiler's allocator picked different registers than the ROM at
@@ -455,7 +455,7 @@ first, only fall back if it's a genuine structural gap" order:
   no `AND #0xff` immediate form, and a sub-word return value isn't
   guaranteed clean in the upper bits at the call site). This fell out
   automatically once `sub_8009BE0` was locally declared returning `u8`
-  (matching how `sub_800A420` is itself declared `u8` despite the same
+  (matching how `ProbeGroundSpriteFloor` is itself declared `u8` despite the same
   narrowing dance appearing at *its* own call sites in `ProbeGroundSpriteTerrain`) -
   declaring it `s32` instead skipped the narrowing entirely and
   produced a plain `cmp r0,#0` with no `lsl`, an immediate byte
@@ -493,7 +493,7 @@ coincide` (checksum matches).
 
 `CollideGroundSprite` was added directly to `src/graphics/actor_part110.c`
 (prepended before `ProbeGroundSpriteTerrain`), the same translation unit as the
-NAKED `ProbeGroundSpriteTerrain`/`sub_800A420` - the same "NAKED function sharing a
+NAKED `ProbeGroundSpriteTerrain`/`ProbeGroundSpriteFloor` - the same "NAKED function sharing a
 file with matched ones" precedent already established for `AdvanceSpriteAnim`/
 `actor_part3.c`. `asm/code_3_2_11.s` is retired entirely (it held only
 `CollideGroundSprite`) and removed from `ldscript.txt`; `actor_part110.o` now
@@ -534,7 +534,7 @@ accumulated into `*outValue` - this pass just closes them as real C.
 Both matched as real C, no `NON_MATCHING` gap and no NAKED fallback
 needed - the earlier "same resistant multi-high-register shape this ROM
 neighborhood already hit four times" caution (about `ProbeGroundSpriteTerrain`/
-`sub_800A420` themselves) turned out not to apply to these two smaller
+`ProbeGroundSpriteFloor` themselves) turned out not to apply to these two smaller
 leaf functions, which only ever need `r0`-`r6`, matching the ROM's own
 register choices directly once the right C shape was found:
 
@@ -670,10 +670,10 @@ exactly where these four functions' real bytes already sat.
 
 ## Later pass (issue #9 NAKED retry)
 
-`sub_800A420` now has an old_agbcc C draft under `NON_MATCHING` that is
+`ProbeGroundSpriteFloor` now has an old_agbcc C draft under `NON_MATCHING` that is
 15 halfwords off. All of the gap is register choice in the first probe's
 hit path. `ProbeGroundSpriteTerrain` was not retried. See [issue-9-naked-retry.md](./issue-9-naked-retry.md) for details.
 
 ## Later pass (issue #9-#11 NAKED retry)
 
-`ProbeGroundSpriteTerrain` and `sub_800A420` (and the formerly pinned `CollideGroundSprite`) are plain C under old_agbcc; `actor_part110.o` is in `OLD_AGBCC_OBJS`. See [issue-9-11-box-naked-retry.md](issue-9-11-box-naked-retry.md).
+`ProbeGroundSpriteTerrain` and `ProbeGroundSpriteFloor` (and the formerly pinned `CollideGroundSprite`) are plain C under old_agbcc; `actor_part110.o` is in `OLD_AGBCC_OBJS`. See [issue-9-11-box-naked-retry.md](issue-9-11-box-naked-retry.md).

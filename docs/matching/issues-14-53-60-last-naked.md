@@ -12,7 +12,7 @@ frame. The old park note blamed "up to twelve running pointers" live
 across the loop. Those are gcc's own strength reduction of
 `self->records[i].field`, and plain C reproduces them. What mattered:
 
-- `sub_800E08C`'s last three arguments are one-byte packed structs
+- `ApplyCrateCollision`'s last three arguments are one-byte packed structs
   (`struct flag8`). The ROM stores them with `strb`; a plain `u8`
   parameter is widened to a word store.
 - The record's position is a `struct vec2` passed by value, which gives

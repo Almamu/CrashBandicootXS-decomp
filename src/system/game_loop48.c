@@ -6,14 +6,14 @@
  * half of the remaining tail of the physics/collision subsystem's
  * per-edge handler family (see docs/matching/issue-12-physics-collision.md's
  * "Phase 1" appendix for the confirmed dispatch map both
- * sub_0800D18C/sub_800E08C, src/system/game_loop47.c, dispatch into).
+ * QueueCratePlayerCollision/ApplyCrateCollision, src/system/game_loop47.c, dispatch into).
  * `self` throughout is the same "collision box" object every other
  * function in this subsystem operates on (`struct crate`,
  * include/crate.h). Compiled with old_agbcc (the Makefile's
  * OLD_AGBCC_OBJS) - see docs/matching/issue-12-physics-collision.md's
  * NAKED-retry section. */
 
-extern void sub_8009150(struct crate_list *list, struct crate *obj);
+extern void LinkCrateToActiveBucket(struct crate_list *list, struct crate *obj);
 extern struct crate_list *gCrateList;
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void *gAudioContext;
@@ -99,7 +99,7 @@ static inline void PhysArgByte(u8 *p, u8 v)
                     PhysArgByte((u8 *)&argP5, (p5)), (p3)));                   \
     }
 
-/* Dispatch-id-5 handler. Both `sub_0800D18C`'s and `sub_800E08C`'s
+/* Dispatch-id-5 handler. Both `QueueCratePlayerCollision`'s and `ApplyCrateCollision`'s
  * per-edge jump tables' case 3 eventually reach this handler
  * transitively (via `BreakCrateInStack`), see
  * docs/matching/issue-12-physics-collision.md's dispatch map.
@@ -175,14 +175,14 @@ void BounceWumpaCrate(struct crate *self)
     }
 }
 
-/* Case-2 handler ("dispatch id 0xe") both `sub_0800D18C`'s and
- * `sub_800E08C`'s per-edge jump tables select - see
+/* Case-2 handler ("dispatch id 0xe") both `QueueCratePlayerCollision`'s and
+ * `ApplyCrateCollision`'s per-edge jump tables select - see
  * docs/matching/issue-12-physics-collision.md's dispatch map. Switches
  * `self` into a fresh sub-state (`+0x4e = 0x15`, hitbox tag `+0x2d =
  * 0x14`), rebuilds its hitbox record (`ResetSpriteFrameTimer`/`ResetSpriteFrameIndex`/
  * `SetSpriteAnimDone`, the same trio every hitbox-rebuild call in this
  * subsystem uses), registers it with the object-pool grid
- * (`sub_8009150`), re-derives a low-nibble sub-animation value from
+ * (`LinkCrateToActiveBucket`), re-derives a low-nibble sub-animation value from
  * the freshly selected hitbox record's `+0x14` byte via
  * `GetPaletteSlot`'s tile-asset-cache lookup, plays SFX `0x11`, and
  * arms a `+0x4f` countdown of `0x3c` (60) frames. */
@@ -234,7 +234,7 @@ void LightTntCrate(void *selfArg)
                 : "r1", "cc", "memory"
             );
         }
-        sub_8009150(gCrateList, (struct crate *)self);
+        LinkCrateToActiveBucket(gCrateList, (struct crate *)self);
 
         {
             register u8 **p2 asm("r0") = *(u8 ***)(self + 0x20);
@@ -297,7 +297,7 @@ void LightTntCrate(void *selfArg)
     self[0x4f] = 0x3c;
 }
 
-/* Case-5 handler both `sub_0800D18C`'s and `sub_800E08C`'s per-edge
+/* Case-5 handler both `QueueCratePlayerCollision`'s and `ApplyCrateCollision`'s per-edge
  * jump tables select unconditionally - see
  * docs/matching/issue-12-physics-collision.md's dispatch map. Spawns
  * a particle-effect object (`SpawnEffectPart`, kind `0x2a`) at `self`'s
@@ -349,7 +349,7 @@ void OpenCheckpointCrate(struct crate *self)
     self->state = (self->state & 0x80) | one;
 }
 
-/* Case-3 handler both `sub_0800D18C`'s and `sub_800E08C`'s per-edge
+/* Case-3 handler both `QueueCratePlayerCollision`'s and `ApplyCrateCollision`'s per-edge
  * jump tables select (see docs/matching/issue-12-physics-collision.md's
  * dispatch map): counts `self` into `gPlayer+0x91`'s
  * "objects handled this frame" tally (saturating at a nonzero value -
@@ -458,7 +458,7 @@ void BreakCrate(struct crate *self, u32 arg1)
     if (GetCrateAbove(self) != NULL && flag == 0)
         chained = 1;
     PHYS_FLAG4(self) = 1;
-    sub_8009150(gCrateList, self);
+    LinkCrateToActiveBucket(gCrateList, self);
     self->state &= 0x7f;
     PHYS_PLAYER->busy = 0;
     one = 1;
@@ -758,7 +758,7 @@ void DropCratesAbove(struct crate *self)
             n->unk_4C = t + d;
         }
         n->flags |= 0x10;
-        sub_8009150(gCrateList, n);
+        LinkCrateToActiveBucket(gCrateList, n);
         if (tbl[n->kind] && self->u48.n == 0 && n->fallDistance > 0x1600)
         {
             struct crate *next = GetCrateAbove(n);

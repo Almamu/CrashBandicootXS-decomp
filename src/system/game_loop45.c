@@ -2,7 +2,7 @@
 
 /* GitHub issue #9/#10: single-point terrain-height ("floor") probes,
  * split out of `docs/matching/issue-9-0x0800a178-graphics.md`'s existing
- * write-up - both callers (`ProbeGroundSpriteTerrain`/`sub_800A420`, GitHub issue
+ * write-up - both callers (`ProbeGroundSpriteTerrain`/`ProbeGroundSpriteFloor`, GitHub issue
  * #9/#10, `src/graphics/actor_part110.c`) already fully placed their
  * argument roles: `s32 fn(void *player, struct probe_pos *pos, s32
  * *outValue)`, computing `pos->x >> 3`/`pos->y >> 3` tile coords from

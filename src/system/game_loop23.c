@@ -2,7 +2,7 @@
 #include "vtable.h"
 
 /* The fields of a level object (`struct gobj`, gobj_1a794.h) that
- * `sub_8010674` reads. */
+ * `IsCrateInsideRect` reads. */
 struct gobj_view {
     u8 unk_00[0xc];
     u8 flags;                       // 0x0c
@@ -21,7 +21,7 @@ struct aabb {
 
 /* GitHub issue #13: 0x0800FC70-0x08010A0C, continuing the physics/
  * collision subsystem (see game_loop17.c's header comment and
- * docs/matching/issue-13-graphics-fc70.md). `sub_8010674` prepended
+ * docs/matching/issue-13-graphics-fc70.md). `IsCrateInsideRect` prepended
  * ahead of the already-matched `ResolvePlayerCollisions` run below - it's
  * immediately ROM-adjacent (no gap), so it joins this file rather
  * than getting its own per docs/workflow.md's "one file per
@@ -33,12 +33,12 @@ extern void *_call_via_r1(void *arg0, void *arg1);
 
 /* AABB-overlap test between `self`'s own table-driven half-width/
  * half-height box (centered on `self`'s own position, via the same
- * `_call_via_r1` table-trampoline convention `sub_8007048`/
- * `sub_80070D4`, graphics.c, already establish - here at the table's
+ * `_call_via_r1` table-trampoline convention `CheckEntityPlayerContact`/
+ * `UpdateEntity`, graphics.c, already establish - here at the table's
  * own `+0x10`/`+0x14` offset pair) and a caller-supplied `struct aabb
  * *`. Short-circuits true (skipping the real test) when `flags` bit 4
  * is set, or when the object has a `mover`. */
-u32 sub_8010674(void *selfArg, struct aabb *boxArg)
+u32 IsCrateInsideRect(void *selfArg, struct aabb *boxArg)
 {
     /* self/box pinned to r5/r6: the ROM keeps both live across the
      * whole function (self is dead by the AABB-build block below and

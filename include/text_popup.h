@@ -85,7 +85,7 @@ struct enemy_ctrl
     s32 unk_34;
     s32 unk_38;
     s32 period;                 // 0x3C - oscillator (part_ctrl.period/
-    s32 phase;                  // 0x40   phase/amplitude, sub_800C8F8)
+    s32 phase;                  // 0x40   phase/amplitude, UpdateEnemyOscillateX)
     s32 amplitude;              // 0x44
     s32 unk_48;
     s32 unk_4C;

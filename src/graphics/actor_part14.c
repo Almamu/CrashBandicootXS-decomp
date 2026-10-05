@@ -127,13 +127,13 @@ struct actor *InitGroundSprite(struct actor *self)
 }
 
 /* `self+0xd` bit 1 get/set/clear accessors. */
-u8 sub_800A6C4(void *selfArg)
+u8 IsGroundSpriteGrounded(void *selfArg)
 {
     u8 *self = selfArg;
     return (self[0xd] >> 1) & 1;
 }
 
-void sub_800A6D0(void *selfArg)
+void ClearGroundSpriteGrounded(void *selfArg)
 {
     u8 *self = selfArg;
     register s32 mask asm("r1") = -3;
@@ -144,7 +144,7 @@ void sub_800A6D0(void *selfArg)
     self[0xd] = result;
 }
 
-void sub_800A6DC(void *selfArg)
+void SetGroundSpriteGrounded(void *selfArg)
 {
     u8 *self = selfArg;
     register s32 mask asm("r1") = 2;
@@ -156,7 +156,7 @@ void sub_800A6DC(void *selfArg)
 }
 
 /* `self+0xd` bit 0 get/set/clear accessors. */
-u8 sub_800A6E8(void *selfArg)
+u8 IsGroundSpriteFloorProbeEnabled(void *selfArg)
 {
     register u8 *self asm("r1");
     register s32 mask asm("r0") = 1;
@@ -169,7 +169,7 @@ u8 sub_800A6E8(void *selfArg)
     return result;
 }
 
-void sub_800A6F4(void *selfArg)
+void DisableGroundSpriteFloorProbe(void *selfArg)
 {
     u8 *self = selfArg;
     register s32 mask asm("r1") = -2;
@@ -180,7 +180,7 @@ void sub_800A6F4(void *selfArg)
     self[0xd] = result;
 }
 
-void sub_800A700(void *selfArg)
+void EnableGroundSpriteFloorProbe(void *selfArg)
 {
     u8 *self = selfArg;
     register s32 mask asm("r1") = 1;
@@ -192,7 +192,7 @@ void sub_800A700(void *selfArg)
 }
 
 /* `flags` bit 5 clear/set/get accessors. */
-void sub_800A70C(void *selfArg)
+void ClearSpriteObjFlag5(void *selfArg)
 {
     u8 *self = selfArg;
     register s32 mask asm("r1") = -0x21;
@@ -203,7 +203,7 @@ void sub_800A70C(void *selfArg)
     self[0xc] = result;
 }
 
-void sub_800A718(void *selfArg)
+void SetSpriteObjFlag5(void *selfArg)
 {
     u8 *self = selfArg;
     register s32 mask asm("r1") = 0x20;
@@ -214,7 +214,7 @@ void sub_800A718(void *selfArg)
     self[0xc] = result;
 }
 
-u8 sub_800A724(void *selfArg)
+u8 GetSpriteObjFlag5(void *selfArg)
 {
     u8 *self = selfArg;
     return (self[0xc] >> 5) & 1;
@@ -222,7 +222,7 @@ u8 sub_800A724(void *selfArg)
 
 /* `ctrl` getter (the same "record" field `DestroyMovingSprite`/`UpdateMovingSprite`
  * fire their trampolines through). */
-s32 sub_800A730(void *selfArg)
+s32 GetMovingSpriteCtrl(void *selfArg)
 {
     return (s32)((struct gfx_part *)selfArg)->ctrl;
 }

@@ -3,10 +3,10 @@
 #include "gfx_part.h"
 #include "sprite_bank.h"
 
-extern s32 sub_8007114(struct actor *self, void *box);
+extern s32 IsEntityInsideRect(struct actor *self, void *box);
 
 /* `part+0x25 == 1` is the same fast override seen in
- * IsSpriteObjOnScreen/SpriteObjOverlapsRect; otherwise defers to `sub_8007114` (already
+ * IsSpriteObjOnScreen/SpriteObjOverlapsRect; otherwise defers to `IsEntityInsideRect` (already
  * matched in graphics.c), forwarding `box` straight through
  * unmodified. */
 s32 IsSpriteObjInsideRect(struct actor *part, void *box)
@@ -18,16 +18,16 @@ s32 IsSpriteObjInsideRect(struct actor *part, void *box)
     byteVal = *addr;
     if (byteVal == 1) {
         result = 1;
-    } else if ((u8)sub_8007114(part, box)) {
+    } else if ((u8)IsEntityInsideRect(part, box)) {
         result = 1;
     }
     return result;
 }
 
-extern u8 sub_8006FE4(struct actor *self);
+extern u8 IsEntityNearCamera(struct actor *self);
 
 /* Same `part+0x25` fast-override shape as `IsSpriteObjInsideRect` above,
- * deferring to `sub_8006FE4` (already matched in `graphics.c`)
+ * deferring to `IsEntityNearCamera` (already matched in `graphics.c`)
  * instead - a single-argument sibling, so the address scratch
  * naturally lands in `r1` instead of `r2` (no second call argument to
  * keep out of the way). */
@@ -40,14 +40,14 @@ s32 IsSpriteObjNearCamera(struct actor *part)
     byteVal = *addr;
     if (byteVal == 1) {
         result = 1;
-    } else if (sub_8006FE4(part)) {
+    } else if (IsEntityNearCamera(part)) {
         result = 1;
     }
     return result;
 }
 
 /* Always-true stub. */
-s32 sub_800834C(void)
+s32 ApplySpriteObjVelocity(void)
 {
     return 1;
 }
@@ -67,7 +67,7 @@ extern void *_call_via_r1(void *arg0, void *arg1);
 
 /* Advances `part`'s animation timer (`AdvanceSpriteAnim`), then resolves two
  * `table+N`/`table+N+4` offset/pointer slot pairs (the same convention
- * documented for `sub_8006FE4`/`IsSpriteObjOnScreen`) into `_call_via_r1` calls
+ * documented for `IsEntityNearCamera`/`IsSpriteObjOnScreen`) into `_call_via_r1` calls
  * - table+0x60/+0x64 first, then table+8/+0xc. */
 void UpdateSpriteObj(struct actor *part)
 {

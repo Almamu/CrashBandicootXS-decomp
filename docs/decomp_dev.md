@@ -292,7 +292,7 @@ where each is handled:
   doesn't have (the `GAX_CALL_ARM` return points `sub_8039E50`,
   `sub_803A318`, `sub_803A608`; `sub_802613E`, which starts
   mid-instruction; the padding stub `sub_8016046`), `code`/`data` for
-  `sub_800039C` and `EepromTimerIntr`, which the frozen sources only have as
+  `mem_walk_heaps` and `EepromTimerIntr`, which the frozen sources only have as
   `.byte` blobs, and `resolve` for a base object that calls a function
   through a local `.set` alias and so has no relocation on those `bl`s
   (math_div64_util.c's calls to `__udivsi3` were the one case, until the
@@ -352,7 +352,7 @@ since both patterns will likely recur:
   had this embedded as a raw `.byte` blob (`// this is ugly AF`) from
   whoever matched `mem_collect` originally, precisely because leaving it
   out breaks the ROM's byte layout - it's now written as real, labelled
-  Thumb instructions (`sub_800039C`) instead, with `expected/corrections.txt`
+  Thumb instructions (`mem_walk_heaps`) instead, with `expected/corrections.txt`
   giving the frozen target a matching `split` entry. Same bytes, same
   `make compare` result, just inspectable instead of opaque.
 

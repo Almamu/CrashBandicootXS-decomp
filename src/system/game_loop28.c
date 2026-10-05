@@ -43,7 +43,7 @@ struct candidate_list
 };
 
 extern struct vec2 *gPlayer;
-extern void sub_800E08C(void *neighbor, s32 kind, s32 field10, s32 field14,
+extern void ApplyCrateCollision(void *neighbor, s32 kind, s32 field10, s32 field14,
                         s32 field18, struct vec2 pos, s32 field1c,
                         struct flag8 field20, struct flag8 field21,
                         struct flag8 forced);
@@ -51,7 +51,7 @@ extern void sub_800E08C(void *neighbor, s32 kind, s32 field10, s32 field14,
 /* Resolves the frame's queued collision candidates. `records[0]` seeds
  * the "nearest to the player" choice (by Y distance, X as tiebreak).
  * Any later candidate whose Y distance is more than 8 off the current
- * best, or whose kind is 4, is resolved on the spot with sub_800E08C.
+ * best, or whose kind is 4, is resolved on the spot with ApplyCrateCollision.
  * The rest only compete for nearest. The nearest one is then resolved
  * too, told whether any forced resolve happened, and the list is
  * emptied. */
@@ -98,7 +98,7 @@ void ResolveCollisionCandidates(struct candidate_list *self)
                 d = -d;
             if (d > 8 || self->records[i].kind == 4)
             {
-                sub_800E08C(n, self->records[i].kind, self->records[i].unk_10,
+                ApplyCrateCollision(n, self->records[i].kind, self->records[i].unk_10,
                             self->records[i].unk_14, self->records[i].unk_18,
                             self->records[i].pos, self->records[i].unk_1C,
                             self->records[i].unk_20, self->records[i].unk_21,
@@ -113,7 +113,7 @@ void ResolveCollisionCandidates(struct candidate_list *self)
             }
         }
 
-        sub_800E08C(self->records[best].neighbor, self->records[best].kind,
+        ApplyCrateCollision(self->records[best].neighbor, self->records[best].kind,
                     self->records[best].unk_10, self->records[best].unk_14,
                     self->records[best].unk_18, (self->records + best)->pos,
                     self->records[best].unk_1C, self->records[best].unk_20,

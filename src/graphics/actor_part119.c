@@ -6,7 +6,7 @@
  *
  * Unconditional prelude: if `owner->4` (Y position) is still less than
  * `self->0x64`, the function is a no-op (early return). Otherwise it
- * always fires `sub_800C8BC(self, 0)` + `sub_800C8AC(self, 0)` and
+ * always fires `SetEnemyMotionX(self, 0)` + `SetEnemyMotionY(self, 0)` and
  * re-syncs `owner->4` from `self->0x64` before dispatching further -
  * reads as "once the tracked Y target is reached, latch it and re-fire
  * the anchor triggers once". Two further `self+0x68`-keyed sub-cases
@@ -18,10 +18,10 @@
  *  - `owner->0x38 != 0`, gated further by `owner->0x30 == 8` and
  *    `owner->0x34 == 0` (the same "blocking condition" pair the Phase 1
  *    doc's field table documents): modes 0/1 both trigger
- *    `sub_800C8BC`/`sub_800C8AC` with mode 3 then play SFX `0x14` -
- *    mode 0 keeps `owner->0x28`'s existing mirror bit (`sub_800C8BC(self,3)`),
- *    mode 1 forces it clear (`sub_800C8BC(self,0)`) before the same
- *    `sub_800C8AC(self,3)` + SFX tail.
+ *    `SetEnemyMotionX`/`SetEnemyMotionY` with mode 3 then play SFX `0x14` -
+ *    mode 0 keeps `owner->0x28`'s existing mirror bit (`SetEnemyMotionX(self,3)`),
+ *    mode 1 forces it clear (`SetEnemyMotionX(self,0)`) before the same
+ *    `SetEnemyMotionY(self,3)` + SFX tail.
  *
  * Real C since the issue #9-#11 NAKED retry (see below). */
 
@@ -39,8 +39,8 @@ void UpdateEnemyHop(struct part_ctrl *self)
 
     if (self->target->y < self->baseY)
         return;
-    sub_800C8BC(self, 0);
-    sub_800C8AC(self, 0);
+    SetEnemyMotionX(self, 0);
+    SetEnemyMotionY(self, 0);
     t = self->target;
     {
         register s32 by asm("r1") = self->baseY;
@@ -62,13 +62,13 @@ void UpdateEnemyHop(struct part_ctrl *self)
     } else if (t->tick == 8 && t->timer == 0) {
         switch (self->mode) {
         case 0:
-            sub_800C8BC(self, 3);
-            sub_800C8AC(self, 3);
+            SetEnemyMotionX(self, 3);
+            SetEnemyMotionY(self, 3);
             PlaySfx(gAudioContext, 0x14, 0x100);
             break;
         case 1:
-            sub_800C8BC(self, 0);
-            sub_800C8AC(self, 3);
+            SetEnemyMotionX(self, 0);
+            SetEnemyMotionY(self, 3);
             PlaySfx(gAudioContext, 0x14, 0x100);
             break;
         }

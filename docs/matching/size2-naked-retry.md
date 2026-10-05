@@ -85,7 +85,7 @@ keeps `self` in sb and `result` in r8, and the draft does the reverse.
 
 - Pinning `self` to r9 gives exactly 1648 bytes. It also adds two
   `self->type` reloads (464 hw, and structurally further away).
-- A single `sub_800FDC8` call with `c`/`d` argument locals, for the
+- A single `FindLineCrossing` call with `c`/`d` argument locals, for the
   `add r2,r5` / `add r5,r2` copies, is worse (702 hw).
 - Two calls with a `c` local give 500 hw and 1628 B.
 - Inline accessors for `box->padY` and `b.x` (the pattern that closed

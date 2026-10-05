@@ -29,7 +29,7 @@ Two gaps, both shared with other functions already documented
 elsewhere in this project:
 
 1. **Cross-jump-merge shared-tail placement** (same class of gap as
-   `sub_800FDC8`, game_loop33.c). The loop's two `return cur;` sites
+   `FindLineCrossing`, game_loop33.c). The loop's two `return cur;` sites
    compile to byte-identical code (`add r0, r4, #0; b <exit>`); the
    ROM keeps them as a single physical copy reached by two *backward*
    branches, positioned *before* the loop body in the ROM's own
@@ -145,7 +145,7 @@ r1` literally writes to, silently reading garbage at the `if (masked
 register the template writes closes that gap.
 
 This same mask-check block is already the established pattern in this
-same file - `sub_80109A4` (already matched, further down
+same file - `CollideCrateWithPlayer` (already matched, further down
 `game_loop30.c`) uses the equivalent materialization for its own
 `self+0x4d & 0x7f` check.
 
@@ -161,5 +161,5 @@ generate` succeeds (no symbol-pairing errors). Full clean `rm -rf
 build crashbandicootxs.elf crashbandicootxs.gba crashbandicootxs.map
 && make compare` - `crashbandicootxs.gba: La suma coincide`. Both
 functions are folded into the same `src/system/game_loop30.o` unit as
-the already-matched `sub_80109A4` in `tools/report_units.py`, since
+the already-matched `CollideCrateWithPlayer` in `tools/report_units.py`, since
 it's the same object file.

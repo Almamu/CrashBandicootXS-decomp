@@ -19,7 +19,7 @@ slots at `self+0x1b8`/`0x1bc` are torn down (`ResetSpriteFrameTimer`/
 `ResetSpriteFrameIndex`/`SetSpriteAnimDone(..., 0)`, the same OAM-trio teardown
 `PlayRoom`, game_loop39.c, already uses) when non-null. `self+0x1bc`'s
 actor additionally feeds its own `+0x20`-table/`+0x2d`-tag hitbox record
-(the same convention `DrawCrate`, game_loop35.c, and `sub_8010674`,
+(the same convention `DrawCrate`, game_loop35.c, and `IsCrateInsideRect`,
 game_loop23.c, already document) into `LoadPaletteSlot` (the tile-asset-cache
 slot loader) - `self+0x29`'s low nibble is the cache slot, and the
 record's own `+0x14` byte is the asset id. Finally `gUnknown_030012EC`
@@ -30,7 +30,7 @@ trampoline too - a nonzero low byte there flags the entry for despawn
 (`PickUpWumpa(entry, 1)`), otherwise the entry is marked "seen" (`+0xc`
 bit 0) and, unless its `+8` id is the `0xFFFF` sentinel, its bit gets set
 in the `gEntityFlags+0x108` collision bitmap - the exact same
-inline idiom `sub_80072D8` (graphics.c) uses on a `struct actor`.
+inline idiom `MarkEntityGone` (graphics.c) uses on a `struct actor`.
 
 Every one of those pieces matches byte-for-byte in isolation with a
 register pin or a small anchored `asm volatile` block: `self` pinned to
@@ -45,7 +45,7 @@ before addresses; a plain C store evaluates the address first), the
 reused for `fn` (a plain rewrite either keeps `table` live across the
 first `_call_via_r1` call, which the ROM never does, or re-derives
 `part->table` a second time for `fn`, which the ROM also never does),
-the `flags |= 1` store anchored to match `sub_80072D8`'s own
+the `flags |= 1` store anchored to match `MarkEntityGone`'s own
 constant-first idiom, and `self+8` read twice - once for the sentinel
 compare, again for the bitmap math - since a shared load collapses both
 into one.
@@ -54,7 +54,7 @@ The one piece that never converged: the loop's own `0xffff` sentinel has
 to live in r7 for the *entire* array walk. A `register s32 sentinel
 asm("r7")` pin hits a confirmed toolchain bug - this compiler never adds
 an inline-asm-clobbered r7 to the function's own push/pop list (the same
-gap already parked for `sub_8010674`'s `success` local, game_loop23.c,
+gap already parked for `IsCrateInsideRect`'s `success` local, game_loop23.c,
 and `DropExtraLife`, game_loop29.c - see `docs/status/game_loop.md`). A
 *plain* (non-pinned) `s32 sentinel = 0xffff;` local dodges the bug and
 gets tracked correctly, but only in isolation - once every other quirk

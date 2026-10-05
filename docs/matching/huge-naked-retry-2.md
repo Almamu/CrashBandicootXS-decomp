@@ -1,8 +1,8 @@
-# Huge NAKED retry 2: `sub_0800D18C`
+# Huge NAKED retry 2: `QueueCratePlayerCollision`
 
 | Function | File | Issue | Before | After |
 |---|---|---|---|---|
-| `sub_0800D18C` | `src/system/game_loop47.c` | #12 | 938 hw, size-exact | 33 hw, size-exact, still NAKED |
+| `QueueCratePlayerCollision` | `src/system/game_loop47.c` | #12 | 938 hw, size-exact | 33 hw, size-exact, still NAKED |
 
 All numbers are for old_agbcc (`game_loop47.o` is on `OLD_AGBCC_OBJS`).
 The function doesn't match yet, so it stays NAKED. The improved draft is
@@ -30,7 +30,7 @@ the ROM one region at a time and kept the exact size, except where noted.
 4. **`for (e = GetCrateBelow(self); e; e = GetCrateBelow(e))`** for the
    neighbour walk. The first call is cross-jumped into the loop's call, so
    the ROM enters the loop with `mov r0, sl`.
-5. **`sub_800FDC8` called in each `dirX` arm** of both slope checks. In
+5. **`FindLineCrossing` called in each `dirX` arm** of both slope checks. In
    the ROM, the stack argument is stored before the join (`str r6,
    [sp]`) and px is passed from its register (`adds r2, r3, #0`), not
    reloaded. That only happens if each arm has its own call and
@@ -101,5 +101,5 @@ with the worktree path updated, plus:
 
 ## Later
 
-The third pass closed the last 33 halfwords; `sub_0800D18C` is real C.
+The third pass closed the last 33 halfwords; `QueueCratePlayerCollision` is real C.
 See [huge-naked-retry-3.md](huge-naked-retry-3.md).

@@ -101,12 +101,12 @@ u8 GetCrateKind(void *selfArg)
     return self->kind;
 }
 
-void sub_8010ABC(void *selfArg, s32 val)
+void SetCrateFallDistance(void *selfArg, s32 val)
 {
     ((struct crate *)selfArg)->fallDistance = val;
 }
 
-s32 sub_8010AC0(void *selfArg)
+s32 GetCrateFallDistance(void *selfArg)
 {
     return ((struct crate *)selfArg)->fallDistance;
 }

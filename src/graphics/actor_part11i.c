@@ -16,7 +16,7 @@ extern s32 _call_via_r2(void *arg0, void *arg1, void *fn);
  * `PoolResetFreeList` inline (see actor_part11.c for the two source
  * details it needs). Kept in its own translation unit (not appended to
  * `actor_part11.c`) since its real ROM address, 0x08009914, sits
- * between `CollidePlayerWithCrates` (`actor_part11d.c`) and `sub_80099F0`
+ * between `CollidePlayerWithCrates` (`actor_part11d.c`) and `CollideCrateGridPartWithObject`
  * (`actor_part12.c`) in ROM order. */
 struct pool_init_link;
 

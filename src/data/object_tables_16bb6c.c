@@ -46,14 +46,14 @@ const u8 gCrateKindUnbreakable[22] = {
     0, 0, 0, 1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0,
 };
 
-/* sub_0800D18C (game_loop47.c): the kind of each of 42 ids. */
+/* QueueCratePlayerCollision (game_loop47.c): the kind of each of 42 ids. */
 const s32 gActionCtrlStateAttackKinds[42] = {
     1, 1, 1, 1, 1, 2, 1, 2, 5, 2, 2, 2, 3, 4,
     4, 4, 1, 1, 1, 1, 1, 1, 5, 1, 5, 5, 2, 1,
     2, 0, 1, 1, 1, 4, 1, 1, 1, 1, 1, 1, 1, 0,
 };
 
-/* sub_0800D18C and sub_800E08C (game_loop47.c): the collision response
+/* QueueCratePlayerCollision and ApplyCrateCollision (game_loop47.c): the collision response
  * code of each pair of kinds, [22][7]. */
 const s32 gCrateHitResponse[22][7] = {
     { 0, 1, 3, 3, 3, 3, 3 },
@@ -80,7 +80,7 @@ const s32 gCrateHitResponse[22][7] = {
     { 1, 1, 1, 4, 4, 4, 4 },
 };
 
-/* sub_0800D18C: a flag per kind. */
+/* QueueCratePlayerCollision: a flag per kind. */
 const u8 gStaticData_0816BF00[8] = {
     0, 0, 1, 0, 0, 0, 0, 0,
 };

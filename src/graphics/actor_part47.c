@@ -6,7 +6,7 @@
  * already tracked in actor_part11.c-actor_part17.c (see
  * docs/matching/issue-9-0x08007634-actor.md). `UpdateGroundSprite`/
  * `sub_800A590` sit between actor_part11.c's raw tail (still-raw
- * CollideGroundSprite/ProbeGroundSpriteTerrain/sub_800A420) and the already-matched
+ * CollideGroundSprite/ProbeGroundSpriteTerrain/ProbeGroundSpriteFloor) and the already-matched
  * actor_part14.c (DrawGroundSprite onward). */
 
 extern void UpdateMovingSprite(void *self);

@@ -13,7 +13,7 @@
 
 extern void *GetCrateBelow(void *selfArg);
 extern void *GetCrateAbove(void *selfArg);
-extern void sub_0800D18C(void *selfArg);
+extern void QueueCratePlayerCollision(void *selfArg);
 
 /* Walks the "get prev" neighbor-list chain (`GetCrateAbove`) starting at
  * `self`, returning the furthest node reachable while every node
@@ -159,11 +159,11 @@ loop:
 /* Unless `self`'s own `+0x4d & 0x7f` state is 1, and `testX`/`testY`
  * (both raw, same Q8 scale as `self`'s own `+0`/`+4` position pair)
  * are both within `0x3fff` of `self`'s position, and `self`'s `+0x4e`
- * byte isn't `5`, fires `sub_0800D18C(self)` - the physics/collision
+ * byte isn't `5`, fires `QueueCratePlayerCollision(self)` - the physics/collision
  * subsystem's own collision-response commit
  * (docs/matching/issue-12-physics-collision.md). Always clears
  * `self`'s own `+0xc` flags bit 3 before returning, unconditionally. */
-s32 sub_80109A4(void *selfArg, u32 unused1, s32 testX, s32 testY)
+s32 CollideCrateWithPlayer(void *selfArg, u32 unused1, s32 testX, s32 testY)
 {
     /* Pinned to r4: the ROM keeps `self` in r4 for the whole function
      * (only the transient mask-check scratch below uses r5/r6/ip), and
@@ -207,7 +207,7 @@ s32 sub_80109A4(void *selfArg, u32 unused1, s32 testX, s32 testY)
                 }
                 if (dy <= limit) {
                     if (self[0x4e] != 5) {
-                        sub_0800D18C(self);
+                        QueueCratePlayerCollision(self);
                     }
                 }
             }

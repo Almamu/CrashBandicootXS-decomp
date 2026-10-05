@@ -47,7 +47,7 @@ struct actor *InitCrate(struct actor *self)
     return self;
 }
 
-/* Bresenham-line-style step algorithm (see `sub_800FDC8`,
+/* Bresenham-line-style step algorithm (see `FindLineCrossing`,
  * game_loop29's neighbor file, for the general 4-octant version this
  * is a fixed single-octant variant of): walks `dy` steps, accumulating
  * `count`; whenever the running error term `err` is non-negative,
@@ -56,7 +56,7 @@ struct actor *InitCrate(struct actor *self)
  * it, the moment `y` reaches `bound`), otherwise just folds by
  * `2*dx`. Returns `-1` if the walk completes all `dy` steps without
  * `y` ever reaching `bound`. */
-s32 sub_8010784(s32 y, s32 count, s32 dx, s32 dy, s32 yStep, s32 bound)
+s32 FindLineCrossingYMajor(s32 y, s32 count, s32 dx, s32 dy, s32 yStep, s32 bound)
 {
     s32 twoDx = dx * 2;
     s32 diff = twoDx - dy * 2;
@@ -81,11 +81,11 @@ s32 sub_8010784(s32 y, s32 count, s32 dx, s32 dy, s32 yStep, s32 bound)
     return -1;
 }
 
-/* Same shape as `sub_8010784`, but stepping `x` (2nd count-position
+/* Same shape as `FindLineCrossingYMajor`, but stepping `x` (2nd count-position
  * pair swapped relative to that function) instead of `y` - walks `dx`
  * steps this time, checking `y >= bound` each time the error term
  * folds. */
-s32 sub_80107C4(s32 y, s32 count, s32 dx, s32 dy, s32 yStep, s32 bound)
+s32 FindLineCrossingXMajor(s32 y, s32 count, s32 dx, s32 dy, s32 yStep, s32 bound)
 {
     s32 twoDy = dy * 2;
     s32 diff = twoDy - dx * 2;

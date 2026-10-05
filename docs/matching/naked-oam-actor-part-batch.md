@@ -93,7 +93,7 @@ real ROM address isn't contiguous with that file's other functions
 - `CollidePartWithObject` moved out of `actor_part7.c` into a new
   `src/graphics/actor_part7b.c` - its real ROM address, `0x08008D80`,
   sits after `actor_part10.c`'s `CullPartList`/`ClearPartList`/
-  `sub_8008D30`, not right after `CollidePartWithPlayer` the way the old
+  `CollidePartsOfClass`, not right after `CollidePartWithPlayer` the way the old
   `#if NON_MATCHING` C draft's position in the file implied (that
   position never mattered before, since the guarded C never actually
   linked into the matching build - only now that it's unconditionally

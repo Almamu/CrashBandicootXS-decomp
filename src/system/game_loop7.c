@@ -16,7 +16,7 @@ extern void *GetCrateBelow(void *obj);
  * puts the `0x7f` mask immediate before the `ldrb`, the gap that kept
  * this NAKED before. The goto-into-loop shape reproduces the ROM's
  * "jump straight to the call with r0 = arg" loop entry. */
-void sub_800E494(void *obj)
+void ClearCrateStackTouched(void *obj)
 {
     u8 *cur;
     void *arg;
@@ -41,7 +41,7 @@ void sub_800E494(void *obj)
     } while (cur != NULL);
 }
 
-/* Same bidirectional-neighbor walk as `sub_800E494` above, but sets
+/* Same bidirectional-neighbor walk as `ClearCrateStackTouched` above, but sets
  * `+0x58` to 1 and, for the forward (`GetCrateAbove`) direction only,
  * also debits `ctx+4` and credits `ctx+0xc` by `ctx+0xc`'s *original*
  * value (`step`, cached once before the loops); the reverse direction
@@ -49,7 +49,7 @@ void sub_800E494(void *obj)
  * hoist the constant into a callee-saved register (r7, then r6) like
  * the ROM; a literal `1` isn't hoisted and the loop-entry call gets
  * cross-jumped away. Built with old_agbcc. */
-void sub_800E4E4(void *obj, void *ctxArg)
+void MarkCrateStackTouched(void *obj, void *ctxArg)
 {
     s32 *ctx = ctxArg;
     s32 step = ctx[3];

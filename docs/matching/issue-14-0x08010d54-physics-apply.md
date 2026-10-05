@@ -8,18 +8,18 @@ write-up for a Phase 1 pass over that chunk: crack the entry point
 `docs/rom_map.md` and `ResolveCollisionCandidates`'s own doc comment - see below),
 match it, and leave a semantic map + address/size list of the other 24
 functions for a future Phase 2 to parallelize, mirroring the approach
-already used for the `UpdateEnemyCtrl` (issue #9/#10) and `sub_0800D18C`
+already used for the `UpdateEnemyCtrl` (issue #9/#10) and `QueueCratePlayerCollision`
 (issue #12 Phase 1) clusters earlier in this session.
 
 ## Ground truth: the caller side
 
 `docs/rom_map.md` (around its "Confirmed: a shared physics/collision
-subsystem" section) already read `sub_0800D18C`'s own tail (matched as
+subsystem" section) already read `QueueCratePlayerCollision`'s own tail (matched as
 NAKED transcription in `src/system/game_loop47.c`, see
 [docs/matching/issue-12-physics-collision.md](issue-12-physics-collision.md))
 and confirmed it hands off to `AddCollisionCandidate` with "~8 packed arguments"
 as "the actual apply/commit step" - the very last call
-`sub_0800D18C`'s own three-jump-table dispatch makes before returning.
+`QueueCratePlayerCollision`'s own three-jump-table dispatch makes before returning.
 `ResolveCollisionCandidates` (matched earlier this session as a NAKED transcription in
 `src/system/game_loop28.c`, GitHub issue #14) went further: its own doc
 comment already calls `AddCollisionCandidate` its **"mirror-image"** function -
@@ -32,11 +32,11 @@ detail:
 > tag at `+0xc`, three more fields at `+0x10`/`+0x14`/`+0x18`/`+0x1c`,
 > two flag bytes at `+0x20`/`+0x21`)
 
-and `game_loop28.c`'s own extern declaration for `sub_800E08C`
+and `game_loop28.c`'s own extern declaration for `ApplyCrateCollision`
 (`src/system/game_loop27.c`) already names every one of those fields:
 
 ```c
-extern void sub_800E08C(void *neighbor, s32 kind, void *field10, void *field14,
+extern void ApplyCrateCollision(void *neighbor, s32 kind, void *field10, void *field14,
                          s32 field18, s32 field4, s32 field8, s32 field1c,
                          u8 field20, u8 field21, u8 extra);
 ```
@@ -90,7 +90,7 @@ for-instruction.
 
 ### Caller-side argument confirmation
 
-Every argument's meaning is confirmed against `sub_0800D18C`'s own
+Every argument's meaning is confirmed against `QueueCratePlayerCollision`'s own
 final call site (`game_loop47.c`, the `bl AddCollisionCandidate` right before that
 function's epilogue):
 
@@ -103,11 +103,11 @@ function's epilogue):
   embedded in the *front* of that same larger per-entity record, past
   `struct actor`'s own documented 0x1c bytes.
 - `neighbor` = the entity whose collision is being committed (`self`
-  from `sub_0800D18C`'s own perspective, held in `r8` at the call site).
-- `kind` = `sub_0800D18C`'s own adjusted dispatch id (`[sp,#0x78]` at
+  from `QueueCratePlayerCollision`'s own perspective, held in `r8` at the call site).
+- `kind` = `QueueCratePlayerCollision`'s own adjusted dispatch id (`[sp,#0x78]` at
   the call site).
 - The remaining seven fields are packed position/rect values
-  `sub_0800D18C` accumulated across its own three jump tables.
+  `QueueCratePlayerCollision` accumulated across its own three jump tables.
 
 ### Independent confirmation: `DestroyCollisionQueue`/`ResetCollisionQueue`
 
@@ -129,7 +129,7 @@ the codebase, and both operate on this exact same `self+0x108` queue on
 
 This confirms the `collision_queue` struct is generic per-entity
 infrastructure (every entity has its own queue at `self+0x108`), not
-player-specific - the player is just the one instance `sub_0800D18C`'s
+player-specific - the player is just the one instance `QueueCratePlayerCollision`'s
 one call site happens to target. `AddCollisionCandidate`/`DestroyCollisionQueue`/
 `ResetCollisionQueue` read as a three-function accessor family for the same
 struct: a fixed-argument append (`AddCollisionCandidate`), a mode-parameterized
@@ -248,7 +248,7 @@ actually read, rather than guessing from two data points.
 - `docs/matching/issue-12-physics-collision.md` /
   `docs/matching/issue-14-0x08010a0c-graphics.md` - the calling
   convention and struct fields this issue's work depended on.
-- `docs/rom_map.md` - the read-only reconnaissance (`sub_0800D18C`'s
+- `docs/rom_map.md` - the read-only reconnaissance (`QueueCratePlayerCollision`'s
   own hand-off to `AddCollisionCandidate`, and the `PickUpExtraLife`/`UpdateExtraLife`/
   `PickUpWumpa`/`UpdateWumpa` notes used in the Phase 2 table above).
 
@@ -321,7 +321,7 @@ object (distinct from `struct actor`'s own 0x1c bytes and from
 | `SetExtraLifePos` | 20B | Seeds `self`/`self+4` (Q8 x/y) from raw `x`/`y` arguments (`<<8`), mirrors both into `self+0x4c`/`self+0x50` (the orbit anchor). |
 | `SetExtraLifeHop` | 16B | Sets orbit mode (`self+0x4a`), resets orbit phase (`self+0x4b`) to 0. |
 | `sub_8011388` | 8B | Unexamined byte setter, `self+0x49` - address-adjacent to the mode/phase pair but not read by anything else in this group. |
-| `CheckWumpaPickup` | 184B | Per-frame player-proximity/hit-resolve step: gated by the same orbit-mode/phase fields plus flags bits 2/3 (`self+0xc`), AABB-tests `self` against the player (`gPlayer`) - primary AABB (`sub_8007C30`) when the player's own `+0xa == 0x13`, secondary AABB (`GetSpriteHitbox`) otherwise - and on overlap sets flags bit 3 and tail-calls the despawn picker `PickUpWumpa` (Phase 2's neighboring group, not read this pass - only extern'd) with a mode that differs per path, playing a hit SFX only on the primary-AABB path. |
+| `CheckWumpaPickup` | 184B | Per-frame player-proximity/hit-resolve step: gated by the same orbit-mode/phase fields plus flags bits 2/3 (`self+0xc`), AABB-tests `self` against the player (`gPlayer`) - primary AABB (`GetSpriteAttackBox`) when the player's own `+0xa == 0x13`, secondary AABB (`GetSpriteHitbox`) otherwise - and on overlap sets flags bit 3 and tail-calls the despawn picker `PickUpWumpa` (Phase 2's neighboring group, not read this pass - only extern'd) with a mode that differs per path, playing a hit SFX only on the primary-AABB path. |
 
 All matched as real C except `UpdateExtraLifeHop`, closed as a NAKED
 transcription: a plain-C reconstruction reproduces the ROM's exact
@@ -381,7 +381,7 @@ New object `src/system/game_loop52.o` inserted between the two in
 family, not the shared physics/collision-queue infrastructure
 `AddCollisionCandidate`/`DestroyCollisionQueue`/`ResetCollisionQueue` operate on - unlike those
 three, nothing here touches the `self+0x108` queue or is called from
-the `sub_0800D18C`/`sub_800E08C` dispatch chain.
+the `QueueCratePlayerCollision`/`ApplyCrateCollision` dispatch chain.
 
 ### Cross-references (this update)
 
@@ -433,7 +433,7 @@ coincide").
   `CollectWumpa(gLevelState)` (a scoring/counter candidate per
   `docs/rom_map.md`), set `self->0xc` bit 0, and - unless `self->8 ==
   0xffff` - set `self->8`'s bit in the `gEntityFlags+0x108`
-  collision bitmap (the same inline idiom `sub_80072D8`/`DropExtraLife`
+  collision bitmap (the same inline idiom `MarkEntityGone`/`DropExtraLife`
   use). Mode 3 increments `self->0x49` each frame, and every 11th frame
   resets it and calls `DropWumpa(gEntitySpawner, self->x>>8,
   self->y>>8, 0, 1, 0)` (already-matched NAKED part-object spawner,

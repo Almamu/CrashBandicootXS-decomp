@@ -28,7 +28,7 @@ extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
 extern u8 GetDpadDirection(void *pad);
 extern u8 CheckActionCtrlLeftGround(struct act *self);
 extern void UpdatePlayerFacing(struct act *self);
-extern void sub_800B334(struct act_part *part);
+extern void ClearPlayerSpeedY(struct act_part *part);
 extern void StartActionCtrlSpin(struct act *self);
 extern void StartActionCtrlRun(struct act *self);
 extern void SetActionCtrlModeAnim(struct act *self, s32 a, s32 b, s32 c, s32 d);
@@ -209,7 +209,7 @@ void ActionCtrlStateRun(struct act *self)
 
 
 /* Clears part+0x0D bits 0/1, then: on contact bit 2 plays animations
- * 0x1A/0x15, holds the part on frame 2 and hands it to sub_800B334; on the
+ * 0x1A/0x15, holds the part on frame 2 and hands it to ClearPlayerSpeedY; on the
  * alt edge (with +0x26 clear) plays 0xE/0x10 and clears the charge state
  * and the player's +0x92; once the part's animation is done, picks the
  * next attack animation from the held fire/shoulder bits (9/6 or 7/0xC)
@@ -237,7 +237,7 @@ void ActionCtrlStateJump(struct act *self)
         if (frame >= count)
             frame = count - 1;
         part->frame = frame;
-        sub_800B334(part);
+        ClearPlayerSpeedY(part);
         ActSetContact(self->part, 0);
         return;
     }

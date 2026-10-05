@@ -9,9 +9,9 @@
 
 /* One queued "commit this collision" candidate - the record
  * `AddCollisionCandidate` appends here and `ResolveCollisionCandidates` (game_loop28.c, already
- * matched) later scans/resolves via `sub_800E08C` (game_loop27.c's own
+ * matched) later scans/resolves via `ApplyCrateCollision` (game_loop27.c's own
  * extern declaration for it). Field names/types mirror
- * `sub_800E08C`'s own already-established extern signature exactly,
+ * `ApplyCrateCollision`'s own already-established extern signature exactly,
  * confirmed field-for-field against this function's own stores - both
  * functions operate on the same record shape (`ResolveCollisionCandidates`'s doc
  * comment already calls `AddCollisionCandidate` its "mirror image" for exactly
@@ -44,7 +44,7 @@ COMPILE_TIME_ASSERT(sizeof(struct collision_candidate) == 0x24);
  * record at `gPlayer + 0x108` that `sub_8010A0C`-`sub_8010B68`
  * (game_loop27.c) and `ResolveCollisionCandidates` (game_loop28.c) already operate on
  * - confirmed by this function's own caller
- * (`sub_0800D18C`/game_loop47.c) passing exactly that address as `self`.
+ * (`QueueCratePlayerCollision`/game_loop47.c) passing exactly that address as `self`.
  * `self+0x44`-`self+0x58` (per game_loop27.c) are further fields of the
  * *same* record past this queue - true capacity of `candidates` beyond
  * one confirmed slot isn't established here (see this file's own issue
@@ -59,17 +59,17 @@ struct collision_queue {
 };
 
 /* Physics/collision subsystem's **apply/commit step** - the final call
- * `sub_0800D18C` (game_loop47.c) makes at the end of its own per-edge
+ * `QueueCratePlayerCollision` (game_loop47.c) makes at the end of its own per-edge
  * dispatch, per docs/rom_map.md's already-confirmed read: "hands off to
  * `AddCollisionCandidate` with ~8 packed arguments... the actual apply/commit
  * step". Appends one `collision_candidate` record to the player's queue
  * (`self`) at `self->candidates[self->count]`, then increments
  * `self->count`. Every field's caller-side value is confirmed against
- * `sub_0800D18C`'s own NAKED call site (the final `bl AddCollisionCandidate` in
+ * `QueueCratePlayerCollision`'s own NAKED call site (the final `bl AddCollisionCandidate` in
  * game_loop47.c): `neighbor` is the entity whose collision is being
- * committed (`self` from `sub_0800D18C`'s own perspective), `kind` is
+ * committed (`self` from `QueueCratePlayerCollision`'s own perspective), `kind` is
  * its adjusted dispatch id, and the rest are packed position/rect
- * fields already accumulated across `sub_0800D18C`'s three jump tables.
+ * fields already accumulated across `QueueCratePlayerCollision`'s three jump tables.
  *
  * The two trailing byte arguments are read straight out of their stack
  * words with `ldrb` (both addresses formed first, then both loads), which

@@ -9,7 +9,7 @@
  * reason issue #12 recategorized the previous span: this whole
  * neighborhood (~0x0800D000-0x08010D54) is `docs/rom_map.md`'s
  * confirmed shared physics/collision subsystem, not per-entity
- * behavior. `UpdateCrateFall`/`sub_800FDC8` immediately before this
+ * behavior. `UpdateCrateFall`/`FindLineCrossing` immediately before this
  * function are left untouched raw - see the write-up doc. */
 
 extern void *gPlayer;

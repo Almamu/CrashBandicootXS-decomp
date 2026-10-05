@@ -72,7 +72,7 @@ Thumb pointer scan): the six byte accessors and `sub_8017A20`-
   constant before the child pointer). Inline helpers `SetAnimA`/`SetAnimB`
   /`SetChildSpeed` reproduce this - the argument is evaluated before the
   inlined body runs. The same idea as `tile_slot_pool.c`'s (#43) helpers.
-- **The "mark actor gone" sequence** (`sub_80072D8`'s, inlined in
+- **The "mark actor gone" sequence** (`MarkEntityGone`'s, inlined in
   `sub_80178EC` and `UpdateInputCtrl`). Earlier matches of this sequence
   (`actor_part27c.c`, `actor_part39.c`, `actor_part124.c`, ...) needed an
   inline-asm `add`/`asr` pair. Here it's plain C: the ROM's copy +
@@ -83,7 +83,7 @@ Thumb pointer scan): the six byte accessors and `sub_8017A20`-
   `volatile` access (the ROM reloads it), and register pins reproduce the
   ROM's allocation, including callee-saved r4/r5 in what is otherwise a
   leaf path. The `flags |= 1` update uses the same pinned-statement form
-  as `sub_80072D8` (constant first).
+  as `MarkEntityGone` (constant first).
 - **`sub_80179D4`'s range check** (`arg2` in 1..4) keeps its lower bound
   in a local: with a literal, gcc folds `>= 1` into `> 0` and merges the
   two tests into one unsigned range check; the ROM has `cmp #1 / blt`,

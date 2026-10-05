@@ -54,7 +54,7 @@ r1/r2/r3/r4" thunks), like issue #21's `input_ctrl`.
     `GetSpriteHitbox`, overlap via `AabbOverlaps`, then a classification into
     push-left/right (1/2), land-on-top (8) or hit-from-below (4) using the
     player's anim-record collision box (`anim_rec` +4..+9) and the
-    `sub_800FDC8` edge probe; it then moves the player (`SetEntityPos`),
+    `FindLineCrossing` edge probe; it then moves the player (`SetEntityPos`),
     sets `carried` (+0xAC) / `+0x68 = 8` when landing, and fires the
     player's method +0x68 (`_call_via_r4`) with event 0x0C/0x0F/0x10/0x11
     depending on the object type (the 3/4 variants gated on
@@ -158,7 +158,7 @@ function for the matching build.
 
 `sub_801AB98` is now real C under old_agbcc (`actor_part_1ab98.o` joined
 `OLD_AGBCC_OBJS`). An r8 hard-register hold up to the first overlap test
-gives `result` r8 and `self` sb; both `sub_800FDC8` calls pass a
+gives `result` r8 and `self` sb; both `FindLineCrossing` calls pass a
 reassigned `px`; the player position goes through a `PosPtr` inline
 instead of a `pp` local; the vtable call is an inline through the
 method pointer. See [last5-naked-retry.md](last5-naked-retry.md).

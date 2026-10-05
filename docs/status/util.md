@@ -20,7 +20,7 @@ helpers.
 - `src/util/rand_util.c`: `srand`, `RandRange`, `rand`
 - `src/util/line_util.c`: `InitBresenhamLine`
 - `src/util/time_util.c`: `FormatCentiseconds`
-- `src/util/word_util.c`: `GetWordLength`, `sub_8001214`
+- `src/util/word_util.c`: `GetWordLength`, `DrawWrappedTextInBox`
 - `src/util/line_util2.c`: `StepBresenhamLine`
 - `src/util/math_div_util.c` (new file, GitHub issue #70, ROM
   `0x0803AE48`-`0x0803AE4C`): `__div0` (shared divide-by-zero

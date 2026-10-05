@@ -92,7 +92,7 @@ extern void ResetSpriteFrameTimer(struct slot_part *part);
 extern void ResetSpriteFrameIndex(struct slot_part *part);
 extern void SetSpriteAnimDone(struct slot_part *part, s32 arg);
 extern void LoadPaletteSlot(void *cache, s32 palette, u8 record);
-extern void sub_8010804(void);
+extern void ConvertCratesForTimeTrial(void);
 extern s32 _call_via_r1(void *self, void *fn);
 extern void PickUpWumpa(struct actor *self, s32 arg1);
 
@@ -107,7 +107,7 @@ static inline void SetPartTag(struct slot_part *part, s32 tag)
 
 /* Level restart: resets the level state's +0x8c/+0x90 fields, then
  * (unless the level object is already in state 3) retags and restarts
- * both slot parts, reloads slot B's tiles, runs sub_8010804, and
+ * both slot parts, reloads slot B's tiles, runs ConvertCratesForTimeTrial, and
  * re-registers every entity in gUnknown_030012EC whose +0x48 method
  * returns 2: those whose +0x28 method fails are despawned, the rest are
  * flagged seen and marked in the collision map's seen bitmap. */
@@ -144,7 +144,7 @@ void StartTimeTrial(struct level_state *self)
         LoadPaletteSlot(gPaletteCache, self->gemPlatform->frameNibble,
                     self->gemPlatform->anim->records[self->gemPlatform->tag].tileRecord);
     }
-    sub_8010804();
+    ConvertCratesForTimeTrial();
 
     i = 0;
     if (i < gUnknown_030012EC->count)

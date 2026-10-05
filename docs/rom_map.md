@@ -704,7 +704,7 @@ values (range checks against constants like `0x98`/`0x3F`/`0x69`, then
 `>>0xC` scaling) against a `gHovercraftBox`-family value - reads
 as a **camera-follow or scroll-velocity smoothing computation**
 (position easing), structurally similar in *purpose* to the
-`CollidePartWithPlayer`/`sub_80096C0` camera-clamp candidate found independently
+`CollidePartWithPlayer`/`CollideCrateGridPartWithPlayer` camera-clamp candidate found independently
 in `game_loop`'s core this same round, but working against a completely
 different global struct - two separate camera-adjacent computations,
 not the same one found twice.
@@ -807,7 +807,7 @@ start** - extends that table's known range slightly earlier than
 previously catalogued. It opens by accumulating two pairs of globals
 (`gAirshipX += gAirshipVelX`,
 `gAirshipY += gAirshipVelY`) - a **third position-
-accumulation instance** this session, after `CollidePartWithPlayer`/`sub_80096C0`
+accumulation instance** this session, after `CollidePartWithPlayer`/`CollideCrateGridPartWithPlayer`
 in `game_loop` and `sub_8032C0C` in `actor`. These addresses sit only
 ~0xAC bytes before the `gHovercraftX`-`030015EC` family
 `sub_8032C0C` uses - very plausibly the **same larger struct at
@@ -1575,7 +1575,7 @@ bucket to start narrowing it down. Both point the same direction:
   table** (`self+0x74` as the state selector, cases 0-17) into
   per-state handler blocks that read a second object pointer
   (`self+0x70`, an "owner"/context reference), call state-transition
-  helpers (`sub_800C8AC`/`sub_800C8BC`/`SetEnemyAnimMode`), and set a
+  helpers (`SetEnemyMotionY`/`SetEnemyMotionX`/`SetEnemyAnimMode`), and set a
   fixed-point velocity-shaped constant (`0xFFFF9C00`, i.e. `-100` in the
   same Q8.8 format - a negative/upward value, the shape of an initial
   jump impulse). An 18-state state machine with velocity assignment is
@@ -1734,7 +1734,7 @@ Read one of the twin-sized entries, **`ActionCtrlStateSlide`** (716 B, tied with
 `ActionCtrlStateLeftGround` for size): checks individual bits of `gKeys`'s
 *lower* half this time (a different half of the same flags word
 `LevelSelectLoop`'s dispatch reads from the upper half) against specific
-action codes (`0xB`, `0x10`) via `sub_800AAEC`, and on a match plays a
+action codes (`0xB`, `0x10`) via `PlayerHasRoomForAnim`, and on a match plays a
 distinct `PlaySfx` id, clears flag bits, and hands off to a further
 per-action handler (`StartActionCtrlHighJump`/`StartActionCtrlSpin`). Reads as **player
 input/action handling** - which specific button or trigger maps to
@@ -1770,9 +1770,9 @@ subsection's claim by hand:
 
 Plus several of the core's largest individual functions read end-to-end
 regardless of which bucket they fell in (`sub_801AB98`, `UpdateEnemyCtrl`,
-`ActionCtrlStateAirborne`, `sub_0800D18C`, `UpdatePlayerCtrl`, `ActionCtrlHandleEvent`,
+`ActionCtrlStateAirborne`, `QueueCratePlayerCollision`, `UpdatePlayerCtrl`, `ActionCtrlHandleEvent`,
 `CreateCrate`, `sub_8017AB0`, `InitLevelSelect`, `DrawAffineSpritePieces`,
-`sub_800E08C`, `LoadLevelSelectRecord`, `UpdatePlatformMover`, and - this round -
+`ApplyCrateCollision`, `LoadLevelSelectRecord`, `UpdatePlatformMover`, and - this round -
 `BreakCrate`, `UpdateSlotCrate`, `DrawPlayer`, `UpdateActionCtrl`,
 `sub_801A2A8`, `CollidePlayer`, `sub_80159F8`, `sub_8016DDC`; see
 below). The remaining ~9.4 KB has no distinguishing signature found
@@ -1815,7 +1815,7 @@ family, but at a new `+0x18` convention rather than the previously-seen
 `+0xC`); **`sub_8017AB0`** (1052 B, 3-state dispatch gated by
 `gPlayer[0x104]` and a bit test); **`DrawAffineSpritePieces`** (1044 B,
 clamps a halfword at `self+0x3c`, min `0x40` - likely velocity/timer);
-**`sub_800E08C`** (1032 B, takes 3 stack-passed byte args, extends
+**`ApplyCrateCollision`** (1032 B, takes 3 stack-passed byte args, extends
 `gPlayer`'s known layout with new `+0x88`/`+0x24` fields);
 **`LoadLevelSelectRecord`** (868 B, clean priority classifier - calls five
 sibling predicates `sub_802336C`/`LevelHasRedGem`/`LevelHasGreenGem`/
@@ -2110,7 +2110,7 @@ further), `sub_80194E0` reuses the already-confirmed record 53.
 dispenser with idle bounce animation, tagging a child object from
 `gLevelSelectCursorAnims` - not previously catalogued as its own
 behavior, though built entirely from known toolkit pieces (OAM trio,
-per-level table lookup). **`UpdateEnemyPatrol`**/**`sub_800C314`** are a
+per-level table lookup). **`UpdateEnemyPatrol`**/**`UpdateEnemyFlipCycle`** are a
 5th+ instance of the recurring `self+0x68`/`self+0x74` generic
 state-machine selector pattern already noted across unrelated object
 types. **`PickUpWumpa`** is a randomized-position spawn picker, same
@@ -2127,7 +2127,7 @@ doc's prose) found **587 undocumented functions, 29,932 bytes**
 outside the physics/collision subsystem's range - larger than the
 prior "65/18,852 B" figure, likely reflecting a different coverage
 threshold or genuine growth in what counts as "documented" as this
-section's own prose has grown. Read 9 more: **`sub_800A420`** (264 B)
+section's own prose has grown. Read 9 more: **`ProbeGroundSpriteFloor`** (264 B)
 finishes a previously-flagged partial read, confirming it's a
 collision/placement check against the text-box singleton exactly as
 guessed. The rest all fit already-documented conventions -
@@ -2157,7 +2157,7 @@ to `overlay_ui` elsewhere - a caller-side confirmation of that link.
 family (the latter with a new near-header offset, `+0x30`).
 **`sub_801A64C`** is a 6th+ confirmed site of the directional-target
 field convention, sourcing from a new table `gStaticData_0816C3B8`.
-**`sub_800BFA8`** is a further instance of the `self+0x68`/`0x74`
+**`UpdateEnemyShooter`** is a further instance of the `self+0x68`/`0x74`
 generic state-machine selector pattern. **`sub_800CF70`**, sitting
 144 bytes before the physics/collision subsystem's stated
 `0x0800D000` start, calls the same linked-list walkers that subsystem
@@ -2168,11 +2168,11 @@ currently stated.
 
 **The "14 functions >=200 B, truly undocumented" set in this zone is
 now fully closed** - the remaining 7 all fit already-documented
-conventions, no new subsystem. `sub_800C5D4`/`UpdateEnemyHop` extend the
+conventions, no new subsystem. `UpdateEnemyTriggerBox`/`UpdateEnemyHop` extend the
 `self+0x68`-keyed generic state-machine family (now 7+ confirmed
-sites); `sub_800C5D4` notably ties that family directly to the
-directional-target field octet for the first time. `sub_800CBF4`
-extends the `gEntityFlags` bitset convention. `sub_8007C30`
+sites); `UpdateEnemyTriggerBox` notably ties that family directly to the
+directional-target field octet for the first time. `UpdateEffectCtrl`
+extends the `gEntityFlags` bitset convention. `GetSpriteAttackBox`
 confirms `SetAabbPos`/`SetAabbSize` as the ROM's general-purpose
 AABB-construction primitive, now reused across 3+ sites (also seen in
 `sub_802DD9C`'s overlap test). `sub_8016C94` is pure input-dispatch
@@ -2181,7 +2181,7 @@ with a new record index (34) and a new 93-entry-family address.
 `MovePlayerWithPlatform` is a camera-target-position setter extending
 `gPlayer`'s known field layout. **Two new data points worth
 flagging**: a recurring, still-unexplained global **`gRoomFrameCount`**
-(3 independent confirmed sites - `sub_8016C94`, `sub_800BFA8`,
+(3 independent confirmed sites - `sub_8016C94`, `UpdateEnemyShooter`,
 `MovePlayerWithPlatform`) and the confirmed AABB-builder primitive reused widely.
 
 ### Cross-checked the `UpdateGameFrame`-`MainLoop` cluster: same signature, not an island
@@ -2809,13 +2809,13 @@ text content and layout. The `+0x74`/18-state shape isn't only a
 player-physics pattern, it's a **general-purpose stateful-widget
 convention** reused for dialog boxes too.
 
-A companion function, `sub_800CD00` (436 B), reinforces the "shared
+A companion function, `PlayerAnimWouldTouchCrate` (436 B), reinforces the "shared
 convention, not shared struct" reading from above: it checks `self+0x4E`
 (the exact field `gCrateHitResponse`, the physics subsystem's 22-row
 table, indexes by) and, when not early-exiting, indexes its *own*
 `self+0x20` sub-table using **stride 28** - matching
 `gCrateHitResponse`'s stride exactly, but clearly a different table
-instance. Its only caller is `sub_800AAEC` - the same input-action-check
+instance. Its only caller is `PlayerHasRoomForAnim` - the same input-action-check
 function the 42-slot action dispatch table's own entries
 (`ActionCtrlStateSlide` etc.) call. Three previously-separate threads
 (`menu_ui`, the physics subsystem's per-state table shape, and the
@@ -2839,9 +2839,9 @@ functions (down to 205 unread, 21.1 KB at that point) - none
 vtable-dispatched, but two land as concrete cross-references and one is
 a genuinely promising new lead:
 
-- **`CollidePartWithPlayer`/`sub_80096C0`** (424 B each) are **structural twins**:
+- **`CollidePartWithPlayer`/`CollideCrateGridPartWithPlayer`** (424 B each) are **structural twins**:
   both open by checking `gLevelState+0x78==3` (the same "mode 3"
-  branch `sub_0800D18C` also checks), then compute a clamped offset
+  branch `QueueCratePlayerCollision` also checks), then compute a clamped offset
   written directly into `gPlayer`'s own position field via a
   threshold compare - flagged here as the strongest camera-follow/clamp
   candidate found this session. **Read in full by a follow-up fork -
@@ -2850,7 +2850,7 @@ a genuinely promising new lead:
   specific branch (mode `!=3` *and* a bit on `self+0xD`) - a genuine
   camera-position step, but the step size is *computed* each call from
   two helper functions, not a fixed constant. The mode-3 branch is
-  different code entirely (calls `sub_8009FF4`, reads a *byte* field,
+  different code entirely (calls `ClassifySpriteContact`, reads a *byte* field,
   no position write). And the rest of the function, when that bit is
   clear, is an **event/message dispatcher** - multiple branches invoke
   the `_call_via_r4` trampoline with small message/direction codes, one
@@ -2860,7 +2860,7 @@ a genuinely promising new lead:
   toward this object" is only one of several gated behaviors, not its
   sole purpose - the original label was directionally right but
   incomplete.
-- **`sub_8009528`** (408 B): iterates a spatial bucket-style array
+- **`CollideCrateGrid`** (408 B): iterates a spatial bucket-style array
   within a viewport-sized box (`0xF0`×`0xA0` in Q8.8 - screen
   dimensions) via the `_call_via_r2` trampoline. Reads as a **broad-phase
   visibility/proximity query** over nearby objects.
@@ -2967,7 +2967,7 @@ implementations.
 on a bucketed structure - indexes a bucket-head array, walks the chain
 removing one item, pushes the freed node onto a free-list. This is
 almost certainly the **same spatial-bucket structure**
-`sub_8009528`'s broad-phase visibility/proximity query reads from -
+`CollideCrateGrid`'s broad-phase visibility/proximity query reads from -
 confirms a real insert/remove/query system, not just a one-way query.
 Called from `UpdateCrateList` (the function flagged as a cross-zone link to
 `UpdateGameFrame`-`MainLoop` several rounds ago, still not itself fully
@@ -3015,13 +3015,13 @@ by an object's own state byte (`self+0x4E`) times **28**, plus a small
 secondary frame/counter index times 4 - `616 / 28 = 22` exactly, so
 **22 rows of up to 7 four-byte values each**, a clean, different shape
 from the 36-byte-stride table above (confirming again: many distinct
-tables, not one uniform array). Found it inside **`sub_0800D18C`**
+tables, not one uniform array). Found it inside **`QueueCratePlayerCollision`**
 (1960 B - one of the largest functions in the entire `game_loop` zone,
 its opening ties together `gPlayer` (viewport),
 `gLevelState+0x78` (a mode field on the central game-state struct,
 special-cased for value `3`), and *this* table in one place.
 
-**Read the rest of it.** `sub_0800D18C` is the **collision-response
+**Read the rest of it.** `QueueCratePlayerCollision` is the **collision-response
 commit** that presumably consumes `sub_801AB98`'s edge codes (`1`/`2`/
 `4`/`8`, left/right/top/bottom): it walks a linked list of nearby
 objects (`GetCrateBelow`/`GetCrateAbove`, "get next"-style calls) accumulating
@@ -3039,8 +3039,8 @@ position/rect (again via `gCrateHitResponse`) and handing everything
 off to **`AddCollisionCandidate`** with ~8 packed arguments - the actual
 apply/commit step.
 
-**One caller only** (`sub_80109A4`, itself unread) - and the 27 distinct
-functions `sub_0800D18C` itself calls almost all fall in one tight
+**One caller only** (`CollideCrateWithPlayer`, itself unread) - and the 27 distinct
+functions `QueueCratePlayerCollision` itself calls almost all fall in one tight
 address neighborhood, roughly `0x0800D000`-`0x08010D54`, alongside it. That's
 a strong hint this whole neighborhood (not sampled elsewhere in this
 document) is a **cohesive physics/collision subsystem** in its own
@@ -3054,7 +3054,7 @@ Followed up immediately. The neighborhood is real: **45 of its 75
 functions (14.9 KB) form one single connected component** - the same
 "nearly everything is one dominant component" signature every other
 confirmed subsystem in this document has shown. Traced its entry point
-up the call chain (`sub_0800D18C` ← `sub_80109A4` ← `CollidePlayerWithCrates` ←
+up the call chain (`QueueCratePlayerCollision` ← `CollideCrateWithPlayer` ← `CollidePlayerWithCrates` ←
 `CollidePlayerWithObjects`) and checked whether the top of that chain is itself
 vtable-dispatched, the same way `UpdateEnemyCtrl`/`CheckPlatformContact` were.
 **It is** - `CollidePlayerWithObjects` sits at `gPlayerVtable+0x74`, the last
@@ -3093,7 +3093,7 @@ ROM, several of which turned out to be dispatch tables themselves.
 
 ## Correction: `_call_via_r0`-`_call_via_r7` are a register-indirect-call trampoline table, not real functions
 
-Reading further into `sub_0800D18C` past the table above hit something
+Reading further into `QueueCratePlayerCollision` past the table above hit something
 that changes how several earlier findings in this document need to be
 read. `_call_via_r3` - the function this document has been calling "the
 matched text-drawing helper" since the `hud` investigation, cited as
@@ -4072,19 +4072,19 @@ and `self+0x4d&0x7f==1` exclusion gate, operating on the `GetCrateBelow`
 distinct hybrid-AABB overlap test (player's hitbox quad positioned at
 `self`'s location, optionally widened via an unconfirmed player state
 byte `gPlayer+0x90`). Both are called only from
-`sub_0800D18C` and are now NAKED-transcribed, byte-exact matched
+`QueueCratePlayerCollision` and are now NAKED-transcribed, byte-exact matched
 (confirmed via a full clean `make compare`), and recategorized
 `graphics` -> `game_loop` to match their caller - the same
 recategorization issue #12 already applied to the neighboring
-`sub_800D040`. This closes the last raw gap between `sub_800CD00`
-(issue #9/#10) and `sub_800D040` (issue #12).
+`BreakCrateTouchedByPlayer`. This closes the last raw gap between `PlayerAnimWouldTouchCrate`
+(issue #9/#10) and `BreakCrateTouchedByPlayer` (issue #12).
 
-## Follow-up: `ProbeGroundSpriteTerrain`'s `self+0x74` note confirmed and completed, both it and `sub_800A420` closed
+## Follow-up: `ProbeGroundSpriteTerrain`'s `self+0x74` note confirmed and completed, both it and `ProbeGroundSpriteFloor` closed
 
 A dedicated deep-investigation pass
 (`docs/matching/issue-9-0x0800a178-graphics.md`) read the real
 disassembly for the `ProbeGroundSpriteTerrain` note above (line ~2624) and its
-sibling `sub_800A420`. The `self+0x74` zeroing observation is confirmed
+sibling `ProbeGroundSpriteFloor`. The `self+0x74` zeroing observation is confirmed
 exactly as described - unconditional once the function's two leading
 gate checks pass - and the "presumably recomputed" half is now fully
 traced: `self+0x74` is a per-call bitmask of which movement
@@ -4098,12 +4098,12 @@ at all - it's the `self->table[0x38]/[0x3c]` gate, whose truthiness
 just decides whether the rest of the function runs (its own callee's
 purpose beyond that boolean wasn't traced further).
 
-Both `ProbeGroundSpriteTerrain` and its sibling `sub_800A420` (a single Y-axis
+Both `ProbeGroundSpriteTerrain` and its sibling `ProbeGroundSpriteFloor` (a single Y-axis
 "floor" probe `ProbeGroundSpriteTerrain` itself calls, built on the newly-read
 `sub_8026BF8`) are now NAKED-transcribed, byte-exact matched (confirmed
 via a full clean `make compare`) - the same `r7`/`r8`/`sb` cross-block
 register-reuse resistance already established four times over in this
-immediate ROM neighborhood (`sub_8009BE0`, `sub_800CD00`,
+immediate ROM neighborhood (`sub_8009BE0`, `PlayerAnimWouldTouchCrate`,
 `sub_800CEAC`, `sub_800CF70`), confirmed directly rather than assumed
 via one isolated-compile attempt. `CollideGroundSprite`, the two functions'
 only caller, stays raw - its own gate logic depends on the also-still-
@@ -4119,8 +4119,8 @@ persistent per-object cumulative collision-axis mask (OR'd from
 per-call scratch mask documented above. `CollideGroundSprite` cross-checks its
 own Y-axis bit against a second, independent `sub_8009BE0` step-probe
 before trusting it. This closes the entire former `CollideGroundSprite`-
-`sub_800A420` raw/parked span at the real-C-or-NAKED level (only
-`CollideGroundSprite` itself is real C; `ProbeGroundSpriteTerrain`/`sub_800A420` remain
+`ProbeGroundSpriteFloor` raw/parked span at the real-C-or-NAKED level (only
+`CollideGroundSprite` itself is real C; `ProbeGroundSpriteTerrain`/`ProbeGroundSpriteFloor` remain
 NAKED, per the gcc-2.9-resistant register shape already documented
 above) - `asm/code_3_2_11.s` is retired entirely.
 

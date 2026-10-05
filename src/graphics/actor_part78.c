@@ -68,7 +68,7 @@ struct a884_method {
  * flag; kind 7 sets `+0x102`; kind 10 sets `+0x103`. Finally, looks up
  * the current keyframe record (`GetSpriteFrame`, already parked in
  * `actor_part5.c`) and picks a `{s16 x, s16 y}` offset table off its
- * `+4` byte's upper nibble - the exact same `sub_80084C4`
+ * `+4` byte's upper nibble - the exact same `GetSpriteFrameAnchor`
  * (`actor_part6.c`) case-to-block mapping (0 -> `info+0x24`, 6 ->
  * `info+0x14`, anything else -> the fixed fallback
  * `gEmptySpritePoint`) - applies it (mirrored by `self+0x28` bit 4)
@@ -83,7 +83,7 @@ struct a884_method {
  * pass); matched in a later pass. Built with old_agbcc (the `movs
  * #0x40`/`movs #8` before their `ldrb`). The methods are gcc 2.x virtual
  * calls through `self+0x18` (`_call_via_r1`/`_call_via_r4`), and the
- * offset-table switch is `sub_80084C4` (actor_part6.c) inlined. The
+ * offset-table switch is `GetSpriteFrameAnchor` (actor_part6.c) inlined. The
  * ROM's "walking" flag offsets (`adds r1, #3`, `subs r2, #3`) are
  * reload's move2add reusing a reload register; they come from r3 holds
  * (no code) that keep reload rotating through r0-r2 only. */

@@ -1,13 +1,13 @@
-# Issues #9/#10: `sub_800AAEC`/`sub_800CD00` (graphics)
+# Issues #9/#10: `PlayerHasRoomForAnim`/`PlayerAnimWouldTouchCrate` (graphics)
 
 Dedicated deep-investigation session against two functions flagged in
 `tools/report_units.py` as parked (`base_object=None`, still raw):
-`sub_800AAEC` (0x0800AAEC, [issue-9-10-0x0800a884-graphics.md](./issue-9-10-0x0800a884-graphics.md)'s
+`PlayerHasRoomForAnim` (0x0800AAEC, [issue-9-10-0x0800a884-graphics.md](./issue-9-10-0x0800a884-graphics.md)'s
 own summary already called this "mechanically clear ... blocked on
-[its callee]") and `sub_800CD00` (0x0800CD00, inside the still-raw
-`UpdateEnemyCtrl` onward span), which `sub_800AAEC` is the only caller of.
+[its callee]") and `PlayerAnimWouldTouchCrate` (0x0800CD00, inside the still-raw
+`UpdateEnemyCtrl` onward span), which `PlayerHasRoomForAnim` is the only caller of.
 `docs/rom_map.md`'s "A companion function" passage (its own reads
-around line 2782) had already worked out `sub_800CD00`'s field-offset
+around line 2782) had already worked out `PlayerAnimWouldTouchCrate`'s field-offset
 shape in a later pass, but that finding was never carried into a
 `docs/matching.md`/`docs/matching/*.md` entry until now - this session
 reconciled that prose against the actual ROM bytes (confirmed correct,
@@ -15,7 +15,7 @@ see below) and closed both functions.
 
 ## Semantics
 
-### `sub_800AAEC(void *self, s32 x)` - `src/graphics/actor_part108.c`
+### `PlayerHasRoomForAnim(void *self, s32 x)` - `src/graphics/actor_part108.c`
 
 The input-action-check function the 42-slot `gActionCtrlStateTable`
 action-dispatch table's own entries (`ActionCtrlStateSlide` etc.) call for
@@ -24,7 +24,7 @@ their action codes `0xB`/`0x10` (`docs/rom_map.md` line 1713).
 1. **Gate**: builds an integer `{x, y}` probe position from `self`'s
    own Q8 `x`/`y` plus the target action `x`'s own `self+0x20`-table
    (a pointer-to-table, indexed by `x` at 28-byte stride - the same
-   "keyframe/hitbox record" convention `game_loop6.c`'s `sub_800D040`
+   "keyframe/hitbox record" convention `game_loop6.c`'s `BreakCrateTouchedByPlayer`
    documents) record's `+6` (s16) vertical offset, added in Q8 space
    before truncating to match the ROM's exact rounding. Passes
    `self+0x28` bit 4 (the mirror-flag bit `actor_part16.c`/
@@ -38,23 +38,23 @@ their action codes `0xB`/`0x10` (`docs/rom_map.md` line 1713).
    `0` immediately.
 2. **Loop**: otherwise walks `gCrateList` (a `struct actor_list
    { s32 count; s32 unused_4; void **items; }`, the exact layout
-   `src/system/game_loop24.c`'s `sub_8010804` already established) -
+   `src/system/game_loop24.c`'s `ConvertCratesForTimeTrial` already established) -
    for each `entry = items[i]`, tests `entry`'s own `+0x18`-table
    `+0x48` trampoline via `_call_via_r1(entry + *(s16*)(table+0x48),
    *(void**)(table+0x48+4))` (matched elsewhere). On state `3`, calls
-   `sub_800CD00(entry, x)`; if that returns `1`, returns `0`
+   `PlayerAnimWouldTouchCrate(entry, x)`; if that returns `1`, returns `0`
    immediately. If the loop runs to completion, returns `1`.
 
-### `sub_800CD00(void *self, s32 x)` - `src/graphics/actor_part109.c`
+### `PlayerAnimWouldTouchCrate(void *self, s32 x)` - `src/graphics/actor_part109.c`
 
-`sub_800AAEC`'s only callee, called once per list entry whose own
+`PlayerHasRoomForAnim`'s only callee, called once per list entry whose own
 `+0x18`-table trampoline reports state `3`.
 
 Early-outs (returns `0`) when `self+0x4e` (a state/type byte) is `5`
 or `0xa`. Otherwise builds **three** AABBs via the shared
 `SetAabbPos`(set-pos)/`SetAabbSize`(set-size) primitive (`struct
 aabb` from `actor_part.c`/`game_loop6.c`), all from the same
-`self+0x20`-table-at-28-byte-stride convention `sub_800AAEC` above
+`self+0x20`-table-at-28-byte-stride convention `PlayerHasRoomForAnim` above
 also uses (confirming `docs/rom_map.md`'s own cross-reference: "the
 exact field `gCrateHitResponse`, the physics subsystem's 22-row
 table, indexes by ... matching `gCrateHitResponse`'s stride
@@ -88,21 +88,21 @@ for the action `x` being tested.
 Read together, this is: "would performing action `x` right now hit
 `self`, given the player isn't already touching it in its current
 pose" - a melee/interaction-trigger gate, consistent with
-`sub_800AAEC`'s own role gating the action-dispatch table's action
+`PlayerHasRoomForAnim`'s own role gating the action-dispatch table's action
 codes `0xB`/`0x10`. The prior `docs/rom_map.md` prose was confirmed
 correct against the raw disassembly in full; nothing needed
 correcting.
 
 ## Matching
 
-### `sub_800AAEC` - PARKED (`NON_MATCHING`), not yet byte-exact
+### `PlayerHasRoomForAnim` - PARKED (`NON_MATCHING`), not yet byte-exact
 
 The `#if NON_MATCHING` branch gets every instruction byte-exact except
 one 5-instruction pair: the `gCrateList` list-walk's loop-
 condition-check/loop-entry transition. The ROM re-loads
 `&gCrateList` from the literal pool fresh on *every* iteration
 (a conservative reload, since the intervening `_call_via_r1`/
-`sub_800CD00` calls alias-escape the global) and lands it in `r0`,
+`PlayerAnimWouldTouchCrate` calls alias-escape the global) and lands it in `r0`,
 then the loop body's own first instruction (`ldr r0, [r0]`) turns that
 same register from "address" into "value" in place, reusing it rather
 than a second register. No C-level phrasing reproduced that exact
@@ -115,7 +115,7 @@ per-iteration re-materialize-into-r0-then-alias-in-place shape:
   as loop-invariant and hoist it - landing the address in `r1` and the
   freshly-dereferenced value/`->count` in `r0` (the ROM's opposite
   choice).
-- The `sub_8010804`-style "cache `&var` in a local declared inside an
+- The `ConvertCratesForTimeTrial`-style "cache `&var` in a local declared inside an
   `if` guard, then `do`/`while`" idiom (`game_loop24.c`'s own proven
   pattern for the identical `gCrateList` list shape) re-adds a
   4th callee-saved register (`r6` for the cached address, on top of
@@ -136,7 +136,7 @@ per-iteration re-materialize-into-r0-then-alias-in-place shape:
 Every other block matches byte-for-byte: the `self+0x20`/`x*28`-
 indexed table lookup (needed the same "materialize the `+4` in two
 separate instructions" opaque-asm anchor - `add %1,%1,#4 / add
-%0,%1,#0` - that `GetSpriteBounds`/`sub_800D040` already needed for their
+%0,%1,#0` - that `GetSpriteBounds`/`BreakCrateTouchedByPlayer` already needed for their
 own record-pointer builds, since a bare `rec + 4` otherwise folds into
 a single `add r4,r1,#4`), the `recByte9`/`flagArg` register pins
 (`r3`/`r2` respectively, matching the ROM's own choices, with
@@ -150,7 +150,7 @@ the `volatile` re-read for the original untruncated `y` (the ROM
 issues a genuinely redundant second `ldr` the natural CSE would
 otherwise eliminate), the Q8-to-int conversion's exact "compute the Y
 sum first, finish X, then finish Y" reordering, and the `(u8)` result-
-truncation casts on both the `sub_8026628` and `sub_800CD00` call
+truncation casts on both the `sub_8026628` and `PlayerAnimWouldTouchCrate` call
 results (the ROM explicitly narrows to a byte via `lsl r0,r0,#0x18` /
 `lsl+lsr` before each comparison; a bare `!= 0`/`== 1` on the full
 `s32` drops those shifts entirely even though it's behaviorally
@@ -166,17 +166,17 @@ which resolve correctly once linked). Real bytes formerly in
 it in link order between the trimmed `asm/code_3_2_16_a884.o` and
 `actor_part81.o`).
 
-### `sub_800CD00` - NAKED transcription, not real C
+### `PlayerAnimWouldTouchCrate` - NAKED transcription, not real C
 
 Not attempted as a C reconstruction at all: this is the same AABB-
-build primitive `game_loop6.c`'s `sub_800D040` already documents at
+build primitive `game_loop6.c`'s `BreakCrateTouchedByPlayer` already documents at
 length (inlined twice there, three times here), and that function's
 own header comment already records the *simpler* two-AABB version as
 resistant to gcc 2.9 C reconstruction - "the ROM keeps exactly two
 extra callee-saved registers live across both AABB builds (`r8` and
 `sb`) ... and reuses `r7`/`r8` for the X/Y 'shift' values across
 *both* the self-block and the player-block - no C reconstruction
-tried reproduced that with gcc 2.9". `sub_800CD00` is a strict
+tried reproduced that with gcc 2.9". `PlayerAnimWouldTouchCrate` is a strict
 superset of that same shape (three AABB builds instead of two,
 `r7`/`r8`/`sb` kept live across all three plus an extra `sl`-held
 argument), so re-attempting a C reconstruction already known to fail
@@ -189,7 +189,7 @@ confirmed byte-exact via the same isolated `cpp`/`agbcc`/`as` +
 relocation sites - eight `bl` calls and one `.word` literal).
 
 Real bytes formerly in `asm/code_3_2_17.s`'s middle (that fragment is
-now trimmed to end right before `sub_800CD00`); the remainder from
+now trimmed to end right before `PlayerAnimWouldTouchCrate`); the remainder from
 `sub_800CEAC` onward (still raw, unexamined this session) moved to the
 new `asm/code_3_2_17_ceac.s`. `actor_part109.o` sits between the two
 in link order.
@@ -219,13 +219,13 @@ coincide` (checksum matches).
   boolean comparison.
 - NAKED transcription as the deliberate, documented default for an
   AABB-build shape this project has *already* proven (via
-  `sub_800D040`) resists gcc 2.9 C reconstruction even in its simplest
+  `BreakCrateTouchedByPlayer`) resists gcc 2.9 C reconstruction even in its simplest
   two-block form - not attempting a C draft here was a judgment call
   informed by that existing precedent, not a shortcut.
 
 ## Later pass (issue #9 NAKED retry)
 
-`sub_800AAEC` is now real C, and it matches under both compilers. Three
+`PlayerHasRoomForAnim` is now real C, and it matches under both compilers. Three
 changes closed it. The list walk is a guarded do-while
 (`i = 0; if (i < n) do {...} while (i < list->count)`), which gives the
 per-iteration literal reload. The position is read as one struct copy.
@@ -233,11 +233,11 @@ The record pointer's `+4` is a separate `rec += 4` statement. See [issue-9-naked
 
 ## Later pass (issue #9-#11 NAKED retry)
 
-`sub_800CD00` now has an old_agbcc C draft under `NON_MATCHING` (42 halfwords off: the player box's address is held in r6 from its first build instead of being rematerialized from sp until the first overlap test). Still NAKED. See [issue-9-11-box-naked-retry.md](issue-9-11-box-naked-retry.md).
+`PlayerAnimWouldTouchCrate` now has an old_agbcc C draft under `NON_MATCHING` (42 halfwords off: the player box's address is held in r6 from its first build instead of being rematerialized from sp until the first overlap test). Still NAKED. See [issue-9-11-box-naked-retry.md](issue-9-11-box-naked-retry.md).
 
 ## Later pass (stack-box NAKED retry)
 
-`sub_800CD00` is now real C under old_agbcc (`actor_part109.o` joined
+`PlayerAnimWouldTouchCrate` is now real C under old_agbcc (`actor_part109.o` joined
 `OLD_AGBCC_OBJS`). The player box's address goes through an empty
 `asm("" : "+r")` copy at each builder call and at the first overlap
 test, so cse no longer keeps `sp+16` in r6 from the first build on.

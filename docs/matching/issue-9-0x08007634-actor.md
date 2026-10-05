@@ -55,7 +55,7 @@ name, from earlier sessions working the surrounding `actor_part11.c`-
 This session re-read all 18 with the additional context accumulated
 since (the `+0x8c`/`gRoomFrameCount` frame-counter convention, the
 `+0x88`/`+0xac`/`+0xb0` field family cross-referenced across
-`ResetPlayer`/`sub_800A810`/`DrawPlayer`/`CollidePlayer`, and the
+`ResetPlayer`/`ResetPlayerForRoom`/`DrawPlayer`/`CollidePlayer`, and the
 established register-pin/goto idioms this file family needs) and found
 6 of the 18 tractable enough to fully understand and reconstruct in C.
 The other 12 remain genuinely hard for the reasons the prior sessions
@@ -63,11 +63,11 @@ already gave - see "Left untouched" below.
 
 ## Matched - 3 functions
 
-- **`sub_800A810`** (`src/graphics/actor_part48.c`, right after the
+- **`ResetPlayerForRoom`** (`src/graphics/actor_part48.c`, right after the
   still-parked `ResetPlayer` in the same file): dispatches a sub-state
   byte (`self+0x88`) to one of three teardown helpers
   (`sub_8015840`/`sub_80159A4`/`sub_8017994`), each called with the
-  same `self+0x44` "record" argument `sub_800A730` already established,
+  same `self+0x44` "record" argument `GetMovingSpriteCtrl` already established,
   after resetting the usual velocity/state fields. Matched with `self`
   pinned to `r3` (kept live across all three `bl` calls); the two
   AND-mask field clears (`self+0x28` bit 5, `self+0xc` bit 3) built via
@@ -162,10 +162,10 @@ this file's original writing - see the update note on the entry below.
   confirmed correct one-for-one against the ROM; the ROM builds several
   field addresses as one running pointer incremented by small relative
   offsets across a long stretch of otherwise-unrelated-looking writes,
-  which no source restructuring reproduced. Its sibling `sub_800A810`,
+  which no source restructuring reproduced. Its sibling `ResetPlayerForRoom`,
   right after it in ROM order, *was* matched this way (a `u8 *p` cursor
   plus register-pinned negative-constant masks) - see "Matched" above -
-  but that technique only closed `sub_800A810`'s gap; re-applying the
+  but that technique only closed `ResetPlayerForRoom`'s gap; re-applying the
   same cursor idea to `ResetPlayer`'s much longer, less uniform stretch
   of field writes (`+0x24`/`+0x44`/`+0x78`/`+0x1c`/`+0x90`/`+0xac`/
   `+0x80`/`+0x88`/`+0x8c`, several via `subs` as well as `adds`) did not
@@ -190,10 +190,10 @@ this file's original writing - see the update note on the entry below.
 - **`UpdateCrateList`** (`asm/code_3_2_13.s`, ROM `0x080091D4`) - list-
   management logic in the same still-unclear manager struct family.
 - **`CollidePlayerWithCrates`** (`asm/code_3_2_13.s`, ROM `0x08009868`) - calls
-  still-unexamined `sub_800D040`/`sub_80109A4`; per
-  `docs/matching/issue-12-physics-collision.md`, `sub_80109A4` leads
+  still-unexamined `BreakCrateTouchedByPlayer`/`CollideCrateWithPlayer`; per
+  `docs/matching/issue-12-physics-collision.md`, `CollideCrateWithPlayer` leads
   into the large, still-mostly-raw physics/collision subsystem
-  (`sub_0800D18C` and friends) that issue explicitly left raw as "not
+  (`QueueCratePlayerCollision` and friends) that issue explicitly left raw as "not
   understood branch-by-branch with the precision a byte-exact
   reconstruction needs".
 - **`sub_8009BE0`** (`asm/code_3_2_14.s`, ROM `0x08009BE0`) - a
@@ -207,14 +207,14 @@ this file's original writing - see the update note on the entry below.
   movement-resolution function built on `sub_8008200`/`sub_8026628`/
   `sub_8026C3C`/`sub_8026BF8`, none of which are matched or precisely
   understood yet.
-- **`sub_800A420`** (`asm/code_3_2_11.s`, ROM `0x0800A420`, ~264 B) -
+- **`ProbeGroundSpriteFloor`** (`asm/code_3_2_11.s`, ROM `0x0800A420`, ~264 B) -
   the same `sub_8008200`/`sub_8026BF8` dependency as `ProbeGroundSpriteTerrain`.
 - **`CollidePlayer`** (`asm/code_3_2_16.s`, ROM `0x0800A884`, ~616 B) - a
   reentrancy-guard-shaped wrapper around `CollideGroundSprite` with a two-level
   jump-table dispatch; calls the unexamined `sub_8026BC0`.
-- **`sub_800AAEC`** (`asm/code_3_2_16.s`, ROM `0x0800AAEC`) - iterates
+- **`PlayerHasRoomForAnim`** (`asm/code_3_2_16.s`, ROM `0x0800AAEC`) - iterates
   a global list (`gCrateList`) calling the unexamined
-  `sub_8026628`/`sub_800CD00`.
+  `sub_8026628`/`PlayerAnimWouldTouchCrate`.
 - **`CollidePlayerWithObjects`** (`asm/code_3_2_16.s`, ROM `0x0800AB9C`) - calls the
   raw `CollidePlayerWithCrates` and the unexamined `ResolvePlayerCollisions`.
 - **`PlayerHandleEvent`** (`asm/code_3_2_16.s`, ROM `0x0800AC2C`, ~950 B) - a
@@ -241,7 +241,7 @@ documentation behind.
 
 1. **`-N` as a bit-clear mask clears the bits of `N-1`, not `N`** (the
    `-N == ~(N-1)` identity) - confirmed again here for `ResetPlayer`
-   (`-0x11` clears only bit 4, since `0x11-1 = 0x10`) and `sub_800A810`
+   (`-0x11` clears only bit 4, since `0x11-1 = 0x10`) and `ResetPlayerForRoom`
    (`-9` clears only bit 3, since `9-1 = 8`). Already documented
    elsewhere in this project but easy to mis-read at a glance if you
    assume `-N` simply clears `N`'s own bit pattern.
@@ -284,7 +284,7 @@ documentation behind.
   above for the specific entries.
 - `docs/matching/issue-12-physics-collision.md` - the neighboring
   physics/collision subsystem several of this issue's left-raw
-  functions (`CollidePlayerWithCrates` via `sub_80109A4`, `DrawPlayer`) eventually
+  functions (`CollidePlayerWithCrates` via `CollideCrateWithPlayer`, `DrawPlayer`) eventually
   lead into.
 
 ## Later pass (issue #9 NAKED retry)

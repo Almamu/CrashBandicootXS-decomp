@@ -3,12 +3,12 @@
 
 /* Dedicated deep investigation (GitHub issue #9/#10,
  * docs/matching/issue-9-0x0800a178-graphics.md): `ProbeGroundSpriteTerrain`/
- * `sub_800A420`, the last two functions in the `CollideGroundSprite`-through-
- * `sub_800A420` still-raw span `tools/report_units.py` tracked as
+ * `ProbeGroundSpriteFloor`, the last two functions in the `CollideGroundSprite`-through-
+ * `ProbeGroundSpriteFloor` still-raw span `tools/report_units.py` tracked as
  * parked. `CollideGroundSprite` itself (the caller of `ProbeGroundSpriteTerrain`, see
  * `asm/code_3_2_11.s`) stays raw/unexamined - its own gate logic still
  * depends on the also-still-raw `sub_8009BE0` (parked NAKED,
- * `actor_part12b.c`), so closing `ProbeGroundSpriteTerrain`/`sub_800A420` alone
+ * `actor_part12b.c`), so closing `ProbeGroundSpriteTerrain`/`ProbeGroundSpriteFloor` alone
  * doesn't unblock it.
  *
  * `docs/rom_map.md` (line ~2624) had already partially flagged
@@ -31,7 +31,7 @@
  * session additionally reads `sub_8026C3C`/`sub_8026BF8` (still raw,
  * `asm/code_3_2_17_266bc.s`) far enough to place them precisely.
  *
- * ## What `ProbeGroundSpriteTerrain`/`sub_800A420` actually do
+ * ## What `ProbeGroundSpriteTerrain`/`ProbeGroundSpriteFloor` actually do
  *
  * Both operate on the same "hitbox quad" pointer - `self->table[0x10]`/
  * `[0x14]`'s own `_call_via_r1(self + addr, fn)` trampoline result,
@@ -41,7 +41,7 @@
  * the same "adjust the object's own Q8 position based on where a
  * collision probe says the ground/wall actually is" shape:
  *
- * - **`sub_800A420(self, quad, u8 *outFlag)`**: a single Y-axis
+ * - **`ProbeGroundSpriteFloor(self, quad, u8 *outFlag)`**: a single Y-axis
  *   ("floor") probe. Builds an int `{x, y}` position at the *bottom*
  *   of the quad (`self.x`/`self.y + (quad->yOff + quad->h) << 8`,
  *   via `sub_8008200(dest, 8, quad)`, nudged left/right by half the
@@ -63,18 +63,18 @@
  *   field, confirmed - see above), computes a starting result mask
  *   (`self+0xd` bit 0 expanded to `8`, but only when `self+0x24 &
  *   0xc` is clear), then:
- *   1. If `self+0xd` bit 0 is set, calls `sub_800A420` once
+ *   1. If `self+0xd` bit 0 is set, calls `ProbeGroundSpriteFloor` once
  *      (arg `&flagByte`, a stack-local initialized `0`) and keeps its
  *      boolean result as a "found ground already" flag.
  *   2. If that flag is set, and the result mask is still `0`, forces
  *      it to `8`.
- *   3. If the `sub_800A420` out-flag came back `1`: builds an int
+ *   3. If the `ProbeGroundSpriteFloor` out-flag came back `1`: builds an int
  *      position at the *bottom* of the quad (mirrored the same way),
  *      probes it via `sub_8026C3C(player, pos, &origY)` (see below,
  *      `player` = `gLevelLayers` dereferenced) - on a hit, snaps
  *      `self->y` to the probed value and nudges `self->x` by ±1 pixel
  *      depending on `self+0x24 & 3`; on a miss, nudges `self->y` down
- *      one pixel instead. Either way calls `sub_800A420` again
+ *      one pixel instead. Either way calls `ProbeGroundSpriteFloor` again
  *      afterward to refresh the "found ground" flag.
  *   4. Three more blocks, each gated on `self+0x24`'s own 2-bit field
  *      (`& 3` for X-axis modes 1/2, `& 0xc` for Y-axis modes 4/8) and
@@ -94,7 +94,7 @@
  * *resolution* step - once some other function (still-raw
  * `CollideGroundSprite`) has decided a part object needs a physics update,
  * `ProbeGroundSpriteTerrain` runs a layered probe (fast quad-based floor/wall test
- * first via `sub_800A420`/`sub_8026C3C`, then falling back to the
+ * first via `ProbeGroundSpriteFloor`/`sub_8026C3C`, then falling back to the
  * general tile-scan `sub_8026628` API per axis) and snaps the object's
  * position to whatever solid surface each probe finds, recording which
  * axes/directions actually resolved in `self+0x74` for whatever caller
@@ -133,7 +133,7 @@
  * exact matching for either wasn't attempted this session - see
  * docs/matching/issue-9-0x0800a178-graphics.md for why (same
  * resistant multi-high-register shape this immediate ROM neighborhood
- * has already hit four times: `sub_8009BE0`, `sub_800CD00`,
+ * has already hit four times: `sub_8009BE0`, `PlayerAnimWouldTouchCrate`,
  * `sub_800CEAC`, `sub_800CF70`).
  *
  * ## Matching
@@ -172,7 +172,7 @@
  * `self+0x68` bit 3 (the "Y-axis/mode-8" collision bit `ProbeGroundSpriteTerrain`
  * just OR'd in, if it hit) is now set: clears `self+0xc` bits 0 and 5,
  * then - unless `self+0xd` bit 1 is already set (ground already
- * snapped this call, `sub_800A420`'s own convention) - fires the same
+ * snapped this call, `ProbeGroundSpriteFloor`'s own convention) - fires the same
  * `self->table+0x10/0x14` "hitbox quad" trampoline `ProbeGroundSpriteTerrain`
  * itself uses, and runs a `mode == 8` (Y-axis/floor) step-probe via
  * `sub_8009BE0(self, 8, quad)`. If that step-probe does *not* report
@@ -184,7 +184,7 @@
  * cleanly. Returns the (possibly rolled-back) `self+0x68` byte either
  * way.
  *
- * Read together with `ProbeGroundSpriteTerrain`/`sub_800A420`: this is the
+ * Read together with `ProbeGroundSpriteTerrain`/`ProbeGroundSpriteFloor`: this is the
  * part-object physics dispatcher - `CollideGroundSprite` is the entry point
  * (called by `CollidePlayer`'s per-frame reentrancy-guarded wrapper,
  * `docs/rom_map.md` line ~1835), `ProbeGroundSpriteTerrain` does the actual
@@ -194,7 +194,7 @@
  * enough to leave the bit set in the persistent `self+0x68` mask.
  *
  * Real C, built with old_agbcc (issue #9-#11 NAKED retry: the file
- * moved to OLD_AGBCC_OBJS for `sub_800A420`). Under old_agbcc the
+ * moved to OLD_AGBCC_OBJS for `ProbeGroundSpriteFloor`). Under old_agbcc the
  * register pins this function needed under the current compiler are
  * gone; the one shape left is the `self+0xc` clear, which goes through
  * an `s32` local so the mask stays the SImode `-0x21` (`movs #0x21;
@@ -248,7 +248,7 @@ struct probe_pos {
     s32 y;
 };
 
-u8 sub_800A420(struct box_part *self, struct part_box *quad, u8 *outFlag);
+u8 ProbeGroundSpriteFloor(struct box_part *self, struct part_box *quad, u8 *outFlag);
 
 /* See the file-level header comment above for this function's
  * semantics. `self`'s only argument; returns the accumulated result
@@ -260,7 +260,7 @@ u8 sub_800A420(struct box_part *self, struct part_box *quad, u8 *outFlag);
  * register, then `&= 8` - the ROM's `mov r2, sb; and r2, r0; mov sb, r2`
  * reload); the `self+0x24` pointer is taken after its `& 0xc` test
  * value (so its spill store follows the `and`); the two out-bytes of
- * sub_800A420 are separate `u8` locals (sp+4 and sp+5, the second
+ * ProbeGroundSpriteFloor are separate `u8` locals (sp+4 and sp+5, the second
  * addressed as `sp + 5`, not `&arr[1]`). The Y-axis block stores
  * `origX` too although it probes with `&origY`, as the ROM does. */
 s32 ProbeGroundSpriteTerrain(struct box_part *self)
@@ -296,7 +296,7 @@ s32 ProbeGroundSpriteTerrain(struct box_part *self)
     m = PART_METHOD(self, 0x10);
     quad = (struct part_box *)_call_via_r1((u8 *)self + m->thisOffset, m->fn);
     if (self->flags2 & 1)
-        hit = sub_800A420(self, quad, &floorMiss);
+        hit = ProbeGroundSpriteFloor(self, quad, &floorMiss);
     if (hit && result == 0)
         result = 8;
     if (floorMiss == 1) {
@@ -315,7 +315,7 @@ s32 ProbeGroundSpriteTerrain(struct box_part *self)
         unused = 0;
         if (c) {
             self->y = origY & 0xFFFFFF00;
-            hit = sub_800A420(self, quad, &unused);
+            hit = ProbeGroundSpriteFloor(self, quad, &unused);
             {
                 u32 xm = *axes & 3;
 
@@ -328,7 +328,7 @@ s32 ProbeGroundSpriteTerrain(struct box_part *self)
             }
         } else {
             self->y += 0x100;
-            hit = sub_800A420(self, quad, &unused);
+            hit = ProbeGroundSpriteFloor(self, quad, &unused);
         }
     }
     mode = *axes & 3;
@@ -399,7 +399,7 @@ done:
  * r2 for the `0xFFFFFF00` literal. The shared final `strb` to +0xd is a
  * common store (`val`) the three exits jump to. */
 
-u8 sub_800A420(struct box_part *self, struct part_box *quad, u8 *outFlag)
+u8 ProbeGroundSpriteFloor(struct box_part *self, struct part_box *quad, u8 *outFlag)
 {
     s32 origY = self->y;
     struct probe_pos pos;

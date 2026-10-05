@@ -3,9 +3,9 @@
 Dedicated deep-investigation session against the two functions
 `tools/report_units.py` tracked as parked (`base_object=None`) at
 `0x0800CEAC`-`0x0800D040` (404 bytes total), the last still-raw gap
-between the just-closed `sub_800CD00` (issue #9/#10,
+between the just-closed `PlayerAnimWouldTouchCrate` (issue #9/#10,
 [issue-9-10-0x0800aaec-graphics.md](./issue-9-10-0x0800aaec-graphics.md))
-and the already-matched `sub_800D040` (issue #12,
+and the already-matched `BreakCrateTouchedByPlayer` (issue #12,
 [issue-12-physics-collision.md](./issue-12-physics-collision.md)). The
 real bytes lived in `asm/code_3_2_17_ceac.s` (now deleted - fully
 consumed by this session's work).
@@ -19,7 +19,7 @@ walkers that subsystem uses and reaches the same 28-byte-record chain -
 functionally part of it despite sitting just outside the documented
 boundary." Its sibling, **`sub_800CEAC`** (the first 196 of the 404
 bytes), had no note anywhere. Both are called *only* from
-`sub_0800D18C` (`asm/code_3_2_17_d18c.s`), the physics/collision
+`QueueCratePlayerCollision` (`asm/code_3_2_17_d18c.s`), the physics/collision
 subsystem's ~1960-byte collision-response commit function documented
 at length in `issue-12-physics-collision.md`.
 
@@ -28,14 +28,14 @@ at length in `issue-12-physics-collision.md`.
 `asm/code_3_2_17_ceac.s` held exactly these two functions, nothing
 else (`thumb_func_start sub_800CEAC` at line 6, `thumb_func_start
 sub_800CF70` at line 107, 212 lines total). Both call sites in
-`sub_0800D18C` were also read in context (`asm/code_3_2_17_d18c.s`
+`QueueCratePlayerCollision` were also read in context (`asm/code_3_2_17_d18c.s`
 around its own AABB-build blocks) to recover the caller's argument
 setup, since neither function's own body makes its argument roles
 obvious in isolation.
 
 ### `sub_800CEAC(void *self, struct hitbox_quad *quad, struct aabb *box, s32 xOffset, s32 yOffset)`
 
-Called once, from `sub_0800D18C`, with:
+Called once, from `QueueCratePlayerCollision`, with:
 - `self` = `sl` (the collision-response commit's own subject) - loaded
   into a callee-saved register by the prologue but **never read again**
   after that; confirmed genuinely unused against the raw disassembly,
@@ -45,8 +45,8 @@ Called once, from `sub_0800D18C`, with:
   to the `{s16 xOff, s16 yOff, u8 w, u8 h}` quad, not the 28-byte
   record's own base (the caller has already added the `+4`).
 - `box` = `self`'s own already-built AABB, constructed at the very top
-  of `sub_0800D18C` from `self`'s own `+0x20` table - the same "AABB1"
-  shape `sub_800D040`'s header documents.
+  of `QueueCratePlayerCollision` from `self`'s own `+0x20` table - the same "AABB1"
+  shape `BreakCrateTouchedByPlayer`'s header documents.
 - `xOffset`/`yOffset` = `self.x>>8`/`self.y>>8`, cached by the caller
   early on and reused across many of its own AABB builds.
 
@@ -69,7 +69,7 @@ Body:
    by 2 on each side, "wide mode"). `y`/`h` are unaffected either way.
 3. Mirrors that local AABB horizontally/vertically around `(xOffset,
    yOffset)` according to the **player's own** `+0x28` flags (bits 4/5 -
-   the same mirror-flag convention `sub_800D040`/`actor_part16.c`/
+   the same mirror-flag convention `BreakCrateTouchedByPlayer`/`actor_part16.c`/
    `actor_part17.c` already establish, just keyed off the player's flags
    here since the box represents the player's shape, not `self`'s).
 4. Tests the mirrored local AABB against `box` (`self`'s own real AABB)
@@ -78,7 +78,7 @@ Body:
 
 Read together: "would a player-shaped hitbox, standing where `self`
 currently is (optionally in its wider variant), overlap `self`'s own
-actual hitbox". The caller (`sub_0800D18C`) uses a `1` result to trigger
+actual hitbox". The caller (`QueueCratePlayerCollision`) uses a `1` result to trigger
 a further `GetCrateAbove` ("get next") list-walk step - consistent with a
 "can something player-sized occupy this spot" gate feeding further
 traversal, e.g. deciding whether `self` currently blocks the space a
@@ -86,7 +86,7 @@ player-sized object would need there.
 
 ### `sub_800CF70(void *self, struct aabb *box, u8 *foundFlag)`
 
-Called from `sub_0800D18C` only while its own 5-slot ring-buffer index
+Called from `QueueCratePlayerCollision` only while its own 5-slot ring-buffer index
 counter is `<= 4` (confirmed at the call site: `cmp r3,#4; bgt` skips
 the call entirely and substitutes `self` directly when the counter
 exceeds 4) - `self` = the caller's own subject, `box` = the player's own
@@ -97,13 +97,13 @@ Body:
 1. `next = GetCrateAbove(self)` ("get next"), `prev = GetCrateBelow(self)`
    ("get prev") - the established doubly-linked neighbor-list accessor
    pair (`src/system/game_loop7.c`'s own header comment; also used by
-   `sub_0800D18C` itself and `sub_800E494`/`sub_800E4E4`).
+   `QueueCratePlayerCollision` itself and `ClearCrateStackTouched`/`MarkCrateStackTouched`).
 2. If **both** are `NULL`: return `self` unchanged, no other side
    effect - `self` is isolated in the list.
 3. Otherwise (at least one neighbor exists): `*foundFlag = 1`,
    overwriting whatever edge-code the caller pre-loaded there.
 4. If `prev` is `NULL`, or `prev`'s own `+0x4d & 0x7f` state byte reads
-   `1` (the exact early-out gate `sub_800D040`'s own header documents -
+   `1` (the exact early-out gate `BreakCrateTouchedByPlayer`'s own header documents -
    objects in this state are excluded from the subsystem's AABB tests
    entirely), return `self` unchanged.
 5. Otherwise build `prev`'s own AABB from the shared `+0x20`-table
@@ -124,11 +124,11 @@ subsystem's own primitives one step outside its stated address range.
 ## Category correction
 
 Both functions are recategorized `graphics` -> `game_loop`, the same
-correction issue #12 already made for the adjacent `sub_800D040`: their
-only caller (`sub_0800D18C`) is squarely inside the confirmed
+correction issue #12 already made for the adjacent `BreakCrateTouchedByPlayer`: their
+only caller (`QueueCratePlayerCollision`) is squarely inside the confirmed
 physics/collision subsystem inside the `game_loop` zone, not
-entity-specific `graphics` behavior. Unlike `sub_800CD00` (which stayed
-`graphics` since its caller `sub_800AAEC` is itself an entity
+entity-specific `graphics` behavior. Unlike `PlayerAnimWouldTouchCrate` (which stayed
+`graphics` since its caller `PlayerHasRoomForAnim` is itself an entity
 action-dispatch gate), these two have no caller outside the subsystem.
 
 ## Matching: both NAKED transcription, not real C
@@ -139,8 +139,8 @@ single-inlined-AABB-build primitive `GetSpriteHitbox`
 2.9's register allocation *even in its simplest, unbranched, single-call
 form* ("about 10 of ~73 instructions... which anonymous scratch
 register" gaps) - a shape this project has now independently hit and
-NAKED-transcribed four times (`GetSpriteHitbox` itself, `sub_800D040`'s two
-inlined copies, `sub_800CD00`'s three inlined copies). Both of this
+NAKED-transcribed four times (`GetSpriteHitbox` itself, `BreakCrateTouchedByPlayer`'s two
+inlined copies, `PlayerAnimWouldTouchCrate`'s three inlined copies). Both of this
 session's functions compound that established-resistant core further
 rather than simplifying it:
 
@@ -152,7 +152,7 @@ rather than simplifying it:
 - `sub_800CF70` stacks the AABB-build primitive on top of a
   `GetCrateAbove`/`GetCrateBelow` neighbor-list read - and that *simpler*
   shape (list read with no AABB build at all) is itself independently
-  documented as resistant for `sub_800E494`/`sub_800E4E4`
+  documented as resistant for `ClearCrateStackTouched`/`MarkCrateStackTouched`
   (`issue-12-physics-collision.md`: a `0x7f`-mask-before-`ldrb`-load
   instruction-scheduling order this compiler never reproduces from any
   C-level operand-order/negation phrasing tried). Two independently
@@ -160,8 +160,8 @@ rather than simplifying it:
   of remaining session time to re-litigate from scratch.
 
 Per this project's established recognition rule for this exact
-neighborhood (see the `sub_800D040`/`sub_800CD00`/`sub_800E494`/
-`sub_800E4E4` precedent above), both were transcribed directly as
+neighborhood (see the `BreakCrateTouchedByPlayer`/`PlayerAnimWouldTouchCrate`/`ClearCrateStackTouched`/
+`MarkCrateStackTouched` precedent above), both were transcribed directly as
 byte-exact NAKED asm instead: the ROM disassembly translated
 instruction-for-instruction, unified-syntax mnemonics converted to this
 project's plain/divided-syntax NAKED convention (`adds`->`add`,
@@ -202,7 +202,7 @@ coincide` (checksum matches).
   the same two functions - recognizing the established pattern rather
   than re-deriving the same negative result from scratch, per this
   project's own stated convention for this exact neighborhood.
-- Cross-referencing the caller (`sub_0800D18C`)'s own argument-setup
+- Cross-referencing the caller (`QueueCratePlayerCollision`)'s own argument-setup
   code to recover each function's parameter roles, since neither
   function's own body makes them obvious in isolation (`sub_800CEAC`'s
   first argument in particular is a dead parameter with no in-body
@@ -224,7 +224,7 @@ coincide` (checksum matches).
   after the original partial note (append-only convention - the
   original note is left untouched).
 - `docs/matching/issue-12-physics-collision.md` - the
-  `sub_800D040`/`sub_800CD00`/`sub_800E494`/`sub_800E4E4` precedent this
+  `BreakCrateTouchedByPlayer`/`PlayerAnimWouldTouchCrate`/`ClearCrateStackTouched`/`MarkCrateStackTouched` precedent this
   session's NAKED-transcription judgment call is based on.
 
 ## Later pass (issue #9-#11 NAKED retry)

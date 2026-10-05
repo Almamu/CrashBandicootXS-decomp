@@ -23,7 +23,7 @@ extern void *gAudioContext;
 extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern s32 _call_via_r3(void *arg0, void *arg1, void *arg2, void *arg3);
-extern u8 sub_800AAEC(void *self, s32 action);
+extern u8 PlayerHasRoomForAnim(void *self, s32 action);
 extern void ActionCtrlStateCrawl(void *self);
 extern void StartActionCtrlHighJump(void *self);
 extern void SetActionCtrlModeAnim(void *self, s32 a, s32 b, s32 c, s32 d);
@@ -48,7 +48,7 @@ void ActionCtrlStateStandUp(void *selfArg)
     }
 }
 
-/* On the "confirm" input edge (checked via `sub_800AAEC(part, 0xb)`),
+/* On the "confirm" input edge (checked via `PlayerHasRoomForAnim(part, 0xb)`),
  * plays a sound, clears two `part+0xd` bits (the runtime `& -2`/`& -3`
  * negation rather than a folded mask - see docs/matching.md), and hands
  * off to `StartActionCtrlHighJump`. Otherwise, while `part+0x38` is set, fires the
@@ -60,7 +60,7 @@ void ActionCtrlStateCrawlStart(void *selfArg)
     u32 snap = *(u32 *)&gKeys;
 
     if ((*(u16 *)((u8 *)&snap + 2) & 1) != 0
-        && sub_800AAEC(self->part, 0xb) == 1) {
+        && PlayerHasRoomForAnim(self->part, 0xb) == 1) {
         PlaySfx(gAudioContext, 0xc, 0x100);
 
         {
@@ -114,7 +114,7 @@ static inline void ActQueue27(struct act *self, s32 cur, s32 next)
  * (once `CheckActionCtrlLeftGround(self)` is clear) dispatches on `GetDpadDirection`'s
  * D-pad-remap result - `1` fires one trampoline pair, `0`/`2` fires
  * another - before falling into a shared tail that, when the input
- * snapshot's `0x180` bits are clear and `sub_800AAEC(part, 2)` just
+ * snapshot's `0x180` bits are clear and `PlayerHasRoomForAnim(part, 2)` just
  * fired, runs a third trampoline pair and finishes with
  * `UpdatePlayerFacing`.
  *
@@ -134,7 +134,7 @@ void ActionCtrlStateCrawl(void *selfArg)
     u8 hit;
     u32 held;
 
-    if ((INPUT_PRESSED(in) & 1) && sub_800AAEC(self->part, 0xB) == 1)
+    if ((INPUT_PRESSED(in) & 1) && PlayerHasRoomForAnim(self->part, 0xB) == 1)
     {
         PlaySfx(gAudioContext, 0xC, 0x100);
         ActAndFlags0D(self->part, -2);
@@ -155,7 +155,7 @@ void ActionCtrlStateCrawl(void *selfArg)
         ActQueue27(self, 0, 0);
         break;
     case 1:
-        if (sub_800AAEC(self->part, 2) == 1)
+        if (PlayerHasRoomForAnim(self->part, 2) == 1)
         {
             ACT_VCALL1(self, m20, 0x15);
             ACT_VCALL2(self, m50, self->part, 2);
@@ -172,7 +172,7 @@ void ActionCtrlStateCrawl(void *selfArg)
         break;
     }
     held = INPUT_HELD(in) & 0x180;
-    if (held == 0 && (hit = sub_800AAEC(self->part, 2)) == 1)
+    if (held == 0 && (hit = PlayerHasRoomForAnim(self->part, 2)) == 1)
     {
         ACT_CALL1(self, m20, 0x12);
         ACT_CALL2(self, m50, self->part, 2);

@@ -1,9 +1,9 @@
-# `sub_8009150` converted from `NON_MATCHING` to real matched C
+# `LinkCrateToActiveBucket` converted from `NON_MATCHING` to real matched C
 
-`sub_8009150` (now `src/graphics/actor_part11g.c`, previously an
+`LinkCrateToActiveBucket` (now `src/graphics/actor_part11g.c`, previously an
 `#if NON_MATCHING` block inside `src/graphics/actor_part11.c`) had been
 parked as "extremely close" since an earlier pass - see `docs/matching.md`,
-"Parked, not matched: `sub_8009150`". It's now genuinely matched as real
+"Parked, not matched: `LinkCrateToActiveBucket`". It's now genuinely matched as real
 decompiled C.
 
 ## What it does
@@ -21,7 +21,7 @@ the free list (the same `AddCrateGridNode` pop idiom), wraps `obj` in it, and
 inserts that new node into bucket 255's head/tail list, finally linking
 the two nodes together via the original node's `field_0xc`. `LinkCrateInGrid`
 only creates this link when `obj->flags` bit 4 is already set at insert
-time; `sub_8009150` looks like the retroactive counterpart, called when
+time; `LinkCrateToActiveBucket` looks like the retroactive counterpart, called when
 an object transitions to "large" status after insertion.
 
 ## The two gaps
@@ -155,7 +155,7 @@ crashbandicootxs.gba crashbandicootxs.map && make compare` -
 
 ## File/link-order change
 
-`sub_8009150` moves from an `#if NON_MATCHING` block inside
+`LinkCrateToActiveBucket` moves from an `#if NON_MATCHING` block inside
 `src/graphics/actor_part11.c` (whose real bytes, while parked, lived in
 the standalone `asm/code_3_2_13_9150.s`, guarded by `.if NON_MATCHING ==
 0`) into its own new `src/graphics/actor_part11g.c` - its real ROM
@@ -168,7 +168,7 @@ entirely; `ldscript.txt`'s `code_3_2_13_9150.o` line is replaced with
 `actor_part11g.o` at the same link-order position. The `struct
 pool_manager` definition that block relied on is still needed by the
 three other `#if NON_MATCHING` blocks remaining in `actor_part11.c`
-(`ResetCrateList`/`DrawCrateList`/`sub_8009528`), so it stays there too,
+(`ResetCrateList`/`DrawCrateList`/`CollideCrateGrid`), so it stays there too,
 duplicated (matching this codebase's existing convention of a
 per-translation-unit local copy of shared structs like this one - see
 also `actor_part12.c`'s own copy).

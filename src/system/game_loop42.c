@@ -4,14 +4,14 @@
 /* Dedicated deep investigation (docs/matching/issue-9-10-0x0800ceac-graphics.md):
  * these two functions sit in the still-raw span `tools/report_units.py`
  * tracked as parked (`base_object=None`) between the just-closed
- * `sub_800CD00` (src/graphics/actor_part109.c, issue #9/#10) and the
- * already-matched `sub_800D040` (src/system/game_loop6.c, issue #12,
+ * `PlayerAnimWouldTouchCrate` (src/graphics/actor_part109.c, issue #9/#10) and the
+ * already-matched `BreakCrateTouchedByPlayer` (src/system/game_loop6.c, issue #12,
  * the physics/collision subsystem's documented entry point). Both are
- * called *only* from `sub_0800D18C` (asm/code_3_2_17_d18c.s, the
+ * called *only* from `QueueCratePlayerCollision` (asm/code_3_2_17_d18c.s, the
  * subsystem's ~1960-byte collision-response commit function,
  * docs/matching/issue-12-physics-collision.md) - recategorized
  * `graphics` -> `game_loop` here to match that caller, the same
- * recategorization issue #12 already applied to `sub_800D040` itself.
+ * recategorization issue #12 already applied to `BreakCrateTouchedByPlayer` itself.
  *
  * `sub_800CF70` is the function `docs/rom_map.md` (line 2137) already
  * partially flagged: "144 bytes before the physics/collision
@@ -37,8 +37,8 @@ struct aabb {
 };
 
 /* Same `+4`/`+6`/`+8`/`+9` `{s16 xOff, s16 yOff, u8 w, u8 h}` hitbox
- * quad layout `sub_800D040`/`sub_800CD00` already document, but here
- * the caller (`sub_0800D18C`) passes a pointer directly to the quad
+ * quad layout `BreakCrateTouchedByPlayer`/`PlayerAnimWouldTouchCrate` already document, but here
+ * the caller (`QueueCratePlayerCollision`) passes a pointer directly to the quad
  * itself (`playerRecordBase + 4`), not the 28-byte record's own base -
  * so this function only ever sees the 4-byte-wide quad and never reads
  * the record's own leading word. */
@@ -63,13 +63,13 @@ struct ceac_player {
     u8 wide;            // 0x90
 };
 
-/* Called once by `sub_0800D18C` (its only caller), passing the
+/* Called once by `QueueCratePlayerCollision` (its only caller), passing the
  * player's (`gPlayer`) own hitbox quad (`player's +0x20`
  * table, indexed by the player's own `+0x2d` tag, at the record's
  * `+4` quad) together with `self`'s own cached `x>>8`/`y>>8` shift
  * values and `self`'s own already-built AABB (`box`, built by the
- * caller from `self`'s own `+0x20` table at the top of `sub_0800D18C`
- * - the same convention `sub_800D040`'s "AABB1" documents).
+ * caller from `self`'s own `+0x20` table at the top of `QueueCratePlayerCollision`
+ * - the same convention `BreakCrateTouchedByPlayer`'s "AABB1" documents).
  *
  * Builds a *hybrid* AABB - the player's hitbox dimensions, positioned
  * at `self`'s location (`quad->xOff + xOffset`, `quad->yOff +
@@ -84,14 +84,14 @@ struct ceac_player {
  *
  * The hybrid box is then mirrored horizontally/vertically around
  * `(xOffset, yOffset)` according to the PLAYER's own `+0x28` mirror
- * flags (bits 4/5 - the same mirror-flag convention `sub_800D040`
+ * flags (bits 4/5 - the same mirror-flag convention `BreakCrateTouchedByPlayer`
  * documents, just keyed off the player's flags instead of `self`'s,
  * since the box represents the player's shape, not `self`'s).
  *
  * Finally tests the hybrid box against `box` (`self`'s own real AABB)
  * via `AabbOverlaps` and returns the boolean overlap result: "would a
  * player-shaped hitbox at `self`'s position overlap `self`'s own
- * actual hitbox" - used by `sub_0800D18C` to decide whether to treat
+ * actual hitbox" - used by `QueueCratePlayerCollision` to decide whether to treat
  * `self` as blocking/pushing a player-sized object at that spot (its
  * caller follows a `1` result with a `GetCrateAbove`(self) "get next"
  * list-walk step, consistent with a "can something occupy this slot"
@@ -142,7 +142,7 @@ u8 sub_800CEAC(void *self, struct hitbox_quad *quad, struct aabb *box,
     return 0;
 }
 
-/* `sub_0800D18C`'s single-step neighbor probe, called while its own
+/* `QueueCratePlayerCollision`'s single-step neighbor probe, called while its own
  * 5-slot "recently touched" ring-buffer counter (`gPlayer
  * +0x94`-adjacent counter at the caller's own stack cache) is `<= 4`
  * (confirmed at the call site: `cmp r3,#4; bgt` skips the call
@@ -159,7 +159,7 @@ u8 sub_800CEAC(void *self, struct hitbox_quad *quad, struct aabb *box,
  * the call and only overwrites when a neighbor is actually found.
  *
  * If there is no "prev" neighbor, or `prev`'s own `+0x4d & 0x7f`
- * state byte reads `1` (the same early-out gate `sub_800D040`'s own
+ * state byte reads `1` (the same early-out gate `BreakCrateTouchedByPlayer`'s own
  * header documents - excluded from the physics AABB tests entirely),
  * returns `self` unchanged.
  *
@@ -167,7 +167,7 @@ u8 sub_800CEAC(void *self, struct hitbox_quad *quad, struct aabb *box,
  * table (indexed by `prev`'s own `+0x2d` tag, quad at record `+4`,
  * `+4`/`+6`/`+8`/`+9` layout) offset by `prev.x>>8`/`prev.y>>8` and
  * mirrored per `prev`'s own `+0x28` flags - the exact "AABB1" shape
- * `sub_800D040`'s header already documents at length, just for `prev`
+ * `BreakCrateTouchedByPlayer`'s header already documents at length, just for `prev`
  * instead of `self`. Tests it against the caller-supplied `box` via
  * `AabbOverlaps`; on overlap, returns `prev` instead of `self` - so the
  * caller can substitute the actual colliding neighbor in place of the

@@ -68,10 +68,10 @@ struct pctrl_target
 {
     s32 x;              // 0x00
     s32 y;              // 0x04
-    u16 id;             // 0x08 - bitmap id (see sub_80072D8)
+    u16 id;             // 0x08 - bitmap id (see MarkEntityGone)
     u8 kind;            // 0x0A - object kind passed to the hit handlers (0x13 while attacking, else 1)
     u8 unk_0B;
-    u8 gone:1;          // 0x0C - bit 0: removed (see sub_80072D8)
+    u8 gone:1;          // 0x0C - bit 0: removed (see MarkEntityGone)
     u8 unk_0C_1:5;
     u8 flag6:1;
     u8 flag7:1;

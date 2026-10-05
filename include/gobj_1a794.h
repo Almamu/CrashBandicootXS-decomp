@@ -130,7 +130,7 @@ struct gobj
     u8 ctrlMode;        // 0x88 - player control mode 0-3: picks the `mover` controller update
                         //        (actor_part48.c); nonzero freezes `list` (sub_800B58C/sub_800B650/sub_800B678)
     u8 unk_89[3];
-    u32 deadline;       // 0x8C - gRoomFrameCount frame sub_800B524 tests against
+    u32 deadline;       // 0x8C - gRoomFrameCount frame IsPlayerInvulnerable tests against
     u8 unk_90;          // 0x90
     u8 countdown;       // 0x91
     u8 unk_92;          // 0x92 - a counter
@@ -248,7 +248,7 @@ extern void GetSpriteHitbox(struct aabb *dest, struct gobj *obj);
 extern u8 AabbOverlaps(struct aabb *a, struct aabb *b);
 extern s32 GetSpritePrevY(struct gobj *obj);
 extern s32 GetSpritePrevX(struct gobj *obj);
-extern s32 sub_800FDC8(s32 a, s32 b, s32 c, s32 d, s32 e);
+extern s32 FindLineCrossing(s32 a, s32 b, s32 c, s32 d, s32 e);
 extern void SetEntityPos(struct gobj *obj, s32 x, s32 y);
 extern void AdvanceSpriteAnim(struct gobj *obj);
 extern void SetSpritePrevPos(struct gobj *obj);

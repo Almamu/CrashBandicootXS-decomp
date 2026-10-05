@@ -12,8 +12,8 @@ The chunk generator's `graphics` label is a stale placeholder - the
 inherited the category of the already-matched `graphics.c` code sitting
 right before it. `docs/rom_map.md`'s "Confirmed: a shared
 physics/collision subsystem, entered from multiple different entity
-types" section directly reads `sub_0800D18C` and traces its entry point
-(`sub_0800D18C` <- `sub_80109A4` <- `CollidePlayerWithCrates` <- `CollidePlayerWithObjects`,
+types" section directly reads `QueueCratePlayerCollision` and traces its entry point
+(`QueueCratePlayerCollision` <- `CollideCrateWithPlayer` <- `CollidePlayerWithCrates` <- `CollidePlayerWithObjects`,
 itself vtable-dispatched from a *different* entity-vtable family than
 any previously-documented one) to conclude this is **shared
 infrastructure inside the confirmed `game_loop` zone**
@@ -34,7 +34,7 @@ multiple different entity-type vtables as shared infrastructure (edge
 detection, collision response, position commit), not specific to one
 entity's own behavior.
 
-- **`sub_0800D18C`** (~1960 B, one of the largest functions in the
+- **`QueueCratePlayerCollision`** (~1960 B, one of the largest functions in the
   entire `game_loop` zone) is the subsystem's **collision-response
   commit**: walks a linked list of nearby objects
   (`GetCrateBelow`/`GetCrateAbove`, "get next"/"get prev"), accumulates an
@@ -47,7 +47,7 @@ entity's own behavior.
   `gCrateHitResponse` 22-row/28-byte-stride per-state table, and
   ends by handing an ~8-argument packed position/rect off to
   `AddCollisionCandidate` (the apply/commit step).
-- **`sub_800D040`** (matched to this issue's understanding, parked
+- **`BreakCrateTouchedByPlayer`** (matched to this issue's understanding, parked
   under `NON_MATCHING`) is a **self-vs-player AABB overlap check** that
   reuses the exact same `+0x20`-pointer-to-table/`+0x2d`-tag/28-byte-
   stride hitbox-record convention `GetSpriteBounds`/`GetSpriteHitbox` in
@@ -58,20 +58,20 @@ entity's own behavior.
   On overlap it looks up `self`'s state id in `gCrateKindExplosive`
   and dispatches to either `ExplodeCrate(self, 1)` or
   `BreakCrateInStack(self, 0, 0, 0)`.
-- **`sub_800E494`/`sub_800E4E4`** (matched to this issue's
+- **`ClearCrateStackTouched`/`MarkCrateStackTouched`** (matched to this issue's
   understanding, parked under `NON_MATCHING`) are **bidirectional
   neighbor-list walkers** built on the same `GetCrateAbove`/
-  `GetCrateBelow` "get next"/"get prev" pair `sub_0800D18C` itself uses,
-  clearing (`sub_800E494`) or setting (`sub_800E4E4`, plus a
+  `GetCrateBelow` "get next"/"get prev" pair `QueueCratePlayerCollision` itself uses,
+  clearing (`ClearCrateStackTouched`) or setting (`MarkCrateStackTouched`, plus a
   budget-redistribution side effect on a caller-supplied `ctx`
   pointer's `+4`/`+0xc` fields) each visited neighbor's `+0x58` flag
   byte whenever its own `+0x4d & 0x7f` state byte reads 0.
-- **`sub_800E08C`** (1032 B) and the 18 functions from `BounceWumpaCrate`
-  through `UpdateSlotCrate` are the rest of `sub_0800D18C`'s jump-table
+- **`ApplyCrateCollision`** (1032 B) and the 18 functions from `BounceWumpaCrate`
+  through `UpdateSlotCrate` are the rest of `QueueCratePlayerCollision`'s jump-table
   targets and their own further sub-dispatches - moderately-sized
   (80-750 B) state-machine functions, each reading/writing several of
   the same `self+0x4d`/`+0x4e`/`+0x50`/`+0x64`/`+0x74`/`gPlayer`
-  fields `sub_0800D18C` and `sub_800D040` already touch, calling
+  fields `QueueCratePlayerCollision` and `BreakCrateTouchedByPlayer` already touch, calling
   `PlaySfx`, `_call_via_r4` (one of the `bx rN` BLX-emulation
   trampolines - see `docs/rom_map.md`'s trampoline-table correction),
   and each other. Left completely raw for this pass - see "Left raw"
@@ -83,7 +83,7 @@ All three are fully understood (semantics, field offsets, every branch
 and call confirmed against the ROM disassembly) but don't yet produce
 byte-identical output from `tools/agbcc`.
 
-- **`sub_800D040`** (`src/system/game_loop6.c`; real bytes in
+- **`BreakCrateTouchedByPlayer`** (`src/system/game_loop6.c`; real bytes in
   `asm/code_3_2_17_d040.s`) - this is the *same* AABB-build primitive
   `GetSpriteHitbox` (`src/graphics/actor_part.c`) is already parked for,
   just inlined twice in a row (once for `self`, once for the player)
@@ -104,12 +104,12 @@ byte-identical output from `tools/agbcc`.
   registers (`r8`/`r9`/`sl`) instead of the ROM's two, and/or moves
   `self` itself out of `r6` into `r8`. Parked rather than keep chasing
   individual register letters.
-- **`sub_800E494`/`sub_800E4E4`** (`src/system/game_loop7.c`; real
+- **`ClearCrateStackTouched`/`MarkCrateStackTouched`** (`src/system/game_loop7.c`; real
   bytes in `asm/code_3_2_17_e494.s`) - every operation, operand and
   branch matches the ROM one-for-one, including gcc naturally finding
   the same "reuse the just-computed `ands` result register as the
   literal 0/1 being stored" trick the ROM uses, and (for
-  `sub_800E4E4`) hoisting the literal `1` into a register kept live
+  `MarkCrateStackTouched`) hoisting the literal `1` into a register kept live
   across each loop, exactly like the ROM's `r7`/`r6`. The one remaining
   gap, 4 occurrences across both functions: the ROM materializes the
   `0x7f` mask immediate *before* the `ldrb` byte load
@@ -121,11 +121,11 @@ byte-identical output from `tools/agbcc`.
 
 ## Left raw (untouched) - 20 functions
 
-- **`sub_0800D18C`** (`asm/code_3_2_17_d18c.s`, ROM `0x0800D18C`,
-  ~1960 B) and **`sub_800E08C`** (same file, ROM `0x0800E08C`,
+- **`QueueCratePlayerCollision`** (`asm/code_3_2_17_d18c.s`, ROM `0x0800D18C`,
+  ~1960 B) and **`ApplyCrateCollision`** (same file, ROM `0x0800E08C`,
   1032 B) - both read at a high level via `docs/rom_map.md` (see
   above), but not understood branch-by-branch with the precision a
-  byte-exact reconstruction needs. `sub_0800D18C` in particular calls
+  byte-exact reconstruction needs. `QueueCratePlayerCollision` in particular calls
   27 other functions in this same still-raw neighborhood and was
   already flagged there as needing "a dedicated pass" of its own,
   larger in scope than this single chunk issue.
@@ -135,7 +135,7 @@ byte-identical output from `tools/agbcc`.
   `ActivateNitroSwitchCrate`, `ActivateIronSwitchCrate`, `SolidifyOutlineCrates`, `SolidifyOutlineCrate`,
   `BreakCratesInArea`, `FinishBrokenCrate`, `UpdateTntCountdown`, `UpdateSlotCrate`**
   (`asm/code_3_2_17_e560.s`, ROM `0x0800E560`-`0x0800FC70`) - the rest
-  of `sub_0800D18C`'s jump-table targets and their own further
+  of `QueueCratePlayerCollision`'s jump-table targets and their own further
   sub-dispatches (see "What this cluster turned out to be" above);
   each individually readable but not attempted here given the size of
   the remaining list and this subsystem's documented difficulty - left
@@ -160,28 +160,28 @@ byte-identical output from `tools/agbcc`.
    `code_3_2_17_d040.s` (guarded) / `code_3_2_17_d18c.s` (plain raw,
    untouched functions) / `code_3_2_17_e494.s` (guarded) /
    `code_3_2_17_e560.s` (tail) was still necessary here only because
-   two *non-contiguous* islands (`sub_800D040` alone, then
-   `sub_800E494`/`sub_800E4E4` after the untouched
-   `sub_0800D18C`/`sub_800E08C` block) needed their own `.c` files per
+   two *non-contiguous* islands (`BreakCrateTouchedByPlayer` alone, then
+   `ClearCrateStackTouched`/`MarkCrateStackTouched` after the untouched
+   `QueueCratePlayerCollision`/`ApplyCrateCollision` block) needed their own `.c` files per
    `docs/workflow.md`'s "one `.c` file per contiguous ROM region" rule
    - each new `.c` file still needs `ldscript.txt` to place it (even
    though it compiles empty in the real build), so its guarded raw
    companion has to sit at a matching, separately-nameable position.
 2. **The `GetSpriteBounds`/`GetSpriteHitbox` AABB-build shape is a known,
    confirmed-resistant register-allocation case**, now hit a second
-   time (`sub_800D040`, inlined twice). Anyone matching another
+   time (`BreakCrateTouchedByPlayer`, inlined twice). Anyone matching another
    function built on the same `+0x20`/`+0x2d`/28-or-0x1c-byte-stride
    hitbox-record convention should expect the same "which anonymous
    scratch register" gap rather than re-deriving it from scratch.
 3. **A `0x7f`-mask-immediate-before-`ldrb`-load instruction order is
    not controllable from the C source** in this compiler, at least for
    the `(mask & byteLoad) == 0` shape hit 4 times across
-   `sub_800E494`/`sub_800E4E4` - every operand-order/negation phrasing
+   `ClearCrateStackTouched`/`MarkCrateStackTouched` - every operand-order/negation phrasing
    tried produced the same (load-first) schedule. Worth checking
    against other still-open parked functions with the same shape
    before spending more time on it.
 
-## Second pass: `sub_800D040`/`sub_800E494`/`sub_800E4E4` matched via NAKED transcription
+## Second pass: `BreakCrateTouchedByPlayer`/`ClearCrateStackTouched`/`MarkCrateStackTouched` matched via NAKED transcription
 
 All three functions parked above are now byte-exact matched, confirmed
 by a full clean `make compare` ("La suma coincide"). Rather than keep
@@ -209,7 +209,7 @@ were already correctly positioned in `ldscript.txt` from the original
 parked pass, so no other `ldscript.txt` changes were needed for these
 two).
 
-## Phase 1: `sub_0800D18C`/`sub_800E08C` closed - the Phase 2 dispatch map
+## Phase 1: `QueueCratePlayerCollision`/`ApplyCrateCollision` closed - the Phase 2 dispatch map
 
 Foundational pass for a second staged effort over this subsystem's
 remaining 20-function tail (`0x0800D18C`-`0x0800FC70`,
@@ -217,7 +217,7 @@ remaining 20-function tail (`0x0800D18C`-`0x0800FC70`,
 dispatcher-first/parallel-leaves approach already used to close the
 `0x0800B8DC`-`0x0800D040` cluster (issue #9/#10). Both of the two
 "left raw" dispatchers this issue's first pass flagged above
-(`sub_0800D18C`, `sub_800E08C`) are now **matched via NAKED
+(`QueueCratePlayerCollision`, `ApplyCrateCollision`) are now **matched via NAKED
 transcription**, confirmed by a full clean `make compare`
 ("La suma coincide"). Real bytes formerly in `asm/code_3_2_17_d18c.s`
 (now deleted, fully consumed - both functions folded into the new
@@ -225,16 +225,16 @@ transcription**, confirmed by a full clean `make compare`
 `game_loop6.o` and `game_loop7.o`, exactly where the raw file used to
 sit).
 
-**Size correction**: `sub_0800D18C` is **~3840 B**
+**Size correction**: `QueueCratePlayerCollision` is **~3840 B**
 (`0x0800D18C`-`0x0800E08C`), not the ~1960 B this issue's original
 read-only pass (and `docs/rom_map.md`) estimated - it's nearly twice
 the size, one of the largest single functions in the whole ROM.
-`sub_800E08C` (`0x0800E08C`-`0x0800E490`, 1032 B) was already sized
+`ApplyCrateCollision` (`0x0800E08C`-`0x0800E490`, 1032 B) was already sized
 correctly.
 
 **Why NAKED, not real C**: three nested jump tables, ~30 distinct
 callees, and (confirmed again here) the same gcc-2.9-resistant
-AABB-build register shape `sub_800D040`'s own doc comment above
+AABB-build register shape `BreakCrateTouchedByPlayer`'s own doc comment above
 already documents (`r7`/`r8`/`sb` cross-block reuse) - twice more,
 inside a function roughly four times the size of any other function
 this project has attempted as real C. Transcribed
@@ -244,7 +244,7 @@ translated `adds`->`add`, `movs`->`mov`, `ands`->`and`,
 `_08XXXXXX:` labels renumbered to GNU-as local numeric labels assigned
 in first-definition order, each reference emitted with the correct
 `f`/`b` suffix by comparing source position), the same escape hatch
-already established for `sub_800D040`/`sub_800E494`/`sub_800E4E4`
+already established for `BreakCrateTouchedByPlayer`/`ClearCrateStackTouched`/`MarkCrateStackTouched`
 above. Verified in two stages: an isolated `cpp`/`agbcc`/`as` +
 `objcopy`/`cmp` pass against `baserom.gba` first (bytes matched up to
 the first `bl` - the expected relocation-site divergence for an
@@ -254,9 +254,9 @@ section isn't yet relocated to its real `0x0800D18C` VMA, another
 expected false-positive at this stage, not a real bug), then the
 authoritative full clean `make compare`, which passed outright.
 
-### `sub_0800D18C`'s three jump tables
+### `QueueCratePlayerCollision`'s three jump tables
 
-`sub_0800D18C(void *self, u32 arg1)` runs three separate jump-table
+`QueueCratePlayerCollision(void *self, u32 arg1)` runs three separate jump-table
 dispatches in sequence, not the single 6-case table the original
 read-only pass described (that one is real, it's the *second* of the
 three):
@@ -301,7 +301,7 @@ three):
    the dispatch id (`sp+0x78`) for two special cases (id 5 + a
    `gPlayer+0x24==4` gate rewrites to id 2; id 3 rewrites to
    id 1), then - unless `self+0x58` was set and `self+0x44` is 0 (early
-   return) - calls **`sub_800E4E4(self, &localAABB)`** (already
+   return) - calls **`MarkCrateStackTouched(self, &localAABB)`** (already
    NAKED-matched, `game_loop7.c`) when the id isn't 6, before falling
    into the third table.
 3. **Post-processing dispatch**, ROM `0x0800DD70`, 9 cases (0-8), keyed
@@ -311,11 +311,11 @@ three):
      tail (apply-offset + `AddCollisionCandidate` call).
    - **Case 1, 2** (`0800DEAC`): overlap-test `self`'s and a
      recomputed box (`AabbOverlapsInclusiveX`); on **no** overlap, calls
-     **`sub_800E494(self)`** (already NAKED-matched, `game_loop7.c`)
+     **`ClearCrateStackTouched(self)`** (already NAKED-matched, `game_loop7.c`)
      and clears the "apply offset" flag; on overlap, runs a large block
      of edge-distance comparisons that (depending on direction/gap)
      calls **`sub_800B324`** (external, unread) and/or
-     **`sub_800FDC8`** (already matched, `game_loop33.c`, the
+     **`FindLineCrossing`** (already matched, `game_loop33.c`, the
      Bresenham line-stepper) to decide a final offset direction.
    - **Case 4** (`0800DD94`): calls **`GetBottomCrate`** (already matched,
      `game_loop30.c`) to reselect `self`, re-reads its
@@ -337,21 +337,21 @@ three):
    ends by calling **`AddCollisionCandidate`** (already matched) with ~8 packed
    arguments - the actual apply/commit step.
 
-### `sub_800E08C`'s jump table
+### `ApplyCrateCollision`'s jump table
 
-`sub_800E08C(void *self, u32 arg1, u32 arg2, u32 arg3, u8 arg4, u8 arg5, u8 arg6)`
+`ApplyCrateCollision(void *self, u32 arg1, u32 arg2, u32 arg3, u8 arg4, u8 arg5, u8 arg6)`
 runs a **single** 6-case jump table, ROM `0x0800E27C`, keyed by `r7`
 (itself derived from `arg1`/`arg2` plus a `gCrateHitResponse`-driven
 special-case rewrite for id 1, and a `gPlayer+0x92`-gated
 rewrite to id 1 that also mutates `self+0x48`/state byte `+0x4e`):
 
-- **Case 0, 1** (`0800E294`): identical to `sub_0800D18C`'s own case
+- **Case 0, 1** (`0800E294`): identical to `QueueCratePlayerCollision`'s own case
   0/1 - reads `self+0x4e`; `6` => **`ActivateNitroSwitchCrate(self)`**, `3` =>
   **`ActivateIronSwitchCrate(self)`**, else nothing.
 - **Case 2** (`0800E342`): reads `self+0x4e`; `0xe` =>
   **`LightTntCrate(self)`**, `0xc` => **`BounceWumpaCrate(self)`**, else no
   callee - just sets `self+0x4d` bit `0x80` and
-  `gPlayer+0x80 = 1` (same as `sub_0800D18C`'s own case 2,
+  `gPlayer+0x80 = 1` (same as `QueueCratePlayerCollision`'s own case 2,
   `LightTntCrate`/`BounceWumpaCrate` are new here).
 - **Case 3** (`0800E37C`): a multi-way gate on `arg1`/`self+0x44`/
   `arg2`/`arg3` that always ends in one **`BreakCrateInStack(self, 0, ...)`**
@@ -366,14 +366,14 @@ rewrite to id 1 that also mutates `self+0x48`/state byte `+0x4e`):
   offset, gated on `gPlayer+0x1084`'s `+4` byte) and, if a
   sound/effect id was set (`sp+0x38`), `_call_via_r4`.
 
-This confirms `sub_0800D18C`'s and `sub_800E08C`'s per-edge dispatch
+This confirms `QueueCratePlayerCollision`'s and `ApplyCrateCollision`'s per-edge dispatch
 tables really are the same shared handler family (identical case
 ordering, identical targets for cases 0/1/4/5, case 3 always landing on
-`BreakCrateInStack`) - `sub_800E08C` is a second, narrower entry point into
-the same six leaf handlers, called only from `sub_0800D18C`'s own
+`BreakCrateInStack`) - `ApplyCrateCollision` is a second, narrower entry point into
+the same six leaf handlers, called only from `QueueCratePlayerCollision`'s own
 9-case table (cases 1/2/4, per that table's targets `0800DEAC`/
 `0800DD94`/`0800DE14` above - none of those actually call
-`sub_800E08C` directly by name in the disassembly read here; note for
+`ApplyCrateCollision` directly by name in the disassembly read here; note for
 Phase 2 to double-check the exact call site if this matters for a leaf
 function's own understanding).
 
@@ -438,7 +438,7 @@ functions, no more, no fewer, in this half.
   dispatchers). Switches `self` into hitbox tag `0x14`, rebuilds its
   hitbox record (the `ResetSpriteFrameTimer`/`ResetSpriteFrameIndex`/`SetSpriteAnimDone` trio
   every hitbox-rebuild call in this subsystem uses), registers it with
-  the object-pool grid (`sub_8009150`), re-derives a low-nibble
+  the object-pool grid (`LinkCrateToActiveBucket`), re-derives a low-nibble
   sub-animation value from the freshly selected hitbox record's `+0x14`
   byte via `GetPaletteSlot`'s tile-asset-cache lookup, plays SFX `0x11`,
   arms a `+0x4f = 0x3c` (60-frame) countdown.
@@ -475,7 +475,7 @@ functions, no more, no fewer, in this half.
   `OpenAkuAkuCrate`/`OpenLifeCrate`/`ActivateIronSwitchCrate`/`ActivateNitroSwitchCrate`/
   `OpenMysteryCrate`/`OpenSlotCrate`/`ExplodeCrate`/`FreezeLevelClock`/a
   SFX-3-plus-particle-spawn fallback (`DropWumpa`) - the largest
-  jump table in this subsystem after `sub_0800D18C`'s own three.
+  jump table in this subsystem after `QueueCratePlayerCollision`'s own three.
 - **`OpenMysteryCrate(self, walkFlag)`** - case-11 handler of
   `BreakCrate`'s table (dispatch id `0xb`). Plays SFX 3, then (the
   first time `self+0x51` is exactly `9`) rolls a random "escalation
@@ -521,7 +521,7 @@ functions, no more, no fewer, in this half.
      (so the compiler substitutes whichever register it lands in,
      rather than hardcoding `r4`).
   2. The `self+0x20`-pointer-to-table/`+0x2d`-tag/28-byte-stride record
-     lookup (the same convention `sub_800D040`'s "AABB1" shape uses) -
+     lookup (the same convention `BreakCrateTouchedByPlayer`'s "AABB1" shape uses) -
      plain C picks a different register pair than the ROM for the
      table-pointer/tag values even when the source statement order
      already matches ROM's load order; closed with explicit
@@ -544,7 +544,7 @@ functions, no more, no fewer, in this half.
   used - jump-table density (`BreakCrate`'s 23 cases, `OpenMysteryCrate`'s
   10, both with cascading-fallthrough or heavily-reused pool constants)
   and/or this subsystem's confirmed `r8`/`sb`/`sl`-triple-accumulator
-  shape (`DropCratesAbove`, matching `sub_0800D18C`'s own AABB-build
+  shape (`DropCratesAbove`, matching `QueueCratePlayerCollision`'s own AABB-build
   register reuse) made a plain-C attempt not worth chasing given this
   project's established precedent for the same shapes elsewhere in
   this subsystem.
@@ -615,7 +615,7 @@ half (`BounceWumpaCrate` through `DropCratesAbove`) separately.
 
 All twelve are now **matched via NAKED transcription**, confirmed by a
 full clean `make compare` ("La suma coincide"), the same escape hatch
-Phase 1 used for `sub_0800D18C`/`sub_800E08C`: every one of them
+Phase 1 used for `QueueCratePlayerCollision`/`ApplyCrateCollision`: every one of them
 re-triggers either the `self+0x20`-table/`+0x2d`-tag/28-byte-stride
 AABB-build register shape, or plain high-register (`r8`/`sb`/`sl`)
 cross-block reuse under `-O2` this compiler's allocator doesn't
@@ -656,13 +656,13 @@ check is the full clean `make compare`, which passed outright.
 ### Per-function roles
 
 - **`ExplodeCrate(self, u8 arg1)`** - the per-edge dispatch's shared
-  **case 4 target** (both `sub_0800D18C`'s and `sub_800E08C`'s own case
+  **case 4 target** (both `QueueCratePlayerCollision`'s and `ApplyCrateCollision`'s own case
   4: `self+0x4d & 0x7f == 0` gates a call with `arg1=1`). Also called
   directly by several siblings below (`arg1=0`) whenever their own
   overlap/state checks reach the same "commit an edge collision"
   outcome. Clears `self+0x4f`/`self+0x4d`'s low 7 bits, sets `self+0xc`
   bit `0x10`, re-adds `self` to `gCrateList`'s active list
-  (`sub_8009150`), sets `self+0x4d` bit `0x80` then ORs in `arg1` as the
+  (`LinkCrateToActiveBucket`), sets `self+0x4d` bit `0x80` then ORs in `arg1` as the
   low bit. Tags `self+0x2d` (`0x21`, or a `self+0x4e-0x21`-offset
   rewind when already `0xa`) via the `ResetSpriteFrameTimer`/`ResetSpriteFrameIndex`/
   `SetSpriteAnimDone` "set tag, refresh sprite/animation" triplet every
@@ -689,7 +689,7 @@ check is the full clean `make compare`, which passed outright.
   `ExplodeCrate(other, 0)`. Called by both `UpdateCrates` and
   `ActivateNitroSwitchCrate` as a "flush leftovers from last frame" first step.
 - **`ActivateNitroSwitchCrate(self)`** - per-edge dispatch id-row-`6` target (shared
-  by `sub_0800D18C`'s/`sub_800E08C`'s case 0/1). Tags `self+0x2d=0x23`,
+  by `QueueCratePlayerCollision`'s/`ApplyCrateCollision`'s case 0/1). Tags `self+0x2d=0x23`,
   runs the tag/refresh triplet plus a `GetPaletteSlot`-driven `self+0x29`
   nibble update, flushes via `DetonateNitroCrates`, bumps a combo counter
   (`ShowHudCrates`), plays sound id 4, arms `self+0x48=1`.
@@ -762,7 +762,7 @@ compilers. The object layout is named in `include/crate.h`
 
 **Closed (18):**
 
-- `sub_800E494`/`sub_800E4E4` (game_loop7.c): old_agbcc as-is. The
+- `ClearCrateStackTouched`/`MarkCrateStackTouched` (game_loop7.c): old_agbcc as-is. The
   first function needs a goto-into-`do` loop so the loop enters at the
   call. The second needs a per-loop `u8 one = 1` local, which makes gcc
   hoist the constant into r7/r6.
@@ -807,7 +807,7 @@ compilers. The object layout is named in `include/crate.h`
 
 **Not closed (6):**
 
-- `sub_800D040` (game_loop6.c): old_agbcc gets the push list, but gcc
+- `BreakCrateTouchedByPlayer` (game_loop6.c): old_agbcc gets the push list, but gcc
   keeps the player box's address `sp+16` in a callee-saved register,
   where the ROM recomputes `add r0, sp, #16` at each use. Separate
   structs, an array, and a static inline accessor all gave the same
@@ -820,7 +820,7 @@ compilers. The object layout is named in `include/crate.h`
   word loads and stores and 8-bit masks. Neither u8/u32 bitfield views
   nor explicit masks reproduce the ROM's unfolded `(n & 7) & 4` test
   and its register set (~280 halfwords).
-- `sub_0800D18C` (~3840 B) and `sub_800E08C` (1032 B): too large for
+- `QueueCratePlayerCollision` (~3840 B) and `ApplyCrateCollision` (1032 B): too large for
   this pass. These are the next candidates for a C draft under
   old_agbcc; the helpers in `include/crate.h` cover most of their
   callee patterns.
@@ -829,7 +829,7 @@ compilers. The object layout is named in `include/crate.h`
 
 - `docs/status/game_loop.md` - matched/parked/raw lists updated,
   including the `graphics` -> `game_loop` recategorization for this
-  address span, Phase 1's `sub_0800D18C`/`sub_800E08C` closure, and
+  address span, Phase 1's `QueueCratePlayerCollision`/`ApplyCrateCollision` closure, and
   Phase 2's lower-address-half (`BounceWumpaCrate`-`DropCratesAbove`) and
   higher-address-half (`ExplodeCrate`-`UpdateSlotCrate`) closures.
 - `tools/report_units.py` - `UNITS` list split/recategorized for
@@ -860,8 +860,8 @@ that the state store and the bitmap shift share. What mattered was
 switching the tag through the `PhysSetTag` inline, clamping the frame
 through the new `PhysSetFrame(self, 3)` inline, setting `flags` bit 4
 as a bitfield, and writing the switch cases in the ROM's block order.
-`sub_800D040`, `sub_800E08C` and `UpdateSlotCrate` now have near-miss drafts
-and `sub_0800D18C` is still untouched. See
+`BreakCrateTouchedByPlayer`, `ApplyCrateCollision` and `UpdateSlotCrate` now have near-miss drafts
+and `QueueCratePlayerCollision` is still untouched. See
 [issue-12-13-25-naked-retry.md](issue-12-13-25-naked-retry.md).
 
 ## Later pass: third near-miss sweep
@@ -872,9 +872,9 @@ steps on a fresh local (`t = (r - 1) << 24; cw &= 0xc7; t >>= 21;
 cw |= t`), which ties each result to the ROM's register. See
 [near-miss-polish-3.md](near-miss-polish-3.md).
 
-## Later pass: first C draft of `sub_0800D18C`
+## Later pass: first C draft of `QueueCratePlayerCollision`
 
-`sub_0800D18C` now has a C draft under `#if NON_MATCHING`. It is the
+`QueueCratePlayerCollision` now has a C draft under `#if NON_MATCHING`. It is the
 ROM's exact size under old_agbcc and 968 halfwords off; the function
 stays NAKED. The draft fixes the function's structure: the frame layout,
 the three jump tables, the `goto` into a shared `edge = dirX` block,
@@ -883,25 +883,25 @@ allocation. See [huge-naked-retry.md](huge-naked-retry.md).
 
 ## Later pass (stack-box NAKED retry)
 
-`sub_800D040` is now real C under old_agbcc (`game_loop6.o` joined
+`BreakCrateTouchedByPlayer` is now real C under old_agbcc (`game_loop6.o` joined
 `OLD_AGBCC_OBJS`). Every use of the player box's address goes through
 an empty `asm("" : "+r")` copy, so cse doesn't hold `sp+16` in a
 callee-saved register across the builder calls, and `px`/`py` are
-shared by both blocks, as in the ROM's r7/r8. `sub_0800D18C` (938
-halfwords off, was 968) and `sub_800E08C` (49) stay NAKED. See
+shared by both blocks, as in the ROM's r7/r8. `QueueCratePlayerCollision` (938
+halfwords off, was 968) and `ApplyCrateCollision` (49) stay NAKED. See
 [sp-box-retry.md](sp-box-retry.md).
 
-## Later pass: sub_800E08C matched (last-five NAKED retry)
+## Later pass: ApplyCrateCollision matched (last-five NAKED retry)
 
-`sub_800E08C` is now real C under old_agbcc (`game_loop47.o` joined
+`ApplyCrateCollision` is now real C under old_agbcc (`game_loop47.o` joined
 `OLD_AGBCC_OBJS`). The first flag byte is a register union of a u32 and
 a one-byte struct, passed to `BreakCrateInStack` as that struct (QImode), which
-gives the ROM's `mov r5, sp; ldrb` reload. `sub_0800D18C` stays NAKED;
+gives the ROM's `mov r5, sp; ldrb` reload. `QueueCratePlayerCollision` stays NAKED;
 see [last5-naked-retry.md](last5-naked-retry.md) for what the pass found.
 
-## Later pass: sub_0800D18C matched (huge NAKED retry 3)
+## Later pass: QueueCratePlayerCollision matched (huge NAKED retry 3)
 
-`sub_0800D18C` is now real C under old_agbcc, which closes the last
+`QueueCratePlayerCollision` is now real C under old_agbcc, which closes the last
 function in this issue's range. The second pass had left it size-exact
 and 33 halfwords off; this pass fixed the swapped spill slots, the table
 load order at the first code lookup, the reload round-robin in the second

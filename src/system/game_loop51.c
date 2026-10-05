@@ -12,7 +12,7 @@ extern void UpdateCrateFall(struct crate *self);
 /* GitHub issue #13: 0x0800FC70-0x08010A0C, continuing the physics/
  * collision subsystem (see game_loop17.c's header comment and
  * docs/matching/issue-13-graphics-fc70.md). Sits between the matched
- * `DrawCrate` (game_loop35.c) and `sub_8010674` (game_loop23.c) in
+ * `DrawCrate` (game_loop35.c) and `IsCrateInsideRect` (game_loop23.c) in
  * ROM, so it needs its own file - see docs/workflow.md's "one file
  * per contiguous ROM region" rule. `self` throughout is the same
  * "collision box" object (`struct crate`, include/crate.h) every
@@ -48,7 +48,7 @@ extern void UpdateCrateFall(struct crate *self);
  * `FinishBrokenCrate`. Finally, unconditionally, calls `AdvanceSpriteAnim` and
  * hands `self+0x18`'s table's own `+0x60`/`+0x64` offset/function-
  * pointer pair off to the `_call_via_r1` table-trampoline (the same
- * convention `sub_8007048`/`sub_80070D4`, graphics.c, establish).
+ * convention `CheckEntityPlayerContact`/`UpdateEntity`, graphics.c, establish).
  *
  * Matches under old_agbcc. The old NAKED note blamed register pressure
  * on the field addresses; the source-level causes were (see

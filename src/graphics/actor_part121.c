@@ -1,13 +1,13 @@
 #include "core.h"
 #include "gobj_1a794.h"
 
-/* GitHub issue #9/#10: `sub_800BFA8`, the last raw function in the
+/* GitHub issue #9/#10: `UpdateEnemyShooter`, the last raw function in the
  * `0x0800B8DC`-`0x0800D040` cluster's own `asm/code_3_2_17_bfa8.s`
  * chunk - called only from `UpdateEnemyCtrl` state 15 (case 42, right
  * after `UpdateEnemyAttackCycle`), per docs/matching/issue-9-10-0x0800b8dc-
  * graphics.md. Small "close enough" gate + `self+0x68`-keyed 2-way
  * dispatch, the same `self+0x68` sub-state byte `UpdateEnemyAttackCycle`/
- * `sub_800C5D4` already key off (docs/rom_map.md's "generic state-
+ * `UpdateEnemyTriggerBox` already key off (docs/rom_map.md's "generic state-
  * machine selector" family, now 8+ confirmed sites).
  *
  * Prelude: `__modsi3(gRoomFrameCount + self->0x48 - self->0x4c,
@@ -24,7 +24,7 @@
  * `owner->0x38` (the cluster's established "enabled" byte) is set,
  * `self->0x68 == 2`/`7` trigger `SetEnemyAnimMode(self, 0)`/
  * `SetEnemyAnimMode(self, 4)`. Otherwise (`owner->0x38 == 0`),
- * `self->0x68 == 2`/`7` each gate a `sub_800C9C8(0xc, 6, 0, d, 0x400,
+ * `self->0x68 == 2`/`7` each gate a `LaunchHarmfulEffectPart(0xc, 6, 0, d, 0x400,
  * owner)` call (`d = -0xa` for mode 2, `d = 8` for mode 7) behind an
  * `owner->0x30`/`owner->0x34` magic-constant check (`0xa`/`0` and
  * `8`/`0` respectively - the same blocking-condition pair
@@ -54,7 +54,7 @@
 
 extern void SetEnemyAnimMode(void *self, s32 mode);
 extern s32 __modsi3(s32 a, s32 b);
-extern void *sub_800C9C8(s32 a, s32 b, s32 c, s32 d, s32 e, void *f);
+extern void *LaunchHarmfulEffectPart(s32 a, s32 b, s32 c, s32 d, s32 e, void *f);
 
 /* The fields of this cluster's controller object (the class of
  * UpdateEnemyCtrl, see actor_part124.c's `struct trigger_ctrl`) read here:
@@ -71,7 +71,7 @@ struct trigger_ctrl {
     struct gobj *owner; // 0x70
 };
 
-void sub_800BFA8(void *selfArg)
+void UpdateEnemyShooter(void *selfArg)
 {
     register struct trigger_ctrl *self asm("r4") = selfArg;
     struct gobj *owner;
@@ -109,11 +109,11 @@ void sub_800BFA8(void *selfArg)
     switch (self->mode) {
     case 2:
         if (owner->frame == 0xa && owner->stepTimer == 0)
-            record = sub_800C9C8(0xc, 6, 0, -0xa, 0x400, owner);
+            record = LaunchHarmfulEffectPart(0xc, 6, 0, -0xa, 0x400, owner);
         break;
     case 7:
         if (owner->frame == 8 && owner->stepTimer == 0)
-            record = sub_800C9C8(0xc, 6, 0, 8, 0x400, owner);
+            record = LaunchHarmfulEffectPart(0xc, 6, 0, 8, 0x400, owner);
         break;
     }
     if (record != NULL)

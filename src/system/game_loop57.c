@@ -26,7 +26,7 @@
  *   pacing pattern docs/matching.md documents elsewhere) and a nested
  *   text-paging loop through a second per-item record array at `+0x10`
  *   (each record `{void **strings; s32 count;}`), rendering each string
- *   via `sub_8000EE4` (text_layout.c) against an `bitmap_font *` at
+ *   via `DrawWrappedText` (text_layout.c) against an `bitmap_font *` at
  *   `+0x14` and a 2-word "box" at `+0x18`/`+0x1c`, continuing to the
  *   next string in the current record while a held-input mask (9,
  *   versus `RunSlideshow`'s 8) stays set. `+0x24` feeds `__udivsi3`
@@ -171,7 +171,7 @@ extern void HideUnusedOamEntries(void *oam);
 extern void CommitOamBuffer(void *oam);
 extern void WaitForVBlank(void);
 extern s32 WaitForKeyPress(s32 count, u8 checkButtons, s32 mask);
-extern s32 sub_8000EE4(u8 *text, void *target, s32 *box, s32 limit, s32 mode);
+extern s32 DrawWrappedText(u8 *text, void *target, s32 *box, s32 limit, s32 mode);
 
 void RunCutscenePlayer(struct pager *self)
 {
@@ -211,7 +211,7 @@ void RunCutscenePlayer(struct pager *self)
 
                 while (str[pos] != 0 && res == 1)
                 {
-                    pos += sub_8000EE4(str + pos, self->target, self->box, limit, 1);
+                    pos += DrawWrappedText(str + pos, self->target, self->box, limit, 1);
                     res = WaitForKeyPress(self->items[i]->count, self->items[i]->buttons, 9);
                 }
             }

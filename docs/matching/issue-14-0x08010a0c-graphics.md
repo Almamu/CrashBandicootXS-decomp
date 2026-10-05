@@ -33,7 +33,7 @@ covering:
   `sub_8010A84` sets), and bits 0-2 (`sub_8010A94` sets, `sub_8010AA4`
   gets).
 - Plain field accessors: `SetCrateKind`/`GetCrateKind` (`self+0x4e`
-  byte), `sub_8010ABC`/`sub_8010AC0` (`self+0x44` word),
+  byte), `SetCrateFallDistance`/`GetCrateFallDistance` (`self+0x44` word),
   `SetCrateState`/`GetCrateState` (`self+0x4d`'s low 7 bits, preserving bit
   7), `sub_8010AE4` (`self+0x4c` byte setter), `sub_8010AEC`
   (`self+0x4c` sign-extending getter), `SetCrateTouched` (`self+0x58`
@@ -73,14 +73,14 @@ is a previous/seed candidate and `records[1..count-1]` are new
 candidates queued this frame. For each candidate, computes its
 Y-distance to the player (`gPlayer`); any whose Y-distance
 jumps more than 8 past the running-best Y-distance, or whose own
-`kind` is `4`, gets resolved immediately via `sub_800E08C()` (an
+`kind` is `4`, gets resolved immediately via `ApplyCrateCollision()` (an
 11-argument call - the 9th-11th land in this function's own stack
 frame at a fixed offset, confirming they're genuine AAPCS-style
 stack-passed arguments, not separate mystery locals, once
 cross-referenced against where their addresses are computed); the
 rest are only compared against each other (Y-distance primary,
 X-distance tiebreak) to find the single nearest. After the scan, that
-overall-nearest candidate is *also* resolved via `sub_800E08C()` -
+overall-nearest candidate is *also* resolved via `ApplyCrateCollision()` -
 its 11th argument set to whether any forced/priority hit happened
 during the scan (`1`), unlike every in-loop call, which always passes
 `0` there - and the list is reset (`count = 0`, `field4 = 0`) for the
@@ -91,7 +91,7 @@ understood and cross-referenced against the mirror-image writer
 `AddCollisionCandidate` (right after this issue's own range, not itself in
 scope) and the `ResolvePlayerCollisions` caller when this was first parked - but
 the ROM builds nearly every record-field address in both the loop
-body and the two `sub_800E08C` call sites as a *running pointer*,
+body and the two `ApplyCrateCollision` call sites as a *running pointer*,
 incremented by `0x24` once per loop iteration, with up to twelve of
 them (`r8`/`sb`/`sl` among them) live across a single `0x68`-byte
 stack frame. This is the same "long, non-uniform stretch of field
@@ -106,7 +106,7 @@ transcribed one-to-one (suffix-less mnemonics - `add`/`mov`/`lsl`/
 `ldr`/`str`, not `adds`/`movs`/`lsls`/suffixed forms - which this
 project's assembler invocation accepts identically), with the single
 `gPlayer` literal pool kept at the ROM's own mid-function
-split point (right after the loop's first `sub_800E08C` call site's
+split point (right after the loop's first `ApplyCrateCollision` call site's
 `b` past it) and a trailing `asm(".align 2, 0")` for the 2-byte
 zero-fill gap before `AddCollisionCandidate` (the assembler's default `nop`
 fill pattern otherwise mismatches the ROM's zero halfword there - see
@@ -135,7 +135,7 @@ techniques that got it over the line, in the order they were needed:
    (`self+0x28` -> `+0x68` -> `+0x8c` via r1; `self+0x24` -> `+0x90` ->
    `+0xac` -> `+0x80` -> `+0x88` via r0), reproduced here as two plain
    `u8 *` cursors (`p1`/`p0`) incremented/decremented by the literal
-   relative offset between each field - the same idiom `sub_800A810`
+   relative offset between each field - the same idiom `ResetPlayerForRoom`
    (right after this function, matched in an earlier session) already
    needed a single cursor for, just doubled up and interleaved here.
 2. **Separate statements, not one folded expression**, for

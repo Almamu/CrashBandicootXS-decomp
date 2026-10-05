@@ -15,7 +15,7 @@
  * `self`/`owner` object shape (`self+0x70` "owner", `self+0xc`
  * "anchor" record, `self+0x84` per-instance table) and calls the
  * exact same helpers `StartCtrlTargetMotionYFromSet`/`StartCtrlTargetMotionXFromSet`/`_call_via_r3`
- * already matched for `sub_800C8AC`/`sub_800C8BC`/`SetEnemyAnimMode`
+ * already matched for `SetEnemyMotionY`/`SetEnemyMotionX`/`SetEnemyAnimMode`
  * (`actor_part113.c`) - not merely the same *convention* reused on a
  * different struct, but the *identical* struct/helper set, just
  * driven by dialog-widget vtable entries instead of the physics
@@ -25,11 +25,11 @@
  * this ROM neighborhood uses, not merely a structurally-similar
  * sibling.
  *
- * `SetEnemyState`'s own case bodies never call `sub_800C8AC`/
- * `sub_800C8BC`/`SetEnemyAnimMode` as functions - each case *manually
+ * `SetEnemyState`'s own case bodies never call `SetEnemyMotionY`/
+ * `SetEnemyMotionX`/`SetEnemyAnimMode` as functions - each case *manually
  * repeats* those three helpers' own instruction sequences inline
  * (confirmed by the `bl` targets: `StartCtrlTargetMotionXFromSet`/`StartCtrlTargetMotionYFromSet`
- * directly, never `sub_800C8AC`/`sub_800C8BC`/`SetEnemyAnimMode`
+ * directly, never `SetEnemyMotionY`/`SetEnemyMotionX`/`SetEnemyAnimMode`
  * themselves) - so the C below inlines them (SetModeA/SetModeB/SetMode).
  *
  * The whole file is built with old_agbcc (issue #10 NAKED retry,

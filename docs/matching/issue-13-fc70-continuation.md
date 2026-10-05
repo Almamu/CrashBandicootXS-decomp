@@ -50,9 +50,9 @@ second pass against those five.
   via `ResetCrate` (`game_loop22.c`). Both take/return `struct actor *`
   (matching `DestroySpriteObj`/`InitSpriteObj`'s own already-matched
   prototypes in `actor_part6.c`).
-- **`sub_8010784`/`sub_80107C4`** (`src/system/game_loop31.c`) - two
+- **`FindLineCrossingYMajor`/`FindLineCrossingXMajor`** (`src/system/game_loop31.c`) - two
   fixed single-octant variants of the Bresenham-line-style stepper
-  `sub_800FDC8` (below) implements in full - each walks a fixed number
+  `FindLineCrossing` (below) implements in full - each walks a fixed number
   of steps along one axis (the 3rd/4th parameters, doubled into the
   classic Bresenham error term), stepping the 1st parameter (`y`) by
   the 5th parameter (`yStep`) whenever the error term overflows (or
@@ -61,10 +61,10 @@ second pass against those five.
   walk completes without ever reaching it. Both matched with no
   register-allocation gotchas - straightforward translations of the
   ROM's own loop shape.
-- **`sub_80109A4`** (`src/system/game_loop30.c`, new file) - unless
+- **`CollideCrateWithPlayer`** (`src/system/game_loop30.c`, new file) - unless
   `self`'s own `+0x4d & 0x7f` state is 1, and `testX`/`testY` are both
   within `0x3fff` of `self`'s own `+0`/`+4` position, and `self`'s
-  `+0x4e` byte isn't `5`, fires `sub_0800D18C(self)` (the subsystem's
+  `+0x4e` byte isn't `5`, fires `QueueCratePlayerCollision(self)` (the subsystem's
   collision-response commit) - then always clears `self`'s own `+0xc`
   flags bit 3. Two register-pinning gotchas:
   - The initial `self+0x4d & 0x7f` check needs a full inline-asm
@@ -98,15 +98,15 @@ second pass against those five.
   per-frame position-wrap advance keeping `sb`/`r8` live as two extra
   callee-saved accumulators throughout - the same "two extra
   high-register accumulators live throughout" gap already parked (and
-  NAKED-transcribed) for `sub_800D040` (`game_loop6.c`,
+  NAKED-transcribed) for `BreakCrateTouchedByPlayer` (`game_loop6.c`,
   [docs/matching/issue-12-physics-collision.md](issue-12-physics-collision.md)).
   Needed a trailing `asm(".align 2, 0")` too - the function body is 342
   bytes (not 4-aligned), and the ROM pads the 2-byte gap before
-  `sub_800FDC8` with a zero halfword rather than the assembler's
+  `FindLineCrossing` with a zero halfword rather than the assembler's
   default `nop` (`matching_decomp_alignment_fix`).
-- **`sub_800FDC8`** (`src/system/game_loop33.c`, new file) - the full
-  4-octant Bresenham-line-style line-stepper `sub_8010784`/
-  `sub_80107C4` above are fixed single-octant variants of. Every
+- **`FindLineCrossing`** (`src/system/game_loop33.c`, new file) - the full
+  4-octant Bresenham-line-style line-stepper `FindLineCrossingYMajor`/
+  `FindLineCrossingXMajor` above are fixed single-octant variants of. Every
   branch/field/octant-selection is understood and was written as plain
   C first (all four octant cases individually matched byte-for-byte in
   isolation) - the sole remaining gap is that this compiler's
@@ -130,7 +130,7 @@ second pass against those five.
   walks its own list direction, returning the furthest node reachable
   while every node visited has a `+0x4d & 0x7f` state != 1, falling
   back to `self` if there's no usable neighbor at all. Hits the exact
-  same cross-jump-over-merge gap as `sub_800FDC8` above - the loop's
+  same cross-jump-over-merge gap as `FindLineCrossing` above - the loop's
   two `return cur;` sites are byte-identical (`adds r0,r4,#0; b
   <exit>`) and the ROM keeps them as separate physical copies, this
   compiler merges them into one (4 bytes short each). Transcribed for
@@ -148,23 +148,23 @@ second pass against those five.
 - **`UpdateCrate`** (`asm/code_3_2_17_e560_ff0c.s`) - a large
   (~195-instruction) state dispatcher calling several still-raw
   siblings; not attempted.
-- **`DrawCrate`/`sub_8010674`** (`asm/code_3_2_17_e560_ff0c.s`) -
+- **`DrawCrate`/`IsCrateInsideRect`** (`asm/code_3_2_17_e560_ff0c.s`) -
   both read and their semantics are understood (`DrawCrate`: a
   `self+0x4d`-gated reset of `self+0x30`/`self+0x38` via the
   `self+0x20`-pointer-to-manager/`self+0x2d`-tag/0x1c-stride hitbox-
-  record convention `sub_800D040` also uses, then a tail call to
-  `DrawSprite`; `sub_8010674`: an AABB-overlap test between `self`'s
+  record convention `BreakCrateTouchedByPlayer` also uses, then a tail call to
+  `DrawSprite`; `IsCrateInsideRect`: an AABB-overlap test between `self`'s
   own table-driven half-width/half-height box and a caller-supplied
   box, short-circuiting true when `self+0xc` bit 4 is set or
   `self+0x44` is 0) - but this compiler's own register allocation for
   both spreads more live values across r0-r7 than the ROM's build
-  needs (an extra `r8`/`ip` pair appears in `sub_8010674` where the
+  needs (an extra `r8`/`ip` pair appears in `IsCrateInsideRect` where the
   ROM stays within r0-r7 entirely, by reusing `self`'s own register for
   a late scratch value once it's no longer needed - the ROM's own
   `self+0x20`/`self+0x2d` field-address computation and the AABB
   compare both keep tighter register pressure than any C phrasing
   tried here reproduced). Left raw rather than force a low-confidence
-  register-pin attempt; a future pass matching `sub_800D040`'s own
+  register-pin attempt; a future pass matching `BreakCrateTouchedByPlayer`'s own
   hitbox-record register shape first may make these more tractable.
 
 ## Cross-references
@@ -179,9 +179,9 @@ second pass against those five.
 - `docs/matching/issue-13-graphics-fc70.md` - the first pass against
   this same issue, left these five units raw.
 
-## Update: `sub_800FDC8` since matched as real C
+## Update: `FindLineCrossing` since matched as real C
 
-`sub_800FDC8`, parked above as a NAKED transcription, is now matched
+`FindLineCrossing`, parked above as a NAKED transcription, is now matched
 as real decompiled C - see
 [naked-sub_800fdc8-matched.md](./naked-sub_800fdc8-matched.md). The
 `goto`-to-a-physically-earlier-label technique that closed
@@ -240,7 +240,7 @@ runs the same triplet. If bit 7 was clear instead, `self+0x4d`'s low 7
 bits == 1 triggers `FinishBrokenCrate`. Finally, unconditionally, calls
 `AdvanceSpriteAnim` and hands `self+0x18`'s table's own `+0x60`/`+0x64`
 offset/function-pointer pair off to the `_call_via_r1` table-trampoline
-- the same convention `sub_8007048`/`sub_80070D4` (`graphics.c`)
+- the same convention `CheckEntityPlayerContact`/`UpdateEntity` (`graphics.c`)
 establish, confirming `self+0x18` is this object's `struct actor.table`
 field even though the rest of `self` is far larger than `struct
 actor`'s own `0x1c` bytes (consistent with every sibling in this file

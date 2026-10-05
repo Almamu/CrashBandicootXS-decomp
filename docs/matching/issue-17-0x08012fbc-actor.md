@@ -15,7 +15,7 @@ of these five end-to-end before any matching work started:
 `ActionCtrlStateAirborne` (the table's shared "bonus/score popup" handler, reused
 across 6 of the table's 42 slots) and `ActionCtrlStateSlide` ("player input/
 action handling" - flag-bit checks against action codes via
-`sub_800AAEC`, then sound + state change). Both readings are confirmed
+`PlayerHasRoomForAnim`, then sound + state change). Both readings are confirmed
 accurate by this pass's own full transcription.
 
 ## New files
@@ -102,7 +102,7 @@ child-object/action-table family (`actor_part79.o`/`actor_part83.o`/
   `0x1a`/`0x15`), clamps `part+0x30`'s index against the `part+0x20`-
   pointer-to-manager/`part+0x2d`-tag/28-byte-stride record's own `+0x16`
   count (the same table-lookup convention `DrawCrate`, game_loop35.c,
-  establishes), calls `sub_800B334(part)`, then clears `part+0x68`.
+  establishes), calls `ClearPlayerSpeedY(part)`, then clears `part+0x68`.
   Otherwise, while `self+0x26==0` and `gKeys`'s high-half
   bit 1 is set: plays a fixed sound (id `0xa`), fires another trampoline
   pair (ids `0xe`/`0x10`), resets `self+0x18`/`+0x1c` and the
@@ -136,7 +136,7 @@ child-object/action-table family (`actor_part79.o`/`actor_part83.o`/
   2: when set, arms `part+0xd` bit 0 and `self+0x34=0`, fires a
   trampoline pair (ids `0x1a`/`0x15`, skipped for `self+8==0xe`),
   clamps `part+0x30` via the same table-lookup idiom `ActionCtrlStateJump`
-  uses, and calls `sub_800B334(part)` (or, for `self+8==0x1a`, instead
+  uses, and calls `ClearPlayerSpeedY(part)` (or, for `self+8==0x1a`, instead
   re-runs `UpdatePlayerFacing`/`HandleActionCtrlAirInput` and clears `part+0x68`); when
   clear, a D-pad result of `1`/`2` similarly re-runs `UpdatePlayerFacing`/
   `HandleActionCtrlAirInput` and resets `part+0x68`, while bit 3 (and `part->0x64
@@ -167,11 +167,11 @@ child-object/action-table family (`actor_part79.o`/`actor_part83.o`/
   pass as `docs/rom_map.md`'s "player input/action handling" reader. If
   `part+0x68==0`: sets the trio to `5`/`1`/`0` directly and returns (no
   trampoline calls). Otherwise, on the "confirm" input edge
-  (`gKeys` low bit 0 plus `sub_800AAEC(part, 0xb)`): plays a
+  (`gKeys` low bit 0 plus `PlayerHasRoomForAnim(part, 0xb)`): plays a
   sound (id `0xc`), clears two `part+0xd` bits (the same runtime
   `-2`/`-3` negated-mask idiom `ActionCtrlStateCrawlStart`, actor_part18.c, uses),
   and tail-calls `StartActionCtrlHighJump(self)`. On bit 1 plus
-  `sub_800AAEC(part, 0x10)`: tail-calls `StartActionCtrlSpin(self)` and sets
+  `PlayerHasRoomForAnim(part, 0x10)`: tail-calls `StartActionCtrlSpin(self)` and sets
   the trio to `1`/`1`/`1`. Otherwise falls into a shared tail:
   increments `self+0x18`, and while it's still below `self+0x1c`,
   clears `part+0x34` and clamps `part+0x30` via the usual table-lookup
@@ -182,7 +182,7 @@ child-object/action-table family (`actor_part79.o`/`actor_part83.o`/
   `0x100`: fires a further pair (ids `0x14`/`0`), resets `self+0x1c`,
   sets the trio to `0`/`1`/`3`, and tail-calls `ActionCtrlStateCrawl(self)`
   (actor_part18.c); otherwise dispatches `GetDpadDirection`
-  (`gInput`) and `sub_800AAEC(part, 2)`: when both fire and
+  (`gInput`) and `PlayerHasRoomForAnim(part, 2)`: when both fire and
   the D-pad result is `3`/`4`, gates `HasTurboRun(gLevelState)`
   behind a further bit test to either fire a trampoline pair (ids
   `4`/`0x18`) and set the trio to `0x1b`, or tail-call

@@ -23,13 +23,13 @@ because one inserted instruction shifts every later halfword.
 Shared header changes (`include/crate.h`), all layout-preserving:
 `crate_vtable.m60`, `crate.animDone`, `crate.unk_54`,
 `phys_flag_bits.bit4` plus `PHYS_FLAG4`, the `PhysSetFrame` inline, and
-`struct phys_player` extended with the player fields `sub_800E08C`
+`struct phys_player` extended with the player fields `ApplyCrateCollision`
 touches (`x`/`y`, `vtable`, `dir`, the velocity words, `hitAxes`,
 `hitMask`, `bounce`, `carried`, `unk_10C`).
 
 ## Not closed
 
-- **`sub_800E08C`** (#12, `game_loop47.c`): near miss under old_agbcc
+- **`ApplyCrateCollision`** (#12, `game_loop47.c`): near miss under old_agbcc
   (49 halfwords, same size). The draft differs in exactly one place.
   In case 3, the ROM reads the first flag byte back as a byte from its
   spill slot (`mov r5, sp; ldrb r2, [r5]`). The draft reads it as a word
@@ -42,9 +42,9 @@ touches (`x`/`y`, `vtable`, `dir`, the velocity words, `hitAxes`,
   for `BreakCrateInStack`, K&R parameters, struct copies, and an
   address-taken local (which gives the `ldrb` but loads it too early).
   The file is still built with agbcc. If the draft closes, the whole
-  file (whose other function is the NAKED `sub_0800D18C`) can move to
+  file (whose other function is the NAKED `QueueCratePlayerCollision`) can move to
   `OLD_AGBCC_OBJS`.
-- **`sub_800D040`** (#12, `game_loop6.c`): near miss under old_agbcc.
+- **`BreakCrateTouchedByPlayer`** (#12, `game_loop6.c`): near miss under old_agbcc.
   The self box and the tail match. For the player box, gcc keeps
   `&b` (`sp+0x10`) in a callee-saved register across the two builder
   calls. The ROM re-adds it for each call, and that pushes px/py and
@@ -66,8 +66,8 @@ touches (`x`/`y`, `vtable`, `dir`, the velocity words, `hitAxes`,
   ROM cross-jumps the overlap arithmetic of both `hdir` arms into one
   shared tail, which the draft's allocation prevents. Not iterated
   further this pass.
-- **`sub_0800D18C`** (#12, `game_loop47.c`, 3840 B): not attempted. Its
-  size is roughly `sub_800E08C` and `CreateCrate` combined.
+- **`QueueCratePlayerCollision`** (#12, `game_loop47.c`, 3840 B): not attempted. Its
+  size is roughly `ApplyCrateCollision` and `CreateCrate` combined.
 
 ## Reusable lessons
 
@@ -85,7 +85,7 @@ touches (`x`/`y`, `vtable`, `dir`, the velocity words, `hitAxes`,
   r8 "accumulator" in `BreakCrate`).
 - **Stores through a pointer to a stack struct** (`pp = &pos; pp->y =`)
   make gcc reload a global pointer afterwards. The ROM had that reload
-  in `sub_800E08C`.
+  in `ApplyCrateCollision`.
 - **A local copy of `anim->records`** (`recs = self->anim->records;
   rec = &recs[self->tag]`) loads the table before the tag, which is the
   order the ROM uses in this whole cluster.

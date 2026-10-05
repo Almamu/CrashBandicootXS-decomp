@@ -1,7 +1,7 @@
-# `sub_800FDC8` converted from NAKED transcription to real matched C
+# `FindLineCrossing` converted from NAKED transcription to real matched C
 
-`sub_800FDC8` (`src/system/game_loop33.c`, the full 4-octant
-Bresenham-line-style line-stepper `sub_8010784`/`sub_80107C4`
+`FindLineCrossing` (`src/system/game_loop33.c`, the full 4-octant
+Bresenham-line-style line-stepper `FindLineCrossingYMajor`/`FindLineCrossingXMajor`
 (game_loop31.c) are fixed single-octant variants of) had been parked
 as a byte-correct NAKED asm transcription - see
 [issue-13-fc70-continuation.md](./issue-13-fc70-continuation.md) for
@@ -16,7 +16,7 @@ together if `count > b`), then walks from the lower-`count` point
 toward the higher-`count` one along whichever of `pos`/`count` is the
 "major" (always-advancing) axis - the classic 4-case Bresenham octant
 split, each case a fixed single-octant variant of the same shape
-`sub_8010784`/`sub_80107C4` already establish. Every branch, field
+`FindLineCrossingYMajor`/`FindLineCrossingXMajor` already establish. Every branch, field
 access, and octant case was already individually verified matching in
 isolation before this function was originally parked - the sole
 blocker was that this compiler's cross-jump pass notices the

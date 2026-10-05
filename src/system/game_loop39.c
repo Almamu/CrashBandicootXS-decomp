@@ -159,7 +159,7 @@ s32 PlayRoom(void *selfArg)
          * r0, r0, #0` runtime mask computation instead of
          * constant-folding it to a single immediate load - the
          * "negative-constant bit-clear idiom" documented in
-         * docs/matching.md (see `sub_800A70C` in actor_part14.c for the
+         * docs/matching.md (see `ClearSpriteObjFlag5` in actor_part14.c for the
          * established `register ... = -N` shape this mirrors). */
         register s32 mask asm("r0") = -0x11;
         register u8 cur asm("r3") = *p;

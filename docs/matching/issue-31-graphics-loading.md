@@ -504,7 +504,7 @@ this) - both fixed with small `asm volatile` blocks:
 
 Both fully understood, every instruction's *content* confirmed matching
 via isolated compile, but both hit the confirmed `r7`-pin gap documented
-for `sub_8007114` (src/graphics/graphics.c) and `SpawnBonusPlatform` above -
+for `IsEntityInsideRect` (src/graphics/graphics.c) and `SpawnBonusPlatform` above -
 this compiler only adds a hard-pinned register to a function's callee-saved
 push/pop set when it tracks that register as holding a value live across
 a *wider* span than a single inline-asm block, and `r7` in both of these

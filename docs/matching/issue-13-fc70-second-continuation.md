@@ -1,4 +1,4 @@
-# Issue #13, third pass: `DrawCrate`/`sub_8010674`
+# Issue #13, third pass: `DrawCrate`/`IsCrateInsideRect`
 
 GitHub issue #13 (`0x0800FC70-0x08010A0C`, physics/collision subsystem,
 `game_loop` category - see
@@ -6,9 +6,9 @@ GitHub issue #13 (`0x0800FC70-0x08010A0C`, physics/collision subsystem,
 the first pass and
 [docs/matching/issue-13-fc70-continuation.md](issue-13-fc70-continuation.md)
 for the second) had one raw cluster left:
-`CreateCrate`/`DrawCrate`/`UpdateCrate`/`sub_8010674`
+`CreateCrate`/`DrawCrate`/`UpdateCrate`/`IsCrateInsideRect`
 (`asm/code_3_2_17_e560_ff0c.s`, `0x0800FF0C`-`0x080106DC`). The second
-pass's write-up already notes `DrawCrate`/`sub_8010674` were read and
+pass's write-up already notes `DrawCrate`/`IsCrateInsideRect` were read and
 understood, but a plain-C attempt spread more live values across r0-r7
 than the ROM's own tighter allocation used, so both stayed raw. This
 third pass picks that back up with more targeted register pinning and
@@ -23,7 +23,7 @@ matches both.
   `self+0x38` to 0 and clamps `self+0x30`'s index to the
   `self+0x20`-pointer-to-manager/`self+0x2d`-tag/0x1c-stride
   hitbox-record's own `+0x16` count (the same table-lookup convention
-  `sub_800D040`, game_loop6.c, establishes). Always tail-fires
+  `BreakCrateTouchedByPlayer`, game_loop6.c, establishes). Always tail-fires
   `DrawSprite(gSpriteRenderer, self)`, then - only if `self+0x38`
   ended up nonzero - clears `self+0xc` bit 3. Two gotchas, both
   register-pinning:
@@ -47,12 +47,12 @@ matches both.
     without that, this compiler reused r4 in place for the `self[0x38]
     != 0` check just above it, corrupting the address this block
     reads/writes).
-- **`sub_8010674`** (`src/system/game_loop23.c`, prepended ahead of the
+- **`IsCrateInsideRect`** (`src/system/game_loop23.c`, prepended ahead of the
   already-matched `ResolvePlayerCollisions` run - it's immediately ROM-adjacent, so
   it joins that file rather than getting its own) - an AABB-overlap
   test between `self`'s own table-driven half-width/half-height box
   (built via the same `_call_via_r1` table-trampoline convention
-  `sub_8007048`/`sub_80070D4`, `graphics.c`, already establish) and a
+  `CheckEntityPlayerContact`/`UpdateEntity`, `graphics.c`, already establish) and a
   caller-supplied `struct aabb *`. Short-circuits true when `self+0xc`
   bit 4 is set or `self+0x44` is nonzero. Several gotchas:
   - **Narrow register-return zero-extend**: returning a `register u8 x
@@ -111,7 +111,7 @@ matches both.
 
 - `docs/status/game_loop.md` - matched list updated for this pass.
 - `tools/report_units.py` - the old single `0x0800FF0C` unit (covering
-  the whole `CreateCrate`-`sub_8010674` span as raw) split into four:
+  the whole `CreateCrate`-`IsCrateInsideRect` span as raw) split into four:
   `0x0800FF0C` (still raw, trimmed `asm/code_3_2_17_e560_ff0c.o`),
   `0x08010480` (new `src/system/game_loop35.o`), `0x080104E4` (still
   raw, new `asm/code_3_2_17_e560_104e4.o`), and `0x08010674` (now the

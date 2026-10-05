@@ -174,7 +174,7 @@ void *AllocVramTileBlock(s32 requestedSizeArg)
  * `gVramTileBlockSpares` spare-node stack to its end, then the
  * `gVramTileBlockList` free-block list all the way around, discarding
  * both results - the same "list-walk with the result never stored"
- * optimizer-leftover shape already documented for `sub_800039C` in
+ * optimizer-leftover shape already documented for `mem_walk_heaps` in
  * src/system/memory.c (see that function's comment). */
 void sub_8028D6C(void)
 {

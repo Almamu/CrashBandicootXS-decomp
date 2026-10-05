@@ -71,7 +71,7 @@ overrides described below).
 4. Sets `self+0x20 = ***gSpriteBankSet + 0x174` - the
    `self+0x20`-pointer-to-manager/`self+0x2d`-tag/0x1c-stride
    hitbox-record table every sibling in this subsystem
-   (`sub_0800D18C`, `DrawCrate`, etc.) already establishes.
+   (`QueueCratePlayerCollision`, `DrawCrate`, etc.) already establishes.
 5. **First jump table** (index `type - 1`, valid for `type` `1`-`15`;
    any other `type` skips straight to step 6): marks a "treat this
    placement record as pre-flagged" local flag (`special`) for `type`
@@ -153,8 +153,8 @@ placement-record lookup; `sb` = `arg0`; `sl` = a placement-record
 pointer, live only across `type == 0xf`'s case), and the same
 `self+0x20`/`self+0x2d`/28-byte-stride hitbox-record register shape
 this project's issue #12/#13 write-ups already established as a
-confirmed gcc-2.9-resistant allocation (see `sub_0800D18C`/
-`sub_800E08C`, game_loop47.c/game_loop48.c) made a plain-C attempt a
+confirmed gcc-2.9-resistant allocation (see `QueueCratePlayerCollision`/
+`ApplyCrateCollision`, game_loop47.c/game_loop48.c) made a plain-C attempt a
 poor bet given the size (~660 instructions, roughly four times any
 function this project has successfully matched as real C). Transcribed
 instruction-for-instruction from the ROM disassembly (cross-checked

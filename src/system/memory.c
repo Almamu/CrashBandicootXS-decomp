@@ -131,9 +131,9 @@ void mem_collect(s32 arg0) {
 __asm__(
     ".align 2, 0\n"
     ".thumb_func\n"
-    ".type sub_800039C, function\n"
-    ".global sub_800039C\n"
-    "sub_800039C:\n"
+    ".type mem_walk_heaps, function\n"
+    ".global mem_walk_heaps\n"
+    "mem_walk_heaps:\n"
     "add r3, r0, #0\n\t"
     "cmp r3, #0\n\t"
     "bge 1f\n\t"

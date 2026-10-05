@@ -24,7 +24,7 @@
  * escape sequences, `/b` (nudge the render Y position down by 4, a
  * half-line break) and `/n` (newline). Returns the number of bytes
  * consumed. */
-struct sub_8000EE4_box {
+struct wrapped_text_box {
     s32 field_0;
     s32 field_4;
     s32 field_8;
@@ -52,7 +52,7 @@ static inline void set_pos(struct bitmap_font *m, u32 x, u32 y)
 static inline u32 *pos_x(struct bitmap_font *m) { return &m->posX; }
 static inline u32 *pos_y(struct bitmap_font *m) { return &m->posY; }
 
-s32 sub_8000EE4(u8 *text, struct bitmap_font *self, struct sub_8000EE4_box *box, s32 limit, s32 mode)
+s32 DrawWrappedText(u8 *text, struct bitmap_font *self, struct wrapped_text_box *box, s32 limit, s32 mode)
 {
     s32 widthAccum;
     s32 lineCount;

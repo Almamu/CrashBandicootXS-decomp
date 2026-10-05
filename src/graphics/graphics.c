@@ -651,7 +651,7 @@ extern void *gLevelLayers;
  * `pSelf` is pinned to r2: this function makes a call, and plain C
  * phrasing left `self` in r3 instead of the ROM's r2 (tried, rebuilt,
  * confirmed different - see docs/matching.md, "Matching decompilation"). */
-u8 sub_8006FE4(struct actor *self)
+u8 IsEntityNearCamera(struct actor *self)
 {
     register struct actor *pSelf asm("r2") = self;
     s32 buf[4];
@@ -687,7 +687,7 @@ extern void _call_via_r4(void *arg0, s32 arg1, s32 arg2, s32 arg3);
 extern struct actor *gPlayer;
 
 /* `self` uses the shared `struct actor` layout (see actor.h) - same
- * precedent as sub_8006FE4 above.
+ * precedent as IsEntityNearCamera above.
  *
  * Two of the flag-byte tests below use inline asm rather than plain C
  * (`(byte >> N) & 1`, `byte | const`): gcc's register choice for the
@@ -698,7 +698,7 @@ extern struct actor *gPlayer;
  * mirrors a load the ROM performs but never uses (dead code in the
  * original too, apparently a field access whose result just goes
  * unused at this call site) - kept to match the byte count exactly. */
-s32 sub_8007048(struct actor *self)
+s32 CheckEntityPlayerContact(struct actor *self)
 {
     struct vtable_slot *table;
     struct anim_box *rec;
@@ -768,7 +768,7 @@ void DrawEntity(void)
 }
 asm(".align 2, 0");
 
-void sub_80070D4(struct actor *self)
+void UpdateEntity(struct actor *self)
 {
     void *table = self->table;
     _call_via_r1((u8 *)self + *(s16 *)((u8 *)table + 8), *(void **)((u8 *)table + 0xc));
@@ -791,18 +791,18 @@ void SetEntitySize(struct actor *self, s32 w, s32 h)
     self->rawH = h;
 }
 
-s32 sub_800710C(void)
+s32 EntityOverlapsRect(void)
 {
     return 0;
 }
 
-s32 sub_8007110(void)
+s32 IsEntityOnScreen(void)
 {
     return 0;
 }
 
 /* `self` uses the shared `struct actor` layout (see actor.h), same
- * precedent as sub_8006FE4/sub_8007048 above. `box` is a plain
+ * precedent as IsEntityNearCamera/CheckEntityPlayerContact above. `box` is a plain
  * {s32 x0, y0, w, h} AABB rect - only seen at this one call site so
  * far, so it's not (yet) worth a named struct of its own. Both
  * `self` and `box` are pinned - matching the ROM's exact register
@@ -813,7 +813,7 @@ s32 sub_8007110(void)
  * now, so the trailing `asm(".align 2, 0")` below is required to get
  * the ROM's zero-fill instead of `as`'s default NOP pad - see
  * docs/matching.md, "A gotcha worth knowing". */
-s32 sub_8007114(struct actor *self, struct aabb *box)
+s32 IsEntityInsideRect(struct actor *self, struct aabb *box)
 {
     register struct actor *pSelf asm("r5") = self;
     register struct aabb *pBox asm("r6") = box;
@@ -882,9 +882,9 @@ asm(".align 2, 0");
 
 /* `arg0` is unused by the ROM - overwritten as scratch before its
  * incoming value is ever read. `gLevelLayers`'s sub-object here
- * is the same one sub_8006FE4 reads, but as two raw s32 fields
+ * is the same one IsEntityNearCamera reads, but as two raw s32 fields
  * (dx/dy) sign-extended from their low 24 bits, not the record table
- * sub_8006FE4 uses - a different part of the same object. */
+ * IsEntityNearCamera uses - a different part of the same object. */
 void WorldToScreen(void *arg0, s32 arg1, s32 arg2, s32 *arg3, s32 *arg4)
 {
     void *subObj;
@@ -940,7 +940,7 @@ struct actor *CreateEntity(u16 arg0, u16 arg1, u16 arg2)
     return obj;
 }
 
-s32 sub_800722C(void)
+s32 GetEntityClassId(void)
 {
     return 0;
 }
@@ -999,7 +999,7 @@ struct actor *InitEntity(struct actor *self)
  * own register (r1) rather than the freshly-loaded byte's (r2) -
  * same pattern as ResetEntity above (see docs/matching.md, "Matching
  * decompilation"). */
-void sub_8007278(struct actor *self)
+void ClearEntityAlwaysActive(struct actor *self)
 {
     register s32 result asm("r1");
     register s32 tmp asm("r2");
@@ -1010,8 +1010,8 @@ void sub_8007278(struct actor *self)
     self->flags = result;
 }
 
-/* Same accumulator-register pattern as ResetEntity/sub_8007278 above. */
-void sub_8007284(struct actor *self)
+/* Same accumulator-register pattern as ResetEntity/ClearEntityAlwaysActive above. */
+void SetEntityAlwaysActive(struct actor *self)
 {
     register s32 result asm("r1");
     register s32 tmp asm("r2");
@@ -1023,15 +1023,15 @@ void sub_8007284(struct actor *self)
 }
 asm(".align 2, 0");
 
-u8 sub_8007290(struct actor *self)
+u8 IsEntityAlwaysActive(struct actor *self)
 {
     return (self->flags >> 4) & 1;
 }
 asm(".align 2, 0");
 
-/* Same accumulator-register pattern as ResetEntity/sub_8007278/
- * sub_8007284 above. */
-void sub_800729C(struct actor *self)
+/* Same accumulator-register pattern as ResetEntity/ClearEntityAlwaysActive/
+ * SetEntityAlwaysActive above. */
+void ClearEntityTouched(struct actor *self)
 {
     register s32 result asm("r1");
     register s32 tmp asm("r2");
@@ -1042,9 +1042,9 @@ void sub_800729C(struct actor *self)
     self->flags = result;
 }
 
-/* Same accumulator-register pattern as ResetEntity/sub_8007278/
- * sub_8007284/sub_800729C above. */
-void sub_80072A8(struct actor *self)
+/* Same accumulator-register pattern as ResetEntity/ClearEntityAlwaysActive/
+ * SetEntityAlwaysActive/ClearEntityTouched above. */
+void SetEntityTouched(struct actor *self)
 {
     register s32 result asm("r1");
     register s32 tmp asm("r2");
@@ -1056,7 +1056,7 @@ void sub_80072A8(struct actor *self)
 }
 asm(".align 2, 0");
 
-u8 sub_80072B4(struct actor *self)
+u8 IsEntityTouched(struct actor *self)
 {
     return (self->flags >> 3) & 1;
 }
@@ -1066,7 +1066,7 @@ asm(".align 2, 0");
  * doesn't move `self` to r1 at all (it can ldrb directly through r0),
  * and separately computes the AND into r1 instead of the constant's
  * own r0 - see docs/matching.md, "Matching decompilation". */
-u8 sub_80072C0(struct actor *self)
+u8 IsEntityGone(struct actor *self)
 {
     register struct actor *pSelf asm("r1") = self;
     register u8 flags asm("r1");
@@ -1078,9 +1078,9 @@ u8 sub_80072C0(struct actor *self)
 }
 asm(".align 2, 0");
 
-/* Same accumulator-register pattern as ResetEntity/sub_8007278/
- * sub_8007284/sub_800729C/sub_80072A8 above. */
-void sub_80072CC(struct actor *self)
+/* Same accumulator-register pattern as ResetEntity/ClearEntityAlwaysActive/
+ * SetEntityAlwaysActive/ClearEntityTouched/SetEntityTouched above. */
+void ClearEntityGone(struct actor *self)
 {
     register s32 result asm("r1");
     register s32 tmp asm("r2");
@@ -1101,7 +1101,7 @@ extern void *gEntityFlags;
  * blocks below reproduce the ROM's exact instruction order/register
  * choices - see the inline comment on each, and docs/matching.md,
  * "Matching decompilation" for the general techniques. */
-void sub_80072D8(struct actor *self)
+void MarkEntityGone(struct actor *self)
 {
     register struct actor *pSelf asm("r1") = self;
     register u16 id asm("r4");
@@ -1144,15 +1144,15 @@ void sub_80072D8(struct actor *self)
     }
 }
 
-u8 sub_800731C(struct actor *self)
+u8 IsEntityContactEnabled(struct actor *self)
 {
     return (self->flags >> 2) & 1;
 }
 asm(".align 2, 0");
 
-/* Same accumulator-register pattern as ResetEntity/sub_8007278/
- * sub_8007284/sub_800729C/sub_80072A8/sub_80072CC above. */
-void sub_8007328(struct actor *self)
+/* Same accumulator-register pattern as ResetEntity/ClearEntityAlwaysActive/
+ * SetEntityAlwaysActive/ClearEntityTouched/SetEntityTouched/ClearEntityGone above. */
+void DisableEntityContact(struct actor *self)
 {
     register s32 result asm("r1");
     register s32 tmp asm("r2");
@@ -1163,9 +1163,9 @@ void sub_8007328(struct actor *self)
     self->flags = result;
 }
 
-/* Same accumulator-register pattern as ResetEntity/sub_8007278/
- * sub_8007284/sub_800729C/sub_80072A8/sub_80072CC/sub_8007328 above. */
-void sub_8007334(struct actor *self)
+/* Same accumulator-register pattern as ResetEntity/ClearEntityAlwaysActive/
+ * SetEntityAlwaysActive/ClearEntityTouched/SetEntityTouched/ClearEntityGone/DisableEntityContact above. */
+void EnableEntityContact(struct actor *self)
 {
     register s32 result asm("r1");
     register s32 tmp asm("r2");
@@ -1177,16 +1177,16 @@ void sub_8007334(struct actor *self)
 }
 asm(".align 2, 0");
 
-u8 sub_8007340(struct actor *self)
+u8 GetEntityFlag1(struct actor *self)
 {
     return (self->flags >> 1) & 1;
 }
 asm(".align 2, 0");
 
-/* Same accumulator-register pattern as ResetEntity/sub_8007278/
- * sub_8007284/sub_800729C/sub_80072A8/sub_80072CC/sub_8007328/
- * sub_8007334 above. */
-void sub_800734C(struct actor *self)
+/* Same accumulator-register pattern as ResetEntity/ClearEntityAlwaysActive/
+ * SetEntityAlwaysActive/ClearEntityTouched/SetEntityTouched/ClearEntityGone/DisableEntityContact/
+ * EnableEntityContact above. */
+void ClearEntityFlag1(struct actor *self)
 {
     register s32 result asm("r1");
     register s32 tmp asm("r2");
@@ -1197,10 +1197,10 @@ void sub_800734C(struct actor *self)
     self->flags = result;
 }
 
-/* Same accumulator-register pattern as ResetEntity/sub_8007278/
- * sub_8007284/sub_800729C/sub_80072A8/sub_80072CC/sub_8007328/
- * sub_8007334/sub_800734C above. */
-void sub_8007358(struct actor *self)
+/* Same accumulator-register pattern as ResetEntity/ClearEntityAlwaysActive/
+ * SetEntityAlwaysActive/ClearEntityTouched/SetEntityTouched/ClearEntityGone/DisableEntityContact/
+ * EnableEntityContact/ClearEntityFlag1 above. */
+void SetEntityFlag1(struct actor *self)
 {
     register s32 result asm("r1");
     register s32 tmp asm("r2");
@@ -1256,12 +1256,12 @@ void SetEntityPosVec(struct actor *self, s32 *arg1)
     SetEntityPos(self, arg1[0], arg1[1]);
 }
 
-void sub_80073B0(struct actor *self, u8 arg1)
+void SetEntityKind(struct actor *self, u8 arg1)
 {
     self->field_0A = arg1;
 }
 
-u8 sub_80073B4(struct actor *self)
+u8 GetEntityKind(struct actor *self)
 {
     return self->field_0A;
 }

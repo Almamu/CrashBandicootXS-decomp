@@ -21,7 +21,7 @@ extern u8 gEmptySpriteBox[];
  * handled - anything above 6 and unhandled 1/2/6 fall through to the
  * same default) selects one of `info+0x14`, `info+0xc`, or the fixed
  * fallback table `gEmptySpriteBox`. */
-void *sub_8007C30(void *dest, void *pt)
+void *GetSpriteAttackBox(void *dest, void *pt)
 {
     register void *part asm("r6") = pt;
     struct aabb buf_;
@@ -88,11 +88,11 @@ void *sub_8007C30(void *dest, void *pt)
     return dest;
 }
 
-/* Same shape as sub_8007C30 above, with a simpler switch: only
+/* Same shape as GetSpriteAttackBox above, with a simpler switch: only
  * `info+0xc` or the `gEmptySpriteBox` fallback are ever selected
  * (cases 0/2/3/4/6 to `info+0xc`; cases 1/5 and the out-of-range
  * default all to the fallback). */
-void *sub_8007CF8(void *dest, void *pt)
+void *GetSpriteBodyBox(void *dest, void *pt)
 {
     register void *part asm("r6") = pt;
     struct aabb buf_;
@@ -169,10 +169,10 @@ extern void *gEntityFlags;
  * region) collides with the player (`gPlayer`, tested via
  * two `GetSpriteHitbox` AABBs and `AabbOverlaps`) and, if so, plays a sound
  * at the player's position (the `table+0x68` offset/dead-read idiom
- * matches sub_8007048's `_call_via_r4` call exactly, just keyed off
+ * matches CheckEntityPlayerContact's `_call_via_r4` call exactly, just keyed off
  * `part->field_0A` instead of `self->field_0A`) and marks itself
  * "collected" (`gEntityFlags` bitmap, same convention as
- * sub_80072D8). `part->field_0A - 0x1b` (0-7) then selects a "kind" to
+ * MarkEntityGone). `part->field_0A - 0x1b` (0-7) then selects a "kind" to
  * spawn via `SpawnEffectPart` at `part`'s own position - case 1 and any
  * out-of-range value spawn nothing. If something spawned, its
  * `+0x28`/`+0xc` flag bytes get tagged - kept as raw offsets since the

@@ -10,8 +10,8 @@
  * animation index into its `anims`, +0x30 the step within that animation.
  *
  * Readers: GetSpriteTileBase (tileBase), GetSpriteFrame (anim -> seq -> frame),
- * DrawAffineSpritePieces/DrawSpritePieces (the pieces), sub_8007C30/sub_8007CF8 and
- * sub_80084C4-sub_80085B8 (the frame's boxes and anchor, picked by the
+ * DrawAffineSpritePieces/DrawSpritePieces (the pieces), GetSpriteAttackBox/GetSpriteBodyBox and
+ * GetSpriteFrameAnchor-GetSpriteFrameBodyBox (the frame's boxes and anchor, picked by the
  * layout type), GetPaletteSlot (the OBJ palettes). Older files read the
  * same records through local views with only the fields they use
  * (struct anim_record in gfx_part.h/level_menu.h/level_select_parts.h,
@@ -29,7 +29,7 @@ struct sprite_piece_pos {
     s16 y;
 };
 
-/* A box relative to the part, in pixels: sub_8007C30 adds {x, y} to the
+/* A box relative to the part, in pixels: GetSpriteAttackBox adds {x, y} to the
  * part's position and hands that and {w, h} to SetAabbPos/SetAabbSize
  * as an AABB. */
 struct sprite_box {
@@ -40,7 +40,7 @@ struct sprite_box {
     u16 unk_06; /* always 0 */
 };
 
-/* A point relative to the part (sub_80084C4; the fallback when a frame has
+/* A point relative to the part (GetSpriteFrameAnchor; the fallback when a frame has
  * none is gEmptySpritePoint). */
 struct sprite_point {
     s16 x;

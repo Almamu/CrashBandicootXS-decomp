@@ -32,7 +32,7 @@ extern void *_call_via_r1(void *arg0, void *arg1);
 extern s32 __udivsi3(s32 value, s32 divisor);
 
 /* Divides `value` by the widget's own line height (`lineHeight`) - see
- * src/util/word_util.c's sub_8001214, which uses this same field as a
+ * src/util/word_util.c's DrawWrappedTextInBox, which uses this same field as a
  * divisor for a line-count limit. */
 s32 FontHeightToLines(struct bitmap_font *self, s32 value)
 {

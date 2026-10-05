@@ -35,7 +35,7 @@ function in the file under old_agbcc:
   key-word copy before the 0x80 test. Variants that move or retype the
   copy didn't help.
 - **`sub_801AB98`** (#25, 1648 bytes), **`BreakCrate`**,
-  **`sub_0800D18C`**, **`sub_800D040`**, **`sub_800E08C`**,
+  **`QueueCratePlayerCollision`**, **`BreakCrateTouchedByPlayer`**, **`ApplyCrateCollision`**,
   **`UpdateSlotCrate`** (#12), **`UpdateCrateFall`**, **`CreateCrate`**,
   **`UpdateCrate`** (#13): not attempted this pass. The time went to the
   functions above. None of the #12/#13 ones has an in-tree C draft yet.

@@ -53,7 +53,7 @@ call is lost by CSE at the list join, so the ROM's dead
   `above` side's `ble; b` far branch now appears.
 
 Four instructions are still missing. All of them are register copies:
-padY into r3, and `add r2,r5` / `add r5,r2` around the sub_800FDC8
+padY into r3, and `add r2,r5` / `add r5,r2` around the FindLineCrossing
 arguments. The ROM also keeps `&b` in r4 into the no-collision switch.
 A `pb = &b` local keeps it live through the whole function and is much
 worse.

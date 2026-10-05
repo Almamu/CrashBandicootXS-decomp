@@ -165,7 +165,7 @@ void DrawCrateList(void *managerArg)
 }
 
 /* Matches the ROM's own trailing zero-fill padding out to the 4-byte
- * boundary that `sub_8009528` (`actor_part11f.c`, immediately following
+ * boundary that `CollideCrateGrid` (`actor_part11f.c`, immediately following
  * in `ldscript.txt` link order) needs for its own alignment. Without this,
  * the linker bridges the same 2-byte gap with its default Thumb NOP
  * fill (`mov r8, r8` / `0x46c0`) instead of the ROM's zero bytes - same

@@ -182,8 +182,8 @@ extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
 extern void *OperatorNew(u32 size);
 extern struct hop_vobj *sub_801886C(void *mem);
 extern struct hop_vobj *sub_80188D0(void *mem);
-extern struct hop_box sub_8007C30(void *obj);
-extern struct hop_box sub_8007CF8(void *obj);
+extern struct hop_box GetSpriteAttackBox(void *obj);
+extern struct hop_box GetSpriteBodyBox(void *obj);
 extern u8 AabbOverlaps(struct hop_box *a, struct hop_box *b);
 extern u8 HasTornadoSpin(void *self);
 extern void RequestRoomExit(void);
@@ -256,21 +256,21 @@ void UpdateTiny(struct tiny_tiger *self, struct hop_part *part)
 
     if (self->state == 8)
     {
-        a = sub_8007C30(gPlayer);
-        b = sub_8007CF8(part);
+        a = GetSpriteAttackBox(gPlayer);
+        b = GetSpriteBodyBox(part);
         if (a.w != 0 && BOX_VALID(b) && AabbOverlaps(&b, &a)
             && gPlayer->unk_0A == 0x13)
             SetTinyState(self, part, 9);
     }
     else if (gPlayer->busy == 0)
     {
-        a = sub_8007CF8(gPlayer);
+        a = GetSpriteBodyBox(gPlayer);
         if (a.w == 0)
         {
-            b = sub_8007C30(gPlayer);
+            b = GetSpriteAttackBox(gPlayer);
             a = b;
         }
-        b = sub_8007C30(part);
+        b = GetSpriteAttackBox(part);
         if (BOX_VALID(b) && a.w != 0 && AabbOverlaps(&b, &a))
         {
             struct hop_player *pl = gPlayer;

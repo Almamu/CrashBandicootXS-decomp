@@ -16,7 +16,7 @@
  * _call_via_r3 to draw a single OAM entry. `struct icon_record` is an
  * array of these, 8 bytes apart, starting at offset 0x10 - DrawPowerDialog
  * (src/graphics/oam_count.c, parked) uses slots 0 and 2 (a wide icon spanning
- * two OAM entries); sub_8000EE4 (src/graphics/text_layout.c, parked) uses slots
+ * two OAM entries); DrawWrappedText (src/graphics/text_layout.c, parked) uses slots
  * 1, 3, and 5 (per-glyph and newline-marker OAM entries). */
 struct icon_slot {
     s16 offset;
@@ -31,7 +31,7 @@ struct icon_record {
      * with the "delete" flags 3. */
     struct icon_slot destroy;
     /* A 7th slot (index 6, offset 0x40) is read by InitLanguageSelectGraphics - extends
-     * the 6-slot record DrawPowerDialog/sub_8000EE4 already established. */
+     * the 6-slot record DrawPowerDialog/DrawWrappedText already established. */
     struct icon_slot slots[7];
 };
 
@@ -54,7 +54,7 @@ struct icon_glyph_metrics {
 COMPILE_TIME_ASSERT(sizeof(struct icon_glyph_metrics) == 0xC);
 
 /* The bitmap font (see the top of this file). gLargeFont/gSmallFont
- * are its two instances; sub_8000EE4 takes one as its render-target
+ * are its two instances; DrawWrappedText takes one as its render-target
  * object.
  *
  * The leading `unused_00`/`unused_10c` regions and part of `unused_118`
@@ -89,7 +89,7 @@ struct bitmap_font {
     /* Left-margin X: `posX` is reset to this on a newline character. */
     u32 marginX;
     /* Line height: added to `posY` on a newline character; also used
-     * as a plain divisor by `FontHeightToLines`/`sub_8001214`
+     * as a plain divisor by `FontHeightToLines`/`DrawWrappedTextInBox`
      * (src/util/word_util.c). */
     s32 lineHeight;
     /* Advance width contributed by a literal space character, in place

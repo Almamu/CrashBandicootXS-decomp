@@ -15,7 +15,7 @@
  * the sign and relative magnitude of `dx = a - pos` vs `dy = b -
  * count`, the classic 4-case Bresenham octant split - each case is a
  * fixed single-octant variant of the same shape
- * `sub_8010784`/`sub_80107C4` (game_loop31.c) already establish.
+ * `FindLineCrossingYMajor`/`FindLineCrossingXMajor` (game_loop31.c) already establish.
  *
  * Was NAKED asm, not plain C: this compiler's cross-jump pass used to
  * notice the X-major-increasing case's own early-return (`adds
@@ -67,7 +67,7 @@
  * memory point 10 / docs/matching.md's extensive r7-must-stay-
  * unpinned notes - pinning `r7` explicitly is a confirmed toolchain
  * bug that silently drops it from the prologue's push/pop list). */
-s32 sub_800FDC8(s32 pos, s32 countArg, s32 a, s32 b, s32 limit)
+s32 FindLineCrossing(s32 pos, s32 countArg, s32 a, s32 b, s32 limit)
 {
     register s32 count asm("r1") = countArg;
     s32 dx, dy, absDx;
