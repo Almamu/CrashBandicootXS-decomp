@@ -5,6 +5,9 @@
 #include "enemies.h"
 #include "frontend.h"
 #include "system.h"
+#include "menus.h"
+#include "crates.h"
+#include "player.h"
 
 /*
  * ROM 0x087E3BEC-0x087E55E4: the 93 virtual tables of the game's C++
@@ -21,7 +24,6 @@ extern void DrawActor();
 extern void DrawEntity();
 extern void CtrlHandleEvent();
 extern void EffectCtrlHandleEvent();
-extern void nullsub_20();
 extern void DamageHovercraftCannonFlash();
 extern void DamageActor();
 extern void IsEntityNearCamera();
@@ -59,16 +61,6 @@ extern void UpdateGroundSprite();
 extern void DrawGroundSprite();
 extern void GetGroundSpriteClassId();
 extern void DestroyGroundSprite();
-extern void CollidePlayer();
-extern void CollidePlayerWithObjects();
-extern void PlayerHandleEvent();
-extern void DrawPlayer();
-extern void ApplyPlayerVelocity();
-extern void UpdatePlayer();
-extern void DestroyPlayer();
-extern void SetCtrlMode();
-extern void SetCtrlTargetMotionY();
-extern void StartCtrlTargetMotionY();
 extern void StartCtrlTargetMotionYFromSet();
 extern void SetCtrlTargetMotionX();
 extern void StartCtrlTargetMotionX();
@@ -78,27 +70,6 @@ extern void AttachCtrl();
 extern void DestroyCtrl();
 extern void UpdateEffectCtrl();
 extern void DestroyEffectCtrl();
-extern void DrawCrate();
-extern void UpdateCrate();
-extern void IsCrateInsideRect();
-extern void GetCrateClassId();
-extern void DestroyCrate();
-extern void ActionCtrlHandleEvent();
-extern void UpdateActionCtrl();
-extern void SetActionCtrlMode();
-extern void AttachActionCtrl();
-extern void ActionCtrlSetTargetAnim();
-extern void DestroyActionCtrl();
-extern void PlayerCtrlHandleEvent();
-extern void UpdatePlayerCtrl();
-extern void AttachPlayerCtrl();
-extern void DestroyPlayerCtrl();
-extern void UpdateInputCtrl();
-extern void InputCtrlHandleEvent();
-extern void AttachInputCtrl();
-extern void DestroyInputCtrl();
-extern void BossCtrlHandleEvent();
-extern void DestroyBossCtrl();
 extern void UpdateMegaMix();
 extern void StartMegaMixMotionYFromSet();
 extern void StartMegaMixMotionXFromSet();
@@ -139,14 +110,6 @@ extern void UpdatePlatformMover();
 extern void StartPlatformMoverMotionYFromSet();
 extern void StartPlatformMoverMotionXFromSet();
 extern void DestroyPlatformMover();
-extern void UpdateCameraLead();
-extern void DestroyCameraLead();
-extern void CheckLaunchPadContact();
-extern void DestroyLaunchPad();
-extern void AnimateLevelSelectEntry();
-extern void SetLevelSelectEntryLevel();
-extern void SetLevelSelectEntryPos();
-extern void DestroyLevelSelectEntry();
 extern void DestroyBgStreamer();
 extern void DestroyBgLayerBase();
 extern void ClampBgLayerScrollStep();

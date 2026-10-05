@@ -1,6 +1,7 @@
 #include "core.h"
 #include "actor.h"
 #include "audio.h"
+#include "crates.h"
 
 /* GitHub issue #13: 0x0800FC70-0x08010A0C, continuing the physics/
  * collision subsystem (see crate_reset.c's header comment and
@@ -80,8 +81,6 @@ asm(".pool");
  * docs/matching/issue-13-graphics-fc70.md). `OpenLifeCrate` right
  * before this function is left untouched raw. */
 
-extern u8 gCrateKindBreakable[];
-
 /* Trivial byte-table lookup: `gCrateKindBreakable[idx]`. The first
  * parameter is unused in the ROM. */
 u8 IsCrateKindBreakable(void *arg0, u32 idx)
@@ -100,10 +99,6 @@ u8 IsCrateKindBreakable(void *arg0, u32 idx)
  * to stay consistent with every already-matched sibling in this file
  * family (crate_reset.c and the other issue #12/#13 files), which do
  * the same. */
-
-extern void *GetCrateBelow(void *selfArg);
-extern void *GetCrateAbove(void *selfArg);
-extern void QueueCratePlayerCollision(void *selfArg);
 
 /* Walks the "get prev" neighbor-list chain (`GetCrateAbove`) starting at
  * `self`, returning the furthest node reachable while every node
@@ -249,11 +244,13 @@ loop:
 /* Unless `self`'s own `+0x4d & 0x7f` state is 1, and `testX`/`testY`
  * (both raw, same Q8 scale as `self`'s own `+0`/`+4` position pair)
  * are both within `0x3fff` of `self`'s position, and `self`'s `+0x4e`
- * byte isn't `5`, fires `QueueCratePlayerCollision(self)` - the physics/collision
+ * byte isn't `5`, fires `QueueCratePlayerCollision(self, idx)` - the physics/collision
  * subsystem's own collision-response commit
- * (docs/matching/issue-12-physics-collision.md). Always clears
+ * (docs/matching/issue-12-physics-collision.md); `idx` (the player's
+ * action, the gActionCtrlStateAttackKinds index) is passed on in r1
+ * untouched. Always clears
  * `self`'s own `+0xc` flags bit 3 before returning, unconditionally. */
-s32 CollideCrateWithPlayer(void *selfArg, u32 unused1, s32 testX, s32 testY)
+s32 CollideCrateWithPlayer(void *selfArg, u32 idx, s32 testX, s32 testY)
 {
     /* Pinned to r4: the ROM keeps `self` in r4 for the whole function
      * (only the transient mask-check scratch below uses r5/r6/ip), and
@@ -297,7 +294,7 @@ s32 CollideCrateWithPlayer(void *selfArg, u32 unused1, s32 testX, s32 testY)
                 }
                 if (dy <= limit) {
                     if (self[0x4e] != 5) {
-                        QueueCratePlayerCollision(self);
+                        QueueCratePlayerCollision((struct crate *)self, idx);
                     }
                 }
             }

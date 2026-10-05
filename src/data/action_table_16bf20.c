@@ -1,49 +1,12 @@
 #include "core.h"
 #include "actor_self.h"
+#include "player.h"
 
 /*
  * ROM 0x0816BF20-0x0816C090: the player's per-action dispatch table and
  * the per-mode animation-row table that follows it. Linked in ROM order
  * between data/data.s sections by ldscript.txt - see docs/data.md.
  */
-
-extern void nullsub_17();
-extern void nullsub_18();
-extern void ActionCtrlStateIdle();
-extern void ActionCtrlStateRun();
-extern void ActionCtrlStateJump();
-extern void ActionCtrlStateAirborne();
-extern void ActionCtrlStateFlipBodySlamStart();
-extern void ActionCtrlStateSlide();
-extern void ActionCtrlStateSpin();
-extern void ActionCtrlStateAirSpin();
-extern void ActionCtrlStateTornadoSpin();
-extern void ActionCtrlStateCrouchDown();
-extern void ActionCtrlStateCrouch();
-extern void ActionCtrlStateStandUp();
-extern void ActionCtrlStateCrawlStart();
-extern void ActionCtrlStateCrawl();
-extern void ActionCtrlStateCrawlStandUp();
-extern void ActionCtrlStateBodySlamLand();
-extern void ActionCtrlStateLand();
-extern void ActionCtrlStateLeftGround();
-extern void ActionCtrlStateDying();
-extern void ActionCtrlStateWarpIn();
-extern void ActionCtrlStateHang();
-extern void sub_8014AEC();
-extern void ActionCtrlReleaseHang();
-extern void ActionCtrlStateHangMoveStart();
-extern void ActionCtrlStateHangMove();
-extern void ActionCtrlStateHangStop();
-extern void sub_80155AC();
-extern void sub_80155B8();
-extern void ActionCtrlStateHangSpin();
-extern void ActionCtrlStateHangGrab();
-extern void ActionCtrlStateWarpOut();
-extern void ActionCtrlStateCrawlStop();
-extern void ActionCtrlStateBodySlamStart();
-extern void ActionCtrlStateTurboRun();
-extern void sub_8015774();
 
 /* 42-slot action dispatch table: one member-function pointer per player
  * action, indexed by the action id (action_ctrl_update.c's `struct act_pmf`
@@ -109,15 +72,13 @@ const struct actor_pmf gActionCtrlStateTable[42] = {
 /* The 13-level animation rows (4-byte `struct level_anim` records,
  * gPlayerCtrlModeLevelAnims in speed_table_16c090.c), one pointer per mode:
  * swim_ctrl.c reads `gPlayerCtrlModeAnimRows[mode][level]`. */
-extern const u8 gPlayerCtrlModeLevelAnims[8][13][4];
-
-const u8 *const gPlayerCtrlModeAnimRows[8] = {
-    gPlayerCtrlModeLevelAnims[0][0],
-    gPlayerCtrlModeLevelAnims[1][0],
-    gPlayerCtrlModeLevelAnims[2][0],
-    gPlayerCtrlModeLevelAnims[3][0],
-    gPlayerCtrlModeLevelAnims[4][0],
-    gPlayerCtrlModeLevelAnims[5][0],
-    gPlayerCtrlModeLevelAnims[6][0],
-    gPlayerCtrlModeLevelAnims[7][0],
+const struct level_anim *const gPlayerCtrlModeAnimRows[8] = {
+    gPlayerCtrlModeLevelAnims[0],
+    gPlayerCtrlModeLevelAnims[1],
+    gPlayerCtrlModeLevelAnims[2],
+    gPlayerCtrlModeLevelAnims[3],
+    gPlayerCtrlModeLevelAnims[4],
+    gPlayerCtrlModeLevelAnims[5],
+    gPlayerCtrlModeLevelAnims[6],
+    gPlayerCtrlModeLevelAnims[7],
 };

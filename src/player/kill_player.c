@@ -3,6 +3,7 @@
 #include "action_obj.h"
 #include "system.h"
 #include "audio.h"
+#include "player.h"
 
 /* Part of GitHub issue #16's remainder (0x08011BD4-0x08012D24) - the
  * "child object" family docs/rom_map.md's "Undifferentiated core"
@@ -26,13 +27,11 @@ struct palette_cache;
 
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern s32 _call_via_r3(void *arg0, void *arg1, void *arg2, void *arg3);
-extern void ApplyActionCtrlMotion(void *self);
 extern void LoseLife(void *arg0);
 extern void LoadPaletteSlot(struct palette_cache *self, s32 slot, s32 recordId);
 extern void ResetSpriteFrameTimer(void *part);
 extern void ResetSpriteFrameIndex(void *part);
 extern void SetSpriteAnimDone(void *part, u8 val);
-extern void SetActionCtrlModeAnim(void *self, s32 a, s32 b, s32 c, s32 d);
 
 extern struct AudioContext *gAudioContext;
 extern void *gLevelState;
@@ -40,8 +39,9 @@ extern struct palette_cache *gPaletteCache;
 extern void *gPlayer;
 extern void *gInput;
 
-/* Plays a sound, fires the `+0x50`/`+0x54` trampoline pair with `arg1`
- * as its "part" argument, then the `+0x20`/`+0x24` pair with id `0x1d`,
+/* Plays a sound, fires the `+0x50`/`+0x54` trampoline pair with `id`
+ * (the death animation, 0x1c/0x2a-0x2f from ActionCtrlHandleEvent) as
+ * its argument, then the `+0x20`/`+0x24` pair with id `0x1d`,
  * resets both halves of the state/flag/table-index trio (`+0x31`/
  * `+0x2f`/`+0x27` and `+0x32`/`+0x30`/`+0x28`) via a single walked
  * pointer, runs `ApplyActionCtrlMotion`, clears/sets a few more `part` bytes
@@ -50,7 +50,7 @@ extern void *gInput;
  * per-tag 28-byte-record table (`part+0x20 -> *ptr + tag*0x1C`, the
  * same dereference chain docs/rom_map.md's "eight more core reads"
  * documented from three other call sites) to feed `LoadPaletteSlot`. */
-void KillPlayer(void *selfArg, void *arg1)
+void KillPlayer(void *selfArg, s32 id)
 {
     u8 *self = selfArg;
 
@@ -63,7 +63,7 @@ void KillPlayer(void *selfArg, void *arg1)
 
     {
         u8 *off = *(u8 **)(self + 0xc) + 0x50;
-        _call_via_r3(self + *(s16 *)off, *(void **)(self + 0x10), arg1, *(void **)(off + 4));
+        _call_via_r3(self + *(s16 *)off, *(void **)(self + 0x10), (void *)id, *(void **)(off + 4));
     }
     {
         struct vtable_slot *mgr = *(struct vtable_slot **)(self + 0xc);
@@ -85,7 +85,7 @@ void KillPlayer(void *selfArg, void *arg1)
             *w = zero;
         }
 
-        ApplyActionCtrlMotion(self);
+        ApplyActionCtrlMotion((struct act *)self);
 
         (*(u8 **)(self + 0x10))[0x100] = zero;
         (*(u8 **)(self + 0x10))[0x102] = zero;

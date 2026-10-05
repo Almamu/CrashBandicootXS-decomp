@@ -13,6 +13,7 @@
 
 #include "action_obj.h"
 #include "audio.h"
+#include "player.h"
 
 /* A keyframe record's `{s16 x, s16 y}` offset (see sprite.c). */
 struct part_offset {
@@ -33,11 +34,6 @@ extern struct act_part *gPlayer;
 extern u8 gEmptySpritePoint[];
 extern void LoadPaletteSlot(void *cache, s32 slot, s32 kind);
 extern void *GetSpriteFrame(struct act_part *part);
-extern u8 PlayerHasRoomForAnim(struct act_part *part, s32 action);
-extern void KillPlayer(struct act *self, s32 id);
-extern void ApplyActionCtrlMotion(struct act *self);
-extern void sub_8015558(struct act *self);
-extern void SetActionCtrlModeAnim(struct act *self, s32 a, s32 b, s32 c, s32 d);
 
 /* Queues action `next` on the +0x31/+0x2F/+0x27 trio. */
 static inline void ActSetNext27(struct act *self, s32 next)
@@ -348,7 +344,7 @@ void ActionCtrlHandleEvent(struct act *self, s32 arg1, s32 arg2, s32 arg3)
         KillPlayer(self, 0x2a);
         break;
     case 11:
-        if ((gPlayer->contact & 8) && PlayerHasRoomForAnim(self->part, 0xb) == 1) {
+        if ((gPlayer->contact & 8) && PlayerHasRoomForAnim((struct box_part *)self->part, 0xb) == 1) {
             ActAndFlags0D(self->part, -2);
             ActAndFlags0D(self->part, -3);
             sub_8015558(self);

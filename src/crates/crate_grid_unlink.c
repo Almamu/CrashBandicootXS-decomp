@@ -1,5 +1,6 @@
 #include "core.h"
 #include "actor.h"
+#include "crates.h"
 
 /* The spatial-hash-grid removal primitive `RemoveCrateFromList`/`RemoveCrateListAt`
  * (`crate_list.c`) call before compacting `manager`'s active-object

@@ -2,6 +2,7 @@
 #include "level_menu.h"
 #include "system.h"
 #include "audio.h"
+#include "menus.h"
 
 /* GitHub issue #27: 0x0801CEE0-0x0801DA38, the whole of the former
  * asm/code_3_2_17_188d0_1cee0.s. The rest of the level-select screen
@@ -34,14 +35,7 @@ extern void *gAudioContext;
 extern void ***gSpriteBankSet;
 extern void *gOamBuffer;
 extern void *gInput;
-extern u8 gNewWorldOpened;
 extern u32 gKeys;     // held keys (low half), newly pressed (high half)
-extern struct xy_pair gLevelSelectEntryPositions[];
-extern struct xy_pair gLevelSelectEntryPositionsAllCleared[];
-extern u32 gLevelSelectWorldEntryBoxAnims[];
-extern u32 gLevelSelectWorldAnims[];
-extern u8 gLevelSelectPageBg[];
-extern struct xy_pair gZoomBgSlotOffsets[];
 
 extern void UploadPaletteCache(void *p);
 extern void CommitOamBuffer(void *p);
@@ -59,38 +53,10 @@ extern void SetSpritePriority(void *part, s32 value);
 extern s32 GetSpriteAnimPaletteSlot(void *part);
 extern void InitBgSetup(void *self, s32 a, s32 b, s32 c, s32 d);
 
-extern void UpdateLevelSelect(struct level_menu *self);
-extern void SettleLevelSelectPage(struct level_menu *self);
-extern void UpdateZoomBg(struct zoom_bg *p);
-extern void CommitZoomBg(struct zoom_bg *p);
-extern u8 IsZoomBgGone(struct zoom_bg *p);
-extern u8 IsZoomBgShown(struct zoom_bg *p);
-extern u8 IsZoomBgWaiting(struct zoom_bg *p);
-extern void StartZoomBgExit(struct zoom_bg *p);
-extern void ClearZoomBgPicture(struct zoom_bg *p);
-extern void RandomizeZoomBgTwinkle(struct zoom_bg *p, struct twinkle *slot);
-extern u16 GetZoomBgControl(struct zoom_bg *p);
-extern void SetLevelSelectEntrySelected(struct item *it, s32 arg);
-extern void SetLevelSelectEntryBox(struct item *it, u32 arg);
-extern void UpdateLevelSelectCursor(void *panel);
-extern void HideLevelSelectCursor(void *panel);
-extern u8 HasLevelSelectCursorArrived(void *panel);
-extern void MoveLevelSelectCursor(void *panel, s32 x, s32 y);
 extern u16 GetBgSetupControl(void *p);
 
-s32 GetLevelSelectPageBgScroll(struct page_bg *p);
-u8 IsLevelSelectPageBgSettled(struct page_bg *p);
-void TurnLevelSelectPageBgBack(struct page_bg *p);
-void TurnLevelSelectPageBgForward(struct page_bg *p);
-void ScrollLevelSelectPageBg(struct page_bg *p);
-u32 GetLevelSelectPageBgOffsets(struct page_bg *p);
-void WaitLevelSelectCursor(struct level_menu *self);
-u8 LevelSelectHasPrevWorld(struct level_menu *self);
-u8 LevelSelectIsNextWorldOpen(struct level_menu *self);
-void RefreshLevelSelectPage(struct level_menu *self);
-
 typedef void (*item_load_fn)(void *self, s32 world, s32 slot);
-typedef void (*item_place_fn)(void *self, struct xy_pair *pos);
+typedef void (*item_place_fn)(void *self, const struct xy_pair *pos);
 
 /* The level-select screen's per-frame register commit (as in
  * level_select.c). */
@@ -177,7 +143,7 @@ static inline void SkinItems(struct level_menu *self)
     s32 i;
 
     for (i = 0; i <= 5; i++)
-        SetLevelSelectEntryBox(self->items[i], gLevelSelectWorldEntryBoxAnims[self->world]);
+        SetLevelSelectEntryBox((struct level_item *)self->items[i], gLevelSelectWorldEntryBoxAnims[self->world]);
 }
 
 /* Runs the page-turn animation: steps BG1's scroll toward its target one
@@ -217,7 +183,7 @@ void LevelSelectConfirm(struct level_menu *self)
     s32 t;
 
     PlaySfx(gAudioContext, 0x52, 0x100);
-    SetLevelSelectEntrySelected(self->items[self->index], 0);
+    SetLevelSelectEntrySelected((struct level_item *)self->items[self->index], 0);
     MoveLevelSelectCursor(self->panel, 0x78, 0x35);
     HideLevelSelectCursor(self->panel);
     WaitLevelSelectCursor(self);
@@ -325,7 +291,7 @@ void RefreshLevelSelectPage(struct level_menu *self)
     if (self->index > self->lastIndex)
         self->index = self->lastIndex;
     {
-        struct xy_pair *pos = &self->positions[self->index];
+        const struct xy_pair *pos = &self->positions[self->index];
 
         MoveLevelSelectCursor(self->panel, pos->x, pos->y - 0x18);
     }
@@ -481,7 +447,7 @@ struct page_bg *CreateLevelSelectPageBg(struct page_bg *self, s32 charBlock, s32
 {
     InitBgSetup(self, charBlock, screenBlock, 0, 2);
     self->scroll = self->target = 0x300;
-    LoadGraphicsPackage(self, gLevelSelectPageBg);
+    LoadGraphicsPackage(self, (void *)&gLevelSelectPageBg);
     return self;
 }
 

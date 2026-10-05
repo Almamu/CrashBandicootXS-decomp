@@ -1,5 +1,6 @@
 #include "core.h"
 #include "aabb.h"
+#include "crates.h"
 
 /* UpdateMegaMix: the update of Mega-Mix, the boss that entity type 0x49
  * spawns (SpawnMegaMix, sprite bank 30). Only room 37 places one, at its
@@ -219,9 +220,6 @@ extern struct ab_list *gCrateList;
 extern void SetMegaMixMotionXFromSet(void *self, void *part, s32 index);
 extern struct aabb GetSpriteHitbox(void *obj);
 extern void CollidePartList(void *manager, struct aabb box, s32 unused, void *compareViewport);
-extern void ExplodeCrate(struct ab_part *p, s32 arg);
-extern u8 IsCrateKindBreakable(struct ab_part *p, s32 kind);
-extern void BreakCrate(struct ab_part *p, s32 arg);
 
 void UpdateMegaMix(struct ab_self *self, struct ab_part *other)
 {
@@ -351,9 +349,9 @@ void UpdateMegaMix(struct ab_self *self, struct ab_part *other)
 
                         if (kind == 0xE || kind == 0x13 || kind == 0x14
                             || kind == 0x15 || kind == 0xA)
-                            ExplodeCrate(t, 0);
+                            ExplodeCrate((struct crate *)t, 0);
                         else if (IsCrateKindBreakable(e, kind))
-                            BreakCrate(e, 1);
+                            BreakCrate((struct crate *)e, 1);
                     }
                 }
                 i++;

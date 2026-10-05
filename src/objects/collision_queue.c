@@ -1,17 +1,11 @@
 #include "core.h"
+#include "crates.h"
 
 /* GitHub issue #14: 0x08010A0C-0x08010D54, continuing the physics/
  * collision subsystem (crate_reset.c-slot_crate.c). `ResolveCollisionCandidates` is
  * this chunk's final and by far largest function - the collision-
  * candidate scan/resolve helper `ResolvePlayerCollisions` (crate.c) already
  * calls once a frame as `ResolveCollisionCandidates(gPlayer + 0x108)`. */
-
-/* A byte passed on the stack as a genuine byte (`strb`); a plain `u8`
- * parameter is widened to a word `str`. */
-struct flag8
-{
-    u8 value;
-} __attribute__((packed));
 
 struct vec2
 {
@@ -23,14 +17,14 @@ struct vec2
 struct candidate
 {
     struct vec2 *neighbor;  // 0x00
-    struct vec2 pos;        // 0x04
+    struct e08c_pos pos;    // 0x04
     s32 kind;               // 0x0C
     s32 unk_10;
     s32 unk_14;
     s32 unk_18;
     s32 unk_1C;
-    struct flag8 unk_20;    // 0x20
-    struct flag8 unk_21;    // 0x21
+    struct byte_arg unk_20; // 0x20 - passed on the stack as a byte (`strb`)
+    struct byte_arg unk_21; // 0x21
     u8 unk_22[2];
 };
 
@@ -43,10 +37,6 @@ struct candidate_list
 };
 
 extern struct vec2 *gPlayer;
-extern void ApplyCrateCollision(void *neighbor, s32 kind, s32 field10, s32 field14,
-                        s32 field18, struct vec2 pos, s32 field1c,
-                        struct flag8 field20, struct flag8 field21,
-                        struct flag8 forced);
 
 /* Resolves the frame's queued collision candidates. `records[0]` seeds
  * the "nearest to the player" choice (by Y distance, X as tiebreak).
@@ -98,11 +88,11 @@ void ResolveCollisionCandidates(struct candidate_list *self)
                 d = -d;
             if (d > 8 || self->records[i].kind == 4)
             {
-                ApplyCrateCollision(n, self->records[i].kind, self->records[i].unk_10,
+                ApplyCrateCollision((struct crate *)n, self->records[i].kind, self->records[i].unk_10,
                             self->records[i].unk_14, self->records[i].unk_18,
                             self->records[i].pos, self->records[i].unk_1C,
                             self->records[i].unk_20, self->records[i].unk_21,
-                            (struct flag8){0});
+                            (struct byte_arg){0});
                 forced = 1;
             }
             else if (dy < bestDy || (dy == bestDy && dx < bestDx))
@@ -113,11 +103,11 @@ void ResolveCollisionCandidates(struct candidate_list *self)
             }
         }
 
-        ApplyCrateCollision(self->records[best].neighbor, self->records[best].kind,
+        ApplyCrateCollision((struct crate *)self->records[best].neighbor, self->records[best].kind,
                     self->records[best].unk_10, self->records[best].unk_14,
                     self->records[best].unk_18, (self->records + best)->pos,
                     self->records[best].unk_1C, self->records[best].unk_20,
-                    self->records[best].unk_21, (struct flag8){forced});
+                    self->records[best].unk_21, (struct byte_arg){forced});
         self->count = 0;
         self->unk_04 = 0;
     }

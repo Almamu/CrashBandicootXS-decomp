@@ -1,4 +1,5 @@
 #include "core.h"
+#include "player.h"
 
 /* GitHub issue #22, ROM 0x08017A44-0x08017AAC. Two groups of methods
  * share this file:
@@ -21,7 +22,6 @@
  * action_ctrl_states.c's top-of-file comment; `self+0xc` is its method table
  * and `self+0x10` the "part" it drives. The accesses stay raw offsets. */
 
-extern u8 gBossCtrlVtable[];
 extern void DestroyCtrl(void *self, s32 flags);
 extern void InitCtrl(void *self);
 
@@ -92,7 +92,7 @@ void DestroyBossCtrl(void *selfArg, s32 flags)
 {
     u8 *self = selfArg;
 
-    *(void **)(self + 0xc) = gBossCtrlVtable;
+    *(void **)(self + 0xc) = (void *)gBossCtrlVtable;
     DestroyCtrl(self, flags);
 }
 
@@ -104,7 +104,7 @@ void *CreateBossCtrl(void *selfArg)
     u8 *self = selfArg;
 
     InitCtrl(self);
-    *(void **)(self + 0xc) = gBossCtrlVtable;
+    *(void **)(self + 0xc) = (void *)gBossCtrlVtable;
     *(s32 *)(self + 0x10) = 0;
     *(s32 *)(self + 0x14) = 0;
     *(s32 *)(self + 0x18) = 0;

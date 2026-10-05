@@ -1,4 +1,5 @@
 #include "core.h"
+#include "crates.h"
 
 /* GitHub issue #13: 0x0800FC70-0x08010A0C, continuing the physics/
  * collision subsystem (see `ResetCrate`'s header comment below and

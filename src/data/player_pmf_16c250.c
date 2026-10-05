@@ -1,5 +1,6 @@
 #include "core.h"
 #include "actor_self.h"
+#include "player.h"
 
 /*
  * ROM 0x0816C250-0x0816C2D8: two per-state member-function-pointer
@@ -7,19 +8,6 @@
  * ROM order between data/data.s sections by ldscript.txt - see
  * docs/data.md.
  */
-
-extern void PlayerCtrlStateIdle();
-extern void PlayerCtrlStateSwim();
-extern void PlayerCtrlStateStroke();
-extern void PlayerCtrlStateSpin();
-extern void PlayerCtrlStateTurn();
-extern void PlayerCtrlStateSwimStart();
-extern void PlayerCtrlStateStop();
-extern void PlayerCtrlStateDead();
-extern void InputCtrlStateStart();
-extern void InputCtrlStateDead();
-extern void sub_801793C();
-extern void sub_801796C();
 
 /* Per-state handlers dispatched by UpdatePlayerCtrl (swim_ctrl.c,
  * its `struct pmf` view); PlayerCtrlKillPlayer sets state 7. */

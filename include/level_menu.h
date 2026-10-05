@@ -12,6 +12,8 @@
  * entries, called through the _call_via_r1/AD80/AD84/AD88 "call via
  * r1/r2/r3/r4" thunks. */
 
+#include "menus.h"
+
 struct method
 {
     s16 thisOffset;
@@ -71,12 +73,6 @@ struct sprite
 };
 
 COMPILE_TIME_ASSERT(level_menu_h, sizeof(struct sprite) == 0x40);
-
-struct xy_pair
-{
-    s32 x;
-    s32 y;
-};
 
 /* One level's saved record word (`level_menu.save + 4 + id * 4`). */
 struct level_save
@@ -244,7 +240,7 @@ struct level_menu
     s32 world;                  // 0x0C - page
     s32 levelId;                // 0x10 - gLevelTable index
     s32 nameText;               // 0x14 - the level name's text
-    struct xy_pair *positions;  // 0x18 - cursor position per index
+    const struct xy_pair *positions; // 0x18 - cursor position per index
     struct page_bg *bg1;        // 0x1C - CreateLevelSelectPageBg, BG1
     struct zoom_bg *bg2;        // 0x20 - InitZoomBg, BG2 (the level picture)
     struct item *items[6];      // 0x24

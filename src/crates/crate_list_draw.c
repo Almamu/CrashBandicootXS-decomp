@@ -1,6 +1,7 @@
 #include "core.h"
 #include "actor.h"
 #include "box_part.h"
+#include "crates.h"
 
 extern void *_call_via_r1(void *arg0, void *fn);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *fn);

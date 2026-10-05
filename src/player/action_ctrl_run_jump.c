@@ -2,6 +2,7 @@
 #include "action_obj.h"
 #include "system.h"
 #include "audio.h"
+#include "player.h"
 
 /* GitHub issue #17, ROM 0x08012FBC-0x080134B8 (details in
  * docs/matching/issue-17-0x08012fbc-actor.md, "Third pass"). Two more
@@ -26,12 +27,6 @@ extern void *gLevelState;
 extern u8 *gPlayer;
 extern void *gEntitySpawner;
 extern void *gInput;
-extern u8 CheckActionCtrlLeftGround(struct act *self);
-extern void UpdatePlayerFacing(struct act *self);
-extern void ClearPlayerSpeedY(struct act_part *part);
-extern void StartActionCtrlSpin(struct act *self);
-extern void StartActionCtrlRun(struct act *self);
-extern void SetActionCtrlModeAnim(struct act *self, s32 a, s32 b, s32 c, s32 d);
 extern u8 HasTurboRun(void *self);
 extern struct spawned *LaunchEffectPart(void *pool, s32 a, s32 b, s32 c, s32 d, s32 e, void *f);
 

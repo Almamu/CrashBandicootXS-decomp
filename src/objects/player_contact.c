@@ -2,6 +2,7 @@
 #include "actor.h"
 #include "level_state.h"
 #include "aabb.h"
+#include "player.h"
 
 /* The one player-object field (gPlayer, a `struct gobj`)
  * this file reads. */
@@ -16,7 +17,6 @@ extern void *gPlayer;
 extern u32 gRoomFrameCount;
 extern void *GetSpriteAttackBox(void *dest, void *pt);
 extern void *GetSpriteBodyBox(void *dest, void *pt);
-extern u8 PlayerTouchesBox(void *arg0, void *buf);
 extern void _call_via_r4(void *arg0, s32 arg1, s32 arg2, s32 arg3);
 extern void ResolvePlayerContact(void *partArg);
 

@@ -8,21 +8,18 @@
 #include <agb_syscall.h>
 #include "text.h"
 #include "util.h"
+#include "menus.h"
 
 extern struct palette_cache *gPaletteCache;
 extern struct AudioContext *gAudioContext;
 extern struct vram_upload_cursor *gObjVramCursor;
 extern u8 gSpriteBankTable[];
-extern u8 gPauseMenuPalette[];
 extern void SetPaletteCacheSource(struct palette_cache *self, u16 count, const u8 *records);
 extern s32 ClaimPaletteSlot(struct palette_cache *self, s32 index);
 extern void DestroyPaletteCache(struct palette_cache *self, u32 flags);
 extern void *_call_via_r1(void *arg0, void *fn);
 extern void ResetObjVram(struct vram_upload_cursor *self);
 extern void *OperatorNew(s32 size);
-extern struct pause_menu *InitPauseMenu(struct pause_menu *self);
-extern s32 PauseMenuLoop(struct pause_menu *self);
-extern void DestroyPauseMenu(struct pause_menu *self, u32 flags);
 
 /* The composite pause/options screen's own constructor/driver
  * (docs/rom_map.md's "overlay_ui" section, "one composite pause/options
@@ -139,10 +136,7 @@ extern s32 GetBgSetupControl(void *buf);
 extern void *gLevelState;
 extern void ***gSpriteBankSet;
 extern void *PackSaveData(void *arg0);
-extern void InitPauseMenuInfo(struct pause_menu *self);
 extern struct actor *InitUiSpriteObj(struct actor *part);
-extern u8 gPauseMenuBg[];
-extern u8 gPauseMenuRows[];
 
 /* Same "recurring screen-constructor shape" docs/rom_map.md's overlay_ui
  * section documents for InitPauseMenu/InitPowerDialog/InitPauseTimeTrialPage: `self`
@@ -226,7 +220,7 @@ struct pause_menu *InitPauseMenu(struct pause_menu *self)
             *hi = one;
         }
 
-        LoadGraphicsPackage(self, gPauseMenuBg);
+        LoadGraphicsPackage(self, (void *)&gPauseMenuBg);
         self->field_10 = PackSaveData(gLevelState);
         InitPauseMenuInfo(self);
 

@@ -5,6 +5,7 @@
 #include "vram_pool.h"
 #include "pause_menu.h"
 #include "system.h"
+#include "menus.h"
 
 /* PauseMenuLoop alone: ROM-address-adjacent to pause_menu.c's
  * DestroyPauseMenu on one side and the already-matched AnimatePauseMenu
@@ -15,12 +16,6 @@
 
 extern void *gInput;
 extern u32 gKeys;
-extern void PauseMenuCursorDown(struct pause_menu *self);
-extern s32 PauseMenuCursorUp(struct pause_menu *self);
-extern void PauseMenuVolumeDown(struct pause_menu *self);
-extern void PauseMenuVolumeUp(struct pause_menu *self);
-extern void CommitPauseMenuFrame(struct pause_menu *self);
-extern void AnimatePauseMenu(struct pause_menu *self);
 
 /* The composite pause/options screen's blocking cursor/confirm/cancel
  * driver (docs/rom_map.md's overlay_ui section) - runs until the user
@@ -54,7 +49,6 @@ extern void AnimatePauseMenu(struct pause_menu *self);
  * before the input loop it lands ahead of that insertion
  * (docs/matching/early-rom-naked-retry-2.md). */
 extern struct AudioContext *gAudioContext;
-extern void DrawPauseMenu(struct pause_menu *self);
 
 /* gKeys as the {held, newly pressed} key-state pair. */
 struct pause_keys {
@@ -75,11 +69,6 @@ struct pause_dispcnt {
     u16 lo:6;
     u16 bit6:1;
     u16 hi:9;
-};
-
-struct pause_row {
-    void *label;
-    s32 type;
 };
 
 static inline void draw_frame(struct pause_menu *self)
@@ -145,7 +134,7 @@ s32 PauseMenuLoop(struct pause_menu *self)
             }
         }
         if (KEYS.pressed & 1) {
-            result = ((struct pause_row *)self->field_14)[self->field_18].type;
+            result = self->field_14[self->field_18].type;
             if ((u32)(result - 4) <= 1) {
                 PlaySfx(gAudioContext, 0x48, 0x100);
             } else {

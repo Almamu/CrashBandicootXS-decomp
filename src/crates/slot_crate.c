@@ -1,5 +1,6 @@
 #include "core.h"
 #include "crate.h"
+#include "crates.h"
 
 /* GitHub issue #13: 0x0800FC70-0x08010A0C, continuing the physics/
  * collision subsystem (see crate_reset.c's header comment and
@@ -31,9 +32,6 @@ asm(".align 2, 0");
  * `gPlayer+0x108` (confirmed by `ResolvePlayerCollisions` in
  * crate.c, which already calls `ResolveCollisionCandidates(gPlayer +
  * 0x108)`). Its fields are `struct crate`'s (include/crate.h). */
-
-/* Getter for the slot crate's stage (`u48.slotState` bits 6-7) - already matched, slot_crate.c. */
-extern u32 GetSlotCrateStage(void *selfArg);
 
 /* Decrements `self+0x48`'s bits 6-7 sub-state by one, if it isn't
  * already zero. */

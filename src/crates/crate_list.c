@@ -3,6 +3,7 @@
 #include "actor_self.h"
 #include "box_part.h"
 #include <agb_syscall.h>
+#include "crates.h"
 
 /* The fixed-slot object-pool manager struct `InitCrateList`
  * (`part_list.c`) initializes: `slotArray` holds the active
@@ -25,9 +26,6 @@ struct pool_manager {
     void *freeListHead;                           // +0x814
 };
 
-extern void UnlinkCrateFromGrid(struct pool_manager *manager, void *item);
-extern void *AddCrateGridNode(struct pool_manager *manager, void *data, s32 bucket, s32 extra);
-extern void LinkCrateInGrid(struct pool_manager *manager, void *obj);
 extern void OperatorDeleteArray(void *ptr);
 extern void OperatorDelete(void *manager);
 

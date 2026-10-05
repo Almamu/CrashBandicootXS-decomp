@@ -4,6 +4,8 @@
 #include "vtable.h"
 #include "system.h"
 #include "audio.h"
+#include "crates.h"
+#include "player.h"
 
 /* GitHub issue #17, ROM 0x08014674-0x08014F8C, formerly
  * asm/code_3_2_17_14674.s (details in
@@ -19,17 +21,16 @@ extern void *gAudioContext;
 extern struct act_part *gPlayer;
 extern void *gInput;
 extern u8 gEmptySpritePoint[];
-extern void StartActionCtrlSpin(struct act *self);
-extern void SetActionCtrlModeAnim(struct act *self, s32 a, s32 b, s32 c, s32 d);
 extern void LoadPaletteSlot(void *cache, s32 slot, s32 kind);
-extern void StartActionCtrlHangSpin(struct act *self);
-extern u8 UpdatePlayerFacing(struct act *self);
 extern void *GetSpriteFrame(struct act_part *part);
 extern void ResetSpriteFrameTimer(struct act_part *p);
 extern void ResetSpriteFrameIndex(struct act_part *p);
 extern void SetSpriteAnimDone(struct act_part *p, s32 arg1);
 
-void ActionCtrlReleaseHang(struct act *self);
+/* codegen: UpdatePlayerFacing returns s32 (player.h, and its definition
+ * in kill_player.c only matches that way), but ActionCtrlStateHangMove
+ * tests the result as a u8 (`lsl #0x18`). docs/headers_plan.md */
+extern u8 UpdatePlayerFacing_u8(void *self) asm("UpdatePlayerFacing");
 
 /* Queues action `next` on the +0x31/+0x2F/+0x27 trio (as ActSetNext) */
 static inline void ActSetNext27(struct act *self, s32 next)
@@ -532,7 +533,7 @@ void ActionCtrlStateHangMove(struct act *self)
         self->frame = alt;
         ActQueue27(self, alt, 0x20);
     }
-    if (UpdatePlayerFacing(self))
+    if (UpdatePlayerFacing_u8(self))
     {
         u8 *info = GetSpriteFrame(self->part);
         s32 x;
@@ -628,7 +629,6 @@ extern s32 _call_via_r1(void *addr, void *fn);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern s32 _call_via_r3(void *arg0, void *arg1, void *arg2, void *arg3);
 extern void _call_via_r4(void *arg0, s32 arg1, s32 arg2, s32 arg3);
-extern void BreakCratesInArea(s32 x, s32 y, s32 arg2, s32 arg3);
 
 /* For each `struct actor *` in the `gCollidableList` list: skips
  * entries whose `+0x48` trampoline (`_call_via_r1`) reports a width of 4

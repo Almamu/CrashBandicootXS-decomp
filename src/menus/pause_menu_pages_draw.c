@@ -5,6 +5,7 @@
 #include "pause_menu.h"
 #include "text.h"
 #include "system.h"
+#include "menus.h"
 
 /* The three functions below are companion "draw a label centered on an
  * icon widget" steps. Once NAKED transcriptions; they match as plain C
@@ -47,8 +48,6 @@ static inline void set_icon_mgr_pos(struct bitmap_font *m, u32 x, u32 y)
         _call_via_r2((u8 *)_m + _r->slots[2].offset, (s32)(label), _r->slots[2].ptr); \
     }
 
-extern struct icon_pos gPauseTimeTrialIconPos;
-
 void DrawPauseTimeTrialPage(struct pause_menu *self)
 {
     u32 w;
@@ -66,9 +65,6 @@ void DrawPauseTimeTrialPage(struct pause_menu *self)
  * the fixed `gPauseCrystalIconPos` position, via `DrawPauseFraction`
  * (src/menus/pause_menu_widgets.c) that actually draws the two small
  * strings. */
-extern struct icon_pos gPauseCrystalIconPos;
-extern void DrawPauseFraction(struct pause_menu *self, void *buf1, void *buf2);
-
 void DrawPauseCrystalsPage(struct pause_menu *self)
 {
     DrawSpriteWithOffset(self->field_88, 0, 0);
@@ -76,24 +72,16 @@ void DrawPauseCrystalsPage(struct pause_menu *self)
     DrawPauseFraction(self, self->buf2c, self->buf46);
 }
 
-/* A different, still-unreconciled self object (only `field_24`, a
- * plain `s32` category index, is touched here) - draws a fixed-position
- * category/header label at (0xc2, 0x2c) via the same icon manager,
- * picking its source character from a lookup table
+/* Draws the current info page's title (`field_24`, AnimatePauseMenu's
+ * page index) at (0xc2, 0x2c) via the same icon manager,
+ * picking its text from a lookup table
  * (`gPauseMenuPageTitles[self->field_24]`) fed through `GetUiText`
  * (the same "char code -> something _call_via_r2 can draw" conversion
  * `DrawPowerDialog`/`InitPauseCrystalsPage` already use for fixed digits like
  * `0x2e`/`0x14`). */
-struct pause_screen_category_state {
-    u8 unused_00[0x24];
-    s32 field_24;
-};
-
-extern void *gPauseMenuPageTitles[];
-
-void DrawPauseMenuPageTitle(struct pause_screen_category_state *self)
+void DrawPauseMenuPageTitle(struct pause_menu *self)
 {
-    s32 label = GetUiText((s32)gPauseMenuPageTitles[self->field_24]);
+    s32 label = GetUiText(gPauseMenuPageTitles[self->field_24]);
     u32 w = MEASURE_ICON_TEXT(gSmallFont, label);
 
     set_icon_mgr_pos(gSmallFont, 0xc2 - (w >> 1), 0x2c);

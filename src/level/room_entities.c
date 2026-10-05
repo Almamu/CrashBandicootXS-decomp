@@ -1,5 +1,6 @@
 #include "core.h"
 #include <agb_syscall.h>
+#include "crates.h"
 
 /* GitHub issue #34/#40/#41, `UpdateGameFrame`-`MainLoop` cluster: the
  * second of the two raw functions `docs/matching/issue-34-game-loop-
@@ -146,9 +147,6 @@ extern void *gEntitySpawner;
 extern struct lk_actor_list *gCrateList;
 extern u8 sub_8025968(struct lk_self *self, s32 n);
 extern void SpawnEntity(void *table, s32 n, struct lk_item *item);
-extern void SetCrateAbove(struct lk_actor *a, struct lk_actor *b);
-extern void SetCrateBelow(struct lk_actor *a, struct lk_actor *b);
-extern struct lk_actor *GetCrateAbove(struct lk_actor *a);
 extern void SetEntityPos(struct lk_actor *a, s32 x, s32 y);
 extern u8 *_call_via_r1(void *self, void *fn);
 

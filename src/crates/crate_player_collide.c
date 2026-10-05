@@ -1,5 +1,6 @@
 #include "core.h"
 #include "actor.h"
+#include "crates.h"
 
 struct grid_node {
     void *data;
@@ -40,8 +41,6 @@ struct player {
     u8 state;           // 0x88
 };
 
-extern void BreakCrateTouchedByPlayer(void *part);
-extern void CollideCrateWithPlayer(void *part, s32 mode, s32 playerX, s32 playerY);
 extern struct level_layers *gLevelLayers;
 extern struct player *gPlayer;
 
@@ -64,7 +63,7 @@ extern struct player *gPlayer;
  * the "cross-branch register-role gap" this was parked for was the
  * newer compiler; the only shaping detail is reading the camera x
  * before the `>> 8`. */
-void CollidePlayerWithCrates(struct pool_manager *m)
+void CollidePlayerWithCrates(struct pool_manager *m, s32 unused)
 {
     s32 lo = gLevelLayers->layer0->x;
     s32 i;

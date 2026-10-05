@@ -3,6 +3,7 @@
 #include "util.h"
 #include "system.h"
 #include "audio.h"
+#include "player.h"
 
 /* Part of GitHub issue #16's remainder (0x08011BD4-0x08012D24): two
  * gActionCtrlStateTable action-table helpers for the player/action object
@@ -31,10 +32,6 @@ extern struct act_part *gPlayer;
 extern void *gInput;
 extern struct anim_rec gCtrlMotionRecords[];
 extern void SetSpritePrevPos(struct act_part *p, s32 x, s32 y);
-extern u8 CheckActionCtrlLeftGround(struct act *self);
-extern void UpdatePlayerFacing(struct act *self);
-extern void StartActionCtrlSpin(struct act *self);
-extern void StartActionCtrlRun(struct act *self);
 extern u8 HasTurboRun(void *self);
 
 /* Trio stores as in action_ctrl_run_jump.c: as inline parameters, old_agbcc

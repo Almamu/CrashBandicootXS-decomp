@@ -4,6 +4,7 @@
 #include "util.h"
 #include <libgcc.h>
 #include "audio.h"
+#include "player.h"
 
 /* GitHub issue #23: 0x080188D0-0x0801967C, formerly
  * asm/code_3_2_17_188d0.s (details in docs/matching/issue-23-graphics.md).
@@ -207,8 +208,6 @@ extern u8 gCortexTargetBlinkStopTimes[];
 
 extern void DestroyCtrl(void *self, s32 flags);
 extern void InitCtrl(void *self);
-extern void DestroyBossCtrl(void *self, s32 flags);
-extern void *CreateBossCtrl(void *self);
 extern void OperatorDeleteArray(void *ptr);
 extern void *OperatorNewArray(u32 size);
 extern void *OperatorNew(u32 size);

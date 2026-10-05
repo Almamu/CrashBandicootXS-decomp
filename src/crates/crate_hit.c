@@ -2,6 +2,7 @@
 #include "actor.h"
 #include "box_part.h"
 #include "util.h"
+#include "crates.h"
 
 /* Dedicated deep investigation (docs/matching/issue-9-10-0x0800ceac-graphics.md):
  * these two functions sit in the still-raw span `tools/report_units.py`
@@ -25,21 +26,11 @@
  * sibling `sub_800CEAC`, entirely unremarked anywhere until now. */
 
 extern void *gPlayer;
-extern void *GetCrateAbove(void *obj); /* "get next" */
-extern void *GetCrateBelow(void *obj); /* "get prev" */
 
-/* Same `+4`/`+6`/`+8`/`+9` `{s16 xOff, s16 yOff, u8 w, u8 h}` hitbox
- * quad layout `BreakCrateTouchedByPlayer`/`PlayerAnimWouldTouchCrate` already document, but here
- * the caller (`QueueCratePlayerCollision`) passes a pointer directly to the quad
- * itself (`playerRecordBase + 4`), not the 28-byte record's own base -
- * so this function only ever sees the 4-byte-wide quad and never reads
- * the record's own leading word. */
-struct hitbox_quad {
-    s16 xOff;
-    s16 yOff;
-    u8 w;
-    u8 h;
-};
+/* `struct hitbox_quad` (crates.h): the caller (`QueueCratePlayerCollision`)
+ * passes a pointer directly to the quad itself (`playerRecordBase + 4`),
+ * not the 28-byte record's own base - so this function only ever sees
+ * the 4-byte-wide quad and never reads the record's own leading word. */
 
 /* The player as these two read it: box_part's mirror bits at +0x28 and
  * a "wide hitbox" byte at +0x90. */
@@ -226,9 +217,6 @@ asm(".align 2, 0");
  * docs/matching/issue-12-physics-collision.md. */
 
 #define gPlayerPart (*(struct box_part **)&gPlayer)
-extern u8 gCrateKindExplosive[];
-extern void ExplodeCrate(void *self, u8 arg1);
-extern void BreakCrateInStack(void *self, u8 arg1, u8 arg2, u8 arg3);
 
 /* Builds two AABBs - one for `self`, one for the player
  * (`gPlayer`) - from the shared "keyframe/hitbox record"
@@ -328,9 +316,9 @@ void BreakCrateTouchedByPlayer(struct box_part *self)
     if (AabbOverlaps(&f.a, BOX_ADDR(&f.b)))
     {
         if (gCrateKindExplosive[self->state] == 1)
-            ExplodeCrate(self, 1);
+            ExplodeCrate((struct crate *)self, 1);
         else
-            BreakCrateInStack(self, 0, 0, 0);
+            BreakCrateInStack((struct crate *)self, 0, 0, 0);
     }
 }
 

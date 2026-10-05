@@ -1,4 +1,5 @@
 #include "core.h"
+#include "menus.h"
 
 /*
  * ROM 0x0816C5A0-0x0816C5F0. Linked in ROM order between data/data.s
@@ -27,9 +28,9 @@ extern const u8 gLevelSelectPicture8Palette[];
 extern const u8 gLevelSelectPicture6Palette[];
 
 /* Ten {palette, tiles} tagged-asset pairs, indexed by image number:
- * UpdateZoomBg (level_select_widgets.c, `struct image_pair`) loads both
- * through LoadTaggedAsset. */
-const u8 *const gLevelSelectPictures[10][2] = {
+ * UpdateZoomBg (level_select_widgets.c) loads both through
+ * LoadTaggedAsset. */
+const struct image_pair gLevelSelectPictures[10] = {
     { gLevelSelectPicture0Palette, gLevelSelectPicture0Tiles },
     { gLevelSelectPicture1Palette, gLevelSelectPicture1Tiles },
     { gLevelSelectPicture2Palette, gLevelSelectPicture2Tiles },

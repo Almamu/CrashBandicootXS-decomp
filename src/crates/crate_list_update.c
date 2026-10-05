@@ -2,8 +2,8 @@
 #include "actor.h"
 #include "box_part.h"
 #include <agb_syscall.h>
+#include "crates.h"
 
-extern void UnlinkCrateFromGrid(void *manager, void *item);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *fn);
 extern void *_call_via_r1(void *arg0, void *fn);
 extern void *gLevelLayers;
@@ -119,7 +119,7 @@ static inline void pool_remove(struct pool_manager *manager, struct box_part *ta
         /* End of the hold above (emits no code). */
         if (holdR2)
             asm("" : : "r"(hold));
-        UnlinkCrateFromGrid(manager, item);
+        UnlinkCrateFromGrid(manager, (struct pool_item *)item);
 
         {
             s32 srcOff = off + 4;

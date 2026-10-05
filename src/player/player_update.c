@@ -1,6 +1,7 @@
 #include "core.h"
 #include "actor.h"
 #include "gobj_1a794.h"
+#include "player.h"
 
 /* GitHub issue #9: 0x08007634-0x0800B3F0, game_loop-labeled chunk that
  * turned out to be part of the `actor` category's "part" object family
@@ -175,7 +176,6 @@ asm(".align 2, 0");
 
 extern s32 UpdateGroundSprite(void *self);
 extern void *GetSpriteBodyBox(void *dest, void *pt);
-extern u8 gPlayerVtable[];
 extern s32 _call_via_r2(void *arg0, void *arg1, void *fn);
 extern void DestroyCollisionQueue(void *arg0, s32 arg1);
 extern void DestroyGroundSprite(void *self, u32 unusedArg);
@@ -256,7 +256,7 @@ void DestroyPlayer(void *selfArg, u32 arg1)
 {
     u8 *self = selfArg;
 
-    *(void **)(self + 0x18) = gPlayerVtable;
+    *(void **)(self + 0x18) = (void *)gPlayerVtable;
     {
         void *rec = *(void **)(self + 0xb0);
 

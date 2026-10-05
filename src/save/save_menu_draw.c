@@ -359,14 +359,6 @@ extern void ResetSpriteFrameIndex(struct actor *part);
 extern void SetSpriteAnimDone(struct actor *part, u8 val);
 extern void ***gSpriteBankSet;
 
-struct icon_frame_nibble {
-    u8 lo:4;
-    u8 hi:4;
-};
-
-#define SET_ICON_FRAME_NIBBLE(iconExpr) \
-    (((struct icon_frame_nibble *)&(iconExpr)->field_29)->lo = GetSpriteAnimPaletteSlot(&(iconExpr)->base))
-
 static inline void IconSetup(struct bitmap_font *m, u32 v)
 {
     struct icon_slot *slot;

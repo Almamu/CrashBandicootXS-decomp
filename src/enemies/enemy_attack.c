@@ -4,6 +4,7 @@
 #include "util.h"
 #include <libgcc.h>
 #include "audio.h"
+#include "player.h"
 
 /* GitHub issue #9/#10: `UpdateEnemyAttackCycle` and `UpdateEnemyTriggerBox`, the last two of
  * the four `self+0x68`-dispatching siblings flagged in
@@ -68,7 +69,6 @@
  * zero-pads its last 2 bytes to the next 4-byte boundary). */
 
 extern struct ctrl_target *LaunchEffectPart(void *pool, s32 kind, s32 b, s32 margin, s32 z, s32 e, struct ctrl_target *src);
-extern u8 PlayerTouchesBox(struct ctrl_target *obj, struct aabb *box);
 extern u32 gRoomFrameCount;
 extern void *gAudioContext;
 extern void *gEntitySpawner;

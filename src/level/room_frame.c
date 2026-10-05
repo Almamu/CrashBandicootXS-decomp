@@ -4,6 +4,7 @@
 #include "level_menu.h"
 #include "hud.h"
 #include "system.h"
+#include "crates.h"
 
 /* Built with old_agbcc - see docs/matching/game-loop-old-agbcc.md. */
 
@@ -31,7 +32,6 @@ extern void ScrollLevelLayers(void *self);
 extern void TickPaletteCycles(void *self);
 extern void DrawPartList(struct dual_array_manager *manager);
 extern void *_call_via_r1(void *arg0, void *arg1);
-extern void DrawCrateList(void *managerArg);
 extern void HideUnusedOamEntries(struct oam_shadow_buffer *arg0);
 extern void CommitOamBuffer(struct oam_shadow_buffer *arg0);
 extern void CommitLevelScroll(void *self);

@@ -4,26 +4,7 @@
 #include "text.h"
 #include "system.h"
 #include "audio.h"
-
-/* Same continue prompt ("fade overlay") self object as `continue_prompt_init.c` (`InitContinuePrompt`) -
- * redeclared locally here per this project's minimal-local-type
- * convention for a type already anchored in another translation unit
- * (see e.g. power_dialog_loop.c's own `struct sub_8006700_actor`
- * comment). Only the fields this file actually touches are named. */
-struct continue_prompt {
-    u8 unused_00[0xc];
-    u16 dispcnt;        /* 0x0c */
-    u8 unused_0e[2];
-    u8 bldcntLo;        /* 0x10 */
-    u8 bldcntHi;
-    u8 eva : 5;         /* 0x12 */
-    u8 evaHi : 3;
-    u8 bldalphaHi;
-    u8 unused_14[4];
-    struct bitmap_font *icons; /* 0x18 */
-    u8 unused_1c[4];
-    s32 selection;      /* 0x20 */
-};
+#include "menus.h"
 
 extern struct vram_upload_cursor *gObjVramCursor;
 extern void ResetObjVram(struct vram_upload_cursor *self);
@@ -38,10 +19,6 @@ extern struct oam_shadow_buffer *gOamBuffer;
 extern void ResetOamBuffer(struct oam_shadow_buffer *arg0);
 extern void HideUnusedOamEntries(struct oam_shadow_buffer *arg0);
 extern void CommitOamBuffer(struct oam_shadow_buffer *arg0);
-extern u16 gContinuePromptPalette0[];
-extern u16 gContinuePromptPalette1[];
-extern u16 gContinuePromptPalette2[];
-extern u16 gContinuePromptPalette3[];
 
 /* The other half of the continue prompt's setup, called from
  * `InitContinuePrompt` (continue_prompt_init.c): flushes the shared VRAM upload cursor
@@ -147,14 +124,12 @@ struct keys89 {
 extern void *gInput;
 extern u32 gKeys;
 extern void *gAudioContext;
-extern void DrawContinuePrompt(struct continue_prompt *self);
-extern void CommitContinuePromptFrame(struct continue_prompt *self);
 
 s32 ContinuePromptLoop(struct continue_prompt *self)
 {
     s32 dir = 1;
     s32 i = 0;
-    s32 level = self->eva;
+    s32 level = self->blend.bits.eva;
     struct keys89 *input = (struct keys89 *)&gKeys;
     void **audio = &gAudioContext;
 
@@ -190,8 +165,8 @@ s32 ContinuePromptLoop(struct continue_prompt *self)
                 if (++level > 15)
                     dir = 1;
             }
-            self->eva = level;
-            *(vu32 *)0x04000050 = *(u32 *)&self->bldcntLo;
+            self->blend.bits.eva = level;
+            *(vu32 *)0x04000050 = self->blend.word;
         }
     }
     return self->selection == 0;

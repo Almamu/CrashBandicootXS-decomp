@@ -5,6 +5,8 @@
 #include "pickups.h"
 #include "util.h"
 #include "audio.h"
+#include "crates.h"
+#include "player.h"
 
 /* GitHub issue #12: 0x0800D040-0x0800FC70, the physics/collision
  * subsystem (see crate_hit.c's header comment and
@@ -123,50 +125,12 @@ struct d18c_level
     s32 mode;           // 0x78
 };
 
-struct d18c_quad
-{
-    s16 xOff;
-    s16 yOff;
-    u8 w;
-    u8 h;
-};
-
-struct d18c_pos
-{
-    s32 x;
-    s32 y;
-};
-
-struct d18c_flag8
-{
-    u8 value;
-} __attribute__((packed));
-
-extern s32 gActionCtrlStateAttackKinds[];
-extern u8 gCrateKindUnbreakable[];
-extern u8 gStaticData_0816BF00[];
 extern u8 gEmptySpriteBox[];
-extern s32 gCrateHitResponse[][7];
 extern void *GetSpriteFrame(void *part);
-extern u8 sub_800CEAC(void *self, struct d18c_quad *quad, struct aabb *box, s32 x, s32 y);
-extern struct crate *sub_800CF70(struct crate *self, struct aabb *box, u8 *found);
-extern struct crate *GetCrateBelow(struct crate *obj);
-extern struct crate *GetCrateAbove(struct crate *obj);
-extern struct crate *GetBottomCrate(struct crate *obj);
-extern struct crate *GetTopCrate(struct crate *obj);
-extern u8 HasPlayerRampYTarget(void *self);
 extern void SetMaskLevel(void *self, s32 arg);
-extern void ClearCrateStackTouched(struct crate *self);
-extern void MarkCrateStackTouched(struct crate *self, struct aabb *box);
-extern void ActivateNitroSwitchCrate(struct crate *self);
-extern void ActivateIronSwitchCrate(struct crate *self);
-extern void LightTntCrate(struct crate *self);
-extern void BreakCrateInStack(struct crate *self, u32 a, u32 b, u32 c);
-extern void ExplodeCrate(struct crate *self, u8 a);
-extern void OpenCheckpointCrate(struct crate *self);
 extern void AddCollisionCandidate(void *queue, struct crate *obj, s32 kind, s32 code,
-                        s32 edge, s32 depth, struct d18c_pos pos, s32 hit,
-                        struct d18c_flag8 f20, struct d18c_flag8 f21);
+                        s32 edge, s32 depth, struct e08c_pos pos, s32 hit,
+                        struct byte_arg f20, struct byte_arg f21);
 
 #define D18C_CALL68(a, b, c) \
     PhysCall3(D18C_P, (struct method *)&D18C_P->vtable->m68, (a), (b), (c))
@@ -180,22 +144,22 @@ extern void AddCollisionCandidate(void *queue, struct crate *obj, s32 kind, s32 
         switch (**(u8 **)(_info + 4) >> 4)                                     \
         {                                                                      \
         case 0:                                                                \
-            (dst) = (struct d18c_quad *)(_info + 0x1c);                        \
+            (dst) = (struct hitbox_quad *)(_info + 0x1c);                        \
             break;                                                             \
         case 1:                                                                \
         case 2:                                                                \
         case 3:                                                                \
-            (dst) = (struct d18c_quad *)gEmptySpriteBox;                  \
+            (dst) = (struct hitbox_quad *)gEmptySpriteBox;                  \
             break;                                                             \
         case 4:                                                                \
-            (dst) = (struct d18c_quad *)(_info + 0x1c);                        \
+            (dst) = (struct hitbox_quad *)(_info + 0x1c);                        \
             break;                                                             \
         case 5:                                                                \
         case 6:                                                                \
-            (dst) = (struct d18c_quad *)gEmptySpriteBox;                  \
+            (dst) = (struct hitbox_quad *)gEmptySpriteBox;                  \
             break;                                                             \
         default:                                                               \
-            (dst) = (struct d18c_quad *)gEmptySpriteBox;                  \
+            (dst) = (struct hitbox_quad *)gEmptySpriteBox;                  \
             break;                                                             \
         }                                                                      \
     }                                                                          \
@@ -217,7 +181,7 @@ extern void AddCollisionCandidate(void *queue, struct crate *obj, s32 kind, s32 
 /* Returns its argument. Writing a position's y through it (instead of a
  * `pp` pointer local) lets gcse make the ROM's pointer copy: the store goes
  * through `add r0, sp, #N` and the copy (`adds r2, r0, #0`) is used after. */
-static inline struct d18c_pos *D18C_PosPtr(struct d18c_pos *p)
+static inline struct e08c_pos *D18C_PosPtr(struct e08c_pos *p)
 {
     return p;
 }
@@ -233,9 +197,9 @@ static inline s32 D18C_Code(s32 row, s32 k)
  * address first, then `&obj->kind`, then adds `row * 28 + k * 4` to the
  * table: the table is an argument (all inline arguments are expanded
  * before the body), and the offset sum is written in that order. */
-static inline s32 D18C_CodeIn(s32 (*t)[7], u8 *row, s32 k)
+static inline s32 D18C_CodeIn(const s32 (*t)[7], u8 *row, s32 k)
 {
-    return *(s32 *)((u8 *)t + (*row * 28 + k * 4));
+    return *(const s32 *)((const u8 *)t + (*row * 28 + k * 4));
 }
 
 /* The ring lock byte as an int, for the first test in D18C_RING_PUSH.
@@ -289,10 +253,10 @@ void QueueCratePlayerCollision(struct crate *self, s32 idx)
         struct aabb c;
         struct aabb b;
         u8 found;
-        struct d18c_pos p1;
-        struct d18c_pos p2;
-        struct d18c_pos p3;
-        struct d18c_pos pos;
+        struct e08c_pos p1;
+        struct e08c_pos p2;
+        struct e08c_pos p3;
+        struct e08c_pos pos;
     } f;
     s32 px;
     s32 py;
@@ -310,9 +274,9 @@ void QueueCratePlayerCollision(struct crate *self, s32 idx)
     s32 dy;
     s32 n;
     s32 r; /* shared by both slope checks, so both get r2 as in the ROM */
-    struct d18c_quad *q;
-    struct d18c_pos *pp;
-    struct d18c_quad *hb;
+    struct hitbox_quad *q;
+    struct e08c_pos *pp;
+    struct hitbox_quad *hb;
     struct aabb *bb;
     /* &self->state, kept for the `case 1`/`case 2` test. Declared last, it
      * is the last user variable on the stack, so it takes the slot right
@@ -323,7 +287,7 @@ void QueueCratePlayerCollision(struct crate *self, s32 idx)
 
     {
         u8 *rec = (u8 *)&self->anim->records[self->tag];
-        struct d18c_quad *pb = (struct d18c_quad *)(rec + 4);
+        struct hitbox_quad *pb = (struct hitbox_quad *)(rec + 4);
         s32 offX;
         s32 offY;
         u8 w;
@@ -401,7 +365,7 @@ void QueueCratePlayerCollision(struct crate *self, s32 idx)
         goto tail;
     f.found = 0;
     if (kind <= 4)
-        obj = sub_800CF70(self, bb, &f.found);
+        obj = (struct crate *)sub_800CF70((struct box_part *)self, bb, &f.found);
     else
         obj = self;
     code = D18C_CodeIn(gCrateHitResponse, &obj->kind, kind);
@@ -465,7 +429,7 @@ void QueueCratePlayerCollision(struct crate *self, s32 idx)
         {
             u8 *rec = (u8 *)&D18C_P->anim->records[D18C_P->tag];
 
-            if (kind != 3 && sub_800CEAC(self, (struct d18c_quad *)(rec + 4), &f.a, px, py))
+            if (kind != 3 && sub_800CEAC(self, (struct hitbox_quad *)(rec + 4), &f.a, px, py))
             {
                 struct crate *e = GetCrateAbove(obj);
 
@@ -546,7 +510,7 @@ tail:
         u8 w;
         u8 h;
 
-        q = (struct d18c_quad *)(rec + 4);
+        q = (struct hitbox_quad *)(rec + 4);
         offX = q->xOff;
         offY = q->yOff;
         w = q->w;
@@ -970,7 +934,7 @@ tail:
         && AabbOverlapsInclusiveX(&f.c, &f.b) == 1)
         LightTntCrate(tgt);
     AddCollisionCandidate(D18C_QUEUE(D18C_P), tgt, kind, code, edge, dy, f.pos, hit,
-                (struct d18c_flag8){f20}, (struct d18c_flag8){f21});
+                (struct byte_arg){f20}, (struct byte_arg){f21});
 }
 
 /* A further jump-table dispatcher in the same physics/collision
@@ -996,45 +960,26 @@ tail:
  * the spilled union's low byte is reloaded with `mov r5, sp; ldrb` in
  * argument order, as in the ROM. */
 extern void *gAudioContext;
-extern s32 gCrateHitResponse[][7];
-extern void ActivateNitroSwitchCrate(struct crate *self);
-extern void ActivateIronSwitchCrate(struct crate *self);
-extern void LightTntCrate(struct crate *self);
-extern void BounceWumpaCrate(struct crate *self);
-extern void BreakCrateInStack(struct crate *self, u32 a, u32 b, u32 c);
-extern void ExplodeCrate(struct crate *self, u8 a);
-extern void OpenCheckpointCrate(struct crate *self);
-
-struct e08c_pos
-{
-    s32 x;
-    s32 y;
-};
-
-struct flag8
-{
-    u8 value;
-} __attribute__((packed));
 
 #define E08C_CALL68(a, b) \
     PhysCall3(PHYS_PLAYER, (struct method *)&PHYS_PLAYER->vtable->m68, 0, (a), (b))
 
 /* BreakCrateInStack as this caller sees it: the flag argument is a one-byte
  * struct, passed in QImode. */
-extern void sub_800E7A8_flag(struct crate *self, u32 a, struct flag8 b, u32 c) asm("BreakCrateInStack");
+extern void sub_800E7A8_flag(struct crate *self, u32 a, struct byte_arg b, u32 c) asm("BreakCrateInStack");
 
 void ApplyCrateCollision(struct crate *self, s32 kind, s32 code, s32 edge, s32 depth,
-                 struct e08c_pos pos, s32 hit, struct flag8 p20, struct flag8 p21,
-                 struct flag8 pforced)
+                 struct e08c_pos pos, s32 hit, struct byte_arg p20, struct byte_arg p21,
+                 struct byte_arg pforced)
 {
-    union { u32 w; struct flag8 s; } f20;
+    union { u32 w; struct byte_arg s; } f20;
     u8 f21;
     u8 forcedIn;
     u8 forced;
 
-    f20.w = p20.value;
-    f21 = p21.value;
-    forcedIn = pforced.value;
+    f20.w = p20.v;
+    f21 = p21.v;
+    forcedIn = pforced.v;
     if ((self->state & 0x7f) != 0)
         goto commit;
     if (PHYS_PLAYER->ctrlMode == 1 && code > 2)
@@ -1303,24 +1248,13 @@ asm(".align 2, 0");
  * OLD_AGBCC_OBJS) - see docs/matching/issue-12-physics-collision.md's
  * NAKED-retry section. */
 
-extern void LinkCrateToActiveBucket(struct crate_list *list, struct crate *obj);
 extern struct crate_list *gCrateList;
 extern void *gEntitySpawner;
-extern u8 gCrateKindCounted[];
-extern u8 gCrateKindExplosive[];
 extern void AddBrokenCrate(void *self);
 extern void SetCheckpointAtPlayer(void *self, u8 arg1);
 extern void FreezeLevelClock(void *arg, s32 n);
 extern void sub_80259D4(void *self, s32 n);
 extern s32 sub_802599C(void *self, s32 n);
-extern void OpenAkuAkuCrate(struct crate *self);
-extern void OpenLifeCrate(struct crate *self, u32 arg1);
-extern void BreakCrateInStack(struct crate *self, u32 arg1, u32 arg2, u32 arg3);
-extern void BreakCrate(struct crate *self, u32 arg1);
-extern void OpenMysteryCrate(struct crate *self, u32 arg1);
-extern void OpenSlotCrate(struct crate *self, u32 arg1);
-extern void DropCratesAbove(struct crate *self);
-extern void ExplodeCrate(struct crate *self, u8 arg1);
 
 /* The effect object SpawnEffectPart spawns (only the fields set here). */
 struct phys_puff
@@ -1516,7 +1450,7 @@ void LightTntCrate(struct crate *selfArg)
                 : "r1", "cc", "memory"
             );
         }
-        LinkCrateToActiveBucket(gCrateList, (struct crate *)self);
+        LinkCrateToActiveBucket((struct pool_manager *)gCrateList, (struct crate *)self);
 
         {
             register u8 **p2 asm("r0") = *(u8 ***)(self + 0x20);
@@ -1740,7 +1674,7 @@ void BreakCrate(struct crate *self, u32 arg1)
     if (GetCrateAbove(self) != NULL && flag == 0)
         chained = 1;
     PHYS_FLAG4(self) = 1;
-    LinkCrateToActiveBucket(gCrateList, self);
+    LinkCrateToActiveBucket((struct pool_manager *)gCrateList, self);
     self->state &= 0x7f;
     PHYS_PLAYER->busy = 0;
     one = 1;
@@ -1774,7 +1708,7 @@ void BreakCrate(struct crate *self, u32 arg1)
         break;
     case 9:
         if (flag == 0)
-            OpenLifeCrate(self, chained);
+            OpenLifeCrate((struct actor *)self, chained);
         break;
     case 3:
         ActivateIronSwitchCrate(self);
@@ -2002,7 +1936,7 @@ void DropCratesAbove(struct crate *self)
     struct crate *n = GetCrateAbove(self);
     s32 spread;
     s32 carry;
-    u8 *tbl = gCrateKindExplosive;
+    const u8 *tbl = gCrateKindExplosive;
 
     if (self->fallDistance != 0)
         delta = -4;
@@ -2040,7 +1974,7 @@ void DropCratesAbove(struct crate *self)
             n->fallSpeed = t + d;
         }
         n->flags |= 0x10;
-        LinkCrateToActiveBucket(gCrateList, n);
+        LinkCrateToActiveBucket((struct pool_manager *)gCrateList, n);
         if (tbl[n->kind] && self->u48.blastState == 0 && n->fallDistance > 0x1600)
         {
             struct crate *next = GetCrateAbove(n);
@@ -2079,23 +2013,13 @@ void DropCratesAbove(struct crate *self)
  * are real C (see docs/matching/issue-12-physics-collision.md's
  * NAKED-retry sections). */
 
-extern u8 gCrateListChanged;
-extern void RemoveCrateListAt(struct crate_list *list, s32 index);
 extern void *gHud;
 extern void PressSwitchCrate(void *arg);
-extern void DetonateNitroCrates(void);
-extern void SolidifyOutlineCrate(struct crate *self);
 extern s32 GetSpriteAnimPaletteSlot(void *self);
 extern void OperatorDeleteArray(void *p);
-extern u8 gCrateKindBreakable[];
 extern void sub_8025A0C(u8 *bitmap, u16 id);
 extern void *OperatorNewArray(u32 size);
-extern void SetCrateBelow(void *obj, void *prev);
-extern void SetCrateAbove(void *obj, void *next);
-extern void BlastNearbyCrates(struct crate *self, s32 dist);
 extern void AddBrokenCrate(void *arg);
-extern u32 GetSlotCrateSpins(struct crate *self);
-extern u8 gSlotCrateTimers[];
 
 /* Per-edge jump table's **case 4 handler**
  * (`QueueCratePlayerCollision(self+0x4d & 0x7f == 0) -> ExplodeCrate(self, 1)`, and
@@ -2109,7 +2033,7 @@ extern u8 gSlotCrateTimers[];
  * `self+0x4f`, clears `self+0x4d`'s low 7 bits, resets
  * `gPlayer+0x80`, sets `self+0xc` bit `0x10` (a "collision
  * response active" render/update flag matched elsewhere in this
- * subsystem), and calls `LinkCrateToActiveBucket(gCrateList, self)` (adds
+ * subsystem), and calls `LinkCrateToActiveBucket((struct pool_manager *)gCrateList, self)` (adds
  * `self` back onto the shared active-object list). Sets `self+0x4d`'s
  * `0x80` bit unconditionally, then ORs in `arg1` on top of that -
  * `arg1` ends up as the low bit of `self+0x4d`.
@@ -2165,7 +2089,7 @@ void ExplodeCrate(struct crate *self, u8 near)
     self->state &= 0x7f;
     PHYS_PLAYER->busy = 0;
     self->flags |= 0x10;
-    LinkCrateToActiveBucket(gCrateList, self);
+    LinkCrateToActiveBucket((struct pool_manager *)gCrateList, self);
     one = 1;
     self->state = (self->state & 0x80) | one;
     if (self->kind == 0xa) {
@@ -2319,7 +2243,7 @@ void UpdateCrates(void)
 
             if (PHYS_CALL(o, m48) == 3) {
                 if (o->flags & 1) {
-                    RemoveCrateListAt(gCrateList, i);
+                    RemoveCrateListAt((struct pool_manager *)gCrateList, i);
                     if (o != NULL)
                         PHYS_CALL1(o, m50, 3);
                     i--;
@@ -2453,7 +2377,7 @@ void ActivateIronSwitchCrate(struct crate *self)
         return;
 
     self->flags |= 0x10;
-    LinkCrateToActiveBucket(gCrateList, self);
+    LinkCrateToActiveBucket((struct pool_manager *)gCrateList, self);
     self->state |= 0x80;
     {
         struct gobj *player = gPlayer;
@@ -2656,7 +2580,7 @@ void BreakCratesInArea(s32 x, s32 y, s32 dist, s32 height)
     s32 i = 0;
 
     if (i < gCrateList->count) {
-        u8 *commit = gCrateKindExplosive;
+        const u8 *commit = gCrateKindExplosive;
 
         do {
             struct crate *o = gCrateList->items[i];

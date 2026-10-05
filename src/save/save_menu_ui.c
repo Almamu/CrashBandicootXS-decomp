@@ -4,6 +4,7 @@
 #include "link.h"
 #include "save.h"
 #include "system.h"
+#include "menus.h"
 
 extern void *InitBgSetup(void *buf, s32 arg1, s32 arg2, s32 arg3, s32 arg4);
 extern void LoadGraphicsPackage(void *buf, void *asset);
@@ -41,10 +42,6 @@ void LoadSaveMenuBg(struct save_menu *self)
     *(vu32 *)REG_ADDR_BG0HOFS = zero;
 }
 
-extern s32 CountClearGems(void *arg0);
-extern s32 CountRelics(void *arg0);
-extern s32 GetProgressLives(void *arg0);
-extern s32 CountCrystals(void *arg0);
 extern s32 GetCompletionPercent(void *arg0);
 
 /* Refreshes each of the 4 settings rows' aggregate stats from `handle`,

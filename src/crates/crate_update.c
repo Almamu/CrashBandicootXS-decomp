@@ -1,13 +1,8 @@
 #include "core.h"
 #include "crate.h"
+#include "crates.h"
 
-extern u8 gCrateListChanged;
 extern void *gPaletteCache;
-extern void UpdateTntCountdown(struct crate *self);
-extern void UpdateSlotCrate(struct crate *self);
-extern void SolidifyOutlineCrates(struct crate *self);
-extern void FinishBrokenCrate(struct crate *self);
-extern void UpdateCrateFall(struct crate *self);
 
 /* GitHub issue #13: 0x0800FC70-0x08010A0C, continuing the physics/
  * collision subsystem (see crate_reset.c's header comment and

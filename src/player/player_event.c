@@ -6,6 +6,8 @@
 #include "util.h"
 #include "system.h"
 #include "audio.h"
+#include "crates.h"
+#include "player.h"
 
 /* GitHub issue #9/#10, ROM 0x0800AB9C-0x0800AC2C (details in
  * docs/matching/issue-9-10-0x0800ab9c-graphics.md). Built with old_agbcc
@@ -45,9 +47,7 @@ struct ab9c_obj
 
 extern void GetSpriteAttackBox(struct aabb *dest, void *obj);
 extern void CollidePartList(void *manager, struct aabb box, s32 unused, void *compareViewport);
-extern void CollidePlayerWithCrates(void *manager, s32 arg1);
 extern void CollidePartsOfClass(void *manager, s32 arg1);
-extern void ResolvePlayerCollisions(void);
 extern void *gCollidableList;
 extern void *gCrateList;
 extern void *gUnknown_030012EC;
@@ -476,8 +476,6 @@ struct orbit_self {
     struct orbit_pos maskTrail[8];   // 0xB8
 };
 
-extern s32 gAkuAkuInvincibleFrame;
-extern s32 gAkuAkuFollowFrame;
 extern void *gSpriteRenderer;
 extern s16 gSineTable[];
 extern void DrawSprite(void *self, void *part);

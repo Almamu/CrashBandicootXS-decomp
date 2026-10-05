@@ -1,6 +1,7 @@
 #include "core.h"
 #include "action_obj.h"
 #include "system.h"
+#include "player.h"
 
 /* Continuation of action_ctrl_states.c's `gActionCtrlStateTable` action-table
  * entries. See action_ctrl_states.c's own
@@ -11,7 +12,6 @@ extern u32 gKeys;
 extern void *gInput;
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern s32 _call_via_r3(void *arg0, void *arg1, void *arg2, void *arg3);
-extern void SetActionCtrlModeAnim(void *self, s32 a, s32 b, s32 c, s32 d);
 
 /* Same shape as `ActionCtrlStateStandUp` (action_ctrl_states.c) - resets the same
  * flag/counter/table-index trio via `SetActionCtrlModeAnim` while `part+0x38` is
@@ -83,8 +83,6 @@ void ActionCtrlStateBodySlamLand(struct act *self)
  * with its default NOP fill instead of the ROM's zero fill (see
  * docs/matching.md's alignment-padding gotcha). */
 asm(".align 2, 0");
-
-extern void ActionCtrlStateIdle(void *self);
 
 /* Clears `self+0x18`. If `gKeys` bit `0x100` is set, fires
  * the usual base+offset+fn-pointer trampoline pair and clears

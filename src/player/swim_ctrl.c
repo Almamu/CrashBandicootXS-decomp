@@ -2,6 +2,7 @@
 #include "player_ctrl.h"
 #include "system.h"
 #include "audio.h"
+#include "player.h"
 
 /* GitHub issues #19 (its last raw function, CheckPlayerCtrlTurn) and #20
  * (0x08016128-0x08017524): the player-input controller class of
@@ -52,24 +53,6 @@ struct keys
     u8 pad[0];
 };
 
-struct pmf_entry
-{
-    s16 delta;
-    s16 index;
-    void *fn;
-};
-
-struct pmf
-{
-    s16 delta;
-    s16 index;
-    union
-    {
-        void *fn;
-        s16 vtableOffset;
-    } u;
-};
-
 extern void *gInput;
 extern struct keys gKeys;
 extern u32 gRoomFrameCount;
@@ -78,31 +61,16 @@ extern void *gLevelState;
 extern void *gPaletteCache;
 extern u8 *gEntityFlags;
 extern struct pctrl_target *gPlayer;
-extern struct pmf gPlayerCtrlStateFuncs[];
-struct level_anim
-{
-    u8 anim;
-    u8 unk_1[3];
-};
-
-extern struct level_anim *gPlayerCtrlModeAnimRows[];
 extern struct pctrl_anim gPlayerCtrlMotionRecords[];
-extern u8 gPlayerCtrlVtable[];
 
 extern void LoseLife(void *arg0);
 extern void LoadPaletteSlot(void *cache, s32 slot, s32 recordId);
 extern void ResetSpriteFrameTimer(struct pctrl_target *t);
 extern void ResetSpriteFrameIndex(struct pctrl_target *t);
 extern void SetSpriteAnimDone(struct pctrl_target *t, s32 a);
-extern void StartCtrlTargetMotionY(void *self, struct pctrl_target *t, struct pctrl_anim *rec);
 extern void StartCtrlTargetMotionX(void *self, struct pctrl_target *t, struct pctrl_anim *rec);
 extern void DestroyCtrl(void *self, s32 flags);
 extern void InitCtrl(void *self);
-extern void ResetPlayerCtrl(struct player_ctrl *self);
-extern void StartPlayerCtrlStroke(struct player_ctrl *self);
-extern void StartPlayerCtrlSpin(struct player_ctrl *self);
-extern void ApplyPlayerCtrlSwimDrift(struct player_ctrl *self);
-extern void SetPlayerSwimDriftY(s32 a, s32 b, s32 c);
 
 typedef void (*pctrl_fn1)(void *self, s32 a);
 typedef void (*pctrl_fn2)(void *self, struct pctrl_target *t, s32 a);
@@ -124,9 +92,6 @@ typedef void (*pctrl_fn0)(void *self);
     }
 
 #define KEEP 0x7FFFFFFF
-
-void SetPlayerCtrlState(struct player_ctrl *self, s32 a, s32 mode, s32 timer, s32 timerMax);
-void PlayerCtrlKillPlayer(struct player_ctrl *self, s32 anim);
 
 static inline u8 LevelAnim(struct player_ctrl *self)
 {
@@ -276,21 +241,21 @@ void PlayerCtrlKillPlayer(struct player_ctrl *self, s32 anim)
 #define PMF_DISPATCH(self)                                                      \
     {                                                                          \
         s32 idx = gPlayerCtrlStateFuncs[(self)->state].index;                   \
-        struct pmf_entry e;                                                    \
+        struct vtable_slot e;                                                  \
         void *fn;                                                              \
         s32 d;                                                                 \
         s32 adj;                                                               \
                                                                                \
         if (idx > 0)                                                           \
         {                                                                      \
-            e = (*(struct pmf_entry **)((u8 *)(self) + gPlayerCtrlStateFuncs[(self)->state].u.vtableOffset))[idx - 1]; \
+            e = (*(struct vtable_slot **)((u8 *)(self) + gPlayerCtrlStateFuncs[(self)->state].u.vtableOffset))[idx - 1]; \
             fn = e.fn;                                                         \
         }                                                                      \
         else                                                                   \
         {                                                                      \
             fn = gPlayerCtrlStateFuncs[(self)->state].u.fn;                     \
         }                                                                      \
-        d = gPlayerCtrlStateFuncs[(self)->state].delta;                         \
+        d = gPlayerCtrlStateFuncs[(self)->state].thisOffset;                   \
         if (idx > 0)                                                           \
             adj = e.delta + d;                                                 \
         else                                                                   \
@@ -546,7 +511,7 @@ void ApplyPlayerCtrlMotion(struct player_ctrl *self)
 
             rec = (struct pctrl_anim *)(off + (u32)gPlayerCtrlMotionRecords);
         }
-        StartCtrlTargetMotionY(self, self->target, rec);
+        StartCtrlTargetMotionY(self, self->target, (struct vec3 *)rec);
     }
 }
 
@@ -797,7 +762,7 @@ void AttachPlayerCtrl(struct player_ctrl *self, struct pctrl_target *target)
 /* UNUSED */
 void StartPlayerCtrlMotionYFromSet(struct player_ctrl *self, struct pctrl_target *target, s32 idx)
 {
-    StartCtrlTargetMotionY(self, target, &gPlayerCtrlMotionRecords[self->animSet->entries[idx].b]);
+    StartCtrlTargetMotionY(self, target, (struct vec3 *)&gPlayerCtrlMotionRecords[self->animSet->entries[idx].b]);
 }
 
 /* UNUSED */

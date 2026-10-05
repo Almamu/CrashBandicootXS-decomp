@@ -3,6 +3,7 @@
 #include <agb_syscall.h>
 #include "util.h"
 #include "audio.h"
+#include "menus.h"
 
 /* GitHub issue #28: 0x0801DA38-0x0801DFEC, the whole of the former
  * asm/code_3_2_17_188d0_1da38.s. Two of the level-select screen's
@@ -88,23 +89,8 @@ struct zoom_bg
 
 COMPILE_TIME_ASSERT(level_select_widgets_c, sizeof(struct zoom_bg) == 0x8C);
 
-/* A level picture: 32-colour palette and 8bpp tiles (LoadTaggedAsset). */
-struct image_pair
-{
-    void *palette;
-    void *tiles;
-};
-
 extern void *gAudioContext;
 extern s16 gSineTable[];
-extern struct image_pair gLevelSelectPictures[];
-extern u32 gLevelSelectEntryBoxAnims[];
-extern u32 gLevelSelectEntryWorldAnims[];
-
-void TickZoomBgTwinkle(struct zoom_bg *self, struct twinkle *t);
-u8 IsZoomBgShown(struct zoom_bg *self);
-void MoveZoomBgTwinkle(struct zoom_bg *self, struct twinkle *t);
-void RandomizeZoomBgTwinkle(struct zoom_bg *self, struct twinkle *t);
 
 static inline void SetPosQ8(struct sprite *p, s32 x, s32 y)
 {
@@ -485,31 +471,16 @@ struct cursor_panel
 
 COMPILE_TIME_ASSERT(level_select_widgets_c, sizeof(struct cursor_panel) == 0x54);
 
-struct xy
-{
-    s32 x;
-    s32 y;
-};
-
 extern struct oam_shadow_buffer *gOamBuffer;
-extern u32 gLevelSelectCursorAnims[];
-extern u8 gLevelSelectCursorZoomTiles[];
 
 extern void AddOamEntry(struct oam_shadow_buffer *buf, struct oam_attrs *oam);
-
-void UpdateLevelSelectCursor(struct cursor_panel *self);
-void SetLevelSelectCursorMatrix(struct cursor_panel *self);
-void GlideLevelSelectCursor(struct cursor_panel *self);
-void MoveLevelSelectCursor(struct cursor_panel *self, s32 x, s32 y);
-void SetLevelSelectCursorPos(struct cursor_panel *self, s32 x, s32 y);
-void ResetLevelSelectCursorIdleTimer(struct cursor_panel *self);
 
 static inline void ResetIdleTimer(struct cursor_panel *self)
 {
     self->timer = (u16)RandRange(300) + 600;
 }
 
-static inline void MoveToPos(struct cursor_panel *self, struct xy *pos)
+static inline void MoveToPos(struct cursor_panel *self, struct xy_pair *pos)
 {
     MoveLevelSelectCursor(self, pos->x, pos->y);
 }
@@ -698,7 +669,7 @@ void HideLevelSelectCursor(struct cursor_panel *self)
  * side of the screen it is on (page turn). */
 void ParkLevelSelectCursor(struct cursor_panel *self)
 {
-    struct xy pos;
+    struct xy_pair pos;
 
     if (self->part->x >> 8 <= 0x78)
         pos.x = 0x14;
@@ -755,7 +726,7 @@ void MoveLevelSelectCursor(struct cursor_panel *self, s32 x, s32 y)
 }
 
 /* UNUSED (inlined into ParkLevelSelectCursor). */
-void MoveLevelSelectCursorTo(struct cursor_panel *self, struct xy *pos)
+void MoveLevelSelectCursorTo(struct cursor_panel *self, struct xy_pair *pos)
 {
     MoveToPos(self, pos);
 }

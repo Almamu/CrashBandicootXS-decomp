@@ -1,14 +1,10 @@
 #include "core.h"
+#include "menus.h"
 
 /*
  * ROM 0x0816C5F0-0x0816C6A4. Linked in ROM order between data/data.s
  * sections by ldscript.txt - see docs/data.md.
  */
-
-struct xy_pair {
-    s32 x;
-    s32 y;
-};
 
 /* InitZoomBg (level_select_pages.c): the four slots' offsets. */
 const struct xy_pair gZoomBgSlotOffsets[4] = {

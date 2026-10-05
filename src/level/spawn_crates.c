@@ -1,11 +1,11 @@
 #include "core.h"
 #include "actor.h"
 #include "text_popup.h"
+#include "crates.h"
 
 extern void *gLevelState;
 
 extern u8 IsSwitchPressed(void *self);
-extern void *CreateCrate(u16 arg0, u16 arg1, u16 arg2, u16 arg3, u8 type);
 
 /* Dispatches to the `CreateCrate` entity-constructor trampoline family
  * (docs/rom_map.md, "already-documented `CreateCrate` entity-constructor

@@ -4,6 +4,8 @@
 #include "mover_new.h"
 #include <libgcc.h>
 #include "util.h"
+#include "crates.h"
+#include "player.h"
 
 /* Shared by src/bosses/dingodile_create.c and src/objects/platform_create.c/
  * platform_contact.c/platform_collide.c/platform.c (GitHub issue #25,
@@ -239,8 +241,6 @@ extern u8 gDingodileVtable[];
 extern u8 gPlatformVtable[];
 extern u8 gPlatformMoverVtable[];
 
-extern void *CreateBossCtrl(void *self);
-extern void DestroyBossCtrl(void *self, s32 flags);
 extern void SpawnDingodileShieldOrRocket(void *self, s32 a, u16 b, u16 c, s32 d);
 extern void *OperatorNew(u32 size);
 extern void InitMovingSprite(void *self);
@@ -261,11 +261,9 @@ extern u8 GetPaletteSlot(void *cache, u8 id);
 extern void GetSpriteHitbox(struct aabb *dest, struct gobj *obj);
 extern s32 GetSpritePrevY(struct gobj *obj);
 extern s32 GetSpritePrevX(struct gobj *obj);
-extern s32 FindLineCrossing(s32 a, s32 b, s32 c, s32 d, s32 e);
 extern void SetEntityPos(struct gobj *obj, s32 x, s32 y);
 extern void AdvanceSpriteAnim(struct gobj *obj);
 extern void SetSpritePrevPos(struct gobj *obj);
-extern void StartCtrlTargetMotionY(void *self, void *part, struct vec3 *vec);
 extern void StartCtrlTargetMotionX(void *self, void *part, struct vec3 *vec);
 extern void DestroyCtrl(void *self, s32 flags);
 extern void InitCtrl(void *self);

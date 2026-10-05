@@ -113,17 +113,13 @@
  * - Three extra references to `type` at the end give it r7 and slot*2
  *   r8. */
 #include "crate.h"
+#include "crates.h"
 extern void *OperatorNew(u32 size);
 extern void InitSpriteObj(void *self);
-extern void ResetCrate(struct crate *self);
 extern u8 sub_802599C(void *level, s32 id);
 extern s32 GetDeaths(void *self);
 extern s32 GetCrateAssistDeaths(void *self);
 extern s32 GetSpriteAnimPaletteSlot(struct crate *self);
-extern void AddCrateToList(void *list, struct crate *self);
-extern void SolidifyOutlineCrate(struct crate *self);
-extern struct crate_vtable gCrateVtable;
-extern u8 gSlotCrateTimers[];
 extern void *gCrateList;
 
 struct placement_level
@@ -151,7 +147,7 @@ void *CreateCrate(u16 id, u16 x, u16 y, u16 slot, u8 type)
         void *obj = OperatorNew(0x64);
 
         InitSpriteObj(obj);
-        ((struct crate *)obj)->vtable = &gCrateVtable;
+        ((struct crate *)obj)->vtable = (struct crate_vtable *)gCrateVtable;
         ((struct crate *)obj)->groupAllocated = 0;
         ResetCrate(obj);
         self = obj;

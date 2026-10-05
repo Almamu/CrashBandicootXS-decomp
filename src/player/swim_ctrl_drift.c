@@ -1,5 +1,6 @@
 #include "core.h"
 #include "gobj_1a794.h"
+#include "player.h"
 
 /* GitHub issue #19: continuation of action_ctrl.c's chunk
  * (0x08015840-0x08016128), non-adjacent since the left-raw

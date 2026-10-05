@@ -1,5 +1,6 @@
 #include "core.h"
 #include "vtable.h"
+#include "player.h"
 
 /* GitHub issue #22, ROM 0x08017ECC-0x08017FE8 - non-adjacent to
  * airship_fireball.c since `UpdateMegaMix` (NAKED-parked, see
@@ -27,10 +28,7 @@ extern u8 gMegaMixMotionRecords[];
 extern u8 gMegaMixMotionSet[];
 extern u8 gMegaMixCtrlVtable[];
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
-extern void StartCtrlTargetMotionY(void *unused, void *selfArg, s32 *vec);
 extern void StartCtrlTargetMotionX(void *selfArg, void *partArg, s32 *vec);
-extern void DestroyBossCtrl(void *selfArg, s32 flags);
-extern void *CreateBossCtrl(void *selfArg);
 
 /* Reads `rec+4` as the type id (bit 5 mirror test), writes into
  * `part+0x54`/`+0x58`/`+0x5c`. */
@@ -130,7 +128,7 @@ void StartMegaMixMotionYFromSet(void *selfArg, void *partArg, s32 index)
     base = gMegaMixMotionRecords;
     asm("add %0, %0, %1" : "+r" (acc) : "r" (base));
 
-    StartCtrlTargetMotionY(selfArg, partArg, (s32 *)acc);
+    StartCtrlTargetMotionY(selfArg, partArg, (struct vec3 *)acc);
 }
 
 /* Resolves the `rec+0`-typed table entry like `SetMegaMixMotionXFromSet`, then

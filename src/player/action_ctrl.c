@@ -1,6 +1,7 @@
 #include "core.h"
 #include "action_obj.h"
 #include "audio.h"
+#include "player.h"
 
 /* Continuation of action_ctrl_moves.c (issue #18's chunk, the last one) -
  * covers `nullsub_17` through `ActionCtrlSetTargetAnim` (all matched); non-adjacent
@@ -8,9 +9,6 @@
  * them (asm/code_3_2_17_156ec.s). Same "self" object family documented
  * at the top of action_ctrl_states.c/hovercraft_parts.c. */
 
-extern void StartActionCtrlRun(void *selfArg);
-extern void ActionCtrlStateRun(void *self);
-extern void ActionCtrlStateIdle(void *self);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern s32 _call_via_r3(void *arg0, void *arg1, void *arg2, void *arg3);
 
@@ -27,7 +25,7 @@ void ActionCtrlStateTurboRun(void *selfArg)
     if (self[0x29] == 0) {
         StartActionCtrlRun(self);
     }
-    ActionCtrlStateRun(self);
+    ActionCtrlStateRun((struct act *)self);
 }
 
 void nullsub_18(void)
@@ -154,12 +152,8 @@ tail:
  * `StartPlayerCtrlStroke`/`StartPlayerCtrlSpin`/`ApplyPlayerCtrlSwimDrift` sit between them (see
  * asm/code_3_2_17_159f8.s). */
 
-extern void SetActionCtrlModeAnim(void *selfArg, s32 a, s32 b, s32 c, s32 d);
 extern void DestroyCtrl(void *selfArg, s32 flags);
 extern void InitCtrl(void *selfArg);
-extern void ResetActionCtrl(void *selfArg);
-extern u8 gActionCtrlVtable[];
-extern void SetPlayerCtrlState(void *selfArg, s32 a, s32 b, s32 c, s32 d);
 
 /* Fires the mgr trampoline pair (actions `0`/`0x12`), then resets the
  * `0x27`/`0x2f`/`0x31` and `0x28`/`0x30`/`0x32` state/counter/table-index
@@ -187,7 +181,7 @@ void DestroyActionCtrl(void *selfArg, s32 flags)
 {
     u8 *self = selfArg;
 
-    *(void **)(self + 0xc) = gActionCtrlVtable;
+    *(void **)(self + 0xc) = (void *)gActionCtrlVtable;
     DestroyCtrl(self, flags);
 }
 
@@ -200,7 +194,7 @@ void *InitActionCtrl(void *selfArg)
     u8 *self = selfArg;
 
     InitCtrl(self);
-    *(void **)(self + 0xc) = gActionCtrlVtable;
+    *(void **)(self + 0xc) = (void *)gActionCtrlVtable;
     ResetActionCtrl(self);
     return self;
 }
@@ -362,7 +356,7 @@ void RestartPlayerCtrl(void *selfArg)
 {
     u8 *self = selfArg;
 
-    SetPlayerCtrlState(self, 0, 0, 0, 0);
+    SetPlayerCtrlState((struct player_ctrl *)self, 0, 0, 0, 0);
 
     self[0x27] = 0;
     self[0x20] = 0;

@@ -5,6 +5,7 @@
 #include "text.h"
 #include <libgcc.h>
 #include "audio.h"
+#include "menus.h"
 
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 
@@ -78,17 +79,9 @@ void DrawPauseFraction(struct pause_menu *self, void *label1, void *label2)
     DRAW_ICON_SLOT(*pdc, 2, label2);
 }
 
-extern s32 FormatDecimal(s32 value, u8 *dest);
 extern void *gAudioContext;
 
-/* One entry of the per-row record array at `field_14` (8-byte stride;
- * `type` 4/5 are the two editable-percentage rows). */
-struct pause_row {
-    void *label;
-    s32 type;
-};
-
-#define ROW_TYPE(self) (((struct pause_row *)(self)->field_14)[(self)->field_18].type)
+#define ROW_TYPE(self) ((self)->field_14[(self)->field_18].type)
 
 /* Writes " <NN%>" into `buf`: the digits of `value` land at `buf + 2`
  * via FormatDecimal, which returns how many it wrote. */
@@ -168,22 +161,9 @@ void PauseMenuVolumeUp(struct pause_menu *self)
     }
 }
 
-/* A small counter/threshold pair on the composite pause/options screen's
- * settings-row sub-widget (the big object InitPauseMenu constructs,
- * fields 0x88 upward - still raw as a whole; see docs/matching.md's
- * write-up for this chunk). Only the two fields these two functions
- * touch are named, the same minimal-local-type convention
- * src/save/save_menu_ui.c's `struct bg_widget` uses. */
-struct row_counter_widget {
-    u8 unused_00[0x18];
-    s32 field_18;
-    s32 field_1c;
-};
-
-/* Bumps `field_18` by one, then re-clamps it against `field_1c` via
- * __modsi3 (still raw - reads like a generic "wrap/clamp counter"
- * helper, seen throughout this chunk). */
-void PauseMenuCursorDown(struct row_counter_widget *self)
+/* Moves the row cursor (`field_18`) down one row, wrapping at the row
+ * count (`field_1c`) via __modsi3. */
+void PauseMenuCursorDown(struct pause_menu *self)
 {
     self->field_18 = self->field_18 + 1;
     self->field_18 = __modsi3(self->field_18, self->field_1c);
@@ -191,7 +171,7 @@ void PauseMenuCursorDown(struct row_counter_widget *self)
 
 /* Counterpart to PauseMenuCursorDown above: decrements `field_18`, wrapping
  * around to `field_1c` first when it's already at zero. */
-s32 PauseMenuCursorUp(struct row_counter_widget *self)
+s32 PauseMenuCursorUp(struct pause_menu *self)
 {
     s32 v = self->field_18;
     if (v == 0) {

@@ -6,6 +6,8 @@
 #include <libgcc.h>
 #include "system.h"
 #include "audio.h"
+#include "menus.h"
+#include "player.h"
 
 /* GitHub issue #26: 0x0801B85C-0x0801CEE0, the whole of the former
  * asm/code_3_2_17_188d0_1b85c.s. Three objects, all gcc 2.x C++ classes
@@ -67,7 +69,7 @@ struct follow_child
     u8 visible:1;
     u8 bit3_7:5;
     u8 unk_0E[0x0A];
-    void *vtable;       // 0x18
+    const struct vtable_slot *vtable; // 0x18 - gCameraLeadVtable
     u8 unk_1C[8];
     u8 unk_24;          // 0x24
     u8 unk_25[0x0D];
@@ -172,12 +174,6 @@ struct level_save
     u16 unk_16;
 };
 
-struct xy_pair
-{
-    s32 x;
-    s32 y;
-};
-
 /* Shadow copies of the blend/display registers, committed every frame. */
 struct blend_bits
 {
@@ -256,8 +252,10 @@ struct item_vtable
     struct method m28;          // 0x28 - destructor (DestroyLevelSelect)
 };
 
-/* One level entry on the current page (CreateLevelSelectEntry, 0x14 bytes). */
-struct item
+/* One level entry on the current page (CreateLevelSelectEntry, 0x14 bytes):
+ * level_select_parts.h's `struct level_item`, seen through its method
+ * table. */
+struct level_item
 {
     u8 unk_00[0x10];
     struct item_vtable *vtable; // 0x10
@@ -276,7 +274,7 @@ struct level_menu
     struct xy_pair *positions;  // 0x18 - cursor position per index
     void *bg1;                  // 0x1C - CreateLevelSelectPageBg, BG1
     void *bg2;                  // 0x20 - InitZoomBg, BG2 (the level picture)
-    struct item *items[6];      // 0x24
+    struct level_item *items[6];      // 0x24
     void *panel;                // 0x3C - CreateLevelSelectCursor, the cursor panel
     struct sprite *sprites[10]; // 0x40
     char timeText[9];           // 0x68 - best time
@@ -334,24 +332,16 @@ extern void *gLevelState;
 extern struct vram_cursor *gObjVramCursor;
 extern void *gOamBuffer;
 extern void *gInput;
-extern struct level_menu *gLevelSelect;
-extern u8 gNewWorldOpened;
 extern union key_state gKeys;
-extern u8 gCameraLeadVtable[];
-extern u8 gLaunchPadVtable[];
 extern struct level_info gLevelTable[];
-extern u8 gLevelSelectPalette[];
+
+/* codegen: gLevelSelectGemPos and gLevelSelectTrialIconPos are const
+ * (menus.h), but InitLevelSelect reads each one twice, across calls,
+ * and the ROM loads it again each time: through the const object gcc
+ * keeps the first loads in registers. docs/headers_plan.md */
+extern struct xy_pair gLevelSelectGemPos_rw asm("gLevelSelectGemPos");
+extern struct xy_pair gLevelSelectTrialIconPos_rw asm("gLevelSelectTrialIconPos");
 extern u8 gMenuSkyBg[];
-extern u32 gLevelSelectWorldAnims[];
-extern u32 gLevelSelectRankAnims[];
-extern struct xy_pair gLevelSelectWorldPos;
-extern struct xy_pair gStaticData_0816C4A0;
-extern struct xy_pair gLevelSelectCrystalPos;
-extern struct xy_pair gLevelSelectGemPos;
-extern struct xy_pair gLevelSelectTrialIconPos;
-extern struct xy_pair gLevelSelectTimePos;
-extern struct xy_pair gStaticData_0816C4C8;
-extern struct xy_pair gStaticData_0816C4D0;
 
 /* Base class and runtime. */
 extern void InitMovingSprite(void *self);
@@ -380,7 +370,6 @@ extern void AdvanceSpriteAnim(void *p);
  * re-zero-extends the result, as it would through a wider return type. */
 extern s32 GetPaletteSlot(void *cache, u8 recordId);
 extern void GetSpriteHitbox(struct aabb *dest, void *part);
-extern u8 PlayerTouchesBox(void *actor, struct aabb *box);
 
 /* Display, VRAM and sound. */
 extern void FreeUnlockedPaletteSlots(void *cache);
@@ -406,60 +395,8 @@ extern u8 LevelHasBlueGem(void *p, s32 id);
 extern u8 LevelHasYellowGem(void *p, s32 id);
 
 /* The level-select screen's sub-objects and siblings (0x0801CEE0 on). */
-extern void *CreateLevelSelectPageBg(void *mem, s32 a, s32 b);
-extern void *InitZoomBg(void *mem, s32 a, s32 b);
-extern void *CreateLevelSelectCursor(void *mem);
-extern struct item *CreateLevelSelectEntry(void *mem);
-extern void LoadLevelSelectEntries(struct level_menu *self);
-extern void PlaceLevelSelectEntries(struct level_menu *self);
-extern void SetLevelSelectEntryBoxes(struct level_menu *self);
-extern void ReloadLevelSelectPalette(struct level_menu *self);
-extern void WaitLevelSelectCursor(struct level_menu *self);
-extern void LevelSelectConfirm(struct level_menu *self);
-extern void LevelSelectExit(struct level_menu *self);
-extern u8 LevelSelectHasPrevWorld(struct level_menu *self);
-extern u8 LevelSelectIsNextWorldOpen(struct level_menu *self);
-extern void LevelSelectPrevWorld(struct level_menu *self);
-extern void LevelSelectNextWorld(struct level_menu *self);
-extern void ScrollLevelSelectPageBg(void *p);
-extern void SetLevelSelectPageBgOffsets(void *p);
-extern u32 GetLevelSelectPageBgOffsets(void *p);
-extern void DestroyLevelSelectPageBg(void *p, s32 flags);
-extern s32 GetLevelSelectPageBgScroll(void *p);
-extern u8 IsLevelSelectPageBgSettled(void *p);
-extern void DestroyZoomBg(void *p, s32 flags);
-extern void UpdateZoomBg(void *p);
-extern void DrawZoomBg(void *p);
-extern void CommitZoomBg(void *p);
-extern u8 IsZoomBgExiting(void *p);
-extern u8 IsZoomBgShown(void *p);
-extern u8 IsZoomBgWaiting(void *p);
-extern u8 IsZoomBgZoomingOut(void *p);
-extern void ClearZoomBgPicture(void *p);
-extern void SetZoomBgPicture(void *p, s32 arg);
-extern u16 GetZoomBgControl(void *p);
-extern u8 IsLevelSelectEntrySelected(struct item *p);
-extern s32 GetLevelSelectEntryLevel(struct item *it);
-extern void SetLevelSelectEntrySelected(struct item *it, s32 arg);
-extern void UpdateLevelSelectCursor(void *p);
-extern void DrawLevelSelectCursor(void *p);
-extern void ParkLevelSelectCursor(void *p);
 /* Returns a u8; the one caller that needs it tests only its low byte. */
-extern s32 HasLevelSelectCursorArrived(void *p);
-extern void MoveLevelSelectCursor(void *p, s32 x, s32 y);
-extern void DestroyLevelSelectCursor(void *p, s32 flags);
 extern u16 GetBgSetupControl(void *p);
-
-void sub_801BAC4(struct sprite *self);
-struct level_menu *InitLevelSelect(struct level_menu *self, s32 arg);
-void DestroyLevelSelect(struct level_menu *self, s32 flags);
-void UpdateLevelSelectPageArrows(struct level_menu *self);
-void DrawLevelSelectRecord(struct level_menu *self);
-void DrawLevelSelectTime(struct level_menu *self, u32 time);
-void LoadLevelSelectRecord(struct level_menu *self);
-s32 LevelSelectLoop(struct level_menu *self);
-void LevelSelectCursorLeft(struct level_menu *self);
-void LevelSelectCursorRight(struct level_menu *self);
 
 /* Returns `v` unchanged. gcc's tree folder moves a constant operand of a
  * commutative operator second, so `mask & *p` loads `*p` before building
@@ -492,11 +429,11 @@ static inline void SetIconPos(struct bitmap_font *m, u32 x, u32 y)
     m->posY = y;
 }
 
-static inline struct item *ItemAt(struct item **items, s32 index)
+static inline struct level_item *ItemAt(struct level_item **items, s32 index)
 {
     register s32 off asm("r0") = index * 4;
 
-    return *(struct item **)((u8 *)items + off);
+    return *(struct level_item **)((u8 *)items + off);
 }
 
 /* The level-select screen's per-frame register commit. */
@@ -653,7 +590,7 @@ s32 GetCameraLeadOffset(struct follow_child *self)
  * materialized with `mov/neg` asm like spawn_objects.c's
  * SpawnMegaMix, since the compiler otherwise derives them from constants
  * already in registers. */
-struct sprite *SpawnLaunchPad(u16 id, u16 x, u16 y)
+struct sprite *SpawnLaunchPad(u16 id, u16 x, u16 y, u16 unused)
 {
     struct sprite *obj = OperatorNew(0x78);
 
@@ -769,7 +706,7 @@ static inline void LoadMenuPalette(struct tile_cache *cache)
     CpuSet(gLevelSelectPalette, cache->palette, 0x10);
 }
 
-u8 RunLevelSelect(s32 *arg)
+s32 RunLevelSelect(s32 *arg)
 {
     struct level_menu *menu;
     u8 result;
@@ -894,14 +831,14 @@ struct level_menu *InitLevelSelect(struct level_menu *self, s32 arg)
     SetEntityPixelPos(self->sprites[2], gLevelSelectCrystalPos.x, gLevelSelectCrystalPos.y);
     self->sprites[3]->anim = AnimTable(0x180);
     SetAnim(self->sprites[3], 1);
-    SetEntityPixelPos(self->sprites[3], gLevelSelectGemPos.x, gLevelSelectGemPos.y);
+    SetEntityPixelPos(self->sprites[3], gLevelSelectGemPos_rw.x, gLevelSelectGemPos_rw.y);
     self->sprites[4]->anim = AnimTable(0x180);
     SetAnim(self->sprites[4], 1);
-    SetEntityPixelPos(self->sprites[4], gLevelSelectGemPos.x, gLevelSelectGemPos.y);
+    SetEntityPixelPos(self->sprites[4], gLevelSelectGemPos_rw.x, gLevelSelectGemPos_rw.y);
     self->sprites[5]->anim = AnimTable(0x18C);
-    SetEntityPixelPos(self->sprites[5], gLevelSelectTrialIconPos.x, gLevelSelectTrialIconPos.y);
+    SetEntityPixelPos(self->sprites[5], gLevelSelectTrialIconPos_rw.x, gLevelSelectTrialIconPos_rw.y);
     self->sprites[6]->anim = AnimTable(0x18C);
-    SetEntityPixelPos(self->sprites[6], gLevelSelectTrialIconPos.x, gLevelSelectTrialIconPos.y);
+    SetEntityPixelPos(self->sprites[6], gLevelSelectTrialIconPos_rw.x, gLevelSelectTrialIconPos_rw.y);
     self->sprites[7]->anim = AnimTable(0x18C);
     SetEntityPixelPos(self->sprites[7], gLevelSelectTimePos.x, gLevelSelectTimePos.y);
     s = InitUiSpriteObj(OperatorNew(0x40));
@@ -956,7 +893,7 @@ void DestroyLevelSelect(struct level_menu *self, s32 flags)
         DestroyZoomBg(self->bg2, 3);
     for (i = 0; i < 6; i++)
     {
-        struct item *it = self->items[i];
+        struct level_item *it = self->items[i];
 
         if (it != NULL)
             _call_via_r2((u8 *)it + it->vtable->m28.thisOffset, 3, it->vtable->m28.fn);
@@ -993,7 +930,7 @@ void UpdateLevelSelect(struct level_menu *self)
     SetLevelSelectPageBgOffsets(self->bg1);
     for (i = 0; i <= self->lastIndex; i++)
     {
-        struct item *it = self->items[i];
+        struct level_item *it = self->items[i];
         struct method *m = &it->vtable->m08;
 
         _call_via_r2((u8 *)it + m->thisOffset, GetLevelSelectPageBgScroll(self->bg1), m->fn);
@@ -1178,7 +1115,7 @@ void DrawLevelSelectTime(struct level_menu *self, u32 time)
  * sprites 2-7. */
 void DrawLevelSelect(struct level_menu *self)
 {
-    struct item **items;
+    struct level_item **items;
     struct sprite **sprites;
     s32 i;
 
@@ -1195,7 +1132,7 @@ void DrawLevelSelect(struct level_menu *self)
     {
         if (!IsLevelSelectEntrySelected(ItemAt(items, self->index)))
         {
-            struct item *it = ItemAt(items, self->index);
+            struct level_item *it = ItemAt(items, self->index);
 
             SetLevelSelectEntrySelected(it, 1);
             if (!IsZoomBgShown(self->bg2))
@@ -1221,7 +1158,7 @@ draw:
     sprites = self->sprites;
     for (i = 5; i >= 0; i--)
     {
-        struct item *it = *items++;
+        struct level_item *it = *items++;
         struct item_vtable *vt = it->vtable;
 
         _call_via_r1((u8 *)it + vt->m20.thisOffset, vt->m20.fn);
