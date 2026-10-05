@@ -233,8 +233,6 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
                   $(C_BUILDDIR)/level/spawn_start_marker.o \
                   $(C_BUILDDIR)/level/spawn_gems.o \
                   $(C_BUILDDIR)/level/spawn_enemies.o \
-                  $(C_BUILDDIR)/graphics/graphics_loading_1fdec.o \
-                  $(C_BUILDDIR)/graphics/graphics_loading_1feec.o \
                   $(C_BUILDDIR)/level/spawn_bosses.o \
                   $(C_BUILDDIR)/level/spawn_objects.o \
                   $(C_BUILDDIR)/frontend/title_screen.o \
@@ -253,7 +251,6 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
                   $(C_BUILDDIR)/menus/pause_menu_gems.o \
                   $(C_BUILDDIR)/menus/pause_menu_pages_init.o \
                   $(C_BUILDDIR)/level/spawn_gem_platforms.o \
-                  $(C_BUILDDIR)/system/bg_scroll_layer_25fc8.o \
                   $(C_BUILDDIR)/level/entity_spawner.o \
                   $(C_BUILDDIR)/level/bg_layer.o \
                   $(C_BUILDDIR)/level/drop_extra_life.o \
