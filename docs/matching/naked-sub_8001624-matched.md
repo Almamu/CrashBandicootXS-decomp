@@ -82,5 +82,5 @@ clean `rm -rf build crashbandicootxs.elf crashbandicootxs.gba
 crashbandicootxs.map && make compare` - `crashbandicootxs.gba: La suma
 coincide`. `CommitBlendRegs` is folded into the same
 `src/graphics/aabb_util.o` unit as the already-matched
-`sub_8001640`-`sub_80016DC` siblings in `tools/report_units.py`, since
+`AabbOverlapsInclusiveX`-`sub_80016DC` siblings in `tools/report_units.py`, since
 it's the same object file.

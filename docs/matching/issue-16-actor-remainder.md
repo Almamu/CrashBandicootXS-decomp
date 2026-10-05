@@ -2,18 +2,18 @@
 
 Continuation of
 [issue-16-actor-12160.md](./issue-16-actor-12160.md), which matched
-four more members of the `gStaticData_0816BF20` 42-slot action-dispatch
+four more members of the `gActionCtrlStateTable` 42-slot action-dispatch
 table and left the hardest six of that pass's ten-function remainder
-untouched: `sub_8011BD4`, `sub_8012420`, `sub_8012694`, `sub_801283C`,
+untouched: `ActionCtrlHandleEvent`, `UpdateActionCtrl`, `sub_8012694`, `sub_801283C`,
 `sub_8012AF4`, `sub_8012D24`. This pass closes out all six - but as
 NAKED transcriptions, not real decompiled C (see "Why NAKED" below).
 
 ## New files
 
-`asm/code_3_2_17_11bd4.s` (just `sub_8011BD4`, 0x08011BD4-0x08012160)
+`asm/code_3_2_17_11bd4.s` (just `ActionCtrlHandleEvent`, 0x08011BD4-0x08012160)
 is removed entirely - its function moves to a new
 `src/graphics/actor_part82.c`. `asm/code_3_2_17_12420.s`
-(`sub_8012420`/`sub_8012694`/`sub_801283C`, 0x08012420-0x08012A7C) is
+(`UpdateActionCtrl`/`sub_8012694`/`sub_801283C`, 0x08012420-0x08012A7C) is
 also removed entirely, moving to a new `src/graphics/actor_part84.c`.
 `asm/code_3_2_17_12af4.s` is trimmed to drop its leading
 `sub_8012AF4`/`sub_8012D24` span (0x08012AF4-0x08012FBC, which moves to
@@ -28,8 +28,8 @@ already-matched `actor_part79.c`, `actor_part84.c` between
 
 ## Semantics (all six)
 
-- **`sub_8011BD4`** (1420 B, `actor_part82.c`) - bails unless
-  `self+8 == 0x1d` (the same type gate `sub_8016288`, still raw,
+- **`ActionCtrlHandleEvent`** (1420 B, `actor_part82.c`) - bails unless
+  `self+8 == 0x1d` (the same type gate `UpdatePlayerCtrl`, still raw,
   checks). Otherwise dispatches its third argument (`arg2 - 1`, range
   `0..0x18`) through a 25-case jump table: several cases are thin
   `KillPlayer` wrappers with a fixed id; case 22 and case 23 each run
@@ -44,12 +44,12 @@ already-matched `actor_part79.c`, `actor_part84.c` between
   object and pool-releases it via one of two dereference-chain-computed
   slots depending on the player's D-pad remap state; cases 9/10 gate
   `sub_8015558` behind `gPlayer+0x68`/`sub_800AAEC` checks.
-- **`sub_8012420`** (628 B, `actor_part84.c`) - a `part`-visibility/OAM-
+- **`UpdateActionCtrl`** (628 B, `actor_part84.c`) - a `part`-visibility/OAM-
   priority housekeeping pass: re-runs `sub_8012238` on an activity-flag
   change, resets velocity/target fields past two `gLevelLayers`-
   anchored screen-space thresholds (the far one also firing
   `SetMaskLevel`/`_call_via_r4`), ticks a couple of counters, looks up
-  `self+8`'s type in `gStaticData_0816BF20` to fire one `_call_via_r3`
+  `self+8`'s type in `gActionCtrlStateTable` to fire one `_call_via_r3`
   trampoline call, then writes a small fixed value into `part+0xa` from
   a second, 22-case jump table on the same type.
 - **`sub_8012694`** (424 B, `actor_part84.c`) - a helper of
@@ -72,7 +72,7 @@ already-matched `actor_part79.c`, `actor_part84.c` between
   flag is set.
 - **`sub_8012AF4`** (560 B, `actor_part83.c`) - an OAM-visibility/
   priority pass: nudges the player's saved-position word by a fixed
-  delta and calls `sub_8009EA8` when `part+0x68` is busy and a flag
+  delta and calls `SetSpritePrevPos` when `part+0x68` is busy and a flag
   just changed; plays a sound and fires the `+0x50`/`+0x54` trampoline
   (id `0x12`) when `self+8==0`; then, keyed on `self+0x2f`, looks up a
   per-tag `gStaticData_0816B304` record (`(*(self+4))[tag]`), copies 12
@@ -90,25 +90,25 @@ already-matched `actor_part79.c`, `actor_part84.c` between
   `sub_8012A7C(self)` reports busy; otherwise dispatches the input
   snapshot's low bits (sound + two trampoline pairs, or a
   `sub_8015398` tail-call, or a `HasTurboRun`-gated trampoline call) -
-  every path converging on `sub_80122CC`.
+  every path converging on `UpdatePlayerFacing`.
 
 ## Why NAKED, not real C
 
-A first plain-C attempt at `sub_8012420` (the smallest, best-documented
+A first plain-C attempt at `UpdateActionCtrl` (the smallest, best-documented
 of the six) compiled logically-equivalent code - every load, store,
 branch, and call matched the ROM's own - but diverged at the prologue:
 the ROM reserves an unused 8-byte stack slot and pushes a 5th callee-
 saved register (`r7`) that the straightforward C translation never
 needed (4 registers, no stack). This is the same unexplained-frame-
-shape/register-budget gap this exact table family (`gStaticData_0816BF20`)
+shape/register-budget gap this exact table family (`gActionCtrlStateTable`)
 already hits repeatedly throughout `docs/status/actor.md`'s "Parked -
 NAKED transcription" section (`sub_801434C`, `sub_80145E4`,
 `sub_8015038`, `sub_8015238`, `sub_80152F0`, `sub_80156EC`,
-`sub_80157C4`, and the whole `UpdateAirshipFireball`-`ConvertAirshipTiles` boss-weapon
+`ActionCtrlSetTargetAnim`, and the whole `UpdateAirshipFireball`-`ConvertAirshipTiles` boss-weapon
 cluster) - a confirmed categorical difficulty for this class of
 function, not a one-off. Given all six of this remainder's functions
 share the same field-offset/trampoline conventions and jump-table-heavy
-dispatch shape as those already-NAKED siblings (and `sub_8011BD4` in
+dispatch shape as those already-NAKED siblings (and `ActionCtrlHandleEvent` in
 particular is the single widest jump-table dispatcher attempted in this
 codebase so far - 25 outer cases plus two independent 7-case inner
 tables), every one was transcribed instruction-for-instruction from the
@@ -116,7 +116,7 @@ ROM disassembly instead, the same escape hatch used for
 `sub_8001CB8`/`sub_8001DB4` (`src/system/link_cable.c`) and
 `sub_801434C` (`actor_part18.c`).
 
-To keep a function this size transcription-error-free, `sub_8011BD4`
+To keep a function this size transcription-error-free, `ActionCtrlHandleEvent`
 was transcribed mechanically (a small Python pass converting each ROM
 instruction's unified-syntax mnemonic to its divided-syntax form -
 `adds`/`movs`/`subs`/`ands`/`orrs`/`lsls`/`lsrs`/`asrs` drop the
@@ -146,7 +146,7 @@ All six of this remainder's functions are now byte-exact, but as NAKED
 transcriptions - parked, not matched, per project policy. Every
 function GitHub issue #16 originally scoped (this remainder plus the
 four matched in `issue-16-actor-12160.md` and the earlier
-`KillPlayer`/`sub_8012238`/`sub_80122CC`/`sub_8012A7C` matches) is now
+`KillPlayer`/`sub_8012238`/`UpdatePlayerFacing`/`sub_8012A7C` matches) is now
 either real C or a verified NAKED transcription - nothing from this
 issue's original scope is left raw - but since six functions are NAKED
 rather than real decompiled C, the issue itself stays open per this
@@ -158,17 +158,17 @@ CONTRIBUTING.md's "Opening the PR").
 `sub_8012D24` (actor_part83.c) and `sub_801283C` (actor_part84.c) are
 real C now, under old_agbcc (both files moved to `OLD_AGBCC_OBJS`), on
 the `struct act` player/action object from `include/action_obj.h`.
-`sub_8012AF4`, `sub_8012420` and `sub_8012694` have old_agbcc drafts
-under `NON_MATCHING`; `sub_8011BD4` wasn't attempted. See
+`sub_8012AF4`, `UpdateActionCtrl` and `sub_8012694` have old_agbcc drafts
+under `NON_MATCHING`; `ActionCtrlHandleEvent` wasn't attempted. See
 [issue-15-16-naked-retry.md](issue-15-16-naked-retry.md).
 
 
 ## Later pass (third issue #15/#16 NAKED retry)
 
-`sub_8012420` and `sub_8012AF4` are real C under old_agbcc now. See
+`UpdateActionCtrl` and `sub_8012AF4` are real C under old_agbcc now. See
 [issue-15-16-naked-retry-3.md](issue-15-16-naked-retry-3.md).
 
 ## Later pass (second big NAKED retry)
 
-`sub_8011BD4` is real C under old_agbcc now (`actor_part82.o` joined
+`ActionCtrlHandleEvent` is real C under old_agbcc now (`actor_part82.o` joined
 `OLD_AGBCC_OBJS`). See [big-naked-retry-2.md](big-naked-retry-2.md).

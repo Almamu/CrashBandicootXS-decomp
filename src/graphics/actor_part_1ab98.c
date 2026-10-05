@@ -76,7 +76,7 @@ void sub_801AB98(struct gobj *selfArg, void *unused)
     /* Emits nothing: keeps r8 live up to the first overlap test, so
      * `self` goes to sb and `result` gets r8, as in the ROM. */
     asm("" : "=r"(hold8));
-    sub_8007B98(&a, self);
+    GetSpriteHitbox(&a, self);
     {
         s32 t = gPlayer->x;
 
@@ -87,7 +87,7 @@ void sub_801AB98(struct gobj *selfArg, void *unused)
     /* Emits nothing: hides `pb`'s value from cse, so `&b` stays in a
      * register (r4) instead of being re-added to sp at each use. */
     asm("" : "+r"(pb));
-    sub_8007B98(pb, gPlayer);
+    GetSpriteHitbox(pb, gPlayer);
     {
         struct gobj *q = gPlayer;
         struct anim_table *anim = q->anim;
@@ -97,14 +97,14 @@ void sub_801AB98(struct gobj *selfArg, void *unused)
     }
     /* Emits nothing: end of the r8 hold. */
     asm("" : : "r"(hold8));
-    if (sub_8001688(&a, pb))
+    if (AabbOverlaps(&a, pb))
     {
         result = 0;
         above = 0;
         if (b.y < a.y)
             above = 1;
-        tx = sub_8009EC4(gPlayer);
-        ty = sub_8009EBC(gPlayer);
+        tx = GetSpritePrevX(gPlayer);
+        ty = GetSpritePrevY(gPlayer);
         side = 2;
         if (px > tx)
             side = 1;
@@ -139,13 +139,13 @@ void sub_801AB98(struct gobj *selfArg, void *unused)
                         result = 8;
                     goto classified;
                 }
-                if (sub_8009EBC(self) == (self->y >> 8) && oy > 2)
+                if (GetSpritePrevY(self) == (self->y >> 8) && oy > 2)
                 {
                     result = hdir;
                     goto classified;
                 }
             }
-            if (tx == px && sub_8009EC4(self) == (self->x >> 8))
+            if (tx == px && GetSpritePrevX(self) == (self->x >> 8))
                 result = vdir;
         }
     classified:
@@ -346,7 +346,7 @@ void sub_801AB98(struct gobj *selfArg, void *unused)
         {
         case 0:
         case 7:
-            if (sub_8001688(&a, pb))
+            if (AabbOverlaps(&a, pb))
             {
                 struct gobj *q = gPlayer;
 
@@ -359,7 +359,7 @@ void sub_801AB98(struct gobj *selfArg, void *unused)
             }
             break;
         case 2:
-            if (sub_8001688(&a, pb))
+            if (AabbOverlaps(&a, pb))
             {
                 s32 d = (self->x >> 8) - (gPlayer->x >> 8);
                 s32 sign;
@@ -373,7 +373,7 @@ void sub_801AB98(struct gobj *selfArg, void *unused)
             break;
         case 3:
             if (!IsBonusRoundDone(gLevelState) && !((u8 *)gLevelState)[0x8C]
-                && sub_8001688(&a, pb))
+                && AabbOverlaps(&a, pb))
             {
                 s32 d = (self->x >> 8) - (gPlayer->x >> 8);
                 s32 sign;
@@ -387,7 +387,7 @@ void sub_801AB98(struct gobj *selfArg, void *unused)
             break;
         case 4:
             if (!IsGemPathDone(gLevelState) && !((u8 *)gLevelState)[0x8C]
-                && sub_8001688(&a, pb))
+                && AabbOverlaps(&a, pb))
             {
                 s32 d = (self->x >> 8) - (gPlayer->x >> 8);
                 s32 sign;
@@ -402,7 +402,7 @@ void sub_801AB98(struct gobj *selfArg, void *unused)
         case 1:
         case 5:
         case 6:
-            if (!sub_8001688(&a, pb))
+            if (!AabbOverlaps(&a, pb))
                 self->mover->active = 0;
             break;
         }

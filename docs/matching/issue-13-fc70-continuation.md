@@ -41,14 +41,14 @@ second pass against those five.
     argument stack slot pair the ROM's own `sub sp, #8`/`add sp, #8`
     frame does.
 - **`DestroyCrate`/`InitCrate`** (`src/system/game_loop31.c`, new
-  file) - a part-object table-set/tail-call-`sub_8008484` helper (same
+  file) - a part-object table-set/tail-call-`DestroySpriteObj` helper (same
   shape as `DestroyWumpa`, `actor_part39.c`) that additionally frees
   `self+0x48` (unless it's the sentinel `-1` or already `NULL`) and
   clears `self+0x59` when `self`'s own `+0x4e` state byte is 3, and a
-  second helper that re-initializes `self` via `sub_80084A4`, resets
+  second helper that re-initializes `self` via `InitSpriteObj`, resets
   its table/`+0x59` flag, then resets its own collision-response state
   via `ResetCrate` (`game_loop22.c`). Both take/return `struct actor *`
-  (matching `sub_8008484`/`sub_80084A4`'s own already-matched
+  (matching `DestroySpriteObj`/`InitSpriteObj`'s own already-matched
   prototypes in `actor_part6.c`).
 - **`sub_8010784`/`sub_80107C4`** (`src/system/game_loop31.c`) - two
   fixed single-octant variants of the Bresenham-line-style stepper
@@ -204,9 +204,9 @@ removed in favor of a matched-list entry.
 
 `UpdateCrate`, parked above as "not attempted", is now matched. By the
 time this pass picked it up, every callee it flagged as a "still-raw
-sibling" (`UpdateTntCountdown`/`sub_800F990`/`SolidifyOutlineCrates`/`FinishBrokenCrate`,
-`UpdateCrateFall`, `sub_80087C0`/`sub_80087B4`/`sub_800872C`,
-`GetPaletteSlot`, `sub_8008044`, `_call_via_r1`) had already been matched
+sibling" (`UpdateTntCountdown`/`UpdateSlotCrate`/`SolidifyOutlineCrates`/`FinishBrokenCrate`,
+`UpdateCrateFall`, `ResetSpriteFrameTimer`/`ResetSpriteFrameIndex`/`SetSpriteAnimDone`,
+`GetPaletteSlot`, `AdvanceSpriteAnim`, `_call_via_r1`) had already been matched
 by earlier passes in this same session (issue #12's cluster and this
 issue's own `UpdateCrateFall`/`game_loop32.c`), which is what made this
 function tractable at all - it's a pure dispatcher/glue function over
@@ -220,7 +220,7 @@ describe) is nonzero, decrements it and, only for the frame it reaches
 zero-triggering, dispatches once more on `self+0x4e` (the settle-state
 byte): `0x13`-`0x15` re-enters the edge-settle chain (`UpdateTntCountdown`)
 and arms the global one-shot rescan flag `gUnknown_030012B0`; `0xf`
-re-triggers `sub_800F990` when `self+0x4d`'s low 7 bits are already 0;
+re-triggers `UpdateSlotCrate` when `self+0x4d`'s low 7 bits are already 0;
 `0xc`, once the throttle has reached 0 this frame, clears `self+0x50`;
 `3` re-triggers `SolidifyOutlineCrates`. Unconditionally afterwards: while
 `self+0x4e == 0xc`, counts `self+0x48` down toward 0; always calls
@@ -232,13 +232,13 @@ re-triggers `sub_800F990` when `self+0x4d`'s low 7 bits are already 0;
 clears the "recently touched" object's (`gPlayer`) own
 `+0x80` byte - then, depending on `self+0x4e`: state 6 settles to
 state 7, tags `self+0x2d = 0x20`, runs the
-`sub_80087C0`/`sub_80087B4`/`sub_800872C` triplet (the same one
+`ResetSpriteFrameTimer`/`ResetSpriteFrameIndex`/`SetSpriteAnimDone` triplet (the same one
 `UpdateTntCountdown`'s own settle paths use), then folds the low nibble of a
 `GetPaletteSlot` tile-cache lookup (keyed by the freshly-retagged hitbox
 record's own `+0x14`) into `self+0x29`; state 3 just tags `0x20` and
 runs the same triplet. If bit 7 was clear instead, `self+0x4d`'s low 7
 bits == 1 triggers `FinishBrokenCrate`. Finally, unconditionally, calls
-`sub_8008044` and hands `self+0x18`'s table's own `+0x60`/`+0x64`
+`AdvanceSpriteAnim` and hands `self+0x18`'s table's own `+0x60`/`+0x64`
 offset/function-pointer pair off to the `_call_via_r1` table-trampoline
 - the same convention `sub_8007048`/`sub_80070D4` (`graphics.c`)
 establish, confirming `self+0x18` is this object's `struct actor.table`
@@ -272,7 +272,7 @@ an inconsistent reuse pattern the ROM itself only sometimes applies
 checks a few instructions later, rather than reusing the r6 copy the
 immediately-preceding `0xf` check just made) - a finer-grained, more
 pervasive version of the same "which anonymous scratch register" gap
-that already forced `sub_8007B00`/`sub_8007B98` (`actor_part.c`) and
+that already forced `GetSpriteBounds`/`GetSpriteHitbox` (`actor_part.c`) and
 `sub_8010B6C` (`game_loop28.c`) fully NAKED. Given the depth of
 precise, non-uniform register control needed across the *entire*
 ~195-instruction function (not just one isolated block), it was

@@ -40,10 +40,10 @@ struct fade_overlay {
 /* The credits screen (RunCredits; docs/rom_map.md read it as a
  * "between-level map/progress screen"): a starfield plus the credits
  * text (gCreditsText) as floating lines and logos, run from the title
- * menu and after the ending (game_loop55.c), allocated `sub_8026EDC(0x98)` by `RunCredits`. Only
+ * menu and after the ending (game_loop55.c), allocated `OperatorNew(0x98)` by `RunCredits`. Only
  * the fields this file's functions actually touch are named. */
 
-/* One timed text-popup node (0x18 bytes, `sub_8026EDC`-allocated by
+/* One timed text-popup node (0x18 bytes, `OperatorNew`-allocated by
  * UpdateCreditsText, drawn by DrawCreditsText). */
 struct popup_node {
     struct popup_node *next; /* 0x00 */
@@ -193,7 +193,7 @@ void CommitContinuePromptFrame(struct fade_overlay *self)
     REG_DISPCNT = self->dispcnt;
 }
 
-extern void sub_8026ED0(void *self);
+extern void OperatorDelete(void *self);
 
 /* --------------------------------------------------------------------
  * DestroyContinuePrompt - the continue prompt's teardown: frees its three BG scratch
@@ -201,14 +201,14 @@ extern void sub_8026ED0(void *self);
  * ------------------------------------------------------------------ */
 void DestroyContinuePrompt(struct fade_overlay *self, s32 mode)
 {
-    sub_8026ED0(self->bg0Buf);
-    sub_8026ED0(self->bg1Buf);
-    sub_8026ED0(self->bg2Buf);
+    OperatorDelete(self->bg0Buf);
+    OperatorDelete(self->bg1Buf);
+    OperatorDelete(self->bg2Buf);
     if (mode & 1)
-        sub_8026ED0(self);
+        OperatorDelete(self);
 }
 
-extern void *sub_8026EDC(s32 size);
+extern void *OperatorNew(s32 size);
 extern s32 mem_free_bytes(s32 flags);
 extern void *InitContinuePrompt(void *selfArg);
 extern s32 ContinuePromptLoop(void *selfArg);
@@ -227,7 +227,7 @@ s32 RunContinuePrompt(void)
     u8 result;
 
     mem_free_bytes(0xc0000000);
-    self = InitContinuePrompt(sub_8026EDC(0x24));
+    self = InitContinuePrompt(OperatorNew(0x24));
     result = ContinuePromptLoop(self);
     if (self != NULL)
         DestroyContinuePrompt(self, 3);
@@ -239,7 +239,7 @@ asm(".align 2, 0");
 
 /* The credits screen's constructor (docs/rom_map.md's "InitCredits is a
  * combined constructor" note): builds the starfield
- * (`InitStarfield(sub_8026EDC(0x14))` -> `self->starfield`), syncs the OAM
+ * (`InitStarfield(OperatorNew(0x14))` -> `self->starfield`), syncs the OAM
  * shadow buffer, hooks both text-icon managers
  * (`gSmallFont`/`gLargeFont`) up for this screen (firing
  * each one's slot-6 OAM trampoline via `_call_via_r1`, and copying
@@ -282,7 +282,7 @@ extern struct icon_manager *gLargeFont;
 extern u8 gDispcnt[2];
 extern struct AudioContext *gAudioContext;
 extern u8 gCreditsText[];
-extern void *sub_8026EDC(s32 size);
+extern void *OperatorNew(s32 size);
 
 /* Sets the manager's glyph tile base and fires its slot-6 method. */
 static inline void IconSetBase(struct icon_manager *m, u32 base)
@@ -303,7 +303,7 @@ static inline void IconReserveVram(struct vram_upload_cursor *c, struct icon_man
 
 struct map_screen *InitCredits(struct map_screen *self)
 {
-    self->starfield = InitStarfield(sub_8026EDC(0x14));
+    self->starfield = InitStarfield(OperatorNew(0x14));
     ResetOamBuffer(gOamBuffer);
     HideUnusedOamEntries(gOamBuffer);
     WaitForVBlank();
@@ -408,7 +408,7 @@ void CreditsLoop(struct map_screen *self)
         void *node = self->popupListHead;
         do {
             void *next = *(void **)node;
-            sub_8026ED0(node);
+            OperatorDelete(node);
             node = next;
         } while (node != NULL);
     }
@@ -521,7 +521,7 @@ asm(".align 2, 0");
 /* The credits screen's floating-text popup driver (docs/rom_map.md's "A
  * floating-text/glyph popup system" note): first walks `self`'s
  * `popupListHead` linked list, decrementing each node's countdown pair
- * (`+8`/`+0xc`) and unlinking/freeing (`sub_8026ED0`) any node whose
+ * (`+8`/`+0xc`) and unlinking/freeing (`OperatorDelete`) any node whose
  * sum has expired; then, unless `self->suppressCounter` is still
  * counting down, parses `self`'s byte-opcode stream
  * (`streamCursor`/`streamBase`, `struct map_screen`) - opcodes 0/1
@@ -545,7 +545,7 @@ asm(".align 2, 0");
  * formed in the ROM's order. */
 extern s32 FontTextHeight(struct icon_manager *mgr, const u8 *text);
 extern s32 _call_via_r3(void *self, const void *a, s32 b, void *fn);
-extern void *sub_8026EDC(s32 size);
+extern void *OperatorNew(s32 size);
 extern u8 gStaticData_0817CF3C[];
 
 #define ICON_TEXT_CALL3(mgrExpr, n, a, b)                                      \
@@ -586,7 +586,7 @@ void UpdateCreditsText(struct map_screen *self)
         if (--n->y + n->timer <= 0)
         {
             *link = n->next;
-            sub_8026ED0(n);
+            OperatorDelete(n);
         }
         else
         {
@@ -636,7 +636,7 @@ void UpdateCreditsText(struct map_screen *self)
                     struct popup_node *n;
 
                     self->streamCursor = p + 1;
-                    n = sub_8026EDC(0x18);
+                    n = OperatorNew(0x18);
                     tail->next = n;
                     n->mode = 2;
                     n->y = height;
@@ -666,7 +666,7 @@ void UpdateCreditsText(struct map_screen *self)
                     }
                     if (*(const u8 *)self->streamCursor != ' ')
                     {
-                        struct popup_node *n = sub_8026EDC(0x18);
+                        struct popup_node *n = OperatorNew(0x18);
 
                         tail->next = n;
                         n->mode = self->drawMode;
@@ -728,7 +728,7 @@ asm(".align 2, 0");
  * - each `sp[4]+0x1c+i*0x18`-relative in the ROM's own indexing),
  * converting each record's raw width/height into rounded Q-something
  * runtime units, DMA3-transferring custom glyph tile data
- * (`sub_8026EC0`/`LoadTaggedAsset`) into a freshly-decoded buffer and
+ * (`OperatorNewArray`/`LoadTaggedAsset`) into a freshly-decoded buffer and
  * building each glyph cell's OAM tile index via a nested nibble/row
  * loop, then loading the shared 15-color palette tail
  * (`gPaletteCache+0x2c`) the same way and pinning the freshly-built
@@ -755,8 +755,8 @@ struct popup_glyph_src {
 };
 
 extern struct popup_glyph_src gCreditsLogos[];
-extern void *sub_8026EC0(u32 size);
-extern void sub_8026EB4(void *ptr);
+extern void *OperatorNewArray(u32 size);
+extern void OperatorDeleteArray(void *ptr);
 extern void LoadTaggedAsset(const void *asset, void *dest);
 extern s32 ClaimPaletteSlot(struct palette_cache *cache, s32 index);
 
@@ -784,10 +784,10 @@ void LoadCreditsLogos(struct map_screen *self)
             glyph->cols = (w + 3) / 4;
             glyph->rows = (h + 3) / 4;
         }
-        tiles = sub_8026EC0(*src->tiles >> 8);
+        tiles = OperatorNewArray(*src->tiles >> 8);
         LoadTaggedAsset(src->tiles, tiles);
         size = (glyph->cols * glyph->rows) << 9;
-        glyph->tiles = sub_8026EC0(size);
+        glyph->tiles = OperatorNewArray(size);
         {
             u32 zero = 0;
             struct dma_regs *dma = (struct dma_regs *)REG_ADDR_DMA3SAD;
@@ -814,8 +814,8 @@ void LoadCreditsLogos(struct map_screen *self)
             }
         }
         if (tiles != NULL)
-            sub_8026EB4(tiles);
-        pal = sub_8026EC0((*src->palette >> 9) << 1);
+            OperatorDeleteArray(tiles);
+        pal = OperatorNewArray((*src->palette >> 9) << 1);
         LoadTaggedAsset(src->palette, pal);
         {
             u16 *s = pal;
@@ -834,7 +834,7 @@ void LoadCreditsLogos(struct map_screen *self)
                 *d++ = *s++;
         }
         if (pal != NULL)
-            sub_8026EB4(pal);
+            OperatorDeleteArray(pal);
         ClaimPaletteSlot(gPaletteCache, slot);
         *(s32 *)&glyph->palette = slot;
         slot++;
@@ -865,7 +865,7 @@ void CommitCreditsFrame(void *unused)
 }
 
 extern void DestroyStarfield(void *self, s32 arg1);
-extern void sub_8026EB4(void *ptr);
+extern void OperatorDeleteArray(void *ptr);
 
 /* --------------------------------------------------------------------
  * DestroyCredits - credits screen teardown: kicks the starfield's own
@@ -885,13 +885,13 @@ void DestroyCredits(struct map_screen *self, s32 mode)
     i = 4;
     do {
         if (*(void **)slot != NULL)
-            sub_8026EB4(*(void **)slot);
+            OperatorDeleteArray(*(void **)slot);
         slot += 0x18;
         i--;
     } while (i >= 0);
 
     if (mode & 1)
-        sub_8026ED0(self);
+        OperatorDelete(self);
 }
 
 /* --------------------------------------------------------------------
@@ -902,7 +902,7 @@ void DestroyCredits(struct map_screen *self, s32 mode)
  * ------------------------------------------------------------------ */
 void RunCredits(void)
 {
-    struct map_screen *self = InitCredits(sub_8026EDC(0x98));
+    struct map_screen *self = InitCredits(OperatorNew(0x98));
 
     CreditsLoop(self);
     if (self != NULL)

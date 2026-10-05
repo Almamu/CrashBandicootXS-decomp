@@ -8,15 +8,15 @@ extern void ***gUnknown_030012D0;
 extern void *gUnknown_030012EC;
 extern void *gEntitySpawner;
 
-extern void *sub_8026EDC(s32 size);
-extern struct actor *sub_8008434(u16 arg0, u16 arg1, u16 arg2, u16 arg3);
-extern void sub_80087C0(void *part);
-extern void sub_80087B4(void *part);
-extern void sub_800872C(void *part, u8 val);
-extern s32 sub_800815C(struct actor *part);
-extern void sub_8008E94(void *manager, void *value);
+extern void *OperatorNew(s32 size);
+extern struct actor *CreateSpriteObj(u16 arg0, u16 arg1, u16 arg2, u16 arg3);
+extern void ResetSpriteFrameTimer(void *part);
+extern void ResetSpriteFrameIndex(void *part);
+extern void SetSpriteAnimDone(void *part, u8 val);
+extern s32 GetSpriteAnimPaletteSlot(struct actor *part);
+extern void AddToPartList(void *manager, void *value);
 
-/* Sets `part->field_29`'s low nibble to `sub_800815C(part)`'s result,
+/* Sets `part->field_29`'s low nibble to `GetSpriteAnimPaletteSlot(part)`'s result,
  * keeping the high nibble - same idiom as `UPDATE_ICON_FRAME_NIBBLE`
  * (src/graphics/settings_menu6.c, confirmed matching for `InitPauseCrystalsPage`),
  * adapted for a raw-offset `struct actor *` instead of a named
@@ -26,7 +26,7 @@ extern void sub_8008E94(void *manager, void *value);
  * shared via a header since both files only need it locally. */
 #define UPDATE_PART_FRAME_NIBBLE(partPtr) \
     do { \
-        register s32 _ret asm("r0") = sub_800815C(partPtr); \
+        register s32 _ret asm("r0") = GetSpriteAnimPaletteSlot(partPtr); \
         register u8 *_addr asm("r2") = (u8 *)(partPtr) + 0x29; \
         register s32 _mask asm("r1"); \
         register u8 _byte asm("r3"); \
@@ -39,32 +39,32 @@ extern void sub_8008E94(void *manager, void *value);
         *_addr = _mask; \
     } while (0)
 
-/* Spawns a full visual effect via `sub_8008434`: points its `+0x20`
+/* Spawns a full visual effect via `CreateSpriteObj`: points its `+0x20`
  * table pointer at `gSpriteBankTable`'s master 12-byte record 38
  * (`table_base + 0x1c8` - the same record `overlay_ui`'s
  * `InitPowerDialog` dialog-box spawner uses, see docs/rom_map.md's
  * "`gSpriteBankTable` record-indexed" writeup), tags it (`+0x2d =
- * 1`), builds it via the standard `sub_80087C0`/`sub_80087B4`/
- * `sub_800872C` OAM trio, sets its `+0x29` bitfield via
- * `sub_800815C`/`UPDATE_PART_FRAME_NIBBLE`, sets `+0xa` to the fixed
+ * 1`), builds it via the standard `ResetSpriteFrameTimer`/`ResetSpriteFrameIndex`/
+ * `SetSpriteAnimDone` OAM trio, sets its `+0x29` bitfield via
+ * `GetSpriteAnimPaletteSlot`/`UPDATE_PART_FRAME_NIBBLE`, sets `+0xa` to the fixed
  * `0x25`, then registers it into `gUnknown_030012EC`'s manager via
- * `sub_8008E94`. One of four near-identical siblings in this chunk
+ * `AddToPartList`. One of four near-identical siblings in this chunk
  * (`SpawnTornadoSpinPower`/`SpawnDoubleJumpPower`/`SpawnTurboRunPower`), differing only in the
  * `+0x2d`/`+0xa` constants. */
 void SpawnBodySlamPower(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     register u8 tag asm("r5") = 1;
     register u8 field0A asm("r6") = 0x25;
-    struct actor *part = sub_8008434(arg0, arg1, arg2, arg3);
+    struct actor *part = CreateSpriteObj(arg0, arg1, arg2, arg3);
 
     *(void **)((u8 *)part + 0x20) = (u8 *)(**gUnknown_030012D0) + 0x1c8;
     *((u8 *)part + 0x2d) = tag;
-    sub_80087C0(part);
-    sub_80087B4(part);
-    sub_800872C(part, 0);
+    ResetSpriteFrameTimer(part);
+    ResetSpriteFrameIndex(part);
+    SetSpriteAnimDone(part, 0);
     UPDATE_PART_FRAME_NIBBLE(part);
     *((u8 *)part + 0xa) = field0A;
-    sub_8008E94(gUnknown_030012EC, part);
+    AddToPartList(gUnknown_030012EC, part);
 }
 
 /* Same shape as `SpawnBodySlamPower` above, tag `0`, `+0xa = 0x24`. */
@@ -72,16 +72,16 @@ void SpawnTornadoSpinPower(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     register u8 tag asm("r5") = 0;
     register u8 field0A asm("r6") = 0x24;
-    struct actor *part = sub_8008434(arg0, arg1, arg2, arg3);
+    struct actor *part = CreateSpriteObj(arg0, arg1, arg2, arg3);
 
     *(void **)((u8 *)part + 0x20) = (u8 *)(**gUnknown_030012D0) + 0x1c8;
     *((u8 *)part + 0x2d) = tag;
-    sub_80087C0(part);
-    sub_80087B4(part);
-    sub_800872C(part, 0);
+    ResetSpriteFrameTimer(part);
+    ResetSpriteFrameIndex(part);
+    SetSpriteAnimDone(part, 0);
     UPDATE_PART_FRAME_NIBBLE(part);
     *((u8 *)part + 0xa) = field0A;
-    sub_8008E94(gUnknown_030012EC, part);
+    AddToPartList(gUnknown_030012EC, part);
 }
 
 /* Same shape as `SpawnBodySlamPower` above, tag `2`, `+0xa = 0x23`. */
@@ -89,16 +89,16 @@ void SpawnDoubleJumpPower(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     register u8 tag asm("r5") = 2;
     register u8 field0A asm("r6") = 0x23;
-    struct actor *part = sub_8008434(arg0, arg1, arg2, arg3);
+    struct actor *part = CreateSpriteObj(arg0, arg1, arg2, arg3);
 
     *(void **)((u8 *)part + 0x20) = (u8 *)(**gUnknown_030012D0) + 0x1c8;
     *((u8 *)part + 0x2d) = tag;
-    sub_80087C0(part);
-    sub_80087B4(part);
-    sub_800872C(part, 0);
+    ResetSpriteFrameTimer(part);
+    ResetSpriteFrameIndex(part);
+    SetSpriteAnimDone(part, 0);
     UPDATE_PART_FRAME_NIBBLE(part);
     *((u8 *)part + 0xa) = field0A;
-    sub_8008E94(gUnknown_030012EC, part);
+    AddToPartList(gUnknown_030012EC, part);
 }
 
 /* Same shape as `SpawnBodySlamPower` above, tag `3`, `+0xa = 0x26`. */
@@ -106,23 +106,23 @@ void SpawnTurboRunPower(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     register u8 tag asm("r5") = 3;
     register u8 field0A asm("r6") = 0x26;
-    struct actor *part = sub_8008434(arg0, arg1, arg2, arg3);
+    struct actor *part = CreateSpriteObj(arg0, arg1, arg2, arg3);
 
     *(void **)((u8 *)part + 0x20) = (u8 *)(**gUnknown_030012D0) + 0x1c8;
     *((u8 *)part + 0x2d) = tag;
-    sub_80087C0(part);
-    sub_80087B4(part);
-    sub_800872C(part, 0);
+    ResetSpriteFrameTimer(part);
+    ResetSpriteFrameIndex(part);
+    SetSpriteAnimDone(part, 0);
     UPDATE_PART_FRAME_NIBBLE(part);
     *((u8 *)part + 0xa) = field0A;
-    sub_8008E94(gUnknown_030012EC, part);
+    AddToPartList(gUnknown_030012EC, part);
 }
 
 extern u8 IsCrystalSaved(void *self);
 extern struct actor *CreateStopwatch(u16 arg0, u16 arg1, u16 arg2, u16 arg3);
 
 /* Gated spawn (see `SpawnBlueGem` below for the sibling shape), but
- * built via `CreateStopwatch` instead of `sub_8008434`, gated by
+ * built via `CreateStopwatch` instead of `CreateSpriteObj`, gated by
  * `IsCrystalSaved(gLevelState)` being true instead of a flag-bit
  * test, table offset `table_base + 0x1b0`, tag `0`, `+0xa = 0x1c`, and
  * an extra `flags |= 0x10` on the constructed object before
@@ -138,9 +138,9 @@ void SpawnStopwatch(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
             register u8 *addr asm("r1") = (u8 *)part + 0x2d;
             *addr = tag;
         }
-        sub_80087C0(part);
-        sub_80087B4(part);
-        sub_800872C(part, 0);
+        ResetSpriteFrameTimer(part);
+        ResetSpriteFrameIndex(part);
+        SetSpriteAnimDone(part, 0);
         UPDATE_PART_FRAME_NIBBLE(part);
         *((u8 *)part + 0xa) = 0x1c;
         {
@@ -150,7 +150,7 @@ void SpawnStopwatch(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
             mask |= old;
             part->flags = mask;
         }
-        sub_8008E94(gUnknown_030012EC, part);
+        AddToPartList(gUnknown_030012EC, part);
     }
 }
 
@@ -175,15 +175,15 @@ void SpawnBlueGem(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     }
     tag = 4;
     field0A = 0x21;
-    part = sub_8008434(arg0, arg1, arg2, arg3);
+    part = CreateSpriteObj(arg0, arg1, arg2, arg3);
     *(void **)((u8 *)part + 0x20) = (u8 *)(**gUnknown_030012D0) + 0x180;
     *((u8 *)part + 0x2d) = tag;
-    sub_80087C0(part);
-    sub_80087B4(part);
-    sub_800872C(part, 0);
+    ResetSpriteFrameTimer(part);
+    ResetSpriteFrameIndex(part);
+    SetSpriteAnimDone(part, 0);
     UPDATE_PART_FRAME_NIBBLE(part);
     *((u8 *)part + 0xa) = field0A;
-    sub_8008E94(gUnknown_030012EC, part);
+    AddToPartList(gUnknown_030012EC, part);
 }
 
 extern void SetCrateGemPos(void *self, s32 *point);
@@ -230,16 +230,16 @@ void sub_802209C(u32 arg0, u32 arg1, u32 arg2, u16 arg3)
  * rom_map.md). */
 void *sub_80220C4(u32 index, u32 tag, u32 field0A, u32 cx, u16 cy, u16 cw, u16 ch)
 {
-    struct actor *part = sub_8008434(cx, cy, cw, ch);
+    struct actor *part = CreateSpriteObj(cx, cy, cw, ch);
 
     *(void **)((u8 *)part + 0x20) = (u8 *)(**gUnknown_030012D0) + index * 12;
     *((u8 *)part + 0x2d) = (u8)tag;
-    sub_80087C0(part);
-    sub_80087B4(part);
-    sub_800872C(part, 0);
+    ResetSpriteFrameTimer(part);
+    ResetSpriteFrameIndex(part);
+    SetSpriteAnimDone(part, 0);
     UPDATE_PART_FRAME_NIBBLE(part);
     *((u8 *)part + 0xa) = (u8)field0A;
-    sub_8008E94(gUnknown_030012EC, part);
+    AddToPartList(gUnknown_030012EC, part);
     return part;
 }
 
@@ -306,7 +306,7 @@ void nullsub_23(void)
 extern void sub_8025D54(void *self, u32 flags);
 
 /* Constructor/consumer pair (docs/rom_map.md): frees `gEntitySpawner`
- * (via `sub_8025D54`'s conditional `sub_8026ED0`, gated bit 0) if
+ * (via `sub_8025D54`'s conditional `OperatorDelete`, gated bit 0) if
  * already allocated. */
 void DestroyEntitySpawner(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
@@ -331,7 +331,7 @@ extern u8 gEntitySpawnFuncs[];
 void CreateEntitySpawner(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     void **addr = &gEntitySpawner;
-    register void *obj asm("r0") = sub_8026EDC(8);
+    register void *obj asm("r0") = OperatorNew(8);
 
     asm volatile("bl sub_8025D6C" : "+r" (obj) :: "r1", "r2", "r3", "lr", "cc");
     *addr = obj;
@@ -400,14 +400,14 @@ void *InitLevelState(void *self)
 
     {
         void **addr = (void **)&gSpriteRenderer;
-        register void *tmp asm("r0") = sub_8026EDC(4);
+        register void *tmp asm("r0") = OperatorNew(4);
 
         asm volatile("bl nullsub_2" : "+r" (tmp) :: "r1", "r2", "r3", "lr", "cc");
         *addr = tmp;
     }
     {
         void ****addr = &gUnknown_030012D0;
-        register void *tmp asm("r0") = sub_8026EDC(4);
+        register void *tmp asm("r0") = OperatorNew(4);
 
         asm volatile("bl nullsub_1" : "+r" (tmp) :: "r1", "r2", "r3", "lr", "cc");
         *addr = (void ***)tmp;
@@ -415,7 +415,7 @@ void *InitLevelState(void *self)
     }
     {
         struct palette_cache **addr = &gPaletteCache;
-        register struct palette_cache *cache asm("r0") = sub_8026EDC(0x8c << 2);
+        register struct palette_cache *cache asm("r0") = OperatorNew(0x8c << 2);
 
         asm volatile("bl InitPaletteCache" : "+r" (cache) :: "r1", "r2", "r3", "lr", "cc");
         *addr = cache;
@@ -432,31 +432,31 @@ void *InitLevelState(void *self)
         struct icon_manager **addr = &gSmallFont;
         s32 size = 0x9a << 1;
 
-        *addr = InitSmallFont(sub_8026EDC(size));
+        *addr = InitSmallFont(OperatorNew(size));
         addr = &gLargeFont;
-        *addr = InitLargeFont(sub_8026EDC(size));
+        *addr = InitLargeFont(OperatorNew(size));
     }
     AllocVramDmaQueue();
     {
         struct oam_shadow_buffer **addr = &gOamBuffer;
 
-        *addr = InitOamBuffer(sub_8026EDC(0x40c));
+        *addr = InitOamBuffer(OperatorNew(0x40c));
     }
     {
         struct vram_upload_cursor **addr = &gObjVramCursor;
 
-        *addr = InitObjVramCursor(sub_8026EDC(0xc), 0);
+        *addr = InitObjVramCursor(OperatorNew(0xc), 0);
     }
     {
         void **addr = (void **)&gUnknown_03001304;
-        register void *tmp asm("r0") = sub_8026EDC(4);
+        register void *tmp asm("r0") = OperatorNew(4);
 
         asm volatile("bl ClearKeys" : "+r" (tmp) :: "r1", "r2", "r3", "lr", "cc");
         *addr = tmp;
     }
     {
         void **addr = (void **)&gEntityFlags;
-        register void *tmp asm("r0") = sub_8026EDC(0x81 << 3);
+        register void *tmp asm("r0") = OperatorNew(0x81 << 3);
 
         asm volatile("bl sub_8025A5C" : "+r" (tmp) :: "r1", "r2", "r3", "lr", "cc");
         *addr = tmp;
@@ -464,7 +464,7 @@ void *InitLevelState(void *self)
     {
         void **addr = (void **)&gPaletteCycles;
 
-        *addr = InitPaletteCycles(sub_8026EDC(0x48));
+        *addr = InitPaletteCycles(OperatorNew(0x48));
     }
     {
         register u8 *addr asm("r0") = gDispcnt;

@@ -19,7 +19,7 @@
  * - Looks up a per-state jump-table id from `self`'s hitbox tag (a
  *   7-case table selecting either the just-built self AABB or a
  *   fallback `gStaticData_0816B2F8` box), tests it for overlap with the
- *   player's own hitbox-record box (`sub_8001688`), and if it overlaps,
+ *   player's own hitbox-record box (`AabbOverlaps`), and if it overlaps,
  *   dispatches to one of `ActivateNitroSwitchCrate`/`ActivateIronSwitchCrate`/`BreakCrateInStack`/
  *   `ExplodeCrate`/`OpenCheckpointCrate`/a flag-only case, keyed by an edge-code
  *   value looked up from `gCrateHitResponse` (`self+0x4e` row,
@@ -145,7 +145,7 @@ extern u8 gStaticData_0816BF00[];
 extern u8 gStaticData_0816B2F8[];
 extern s32 gCrateHitResponse[][7];
 extern void *GetSpriteFrame(void *part);
-extern u8 sub_8001640(struct aabb *a, struct aabb *b);
+extern u8 AabbOverlapsInclusiveX(struct aabb *a, struct aabb *b);
 extern u8 sub_800CEAC(void *self, struct d18c_quad *quad, struct aabb *box, s32 x, s32 y);
 extern struct crate *sub_800CF70(struct crate *self, struct aabb *box, u8 *found);
 extern struct crate *GetCrateBelow(struct crate *obj);
@@ -395,7 +395,7 @@ void sub_0800D18C(struct crate *self, s32 idx)
             f.b.y = py * 2 - (f.b.y + f.b.h);
     }
     bb = BOX_ADDR(&f.b);
-    if (!sub_8001688(&f.a, bb))
+    if (!AabbOverlaps(&f.a, bb))
         goto tail;
     f.found = 0;
     if (kind <= 4)
@@ -561,7 +561,7 @@ tail:
             f.b.y = py * 2 - (f.b.y + f.b.h);
     }
     bb = BOX_ADDR(&f.b);
-    if (!sub_8001640(&f.a, bb))
+    if (!AabbOverlapsInclusiveX(&f.a, bb))
         return;
     edge = 0;
     f21 = 0;
@@ -569,7 +569,7 @@ tail:
         f21 = 1;
     if (self->unk_44 != 0)
     {
-        if (!sub_8001640(&f.c, &f.b))
+        if (!AabbOverlapsInclusiveX(&f.c, &f.b))
             return;
         if (gCrateKindUnbreakable[self->kind] != 0)
         {
@@ -578,7 +578,7 @@ tail:
              * call: a leftover of a compare deleted after reload. The empty
              * asm emits nothing; it only uses ax and px, which gives the
              * same reload into r1. */
-            s32 ax = sub_8009EC4((struct gobj *)D18C_P);
+            s32 ax = GetSpritePrevX((struct gobj *)D18C_P);
 
             asm("" : : "r"(ax), "r"(px));
             if ((D18C_P->x >> 8) < (self->x >> 8))
@@ -692,8 +692,8 @@ tail:
     }
     else
     {
-        s32 ax = sub_8009EC4((struct gobj *)D18C_P);
-        s32 ay = sub_8009EBC((struct gobj *)D18C_P);
+        s32 ax = GetSpritePrevX((struct gobj *)D18C_P);
+        s32 ay = GetSpritePrevY((struct gobj *)D18C_P);
         s32 side = 2;
 
         if (px > ax)
@@ -910,7 +910,7 @@ tail:
     case 1:
     case 2:
         hit = dirX;
-        if (!sub_8001640(&f.c, &f.b))
+        if (!AabbOverlapsInclusiveX(&f.c, &f.b))
         {
             code = 0;
             sub_800E494(self);
@@ -965,7 +965,7 @@ tail:
         break;
     }
     if (D18C_P->ringLocked == 1 && self->kind == 0xe && code <= 1
-        && sub_8001640(&f.c, &f.b) == 1)
+        && AabbOverlapsInclusiveX(&f.c, &f.b) == 1)
         LightTntCrate(tgt);
     sub_8010D54(D18C_QUEUE(D18C_P), tgt, kind, code, edge, dy, f.pos, hit,
                 (struct d18c_flag8){f20}, (struct d18c_flag8){f21});

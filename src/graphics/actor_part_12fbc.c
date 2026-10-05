@@ -3,7 +3,7 @@
 
 /* GitHub issue #17, ROM 0x08012FBC-0x080134B8 (details in
  * docs/matching/issue-17-0x08012fbc-actor.md, "Third pass"). Two more
- * gStaticData_0816BF20 action-table handlers for the player/action object
+ * gActionCtrlStateTable action-table handlers for the player/action object
  * (include/action_obj.h). Built with old_agbcc. */
 
 /* The object sub_8025B0C spawns for the 0x100 path, as far as it is used. */
@@ -27,7 +27,7 @@ extern void *gUnknown_03001304;
 extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
 extern u8 GetDpadDirection(void *pad);
 extern u8 sub_8012A7C(struct act *self);
-extern void sub_80122CC(struct act *self);
+extern void UpdatePlayerFacing(struct act *self);
 extern void sub_800B334(struct act_part *part);
 extern void sub_8015398(struct act *self);
 extern void sub_8015460(struct act *self);
@@ -204,7 +204,7 @@ void sub_8012FBC(struct act *self)
             self->frame = held;
         }
     }
-    sub_80122CC(self);
+    UpdatePlayerFacing(self);
 }
 
 
@@ -338,6 +338,6 @@ void sub_8013228(struct act *self)
             ActSetNext27P(self, slot, 7);
         }
     }
-    sub_80122CC(self);
+    UpdatePlayerFacing(self);
 }
 asm(".align 2, 0");

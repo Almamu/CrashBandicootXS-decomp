@@ -295,7 +295,7 @@ technique gets around.
   register (`r4`-`r6`, `r8`, `r9`) gets saved and restored correctly
   in the exact same setup, just never `r7`. This is the same
   categorical limitation already documented project-wide for
-  `sub_8007DBC` (`actor_part2.c`), `MovePolarAkuAku` (`actor_part62.c`,
+  `CheckSpritePickup` (`actor_part2.c`), `MovePolarAkuAku` (`actor_part62.c`,
   `docs/matching/issue-54-actor-d3a8.md`) and others (see
   `matching_decomp_register_pinning` memory point 10) - parked rather
   than keep chasing a compiler bug with no known workaround. The

@@ -36,7 +36,7 @@ function in the file under old_agbcc:
   copy didn't help.
 - **`sub_801AB98`** (#25, 1648 bytes), **`BreakCrate`**,
   **`sub_0800D18C`**, **`sub_800D040`**, **`sub_800E08C`**,
-  **`sub_800F990`** (#12), **`UpdateCrateFall`**, **`CreateCrate`**,
+  **`UpdateSlotCrate`** (#12), **`UpdateCrateFall`**, **`CreateCrate`**,
   **`UpdateCrate`** (#13): not attempted this pass. The time went to the
   functions above. None of the #12/#13 ones has an in-tree C draft yet.
 

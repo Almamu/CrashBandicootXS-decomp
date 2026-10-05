@@ -11,7 +11,7 @@
  * `struct input_ctrl`, whose method table is `gInputCtrlVtable`
  * (constructor `CreateInputCtrl` - called from game_loop39.c - destructor
  * `DestroyInputCtrl`; every other slot it calls through is a base-class
- * `sub_800B6xx`/`sub_800B8xx` function). Each frame (`sub_8017650`, table
+ * `sub_800B6xx`/`sub_800B8xx` function). Each frame (`UpdateInputCtrl`, table
  * slot +0x0C) it reads the held D-pad bits from `gKeys` and
  * picks animation pairs for its target (`+0x10`) through
  * `gStaticData_0816B8C0`'s 12-byte records: up/down select one channel
@@ -172,13 +172,13 @@ extern s32 _call_via_r2(void *self, s32 arg, void *fn);
 extern s32 _call_via_r3(void *self, void *arg1, void *arg2, void *fn);
 extern void LoseLife(void *arg0);
 extern void LoadPaletteSlot(void *self, s32 slot, s32 recordId);
-extern void *sub_8026EDC(u32 size);
+extern void *OperatorNew(u32 size);
 extern struct ctrl_child *CreateCameraLead(void *mem);
 extern void ResetCameraLead(struct ctrl_child *child);
-extern void sub_8008E94(void *manager, void *value);
+extern void AddToPartList(void *manager, void *value);
 extern void RequestRoomExit(void);
-extern void sub_800B8A8(void *self, s32 flags);
-extern void sub_800B8C8(void *self);
+extern void DestroyCtrl(void *self, s32 flags);
+extern void InitCtrl(void *self);
 
 /* A virtual call as gcc 2.x lowers it: take the method-table entry's
  * address once, then read its `this` adjustment and function from it.
@@ -300,14 +300,14 @@ void sub_8017600(struct input_ctrl *self)
     self->dirState = 0;
     if (self->child == NULL)
     {
-        self->child = CreateCameraLead(sub_8026EDC(0x80));
-        sub_8008E94(gUnknown_030012F0, self->child);
+        self->child = CreateCameraLead(OperatorNew(0x80));
+        AddToPartList(gUnknown_030012F0, self->child);
     }
     ResetCameraLead(self->child);
 }
 
 
-void sub_8017650(struct input_ctrl *self)
+void UpdateInputCtrl(struct input_ctrl *self)
 {
     if (self->state != 3)
     {
@@ -497,12 +497,12 @@ void AttachInputCtrl(struct input_ctrl *self, struct ctrl_target *target)
 void DestroyInputCtrl(struct input_ctrl *self, s32 flags)
 {
     self->vtable = (struct ctrl_vtable *)gInputCtrlVtable;
-    sub_800B8A8(self, flags);
+    DestroyCtrl(self, flags);
 }
 
 struct input_ctrl *CreateInputCtrl(struct input_ctrl *self)
 {
-    sub_800B8C8(self);
+    InitCtrl(self);
     self->vtable = (struct ctrl_vtable *)gInputCtrlVtable;
     ResetInputCtrl(self);
     return self;

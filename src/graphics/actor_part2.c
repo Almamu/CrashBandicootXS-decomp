@@ -13,7 +13,7 @@ extern void SetAabbSize(void *buf, s32 arg1, s32 arg2);
 extern void *GetSpriteFrame(void *part);
 extern u8 gStaticData_0816B2F8[];
 
-/* A third AABB-for-keyframe builder (see sub_8007B00/sub_8007B98 in
+/* A third AABB-for-keyframe builder (see GetSpriteBounds/GetSpriteHitbox in
  * src/graphics/actor_part.c), this time selecting its 6-byte
  * `{s16 x, s16 y, u8 w, u8 h}` record via a `GetSpriteFrame(part)`-derived
  * "info" struct rather than `part`'s own keyframe table pointer:
@@ -157,8 +157,8 @@ void *sub_8007CF8(void *dest, void *pt)
     return dest;
 }
 
-extern void *sub_8007B98(void *dest, void *part);
-extern u8 sub_8001688(void *buf1, void *buf2);
+extern void *GetSpriteHitbox(void *dest, void *part);
+extern u8 AabbOverlaps(void *buf1, void *buf2);
 extern void _call_via_r4(void *arg0, s32 arg1, s32 arg2, s32 arg3);
 extern void *sub_8025BAC(void *pool, s32 arg1, s32 kind, s32 x, s32 y, s32 arg5);
 extern struct actor *gPlayer;
@@ -167,7 +167,7 @@ extern void *gEntityFlags;
 
 /* `part` (a `struct actor`, same layout used throughout this ROM
  * region) collides with the player (`gPlayer`, tested via
- * two `sub_8007B98` AABBs and `sub_8001688`) and, if so, plays a sound
+ * two `GetSpriteHitbox` AABBs and `AabbOverlaps`) and, if so, plays a sound
  * at the player's position (the `table+0x68` offset/dead-read idiom
  * matches sub_8007048's `_call_via_r4` call exactly, just keyed off
  * `part->field_0A` instead of `self->field_0A`) and marks itself
@@ -219,7 +219,7 @@ static inline struct collect_part *SpawnPickup(s32 kind, s32 x, s32 y)
     return sub_8025BAC(gEntitySpawner, 0x2b, kind, x, y, 0);
 }
 
-s32 sub_8007DBC(struct collect_part *part)
+s32 CheckSpritePickup(struct collect_part *part)
 {
     struct aabb a, b;
     struct collect_part *player;
@@ -228,10 +228,10 @@ s32 sub_8007DBC(struct collect_part *part)
     register u32 one asm("r6");
 
     if (!((flags >> 27) & (one = 1)) && ((flags >> 26) & one)) {
-        sub_8007B98(&a, part);
+        GetSpriteHitbox(&a, part);
         if (COLLECT_FLAGS(gPlayer) >> 7) {
-            sub_8007B98(&b, gPlayer);
-            if (sub_8001688(&b, &a)) {
+            GetSpriteHitbox(&b, gPlayer);
+            if (AabbOverlaps(&b, &a)) {
                 COLLECT_FLAGS(part) |= 8;
                 player = (struct collect_part *)gPlayer;
                 {

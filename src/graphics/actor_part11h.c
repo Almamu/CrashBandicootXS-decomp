@@ -6,7 +6,7 @@ extern void *_call_via_r1(void *arg0, void *fn);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *fn);
 extern void *gLevelLayers;
 
-/* The spatial-hash-grid pool manager struct `sub_8008F20` initializes
+/* The spatial-hash-grid pool manager struct `InitCrateList` initializes
  * and `actor_part12.c` operates on - see that file (and
  * `actor_part11.c`) for the full field writeup. */
 struct pool_manager {
@@ -20,7 +20,7 @@ struct pool_manager {
     void *freeListHead;
 };
 
-/* Same "extended screen box" filter shape as `sub_8008C80` (the plain
+/* Same "extended screen box" filter shape as `CullPartList` (the plain
  * 240x160 GBA screen region, in Q8, at the `gLevelLayers`
  * sub-object's own position), but instead of filtering into a second
  * array, iterates `manager`'s spatial hash grid buckets directly (from
@@ -62,7 +62,7 @@ struct pool_manager {
  * single-instruction `asm` (matching the ROM's own operand order
  * exactly, `"add %0, %1, %2"` with the base as `%1`) closes it without
  * disturbing anything else. */
-void sub_800944C(void *managerArg)
+void DrawCrateList(void *managerArg)
 {
     register struct pool_manager *manager asm("r3") = managerArg;
     s32 box[4];

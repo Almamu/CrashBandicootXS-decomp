@@ -49,15 +49,15 @@ struct MedalItemList {
 extern void *gEntityFlags;
 extern s32 CountCrateEntities(void *self, void *list);
 extern s32 CountCategoryCrates(u16 catIndex);
-extern void sub_8026ED0(void *self);
+extern void OperatorDelete(void *self);
 
 /* Wrapper: if bit 0 of `flags` is set, tears down `self` via
- * `sub_8026ED0` (the documented UI-overlay-manager-family destroy
+ * `OperatorDelete` (the documented UI-overlay-manager-family destroy
  * call). */
 void sub_802425C(void *self, s32 flags)
 {
     if (flags & 1) {
-        sub_8026ED0(self);
+        OperatorDelete(self);
     }
 }
 

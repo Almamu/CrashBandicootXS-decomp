@@ -77,7 +77,7 @@ struct anim_table
 struct gobj_vtable
 {
     u8 unk_00[0x10];
-    struct method m10; // 0x10 - returns the platform record the object stands on (sub_800A528)
+    struct method m10; // 0x10 - returns the platform record the object stands on (UpdateGroundSprite)
     u8 unk_18[0x20];
     struct method m38; // 0x38
     u8 unk_40[0x20];
@@ -97,7 +97,7 @@ struct gobj
     u8 flags2;          // 0x0D
     u8 unk_0E[0xA];
     struct gobj_vtable *vtable; // 0x18
-    void *platform;     // 0x1C - the last m10 record (sub_800A528/sub_800A590)
+    void *platform;     // 0x1C - the last m10 record (UpdateGroundSprite/sub_800A590)
     struct anim_table *anim; // 0x20
     u8 dir;             // 0x24
     u8 unk_25[3];
@@ -118,7 +118,7 @@ struct gobj
     s32 speedY;         // 0x64
     u8 unk_68;          // 0x68
     u8 unk_69[3];
-    s32 prevX;          // 0x6C - previous position (Q8), cached by sub_8009DF4
+    s32 prevX;          // 0x6C - previous position (Q8), cached by ApplySpriteVelocity
     s32 prevY;          // 0x70
     s32 unk_74;         // 0x74
     s32 type;           // 0x78
@@ -224,9 +224,9 @@ extern u8 gPlatformMoverVtable[];
 extern void *sub_8017A8C(void *self);
 extern void sub_8017A78(void *self, s32 flags);
 extern void sub_8019EBC(void *self, s32 a, u16 b, u16 c, s32 d);
-extern void *sub_8026EDC(u32 size);
-extern void sub_8009F90(void *self);
-extern void sub_8009F1C(void *self, s32 flags);
+extern void *OperatorNew(u32 size);
+extern void InitMovingSprite(void *self);
+extern void DestroyMovingSprite(void *self, s32 flags);
 extern s32 _call_via_r1(void *self, void *fn);
 extern s32 _call_via_r2(void *self, void *arg, void *fn);
 extern s32 _call_via_r3(void *self, void *arg1, s32 arg2, void *fn);
@@ -236,23 +236,23 @@ extern s32 sub_80233B4(void *arg);
 extern u8 IsBonusRoundDone(void *arg);
 extern u8 IsGemPathDone(void *arg);
 extern struct mover *sub_801961C(void *mem);
-extern void sub_8008E94(void *manager, void *value);
-extern void sub_80087C0(void *self);
-extern void sub_80087B4(void *self);
-extern void sub_800872C(void *self, s32 a);
+extern void AddToPartList(void *manager, void *value);
+extern void ResetSpriteFrameTimer(void *self);
+extern void ResetSpriteFrameIndex(void *self);
+extern void SetSpriteAnimDone(void *self, s32 a);
 extern u8 GetPaletteSlot(void *cache, u8 id);
-extern void sub_8007B98(struct aabb *dest, struct gobj *obj);
-extern u8 sub_8001688(struct aabb *a, struct aabb *b);
-extern s32 sub_8009EBC(struct gobj *obj);
-extern s32 sub_8009EC4(struct gobj *obj);
+extern void GetSpriteHitbox(struct aabb *dest, struct gobj *obj);
+extern u8 AabbOverlaps(struct aabb *a, struct aabb *b);
+extern s32 GetSpritePrevY(struct gobj *obj);
+extern s32 GetSpritePrevX(struct gobj *obj);
 extern s32 sub_800FDC8(s32 a, s32 b, s32 c, s32 d, s32 e);
 extern void sub_8007398(struct gobj *obj, s32 x, s32 y);
-extern void sub_8008044(struct gobj *obj);
-extern void sub_8009EA8(struct gobj *obj);
-extern void sub_800B6D0(void *self, void *part, struct vec3 *vec);
-extern void sub_800B7B0(void *self, void *part, struct vec3 *vec);
-extern void sub_800B8A8(void *self, s32 flags);
-extern void sub_800B8C8(void *self);
+extern void AdvanceSpriteAnim(struct gobj *obj);
+extern void SetSpritePrevPos(struct gobj *obj);
+extern void StartCtrlTargetMotionY(void *self, void *part, struct vec3 *vec);
+extern void StartCtrlTargetMotionX(void *self, void *part, struct vec3 *vec);
+extern void DestroyCtrl(void *self, s32 flags);
+extern void InitCtrl(void *self);
 
 void sub_801B2D8(struct gobj *self);
 
@@ -260,7 +260,7 @@ void sub_801B2D8(struct gobj *self);
  * into its `new`. */
 static inline struct gobj *GobjInit(struct gobj *self)
 {
-    sub_8009F90(self);
+    InitMovingSprite(self);
     self->vtable = (struct gobj_vtable *)gPlatformVtable;
     sub_801B2D8(self);
     return self;

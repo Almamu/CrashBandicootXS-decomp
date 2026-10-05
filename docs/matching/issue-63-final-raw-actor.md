@@ -45,7 +45,7 @@ effect, and a hookup to the shared text icon manager
 ## `InitContinuePrompt` (`src/graphics/actor_part87.c`) - matched, real C
 
 The constructor half: allocates and initializes the three BG scratch
-buffers (`sub_8026EDC`/`InitBgSetup`), loads their graphics packages,
+buffers (`OperatorNew`/`InitBgSetup`), loads their graphics packages,
 clears palette entry 0, builds the DISPCNT value (mode 0, 1D OBJ
 mapping, BG0/BG1/BG2 enabled), calls `InitContinuePromptGraphics` for the other setup
 half, then builds the BLDCNT/BLDALPHA alpha-blend value (BG2 -> BG0,
@@ -125,7 +125,7 @@ vram_upload_cursor`), hooks `self->icons` up to the global text icon
 manager (`gSmallFont`, `struct icon_manager` - already fully
 described in `include/icon_manager.h`), fires its 7th (index 6) OAM
 trampoline slot via `_call_via_r1` (the same `icon_slot` shape
-`sub_8011A1C`/`actor_part39.c` already established), clears
+`CollideWumpa`/`actor_part39.c` already established), clears
 `icons->field_118` and re-derives the cursor's limit from
 `icons->field_12c << 5` (`ReserveObjVram`), resets the shared tile cache
 (`gPaletteCache`, `struct palette_cache`) and pins its first four

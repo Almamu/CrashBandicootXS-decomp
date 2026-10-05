@@ -4,7 +4,7 @@
 #include "action_obj.h"
 
 /* Continuation of actor_part38b.c (issue #18's chunk) - covers
- * `sub_8015350` through `sub_80156EC`. Same "self" object family
+ * `SetActionCtrlMode` through `sub_80156EC`. Same "self" object family
  * documented at the top of actor_part18.c/actor_part28.c. */
 
 extern void *gAudioContext;
@@ -12,7 +12,7 @@ extern void *gPlayer;
 extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern s32 _call_via_r3(void *arg0, void *arg1, void *arg2, void *arg3);
-extern void sub_80122CC(void *self);
+extern void UpdatePlayerFacing(void *self);
 extern void sub_8014B54(void *self);
 extern void RequestRoomExit(void);
 
@@ -22,7 +22,7 @@ extern void RequestRoomExit(void);
  * `part+0x90` and the player's `+0x92`/`+0x94` (written twice - the ROM
  * really does re-derive the player pointer and store the same byte
  * there a second time). */
-void sub_8015350(void *selfArg, s32 arg1)
+void SetActionCtrlMode(void *selfArg, s32 arg1)
 {
     u8 *self = selfArg;
     s32 old;
@@ -230,7 +230,7 @@ void sub_8015558(void *selfArg)
 }
 
 /* Single-instruction store: `self+0x10 = val`. */
-void sub_80155A8(void *selfArg, void *val)
+void AttachActionCtrl(void *selfArg, void *val)
 {
     *(void **)((u8 *)selfArg + 0x10) = val;
 }
@@ -265,7 +265,7 @@ void sub_80155B8(void *selfArg)
 /* Bumps `frame`; once it reaches `frames` (or the part's `animDone` is
  * already set), stamps `unk_26 = 0xc`, fires the `m20`/`m50` methods
  * (actions `0x20`/`0x1f`), and resets `frame`/`frames` to `0`.
- * Always tail-calls `sub_80122CC`. */
+ * Always tail-calls `UpdatePlayerFacing`. */
 void sub_80155F8(void *selfArg)
 {
     struct act *self = selfArg;
@@ -288,7 +288,7 @@ void sub_80155F8(void *selfArg)
         self->frames = zero;
     }
 
-    sub_80122CC(self);
+    UpdatePlayerFacing(self);
 }
 
 /* Same shape as `sub_80155B8` - byte-identical ROM encoding at a

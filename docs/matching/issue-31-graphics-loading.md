@@ -22,7 +22,7 @@ functions" section already names this shape via `SpawnWoodenCrusher` and
 C before this pass). Every sibling shares the same skeleton, varying
 only in a handful of embedded constants:
 
-1. Allocates a part-object via `sub_8009ED0(arg0, arg1, arg2)` - only 3
+1. Allocates a part-object via `CreateMovingSprite(arg0, arg1, arg2)` - only 3
    of the caller's 4 `u16` arguments are actually consumed by the
    callee, but the ROM still marshals `arg3` into `r3` for the call
    (an artifact of the caller not narrowing its own argument list to
@@ -32,7 +32,7 @@ only in a handful of embedded constants:
    this instance) into the record reached through
    `gUnknown_030012D0`'s double pointer-to-pointer (one level deeper
    than the twin family's single dereference).
-3. Sets the part's `+0x29` bitfield low nibble from `sub_800815C`'s
+3. Sets the part's `+0x29` bitfield low nibble from `GetSpriteAnimPaletteSlot`'s
    result, via the same "compute address, then mask, then reload-AND-OR"
    idiom used throughout this ROM region.
 4. Calls `CreateEnemyCtrl()` for a header/context pointer, then fires a
@@ -48,7 +48,7 @@ only in a handful of embedded constants:
    `{u16 offsets[], u8 bytes[]}` pair, indexed by `arg3`, and packs them
    into `part->0x28`'s bits 4/5.
 7. Registers itself into `gUnknown_030012F0`'s manager
-   (`sub_8008E94`).
+   (`AddToPartList`).
 8. Overwrites `header->0x84` with a table pointer
    (`gSquidAnimMap` for this instance) and calls
    `SetEnemyState(header, 7)`.
@@ -57,7 +57,7 @@ Every one of the ~20 other still-raw functions in this chunk is a
 variant of this same shape with different embedded offsets/constants
 (and, for several, a different tail after step 8 - some do a
 second `header->0x84` rewrite plus a struct-field copy, some do the
-standard `sub_80087C0`/`sub_80087B4`/`sub_800872C` OAM trio instead of
+standard `ResetSpriteFrameTimer`/`ResetSpriteFrameIndex`/`SetSpriteAnimDone` OAM trio instead of
 steps 6-8, at least one variant reads a bit-27 test on `part->0x28`
 first). Left untouched this pass - see "Left raw" below.
 
@@ -67,7 +67,7 @@ first). Left untouched this pass - see "Left raw" below.
 verified (`La suma coincide`). `arg0` has to stay `u32` (not `u16` like
 its siblings) for the same reason documented for the twin family in
 `docs/matching.md`: the ROM only truncates it at its single call site
-inside `sub_8009ED0`'s argument marshalling, not up front in the
+inside `CreateMovingSprite`'s argument marshalling, not up front in the
 prologue.
 
 Three spots needed `asm volatile` rather than plain C, all confirmed by
@@ -242,13 +242,13 @@ at `SpawnCortexBoss`'s literal pool) and before
 
 ### `sub_8021668` - the popup family's OAM-trio tail variant
 
-Same `sub_8009ED0` constructor and `+0x20` table-pointer setup as
+Same `CreateMovingSprite` constructor and `+0x20` table-pointer setup as
 `SpawnSquid`, but a different tail: builds the part via the standard
-`sub_80087C0`/`sub_80087B4`/`sub_800872C` OAM trio (like
+`ResetSpriteFrameTimer`/`ResetSpriteFrameIndex`/`SetSpriteAnimDone` OAM trio (like
 `graphics_loading_21d80.c`'s family, not the twin family's lookup-table
 pack), looks up a frame-nibble value through a *double* dereference of
 its own just-stored `+0x20` table pointer (`*(*(part->0x20)) + 0x14`,
-not `sub_800815C`) plus `gPaletteCache`'s tile-asset cache via
+not `GetSpriteAnimPaletteSlot`) plus `gPaletteCache`'s tile-asset cache via
 `GetPaletteSlot`, unconditionally clears bits 4/5 of `part->0x28` (no OR -
 simpler than the twin family's lookup-table pack), fires a single
 `_call_via_r2` trampoline (not twice), and finishes with a three-step
@@ -288,7 +288,7 @@ reload, in ways the ROM's own codegen never does.
 ### The `gSpriteBankTable`-record family: `SpawnSeaweed`/`sub_80217D0`/`SpawnFlame`
 
 Same overall shape as `graphics_loading_21d80.c`'s `SpawnBodySlamPower` family
-(`sub_8008434` constructor, `+0x20` table offset, `sub_800815C`
+(`CreateSpriteObj` constructor, `+0x20` table offset, `GetSpriteAnimPaletteSlot`
 frame-nibble update), but two differences: they register into
 `gUnknown_030012F8`'s manager instead of `EC`, and (except
 `sub_80217D0`, which skips the OAM trio and the `+0x2d`/`+0xa` writes
@@ -325,8 +325,8 @@ range contiguous.
 ### `SpawnSealSpawner` - a `CreatePeriodicSpawner`-based constructor
 
 The one function in this run using a *different* constructor
-(`CreatePeriodicSpawner`, no arguments) instead of `sub_8009ED0`/`sub_8008434`.
-Calls `sub_8026EDC(0x28)` purely for a side effect first (return value
+(`CreatePeriodicSpawner`, no arguments) instead of `CreateMovingSprite`/`CreateSpriteObj`.
+Calls `OperatorNew(0x28)` purely for a side effect first (return value
 discarded, matching the "call purely for a side effect" idiom
 `docs/naming.md` documents), then builds the real object, wiring a
 fixed `SpawnSeal` callback into `+0x1c`, `+0x20 = 0x78`, `+0x24 = 0`,
@@ -390,8 +390,8 @@ pass's writeup carried forward:
   semantics read far enough to know it's not a popup-family sibling, but
   not worked through to a full C reconstruction.
 - **`sub_8021388`**, **`sub_8021480`**, **`SpawnCortexBoss`** genuinely
-  *are* 3 more popup-family instances (same `sub_8009ED0` constructor,
-  `+0x20` table offset, `sub_800815C`/`UPDATE_PART_FRAME_NIBBLE` nibble
+  *are* 3 more popup-family instances (same `CreateMovingSprite` constructor,
+  `+0x20` table offset, `GetSpriteAnimPaletteSlot`/`UPDATE_PART_FRAME_NIBBLE` nibble
   update, `gEntityFlags` two-bit collected pack, `_call_via_r2`
   trampoline via an allocated header, tag/manager-register tail -
   `sub_8021480`/`SpawnCortexBoss` skip the flags-mask step `sub_8021388`
@@ -439,7 +439,7 @@ the raw incoming values, immediately followed by a second pair from the
 truncated ones) really is a pure gcc-2.9 codegen quirk, not a semantics
 gap - but it turned out reachable from plain C after all, via a technique
 the fourth pass hadn't tried: writing the *entire* prologue-through-call
-(argument truncation, the double `r8`/`sb` store, and the `bl sub_8009ED0`
+(argument truncation, the double `r8`/`sb` store, and the `bl CreateMovingSprite`
 itself) as one hand-spelled `asm volatile` block with the raw incoming
 registers (`r0`-`r3`) pinned as inputs and `part`/`a1`/`a2`/the truncated
 `arg3` pinned as outputs - rather than trying to coax the compiler's own
@@ -534,7 +534,7 @@ from the ROM disassembly instead:
   `0x28`x`0x28` instead. Every `sub_80071E4`/`CreatePlatform` call still
   marshals `arg3` into `r3` even though neither function's real body
   reads a 4th argument - the same "pass everything, callee ignores the
-  rest" convention this whole ROM region's `sub_8009ED0` callers
+  rest" convention this whole ROM region's `CreateMovingSprite` callers
   establish.
 - **`sub_8021480`** - one more "two-line text popup" sibling (a bare
   `CreateTiny()` header call, no OAM trio, `flags |= 0x10` at the very
@@ -564,10 +564,10 @@ through fifth passes worked through. `tools/report_units.py`'s
 target for whoever picks this up next" and "out of scope" for the pass
 that wrote that note - this pass is that follow-up. Semantics for all
 12 are the numbered list at the top of this document, unchanged - every
-one allocates via `sub_8009ED0` (or, for `SpawnSeal`, the bigger
-`sub_800A604` constructor), hooks its own fixed offset into the
+one allocates via `CreateMovingSprite` (or, for `SpawnSeal`, the bigger
+`CreateGroundSprite` constructor), hooks its own fixed offset into the
 `gUnknown_030012D0`-rooted table at `+0x20`, updates its `+0x29` frame
-nibble via `sub_800815C`, packs the `gEntityFlags` "collected" bits
+nibble via `GetSpriteAnimPaletteSlot`, packs the `gEntityFlags` "collected" bits
 into `+0x28`, registers into `gUnknown_030012F0`, and closes with one of
 several tail shapes this cluster's earlier passes already catalogued
 (a single header write, a "second `header->0x84` rewrite plus a
@@ -697,9 +697,9 @@ of the original larger raw file, leaving this 13-function stretch as its
 own still-raw remainder (`tools/report_units.py`'s own comment on this
 range called it "most of the rest of the chunk 31 range"). All 13 are
 one more set of "two-line text popup" family instances, same numbered
-skeleton as documented at the top of this file: a `sub_8009ED0`-built
+skeleton as documented at the top of this file: a `CreateMovingSprite`-built
 part object, a `gUnknown_030012D0`-rooted `+0x20` table offset, a
-`sub_800815C` frame-nibble update, a `gEntityFlags` two-bit
+`GetSpriteAnimPaletteSlot` frame-nibble update, a `gEntityFlags` two-bit
 "collected" pack into `+0x28`, a `gUnknown_030012F0` manager
 registration, and a header (`CreateEnemyCtrl`) with one or two `_call_via_r2`
 trampoline calls - varying only the embedded offsets/constants and tail
@@ -724,7 +724,7 @@ being aliased into `r8` (the same "avoid an immediate-offset load off a
 high-register base" trick `SpawnSeal`/`SpawnCortexBoss` already
 established), a hand-spelled `asm volatile` island for the whole
 constructor-call prologue (raw-register truncation, the `arg3` stash
-into `r4`, and the `bl sub_8009ED0` itself), and the same
+into `r4`, and the `bl CreateMovingSprite` itself), and the same
 `register s32 one asm("r6")`-cached collected-bits-pack block
 `SpawnVulture` uses. Tail is a "second header->0x84 rewrite" variant
 that reuses one already-computed address (`hdr + 0x84`, pinned in `r1`)
@@ -783,7 +783,7 @@ worth noting that hadn't appeared in quite this form before:
   (`sl`/`sb`/`r8`) simultaneously, the widest register footprint of any
   function in this file - `SpawnFlamethrowerLabAssistant` additionally spills its `+0x28`
   record address to a 4-byte stack slot (`sub sp, #4`) across the
-  `sub_8008E94` manager-registration call, reloading it from `sp`
+  `AddToPartList` manager-registration call, reloading it from `sp`
   afterward rather than keeping it in a register the call might
   clobber.
 - **`SpawnPistonCrusher`/`SpawnWoodenCrusher`** share a "dependent `sub r0, #0x4b`"

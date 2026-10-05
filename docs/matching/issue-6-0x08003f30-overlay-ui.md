@@ -77,12 +77,12 @@ record that these two were reviewed but not attempted.
   `field_108` in between), and finally allocates 15 objects (5 each
   across `rowObjA`/`rowObjB`/`rowObjC`, the exact arrays `sub_8003F30`
   above reads) in a `sl`/`sb`/`r8`-heavy loop, each one built via the
-  standard `sub_8026EDC(0x40)`/`sub_8008904` alloc, a `gUnknown_030012D0`
+  standard `OperatorNew(0x40)`/`InitUiSpriteObj` alloc, a `gUnknown_030012D0`
   header-table pointer at three new offsets (`0xc0<<1`/`0xc6<<1`/
   `0xde<<1`, extending `docs/rom_map.md`'s "five confirmed
   header-relative offsets" note to eight), a fixed `type` byte (`1`/
-  `2`/`0` respectively) at `+0x2d`, the standard `sub_80087C0`/
-  `sub_80087B4`/`sub_800872C` OAM trio, and a `sub_800815C`-driven
+  `2`/`0` respectively) at `+0x2d`, the standard `ResetSpriteFrameTimer`/
+  `ResetSpriteFrameIndex`/`SetSpriteAnimDone` OAM trio, and a `GetSpriteAnimPaletteSlot`-driven
   `field_29` nibble update - then closes with five fixed Q8 width/
   height rects written directly through the `sp`-cached object
   pointers.

@@ -9,7 +9,7 @@ extern u8 *gLevelState;
 extern void *gUnknown_030012E8;
 extern void *gUnknown_030012F8;
 
-extern struct popup_part *sub_8008434(u16 arg0, u16 arg1, u16 arg2, u16 arg3);
+extern struct popup_part *CreateSpriteObj(u16 arg0, u16 arg1, u16 arg2, u16 arg3);
 extern struct enemy_ctrl *sub_8017FE8(void *mem);
 extern u8 GetPaletteSlot(void *cache, s32 recordId);
 extern u8 IsBonusRoundDone(void *self);
@@ -63,28 +63,28 @@ static inline void SetFrameNibble(struct popup_part *part, s32 frame)
     part->frameNibble = frame;
 }
 
-/* Popup-family variant: builds a sub_8009ED0 part on animation table
+/* Popup-family variant: builds a CreateMovingSprite part on animation table
  * +0x168 at (arg1, arg2) in Q8, takes its frame from the tile cache
  * record of the first animation, clears the collected bits, attaches a
  * newly allocated sub_8017FE8 header, then shows it (flags: clear bits 7/2/6, set
  * bit 4) and registers it with gUnknown_030012F0's manager. */
 void sub_8021668(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    struct popup_part *part = sub_8009ED0(arg0, arg1, arg2, arg3);
+    struct popup_part *part = CreateMovingSprite(arg0, arg1, arg2, arg3);
     struct enemy_ctrl *hdr;
 
     part->anim = POPUP_ANIM(0x168);
     part->base.x = arg1 << 8;
     part->base.y = arg2 << 8;
     SetPartTag(part, 0);
-    sub_80087C0(part);
-    sub_80087B4(part);
-    sub_800872C(part, 0);
+    ResetSpriteFrameTimer(part);
+    ResetSpriteFrameIndex(part);
+    SetSpriteAnimDone(part, 0);
     SetFrameNibble(part, GetPaletteSlot(gPaletteCache,
         ((struct anim_table_21668 *)part->anim)->records->tileRecord));
     part->flipX = 0;
     part->unk_28_5 = 0;
-    hdr = sub_8017FE8(sub_8026EDC(0x24));
+    hdr = sub_8017FE8(OperatorNew(0x24));
     part->hdr = hdr;
     POPUP_ATTACH(hdr, part);
     part->base.field_0A = 1;
@@ -92,58 +92,58 @@ void sub_8021668(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     PART_FLAGS(part)->bit2 = 0;
     PART_FLAGS(part)->bit6 = 0;
     PART_FLAGS(part)->bit4 = 1;
-    sub_8008E94(gUnknown_030012F0, part);
+    AddToPartList(gUnknown_030012F0, part);
 }
 
-/* Builds a sub_8008434 sprite part on animation table +0x21c, resets
+/* Builds a CreateSpriteObj sprite part on animation table +0x21c, resets
  * its OAM state and frame nibble, clears flags bits 7 and 2 and
  * registers it with gUnknown_030012F8's manager. */
 void SpawnSeaweed(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    struct popup_part *part = sub_8008434(arg0, arg1, arg2, arg3);
+    struct popup_part *part = CreateSpriteObj(arg0, arg1, arg2, arg3);
 
     part->anim = POPUP_ANIM(0x21c);
     SetPartTag(part, 0);
-    sub_80087C0(part);
-    sub_80087B4(part);
-    sub_800872C(part, 0);
-    part->frameNibble = sub_800815C(part);
+    ResetSpriteFrameTimer(part);
+    ResetSpriteFrameIndex(part);
+    SetSpriteAnimDone(part, 0);
+    part->frameNibble = GetSpriteAnimPaletteSlot(part);
     PART_FLAGS(part)->bit7 = 0;
     PART_FLAGS(part)->bit2 = 0;
     part->base.field_0A = 0;
-    sub_8008E94(gUnknown_030012F8, part);
+    AddToPartList(gUnknown_030012F8, part);
 }
 
 /* SpawnSeaweed without the animation reset. */
 void sub_80217D0(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    struct popup_part *part = sub_8008434(arg0, arg1, arg2, arg3);
+    struct popup_part *part = CreateSpriteObj(arg0, arg1, arg2, arg3);
 
     part->anim = POPUP_ANIM(0x21c);
-    part->frameNibble = sub_800815C(part);
+    part->frameNibble = GetSpriteAnimPaletteSlot(part);
     PART_FLAGS(part)->bit7 = 0;
     PART_FLAGS(part)->bit2 = 0;
     part->base.field_0A = 0;
-    sub_8008E94(gUnknown_030012F8, part);
+    AddToPartList(gUnknown_030012F8, part);
 }
 
-/* Builds a sub_8008434 sprite part on animation table +0x210, resets
+/* Builds a CreateSpriteObj sprite part on animation table +0x210, resets
  * its OAM state and frame nibble, clears flags bits 7 and 2 and
  * registers it with gUnknown_030012F8's manager. */
 void SpawnFlame(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
-    struct popup_part *part = sub_8008434(arg0, arg1, arg2, arg3);
+    struct popup_part *part = CreateSpriteObj(arg0, arg1, arg2, arg3);
 
     part->anim = POPUP_ANIM(0x210);
     SetPartTag(part, 0);
-    sub_80087C0(part);
-    sub_80087B4(part);
-    sub_800872C(part, 0);
-    part->frameNibble = sub_800815C(part);
+    ResetSpriteFrameTimer(part);
+    ResetSpriteFrameIndex(part);
+    SetSpriteAnimDone(part, 0);
+    part->frameNibble = GetSpriteAnimPaletteSlot(part);
     PART_FLAGS(part)->bit7 = 0;
     PART_FLAGS(part)->bit2 = 0;
     part->base.field_0A = 0;
-    sub_8008E94(gUnknown_030012F8, part);
+    AddToPartList(gUnknown_030012F8, part);
 }
 
 /* Plain `CreatePlatform` trampoline (docs/rom_map.md; same callee as
@@ -210,7 +210,7 @@ void SpawnSealSpawner(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     struct periodic_spawner *obj;
     s32 zero;
 
-    obj = CreatePeriodicSpawner(sub_8026EDC(0x28));
+    obj = CreatePeriodicSpawner(OperatorNew(0x28));
     zero = 0;
     obj->callback = SpawnSeal;
     obj->unk_20 = 0x78;
@@ -218,7 +218,7 @@ void SpawnSealSpawner(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     obj->base.x = arg1 << 8;
     obj->base.y = arg2 << 8;
     obj->base.flags |= 0x10;
-    sub_8008E94(gUnknown_030012E8, obj);
+    AddToPartList(gUnknown_030012E8, obj);
 }
 
 /* Plain `CreateCrate` entity-constructor trampoline (docs/rom_map.md;
@@ -242,7 +242,7 @@ void SpawnTimeCrate1(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 }
 
 /* Plain `CreateCrate` trampoline, type `0xf`. */
-void sub_8021AB8(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
+void SpawnSlotCrate(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     CreateCrate(arg0, arg1, arg2, arg3, 0xf);
 }

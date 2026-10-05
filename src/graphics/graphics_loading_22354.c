@@ -50,7 +50,7 @@ extern struct text_list gCutscenes[];
 extern void FreeVramDmaQueue(void);
 extern void DestroyOamBuffer(void *self, u32 flags);
 extern void DestroyObjVramCursor(void *self, u32 flags);
-extern void sub_8026ED0(void *p);
+extern void OperatorDelete(void *p);
 /* Takes no argument (audio_context.c), but the ROM loads the audio
  * context into r0 before calling it anyway. */
 extern void DisableMusicVCountIrq(void *audio);
@@ -89,7 +89,7 @@ void sub_8022354(void *self, s32 flags)
     if (gObjVramCursor != NULL)
         DestroyObjVramCursor(gObjVramCursor, 3);
     if (gUnknown_03001304 != NULL)
-        sub_8026ED0(gUnknown_03001304);
+        OperatorDelete(gUnknown_03001304);
     DisableMusicVCountIrq(gAudioContext);
     if (gAudioContext != NULL)
         DestroyAudioContext(gAudioContext, 3);
@@ -109,7 +109,7 @@ void sub_8022354(void *self, s32 flags)
         DestroyPaletteCycles(gPaletteCycles, 3);
     gLevelStateSingleton = NULL;
     if (flags & 1)
-        sub_8026ED0(self);
+        OperatorDelete(self);
 }
 
 struct text_vec

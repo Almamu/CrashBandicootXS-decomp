@@ -8,7 +8,7 @@
  * `self+0xc` convention as actor_part20.c/20b.c). `other`/`part`'s
  * `+0x38`/`+0xc`/`+8` fields match the same `struct actor`-shaped
  * header used by every other "part" object in this ROM region
- * (compare `sub_8007DBC`'s `part->flags`/`part->field_08` bitmap-set
+ * (compare `CheckSpritePickup`'s `part->flags`/`part->field_08` bitmap-set
  * in actor_part2.c) - kept as raw offsets rather than `struct actor`
  * itself since this object is bigger than the 0x1c-byte `struct actor`
  * (its own `+0x38` byte is read directly here), matching the same
@@ -33,8 +33,8 @@ struct level_layers {
 extern struct level_layers *gLevelLayers;
 extern void *gEntityFlags;
 extern s32 _call_via_r3(void *addr, void *arg1, void *arg2, void *fn);
-extern void sub_800B8A8(void *self, s32 flags);
-extern void sub_800B8C8(void *self);
+extern void DestroyCtrl(void *self, s32 flags);
+extern void InitCtrl(void *self);
 
 /* A two-state (`obj+8`: 0 then 1 then 2) "charge" handler. State 0
  * fires the usual table-trampoline pair (action 8) and advances to
@@ -97,23 +97,23 @@ end:
 }
 
 /* Sets `self+0xc`'s table pointer to `gStaticData_087E442C`, then
- * tail-calls `sub_800B8A8` - same double-set pattern as
+ * tail-calls `DestroyCtrl` - same double-set pattern as
  * `sub_8017A78`/`sub_8017FD4`. */
 void sub_8018858(void *selfArg, s32 flags)
 {
     u8 *self = selfArg;
 
     *(void **)(self + 0xc) = gStaticData_087E442C;
-    sub_800B8A8(self, flags);
+    DestroyCtrl(self, flags);
 }
 
-/* Resets via `sub_800B8C8`, then re-points the table at
+/* Resets via `InitCtrl`, then re-points the table at
  * `gStaticData_087E442C`. Returns `self`. */
 void *sub_801886C(void *selfArg)
 {
     u8 *self = selfArg;
 
-    sub_800B8C8(self);
+    InitCtrl(self);
     *(void **)(self + 0xc) = gStaticData_087E442C;
     return self;
 }
@@ -121,7 +121,7 @@ void *sub_801886C(void *selfArg)
 /* While `other+0x38` is set: ORs bit 0 into `other+0xc`'s flags, then
  * (unless `other+8`'s id is the sentinel `0xFFFF`) sets bit
  * `other+8 & 0x1f` in the `gEntityFlags+0x108` word-indexed
- * bitmap - the same bitmap-set idiom `sub_8007DBC` uses via
+ * bitmap - the same bitmap-set idiom `CheckSpritePickup` uses via
  * `part->field_08`. The first argument is taken but never read
  * anywhere in this function's ROM body.
  *

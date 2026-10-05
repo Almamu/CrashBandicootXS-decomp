@@ -60,9 +60,9 @@ extern void *_call_via_r1(void *arg0, void *fn);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern void ShowBg2(void);
 extern s32 RandRange(s32 arg0);
-extern void *sub_8026EC0(u32 size);
-extern void sub_8026EB4(void *ptr);
-extern void *sub_8026EDC(s32 size);
+extern void *OperatorNewArray(u32 size);
+extern void OperatorDeleteArray(void *ptr);
+extern void *OperatorNew(s32 size);
 extern void *InitStarfield(void *arg0);
 extern void LoadTaggedAsset(void *asset, void *dest);
 extern void LoadTaggedAssetBuffered(void *self, void *asset, void *dest);
@@ -80,7 +80,7 @@ extern void FreeCategorySpriteSheet(void);
 extern void FlushVramDmaQueue(void);
 extern s32 QueueVramDmaTransfer(void *src, void *dest, u16 size, u16 unit);
 extern void UpdateKeys(void *arg0);
-extern void sub_8026ED0(void *self);
+extern void OperatorDelete(void *self);
 extern s32 __modsi3(void *self, s32 arg1);
 extern void DestroyStarfield(void *self, s32 arg1);
 extern void InitActorPart(void *self, s32 a, s32 b, s32 c, s32 d);
@@ -638,7 +638,7 @@ loop:
  * (`gDispcnt`) and commits it (`CommitDispcnt`), zeroes all 256
  * BG palette entries (`0x05000000`), sets REG_BLDCNT/REG_BLDY to a full
  * fade (0xff/0x10), and - only if `flag`'s bit 0 is set - frees the
- * scratch object via `sub_8026ED0`. The palette clear needs its zero
+ * scratch object via `OperatorDelete`. The palette clear needs its zero
  * in a local assigned before the pointer (the ROM materializes it
  * first). */
 void DestroyTitleScreen(u32 *self, u32 flag)
@@ -658,7 +658,7 @@ void DestroyTitleScreen(u32 *self, u32 flag)
     REG_BLDCNT = 0xff;
     REG_BLDY = 0x10;
     if (flag & 1)
-        sub_8026ED0(self);
+        OperatorDelete(self);
 }
 
 /* The part's method table as `RunCompanyLogos` uses it (gcc 2.x C++
@@ -725,7 +725,7 @@ void RunCompanyLogos(u32 *self)
     }
     LoadVvLogoGraphics(self);
     InitVvLogoPieces(self);
-    bgObj = InitStarfield(sub_8026EDC(0x14));
+    bgObj = InitStarfield(OperatorNew(0x14));
     LoadUniversalLogoBg(self);
     for (i = 0; i <= 0x3b; i++)
     {
@@ -866,9 +866,9 @@ void RunCompanyLogos(u32 *self)
     if (bgObj != NULL)
         DestroyStarfield(bgObj, 3);
     if (SLOT_SYSTEM(self)->scratch != NULL)
-        sub_8026EB4(SLOT_SYSTEM(self)->scratch);
+        OperatorDeleteArray(SLOT_SYSTEM(self)->scratch);
     if (SLOT_SYSTEM(self)->frames != NULL)
-        sub_8026EB4(SLOT_SYSTEM(self)->frames);
+        OperatorDeleteArray(SLOT_SYSTEM(self)->frames);
     FreeSpriteFrameCache();
     FreeSpriteFrameOamQueue();
     FreeObjTileFreeList();
@@ -903,12 +903,12 @@ void LoadVvLogoGraphics(u32 *self)
         u8 **dst = &SLOT_SYSTEM(self)->frames;
         void *buf;
 
-        *dst = buf = sub_8026EC0(size);
+        *dst = buf = OperatorNewArray(size);
         LoadTaggedAsset(PKG_A->tileAsset, buf);
     }
     {
         u8 **dst = &SLOT_SYSTEM(self)->scratch;
-        *dst = sub_8026EC0(0x1000);
+        *dst = OperatorNewArray(0x1000);
     }
 }
 

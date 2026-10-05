@@ -62,10 +62,10 @@
  * level-state record's (`self->0x18`) own `+8` "widget kind" field
  * (the same field `PlayRoom` dispatched its own widget-construction
  * switch on) - if it's `1`, re-stamps the player's `+0x2d` byte to
- * `0x1f`, refreshes its OAM entry (`sub_80087C0`/`sub_80087B4`/
- * `sub_800872C`), and sets the 0x18-byte scratch block's `+0x14` to
+ * `0x1f`, refreshes its OAM entry (`ResetSpriteFrameTimer`/`ResetSpriteFrameIndex`/
+ * `SetSpriteAnimDone`), and sets the 0x18-byte scratch block's `+0x14` to
  * `2`. Either way, recomputes the player's `+0x29` low nibble from
- * `sub_800815C(player)` (the "negative-constant bit-clear idiom",
+ * `GetSpriteAnimPaletteSlot(player)` (the "negative-constant bit-clear idiom",
  * `docs/matching.md`) and fires `LoadPaletteSlot` against the tile-asset
  * cache using a `player+0x20`-table lookup indexed by `player+0x2d*7`
  * (0x1c-byte stride), flushes the scratch block (`SnapCamera`) and
@@ -81,7 +81,7 @@
  * cache call, and pings `gHud` (`ShowHudCounters`).
  *
  * Either way, this converges on flushing the four HUD ring-buffer
- * managers (`sub_8008C80` on `030012F4`/`EC`/`F0`/`F8`), a
+ * managers (`CullPartList` on `030012F4`/`EC`/`F0`/`F8`), a
  * `UpdateRoomFrame(self)` VRAM/OAM refresh, and the fade-cluster
  * `SetDispcntMode(0)`/`ShowObj`/`CommitDispcnt`/`CommitBlendRegs` reset
  * quartet, landing at the **wait loop** (`_08023E5A`/`_08023D7C`,
@@ -92,9 +92,9 @@
  * (`sub_802423C`/`UpdateRoomFrame`, a `RunPauseMenu` input-driven mini-
  * dispatch that can early-exit this whole function with return value
  * `1` or `2` via `ResumeRoomAfterPause`'s level-end teardown, a `gUnknown_
- * 030007E0` input-flag-gated `ShowHudCounters` ping, `sub_800891C` on
+ * 030007E0` input-flag-gated `ShowHudCounters` ping, `UpdatePartList` on
  * three ring-buffer managers, `_call_via_r1` trampoline probes against
- * the player's own `+0x18`/`+0x38`-`/+0x18` tables, `sub_80091D4` on
+ * the player's own `+0x18`/`+0x38`-`/+0x18` tables, `UpdateCrateList` on
  * `gCrateList`, `UpdateHudSlides`, and a `gLevelState+0x8c`-
  * gated `TickLevelClock` call) before looping back. Once ready, fires the
  * fade (`FadePaletteToBlack`) - the concrete trigger `rom_map.md` originally
@@ -111,7 +111,7 @@
  * issue-12-physics-collision.md`), then calls `sub_8023140(gUnknown_
  * 030012C0, count)`. **Final tail** (`_08023F92`, also every early-out
  * above): flushes all five hot IWRAM widget-manager globals
- * (`sub_8008CEC` on `030012E8`/`EC`/`F0`/`F8`/`F4`, `sub_8009914` on
+ * (`ClearPartList` on `030012E8`/`EC`/`F0`/`F8`/`F4`, `ResetCrateList` on
  * `0300130C`), resets the fade cluster's own bitfield accessors
  * (`HideBg0`/`HideBg1`/`HideBg2`/`HideBg3`/
  * `HideObj`/`WaitForVBlank`/`CommitDispcnt`), and returns whatever
@@ -303,10 +303,10 @@ extern void AddPaletteCycle(void *queue, u16 *targets, u16 *lists, s32 rate, s32
                 (struct fx_direction){ (dir) })
 extern void SetupRoomBlend(struct gl_self *self);
 extern void sub_802423C(void);
-extern void sub_80087C0(void *part);
-extern void sub_80087B4(void *part);
-extern void sub_800872C(void *part, s32 arg);
-extern s32 sub_800815C(void *part);
+extern void ResetSpriteFrameTimer(void *part);
+extern void ResetSpriteFrameIndex(void *part);
+extern void SetSpriteAnimDone(void *part, s32 arg);
+extern s32 GetSpriteAnimPaletteSlot(void *part);
 extern void LoadPaletteSlot(void *cache, s32 slot, s32 recordId);
 extern void SnapCamera(void *scratch);
 extern void ResetLevelLayers(void *box);
@@ -318,7 +318,7 @@ extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
 extern s32 _call_via_r2(void *self, s32 arg, void *fn);
 extern s32 _call_via_r1(void *self, void *fn);
 extern void ShowHudCounters(void *arg);
-extern void sub_8008C80(void *mgr);
+extern void CullPartList(void *mgr);
 extern void UpdateRoomFrame(struct gl_self *self);
 extern void SetDispcntMode(s32 arg);
 extern void SetObjMapping1D(void);
@@ -328,8 +328,8 @@ extern void CommitBlendRegs(void);
 extern void UpdateKeys(void *arg);
 extern s32 RunPauseMenu(void);
 extern void ResumeRoomAfterPause(struct gl_self *self);
-extern void sub_800891C(void *mgr);
-extern void sub_80091D4(void *list);
+extern void UpdatePartList(void *mgr);
+extern void UpdateCrateList(void *list);
 extern void UpdateHudSlides(void *arg);
 extern void TickLevelClock(struct gl_level *level);
 extern u8 IsRoomExitRequested(void);
@@ -338,8 +338,8 @@ extern s32 *GetBonusPlatform(void *level);
 extern s32 sub_801B29C(s32 *arg);
 extern void SetCheckpoint(void *level, s32 arg, s32 *point);
 extern void sub_8023140(void *level, s32 count);
-extern void sub_8008CEC(void *mgr);
-extern void sub_8009914(void *list);
+extern void ClearPartList(void *mgr);
+extern void ResetCrateList(void *list);
 extern void HideBg0(void);
 extern void HideBg1(void);
 extern void HideBg2(void);
@@ -376,9 +376,9 @@ static inline void SpawnNearPlayer(s32 x, s32 y)
 static inline void RestartPlayerAnim(struct gl_player *p, s32 anim)
 {
     p->animIndex = anim;
-    sub_80087C0(p);
-    sub_80087B4(p);
-    sub_800872C(p, 0);
+    ResetSpriteFrameTimer(p);
+    ResetSpriteFrameIndex(p);
+    SetSpriteAnimDone(p, 0);
 }
 
 static inline void RefreshPlayerTiles(void)
@@ -437,7 +437,7 @@ s32 RunRoom(struct gl_self *self)
         RestartPlayerAnim(gPlayer, 0x1F);
         gCamera->unk_14 = 2;
     }
-    gPlayer->frameNibble = sub_800815C(gPlayer);
+    gPlayer->frameNibble = GetSpriteAnimPaletteSlot(gPlayer);
     RefreshPlayerTiles();
     SnapCamera(gCamera);
     ResetLevelLayers(gLevelLayers);
@@ -458,10 +458,10 @@ s32 RunRoom(struct gl_self *self)
             ShowHudCounters(gHud);
         }
     }
-    sub_8008C80(gUnknown_030012F4);
-    sub_8008C80(gUnknown_030012EC);
-    sub_8008C80(gUnknown_030012F0);
-    sub_8008C80(gUnknown_030012F8);
+    CullPartList(gUnknown_030012F4);
+    CullPartList(gUnknown_030012EC);
+    CullPartList(gUnknown_030012F0);
+    CullPartList(gUnknown_030012F8);
     UpdateRoomFrame(self);
     SetDispcntMode(0);
     SetObjMapping1D();
@@ -498,14 +498,14 @@ s32 RunRoom(struct gl_self *self)
         }
         if (gKeys.held & 4)
             ShowHudCounters(gHud);
-        sub_800891C(gUnknown_030012F4);
-        sub_800891C(gUnknown_030012E8);
+        UpdatePartList(gUnknown_030012F4);
+        UpdatePartList(gUnknown_030012E8);
         if ((u8)PMF_CALL(gPlayer, m38))
             PMF_CALL(gPlayer, m18);
-        sub_80091D4(gCrateList);
-        sub_800891C(gUnknown_030012EC);
-        sub_800891C(gUnknown_030012F0);
-        sub_800891C(gUnknown_030012F8);
+        UpdateCrateList(gCrateList);
+        UpdatePartList(gUnknown_030012EC);
+        UpdatePartList(gUnknown_030012F0);
+        UpdatePartList(gUnknown_030012F8);
         UpdateHudSlides(gHud);
         if (gLevelState->timeTrial)
             TickLevelClock(gLevelState);
@@ -568,12 +568,12 @@ fade:
             sub_8023140(gLevelState, count);
         }
     }
-    sub_8008CEC(gUnknown_030012E8);
-    sub_8009914(gCrateList);
-    sub_8008CEC(gUnknown_030012EC);
-    sub_8008CEC(gUnknown_030012F0);
-    sub_8008CEC(gUnknown_030012F8);
-    sub_8008CEC(gUnknown_030012F4);
+    ClearPartList(gUnknown_030012E8);
+    ResetCrateList(gCrateList);
+    ClearPartList(gUnknown_030012EC);
+    ClearPartList(gUnknown_030012F0);
+    ClearPartList(gUnknown_030012F8);
+    ClearPartList(gUnknown_030012F4);
     HideBg0();
     HideBg1();
     HideBg2();

@@ -51,7 +51,7 @@ r1/r2/r3/r4" thunks), like issue #21's `input_ctrl`.
   - `CheckPlatformContact` (+0x0C) gates `sub_801AB98` on the player
     (`gPlayer`) being active and within 0x7FFF on both axes.
   - `sub_801AB98` resolves player-vs-object contact: two AABBs from
-    `sub_8007B98`, overlap via `sub_8001688`, then a classification into
+    `GetSpriteHitbox`, overlap via `AabbOverlaps`, then a classification into
     push-left/right (1/2), land-on-top (8) or hit-from-below (4) using the
     player's anim-record collision box (`anim_rec` +4..+9) and the
     `sub_800FDC8` edge probe; it then moves the player (`sub_8007398`),
@@ -73,7 +73,7 @@ r1/r2/r3/r4" thunks), like issue #21's `input_ctrl`.
   distance); kinds 5/6/7 add timed behaviour (see the function comment).
   `MovePlayerWithPlatform` drags the player along by the owner's per-frame
   displacement while `active`. `sub_801B77C`/`sub_801B7A0` (+0x64/+0x5C)
-  resolve a record and tail-call `sub_800B6D0`/`sub_800B7B0`.
+  resolve a record and tail-call `StartCtrlTargetMotionY`/`StartCtrlTargetMotionX`.
 
 UNUSED (no `bl`/`.4byte` in `asm/`, no C caller, no Thumb pointer in the
 ROM): `sub_801A870`, `sub_801A874`, `sub_801B2E4` (inlined instead),

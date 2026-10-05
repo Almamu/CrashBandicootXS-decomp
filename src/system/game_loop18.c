@@ -57,7 +57,7 @@ struct AudioContext;
  * halfword index `flagIdx` in its own `+0x10` table pointer - i.e. "is
  * flag `flagIdx` set on any list item's flag table". Returns as soon as
  * a set flag is found (or a table read comes back nonzero), otherwise
- * 0. `sub_8024428`/`34`/`40`/`4C`/`58` below are thin wrappers baking in
+ * 0. `LevelHasYellowGemEntity`/`34`/`40`/`4C`/`58` below are thin wrappers baking in
  * a constant `flagIdx`.
  *
  * `flagIdx` is kept in `ip`/r12 for the whole function (via the
@@ -152,26 +152,26 @@ s32 IsInBonusRoom(struct level_progress *self)
     return result;
 }
 
-/* sub_8024428/34/40/4C/58: five thin wrappers over LevelHasEntityType with
+/* LevelHasYellowGemEntity/34/40/4C/58: five thin wrappers over LevelHasEntityType with
  * the medal "flag index" constant baked in (0xc, 9, 0xb, 0xa, 8 -
  * plausibly per-medal-type slot indices into the halfword table
  * LevelHasEntityType reads). */
-s32 sub_8024428(s32 idx)
+s32 LevelHasYellowGemEntity(s32 idx)
 {
     return LevelHasEntityType(idx, 0xc);
 }
 
-s32 sub_8024434(s32 idx)
+s32 LevelHasBlueGemEntity(s32 idx)
 {
     return LevelHasEntityType(idx, 9);
 }
 
-s32 sub_8024440(s32 idx)
+s32 LevelHasGreenGemEntity(s32 idx)
 {
     return LevelHasEntityType(idx, 0xb);
 }
 
-s32 sub_802444C(s32 idx)
+s32 LevelHasRedGemEntity(s32 idx)
 {
     return LevelHasEntityType(idx, 0xa);
 }

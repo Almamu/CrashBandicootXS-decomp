@@ -108,7 +108,7 @@ extern void sub_8023120(struct level_state *self, s32 n);
 extern void SetMaskAssistDeaths(struct level_state *self, s32 n);
 extern void sub_8023110(struct level_state *self, s32 n);
 extern void *MemCopy32(void *dest, void *src, s32 size);
-extern void *sub_8026EDC(u32 size);
+extern void *OperatorNew(u32 size);
 extern void *InitTitleScreen(void *mem);
 extern s32 RunTitleScreen(void *gfx);
 extern void DestroyTitleScreen(void *gfx, u32 flag);
@@ -209,7 +209,7 @@ void UpdateGameFrame(struct level_state *self)
         s32 result;
 
     load:
-        gfx = InitTitleScreen(sub_8026EDC(0x220));
+        gfx = InitTitleScreen(OperatorNew(0x220));
         result = RunTitleScreen(gfx);
         if (gfx != NULL)
             DestroyTitleScreen(gfx, 3);
@@ -263,7 +263,7 @@ void UpdateGameFrame(struct level_state *self)
         self->unk_e0 = 0;
         status = 1;
         self->crateTotal = CountLevelCrates(self->level);
-        gHud = InitHud(sub_8026EDC(0x68));
+        gHud = InitHud(OperatorNew(0x68));
         sub_8028568(gHud, self->crateTotal);
         ClearBonusRoundDone(self);
         ClearInBonusRound(self);
@@ -283,7 +283,7 @@ void UpdateGameFrame(struct level_state *self)
             if (IsInBonusRound(self) || IsInGemPath(self))
             {
                 self->savedBitmap = *bitmap;
-                *bitmap = sub_8025A5C(sub_8026EDC(0x408));
+                *bitmap = sub_8025A5C(OperatorNew(0x408));
                 if (IsInBonusRound(self))
                 {
                     self->savedWumpa = GetWumpa(self);

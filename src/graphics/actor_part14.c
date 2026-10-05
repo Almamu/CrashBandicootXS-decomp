@@ -2,65 +2,65 @@
 #include "actor.h"
 #include "gfx_part.h"
 
-extern s32 sub_8008350(void *arg0);
-extern void *sub_8026EDC(s32 size);
-extern struct actor *sub_8009F90(struct actor *part);
-extern void sub_8009F1C(struct actor *self, u32 arg1);
-extern u8 gStaticData_087E3D8C[];
-extern void sub_800A664(void *selfArg);
+extern s32 DrawSpriteObj(void *arg0);
+extern void *OperatorNew(s32 size);
+extern struct actor *InitMovingSprite(struct actor *part);
+extern void DestroyMovingSprite(struct actor *self, u32 arg1);
+extern u8 gGroundSpriteVtable[];
+extern void ResetGroundSprite(void *selfArg);
 
-/* Void tail-call wrapper around the already-matched `sub_8008350`. */
-void sub_800A5F4(void *arg0)
+/* Void tail-call wrapper around the already-matched `DrawSpriteObj`. */
+void DrawGroundSprite(void *arg0)
 {
-    sub_8008350(arg0);
+    DrawSpriteObj(arg0);
 }
 
 /* Constant-6 stub. */
-s32 sub_800A600(void)
+s32 GetGroundSpriteClassId(void)
 {
     return 6;
 }
 
-/* Same shape as `sub_8009ED0`/etc.: allocates a bigger (0x80-byte)
- * part-object, re-initializes it via `sub_8009F90`, overwrites its
- * table with `gStaticData_087E3D8C`, clears it via `sub_800A664`
+/* Same shape as `CreateMovingSprite`/etc.: allocates a bigger (0x80-byte)
+ * part-object, re-initializes it via `InitMovingSprite`, overwrites its
+ * table with `gGroundSpriteVtable`, clears it via `ResetGroundSprite`
  * below, then sets `field_08` and the Q8 `x`/`y` position from the
  * three `u16` arguments. */
-struct actor *sub_800A604(u16 arg0, u16 arg1, u16 arg2)
+struct actor *CreateGroundSprite(u16 arg0, u16 arg1, u16 arg2)
 {
-    struct actor *part = sub_8026EDC(0x80);
+    struct actor *part = OperatorNew(0x80);
 
-    sub_8009F90(part);
-    part->table = gStaticData_087E3D8C;
-    sub_800A664(part);
+    InitMovingSprite(part);
+    part->table = gGroundSpriteVtable;
+    ResetGroundSprite(part);
     part->field_08 = arg0;
     part->x = (s32)arg1 << 8;
     part->y = (s32)arg2 << 8;
     return part;
 }
 
-/* Overwrites `self->table` with `gStaticData_087E3D8C`, then tail-
- * calls `sub_8009F1C` - which unconditionally overwrites `table`
- * again with `gStaticData_087E3D14` and fires its own trampoline, so
+/* Overwrites `self->table` with `gGroundSpriteVtable`, then tail-
+ * calls `DestroyMovingSprite` - which unconditionally overwrites `table`
+ * again with `gMovingSpriteVtable` and fires its own trampoline, so
  * this function's own table write only matters transiently (read by
- * nothing before `sub_8009F1C` clobbers it). `unusedArg` is passed
- * straight through to `sub_8009F1C`'s own second parameter without
+ * nothing before `DestroyMovingSprite` clobbers it). `unusedArg` is passed
+ * straight through to `DestroyMovingSprite`'s own second parameter without
  * this function ever touching it itself - the ROM leaves it in
  * whatever register its own caller happened to leave it in. */
-void sub_800A650(struct actor *self, u32 unusedArg)
+void DestroyGroundSprite(struct actor *self, u32 unusedArg)
 {
-    self->table = gStaticData_087E3D8C;
-    sub_8009F1C(self, unusedArg);
+    self->table = gGroundSpriteVtable;
+    DestroyMovingSprite(self, unusedArg);
 }
 
-/* Part-object field clearer/initializer, the `gStaticData_087E3D8C`-
- * table sibling of `sub_8009F50`'s own `gStaticData_087E3D14`-table
+/* Part-object field clearer/initializer, the `gGroundSpriteVtable`-
+ * table sibling of `ResetMovingSprite`'s own `gMovingSpriteVtable`-table
  * clearer: sets `flags` bits 6/7, zeroes the same velocity/accel/
- * max-velocity fields `sub_8009DF4` consumes (`+0x60`/`+0x64`/`+0x48`/
+ * max-velocity fields `ApplySpriteVelocity` consumes (`+0x60`/`+0x64`/`+0x48`/
  * `+0x4c`/`+0x50`/`+0x54`/`+0x58`/`+0x5c`) plus `+0x24`/`+0x44`/
- * `+0x78`/`+0x1c`, sets `+0x68` to 8, and (unlike `sub_8009F50`) sets
+ * `+0x78`/`+0x1c`, sets `+0x68` to 8, and (unlike `ResetMovingSprite`) sets
  * `+0xd` bit 0 instead of clearing bit 3. */
-void sub_800A664(void *selfArg)
+void ResetGroundSprite(void *selfArg)
 {
     u8 *self = selfArg;
 
@@ -114,15 +114,15 @@ void sub_800A664(void *selfArg)
     }
 }
 
-/* Same `sub_8009F90`/table-swap/clearer shape as `sub_800A604` above,
+/* Same `InitMovingSprite`/table-swap/clearer shape as `CreateGroundSprite` above,
  * but re-initializes an existing `self` instead of allocating a new
- * one - the same relationship `sub_8009F90` itself has to
- * `sub_800A604`. */
-struct actor *sub_800A6A4(struct actor *self)
+ * one - the same relationship `InitMovingSprite` itself has to
+ * `CreateGroundSprite`. */
+struct actor *InitGroundSprite(struct actor *self)
 {
-    sub_8009F90(self);
-    self->table = gStaticData_087E3D8C;
-    sub_800A664(self);
+    InitMovingSprite(self);
+    self->table = gGroundSpriteVtable;
+    ResetGroundSprite(self);
     return self;
 }
 
@@ -220,7 +220,7 @@ u8 sub_800A724(void *selfArg)
     return (self[0xc] >> 5) & 1;
 }
 
-/* `ctrl` getter (the same "record" field `sub_8009F1C`/`sub_8009FB0`
+/* `ctrl` getter (the same "record" field `DestroyMovingSprite`/`UpdateMovingSprite`
  * fire their trampolines through). */
 s32 sub_800A730(void *selfArg)
 {

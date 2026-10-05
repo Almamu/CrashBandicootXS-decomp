@@ -5,7 +5,7 @@
  * actor_part79.c's top-of-file comment for the shared field-offset
  * conventions (`self+0xc`/`self+0x10`/`+0x27`..`+0x32`) this "child
  * object" family uses (include/action_obj.h's `struct act`). Not ROM-adjacent to actor_part79.c's functions
- * (raw `sub_8012420`/`sub_8012694`/`sub_801283C` sit in between, see
+ * (raw `UpdateActionCtrl`/`sub_8012694`/`sub_801283C` sit in between, see
  * asm/code_3_2_17_12420.s), hence its own file. */
 
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);

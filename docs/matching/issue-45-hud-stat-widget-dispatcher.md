@@ -41,7 +41,7 @@ void UpdateHud(struct hud_counter *self)
     }
     if (IsInBonusRound(gLevelState)) {
         gHudSlideOffset = 0;
-        sub_8008044(&self->parts[34]);        /* recomputed fresh both times, not cached */
+        AdvanceSpriteAnim(&self->parts[34]);        /* recomputed fresh both times, not cached */
         DrawHudPart(&self->parts[34], 0, 0);
     }
     if (*((u8 *)gLevelState + 0x8c) && self->mode == 0 && self->field_08 == 0)
@@ -354,7 +354,7 @@ time already spent on the six functions above:
 
 - **`InitHud`** (constructor) / **`sub_802732C`** (its own tail,
   called by `InitHud` itself with a second argument of 0): allocates
-  the 35-slot `parts` array (`sub_8026EC0(0x8C4)` - a leading 4-byte
+  the 35-slot `parts` array (`OperatorNewArray(0x8C4)` - a leading 4-byte
   header word holding the count `0x23`, *then* the 35
   `struct hud_digit_part` slots, not the trailing-padding read the
   second pass guessed), constructs every slot via the already-matched
@@ -531,7 +531,7 @@ is unreviewed opaque asm, just asm written by hand rather than by gcc.
 ### Matched: `InitHud`/`sub_802732C` (new `src/graphics/hud_digit_array.c`)
 
 `InitHud` allocates the 35-slot `struct hud_digit_part` array
-(`sub_8026EC0(0x8C4)` - a leading 4-byte header word holding the count
+(`OperatorNewArray(0x8C4)` - a leading 4-byte header word holding the count
 `0x23` = 35, then the 35 slots themselves), constructs every slot via
 the already-matched `InitHudPart`, zeroes `mode`/`layout_value`/
 `field_08`/the rest of `unknown_0c`, then loops over all 35 slots wiring

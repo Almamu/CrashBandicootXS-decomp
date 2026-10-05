@@ -2,18 +2,18 @@
 #include "action_obj.h"
 
 /* Part of GitHub issue #16's remainder (0x08011BD4-0x08012D24): three
- * gStaticData_0816BF20 action-table helpers for the player/action object
+ * gActionCtrlStateTable action-table helpers for the player/action object
  * (include/action_obj.h). Not ROM-adjacent to actor_part79.c/
- * actor_part80.c (the still-NAKED `sub_8011BD4` sits before it,
+ * actor_part80.c (the still-NAKED `ActionCtrlHandleEvent` sits before it,
  * `sub_8012AF4` after) - see docs/matching/issue-16-actor-12420.md.
  *
  * Built with old_agbcc (Makefile OLD_AGBCC_OBJS) since the issue #15/#16
  * NAKED retry (docs/matching/issue-15-16-naked-retry.md): `sub_801283C`
  * matches as plain C under it, and `sub_8012694` since the second retry
- * (docs/matching/issue-15-16-17-naked-retry-2.md), and `sub_8012420` in a
+ * (docs/matching/issue-15-16-17-naked-retry-2.md), and `UpdateActionCtrl` in a
  * later pass. */
 
-/* A gcc 2.x pointer-to-member-function record (gStaticData_0816BF20's
+/* A gcc 2.x pointer-to-member-function record (gActionCtrlStateTable's
  * per-state handlers): `index > 0` selects virtual slot `index - 1` of the
  * method table at `this + vtableOffset`, otherwise `fn` is called. */
 struct act_pmf
@@ -46,7 +46,7 @@ extern void *gLevelState;
 extern struct act_part *gPlayer;
 extern void *gUnknown_03001304;
 extern struct cam *gLevelLayers;
-extern struct act_pmf gStaticData_0816BF20[];
+extern struct act_pmf gActionCtrlStateTable[];
 extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
 extern u8 GetDpadDirection(void *pad);
 extern void sub_8012238(struct act *self);
@@ -134,7 +134,7 @@ static inline u8 *PartBytePtr(struct act_part *part, s32 offset)
  * reaching zero, resets the trio's first half (`+0x31`/`+0x2f`/`+0x27`/
  * `+0x2c`) if `+0x27` was already clear, then always clears the
  * player's `+0x90` byte. Looks up `self+8`'s type in
- * `gStaticData_0816BF20`'s 8-byte-per-slot table - a `{s16 baseOffset;
+ * `gActionCtrlStateTable`'s 8-byte-per-slot table - a `{s16 baseOffset;
  * s16 count; s16 recordOffset; s32 fallback}` record - to build the
  * arguments for one `_call_via_r3` trampoline call. If `part+0x68` bit 3
  * got cleared this call and `self+0x28` is `4`/`5`, resets the trio's
@@ -167,7 +167,7 @@ static inline s32 K100(void)
  * With those, the PMF call's method record lands in the ROM's 8-byte
  * stack slot on its own.
  */
-void sub_8012420(struct act *self)
+void UpdateActionCtrl(struct act *self)
 {
     u32 in = gKeys;
 
@@ -232,16 +232,16 @@ void sub_8012420(struct act *self)
     {
         struct act_method m;
         void (*fn)(void *);
-        s32 index = gStaticData_0816BF20[self->state].index;
+        s32 index = gActionCtrlStateTable[self->state].index;
         s32 off;
 
         if (index > 0) {
-            m = (*(struct act_method **)((u8 *)self + gStaticData_0816BF20[self->state].u.vtableOffset))[index - 1];
+            m = (*(struct act_method **)((u8 *)self + gActionCtrlStateTable[self->state].u.vtableOffset))[index - 1];
             fn = m.fn;
         } else {
-            fn = gStaticData_0816BF20[self->state].u.fn;
+            fn = gActionCtrlStateTable[self->state].u.fn;
         }
-        off = gStaticData_0816BF20[self->state].thisOffset;
+        off = gActionCtrlStateTable[self->state].thisOffset;
         {
             s32 d;
 

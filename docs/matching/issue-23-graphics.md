@@ -20,15 +20,15 @@ The same C++-style object family as `actor_part_17524.c` and
 `actor_part27*.c`: small classes with a method table ("vtable") at
 `self+0xc`, gcc 2.x `{s16 this-adjust, pad, fn}` method entries called
 through the `_call_via_r2`/`AD84`/`AD88` call-via-register trampolines.
-Every class has a constructor (base constructor `sub_800B8C8`,
+Every class has a constructor (base constructor `InitCtrl`,
 `sub_8017A8C` or `CreatePlatformMover`, then its own table pointer, returns
 `self`) and a destructor (table pointer, then the base destructor).
 
-The objects drive a "part": an on-screen object built by `sub_8009ED0`
+The objects drive a "part": an on-screen object built by `CreateMovingSprite`
 (`struct gfx_part` in the file): position at `+0`/`+4`, bitmap id `+8`,
 flags byte `+0xc` (bit 0 gone, bit 2 hidden, bit 4 active), animation bank
 `+0x20` (28-byte records, frame count at record `+0x16`), mirror bit
-(`+0x28` bit 4), frame nibble (`+0x29` low 4 bits, from `sub_800815C`),
+(`+0x28` bit 4), frame nibble (`+0x29` low 4 bits, from `GetSpriteAnimPaletteSlot`),
 animation tag `+0x2d`, frame `+0x30`, "animation finished" `+0x38`,
 controller `+0x44`.
 
@@ -62,7 +62,7 @@ controller `+0x44`.
   pattern and the per-config timings in
   `gStaticData_0816C358`/`35C`/`35F`/`362`.
 - `sub_8019324`: box-overlap hit test (`sub_8007CF8`/`sub_8007C30`/
-  `sub_8007B98` boxes, `sub_8001688` overlap) of a part against the
+  `GetSpriteHitbox` boxes, `AabbOverlaps` overlap) of a part against the
   player (fires the player's `+0x68` method with code 9 unless it's busy)
   and against every entry of the `gUnknown_030012F0` list.
 - `sub_8019464`, `sub_80194E0`: two more per-frame methods (frame reset

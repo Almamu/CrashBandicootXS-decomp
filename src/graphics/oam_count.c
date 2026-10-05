@@ -25,7 +25,7 @@ COMPILE_TIME_ASSERT(sizeof(struct threshold_table_entry) == 0x24);
 extern struct threshold_table_entry gLevelTable[];
 extern void ShowPowerDialog(s32 arg0, s32 arg1, s32 arg2);
 extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
-extern void sub_8026ED0(void *arg0);
+extern void OperatorDelete(void *arg0);
 extern void UploadPaletteCache(struct palette_cache *arg0);
 extern void CommitOamBuffer(void *arg0);
 extern void ResetOamBuffer(void *arg0);
@@ -34,7 +34,7 @@ extern void FlushVramDmaQueue(void);
 extern struct palette_cache *gPaletteCache;
 extern void *gOamBuffer;
 
-extern void sub_8008044(void *arg0);
+extern void AdvanceSpriteAnim(void *arg0);
 
 /* Shared by DrawPowerDialog/AnimatePowerDialog/CommitPowerDialogFrame/DestroyPowerDialog below - all
  * four access field_18 (and DrawPowerDialog also field_10/field_14) at the
@@ -52,7 +52,7 @@ struct sub_8006700_actor {
 };
 
 extern void RewindObjVram(struct vram_upload_cursor *arg0);
-extern void sub_8008890(void *arg0, s32 arg1, s32 arg2);
+extern void DrawSpriteWithOffset(void *arg0, s32 arg1, s32 arg2);
 extern void SetAabbPos(void *buf, s32 arg1, s32 arg2);
 extern void SetAabbSize(void *buf, s32 arg1, s32 arg2);
 extern s32 sub_8001214(void *arg0, void *arg1, void *buf, s32 arg3);
@@ -90,7 +90,7 @@ void DrawPowerDialog(struct sub_8006700_actor *arg0)
 
     ResetOamBuffer(gOamBuffer);
     RewindObjVram(gObjVramCursor);
-    sub_8008890(arg0->field_18, 0, 0);
+    DrawSpriteWithOffset(arg0->field_18, 0, 0);
     r = gLargeFont->record;
     w = _call_via_r2((u8 *)gLargeFont + r->slots[0].offset, arg0->field_10, r->slots[0].ptr);
     x = (u32)(240 - w) >> 1;
@@ -115,7 +115,7 @@ extern void WaitForVBlank(void *arg0);
 void AnimatePowerDialog(struct sub_8006700_actor *arg0)
 {
     arg0->field_1c++;
-    sub_8008044(arg0->field_18);
+    AdvanceSpriteAnim(arg0->field_18);
 }
 
 void CommitPowerDialogFrame(struct sub_8006700_actor *arg0)
@@ -142,7 +142,7 @@ void DestroyPowerDialog(struct sub_8006700_actor *arg0, u32 arg1)
         _call_via_r2((u8 *)field18 + *(s16 *)p, 3, *(void **)(p + 4));
     }
     if (arg1 & 1) {
-        sub_8026ED0(arg0);
+        OperatorDelete(arg0);
     }
 }
 

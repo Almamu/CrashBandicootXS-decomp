@@ -142,7 +142,7 @@ vram-upload-cursor/OAM-shadow flush tail both `UpdateRoomFrame` and
 - **`PlayRoom`/`RunRoom`** (`asm/code_3_2_17_2375c.s`, ROM
   `0x0802375C`-`0x08024007`) - a ~300-instruction level-start
   dispatcher (allocates and initializes several HUD/counter widget
-  objects via `sub_8026EDC`+`sub_800B69C`/`_call_via_r2`, dispatches on
+  objects via `OperatorNew`+`SetCtrlAnimSet`/`_call_via_r2`, dispatches on
   a 3-way record-type switch) feeding into a ~650-instruction
   continuation (`RunRoom`) built around a 6-case jump table with
   cross-branch jumps into a shared tail (`_08023BB8`/`_08023BBE`

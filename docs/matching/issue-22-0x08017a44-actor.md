@@ -30,24 +30,24 @@ avoid an add/add filename collision.
   `sub_8017A44`-`sub_8017AAC` (9 functions) - trivial `self+0x14`/
   `self+0x17`/`self+0x18` byte/word accessors, plus the
   `sub_8017A78`/`sub_8017A8C` table-pointer-reset pair (same
-  `gStaticData_087E435C`/`sub_800B8A8`/`sub_800B8C8` double-set pattern
+  `gStaticData_087E435C`/`DestroyCtrl`/`InitCtrl` double-set pattern
   seen throughout this object family).
 - `src/graphics/actor_part27b.c` (new file, ROM 0x08017ECC-0x08017FE8,
   non-adjacent to `actor_part27.c` since the raw `sub_8017AB0` sits
   between them): `sub_8017ECC`, `sub_8017F14`, `sub_8017F5C`,
   `sub_8017F80`, `sub_8017FA4`, `sub_8017FD4`, `sub_8017FE8` - a
   `self+4` double-pointer-chain record lookup (same shape as
-  `sub_800B704`/`sub_800B838` in `actor_part17.c`) feeding the
+  `StartCtrlTargetMotionYFromSet`/`StartCtrlTargetMotionXFromSet` in `actor_part17.c`) feeding the
   `gStaticData_0816C2D8` per-vector-component trampoline table, with
   `part+0x28` bit 4/bit 5 mirror-flag X/Z negation exactly like
-  `sub_800B734`/`sub_800B7B0`/`sub_800B6A0`/`sub_800B6D0`.
+  `SetCtrlTargetMotionX`/`StartCtrlTargetMotionX`/`SetCtrlTargetMotionY`/`StartCtrlTargetMotionY`.
 - `src/graphics/actor_part27c.c` (new file, ROM 0x080187FC-0x08018884,
   non-adjacent to `actor_part27b.c` since the raw `UpdateTiny`-
   `sub_80186F0` block sits between them): `sub_80187FC` (a two-state
   "charge" handler), `sub_8018858`/`sub_801886C` (another table-pointer
   reset pair, `gStaticData_087E442C`), `sub_8018884` (a struct-actor-
   shaped "part"'s flags-OR plus `gEntityFlags+0x108` bitmap-set,
-  same idiom as `sub_8007DBC`'s `part->field_08` bitmap-set in
+  same idiom as `CheckSpritePickup`'s `part->field_08` bitmap-set in
   `actor_part2.c`).
 
 ### Compiler-codegen notes
@@ -69,7 +69,7 @@ worth recording since the techniques generalize:
   - a plain C `+` reliably picked the wrong operand order or CSE'd the
     two into one register regardless of source statement order.
 - **`sub_8017F5C`/`sub_8017F80`** (same lookup, tail-calling
-  `sub_800B6D0`/`sub_800B7B0`): same fix, but here the ROM reuses a
+  `StartCtrlTargetMotionY`/`StartCtrlTargetMotionX`): same fix, but here the ROM reuses a
   *single* register (`r2`) as the accumulator across the whole
   computation (`recOffset` -> `rec` -> `type*12` -> `tableEntry`) with
   `r3` as the transient "current source" - modeled with one

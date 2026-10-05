@@ -9,12 +9,12 @@
  * accessors for it; fields `struct gobj` doesn't cover yet stay as
  * byte offsets. */
 
-extern s32 sub_800A528(void *self);
+extern s32 UpdateGroundSprite(void *self);
 extern void *sub_8007CF8(void *dest, void *pt);
 extern u8 gPlayerVtable[];
 extern s32 _call_via_r2(void *arg0, void *arg1, void *fn);
 extern void sub_8010E14(void *arg0, s32 arg1);
-extern void sub_800A650(void *self, u32 unusedArg);
+extern void DestroyGroundSprite(void *self, u32 unusedArg);
 
 /* `velB.z` (+0x5c) boolean getter (nonzero -> 1). */
 u8 sub_800B324(void *selfArg)
@@ -52,33 +52,33 @@ void sub_800B33C(void *selfArg)
 }
 
 /* Decrements the `self+0x91` countdown byte (if nonzero), then tail-
- * calls `sub_800A528` (still raw, in the sub_800A0FC-sub_800A590
+ * calls `UpdateGroundSprite` (still raw, in the CollideGroundSprite-sub_800A590
  * span). */
-void sub_800B360(void *selfArg)
+void UpdatePlayer(void *selfArg)
 {
     u8 *self = selfArg;
 
     if (self[0x91] != 0) {
         self[0x91] -= 1;
     }
-    sub_800A528(selfArg);
+    UpdateGroundSprite(selfArg);
 }
 
 /* The `gPlayer` collision check used throughout this whole
- * session (`sub_8009CA0`/`sub_80096C0`/`sub_80099F0` etc all call
+ * session (`CheckPlayerContact`/`sub_80096C0`/`sub_80099F0` etc all call
  * this by name via an `extern` declaration, finally matched for
  * real): builds `selfArg`'s secondary AABB via `sub_8007CF8`
  * (already matched), and - only if it has a region (`field_8 > 0`) -
- * tests it against `buf` via `sub_8001688` (already matched),
+ * tests it against `buf` via `AabbOverlaps` (already matched),
  * returning the low byte of that result; otherwise returns 0. */
-u8 sub_800B37C(void *selfArg, void *buf)
+u8 PlayerTouchesBox(void *selfArg, void *buf)
 {
     s32 tmp[4];
     u8 result = 0;
 
     sub_8007CF8(tmp, selfArg);
     if (tmp[2] > 0) {
-        result = sub_8001688((struct aabb *)tmp, buf);
+        result = AabbOverlaps((struct aabb *)tmp, buf);
     }
     return result;
 }
@@ -86,7 +86,7 @@ u8 sub_800B37C(void *selfArg, void *buf)
 /* Overwrites `self->table` with `gPlayerVtable`, then (if
  * `self+0xb0`'s child object is set) fires its `table+0x50/0x54`-
  * driven trampoline via `_call_via_r2` with constant arg `3`, then
- * calls `sub_8010E14(self+0x108, 2)` and tail-calls `sub_800A650`
+ * calls `sub_8010E14(self+0x108, 2)` and tail-calls `DestroyGroundSprite`
  * (already matched in `actor_part14.c`). */
 void DestroyPlayer(void *selfArg, u32 arg1)
 {
@@ -106,5 +106,5 @@ void DestroyPlayer(void *selfArg, u32 arg1)
         }
     }
     sub_8010E14(self + 0x108, 2);
-    sub_800A650(self, arg1);
+    DestroyGroundSprite(self, arg1);
 }

@@ -203,7 +203,7 @@ that file into `actor_part52.c`/`actor_part54.c` - shifting every
 subsequent function's address by 4 bytes, caught only by the full-link
 `make compare` and the map-file address-shift diagnostic
 `docs/workflow.md` describes. This is the same failure mode already
-documented for `CreateHovercraftCannon` (issue #62) and the `sub_8008C80`/
+documented for `CreateHovercraftCannon` (issue #62) and the `CullPartList`/
 `sub_8008D30` pair, now confirmed a third and fourth time: which other
 functions share a translation unit can change this compiler's own
 register allocation for a function whose *C source* never changed,

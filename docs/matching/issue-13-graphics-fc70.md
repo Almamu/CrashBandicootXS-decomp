@@ -97,8 +97,8 @@ too, continuing issue #12's precedent.
   large (~195-instruction) state dispatcher calling several still-raw
   siblings, and an AABB-overlap check. Not attempted this pass.
 - **`DestroyCrate`**/**`InitCrate`** (`asm/code_3_2_17_e560_1071c.s`)
-  - two part-object init helpers (`sub_80087C0`/`sub_80087B4`/
-  `sub_800872C` shape, same as several already-matched siblings in this
+  - two part-object init helpers (`ResetSpriteFrameTimer`/`ResetSpriteFrameIndex`/
+  `SetSpriteAnimDone` shape, same as several already-matched siblings in this
   file) - readable but not attempted this pass.
 - **`sub_8010784`**/**`sub_80107C4`** (`asm/code_3_2_17_e560_1071c.s`)
   - two more Bresenham-line-style step algorithms (variants of

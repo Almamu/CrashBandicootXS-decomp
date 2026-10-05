@@ -4,7 +4,7 @@
 /* Same "self" object family as actor_part61.c/actor_part66.c/actor_part72.c/
  * actor_part73.c - see docs/matching/issue-63-0x08033ef4-actor.md. This is
  * the 0x14-byte constructor (`InitStarfield`, called by `InitTitleScreen` as
- * `InitStarfield(sub_8026EDC(0x14))`, see `src/graphics/level_graphics.c`) and
+ * `InitStarfield(OperatorNew(0x14))`, see `src/graphics/level_graphics.c`) and
  * its companion per-frame updater (`DrawStarfield`, called by
  * `UpdateStarfield`/actor_part73.c) for a BG0 "raw bitmap" particle-trail
  * effect: the whole 240x160 screen is set up as one contiguous run of 8x8
@@ -27,13 +27,13 @@ struct particle_bg {
      * `InitStarfield`'s `REG_BG0CNT` setup below), laid out once at
      * construction time as one sequential tile index per 8x8 cell. */
     u32 mapVramBase;
-    /* 128-slot particle array (`sub_8026EC0(0x800)`, 16-byte stride - see
+    /* 128-slot particle array (`OperatorNewArray(0x800)`, 16-byte stride - see
      * `struct particle_slot`, actor_part72.c). */
     void *particles;
     /* Active particle count (0-0x80). */
     s32 count;
     /* 240x160, 4-bit-per-pixel shadow tile-graphics buffer
-     * (`sub_8026EC0(0x4B00)`) - `DrawStarfield` draws each active particle's
+     * (`OperatorNewArray(0x4B00)`) - `DrawStarfield` draws each active particle's
      * trail into this every frame, then DMAs it wholesale into
      * `tileVramBase`. */
     void *tileBuffer;
@@ -46,7 +46,7 @@ struct particle_slot {
     s32 dy;
 };
 
-extern void *sub_8026EC0(u32 size);
+extern void *OperatorNewArray(u32 size);
 extern void SetDispcntMode(s32 val);
 extern void ShowBg0(void);
 extern void CommitDispcnt(void);
@@ -97,7 +97,7 @@ void *InitStarfield(void *selfArg)
     u32 *dma2Src;
     u32 zero;
 
-    self->particles = sub_8026EC0(0x800);
+    self->particles = OperatorNewArray(0x800);
 
     {
         u16 *dispcntShadow = (u16 *)gDispcnt;
@@ -186,7 +186,7 @@ void *InitStarfield(void *selfArg)
 
     self->count = 0;
 
-    self->tileBuffer = sub_8026EC0(0x4B00);
+    self->tileBuffer = OperatorNewArray(0x4B00);
 
     /* Zero-fills the freshly-allocated 19200-byte `tileBuffer` (fixed-
      * source 32-bit fill from one stack word). */

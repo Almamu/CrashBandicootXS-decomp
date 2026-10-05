@@ -12,8 +12,8 @@
  * a guessed struct, matching the rest of this object family. */
 
 extern u8 gStaticData_087E435C[];
-extern void sub_800B8A8(void *self, s32 flags);
-extern void sub_800B8C8(void *self);
+extern void DestroyCtrl(void *self, s32 flags);
+extern void InitCtrl(void *self);
 
 /* `self+0x17` byte getter. */
 u8 sub_8017A44(void *selfArg)
@@ -78,25 +78,25 @@ void sub_8017A70(void *selfArg, s32 arg1, s32 a, s32 b)
 }
 
 /* Sets `self+0xc`'s table pointer to `gStaticData_087E435C`, then
- * tail-calls `sub_800B8A8(self, flags)` - which promptly resets it
- * back to `gStaticData_087E3E7C` (see actor_part17.c) and, if
- * `flags` bit 0 is set, fires `sub_8026ED0`. */
+ * tail-calls `DestroyCtrl(self, flags)` - which promptly resets it
+ * back to `gCtrlVtable` (see actor_part17.c) and, if
+ * `flags` bit 0 is set, fires `OperatorDelete`. */
 void sub_8017A78(void *selfArg, s32 flags)
 {
     u8 *self = selfArg;
 
     *(void **)(self + 0xc) = gStaticData_087E435C;
-    sub_800B8A8(self, flags);
+    DestroyCtrl(self, flags);
 }
 
-/* Resets via `sub_800B8C8` (table pointer to `gStaticData_087E3E7C`,
+/* Resets via `InitCtrl` (table pointer to `gCtrlVtable`,
  * `self+8` cleared), then re-points the table at `gStaticData_087E435C`
  * and zeroes `self+0x10`/`self+0x14`/`self+0x18`. Returns `self`. */
 void *sub_8017A8C(void *selfArg)
 {
     u8 *self = selfArg;
 
-    sub_800B8C8(self);
+    InitCtrl(self);
     *(void **)(self + 0xc) = gStaticData_087E435C;
     *(s32 *)(self + 0x10) = 0;
     *(s32 *)(self + 0x14) = 0;

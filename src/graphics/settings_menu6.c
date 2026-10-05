@@ -6,8 +6,8 @@
  * constructors below only match under it, and InitPauseCrystalsPage compiles
  * identically under both compilers. */
 
-extern void *sub_8026EDC(s32 size);
-extern struct actor *sub_8008904(struct actor *part);
+extern void *OperatorNew(s32 size);
+extern struct actor *InitUiSpriteObj(struct actor *part);
 extern void sub_800737C(struct actor *self, s32 arg1, s32 arg2);
 extern s32 CountCrystals(void *arg0);
 extern s32 FormatDecimal(s32 value, void *dest);
@@ -24,7 +24,7 @@ void InitPauseCrystalsPage(struct pause_screen_results *self)
 {
     struct settings_icon_actor **dest = &self->field_88;
 
-    *dest = (struct settings_icon_actor *)sub_8008904((struct actor *)sub_8026EDC(0x40));
+    *dest = (struct settings_icon_actor *)InitUiSpriteObj((struct actor *)OperatorNew(0x40));
     (*dest)->field_20 = (void **)((u8 *)(**gUnknown_030012D0) + (0xde << 1));
     sub_800737C(&(*dest)->base, gStaticData_0816B1E4.x, gStaticData_0816B1E4.y);
     UPDATE_ICON_FRAME_NIBBLE(*dest);
@@ -33,12 +33,12 @@ void InitPauseCrystalsPage(struct pause_screen_results *self)
     FormatDecimal(0x14, (u8 *)self + 0x46);
 }
 
-extern void sub_80087C0(struct actor *part);
-extern void sub_80087B4(struct actor *part);
-extern void sub_800872C(struct actor *part, u8 val);
+extern void ResetSpriteFrameTimer(struct actor *part);
+extern void ResetSpriteFrameIndex(struct actor *part);
+extern void SetSpriteAnimDone(struct actor *part, u8 val);
 
 /* `field_29` viewed as the nibble pair it is: the low nibble is the
- * sub_800815C-derived frame bits (same byte as level_menu.h's
+ * GetSpriteAnimPaletteSlot-derived frame bits (same byte as level_menu.h's
  * `struct sprite` `palette:4`). Assigning the bitfield gives the ROM's
  * `and #0xf / mov #0x10; neg / and / orr` sequence with no pins. */
 struct icon_frame_nibble {
@@ -47,7 +47,7 @@ struct icon_frame_nibble {
 };
 
 #define SET_ICON_FRAME_NIBBLE(iconExpr) \
-    (((struct icon_frame_nibble *)&(iconExpr)->field_29)->lo = sub_800815C(&(iconExpr)->base))
+    (((struct icon_frame_nibble *)&(iconExpr)->field_29)->lo = GetSpriteAnimPaletteSlot(&(iconExpr)->base))
 
 /* Allocates and constructs a fresh 0x40-byte icon into `icon`, yielding
  * it. Used as the right-hand side of the `self->iconsXX[i] = ...`
@@ -56,7 +56,7 @@ struct icon_frame_nibble {
  * (before the two calls), which is also what keeps the loop from being
  * strength-reduced - both exactly as the ROM has it. */
 #define NEW_ICON(icon) \
-    ((icon) = (struct settings_icon_actor *)sub_8008904((struct actor *)sub_8026EDC(0x40)), (icon))
+    ((icon) = (struct settings_icon_actor *)InitUiSpriteObj((struct actor *)OperatorNew(0x40)), (icon))
 
 static inline void set_icon_pos(struct actor *a, struct icon_pos *p)
 {
@@ -80,9 +80,9 @@ void InitPausePowersPage(struct pause_screen_results *self)
         self->icons8c[i] = NEW_ICON(icon);
         icon->field_20 = (void **)((u8 *)(**gUnknown_030012D0) + (0xe4 << 1));
         icon->frameIndex = gStaticData_0816B20C[i];
-        sub_80087C0(&icon->base);
-        sub_80087B4(&icon->base);
-        sub_800872C(&icon->base, 0);
+        ResetSpriteFrameTimer(&icon->base);
+        ResetSpriteFrameIndex(&icon->base);
+        SetSpriteAnimDone(&icon->base, 0);
         set_icon_pos(&self->icons8c[i]->base, &gStaticData_0816B1EC[i]);
         SET_ICON_FRAME_NIBBLE(self->icons8c[i]);
     }
@@ -110,9 +110,9 @@ void InitPauseGemsPage(struct pause_screen_results *self)
         self->icons9c[i] = NEW_ICON(icon);
         icon->field_20 = (void **)((u8 *)(**gUnknown_030012D0) + (0xc0 << 1));
         icon->frameIndex = gStaticData_0816B244[i];
-        sub_80087C0(&icon->base);
-        sub_80087B4(&icon->base);
-        sub_800872C(&icon->base, 0);
+        ResetSpriteFrameTimer(&icon->base);
+        ResetSpriteFrameIndex(&icon->base);
+        SetSpriteAnimDone(&icon->base, 0);
         set_icon_pos(&self->icons9c[i]->base, &gStaticData_0816B21C[i]);
         SET_ICON_FRAME_NIBBLE(self->icons9c[i]);
         self->icons9c[i]->field_3c = 0x80;
@@ -150,9 +150,9 @@ void InitPauseRelicsPage(struct pause_screen_results *self)
         self->iconsB0[i] = NEW_ICON(icon);
         icon->field_20 = (void **)((u8 *)(**gUnknown_030012D0) + (0xc6 << 1));
         icon->frameIndex = gStaticData_0816B270[i];
-        sub_80087C0(&icon->base);
-        sub_80087B4(&icon->base);
-        sub_800872C(&icon->base, 0);
+        ResetSpriteFrameTimer(&icon->base);
+        ResetSpriteFrameIndex(&icon->base);
+        SetSpriteAnimDone(&icon->base, 0);
         set_icon_pos(&self->iconsB0[i]->base, &gStaticData_0816B258[i]);
         SET_ICON_FRAME_NIBBLE(self->iconsB0[i]);
         self->iconsB0[i]->field_3c = 0x80;
@@ -192,9 +192,9 @@ extern struct icon_pos gStaticData_0816B27C;
 static inline void set_icon_frame(struct settings_icon_actor *icon, u32 frame)
 {
     icon->frameIndex = frame;
-    sub_80087C0(&icon->base);
-    sub_80087B4(&icon->base);
-    sub_800872C(&icon->base, 0);
+    ResetSpriteFrameTimer(&icon->base);
+    ResetSpriteFrameIndex(&icon->base);
+    SetSpriteAnimDone(&icon->base, 0);
 }
 
 /* The medal/rank award widget (see docs/rom_map.md's overlay_ui
@@ -230,7 +230,7 @@ void InitPauseTimeTrialPage(struct pause_screen_results *self)
     self->field_6c = earned;
 
     slot = &self->field_bc;
-    *slot = (struct settings_icon_actor *)sub_8008904((struct actor *)sub_8026EDC(0x40));
+    *slot = (struct settings_icon_actor *)InitUiSpriteObj((struct actor *)OperatorNew(0x40));
     (*slot)->field_20 = (void **)((u8 *)(**gUnknown_030012D0) + (0xc6 << 1));
     set_icon_pos(&(*slot)->base, &gStaticData_0816B27C);
 

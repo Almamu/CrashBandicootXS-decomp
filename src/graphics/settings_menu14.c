@@ -12,7 +12,7 @@
  * `_call_via_r1` and reserves its `tileCount<<5` bytes of VRAM via
  * `ReserveObjVram` (copying `gSmallFont`'s `tileCount` into
  * `gLargeFont`'s `tileBase` in between - meaning not otherwise
- * established), then allocates the dialog object (`sub_8026EDC(0x2c)`,
+ * established), then allocates the dialog object (`OperatorNew(0x2c)`,
  * exactly `src/graphics/settings_menu13.c`'s `struct
  * sub_8006700_actor`'s own size) and builds it via `InitPowerDialog`
  * (matched, same file) before running its fade-in/wait-for-confirm/
@@ -44,7 +44,7 @@ struct sub_8006700_actor {
     u16 field_28;
 };
 
-extern void *sub_8026EDC(s32 size);
+extern void *OperatorNew(s32 size);
 extern s32 GetUiText(s32 arg0);
 extern void WaitForVBlank(void);
 extern s32 mem_free_bytes(s32 flags);
@@ -102,7 +102,7 @@ void ShowPowerDialog(s32 label1, s32 label2, s32 type)
     }
     IconReserve(&gLargeFont);
     MarkObjVram(gObjVramCursor);
-    dialog = InitPowerDialog(sub_8026EDC(0x2c), GetUiText(label1), GetUiText(label2), type);
+    dialog = InitPowerDialog(OperatorNew(0x2c), GetUiText(label1), GetUiText(label2), type);
     PowerDialogLoop(dialog);
     if (dialog != NULL)
         DestroyPowerDialog(dialog, 3);

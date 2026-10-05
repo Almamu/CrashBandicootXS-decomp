@@ -5,7 +5,7 @@
  * asm/code_3_2_17_12af4.s (details in
  * docs/matching/issue-17-0x08012fbc-actor.md, "Second pass").
  *
- * Five more entries of the gStaticData_0816BF20 42-slot action table
+ * Five more entries of the gActionCtrlStateTable 42-slot action table
  * (docs/rom_map.md), the same player/action object as
  * actor_part18.c/actor_part_138e8.c: `self+0xc` is its method table,
  * `self+0x10` its on-screen part, `self+0x18`/`+0x1c` an animation

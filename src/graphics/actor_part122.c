@@ -14,7 +14,7 @@
  * same field-offset conventions as the rest of this cluster's
  * `self`/`owner` object shape (`self+0x70` "owner", `self+0xc`
  * "anchor" record, `self+0x84` per-instance table) and calls the
- * exact same helpers `sub_800B704`/`sub_800B838`/`_call_via_r3`
+ * exact same helpers `StartCtrlTargetMotionYFromSet`/`StartCtrlTargetMotionXFromSet`/`_call_via_r3`
  * already matched for `sub_800C8AC`/`sub_800C8BC`/`SetEnemyAnimMode`
  * (`actor_part113.c`) - not merely the same *convention* reused on a
  * different struct, but the *identical* struct/helper set, just
@@ -28,7 +28,7 @@
  * `SetEnemyState`'s own case bodies never call `sub_800C8AC`/
  * `sub_800C8BC`/`SetEnemyAnimMode` as functions - each case *manually
  * repeats* those three helpers' own instruction sequences inline
- * (confirmed by the `bl` targets: `sub_800B838`/`sub_800B704`
+ * (confirmed by the `bl` targets: `StartCtrlTargetMotionXFromSet`/`StartCtrlTargetMotionYFromSet`
  * directly, never `sub_800C8AC`/`sub_800C8BC`/`SetEnemyAnimMode`
  * themselves) - so the C below inlines them (SetModeA/SetModeB/SetMode).
  *
@@ -49,20 +49,20 @@
 
 #include "part_ctrl.h"
 
-extern void sub_800B704(struct part_ctrl *self, struct ctrl_target *target, s32 mode);
-extern void sub_800B838(struct part_ctrl *self, struct ctrl_target *target, s32 mode);
+extern void StartCtrlTargetMotionYFromSet(struct part_ctrl *self, struct ctrl_target *target, s32 mode);
+extern void StartCtrlTargetMotionXFromSet(struct part_ctrl *self, struct ctrl_target *target, s32 mode);
 extern s32 _call_via_r3(void *self, struct ctrl_target *target, s32 arg, void *fn);
 
 static inline void SetModeA(struct part_ctrl *self, s32 mode)
 {
     self->modeA = mode;
-    sub_800B704(self, self->target, mode);
+    StartCtrlTargetMotionYFromSet(self, self->target, mode);
 }
 
 static inline void SetModeB(struct part_ctrl *self, s32 mode)
 {
     self->modeB = mode;
-    sub_800B838(self, self->target, mode);
+    StartCtrlTargetMotionXFromSet(self, self->target, mode);
 }
 
 static inline void SetMode(struct part_ctrl *self, s32 mode)

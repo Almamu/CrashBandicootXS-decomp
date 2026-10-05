@@ -10,8 +10,8 @@
  * hud_icon_widget*.c files). */
 
 extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
-extern void sub_8026EB4(void *ptr);
-extern void sub_8026ED0(void *manager);
+extern void OperatorDeleteArray(void *ptr);
+extern void OperatorDelete(void *manager);
 
 /* Minimal local copy of `struct icon_slot` (see include/icon_manager.h)
  * - not itself an `icon_manager`/`icon_record` object, but the same
@@ -54,10 +54,10 @@ void DestroyHud(struct hud_counter *self, s32 flags)
                 _call_via_r2((u8 *)end + slot->offset, 0, slot->ptr);
             } while (self->parts != end);
         }
-        sub_8026EB4((u8 *)self->parts - 4);
+        OperatorDeleteArray((u8 *)self->parts - 4);
     }
     if (flags & 1) {
-        sub_8026ED0(self);
+        OperatorDelete(self);
     }
 }
 asm(".align 2, 0");

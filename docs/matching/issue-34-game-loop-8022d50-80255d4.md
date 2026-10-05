@@ -15,8 +15,8 @@ Fully traced against the ROM: `self` (every caller passes
 accessor family, game_loop2.c, operate on) gets two fields cleared
 (`self+0x8c` as a byte, `self+0x90`-`0xa0` as five zeroed words), then -
 unless `self+0xdc`'s level object is already in state 3 - the two actor
-slots at `self+0x1b8`/`0x1bc` are torn down (`sub_80087C0`/
-`sub_80087B4`/`sub_800872C(..., 0)`, the same OAM-trio teardown
+slots at `self+0x1b8`/`0x1bc` are torn down (`ResetSpriteFrameTimer`/
+`ResetSpriteFrameIndex`/`SetSpriteAnimDone(..., 0)`, the same OAM-trio teardown
 `PlayRoom`, game_loop39.c, already uses) when non-null. `self+0x1bc`'s
 actor additionally feeds its own `+0x20`-table/`+0x2d`-tag hitbox record
 (the same convention `DrawCrate`, game_loop35.c, and `sub_8010674`,
@@ -224,7 +224,7 @@ in this state, do nothing more" when true; the transition callee only
 fires when the gate says "no longer in this state."
 
 **Level-load loop** (function entry, before the state dispatch):
-allocates a `0x220`-byte scratch buffer (`sub_8026EDC`, matches
+allocates a `0x220`-byte scratch buffer (`OperatorNew`, matches
 `src/graphics/level_graphics.c`'s own doc comment for this exact
 allocation) and hands it straight to `InitTitleScreen`, then polls
 `RunTitleScreen`; while it returns `2` ("still loading") the loop calls

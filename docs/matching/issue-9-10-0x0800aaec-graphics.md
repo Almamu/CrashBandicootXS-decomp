@@ -17,7 +17,7 @@ see below) and closed both functions.
 
 ### `sub_800AAEC(void *self, s32 x)` - `src/graphics/actor_part108.c`
 
-The input-action-check function the 42-slot `gStaticData_0816BF20`
+The input-action-check function the 42-slot `gActionCtrlStateTable`
 action-dispatch table's own entries (`sub_8013994` etc.) call for
 their action codes `0xB`/`0x10` (`docs/rom_map.md` line 1713).
 
@@ -78,7 +78,7 @@ object's own `+0x28` bits 4/5 are set (same mirror-flag convention):
   argument, the caller's target action index) instead of the player's
   `+0x2d` - the player's hitbox *for the target action*.
 
-If AABB1 overlaps AABB2 (`sub_8001640`, the inclusive/touching-counts
+If AABB1 overlaps AABB2 (`AabbOverlapsInclusiveX`, the inclusive/touching-counts
 variant, `src/graphics/aabb_util.c`), bails out and returns `0`
 immediately - `self`'s hitbox already overlaps the player's *current*
 hitbox, so this isn't a fresh trigger. Otherwise returns `1` only if
@@ -136,7 +136,7 @@ per-iteration re-materialize-into-r0-then-alias-in-place shape:
 Every other block matches byte-for-byte: the `self+0x20`/`x*28`-
 indexed table lookup (needed the same "materialize the `+4` in two
 separate instructions" opaque-asm anchor - `add %1,%1,#4 / add
-%0,%1,#0` - that `sub_8007B00`/`sub_800D040` already needed for their
+%0,%1,#0` - that `GetSpriteBounds`/`sub_800D040` already needed for their
 own record-pointer builds, since a bare `rec + 4` otherwise folds into
 a single `add r4,r1,#4`), the `recByte9`/`flagArg` register pins
 (`r3`/`r2` respectively, matching the ROM's own choices, with
@@ -205,7 +205,7 @@ coincide` (checksum matches).
 
 - Opaque two-instruction `asm volatile` materialization to stop a
   `ptr + N` from folding into the next store/copy's addressing mode
-  (established technique, `actor_part48.c`/`sub_8007B00`).
+  (established technique, `actor_part48.c`/`GetSpriteBounds`).
 - Scoped `register` pins (`r2`/`r3`/`r4`) for values that need to
   outlive several intervening statements in a *specific* hardware
   register, plus deliberately reordering the C statements that produce

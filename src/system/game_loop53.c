@@ -148,7 +148,7 @@ void PickUpWumpa(struct orbit_part *self, u8 randomize)
  * If self->0x48 == 3 specifically, self->x/self->y are instead reset to
  * gPlayer's own position minus a small fixed offset
  * (0xFFFFFC00/0xFFFFF200, i.e. -0x400/-0xe00 in Q8). Every path ends
- * with a tail call to sub_8008364(self) (already matched elsewhere,
+ * with a tail call to UpdateSpriteObj(self) (already matched elsewhere,
  * src/graphics/actor_part5.c).
  *
  * Matched (old_agbcc) over three passes, see
@@ -170,7 +170,7 @@ extern struct actor *DropWumpa(void *unused0, u16 x, u16 y, u8 p3, u8 p4, u8 p5)
 typedef struct actor *(*OrbitSpawn4)(void *pool, s32 x, s32 y, u8 p3);
 
 extern void sub_801192C(struct orbit_part *self);
-extern void sub_8008364(struct actor *self);
+extern void UpdateSpriteObj(struct actor *self);
 
 /* flags |= 1 and, unless the id is 0xffff, the id's bit in the
  * collision bitmap. The three copies are merged by cross-jumping. */
@@ -304,7 +304,7 @@ void UpdateWumpa(struct orbit_part *self)
         self->base.x = nx;
         self->base.y = ny;
     }
-    sub_8008364(&self->base);
+    UpdateSpriteObj(&self->base);
 }
 
 /* CreateWumpa: the achievement/unlock-icon spawn helper (docs/rom_map.md),
@@ -317,15 +317,15 @@ void UpdateWumpa(struct orbit_part *self)
  * x, y, special)` where `special` is `0xFFFF` or `0` selecting which of
  * two dual_array_manager lists (`gUnknown_030012F4` vs `gUnknown_030012EC`)
  * the newly spawned part joins. Allocates a new 0x54-byte object
- * (`sub_8026EDC`), re-initializes it (`sub_80084A4`), points its vtable
- * at `gWumpaVtable`, re-initializes via `sub_80119EC` (actor_part39.c,
+ * (`OperatorNew`), re-initializes it (`InitSpriteObj`), points its vtable
+ * at `gWumpaVtable`, re-initializes via `ResetWumpaPickup` (actor_part39.c,
  * already matched), stores `id` at `+8` and `x`/`y` (Q8-shifted) at `+0`/
  * `+4` - mirrored into `+0x4c`/`+0x50` as a "home position" pair the same
  * way UpdateWumpa's mode-3 branch reads it back - joins the
  * `special`-selected list, points `+0x20` at `gUnknown_030012D0`'s shared
  * resource table (fixed slot `0xd2*2`, per the same `DropExtraLife`/
  * `DropWumpa` convention), tags `+0x2d = 1`, builds the OAM/keyframe
- * trio (`sub_80087C0`/`sub_80087B4`/`sub_800872C`), derives `+0x30` from
+ * trio (`ResetSpriteFrameTimer`/`ResetSpriteFrameIndex`/`SetSpriteAnimDone`), derives `+0x30` from
  * the same `table[tag]->+0x16` clamp idiom as PickUpWumpa/SendWumpaToHud,
  * clears bits 0/5 of `+0x28`, clears `+0x49`, tags `+0x4a`/`+0x4b` both 0
  * (always - `r7`/`r6` are hardcoded 0 locals, not passed through from any
@@ -355,14 +355,14 @@ extern void *gUnknown_030012F4;
 extern void ***gUnknown_030012D0;
 extern void *gPaletteCache;
 extern u8 gWumpaVtable[];
-extern void *sub_8026EDC(s32 size);
-extern struct actor *sub_80084A4(struct actor *self);
-extern void sub_8008E94(void *manager, void *value);
-extern void sub_80119EC(struct orbit_part *self);
+extern void *OperatorNew(s32 size);
+extern struct actor *InitSpriteObj(struct actor *self);
+extern void AddToPartList(void *manager, void *value);
+extern void ResetWumpaPickup(struct orbit_part *self);
 extern void sub_801191C(struct actor *self);
-extern void sub_80087C0(struct orbit_part *part);
-extern void sub_80087B4(struct orbit_part *part);
-extern void sub_800872C(struct orbit_part *part, u8 val);
+extern void ResetSpriteFrameTimer(struct orbit_part *part);
+extern void ResetSpriteFrameIndex(struct orbit_part *part);
+extern void SetSpriteAnimDone(struct orbit_part *part, u8 val);
 extern u8 GetPaletteSlot(void *cache, u8 record);
 
 struct orbit_part *CreateWumpa(u16 id, u16 x, u16 y, u16 special)
@@ -372,18 +372,18 @@ struct orbit_part *CreateWumpa(u16 id, u16 x, u16 y, u16 special)
     u8 mode = 0;
     u8 phase;
 
-    self = sub_8026EDC(0x54);
-    sub_80084A4(&self->base);
+    self = OperatorNew(0x54);
+    InitSpriteObj(&self->base);
     self->base.table = gWumpaVtable;
-    sub_80119EC(self);
+    ResetWumpaPickup(self);
     self->base.field_08 = id;
     self->base.x = x << 8;
     self->base.y = y << 8;
     self->anchor = ORBIT_POS(self);
     if (special == 0xffff)
-        sub_8008E94(gUnknown_030012F4, self);
+        AddToPartList(gUnknown_030012F4, self);
     else
-        sub_8008E94(gUnknown_030012EC, self);
+        AddToPartList(gUnknown_030012EC, self);
     p = self;
     p->bank = (struct act_anim_bank *)((u8 *)**gUnknown_030012D0 + 0xd2 * 2);
     {
@@ -396,9 +396,9 @@ struct orbit_part *CreateWumpa(u16 id, u16 x, u16 y, u16 special)
         asm("" : "+r"(phase));
         *t = one;
     }
-    sub_80087C0(p);
-    sub_80087B4(p);
-    sub_800872C(p, 0);
+    ResetSpriteFrameTimer(p);
+    ResetSpriteFrameIndex(p);
+    SetSpriteAnimDone(p, 0);
     {
         s32 frame = 0;
         s32 count = p->bank->records[p->tag].frameCount;

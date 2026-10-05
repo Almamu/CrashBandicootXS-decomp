@@ -2,7 +2,7 @@
 #include "actor.h"
 #include "box_part.h"
 
-extern void sub_8009008(void *manager, void *item);
+extern void UnlinkCrateFromGrid(void *manager, void *item);
 extern void CpuSet(void *src, void *dst, s32 control);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *fn);
 extern void *_call_via_r1(void *arg0, void *fn);
@@ -12,7 +12,7 @@ extern void *gLevelLayers;
  * `struct pool_manager` (`actor_part12.c`), scoped to the 3-bucket
  * window `[baseIdx, baseIdx+2]` around `baseIdx` (the same
  * `max(gLevelLayers`'s sub-object's own `x >> 8`, `0)` bucket
- * index `sub_800944C`/`sub_8009528` compute), plus the special "large
+ * index `DrawCrateList`/`sub_8009528` compute), plus the special "large
  * object" bucket 255 in a second pass - not a full 0-255 sweep like
  * those two sibling functions.
  *
@@ -24,21 +24,21 @@ extern void *gLevelLayers;
  *    head/tail list, cross-link the two nodes via `+0xc`).
  *  - Otherwise, if `part->flags` bit 0 is set (a "pending removal"
  *    flag), removes `part` from `manager`'s active-object array the
- *    same way `sub_8009A30` does (linear search, `sub_8009008` to
+ *    same way `RemoveCrateFromList` does (linear search, `UnlinkCrateFromGrid` to
  *    unlink the grid node(s), `CpuSet`-based compaction), then
  *    fires a `part->table+0x50/0x54`-driven trampoline via
  *    `_call_via_r2` with constant arg `3` - the exact same "destroy"
- *    trampoline `sub_8009914`'s teardown loop fires.
+ *    trampoline `ResetCrateList`'s teardown loop fires.
  *  - Otherwise, tests `part` against a computed box (the tracked
  *    sub-object's position, offset by fixed constants `-0x6400`/
  *    `-0x3C00` in Q8 and sized `0x1B8`x`0x118` in Q8 - an "extended"
- *    region wider than the plain 240x160 screen box `sub_800944C`/
+ *    region wider than the plain 240x160 screen box `DrawCrateList`/
  *    `sub_8009528` use, meaning/purpose not yet confirmed) via a
  *    `part->table+0x40/0x44`-driven trampoline; on a hit, fires a
  *    `part->table+0x18/0x1c`-driven trampoline and marks the node
  *    (`node+0x10 = 1`) so the bucket-255 second pass knows to skip a
  *    node already handled via its primary bucket (clearing the mark
- *    instead), mirroring `sub_800944C`'s own primary/secondary-pass
+ *    instead), mirroring `DrawCrateList`'s own primary/secondary-pass
  *    marking convention (there via `node+0x11`).
  *
  * Built with old_agbcc (see `OLD_AGBCC_OBJS` in the Makefile).
@@ -73,7 +73,7 @@ struct track_obj {
     s32 *pos;
 };
 
-/* `sub_8009A30`'s body, inlined. `holdR2` is a constant: nonzero only
+/* `RemoveCrateFromList`'s body, inlined. `holdR2` is a constant: nonzero only
  * for the first loop's copy (see the hold below). */
 static inline void pool_remove(struct pool_manager *manager, struct box_part *target, s32 holdR2)
 {
@@ -119,7 +119,7 @@ static inline void pool_remove(struct pool_manager *manager, struct box_part *ta
         /* End of the hold above (emits no code). */
         if (holdR2)
             asm("" : : "r"(hold));
-        sub_8009008(manager, item);
+        UnlinkCrateFromGrid(manager, item);
 
         {
             s32 srcOff = off + 4;
@@ -163,7 +163,7 @@ static inline void pool_destroy(struct pool_manager *manager, struct box_part *o
     part_destroy(PART_COPY(obj));
 }
 
-void sub_80091D4(struct pool_manager *manager)
+void UpdateCrateList(struct pool_manager *manager)
 {
     s32 box[4];
     s32 *pos;

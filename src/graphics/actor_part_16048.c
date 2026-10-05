@@ -8,15 +8,15 @@
  * Built with the older compiler, tools/agbcc/bin/old_agbcc (the Makefile's
  * OLD_AGBCC_OBJS) - see docs/matching/issue-20-player-ctrl.md.
  *
- * - sub_8016288 (table slot +0x0C) is the per-frame update: D-pad
+ * - UpdatePlayerCtrl (table slot +0x0C) is the per-frame update: D-pad
  *   up/down with auto-repeat (`repeat`) steps `level` (0..12) and
  *   re-applies the target's animation (ApplyLevel, whose out-of-line copy
  *   is sub_8017348), then runs the per-state handler through
  *   gStaticData_0816C250, a table of gcc 2.x pointer-to-member-functions:
  *   states 0..7 are sub_8016B1C, sub_8016C08, sub_8016C94, sub_8016D5C,
  *   sub_8016DDC, sub_80170EC, sub_8017044, sub_8017184.
- * - sub_8016128 (+0x14) is the message handler, sub_8017218 (+0x1C) sets
- *   the target, sub_80174D8 (+0x4C) is the destructor and sub_80174EC the
+ * - PlayerCtrlHandleEvent (+0x14) is the message handler, AttachPlayerCtrl (+0x1C) sets
+ *   the target, DestroyPlayerCtrl (+0x4C) is the destructor and InitPlayerCtrl the
  *   constructor (called from game_loop39.c).
  * - sub_8017264 sets the mode through the method table (+0x20/+0x50,
  *   called through the _call_via_r2/_call_via_r3 `_call_via_rN` thunks) and
@@ -85,14 +85,14 @@ extern u8 GetDpadDirection(void *arg);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void LoseLife(void *arg0);
 extern void LoadPaletteSlot(void *cache, s32 slot, s32 recordId);
-extern void sub_80087C0(struct pctrl_target *t);
-extern void sub_80087B4(struct pctrl_target *t);
-extern void sub_800872C(struct pctrl_target *t, s32 a);
-extern void sub_800B6D0(void *self, struct pctrl_target *t, struct pctrl_anim *rec);
-extern void sub_800B7B0(void *self, struct pctrl_target *t, struct pctrl_anim *rec);
-extern void sub_800B8A8(void *self, s32 flags);
-extern void sub_800B8C8(void *self);
-extern void sub_8015958(struct player_ctrl *self);
+extern void ResetSpriteFrameTimer(struct pctrl_target *t);
+extern void ResetSpriteFrameIndex(struct pctrl_target *t);
+extern void SetSpriteAnimDone(struct pctrl_target *t, s32 a);
+extern void StartCtrlTargetMotionY(void *self, struct pctrl_target *t, struct pctrl_anim *rec);
+extern void StartCtrlTargetMotionX(void *self, struct pctrl_target *t, struct pctrl_anim *rec);
+extern void DestroyCtrl(void *self, s32 flags);
+extern void InitCtrl(void *self);
+extern void ResetPlayerCtrl(struct player_ctrl *self);
 extern void sub_80159F8(struct player_ctrl *self);
 extern void sub_8015C6C(struct player_ctrl *self);
 extern void sub_8015DF8(struct player_ctrl *self);
@@ -209,7 +209,7 @@ void sub_8016048(struct player_ctrl *self)
     }
 }
 
-void sub_8016128(struct player_ctrl *self, s32 unused, s32 msg, s32 arg)
+void PlayerCtrlHandleEvent(struct player_ctrl *self, s32 unused, s32 msg, s32 arg)
 {
     switch (msg)
     {
@@ -381,9 +381,9 @@ static inline void ApplyLevel(struct player_ctrl *self)
         s32 f34 = t->unk_34;
 
         *tag = gStaticData_0816C070[self->mode][self->level].anim;
-        sub_80087C0(t);
-        sub_80087B4(t);
-        sub_800872C(t, 0);
+        ResetSpriteFrameTimer(t);
+        ResetSpriteFrameIndex(t);
+        SetSpriteAnimDone(t, 0);
         RestoreFrame(self->target, frame, f34);
     }
     else
@@ -410,7 +410,7 @@ static inline void ApplyLevel(struct player_ctrl *self)
     }
 }
 
-void sub_8016288(struct player_ctrl *self)
+void UpdatePlayerCtrl(struct player_ctrl *self)
 {
     if (self->state == 7)
     {
@@ -527,7 +527,7 @@ void sub_8016AB0(struct player_ctrl *self)
 
             rec = (struct pctrl_anim *)(off + (u32)gStaticData_0816B61C);
         }
-        sub_800B7B0(self, self->target, rec);
+        StartCtrlTargetMotionX(self, self->target, rec);
     }
     if (self->hasB == 1)
     {
@@ -540,7 +540,7 @@ void sub_8016AB0(struct player_ctrl *self)
 
             rec = (struct pctrl_anim *)(off + (u32)gStaticData_0816B61C);
         }
-        sub_800B6D0(self, self->target, rec);
+        StartCtrlTargetMotionY(self, self->target, rec);
     }
 }
 
@@ -783,7 +783,7 @@ void sub_8017184(struct player_ctrl *self)
         MarkGone(self->target);
 }
 
-void sub_8017218(struct player_ctrl *self, struct pctrl_target *target)
+void AttachPlayerCtrl(struct player_ctrl *self, struct pctrl_target *target)
 {
     self->target = target;
 }
@@ -791,13 +791,13 @@ void sub_8017218(struct player_ctrl *self, struct pctrl_target *target)
 /* UNUSED */
 void sub_801721C(struct player_ctrl *self, struct pctrl_target *target, s32 idx)
 {
-    sub_800B6D0(self, target, &gStaticData_0816B61C[self->animSet->entries[idx].b]);
+    StartCtrlTargetMotionY(self, target, &gStaticData_0816B61C[self->animSet->entries[idx].b]);
 }
 
 /* UNUSED */
 void sub_8017240(struct player_ctrl *self, struct pctrl_target *target, s32 idx)
 {
-    sub_800B7B0(self, target, &gStaticData_0816B61C[self->animSet->entries[idx].a]);
+    StartCtrlTargetMotionX(self, target, &gStaticData_0816B61C[self->animSet->entries[idx].a]);
 }
 
 void sub_8017264(struct player_ctrl *self, s32 a, s32 mode, s32 timer, s32 timerMax)
@@ -828,17 +828,17 @@ void sub_80174BC(struct player_ctrl *self)
     sub_8017264(self, 1, 1, KEEP, 0);
 }
 
-void sub_80174D8(struct player_ctrl *self, s32 flags)
+void DestroyPlayerCtrl(struct player_ctrl *self, s32 flags)
 {
     self->vtable = (struct pctrl_vtable *)gPlayerCtrlVtable;
-    sub_800B8A8(self, flags);
+    DestroyCtrl(self, flags);
 }
 
-struct player_ctrl *sub_80174EC(struct player_ctrl *self)
+struct player_ctrl *InitPlayerCtrl(struct player_ctrl *self)
 {
-    sub_800B8C8(self);
+    InitCtrl(self);
     self->vtable = (struct pctrl_vtable *)gPlayerCtrlVtable;
-    sub_8015958(self);
+    ResetPlayerCtrl(self);
     return self;
 }
 

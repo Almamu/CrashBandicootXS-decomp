@@ -77,15 +77,15 @@ void sub_8025A3C(void *self, s32 val)
     *(s32 *)((u8 *)self + 4) = val >> 8;
 }
 
-extern void sub_8026ED0(void *self);
+extern void OperatorDelete(void *self);
 
-/* If bit 0 of `flags` is set, forwards to `sub_8026ED0` - same
+/* If bit 0 of `flags` is set, forwards to `OperatorDelete` - same
  * conditional-destroy shape as `sub_8025D54`/game_loop4.c's
  * near-identical function. */
 void sub_8025A44(void *self, s32 flags)
 {
     if (flags & 1) {
-        sub_8026ED0(self);
+        OperatorDelete(self);
     }
 }
 

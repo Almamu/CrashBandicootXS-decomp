@@ -14,7 +14,7 @@ any of this.
 ## Session update: a third, previously-undocumented gap found and closed
 
 A follow-up session (prompted by this project's newly-discovered
-matching-constraint-asm technique, see `sub_800A884`'s doc) re-derived
+matching-constraint-asm technique, see `CollidePlayer`'s doc) re-derived
 the whole-function instruction diff from scratch (extracting the exact
 ROM bytes straight from this file's own NAKED transcription - which is
 *defined* to be byte-identical to the ROM - assembling both sides
@@ -52,7 +52,7 @@ diff, not just the touched spot), raising the match from 99.86% to
 99.89011% per `objdiff-cli diff`. The two previously-documented
 register-choice residuals (below) are unchanged and were re-attempted
 this session with the new matching-constraint-asm technique described
-in `sub_800A884`'s doc; neither could be closed (see "New technique
+in `CollidePlayer`'s doc; neither could be closed (see "New technique
 attempts this session" at the end of this doc for exactly what was
 tried and why it didn't work, including one attempt that silently
 *miscompiled* - worth recording so it isn't retried blindly).
@@ -261,7 +261,7 @@ sites now that everything else is nailed down.
 
 ## New technique attempts this session (matching-constraint asm operand)
 
-`sub_800A884`'s doc (`docs/matching/issue-9-10-0x0800a884-graphics.md`)
+`CollidePlayer`'s doc (`docs/matching/issue-9-10-0x0800a884-graphics.md`)
 this session documented a new technique: an inline-asm operand with a
 **matching constraint** (`"0"(existing_var)`) that reuses a register
 another value is *already*, naturally (unforced), allocated to,
@@ -297,7 +297,7 @@ technique and neither closed cleanly:
    genuine 4-way control-flow merge point (reached from the
    "first-char-is-NUL" check, the "posAccum >= limit" check, the
    bottom-of-loop "`*token == 0`" check, and the "lineCount >= limit"
-   check) - unlike `sub_800A884`'s `kindZero` case, there is **no
+   check) - unlike `CollidePlayer`'s `kindZero` case, there is **no
    variable that is already, naturally, unforced in `r1` on all four
    incoming edges** to hook a matching constraint onto; nothing
    upstream of `end:` uses `r1` for anything still live by the time
@@ -323,7 +323,7 @@ Net result this session: the newly-found default-case control-flow bug
 previously-known register-choice residuals remain open, and the new
 matching-constraint technique - while it *can* reproduce either
 residual's target instructions in isolation - does not decompose
-cleanly for either one the way it did for `sub_800A884`'s
+cleanly for either one the way it did for `CollidePlayer`'s
 `kindZero`/`r7` case (which had a stable, single, already-forced
 register to lean on across the whole function; both of this function's
 residuals sit at points with no comparably stable natural register

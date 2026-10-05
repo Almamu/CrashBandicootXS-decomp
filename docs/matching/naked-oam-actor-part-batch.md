@@ -12,7 +12,7 @@ folding it into the surrounding matched file's tracked range. This
 does not apply to trivial pre-existing wrapper-style NAKED functions
 (BIOS SWI call wrappers, bare register trampolines, no-op stubs) -
 those remain an accepted, separate convention since there's no real C
-logic to express for them in the first place; `sub_8007DBC`
+logic to express for them in the first place; `CheckSpritePickup`
 (`naked-sub_8007dbc.md`), a substantial function matched via this same
 technique in an earlier session before this tracking distinction was
 drawn, is left as-is rather than retroactively re-filed.
@@ -22,26 +22,26 @@ matches - every function that was previously parked under
 `#if NON_MATCHING` across `src/graphics/oam_count.c`, `graphics.c`,
 `actor_part.c`, `actor_part3.c`, `actor_part4.c`, `actor_part5.c`,
 `actor_part6.c`, and `actor_part7.c`/the new `actor_part7b.c`:
-`DrawPowerDialog`, `DrawSpritePieces`, `sub_8007B00`, `sub_8007B98`,
-`sub_8008044`, `sub_8008188`, `sub_8008200`, `sub_8008278`,
-`GetSpriteFrame`, `sub_8008770`, `sub_800891C`, `sub_8008A40`,
-`sub_8008AD8`, and `sub_8008D80`. Every one of these had already been
+`DrawPowerDialog`, `DrawSpritePieces`, `GetSpriteBounds`, `GetSpriteHitbox`,
+`AdvanceSpriteAnim`, `sub_8008188`, `sub_8008200`, `sub_8008278`,
+`GetSpriteFrame`, `IsSpriteAnimLooping`, `UpdatePartList`, `CollidePartList`,
+`CollidePartWithPlayer`, and `CollidePartWithObject`. Every one of these had already been
 fully semantically understood (see their doc comments, now preserved
 in git history alongside the plain-C reconstructions they replace, and
 `docs/matching.md`'s corresponding "Parked, not matched" entries) -
 the only remaining gap was register-letter/codegen-shape mismatches
 that resisted every C-level technique tried across one or more prior
 sessions: the categorical `r7`-pin hazard (`DrawPowerDialog`,
-`sub_8007B00`, `sub_800891C`, `sub_8008A40` - see
+`GetSpriteBounds`, `UpdatePartList`, `CollidePartList` - see
 `matching_decomp_register_pinning` memory point 10 and
 `naked-sub_8007dbc.md`'s account of the same wall), a register-register
 `add`'s stubborn destination-operand canonicalization that this
 compiler never reorders no matter the C source shape (`sub_8008188`,
 `sub_8008200`, `sub_8008278`, `GetSpriteFrame`), a redundant
 byte-truncation the compiler always optimizes away once it can prove
-an `AND`'s range (`sub_8008770`), a genuine stack-frame/local-variable
+an `AND`'s range (`IsSpriteAnimLooping`), a genuine stack-frame/local-variable
 shape this reconstruction couldn't reverse-engineer (`DrawSpritePieces`,
-`sub_8008044`), and (`sub_8008AD8`/`sub_8008D80`) a C-level
+`AdvanceSpriteAnim`), and (`CollidePartWithPlayer`/`CollidePartWithObject`) a C-level
 inexpressibility - leaving one incoming scalar argument untouched in
 its own stack slot while still building a struct pointer that includes
 it, which C has no syntax for.
@@ -51,7 +51,7 @@ already exhausted every cataloged technique against, including
 `decomp-permuter` runs - every one of these fourteen functions was
 converted to a `NAKED` function whose body is a single `asm()` block
 transcribing the real ROM disassembly instruction-for-instruction, the
-same technique already used for `sub_8007DBC`
+same technique already used for `CheckSpritePickup`
 (`naked-sub_8007dbc.md`) and several functions in
 `src/system/link_cable.c`/`src/audio/gax_swi.c`. Since this is a
 literal byte-for-byte transcription rather than a derived
@@ -90,10 +90,10 @@ real ROM address isn't contiguous with that file's other functions
 (the established "needs its own new .c file" case from
 `docs/workflow.md` step 4):
 
-- `sub_8008D80` moved out of `actor_part7.c` into a new
+- `CollidePartWithObject` moved out of `actor_part7.c` into a new
   `src/graphics/actor_part7b.c` - its real ROM address, `0x08008D80`,
-  sits after `actor_part10.c`'s `sub_8008C80`/`sub_8008CEC`/
-  `sub_8008D30`, not right after `sub_8008AD8` the way the old
+  sits after `actor_part10.c`'s `CullPartList`/`ClearPartList`/
+  `sub_8008D30`, not right after `CollidePartWithPlayer` the way the old
   `#if NON_MATCHING` C draft's position in the file implied (that
   position never mattered before, since the guarded C never actually
   linked into the matching build - only now that it's unconditionally
@@ -103,14 +103,14 @@ real ROM address isn't contiguous with that file's other functions
 
 This batch retires six now-empty raw-assembly splits entirely -
 `asm/code_3_1_10_11.s` (`DrawPowerDialog`), `asm/code_3_2_2.s`
-(`sub_8007B00`/`sub_8007B98`), `asm/code_3_2_4.s` (`sub_8008044`),
+(`GetSpriteBounds`/`GetSpriteHitbox`), `asm/code_3_2_4.s` (`AdvanceSpriteAnim`),
 `asm/code_3_2_5.s` (`sub_8008188`/`sub_8008200`/`sub_8008278`),
 `asm/code_3_2_6.s` (`GetSpriteFrame`), `asm/code_3_2_7.s`
-(`sub_8008770`), `asm/code_3_2_8.s` (`sub_800891C`/`sub_8008A40`/
-`sub_8008AD8`), and `asm/code_3_2_12.s` (`sub_8008D80`) - each deleted
+(`IsSpriteAnimLooping`), `asm/code_3_2_8.s` (`UpdatePartList`/`CollidePartList`/
+`CollidePartWithPlayer`), and `asm/code_3_2_12.s` (`CollidePartWithObject`) - each deleted
 and its `ldscript.txt` line dropped, the same "retire an emptied
 split" convention as `asm/code_3_1.s`/`ShowBitmapScreen` and
-`asm/code_3_2_3.s`/`sub_8007DBC` before it (see `docs/matching.md` and
+`asm/code_3_2_3.s`/`CheckSpritePickup` before it (see `docs/matching.md` and
 `naked-sub_8007dbc.md`). `graphics.c`'s `asm/code_3_2.s` split stays
 (other raw functions remain in it after `DrawSpritePieces`'s removal).
 
@@ -120,13 +120,13 @@ after this batch, alongside `make NON_MATCHING=1 report` (kept
 working, though now a no-op for these fourteen functions specifically
 since they're unconditionally compiled either way).
 
-**Update: `sub_8008770` matched in a later session.** Converted back
+**Update: `IsSpriteAnimLooping` matched in a later session.** Converted back
 from this NAKED transcription to real C - an empty
 `asm volatile("" : "+r"(test))` barrier right after the `and` that
 computes the result made its value opaque to the optimizer, forcing
 the automatic `s32`-to-`u8` return-value truncation the ROM has (and
 this compiler otherwise proves redundant) to actually materialize.
-See `docs/matching.md`'s "Parked, not matched: sub_8008770" entry for
+See `docs/matching.md`'s "Parked, not matched: IsSpriteAnimLooping" entry for
 the full account.
 
 **Update: `sub_8008188`/`sub_8008200`/`sub_8008278`/`GetSpriteFrame`
@@ -157,10 +157,10 @@ parked.
 
 ## Later pass (issue #9 NAKED retry)
 
-`sub_8007B00`/`sub_8007B98`, `sub_8008044`, `sub_8008A40`/`sub_8008AD8`
-and `sub_8008D80` are now real C under old_agbcc. The box builders
-return the box by value. `sub_8008A40`/`sub_8008AD8`/`sub_8008D80` take
-it by value, which fixes the "stack-layout coincidence". `sub_800891C`
+`GetSpriteBounds`/`GetSpriteHitbox`, `AdvanceSpriteAnim`, `CollidePartList`/`CollidePartWithPlayer`
+and `CollidePartWithObject` are now real C under old_agbcc. The box builders
+return the box by value. `CollidePartList`/`CollidePartWithPlayer`/`CollidePartWithObject` take
+it by value, which fixes the "stack-layout coincidence". `UpdatePartList`
 is still NAKED, with a C draft 18 halfwords off. See [issue-9-naked-retry.md](./issue-9-naked-retry.md) for details.
 
 ## Later pass (strag1)

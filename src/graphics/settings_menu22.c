@@ -15,7 +15,7 @@
  * Built with old_agbcc (Makefile OLD_AGBCC_OBJS): its mask-before-ldrb
  * order shows in DrawPauseGemsPage's flag tests. */
 
-extern void sub_8008890(void *arg0, s32 arg1, s32 arg2);
+extern void DrawSpriteWithOffset(void *arg0, s32 arg1, s32 arg2);
 extern struct icon_pos gStaticData_0816B21C[];
 extern void DrawPauseFraction(struct pause_screen_results *self, void *label1, void *label2);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
@@ -51,14 +51,14 @@ static inline void set_icon_mgr_pos(struct icon_manager *m, u32 x, u32 y)
 void DrawPauseGemsPage(struct pause_screen_results *self)
 {
     if (((u8 *)self->field_10)[2] & 1)
-        sub_8008890(self->icons9c[1], 0, 0);
+        DrawSpriteWithOffset(self->icons9c[1], 0, 0);
     if (((u8 *)self->field_10)[2] & 4)
-        sub_8008890(self->icons9c[2], 0, 0);
+        DrawSpriteWithOffset(self->icons9c[2], 0, 0);
     if (((u8 *)self->field_10)[2] & 8)
-        sub_8008890(self->icons9c[3], 0, 0);
+        DrawSpriteWithOffset(self->icons9c[3], 0, 0);
     if (((u8 *)self->field_10)[2] & 2)
-        sub_8008890(self->icons9c[4], 0, 0);
-    sub_8008890(self->icons9c[0], 0, 0);
+        DrawSpriteWithOffset(self->icons9c[4], 0, 0);
+    DrawSpriteWithOffset(self->icons9c[0], 0, 0);
 
     set_icon_mgr_pos(gSmallFont, gStaticData_0816B21C[0].x - 0x14, gStaticData_0816B21C[0].y - 4);
     DRAW_ICON_TEXT(gSmallFont, self->buf2f);
@@ -82,7 +82,7 @@ void DrawPauseRelicsPage(struct pause_screen_results *self)
     s32 i;
 
     for (i = 0; i <= 2; i++)
-        sub_8008890(self->iconsB0[i], 0, 0);
+        DrawSpriteWithOffset(self->iconsB0[i], 0, 0);
 
     set_icon_mgr_pos(gSmallFont, gStaticData_0816B258[2].x - 4, gStaticData_0816B258[2].y + 0xe);
     DRAW_ICON_TEXT(gSmallFont, self->buf38);

@@ -1,6 +1,6 @@
 # Issue #17, leading portion: 0x08012FBC-0x08013C60 (5 functions)
 
-Continuation of the `gStaticData_0816BF20` 42-slot action-dispatch-table
+Continuation of the `gActionCtrlStateTable` 42-slot action-dispatch-table
 family issue #16's remainder (`docs/matching/issue-16-actor-12160.md`,
 `docs/matching/issue-16-actor-remainder.md`) already closed out through
 0x08012D24. Issue #17 itself scopes the whole 0x08012FBC-0x08014F8C
@@ -67,7 +67,7 @@ child-object/action-table family (`actor_part79.o`/`actor_part83.o`/
 ## Semantics (all five)
 
 - **`sub_8012FBC`** (620 B, `actor_part_12fbc.c`) - bails immediately
-  (no `sub_80122CC` call at all) if `sub_8012A7C(self)` reports busy.
+  (no `UpdatePlayerFacing` call at all) if `sub_8012A7C(self)` reports busy.
   Otherwise reads `gKeys`'s high 16 bits: bit 0 plays a
   fixed sound (id `0xd`), fires the `+0x20`/`+0x24` and `+0x50`/`+0x54`
   trampoline pairs (ids `5`/`0x13`), sets the trio `self+0x18=0`/
@@ -94,7 +94,7 @@ child-object/action-table family (`actor_part79.o`/`actor_part83.o`/
   for `self+8==4`, sets `self+0x29` from the bit test and tail-calls
   `sub_8015460(self)`; otherwise, while `self+0x18` is already nonzero,
   overwrites it with the same bit-test value. Every path but the very
-  first (bit-0) case ends with `sub_80122CC(self)`.
+  first (bit-0) case ends with `UpdatePlayerFacing(self)`.
 - **`sub_8013228`** (656 B, `actor_part_12fbc.c`) - first clears two
   `part+0xd` bits (`&= ~2`, then `&= ~3`, each via the runtime-negated-
   mask idiom, not a folded AND-immediate). If `part+0x68` bit 2 is set:
@@ -118,7 +118,7 @@ child-object/action-table family (`actor_part79.o`/`actor_part83.o`/
   otherwise, a `self+0x27` tag of `0x1b`/`0x1c` resets it to `1`/`1`/
   `0x1c`; a nonzero `self+0x18` (tag `!=0xd`) resets it to `0`/`1`/`0xd`;
   and a clear player `+0x100` flag resets it to `0`/`1`/`7` - before
-  tail-calling `sub_80122CC(self)`.
+  tail-calling `UpdatePlayerFacing(self)`.
 - **`sub_80134B8`** (1072 B, `actor_part_134b8.c`) - confirmed by this
   pass as `docs/rom_map.md`'s "bonus/score popup" handler, the table's
   shared default reused across 6 of its 42 slots. Caches `part+0x68`
@@ -128,7 +128,7 @@ child-object/action-table family (`actor_part79.o`/`actor_part83.o`/
   `+0x20`/`+0x24` and `+0x50`/`+0x54` trampoline pairs (ids `0xe`/
   `0x10`), resetting `self+0x18`/`+0x1c` and the `+0x21..+0x24` run plus
   the player's `+0x92` byte - the same shape `sub_8013228` establishes.
-  If `part+0x68` was clear: calls `sub_80122CC(self)`, then ticks
+  If `part+0x68` was clear: calls `UpdatePlayerFacing(self)`, then ticks
   `self+0x25`'s countdown (resetting it once the D-pad result is also
   clear) and returns. Otherwise (`part+0x68` set): calls
   `sub_801283C(self)`; for `self+8==0x1a` with `self+0x28==0`, sets the
@@ -137,8 +137,8 @@ child-object/action-table family (`actor_part79.o`/`actor_part83.o`/
   trampoline pair (ids `0x1a`/`0x15`, skipped for `self+8==0xe`),
   clamps `part+0x30` via the same table-lookup idiom `sub_8013228`
   uses, and calls `sub_800B334(part)` (or, for `self+8==0x1a`, instead
-  re-runs `sub_80122CC`/`sub_801283C` and clears `part+0x68`); when
-  clear, a D-pad result of `1`/`2` similarly re-runs `sub_80122CC`/
+  re-runs `UpdatePlayerFacing`/`sub_801283C` and clears `part+0x68`); when
+  clear, a D-pad result of `1`/`2` similarly re-runs `UpdatePlayerFacing`/
   `sub_801283C` and resets `part+0x68`, while bit 3 (and `part->0x64
   >= 0`) arms `part+0xd` bit 0, clears `self+0x34`, and - for `self+8`
   in `0x18..0x19` - spawns two objects via
@@ -256,7 +256,7 @@ ROM's own `_0XXXXXXX` hex-address labels verbatim as plain, file-local
 asm symbols rather than hand-renumbering them - safe here since each
 label's hex address is inherently unique across the whole ROM, so no
 collision risk exists even across the three files, the same approach
-`actor_part82.c`'s `sub_8011BD4` uses for the same reason (transcription-
+`actor_part82.c`'s `ActionCtrlHandleEvent` uses for the same reason (transcription-
 error avoidance for functions this size). Every function was verified
 structurally byte-exact via an isolated `cpp`/`agbcc`/`arm-none-eabi-as`
 + `objcopy`/`objdump` comparison against the ROM's own raw bytes before

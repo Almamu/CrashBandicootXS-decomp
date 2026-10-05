@@ -4,7 +4,7 @@
 /* GitHub issue #12: 0x0800D040-0x0800FC70, the physics/collision
  * subsystem (see game_loop6.c's header comment and
  * docs/matching/issue-12-physics-collision.md). Phase 2, higher-address
- * half: the twelve functions from `ExplodeCrate` through `sub_800F990`
+ * half: the twelve functions from `ExplodeCrate` through `UpdateSlotCrate`
  * (0x0800EEF0-0x0800FC70, the end of this whole cluster), all direct or
  * transitive callees of `sub_0800D18C`'s and `sub_800E08C`'s per-edge
  * jump table (game_loop47.c) - see that issue doc's "Phase 2 grouping
@@ -20,7 +20,7 @@
 extern struct phys_obj_list *gCrateList;
 extern u8 gUnknown_030012B0;
 extern void ExplodeCrate(struct crate *self, u8 arg1);
-extern void sub_8009AA0(struct phys_obj_list *list, s32 index);
+extern void RemoveCrateListAt(struct phys_obj_list *list, s32 index);
 extern void *gAudioContext;
 extern void *gHud;
 extern void PlaySfx(void *ctx, s32 id, s32 volume);
@@ -28,8 +28,8 @@ extern void sub_8028474(void *arg);
 extern void PressSwitchCrate(void *arg);
 extern void DetonateNitroCrates(void);
 extern void SolidifyOutlineCrate(struct crate *self);
-extern s32 sub_800815C(void *self);
-extern void sub_8026EB4(void *p);
+extern s32 GetSpriteAnimPaletteSlot(void *self);
+extern void OperatorDeleteArray(void *p);
 extern u8 gCrateKindExplosive[];
 extern u8 gCrateKindBreakable[];
 extern void OpenCheckpointCrate(void *self);
@@ -38,7 +38,7 @@ extern void ActivateIronSwitchCrate(struct crate *self);
 extern void ActivateNitroSwitchCrate(struct crate *self);
 extern void sub_8009150(struct phys_obj_list *list, struct crate *obj);
 extern void sub_8025A0C(u8 *bitmap, u16 id);
-extern void *sub_8026EC0(u32 size);
+extern void *OperatorNewArray(u32 size);
 extern void *GetCrateBelow(void *obj);
 extern void *GetCrateAbove(void *obj);
 extern void SetCrateBelow(void *obj, void *prev);
@@ -49,7 +49,7 @@ extern void AddBrokenCrate(void *arg);
 extern void DropCratesAbove(struct crate *self);
 extern void BreakCrateInStack(void *self, u32 arg1, u32 arg2, u32 arg3);
 extern u32 sub_8010A50(struct crate *self);
-extern u8 gStaticData_0816BB94[];
+extern u8 gSlotCrateTimers[];
 
 
 /* Per-edge jump table's **case 4 handler**
@@ -73,7 +73,7 @@ extern u8 gStaticData_0816BB94[];
  * `self+0x4e` by `0x21` (`0xa -> ... ` - stores through
  * `self+0x4e - 0x21`, i.e. a computed offset elsewhere in `self`'s
  * struct) instead of the usual `self+0x2d = 0x21` tag write, then in
- * either case calls the `sub_80087C0`/`sub_80087B4`/`sub_800872C`
+ * either case calls the `ResetSpriteFrameTimer`/`ResetSpriteFrameIndex`/`SetSpriteAnimDone`
  * triplet (the "set tag, refresh sprite/animation" idiom shared by
  * every state-transition function in this cluster - see
  * `ActivateNitroSwitchCrate`/`ActivateIronSwitchCrate`/`SolidifyOutlineCrate`/`UpdateTntCountdown` below for the
@@ -125,9 +125,9 @@ void ExplodeCrate(struct crate *self, u8 near)
     self->state = (self->state & 0x80) | one;
     if (self->kind == 0xa) {
         self->tag = one;
-        sub_80087C0(self);
-        sub_80087B4(self);
-        sub_800872C(self, 0);
+        ResetSpriteFrameTimer(self);
+        ResetSpriteFrameIndex(self);
+        SetSpriteAnimDone(self, 0);
     } else
         PhysSetTag(self, 0x21);
     if (gCrateKindCounted[self->kind])
@@ -252,7 +252,7 @@ void BlastNearbyCrates(struct crate *self, s32 dist)
  * (gUnknown_030012B0)` driven by a one-shot re-scan flag stored at
  * `gUnknown_030012B0`): for every object whose `_call_via_r1`
  * classification against `self` is `3` and whose `+0xc` bit `1` is set,
- * calls `sub_8009AA0(list, index)` (an already-elsewhere-matched
+ * calls `RemoveCrateListAt(list, index)` (an already-elsewhere-matched
  * list-removal helper) and, if that object is still non-NULL
  * afterward, `_call_via_r2(other, 3, ...)` (a variant of the
  * `_call_via_r1` overlap-classifier that also *mutates* state, per the
@@ -274,7 +274,7 @@ void UpdateCrates(void)
 
             if (PHYS_CALL(o, m48) == 3) {
                 if (o->flags & 1) {
-                    sub_8009AA0(gCrateList, i);
+                    RemoveCrateListAt(gCrateList, i);
                     if (o != NULL)
                         PHYS_CALL1(o, m50, 3);
                     i--;
@@ -325,7 +325,7 @@ void DetonateNitroCrates(void)
  * `self+0x2d = 0x23` (a "bounced/deflected" state constant, matching
  * this cluster's numbering - `ActivateIronSwitchCrate` below uses `0x22` for a
  * closely related case), then runs the
- * `sub_80087C0`/`sub_80087B4`/`sub_800872C` "set tag, refresh
+ * `ResetSpriteFrameTimer`/`ResetSpriteFrameIndex`/`SetSpriteAnimDone` "set tag, refresh
  * sprite/animation" triplet every state-transition function in this
  * cluster shares. Looks up `self`'s hitbox-record row
  * (`self+0x20`-table/`self+0x2d`-tag/28-byte-stride, this subsystem's
@@ -376,7 +376,7 @@ void ActivateNitroSwitchCrate(struct crate *self)
  * self)` (re-adds `self` to the active list, same call `ExplodeCrate`
  * makes), sets `self+0x4d` bit `0x80` and `gPlayer+0x80 = 1`,
  * tags `self+0x2d = 0x22` (this case's own state constant), and runs
- * the same `sub_80087C0`/`sub_80087B4`/`sub_800872C` triplet plus the
+ * the same `ResetSpriteFrameTimer`/`ResetSpriteFrameIndex`/`SetSpriteAnimDone` triplet plus the
  * `GetPaletteSlot`-driven `self+0x29` nibble update `ActivateNitroSwitchCrate` uses.
  * Calls `sub_8025A0C(gEntityFlags, self+8)` (marks `self`'s
  * position in the same 32x32 collision-cell bitmap `ExplodeCrate`
@@ -388,7 +388,7 @@ void ActivateNitroSwitchCrate(struct crate *self)
  * == 0`, `+0x4e == 5`, and `+0x50` matches `self+0x50`, into a local
  * stack array, calling `sub_8025A0C` on each of *their* positions too.
  * If any were collected, allocates a heap block sized for the count
- * (`sub_8026EC0`), sets `self+0x59 = 1`, and copies the collected
+ * (`OperatorNewArray`), sets `self+0x59 = 1`, and copies the collected
  * pointer array into it before storing the block at `self+0x48` -
  * building a "linked group of simultaneously-triggered neighbors" list.
  * If none were collected, `self+0x48` gets the `-1` sentinel instead.
@@ -442,7 +442,7 @@ void ActivateIronSwitchCrate(struct crate *self)
     }
 
     if (n != 0) {
-        struct crate_group *g = sub_8026EC0((n + 1) * 4);
+        struct crate_group *g = OperatorNewArray((n + 1) * 4);
 
         self->unk_59 = 1;
         g->count = n;
@@ -463,7 +463,7 @@ void ActivateIronSwitchCrate(struct crate *self)
  * "successive triggers" counter) and compares it against `self+0x51`
  * (a per-object cap). Once the cap is reached: if `self+0x48` (the
  * linked-group pointer `ActivateIronSwitchCrate` builds) holds more than one
- * element, calls `sub_8026EB4` (frees it, already-elsewhere-matched);
+ * element, calls `OperatorDeleteArray` (frees it, already-elsewhere-matched);
  * resets `self+0x48` to `-1` and `self+0x4e = 7` (a distinct "group
  * exhausted" state).
  *
@@ -486,7 +486,7 @@ void SolidifyOutlineCrates(struct crate *self)
 
         if (PHYS_HAS_GROUP(g)) {
             if (g != NULL)
-                sub_8026EB4(g);
+                OperatorDeleteArray(g);
             self->unk_59 = 0;
         }
         self->u48.group = PHYS_NO_GROUP;
@@ -530,12 +530,12 @@ void SolidifyOutlineCrates(struct crate *self)
  * of `self+0x2d` tag constants (`0x1f, 0x1a, 0x17, 0x18, 4, 0x20, 2, 5,
  * 0x19 (with a nested self+0x48 = -0x2a store), 6, 0x11, 0xe, 0xf, 0x10
  * (a distinct "no group" tag)`), each falling into the same shared
- * `sub_80087C0`/`sub_80087B4`/`sub_800872C` triplet, plus 4 cases
+ * `ResetSpriteFrameTimer`/`ResetSpriteFrameIndex`/`SetSpriteAnimDone` triplet, plus 4 cases
  * (`3, 5, 9, 11`, per the raw table's own indices) that skip straight
  * to the tail instead. Tail (`self+0x29` nibble update via
- * `sub_800815C(self)`) matches the same `(x & 0xf) | (old & ~0xf)` fold
+ * `GetSpriteAnimPaletteSlot(self)`) matches the same `(x & 0xf) | (old & ~0xf)` fold
  * `ActivateNitroSwitchCrate`/`ActivateIronSwitchCrate` use, just via a different lookup helper
- * (`sub_800815C` instead of `GetPaletteSlot` directly - presumably an
+ * (`GetSpriteAnimPaletteSlot` instead of `GetPaletteSlot` directly - presumably an
  * already-classified variant). */
 
 void SolidifyOutlineCrate(struct crate *self)
@@ -586,7 +586,7 @@ void SolidifyOutlineCrate(struct crate *self)
         PhysSetTag(self, 0x10);
         break;
     }
-    self->slot = sub_800815C(self);
+    self->slot = GetSpriteAnimPaletteSlot(self);
 }
 
 /* `BreakCratesInArea(s32 x, s32 y, s32 arg2, s32 arg3)` - the one function in
@@ -720,7 +720,7 @@ void FinishBrokenCrate(struct crate *self)
  * dispatches on `self+0x4e`:
  *
  * - `0x14`: tags `self+0x2d = 0x12`, runs the
- *   `sub_80087C0`/`sub_80087B4`/`sub_800872C` triplet, plays a sound
+ *   `ResetSpriteFrameTimer`/`ResetSpriteFrameIndex`/`SetSpriteAnimDone` triplet, plays a sound
  *   (`gAudioContext`, id 0x11), then falls into the shared tail
  *   with `self+0x4e = 0x13`, `self+0x4f = 0x3c` (a ~1-second cooldown
  *   at 60 fps).
@@ -780,10 +780,10 @@ void UpdateTntCountdown(struct crate *self)
  * `self+0x48 & 7`, advanced via `(x+1) & 3` each call and masked back
  * into `self+0x48`'s low 3 bits - a 4-phase rotation (only entered when
  * `self+0x2d == 8`, a specific tag this cluster's other functions write
- * via the `sub_80087C0` triplet) that dispatches each phase (`0`, `1`,
+ * via the `ResetSpriteFrameTimer` triplet) that dispatches each phase (`0`, `1`,
  * `2`, `3`, sub-split further by the *previous* phase value in a nested
  * compare) into per-phase blocks. These re-tag `self+0x2d`, re-run the
- * `sub_80087C0`/`sub_80087B4`/`sub_800872C` triplet, and (per the
+ * `ResetSpriteFrameTimer`/`ResetSpriteFrameIndex`/`SetSpriteAnimDone` triplet, and (per the
  * `0xc0`-bit branch taken near the top) call `sub_8010A50(self)` -
  * already matched elsewhere (`game_loop30.c` family) - to decide
  * whether the phase cycle continues or the object's position gets
@@ -800,7 +800,7 @@ void UpdateTntCountdown(struct crate *self)
  * cw |= t`), which ties the `& 0xc7` to the reloaded word's register and
  * the shift to `t`'s, as the ROM does; a single `(w & 0xc7) | (t << 3)`
  * expression left 7 halfwords off. */
-void sub_800F990(struct crate *self)
+void UpdateSlotCrate(struct crate *self)
 {
     s32 w;
     s32 ph0;
@@ -926,7 +926,7 @@ void sub_800F990(struct crate *self)
         {
             s32 d = (s32)((u32)(self->u48.n & 0xc0) >> 6);
 
-            self->timer = gStaticData_0816BB94[d];
+            self->timer = gSlotCrateTimers[d];
         }
     }
     else

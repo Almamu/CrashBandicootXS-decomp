@@ -1,6 +1,6 @@
-# Issues #9/#10: `sub_800AB9C` follow-up (graphics)
+# Issues #9/#10: `CollidePlayerWithObjects` follow-up (graphics)
 
-> **Update:** `sub_800AB9C` is now matched. See "Matched: old_agbcc and
+> **Update:** `CollidePlayerWithObjects` is now matched. See "Matched: old_agbcc and
 > a by-value box" at the end. The sections below describe the earlier
 > parked attempt.
 
@@ -10,13 +10,13 @@ as of
 [issue-9-10-0x0800a884-graphics.md](./issue-9-10-0x0800a884-graphics.md):
 
 - `0x0800AAEC`-`0x0800AFF4` (that write-up's own "most tractable next
-  target", `sub_800AB9C`, plus its still-raw neighbors)
+  target", `CollidePlayerWithObjects`, plus its still-raw neighbors)
 - `0x0800B8DC` onward (a 546+-line, 18-case jump-table state
   dispatcher and beyond)
 
 ## Parked (`NON_MATCHING`, not yet byte-exact) - 1 function
 
-- **`sub_800AB9C`** (`src/graphics/actor_part81.c`) - a two-flag-gated
+- **`CollidePlayerWithObjects`** (`src/graphics/actor_part81.c`) - a two-flag-gated
   teardown/notification step on `self`, the same still-unnamed "big
   object" (at least 0x108 bytes) `actor_part15.c`/`actor_part77.c`
   already work on. Guarded by `self+0x105` (a "torn down already"
@@ -28,31 +28,31 @@ as of
   `self+0xc` bit 1: relocates `self`'s primary AABB (`sub_8007C30`,
   `actor_part9.c`'s own copy of the same helper) onto a second stack
   slot (`MemCopy32`, a plain `memcpy`) before unpacking it back out
-  into scalars for `sub_8008A40` (already NAKED-parked, `actor_part7.c`)
-  - the exact "relocate then unpack" idiom `sub_8008A40`'s own doc
+  into scalars for `CollidePartList` (already NAKED-parked, `actor_part7.c`)
+  - the exact "relocate then unpack" idiom `CollidePartList`'s own doc
   comment already documents from its callers' side, done here
   explicitly in the caller instead of inline in the callee.
 
   `self+0xc` bit 7: clears `self+0x108`/`self+0x10c` (the same fields
   `sub_8010E2C` clears elsewhere in this object family, just written
   directly here) and fires three teardown/notification calls:
-  `sub_8009868` (NAKED-parked, `actor_part11d.c`) against
+  `CollidePlayerWithCrates` (NAKED-parked, `actor_part11d.c`) against
   `gCrateList`'s manager with selector `3`, `sub_8008D30`
   (`actor_part10.c`) against `gUnknown_030012EC`'s manager with
   selector `4`, and `sub_80106DC` (`game_loop23.c`) with no arguments.
-  `sub_8009868` was previously declared with only one parameter
+  `CollidePlayerWithCrates` was previously declared with only one parameter
   (`manager`) since its only known call site at the time never
   exercised a second argument - this call site is the first one that
-  does (`movs r1, #3` loaded but never read inside `sub_8009868`'s own
+  does (`movs r1, #3` loaded but never read inside `CollidePlayerWithCrates`'s own
   NAKED body), so the extern here is widened to
-  `void sub_8009868(void *manager, s32 arg1)` to reproduce that dead
-  argument load; `sub_8009868`'s own definition is untouched (a dead
+  `void CollidePlayerWithCrates(void *manager, s32 arg1)` to reproduce that dead
+  argument load; `CollidePlayerWithCrates`'s own definition is untouched (a dead
   incoming `r1` doesn't change its behavior or bytes).
 
   Matched everything except one gap:
 
   1. **Both bit tests** needed the established "byte loads into r1,
-     shifted result lands in r0" idiom (`sub_800A884`'s own gotcha,
+     shifted result lands in r0" idiom (`CollidePlayer`'s own gotcha,
      `actor_part78.c`) - `register u8 flagByte asm("r1") = self[0xc];
      register u32 bitN asm("r0") = flagByte >> N;`. For the bit-1 test,
      the subsequent `& 1` also needed forcing into `r0` explicitly
@@ -87,7 +87,7 @@ as of
      usage never has.
 
   **The one gap that resisted every technique tried:** the ROM
-  evaluates `sub_8008A40`'s 7 arguments in the order `unused`
+  evaluates `CollidePartList`'s 7 arguments in the order `unused`
   (`self[0x24]`, stack slot 2, `[sp,#4]`), `compareViewport` (`self`,
   stack slot 3, `[sp,#8]`), `boxH` (`boxCopy.field_c`, stack slot 1,
   `[sp,#0]`), `boxX`/`boxY`/`boxW` (`r1`/`r2`/`r3`), `manager` (`r0`,
@@ -108,7 +108,7 @@ as of
   ldr  r2, [sp, #0x20]
   ldr  r3, [sp, #0x24]
   adds r0, r4, #0      @ manager, last
-  bl   sub_8008A40
+  bl   CollidePartList
   ```
 
   Every plain-C phrasing tried instead has this compiler batch *all*
@@ -132,7 +132,7 @@ as of
     motion).
   - A fully inline-asm call sequence reproducing the ROM's instructions
     verbatim: works in isolation, but the moment the *real* C call to
-    `sub_8008A40` is removed, this compiler no longer sees a
+    `CollidePartList` is removed, this compiler no longer sees a
     stack-argument call anywhere in the function and shrinks the
     outgoing-argument reservation accordingly, silently shifting every
     `sp`-relative local (`box`/`boxCopy`) by the same amount the
@@ -143,8 +143,8 @@ as of
     fragility for a single call's instruction-scheduling gap.
 
   This is the same class of gap this exact source file already
-  documents as unclosable for `sub_8008AD8`/`sub_8008D80`
-  (`actor_part7.c`, right next to `sub_8008A40` itself): "this compiler
+  documents as unclosable for `CollidePartWithPlayer`/`CollidePartWithObject`
+  (`actor_part7.c`, right next to `CollidePartList` itself): "this compiler
   has no way to express 'this scalar parameter is already sitting in
   the right stack position for the callee I'm about to build a struct
   pointer into'" - and the same class `PlaySfx`'s own doc comment
@@ -153,7 +153,7 @@ as of
   appear to be steerable from C source at all." Given a real, working
   precedent for accepting this exact gap (`PlaySfx` itself stays parked
   on it), and every C-level technique in this project's own toolbox
-  already tried, `sub_800AB9C` is parked under `NON_MATCHING` rather
+  already tried, `CollidePlayerWithObjects` is parked under `NON_MATCHING` rather
   than force-matched with a fragile hand-managed-stack asm splice.
 
   Real bytes stay in the new `asm/code_3_2_16_ab9c.s`. `asm/
@@ -162,7 +162,7 @@ as of
   `PlayerHandleEvent`/`DrawPlayer` - moved to the new
   `asm/code_3_2_16_ac2c.s`, keeping the same three-way "before /
   parked function / after" split this ROM region's earlier passes
-  (`sub_800A884`, `sub_800B270`) already established.
+  (`CollidePlayer`, `ApplyPlayerVelocity`) already established.
 
 ## Left raw (deeper, still-unexamined dependencies) - 3 functions + 1 large block
 
@@ -191,15 +191,15 @@ as of
   sits directly before the already-flagged-out-of-scope physics/
   collision subsystem (issues #12/#13). This remains its own
   dedicated multi-session effort - not attempted here, since this
-  session's time went entirely into closing `sub_800AB9C`'s gap
+  session's time went entirely into closing `CollidePlayerWithObjects`'s gap
   instead (which itself only got as far as `NON_MATCHING`, not a full
   match).
 
 ## Cross-references
 
-- `docs/status/actor.md` - `sub_800AB9C`'s `NON_MATCHING` entry added
-  next to `sub_800A884`'s own; the stale combined "`sub_800A884`/
-  `sub_800AAEC`/`sub_800AB9C`/`PlayerHandleEvent`/`DrawPlayer`" left-raw
+- `docs/status/actor.md` - `CollidePlayerWithObjects`'s `NON_MATCHING` entry added
+  next to `CollidePlayer`'s own; the stale combined "`CollidePlayer`/
+  `sub_800AAEC`/`CollidePlayerWithObjects`/`PlayerHandleEvent`/`DrawPlayer`" left-raw
   bullet split into `sub_800AAEC` (its own bullet) and
   `PlayerHandleEvent`/`DrawPlayer` (still combined, both blocked on the
   same class of unexamined state-transition callees).
@@ -211,9 +211,9 @@ as of
   starting point, including the exact function this write-up closes
   (as far as it could be closed) and the `GetSpriteFrame`/`sub_80084C4`
   keyframe-lookup convention referenced above.
-- `src/graphics/actor_part7.c` - `sub_8008A40`'s own doc comment
+- `src/graphics/actor_part7.c` - `CollidePartList`'s own doc comment
   (the "relocate then unpack" idiom this function's first branch
-  mirrors) and `sub_8008AD8`/`sub_8008D80`'s doc comment (the
+  mirrors) and `CollidePartWithPlayer`/`CollidePartWithObject`'s doc comment (the
   precedent for this exact "argument already in the right stack
   position" unclosable-gap class).
 - `docs/matching/issue-3-overlay-ui-audio-wrapper.md` - `PlaySfx`'s
@@ -222,7 +222,7 @@ as of
 
 ## Matched: old_agbcc and a by-value box
 
-`sub_800AB9C` is now real C (`src/graphics/actor_part81.c`), and
+`CollidePlayerWithObjects` is now real C (`src/graphics/actor_part81.c`), and
 `asm/code_3_2_16_ab9c.s` is gone. `actor_part81.o` is on the Makefile's
 `OLD_AGBCC_OBJS`. It is the only function in that file, so no other
 function had to be rechecked.
@@ -233,9 +233,9 @@ function had to be rechecked.
   `r0`. Under old_agbcc that "byte in r1, result in r0" shape comes from
   plain `(self->flags0C >> 1) & 1` / `self->flags0C >> 7`. It was the
   reason for the register pins in the first draft. This is some evidence
-  that the 0x0800Axxx neighborhood (`sub_800A884`, `sub_800AAEC`) was
+  that the 0x0800Axxx neighborhood (`CollidePlayer`, `sub_800AAEC`) was
   built with old_agbcc too. Nobody has retried those under it yet.
-- **The argument order.** `sub_8008A40` takes the box by value, as
+- **The argument order.** `CollidePartList` takes the box by value, as
   PR #432 found for `sub_8017AB0` (`actor_part27a.c`). Three words go in
   `r1`-`r3` and the fourth on the stack. gcc stores a partly-in-registers
   argument after the plain stack arguments, which gives the ROM's order:

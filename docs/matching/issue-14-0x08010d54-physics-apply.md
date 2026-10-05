@@ -270,16 +270,16 @@ Phase 1's own pass (see above). Reading the raw bytes confirmed:
   void sub_8010E14(void *arg0, s32 arg1)
   {
       if (arg1 & 1) {
-          sub_8026ED0(arg0);
+          OperatorDelete(arg0);
       }
   }
   ```
   This is **byte-identical in shape** to an already-matched function
   elsewhere in the codebase - `src/graphics/graphics.c`'s own
-  `DestroyOamBuffer(void *arg0, u32 arg1) { if (arg1 & 1) { sub_8026ED0(arg0); } }`.
+  `DestroyOamBuffer(void *arg0, u32 arg1) { if (arg1 & 1) { OperatorDelete(arg0); } }`.
   Not a "mode-parameterized insert" after all (Phase 1's own guess,
   written before this function was read branch-by-branch) - `arg1`
-  gates a VRAM-upload-manager refresh (`sub_8026ED0`, matched
+  gates a VRAM-upload-manager refresh (`OperatorDelete`, matched
   elsewhere), unrelated to the insert-mode idea. `actor_part15.c`'s own
   call site (`sub_8010E14(self + 0x108, 2)`) passes `arg1 = 2`, whose
   bit 0 is clear - so that specific call is itself a no-op at runtime,
@@ -314,14 +314,14 @@ object (distinct from `struct actor`'s own 0x1c bytes and from
 | `sub_8011248` | 124B | Per-frame orbit-position update: two lookups into the shared sine table `gSineTable` (`self+0x4b`'s phase, at strides `*4` and `*2`), combined via the overflow-avoiding fixed-point multiply `FixedMul` (already matched, `math_util.c`) - `self+4` (`y`) is always anchor-y minus the y-offset; `self` (`x`) is anchor-x minus/plus the x-offset depending on `self+0x4a` (mode 1/2), or just the anchor x unchanged for any other mode value. |
 | `DrawExtraLife` | 44B | Re-derives visibility via `DrawSprite(gSpriteRenderer, self)` (already matched), clears flags bit 3 when `self+0x38` is nonzero. |
 | `sub_80112F0` | 4B | Trivial - always returns 2. |
-| `DestroyExtraLife` | 20B | Repoints `self->table` at `gExtraLifeVtable`, tail-calls `sub_8008484` (already matched) with `self`+its own 2nd argument passed through. |
+| `DestroyExtraLife` | 20B | Repoints `self->table` at `gExtraLifeVtable`, tail-calls `DestroySpriteObj` (already matched) with `self`+its own 2nd argument passed through. |
 | `sub_8011308` | 8B | Clears the "spawned/active" gate byte `self+0x48`. |
-| `InitExtraLife` | 32B | `sub_80084A4(self)` (already matched, return discarded) + table repoint (`gExtraLifeVtable`) + `sub_8011308(self)`; returns `self`. Same init/reset/table-repoint trio shape as `actor_part8.c`. |
+| `InitExtraLife` | 32B | `InitSpriteObj(self)` (already matched, return discarded) + table repoint (`gExtraLifeVtable`) + `sub_8011308(self)`; returns `self`. Same init/reset/table-repoint trio shape as `actor_part8.c`. |
 | `sub_8011330` | 52B | If `self+0x48 == 0` and the player's `+0xc` bit 7 is set, fires `self->table+0x68/0x6c`'s trampoline (`_call_via_r1`, already matched) - the usual "offset + fn pointer" pair convention. Always returns 0. |
 | `sub_8011364` | 20B | Seeds `self`/`self+4` (Q8 x/y) from raw `x`/`y` arguments (`<<8`), mirrors both into `self+0x4c`/`self+0x50` (the orbit anchor). |
 | `sub_8011378` | 16B | Sets orbit mode (`self+0x4a`), resets orbit phase (`self+0x4b`) to 0. |
 | `sub_8011388` | 8B | Unexamined byte setter, `self+0x49` - address-adjacent to the mode/phase pair but not read by anything else in this group. |
-| `CheckWumpaPickup` | 184B | Per-frame player-proximity/hit-resolve step: gated by the same orbit-mode/phase fields plus flags bits 2/3 (`self+0xc`), AABB-tests `self` against the player (`gPlayer`) - primary AABB (`sub_8007C30`) when the player's own `+0xa == 0x13`, secondary AABB (`sub_8007B98`) otherwise - and on overlap sets flags bit 3 and tail-calls the despawn picker `PickUpWumpa` (Phase 2's neighboring group, not read this pass - only extern'd) with a mode that differs per path, playing a hit SFX only on the primary-AABB path. |
+| `CheckWumpaPickup` | 184B | Per-frame player-proximity/hit-resolve step: gated by the same orbit-mode/phase fields plus flags bits 2/3 (`self+0xc`), AABB-tests `self` against the player (`gPlayer`) - primary AABB (`sub_8007C30`) when the player's own `+0xa == 0x13`, secondary AABB (`GetSpriteHitbox`) otherwise - and on overlap sets flags bit 3 and tail-calls the despawn picker `PickUpWumpa` (Phase 2's neighboring group, not read this pass - only extern'd) with a mode that differs per path, playing a hit SFX only on the primary-AABB path. |
 
 All matched as real C except `sub_8011248`, closed as a NAKED
 transcription: a plain-C reconstruction reproduces the ROM's exact
@@ -450,7 +450,7 @@ coincide").
   `self->0x48 == 3` specifically, `self->x`/`self->y` are instead reset
   to `gPlayer`'s own position minus a fixed
   `-0x400`/`-0xe00` (Q8) offset. Every path ends with a tail call to
-  `sub_8008364(self)` (already matched, `actor_part5.c`).
+  `UpdateSpriteObj(self)` (already matched, `actor_part5.c`).
 - **`CreateWumpa`** (308B) - the achievement/unlock-icon spawn helper.
   Extern-declared as `void CreateWumpa(u16 arg0)` in
   `graphics_loading_21d80.c` (that call site only ever reads `arg0`, per
@@ -460,9 +460,9 @@ coincide").
   `CreateWumpa(id, x, y, special)` where `special` is `0xFFFF` or `0`
   selecting which of two `dual_array_manager` lists
   (`gUnknown_030012F4` vs `gUnknown_030012EC`) the new part joins.
-  Allocates a `0x54`-byte object (`sub_8026EDC`), re-initializes it
-  (`sub_80084A4`), points its vtable at `gWumpaVtable`,
-  re-initializes via `sub_80119EC` (`actor_part39.c`, already matched),
+  Allocates a `0x54`-byte object (`OperatorNew`), re-initializes it
+  (`InitSpriteObj`), points its vtable at `gWumpaVtable`,
+  re-initializes via `ResetWumpaPickup` (`actor_part39.c`, already matched),
   stores `id`/`x`/`y` (mirrored into `+0x4c`/`+0x50` as a "home
   position" pair `UpdateWumpa`'s mode-3 branch reads back), joins the
   `special`-selected list, points `+0x20` at `gUnknown_030012D0`'s
@@ -533,7 +533,7 @@ make compare`, which passed outright ("La suma coincide"):
 - `CreateWumpa`/`UpdateWumpa`'s mode-3 spawn call share the identical
   shape as the already-NAKED `DropExtraLife`/`DropWumpa` wrappers
   (`game_loop29.c`/`game_loop14.c`): truncated arguments held live in
-  `r8`/`sb` across a `sub_8026EDC`/`sub_80084A4`/re-init call sequence,
+  `r8`/`sb` across a `OperatorNew`/`InitSpriteObj`/re-init call sequence,
   the `mov r_lo,r_hi`/`push {r_lo,...}` high-register save dance this
   compiler only reproduces when its own *unforced* allocator picks
   those registers - `CreateWumpa` is in fact the **callee** those two
@@ -652,8 +652,8 @@ position).
   confirmed this is genuinely how gcc 2.9 -O2 compiles this exact
   bit-test phrasing in this codebase, not a hand-picked quirk). Past the
   gate: builds `self`'s own AABB and the player's AABB via two
-  `sub_8007B98` calls (in that order - `self` first), tests overlap via
-  `sub_8001688`, and on overlap sets flags bit 3 and calls
+  `GetSpriteHitbox` calls (in that order - `self` first), tests overlap via
+  `AabbOverlaps`, and on overlap sets flags bit 3 and calls
   `PickUpExtraLife(self, 0)` - i.e. this is `PickUpExtraLife`'s own player-
   proximity trigger, the "randomized-behavior family"'s entry point.
 - **`PickUpExtraLife`** (224B) - `docs/rom_map.md`'s "randomized-behavior"
@@ -684,7 +684,7 @@ position).
   `gSineTable[self->0x49 & 0x7f]` and `FixedMul` added into
   `self->0x50`, stored to `self->y`, when `self->0x4a` is clear, or
   calls `sub_8011248` (`game_loop52.c`'s orbit-position updater) when
-  set - then always tail-calls `sub_8008364`.
+  set - then always tail-calls `UpdateSpriteObj`.
 - **`CreateExtraLife`** (164B) - `struct actor *CreateExtraLife(u16 arg0, u16
   arg1, u16 arg2, s32 arg3)`, the part-object spawn helper
   extern-declared in `game_loop29.c`. Confirmed `arg3` is genuinely
@@ -789,7 +789,7 @@ followed by `make compare` ("La suma coincide"):
   different register survivors" shape already documented for
   `UpdateWumpa` (`game_loop53.c`).
 - `CreateExtraLife` needs a `0` sentinel alive in `r8` across the
-  `sub_8026EDC`/`sub_80084A4`/`sub_8011308` call sequence purely so it
+  `OperatorNew`/`InitSpriteObj`/`sub_8011308` call sequence purely so it
   can later be spilled back out for three trailing byte stores - the
   same confirmed `mov r_lo,r_hi`/`push {r_lo,...}` high-register
   save/restore dance this compiler only reproduces when its own

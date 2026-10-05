@@ -52,7 +52,7 @@
  * flag set, `DrawExtraLife` re-derives visibility from a
  * `DrawSprite`/`self+0x38` gate and clears flags bit 3 when gated off,
  * `DestroyExtraLife`/`InitExtraLife`/`sub_8011308` are a small
- * init/reset/table-repoint trio (same `sub_80084A4`/table-swap shape
+ * init/reset/table-repoint trio (same `InitSpriteObj`/table-swap shape
  * documented throughout `actor_part8.c`), and `CheckWumpaPickup` is the
  * per-frame player-proximity/hit-resolve step: gated by the same
  * orbit-mode/phase fields, it AABB-tests against the player (choosing
@@ -69,12 +69,12 @@ extern void *gAudioContext;
 
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void DrawSprite(void *self, void *part);
-extern void *sub_8007B98(void *dest, void *pt);
+extern void *GetSpriteHitbox(void *dest, void *pt);
 extern void *sub_8007C30(void *dest, void *pt);
-extern u8 sub_8001688(void *buf1, void *buf2);
+extern u8 AabbOverlaps(void *buf1, void *buf2);
 extern void *_call_via_r1(void *arg0, void *fn);
-extern struct actor *sub_80084A4(struct actor *self);
-extern void sub_8008484(struct actor *self, u32 arg1);
+extern struct actor *InitSpriteObj(struct actor *self);
+extern void DestroySpriteObj(struct actor *self, u32 arg1);
 extern s32 FixedMul(s32 a, s32 b);
 extern s16 gSineTable[];
 extern s32 gStaticData_0816BF08[3];
@@ -155,7 +155,7 @@ s32 sub_80112F0(void)
 }
 
 /* Repoints `self->table` (`self+0x18`) at `gExtraLifeVtable`, then
- * tail-calls `sub_8008484` (already matched, `actor_part8.c`) with
+ * tail-calls `DestroySpriteObj` (already matched, `actor_part8.c`) with
  * `self` and this function's own second argument passed straight
  * through. */
 void DestroyExtraLife(void *selfArg, u32 arg1)
@@ -163,7 +163,7 @@ void DestroyExtraLife(void *selfArg, u32 arg1)
     u8 *self = selfArg;
 
     *(void **)(self + 0x18) = gExtraLifeVtable;
-    sub_8008484((struct actor *)self, arg1);
+    DestroySpriteObj((struct actor *)self, arg1);
 }
 
 /* Clears the "spawned/active" gate byte `self+0x48`. */
@@ -174,7 +174,7 @@ void sub_8011308(void *selfArg)
     self[0x48] = 0;
 }
 
-/* Re-initializes `self` via `sub_80084A4` (already matched,
+/* Re-initializes `self` via `InitSpriteObj` (already matched,
  * `actor_part8.c`; its return value is discarded - same "call for
  * side effect only" shape used elsewhere in this object family),
  * repoints `self->table` at `gExtraLifeVtable`, clears the
@@ -183,7 +183,7 @@ void *InitExtraLife(void *selfArg)
 {
     u8 *self = selfArg;
 
-    sub_80084A4((struct actor *)self);
+    InitSpriteObj((struct actor *)self);
     *(void **)(self + 0x18) = gExtraLifeVtable;
     sub_8011308(self);
     return self;
@@ -261,13 +261,13 @@ void sub_8011388(void *selfArg, u8 val)
  *
  * Once past that gate, proceeds only when flags bit 3
  * (the "already hit" latch `DrawExtraLife` clears) is clear and flags
- * bit 2 is set. Builds `self`'s own AABB via `sub_8007B98`, then reads
+ * bit 2 is set. Builds `self`'s own AABB via `GetSpriteHitbox`, then reads
  * the player's own `+0xa` state: if it's `0x13`, builds the player's
  * *primary* AABB (`sub_8007C30`) and tests it against `self`'s own via
- * `sub_8001688`; on overlap, sets flags bit 3, tail-calls
+ * `AabbOverlaps`; on overlap, sets flags bit 3, tail-calls
  * `PickUpWumpa(self, 1)`, and plays a hit SFX
  * (`PlaySfx(gAudioContext, 6, 0x80)`). Otherwise builds the
- * player's *secondary* AABB (`sub_8007B98`, the same helper used for
+ * player's *secondary* AABB (`GetSpriteHitbox`, the same helper used for
  * `self`'s own box) and tests it the same way; on overlap, sets flags
  * bit 3 and tail-calls `PickUpWumpa(self, 0)` (no SFX on this path). */
 void CheckWumpaPickup(void *selfArg)
@@ -295,12 +295,12 @@ void CheckWumpaPickup(void *selfArg)
         }
     }
 
-    sub_8007B98(selfBox, self);
+    GetSpriteHitbox(selfBox, self);
     player = gPlayer;
 
     if (player[0xa] == 0x13) {
         sub_8007C30(playerBox, player);
-        if (sub_8001688(playerBox, selfBox)) {
+        if (AabbOverlaps(playerBox, selfBox)) {
             register s32 bit asm("r0") = 8;
 
             bit |= self[0xc];
@@ -309,8 +309,8 @@ void CheckWumpaPickup(void *selfArg)
             PlaySfx(gAudioContext, 6, 0x80);
         }
     } else {
-        sub_8007B98(playerBox, player);
-        if (sub_8001688(playerBox, selfBox)) {
+        GetSpriteHitbox(playerBox, player);
+        if (AabbOverlaps(playerBox, selfBox)) {
             register s32 bit asm("r0") = 8;
 
             bit |= self[0xc];

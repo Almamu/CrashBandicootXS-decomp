@@ -2,7 +2,7 @@
 
 /* GitHub issue #9/#10 (0x0800B8DC-0x0800D040 cluster, see
  * docs/matching/issue-9-10-0x0800b8dc-graphics.md): `sub_800C8F8`/
- * `sub_800C940`/`sub_800C97C`, a family of three "sine-wave
+ * `UpdateEnemyBob`/`sub_800C97C`, a family of three "sine-wave
  * oscillator" writers sharing the same 256-entry sine-ish table
  * `gSineTable` (already established elsewhere in this ROM,
  * `src/graphics/actor_part72.c`/`actor_part111.c`) and the global
@@ -15,7 +15,7 @@
  * - `sub_800C8F8`: X axis (`owner+0`), base `self->0x60`, phase index
  *   via `__udivsi3(gRoomFrameCount << 8, self->0x3c) -
  *   (self->0x40 - 0x100)`.
- * - `sub_800C940`: Y axis (`owner+4`), base `self->0x64`, phase index
+ * - `UpdateEnemyBob`: Y axis (`owner+4`), base `self->0x64`, phase index
  *   via `(gRoomFrameCount >> 1) - (self->0x40 - 0x100)` - *no*
  *   `__udivsi3` call, a plain half-rate frame-counter phase
  *   instead.
@@ -43,7 +43,7 @@
  * (and to which register) depends on downstream allocator choices an
  * isolated single-function compile couldn't be made to reproduce
  * exactly, even after matching the constant-materialization form
- * above and pinning registers directly. `sub_800C940` additionally
+ * above and pinning registers directly. `UpdateEnemyBob` additionally
  * uses a 4-register push (`r4-r6`) though only 3 registers hold live
  * values in its own body - presumably 8-byte stack-alignment padding
  * this compiler build doesn't reproduce for a call-free leaf. Given
@@ -88,7 +88,7 @@ void sub_800C8F8(struct part_ctrl *self)
     target->x = self->baseX + v;
 }
 
-/* sub_800C940 and sub_800C97C are real C (issue #10 retry). The ROM
+/* UpdateEnemyBob and sub_800C97C are real C (issue #10 retry). The ROM
  * saves a callee-saved register neither body uses (r5 in C940, r8 in
  * C97C). -fprologue-bugfix is not the cause: agbcc with or without it
  * and old_agbcc all emit the same code for these. What reproduces it is
@@ -98,7 +98,7 @@ void sub_800C8F8(struct part_ctrl *self)
  *   a constant-init asm (brief item 10), which keeps it from being folded
  *   and loaded early.
  * - C97C: `table` pinned to r6, which puts `target` in r5 as in the ROM. */
-void sub_800C940(struct part_ctrl *self)
+void UpdateEnemyBob(struct part_ctrl *self)
 {
     register struct ctrl_target *target asm("r3") = self->target;
     s16 *table = gSineTable;

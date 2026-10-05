@@ -2,7 +2,7 @@
 #include "action_obj.h"
 
 /* Continuation of actor_part28c.c (issue #18's chunk, the last one) -
- * covers `nullsub_17` through `sub_80157C4` (all matched); non-adjacent
+ * covers `nullsub_17` through `ActionCtrlSetTargetAnim` (all matched); non-adjacent
  * to actor_part28c.c since the parked `sub_80156EC` sits raw between
  * them (asm/code_3_2_17_156ec.s). Same "self" object family documented
  * at the top of actor_part18.c/actor_part28.c. */
@@ -65,14 +65,14 @@ extern void *gAudioContext;
 extern void *gPlayer;
 extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
 extern void StopSfx(void *self, u32 id);
-extern u8 sub_800B86C(void *unused, void *partArg, s32 newVal);
+extern u8 SetCtrlTargetAnim(void *unused, void *partArg, s32 newVal);
 
 /* If the player's `+0x100` flag is set: picks a replacement `mode` for
  * a handful of special values (`0x12` when the player's `+0x60` is
  * nonzero -> `0x25`; `0xd`/`0x18` -> `0x26`, both playing a fixed cue
  * via `StopSfx`/`PlaySfx`) and otherwise just re-arms the cue via
  * `StopSfx` with the original `mode`. Always tail-calls
- * `sub_800B86C(arg0, arg1, mode)`.
+ * `SetCtrlTargetAnim(arg0, arg1, mode)`.
  *
  * The control flow below is written as explicit `goto`s matching the
  * ROM's own block layout exactly (one label per ROM branch target, no
@@ -85,7 +85,7 @@ extern u8 sub_800B86C(void *unused, void *partArg, s32 newVal);
  * *shape* just as much as to instruction *choice*.
  *
  * The tail call is declared to return `s32` (reinterpreting
- * `sub_800B86C`'s real `u8` return through a function-pointer cast)
+ * `SetCtrlTargetAnim`'s real `u8` return through a function-pointer cast)
  * purely so the value is considered live in `r0` at the return point:
  * a genuinely `void` tail call leaves `r0` free, and gcc then reuses
  * it as the epilogue's `pop`/`bx` scratch register, where the ROM uses
@@ -98,7 +98,7 @@ extern u8 sub_800B86C(void *unused, void *partArg, s32 newVal);
  * register. See docs/matching/naked-sub_80157c4-matched.md for the
  * full derivation (this was the sole remaining residual after a
  * 99.8%-matching pass). */
-s32 sub_80157C4(void *arg0, void *other, s32 mode)
+s32 ActionCtrlSetTargetAnim(void *arg0, void *other, s32 mode)
 {
     struct act_part *player = gPlayer;
 
@@ -140,5 +140,5 @@ rearm:
     StopSfx(gAudioContext, 0x36);
 
 tail:
-    return ((s32 (*)(void *, void *, s32))sub_800B86C)(arg0, other, mode);
+    return ((s32 (*)(void *, void *, s32))SetCtrlTargetAnim)(arg0, other, mode);
 }

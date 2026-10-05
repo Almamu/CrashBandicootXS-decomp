@@ -1,27 +1,27 @@
 #include "core.h"
 #include "actor.h"
 
-/* The spatial-hash-grid removal primitive `sub_8009A30`/`sub_8009AA0`
+/* The spatial-hash-grid removal primitive `RemoveCrateFromList`/`RemoveCrateListAt`
  * (`actor_part12.c`) call before compacting `manager`'s active-object
  * array - unlinks `item`'s pool node(s) from `manager`'s grid
  * (the `struct pool_manager` documented in `actor_part12.c`) and
  * returns them to the free list.
  *
- * Two-phase search, matching the two places `sub_8009B3C` (insert side)
+ * Two-phase search, matching the two places `LinkCrateInGrid` (insert side)
  * can register an object:
  *  - Phase 1 walks `item`'s own *primary* bucket
- *    (`gridHead[item->bucket]`, the same bucket index `sub_8009B3C`
+ *    (`gridHead[item->bucket]`, the same bucket index `LinkCrateInGrid`
  *    computes on insert) looking for a node whose data pointer equals
  *    `item`; on the first match, unlinks it from that bucket's
  *    singly-linked list (head/tail/prev-next patched as needed, mirroring
- *    `sub_8009AF0`'s own insert-side bookkeeping) and pushes the node's
+ *    `AddCrateGridNode`'s own insert-side bookkeeping) and pushes the node's
  *    wrapper entry back onto `manager->freeListHead`.
  *  - Phase 2 always runs unless phase 1 found a match *and* neither of
  *    two escape conditions hold (`item->field_8 == 0xFFFF`, or
  *    `item`'s flags byte bit 4 - the "large object" flag `sub_8009150`/
- *    `sub_8009B3C` also test - is clear): it then walks every bucket
+ *    `LinkCrateInGrid` also test - is clear): it then walks every bucket
  *    from 255 down to 0 (the special "large object" bucket first,
- *    matching where `sub_8009B3C` links a second node for large objects),
+ *    matching where `LinkCrateInGrid` links a second node for large objects),
  *    removing any further node matching `item` the same way, and stops
  *    scanning a bucket's list once the combined removal count across
  *    both phases exceeds 1.
@@ -71,7 +71,7 @@ struct pool_manager {
         (m)->freeListHead = (node)->wrap;                               \
     }
 
-void sub_8009008(struct pool_manager *manager, struct pool_item *item)
+void UnlinkCrateFromGrid(struct pool_manager *manager, struct pool_item *item)
 {
     s32 bucket = item->bucket;
     struct pool_node *found = manager->gridHead[bucket];

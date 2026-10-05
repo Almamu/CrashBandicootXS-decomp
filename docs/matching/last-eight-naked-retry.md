@@ -55,14 +55,14 @@ only).
 
 ## `SpawnFlamethrowerLabAssistant`: 62 to 12
 
-The ROM's `str r3, [sp]` / `ldr r3, [sp]` around `sub_8008E94` isn't
+The ROM's `str r3, [sp]` / `ldr r3, [sp]` around `AddToPartList` isn't
 one long-lived part+0x28 pseudo. It can be two:
 
 - the first flip's part+0x28, block-local (r3);
 - a stack-resident copy for the second flip.
 
 ```c
-sub_8008E94(gUnknown_030012F0, (q2 = (struct popup_bits *)((u8 *)part + 0x28), part));
+AddToPartList(gUnknown_030012F0, (q2 = (struct popup_bits *)((u8 *)part + 0x28), part));
 asm("" : : "m"(q2));
 ```
 

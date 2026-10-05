@@ -41,7 +41,7 @@ it:
 
 - **One frame struct for both AABBs**
   (`struct { struct fx_box a, b; } f`). With separate locals, gcc held
-  `&b` in a callee-saved register across the second `sub_8007B98` call.
+  `&b` in a callee-saved register across the second `GetSpriteHitbox` call.
 - **Spawn arguments through locals `x0`/`y0`/`m`.** This computes all
   three before either stack-argument store, as the ROM does. It also
   fixed the register permutation: with `y0` live in r5 across the

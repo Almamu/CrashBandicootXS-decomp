@@ -53,7 +53,7 @@ Three functions keep their previous form:
 
 `include/text_popup.h` holds the shared types:
 
-- `struct popup_part`, the sub_8009ED0 part. Its layout matches
+- `struct popup_part`, the CreateMovingSprite part. Its layout matches
   actor_part_188d0.c's `struct gfx_part`: `flipX` is bit 4 of +0x28,
   `frameNibble` is +0x29 and `hdr` is +0x44.
 - `struct enemy_ctrl`, the CreateEnemyCtrl header.

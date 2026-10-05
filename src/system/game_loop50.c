@@ -107,7 +107,7 @@ void sub_8010D54(struct collision_queue *self, void *neighbor, s32 kind,
 
 /* Already matched/documented elsewhere in the codebase (graphics.c's
  * `DestroyOamBuffer`, `src/graphics/graphics.c`) as the exact same
- * one-line "conditional call on bit 0" shape: `sub_8026ED0` (VRAM
+ * one-line "conditional call on bit 0" shape: `OperatorDelete` (VRAM
  * upload manager, matched in graphics.c) only fires when `arg1`'s low
  * bit is set. `src/graphics/actor_part15.c` already externs this
  * function and calls it as `sub_8010E14(self + 0x108, 2)` - i.e. bit 0
@@ -119,12 +119,12 @@ void sub_8010D54(struct collision_queue *self, void *neighbor, s32 kind,
  * sibling before being read branch-by-branch - turns out to be this
  * simpler shape instead, `arg1` gates a VRAM-manager refresh rather
  * than selecting an insert mode). */
-extern void sub_8026ED0(void *arg0);
+extern void OperatorDelete(void *arg0);
 
 void sub_8010E14(void *arg0, s32 arg1)
 {
     if (arg1 & 1) {
-        sub_8026ED0(arg0);
+        OperatorDelete(arg0);
     }
 }
 

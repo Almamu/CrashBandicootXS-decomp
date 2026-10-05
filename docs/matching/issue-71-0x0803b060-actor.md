@@ -42,7 +42,7 @@ All in `src/graphics/actor_anim.c`, in ROM order:
   circular list, and free `self` when `flags & 1`. Almost certainly one
   shared per-"kind" destructor template the original build never
   deduplicated - the same per-"kind"/per-slot pattern seen elsewhere in
-  this ROM (`gStaticData_0816BF20`'s 42-slot table, etc.).
+  this ROM (`gActionCtrlStateTable`'s 42-slot table, etc.).
 - **`UpdatePolarCheckpointText`** - advances `self+0x20` (a Q8 fixed-point
   accumulator, likely a fall/scroll speed) by a fixed `-0x180`/256 per
   call, then either fires the `self+0x50` trampoline record (arg `3`)

@@ -102,7 +102,7 @@ to hold `sp` across the halfword store sequence) or reusing a different
 low register each time depending on how the two boxes' temp/final
 locals are split. This is the same categorical "r7 cannot be pinned in
 this toolchain, ever" limitation from `matching_decomp_register_pinning`
-memory point 10, already on file for `sub_8007DBC`
+memory point 10, already on file for `CheckSpritePickup`
 (`src/graphics/actor_part2.c`) and `MovePolarAkuAku` (this issue's own
 sibling, `docs/matching/issue-54-actor-d3a8.md`) - not something more
 C-level rephrasing was likely to fix, so parked the same way as its two

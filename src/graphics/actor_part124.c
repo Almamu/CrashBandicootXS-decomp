@@ -13,7 +13,7 @@
  * size the whole file turned out to be nothing but tiny single-purpose
  * accessors on this cluster's already-well-characterized `self`/`owner`
  * object shape (field table in the Phase 1 section of the doc above),
- * plus two slightly larger helpers (`sub_800CA08`'s camera-distance/
+ * plus two slightly larger helpers (`GetSfxVolumeAt`'s camera-distance/
  * volume calculator, `UpdatePeriodicSpawner`'s conditional `_call_via_r4`
  * trigger) and one instance of the "flag active + bitmap-set" idiom
  * (`UpdateKnockedEnemyCtrl`) already matched as real C once before, in
@@ -32,7 +32,7 @@
  *   setter (every other function in this cluster only ever *reads*
  *   `self+0x70`; this is the first confirmed writer).
  * - `self+0x4`: the "manager" pointer Phase 2's doc already
- *   identified (`sub_800B704`/`sub_800B838`'s own 8-byte-record
+ *   identified (`StartCtrlTargetMotionYFromSet`/`StartCtrlTargetMotionXFromSet`'s own 8-byte-record
  *   array base) - `ResetEnemyCtrl` resets it to the fixed global
  *   `gStaticData_0816BB6C`.
  * - `self+0x84`: the per-instance mode-indexed pointer table Phase 2
@@ -42,7 +42,7 @@
  *   field table already names - `ResetEnemyCtrl` clears it (part of the
  *   same reset this function performs on `self+0x70`/`self+0x84`).
  * - `self+0x3c`/`0x40`/`0x44`: the sine-oscillator parameters
- *   `sub_800C8F8`/`sub_800C940`/`sub_800C97C` (`actor_part116.c`)
+ *   `sub_800C8F8`/`UpdateEnemyBob`/`sub_800C97C` (`actor_part116.c`)
  *   already consume (`self->0x3c` divisor, `self->0x40` phase offset,
  *   `self->0x44` amplitude) - `sub_800CA94` is their setter.
  * - `self+0x48`/`0x4c`: the fields `sub_800BFA8`'s (`actor_part121.c`)
@@ -88,7 +88,7 @@
  * the same offsets, so its own meaning is still unknown. */
 struct trigger_ctrl {
     u8 unk_00[4];
-    void *manager;          // 0x04 - 8-byte-record array (sub_800B704/sub_800B838)
+    void *manager;          // 0x04 - 8-byte-record array (StartCtrlTargetMotionYFromSet/StartCtrlTargetMotionXFromSet)
     u8 unk_08[4];
     void *vtable;           // 0x0C
     u8 unk_10[0x10];
@@ -99,7 +99,7 @@ struct trigger_ctrl {
     s32 unk_30;             // 0x30
     s32 unk_34;             // 0x34
     s32 unk_38;             // 0x38
-    s32 oscDivisor;         // 0x3C - sine oscillator (sub_800C8F8/sub_800C940/sub_800C97C)
+    s32 oscDivisor;         // 0x3C - sine oscillator (sub_800C8F8/UpdateEnemyBob/sub_800C97C)
     s32 oscPhase;           // 0x40
     s32 oscAmplitude;       // 0x44
     s32 period;             // 0x48 - sub_800BFA8's gate passes once every `period` frames...
@@ -152,7 +152,7 @@ extern struct actor *gPlayer;
  * than the more natural `if (d < 0x20) d = 0x20;`) to make gcc emit
  * the ROM's own `cmp r1, #0x20; bge` pair instead of canonicalizing
  * the negated branch condition into `cmp r1, #0x1f; bgt`. */
-s32 sub_800CA08(s32 x, s32 y)
+s32 GetSfxVolumeAt(s32 x, s32 y)
 {
     register s32 dx asm("r0") = x;
     register s32 dy asm("r1") = y;
@@ -199,28 +199,28 @@ void ResetEnemyCtrl(struct trigger_ctrl *self)
 }
 
 extern u8 gEnemyCtrlVtable[];
-extern void sub_800B8A8(void *self, s32 flags);
-extern void sub_800B8C8(void *self);
+extern void DestroyCtrl(void *self, s32 flags);
+extern void InitCtrl(void *self);
 
 /* Sets `self+0xc`'s table pointer to `gEnemyCtrlVtable` - the
  * same 93-vtable-family record `UpdateEnemyCtrl`/`HitEnemy`
  * (`actor_part112.c`) themselves live in, per the Phase 1 doc's own
- * "Bounds and vtable status" section - then tail-calls `sub_800B8A8`.
+ * "Bounds and vtable status" section - then tail-calls `DestroyCtrl`.
  * Same "dead store, immediately overwritten by the callee" shape
  * already flagged as a likely oddity for this exact function in the
- * Phase 1 doc's own state-9 note: `sub_800B8A8` (`actor_part17.c`)
+ * Phase 1 doc's own state-9 note: `DestroyCtrl` (`actor_part17.c`)
  * unconditionally resets `self+0xc` right back to
- * `gStaticData_087E3E7C` on every call, so this function's own store
+ * `gCtrlVtable` on every call, so this function's own store
  * never survives past the call - the same harmless double-set pattern
  * already established for `sub_8018858`/`sub_8017A78`/`sub_8017FD4`/
  * `sub_800CCCC`. */
 void DestroyEnemyCtrl(struct trigger_ctrl *self, s32 flags)
 {
     self->vtable = gEnemyCtrlVtable;
-    sub_800B8A8(self, flags);
+    DestroyCtrl(self, flags);
 }
 
-/* Resets via `sub_800B8C8`, re-points `self+0xc` at the same
+/* Resets via `InitCtrl`, re-points `self+0xc` at the same
  * `gEnemyCtrlVtable` table `DestroyEnemyCtrl` above uses, then calls
  * `ResetEnemyCtrl` (clearing this object's own extension fields) and
  * returns `self` - the same "reset, re-point, hook, return self"
@@ -229,14 +229,14 @@ void DestroyEnemyCtrl(struct trigger_ctrl *self, s32 flags)
  * `nullsub_N`-hook role those other constructors give a no-op. */
 void *CreateEnemyCtrl(struct trigger_ctrl *self)
 {
-    sub_800B8C8(self);
+    InitCtrl(self);
     self->vtable = gEnemyCtrlVtable;
     ResetEnemyCtrl(self);
     return self;
 }
 
 /* `self+0x3c`/`0x40`/`0x44` setter - the sine-oscillator parameters
- * (divisor, phase offset, amplitude) `sub_800C8F8`/`sub_800C940`/
+ * (divisor, phase offset, amplitude) `sub_800C8F8`/`UpdateEnemyBob`/
  * `sub_800C97C` (`actor_part116.c`) already consume. */
 void sub_800CA94(struct trigger_ctrl *self, s32 a, s32 b, s32 c)
 {
@@ -345,18 +345,18 @@ void UpdatePeriodicSpawner(struct periodic_spawner *self)
 }
 
 extern u8 gStaticData_087E3BEC[];
-extern void sub_8026ED0(void *self);
+extern void OperatorDelete(void *self);
 
 /* Sets `self+0x18`'s table pointer (the struct-actor-shaped "table"
  * field role, per this file's own banner comment) to
  * `gStaticData_087E3BEC` - the same table `graphics.c`'s own
  * constructors already use - then, only if bit 0 of `flags` is set,
- * fires `sub_8026ED0(self)`. */
+ * fires `OperatorDelete(self)`. */
 void DestroyPeriodicSpawner(struct periodic_spawner *self, s32 flags)
 {
     self->base.table = gStaticData_087E3BEC;
     if (flags & 1) {
-        sub_8026ED0(self);
+        OperatorDelete(self);
     }
 }
 
@@ -472,11 +472,11 @@ extern u8 gKnockedEnemyCtrlVtable[];
 /* Same "double-set" shape as `DestroyEnemyCtrl` above: sets `self+0xc`'s
  * table pointer to `gKnockedEnemyCtrlVtable` - the same fixed anchor
  * table `CreateKnockedEnemyCtrl` (`actor_part117.c`) itself re-points `self+0xc`
- * at - then tail-calls `sub_800B8A8`, which promptly resets `self+0xc`
- * right back to `gStaticData_087E3E7C` regardless (same harmless dead
+ * at - then tail-calls `DestroyCtrl`, which promptly resets `self+0xc`
+ * right back to `gCtrlVtable` regardless (same harmless dead
  * store as `DestroyEnemyCtrl`). */
 void DestroyKnockedEnemyCtrl(struct trigger_ctrl *self, s32 flags)
 {
     self->vtable = gKnockedEnemyCtrlVtable;
-    sub_800B8A8(self, flags);
+    DestroyCtrl(self, flags);
 }

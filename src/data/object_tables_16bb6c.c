@@ -26,8 +26,8 @@ const u32 gStaticData_0816BB74[4][2] = {
 };
 
 /* Timer values per direction, CreateCrate (game_loop36.c) and
- * sub_800F990 (game_loop49.c). */
-const u8 gStaticData_0816BB94[4] = {
+ * UpdateSlotCrate (game_loop49.c). */
+const u8 gSlotCrateTimers[4] = {
     40, 30, 20, 10,
 };
 

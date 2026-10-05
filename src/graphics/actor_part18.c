@@ -2,8 +2,8 @@
 #include "action_obj.h"
 
 /* This file (and actor_part18b.c, its non-adjacent continuation) covers
- * part of `gStaticData_0816BF20`, the 42-slot per-level action dispatch
- * table documented in docs/rom_map.md ("`gStaticData_0816BF20` is a
+ * part of `gActionCtrlStateTable`, the 42-slot per-level action dispatch
+ * table documented in docs/rom_map.md ("`gActionCtrlStateTable` is a
  * 42-slot, fully-populated action dispatch table") - `self` is the
  * player/action object those table entries are invoked on, not the
  * small (0x1c-byte) `struct actor` from include/actor.h. `self+0xc` is
@@ -97,7 +97,7 @@ void sub_80142B0(void *selfArg)
 
 extern u8 GetDpadDirection(void *dummy);
 extern u8 sub_8012A7C(void *self);
-extern void sub_80122CC(void *self);
+extern void UpdatePlayerFacing(void *self);
 extern void *gUnknown_03001304;
 
 /* Queues action `next` on the +0x31/+0x2F/+0x27 trio; as inline
@@ -116,7 +116,7 @@ static inline void ActQueue27(struct act *self, s32 cur, s32 next)
  * another - before falling into a shared tail that, when the input
  * snapshot's `0x180` bits are clear and `sub_800AAEC(part, 2)` just
  * fired, runs a third trampoline pair and finishes with
- * `sub_80122CC`.
+ * `UpdatePlayerFacing`.
  *
  * Formerly NAKED; matches under old_agbcc (this whole file is built with
  * it, see docs/matching/issue-15-16-17-naked-retry-2.md): the case 0/2
@@ -180,7 +180,7 @@ void sub_801434C(void *selfArg)
         self->flag2F = hit;
         self->next27 = held;
     }
-    sub_80122CC(self);
+    UpdatePlayerFacing(self);
 }
 /* Trailing byte count isn't a multiple of 4 - without this, `as` pads
  * with its default NOP fill instead of the ROM's zero fill (see

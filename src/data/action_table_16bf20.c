@@ -47,10 +47,10 @@ extern void sub_8015774();
 
 /* 42-slot action dispatch table: one member-function pointer per player
  * action, indexed by the action id (actor_part84.c's `struct act_pmf`
- * view; docs/rom_map.md "gStaticData_0816BF20 is a 42-slot,
+ * view; docs/rom_map.md "gActionCtrlStateTable is a 42-slot,
  * fully-populated action dispatch table"). sub_80134B8 is the shared
  * default handler (6 slots). */
-const struct actor_pmf gStaticData_0816BF20[42] = {
+const struct actor_pmf gActionCtrlStateTable[42] = {
     ACTOR_PMF(sub_8012D24),
     ACTOR_PMF(sub_8015774),
     ACTOR_PMF(nullsub_18),

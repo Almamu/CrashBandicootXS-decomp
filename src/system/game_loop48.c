@@ -34,7 +34,7 @@ extern void OpenLifeCrate(struct crate *self, u32 arg1);
 extern void BreakCrateInStack(struct crate *self, u32 arg1, u32 arg2, u32 arg3);
 extern void BreakCrate(struct crate *self, u32 arg1);
 extern void OpenMysteryCrate(struct crate *self, u32 arg1);
-extern void sub_800ED08(struct crate *self, u32 arg1);
+extern void OpenSlotCrate(struct crate *self, u32 arg1);
 extern void DropCratesAbove(struct crate *self);
 extern void ExplodeCrate(struct crate *self, u8 arg1);
 extern void ActivateIronSwitchCrate(struct crate *self);
@@ -179,8 +179,8 @@ void BounceWumpaCrate(struct crate *self)
  * `sub_800E08C`'s per-edge jump tables select - see
  * docs/matching/issue-12-physics-collision.md's dispatch map. Switches
  * `self` into a fresh sub-state (`+0x4e = 0x15`, hitbox tag `+0x2d =
- * 0x14`), rebuilds its hitbox record (`sub_80087C0`/`sub_80087B4`/
- * `sub_800872C`, the same trio every hitbox-rebuild call in this
+ * 0x14`), rebuilds its hitbox record (`ResetSpriteFrameTimer`/`ResetSpriteFrameIndex`/
+ * `SetSpriteAnimDone`, the same trio every hitbox-rebuild call in this
  * subsystem uses), registers it with the object-pool grid
  * (`sub_8009150`), re-derives a low-nibble sub-animation value from
  * the freshly selected hitbox record's `+0x14` byte via
@@ -214,9 +214,9 @@ void LightTntCrate(void *selfArg)
             : "r0", "cc", "memory"
         );
 
-        sub_80087C0(self);
-        sub_80087B4(self);
-        sub_800872C(self, 0);
+        ResetSpriteFrameTimer(self);
+        ResetSpriteFrameIndex(self);
+        SetSpriteAnimDone(self, 0);
         /* Anchored: the ROM materializes the `0x10` immediate before
          * loading `self[0xc]`, not after - a plain C `self[0xc] |=
          * 0x10;` (in either operand order) always loads the field
@@ -432,7 +432,7 @@ other:
  * dispatches a 23-case jump table on `self`'s freshly-cached
  * `+0x4e` state id to one of this subsystem's other per-state leaf
  * handlers (`OpenAkuAkuCrate`/`OpenLifeCrate`/`ActivateIronSwitchCrate`/`ActivateNitroSwitchCrate`/
- * `OpenMysteryCrate`/`sub_800ED08`/`ExplodeCrate`/`FreezeLevelClock`, or a
+ * `OpenMysteryCrate`/`OpenSlotCrate`/`ExplodeCrate`/`FreezeLevelClock`, or a
  * SFX-3-plus-particle-spawn fallback) before converging on a shared
  * epilogue.
  *
@@ -518,7 +518,7 @@ void BreakCrate(struct crate *self, u32 arg1)
         break;
     case 15:
         if (flag == 0)
-            sub_800ED08(self, chained);
+            OpenSlotCrate(self, chained);
         break;
     case 16:
         FreezeLevelClock(gLevelState, 1);
@@ -655,7 +655,7 @@ static inline void PhysBonus(s32 *p4, u8 *p5, s32 x, s32 y, u8 flag)
                (*(volatile s32 *)p4 = 3, *(volatile u8 *)p5 = flag, 0));
 }
 
-void sub_800ED08(struct crate *self, u32 arg1)
+void OpenSlotCrate(struct crate *self, u32 arg1)
 {
     s32 argP4;
     u32 argP5;

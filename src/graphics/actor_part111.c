@@ -100,7 +100,7 @@
  * `r8`/`ip` all stay live across the trig-table lookups and the two
  * child-record clamp blocks) and the same shape this project has
  * already proven resistant to gcc 2.9 reconstruction on several other
- * functions this session (`sub_800CD00`, `sub_800A178`/`sub_800A420`,
+ * functions this session (`sub_800CD00`, `ProbeGroundSpriteTerrain`/`sub_800A420`,
  * `sub_8026AE8`/`sub_8026A18`) - transcribed directly as byte-exact
  * NAKED asm instead, verified instruction-for-instruction against the
  * ROM disassembly (`asm/code_3_2_16_ac2c.s`'s own former content at

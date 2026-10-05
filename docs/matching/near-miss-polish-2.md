@@ -66,7 +66,7 @@ shift.
 
 | Function | Now | Left |
 |---|---|---|
-| `sub_800F990` | 7 (was 58, old_agbcc) | Separate locals for the phase test, the loop and the `0x38` switch, `asm("" : : "r"(lw))`, and `asm("" : "+r"(ph0))` fixed everything except the count update. There the ROM's `& 0xc7` writes the reloaded word's register (r1, with `t` in r2); the draft writes the constant's (r0, with `t` in r1). Operand order, a fresh local, and 0-2 extra references on `w`/`t` in every position didn't change it. The draft in the file is updated. |
+| `UpdateSlotCrate` | 7 (was 58, old_agbcc) | Separate locals for the phase test, the loop and the `0x38` switch, `asm("" : : "r"(lw))`, and `asm("" : "+r"(ph0))` fixed everything except the count update. There the ROM's `& 0xc7` writes the reloaded word's register (r1, with `t` in r2); the draft writes the constant's (r0, with `t` in r1). Operand order, a fresh local, and 0-2 extra references on `w`/`t` in every position didn't change it. The draft in the file is updated. |
 
 ## Not closed
 

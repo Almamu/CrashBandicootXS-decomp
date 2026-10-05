@@ -6,17 +6,17 @@
  * actor_part38d.c - recategorized `graphics`->`actor` (see docs/matching/
  * issue-19-0x08015840-actor.md). Directly adjacent to actor_part38d.c's
  * matched span (which ends with the shared `sub_8015780` trampoline
- * helper this file's first function calls) and its parked `sub_80157C4`
+ * helper this file's first function calls) and its parked `ActionCtrlSetTargetAnim`
  * right before this chunk starts. Non-adjacent to actor_part57b.c (this
  * chunk's other matched file) since the left-raw
  * `sub_80159F8`/`sub_8015C6C`/`sub_8015DF8` sit between them (see
  * asm/code_3_2_17_159f8.s). */
 
 extern void sub_8015780(void *selfArg, s32 a, s32 b, s32 c, s32 d);
-extern void sub_800B8A8(void *selfArg, s32 flags);
-extern void sub_800B8C8(void *selfArg);
-extern void sub_8011B90(void *selfArg);
-extern u8 gStaticData_087E4224[];
+extern void DestroyCtrl(void *selfArg, s32 flags);
+extern void InitCtrl(void *selfArg);
+extern void ResetActionCtrl(void *selfArg);
+extern u8 gActionCtrlVtable[];
 extern void *gPlayer;
 extern void sub_8017264(void *selfArg, s32 a, s32 b, s32 c, s32 d);
 
@@ -38,29 +38,29 @@ void sub_8015840(void *selfArg)
     self[0x28] = 0;
 }
 
-/* Sets `self+0xc`'s table pointer to `gStaticData_087E4224`, then
- * tail-calls `sub_800B8A8(self, flags)` - which promptly resets it back
- * to `gStaticData_087E3E7C` (see actor_part17.c) - same double-set
+/* Sets `self+0xc`'s table pointer to `gActionCtrlVtable`, then
+ * tail-calls `DestroyCtrl(self, flags)` - which promptly resets it back
+ * to `gCtrlVtable` (see actor_part17.c) - same double-set
  * pattern as `sub_8017A78`. */
-void sub_8015878(void *selfArg, s32 flags)
+void DestroyActionCtrl(void *selfArg, s32 flags)
 {
     u8 *self = selfArg;
 
-    *(void **)(self + 0xc) = gStaticData_087E4224;
-    sub_800B8A8(self, flags);
+    *(void **)(self + 0xc) = gActionCtrlVtable;
+    DestroyCtrl(self, flags);
 }
 
-/* Resets via `sub_800B8C8` (table pointer to `gStaticData_087E3E7C`,
- * `self+8` cleared), re-points the table at `gStaticData_087E4224`, then
- * calls `sub_8011B90` (the child-object field-reset constructor
+/* Resets via `InitCtrl` (table pointer to `gCtrlVtable`,
+ * `self+8` cleared), re-points the table at `gActionCtrlVtable`, then
+ * calls `ResetActionCtrl` (the child-object field-reset constructor
  * documented in actor_part39.c). Returns `self`. */
-void *sub_801588C(void *selfArg)
+void *InitActionCtrl(void *selfArg)
 {
     u8 *self = selfArg;
 
-    sub_800B8C8(self);
-    *(void **)(self + 0xc) = gStaticData_087E4224;
-    sub_8011B90(self);
+    InitCtrl(self);
+    *(void **)(self + 0xc) = gActionCtrlVtable;
+    ResetActionCtrl(self);
     return self;
 }
 
@@ -169,7 +169,7 @@ u8 sub_8015950(void *selfArg)
  * `self+0x22`/`self+0x23`/`self+0x27`/`self+0x20`, sets `self+0x21` to
  * 6, clears `self+0x18`/`self+0x1c`, and clears the player's `+0x92`
  * byte. */
-void sub_8015958(void *selfArg)
+void ResetPlayerCtrl(void *selfArg)
 {
     register u8 *self asm("r3") = selfArg;
     register u8 *p asm("r0") = self + 0x26;

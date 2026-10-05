@@ -40,8 +40,8 @@
  *   0x27FF && abs(dy) <= 0x31FF` in the player/other Q8 delta) that
  *   fires `sub_8017F14(self, other, 0)` plus two more trampoline
  *   calls, or - out of bounds - falls into a "spawn + scan" cluster:
- *   builds an AABB via `sub_8007B98(&box, other)`, unpacks it into
- *   `sub_8008A40(gUnknown_030012F0, box.x, box.y, box.w, box.h, 0,
+ *   builds an AABB via `GetSpriteHitbox(&box, other)`, unpacks it into
+ *   `CollidePartList(gUnknown_030012F0, box.x, box.y, box.w, box.h, 0,
  *   other)`, then walks the whole `gCrateList` object list -
  *   for each entry whose own table (`+0x18`, offset `0x48`) probes
  *   `==3` and is within a `0x27`/`0x3b` Q8>>8 box of `other` with
@@ -66,7 +66,7 @@
  * compiler as actor_part_18008.c/actor_part_188d0.c after it. This used to
  * be a NAKED transcription: the two "unclosable" agbcc gaps recorded for
  * it both close under old_agbcc - the list walk's per-iteration pointer
- * reload is a guarded do-while, and the sub_8008A40 stack-argument order
+ * reload is a guarded do-while, and the CollidePartList stack-argument order
  * comes from passing the box by value. See
  * docs/matching/issue-22-0x08018008-hopper.md. */
 
@@ -210,8 +210,8 @@ extern struct ab_player *gPlayer;
 extern void *gUnknown_030012F0;
 extern struct ab_list *gCrateList;
 extern void sub_8017F14(void *self, void *part, s32 index);
-extern struct ab_box sub_8007B98(void *obj);
-extern void sub_8008A40(void *manager, struct ab_box box, s32 unused, void *compareViewport);
+extern struct ab_box GetSpriteHitbox(void *obj);
+extern void CollidePartList(void *manager, struct ab_box box, s32 unused, void *compareViewport);
 extern void ExplodeCrate(struct ab_part *p, s32 arg);
 extern u8 sub_8010908(struct ab_part *p, s32 kind);
 extern void BreakCrate(struct ab_part *p, s32 arg);
@@ -314,11 +314,11 @@ void sub_8017AB0(struct ab_self *self, struct ab_part *other)
                 return;
             }
         }
-        /* The box goes to sub_8008A40 by value (three words in r1-r3, the
+        /* The box goes to CollidePartList by value (three words in r1-r3, the
          * fourth on the stack): that is what gives the ROM's stack-argument
          * order (6th, 7th, then the box's last word). */
-        box = sub_8007B98(other);
-        sub_8008A40(gUnknown_030012F0, box, 0, other);
+        box = GetSpriteHitbox(other);
+        CollidePartList(gUnknown_030012F0, box, 0, other);
         /* a guarded do-while: a `for` shares the list pointer between the
          * entry test and the body, where the ROM reloads it */
         i = 0;

@@ -1,7 +1,7 @@
 #include "core.h"
 #include "actor.h"
 
-/* Same fixed-slot object-pool/spatial-hash-grid struct `sub_8008F20`
+/* Same fixed-slot object-pool/spatial-hash-grid struct `InitCrateList`
  * initializes (`actor_part11.c`) and `actor_part12.c` operates on - see
  * that file for the full field writeup. */
 struct pool_manager {
@@ -21,13 +21,13 @@ struct pool_manager {
  * the object's `+0xc` flags byte bit 4 isn't set, returns immediately
  * (nothing to do). If it IS set but the node already has a bucket-255
  * secondary link (`node->field_0xc != 0`, the same field
- * `sub_8009AF0`/`sub_8009B3C` set up), also returns immediately - the
+ * `AddCrateGridNode`/`LinkCrateInGrid` set up), also returns immediately - the
  * link already exists. Otherwise, pops a fresh node off the free list
- * (the same `sub_8009AF0` pop idiom), wraps `obj` in it, and inserts
+ * (the same `AddCrateGridNode` pop idiom), wraps `obj` in it, and inserts
  * that new node into bucket 255's head/tail list, finally linking the
  * two nodes together via the original node's `field_0xc` - lazily
  * creating the "large object" bucket-255 registration for an object
- * that didn't get one when it was originally inserted (`sub_8009B3C`
+ * that didn't get one when it was originally inserted (`LinkCrateInGrid`
  * only creates it when `obj->flags` bit 4 is already set at insert
  * time; this looks like the retroactive counterpart, called when an
  * object transitions to "large" status after insertion).

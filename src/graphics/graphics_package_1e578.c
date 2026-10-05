@@ -2,8 +2,8 @@
 #include "graphics_package.h"
 
 extern void LoadTaggedAsset(void *asset, void *dest);
-extern void *sub_8026EC0(u32 size);
-extern void sub_8026EB4(void *ptr);
+extern void *OperatorNewArray(u32 size);
+extern void OperatorDeleteArray(void *ptr);
 
 /* GitHub issue #30. Loads one BG: the palette into bank `paletteBank`,
  * the tiles into char block `charBlock`, and the tilemap into screen
@@ -25,7 +25,7 @@ void LoadGraphicsPackage(struct bg_setup *self, struct bg_package *pkg)
         self->ctrl.bits.colorMode = 1;
     LoadTaggedAsset(pkg->paletteAsset, (void *)(PLTT + (self->paletteBank << 5)));
     LoadTaggedAsset(pkg->tileAsset, (void *)(VRAM + (self->charBlock << 14)));
-    map = sub_8026EC0(*(u32 *)pkg->mapAsset >> 9 << 1);
+    map = OperatorNewArray(*(u32 *)pkg->mapAsset >> 9 << 1);
     LoadTaggedAsset(pkg->mapAsset, map);
     pal = self->paletteBank << 12;
     src = map;
@@ -39,7 +39,7 @@ void LoadGraphicsPackage(struct bg_setup *self, struct bg_package *pkg)
         dest = next;
     }
     if (map != NULL)
-        sub_8026EB4(map);
+        OperatorDeleteArray(map);
 }
 /* Zero-fill the trailing halfword, as the ROM does. */
 asm(".align 2, 0");

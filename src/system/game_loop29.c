@@ -29,10 +29,10 @@ extern struct level_state *gLevelState;
 extern void ***gUnknown_030012D0;
 
 extern struct spawn_part *CreateExtraLife(u16 arg0, u16 arg1, u16 arg2, s32 arg3);
-extern void sub_80087C0(struct spawn_part *part);
-extern void sub_80087B4(struct spawn_part *part);
-extern void sub_800872C(struct spawn_part *part, u8 val);
-extern s32 sub_800815C(struct spawn_part *part);
+extern void ResetSpriteFrameTimer(struct spawn_part *part);
+extern void ResetSpriteFrameIndex(struct spawn_part *part);
+extern void SetSpriteAnimDone(struct spawn_part *part, u8 val);
+extern s32 GetSpriteAnimPaletteSlot(struct spawn_part *part);
 extern void SendExtraLifeToHud(struct spawn_part *part);
 
 static inline void SetPartTag(struct spawn_part *part, s32 tag)
@@ -60,10 +60,10 @@ struct spawn_part *DropExtraLife(void *unused0, u32 x, u32 y, u32 p3, u32 p5, u3
         part->unk_4B = state;
         part->anim = (u8 *)**gUnknown_030012D0 + 0x8d * 4;
         SetPartTag(part, 0xa);
-        sub_80087C0(part);
-        sub_80087B4(part);
-        sub_800872C(part, 0);
-        part->frameNibble = sub_800815C(part);
+        ResetSpriteFrameTimer(part);
+        ResetSpriteFrameIndex(part);
+        SetSpriteAnimDone(part, 0);
+        part->frameNibble = GetSpriteAnimPaletteSlot(part);
         if (f)
             SendExtraLifeToHud(part);
     }

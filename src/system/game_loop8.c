@@ -28,9 +28,9 @@ extern void UpdateCamera(void *self);
 extern void ScrollLevelLayers(void *self);
 extern void TickPaletteCycles(void *self);
 extern void UpdateHud(void *self);
-extern void sub_8008DC0(struct dual_array_manager *manager);
+extern void DrawPartList(struct dual_array_manager *manager);
 extern void *_call_via_r1(void *arg0, void *arg1);
-extern void sub_800944C(void *managerArg);
+extern void DrawCrateList(void *managerArg);
 extern void HideUnusedOamEntries(struct oam_shadow_buffer *arg0);
 extern void WaitForVBlank(void);
 extern void CommitOamBuffer(struct oam_shadow_buffer *arg0);
@@ -50,7 +50,7 @@ void UpdateRoomFrame(void *self)
 
     if (*(s32 *)self <= 0x1000) {
         UpdateHud(gHud);
-        sub_8008DC0(gUnknown_030012F4);
+        DrawPartList(gUnknown_030012F4);
 
         {
             struct actor *p = (struct actor *)gPlayer;
@@ -62,10 +62,10 @@ void UpdateRoomFrame(void *self)
             }
         }
 
-        sub_8008DC0(gUnknown_030012F0);
-        sub_8008DC0(gUnknown_030012EC);
-        sub_800944C(gCrateList);
-        sub_8008DC0(gUnknown_030012F8);
+        DrawPartList(gUnknown_030012F0);
+        DrawPartList(gUnknown_030012EC);
+        DrawCrateList(gCrateList);
+        DrawPartList(gUnknown_030012F8);
 
         HideUnusedOamEntries(gOamBuffer);
         WaitForVBlank();

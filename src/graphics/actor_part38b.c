@@ -180,12 +180,12 @@ void sub_8015238(struct act *self, u8 mode, s32 flags)
     }
 }
 
-extern void sub_80122CC(void *self);
+extern void UpdatePlayerFacing(void *self);
 
 /* While `self+0x27`/`self+0x2b` are both clear and `mode` is `3`/`4`:
  * sets the state/counter/table-index trio (`0x31`/`0x2f`/`0x27`) to
  * `0`/`1`/`0x17`. Independently, for `mode <= 2`: resets the same trio
- * to `0`/`1`/`0`. Always tail-calls `sub_80122CC`.
+ * to `0`/`1`/`0`. Always tail-calls `UpdatePlayerFacing`.
  *
  * Matched in a later pass (docs/matching/issue-18-0x08014f8c-actor.md,
  * "Later pass: strag2 retry"): the `0x17`/`0` table indices go through `u8` locals
@@ -213,7 +213,7 @@ void sub_80152F0(u8 *self, u8 mode)
         self[0x2f] = 1;
         self[0x27] = idx;
     }
-    sub_80122CC(self);
+    UpdatePlayerFacing(self);
 }
 /* Trailing byte count isn't a multiple of 4 - without this, `as` pads
  * with its default NOP fill instead of the ROM's zero fill (see

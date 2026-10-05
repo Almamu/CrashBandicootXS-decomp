@@ -6,37 +6,37 @@ GitHub issues #9/#10's original scope, the `actor` "part" object
 family already covered at length by
 [issue-9-0x08007634-actor.md](./issue-9-0x08007634-actor.md)):
 
-- `0x0800A884`-`0x0800AFF4` (`sub_800A884` through `DrawPlayer`)
+- `0x0800A884`-`0x0800AFF4` (`CollidePlayer` through `DrawPlayer`)
 - `0x0800B3F0` (`InitPlayer`)
 - `0x0800B8DC` onward (`UpdateEnemyCtrl`, 546+ lines, and beyond)
 
 ## Matched - 1 function
 
 - **`InitPlayer`** (`src/graphics/actor_part77.c`) - a part-object
-  constructor: re-initializes `self` via `sub_800A6A4` (matched,
+  constructor: re-initializes `self` via `InitGroundSprite` (matched,
   `actor_part14.c`), overwrites its table with `gPlayerVtable`,
   clears its trailing `+0x108`/`+0x10c` fields via `sub_8010E2C` (still
   raw, trivial - a 2-field clear), allocates a fresh `struct
-  actor`-shaped child object via `sub_8008434(0, 0, 0, 0)` (matched,
+  actor`-shaped child object via `CreateSpriteObj(0, 0, 0, 0)` (matched,
   `actor_part6.c` - called with the same "extra unused 4th zero
   argument" calling convention `graphics_loading_21d80.c`'s own callers
   already use) and hooks it up at `self+0xb0`: points its own `+0x20`
   table-entry pointer at `gUnknown_030012D0`'s shared table (the same
   `(u8 *)(**gUnknown_030012D0) + offset` idiom used throughout
   `graphics_loading_21d80.c`), clears its `+0x2d` byte, and builds it
-  via the standard `sub_80087C0`/`sub_80087B4`/`sub_800872C` OAM trio.
-  Clears `self+0xb4`, then calls `sub_800A734` (matched,
-  `actor_part48.c`) to finish the reset - `sub_800A734` itself is what
-  hooks the `self+0xb0` child up via its own `sub_800815C` call, per
+  via the standard `ResetSpriteFrameTimer`/`ResetSpriteFrameIndex`/`SetSpriteAnimDone` OAM trio.
+  Clears `self+0xb4`, then calls `ResetPlayer` (matched,
+  `actor_part48.c`) to finish the reset - `ResetPlayer` itself is what
+  hooks the `self+0xb0` child up via its own `GetSpriteAnimPaletteSlot` call, per
   its existing doc comment. Finally sets `self+8`/`self+0`/`self+4`
   (`field_08`/`x`/`y`) from its three `u16` arguments, the same
-  `sub_800A604`-style tail `actor_part14.c` already established, and
+  `CreateGroundSprite`-style tail `actor_part14.c` already established, and
   returns `self`.
 
   Matched on the first real attempt after one register-pin fix: the
   ROM keeps the constant `0` used for both `child+0x2d`'s clear and
   `self+0xb4`'s clear alive in `sl` across all three
-  `sub_80087C0`/`sub_80087B4`/`sub_800872C` calls (a callee-saved
+  `ResetSpriteFrameTimer`/`ResetSpriteFrameIndex`/`SetSpriteAnimDone` calls (a callee-saved
   register survives a `bl`), rather than reloading a fresh `0` for the
   second store - closed with `register s32 zero asm("sl") = 0;`
   spanning both stores and the three calls between them (the same
@@ -48,10 +48,10 @@ family already covered at length by
 
 ## Parked (`NON_MATCHING`, not yet byte-exact) - 1 function
 
-- **`sub_800A884`** (`src/graphics/actor_part78.c`) - a per-frame
+- **`CollidePlayer`** (`src/graphics/actor_part78.c`) - a per-frame
   "reentrancy guard"-shaped wrapper (only runs while `self+0xc` bit 7
   is set): fires `self->table+0x70`'s trampoline via `_call_via_r1`
-  (matched), then calls `sub_800A0FC` (still raw, its own return value
+  (matched), then calls `CollideGroundSprite` (still raw, its own return value
   discarded) with the global `gLevelLayers+0x2a` flag held set
   for the call's duration. If `self+0xac` (a pointer, cleared here)
   was non-null, sets `self+0x68` bit 3 and clears the
@@ -95,7 +95,7 @@ family already covered at length by
   **Not yet byte-exact, but far closer after two follow-up sessions.**
   The earlier claim that the leading ~40 instructions were "confirmed"
   came from an *isolated* compile (just that prefix, ending right
-  after `sub_800A0FC`'s call) - that isolated match did not survive
+  after `CollideGroundSprite`'s call) - that isolated match did not survive
   once the rest of the function was compiled alongside it (see "Real
   gotchas" below, point 1). A follow-up session took the whole
   function - the leading block, the 10-way "kind" dispatch (all ten
@@ -191,7 +191,7 @@ family already covered at length by
   constraint technique that closed the `r7` self-overwrite gap without
   rippling). Real bytes stay in `asm/code_3_2_16_a884.s`
   (`asm/code_3_2_16.o` trimmed to start at `sub_800AAEC`), following
-  the same `.if NON_MATCHING == 0` pattern as `sub_800A528`'s own
+  the same `.if NON_MATCHING == 0` pattern as `UpdateGroundSprite`'s own
   `asm/code_3_2_11_a528.s`. A future session picking this up should
   treat the `self+0x105` gap as a genuine compiler-fragility floor for
   this function shape rather than an unexplored lead, unless a new
@@ -221,7 +221,7 @@ family already covered at length by
    it's actually needed and pulls in extra high registers.** An early
    draft computed `gLevelLayers+0x29`'s address once, up front,
    into a plain (unpinned) `u8 *kindAddr` local kept alive across the
-   `_call_via_r1`/`sub_800A0FC` calls purely so it could be reused much
+   `_call_via_r1`/`CollideGroundSprite` calls purely so it could be reused much
    later in the function - this compiler's allocator responded by
    spilling it (and a second similarly-early-computed value) into
    `r8`/`r9`, needing a `push {r8, r9}`-equivalent prologue the ROM's
@@ -229,12 +229,12 @@ family already covered at length by
    {r4,r5,r6,r7,lr}` only) never has. Fixed by *not* introducing that
    named variable at all - `gLevelLayers` is instead re-dereferenced
    fresh, inline, at each of its actual use sites (the `+0x2a` flag
-   sets around the `sub_800A0FC` call, the `kind` read, and the final
+   sets around the `CollideGroundSprite` call, the `kind` read, and the final
    kind-reset store), letting this compiler's own local CSE reuse a
    register (`r6`, matching the ROM) only across the short spans where
    the ROM itself does, rather than one artificially-widened lifetime.
    This is the general form of a lesson already documented for
-   `sub_800B270` in issue-9's own write-up (pinning a value into a
+   `ApplyPlayerVelocity` in issue-9's own write-up (pinning a value into a
    *specific* register too early/broadly can itself cause a mismatch,
    not just leaving it unpinned) - here the fix was the opposite
    direction: stop pinning (i.e. stop naming a persistent variable) at
@@ -257,9 +257,9 @@ family already covered at length by
   this function's own second argument; a `<= 1` return from that call
   short-circuits the whole loop. Mechanically clear, but `sub_800CD00`
   itself is genuinely unexamined - not attempted further this session.
-- **`sub_800AB9C`** (`asm/code_3_2_16.s`, ROM `0x0800AB9C`) - mostly
+- **`CollidePlayerWithObjects`** (`asm/code_3_2_16.s`, ROM `0x0800AB9C`) - mostly
   built from already-matched/understood pieces
-  (`sub_8007C30`/`MemCopy32`/`sub_8008A40`/`sub_8009868`
+  (`sub_8007C30`/`MemCopy32`/`CollidePartList`/`CollidePlayerWithCrates`
   [NAKED-parked]/`sub_8008D30`/`sub_80106DC`, all matched or
   understood elsewhere in this codebase now), gated on `self+0x105`/
   `self+0xc` flag bits. The most tractable of the four left-raw
@@ -285,8 +285,8 @@ family already covered at length by
 - **`UpdateEnemyCtrl`** (`asm/code_3_2_17.s`, ROM `0x0800B8DC`, 546 lines)
   - an 18-case jump-table state dispatcher over `self+0x74`, calling
   **18 entirely unexamined helper functions** (`UpdateEnemyPatrol`,
-  `UpdateEnemyAttackCycle`, `sub_800C314`, `sub_800C244`, `sub_800C18C`,
-  `sub_800C1E8`, `sub_800C8F8`, `sub_800C97C`, `sub_800C940`,
+  `UpdateEnemyAttackCycle`, `sub_800C314`, `UpdateEnemyHop`, `UpdateEnemyHomingX`,
+  `UpdateEnemyHomingY`, `sub_800C8F8`, `sub_800C97C`, `UpdateEnemyBob`,
   `sub_800C5D4`, `sub_800C8AC`, `sub_800C8BC`, `SetEnemyAnimMode`,
   `sub_800C9C8`, `sub_800BFA8`, plus already-matched
   `_call_via_r1`/`_call_via_r4`/`PlaySfx`) none of which have any
@@ -362,7 +362,7 @@ exactly the "discarded outValue" idiom `sub_8026628`'s own
 in this same neighborhood.
 
 This confirms the caller-side reading above: the "camera-probe" in
-`sub_800A884`'s tail passes an already-pixel-unit `{x, y}` (de-Q8'd via
+`CollidePlayer`'s tail passes an already-pixel-unit `{x, y}` (de-Q8'd via
 `>>8`, same convention as `sub_8026628`'s own `pos`), and
 `sub_8026BC0` itself does the pixel-to-tile-cache-lookup-unit
 conversion, so the `code == 6` test in the caller really is just
@@ -403,7 +403,7 @@ src/system/game_loop44.o(.text);
 asm/code_3_2_17_26bf8.o(.text);
 ```
 
-`sub_800A884` itself (this doc's own primary subject) is unaffected -
+`CollidePlayer` itself (this doc's own primary subject) is unaffected -
 it still calls `sub_8026BC0` exactly as before; only the callee's own
 body moved from opaque raw bytes to matched, documented C.
 
@@ -425,7 +425,7 @@ body moved from opaque raw bytes to matched, documented C.
 
 ## Later pass (issue #9/#10 raw-asm pass)
 
-`asm/code_3_2_16_a884.s` is gone. `sub_800A884` is NAKED in `actor_part78.c`, and the pin/asm-island draft was replaced with plain C (127 halfwords off under old_agbcc; the old draft was 137 off). The remaining gap is the one-register offset walk for +0x100/+0x102/+0x103. See [issue-9-raw-asm-pass.md](issue-9-raw-asm-pass.md).
+`asm/code_3_2_16_a884.s` is gone. `CollidePlayer` is NAKED in `actor_part78.c`, and the pin/asm-island draft was replaced with plain C (127 halfwords off under old_agbcc; the old draft was 137 off). The remaining gap is the one-register offset walk for +0x100/+0x102/+0x103. See [issue-9-raw-asm-pass.md](issue-9-raw-asm-pass.md).
 
 ## Later pass (last-four NAKED retry)
 

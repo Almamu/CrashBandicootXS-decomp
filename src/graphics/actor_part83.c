@@ -2,7 +2,7 @@
 #include "action_obj.h"
 
 /* Part of GitHub issue #16's remainder (0x08011BD4-0x08012D24): two
- * gStaticData_0816BF20 action-table helpers for the player/action object
+ * gActionCtrlStateTable action-table helpers for the player/action object
  * (include/action_obj.h, the same object issue #17's actor_part_12fbc.c
  * handlers use). Not ROM-adjacent to actor_part80.c's matched
  * `sub_8012A7C` (this file starts right where that one ends, at
@@ -31,9 +31,9 @@ extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
 extern void StopSfx(void *ctx, u32 id);
 extern s32 FixedMul(s32 a, s32 b);
 extern u8 GetDpadDirection(void *pad);
-extern void sub_8009EA8(struct act_part *p, s32 x, s32 y);
+extern void SetSpritePrevPos(struct act_part *p, s32 x, s32 y);
 extern u8 sub_8012A7C(struct act *self);
-extern void sub_80122CC(struct act *self);
+extern void UpdatePlayerFacing(struct act *self);
 extern void sub_8015398(struct act *self);
 extern void sub_8015460(struct act *self);
 extern u8 HasTurboRun(void *self);
@@ -65,7 +65,7 @@ static inline u8 PartByte(struct act_part *part, s32 offset)
 /* Runs a "part" OAM-visibility/priority housekeeping pass. If the
  * player's `+0x103` flag or `+0x102` byte just changed and `part+0x68`
  * is busy (`==8`), nudges the player's saved-position word by a fixed
- * delta and calls `sub_8009EA8`. If `self+8==0`, and the player isn't
+ * delta and calls `SetSpritePrevPos`. If `self+8==0`, and the player isn't
  * already in a matching state, plays a fixed sound and fires the
  * `+0x50`/`+0x54` trampoline pair with id `0x12`. Then, keyed on
  * `self+0x2f`'s value (whether `1` or something else), either sets it
@@ -104,7 +104,7 @@ void sub_8012AF4(struct act *self)
                 p->x -= 0x100;
             else if (p->unk_103)
                 p->x += 0x100;
-            sub_8009EA8(gPlayer, gPlayer->x, gPlayer->y);
+            SetSpritePrevPos(gPlayer, gPlayer->x, gPlayer->y);
         }
     }
 skip:
@@ -180,16 +180,16 @@ skip:
  * Otherwise dispatches the input snapshot's low bits: bit 0 plays a
  * fixed sound and fires two trampoline pairs, bit 1 tail-calls
  * `sub_8015398`, bit `0x80` (high byte) fires a different trampoline
- * pair - all converging on `sub_80122CC`. A further branch (input byte
+ * pair - all converging on `UpdatePlayerFacing`. A further branch (input byte
  * unset, `self+0x25==0`) reads `self+8`'s snapshot value against `2`/
  * `8`-range checks to gate a `HasTurboRun`-confirmed trampoline call
  * (id `4`/`0x18`) or fall through to `sub_8015460`/a final `+0x20`/
- * `+0x24` trampoline pair, each path ending in `sub_80122CC`.
+ * `+0x24` trampoline pair, each path ending in `UpdatePlayerFacing`.
  *
  * Matched under old_agbcc. The pad object is loaded before the input word
  * is spilled (its argument is read first); the held-0x100 test's result
  * is what +0x29 is cleared with; the D-pad `else` part sits after the
- * first sub_80122CC tail, reached by a goto, as in the ROM's layout; and
+ * first UpdatePlayerFacing tail, reached by a goto, as in the ROM's layout; and
  * the 3..8 range case comes before case 2. */
 void sub_8012D24(struct act *self)
 {
@@ -252,7 +252,7 @@ skip:
                 self->frames = alt;
             }
         }
-        sub_80122CC(self);
+        UpdatePlayerFacing(self);
         return;
     other:
         self->unk_29 = held;
@@ -285,7 +285,7 @@ skip:
                 }
             }
         }
-        sub_80122CC(self);
+        UpdatePlayerFacing(self);
     }
 }
 /* Trailing byte count isn't a multiple of 4 - pad with zeros, not a nop. */

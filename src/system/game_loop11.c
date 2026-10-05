@@ -1,6 +1,6 @@
 #include "core.h"
 
-extern void *sub_8026EDC(s32 size);
+extern void *OperatorNew(s32 size);
 extern void *InitLevelState(void *arg0);
 
 /* Lazily allocates `gLevelStateSingleton` (0x1cc bytes) through
@@ -15,7 +15,7 @@ extern void *gLevelStateSingleton;
 void *GetLevelState(void)
 {
     if (gLevelStateSingleton == NULL) {
-        gLevelStateSingleton = InitLevelState(sub_8026EDC(0x1cc));
+        gLevelStateSingleton = InitLevelState(OperatorNew(0x1cc));
     }
     return gLevelStateSingleton;
 }

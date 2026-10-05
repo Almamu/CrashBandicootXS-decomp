@@ -24,7 +24,7 @@
 
 extern void SetAabbPos(void *buf, s32 arg1, s32 arg2);
 extern void SetAabbSize(void *buf, s32 arg1, s32 arg2);
-extern u8 sub_8001688(void *buf1, void *buf2);
+extern u8 AabbOverlaps(void *buf1, void *buf2);
 extern void *gPlayer;
 extern void *GetCrateAbove(void *obj); /* "get next" */
 extern void *GetCrateBelow(void *obj); /* "get prev" */
@@ -89,7 +89,7 @@ struct ceac_player {
  * since the box represents the player's shape, not `self`'s).
  *
  * Finally tests the hybrid box against `box` (`self`'s own real AABB)
- * via `sub_8001688` and returns the boolean overlap result: "would a
+ * via `AabbOverlaps` and returns the boolean overlap result: "would a
  * player-shaped hitbox at `self`'s position overlap `self`'s own
  * actual hitbox" - used by `sub_0800D18C` to decide whether to treat
  * `self` as blocking/pushing a player-sized object at that spot (its
@@ -137,7 +137,7 @@ u8 sub_800CEAC(void *self, struct hitbox_quad *quad, struct aabb *box,
         b.field_0 = xOffset * 2 - (b.field_0 + b.field_8);
     if (((struct ceac_player *)gPlayer)->mirrorY)
         b.field_4 = yOffset * 2 - (b.field_4 + b.field_c);
-    if (sub_8001688(box, &b))
+    if (AabbOverlaps(box, &b))
         return 1;
     return 0;
 }
@@ -169,7 +169,7 @@ u8 sub_800CEAC(void *self, struct hitbox_quad *quad, struct aabb *box,
  * mirrored per `prev`'s own `+0x28` flags - the exact "AABB1" shape
  * `sub_800D040`'s header already documents at length, just for `prev`
  * instead of `self`. Tests it against the caller-supplied `box` via
- * `sub_8001688`; on overlap, returns `prev` instead of `self` - so the
+ * `AabbOverlaps`; on overlap, returns `prev` instead of `self` - so the
  * caller can substitute the actual colliding neighbor in place of the
  * object it started the probe from.
  *
@@ -216,7 +216,7 @@ struct box_part *sub_800CF70(struct box_part *selfArg, struct aabb *box, u8 *fou
             b.field_0 = px * 2 - (b.field_0 + b.field_8);
         if (self->mirrorY)
             b.field_4 = py * 2 - (b.field_4 + b.field_c);
-        if (sub_8001688(&b, box))
+        if (AabbOverlaps(&b, box))
             self = prev;
     }
     return self;

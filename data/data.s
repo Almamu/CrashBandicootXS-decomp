@@ -62,7 +62,7 @@ gSfxTable:
 
 @ gStaticData_0816BB6C..gStaticData_0816BF14: src/data/object_tables_16bb6c.c
 
-@ gStaticData_0816BF20..gStaticData_0816C070: src/data/action_table_16bf20.c
+@ gActionCtrlStateTable..gStaticData_0816C070: src/data/action_table_16bf20.c
 
 @ gStaticData_0816C090..gStaticData_0816C0B0: src/data/speed_table_16c090.c
 

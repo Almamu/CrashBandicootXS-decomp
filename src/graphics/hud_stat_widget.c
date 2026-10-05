@@ -6,7 +6,7 @@ extern void *gLevelState;
 extern s32 gHudSlideOffset;
 
 extern void DrawHudPart(struct hud_digit_part *part, s32 x, s32 y);
-extern void sub_8008044(struct actor *part);
+extern void AdvanceSpriteAnim(struct actor *part);
 extern s32 sub_80233B4(void *self);
 extern u8 IsInBonusRound(void *self);
 extern void UpdateHudLives(struct hud_counter *counter);
@@ -50,7 +50,7 @@ void UpdateHud(struct hud_counter *self)
 
     if (IsInBonusRound(gLevelState)) {
         gHudSlideOffset = 0;
-        sub_8008044((struct actor *)((u8 *)sself->parts + 0x880));
+        AdvanceSpriteAnim((struct actor *)((u8 *)sself->parts + 0x880));
         DrawHudPart((struct hud_digit_part *)((u8 *)sself->parts + 0x880), 0, 0);
     }
 

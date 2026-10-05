@@ -86,7 +86,7 @@ original `asm/code_3_2_17_14674.s` is truncated to end right before
   `register s32 one asm("r0")`/`register u8 old asm("r2")` pins to get
   the ROM's own register roles for the `orrs`/`strb` pair (a plain C
   `|=` picked the opposite operand-to-register assignment).
-- **`sub_8015350`**: clears `self+0x33`, saves `self+8`'s old value
+- **`SetActionCtrlMode`**: clears `self+0x33`, saves `self+8`'s old value
   (truncated) into `self+0x2d`, overwrites `self+8`, clears
   `self+0x2c`/`0x2b`; if the new value isn't 0xd/0xe, also clears
   `part+0x90` and the player's `+0x92`/`+0x94` (written twice - the ROM
@@ -125,7 +125,7 @@ original `asm/code_3_2_17_14674.s` is truncated to end right before
   point, plus an `asm volatile("" : "+r"(p28))` anti-fold barrier on
   the `self+0x28` pointer to stop the final `+6`-style offset folding
   into the `strb`'s own addressing mode.
-- **`sub_80155A8`**: single-instruction store, `self+0x10 = val`.
+- **`AttachActionCtrl`**: single-instruction store, `self+0x10 = val`.
 - **`sub_80155AC`**: trivial tail-call to `sub_8014B54`.
 - **`sub_80155B8`**/**`sub_8015650`**: byte-identical ROM encoding at
   two different addresses (no shared caller) - `part+0x38`-gated mgr
@@ -135,7 +135,7 @@ original `asm/code_3_2_17_14674.s` is truncated to end right before
   at each use with a fresh `movs r0,#0`).
 - **`sub_80155F8`**: bumps `self+0x18`; once it reaches `self+0x1c` (or
   `part+0x38` is already set), resets via the same mgr trampoline
-  pair/state-clear as `sub_80155B8`, then tail-calls `sub_80122CC`.
+  pair/state-clear as `sub_80155B8`, then tail-calls `UpdatePlayerFacing`.
   Needed the `self+0x26` pointer computed *before* the `zero` register
   materializes (opposite of the natural declaration order) to match
   the ROM's `adds r1,r5,#0x26` / `movs r4,#0` / `strb` sequence.
@@ -190,7 +190,7 @@ a 25-function file, when first tried without explicit labels).
 
 See `docs/status/actor.md`'s "Parked" section for the one-line summary
 of each: `sub_8015038`, `sub_8015238`, `sub_80152F0`, `sub_80156EC`,
-`sub_80157C4` - 20 matched, 5 parked, out of 25 total.
+`ActionCtrlSetTargetAnim` - 20 matched, 5 parked, out of 25 total.
 `sub_8015238`/`sub_80152F0` share one raw file (`code_3_2_17_15238.s`)
 since both ended up parked back-to-back, but each is still counted as
 its own parked function.
@@ -204,7 +204,7 @@ parked - the issue stays open for whoever picks up the remaining 5.
 ## Third pass: all 5 remaining parked functions matched via NAKED transcription
 
 `sub_8015038`, `sub_8015238`, `sub_80152F0`, `sub_80156EC` and
-`sub_80157C4` are now all byte-exact matched, confirmed by a full clean
+`ActionCtrlSetTargetAnim` are now all byte-exact matched, confirmed by a full clean
 `make compare` ("La suma coincide") - all 25 functions in this issue's
 range are matched now (see "Closing this issue" below). Each was fully
 understood already (see the parked-pass doc comments this replaced);

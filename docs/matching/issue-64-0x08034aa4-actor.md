@@ -61,7 +61,7 @@ comment left vague:
   of the "natural" phrasing, but the one that happens to make this
   compiler's block-layout choice match the ROM's. Neither fix alone was
   enough; both together reproduce the ROM's exact byte sequence. Also
-  needed: chaining `InitContinuePrompt(sub_8026EDC(0x24))` directly as a
+  needed: chaining `InitContinuePrompt(OperatorNew(0x24))` directly as a
   nested call in `RunContinuePrompt` rather than through an intermediate
   named variable (the ROM never copies the allocator's return value
   into a register before immediately passing it on).
@@ -97,7 +97,7 @@ disassembly rather than attempted as plain C, given the precedent.
 
 `InitCredits`/`CreditsLoop`/`DrawCreditsText`/`UpdateCreditsText`/`LoadCreditsLogos`/
 `CommitCreditsFrame`/`DestroyCredits`/`RunCredits` all operate on a brand-new
-0x98-byte heap object (`sub_8026EDC(0x98)`, `struct map_screen` in
+0x98-byte heap object (`OperatorNew(0x98)`, `struct map_screen` in
 actor_part131.c) - a combined minimap-reveal + floating-text-popup
 screen shown between levels, already partially characterized by
 `docs/rom_map.md`'s "A fourth thing in this file"/"Correction: `RunContinuePrompt`

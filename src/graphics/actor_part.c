@@ -4,7 +4,7 @@
 
 extern void sub_8007174(void *arg0, s32 arg1, s32 arg2, s32 *arg3, s32 *arg4);
 extern void DrawSpritePieces(void *unused, void *part, s32 *posPtr);
-extern void sub_8026ED0(void *arg0);
+extern void OperatorDelete(void *arg0);
 
 /* `part+0x25` selects whether (x, y) are already screen-relative
  * (nonzero - used as-is) or need the camera-relative conversion
@@ -39,7 +39,7 @@ asm(".align 2, 0");
 void DestroySpriteRenderer(void *arg0, u32 arg1)
 {
     if (arg1 & 1) {
-        sub_8026ED0(arg0);
+        OperatorDelete(arg0);
     }
 }
 asm(".align 2, 0");
@@ -68,7 +68,7 @@ asm(".align 2, 0");
  * local (reused across differently-sized stores instead of
  * rematerializing the constant) both mirror the ROM's own address/
  * value reuse - see docs/matching.md, "Matching decompilation". */
-void sub_8007AB4(void *arg0)
+void ResetSpriteObj(void *arg0)
 {
     register void *part asm("r3") = arg0;
     register s32 result asm("r0");
@@ -129,7 +129,7 @@ extern void SetAabbSize(struct aabb *buf, s32 w, s32 h);
  * own position per the 0x28 mirror bits. Returned by value (the hidden
  * return pointer is the `dest` the ROM keeps in r8 and hands back in r0).
  * Matches under old_agbcc - see docs/matching/issue-9-naked-retry.md. */
-struct aabb sub_8007B00(struct box_part *part)
+struct aabb GetSpriteBounds(struct box_part *part)
 {
     struct aabb box;
     u8 *rec = (u8 *)&(*part->keyframes)[part->frame];
@@ -150,10 +150,10 @@ struct aabb sub_8007B00(struct box_part *part)
     return box;
 }
 
-/* Same as sub_8007B00 above for the other keyframe-table layout, whose
+/* Same as GetSpriteBounds above for the other keyframe-table layout, whose
  * box sits at record+0x4 instead (the collision box `struct anim_box` in
  * include/gobj_1a794.h). */
-struct aabb sub_8007B98(struct box_part *part)
+struct aabb GetSpriteHitbox(struct box_part *part)
 {
     struct aabb box;
     u8 *rec = (u8 *)&(*part->keyframes)[part->frame];

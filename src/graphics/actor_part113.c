@@ -15,7 +15,7 @@
  * fn)`.
  *
  * `sub_800C8AC`/`sub_800C8BC` are thin wrappers around the two
- * already-matched `sub_800B704`/`sub_800B838` accessors
+ * already-matched `StartCtrlTargetMotionYFromSet`/`StartCtrlTargetMotionXFromSet` accessors
  * (src/graphics/actor_part17.c) - same "look up an 8-byte record from
  * self+4's array, translate its type word through the shared
  * gStaticData_0816B304 table, then trigger via self+0xc's anchor pair"
@@ -25,7 +25,7 @@
  * anchor record's pair offsets the Phase 1 doc left open.
  *
  * `SetEnemyAnimMode` is the odd one out: instead of going through
- * `sub_800B704`/`sub_800B838`'s global-table-plus-type-index lookup, it
+ * `StartCtrlTargetMotionYFromSet`/`StartCtrlTargetMotionXFromSet`'s global-table-plus-type-index lookup, it
  * indexes `self->0x84` *directly* by `mode` (`((void **)self->0x84)[mode]`)
  * to get its table entry, and reads its own anchor pair at
  * part+0x50/+0x54. This resolves the Phase 1 doc's open question about
@@ -36,29 +36,29 @@
  * `sub_800C8AC`/`sub_800C8BC` - i.e. a per-object override table
  * parallel to the shared global one. */
 
-extern void sub_800B704(void *selfArg, void *arg1, s32 index);
-extern void sub_800B838(void *selfArg, void *arg1, s32 index);
+extern void StartCtrlTargetMotionYFromSet(void *selfArg, void *arg1, s32 index);
+extern void StartCtrlTargetMotionXFromSet(void *selfArg, void *arg1, s32 index);
 extern s32 _call_via_r3(void *arg0, void *arg1, void *arg2, void *arg3);
 
-/* Caches `mode` into `self->0x7c`, then delegates to `sub_800B704`
+/* Caches `mode` into `self->0x7c`, then delegates to `StartCtrlTargetMotionYFromSet`
  * (the anchor's part+0x30/+0x34 pair, record word 1 as type). */
 void sub_800C8AC(void *selfArg, s32 mode)
 {
     u8 *self = selfArg;
 
     *(s32 *)(self + 0x7c) = mode;
-    sub_800B704(self, *(void **)(self + 0x70), mode);
+    StartCtrlTargetMotionYFromSet(self, *(void **)(self + 0x70), mode);
 }
 
 /* Same shape as `sub_800C8AC`, caching into `self->0x78` and
- * delegating to `sub_800B838` instead (the anchor's part+0x28/+0x2c
+ * delegating to `StartCtrlTargetMotionXFromSet` instead (the anchor's part+0x28/+0x2c
  * pair, record word 0 as type). */
 void sub_800C8BC(void *selfArg, s32 mode)
 {
     u8 *self = selfArg;
 
     *(s32 *)(self + 0x78) = mode;
-    sub_800B838(self, *(void **)(self + 0x70), mode);
+    StartCtrlTargetMotionXFromSet(self, *(void **)(self + 0x70), mode);
 }
 
 /* Caches `mode` into `self->0x68`, then triggers directly (no

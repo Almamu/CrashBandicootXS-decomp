@@ -19,14 +19,14 @@ extern void *gLevelLayers;
 extern s32 _call_via_r2(void *arg0, void *arg1, void *fn);
 extern void *_call_via_r1(void *arg0, void *fn);
 
-/* Same "extended screen box" filter shape as `sub_800891C`'s own
+/* Same "extended screen box" filter shape as `UpdatePartList`'s own
  * `boxB` pass above (the plain 240x160 GBA screen region, in Q8, at
  * the `gLevelLayers` sub-object's own position) - iterates
  * `manager`'s array (`manager+0xc` base, `manager+4` count),
  * filtering each `part` whose `table+0x30/0x34`-driven trampoline
  * passes into a second output array (`manager+0x10` base,
  * `manager+8` count). */
-void sub_8008C80(void *manager)
+void CullPartList(void *manager)
 {
     s32 i;
     s32 box[4];
@@ -82,7 +82,7 @@ void sub_8008C80(void *manager)
  * then clears every slot and resets both the count (`manager+4`) and
  * the second array's count (`manager+8`) to 0 - a full teardown of
  * both this manager's arrays. */
-void sub_8008CEC(void *manager)
+void ClearPartList(void *manager)
 {
     s32 i;
 

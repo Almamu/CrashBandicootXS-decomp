@@ -179,23 +179,23 @@ extern u8 gStaticData_0816C308[];
 extern u8 gStaticData_0816C30B[];
 
 extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
-extern void *sub_8026EDC(u32 size);
+extern void *OperatorNew(u32 size);
 extern struct hop_vobj *sub_801886C(void *mem);
 extern struct hop_vobj *sub_80188D0(void *mem);
 extern struct hop_box sub_8007C30(void *obj);
 extern struct hop_box sub_8007CF8(void *obj);
-extern u8 sub_8001688(struct hop_box *a, struct hop_box *b);
+extern u8 AabbOverlaps(struct hop_box *a, struct hop_box *b);
 extern u8 HasTornadoSpin(void *self);
 extern void RequestRoomExit(void);
 extern void sub_8018978(struct tiny_tiger *self, struct hop_part *part);
 extern void nullsub_19(struct tiny_tiger *self, struct hop_part *part);
 extern void SpawnTornadoSpinPower(u32 arg0, u16 x, u16 y, u16 arg3);
-extern struct hop_part *sub_8009ED0(u16 arg0, u16 arg1, u16 arg2, u16 arg3);
-extern void sub_80087C0(struct hop_part *p);
-extern void sub_80087B4(struct hop_part *p);
-extern void sub_800872C(struct hop_part *p, s32 arg1);
-extern s32 sub_800815C(struct hop_part *p);
-extern void sub_8008E94(void *list, struct hop_part *p);
+extern struct hop_part *CreateMovingSprite(u16 arg0, u16 arg1, u16 arg2, u16 arg3);
+extern void ResetSpriteFrameTimer(struct hop_part *p);
+extern void ResetSpriteFrameIndex(struct hop_part *p);
+extern void SetSpriteAnimDone(struct hop_part *p, s32 arg1);
+extern s32 GetSpriteAnimPaletteSlot(struct hop_part *p);
+extern void AddToPartList(void *list, struct hop_part *p);
 
 /* Byte read-modify-writes of the flags at +0x0C. old_agbcc materializes
  * the constant before loading the byte only when it arrives as an inline
@@ -247,7 +247,7 @@ void UpdateTiny(struct tiny_tiger *self, struct hop_part *part)
 
         if (anchor->ctrl != NULL)
             VCALL1(anchor->ctrl, m48, 3);
-        ctrl = sub_801886C(sub_8026EDC(0x10));
+        ctrl = sub_801886C(OperatorNew(0x10));
         anchor->ctrl = ctrl;
         VCALL1P(ctrl, m18, anchor);
         self->stomped = -1;
@@ -258,7 +258,7 @@ void UpdateTiny(struct tiny_tiger *self, struct hop_part *part)
     {
         a = sub_8007C30(gPlayer);
         b = sub_8007CF8(part);
-        if (a.w != 0 && BOX_VALID(b) && sub_8001688(&b, &a)
+        if (a.w != 0 && BOX_VALID(b) && AabbOverlaps(&b, &a)
             && gPlayer->unk_0A == 0x13)
             SetTinyState(self, part, 9);
     }
@@ -271,7 +271,7 @@ void UpdateTiny(struct tiny_tiger *self, struct hop_part *part)
             a = b;
         }
         b = sub_8007C30(part);
-        if (BOX_VALID(b) && a.w != 0 && sub_8001688(&b, &a))
+        if (BOX_VALID(b) && a.w != 0 && AabbOverlaps(&b, &a))
         {
             struct hop_player *pl = gPlayer;
             struct hop_method *m = &pl->vt->m68;
@@ -582,7 +582,7 @@ s32 PickTinyHopTarget(struct tiny_tiger *self)
 void sub_80186F0(struct tiny_tiger *self, struct hop_part *part, s32 n)
 {
     /* `p` pinned to r4: unpinned, it and `ctrl` swap r4/r5 */
-    register struct hop_part *p asm("r4") = sub_8009ED0(0xFFFF, 0, 0, 0);
+    register struct hop_part *p asm("r4") = CreateMovingSprite(0xFFFF, 0, 0, 0);
     struct hop_vobj *ctrl;
     s32 x;
     s32 zero;
@@ -602,15 +602,15 @@ void sub_80186F0(struct tiny_tiger *self, struct hop_part *part, s32 n)
         asm("" : "+r"(zero));
         *tp = t;
     }
-    sub_80087C0(p);
-    sub_80087B4(p);
-    sub_800872C(p, 0);
-    ctrl = sub_80188D0(sub_8026EDC(0x10));
-    SetSlot(p, sub_800815C(p));
+    ResetSpriteFrameTimer(p);
+    ResetSpriteFrameIndex(p);
+    SetSpriteAnimDone(p, 0);
+    ctrl = sub_80188D0(OperatorNew(0x10));
+    SetSlot(p, GetSpriteAnimPaletteSlot(p));
     p->ctrl = ctrl;
     VCALL1P(ctrl, m18, p);
     OrFlags(p, 0x10);
-    sub_8008E94(gUnknown_030012F0, p);
+    AddToPartList(gUnknown_030012F0, p);
     {
         /* the ROM materializes 0x80 before re-reading `zero` */
         s32 k = 0x80;

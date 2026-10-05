@@ -20,7 +20,7 @@ extern void WaitForVBlank(void);
 extern void CommitOamBuffer(struct oam_shadow_buffer *arg0);
 extern void FontSetPalette(struct icon_manager *self, u8 val);
 extern void *_call_via_r1(void *arg0, void *fn);
-extern void *sub_8026EDC(s32 size);
+extern void *OperatorNew(s32 size);
 extern void *InitStarfield(void *arg0);
 extern void SetObjMapping1D(void);
 extern void ShowObj(void);
@@ -39,15 +39,15 @@ extern u8 gTitleMenuBlinkPalette[0x70];
 extern struct bg_package gTitleScreenBg;
 extern void *gTitleObjPackages[4];
 
-extern void *sub_8026EC0(u32 size);
-extern void sub_8026EB4(void *ptr);
+extern void *OperatorNewArray(u32 size);
+extern void OperatorDeleteArray(void *ptr);
 extern void LoadTaggedAsset(void *asset, void *dest);
 
 void LoadTitleScreenBg(u32 *self);
 void LoadTitleScreenObjTiles(u32 *self);
 
 /* The 0x220-byte title-screen object `UpdateGameFrame` allocates
- * (`sub_8026EDC(0x220)`) and passes here - most of its fields are still
+ * (`OperatorNew(0x220)`) and passes here - most of its fields are still
  * touched only by this chunk's not-yet-matched neighbors
  * (`UpdateTitleLogoPieces`/`RunTitleScreen`/`DestroyTitleScreen`/...), so it stays a raw
  * `u32 *` scratch buffer here rather than a named struct (see
@@ -98,7 +98,7 @@ void *InitTitleScreen(u32 *self)
 
     {
         u32 *dest = &self[0x82];
-        *dest = (u32)InitStarfield(sub_8026EDC(0x14));
+        *dest = (u32)InitStarfield(OperatorNew(0x14));
     }
 
     SetObjMapping1D();
@@ -140,7 +140,7 @@ void LoadTitleScreenBg(u32 *self)
 
     LoadTaggedAsset(pkg->paletteAsset, (void *)BG_PLTT);
     LoadTaggedAsset(pkg->tileAsset, (void *)BG_CHAR_ADDR(2));
-    mapBuf = sub_8026EC0((s32)pkg->height * (s32)pkg->width * 2);
+    mapBuf = OperatorNewArray((s32)pkg->height * (s32)pkg->width * 2);
     LoadTaggedAsset(pkg->mapAsset, mapBuf);
     dest = (u16 *)BG_SCREEN_ADDR(30);
     for (i = 0; i < (s32)pkg->height * (s32)pkg->width; i += 2)
@@ -155,7 +155,7 @@ void LoadTitleScreenBg(u32 *self)
     bg2cnt |= 1;
     REG_BG2CNT = bg2cnt;
     if (mapBuf != NULL)
-        sub_8026EB4(mapBuf);
+        OperatorDeleteArray(mapBuf);
 }
 
 /* Uploads the 4 obj-sprite `struct bg_package` entries in
@@ -217,7 +217,7 @@ void LoadTitleScreenObjTiles(u32 *self)
         register struct dma_regs *dma asm("r0");
         register u32 dmaCnt asm("r1");
 
-        paletteBuf = sub_8026EC0(*(u32 *)(*pkgPtr)->paletteAsset >> 8);
+        paletteBuf = OperatorNewArray(*(u32 *)(*pkgPtr)->paletteAsset >> 8);
         LoadTaggedAsset((*pkgPtr)->paletteAsset, paletteBuf);
         dma = (struct dma_regs *)REG_ADDR_DMA3SAD;
         dma->src = (u32)paletteBuf;
@@ -227,14 +227,14 @@ void LoadTitleScreenObjTiles(u32 *self)
         dma->cnt;
         paletteDest = (u8 *)paletteDest + 0x20;
         if (paletteBuf != NULL) {
-            sub_8026EB4(paletteBuf);
+            OperatorDeleteArray(paletteBuf);
         }
 
-        tileBuf = sub_8026EC0(*(u32 *)(*pkgPtr)->tileAsset >> 8);
+        tileBuf = OperatorNewArray(*(u32 *)(*pkgPtr)->tileAsset >> 8);
         LoadTaggedAsset((*pkgPtr)->tileAsset, tileBuf);
 
         count = (*pkgPtr)->height * (*pkgPtr)->width;
-        mapBuf = sub_8026EC0(count * 2);
+        mapBuf = OperatorNewArray(count * 2);
         {
             /* ROM emits a single `ldm r7!, {r0}` here - see doc comment
              * above. */
@@ -283,10 +283,10 @@ void LoadTitleScreenObjTiles(u32 *self)
         }
 
         if (mapBuf != NULL) {
-            sub_8026EB4(mapBuf);
+            OperatorDeleteArray(mapBuf);
         }
         if (tileBuf != NULL) {
-            sub_8026EB4(tileBuf);
+            OperatorDeleteArray(tileBuf);
         }
         pkgPtr = pkgPtrStash;
         asm volatile("mov %0, %1" : "=r"(loopCond) : "r"(pass));

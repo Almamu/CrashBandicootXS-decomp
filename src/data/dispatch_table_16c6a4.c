@@ -60,7 +60,7 @@ extern void SpawnSealSpawner();
 extern void SpawnTimeCrate3();
 extern void SpawnTimeCrate2();
 extern void SpawnTimeCrate1();
-extern void sub_8021AB8();
+extern void SpawnSlotCrate();
 extern void SpawnTntCrate();
 extern void sub_8021B00();
 extern void SpawnBouncyWumpaCrate();
@@ -132,7 +132,7 @@ void (*const gEntitySpawnFuncs[92])() = {
     SpawnBouncyWumpaCrate,
     sub_8021B00,
     SpawnTntCrate,
-    sub_8021AB8,
+    SpawnSlotCrate,
     SpawnTimeCrate1,
     SpawnTimeCrate2,
     SpawnTimeCrate3,

@@ -4,16 +4,16 @@
 /* GitHub issue #9: 0x08007634-0x0800B3F0, game_loop-labeled chunk that
  * turned out to be part of the `actor` category's "part" object family
  * already tracked in actor_part11.c-actor_part17.c (see
- * docs/matching/issue-9-0x08007634-actor.md). `sub_800A528`/
+ * docs/matching/issue-9-0x08007634-actor.md). `UpdateGroundSprite`/
  * `sub_800A590` sit between actor_part11.c's raw tail (still-raw
- * sub_800A0FC/sub_800A178/sub_800A420) and the already-matched
- * actor_part14.c (sub_800A5F4 onward). */
+ * CollideGroundSprite/ProbeGroundSpriteTerrain/sub_800A420) and the already-matched
+ * actor_part14.c (DrawGroundSprite onward). */
 
-extern void sub_8009FB0(void *self);
+extern void UpdateMovingSprite(void *self);
 
 /* Looks up `self`'s current "moving platform" record via the
  * virtual method `m10` (the same method-table convention as
- * `sub_8008DC0`'s `m20` slot in actor_part11.c) and, if the record
+ * `DrawPartList`'s `m20` slot in actor_part11.c) and, if the record
  * pointer changed since the last call (cached in `self->platform`,
  * non-NULL), nudges `self->y` by the delta between the old and new
  * record's position - interpreted as `record[5] + record[2]` (a Q8
@@ -21,8 +21,8 @@ extern void sub_8009FB0(void *self);
  * `record[2]` (a plain halfword) when it reads state `4`. Reads as a
  * "ride along with a moving platform" hookup: when the platform record
  * moves, carry the rider by the same amount. This function
- * (`sub_800A528`) additionally makes one extra unconditional
- * `sub_8009FB0(self)` call first (return value discarded) - its own
+ * (`UpdateGroundSprite`) additionally makes one extra unconditional
+ * `UpdateMovingSprite(self)` call first (return value discarded) - its own
  * purpose isn't examined further here, just reproduced. Its twin
  * `sub_800A590` right below is the same body without that extra call.
  *
@@ -46,11 +46,11 @@ extern void sub_8009FB0(void *self);
  * docs/matching/issue-9-0x08007634-actor.md.
  *
  * Function order in this file matches ROM address order
- * (`sub_800A528` < `sub_800A590`) rather than the two twins' logical
+ * (`UpdateGroundSprite` < `sub_800A590`) rather than the two twins' logical
  * "base function then its +1-call variant" relationship, since the
  * linker places each object's functions in source order and this one
  * must land first. */
-void sub_800A528(struct gobj *self)
+void UpdateGroundSprite(struct gobj *self)
 {
     struct gobj_vtable *tbl;
     s16 off;
@@ -60,7 +60,7 @@ void sub_800A528(struct gobj *self)
     register void *prev asm("r1");
     register s32 delta asm("r1");
 
-    sub_8009FB0(self);
+    UpdateMovingSprite(self);
 
     tbl = self->vtable;
     off = tbl->m10.thisOffset;
@@ -122,8 +122,8 @@ skip:
     self->platform = rec;
 }
 
-/* Same shape as `sub_800A528` above, minus its leading unconditional
- * `sub_8009FB0(self)` call. See `sub_800A528`'s doc comment for the
+/* Same shape as `UpdateGroundSprite` above, minus its leading unconditional
+ * `UpdateMovingSprite(self)` call. See `UpdateGroundSprite`'s doc comment for the
  * shared logic and the closed register-allocation gap. */
 void sub_800A590(struct gobj *self)
 {

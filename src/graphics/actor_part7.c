@@ -5,10 +5,10 @@
 
 extern void *GetSpriteFrame(void *part);
 
-/* Same keyframe-record lookup as `sub_8008734`/`sub_8008770` above,
+/* Same keyframe-record lookup as `GetSpriteAnimPaletteId`/`IsSpriteAnimLooping` above,
  * returning the record's `+0x16` byte (frame count, also read by
  * `GetSpriteFrame`). */
-u8 sub_800878C(struct actor *part)
+u8 GetSpriteAnimFrameCount(struct actor *part)
 {
     register void **tablePtr asm("r1") = *(void ***)((u8 *)part + 0x20);
     register u8 *idxAddr asm("r0") = (u8 *)part + 0x2d;
@@ -22,10 +22,10 @@ u8 sub_800878C(struct actor *part)
     return *((u8 *)rec + 0x16);
 }
 
-/* Same shape as `sub_800878C` immediately above, returning the
+/* Same shape as `GetSpriteAnimFrameCount` immediately above, returning the
  * record's `+0x15` byte (duration, also read by `GetSpriteFrame`)
  * instead. */
-u8 sub_80087A0(struct actor *part)
+u8 GetSpriteAnimDuration(struct actor *part)
 {
     register void **tablePtr asm("r1") = *(void ***)((u8 *)part + 0x20);
     register u8 *idxAddr asm("r0") = (u8 *)part + 0x2d;
@@ -40,49 +40,49 @@ u8 sub_80087A0(struct actor *part)
 }
 
 /* Resets `part`'s frame index (`+0x30`) to 0. */
-void sub_80087B4(void *part)
+void ResetSpriteFrameIndex(void *part)
 {
     *(s32 *)((u8 *)part + 0x30) = 0;
 }
 
 /* `part+0x34` (sub-counter) get/set pair. */
-void sub_80087BC(void *part, s32 val)
+void SetSpriteFrameTimer(void *part, s32 val)
 {
     *(s32 *)((u8 *)part + 0x34) = val;
 }
 
-void sub_80087C0(void *part)
+void ResetSpriteFrameTimer(void *part)
 {
     *(s32 *)((u8 *)part + 0x34) = 0;
 }
 
 /* `part+0x2d` (frame index within the keyframe table) setter. */
-void sub_80087C8(void *part, u8 val)
+void SetSpriteAnimIndex(void *part, u8 val)
 {
     *((u8 *)part + 0x2d) = val;
 }
 
-extern void sub_800872C(void *part, u8 val);
+extern void SetSpriteAnimDone(void *part, u8 val);
 
 /* Sets `part`'s frame index (`+0x2d`), then resets the sub-counter,
- * frame counter, and "done" flag (`sub_80087C0`/`sub_80087B4`/
- * `sub_800872C`). */
-void sub_80087D0(void *part, u8 idx)
+ * frame counter, and "done" flag (`ResetSpriteFrameTimer`/`ResetSpriteFrameIndex`/
+ * `SetSpriteAnimDone`). */
+void SetSpriteAnim(void *part, u8 idx)
 {
     *((u8 *)part + 0x2d) = idx;
-    sub_80087C0(part);
-    sub_80087B4(part);
-    sub_800872C(part, 0);
+    ResetSpriteFrameTimer(part);
+    ResetSpriteFrameIndex(part);
+    SetSpriteAnimDone(part, 0);
 }
 
 /* Increments `part`'s frame index (`+0x30`). */
-void sub_80087F4(void *part)
+void IncSpriteFrameIndex(void *part)
 {
     *(s32 *)((u8 *)part + 0x30) += 1;
 }
 
 /* Increments `part`'s sub-counter (`+0x34`). */
-void sub_80087FC(void *part)
+void IncSpriteFrameTimer(void *part)
 {
     *(s32 *)((u8 *)part + 0x34) += 1;
 }
@@ -99,25 +99,25 @@ u8 sub_800880C(void *part)
 }
 
 /* `tick` (per-keyframe step counter) getter. */
-s32 sub_8008814(struct box_part *part)
+s32 GetSpriteFrameIndex(struct box_part *part)
 {
     return part->tick;
 }
 
 /* `timer` (ticks on the current step) getter. */
-s32 sub_8008818(struct box_part *part)
+s32 GetSpriteFrameTimer(struct box_part *part)
 {
     return part->timer;
 }
 
 /* `part+0x2d` (frame index within the keyframe table) getter. */
-u8 sub_800881C(void *part)
+u8 GetSpriteAnim(void *part)
 {
     return *((u8 *)part + 0x2d);
 }
 
 /* `part+0x28` low-2-bit getter - same `(u32 << 30) >> 30` idiom used
- * by `sub_8008408`'s 2-bit field extraction. */
+ * by `GetSpriteObjPriority`'s 2-bit field extraction. */
 s32 sub_8008824(void *part)
 {
     u32 byte = *((u8 *)part + 0x28);
@@ -127,7 +127,7 @@ s32 sub_8008824(void *part)
 /* Sets `part+0x28`'s low 2 bits to `value & 3`. Same accumulator-
  * register pattern (mask/byte/result chain) used throughout this ROM
  * region for AND/OR accessors, plus the same `+r`-on-the-other-
- * operand fix as `sub_8008754`/`sub_80086F4` to stop the mask
+ * operand fix as `SetSpritePalette`/`SetSpriteFlipX` to stop the mask
  * constant `-4` being computed relative to the leftover `3` register
  * value instead of via a fresh `movs`+`negs`. */
 void sub_8008830(void *part, s32 value)
@@ -151,28 +151,28 @@ void sub_8008830(void *part, s32 value)
 }
 
 /* `part+0x28` bit-4 getter, via the `(u32 << N) >> 31` logical-shift
- * idiom (see `sub_8007B00`'s mirror flags) rather than a plain
+ * idiom (see `GetSpriteBounds`'s mirror flags) rather than a plain
  * `(byte >> 4) & 1`. */
-s32 sub_8008844(void *part)
+s32 GetSpriteFlipX(void *part)
 {
     u32 byte = *((u8 *)part + 0x28);
     return (byte << 0x1b) >> 0x1f;
 }
 
-/* `part+0x28` bit-5 getter, same idiom as `sub_8008844` above. */
-s32 sub_8008850(void *part)
+/* `part+0x28` bit-5 getter, same idiom as `GetSpriteFlipX` above. */
+s32 GetSpriteFlipY(void *part)
 {
     u32 byte = *((u8 *)part + 0x28);
     return (byte << 0x1a) >> 0x1f;
 }
 
-/* `part+0x38` ("done" flag, also written by `sub_800872C`) getter. */
-u8 sub_800885C(void *part)
+/* `part+0x38` ("done" flag, also written by `SetSpriteAnimDone`) getter. */
+u8 GetSpriteAnimDone(void *part)
 {
     return *((u8 *)part + 0x38);
 }
 
-/* `part+0x28` bit-2 getter, same idiom as `sub_8008844`/`sub_8008850`
+/* `part+0x28` bit-2 getter, same idiom as `GetSpriteFlipX`/`GetSpriteFlipY`
  * above. */
 s32 sub_8008864(void *part)
 {
@@ -180,7 +180,7 @@ s32 sub_8008864(void *part)
     return (byte << 0x1d) >> 0x1f;
 }
 
-/* `part+0x29` low-nibble getter, same shape as `sub_8008748`. */
+/* `part+0x29` low-nibble getter, same shape as `GetSpritePalette`. */
 s32 sub_8008870(void *part)
 {
     u32 byte = *((u8 *)part + 0x29);
@@ -214,7 +214,7 @@ extern void DrawSpritePieces(void *unused, void *part, s32 *posPtr);
  * stack `{x, y}` pair, then dispatches to `DrawAffineSpritePieces` or
  * `DrawSpritePieces` (both already matched/parked elsewhere in this ROM
  * region) depending on whether `unk_3C` is set. */
-void sub_8008890(struct actor *part, s32 arg1, s32 arg2)
+void DrawSpriteWithOffset(struct actor *part, s32 arg1, s32 arg2)
 {
     s32 pos[2];
 
@@ -229,10 +229,10 @@ void sub_8008890(struct actor *part, s32 arg1, s32 arg2)
 }
 
 /* Sets `part+0x28`'s top 2 bits to `value << 6`. Needed the parameter
- * typed `s32` (not `u8`) for the same reason as `sub_8008754` - a
+ * typed `s32` (not `u8`) for the same reason as `SetSpritePalette` - a
  * `u8`-typed parameter's mandatory entry truncation combines with the
  * later `<< 6` into a single, ROM-mismatching shift pair. */
-void sub_80088D8(void *part, s32 value)
+void SetSpritePriority(void *part, s32 value)
 {
     register u8 *addr asm("r0") = (u8 *)part + 0x28;
     register s32 shiftedVal asm("r1") = value << 6;
@@ -248,36 +248,36 @@ void sub_80088D8(void *part, s32 value)
 
 /* `part+0x28` top-2-bit getter - no mask needed since the shift
  * already isolates those bits. */
-s32 sub_80088E8(void *part)
+s32 GetSpritePriority(void *part)
 {
     return *((u8 *)part + 0x28) >> 6;
 }
 
-extern u8 gStaticData_087E3CAC[];
-extern void sub_8008484(struct actor *self, u32 arg1);
+extern u8 gUiSpriteObjVtable[];
+extern void DestroySpriteObj(struct actor *self, u32 arg1);
 
-/* Overwrites `part->table` with `gStaticData_087E3CAC`, then tail-
- * calls `sub_8008484` (already matched in `actor_part6.c`) with the
+/* Overwrites `part->table` with `gUiSpriteObjVtable`, then tail-
+ * calls `DestroySpriteObj` (already matched in `actor_part6.c`) with the
  * same `arg1` - which immediately overwrites `table` again with
- * `gStaticData_087E3BEC` before its own conditional `sub_8026ED0`
+ * `gStaticData_087E3BEC` before its own conditional `OperatorDelete`
  * call. Reproduces the ROM's apparently-redundant double table write
  * as-is. */
-void sub_80088F0(struct actor *part, u32 arg1)
+void DestroyUiSpriteObj(struct actor *part, u32 arg1)
 {
-    part->table = gStaticData_087E3CAC;
-    sub_8008484(part, arg1);
+    part->table = gUiSpriteObjVtable;
+    DestroySpriteObj(part, arg1);
 }
 
-extern struct actor *sub_80084A4(struct actor *self);
+extern struct actor *InitSpriteObj(struct actor *self);
 
-/* Re-initializes `part` via `sub_80084A4` (already matched in
- * `actor_part6.c`, which itself sets `table` to `gStaticData_087E3C44`),
- * then immediately overwrites `table` with `gStaticData_087E3CAC`
+/* Re-initializes `part` via `InitSpriteObj` (already matched in
+ * `actor_part6.c`, which itself sets `table` to `gSpriteObjVtable`),
+ * then immediately overwrites `table` with `gUiSpriteObjVtable`
  * instead. */
-struct actor *sub_8008904(struct actor *part)
+struct actor *InitUiSpriteObj(struct actor *part)
 {
-    sub_80084A4(part);
-    part->table = gStaticData_087E3CAC;
+    InitSpriteObj(part);
+    part->table = gUiSpriteObjVtable;
     return part;
 }
 
@@ -323,7 +323,7 @@ extern void CpuSet(const void *src, void *dst, u32 cnt);
  * members of one frame object (so the screen box's x/y go straight to
  * sp offsets), and the w/h stores go through a `&screen` pointer taken
  * after them - that pointer is the one the loop keeps in r8. */
-void sub_800891C(struct part_list *list)
+void UpdatePartList(struct part_list *list)
 {
     struct { struct part_aabb near; struct part_aabb screen; } f;
     struct bg_scroll_layer *cam;
@@ -396,22 +396,22 @@ void sub_800891C(struct part_list *list)
 }
 
 extern void *MemCopy32(void *dst, const void *src, s32 size); /* memcpy (asm/crt0.s) */
-extern void sub_8008AD8(struct part_list *list, struct part_aabb box, struct box_part *part);
-extern void sub_8008D80(struct part_list *list, struct part_aabb box, struct box_part *part, struct box_part *other);
+extern void CollidePartWithPlayer(struct part_list *list, struct part_aabb box, struct box_part *part);
+extern void CollidePartWithObject(struct part_list *list, struct part_aabb box, struct box_part *part, struct box_part *other);
 extern struct box_part *gPlayer;
 
 /* Walks `list`'s visible parts. For each: asks its method-table +0x48
  * method for a state and skips it unless that is above 4, and skips it
  * unless its `visible` bit (flags bit 2) is set. Then hands the incoming
- * box to `sub_8008AD8` (when `other` is the player, gPlayer)
- * or `sub_8008D80` (otherwise, also passing `other`).
+ * box to `CollidePartWithPlayer` (when `other` is the player, gPlayer)
+ * or `CollidePartWithObject` (otherwise, also passing `other`).
  *
  * The box arrives and is passed on by value; the ROM copies it into one
  * shared temporary with MemCopy32 (memcpy) before each call, which is
  * what the explicit call reproduces (a plain struct assignment is
  * copied inline with ldm/stm instead). `unused` is the caller's padding
  * argument. Matches under old_agbcc. */
-void sub_8008A40(struct part_list *list, struct part_aabb box, s32 unused, struct box_part *other)
+void CollidePartList(struct part_list *list, struct part_aabb box, s32 unused, struct box_part *other)
 {
     s32 i;
     struct part_aabb tmp;
@@ -426,10 +426,10 @@ void sub_8008A40(struct part_list *list, struct part_aabb box, s32 unused, struc
             continue;
         if (other == gPlayer) {
             MemCopy32(&tmp, &box, sizeof(tmp));
-            sub_8008AD8(list, tmp, part);
+            CollidePartWithPlayer(list, tmp, part);
         } else {
             MemCopy32(&tmp, &box, sizeof(tmp));
-            sub_8008D80(list, tmp, part, other);
+            CollidePartWithObject(list, tmp, part, other);
         }
     }
 }
@@ -442,9 +442,9 @@ struct game_state {
 extern struct game_state *gLevelState;
 extern void *gAudioContext;
 extern s32 sub_8009FF4(struct box_part *part, struct part_aabb *box);
-extern struct part_aabb sub_8007B98(struct box_part *part);
+extern struct part_aabb GetSpriteHitbox(struct box_part *part);
 extern struct part_aabb sub_8007CF8(struct box_part *part);
-extern u8 sub_8001688(struct part_aabb *a, struct part_aabb *b);
+extern u8 AabbOverlaps(struct part_aabb *a, struct part_aabb *b);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
 
 /* obj->vtable[0x68](a, b, c) - the part's "hit" method. */
@@ -455,12 +455,12 @@ extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
     } else (void)0
 
 /* Resolves a hit between `part` and the player (gPlayer)
- * against the incoming box passed by sub_8008A40 (`list` is unused).
+ * against the incoming box passed by CollidePartList (`list` is unused).
  *
  * In mode 3 (gLevelState->maskLevel): if `part` touches the box
  * (`sub_8009FF4`), calls its hit method with the player's kind.
  * Otherwise, for a solid part (flags2 bit 3): builds the player's box
- * (sub_8007B98) and the part's (sub_8007CF8); on overlap pushes the
+ * (GetSpriteHitbox) and the part's (sub_8007CF8); on overlap pushes the
  * player's x out of `part` by the sum of both widths (<<7) on whichever
  * side it is, and calls the player's hit method (0, 0xc, side 2/1).
  * Otherwise, by `sub_8009FF4`'s result: 1 marks the player hit; a
@@ -473,7 +473,7 @@ extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
  * scalar in its incoming stack slot" blocker); the empty `case 0` gives
  * the ROM's `cmp #1; beq; cmp #1; ble; cmp #2` switch; the player's
  * hit-flag update goes through a pointer to keep the ROM's registers. */
-void sub_8008AD8(struct part_list *list, struct part_aabb box, struct box_part *part)
+void CollidePartWithPlayer(struct part_list *list, struct part_aabb box, struct box_part *part)
 {
     if (gLevelState->maskLevel == 3) {
         if (!sub_8009FF4(part, &box))
@@ -483,9 +483,9 @@ void sub_8008AD8(struct part_list *list, struct part_aabb box, struct box_part *
         struct part_aabb a, b;
         s32 px;
 
-        a = sub_8007B98(gPlayer);
+        a = GetSpriteHitbox(gPlayer);
         b = sub_8007CF8(part);
-        if (!sub_8001688(&a, &b))
+        if (!AabbOverlaps(&a, &b))
             return;
         px = part->x;
         if (px < gPlayer->x) {
@@ -528,10 +528,10 @@ void sub_8008AD8(struct part_list *list, struct part_aabb box, struct box_part *
     }
 }
 
-/* sub_8008D80, this function's ROM-adjacent sibling (its collision-hit
+/* CollidePartWithObject, this function's ROM-adjacent sibling (its collision-hit
  * logic mirror for a non-default "compare viewport"), lives in
  * src/graphics/actor_part7b.c instead of here - its real ROM address
  * isn't adjacent to this file's functions (actor_part10.c's
- * sub_8008C80/sub_8008CEC/sub_8008D30 sit between sub_8008AD8 above and
- * sub_8008D80 in ROM order), so it needs its own translation unit per
+ * CullPartList/ClearPartList/sub_8008D30 sit between CollidePartWithPlayer above and
+ * CollidePartWithObject in ROM order), so it needs its own translation unit per
  * docs/workflow.md step 4. */

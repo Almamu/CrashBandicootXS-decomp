@@ -32,13 +32,13 @@ Two loosely related families sharing the same ROM neighborhood:
 ## Matched (19 functions, full clean `make compare` passing)
 
 `src/system/game_loop17.c` (`sub_802425C`-`CountLevelCrates`, 3 fns):
-`sub_802425C` (bit-tested `sub_8026ED0` teardown wrapper), `nullsub_25`
+`sub_802425C` (bit-tested `OperatorDelete` teardown wrapper), `nullsub_25`
 (empty stub), `CountLevelCrates` (the medal-table per-level tally).
 
 `src/system/game_loop18.c` (`IsInGemPathRoom`-`SelectRoom`, 13 fns):
 `IsInGemPathRoom`/`IsInBonusRoom` (medal item-list `extra2`/`extra1`-matches-
-cached-value checks), `sub_8024428`/`sub_8024434`/`sub_8024440`/
-`sub_802444C`/`sub_8024458` (thin wrappers over `LevelHasEntityType` with a
+cached-value checks), `LevelHasYellowGemEntity`/`LevelHasBlueGemEntity`/`LevelHasGreenGemEntity`/
+`LevelHasRedGemEntity`/`sub_8024458` (thin wrappers over `LevelHasEntityType` with a
 baked-in flag-index constant - `LevelHasEntityType` itself is left raw, see
 below), `CountRoomCrates` (standalone instance of `CountLevelCrates`'s per-item
 dispatch body), `PlayRoomMusic` (medal-results sound-cue resolver),
@@ -124,7 +124,7 @@ left as a clear target for a future pass instead.
   list (same `MedalItemList`/`MedalListItem` shape `CountLevelCrates` uses)
   for any non-type-3 item whose `linkedObj->0x1c->0x10` table has a
   nonzero `u16` at halfword index `flagIdx` (the parameter
-  `sub_8024428`/`34`/`40`/`4C`/`58` bake a constant into). Every field,
+  `LevelHasYellowGemEntity`/`34`/`40`/`4C`/`58` bake a constant into). Every field,
   offset and branch confirmed correct (including the early-exit-on-
   match loop shape) via an isolated reconstruction, but the ROM keeps
   `flagIdx` alive across the whole function in `ip`/r12 (via an explicit

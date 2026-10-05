@@ -1,6 +1,6 @@
 #include "core.h"
 
-/* GitHub issue #9/#10: `sub_800C244`, another of the four
+/* GitHub issue #9/#10: `UpdateEnemyHop`, another of the four
  * `self+0x68`-dispatching siblings (docs/matching/issue-9-10-0x0800b8dc-graphics.md)
  * - called from UpdateEnemyCtrl's own state 8.
  *
@@ -33,7 +33,7 @@ extern void *gAudioContext;
 /* Real C (issue #9-#11 NAKED retry): the only gap in the old draft was
  * the post-call `target->y = baseY` store - `baseY` pinned to r1 gives the
  * ROM's r2/r1 split, and every later access reuses the same `t`. */
-void sub_800C244(struct part_ctrl *self)
+void UpdateEnemyHop(struct part_ctrl *self)
 {
     struct ctrl_target *t;
 

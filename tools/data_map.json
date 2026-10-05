@@ -345,7 +345,7 @@
    "consumers": [
     "DrawPlayer",
     "sub_800C8F8",
-    "sub_800C940",
+    "UpdateEnemyBob",
     "sub_800C97C",
     "UpdateExtraLife",
     "sub_8011248",
@@ -952,8 +952,8 @@
    "name": "gStaticData_0816B300",
    "consumers": [
     "sub_80084C4",
-    "sub_800A884",
-    "sub_8011BD4",
+    "CollidePlayer",
+    "ActionCtrlHandleEvent",
     "sub_8014D18"
    ],
    "consumer_files": [
@@ -978,8 +978,8 @@
    "size": 792,
    "name": "gStaticData_0816B304",
    "consumers": [
-    "sub_800B704",
-    "sub_800B838",
+    "StartCtrlTargetMotionYFromSet",
+    "StartCtrlTargetMotionXFromSet",
     "sub_8012AF4"
    ],
    "consumer_files": [
@@ -1493,9 +1493,9 @@
   {
    "address": "0x0816BB94",
    "size": 4,
-   "name": "gStaticData_0816BB94",
+   "name": "gSlotCrateTimers",
    "consumers": [
-    "sub_800F990",
+    "UpdateSlotCrate",
     "CreateCrate"
    ],
    "consumer_files": [
@@ -1734,9 +1734,9 @@
   {
    "address": "0x0816BF20",
    "size": 336,
-   "name": "gStaticData_0816BF20",
+   "name": "gActionCtrlStateTable",
    "consumers": [
-    "sub_8012420"
+    "UpdateActionCtrl"
    ],
    "consumer_files": [
     "graphics/actor_part84.c"
@@ -1760,7 +1760,7 @@
    "size": 32,
    "name": "gStaticData_0816C070",
    "consumers": [
-    "sub_8016288",
+    "UpdatePlayerCtrl",
     "sub_8016DDC",
     "sub_80170EC",
     "sub_8017264",
@@ -1811,7 +1811,7 @@
    "size": 64,
    "name": "gStaticData_0816C250",
    "consumers": [
-    "sub_8016288"
+    "UpdatePlayerCtrl"
    ],
    "consumer_files": [
     "graphics/actor_part_16048.c"
@@ -1835,7 +1835,7 @@
    "size": 64,
    "name": "gStaticData_0816C290",
    "consumers": [
-    "sub_8017650"
+    "UpdateInputCtrl"
    ],
    "consumer_files": [
     "graphics/actor_part_17524.c"
@@ -5098,8 +5098,8 @@
     "InitLevelState",
     "GetSpriteTileBase",
     "GetSpriteFrame",
-    "sub_800815C",
-    "sub_8008734",
+    "GetSpriteAnimPaletteSlot",
+    "GetSpriteAnimPaletteId",
     "GetPaletteSlot",
     "GAX2 engine (the audio part: SFX voices created from GaxSongHeader.sfxTypes by GAX2_init, played by GaxFxChannelPlay)"
    ],
@@ -7145,7 +7145,7 @@
     "sub_80071E4",
     "sub_800725C",
     "sub_80073BC",
-    "sub_8008484",
+    "DestroySpriteObj",
     "DestroyPeriodicSpawner"
    ],
    "consumer_files": [
@@ -7170,10 +7170,10 @@
   {
    "address": "0x087E3C44",
    "size": 104,
-   "name": "gStaticData_087E3C44",
+   "name": "gSpriteObjVtable",
    "consumers": [
-    "sub_8008434",
-    "sub_80084A4"
+    "CreateSpriteObj",
+    "InitSpriteObj"
    ],
    "consumer_files": [
     "graphics/actor_part6.c"
@@ -7195,10 +7195,10 @@
   {
    "address": "0x087E3CAC",
    "size": 104,
-   "name": "gStaticData_087E3CAC",
+   "name": "gUiSpriteObjVtable",
    "consumers": [
-    "sub_80088F0",
-    "sub_8008904"
+    "DestroyUiSpriteObj",
+    "InitUiSpriteObj"
    ],
    "consumer_files": [
     "graphics/actor_part7.c"
@@ -7220,11 +7220,11 @@
   {
    "address": "0x087E3D14",
    "size": 120,
-   "name": "gStaticData_087E3D14",
+   "name": "gMovingSpriteVtable",
    "consumers": [
-    "sub_8009ED0",
-    "sub_8009F1C",
-    "sub_8009F90"
+    "CreateMovingSprite",
+    "DestroyMovingSprite",
+    "InitMovingSprite"
    ],
    "consumer_files": [
     "graphics/actor_part8.c"
@@ -7246,11 +7246,11 @@
   {
    "address": "0x087E3D8C",
    "size": 120,
-   "name": "gStaticData_087E3D8C",
+   "name": "gGroundSpriteVtable",
    "consumers": [
-    "sub_800A604",
-    "sub_800A650",
-    "sub_800A6A4"
+    "CreateGroundSprite",
+    "DestroyGroundSprite",
+    "InitGroundSprite"
    ],
    "consumer_files": [
     "graphics/actor_part14.c"
@@ -7298,10 +7298,10 @@
   {
    "address": "0x087E3E7C",
    "size": 104,
-   "name": "gStaticData_087E3E7C",
+   "name": "gCtrlVtable",
    "consumers": [
-    "sub_800B8A8",
-    "sub_800B8C8"
+    "DestroyCtrl",
+    "InitCtrl"
    ],
    "consumer_files": [
     "graphics/actor_part17.c"
@@ -7531,10 +7531,10 @@
   {
    "address": "0x087E4224",
    "size": 104,
-   "name": "gStaticData_087E4224",
+   "name": "gActionCtrlVtable",
    "consumers": [
-    "sub_8015878",
-    "sub_801588C"
+    "DestroyActionCtrl",
+    "InitActionCtrl"
    ],
    "consumer_files": [
     "graphics/actor_part57.c"
@@ -7558,8 +7558,8 @@
    "size": 104,
    "name": "gPlayerCtrlVtable",
    "consumers": [
-    "sub_80174D8",
-    "sub_80174EC"
+    "DestroyPlayerCtrl",
+    "InitPlayerCtrl"
    ],
    "consumer_files": [
     "graphics/actor_part_16048.c"

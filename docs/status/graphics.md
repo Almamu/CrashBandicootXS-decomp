@@ -65,7 +65,7 @@ and [graphics_loading.md](./graphics_loading.md).
   opaque to the peephole fusion that otherwise always combines it into
   a `stmia` writeback, plus the ROM's own shift-based mask idiom - see
   [naked-CommitBlendRegs-matched.md](../matching/naked-CommitBlendRegs-matched.md)),
-  `sub_8001640`, `sub_8001688`, `sub_80016D0`, `sub_80016DC` - two AABB
+  `AabbOverlapsInclusiveX`, `AabbOverlaps`, `sub_80016D0`, `sub_80016DC` - two AABB
   overlap tests (one already referenced by name from `actor.md`'s
   `actor_part15.c`) plus `mem_free`/`mem_alloc` wrappers.
 
@@ -79,12 +79,12 @@ and [graphics_loading.md](./graphics_loading.md).
   issue #19's last raw function `sub_8016048`): `sub_8016048`-
   `sub_801751C` (26 functions), all real C - the player-input controller
   class (method table `gPlayerCtrlVtable`, struct in
-  `include/player_ctrl.h`): per-frame update `sub_8016288` (D-pad
+  `include/player_ctrl.h`): per-frame update `UpdatePlayerCtrl` (D-pad
   auto-repeat level stepping, animation re-apply, pointer-to-member state
   dispatch through `gStaticData_0816C250` to the eight state handlers
-  `sub_8016B1C`...`sub_8017184`), message handler `sub_8016128`, mode/
+  `sub_8016B1C`...`sub_8017184`), message handler `PlayerCtrlHandleEvent`, mode/
   animation setter `sub_8017264`, player record writer `sub_80172D0`,
-  constructor/destructor `sub_80174EC`/`sub_80174D8`. Nine UNUSED
+  constructor/destructor `InitPlayerCtrl`/`DestroyPlayerCtrl`. Nine UNUSED
   (`sub_8016AB0`, `sub_801721C`, `sub_8017240`, `sub_8017330`,
   `sub_8017348`, `sub_80174BC`, `sub_801750C`, `sub_8017514`,
   `sub_801751C`). Built with `tools/agbcc/bin/old_agbcc`; register pins
