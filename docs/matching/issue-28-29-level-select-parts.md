@@ -4,8 +4,8 @@ All 41 functions of the former `asm/code_3_2_17_188d0_1da38.s` (issue #28,
 25 functions) and `asm/code_3_2_17_188d0_1dfec.s` (issue #29, 16
 functions) are now **real C**, with no NAKED or NON_MATCHING code:
 
-- `src/graphics/actor_part_1da38.c`: `DestroyZoomBg`-`DestroyLevelSelectEntry`
-- `src/graphics/actor_part_1dfec.c`: `CreateLevelSelectEntry`-`DestroyLevelSelectCursor`
+- `src/menus/level_select_widgets.c`: `DestroyZoomBg`-`DestroyLevelSelectEntry`
+- `src/menus/level_select_widgets.c`: `CreateLevelSelectEntry`-`DestroyLevelSelectCursor`
 - `include/level_select_parts.h`: the structs, macros and inlines the two
   files share
 
@@ -21,7 +21,7 @@ files) and a clean `make compare` (`crashbandicootxs.gba: OK`).
 ## What the code is
 
 These are the three sub-objects of `struct level_menu`, the level-select
-screen in `actor_part_1b85c.c` (issue #26):
+screen in `level_select.c` (issue #26):
 
 - **`struct zoom_bg`** (`level_menu.bg2`, 0x8C bytes, constructor
   `InitZoomBg` in the issue #27 range): the selected level's picture on

@@ -18,7 +18,7 @@ extern void AddToPartList(void *manager, void *value);
 
 /* Sets `part->field_29`'s low nibble to `GetSpriteAnimPaletteSlot(part)`'s result,
  * keeping the high nibble - same idiom as `UPDATE_ICON_FRAME_NIBBLE`
- * (src/graphics/settings_menu6.c, confirmed matching for `InitPauseCrystalsPage`),
+ * (src/menus/pause_menu_pages_init.c, confirmed matching for `InitPauseCrystalsPage`),
  * adapted for a raw-offset `struct actor *` instead of a named
  * `field_29`, since this object's tail past `struct actor`'s 0x1c
  * bytes isn't its own named struct here (see `trigger_effect.c`'s same

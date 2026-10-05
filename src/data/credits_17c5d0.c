@@ -5,7 +5,7 @@
  * sections by ldscript.txt - see docs/data.md.
  */
 
-/* The credits (InitCredits/UpdateCreditsText, actor_part131.c): a stream of
+/* The credits (InitCredits/UpdateCreditsText, credits.c): a stream of
  * lines of text and three opcodes. UpdateCreditsText draws one line at a time
  * as floating glyph popups and starts over at the terminating zero. */
 /* 1, n: popup glyph picture n (the logos of popup_glyphs_17cf40.c) */

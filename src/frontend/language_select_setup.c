@@ -44,7 +44,7 @@ extern struct language_select *gLanguageSelect;
  * cache with 4 fixed OBJ tiles, then copies a few bitmap_font fields
  * from gSmallFont's instance into gLargeFont's), but hits
  * the same class of gcc-2.9 register-allocation difficulty already
- * documented for DrawPowerDialog (src/graphics/oam_count.c) - the compiler
+ * documented for DrawPowerDialog (src/menus/power_dialog_draw.c) - the compiler
  * keeps reaching for r8/r9/sl instead of the ROM's plain r4-r7 reuse no
  * matter how the source is rephrased (indexed vs pointer-increment copy
  * loop, address-of-global caching, ...). Parking it properly (the

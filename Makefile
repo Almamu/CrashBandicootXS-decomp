@@ -297,15 +297,15 @@ $(OLD_AGBCC_OBJS): CC1 := $(CC1_OLD)
 $(OLD_AGBCC_OBJS): CC1FLAGS := $(filter-out -fprologue-bugfix,$(CC1FLAGS))
 
 # Objects built with -fno-strength-reduce on top of their compiler's -O2.
-# graphics_loading_35d1c: InitVvLogoPieces's first loop keeps its up-counting
+# title_screen.o: InitVvLogoPieces's first loop keeps its up-counting
 # `i` (with strength reduction on, gcc reverses a loop whose counter only
 # feeds the exit test), and the flag leaves every other real-C function in
 # the file byte-identical. It is NOT a global property: adding it to all
 # old_agbcc objects breaks matched functions in 11 other files, and
-# DrawTitleLogoPieces (graphics_loading_35780.o, split off for this reason) needs
+# DrawTitleLogoPieces (title_screen_init.o, split off for this reason) needs
 # strength reduction ON: its up-counting inner loop must be reversed. See
 # docs/matching/per-file-flags-investigation.md and
-# docs/matching/issue-64-65-naked-retry-2.md. graphics_loading_3686c.o
+# docs/matching/issue-64-65-naked-retry-2.md. company_logos.o
 # (DrawVvLogoPieces onward) was split off it for the same reason and is NOT
 # listed: DrawVvLogoPieces's reversed header loop and reduced row pointer need
 # strength reduction on; the rest of that file also matches with it on

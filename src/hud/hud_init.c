@@ -163,7 +163,7 @@ struct hud_counter *InitHud(struct hud_counter *self)
 /* `InitHud`'s own tail: stores `iconFlag` into `self->icon_flag`,
  * finishes the two slots `InitHud` set up part of already (a
  * position/frame-index pair from a shared table, then the same
- * `field_29`-low-nibble update `settings_menu6.c`'s
+ * `field_29`-low-nibble update `pause_menu_pages_init.c`'s
  * `UPDATE_ICON_FRAME_NIBBLE` macro names for the unrelated
  * `struct settings_icon_actor` family - `GetSpriteAnimPaletteSlot`'s result feeds the
  * same low-nibble-preserving update here too), then loops over the
@@ -172,7 +172,7 @@ struct hud_counter *InitHud(struct hud_counter *self)
  * `0x740` off `self->parts`) depending on the current level/game-mode
  * (`GetBossIndex`) and `self->icon_flag`, before DMA-filling nine words
  * at `self+0x40` with `-1` (a raw `REG_DMA3SAD`/`DAD`/`CNT` poke, the
- * same low-level idiom `settings_menu8e.c`'s `ValidateSaveData` and
+ * same low-level idiom `save_data.c`'s `ValidateSaveData` and
  * `link_handshake.c` already document for this ROM).
  *
  * Matching notes (old_agbcc): the two inner palette stores go through

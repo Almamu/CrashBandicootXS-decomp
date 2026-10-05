@@ -7,7 +7,7 @@
 
 #include "graphics_package.h"
 
-/* graphics_loading_35d1c.c's `struct delta_record`: one step of a
+/* title_screen.c's `struct delta_record`: one step of a
  * countdown slot's motion. When the slot's hold count runs out it loads
  * the next record: a new hold count (0 ends the sequence), three Q16.16
  * positions, two Q24.8 velocities and the five per-frame deltas added to
@@ -30,11 +30,11 @@ struct delta_record
 extern const u8 gUniversalLogoBgPalette[];
 extern const u8 gUniversalLogoBgTiles[];
 extern const u8 gUniversalLogoBgMap[];
-/* The BG2 picture LoadUniversalLogoBg (graphics_loading_3686c.c) loads. */
+/* The BG2 picture LoadUniversalLogoBg (company_logos.c) loads. */
 const struct bg_package gUniversalLogoBg = { 30, 20, (void *)gUniversalLogoBgPalette, (void *)gUniversalLogoBgTiles, (void *)gUniversalLogoBgMap };
 
 /* The motion sequences of the twenty countdown slots of InitVvLogoPieces
- * (graphics_loading_35d1c.c), which slot_seeds_17d6c0.c's
+ * (title_screen.c), which slot_seeds_17d6c0.c's
  * gVvLogoPieceSeeds seeds: each ends with a zero hold. */
 const struct delta_record gVvLogoPieceMotion00[11] = {
     { 79, 120, 80, 0, 76, 76, 0, 0, 0, 580, 580 },
@@ -218,7 +218,7 @@ const struct delta_record gVvLogoPieceMotion19[4] = {
 };
 
 /* The language names the language menu draws (DrawLanguageSelect,
- * counter_selector_icons.c, through digit_glyphs_17e714.c's
+ * language_select.c, through digit_glyphs_17e714.c's
  * gLanguageNames), in the order of the language setting. */
 const u8 gLanguageNameEnglish[] = "english";
 const u8 gLanguageNameFrench[] = "fran\347ais";

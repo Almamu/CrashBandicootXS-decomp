@@ -293,7 +293,7 @@ extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern void OperatorDelete(void *arg0);
 
 /* Same "re-probe an actor's own category-table slot 0x50/0x54" shape
- * already established by DestroyPowerDialog (src/graphics/oam_count.c) -
+ * already established by DestroyPowerDialog (src/menus/power_dialog_draw.c) -
  * width-re-measures a single icon's currently-drawn text in place
  * (the return value is discarded), skipping a NULL slot entirely. A
  * `#define`, not a helper function, so it inlines identically at each

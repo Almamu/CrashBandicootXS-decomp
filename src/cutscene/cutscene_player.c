@@ -3,7 +3,7 @@
 
 /* GitHub issue #39: 0x08024810-0x08024E68 (game_loop) - the remainder of
  * the UpdateGameFrame-MainLoop cluster between the sound-channel-handle
- * family (game_loop37.c/game_loop38.c) and the terrain-tile decode cache
+ * family (slideshow.c/slideshow_display.c) and the terrain-tile decode cache
  * (game_loop3.c, GitHub issue #40). docs/rom_map.md's "A new find: a
  * custom RLE/delta token-stream decoder" and its two follow-up sections
  * ("Follow-up: resolved the semantics by tracing callers", "The
@@ -14,12 +14,12 @@
  * Two systems share this address range:
  *
  * - `InitSlideshow`/`RunCutscenePlayer`/`DestroyCutscenePlayer`/`InitCutscenePlayer` extend
- *   `struct SoundChannelList` (game_loop37.c/game_loop38.c) with more
- *   fields: `ResetSlideshow` (already matched, game_loop20.c) sets
+ *   `struct SoundChannelList` (slideshow.c/slideshow_display.c) with more
+ *   fields: `ResetSlideshow` (already matched, slideshow_display.c) sets
  *   `+0xc` (the VRAM-bank toggle) to 1 - `InitCutscenePlayer` extends that same
  *   constructor to also zero two new fields, `+0x10`/`+0x14`.
  *   `RunCutscenePlayer` is a second per-frame driver loop over the same
- *   `+0/+4` items/count pair `RunSlideshow` (game_loop37.c) already
+ *   `+0/+4` items/count pair `RunSlideshow` (slideshow.c) already
  *   drives, but interleaved with an explicit OAM-shadow-buffer flush
  *   (`ResetOamBuffer`/`HideUnusedOamEntries`/`WaitForVBlank`/`CommitOamBuffer` on
  *   `gOamBuffer`, the same "HUD-icon-plus-number renderer" OAM
@@ -32,7 +32,7 @@
  *   versus `RunSlideshow`'s 8) stays set. `+0x24` feeds `__udivsi3`
  *   (value/divisor) to compute the per-call text-wrap `limit`.
  *   `DestroyCutscenePlayer` is a plain two-argument forwarding trampoline to
- *   `DestroySlideshow` (game_loop20.c).
+ *   `DestroySlideshow` (slideshow_display.c).
  *
  * - `DecodeLayerChunk` through `StepBgLayerScroll` are the "visual scrolling
  *   background streamer" docs/rom_map.md names: a circular 4x4-block
@@ -117,7 +117,7 @@ void *InitSlideshow(void *self)
 }
 
 /* Per-frame driver loop over `self`'s `+0/+4` item list (the same
- * `struct SoundChannelList` shape `RunSlideshow` (game_loop37.c) drives),
+ * `struct SoundChannelList` shape `RunSlideshow` (slideshow.c) drives),
  * interleaved with an explicit OAM-shadow-buffer flush and a nested
  * text-paging walk through a second per-item record array at `+0x10`.
  * See this file's header comment for the full shape.
@@ -226,7 +226,7 @@ void RunCutscenePlayer(struct pager *self)
 asm(".align 2, 0");
 
 /* Plain two-argument forwarding trampoline to `DestroySlideshow`
- * (game_loop20.c) - a same-shaped alias for a different call site
+ * (slideshow_display.c) - a same-shaped alias for a different call site
  * (matches this project's other trivial-wrapper aliases, e.g.
  * `sub_802425C`/`DestroySlideshow` themselves). */
 void DestroyCutscenePlayer(void *self, s32 flags)
@@ -619,7 +619,7 @@ extern u8 gBgLayerBaseVtable[];
  * ring buffer (if already allocated - `InitBgStreamer` below is the
  * matching constructor) and/or notifies via `OperatorDelete` if bit 0 of
  * `flags` is set - the same conditional-teardown shape this project
- * sees a lot of (e.g. `DestroySlideshow`, game_loop20.c). */
+ * sees a lot of (e.g. `DestroySlideshow`, slideshow_display.c). */
 void DestroyBgStreamer(void *self0, s32 flags)
 {
     struct bg_streamer *self = self0;

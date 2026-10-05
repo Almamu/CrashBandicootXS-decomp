@@ -32,7 +32,7 @@ touched: `ResetLinkSessionState` and `HandleLinkSerial` (#4), `DrawPauseFraction
 
 ## Not closed
 
-- `DrawPauseFraction` (settings_menu16.c): tried reading/writing the position
+- `DrawPauseFraction` (pause_menu_widgets.c): tried reading/writing the position
   through a pointer, reordering the x/y reads, and direct stores, under both
   compilers. The best was 57 hw off with the size fixed, so the draft was not
   updated. The ROM holds 0x110 in r7, re-materializes 0x114 in the first

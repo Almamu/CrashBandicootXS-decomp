@@ -14,7 +14,7 @@
  * `ReserveObjVram` (copying `gSmallFont`'s `tileCount` into
  * `gLargeFont`'s `tileBase` in between - meaning not otherwise
  * established), then allocates the dialog object (`OperatorNew(0x2c)`,
- * exactly `src/graphics/settings_menu13.c`'s `struct
+ * exactly `src/menus/power_dialog.c`'s `struct
  * sub_8006700_actor`'s own size) and builds it via `InitPowerDialog`
  * (matched, same file) before running its fade-in/wait-for-confirm/
  * fade-out lifecycle via `PowerDialogLoop` and, if the confirm button was
@@ -22,16 +22,16 @@
  *
  * Has no `bl` caller in raw asm - it's called from the four
  * already-matched `ShowTurboRunDialog`...`ShowSuperBodySlamDialog` wrappers in
- * `src/graphics/oam_count.c`, each with a fixed `(label1, label2,
+ * `src/menus/power_dialog_draw.c`, each with a fixed `(label1, label2,
  * type)` triple.
  *
  * Once a NAKED transcription. It matches as plain C under both
  * compilers: the icon-manager set-up is the same `IconSetup`/
  * `IconReserve` inline-helper sequence `RunLevelSelect`
- * (src/graphics/actor_part_1b85c.c) uses, and `FontResetPalette` takes one
+ * (src/menus/level_select.c) uses, and `FontResetPalette` takes one
  * argument. See docs/matching/issue-4-6-8-naked-retry.md. */
 
-/* Same struct sub_8006700_actor shape src/graphics/settings_menu13.c
+/* Same struct sub_8006700_actor shape src/menus/power_dialog.c
  * documents (redeclared locally per this project's convention). */
 struct sub_8006700_actor {
     u8 unused_00[0x10];
@@ -118,7 +118,7 @@ void ShowPowerDialog(s32 label1, s32 label2, s32 type)
  * resets palette color 0 and DISPCNT, re-initializes the popup-text
  * system's `gSmallFont`/`030012E0` icon managers, calls this
  * function then `PowerDialogLoop` to run the dialog's lifecycle) is parked
- * as `NON_MATCHING` in `src/graphics/settings_menu14.c` - see that
+ * as `NON_MATCHING` in `src/menus/power_dialog.c` - see that
  * file's header comment. */
 
 /* `struct sub_8006700_actor` (above) is allocated here via
@@ -127,7 +127,7 @@ void ShowPowerDialog(s32 label1, s32 label2, s32 type)
  * fade/confirm driver) and `DestroyPowerDialog`'s (the on-hit
  * teardown/sound helper) existing signatures. */
 
-/* Same `struct settings_icon_actor` shape `src/graphics/settings_menu6.c`
+/* Same `struct settings_icon_actor` shape `src/menus/pause_menu_pages_init.c`
  * already documents (a `struct actor`-derived on-screen icon, allocated
  * the same way via `InitUiSpriteObj(OperatorNew(0x40))`) - redeclared
  * locally per this project's convention. */
@@ -164,7 +164,7 @@ extern void *gAudioContext;
  * and `field_28` (a fixed priority/flags pair), stashes the two label
  * pointers at `field_10`/`field_14`, loads `gMenuSkyBg`'s
  * background package, and builds the background icon the same way
- * `settings_menu6.c`'s icon-constructor family does (allocate via
+ * `pause_menu_pages_init.c`'s icon-constructor family does (allocate via
  * `InitUiSpriteObj(OperatorNew(0x40))`, point `field_20` at the shared
  * `gSpriteBankSet` header table at a new `0xe4<<1` offset - see
  * docs/rom_map.md's "five confirmed header-relative offsets" note,
@@ -176,7 +176,7 @@ extern void *gAudioContext;
  * via `PlaySong(gAudioContext, 0xf)`.
  *
  * Matched byte-exact, but only after heavy register pinning (mirroring
- * `oam_count.c`'s `SUB_8006600_*` macros and `settings_menu6.c`'s
+ * `power_dialog_draw.c`'s `SUB_8006600_*` macros and `pause_menu_pages_init.c`'s
  * `UPDATE_ICON_FRAME_NIBBLE`) - this function's 4-argument, many-hi-reg
  * calling convention (`r8`/`r9`/`sl` all live across calls) and its
  * several byte-level bitfield read-modify-write sequences hit the same

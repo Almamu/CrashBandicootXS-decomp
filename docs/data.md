@@ -755,7 +755,7 @@ the code starts over there.
 
 `gTitleScreenBg` and `gUniversalLogoBg` are each a BG2
 picture (`struct bg_package`) followed by the motion scripts of the
-countdown slots of `graphics_loading_35d1c.c`: `struct delta_record`s
+countdown slots of `title_screen.c`: `struct delta_record`s
 (a hold count, positions, velocities, per-frame deltas), in sequences
 that end with a zero hold. The seed tables (`popup_glyphs_17cf40.c`'s
 `gTitleLogoPieceSeeds`, `slot_seeds_17d6c0.c`'s `gVvLogoPieceSeeds`)
@@ -839,7 +839,7 @@ u16 zeros;         // ...
 
 The IWRAM routine `0x03000634` (`UnpackRleSpriteFrame` in
 `src/iwram/sprite_arm.c`, the `gUnpackRleSpriteFrameFunc` hook, called by
-`actor_part127.c`, `actor_part128.c` and `graphics_loading_3686c.c`)
+`actor_part127.c`, `actor_part128.c` and `company_logos.c`)
 unpacks a frame into a VRAM tile block. The frame pointer tables
 (`table_B` of animation record 0 of both category families, and
 `gYetiFrames`) point at the frame headers.

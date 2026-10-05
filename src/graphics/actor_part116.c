@@ -5,7 +5,7 @@
  * `UpdateEnemyBob`/`UpdateEnemyOscillateY`, a family of three "sine-wave
  * oscillator" writers sharing the same 256-entry sine-ish table
  * `gSineTable` (already established elsewhere in this ROM,
- * `src/graphics/actor_part72.c`/`actor_part111.c`) and the global
+ * `src/frontend/starfield.c`/`actor_part111.c`) and the global
  * frame counter `gRoomFrameCount`. All three read `owner`
  * (`self+0x70`) and write a single Q8.8 coordinate on it, derived as
  * `base + table[idx & 0xff] * self->0x44` (`self->0x44` acting as an

@@ -6,7 +6,7 @@ closed and one draft got much closer.
 
 | Function | File | Before | Now | Status |
 |---|---|---|---|---|
-| `DrawPauseFraction` (#7) | `src/graphics/settings_menu16.c` | 14 | match (both compilers) | **Closed** |
+| `DrawPauseFraction` (#7) | `src/menus/pause_menu_widgets.c` | 14 | match (both compilers) | **Closed** |
 | `ResetLinkSessionState` (#4) | `src/link/link_session_reset.c` (split) | 136 | 51 (same size, old_agbcc + `-fno-rerun-loop-opt`) | Draft updated |
 | `SpawnFlamethrowerLabAssistant` (#31) | `src/graphics/graphics_loading_1feec.c` | 4 | 4 | Note added |
 

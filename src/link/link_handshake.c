@@ -5,7 +5,7 @@
 /* The GBA multiplayer link-cable/SIO transport - see docs/rom_map.md's
  * SIO/link-cable section. `ResetLinkSessionState` resets a per-session object at
  * `gLinkSession` (still uncharacterized beyond the offsets touched
- * here and in src/graphics/settings_menu8a2.c/settings_menu.c); 4
+ * here and in src/save/save_transfer.c/save_menu_draw.c); 4
  * per-player 0xc8-byte sub-records live at session+playerIndex*0xc8. */
 
 extern void IrqClearHandler(s32 interruptIndex);

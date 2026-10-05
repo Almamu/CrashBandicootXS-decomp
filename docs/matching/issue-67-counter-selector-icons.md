@@ -1,7 +1,7 @@
 # `0x080372BC` - counter widget icon draw loop / tile-cache init (issue #67)
 
-`DrawLanguageSelect`/`InitLanguageSelectGraphics` (`src/audio/counter_selector_icons.c`) are
-the small on-screen "counter" widget's (`src/audio/counter_selector.c`,
+`DrawLanguageSelect`/`InitLanguageSelectGraphics` (`src/frontend/language_select.c`) are
+the small on-screen "counter" widget's (`src/frontend/language_select.c`,
 `RunLanguageSelect`'s loop) per-frame icon draw pass and its one-time tile-cache
 init helper. Both are fully understood - previously left raw
 (`docs/status/audio.md`: "hit the same many-register gcc-2.9
@@ -21,7 +21,7 @@ widget's free-running frame counter) when the loop index equals
 that slot's own fixed digit glyph - one of six `struct bitmap_font *`
 looked up from `gLanguageNames[i]` - positioned via
 `_call_via_r2` at a fixed X (centered from the rendered pixel width,
-the same `(240-w)>>1` idiom `DrawPowerDialog`/`src/graphics/oam_count.c`
+the same `(240-w)>>1` idiom `DrawPowerDialog`/`src/menus/power_dialog_draw.c`
 uses) and a Y that steps by `0xa` per slot from a `0x32` base, reading
 and writing `gSmallFont->record->slots[0]`/`slots[2]` (see
 `include/bitmap_font.h`) as its OAM-slot-record pair - the exact same
@@ -49,10 +49,10 @@ centering-math rewritten several ways - but every attempt fell to the
 same many-register gcc-2.9 allocation ceiling already documented at
 length for two other functions in this codebase:
 
-- `DrawPowerDialog` (`src/graphics/oam_count.c`) - the near-identical
+- `DrawPowerDialog` (`src/menus/power_dialog_draw.c`) - the near-identical
   two-icon centering/draw loop this pair's `DrawLanguageSelect` extends to
   six slots, itself parked NAKED for exactly this reason.
-- `ShowPowerDialog` (`src/graphics/settings_menu14.c`) - already NAKED,
+- `ShowPowerDialog` (`src/menus/power_dialog.c`) - already NAKED,
   and its tail is *this same* `_call_via_r1`/`ReserveObjVram`/
   constant-reuse idiom `InitLanguageSelectGraphics`'s tail uses, hitting the identical
   register-choreography wall around the cached
@@ -74,7 +74,7 @@ eventually parked.
 
 ## Verification
 
-Every instruction in `src/audio/counter_selector_icons.c`'s two `NAKED`
+Every instruction in `src/frontend/language_select.c`'s two `NAKED`
 bodies is transcribed directly from the ROM's own disassembly
 (`asm/code_3_2_20a.s`, now removed) and checked against it - the only
 edits versus the raw dump are stripping the flag-setting `S` suffix
@@ -94,7 +94,7 @@ prints "La suma coincide").
 
 `InitLanguageSelectGraphics` now matches as real C under both compilers: the two
 icon-manager steps written as `static inline` helpers taking the manager
-(the idiom `InitCredits` in actor_part131.c established - each expansion
+(the idiom `InitCredits` in credits.c established - each expansion
 rematerializes its own `0x108`/`0x12c`/`0x130` offsets), plus one `u32
 zero` local shared by the `field_8`/`field_108` stores, which is the 0
 the ROM keeps in r8. See [late-rom-naked-retry.md](./late-rom-naked-retry.md).

@@ -163,7 +163,7 @@ is built with the setting it was compiled with.
   old `continue` chain.
 
 The functions keep the project's `s32` return types, which the callers
-in `src/graphics/settings_menu8d.c` and the siblings in
+in `src/save/save_data.c` and the siblings in
 `eeprom_read_write.c` declare; the SDK returns `u16`, and the code is the
 same either way because every result is a `u16` local.
 

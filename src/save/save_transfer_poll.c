@@ -16,7 +16,7 @@ extern void SendSaveTransferChunk(struct settings_sync_pump *self);
  * 1 (unrecognised role).
  *
  * Its two siblings (SendSaveTransferChunk/ReceiveSaveTransferChunk, src/graphics/
- * settings_menu8a2.c) stay parked - both need r7 as genuine scratch,
+ * save_transfer.c) stay parked - both need r7 as genuine scratch,
  * and this exact agbcc build never includes r7 in a function's
  * automatic callee-save push/pop (see the doc comment above their
  * parked C for the full explanation and repro). This function doesn't

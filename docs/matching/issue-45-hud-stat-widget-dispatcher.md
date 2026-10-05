@@ -12,10 +12,10 @@ HUD stat-widget dispatcher and its callees (`UpdateHud`/`UpdateHudBoss`/
 This pass picks up that remainder. Net result: **1 more function matched
 (`UpdateHud`), 9 still untouched** - the issue stays open.
 
-## Matched: `UpdateHud` (new `src/graphics/hud_stat_widget.c`)
+## Matched: `UpdateHud` (new `src/hud/hud.c`)
 
 The dispatcher itself. Takes the same `struct hud_counter *self` that
-`UpdateHudLives` (already matched, `hud_counter.c`) receives - confirmed by
+`UpdateHudLives` (already matched, `hud_lives.c`) receives - confirmed by
 the dispatcher calling `UpdateHudLives(self)` directly with its own
 argument, and every field it touches (`mode`, `field_08` (new),
 `icon_flag` (new), `parts`) already fitting inside `struct hud_counter`'s
@@ -140,9 +140,9 @@ sections), but none were matched or parked this pass:
 
 `asm/code_3_2_17_27138.s` is now truncated to just `InitHud`/
 `ConfigureHudParts` (previously also held `UpdateHud`-`UpdateHudClock`).
-Followed by `hud_stat_widget.o` (`UpdateHud`), then the new raw
+Followed by `hud.o` (`UpdateHud`), then the new raw
 `asm/code_3_2_17_2757c.s` (`UpdateHudBoss`/`UpdateHudClock` - the removed
-tail of the original file), then the existing `hud_counter.o`. See
+tail of the original file), then the existing `hud_lives.o`. See
 `ldscript.txt` and `tools/report_units.py`'s `hud` category entries,
 both updated to match. Verified via a full clean `make compare`
 (`La suma coincide`).
@@ -252,7 +252,7 @@ documented for this same function family:
   index - reproduces the exact two-register shape everywhere it
   appears, including in `AddPaletteCycle`'s `list += n` (needing the
   operand order forced too, via the established `add %0, %1, %0` idiom
-  from `hud_counter.c`, this time keeping the pointer being updated as
+  from `hud_lives.c`, this time keeping the pointer being updated as
   the *output* operand rather than the shift result).
 - **`n`'s register differs by branch - don't share one pin across
   both.** `TickPaletteCycles`'s `if (self->direction)` branch keeps
@@ -296,7 +296,7 @@ functions cut into `src/gfx/palette_cycle.c` and their
 ### Parked: `UpdateHudBoss`/`UpdateHudClock` (real gap, not a budget cut)
 
 Both fully understood and reconstructed as C (`src/graphics/
-hud_stat_widget2.c`, guarded by `#if NON_MATCHING`; real bytes stay in
+hud_boss_clock.c`, guarded by `#if NON_MATCHING`; real bytes stay in
 `asm/code_3_2_17_2757c.s`, now itself split into two
 `.if NON_MATCHING == 0` blocks, one per function) but not byte-matched:
 
@@ -362,7 +362,7 @@ time already spent on the six functions above:
   (`+0x0c`/`+0x10`/`+0x14`, still nameless - meaning not established),
   then loops over all 35 slots wiring each one's `anim_data` from a
   triple-indirected shared table (`**gSpriteBankSet`, the same
-  global `src/graphics/settings_menu6.c` already names and uses via its
+  global `src/menus/pause_menu_pages_init.c` already names and uses via its
   own `(**gSpriteBankSet) + (const << N)` idiom) and either a
   per-slot glyph table (`gHudPartAnims[i]`) or, for slot 22
   specifically, `GetBossIndex(...)+ 6`. `ConfigureHudParts` is the exact same
@@ -371,7 +371,7 @@ time already spent on the six functions above:
   clamp idiom as `UpdateHudBoss`/`UpdateHudClock` above. Both make heavy use
   of the high registers (`sl`/`sb`/`r8`) throughout the loop body - the
   same class of "loop/self pointer never lands in r8/sb no matter how
-  the source is phrased" difficulty `src/graphics/settings_menu6.c`'s
+  the source is phrased" difficulty `src/menus/pause_menu_pages_init.c`'s
   own `UPDATE_ICON_FRAME_NIBBLE` comment already documents giving up on
   for four near-identical functions in that file; near-certain to hit
   the same wall here, on top of needing `UpdateHudBoss`'s r7 blocker
@@ -405,7 +405,7 @@ raw.
 
 ## Cross-references (third pass)
 
-- `src/graphics/hud_stat_widget2.c` - new file, `UpdateHudBoss`/
+- `src/hud/hud_boss_clock.c` - new file, `UpdateHudBoss`/
   `UpdateHudClock`'s `NON_MATCHING` reconstructions.
 - `docs/status/hud.md` - matched and parked lists both updated.
 
@@ -465,7 +465,7 @@ every single instruction, operand and relative branch offset identical
 to the original ROM disassembly before this was ever wired into
 `ldscript.txt`. Confirmed for real via a full clean `rm -rf build
 crashbandicootxs.elf crashbandicootxs.gba crashbandicootxs.map && make
-compare` (`La suma coincide`), with `hud_stat_widget2.o` now replacing
+compare` (`La suma coincide`), with `hud_boss_clock.o` now replacing
 `asm/code_3_2_17_2757c.o` in `ldscript.txt`'s link order and the
 now-fully-empty `asm/code_3_2_17_2757c.s` deleted (same treatment the
 third pass gave `asm/code_3_2_17_26f54.s` once `TickPaletteCycles`/
@@ -478,10 +478,10 @@ issue #45 stays open.
 
 ### Cross-references
 
-- `src/graphics/hud_stat_widget2.c` - `UpdateHudBoss`/`UpdateHudClock`, now
+- `src/hud/hud_boss_clock.c` - `UpdateHudBoss`/`UpdateHudClock`, now
   `NAKED`, no `NON_MATCHING` guard.
 - `tools/report_units.py` - `0x0802757C` entry now points at
-  `src/graphics/hud_stat_widget2.o` instead of `None`.
+  `src/hud/hud_boss_clock.o` instead of `None`.
 - `docs/status/hud.md` - moved from "Parked" to "Matched".
 
 ## Fourth pass
@@ -510,7 +510,7 @@ immediate siblings:
 - `ConfigureHudParts`'s own loop additionally keeps a running byte offset in
   `r8` and two more loop-invariant values in `sb`/`sl` live across the
   entire ~10-`bl`-per-iteration loop body - the same "loop/self-pointer
-  register allocation difficulty `src/graphics/settings_menu6.c`'s own
+  register allocation difficulty `src/menus/pause_menu_pages_init.c`'s own
   comment documents giving up on for four near-identical functions"
   the third pass's read-through already named for this exact function.
 
@@ -528,7 +528,7 @@ family). Semantics for all 5 were read and understood in full first (see
 the field-by-field comments in the two new files below) - nothing here
 is unreviewed opaque asm, just asm written by hand rather than by gcc.
 
-### Matched: `InitHud`/`ConfigureHudParts` (new `src/graphics/hud_digit_array.c`)
+### Matched: `InitHud`/`ConfigureHudParts` (new `src/hud/hud_init.c`)
 
 `InitHud` allocates the 35-slot `struct hud_digit_part` array
 (`OperatorNewArray(0x8C4)` - a leading 4-byte header word holding the count
@@ -536,7 +536,7 @@ is unreviewed opaque asm, just asm written by hand rather than by gcc.
 the already-matched `InitHudPart`, zeroes `mode`/`layout_value`/
 `field_08`/the rest of `unknown_0c`, then loops over all 35 slots wiring
 each one's `anim_data` from the same triple-indirected shared table
-`settings_menu6.c` already names (`(**gSpriteBankSet) + (const <<
+`pause_menu_pages_init.c` already names (`(**gSpriteBankSet) + (const <<
 N)`) and a frame index from `gHudPartAnims[i]` (or, for slot 22,
 `GetBossIndex(...) + 6` - the same "life count" special case the
 dispatcher itself, `UpdateHud`, also singles out). One more slot past
@@ -546,17 +546,17 @@ index set up front, and finally `ConfigureHudParts(self, 0)` runs to finish
 the rest. `ConfigureHudParts` is that same per-slot loop's tail: stores its
 second argument into `self->icon_flag`, finishes the two slots
 `InitHud` only partially set up (including the same `field_29`-low-
-nibble update `settings_menu6.c`'s `UPDATE_ICON_FRAME_NIBBLE` macro
+nibble update `pause_menu_pages_init.c`'s `UPDATE_ICON_FRAME_NIBBLE` macro
 documents for the unrelated `struct settings_icon_actor` family), then
 loops over all 35 slots again repositioning/re-clamping a handful of
 specific ones (13, 22, 29) depending on the current level/game-mode and
 `self->icon_flag`, before DMA-filling nine words at `self+0x40` with
 `-1` via a raw `REG_DMA3SAD`/`DAD`/`CNT` poke (the same low-level idiom
-`settings_menu8e.c`'s `ValidateSaveData` already uses for an unrelated
+`save_data.c`'s `ValidateSaveData` already uses for an unrelated
 struct, address kept raw in the transcribed asm the same way that file
 keeps it).
 
-### Matched: `UpdateHudCrates`/`UpdateHudWumpa`/`UpdateHudPercentCounters` (new `src/graphics/hud_stat_widget3.c`)
+### Matched: `UpdateHudCrates`/`UpdateHudWumpa`/`UpdateHudPercentCounters` (new `src/hud/hud_counters.c`)
 
 `UpdateHudCrates` is a much larger sibling of the already-matched
 `UpdateHudLives`: two independent 3-digit displays (change-detection cache
@@ -597,9 +597,9 @@ in `ldscript.txt`'s link order.
 
 ### Cross-references
 
-- `src/graphics/hud_digit_array.c` - new file, `InitHud`/
+- `src/hud/hud_init.c` - new file, `InitHud`/
   `ConfigureHudParts`, both `NAKED`.
-- `src/graphics/hud_stat_widget3.c` - new file, `UpdateHudCrates`/
+- `src/hud/hud_counters.c` - new file, `UpdateHudCrates`/
   `UpdateHudWumpa`/`UpdateHudPercentCounters`, all three `NAKED`.
 - `tools/report_units.py` - the `0x08027138` and `0x08027940` entries
   now point at these two new object files instead of `None`.
@@ -609,7 +609,7 @@ in `ldscript.txt`'s link order.
 
 `UpdateHudBoss`, `UpdateHudClock`, `UpdateHudCrates`, `UpdateHudWumpa`,
 `UpdateHudPercentCounters` and `ConfigureHudParts` are now plain C, and
-`hud_stat_widget2.c`/`hud_stat_widget3.c` build with old_agbcc. The "r7
+`hud_boss_clock.c`/`hud_counters.c` build with old_agbcc. The "r7
 wrong-value miscompile" above was a compiler mismatch. Under old_agbcc
 the ordinary clamp reproduces the ROM's `ldrb r7; ...; adds rN, r7, #0`
 sequence. See [naked-retry-mid45.md](naked-retry-mid45.md).

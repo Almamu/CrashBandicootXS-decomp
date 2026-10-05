@@ -13,15 +13,15 @@ struct icon_glyph_metrics {
     u8 unused_9[3];
 };
 
-/* hud_stat_widget2.c's `struct hud_pos`. */
+/* hud_boss_clock.c's `struct hud_pos`. */
 struct hud_pos
 {
     s32 x;
     s32 y;
 };
 
-/* The HUD digit array's 35 slots (hud_digit_array.c, hud_stat_widget2.c,
- * hud_stat_widget3.c): an animation index and a position per slot. */
+/* The HUD digit array's 35 slots (hud_init.c, hud_boss_clock.c,
+ * hud_counters.c): an animation index and a position per slot. */
 const u32 gHudPartAnims[35] = {
     0, 0, 10, 0, 0, 0, 1, 1, 1, 2, 3, 0,
     0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 6, 5,

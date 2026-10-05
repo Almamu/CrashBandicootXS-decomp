@@ -81,7 +81,7 @@
  *   fixed trailing delay) and adds a rotating offset built from the
  *   shared 256-entry sine-ish table `gSineTable` (already
  *   confirmed `extern s16 gSineTable[];`,
- *   `actor_part72.c`): `child.x = oldX + (table[frame & 0xff] << 4)`,
+ *   `starfield.c`): `child.x = oldX + (table[frame & 0xff] << 4)`,
  *   `child.y = oldY + (table[(frame >> 1) & 0xff] << 3) - 0x1800`
  *   (Q8 `-24.0`) - two different angular speeds (full-speed X,
  *   half-speed Y) around a point 24 px above the trailed position, the

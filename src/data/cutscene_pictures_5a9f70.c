@@ -4,7 +4,7 @@
  * ROM 0x085A9F70-0x0861BADC: the 24 cutscene pictures, each a 256-colour
  * palette directly followed by its Mode 4 bitmap (240x160 8bpp, LZ77).
  * A cutscene slide (src/data/cutscenes_16d1c8.c) points at the palette
- * and ShowSlidePicture (game_loop37.c) finds the bitmap at +0x200, so each
+ * and ShowSlidePicture (slideshow.c) finds the bitmap at +0x200, so each
  * bitmap must stay right after its palette.
  *
  * The bitmaps are built from graphics/intro/NN_xxxxxx_bitmap.png by

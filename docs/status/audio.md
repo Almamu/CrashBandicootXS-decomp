@@ -51,10 +51,10 @@ for the full write-up.
 `docs/matching.md`'s "`0x08037110`-`0x08038538`" entry for the full
 write-up):
 
-- `src/audio/counter_selector.c` - `LoadTaggedAssetBuffered`, `nullsub_7`,
+- `src/frontend/language_select.c` - `LoadTaggedAssetBuffered`, `nullsub_7`,
   `DestroyCompanyLogos`, `DestroyLogoActor` (reached only through
   gLogoActorVtable's slot 1), `RunLanguageSelect`, `LanguageSelectInput`
-- `src/audio/counter_selector_setup.c` - `LoadLanguageSelectBg`, `LanguageSelectBlink`,
+- `src/frontend/language_select_setup.c` - `LoadLanguageSelectBg`, `LanguageSelectBlink`,
   `CommitLanguageSelectFrame`, `DestroyLanguageSelect`, `InitLanguageSelect`, `CloseLanguageSelect`,
   `OpenLanguageSelect`
 - `lib/gax/src/gax_find_mix_rate.c` - `GaxFindMixRate`
@@ -62,7 +62,7 @@ write-up):
 
 These six-through-one-function groups read like game/HUD-side code that
 merely *calls into* audio (`PlaySfx`) or is a SoundHandler-shaped object
-constructor, not confirmed GAX2 mixer internals - the counter_selector*.c group is the boot
+constructor, not confirmed GAX2 mixer internals - the language_select*.c group is the boot
 language menu (`RunLanguageSelect`).
 
 `src/audio/` (further in, at `0x08038538`-`0x08039658` - see
@@ -151,7 +151,7 @@ drafts. Written plainly against the handler/channel structs now in
 [`docs/matching/gax-toolchain-retry.md`](../matching/gax-toolchain-retry.md)
 for the per-function notes.
 
-- `src/audio/counter_selector_icons.c` - `DrawLanguageSelect` (counter widget
+- `src/frontend/language_select.c` - `DrawLanguageSelect` (counter widget
   digit-icon draw loop); `InitLanguageSelectGraphics` (the widget's tile-cache/
   icon-manager init) followed in the late-ROM NAKED retry - the two
   icon-manager steps as `static inline` helpers plus a shared `zero`

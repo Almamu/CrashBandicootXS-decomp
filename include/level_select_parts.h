@@ -1,9 +1,9 @@
 #ifndef GUARD_LEVEL_SELECT_PARTS_H
 #define GUARD_LEVEL_SELECT_PARTS_H
 
-/* Shared by src/graphics/actor_part_1da38.c and actor_part_1dfec.c
+/* Shared by src/menus/level_select_widgets.c
  * (GitHub issues #28/#29, ROM 0x0801DA38-0x0801E578): the level-select
- * screen's (actor_part_1b85c.c's `struct level_menu`) sub-objects - the
+ * screen's (level_select.c's `struct level_menu`) sub-objects - the
  * zooming BG2 picture, the per-level page entries and the cursor panel.
  * All of them own animated sprite parts built by InitUiSpriteObj. */
 

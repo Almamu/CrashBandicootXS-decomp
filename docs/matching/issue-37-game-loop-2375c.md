@@ -166,8 +166,8 @@ previous pass above left open.
 ### The 6-case dispatch map
 
 Opening: index `gLevelTable` by `self+0` (the confirmed
-36-slot, 0x24-byte-stride per-level master table - `settings_menu19.c`/
-`oam_count.c`/`game_loop17.c` all have their own struct view of it).
+36-slot, 0x24-byte-stride per-level master table - `pause_menu_info.c`/
+`power_dialog_draw.c`/`game_loop17.c` all have their own struct view of it).
 Read its `+0x1c` byte (`isBoss`, first read as an "initialized" guard; calls `CheckAllCratesBroken` once if
 still clear), feed its `+0x14`/`+0x18` fields (`maskAssistDeaths`/`crateAssistDeaths`) straight through to
 `SetMaskAssistDeaths`/`SetCrateAssistDeaths`, then dispatch on its `+4` field

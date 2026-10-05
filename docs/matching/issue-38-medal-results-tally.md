@@ -46,10 +46,10 @@ dispatch body), `PlayRoomMusic` (medal-results sound-cue resolver),
 (item-list `extra2`/`extra1` field-copy accessors), `SelectRoom`
 (item-list nonempty check + cursor-indexed cache).
 
-`src/system/game_loop19.c`: `SetSlideshowDispcnt` (trivial `gSlideshowDispcnt`
+`src/cutscene/slideshow_display.c`: `SetSlideshowDispcnt` (trivial `gSlideshowDispcnt`
 setter).
 
-`src/system/game_loop20.c`: `DestroySlideshow` (the `sub_802425C`-shaped
+`src/cutscene/slideshow_display.c`: `DestroySlideshow` (the `sub_802425C`-shaped
 teardown wrapper), `ResetSlideshow` (trivial constructor).
 
 ### Gotchas worth recording

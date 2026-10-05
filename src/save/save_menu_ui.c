@@ -4,7 +4,7 @@
 
 /* A small "load my background" sub-widget - the same field_c/field_d
  * bit-flags-pair idiom as `struct language_select`
- * (src/audio/counter_selector_setup.c's LoadLanguageSelectBg), just at offsets
+ * (src/frontend/language_select_setup.c's LoadLanguageSelectBg), just at offsets
  * 0x1c/0x1d here - this chunk doesn't include whatever embeds it in a
  * bigger object, so it gets its own minimal type. */
 struct bg_widget {
@@ -19,7 +19,7 @@ extern void LoadGraphicsPackage(void *buf, void *asset);
 extern s32 GetBgSetupControl(void *buf);
 extern u8 gMenuSkyBg[];
 
-/* Same shape as LoadLanguageSelectBg (src/audio/counter_selector_setup.c) - reset
+/* Same shape as LoadLanguageSelectBg (src/frontend/language_select_setup.c) - reset
  * two bit-flag bytes, request a BG tile/map graphics package, set BG0's
  * control register from it - plus zeroing `field_0`, which LoadLanguageSelectBg's
  * language_select doesn't have. */
@@ -130,9 +130,9 @@ static inline void set_icon_mgr_pos(struct bitmap_font *m, u32 x, u32 y)
     })
 
 /* Sits right after the screen-init BG-load/per-row-stats cluster
- * (`src/graphics/settings_menu2.o`, ROM `0x080047F8`-`0x08004914`) and
+ * (`src/save/save_menu_ui.o`, ROM `0x080047F8`-`0x08004914`) and
  * before the settings-row flag-test/wrapper cluster
- * (`src/graphics/settings_menu3.c`, ROM `0x08004A50` onward). Both
+ * (`src/save/save_menu_ui.c`, ROM `0x08004A50` onward). Both
  * functions were NAKED transcriptions until the issue #4/#6/#8 retry
  * (docs/matching/issue-4-6-8-naked-retry.md); they match as plain C
  * under both compilers. */
@@ -162,7 +162,7 @@ void DrawEmptySlotLabel(struct save_menu *self, s32 arg1, s32 arg2, u8 arg3)
 
 /* Draws a centered label (from the runtime string table via
  * GetUiText) into gLargeFont's icon pair - `self` is unused.
- * Matches DrawPowerDialog's (src/graphics/oam_count.c) centered-icon shape
+ * Matches DrawPowerDialog's (src/menus/power_dialog_draw.c) centered-icon shape
  * exactly, just for a single label rather than flanking a number.
  *
  * Once a NAKED transcription; it matches as plain C under both

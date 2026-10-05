@@ -20,9 +20,10 @@ behind every entry here, see [docs/matching.md](../matching.md).
 - [actor.md](./actor.md) - the per-instance actor "self" object family
   (`src/graphics/actor_part*.c`)
 - [hud.md](./hud.md) - the on-screen HUD stat-counter/icon widgets
-  (`src/graphics/hud_*.c`)
+  (`src/hud/*.c`)
 - [overlay_ui.md](./overlay_ui.md) - the pause/options screen and its
-  widgets (`src/graphics/settings_menu*.c`)
+  widgets (`src/menus/pause_menu*.c`, `src/menus/power_dialog*.c`,
+  `src/save/*.c`)
 - [graphics_loading.md](./graphics_loading.md) - asset/graphics-package
   loading and the trigger-effect dispatch family
 - [game_loop.md](./game_loop.md) - the top-level per-frame game loop

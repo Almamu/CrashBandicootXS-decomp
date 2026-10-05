@@ -19,7 +19,7 @@ extern void UpdateHudWumpa(struct hud_counter *self);
 /* The HUD stat-widget family's dispatcher - see docs/rom_map.md's "full
  * HUD stat-widget family" section. `self` is the same `struct
  * hud_counter` passed straight through to every callee here (including
- * `UpdateHudLives`, matched separately in hud_counter.c) - `sself->parts`
+ * `UpdateHudLives`, matched separately in hud_lives.c) - `sself->parts`
  * is the 35-slot OAM array `InitHud` builds. Runs the percentage
  * counter (`UpdateHudPercentCounters`) when `icon_flag` is set, then the score
  * counter (`UpdateHudLives`) unconditionally, then branches on

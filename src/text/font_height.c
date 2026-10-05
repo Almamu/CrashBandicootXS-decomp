@@ -4,7 +4,7 @@
 /* Sits between FontDrawText/FontMeasureChars (src/text/font_draw_text.c)
  * and FontMeasureText (src/text/font_measure.c) - just
  * FontTextHeight here, GitHub issue #46. Same `struct bitmap_font` as
- * hud_icon_widget.c and the other src/text/font*.c files. */
+ * hud_slide.c and the other src/text/font*.c files. */
 
 /* Sums `lineHeight` (line height) once for the first line plus once more
  * per newline in `str` - a "total text block height" helper. */

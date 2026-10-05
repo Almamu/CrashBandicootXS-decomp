@@ -46,9 +46,9 @@ system from "core" system startup/init code.
   lazily initialize this object - GitHub issue #37's last standing
   gap) - all matched as real C, no `NAKED` fallbacks needed. See
   [docs/matching/issue-35-36-0x080231cc-game-loop.md](../matching/issue-35-36-0x080231cc-game-loop.md)
-- `src/system/game_loop57.c` (new file, GitHub issue #39): `InitSlideshow`-
+- `src/cutscene/cutscene_player.c` (new file, GitHub issue #39): `InitSlideshow`-
   `StepBgLayerScroll` (25 functions) - extends `struct SoundChannelList`
-  (game_loop37.c/38.c) with more fields, plus the "visual scrolling
+  (slideshow.c/slideshow_display.c) with more fields, plus the "visual scrolling
   background streamer" family (docs/rom_map.md): a circular 4x4-block
   ring-buffer tilemap fed by the same custom RLE/delta token-stream
   decoder as the terrain-tile cache's `DecodeCollisionChunk` (`DecodeLayerChunk`), its
@@ -161,9 +161,9 @@ system from "core" system startup/init code.
   medal-table entry/item-list field accessors, the sound-cue resolver,
   and the `LevelHasEntityType` constant wrappers (`LevelHasEntityType` itself is left
   raw, see below)
-- `src/system/game_loop19.c` (GitHub issue #38): `SetSlideshowDispcnt` -
+- `src/cutscene/slideshow_display.c` (GitHub issue #38): `SetSlideshowDispcnt` -
   trivial `gSlideshowDispcnt` setter
-- `src/system/game_loop20.c` (GitHub issue #38): `DestroySlideshow`,
+- `src/cutscene/slideshow_display.c` (GitHub issue #38): `DestroySlideshow`,
   `ResetSlideshow` - the `sub_802425C`-shaped teardown wrapper and a
   trivial constructor
 - `src/system/game_loop22.c` (GitHub issue #13 - numbered `22` rather
@@ -256,7 +256,7 @@ system from "core" system startup/init code.
   [docs/matching/issue-38-sound-channel-family.md](../matching/issue-38-sound-channel-family.md)
   for the `ip`/r12 pin plus the pointer-arithmetic-canonicalization
   gotcha that closed this out.
-- `src/system/game_loop37.c` (GitHub issue #38, follow-up pass):
+- `src/cutscene/slideshow.c` (GitHub issue #38, follow-up pass):
   `RunSlideshow` (per-item sound-channel driver loop), `SkipSlides`
   (its "find next active item" index scanner), and - as of a second
   follow-up pass - `ShowSlidePicture` (VRAM-bank tile-asset streamer) too.
@@ -264,7 +264,7 @@ system from "core" system startup/init code.
   the file. See
   [docs/matching/issue-38-sound-channel-family.md](../matching/issue-38-sound-channel-family.md)
   and its second-pass addendum.
-- `src/system/game_loop38.c` (GitHub issue #38, follow-up pass):
+- `src/cutscene/slideshow_display.c` (GitHub issue #38, follow-up pass):
   `EndSlide` - the tail half of `RunSlideshow`'s per-item body, reused
   standalone. See
   [docs/matching/issue-38-sound-channel-family.md](../matching/issue-38-sound-channel-family.md).

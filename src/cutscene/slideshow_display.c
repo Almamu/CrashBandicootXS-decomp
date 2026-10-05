@@ -4,13 +4,13 @@
  * game_loop18.c - see game_loop17.c's header comment and
  * docs/matching/issue-38-medal-results-tally.md for the full write-up.
  * This single function sits between the BeginSlide..ShowSlidePicture run
- * (game_loop37.c - BeginSlide NAKED-parked, the rest matched - see
+ * (slideshow.c - BeginSlide NAKED-parked, the rest matched - see
  * docs/matching/issue-38-sound-channel-family.md) and EndSlide
- * (matched, game_loop38.c). */
+ * (matched, slideshow_display.c). */
 
 extern void *gSlideshowDispcnt;
 
-/* Trivial setter: `gSlideshowDispcnt = value` - see game_loop37.c's
+/* Trivial setter: `gSlideshowDispcnt = value` - see slideshow.c's
  * ShowSlidePicture for the other (bitfield-level) writer of this same
  * global. */
 void SetSlideshowDispcnt(void *value)
@@ -19,14 +19,14 @@ void SetSlideshowDispcnt(void *value)
 }
 
 /* GitHub issue #38: 0x08024790-0x080247EB (game_loop) - continuation of
- * the sound-channel-handle helper family (game_loop37.c). See
+ * the sound-channel-handle helper family (slideshow.c). See
  * docs/matching/issue-38-medal-results-tally.md for the original chunk
  * write-up and docs/matching/issue-38-sound-channel-family.md for this
  * follow-up pass. */
 
 struct AudioContext;
 
-/* Same `SoundChannelItem`/`SoundChannelList` shape game_loop37.c's
+/* Same `SoundChannelItem`/`SoundChannelList` shape slideshow.c's
  * BeginSlide/RunSlideshow/ShowSlidePicture operate on - kept as this file's
  * own local copy (only the three fields this function reads), per this
  * project's established per-translation-unit convention for structs
@@ -52,7 +52,7 @@ extern void FadeOutMusic(struct AudioContext *self, u32 value);
 extern void FadeBrightness(u8 flags, s32 frameDelay, u8 sync);
 extern void StopSfx(struct AudioContext *self, u32 id);
 
-/* Tail half of RunSlideshow's per-item body (game_loop37.c) - duck-out
+/* Tail half of RunSlideshow's per-item body (slideshow.c) - duck-out
  * (`field_11`), fade-start (`field_0c`), and re-arm (`field_12`/
  * `field_18`) - reused standalone against a caller-supplied index. Each
  * of the three checks re-reads `self->items[idx]` fresh rather than
@@ -84,7 +84,7 @@ void EndSlide(struct SoundChannelList *self0, s32 idx)
 }
 
 /* GitHub issue #38: 0x0802425C-0x08024810 (game_loop), continued from
- * game_loop19.c - see game_loop17.c's header comment and
+ * slideshow_display.c - see game_loop17.c's header comment and
  * docs/matching/issue-38-medal-results-tally.md for the full write-up.
  * This is the tail of the chunk, right after EndSlide (parked/left
  * in asm/code_3_2_17_24790.s). */

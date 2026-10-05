@@ -48,7 +48,7 @@ the 0x200-byte BG palette with DMA3 and resets the BG2 affine registers
 to identity. Next it reloads the tile cache (`FreeUnlockedPaletteSlots`) and resets
 the font icon manager `gSmallFont` (tile base 0x200, then its
 slot-6 method). Finally it runs a stack-allocated `InitCutscenePlayer` text
-pager (`game_loop57.c`) over list `gCutscenes[idx]`, with the
+pager (`cutscene_player.c`) over list `gCutscenes[idx]`, with the
 per-level page table `gCutsceneTexts[gLanguage][idx]` and a
 fixed box (7, 0x7E) + (0xE4, 0x1E), until `RunCutscenePlayer` returns. It
 restores the shadow and destroys the pager.

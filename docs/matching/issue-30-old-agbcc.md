@@ -49,5 +49,5 @@ that were already matched (`graphics_package.c`, `_1e964.c` and
 
 ## Worth retrying
 
-`LoadTitleScreenBg` (level_graphics.c, issue #65) was parked on the same
+`LoadTitleScreenBg` (title_screen_init.c, issue #65) was parked on the same
 dropped-r7 artifact.

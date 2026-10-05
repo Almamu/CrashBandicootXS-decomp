@@ -5,18 +5,18 @@
 
 | Function | File | Compiler | Result |
 |---|---|---|---|
-| `DrawVvLogoPieces` | `src/graphics/graphics_loading_3686c.c` (new) | old_agbcc, strength reduction on | matched |
+| `DrawVvLogoPieces` | `src/frontend/company_logos.c` (new) | old_agbcc, strength reduction on | matched |
 
 ## File split
 
 The function needs strength reduction on. Its header loop is
 check_dbra_loop's reversed counter placed after the hoisted `&oamA`, and
 its row pointer is a reduced giv. `InitVvLogoPieces` needs it off.
-`graphics_loading_35d1c.c` was split at `0x0803686C`:
+`title_screen.c` was split at `0x0803686C`:
 
-- `graphics_loading_35d1c.c` keeps `TitleScreenCheatInput`..`UpdateVvLogoPieces`, still on
+- `title_screen.c` keeps `TitleScreenCheatInput`..`UpdateVvLogoPieces`, still on
   `NO_STRENGTH_REDUCE_OBJS`.
-- `graphics_loading_3686c.c` has `DrawVvLogoPieces`..`DrawLogoActor`. It is on
+- `company_logos.c` has `DrawVvLogoPieces`..`DrawLogoActor`. It is on
   `OLD_AGBCC_OBJS` only. The shared declarations are copied.
 
 The split was first checked with the old NAKED body: `make compare`

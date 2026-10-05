@@ -204,7 +204,7 @@ extern void UpdateSaveChecksum(struct save_data *self);
  * this one) and, if it fails, repairs the record in place: DMA-fills
  * the whole 0x200 bytes with 0 (raw DMA3 register pokes rather than a
  * `DmaFill16` call - a different, earlier style than
- * `src/graphics/settings_menu8.c`'s `ResetSaveData` uses for the same
+ * `src/save/save_data.c`'s `ResetSaveData` uses for the same
  * "reset to blank" operation), marks every row selected
  * (`EraseSaveSlot`), re-stamps the two marker bytes, clears
  * `flags`/`field_1fb`, and refreshes the checksum (`UpdateSaveChecksum`).
@@ -292,7 +292,7 @@ u32 CheckSaveChecksum(struct save_data *self)
 /* Recomputes and stores this record's additive word-sum checksum over
  * its first 0x1fc bytes (127 words) into `checksum`. Every function
  * that mutates `flags`/`slotEmpty` calls this afterward to keep the
- * checksum in sync - see src/graphics/settings_menu8.c's header
+ * checksum in sync - see src/save/save_data.c's header
  * comment, which already anticipated this function (it was matched
  * from a later chunk, issue #5, before this one). */
 void UpdateSaveChecksum(struct save_data *self)
@@ -317,7 +317,7 @@ extern s32 WriteSaveData(void *self, s32 len);
 
 /* Saves the settings record to EEPROM (`WriteSaveData`, retried up to 5
  * times), muting the music player across the transfer the same way
- * `LoadSaveData` (src/graphics/settings_menu8d.c) does (checksum
+ * `LoadSaveData` (src/save/save_data.c) does (checksum
  * refreshed first via `UpdateSaveChecksum`, before the mute). Returns 4
  * (EEPROM write failed after retries) or 0 (success). */
 s32 StoreSaveData(struct save_data *self)

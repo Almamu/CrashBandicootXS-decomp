@@ -1,7 +1,7 @@
 # Issue #27: 0x0801CEE0-0x0801DA38, graphics - level-select page turns and background layers
 
 All 25 functions of the former `asm/code_3_2_17_188d0_1cee0.s` are now
-plain C in `src/graphics/actor_part_1cee0.c`. The `.s` file is deleted.
+plain C in `src/menus/level_select_pages.c`. The `.s` file is deleted.
 There are no NAKED or `NON_MATCHING` functions. The shared structs are in
 the new `include/level_menu.h`. Verified with a clean
 `make NON_MATCHING=1 report` and a clean `make compare`
@@ -64,7 +64,7 @@ This is the rest of issue #26's level-select screen (`struct level_menu`,
 update). It has no `bl`/`.4byte` reference and no Thumb pointer anywhere
 in the ROM. It is matched anyway.
 
-`actor_part_1b85c.c` still has its own copies of these structs. It was
+`level_select.c` still has its own copies of these structs. It was
 left alone because another pass is revising that file. It can switch to
 `include/level_menu.h`. The two layouts agree, except that the header
 types the save block (`struct menu_save`) and the two background layers.

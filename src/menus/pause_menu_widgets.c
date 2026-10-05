@@ -175,7 +175,7 @@ void PauseMenuVolumeUp(struct pause_menu *self)
  * fields 0x88 upward - still raw as a whole; see docs/matching.md's
  * write-up for this chunk). Only the two fields these two functions
  * touch are named, the same minimal-local-type convention
- * src/graphics/settings_menu2.c's `struct bg_widget` uses. */
+ * src/save/save_menu_ui.c's `struct bg_widget` uses. */
 struct row_counter_widget {
     u8 unused_00[0x18];
     s32 field_18;
@@ -212,7 +212,7 @@ extern s32 __divsi3(s32 dividend, s32 divisor);
 /* Decimal `itoa`: writes `value`'s decimal digits (unsigned, most
  * significant first) to `dest`, NUL-terminated, and returns the digit
  * count. Shared by every settings-row/results-widget number label in
- * this ROM region (`src/graphics/settings_menu6.c`/`settings_menu7.c`
+ * this ROM region (`src/menus/pause_menu_pages_init.c`/`pause_menu_widgets.c`
  * already call it as an `extern`). Builds the digits least-significant
  * first into a small stack buffer via the div/mod library primitives
  * (`lib/libgcc/lib1funcs.s`), then reverses them into `dest`.

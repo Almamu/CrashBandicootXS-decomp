@@ -145,7 +145,7 @@ void TickPaletteCycles(struct palette_cycler *self)
                 s32 j = n;
                 do {
                     /* Plain C reverses this commutative ADD's operands -
-                     * see docs/workflow.md step 7 and hud_counter.c's
+                     * see docs/workflow.md step 7 and hud_lives.c's
                      * matching note on the same idiom. */
                     u16 idx_val = *list;
                     u32 addr_val;
@@ -197,7 +197,7 @@ void TickPaletteCycles(struct palette_cycler *self)
                 }
                 do {
                     /* Plain C reverses this commutative ADD's operands -
-                     * see docs/workflow.md step 7 and hud_counter.c's
+                     * see docs/workflow.md step 7 and hud_lives.c's
                      * matching note on the same idiom. */
                     u16 idx_val = *list;
                     u32 addr_val;

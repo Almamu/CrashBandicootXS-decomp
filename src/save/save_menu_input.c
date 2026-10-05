@@ -32,7 +32,7 @@ void ResetSaveTransfer(struct settings_sync_pump *self)
 
 extern void *gInput;
 /* gKeys is a plain u32 elsewhere (e.g.
- * src/graphics/settings_menu.c's LinkExchangeSaveData) but this call site reads
+ * src/save/save_menu_draw.c's LinkExchangeSaveData) but this call site reads
  * only its upper 16 bits (the "newly pressed" half of a held/pressed
  * input pair) - matching the ROM's own `ldrh r1,[r0,#2]` (a runtime
  * +2 byte offset on the reloaded base address) requires a real field
@@ -113,7 +113,7 @@ extern void ResetSaveData(struct save_data *self);
  * LoadSaveMenuData, still raw), fills `currentStats` and the first
  * `rowStats` entry, then allocates and stashes the global SIO session
  * object (`gLinkSession`, still uncharacterized - see
- * SendSaveTransferChunk/ReceiveSaveTransferChunk, src/graphics/settings_menu8.c) and kicks off
+ * SendSaveTransferChunk/ReceiveSaveTransferChunk, src/save/save_data.c) and kicks off
  * a VBlank IRQ request. */
 struct save_menu *InitSaveMenu(struct save_menu *arg0)
 {
@@ -456,7 +456,7 @@ void SaveMenuLoadInput(struct save_menu *self, u32 flags, void *handle)
 
 extern s32 LinkExchangeSaveData(struct save_menu *self);
 /* Matches EndLinkSaveTransfer's real (void)-taking, unused-argument prototype
- * from src/graphics/settings_menu3.c - this call site passes `self`
+ * from src/save/save_menu_ui.c - this call site passes `self`
  * anyway (the ROM's caller sets it up in r0 even though the callee
  * never reads it), so it's declared here as taking one ignored
  * argument to reproduce that dead register setup. */
@@ -595,7 +595,7 @@ extern void SaveGameToSlot(struct save_menu *self, s32 rowIndex);
 extern void SaveMenuMoveCursor(struct save_menu *self, u32 flags);
 
 /* State 7's input handler: confirm/cancel-combo commits row `field_24`
- * (SaveGameToSlot, src/graphics/settings_menu8b.c) and returns to state 0
+ * (SaveGameToSlot, src/save/save_menu_input.c) and returns to state 0
  * if it was already the "current" row (`field_10==0`), else re-enters
  * state 5 to reselect; cancel (bit 1) re-enters state 5 too; L/R toggle
  * `field_10` between 0/1. */
@@ -778,7 +778,7 @@ extern s32 gSaveMenuOptions[];
  * gSmallFont, highlighting whichever row matches `field_10`,
  * then draws a final fixed label via the still-raw DrawSaveSlotStats. Same
  * measure-then-draw icon shape as DrawSaveMenuTitle
- * (src/graphics/settings_menu.c, parked) - see that function's doc
+ * (src/save/save_menu_draw.c, parked) - see that function's doc
  * comment for the class of gcc register-allocation quirk this may hit
  * too. */
 /* This compiler's automatic register allocation cannot reproduce the

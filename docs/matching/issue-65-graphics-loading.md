@@ -6,7 +6,7 @@ right at the boundary between the 40.4 KB actor-per-type-behavior zone
 (`docs/rom_map.md`'s `0x0802B348`-`0x080354E0` entry) and the GAX2 audio
 range (which starts at `0x08037110`, confirmed both by `docs/rom_map.md`
 and by this chunk's own object-file neighbor in `ldscript.txt`:
-`src/audio/counter_selector.o` picks up immediately after this chunk's
+`src/frontend/language_select.o` picks up immediately after this chunk's
 last function). This is the write-up for the work done against that
 list.
 
@@ -36,7 +36,7 @@ behavior. This pass worked those three:
   at `0x050003A0`/`_C0`/`_E0`; calls `LoadTitleScreenBg`/
   `LoadTitleScreenObjTiles`; allocates and constructs a 0x14-byte object via
   `InitStarfield(OperatorNew(0x14))` (the exact same allocate-then-construct
-  pairing already confirmed in `src/audio/counter_selector_setup.c`'s
+  pairing already confirmed in `src/frontend/language_select_setup.c`'s
   `self->field_10 = InitStarfield(OperatorNew(0x14))`) into the scratch
   object's `+0x208` field; runs a fixed fade/audio-reset sequence
   (`SetObjMapping1D`/`ShowObj`/`SetDispcntMode(1)`/`CommitDispcnt` - the same
@@ -82,11 +82,11 @@ behavior. This pass worked those three:
 
 ## Matched (1 function, full clean `make compare` passing - "La suma coincide")
 
-- **`InitTitleScreen`** (`src/graphics/level_graphics.c`)
+- **`InitTitleScreen`** (`src/frontend/title_screen_init.c`)
 
 ## Parked (`NON_MATCHING`, not yet byte-exact)
 
-- **`LoadTitleScreenBg`** (`src/graphics/level_graphics.c`, real bytes in
+- **`LoadTitleScreenBg`** (`src/frontend/title_screen_init.c`, real bytes in
   `asm/code_3_2_20_28568_c99c_31784_33ef4_355e0.s`) - loads BG2's
   palette/tileset/tilemap from the 5-field `gTitleScreenBg`
   package (`struct bg_package`: `width`/`height`/`paletteAsset`/
@@ -119,7 +119,7 @@ behavior. This pass worked those three:
   behavior, not a permuter shortcut (see the negative-constant
   bit-clear idiom in `docs/matching.md`), reproduced faithfully rather
   than "cleaned up" into an initialized local.
-- **`LoadTitleScreenObjTiles`** (`src/graphics/level_graphics.c`, real bytes
+- **`LoadTitleScreenObjTiles`** (`src/frontend/title_screen_init.c`, real bytes
   in the same new asm file) - uploads the 4 `struct bg_package` entries
   in `gTitleObjPackages` into OBJ VRAM (`0x06010000` on) and OBJ palette
   RAM (`0x05000200` on, one 16-color bank per package), remapping each
@@ -149,7 +149,7 @@ wasn't confirmed function-by-function. Left for a follow-up pass.
 
 `asm/code_3_2_20_28568_c99c_31784_33ef4.s` truncated to end right before
 `InitTitleScreen` (still holds the actor-region functions before this
-chunk's range, out of scope here). New `src/graphics/level_graphics.c`
+chunk's range, out of scope here). New `src/frontend/title_screen_init.c`
 holds `InitTitleScreen` (matched, unconditional) plus
 `LoadTitleScreenBg`/`LoadTitleScreenObjTiles` (guarded `#if NON_MATCHING`).
 New `asm/code_3_2_20_28568_c99c_31784_33ef4_355e0.s` holds those same two
@@ -217,12 +217,12 @@ block and re-opening the `.if NON_MATCHING == 0` guard right before
 `LoadTitleScreenObjTiles`, which is now the file's only guarded function).
 
 `tools/report_units.py`'s single combined entry for this pair's address
-range was split into three: `(0x080354E0, "src/graphics/level_graphics.o", ...)`
+range was split into three: `(0x080354E0, "src/frontend/title_screen_init.o", ...)`
 for `InitTitleScreen` (unchanged), `(0x080355E0, None, ...)` for
 `LoadTitleScreenBg` (matching the `InitBgSetup`/`FitScaledSprite` precedent -
 a NAKED transcription doesn't count as "matched" for this project's
 per-file tracking, even though it's byte-correct), and
-`(0x08035684, "src/graphics/level_graphics.o", ...)` for
+`(0x08035684, "src/frontend/title_screen_init.o", ...)` for
 `LoadTitleScreenObjTiles` (unchanged treatment, still pointing at the `.c`
 file's `#if NON_MATCHING` reconstruction for its NON_MATCHING=1 diffable
 percentage).
@@ -519,7 +519,7 @@ now each independently failed to reconcile the two sides.
 
 ## Later pass: matched under old_agbcc
 
-`LoadTitleScreenBg` is now real C. `level_graphics.c` is old_agbcc code
+`LoadTitleScreenBg` is now real C. `title_screen_init.c` is old_agbcc code
 (the Makefile's `OLD_AGBCC_OBJS`), and under that compiler plain C with
 indexed `mapBuf[i]`/`mapBuf[i + 1]` reads matches with no pins. The
 "dead r7" gap the second and fourth passes chased was the wrong

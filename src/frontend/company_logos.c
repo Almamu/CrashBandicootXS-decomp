@@ -7,12 +7,12 @@
 #include "logo_screen.h"
 
 /* Tail of GitHub issue #65's chunk (0x0803686C-0x08037110), split off
- * `graphics_loading_35d1c.c` at `DrawVvLogoPieces`. Like both earlier halves
+ * `title_screen.c` at `DrawVvLogoPieces`. Like both earlier halves
  * this is old_agbcc code (OLD_AGBCC_OBJS), but it is built WITH strength
  * reduction (it is not on NO_STRENGTH_REDUCE_OBJS): `DrawVvLogoPieces`'s
  * header loop is check_dbra_loop's reversed counter after the hoisted
  * `&oamA`, which only strength reduction emits, while `InitVvLogoPieces`
- * (still in `graphics_loading_35d1c.c`) needs it off. The shared
+ * (still in `title_screen.c`) needs it off. The shared
  * declarations below are copied from the first file. See
  * docs/matching/sr65-naked-retry.md. */
 
@@ -218,7 +218,7 @@ static inline void SetAffineZ(struct oam_buf *buf, s32 m, u16 pa, u16 pd)
 
 /* Matched in the #65 strength-reduction retry
  * (docs/matching/sr65-naked-retry.md). It needs strength reduction ON,
- * which is why this file was split off `graphics_loading_35d1c.c`. */
+ * which is why this file was split off `title_screen.c`. */
 void DrawVvLogoPieces(struct logo_screen *self)
 {
     vu16 zero;

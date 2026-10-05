@@ -196,13 +196,13 @@ void IncHudCrateTotal(struct hud_blink *state)
     state->crateTotal += 1;
 }
 
-/* Sits right after hud_blink.c's blink-timer trio (ROM 0x08028568) and
+/* Sits right after hud_slide.c's blink-timer trio (ROM 0x08028568) and
  * before FontDrawGlyph/InitSmallFont/InitLargeFont/FontPutChar
  * (src/text/font_glyph.c) - see GitHub issue #46. Just
  * `DestroyHud` here: a `struct hud_counter`-parts destructor, unrelated
  * to the `struct bitmap_font` text/icon-glyph renderer the rest of this
  * chunk's functions operate on (see include/bitmap_font.h and the other
- * hud_icon_widget*.c files). */
+ * src/text/font*.c files). */
 
 extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
 extern void OperatorDeleteArray(void *ptr);

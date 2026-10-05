@@ -7,7 +7,7 @@
 
 #include "graphics_package.h"
 
-/* graphics_loading_35d1c.c's `struct delta_record`: one step of a
+/* title_screen.c's `struct delta_record`: one step of a
  * countdown slot's motion. When the slot's hold count runs out it loads
  * the next record: a new hold count (0 ends the sequence), three Q16.16
  * positions, two Q24.8 velocities and the five per-frame deltas added to
@@ -42,7 +42,7 @@ extern const u8 gTitleCrashObjMap[];
 extern const u8 gTitleArrow1ObjMap[];
 extern const u8 gTitleArrow2ObjMap[];
 extern const u8 gTitleScreenBgMap[];
-/* DrawTitleLogoPieces (graphics_loading_35780.c): the {x, y} offsets of the
+/* DrawTitleLogoPieces (title_screen_init.c): the {x, y} offsets of the
  * eight OAM pieces it draws around each of its two slots. */
 const s32 gTitleArrowPieceOffsets[8][2] = {
     { 0, 0 },
@@ -55,7 +55,7 @@ const s32 gTitleArrowPieceOffsets[8][2] = {
     { 0, 70 },
 };
 
-/* The palettes InitTitleScreen (level_graphics.c) DMAs to OBJ palettes
+/* The palettes InitTitleScreen (title_screen_init.c) DMAs to OBJ palettes
  * 13, 14 and 15. */
 const u16 gTitleMenuPalette[16] = {
     0x83E0, 0x9CC6, 0x107F, 0x0D04, 0x0F9F, 0x894C, 0x0864, 0x05D4,
@@ -70,7 +70,7 @@ const u16 gTitleMenuBlinkPalette[16] = {
     0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF,
 };
 
-/* The four OBJ sprites LoadTitleScreenObjTiles (level_graphics.c) uploads,
+/* The four OBJ sprites LoadTitleScreenObjTiles (title_screen_init.c) uploads,
  * through the IWRAM table gTitleObjPackages (src/iwram/iwram_data.c),
  * which lists them in the order 0817D0A8, 0817D0D0, 0817D0BC, 0817D094. */
 const struct bg_package gTitleBandicootObj = { 4, 6, (void *)gTitleBandicootObjPalette, (void *)gTitleBandicootObjTiles, (void *)gTitleBandicootObjMap };
@@ -78,11 +78,11 @@ const struct bg_package gTitleCrashObj = { 8, 40, (void *)gTitleCrashObjPalette,
 const struct bg_package gTitleArrow1Obj = { 4, 16, (void *)gTitleArrow1ObjPalette, (void *)gTitleArrow1ObjTiles, (void *)gTitleArrow1ObjMap };
 const struct bg_package gTitleArrow2Obj = { 4, 16, (void *)gTitleArrow2ObjPalette, (void *)gTitleArrow2ObjTiles, (void *)gTitleArrow2ObjMap };
 
-/* LoadTitleScreenBg's (level_graphics.c) BG2 picture. */
+/* LoadTitleScreenBg's (title_screen_init.c) BG2 picture. */
 const struct bg_package gTitleScreenBg = { 16, 16, (void *)gTitleScreenBgPalette, (void *)gTitleScreenBgTiles, (void *)gTitleScreenBgMap };
 
 /* The motion sequences of the nine countdown slots of
- * graphics_loading_35d1c.c (RunTitleScreen, ResetTitleLogoPieces), which
+ * title_screen.c (RunTitleScreen, ResetTitleLogoPieces), which
  * popup_glyphs_17cf40.c's gTitleLogoPieceSeeds seeds: each ends with a
  * zero hold. */
 const struct delta_record gTitleLogoPieceMotion0[4] = {
@@ -157,7 +157,7 @@ const struct delta_record gTitleLogoPieceMotion8[6] = {
     { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
 };
 
-/* The animation record RunCompanyLogos (graphics_loading_35d1c.c) builds its
+/* The animation record RunCompanyLogos (title_screen.c) builds its
  * part from: actor_anim.h's `struct anim_table_record` (0x28 bytes),
  * written with its own view here - index, keyframes, frames, header
  * byte, a word, a {x, y, z, w, h, d} box and the spawn offsets. The

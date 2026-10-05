@@ -2,9 +2,9 @@
 #define GUARD_LEVEL_MENU_H
 
 /* The level-select screen (`struct level_menu`) and its two background
- * layers, shared by src/graphics/actor_part_1cee0.c (GitHub issue #27).
+ * layers, shared by src/menus/level_select_pages.c (GitHub issue #27).
  *
- * The layouts are the ones src/graphics/actor_part_1b85c.c (issue #26)
+ * The layouts are the ones src/menus/level_select.c (issue #26)
  * worked out for the same objects; that file still carries its own
  * copies of these definitions and can switch to this header.
  *
@@ -184,7 +184,7 @@ struct page_bg
 COMPILE_TIME_ASSERT(sizeof(struct page_bg) == 0x28);
 
 /* One twinkle sprite at the picture's corners, handed to
- * RandomizeZoomBgTwinkle (`struct twinkle` in actor_part_1da38.c: the
+ * RandomizeZoomBgTwinkle (`struct twinkle` in level_select_widgets.c: the
  * first 8 bytes are its timer and blink window). */
 struct twinkle
 {
@@ -193,7 +193,7 @@ struct twinkle
 };
 
 /* BG2, the zooming level picture (InitZoomBg, BG2CNT through
- * GetZoomBgControl; `struct zoom_bg` in actor_part_1da38.c). */
+ * GetZoomBgControl; `struct zoom_bg` in level_select_widgets.c). */
 struct zoom_bg
 {
     u8 unk_00[0x0C];

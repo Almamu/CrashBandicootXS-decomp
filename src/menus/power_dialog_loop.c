@@ -1,9 +1,9 @@
 #include "core.h"
 
-/* The same small per-widget object `src/graphics/oam_count.c` already
+/* The same small per-widget object `src/menus/power_dialog_draw.c` already
  * names `struct sub_8006700_actor` (redeclared locally here per this
  * project's minimal-local-type convention for a type already anchored
- * in another translation unit - see e.g. settings_menu6.c's own
+ * in another translation unit - see e.g. pause_menu_pages_init.c's own
  * `struct threshold_table_entry` comment). Steps `field_24`'s low 5
  * bits down to 0 (redrawing/committing every step via
  * DrawPowerDialog/CommitPowerDialogFrame/AnimatePowerDialog), then polls input

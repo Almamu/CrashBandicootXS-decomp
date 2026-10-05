@@ -76,8 +76,8 @@ void DestroyCompanyLogos(void *self, u32 flags)
     }
 }
 
-/* The company-logo actor's destructor (RunCompanyLogos, graphics_loading_
- * 35d1c.c): slot 1 of gLogoActorVtable, so no `bl` reaches it - it is
+/* The company-logo actor's destructor (RunCompanyLogos, title_screen.c):
+ * slot 1 of gLogoActorVtable, so no `bl` reaches it - it is
  * called through the vtable with the deleting flags 3. It frees the two
  * VRAM tile blocks InitLogoActor allocated, drops back to the base
  * gActorVtable, unlinks the actor from the actor ring and frees it on
@@ -182,7 +182,7 @@ extern s32 LanguageSelectBlink(struct language_select *self);
 /* `_call_via_r2`: calls `fn(self, arg)` (an bitmap_font method). */
 extern s32 _call_via_r2(void *self, void *arg, void *fn);
 
-/* The language menu's (src/audio/counter_selector.c) per-frame draw
+/* The language menu's (src/frontend/language_select.c) per-frame draw
  * loop: for each of the six language names (0-5) it sets the shared
  * overlay frame (`gSmallFont`: 1 or 2 from `LanguageSelectBlink`'s blink
  * state on the currently selected entry `language`, 0 elsewhere), measures
@@ -233,7 +233,7 @@ void DrawLanguageSelect(struct language_select *self)
  *
  * Was NAKED: the ROM rematerializes the 0x108/0x12c/0x130 field-offset
  * constants after every call instead of keeping them in callee-saved
- * registers. Matched with the idiom from actor_part131.c's
+ * registers. Matched with the idiom from credits.c's
  * `InitCredits`: the two icon-manager steps as `static inline` helpers
  * taking the manager as a parameter (each expansion recomputes its own
  * offsets; the E0 base is read from DC before E0 itself), plus one

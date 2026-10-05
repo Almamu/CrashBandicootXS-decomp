@@ -5,7 +5,7 @@
 
 /* GitHub issue #28: 0x0801DA38-0x0801DFEC, the whole of the former
  * asm/code_3_2_17_188d0_1da38.s. Two of the level-select screen's
- * (actor_part_1b85c.c) sub-objects:
+ * (level_select.c) sub-objects:
  *
  * - DestroyZoomBg-TickZoomBgTwinkle: `struct zoom_bg`, the level picture on the
  *   affine BG2 layer (`level_menu.bg2`, constructor InitZoomBg in the
@@ -410,7 +410,7 @@ void DestroyLevelSelectEntry(struct level_item *self, s32 flags)
  * asm/code_3_2_17_188d0_1dfec.s.
  *
  * - CreateLevelSelectEntry: `struct level_item`'s constructor (its methods end
- *   issue #28, actor_part_1da38.c).
+ *   issue #28, level_select_widgets.c).
  * - CreateLevelSelectCursor-DestroyLevelSelectCursor: `struct cursor_panel`, the level-select
  *   screen's cursor (`level_menu.panel`, 0x54 bytes). It glides between
  *   entries along a Bresenham line (two steps per frame), plays an idle

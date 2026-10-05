@@ -5,7 +5,7 @@ retries, each with an open parked-function issue. Both are now real C.
 
 | Function | File | Size | Before | Compiler | Result |
 |---|---|---|---|---|---|
-| `DrawPowerDialog` | `src/graphics/oam_count.c` | 240 B | no draft in tree | agbcc (either) | **Closed** (#101) |
+| `DrawPowerDialog` | `src/menus/power_dialog_draw.c` | 240 B | no draft in tree | agbcc (either) | **Closed** (#101) |
 | `DrawWrappedText` | `src/text/wrapped_text.c` | 384 B | heavily pinned draft, "2 residuals" | old_agbcc | **Closed** (#102) |
 
 ## DrawPowerDialog
@@ -15,7 +15,7 @@ manager's `record->slots[0]` method, centers it at `(240 - w) >> 1`,
 sets the Y, draws it with `slots[2]`, and does the same for a second
 manager after the number is formatted. The method calls are gcc 2.x
 virtual calls through `_call_via_r2`, written the same
-way as in `settings_menu11.c` and `counter_selector_icons.c`.
+way as in `pause_menu_pages_draw.c` and `language_select.c`.
 
 - The first plain draft, with direct `mgr->posX = ...; mgr->posY = ...;`
   stores, was 6 instructions long and had the stores in the wrong order.
@@ -28,7 +28,7 @@ way as in `settings_menu11.c` and `counter_selector_icons.c`.
   swapped, and so did x and y.
 - **The fix:** compute `x = (u32)(240 - w) >> 1;` into a local and pass
   `x` to the setter, instead of passing the expression. It matches under
-  both compilers, with no pins or asm. It stays in `oam_count.c`, which
+  both compilers, with no pins or asm. It stays in `power_dialog_draw.c`, which
   is built with agbcc.
 
 ## DrawWrappedText
@@ -71,6 +71,6 @@ accessors. They do not need their own workarounds.
 ## Verification
 
 - `rm -rf build && make NON_MATCHING=1 report`: no warnings from
-  `oam_count.c` or `wrapped_text.c`.
+  `power_dialog_draw.c` or `wrapped_text.c`.
 - `rm -rf build crashbandicootxs.elf crashbandicootxs.gba
   crashbandicootxs.map && make compare`: `crashbandicootxs.gba: OK`.

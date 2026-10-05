@@ -8,7 +8,7 @@ function was tried under both agbcc and old_agbcc.
 
 | Function | File | Compiler | What it took |
 |---|---|---|---|
-| `InitLanguageSelectGraphics` | `src/audio/counter_selector_icons.c` | both | The icon-manager steps as `static inline` helpers taking the manager (`IconSetBase`/`IconReserveVram`, the idiom from `InitCredits` in actor_part131.c), plus one `u32 zero` local shared by the `field_8` and `field_108` stores. |
+| `InitLanguageSelectGraphics` | `src/frontend/language_select.c` | both | The icon-manager steps as `static inline` helpers taking the manager (`IconSetBase`/`IconReserveVram`, the idiom from `InitCredits` in credits.c), plus one `u32 zero` local shared by the `field_8` and `field_108` stores. |
 | `FillBgPictureMap` | `src/graphics/actor_part45d.c` | old_agbcc (object joined `OLD_AGBCC_OBJS`) | Map entry read as `v = *map; v += base;`, high nibble masked as `(*nib >> 4) & 0xf`, and the function declared `inline` ahead of `LoadBgPicture`. |
 
 ### `InitLanguageSelectGraphics`
@@ -16,7 +16,7 @@ function was tried under both agbcc and old_agbcc.
 The old note said the ROM rematerializes the `0x108`/`0x12c`/`0x130`
 field offsets after every call while the compiler CSEs them into
 callee-saved registers. Separate inline expansions give each call site
-its own offsets, as in actor_part131.c. That left one difference: the
+its own offsets, as in credits.c. That left one difference: the
 ROM keeps a 0 in r8 and uses it for both the cursor's `field_8 = 0` and
 `IconSetBase(DC, 0)`. A `u32 zero = 0;` local passed to both reproduces
 it.
@@ -54,7 +54,7 @@ down to spelling:
   declarations and types, argument spellings, pseudo-number shifts,
   or nine nibble-read spellings in the inline body (all of which keep
   8E8 matching).
-- **`ContinuePromptLoop`** (actor_part89.c, #63). The new draft is 2 halfwords
+- **`ContinuePromptLoop`** (continue_prompt.c, #63). The new draft is 2 halfwords
   off under old_agbcc. It needed:
   - the input word read as a struct copy, so each test does a word load
     and `lsrs #16`, and the 0x80 test does a fresh `ldrh` after the
@@ -117,7 +117,7 @@ A brute-force variant runner found both matches.
 
 | Function | File | Compiler | What it took |
 |---|---|---|---|
-| `ContinuePromptLoop` | `actor_part89.c` (object joined `OLD_AGBCC_OBJS`) | old_agbcc | `asm("" : "+r"(k))` on the input copy between the `& 1` and `& 8` tests, and one extra reference to `audio` at the top of the loop in place of the r8 pin. |
+| `ContinuePromptLoop` | `continue_prompt.c` (object joined `OLD_AGBCC_OBJS`) | old_agbcc | `asm("" : "+r"(k))` on the input copy between the `& 1` and `& 8` tests, and one extra reference to `audio` at the top of the loop in place of the r8 pin. |
 | `LoadBgPicture` | `actor_part45d.c` | old_agbcc | The DMA width fixed, one extra reference to `dest` after the loop, two to `cols` before the call, and 7B0 inlining its own `static inline` copy of the loop. |
 
 ### `ContinuePromptLoop`

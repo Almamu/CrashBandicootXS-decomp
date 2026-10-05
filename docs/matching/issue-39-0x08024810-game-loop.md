@@ -4,7 +4,7 @@ Issue #39 (`decomp-chunk`, category `game_loop`) listed 25 raw functions
 in `asm/code_3_2_17_24810.s` - the remainder of the `UpdateGameFrame`-
 `MainLoop` cluster sitting directly between the sound-channel-handle
 family (`BeginSlide`-`ResetSlideshow`, GitHub issue #38,
-`game_loop20.c`/`game_loop37.c`/`game_loop38.c`) and the terrain-tile
+`slideshow_display.c`/`slideshow.c`/`slideshow_display.c`) and the terrain-tile
 decode cache (`ScrollBgLayerBase`-`DecodeCollisionChunk`, GitHub issue #40,
 `game_loop3.c`/`game_loop4.c`/`game_loop5.c`). All 25 turned out to
 belong to two already-partially-documented systems from
@@ -14,8 +14,8 @@ belong to two already-partially-documented systems from
 
 ### `struct SoundChannelList` gains four more functions
 
-`ResetSlideshow` (already matched, `game_loop20.c`) constructs a
-`struct SoundChannelList` (`game_loop37.c`) by zeroing `items`/`count`
+`ResetSlideshow` (already matched, `slideshow_display.c`) constructs a
+`struct SoundChannelList` (`slideshow.c`) by zeroing `items`/`count`
 and setting `toggle` to 1. This chunk adds:
 
 - **`InitSlideshow`**: trivial wrapper - runs `ResetSlideshow`'s reset, then
@@ -24,11 +24,11 @@ and setting `toggle` to 1. This chunk adds:
   cluster introduces, `self+0x10`/`self+0x14` (a "text-paging" record
   array pointer and count - see `RunCutscenePlayer` below), both zeroed.
 - **`DestroyCutscenePlayer`**: a plain two-argument forwarding trampoline to
-  `DestroySlideshow` (`game_loop20.c`) - passes both its arguments through
+  `DestroySlideshow` (`slideshow_display.c`) - passes both its arguments through
   untouched (only `self` is ever loaded into a register; `flags` flows
   through in `r1` since the ROM never touches it).
 - **`RunCutscenePlayer`**: a *second* per-frame driver loop over the same
-  `self+0/self+4` items/count pair `RunSlideshow` (`game_loop37.c`)
+  `self+0/self+4` items/count pair `RunSlideshow` (`slideshow.c`)
   already drives, but interleaved with an explicit OAM-shadow-buffer
   flush (`ResetOamBuffer`/`HideUnusedOamEntries`/`WaitForVBlank`/`CommitOamBuffer` on
   `gOamBuffer` - the same "HUD-icon-plus-number renderer" OAM
@@ -216,11 +216,11 @@ linked ROM shows the swap) and `StepBgLayerScroll`'s trailing alignment gap
 as the file's very last two bytes once fully linked).
 
 Confirmed via a full clean `rm -rf build && make NON_MATCHING=1 report`
-(no warnings for `game_loop57.c`) and a full clean `rm -rf build
+(no warnings for `cutscene_player.c`) and a full clean `rm -rf build
 crashbandicootxs.elf crashbandicootxs.gba crashbandicootxs.map && make
 compare` (`crashbandicootxs.gba: La suma coincide`).
 `asm/code_3_2_17_24810.s` is now fully retired - all 25 functions moved
-to the new `src/system/game_loop57.c`, and `ldscript.txt`'s entry for it
+to the new `src/cutscene/cutscene_player.c`, and `ldscript.txt`'s entry for it
 now points there directly.
 
 ## Cross-references

@@ -6,9 +6,9 @@
 #include "pause_menu.h"
 #include "memory.h"
 
-/* PauseMenuLoop alone: ROM-address-adjacent to settings_menu15.c's
+/* PauseMenuLoop alone: ROM-address-adjacent to pause_menu.c's
  * DestroyPauseMenu on one side and the already-matched AnimatePauseMenu
- * (settings_menu17.c) on the other, so it needs its own object file
+ * (pause_menu_draw.c) on the other, so it needs its own object file
  * to keep both neighbors' link-order positions intact (docs/workflow.md
  * step 4's "one .c file per contiguous ROM region" rule) - see
  * docs/matching/issue-7-0x08004d74-overlay-ui.md. */

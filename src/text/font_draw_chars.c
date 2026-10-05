@@ -5,7 +5,7 @@
  * FontPutChar (src/text/font_glyph.c) and FontDrawText/
  * FontMeasureChars (src/text/font_draw_text.c) - just FontDrawChars
  * here, GitHub issue #46. Same `struct bitmap_font` text/icon-glyph
- * renderer as hud_icon_widget.c and the other src/text/font*.c files. */
+ * renderer as hud_slide.c and the other src/text/font*.c files. */
 
 extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
 

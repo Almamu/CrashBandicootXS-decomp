@@ -307,7 +307,7 @@ struct rle_frame {
 
 /* gUnpackRleSpriteFrameFunc(dst, frame): unpacks a frame's w*h tiles into `dst`,
  * zero runs with a DMA3 fill and literal runs with a DMA3 copy. Called
- * by actor_part127.c, actor_part128.c and graphics_loading_3686c.c. */
+ * by actor_part127.c, actor_part128.c and company_logos.c. */
 void UnpackRleSpriteFrame(u16 *dst, struct rle_frame *frame)
 {
     u16 *end = dst + frame->h * frame->w * 16;

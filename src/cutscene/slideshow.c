@@ -97,7 +97,7 @@ void BeginSlide(struct SoundChannelList *self, s32 idx)
  * UNUSED - no caller anywhere in the ROM (checked src/, asm/ and every
  * Thumb `bl` and aligned word of baserom.gba for its address). It plays
  * a slide list without text; the cutscenes use RunCutscenePlayer
- * (game_loop57.c), the same loop with the text pages added. */
+ * (cutscene_player.c), the same loop with the text pages added. */
 void RunSlideshow(struct SoundChannelList *self0)
 {
     struct SoundChannelList *self = self0;

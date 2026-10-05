@@ -10,7 +10,7 @@ extern const u8 gPauseMenuBgPalette[];
 extern const u8 gPauseMenuBgTiles[];
 extern const u8 gPauseMenuBgMap[];
 
-/* BG graphics package loaded by RunPauseMenu (settings_menu15.c). */
+/* BG graphics package loaded by RunPauseMenu (pause_menu.c). */
 const struct bg_package gPauseMenuBg = {
     0x1e,
     0x14,

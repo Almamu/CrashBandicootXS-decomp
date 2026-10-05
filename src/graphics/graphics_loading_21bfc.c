@@ -65,7 +65,7 @@ void SpawnCheckpointCrate(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
  * in the ROM's own load order, an opaque `asm volatile` copy for the
  * final `adds r3,r0,#0` - a plain C copy always got optimized away
  * here) and using the same `mov #N; neg` negative-mask idiom as
- * `UPDATE_ICON_FRAME_NIBBLE` (src/graphics/settings_menu6.c) for both
+ * `UPDATE_ICON_FRAME_NIBBLE` (src/menus/pause_menu_pages_init.c) for both
  * bitfield writes closes the whole function. */
 void SpawnBasicCrate(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {

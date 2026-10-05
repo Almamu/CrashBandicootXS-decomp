@@ -6,22 +6,22 @@ now real C, all under old_agbcc. Two are still NAKED.
 
 | Function | File | Result |
 |---|---|---|
-| `ResetTitleLogoPieces` | graphics_loading_35d1c.c | matched |
-| `RunTitleScreen` | graphics_loading_35d1c.c | matched |
-| `DrawTitleLogoPieces` | graphics_loading_35780.c | matched (needs strength reduction on) |
-| `LoadCreditsLogos` | actor_part131.c | still NAKED, draft note updated |
-| `DrawVvLogoPieces` | graphics_loading_35d1c.c | not attempted |
+| `ResetTitleLogoPieces` | title_screen.c | matched |
+| `RunTitleScreen` | title_screen.c | matched |
+| `DrawTitleLogoPieces` | title_screen_init.c | matched (needs strength reduction on) |
+| `LoadCreditsLogos` | credits.c | still NAKED, draft note updated |
+| `DrawVvLogoPieces` | title_screen.c | not attempted |
 
 ## File split
 
 `DrawTitleLogoPieces` only matches with strength reduction **on**, and
 `InitVvLogoPieces` only matches with it off. The old
-`graphics_loading_35780.c` was therefore split at the 4-byte-aligned
+`title_screen_init.c` was therefore split at the 4-byte-aligned
 boundary `0x08035D1C`:
 
-- `graphics_loading_35780.c` has `UpdateTitleLogoPieces` and `DrawTitleLogoPieces`. It is
+- `title_screen_init.c` has `UpdateTitleLogoPieces` and `DrawTitleLogoPieces`. It is
   old_agbcc with the default flags. `UpdateTitleLogoPieces` matches either way.
-- `graphics_loading_35d1c.c` has everything from `TitleScreenCheatInput` on. It is
+- `title_screen.c` has everything from `TitleScreenCheatInput` on. It is
   old_agbcc and keeps `-fno-strength-reduce` (`NO_STRENGTH_REDUCE_OBJS`).
   A whole-file compile of the old file with strength reduction on
   differed only in `InitVvLogoPieces` (16 halfwords).
@@ -134,5 +134,5 @@ on. Still NAKED; see [big-naked-retry.md](big-naked-retry.md).
 [size2-naked-retry.md](size2-naked-retry.md).
 
 *Later pass (#65 strength-reduction retry):* `DrawVvLogoPieces` is matched and
-lives in the new `graphics_loading_3686c.c`; see
+lives in the new `company_logos.c`; see
 [sr65-naked-retry.md](sr65-naked-retry.md).

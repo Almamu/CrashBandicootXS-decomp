@@ -11,8 +11,8 @@
  * local views, named on each struct below.
  */
 
-/* One slide: `struct SoundChannelItem` (game_loop37.c), `struct
- * pager_item` (game_loop57.c). */
+/* One slide: `struct SoundChannelItem` (slideshow.c), `struct
+ * pager_item` (cutscene_player.c). */
 struct cutscene_slide
 {
     const u16 *picture;     // 0x00 - a 256-colour palette, followed by the
@@ -37,7 +37,7 @@ struct cutscene_slides
     s32 count;
 };
 
-/* The text of one slide: `struct pager_text` (game_loop57.c), strings
+/* The text of one slide: `struct pager_text` (cutscene_player.c), strings
  * shown one after the other. */
 struct cutscene_page
 {

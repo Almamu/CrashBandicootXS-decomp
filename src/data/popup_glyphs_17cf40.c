@@ -26,7 +26,7 @@ extern const u8 gCreditsCosmigoLogoTiles[];
 extern const u8 gCreditsUniversalLogoTiles[];
 extern const u8 gCreditsVvLogoTiles[];
 
-/* graphics_loading_35d1c.c's view of one countdown-slot seed. */
+/* title_screen.c's view of one countdown-slot seed. */
 struct slot_seed
 {
     const void *record;
@@ -34,7 +34,7 @@ struct slot_seed
 };
 
 /* Five popup glyph sources, each a {w, h, palette, tiles, 0}
- * package (LoadCreditsLogos, actor_part131.c, reads them as its
+ * package (LoadCreditsLogos, credits.c, reads them as its
  * `struct popup_glyph_src`). */
 const struct bg_package gCreditsLogos[5] = {
     { 0x10, 0x4, (void *)gCreditsCosmigoLogoPalette, (void *)gCreditsCosmigoLogoTiles, NULL },
@@ -45,7 +45,7 @@ const struct bg_package gCreditsLogos[5] = {
 };
 
 /* Nine {record, hold} seeds for the countdown slots of
- * graphics_loading_35d1c.c (RunTitleScreen, ResetTitleLogoPieces): the motion
+ * title_screen.c (RunTitleScreen, ResetTitleLogoPieces): the motion
  * sequences in level_gfx_17cff4.c, NULL-terminated. */
 const struct slot_seed gTitleLogoPieceSeeds[10] = {
     { gTitleLogoPieceMotion0, 0x54 },

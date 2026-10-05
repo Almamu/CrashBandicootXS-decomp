@@ -43,7 +43,7 @@ family. Filed under `src/graphics/` on disk, tracked as its own
   for the earlier accessor passes (`sub_801E8F8`'s DMA-register load
   order, the trailing `asm(".align 2, 0")` zero-padding fix).
 
-- **`InitTitleScreen`** (`src/graphics/level_graphics.c`) - the
+- **`InitTitleScreen`** (`src/frontend/title_screen_init.c`) - the
   title screen's constructor (`UpdateGameFrame` runs the title screen
   before the level loop: `RunTitleScreen`, then `DestroyTitleScreen`); stashes the
   icon-manager pointer, resets the OAM shadow buffer, sets up blend/
@@ -51,7 +51,7 @@ family. Filed under `src/graphics/` on disk, tracked as its own
   `LoadTitleScreenBg`/`LoadTitleScreenObjTiles`, runs the fade/audio-reset
   quartet, and starts song `0xb` - see
   [issue-65-graphics-loading.md](../matching/issue-65-graphics-loading.md).
-- **`LoadTitleScreenObjTiles`** (`src/graphics/level_graphics.c`) - the
+- **`LoadTitleScreenObjTiles`** (`src/frontend/title_screen_init.c`) - the
   OBJ-sprite tileset/palette loader (4-pass over `gTitleObjPackages`),
   closed via a register-pinning + opaque-asm-island pass on top of the
   previously-parked semantically-faithful reconstruction - see
@@ -133,7 +133,7 @@ family. Filed under `src/graphics/` on disk, tracked as its own
   [docs/matching/naked-sub_801e990-matched.md](../matching/naked-sub_801e990-matched.md)
   for the full derivation.
 - **`TitleScreenCheatInput`**, **`UpdateVvLogoPieces`**, **`LoadUniversalLogoBg`**
-  (`src/graphics/graphics_loading_35d1c.c`, issue #65) - the "cheat
+  (`src/frontend/title_screen.c`, issue #65) - the "cheat
   code" detector, the 20-slot updater and BG2's tilemap-remap loader,
   NAKED until the issue #64/#65 NAKED retry: the held/pressed pair read
   into a local struct first (the ROM's `0x100` mask built in r4 and
@@ -141,7 +141,7 @@ family. Filed under `src/graphics/` on disk, tracked as its own
   of the hoisted constants), and `*dest++` in both remap branches
   (doubles `dest`'s reference count, giving it r4). See
   [issue-64-65-naked-retry.md](../matching/issue-64-65-naked-retry.md).
-- **`HashTitleCheatInput`** (`src/graphics/graphics_loading_35d1c.c`) - a
+- **`HashTitleCheatInput`** (`src/frontend/title_screen.c`) - a
   standalone one-shot rolling-hash update (rotate-left-1 then multiply
   by 521), the same primitive `TitleScreenCheatInput` inlines for its "cheat code"
   detector. Matched as real C once the rotate was register-pinned
@@ -149,7 +149,7 @@ family. Filed under `src/graphics/` on disk, tracked as its own
   `(v << 1) | (v >> 31)` idiom into a single Thumb `ROR` instruction the
   ROM's own build never emits. See
   [issue-65-0x08035780-graphics-loading.md](../matching/issue-65-0x08035780-graphics-loading.md).
-- **`UpdateTitleLogoPieces`** (`src/graphics/graphics_loading_35780.c`) - the
+- **`UpdateTitleLogoPieces`** (`src/frontend/title_screen_init.c`) - the
   9-slot record-array per-frame updater documented under "Parked" below
   for its siblings; promoted to real C in a follow-up pass via the
   static-inline anti-CSE technique first demonstrated in
@@ -159,12 +159,12 @@ family. Filed under `src/graphics/` on disk, tracked as its own
   `self+i*0x34` slot-base register the way any single plain-C
   reconstruction otherwise does. See
   [issue-59-60-static-inline-cse-promotion.md](../matching/issue-59-60-static-inline-cse-promotion.md).
-- **`LoadTitleScreenBg`** (`src/graphics/level_graphics.c`), and
+- **`LoadTitleScreenBg`** (`src/frontend/title_screen_init.c`), and
   **`CommitTitleScreenFrame`**, **`DrawTitleMenuItem`**, **`DrawTitleScreen`**,
   **`DestroyTitleScreen`**, **`RunCompanyLogos`**, **`LoadVvLogoGraphics`**,
   **`InitLogoActor`**, **`UpdateLogoActor`**, **`DrawLogoActor`**
-  (`src/graphics/graphics_loading_35d1c.c`, split off
-  `graphics_loading_35780.c`) - promoted from NAKED to
+  (`src/frontend/title_screen.c`, split off
+  `title_screen_init.c`) - promoted from NAKED to
   real C in the issue #65 retry pass. Both files turned out to be
   old_agbcc code (both are now on the Makefile's `OLD_AGBCC_OBJS`);
   `LoadTitleScreenBg`'s long-documented "dead r7 in the push list" gap
@@ -175,7 +175,7 @@ family. Filed under `src/graphics/` on disk, tracked as its own
   destination pointer taken before an allocation call, a nested block
   for the ROM's stack-slot order). See
   [issue-65-naked-retry.md](../matching/issue-65-naked-retry.md).
-- **`InitVvLogoPieces`** (`src/graphics/graphics_loading_35d1c.c`) - the
+- **`InitVvLogoPieces`** (`src/frontend/title_screen.c`) - the
   20-slot seeder. Real C once the object is built with
   `-fno-strength-reduce` (the Makefile's `NO_STRENGTH_REDUCE_OBJS`):
   with strength reduction on, gcc reverses the first loop into a
@@ -184,9 +184,9 @@ family. Filed under `src/graphics/` on disk, tracked as its own
   old_agbcc objects. See
   [per-file-flags-investigation.md](../matching/per-file-flags-investigation.md).
 
-- **`DrawTitleLogoPieces`** (`src/graphics/graphics_loading_35780.c`),
+- **`DrawTitleLogoPieces`** (`src/frontend/title_screen_init.c`),
   **`RunTitleScreen`** and **`ResetTitleLogoPieces`**
-  (`src/graphics/graphics_loading_35d1c.c`) - the 9-slot OAM builder,
+  (`src/frontend/title_screen.c`) - the 9-slot OAM builder,
   the intro sequencer and the 9-slot seeder, NAKED until the issues
   #64/#65 second NAKED retry. The seed loops are `goto` loops with
   empty-asm reference nudges for global-alloc priority. `DrawTitleLogoPieces`
@@ -194,9 +194,9 @@ family. Filed under `src/graphics/` on disk, tracked as its own
   reversed), so the old file was split at `TitleScreenCheatInput`: the second
   half keeps `-fno-strength-reduce` for `InitVvLogoPieces`. See
   [issue-64-65-naked-retry-2.md](../matching/issue-64-65-naked-retry-2.md).
-- **`DrawVvLogoPieces`** (`src/graphics/graphics_loading_3686c.c`) - the
+- **`DrawVvLogoPieces`** (`src/frontend/company_logos.c`) - the
   20-slot OAM builder. NAKED until the #65 strength-reduction retry. It
-  needs strength reduction on, so `graphics_loading_35d1c.c` was split
+  needs strength reduction on, so `title_screen.c` was split
   at `0x0803686C`; the new file (with `LoadUniversalLogoBg`..`DrawLogoActor`) is
   old_agbcc without `-fno-strength-reduce`. See
   [sr65-naked-retry.md](../matching/sr65-naked-retry.md).

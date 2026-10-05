@@ -16,9 +16,9 @@ compared it against the ROM.
 | `CreateCortexBossPlatformMover` | `actor_part_188d0.c` (#23) | **matched**, rewritten with the `CreatePlatform` stack-argument idiom |
 | `CreatePlatform` | `actor_part_1a878.c` (#25) | **matched**, after removing every register pin |
 | `ResolvePlatformCollision` | `actor_part_1ab98.c` (#25) | still NAKED |
-| `InitLevelSelect` | `actor_part_1b85c.c` (#26) | still NAKED here; real C since the #12/#24/#26 retry |
-| `LoadLevelSelectRecord` | `actor_part_1b85c.c` (#26) | still NAKED |
-| `LevelSelectLoop` | `actor_part_1b85c.c` (#26) | still NAKED |
+| `InitLevelSelect` | `level_select.c` (#26) | still NAKED here; real C since the #12/#24/#26 retry |
+| `LoadLevelSelectRecord` | `level_select.c` (#26) | still NAKED |
+| `LevelSelectLoop` | `level_select.c` (#26) | still NAKED |
 
 Issue #23 has no NAKED/NON_MATCHING functions left. Issue #25 still has
 `ResolvePlatformCollision`, and issue #26 still has all three.
@@ -29,7 +29,7 @@ The five functions that share a file with matched functions would have
 needed that file split around them (all of their boundaries are 4-byte
 aligned: `0x08018A30`/`0x08018BDC`, `0x0801961C`/`0x0801964C`). That
 turned out to be unnecessary. Every function in `actor_part_188d0.c` and
-`actor_part_1b85c.c` also matches under old_agbcc. Most of them match with
+`level_select.c` also matches under old_agbcc. Most of them match with
 their agbcc-era C unchanged; a few needed a workaround *removed*. So both
 files moved to old_agbcc whole:
 
@@ -38,12 +38,12 @@ files moved to old_agbcc whole:
   with a pinned zero index. Plain `CALL3` gives the ROM's register there
   now. `UpdateCortexShot` had its `part` pinned to r8 and matches with the pin
   removed.
-- `actor_part_1b85c.c`: only `SpawnLaunchPad` differed (2 bytes), and it
+- `level_select.c`: only `SpawnLaunchPad` differed (2 bytes), and it
   matches once its zero/id pins are dropped.
 - `actor_part_1a878.c` was already on its own.
 
 `OLD_AGBCC_OBJS` in the Makefile now lists `actor_part_188d0.o`,
-`actor_part_1a878.o` and `actor_part_1b85c.o` next to `actor_part_1967c.o`.
+`actor_part_1a878.o` and `level_select.o` next to `actor_part_1967c.o`.
 `ldscript.txt` is unchanged, since no object was added or renamed.
 
 ## Workarounds that turned out to be unnecessary
@@ -122,7 +122,7 @@ write-ups, not applied.
   overlap arithmetic (`x + w - x' + 1`) into one shared tail. Stripping
   the pins makes it worse.
 
-`SetAnim(s32)` keeps every matched function in `actor_part_1b85c.c`
+`SetAnim(s32)` keeps every matched function in `level_select.c`
 matching, so it is safe to adopt whenever `LoadLevelSelectRecord`/`InitLevelSelect` are
 picked up again.
 

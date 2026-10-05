@@ -147,7 +147,7 @@ to its pinned register if the ROM's own code did so.
 `3`) needed `extern void StartSong(struct AudioContext *self, u32
 songIndex);`, matching the signature already used in
 `src/audio/audio.c`/
-`src/graphics/level_graphics.c`. Unlike those files, `game_loop2.c` had
+`src/frontend/title_screen_init.c`. Unlike those files, `game_loop2.c` had
 no prior reference to `struct AudioContext` anywhere at file scope, so
 the tag's first appearance was inside this `extern` declaration's own
 parameter list - triggering `agbcc`'s "declared inside parameter list"

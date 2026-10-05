@@ -9,7 +9,7 @@
  *
  * The layer keeps a 32x32-entry window of the level's tile map resident in
  * its BG screen block. `+0x3C..+0x40` / `+0x44..+0x48` are the resident
- * tile row / column ranges; the streamer at `+0x2C` (game_loop57.c's
+ * tile row / column ranges; the streamer at `+0x2C` (cutscene_player.c's
  * `GetBgStreamerColumn`/`GetBgStreamerRow`) resolves a (column, row) of the level map
  * to its ring-buffer entries. Screen entries wrap modulo 32 on both axes.
  *

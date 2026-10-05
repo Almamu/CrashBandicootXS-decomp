@@ -105,9 +105,9 @@ asm(".align 2, 0");
 
 /* DrawPauseMenu + DrawPauseMenuRows: mutually address-adjacent (nothing real
  * sits between them), but bracketed by the already-matched
- * AnimatePauseMenu (settings_menu17.c) before and DrawPausePowersPage
- * (settings_menu18.c) after - own object file for the same reason
- * settings_menu20.c documents. See
+ * AnimatePauseMenu (pause_menu_draw.c) before and DrawPausePowersPage
+ * (pause_menu_powers.c) after - own object file for the same reason
+ * pause_menu_loop.c documents. See
  * docs/matching/issue-7-0x08004d74-overlay-ui.md. */
 
 extern void ResetOamBuffer(void *arg0);

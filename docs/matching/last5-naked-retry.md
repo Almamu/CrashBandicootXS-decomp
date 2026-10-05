@@ -8,7 +8,7 @@ under `#if NON_MATCHING`. Two closed and two did not.
 | `ApplyCrateCollision` (`game_loop47.c`) | #12 | 49 hw | **matched**, old_agbcc |
 | `ResolvePlatformCollision` (`actor_part_1ab98.c`) | #25 | 565 hw, 8 bytes short | **matched**, old_agbcc |
 | `QueueCratePlayerCollision` (`game_loop47.c`) | #12 | 938 hw | still NAKED |
-| `DrawVvLogoPieces` (`graphics_loading_35d1c.c`) | #65 | 329 hw | still NAKED |
+| `DrawVvLogoPieces` (`title_screen.c`) | #65 | 329 hw | still NAKED |
 
 `actor_part_1ab98.o` and `game_loop47.o` joined `OLD_AGBCC_OBJS`. Both
 address ranges are inside the span already confirmed to be old_agbcc

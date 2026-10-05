@@ -11,7 +11,7 @@
  */
 
 /* One layer (BG0-3 or the collision layer): `struct bg_layer_desc` in
- * bg_scroll_layer_25fc8.c, `struct stream_source` in game_loop57.c, and
+ * bg_scroll_layer_25fc8.c, `struct stream_source` in cutscene_player.c, and
  * the raw `source` of the terrain cache (game_loop3.c/game_loop5.c). */
 struct level_layer_desc
 {
@@ -117,8 +117,8 @@ struct level_room_list
 
 /*
  * One level (gLevelTable). The code's views: `level_info`
- * (actor_part_1b85c.c), `threshold_table_entry` (settings_menu6.c,
- * oam_count.c), `MedalTableEntry` (game_loop17.c, game_loop18.c),
+ * (level_select.c), `threshold_table_entry` (pause_menu_pages_init.c,
+ * power_dialog_draw.c), `MedalTableEntry` (game_loop17.c, game_loop18.c),
  * `level_guard` (graphics_loading_21280.c), `gl_level_entry`
  * (game_loop56.c).
  */

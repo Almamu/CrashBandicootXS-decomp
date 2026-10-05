@@ -19,7 +19,7 @@ extern void UpdateGameFrame(void *state);
  * (`gLevelState`, see docs/rom_map.md's "hud"/"game_loop"
  * investigations for what its fields mean), the boot language menu
  * (`OpenLanguageSelect`/`RunLanguageSelect`/`CloseLanguageSelect`, src/audio/
- * counter_selector*.c), then runs `UpdateGameFrame` forever, freeing
+ * language_select*.c), then runs `UpdateGameFrame` forever, freeing
  * scratch memory before and after each frame. Never actually returns -
  * the `s32` return type only exists to match `AgbMain`'s
  * `if (MainLoop() != 0)` guard, which this loop never reaches. */

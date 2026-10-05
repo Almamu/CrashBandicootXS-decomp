@@ -297,7 +297,7 @@ void LoadTitleScreenObjTiles(u32 *self)
 
 /* GitHub issue #65's chunk (0x080354E0-0x08037110): the remaining 19
  * functions after `InitTitleScreen`/`LoadTitleScreenBg`/
- * `LoadTitleScreenObjTiles` (src/graphics/level_graphics.c - see
+ * `LoadTitleScreenObjTiles` (src/frontend/title_screen_init.c - see
  * docs/matching/issue-65-graphics-loading.md). Most of them operate on
  * the title-screen object `InitTitleScreen` builds (still a
  * raw `u32 *` here - stride-0x34 slot records at `self+0x10` holding
@@ -311,7 +311,7 @@ void LoadTitleScreenObjTiles(u32 *self)
  * This translation unit is old_agbcc code (see the Makefile's
  * OLD_AGBCC_OBJS) with the default -O2 strength reduction. It holds only
  * `UpdateTitleLogoPieces` and `DrawTitleLogoPieces`; the rest of the chunk (from
- * `TitleScreenCheatInput`) was split into graphics_loading_35d1c.c in the issues
+ * `TitleScreenCheatInput`) was split into title_screen.c in the issues
  * #64/#65 second NAKED retry, because that half needs
  * -fno-strength-reduce for `InitVvLogoPieces` while `DrawTitleLogoPieces` needs
  * strength reduction on. See docs/matching/issue-64-65-naked-retry-2.md,

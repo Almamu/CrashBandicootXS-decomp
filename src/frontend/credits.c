@@ -7,8 +7,8 @@
 #include <agb_syscall.h>
 
 /* GitHub issue #64 (0x08034AA4-0x080354E0, 13 functions). Continues
- * straight on from issue #63's fade-overlay cluster (actor_part87.c/
- * actor_part88.c/actor_part89.c) - the first five functions here
+ * straight on from issue #63's fade-overlay cluster (continue_prompt_init.c/
+ * continue_prompt.c) - the first five functions here
  * (DrawContinuePrompt/GetContinuePromptBlink/CommitContinuePromptFrame/DestroyContinuePrompt/RunContinuePrompt) are more
  * methods on that same `struct continue_prompt` "self" object, then the
  * chunk moves on to the credits screen (RunCredits, read at first as
@@ -17,9 +17,9 @@
  * thing in this file" sections) - see
  * docs/matching/issue-64-0x08034aa4-actor.md for the full write-up. */
 
-/* Same `struct continue_prompt` as actor_part87.c/88.c/89.c, redeclared
+/* Same `struct continue_prompt` as continue_prompt_init.c/continue_prompt.c, redeclared
  * locally per this project's minimal-local-type convention. This
- * chunk's functions pin down real meanings for two fields actor_part87.c
+ * chunk's functions pin down real meanings for two fields continue_prompt_init.c
  * left vague: `unused_1c` is a per-item blink/flash toggle counter
  * (kept the same field name there since that file never touches it),
  * and `selection` (once `flag_20`, guessed as "which of two alternating
@@ -100,7 +100,7 @@ extern void FlushVramDmaQueue(void);
  * Was a NAKED transcription until the issue #64/#65 NAKED retry: each
  * label draw is a gcc 2.x virtual call through the icon manager's
  * method record (`record->slots[n]`, `_call_via_r2`),
- * the same `ICON_TEXT_CALL` shape settings_menu.c already matches, and
+ * the same `ICON_TEXT_CALL` shape save_menu_draw.c already matches, and
  * with that the "many live values across calls" allocation falls out
  * of plain C. */
 extern struct vram_upload_cursor *gObjVramCursor;

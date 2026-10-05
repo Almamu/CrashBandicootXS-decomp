@@ -3,7 +3,7 @@
 
 /* GitHub issue #27: 0x0801CEE0-0x0801DA38, the whole of the former
  * asm/code_3_2_17_188d0_1cee0.s. The rest of the level-select screen
- * (`struct level_menu`, issue #26's actor_part_1b85c.c) and its two
+ * (`struct level_menu`, issue #26's level_select.c) and its two
  * background layers:
  *
  * - LevelSelectTurnPage-ReloadLevelSelectPalette: level_menu methods - the page-turn
@@ -94,7 +94,7 @@ typedef void (*item_load_fn)(void *self, s32 world, s32 slot);
 typedef void (*item_place_fn)(void *self, struct xy_pair *pos);
 
 /* The level-select screen's per-frame register commit (as in
- * actor_part_1b85c.c). */
+ * level_select.c). */
 static inline void CommitDisplay(struct level_menu *self)
 {
     FlushVramDmaQueue();

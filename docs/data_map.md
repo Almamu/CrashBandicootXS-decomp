@@ -68,7 +68,7 @@ the appendix.
 | `08167AD4`-`0817E78C` | 92,180 | 200 small/mid tables: gameplay, menus, HUD, actors, text (the built sfx table sits in between) | direct, see appendix | mostly high | easy (a few medium) |
 | `0817E78C`-`0817E7AC` | 32 | `u16[16]` | `InitLanguageSelectGraphics` | high | **done** (C) |
 | `0817E7AC`-`0824B638` | 839,308 | level tile sets 1-3 (tag-0x00 raw 8bpp tiles) | `bg_scroll_layer_25fc8.c` via `bg_layer_desc.tileData` | high | **done** (grit) |
-| `0824B638`-`08270F08` | 153,808 | per-room level data, 33 rooms | `level_layers.c`, `game_loop5.c`, `game_loop57.c`, `game_loop41.c` | high | **done** (C, [levels.md](./levels.md)) |
+| `0824B638`-`08270F08` | 153,808 | per-room level data, 33 rooms | `level_layers.c`, `game_loop5.c`, `cutscene_player.c`, `game_loop41.c` | high | **done** (C, [levels.md](./levels.md)) |
 | `08270F08`-`082B91D0` | 295,624 | level tile sets 4-5 | as tile sets 1-3 | high | **done** (grit) |
 | `082B91D0`-`082BF120` | 24,400 | per-room level data, 8 rooms | as block 1 | high | **done** (C) |
 | `082BF120`-`084A4660` | 1,987,904 | sprite tile pool for the 56 sprite banks | `affine_sprite_pieces.c`/`sprite_pieces.c` (`GetSpriteTileBase` + frame offset) | high | **done** (grit) |
@@ -207,7 +207,7 @@ out scrambled. The `0x30` byte is the clue: these frames are
 **compressed**, and they are never passed to `LoadSpriteFrameTiles`.
 
 The consumers (`actor_part127.c`, `actor_part128.c`,
-`graphics_loading_3686c.c`) call `gUnpackRleSpriteFrameFunc(vramBlock, frame)`.
+`company_logos.c`) call `gUnpackRleSpriteFrameFunc(vramBlock, frame)`.
 That IWRAM variable is initialised by the `crt0` copy of the IWRAM image
 (`0x087E55E4 + 0x874`) to `0x03000634`, an ARM routine in the same image.
 Disassembled, it fills `w*h*32` bytes of VRAM from a stream of `u16`
@@ -278,7 +278,7 @@ Walking them:
   ... `08270BCC` (33) and `082B9ED0` ... `082BEADC` (8).
 - `struct bg_layer_desc` (0x20, `bg_scroll_layer_25fc8.c`): `u16 *chunkGrid`,
   `u32 assetOffset` (the streamers use `level asset + assetOffset` as
-  their decode base, `game_loop5.c`/`game_loop57.c`), `tileData`,
+  their decode base, `game_loop5.c`/`cutscene_player.c`), `tileData`,
   `scaleX`, `scaleY`, `cnt`, grid width/height in chunks
   (`+0x16`/`+0x18`), size in tiles (`+0x1A`/`+0x1C`).
 - `tileData` is either one of the built LZ77 tile sets
@@ -331,7 +331,7 @@ see [levels.md](./levels.md).
 ### `gSpriteBankTable` (747,188 B): sprite-bank table + second GAX2 data set
 
 This is the "master asset table" of docs/rom_map.md. Its structure,
-from the matched readers (`RunPauseMenu` in `settings_menu15.c`, `GetSpriteTileBase`/
+from the matched readers (`RunPauseMenu` in `pause_menu.c`, `GetSpriteTileBase`/
 `GetSpriteFrame`/`GetSpriteAnimPaletteSlot`/`GetSpriteAnimPaletteId` in `actor_part4.c`-`actor_part6.c`,
 `affine_sprite_pieces.c`, and the `**gSpriteBankSet + N` users):
 

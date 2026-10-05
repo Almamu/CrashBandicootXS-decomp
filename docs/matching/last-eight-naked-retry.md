@@ -5,9 +5,9 @@ This pass retried four NAKED functions with C drafts under
 
 | Function | File | Before | Now | Status |
 |---|---|---|---|---|
-| `ReceiveSaveTransferChunk` (#5) | `src/graphics/settings_menu8a2.c` | 14 | match (both compilers) | Real C |
+| `ReceiveSaveTransferChunk` (#5) | `src/save/save_transfer.c` | 14 | match (both compilers) | Real C |
 | `SpawnFlamethrowerLabAssistant` (#31) | `src/graphics/graphics_loading_1feec.c` | 62 | 12 (same size, old_agbcc) | Draft updated |
-| `DrawPauseFraction` (#7) | `src/graphics/settings_menu16.c` | 73 (16 bytes long) | 45 (same size, both compilers) | Draft updated |
+| `DrawPauseFraction` (#7) | `src/menus/pause_menu_widgets.c` | 73 (16 bytes long) | 45 (same size, both compilers) | Draft updated |
 | `ResetLinkSessionState` (#4) | `src/link/link_handshake.c` | 136 | 136 (122 found, not adopted) | Note added |
 
 ## `ReceiveSaveTransferChunk`: closed

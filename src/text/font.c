@@ -5,7 +5,7 @@
 /* Sits between FontMeasureText (src/text/font_measure.c) and
  * InitFont (src/text/font.c) - FontUploadTiles/
  * FontSetPalette/FontResetPalette, GitHub issue #46. Same `struct bitmap_font`
- * as hud_icon_widget.c and the other src/text/font*.c files. */
+ * as hud_slide.c and the other src/text/font*.c files. */
 
 extern void LoadTaggedAsset(void *asset, void *dest);
 extern u8 *gPaletteCache;
@@ -111,7 +111,7 @@ struct bitmap_font *InitFont(struct bitmap_font *selfArg)
  * rest of the still-raw HUD text/icon-widget driver code
  * (asm/code_3_2_20_8b7c.s, out of GitHub issue #46's chunk scope) -
  * FontHeightToLines through FontSetTileBase, GitHub issue #46. Same
- * `struct bitmap_font` as hud_icon_widget.c and the other
+ * `struct bitmap_font` as hud_slide.c and the other
  * src/text/font*.c files.
  *
  * DestroyFont (0x08028B7C, no tracked issue - just the next

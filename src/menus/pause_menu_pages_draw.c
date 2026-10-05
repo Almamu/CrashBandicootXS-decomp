@@ -63,7 +63,7 @@ void DrawPauseTimeTrialPage(struct pause_menu *self)
  * companion label draw - the "results count" pair (`buf2c`/`buf46`,
  * already formatted by `InitPauseCrystalsPage` itself) centered on that icon at
  * the fixed `gPauseCrystalIconPos` position, via `DrawPauseFraction`
- * (src/graphics/settings_menu16.c) that actually draws the two small
+ * (src/menus/pause_menu_widgets.c) that actually draws the two small
  * strings. */
 extern struct icon_pos gPauseCrystalIconPos;
 extern void DrawPauseFraction(struct pause_menu *self, void *buf1, void *buf2);
@@ -104,8 +104,8 @@ void DrawPauseMenuPageTitle(struct pause_screen_category_state *self)
  * for its own top-level object - see include/pause_menu.h for
  * the full reconciled struct (this function only touches field_c8/
  * field_cc/field_d0). Distinct from - and much larger than -
- * `struct sub_8006700_actor` (src/graphics/oam_count.c/settings_menu10.c),
- * which is the smaller per-widget object `src/graphics/oam_count.c`'s
+ * `struct sub_8006700_actor` (src/menus/power_dialog_draw.c/power_dialog_loop.c),
+ * which is the smaller per-widget object `src/menus/power_dialog_draw.c`'s
  * already-matched `CommitPowerDialogFrame` uses for the same job at different
  * offsets. */
 

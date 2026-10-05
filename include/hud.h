@@ -2,12 +2,12 @@
 #define __HUD_H__
 
 /* Shared shapes for the in-game HUD (`gHud`, built by `InitHud`):
- * docs/rom_map.md's "hud" investigation. `UpdateHud` (hud_stat_widget.c)
+ * docs/rom_map.md's "hud" investigation. `UpdateHud` (hud.c)
  * is the per-frame dispatcher; its widgets are `UpdateHudLives`
- * (hud_counter.c), `UpdateHudClock`/`UpdateHudWumpa` and the still
- * unnamed counters (hud_stat_widget2.c, hud_stat_widget3.c). The lives,
+ * (hud_lives.c), `UpdateHudClock`/`UpdateHudWumpa` and the still
+ * unnamed counters (hud_boss_clock.c, hud_counters.c). The lives,
  * wumpa and third counters each slide in from the top of the screen
- * (`ShowHudLives`/`ShowHudWumpa`/`UpdateHudSlides`, hud_blink.c): a
+ * (`ShowHudLives`/`ShowHudWumpa`/`UpdateHudSlides`, hud_slide.c): a
  * counter's slide state is 0 hidden, 1 sliding in, 2 held, 3 sliding
  * out, and while it slides `gHudSlideOffset = slideTimer * 2 - 40`. */
 

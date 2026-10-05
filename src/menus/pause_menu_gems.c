@@ -7,9 +7,9 @@
 #include "memory.h"
 
 /* DrawPauseGemsPage + DrawPauseRelicsPage: mutually address-adjacent, bracketed by
- * the already-matched DrawPausePowersPage (settings_menu18.c) before and
- * InitPauseMenuInfo (settings_menu19.c) after - own object file for the
- * same reason settings_menu20.c documents. See
+ * the already-matched DrawPausePowersPage (pause_menu_powers.c) before and
+ * InitPauseMenuInfo (pause_menu_info.c) after - own object file for the
+ * same reason pause_menu_loop.c documents. See
  * docs/matching/issue-7-0x08004d74-overlay-ui.md.
  *
  * Built with old_agbcc (Makefile OLD_AGBCC_OBJS): its mask-before-ldrb
@@ -46,7 +46,7 @@ static inline void set_icon_mgr_pos(struct bitmap_font *m, u32 x, u32 y)
  * first `gPauseGemIconPos[0]`'s position (offset by -0x14/-4) with
  * `self->buf2f` at a fixed slot, then repositions to (0xb4, 0x80) and
  * calls `DrawPauseFraction` with `self->buf32`/`self->buf49` (the count/total
- * buffers `InitPauseGemsPage` - src/graphics/settings_menu6.c - already fills
+ * buffers `InitPauseGemsPage` - src/menus/pause_menu_pages_init.c - already fills
  * for this same icon row). */
 void DrawPauseGemsPage(struct pause_menu *self)
 {
@@ -75,7 +75,7 @@ extern struct icon_pos gPauseRelicIconPos[];
  * pattern as DrawPauseGemsPage's single readout) with `self->buf38`/
  * `buf3b`/`buf3e`, then a final one at (0xb4, 0x80) via `DrawPauseFraction`
  * with `self->buf35`/`buf4c` (the total/threshold buffers
- * `InitPauseRelicsPage` - src/graphics/settings_menu6.c - fills for this
+ * `InitPauseRelicsPage` - src/menus/pause_menu_pages_init.c - fills for this
  * row). */
 void DrawPauseRelicsPage(struct pause_menu *self)
 {

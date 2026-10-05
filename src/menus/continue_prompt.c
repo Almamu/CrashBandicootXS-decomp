@@ -2,10 +2,10 @@
 #include "bitmap_font.h"
 #include "vram_pool.h"
 
-/* Same continue prompt ("fade overlay") self object as `actor_part87.c` (`InitContinuePrompt`) -
+/* Same continue prompt ("fade overlay") self object as `continue_prompt_init.c` (`InitContinuePrompt`) -
  * redeclared locally here per this project's minimal-local-type
  * convention for a type already anchored in another translation unit
- * (see e.g. settings_menu10.c's own `struct sub_8006700_actor`
+ * (see e.g. power_dialog_loop.c's own `struct sub_8006700_actor`
  * comment). Only the fields this file actually touches are named. */
 struct continue_prompt {
     u8 unused_00[0xc];
@@ -43,7 +43,7 @@ extern u16 gContinuePromptPalette2[];
 extern u16 gContinuePromptPalette3[];
 
 /* The other half of the continue prompt's setup, called from
- * `InitContinuePrompt` (actor_part87.c): flushes the shared VRAM upload cursor
+ * `InitContinuePrompt` (continue_prompt_init.c): flushes the shared VRAM upload cursor
  * twice, hooks `self->icons` up to the global text icon manager
  * (`gSmallFont`), fires its 7th OAM trampoline slot, clears its
  * `marginX` and re-derives the cursor's limit from `tileCount`, resets
@@ -106,8 +106,8 @@ void InitContinuePromptGraphics(struct continue_prompt *self)
     CommitOamBuffer(gOamBuffer);
 }
 
-/* The continue prompt's (`InitContinuePrompt`/`InitContinuePromptGraphics`, actor_part87.c/
- * actor_part88.c) per-frame driver, called once per frame while the
+/* The continue prompt's (`InitContinuePrompt`/`InitContinuePromptGraphics`, continue_prompt_init.c/
+ * continue_prompt.c) per-frame driver, called once per frame while the
  * effect is running (caller not yet identified in this pass - out of
  * scope, see docs/matching/issue-63-0x08033ef4-actor.md). Busy-loops
  * (yielding via `DrawContinuePrompt`/`CommitContinuePromptFrame` each iteration - graphics-

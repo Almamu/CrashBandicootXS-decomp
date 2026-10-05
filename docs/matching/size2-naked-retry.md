@@ -5,7 +5,7 @@ This pass took three drafts whose size was nearly right:
 
 | Function | File | Start | Result |
 |---|---|---|---|
-| `LoadCreditsLogos` (#64) | `src/graphics/actor_part131.c` (already old_agbcc) | 114 hw, 420 vs 416 B | **Closed**, real C, old_agbcc |
+| `LoadCreditsLogos` (#64) | `src/frontend/credits.c` (already old_agbcc) | 114 hw, 420 vs 416 B | **Closed**, real C, old_agbcc |
 | `CreateCrate` (#13) | `src/system/game_loop36.c` | 471 hw, 1388 vs 1396 B | **Closed**, real C, old_agbcc (`game_loop36.o` joined `OLD_AGBCC_OBJS`; it is the only function in the file) |
 | `ResolvePlatformCollision` (#25) | `src/graphics/actor_part_1ab98.c` | 565 hw, 1640 vs 1648 B | Not closed, draft unchanged, note updated |
 

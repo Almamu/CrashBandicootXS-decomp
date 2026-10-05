@@ -3,7 +3,7 @@
 
 A further pass over the two functions
 [docs/matching/issue-38-sound-channel-family.md](./issue-38-sound-channel-family.md)
-left as `NON_MATCHING` C reconstructions in `src/system/game_loop37.c` -
+left as `NON_MATCHING` C reconstructions in `src/cutscene/slideshow.c` -
 `BeginSlide` and `ShowSlidePicture`. Both had a single documented residual
 gap each; this pass found the actual fix for `ShowSlidePicture` (now real,
 matched C) and, while chasing `BeginSlide`'s documented gap, found the
@@ -64,7 +64,7 @@ one:
    adds r1,r2,#0; orrs r0,r1`); a plain `register s32 val asm("r1") =
    mask;` copy always got optimized away. Fixed with the same
    `asm volatile("" : "=r"(v) : "0"(expr))` forced-same-register-move
-   idiom `settings_menu13.c` documents - `register s32 val asm("r1");
+   idiom `power_dialog.c` documents - `register s32 val asm("r1");
    asm volatile("" : "=r"(val) : "0"(mask));` forces the actual `mov`
    into r1 the ROM's own reuse of a free register produces.
 2. **Fixed for real**: the very first `self->items[idx]` pointer load
@@ -74,7 +74,7 @@ one:
    Fixed by not naming it - `PlaySong(audio, self->items[idx]->field_14);`
    inline, instead of assigning through the same `item` local the rest of
    the function reloads - the "differently-named pointer variable avoids
-   reuse" gotcha `settings_menu13.c` also documents (a shared register
+   reuse" gotcha `power_dialog.c` also documents (a shared register
    for a variable's whole lexical lifetime vs. a fresh one per
    transient use).
 3. **Unfixable, confirmed toolchain bug**: the ROM's busy-poll loop
@@ -106,8 +106,8 @@ in `docs/status/game_loop.md` and `tools/report_units.py`, and this pass
 doesn't claim it toward closing issue #38.
 
 `BeginSlide`/`RunSlideshow`/`SkipSlides`/`ShowSlidePicture` are now all one
-contiguous span in `src/system/game_loop37.c`'s own object
-(`src/system/game_loop37.o`), so the two single-function raw asm files
+contiguous span in `src/cutscene/slideshow.c`'s own object
+(`src/cutscene/slideshow.o`), so the two single-function raw asm files
 that used to flank the matched middle (`asm/code_3_2_17_24590.s`,
 `asm/code_3_2_17_24708.s`) are deleted and `ldscript.txt`/
 `tools/report_units.py` updated to match - the same "widen the unit,

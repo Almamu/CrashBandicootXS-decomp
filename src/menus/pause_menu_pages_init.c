@@ -137,7 +137,7 @@ extern struct icon_pos gPauseRelicIconPos[];
  * from `gPauseRelicIconPos`/`gPauseRelicIconFrames`), each icon's
  * `field_3c = 0x80`. After the loop, formats four category counts
  * (`CountSapphireRelics`/`CountGoldRelics`/`CountPlatinumRelics`/`CountRelics` on
- * `field_10` - the same four functions src/graphics/oam_count.c
+ * `field_10` - the same four functions src/menus/power_dialog_draw.c
  * documents) into `buf38`/`buf3b`/`buf3e`/`buf35`, and the constant
  * `0x14` into `buf4c`. */
 void InitPauseRelicsPage(struct pause_menu *self)
@@ -169,7 +169,7 @@ extern void *gLevelState;
 extern s32 GetCurrentLevel(void *arg0);
 extern void FormatCentiseconds(s32 value, u8 *buf);
 
-/* Same per-level bronze/silver/gold threshold table src/graphics/oam_count.c's
+/* Same per-level bronze/silver/gold threshold table src/menus/power_dialog_draw.c's
  * `struct threshold_table_entry`/`gLevelTable` already document -
  * duplicated locally (rather than shared via a header) per that file's
  * own comment on the type, matching this project's minimal-local-type

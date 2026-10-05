@@ -1,12 +1,11 @@
 #include "core.h"
 #include "gba/dma_macros.h"
 
-/* Same "self" object family as actor_part61.c/actor_part66.c/actor_part72.c/
- * actor_part73.c - see docs/matching/issue-63-0x08033ef4-actor.md. This is
+/* Same "self" object family as actor_part61.c/actor_part66.c/starfield.c - see docs/matching/issue-63-0x08033ef4-actor.md. This is
  * the 0x14-byte constructor (`InitStarfield`, called by `InitTitleScreen` as
- * `InitStarfield(OperatorNew(0x14))`, see `src/graphics/level_graphics.c`) and
+ * `InitStarfield(OperatorNew(0x14))`, see `src/frontend/title_screen_init.c`) and
  * its companion per-frame updater (`DrawStarfield`, called by
- * `UpdateStarfield`/actor_part73.c) for a BG0 "raw bitmap" particle-trail
+ * `UpdateStarfield`, below) for a BG0 "raw bitmap" particle-trail
  * effect: the whole 240x160 screen is set up as one contiguous run of 8x8
  * tiles on BG0 (tile index == screen position, palette bank 15), and a
  * shadow 4-bit-per-pixel buffer (`tileBuffer`, exactly 240*160/2 = 0x4B00
@@ -14,7 +13,7 @@
  * wholesale into the real tile graphics VRAM - the classic "abuse the BG
  * tile grid as a raw indexed bitmap" GBA trick.
  *
- * The effect is a starfield: SpawnStar (actor_part72.c) starts each of
+ * The effect is a starfield: SpawnStar (starfield.c) starts each of
  * up to 128 stars at the screen centre with a random direction and
  * speed, and DrawStarfield moves them outwards, plotting a short trail.
  * The language menu, the credits and the level-loading screens run it
@@ -28,7 +27,7 @@ struct particle_bg {
      * construction time as one sequential tile index per 8x8 cell. */
     u32 mapVramBase;
     /* 128-slot particle array (`OperatorNewArray(0x800)`, 16-byte stride - see
-     * `struct particle_slot`, actor_part72.c). */
+     * `struct particle_slot`, starfield.c). */
     void *particles;
     /* Active particle count (0-0x80). */
     s32 count;
@@ -82,7 +81,7 @@ void *InitStarfield(void *selfArg)
      * with an `ands r5, =0xFFFF0000` against whatever was already in the
      * register, then fills in every bit the halfword write actually reads
      * via the ORs below (negative-constant bit-clear idiom, see
-     * LoadTitleScreenBg's `bg2cnt`, src/graphics/level_graphics.c). */
+     * LoadTitleScreenBg's `bg2cnt`, src/frontend/title_screen_init.c). */
     u32 bg0cnt;
     s32 gradIdx;
     s32 gradCount;
@@ -205,7 +204,7 @@ void *InitStarfield(void *selfArg)
  * `1` at the pre-movement position, nibble `2` at the post-movement
  * position - the same `(x>>3)<<6 + ((y>>3)*15)<<7 + (x&7) + (y&7)<<3`
  * nibble-address formula as the matched general-purpose `PlotStarfieldPixel`,
- * actor_part72.c, just inlined twice instead of called), applies the
+ * starfield.c, just inlined twice instead of called), applies the
  * particle's `dx`/`dy` in between, and respawns it via `SpawnStar` if it
  * drifted outside the `[0, 0xEFFF]`x`[0, 0x9FFF]` (24.8 fixed-point,
  * 240x160 pixel) box.

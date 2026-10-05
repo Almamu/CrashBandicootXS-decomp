@@ -8,11 +8,11 @@ None of them needs a register pin.
 |---|---|---|---|---|
 | `DropWumpa` | `src/system/game_loop14.c` | 132 B | 5 hw (note) | **Closed** |
 | `LaunchEffectPart` | `src/system/game_loop14.c` | 160 B | 61 hw (note), no draft | **Closed** |
-| `DecodeLayerChunk` | `src/system/game_loop57.c` | 320 B | 13 hw (note), no draft | **Closed** |
-| `RunCutscenePlayer` | `src/system/game_loop57.c` | 284 B | 77 hw (note), no draft | **Closed** |
+| `DecodeLayerChunk` | `src/cutscene/cutscene_player.c` | 320 B | 13 hw (note), no draft | **Closed** |
+| `RunCutscenePlayer` | `src/cutscene/cutscene_player.c` | 284 B | 77 hw (note), no draft | **Closed** |
 | `DrawSpritePieces` | `src/gfx/sprite_pieces.c` (new, split from `graphics.c`) | 600 B | draft removed long ago | **Closed** |
 
-`game_loop14.c` and `game_loop57.c` were already on `OLD_AGBCC_OBJS`.
+`game_loop14.c` and `cutscene_player.c` were already on `OLD_AGBCC_OBJS`.
 `DrawSpritePieces` was the last function in `graphics.c`, which is built with
 agbcc. Its loop loads the `0xf` mask before the `ldrb` it is combined
 with, which is the old_agbcc tell. It now lives in its own

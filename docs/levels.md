@@ -55,7 +55,7 @@ struct names the code's own local views of the same record.
 ### `struct level_layer_desc` (0x20)
 
 `struct bg_layer_desc` in `bg_scroll_layer_25fc8.c`, `struct
-stream_source` in `game_loop57.c`, the terrain cache's `source`.
+stream_source` in `cutscene_player.c`, the terrain cache's `source`.
 
 | Offset | Field |
 |---|---|

@@ -3,7 +3,7 @@
 Question: besides the old_agbcc/agbcc split, did the original build
 also use different `-O2` sub-flags for some translation units? The lead
 came from issue #65's retry pass (`issue-65-naked-retry.md`): three NAKED
-functions in `src/graphics/graphics_loading_35780.c` (`InitVvLogoPieces`,
+functions in `src/frontend/title_screen_init.c` (`InitVvLogoPieces`,
 `ResetTitleLogoPieces`, `RunTitleScreen`) were all stuck on the same "seed loop".
 The ROM keeps an up-counting loop counter, leaves some address
 arithmetic unsimplified and does not hoist 0/-1 out of the loop. Both
@@ -15,7 +15,7 @@ Every real-C function already matched in the file has to stay
 byte-exact with it, the way old_agbcc did for its files.
 
 **Result:** `-fno-strength-reduce` meets that bar for
-`graphics_loading_35780.o`, so it is now applied to that object alone
+`title_screen_init.o`, so it is now applied to that object alone
 (the Makefile's `NO_STRENGTH_REDUCE_OBJS`), and `InitVvLogoPieces` is real C.
 It is **not** a global property of the old_agbcc objects. The other two
 seed loops need a source-level explanation instead (see below).
@@ -32,7 +32,7 @@ Probed with a small loop against both `tools/agbcc/bin/old_agbcc` and
 No flag turns off gcc 2.95's loop optimizer as a whole. `-O3` and `-Os`
 produced the same code as `-O2` on the probe.
 
-## Whole-file sweep (graphics_loading_35780.c, old_agbcc, NON_MATCHING drafts)
+## Whole-file sweep (title_screen_init.c, old_agbcc, NON_MATCHING drafts)
 
 "Matched" means the file's 11 real-C functions at the start of this
 work (`UpdateTitleLogoPieces`, `CommitTitleScreenFrame`, `DrawTitleMenuItem`, `DrawTitleScreen`,
@@ -152,16 +152,16 @@ without the flag and compare the per-function assembly, labels
 normalized) finds changed code in matched real-C functions in 11
 old_agbcc files:
 
-- `actor_part88.c` (`InitContinuePromptGraphics`)
+- `continue_prompt.c` (`InitContinuePromptGraphics`)
 - `actor_part_18008.c` (`PickTinyHopTarget`)
 - `actor_part_188d0.c` (`CreateTiny`)
-- `actor_part_1b85c.c` (`DestroyLevelSelect`)
-- `actor_part_1cee0.c` (`LevelSelectTurnPage`, `PlaceLevelSelectEntries`, `InitZoomBg`)
+- `level_select.c` (`DestroyLevelSelect`)
+- `level_select_pages.c` (`LevelSelectTurnPage`, `PlaceLevelSelectEntries`, `InitZoomBg`)
 - `graphics_package.c` (`LoadGraphicsPackage`)
 - `graphics_package.c` (`FitScaledSprite`)
-- `hud_digit_array.c` (`InitHud`)
-- `level_graphics.c` (`LoadTitleScreenBg`)
-- `settings_menu22.c` (`DrawPauseRelicsPage`)
+- `hud_init.c` (`InitHud`)
+- `title_screen_init.c` (`LoadTitleScreenBg`)
+- `pause_menu_gems.c` (`DrawPauseRelicsPage`)
 - `game_loop49.c` (`SolidifyOutlineCrates`)
 
 Those are all byte-exact today, so each change is a break. Among the
@@ -169,7 +169,7 @@ current-agbcc objects, 8 files change (`audio.c`,
 `actor_part100.c`, `graphics.c`, `palette_cycle.c`, `game_loop28.c`,
 `game_loop5.c`, `irq.c`, `tile_slot_pool.c`). The flag is **not** a
 property of the old_agbcc build as a whole, nor of the whole ROM. Of the
-old_agbcc objects, `graphics_loading_35780.o` is one where it changes
+old_agbcc objects, `title_screen_init.o` is one where it changes
 nothing that already matched.
 
 ## How confident is this?

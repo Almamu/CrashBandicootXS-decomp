@@ -37,7 +37,7 @@ static inline void set_icon_mgr_pos(struct bitmap_font *m, u32 x, u32 y)
  * OLD_AGBCC_OBJS) because `InitSaveMenuIcons` only matches under it - every
  * other function here compiles identically under both compilers. Their
  * siblings `DrawEmptySlotLabel`/`DrawSaveMenuTitle` live in
- * `src/graphics/settings_menu23.c`. */
+ * `src/save/save_menu_ui.c`. */
 
 extern void *OperatorNew(s32 size);
 extern void SetSaveTransferRecord(void *newObj, void *tmpl);
@@ -122,12 +122,12 @@ void DrawSaveMenuMessageLines(struct save_menu *self, s32 label1, s32 label2)
     }
 }
 
-/* Same centered-label shape as DrawSaveMenuTitle (src/graphics/settings_menu20.c),
+/* Same centered-label shape as DrawSaveMenuTitle (src/menus/pause_menu_loop.c),
  * but always label 0x23, drawn into gSmallFont (not E0) at
  * fixed Y=0x87, and with a highlight-dependent initial visibility call.
  *
  * Once a NAKED transcription; it matches as plain C under both
- * compilers (same shape as DrawEmptySlotLabel, src/graphics/settings_menu23.c). */
+ * compilers (same shape as DrawEmptySlotLabel, src/save/save_menu_ui.c). */
 void DrawSaveMenuCancel(struct save_menu *self, u8 highlight)
 {
     s32 w;
@@ -235,7 +235,7 @@ static inline void place_row_obj(void *p, s32 x, s32 y)
  * settings_row_stats` (`statPtr` is `(&self->currentStats)[rowIdx]`,
  * i.e. `currentStats` and `rowStats[0..3]` read as one contiguous
  * 5-element array - `RefreshSaveSlotSummaries`/`SummarizeProgress`,
- * `src/graphics/settings_menu2.c`, already establish `rowStats` as
+ * `src/save/save_menu_ui.c`, already establish `rowStats` as
  * this same array shape) - as plain decimal strings into
  * `self->rowObjA[rowIdx]`/`rowObjC[rowIdx]`/`rowObjB[rowIdx]`
  * respectively (each drawn via `gSmallFont`'s `record->slots[2]`
@@ -312,7 +312,7 @@ void DrawSaveSlotStats(struct save_menu *self, s32 label1, s32 label2, s32 rowId
     ICON_TEXT_CALL(gLargeFont, 2, buf);
 }
 
-/* An inlined copy of DrawEmptySlotLabel (src/graphics/settings_menu23.c): the
+/* An inlined copy of DrawEmptySlotLabel (src/save/save_menu_ui.c): the
  * row's highlighted/dimmed 0x25 glyph centred at (arg1 + 0x1d, arg2 + 0xc). */
 static inline void draw_row_mark(struct save_menu *self, s32 arg1, s32 arg2, u8 arg3)
 {
@@ -341,7 +341,7 @@ static inline void draw_row_mark(struct save_menu *self, s32 arg1, s32 arg2, u8 
 /* Per docs/rom_map.md's "narrowed down which screen overlay_ui is"
  * section: one of 4 settings rows, `handle`/`selectedIndex` from the
  * 6-wrapper-caller family (DrawSaveMenuConfirmDelete etc.,
- * src/graphics/settings_menu3.c). When `IsSaveSlotEmpty(handle, i)`
+ * src/save/save_menu_ui.c). When `IsSaveSlotEmpty(handle, i)`
  * reports row `i` selected, draws a highlighted numeric glyph
  * (label 0x25) centered at the row's fixed position; otherwise draws
  * the row's normal label pair via DrawSaveSlotStats (above in this file),
@@ -352,7 +352,7 @@ static inline void draw_row_mark(struct save_menu *self, s32 arg1, s32 arg2, u8 
  *
  * Once a NAKED transcription; it matches as plain C under both
  * compilers. The "selected" branch is an inlined copy of DrawEmptySlotLabel
- * (src/graphics/settings_menu23.c), `draw_row_mark` above. */
+ * (src/save/save_menu_ui.c), `draw_row_mark` above. */
 void DrawSaveSlots(struct save_menu *self, void *handle, s32 selectedIndex)
 {
     DRAW_ROW(0, 0x26, 0x21);

@@ -72,9 +72,9 @@ s32 gBrightnessFadeStep = 0;
 s32 gBrightnessFadeTimer = 0;
 u32 gSfxVoiceToggle = 0;
 
-/* Link cable (src/link/*.c, settings_menu*.c): gLinkSession is the
+/* Link cable (src/link/*.c, src/save/*.c): gLinkSession is the
  * session object the link IRQ handlers work on. gEepromNeedsInit is the
- * save code's (settings_menu8d.c): set until its first EEPROMConfigure. */
+ * save code's (save_data.c): set until its first EEPROMConfigure. */
 u8 gLinkSessionReset = 1;
 void *gLinkSession = NULL;
 u8 gEepromNeedsInit = 1;
@@ -148,7 +148,7 @@ s32 gUnknown_0300089C[6] = { 0x1555, 0x1155, 0xD55, 0x955, 0x555, 0x155 };
 void *gFlashBgPalette = (void *)(PLTT + 0x20);
 void *gFlashObjPalette = (void *)(PLTT + 0x340);
 
-/* level_graphics.c: the four OBJ sprite packages of
+/* title_screen_init.c: the four OBJ sprite packages of
  * src/data/level_gfx_17cff4.c. */
 const void *gTitleObjPackages[4] = {
     gTitleCrashObj,

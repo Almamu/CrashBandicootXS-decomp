@@ -10,16 +10,16 @@ Two unrelated things, plus one bigger, previously-only-partially-known
 object family:
 
 - **`SetHudCrateTotal`/`IncHudCrateTotal`** are a trivial setter/increment pair on
-  the same central blink-timer object `src/graphics/hud_blink.c` already
+  the same central blink-timer object `src/hud/hud_slide.c` already
   documents (`gHud`), extending its known field range to
-  `+0x28`. Contiguous with `hud_blink.c`'s existing functions, so they
+  `+0x28`. Contiguous with `hud_slide.c`'s existing functions, so they
   were appended there rather than getting a new file.
 - **`DestroyHud`** is a `struct hud_counter`'s `parts`-array destructor
   (see `include/hud.h`) - unrelated to everything else in this chunk,
   just adjacent in ROM.
 - **Everything else** (`FontDrawGlyph` through `FontSetTileBase`) operates on
   `struct bitmap_font` (`include/bitmap_font.h`), an object
-  `src/graphics/oam_count.c`/`src/text/wrapped_text.c` had already
+  `src/menus/power_dialog_draw.c`/`src/text/wrapped_text.c` had already
   partially characterized (an OAM icon positioner with `posX`/`posY`/
   `record` fields) but left most of its leading `unused_00`/`unused_10c`/
   `unused_118` byte ranges opaque. This chunk's functions read and write
@@ -55,8 +55,8 @@ object family:
 
 ## Matched (17 functions, full clean `make compare` passing)
 
-`src/graphics/hud_blink.c` (appended): `SetHudCrateTotal`, `IncHudCrateTotal`.
-`src/graphics/hud_icon_widget.c`: `DestroyHud`.
+`src/hud/hud_slide.c` (appended): `SetHudCrateTotal`, `IncHudCrateTotal`.
+`src/hud/hud_slide.c`: `DestroyHud`.
 `src/text/font_draw_chars.c`: `FontDrawChars`.
 `src/text/font_height.c`: `FontTextHeight`.
 `src/text/font.c`: `FontUploadTiles`, `FontSetPalette`,
@@ -126,12 +126,12 @@ difficulty in this codebase:
    spilling them across the loop's own `bl _call_via_r3`/`GetPaletteSlot`-
    style calls - the same class of gap already documented for
    `DrawPowerDialog`/`InitLanguageSelectGraphics` elsewhere in this codebase (see
-   `src/audio/counter_selector_setup.c`'s comment on the latter).
+   `src/frontend/language_select_setup.c`'s comment on the latter).
 
 ## Real gotchas found along the way (useful beyond this issue)
 
 1. **Trailing function-alignment padding is compiler-fill, not
-   zero-fill, unless forced.** `DestroyHud` (`hud_icon_widget.c`) and
+   zero-fill, unless forced.** `DestroyHud` (`hud_slide.c`) and
    `FontTextHeight` (`font_height.c`) both end 2 bytes short of a
    4-byte boundary, immediately followed by a raw `.s` fragment whose
    `.align 2, 0` directive (correctly) zero-fills the gap. Left alone,
@@ -168,7 +168,7 @@ difficulty in this codebase:
 - `include/bitmap_font.h` - `struct bitmap_font`'s `unused_00`/
   `unused_10c`/`unused_118` byte ranges filled in with real named
   fields, and the new `struct icon_glyph_metrics` type added.
-- `src/audio/counter_selector_setup.c` - `InitLanguageSelectGraphics`'s own comment
+- `src/frontend/language_select_setup.c` - `InitLanguageSelectGraphics`'s own comment
   documents the same r8/r9-register-pressure class of gap hit by
   `FontMeasureChars`/`FontMeasureText` here.
 - `src/util/aabb_setup.c` - `DestroyLargeFont`/`DestroySmallFont`

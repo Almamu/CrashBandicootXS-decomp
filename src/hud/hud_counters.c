@@ -81,9 +81,9 @@ static inline void SetPartPos(s32 x, s32 y, struct hud_digit_part *part)
     }
 
 /* The remaining three callees of the HUD stat-widget dispatcher
- * (`UpdateHud`, `hud_stat_widget.c`) - see `docs/matching/
+ * (`UpdateHud`, `hud.c`) - see `docs/matching/
  * issue-45-hud-stat-widget-dispatcher.md` for the family's full
- * background. Built with old_agbcc, like `hud_stat_widget2.c`.
+ * background. Built with old_agbcc, like `hud_boss_clock.c`.
  *
  * These were parked as NAKED on the belief that a second "r7 wrong-value
  * miscompile" broke every clamp site; under old_agbcc the plain clamp

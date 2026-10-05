@@ -35,7 +35,7 @@ All in `src/graphics/actor_anim.c`, in ROM order:
   function's embedded literal pointer resolves to the same
   `gActorVtable` symbol, and the surrounding unlink/free
   sequence is otherwise identical). Same doubly-linked-list unlink
-  convention already named in `src/audio/counter_selector.c`'s
+  convention already named in `src/frontend/language_select.c`'s
   `DestroyLogoActor` (a local `struct linked_node` with `+0x48`=prev,
   `+0x4c`=next, `+0x50`=state/vtable pointer): set `self+0x50` to the
   shared "dead" table `gActorVtable`, unlink `self` from its

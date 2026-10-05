@@ -30,7 +30,7 @@ and [graphics_loading.md](./graphics_loading.md).
   `GetEntityY`, `GetEntityX`, `SetEntityPixelPos`, `SetEntityPixelPosVec`,
   `SetEntityPos`, `SetEntityPosVec`, `SetEntityKind`, `GetEntityKind`,
   `GetEntityId`, `DestroyEntity`
-- `src/graphics/oam_count.c`: `AnimatePowerDialog`, `CommitPowerDialogFrame`, `DestroyPowerDialog`,
+- `src/menus/power_dialog_draw.c`: `AnimatePowerDialog`, `CommitPowerDialogFrame`, `DestroyPowerDialog`,
   `ShowTurboRunDialog`, `ShowTornadoSpinDialog`, `ShowDoubleJumpDialog`, `ShowSuperBodySlamDialog`, `GetProgressLives`,
   `CountPlatinumRelics`, `CountGoldRelics`, `CountSapphireRelics`, `CountRelics`, `CountGems`,
   `CountClearGems`, `CountCrystals`
@@ -115,7 +115,7 @@ and [graphics_loading.md](./graphics_loading.md).
   `UpdateCortexBoss` and `CreateCortexBossPlatformMover` (NAKED under agbcc) closed. See
   [docs/matching/issue-23-graphics.md](../matching/issue-23-graphics.md)
   and [docs/matching/old-agbcc-retry.md](../matching/old-agbcc-retry.md).
-- `src/graphics/actor_part_1b85c.c` (new file - GitHub issue #26):
+- `src/menus/level_select.c` (new file - GitHub issue #26):
   `sub_801B85C`-`GetCameraLeadOffset` (the player-follow child `InputCtrlStateStart`
   spawns), `SpawnLaunchPad`-`InitLaunchPad` (a 0x78-byte sprite subclass),
   `RunLevelSelect` (the modal level-select screen), `DestroyLevelSelect`,
@@ -125,7 +125,7 @@ and [graphics_loading.md](./graphics_loading.md).
   22 of the chunk's 25 functions as plain C; the other three are parked
   below. Built with `tools/agbcc/bin/old_agbcc`. See
   [docs/matching/issue-26-level-select-menu.md](../matching/issue-26-level-select-menu.md).
-- `src/graphics/actor_part_1cee0.c` (new file - GitHub issue #27, shared
+- `src/menus/level_select_pages.c` (new file - GitHub issue #27, shared
   structs in `include/level_menu.h`): all 25 functions of
   `LevelSelectTurnPage`-`InitZoomBg` as plain C - the rest of the level-select
   screen: the page-turn animation `LevelSelectTurnPage` and its Down/Up handlers
@@ -161,26 +161,26 @@ and [graphics_loading.md](./graphics_loading.md).
   [docs/matching/issue-25-level-objects.md](../matching/issue-25-level-objects.md).
 - GitHub issues #28/#29 (0x0801DA38-0x0801E578, shared structs in
   `include/level_select_parts.h`, both files built with `old_agbcc`):
-  `src/graphics/actor_part_1da38.c` (`DestroyZoomBg`-`DestroyLevelSelectEntry`, all
+  `src/menus/level_select_widgets.c` (`DestroyZoomBg`-`DestroyLevelSelectEntry`, all
   25) - the level-select screen's zooming BG2 picture (`struct
   zoom_bg`: destructor, state machine, affine draw/commit, state
   queries, twinkle sprites) and the level entry's methods (`struct
   level_item`, method table `gLevelSelectEntryVtable`);
-  `src/graphics/actor_part_1dfec.c` (`CreateLevelSelectEntry`-`DestroyLevelSelectCursor`, all
+  `src/menus/level_select_widgets.c` (`CreateLevelSelectEntry`-`DestroyLevelSelectCursor`, all
   16) - the level entry's constructor and the cursor panel (`struct
   cursor_panel`: Bresenham glide, idle animation cycle, affine OBJ
   grow/shrink). `IsLevelSelectCursorHidden`, `IsLevelSelectCursorGrowing` and `MoveLevelSelectCursorTo` are
   UNUSED. All real C. See
   [docs/matching/issue-28-29-level-select-parts.md](../matching/issue-28-29-level-select-parts.md).
-- **Near-miss polish pass:** `LevelSelectLoop` (`actor_part_1b85c.c`,
+- **Near-miss polish pass:** `LevelSelectLoop` (`level_select.c`,
   level-select main loop) promoted from NAKED to real C under old_agbcc.
   See [near-miss-polish.md](../matching/near-miss-polish.md).
 - **Issue #24/#26 NAKED retry:** `SpawnDingodileShark` (`actor_part_1967c.c`,
-  floor-part spawner) and `InitLevelSelect` (`actor_part_1b85c.c`,
+  floor-part spawner) and `InitLevelSelect` (`level_select.c`,
   level-select constructor) promoted from NAKED to real C, both under
   old_agbcc. See
   [docs/matching/issue-24-26-12-naked-retry.md](../matching/issue-24-26-12-naked-retry.md).
-- **Third near-miss sweep:** `LoadLevelSelectRecord` (`actor_part_1b85c.c`,
+- **Third near-miss sweep:** `LoadLevelSelectRecord` (`level_select.c`,
   level-select record loader) promoted from NAKED to real C under
   old_agbcc: the ROM's stack-spilled second copy of the record pointer
   is a separate local that `info` copies. See
@@ -226,7 +226,7 @@ derivation of each, and `docs/matching.md`'s original entries ("The
 `0x080014A4`-`0x08001624` fade/screen-mode cluster" and "Parked, not
 matched: `DrawWrappedText`") for the pre-NAKED gap analysis.
 
-- **`DrawSpritePieces` is now matched as real C (split into `src/gfx/sprite_pieces.c`, old_agbcc; see docs/matching/strag1-naked-retry.md); `DrawPowerDialog` is now matched as real C too (see docs/matching/strag3-naked-retry.md); entry kept for history.** **`DrawPowerDialog`** (`src/graphics/oam_count.c`) and **`DrawSpritePieces`**
+- **`DrawSpritePieces` is now matched as real C (split into `src/gfx/sprite_pieces.c`, old_agbcc; see docs/matching/strag1-naked-retry.md); `DrawPowerDialog` is now matched as real C too (see docs/matching/strag3-naked-retry.md); entry kept for history.** **`DrawPowerDialog`** (`src/menus/power_dialog_draw.c`) and **`DrawSpritePieces`**
   (`src/gfx/graphics.c`) - this project's original reference cases
   for the register-allocation-gap class documented above (several
   `overlay_ui`/`actor` functions elsewhere still hit the same class,

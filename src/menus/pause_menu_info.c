@@ -29,7 +29,7 @@ extern void InitPauseTimeTrialPage(struct pause_menu *self);
  * 256` into `musicVolume`/`soundVolume`, then " <NN%>"-formatted into
  * `musicVolumeText`/`soundVolumeText`), then builds the five icon-widget sub-groups in
  * order (`InitPauseCrystalsPage`/`AE8`/`B80`/`C58`/`D44`, all already matched or
- * parked - src/graphics/settings_menu6.c). */
+ * parked - src/menus/pause_menu_pages_init.c). */
 void InitPauseMenuInfo(struct pause_menu *self)
 {
     s32 levelIdx = GetCurrentLevel(gLevelState);

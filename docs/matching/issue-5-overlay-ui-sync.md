@@ -23,7 +23,7 @@ types, both now named and documented in `include/settings_sync.h`:
 - **`struct settings_sync_pump`** (0x220 bytes) - a transient SIO
   send/receive envelope wrapping a `save_data` copy.
   Allocated per "connecting..." spinner-dialog session
-  (`LinkExchangeSaveData`, `src/graphics/settings_menu.c`, parked) via
+  (`LinkExchangeSaveData`, `src/save/save_menu_draw.c`, parked) via
   `SetSaveTransferRecord`/`ResetSaveTransfer` and torn down with it.
   `tmpl`/`cursor` stream a record's bytes out to the SIO session's
   ring buffer (`SendSaveTransferChunk`); `data`/`writePtr` receive the remote
@@ -53,7 +53,7 @@ settling at 0.
 `InitSaveMenu` (constructor) and `DestroySaveMenu` (destructor) turned out
 to double as the constructor/destructor for **both** the composite
 pause/options screen *and* the "connecting..." spinner dialog
-(`OpenSaveMenu`/`CloseSaveMenu`, `src/graphics/settings_menu4.c`,
+(`OpenSaveMenu`/`CloseSaveMenu`, `src/save/save_menu.c`,
 already matched) - both allocate a `struct save_menu`
 (0xe4 bytes) and build the exact same `field_8c`/`field_90` pair, and
 `RunSaveMenu`'s blocking modal input loop (used only by the spinner
@@ -68,15 +68,15 @@ picked up two more named fields from this chunk: `field_20` (a
 
 All six hit the same unresolved gcc-2.9 scratch-register
 nondeterminism this project has documented at length already
-(`DrawPowerDialog`/`src/graphics/oam_count.c`,
-`DrawSaveMenuTitle`/`src/graphics/settings_menu.c`) - every load/store,
+(`DrawPowerDialog`/`src/menus/power_dialog_draw.c`,
+`DrawSaveMenuTitle`/`src/save/save_menu_draw.c`) - every load/store,
 branch and call is semantically confirmed, real bytes stay in the
 `asm/code_3_1_10_3_*.s` fragments listed below wrapped
 `.if NON_MATCHING == 0`, C reconstructions stay in-tree under
 `#if NON_MATCHING`:
 
 - **`ClearSaveFlags`** (`asm/code_3_1_10_3_2d0c.s`, C in
-  `src/graphics/settings_menu8.c`) - the bitmask-clear accessor. The
+  `src/save/save_data.c`) - the bitmask-clear accessor. The
   ROM keeps a redundant copy of the bit-cleared result through a
   second register (load -> `bics` -> copy -> store) that no variation
   tried here (separate result variable, register pins on the
@@ -87,7 +87,7 @@ branch and call is semantically confirmed, real bytes stay in the
   `register ... asm("r3")`/`asm("r1")` pins - only the AND-NOT shape
   resists.
 - **`SendSaveTransferChunk`**, **`ReceiveSaveTransferChunk`**, **`PollSaveTransfer`**
-  (`asm/code_3_1_10_3_2d44.s`, C in `src/graphics/settings_menu8a2.c`)
+  (`asm/code_3_1_10_3_2d44.s`, C in `src/save/save_transfer.c`)
   - the SIO send/receive pump trio. Every technique this project
   documents was tried (down-counting `for`/`do-while` loops matching
   the ROM's `n != -1` sentinel idiom, swapping the wrap/non-wrap
@@ -98,15 +98,15 @@ branch and call is semantically confirmed, real bytes stay in the
   but never byte-for-byte content; `ReceiveSaveTransferChunk`/`PollSaveTransfer` didn't
   converge on size either.
 - **`SaveGameToSlot`** (`asm/code_3_1_10_3_3698.s`, C in
-  `src/graphics/settings_menu8b.c`) - the shared "commit or refresh
+  `src/save/save_menu_input.c`) - the shared "commit or refresh
   row" step nine of this chunk's input handlers call into. The
   `handleAddr`-cached-pointer pattern that fixed the same class of gap
   in `InitSaveMenu`/`DestroySaveMenu`/`SaveMenuInput` below got this one to
   the ROM's exact byte size too, but not exact content.
 - **`DrawSaveMenuMain`** (`asm/code_3_1_10_3_3a60.s`, C in
-  `src/graphics/settings_menu8c.c`) - the state-select label list
+  `src/save/save_menu_input.c`) - the state-select label list
   draw. Same measure-then-draw icon shape as `DrawSaveMenuTitle`
-  (`src/graphics/settings_menu.c`, already parked) - a cached
+  (`src/save/save_menu_draw.c`, already parked) - a cached
   `&gSmallFont` address pin (the same technique that worked for
   the constructor/destructor/dispatcher below) collided with a
   compiler-hoisted constant landing in the same register as the
@@ -118,11 +118,11 @@ branch and call is semantically confirmed, real bytes stay in the
 
 - `ResetSaveData`, `IsSaveSlotEmpty`, `TestSaveFlags` - record init (DMA16
   zero-fill + marker stamp + checksum refresh) and two flag-test
-  accessors (`src/graphics/settings_menu8.c`).
+  accessors (`src/save/save_data.c`).
 - `SetSaveFlags` - the bitmask-set accessor, needed an explicit
   `asm(".align 2, 0")` after it: GAS's default Thumb padding filler is
   the `mov r8, r8` NOP (`0x46c0`), but the ROM pads this function's
-  tail with a zero halfword instead (`src/graphics/settings_menu8a2.c`).
+  tail with a zero halfword instead (`src/save/save_transfer.c`).
 - `SetSaveTransferRecord`, `GetSaveTransferData`, `ResetSaveTransfer` - the pump's
   template-attach/data-pointer/reset accessors.
 - `RunSaveMenu` - the spinner dialog's blocking modal input loop.
@@ -135,7 +135,7 @@ branch and call is semantically confirmed, real bytes stay in the
   instead of assigning to a local first) to match the ROM's direct
   `ldr r0, [r4]` reload pattern, and a call site for the real
   `EndLinkSaveTransfer(void)` (matched elsewhere, in
-  `src/graphics/settings_menu3.c`) that still passes `self` in r0 -
+  `src/save/save_menu_ui.c`) that still passes `self` in r0 -
   the ROM's caller sets it up even though the callee never reads it.
 - `InitSaveMenu`, `DestroySaveMenu`, `SaveMenuInput` - the shared
   constructor/destructor/per-frame-dispatcher for both the composite
@@ -165,7 +165,7 @@ branch and call is semantically confirmed, real bytes stay in the
 
 - `include/settings_sync.h` (new) - `struct save_data`,
   `struct settings_sync_pump`, shared across
-  `settings_menu8.c`/`settings_menu8a2.c`/`settings_menu8b.c`.
+  `save_data.c`/`save_transfer.c`/`save_menu_input.c`.
 - `include/save_menu.h` - added `field_8` (u8, "input loop
   should exit" flag), `field_20` (u8, "result ready" flag),
   `currentStats` (a `settings_row_stats` at 0x28-0x3b, replacing
@@ -185,7 +185,7 @@ still parked. This pass matched 4 of those 6 (`ClearSaveFlags`,
 technique gets around.
 
 - **`ClearSaveFlags`** (bitmask-clear accessor, `src/graphics/
-  settings_menu8.c`) - the redundant register-to-register copy the
+  save_data.c`) - the redundant register-to-register copy the
   first pass's every plain-C attempt collapsed away turned out to be
   forceable with a single `asm volatile("add %0, %1, #0" : "=r"(v) :
   "r"(loaded))` between the `bics`-equivalent computation and the
@@ -205,7 +205,7 @@ technique gets around.
   pass's other inline-asm blocks.
 
 - **`SaveGameToSlot`** (shared "commit or refresh row" step, `src/
-  graphics/settings_menu8b.c`) - the previous pass got this to the
+  save/save_menu_input.c`) - the previous pass got this to the
   ROM's exact byte *size* with a single cached `handleAddr`, but the
   real gap was argument-evaluation order: `MemCopy32(buf + 0x70,
   PackSaveData(*c0Addr), 0x68)` lets this compiler compute `buf + 0x70`
@@ -222,7 +222,7 @@ technique gets around.
   (`handleAddr2`) rather than reusing `handleAddr` reproduces that.
 
 - **`DrawSaveMenuMain`** (state-select label list draw, `src/graphics/
-  settings_menu8c.c`) - this one resisted every plain-C register-pin
+  save_menu_input.c`) - this one resisted every plain-C register-pin
   combination tried across both passes: a loop-invariant constant
   (`mgr->record`'s `0x130` field offset, and separately
   `&gSaveMenuOptions[0]`) kept getting hoisted out of the loop into
@@ -260,7 +260,7 @@ technique gets around.
   in the ROM's early slot.
 
 - **`PollSaveTransfer`** (SIO pump per-frame poll, `src/graphics/
-  settings_menu8a3.c`, new file) - matched the same way as
+  save_transfer_poll.c`, new file) - matched the same way as
   `DrawSaveMenuMain` above, as one big `asm volatile` transcription of the
   ROM's instructions (this one genuinely doesn't need any real C
   control flow at all, since it has no loop). The output register
@@ -272,15 +272,15 @@ technique gets around.
   through `%0` (which resolves to that same `r0`) instead of a literal
   `r0`, and no separate closing move needed since the ROM's own
   `pop {r4, r5, r6}; pop {r1}; bx r1` never has one either. Needed its
-  own new file (`settings_menu8a3.c`) rather than joining
-  `settings_menu8b.c`/`settings_menu8a2.c` because its real address
+  own new file (`save_transfer_poll.c`) rather than joining
+  `save_menu_input.c`/`save_transfer.c` because its real address
   (`0x08002EFC`) sits between the still-parked `SendSaveTransferChunk`/
   `ReceiveSaveTransferChunk` (staying in `asm/code_3_1_10_3_2d44.s`) and
-  `settings_menu8b.c`'s first function - the usual "one `.c` file per
+  `save_menu_input.c`'s first function - the usual "one `.c` file per
   contiguous ROM region" rule from `docs/workflow.md`.
 
 - **`SendSaveTransferChunk`/`ReceiveSaveTransferChunk`** (SIO pump TX/RX drain-fill,
-  `src/graphics/settings_menu8a2.c`) - still parked. Both need `r7` as
+  `src/save/save_transfer.c`) - still parked. Both need `r7` as
   a genuinely allocated scratch register (matching the ROM's own
   `sendLen`/sentinel usage there), and this exact agbcc build *never*
   includes `r7` in a function's automatic callee-save push/pop,
@@ -318,7 +318,7 @@ byte-verified" section, and the smaller worked examples in
 `lib/libgcc/lib1funcs.s`'s `__div0` and `lib/gax/src/gax_swi.c`'s
 `GaxHuffUnComp`). Both functions were already fully understood
 semantically - the parked C reconstruction that used to sit in
-`src/graphics/settings_menu8a2.c` (now replaced) and the walkthrough
+`src/save/save_transfer.c` (now replaced) and the walkthrough
 above are that derivation - so this was a pure transcription pass, not
 a fresh reverse-engineering one.
 
@@ -343,7 +343,7 @@ merging them into one, matching the ROM's own pool placement byte for
 byte.
 
 Verified via the standard loop: an isolated compile+assemble of
-`src/graphics/settings_menu8a2.c` was first disassembled and eyeballed
+`src/save/save_transfer.c` was first disassembled and eyeballed
 instruction-by-instruction against the original ROM disassembly (still
 just a diagnostic, per `docs/workflow.md` step 3 - not proof), then the
 whole `asm/code_3_1_10_3_2d44.s` file (which held nothing but these two

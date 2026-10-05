@@ -10,7 +10,7 @@ function that had no draft now has one.
 | Function | File | Compiler | What it took |
 |---|---|---|---|
 | `PlayAmbientSfx` | `src/audio/audio.c` | both | Written fresh as C, it matched on the first compile. The fifth argument is a one-byte struct passed by value, which gives the `add rX, sp, #0x14; ldrb` read. The volume is read as `gSfxTable[id].baseVolume`. The old note said the ROM "recomputes" this address where C would CSE it. In fact `base + 8 + offset` is simply how gcc computes a non-zero field offset, so there was no CSE gap. |
-| `DrawYesNoPrompt` | `src/graphics/settings_menu.c` (old_agbcc object) | both | The r8/sb swap is a global-alloc priority tie. The 0x87 constant ranks 8/112 = 0.0714 and the 0x130 offset ranks 14/200 = 0.070, so the constant gets r8 first. `y` is now pinned to r9. It is set inside a block, after `x = 0xa0 - w` and after the manager pointer is loaded into a local, which keeps the ROM's `ldr r4, [r7]` ahead of `mov sb, r2`. The unpinned allocator then gives 0x130 r8. |
+| `DrawYesNoPrompt` | `src/save/save_menu_draw.c` (old_agbcc object) | both | The r8/sb swap is a global-alloc priority tie. The 0x87 constant ranks 8/112 = 0.0714 and the 0x130 offset ranks 14/200 = 0.070, so the constant gets r8 first. `y` is now pinned to r9. It is set inside a block, after `x = 0xa0 - w` and after the manager pointer is loaded into a local, which keeps the ROM's `ldr r4, [r7]` ahead of `mov sb, r2`. The unpinned allocator then gives 0x130 r8. |
 
 A pre-existing `initialization makes pointer from integer` warning in
 `DisableMusicVCountIrq` (same file as `PlayAmbientSfx`) is fixed with a `(vu8 *)`
@@ -30,7 +30,7 @@ cast. The code is unchanged.
 | `InitSaveMenuIcons` (raw) | 5 | 5 | A loop dump explains the pre-header order. loop.c's first pass moves four invariants: the `gSpriteBankSet` address, 15, and the QI and SI -16 of the nibble insert. Each move lowers the threshold by 3, so the 0x80 (84 insns of 117) is "not desirable" until the rerun, after strength reduction has emitted the pointer copies. The ROM moved it in pass 1. Nibble spellings, `field_3c` store forms, dropping `Opaque`, loop shapes, `-fmove-all-movables` and `-freduce-all-givs` don't fix it. |
 | `RunPauseMenu` | 54 | 54 | The 0x12c offset (4 refs / 36 insns) outranks the icon-manager address pseudos, so it takes a low register. The ROM leaves it without a register and rematerializes it. Pinning the three global addresses to r6/r4/r5 then gives 0x12c r8 (80 halfwords). |
 | `PauseMenuLoop` | 14 (old) | 5 (old) | `pressed` pinned to r1 keeps the word load plus `lsr #16`; unpinned, combine turns it into `ldrh [keys+2]`. `key` pinned to r3, with the pressed test spelled using the literal, gives the ROM's two `mov #K`. Left: the ROM computes the fade pointer (self+0xcc) before `disp`. A `fade` local changes the fade loops. |
-| `DrawPauseMenu` | 20 | 20 | The two computed-x positions: the ROM puts x in r3 and y in r2. None of an x local, setter argument orders, blocks, direct stores, pins, or the settings_menu.c macro shape changed it. |
+| `DrawPauseMenu` | 20 | 20 | The two computed-x positions: the ROM puts x in r3 and y in r2. None of an x local, setter argument orders, blocks, direct stores, pins, or the save_menu_draw.c macro shape changed it. |
 | `DrawPauseFraction` | 73 | 73 | Not re-attempted beyond triage. The ROM derives 0x114 as `r7 + 4` in the last reposition only. |
 
 ## Techniques worth keeping

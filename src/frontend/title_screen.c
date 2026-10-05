@@ -7,7 +7,7 @@
 #include "logo_screen.h"
 
 /* Middle part of GitHub issue #65's chunk (0x08035D1C-0x0803686C), split
- * off `graphics_loading_35780.c` at `TitleScreenCheatInput` in the issues #64/#65
+ * off `title_screen_init.c` at `TitleScreenCheatInput` in the issues #64/#65
  * second NAKED retry. Both halves are old_agbcc code (see the Makefile's
  * OLD_AGBCC_OBJS), but only this one is built with -fno-strength-reduce
  * (NO_STRENGTH_REDUCE_OBJS): `InitVvLogoPieces` keeps its up-counting loop
@@ -15,7 +15,7 @@
  * half) only matches with it (its inner loop is written up-counting and
  * strength reduction reverses it). The shared declarations below are
  * copied from the first half. Everything from `DrawVvLogoPieces` on lives in
- * `graphics_loading_3686c.c`, which needs strength reduction on. See
+ * `company_logos.c`, which needs strength reduction on. See
  * docs/matching/issue-64-65-naked-retry-2.md and
  * docs/matching/sr65-naked-retry.md. */
 
@@ -272,7 +272,7 @@ static inline s32 *DeltaBAt(u32 *self, s32 stride)
  * held/pressed pair into a local struct first is what makes the ROM
  * build the 0x100 mask in r4 and copy it to r1. */
 /* The title-screen object's cheat-code hash word (see
- * graphics_loading_35780.c for the rest of that raw `u32 *` object). */
+ * title_screen_init.c for the rest of that raw `u32 *` object). */
 struct level_scratch {
     u8 unk_000[0x210];
     u32 cheatHash;      // 0x210
@@ -494,7 +494,7 @@ void CommitTitleScreenFrame(u32 *self)
  * `0xf0` px to its right), positioning them from the icon-manager's own
  * anchor record. The two `_call_via_r2` calls are
  * virtual calls through the icon manager's `record->slots[0]`/`[2]`
- * entries (same shape as `actor_part_1b85c.c`). */
+ * entries (same shape as `level_select.c`). */
 
 void DrawTitleMenuItem(u32 *self, s32 text, s32 variant)
 {
