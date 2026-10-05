@@ -70,7 +70,7 @@ struct sprite
     u8 unk_3E[2];
 };
 
-COMPILE_TIME_ASSERT(sizeof(struct sprite) == 0x40);
+COMPILE_TIME_ASSERT(level_menu_h, sizeof(struct sprite) == 0x40);
 
 struct xy_pair
 {
@@ -181,7 +181,7 @@ struct page_bg
     u16 vofs;           // 0x26 - BG1VOFS
 };
 
-COMPILE_TIME_ASSERT(sizeof(struct page_bg) == 0x28);
+COMPILE_TIME_ASSERT(level_menu_h, sizeof(struct page_bg) == 0x28);
 
 /* One twinkle sprite at the picture's corners, handed to
  * RandomizeZoomBgTwinkle (`struct twinkle` in level_select_widgets.c: the
@@ -232,7 +232,7 @@ struct zoom_bg
     struct twinkle twinkles[4]; // 0x5C
 };
 
-COMPILE_TIME_ASSERT(sizeof(struct zoom_bg) == 0x8C);
+COMPILE_TIME_ASSERT(level_menu_h, sizeof(struct zoom_bg) == 0x8C);
 
 /* The level-select screen object (0xAC bytes, InitLevelSelect). */
 struct level_menu
@@ -267,6 +267,6 @@ struct level_menu
     union dispcnt dispcnt;      // 0xA8 - REG_DISPCNT
 };
 
-COMPILE_TIME_ASSERT(sizeof(struct level_menu) == 0xAC);
+COMPILE_TIME_ASSERT(level_menu_h, sizeof(struct level_menu) == 0xAC);
 
 #endif /* GUARD_LEVEL_MENU_H */

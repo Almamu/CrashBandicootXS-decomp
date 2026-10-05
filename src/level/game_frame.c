@@ -4,6 +4,7 @@
 #include "hud.h"
 #include "save.h"
 #include "frontend.h"
+#include "util.h"
 
 /* UpdateGameFrame - the main per-frame game-loop driver at the head of
  * the UpdateGameFrame-MainLoop cluster (GitHub issue #34,
@@ -160,7 +161,6 @@ extern void DestroyEntityFlags(void *bitmap, s32 arg1);
 extern void *InitEntityFlags(void *mem);
 extern void EndBonusRound(struct level_state *self, u8 arg1);
 extern void EndGemPath(struct level_state *self, u8 arg1);
-extern s32 GetLives(struct level_state *self);
 extern void RestoreCheckpoint(struct level_state *self);
 extern s32 GetWumpa(struct level_state *self);
 extern s32 GetCrateCount(struct level_state *self);

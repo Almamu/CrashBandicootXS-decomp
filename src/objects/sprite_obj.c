@@ -3,17 +3,8 @@
 #include "vram_pool.h"
 #include "gfx_part.h"
 #include "sprite_bank.h"
-
-struct aabb {
-    s32 field_0;
-    s32 field_4;
-    s32 field_8;
-    s32 field_c;
-};
-
-extern void SetAabbPos(void *buf, s32 arg1, s32 arg2);
-extern void SetAabbSize(void *buf, s32 arg1, s32 arg2);
-extern u8 AabbOverlaps(void *buf1, void *buf2);
+#include "aabb.h"
+#include "util.h"
 
 /* Builds `part`'s AABB (same keyframe-table shape/record layout as
  * GetSpriteHitbox, inlined directly here rather than calling it - this
@@ -63,10 +54,10 @@ s32 SpriteHitboxOverlaps(struct actor *part, void *region)
     SetAabbSize(&buf_, w, h);
 
     if (mirrorX) {
-        buf_.field_0 = xpos * 2 - (buf_.field_0 + buf_.field_8);
+        buf_.x = xpos * 2 - (buf_.x + buf_.w);
     }
     if (mirrorY) {
-        buf_.field_4 = ypos * 2 - (buf_.field_4 + buf_.field_c);
+        buf_.y = ypos * 2 - (buf_.y + buf_.h);
     }
 
     return (u8)AabbOverlaps(&buf_, region);

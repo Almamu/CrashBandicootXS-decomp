@@ -1,5 +1,6 @@
 #include "core.h"
 #include "memory.h"
+#include "util.h"
 
 /* Sits right after the parked CommitBlendRegs (asm/code_3_1_9.s) and
  * before the still-raw pause-menu/SIO cluster. */
@@ -42,13 +43,6 @@ void CommitBlendRegs(void)
     *(vu16 *)bldReg = masked;
 }
 
-struct aabb {
-    s32 field_0;
-    s32 field_4;
-    s32 field_8;
-    s32 field_c;
-};
-
 /* Axis-aligned box overlap test, X-axis edges inclusive (touching
  * counts as overlap) - the `PlayerTouchesBox`-family collision checks in
  * the sprite-object files use the stricter `AabbOverlaps` below instead. */
@@ -56,16 +50,16 @@ u8 AabbOverlapsInclusiveX(struct aabb *a, struct aabb *b)
 {
     u8 result = 0;
 
-    if (a->field_8 > 0 && b->field_8 > 0) {
-        s32 aMaxX = a->field_0 + a->field_8;
-        s32 bMaxX = b->field_0 + b->field_8;
+    if (a->w > 0 && b->w > 0) {
+        s32 aMaxX = a->x + a->w;
+        s32 bMaxX = b->x + b->w;
 
-        if (a->field_0 <= bMaxX && b->field_0 <= aMaxX) {
-            s32 aMaxY = a->field_4 + a->field_c;
-            s32 bMaxY = b->field_4 + b->field_c;
+        if (a->x <= bMaxX && b->x <= aMaxX) {
+            s32 aMaxY = a->y + a->h;
+            s32 bMaxY = b->y + b->h;
             u8 temp = 0;
 
-            if (a->field_4 < bMaxY && b->field_4 < aMaxY) {
+            if (a->y < bMaxY && b->y < aMaxY) {
                 temp = 1;
             }
             result = temp;
@@ -83,16 +77,16 @@ u8 AabbOverlaps(struct aabb *a, struct aabb *b)
 {
     u8 result = 0;
 
-    if (a->field_8 > 0 && b->field_8 > 0) {
-        s32 aMaxX = a->field_0 + a->field_8;
-        s32 bMaxX = b->field_0 + b->field_8;
+    if (a->w > 0 && b->w > 0) {
+        s32 aMaxX = a->x + a->w;
+        s32 bMaxX = b->x + b->w;
 
-        if (a->field_0 < bMaxX && b->field_0 < aMaxX) {
-            s32 aMaxY = a->field_4 + a->field_c;
-            s32 bMaxY = b->field_4 + b->field_c;
+        if (a->x < bMaxX && b->x < aMaxX) {
+            s32 aMaxY = a->y + a->h;
+            s32 bMaxY = b->y + b->h;
             u8 temp = 0;
 
-            if (a->field_4 < bMaxY && b->field_4 < aMaxY) {
+            if (a->y < bMaxY && b->y < aMaxY) {
                 temp = 1;
             }
             result = temp;

@@ -8,11 +8,13 @@
  * (src/util/aabb_setup.c) fill one, AabbOverlaps/AabbOverlapsInclusiveX
  * (src/util/aabb.c) test two for overlap, and the text renderer
  * (DrawWrappedText/DrawWrappedTextInBox, include/text.h) uses one as the
- * text rectangle.
+ * text rectangle. GetSpriteHitbox and the other sprite box getters
+ * return one, and the collision passes take it by value.
  *
- * Several .c files still define their own copy of this struct; they
- * move to this header in their subsystem's header batch
- * (docs/headers_plan.md). */
+ * The local copies (`part_aabb` in box_part.h, `hop_box`, `gfx_box`,
+ * `box`, `ab_box`, `fx_box`, `hit_box` and eight `struct aabb`s with
+ * `field_0`..`field_c` or x/y/w/h) were merged here (docs/headers_plan.md,
+ * batch 4). */
 struct aabb
 {
     s32 x;

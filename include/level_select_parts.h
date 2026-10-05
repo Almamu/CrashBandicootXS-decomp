@@ -58,7 +58,7 @@ struct sprite
     u8 unk_39[7];
 };
 
-COMPILE_TIME_ASSERT(sizeof(struct sprite) == 0x40);
+COMPILE_TIME_ASSERT(level_select_parts_h, sizeof(struct sprite) == 0x40);
 
 /* One level entry on the level-select page (0x14 bytes, constructor
  * CreateLevelSelectEntry, destructor DestroyLevelSelectEntry, method table gLevelSelectEntryVtable).
@@ -91,7 +91,6 @@ extern void DrawSpriteWithOffset(struct sprite *part, s32 dx, s32 dy);
 extern void AdvanceSpriteAnim(struct sprite *part);
 extern void UnlockPalette(void *cache, u8 record);
 extern void LockPalette(void *cache, u8 record);
-extern s32 RandRange(s32 max);
 extern void LoadTaggedAsset(void *asset, void *dest);
 
 typedef void (*dtor_fn)(void *self, s32 flags);

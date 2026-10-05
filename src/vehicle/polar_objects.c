@@ -1,5 +1,7 @@
 #include "core.h"
 #include "actor_self.h"
+#include "util.h"
+#include <libgcc.h>
 
 /* Continues the `InitActorPart`/`gActorList`-rooted "self" object
  * family (state at `self+0x28`, table-index/"kind" at `self+0xc`, an
@@ -29,8 +31,6 @@ extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void InitActorPart(void *self, s32 a, s32 b, s32 c, s32 d);
 extern s32 GetAnimFrameBaseOffset(void *self);
 extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
-extern s32 __divsi3(s32 a, s32 b);
-extern s32 RandRange(s32 max);
 extern s32 SetMaskLevel(void *arg0, s32 arg1);
 extern s32 QueueVramDmaTransfer(void *src, void *dest, u16 size, u16 unit);
 extern s32 sub_802A570(s32 idx);

@@ -3,6 +3,7 @@
 #include "sprite_bank.h"
 #include "text.h"
 #include "pickups.h"
+#include "util.h"
 
 extern void *gLevelState;
 extern void *gEntityFlags;
@@ -334,7 +335,6 @@ void CreateEntitySpawner(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     SetEntitySpawnerTable(obj, gEntitySpawnFuncs, 0x5c);
 }
 
-extern void *IwramAlloc(u32 size);
 extern struct AudioContext *InitAudioContext(struct AudioContext *self);
 extern void EnableMusicVCountIrq(void);
 extern void SetSfxVolume(void *arg0, u16 arg1);

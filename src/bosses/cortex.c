@@ -1,6 +1,8 @@
 #include "core.h"
 #include "mover_new.h"
 #include "gfx_part.h"
+#include "util.h"
+#include <libgcc.h>
 
 /* GitHub issue #23: 0x080188D0-0x0801967C, formerly
  * asm/code_3_2_17_188d0.s (details in docs/matching/issue-23-graphics.md).
@@ -160,14 +162,6 @@ struct gfx_kind_ctrl
     s32 kind;                   // 0x10
 };
 
-struct gfx_box
-{
-    s32 x;
-    s32 y;
-    s32 w;
-    s32 h;
-};
-
 struct gfx_player
 {
     s32 x;                      // 0x00
@@ -227,14 +221,11 @@ extern void AddToPartList(void *manager, void *value);
 extern s32 _call_via_r2(void *self, s32 arg, void *fn);
 extern s32 _call_via_r3(void *self, void *arg1, s32 arg2, void *fn);
 extern void _call_via_r4(void *arg0, s32 arg1, s32 arg2, s32 arg3);
-extern s32 __divsi3(s32 dividend, s32 divisor);
-extern s32 __udivsi3(s32 value, s32 divisor);
 extern u8 HasTurboRun(void *self);
 extern void RequestRoomExit(void);
 extern void *GetSpriteBodyBox(void *dest, void *pt);
 extern void *GetSpriteAttackBox(void *dest, void *pt);
 extern void *GetSpriteHitbox(void *dest, void *pt);
-extern u8 AabbOverlaps(void *buf1, void *buf2);
 extern void DestroyPlatformMover(void *self, s32 flags);
 extern void *CreateCortexCannonCtrl(void *mem);
 extern void *CreateCortexTargetCtrl(void *mem, void *owner);
@@ -977,9 +968,9 @@ void FireCortexShot(struct gfx_mover *self, struct gfx_part *partArg, s32 kindAr
 void UpdateCortexShot(struct gfx_hit_ctrl *self, struct gfx_part *partArg)
 {
     struct gfx_part *part = partArg;
-    struct gfx_box a;
-    struct gfx_box b;
-    struct gfx_box c;
+    struct aabb a;
+    struct aabb b;
+    struct aabb c;
 
     if (part->kind == 1)
     {

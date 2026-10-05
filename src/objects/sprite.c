@@ -1,6 +1,7 @@
 #include "core.h"
 #include "actor.h"
 #include "box_part.h"
+#include "util.h"
 
 extern void WorldToScreen(void *arg0, s32 arg1, s32 arg2, s32 *arg3, s32 *arg4);
 extern void DrawSpritePieces(void *unused, void *part, s32 *posPtr);
@@ -112,16 +113,6 @@ void ResetSpriteObj(void *arg0)
         *p2 = 1;
     }
 }
-
-struct aabb {
-    s32 x;
-    s32 y;
-    s32 w;
-    s32 h;
-};
-
-extern void SetAabbPos(struct aabb *buf, s32 x, s32 y);
-extern void SetAabbSize(struct aabb *buf, s32 w, s32 h);
 
 /* Builds the AABB (via the shared SetAabbPos set-position/SetAabbSize
  * set-size pair) for `part`'s current animation keyframe, whose box sits
@@ -322,7 +313,6 @@ void *GetSpriteBodyBox(void *dest, void *pt)
     return dest;
 }
 
-extern u8 AabbOverlaps(void *buf1, void *buf2);
 extern void _call_via_r4(void *arg0, s32 arg1, s32 arg2, s32 arg3);
 extern void *SpawnEffectPart(void *pool, s32 arg1, s32 kind, s32 x, s32 y, s32 arg5);
 extern struct actor *gPlayer;
@@ -504,7 +494,7 @@ s32 IsSpriteObjOnScreen(struct box_part *part)
 /* Same `part+0x25`/`part+0xd` bit-2 fast-path shape as IsSpriteObjOnScreen
  * above, but the real check is an AABB-overlap test: `part`'s own box
  * (via GetSpriteBounds) against `region`'s `{s32 x, y, w, h}`. */
-s32 SpriteObjOverlapsRect(struct actor *part, struct part_aabb *region)
+s32 SpriteObjOverlapsRect(struct actor *part, struct aabb *region)
 {
     register s32 earlyResult asm("r3") = 0;
 

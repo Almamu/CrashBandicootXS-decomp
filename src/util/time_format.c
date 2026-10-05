@@ -1,10 +1,10 @@
 #include "core.h"
+#include <libgcc.h>
+#include "util.h"
 
 /* Sits between the still-parked DrawWrappedText (asm/code_3_1_3.s) and
  * WaitForKeyPress (asm/code_3_1_4.s). */
 
-extern s32 __umodsi3(s32 value, s32 divisor);
-extern s32 __udivsi3(s32 value, s32 divisor);
 
 /* Formats `value` (in centiseconds) as "MM:SS.X0" into `buf` (9 bytes,
  * NUL-terminated) - only one fractional digit is actually computed

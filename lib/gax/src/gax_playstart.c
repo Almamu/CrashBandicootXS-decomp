@@ -1,4 +1,5 @@
 #include "gax_internal.h"
+#include <libgcc.h>
 
 /* GAX2's play-start/init entry point (per docs/audio.md): initializes the
  * runtime player-state object at gGaxPlayerState (magic, songPtr,
@@ -38,7 +39,6 @@ extern const char gGaxErrOutOfMemory[];
 extern void GaxFatalError(const char *a, const char *b);
 extern void GaxZeroFill(void *dest, s32 count);
 extern s32 GaxFindMixRate(u32 rate);
-extern s32 __udivsi3(s32 a, s32 b);
 extern void GaxResetSoundHardware(void);
 extern u8 GaxCreateHandlers(struct GaxHandlerLayout *layout, struct GaxHandlerType **sfx, u32 numSfx, u8 **bufp,
                       u32 *sizep);

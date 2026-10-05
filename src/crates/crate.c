@@ -1,6 +1,7 @@
 #include "core.h"
 #include "vtable.h"
 #include "actor.h"
+#include "aabb.h"
 
 /* The fields of a level object (`struct gobj`, gobj_1a794.h) that
  * `IsCrateInsideRect` reads. */
@@ -11,13 +12,6 @@ struct gobj_view {
     struct vtable_slot *vtable;     // 0x18
     u8 unk_1c[0x28];
     void *mover;                    // 0x44
-};
-
-struct aabb {
-    s32 field_0;
-    s32 field_4;
-    s32 field_8;
-    s32 field_c;
 };
 
 /* GitHub issue #13: 0x0800FC70-0x08010A0C, continuing the physics/
@@ -100,13 +94,13 @@ u32 IsCrateInsideRect(void *selfArg, struct aabb *boxArg)
             : "r0", "r2", "cc", "memory"
         );
 
-        /* `box->field_0`/`box->field_4` are each read once, into r2,
+        /* `box->x`/`box->y` are each read once, into r2,
          * and reused for both their own edge compare and the
          * opposite edge's sum (`ble`/`bge` short-circuiting straight
          * past the remaining checks on failure) - the register-pinned
          * locals force that single load/reuse. The sum itself
-         * (`box->field_0 + box->field_8`, `box->field_4 +
-         * box->field_c`) is anchored too: this compiler always
+         * (`box->x + box->w`, `box->y +
+         * box->h`) is anchored too: this compiler always
          * computes it in-place into whichever operand's register is
          * written first in the C expression, but the ROM keeps the
          * running edge value (r2) as the *first* source operand while
@@ -125,7 +119,7 @@ u32 IsCrateInsideRect(void *selfArg, struct aabb *boxArg)
          * it correctly for save/restore. */
         success = 0;
         {
-            register s32 boxX asm("r2") = box->field_0;
+            register s32 boxX asm("r2") = box->x;
             if (left > boxX) {
                 register s32 boxRight asm("r0");
                 asm volatile(
@@ -136,7 +130,7 @@ u32 IsCrateInsideRect(void *selfArg, struct aabb *boxArg)
                     : "cc"
                 );
                 if (right < boxRight) {
-                    register s32 boxY asm("r2") = box->field_4;
+                    register s32 boxY asm("r2") = box->y;
                     if (top > boxY) {
                         register s32 boxBottom asm("r0");
                         asm volatile(

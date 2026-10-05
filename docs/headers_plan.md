@@ -23,17 +23,19 @@ Batch 1 (link + hud) done: `include/link.h` and `include/hud.h`, see
 `include/cutscene.h`, `include/pickups.h` and `include/enemies.h`, see
 "Batch 2" below. Batch 3 (save + frontend) done: `include/save.h`,
 `include/frontend.h` and `gLinkSession` in `include/link.h`, see
-"Batch 3" below.
+"Batch 3" below. Batch 4 (util + libgcc) done: `include/util.h`,
+`lib/libgcc/include/libgcc.h`, every `struct aabb` copy merged into
+`aabb.h`, and `COMPILE_TIME_ASSERT` takes a tag, see "Batch 4" below.
 
 Audit totals (`tools/extern_audit.py`) as the batches land:
 
-| | Pilot merged | After batch 1 | After batch 2 | After batch 3 |
-|---|---:|---:|---:|---:|
-| Declarations in `.c` files (symbols defined elsewhere) | 4,572 | 4,513 | 4,436 | 4,279 |
-| Unique symbols declared in a `.c` file | 2,317 | 2,284 | 2,214 | 2,112 |
-| - conflicting | 231 | 229 | 226 | 222 |
-| Local struct/union definitions in `.c` files | 548 | 538 | 522 | 501 |
-| Struct names defined in more than one `.c` file | 75 | 74 | 68 | 63 |
+| | Pilot merged | After batch 1 | After batch 2 | After batch 3 | After batch 4 |
+|---|---:|---:|---:|---:|---:|
+| Declarations in `.c` files (symbols defined elsewhere) | 4,572 | 4,513 | 4,436 | 4,279 | 4,159 |
+| Unique symbols declared in a `.c` file | 2,317 | 2,284 | 2,214 | 2,112 | 2,091 |
+| - conflicting | 231 | 229 | 226 | 222 | 210 |
+| Local struct/union definitions in `.c` files | 548 | 538 | 522 | 501 | 487 |
+| Struct names defined in more than one `.c` file | 75 | 74 | 68 | 63 | 62 |
 
 ## Tools
 
@@ -199,10 +201,10 @@ The full list:
 | save | `save.h` (new) | |
 | system | `system.h` (new) | `memory.h` and `irq.h` stay as they are (already real headers) |
 | text | `text.h` (**done**, pilot) | |
-| util | `util.h` (new) | includes `aabb.h` |
+| util | `util.h` (**done**, batch 4) | includes `aabb.h` and `line_util.h` |
 | vehicle | `vehicle.h` (new) | |
 | (shared globals) | `globals.h` (new) | see below |
-| libgcc | `lib/libgcc/include/libgcc.h` (new) | `__udivsi3`, `__divsi3`, `__modsi3`, `__umodsi3`; not `_call_via_rN` |
+| libgcc | `lib/libgcc/include/libgcc.h` (**done**, batch 4) | `__udivsi3`, `__divsi3`, `__modsi3`, `__umodsi3` and the three 64-bit routines; not `_call_via_rN` |
 | GAX2, AgbEeprom, SWI | `<gax.h>`, `<agb_eeprom.h>`, `<agb_syscall.h>` | already exist (docs/libraries.md) |
 
 `src/data/` has no header of its own: data is declared where it is used.
@@ -249,9 +251,9 @@ Where the remaining declarations would go (after the pilot):
 | pickups (**done**, batch 2) | 28 | 3 | 33 | 10 |
 | enemies (**done**, batch 2) | 32 | 1 | 34 | 6 |
 | system | 33 | 6 | 135 | 73 |
-| util | 17 | 9 | 69 | 49 |
+| util (**done**, batch 4) | 17 | 9 | 69 | 49 |
 | audio | 22 | 8 | 117 | 80 |
-| libgcc (without `_call_via_rN`) | 8 | 2 | 53 | 39 |
+| libgcc (without `_call_via_rN`) (**done**, batch 4) | 8 | 2 | 53 | 39 |
 | lib/gax (internal) | 43 | 3 | 74 | 22 |
 | save (**done**, batch 3) | 50 | 2 | 62 | 9 |
 | frontend (**done**, batch 3) | 60 | 2 | 109 | 15 |
@@ -382,9 +384,9 @@ before the files that every subsystem touches.
    "Batch 2" below.
 4. **save, frontend (done):** 110 symbols, 4 conflicts, plus
    `gLinkSession` from batch 1. See "Batch 3" below.
-5. **util + `libgcc.h`:** `RandRange` (see above), `__modsi3`/`__umodsi3`
-   variants. `aabb.h` takes the remaining 8 `struct aabb` copies (crates,
-   gfx, objects, player, `src/util/aabb.c`).
+5. **util + `libgcc.h` (done):** `RandRange`, `__modsi3`/`__umodsi3`
+   variants, and every `struct aabb` copy into `aabb.h`. See "Batch 4"
+   below.
 6. **system, audio:** `WaitForVBlank` (27 files), `PlaySfx` (66 files, 3
    variants). Big include fan-out but few distinct symbols.
 7. **menus, crates, player:** one PR each.
@@ -701,11 +703,11 @@ definitions (522 -> 501). No file needed an asm-label alias.
     the actor batch, `struct held_pressed_pair` (`gKeys`) with
     `globals.h`, `struct icon_frame_nibble` (save_menu_draw.c,
     pause_menu_pages_init.c) with menus.
-- **Surprise:** `COMPILE_TIME_ASSERT` names its typedef after the line
-  number, so two headers with an assert on the same line can't be
-  included together (`logo_screen.h:49` and `actor_anim.h:49`).
-  anim_family_178f80.c (defines `gPolarCategoryPalette`) doesn't include
-  `frontend.h` for that reason.
+- **Surprise:** `COMPILE_TIME_ASSERT` named its typedef after the line
+  number only, so two headers with an assert on the same line couldn't be
+  included together (`logo_screen.h:49` and `actor_anim.h:49`), and
+  anim_family_178f80.c (defines `gPolarCategoryPalette`) couldn't include
+  `frontend.h`. Batch 4 fixed the macro and added the include.
 - The data files that define the new headers' tables include them, so
   the compiler checks each definition. level_gfx_17cff4.c's anim record
   points into `gPolarCategoryPalette` by byte offset, now through a
@@ -713,6 +715,76 @@ definitions (522 -> 501). No file needed an asm-label alias.
 
 Every touched object file is identical to the clean build's, and so is
 every `.s` file.
+
+## Batch 4: util + libgcc
+
+120 local declarations are gone (4,279 -> 4,159), and 14 local struct
+definitions (501 -> 487). One file needed an asm-label alias
+(`RandRange` in title_screen_init.c, see "Codegen exceptions").
+
+- **`include/util.h`** (new) declares every function of src/util/ and
+  `gRandSeed` (iwram_data.c, which includes it). It includes `aabb.h` and
+  `line_util.h`; `InitBresenhamLine`/`StepBresenhamLine` moved here from
+  `line_util.h`, which is now a type header. Two exceptions:
+  `DestroyLargeFont`/`DestroySmallFont` stay in `text.h` (pilot), and
+  `strlen`/`strcpy` are not declared: their `u8 *` prototypes conflict
+  with gcc's built-ins, which warns in every file that sees them, and
+  nothing outside string.c calls them. `gBlendRegs` (sym_iwram.txt,
+  mostly level) waits for the level batch. `gobj_1a794.h` and
+  `level_select_parts.h` lost their copies of `AabbOverlaps` and
+  `RandRange` (`s32` there); gobj_1a794.h includes `util.h`.
+- **`lib/libgcc/include/libgcc.h`** (new) declares `__udivsi3`,
+  `__divsi3`, `__modsi3`, `__umodsi3` with their real types (`u32` for
+  the unsigned pair) and the 64-bit `__divdi3`/`__udivdi3`/`__muldi3`.
+  libgcc2.c includes it, so the compiler checks the 64-bit definitions.
+  `_call_via_rN` stay out (rule 5), and so do libgcc's internal
+  `__div0` and `__clz_tab_*`. 50 declarations are gone from 35 files,
+  and `gobj_1a794.h`'s `__umodsi3` too. lib headers are included as
+  `<libgcc.h>`; `tools/apply_headers.py` now writes that form for a
+  header under `lib/`.
+- **Conflicts**, all identical with the header's type:
+  - `RandRange` returns `u16`. 13 of the 14 `s32` callers and
+    level_select_widgets.c (through level_select_parts.h) take the `u16`;
+    title_screen_init.c keeps an `s32` alias.
+  - `rand` returns `u16` (extra_life.c, wumpa_update.c declared `s32`).
+  - `__udivsi3`/`__umodsi3` are `u32 (u32, u32)`; 8 callers declared
+    `s32 (s32, s32)`, and rand.c `u16 (u16, s32)`.
+  - `__modsi3` was declared `(void *, s32)` in company_logos.c,
+    title_screen.c and title_screen_init.c, none of which calls it.
+  - `IwramAlloc` takes `u32` (save_menu_input.c declared `s32`),
+    `FormatCentiseconds` takes `u8 *` (level_select.c declared `char *`)
+    and `GetLives` takes `struct level_state *`: the callers that hold
+    `gLevelState` as `u8 *`/`void *` pass it as is, or with a cast
+    (actor_category_init.c) until `globals.h`.
+  - `AabbOverlaps`/`AabbOverlapsInclusiveX`/`SetAabbPos`/`SetAabbSize`
+    take `struct aabb *`; the callers passed `void *`, `u8 [16]`,
+    `s32 [4]` or one of the copies below.
+- **`struct aabb` everywhere** (`aabb.h`). These are gone:
+  - the eight local `struct aabb` copies (crate.c, crate_hit.c,
+    graphics.c, player_contact.c, sprite.c, sprite_obj.c,
+    player_event.c, aabb.c). Four used `field_0`..`field_c`, now
+    `x`/`y`/`w`/`h`;
+  - `struct part_aabb` in `box_part.h` (which now includes `aabb.h`), in
+    8 crates/enemies/objects files;
+  - the same box under other names: `hop_box` (tiny_update.c), `gfx_box`
+    (cortex.c), `box` (dingodile.c, its `valid` is `w`), `ab_box`
+    (mega_mix_update.c), `fx_box` (entity_spawner.c) and `hit_box`
+    (level_select.c, `unk_08` is `w`). Each is what `GetSpriteHitbox`
+    and the other box getters return;
+  - the stack buffers `u8 selfBox[16]`/`playerBox[16]` (extra_life.c)
+    and `s32 buf[4]` (`CheckEntityPlayerContact`, graphics.c).
+- **`COMPILE_TIME_ASSERT(TAG, COND)`** (core.h) takes the file's name as a
+  tag (`logo_screen_h`, `actor_spawn_c`), and names the typedef after the
+  tag and `__LINE__`. Before, the name was the line number alone, so two
+  headers with an assert on the same line couldn't be in one translation
+  unit (agbcc has no `__COUNTER__`). All 62 asserts pass a tag. A typedef
+  emits nothing, so every object is unchanged. With this,
+  anim_family_178f80.c includes `frontend.h` (it defines
+  `gPolarCategoryPalette`), actor_spawn.c's `#include "actor_self.h"`
+  moved back to the top, and pause_menu.h lost its blank-line workaround.
+
+Every touched object file and every `.s` file is identical to the clean
+build's, and no file has a new warning.
 
 ## Codegen findings
 
@@ -754,10 +826,16 @@ here (built with agbcc and, in `font_glyph.c`, `font_draw_text.c`,
 | `u8 []` extern cast to `struct bg_package *` -> `const struct bg_package` and `&` | company_logos.c, title_screen.c (old_agbcc) | identical |
 | local list-node struct -> `struct actor_self` (`prev`/`next`/`vtable`) | `DestroyLogoActor` | identical |
 | `(s32)` argument -> pointer, `u32` element -> `(void *)` cast | `UpdateStarfield` in title_screen.c (old_agbcc) | identical |
+| return `s32` -> `u16` | `RandRange` in 13 callers (old_agbcc and agbcc), `rand` in extra_life.c/wumpa_update.c | identical; title_screen_init.c changes (stack slots swap), see the exception |
+| `s32 (s32, s32)` -> `u32 (u32, u32)`, `u16 (u16, s32)` -> `u32 (u32, u32)` | `__udivsi3`/`__umodsi3` in time_format.c, hud_boss_clock.c (old_agbcc), enemy_ctrl.c, font.c, text_box.c, cortex.c, cutscene_player.c, rand.c | identical |
+| parameter `void *`/`u8 [16]`/`s32 [4]`/local box struct -> `struct aabb *`, stack buffers -> `struct aabb` | `AabbOverlaps`/`SetAabbPos`/`SetAabbSize` callers, extra_life.c (old_agbcc), graphics.c | identical |
+| `field_0`..`field_c`/`valid`/`unk_08` -> `x`/`y`/`w`/`h`, including through `*(vs32 *)&box.w` | crate.c (pinned registers), crate_hit.c, sprite_obj.c, player_contact.c, dingodile.c (old_agbcc) | identical |
+| `COMPILE_TIME_ASSERT` typedef renamed | every file with an assert | identical (typedefs emit nothing) |
 
-Experiments for later batches (not applied in this PR):
+Experiments for later batches:
 
-- **`RandRange` (util): neither type works everywhere.** The definition
+- **`RandRange` (util, applied in batch 4): neither type works
+  everywhere.** The definition
   (`src/util/rand.c`) returns `u16`. 14 callers declare `s32`, and
   `airship_explode.c` declares `u16`.
   - Switching `airship_explode.c` to `s32` removes every `lsl #0x10`/
@@ -768,7 +846,7 @@ Experiments for later batches (not applied in this PR):
   - With the header at `u16`, `title_screen_init.c` can keep
     `extern s32 RandRange_s32(s32) asm("RandRange");` and still include the
     header. That build's `.s` is identical to today's. This is the alias
-    pattern from rule 3.
+    pattern from rule 3, and batch 4 applied it.
 - **`HasTurboRun`/`HasSuperBodySlam` (level):** `action_ctrl_moves.c`
   declares them returning `s32`, but they return `u8`. Switching to `u8` is
   identical, because the call sites already cast the result to `(u8)`.
@@ -780,6 +858,7 @@ adds its entries here.
 
 | File | Symbol | Local form | Header form | Why |
 |---|---|---|---|---|
+| src/frontend/title_screen_init.c | `RandRange` | `s32 RandRange_s32(s32 max) asm("RandRange")` | `u16 RandRange(s32 max)` (util.h) | with the `u16` return, InitTitleScreen's two stack slots (`[sp, #0x20]`/`[sp, #0x24]`) swap (old_agbcc) |
 | src/level/spawn_enemies.c | `CreateEnemyCtrl` | `CreateEnemyCtrl_r0(void) asm("CreateEnemyCtrl")`, called after a bare `OperatorNew(0x8c);` | `struct part_ctrl *(struct part_ctrl *self)` | in 11 of the 26 spawners (old_agbcc) the registers only match with the block left in r0 by the previous call; the other 15 use the header's prototype |
 
 Known permanent exceptions: `_call_via_rN` (rule 5 above), and the

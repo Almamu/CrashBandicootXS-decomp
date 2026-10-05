@@ -1,6 +1,7 @@
 #include "core.h"
 #include "actor.h"
 #include "pause_menu.h"
+#include "util.h"
 
 /* Built with old_agbcc (Makefile OLD_AGBCC_OBJS): the four icon-group
  * constructors below only match under it, and InitPauseCrystalsPage compiles
@@ -167,7 +168,6 @@ void InitPauseRelicsPage(struct pause_menu *self)
 
 extern void *gLevelState;
 extern s32 GetCurrentLevel(void *arg0);
-extern void FormatCentiseconds(s32 value, u8 *buf);
 
 /* Same per-level bronze/silver/gold threshold table src/menus/power_dialog_draw.c's
  * `struct threshold_table_entry`/`gLevelTable` already document -
@@ -181,7 +181,7 @@ struct threshold_table_entry {
     u32 threshold_10;
     u8 unused_14[0x24 - 0x14];
 };
-COMPILE_TIME_ASSERT(sizeof(struct threshold_table_entry) == 0x24);
+COMPILE_TIME_ASSERT(pause_menu_pages_init_c, sizeof(struct threshold_table_entry) == 0x24);
 
 extern struct threshold_table_entry gLevelTable[];
 extern struct icon_pos gPauseTimeTrialIconPos;

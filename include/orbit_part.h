@@ -55,6 +55,6 @@ struct orbit_part
  * into `anchor` in one go (the ROM's paired `ldr; ldr; str; str`). */
 #define ORBIT_POS(self) (*(struct orbit_vec *)&(self)->base.x)
 
-COMPILE_TIME_ASSERT(sizeof(struct orbit_part) == 0x54);
+COMPILE_TIME_ASSERT(orbit_part_h, sizeof(struct orbit_part) == 0x54);
 
 #endif // GUARD_ORBIT_PART_H

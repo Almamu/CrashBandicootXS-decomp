@@ -7,6 +7,7 @@
 #include "memory.h"
 #include <agb_syscall.h>
 #include "text.h"
+#include "util.h"
 
 extern void StopAmbientSfx(struct AudioContext *self);
 extern void WaitForVBlank(void);
@@ -142,7 +143,6 @@ extern void ***gSpriteBankSet;
 extern void *PackSaveData(void *arg0);
 extern void InitPauseMenuInfo(struct pause_menu *self);
 extern struct actor *InitUiSpriteObj(struct actor *part);
-extern s32 RandRange(s32 max);
 extern u8 gPauseMenuBg[];
 extern u8 gPauseMenuRows[];
 

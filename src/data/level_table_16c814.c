@@ -20,9 +20,9 @@
 
 #define ARRAY_COUNT(a) (sizeof(a) / sizeof((a)[0]))
 
-COMPILE_TIME_ASSERT(sizeof(struct level_info) == 0x24);
-COMPILE_TIME_ASSERT(sizeof(struct level_room_list) == 0x10);
-COMPILE_TIME_ASSERT(sizeof(struct level_room) == 0x14);
+COMPILE_TIME_ASSERT(level_table_16c814_c, sizeof(struct level_info) == 0x24);
+COMPILE_TIME_ASSERT(level_table_16c814_c, sizeof(struct level_room_list) == 0x10);
+COMPILE_TIME_ASSERT(level_table_16c814_c, sizeof(struct level_room) == 0x14);
 
 /* The rooms' palettes and descriptors (src/data/level_rooms_*.c). */
 extern const u16 gRoom00Palette[];

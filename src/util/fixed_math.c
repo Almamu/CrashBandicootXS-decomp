@@ -1,5 +1,7 @@
 #include "core.h"
 #include <agb_syscall.h>
+#include <libgcc.h>
+#include "util.h"
 
 /* Fixed-point helpers on the game's 24.8 coordinates (the s16 ones on
  * 8.8 values).
@@ -26,8 +28,6 @@ u32 FixedDist(s32 x1, s32 x2, s32 y1, s32 y2)
     s32 dySq = dy * dy;
     return (u16)Sqrt(dxSq + dySq) << 8;
 }
-
-extern s32 __divsi3(s32 arg0, s32 arg1);
 
 /* arg0 / arg1 in 24.8. */
 s32 FixedDiv(s32 arg0, s32 arg1)

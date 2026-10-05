@@ -21,7 +21,7 @@ struct cell_anim_03b8b0 {
         u8 banks[(19 * 13 + 7) / 8 * 4];
     } frames[60];
 };
-COMPILE_TIME_ASSERT(sizeof(struct cell_anim_03b8b0) == 0x75B94);
+COMPILE_TIME_ASSERT(cell_anim_03b8b0_c, sizeof(struct cell_anim_03b8b0) == 0x75B94);
 
 const struct cell_anim_03b8b0 gCategoryFamily0CellAnim = {
     {

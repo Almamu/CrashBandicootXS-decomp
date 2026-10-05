@@ -28,8 +28,8 @@ struct mem_heap {
 #define MEM_HEAP_BOTH (MEM_HEAP_EWRAM | MEM_HEAP_IWRAM)
 
 // ensure some structs don't change size
-COMPILE_TIME_ASSERT(sizeof (struct mem_block) == 0x10);
-COMPILE_TIME_ASSERT(sizeof (struct mem_heap_header) == 0x14);
+COMPILE_TIME_ASSERT(memory_h, sizeof (struct mem_block) == 0x10);
+COMPILE_TIME_ASSERT(memory_h, sizeof (struct mem_heap_header) == 0x14);
 
 extern struct mem_heap mem_ewram_heap;
 extern struct mem_heap mem_iwram_heap;

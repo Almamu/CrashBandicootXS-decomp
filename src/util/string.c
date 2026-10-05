@@ -1,4 +1,5 @@
 #include "core.h"
+#include "util.h"
 
 /* Sits right after FindSubstring (ROM 0x08000CBC), which is not yet
  * byte-matching and is still parked in asm/code_3_1_2.s - kept in its

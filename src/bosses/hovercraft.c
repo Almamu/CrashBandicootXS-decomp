@@ -1,5 +1,6 @@
 #include "core.h"
 #include "actor_self.h"
+#include <libgcc.h>
 
 /* Second half of issue #59's Phase 2 gap (`CreateJetpackRing`-`nullsub_35`,
  * the tail of `asm/code_3_2_20_28568_c99c_31784_31a6c.s`) - see
@@ -46,7 +47,6 @@ extern void SetupSpriteFrameOam(u8 *frame, u32 arg1, u32 arg2, s32 priority);
 extern void SetActorAnim(void *self, s32 idx);
 extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
 extern void UpdateActor(void *self);
-extern s32 __divsi3(s32 dividend, s32 divisor);
 extern s32 GetActorBgCenterY(void);
 extern s32 GetActorBgCenterX(void);
 extern void sub_8029E34(s32 arg0);

@@ -1,5 +1,6 @@
 #include "core.h"
 #include "text.h"
+#include <libgcc.h>
 
 /* Sits right after LoadBackgroundTileAndPalette (ROM 0x080011C0, in src/system/asset.c)
  * and before whatever's still raw in asm/code_3_1_7.s. */
@@ -36,8 +37,6 @@ s32 GetWordLength(u8 *s)
 done:
     return len;
 }
-
-extern s32 __udivsi3(s32 value, s32 divisor);
 
 /* Thin wrapper around the still-parked DrawWrappedText (src/text/wrapped_text.c):
  * stashes `params->x` into `self`'s own `marginX`, computes a

@@ -1,5 +1,6 @@
 #include "core.h"
 #include "actor_self.h"
+#include <libgcc.h>
 
 /* Same boss-weapon "self"/tracker object family as airship_fireball.c/
  * airship_fall.c/airship_damage.c - see airship_fireball.c's header comment
@@ -184,7 +185,6 @@ void AirshipStateFireballs(void)
  * `/` goes through the ROM's own `__divsi3` and the
  * absolute values are the branchless `asrs`/`eors`/`subs` form. */
 extern struct actor_self *gActorList;
-extern s32 __divsi3(s32 arg0, s32 arg1);
 extern s32 SpawnJetpackCannonball(s32 x, s32 y, s32 z, s32 dx, s32 dy);
 
 static inline s32 Abs(s32 x)

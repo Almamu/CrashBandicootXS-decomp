@@ -1,7 +1,7 @@
 #include "core.h"
 #include "level_select_parts.h"
 #include <agb_syscall.h>
-#include "line_util.h"
+#include "util.h"
 
 /* GitHub issue #28: 0x0801DA38-0x0801DFEC, the whole of the former
  * asm/code_3_2_17_188d0_1da38.s. Two of the level-select screen's
@@ -85,7 +85,7 @@ struct zoom_bg
     struct twinkle twinkles[4]; // 0x5C
 };
 
-COMPILE_TIME_ASSERT(sizeof(struct zoom_bg) == 0x8C);
+COMPILE_TIME_ASSERT(level_select_widgets_c, sizeof(struct zoom_bg) == 0x8C);
 
 /* A level picture: 32-colour palette and 8bpp tiles (LoadTaggedAsset). */
 struct image_pair
@@ -484,7 +484,7 @@ struct cursor_panel
     s16 matrix[4];              // 0x4C - pa, pb, pc, pd
 };
 
-COMPILE_TIME_ASSERT(sizeof(struct cursor_panel) == 0x54);
+COMPILE_TIME_ASSERT(level_select_widgets_c, sizeof(struct cursor_panel) == 0x54);
 
 struct xy
 {

@@ -1,5 +1,6 @@
 #include "core.h"
 #include "memory.h"
+#include "actor_self.h"
 
 /* gActorSpawnTable[] - the category's "spawnTable" runtime array,
  * category_descriptor.spawnTable (include/actor_anim.h, offset
@@ -27,11 +28,7 @@ struct sub_effect_record {
     s32 offsetX;    /* 0x0c - stored raw, <<8 by the accessors that read it */
     s32 offsetY;    /* 0x10 - stored raw, <<8 by the accessors that read it */
 };
-COMPILE_TIME_ASSERT(sizeof(struct sub_effect_record) == 0x14);
-
-/* Not at the top: COMPILE_TIME_ASSERT names its typedef after __LINE__,
- * and moving the assert above to line 31 clashes with memory.h's. */
-#include "actor_self.h"
+COMPILE_TIME_ASSERT(actor_spawn_c, sizeof(struct sub_effect_record) == 0x14);
 
 extern struct sub_effect_record *gActorSpawnTable;
 extern s32 gActorSpawnOffset;

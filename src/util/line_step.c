@@ -1,5 +1,5 @@
 #include "core.h"
-#include "line_util.h"
+#include "util.h"
 
 /* Sits right after DrawWrappedTextInBox (ROM 0x08001214, in src/text/text_box.c)
  * and before StepBrightnessFade (still raw in asm/code_3_1_7.s). Not adjacent

@@ -45,7 +45,7 @@ struct logo_screen
                                 //         the outro countdown
 };
 
-COMPILE_TIME_ASSERT(sizeof(struct logo_piece) == 0x34);
-COMPILE_TIME_ASSERT(sizeof(struct logo_screen) == 0x44c);
+COMPILE_TIME_ASSERT(logo_screen_h, sizeof(struct logo_piece) == 0x34);
+COMPILE_TIME_ASSERT(logo_screen_h, sizeof(struct logo_screen) == 0x44c);
 
 #endif // GUARD_LOGO_SCREEN_H

@@ -1,9 +1,7 @@
 #include "core.h"
 #include <stdarg.h>
+#include "util.h"
 
-extern u8 *FormatPaddedNumber(u8 *dest, u8 *fmt, s32 *valuePtr, u8 padChar,
-                        s32 *charsConsumedPtr);
-extern s32 itoa(s32 value, u8 *buffer, s32 base);
 
 /* Custom sprintf: writes the formatted result of `fmt`/`args` into
  * `dest` (NUL-terminated) and returns a pointer to the end of it.

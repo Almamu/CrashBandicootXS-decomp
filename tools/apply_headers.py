@@ -138,8 +138,13 @@ def apply(path, hdr_path, hdecls, adopt, dry_run, allow_definer):
         if j > 0 and lines[j - 1].strip() == '' and lines[i + 1].strip() == '':
             drop.add(i + 1)
     out = [l for i, l in enumerate(lines) if i not in drop]
-    inc_line = '#include "%s"' % rel_inc
-    if not any(l.strip() in (inc_line, '#include <%s>' % rel_inc) for l in out):
+    # Library headers (lib/*/include) are system-style includes:
+    # `#include <libgcc.h>`, like `<agb_syscall.h>` (docs/libraries.md).
+    if hdr_path.startswith('lib/'):
+        inc_line = '#include <%s>' % rel_inc
+    else:
+        inc_line = '#include "%s"' % rel_inc
+    if not any(l.strip() in ('#include "%s"' % rel_inc, '#include <%s>' % rel_inc) for l in out):
         k = find_include_slot(out)
         out.insert(k, inc_line)
     if not dry_run:

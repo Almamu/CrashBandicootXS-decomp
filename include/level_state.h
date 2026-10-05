@@ -78,7 +78,7 @@ struct level_state
     struct level_state_1c8 *boss; // 0x1C8 - SetLevelBoss
 };
 
-COMPILE_TIME_ASSERT(sizeof(struct level_state) == 0x1CC);
+COMPILE_TIME_ASSERT(level_state_h, sizeof(struct level_state) == 0x1CC);
 
 /* The record `level_state.boss` points at (GetBossHealth). */
 struct level_state_1c8

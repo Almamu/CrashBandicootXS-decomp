@@ -1,4 +1,5 @@
 #include "core.h"
+#include "util.h"
 
 extern void *gObjVramCursor;
 extern void *gOamBuffer;
@@ -16,7 +17,6 @@ extern void UpdateRoomFrame(void *self);
 extern void SetDispcntMode(s32 val);
 extern void ShowObj(void);
 extern void CommitDispcnt(void);
-extern void CommitBlendRegs(void);
 
 void ClearRoomExit(void)
 {

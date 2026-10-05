@@ -102,10 +102,10 @@ struct hud_pos {
     s32 y;
 };
 
-COMPILE_TIME_ASSERT(sizeof(struct hud_anim_record) == 0x1C);
-COMPILE_TIME_ASSERT(sizeof(struct hud_digit_part) == 0x40);
-COMPILE_TIME_ASSERT(sizeof(struct hud_counter) == 0x68);
-COMPILE_TIME_ASSERT(sizeof(struct hud_pos) == 0x8);
+COMPILE_TIME_ASSERT(hud_h, sizeof(struct hud_anim_record) == 0x1C);
+COMPILE_TIME_ASSERT(hud_h, sizeof(struct hud_digit_part) == 0x40);
+COMPILE_TIME_ASSERT(hud_h, sizeof(struct hud_counter) == 0x68);
+COMPILE_TIME_ASSERT(hud_h, sizeof(struct hud_pos) == 0x8);
 
 /* The vertical offset DrawHudPart adds to every part, set by the
  * counters while they slide (src/iwram/iwram_data.c). */

@@ -1,6 +1,7 @@
 #include "core.h"
 #include "gobj_1a794.h"
 #include "enemies.h"
+#include <libgcc.h>
 
 /* GitHub issue #9/#10: `UpdateEnemyShooter`, the last raw function in the
  * `0x0800B8DC`-`0x0800D040` cluster's own `asm/code_3_2_17_bfa8.s`
@@ -52,8 +53,6 @@
  * crashbandicootxs.elf crashbandicootxs.gba crashbandicootxs.map &&
  * make compare` (`La suma coincide`). This closes out
  * `asm/code_3_2_17_bfa8.s` entirely - retired from `ldscript.txt`. */
-
-extern s32 __modsi3(s32 a, s32 b);
 
 /* `shotPeriod`/`shotPhase` make the gate below pass once every
  * `shotPeriod` frames, `mode` is the `self+0x68` sub-state, and the

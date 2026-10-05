@@ -1,4 +1,5 @@
 #include "gba/types.h"
+#include <libgcc.h>
 
 /* gcc 2.x's libgcc2.c, the 64-bit arithmetic helpers `__divdi3`,
  * `__udivdi3` and `__muldi3`. As in gcc's own build, this one file is

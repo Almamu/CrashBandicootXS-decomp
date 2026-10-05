@@ -1,11 +1,9 @@
 #include "core.h"
 #include "hud.h"
+#include "util.h"
+#include <libgcc.h>
 
 extern void *gLevelState;
-
-extern s32 __divsi3(s32 dividend, s32 divisor);
-extern s32 __modsi3(s32 dividend, s32 divisor);
-extern s32 GetLives(void *state);
 
 void UpdateHudLives(struct hud_counter *counter)
 {

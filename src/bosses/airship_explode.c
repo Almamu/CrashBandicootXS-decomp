@@ -1,5 +1,6 @@
 #include "core.h"
 #include "actor_self.h"
+#include "util.h"
 
 /* Same boss-weapon "self"/tracker object family as airship_fireball.c/
  * airship_states.c - see
@@ -39,7 +40,6 @@ extern s32 gAirshipVelZ;
 extern s32 gAirshipHitFlashTimer;
 extern const s16 gAirshipBox[];
 extern s32 gAirshipStateTimer;
-extern u16 RandRange(s32 max);
 extern void CreateJetpackExplosion(s32 x, s32 y, s32 z);
 extern void ResumeActorSpawns(void);
 extern s32 gAirshipState;

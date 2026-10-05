@@ -51,7 +51,7 @@ struct icon_glyph_metrics {
     u8 unused_9[3];
 };
 
-COMPILE_TIME_ASSERT(sizeof(struct icon_glyph_metrics) == 0xC);
+COMPILE_TIME_ASSERT(bitmap_font_h, sizeof(struct icon_glyph_metrics) == 0xC);
 
 /* The bitmap font (see the top of this file). gLargeFont/gSmallFont
  * are its two instances; DrawWrappedText takes one as its render-target
@@ -110,6 +110,6 @@ struct bitmap_font {
     struct icon_record *record;
 };
 
-COMPILE_TIME_ASSERT(sizeof(struct bitmap_font) == 0x134);
+COMPILE_TIME_ASSERT(bitmap_font_h, sizeof(struct bitmap_font) == 0x134);
 
 #endif /* __BITMAP_FONT_H__ */

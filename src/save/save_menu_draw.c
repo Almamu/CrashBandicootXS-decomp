@@ -6,6 +6,7 @@
 #include "text.h"
 #include "link.h"
 #include "save.h"
+#include "util.h"
 
 extern s32 GetUiText(s32 arg0);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
@@ -184,7 +185,6 @@ void DrawYesNoPrompt(struct save_menu *self, s32 value)
 }
 
 extern void DrawSpriteWithOffset(void *arg0, s32 arg1, s32 arg2);
-extern s32 itoa(s32 value, u8 *buffer, s32 base);
 
 /* `rowObjA`/`rowObjB`/`rowObjC` entries (see save_menu.h)
  * are small on-screen objects with just a Q8 `x`/`y` position at their

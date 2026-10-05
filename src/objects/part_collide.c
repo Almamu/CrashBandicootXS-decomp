@@ -4,7 +4,7 @@
 
 typedef void (*part_method3_fn)(void *self, s32 a, s32 b, s32 c);
 
-extern s32 ClassifySpriteContact(struct box_part *part, struct part_aabb *box);
+extern s32 ClassifySpriteContact(struct box_part *part, struct aabb *box);
 
 /* `CollidePartWithPlayer`'s sibling: resolves the same collision-hit logic when
  * the "compare viewport" doesn't match the current one (see
@@ -20,7 +20,7 @@ extern s32 ClassifySpriteContact(struct box_part *part, struct part_aabb *box);
  * 0x08008D80, isn't adjacent to sprite_anim.c's functions
  * (part_list_cull.c's CullPartList/ClearPartList/CollidePartsOfClass sit between).
  * See docs/matching/issue-9-naked-retry.md. */
-void CollidePartWithObject(struct part_list *list, struct part_aabb box, struct box_part *part, struct box_part *other)
+void CollidePartWithObject(struct part_list *list, struct aabb box, struct box_part *part, struct box_part *other)
 {
     if (ClassifySpriteContact(part, &box)) {
         struct part_method *m = PART_METHOD(part, 0x68);

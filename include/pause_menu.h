@@ -1,11 +1,5 @@
 #ifndef __PAUSE_MENU_H__
 #define __PAUSE_MENU_H__
-/* (blank line above left intentionally to keep this header's
- * COMPILE_TIME_ASSERT off whatever line number bitmap_font.h's own
- * assert happens to sit on - COMPILE_TIME_ASSERT's generated symbol
- * name is line-number-based, not per-file, so two same-numbered
- * asserts collide with a "redefinition" error when both headers end
- * up in the same translation unit, as they do here.) */
 
 /* A small `struct actor`-derived on-screen icon: the first 0x1c bytes
  * are a plain `struct actor` (see actor.h), then a second keyframe-
@@ -108,7 +102,7 @@ struct pause_menu {
     u16 field_d0;                                              /* 0xd0 - REG_DISPCNT value, applied by CommitPauseMenuFrame */
     u8 unused_d2[2];
 };
-COMPILE_TIME_ASSERT(sizeof(struct pause_menu) == 0xd4);
+COMPILE_TIME_ASSERT(pause_menu_h, sizeof(struct pause_menu) == 0xd4);
 
 extern s32 GetSpriteAnimPaletteSlot(struct actor *part);
 

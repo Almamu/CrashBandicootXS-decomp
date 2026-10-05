@@ -1,4 +1,5 @@
 #include "core.h"
+#include <libgcc.h>
 
 /* Same boss-weapon subsystem as airship_fireball.c/airship_load_graphics.c - see
  * airship_fireball.c's header comment and
@@ -122,7 +123,6 @@ void UpdateAirshipFlashColor(void)
     }
 }
 
-extern s32 __divsi3(s32 arg0, s32 arg1);
 extern s32 QueueVramDmaTransfer(void *arg0, void *arg1, u16 arg2, u16 arg3);
 extern s32 gAirshipHitFlashTimer;
 extern u8 gAirshipHitFlashPalettes[];

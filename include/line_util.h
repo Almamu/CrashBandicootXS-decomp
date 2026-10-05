@@ -4,7 +4,8 @@
 /* Bresenham-line state: set up by InitBresenhamLine (src/util/line.c) and
  * advanced one step at a time by StepBresenhamLine (src/util/line_step.c).
  * Field names beyond the four input coordinates are left as `field_N`
- * (offsets, not purposes) until a caller clarifies them. */
+ * (offsets, not purposes) until a caller clarifies them. The two
+ * functions are declared in util.h. */
 struct bresenham_line {
     s32 x0;
     s32 y0;
@@ -17,8 +18,5 @@ struct bresenham_line {
     s32 sy;
     u8 flag;
 };
-
-void InitBresenhamLine(struct bresenham_line *l);
-void StepBresenhamLine(struct bresenham_line *line);
 
 #endif /* __LINE_UTIL_H__ */

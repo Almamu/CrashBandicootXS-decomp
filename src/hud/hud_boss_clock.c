@@ -1,6 +1,7 @@
 #include "core.h"
 #include "gba/defines.h"
 #include "hud.h"
+#include <libgcc.h>
 
 /* Icon-indicator widget (lives display) - see
  * docs/matching/issue-45-hud-stat-widget-dispatcher.md for the full
@@ -19,8 +20,6 @@ extern s32 GetBossHealth(void *state);
 extern s32 GetClockMinutes(void *state);
 extern s32 GetClockSeconds(void *state);
 extern s32 GetClockTenths(void *state);
-extern s32 __udivsi3(s32 value, s32 divisor);
-extern s32 __umodsi3(s32 value, s32 divisor);
 
 static inline void SetPartPos(s32 x, s32 y, struct hud_digit_part *part)
 {

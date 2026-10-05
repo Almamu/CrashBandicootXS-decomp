@@ -1,6 +1,7 @@
 #include "core.h"
 #include "gba/dma_macros.h"
 #include "frontend.h"
+#include "util.h"
 
 /* Same "self" object family as hovercraft_side_gun.c - see docs/matching/issue-63-0x08033ef4-actor.md. This is
  * the 0x14-byte constructor (`InitStarfield`, called by `InitTitleScreen` as
@@ -387,7 +388,6 @@ asm(".align 2, 0");
  * `self+8` (16-byte stride: `{s32 x; s32 y; s32 dx; s32 dy;}`) and a
  * 4-bit-per-cell tilemap at `self+0x10`. */
 
-extern s32 RandRange(s32 max);
 extern s16 gSineTable[];
 
 /* Seeds particle slot `idx` at a fixed starting position, then rolls two

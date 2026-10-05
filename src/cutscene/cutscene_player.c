@@ -2,6 +2,7 @@
 #include "bg_scroll_layer.h"
 #include "text.h"
 #include "cutscene.h"
+#include <libgcc.h>
 
 /* GitHub issue #39: 0x08024810-0x08024E68 (game_loop) - the remainder of
  * the UpdateGameFrame-MainLoop cluster between the sound-channel-handle
@@ -123,7 +124,6 @@ struct cutscene_player *InitSlideshow(struct cutscene_player *self)
  * prologue reads the box word and `font` into locals before the
  * store, and the page loop is a plain `for` with `j++`. */
 extern void *gOamBuffer;
-extern s32 __udivsi3(s32 value, s32 divisor);
 extern void ResetOamBuffer(void *oam);
 extern void HideUnusedOamEntries(void *oam);
 extern void CommitOamBuffer(void *oam);

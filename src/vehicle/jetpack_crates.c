@@ -1,5 +1,7 @@
 #include "core.h"
 #include "actor_self.h"
+#include "util.h"
+#include <libgcc.h>
 
 /* First half of the `0x08031A6C`-`0x08032858` remainder issue #59's
  * foundational pass (docs/matching/issue-59-0x08031784-actor.md) left
@@ -51,9 +53,7 @@ extern s32 AddLife(void *self);
 extern void ReleaseJetpackBalloon(void *selfArg);
 extern void MoveJetpackBalloon(void *selfArg, s32 a, s32 b, s32 c);
 extern void InitActorPart(void *self, s32 a, s32 b, s32 c, s32 d);
-extern s32 RandRange(s32 max);
 extern s32 SpawnJetpackBalloon(s32 kind, s32 a1, s32 a2, s32 a3, void *selfArg);
-extern s32 __divsi3(s32 a, s32 b);
 extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
 extern void mem_free(void *ptr);
 

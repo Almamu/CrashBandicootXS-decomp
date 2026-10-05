@@ -13,7 +13,7 @@ struct settings_row_stats {
     s32 lives;
     s32 crystals;
 };
-COMPILE_TIME_ASSERT(sizeof(struct settings_row_stats) == 0x14);
+COMPILE_TIME_ASSERT(save_menu_h, sizeof(struct settings_row_stats) == 0x14);
 
 /* The save menu (`gSaveMenu`, OpenSaveMenu/InitSaveMenu, run by
  * RunSaveMenu): its main options are "load game", "load link game",

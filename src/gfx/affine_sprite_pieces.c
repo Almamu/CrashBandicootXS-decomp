@@ -1,4 +1,5 @@
 #include "core.h"
+#include "util.h"
 
 /* GitHub issue #9: DrawAffineSpritePieces (0x08007634-0x08007A48), the affine
  * (rotation/scaling) sibling of `DrawSpritePieces` (graphics.c) - see
@@ -120,7 +121,6 @@ extern s32 GetSpriteTileBase(void *part);
 extern s32 GetObjVramTile(void *cursor);
 extern s32 UploadObjVram(void *cursor, s32 src, s32 size);
 extern void AddOamEntry(void *buffer, void *record);
-extern s32 FixedInverse16(s32 scale);
 extern s32 _call_via_r1(void *self, void *fn);
 extern void *gObjVramCursor;
 extern struct oam_buffer *gOamBuffer;

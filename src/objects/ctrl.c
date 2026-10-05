@@ -1,10 +1,10 @@
 #include "core.h"
 #include "actor.h"
 #include "vtable.h"
+#include "util.h"
 
 extern u8 gCtrlMotionRecords[];
 extern s32 _call_via_r3(void *addr, void *arg1, void *tableEntry, void *fn);
-extern s32 FixedMul(s32 a, s32 b);
 extern void ResetSpriteFrameTimer(void *part);
 extern void ResetSpriteFrameIndex(void *part);
 extern void SetSpriteAnimDone(void *part, u8 val);

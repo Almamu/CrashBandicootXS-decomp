@@ -1,4 +1,5 @@
 #include "core.h"
+#include "util.h"
 
 /* Sits right after src/system/irq.c's matched functions and before
  * src/util/fixed_math.c - the only function in this address range,
@@ -6,7 +7,6 @@
  * main.c/memory.c/irq.c sit between them. Replaced the raw
  * asm/code_3_1.s (now deleted - this was its only function). */
 
-extern s32 FixedInverse16(s32 arg0);
 extern void LoadTaggedAsset(void *asset, void *dest);
 
 /* Sets up BG2 for an affine full-screen image (mode 1, BG2 as an

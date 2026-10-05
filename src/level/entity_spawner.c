@@ -1,4 +1,5 @@
 #include "core.h"
+#include "aabb.h"
 #include "actor.h"
 #include "orbit_part.h"
 #include "pickups.h"
@@ -53,13 +54,6 @@ struct fx_part
     s32 speedX;                 // 0x60
 };
 
-struct fx_box
-{
-    s32 x, y;
-    s32 w;                      // 0x08
-    s32 h;
-};
-
 struct actor_flag_bits
 {
     u8 unk_0:1;
@@ -100,7 +94,7 @@ extern void AddToPartList(void *manager, void *value);
  *   (`-speed`, 0x40) are expanded before the stores, and the X offset is
  *   a `?:` so the flip byte is tested before `ox + dist`. */
 struct fx_part *SpawnEffectPart(void *unused0, s32 anim, s32 tag, s32 x, s32 y, s32 mirror);
-extern void GetSpriteHitbox(struct fx_box *dest, void *obj);
+extern void GetSpriteHitbox(struct aabb *dest, void *obj);
 
 static inline void SetVel(struct fx_part *p, s32 v, s32 k)
 {
@@ -123,7 +117,7 @@ struct fx_part *LaunchEffectPart(void *pool, s32 arg1, s32 kind, s32 margin, s32
         part = SpawnEffectPart(pool, arg1, kind, x0, y0, m);
     }
     {
-        struct { struct fx_box a, b; } f;
+        struct { struct aabb a, b; } f;
 
         GetSpriteHitbox(&f.a, part);
         w1 = f.a.w;

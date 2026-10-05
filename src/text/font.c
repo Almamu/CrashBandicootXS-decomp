@@ -1,6 +1,7 @@
 #include "core.h"
 #include "text.h"
 #include <agb_syscall.h>
+#include <libgcc.h>
 
 /* Sits between FontMeasureText (src/text/font_measure.c) and
  * InitFont (src/text/font.c) - FontUploadTiles/
@@ -132,7 +133,6 @@ struct bitmap_font *InitFont(struct bitmap_font *selfArg)
 extern void OperatorDelete(void *manager);
 
 extern void *_call_via_r1(void *arg0, void *arg1);
-extern s32 __udivsi3(s32 value, s32 divisor);
 
 /* Divides `value` by the widget's own line height (`lineHeight`) - see
  * src/text/text_box.c's DrawWrappedTextInBox, which uses this same field as a

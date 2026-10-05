@@ -3,6 +3,7 @@
 #include "actor_self.h"
 #include "part_ctrl.h"
 #include "enemies.h"
+#include <libgcc.h>
 
 /* GitHub issue #9/#10: the three small `(self, mode)`-shaped trigger
  * functions the Phase 1 investigation (docs/matching/issue-9-10-0x0800b8dc-graphics.md)
@@ -160,7 +161,6 @@ asm(".align 2, 0");
 
 extern s16 gSineTable[];
 extern u32 gRoomFrameCount;
-extern s32 __udivsi3(s32 value, s32 divisor);
 
 static inline s16 Wave(s16 *table, s32 t, s32 phase)
 {
@@ -512,7 +512,6 @@ void sub_800CAC8(struct part_ctrl *self, s32 kind)
     self->kind = kind;
 }
 
-extern s32 __modsi3(s32 a, s32 b);
 extern void _call_via_r4(void *arg0, s32 arg1, s32 arg2, s32 arg3);
 
 /* If `self`'s own X position (`self+0`, Q8.8) is within `[0xa1, 0x18f]`
