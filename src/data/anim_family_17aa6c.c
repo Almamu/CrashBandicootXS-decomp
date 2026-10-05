@@ -5,7 +5,7 @@
 /*
  * ROM 0x0817AA6C-0x0817C1C0: a palette and two boxes of the
  * UpdateYeti actor, then the data of actor categories 3-6 (the family
- * whose frames are the gStaticData_0814174C sheet): their two OBJ
+ * whose frames are the gJetpackSpriteSheet sheet): their two OBJ
  * palettes, the 47-record animation table gCategoryFamily1AnimTable
  * (include/actor_anim.h) and its keyframe (table_A) and frame (table_B)
  * arrays. Linked in ROM order between data/data.s sections by
@@ -24,48 +24,48 @@ extern const u8 gJetpackPlayerRleFrames[];
 
 extern const struct anim_frame_record gJetpackPlayerKeyframes[6];
 extern const u8 *const gJetpackPlayerFrames[90];
-extern const struct anim_frame_record gStaticData_0817BBAC[1];
-extern const u32 gStaticData_0817BBB8[3];
-extern const struct anim_frame_record gStaticData_0817BBC4[6];
-extern const u32 gStaticData_0817BC0C[32];
-extern const struct anim_frame_record gStaticData_0817BC8C[2];
-extern const u32 gStaticData_0817BCA4[20];
-extern const struct anim_frame_record gStaticData_0817BCF4[1];
-extern const u32 gStaticData_0817BD00[1];
-extern const struct anim_frame_record gStaticData_0817BD04[2];
-extern const u32 gStaticData_0817BD1C[18];
-extern const struct anim_frame_record gStaticData_0817BD64[3];
-extern const u32 gStaticData_0817BD88[26];
-extern const struct anim_frame_record gStaticData_0817BDF0[4];
-extern const u32 gStaticData_0817BE20[31];
-extern const struct anim_frame_record gStaticData_0817BE9C[2];
-extern const u32 gStaticData_0817BEB4[1];
-extern const struct anim_frame_record gStaticData_0817BEB8[1];
-extern const u32 gStaticData_0817BEC4[6];
-extern const struct anim_frame_record gStaticData_0817BEDC[2];
-extern const u32 gStaticData_0817BEF4[9];
-extern const u32 gStaticData_0817BF18[9];
-extern const u32 gStaticData_0817BF3C[9];
-extern const u32 gStaticData_0817BF60[9];
-extern const struct anim_frame_record gStaticData_0817BF84[2];
-extern const u32 gStaticData_0817BF9C[18];
-extern const struct anim_frame_record gStaticData_0817BFE4[3];
-extern const u32 gStaticData_0817C008[26];
+extern const struct anim_frame_record gJetpackShotKeyframes[1];
+extern const u32 gJetpackShotFrames[3];
+extern const struct anim_frame_record gJetpackPlaneKeyframes[6];
+extern const u32 gJetpackPlaneFrames[32];
+extern const struct anim_frame_record gJetpackBomberKeyframes[2];
+extern const u32 gJetpackBomberFrames[20];
+extern const struct anim_frame_record gJetpackCannonballKeyframes[1];
+extern const u32 gJetpackCannonballFrames[1];
+extern const struct anim_frame_record gBossFireballKeyframes[2];
+extern const u32 gBossFireballFrames[18];
+extern const struct anim_frame_record gHovercraftCannonKeyframes[3];
+extern const u32 gHovercraftCannonFrames[26];
+extern const struct anim_frame_record gHovercraftLauncherKeyframes[4];
+extern const u32 gHovercraftLauncherFrames[31];
+extern const struct anim_frame_record gHovercraftSideGunKeyframes[2];
+extern const u32 gHovercraftSideGunFrames[1];
+extern const struct anim_frame_record gHovercraftCannonFlashKeyframes[1];
+extern const u32 gHovercraftCannonFlashFrames[6];
+extern const struct anim_frame_record gJetpackCrateKeyframes[2];
+extern const u32 gJetpackQuestionCrateFrames[9];
+extern const u32 gJetpackTimeCrate1Frames[9];
+extern const u32 gJetpackTimeCrate2Frames[9];
+extern const u32 gJetpackTimeCrate3Frames[9];
+extern const struct anim_frame_record gJetpackParachuteNitroKeyframes[2];
+extern const u32 gJetpackParachuteNitroFrames[18];
+extern const struct anim_frame_record gJetpackRocketKeyframes[3];
+extern const u32 gJetpackRocketFrames[26];
 extern const struct anim_frame_record gStaticData_0817C070[2];
 extern const u32 gStaticData_0817C088[6];
-extern const struct anim_frame_record gStaticData_0817C0A0[2];
-extern const u32 gStaticData_0817C0B8[6];
-extern const u32 gStaticData_0817C0D0[6];
-extern const u32 gStaticData_0817C0E8[6];
+extern const struct anim_frame_record gJetpackBalloonKeyframes[2];
+extern const u32 gJetpackRedYellowBalloonFrames[6];
+extern const u32 gJetpackYellowBlueBalloonFrames[6];
+extern const u32 gJetpackOrangeBlueBalloonFrames[6];
 extern const struct anim_frame_record gStaticData_0817C100[1];
 extern const struct anim_frame_record gStaticData_0817C10C[1];
-extern const u32 gStaticData_0817C118[6];
-extern const struct anim_frame_record gStaticData_0817C130[1];
-extern const u32 gStaticData_0817C13C[14];
-extern const struct anim_frame_record gStaticData_0817C174[1];
-extern const u32 gStaticData_0817C180[10];
-extern const struct anim_frame_record gStaticData_0817C1A8[1];
-extern const u32 gStaticData_0817C1B4[3];
+extern const u32 gJetpackRingFrames[6];
+extern const struct anim_frame_record gJetpackCollectedWumpaKeyframes[1];
+extern const u32 gJetpackCollectedWumpaFrames[14];
+extern const struct anim_frame_record gJetpackExplosionKeyframes[1];
+extern const u32 gJetpackExplosionFrames[10];
+extern const struct anim_frame_record gJetpackCheckpointTextKeyframes[1];
+extern const u32 gJetpackCheckpointTextFrames[3];
 
 /* The 16-colour gradient UpdateYetiPalette (actor_part74.c) DMAs to OBJ
  * palette 15, or fades towards. */
@@ -82,7 +82,7 @@ const struct anim_box gStaticData_0817AA98 = { -80, -40, -14, 160, 110, 16 };
 
 /* The 256-colour OBJ palette InitActorCategory loads for these
  * categories. The second 0x200 bytes are zero; nothing reads them. */
-const u16 gStaticData_0817AAA4[0x200] = {
+const u16 gAirshipCategoryPalette[0x200] = {
     0x03E0, 0x00BD, 0x004A, 0x035D, 0x0071, 0x069A, 0x0DBB, 0x3C43,
     0x0823, 0x198E, 0x2210, 0x10E8, 0x194A, 0x4337, 0x36B4, 0x0C64,
     0x03E0, 0x1CC6, 0x107F, 0x0D04, 0x0F9F, 0x094C, 0x0864, 0x05D4,
@@ -119,7 +119,7 @@ const u16 gStaticData_0817AAA4[0x200] = {
 
 /* The 256-colour OBJ palette InitActorCategory loads for these
  * categories. The second 0x200 bytes are zero; nothing reads them. */
-const u16 gStaticData_0817AEA4[0x200] = {
+const u16 gHovercraftCategoryPalette[0x200] = {
     0x03E0, 0x00BD, 0x004A, 0x035D, 0x0071, 0x069A, 0x0DBB, 0x3C43,
     0x0823, 0x198E, 0x2210, 0x10E8, 0x194A, 0x4337, 0x36B4, 0x0C64,
     0x03E0, 0x1CC6, 0x107F, 0x0D04, 0x0F9F, 0x094C, 0x0864, 0x05D4,
@@ -156,52 +156,52 @@ const u16 gStaticData_0817AEA4[0x200] = {
 
 const struct anim_table_record gCategoryFamily1AnimTable[47] = {
     { 0, (struct anim_frame_record *)gJetpackPlayerKeyframes, (u32 *)gJetpackPlayerFrames, 0, { 0 }, 0x1C00, { -10, -20, -1, 20, 42, 3 }, 0, 0 },
-    { 1, (struct anim_frame_record *)gStaticData_0817BBC4, (u32 *)gStaticData_0817BC0C, 2, { 0 }, 0x2400, { -32, -16, -2, 64, 32, 4 }, 0, 0 },
-    { 2, (struct anim_frame_record *)gStaticData_0817BBAC, (u32 *)gStaticData_0817BBB8, 1, { 0 }, 0x2C00, { -12, -12, -2, 24, 24, 4 }, 0, 0 },
-    { 3, (struct anim_frame_record *)gStaticData_0817BCF4, (u32 *)gStaticData_0817BD00, 2, { 0 }, 0x2A00, { -6, -6, -2, 12, 12, 4 }, 0, 0 },
-    { 4, (struct anim_frame_record *)gStaticData_0817BC8C, (u32 *)gStaticData_0817BCA4, 2, { 0 }, 0x2400, { -16, -16, -2, 32, 32, 4 }, 0, 0 },
-    { 5, (struct anim_frame_record *)gStaticData_0817BC8C, (u32 *)gStaticData_0817BCA4, 2, { 0 }, 0x2400, { -16, -16, -2, 32, 32, 4 }, 0, 0 },
-    { 6, (struct anim_frame_record *)gStaticData_0817BC8C, (u32 *)gStaticData_0817BCA4, 2, { 0 }, 0x2400, { -16, -16, -2, 32, 32, 4 }, 0, 0 },
-    { 7, (struct anim_frame_record *)gStaticData_0817BC8C, (u32 *)gStaticData_0817BCA4, 2, { 0 }, 0x2400, { -16, -16, -2, 32, 32, 4 }, 0, 0 },
-    { 8, (struct anim_frame_record *)gStaticData_0817BC8C, (u32 *)gStaticData_0817BCA4, 2, { 0 }, 0x2400, { -16, -16, -2, 32, 32, 4 }, 0, 0 },
-    { 9, (struct anim_frame_record *)gStaticData_0817BC8C, (u32 *)gStaticData_0817BCA4, 2, { 0 }, 0x2400, { -16, -16, -2, 32, 32, 4 }, 0, 0 },
-    { 10, (struct anim_frame_record *)gStaticData_0817BD64, (u32 *)gStaticData_0817BD88, 10, { 0 }, 0x2C00, { -8, -8, -2, 16, 16, 4 }, 0, 0 },
-    { 11, (struct anim_frame_record *)gStaticData_0817BD64, (u32 *)gStaticData_0817BD88, 10, { 0 }, 0x2C00, { -8, -8, -2, 16, 16, 4 }, 0, 0 },
-    { 12, (struct anim_frame_record *)gStaticData_0817BDF0, (u32 *)gStaticData_0817BE20, 10, { 0 }, 0x2C00, { -8, -8, -2, 16, 16, 4 }, 0, 0 },
-    { 13, (struct anim_frame_record *)gStaticData_0817BE9C, (u32 *)gStaticData_0817BEB4, 10, { 0 }, 0x2C00, { -8, -8, -2, 16, 16, 4 }, 0, 0 },
-    { 14, (struct anim_frame_record *)gStaticData_0817BEB8, (u32 *)gStaticData_0817BEC4, 4, { 0 }, 0x2C00, { -8, -8, -2, 16, 16, 4 }, 0, 0 },
-    { 0, (struct anim_frame_record *)gStaticData_0817BD64, (u32 *)gStaticData_0817BD88, 10, { 0 }, 0x2C00, { -8, -8, -2, 16, 16, 4 }, 0, 0 },
-    { 16, (struct anim_frame_record *)gStaticData_0817BD64, (u32 *)gStaticData_0817BD88, 10, { 0 }, 0x2C00, { -8, -8, -2, 16, 16, 4 }, 0, 0 },
-    { 17, (struct anim_frame_record *)gStaticData_0817BD64, (u32 *)gStaticData_0817BD88, 10, { 0 }, 0x2C00, { -8, -8, -2, 16, 16, 4 }, 0, 0 },
-    { 18, (struct anim_frame_record *)gStaticData_0817BD64, (u32 *)gStaticData_0817BD88, 10, { 0 }, 0x2C00, { -8, -8, -2, 16, 16, 4 }, 0, 0 },
-    { 19, (struct anim_frame_record *)gStaticData_0817BEDC, (u32 *)gStaticData_0817BEF4, 7, { 0 }, 0x2400, { -11, -16, -2, 22, 22, 4 }, 0, 0 },
-    { 20, (struct anim_frame_record *)gStaticData_0817BEDC, (u32 *)gStaticData_0817BEF4, 7, { 0 }, 0x2400, { -11, -16, -2, 22, 22, 4 }, 0, 0 },
-    { 21, (struct anim_frame_record *)gStaticData_0817BEDC, (u32 *)gStaticData_0817BEF4, 7, { 0 }, 0x2400, { -11, -16, -2, 22, 22, 4 }, 0, 0 },
-    { 22, (struct anim_frame_record *)gStaticData_0817BEDC, (u32 *)gStaticData_0817BEF4, 7, { 0 }, 0x2400, { -11, -16, -2, 22, 22, 4 }, 0, 0 },
-    { 23, (struct anim_frame_record *)gStaticData_0817BEDC, (u32 *)gStaticData_0817BEF4, 7, { 0 }, 0x2400, { -11, -16, -2, 22, 22, 4 }, 0, 0 },
-    { 24, (struct anim_frame_record *)gStaticData_0817BEDC, (u32 *)gStaticData_0817BF18, 5, { 0 }, 0x2400, { -11, -16, -2, 22, 22, 4 }, 0, 0 },
-    { 25, (struct anim_frame_record *)gStaticData_0817BEDC, (u32 *)gStaticData_0817BF3C, 5, { 0 }, 0x2400, { -11, -16, -2, 22, 22, 4 }, 0, 0 },
-    { 26, (struct anim_frame_record *)gStaticData_0817BEDC, (u32 *)gStaticData_0817BF60, 5, { 0 }, 0x2400, { -11, -16, -2, 22, 22, 4 }, 0, 0 },
-    { 27, (struct anim_frame_record *)gStaticData_0817BF84, (u32 *)gStaticData_0817BF9C, 8, { 0 }, 0x2400, { -21, 5, -2, 32, 31, 4 }, 0, 0 },
-    { 28, (struct anim_frame_record *)gStaticData_0817BFE4, (u32 *)gStaticData_0817C008, 5, { 0 }, 0x2400, { -4, -21, -2, 8, 42, 4 }, 0, 0 },
+    { 1, (struct anim_frame_record *)gJetpackPlaneKeyframes, (u32 *)gJetpackPlaneFrames, 2, { 0 }, 0x2400, { -32, -16, -2, 64, 32, 4 }, 0, 0 },
+    { 2, (struct anim_frame_record *)gJetpackShotKeyframes, (u32 *)gJetpackShotFrames, 1, { 0 }, 0x2C00, { -12, -12, -2, 24, 24, 4 }, 0, 0 },
+    { 3, (struct anim_frame_record *)gJetpackCannonballKeyframes, (u32 *)gJetpackCannonballFrames, 2, { 0 }, 0x2A00, { -6, -6, -2, 12, 12, 4 }, 0, 0 },
+    { 4, (struct anim_frame_record *)gJetpackBomberKeyframes, (u32 *)gJetpackBomberFrames, 2, { 0 }, 0x2400, { -16, -16, -2, 32, 32, 4 }, 0, 0 },
+    { 5, (struct anim_frame_record *)gJetpackBomberKeyframes, (u32 *)gJetpackBomberFrames, 2, { 0 }, 0x2400, { -16, -16, -2, 32, 32, 4 }, 0, 0 },
+    { 6, (struct anim_frame_record *)gJetpackBomberKeyframes, (u32 *)gJetpackBomberFrames, 2, { 0 }, 0x2400, { -16, -16, -2, 32, 32, 4 }, 0, 0 },
+    { 7, (struct anim_frame_record *)gJetpackBomberKeyframes, (u32 *)gJetpackBomberFrames, 2, { 0 }, 0x2400, { -16, -16, -2, 32, 32, 4 }, 0, 0 },
+    { 8, (struct anim_frame_record *)gJetpackBomberKeyframes, (u32 *)gJetpackBomberFrames, 2, { 0 }, 0x2400, { -16, -16, -2, 32, 32, 4 }, 0, 0 },
+    { 9, (struct anim_frame_record *)gJetpackBomberKeyframes, (u32 *)gJetpackBomberFrames, 2, { 0 }, 0x2400, { -16, -16, -2, 32, 32, 4 }, 0, 0 },
+    { 10, (struct anim_frame_record *)gHovercraftCannonKeyframes, (u32 *)gHovercraftCannonFrames, 10, { 0 }, 0x2C00, { -8, -8, -2, 16, 16, 4 }, 0, 0 },
+    { 11, (struct anim_frame_record *)gHovercraftCannonKeyframes, (u32 *)gHovercraftCannonFrames, 10, { 0 }, 0x2C00, { -8, -8, -2, 16, 16, 4 }, 0, 0 },
+    { 12, (struct anim_frame_record *)gHovercraftLauncherKeyframes, (u32 *)gHovercraftLauncherFrames, 10, { 0 }, 0x2C00, { -8, -8, -2, 16, 16, 4 }, 0, 0 },
+    { 13, (struct anim_frame_record *)gHovercraftSideGunKeyframes, (u32 *)gHovercraftSideGunFrames, 10, { 0 }, 0x2C00, { -8, -8, -2, 16, 16, 4 }, 0, 0 },
+    { 14, (struct anim_frame_record *)gHovercraftCannonFlashKeyframes, (u32 *)gHovercraftCannonFlashFrames, 4, { 0 }, 0x2C00, { -8, -8, -2, 16, 16, 4 }, 0, 0 },
+    { 0, (struct anim_frame_record *)gHovercraftCannonKeyframes, (u32 *)gHovercraftCannonFrames, 10, { 0 }, 0x2C00, { -8, -8, -2, 16, 16, 4 }, 0, 0 },
+    { 16, (struct anim_frame_record *)gHovercraftCannonKeyframes, (u32 *)gHovercraftCannonFrames, 10, { 0 }, 0x2C00, { -8, -8, -2, 16, 16, 4 }, 0, 0 },
+    { 17, (struct anim_frame_record *)gHovercraftCannonKeyframes, (u32 *)gHovercraftCannonFrames, 10, { 0 }, 0x2C00, { -8, -8, -2, 16, 16, 4 }, 0, 0 },
+    { 18, (struct anim_frame_record *)gHovercraftCannonKeyframes, (u32 *)gHovercraftCannonFrames, 10, { 0 }, 0x2C00, { -8, -8, -2, 16, 16, 4 }, 0, 0 },
+    { 19, (struct anim_frame_record *)gJetpackCrateKeyframes, (u32 *)gJetpackQuestionCrateFrames, 7, { 0 }, 0x2400, { -11, -16, -2, 22, 22, 4 }, 0, 0 },
+    { 20, (struct anim_frame_record *)gJetpackCrateKeyframes, (u32 *)gJetpackQuestionCrateFrames, 7, { 0 }, 0x2400, { -11, -16, -2, 22, 22, 4 }, 0, 0 },
+    { 21, (struct anim_frame_record *)gJetpackCrateKeyframes, (u32 *)gJetpackQuestionCrateFrames, 7, { 0 }, 0x2400, { -11, -16, -2, 22, 22, 4 }, 0, 0 },
+    { 22, (struct anim_frame_record *)gJetpackCrateKeyframes, (u32 *)gJetpackQuestionCrateFrames, 7, { 0 }, 0x2400, { -11, -16, -2, 22, 22, 4 }, 0, 0 },
+    { 23, (struct anim_frame_record *)gJetpackCrateKeyframes, (u32 *)gJetpackQuestionCrateFrames, 7, { 0 }, 0x2400, { -11, -16, -2, 22, 22, 4 }, 0, 0 },
+    { 24, (struct anim_frame_record *)gJetpackCrateKeyframes, (u32 *)gJetpackTimeCrate1Frames, 5, { 0 }, 0x2400, { -11, -16, -2, 22, 22, 4 }, 0, 0 },
+    { 25, (struct anim_frame_record *)gJetpackCrateKeyframes, (u32 *)gJetpackTimeCrate2Frames, 5, { 0 }, 0x2400, { -11, -16, -2, 22, 22, 4 }, 0, 0 },
+    { 26, (struct anim_frame_record *)gJetpackCrateKeyframes, (u32 *)gJetpackTimeCrate3Frames, 5, { 0 }, 0x2400, { -11, -16, -2, 22, 22, 4 }, 0, 0 },
+    { 27, (struct anim_frame_record *)gJetpackParachuteNitroKeyframes, (u32 *)gJetpackParachuteNitroFrames, 8, { 0 }, 0x2400, { -21, 5, -2, 32, 31, 4 }, 0, 0 },
+    { 28, (struct anim_frame_record *)gJetpackRocketKeyframes, (u32 *)gJetpackRocketFrames, 5, { 0 }, 0x2400, { -4, -21, -2, 8, 42, 4 }, 0, 0 },
     { 29, (struct anim_frame_record *)gStaticData_0817C070, (u32 *)gStaticData_0817C088, 5, { 0 }, 0x2400, { -17, 4, -2, 25, 24, 4 }, 0, 0 },
-    { 30, (struct anim_frame_record *)gStaticData_0817BFE4, (u32 *)gStaticData_0817C008, 5, { 0 }, 0x2400, { -17, 4, -2, 25, 24, 4 }, 0, 0 },
-    { 31, (struct anim_frame_record *)gStaticData_0817C100, (u32 *)gStaticData_0817C118, 11, { 0 }, 0x1C00, { 3, -19, -2, 50, 38, 4 }, -7168, 0 },
-    { 32, (struct anim_frame_record *)gStaticData_0817BD64, (u32 *)gStaticData_0817BD88, 10, { 0 }, 0x2C00, { -8, -8, -2, 16, 16, 4 }, 0, 0 },
-    { 33, (struct anim_frame_record *)gStaticData_0817BD64, (u32 *)gStaticData_0817BD88, 10, { 0 }, 0x2C00, { -8, -8, -2, 16, 16, 4 }, 0, 0 },
-    { 34, (struct anim_frame_record *)gStaticData_0817BD64, (u32 *)gStaticData_0817BD88, 10, { 0 }, 0x2C00, { -8, -8, -2, 16, 16, 4 }, 0, 0 },
-    { 35, (struct anim_frame_record *)gStaticData_0817BD64, (u32 *)gStaticData_0817BD88, 10, { 0 }, 0x2C00, { -8, -8, -2, 16, 16, 4 }, 0, 0 },
-    { 36, (struct anim_frame_record *)gStaticData_0817BD64, (u32 *)gStaticData_0817BD88, 10, { 0 }, 0x2C00, { -8, -8, -2, 16, 16, 4 }, 0, 0 },
-    { 37, (struct anim_frame_record *)gStaticData_0817BD64, (u32 *)gStaticData_0817BD88, 10, { 0 }, 0x2C00, { -8, -8, -2, 16, 16, 4 }, 0, 0 },
-    { 38, (struct anim_frame_record *)gStaticData_0817BD04, (u32 *)gStaticData_0817BD1C, 3, { 0 }, 0x1C00, { -8, -8, -2, 16, 16, 4 }, 0, 0 },
-    { 39, (struct anim_frame_record *)gStaticData_0817BD04, (u32 *)gStaticData_0817BD1C, 3, { 0 }, 0x1C00, { -8, -8, -2, 16, 16, 4 }, 0, 0 },
-    { 40, (struct anim_frame_record *)gStaticData_0817C0A0, (u32 *)gStaticData_0817C0B8, 5, { 0 }, 0x2400, { -17, -38, -2, 53, 16, 4 }, 0, 0 },
-    { 41, (struct anim_frame_record *)gStaticData_0817C0A0, (u32 *)gStaticData_0817C0E8, 6, { 0 }, 0x2400, { -17, -38, -2, 53, 16, 4 }, 0, 0 },
-    { 42, (struct anim_frame_record *)gStaticData_0817C0A0, (u32 *)gStaticData_0817C0D0, 7, { 0 }, 0x2400, { -17, -38, -2, 53, 16, 4 }, 0, 0 },
-    { 43, (struct anim_frame_record *)gStaticData_0817C10C, (u32 *)gStaticData_0817C118, 11, { 0 }, 0x1C00, { 0, 0, 0, 0, 0, 0 }, 7168, 0 },
-    { 44, (struct anim_frame_record *)gStaticData_0817C130, (u32 *)gStaticData_0817C13C, 9, { 0 }, 0x1C00, { 0, 0, 0, 0, 0, 0 }, 0, 0 },
-    { 45, (struct anim_frame_record *)gStaticData_0817C174, (u32 *)gStaticData_0817C180, 4, { 0 }, 0x2C00, { 0, 0, 0, 0, 0, 0 }, 0, 0 },
-    { 46, (struct anim_frame_record *)gStaticData_0817C1A8, (u32 *)gStaticData_0817C1B4, 9, { 0 }, 0x2C00, { 0, 0, 0, 0, 0, 0 }, 0, 0 },
+    { 30, (struct anim_frame_record *)gJetpackRocketKeyframes, (u32 *)gJetpackRocketFrames, 5, { 0 }, 0x2400, { -17, 4, -2, 25, 24, 4 }, 0, 0 },
+    { 31, (struct anim_frame_record *)gStaticData_0817C100, (u32 *)gJetpackRingFrames, 11, { 0 }, 0x1C00, { 3, -19, -2, 50, 38, 4 }, -7168, 0 },
+    { 32, (struct anim_frame_record *)gHovercraftCannonKeyframes, (u32 *)gHovercraftCannonFrames, 10, { 0 }, 0x2C00, { -8, -8, -2, 16, 16, 4 }, 0, 0 },
+    { 33, (struct anim_frame_record *)gHovercraftCannonKeyframes, (u32 *)gHovercraftCannonFrames, 10, { 0 }, 0x2C00, { -8, -8, -2, 16, 16, 4 }, 0, 0 },
+    { 34, (struct anim_frame_record *)gHovercraftCannonKeyframes, (u32 *)gHovercraftCannonFrames, 10, { 0 }, 0x2C00, { -8, -8, -2, 16, 16, 4 }, 0, 0 },
+    { 35, (struct anim_frame_record *)gHovercraftCannonKeyframes, (u32 *)gHovercraftCannonFrames, 10, { 0 }, 0x2C00, { -8, -8, -2, 16, 16, 4 }, 0, 0 },
+    { 36, (struct anim_frame_record *)gHovercraftCannonKeyframes, (u32 *)gHovercraftCannonFrames, 10, { 0 }, 0x2C00, { -8, -8, -2, 16, 16, 4 }, 0, 0 },
+    { 37, (struct anim_frame_record *)gHovercraftCannonKeyframes, (u32 *)gHovercraftCannonFrames, 10, { 0 }, 0x2C00, { -8, -8, -2, 16, 16, 4 }, 0, 0 },
+    { 38, (struct anim_frame_record *)gBossFireballKeyframes, (u32 *)gBossFireballFrames, 3, { 0 }, 0x1C00, { -8, -8, -2, 16, 16, 4 }, 0, 0 },
+    { 39, (struct anim_frame_record *)gBossFireballKeyframes, (u32 *)gBossFireballFrames, 3, { 0 }, 0x1C00, { -8, -8, -2, 16, 16, 4 }, 0, 0 },
+    { 40, (struct anim_frame_record *)gJetpackBalloonKeyframes, (u32 *)gJetpackRedYellowBalloonFrames, 5, { 0 }, 0x2400, { -17, -38, -2, 53, 16, 4 }, 0, 0 },
+    { 41, (struct anim_frame_record *)gJetpackBalloonKeyframes, (u32 *)gJetpackOrangeBlueBalloonFrames, 6, { 0 }, 0x2400, { -17, -38, -2, 53, 16, 4 }, 0, 0 },
+    { 42, (struct anim_frame_record *)gJetpackBalloonKeyframes, (u32 *)gJetpackYellowBlueBalloonFrames, 7, { 0 }, 0x2400, { -17, -38, -2, 53, 16, 4 }, 0, 0 },
+    { 43, (struct anim_frame_record *)gStaticData_0817C10C, (u32 *)gJetpackRingFrames, 11, { 0 }, 0x1C00, { 0, 0, 0, 0, 0, 0 }, 7168, 0 },
+    { 44, (struct anim_frame_record *)gJetpackCollectedWumpaKeyframes, (u32 *)gJetpackCollectedWumpaFrames, 9, { 0 }, 0x1C00, { 0, 0, 0, 0, 0, 0 }, 0, 0 },
+    { 45, (struct anim_frame_record *)gJetpackExplosionKeyframes, (u32 *)gJetpackExplosionFrames, 4, { 0 }, 0x2C00, { 0, 0, 0, 0, 0, 0 }, 0, 0 },
+    { 46, (struct anim_frame_record *)gJetpackCheckpointTextKeyframes, (u32 *)gJetpackCheckpointTextFrames, 9, { 0 }, 0x2C00, { 0, 0, 0, 0, 0, 0 }, 0, 0 },
 };
 
 const struct anim_frame_record gJetpackPlayerKeyframes[6] = {
@@ -306,17 +306,17 @@ const u8 *const gJetpackPlayerFrames[90] = {
     gJetpackPlayerRleFrames + RLE_SPRITES_15A050_FRAME_079,
 };
 
-const struct anim_frame_record gStaticData_0817BBAC[1] = {
+const struct anim_frame_record gJetpackShotKeyframes[1] = {
     { 64, 0, 3, 0, 0x0, { 0, 0 } },
 };
 
-const u32 gStaticData_0817BBB8[3] = {
+const u32 gJetpackShotFrames[3] = {
     FRAMED_14174C_RECORD_SLOT02_00,
     FRAMED_14174C_RECORD_SLOT02_01,
     FRAMED_14174C_RECORD_SLOT02_02,
 };
 
-const struct anim_frame_record gStaticData_0817BBC4[6] = {
+const struct anim_frame_record gJetpackPlaneKeyframes[6] = {
     { 64, 0, 3, 0, 0x0, { 0, 0 } },
     { 64, 3, 6, 5, 0x0, { 0, 0 } },
     { 64, 9, 7, 0, 0x0, { 0, 0 } },
@@ -325,7 +325,7 @@ const struct anim_frame_record gStaticData_0817BBC4[6] = {
     { 64, 25, 7, 0, 0x0, { 0, 0 } },
 };
 
-const u32 gStaticData_0817BC0C[32] = {
+const u32 gJetpackPlaneFrames[32] = {
     FRAMED_14174C_WINGED_CREATURE_00,
     FRAMED_14174C_WINGED_CREATURE_01,
     FRAMED_14174C_WINGED_CREATURE_02,
@@ -360,12 +360,12 @@ const u32 gStaticData_0817BC0C[32] = {
     FRAMED_14174C_WINGED_CREATURE_25,
 };
 
-const struct anim_frame_record gStaticData_0817BC8C[2] = {
+const struct anim_frame_record gJetpackBomberKeyframes[2] = {
     { 64, 0, 10, 0, 0x0, { 0, 0 } },
     { 51, 10, 10, 9, 0x0, { 0, 0 } },
 };
 
-const u32 gStaticData_0817BCA4[20] = {
+const u32 gJetpackBomberFrames[20] = {
     FRAMED_14174C_RECORD_SLOT04_00,
     FRAMED_14174C_RECORD_SLOT04_01,
     FRAMED_14174C_RECORD_SLOT04_02,
@@ -388,20 +388,20 @@ const u32 gStaticData_0817BCA4[20] = {
     FRAMED_14174C_RECORD_SLOT45_09,
 };
 
-const struct anim_frame_record gStaticData_0817BCF4[1] = {
+const struct anim_frame_record gJetpackCannonballKeyframes[1] = {
     { 64, 0, 1, 0, 0x0, { 0, 0 } },
 };
 
-const u32 gStaticData_0817BD00[1] = {
+const u32 gJetpackCannonballFrames[1] = {
     FRAMED_14174C_RECORD_SLOT03_00,
 };
 
-const struct anim_frame_record gStaticData_0817BD04[2] = {
+const struct anim_frame_record gBossFireballKeyframes[2] = {
     { 42, 0, 8, 0, 0x0, { 0, 0 } },
     { 42, 8, 10, 9, 0x0, { 0, 0 } },
 };
 
-const u32 gStaticData_0817BD1C[18] = {
+const u32 gBossFireballFrames[18] = {
     FRAMED_14174C_RECORD_SLOT38_00,
     FRAMED_14174C_RECORD_SLOT38_01,
     FRAMED_14174C_RECORD_SLOT38_02,
@@ -422,13 +422,13 @@ const u32 gStaticData_0817BD1C[18] = {
     FRAMED_14174C_CRATE_3_18,
 };
 
-const struct anim_frame_record gStaticData_0817BD64[3] = {
+const struct anim_frame_record gHovercraftCannonKeyframes[3] = {
     { 64, 0, 1, 0, 0x0, { 0, 0 } },
     { 64, 0, 11, 0, 0x0, { 0, 0 } },
     { 64, 11, 14, 11, 0x0, { 0, 0 } },
 };
 
-const u32 gStaticData_0817BD88[26] = {
+const u32 gHovercraftCannonFrames[26] = {
     FRAMED_14174C_RECORD_SLOT10_00,
     FRAMED_14174C_RECORD_SLOT10_00,
     FRAMED_14174C_RECORD_SLOT10_01,
@@ -457,14 +457,14 @@ const u32 gStaticData_0817BD88[26] = {
     FRAMED_14174C_RECORD_SLOT10_24,
 };
 
-const struct anim_frame_record gStaticData_0817BDF0[4] = {
+const struct anim_frame_record gHovercraftLauncherKeyframes[4] = {
     { 64, 0, 1, 0, 0x0, { 0, 0 } },
     { 64, 1, 8, 7, 0x0, { 0, 0 } },
     { 64, 9, 8, 7, 0x0, { 0, 0 } },
     { 64, 17, 14, 0, 0x0, { 0, 0 } },
 };
 
-const u32 gStaticData_0817BE20[31] = {
+const u32 gHovercraftLauncherFrames[31] = {
     FRAMED_14174C_TREASURE_CHEST_00,
     FRAMED_14174C_TREASURE_CHEST_00,
     FRAMED_14174C_TREASURE_CHEST_01,
@@ -498,20 +498,20 @@ const u32 gStaticData_0817BE20[31] = {
     FRAMED_14174C_TREASURE_CHEST_21,
 };
 
-const struct anim_frame_record gStaticData_0817BE9C[2] = {
+const struct anim_frame_record gHovercraftSideGunKeyframes[2] = {
     { 64, 0, 1, 0, 0x0, { 0, 0 } },
     { 64, 0, 1, 0, 0x1000, { 0, 0 } },
 };
 
-const u32 gStaticData_0817BEB4[1] = {
+const u32 gHovercraftSideGunFrames[1] = {
     FRAMED_14174C_RECORD_SLOT13_00,
 };
 
-const struct anim_frame_record gStaticData_0817BEB8[1] = {
+const struct anim_frame_record gHovercraftCannonFlashKeyframes[1] = {
     { 64, 0, 6, 0, 0x0, { 0, 0 } },
 };
 
-const u32 gStaticData_0817BEC4[6] = {
+const u32 gHovercraftCannonFlashFrames[6] = {
     FRAMED_14174C_RECORD_SLOT14_00,
     FRAMED_14174C_RECORD_SLOT14_01,
     FRAMED_14174C_RECORD_SLOT14_02,
@@ -520,12 +520,12 @@ const u32 gStaticData_0817BEC4[6] = {
     FRAMED_14174C_RECORD_SLOT14_05,
 };
 
-const struct anim_frame_record gStaticData_0817BEDC[2] = {
+const struct anim_frame_record gJetpackCrateKeyframes[2] = {
     { 42, 0, 1, 0, 0x0, { 0, 0 } },
     { 42, 1, 8, 7, 0x0, { 0, 0 } },
 };
 
-const u32 gStaticData_0817BEF4[9] = {
+const u32 gJetpackQuestionCrateFrames[9] = {
     FRAMED_14174C_CRATE_QUESTION_MARK_00,
     FRAMED_14174C_CRATE_3_01,
     FRAMED_14174C_CRATE_3_02,
@@ -537,7 +537,7 @@ const u32 gStaticData_0817BEF4[9] = {
     FRAMED_14174C_CRATE_3_08,
 };
 
-const u32 gStaticData_0817BF18[9] = {
+const u32 gJetpackTimeCrate1Frames[9] = {
     FRAMED_14174C_CRATE_1_00,
     FRAMED_14174C_CLOCK_06,
     FRAMED_14174C_CLOCK_07,
@@ -549,7 +549,7 @@ const u32 gStaticData_0817BF18[9] = {
     FRAMED_14174C_CLOCK_13,
 };
 
-const u32 gStaticData_0817BF3C[9] = {
+const u32 gJetpackTimeCrate2Frames[9] = {
     FRAMED_14174C_CRATE_2_00,
     FRAMED_14174C_CLOCK_06,
     FRAMED_14174C_CLOCK_07,
@@ -561,7 +561,7 @@ const u32 gStaticData_0817BF3C[9] = {
     FRAMED_14174C_CLOCK_13,
 };
 
-const u32 gStaticData_0817BF60[9] = {
+const u32 gJetpackTimeCrate3Frames[9] = {
     FRAMED_14174C_CRATE_3_00,
     FRAMED_14174C_CLOCK_06,
     FRAMED_14174C_CLOCK_07,
@@ -573,12 +573,12 @@ const u32 gStaticData_0817BF60[9] = {
     FRAMED_14174C_CLOCK_13,
 };
 
-const struct anim_frame_record gStaticData_0817BF84[2] = {
+const struct anim_frame_record gJetpackParachuteNitroKeyframes[2] = {
     { 42, 0, 10, 0, 0x0, { 0, 0 } },
     { 42, 10, 8, 7, 0x0, { 0, 0 } },
 };
 
-const u32 gStaticData_0817BF9C[18] = {
+const u32 gJetpackParachuteNitroFrames[18] = {
     FRAMED_14174C_PARACHUTE_CRATE_00,
     FRAMED_14174C_PARACHUTE_CRATE_01,
     FRAMED_14174C_PARACHUTE_CRATE_02,
@@ -599,13 +599,13 @@ const u32 gStaticData_0817BF9C[18] = {
     FRAMED_14174C_PARACHUTE_CRATE_13,
 };
 
-const struct anim_frame_record gStaticData_0817BFE4[3] = {
+const struct anim_frame_record gJetpackRocketKeyframes[3] = {
     { 42, 0, 5, 0, 0x0, { 0, 0 } },
     { 34, 5, 11, 9, 0x0, { 0, 0 } },
     { 42, 16, 10, 9, 0x0, { 0, 0 } },
 };
 
-const u32 gStaticData_0817C008[26] = {
+const u32 gJetpackRocketFrames[26] = {
     FRAMED_14174C_RECORD_SLOT28_00,
     FRAMED_14174C_RECORD_SLOT28_01,
     FRAMED_14174C_RECORD_SLOT28_02,
@@ -648,12 +648,12 @@ const u32 gStaticData_0817C088[6] = {
     FRAMED_14174C_CLOCK_05,
 };
 
-const struct anim_frame_record gStaticData_0817C0A0[2] = {
+const struct anim_frame_record gJetpackBalloonKeyframes[2] = {
     { 42, 0, 1, 0, 0x0, { 0, 0 } },
     { 42, 1, 5, 4, 0x0, { 0, 0 } },
 };
 
-const u32 gStaticData_0817C0B8[6] = {
+const u32 gJetpackRedYellowBalloonFrames[6] = {
     FRAMED_14174C_BALLOON_RED_YELLOW_00,
     FRAMED_14174C_BALLOON_RED_YELLOW_01,
     FRAMED_14174C_BALLOON_RED_YELLOW_02,
@@ -662,7 +662,7 @@ const u32 gStaticData_0817C0B8[6] = {
     FRAMED_14174C_BALLOON_RED_YELLOW_05,
 };
 
-const u32 gStaticData_0817C0D0[6] = {
+const u32 gJetpackYellowBlueBalloonFrames[6] = {
     FRAMED_14174C_BALLOON_YELLOW_BLUE_CROSS_00,
     FRAMED_14174C_BALLOON_YELLOW_BLUE_CROSS_01,
     FRAMED_14174C_BALLOON_YELLOW_BLUE_CROSS_02,
@@ -671,7 +671,7 @@ const u32 gStaticData_0817C0D0[6] = {
     FRAMED_14174C_BALLOON_YELLOW_BLUE_CROSS_05,
 };
 
-const u32 gStaticData_0817C0E8[6] = {
+const u32 gJetpackOrangeBlueBalloonFrames[6] = {
     FRAMED_14174C_BALLOON_ORANGE_BLUE_00,
     FRAMED_14174C_BALLOON_ORANGE_BLUE_01,
     FRAMED_14174C_BALLOON_ORANGE_BLUE_02,
@@ -688,7 +688,7 @@ const struct anim_frame_record gStaticData_0817C10C[1] = {
     { 42, 0, 6, 0, 0x1000, { 0, 0 } },
 };
 
-const u32 gStaticData_0817C118[6] = {
+const u32 gJetpackRingFrames[6] = {
     FRAMED_14174C_CRESCENT_ARCH_00,
     FRAMED_14174C_CRESCENT_ARCH_00,
     FRAMED_14174C_CRESCENT_ARCH_00,
@@ -697,11 +697,11 @@ const u32 gStaticData_0817C118[6] = {
     FRAMED_14174C_CRESCENT_ARCH_03,
 };
 
-const struct anim_frame_record gStaticData_0817C130[1] = {
+const struct anim_frame_record gJetpackCollectedWumpaKeyframes[1] = {
     { 85, 0, 14, 0, 0x0, { 0, 0 } },
 };
 
-const u32 gStaticData_0817C13C[14] = {
+const u32 gJetpackCollectedWumpaFrames[14] = {
     FRAMED_14174C_RECORD_SLOT44_00,
     FRAMED_14174C_RECORD_SLOT44_01,
     FRAMED_14174C_RECORD_SLOT44_02,
@@ -718,11 +718,11 @@ const u32 gStaticData_0817C13C[14] = {
     FRAMED_14174C_RECORD_SLOT44_13,
 };
 
-const struct anim_frame_record gStaticData_0817C174[1] = {
+const struct anim_frame_record gJetpackExplosionKeyframes[1] = {
     { 51, 0, 10, 9, 0x0, { 0, 0 } },
 };
 
-const u32 gStaticData_0817C180[10] = {
+const u32 gJetpackExplosionFrames[10] = {
     FRAMED_14174C_RECORD_SLOT45_00,
     FRAMED_14174C_RECORD_SLOT45_01,
     FRAMED_14174C_RECORD_SLOT45_02,
@@ -735,11 +735,11 @@ const u32 gStaticData_0817C180[10] = {
     FRAMED_14174C_RECORD_SLOT45_09,
 };
 
-const struct anim_frame_record gStaticData_0817C1A8[1] = {
+const struct anim_frame_record gJetpackCheckpointTextKeyframes[1] = {
     { 8, 0, 3, 0, 0x0, { 0, 0 } },
 };
 
-const u32 gStaticData_0817C1B4[3] = {
+const u32 gJetpackCheckpointTextFrames[3] = {
     FRAMED_14174C_CHECKPOINT_TEXT_00,
     FRAMED_14174C_CHECKPOINT_TEXT_00,
     FRAMED_14174C_CHECKPOINT_TEXT_00,

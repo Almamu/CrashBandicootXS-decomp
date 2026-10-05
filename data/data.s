@@ -4,8 +4,8 @@
 
 .section .rodata.080B2120
 
-.global gStaticData_080B2120
-gStaticData_080B2120:
+.global gPolarSpriteSheet
+gPolarSpriteSheet:
 	@ LZ77 compressed data (unidentified) (213064 bytes decompressed)
 	.incbin "build/crashbandicootxs/graphics/unknown/00_0b2120.bin.lz"
 
@@ -17,8 +17,8 @@ gStaticData_080B2120:
 
 .section .rodata.0814174C
 
-.global gStaticData_0814174C
-gStaticData_0814174C:
+.global gJetpackSpriteSheet
+gJetpackSpriteSheet:
 	@ LZ77 compressed data (unidentified) (207124 bytes decompressed)
 	.incbin "build/crashbandicootxs/graphics/unknown/01_14174c.bin.lz"
 
@@ -98,7 +98,7 @@ gSfxTable:
 
 @ gActorPaletteCycleFrames..gActorPaletteCycleTargetFrames: src/data/palette_cycle_175760.c
 
-@ gStaticData_08178F80..0x0817A6B8 (categories 0-2 family data): src/data/anim_family_178f80.c
+@ gPolarCategoryPalette..0x0817A6B8 (categories 0-2 family data): src/data/anim_family_178f80.c
 
 @ gPolarPlayerStateFuncs: src/data/actor_pmf_17a6b8.c
 
@@ -148,10 +148,10 @@ gSfxTable:
 
 @ gLanguageSelectPalette0..gLanguageSelectPalette2: src/data/palettes_17e72c.c
 
-@ gLanguageSelectPalette3..gStaticData_08200DF4: src/data/level_tilesets_17e78c.c
+@ gLanguageSelectPalette3..gUnderwaterBg0Tiles: src/data/level_tilesets_17e78c.c
 
 @ 0x0824B638..0x08270F08 (33 rooms' level data): src/data/level_rooms_24b638.c
-@ gStaticData_08270F08..gStaticData_08299DCC: src/data/level_tilesets_270f08.c
+@ gSewerBg0Tiles..gSpaceBg0Tiles: src/data/level_tilesets_270f08.c
 @ 0x082B91D0..0x082BF120 (8 rooms' level data): src/data/level_rooms_2b91d0.c
 @ gSpriteBank00Tiles..gObjPalettes: src/data/sprite_tiles_2bf120.c
 
@@ -571,8 +571,8 @@ gVvLogoUrlTiles:
 	@ LZ77 tile graphics (4bpp) (1024 bytes decompressed)
 	.incbin "build/crashbandicootxs/graphics/intro/75_637604_tiles.4bpp.lz"
 
-.global gStaticData_086377C0
-gStaticData_086377C0:
+.global gLevelSelectCursorZoomTiles
+gLevelSelectCursorZoomTiles:
 	@ LZ77 tile graphics (4bpp) (2048 bytes decompressed)
 	.incbin "build/crashbandicootxs/graphics/tileset1/00_6377c0_tiles.4bpp.lz"
 
@@ -722,33 +722,33 @@ gLevelSelectPicture6Palette:
 	@ uses bits 0-14), which broke byte-exact rebuilding when tried as .pal
 	.incbin "build/crashbandicootxs/graphics/tileset1/20_63d43c.bin.lz"
 
-.global gStaticData_0863D4C0
-gStaticData_0863D4C0:
+.global gSnowBgTiles
+gSnowBgTiles:
 	@ LZ77 tile graphics (4bpp) (23520 bytes decompressed)
 	.incbin "build/crashbandicootxs/graphics/tileset1/21_63d4c0_tiles.4bpp.lz"
 
-.global gStaticData_08640EF8
-gStaticData_08640EF8:
+.global gJungleBgTiles
+gJungleBgTiles:
 	@ LZ77 tile graphics (4bpp) (23392 bytes decompressed)
 	.incbin "build/crashbandicootxs/graphics/tileset1/22_640ef8_tiles.4bpp.lz"
 
-.global gStaticData_08644A88
-gStaticData_08644A88:
+.global gTempleBgTiles
+gTempleBgTiles:
 	@ LZ77 compressed data (24352 bytes decompressed) - not clearly identifiable as pixel graphics
 	.incbin "build/crashbandicootxs/graphics/tileset1/23_644a88.bin.lz"
 
-.global gStaticData_08649418
-gStaticData_08649418:
+.global gSewerBgTiles
+gSewerBgTiles:
 	@ LZ77 compressed data (15968 bytes decompressed) - not clearly identifiable as pixel graphics
 	.incbin "build/crashbandicootxs/graphics/tileset1/24_649418.bin.lz", 0, 0x2744
 
-.global gStaticData_0864BB5C
-gStaticData_0864BB5C:
+.global gSpaceBgTiles
+gSpaceBgTiles:
 	@ LZ77 compressed data (12576 bytes decompressed) - not clearly identifiable as pixel graphics
 	.incbin "build/crashbandicootxs/graphics/tileset1/25_64bb5c.bin.lz"
 
-.global gStaticData_0864D7E8
-gStaticData_0864D7E8:
+.global gUnderwaterBgTiles
+gUnderwaterBgTiles:
 	@ LZ77 compressed data (14240 bytes decompressed) - not clearly identifiable as pixel graphics
 	.incbin "build/crashbandicootxs/graphics/tileset1/26_64d7e8.bin.lz"
 

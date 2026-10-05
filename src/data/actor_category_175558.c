@@ -38,21 +38,21 @@ extern void DestroyHovercraft();
 
 extern const u8 gCategoryFamily0CellAnim[];
 extern const u8 gCategory0SpawnTable[];
-extern const u8 gStaticData_080B2120[];
+extern const u8 gPolarSpriteSheet[];
 extern const u8 gCategory1SpawnTable[];
 extern const u8 gCategory2SpawnTable[];
 extern const u8 gCategoryFamily1CellAnim[];
 extern const u8 gCategory3BgPicture[];
 extern const u8 gCategory3SpawnTable[];
-extern const u8 gStaticData_0814174C[];
+extern const u8 gJetpackSpriteSheet[];
 extern const u8 gCategory4BgPicture[];
 extern const u8 gCategory4SpawnTable[];
 extern const u8 gCategory5BgPicture[];
 extern const u8 gCategory5SpawnTable[];
 extern const u8 gCategory6SpawnTable[];
-extern const u16 gStaticData_08178F80[];
-extern const u16 gStaticData_0817AAA4[];
-extern const u16 gStaticData_0817AEA4[];
+extern const u16 gPolarCategoryPalette[];
+extern const u16 gAirshipCategoryPalette[];
+extern const u16 gHovercraftCategoryPalette[];
 
 /* One descriptor per actor category 0-6 (type 0: categories 0-2,
  * type 1: 3-5, type 2: 6). data.s used to split this table at
@@ -63,10 +63,10 @@ const struct category_descriptor gActorCategories[7] = {
         (void *)gCategoryFamily0CellAnim,
         0x75b94,
         NULL,
-        gStaticData_08178F80,
+        gPolarCategoryPalette,
         (struct sub_effect_record *)gCategory0SpawnTable,
         (struct anim_table_record *)gCategoryFamily0AnimTable,
-        gStaticData_080B2120,
+        gPolarSpriteSheet,
         4,
         3,
         2,
@@ -78,10 +78,10 @@ const struct category_descriptor gActorCategories[7] = {
         (void *)gCategoryFamily0CellAnim,
         0x75b94,
         NULL,
-        gStaticData_08178F80,
+        gPolarCategoryPalette,
         (struct sub_effect_record *)gCategory1SpawnTable,
         (struct anim_table_record *)gCategoryFamily0AnimTable,
-        gStaticData_080B2120,
+        gPolarSpriteSheet,
         4,
         3,
         2,
@@ -93,10 +93,10 @@ const struct category_descriptor gActorCategories[7] = {
         (void *)gCategoryFamily0CellAnim,
         0x75b94,
         NULL,
-        gStaticData_08178F80,
+        gPolarCategoryPalette,
         (struct sub_effect_record *)gCategory2SpawnTable,
         (struct anim_table_record *)gCategoryFamily0AnimTable,
-        gStaticData_080B2120,
+        gPolarSpriteSheet,
         4,
         3,
         2,
@@ -108,10 +108,10 @@ const struct category_descriptor gActorCategories[7] = {
         (void *)gCategoryFamily1CellAnim,
         0x3e784,
         (void *)gCategory3BgPicture,
-        gStaticData_0817AAA4,
+        gAirshipCategoryPalette,
         (struct sub_effect_record *)gCategory3SpawnTable,
         (struct anim_table_record *)gCategoryFamily1AnimTable,
-        gStaticData_0814174C,
+        gJetpackSpriteSheet,
         7,
         4,
         6,
@@ -123,10 +123,10 @@ const struct category_descriptor gActorCategories[7] = {
         (void *)gCategoryFamily1CellAnim,
         0x3e784,
         (void *)gCategory4BgPicture,
-        gStaticData_0817AAA4,
+        gAirshipCategoryPalette,
         (struct sub_effect_record *)gCategory4SpawnTable,
         (struct anim_table_record *)gCategoryFamily1AnimTable,
-        gStaticData_0814174C,
+        gJetpackSpriteSheet,
         7,
         4,
         6,
@@ -138,10 +138,10 @@ const struct category_descriptor gActorCategories[7] = {
         (void *)gCategoryFamily1CellAnim,
         0x3e784,
         (void *)gCategory5BgPicture,
-        gStaticData_0817AAA4,
+        gAirshipCategoryPalette,
         (struct sub_effect_record *)gCategory5SpawnTable,
         (struct anim_table_record *)gCategoryFamily1AnimTable,
-        gStaticData_0814174C,
+        gJetpackSpriteSheet,
         7,
         4,
         6,
@@ -153,10 +153,10 @@ const struct category_descriptor gActorCategories[7] = {
         (void *)gCategoryFamily1CellAnim,
         0x3e784,
         (void *)gCategory5BgPicture,
-        gStaticData_0817AEA4,
+        gHovercraftCategoryPalette,
         (struct sub_effect_record *)gCategory6SpawnTable,
         (struct anim_table_record *)gCategoryFamily1AnimTable,
-        gStaticData_0814174C,
+        gJetpackSpriteSheet,
         4,
         3,
         3,

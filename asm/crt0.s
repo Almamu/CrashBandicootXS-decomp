@@ -11,10 +11,10 @@ start: @ 0x08000000
 init_vector:
 	mov r0, #0x12
 	msr cpsr_fc, r0
-	ldr sp, _08000128 @ =gUnknown_03007FA0
+	ldr sp, _08000128 @ =gIrqStack
 	mov r0, #0x1f
 	msr cpsr_fc, r0
-	ldr sp, _08000120 @ =gUnknown_03007F00
+	ldr sp, _08000120 @ =gSysStack
 	mov r0, #0xff
 	svc #0x10000
 	ldr sp, _08000124 @ =iwram_end
@@ -34,9 +34,9 @@ init_vector:
 	bx r1
 	b init_vector
 	.align 2, 0
-_08000120: .4byte gUnknown_03007F00
+_08000120: .4byte gSysStack
 _08000124: .4byte iwram_end
-_08000128: .4byte gUnknown_03007FA0
+_08000128: .4byte gIrqStack
 _0800012C: .4byte __iwram_lma
 _08000130: .4byte gIntrTable
 _08000134: .4byte IntrMain_Buffer

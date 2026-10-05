@@ -69,9 +69,22 @@ stream_source` in `game_loop57.c`, the terrain cache's `source`.
 | 0x1E | `u16`, 2 in every layer |
 
 A layer is a grid of **chunks** of 16x8 cells (128x64 pixels). BG1-3 use
-the 4bpp LZ77 tile sets `gStaticData_0863D4C0`..`gStaticData_0864D7E8`
-(`graphics/tileset1/21`-`26`), BG0 uses one of the five 8bpp tag-0x00 tile
-sets (`graphics/level_tilesets/`).
+the six 4bpp LZ77 tile sets of `graphics/tileset1/21`-`26`, BG0 uses one of
+the five 8bpp tag-0x00 tile sets (`graphics/level_tilesets/`). Each set
+belongs to one level theme, which names it (`tools/levels.py`'s
+`TILESET_SYMBOLS`):
+
+| Theme | Levels | BG0 | BG1-3 |
+|---|---|---|---|
+| 0 | snow crash, snow job, frostbite cavern | `gSnowBg0Tiles` | `gSnowBgTiles` |
+| 1 | jungle jam, ruined | `gJungleBg0Tiles` | `gJungleBgTiles`, and `gTempleBgTiles` on BG1 of some rooms |
+| 1 | temple of boom, down the hole | `gJungleBg0Tiles` | `gTempleBgTiles` |
+| 2 | just in slime, just hangin', drip drip drip | `gSewerBg0Tiles` | `gSewerBgTiles` |
+| 3 | shipwrecked, shark attack, sunken city, air supply | `gUnderwaterBg0Tiles` | `gUnderwaterBgTiles` |
+| 5 | ace of space, star to finish, final countdown | `gSpaceBg0Tiles` | `gSpaceBgTiles` |
+
+The boss rooms borrow a theme's sets: tiny the jungle ones, dingodile the
+underwater ones, neo cortex and mega-mix the space ones.
 
 ### Cells
 

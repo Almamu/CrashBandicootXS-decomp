@@ -2337,7 +2337,7 @@
   {
    "address": "0x0816C4A8",
    "size": 8,
-   "name": "gStaticData_0816C4A8",
+   "name": "gLevelSelectCrystalPos",
    "consumers": [
     "InitLevelSelect"
    ],
@@ -2361,7 +2361,7 @@
   {
    "address": "0x0816C4B0",
    "size": 8,
-   "name": "gStaticData_0816C4B0",
+   "name": "gLevelSelectGemPos",
    "consumers": [
     "InitLevelSelect"
    ],
@@ -2385,7 +2385,7 @@
   {
    "address": "0x0816C4B8",
    "size": 8,
-   "name": "gStaticData_0816C4B8",
+   "name": "gLevelSelectTrialIconPos",
    "consumers": [
     "InitLevelSelect"
    ],
@@ -2409,7 +2409,7 @@
   {
    "address": "0x0816C4C0",
    "size": 8,
-   "name": "gStaticData_0816C4C0",
+   "name": "gLevelSelectTimePos",
    "consumers": [
     "InitLevelSelect",
     "DrawLevelSelectTime"
@@ -3473,7 +3473,7 @@
   {
    "address": "0x08178F80",
    "size": 5944,
-   "name": "gStaticData_08178F80",
+   "name": "gPolarCategoryPalette",
    "consumers": [
     "RunCompanyLogos"
    ],

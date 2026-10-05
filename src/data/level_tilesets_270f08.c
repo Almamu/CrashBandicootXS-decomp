@@ -8,7 +8,7 @@
  */
 
 /* Tile set 4: 2619 tiles, 7 rooms. */
-const TAGGED_RAW_ASSET(0x28EC0) gStaticData_08270F08 = {
+const TAGGED_RAW_ASSET(0x28EC0) gSewerBg0Tiles = {
     TAGGED_RAW_HEADER(0x28EC0),
     {
 #include "level_tilesets/tileset4_270f08.img.bin.inc"
@@ -16,7 +16,7 @@ const TAGGED_RAW_ASSET(0x28EC0) gStaticData_08270F08 = {
 };
 
 /* Tile set 5: 2000 tiles, 9 rooms. */
-const TAGGED_RAW_ASSET(0x1F400) gStaticData_08299DCC = {
+const TAGGED_RAW_ASSET(0x1F400) gSpaceBg0Tiles = {
     TAGGED_RAW_HEADER(0x1F400),
     {
 #include "level_tilesets/tileset5_299dcc.img.bin.inc"

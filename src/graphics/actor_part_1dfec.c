@@ -90,7 +90,7 @@ struct xy
 
 extern struct oam_shadow_buffer *gOamBuffer;
 extern u32 gLevelSelectCursorAnims[];
-extern u8 gStaticData_086377C0[];
+extern u8 gLevelSelectCursorZoomTiles[];
 
 extern void AddOamEntry(struct oam_shadow_buffer *buf, struct oam_attrs *oam);
 extern void ObjAffineSet(void *src, void *dst, s32 count, s32 stride);
@@ -156,7 +156,7 @@ struct cursor_panel *CreateLevelSelectCursor(struct cursor_panel *self)
     self->oam.tileNum = 0x3C0;
     self->oam.priority = 0;
     self->oam.palette = self->part->palette;
-    LoadTaggedAsset(gStaticData_086377C0, OBJ_VRAM0 + 0x7800);
+    LoadTaggedAsset(gLevelSelectCursorZoomTiles, OBJ_VRAM0 + 0x7800);
     self->angle = 0;
     self->scale = 8;
     self->state = 4;

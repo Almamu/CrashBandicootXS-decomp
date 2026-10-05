@@ -489,7 +489,8 @@ def find_tileset(symbol):
     gray / 17) or graphics/tileset1/23-26 (raw 4bpp tiles)."""
     from PIL import Image
 
-    addr = symbol[-6:].lower()
+    named = {n: a for a, n in TILESET_SYMBOLS.items()}
+    addr = "%06x" % (named[symbol] & 0xFFFFFF) if symbol in named else symbol[-6:].lower()
     for pat in ("graphics/level_tilesets/*_%s.png", "graphics/tileset1/*_%s_tiles.png"):
         hits = sorted(Path(".").glob(pat % addr))
         if hits:
@@ -612,6 +613,21 @@ def in_regions(a):
 def sym(a):
     return "gStaticData_%08X" % a
 
+# The level tile sets' symbol names (see docs/levels.md).
+TILESET_SYMBOLS = {
+    0x0817E7AC: "gJungleBg0Tiles",
+    0x081E6330: "gSnowBg0Tiles",
+    0x08200DF4: "gUnderwaterBg0Tiles",
+    0x08270F08: "gSewerBg0Tiles",
+    0x08299DCC: "gSpaceBg0Tiles",
+    0x0863D4C0: "gSnowBgTiles",
+    0x08640EF8: "gJungleBgTiles",
+    0x08644A88: "gTempleBgTiles",
+    0x08649418: "gSewerBgTiles",
+    0x0864BB5C: "gSpaceBgTiles",
+    0x0864D7E8: "gUnderwaterBgTiles",
+}
+
 
 # The room objects' symbol names: gRoomNN + what the object is.
 LAYER_SYMBOLS = {"bg0": "Bg0", "bg1": "Bg1", "bg2": "Bg2", "bg3": "Bg3", "collision": "Collision"}
@@ -701,7 +717,7 @@ def extract(rom_path):
                 "map": fname,
                 "size_chunks": [cw, ch],
                 "size_tiles": [rom.h(p + 0x1A), rom.h(p + 0x1C)],
-                "tileset": sym(tiles) if tiles else None,
+                "tileset": TILESET_SYMBOLS.get(tiles, sym(tiles)) if tiles else None,
                 "scale": [struct.unpack_from("<i", rom.data, p + 0xC - ROM_BASE)[0],
                           struct.unpack_from("<i", rom.data, p + 0x10 - ROM_BASE)[0]],
                 "cnt": rom.h(p + 0x14),

@@ -221,5 +221,5 @@
 . = 0x00001634; gEepromConfig = .;
 . = 0x00001638; mem_iwram_heap = .;
 . = 0x00007E00; iwram_end = .;
-. = 0x00007F00; gUnknown_03007F00 = .;
-. = 0x00007FA0; gUnknown_03007FA0 = .;
+. = 0x00007F00; gSysStack = .;
+. = 0x00007FA0; gIrqStack = .;

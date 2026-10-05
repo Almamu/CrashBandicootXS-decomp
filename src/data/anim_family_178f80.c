@@ -4,7 +4,7 @@
 
 /*
  * ROM 0x08178F80-0x0817A6B8: the data of actor categories 0-2 (the family
- * whose frames are the gStaticData_080B2120 sheet): their OBJ palette,
+ * whose frames are the gPolarSpriteSheet sheet): their OBJ palette,
  * the 41-record animation table gCategoryFamily0AnimTable
  * (include/actor_anim.h) and the keyframe (table_A) and frame (table_B)
  * arrays its records point at. Linked in ROM order between data/data.s
@@ -25,45 +25,45 @@ extern const u8 gPolarPlayerRleFrames[];
 
 extern const struct anim_frame_record gPolarPlayerKeyframes[13];
 extern const u8 *const gPolarPlayerFrames[156];
-extern const struct anim_frame_record gStaticData_0817968C[2];
-extern const u32 gStaticData_081796A4[10];
-extern const struct anim_frame_record gStaticData_08179D34[1];
-extern const u32 gStaticData_08179D40[14];
-extern const struct anim_frame_record gStaticData_08179D78[2];
-extern const u32 gStaticData_08179D90[20];
-extern const struct anim_frame_record gStaticData_08179DE0[3];
-extern const u32 gStaticData_08179E04[8];
-extern const struct anim_frame_record gStaticData_08179E24[2];
-extern const u32 gStaticData_08179E3C[22];
-extern const struct anim_frame_record gStaticData_08179E94[24];
-extern const u32 gStaticData_08179FB4[12];
+extern const struct anim_frame_record gRiderlessPolarKeyframes[2];
+extern const u32 gRiderlessPolarFrames[10];
+extern const struct anim_frame_record gPolarWumpaKeyframes[1];
+extern const u32 gPolarWumpaFrames[14];
+extern const struct anim_frame_record gPolarLauncherKeyframes[2];
+extern const u32 gPolarLauncherFrames[20];
+extern const struct anim_frame_record gPolarBoostPadKeyframes[3];
+extern const u32 gPolarBoostPadFrames[8];
+extern const struct anim_frame_record gPolarElectricFenceKeyframes[2];
+extern const u32 gPolarElectricFenceFrames[22];
+extern const struct anim_frame_record gPolarIcicleKeyframes[24];
+extern const u32 gPolarIcicleFrames[12];
 extern const u32 gStaticData_08179FE4[1];
 extern const struct anim_frame_record gStaticData_08179FE8[2];
-extern const u32 gStaticData_0817A000[1];
-extern const struct anim_frame_record gStaticData_0817A004[2];
-extern const u32 gStaticData_0817A01C[9];
-extern const struct anim_frame_record gStaticData_0817A040[1];
-extern const struct anim_frame_record gStaticData_0817A04C[19];
-extern const u32 gStaticData_0817A130[15];
-extern const struct anim_frame_record gStaticData_0817A16C[19];
-extern const u32 gStaticData_0817A250[26];
-extern const struct anim_frame_record gStaticData_0817A2B8[19];
-extern const u32 gStaticData_0817A39C[24];
-extern const u32 gStaticData_0817A3FC[24];
-extern const u32 gStaticData_0817A45C[24];
-extern const u32 gStaticData_0817A4BC[24];
-extern const u32 gStaticData_0817A51C[24];
-extern const u32 gStaticData_0817A57C[24];
-extern const u32 gStaticData_0817A5DC[20];
-extern const struct anim_frame_record gStaticData_0817A62C[4];
-extern const u32 gStaticData_0817A65C[11];
-extern const struct anim_frame_record gStaticData_0817A688[2];
-extern const struct anim_frame_record gStaticData_0817A6A0[1];
-extern const u32 gStaticData_0817A6AC[3];
+extern const u32 gPolarGoalFrames[1];
+extern const struct anim_frame_record gPolarGoalKeyframes[2];
+extern const u32 gPolarPenguinFrames[9];
+extern const struct anim_frame_record gPolarPenguinKeyframes[1];
+extern const struct anim_frame_record gPolarBasicCrateKeyframes[19];
+extern const u32 gPolarBasicCrateFrames[15];
+extern const struct anim_frame_record gPolarNitroCrateKeyframes[19];
+extern const u32 gPolarNitroCrateFrames[26];
+extern const struct anim_frame_record gPolarCrateKeyframes[19];
+extern const u32 gPolarTimeCrate1Frames[24];
+extern const u32 gPolarTimeCrate2Frames[24];
+extern const u32 gPolarTimeCrate3Frames[24];
+extern const u32 gPolarQuestionCrateFrames[24];
+extern const u32 gPolarLifeCrateFrames[24];
+extern const u32 gPolarAkuAkuCrateFrames[24];
+extern const u32 gPolarCheckpointCrateFrames[20];
+extern const struct anim_frame_record gPolarCheckpointCrateKeyframes[4];
+extern const u32 gPolarAkuAkuFrames[11];
+extern const struct anim_frame_record gPolarAkuAkuKeyframes[2];
+extern const struct anim_frame_record gPolarCheckpointTextKeyframes[1];
+extern const u32 gPolarCheckpointTextFrames[3];
 
 /* The 256-colour OBJ palette InitActorCategory loads for these
  * categories. The second 0x200 bytes are zero; nothing reads them. */
-const u16 gStaticData_08178F80[0x200] = {
+const u16 gPolarCategoryPalette[0x200] = {
     0x03E0, 0x01DD, 0x00DE, 0x0050, 0x00B7, 0x3461, 0x0005, 0x31DB,
     0x18C8, 0x31B1, 0x294C, 0x52D8, 0x3E32, 0x5F3B, 0x4675, 0x6BBF,
     0x03E0, 0x5B9C, 0x033C, 0x05F1, 0x1657, 0x3697, 0x1DB3, 0x057A,
@@ -273,12 +273,12 @@ const u8 *const gPolarPlayerFrames[156] = {
     gPolarPlayerRleFrames + RLE_SPRITES_0C2758_FRAME_134,
 };
 
-const struct anim_frame_record gStaticData_0817968C[2] = {
+const struct anim_frame_record gRiderlessPolarKeyframes[2] = {
     { 64, 0, 9, 8, 0x0, { 0, 0 } },
     { 64, 9, 1, 0, 0x0, { 0, 0 } },
 };
 
-const u32 gStaticData_081796A4[10] = {
+const u32 gRiderlessPolarFrames[10] = {
     FRAMED_0B2120_SMALL_CREATURE_00,
     FRAMED_0B2120_SMALL_CREATURE_01,
     FRAMED_0B2120_SMALL_CREATURE_02,
@@ -293,53 +293,53 @@ const u32 gStaticData_081796A4[10] = {
 
 const struct anim_table_record gCategoryFamily0AnimTable[41] = {
     { 0, (struct anim_frame_record *)gPolarPlayerKeyframes, (u32 *)gPolarPlayerFrames, 0, { 0 }, 0x2F00, { -10, -20, -1, 20, 44, 3 }, 0, 0 },
-    { 1, (struct anim_frame_record *)gStaticData_0817A04C, (u32 *)gStaticData_0817A130, 1, { 0 }, 0x313C, { -10, -10, -1, 20, 20, 3 }, 0, 0 },
-    { 2, (struct anim_frame_record *)gStaticData_0817968C, (u32 *)gStaticData_081796A4, 0, { 0 }, 0x2F00, { 0, 0, 0, 0, 0, 0 }, 0, 0 },
-    { 3, (struct anim_frame_record *)gStaticData_0817A62C, (u32 *)gStaticData_0817A5DC, 5, { 0 }, 0x313C, { -12, -20, -2, 24, 30, 5 }, 0, 256 },
-    { 4, (struct anim_frame_record *)gStaticData_0817A16C, (u32 *)gStaticData_0817A250, 2, { 0 }, 0x313C, { -10, -10, -1, 20, 20, 3 }, 0, 0 },
-    { 5, (struct anim_frame_record *)gStaticData_0817A2B8, (u32 *)gStaticData_0817A39C, 4, { 0 }, 0x313C, { -10, -10, -1, 20, 20, 3 }, 0, 0 },
-    { 6, (struct anim_frame_record *)gStaticData_0817A2B8, (u32 *)gStaticData_0817A3FC, 4, { 0 }, 0x313C, { -10, -10, -1, 20, 20, 3 }, 0, 0 },
-    { 7, (struct anim_frame_record *)gStaticData_0817A2B8, (u32 *)gStaticData_0817A45C, 4, { 0 }, 0x313C, { -10, -10, -1, 20, 20, 3 }, 0, 0 },
-    { 8, (struct anim_frame_record *)gStaticData_0817A2B8, (u32 *)gStaticData_0817A51C, 3, { 0 }, 0x313C, { -10, -10, -1, 20, 20, 3 }, 0, 0 },
-    { 9, (struct anim_frame_record *)gStaticData_0817A2B8, (u32 *)gStaticData_0817A57C, 3, { 0 }, 0x313C, { -10, -10, -1, 20, 20, 3 }, 0, 0 },
-    { 10, (struct anim_frame_record *)gStaticData_0817A04C, (u32 *)gStaticData_0817A130, 1, { 0 }, 0x313C, { -10, -10, -1, 20, 20, 3 }, 0, 0 },
-    { 11, (struct anim_frame_record *)gStaticData_08179D34, (u32 *)gStaticData_08179D40, 7, { 0 }, 0x2849, { -12, -12, -1, 24, 24, 3 }, 0, 0 },
-    { 12, (struct anim_frame_record *)gStaticData_08179DE0, (u32 *)gStaticData_08179E04, 6, { 0 }, 0x2849, { -1, 4, -2, 2, 10, 4 }, 0, 0 },
+    { 1, (struct anim_frame_record *)gPolarBasicCrateKeyframes, (u32 *)gPolarBasicCrateFrames, 1, { 0 }, 0x313C, { -10, -10, -1, 20, 20, 3 }, 0, 0 },
+    { 2, (struct anim_frame_record *)gRiderlessPolarKeyframes, (u32 *)gRiderlessPolarFrames, 0, { 0 }, 0x2F00, { 0, 0, 0, 0, 0, 0 }, 0, 0 },
+    { 3, (struct anim_frame_record *)gPolarCheckpointCrateKeyframes, (u32 *)gPolarCheckpointCrateFrames, 5, { 0 }, 0x313C, { -12, -20, -2, 24, 30, 5 }, 0, 256 },
+    { 4, (struct anim_frame_record *)gPolarNitroCrateKeyframes, (u32 *)gPolarNitroCrateFrames, 2, { 0 }, 0x313C, { -10, -10, -1, 20, 20, 3 }, 0, 0 },
+    { 5, (struct anim_frame_record *)gPolarCrateKeyframes, (u32 *)gPolarTimeCrate1Frames, 4, { 0 }, 0x313C, { -10, -10, -1, 20, 20, 3 }, 0, 0 },
+    { 6, (struct anim_frame_record *)gPolarCrateKeyframes, (u32 *)gPolarTimeCrate2Frames, 4, { 0 }, 0x313C, { -10, -10, -1, 20, 20, 3 }, 0, 0 },
+    { 7, (struct anim_frame_record *)gPolarCrateKeyframes, (u32 *)gPolarTimeCrate3Frames, 4, { 0 }, 0x313C, { -10, -10, -1, 20, 20, 3 }, 0, 0 },
+    { 8, (struct anim_frame_record *)gPolarCrateKeyframes, (u32 *)gPolarLifeCrateFrames, 3, { 0 }, 0x313C, { -10, -10, -1, 20, 20, 3 }, 0, 0 },
+    { 9, (struct anim_frame_record *)gPolarCrateKeyframes, (u32 *)gPolarAkuAkuCrateFrames, 3, { 0 }, 0x313C, { -10, -10, -1, 20, 20, 3 }, 0, 0 },
+    { 10, (struct anim_frame_record *)gPolarBasicCrateKeyframes, (u32 *)gPolarBasicCrateFrames, 1, { 0 }, 0x313C, { -10, -10, -1, 20, 20, 3 }, 0, 0 },
+    { 11, (struct anim_frame_record *)gPolarWumpaKeyframes, (u32 *)gPolarWumpaFrames, 7, { 0 }, 0x2849, { -12, -12, -1, 24, 24, 3 }, 0, 0 },
+    { 12, (struct anim_frame_record *)gPolarBoostPadKeyframes, (u32 *)gPolarBoostPadFrames, 6, { 0 }, 0x2849, { -1, 4, -2, 2, 10, 4 }, 0, 0 },
     { 13, (struct anim_frame_record *)gStaticData_08179FE8, (u32 *)gStaticData_08179FE4, 11, { 0 }, 0x2DE1, { -30, -4, -1, 120, 20, 3 }, -7680, -1024 },
     { 14, (struct anim_frame_record *)gStaticData_08179FE8, (u32 *)gStaticData_08179FE4, 11, { 0 }, 0x2DE1, { 0, 0, 0, 0, 0, 0 }, 7680, 0 },
-    { 0, (struct anim_frame_record *)gStaticData_08179DE0, (u32 *)gStaticData_08179E04, 6, { 0 }, 0x2849, { -10, 8, -1, 20, 3, 3 }, 0, 0 },
-    { 16, (struct anim_frame_record *)gStaticData_08179E94, (u32 *)gStaticData_08179FB4, 10, { 0 }, 0x2F00, { -8, -20, 0, 16, 36, 1 }, 0, 0 },
-    { 17, (struct anim_frame_record *)gStaticData_08179E94, (u32 *)gStaticData_08179FB4, 10, { 0 }, 0x2F00, { -8, -20, 0, 16, 36, 1 }, 0, 0 },
-    { 18, (struct anim_frame_record *)gStaticData_08179E94, (u32 *)gStaticData_08179FB4, 10, { 0 }, 0x2F00, { -4, -20, 0, 8, 36, 1 }, 0, 0 },
-    { 19, (struct anim_frame_record *)gStaticData_08179E94, (u32 *)gStaticData_08179FB4, 10, { 0 }, 0x2F00, { -4, -20, 0, 8, 36, 1 }, 0, 0 },
-    { 20, (struct anim_frame_record *)gStaticData_08179E94, (u32 *)gStaticData_08179FB4, 10, { 0 }, 0x2F00, { -3, -12, 0, 6, 24, 1 }, 0, -2048 },
-    { 21, (struct anim_frame_record *)gStaticData_08179E94, (u32 *)gStaticData_08179FB4, 10, { 0 }, 0x2F00, { -3, -12, 0, 6, 24, 1 }, 0, -2048 },
-    { 22, (struct anim_frame_record *)gStaticData_08179D78, (u32 *)gStaticData_08179D90, 8, { 0 }, 0x313C, { -9, -1, -1, 18, 4, 2 }, 0, 2048 },
-    { 23, (struct anim_frame_record *)gStaticData_08179E24, (u32 *)gStaticData_08179E3C, 9, { 0 }, 0x260C, { -24, -25, 0, 48, 40, 1 }, 0, -1024 },
-    { 24, (struct anim_frame_record *)gStaticData_0817A040, (u32 *)gStaticData_0817A01C, 13, { 0 }, 0x36D5, { -12, -2, -1, 24, 12, 2 }, 0, 0 },
-    { 25, (struct anim_frame_record *)gStaticData_0817A004, (u32 *)gStaticData_0817A000, 12, { 0 }, 0x2CC3, { -30, -120, -28, 120, 140, 3 }, -7680, 1536 },
-    { 26, (struct anim_frame_record *)gStaticData_0817A004, (u32 *)gStaticData_0817A000, 12, { 0 }, 0x2CC3, { 0, 0, 0, 0, 0, 0 }, 7680, 0 },
-    { 27, (struct anim_frame_record *)gStaticData_0817A688, (u32 *)gStaticData_0817A65C, 14, { 0 }, 0x2F00, { 0, 0, 0, 0, 0, 0 }, 0, 0 },
-    { 28, (struct anim_frame_record *)gStaticData_0817A2B8, (u32 *)gStaticData_0817A4BC, 1, { 0 }, 0x313C, { -10, -10, -1, 20, 20, 3 }, 0, 0 },
-    { 29, (struct anim_frame_record *)gStaticData_0817A2B8, (u32 *)gStaticData_0817A4BC, 1, { 0 }, 0x313C, { -10, -10, -1, 20, 20, 3 }, 0, 0 },
-    { 30, (struct anim_frame_record *)gStaticData_0817A2B8, (u32 *)gStaticData_0817A4BC, 1, { 0 }, 0x313C, { -10, -10, -1, 20, 20, 3 }, 0, 0 },
-    { 31, (struct anim_frame_record *)gStaticData_0817A2B8, (u32 *)gStaticData_0817A4BC, 1, { 0 }, 0x313C, { -10, -10, -1, 20, 20, 3 }, 0, 0 },
+    { 0, (struct anim_frame_record *)gPolarBoostPadKeyframes, (u32 *)gPolarBoostPadFrames, 6, { 0 }, 0x2849, { -10, 8, -1, 20, 3, 3 }, 0, 0 },
+    { 16, (struct anim_frame_record *)gPolarIcicleKeyframes, (u32 *)gPolarIcicleFrames, 10, { 0 }, 0x2F00, { -8, -20, 0, 16, 36, 1 }, 0, 0 },
+    { 17, (struct anim_frame_record *)gPolarIcicleKeyframes, (u32 *)gPolarIcicleFrames, 10, { 0 }, 0x2F00, { -8, -20, 0, 16, 36, 1 }, 0, 0 },
+    { 18, (struct anim_frame_record *)gPolarIcicleKeyframes, (u32 *)gPolarIcicleFrames, 10, { 0 }, 0x2F00, { -4, -20, 0, 8, 36, 1 }, 0, 0 },
+    { 19, (struct anim_frame_record *)gPolarIcicleKeyframes, (u32 *)gPolarIcicleFrames, 10, { 0 }, 0x2F00, { -4, -20, 0, 8, 36, 1 }, 0, 0 },
+    { 20, (struct anim_frame_record *)gPolarIcicleKeyframes, (u32 *)gPolarIcicleFrames, 10, { 0 }, 0x2F00, { -3, -12, 0, 6, 24, 1 }, 0, -2048 },
+    { 21, (struct anim_frame_record *)gPolarIcicleKeyframes, (u32 *)gPolarIcicleFrames, 10, { 0 }, 0x2F00, { -3, -12, 0, 6, 24, 1 }, 0, -2048 },
+    { 22, (struct anim_frame_record *)gPolarLauncherKeyframes, (u32 *)gPolarLauncherFrames, 8, { 0 }, 0x313C, { -9, -1, -1, 18, 4, 2 }, 0, 2048 },
+    { 23, (struct anim_frame_record *)gPolarElectricFenceKeyframes, (u32 *)gPolarElectricFenceFrames, 9, { 0 }, 0x260C, { -24, -25, 0, 48, 40, 1 }, 0, -1024 },
+    { 24, (struct anim_frame_record *)gPolarPenguinKeyframes, (u32 *)gPolarPenguinFrames, 13, { 0 }, 0x36D5, { -12, -2, -1, 24, 12, 2 }, 0, 0 },
+    { 25, (struct anim_frame_record *)gPolarGoalKeyframes, (u32 *)gPolarGoalFrames, 12, { 0 }, 0x2CC3, { -30, -120, -28, 120, 140, 3 }, -7680, 1536 },
+    { 26, (struct anim_frame_record *)gPolarGoalKeyframes, (u32 *)gPolarGoalFrames, 12, { 0 }, 0x2CC3, { 0, 0, 0, 0, 0, 0 }, 7680, 0 },
+    { 27, (struct anim_frame_record *)gPolarAkuAkuKeyframes, (u32 *)gPolarAkuAkuFrames, 14, { 0 }, 0x2F00, { 0, 0, 0, 0, 0, 0 }, 0, 0 },
+    { 28, (struct anim_frame_record *)gPolarCrateKeyframes, (u32 *)gPolarQuestionCrateFrames, 1, { 0 }, 0x313C, { -10, -10, -1, 20, 20, 3 }, 0, 0 },
+    { 29, (struct anim_frame_record *)gPolarCrateKeyframes, (u32 *)gPolarQuestionCrateFrames, 1, { 0 }, 0x313C, { -10, -10, -1, 20, 20, 3 }, 0, 0 },
+    { 30, (struct anim_frame_record *)gPolarCrateKeyframes, (u32 *)gPolarQuestionCrateFrames, 1, { 0 }, 0x313C, { -10, -10, -1, 20, 20, 3 }, 0, 0 },
+    { 31, (struct anim_frame_record *)gPolarCrateKeyframes, (u32 *)gPolarQuestionCrateFrames, 1, { 0 }, 0x313C, { -10, -10, -1, 20, 20, 3 }, 0, 0 },
     { 32 }, /* unused */
     { 33 }, /* unused */
     { 34 }, /* unused */
-    { 35, (struct anim_frame_record *)gStaticData_0817A2B8, (u32 *)gStaticData_0817A4BC, 1, { 0 }, 0x313C, { -10, -10, -1, 20, 20, 3 }, 0, 0 },
-    { 36, (struct anim_frame_record *)gStaticData_08179DE0, (u32 *)gStaticData_08179E04, 6, { 0 }, 0x2849, { 0, 0, 0, 0, 0, 0 }, 0, 0 },
-    { 37, (struct anim_frame_record *)gStaticData_08179DE0, (u32 *)gStaticData_08179E04, 6, { 0 }, 0x2849, { 0, 0, 0, 0, 0, 0 }, 0, 0 },
-    { 38, (struct anim_frame_record *)gStaticData_08179DE0, (u32 *)gStaticData_08179E04, 6, { 0 }, 0x2849, { 0, 0, 0, 0, 0, 0 }, 0, 0 },
-    { 39, (struct anim_frame_record *)gStaticData_08179DE0, (u32 *)gStaticData_08179E04, 6, { 0 }, 0x2849, { 0, 0, 0, 0, 0, 0 }, 0, 0 },
-    { 40, (struct anim_frame_record *)gStaticData_0817A6A0, (u32 *)gStaticData_0817A6AC, 7, { 0 }, 0x313C, { 0, 0, 0, 0, 0, 0 }, 0, 0 },
+    { 35, (struct anim_frame_record *)gPolarCrateKeyframes, (u32 *)gPolarQuestionCrateFrames, 1, { 0 }, 0x313C, { -10, -10, -1, 20, 20, 3 }, 0, 0 },
+    { 36, (struct anim_frame_record *)gPolarBoostPadKeyframes, (u32 *)gPolarBoostPadFrames, 6, { 0 }, 0x2849, { 0, 0, 0, 0, 0, 0 }, 0, 0 },
+    { 37, (struct anim_frame_record *)gPolarBoostPadKeyframes, (u32 *)gPolarBoostPadFrames, 6, { 0 }, 0x2849, { 0, 0, 0, 0, 0, 0 }, 0, 0 },
+    { 38, (struct anim_frame_record *)gPolarBoostPadKeyframes, (u32 *)gPolarBoostPadFrames, 6, { 0 }, 0x2849, { 0, 0, 0, 0, 0, 0 }, 0, 0 },
+    { 39, (struct anim_frame_record *)gPolarBoostPadKeyframes, (u32 *)gPolarBoostPadFrames, 6, { 0 }, 0x2849, { 0, 0, 0, 0, 0, 0 }, 0, 0 },
+    { 40, (struct anim_frame_record *)gPolarCheckpointTextKeyframes, (u32 *)gPolarCheckpointTextFrames, 7, { 0 }, 0x313C, { 0, 0, 0, 0, 0, 0 }, 0, 0 },
 };
 
-const struct anim_frame_record gStaticData_08179D34[1] = {
+const struct anim_frame_record gPolarWumpaKeyframes[1] = {
     { 85, 0, 14, 0, 0x0, { 0, 0 } },
 };
 
-const u32 gStaticData_08179D40[14] = {
+const u32 gPolarWumpaFrames[14] = {
     FRAMED_0B2120_WUMPA_FRUIT_00,
     FRAMED_0B2120_WUMPA_FRUIT_01,
     FRAMED_0B2120_WUMPA_FRUIT_02,
@@ -356,12 +356,12 @@ const u32 gStaticData_08179D40[14] = {
     FRAMED_0B2120_WUMPA_FRUIT_13,
 };
 
-const struct anim_frame_record gStaticData_08179D78[2] = {
+const struct anim_frame_record gPolarLauncherKeyframes[2] = {
     { 64, 0, 10, 0, 0x0, { 0, 0 } },
     { 64, 10, 10, 0, 0x0, { 0, 0 } },
 };
 
-const u32 gStaticData_08179D90[20] = {
+const u32 gPolarLauncherFrames[20] = {
     FRAMED_0B2120_EMERGING_CREATURE_00,
     FRAMED_0B2120_EMERGING_CREATURE_01,
     FRAMED_0B2120_EMERGING_CREATURE_02,
@@ -384,13 +384,13 @@ const u32 gStaticData_08179D90[20] = {
     FRAMED_0B2120_EMERGING_CREATURE_19,
 };
 
-const struct anim_frame_record gStaticData_08179DE0[3] = {
+const struct anim_frame_record gPolarBoostPadKeyframes[3] = {
     { 42, 4, 4, 0, 0x1000, { 0, 0 } },
     { 42, 0, 4, 0, 0x0, { 0, 0 } },
     { 42, 4, 4, 0, 0x0, { 0, 0 } },
 };
 
-const u32 gStaticData_08179E04[8] = {
+const u32 gPolarBoostPadFrames[8] = {
     FRAMED_0B2120_RECORD_SLOT12_00,
     FRAMED_0B2120_RECORD_SLOT12_01,
     FRAMED_0B2120_RECORD_SLOT12_02,
@@ -401,12 +401,12 @@ const u32 gStaticData_08179E04[8] = {
     FRAMED_0B2120_RECORD_SLOT12_07,
 };
 
-const struct anim_frame_record gStaticData_08179E24[2] = {
+const struct anim_frame_record gPolarElectricFenceKeyframes[2] = {
     { 64, 0, 8, 0, 0x0, { 0, 0 } },
     { 64, 8, 14, 13, 0x0, { 0, 0 } },
 };
 
-const u32 gStaticData_08179E3C[22] = {
+const u32 gPolarElectricFenceFrames[22] = {
     FRAMED_0B2120_GUARD_BARRIER_00,
     FRAMED_0B2120_GUARD_BARRIER_01,
     FRAMED_0B2120_GUARD_BARRIER_02,
@@ -431,7 +431,7 @@ const u32 gStaticData_08179E3C[22] = {
     FRAMED_0B2120_EMERGING_CREATURE_53,
 };
 
-const struct anim_frame_record gStaticData_08179E94[24] = {
+const struct anim_frame_record gPolarIcicleKeyframes[24] = {
     { 0, 0, 1, 0, 0x0, { 0, 0 } },
     { 0, 1, 1, 0, 0x0, { 0, 0 } },
     { 0, 2, 1, 0, 0x0, { 0, 0 } },
@@ -458,7 +458,7 @@ const struct anim_frame_record gStaticData_08179E94[24] = {
     { 0, 11, 1, 0, 0x1000, { 0, 0 } },
 };
 
-const u32 gStaticData_08179FB4[12] = {
+const u32 gPolarIcicleFrames[12] = {
     FRAMED_0B2120_RECORD_SLOT16_00,
     FRAMED_0B2120_RECORD_SLOT16_01,
     FRAMED_0B2120_RECORD_SLOT16_02,
@@ -482,16 +482,16 @@ const struct anim_frame_record gStaticData_08179FE8[2] = {
     { 0, 0, 1, 0, 0x1000, { 0, 0 } },
 };
 
-const u32 gStaticData_0817A000[1] = {
+const u32 gPolarGoalFrames[1] = {
     FRAMED_0B2120_RECORD_SLOT25_00,
 };
 
-const struct anim_frame_record gStaticData_0817A004[2] = {
+const struct anim_frame_record gPolarGoalKeyframes[2] = {
     { 0, 0, 1, 0, 0x0, { 0, 0 } },
     { 0, 0, 1, 0, 0x1000, { 0, 0 } },
 };
 
-const u32 gStaticData_0817A01C[9] = {
+const u32 gPolarPenguinFrames[9] = {
     FRAMED_0B2120_RECORD_SLOT24_00,
     FRAMED_0B2120_RECORD_SLOT24_01,
     FRAMED_0B2120_RECORD_SLOT24_02,
@@ -503,11 +503,11 @@ const u32 gStaticData_0817A01C[9] = {
     FRAMED_0B2120_RECORD_SLOT24_08,
 };
 
-const struct anim_frame_record gStaticData_0817A040[1] = {
+const struct anim_frame_record gPolarPenguinKeyframes[1] = {
     { 64, 0, 9, 0, 0x0, { 0, 0 } },
 };
 
-const struct anim_frame_record gStaticData_0817A04C[19] = {
+const struct anim_frame_record gPolarBasicCrateKeyframes[19] = {
     { 0, 0, 1, 0, 0x0, { 0, 0 } },
     { 0, 1, 1, 0, 0x0, { 0, 0 } },
     { 0, 2, 1, 0, 0x0, { 0, 0 } },
@@ -529,7 +529,7 @@ const struct anim_frame_record gStaticData_0817A04C[19] = {
     { 51, 9, 6, 5, 0x0, { 0, 0 } },
 };
 
-const u32 gStaticData_0817A130[15] = {
+const u32 gPolarBasicCrateFrames[15] = {
     FRAMED_0B2120_TNT_CRATE_00,
     FRAMED_0B2120_TNT_CRATE_01,
     FRAMED_0B2120_TNT_CRATE_02,
@@ -547,7 +547,7 @@ const u32 gStaticData_0817A130[15] = {
     FRAMED_0B2120_EMERGING_CREATURE_25,
 };
 
-const struct anim_frame_record gStaticData_0817A16C[19] = {
+const struct anim_frame_record gPolarNitroCrateKeyframes[19] = {
     { 0, 0, 1, 0, 0x0, { 0, 0 } },
     { 0, 1, 1, 0, 0x0, { 0, 0 } },
     { 0, 2, 1, 0, 0x0, { 0, 0 } },
@@ -569,7 +569,7 @@ const struct anim_frame_record gStaticData_0817A16C[19] = {
     { 51, 18, 8, 7, 0x0, { 0, 0 } },
 };
 
-const u32 gStaticData_0817A250[26] = {
+const u32 gPolarNitroCrateFrames[26] = {
     FRAMED_0B2120_NITRO_CRATE_00,
     FRAMED_0B2120_NITRO_CRATE_01,
     FRAMED_0B2120_NITRO_CRATE_02,
@@ -598,7 +598,7 @@ const u32 gStaticData_0817A250[26] = {
     FRAMED_0B2120_EMERGING_CREATURE_33,
 };
 
-const struct anim_frame_record gStaticData_0817A2B8[19] = {
+const struct anim_frame_record gPolarCrateKeyframes[19] = {
     { 0, 0, 1, 0, 0x0, { 0, 0 } },
     { 0, 1, 1, 0, 0x0, { 0, 0 } },
     { 0, 2, 1, 0, 0x0, { 0, 0 } },
@@ -620,7 +620,7 @@ const struct anim_frame_record gStaticData_0817A2B8[19] = {
     { 51, 18, 6, 5, 0x0, { 0, 0 } },
 };
 
-const u32 gStaticData_0817A39C[24] = {
+const u32 gPolarTimeCrate1Frames[24] = {
     FRAMED_0B2120_CRATE_VARIANT_A_00,
     FRAMED_0B2120_CRATE_VARIANT_A_01,
     FRAMED_0B2120_CRATE_VARIANT_A_02,
@@ -647,7 +647,7 @@ const u32 gStaticData_0817A39C[24] = {
     FRAMED_0B2120_EMERGING_CREATURE_39,
 };
 
-const u32 gStaticData_0817A3FC[24] = {
+const u32 gPolarTimeCrate2Frames[24] = {
     FRAMED_0B2120_CRATE_VARIANT_B_00,
     FRAMED_0B2120_CRATE_VARIANT_B_01,
     FRAMED_0B2120_CRATE_VARIANT_B_02,
@@ -674,7 +674,7 @@ const u32 gStaticData_0817A3FC[24] = {
     FRAMED_0B2120_EMERGING_CREATURE_39,
 };
 
-const u32 gStaticData_0817A45C[24] = {
+const u32 gPolarTimeCrate3Frames[24] = {
     FRAMED_0B2120_CRATE_VARIANT_C_00,
     FRAMED_0B2120_CRATE_VARIANT_C_01,
     FRAMED_0B2120_CRATE_VARIANT_C_02,
@@ -701,7 +701,7 @@ const u32 gStaticData_0817A45C[24] = {
     FRAMED_0B2120_EMERGING_CREATURE_39,
 };
 
-const u32 gStaticData_0817A4BC[24] = {
+const u32 gPolarQuestionCrateFrames[24] = {
     FRAMED_0B2120_RECORD_SLOT28_00,
     FRAMED_0B2120_RECORD_SLOT28_01,
     FRAMED_0B2120_RECORD_SLOT28_02,
@@ -728,7 +728,7 @@ const u32 gStaticData_0817A4BC[24] = {
     FRAMED_0B2120_EMERGING_CREATURE_25,
 };
 
-const u32 gStaticData_0817A51C[24] = {
+const u32 gPolarLifeCrateFrames[24] = {
     FRAMED_0B2120_CRATE_VARIANT_D_00,
     FRAMED_0B2120_CRATE_VARIANT_D_01,
     FRAMED_0B2120_CRATE_VARIANT_D_02,
@@ -755,7 +755,7 @@ const u32 gStaticData_0817A51C[24] = {
     FRAMED_0B2120_EMERGING_CREATURE_25,
 };
 
-const u32 gStaticData_0817A57C[24] = {
+const u32 gPolarAkuAkuCrateFrames[24] = {
     FRAMED_0B2120_CRATE_VARIANT_E_00,
     FRAMED_0B2120_CRATE_VARIANT_E_01,
     FRAMED_0B2120_CRATE_VARIANT_E_02,
@@ -782,7 +782,7 @@ const u32 gStaticData_0817A57C[24] = {
     FRAMED_0B2120_EMERGING_CREATURE_25,
 };
 
-const u32 gStaticData_0817A5DC[20] = {
+const u32 gPolarCheckpointCrateFrames[20] = {
     FRAMED_0B2120_BARREL_00,
     FRAMED_0B2120_BARREL_01,
     FRAMED_0B2120_BARREL_02,
@@ -805,14 +805,14 @@ const u32 gStaticData_0817A5DC[20] = {
     FRAMED_0B2120_EMERGING_CREATURE_25,
 };
 
-const struct anim_frame_record gStaticData_0817A62C[4] = {
+const struct anim_frame_record gPolarCheckpointCrateKeyframes[4] = {
     { 128, 0, 1, 0, 0x0, { 0, 0 } },
     { 128, 1, 13, 12, 0x0, { 0, 0 } },
     { 128, 13, 1, 0, 0x0, { 0, 0 } },
     { 51, 14, 6, 5, 0x0, { 0, 0 } },
 };
 
-const u32 gStaticData_0817A65C[11] = {
+const u32 gPolarAkuAkuFrames[11] = {
     FRAMED_0B2120_RECORD_SLOT27_00,
     FRAMED_0B2120_RECORD_SLOT27_01,
     FRAMED_0B2120_RECORD_SLOT27_01,
@@ -826,16 +826,16 @@ const u32 gStaticData_0817A65C[11] = {
     FRAMED_0B2120_EMERGING_CREATURE_58,
 };
 
-const struct anim_frame_record gStaticData_0817A688[2] = {
+const struct anim_frame_record gPolarAkuAkuKeyframes[2] = {
     { 34, 0, 6, 0, 0x0, { 0, 0 } },
     { 34, 6, 5, 4, 0x0, { 0, 0 } },
 };
 
-const struct anim_frame_record gStaticData_0817A6A0[1] = {
+const struct anim_frame_record gPolarCheckpointTextKeyframes[1] = {
     { 8, 0, 3, 0, 0x0, { 0, 0 } },
 };
 
-const u32 gStaticData_0817A6AC[3] = {
+const u32 gPolarCheckpointTextFrames[3] = {
     FRAMED_0B2120_CHECKPOINT_TEXT_00,
     FRAMED_0B2120_CHECKPOINT_TEXT_00,
     FRAMED_0B2120_CHECKPOINT_TEXT_00,
