@@ -169,7 +169,7 @@ and [graphics_loading.md](./graphics_loading.md).
   `src/graphics/actor_part_1dfec.c` (`CreateLevelSelectEntry`-`DestroyLevelSelectCursor`, all
   16) - the level entry's constructor and the cursor panel (`struct
   cursor_panel`: Bresenham glide, idle animation cycle, affine OBJ
-  grow/shrink). `sub_801E3D4`, `sub_801E3E4` and `sub_801E4E4` are
+  grow/shrink). `IsLevelSelectCursorHidden`, `IsLevelSelectCursorGrowing` and `MoveLevelSelectCursorTo` are
   UNUSED. All real C. See
   [docs/matching/issue-28-29-level-select-parts.md](../matching/issue-28-29-level-select-parts.md).
 - **Near-miss polish pass:** `LevelSelectLoop` (`actor_part_1b85c.c`,

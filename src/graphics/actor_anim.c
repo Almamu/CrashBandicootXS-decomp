@@ -112,7 +112,7 @@ extern u8 gActorVtable[];
  * certainly one shared per-"kind" destructor template that just wasn't
  * deduplicated by the original build, the same way this project's other
  * per-"kind"/per-slot dispatch tables aren't. */
-void sub_803B0C4(struct linked_node *self, u32 flags)
+void DestroyRiderlessPolar(struct linked_node *self, u32 flags)
 {
     self->field_50 = gActorVtable;
     self->next->prev = self->prev;
@@ -295,7 +295,7 @@ void sub_803B30C(struct linked_node *self, u32 flags)
 
 asm(".align 2, 0");
 
-void sub_803B338(struct linked_node *self, u32 flags)
+void DestroyPolarLauncher(struct linked_node *self, u32 flags)
 {
     self->field_50 = gActorVtable;
     self->next->prev = self->prev;
@@ -343,7 +343,7 @@ void DestroyPolarAkuAku(struct linked_node *self, u32 flags)
 
 asm(".align 2, 0");
 
-void sub_803B3E8(struct linked_node *self, u32 flags)
+void DestroyPolarGoal(struct linked_node *self, u32 flags)
 {
     self->field_50 = gActorVtable;
     self->next->prev = self->prev;
@@ -355,7 +355,7 @@ void sub_803B3E8(struct linked_node *self, u32 flags)
 
 asm(".align 2, 0");
 
-void sub_803B414(struct linked_node *self, u32 flags)
+void DestroyPolarBoostPad(struct linked_node *self, u32 flags)
 {
     self->field_50 = gActorVtable;
     self->next->prev = self->prev;
@@ -547,7 +547,7 @@ asm(".align 2, 0");
 
 /* No direct `bl`/`.4byte` reference found in any asm/*.s, expected/*.s
  * or src/*.c file, but - like the 20 "kind" teardown handlers already
- * matched in this file (sub_803B0C4 onward) - that doesn't mean
+ * matched in this file (DestroyRiderlessPolar onward) - that doesn't mean
  * unreachable: those are also grep-invisible, since whatever installs
  * them as a "kind"'s destroy/vtable slot does so from a still-raw data
  * table this project hasn't symbolized yet, not a readable `bl`. The
@@ -567,7 +567,7 @@ asm(".align 2, 0");
 
 /* Another hidden function with no `thumb_func_start` label of its own
  * (see `IsJetpackCheckpointTextUnshootable` above) - the standard "kind" teardown handler
- * shape already matched 20 times over in this file (`sub_803B0C4`
+ * shape already matched 20 times over in this file (`DestroyRiderlessPolar`
  * onward) and again below (`DestroyJetpackExplosion` onward): set `self->field_50`
  * to the shared "dead" table, unlink `self` from its `+0x48`/`+0x4c`
  * circular list, and free `self` when `flags & 1`. */

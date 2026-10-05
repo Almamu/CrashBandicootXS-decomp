@@ -19,7 +19,7 @@ const struct singleton_kind gHovercraftAttacks[2] = {
     { { 60, 70, 4, 230, 20, 3, 90, 40, 2, 160 } },
 };
 
-/* The camera-offset target box (struct anim_box) sub_8032C0C
+/* The camera-offset target box (struct anim_box) HovercraftStateCloseIn
  * (actor_part130.c) steers by. */
 const struct anim_box gHovercraftBox = { -102, -12, -2, 51, 68, 4 };
 

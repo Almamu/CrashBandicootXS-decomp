@@ -7,7 +7,7 @@
  * `self+0x10`/`self+0x12`, an accumulator at `self+8`, a "part table"
  * pointer at `self+0`), part of a second boss-weapon "spawn/pre-
  * attack" singleton whose own flags/counters live at
- * `gUnknown_030014E0`-`gJetpackPlayerTiles` - a different singleton
+ * `gJetpackBomberCount`-`gJetpackPlayerTiles` - a different singleton
  * cluster than issue #58's `gAirship` one and issue #62's
  * `gHovercraft` one. See docs/matching/issue-56-0x0802f0dc-actor.md
  * and docs/status/actor.md. */
@@ -15,40 +15,40 @@
 extern void SetCellAnimSpeed(s32 arg0);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void FreezeLevelClock(void *arg0, s32 arg1);
-extern s32 sub_802A4D4(void);
+extern s32 GetActorCategoryFrameCount(void);
 extern s32 __divsi3(s32 arg0, s32 arg1);
 extern s32 AddLife(void *self);
 extern void *gAudioContext;
 extern void *gLevelState;
-extern u8 gUnknown_03001504;
-extern u8 gUnknown_03001506;
-extern u8 gUnknown_03001507;
+extern u8 gJetpackPlayerHalted;
+extern u8 gJetpackPlayerInactive;
+extern u8 gJetpackInputEnabled;
 extern s32 gJetpackPlayerVelY;
 extern s32 gJetpackPlayerVelX;
 extern s32 gJetpackPlayerMaxHp;
-extern s32 gUnknown_030014EC;
-extern s32 gUnknown_030014F0;
-extern s32 gUnknown_030014F8;
+extern s32 gJetpackRingLastFrame;
+extern s32 gJetpackRingChain;
+extern s32 gJetpackWumpaDispenseTimer;
 extern s32 gJetpackQueuedWumpa;
 
 struct actor_hp {
     struct actor_self base;
-    s32 hp;             // 0x54 - refilled by sub_802F164, capped at gJetpackPlayerMaxHp
+    s32 hp;             // 0x54 - refilled by PassJetpackRing, capped at gJetpackPlayerMaxHp
 };
 
-/* Constructor/reset: while the singleton flag (`gUnknown_03001506`) is
+/* Constructor/reset: while the singleton flag (`gJetpackPlayerInactive`) is
  * off, resets `self` to state 5/table-index 4 (idle-ish), plays a cue,
  * and - only if the current game-mode flag at `gLevelState+0x8c`
  * is set - fires an extra one-shot effect via `FreezeLevelClock`. */
-void sub_802F0DC(void *selfArg)
+void FinishJetpackRun(void *selfArg)
 {
     register struct actor_self *self asm("r4") = selfArg;
-    register s32 zero asm("r5") = gUnknown_03001506;
+    register s32 zero asm("r5") = gJetpackPlayerInactive;
 
     if (zero == 0) {
-        gUnknown_03001507 = zero;
-        gUnknown_03001504 = 1;
-        gUnknown_03001506 = 1;
+        gJetpackInputEnabled = zero;
+        gJetpackPlayerHalted = 1;
+        gJetpackPlayerInactive = 1;
         SetCellAnimSpeed(0x3c);
         gJetpackPlayerVelY = zero;
         gJetpackPlayerVelX = zero;
@@ -81,16 +81,16 @@ void sub_802F0DC(void *selfArg)
  * frame if it wasn't already, latches the target position at `self+0x1c`/
  * `self+0x20` from the two arguments, and re-arms state 6 (playing a cue
  * only on the *first* transition into it). While the current game-mode
- * flag at `gLevelState+0x8c` is clear and the `gUnknown_030014EC`
+ * flag at `gLevelState+0x8c` is clear and the `gJetpackRingLastFrame`
  * frame-timer has advanced far enough (>0x14 frames since the last pass),
- * drives a 5-case round-robin (`gUnknown_030014F0`, wrapping 0-4) once
+ * drives a 5-case round-robin (`gJetpackRingChain`, wrapping 0-4) once
  * every >0xbe-frame window: cases 0-2 feed the `gJetpackQueuedWumpa` reward
  * accumulator (by 1/5/0x14) while not paused, case 3 advances `self+0x54`'s
  * own accumulator (clamped to `gJetpackPlayerMaxHp`) while the other
  * singleton flag is clear, and case 4 fires a one-shot effect plus a cue.
  * Every path through the round-robin (taken or not) re-samples the
  * frame timer and advances the round-robin index. */
-void sub_802F164(void *selfArg, s32 xArg, s32 yArg)
+void PassJetpackRing(void *selfArg, s32 xArg, s32 yArg)
 {
     register struct actor_hp *self asm("r5") = selfArg;
     register s32 x asm("r3") = xArg;
@@ -138,19 +138,19 @@ void sub_802F164(void *selfArg, s32 xArg, s32 yArg)
         return;
     }
 
-    if (sub_802A4D4() - gUnknown_030014EC <= 0x14) {
+    if (GetActorCategoryFrameCount() - gJetpackRingLastFrame <= 0x14) {
         return;
     }
 
-    if (sub_802A4D4() - gUnknown_030014EC > 0xbe) {
-        gUnknown_030014F0 = paused;
+    if (GetActorCategoryFrameCount() - gJetpackRingLastFrame > 0xbe) {
+        gJetpackRingChain = paused;
     }
 
-    switch (gUnknown_030014F0) {
+    switch (gJetpackRingChain) {
     case 0:
         if (*((u8 *)gLevelState + 0x8c) == 0) {
             if (gJetpackQueuedWumpa == 0) {
-                gUnknown_030014F8 = 0xf;
+                gJetpackWumpaDispenseTimer = 0xf;
             }
             gJetpackQueuedWumpa += 1;
         }
@@ -158,7 +158,7 @@ void sub_802F164(void *selfArg, s32 xArg, s32 yArg)
     case 1:
         if (*((u8 *)gLevelState + 0x8c) == 0) {
             if (gJetpackQueuedWumpa == 0) {
-                gUnknown_030014F8 = 0xf;
+                gJetpackWumpaDispenseTimer = 0xf;
             }
             gJetpackQueuedWumpa += 5;
         }
@@ -166,13 +166,13 @@ void sub_802F164(void *selfArg, s32 xArg, s32 yArg)
     case 2:
         if (*((u8 *)gLevelState + 0x8c) == 0) {
             if (gJetpackQueuedWumpa == 0) {
-                gUnknown_030014F8 = 0xf;
+                gJetpackWumpaDispenseTimer = 0xf;
             }
             gJetpackQueuedWumpa += 0x14;
         }
         break;
     case 3:
-        if (gUnknown_03001506 == 0) {
+        if (gJetpackPlayerInactive == 0) {
             register s32 *maxPtr asm("r4") = &gJetpackPlayerMaxHp;
             register s32 max asm("r1") = *maxPtr;
             register s32 mul asm("r0") = 0x14;
@@ -196,9 +196,9 @@ void sub_802F164(void *selfArg, s32 xArg, s32 yArg)
         break;
     }
 
-    gUnknown_030014EC = sub_802A4D4();
-    gUnknown_030014F0++;
-    if (gUnknown_030014F0 == 5) {
-        gUnknown_030014F0 = 0;
+    gJetpackRingLastFrame = GetActorCategoryFrameCount();
+    gJetpackRingChain++;
+    if (gJetpackRingChain == 5) {
+        gJetpackRingChain = 0;
     }
 }

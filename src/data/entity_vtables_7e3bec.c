@@ -214,12 +214,12 @@ extern void sub_802CA6C();
 extern void UpdatePolarBasicCrate();
 extern void UpdatePolarElectricFence();
 extern void sub_802CE10();
-extern void sub_802CE5C();
+extern void UpdatePolarLauncher();
 extern void UpdatePolarPenguin();
 extern void UpdatePolarIcicle();
 extern void UpdatePolarAkuAku();
-extern void sub_802D59C();
-extern void sub_802D600();
+extern void UpdatePolarGoal();
+extern void UpdatePolarBoostPad();
 extern void UpdatePolarCheckpointCrate();
 extern void UpdateJetpackPlayer();
 extern void DrawJetpackPlayer();
@@ -284,7 +284,7 @@ extern void DrawLogoActor();
 extern void DestroyLogoActor();
 extern void DestroyLargeFont();
 extern void DestroySmallFont();
-extern void sub_803B0C4();
+extern void DestroyRiderlessPolar();
 extern void UpdatePolarCheckpointText();
 extern void DestroyPolarCheckpointText();
 extern void DestroyPolarWumpa();
@@ -298,12 +298,12 @@ extern void DestroyPolarBasicCrate();
 extern void DestroyPolarCrate();
 extern void DestroyPolarElectricFence();
 extern void sub_803B30C();
-extern void sub_803B338();
+extern void DestroyPolarLauncher();
 extern void DestroyPolarPenguin();
 extern void DestroyPolarIcicle();
 extern void DestroyPolarAkuAku();
-extern void sub_803B3E8();
-extern void sub_803B414();
+extern void DestroyPolarGoal();
+extern void DestroyPolarBoostPad();
 extern void DestroyPolarCheckpointCrate();
 extern void DrawJetpackCheckpointText();
 extern void UpdateJetpackCheckpointText();
@@ -1113,11 +1113,11 @@ const struct vtable_slot gFontVtable[9] = {
  * InitActorPart installs it, and every derived destructor puts it back
  * before unlinking the actor.
  *
- * Used by counter_selector.c (DestroyLogoActor), actor_anim.c (sub_803B0C4,
+ * Used by counter_selector.c (DestroyLogoActor), actor_anim.c (DestroyRiderlessPolar,
  * DestroyPolarCheckpointText, DestroyPolarWumpa, DestroyPolarTimeCrate, DestroyPolarQuestionCrate, DestroyPolarAkuAkuCrate,
  * DestroyPolarNitroCrate, DestroyPolarLifeCrate, sub_803B25C, DestroyPolarBasicCrate, DestroyPolarCrate,
- * DestroyPolarElectricFence, sub_803B30C, sub_803B338, DestroyPolarPenguin, DestroyPolarIcicle,
- * DestroyPolarAkuAku, sub_803B3E8, sub_803B414, DestroyPolarCheckpointCrate, DestroyJetpackCheckpointText,
+ * DestroyPolarElectricFence, sub_803B30C, DestroyPolarLauncher, DestroyPolarPenguin, DestroyPolarIcicle,
+ * DestroyPolarAkuAku, DestroyPolarGoal, DestroyPolarBoostPad, DestroyPolarCheckpointCrate, DestroyJetpackCheckpointText,
  * DestroyJetpackExplosion, DestroyJetpackShot, DestroyJetpackPlane, DestroyJetpackBomber, DestroyJetpackCannonball,
  * DestroyAirshipFireball, DestroyJetpackBalloon, DestroyJetpackParachuteNitro, DestroyJetpackRocket, DestroyJetpackRing,
  * DestroyHovercraftFireball, DestroyHovercraftCannon, DestroyHovercraftLauncher, DestroyHovercraftSideGun, DestroyHovercraftCannonFlash),
@@ -1131,9 +1131,9 @@ const struct vtable_slot gActorVtable[4] = {
 };
 
 /* Used by actor_part_2ac28.c. */
-const struct vtable_slot gStaticData_087E4E14[4] = {
+const struct vtable_slot gRiderlessPolarVtable[4] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_803B0C4),
+    VTABLE_SLOT(DestroyRiderlessPolar),
     VTABLE_SLOT(UpdateActor),
     VTABLE_SLOT(DrawActor),
 };
@@ -1252,10 +1252,10 @@ const struct vtable_slot gStaticData_087E4FD4[4] = {
 };
 
 /* Used by actor_part126.c. */
-const struct vtable_slot gStaticData_087E4FF4[4] = {
+const struct vtable_slot gPolarLauncherVtable[4] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_803B338),
-    VTABLE_SLOT(sub_802CE5C),
+    VTABLE_SLOT(DestroyPolarLauncher),
+    VTABLE_SLOT(UpdatePolarLauncher),
     VTABLE_SLOT(DrawActor),
 };
 
@@ -1284,18 +1284,18 @@ const struct vtable_slot gPolarAkuAkuVtable[4] = {
 };
 
 /* Used by actor_part58.c. */
-const struct vtable_slot gStaticData_087E5074[4] = {
+const struct vtable_slot gPolarGoalVtable[4] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_803B3E8),
-    VTABLE_SLOT(sub_802D59C),
+    VTABLE_SLOT(DestroyPolarGoal),
+    VTABLE_SLOT(UpdatePolarGoal),
     VTABLE_SLOT(DrawActor),
 };
 
 /* Used by actor_part58.c. */
-const struct vtable_slot gStaticData_087E5094[4] = {
+const struct vtable_slot gPolarBoostPadVtable[4] = {
     VTABLE_SLOT(NULL),
-    VTABLE_SLOT(sub_803B414),
-    VTABLE_SLOT(sub_802D600),
+    VTABLE_SLOT(DestroyPolarBoostPad),
+    VTABLE_SLOT(UpdatePolarBoostPad),
     VTABLE_SLOT(DrawActor),
 };
 

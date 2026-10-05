@@ -22,7 +22,7 @@ struct health_actor {
 extern u8 gHovercraftCannonVtable[];
 
 extern void InitActorPart(void *self, s32 a, s32 b, s32 c, s32 d);
-extern void sub_8029E28(s32 arg0);
+extern void ShakeActorBg(s32 arg0);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *fn);
 extern s32 GetHovercraftX(void);
 extern s32 GetHovercraftY(void);
@@ -53,14 +53,14 @@ void *CreateHovercraftCannon(void *selfArg, s32 a, s32 b, s32 cParam, s32 d)
     return self;
 }
 
-/* Plays a fixed sound cue (`sub_8029E28(0x400)`), then - if `self`'s
+/* Plays a fixed sound cue (`ShakeActorBg(0x400)`), then - if `self`'s
  * `+0x12` flag is set - fires the `vtable` event table's slot-3
  * trampoline at `self` offset by the table's `+8` halfword. */
 void HovercraftCannonStateDestroyed(void *selfArg)
 {
     struct health_actor *self = selfArg;
 
-    sub_8029E28(0x400);
+    ShakeActorBg(0x400);
 
     if (self->base.animDone != 0 && self != NULL) {
         register u8 *table asm("r1") = (u8 *)self->base.vtable;

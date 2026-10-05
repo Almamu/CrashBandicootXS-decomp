@@ -17,10 +17,10 @@ Nine closed as plain C, with no register pins:
 | `FillCellAnimTilemap` | `actor_part98.c` | both | `tile++` in each branch |
 | `ResetCellAnimBg` | `actor_part95.c` | both | `FillCellAnimTilemap` inlined twice, upward clear loop |
 | `UploadCellAnimFrame` | `actor_part95.c` | both | expression order and locals |
-| `sub_802A674` | `actor_part94.c` | both | returns the callee's result |
-| `sub_802A688` | `actor_part94.c` | both | returns the callee's result |
+| `JetpackIsPauseLocked` | `actor_part94.c` | both | returns the callee's result |
+| `PolarIsPauseLocked` | `actor_part94.c` | both | returns the callee's result |
 
-`sub_802A688` was not on the list, but it is `sub_802A674`'s twin in the
+`PolarIsPauseLocked` was not on the list, but it is `JetpackIsPauseLocked`'s twin in the
 same file and parked for the same reason.
 
 Still NAKED: `InitActorCategory`, `InitCellAnim`, `SelectActorCategory`,
@@ -121,9 +121,9 @@ order:
 - `dst = gCellAnimPage != 0 ? 0x06000000 : 0x06002000;`
 - The callback's first argument goes into its own local.
 
-## `sub_802A674` / `sub_802A688`
+## `JetpackIsPauseLocked` / `PolarIsPauseLocked`
 
-They return what `sub_802F4C0`/`sub_802BD18` return (`pop {r1}; bx r1`).
+They return what `IsJetpackPauseLocked`/`IsPolarPauseLocked` return (`pop {r1}; bx r1`).
 The callees are `u8`, but these wrappers do not re-narrow the value, so
 they are declared `s32` here. The old note put the epilogue down to a
 TU-wide allocator quirk.
@@ -144,7 +144,7 @@ TU-wide allocator quirk.
   `table + 0x14 + i*0x14` address shape (an inline returning a pointer,
   so the load comes after the limit) and `&gActorDrawList` loaded
   before `mem_alloc`. But the `&gActorSpawnIndex` pseudo and the cached
-  `sub_8029B2C()` value swap `r7`/`r8`, which adds two `mov`s. In the
+  `GetCellAnimDistance()` value swap `r7`/`r8`, which adds two `mov`s. In the
   `-dg` dump the cached value (refs 7, live 105) outranks the address
   (refs 4, live 84). Goto and `for (;;)` forms of the first loop did not
   change that.

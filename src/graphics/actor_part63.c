@@ -74,10 +74,10 @@ void *CreateHovercraftLauncher(void *selfArg, void *part, s32 b, s32 cParam, s32
     return self;
 }
 
-extern void sub_8029E28(s32 arg0);
+extern void ShakeActorBg(s32 arg0);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *fn);
 
-/* Plays a fixed sound cue (`sub_8029E28(0x400)`), then - if `self` is
+/* Plays a fixed sound cue (`ShakeActorBg(0x400)`), then - if `self` is
  * non-NULL and its `+0x12` flag is set - fires the `self+0x50` event
  * table's slot-3 trampoline at `self` offset by the table's `+8`
  * halfword. Same shape as `HovercraftCannonStateDestroyed` (actor_part32.c). */
@@ -85,7 +85,7 @@ void HovercraftLauncherStateDestroyed(void *selfArg)
 {
     struct actor_self *self = selfArg;
 
-    sub_8029E28(0x400);
+    ShakeActorBg(0x400);
 
     if (self->animDone != 0 && self != NULL) {
         register struct actor_vtable *table asm("r1") = self->vtable;

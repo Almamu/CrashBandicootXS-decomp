@@ -16,7 +16,7 @@ extern void InitActorPart(void *self, s32 a, s32 b, s32 c, s32 d);
 extern s32 GetAnimFrameBaseOffset(void *self);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void UpdateActorDepth(void *self);
-extern void sub_8032138(void *obj);
+extern void ClearJetpackCrateBalloon(void *obj);
 
 extern s32 gAirshipState;
 extern s32 gAirshipHp;
@@ -83,7 +83,7 @@ void AirshipStateInactive(void)
 
 /* Per-frame update: syncs via `UpdateActorDepth`; once `self` has fallen
  * behind the camera (`depth` below `gUnknown_030013C0 - 0x200`) it
- * releases its pending linked object (`sub_8032138`) and destroys
+ * releases its pending linked object (`ClearJetpackCrateBalloon`) and destroys
  * itself, as it also does once the state-2 animation has played through
  * or state 1 has sunk past a height; otherwise runs the member-pointer
  * dispatch `RunJetpackBalloonState`. The shared destroy tail is a `goto` target, as
@@ -93,7 +93,7 @@ void UpdateJetpackBalloon(struct jetpack_balloon *self)
     UpdateActorDepth(self);
     if (self->base.depth < gUnknown_030013C0 - 0x200) {
         if (self->pending != NULL) {
-            sub_8032138(self->pending);
+            ClearJetpackCrateBalloon(self->pending);
             self->pending = NULL;
         }
         goto destroy;
@@ -110,7 +110,7 @@ void UpdateJetpackBalloon(struct jetpack_balloon *self)
 }
 
 /* Trivial `self+0x58` clearing setter. */
-void sub_8031850(void *selfArg)
+void ClearJetpackBalloonCrate(void *selfArg)
 {
     u8 *self = selfArg;
     *(s32 *)(self + 0x58) = 0;
@@ -141,7 +141,7 @@ void DamageJetpackBalloon(struct jetpack_balloon *self, s32 damage)
  * anim frame re-synced from `self`'s own part table) - same shape as
  * the boss cluster's established reset blocks (`AirshipStateApproach`,
  * actor_part21c.c). */
-void sub_80318B4(void *selfArg)
+void ReleaseJetpackBalloon(void *selfArg)
 {
     u8 *self = selfArg;
     register s32 zero asm("r2") = 0;
@@ -211,7 +211,7 @@ void *CreateJetpackBalloon(void *selfArg, s32 a, s32 b, s32 c, s32 d, s32 e)
 
 /* The shared anim-frame-advance-and-clamp idiom on its own (see
  * `MoveJetpackBalloon`). */
-void sub_8031954(struct actor_self *self)
+void JetpackBalloonStatePop(struct actor_self *self)
 {
     s32 base;
 
@@ -229,7 +229,7 @@ void sub_8031954(struct actor_self *self)
 /* Falls under a decaying vertical velocity (`velY` drops by 6 per
  * frame, floored at -0x12C), then the shared anim-frame-advance-and-
  * clamp idiom (see `MoveJetpackBalloon`). */
-void sub_80319A0(struct jetpack_balloon *self)
+void JetpackBalloonStateFloatAway(struct jetpack_balloon *self)
 {
     s32 base;
 

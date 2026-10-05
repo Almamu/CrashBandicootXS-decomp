@@ -10,7 +10,7 @@
  * - ConstructAnimTableState (category vtable slot 0, see docs/rom_map.md)
  *   installs the category's animation table (`struct anim_table_record`,
  *   include/actor_anim.h) as gActorAnimTable and builds the player with
- *   ConstructActorPart, which also resets the gUnknown_03001480-030014A4
+ *   ConstructActorPart, which also resets the gPolarPauseLocked-030014A4
  *   player-state globals.
  * - SpawnActor (vtable slot 1) turns a level spawn record into a
  *   CreateActor call, picking the record's alternate kind in the
@@ -31,7 +31,7 @@ extern struct anim_table_record *gActorAnimTable;
 extern struct actor_self *gActorList;
 extern void *gLevelState;
 
-extern u8 gStaticData_087E4E14[];
+extern u8 gRiderlessPolarVtable[];
 extern u8 gPolarCheckpointTextVtable[];
 extern u8 gPolarPlayerVtable[];
 extern u8 gPolarWumpaVtable[];
@@ -46,12 +46,12 @@ extern u8 gPolarBasicCrateVtable[];
 extern struct actor_self *InitActorPart(struct actor_self *self, struct anim_table_record *rec, s32 x, s32 y, s32 z);
 extern struct actor_self *InitPolarCrate(struct actor_self *self, struct anim_table_record *rec, s32 x, s32 y, s32 z);
 extern struct actor_self *CreatePolarCheckpointCrate(struct actor_self *self, struct anim_table_record *rec, s32 x, s32 y, s32 z);
-extern struct actor_self *sub_802CF0C(struct actor_self *self, struct anim_table_record *rec, s32 x, s32 y, s32 z);
-extern struct actor_self *sub_802D648(struct actor_self *self, struct anim_table_record *rec, s32 x, s32 y, s32 z);
+extern struct actor_self *CreatePolarLauncher(struct actor_self *self, struct anim_table_record *rec, s32 x, s32 y, s32 z);
+extern struct actor_self *CreatePolarBoostPad(struct actor_self *self, struct anim_table_record *rec, s32 x, s32 y, s32 z);
 extern struct actor_self *CreatePolarPenguin(struct actor_self *self, struct anim_table_record *rec, s32 x, s32 y, s32 z, void *spawn);
 extern struct actor_self *CreatePolarElectricFence(struct actor_self *self, struct anim_table_record *rec, s32 x, s32 y, s32 z);
 extern struct actor_self *CreatePolarIcicle(struct actor_self *self, struct anim_table_record *rec, s32 x, s32 y, s32 z);
-extern struct actor_self *sub_802D5D4(struct actor_self *self, struct anim_table_record *rec, s32 x, s32 y, s32 z);
+extern struct actor_self *CreatePolarGoal(struct actor_self *self, struct anim_table_record *rec, s32 x, s32 y, s32 z);
 extern struct actor_self *sub_802CE38(struct actor_self *self, struct anim_table_record *rec, s32 x, s32 y, s32 z);
 extern struct actor_self *CreatePolarCollectedWumpa(struct actor_self *self, struct anim_table_record *rec, s32 x, s32 y, s32 z);
 extern struct actor_self *CreatePolarAkuAku(struct actor_self *self, struct anim_table_record *rec, s32 x, s32 y, s32 z, s32 arg);
@@ -135,9 +135,9 @@ struct actor_self *CreateActor(u8 kind, s32 x, s32 y, s32 z, void *spawn)
     case 4:
         NEW_CB34_ACTOR(0x54, REC_AT(kind), gPolarNitroCrateVtable);
     case 22:
-        return sub_802CF0C(AllocActor(0x54), gActorAnimTable + kind, x, y, z);
+        return CreatePolarLauncher(AllocActor(0x54), gActorAnimTable + kind, x, y, z);
     case 12:
-        return sub_802D648(AllocActor(0x58), gActorAnimTable + kind, x, y, z);
+        return CreatePolarBoostPad(AllocActor(0x58), gActorAnimTable + kind, x, y, z);
     case 24:
         return CreatePolarPenguin(AllocActor(0x68), gActorAnimTable + kind, x, y, z, spawn);
     case 28:
@@ -169,10 +169,10 @@ struct actor_self *CreateActor(u8 kind, s32 x, s32 y, s32 z, void *spawn)
         return CreatePolarIcicle(AllocActor(0x54), gActorAnimTable + kind, x, y, z);
     case 25:
     {
-        struct actor_self *self = sub_802D5D4(AllocActor(0x54), gActorAnimTable + 26, gActorAnimTable[26].spawnX, y, z);
+        struct actor_self *self = CreatePolarGoal(AllocActor(0x54), gActorAnimTable + 26, gActorAnimTable[26].spawnX, y, z);
 
         SET_ANIM(self, 1);
-        return sub_802D5D4(AllocActor(0x54), gActorAnimTable + kind, gActorAnimTable[kind].spawnX, y, z);
+        return CreatePolarGoal(AllocActor(0x54), gActorAnimTable + kind, gActorAnimTable[kind].spawnX, y, z);
     }
     case 13:
     {
@@ -182,7 +182,7 @@ struct actor_self *CreateActor(u8 kind, s32 x, s32 y, s32 z, void *spawn)
         return sub_802CE38(AllocActor(0x54), gActorAnimTable + kind, gActorAnimTable[kind].spawnX, y, z);
     }
     case 2:
-        NEW_BASE_ACTOR(REC_AT(kind), gStaticData_087E4E14);
+        NEW_BASE_ACTOR(REC_AT(kind), gRiderlessPolarVtable);
     case 36:
     case 37:
     case 38:
@@ -252,19 +252,19 @@ struct actor_self *SpawnActor(struct actor_spawn *spawn, u8 useBonus, s32 zOffse
     return CreateActor(kind, spawn->x << 8, spawn->y << 8, (spawn->z << 8) + zOffset, spawn);
 }
 
-extern s32 gUnknown_030014A4;
-extern s32 gUnknown_03001490;
+extern s32 gPolarPlayerVelY;
+extern s32 gRiderlessPolar;
 extern s32 gPolarAkuAku;
-extern u8 gUnknown_030014A3;
-extern s32 gUnknown_0300149C;
-extern s32 gUnknown_03001498;
-extern s32 gUnknown_0300148C;
-extern u8 gUnknown_030014A0;
-extern u8 gUnknown_030014A2;
-extern u8 gUnknown_030014A1;
+extern u8 gPolarSteerEnabled;
+extern s32 gPolarInvulnTimer;
+extern s32 gPolarSteerTime;
+extern s32 gPolarFinishTimer;
+extern u8 gPolarPlayerInactive;
+extern u8 gPolarFadeStarted;
+extern u8 gPolarPlayerHalted;
 extern s32 gPolarQueuedWumpa;
-extern s32 gUnknown_03001484;
-extern u8 gUnknown_03001480;
+extern s32 gPolarWumpaDispenseTimer;
+extern u8 gPolarPauseLocked;
 
 struct actor_self *ConstructActorPart(struct actor_self *self, struct anim_table_record *rec, s32 z)
 {
@@ -284,18 +284,18 @@ struct actor_self *ConstructActorPart(struct actor_self *self, struct anim_table
         self->animDone = 0;
         self->animTime = 0;
     }
-    gUnknown_030014A4 = 0;
-    gUnknown_03001490 = 0;
+    gPolarPlayerVelY = 0;
+    gRiderlessPolar = 0;
     gPolarAkuAku = 0;
-    gUnknown_030014A3 = 0;
-    gUnknown_0300149C = 0;
-    gUnknown_03001498 = 0;
-    gUnknown_0300148C = 0;
-    gUnknown_030014A0 = 1;
-    gUnknown_030014A2 = 0;
-    gUnknown_030014A1 = 0;
+    gPolarSteerEnabled = 0;
+    gPolarInvulnTimer = 0;
+    gPolarSteerTime = 0;
+    gPolarFinishTimer = 0;
+    gPolarPlayerInactive = 1;
+    gPolarFadeStarted = 0;
+    gPolarPlayerHalted = 0;
     gPolarQueuedWumpa = 0;
-    gUnknown_03001484 = 0;
-    gUnknown_03001480 = 0;
+    gPolarWumpaDispenseTimer = 0;
+    gPolarPauseLocked = 0;
     return self;
 }

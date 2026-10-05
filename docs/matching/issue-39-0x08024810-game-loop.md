@@ -121,7 +121,7 @@ rest is matched.
 `ScrollBgStreamer` (the per-frame axis-crossing dispatcher) matched on the
 first isolated-compile attempt with no register pins needed at all -
 the same "confirmed the same as the just-closed sibling cluster" result
-`sub_8026628` got in the terrain-streamer's own neighborhood.
+`ProbeTerrain` got in the terrain-streamer's own neighborhood.
 
 `GetBgStreamerColumn`/`GetBgStreamerRow`/`GetBgStreamerCell` (the wrapped-address helpers)
 each needed the `register u8 subX/subY asm("r5")`/`register s32 shifted

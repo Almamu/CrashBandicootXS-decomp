@@ -43,7 +43,7 @@ extern void AllocJetpackPlayerTiles(void *arg0);
 
 /* Trivial forwarder - ignores its own argument and calls
  * `AllocJetpackPlayerTiles(gActorList)` (the player object), discarding its
- * return value. Same shape as `sub_802C0A8` in actor_part19.c. */
+ * return value. Same shape as `GivePolarPlayerLife` in actor_part19.c. */
 void JetpackReloadPlayerTiles(void *arg0)
 {
     AllocJetpackPlayerTiles(gActorList);
@@ -57,22 +57,22 @@ void PolarReloadPlayerTiles(void *arg0)
     AllocPolarPlayerTiles(gActorList);
 }
 
-extern void sub_802F0DC(void *arg0);
+extern void FinishJetpackRun(void *arg0);
 
-/* Same forwarder shape as `JetpackReloadPlayerTiles`, calling `sub_802F0DC` instead. */
-void sub_802A6C4(void *arg0)
+/* Same forwarder shape as `JetpackReloadPlayerTiles`, calling `FinishJetpackRun` instead. */
+void JetpackReachCourseEnd(void *arg0)
 {
-    sub_802F0DC(gActorList);
+    FinishJetpackRun(gActorList);
 }
 
-extern void sub_802BFD4(void *arg0);
+extern void FinishPolarRun(void *arg0);
 
-/* Same forwarder shape as `JetpackReloadPlayerTiles`, calling `sub_802BFD4` (already
+/* Same forwarder shape as `JetpackReloadPlayerTiles`, calling `FinishPolarRun` (already
  * matched as a no-argument function in actor_part19.c) with the player
  * pointer anyway - the callee simply ignores it. */
-void sub_802A6D8(void *arg0)
+void PolarReachCourseEnd(void *arg0)
 {
-    sub_802BFD4(gActorList);
+    FinishPolarRun(gActorList);
 }
 
 extern void *gActorCategoryVtable;
@@ -90,7 +90,7 @@ s32 IsTouchingPlayer(void *self)
 
 extern u8 gActorVtable[];
 extern void SetActorAnim(void *self, s32 arg1);
-extern s32 sub_8029B2C(void);
+extern s32 GetCellAnimDistance(void);
 extern s32 sub_8029E40(void);
 
 /* The constructor every other `actor_part*.c` file already forward-
@@ -136,7 +136,7 @@ void *InitActorPart(void *selfArg, void *partArg, s32 b, s32 c, s32 d)
     self->visible = 1;
 
     {
-        register s32 value asm("r2") = self->z - (sub_8029B2C() << 8);
+        register s32 value asm("r2") = self->z - (GetCellAnimDistance() << 8);
         s32 sign;
 
         ABS32(value, sign);
@@ -201,7 +201,7 @@ void UpdateActor(void *selfArg)
     struct actor_self *self = selfArg;
 
     {
-        register s32 value asm("r2") = self->z - (sub_8029B2C() << 8);
+        register s32 value asm("r2") = self->z - (GetCellAnimDistance() << 8);
         s32 sign;
 
         ABS32(value, sign);

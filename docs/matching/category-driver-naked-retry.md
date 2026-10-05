@@ -17,7 +17,7 @@ the same result as the old note. The cause was not register pressure:
   (`duplicate_loop_exit_test`) copies the exit test ahead of the loop,
   so the ROM has the test twice and the body starts at a label. CSE
   cannot carry the test's loads into the body, which is why the ROM
-  re-reads `gActorSpawnIndex`/`gUnknown_03001420`/the vtable in the
+  re-reads `gActorSpawnIndex`/`gActorSpawnOffset`/the vtable in the
   body.
 - The copy is refused if the test contains block notes, so the test
   cannot call an inline function (the `NextThreshold` helper that
@@ -42,12 +42,12 @@ most instructions already right. What closed it:
    in `continue` keeps the inner loop from being rotated.
 2. **The `RunPauseMenu()` result tests stay ifs** (a `switch` there also
    builds a tree).
-3. **`-sub_802A5AC() < 0`** gives the ROM's `neg; lsr #31`; `!= 0`
+3. **`-CanPauseActorCategory() < 0`** gives the ROM's `neg; lsr #31`; `!= 0`
    adds an `orr`.
 4. **`(gKeys >> 16) & 8`** (u32 global) loads with
    `ldrh [rX, #2]` from the same literal as the later `& 4` word test.
    `((u16 *)&g)[1]` gets its own `g+2` literal.
-5. **Pointer locals for gUnknown_03001384/gUnknown_03001388** (19 -> 4
+5. **Pointer locals for gActorCategoryDeaths/gUnknown_03001388** (19 -> 4
    halfwords). They are spilled, so every use rematerializes the
    address through a reload register. That is where the ROM's odd
    choices come from (`r3`/`r7` in the prologue stores, `r5` in the

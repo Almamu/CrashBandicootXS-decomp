@@ -77,13 +77,13 @@ static inline u8 ActorsOverlap(struct actor_self *pl, struct actor_self *self)
  * frames: walks the whole `self+0x4c`-rooted circular actor list
  * (rooted at `gActorList`, the same sentinel-head list every
  * other `self+0x4c`/`self+0x48` teardown/unlink helper in this ROM
- * region walks - `sub_802AA4C`/`DestroyPolarPlayer`/`DestroyPolarCollectedWumpa`) looking
+ * region walks - `IsActorVisible`/`DestroyPolarPlayer`/`DestroyPolarCollectedWumpa`) looking
  * for every OTHER actor whose type byte (`*(u8*)(*(u8**)(node+0x30))`,
  * the same type-byte indirection `UpdatePolarQuestionCrate` dispatches on) is `4`
  * and that overlaps `self`'s own translated `self+0x38` AABB (both
  * boxes translated into world space by each object's own `+0x1c`/
  * `+0x20`/`+0x24` `>>8` position, exactly like `UpdateYeti`/
- * `sub_802DD9C`'s player-overlap test) - a proximity "chain pickup"
+ * `IsTouchingYeti`'s player-overlap test) - a proximity "chain pickup"
  * that fires the shared used-state transition (sound cue `PlaySfx(...,
  * 4, 0x100)`, lap-counter tie `AddBrokenCrate`, `+0x44`/`+0x12`/`+8`
  * cleared, `+0xc = 0x12`, anim base reloaded from the node's own part

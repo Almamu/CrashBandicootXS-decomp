@@ -4,7 +4,7 @@ A scoping investigation of the actor zone found this 4152-byte range -
 the whole of `asm/code_3_2_20_28568_c99c_e0a4.s` - sitting between
 issue #54's chunk (`actor_part61.c`, ending at `YetiStateCaught`/
 `sub_802E0A0`) and issue #56's chunk (`actor_part43.c`, starting at
-`sub_802F0DC`) - still completely raw. `docs/rom_map.md` had already
+`FinishJetpackRun`) - still completely raw. `docs/rom_map.md` had already
 partly read this range from disassembly alone: `CreateJetpackActor` is "a
 31-case jump table paired with a new stride-40 RAM table,
 `gJetpackAnimTable`, fetching a position-offset pair per case".
@@ -113,7 +113,7 @@ raw disassembly.
   transitions); `DrawJetpackPlayer` additionally has `r8`/`sb`/`sl` all
   simultaneously live.
 - **`SteerJetpackPlayerY`**, **`SteerJetpackPlayerX`** - no-argument helpers reading
-  `gUnknown_03001507`/`gKeys` directly.
+  `gJetpackInputEnabled`/`gKeys` directly.
 - **`JetpackPlayerStateFly`**, **`JetpackPlayerStateRollLeft`**, **`JetpackPlayerStateRollRight`** - `self`-
   object frame-counter-threshold steps, each starting with a tail-call
   into `SteerJetpackPlayerY`/`SteerJetpackPlayerX` above.

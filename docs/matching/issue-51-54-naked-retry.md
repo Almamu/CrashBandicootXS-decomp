@@ -19,10 +19,10 @@ file is now on the Makefile's `OLD_AGBCC_OBJS` list.
 | `UpdatePolarPlayer` | The per-frame update. It is the same shape as `actor_part128.c`'s `UpdateJetpackPlayer`: branchless `Abs()` for the `visible` word, the inline anim-advance block, and `ACTOR_PMF_CALL(self, gPolarPlayerStateFuncs)`, which covers the "stride-8 keyframe lookup / r7 hazard" in the old note. Two details mattered. The keys are read as a `struct held_pressed_pair` copy with `keys.held & 0x20` and then `u16 right = keys.held & 0x10`, which keeps the key word in r2. The tier argument of `SpawnPolarAkuAku` is read into a local first so it loads before x/y/z. Matches under both compilers. |
 | `DrawPolarPlayer` | The sprite draw. It is `DrawJetpackPlayer` (actor_part128.c) with a `0x2f00000` projection constant, `CurFrame`/`CurAttr` inlines and `GET_TILE_NUM`. Needs old_agbcc; under the current agbcc 2 halfwords are off, in the `attr` load. |
 | `AllocPolarPlayerTiles` | Plain C: `h * w * 32` with `f[1] * f[0]` operand order, and `animTime >> 8` evaluated first. The "multiply into one register, copy to a second" sequence is just what old_agbcc emits for this. Needs old_agbcc. |
-| `sub_802B8E8` | Plain C. `ACTOR_SET_STATE` plus `ACTOR_VCALL(*spawnAddr, m08, 3)`, with the spawn slot read through one `struct actor_self **` local. Matches under both. |
-| `sub_802BA5C` | Plain C. The old comment's `0xA000` threshold is really `0x2800`. Matches under both. |
-| `sub_802BAD0` | Plain C with `u16 bit = *(u32 *)input & 2` reused as the zero. Needs old_agbcc because the `1` mask is loaded before the `ldrh`. |
-| `sub_802BBE4` | Plain C with `ACTOR_SET_STATE`. Matches under both. |
+| `PolarPlayerStateMount` | Plain C. `ACTOR_SET_STATE` plus `ACTOR_VCALL(*spawnAddr, m08, 3)`, with the spawn slot read through one `struct actor_self **` local. Matches under both. |
+| `PolarPlayerStateJump` | Plain C. The old comment's `0xA000` threshold is really `0x2800`. Matches under both. |
+| `PolarPlayerStateDash` | Plain C with `u16 bit = *(u32 *)input & 2` reused as the zero. Needs old_agbcc because the `1` mask is loaded before the `ldrh`. |
+| `PolarPlayerStateCaught` | Plain C with `ACTOR_SET_STATE`. Matches under both. |
 
 ### `actor_part62.c`: `MovePolarAkuAku` (current agbcc, no pins)
 
@@ -75,7 +75,7 @@ no caller).
   register, and r5/r6 roles shift for the rest of the function. Passing
   the box by value, wrapping the `MemCopy32` call in an inline and
   using pointer locals all failed to fix it.
-- **`sub_802DD9C`** (actor_part75.c): the same box code as a standalone
+- **`IsTouchingYeti`** (actor_part75.c): the same box code as a standalone
   function, with the same `&b` hoist (about 51 halfwords off, plus an
   extra r6 push). This is also the leftover recorded for
   `actor_part24b.c`'s `IsTouchingAirship` in issue-58-61-naked-retry.md.
@@ -93,7 +93,7 @@ no caller).
 ### Later pass: all three closed
 
 [actor-zone-naked-retry.md](actor-zone-naked-retry.md) closed the
-three, so issue #54 has nothing left. `UpdateYeti` and `sub_802DD9C`
+three, so issue #54 has nothing left. `UpdateYeti` and `IsTouchingYeti`
 keep their boxes as members of one stack-frame struct, which makes gcc
 rematerialize `&b` from sp the way the ROM does (old_agbcc;
 `actor_part75.c` moved to it). `LoadYetiGraphics` passes

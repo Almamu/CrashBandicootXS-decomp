@@ -20,13 +20,13 @@
  * itself exactly (unconditional once both leading gate checks pass -
  * see below) and traces the "recompute" side all the way through: the
  * function's second half OR's `mode` bits (`self+0x24 & 0x3`/`0xc`)
- * into `self+0x74` on each successful `sub_8026628` axis-probe hit -
+ * into `self+0x74` on each successful `ProbeTerrain` axis-probe hit -
  * i.e. `self+0x74` really is "which movement axes/directions collided
  * this call", zeroed up front and rebuilt bit by bit as each probe
  * fires. `docs/matching/issue-9-0x08007634-actor.md` (line ~206) had
  * also already flagged both functions as built on `sub_8008200`/
- * `sub_8026628`/`sub_8026C3C`/`sub_8026BF8` - two of those four
- * (`sub_8008200`, `sub_8026628`) are already matched this session
+ * `ProbeTerrain`/`sub_8026C3C`/`sub_8026BF8` - two of those four
+ * (`sub_8008200`, `ProbeTerrain`) are already matched this session
  * (`src/graphics/actor_part4.c`, `src/system/game_loop43.c`); this
  * session additionally reads `sub_8026C3C`/`sub_8026BF8` (still raw,
  * `asm/code_3_2_17_266bc.s`) far enough to place them precisely.
@@ -80,14 +80,14 @@
  *      (`& 3` for X-axis modes 1/2, `& 0xc` for Y-axis modes 4/8) and
  *      on the "found ground" flag still being `0`: build a plain int
  *      `{x, y}` position via `sub_8008278(dest, mode, quad)`, probe it
- *      through the shared `sub_8026628(player, mode, pos, span,
+ *      through the shared `ProbeTerrain(player, mode, pos, span,
  *      outValue)` API (already matched, `game_loop43.c`) with a
  *      `span` derived from the quad's own `h`/`w` byte (`h - 16` for
  *      the first X-axis block, `w` for the Y-axis block, `h` for the
  *      second X-axis block - three deliberately different probe
  *      geometries, not a shared constant), and on a hit OR's `mode`
  *      into both `self+0x74` and the running result mask, restoring
- *      the axis coordinate `sub_8026628` didn't touch. Returns the
+ *      the axis coordinate `ProbeTerrain` didn't touch. Returns the
  *      final result mask.
  *
  * Read together: this is the part-object movement/collision
@@ -95,7 +95,7 @@
  * `CollideGroundSprite`) has decided a part object needs a physics update,
  * `ProbeGroundSpriteTerrain` runs a layered probe (fast quad-based floor/wall test
  * first via `ProbeGroundSpriteFloor`/`sub_8026C3C`, then falling back to the
- * general tile-scan `sub_8026628` API per axis) and snaps the object's
+ * general tile-scan `ProbeTerrain` API per axis) and snaps the object's
  * position to whatever solid surface each probe finds, recording which
  * axes/directions actually resolved in `self+0x74` for whatever caller
  * reads it next (`UpdateGameFrame`'s own level-load branch is the only
@@ -104,7 +104,7 @@
  * ## `sub_8026C3C`/`sub_8026BF8` (still raw, understood only)
  *
  * Both are single-point collision-test siblings of the already-matched
- * `sub_8026A18`/`sub_8026AE8` pair (`game_loop43.c`'s own "what's still
+ * `ProbeTerrainY`/`ProbeTerrainX` pair (`game_loop43.c`'s own "what's still
  * open" section already predicted this) - `rom_map.md`'s "15 more
  * reads" pass (line ~2581) had already placed them as "single-point
  * collision-test siblings ... one via the raw terrain streamer and one
@@ -122,7 +122,7 @@
  * - **`sub_8026C3C`**: the exact same shape, but the height byte comes
  *   from `sub_8025228(terrainPtr, tileX, tileY, 0, &scratch)` instead
  *   of a direct row-pointer byte read - the "CheckTerrainFlag"-style
- *   API `sub_8026A18`/`sub_8026AE8` already use via their own
+ *   API `ProbeTerrainY`/`ProbeTerrainX` already use via their own
  *   `GetSolidTerrainHeights` calls (same argument shape: base pointer, tile
  *   coords, a submode, an out-parameter). Returns `0` if the returned
  *   signed byte is negative, `1` otherwise, with the same
@@ -156,7 +156,7 @@
  * function's semantics were still unresolved. `sub_8009BE0` is now
  * fully understood (a physics/collision step-probe: converts `self`'s
  * position to plain ints via `sub_8008278`, probes it through
- * `sub_8026628` with `mode` as the axis selector, retrying up to 3
+ * `ProbeTerrain` with `mode` as the axis selector, retrying up to 3
  * more times on a miss by nudging Y down), which is enough to close
  * this function's own dispatch logic as real, byte-exact matched C:
  *
@@ -238,7 +238,7 @@ u8 CollideGroundSprite(struct box_part *self)
 extern s32 _call_via_r1(void *addr, void *fn);
 extern s32 sub_8008200(void *dest, s32 kind, void *rec);
 extern s32 sub_8008278(void *dest, s32 kind, void *rec);
-extern s32 sub_8026628(void *player, s32 mode, void *pos, s32 span, void *outValue);
+extern s32 ProbeTerrain(void *player, s32 mode, void *pos, s32 span, void *outValue);
 extern s32 sub_8026C3C(void *player, void *pos, void *outValue);
 extern s32 sub_8026BF8(void *player, void *pos, void *outValue);
 extern void *gLevelLayers;
@@ -253,7 +253,7 @@ u8 ProbeGroundSpriteFloor(struct box_part *self, struct part_box *quad, u8 *outF
 /* See the file-level header comment above for this function's
  * semantics. `self`'s only argument; returns the accumulated result
  * bitmask (`self+0x24`'s per-axis mode bits, OR'd in as each
- * `sub_8026628` probe reports a hit).
+ * `ProbeTerrain` probe reports a hit).
  *
  * Source-shape details that matter: the result is an `s32` set by a
  * `? 8 : result` conditional (expanded as `-(x != 0)` into the result
@@ -341,7 +341,7 @@ s32 ProbeGroundSpriteTerrain(struct box_part *self)
         sub_8008278(&pos, mode, quad);
         pos.x >>= 8;
         pos.y = (pos.y >> 8) + 8;
-        if ((u8)sub_8026628(gLevelLayers, mode, &pos, span, &origX)) {
+        if ((u8)ProbeTerrain(gLevelLayers, mode, &pos, span, &origX)) {
             self->hitMask |= mode;
             result |= mode;
             self->x = origX;
@@ -359,7 +359,7 @@ y_probe:
         sub_8008278(&pos, mode, quad);
         pos.x >>= 8;
         pos.y >>= 8;
-        if ((u8)sub_8026628(gLevelLayers, mode, &pos, span, &origY)) {
+        if ((u8)ProbeTerrain(gLevelLayers, mode, &pos, span, &origY)) {
             result |= mode;
             self->hitMask |= mode;
             self->y = origY;
@@ -375,7 +375,7 @@ y_probe:
         sub_8008278(&pos, mode, quad);
         pos.x >>= 8;
         pos.y >>= 8;
-        if ((u8)sub_8026628(gLevelLayers, mode, &pos, span, &origX)) {
+        if ((u8)ProbeTerrain(gLevelLayers, mode, &pos, span, &origX)) {
             self->hitMask |= mode;
             result |= mode;
             self->x = origX;

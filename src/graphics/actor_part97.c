@@ -4,7 +4,7 @@ extern s32 gCellAnimTime;
 extern s32 gCellAnimSpeed;
 extern s32 gCellAnimFrameStep;
 extern s32 gCellAnimLength;
-extern s32 gUnknown_030013A8;
+extern s32 gCellAnimDistance;
 
 extern void UploadCellAnimFrame(void);
 extern void UpdateActorPaletteCycle(void);
@@ -46,7 +46,7 @@ void AdvanceCellAnim(void)
     }
 
     if (delta != 0) {
-        gUnknown_030013A8 += delta;
+        gCellAnimDistance += delta;
         UploadCellAnimFrame();
         UpdateActorPaletteCycle();
     }

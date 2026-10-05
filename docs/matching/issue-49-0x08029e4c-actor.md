@@ -12,12 +12,12 @@ of this chunk hit.
 
 ## Matched (real C)
 
-- `nullsub_6`, `sub_8029E50`, `sub_8029E98`, `sub_8029EB4`
+- `nullsub_6`, `CommitActorBgScroll`, `sub_8029E98`, `sub_8029EB4`
   (`actor_part92.c`/`actor_part99.c`/`actor_part93.c`) - the tail of
   the BG2-affine scroll/zoom subsystem: a no-op stub, committing the
   scroll accumulators to `REG_BG0*`/`REG_BG1*`, and two small target-
   field getters.
-- `sub_802A4D4`-`sub_802A650`/`sub_802A668` (`actor_part94.c`) - the
+- `GetActorCategoryFrameCount`-`UpdateActorCategoryBg2`/`SetActorCategoryExitStatus` (`actor_part94.c`) - the
   `gActorSpawnTable` `sub_effect_table` record accessor family
   (`struct sub_effect_record`, see `include/actor_anim.h`), a
   circular-list marker-drawing pass (`DestroyAllActors`), and several
@@ -40,11 +40,11 @@ of this chunk hit.
   own 12-byte `{s16 x,y,z,sizeX,sizeY,sizeZ}` AABB record into stack
   scratch boxes via `MemCopy32`, then run the same 3-axis overlap
   test already established throughout this project
-  (`UpdateYeti`/`sub_802DD9C`/`DetonateNearbyPolarNitros`/`IsTouchingAirship`, see
+  (`UpdateYeti`/`IsTouchingYeti`/`DetonateNearbyPolarNitros`/`IsTouchingAirship`, see
   `docs/matching.md` and `issue-53-actor-c7a8.md`/
   `issue-54-actor-d3a8.md`/`issue-58-0x08030574-actor.md`).
   `PolarIsTouchingPlayer`/`JetpackIsTouchingPlayer` are near-identical (differ only in guard
-  byte: `gUnknown_030014A0` vs `gUnknown_03001506`); `FindShotTarget` wraps
+  byte: `gPolarPlayerInactive` vs `gJetpackPlayerInactive`); `FindShotTarget` wraps
   the same test in an outer walk of the whole circular actor list. All
   three hit this project's **confirmed categorical gcc-2.9 `r7`
   register-allocation bug** - the unforced allocator never reaches `r7`
@@ -61,7 +61,7 @@ of this chunk hit.
   needed one extra high register (`r9`) on top of the ROM's own single
   `r8` to hold the vtable/table-pointer/cached-scroll-value trio
   simultaneously live.
-- **`sub_802A674`/`sub_802A688`** (`actor_part94.c`) - plain one-call
+- **`JetpackIsPauseLocked`/`PolarIsPauseLocked`** (`actor_part94.c`) - plain one-call
   trampolines, identical in shape to already-matched siblings elsewhere
   in this project (e.g. `actor_part50.c`'s `JetpackReloadPlayerTiles`). This
   compiler's epilogue register allocator picks `r1` for these two
@@ -83,7 +83,7 @@ once linked).
 
 `PolarIsTouchingPlayer`, `JetpackIsTouchingPlayer` and `FindShotTarget` are now plain C under
 old_agbcc (`actor_part103.c` moved). They share one inline that keeps
-the three boxes in one frame struct. `sub_802A674`/`sub_802A688` are
+the three boxes in one frame struct. `JetpackIsPauseLocked`/`PolarIsPauseLocked` are
 plain C: they return the callee's result. `SelectActorCategory` has a
 `NON_MATCHING` draft with the ROM's instruction sequence but two
 registers swapped. `RunActorCategoryFrame` is unchanged. See
@@ -93,7 +93,7 @@ registers swapped. `RunActorCategoryFrame` is unchanged. See
 
 `SelectActorCategory` is real C (both compilers). The zeroing store of
 `gActorSpawnIndex` goes through a local pointer. An empty
-`asm("" : : "r"(idx))` after the `sub_8029B2C` call gives that pointer
+`asm("" : : "r"(idx))` after the `GetCellAnimDistance` call gives that pointer
 one more reference, so it outranks `base` and takes r7. Both scan loops
 still name the global directly, which gives the ROM's loop-local copies
 of the address. See [near-miss-polish-2.md](near-miss-polish-2.md).

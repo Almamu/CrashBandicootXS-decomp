@@ -2,14 +2,14 @@
 #include "actor_self.h"
 
 /* Sits right after actor_part58.c's `CreatePolarCheckpointCrate` and before
- * actor_part59.c's `sub_802DB2C`/`sub_802DCC0` - the whole contiguous
+ * actor_part59.c's `YetiStateChase`/`YetiStateCharge` - the whole contiguous
  * range that used to be `asm/code_3_2_20_28568_c99c_d7b0.s`. All three
  * functions here operate on the `gYeti`-rooted "position-
  * tracking object with tier-threshold sound cues" documented in
  * actor_part59.c's header comment and docs/matching/issue-54-actor-d3a8.md
  * (the "third RAM-struct family" from docs/rom_map.md). See that issue
  * doc's "Second pass" section for how the 12-byte AABB-record layout
- * used here and by `sub_802DD9C` (actor_part75.c) was finally pinned
+ * used here and by `IsTouchingYeti` (actor_part75.c) was finally pinned
  * down.
  *
  * Built with old_agbcc: `UpdateYetiBg2` only matches under it, and
@@ -30,8 +30,8 @@ extern s32 gYetiDistance;
 extern void sub_8029E34(s32 arg0);
 extern void UpdateYetiPalette(void);
 extern u8 gStaticData_0817AA98[];
-extern s32 gUnknown_030014C8;
-extern u8 gUnknown_030014A0;
+extern s32 gYetiPosition;
+extern u8 gPolarPlayerInactive;
 extern void *MemCopy32(void *dest, void *src, s32 size);
 extern void CatchPolarPlayer(void *self);
 extern void SetCellAnimSpeed(s32 arg0);
@@ -75,7 +75,7 @@ extern s32 sub_8029EB4(void);
  * *is* its own source, not a disassembly artifact. On overlap, arms
  * `gYetiState = 2`, resets the object's kind/anim state to the
  * part table's `+0x18` record, and refreshes the player via
- * `CatchPolarPlayer`/`SetCellAnimSpeed(0)`; skipped once `gUnknown_030014A0` (an
+ * `CatchPolarPlayer`/`SetCellAnimSpeed(0)`; skipped once `gPolarPlayerInactive` (an
  * already-consumed one-shot flag elsewhere in this ROM region) is set.
  *
  * The three boxes (static A at sp, the copy B at sp+0xc, the player
@@ -140,13 +140,13 @@ void UpdateYeti(void)
     sub_8029E34(gYetiDistance);
     UpdateYetiPalette();
     f.a = *(struct box16 *)gStaticData_0817AA98;
-    BoxMove(&f.a, gYetiX >> 8, 0, gUnknown_030014C8 >> 8);
+    BoxMove(&f.a, gYetiX >> 8, 0, gYetiPosition >> 8);
     if ((u32)gYetiState <= 1) {
         struct actor_self **playerAddr = &gActorList;
         struct actor_self *pl;
         struct box16 *b;
 
-        if (gUnknown_030014A0 != 0)
+        if (gPolarPlayerInactive != 0)
             return;
         pl = *playerAddr;
         f.t = *(struct box16 *)pl->box;

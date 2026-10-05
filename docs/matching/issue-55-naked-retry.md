@@ -22,7 +22,7 @@ was needed.
 - `CreateJetpackPlayer`-`JetpackPlayerStateRollRight` are the player vehicle object (method
   table gJetpackPlayerVtable): constructor, per-frame update, sprite
   draw, damage handler, d-pad steering and the per-state input steps.
-  Its state lives in the `gUnknown_030014DC`-`gJetpackPlayerTiles`
+  Its state lives in the `gJetpackBomberSfxTimer`-`gJetpackPlayerTiles`
   singletons.
 
 ## Closed (21 functions)

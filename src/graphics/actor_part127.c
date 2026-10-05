@@ -5,15 +5,15 @@
  * cluster already established in `src/graphics/actor_part107.c`
  * (issue #50's leftover tail, `docs/matching/issue-50-actor-bc68.md`) -
  * same `self` object and global family (a countdown-timer/respawn
- * pair at `gUnknown_0300148C`/`gUnknown_0300149C`, a "camera catch-up"
- * budget at `gUnknown_030014A4`, and the shared reset/state-transition
+ * pair at `gPolarFinishTimer`/`gPolarInvulnTimer`, a "camera catch-up"
+ * budget at `gPolarPlayerVelY`, and the shared reset/state-transition
  * idiom). Covers `0x0802B364`-`0x0802BC68`, right before
  * `actor_part107.c`'s own range - the start of this whole 40KB "actor
  * zone" a scoping investigation found still raw, before issue #52's
  * `actor_part19.c`. `docs/rom_map.md` had already read part of this
  * cluster from disassembly alone.
  *
- * Built with old_agbcc: `sub_802BAD0` (the `1` mask materialized before
+ * Built with old_agbcc: `PolarPlayerStateDash` (the `1` mask materialized before
  * the `ldrh` it is ANDed with) and `DrawPolarPlayer`/`AllocPolarPlayerTiles` (operand
  * order of their loads and multiplies) only match under it, and every
  * other function here matches under both compilers - see
@@ -29,13 +29,13 @@ struct game_state {
 
 extern struct game_state *gLevelState;
 extern void *gAudioContext;
-extern void *gUnknown_03001490;
+extern void *gRiderlessPolar;
 extern void *gPolarAkuAku;
-extern s32 gUnknown_0300149C;
-extern s32 gUnknown_030014A4;
-extern u8 gUnknown_03001480;
-extern u8 gUnknown_030014A0;
-extern u8 gUnknown_030014A3;
+extern s32 gPolarInvulnTimer;
+extern s32 gPolarPlayerVelY;
+extern u8 gPolarPauseLocked;
+extern u8 gPolarPlayerInactive;
+extern u8 gPolarSteerEnabled;
 
 struct held_pressed_pair {
     u16 held;
@@ -59,9 +59,9 @@ extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
 extern u8 gStaticData_0817A728[];
 extern u8 gStaticData_0817A748[];
 
-extern s32 gUnknown_0300148C;
-extern s32 gUnknown_03001498;
-extern u8 gUnknown_030014A1;
+extern s32 gPolarFinishTimer;
+extern s32 gPolarSteerTime;
+extern u8 gPolarPlayerHalted;
 extern struct actor_pmf gPolarPlayerStateFuncs[];
 extern void (*gUnpackRleSpriteFrameFunc)(void *dst, u8 *frame);
 extern void *gPolarPlayerTiles[2];     // the two VRAM tile buffers
@@ -77,9 +77,9 @@ struct cam_ref {
 extern s32 GetAnimFrameBaseOffset(void *self);
 extern u32 GetSpriteShapeSizeBits(u8 *frame);
 extern void QueueSpriteFrameOam(u32 attr01, u16 attr2, s32 priority);
-extern u8 sub_8029794(void);
-extern s32 sub_8029B2C(void);
-extern void sub_8029D8C(s32 x, s32 y);
+extern u8 IsActorMaskAssistDue(void);
+extern s32 GetCellAnimDistance(void);
+extern void UpdateActorBgScroll(s32 x, s32 y);
 extern s32 sub_8029E98(void);
 extern s32 sub_8029EB4(void);
 extern void *SpawnPolarAkuAku(s32 x, s32 y, s32 z, s32 tier);
@@ -95,29 +95,29 @@ static inline s32 Abs(s32 x)
 
 /* The per-frame update (`docs/rom_map.md`'s "UpdatePolarPlayer", a slot of
  * the `gPolarPlayerVtable` method table): runs `DispensePolarWumpa`, ticks
- * the two countdowns (`gUnknown_0300148C` expiring into state 10;
- * `gUnknown_0300149C` blinking `self+0x2C`), depth, animation, the
+ * the two countdowns (`gPolarFinishTimer` expiring into state 10;
+ * `gPolarInvulnTimer` blinking `self+0x2C`), depth, animation, the
  * current state's handler from `gPolarPlayerStateFuncs` (a C++
  * pointer-to-member call), left/right steering while
- * `gUnknown_030014A3` is set, then drives - or first spawns - the
+ * `gPolarSteerEnabled` is set, then drives - or first spawns - the
  * companion object in `gPolarAkuAku`. Same shape as
  * `actor_part128.c`'s `UpdateJetpackPlayer`. */
 void UpdatePolarPlayer(struct actor_self *self)
 {
     DispensePolarWumpa(self);
-    if (gUnknown_0300148C != 0 && --gUnknown_0300148C == 0) {
-        gUnknown_030014A1 = 1;
+    if (gPolarFinishTimer != 0 && --gPolarFinishTimer == 0) {
+        gPolarPlayerHalted = 1;
         SetCellAnimSpeed(0);
         ACTOR_SET_STATE(self, 10, 10);
     }
-    if (gUnknown_0300149C != 0 && --gUnknown_0300149C != 0 && gUnknown_030014A0 == 0
+    if (gPolarInvulnTimer != 0 && --gPolarInvulnTimer != 0 && gPolarPlayerInactive == 0
         && gLevelState->maskLevel != 3)
-        self->visible = ((u32)gUnknown_0300149C >> 2) & 1;
+        self->visible = ((u32)gPolarInvulnTimer >> 2) & 1;
     else
         self->visible = 1;
-    if (gUnknown_030014A1 == 0) {
+    if (gPolarPlayerHalted == 0) {
         self->depth = 0x2f00;
-        self->z = (sub_8029B2C() << 8) - self->depth;
+        self->z = (GetCellAnimDistance() << 8) - self->depth;
     }
     {
         s32 d = (self->depth >> 1) & 0x7f80;
@@ -132,13 +132,13 @@ void UpdatePolarPlayer(struct actor_self *self)
                            - self->anims[self->animIndex].loopBase) << 8;
         self->animDone = 1;
     }
-    sub_8029D8C(self->x, self->y);
+    UpdateActorBgScroll(self->x, self->y);
     ACTOR_PMF_CALL(self, gPolarPlayerStateFuncs);
-    if (gUnknown_030014A3 != 0) {
+    if (gPolarSteerEnabled != 0) {
         struct held_pressed_pair keys = gKeys;
 
         if (keys.held & 0x20) {
-            if (gUnknown_03001498++ > 12)
+            if (gPolarSteerTime++ > 12)
                 self->x += -0x380;
             else
                 self->x += -0x2cd;
@@ -148,14 +148,14 @@ void UpdatePolarPlayer(struct actor_self *self)
             u16 right = keys.held & 0x10;
 
             if (right) {
-                if (gUnknown_03001498++ > 12)
+                if (gPolarSteerTime++ > 12)
                     self->x += 0x380;
                 else
                     self->x += 0x2cd;
                 if (self->x > 0x3200)
                     self->x = 0x3200;
             } else {
-                gUnknown_03001498 = right;
+                gPolarSteerTime = right;
             }
         }
     }
@@ -165,7 +165,7 @@ void UpdatePolarPlayer(struct actor_self *self)
         s32 tier = gLevelState->maskLevel;
 
         gPolarAkuAku = SpawnPolarAkuAku(self->x, self->y, self->z, tier);
-        if (sub_8029794())
+        if (IsActorMaskAssistDue())
             AddPolarAkuAkuMask(gPolarAkuAku);
     }
 }
@@ -246,15 +246,15 @@ void DrawPolarPlayer(struct actor_self *self)
 
 /* Once-only spawn/reset trigger (proximity-hazard family, established
  * `gUnknown_0300148x`/`gUnknown_030014Bx` cluster): if the shared
- * "used" respawn timer (`gUnknown_0300149C`) is already counting down,
+ * "used" respawn timer (`gPolarInvulnTimer`) is already counting down,
  * reports "still used" (1) without doing anything. Otherwise, while
  * the current mask level (`maskLevel`) (`gLevelState->0x78`) is clear, plays
  * a cue, DMAs a gauge strip, resets `self` to state 6/table-index 5,
- * arms `gUnknown_03001480`, kicks the game-mode transition
+ * arms `gPolarPauseLocked`, kicks the game-mode transition
  * (`LoseLife`) if not already paused, clears
- * `gUnknown_030014A3`/arms `gUnknown_030014A0`, and fires
+ * `gPolarSteerEnabled`/arms `gPolarPlayerInactive`, and fires
  * `SetCellAnimSpeed(0)`/`StopYeti()` - or, while a tier is already
- * active, arms a fixed `gUnknown_0300149C` countdown and forwards to
+ * active, arms a fixed `gPolarInvulnTimer` countdown and forwards to
  * `RemovePolarAkuAkuMask` (the "remove a mask" helper, `actor_part58.c`)
  * instead. Either way reports "not yet used" (0).
  *
@@ -264,7 +264,7 @@ void DrawPolarPlayer(struct actor_self *self)
  * label (reached by `goto` from the early-return case) reproduces that,
  * per the `goto`-shared-tail idiom in
  * `docs/matching/issue-52-gap-b364.md`. The three addresses this
- * function keeps alive throughout (`gUnknown_0300149C`, `gUnknown_
+ * function keeps alive throughout (`gPolarInvulnTimer`, `gUnknown_
  * 03001494`, `&gLevelState`) are each read once into their own
  * pointer local and reused from there, matching the ROM's own register
  * lifetime (never re-deriving an address it already has); `self`
@@ -274,7 +274,7 @@ s32 HurtPolarPlayer(void *selfArg)
 {
     struct actor_self *self = selfArg;
     register s32 result asm("r0");
-    register s32 *usedTimer asm("r1") = &gUnknown_0300149C;
+    register s32 *usedTimer asm("r1") = &gPolarInvulnTimer;
 
     if (*usedTimer != 0) {
         result = 1;
@@ -305,7 +305,7 @@ s32 HurtPolarPlayer(void *selfArg)
                     self->animTime = tier;
 
                     {
-                        u8 *reg1480 = &gUnknown_03001480;
+                        u8 *reg1480 = &gPolarPauseLocked;
                         register u8 one asm("r4") = 1;
 
                         *reg1480 = one;
@@ -316,8 +316,8 @@ s32 HurtPolarPlayer(void *selfArg)
                                 LoseLife(player);
                             }
                         }
-                        gUnknown_030014A3 = zero;
-                        gUnknown_030014A0 = one;
+                        gPolarSteerEnabled = zero;
+                        gPolarPlayerInactive = one;
                     }
                 }
             }
@@ -336,7 +336,7 @@ end:
 
 /* Same shape as `HurtPolarPlayer` (twin trigger, different reset target -
  * state 0xc/table-index 0xb): once-only spawn/reset gated the same way
- * on `gUnknown_0300149C`/mask level (`maskLevel`), or forwards to `RemovePolarAkuAkuMask`.
+ * on `gPolarInvulnTimer`/mask level (`maskLevel`), or forwards to `RemovePolarAkuAkuMask`.
  *
  * Same `goto`-shared-tail idiom as `HurtPolarPlayer` above (single `return
  * result;` at one shared `end` label) and the same three
@@ -350,7 +350,7 @@ s32 ShockPolarPlayer(void *selfArg)
 {
     struct actor_self *self = selfArg;
     register s32 result asm("r0");
-    register s32 *usedTimer asm("r1") = &gUnknown_0300149C;
+    register s32 *usedTimer asm("r1") = &gPolarInvulnTimer;
 
     if (*usedTimer != 0) {
         result = 1;
@@ -378,9 +378,9 @@ s32 ShockPolarPlayer(void *selfArg)
                 self->animTime = tier;
 
                 PlaySfx(gAudioContext, 0x33, 0x100);
-                gUnknown_030014A3 = zero;
+                gPolarSteerEnabled = zero;
             }
-            gUnknown_030014A0 = 1;
+            gPolarPlayerInactive = 1;
             SetCellAnimSpeed(0);
             StopYeti();
         } else {
@@ -416,16 +416,16 @@ void AllocPolarPlayerTiles(struct actor_self *self)
 }
 
 /* Spawn-once trigger for a secondary effect object
- * (`gUnknown_03001490`, via `CreateActor`), then drains a "camera
- * catch-up" budget (`gUnknown_030014A4`) into `self+0x20` until it
+ * (`gRiderlessPolar`, via `CreateActor`), then drains a "camera
+ * catch-up" budget (`gPolarPlayerVelY`) into `self+0x20` until it
  * crosses a fixed threshold, at which point it plays a cue, clamps
  * `self+0x20`, resets `self` to state 9/table-index 9, clears
- * `gUnknown_030014A0`, fires the spawned object's own `self+0x50`
- * trampoline (index 3) if still alive, clears `gUnknown_03001490`, and
+ * `gPolarPlayerInactive`, fires the spawned object's own `self+0x50`
+ * trampoline (index 3) if still alive, clears `gRiderlessPolar`, and
  * fires `SetCellAnimSpeed(0x19)`. */
-void sub_802B8E8(struct actor_self *self)
+void PolarPlayerStateMount(struct actor_self *self)
 {
-    struct actor_self **spawnAddr = (struct actor_self **)&gUnknown_03001490;
+    struct actor_self **spawnAddr = (struct actor_self **)&gRiderlessPolar;
     struct actor_self *spawn = *spawnAddr;
     s32 *budget;
     s32 y;
@@ -439,7 +439,7 @@ void sub_802B8E8(struct actor_self *self)
         o->animDone = 0;
         o->animTime = 0;
     }
-    budget = &gUnknown_030014A4;
+    budget = &gPolarPlayerVelY;
     y = self->y + *budget;
     self->y = y;
     *budget += 0x2d;
@@ -447,7 +447,7 @@ void sub_802B8E8(struct actor_self *self)
         PlaySfx(gAudioContext, 0x35, 0x100);
         self->y = 0x2800;
         ACTOR_SET_STATE(self, 9, 9);
-        gUnknown_030014A0 = 0;
+        gPolarPlayerInactive = 0;
         if (*spawnAddr != NULL) {
             ACTOR_VCALL(*spawnAddr, destroy, 3);
         }
@@ -462,9 +462,9 @@ void sub_802B8E8(struct actor_self *self)
  * `RandRange(3)`'s own result, either restores `self+0xc` or
  * transitions it to 1 - both cases refreshing the anim frame from the
  * (possibly restored) table index. Independently, on the
- * `gUnknown_030014A3` edge, fires up to two more `gKeys`
+ * `gPolarSteerEnabled` edge, fires up to two more `gKeys`
  * input-gated one-shot transitions (state 4/table-index 3 with a cue
- * and a `gUnknown_030014A4` reset, and state 2/table-index 0 with
+ * and a `gPolarPlayerVelY` reset, and state 2/table-index 0 with
  * `SetCellAnimSpeed(0x38)`).
  *
  * The ROM keeps the "self+0xc == 0" reset case and the
@@ -477,7 +477,7 @@ void sub_802B8E8(struct actor_self *self)
  * `tail`/`join` labels the ROM's own branches target, per the
  * `goto`-shared-tail idiom documented in
  * `docs/matching/issue-52-gap-b364.md`. */
-void sub_802B990(void *selfArg)
+void PolarPlayerStateRun(void *selfArg)
 {
     struct actor_self *self = selfArg;
     register s32 index asm("r5");
@@ -528,7 +528,7 @@ join:
     self->animTime = index;
 
 tail:
-    if (gUnknown_030014A3 != 0) {
+    if (gPolarSteerEnabled != 0) {
         register struct held_pressed_pair *addr asm("r5") = &gKeys;
         register s32 bit1 asm("r0") = 1;
         u16 pressed = addr->pressed;
@@ -554,7 +554,7 @@ tail:
                 self->animTime = zero;
             }
             PlaySfx(gAudioContext, 0xd, 0x100);
-            gUnknown_030014A4 = 0xFFFFF880;
+            gPolarPlayerVelY = 0xFFFFF880;
         }
         if ((*(u32 *)addr & 2) != 0) {
             register s32 state asm("r0") = 2;
@@ -580,14 +580,14 @@ tail:
 }
 
 /* Camera catch-up accumulate/threshold reset: drains
- * `gUnknown_030014A4` into `self+0x20`, advances the budget by a fixed
+ * `gPolarPlayerVelY` into `self+0x20`, advances the budget by a fixed
  * step (clamped to 0x780), applies a stall clamp
- * (`gUnknown_030014A4 = 0xFFFFFC00`) once the frame counter passes a
+ * (`gPolarPlayerVelY = 0xFFFFFC00`) once the frame counter passes a
  * threshold with no input, then resets `self` to state 1/table-index 4
  * once `self+0x20` crosses `0x2800`. */
-void sub_802BA5C(struct actor_self *self)
+void PolarPlayerStateJump(struct actor_self *self)
 {
-    s32 *budget = &gUnknown_030014A4;
+    s32 *budget = &gPolarPlayerVelY;
 
     self->y += *budget;
     *budget += 0x60;
@@ -606,8 +606,8 @@ void sub_802BA5C(struct actor_self *self)
  * transitions on `self`: bit 1 resets to state 1/table-index 0 (plain
  * anim-frame idle reset, `SetCellAnimSpeed(0x24)`); bit 0 (of the high
  * halfword) transitions to state 4/table-index 3 with a cue and the
- * `gUnknown_030014A4` stall reset - same pair `sub_802B990` fires. */
-void sub_802BAD0(struct actor_self *self)
+ * `gPolarPlayerVelY` stall reset - same pair `PolarPlayerStateRun` fires. */
+void PolarPlayerStateDash(struct actor_self *self)
 {
     struct held_pressed_pair *input = &gKeys;
     u16 bit = *(u32 *)input & 2;
@@ -625,23 +625,23 @@ void sub_802BAD0(struct actor_self *self)
     if (input->pressed & 1) {
         ACTOR_SET_STATE(self, 4, 3);
         PlaySfx(gAudioContext, 0xd, 0x100);
-        gUnknown_030014A4 = 0xFFFFF880;
+        gPolarPlayerVelY = 0xFFFFF880;
     }
 }
 
 /* Frame-counter threshold DMA driver: past `0x2c` frames, does the
  * full gauge-strip DMA plus state 6/table-index 5 reset (arming
- * `gUnknown_03001480` and kicking the mode transition, same shape as
+ * `gPolarPauseLocked` and kicking the mode transition, same shape as
  * `HurtPolarPlayer` above); otherwise DMAs one of two gauge-strip variants
  * every 4th frame without touching any state. */
-void sub_802BB4C(void *selfArg)
+void PolarPlayerStateShocked(void *selfArg)
 {
     struct actor_self *self = selfArg;
     s32 counter = self->stateTime;
 
     if (counter > 0x2c) {
         QueueVramDmaTransfer(gStaticData_0817A728, (void *)OBJ_PLTT, 0x20, 0x10);
-        gUnknown_03001480 = 1;
+        gPolarPauseLocked = 1;
         {
             register s32 state asm("r0") = 6;
             register s32 idx asm("r1") = 5;
@@ -672,20 +672,20 @@ void sub_802BB4C(void *selfArg)
     }
 }
 
-/* On the state-0x12 anim edge, resets `gUnknown_030014A4`'s stall
+/* On the state-0x12 anim edge, resets `gPolarPlayerVelY`'s stall
  * clamp, and, once `self+0x20` crosses `0x2000`, spawns a secondary
- * effect object via `CreateActor` (stashed into `gUnknown_03001490`)
+ * effect object via `CreateActor` (stashed into `gRiderlessPolar`)
  * gated on that same threshold. Resets `self` to state 8/table-index
- * 7, arms `gUnknown_03001480`, and kicks the mode transition the same
- * way as `HurtPolarPlayer`/`sub_802BB4C`. */
-void sub_802BBE4(struct actor_self *self)
+ * 7, arms `gPolarPauseLocked`, and kicks the mode transition the same
+ * way as `HurtPolarPlayer`/`PolarPlayerStateShocked`. */
+void PolarPlayerStateCaught(struct actor_self *self)
 {
     if (self->animDone) {
-        gUnknown_030014A4 = 0xFFFFF980;
+        gPolarPlayerVelY = 0xFFFFF980;
         if (self->y > 0x2000)
-            gUnknown_03001490 = CreateActor(2, self->x, 0x2800, self->z, 0);
+            gRiderlessPolar = CreateActor(2, self->x, 0x2800, self->z, 0);
         ACTOR_SET_STATE(self, 8, 7);
-        gUnknown_03001480 = 1;
+        gPolarPauseLocked = 1;
         {
             struct game_state *player = gLevelState;
 

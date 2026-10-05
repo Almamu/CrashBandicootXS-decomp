@@ -1,25 +1,25 @@
 #include "core.h"
 #include "actor_self.h"
 
-/* Sits right after actor_part59.c's `sub_802DCC0` and before
+/* Sits right after actor_part59.c's `YetiStateCharge` and before
  * actor_part60.c's `StopYeti` - the whole contiguous range that used
  * to be `asm/code_3_2_20_28568_c99c_dd9c.s`. Both functions continue the
  * `gYeti`-rooted "gauge" object documented in actor_part59.c/
  * actor_part74.c's header comments. */
 
-extern u8 gStaticData_0817AA8C[];
+extern u8 gYetiBox[];
 extern s32 gYetiX;
-extern s32 gUnknown_030014C8;
+extern s32 gYetiPosition;
 extern void *MemCopy32(void *dest, void *src, s32 size);
 
 /* `UpdateYeti`'s (actor_part74.c) shared AABB-overlap-test tail,
  * factored out as its own function taking `self` explicitly instead of
  * always reading the player global - used by `UpdatePolarCheckpointCrate`
- * (actor_part58.c, already matched, called as `sub_802DD9C(self)`)
+ * (actor_part58.c, already matched, called as `IsTouchingYeti(self)`)
  * among others. Same 12-byte `{s16 x, y, z, sizeX, sizeY, sizeZ}` record
  * shape and same self-copy-through-`MemCopy32` idiom as `UpdateYeti`
  * - see that function's doc comment for the full record-layout writeup.
- * Box A: `gStaticData_0817AA8C` (a record adjacent to `UpdateYeti`'s
+ * Box A: `gYetiBox` (a record adjacent to `UpdateYeti`'s
  * own `gStaticData_0817AA98` - literal-pool-verified 0xC bytes apart)
  * with `gYetiX`/`030014C8` (both `>>8`) added into its `x`/
  * `z` fields only. Box B: `self+0x38`'s own 12-byte vector, with
@@ -56,15 +56,15 @@ hit:
     return 1;
 }
 
-u8 sub_802DD9C(struct actor_self *self)
+u8 IsTouchingYeti(struct actor_self *self)
 {
     struct {
         struct box16 a, b, t;
     } f;
     struct box16 *b;
 
-    f.a = *(struct box16 *)gStaticData_0817AA8C;
-    BoxMove(&f.a, gYetiX >> 8, 0, gUnknown_030014C8 >> 8);
+    f.a = *(struct box16 *)gYetiBox;
+    BoxMove(&f.a, gYetiX >> 8, 0, gYetiPosition >> 8);
     f.t = *(struct box16 *)self->box;
     BoxMove(&f.t, self->x >> 8, self->y >> 8, self->z >> 8);
     f.b = f.t;

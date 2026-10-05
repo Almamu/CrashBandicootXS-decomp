@@ -12,8 +12,8 @@ disassembly alone.
 
 11 functions total, all on the same `gUnknown_0300148x`-`gUnknown_
 030014Bx` object/global cluster already established in `actor_part107.c`
-(a countdown-timer/respawn pair at `gUnknown_0300148C`/`gUnknown_
-0300149C`, a "camera catch-up" budget at `gUnknown_030014A4`, and the
+(a countdown-timer/respawn pair at `gPolarFinishTimer`/`gUnknown_
+0300149C`, a "camera catch-up" budget at `gPolarPlayerVelY`, and the
 shared reset/state-transition idiom: state at `self+0x28`, table-index
 at `self+0xc`, an anim-frame halfword/byte pair at `self+0x10`/
 `self+0x12`, an accumulator at `self+8`, a frame counter at `self+
@@ -21,9 +21,9 @@ at `self+0xc`, an anim-frame halfword/byte pair at `self+0x10`/
 
 ## Matched (4 of 11 functions)
 
-- **`sub_802BB4C`** (`src/graphics/actor_part127.c`) - frame-counter
+- **`PolarPlayerStateShocked`** (`src/graphics/actor_part127.c`) - frame-counter
   threshold DMA driver: past `0x2c` frames, DMAs a gauge-strip pair and
-  resets `self` to state 6/table-index 5 (arming `gUnknown_03001480`
+  resets `self` to state 6/table-index 5 (arming `gPolarPauseLocked`
   and kicking the mode transition, the same shared idiom `HurtPolarPlayer`
   below uses); otherwise DMAs one of two gauge-strip variants every 4th
   frame without touching any state. Needed the established "materialize
@@ -46,7 +46,7 @@ at `self+0xc`, an anim-frame halfword/byte pair at `self+0x10`/
   alongside that restructuring, both found by isolated-compile diffing
   against `expected/code_3.s` instruction-by-instruction:
   - The three addresses this function keeps alive throughout
-    (`&gUnknown_0300149C`, `&gPolarAkuAku`, `&gLevelState`)
+    (`&gPolarInvulnTimer`, `&gPolarAkuAku`, `&gLevelState`)
     each need their own persistent pointer local, read once and reused
     from there (`register s32 *usedTimer asm("r1")`, `register void
     **effectAddr asm("r2")`/`asm("r4")` in the two functions
@@ -63,7 +63,7 @@ at `self+0xc`, an anim-frame halfword/byte pair at `self+0x10`/
     declaring a *fresh* `register` variable pinned to the same
     register name in a nested scope (`register u8 one asm("r4") = 1;`
     / `register u8 zero asm("r4") = 0;`), the same reuse idiom already
-    established for `sub_802BB4C` above, not a real aliasing hazard
+    established for `PolarPlayerStateShocked` above, not a real aliasing hazard
     since the two lifetimes never overlap (mutually exclusive
     branches).
   - Order-of-evaluation gotcha: a plain `u8 *p = &g; register u8 one
@@ -73,7 +73,7 @@ at `self+0xc`, an anim-frame halfword/byte pair at `self+0x10`/
     plain (unregistered) local declared *before* the register variable
     forced the load-then-materialize order the ROM actually uses.
 
-- **`sub_802B990`** (`src/graphics/actor_part127.c`) - the state-0x12
+- **`PolarPlayerStateRun`** (`src/graphics/actor_part127.c`) - the state-0x12
   anim-frame edge reset described below, promoted using the same
   `goto`-shared-tail idiom but for an *interior* shared tail rather than
   the whole function's epilogue: explicit `goto tail;`/`goto gated;`/
@@ -97,7 +97,7 @@ at `self+0xc`, an anim-frame halfword/byte pair at `self+0x10`/
 ## Parked - NAKED transcription (byte-correct, not decompiled)
 
 The remaining 7 in `src/graphics/actor_part127.c` (`HurtPolarPlayer`,
-`ShockPolarPlayer`, and `sub_802B990` were promoted to the "Matched" section
+`ShockPolarPlayer`, and `PolarPlayerStateRun` were promoted to the "Matched" section
 above in a later pass). Every one was fully understood semantically;
 each resisted a byte-exact plain-C reconstruction for a different
 reason, transcribed instruction-for-instruction from the ROM
@@ -134,34 +134,34 @@ same approach this project has used for other large NAKED batches.
   volatile` register-order forcing for this exact "materialize the
   multiply result into one register, copy it to a second, then shift"
   idiom; transcribed directly here instead of re-chased at the C level.
-- **`sub_802B8E8`** - spawn-once trigger for a secondary effect object
-  (`gUnknown_03001490`, via `CreateActor`), then drains the camera
+- **`PolarPlayerStateMount`** - spawn-once trigger for a secondary effect object
+  (`gRiderlessPolar`, via `CreateActor`), then drains the camera
   catch-up budget into `self+0x20` until it crosses `0x2800`, at which
   point it plays a cue, clamps `self+0x20`, resets `self` to state 9/
-  table-index 9, clears `gUnknown_030014A0`, fires the spawned object's
-  own trampoline if still alive, clears `gUnknown_03001490`, and fires
+  table-index 9, clears `gPolarPlayerInactive`, fires the spawned object's
+  own trampoline if still alive, clears `gRiderlessPolar`, and fires
   `SetCellAnimSpeed(0x19)`. The spawned-object pointer needed to stay live in
   its own ROM-chosen register (`r0`) across several stores rather than
   being copied to a fresh one, which this compiler did unprompted.
-- **`sub_802BA5C`**/**`sub_802BAD0`** - camera catch-up accumulate/
+- **`PolarPlayerStateJump`**/**`PolarPlayerStateDash`** - camera catch-up accumulate/
   threshold-reset pair and a `gKeys`-gated one-shot
   transition pair, both sharing the same reset idiom as
-  `HurtPolarPlayer`/`sub_802BB4C`.
-- **`sub_802BBE4`** - on the `self+0x12` edge, resets
-  `gUnknown_030014A4`'s stall clamp, conditionally spawns a secondary
+  `HurtPolarPlayer`/`PolarPlayerStateShocked`.
+- **`PolarPlayerStateCaught`** - on the `self+0x12` edge, resets
+  `gPolarPlayerVelY`'s stall clamp, conditionally spawns a secondary
   effect object once `self+0x20` crosses `0x2000`, and resets `self` to
-  state 8/table-index 7 (arming `gUnknown_03001480`, kicking the mode
+  state 8/table-index 7 (arming `gPolarPauseLocked`, kicking the mode
   transition - the same shared tail idiom as `HurtPolarPlayer` above). Hit
   the same "spawned/self pointer gets an extra register copy" gotcha as
-  `sub_802B8E8`.
+  `PolarPlayerStateMount`.
 
 ## A note on two literal-pool placement bugs
 
 The first NAKED-transcription attempt at `UpdatePolarPlayer` initially placed
-two `.4byte` pool entries (`gUnknown_030014A1` and `0xFFFFFC80`) too
+two `.4byte` pool entries (`gPolarPlayerHalted` and `0xFFFFFC80`) too
 early - grouped with the nearest preceding code block instead of the
 ROM's own, more distant placement (each shared a single pool group with
-a *later* code block's own literal, e.g. `gUnknown_030014A1` sits in the
+a *later* code block's own literal, e.g. `gPolarPlayerHalted` sits in the
 same aligned group as `gPolarPlayerStateFuncs`, separated from its own
 first use site by an entire keyframe-lookup block). Since GNU-as
 computes `ldr rD, [pc, #N]` distances automatically from wherever a
@@ -186,7 +186,7 @@ identical `graphics/`/`sound/` source trees via `diff -rq` - every
 relinked from scratch.) `make NON_MATCHING=1 report` also compiled
 clean, no warnings for `actor_part127.c`.
 
-A later pass promoted `HurtPolarPlayer`/`ShockPolarPlayer`/`sub_802B990` from
+A later pass promoted `HurtPolarPlayer`/`ShockPolarPlayer`/`PolarPlayerStateRun` from
 that NAKED batch to real C using the `goto`-shared-tail idiom (see the
 "Matched" section above); re-verified with a fresh `rm -rf build &&
 make NON_MATCHING=1 report` (clean, no warnings for
@@ -199,10 +199,10 @@ matched/parked list this entry feeds into.
 
 ## Later pass: the other 7 promoted (issue #51/#54 NAKED retry)
 
-`UpdatePolarPlayer`, `DrawPolarPlayer`, `AllocPolarPlayerTiles`, `sub_802B8E8`,
-`sub_802BA5C`, `sub_802BAD0` and `sub_802BBE4` are now real C too, so
+`UpdatePolarPlayer`, `DrawPolarPlayer`, `AllocPolarPlayerTiles`, `PolarPlayerStateMount`,
+`PolarPlayerStateJump`, `PolarPlayerStateDash` and `PolarPlayerStateCaught` are now real C too, so
 the whole gap is decompiled. None of the reasons recorded above held
-up: `actor_part127.c` is an old_agbcc file (`sub_802BAD0` materializes
+up: `actor_part127.c` is an old_agbcc file (`PolarPlayerStateDash` materializes
 its `1` mask before the `ldrh`; `DrawPolarPlayer`/`AllocPolarPlayerTiles` differ only
 in load/multiply operand order under the current agbcc), the "stride-8
 keyframe lookup" in `UpdatePolarPlayer` is a C++ pointer-to-member call

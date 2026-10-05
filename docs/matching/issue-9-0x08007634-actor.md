@@ -198,23 +198,23 @@ this file's original writing - see the update note on the entry below.
   reconstruction needs".
 - **`sub_8009BE0`** (`asm/code_3_2_14.s`, ROM `0x08009BE0`) - a
   physics/collision step-probe calling still-unexamined
-  `sub_8008278`/`sub_8026628`.
+  `sub_8008278`/`ProbeTerrain`.
 - **`CollideGroundSprite`** (`asm/code_3_2_11.s`, ROM `0x0800A0FC`) - calls the
   raw `ProbeGroundSpriteTerrain` and the parked `sub_8009BE0`; left raw since its
   own correctness depends on functions whose exact behavior isn't
   pinned down.
 - **`ProbeGroundSpriteTerrain`** (`asm/code_3_2_11.s`, ROM `0x0800A178`, ~680 B) - a
-  movement-resolution function built on `sub_8008200`/`sub_8026628`/
+  movement-resolution function built on `sub_8008200`/`ProbeTerrain`/
   `sub_8026C3C`/`sub_8026BF8`, none of which are matched or precisely
   understood yet.
 - **`ProbeGroundSpriteFloor`** (`asm/code_3_2_11.s`, ROM `0x0800A420`, ~264 B) -
   the same `sub_8008200`/`sub_8026BF8` dependency as `ProbeGroundSpriteTerrain`.
 - **`CollidePlayer`** (`asm/code_3_2_16.s`, ROM `0x0800A884`, ~616 B) - a
   reentrancy-guard-shaped wrapper around `CollideGroundSprite` with a two-level
-  jump-table dispatch; calls the unexamined `sub_8026BC0`.
+  jump-table dispatch; calls the unexamined `GetTerrainFlagsAt`.
 - **`PlayerHasRoomForAnim`** (`asm/code_3_2_16.s`, ROM `0x0800AAEC`) - iterates
   a global list (`gCrateList`) calling the unexamined
-  `sub_8026628`/`PlayerAnimWouldTouchCrate`.
+  `ProbeTerrain`/`PlayerAnimWouldTouchCrate`.
 - **`CollidePlayerWithObjects`** (`asm/code_3_2_16.s`, ROM `0x0800AB9C`) - calls the
   raw `CollidePlayerWithCrates` and the unexamined `ResolvePlayerCollisions`.
 - **`PlayerHandleEvent`** (`asm/code_3_2_16.s`, ROM `0x0800AC2C`, ~950 B) - a

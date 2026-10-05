@@ -19,7 +19,7 @@
  * `SpawnAirshipFireball`) and advances the same `gAirshipVolleyCount` counter
  * through the weapon table's next threshold slot (`+0x14`/`+0x18`/
  * `+0x10`). Otherwise the phase just decrements. Always re-runs
- * `sub_8030E08` and, past a higher position ceiling (`0x4300`),
+ * `SteerAirship` and, past a higher position ceiling (`0x4300`),
  * re-arms the phase from the weapon table (`+4`) and fires the
  * state-2/table-index-0 transition on the tracker object, then always
  * finishes with `UpdateAirshipFlashColor`.
@@ -45,7 +45,7 @@ extern struct actor_self *gAirship;
 extern s32 GetAnimFrameBaseOffset(void *self);
 extern s32 gAirshipState;
 extern s32 gAirshipStateTimer;
-extern void sub_8030E08(void);
+extern void SteerAirship(void);
 extern void UpdateAirshipFlashColor(void);
 
 static inline void BossSetState(s32 st, s32 idx)
@@ -100,7 +100,7 @@ void AirshipStateCannon(void)
     } else {
         gAirshipFireTimer = phase - 1;
     }
-    sub_8030E08();
+    SteerAirship();
     if (gAirshipDistance > 0x4300) {
         gAirshipFireTimer = gAirshipAttack[1];
         gAirshipVolleyCount = 0;

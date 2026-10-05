@@ -58,17 +58,17 @@ screen in `actor_part_1b85c.c` (issue #26):
   frame toward the target `MoveLevelSelectCursor` sets. `MoveLevelSelectCursor` also derives
   the zoom speed from half the major-axis distance. `UpdateLevelSelectCursor` runs an
   idle animation cycle (`gLevelSelectCursorAnims`) at random intervals
-  (`sub_801E504`), plus the grow-in and shrink-away states 4 and 5. While
+  (`ResetLevelSelectCursorIdleTimer`), plus the grow-in and shrink-away states 4 and 5. While
   growing or shrinking, `DrawLevelSelectCursor` draws the cursor itself as an affine
   OBJ. It takes the next matrix slot from the OAM shadow buffer
   (`gOamBuffer->field_08`), writes the ObjAffineSet result
   (`SetLevelSelectCursorMatrix`) into the four entries' affine words, and queues the
   panel's own OAM attributes (`+0x34`) with `AddOamEntry`.
 
-UNUSED: `sub_801E3D4`, `sub_801E3E4` and `sub_801E4E4` have no
+UNUSED: `IsLevelSelectCursorHidden`, `IsLevelSelectCursorGrowing` and `MoveLevelSelectCursorTo` have no
 `bl`/`.4byte` reference in `asm/`, `data/` or `src/`, and no Thumb pointer
 anywhere in the ROM. `ParkLevelSelectCursor` contains an inlined copy of
-`sub_801E4E4`. All three are matched anyway.
+`MoveLevelSelectCursorTo`. All three are matched anyway.
 
 ## Matching notes
 

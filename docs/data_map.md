@@ -670,7 +670,7 @@ vtable shapes).
 | `0816B92C` | 0x8 | pointer table (1 data pointers) | `PlayRoom` | high | easy |
 | `0816B934` | 0x8 | pointer table (1 data pointers) | `PlayRoom` | high | easy |
 | `0816B93C` | 0x50 | entry set {entries, 0x100} + its 9 {a, b} entries (`gInputCtrlMotionEntries`). **Converted** (`src/data/entry_set_16b93c.c`) | `PlayRoom` | medium | done |
-| `0816B98C` | 0x20 | table (element layout: see consumers). **Converted** (`src/data/popup_tables_16b98c.c`) | `sub_801EF0C`, `SpawnVulture`, `SpawnVenusFlytrap` +22 | medium | done |
+| `0816B98C` | 0x20 | table (element layout: see consumers). **Converted** (`src/data/popup_tables_16b98c.c`) | `SpawnLizard`, `SpawnVulture`, `SpawnVenusFlytrap` +22 | medium | done |
 | `0816B9AC` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16). **Converted** (`src/data/popup_tables_16b98c.c`) | `SpawnPenguin` | high | done |
 | `0816B9CC` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16). **Converted** (`src/data/popup_tables_16b98c.c`) | `SpawnPufferfish` | high | done |
 | `0816B9EC` | 0x20 | BGR555 palette(s): 1 x 16 colours (`u16` x 16). **Converted** (`src/data/popup_tables_16b98c.c`) | `SpawnBlowgunTribesman` | high | done |
@@ -771,30 +771,30 @@ vtable shapes).
 | `08178F70` | 0x10 | palette-cycle cursor bounds `s32[4]`. **Converted** | `SetActorPaletteCycle` | high | done |
 | `08178F80` | 0x1738 | categories 0-2 family data: OBJ palette, keyframe tables (table_A), anim table gCategoryFamily0AnimTable (41 x 0x28) and table_B arrays. **Converted** (`src/data/anim_family_178f80.c`, docs/data.md "Category families") | `RunCompanyLogos` | high | done |
 | `0817A6B8` | 0x70 | function-pointer / pointer-to-member table (14 code pointers) | `UpdatePolarPlayer`, `RunPolarPlayerState` | high | easy |
-| `0817A728` | 0x20 | 16-colour palette. **Converted** (`src/data/actor_tables_17a728.c`) | `HurtPolarPlayer`, `sub_802BB4C` | high | done |
-| `0817A748` | 0x20 | 16-colour palette. **Converted** | `sub_802BB4C` | high | done |
+| `0817A728` | 0x20 | 16-colour palette. **Converted** (`src/data/actor_tables_17a728.c`) | `HurtPolarPlayer`, `PolarPlayerStateShocked` | high | done |
+| `0817A748` | 0x20 | 16-colour palette. **Converted** | `PolarPlayerStateShocked` | high | done |
 | `0817A768` | 0xC | `struct anim_box`. **Converted** | `UpdatePolarNitroCrate` | medium | done |
 | `0817A774` | 0xC | `struct anim_box`. **Converted** | `UpdatePolarElectricFence` | medium | done |
 | `0817A780` | 0xC | `struct anim_box`. **Converted** | `UpdatePolarElectricFence` | medium | done |
 | `0817A78C` | 0xC | `struct anim_box`. **Converted** | `UpdatePolarElectricFence` | medium | done |
-| `0817A798` | 0x20 | 16-colour palette (gauge tier 1). **Converted** | `sub_802D204` | high | done |
+| `0817A798` | 0x20 | 16-colour palette (gauge tier 1). **Converted** | `RefreshPolarAkuAku` | high | done |
 | `0817A7B8` | 0x20 | 16-colour palette. **Converted** | `UpdatePolarAkuAku` | high | done |
 | `0817A7D8` | 0x20 | 16-colour palette. **Converted** | `UpdatePolarAkuAku` | high | done |
-| `0817A7F8` | 0x48 | 6 x `{s32 value, s32 threshold, s32 threshold}`. **Converted** | `sub_802DB2C`, `sub_802DCC0` | medium | done |
+| `0817A7F8` | 0x48 | 6 x `{s32 value, s32 threshold, s32 threshold}`. **Converted** | `YetiStateChase`, `YetiStateCharge` | medium | done |
 | `0817A840` | 0x10 | function-pointer / pointer-to-member table (4 code pointers) (`void (*)(void)` x 4) | `UpdateYeti` | high | easy |
 | `0817A850` | 0x30 | 4 `struct anim_frame_record` (the CreateYeti singleton's keyframes). **Converted** (`src/data/anim_frames_17a850.c`) | `CreateYeti` | medium | done |
 | `0817A880` | 0x1EC | table_B: 123 absolute pointers into compressed frame set B (0x080DA1D8..) | `CreateYeti` | high | easy |
 | `0817AA6C` | 0x20 | 16-colour gradient palette. **Converted** (`src/data/anim_family_17aa6c.c`) | `UpdateYetiPalette` | high | done |
-| `0817AA8C` | 0xC | `struct anim_box`. **Converted** | `sub_802DD9C` | medium | done |
+| `0817AA8C` | 0xC | `struct anim_box`. **Converted** | `IsTouchingYeti` | medium | done |
 | `0817AA98` | 0x1728 | categories 3-6 family data: a box, 2 OBJ palettes, table_A, anim table gCategoryFamily1AnimTable (47 x 0x28), table_B arrays. **Converted** (`src/data/anim_family_17aa6c.c`) | `UpdateYeti` | high | done |
 | `0817C1C0` | 0x40 | function-pointer / pointer-to-member table (8 code pointers) | `UpdateJetpackPlayer`, `RunJetpackPlayerState` | high | easy |
-| `0817C200` | 0x60 | 3-frame 16-colour palette strip. **Converted** (`src/data/palette_strip_17c200.c`) | `sub_802F4CC` | high | done |
+| `0817C200` | 0x60 | 3-frame 16-colour palette strip. **Converted** (`src/data/palette_strip_17c200.c`) | `AnimateJetpackPlayerPalette` | high | done |
 | `0817C260` | 0x20 | function-pointer / pointer-to-member table (4 code pointers) | `UpdateJetpackPlane`, `RunJetpackPlaneState` | high | easy |
 | `0817C280` | 0x38 | function-pointer / pointer-to-member table (7 code pointers) | `UpdateJetpackBomber`, `RunJetpackBomberState` | high | easy |
 | `0817C2B8` | 0x18 | function-pointer / pointer-to-member table (3 code pointers) | `UpdateAirshipFireball`, `RunAirshipFireballState` | high | easy |
 | `0817C2D0` | 0xA8 | 6 `struct weapon_kind` (7 words). **Converted** (`src/data/weapon_kind_17c2d0.c`) | `SpawnAirship` | high | done |
 | `0817C378` | 0x60 | 3-frame 16-colour palette strip. **Converted** | `SpawnAirship`, `AnimateAirshipPalette` | high | done |
-| `0817C3D8` | 0xC | `struct anim_box`. **Converted** | `AirshipStateExplode`, `sub_8030E08`, `IsTouchingAirship` | high | done |
+| `0817C3D8` | 0xC | `struct anim_box`. **Converted** | `AirshipStateExplode`, `SteerAirship`, `IsTouchingAirship` | high | done |
 | `0817C3E4` | 0x18 | 2 `struct anim_frame_record`. **Converted** | `CreateAirship` | high | done |
 | `0817C3FC` | 0x18 | function-pointer / pointer-to-member table (6 code pointers) (`void*` x 6) | `UpdateAirship` | high | easy |
 | `0817C414` | 0x18 | function-pointer / pointer-to-member table (3 code pointers) | `RunJetpackBalloonState` | high | easy |
@@ -802,7 +802,7 @@ vtable shapes).
 | `0817C444` | 0xC | `struct anim_box`. **Converted** (`src/data/actor_box_17c444.c`) | `UpdateJetpackRocket` | medium | done |
 | `0817C450` | 0x10 | function-pointer / pointer-to-member table (2 code pointers) | `UpdateHovercraftFireball`, `RunHovercraftFireballState` | high | easy |
 | `0817C460` | 0x50 | 2 `struct singleton_kind` (10 words). **Converted** (`src/data/singleton_kind_17c460.c`) | `SpawnHovercraft` | high | done |
-| `0817C4B0` | 0xC | `struct anim_box`. **Converted** | `sub_8032C0C` | high | done |
+| `0817C4B0` | 0xC | `struct anim_box`. **Converted** | `HovercraftStateCloseIn` | high | done |
 | `0817C4BC` | 0xC | 1 `struct anim_frame_record`. **Converted** | `CreateHovercraft` | medium | done |
 | `0817C4C8` | 0x18 | function-pointer / pointer-to-member table (6 code pointers) (`void*` x 6) | `RunHovercraftState` | high | easy |
 | `0817C4E0` | 0x18 | function-pointer / pointer-to-member table (3 code pointers) | `UpdateHovercraftCannon`, `RunHovercraftCannonState` | high | easy |
@@ -1012,12 +1012,12 @@ vtable shapes).
 | `087E4F94` | 0x20 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `InitPolarCrate` | high | easy |
 | `087E4FB4` | 0x20 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreatePolarElectricFence` | high | easy |
 | `087E4FD4` | 0x20 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_802CE38` | high | easy |
-| `087E4FF4` | 0x20 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_802CF0C` | high | easy |
+| `087E4FF4` | 0x20 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreatePolarLauncher` | high | easy |
 | `087E5014` | 0x20 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreatePolarPenguin` | high | easy |
 | `087E5034` | 0x20 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreatePolarIcicle` | high | easy |
 | `087E5054` | 0x20 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreatePolarAkuAku` | high | easy |
-| `087E5074` | 0x20 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_802D5D4` | high | easy |
-| `087E5094` | 0x20 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `sub_802D648` | high | easy |
+| `087E5074` | 0x20 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreatePolarGoal` | high | easy |
+| `087E5094` | 0x20 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreatePolarBoostPad` | high | easy |
 | `087E50B4` | 0x20 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreatePolarCheckpointCrate` | high | easy |
 | `087E50D4` | 0x38 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateJetpackCheckpointText` | high | easy |
 | `087E510C` | 0x38 | gcc 2.x vtable: 8-byte {s16 delta, s16 pad, fnptr} slots, first two words zero | `CreateJetpackExplosion` | high | easy |

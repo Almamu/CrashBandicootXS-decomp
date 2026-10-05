@@ -10,16 +10,16 @@ extern void *gLevelState;
 extern void *gActorList;
 
 extern u8 IsTouchingPlayer(void *self);
-extern u8 sub_802DD9C(void *self);
+extern u8 IsTouchingYeti(void *self);
 extern void AddBrokenCrate(void *self);
-extern void sub_802C128(void *arg0);
+extern void GivePolarPlayerMask(void *arg0);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void UpdatePolarCrate(void *selfArg);
 
 /* On proximity (`IsTouchingPlayer`), ties the lap counter and the lock-timer
- * setter `sub_802C128`, then transitions to the shared "used"
+ * setter `GivePolarPlayerMask`, then transitions to the shared "used"
  * animation sequence 0x12. Whether or
- * not that fired, on `sub_802DD9C`'s overlap test transitions a second
+ * not that fired, on `IsTouchingYeti`'s overlap test transitions a second
  * time with its own sound cue - both share the same state-0x12
  * transition block (plus `self->palette = 1`) before tail-calling the
  * shared cleanup `UpdatePolarCrate`.
@@ -32,7 +32,7 @@ void UpdatePolarAkuAkuCrate(struct actor_self *self)
 {
     if (self->animIndex != 0x12 && IsTouchingPlayer(self)) {
         AddBrokenCrate(gLevelState);
-        sub_802C128(gActorList);
+        GivePolarPlayerMask(gActorList);
         self->animIndex = 0x12;
         {
             register u16 anim asm("r0") = self->anims[0x12].duration;
@@ -46,7 +46,7 @@ void UpdatePolarAkuAkuCrate(struct actor_self *self)
         self->palette = 1;
     }
 
-    if (self->animIndex != 0x12 && sub_802DD9C(self)) {
+    if (self->animIndex != 0x12 && IsTouchingYeti(self)) {
         PlaySfx(gAudioContext, 3, 0x100);
         AddBrokenCrate(gLevelState);
         self->animIndex = 0x12;

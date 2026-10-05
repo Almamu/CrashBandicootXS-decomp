@@ -4,7 +4,7 @@
 (the category (re)selection/loading-screen entry point), the
 `sub_effect_table` entry-counting helper `CountCategoryCrates`, and an unrelated-
 but-address-adjacent BG-tilemap double-buffer scroll-effect subsystem
-(`sub_8029720`-`sub_8029E40`) that turns out to sit interleaved in the
+(`AddActorMissedNitro`-`sub_8029E40`) that turns out to sit interleaved in the
 same ROM region rather than being part of the category system itself.
 
 ## Matched (real C)
@@ -17,15 +17,15 @@ same ROM region rather than being part of the category system itself.
   category's `sub_effect_table` entries (`struct sub_effect_record`,
   `include/actor_anim.h`) match one of two fixed `variantA` byte sets,
   picked by the category's `type` field.
-- `sub_8029720`/`sub_8029730`/`GetActorCheckpoint` (`actor_part105.c`) - trivial
+- `AddActorMissedNitro`/`GetActorMissedNitros`/`GetActorCheckpoint` (`actor_part105.c`) - trivial
   frame-tick counter accessors.
-- `SetActorCheckpoint`/`sub_8029794` (`actor_part95.c`) - category tick
+- `SetActorCheckpoint`/`IsActorMaskAssistDue` (`actor_part95.c`) - category tick
   re-basing and an active-instance-count threshold test.
 - `nullsub_5`/`GetCellAnimFreeTile` (`actor_part106.c`), `FlipCellAnimPage`
-  (`actor_part96.c`), `sub_8029B2C` (`actor_part90.c`), `AdvanceCellAnim`
-  (`actor_part97.c`), `sub_8029B8C`/`sub_8029B98` (`actor_part91.c`),
-  `SetCellAnimSpeed`/`sub_8029C30`/`sub_8029D8C` (`actor_part98.c`),
-  `sub_8029E28`/`sub_8029E34`/`sub_8029E40` (`actor_part92.c`) - the
+  (`actor_part96.c`), `GetCellAnimDistance` (`actor_part90.c`), `AdvanceCellAnim`
+  (`actor_part97.c`), `GetCellAnimFrameStep`/`GetCellAnimSpeed` (`actor_part91.c`),
+  `SetCellAnimSpeed`/`InitActorBgScroll`/`UpdateActorBgScroll` (`actor_part98.c`),
+  `ShakeActorBg`/`sub_8029E34`/`sub_8029E40` (`actor_part92.c`) - the
   rest of the BG-tilemap scroll-effect subsystem's small accessors,
   accumulator-advance, and BG2-affine scroll/zoom setup functions.
 
@@ -98,27 +98,27 @@ turned up the same handful of gcc-2.9 quirks over and over:
    register gets reused for an unrelated purpose afterward. Fixed by
    materializing an explicit pointer local (optionally register-pinned)
    ahead of the value computation, then storing through it. Hit
-   repeatedly: `FlipCellAnimPage`, `AdvanceCellAnim`, `SetCellAnimSpeed`, `sub_8029C30`
-   (three separate times within the same function), `sub_8029E50`.
+   repeatedly: `FlipCellAnimPage`, `AdvanceCellAnim`, `SetCellAnimSpeed`, `InitActorBgScroll`
+   (three separate times within the same function), `CommitActorBgScroll`.
 3. **Fresh-register vs. in-place reuse for a "new" value.** When a
    local's old value is dead after producing a new one (e.g. `pos =
    prev + delta;` where `prev` is never read again), this compiler
    defaults to overwriting `prev`'s own register in place. The ROM's
    build sometimes keeps the new value in a genuinely different
    register instead. Fixed with register-pinned locals for both the old
-   and new values. Hit in `AdvanceCellAnim` (twice) and `sub_8029C30`.
+   and new values. Hit in `AdvanceCellAnim` (twice) and `InitActorBgScroll`.
 4. **Signed vs. unsigned shift-by-31 idiom.** `v >> 31` on a signed
    `s32` produces an implementation-defined result this compiler
    resolves as an arithmetic shift (`asrs`); the ROM's own
    "sign bit as 0/1" rounding idiom needs the *logical* shift (`lsrs`),
    requiring an explicit `(s32)((u32)v >> 31)` cast. Hit in
-   `sub_8029C30`.
-5. **A genuine semantic bug**, not a codegen quirk: `sub_8029794`
+   `InitActorBgScroll`.
+5. **A genuine semantic bug**, not a codegen quirk: `IsActorMaskAssistDue`
    compared the two operands as unsigned (`bcc`) where the ROM compares
    them signed (`blt`) - fixed with an explicit `(s32)` cast on the
-   `u32`-typed struct field being compared. And `sub_8029C30`'s
-   `REG_BG0VOFS` write turned out to be `gUnknown_030013F4` alone, not
-   `gUnknown_030013F4 + (v >> 9)` as an earlier pass had guessed - the
+   `u32`-typed struct field being compared. And `InitActorBgScroll`'s
+   `REG_BG0VOFS` write turned out to be `gActorBg0VOffset` alone, not
+   `gActorBg0VOffset + (v >> 9)` as an earlier pass had guessed - the
    ROM's own instructions have no `adds` between the load and the store.
 
 None of this changes any function's understood *behavior* - every fix

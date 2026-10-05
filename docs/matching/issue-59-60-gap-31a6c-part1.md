@@ -60,7 +60,7 @@ established "cut at the boundary" convention.
   compiler's own allocator always prefers low registers unless forced.
   `CreateJetpackQuestionCrate` additionally stashes a 6th argument into `self+0x70`
   after the constructor proper.
-- **`sub_8032138`** - trivial `self+0x58` clearing setter.
+- **`ClearJetpackCrateBalloon`** - trivial `self+0x58` clearing setter.
 - **`BreakJetpackBalloonCrate`** - full reset idiom (state=1, `self+0x44`/`0xc`/`8`/
   `0x6c` cleared, anim frame re-synced from `self`'s own part table at
   `+0` rather than the usual `+0xc`), plus a lap-counter tie and
@@ -137,7 +137,7 @@ established "cut at the boundary" convention.
   `self+0x64`, `self+0xc`, `self+8`) to match the ROM's own 4-register
   `push {r4, r5, r6, lr}`.
 - **`UpdateJetpackRing`** - type-byte-gated (`self+0x30`'s type byte
-  `== 0x1f`) proximity check feeding `sub_802F164`, with a one-shot cue
+  `== 0x1f`) proximity check feeding `PassJetpackRing`, with a one-shot cue
   latched via `self+0x58`; tail-calls `UpdateActor` unconditionally.
 
 ## Parked - NAKED transcription (5 of 30 functions, byte-correct but not counted as matched)

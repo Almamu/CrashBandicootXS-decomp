@@ -20,7 +20,7 @@ have entries for this pass, cross-referencing this document).
 ### Two RAM-family findings
 
 1. **The singleton system's own camera-follow/scroll-velocity RAM
-   family, `gHovercraftMapCols`-`030015FF`.** `sub_8032C0C`/`sub_8032EA0`
+   family, `gHovercraftMapCols`-`030015FF`.** `HovercraftStateCloseIn`/`HovercraftStateFallBack`
    are the first functions in ROM order to touch most of this family's
    fields (`gHovercraftX`-`030015EC`, ~9 live fields across a
    ~0x38-byte span with a few gaps, plus a separate small cluster at
@@ -44,9 +44,9 @@ have entries for this pass, cross-referencing this document).
    pass adds to the family (not touched by `actor_part28.c`):
    `gHovercraftMapCols`/`030015A4`/`030015A8` (P2-meter-shaped row/column
    counts and fill level, seeded by `CreateHovercraft` from
-   `gHovercraftPicture`), `gUnknown_03001600` (the row-pointer array
+   `gHovercraftPicture`), `gHovercraftMapFrames` (the row-pointer array
    `DrawHovercraftMap`/`ConvertHovercraftTiles` fill, structurally identical to the boss
-   cluster's `gUnknown_03001580`), `gHovercraftScreenX`/`030015C4`
+   cluster's `gAirshipMapFrames`), `gHovercraftScreenX`/`030015C4`
    (BG2-space dy/dx offsets), `gHovercraftDistance` (projection-scale
    source, structurally identical to the boss cluster's
    `gAirshipDistance`), `gUnknown_030015E0`/`030015E4`/`030015E8`/
@@ -81,12 +81,12 @@ per-frame driver that DMA-clears/fills a blank BG3 tile exactly like
 `LoadAirshipGraphics` does before its own meter call. `ConvertHovercraftTiles` is the
 P2-side twin of the already-matched VRAM fill-level meter `ConvertAirshipTiles`
 (issue #58, `actor_part26c.c`), on this singleton's own per-level table
-(`gHovercraftPalette`) and row array (`gUnknown_03001600`) rather than
-the boss's (`gAirshipPalette`/`gUnknown_03001580`).
+(`gHovercraftPalette`) and row array (`gHovercraftMapFrames`) rather than
+the boss's (`gAirshipPalette`/`gAirshipMapFrames`).
 
 ### A corrected semantic reading
 
-`sub_8032A24`'s patrol-speed clamp was initially misread as a *ceiling*
+`HovercraftFireballStateFly`'s patrol-speed clamp was initially misread as a *ceiling*
 (`if (delta > 0x13) delta = 0x14`); the full-link byte diff caught the
 actual ROM branch condition (`bgt` skips the clamp, i.e. the clamp only
 fires when the decaying value has dropped to `0x13` or below) - it's a
@@ -121,7 +121,7 @@ real `.c` file and linking:
   DMA setups' shared literal-pool addressing more aggressively than the
   ROM's own build did. Transcribed NAKED.
 - **`DestroyJetpackCollectedWumpa`** (a reward-dispensing teardown, same shared shape as
-  the already-matched `sub_803B0C4`) - every instruction reproduced
+  the already-matched `DestroyRiderlessPolar`) - every instruction reproduced
   correctly except the very first two: this compiler's parameter-
   register prologue shuffle always copies the incoming `flags` (r1)
   parameter before `self` (r0) regardless of C declaration order,
@@ -133,16 +133,16 @@ real `.c` file and linking:
   copy is scheduled second), empirically confirmed here by test-
   compiling both variants. Transcribed NAKED rather than ship code that
   corrupts the caller's `r7`.
-- **`DamageHovercraftFireball`/`sub_8032A24`'s shared state/anim-frame-reset tail** -
+- **`DamageHovercraftFireball`/`HovercraftFireballStateFly`'s shared state/anim-frame-reset tail** -
   needed the same "nested register-pin block" idiom already documented
-  for `sub_80318B4` (issue #59): a `one` (r0) and `zero` (r2) constant
+  for `ReleaseJetpackBalloon` (issue #59): a `one` (r0) and `zero` (r2) constant
   each declared in their own nested block, matching the ROM's exact
   interleaving of stores between the two literals, plus a third,
   independently-scoped `zero2` (r1) declared immediately before its one
   use (the `self+0x12` byte store) even though it's logically "the same
   zero" as `zero` - the ROM's own build materializes it as a genuinely
   separate literal load rather than reusing the already-live register.
-- **`sub_8032A24`'s head** - computing `s32 speed = *(self+0x60) - 5;`
+- **`HovercraftFireballStateFly`'s head** - computing `s32 speed = *(self+0x60) - 5;`
   as an eager local (evaluated before `self+0x24`'s update) made this
   compiler keep `self` in a temporary register before its final home,
   costing an extra `adds` instruction the ROM's build doesn't have;
@@ -150,7 +150,7 @@ real `.c` file and linking:
   order (sum first, delta second) and explicitly pin `self` itself to
   `r4` for the whole function, matching the ROM's single `adds r4, r0,
   #0` exactly.
-- **`sub_8032A24`'s `_call_via_r2` call** - pre-computing the third
+- **`HovercraftFireballStateFly`'s `_call_via_r2` call** - pre-computing the third
   argument (`table+0x24`) into a named local before the call made this
   compiler evaluate it *before* the first argument's own dependent read
   (`table+0x20`); inlining both reads directly as call-argument
@@ -161,7 +161,7 @@ real `.c` file and linking:
   keeps the just-incremented counter value live in its own register and
   reuses it for the following `& 3` check, where the ROM's own build
   re-reads the counter from memory instead; forced via a genuine
-  volatile re-read (`*(vu16 *)&gUnknown_030015FC`, not `vs16` - the
+  volatile re-read (`*(vu16 *)&gHovercraftHitFlashTimer`, not `vs16` - the
   signed variant emits extra sign-extension instructions the ROM
   doesn't have) plus explicit register pins (`r0`=the literal `3`,
   `r1`=the reloaded value, with the AND's result forced back into `r0`
@@ -185,7 +185,7 @@ elsewhere in this project, re-confirmed rather than re-derived here:
 - **`UpdateJetpackCollectedWumpa`** - the shared anim-frame-advance-and-clamp idiom
   (this compiler schedules the `#4`/`#6` `ldrsh` constant loads one
   instruction earlier than the ROM's own build), same as
-  `MoveJetpackBalloon`/`sub_8031954`/`sub_80319A0` (issue #59).
+  `MoveJetpackBalloon`/`JetpackBalloonStatePop`/`JetpackBalloonStateFloatAway` (issue #59).
 - **`UpdateHovercraftFireball`/`RunHovercraftFireballState`** - a `gHovercraftFireballStateFuncs` stride-8
   table lookup keeping the table's base address alive in `r7` across
   straight-line code with no call to piggyback a high-register relay
@@ -197,17 +197,17 @@ elsewhere in this project, re-confirmed rather than re-derived here:
   `DrawLanguageSelect`/`GAX2_init` and the hard-won `DrawActor`
   (issue #50, `actor_part55.c`) already needed elaborate register-pin/
   stack-spill workarounds for.
-- **`RunHovercraftState`** - fully inlines `sub_8033828`'s own P1/P2
+- **`RunHovercraftState`** - fully inlines `SetHovercraftFlashColor`'s own P1/P2
   speed-toggle shape (issue #62) *twice*, once per frame-counter
   schedule case, plus an outer dispatch - the same cross-jump-merging
   register-pin hazard that function's own writeup documents, doubled.
   **Update:** promoted to real C in a later pass via the static-inline
   anti-CSE technique (register-pinned `p`/`val` locals matching
-  `sub_8033828`'s own idiom exactly, plus an `asm("" : "+r"(p))` barrier
+  `SetHovercraftFlashColor`'s own idiom exactly, plus an `asm("" : "+r"(p))` barrier
   to keep each branch's pointer reload from being merged into the shared
   tail) - see
   [issue-59-60-static-inline-cse-promotion.md](issue-59-60-static-inline-cse-promotion.md).
-- **`sub_8032C0C`/`sub_8032EA0`/`DrawHovercraftMap`/`SpawnHovercraft`/
+- **`HovercraftStateCloseIn`/`HovercraftStateFallBack`/`DrawHovercraftMap`/`SpawnHovercraft`/
   `ConvertHovercraftTiles`** - many-high-register (`ip`/`sb`/`sl`/`r8`)
   allocation, the same gcc-2.9 difficulty already documented
   project-wide for `ConvertAirshipTiles`/`DrawLanguageSelect`/`GAX2_init` and
@@ -244,7 +244,7 @@ shape was gcc 2.x's pointer-to-member-function call
 
 ## Later pass: NAKED retry
 
-A later pass promoted `sub_8032C0C`, `sub_8032EA0`, `CreateHovercraft`,
+A later pass promoted `HovercraftStateCloseIn`, `HovercraftStateFallBack`, `CreateHovercraft`,
 `SpawnHovercraft`, `UpdateHovercraft` and `LoadHovercraftGraphics` to plain C, mostly by
 porting fixes from their issue #58 twins. The link-time byte-count gaps
 noted above came from a reused `self` pseudo (`UpdateHovercraft`) and the

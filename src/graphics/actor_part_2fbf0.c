@@ -36,7 +36,7 @@ extern u8 IsTouchingPlayer(void *self);
 extern void UpdateActor(void *self);
 /* Defined as a no-argument counter in actor_part44.c, but the ROM passes
  * the player object here (a C++ method ignoring its `this`). */
-extern s32 sub_802F46C(void *player);
+extern s32 CountJetpackBomber(void *player);
 
 extern s32 gUnknown_0300089C[];
 extern void *gAudioContext;
@@ -298,7 +298,7 @@ void *CreateJetpackBomber(struct jetpack_bomber *self, u8 *part, s32 b, s32 c, s
     return self;
 }
 
-/* Per-frame update: while alive, ticks sub_802F46C and on player
+/* Per-frame update: while alive, ticks CountJetpackBomber and on player
  * contact damages the player (strength 10) and switches to the dying
  * state 6. Then runs this state's gJetpackBomberStateFuncs handler; once
  * the dying animation is done, calls its own "destroy" method,
@@ -306,7 +306,7 @@ void *CreateJetpackBomber(struct jetpack_bomber *self, u8 *part, s32 b, s32 c, s
 void UpdateJetpackBomber(struct jetpack_bomber *self)
 {
     if (self->base.state != 6) {
-        sub_802F46C(gActorList);
+        CountJetpackBomber(gActorList);
         if (self->base.state != 6 && IsTouchingPlayer(self)) {
             ACTOR_VCALL(gActorList, m20, 10);
             self->base.palette = 4;

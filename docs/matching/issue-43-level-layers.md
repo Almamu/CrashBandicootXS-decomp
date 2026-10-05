@@ -1,6 +1,6 @@
 # Issue #43: 0x08026418-0x08026A18, game_loop - the level-layers singleton
 
-`sub_8026628`, `sub_8026A18`, `sub_8026AE8`, `sub_8026BC0`, `sub_8026BF8`
+`ProbeTerrain`, `ProbeTerrainY`, `ProbeTerrainX`, `GetTerrainFlagsAt`, `sub_8026BF8`
 and `sub_8026C3C` were already matched before this pass. Of the remaining
 19 functions, all 19 are byte-exact matched as C (three of them with
 narrow inline-asm anchors, described below). Nothing parked, nothing left

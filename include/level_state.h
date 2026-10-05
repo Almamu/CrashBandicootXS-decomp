@@ -37,7 +37,7 @@ struct level_state
     s32 deaths;                     // 0x07C - maskless hits since the last checkpoint (AddDeath, ResetDeaths)
     s32 unk_80;                     // 0x080
     s32 maskAssistDeaths;           // 0x084 - deaths after which the start marker hands out a mask (graphics_loading_1e990.c)
-    s32 crateAssistDeaths;          // 0x088 - from the level table (sub_8023110, 5 by default); once `deaths` reaches it outside a time trial, CreateCrate turns placement-flagged "?" crates (and kind 0xF) into Aku Aku, checkpoint or life crates
+    s32 crateAssistDeaths;          // 0x088 - from the level table (SetCrateAssistDeaths, 5 by default); once `deaths` reaches it outside a time trial, CreateCrate turns placement-flagged "?" crates (and kind 0xF) into Aku Aku, checkpoint or life crates
     u8 timeTrial;                   // 0x08C - nonzero: no lives lost, the clock runs (StartTimeTrial)
     u8 unk_8d[3];
     s32 minutes;                    // 0x090 - the time-trial clock (TickLevelClock), capped at 99

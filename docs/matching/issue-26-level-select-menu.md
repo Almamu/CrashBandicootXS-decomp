@@ -174,7 +174,7 @@ none of the three matches, but two got much closer with small changes
 
 - `struct level_menu` (0xAC) is fully laid out; `panelSlideX` and `clearedIconY`-`trialIcon2Y` are the
   record panel's slide offset and per-row y offsets (0 or 0x1C),
-  `rank` is the first of `sub_802336C`/`LevelHasRedGem`/`LevelHasGreenGem`/
+  `rank` is the first of `LevelHasGemPathGem`/`LevelHasRedGem`/`LevelHasGreenGem`/
   `LevelHasBlueGem`/`LevelHasYellowGem` that holds for the level (5 = none), and
   byte 2 of the save block holds four more flags tested per rank.
 - `struct sprite` is the 0x40-byte part `InitUiSpriteObj` constructs

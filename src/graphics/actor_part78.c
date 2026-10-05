@@ -9,7 +9,7 @@
 extern void CollideGroundSprite(void *self);
 extern void SetMaskLevel(void *arg0, s32 arg1);
 extern void *GetSpriteFrame(void *part);
-extern s32 sub_8026BC0(void *arg0, s32 x, s32 y);
+extern s32 GetTerrainFlagsAt(void *arg0, s32 x, s32 y);
 extern void *gLevelLayers;
 extern void *gLevelState;
 extern u8 gEmptySpritePoint[];
@@ -73,7 +73,7 @@ struct a884_method {
  * `info+0x14`, anything else -> the fixed fallback
  * `gEmptySpritePoint`) - applies it (mirrored by `self+0x28` bit 4)
  * to `self`'s de-Q8'd position, and probes the result via
- * `sub_8026BC0` (still raw). A hit (code 6) snaps `self`'s Y position
+ * `GetTerrainFlagsAt` (still raw). A hit (code 6) snaps `self`'s Y position
  * down to the next multiple of 8 (unless `+0x101` is already set) and
  * fires the table+0x68 trampoline with code `0x17`; any other code
  * fires the same trampoline with code `0x18` if `+0x101` is set.
@@ -260,7 +260,7 @@ u8 CollidePlayer(struct a884_part *self)
         else
             x += off[0];
         y += off[1];
-        if (sub_8026BC0(gLevelLayers, x, y) == 6) {
+        if (GetTerrainFlagsAt(gLevelLayers, x, y) == 6) {
             if (self->f101 == 0) {
                 s32 snap = (y & 0x00FFFFF8) + 7;
 

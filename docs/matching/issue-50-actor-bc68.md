@@ -11,7 +11,7 @@ out of GitHub issue #50's chunk scope" - the raw `.s` file issue #50's
 chunk was carved out of (`asm/code_3_2_20_8b7c_ac28.s`) runs well past
 the chunk's own upper bound, all the way to 0x0802BED8 where the
 already-matched `actor_part19.c` (issue #52) begins. This entry covers
-this raw file's own literal tail: `DispensePolarWumpa` through `sub_802BE80`,
+this raw file's own literal tail: `DispensePolarWumpa` through `PolarPlayerStateBoost`,
 the last 7 functions in the file (everything from that file's very end
 backwards to the start of `DispensePolarWumpa`), the cleanest possible cut
 since the raw file's last byte and this chunk's last byte are the same
@@ -21,10 +21,10 @@ byte.
 
 Everything from `CreateActor` (the giant kind-dispatch actor-part-
 factory constructor with its own 39-case jump table, ~560 lines of
-disassembly by itself) through `sub_802BBE4` stays raw - the actor-
+disassembly by itself) through `PolarPlayerStateCaught` stays raw - the actor-
 part-factory dispatcher itself and the run of animation-table-state/
 actor-part-factory functions between it and this chunk
-(`CreatePolarCheckpointText`-`sub_802BBE4`, including `ConstructAnimTableState`/
+(`CreatePolarCheckpointText`-`PolarPlayerStateCaught`, including `ConstructAnimTableState`/
 `ConstructActorPart` and the large `UpdatePolarPlayer`/`DrawPolarPlayer` state
 machines). None of that is in scope here; `tools/report_units.py`'s
 `(0x0802AC28, None, "actor")` entry still covers it, with an updated
@@ -42,9 +42,9 @@ real matched C.
 
 - **`DispensePolarWumpa`** - accumulator-drain/reward-dispenser for
   `gPolarQueuedWumpa` (filled by `QueuePolarWumpa`, still raw): while the
-  "locked" flag `gUnknown_030014A0` is set, fully drains it via repeated
+  "locked" flag `gPolarPlayerInactive` is set, fully drains it via repeated
   `CollectWumpa` calls without spawning anything; otherwise, once the
-  `gUnknown_03001484` cooldown elapses, dispenses one of four tiers of
+  `gPolarWumpaDispenseTimer` cooldown elapses, dispenses one of four tiers of
   reward (via `SpawnPolarCollectedWumpa`, itself still raw but confirmed by
   docs/rom_map.md as a "spawn effect type N" family member) sized by the
   accumulator's own magnitude, and plays a cue. Docs/rom_map.md already
@@ -52,40 +52,40 @@ real matched C.
   confirmed exactly: same `register u8 *self asm("r1")` pin, same
   branch/threshold shape, just a different accumulator/cooldown global
   pair.
-- **`sub_802BD18`** - trivial byte getter (`gUnknown_03001480`). Called
-  by the NAKED `sub_802A688` trampoline in `actor_part94.c`.
+- **`IsPolarPauseLocked`** - trivial byte getter (`gPolarPauseLocked`). Called
+  by the NAKED `PolarIsPauseLocked` trampoline in `actor_part94.c`.
 - **`sub_802BD24`** - frame-counter-threshold (`self+0x44 > 0x13`)
-  state-transition: latches `gUnknown_030014A3`, clears the hazard lock
-  `gUnknown_030014A0`, and resets `self` to state 1/table-index 0 via
+  state-transition: latches `gPolarSteerEnabled`, clears the hazard lock
+  `gPolarPlayerInactive`, and resets `self` to state 1/table-index 0 via
   the same state/table-index/anim-frame reset idiom already documented
   for the boss cluster's `DamageAirshipFireball`/`AirshipStateFall` and this family's
-  own `sub_802C14C` (`actor_part19.c`), then fires `SetCellAnimSpeed(0x24)`.
-- **`sub_802BD64`**/**`sub_802BDD0`** - a per-axis hazard-threshold pair:
-  drains a shared "camera catch-up" budget (`gUnknown_030014A4`) into
+  own `LaunchPolarPlayer` (`actor_part19.c`), then fires `SetCellAnimSpeed(0x24)`.
+- **`PolarPlayerStateFinishLeap`**/**`PolarPlayerStateCarriedOff`** - a per-axis hazard-threshold pair:
+  drains a shared "camera catch-up" budget (`gPolarPlayerVelY`) into
   `self+0x20`, advances `self+0x24` by a fixed step, and derives a
-  camera-relative depth (`self+0x34`, via `sub_8029B2C`) - the same
-  shape as `actor_part44.c`'s `sub_802F5E4`/`sub_802F640`. Once that
+  camera-relative depth (`self+0x34`, via `GetCellAnimDistance`) - the same
+  shape as `actor_part44.c`'s `JetpackPlayerStateFall`/`JetpackPlayerStateFinish`. Once that
   depth drops to/below a far threshold (`0x16FF`), triggers a one-shot
-  screen-flash (`FadeBrightness(0, 2, 1)`, latched via `gUnknown_030014A2`)
-  - `sub_802BD64` additionally latches its own one-shot flag
-    (`gUnknown_03001480`, the same global `sub_802BD18` reads);
-    `sub_802BDD0` doesn't touch it. Once the depth drops to/below a near
-    threshold (`0x3FF`), arms hazard direction 1 (`sub_802BD64`) or 2
-    (`sub_802BDD0`) via `sub_802A668`.
-- **`sub_802BE34`** - the third axis of the same hazard-threshold
+  screen-flash (`FadeBrightness(0, 2, 1)`, latched via `gPolarFadeStarted`)
+  - `PolarPlayerStateFinishLeap` additionally latches its own one-shot flag
+    (`gPolarPauseLocked`, the same global `IsPolarPauseLocked` reads);
+    `PolarPlayerStateCarriedOff` doesn't touch it. Once the depth drops to/below a near
+    threshold (`0x3FF`), arms hazard direction 1 (`PolarPlayerStateFinishLeap`) or 2
+    (`PolarPlayerStateCarriedOff`) via `SetActorCategoryExitStatus`.
+- **`PolarPlayerStateKnockedOff`** - the third axis of the same hazard-threshold
   family, but driven directly off `self+0x20` (a fixed `-0x100`
   decrement per call, no shared accumulator, no `self+0x24`/`self+0x34`
   derivation) and arming hazard direction 3.
-- **`sub_802BE80`** - frame-counter-threshold (`self+0x44 == 0x1e`)
+- **`PolarPlayerStateBoost`** - frame-counter-threshold (`self+0x44 == 0x1e`)
   state-transition, structural twin of `sub_802BD24`: latches
-  `gUnknown_030014A3`, then either (input bit 1 of `gKeys`
+  `gPolarSteerEnabled`, then either (input bit 1 of `gKeys`
   clear) resets `self` to state 1/table-index 0 via the same reset
   idiom and fires `SetCellAnimSpeed(0x24)`, or (bit set) transitions to
   state 2 and fires `SetCellAnimSpeed(0x38)` instead.
 
 ## Compiler-quirk notes
 
-- **`sub_802BE80`'s boolean-truthy zero-extension idiom.** The ROM
+- **`PolarPlayerStateBoost`'s boolean-truthy zero-extension idiom.** The ROM
   computes `gKeys & 2` into a register, then zero-extends it
   through an explicit `lsls #0x10`/`lsrs #0x10` pair before comparing
   against 0 and branching - not the plain `ands`/`cmp #0`/`bne` a direct
@@ -106,7 +106,7 @@ real matched C.
   there, so `state` (the store value) needed its own explicit
   `register s32 state asm("r0") = 2;` to force a fresh load and block the
   CSE.
-- **Comparison-polarity gotcha in `sub_802BD64`/`sub_802BDD0`** (a real
+- **Comparison-polarity gotcha in `PolarPlayerStateFinishLeap`/`PolarPlayerStateCarriedOff`** (a real
   bug this pass caught only via the full-link `make compare`, not the
   isolated compile - see "A note on isolated-compile confidence" below).
   The ROM's screen-flash trigger fires when the derived depth
@@ -121,9 +121,9 @@ real matched C.
   the opposite one from the ROM) - only diffing the real linked ROM
   against `baserom.gba` (`cmp baserom.gba crashbandicootxs.gba`, first
   mismatch at byte 0x2BD96 = ROM address 0x0802BD96, landing squarely on
-  this branch's `movs r0, #0` inside `sub_802BD64`) surfaced it. The
+  this branch's `movs r0, #0` inside `PolarPlayerStateFinishLeap`) surfaced it. The
   second threshold in the same two functions (`self+0x34 <= 0x3FF` for
-  the `sub_802A668` hazard-direction arm) was read correctly from the
+  the `SetActorCategoryExitStatus` hazard-direction arm) was read correctly from the
   start.
 
 ## A note on isolated-compile confidence
@@ -135,7 +135,7 @@ per-function compile is a diagnostic tool, never proof of a match - but
 this time the gap wasn't a context-dependent register-allocation choice,
 it was a plain misreading of a `cmp`/`bgt` pair's branch polarity that
 happened to still compile to *some* plausible-looking branch either way.
-The isolated compile of `sub_802BD64`/`sub_802BDD0` with the wrong
+The isolated compile of `PolarPlayerStateFinishLeap`/`PolarPlayerStateCarriedOff` with the wrong
 (`> 0x16FF`) condition produced clean, well-formed Thumb code - nothing
 about it looked broken in isolation, and a fast visual scan of the
 generated `.s` output initially misread its `ble` as matching the ROM's

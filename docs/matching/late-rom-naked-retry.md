@@ -74,7 +74,7 @@ down to spelling:
   (actor_part130.c, #61), the fill-level meter twins, are still about 95
   and 105 halfwords off. The first loop in the ROM spills each height
   and reloads it (`ldm r1!`) after the row-pointer store, because all 8
-  low registers are taken. That includes `&gUnknown_03001530`, which is
+  low registers are taken. That includes `&gAirshipMapTileBase`, which is
   hoisted into r7, where the drafts give it r8 and keep the height
   in a register. None of these reproduced it: `sum += heights[k] = ...`,
   walking-pointer forms, `volatile` on one access, a volatile row store,
@@ -155,7 +155,7 @@ Both drafts improved (95 to 56, and 105 to 29 halfwords):
 
 - **Height re-read.** `asm("" : "+m"(heights[k]))` right after the
   row-pointer store makes gcc reload the height, which is the ROM's
-  `ldm r1!`. `&gUnknown_03001530` then lands in r7, as in the ROM.
+  `ldm r1!`. `&gAirshipMapTileBase` then lands in r7, as in the ROM.
   Walking pointers, `s32 x` temporaries and struct forms didn't do it.
 - **`dst` split.** The ROM keeps `dst` in r3 between rows and in sb
   inside the row. A copy `u32 *d = dst;` for the inner loop, then

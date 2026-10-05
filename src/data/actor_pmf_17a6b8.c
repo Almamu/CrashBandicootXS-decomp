@@ -6,36 +6,36 @@
  * sections by ldscript.txt - see docs/data.md.
  */
 
-extern void sub_802B8E8();
-extern void sub_802B990();
-extern void sub_802BA5C();
-extern void sub_802BAD0();
-extern void sub_802BB4C();
-extern void sub_802BBE4();
+extern void PolarPlayerStateMount();
+extern void PolarPlayerStateRun();
+extern void PolarPlayerStateJump();
+extern void PolarPlayerStateDash();
+extern void PolarPlayerStateShocked();
+extern void PolarPlayerStateCaught();
 extern void sub_802BD24();
-extern void sub_802BD64();
-extern void sub_802BDD0();
-extern void sub_802BE34();
-extern void sub_802BE80();
-extern void sub_802BED8();
-extern void sub_802BF30();
-extern void sub_802BFA0();
+extern void PolarPlayerStateFinishLeap();
+extern void PolarPlayerStateCarriedOff();
+extern void PolarPlayerStateKnockedOff();
+extern void PolarPlayerStateBoost();
+extern void PolarPlayerStateLaunched();
+extern void PolarPlayerStateFinish();
+extern void PolarPlayerStateLand();
 
 /* Per-state handlers of the actor object dispatched by UpdatePolarPlayer
  * (actor_part127.c) and RunPolarPlayerState (actor_part19e.c). */
 const struct actor_pmf gPolarPlayerStateFuncs[14] = {
-    ACTOR_PMF(sub_802B8E8),
-    ACTOR_PMF(sub_802B990),
-    ACTOR_PMF(sub_802BAD0),
-    ACTOR_PMF(sub_802BE80),
-    ACTOR_PMF(sub_802BA5C),
-    ACTOR_PMF(sub_802BED8),
-    ACTOR_PMF(sub_802BE34),
-    ACTOR_PMF(sub_802BBE4),
-    ACTOR_PMF(sub_802BDD0),
-    ACTOR_PMF(sub_802BFA0),
-    ACTOR_PMF(sub_802BF30),
-    ACTOR_PMF(sub_802BD64),
-    ACTOR_PMF(sub_802BB4C),
+    ACTOR_PMF(PolarPlayerStateMount),
+    ACTOR_PMF(PolarPlayerStateRun),
+    ACTOR_PMF(PolarPlayerStateDash),
+    ACTOR_PMF(PolarPlayerStateBoost),
+    ACTOR_PMF(PolarPlayerStateJump),
+    ACTOR_PMF(PolarPlayerStateLaunched),
+    ACTOR_PMF(PolarPlayerStateKnockedOff),
+    ACTOR_PMF(PolarPlayerStateCaught),
+    ACTOR_PMF(PolarPlayerStateCarriedOff),
+    ACTOR_PMF(PolarPlayerStateLand),
+    ACTOR_PMF(PolarPlayerStateFinish),
+    ACTOR_PMF(PolarPlayerStateFinishLeap),
+    ACTOR_PMF(PolarPlayerStateShocked),
     ACTOR_PMF(sub_802BD24),
 };

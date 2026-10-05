@@ -170,7 +170,7 @@ Opening: index `gLevelTable` by `self+0` (the confirmed
 `oam_count.c`/`game_loop17.c` all have their own struct view of it).
 Read its `+0x1c` byte (`isBoss`, first read as an "initialized" guard; calls `CheckAllCratesBroken` once if
 still clear), feed its `+0x14`/`+0x18` fields (`maskAssistDeaths`/`crateAssistDeaths`) straight through to
-`SetMaskAssistDeaths`/`sub_8023110`, then dispatch on its `+4` field
+`SetMaskAssistDeaths`/`SetCrateAssistDeaths`, then dispatch on its `+4` field
 (`state - 1`, clamped `[0,5]`; `state == 0` or `state > 6` takes the
 `default` path):
 

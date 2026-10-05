@@ -9,7 +9,7 @@ at `self+0xc`, an anim-frame halfword/byte pair at `self+0x10`/
 `self+0`, and here also an event/trampoline table pointer at
 `self+0x50`), but driving a *different* singleton than issue #58's
 `gAirship` cluster and issue #62's `gHovercraft`
-cluster - this one's flags/counters live at `gUnknown_030014E0`-
+cluster - this one's flags/counters live at `gJetpackBomberCount`-
 `gJetpackPlayerTiles`.
 
 The chunk generator's listed source file (`asm/code_3_2_17.s`) was
@@ -47,15 +47,15 @@ are named by the lower 5 hex digits of their first function's address
   ROM's own `ldrb` register choices (which differ between the two
   otherwise-identical blocks). The old raw
   `asm/code_3_2_20_28568_c99c_2f338.s` is retired.
-- **`sub_802F164`** (`src/graphics/actor_part43.c`) - state-machine
+- **`PassJetpackRing`** (`src/graphics/actor_part43.c`) - state-machine
   update for the same singleton: while `self+0x28` is one of the
   "active" states (1/6/2/3), resets `self`'s table index/anim to the
   idle frame if it wasn't already, latches the target position at
   `self+0x1c`/`self+0x20` from the two arguments, and re-arms state 6
   (playing a cue only on the *first* transition into it). While the
   current game-mode flag at `gLevelState+0x8c` is clear and the
-  `gUnknown_030014EC` frame-timer has advanced far enough, drives a
-  5-case round-robin (`gUnknown_030014F0`) once every >0xbe-frame
+  `gJetpackRingLastFrame` frame-timer has advanced far enough, drives a
+  5-case round-robin (`gJetpackRingChain`) once every >0xbe-frame
   window via a real `switch` on a dense 0-4 case set - the switch's
   own generated bounds check turned out to be exactly the ROM's own
   `cmp r0, #4; bls ...; b ...` pair, so no separate guard `if` was
@@ -76,8 +76,8 @@ are named by the lower 5 hex digits of their first function's address
   cap asm("r4") = *maxPtr;` declared after the store, not before) to
   match the ROM's own redundant post-call reload rather than reusing
   the pre-call value.
-- **`sub_802F0DC`** (`src/graphics/actor_part43.c`) - constructor/
-  reset: while the singleton flag (`gUnknown_03001506`) is off, resets
+- **`FinishJetpackRun`** (`src/graphics/actor_part43.c`) - constructor/
+  reset: while the singleton flag (`gJetpackPlayerInactive`) is off, resets
   `self` to state 5/table-index 4, plays a cue, and conditionally
   fires an extra one-shot effect via `FreezeLevelClock`. Matched with the
   established "cache the known-zero value in a register, front-load
@@ -88,14 +88,14 @@ are named by the lower 5 hex digits of their first function's address
   drain/reward-dispenser for the `gJetpackQueuedWumpa` accumulator
   `QueueJetpackWumpa` fills: while the singleton flag is set, fully drains
   it via repeated `CollectWumpa` calls; otherwise, once a
-  `gUnknown_030014F8` cooldown elapses, dispenses one of four tiers of
+  `gJetpackWumpaDispenseTimer` cooldown elapses, dispenses one of four tiers of
   reward sized by the accumulator's own magnitude. Needed `self`
   explicitly pinned to `r1` - this compiler's default allocation put a
   redundant `self`-into-`r5` copy at function entry (for the one
   tier-4 case only) that the ROM never has, since the ROM keeps `self`
   in `r1` uniformly across all four tiers.
-- **`sub_802F46C`** (`src/graphics/actor_part44.c`) - trivial
-  pre-increment counter accessor (`return ++gUnknown_030014E0;`).
+- **`CountJetpackBomber`** (`src/graphics/actor_part44.c`) - trivial
+  pre-increment counter accessor (`return ++gJetpackBomberCount;`).
 - **`GetJetpackPlayerHpPercent`** (`src/graphics/actor_part44.c`) - threshold check
   on `self+0x54`'s accumulator against `gJetpackPlayerMaxHp`'s cap.
   Needed the two-condition guard folded into one `if (r == 0 && v > 0)
@@ -108,10 +108,10 @@ are named by the lower 5 hex digits of their first function's address
   discarding the result; declared `void` (not `s32`) so this compiler
   reuses `r0` for the `pop {r0}; bx r0` epilogue instead of preserving
   a return value the ROM itself discards the same way.
-- **`sub_802F4C0`** (`src/graphics/actor_part44.c`) - trivial byte
-  getter for `gUnknown_030014E8`.
-- **`sub_802F4CC`** (`src/graphics/actor_part44.c`) - countdown timer
-  (`gUnknown_030014F4`) driving a palette-strip animation refresh,
+- **`IsJetpackPauseLocked`** (`src/graphics/actor_part44.c`) - trivial byte
+  getter for `gJetpackPauseLocked`.
+- **`AnimateJetpackPlayerPalette`** (`src/graphics/actor_part44.c`) - countdown timer
+  (`gJetpackFlashTimer`) driving a palette-strip animation refresh,
   ping-ponging the frame index via `__divsi3` the same way
   `AnimateAirshipPalette` (actor_part26.c) does for its own strip.
 - **`HealJetpackPlayer`** (`src/graphics/actor_part44.c`) - advances
@@ -122,28 +122,28 @@ are named by the lower 5 hex digits of their first function's address
   multiply's destination register the way the ROM does.
 - **`QueueJetpackWumpa`** (`src/graphics/actor_part44.c`) - feeds `delta`
   into the `gJetpackQueuedWumpa` reward accumulator, arming its
-  `gUnknown_030014F8` cooldown the first time it goes from zero. Its
+  `gJetpackWumpaDispenseTimer` cooldown the first time it goes from zero. Its
   own `self` parameter is genuinely unused (dead) in the ROM.
-- **`sub_802F570`**/**`sub_802F69C`** (`src/graphics/actor_part44.c`)
+- **`JetpackPlayerStateResume`**/**`JetpackPlayerStateEnter`** (`src/graphics/actor_part44.c`)
   - twin "if a threshold/flag trips, reset `self` to an idle
     state-1/table-index-0 transition and arm the singleton's flags"
   idioms, matched with `self` pinned `r2` and the established
   register-pinned reset-block idiom.
-- **`sub_802F5AC`** (`src/graphics/actor_part44.c`) - two independent
+- **`JetpackPlayerStateBoost`** (`src/graphics/actor_part44.c`) - two independent
   one-shot transitions on `self`: a table-index-5 idle reset gated on
   `self+0x12`, and a separate `self+0x44`-counter-driven state-1
   transition.
-- **`sub_802F5E4`** (`src/graphics/actor_part44.c`) - advances
+- **`JetpackPlayerStateFall`** (`src/graphics/actor_part44.c`) - advances
   `gJetpackPlayerVelY`'s bounded oscillator by 9 (clamped to +0x140 by
   absolute value via the standard `sign = v>>31; v ^= sign; v -=
   sign;` idiom, reusing `v`/`sign` in place rather than a separate
   `abs` local), then fires two one-shot threshold effects on
   `self+0x20`.
-- **`sub_802F640`** (`src/graphics/actor_part44.c`) - advances
+- **`JetpackPlayerStateFinish`** (`src/graphics/actor_part44.c`) - advances
   `self+0x24` by a fixed step, derives `self+0x34` (a camera-relative
-  depth) via `sub_8029B2C`, and fires the same one-shot threshold pair
-  as `sub_802F5E4`. Needed `self+0x24` re-read fresh from memory after
-  the `sub_8029B2C()` call (rather than keeping the pre-call value in
+  depth) via `GetCellAnimDistance`, and fires the same one-shot threshold pair
+  as `JetpackPlayerStateFall`. Needed `self+0x24` re-read fresh from memory after
+  the `GetCellAnimDistance()` call (rather than keeping the pre-call value in
   a local) to match the ROM's own redundant reload.
 - **`DestroyJetpackPlayer`** (`src/graphics/actor_part44.c`) - teardown/
   destructor: marks `self` "dying", drains the reward accumulator,
@@ -164,7 +164,7 @@ are named by the lower 5 hex digits of their first function's address
   `HovercraftLauncherStateLaunch`) - a real correctness gap this plain-local-copy form
   avoids by letting the compiler make its own (correct) callee-save
   decision.
-- **`sub_802F7A4`** (`src/graphics/actor_part45.c`) - trivial byte
+- **`IsJetpackPlayerInactive`** (`src/graphics/actor_part45.c`) - trivial byte
   getter for the singleton's own flag.
 - **`IsJetpackShotUnshootable`** (`src/graphics/actor_part46.c`) - trivial
   constant-true predicate.

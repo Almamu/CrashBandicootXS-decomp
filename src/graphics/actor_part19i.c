@@ -163,7 +163,7 @@ void UpdatePolarBasicCrate(void *selfArg)
  * function of `b` (clamped to `[0, 5]`) plus up to two `+6` bumps keyed
  * off `c`'s own range - selecting one of up to 18 per-kind anim
  * records from the part table (`self[0]`, stride `0xc`) to seed
- * `animTimer`/`animDone`/`self+8`, the same idiom as `sub_802D648`
+ * `animTimer`/`animDone`/`self+8`, the same idiom as `CreatePolarBoostPad`
  * (`src/graphics/actor_part58.c`). */
 void *InitPolarCrate(void *selfArg, s32 a, s32 b, s32 c, s32 lastArg)
 {

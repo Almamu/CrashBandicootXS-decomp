@@ -12,7 +12,7 @@ This chunk turned out to be two interleaved families:
    32-bit-word-per-row bitmap arrays living at `self+8`/`self+0x208`/
    `self+0x308`, using the exact same "floor-divide-by-32, adjust for
    negative n by `+0x1f` before the shift" idiom already proven in
-   `sub_8025554`/`sub_8025588` (game_loop5.c, issue #40). Getting these
+   `SetBitmapBit`/`ClearBitmapBit` (game_loop5.c, issue #40). Getting these
    byte-exact took real iteration on **statement order**, not register
    pins: this compiler folds a `base + fixedOffset + (index << 2)`
    pointer expression differently depending on whether the fixed
