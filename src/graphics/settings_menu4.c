@@ -1,6 +1,6 @@
 #include "core.h"
 #include "gba/io_reg.h"
-#include "pause_options_screen.h"
+#include "save_menu.h"
 
 extern void *gAudioContext;
 extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
@@ -8,7 +8,7 @@ extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
 /* Confirm/cancel handler for the composite pause/options screen: on
  * either flags bit 0 or bit 3, plays the standard "confirm" cue and
  * resets `state`/`field_10` back to their initial values. */
-void SaveMenuMessageInput(struct pause_options_screen *self, u32 flags)
+void SaveMenuMessageInput(struct save_menu *self, u32 flags)
 {
     if (flags & 1) {
         goto confirm;
@@ -27,10 +27,10 @@ extern void CommitOamBuffer(struct oam_shadow_buffer *arg0);
 extern void FlushVramDmaQueue(void);
 
 /* Restores the saved BG0HOFS/DISPCNT pair (see field_0/field_1c's doc
- * comments in pause_options_screen.h) and flushes the VRAM/OAM commit
+ * comments in save_menu.h) and flushes the VRAM/OAM commit
  * queues - the counterpart "leaving the screen" step to whatever saved
  * those two fields (still raw, outside this chunk). */
-void CommitSaveMenuFrame(struct pause_options_screen *self)
+void CommitSaveMenuFrame(struct save_menu *self)
 {
     REG_DISPCNT = self->field_1c;
     REG_BG0HOFS = self->field_0 >> 3;

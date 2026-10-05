@@ -13,7 +13,7 @@ extern void EraseSaveSlot(void *handle, s32 rowIndex);
 /* Zeroes the whole 0x200-byte record via a DMA16 fill, marks every row
  * "selected" (EraseSaveSlot, still raw), stamps the two fixed marker
  * bytes, clears `flags`/`field_1fb`, then refreshes the checksum. */
-void ResetSaveData(struct settings_sync_record *self)
+void ResetSaveData(struct save_data *self)
 {
     s32 i;
 
@@ -28,12 +28,12 @@ void ResetSaveData(struct settings_sync_record *self)
     UpdateSaveChecksum(self);
 }
 
-u8 IsSaveSlotEmpty(struct settings_sync_record *self, s32 rowIndex)
+u8 IsSaveSlotEmpty(struct save_data *self, s32 rowIndex)
 {
     return self->slotEmpty[rowIndex];
 }
 
-u8 TestSaveFlags(struct settings_sync_record *self, u8 flags)
+u8 TestSaveFlags(struct save_data *self, u8 flags)
 {
     register u8 v asm("r1");
     u8 result;
@@ -46,7 +46,7 @@ u8 TestSaveFlags(struct settings_sync_record *self, u8 flags)
     return result;
 }
 
-void ClearSaveFlags(struct settings_sync_record *self, u8 flags)
+void ClearSaveFlags(struct save_data *self, u8 flags)
 {
     register u8 loaded asm("r3");
     register u8 v asm("r1");

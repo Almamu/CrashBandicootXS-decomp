@@ -1,10 +1,10 @@
 #include "core.h"
-#include "pause_options_screen.h"
+#include "save_menu.h"
 
 /* Bit-2 flag test repeated throughout this chunk's functions - matches
  * GetSaveMenuBlinkPalette's own trivial body: caller-visible "1" (set) vs "2"
  * (clear). */
-s32 GetSaveMenuBlinkPalette(struct pause_options_screen *self)
+s32 GetSaveMenuBlinkPalette(struct save_menu *self)
 {
     if ((self->flags >> 2) & 1) {
         return 1;
@@ -24,61 +24,61 @@ void EndLinkSaveTransfer(void)
 
 extern void ResetSaveData(void *arg0);
 
-void BeginLinkSaveTransfer(struct pause_options_screen *self)
+void BeginLinkSaveTransfer(struct save_menu *self)
 {
     ResetLinkSession(gLinkSession);
     *((u8 *)gLinkSession + 5) = 1;
     ResetSaveData(self->field_90);
 }
 
-extern void DrawSaveMenuTitle(struct pause_options_screen *self, s32 labelIndex);
-extern void DrawSaveSlots(struct pause_options_screen *self, void *handle, s32 arg2);
-extern void DrawYesNoPrompt(struct pause_options_screen *self, s32 labelIndex);
-extern void DrawSaveMenuCancel(struct pause_options_screen *self, u8 highlight);
-extern void DrawSaveMenuMessageLines(struct pause_options_screen *self, s32 label1, s32 label2);
+extern void DrawSaveMenuTitle(struct save_menu *self, s32 labelIndex);
+extern void DrawSaveSlots(struct save_menu *self, void *handle, s32 arg2);
+extern void DrawYesNoPrompt(struct save_menu *self, s32 labelIndex);
+extern void DrawSaveMenuCancel(struct save_menu *self, u8 highlight);
+extern void DrawSaveMenuMessageLines(struct save_menu *self, s32 label1, s32 label2);
 
-void DrawSaveMenuConfirmDelete(struct pause_options_screen *self)
+void DrawSaveMenuConfirmDelete(struct save_menu *self)
 {
     DrawSaveMenuTitle(self, 0x1d);
     DrawSaveSlots(self, self->field_8c, self->field_24);
     DrawYesNoPrompt(self, 0x26);
 }
 
-void DrawSaveMenuDelete(struct pause_options_screen *self)
+void DrawSaveMenuDelete(struct save_menu *self)
 {
     DrawSaveMenuTitle(self, 0x1d);
     DrawSaveSlots(self, self->field_8c, self->field_10);
     DrawSaveMenuCancel(self, self->field_10 == 4);
 }
 
-void DrawSaveMenuOverwrite(struct pause_options_screen *self)
+void DrawSaveMenuOverwrite(struct save_menu *self)
 {
     DrawSaveMenuTitle(self, 0x1e);
     DrawSaveSlots(self, self->field_8c, self->field_24);
     DrawYesNoPrompt(self, 0x27);
 }
 
-void DrawSaveMenuSave(struct pause_options_screen *self)
+void DrawSaveMenuSave(struct save_menu *self)
 {
     DrawSaveMenuTitle(self, 0x1e);
     DrawSaveSlots(self, self->field_8c, self->field_10);
     DrawSaveMenuCancel(self, self->field_10 == 4);
 }
 
-void DrawSaveMenuMessage(struct pause_options_screen *self)
+void DrawSaveMenuMessage(struct save_menu *self)
 {
     DrawSaveMenuTitle(self, 0x1c);
     DrawSaveMenuMessageLines(self, self->field_14, self->field_18);
 }
 
-void DrawSaveMenuLoadLink(struct pause_options_screen *self)
+void DrawSaveMenuLoadLink(struct save_menu *self)
 {
     DrawSaveMenuTitle(self, 0x1c);
     DrawSaveSlots(self, self->field_90, self->field_10);
     DrawSaveMenuCancel(self, self->field_10 == 4);
 }
 
-void DrawSaveMenuLoad(struct pause_options_screen *self)
+void DrawSaveMenuLoad(struct save_menu *self)
 {
     DrawSaveMenuTitle(self, 0x1b);
     DrawSaveSlots(self, self->field_8c, self->field_10);
@@ -88,11 +88,11 @@ void DrawSaveMenuLoad(struct pause_options_screen *self)
 extern void ResetOamBuffer(void *arg0);
 extern void HideUnusedOamEntries(void *arg0);
 extern void RewindObjVram(void *arg0);
-extern void DrawSaveMenuMain(struct pause_options_screen *self);
+extern void DrawSaveMenuMain(struct save_menu *self);
 extern void *gOamBuffer;
 extern void *gObjVramCursor;
 
-void DrawSaveMenu(struct pause_options_screen *self)
+void DrawSaveMenu(struct save_menu *self)
 {
     ResetOamBuffer(gOamBuffer);
     RewindObjVram(gObjVramCursor);
@@ -139,7 +139,7 @@ extern void EraseSaveSlot(void *arg0, s32 arg1);
 extern s32 StoreSaveData(void *arg0);
 extern void WriteSaveSlot(void *arg0, s32 arg1, void *buf);
 
-void DeleteSaveSlot(struct pause_options_screen *self, s32 arg1)
+void DeleteSaveSlot(struct save_menu *self, s32 arg1)
 {
     u8 buf[0x70];
 

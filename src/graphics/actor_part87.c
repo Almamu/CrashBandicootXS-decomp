@@ -1,7 +1,7 @@
 #include "core.h"
 #include "gba/io_reg.h"
 #include "graphics_package.h"
-#include "icon_manager.h"
+#include "bitmap_font.h"
 #include "vram_pool.h"
 
 /* GitHub issue #63's final remaining raw span, right after the
@@ -11,7 +11,7 @@
  * and its field layout doesn't match): it's a standalone fade/overlay
  * controller that owns three small BG scratch buffers plus a combined
  * BLDCNT/BLDALPHA mirror, driving a full-screen alpha-blend effect. */
-struct fade_overlay {
+struct continue_prompt {
     u8 *bg1Buf;   /* 0x00 - LoadGraphicsPackage "self" scratch for BG1 */
     u8 *bg0Buf;   /* 0x04 - ditto for BG0 */
     u8 *bg2Buf;   /* 0x08 - ditto for BG2 */
@@ -28,9 +28,9 @@ struct fade_overlay {
         } b;
     } blend;
     u8 unused_14[4]; /* 0x14 - never referenced by this file's functions */
-    struct icon_manager *icons; /* 0x18 */
+    struct bitmap_font *icons; /* 0x18 */
     u32 unused_1c;
-    u32 flag_20; /* 0x20 - which of two alternating cue sfx last fired */
+    u32 selection; /* 0x20 - the Yes/No cursor, 0/1 (ContinuePromptLoop) */
 };
 
 extern void *OperatorNew(s32 size);
@@ -42,7 +42,7 @@ extern u8 gStaticData_0817C594[];
 extern u8 gStaticData_0817C5A8[];
 extern struct AudioContext *gAudioContext;
 extern void FadeOutMusic(struct AudioContext *self, u32 value);
-extern struct fade_overlay *InitContinuePromptGraphics(struct fade_overlay *self);
+extern struct continue_prompt *InitContinuePromptGraphics(struct continue_prompt *self);
 
 /* Allocates and initializes the continue prompt's three BG scratch buffers
  * (BG1 priority 3/bgcnt 0x1e, BG0 bgcnt 0x1f/slot 3, BG2 priority
@@ -90,7 +90,7 @@ void *InitContinuePrompt(void *selfArg)
      * `0x40`) that stay live across the `InitContinuePromptGraphics` call below, so the
      * ROM's own build pushes them into r8/sb instead - reproduced here
      * the same way. */
-    register struct fade_overlay *self asm("r5") = selfArg;
+    register struct continue_prompt *self asm("r5") = selfArg;
     register u8 *buf asm("r0");
 
     buf = OperatorNew(0x10);
@@ -242,7 +242,7 @@ void *InitContinuePrompt(void *selfArg)
                         *(vu16 *)REG_ADDR_DISPCNT = self->dispcnt;
                         *(vu32 *)REG_ADDR_BLDCNT = self->blend.word;
                         self->unused_1c = z2;
-                        self->flag_20 = z2;
+                        self->selection = z2;
                     }
                 }
             }

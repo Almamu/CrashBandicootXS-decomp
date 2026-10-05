@@ -1,14 +1,14 @@
 #include "core.h"
-#include "icon_manager.h"
-#include "pause_options_screen.h"
+#include "bitmap_font.h"
+#include "save_menu.h"
 
 extern s32 FontSetPalette(void *mgr, s32 arg1);
 extern s32 GetUiText(s32 arg0);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
-extern struct icon_manager *gLargeFont;
-extern struct icon_manager *gSmallFont;
+extern struct bitmap_font *gLargeFont;
+extern struct bitmap_font *gSmallFont;
 
-static inline void set_icon_mgr_pos(struct icon_manager *m, u32 x, u32 y)
+static inline void set_icon_mgr_pos(struct bitmap_font *m, u32 x, u32 y)
 {
     m->posX = x;
     m->posY = y;
@@ -20,7 +20,7 @@ static inline void set_icon_mgr_pos(struct icon_manager *m, u32 x, u32 y)
  * `this` is computed before the label argument, as in the ROM. */
 #define ICON_TEXT_CALL(mgrExpr, n, label)                                       \
     ({                                                                          \
-        struct icon_manager *_m = (mgrExpr);                                    \
+        struct bitmap_font *_m = (mgrExpr);                                    \
         struct icon_slot *_s = &_m->record->slots[n];                           \
         _call_via_r2((u8 *)_m + _s->offset, (void *)(label), _s->ptr);           \
     })
@@ -41,7 +41,7 @@ static inline void set_icon_mgr_pos(struct icon_manager *m, u32 x, u32 y)
  * Once a NAKED transcription; it matches as plain C under both
  * compilers, the draws written as `record->slots[n]` virtual calls
  * (`ICON_TEXT_CALL`). See docs/matching/issue-4-6-8-naked-retry.md. */
-void DrawEmptySlotLabel(struct pause_options_screen *self, s32 arg1, s32 arg2, u8 arg3)
+void DrawEmptySlotLabel(struct save_menu *self, s32 arg1, s32 arg2, u8 arg3)
 {
     s32 x = arg1 + 0x1d;
     s32 y = arg2 + 0xc;
@@ -64,7 +64,7 @@ void DrawEmptySlotLabel(struct pause_options_screen *self, s32 arg1, s32 arg2, u
  * Once a NAKED transcription; it matches as plain C under both
  * compilers with the same `ICON_TEXT_CALL` virtual-call macro and no
  * pins. See docs/matching/issue-4-6-8-naked-retry.md. */
-void DrawSaveMenuTitle(struct pause_options_screen *self, s32 labelIndex)
+void DrawSaveMenuTitle(struct save_menu *self, s32 labelIndex)
 {
     s32 w;
 

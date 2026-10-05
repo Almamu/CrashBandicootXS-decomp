@@ -1,5 +1,5 @@
 #include "core.h"
-#include "icon_manager.h"
+#include "bitmap_font.h"
 #include "vram_pool.h"
 #include "actor.h"
 
@@ -59,13 +59,13 @@ extern s32 sub_8001214(void *arg0, void *arg1, void *buf, s32 arg3);
 extern s32 GetUiText(s32 arg0);
 extern struct vram_upload_cursor *gObjVramCursor;
 
-extern struct icon_manager *gLargeFont;
-extern struct icon_manager *gSmallFont;
+extern struct bitmap_font *gLargeFont;
+extern struct bitmap_font *gSmallFont;
 
 /* Sets an icon manager's draw position. Both coordinates are inline
  * arguments, so gcc evaluates them (and re-reads the manager global)
  * before either store - the ROM's order. */
-static inline void set_icon_mgr_pos(struct icon_manager *m, u32 x, u32 y)
+static inline void set_icon_mgr_pos(struct bitmap_font *m, u32 x, u32 y)
 {
     m->posX = x;
     m->posY = y;

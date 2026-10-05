@@ -8,9 +8,9 @@
  * most of its own callees take. `gLevelTable` is the confirmed
  * 36-slot, 0x24-byte-stride per-level master table (see
  * `settings_menu19.c`/`oam_count.c`/`game_loop17.c`'s own struct views
- * of it) - here indexed by `self+0`, reading its `+0x1c` "already
- * initialized" guard byte (calls `CheckAllCratesBroken` once if clear), then
- * `+0x14`/`+0x18` (fed straight through to `SetMaskAssistDeaths`/`sub_8023110`)
+ * of it) - here indexed by `self+0`, reading its `+0x1c` `isBoss`
+ * byte (calls `CheckAllCratesBroken` if clear), then
+ * `+0x14`/`+0x18` (`maskAssistDeaths`/`crateAssistDeaths`, fed to `SetMaskAssistDeaths`/`sub_8023110`)
  * and finally `+4`, the **state field the 6-case jump table below
  * dispatches on**.
  *
@@ -18,7 +18,7 @@
  * `state==0` or `state>6` - taking the `default` path below):
  *
  * - **state 1 or 6** (cases 0 and 5 share one code block): resets the
- *   `gPaletteCycles` "fx queue" (`ClearPaletteCycles`, the `hud_fx_queue`
+ *   `gPaletteCycles` "fx queue" (`ClearPaletteCycles`, the `palette_cycler`
  *   struct `hud_icon_slot.c` documents) then fires it **twice** via
  *   `AddPaletteCycle(queue, (u16 *)0x05000000, gThemePaletteCycle1A, 0x10,
  *   9, 0)` and `AddPaletteCycle(queue, (u16 *)0x05000000, gStaticData_
@@ -210,9 +210,9 @@ struct gl_level_entry
     s32 unk_00;
     s32 state;                      /* +0x04 */
     u8 unk_08[0xC];
-    s32 unk_14;
-    s32 unk_18;
-    u8 initialized;                 /* +0x1C */
+    s32 maskAssistDeaths;           /* +0x14 */
+    s32 crateAssistDeaths;          /* +0x18 */
+    u8 isBoss;                      /* +0x1C */
     u8 unk_1D[7];
 };
 
@@ -398,12 +398,12 @@ s32 RunRoom(struct gl_self *self)
     gCamera->player = gPlayer;
     gCamera->unk_14 = ret;
     LoadRoom(gLevelLayers, self->widget);
-    if (!gLevelTable[self->level].initialized)
+    if (!gLevelTable[self->level].isBoss)
         CheckAllCratesBroken(gLevelState);
     if (IsSwitchPressed(gLevelState))
         UpdateCrates();
-    SetMaskAssistDeaths(gLevelState, gLevelTable[self->level].unk_14);
-    sub_8023110(gLevelState, gLevelTable[self->level].unk_18);
+    SetMaskAssistDeaths(gLevelState, gLevelTable[self->level].maskAssistDeaths);
+    sub_8023110(gLevelState, gLevelTable[self->level].crateAssistDeaths);
 
     switch (gLevelTable[self->level].state)
     {

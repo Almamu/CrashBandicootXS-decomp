@@ -1,10 +1,10 @@
-#ifndef __PAUSE_OPTIONS_SCREEN_H__
-#define __PAUSE_OPTIONS_SCREEN_H__
+#ifndef __SAVE_MENU_H__
+#define __SAVE_MENU_H__
 
 /* A small per-row aggregate: five running totals gathered from a
  * temporary 0x70-byte scratch buffer built by ReadSaveSlot (still raw -
  * `arg0` there is some list/category handle, `arg1` a row index). Used
- * as a contiguous 4-element array at `pause_options_screen.rowStats`
+ * as a contiguous 4-element array at `save_menu.rowStats`
  * (see RefreshSaveSlotSummaries in src/graphics/settings_menu2.c). */
 struct settings_row_stats {
     s32 percent;
@@ -23,11 +23,11 @@ COMPILE_TIME_ASSERT(sizeof(struct settings_row_stats) == 0x14);
  * 3 link transfer, 4 message, 5 save, 6 delete, 7 "delete?",
  * 9 "overwrite?". `field_10` is the cursor (slots 0-3, 4 = cancel).
  * `field_8c` is the cartridge save, `field_90` the save received over
- * the link cable (struct settings_sync_record, the save data).
+ * the link cable (struct save_data, the save data).
  * `currentStats`/`rowStats` are the summaries the slot list shows
- * (SummarizeProgress). The struct keeps its historical name; earlier
+ * (SummarizeProgress). Formerly `struct pause_options_screen`; earlier
  * notes read it as a pause/options screen. */
-struct pause_options_screen {
+struct save_menu {
     /* 0x00 - read by CommitSaveMenuFrame (src/graphics/settings_menu4.c), shifted
      * right by 3 and written to REG_BG0HOFS (a u16) - a saved/pending BG0
      * horizontal-scroll value, pre-shifted by the caller. Also a plain
@@ -65,4 +65,4 @@ struct pause_options_screen {
     void *rowObjC[5];                            /* 0xd0-0xe3 */
 };
 
-#endif /* __PAUSE_OPTIONS_SCREEN_H__ */
+#endif /* __SAVE_MENU_H__ */

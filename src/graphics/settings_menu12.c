@@ -1,10 +1,10 @@
 #include "core.h"
 #include "gba/defines.h"
 #include "actor.h"
-#include "pause_screen_results.h"
+#include "pause_menu.h"
 
 /* The composite pause/options screen's "apply display registers" step
- * for its own top-level object - see include/pause_screen_results.h for
+ * for its own top-level object - see include/pause_menu.h for
  * the full reconciled struct (this function only touches field_c8/
  * field_cc/field_d0). Distinct from - and much larger than -
  * `struct sub_8006700_actor` (src/graphics/oam_count.c/settings_menu10.c),
@@ -28,7 +28,7 @@ extern void *gOamBuffer;
  * never performs this particular reuse here (though it does for the
  * `field_c8`/`field_cc` accesses just above, which this reconstruction
  * gets for free from plain field access). */
-void CommitPauseMenuFrame(struct pause_screen_results *self)
+void CommitPauseMenuFrame(struct pause_menu *self)
 {
     WaitForVBlank(self);
     UploadPaletteCache(gPaletteCache);

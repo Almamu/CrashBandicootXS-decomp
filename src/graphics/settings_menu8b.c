@@ -1,13 +1,13 @@
 #include "core.h"
 #include "settings_sync.h"
-#include "pause_options_screen.h"
+#include "save_menu.h"
 #include "box_part.h"
 
 extern void ReadSaveSlot(void *handle, s32 rowIndex, void *buf);
 extern void WriteSaveSlot(void *handle, s32 rowIndex, void *buf);
 extern void EraseSaveSlot(void *handle, s32 rowIndex);
 
-void SetSaveTransferRecord(struct settings_sync_pump *self, struct settings_sync_record *tmpl)
+void SetSaveTransferRecord(struct settings_sync_pump *self, struct save_data *tmpl)
 {
     self->tmpl = tmpl;
     self->cursor = (u8 *)tmpl;
@@ -43,11 +43,11 @@ struct held_pressed_pair {
 };
 extern struct held_pressed_pair gKeys;
 extern void UpdateKeys(void *arg0);
-extern void DrawSaveMenu(struct pause_options_screen *self);
+extern void DrawSaveMenu(struct save_menu *self);
 extern void WaitForVBlank(void);
-extern void CommitSaveMenuFrame(struct pause_options_screen *self);
+extern void CommitSaveMenuFrame(struct save_menu *self);
 extern void *gSaveMenu;
-extern void SaveMenuInput(struct pause_options_screen *self, u32 keys);
+extern void SaveMenuInput(struct save_menu *self, u32 keys);
 
 /* The "connecting..." spinner dialog's blocking modal loop: sets up
  * `gSaveMenu`'s `state`/`field_10`/`flags`/`field_8`/`field_20`,
@@ -58,8 +58,8 @@ extern void SaveMenuInput(struct pause_options_screen *self, u32 keys);
  * "result ready" flag. */
 u8 RunSaveMenu(u32 state, u32 field10)
 {
-    struct pause_options_screen **selfAddr = (struct pause_options_screen **)&gSaveMenu;
-    struct pause_options_screen *self;
+    struct save_menu **selfAddr = (struct save_menu **)&gSaveMenu;
+    struct save_menu *self;
 
     self = *selfAddr;
     self->state = state;
@@ -83,7 +83,7 @@ u8 RunSaveMenu(u32 state, u32 field10)
             break;
         }
     }
-    return ((struct pause_options_screen *)gSaveMenu)->field_20;
+    return ((struct save_menu *)gSaveMenu)->field_20;
 }
 
 extern void *OperatorNew(s32 size);
@@ -92,31 +92,31 @@ extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
 extern u8 CheckSaveChecksum(void *arg0);
 extern struct palette_cache *gPaletteCache;
 extern void FreeUnlockedPaletteSlots(struct palette_cache *self);
-extern void InitSaveMenuIcons(struct pause_options_screen *self);
-extern void LoadSaveMenuBg(struct pause_options_screen *self);
+extern void InitSaveMenuIcons(struct save_menu *self);
+extern void LoadSaveMenuBg(struct save_menu *self);
 extern void PlaySong(void *arg0, s32 arg1);
-extern void LoadSaveMenuData(struct pause_options_screen *self);
+extern void LoadSaveMenuData(struct save_menu *self);
 extern void *gLevelState;
 extern void *PackSaveData(void *arg0);
 extern void SummarizeProgress(void *self, struct settings_row_stats *dest, void *src);
-extern void RefreshSaveSlotSummaries(struct pause_options_screen *self, void *handle);
+extern void RefreshSaveSlotSummaries(struct save_menu *self, void *handle);
 extern void *IwramAlloc(s32 size);
 extern void *InitLinkSession(void *arg0);
 extern void FadeBrightness(u8 flags, s32 frameDelay, u8 sync);
-extern void ResetSaveData(struct settings_sync_record *self);
+extern void ResetSaveData(struct save_data *self);
 
 /* The composite pause/options screen's (and the spinner dialog's, via
  * InitSaveMenu above) `field_8c`/`field_90` constructor: allocates and
- * initialises both settings_sync_record instances (ResetSaveData), does
+ * initialises both save_data instances (ResetSaveData), does
  * the screen's tile/BG/list setup (InitSaveMenuIcons/LoadSaveMenuBg/
  * LoadSaveMenuData, still raw), fills `currentStats` and the first
  * `rowStats` entry, then allocates and stashes the global SIO session
  * object (`gLinkSession`, still uncharacterized - see
  * SendSaveTransferChunk/ReceiveSaveTransferChunk, src/graphics/settings_menu8.c) and kicks off
  * a VBlank IRQ request. */
-struct pause_options_screen *InitSaveMenu(struct pause_options_screen *arg0)
+struct save_menu *InitSaveMenu(struct save_menu *arg0)
 {
-    register struct pause_options_screen *self asm("r5") = arg0;
+    register struct save_menu *self asm("r5") = arg0;
     register void **field8cAddr asm("r9") = &self->field_8c;
     register void **field90Addr asm("r8");
     register s32 size asm("r6") = 0x200;
@@ -158,7 +158,7 @@ extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
  * active, erases each of the five settings-row icon widgets
  * (rowObjA/B/C, drawing a "blank" glyph via _call_via_r2's arg1=3), and
  * - only when `flags` bit 0 is set - destroys `self` itself. */
-void DestroySaveMenu(struct pause_options_screen *self, u32 flags)
+void DestroySaveMenu(struct save_menu *self, u32 flags)
 {
     register void **c asm("r6");
     register void **b asm("r5");
@@ -184,7 +184,7 @@ void DestroySaveMenu(struct pause_options_screen *self, u32 flags)
 
         /* rowObjA/B/C[i]'s icon descriptor at +0x18 holds a {s16 offset,
          * u8 pad[2], void *fn} record at +0x50 - the same (offset, fn)
-         * shape icon_manager's own record slots use elsewhere in this
+         * shape bitmap_font's own record slots use elsewhere in this
          * screen, just inside a different, still-uncharacterized
          * container type. */
         obj = *a;
@@ -214,14 +214,14 @@ void DestroySaveMenu(struct pause_options_screen *self, u32 flags)
 }
 
 extern void _call_via_r1(void *arg0, void *fn);
-extern void SaveMenuMainInput(struct pause_options_screen *self, u32 keys);
-extern void SaveMenuLoadInput(struct pause_options_screen *self, u32 keys, void *handle);
-extern void SaveMenuLinkInput(struct pause_options_screen *self);
-extern void SaveMenuMessageInput(struct pause_options_screen *self, u32 keys);
-extern void SaveMenuSaveInput(struct pause_options_screen *self, u32 keys);
-extern void SaveMenuDeleteInput(struct pause_options_screen *self, u32 keys);
-extern void SaveMenuOverwriteInput(struct pause_options_screen *self, u32 keys);
-extern void SaveMenuConfirmDeleteInput(struct pause_options_screen *self, u32 keys);
+extern void SaveMenuMainInput(struct save_menu *self, u32 keys);
+extern void SaveMenuLoadInput(struct save_menu *self, u32 keys, void *handle);
+extern void SaveMenuLinkInput(struct save_menu *self);
+extern void SaveMenuMessageInput(struct save_menu *self, u32 keys);
+extern void SaveMenuSaveInput(struct save_menu *self, u32 keys);
+extern void SaveMenuDeleteInput(struct save_menu *self, u32 keys);
+extern void SaveMenuOverwriteInput(struct save_menu *self, u32 keys);
+extern void SaveMenuConfirmDeleteInput(struct save_menu *self, u32 keys);
 
 /* Per-frame input dispatch for the composite screen (or, via
  * RunSaveMenu above, the spinner dialog sharing the same struct shape):
@@ -230,7 +230,7 @@ extern void SaveMenuConfirmDeleteInput(struct pause_options_screen *self, u32 ke
  * dispatches `keys` to whichever per-`state` handler is active, and
  * finally advances `flags` (as a wrapping 0-0xff per-frame counter) and
  * `field_0` (as a plain per-frame tick). */
-void SaveMenuInput(struct pause_options_screen *self, u32 keys)
+void SaveMenuInput(struct save_menu *self, u32 keys)
 {
     s32 i;
 
@@ -292,13 +292,13 @@ void SaveMenuInput(struct pause_options_screen *self, u32 keys)
 }
 
 extern s32 GetUiText(s32 arg0);
-extern void BeginLinkSaveTransfer(struct pause_options_screen *self);
+extern void BeginLinkSaveTransfer(struct save_menu *self);
 
 /* State 0's input handler: cancel/confirm-combo (bits 1/3) requests an
  * exit; confirm (bit 0) advances through this state's own little
  * sub-menu (`field_10` 0-4, mirroring the DrawSaveMenu states each
  * selects); L/R (bits 6/7) move the `field_10` cursor with wraparound. */
-void SaveMenuMainInput(struct pause_options_screen *self, u32 flags)
+void SaveMenuMainInput(struct save_menu *self, u32 flags)
 {
     if (flags & 0xa) {
         PlaySfx(gAudioContext, 0x47, 0x100);
@@ -354,7 +354,7 @@ void SaveMenuMainInput(struct pause_options_screen *self, u32 flags)
 /* L/R-only row-cursor mover shared by several of this screen's other
  * states (called directly by several handlers below when their own
  * confirm/cancel bits are clear). */
-void SaveMenuMoveCursor(struct pause_options_screen *self, u32 flags)
+void SaveMenuMoveCursor(struct save_menu *self, u32 flags)
 {
     if (flags & 0x40) {
         PlaySfx(gAudioContext, 0x46, 0x100);
@@ -413,7 +413,7 @@ extern void SetMusicVolume(void *arg0, u16 arg1);
  * already selected (IsSaveSlotEmpty), toggles it on and pulls its stats
  * into the current-selection scratch fields; cancel (bit 1) resets to
  * state 0; otherwise falls through to the shared L/R cursor mover. */
-void SaveMenuLoadInput(struct pause_options_screen *self, u32 flags, void *handle)
+void SaveMenuLoadInput(struct save_menu *self, u32 flags, void *handle)
 {
     u8 buf[0x70];
     extern u8 IsSaveSlotEmpty(void *handle, s32 rowIndex);
@@ -453,7 +453,7 @@ void SaveMenuLoadInput(struct pause_options_screen *self, u32 flags, void *handl
     SaveMenuMoveCursor(self, flags);
 }
 
-extern s32 LinkExchangeSaveData(struct pause_options_screen *self);
+extern s32 LinkExchangeSaveData(struct save_menu *self);
 /* Matches EndLinkSaveTransfer's real (void)-taking, unused-argument prototype
  * from src/graphics/settings_menu3.c - this call site passes `self`
  * anyway (the ROM's caller sets it up in r0 even though the callee
@@ -470,7 +470,7 @@ extern s32 gCrash3LinkTextPtr;
  * (GetSaveGameId's version nibble), accept it (state 2); if they don't,
  * inspect the remote's nibble to merge either flag 2 or flag 4 into our
  * own record and show a matching "conflict" message. */
-void SaveMenuLinkInput(struct pause_options_screen *self)
+void SaveMenuLinkInput(struct save_menu *self)
 {
     extern u32 GetSaveGameId(void *arg0);
     extern s32 StoreSaveData(void *arg0);
@@ -533,7 +533,7 @@ extern s32 StoreSaveData(void *arg0);
  * `field_8c`'s pending-edit slot, and either finalises the edit
  * (EraseSaveSlot, when it wasn't already selected) or just refreshes the
  * row's aggregate stats. */
-void SaveGameToSlot(struct pause_options_screen *self, s32 rowIndex)
+void SaveGameToSlot(struct save_menu *self, s32 rowIndex)
 {
     u8 buf[0xe0];
     void **handleAddr = &self->field_8c;

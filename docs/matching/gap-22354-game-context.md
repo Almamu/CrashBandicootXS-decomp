@@ -29,7 +29,7 @@ symbol reference in `asm/`/`src/`. That fits: the game never returns from
 `MainLoop`.
 
 The icon managers' destructor entry is the method record at +0x08 of
-their `record`. `struct icon_record` (`include/icon_manager.h`) now names
+their `record`. `struct icon_record` (`include/bitmap_font.h`) now names
 it `destroy`, taken out of the leading `unused_00` padding. The call goes
 through `_call_via_r2`, linked with the usual `.set`
 alias.

@@ -1,5 +1,5 @@
 #include "core.h"
-#include "icon_manager.h"
+#include "bitmap_font.h"
 
 /* GitHub issue #46: the HUD icon/text widget's glyph drawer and its two
  * constructors. Built with old_agbcc: under agbcc, FontDrawGlyph derives
@@ -19,7 +19,7 @@ extern u8 gLargeFontTiles[];
 extern u8 gLargeFontChars[];
 extern u8 gLargeFontGlyphs[];
 
-/* `icon_manager.oam_scratch` viewed as the OAM-shaped draw request
+/* `bitmap_font.oam_scratch` viewed as the OAM-shaped draw request
  * AddOamEntry consumes: attr0's Y byte and 2-bit shape, attr1's 9-bit X
  * and 2-bit size, attr2's 10-bit tile number. */
 struct glyph_oam
@@ -44,7 +44,7 @@ static inline void SetGlyphX(struct glyph_oam *oam, s32 x)
 /* Builds one glyph's draw request in `self->oam_scratch` from
  * `glyphRecords[charLookup[charByte]]` and the cursor, draws it with
  * AddOamEntry, then advances `posX` by the glyph's width. */
-void FontDrawGlyph(struct icon_manager *self, u8 charByte)
+void FontDrawGlyph(struct bitmap_font *self, u8 charByte)
 {
     struct glyph_oam *oam = (struct glyph_oam *)self->oam_scratch;
     u8 glyph = self->charLookup[charByte];
@@ -65,7 +65,7 @@ void FontDrawGlyph(struct icon_manager *self, u8 charByte)
  * margin and tileCount, zeroes the OAM scratch buffer, and points
  * `record` at gFontVtable (which the constructors then
  * overwrite). */
-static inline void InitIconManager(struct icon_manager *self)
+static inline void InitIconManager(struct bitmap_font *self)
 {
     u32 zero;
 
@@ -79,8 +79,8 @@ static inline void InitIconManager(struct icon_manager *self)
 
 /* Constructs the "A" widget: 9-pixel lines, 4-pixel spaces, glyph
  * stride 2, and a charLookup built from the gSmallFontChars font
- * order table (see include/icon_manager.h). */
-struct icon_manager *InitSmallFont(struct icon_manager *self)
+ * order table (see include/bitmap_font.h). */
+struct bitmap_font *InitSmallFont(struct bitmap_font *self)
 {
     u32 i;
     u32 j;
@@ -110,7 +110,7 @@ struct icon_manager *InitSmallFont(struct icon_manager *self)
 /* Constructs the "B" widget: 16-pixel lines, 6-pixel spaces, glyph
  * stride 4, OBJ size 1, and a charLookup built from the
  * gLargeFontChars font order table. */
-struct icon_manager *InitLargeFont(struct icon_manager *self)
+struct bitmap_font *InitLargeFont(struct bitmap_font *self)
 {
     u32 i;
     u32 j;
@@ -164,10 +164,10 @@ struct icon_manager *InitLargeFont(struct icon_manager *self)
  * as one asm block - self-copy first, then the in-place `lsl`/`lsr`
  * widen matching the ROM's own register reuse (`lsl r1,r1,#0x18` in
  * place, not into a fresh register) - fixed it. */
-void FontPutChar(struct icon_manager *self, u32 charByte)
+void FontPutChar(struct bitmap_font *self, u32 charByte)
 {
     register u32 raw asm("r1") = charByte;
-    register struct icon_manager *s asm("r3");
+    register struct bitmap_font *s asm("r3");
     register u32 c asm("r4");
     register u32 *destAddr asm("r2");
     register u32 offset asm("r0");

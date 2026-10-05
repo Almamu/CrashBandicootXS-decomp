@@ -1,7 +1,7 @@
 #include "core.h"
 #include "gba/io_reg.h"
 #include "gba/dma_macros.h"
-#include "icon_manager.h"
+#include "bitmap_font.h"
 
 /* 0x08022354-0x080225A0, formerly asm/code_3_2_17_22354.s: the two
  * functions between issue #33's chunk (graphics_loading_21d80.c, which
@@ -27,8 +27,8 @@ extern void *gOamBuffer;
 extern void *gObjVramCursor;
 extern void *gInput;
 extern void *gAudioContext;
-extern struct icon_manager *gLargeFont;
-extern struct icon_manager *gSmallFont;
+extern struct bitmap_font *gLargeFont;
+extern struct bitmap_font *gSmallFont;
 extern void *gSpriteRenderer;
 extern void *gSpriteBankSet;
 extern void *gPaletteCache;
@@ -65,9 +65,9 @@ typedef void (*destroy_fn)(void *self, s32 flags);
 
 /* Destroys an icon manager through its method table (a gcc 2.x virtual
  * `delete`). */
-#define DESTROY_ICON_MANAGER(m)                                                \
+#define DESTROY_FONT(m)                                                \
     {                                                                          \
-        struct icon_manager *_m = (m);                                         \
+        struct bitmap_font *_m = (m);                                         \
         struct icon_record *_r = _m->record;                                   \
         ((destroy_fn)_r->destroy.ptr)((u8 *)_m + _r->destroy.offset, 3);       \
     }
@@ -94,9 +94,9 @@ void DestroyLevelState(void *self, s32 flags)
     if (gAudioContext != NULL)
         DestroyAudioContext(gAudioContext, 3);
     if (gLargeFont != NULL)
-        DESTROY_ICON_MANAGER(gLargeFont);
+        DESTROY_FONT(gLargeFont);
     if (gSmallFont != NULL)
-        DESTROY_ICON_MANAGER(gSmallFont);
+        DESTROY_FONT(gSmallFont);
     if (gSpriteRenderer != NULL)
         DestroySpriteRenderer(gSpriteRenderer, 3);
     if (gSpriteBankSet != NULL)
@@ -133,7 +133,7 @@ struct text_pager
     s32 count;                      // 0x04
     u8 unk_08[8];
     u32 *pages;                     // 0x10
-    struct icon_manager *font;      // 0x14
+    struct bitmap_font *font;      // 0x14
     struct text_rect box;           // 0x18
 };
 
@@ -143,7 +143,7 @@ extern void ShowObj(void);
 extern void CommitDispcnt(void);
 extern void FreeUnlockedPaletteSlots(void *cache);
 extern void UploadPaletteCache(void *cache);
-extern void FontResetPalette(struct icon_manager *self);
+extern void FontResetPalette(struct bitmap_font *self);
 extern void InitCutscenePlayer(struct text_pager *self);
 extern void SetSlideshowDispcnt(u32 value);
 extern void RunCutscenePlayer(struct text_pager *self);
@@ -199,7 +199,7 @@ void PlayCutscene(void *self, s32 idx)
     REG_BG2Y = zero;
     FreeUnlockedPaletteSlots(gPaletteCache);
     {
-        struct icon_manager *m = gSmallFont;
+        struct bitmap_font *m = gSmallFont;
         u32 tileBase = 0x200;
         struct icon_slot *slot;
 

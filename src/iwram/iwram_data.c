@@ -154,7 +154,7 @@ const void *gTitleObjPackages[4] = {
     gTitleBandicootObj,
 };
 
-void *gLanguageSelect = NULL; /* struct counter_widget * */
+void *gLanguageSelect = NULL; /* struct language_select * */
 
 /* GAX2's fatal-error screen font (gax_fatal_error.c), Huffman-compressed
  * for the BIOS HuffUnComp: 8-bit symbols, 0x4A0 bytes (37 4bpp tiles)

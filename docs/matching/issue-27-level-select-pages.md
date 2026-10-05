@@ -52,7 +52,7 @@ This is the rest of issue #26's level-select screen (`struct level_menu`,
   0x300) and the BG1HOFS/VOFS pair (`sub_801D7D0` returns both as one
   word, `sub_801D7D4` resets them). `DestroyLevelSelectPageBg` is its destructor
   body.
-- **`struct icon_bg`** (BG2, `InitZoomBg`, 0x8C bytes): the BG2CNT
+- **`struct zoom_bg`** (formerly `icon_bg`; BG2, `InitZoomBg`, 0x8C bytes): the BG2CNT
   shadow (priority 1, 256 colours), a cleared screen block with an 8x4
   block of tile entries, and four corner sprites (bank `+0x258`,
   positions `gStaticData_0816C5F0` around (0x78, 0x35), mirrored X/Y
@@ -106,8 +106,8 @@ types the save block (`struct menu_save`) and the two background layers.
     have. A parameter keeps the full clear-then-or for a 1-bit field
     (a literal `= 1` compiles to a bare `orr`). `SetMode`'s `s32`
     parameter makes the loop hoist the `1` into `sb`.
-  - The stores run in the order `unk_28 = unk_2C = unk_30 = 0` and
-    `unk_3C = unk_38 = 0x2000`, which gives the ROM's store order.
+  - The stores run in the order `dx = dy = phase = 0` and
+    `texY = texX = 0x2000`, which gives the ROM's store order.
   - The `bgcnt` union and `struct sprite_f28` need
     `__attribute__((packed))`; otherwise ARM's 4-byte struct rounding
     moves every later field.

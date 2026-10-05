@@ -78,8 +78,8 @@ setters.
   (`subs r0, #0x43`).
 - **Load-all-then-store-all copies.** The copies of record fields into
   hdr+0x20..0x4c load every value before storing any. That comes from a
-  multi-parameter inline (`SetPopupRect`, `SetPopupSpan`,
-  `SetPopupBox`). Separate statements interleave the loads and stores.
+  multi-parameter inline (`SetEnemyHitBox`, `SetPopupSpan`,
+  `SetEnemyWave`). Separate statements interleave the loads and stores.
 - **A second `rec2` local.** When a function looks the record up twice,
   the second lookup has to go into its own local, computed before the
   next call. Reusing `rec` changes the whole allocation.

@@ -183,27 +183,30 @@ struct page_bg
 
 COMPILE_TIME_ASSERT(sizeof(struct page_bg) == 0x28);
 
-/* A sprite slot of the icon layer, handed to RandomizeZoomBgTwinkle. */
-struct icon_slot
+/* One twinkle sprite at the picture's corners, handed to
+ * RandomizeZoomBgTwinkle (`struct twinkle` in actor_part_1da38.c: the
+ * first 8 bytes are its timer and blink window). */
+struct twinkle
 {
     u8 unk_00[8];
-    struct sprite *sprite;      // 0x08
+    struct sprite *part;        // 0x08
 };
 
-/* BG2, the icon layer (InitZoomBg, BG2CNT through GetZoomBgControl). */
-struct icon_bg
+/* BG2, the zooming level picture (InitZoomBg, BG2CNT through
+ * GetZoomBgControl; `struct zoom_bg` in actor_part_1da38.c). */
+struct zoom_bg
 {
     u8 unk_00[0x0C];
-    s32 unk_0C;                 // 0x0C
-    s32 unk_10;                 // 0x10
-    s32 unk_14;                 // 0x14
+    s32 state;                  // 0x0C - see UpdateZoomBg
+    s32 image;                  // 0x10 - gLevelSelectPictures index, 11 = none
+    s32 scale;                  // 0x14 - zoom, 0x100 = 1:1, 8 = smallest
     s32 charBlock;              // 0x18
     s32 screenBlock;            // 0x1C
     s32 x;                      // 0x20
     s32 y;                      // 0x24
-    s32 unk_28;                 // 0x28
-    s32 unk_2C;                 // 0x2C
-    s32 unk_30;                 // 0x30
+    s32 dx;                     // 0x28 - wobble offset
+    s32 dy;                     // 0x2C
+    s32 phase;                  // 0x30 - wobble phase, 0-0xFF
     union
     {
         u16 raw;
@@ -219,17 +222,17 @@ struct icon_bg
         } __attribute__((packed)) bits;
     } __attribute__((packed)) bgcnt;
     u8 unk_36[2];
-    s32 unk_38;                 // 0x38
-    s32 unk_3C;                 // 0x3C
+    s32 texX;                   // 0x38 - BgAffineSet source
+    s32 texY;                   // 0x3C
     u16 x16;                    // 0x40
     u16 y16;                    // 0x42
     u8 unk_44[4];
-    u16 unk_48;                 // 0x48
+    u16 alpha;                  // 0x48 - rotation
     u8 unk_4A[0x12];
-    struct icon_slot slots[4];  // 0x5C
+    struct twinkle twinkles[4]; // 0x5C
 };
 
-COMPILE_TIME_ASSERT(sizeof(struct icon_bg) == 0x8C);
+COMPILE_TIME_ASSERT(sizeof(struct zoom_bg) == 0x8C);
 
 /* The level-select screen object (0xAC bytes, InitLevelSelect). */
 struct level_menu
@@ -243,7 +246,7 @@ struct level_menu
     s32 nameText;               // 0x14 - the level name's text
     struct xy_pair *positions;  // 0x18 - cursor position per index
     struct page_bg *bg1;        // 0x1C - CreateLevelSelectPageBg, BG1
-    struct icon_bg *bg2;        // 0x20 - InitZoomBg, BG2 (icon layer)
+    struct zoom_bg *bg2;        // 0x20 - InitZoomBg, BG2 (the level picture)
     struct item *items[6];      // 0x24
     void *panel;                // 0x3C - CreateLevelSelectCursor, the cursor panel
     struct sprite *sprites[10]; // 0x40
@@ -251,12 +254,12 @@ struct level_menu
     char recordText[9];         // 0x71 - next threshold to beat
     u8 unk_7A[2];
     u32 scroll;                 // 0x7C - BG0 auto-scroll counter
-    s32 unk_80;                 // 0x80
-    s32 unk_84;                 // 0x84
-    s32 unk_88;                 // 0x88
-    s32 unk_8C;                 // 0x8C
-    s32 unk_90;                 // 0x90
-    s32 unk_94;                 // 0x94
+    s32 panelSlideX;            // 0x80 - x offset of the record panel
+    s32 clearedIconY;           // 0x84 - sprite 2's y offset (0 or 0x1C), see LoadLevelSelectRecord
+    s32 flag1IconY;             // 0x88 - sprite 3's
+    s32 gemIconY;               // 0x8C - sprite 4's (the `rank` gem icon)
+    s32 trialIconY;             // 0x90 - sprite 5's (time-trial icons)
+    s32 trialIcon2Y;            // 0x94 - sprite 6's
     s32 rank;                   // 0x98
     struct menu_save *save;     // 0x9C - PackSaveData's save block
     union blend blend;          // 0xA0 - REG_BLDCNT + REG_BLDALPHA

@@ -1,8 +1,8 @@
 #include "core.h"
 #include "audio.h"
 #include "actor.h"
-#include "icon_manager.h"
-#include "pause_screen_results.h"
+#include "bitmap_font.h"
+#include "pause_menu.h"
 
 extern s32 GetUiText(s32 arg0);
 extern s32 GetCurrentLevel(void *arg0);
@@ -14,11 +14,11 @@ extern void FormatVolumePercent(s32 arg0, s32 arg1, u8 *out);
 extern s32 GetMusicVolume(void *arg0);
 extern s32 GetSfxVolume(void *arg0);
 extern struct AudioContext *gAudioContext;
-extern void InitPauseCrystalsPage(struct pause_screen_results *self);
-extern void InitPausePowersPage(struct pause_screen_results *self);
-extern void InitPauseGemsPage(struct pause_screen_results *self);
-extern void InitPauseRelicsPage(struct pause_screen_results *self);
-extern void InitPauseTimeTrialPage(struct pause_screen_results *self);
+extern void InitPauseCrystalsPage(struct pause_menu *self);
+extern void InitPausePowersPage(struct pause_menu *self);
+extern void InitPauseGemsPage(struct pause_menu *self);
+extern void InitPauseRelicsPage(struct pause_menu *self);
+extern void InitPauseTimeTrialPage(struct pause_menu *self);
 
 /* The composite pause/options screen's "results" sub-region
  * constructor: resolves the current level's name/index label
@@ -30,7 +30,7 @@ extern void InitPauseTimeTrialPage(struct pause_screen_results *self);
  * `musicVolumeText`/`soundVolumeText`), then builds the five icon-widget sub-groups in
  * order (`InitPauseCrystalsPage`/`AE8`/`B80`/`C58`/`D44`, all already matched or
  * parked - src/graphics/settings_menu6.c). */
-void InitPauseMenuInfo(struct pause_screen_results *self)
+void InitPauseMenuInfo(struct pause_menu *self)
 {
     s32 levelIdx = GetCurrentLevel(gLevelState);
     u32 labelId = *(u32 *)(gLevelTable + levelIdx * 0x24);

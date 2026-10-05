@@ -20,8 +20,8 @@ behavior. This pass worked those three:
 
 - **`InitTitleScreen`**: the per-level setup entry point (`UpdateGameFrame`,
   `asm/code_3_2_17_225a0.s`, calls it with a freshly-allocated 0x220-byte
-  scratch object). Stashes `gSmallFont` (the `struct icon_manager *`
-  already established by GitHub issue #46's chunk, `include/icon_manager.h`)
+  scratch object). Stashes `gSmallFont` (the `struct bitmap_font *`
+  already established by GitHub issue #46's chunk, `include/bitmap_font.h`)
   into the scratch object's `+0xc` field; resets the OAM shadow buffer
   (`gOamBuffer`, `struct oam_shadow_buffer *`) via
   `ResetOamBuffer`/`HideUnusedOamEntries`/`WaitForVBlank`/`CommitOamBuffer`; clears

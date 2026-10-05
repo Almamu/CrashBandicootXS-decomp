@@ -12,7 +12,7 @@ as its own `overlay_ui` category since `docs/rom_map.md` and the
 - `src/graphics/settings_menu8.c`/`settings_menu8a2.c`/`settings_menu8a3.c`/
   `settings_menu8b.c`/`settings_menu8c.c` (`settings_menu8a3.c` new in the
   second pass - issue #5, 0x08002C84-0x08003B40): the settings-sync
-  record's init/flag/checksum accessors (`struct settings_sync_record`,
+  record's init/flag/checksum accessors (`struct save_data`,
   `include/settings_sync.h`), the SIO send/receive pump's handle
   accessors and per-frame poll step, the spinner dialog's blocking
   modal loop and shared field_8c/field_90 constructor/destructor
@@ -65,7 +65,7 @@ as its own `overlay_ui` category since `docs/rom_map.md` and the
   0x08002B44-0x08002C84): checksum compare/store, the `versionNibble`
   accessor, the EEPROM-save-with-retry orchestrator, and three per-row
   default-refresh/force-set/mark-selected helpers extending
-  `struct settings_sync_record`: `CheckSaveChecksum`, `UpdateSaveChecksum`,
+  `struct save_data`: `CheckSaveChecksum`, `UpdateSaveChecksum`,
   `GetSaveGameId`, `StoreSaveData`, `ReadSaveSlot`, `WriteSaveSlot`,
   `EraseSaveSlot`. See `docs/matching/issue-4-sio-settings-sync.md`. The
   file's `ValidateSaveData` (checksum validate + DMA-repair) is real C too

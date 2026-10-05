@@ -1,6 +1,6 @@
 #include "core.h"
 #include "actor.h"
-#include "pause_screen_results.h"
+#include "pause_menu.h"
 
 extern s32 FormatDecimal(s32 value, void *dest);
 extern void *gAudioContext;
@@ -39,7 +39,7 @@ static inline void format_pct(u8 *buf, s32 value)
  * through the matching AudioContext setter (`SetMusicVolume`/`SetSfxVolume`
  * - see src/audio/audio_context.c). Only the type-5/`soundVolume` branch
  * also plays the standard SFX cue. */
-void PauseMenuVolumeDown(struct pause_screen_results *self)
+void PauseMenuVolumeDown(struct pause_menu *self)
 {
     s32 count;
 
@@ -68,7 +68,7 @@ void PauseMenuVolumeDown(struct pause_screen_results *self)
 
 /* Counterpart to PauseMenuVolumeDown above: increments (capped at 0x14)
  * instead of decrementing. */
-void PauseMenuVolumeUp(struct pause_screen_results *self)
+void PauseMenuVolumeUp(struct pause_menu *self)
 {
     s32 count;
 

@@ -1,5 +1,5 @@
 #include "core.h"
-#include "icon_manager.h"
+#include "bitmap_font.h"
 
 /* GitHub issue #26: 0x0801B85C-0x0801CEE0, the whole of the former
  * asm/code_3_2_17_188d0_1b85c.s. Three objects, all gcc 2.x C++ classes
@@ -152,7 +152,7 @@ struct hit_box
 struct level_info
 {
     s32 nameText;           // 0x00 - text id (GetUiText)
-    s32 unk_04;             // 0x04 - passed to SetZoomBgPicture
+    s32 theme;              // 0x04 - also the SetZoomBgPicture image
     u32 time0;              // 0x08 - time-trial thresholds, centiseconds,
     u32 time1;              // 0x0C   loosest first
     u32 time2;              // 0x10
@@ -275,7 +275,7 @@ struct level_menu
     s32 nameText;               // 0x14 - the level name's text
     struct xy_pair *positions;  // 0x18 - cursor position per index
     void *bg1;                  // 0x1C - CreateLevelSelectPageBg, BG1
-    void *bg2;                  // 0x20 - InitZoomBg, BG2 (icon layer)
+    void *bg2;                  // 0x20 - InitZoomBg, BG2 (the level picture)
     struct item *items[6];      // 0x24
     void *panel;                // 0x3C - CreateLevelSelectCursor, the cursor panel
     struct sprite *sprites[10]; // 0x40
@@ -283,12 +283,12 @@ struct level_menu
     char recordText[9];         // 0x71 - next threshold to beat
     u8 unk_7A[2];
     u32 scroll;                 // 0x7C - BG0 auto-scroll counter
-    s32 unk_80;                 // 0x80 - horizontal slide of the record panel
-    s32 unk_84;                 // 0x84 - per-sprite y offsets (0 or 0x1C)
-    s32 unk_88;                 // 0x88
-    s32 unk_8C;                 // 0x8C
-    s32 unk_90;                 // 0x90
-    s32 unk_94;                 // 0x94
+    s32 panelSlideX;            // 0x80 - x offset of the record panel
+    s32 clearedIconY;           // 0x84 - sprite 2's y offset (0 or 0x1C), see LoadLevelSelectRecord
+    s32 flag1IconY;             // 0x88 - sprite 3's
+    s32 gemIconY;               // 0x8C - sprite 4's (the `rank` gem icon)
+    s32 trialIconY;             // 0x90 - sprite 5's (time-trial icons)
+    s32 trialIcon2Y;            // 0x94 - sprite 6's
     s32 rank;                   // 0x98 - LoadLevelSelectRecord's classification, 5 = none
     u8 *save;                   // 0x9C - PackSaveData's save block
     union blend blend;          // 0xA0 - REG_BLDCNT + REG_BLDALPHA
@@ -331,8 +331,8 @@ extern void *gUnknown_030012F0;
 extern struct tile_cache *gPaletteCache;
 extern void *gAudioContext;
 extern void *gLevelState;
-extern struct icon_manager *gSmallFont;
-extern struct icon_manager *gLargeFont;
+extern struct bitmap_font *gSmallFont;
+extern struct bitmap_font *gLargeFont;
 extern struct vram_cursor *gObjVramCursor;
 extern void *gOamBuffer;
 extern void *gInput;
@@ -407,8 +407,8 @@ extern void LoadGraphicsPackage(void *dst, void *pkg);
 extern void PlaySong(void *arg0, s32 arg1);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern s32 GetUiText(s32 id);
-extern void FontSetPalette(struct icon_manager *m, u8 v);
-extern void FontResetPalette(struct icon_manager *m);
+extern void FontSetPalette(struct bitmap_font *m, u8 v);
+extern void FontResetPalette(struct bitmap_font *m);
 extern void FormatCentiseconds(s32 value, char *buf);
 
 /* Save data. */
@@ -500,7 +500,7 @@ static inline struct anim_table *AnimTable(s32 offset)
     return (struct anim_table *)((u8 *)**gSpriteBankSet + offset);
 }
 
-static inline void SetIconPos(struct icon_manager *m, u32 x, u32 y)
+static inline void SetIconPos(struct bitmap_font *m, u32 x, u32 y)
 {
     m->posX = x;
     m->posY = y;
@@ -762,7 +762,7 @@ struct sprite *sub_801BAD0(struct sprite *self)
  * its `result` byte. The icon-manager steps are inline helpers: the ROM
  * recomputes every field address after each call instead of keeping the
  * offsets in registers, which is what separate inlined expansions give. */
-static inline void IconSetup(struct icon_manager *m, u32 v)
+static inline void IconSetup(struct bitmap_font *m, u32 v)
 {
     struct icon_slot *slot;
 
@@ -771,7 +771,7 @@ static inline void IconSetup(struct icon_manager *m, u32 v)
     _call_via_r1((u8 *)m + slot->offset, slot->ptr);
 }
 
-static inline void IconReserve(struct icon_manager **m)
+static inline void IconReserve(struct bitmap_font **m)
 {
     struct vram_cursor *c = gObjVramCursor;
 
@@ -998,7 +998,7 @@ void UpdateLevelSelect(struct level_menu *self)
         struct icon_slot *slot = &gLargeFont->record->slots[0];
         u32 x = (u32)(0xF0 - _call_via_r2((u8 *)gLargeFont + slot->offset, self->nameText, slot->ptr)) >> 1;
 
-        SetIconPos(gLargeFont, x, -self->unk_80 + 2);
+        SetIconPos(gLargeFont, x, -self->panelSlideX + 2);
         slot = &gLargeFont->record->slots[2];
         _call_via_r2((u8 *)gLargeFont + slot->offset, self->nameText, slot->ptr);
         if (self->index <= 4)
@@ -1133,12 +1133,12 @@ void UpdateLevelSelectPageArrows(struct level_menu *self)
  * the level is cleared, its time readout (DrawLevelSelectTime). */
 void DrawLevelSelectRecord(struct level_menu *self)
 {
-    DrawSpriteWithOffset(self->sprites[0], -self->unk_80, 0);
-    DrawSpriteWithOffset(self->sprites[1], -self->unk_80, 0);
-    DrawSpriteWithOffset(self->sprites[2], -self->unk_80, self->unk_84);
-    DrawSpriteWithOffset(self->sprites[3], -self->unk_80, self->unk_88);
+    DrawSpriteWithOffset(self->sprites[0], -self->panelSlideX, 0);
+    DrawSpriteWithOffset(self->sprites[1], -self->panelSlideX, 0);
+    DrawSpriteWithOffset(self->sprites[2], -self->panelSlideX, self->clearedIconY);
+    DrawSpriteWithOffset(self->sprites[3], -self->panelSlideX, self->flag1IconY);
     if (self->rank != 5)
-        DrawSpriteWithOffset(self->sprites[4], -self->unk_80, self->unk_8C);
+        DrawSpriteWithOffset(self->sprites[4], -self->panelSlideX, self->gemIconY);
     {
         u8 **ps = &self->save;
         s32 off = self->levelId * 4 + 4;
@@ -1159,14 +1159,14 @@ void DrawLevelSelectTime(struct level_menu *self, u32 time)
 {
     struct level_info *info;
 
-    DrawSpriteWithOffset(self->sprites[5], -self->unk_80, self->unk_90);
-    DrawSpriteWithOffset(self->sprites[6], -self->unk_80, self->unk_94);
+    DrawSpriteWithOffset(self->sprites[5], -self->panelSlideX, self->trialIconY);
+    DrawSpriteWithOffset(self->sprites[6], -self->panelSlideX, self->trialIcon2Y);
     info = &gLevelTable[self->levelId];
     if (time != 0 && time <= info->time2)
     {
         struct icon_slot *slot;
 
-        SetIconPos(gLargeFont, self->unk_80 + gStaticData_0816C4C0.x + 10, gStaticData_0816C4C0.y - 8);
+        SetIconPos(gLargeFont, self->panelSlideX + gStaticData_0816C4C0.x + 10, gStaticData_0816C4C0.y - 8);
         slot = &gLargeFont->record->slots[2];
         _call_via_r2((u8 *)gLargeFont + slot->offset, (s32)self->timeText, slot->ptr);
     }
@@ -1174,13 +1174,13 @@ void DrawLevelSelectTime(struct level_menu *self, u32 time)
     {
         struct icon_slot *slot;
 
-        DrawSpriteWithOffset(self->sprites[7], self->unk_80, 0);
+        DrawSpriteWithOffset(self->sprites[7], self->panelSlideX, 0);
         FontSetPalette(gLargeFont, self->sprites[7]->palette);
-        SetIconPos(gLargeFont, self->unk_80 + gStaticData_0816C4C0.x + 10, gStaticData_0816C4C0.y - 8);
+        SetIconPos(gLargeFont, self->panelSlideX + gStaticData_0816C4C0.x + 10, gStaticData_0816C4C0.y - 8);
         slot = &gLargeFont->record->slots[2];
         _call_via_r2((u8 *)gLargeFont + slot->offset, (s32)self->recordText, slot->ptr);
         FontResetPalette(gLargeFont);
-        SetIconPos(gLargeFont, self->unk_80 + gStaticData_0816C4C0.x + 10, gStaticData_0816C4C0.y + 8);
+        SetIconPos(gLargeFont, self->panelSlideX + gStaticData_0816C4C0.x + 10, gStaticData_0816C4C0.y + 8);
         slot = &gLargeFont->record->slots[2];
         _call_via_r2((u8 *)gLargeFont + slot->offset, (s32)self->timeText, slot->ptr);
     }
@@ -1218,10 +1218,10 @@ void DrawLevelSelect(struct level_menu *self)
 
                 self->levelId = sub_801DE2C(it);
                 info = &gLevelTable[self->levelId];
-                SetZoomBgPicture(self->bg2, info->unk_04);
+                SetZoomBgPicture(self->bg2, info->theme);
                 self->nameText = GetUiText(info->nameText);
             }
-            self->unk_80 = 0;
+            self->panelSlideX = 0;
             if (self->index <= 4)
             {
                 LoadLevelSelectRecord(self);
@@ -1273,37 +1273,37 @@ void LoadLevelSelectRecord(struct level_menu *self)
         *rank = 3;
     if (LevelHasYellowGem(gLevelState, self->levelId))
         *rank = 4;
-    self->unk_84 = 0;
-    self->unk_88 = 0;
-    self->unk_8C = 0;
-    self->unk_90 = 0;
-    self->unk_94 = 0;
+    self->clearedIconY = 0;
+    self->flag1IconY = 0;
+    self->gemIconY = 0;
+    self->trialIconY = 0;
+    self->trialIcon2Y = 0;
     sv = (struct level_save *)(self->save + (self->levelId * 4 + 4));
     if (sv->cleared)
-        self->unk_84 = 0x1C;
+        self->clearedIconY = 0x1C;
     if (sv->flag1)
-        self->unk_88 = 0x1C;
+        self->flag1IconY = 0x1C;
     switch (*rank)
     {
     case 0:
         if (sv->flag2)
-            self->unk_8C = 0x1C;
+            self->gemIconY = 0x1C;
         break;
     case 1:
         if (self->save[2] & 1)
-            self->unk_8C = 0x1C;
+            self->gemIconY = 0x1C;
         break;
     case 2:
         if (self->save[2] & 4)
-            self->unk_8C = 0x1C;
+            self->gemIconY = 0x1C;
         break;
     case 3:
         if (self->save[2] & 8)
-            self->unk_8C = 0x1C;
+            self->gemIconY = 0x1C;
         break;
     case 4:
         if (self->save[2] & 2)
-            self->unk_8C = 0x1C;
+            self->gemIconY = 0x1C;
         break;
     case 5:
         break;
@@ -1314,10 +1314,10 @@ void LoadLevelSelectRecord(struct level_menu *self)
     {
     set_rank_icon:
         SetAnim(self->sprites[4], gStaticData_0816C558[self->rank]);
-        if (self->unk_88 == self->unk_8C)
+        if (self->flag1IconY == self->gemIconY)
         {
-            self->unk_88 -= 6;
-            self->unk_8C += 6;
+            self->flag1IconY -= 6;
+            self->gemIconY += 6;
         }
     }
     if (sv->cleared)
@@ -1334,15 +1334,15 @@ void LoadLevelSelectRecord(struct level_menu *self)
         {
             if (sv->time <= info->time2)
             {
-                self->unk_94 = 0x1C;
-                self->unk_90 = 0x1C;
+                self->trialIcon2Y = 0x1C;
+                self->trialIconY = 0x1C;
                 SetAnim(self->sprites[5], 1);
                 SetAnim(self->sprites[6], 1);
             }
             else if (sv->time <= info->time1)
             {
                 FormatCentiseconds(info->time2, self->recordText);
-                self->unk_90 = 0x1C;
+                self->trialIconY = 0x1C;
                 SetAnim(self->sprites[5], 2);
                 SetAnim(self->sprites[6], 1);
                 SetAnim(self->sprites[7], 1);
@@ -1350,7 +1350,7 @@ void LoadLevelSelectRecord(struct level_menu *self)
             else if (sv->time <= entry->time0)
             {
                 FormatCentiseconds(info->time1, self->recordText);
-                self->unk_90 = 0x1C;
+                self->trialIconY = 0x1C;
                 SetAnim(self->sprites[5], 0);
                 SetAnim(self->sprites[6], 2);
                 SetAnim(self->sprites[7], 2);
@@ -1375,7 +1375,7 @@ s32 LevelSelectLoop(struct level_menu *self)
     self->result = 0;
     self->levelId = sub_801DE2C(self->items[self->index]);
     info = &gLevelTable[self->levelId];
-    SetZoomBgPicture(self->bg2, info->unk_04);
+    SetZoomBgPicture(self->bg2, info->theme);
     self->nameText = GetUiText(info->nameText);
     while (!IsZoomBgShown(self->bg2))
     {

@@ -1,5 +1,5 @@
 #include "core.h"
-#include "icon_manager.h"
+#include "bitmap_font.h"
 
 /* Sits right after LoadBackgroundTileAndPalette (ROM 0x080011C0, in src/system/asset_util.c)
  * and before whatever's still raw in asm/code_3_1_7.s. */
@@ -38,7 +38,7 @@ done:
 }
 
 extern s32 __udivsi3(s32 value, s32 divisor);
-extern s32 sub_8000EE4(u8 *text, struct icon_manager *self, void *box, s32 limit, s32 mode);
+extern s32 sub_8000EE4(u8 *text, struct bitmap_font *self, void *box, s32 limit, s32 mode);
 
 struct sub_8001214_params {
     s32 field_0;
@@ -54,7 +54,7 @@ struct sub_8001214_params {
  * still-parked `DrawPowerDialog`, but the ROM does actually propagate it -
  * confirmed by the epilogue needing r1, not r0, to restore the return
  * address, since r0 holds the forwarded value at that point). */
-s32 sub_8001214(u8 *text, struct icon_manager *self, struct sub_8001214_params *params, s32 mode)
+s32 sub_8001214(u8 *text, struct bitmap_font *self, struct sub_8001214_params *params, s32 mode)
 {
     s32 limit;
 

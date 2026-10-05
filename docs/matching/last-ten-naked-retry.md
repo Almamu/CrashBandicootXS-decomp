@@ -25,7 +25,7 @@ With plain field accesses the second half comes out as in the ROM:
 
 ```c
 {
-    struct icon_manager *e = *pe0;
+    struct bitmap_font *e = *pe0;
 
     set_icon_mgr_pos(*pdc, get_icon_mgr_posx(e) - 5, get_icon_mgr_posy(e) + 8);
 }

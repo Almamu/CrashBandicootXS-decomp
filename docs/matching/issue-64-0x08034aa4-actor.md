@@ -7,7 +7,7 @@ real C or a NAKED transcription - with the whole raw span
 
 This picks up straight from
 [issue-63-final-raw-actor.md](issue-63-final-raw-actor.md): the first
-five functions here are more methods on that same `struct fade_overlay`
+five functions here are more methods on that same `struct continue_prompt`
 "self" object (`InitContinuePrompt`/`InitContinuePromptGraphics`/`ContinuePromptLoop`,
 actor_part87.c/88.c/89.c), which had already flagged `DrawContinuePrompt`/
 `CommitContinuePromptFrame` as its per-frame yield helpers before this pass started.
@@ -16,7 +16,7 @@ undocumented object - a between-level map/progress screen driven
 directly from `game_loop`'s level-load state machine (see
 `docs/rom_map.md`'s "A fourth thing in this file" section).
 
-## `struct fade_overlay` gets two of its vague fields clarified
+## `struct continue_prompt` gets two of its vague fields clarified
 
 `GetContinuePromptBlink`/`CommitContinuePromptFrame`/`DestroyContinuePrompt`/`RunContinuePrompt`/`DrawContinuePrompt` all
 operate on the fade overlay object actor_part87.c already named. Working
@@ -97,7 +97,7 @@ disassembly rather than attempted as plain C, given the precedent.
 
 `InitCredits`/`CreditsLoop`/`DrawCreditsText`/`UpdateCreditsText`/`LoadCreditsLogos`/
 `CommitCreditsFrame`/`DestroyCredits`/`RunCredits` all operate on a brand-new
-0x98-byte heap object (`OperatorNew(0x98)`, `struct map_screen` in
+0x98-byte heap object (`OperatorNew(0x98)`, `struct credits_screen` in
 actor_part131.c) - a combined minimap-reveal + floating-text-popup
 screen shown between levels, already partially characterized by
 `docs/rom_map.md`'s "A fourth thing in this file"/"Correction: `RunContinuePrompt`

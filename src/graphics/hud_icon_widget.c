@@ -5,16 +5,16 @@
  * before FontDrawGlyph/InitSmallFont/InitLargeFont/FontPutChar
  * (src/graphics/hud_icon_widget_85c4.c) - see GitHub issue #46. Just
  * `DestroyHud` here: a `struct hud_counter`-parts destructor, unrelated
- * to the `struct icon_manager` text/icon-glyph renderer the rest of this
- * chunk's functions operate on (see include/icon_manager.h and the other
+ * to the `struct bitmap_font` text/icon-glyph renderer the rest of this
+ * chunk's functions operate on (see include/bitmap_font.h and the other
  * hud_icon_widget*.c files). */
 
 extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
 extern void OperatorDeleteArray(void *ptr);
 extern void OperatorDelete(void *manager);
 
-/* Minimal local copy of `struct icon_slot` (see include/icon_manager.h)
- * - not itself an `icon_manager`/`icon_record` object, but the same
+/* Minimal local copy of `struct icon_slot` (see include/bitmap_font.h)
+ * - not itself an `bitmap_font`/`icon_record` object, but the same
  * generic {offset, ptr} trampoline-dispatch pair shape reused for a
  * `hud_digit_part`'s own per-type descriptor table. */
 struct icon_slot {

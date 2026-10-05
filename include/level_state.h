@@ -37,7 +37,7 @@ struct level_state
     s32 deaths;                     // 0x07C - maskless hits since the last checkpoint (AddDeath, ResetDeaths)
     s32 unk_80;                     // 0x080
     s32 maskAssistDeaths;           // 0x084 - deaths after which the start marker hands out a mask (graphics_loading_1e990.c)
-    s32 unk_88;                     // 0x088
+    s32 crateAssistDeaths;          // 0x088 - from the level table (sub_8023110, 5 by default); once `deaths` reaches it outside a time trial, CreateCrate turns placement-flagged "?" crates (and kind 0xF) into Aku Aku, checkpoint or life crates
     u8 timeTrial;                   // 0x08C - nonzero: no lives lost, the clock runs (StartTimeTrial)
     u8 unk_8d[3];
     s32 minutes;                    // 0x090 - the time-trial clock (TickLevelClock), capped at 99
@@ -84,7 +84,7 @@ COMPILE_TIME_ASSERT(sizeof(struct level_state) == 0x1CC);
 struct level_state_1c8
 {
     u8 unk_00[0x10];
-    s32 unk_10;                     // 0x10 - GetBossHealth returns 3 minus this
+    s32 hits;                       // 0x10 - hits taken; GetBossHealth returns 3 minus this
 };
 
 #endif /* GUARD_LEVEL_STATE_H */

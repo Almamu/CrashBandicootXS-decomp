@@ -1,12 +1,12 @@
 #include "core.h"
 #include "actor.h"
-#include "icon_manager.h"
-#include "pause_screen_results.h"
+#include "bitmap_font.h"
+#include "pause_menu.h"
 
 extern void DrawSpriteWithOffset(void *arg0, s32 arg1, s32 arg2);
 extern s32 GetUiText(s32 arg0);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
-extern struct icon_manager *gSmallFont;
+extern struct bitmap_font *gSmallFont;
 
 /* Shows (`DrawSpriteWithOffset(icon, 0, 0)`) whichever of `icons8c[0..3]` has a
  * matching bit set in `self->field_10`'s byte at offset 2 (a flag byte
@@ -14,7 +14,7 @@ extern struct icon_manager *gSmallFont;
  * settings_menu2.c - already fill; bits 0x20/0x80/0x40/0x10, one per
  * slot). If *none* of the four bits were set, draws a fallback
  * centered label (text id 0x3a) at a fixed position instead. */
-void DrawPausePowersPage(struct pause_screen_results *self)
+void DrawPausePowersPage(struct pause_menu *self)
 {
     s32 none = 1;
 
@@ -68,7 +68,7 @@ void DrawPausePowersPage(struct pause_screen_results *self)
         struct icon_record *rec = gSmallFont->record;
         u32 width = _call_via_r2((u8 *)gSmallFont + rec->slots[0].offset, (void *)label, rec->slots[0].ptr);
         s32 halfX = 0xc2 - (width >> 1);
-        struct icon_manager *mgr = gSmallFont;
+        struct bitmap_font *mgr = gSmallFont;
         s32 y = 0x64;
 
         mgr->posX = halfX;

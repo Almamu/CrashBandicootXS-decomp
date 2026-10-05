@@ -1,7 +1,7 @@
-#ifndef __PAUSE_SCREEN_RESULTS_H__
-#define __PAUSE_SCREEN_RESULTS_H__
+#ifndef __PAUSE_MENU_H__
+#define __PAUSE_MENU_H__
 /* (blank line above left intentionally to keep this header's
- * COMPILE_TIME_ASSERT off whatever line number icon_manager.h's own
+ * COMPILE_TIME_ASSERT off whatever line number bitmap_font.h's own
  * assert happens to sit on - COMPILE_TIME_ASSERT's generated symbol
  * name is line-number-based, not per-file, so two same-numbered
  * asserts collide with a "redefinition" error when both headers end
@@ -42,8 +42,8 @@ struct icon_pos {
  * edit `musicVolume`/`soundVolume` in 5% steps, and PauseMenuLoop
  * returns the confirmed row's type. On the right it cycles five info
  * pages every 180 frames (`field_24`, AnimatePauseMenu): crystals,
- * powers, gems, relics and the level's time trial. The struct keeps its
- * historical name. This
+ * powers, gems, relics and the level's time trial. Formerly
+ * `struct pause_screen_results`. This
  * reconciles three previously-separate partial views of the exact same
  * 0xd4-byte allocation (confirmed by the real call chain: RunPauseMenu
  * allocates it with `OperatorNew(0xd4)`, passes it to InitPauseMenu,
@@ -51,7 +51,7 @@ struct icon_pos {
  * the five Init*Page functions - and separately InitPauseMenu also passes
  * it to CommitPauseMenuFrame/PauseMenuLoop, which is the settings_menu12.c/
  * settings_menu7.c fields' own consumer):
- * - `struct pause_screen_results` (src/graphics/settings_menu6.c,
+ * - `struct pause_menu` (src/graphics/settings_menu6.c,
  *   originally local to that file) - the icon-widget fields.
  * - `struct pause_screen_row_counts` (src/graphics/settings_menu7.c) -
  *   the per-row edit-count fields.
@@ -60,11 +60,11 @@ struct icon_pos {
  * All three agreed on their own fields' offsets with zero overlap once
  * merged - strong confirmation this is genuinely one object, not a
  * coincidence. Distinct from (and NOT reconciled with) `struct
- * pause_options_screen` (include/pause_options_screen.h), a smaller,
+ * save_menu` (include/save_menu.h), a smaller,
  * separately-allocated settings-sync/spinner object that happens to
  * share some byte offsets by coincidence - see that header's own
  * comment. */
-struct pause_screen_results {
+struct pause_menu {
     u8 unused_00[0x10];
     void *field_10;             /* 0x10 - a row-stats handle, passed to CountClearGems/CountGems/CountRelics/etc and read via gLevelState's per-level index table in InitPauseTimeTrialPage */
     void *field_14;               /* 0x14 - base of an 8-byte-stride per-row record array (gPauseMenuRows), see DrawPauseMenuRows/PauseMenuVolumeDown */
@@ -108,7 +108,7 @@ struct pause_screen_results {
     u16 field_d0;                                              /* 0xd0 - REG_DISPCNT value, applied by CommitPauseMenuFrame */
     u8 unused_d2[2];
 };
-COMPILE_TIME_ASSERT(sizeof(struct pause_screen_results) == 0xd4);
+COMPILE_TIME_ASSERT(sizeof(struct pause_menu) == 0xd4);
 
 extern s32 GetSpriteAnimPaletteSlot(struct actor *part);
 
@@ -136,4 +136,4 @@ extern s32 GetSpriteAnimPaletteSlot(struct actor *part);
         *_addr = _mask; \
     } while (0)
 
-#endif /* __PAUSE_SCREEN_RESULTS_H__ */
+#endif /* __PAUSE_MENU_H__ */

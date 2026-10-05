@@ -168,8 +168,8 @@ previous pass above left open.
 Opening: index `gLevelTable` by `self+0` (the confirmed
 36-slot, 0x24-byte-stride per-level master table - `settings_menu19.c`/
 `oam_count.c`/`game_loop17.c` all have their own struct view of it).
-Read its `+0x1c` "initialized" guard byte (calls `CheckAllCratesBroken` once if
-still clear), feed its `+0x14`/`+0x18` fields straight through to
+Read its `+0x1c` byte (`isBoss`, first read as an "initialized" guard; calls `CheckAllCratesBroken` once if
+still clear), feed its `+0x14`/`+0x18` fields (`maskAssistDeaths`/`crateAssistDeaths`) straight through to
 `SetMaskAssistDeaths`/`sub_8023110`, then dispatch on its `+4` field
 (`state - 1`, clamped `[0,5]`; `state == 0` or `state > 6` takes the
 `default` path):
@@ -183,7 +183,7 @@ still clear), feed its `+0x14`/`+0x18` fields straight through to
 | 4 | 5 | `_08023B8C` |
 | 5 | 6 | `_08023B20` (shared with index 0) |
 
-Every non-default case resets `gPaletteCycles` (the `hud_fx_queue`
+Every non-default case resets `gPaletteCycles` (the `palette_cycler`
 `hud_icon_slot.c` documents) via `ClearPaletteCycles`, then fires
 `AddPaletteCycle(queue, targets, lists, angle, list_count, direction)`:
 

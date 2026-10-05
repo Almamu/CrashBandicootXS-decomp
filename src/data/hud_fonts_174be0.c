@@ -5,7 +5,7 @@
  * sections by ldscript.txt - see docs/data.md.
  */
 
-/* include/icon_manager.h's `struct icon_glyph_metrics`. */
+/* include/bitmap_font.h's `struct icon_glyph_metrics`. */
 struct icon_glyph_metrics {
     s32 width;
     s32 shape;

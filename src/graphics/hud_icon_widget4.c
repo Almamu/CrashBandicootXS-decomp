@@ -1,9 +1,9 @@
 #include "core.h"
-#include "icon_manager.h"
+#include "bitmap_font.h"
 
 /* Sits between FontMeasureText (src/graphics/hud_icon_widget_8994.c) and
  * InitFont (src/graphics/hud_icon_widget_8a78.c) - FontUploadTiles/
- * FontSetPalette/FontResetPalette, GitHub issue #46. Same `struct icon_manager`
+ * FontSetPalette/FontResetPalette, GitHub issue #46. Same `struct bitmap_font`
  * as hud_icon_widget.c/hud_icon_widget2.c/hud_icon_widget3.c/
  * hud_icon_widget5.c. */
 
@@ -15,7 +15,7 @@ extern s32 GetPaletteSlot(u8 *cache, s32 recordId);
 /* Uploads `tiles`'s referenced tile data to the OBJ VRAM slot
  * selected by `tileBase`, recording the resulting tile-count-derived
  * shift (`>>13` of the asset's own header word) into `tileCount`. */
-void FontUploadTiles(struct icon_manager *self)
+void FontUploadTiles(struct bitmap_font *self)
 {
     void *asset = self->tiles;
 
@@ -25,7 +25,7 @@ void FontUploadTiles(struct icon_manager *self)
 
 /* Sets the low nibble of `oam_scratch[5]` from `val`'s low byte - a
  * priority/attribute nibble selector, exact meaning not established. */
-void FontSetPalette(struct icon_manager *self, u8 val)
+void FontSetPalette(struct bitmap_font *self, u8 val)
 {
     u32 shifted;
     register u8 mask asm("r2");
@@ -45,7 +45,7 @@ void FontSetPalette(struct icon_manager *self, u8 val)
  * docs/rom_map.md's `gSpriteBankTable` investigation) via
  * `GetPaletteSlot`, and folds the result into the same `oam_scratch[5]`
  * nibble FontSetPalette sets above. */
-void FontResetPalette(struct icon_manager *self, u32 unused)
+void FontResetPalette(struct bitmap_font *self, u32 unused)
 {
     u8 *cache = gPaletteCache;
     void *rec = *(void **)((u8 *)(**gSpriteBankSet) + (0xD2 << 1));

@@ -5,7 +5,7 @@
  * sections by ldscript.txt - see docs/data.md.
  */
 
-/* pause_screen_results.h's `struct icon_pos`. */
+/* pause_menu.h's `struct icon_pos`. */
 struct icon_pos {
     s32 x;
     s32 y;

@@ -33,7 +33,7 @@ Previously raw asm with a `NON_MATCHING` draft; now plain C in actor_part88.c
 under `old_agbcc`, and `asm/code_3_2_20_28568_c99c_31784_33ef4_3487c.s` is
 gone.
 
-- **Struct fix:** `struct fade_overlay`'s `icons` field is at +0x18, not +0x1C.
+- **Struct fix:** `struct continue_prompt`'s `icons` field is at +0x18, not +0x1C.
 - **Seeding loop:** it indexes the four `gStaticData_0817C5xx` arrays directly with an up-counting `i`. With explicit pointer increments, old_agbcc's loop pass reverses `i` into a down-counter; that reversal, not an r7 bug, is what parked it.
 
 `ContinuePromptLoop` stays NAKED.

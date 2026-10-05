@@ -1,5 +1,5 @@
 #include "core.h"
-#include "icon_manager.h"
+#include "bitmap_font.h"
 
 /* Sits right after InitBresenhamLine (ROM 0x08000E6C, in src/util/line_util.c) and
  * before FormatCentiseconds (still raw in asm/code_3_1_3.s).
@@ -39,7 +39,7 @@ extern void WaitForVBlank(void);
 extern void CommitOamBuffer(void *arg0);
 extern void *gOamBuffer;
 
-static inline void set_pos(struct icon_manager *m, u32 x, u32 y)
+static inline void set_pos(struct bitmap_font *m, u32 x, u32 y)
 {
     m->posX = x;
     m->posY = y;
@@ -49,10 +49,10 @@ static inline void set_pos(struct icon_manager *m, u32 x, u32 y)
  * returned pointer makes the reads use the same loop-hoisted
  * `&self->posX`/`&self->posY` as the stores (the ROM's two spill
  * slots), where a plain `self->posX` read recomputes the address. */
-static inline u32 *pos_x(struct icon_manager *m) { return &m->posX; }
-static inline u32 *pos_y(struct icon_manager *m) { return &m->posY; }
+static inline u32 *pos_x(struct bitmap_font *m) { return &m->posX; }
+static inline u32 *pos_y(struct bitmap_font *m) { return &m->posY; }
 
-s32 sub_8000EE4(u8 *text, struct icon_manager *self, struct sub_8000EE4_box *box, s32 limit, s32 mode)
+s32 sub_8000EE4(u8 *text, struct bitmap_font *self, struct sub_8000EE4_box *box, s32 limit, s32 mode)
 {
     s32 widthAccum;
     s32 lineCount;

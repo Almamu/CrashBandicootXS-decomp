@@ -98,7 +98,7 @@ void SpawnVulture(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     SetEnemyAnimMap(hdr, gEnemyDefaultAnimMap);
     SetEnemyState(hdr, 0x11);
     hdr->animMap = gVultureAnimMap;
-    SetPopupRect(hdr, 0, 0, 100, 50);
+    SetEnemyHitBox(hdr, 0, 0, 100, 50);
 }
 
 /* Text popup, tag 0xA. Restarts the part's animation as tag 1, sets
@@ -484,7 +484,7 @@ void SpawnPufferfish(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->base.field_0A = 5;
     SetEnemyAnimMap(hdr, gPufferfishAnimMap);
     SetPopupSpan(hdr, rec2->unk_04, rec2->unk_08, rec2->unk_0C);
-    SetPopupBox(hdr, rec2->unk_14, rec2->unk_18, rec2->unk_10);
+    SetEnemyWave(hdr, rec2->unk_14, rec2->unk_18, rec2->unk_10);
     SetEnemyState(hdr, 14);
 }
 

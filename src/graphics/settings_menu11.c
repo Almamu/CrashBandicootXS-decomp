@@ -1,5 +1,5 @@
 #include "core.h"
-#include "icon_manager.h"
+#include "bitmap_font.h"
 
 /* The three functions below are companion "draw a label centered on an
  * icon widget" steps. Once NAKED transcriptions; they match as plain C
@@ -9,14 +9,14 @@
  * docs/matching/issue-4-6-8-naked-retry.md. */
 
 /* Same "results" sub-region self object `settings_menu6.c`'s
- * `struct pause_screen_results` documents (`field_6c`/`field_bc`/
+ * `struct pause_menu` documents (`field_6c`/`field_bc`/
  * `timeBuf` all line up) - the medal-icon-widget's (`InitPauseTimeTrialPage`)
  * companion label draw: formats `self->timeBuf` (already filled in by
  * InitPauseTimeTrialPage) centered on the medal icon via the shared
  * `gSmallFont` icon manager, using the same fixed
  * `gStaticData_0816B27C` position pair InitPauseTimeTrialPage itself positions
  * the icon with. */
-struct pause_screen_results {
+struct pause_menu {
     u8 unused_00[0x2c];
     u8 buf2c[0x46 - 0x2c];
     u8 buf46[0x6c - 0x46];
@@ -30,9 +30,9 @@ struct pause_screen_results {
 
 extern void DrawSpriteWithOffset(void *arg0, s32 arg1, s32 arg2);
 extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
-extern struct icon_manager *gSmallFont;
+extern struct bitmap_font *gSmallFont;
 
-static inline void set_icon_mgr_pos(struct icon_manager *m, u32 x, u32 y)
+static inline void set_icon_mgr_pos(struct bitmap_font *m, u32 x, u32 y)
 {
     m->posX = x;
     m->posY = y;
@@ -44,13 +44,13 @@ static inline void set_icon_mgr_pos(struct icon_manager *m, u32 x, u32 y)
  * so `this` is computed before the label argument, as in the ROM. */
 #define MEASURE_ICON_TEXT(mgrExpr, label)                                       \
     ({                                                                          \
-        struct icon_manager *_m = (mgrExpr);                                    \
+        struct bitmap_font *_m = (mgrExpr);                                    \
         struct icon_record *_r = _m->record;                                    \
         _call_via_r2((u8 *)_m + _r->slots[0].offset, (s32)(label), _r->slots[0].ptr); \
     })
 #define DRAW_ICON_TEXT(mgrExpr, label)                                          \
     {                                                                           \
-        struct icon_manager *_m = (mgrExpr);                                    \
+        struct bitmap_font *_m = (mgrExpr);                                    \
         struct icon_record *_r = _m->record;                                    \
         _call_via_r2((u8 *)_m + _r->slots[2].offset, (s32)(label), _r->slots[2].ptr); \
     }
@@ -65,7 +65,7 @@ struct icon_pos {
 };
 extern struct icon_pos gStaticData_0816B27C;
 
-void DrawPauseTimeTrialPage(struct pause_screen_results *self)
+void DrawPauseTimeTrialPage(struct pause_menu *self)
 {
     u32 w;
 
@@ -83,9 +83,9 @@ void DrawPauseTimeTrialPage(struct pause_screen_results *self)
  * (src/graphics/settings_menu16.c) that actually draws the two small
  * strings. */
 extern struct icon_pos gStaticData_0816B1E4;
-extern void DrawPauseFraction(struct pause_screen_results *self, void *buf1, void *buf2);
+extern void DrawPauseFraction(struct pause_menu *self, void *buf1, void *buf2);
 
-void DrawPauseCrystalsPage(struct pause_screen_results *self)
+void DrawPauseCrystalsPage(struct pause_menu *self)
 {
     DrawSpriteWithOffset(self->field_88, 0, 0);
     set_icon_mgr_pos(gSmallFont, gStaticData_0816B1E4.x - 0x2c, gStaticData_0816B1E4.y - 8);

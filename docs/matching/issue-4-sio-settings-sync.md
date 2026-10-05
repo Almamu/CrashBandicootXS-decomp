@@ -32,14 +32,14 @@ compare` ("La suma coincide").
   `EepromConfig`/`EEPROMConfigure`/`EEPROMRead`/`EEPROMWrite1_check` - confirmed
   by `gEepromConfig->maxCount` (an `EepromConfig` field) driving
   their loop bound, not anything SIO-shaped.
-- **`LoadSaveData`-`EraseSaveSlot`** (overlay_ui) - the settings_sync_record
+- **`LoadSaveData`-`EraseSaveSlot`** (overlay_ui) - the save_data
   persistence layer: EEPROM load/save orchestrators with retry and
   music-mute guards (`LoadSaveData`/`StoreSaveData`), checksum
   compare/store (`CheckSaveChecksum`/`UpdateSaveChecksum`), the `versionNibble`
   accessor (`GetSaveGameId`), the checksum validate/DMA-repair function
   (`ValidateSaveData`), and three per-row helpers
   (`ReadSaveSlot`/`WriteSaveSlot`/`EraseSaveSlot`) that directly extend
-  `struct settings_sync_record` from `include/settings_sync.h`
+  `struct save_data` from `include/settings_sync.h`
   (issue #5). `EraseSaveSlot` in particular was already referenced by
   name in that header's `rowSelected` field comment and in
   `src/graphics/settings_menu8.c`'s extern declaration, both written
@@ -174,7 +174,7 @@ the established pattern this project has hit many times before):
 
 ## Struct/header changes
 
-None - all new code reuses `struct settings_sync_record`/
+None - all new code reuses `struct save_data`/
 `struct settings_sync_pump` from `include/settings_sync.h` (issue #5)
 without modification. `struct EepromConfig`/`gEepromConfig` from
 `src/system/timer_util.c` are referenced via a raw `u8 *` cast rather

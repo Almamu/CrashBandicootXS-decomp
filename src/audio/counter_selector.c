@@ -10,8 +10,8 @@
  * result in gLanguage, which picks the gUiText<Lang>/cutscene tables.
  * Sits at the very start of the address range docs/audio.md calls the
  * GAX2 engine, but is game-side code that merely uses PlaySfx.
- * `struct counter_widget` keeps its historical name. */
-struct counter_widget {
+ * (Formerly `struct counter_widget`.) */
+struct language_select {
     u32 frame;
     u8 done;
     u8 pad_5[3];
@@ -31,13 +31,13 @@ extern u16 gKeys;
 extern void *gAudioContext;
 extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
 extern s32 UpdateKeys(void *arg0);
-extern void CommitLanguageSelectFrame(struct counter_widget *self);
-extern void DrawLanguageSelect(struct counter_widget *self);
+extern void CommitLanguageSelectFrame(struct language_select *self);
+extern void DrawLanguageSelect(struct language_select *self);
 extern void UpdateStarfield(void *arg0);
-extern struct counter_widget *gLanguageSelect;
+extern struct language_select *gLanguageSelect;
 extern void LoadTaggedAsset(void *asset, void *dest);
 
-void LanguageSelectInput(struct counter_widget *self, u32 flags);
+void LanguageSelectInput(struct language_select *self, u32 flags);
 
 /* Loads a "tagged" asset (see LoadTaggedAsset, src/system/asset_util.c)
  * into a freshly allocated buffer, then queues a DMA3 transfer from that
@@ -80,7 +80,7 @@ void DestroyCompanyLogos(void *self, u32 flags)
  * VRAM tile blocks InitLogoActor allocated, drops back to the base
  * gActorVtable, unlinks the actor from the actor ring and frees it on
  * flags bit 0 - the same shape as DestroyActor. Its object is a much
- * larger one than the 0x14-byte `counter_widget` every neighboring
+ * larger one than the 0x14-byte `language_select` every neighboring
  * function in this file operates on, so it gets its own minimal,
  * locally-scoped struct. */
 struct linked_node {
@@ -142,7 +142,7 @@ s32 RunLanguageSelect(void)
  * 0x49); bit 6/bit 7 decrement/increment the 0-5 `field_8` value
  * (wrapping around, sfx 0x46). `field_0` is a free-running frame
  * counter, incremented every call regardless. */
-void LanguageSelectInput(struct counter_widget *self, u32 flags)
+void LanguageSelectInput(struct language_select *self, u32 flags)
 {
     if (flags & 8) {
         self->done = 1;

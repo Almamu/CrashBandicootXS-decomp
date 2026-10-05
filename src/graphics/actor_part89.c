@@ -32,7 +32,7 @@
  *    second test's shift a fresh value, so CSE doesn't share it with the
  *    first, and the first test keeps the ROM's `movs r0, #1; ands r0, r1`
  *    register choice. */
-struct fade_overlay89 {
+struct continue_prompt {
     u8 unused_00[0x10];
     u8 bldcntLo;
     u8 bldcntHi;
@@ -40,7 +40,7 @@ struct fade_overlay89 {
     u8 evaHi : 3;
     u8 bldalphaHi;
     u8 unused_14[0xc];
-    s32 flag_20;
+    s32 selection;
 };
 
 struct keys89 {
@@ -53,10 +53,10 @@ extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void *gInput;
 extern u32 gKeys;
 extern void *gAudioContext;
-extern void DrawContinuePrompt(struct fade_overlay89 *self);
-extern void CommitContinuePromptFrame(struct fade_overlay89 *self);
+extern void DrawContinuePrompt(struct continue_prompt *self);
+extern void CommitContinuePromptFrame(struct continue_prompt *self);
 
-s32 ContinuePromptLoop(struct fade_overlay89 *self)
+s32 ContinuePromptLoop(struct continue_prompt *self)
 {
     s32 dir = 1;
     s32 i = 0;
@@ -76,14 +76,14 @@ s32 ContinuePromptLoop(struct fade_overlay89 *self)
                 PlaySfx(*audio, 0x49, 0x100);
                 break;
             }
-            if ((k.pressed & 0x40) && self->flag_20 == 1) {
+            if ((k.pressed & 0x40) && self->selection == 1) {
                 PlaySfx(*audio, 0x46, 0x100);
-                self->flag_20 = 0;
+                self->selection = 0;
             }
         }
-        if ((input->pressed & 0x80) && self->flag_20 == 0) {
+        if ((input->pressed & 0x80) && self->selection == 0) {
             PlaySfx(*audio, 0x46, 0x100);
-            self->flag_20 = 1;
+            self->selection = 1;
         }
         DrawContinuePrompt(self);
         CommitContinuePromptFrame(self);
@@ -100,7 +100,7 @@ s32 ContinuePromptLoop(struct fade_overlay89 *self)
             *(vu32 *)0x04000050 = *(u32 *)&self->bldcntLo;
         }
     }
-    return self->flag_20 == 0;
+    return self->selection == 0;
 }
 
 asm(".align 2, 0");

@@ -164,7 +164,7 @@ untouched (see "Still untouched - all 9 remaining functions" above).
 
 Both now live in `src/graphics/hud_icon_slot.c`, placed at the top of
 the file (ROM order puts them immediately before `ClearPaletteCycles`, which
-this file already held). `struct hud_fx_queue` (previously a stub with
+this file already held). `struct palette_cycler` (previously a stub with
 two named `s32[3]` arrays and unlabelled padding, in this same file)
 is now fully characterized: `targets[3]`/`lists[3]` (pointer pairs,
 `+0x10`/`+0x1c`), `periods[3]`/`counts[3]` (`+0x28`/`+0x34`), `count`

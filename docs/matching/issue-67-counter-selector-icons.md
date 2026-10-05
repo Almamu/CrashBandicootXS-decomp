@@ -13,18 +13,18 @@ them from "left raw" to "parked".
 
 `DrawLanguageSelect` draws six digit slots (0-5), one per widget value: for
 each slot index it either shows the shared "selected" overlay
-(`gSmallFont`, a `struct icon_manager *`, drawn with value 1 or
+(`gSmallFont`, a `struct bitmap_font *`, drawn with value 1 or
 2 from `LanguageSelectBlink` depending on a bit of `self->field_0`, the
 widget's free-running frame counter) when the loop index equals
 `self->field_8` (the widget's current 0-5 value), or blanks it (value
 0 via the same `FontSetPalette` call) otherwise. It then always draws
-that slot's own fixed digit glyph - one of six `struct icon_manager *`
+that slot's own fixed digit glyph - one of six `struct bitmap_font *`
 looked up from `gLanguageNames[i]` - positioned via
 `_call_via_r2` at a fixed X (centered from the rendered pixel width,
 the same `(240-w)>>1` idiom `DrawPowerDialog`/`src/graphics/oam_count.c`
 uses) and a Y that steps by `0xa` per slot from a `0x32` base, reading
 and writing `gSmallFont->record->slots[0]`/`slots[2]` (see
-`include/icon_manager.h`) as its OAM-slot-record pair - the exact same
+`include/bitmap_font.h`) as its OAM-slot-record pair - the exact same
 shape `DrawPowerDialog` uses on the same two globals.
 
 `InitLanguageSelectGraphics` resets several OAM-manager globals
@@ -35,7 +35,7 @@ shape `DrawPowerDialog` uses on the same two globals.
 iteration via a doubled offset, 16 iterations), and finally threads
 `gSmallFont`'s/`gLargeFont`'s `record->slots[6]`
 trampoline (`_call_via_r1`) and VRAM-reserve (`ReserveObjVram`) pair -
-copying `field_12c` from one `icon_manager` into the other's
+copying `field_12c` from one `bitmap_font` into the other's
 `field_108` via the ROM's own "subtract `0x24` from the already-loaded
 `0x12c` offset constant" trick rather than a fresh `0x108` literal.
 

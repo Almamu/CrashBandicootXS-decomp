@@ -1,7 +1,7 @@
 #include "core.h"
-#include "icon_manager.h"
+#include "bitmap_font.h"
 
-struct counter_widget {
+struct language_select {
     u32 frame;
     u8 done;
     u8 pad_5[3];
@@ -10,15 +10,15 @@ struct counter_widget {
 
 extern void *gOamBuffer;
 extern void *gObjVramCursor;
-extern struct icon_manager *gSmallFont;
+extern struct bitmap_font *gSmallFont;
 /* The six language names. */
 extern void *gLanguageNames[6];
 extern void ResetOamBuffer(void *arg0);
 extern void RewindObjVram(void *arg0);
 extern void HideUnusedOamEntries(void *arg0);
-extern s32 FontSetPalette(struct icon_manager *mgr, u8 frame);
-extern s32 LanguageSelectBlink(struct counter_widget *self);
-/* `_call_via_r2`: calls `fn(self, arg)` (an icon_manager method). */
+extern s32 FontSetPalette(struct bitmap_font *mgr, u8 frame);
+extern s32 LanguageSelectBlink(struct language_select *self);
+/* `_call_via_r2`: calls `fn(self, arg)` (an bitmap_font method). */
 extern s32 _call_via_r2(void *self, void *arg, void *fn);
 
 /* The language menu's (src/audio/counter_selector.c) per-frame draw
@@ -34,7 +34,7 @@ extern s32 _call_via_r2(void *self, void *arg, void *fn);
  * first call's argument list (so it's loaded between `this` and the
  * method pointer, as the ROM does) matches outright - see
  * docs/matching/gax-toolchain-retry.md. */
-void DrawLanguageSelect(struct counter_widget *self)
+void DrawLanguageSelect(struct language_select *self)
 {
     s32 y;
     s32 i;
@@ -80,7 +80,7 @@ void DrawLanguageSelect(struct counter_widget *self)
  * ROM keeps in r8. Matches under both compilers. */
 #include "vram_pool.h"
 extern struct palette_cache *gPaletteCache;
-extern struct icon_manager *gLargeFont;
+extern struct bitmap_font *gLargeFont;
 extern const u16 gStaticData_0817E72C[16];
 extern const u16 gStaticData_0817E74C[16];
 extern const u16 gStaticData_0817E76C[16];
@@ -94,7 +94,7 @@ extern s32 ReserveObjVram(void *cursor, s32 size);
 extern void MarkObjVram(void *cursor);
 extern void _call_via_r1(void *self, void *fn);
 
-static inline void IconSetBase(struct icon_manager *m, u32 base)
+static inline void IconSetBase(struct bitmap_font *m, u32 base)
 {
     struct icon_slot *slot;
 
@@ -103,7 +103,7 @@ static inline void IconSetBase(struct icon_manager *m, u32 base)
     _call_via_r1((u8 *)m + slot->offset, slot->ptr);
 }
 
-static inline void IconReserveVram(void *c, struct icon_manager *m)
+static inline void IconReserveVram(void *c, struct bitmap_font *m)
 {
     ReserveObjVram(c, m->tileCount << 5);
 }

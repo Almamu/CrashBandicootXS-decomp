@@ -1,6 +1,6 @@
 #include "core.h"
 #include "gba/io_reg.h"
-#include "icon_manager.h"
+#include "bitmap_font.h"
 #include "actor_self.h"
 #include "gba/dma_macros.h"
 #include "graphics_package.h"
@@ -53,7 +53,7 @@ extern s32 __divsi3(s32 arg0, s32 arg1);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void CommitDispcnt(void);
 extern void PlaySong(struct AudioContext *self, u32 id);
-extern void FontSetPalette(struct icon_manager *self, u8 val);
+extern void FontSetPalette(struct bitmap_font *self, u8 val);
 extern s32 GetUiText(s32 arg0);
 extern void UpdateStarfield(s32 arg0);
 extern void *_call_via_r1(void *arg0, void *fn);
@@ -456,7 +456,7 @@ fadeLoop:
     return self[0];
 }
 
-static inline void SetIconPos(struct icon_manager *m, u32 x, u32 y)
+static inline void SetIconPos(struct bitmap_font *m, u32 x, u32 y)
 {
     m->posX = x;
     m->posY = y;
@@ -498,7 +498,7 @@ void CommitTitleScreenFrame(u32 *self)
 
 void DrawTitleMenuItem(u32 *self, s32 text, s32 variant)
 {
-    struct icon_manager *im;
+    struct bitmap_font *im;
     struct icon_slot *slot;
     s32 x;
 
@@ -506,15 +506,15 @@ void DrawTitleMenuItem(u32 *self, s32 text, s32 variant)
     {
         s32 count = self[1] + 1;
         self[1] = count;
-        FontSetPalette((struct icon_manager *)self[3], ((count >> 2) & 1) + 0xe);
+        FontSetPalette((struct bitmap_font *)self[3], ((count >> 2) & 1) + 0xe);
     }
     else
     {
-        FontSetPalette((struct icon_manager *)self[3], 0xd);
+        FontSetPalette((struct bitmap_font *)self[3], 0xd);
     }
-    slot = &((struct icon_manager *)self[3])->record->slots[0];
+    slot = &((struct bitmap_font *)self[3])->record->slots[0];
     x = (0xf0 - _call_via_r2((u8 *)self[3] + slot->offset, (void *)text, slot->ptr)) >> 1;
-    im = (struct icon_manager *)self[3];
+    im = (struct bitmap_font *)self[3];
     SetIconPos(im, x, variant * 10 + 0x80);
     slot = &im->record->slots[2];
     _call_via_r2((u8 *)im + slot->offset, (void *)text, slot->ptr);

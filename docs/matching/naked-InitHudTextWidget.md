@@ -4,17 +4,17 @@
 `asm/code_3_2_20_8b7c.s`) has no tracked GitHub issue - it sits
 immediately after GitHub issue #46's fully-matched
 `FontHeightToLines`-`FontSetTileBase` run (`src/graphics/hud_icon_widget5.c`,
-"trivial `struct icon_manager` getter/setter/trampoline-forwarder
+"trivial `struct bitmap_font` getter/setter/trampoline-forwarder
 family") and was explicitly called out in that chunk's own write-up as
 next-but-out-of-scope.
 
-It's a minimal constructor for the same `struct icon_manager` (see
-`include/icon_manager.h`) that `hud_icon_widget5.c`'s whole file
+It's a minimal constructor for the same `struct bitmap_font` (see
+`include/bitmap_font.h`) that `hud_icon_widget5.c`'s whole file
 already operates on: it points the manager's `record` field at a fixed
 ROM table, then optionally registers the object for teardown -
 
 ```c
-void DestroyFont(struct icon_manager *self, u32 flags)
+void DestroyFont(struct bitmap_font *self, u32 flags)
 {
     self->record = (struct icon_record *)gFontVtable;
     if (flags & 1) {
@@ -38,7 +38,7 @@ own `record` write or `DestroyLargeFont`/`DestroySmallFont`'s double-store
 variant (both documented as needing one to stop gcc's CSE/dead-store
 elimination from collapsing a repeated address computation the ROM
 computes fresh). The difference here: `DestroyFont` only ever
-computes `self + offsetof(icon_manager, record)` once in the whole
+computes `self + offsetof(bitmap_font, record)` once in the whole
 function, so there's nothing for gcc to collapse against - the natural
 codegen already lands the address add in `r2` exactly like the ROM.
 
@@ -47,7 +47,7 @@ codegen already lands the address add in `r2` exactly like the ROM.
 Folded into `src/graphics/hud_icon_widget5.c` (immediately after
 `FontSetTileBase`) rather than getting its own object file, since it's
 directly contiguous with that file's existing ROM range and shares the
-same `struct icon_manager`/`gEntityVtable`-family conventions -
+same `struct bitmap_font`/`gEntityVtable`-family conventions -
 see `docs/workflow.md`'s "one `.c` file per contiguous ROM region"
 rule. The function's block was cut out of `asm/code_3_2_20_8b7c.s`,
 which now starts at `InitObjTileFreeList` (`0x08028BA0`) instead;

@@ -66,7 +66,7 @@ record that these two were reviewed but not attempted.
   investigation already links to this screen) into a 16-row loop
   writing halfwords at `self+0x2c`/`+0x4c` and `self+0x6c`/`+0x8c`
   (four parallel arrays, 0x20 bytes apart, 16 entries each - not yet
-  reconciled against `struct pause_options_screen`'s existing
+  reconciled against `struct save_menu`'s existing
   `rowStats`/`currentStats` layout, which only covers up to offset
   `0x8c`), then runs the **exact same 9-statement two-icon-manager init
   block** `src/graphics/settings_menu14.c`'s parked `ShowPowerDialog`
@@ -94,7 +94,7 @@ record that these two were reviewed but not attempted.
   written up as C:
   1. The 16-row copy loop's four destination arrays
      (`self+0x2c`/`self+0x4c`/`self+0x6c`/`self+0x8c`) don't cleanly
-     map onto `struct pause_options_screen`'s existing fields at those
+     map onto `struct save_menu`'s existing fields at those
      offsets (`flags` at `0x04`, `state` at `0x0c`, ..., `field_24` at
      `0x24`, `currentStats` starting at `0x28`) - `self+0x2c` lands
      4 bytes into `currentStats`, `self+0x4c` and `self+0x6c` land

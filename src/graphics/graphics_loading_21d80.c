@@ -348,17 +348,17 @@ extern void *gSpriteRenderer;
 extern void *gPaletteCycles;
 extern struct palette_cache *gPaletteCache;
 extern void SetPaletteCacheSource(struct palette_cache *self, u16 count, const u8 *records);
-extern struct icon_manager *gSmallFont;
-extern struct icon_manager *gLargeFont;
-extern struct icon_manager *InitSmallFont(struct icon_manager *self);
-extern struct icon_manager *InitLargeFont(struct icon_manager *self);
+extern struct bitmap_font *gSmallFont;
+extern struct bitmap_font *gLargeFont;
+extern struct bitmap_font *InitSmallFont(struct bitmap_font *self);
+extern struct bitmap_font *InitLargeFont(struct bitmap_font *self);
 extern s32 AllocVramDmaQueue(void);
 extern struct oam_shadow_buffer *gOamBuffer;
 extern struct oam_shadow_buffer *InitOamBuffer(struct oam_shadow_buffer *arg0);
 extern struct vram_upload_cursor *gObjVramCursor;
 extern struct vram_upload_cursor *InitObjVramCursor(struct vram_upload_cursor *self, s32 count);
 extern void *gInput;
-extern struct hud_fx_queue *InitPaletteCycles(struct hud_fx_queue *self);
+extern struct palette_cycler *InitPaletteCycles(struct palette_cycler *self);
 extern u8 gDispcnt[2];
 extern void SetObjMapping1D(void);
 extern void CommitDispcnt(void);
@@ -429,7 +429,7 @@ void *InitLevelState(void *self)
         }
     }
     {
-        struct icon_manager **addr = &gSmallFont;
+        struct bitmap_font **addr = &gSmallFont;
         s32 size = 0x9a << 1;
 
         *addr = InitSmallFont(OperatorNew(size));

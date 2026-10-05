@@ -1,6 +1,6 @@
 #include "core.h"
 #include "actor.h"
-#include "pause_screen_results.h"
+#include "pause_menu.h"
 
 /* Built with old_agbcc (Makefile OLD_AGBCC_OBJS): the four icon-group
  * constructors below only match under it, and InitPauseCrystalsPage compiles
@@ -20,7 +20,7 @@ extern struct icon_pos gStaticData_0816B1E4;
  * offset `0xde<<1`), and formats two small numbers - a row-stats
  * derived count into `buf2c` and the constant `0x14` into `buf46` -
  * as decimal strings. */
-void InitPauseCrystalsPage(struct pause_screen_results *self)
+void InitPauseCrystalsPage(struct pause_menu *self)
 {
     struct settings_icon_actor **dest = &self->field_88;
 
@@ -70,7 +70,7 @@ extern struct icon_pos gStaticData_0816B1EC[];
  * position entry, keyframe-table base `0xe4<<1` off the same shared
  * table `InitPauseCrystalsPage` uses, frame index from `gStaticData_0816B20C`,
  * then the standard sub-counter/frame-counter/"done"-flag reset trio. */
-void InitPausePowersPage(struct pause_screen_results *self)
+void InitPausePowersPage(struct pause_menu *self)
 {
     s32 i;
 
@@ -99,7 +99,7 @@ extern struct icon_pos gStaticData_0816B21C[];
  * `field_3c = 0x80`. After the loop, formats two more row-stats
  * derived numbers (`CountClearGems`/`CountGems` on `field_10`) into
  * `buf2f`/`buf32`, and the constant `0x1c` into `buf49`. */
-void InitPauseGemsPage(struct pause_screen_results *self)
+void InitPauseGemsPage(struct pause_menu *self)
 {
     s32 i;
     s32 a, b;
@@ -140,7 +140,7 @@ extern struct icon_pos gStaticData_0816B258[];
  * `field_10` - the same four functions src/graphics/oam_count.c
  * documents) into `buf38`/`buf3b`/`buf3e`/`buf35`, and the constant
  * `0x14` into `buf4c`. */
-void InitPauseRelicsPage(struct pause_screen_results *self)
+void InitPauseRelicsPage(struct pause_menu *self)
 {
     s32 i;
 
@@ -206,7 +206,7 @@ static inline void set_icon_frame(struct settings_icon_actor *icon, u32 frame)
  * thresholds and constructs the icon at `field_bc`, tagged with each
  * medal (from `gStaticData_0816B270`, the same table InitPauseRelicsPage uses)
  * whose threshold was met. `field_6c` is an "earned" flag. */
-void InitPauseTimeTrialPage(struct pause_screen_results *self)
+void InitPauseTimeTrialPage(struct pause_menu *self)
 {
     s32 levelIdx;
     u32 time;

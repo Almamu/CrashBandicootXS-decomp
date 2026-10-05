@@ -1,5 +1,5 @@
 #include "core.h"
-#include "icon_manager.h"
+#include "bitmap_font.h"
 #include "gba/dma_macros.h"
 #include "graphics_package.h"
 
@@ -10,7 +10,7 @@
  * already high-confidence `graphics_loading` per docs/rom_map.md's own
  * table before this chunk (`0x080354E0`-`0x08035780`ish). */
 
-extern struct icon_manager *gSmallFont;
+extern struct bitmap_font *gSmallFont;
 extern struct oam_shadow_buffer *gOamBuffer;
 extern struct AudioContext *gAudioContext;
 
@@ -18,7 +18,7 @@ extern void ResetOamBuffer(struct oam_shadow_buffer *arg0);
 extern void HideUnusedOamEntries(struct oam_shadow_buffer *arg0);
 extern void WaitForVBlank(void);
 extern void CommitOamBuffer(struct oam_shadow_buffer *arg0);
-extern void FontSetPalette(struct icon_manager *self, u8 val);
+extern void FontSetPalette(struct bitmap_font *self, u8 val);
 extern void *_call_via_r1(void *arg0, void *fn);
 extern void *OperatorNew(s32 size);
 extern void *InitStarfield(void *arg0);
@@ -57,7 +57,7 @@ void LoadTitleScreenObjTiles(u32 *self);
 void *InitTitleScreen(u32 *self)
 {
     struct dma_regs *dma;
-    struct icon_manager *iconManager;
+    struct bitmap_font *iconManager;
     struct icon_slot *slot;
     u32 fieldValue;
 
@@ -71,9 +71,9 @@ void *InitTitleScreen(u32 *self)
     REG_BLDY = 0x10;
     REG_DISPCNT = 0;
 
-    FontSetPalette((struct icon_manager *)self[3], 0xe);
+    FontSetPalette((struct bitmap_font *)self[3], 0xe);
 
-    iconManager = (struct icon_manager *)self[3];
+    iconManager = (struct bitmap_font *)self[3];
     fieldValue = 0x200;
     iconManager->tileBase = fieldValue;
     slot = &iconManager->record->slots[6];
