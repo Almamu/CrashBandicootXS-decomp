@@ -144,7 +144,7 @@ void EndActionCtrlSpin(struct act *self, u8 mode, s32 flags)
             struct act_vtable *mgr;
             struct act_method *off;
             u8 one;
-            u8 *p = &self->unk_29;
+            u8 *p = &self->turboRun;
 
             one = 1;
             *p = one;

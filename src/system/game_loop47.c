@@ -152,7 +152,7 @@ extern struct crate *GetCrateBelow(struct crate *obj);
 extern struct crate *GetCrateAbove(struct crate *obj);
 extern struct crate *GetBottomCrate(struct crate *obj);
 extern struct crate *GetTopCrate(struct crate *obj);
-extern u8 sub_800B324(void *self);
+extern u8 HasPlayerRampYTarget(void *self);
 extern void SetMaskLevel(void *self, s32 arg);
 extern void ClearCrateStackTouched(struct crate *self);
 extern void MarkCrateStackTouched(struct crate *self, struct aabb *box);
@@ -740,7 +740,7 @@ tail:
              * gets r6, so cross-jumping sends this arm to the r6 copy of
              * `edge = dirX` (the one the first slope check ends in), as the
              * ROM's branch does. */
-            else if (dy <= 2 && (dx > 3 || !sub_800B324(D18C_P)))
+            else if (dy <= 2 && (dx > 3 || !HasPlayerRampYTarget(D18C_P)))
             {
                 edge = 4;
                 if (f21 != 0)
@@ -1062,18 +1062,18 @@ void ApplyCrateCollision(struct crate *self, s32 kind, s32 code, s32 edge, s32 d
                     else
                         E08C_CALL68(0xd, 8);
                     PHYS_PLAYER->speedY = 0;
-                    PHYS_PLAYER->velX = 0;
-                    PHYS_PLAYER->velY = 0;
-                    PHYS_PLAYER->velZ = 0;
+                    PHYS_PLAYER->rampYStart = 0;
+                    PHYS_PLAYER->rampYStep = 0;
+                    PHYS_PLAYER->rampYTarget = 0;
                 }
                 else if ((u32)(kind - 5) <= 1 && k == 8)
                 {
                     PlaySfx(gAudioContext, 2, 0x100);
                     E08C_CALL68(0xe, 8);
                     PHYS_PLAYER->speedY = 0;
-                    PHYS_PLAYER->velX = 0;
-                    PHYS_PLAYER->velY = 0;
-                    PHYS_PLAYER->velZ = 0;
+                    PHYS_PLAYER->rampYStart = 0;
+                    PHYS_PLAYER->rampYStep = 0;
+                    PHYS_PLAYER->rampYTarget = 0;
                 }
             }
             else if (code == 2)
@@ -1088,13 +1088,13 @@ void ApplyCrateCollision(struct crate *self, s32 kind, s32 code, s32 edge, s32 d
             }
         }
     }
-    if (code == 3 && self->kind == 0xf && (self->u48.n & 7) == 3)
+    if (code == 3 && self->kind == 0xf && (self->u48.slotState & 7) == 3)
     {
         {
             u8 e = 0xe;
 
             self->kind = e;
-            self->u48.n = 0;
+            self->u48.blastState = 0;
         }
         code = gCrateHitResponse[self->kind][kind];
     }

@@ -49,20 +49,20 @@ void UpdateEnemyHomingX(struct part_ctrl *self)
 
     if (d > 20) {
         if (x < self->rangeX[0])
-            SET_VEL(target->velA, 0, 0x10)
+            SET_VEL(target->rampX, 0, 0x10)
         else
-            SET_VEL(target->velA, -self->speed, self->accel)
+            SET_VEL(target->rampX, -self->speed, self->accel)
     } else if (d < -20) {
         if (x > self->rangeX[1])
-            SET_VEL(target->velA, 0, 0x10)
+            SET_VEL(target->rampX, 0, 0x10)
         else
-            SET_VEL(target->velA, self->speed, self->accel)
+            SET_VEL(target->rampX, self->speed, self->accel)
     } else {
-        SET_VEL(target->velA, 0, self->accel)
+        SET_VEL(target->rampX, 0, self->accel)
     }
 }
 
-/* Y-axis mirror of `UpdateEnemyHomingX` above: `target->y`, `velB`, and the
+/* Y-axis mirror of `UpdateEnemyHomingX` above: `target->y`, `rampY`, and the
  * `rangeY` bounds tested in the opposite order. */
 void UpdateEnemyHomingY(struct part_ctrl *self)
 {
@@ -72,16 +72,16 @@ void UpdateEnemyHomingY(struct part_ctrl *self)
 
     if (d > 20) {
         if (y < self->rangeY[1])
-            SET_VEL(target->velB, 0, 0x10)
+            SET_VEL(target->rampY, 0, 0x10)
         else
-            SET_VEL(target->velB, -self->speed, self->accel)
+            SET_VEL(target->rampY, -self->speed, self->accel)
     } else if (d < -20) {
         if (y > self->rangeY[0])
-            SET_VEL(target->velB, 0, 0x10)
+            SET_VEL(target->rampY, 0, 0x10)
         else
-            SET_VEL(target->velB, self->speed, self->accel)
+            SET_VEL(target->rampY, self->speed, self->accel)
     } else {
-        SET_VEL(target->velB, 0, self->accel)
+        SET_VEL(target->rampY, 0, self->accel)
     }
 }
 asm(".align 2, 0");

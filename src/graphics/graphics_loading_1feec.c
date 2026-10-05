@@ -35,7 +35,7 @@ void SpawnJellyfish(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->base.flags &= 0x7f;
     rec = LEVEL_RECORD(arg3);
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
-    part->unk_28_5 = rec->flags >> 2 & 1;
+    part->flipY = rec->flags >> 2 & 1;
     AddToPartList(gCollidableList, part);
     SetEnemyAnimMap(hdr, gEnemyDefaultAnimMap);
     rec2 = LEVEL_RECORD(arg3);
@@ -63,7 +63,7 @@ void SpawnLaserBarrier(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->base.flags &= 0x7f;
     rec = LEVEL_RECORD(arg3);
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
-    part->unk_28_5 = rec->flags >> 2 & 1;
+    part->flipY = rec->flags >> 2 & 1;
     AddToPartList(gCollidableList, part);
     SetEnemyAnimMap(hdr, gEnemyDefaultAnimMap);
     {
@@ -98,12 +98,12 @@ void sub_8020138(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->base.flags &= 0x7f;
     rec = LEVEL_RECORD(arg3);
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
-    part->unk_28_5 = rec->flags >> 2 & 1;
+    part->flipY = rec->flags >> 2 & 1;
     AddToPartList(gCollidableList, part);
     SetEnemyAnimMap(hdr, gEnemyDefaultAnimMap);
     rec2 = LEVEL_RECORD(arg3);
     SetEnemyAnimMap(hdr, gStaticData_0816BACC);
-    SetPopupSpan(hdr, rec2->unk_08, rec2->unk_04, rec2->unk_0C);
+    SetEnemyAttackCycle(hdr, rec2->unk_08, rec2->unk_04, rec2->unk_0C);
     SetEnemyState(hdr, 4);
 }
 
@@ -130,12 +130,12 @@ void sub_802026C(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->base.flags &= 0x7f;
     rec = LEVEL_RECORD(arg3);
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
-    part->unk_28_5 = rec->flags >> 2 & 1;
+    part->flipY = rec->flags >> 2 & 1;
     AddToPartList(gCollidableList, part);
     SetEnemyAnimMap(hdr, gEnemyDefaultAnimMap);
     rec2 = LEVEL_RECORD(arg3);
     SetEnemyAnimMap(hdr, gStaticData_0816BAEC);
-    SetPopupSpan(hdr, rec2->unk_08, rec2->unk_0C, rec2->unk_10);
+    SetEnemyAttackCycle(hdr, rec2->unk_08, rec2->unk_0C, rec2->unk_10);
     SetEnemyRangeX(hdr, rec2->unk_04);
     SetEnemyState(hdr, 0xd);
 }
@@ -164,12 +164,12 @@ void SpawnSaucerLabAssistant(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->base.flags &= 0x7f;
     rec = LEVEL_RECORD(arg3);
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
-    part->unk_28_5 = rec->flags >> 2 & 1;
+    part->flipY = rec->flags >> 2 & 1;
     AddToPartList(gCollidableList, part);
     SetEnemyAnimMap(hdr, gEnemyDefaultAnimMap);
     rec2 = LEVEL_RECORD(arg3);
     SetEnemyAnimMap(hdr, gSaucerLabAssistantAnimMap);
-    SetPopupSpan(hdr, 0x78, 0x5a, rec2->unk_0C);
+    SetEnemyAttackCycle(hdr, 0x78, 0x5a, rec2->unk_0C);
     SetEnemyRangeX(hdr, 0x28);
     SetEnemyState(hdr, 0x12);
 }
@@ -197,14 +197,14 @@ void SpawnPistonCrusher(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->base.flags &= 0x7f;
     rec = LEVEL_RECORD(arg3);
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
-    part->unk_28_5 = rec->flags >> 2 & 1;
+    part->flipY = rec->flags >> 2 & 1;
     AddToPartList(gCollidableList, part);
     SetEnemyAnimMap(hdr, gEnemyDefaultAnimMap);
     rec2 = LEVEL_RECORD(arg3);
     SetPartField0A(part, 0xa);
     AndPartFlags(part, ~0x40);
     SetEnemyAnimMap(hdr, gCrusherAnimMap);
-    SetPopupSpan(hdr, rec2->unk_04, rec2->unk_08, rec2->unk_0C);
+    SetEnemyAttackCycle(hdr, rec2->unk_04, rec2->unk_08, rec2->unk_0C);
     SetEnemyState(hdr, 4);
 }
 
@@ -253,7 +253,7 @@ void SpawnFlamethrowerLabAssistant(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->base.flags &= 0x7f;
     rec = LEVEL_RECORD(arg3);
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
-    part->unk_28_5 = rec->flags >> 2 & 1;
+    part->flipY = rec->flags >> 2 & 1;
     /* The `q2` store sits inside the second argument, after a copy of
      * `part` that the empty asm (no code) keeps as its own pseudo. That
      * copy is tied to r1, so the ROM's order comes out: `adds r1, r7, #0`,
@@ -296,7 +296,7 @@ void SpawnFlamethrowerLabAssistant(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     }
     SetPartField0A(part, 1);
     SetEnemyAnimMap(hdr, gFlamethrowerLabAssistantAnimMap);
-    SetPopupSpan(hdr, rec2->unk_08, rec2->unk_04, rec2->unk_0C);
+    SetEnemyAttackCycle(hdr, rec2->unk_08, rec2->unk_04, rec2->unk_0C);
     SetEnemyState(hdr, 4);
 }
 
@@ -322,7 +322,7 @@ void sub_8020788(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->base.flags &= 0x7f;
     rec = LEVEL_RECORD(arg3);
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
-    part->unk_28_5 = rec->flags >> 2 & 1;
+    part->flipY = rec->flags >> 2 & 1;
     AddToPartList(gCollidableList, part);
     SetEnemyAnimMap(hdr, gEnemyDefaultAnimMap);
     rec2 = LEVEL_RECORD(arg3);
@@ -353,7 +353,7 @@ void sub_80208C4(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->base.flags &= 0x7f;
     rec = LEVEL_RECORD(arg3);
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
-    part->unk_28_5 = rec->flags >> 2 & 1;
+    part->flipY = rec->flags >> 2 & 1;
     AddToPartList(gCollidableList, part);
     SetEnemyAnimMap(hdr, gEnemyDefaultAnimMap);
     rec2 = LEVEL_RECORD(arg3);
@@ -385,7 +385,7 @@ void SpawnRat(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->base.flags &= 0x7f;
     rec = LEVEL_RECORD(arg3);
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
-    part->unk_28_5 = rec->flags >> 2 & 1;
+    part->flipY = rec->flags >> 2 & 1;
     AddToPartList(gCollidableList, part);
     SetEnemyAnimMap(hdr, gEnemyDefaultAnimMap);
     rec2 = LEVEL_RECORD(arg3);
@@ -415,7 +415,7 @@ void SpawnFrog(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->base.flags &= 0x7f;
     rec = LEVEL_RECORD(arg3);
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
-    part->unk_28_5 = rec->flags >> 2 & 1;
+    part->flipY = rec->flags >> 2 & 1;
     AddToPartList(gCollidableList, part);
     SetEnemyAnimMap(hdr, gEnemyDefaultAnimMap);
     part->base.field_0A = 7;
@@ -446,7 +446,7 @@ void SpawnSeaMine(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->base.flags &= 0x7f;
     rec = LEVEL_RECORD(arg3);
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
-    part->unk_28_5 = rec->flags >> 2 & 1;
+    part->flipY = rec->flags >> 2 & 1;
     AddToPartList(gCollidableList, part);
     SetEnemyAnimMap(hdr, gEnemyDefaultAnimMap);
     rec2 = LEVEL_RECORD(arg3);
@@ -480,13 +480,13 @@ void SpawnWoodenCrusher(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
     part->base.flags &= 0x7f;
     rec = LEVEL_RECORD(arg3);
     part->flipX = (rec->flags >> 1 ^ 1) & 1;
-    part->unk_28_5 = rec->flags >> 2 & 1;
+    part->flipY = rec->flags >> 2 & 1;
     AddToPartList(gCollidableList, part);
     SetEnemyAnimMap(hdr, gEnemyDefaultAnimMap);
     rec2 = LEVEL_RECORD(arg3);
     part->base.field_0A = 0xa;
     AndPartFlags(part, ~0x40);
     hdr->animMap = gCrusherAnimMap;
-    SetPopupSpan(hdr, rec2->unk_04, rec2->unk_08, rec2->unk_0C);
+    SetEnemyAttackCycle(hdr, rec2->unk_04, rec2->unk_08, rec2->unk_0C);
     SetEnemyState(hdr, 4);
 }

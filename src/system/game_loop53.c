@@ -100,7 +100,7 @@ void PickUpWumpa(struct orbit_part *self, u8 randomize)
     {
         u8 one = 1;
 
-        self->unk_25 = one;
+        self->screenSpace = one;
     }
     self->base.flags |= 0x10;
 
@@ -450,7 +450,7 @@ void SendWumpaToHud(struct orbit_part *self)
     self->base.x -= self->mode << 8;
     self->timer = 0xa0;
     OrbitClampFrame(self);
-    self->unk_25 = 1;
+    self->screenSpace = 1;
 
     WorldToScreen(self, self->base.x >> 8, self->base.y >> 8, &outX, &outY);
 

@@ -186,7 +186,7 @@ system from "core" system startup/init code.
   `OpenAkuAkuCrate` (viewport trampoline-pair/cue-1 firing)
 - `src/system/game_loop25.c` (GitHub issue #13): `IsCrateKindBreakable` -
   trivial `gCrateKindBreakable[idx]` lookup
-- `src/system/game_loop26.c` (GitHub issue #13): `sub_8010A00` -
+- `src/system/game_loop26.c` (GitHub issue #13): `GetSlotCrateStage` -
   `self+0x48` bits 6-7 sub-state extractor
 - `src/system/game_loop29.c` (GitHub issue #13, second pass): `OpenLifeCrate`
   - cue-3 SFX plus a `gEntityFlags` bit-grid consume-if-clear and a
@@ -270,12 +270,12 @@ system from "core" system startup/init code.
   [docs/matching/issue-38-sound-channel-family.md](../matching/issue-38-sound-channel-family.md).
 - `src/system/game_loop27.c` (GitHub issue #14, recategorized
   graphics->game_loop - a direct continuation of the same physics/
-  collision subsystem file family): `sub_8010A0C`-`sub_8010B68` (24
+  collision subsystem file family): `DecrementSlotCrateStage`-`GetCrateTrialKind` (24
   functions) plus the unlabeled `IsCrateBusy` (the original
   disassembly never gave it its own symbol - it falls out of
-  `sub_8010AEC`'s trailing alignment padding) - a run of bit-field get/
+  `GetCrateFallSpeed`'s trailing alignment padding) - a run of bit-field get/
   set/clear accessors and plain field accessors on the same
-  "collision box" record `sub_8010A00`/`ResetCrate` already operate
+  "collision box" record `GetSlotCrateStage`/`ResetCrate` already operate
   on. See
   [docs/matching/issue-14-0x08010a0c-graphics.md](../matching/issue-14-0x08010a0c-graphics.md).
 - **`ResolveCollisionCandidates`** (`src/system/game_loop28.c`) - issue #14's last

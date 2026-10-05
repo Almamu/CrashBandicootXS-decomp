@@ -106,7 +106,7 @@ void ActionCtrlStateAirSpin(struct act *self)
     if ((part->contact & 8) && part->speedY > 0)
     {
         ActOrFlags0D(part, 1);
-        self->unk_34 = 0;
+        self->slamBlocked = 0;
         ACT_VCALL1(self, m20, 0xD);
         self->motionYKeepSpeed = 0;
         self->motionYPending = 1;

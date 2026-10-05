@@ -50,7 +50,7 @@ void UpdateCrateFall(struct crate *self)
     if (remaining == 0)
         return;
     gCrateListChanged = 1;
-    speed = self->unk_4C;
+    speed = self->fallSpeed;
     if (speed == 0)
         speed = 1;
     acc = 0;
@@ -95,7 +95,7 @@ void UpdateCrateFall(struct crate *self)
                 self->fallDistance = remaining;
                 if (gCrateKindExplosive[kind = self->kind])
                 {
-                    if (self->u48.n != 0 || kind == 10)
+                    if (self->u48.blastState != 0 || kind == 10)
                     {
                         if ((self->state & 0x7f) == 0)
                             ExplodeCrate(self, 0);
@@ -133,13 +133,13 @@ void UpdateCrateFall(struct crate *self)
     }
     self->fallDistance = remaining;
     if (remaining == 0)
-        self->unk_4C = 0;
+        self->fallSpeed = 0;
     else
     {
-        if (++self->unk_4C == 0)
-            ++self->unk_4C;
-        if (self->unk_4C > 5)
-            self->unk_4C = 5;
+        if (++self->fallSpeed == 0)
+            ++self->fallSpeed;
+        if (self->fallSpeed > 5)
+            self->fallSpeed = 5;
     }
 }
 /* Trailing byte-padding mismatch fix: the function body is 342 bytes

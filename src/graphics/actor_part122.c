@@ -77,17 +77,17 @@ static inline void SetMode(struct part_ctrl *self, s32 mode)
 static inline void SetVelX(struct ctrl_target *t, s32 v, s32 w)
 {
     t->speedX = v;
-    t->velA[0] = v;
-    t->velA[1] = w;
-    t->velA[2] = v;
+    t->rampX[0] = v;
+    t->rampX[1] = w;
+    t->rampX[2] = v;
 }
 
 static inline void SetVelY(struct ctrl_target *t, s32 v, s32 w)
 {
     t->speedY = v;
-    t->velB[0] = v;
-    t->velB[1] = w;
-    t->velB[2] = v;
+    t->rampY[0] = v;
+    t->rampY[1] = w;
+    t->rampY[2] = v;
 }
 
 /* `self->state` update (1-18 valid, same shape as UpdateEnemyCtrl's state
@@ -122,7 +122,7 @@ void SetEnemyState(struct part_ctrl *self, s32 state)
     case 4:
     case 14:
     case 16:
-        if (self->unk_38 >= self->unk_30) {
+        if (self->cycleOffset >= self->idleTime) {
             SetMode(self, 4);
             {
                 struct ctrl_target *target = self->target;

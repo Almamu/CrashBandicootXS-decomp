@@ -140,7 +140,7 @@ void KillPlayer(void *selfArg, void *arg1)
     }
 }
 
-/* If the player (`gPlayer`)'s `unk_100` "active" flag is set:
+/* If the player (`gPlayer`) is on slippery ground (`slippery`, +0x100):
  * on tag `0x12` (only if `unk_60` is nonzero) or tag `0xd`/`0x18`,
  * re-tags the player as `0x25` (type `0x12`) or `0x26` (the other two,
  * re-reading the global fresh first) and fires the standard
@@ -151,7 +151,7 @@ void sub_8012238(void *selfArg)
 {
     u8 *self = selfArg;
     struct act_part *player = gPlayer;
-    register s32 flag asm("r5") = player->unk_100;
+    register s32 flag asm("r5") = player->slippery;
 
     if (flag == 0)
         goto flag_zero;

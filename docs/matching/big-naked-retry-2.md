@@ -89,7 +89,7 @@ other way round: the function returns *when* `self->state == 0x1D`.
   reproduces it. I didn't find a source form that leaves a dead
   non-volatile load.
 - Smaller fixes:
-  - `unk_101` and `unk_90` are stored through inline setters, so the
+  - `hanging` and `bumped` are stored through inline setters, so the
     value is materialized before the offset.
   - The player's `flags0C &= 0x7f` goes through a `u8 *`. As a struct
     member store, the zero from the dead `& 0` gets reused for the later
@@ -97,11 +97,11 @@ other way round: the function returns *when* `self->state == 0x1D`.
   - Case 12's two mirror tests are spelled differently:
     `(s8)(flags28 << 3) < 0` and `(u32)(flags28 << 27) >> 31`. The ROM
     has a sign test in one and an extract in the other.
-  - The zero in cases 1/4/6 is a local assigned before the `unk_100`
+  - The zero in cases 1/4/6 is a local assigned before the `slippery`
     test.
 
 `include/action_obj.h`'s unused `unk_54[0xC]` became three named `s32`s
-(now `velBX`/`velBY`/`velBZ`) for the velocity triple. No other file
+(now `rampYStart`/`rampYStep`/`rampYTarget`) for the velocity triple. No other file
 used it.
 
 ## Tools

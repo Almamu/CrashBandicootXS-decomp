@@ -26,8 +26,8 @@ under both).
   `ldr; ldr; str; str` anchor copy is a struct copy (`ORBIT_POS`).
 - `include/action_obj.h` gained named fields only: `act.anims`
   (+0x04), the method slots `m10`/`m28`..`m48`, `act_part` fields
-  (`velAX`/`velAY`/`velAZ`/`speedX`/`deadline`/`unk_90`/`listCount`/
-  `unk_100`/`pushLeft`/`pushRight`) and `act_anim_bank.unk_0A`.
+  (`rampXStart`/`rampXStep`/`rampXTarget`/`speedX`/`deadline`/`bumped`/`listCount`/
+  `slippery`/`pushLeft`/`pushRight`) and `act_anim_bank.unk_0A`.
 
 ## Closed (8)
 
@@ -39,7 +39,7 @@ under both).
 | `PickUpWumpa` | game_loop53.c | old | Plain C; the tag lands in r7 on its own under old_agbcc (the old r7-hazard note). The `+0x25 = 1` store goes through a `u8` local so the 1 is materialized before the field address. |
 | `SendWumpaToHud` | game_loop53.c | old | The fixed `-0x1000` offsets go through `OrbitOffset(pos, off)`, an inline taking the offset as a parameter: that makes old_agbcc reload `0xFFFFF000` from the pool for each axis (into r1, then r6) while `0x1400` stays shared in r4, as in the ROM. |
 | `CreateExtraLife` | game_loop54.c | old | Plain C: the r8 "zero sentinel" is just a `u8 zero` local stored to +0x49..+0x4B, the anchor copy is `ORBIT_POS`, and the +0x28 bit clears are `s32` 1-bit fields (the ROM's `-17`/`-33` masks). |
-| `ActionCtrlStateIdle` | actor_part83.c | old | The pad object is loaded before `in` is spilled (`void *pad = gInput` first). The held-0x100 result is what `+0x29` is cleared with. The D-pad part sits after the first `UpdatePlayerFacing` tail, reached by a `goto`, matching the ROM layout. The 3..8 range `case` comes before `case 2`. `part->unk_100` is read through `PartByte(part, 0x100)`, an inline with the offset as a parameter, so the 0x100 is rematerialized instead of reused from the input test. |
+| `ActionCtrlStateIdle` | actor_part83.c | old | The pad object is loaded before `in` is spilled (`void *pad = gInput` first). The held-0x100 result is what `+0x29` is cleared with. The D-pad part sits after the first `UpdatePlayerFacing` tail, reached by a `goto`, matching the ROM layout. The 3..8 range `case` comes before `case 2`. `part->slippery` is read through `PartByte(part, 0x100)`, an inline with the offset as a parameter, so the 0x100 is rematerialized instead of reused from the input test. |
 | `HandleActionCtrlAirInput` | actor_part84.c | old | Each distance test is two separate `if`s (a `\|\|` gets folded into one compare). The part/type chain is an `if` chain with a shared `goto hit`. The +0x0D bit-0 set in the charge path is a plain `\|= 1` (the `ActOrFlags0D` inline's 1 would be reused for the trio). The trios mix literal stores and parameter-passing inlines exactly where the ROM materializes constants early (`ActTrio28` for the second trio, `ActQueue27(self, 0, 0)` for the idle reset). |
 
 ## Not closed (7)

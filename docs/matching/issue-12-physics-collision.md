@@ -314,7 +314,7 @@ three):
      **`ClearCrateStackTouched(self)`** (already NAKED-matched, `game_loop7.c`)
      and clears the "apply offset" flag; on overlap, runs a large block
      of edge-distance comparisons that (depending on direction/gap)
-     calls **`sub_800B324`** (external, unread) and/or
+     calls **`HasPlayerRampYTarget`** (external, unread) and/or
      **`FindLineCrossing`** (already matched, `game_loop33.c`, the
      Bresenham line-stepper) to decide a final offset direction.
    - **Case 4** (`0800DD94`): calls **`GetBottomCrate`** (already matched,
@@ -741,7 +741,7 @@ check is the full clean `make compare`, which passed outright.
   `docs/matching/issue-13-fc70-continuation.md`): clamps `self` within
   0x4f/0x3f px of the player into a packed `self+0x48` byte, then (only
   when `self+0x2d==8`) runs a 4-phase `self+0x48&7` state rotation
-  calling `sub_8010A50` to decide whether each phase continues or
+  calling `GetSlotCrateSpins` to decide whether each phase continues or
   commits. Self-contained (no calls out to any other function in this
   cluster) - a full branch-by-branch semantic write-up was not attempted
   for this pass, since the NAKED transcription's byte-exactness doesn't

@@ -72,23 +72,23 @@ struct act_part
     s32 stepTimer;         // 0x34 - ticks spent on the current step
     u8 animDone;           // 0x38
     u8 unk_39[0xF];
-    s32 velAX;             // 0x48 - struct gobj's velA/velB/speedX/speedY, as
-    s32 velAY;             // 0x4C   separate words
-    s32 velAZ;             // 0x50
-    s32 velBX;             // 0x54
-    s32 velBY;             // 0x58
-    s32 velBZ;             // 0x5C
+    s32 rampXStart;        // 0x48 - struct gobj's rampX/rampY (start, step, target),
+    s32 rampXStep;         // 0x4C   as separate words
+    s32 rampXTarget;       // 0x50
+    s32 rampYStart;        // 0x54
+    s32 rampYStep;         // 0x58
+    s32 rampYTarget;       // 0x5C
     s32 speedX;            // 0x60
     s32 speedY;            // 0x64
     u8 contact;            // 0x68
     u8 unk_69[0x23];
     s32 deadline;          // 0x8C - struct gobj.deadline
-    u8 unk_90;             // 0x90
+    u8 bumped;             // 0x90 - struct gobj.bumped
     u8 unk_91[3];
     u8 listCount;          // 0x94 - struct gobj.listCount
     u8 unk_95[0x6B];
-    u8 unk_100;            // 0x100
-    u8 unk_101;            // 0x101
+    u8 slippery;           // 0x100 - struct gobj.slippery (terrain kind 5: keeps sliding)
+    u8 hanging;            // 0x101 - struct gobj.hanging (set on event 0x17, cleared on 0x18)
     u8 pushLeft;           // 0x102 - nonzero: moves the standing player 1px left per frame
     u8 pushRight;          // 0x103 - nonzero: moves the standing player 1px right per frame
 };
@@ -119,14 +119,23 @@ struct act
     u8 spinCooldown;       // 0x26 - frames until the next spin is allowed (set to 12, counts down)
     u8 motionX;            // 0x27 - queued X motion entry (anims->first)
     u8 motionY;            // 0x28 - queued Y motion entry (anims->second)
-    u8 unk_29;             // 0x29
-    u8 unk_2A[5];
+    u8 turboRun;           // 0x29 - set on entering the turbo run (L, state 4); landing resumes it
+                           //        instead of the plain run; the idle state clears it
+    u8 unk_2A;
+    u8 bumpTimer;          // 0x2B - 3 after a crate's side stopped the X motion (event 12); counts down
+                           //        while at most one crate is touched, then re-queues bumpedMotionX
+    u8 bumpedMotionX;      // 0x2C - the motionX that bump cancelled
+    u8 prevState;          // 0x2D - `state` before the last SetActionCtrlMode (a flip jump, 9,
+                           //        turns the mid-air body slam into the flip body slam)
+    u8 prevSlippery;       // 0x2E - part->slippery last frame; UpdateActionCtrl calls sub_8012238 on a change
     u8 motionXPending;     // 0x2F - ApplyActionCtrlMotion applies motionX
     u8 motionYPending;     // 0x30 - ApplyActionCtrlMotion applies motionY
     u8 motionXKeepSpeed;   // 0x31 - apply with SetCtrlTargetMotionX (speed kept), not Start...
     u8 motionYKeepSpeed;   // 0x32 - the same for Y
-    u8 unk_33;
-    u8 unk_34;             // 0x34
+    u8 idleFidget;         // 0x33 - an idle fidget anim (0xE/5/0x1A, after 8/20/30 s) is playing;
+                           //        UpdateActionCtrl doesn't force the idle anim back meanwhile
+    u8 slamBlocked;        // 0x34 - R was held through a bounce (events 13/14): the mid-air body
+                           //        slam needs R released first (UpdateActionCtrl clears it then)
 };
 
 typedef void (*act_fn1)(void *self, s32 a);

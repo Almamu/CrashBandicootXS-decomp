@@ -148,7 +148,7 @@ place; the NAKED bodies are unchanged.
   next, so every reload before this point has to match. The first
   mismatch is already the `movs #0` index for the `+0x70` method's
   `ldrsh` (r2 in the ROM, r3 here). A pointer walk, bitfield
-  `f100..f103`, and a value-first `one` local were tried. The
+  `slippery`/`hanging`/`pushLeft`/`pushRight`, and a value-first `one` local were tried. The
   value-first local does reproduce the ROM's `movs rX, #1` before the
   offset, but the registers still differ.
 - **`DrawAffineSpritePieces`: not attempted past reading.** It is 1044 bytes, and

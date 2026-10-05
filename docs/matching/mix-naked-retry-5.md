@@ -86,7 +86,7 @@ differences left. Each one had its own fix:
   `self`, `part`, `count` or the records pointer, `ACT_CALL*` instead
   of `ACT_VCALL*`, the constant-init `asm` for 0x600 and for the
   `ActSetNext` 4, inline `MoveY`/`Lift` helpers, a `u8`/`s32` zero for
-  `unk_101`, and pointer spellings of the `y` update. Adding references
+  `hanging`, and pointer spellings of the `y` update. Adding references
   to the records pointer moves its load instead (6 halfwords).
 - **`GaxChannelMix`** (GAX mixer). The ROM has its own `__muldi3`. With
   a plain 64-bit `*` (the libcall

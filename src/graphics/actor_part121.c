@@ -58,13 +58,13 @@ extern void *LaunchHarmfulEffectPart(s32 a, s32 b, s32 c, s32 d, s32 e, void *f)
 
 /* The fields of this cluster's controller object (the class of
  * UpdateEnemyCtrl, see actor_part124.c's `struct trigger_ctrl`) read here:
- * `period`/`phase` make the gate below pass once every `period` frames,
+ * `shotPeriod`/`shotPhase` make the gate below pass once every `shotPeriod` frames,
  * `mode` is the `self+0x68` sub-state and `owner` the controlled
  * object. */
 struct trigger_ctrl {
     u8 unk_00[0x48];
-    s32 period;         // 0x48
-    s32 phase;          // 0x4C
+    s32 shotPeriod;     // 0x48
+    s32 shotPhase;      // 0x4C
     u8 unk_50[0x18];
     s32 mode;           // 0x68
     u8 unk_6c[4];
@@ -77,8 +77,8 @@ void UpdateEnemyShooter(void *selfArg)
     struct gobj *owner;
     u8 *record;
     s32 base = (s32)gRoomFrameCount;
-    s32 period = self->period;
-    s32 divCheck = __modsi3(base + period - self->phase, period);
+    s32 period = self->shotPeriod;
+    s32 divCheck = __modsi3(base + period - self->shotPhase, period);
 
     if (divCheck == 0) {
         switch (self->mode) {

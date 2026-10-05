@@ -165,7 +165,7 @@ void ActionCtrlStateSlide(struct act *self)
                 case 3 ... 4:
                     if ((INPUT_HELD(in) & 0x200) && HasTurboRun(gLevelState))
                     {
-                        self->unk_29 = 1;
+                        self->turboRun = 1;
                         ACT_VCALL1(self, m20, 4);
                         ACT_VCALL2(self, m50, self->part, 0x18);
                         ActTrio27(self, held, 1, 0x1B);

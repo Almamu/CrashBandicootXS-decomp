@@ -34,14 +34,14 @@ struct a884_part {
     u8 unk_2c[0x3c];
     u8 hitAxes;         // 0x68
     u8 unk_69[0x23];
-    s32 unk_8c;         // 0x8C
+    s32 deadline;       // 0x8C - struct gobj.deadline (invulnerability)
     u8 unk_90[0x1c];
-    s32 unk_ac;         // 0xAC
+    s32 carried;        // 0xAC - struct gobj.carried
     u8 unk_b0[0x50];
-    u8 f100;            // 0x100
-    u8 f101;            // 0x101
-    u8 f102;            // 0x102
-    u8 f103;            // 0x103
+    u8 slippery;        // 0x100 - terrain kind 5 (struct gobj.slippery)
+    u8 hanging;         // 0x101 - see the hang-terrain probe at the end
+    u8 pushLeft;        // 0x102 - terrain kind 7
+    u8 pushRight;       // 0x103 - terrain kind 10
     u8 dead;            // 0x104
     u8 f105;            // 0x105
 };
@@ -178,12 +178,12 @@ u8 CollidePlayer(struct a884_part *self)
          * offsets reuse one register (`adds r1, #3`, `subs r2, #3`). */
         asm("" : "=r"(hold));
         ((struct a884_game *)gLevelLayers)->busy = zero;
-        if (self->unk_ac != 0) {
+        if (self->carried != 0) {
             self->hitAxes |= 8;
-            self->unk_ac = zero;
-            self->f100 = zero;
-            self->f102 = zero;
-            self->f103 = zero;
+            self->carried = zero;
+            self->slippery = zero;
+            self->pushLeft = zero;
+            self->pushRight = zero;
         }
         kind = ((struct a884_game *)gLevelLayers)->kind;
         if (kind != 0) {
@@ -192,7 +192,7 @@ u8 CollidePlayer(struct a884_part *self)
                 self->flags |= 0x40;
                 {
                     /* The ROM stores a fresh 0 from r0 (address in r1). */
-                    s32 *_p = &self->unk_8c;
+                    s32 *_p = &self->deadline;
                     register s32 _z asm("r0") = 0;
                     *_p = _z;
                 }
@@ -204,27 +204,27 @@ u8 CollidePlayer(struct a884_part *self)
             case 4:
                 break;
             case 5:
-                self->f102 = 0;
-                self->f103 = 0;
+                self->pushLeft = 0;
+                self->pushRight = 0;
                 {
                     /* Constant-init (no code): the 1 is set before the
                      * address, as in the ROM, which keeps the kind-5 tail
                      * from being cross-jumped. */
                     s32 _one;
                     asm("" : "=r"(_one) : "0"(1));
-                    self->f100 = _one;
+                    self->slippery = _one;
                 }
                 break;
             case 7:
-                self->f103 = 0;
-                self->f100 = 0;
+                self->pushRight = 0;
+                self->slippery = 0;
                 {
                     /* Constant-init (no code): the 1 is set before the
                      * address, as in the ROM, which keeps the kind-5 tail
                      * from being cross-jumped. */
                     s32 _one;
                     asm("" : "=r"(_one) : "0"(1));
-                    self->f102 = _one;
+                    self->pushLeft = _one;
                 }
                 break;
             case 6:
@@ -232,23 +232,23 @@ u8 CollidePlayer(struct a884_part *self)
             case 9:
                 break;
             case 10:
-                self->f102 = 0;
-                self->f100 = 0;
+                self->pushLeft = 0;
+                self->slippery = 0;
                 {
                     /* Constant-init (no code): the 1 is set before the
                      * address, as in the ROM, which keeps the kind-5 tail
                      * from being cross-jumped. */
                     s32 _one;
                     asm("" : "=r"(_one) : "0"(1));
-                    self->f103 = _one;
+                    self->pushRight = _one;
                 }
                 break;
             }
             ((struct a884_game *)gLevelLayers)->kind = 0;
         } else if (self->hitAxes == 8) {
-            self->f102 = 0;
-            self->f103 = 0;
-            self->f100 = 0;
+            self->pushLeft = 0;
+            self->pushRight = 0;
+            self->slippery = 0;
         }
 
         asm("" : : "r"(hold)); /* r3 hold ends: no code */
@@ -261,14 +261,14 @@ u8 CollidePlayer(struct a884_part *self)
             x += off[0];
         y += off[1];
         if (GetTerrainFlagsAt(gLevelLayers, x, y) == 6) {
-            if (self->f101 == 0) {
+            if (self->hanging == 0) {
                 s32 snap = (y & 0x00FFFFF8) + 7;
 
                 snap -= y;
                 self->y += snap << 8;
                 CALL_M68(self, 0, 0x17, 0);
             }
-        } else if (self->f101 != 0) {
+        } else if (self->hanging != 0) {
             CALL_M68(self, 0, 0x18, 0);
         }
     }

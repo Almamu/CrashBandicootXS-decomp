@@ -90,9 +90,9 @@ struct pctrl_target
     s32 stepTimer;      // 0x34 - ticks spent on the current step
     u8 animDone;        // 0x38 - set once a non-looping animation ends
     u8 unk_39[0xF];
-    s32 velAX;          // 0x48 - struct gobj.velA
-    s32 velAY;          // 0x4C
-    s32 velAZ;          // 0x50
+    s32 rampXStart;     // 0x48 - struct gobj.rampX (start, step, target)
+    s32 rampXStep;      // 0x4C
+    s32 rampXTarget;    // 0x50
     u8 unk_54[0xC];
     s32 speedX;         // 0x60
     s32 speedY;         // 0x64

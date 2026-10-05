@@ -54,7 +54,7 @@ static inline void ActHold27P(struct act *self, u8 *slot, s32 next)
     *slot = next;
 }
 
-/* `part->unk_100` read through an offset parameter: that keeps old_agbcc
+/* `part->slippery` (+0x100) read through an offset parameter: that keeps old_agbcc
  * from reusing an earlier 0x100 constant for the field address, which
  * the ROM rematerializes. */
 static inline u8 PartByte(struct act_part *part, s32 offset)
@@ -110,14 +110,14 @@ void ApplyActionCtrlMotion(struct act *self)
 skip:
     if (self->state == 0) {
         struct act_part *p = gPlayer;
-        if (p->speedX == 0 && p->bank->unk_0A != 0x12 && self->unk_33 == 0) {
+        if (p->speedX == 0 && p->bank->unk_0A != 0x12 && self->idleFidget == 0) {
             StopSfx(gAudioContext, 0x36);
             ACT_CALL2(self, m50, gPlayer, 0x12);
         }
     }
     if (self->state == 0 || self->state == 0x11) {
         struct act_part *p = gPlayer;
-        if (p->speedX != 0 && p->unk_100 == 0) {
+        if (p->speedX != 0 && p->slippery == 0) {
             self->motionXKeepSpeed = 0;
             self->motionXPending = 1;
             self->motionX = 0;
@@ -131,7 +131,7 @@ skip:
 
             rec = *(gCtrlMotionRecords + (*self->anims)[self->motionX].first);
             q = gPlayer;
-            if (q->unk_100 && self->part->contact == 8 && q->speedX != 0) {
+            if (q->slippery && self->part->contact == 8 && q->speedX != 0) {
                 self->motionXKeepSpeed = f;
                 /* Three extra references to `self` (no code): they raise its
                  * allocation priority so the ROM's register choice for the
@@ -144,7 +144,7 @@ skip:
             }
             if (self->motionX == 0x1E) {
                 self->motionXKeepSpeed = 0;
-                if (gPlayer->unk_100) {
+                if (gPlayer->slippery) {
                     rec.b = FixedMul(rec.b, 0x200);
                     rec.a = FixedMul(rec.a, 0x180);
                 }
@@ -207,7 +207,7 @@ void ActionCtrlStateIdle(struct act *self)
     part = self->part;
     if (part->animDone) {
         ACT_CALL2(self, m50, part, 0x12);
-        self->unk_33 = 0;
+        self->idleFidget = 0;
     }
     frames = ++self->frames;
     part = self->part;
@@ -224,7 +224,7 @@ void ActionCtrlStateIdle(struct act *self)
         } else {
             goto skip;
         }
-        self->unk_33 = 1;
+        self->idleFidget = 1;
     }
 skip:
     {
@@ -255,7 +255,7 @@ skip:
         UpdatePlayerFacing(self);
         return;
     other:
-        self->unk_29 = held;
+        self->turboRun = held;
         if (dir == 0) {
             struct act_part *p = self->part;
             u8 *slot;
@@ -269,7 +269,7 @@ skip:
                 switch (dir) {
                 case 3 ... 8:
                     if ((INPUT_HELD(in) & 0x200) && HasTurboRun(gLevelState)) {
-                        self->unk_29 = 1;
+                        self->turboRun = 1;
                         ACT_CALL1(self, m20, 4);
                         ACT_CALL2(self, m50, self->part, 0x18);
                         ActTrio27(self, wait, 1, 0x1B);

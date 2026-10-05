@@ -31,9 +31,9 @@ struct crate;
  * updated with word-sized masks. */
 struct phys_b48
 {
-    u8 phase:3;
-    u8 cnt:3;
-    u8 dir:2;
+    u8 phase:3;         // face 0-3; bit 2: the spin has started
+    u8 spins:3;         // full turns left at this stage
+    u8 stage:2;         // 0 idle, 1-3 faster each time (gSlotCrateTimers); past 3 it turns to iron
 };
 
 
@@ -90,19 +90,40 @@ struct crate
     s32 fallTargetY;    // 0x40 - Q8 y the crate lands at (DropCratesAbove sets it; UpdateCrateFall
                         //        snaps `y` to it when the fall ends)
     s32 fallDistance;   // 0x44 - Q8 distance still to fall, 0: resting
-    union {
-        s32 n;
-        struct crate_group *group; // NULL or PHYS_NO_GROUP: none
+    union {             // 0x48 - one word, read per kind (placement halfword +8 for outlines):
+        s32 solidKind;  //   5 (outline): kind + 0x15 it turns into (SolidifyOutlineCrate); also
+                        //   loaded from `trialKind` by ConvertCratesForTimeTrial
+        struct crate_group *group; // 3 (iron switch): its outline crates; NULL or PHYS_NO_GROUP: none
+        s32 bounceTimer; // 12 (bouncy wumpa): -0x2A until the first bounce, then 360 frames
+                        //   counted down by UpdateCrate (BounceWumpaCrate)
+        s32 slotState;  // 15 (slot): bits 0-2 phase (face 0-3, bit 2 started), 3-5 spins
+                        //   left at this stage, 6-7 stage (gSlotCrateTimers index; 0 idle);
+                        //   see struct phys_b48 and UpdateSlotCrate
+        s32 pressed;    // 6 (nitro switch): set once ActivateNitroSwitchCrate has fired
+        s32 blastState; // explosive kinds: 1 once it has fallen far enough to explode on
+                        //   landing (DropCratesAbove/UpdateCrateFall), 0xFF once it has
+                        //   blasted (BlastNearbyCrates)
         struct phys_b48 b;
-    } u48;              // 0x48
-    s8 unk_4C;          // 0x4C
+    } u48;
+    s8 fallSpeed;       // 0x4C - UpdateCrateFall's per-tick speed (ramps up to 5); the iron switch
+                        //        instead keeps its step delay here (placement byte 8, reloaded
+                        //        into `timer` after each step)
     u8 state;           // 0x4D - low 7 bits: state (1: committed), bit 7: busy
     u8 kind;            // 0x4E - index into the gStaticData_0816BB** tables
     u8 timer;           // 0x4F
-    u8 unk_50;          // 0x50
-    u8 unk_51;          // 0x51
+    u8 paramA;          // 0x50 - per-kind parameter (placement byte 6 for kinds 3/5):
+                        //        1 (checkpoint): placement flag bit 6, handed to SetCheckpointAtPlayer;
+                        //        3 (iron switch): group id, then the step counter once activated;
+                        //        5 (outline): group id (matches its switch's);
+                        //        12 (bouncy wumpa): set while a bounce animation runs;
+                        //        15 (slot): mask of the faces it may stop on (placement byte 1 bits 1-3)
+    u8 paramB;          // 0x51 - per-kind parameter (placement byte 6/7):
+                        //        3 (iron switch): number of steps; 5 (outline): the step it solidifies on;
+                        //        11 ("?"): contents (9: random, OpenMysteryCrate);
+                        //        12 (bouncy wumpa): bounces so far (breaks after 5); 15 (slot): placement byte 6
     u8 unk_52[2];
-    s32 unk_54;         // 0x54
+    s32 trialKind;      // 0x54 - kind + 0x15 the crate becomes in a time trial (placement halfword +4,
+                        //        0x1B read as 0x15); -1: none (ResetCrate). See ConvertCratesForTimeTrial
     u8 touched;         // 0x58
     u8 groupAllocated;  // 0x59 - ActivateIronSwitchCrate allocated `u48.group` (freed when it fires)
 };
@@ -118,9 +139,9 @@ struct phys_player
     u8 unk_1C[8];
     u8 dir;             // 0x24 - bit 2: blocks the landing checks
     u8 unk_25[0x2F];
-    s32 velX;           // 0x54
-    s32 velY;           // 0x58
-    s32 velZ;           // 0x5C
+    s32 rampYStart;     // 0x54 - struct gobj.rampY (start, step, target)
+    s32 rampYStep;      // 0x58
+    s32 rampYTarget;    // 0x5C
     u8 unk_60[4];
     s32 speedY;         // 0x64
     u8 hitAxes;         // 0x68 - struct gobj.hitAxes; 8: standing (on `carried`)

@@ -187,7 +187,7 @@ void ActionCtrlStateRun(struct act *self)
             {
                 s32 zero;
 
-                self->unk_29 = 1;
+                self->turboRun = 1;
                 zero = 0;
                 ACT_CALL1(self, m20, 4);
                 ACT_CALL2(self, m50, self->part, 0x18);
@@ -196,7 +196,7 @@ void ActionCtrlStateRun(struct act *self)
         }
         else if (self->state == 4)
         {
-            self->unk_29 = held;
+            self->turboRun = held;
             StartActionCtrlRun(self);
         }
         else if (self->frame != 0)
