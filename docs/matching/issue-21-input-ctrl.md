@@ -1,8 +1,8 @@
 # Issue #21: 0x08017524-0x08017A44, graphics - a D-pad-driven actor-part controller
 
 All 25 functions are byte-exact matched as plain C in the new
-`src/graphics/actor_part_17524.c` (named by address, following
-`actor_part_12fbc.c`'s precedent, since what this object controls in-game
+`src/player/input_ctrl.c` (named by address, following
+`action_ctrl_run_jump.c`'s precedent, since what this object controls in-game
 isn't established). It replaces the tail of `asm/code_3_2_17_16048.s`,
 which now ends at `SetPlayerCtrlMotionXPending` (the rest of that file is issue #20).
 Built with old_agbcc since a later pass (see "Later pass: old_agbcc" at the
@@ -74,7 +74,7 @@ Thumb pointer scan): the six byte accessors and `SetInputCtrlMotionYPending`-
   inlined body runs. The same idea as `tile_slot_pool.c`'s (#43) helpers.
 - **The "mark actor gone" sequence** (`MarkEntityGone`'s, inlined in
   `InputCtrlStateDead` and `UpdateInputCtrl`). Earlier matches of this sequence
-  (`actor_part27c.c`, `actor_part39.c`, `actor_part124.c`, ...) needed an
+  (`actor_part27c.c`, `wumpa.c`, `enemy_ctrl.c`, ...) needed an
   inline-asm `add`/`asr` pair. Here it's plain C: the ROM's copy +
   `asr #5` + subtract is gcc's **signed** `/ 32` and `% 32` of the
   zero-extended id (the sign fix-up is then dropped as provably dead), so
@@ -102,8 +102,8 @@ Thumb pointer scan): the six byte accessors and `SetInputCtrlMotionYPending`-
 
 ## Later pass: old_agbcc
 
-`actor_part_17524.o` is on the Makefile's `OLD_AGBCC_OBJS` now, like
-`actor_part_16048.o` before it (issue #20 showed `InputCtrlKillPlayer` stripped
+`input_ctrl.o` is on the Makefile's `OLD_AGBCC_OBJS` now, like
+`swim_ctrl.o` before it (issue #20 showed `InputCtrlKillPlayer` stripped
 of its pins matches under old_agbcc and is 30 bytes off under agbcc).
 All 25 functions still match. What became unnecessary:
 
@@ -116,7 +116,7 @@ All 25 functions still match. What became unnecessary:
 - **The "mark gone" sequence** (`InputCtrlStateDead` and `UpdateInputCtrl`): no pins
   and no `volatile` id re-read. It is `MARK_GONE(t)` - `t->gone = 1`, then
   `SET_ID_BIT(t->field_08)` unless the id is `0xFFFF` - the same
-  sequence as `actor_part_16048.c`'s `MarkGone`. `SET_ID_BIT` stays a
+  sequence as `swim_ctrl.c`'s `MarkGone`. `SET_ID_BIT` stays a
   `do`/`while (0)` on purpose: its loop notes are what reproduce the id
   reload. The target/child pointer is loaded into a local first.
 - **`UpdateInputCtrl`'s up/down chain**: the pinned `dirState` read and the

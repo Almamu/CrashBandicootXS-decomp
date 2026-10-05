@@ -179,65 +179,54 @@ $(ELF): $(OBJS) $(LDSCRIPT)
 # where the current agbcc loads the byte first - see
 # docs/matching/issue-24-boss-actor.md. old_agbcc has no
 # -fprologue-bugfix option.
-OLD_AGBCC_OBJS := $(C_BUILDDIR)/graphics/actor_part.o \
+OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
                   $(C_BUILDDIR)/gfx/sprite_pieces.o \
                   $(C_BUILDDIR)/gfx/affine_sprite_pieces.o \
                   $(C_BUILDDIR)/text/wrapped_text.o \
                   $(C_BUILDDIR)/graphics/actor_part101.o \
                   $(C_BUILDDIR)/graphics/actor_part103.o \
-                  $(C_BUILDDIR)/graphics/actor_part109.o \
-                  $(C_BUILDDIR)/graphics/actor_part118.o \
-                  $(C_BUILDDIR)/graphics/actor_part112.o \
-                  $(C_BUILDDIR)/graphics/actor_part110.o \
-                  $(C_BUILDDIR)/graphics/actor_part111.o \
-                  $(C_BUILDDIR)/graphics/actor_part11b.o \
-                  $(C_BUILDDIR)/graphics/actor_part11c.o \
-                  $(C_BUILDDIR)/graphics/actor_part11d.o \
-                  $(C_BUILDDIR)/graphics/actor_part11e.o \
-                  $(C_BUILDDIR)/graphics/actor_part11f.o \
-                  $(C_BUILDDIR)/graphics/actor_part12.o \
-                  $(C_BUILDDIR)/graphics/actor_part120.o \
-                  $(C_BUILDDIR)/graphics/actor_part122.o \
-                  $(C_BUILDDIR)/graphics/actor_part123.o \
+                  $(C_BUILDDIR)/crates/crate_touch.o \
+                  $(C_BUILDDIR)/enemies/enemy_patrol.o \
+                  $(C_BUILDDIR)/enemies/enemy_ctrl_update.o \
+                  $(C_BUILDDIR)/objects/ground_sprite_collide.o \
+                  $(C_BUILDDIR)/crates/crate_grid_unlink.o \
+                  $(C_BUILDDIR)/crates/crate_list_update.o \
+                  $(C_BUILDDIR)/crates/crate_player_collide.o \
+                  $(C_BUILDDIR)/crates/crate_grid_collide.o \
+                  $(C_BUILDDIR)/crates/crate_list.o \
+                  $(C_BUILDDIR)/enemies/enemy_attack.o \
+                  $(C_BUILDDIR)/objects/effect_ctrl.o \
                   $(C_BUILDDIR)/graphics/actor_part127.o \
                   $(C_BUILDDIR)/graphics/actor_part128.o \
                   $(C_BUILDDIR)/graphics/actor_part130.o \
                   $(C_BUILDDIR)/frontend/credits.o \
-                  $(C_BUILDDIR)/graphics/actor_part18.o \
                   $(C_BUILDDIR)/graphics/actor_part19h.o \
                   $(C_BUILDDIR)/graphics/actor_part23b.o \
                   $(C_BUILDDIR)/graphics/actor_part24b.o \
                   $(C_BUILDDIR)/graphics/actor_part27a.o \
-                  $(C_BUILDDIR)/graphics/actor_part2.o \
-                  $(C_BUILDDIR)/graphics/actor_part3.o \
-                  $(C_BUILDDIR)/graphics/actor_part38.o \
-                  $(C_BUILDDIR)/graphics/actor_part38b.o \
-                  $(C_BUILDDIR)/graphics/actor_part38c.o \
+                  $(C_BUILDDIR)/player/action_ctrl_moves.o \
                   $(C_BUILDDIR)/graphics/actor_part45d.o \
-                  $(C_BUILDDIR)/graphics/actor_part7.o \
+                  $(C_BUILDDIR)/objects/sprite_anim.o \
                   $(C_BUILDDIR)/graphics/actor_part74.o \
                   $(C_BUILDDIR)/graphics/actor_part75.o \
-                  $(C_BUILDDIR)/graphics/actor_part78.o \
-                  $(C_BUILDDIR)/graphics/actor_part7b.o \
-                  $(C_BUILDDIR)/graphics/actor_part81.o \
-                  $(C_BUILDDIR)/graphics/actor_part82.o \
-                  $(C_BUILDDIR)/graphics/actor_part83.o \
-                  $(C_BUILDDIR)/graphics/actor_part84.o \
-                  $(C_BUILDDIR)/graphics/actor_part86.o \
-                  $(C_BUILDDIR)/graphics/actor_part86b.o \
+                  $(C_BUILDDIR)/player/player_collide.o \
+                  $(C_BUILDDIR)/objects/part_collide.o \
+                  $(C_BUILDDIR)/player/player_event.o \
+                  $(C_BUILDDIR)/player/action_ctrl_event.o \
+                  $(C_BUILDDIR)/player/action_ctrl_idle.o \
+                  $(C_BUILDDIR)/player/action_ctrl_update.o \
+                  $(C_BUILDDIR)/player/swim_ctrl_stroke.o \
                   $(C_BUILDDIR)/menus/continue_prompt.o \
-                  $(C_BUILDDIR)/graphics/actor_part_12fbc.o \
-                  $(C_BUILDDIR)/graphics/actor_part_134b8.o \
-                  $(C_BUILDDIR)/graphics/actor_part_138e8.o \
-                  $(C_BUILDDIR)/graphics/actor_part_13c60.o \
-                  $(C_BUILDDIR)/graphics/actor_part_14674.o \
-                  $(C_BUILDDIR)/graphics/actor_part_16048.o \
-                  $(C_BUILDDIR)/graphics/actor_part_17524.o \
+                  $(C_BUILDDIR)/player/action_ctrl_run_jump.o \
+                  $(C_BUILDDIR)/player/action_ctrl_states.o \
+                  $(C_BUILDDIR)/player/action_ctrl_hang.o \
+                  $(C_BUILDDIR)/player/swim_ctrl.o \
+                  $(C_BUILDDIR)/player/input_ctrl.o \
                   $(C_BUILDDIR)/graphics/actor_part_18008.o \
                   $(C_BUILDDIR)/graphics/actor_part_188d0.o \
                   $(C_BUILDDIR)/graphics/actor_part_1967c.o \
-                  $(C_BUILDDIR)/graphics/actor_part_1a878.o \
-                  $(C_BUILDDIR)/graphics/actor_part_1ab98.o \
+                  $(C_BUILDDIR)/objects/platform_create.o \
+                  $(C_BUILDDIR)/objects/platform_collide.o \
                   $(C_BUILDDIR)/menus/level_select.o \
                   $(C_BUILDDIR)/menus/level_select_pages.o \
                   $(C_BUILDDIR)/menus/level_select_widgets.o \
@@ -269,26 +258,20 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/graphics/actor_part.o \
                   $(C_BUILDDIR)/system/game_loop16.o \
                   $(C_BUILDDIR)/system/game_loop29.o \
                   $(C_BUILDDIR)/system/game_loop3.o \
-                  $(C_BUILDDIR)/system/game_loop32.o \
-                  $(C_BUILDDIR)/system/game_loop36.o \
+                  $(C_BUILDDIR)/crates/crate_create.o \
                   $(C_BUILDDIR)/cutscene/slideshow.o \
                   $(C_BUILDDIR)/system/game_loop4.o \
                   $(C_BUILDDIR)/system/game_loop40.o \
                   $(C_BUILDDIR)/system/game_loop41.o \
-                  $(C_BUILDDIR)/system/game_loop42.o \
+                  $(C_BUILDDIR)/crates/crate_hit.o \
                   $(C_BUILDDIR)/system/game_loop46.o \
-                  $(C_BUILDDIR)/system/game_loop47.o \
-                  $(C_BUILDDIR)/system/game_loop48.o \
-                  $(C_BUILDDIR)/system/game_loop49.o \
-                  $(C_BUILDDIR)/system/game_loop51.o \
-                  $(C_BUILDDIR)/system/game_loop52.o \
-                  $(C_BUILDDIR)/system/game_loop53.o \
-                  $(C_BUILDDIR)/system/game_loop54.o \
+                  $(C_BUILDDIR)/crates/crate_break.o \
+                  $(C_BUILDDIR)/crates/crate_update.o \
+                  $(C_BUILDDIR)/pickups/wumpa_update.o \
+                  $(C_BUILDDIR)/pickups/extra_life.o \
                   $(C_BUILDDIR)/system/game_loop55.o \
                   $(C_BUILDDIR)/system/game_loop56.o \
                   $(C_BUILDDIR)/cutscene/cutscene_player.o \
-                  $(C_BUILDDIR)/system/game_loop6.o \
-                  $(C_BUILDDIR)/system/game_loop7.o \
                   $(C_BUILDDIR)/system/game_loop8.o \
                   $(C_BUILDDIR)/link/link_handshake.o \
                   $(C_BUILDDIR)/link/link_session_reset.o \

@@ -20,17 +20,18 @@ accurate by this pass's own full transcription.
 
 ## New files
 
-`src/graphics/actor_part_12fbc.c` (`ActionCtrlStateRun`/`ActionCtrlStateJump`,
-0x08012FBC-0x080134B8), `src/graphics/actor_part_134b8.c`
+`src/player/action_ctrl_run_jump.c` (`ActionCtrlStateRun`/`ActionCtrlStateJump`,
+0x08012FBC-0x080134B8), `src/player/action_ctrl_states.c`
 (`ActionCtrlStateAirborne`, 0x080134B8-0x080138E8), and
-`src/graphics/actor_part_138e8.c` (`ActionCtrlStateFlipBodySlamStart`/`ActionCtrlStateSlide`,
+`src/player/action_ctrl_states.c` (`ActionCtrlStateFlipBodySlamStart`/`ActionCtrlStateSlide`,
 0x080138E8-0x08013C60). All three are named `actor_part_<addr>.c`
 (address-suffixed) rather than the next sequential `actor_partNN`
-(`starfield.c`/`86.c`/...) - `starfield.c` turned out to already
+(`actor_part85.c`/`86.c`/...) - `actor_part85.c` (now
+`frontend/starfield.c`) turned out to already
 be claimed by unrelated, non-ROM-adjacent issue #63 work
 (`InitStarfield`/`DrawStarfield`, the particle-trail BG0 object at
 0x08034374). **This was discovered the hard way**: an early draft of
-this pass's own `starfield.c` silently overwrote that file via the
+this pass's own `actor_part85.c` silently overwrote that file via the
 Write tool before its pre-existing content had been read, destroying
 377 lines of already-matched real C. Caught by an unrelated-looking
 symptom - a full clean `make compare` failing with undefined references
@@ -57,16 +58,16 @@ neighbor.
 
 `ldscript.txt` and `tools/report_units.py`'s `UNITS` list were updated:
 the three new files are inserted in ROM order right after
-`actor_part83.o` (0x08012AF4-0x08012FBC) and before the trimmed
+`action_ctrl_idle.o` (0x08012AF4-0x08012FBC) and before the trimmed
 `asm/code_3_2_17_12af4.o` (now starting at `ActionCtrlStateSpin`,
 0x08013C60). Category changed from the placeholder `graphics` to
 `actor`, matching every ROM-adjacent neighbor in this same "self"
-child-object/action-table family (`actor_part79.o`/`actor_part83.o`/
-`actor_part84.o`/`actor_part18.o`).
+child-object/action-table family (`kill_player.o`/`action_ctrl_idle.o`/
+`action_ctrl_update.o`/`action_ctrl_states.o`).
 
 ## Semantics (all five)
 
-- **`ActionCtrlStateRun`** (620 B, `actor_part_12fbc.c`) - bails immediately
+- **`ActionCtrlStateRun`** (620 B, `action_ctrl_run_jump.c`) - bails immediately
   (no `UpdatePlayerFacing` call at all) if `CheckActionCtrlLeftGround(self)` reports busy.
   Otherwise reads `gKeys`'s high 16 bits: bit 0 plays a
   fixed sound (id `0xd`), fires the `+0x20`/`+0x24` and `+0x50`/`+0x54`
@@ -95,13 +96,13 @@ child-object/action-table family (`actor_part79.o`/`actor_part83.o`/
   `StartActionCtrlRun(self)`; otherwise, while `self+0x18` is already nonzero,
   overwrites it with the same bit-test value. Every path but the very
   first (bit-0) case ends with `UpdatePlayerFacing(self)`.
-- **`ActionCtrlStateJump`** (656 B, `actor_part_12fbc.c`) - first clears two
+- **`ActionCtrlStateJump`** (656 B, `action_ctrl_run_jump.c`) - first clears two
   `part+0xd` bits (`&= ~2`, then `&= ~3`, each via the runtime-negated-
   mask idiom, not a folded AND-immediate). If `part+0x68` bit 2 is set:
   fires the `+0x20`/`+0x24` and `+0x50`/`+0x54` trampoline pairs (ids
   `0x1a`/`0x15`), clamps `part+0x30`'s index against the `part+0x20`-
   pointer-to-manager/`part+0x2d`-tag/28-byte-stride record's own `+0x16`
-  count (the same table-lookup convention `DrawCrate`, game_loop35.c,
+  count (the same table-lookup convention `DrawCrate`, crate_draw.c,
   establishes), calls `ClearPlayerSpeedY(part)`, then clears `part+0x68`.
   Otherwise, while `self+0x26==0` and `gKeys`'s high-half
   bit 1 is set: plays a fixed sound (id `0xa`), fires another trampoline
@@ -119,7 +120,7 @@ child-object/action-table family (`actor_part79.o`/`actor_part83.o`/
   `0x1c`; a nonzero `self+0x18` (tag `!=0xd`) resets it to `0`/`1`/`0xd`;
   and a clear player `+0x100` flag resets it to `0`/`1`/`7` - before
   tail-calling `UpdatePlayerFacing(self)`.
-- **`ActionCtrlStateAirborne`** (1072 B, `actor_part_134b8.c`) - confirmed by this
+- **`ActionCtrlStateAirborne`** (1072 B, `action_ctrl_states.c`) - confirmed by this
   pass as `docs/rom_map.md`'s "bonus/score popup" handler, the table's
   shared default reused across 6 of its 42 slots. Caches `part+0x68`
   (busy flag) and `GetDpadDirection`'s D-pad-remap result up front. Unless
@@ -155,7 +156,7 @@ child-object/action-table family (`actor_part79.o`/`actor_part83.o`/
   `1`/`1`/`1c` or `0`/`1`/tag(0/1); otherwise, gated on
   `gPlayer+0x100` and `GetDpadDirection`'s result, fires one more
   trampoline pair (ids `0x17`/`0x16`) and sets the trio to `0`/`1`.
-- **`ActionCtrlStateFlipBodySlamStart`** (172 B, `actor_part_138e8.c`) - a thin
+- **`ActionCtrlStateFlipBodySlamStart`** (172 B, `action_ctrl_states.c`) - a thin
   `_call_via_r3` dispatcher on `part`'s state. While `part+0x2d==6`: for
   `part->0x30==3`, fires the `+0x50`/`+0x54` trampoline with id `9`;
   for `part->0x30>3` or `part+0x38!=0`, fires it with id `8` instead
@@ -163,13 +164,13 @@ child-object/action-table family (`actor_part79.o`/`actor_part83.o`/
   `HasSuperBodySlam(gLevelState)` true fires the `+0x20`/`+0x24`
   trampoline (id `0x19`) then the `+0x50`/`+0x54` trampoline (id `7`);
   false fires only the `+0x20`/`+0x24` trampoline (id `0x18`).
-- **`ActionCtrlStateSlide`** (716 B, `actor_part_138e8.c`) - confirmed by this
+- **`ActionCtrlStateSlide`** (716 B, `action_ctrl_states.c`) - confirmed by this
   pass as `docs/rom_map.md`'s "player input/action handling" reader. If
   `part+0x68==0`: sets the trio to `5`/`1`/`0` directly and returns (no
   trampoline calls). Otherwise, on the "confirm" input edge
   (`gKeys` low bit 0 plus `PlayerHasRoomForAnim(part, 0xb)`): plays a
   sound (id `0xc`), clears two `part+0xd` bits (the same runtime
-  `-2`/`-3` negated-mask idiom `ActionCtrlStateCrawlStart`, actor_part18.c, uses),
+  `-2`/`-3` negated-mask idiom `ActionCtrlStateCrawlStart`, action_ctrl_states.c, uses),
   and tail-calls `StartActionCtrlHighJump(self)`. On bit 1 plus
   `PlayerHasRoomForAnim(part, 0x10)`: tail-calls `StartActionCtrlSpin(self)` and sets
   the trio to `1`/`1`/`1`. Otherwise falls into a shared tail:
@@ -181,7 +182,7 @@ child-object/action-table family (`actor_part79.o`/`actor_part83.o`/
   trio to `4`/`1`/`0`; else, on `gKeys`'s low-half bit
   `0x100`: fires a further pair (ids `0x14`/`0`), resets `self+0x1c`,
   sets the trio to `0`/`1`/`3`, and tail-calls `ActionCtrlStateCrawl(self)`
-  (actor_part18.c); otherwise dispatches `GetDpadDirection`
+  (action_ctrl_states.c); otherwise dispatches `GetDpadDirection`
   (`gInput`) and `PlayerHasRoomForAnim(part, 2)`: when both fire and
   the D-pad result is `3`/`4`, gates `HasTurboRun(gLevelState)`
   behind a further bit test to either fire a trampoline pair (ids
@@ -215,9 +216,9 @@ genuine attempt:
 - **`ActionCtrlStateJump`**: a first plain-C draft, structured as straightforward
   nested `if`/`else` mirroring the ROM's own branch shape (reusing the
   exact `mgr = *(u8 **)(self + 0xc); _call_via_r2(...)` idiom already
-  matched in `actor_part18.c`'s `ActionCtrlStateCrawlStart`, plus the register-pinned
+  matched in `action_ctrl_states.c`'s `ActionCtrlStateCrawlStart`, plus the register-pinned
   "clamp against a `part+0x20`-manager/`part+0x2d`-tag table" block
-  already matched for `DrawCrate`, game_loop35.c), compiled and
+  already matched for `DrawCrate`, crate_draw.c), compiled and
   isolated-assembled cleanly but diverged at the very first instructions:
   gcc 2.9 pushed an extra `r7` (5 callee-saved registers instead of the
   ROM's 3) for the live `mgr`/`part` pointers, and `part[0xd] &= ~2`
@@ -232,7 +233,7 @@ genuine attempt:
   `_call_via_r2`/`_call_via_r3` trampoline call (keyed on
   `HasSuperBodySlam(gLevelState)`) reproduces the *exact* shape
   already confirmed unmatchable in `ActionCtrlStateBodySlamStart`
-  (`actor_part38c.c`, `docs/matching/issue-18-0x08014f8c-actor.md`'s
+  (`action_ctrl_moves.c`, `docs/matching/issue-18-0x08014f8c-actor.md`'s
   "Parked, not matched: ActionCtrlStateBodySlamStart" - gcc 2.9 insists on an extra
   push/pop to recompute `self` into a fresh register in the `else` arm
   once `mgr` is locally redeclared there, where the ROM reuses the same
@@ -256,7 +257,7 @@ ROM's own `_0XXXXXXX` hex-address labels verbatim as plain, file-local
 asm symbols rather than hand-renumbering them - safe here since each
 label's hex address is inherently unique across the whole ROM, so no
 collision risk exists even across the three files, the same approach
-`actor_part82.c`'s `ActionCtrlHandleEvent` uses for the same reason (transcription-
+`action_ctrl_event.c`'s `ActionCtrlHandleEvent` uses for the same reason (transcription-
 error avoidance for functions this size). Every function was verified
 structurally byte-exact via an isolated `cpp`/`agbcc`/`arm-none-eabi-as`
 + `objcopy`/`objdump` comparison against the ROM's own raw bytes before
@@ -281,8 +282,8 @@ itself stays open - only 5 of its 25 scoped functions are covered here
 
 This pass covers the rest of the chunk, the two raw files
 `asm/code_3_2_17_12af4.s` (`ActionCtrlStateSpin`-`ActionCtrlStateCrouch`, now
-`src/graphics/actor_part_13c60.c`) and `asm/code_3_2_17_14674.s`
-(`ActionCtrlStateLeftGround`-`ActionCtrlStateHangStop`, now `src/graphics/actor_part_14674.c`).
+`src/player/action_ctrl_states.c`) and `asm/code_3_2_17_14674.s`
+(`ActionCtrlStateLeftGround`-`ActionCtrlStateHangStop`, now `src/player/action_ctrl_hang.c`).
 Both raw files are retired. Of the 14 functions, 9 are real C and 5 are
 NAKED transcriptions, each with its C kept under `#if NON_MATCHING`.
 
@@ -302,7 +303,7 @@ throughout (`movs r0, #8; ldrb r1, [r1]; ands r0, r1` for `contact &
 8`). `ActionCtrlStateCrouchDown` is the cleanest proof: the same C is byte-exact under
 old_agbcc and differs in 8 bytes under the current agbcc. Both new objects are
 on `OLD_AGBCC_OBJS`. The chunk's first five functions
-(`actor_part_12fbc.c`/`_134b8.c`/`_138e8.c`, all NAKED without C) were
+(`action_ctrl_run_jump.c`/`_134b8.c`/`_138e8.c`, all NAKED without C) were
 parked against the current agbcc. They are candidates for an old_agbcc
 retry, which this pass did not attempt.
 
@@ -374,14 +375,14 @@ are now real C. Three stay NAKED, each with its best C under
 
 | function | file | result |
 |---|---|---|
-| `ActionCtrlStateRun`, `ActionCtrlStateJump` | `actor_part_12fbc.c` | matched |
-| `ActionCtrlStateAirborne` | `actor_part_134b8.c` | matched |
-| `ActionCtrlStateFlipBodySlamStart`, `ActionCtrlStateSlide` | `actor_part_138e8.c` | matched |
-| `ActionCtrlStateCrouch` | `actor_part_13c60.c` | NAKED |
-| `ActionCtrlStateLeftGround`, `ActionCtrlReleaseHang` | `actor_part_14674.c` | NAKED |
-| `ActionCtrlStateHangMoveStart`, `ActionCtrlStateHangMove` | `actor_part_14674.c` | matched |
+| `ActionCtrlStateRun`, `ActionCtrlStateJump` | `action_ctrl_run_jump.c` | matched |
+| `ActionCtrlStateAirborne` | `action_ctrl_states.c` | matched |
+| `ActionCtrlStateFlipBodySlamStart`, `ActionCtrlStateSlide` | `action_ctrl_states.c` | matched |
+| `ActionCtrlStateCrouch` | `action_ctrl_states.c` | NAKED |
+| `ActionCtrlStateLeftGround`, `ActionCtrlReleaseHang` | `action_ctrl_hang.c` | NAKED |
+| `ActionCtrlStateHangMoveStart`, `ActionCtrlStateHangMove` | `action_ctrl_hang.c` | matched |
 
-`actor_part_12fbc.o`, `actor_part_134b8.o` and `actor_part_138e8.o` now
+`action_ctrl_run_jump.o`, `action_ctrl_states.o` now
 build with old_agbcc (Makefile `OLD_AGBCC_OBJS`). The first pass left
 all three with NAKED functions only, so moving the whole object was
 safe and no split was needed. All five first-pass functions match under
@@ -470,7 +471,7 @@ compilers. `ActionCtrlStateSlide` differs in 35 bytes under the current agbcc.
 ## Later pass (issue #15/#16/#17 second NAKED retry)
 
 See docs/matching/issue-15-16-17-naked-retry-2.md. `ActionCtrlStateCrawl` and
-`ActionCtrlStateLand` (actor_part18.c/actor_part18b.c) are now real C.
+`ActionCtrlStateLand` (action_ctrl_states.c/action_ctrl_land.c) are now real C.
 `ActionCtrlStateCrouch`'s draft is down to one misplaced instruction: its facing
 block now reads `self->part` for every access (GCSE produces the ROM's
 r2 copy) and spells the two bit tests differently so the second is not

@@ -1,7 +1,7 @@
 # Issue #20: 0x08016128-0x08017524 (graphics), plus issue #19's `CheckPlayerCtrlTurn`
 
 All 26 functions of the former `asm/code_3_2_17_16048.s` are byte-exact
-real C in the new `src/graphics/actor_part_16048.c`: `CheckPlayerCtrlTurn` (the
+real C in the new `src/player/swim_ctrl.c`: `CheckPlayerCtrlTurn` (the
 last raw function of issue #19, see
 [issue-19-0x08015840-actor.md](./issue-19-0x08015840-actor.md)) and the 25
 functions of issue #20. No NAKED, no `NON_MATCHING`. The only register
@@ -21,26 +21,26 @@ byte). agbcc loads the byte first.
 **Where the old_agbcc region starts.** It covers at least
 `0x08016048`-`0x0801E578`: this file, issue #21's `0x08017524`-`0x08017A44`
 (see below) and the already-known `0x080188D0`-`0x0801E578`. Nothing below
-`0x08016048` was decided here. `actor_part57b.c`'s `SetPlayerSwimDriftY`, the
+`0x08016048` was decided here. `swim_ctrl_drift.c`'s `SetPlayerSwimDriftY`, the
 nearest function below, compiles to the same bytes under both compilers,
 both with its current pins and as plain C, so it does not tell them
-apart. `actor_part57.c` and `actor_part38d.c` also build identically under
+apart. `action_ctrl.c` also build identically under
 both.
 
-**Issue #21 (`actor_part_17524.c`) looks like old_agbcc code.** Its
+**Issue #21 (`input_ctrl.c`) looks like old_agbcc code.** Its
 `InputCtrlKillPlayer`, rewritten without any pins (bitfield clears for the two
 flag bits, a plain `records[tag * 28 + 0x14]` read), matches under
 old_agbcc and is 30 bytes off under agbcc. The file itself was not
 changed. Moving it to `OLD_AGBCC_OBJS` would probably let most of its pins
 and the `volatile` id reload go (see the `do`/`while (0)` finding below).
-A later pass did that: `actor_part_17524.o` is on `OLD_AGBCC_OBJS` with
+A later pass did that: `input_ctrl.o` is on `OLD_AGBCC_OBJS` with
 no pins, `volatile` or barriers left (see
 [issue-21-input-ctrl.md](./issue-21-input-ctrl.md)). The same pass
 matched issue #19's `StartPlayerCtrlStroke`/`StartPlayerCtrlSpin`/`ApplyPlayerCtrlSwimDrift`
-(`0x080159F8`-`0x08015FDC`, `actor_part86.o`/`actor_part86b.o`) under
+(`0x080159F8`-`0x08015FDC`, `swim_ctrl_stroke.o`) under
 old_agbcc too (the issue #17 pass had already found old_agbcc code at
-`0x08013C60`-`0x08014F8C`, `actor_part_13c60.c`/`actor_part_14674.c`).
-`StartPlayerCtrlSpin` has the tell; `actor_part57b.c` in between still does not
+`0x08013C60`-`0x08014F8C`, `action_ctrl_states.c`/`action_ctrl_hang.c`).
+`StartPlayerCtrlSpin` has the tell; `swim_ctrl_drift.c` in between still does not
 tell the compilers apart.
 
 ## What the code is
@@ -56,7 +56,7 @@ class with method table `gPlayerCtrlVtable`:
 | +0x4C | `DestroyPlayerCtrl` destructor |
 
 The constructor is `InitPlayerCtrl`, called from `game_loop39.c`. Its field
-reset is `actor_part57.c`'s `ResetPlayerCtrl`. The #19 dispatchers
+reset is `action_ctrl.c`'s `ResetPlayerCtrl`. The #19 dispatchers
 `StartPlayerCtrlStroke`/`StartPlayerCtrlSpin`/`ApplyPlayerCtrlSwimDrift` and `SetPlayerSwimDriftY` are methods of
 the same class. The target (`+0x10`) is the player object.
 

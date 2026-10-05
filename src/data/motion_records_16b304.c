@@ -5,7 +5,7 @@
  * sections by ldscript.txt - see docs/data.md.
  */
 
-/* 12-byte {s32, s32, s32} motion records (actor_part83.c's
+/* 12-byte {s32, s32, s32} motion records (action_ctrl_idle.c's
  * `struct anim_rec`, player_ctrl.h's `struct pctrl_anim`) and the {a, b}
  * index pairs the entry sets of entry_set_16b92c.c point at, which pick
  * two records per state. */
@@ -15,8 +15,8 @@ struct motion_rec {
     s32 c;
 };
 
-/* Read by StartCtrlTargetMotionYFromSet/StartCtrlTargetMotionXFromSet (actor_part17.c) and ApplyActionCtrlMotion
- * (actor_part83.c). */
+/* Read by StartCtrlTargetMotionYFromSet/StartCtrlTargetMotionXFromSet (ctrl.c) and ApplyActionCtrlMotion
+ * (action_ctrl_idle.c). */
 const struct motion_rec gCtrlMotionRecords[44] = {
     { 0, 32, 0 },
     { 128, 32, 128 },
@@ -101,7 +101,7 @@ const u32 gActionCtrlMotionEntries[33][2] = {
     { 33, 0 },
 };
 
-/* Read by ApplyPlayerCtrlMotion, StartPlayerCtrlMotionYFromSet and StartPlayerCtrlMotionXFromSet (actor_part_16048.c). */
+/* Read by ApplyPlayerCtrlMotion, StartPlayerCtrlMotionYFromSet and StartPlayerCtrlMotionXFromSet (swim_ctrl.c). */
 const struct motion_rec gPlayerCtrlMotionRecords[31] = {
     { 0, 0, 0 },
     { 192, 0, 192 },
@@ -178,7 +178,7 @@ const u32 gPlayerCtrlMotionEntries[38][2] = {
     { 0, 30 },
 };
 
-/* The records ApplyInputCtrlMotion (actor_part_17524.c) indexes by its entry
+/* The records ApplyInputCtrlMotion (input_ctrl.c) indexes by its entry
  * set's entries. */
 const struct motion_rec gInputCtrlMotionRecords[9] = {
     { 0, 0, 0 },

@@ -65,7 +65,7 @@ straight into `info`'s own play_fn slot (`info->0->0x8`, the same
 three-function-pointer-per-type table this function itself is a member of)
 via the `_call_via_r3` "call through r3" trampoline - the established
 `_call_via_r3(addr, a1, a2, fn)` parameter order (see
-`src/graphics/actor_part17.c`/`src/system/game_loop16.c`) landed the
+`src/objects/ctrl.c`/`src/system/game_loop16.c`) landed the
 function-pointer argument in `r3` with zero extra effort, and this part of
 the reconstruction was byte-exact immediately. Then: if `info` armed a
 "retrigger" flag (`info->0x1b`), clears this channel's own `field_0x3c`; if
@@ -115,7 +115,7 @@ packed-row decode - the same many-register gcc-2.9 allocation ceiling
 already documented throughout this ROM region for `GAX2_init`'s cluster
 (`docs/status/audio.md`). Its 15-entry jump table is hand-placed with named
 local labels (the same "hand-placed local labels shared across a single
-literal pool" idea as `actor_part38b.c`'s `sub_80151C8` jump table) rather
+literal pool" idea as `action_ctrl_moves.c`'s `sub_80151C8` jump table) rather
 than numbered ones, given how many branch targets this function has.
 
 Both were transcribed instruction-for-instruction from the ROM disassembly

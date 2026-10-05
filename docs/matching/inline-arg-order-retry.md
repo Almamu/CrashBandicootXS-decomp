@@ -10,7 +10,7 @@ This pass retried four drafts left by the hard-register hold passes
 
 | Function | File | Compiler | What it took |
 |---|---|---|---|
-| `DrawPlayer` | `src/graphics/actor_part111.c` (already old_agbcc) | old_agbcc | Was 40 halfwords off. The orbit tail now passes its two position sums straight in as arguments to a small inline setter (see below). That gives the ROM's order in the tail, and the `&82C`/`&81C` r4/r5 swap went away with it. The two r6 holds from the hold pass stay. |
+| `DrawPlayer` | `src/player/player_event.c` (already old_agbcc) | old_agbcc | Was 40 halfwords off. The orbit tail now passes its two position sums straight in as arguments to a small inline setter (see below). That gives the ROM's order in the tail, and the `&82C`/`&81C` r4/r5 swap went away with it. The two r6 holds from the hold pass stay. |
 
 ## New technique: sums passed to an inline are expanded late
 

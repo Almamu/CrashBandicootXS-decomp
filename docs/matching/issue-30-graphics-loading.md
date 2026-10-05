@@ -337,7 +337,7 @@ a normal function at all - it's the `bx r4` register-trampoline from
 `_call_via_r0`-`_call_via_r7` "call through register" family) - the ROM
 loads the real callee's address into `r4` right before the `bl`, and
 this project's established convention (`HitMovingSprite` in
-`actor_part9.c`, `CheckSpritePickup`) is to model that load as a genuine
+`moving_sprite_collide.c`, `CheckSpritePickup`) is to model that load as a genuine
 "dead read" (`register void *x asm("r4") = ...; (void)x;`) immediately
 before an ordinary-looking `_call_via_r4(addr, arg1, arg2, arg3)` call.
 

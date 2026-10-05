@@ -1,8 +1,8 @@
 #include "core.h"
 #include "actor_self.h"
 
-/* Same "self" object family as actor_part39.c/actor_part41.c - see
- * actor_part39.c's header comment and
+/* Same "self" object family as wumpa.c/actor_part41.c - see
+ * wumpa.c's header comment and
  * docs/matching/issue-50-actor-2a69c.md. */
 
 /* A 12-byte little vector block: copies `self+0x38..0x44` into `*out`,

@@ -76,9 +76,9 @@ u8 AabbOverlapsInclusiveX(struct aabb *a, struct aabb *b)
 
 /* Same axis-aligned box overlap test as `AabbOverlapsInclusiveX`, but with the
  * X-axis edges exclusive too (touching does not count) - this is the
- * variant already referenced by name from `actor_part15.c`'s
+ * variant already referenced by name from `player_update.c`'s
  * `PlayerTouchesBox` and the pool/grid collision functions in
- * `actor_part11.c`. */
+ * `part_list.c`. */
 u8 AabbOverlaps(struct aabb *a, struct aabb *b)
 {
     u8 result = 0;

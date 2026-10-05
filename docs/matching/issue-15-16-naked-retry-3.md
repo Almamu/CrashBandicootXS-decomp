@@ -5,13 +5,13 @@ closed; two got new or better drafts; three were not attempted.
 
 | Function | File | Result |
 | --- | --- | --- |
-| `ApplyActionCtrlMotion` | `actor_part83.c` | **Real C**, old_agbcc |
-| `UpdateActionCtrl` | `actor_part84.c` | **Real C**, old_agbcc |
-| `CreateWumpa` | `game_loop53.c` | Still NAKED, analysis added to the draft's note |
-| `UpdateWumpa` | `game_loop53.c` | Still NAKED, first C draft under `NON_MATCHING` |
+| `ApplyActionCtrlMotion` | `action_ctrl_idle.c` | **Real C**, old_agbcc |
+| `UpdateActionCtrl` | `action_ctrl_update.c` | **Real C**, old_agbcc |
+| `CreateWumpa` | `wumpa_update.c` | Still NAKED, analysis added to the draft's note |
+| `UpdateWumpa` | `wumpa_update.c` | Still NAKED, first C draft under `NON_MATCHING` |
 | `ResetLinkSessionState` | `link_handshake.c` | Still NAKED, note on the draft extended |
 | `HandleLinkSerial` | `link_handshake.c` | Not attempted (1488 B, no draft) |
-| `UpdateEnemyCtrl` | `actor_part112.c` | Not attempted (1132 B, no draft) |
+| `UpdateEnemyCtrl` | `enemy_ctrl_update.c` | Not attempted (1132 B, no draft) |
 
 ## Closed
 
@@ -75,7 +75,7 @@ themselves. So did the first draft's "temporaries in r6".
   registers and leaves r7 for `mode`. An unpinned copy is used after the
   join. See [gap4-naked-retry.md](gap4-naked-retry.md).
 - **`UpdateWumpa`.** New draft, modelled on `UpdateExtraLife`'s
-  (`game_loop54.c`). The mode-3 spawn uses `game_loop48.c`'s
+  (`extra_life.c`). The mode-3 spawn uses `crate_break.c`'s
   argP4/argP5 stack-argument trick. Control flow and calls are right,
   but the draft is 84 bytes long. In the ROM, cross-jumping merged the
   three "flags |= 1, set the id bit" tails: mode 1 jumps into the

@@ -16,14 +16,14 @@ matches both.
 
 ## Matched (2 of 4 remaining functions)
 
-- **`DrawCrate`** (`src/system/game_loop35.c`, new file - it sits
+- **`DrawCrate`** (`src/crates/crate_draw.c`, new file - it sits
   between the still-raw `CreateCrate` and `UpdateCrate`, so it can't
   join either neighbor's file) - unless `self`'s own `+0x4d` state byte
   has bit 7 set or its low 7 bits are already nonzero, resets
   `self+0x38` to 0 and clamps `self+0x30`'s index to the
   `self+0x20`-pointer-to-manager/`self+0x2d`-tag/0x1c-stride
   hitbox-record's own `+0x16` count (the same table-lookup convention
-  `BreakCrateTouchedByPlayer`, game_loop6.c, establishes). Always tail-fires
+  `BreakCrateTouchedByPlayer`, crate_hit.c, establishes). Always tail-fires
   `DrawSprite(gSpriteRenderer, self)`, then - only if `self+0x38`
   ended up nonzero - clears `self+0xc` bit 3. Two gotchas, both
   register-pinning:
@@ -34,7 +34,7 @@ matches both.
     pin's scope right as its value dies so a later value can safely
     reuse the same register - the same "which anonymous scratch
     register" gap that forced `GetSpriteBounds`/`GetSpriteHitbox`
-    (`actor_part.c`) fully NAKED, but tractable here with explicit
+    (`sprite.c`) fully NAKED, but tractable here with explicit
     pins since this function's register pressure is much lower (no
     `SetAabbPos`/`SetAabbSize` calls in the middle). The final
     add (`record = tag*0x1c + table`) also needed the offset written as
@@ -47,7 +47,7 @@ matches both.
     without that, this compiler reused r4 in place for the `self[0x38]
     != 0` check just above it, corrupting the address this block
     reads/writes).
-- **`IsCrateInsideRect`** (`src/system/game_loop23.c`, prepended ahead of the
+- **`IsCrateInsideRect`** (`src/crates/crate.c`, prepended ahead of the
   already-matched `ResolvePlayerCollisions` run - it's immediately ROM-adjacent, so
   it joins that file rather than getting its own) - an AABB-overlap
   test between `self`'s own table-driven half-width/half-height box
@@ -79,7 +79,7 @@ matches both.
     allocated register-resident variable *does* get correctly tracked
     for save/restore.
   - **AABB-build "which anonymous scratch register" gap**: the same
-    class of gap `GetSpriteBounds`/`GetSpriteHitbox` (`actor_part.c`) went
+    class of gap `GetSpriteBounds`/`GetSpriteHitbox` (`sprite.c`) went
     NAKED over. Anchored as one literal `asm volatile` block (self/rec
     passed as inputs purely to mark them live; left/right/top/bottom as
     fixed-register outputs) rather than plain C, which kept letting
@@ -113,10 +113,10 @@ matches both.
 - `tools/report_units.py` - the old single `0x0800FF0C` unit (covering
   the whole `CreateCrate`-`IsCrateInsideRect` span as raw) split into four:
   `0x0800FF0C` (still raw, trimmed `asm/code_3_2_17_e560_ff0c.o`),
-  `0x08010480` (new `src/system/game_loop35.o`), `0x080104E4` (still
+  `0x08010480` (new `src/crates/crate_draw.o`), `0x080104E4` (still
   raw, new `asm/code_3_2_17_e560_104e4.o`), and `0x08010674` (now the
-  start address of `src/system/game_loop23.o`, moved from its old
+  start address of `src/crates/crate.o`, moved from its old
   `0x080106DC`).
-- `ldscript.txt` - `game_loop35.o` and `code_3_2_17_e560_104e4.o`
+- `ldscript.txt` - `crate_draw.o` and `code_3_2_17_e560_104e4.o`
   inserted between the trimmed `code_3_2_17_e560_ff0c.o` and
-  `game_loop23.o`, preserving ROM link order.
+  `crate.o`, preserving ROM link order.

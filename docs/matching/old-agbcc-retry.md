@@ -14,8 +14,8 @@ compared it against the ROM.
 |---|---|---|
 | `UpdateCortexBoss` | `actor_part_188d0.c` (#23) | **matched**, NON_MATCHING C unchanged |
 | `CreateCortexBossPlatformMover` | `actor_part_188d0.c` (#23) | **matched**, rewritten with the `CreatePlatform` stack-argument idiom |
-| `CreatePlatform` | `actor_part_1a878.c` (#25) | **matched**, after removing every register pin |
-| `ResolvePlatformCollision` | `actor_part_1ab98.c` (#25) | still NAKED |
+| `CreatePlatform` | `platform_create.c` (#25) | **matched**, after removing every register pin |
+| `ResolvePlatformCollision` | `platform_collide.c` (#25) | still NAKED |
 | `InitLevelSelect` | `level_select.c` (#26) | still NAKED here; real C since the #12/#24/#26 retry |
 | `LoadLevelSelectRecord` | `level_select.c` (#26) | still NAKED |
 | `LevelSelectLoop` | `level_select.c` (#26) | still NAKED |
@@ -40,10 +40,10 @@ files moved to old_agbcc whole:
   removed.
 - `level_select.c`: only `SpawnLaunchPad` differed (2 bytes), and it
   matches once its zero/id pins are dropped.
-- `actor_part_1a878.c` was already on its own.
+- `platform_create.c` was already on its own.
 
 `OLD_AGBCC_OBJS` in the Makefile now lists `actor_part_188d0.o`,
-`actor_part_1a878.o` and `level_select.o` next to `actor_part_1967c.o`.
+`platform_create.o` and `level_select.o` next to `actor_part_1967c.o`.
 `ldscript.txt` is unchanged, since no object was added or renamed.
 
 ## Workarounds that turned out to be unnecessary

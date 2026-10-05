@@ -10,9 +10,9 @@ away from matching.
 
 | Function | File | Technique |
 |---|---|---|
-| `UpdateCrateFall` (#13) | `game_loop32.c` (now in `OLD_AGBCC_OBJS`) | Every use of the speed byte goes through `self->fallSpeed` (the ROM's `sb` is the GCSE copy of that address). `speed--` is written in both step arms. The neighbour walk skips the first neighbour: `n = next(self); if (n) { n = next(n); while (n) {...} }`. One temporary `t` carries `fallTargetY` into `y` and re-reads `x` at the bottom of the loop, which is the ROM's r1. |
-| `UpdateCrate` (#13) | `game_loop51.c` (now in `OLD_AGBCC_OBJS`) | The 0x13-0x15 range test is two nested `if`s on an `s32` copy of `kind`. A single `&&` gets folded into an unsigned subtract-and-compare, and testing the u8 field gives unsigned branches. The `kind == 0xf` test and its `state` test are nested for the same reason: one `&&` makes gcc merge the two adjacent byte compares into one word compare. The frame clamp is the new `PhysSetFrame(self, 0)` inline, whose parameter keeps the constant 0 in r3 for the later `animDone`/`busy` stores. The tile-cache key's record is indexed from a local copy of `anim->records`, which loads the table before the tag. Needs `_call_via_r1` aliased to `_call_via_r1` for the `m60` method call. |
-| `BreakCrate` (#12) | `game_loop48.c` | The tag goes through the `PhysSetTag` inline (the constant is loaded before the tag address). The frame clamp is `PhysSetFrame(self, 3)`. Bit 4 of `flags` is set as a bitfield (`PHYS_FLAG4`). A plain `|= 0x10` leaves a zero pseudo that CSE shares with the later `busy = 0` store, which moves `self` from r4 to r5. The state store's constant 1 is a local `one` that the bitmap shift reuses (the ROM's r8). The switch cases are written in the ROM's block order, with an explicit empty `case 22`. |
+| `UpdateCrateFall` (#13) | `crate_break.c` (now in `OLD_AGBCC_OBJS`) | Every use of the speed byte goes through `self->fallSpeed` (the ROM's `sb` is the GCSE copy of that address). `speed--` is written in both step arms. The neighbour walk skips the first neighbour: `n = next(self); if (n) { n = next(n); while (n) {...} }`. One temporary `t` carries `fallTargetY` into `y` and re-reads `x` at the bottom of the loop, which is the ROM's r1. |
+| `UpdateCrate` (#13) | `crate_update.c` (now in `OLD_AGBCC_OBJS`) | The 0x13-0x15 range test is two nested `if`s on an `s32` copy of `kind`. A single `&&` gets folded into an unsigned subtract-and-compare, and testing the u8 field gives unsigned branches. The `kind == 0xf` test and its `state` test are nested for the same reason: one `&&` makes gcc merge the two adjacent byte compares into one word compare. The frame clamp is the new `PhysSetFrame(self, 0)` inline, whose parameter keeps the constant 0 in r3 for the later `animDone`/`busy` stores. The tile-cache key's record is indexed from a local copy of `anim->records`, which loads the table before the tag. Needs `_call_via_r1` aliased to `_call_via_r1` for the `m60` method call. |
+| `BreakCrate` (#12) | `crate_break.c` | The tag goes through the `PhysSetTag` inline (the constant is loaded before the tag address). The frame clamp is `PhysSetFrame(self, 3)`. Bit 4 of `flags` is set as a bitfield (`PHYS_FLAG4`). A plain `|= 0x10` leaves a zero pseudo that CSE shares with the later `busy = 0` store, which moves `self` from r4 to r5. The state store's constant 1 is a local `one` that the bitmap shift reuses (the ROM's r8). The switch cases are written in the ROM's block order, with an explicit empty `case 22`. |
 
 All three were found with the brute-force variant runner (scratchpad
 `mix12b/brute2.py`, a copy of `box9/brute.py` that also scores each
@@ -29,7 +29,7 @@ touches (`x`/`y`, `vtable`, `dir`, the velocity words, `hitAxes`,
 
 ## Not closed
 
-- **`ApplyCrateCollision`** (#12, `game_loop47.c`): near miss under old_agbcc
+- **`ApplyCrateCollision`** (#12, `crate_break.c`): near miss under old_agbcc
   (49 halfwords, same size). The draft differs in exactly one place.
   In case 3, the ROM reads the first flag byte back as a byte from its
   spill slot (`mov r5, sp; ldrb r2, [r5]`). The draft reads it as a word
@@ -44,29 +44,29 @@ touches (`x`/`y`, `vtable`, `dir`, the velocity words, `hitAxes`,
   The file is still built with agbcc. If the draft closes, the whole
   file (whose other function is the NAKED `QueueCratePlayerCollision`) can move to
   `OLD_AGBCC_OBJS`.
-- **`BreakCrateTouchedByPlayer`** (#12, `game_loop6.c`): near miss under old_agbcc.
+- **`BreakCrateTouchedByPlayer`** (#12, `crate_hit.c`): near miss under old_agbcc.
   The self box and the tail match. For the player box, gcc keeps
   `&b` (`sp+0x10`) in a callee-saved register across the two builder
   calls. The ROM re-adds it for each call, and that pushes px/py and
   `&gPlayer` into the wrong registers. No `-f` flag changes
   it. Frame structs, arrays, macros, inline builders (by pointer or by
   value) and px/py scoping didn't help either.
-- **`UpdateSlotCrate`** (#12, `game_loop49.c`): 58 halfwords off under
+- **`UpdateSlotCrate`** (#12, `crate_break.c`): 58 halfwords off under
   old_agbcc, same size. `u48` is handled as a word with explicit byte
   masks (`& 0x3f`, `& 0xc7`, `& 0xf8`), the direction switch as
   `(u32)(w & 0xc0) >> 6`, and the |dx| test as `d = a; d -= b`. What is
   left is register choice and order in the phase/count updates.
-- **`CreateCrate`** (#13, `game_loop36.c`): first full C draft, 1416
+- **`CreateCrate`** (#13, `crate_create.c`): first full C draft, 1416
   bytes vs 1396 under old_agbcc. The control flow, both jump tables
   and the per-type field stores are all reconstructed. The allocation
   differs from the prologue on: the ROM has `type` in r7 and slot*2 in
   r8, the draft the other way round.
-- **`ResolvePlatformCollision`** (#25, `actor_part_1ab98.c`): the existing draft is
+- **`ResolvePlatformCollision`** (#25, `platform_collide.c`): the existing draft is
   still 40 bytes short under both compilers (644/656 halfwords). The
   ROM cross-jumps the overlap arithmetic of both `hdir` arms into one
   shared tail, which the draft's allocation prevents. Not iterated
   further this pass.
-- **`QueueCratePlayerCollision`** (#12, `game_loop47.c`, 3840 B): not attempted. Its
+- **`QueueCratePlayerCollision`** (#12, `crate_break.c`, 3840 B): not attempted. Its
   size is roughly `ApplyCrateCollision` and `CreateCrate` combined.
 
 ## Reusable lessons

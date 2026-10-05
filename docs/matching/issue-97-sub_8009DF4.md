@@ -18,7 +18,7 @@ for the twin fix. The rest of this document is preserved as the
 original parking write-up.
 
 `parked-function` issue against `ApplySpriteVelocity` in
-`src/graphics/actor_part8.c` (real bytes in `asm/code_3_2_9.s`). Not
+`src/objects/moving_sprite.c` (real bytes in `asm/code_3_2_9.s`). Not
 closed this session, but the reconstruction was rewritten and the
 remaining gap is now much narrower and more precisely understood than
 `docs/matching.md`'s frozen entry describes.
@@ -45,7 +45,7 @@ tried", including pinning `self` to `r2` directly, and accepted an
 
 This turned out not to be quite right. `ApplySpriteVelocity` is structurally
 almost identical to `ApplyPlayerVelocity` (issue #9, `src/graphics/
-actor_part49.c`) - same per-axis clamp shape, same field offsets
+player_update.c`) - same per-axis clamp shape, same field offsets
 (`+0x60`/`+0x50`/`+0x4c`, `+0x64`/`+0x5c`/`+0x58`, `+0x24`, `+0`/`+4`),
 same true-leaf-function ROM shape, differing only in which global gets
 the final Y-velocity write. `ApplyPlayerVelocity` had already been worked out

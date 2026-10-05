@@ -11,7 +11,7 @@ write-up as `CollideCrateGridPartWithPlayer`/`CollideCrateGridPartWithObject` (t
 list under "## Parked (`NON_MATCHING`, not yet byte-exact)").
 
 Both were previously `#if NON_MATCHING` C reconstructions in
-`actor_part11.c` (see `docs/matching.md`, "Parked, not matched:
+`part_list.c` (see `docs/matching.md`, "Parked, not matched:
 `InitCrateList`"/"`ResetCrateList`", the original write-ups, for the full
 semantic breakdown - unchanged here). They share the exact same
 free-list-build loop shape (`ResetCrateList`'s own tail is a byte-for-byte
@@ -62,7 +62,7 @@ gap already catalogued for this cluster's siblings
 Both converted to `NAKED` functions whose body is a single `asm()`
 block transcribing the real ROM disassembly instruction-for-instruction,
 following the exact same conventions established earlier this session
-(`ResolveCollisionCandidates`, `game_loop28.c`; `naked-oam-actor-part-batch.md`):
+(`ResolveCollisionCandidates`, `collision_queue.c`; `naked-oam-actor-part-batch.md`):
 GNU-as local numeric labels in ROM order (`Nf`/`Nb`, reusable since
 each number is only ever defined once per function), the ROM's
 suffixed Thumb mnemonics (`movs`/`adds`/`subs`/`lsls`) written in their
@@ -87,50 +87,50 @@ NAKED C instead) - identical for both.
 content of that file (already trimmed down to just this one guard by
 an earlier batch, see `naked-spatial-grid-tail.md`). Since it's now a
 real (if `NAKED`) function, it no longer needs a guard at all - it's
-appended directly to `actor_part11.c`, right after the truly-matched
+appended directly to `part_list.c`, right after the truly-matched
 `DrawPartList`-`InitPartList` functions and before the still-`#if
 NON_MATCHING`-guarded `LinkCrateToActiveBucket` (owned by a parallel effort, left
 untouched). `asm/code_3_2_13.s` is retired entirely, and its
-`ldscript.txt` line removed - `actor_part11.o`'s own compiled output
+`ldscript.txt` line removed - `part_list.o`'s own compiled output
 now ends exactly where that file used to begin, so no other reordering
 is needed.
 
 `ResetCrateList` sat inside `asm/code_3_2_13_9914.s` (also already trimmed
 to just this one guard by the same earlier batch). Unlike `InitCrateList`,
 its real ROM address (`0x08009914`) does **not** sit adjacent to
-`actor_part11.c`'s own functions - `LinkCrateToActiveBucket`, `UnlinkCrateFromGrid`,
+`part_list.c`'s own functions - `LinkCrateToActiveBucket`, `UnlinkCrateFromGrid`,
 `UpdateCrateList`, `DrawCrateList`, `CollideCrateGrid`, `CollideCrateGridPartWithPlayer`, and
 `CollidePlayerWithCrates` all sit between them in ROM order, each already living in
 its own translation unit. Per `docs/workflow.md` step 4 ("a function
 whose real address isn't adjacent to an existing matched file's
 functions needs its own new `.c` file"), `ResetCrateList` moved to a new
-`src/graphics/actor_part11i.c` instead - the same reasoning that gave
-`CollideCrateGridPartWithPlayer` its own `actor_part11e.c` earlier, `CollideCrateGrid` its own
-`actor_part11f.c`, `LinkCrateToActiveBucket` its own `actor_part11g.c`, and
-`DrawCrateList` its own `actor_part11h.c` - `ResetCrateList` landed on "i"
+`src/crates/crate_list_reset.c` instead - the same reasoning that gave
+`CollideCrateGridPartWithPlayer` its own `crate_grid_collide.c` earlier, `CollideCrateGrid` its own
+`crate_grid_collide.c`, `LinkCrateToActiveBucket` its own `crate_grid_link.c`, and
+`DrawCrateList` its own `crate_list_draw.c` - `ResetCrateList` landed on "i"
 purely because all three of those letters were already claimed, by
 three separate parallel PRs, by the time this branch rebased onto them
 (three times, in fact - this file was renamed during each rebase:
 f -> g -> h -> i).
 `asm/code_3_2_13_9914.s` is retired entirely, and `ldscript.txt`'s
-corresponding line now points at the new `actor_part11i.o`, in the
+corresponding line now points at the new `crate_list_reset.o`, in the
 exact same link-order slot the old guard file occupied (between
-`actor_part11d.o` and `actor_part12.o`).
+`crate_player_collide.o` and `crate_list.o`).
 
 `tools/report_units.py` gained two new `base_object: None` entries at
-`0x08008F20` and `0x08009914` (splitting `actor_part11.o`'s own entry
-right before the first, and `actor_part11d.o`'s neighbor `CollidePlayerWithCrates`
+`0x08008F20` and `0x08009914` (splitting `part_list.o`'s own entry
+right before the first, and `crate_player_collide.o`'s neighbor `CollidePlayerWithCrates`
 entry right before the second) - the same "NAKED function embedded in
 an otherwise-matched file still gets its own address-boundary report
 entry" convention already established for `AdvanceSpriteAnim`
-(`actor_part3.c`)/`UpdateHovercraftCannon`(`actor_part31.c`)-style cases.
+(`sprite.c`)/`UpdateHovercraftCannon`(`actor_part31.c`)-style cases.
 
 Full clean `rm -rf build crashbandicootxs.elf crashbandicootxs.gba
 crashbandicootxs.map && make compare` confirms `crashbandicootxs.gba:
 La suma coincide` after this change, alongside `make NON_MATCHING=1
 report` + `objdiff-cli report generate` (both functions report as
 their own `raw_0800XXXX` units, matching the established parked-NAKED
-convention - `actor_part11`'s own unit is 100% matched across its 6
+convention - `part_list.c`'s own unit is 100% matched across its 6
 remaining real functions).
 
 ## Later pass (issue #9-#11 NAKED retry)

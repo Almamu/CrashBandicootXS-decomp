@@ -6,7 +6,7 @@
  * asm/code_3_2_17_188d0.s (details in docs/matching/issue-23-graphics.md).
  *
  * Small method-table ("vtable" at self+0x0C) objects of the same C++-style
- * family as actor_part_17524.c/actor_part27*.c: each class here is a
+ * family as input_ctrl.c/actor_part27*.c: each class here is a
  * constructor (base InitCtrl/CreateBossCtrl/CreatePlatformMover, then its own
  * table pointer) plus a destructor (table pointer, then the base
  * destructor), and a handful of per-frame update methods that drive one
@@ -377,7 +377,7 @@ static inline void SetFrame(struct gfx_part *part, s32 frame)
 
 /* "Mark part gone": set flags bit 0, then unless its id is 0xFFFF set the
  * id's bit in the gEntityFlags+0x108 bitmap - the same sequence as
- * MarkEntityGone (graphics.c) and InputCtrlStateDead (actor_part_17524.c), inlined.
+ * MarkEntityGone (graphics.c) and InputCtrlStateDead (input_ctrl.c), inlined.
  * The id is re-read (`volatile`) after the 0xFFFF test, and the word index
  * is a *signed* division of that zero-extended value, which is what gives
  * the ROM's copy + `asr #5` + subtract. The register pins are
@@ -998,7 +998,7 @@ void UpdateCortexShot(struct gfx_hit_ctrl *self, struct gfx_part *partArg)
             {
                 /* _call_via_r4 calls through r4: the method's function
                  * pointer is loaded there but never passed in r0-r3 (same
-                 * idiom as actor_part78.c's _call_via_r4 calls) */
+                 * idiom as player_collide.c's _call_via_r4 calls) */
                 u8 *tbl = p->vtable + 0x68;
                 void *thisp = (u8 *)p + *(s16 *)tbl;
                 register void *fn asm("r4") = *(void *volatile *)(tbl + 4);
@@ -1148,7 +1148,7 @@ void DestroyCortexBossPlatformMover(struct gfx_ctrl *self, s32 flags)
  * and points the method table at gCortexBossPlatformMoverVtable.
  *
  * The fifth argument is a byte the ROM stores with `strb` into its
- * outgoing stack slot; like CreatePlatform (actor_part_1a878.c), the call
+ * outgoing stack slot; like CreatePlatform (platform_create.c), the call
  * writes both stack slots itself through MOVER_NEW's 4-argument view
  * (include/mover_new.h), which also gives the ROM's `mov r1, sp` before
  * the 0. */

@@ -31,7 +31,7 @@ block copy and takes box A's address (`mov r1, sp`) again after the
 call. As three separate locals, gcc computed `&b` once and kept it (and
 `&a`) in callee-saved registers, which shifted everything else.
 
-The fix, as in `actor_part81.c`'s `struct aabb_copy`: make the three
+The fix, as in `player_event.c`'s `struct aabb_copy`: make the three
 boxes members of one stack struct.
 
 ```c

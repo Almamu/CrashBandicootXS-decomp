@@ -20,8 +20,8 @@ drawn, is left as-is rather than retroactively re-filed.
 This batch closes - as byte-exact NAKED transcriptions, not real
 matches - every function that was previously parked under
 `#if NON_MATCHING` across `src/menus/power_dialog_draw.c`, `graphics.c`,
-`actor_part.c`, `actor_part3.c`, `actor_part4.c`, `actor_part5.c`,
-`actor_part6.c`, and `actor_part7.c`/the new `actor_part7b.c`:
+`sprite.c`, `sprite_obj.c`
+and `sprite_anim.c`/the new `part_collide.c`:
 `DrawPowerDialog`, `DrawSpritePieces`, `GetSpriteBounds`, `GetSpriteHitbox`,
 `AdvanceSpriteAnim`, `sub_8008188`, `sub_8008200`, `sub_8008278`,
 `GetSpriteFrame`, `IsSpriteAnimLooping`, `UpdatePartList`, `CollidePartList`,
@@ -90,15 +90,15 @@ real ROM address isn't contiguous with that file's other functions
 (the established "needs its own new .c file" case from
 `docs/workflow.md` step 4):
 
-- `CollidePartWithObject` moved out of `actor_part7.c` into a new
-  `src/graphics/actor_part7b.c` - its real ROM address, `0x08008D80`,
-  sits after `actor_part10.c`'s `CullPartList`/`ClearPartList`/
+- `CollidePartWithObject` moved out of `sprite_anim.c` into a new
+  `src/objects/part_collide.c` - its real ROM address, `0x08008D80`,
+  sits after `part_list_cull.c`'s `CullPartList`/`ClearPartList`/
   `CollidePartsOfClass`, not right after `CollidePartWithPlayer` the way the old
   `#if NON_MATCHING` C draft's position in the file implied (that
   position never mattered before, since the guarded C never actually
   linked into the matching build - only now that it's unconditionally
   compiled does its link-order position matter). `ldscript.txt` now
-  places `actor_part7b.o` between `actor_part10.o` and `actor_part11.o`,
+  places `part_collide.o` between `part_list_cull.o` and `part_list.o`,
   exactly where the old `asm/code_3_2_12.o` used to sit.
 
 This batch retires six now-empty raw-assembly splits entirely -

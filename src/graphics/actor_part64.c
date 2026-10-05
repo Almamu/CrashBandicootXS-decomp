@@ -1,7 +1,7 @@
 #include "core.h"
 #include "actor_self.h"
 
-/* Same "self" object family as actor_part57.c (constructed by
+/* Same "self" object family as action_ctrl.c (constructed by
  * `CreateHovercraftLauncher`) - see docs/matching/issue-63-0x08033ef4-actor.md. */
 
 extern struct actor_pmf gHovercraftLauncherStateFuncs[];

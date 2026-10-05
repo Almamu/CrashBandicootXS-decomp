@@ -162,11 +162,11 @@ old_agbcc files:
 - `hud_init.c` (`InitHud`)
 - `title_screen_init.c` (`LoadTitleScreenBg`)
 - `pause_menu_gems.c` (`DrawPauseRelicsPage`)
-- `game_loop49.c` (`SolidifyOutlineCrates`)
+- `crate_break.c` (`SolidifyOutlineCrates`)
 
 Those are all byte-exact today, so each change is a break. Among the
 current-agbcc objects, 8 files change (`audio.c`,
-`actor_part100.c`, `graphics.c`, `palette_cycle.c`, `game_loop28.c`,
+`actor_part100.c`, `graphics.c`, `palette_cycle.c`, `collision_queue.c`,
 `game_loop5.c`, `irq.c`, `tile_slot_pool.c`). The flag is **not** a
 property of the old_agbcc build as a whole, nor of the whole ROM. Of the
 old_agbcc objects, `title_screen_init.o` is one where it changes

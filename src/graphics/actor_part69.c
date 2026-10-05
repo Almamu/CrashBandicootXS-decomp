@@ -1,7 +1,7 @@
 #include "core.h"
 
 /* Same `InitActorPart`-rooted per-instance "self" object family
- * documented in actor_part57.c/actor_part28.c/actor_part32.c. This is a
+ * documented in action_ctrl.c/actor_part28.c/actor_part32.c. This is a
  * third, much smaller object kind (vtable `gHovercraftCannonFlashVtable`) that
  * reuses `self+0x58` as a plain one-shot flag rather than a health
  * countdown. See docs/matching/issue-63-0x08033ef4-actor.md. */

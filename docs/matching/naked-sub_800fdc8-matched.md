@@ -1,8 +1,8 @@
 # `FindLineCrossing` converted from NAKED transcription to real matched C
 
-`FindLineCrossing` (`src/system/game_loop33.c`, the full 4-octant
+`FindLineCrossing` (`src/crates/crate_reset.c`, the full 4-octant
 Bresenham-line-style line-stepper `FindLineCrossingYMajor`/`FindLineCrossingXMajor`
-(game_loop31.c) are fixed single-octant variants of) had been parked
+(crate.c) are fixed single-octant variants of) had been parked
 as a byte-correct NAKED asm transcription - see
 [issue-13-fc70-continuation.md](./issue-13-fc70-continuation.md) for
 the original parking rationale. It's now genuinely matched as real
@@ -28,7 +28,7 @@ X-major-increasing case, one shared by the other three) - 4 bytes
 short.
 
 This is the same gap *class* as `GetTopCrate`/`GetBottomCrate`
-(game_loop30.c, see
+(crate_stack.c, see
 [naked-GetTopCrate-matched.md](./naked-GetTopCrate-matched.md)), but
 notably harder: that function's two `return cur;` sites were *both*
 meant to collapse into a single shared copy in the ROM too, so the fix
@@ -164,8 +164,8 @@ Isolated pipeline (`cpp` | `agbcc -O2 -fhex-asm -fprologue-bugfix` |
 `arm-none-eabi-as` | `objcopy --only-section=.text` | `cmp` against the
 ROM's own raw bytes at `0x0800FDC8`-`0x0800FEB0`, 232 bytes): exact
 match. Full clean `rm -rf build && make NON_MATCHING=1 report` - no
-warnings or errors for `game_loop33.c`. Full clean `rm -rf build
+warnings or errors for `crate_reset.c`. Full clean `rm -rf build
 crashbandicootxs.elf crashbandicootxs.gba crashbandicootxs.map && make
 compare` - `crashbandicootxs.gba: La suma coincide`.
 `tools/report_units.py`'s `0x0800FDC8` entry now points at
-`src/system/game_loop33.o` instead of `None`.
+`src/crates/crate_reset.o` instead of `None`.

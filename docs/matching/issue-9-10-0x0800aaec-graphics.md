@@ -15,7 +15,7 @@ see below) and closed both functions.
 
 ## Semantics
 
-### `PlayerHasRoomForAnim(void *self, s32 x)` - `src/graphics/actor_part108.c`
+### `PlayerHasRoomForAnim(void *self, s32 x)` - `src/player/player_anim_room.c`
 
 The input-action-check function the 42-slot `gActionCtrlStateTable`
 action-dispatch table's own entries (`ActionCtrlStateSlide` etc.) call for
@@ -24,28 +24,28 @@ their action codes `0xB`/`0x10` (`docs/rom_map.md` line 1713).
 1. **Gate**: builds an integer `{x, y}` probe position from `self`'s
    own Q8 `x`/`y` plus the target action `x`'s own `self+0x20`-table
    (a pointer-to-table, indexed by `x` at 28-byte stride - the same
-   "keyframe/hitbox record" convention `game_loop6.c`'s `BreakCrateTouchedByPlayer`
+   "keyframe/hitbox record" convention `crate_hit.c`'s `BreakCrateTouchedByPlayer`
    documents) record's `+6` (s16) vertical offset, added in Q8 space
    before truncating to match the ROM's exact rounding. Passes
-   `self+0x28` bit 4 (the mirror-flag bit `actor_part16.c`/
-   `actor_part17.c` already read) as a `1`/`2` selector, the record's
+   `self+0x28` bit 4 (the mirror-flag bit `player_flags.c`/
+   `ctrl.c` already read) as a `1`/`2` selector, the record's
    own `+9` byte as a third scalar, and a pointer to `self`'s original
    (untruncated) Q8 `y` for the callee to restore/report through, to
    `ProbeTerrain(player, arg1, posInt, arg3, outY)` (prototype already
    established from its two other NAKED call sites,
-   `actor_part12b.c`/`game_loop6.c`... actually `actor_part12b.c`'s
+   `step_probe.c`/`crate_hit.c`... actually `step_probe.c`'s
    `sub_8009BE0`). If the low byte of the result is nonzero, returns
    `0` immediately.
 2. **Loop**: otherwise walks `gCrateList` (a `struct actor_list
    { s32 count; s32 unused_4; void **items; }`, the exact layout
-   `src/system/game_loop24.c`'s `ConvertCratesForTimeTrial` already established) -
+   `src/crates/crate_time_trial.c`'s `ConvertCratesForTimeTrial` already established) -
    for each `entry = items[i]`, tests `entry`'s own `+0x18`-table
    `+0x48` trampoline via `_call_via_r1(entry + *(s16*)(table+0x48),
    *(void**)(table+0x48+4))` (matched elsewhere). On state `3`, calls
    `PlayerAnimWouldTouchCrate(entry, x)`; if that returns `1`, returns `0`
    immediately. If the loop runs to completion, returns `1`.
 
-### `PlayerAnimWouldTouchCrate(void *self, s32 x)` - `src/graphics/actor_part109.c`
+### `PlayerAnimWouldTouchCrate(void *self, s32 x)` - `src/crates/crate_touch.c`
 
 `PlayerHasRoomForAnim`'s only callee, called once per list entry whose own
 `+0x18`-table trampoline reports state `3`.
@@ -53,7 +53,7 @@ their action codes `0xB`/`0x10` (`docs/rom_map.md` line 1713).
 Early-outs (returns `0`) when `self+0x4e` (a state/type byte) is `5`
 or `0xa`. Otherwise builds **three** AABBs via the shared
 `SetAabbPos`(set-pos)/`SetAabbSize`(set-size) primitive (`struct
-aabb` from `actor_part.c`/`game_loop6.c`), all from the same
+aabb` from `sprite.c`/`crate_hit.c`), all from the same
 `self+0x20`-table-at-28-byte-stride convention `PlayerHasRoomForAnim` above
 also uses (confirming `docs/rom_map.md`'s own cross-reference: "the
 exact field `gCrateHitResponse`, the physics subsystem's 22-row
@@ -62,8 +62,8 @@ exactly, but clearly a different table instance" - reinforcing the
 project's established "shared convention, not shared struct" reading),
 with the record's own `{s16 offX, s16 offY, u8 w, u8 h}` quad at
 `+4`/`+6`/`+8`/`+9` (yet another layout variant of the convention
-alongside `actor_part.c`'s `+0xc`/`+0xe`/`+0x10`/`+0x11` and
-`game_loop6.c`'s own `+4`/`+6`/`+8`/`+9`, which this function's first
+alongside `sprite.c`'s `+0xc`/`+0xe`/`+0x10`/`+0x11` and
+`crate_hit.c`'s own `+4`/`+6`/`+8`/`+9`, which this function's first
 two AABBs match exactly). Each AABB is mirrored horizontally/
 vertically around its own object's integer position when that
 object's own `+0x28` bits 4/5 are set (same mirror-flag convention):
@@ -116,7 +116,7 @@ per-iteration re-materialize-into-r0-then-alias-in-place shape:
   freshly-dereferenced value/`->count` in `r0` (the ROM's opposite
   choice).
 - The `ConvertCratesForTimeTrial`-style "cache `&var` in a local declared inside an
-  `if` guard, then `do`/`while`" idiom (`game_loop24.c`'s own proven
+  `if` guard, then `do`/`while`" idiom (`crate_time_trial.c`'s own proven
   pattern for the identical `gCrateList` list shape) re-adds a
   4th callee-saved register (`r6` for the cached address, on top of
   `r4`/`r5`/`r7`) here - it doesn't reproduce the ROM's shape either,
@@ -162,14 +162,14 @@ NAKED transcription of the ROM's own confirmed-correct instructions
 `baserom.gba`'s own bytes at `0x0800AAEC`-`0x0800AB9C` - the only
 byte differences were at the three `bl`/two `.word` relocation sites,
 which resolve correctly once linked). Real bytes formerly in
-`asm/code_3_2_16.s` (now removed entirely - `actor_part108.o` replaces
+`asm/code_3_2_16.s` (now removed entirely - `player_anim_room.o` replaces
 it in link order between the trimmed `asm/code_3_2_16_a884.o` and
-`actor_part81.o`).
+`player_event.o`).
 
 ### `PlayerAnimWouldTouchCrate` - NAKED transcription, not real C
 
 Not attempted as a C reconstruction at all: this is the same AABB-
-build primitive `game_loop6.c`'s `BreakCrateTouchedByPlayer` already documents at
+build primitive `crate_hit.c`'s `BreakCrateTouchedByPlayer` already documents at
 length (inlined twice there, three times here), and that function's
 own header comment already records the *simpler* two-AABB version as
 resistant to gcc 2.9 C reconstruction - "the ROM keeps exactly two
@@ -191,7 +191,7 @@ relocation sites - eight `bl` calls and one `.word` literal).
 Real bytes formerly in `asm/code_3_2_17.s`'s middle (that fragment is
 now trimmed to end right before `PlayerAnimWouldTouchCrate`); the remainder from
 `sub_800CEAC` onward (still raw, unexamined this session) moved to the
-new `asm/code_3_2_17_ceac.s`. `actor_part109.o` sits between the two
+new `asm/code_3_2_17_ceac.s`. `crate_touch.o` sits between the two
 in link order.
 
 ## Full-ROM verification
@@ -205,7 +205,7 @@ coincide` (checksum matches).
 
 - Opaque two-instruction `asm volatile` materialization to stop a
   `ptr + N` from folding into the next store/copy's addressing mode
-  (established technique, `actor_part48.c`/`GetSpriteBounds`).
+  (established technique, `player_reset.c`/`GetSpriteBounds`).
 - Scoped `register` pins (`r2`/`r3`/`r4`) for values that need to
   outlive several intervening statements in a *specific* hardware
   register, plus deliberately reordering the C statements that produce
@@ -237,7 +237,7 @@ The record pointer's `+4` is a separate `rec += 4` statement. See [issue-9-naked
 
 ## Later pass (stack-box NAKED retry)
 
-`PlayerAnimWouldTouchCrate` is now real C under old_agbcc (`actor_part109.o` joined
+`PlayerAnimWouldTouchCrate` is now real C under old_agbcc (`crate_touch.o` joined
 `OLD_AGBCC_OBJS`). The player box's address goes through an empty
 `asm("" : "+r")` copy at each builder call and at the first overlap
 test, so cse no longer keeps `sp+16` in r6 from the first build on.

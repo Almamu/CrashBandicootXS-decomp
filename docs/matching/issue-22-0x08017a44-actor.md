@@ -2,11 +2,11 @@
 
 Labeled `graphics` by the chunk generator, but on inspection every
 function here operates on the same large per-level "player/action"
-object already documented in `actor_part18.c`/`actor_part19*.c`
+object already documented in `action_ctrl_states.c`/`actor_part19*.c`
 (`self+0xc` per-category table pointer, `self+0x10` "part" sub-object,
 the `_call_via_r2`/`_call_via_r3` base+offset+fn-pointer trampoline
 convention) - filed under `docs/status/actor.md` instead, matching the
-precedent already set for `actor_part18.o`/`actor_part18b.o` (also
+precedent already set for `action_ctrl_states.o`/`action_ctrl_land.o` (also
 `graphics`-labeled-but-actor-shaped, see their own `tools/report_units.py`
 entries).
 
@@ -26,18 +26,18 @@ avoid an add/add filename collision.
 
 ## Matched
 
-- `src/graphics/actor_part27.c` (new file, ROM 0x08017A44-0x08017AAC):
+- `src/player/input_ctrl_queue.c` (new file, ROM 0x08017A44-0x08017AAC):
   `IsInputCtrlMotionXPending`-`GetCtrlTarget` (9 functions) - trivial `self+0x14`/
   `self+0x17`/`self+0x18` byte/word accessors, plus the
   `DestroyBossCtrl`/`CreateBossCtrl` table-pointer-reset pair (same
   `gBossCtrlVtable`/`DestroyCtrl`/`InitCtrl` double-set pattern
   seen throughout this object family).
 - `src/graphics/actor_part27b.c` (new file, ROM 0x08017ECC-0x08017FE8,
-  non-adjacent to `actor_part27.c` since the raw `UpdateMegaMix` sits
+  non-adjacent to `input_ctrl_queue.c` since the raw `UpdateMegaMix` sits
   between them): `SetMegaMixMotionYFromSet`, `SetMegaMixMotionXFromSet`, `StartMegaMixMotionYFromSet`,
   `StartMegaMixMotionXFromSet`, `ResetMegaMixCtrl`, `DestroyMegaMixCtrl`, `CreateMegaMixCtrl` - a
   `self+4` double-pointer-chain record lookup (same shape as
-  `StartCtrlTargetMotionYFromSet`/`StartCtrlTargetMotionXFromSet` in `actor_part17.c`) feeding the
+  `StartCtrlTargetMotionYFromSet`/`StartCtrlTargetMotionXFromSet` in `ctrl.c`) feeding the
   `gMegaMixMotionRecords` per-vector-component trampoline table, with
   `part+0x28` bit 4/bit 5 mirror-flag X/Z negation exactly like
   `SetCtrlTargetMotionX`/`StartCtrlTargetMotionX`/`SetCtrlTargetMotionY`/`StartCtrlTargetMotionY`.
@@ -48,7 +48,7 @@ avoid an add/add filename collision.
   reset pair, `gStompedHopPadVtable`), `UpdateOneShotAnimCtrl` (a struct-actor-
   shaped "part"'s flags-OR plus `gEntityFlags+0x108` bitmap-set,
   same idiom as `CheckSpritePickup`'s `part->field_08` bitmap-set in
-  `actor_part2.c`).
+  `sprite.c`).
 
 ### Compiler-codegen notes
 

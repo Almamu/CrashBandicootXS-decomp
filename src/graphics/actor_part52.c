@@ -1,9 +1,9 @@
 #include "core.h"
 #include "memory.h"
 
-/* Same "self" object family as actor_part39.c - see that file's header
+/* Same "self" object family as wumpa.c - see that file's header
  * comment and docs/matching/issue-50-actor-2a69c.md. Non-adjacent to
- * actor_part39.c since the parked `sub_802AA0C` (actor_part40.c) sits
+ * wumpa.c since the parked `sub_802AA0C` (actor_part40.c) sits
  * raw between them. */
 
 extern u8 gActorVtable[];

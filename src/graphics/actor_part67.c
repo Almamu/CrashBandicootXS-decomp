@@ -2,7 +2,7 @@
 #include "actor_self.h"
 
 /* Same `InitActorPart`-rooted per-instance "self" object family
- * documented in actor_part57.c/actor_part28.c/actor_part32.c: a "part
+ * documented in action_ctrl.c/actor_part28.c/actor_part32.c: a "part
  * table" pointer at `self+0`, a table-index/"kind" field at `self+0xc`,
  * an anim-frame halfword/byte pair at `self+0x10`/`self+0x12`, an
  * accumulator at `self+8`, state at `self+0x28`, a frame counter at

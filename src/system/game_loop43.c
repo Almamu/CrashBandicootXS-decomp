@@ -1,9 +1,9 @@
 #include "core.h"
 
 /* GitHub issues #9/#10/#41's shared cross-reference: `sub_8009BE0`'s
- * physics/collision step-probe (`src/graphics/actor_part12b.c`, see
+ * physics/collision step-probe (`src/objects/step_probe.c`, see
  * `docs/matching/naked-spatial-grid-tail.md`) and `PlayerHasRoomForAnim`'s
- * input-action-check gate (`src/graphics/actor_part108.c`, see
+ * input-action-check gate (`src/player/player_anim_room.c`, see
  * `docs/matching/issue-9-10-0x0800aaec-graphics.md`) both flagged this
  * function as "still unexamined" from their own call sites.
  * `docs/rom_map.md` (line ~2472) had already sketched it as "an

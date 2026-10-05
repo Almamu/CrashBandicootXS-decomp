@@ -2,14 +2,14 @@
 
 Category label was `graphics`, but this chunk turned out to be the same
 "self" action-table object family already established in
-`actor_part18.c`/`actor_part18b.c` (self+0xc a per-category
+`action_ctrl_states.c`/`action_ctrl_land.c` (self+0xc a per-category
 `{s16 offset; void *fn}` table fed through the `_call_via_r2`/
 `_call_via_r3` trampolines together with `self+0x10`, a `struct actor *`
 sub-object; self+0x27-0x32 a shared state/flag/table-index trio) - filed
 under `docs/status/actor.md`, not `graphics.md`, matching the note in
 `docs/status/README.md` that several graphics-labeled chunks are
 actually `actor`. Two of this chunk's own functions
-(`StartActionCtrlHighJump`/`SetActionCtrlModeAnim`) are called directly by `actor_part18.c`'s
+(`StartActionCtrlHighJump`/`SetActionCtrlModeAnim`) are called directly by `action_ctrl_states.c`'s
 `ActionCtrlStateStandUp`/`ActionCtrlStateCrawlStart`, confirming the same object family carries
 straight through.
 
@@ -21,13 +21,14 @@ guessed struct.
 ## New files
 
 The chunk's matched/parked functions split into four new `.c` files
-(`actor_part38.c`/`38b.c`/`38c.c`/`38d.c` - numbered `38` rather than
+(`actor_part38.c`/`38b.c`/`38c.c`/`38d.c`, now `action_ctrl_hang.c`,
+`action_ctrl_moves.c` and `action_ctrl.c` - numbered `38` rather than
 `28`, which would have matched their creation order more naturally,
 since issue #62's parallel PR independently claimed `actor_part28.c`
 first before this PR merged), each ending where a parked
 function's raw bytes sit between it and the next matched run - the same
 "widen past the parked function's real end" convention as
-`actor_part18.c`. Four new raw `.s` splits carry the parked functions'
+`action_ctrl_states.c`. Four new raw `.s` splits carry the parked functions'
 real bytes: `asm/code_3_2_17_15038.s`, `code_3_2_17_15238.s` (covers
 both `EndActionCtrlSpin` and `SteerActionCtrlSpin`, since both ended up parked
 back-to-back), `code_3_2_17_156ec.s`, `code_3_2_17_157c4.s`. The
@@ -157,7 +158,7 @@ original `asm/code_3_2_17_14674.s` is truncated to end right before
 - **`SetActionCtrlModeAnim`**: fires the mgr trampoline pair with `a`/`b` as the
   two action arguments (note: `a` is a real, *used* parameter here,
   passed straight through as `_call_via_r2`'s action index - not the
-  "unused" parameter it looked like from `actor_part18.c`'s call
+  "unused" parameter it looked like from `action_ctrl_states.c`'s call
   sites alone), then conditionally latches `self+0x18`/`self+0x1c`
   from `c`/`d` unless either equals the `0x7FFFFFFF` sentinel. Matched
   with no register pins needed.
@@ -229,8 +230,7 @@ Since `asm/code_3_2_17_1434c.s`, `code_3_2_17_145e4.s`,
 `code_3_2_17_157c4.s` each held nothing but their one or two guarded
 functions, all six files are now empty and were deleted, with their
 `ldscript.txt` lines dropped - the six target `.c` files
-(`actor_part18.c`/`actor_part18b.c`/`actor_part38.c`/`actor_part38b.c`/
-`actor_part38c.c`/`actor_part38d.c`) were already correctly positioned
+(`action_ctrl_states.c`/`action_ctrl_land.c`/`action_ctrl_hang.c`/`action_ctrl_moves.c`/`action_ctrl.c`) were already correctly positioned
 in `ldscript.txt` from the original parked pass, so no other
 `ldscript.txt` changes were needed.
 
@@ -259,8 +259,8 @@ warning `docs/workflow.md` calls out - it held true again here.
 ## Later pass: strag2 retry
 
 Three of the four NAKED transcriptions from the third pass are now real
-C: `EndActionCtrlSpin`, `SteerActionCtrlSpin` (`actor_part38b.c`) and `ActionCtrlStateBodySlamStart`
-(`actor_part38c.c`). The whole `.text` of `actor_part38.o`/`38b.o`/`38c.o`
+C: `EndActionCtrlSpin`, `SteerActionCtrlSpin` (`action_ctrl_moves.c`) and `ActionCtrlStateBodySlamStart`
+(`action_ctrl_moves.c`). The whole `.text` of `action_ctrl_hang.o`/`38b.o`/`38c.o`
 is identical under agbcc and old_agbcc, and this range is confirmed
 old_agbcc territory, so the three objects joined `OLD_AGBCC_OBJS`.
 

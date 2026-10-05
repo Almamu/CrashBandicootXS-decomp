@@ -7,7 +7,8 @@ claimed `actor_part57.c`-`62.c` first, both before this PR merged -
 resolved as a rename on merge to avoid a three-way add/add filename
 collision. The whole eleven-file family was renumbered together (not
 just the six files that literally collided) to keep it visually
-contiguous.
+contiguous. (#575 has since given these files descriptive names; see
+`tools/file_layout_plan.tsv` for the mapping.)
 
 25-function `decomp-chunk` immediately following issue #62's cluster
 (`0x08033804`-`0x08033EF4`, see

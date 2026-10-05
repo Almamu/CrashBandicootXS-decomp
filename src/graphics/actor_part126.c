@@ -6,7 +6,7 @@
  * anim-frame halfword/byte pair at `self+0x10`/`self+0x12`, an
  * accumulator at `self+8`, a `self+0x50`-rooted event/trampoline
  * table, and the position triple at `self+0x1c`/`self+0x20`/`self+0x24`)
- * already documented for `actor_part17.c`-`actor_part19i.c` and
+ * already documented for `ctrl.c`-`actor_part19i.c` and
  * `actor_part58.c`. Sits between `actor_part19i.c` (issue #53, ending
  * at `CreatePolarBasicCrate`) and `actor_part62.c` (issue #54, starting at
  * `MovePolarAkuAku`) - the whole `0x0802CC9C`-`0x0802D3A8` gap

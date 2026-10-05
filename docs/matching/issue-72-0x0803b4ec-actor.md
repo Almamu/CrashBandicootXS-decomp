@@ -45,7 +45,7 @@ their bytes to the preceding labelled function:
   `self->field_54` getter.
 - **`DamageActor`** (0x0803B5E0, 2 bytes, 2-byte aligned pad after) -
   `bx lr` alone, a genuinely empty stub (same shape as `ResetStopwatch` in
-  `src/graphics/actor_part39.c`) - next available `nullsub_N`, since
+  `src/pickups/wumpa.c`) - next available `nullsub_N`, since
   `_call_via_lr` was already taken.
 - **`IsJetpackPlayerUnshootable`** (0x0803B5E4, 4 bytes) - between `DamageActor`'s
   padding and `DestroyJetpackShot`. `movs r0,#0; bx lr` - a trivial "return

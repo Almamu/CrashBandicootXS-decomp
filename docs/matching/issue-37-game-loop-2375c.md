@@ -14,13 +14,13 @@ level object's own `+0xdc->+8` state field is `2`
 1. Fires two no-argument setup calls (`CreateEntitySpawner`, `ClearRoomExit`).
 2. Allocates the whole per-level widget set: five `dual_array_manager`s
    (`gUpdateOnlyPartList`/`EC`/`F0`/`F8`/`F4`, the same struct
-   `actor_part11.c`'s `InitPartList` already returns) and one
+   `part_list.c`'s `InitPartList` already returns) and one
    `pool_manager` (`gCrateList`, `InitCrateList`'s own type from
-   `actor_part12.c`), a generic 0x18-byte block (`gCamera`),
+   `crate_list.c`), a generic 0x18-byte block (`gCamera`),
    the text-box singleton (`gLevelLayers`, lazily built by the
    still-raw `GetLevelLayers`), and the player actor itself
    (`gPlayer`, a 0x350-byte block handed to `InitPlayer`
-   - the same constructor `actor_part77.c` already matched, called here
+   - the same constructor `player_init.c` already matched, called here
    with a genuine 5th stack argument the matched 4-parameter signature
    there simply never touches).
 3. Sets the player's position from `self+0x10`/`0x14`
@@ -98,7 +98,7 @@ level object's own `+0xdc->+8` state field is `2`
   immediate load - one instruction short of the ROM's real `movs r0,
   #0x11 / rsbs r0, r0, #0` runtime negation. The established
   "negative-constant bit-clear idiom" (`docs/matching.md`,
-  `ClearSpriteObjFlag5` in `actor_part14.c`) fixes it, but *only* when the
+  `ClearSpriteObjFlag5` in `ground_sprite.c`) fixes it, but *only* when the
   negative literal (`-0x11`) is bound to a `register ... asm("r0")`
   local first - a bare `*p & -0x11` inline still constant-folds despite
   being the "right" literal, since nothing forces the compiler to treat
@@ -128,7 +128,7 @@ level object's own `+0xdc->+8` state field is `2`
   letting this compiler's own switch lowering pick that shape, rather
   than hand-writing the comparison order.
 - **`InitPlayer`'s 5th argument**: the matched 4-parameter signature in
-  `actor_part77.c` never reads a 5th argument, but this call site (and,
+  `player_init.c` never reads a 5th argument, but this call site (and,
   per that file's own doc comment, `CreateSpriteObj` elsewhere in the same
   neighborhood) passes one anyway - a real stack argument (`str r2,
   [sp]` sitting *before* the register arguments are even fully loaded,

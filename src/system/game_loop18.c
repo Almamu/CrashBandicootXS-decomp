@@ -210,7 +210,7 @@ extern u8 gThemeMusicCues[];
 
 /* Resolves which sound cue to play for a medal-results screen event:
  * `0x12` while `gLevelState`'s mode field (`+0x78`, see
- * src/graphics/actor_part7.c) is 3, `6` if `IsInBonusRoom` (the
+ * src/objects/sprite_anim.c) is 3, `6` if `IsInBonusRoom` (the
  * item-list `extra1`-matches-cached-value check) is true, otherwise a
  * byte looked up from the per-level sound-cue-ID table
  * `gThemeMusicCues` at `gLevelTable[self->level]`'s `+0x04`
@@ -218,7 +218,7 @@ extern u8 gThemeMusicCues[];
  * `PlaySong`. The `IsInBonusRoom` call's result is truncated to `u8`
  * before the nonzero test, matching this codebase's established
  * `(u8)funcCall(...) != 0` idiom for a callee whose real return value
- * is only byte-wide (see e.g. src/graphics/actor_part38c.c). */
+ * is only byte-wide (see e.g. src/player/action_ctrl_moves.c). */
 void PlayRoomMusic(struct level_progress *self)
 {
     s32 mode = gLevelState->maskLevel;

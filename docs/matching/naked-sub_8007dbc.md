@@ -1,6 +1,6 @@
 # `CheckSpritePickup`: matched via NAKED asm transcription
 
-`CheckSpritePickup` (ROM `0x08007DBC`, `src/graphics/actor_part2.c`) is the
+`CheckSpritePickup` (ROM `0x08007DBC`, `src/objects/sprite.c`) is the
 `part`-vs-player collision handler documented at length in
 `docs/matching.md`'s "Parked, not matched: `CheckSpritePickup`" entry: two
 `part->flags` bit tests gate an AABB collision test against the player
@@ -59,8 +59,8 @@ needs no register-allocation coaxing at all.
 
 Matching this function also retired the `asm/code_3_2_3.s` split: it
 held only `CheckSpritePickup`, immediately followed by `IsSpriteObjOnScreen`
-(already matched in `actor_part3.c`), so moving `CheckSpritePickup` into
-`actor_part2.c` closes the gap completely - `asm/code_3_2_3.s` was
+(already matched in `sprite.c`), so moving `CheckSpritePickup` into
+`sprite.c` closes the gap completely - `asm/code_3_2_3.s` was
 deleted and its `ldscript.txt` line removed, the same "retire an
 emptied split" convention as `asm/code_3_1.s`/`ShowBitmapScreen` and
 `asm/code_3_1_697c.o`/`GetCompletionPercent` before it (see `docs/matching.md`).
@@ -74,4 +74,4 @@ update. See [issue-9-naked-retry.md](./issue-9-naked-retry.md) for details.
 
 ## Later pass (issue #9-#11 NAKED retry)
 
-`CheckSpritePickup` is real C under old_agbcc now; `actor_part2.o` is in `OLD_AGBCC_OBJS`. The r7 player-global problem was the compiler, not the source. See [issue-9-11-box-naked-retry.md](issue-9-11-box-naked-retry.md).
+`CheckSpritePickup` is real C under old_agbcc now; `sprite.o` is in `OLD_AGBCC_OBJS`. The r7 player-global problem was the compiler, not the source. See [issue-9-11-box-naked-retry.md](issue-9-11-box-naked-retry.md).

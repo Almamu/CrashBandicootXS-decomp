@@ -9,7 +9,7 @@ second pass against those five.
 
 ## Matched (7 of 12 remaining functions)
 
-- **`OpenLifeCrate`** (`src/system/game_loop34.c`, new file) - plays
+- **`OpenLifeCrate`** (`src/crates/crate_stack.c`, new file) - plays
   cue-3 SFX, then - unless `self->field_08` is the sentinel `0xffff` -
   consumes a slot from the per-record bit-grid (`gEntityFlags`,
   the same `sub_802599C`/`sub_80259D4` accessor pair game_loop12.c/
@@ -40,17 +40,17 @@ second pass against those five.
     purely to make this compiler reserve the same 8-byte outgoing-
     argument stack slot pair the ROM's own `sub sp, #8`/`add sp, #8`
     frame does.
-- **`DestroyCrate`/`InitCrate`** (`src/system/game_loop31.c`, new
+- **`DestroyCrate`/`InitCrate`** (`src/crates/crate.c`, new
   file) - a part-object table-set/tail-call-`DestroySpriteObj` helper (same
-  shape as `DestroyWumpa`, `actor_part39.c`) that additionally frees
+  shape as `DestroyWumpa`, `wumpa.c`) that additionally frees
   `self+0x48` (unless it's the sentinel `-1` or already `NULL`) and
   clears `self+0x59` when `self`'s own `+0x4e` state byte is 3, and a
   second helper that re-initializes `self` via `InitSpriteObj`, resets
   its table/`+0x59` flag, then resets its own collision-response state
-  via `ResetCrate` (`game_loop22.c`). Both take/return `struct actor *`
+  via `ResetCrate` (`crate_reset.c`). Both take/return `struct actor *`
   (matching `DestroySpriteObj`/`InitSpriteObj`'s own already-matched
-  prototypes in `actor_part6.c`).
-- **`FindLineCrossingYMajor`/`FindLineCrossingXMajor`** (`src/system/game_loop31.c`) - two
+  prototypes in `sprite_obj.c`).
+- **`FindLineCrossingYMajor`/`FindLineCrossingXMajor`** (`src/crates/crate.c`) - two
   fixed single-octant variants of the Bresenham-line-style stepper
   `FindLineCrossing` (below) implements in full - each walks a fixed number
   of steps along one axis (the 3rd/4th parameters, doubled into the
@@ -61,7 +61,7 @@ second pass against those five.
   walk completes without ever reaching it. Both matched with no
   register-allocation gotchas - straightforward translations of the
   ROM's own loop shape.
-- **`CollideCrateWithPlayer`** (`src/system/game_loop30.c`, new file) - unless
+- **`CollideCrateWithPlayer`** (`src/crates/crate_stack.c`, new file) - unless
   `self`'s own `+0x4d & 0x7f` state is 1, and `testX`/`testY` are both
   within `0x3fff` of `self`'s own `+0`/`+4` position, and `self`'s
   `+0x4e` byte isn't `5`, fires `QueueCratePlayerCollision(self)` (the subsystem's
@@ -94,17 +94,17 @@ second pass against those five.
 
 ## Parked (NAKED transcription) - 4 functions
 
-- **`UpdateCrateFall`** (`src/system/game_loop32.c`, new file) - a
+- **`UpdateCrateFall`** (`src/crates/crate_break.c`, new file) - a
   per-frame position-wrap advance keeping `sb`/`r8` live as two extra
   callee-saved accumulators throughout - the same "two extra
   high-register accumulators live throughout" gap already parked (and
-  NAKED-transcribed) for `BreakCrateTouchedByPlayer` (`game_loop6.c`,
+  NAKED-transcribed) for `BreakCrateTouchedByPlayer` (`crate_hit.c`,
   [docs/matching/issue-12-physics-collision.md](issue-12-physics-collision.md)).
   Needed a trailing `asm(".align 2, 0")` too - the function body is 342
   bytes (not 4-aligned), and the ROM pads the 2-byte gap before
   `FindLineCrossing` with a zero halfword rather than the assembler's
   default `nop` (`matching_decomp_alignment_fix`).
-- **`FindLineCrossing`** (`src/system/game_loop33.c`, new file) - the full
+- **`FindLineCrossing`** (`src/crates/crate_reset.c`, new file) - the full
   4-octant Bresenham-line-style line-stepper `FindLineCrossingYMajor`/
   `FindLineCrossingXMajor` above are fixed single-octant variants of. Every
   branch/field/octant-selection is understood and was written as plain
@@ -125,7 +125,7 @@ second pass against those five.
   elsewhere, so it's transcribed instead; the full octant-by-octant C
   reconstruction (verified matching in isolation before this gap
   surfaced) is preserved in the function's doc comment for reference.
-- **`GetTopCrate`/`GetBottomCrate`** (`src/system/game_loop30.c`) - two
+- **`GetTopCrate`/`GetBottomCrate`** (`src/crates/crate_stack.c`) - two
   "get prev"/"get next" neighbor-list-walk-and-filter helpers: each
   walks its own list direction, returning the furthest node reachable
   while every node visited has a `+0x4d & 0x7f` state != 1, falling
@@ -196,7 +196,7 @@ instruction sequences by content regardless of source position, but
 never unifies an inline-asm block with a compiler-generated one. This
 entry is left as-is above (a frozen historical record of why the
 function was originally parked); `tools/report_units.py`'s
-`0x0800FDC8` entry now points at `src/system/game_loop33.o` instead of
+`0x0800FDC8` entry now points at `src/crates/crate_reset.o` instead of
 `None`, and `docs/status/game_loop.md`'s parked-list entry for it was
 removed in favor of a matched-list entry.
 
@@ -208,14 +208,14 @@ sibling" (`UpdateTntCountdown`/`UpdateSlotCrate`/`SolidifyOutlineCrates`/`Finish
 `UpdateCrateFall`, `ResetSpriteFrameTimer`/`ResetSpriteFrameIndex`/`SetSpriteAnimDone`,
 `GetPaletteSlot`, `AdvanceSpriteAnim`, `_call_via_r1`) had already been matched
 by earlier passes in this same session (issue #12's cluster and this
-issue's own `UpdateCrateFall`/`game_loop32.c`), which is what made this
+issue's own `UpdateCrateFall`/`crate_break.c`), which is what made this
 function tractable at all - it's a pure dispatcher/glue function over
 already-understood pieces, not new semantic territory.
 
 **What it does**: a per-frame state-machine tick on the same
 "collision box" `self` object this whole file family operates on.
 While `self+0x4f` (a per-object throttle counter, matching the
-`ActivateIronSwitchCrate`-seeded throttle byte game_loop49.c's own header comments
+`ActivateIronSwitchCrate`-seeded throttle byte crate_break.c's own header comments
 describe) is nonzero, decrements it and, only for the frame it reaches
 zero-triggering, dispatches once more on `self+0x4e` (the settle-state
 byte): `0x13`-`0x15` re-enters the edge-settle chain (`UpdateTntCountdown`)
@@ -224,11 +224,11 @@ re-triggers `UpdateSlotCrate` when `self+0x4d`'s low 7 bits are already 0;
 `0xc`, once the throttle has reached 0 this frame, clears `self+0x50`;
 `3` re-triggers `SolidifyOutlineCrates`. Unconditionally afterwards: while
 `self+0x4e == 0xc`, counts `self+0x48` down toward 0; always calls
-`UpdateCrateFall` (the position-wrap advance, `game_loop32.c`). Then, if
+`UpdateCrateFall` (the position-wrap advance, `crate_break.c`). Then, if
 `self+0x4d`'s bit 7 is set and `self+0x38` is nonzero, re-derives
 `self+0x30`'s index via the exact same `self+0x20`-pointer-to-manager/
 `self+0x2d`-tag/0x1c-stride hitbox-record clamp `DrawCrate`
-(`game_loop35.c`) uses, clears `self+0x38` and `self+0x4d`'s bit 7, and
+(`crate_draw.c`) uses, clears `self+0x38` and `self+0x4d`'s bit 7, and
 clears the "recently touched" object's (`gPlayer`) own
 `+0x80` byte - then, depending on `self+0x4e`: state 6 settles to
 state 7, tags `self+0x2d = 0x20`, runs the
@@ -272,24 +272,24 @@ an inconsistent reuse pattern the ROM itself only sometimes applies
 checks a few instructions later, rather than reusing the r6 copy the
 immediately-preceding `0xf` check just made) - a finer-grained, more
 pervasive version of the same "which anonymous scratch register" gap
-that already forced `GetSpriteBounds`/`GetSpriteHitbox` (`actor_part.c`) and
-`ResolveCollisionCandidates` (`game_loop28.c`) fully NAKED. Given the depth of
+that already forced `GetSpriteBounds`/`GetSpriteHitbox` (`sprite.c`) and
+`ResolveCollisionCandidates` (`collision_queue.c`) fully NAKED. Given the depth of
 precise, non-uniform register control needed across the *entire*
 ~195-instruction function (not just one isolated block), it was
 transcribed byte-exact instead - every instruction checked directly
 against the ROM's raw bytes, confirmed via a full clean
 `make NON_MATCHING=1 report` (no warnings) and `make compare`
 ("La suma coincide") from scratch. Lives in new file
-`src/system/game_loop50.c` (the next free `game_loopNN` slot in this
+`src/objects/collision_queue.c` (the next free `game_loopNN` slot in this
 file family; it sits between the still-differently-addressed
-`game_loop35.o` and `game_loop23.o` in ROM order, so - like
+`crate_draw.o` and `crate.o` in ROM order, so - like
 `DrawCrate` before it - it needs its own file rather than joining
 either neighbor).
 
 ## Later pass: issue #12/#13/#25 NAKED retry
 
 `UpdateCrateFall` and `UpdateCrate` are real C under old_agbcc
-(`game_loop32.o` and `game_loop51.o` joined `OLD_AGBCC_OBJS`). Neither
+(`crate_break.o` and `crate_update.o` joined `OLD_AGBCC_OBJS`). Neither
 needed a register pin: the "accumulators" and "threaded field addresses"
 come from GCSE copies of fields the source re-reads, nested `if`s that
 stop gcc folding a range test or merging two byte compares, and a

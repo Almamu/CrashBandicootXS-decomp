@@ -2,9 +2,9 @@
 
 | Function | File | Issue | Before | After |
 |---|---|---|---|---|
-| `QueueCratePlayerCollision` | `src/system/game_loop47.c` | #12 | 938 hw, size-exact | 33 hw, size-exact, still NAKED |
+| `QueueCratePlayerCollision` | `src/crates/crate_break.c` | #12 | 938 hw, size-exact | 33 hw, size-exact, still NAKED |
 
-All numbers are for old_agbcc (`game_loop47.o` is on `OLD_AGBCC_OBJS`).
+All numbers are for old_agbcc (`crate_break.o` is on `OLD_AGBCC_OBJS`).
 The function doesn't match yet, so it stays NAKED. The improved draft is
 kept under `#if NON_MATCHING`. Under current agbcc the draft is 1399
 halfwords off and 8 bytes short.
@@ -95,7 +95,7 @@ with the worktree path updated, plus:
 ## Verification
 
 - `rm -rf build && make NON_MATCHING=1 report`: no warnings from
-  `game_loop47.c`.
+  `crate_break.c`.
 - `rm -rf build crashbandicootxs.elf crashbandicootxs.gba crashbandicootxs.map && make compare`:
   `crashbandicootxs.gba: OK`.
 

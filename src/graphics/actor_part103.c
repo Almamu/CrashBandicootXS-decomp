@@ -20,7 +20,7 @@
  * (same shape as `DetonateNearbyPolarNitros`, actor_part19h.c).
  *
  * All three share the `ActorsOverlap` inline below. Its three boxes are
- * members of one frame struct (the actor_part74.c/actor_part81.c
+ * members of one frame struct (the actor_part74.c/player_event.c
  * pattern), so every box address is a fresh `add rX, sp, #off`; only
  * the pointer to the middle box stays live across both `MemCopy32`
  * calls (that is the ROM's `r4`, or `r7` once `FindShotTarget`'s loop

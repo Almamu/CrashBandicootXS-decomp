@@ -16,9 +16,9 @@ as of
 
 ## Parked (`NON_MATCHING`, not yet byte-exact) - 1 function
 
-- **`CollidePlayerWithObjects`** (`src/graphics/actor_part81.c`) - a two-flag-gated
+- **`CollidePlayerWithObjects`** (`src/player/player_event.c`) - a two-flag-gated
   teardown/notification step on `self`, the same still-unnamed "big
-  object" (at least 0x108 bytes) `actor_part15.c`/`actor_part77.c`
+  object" (at least 0x108 bytes) `player_update.c`/`player_init.c`
   already work on. Guarded by `self+0x105` (a "torn down already"
   latch, read once into `wasCleared` and confirmed 0 on every path
   that reaches either branch below - both branches reuse that
@@ -26,9 +26,9 @@ as of
   constant, matching the ROM's own `r6` reuse).
 
   `self+0xc` bit 1: relocates `self`'s primary AABB (`GetSpriteAttackBox`,
-  `actor_part9.c`'s own copy of the same helper) onto a second stack
+  `moving_sprite_collide.c`'s own copy of the same helper) onto a second stack
   slot (`MemCopy32`, a plain `memcpy`) before unpacking it back out
-  into scalars for `CollidePartList` (already NAKED-parked, `actor_part7.c`)
+  into scalars for `CollidePartList` (already NAKED-parked, `sprite_anim.c`)
   - the exact "relocate then unpack" idiom `CollidePartList`'s own doc
   comment already documents from its callers' side, done here
   explicitly in the caller instead of inline in the callee.
@@ -36,10 +36,10 @@ as of
   `self+0xc` bit 7: clears `self+0x108`/`self+0x10c` (the same fields
   `ResetCollisionQueue` clears elsewhere in this object family, just written
   directly here) and fires three teardown/notification calls:
-  `CollidePlayerWithCrates` (NAKED-parked, `actor_part11d.c`) against
+  `CollidePlayerWithCrates` (NAKED-parked, `crate_player_collide.c`) against
   `gCrateList`'s manager with selector `3`, `CollidePartsOfClass`
-  (`actor_part10.c`) against `gUnknown_030012EC`'s manager with
-  selector `4`, and `ResolvePlayerCollisions` (`game_loop23.c`) with no arguments.
+  (`part_list_cull.c`) against `gUnknown_030012EC`'s manager with
+  selector `4`, and `ResolvePlayerCollisions` (`crate.c`) with no arguments.
   `CollidePlayerWithCrates` was previously declared with only one parameter
   (`manager`) since its only known call site at the time never
   exercised a second argument - this call site is the first one that
@@ -53,7 +53,7 @@ as of
 
   1. **Both bit tests** needed the established "byte loads into r1,
      shifted result lands in r0" idiom (`CollidePlayer`'s own gotcha,
-     `actor_part78.c`) - `register u8 flagByte asm("r1") = self[0xc];
+     `player_collide.c`) - `register u8 flagByte asm("r1") = self[0xc];
      register u32 bitN asm("r0") = flagByte >> N;`. For the bit-1 test,
      the subsequent `& 1` also needed forcing into `r0` explicitly
      (`register u32 result asm("r0") = bit1 & mask;`) - left as a plain
@@ -144,7 +144,7 @@ as of
 
   This is the same class of gap this exact source file already
   documents as unclosable for `CollidePartWithPlayer`/`CollidePartWithObject`
-  (`actor_part7.c`, right next to `CollidePartList` itself): "this compiler
+  (`sprite_anim.c`, right next to `CollidePartList` itself): "this compiler
   has no way to express 'this scalar parameter is already sitting in
   the right stack position for the callee I'm about to build a struct
   pointer into'" - and the same class `PlaySfx`'s own doc comment
@@ -205,13 +205,13 @@ as of
   same class of unexamined state-transition callees).
 - `tools/report_units.py` - `0x0800AAEC` narrowed to just
   `PlayerHasRoomForAnim`; new `0x0800AB9C` entry pointing at
-  `actor_part81.o` (`NON_MATCHING`); new `0x0800AC2C` entry for the
+  `player_event.o` (`NON_MATCHING`); new `0x0800AC2C` entry for the
   remaining raw tail.
 - `docs/matching/issue-9-10-0x0800a884-graphics.md` - this session's
   starting point, including the exact function this write-up closes
   (as far as it could be closed) and the `GetSpriteFrame`/`GetSpriteFrameAnchor`
   keyframe-lookup convention referenced above.
-- `src/graphics/actor_part7.c` - `CollidePartList`'s own doc comment
+- `src/objects/sprite_anim.c` - `CollidePartList`'s own doc comment
   (the "relocate then unpack" idiom this function's first branch
   mirrors) and `CollidePartWithPlayer`/`CollidePartWithObject`'s doc comment (the
   precedent for this exact "argument already in the right stack
@@ -222,8 +222,8 @@ as of
 
 ## Matched: old_agbcc and a by-value box
 
-`CollidePlayerWithObjects` is now real C (`src/graphics/actor_part81.c`), and
-`asm/code_3_2_16_ab9c.s` is gone. `actor_part81.o` is on the Makefile's
+`CollidePlayerWithObjects` is now real C (`src/player/player_event.c`), and
+`asm/code_3_2_16_ab9c.s` is gone. `player_event.o` is on the Makefile's
 `OLD_AGBCC_OBJS`. It is the only function in that file, so no other
 function had to be rechecked.
 
@@ -257,4 +257,4 @@ function had to be rechecked.
 
 ## Later pass (issue #9/#10 raw-asm pass)
 
-`PlayerHandleEvent` now matches as real C under old_agbcc in `actor_part111.c` (on `OLD_AGBCC_OBJS`), and `asm/code_3_2_16_ac2c.s` is gone. See [issue-9-raw-asm-pass.md](issue-9-raw-asm-pass.md).
+`PlayerHandleEvent` now matches as real C under old_agbcc in `player_event.c` (on `OLD_AGBCC_OBJS`), and `asm/code_3_2_16_ac2c.s` is gone. See [issue-9-raw-asm-pass.md](issue-9-raw-asm-pass.md).

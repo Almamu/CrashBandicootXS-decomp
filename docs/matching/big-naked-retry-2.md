@@ -5,13 +5,13 @@ tree. Both closed as real C under old_agbcc.
 
 | Function | File | Issue | Size | Compiler | Result |
 |---|---|---|---|---|---|
-| `UpdateEnemyCtrl` | `src/graphics/actor_part112.c` | #10 | 1132 bytes | old_agbcc (object added to `OLD_AGBCC_OBJS`) | matched |
-| `ActionCtrlHandleEvent` | `src/graphics/actor_part82.c` | #16 | 1420 bytes | old_agbcc (object added to `OLD_AGBCC_OBJS`) | matched |
+| `UpdateEnemyCtrl` | `src/enemies/enemy_ctrl_update.c` | #10 | 1132 bytes | old_agbcc (object added to `OLD_AGBCC_OBJS`) | matched |
+| `ActionCtrlHandleEvent` | `src/player/action_ctrl_event.c` | #16 | 1420 bytes | old_agbcc (object added to `OLD_AGBCC_OBJS`) | matched |
 
 Under the current agbcc the final C is 43 halfwords off for
 `UpdateEnemyCtrl` and 36 for `ActionCtrlHandleEvent`. The other function in
-`actor_part112.c`, `HitEnemy`, is still NAKED, so the whole file
-builds the same under old_agbcc. `actor_part82.c` holds only
+`enemy_ctrl_update.c`, `HitEnemy`, is still NAKED, so the whole file
+builds the same under old_agbcc. `action_ctrl_event.c` holds only
 `ActionCtrlHandleEvent`.
 
 Neither function needed loop work: both are a single `switch`. Both

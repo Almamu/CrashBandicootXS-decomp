@@ -8,7 +8,7 @@ touched: `ResetLinkSessionState` and `HandleLinkSerial` (#4), `DrawPauseFraction
 
 ## Closed (1)
 
-- **`UnlinkCrateFromGrid`** (`src/graphics/actor_part11b.c`) builds with old_agbcc,
+- **`UnlinkCrateFromGrid`** (`src/crates/crate_grid_unlink.c`) builds with old_agbcc,
   and the object is now on `OLD_AGBCC_OBJS`. There was no earlier C draft;
   a first straightforward draft landed 44 halfwords off under agbcc and 6
   off under old_agbcc. Three steps took it to a match:
@@ -27,8 +27,8 @@ touched: `ResetLinkSessionState` and `HandleLinkSerial` (#4), `DrawPauseFraction
 
 | Function | Before | Now | What's left |
 |---|---|---|---|
-| `UpdateExtraLife` (game_loop54.c) | 163 hw, 4 B short | 22 hw, same size | An `asm("" : "+r"(vx))` after the x store makes mode 1 recompute `x + velX`. An extra reference to `vx` inside the hit branch and a volatile id compare in mode 2 fix more registers. Still off: mode 1's id compare uses r6 (the ROM uses r2), and mode 2 loads x and velX into swapped registers, which also changes the registers in its fire tail. |
-| `UpdateCrateList` (actor_part11c.c) | no draft | 215 hw, same size | The removal path is `RemoveCrateFromList`'s body inlined, and `"+r"` copies keep the separate copies of `part` for the destroy and search targets. The ROM keeps `manager` in r7 and `node` in r8; this C puts them in r8 and sb, which shifts every other register. |
+| `UpdateExtraLife` (extra_life.c) | 163 hw, 4 B short | 22 hw, same size | An `asm("" : "+r"(vx))` after the x store makes mode 1 recompute `x + velX`. An extra reference to `vx` inside the hit branch and a volatile id compare in mode 2 fix more registers. Still off: mode 1's id compare uses r6 (the ROM uses r2), and mode 2 loads x and velX into swapped registers, which also changes the registers in its fire tail. |
+| `UpdateCrateList` (crate_list_update.c) | no draft | 215 hw, same size | The removal path is `RemoveCrateFromList`'s body inlined, and `"+r"` copies keep the separate copies of `part` for the destroy and search targets. The ROM keeps `manager` in r7 and `node` in r8; this C puts them in r8 and sb, which shifts every other register. |
 
 ## Not closed
 
@@ -39,6 +39,6 @@ touched: `ResetLinkSessionState` and `HandleLinkSerial` (#4), `DrawPauseFraction
   reposition and derives it as `r7 + 4` (with an r7-to-r6 copy) in the
   second. No source shape tried reproduced that.
 - `ResetLinkSessionState`, `HandleLinkSerial` (link_handshake.c), `UpdateEnemyCtrl`
-  (actor_part112.c), `UpdateWumpa`, `CreateWumpa` (game_loop53.c),
-  `UpdateActionCtrl` (actor_part84.c), `ApplyActionCtrlMotion` (actor_part83.c): not
+  (enemy_ctrl_update.c), `UpdateWumpa`, `CreateWumpa` (wumpa_update.c),
+  `UpdateActionCtrl` (action_ctrl_update.c), `ApplyActionCtrlMotion` (action_ctrl_idle.c): not
   reached this pass. Their existing notes and drafts are unchanged.

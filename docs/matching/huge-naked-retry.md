@@ -1,17 +1,17 @@
 # Huge NAKED retry: `QueueCratePlayerCollision`
 
-`QueueCratePlayerCollision` (issue #12, `src/system/game_loop47.c`) is the largest
+`QueueCratePlayerCollision` (issue #12, `src/crates/crate_break.c`) is the largest
 NAKED function in the project, at 3840 bytes. Before this pass it had no
 C draft. It still does not match, but it now has a draft that is the
 ROM's exact size.
 
 | Function | File | Issue | Size | Result |
 |---|---|---|---|---|
-| `QueueCratePlayerCollision` | `src/system/game_loop47.c` | #12 | 3840 bytes | still NAKED; first draft, size-exact under old_agbcc, 968 halfwords off |
+| `QueueCratePlayerCollision` | `src/crates/crate_break.c` | #12 | 3840 bytes | still NAKED; first draft, size-exact under old_agbcc, 968 halfwords off |
 
 Under the current agbcc the draft is 1629 halfwords off and 8 bytes
 long. The ROM loads masks before `ldrb` (`movs r0, #0x7f; ldrb r2, [r1];
-ands r0, r2`), which points to old_agbcc. `game_loop47.o` is not on
+ands r0, r2`), which points to old_agbcc. `crate_break.o` is not on
 `OLD_AGBCC_OBJS` yet; it would have to be, along with `ApplyCrateCollision`
 (49 halfwords off under old_agbcc).
 
@@ -133,7 +133,7 @@ The helpers are in the scratch area `huge/`. They were not committed.
 ## Verification
 
 - `rm -rf build && make NON_MATCHING=1 report`: no warnings from
-  `game_loop47.c`.
+  `crate_break.c`.
 - `rm -rf build crashbandicootxs.elf crashbandicootxs.gba crashbandicootxs.map && make compare`:
   `crashbandicootxs.gba: OK`.
 

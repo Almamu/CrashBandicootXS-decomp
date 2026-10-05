@@ -26,7 +26,7 @@ This chunk turned out to be two interleaved families:
    (`InitBgLayer`/`GrowBgLayerRows`/`GrowBgLayerColumns`/`ClipBgLayerColumns`/
    `ClipBgLayerRows`/`ScrollBgLayer`/`CommitBgLayerScroll`/`DrawBgLayerColumn`) - a
    per-BG scroll-layer object (distinct from, but structurally similar
-   to, `game_loop6.c`'s viewport/parallax-scroll-layer family) that
+   to, `crate_hit.c`'s viewport/parallax-scroll-layer family) that
    caches hardware `BGnCNT`/`BGnHOFS` register addresses at
    construction (`InitBgLayer`), grows a streamed tile range one row/
    column at a time firing a per-layer trampoline on each step
@@ -42,7 +42,7 @@ This chunk turned out to be two interleaved families:
    **table-indexed function-pointer dispatcher** (`SpawnEntity`) and a
    **jump-table list counter** (`CountCrateEntities`) - these reuse the
    `struct actor` + `gSpriteBankSet` triple-indirection convention
-   already established in `actor_part8.c`/`trigger_effect.c`.
+   already established in `moving_sprite.c`/`trigger_effect.c`.
 
 ## Matched (16 of 25)
 
@@ -63,7 +63,7 @@ r0" through "bx sp"). *Which* trampoline gets used is not something
 the C source picks - it falls out purely of which register this
 compiler's allocator happens to land the function pointer in for that
 particular call, matching `_call_via_r2`'s existing use in
-`actor_part8.c`'s `DestroyMovingSprite` (there, naturally in `r2`, the 3rd
+`moving_sprite.c`'s `DestroyMovingSprite` (there, naturally in `r2`, the 3rd
 AAPCS argument register). For `SpawnEntity`'s case the ROM picked
 `r5`/`_call_via_r5`, which required:
 
@@ -228,7 +228,7 @@ C has no way to work around on this toolchain:
   in `r7` across every intervening call the way the ROM keeps it there,
   and an explicit `register T x asm("r7")` pin never makes it into this
   compiler's own `push`/`pop` list (the same confirmed bug documented on
-  `src/menus/power_dialog_draw.c`/`src/graphics/actor_part.c` and elsewhere
+  `src/menus/power_dialog_draw.c`/`src/objects/sprite.c` and elsewhere
   project-wide); separately, the trailing `(*bf & -0x10) | (result &
   0xf)` bitfield combine - even with the established negative-literal
   register-pin idiom (`ClearPowers`/`LoadLanguageSelectBg`) - gets

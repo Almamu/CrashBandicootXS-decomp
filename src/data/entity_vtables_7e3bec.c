@@ -332,8 +332,8 @@ extern void DestroyHovercraftLauncher();
 extern void DestroyHovercraftSideGun();
 extern void DestroyHovercraftCannonFlash();
 
-/* Used by aabb_setup.c, actor_part124.c, actor_part39.c,
- * actor_part6.c (DestroySpriteObj), actor_part7.c, graphics.c (nullsub_12,
+/* Used by aabb_setup.c, enemy_ctrl.c, wumpa.c,
+ * sprite_obj.c (DestroySpriteObj), sprite_anim.c, graphics.c (nullsub_12,
  * ResetEntity, DestroyEntity). */
 const struct vtable_slot gEntityVtable[11] = {
     VTABLE_SLOT(NULL),
@@ -349,7 +349,7 @@ const struct vtable_slot gEntityVtable[11] = {
     VTABLE_SLOT(DestroyEntity),
 };
 
-/* Used by actor_part6.c (GetSpriteObjPriority, DestroySpriteObj), actor_part7.c. */
+/* Used by sprite_obj.c (GetSpriteObjPriority, DestroySpriteObj), sprite_anim.c. */
 const struct vtable_slot gSpriteObjVtable[13] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(CheckSpritePickup),
@@ -366,7 +366,7 @@ const struct vtable_slot gSpriteObjVtable[13] = {
     VTABLE_SLOT(ApplySpriteObjVelocity),
 };
 
-/* Used by actor_part7.c (DestroyUiSpriteObj). */
+/* Used by sprite_anim.c (DestroyUiSpriteObj). */
 const struct vtable_slot gUiSpriteObjVtable[13] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(CheckSpritePickup),
@@ -383,7 +383,7 @@ const struct vtable_slot gUiSpriteObjVtable[13] = {
     VTABLE_SLOT(ApplySpriteObjVelocity),
 };
 
-/* Used by actor_part14.c, actor_part8.c (GetMovingSpriteClassId, DestroyMovingSprite,
+/* Used by ground_sprite.c, moving_sprite.c (GetMovingSpriteClassId, DestroyMovingSprite,
  * ResetMovingSprite). */
 const struct vtable_slot gMovingSpriteVtable[15] = {
     VTABLE_SLOT(NULL),
@@ -403,7 +403,7 @@ const struct vtable_slot gMovingSpriteVtable[15] = {
     VTABLE_SLOT(CheckPlayerContact),
 };
 
-/* Used by actor_part14.c (GetGroundSpriteClassId, DestroyGroundSprite, ResetGroundSprite). */
+/* Used by ground_sprite.c (GetGroundSpriteClassId, DestroyGroundSprite, ResetGroundSprite). */
 const struct vtable_slot gGroundSpriteVtable[15] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(CollideGroundSprite),
@@ -422,7 +422,7 @@ const struct vtable_slot gGroundSpriteVtable[15] = {
     VTABLE_SLOT(CheckPlayerContact),
 };
 
-/* Used by actor_part15.c, actor_part77.c. */
+/* Used by player_update.c, player_init.c. */
 const struct vtable_slot gPlayerVtable[15] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(CollidePlayer),
@@ -441,7 +441,7 @@ const struct vtable_slot gPlayerVtable[15] = {
     VTABLE_SLOT(CollidePlayerWithObjects),
 };
 
-/* Used by actor_part124.c, actor_part17.c, actor_part27.c, actor_part57.c. */
+/* Used by enemy_ctrl.c, ctrl.c, input_ctrl_queue.c, action_ctrl.c. */
 const struct vtable_slot gCtrlVtable[13] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(UpdateCtrl),
@@ -458,7 +458,7 @@ const struct vtable_slot gCtrlVtable[13] = {
     VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
 };
 
-/* Used by actor_part112.c, actor_part124.c. */
+/* Used by enemy_ctrl_update.c, enemy_ctrl.c. */
 const struct vtable_slot gEnemyCtrlVtable[13] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(UpdateEnemyCtrl),
@@ -475,7 +475,7 @@ const struct vtable_slot gEnemyCtrlVtable[13] = {
     VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
 };
 
-/* Used by actor_part124.c. */
+/* Used by enemy_ctrl.c. */
 const struct vtable_slot gPeriodicSpawnerVtable[11] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(CheckEntityPlayerContact),
@@ -490,7 +490,7 @@ const struct vtable_slot gPeriodicSpawnerVtable[11] = {
     VTABLE_SLOT(DestroyPeriodicSpawner),
 };
 
-/* Used by actor_part112.c, actor_part117.c, actor_part124.c. */
+/* Used by enemy_ctrl_update.c, enemy_ctrl.c. */
 const struct vtable_slot gKnockedEnemyCtrlVtable[13] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(UpdateKnockedEnemyCtrl),
@@ -507,7 +507,7 @@ const struct vtable_slot gKnockedEnemyCtrlVtable[13] = {
     VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
 };
 
-/* Used by actor_part123.c. */
+/* Used by effect_ctrl.c. */
 const struct vtable_slot gEffectCtrlVtable[13] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(UpdateEffectCtrl),
@@ -524,7 +524,7 @@ const struct vtable_slot gEffectCtrlVtable[13] = {
     VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
 };
 
-/* Used by game_loop31.c (DestroyCrate), game_loop36.c (CreateCrate). */
+/* Used by crate.c (DestroyCrate), crate_create.c (CreateCrate). */
 const struct vtable_slot gCrateVtable[13] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(CheckSpritePickup),
@@ -541,7 +541,7 @@ const struct vtable_slot gCrateVtable[13] = {
     VTABLE_SLOT(ApplySpriteObjVelocity),
 };
 
-/* Used by game_loop52.c, game_loop54.c (UpdateExtraLife). */
+/* Used by extra_life.c (UpdateExtraLife). */
 const struct vtable_slot gExtraLifeVtable[14] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(CollideExtraLife),
@@ -559,7 +559,7 @@ const struct vtable_slot gExtraLifeVtable[14] = {
     VTABLE_SLOT(CheckExtraLifePickup),
 };
 
-/* Used by actor_part39.c (DestroyWumpa, ResetWumpaPickup), game_loop53.c
+/* Used by wumpa.c (DestroyWumpa, ResetWumpaPickup), wumpa_update.c
  * (UpdateWumpa). */
 const struct vtable_slot gWumpaVtable[14] = {
     VTABLE_SLOT(NULL),
@@ -578,7 +578,7 @@ const struct vtable_slot gWumpaVtable[14] = {
     VTABLE_SLOT(CheckWumpaPickup),
 };
 
-/* Used by actor_part39.c (UpdateStopwatch, DestroyStopwatch). */
+/* Used by wumpa.c (UpdateStopwatch, DestroyStopwatch). */
 const struct vtable_slot gStopwatchVtable[13] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(CheckSpritePickup),
@@ -595,7 +595,7 @@ const struct vtable_slot gStopwatchVtable[13] = {
     VTABLE_SLOT(ApplySpriteObjVelocity),
 };
 
-/* Used by actor_part39.c, actor_part57.c. */
+/* Used by wumpa.c, action_ctrl.c. */
 const struct vtable_slot gActionCtrlVtable[13] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(UpdateActionCtrl),
@@ -612,7 +612,7 @@ const struct vtable_slot gActionCtrlVtable[13] = {
     VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
 };
 
-/* Used by actor_part_16048.c (DestroyPlayerCtrl), player_ctrl.h. */
+/* Used by swim_ctrl.c (DestroyPlayerCtrl), player_ctrl.h. */
 const struct vtable_slot gPlayerCtrlVtable[13] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(UpdatePlayerCtrl),
@@ -629,7 +629,7 @@ const struct vtable_slot gPlayerCtrlVtable[13] = {
     VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
 };
 
-/* Used by actor_part_17524.c (DestroyInputCtrl). */
+/* Used by input_ctrl.c (DestroyInputCtrl). */
 const struct vtable_slot gInputCtrlVtable[13] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(UpdateInputCtrl),
@@ -646,7 +646,7 @@ const struct vtable_slot gInputCtrlVtable[13] = {
     VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
 };
 
-/* Used by actor_part27.c. The bosses' controller base class: Mega-Mix,
+/* Used by input_ctrl_queue.c. The bosses' controller base class: Mega-Mix,
  * Tiny, the Neo Cortex fight's controller, Dingodile and his shield and
  * rocket/stalactite derive from it and keep its event slot
  * (BossCtrlHandleEvent). */
@@ -924,7 +924,7 @@ const struct vtable_slot gDingodileVtable[13] = {
     VTABLE_SLOT(StartCtrlTargetMotionYFromSet),
 };
 
-/* Used by actor_part_1b208.c (DestroyPlatform), gobj_1a794.h. */
+/* Used by platform.c (DestroyPlatform), gobj_1a794.h. */
 const struct vtable_slot gPlatformVtable[15] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(CheckPlatformContact),
@@ -943,7 +943,7 @@ const struct vtable_slot gPlatformVtable[15] = {
     VTABLE_SLOT(CheckPlayerContact),
 };
 
-/* Used by actor_part_1b208.c (DestroyPlatformMover), gobj_1a794.h. */
+/* Used by platform.c (DestroyPlatformMover), gobj_1a794.h. */
 const struct vtable_slot gPlatformMoverVtable[13] = {
     VTABLE_SLOT(NULL),
     VTABLE_SLOT(UpdatePlatformMover),

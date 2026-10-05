@@ -12,13 +12,13 @@ family already covered at length by
 
 ## Matched - 1 function
 
-- **`InitPlayer`** (`src/graphics/actor_part77.c`) - a part-object
+- **`InitPlayer`** (`src/player/player_init.c`) - a part-object
   constructor: re-initializes `self` via `InitGroundSprite` (matched,
-  `actor_part14.c`), overwrites its table with `gPlayerVtable`,
+  `ground_sprite.c`), overwrites its table with `gPlayerVtable`,
   clears its trailing `+0x108`/`+0x10c` fields via `ResetCollisionQueue` (still
   raw, trivial - a 2-field clear), allocates a fresh `struct
   actor`-shaped child object via `CreateSpriteObj(0, 0, 0, 0)` (matched,
-  `actor_part6.c` - called with the same "extra unused 4th zero
+  `sprite_obj.c` - called with the same "extra unused 4th zero
   argument" calling convention `graphics_loading_21d80.c`'s own callers
   already use) and hooks it up at `self+0xb0`: points its own `+0x20`
   table-entry pointer at `gSpriteBankSet`'s shared table (the same
@@ -26,11 +26,11 @@ family already covered at length by
   `graphics_loading_21d80.c`), clears its `+0x2d` byte, and builds it
   via the standard `ResetSpriteFrameTimer`/`ResetSpriteFrameIndex`/`SetSpriteAnimDone` OAM trio.
   Clears `self+0xb4`, then calls `ResetPlayer` (matched,
-  `actor_part48.c`) to finish the reset - `ResetPlayer` itself is what
+  `player_reset.c`) to finish the reset - `ResetPlayer` itself is what
   hooks the `self+0xb0` child up via its own `GetSpriteAnimPaletteSlot` call, per
   its existing doc comment. Finally sets `self+8`/`self+0`/`self+4`
   (`field_08`/`x`/`y`) from its three `u16` arguments, the same
-  `CreateGroundSprite`-style tail `actor_part14.c` already established, and
+  `CreateGroundSprite`-style tail `ground_sprite.c` already established, and
   returns `self`.
 
   Matched on the first real attempt after one register-pin fix: the
@@ -48,14 +48,14 @@ family already covered at length by
 
 ## Parked (`NON_MATCHING`, not yet byte-exact) - 1 function
 
-- **`CollidePlayer`** (`src/graphics/actor_part78.c`) - a per-frame
+- **`CollidePlayer`** (`src/player/player_collide.c`) - a per-frame
   "reentrancy guard"-shaped wrapper (only runs while `self+0xc` bit 7
   is set): fires `self->table+0x70`'s trampoline via `_call_via_r1`
   (matched), then calls `CollideGroundSprite` (still raw, its own return value
   discarded) with the global `gLevelLayers+0x2a` flag held set
   for the call's duration. If `self+0xac` (a pointer, cleared here)
   was non-null, sets `self+0x68` bit 3 and clears the
-  `+0x100`/`+0x102`/`+0x103` flag bytes `actor_part48.c`'s doc comment
+  `+0x100`/`+0x102`/`+0x103` flag bytes `player_reset.c`'s doc comment
   already introduced. Then dispatches on `gLevelLayers+0x29` (a
   pending-action "kind" byte the ROM's own 10-entry jump table reads,
   cleared back to `0` by every path here): kind `0` additionally
@@ -65,9 +65,9 @@ family already covered at length by
   `1`; kinds `5`/`7`/`10` each set one of the `+0x100`/`+0x102`/`+0x103`
   flags; the rest are no-ops beyond the shared kind-reset. Finally
   looks up the current keyframe record via `GetSpriteFrame` (already
-  parked as `NAKED` in `actor_part5.c`) and picks a `{s16 x, s16 y}`
+  parked as `NAKED` in `sprite_obj.c`) and picks a `{s16 x, s16 y}`
   offset table off its `+4` byte's upper nibble - **the exact same
-  case-to-block mapping `GetSpriteFrameAnchor` (`actor_part6.c`, already
+  case-to-block mapping `GetSpriteFrameAnchor` (`sprite_obj.c`, already
   matched) uses**: `0` -> `info+0x24`, `6` -> `info+0x14`, everything
   else -> the fixed fallback `gEmptySpritePoint`. Applies that
   offset (mirrored by `self+0x28` bit 4) to `self`'s de-Q8'd position
@@ -89,7 +89,7 @@ family already covered at length by
   `_call_via_r4` calls each also perform a "dead read" of the trampoline
   table's `+4` function-pointer field that's never actually passed
   through `r0`-`r3` - the same established idiom as `CollideCrateGridPartWithPlayer`'s own
-  `_call_via_r4` calls in `actor_part11.c`
+  `_call_via_r4` calls in `part_list.c`
   (`register void *deadRead asm("r4") = *(void *volatile *)(...)`).
 
   **Not yet byte-exact, but far closer after two follow-up sessions.**
@@ -412,9 +412,9 @@ body moved from opaque raw bytes to matched, documented C.
 - `docs/status/actor.md` / `docs/status/graphics.md` - matched/parked
   lists updated for this session's two functions.
 - `tools/report_units.py` - `0x0800A884` split into its own matched-
-  reconstruction unit (`actor_part78.o`, `NON_MATCHING`) plus a new
+  reconstruction unit (`player_collide.o`, `NON_MATCHING`) plus a new
   `0x0800AAEC` raw entry for the remainder; `0x0800B3F0` now points at
-  `actor_part77.o`.
+  `player_init.o`.
 - `docs/matching/issue-9-0x08007634-actor.md` - the original write-up
   for this whole neighborhood's prior pass, including the
   `GetSpriteFrame`/`GetSpriteFrameAnchor` keyframe-lookup convention this session
@@ -425,11 +425,11 @@ body moved from opaque raw bytes to matched, documented C.
 
 ## Later pass (issue #9/#10 raw-asm pass)
 
-`asm/code_3_2_16_a884.s` is gone. `CollidePlayer` is NAKED in `actor_part78.c`, and the pin/asm-island draft was replaced with plain C (127 halfwords off under old_agbcc; the old draft was 137 off). The remaining gap is the one-register offset walk for +0x100/+0x102/+0x103. See [issue-9-raw-asm-pass.md](issue-9-raw-asm-pass.md).
+`asm/code_3_2_16_a884.s` is gone. `CollidePlayer` is NAKED in `player_collide.c`, and the pin/asm-island draft was replaced with plain C (127 halfwords off under old_agbcc; the old draft was 137 off). The remaining gap is the one-register offset walk for +0x100/+0x102/+0x103. See [issue-9-raw-asm-pass.md](issue-9-raw-asm-pass.md).
 
 ## Later pass (last-four NAKED retry)
 
-Matched as real C under old_agbcc (`actor_part78.o` joined
+Matched as real C under old_agbcc (`player_collide.o` joined
 `OLD_AGBCC_OBJS`). The walking offsets are reload's move2add reusing a
 reload register; r3 holds keep reload's rotation on r0-r2 as in the
 ROM. See [last-four-naked-retry.md](last-four-naked-retry.md).

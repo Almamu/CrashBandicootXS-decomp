@@ -9,10 +9,10 @@ system from "core" system startup/init code.
 ## Matched
 
 - **Issue #9-#11 box/collision NAKED retry** ([docs/matching/issue-9-11-box-naked-retry.md](../matching/issue-9-11-box-naked-retry.md)):
-  `UpdateEnemyHop` (`actor_part119.c`), `UpdateEnemyTriggerBox` (`actor_part120.c`),
-  `UpdateEnemyOscillateX` (`actor_part116.c`), `UpdateEffectCtrl` (`actor_part123.c`)
-  and `sub_800CEAC`/`sub_800CF70` (`game_loop42.c`) are real C now; they
-  were NAKED. `actor_part123.o` and `game_loop42.o` moved to old_agbcc
+  `UpdateEnemyHop` (`enemy_motion.c`), `UpdateEnemyTriggerBox` (`enemy_attack.c`),
+  `UpdateEnemyOscillateX` (`enemy_ctrl.c`), `UpdateEffectCtrl` (`effect_ctrl.c`)
+  and `sub_800CEAC`/`sub_800CF70` (`crate_hit.c`) are real C now; they
+  were NAKED. `effect_ctrl.o` and `crate_hit.o` moved to old_agbcc
   (whole-file matches).
 
 - `src/system/game_loop.c` (GitHub issue #34): `EndBonusRound`
@@ -81,7 +81,7 @@ system from "core" system startup/init code.
   and a `CpuSet`-based palette-bank zero-fill wrapper pair
 - `src/system/game_loop10.c` (GitHub issue #37 - numbered `10` rather
   than `6` since issue #12's parallel PR independently claimed
-  `game_loop6.c`/`game_loop7.c` first): `SetGemPlatform`,
+  `crate_hit.c`/`crate_break.c` first): `SetGemPlatform`,
   `SetBonusPlatform`, `SetCrateGemPos`, `RequestGemPath`, `RequestBonusRound`,
   `RestoreCheckpoint`, `SetCheckpoint`, `EndGemPath`, `PlayNewGameCutscene`,
   `PlayIntroCutscene`, `ShowCompanyLogos`, `PlayBootCutscene`, `nullsub_24`,
@@ -166,12 +166,12 @@ system from "core" system startup/init code.
 - `src/cutscene/slideshow_display.c` (GitHub issue #38): `DestroySlideshow`,
   `ResetSlideshow` - the `sub_802425C`-shaped teardown wrapper and a
   trivial constructor
-- `src/system/game_loop22.c` (GitHub issue #13 - numbered `22` rather
+- `src/crates/crate_reset.c` (GitHub issue #13 - numbered `22` rather
   than `17` since issue #38's PR above independently claimed
   `game_loop17.c`-`20.c` first): `ResetCrate` - resets
   `self`'s collision-response state/timer/neighbor-list-pointer block
   on reset
-- `src/system/game_loop23.c` (GitHub issue #13, third pass for
+- `src/crates/crate.c` (GitHub issue #13, third pass for
   `IsCrateInsideRect`): `IsCrateInsideRect` (AABB-overlap test between `self`'s
   own table-driven half-width/half-height box and a caller-supplied
   box, prepended ahead of the rest since it's immediately
@@ -181,18 +181,18 @@ system from "core" system startup/init code.
   (UNUSED trivial constant). See
   [docs/matching/issue-13-fc70-second-continuation.md](../matching/issue-13-fc70-second-continuation.md)
   for `IsCrateInsideRect`'s register-pinning/toolchain-bug notes.
-- `src/system/game_loop24.c` (GitHub issue #13): `ConvertCratesForTimeTrial` (a
+- `src/crates/crate_time_trial.c` (GitHub issue #13): `ConvertCratesForTimeTrial` (a
   state-3-countdown-expiry sweep over `gCrateList`),
   `OpenAkuAkuCrate` (viewport trampoline-pair/cue-1 firing)
-- `src/system/game_loop25.c` (GitHub issue #13): `IsCrateKindBreakable` -
+- `src/crates/crate_stack.c` (GitHub issue #13): `IsCrateKindBreakable` -
   trivial `gCrateKindBreakable[idx]` lookup
-- `src/system/game_loop26.c` (GitHub issue #13): `GetSlotCrateStage` -
+- `src/crates/slot_crate.c` (GitHub issue #13): `GetSlotCrateStage` -
   `self+0x48` bits 6-7 sub-state extractor
 - `src/system/game_loop29.c` (GitHub issue #13, second pass): `OpenLifeCrate`
   - cue-3 SFX plus a `gEntityFlags` bit-grid consume-if-clear and a
   `DropExtraLife` part-object spawn. See
   [docs/matching/issue-13-fc70-continuation.md](../matching/issue-13-fc70-continuation.md).
-- `src/system/game_loop30.c` (GitHub issue #13, second pass):
+- `src/crates/crate_stack.c` (GitHub issue #13, second pass):
   `GetTopCrate`/`GetBottomCrate` (the "get prev"/"get next"
   neighbor-list-walk-and-filter helpers - previously NAKED, now matched
   as real C via source-order block placement matching the ROM's own
@@ -201,14 +201,14 @@ system from "core" system startup/init code.
   and `CollideCrateWithPlayer` - a distance-gated `QueueCratePlayerCollision` dispatcher
   clearing `self+0xc` bit 3. See
   [docs/matching/issue-13-fc70-continuation.md](../matching/issue-13-fc70-continuation.md).
-- `src/system/game_loop31.c` (GitHub issue #13, second pass): `DestroyCrate`/
+- `src/crates/crate.c` (GitHub issue #13, second pass): `DestroyCrate`/
   `InitCrate` (a part-object table-set/tail-call-`DestroySpriteObj` helper
   pair) and `FindLineCrossingYMajor`/`FindLineCrossingXMajor` (two fixed single-octant
   Bresenham-line-style step algorithms). See
   [docs/matching/issue-13-fc70-continuation.md](../matching/issue-13-fc70-continuation.md).
-- `src/system/game_loop33.c` (GitHub issue #13, third pass): `FindLineCrossing`
+- `src/crates/crate_reset.c` (GitHub issue #13, third pass): `FindLineCrossing`
   - the full 4-octant Bresenham-line-style line-stepper `FindLineCrossingYMajor`/
-  `FindLineCrossingXMajor` (game_loop31.c) are fixed single-octant variants of -
+  `FindLineCrossingXMajor` (crate.c) are fixed single-octant variants of -
   previously NAKED, now matched as real C via the same source-order
   block-placement technique as `GetTopCrate`/`GetBottomCrate` (a `goto`
   to a physically-earlier shared-return label) plus an opaque-asm
@@ -218,7 +218,7 @@ system from "core" system startup/init code.
   it with the shared copy purely by instruction content) and per-case
   `diff`/`err` register pins (`r6`/`r0`, the ROM's own fixed roles) -
   see [naked-sub_800fdc8-matched.md](../matching/naked-sub_800fdc8-matched.md).
-- `src/system/game_loop36.c` (GitHub issue #13, fourth pass, new file -
+- `src/crates/crate_create.c` (GitHub issue #13, fourth pass, new file -
   replaces the trimmed `asm/code_3_2_17_e560_ff0c.s`, now deleted):
   `CreateCrate` - the `CreateCrate` entity-constructor trampoline
   family's own target function (two whole files, `graphics_loading_21bfc.c`/
@@ -229,25 +229,25 @@ system from "core" system startup/init code.
   externally confirmed by every trampoline caller) through two nested
   jump tables (15 and 19 cases) to tag `self+0x2d` and initialize
   per-type fields - including a confirmed call to `SolidifyOutlineCrate`
-  (game_loop49.c, issue #12) for `type == 5`. `NAKED` transcription
+  (crate_break.c, issue #12) for `type == 5`. `NAKED` transcription
   (byte-correct, not real decompiled C): three extended registers
   (`r8`/`sb`/`sl`) live across the whole function, the same
   gcc-2.9-resistant shape already established for `QueueCratePlayerCollision`/
-  `ApplyCrateCollision` (game_loop47.c/game_loop48.c). See
+  `ApplyCrateCollision` (crate_break.c). See
   [docs/matching/issue-13-0x0800ff0c-graphics.md](../matching/issue-13-0x0800ff0c-graphics.md)
   for the full type-code-to-behavior table. *Later pass (size2 NAKED
-  retry):* real C under old_agbcc (`game_loop36.o` joined
+  retry):* real C under old_agbcc (`crate_create.o` joined
   `OLD_AGBCC_OBJS`). The ROM's three placement-record pointer copies
   come from reading the record through an inline `Placement(slot)`
   (its return value is copied) in the 0xb pre-check, the `flagged`
   block and case 15. See
   [docs/matching/size2-naked-retry.md](../matching/size2-naked-retry.md).
-- `src/system/game_loop35.c` (GitHub issue #13, third pass, new file -
-  it sits between `CreateCrate` (now `game_loop36.c`) and `UpdateCrate`,
+- `src/crates/crate_draw.c` (GitHub issue #13, third pass, new file -
+  it sits between `CreateCrate` (now `crate_create.c`) and `UpdateCrate`,
   so it can't join either neighbor's file): `DrawCrate` - a
   `self+0x4d`-gated reset of `self+0x30`/`self+0x38` via the
   `self+0x20`-pointer-to-manager/`self+0x2d`-tag/0x1c-stride
-  hitbox-record convention `BreakCrateTouchedByPlayer` (game_loop6.c) also uses,
+  hitbox-record convention `BreakCrateTouchedByPlayer` (crate_hit.c) also uses,
   then a tail call to `DrawSprite`. See
   [docs/matching/issue-13-fc70-second-continuation.md](../matching/issue-13-fc70-second-continuation.md).
 - `src/system/game_loop18.c` (GitHub issue #38, follow-up pass): `LevelHasEntityType`
@@ -268,7 +268,7 @@ system from "core" system startup/init code.
   `EndSlide` - the tail half of `RunSlideshow`'s per-item body, reused
   standalone. See
   [docs/matching/issue-38-sound-channel-family.md](../matching/issue-38-sound-channel-family.md).
-- `src/system/game_loop27.c` (GitHub issue #14, recategorized
+- `src/crates/slot_crate.c` (GitHub issue #14, recategorized
   graphics->game_loop - a direct continuation of the same physics/
   collision subsystem file family): `DecrementSlotCrateStage`-`GetCrateTrialKind` (24
   functions) plus the unlabeled `IsCrateBusy` (the original
@@ -278,7 +278,7 @@ system from "core" system startup/init code.
   "collision box" record `GetSlotCrateStage`/`ResetCrate` already operate
   on. See
   [docs/matching/issue-14-0x08010a0c-graphics.md](../matching/issue-14-0x08010a0c-graphics.md).
-- **`ResolveCollisionCandidates`** (`src/system/game_loop28.c`) - issue #14's last
+- **`ResolveCollisionCandidates`** (`src/objects/collision_queue.c`) - issue #14's last
   function, the collision-candidate scan/resolve helper `ResolvePlayerCollisions`
   calls once a frame. Plain C; it was NAKED. The "twelve running
   pointers" were gcc's own loop strength reduction of
@@ -357,7 +357,7 @@ system from "core" system startup/init code.
   pass on functions already fully understood from
   `docs/matching/issue-9-0x0800a178-graphics.md`) - the single-point
   terrain-height ("floor") probes `ProbeGroundSpriteTerrain`/`ProbeGroundSpriteFloor`
-  (`src/graphics/actor_part110.c`) call. Both `s32 fn(void *player,
+  (`src/objects/ground_sprite_collide.c`) call. Both `s32 fn(void *player,
   struct probe_pos *pos, s32 *outValue)`: `sub_8026BF8` reads a signed
   height byte via the raw terrain streamer `GetTerrainHeights`; `sub_8026C3C`
   gets it via the CheckTerrainFlag-style `sub_8025228`. `sub_8026C3C`
@@ -385,16 +385,16 @@ system from "core" system startup/init code.
   [docs/matching/issue-44-camera-follow.md](../matching/issue-44-camera-follow.md).
   `asm/code_3_2_17_26bf8.s` removed.
 - **Issue #12 NAKED retry (old_agbcc)**: `ClearCrateStackTouched`/`MarkCrateStackTouched`
-  (`src/system/game_loop7.c`), `BounceWumpaCrate`/`OpenCheckpointCrate`/`BreakCrateInStack`/
-  `OpenMysteryCrate`/`OpenSlotCrate` (`src/system/game_loop48.c`) and
+  (`src/crates/crate_break.c`), `BounceWumpaCrate`/`OpenCheckpointCrate`/`BreakCrateInStack`/
+  `OpenMysteryCrate`/`OpenSlotCrate` (`src/crates/crate_break.c`) and
   `ExplodeCrate`/`BlastNearbyCrates`/`UpdateCrates`/`DetonateNitroCrates`/`ActivateNitroSwitchCrate`/
   `ActivateIronSwitchCrate`/`SolidifyOutlineCrates`/`SolidifyOutlineCrate`/`BreakCratesInArea`/`FinishBrokenCrate`/
-  `UpdateTntCountdown` (`src/system/game_loop49.c`) promoted from NAKED to real
+  `UpdateTntCountdown` (`src/crates/crate_break.c`) promoted from NAKED to real
   C - all three files moved to `OLD_AGBCC_OBJS`, the shared object
   layout named in `include/crate.h`. See
   [docs/matching/issue-12-physics-collision.md](../matching/issue-12-physics-collision.md)'s
   NAKED-retry section.
-- **`LightTntCrate`** (`src/system/game_loop48.c`, new file
+- **`LightTntCrate`** (`src/crates/crate_break.c`, new file
   - GitHub issue #12 Phase 2, lower-address half) - two of
   `QueueCratePlayerCollision`'s/`ApplyCrateCollision`'s per-edge jump-table dispatch
   targets, matched as real C: `LightTntCrate` (dispatch id `0xe`)
@@ -422,24 +422,23 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   old_agbcc" - 17 former `NAKED` transcriptions in 0x08022D50-0x08026BC0,
   now plain C. This ROM region was built with old_agbcc; see [game-loop-old-agbcc.md](../matching/game-loop-old-agbcc.md).
 - **Issue #10 NAKED retry**: `UpdateEnemyHomingX`/`UpdateEnemyHomingY`
-  (`actor_part114.c`), `UpdateEnemyFlipCycle` (`actor_part115.c`), `UpdateEnemyPatrol`
-  (`actor_part118.c`, old_agbcc), `UpdateEnemyAttackCycle` (`actor_part120.c`,
-  old_agbcc) and `SetEnemyState` (`actor_part122.c`, old_agbcc) promoted
-  from NAKED to real C. `actor_part118.o`, `actor_part120.o` and
-  `actor_part122.o` moved to `OLD_AGBCC_OBJS`; under old_agbcc
-  `actor_part122.c`'s bounds setters (`SetEnemyRangeXSpeed`/`SetEnemyRangeYSpeed`/
+  (`enemy_motion.c`), `UpdateEnemyFlipCycle` (`enemy_motion.c`), `UpdateEnemyPatrol`
+  (`enemy_patrol.c`, old_agbcc), `UpdateEnemyAttackCycle` (`enemy_attack.c`,
+  old_agbcc) and `SetEnemyState` (`enemy_attack.c`, old_agbcc) promoted
+  from NAKED to real C. `enemy_patrol.o`, `enemy_attack.o` moved to `OLD_AGBCC_OBJS`; under old_agbcc
+  `enemy_attack.c`'s bounds setters (`SetEnemyRangeXSpeed`/`SetEnemyRangeYSpeed`/
   `SetEnemyRangeX`) no longer need register pins. The controller/target
   layout is in the new `include/part_ctrl.h`. See
   [docs/matching/issue-10-naked-retry.md](../matching/issue-10-naked-retry.md).
-- **Issue #12 NAKED retry:** `DropCratesAbove` (`game_loop48.c`, old_agbcc,
+- **Issue #12 NAKED retry:** `DropCratesAbove` (`crate_break.c`, old_agbcc,
   the neighbor "impact spread" walk) promoted from NAKED to real C. See
   [docs/matching/issue-24-26-12-naked-retry.md](../matching/issue-24-26-12-naked-retry.md).
-- **Issue #12/#13/#25 NAKED retry:** `BreakCrate` (`game_loop48.c`,
+- **Issue #12/#13/#25 NAKED retry:** `BreakCrate` (`crate_break.c`,
   the shared "apply the collision response" landing point),
-  `UpdateCrateFall` (`game_loop32.c`, the position-wrap advance) and
-  `UpdateCrate` (`game_loop51.c`, the per-frame state tick) promoted
-  from NAKED to real C, all under old_agbcc (`game_loop32.o` and
-  `game_loop51.o` joined `OLD_AGBCC_OBJS`). `BreakCrateTouchedByPlayer`,
+  `UpdateCrateFall` (`crate_break.c`, the position-wrap advance) and
+  `UpdateCrate` (`crate_update.c`, the per-frame state tick) promoted
+  from NAKED to real C, all under old_agbcc (`crate_break.o` and
+  `crate_update.o` joined `OLD_AGBCC_OBJS`). `BreakCrateTouchedByPlayer`,
   `ApplyCrateCollision`, `UpdateSlotCrate` and `CreateCrate` stay NAKED with new
   C drafts under `#if NON_MATCHING`. See
   [docs/matching/issue-12-13-25-naked-retry.md](../matching/issue-12-13-25-naked-retry.md).
@@ -450,27 +449,27 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   step is a `goto` loop, and a `bitmap` pointer local set right before
   the attempt loop gives the ROM's `sb`. See
   [docs/matching/big-naked-retry.md](../matching/big-naked-retry.md).
-- **Third near-miss sweep:** `UpdateSlotCrate` (`game_loop49.c`, the
-  position-wrap/edge-scan advance) and `UpdateExtraLife` (`game_loop54.c`,
+- **Third near-miss sweep:** `UpdateSlotCrate` (`crate_break.c`, the
+  position-wrap/edge-scan advance) and `UpdateExtraLife` (`extra_life.c`,
   the orbiting-hazard state machine) promoted from NAKED to real C, both
   under old_agbcc (the files' compiler). See
   [docs/matching/near-miss-polish-3.md](../matching/near-miss-polish-3.md).
 
-- **Second big NAKED retry:** `UpdateEnemyCtrl` (`actor_part112.c`, GitHub
+- **Second big NAKED retry:** `UpdateEnemyCtrl` (`enemy_ctrl_update.c`, GitHub
   issue #10, 1132 bytes, the 18-state controller update) promoted from
-  NAKED to real C under old_agbcc (`actor_part112.o` joined
+  NAKED to real C under old_agbcc (`enemy_ctrl_update.o` joined
   `OLD_AGBCC_OBJS`). State 18's second `animDone` test reads the byte
   through a `vu8` so jump threading keeps the ROM's re-test; the rest
   was statement order and locals. See
   [docs/matching/big-naked-retry-2.md](../matching/big-naked-retry-2.md).
 
-- **Late NAKED retry 3:** `HitEnemy` (`actor_part112.c`, GitHub
+- **Late NAKED retry 3:** `HitEnemy` (`enemy_ctrl_update.c`, GitHub
   issue #10, 608 bytes, the 22-state dispatcher) promoted from NAKED to
   real C under old_agbcc. An r2 register variable held live (by empty
   asms only) across the first MarkGone's id compare puts r3 in reload's
   spill-register set, which fixes the whole reload rotation. States
   1/21/22 store the layer from an `s32` local and build the bitmap bit
-  with the constant-init asm. `actor_part112.c` has no NAKED functions
+  with the constant-init asm. `enemy_ctrl_update.c` has no NAKED functions
   left. See
   [docs/matching/late-naked-retry-3.md](../matching/late-naked-retry-3.md).
 
@@ -482,9 +481,9 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   test, so the searches leave with `goto`. See
   [docs/matching/big-naked-retry-3.md](../matching/big-naked-retry-3.md).
 
-- **Stack-box NAKED retry:** `BreakCrateTouchedByPlayer` (`game_loop6.c`, GitHub
+- **Stack-box NAKED retry:** `BreakCrateTouchedByPlayer` (`crate_hit.c`, GitHub
   issue #12, the self/player box overlap dispatch) promoted from NAKED
-  to real C under old_agbcc (`game_loop6.o` joined `OLD_AGBCC_OBJS`).
+  to real C under old_agbcc (`crate_hit.o` joined `OLD_AGBCC_OBJS`).
   Each use of the player box's address goes through an empty
   `asm("" : "+r")` copy so cse doesn't hold `sp+16` in a callee-saved
   register, and `px`/`py` are shared by both blocks. See
@@ -498,19 +497,19 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   in the ROM). An r0/r1 hard-register hold puts the post-fade
   player-position copy's pointer in r2. See
   [docs/matching/hard-register-hold-retry.md](../matching/hard-register-hold-retry.md).
-- **Size2 NAKED retry:** `CreateCrate` (`game_loop36.c`, issue #13, the
+- **Size2 NAKED retry:** `CreateCrate` (`crate_create.c`, issue #13, the
   entity constructor behind the trampoline family) promoted from NAKED
-  to real C under old_agbcc (`game_loop36.o` joined `OLD_AGBCC_OBJS`).
+  to real C under old_agbcc (`crate_create.o` joined `OLD_AGBCC_OBJS`).
   See [docs/matching/size2-naked-retry.md](../matching/size2-naked-retry.md).
-- **Last-five NAKED retry:** `ApplyCrateCollision` (`game_loop47.c`, issue #12,
+- **Last-five NAKED retry:** `ApplyCrateCollision` (`crate_break.c`, issue #12,
   the second per-edge dispatcher) promoted from NAKED to real C under
-  old_agbcc (`game_loop47.o` joined `OLD_AGBCC_OBJS`; the NAKED
+  old_agbcc (`crate_break.o` joined `OLD_AGBCC_OBJS`; the NAKED
   `QueueCratePlayerCollision` beside it is compiler-independent). The first flag
   byte is a register union of a u32 and a one-byte struct, passed to
   `BreakCrateInStack` as that struct, so it goes in QImode and its spill slot
   is reloaded with `mov r5, sp; ldrb`. See
   [docs/matching/last5-naked-retry.md](../matching/last5-naked-retry.md).
-- **Huge NAKED retry 3:** `QueueCratePlayerCollision` (`game_loop47.c`, issue #12,
+- **Huge NAKED retry 3:** `QueueCratePlayerCollision` (`crate_break.c`, issue #12,
   the 3840-byte collision-response commit) promoted from NAKED to real
   C under old_agbcc, from the 33-halfword draft the second pass left.
   A `u8 *st = &self->state` local declared last fixes the swapped spill
@@ -563,16 +562,16 @@ doesn't advance that even when byte-correct. See
 established convention, and each entry's linked write-up for why
 plain C didn't converge.
 
-- **Now matched as real C (stack-box NAKED retry, see Matched and docs/matching/sp-box-retry.md); entry kept for history.** **`BreakCrateTouchedByPlayer`** (`src/system/game_loop6.c`, GitHub issue #12) -
+- **Now matched as real C (stack-box NAKED retry, see Matched and docs/matching/sp-box-retry.md); entry kept for history.** **`BreakCrateTouchedByPlayer`** (`src/crates/crate_hit.c`, GitHub issue #12) -
   builds `self`'s and the player's AABB from the shared
   `+0x20`-table-pointer/`+0x2d`-tag hitbox-record convention
-  (`GetSpriteBounds`/`GetSpriteHitbox` in `actor_part.c`), dispatches to
+  (`GetSpriteBounds`/`GetSpriteHitbox` in `sprite.c`), dispatches to
   `ExplodeCrate`/`BreakCrateInStack` on overlap. See
   [docs/matching/issue-12-physics-collision.md](../matching/issue-12-physics-collision.md).
   The issue #12/#13/#25 retry left a near-miss C draft (old_agbcc: gcc
   keeps the player box's `sp+0x10` in a register), see
   [docs/matching/issue-12-13-25-naked-retry.md](../matching/issue-12-13-25-naked-retry.md).
-- **`QueueCratePlayerCollision`/`ApplyCrateCollision`** (`src/system/game_loop47.c`, new
+- **`QueueCratePlayerCollision`/`ApplyCrateCollision`** (`src/crates/crate_break.c`, new
   file - GitHub issue #12 Phase 1) - the physics/collision subsystem's
   two largest, most tangled dispatchers, closed by NAKED transcription
   rather than real C: `QueueCratePlayerCollision` (~3840 B, not the ~1960 B this
@@ -592,7 +591,7 @@ plain C didn't converge.
   `ApplyCrateCollision` is now real C (last-five NAKED retry, see Matched);
   `QueueCratePlayerCollision` is now real C too (huge NAKED retry 3, see Matched);
   entry kept for history.
-- **Now matched as real C (issue #12/#13/#25 NAKED retry, see Matched); entry kept for history.** **`BreakCrate`** (`src/system/game_loop48.c`; `DropCratesAbove` was
+- **Now matched as real C (issue #12/#13/#25 NAKED retry, see Matched); entry kept for history.** **`BreakCrate`** (`src/crates/crate_break.c`; `DropCratesAbove` was
   promoted by the issue #12/#24/#26 retry; the
   rest of this file was promoted to C by the NAKED-retry pass, see
   Matched) (originally with `BounceWumpaCrate`/`OpenCheckpointCrate`/`BreakCrateInStack`/
@@ -614,7 +613,7 @@ plain C didn't converge.
   `ExplodeCrate`, `BlastNearbyCrates`, `UpdateCrates`, `DetonateNitroCrates`,
   `ActivateNitroSwitchCrate`, `ActivateIronSwitchCrate`, `SolidifyOutlineCrates`, `SolidifyOutlineCrate`,
   `BreakCratesInArea`, `FinishBrokenCrate`, `UpdateTntCountdown`, `UpdateSlotCrate` -
-  `src/system/game_loop49.c`, new file - GitHub issue #12 Phase 2,
+  `src/crates/crate_break.c`, new file - GitHub issue #12 Phase 2,
   higher-address half, sibling pass) - the direct/transitive callees of
   `QueueCratePlayerCollision`'s and `ApplyCrateCollision`'s per-edge jump table reachable
   from `ExplodeCrate` up through the end of this whole cluster
@@ -624,11 +623,11 @@ plain C didn't converge.
   AABB-build idiom or plain high-register (`r8`/`sb`/`sl`) cross-block
   reuse under -O2. Verified byte-exact via a full clean `make compare`.
   `asm/code_3_2_17_e560.s` is now gone entirely - both this half and
-  the lower-address half above (`src/system/game_loop48.c`) are fully
+  the lower-address half above (`src/crates/crate_break.c`) are fully
   consumed. See
   [docs/matching/issue-12-physics-collision.md](../matching/issue-12-physics-collision.md)'s
   Phase 2 appendix for the confirmed per-function roles.
-- **Now matched as real C (issue #9-#11 NAKED retry, see Matched and docs/matching/issue-9-11-box-naked-retry.md); entry kept for history.** **`sub_800CEAC`/`sub_800CF70`** (`src/system/game_loop42.c`, new
+- **Now matched as real C (issue #9-#11 NAKED retry, see Matched and docs/matching/issue-9-11-box-naked-retry.md); entry kept for history.** **`sub_800CEAC`/`sub_800CF70`** (`src/crates/crate_hit.c`, new
   file - dedicated deep investigation) - the two functions formerly
   tracked as unexamined raw bytes between `PlayerAnimWouldTouchCrate` (issue #9/#10)
   and `BreakCrateTouchedByPlayer` (issue #12); recategorized `graphics` -> `game_loop`
@@ -644,12 +643,12 @@ plain C didn't converge.
   it the same way. Both NAKED: the same single-inlined-AABB-build shape
   `BreakCrateTouchedByPlayer`/`PlayerAnimWouldTouchCrate` already document as gcc-2.9-resistant. See
   [docs/matching/issue-9-10-0x0800ceac-graphics.md](../matching/issue-9-10-0x0800ceac-graphics.md).
-- **Now matched as real C (issue #12/#13/#25 NAKED retry, see Matched); entry kept for history.** **`UpdateCrateFall`** (`src/system/game_loop32.c`, GitHub issue #13,
+- **Now matched as real C (issue #12/#13/#25 NAKED retry, see Matched); entry kept for history.** **`UpdateCrateFall`** (`src/crates/crate_break.c`, GitHub issue #13,
   second pass) - a per-frame position-wrap advance keeping `sb`/`r8`
   live as two extra callee-saved accumulators throughout, the same gap
   as `BreakCrateTouchedByPlayer` above. See
   [docs/matching/issue-13-fc70-continuation.md](../matching/issue-13-fc70-continuation.md).
-- **Now matched as real C (late NAKED retry 3, see docs/matching/late-naked-retry-3.md); entry kept for history.** **`HitEnemy`** (`src/graphics/actor_part112.c`, new file - GitHub
+- **Now matched as real C (late NAKED retry 3, see docs/matching/late-naked-retry-3.md); entry kept for history.** **`HitEnemy`** (`src/enemies/enemy_ctrl_update.c`, new file - GitHub
   issue #9/#10, foundational investigation of the large still-raw
   `0x0800B8DC`-`0x0800D040` cluster). An entity-vtable slot of the same
   object type (`gEnemyCtrlVtable`) as its ROM neighbour
@@ -663,7 +662,7 @@ plain C didn't converge.
   [issue-10-naked-retry.md](../matching/issue-10-naked-retry.md).) See
   [docs/matching/issue-9-10-0x0800b8dc-graphics.md](../matching/issue-9-10-0x0800b8dc-graphics.md)
   for the 22-case dispatch map.
-- **`SetEnemyMotionY`/`SetEnemyMotionX`/`SetEnemyAnimMode`** (`src/graphics/actor_part113.c`,
+- **`SetEnemyMotionY`/`SetEnemyMotionX`/`SetEnemyAnimMode`** (`src/enemies/enemy_ctrl.c`,
   new file - GitHub issue #9/#10, Phase 2 of the `0x0800B8DC`-cluster
   investigation above, tackling the three `(self, mode)`-shaped trigger
   primitives that pass's own doc flagged as shared by nearly every
@@ -672,7 +671,7 @@ plain C didn't converge.
   register-allocation gap (straight-line, no branches). `SetEnemyMotionY`/
   `SetEnemyMotionX` cache `mode` into `self+0x7c`/`self+0x78` and delegate
   to the already-matched `StartCtrlTargetMotionYFromSet`/`StartCtrlTargetMotionXFromSet`
-  (`actor_part17.c`); `SetEnemyAnimMode` caches into `self+0x68` and fires
+  (`ctrl.c`); `SetEnemyAnimMode` caches into `self+0x68` and fires
   `_call_via_r3` directly, indexing `self+0x84`'s own pointer array by
   `mode` rather than going through the shared `gCtrlMotionRecords`
   table the other two use. See
@@ -683,7 +682,7 @@ plain C didn't converge.
   `UpdateEnemyHomingY`/`UpdateEnemyFlipCycle` are now real C, see Matched) - originally
   **`UpdateEnemyHomingX`/`UpdateEnemyHomingY`/`UpdateEnemyFlipCycle`/`UpdateEnemyOscillateX`/
   `UpdateEnemyBob`/`UpdateEnemyOscillateY`/`LaunchHarmfulEffectPart`/`CreateKnockedEnemyCtrl`**
-  (`src/graphics/actor_part114.c`-`actor_part117.c`, new files - GitHub
+  (`src/enemies/enemy_motion.c`-`enemy_ctrl.c`, new files - GitHub
   issue #9/#10, Phase 3 of the `0x0800B8DC`-cluster investigation, the
   "remaining leaves" the Phase 1 doc's priority list named). `UpdateEnemyHomingX`/
   `UpdateEnemyHomingY` are the X-axis/Y-axis "homing velocity-target setter"
@@ -706,7 +705,7 @@ plain C didn't converge.
   "Phase 3" section for the full writeup.
 - **`SetEnemyState`/`SetEnemyRangeXSpeed`/`SetEnemyRangeYSpeed`/`SetEnemyRangeX`** (all
   real C since the issue #10 NAKED retry, see Matched; kept here for
-  the history) (`src/graphics/actor_part122.c`, new file - GitHub issue #9/#10, the
+  the history) (`src/enemies/enemy_attack.c`, new file - GitHub issue #9/#10, the
   last four functions of the old `asm/code_3_2_17_c6a8.s`, now fully
   retired). `SetEnemyState` is the `menu_ui` dialog-widget system's own
   18-state `self+0x74` update, called from all 31 confirmed `menu_ui`
@@ -729,7 +728,7 @@ plain C didn't converge.
   [docs/matching/issue-9-10-0x0800b8dc-graphics.md](../matching/issue-9-10-0x0800b8dc-graphics.md)'s
   "Phase 4" section for the full writeup.
 - **`UpdateEffectCtrl` now matched as real C (issue #9-#11 NAKED retry, see Matched and docs/matching/issue-9-11-box-naked-retry.md); entry kept for history.** **`UpdateEffectCtrl`/`EffectCtrlHandleEvent`/`nullsub_3`/`DestroyEffectCtrl`/`InitEffectCtrl`**
-  (`src/graphics/actor_part123.c`, new file - GitHub issue #9/#10, the
+  (`src/objects/effect_ctrl.c`, new file - GitHub issue #9/#10, the
   final piece of the `0x0800B8DC`-cluster investigation, closing out
   the entire 43-function cluster). `UpdateEffectCtrl` (NAKED) inlines the
   "flag active + bitmap-set" idiom (`actor_part27c.c`'s `UpdateOneShotAnimCtrl`)
@@ -743,10 +742,10 @@ plain C didn't converge.
   ([docs/matching/issue-12-physics-collision.md](../matching/issue-12-physics-collision.md))
   but is confirmed to still be a plain entity constructor in this
   cluster, immediately followed with no gap by the already-matched
-  `PlayerAnimWouldTouchCrate` (`actor_part109.c`). See
+  `PlayerAnimWouldTouchCrate` (`crate_touch.c`). See
   [docs/matching/issue-9-10-0x0800b8dc-graphics.md](../matching/issue-9-10-0x0800b8dc-graphics.md)'s
   final section for the full writeup.
-- **`UpdateEnemyShooter`** (`src/graphics/actor_part121.c`, new file - GitHub
+- **`UpdateEnemyShooter`** (`src/enemies/enemy_shooter.c`, new file - GitHub
   issue #9/#10) - the last raw function in the cluster's own
   `asm/code_3_2_17_bfa8.s` chunk, called only from `UpdateEnemyCtrl` state
   15. A small `self+0x68`-keyed 2-way dispatcher gated by a
@@ -822,13 +821,13 @@ plain C didn't converge.
   from the confirmed-traced ROM disassembly, formerly
   `asm/code_3_2_17_225a0.s`, now retired). See `docs/matching.md`'s
   entry for this function for the full trace.
-- **Now matched as real C (issue #12/#13/#25 NAKED retry, see Matched); entry kept for history.** **`UpdateCrate`** (`src/system/game_loop51.c`, new file, GitHub
+- **Now matched as real C (issue #12/#13/#25 NAKED retry, see Matched); entry kept for history.** **`UpdateCrate`** (`src/crates/crate_update.c`, new file, GitHub
   issue #13) - a ~195-instruction per-frame state-machine dispatcher:
   throttles/re-triggers `UpdateTntCountdown`/`UpdateSlotCrate`/`SolidifyOutlineCrates` off
   `self+0x4e`'s settle-state byte, always calls `UpdateCrateFall`, then -
   gated on `self+0x4d`'s bit 7 and `self+0x38` - re-derives
   `self+0x30`'s index via the same `self+0x20`/`self+0x2d`-tag/
-  0x1c-stride hitbox-record clamp `DrawCrate` (`game_loop35.c`)
+  0x1c-stride hitbox-record clamp `DrawCrate` (`crate_draw.c`)
   uses and settles state 6/3, or otherwise re-triggers `FinishBrokenCrate`;
   finally hands off to the `_call_via_r1` table-trampoline convention
   `CheckEntityPlayerContact`/`UpdateEntity` (`graphics.c`) establish. A plain-C
@@ -846,21 +845,21 @@ plain C didn't converge.
   `ResolveCollisionCandidates` above, at a finer grain spread across the whole
   function rather than one isolated block. Replaces
   `asm/code_3_2_17_e560_104e4.o` in `ldscript.txt`, sitting between
-  `src/system/game_loop35.o` and `game_loop23.o`. Filed as
-  `game_loop51.c`, not `game_loop50.c`, after a merge conflict with
+  `src/crates/crate_draw.o` and `crate.o`. Filed as
+  `crate_update.c`, not `collision_queue.c`, after a merge conflict with
   the concurrently-matched `AddCollisionCandidate` below, which took the
-  `game_loop50.c` name first. See
+  `collision_queue.c` name first. See
   [docs/matching/issue-13-fc70-continuation.md](../matching/issue-13-fc70-continuation.md)'s
   "Update: `UpdateCrate` matched" section.
-- **`AddCollisionCandidate`** (`src/system/game_loop50.c`, new file - Phase 1 of
+- **`AddCollisionCandidate`** (`src/objects/collision_queue.c`, new file - Phase 1 of
   the next still-unexamined chunk past issue #14's own range) - the
   physics/collision subsystem's **apply/commit step**, the call
-  `QueueCratePlayerCollision` (`game_loop47.c`) makes at the very end of its own
+  `QueueCratePlayerCollision` (`crate_break.c`) makes at the very end of its own
   per-edge dispatch. Appends one 0x24-byte "collision candidate" record
   to a per-entity queue at `self->candidates[self->count]` (`self` is
   the caller's own `entity+0x108` - the player's
   `gPlayer+0x108` at this specific call site - the same
-  record shape `ResolveCollisionCandidates`/`game_loop28.c` already reads back, per
+  record shape `ResolveCollisionCandidates`/`collision_queue.c` already reads back, per
   its own doc comment calling `AddCollisionCandidate` its "mirror image"). A
   plain-C reconstruction reproduces the ROM's exact instruction *shape*
   (the same 8-way common-subexpression grouping for the repeated
@@ -875,7 +874,7 @@ plain C didn't converge.
   folded `DestroyCollisionQueue`/`ResetCollisionQueue` into this same file (both real C):
   `DestroyCollisionQueue` is byte-identical in shape to `graphics.c`'s already-
   matched `DestroyOamBuffer` (`if (arg1 & 1) OperatorDelete(arg0);`) - a VRAM-
-  manager-refresh gate that happens to be called from `actor_part15.c`
+  manager-refresh gate that happens to be called from `player_update.c`
   with `arg1 = 2` (bit 0 clear), so that particular call site is itself
   a no-op; `ResetCollisionQueue` is a trivial two-field queue reset
   (`count`/`unk4[0]`). `asm/code_3_2_17_e560_10d54.s` trimmed to begin
@@ -888,7 +887,7 @@ plain C didn't converge.
   (the ROM's `add; add; ldrb; ldrb`), and the +0x04/+0x08 pair is a
   by-value struct copy. See
   [docs/matching/issue-15-16-naked-retry.md](../matching/issue-15-16-naked-retry.md).
-- **`UpdateExtraLifeHop`-`CheckWumpaPickup`** (`src/system/game_loop52.c`, new file
+- **`UpdateExtraLifeHop`-`CheckWumpaPickup`** (`src/pickups/extra_life.c`, new file
   - Phase 2's "accessor cluster" group) - 11 functions, a small
   "orbiting hazard" behavior family on a further still-unnamed "part"
   object distinct from `struct actor` and from `AddCollisionCandidate`'s own
@@ -902,7 +901,7 @@ plain C didn't converge.
   (`self+0x48 == 0`) and a player flag is set, `DrawExtraLife` re-derives
   visibility from a `DrawSprite`/`self+0x38` gate, `DestroyExtraLife`/
   `InitExtraLife`/`ResetExtraLifePickup` are a small init/reset/table-repoint trio
-  (same `InitSpriteObj`/table-swap shape as `actor_part8.c`), and
+  (same `InitSpriteObj`/table-swap shape as `moving_sprite.c`), and
   `CheckWumpaPickup` is the per-frame player-proximity/hit-resolve step
   (AABB-tests against the player, choosing primary vs. secondary AABB
   build depending on the player's own state, and on overlap tail-calls
@@ -920,9 +919,9 @@ plain C didn't converge.
   (`include/orbit_part.h`). See
   [docs/matching/issue-15-16-naked-retry.md](../matching/issue-15-16-naked-retry.md).
 - **`PickUpWumpa`/`UpdateWumpa`/`CreateWumpa`/`SendWumpaToHud`/`StartWumpaPayout`/
-  `UpdateWumpaHop`** (`src/system/game_loop53.c`, new file - Phase 2,
+  `UpdateWumpaHop`** (`src/pickups/wumpa_update.c`, new file - Phase 2,
   a parallel slice of the same 24-function chunk) - the chunk's tail 6
-  functions, contiguous through to the already-matched `actor_part39.c`.
+  functions, contiguous through to the already-matched `wumpa.c`.
   `PickUpWumpa` is a randomized-position spawn/despawn picker;
   `UpdateWumpa` is an entity-vtable-dispatched velocity integrator
   (mode 0-3 on `self->0x48`, with a PlaySfx+`CollectWumpa`+
@@ -937,7 +936,7 @@ plain C didn't converge.
   `DropExtraLife`/`DropWumpa` wrappers. Matched, confirmed by a full
   clean `make compare`. `CheckExtraLifePickup`/`PickUpExtraLife`/`UpdateExtraLife`/
   `SendExtraLifeToHud` were also read and isolated-verified this pass but left
-  un-integrated at the time - see the `game_loop54.c` entry below for
+  un-integrated at the time - see the `extra_life.c` entry below for
   their eventual integration. *Later pass (issue #15 NAKED retry):*
   `PickUpWumpa`, `SendWumpaToHud` and `UpdateWumpaHop` are real C under
   old_agbcc (the file moved to `OLD_AGBCC_OBJS`); `UpdateWumpa` and
@@ -956,16 +955,16 @@ plain C didn't converge.
   taken by an `asm`, and locals for the state-3 tail; see
   [mix-naked-retry-5.md](../matching/mix-naked-retry-5.md).
 - **`CheckExtraLifePickup`/`PickUpExtraLife`/`UpdateExtraLife`/`CreateExtraLife`/
-  `SendExtraLifeToHud`** (`src/system/game_loop54.c`, new file - Phase 2
+  `SendExtraLifeToHud`** (`src/pickups/extra_life.c`, new file - Phase 2
   mop-up, the chunk's final slice) - the last 5 functions of the former
   24-function tail, closing the entire `AddCollisionCandidate` chunk (issue
   #12/#14). `CheckExtraLifePickup` (real C) is a bounds-checked AABB gate that
   calls `PickUpExtraLife(self, 0)` on overlap, sharing its opening gate and
-  bit-test idiom verbatim with `CheckWumpaPickup` (`game_loop52.c`).
+  bit-test idiom verbatim with `CheckWumpaPickup` (`extra_life.c`).
   `PickUpExtraLife`/`SendExtraLifeToHud` (both real C) are two more members of the
   "randomized/fixed `(dx,dy)` offset, `PlaySfx`, `WorldToScreen`,
   `-FixedDiv(...)` distance-pair" tail shape already documented for
-  `PickUpWumpa`/`SendWumpaToHud` (`game_loop53.c`) - unlike those two,
+  `PickUpWumpa`/`SendWumpaToHud` (`wumpa_update.c`) - unlike those two,
   both closed as real C this time, needing a handful of register-pinned/
   opaque-materialization fixes (forced constant-first evaluation order
   for `self->0xc |= mask` and `self->0x25 = 1`, and a two-register

@@ -31,7 +31,7 @@ section) both compile to fully correct, byte-exact C:
   result with a redundant `lsl`/`asr` pair on use).
 - **A genuine "dead read"** - `*(u32 volatile *)(entry + 4)` loaded
   into r4 but never used, the same documented idiom as `HitMovingSprite`
-  (`actor_part9.c`) and `CheckSpritePickup`; needs the `volatile` qualifier
+  (`moving_sprite_collide.c`) and `CheckSpritePickup`; needs the `volatile` qualifier
   or this compiler dead-store-eliminates it.
 - **Two double-dereference bugs caught during development**: an early
   draft wrote `*(u8 **)gPlayer` (treating the *value* as a
@@ -84,7 +84,7 @@ structural insight from earlier sessions, now falling out naturally
 from the type change instead of needing a separate workaround.
 
 This is consistent with the pattern seen closing `CollidePlayer`'s
-`kindZero` gap the same session (`src/graphics/actor_part78.c`,
+`kindZero` gap the same session (`src/player/player_collide.c`,
 docs comment point 7): a register-choice gap caused by *what value a
 pinned register is asked to hold* (an address vs. a dereferenced
 value) can resist every register-pinning/matching-constraint trick and

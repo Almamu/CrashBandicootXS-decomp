@@ -7,11 +7,12 @@ independently claimed `actor_part39.c` and `actor_part43.c`-`46.c`
 first, before this PR merged - resolved as a rename on merge to avoid
 add/add filename collisions. The whole seven-file family was
 renumbered together (not just the four that literally collided) to
-keep it visually contiguous.
+keep it visually contiguous. (#575 has since given these files
+descriptive names; see `tools/file_layout_plan.tsv` for the mapping.)
 
 25-function `decomp-chunk` covering the `InitActorPart`/`gActorList`-
 rooted "self" object family already documented for
-`actor_part17.c`/`actor_part18.c`/`actor_part19.c`/`actor_part28.c`/
+`ctrl.c`/`action_ctrl_states.c`/`actor_part19.c`/`actor_part28.c`/
 `actor_part32.c`: a "part table" pointer at `self+0` (copied from the
 constructor's `part` argument's own `+4` field), a table-index/"kind"
 field at `self+0xc`, an anim-frame halfword/byte pair at `self+0x10`/

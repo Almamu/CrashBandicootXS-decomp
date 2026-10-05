@@ -2,9 +2,9 @@
 #define GUARD_ACTION_OBJ_H
 
 /* The player/action object behind the gActionCtrlStateTable 42-slot action
- * table (docs/rom_map.md), as far as src/graphics/actor_part_13c60.c and
- * actor_part_14674.c (GitHub issue #17, both built with old_agbcc) use it.
- * actor_part18.c/actor_part_138e8.c and friends reach the same fields
+ * table (docs/rom_map.md), as far as src/player/action_ctrl_states.c and
+ * action_ctrl_hang.c (GitHub issue #17, both built with old_agbcc) use it.
+ * action_ctrl_states.c and friends reach the same fields
  * through raw offsets.
  *
  * `vt` is a gcc 2.x method table ({s16 this-adjust; fn} entries, called

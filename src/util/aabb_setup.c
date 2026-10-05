@@ -3,8 +3,8 @@
 
 /* Same `struct aabb` shape as src/util/aabb.c/actor_part*.c -
  * duplicated here rather than shared, matching this project's existing
- * per-file convention for this struct (see docs/workflow.md/actor_part2.c
- * etc). */
+ * per-file convention for this struct (see docs/workflow.md and
+ * sprite.c etc). */
 struct aabb {
     s32 field_0;
     s32 field_4;
@@ -13,7 +13,7 @@ struct aabb {
 };
 
 /* Set-size primitive - already referenced by name from several other
- * files (actor_part.c/actor_part2.c/power_dialog_draw.c's DrawPowerDialog) as the
+ * files (sprite.c/power_dialog_draw.c's DrawPowerDialog) as the
  * shared `SetAabbPos`(set-position)/`SetAabbSize`(set-size) pair. */
 void SetAabbSize(struct aabb *dest, s32 w, s32 h)
 {

@@ -4,7 +4,7 @@
 extern void InitBgLayerBase(void *self, s32 bgIndex);
 extern u8 gBgLayerVtable[];
 
-/* Initializes a BG-scroll-layer object (see game_loop6.c's viewport/
+/* Initializes a BG-scroll-layer object (see crate_hit.c's viewport/
  * parallax-scroll-layer family) for hardware BG `bgIndex`: caches
  * `gBgLayerVtable` as its method table, screen block
  * `bgIndex + 0x1c`'s address as `screen`, `&REG_BGnCNT` as `cntReg`,
