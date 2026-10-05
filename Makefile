@@ -180,9 +180,9 @@ $(ELF): $(OBJS) $(LDSCRIPT)
 # docs/matching/issue-24-boss-actor.md. old_agbcc has no
 # -fprologue-bugfix option.
 OLD_AGBCC_OBJS := $(C_BUILDDIR)/graphics/actor_part.o \
-                  $(C_BUILDDIR)/graphics/graphics_73dc.o \
-                  $(C_BUILDDIR)/graphics/graphics_7634.o \
-                  $(C_BUILDDIR)/graphics/text_layout.o \
+                  $(C_BUILDDIR)/gfx/sprite_pieces.o \
+                  $(C_BUILDDIR)/gfx/affine_sprite_pieces.o \
+                  $(C_BUILDDIR)/text/wrapped_text.o \
                   $(C_BUILDDIR)/graphics/actor_part101.o \
                   $(C_BUILDDIR)/graphics/actor_part103.o \
                   $(C_BUILDDIR)/graphics/actor_part109.o \
@@ -253,15 +253,15 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/graphics/actor_part.o \
                   $(C_BUILDDIR)/graphics/graphics_loading_35780.o \
                   $(C_BUILDDIR)/graphics/graphics_loading_35d1c.o \
                   $(C_BUILDDIR)/graphics/graphics_loading_3686c.o \
-                  $(C_BUILDDIR)/graphics/graphics_package_1e578.o \
+                  $(C_BUILDDIR)/gfx/graphics_package.o \
                   $(C_BUILDDIR)/graphics/graphics_package_1e640.o \
                   $(C_BUILDDIR)/graphics/graphics_package_1e688.o \
                   $(C_BUILDDIR)/graphics/graphics_package_1e8f8.o \
                   $(C_BUILDDIR)/graphics/graphics_package_1e964.o \
                   $(C_BUILDDIR)/graphics/hud_digit_array.o \
-                  $(C_BUILDDIR)/graphics/hud_icon_widget_85c4.o \
-                  $(C_BUILDDIR)/graphics/hud_icon_widget_8890.o \
-                  $(C_BUILDDIR)/graphics/hud_icon_widget_8994.o \
+                  $(C_BUILDDIR)/text/font_glyph.o \
+                  $(C_BUILDDIR)/text/font_draw_text.o \
+                  $(C_BUILDDIR)/text/font_measure.o \
                   $(C_BUILDDIR)/graphics/hud_stat_widget2.o \
                   $(C_BUILDDIR)/graphics/hud_stat_widget3.o \
                   $(C_BUILDDIR)/graphics/level_graphics.o \
@@ -297,9 +297,9 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/graphics/actor_part.o \
                   $(C_BUILDDIR)/system/game_loop6.o \
                   $(C_BUILDDIR)/system/game_loop7.o \
                   $(C_BUILDDIR)/system/game_loop8.o \
-                  $(C_BUILDDIR)/system/link_cable.o \
-                  $(C_BUILDDIR)/system/link_cable_01db4.o \
-                  $(C_BUILDDIR)/system/link_cable_01f50.o
+                  $(C_BUILDDIR)/link/link_handshake.o \
+                  $(C_BUILDDIR)/link/link_session_reset.o \
+                  $(C_BUILDDIR)/link/link_session.o
 $(OLD_AGBCC_OBJS): CC1 := $(CC1_OLD)
 $(OLD_AGBCC_OBJS): CC1FLAGS := $(filter-out -fprologue-bugfix,$(CC1FLAGS))
 
@@ -328,7 +328,7 @@ $(NO_STRENGTH_REDUCE_OBJS): CC1FLAGS += -fno-strength-reduce
 # why ResetLinkSessionState was split out of link_cable.c. See
 # docs/matching/last-ten-naked-retry.md and
 # docs/matching/last-eleven-naked-retry.md.
-NO_RERUN_LOOP_OPT_OBJS := $(C_BUILDDIR)/system/link_cable_01db4.o
+NO_RERUN_LOOP_OPT_OBJS := $(C_BUILDDIR)/link/link_session_reset.o
 $(NO_RERUN_LOOP_OPT_OBJS): CC1FLAGS += -fno-rerun-loop-opt
 
 # Objects built with -O1 instead of -O2: the whole of lib/agb_eeprom's
