@@ -38,14 +38,10 @@ SECTIONS
         build/crashbandicootxs/src/text/text_box.o(.text);
         build/crashbandicootxs/src/util/line_step.o(.text);
         build/crashbandicootxs/src/gfx/fade.o(.text);
-        build/crashbandicootxs/src/graphics/palette_blend.o(.text);
         build/crashbandicootxs/src/gfx/fade_to_black.o(.text);
         build/crashbandicootxs/src/gfx/display.o(.text);
         build/crashbandicootxs/src/util/aabb.o(.text);
         build/crashbandicootxs/src/audio/audio.o(.text);
-        build/crashbandicootxs/src/audio/sfx_ambient.o(.text);
-        build/crashbandicootxs/src/audio/audio_context.o(.text);
-        build/crashbandicootxs/src/audio/music_irq.o(.text);
         build/crashbandicootxs/src/link/link_handshake.o(.text);
         build/crashbandicootxs/src/link/link_session_reset.o(.text);
         build/crashbandicootxs/src/link/link_session.o(.text);
@@ -198,10 +194,6 @@ SECTIONS
         build/crashbandicootxs/src/graphics/actor_part_1da38.o(.text);
         build/crashbandicootxs/src/graphics/actor_part_1dfec.o(.text);
         build/crashbandicootxs/src/gfx/graphics_package.o(.text);
-        build/crashbandicootxs/src/graphics/graphics_package_1e640.o(.text);
-        build/crashbandicootxs/src/graphics/graphics_package_1e688.o(.text);
-        build/crashbandicootxs/src/graphics/graphics_package_1e8f8.o(.text);
-        build/crashbandicootxs/src/graphics/graphics_package_1e964.o(.text);
         build/crashbandicootxs/src/graphics/graphics_loading_1e990.o(.text);
         build/crashbandicootxs/src/graphics/graphics_loading_1ea5c.o(.text);
         build/crashbandicootxs/src/graphics/graphics_loading_1ef0c.o(.text);
@@ -263,10 +255,7 @@ SECTIONS
         build/crashbandicootxs/src/text/font_height.o(.text);
         build/crashbandicootxs/src/text/font_measure.o(.text);
         build/crashbandicootxs/src/text/font.o(.text);
-        build/crashbandicootxs/src/graphics/hud_icon_widget_8a78.o(.text);
-        build/crashbandicootxs/src/graphics/hud_icon_widget5.o(.text);
         build/crashbandicootxs/src/gfx/sprite_frame.o(.text);
-        build/crashbandicootxs/src/graphics/sprite_frame_queue.o(.text);
         build/crashbandicootxs/src/graphics/actor_part104.o(.text);
         build/crashbandicootxs/src/graphics/actor_part101.o(.text);
         build/crashbandicootxs/src/graphics/actor_part100.o(.text);
