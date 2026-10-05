@@ -41,7 +41,7 @@
 #     defines itself). A local label for NAME at the end of the target's
 #     slice makes the target's calls resolve the same way (see
 #     tools/slice_expected.py). No entry needs it at the moment: its one
-#     user, math_div64_util.c's calls to sub_8037E54, went away when that
+#     user, libgcc2.c's calls to sub_8037E54, went away when that
 #     function was named `__udivsi3` and the `.set` alias was dropped
 #     (the calls now carry relocations, which the `rename` below pairs).
 #
@@ -135,8 +135,8 @@ unlabel sub_802613E
 # Return points of GAX_CALL_ARM/GAX_CALL_ARM_R (the nop or shared
 # epilogue a hand-computed ARM-call return address lands on), which the
 # original disassembly took for function starts. Never called; the C
-# has no such functions - see src/audio/gax_note_trigger.c and
-# src/audio/gax_unknownc_play.c.
+# has no such functions - see lib/gax/src/gax_note_trigger.c and
+# lib/gax/src/gax_unknownc_play.c.
 unlabel sub_8039E50
 unlabel sub_803A318
 unlabel sub_803A608
@@ -156,7 +156,7 @@ data 0x080003CA
 code 0x080003D0
 data 0x080003DA
 
-# src/system/timer_util.c: sub_803A9AC (SDK EepromTimerIntr) is an unlabelled
+# lib/agb_eeprom/src/eeprom_timer.c: sub_803A9AC (SDK EepromTimerIntr) is an unlabelled
 # .byte blob right after sub_803A968's pool in expected/code_3.s, with a
 # stray gStaticData_0803A9AD label one byte in. Code, then its two pool words.
 split 0x0803A9AC EepromTimerIntr

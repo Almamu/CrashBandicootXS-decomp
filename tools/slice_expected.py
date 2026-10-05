@@ -70,8 +70,9 @@ def main():
 
     # `resolve` entries in expected/corrections.txt: a function right after
     # this slice that the base object calls through a local `.set` alias
-    # of a symbol it defines itself (math_div64_util.c's `__udivsi3`
-    # alias, before that function was named __udivsi3 itself), so the
+    # of a symbol it defines itself (the libgcc `__udivsi3` alias, back
+    # when libgcc2.c and __udivsi3 were one object and before that
+    # function was named __udivsi3 itself), so the
     # assembler resolved those `bl`s with no
     # relocation. A local label at the slice's end, where that function
     # starts, makes the target's `bl`s resolve the same way.

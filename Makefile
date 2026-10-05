@@ -20,7 +20,9 @@ RAMSCRGEN := tools/ramscrgen/ramscrgen
 FIX := tools/gbafix/gbafix
 
 CC1FLAGS := -mthumb-interwork -Wimplicit -Wparentheses -O2 -fhex-asm  -fprologue-bugfix
-CPPFLAGS := -I tools/agbcc/include -iquote include -nostdinc -undef
+# The libraries' public headers (lib/*/include) are on the -I path, so
+# game code includes them as <gax.h>, <agb_eeprom.h>, <agb_syscall.h>.
+CPPFLAGS := -I tools/agbcc/include -iquote include $(patsubst %,-I %,$(wildcard lib/*/include)) -nostdinc -undef
 ASFLAGS  := -mcpu=arm7tdmi -mthumb-interwork -I asminclude
 
 #### Custom flags to alter compilation output ####
@@ -60,7 +62,35 @@ ASM_OBJS := $(patsubst $(ASM_SUBDIR)/%.s,$(ASM_BUILDDIR)/%.o,$(ASM_SRCS))
 DATA_ASM_SRCS := $(wildcard $(DATA_ASM_SUBDIR)/*.s)
 DATA_ASM_OBJS := $(patsubst $(DATA_ASM_SUBDIR)/%.s,$(DATA_ASM_BUILDDIR)/%.o,$(DATA_ASM_SRCS))
 
-OBJS := $(C_OBJS) $(ASM_OBJS) $(DATA_ASM_OBJS)
+#### Libraries ####
+# Third-party and SDK code linked into the ROM, kept apart from the game
+# under lib/ (see docs/libraries.md). They are linked as plain objects:
+# ldscript.txt interleaves them with the game code in ROM order.
+#  - lib/gax: Shin'en's GAX2 sound engine (src/*.c code, data/*.c tables)
+#  - lib/agb_eeprom: Nintendo's AgbEeprom SDK library, EEPROM_V122
+#  - lib/libgcc: libgcc2.c's 64-bit helpers and lib1funcs.asm's routines
+#  - lib/libagbsyscall: the BIOS SWI wrappers
+LIB_SUBDIR = lib
+LIB_BUILDDIR = $(OBJ_DIR)/lib
+
+LIB_C_SRCS := $(wildcard $(LIB_SUBDIR)/*/src/*.c $(LIB_SUBDIR)/*/data/*.c)
+LIB_C_ASMS := $(patsubst $(LIB_SUBDIR)/%.c,$(LIB_BUILDDIR)/%.s,$(LIB_C_SRCS))
+LIB_C_OBJS := $(patsubst $(LIB_SUBDIR)/%.c,$(LIB_BUILDDIR)/%.o,$(LIB_C_SRCS))
+
+# As in gcc's own libgcc build, libgcc2.c is compiled once per function
+# with -DL_<name> and lib1funcs.s assembled once per routine with
+# L_<name> defined, one object per function.
+LIBGCC2_FUNCS := _divdi3 _udivdi3 _muldi3
+LIB1FUNCS := _udivsi3 _divsi3 _dvmd_tls _modsi3 _umodsi3 _call_via_rX
+LIBGCC2_OBJS := $(patsubst %,$(LIB_BUILDDIR)/libgcc/%.o,$(LIBGCC2_FUNCS))
+LIBGCC2_ASMS := $(LIBGCC2_OBJS:.o=.s)
+LIB1FUNCS_OBJS := $(patsubst %,$(LIB_BUILDDIR)/libgcc/%.o,$(LIB1FUNCS))
+
+LIBAGBSYSCALL_OBJS := $(LIB_BUILDDIR)/libagbsyscall/libagbsyscall.o
+
+LIB_OBJS := $(LIB_C_OBJS) $(LIBGCC2_OBJS) $(LIB1FUNCS_OBJS) $(LIBAGBSYSCALL_OBJS)
+
+OBJS := $(C_OBJS) $(LIB_OBJS) $(ASM_OBJS) $(DATA_ASM_OBJS)
 OBJS_REL := $(patsubst $(OBJ_DIR)/%,%,$(OBJS))
 
 include graphics.mk
@@ -112,7 +142,7 @@ $(SOUND_BUILDDIR)/sfx_table.bin: sound/sfx_table.json tools/sfx_table.py
 	python3 tools/sfx_table.py $@
 
 clean:
-	$(RM) $(ROM) $(ELF) $(MAP) $(OBJS) $(C_ASMS)
+	$(RM) $(ROM) $(ELF) $(MAP) $(OBJS) $(C_ASMS) $(LIB_C_ASMS) $(LIBGCC2_ASMS)
 
 tidy:
 	rm -f $(ROM) $(ELF) $(MAP)
@@ -132,7 +162,7 @@ tidy:
 # assets it incbins, but not data.o itself (that needs baserom.gba).
 
 .PHONY: report
-report: $(C_OBJS) $(GRAPHICS_BUILT) $(LEVELS_BUILT) $(SOUND_BUILT)
+report: $(C_OBJS) $(LIB_C_OBJS) $(LIBGCC2_OBJS) $(GRAPHICS_BUILT) $(LEVELS_BUILT) $(SOUND_BUILT)
 	python3 tools/report_units.py
 
 #### Recipes ####
@@ -301,36 +331,39 @@ $(NO_STRENGTH_REDUCE_OBJS): CC1FLAGS += -fno-strength-reduce
 NO_RERUN_LOOP_OPT_OBJS := $(C_BUILDDIR)/system/link_cable_01db4.o
 $(NO_RERUN_LOOP_OPT_OBJS): CC1FLAGS += -fno-rerun-loop-opt
 
-# Objects built with -O1 instead of -O2. Nintendo's AgbEeprom SDK library
-# (the ROM's "EEPROM_V122", 0x0803A968-0x0803AD7C) was compiled at -O1,
-# and all nine of its functions are the SDK's plain C (TMC/pokeemerald
-# source shape, no pins or volatile tricks), byte-identical at -O1:
-# - timer_util.o: EEPROMConfigure, EepromTimerIntr (timer
+# Objects built with -O1 instead of -O2: the whole of lib/agb_eeprom's
+# code. Nintendo's AgbEeprom SDK library (the ROM's "EEPROM_V122",
+# 0x0803A968-0x0803AD7C) was compiled at -O1, and all nine of its
+# functions are the SDK's plain C (TMC/pokeemerald source shape, no pins
+# or volatile tricks), byte-identical at -O1:
+# - eeprom_timer.o: EEPROMConfigure, EepromTimerIntr (timer
 #   IRQ handler), SetEepromTimerIntr and StartEepromTimer. At -O2 the same C is 47 halfwords off in
 #   StartEepromTimer; the old -O2 version needed six register pins and a
-#   `vu16 * volatile` global. The object's BIOS SWI wrappers are
-#   hand-written NAKED asm, identical under any flag.
-# - timer_util_aa90.o: StopEepromTimer, DMA3Transfer - 2/43 halfwords off at -O2 (-O2 cross-jumps the
+#   `vu16 * volatile` global.
+# - eeprom_timer_stop.o: StopEepromTimer, DMA3Transfer - 2/43 halfwords off at -O2 (-O2 cross-jumps the
 #   duplicated DMA-wait test into the loop).
-# - eeprom_util.o: EEPROMRead/EEPROMWrite -
+# - eeprom_read_write.o: EEPROMRead/EEPROMWrite -
 #   79/107 halfwords off at -O2.
 # - eeprom_verify.o: EEPROMCompare/EEPROMWrite1_check.
 # It is current agbcc: old_agbcc -O1 is 2/44/35 off for DMA3Transfer/
 # EEPROMRead/EEPROMWrite. Every object matches as a whole with the flag.
 # EEPROM_V122 is the ROM's only SDK version tag, and no other compiled
-# code was found to be SDK C. See docs/matching/eeprom-sdk-o1.md.
-O1_OBJS := $(C_BUILDDIR)/system/timer_util.o \
-           $(C_BUILDDIR)/system/timer_util_aa90.o \
-           $(C_BUILDDIR)/system/eeprom_util.o \
-           $(C_BUILDDIR)/system/eeprom_verify.o
+# code was found to be SDK C. The library's data object
+# (lib/agb_eeprom/data/eeprom_5a9eec.o) keeps the default flags. See
+# docs/matching/eeprom-sdk-o1.md.
+O1_OBJS := $(LIB_BUILDDIR)/agb_eeprom/src/eeprom_timer.o \
+           $(LIB_BUILDDIR)/agb_eeprom/src/eeprom_timer_stop.o \
+           $(LIB_BUILDDIR)/agb_eeprom/src/eeprom_read_write.o \
+           $(LIB_BUILDDIR)/agb_eeprom/src/eeprom_verify.o
 $(O1_OBJS): CC1FLAGS := $(filter-out -O2,$(CC1FLAGS)) -O1
 
-# GAX2's bundled libgcc2.c code (__divdi3/__udivdi3/__muldi3) was built
-# without -mthumb-interwork: its functions are the only ones in the ROM
-# that return via a combined `pop {r4-r7, pc}`, and with the flag
-# dropped they compile from libgcc2.c's own source byte-for-byte - see
-# src/util/math_div64_util.c and docs/matching/gax-toolchain-retry.md.
-NO_INTERWORK_OBJS := $(C_BUILDDIR)/util/math_div64_util.o
+# libgcc2.c's objects (__divdi3/__udivdi3/__muldi3, linked in with the
+# GAX2 library) were built without -mthumb-interwork: their functions are
+# the only ones in the ROM that return via a combined `pop {r4-r7, pc}`,
+# and with the flag dropped they compile from libgcc2.c's own source
+# byte-for-byte - see lib/libgcc/libgcc2.c and
+# docs/matching/gax-toolchain-retry.md.
+NO_INTERWORK_OBJS := $(LIBGCC2_OBJS)
 $(NO_INTERWORK_OBJS): CC1FLAGS := $(filter-out -mthumb-interwork,$(CC1FLAGS))
 
 # ARM-state code of the IWRAM image (ldscript.txt's `iwram` section),
@@ -349,6 +382,24 @@ $(C_BUILDDIR)/%.o : $(C_SUBDIR)/%.c
 	@mkdir -p $(dir $@)
 	$(CPP) $(CPPFLAGS) $< | $(CC1) $(CC1FLAGS) -o $(C_BUILDDIR)/$*.s
 	$(AS) $(ASFLAGS) -o $@ $(C_BUILDDIR)/$*.s
+
+$(LIB_BUILDDIR)/%.o : $(LIB_SUBDIR)/%.c
+	@mkdir -p $(dir $@)
+	$(CPP) $(CPPFLAGS) $< | $(CC1) $(CC1FLAGS) -o $(LIB_BUILDDIR)/$*.s
+	$(AS) $(ASFLAGS) -o $@ $(LIB_BUILDDIR)/$*.s
+
+$(LIBGCC2_OBJS): $(LIB_BUILDDIR)/libgcc/%.o: $(LIB_SUBDIR)/libgcc/libgcc2.c $(LIB_SUBDIR)/libgcc/libgcc2_udivmoddi4.h
+	@mkdir -p $(dir $@)
+	$(CPP) $(CPPFLAGS) -DL$* $< | $(CC1) $(CC1FLAGS) -o $(LIB_BUILDDIR)/libgcc/$*.s
+	$(AS) $(ASFLAGS) -o $@ $(LIB_BUILDDIR)/libgcc/$*.s
+
+$(LIB1FUNCS_OBJS): $(LIB_BUILDDIR)/libgcc/%.o: $(LIB_SUBDIR)/libgcc/lib1funcs.s
+	@mkdir -p $(dir $@)
+	$(AS) $(ASFLAGS) --defsym L$*=1 -o $@ $<
+
+$(LIB_BUILDDIR)/%.o: $(LIB_SUBDIR)/%.s
+	@mkdir -p $(dir $@)
+	$(AS) $(ASFLAGS) -o $@ $<
 
 $(ASM_BUILDDIR)/%.o: $(ASM_SUBDIR)/%.s
 	$(AS) $(ASFLAGS) -o $@ $<

@@ -13,7 +13,9 @@ A converted table is a C `const` object in a `src/data/*.c` file, with a
 real element type (from a shared header when the consuming code has one)
 and real symbol references for every pointer. The linker script places
 the file's `.rodata` at the table's ROM address, between the raw parts of
-`data/data.s`.
+`data/data.s`. A library's own tables (GAX2's, AgbEeprom's, libgcc's
+`__clz_tab`) follow the same convention under `lib/<name>/data/` instead
+(see [libraries.md](./libraries.md)).
 
 - **One file per contiguous run of converted tables.** Name it
   `<what>_<ROM offset>.c`, the offset in lowercase hex without the
@@ -660,7 +662,7 @@ music block and the cutscene pictures, are C in three files:
 
 - `clz_tab_5a4c70.c`: libgcc2.c's `__clz_tab` (bit length of each byte
   value), twice, because gcc 2.x's libgcc2.c made it `static` in each
-  object. `__divdi3` and `__udivdi3` (`src/util/math_div64_util.c`)
+  object. `__divdi3` and `__udivdi3` (`lib/libgcc/libgcc2.c`)
   each read their own. The values are written the way libgcc2.c writes
   them.
 - `gax_tables_5a6100.c`: the GAX2 engine's version string (and the

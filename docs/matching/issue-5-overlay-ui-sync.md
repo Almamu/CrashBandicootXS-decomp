@@ -315,7 +315,7 @@ instruction-for-instruction - the same escape hatch already
 established and proven in this project (see
 `docs/matching/issue-4-sio-settings-sync.md`'s "NAKED transcription,
 byte-verified" section, and the smaller worked examples in
-`src/util/math_div_util.c`'s `__div0` and `src/audio/gax_swi.c`'s
+`lib/libgcc/lib1funcs.s`'s `__div0` and `lib/gax/src/gax_swi.c`'s
 `GaxHuffUnComp`). Both functions were already fully understood
 semantically - the parked C reconstruction that used to sit in
 `src/graphics/settings_menu8a2.c` (now replaced) and the walkthrough

@@ -417,7 +417,7 @@ parked above. Both are now byte-exact matched, converted from their
 whose bodies are a direct instruction-for-instruction transcription of
 the ROM's own disassembly, following this project's established escape
 hatch for this exact class of problem (`src/system/link_cable.c`'s
-several `NAKED` functions, `src/audio/gax_swi.c`'s `GaxHuffUnComp`,
+several `NAKED` functions, `lib/gax/src/gax_swi.c`'s `GaxHuffUnComp`,
 `docs/matching/issue-4-sio-settings-sync.md`'s "NAKED transcription,
 byte-verified" section for the worked-out general method).
 

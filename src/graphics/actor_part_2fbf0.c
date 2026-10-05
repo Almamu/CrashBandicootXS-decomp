@@ -21,7 +21,7 @@
  *
  * Method-table and member-pointer calls are real indirect calls
  * (ACTOR_VCALL/ACTOR_PMF_CALL), which Thumb gcc emits as
- * `bl _call_via_rN` (src/system/reg_trampolines.c). */
+ * `bl _call_via_rN` (lib/libgcc/lib1funcs.s). */
 
 extern s32 sub_802A504(s32 idx);
 extern s32 sub_802A51C(s32 idx);

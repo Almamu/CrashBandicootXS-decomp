@@ -30,6 +30,13 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 ASM_DIR = ROOT / "asm"
 SRC_DIR = ROOT / "src"
+# The third-party/SDK libraries (docs/libraries.md): matched C too.
+LIB_DIR = ROOT / "lib"
+
+
+def c_sources():
+    """Every C source: the game's src/**/*.c and the libraries' lib/**/*.c."""
+    return sorted(SRC_DIR.rglob("*.c")) + sorted(LIB_DIR.rglob("*.c"))
 REPO_URL = "https://github.com/Almamu/CrashBandicootXS-decomp"
 
 FUNC_START_RE = re.compile(
@@ -131,21 +138,31 @@ DIR_TO_CATEGORY = {
     "audio": "audio",
 }
 
+# lib/<name>/ -> its tools/report_units.py progress category
+LIB_TO_CATEGORY = {
+    "gax": "gax",
+    "agb_eeprom": "agb_eeprom",
+    "libgcc": "libgcc",
+}
+
 
 def category_from_path(rel_path):
     parts = Path(rel_path).parts
     if len(parts) >= 2 and parts[0] == "src":
         return DIR_TO_CATEGORY.get(parts[1])
+    if len(parts) >= 2 and parts[0] == "lib":
+        return LIB_TO_CATEGORY.get(parts[1])
     return None
 
 
 def scan_parked_functions():
     """Finds every function inside a `#if NON_MATCHING` block in src/**/*.c
+    and lib/**/*.c
     and pulls its immediately-preceding /* ... */ doc comment (this
     project's convention always documents a parked function's remaining
     gap right above it)."""
     parked = []
-    for path in sorted(SRC_DIR.rglob("*.c")):
+    for path in c_sources():
         lines = path.read_text().splitlines()
         depth = 0
         comment_buf = []
@@ -201,7 +218,7 @@ REGISTER_ASM_RE = re.compile(r"\bregister\b.*\basm\s*\(")
 
 
 def scan_cleanup_candidates():
-    """Scans already-matched src/**/*.c (skipping #if NON_MATCHING
+    """Scans already-matched src/**/*.c and lib/**/*.c (skipping #if NON_MATCHING
     blocks - those are parked functions, tracked separately) for raw
     pointer-arithmetic offset casts and raw hardware addresses that
     docs/workflow.md step 7 says should become named struct fields /
@@ -209,7 +226,7 @@ def scan_cleanup_candidates():
     as a rough "how risky would cleanup here be" signal, per the
     project's own carve-out for register-allocation-sensitive code."""
     results = []
-    for path in sorted(SRC_DIR.rglob("*.c")):
+    for path in c_sources():
         lines = path.read_text().splitlines()
         depth = 0
         in_comment = False

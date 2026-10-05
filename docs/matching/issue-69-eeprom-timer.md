@@ -13,10 +13,10 @@ EEPROM cluster's working theory into a fully-confirmed, committed
 
 ## Matched this pass
 
-**`StopEepromTimer`** (`src/system/timer_util_aa90.c` - split into its own
+**`StopEepromTimer`** (`lib/agb_eeprom/src/eeprom_timer_stop.c` - split into its own
 file since its real ROM address, `0x0803AA90`, sits between the
 still-parked `StartEepromTimer` and `DMA3Transfer`, so it isn't adjacent to
-`timer_util.c`'s own matched functions; see docs/workflow.md step 4).
+`eeprom_timer.c`'s own matched functions; see docs/workflow.md step 4).
 The exact inverse of `StartEepromTimer`: stops the timer, disables its IRQ
 line, restores IME. Two real gaps, both fixed:
 
@@ -51,7 +51,7 @@ line, restores IME. Two real gaps, both fixed:
    moves its literal load to the very top of the sequence too, exactly
    matching the ROM.
 
-**`EEPROMCompare`** (`src/system/eeprom_verify.c` - see below). Reads an
+**`EEPROMCompare`** (`lib/agb_eeprom/src/eeprom_verify.c` - see below). Reads an
 EEPROM block back via `EEPROMRead` and compares it against the
 caller's expected data. One real surprise: the ROM does its **own**
 `addr >= maxCount` range check up front and **never looks at
@@ -100,7 +100,7 @@ still live from the previous store three instructions earlier.
 
 **`DMA3Transfer`**: no change from the previous pass - still the
 busy-wait tail's loop-rotation/literal-pool-placement shape (see the
-function's own doc comment in `src/system/timer_util.c`). A hand-written
+function's own doc comment in `lib/agb_eeprom/src/eeprom_timer.c`). A hand-written
 `asm volatile` anchor for just the tail *can* reproduce the ROM's
 doubled check, but the ROM keeps every constant this function uses
 (including the loop's `0x040000DE` address) in one shared trailing
@@ -121,7 +121,7 @@ function next.
 the GBA EEPROM save chip. Reading every instruction against the real
 GBA EEPROM bit-serial protocol confirms this exactly:
 
-- **Read** (`EEPROMRead`, `src/system/eeprom_util.c`): sends 2 start
+- **Read** (`EEPROMRead`, `lib/agb_eeprom/src/eeprom_read_write.c`): sends 2 start
   bits ("11"), the chip's `addrBitCount` address bits (6 or 14,
   MSB-first), and one more bit - left as uninitialized stack data, the
   ROM never explicitly sets it and this reconstruction doesn't either,
@@ -148,7 +148,7 @@ GBA EEPROM bit-serial protocol confirms this exactly:
   interface only latching bit 0 of each transferred halfword.
 
 This is committed as a `NON_MATCHING` reconstruction in
-`src/system/eeprom_util.c` (real bytes still in
+`lib/agb_eeprom/src/eeprom_read_write.c` (real bytes still in
 `asm/code_3_2_20e_ab54.s`) rather than left raw - a real upgrade from
 the previous pass's "working theory, not confirmed enough to commit
 even a parked reconstruction". What resists byte-matching is the same
@@ -174,10 +174,10 @@ family of register-allocation/loop-rotation gaps documented above for
   linear flow.
 
 `EEPROMCompare`/`EEPROMWrite1_check` (the read-verify and write-retry pair) are
-split into their own file, `src/system/eeprom_verify.c`, for the same
+split into their own file, `lib/agb_eeprom/src/eeprom_verify.c`, for the same
 ROM-contiguity reason `StopEepromTimer` needed its own file - their real
 addresses sit between the still-parked `EEPROMWrite` and
-`reg_trampolines.c`'s matched functions, so they can't share a
+`lib1funcs.s`'s matched functions, so they can't share a
 translation unit with either. `EEPROMWrite1_check`'s `result` local is typed
 `u16` (not `s32`, even though the callees it stores both return `s32`)
 specifically to match the ROM's `lsls r0,r0,0x10 / lsrs r2,r0,0x10`
@@ -207,24 +207,24 @@ analysis, and the transcription was verified by disassembling the
 isolated-compiled object and diffing it instruction-for-instruction
 against the ROM's own disassembly before ever touching `ldscript.txt`.
 
-- **`StartEepromTimer`** (`src/system/timer_util.c`) - arms the timer.
+- **`StartEepromTimer`** (`lib/agb_eeprom/src/eeprom_timer.c`) - arms the timer.
   Transcribed as a single straight-line sequence (no branches at all
   in the body), so label renumbering was only needed for the trailing
   literal pool.
-- **`DMA3Transfer`** - moved from `src/system/timer_util.c` to
-  `src/system/timer_util_aa90.c`, appended right after `StopEepromTimer`:
+- **`DMA3Transfer`** - moved from `lib/agb_eeprom/src/eeprom_timer.c` to
+  `lib/agb_eeprom/src/eeprom_timer_stop.c`, appended right after `StopEepromTimer`:
   since it's now matched (not `NON_MATCHING`-guarded raw bytes in a
   separate `asm/*.s` file anymore), its real ROM address
   (`0x0803AAD4`, immediately after `StopEepromTimer`'s own range) has to
   sit in the same translation unit as `StopEepromTimer` to link in the
-  right place - it can no longer share `timer_util.c` with
+  right place - it can no longer share `eeprom_timer.c` with
   `StartEepromTimer`, since `StopEepromTimer`'s own file has to be linked
   between them (see docs/workflow.md step 4). One loop (the busy-wait
   tail), one literal pool entry (`0x04000208`, the REG_IME address)
   reused by two separate `ldr` instructions at different points in the
   function, reproduced faithfully by referencing the same numeric
   label from both.
-- **`EEPROMRead`/`EEPROMWrite`** (`src/system/eeprom_util.c`) - the
+- **`EEPROMRead`/`EEPROMWrite`** (`lib/agb_eeprom/src/eeprom_read_write.c`) - the
   read/write pair. Both have a stack-allocated bit buffer (`sub sp,
   #0x88`/`#0xa4`, explicit in the transcription since NAKED functions
   get no compiler-managed frame) and a mid-function literal pool split
@@ -245,7 +245,7 @@ The same pass also closed out three more parked functions that hit an
 identical class of gap, documented in their own issues:
 
 - **`__divsi3`/`__modsi3`/`__umodsi3`** (`src/util/
-  math_div_util.c`, GitHub issue #70) - the signed-division/signed-
+  lib1funcs.s`, GitHub issue #70) - the signed-division/signed-
   modulo/unsigned-modulo trio `docs/matching.md`'s issue #70 entry
   parked on real per-path prologue/epilogue shrink-wrapping (plus a
   `ror`-codegen gap for the modulo pair) that a gcc-2.9-era compiler
@@ -278,22 +278,22 @@ identical class of gap, documented in their own issues:
 
 ## Files touched
 
-- `src/system/timer_util.c` - `StartEepromTimer` improved (still parked),
+- `lib/agb_eeprom/src/eeprom_timer.c` - `StartEepromTimer` improved (still parked),
   `StopEepromTimer` cut out to its own file, `DMA3Transfer` unchanged.
   `gEepromTimerReg`'s declaration is now `vu16 * volatile`.
-- `src/system/timer_util_aa90.c` (new) - `StopEepromTimer`, matched.
-- `src/system/eeprom_util.c` (new) - `EEPROMRead`/`EEPROMWrite`,
+- `lib/agb_eeprom/src/eeprom_timer_stop.c` (new) - `StopEepromTimer`, matched.
+- `lib/agb_eeprom/src/eeprom_read_write.c` (new) - `EEPROMRead`/`EEPROMWrite`,
   `NON_MATCHING` reconstructions (previously fully raw).
-- `src/system/eeprom_verify.c` (new) - `EEPROMCompare`/`EEPROMWrite1_check`,
+- `lib/agb_eeprom/src/eeprom_verify.c` (new) - `EEPROMCompare`/`EEPROMWrite1_check`,
   matched.
 - `asm/code_3_2_20e_aa08.s` - trimmed to just `StartEepromTimer`.
 - `asm/code_3_2_20e_aa90.s` (new, split from the above) - just
   `DMA3Transfer`.
 - `asm/code_3_2_20e_ab54.s` - trimmed to just `EEPROMRead`/
   `EEPROMWrite`.
-- `ldscript.txt` - `timer_util_aa90.o`/`code_3_2_20e_aa90.o` inserted
+- `ldscript.txt` - `eeprom_timer_stop.o`/`code_3_2_20e_aa90.o` inserted
   between the two halves of the old `code_3_2_20e_aa08.o`;
-  `eeprom_util.o`/`eeprom_verify.o` inserted around
+  `eeprom_read_write.o`/`eeprom_verify.o` inserted around
   `code_3_2_20e_ab54.o`.
 - `tools/report_units.py` - `UNITS` table split to match the new file
   boundaries.
@@ -301,13 +301,13 @@ identical class of gap, documented in their own issues:
 
 ## Files touched (NAKED transcription pass)
 
-- `src/system/timer_util.c` - `StartEepromTimer` now `NAKED`, matched;
+- `lib/agb_eeprom/src/eeprom_timer.c` - `StartEepromTimer` now `NAKED`, matched;
   `DMA3Transfer` moved out entirely (see below).
-- `src/system/timer_util_aa90.c` - `DMA3Transfer` added as `NAKED`,
+- `lib/agb_eeprom/src/eeprom_timer_stop.c` - `DMA3Transfer` added as `NAKED`,
   matched, appended right after `StopEepromTimer` in ROM order.
-- `src/system/eeprom_util.c` - `EEPROMRead`/`EEPROMWrite` now `NAKED`,
+- `lib/agb_eeprom/src/eeprom_read_write.c` - `EEPROMRead`/`EEPROMWrite` now `NAKED`,
   matched; the now-unused `EEPROM_PORT` macro removed.
-- `src/util/math_div_util.c` - `__divsi3`/`__modsi3`/
+- `lib/libgcc/lib1funcs.s` - `__divsi3`/`__modsi3`/
   `__umodsi3` now `NAKED`, matched, reordered so `__divsi3` comes
   before `__div0` (matching ROM order - previously `__div0` was
   matched on its own with both division routines still fully raw in
@@ -334,7 +334,7 @@ above (`StartEepromTimer`/`DMA3Transfer`/`EEPROMRead`/`EEPROMWrite`) to see
 whether any of the previously-catalogued register-allocation gaps were
 actually closeable with techniques not yet tried, rather than accepting
 the NAKED transcriptions as final. **`StartEepromTimer` closed** (now real C
-in `src/system/timer_util.c`, byte-verified via a full clean `make
+in `lib/agb_eeprom/src/eeprom_timer.c`, byte-verified via a full clean `make
 compare`); the other three did not, for reasons recorded below.
 
 **What closed `StartEepromTimer`:** all three gaps the original "narrowed
@@ -480,13 +480,13 @@ former and the same unresolved constant-folding issue for the latter,
 not a gap this pass's new techniques had any real leverage on.
 
 **Files touched this pass:**
-- `src/system/timer_util.c` - `StartEepromTimer` now real C, matched (no
+- `lib/agb_eeprom/src/eeprom_timer.c` - `StartEepromTimer` now real C, matched (no
   longer `NAKED`).
 - `tools/report_units.py` - `StartEepromTimer`'s entry merged into the
-  preceding `BgAffineSet` `timer_util.o` entry (both now point at the
+  preceding `BgAffineSet` `eeprom_timer.o` entry (both now point at the
   same matched object).
 - `docs/status/system.md` - `StartEepromTimer` moved from the "Parked -
-  NAKED asm transcription" list into the matched `timer_util.c` entry.
+  NAKED asm transcription" list into the matched `eeprom_timer.c` entry.
 
 ## Later pass: EEPROM SDK at -O1
 
@@ -502,7 +502,7 @@ duplicated `while` exit test, which -O2 cross-jumps away. See
 
 `EEPROMConfigure`, `SetEepromTimerIntr`, `StartEepromTimer`, `EEPROMCompare` and
 `EEPROMWrite1_check` were rewritten as the SDK's plain C too, and
-`timer_util.o`/`eeprom_verify.o` joined `O1_OBJS`. `StartEepromTimer`'s six
+`eeprom_timer.o`/`eeprom_verify.o` joined `O1_OBJS`. `StartEepromTimer`'s six
 register pins, its `asm volatile` barrier and the `vu16 * volatile`
 declaration of `gEepromTimerReg` described above are all gone: at
 -O1, pokeemerald's `StartFlashTimer` shape (with the IF write before

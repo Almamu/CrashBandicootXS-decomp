@@ -58,7 +58,7 @@ cycle, not just isolated compiles.
 function-pointer dispatch (`fn(self, p1, p2, p3)`), and on real
 hardware an indirect call through a stored function pointer has to go
 through one of this ROM's fixed per-register interworking trampolines
-(`src/system/reg_trampolines.c`, `_call_via_r0`-`_call_via_r7` - "bx
+(`lib/libgcc/lib1funcs.s`, `_call_via_r0`-`_call_via_r7` - "bx
 r0" through "bx sp"). *Which* trampoline gets used is not something
 the C source picks - it falls out purely of which register this
 compiler's allocator happens to land the function pointer in for that

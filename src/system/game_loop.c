@@ -2,6 +2,7 @@
 #include "vram_pool.h"
 #include "actor.h"
 #include "level_state.h"
+#include <agb_syscall.h>
 
 extern void *gPlayer;
 extern void *gEntityFlags;
@@ -12,7 +13,6 @@ extern s32 GetCrateCount(void *self);
 extern void ResetDeaths(void *self);
 extern void ClearSpawnAtStart(void *self);
 extern void *MemCopy32(void *dest, void *src, s32 size);
-extern void CpuSet(void *src, void *dst, s32 control);
 extern void SetBonusRoundDone(void *self);
 extern void ClearInBonusRound(void *self);
 extern void SetEntityPos(struct actor *self, s32 arg1, s32 arg2);

@@ -35,11 +35,11 @@ category page - see [game_loop.md](./game_loop.md).
   boot-adjacent BIOS wrappers right after `asm/crt0.s`'s permanent boot
   stub (`start`, left as hand-written asm, not tracked as a function to
   match); see `docs/matching.md`
-- `src/system/timer_util.c`: `BgAffineSet`, `CpuFastSet`, `CpuSet`,
+- `lib/libagbsyscall/libagbsyscall.s`: `BgAffineSet`, `CpuFastSet`, `CpuSet`,
   `LZ77UnCompVram`, `ObjAffineSet`, `RLUnCompVram`, `Sqrt`,
-  `VBlankIntrWait` (eight BIOS SWI wrappers - NAKED but genuinely
-  un-improvable trampolines with no real C logic to express, kept
-  matched per `docs/matching.md`'s frozen convention), then the start of
+  `VBlankIntrWait` (eight BIOS SWI wrappers, hand-written asm, excluded
+  from progress - see `docs/libraries.md`).
+- `lib/agb_eeprom/src/eeprom_timer.c`: the start of
   Nintendo's AgbEeprom SDK library ("EEPROM_V122"), built with -O1 as
   plain C with no pins: `EEPROMConfigure` (picks the
   12-byte `EepromConfig` by chip-size code), `EepromTimerIntr` (the
@@ -47,23 +47,23 @@ category page - see [game_loop.md](./game_loop.md).
   `SetEepromTimerIntr` (claims a hardware timer and
   hands back the handler), `StartEepromTimer` -
   GitHub issue #69, see `docs/matching/eeprom-sdk-o1.md`.
-- `src/system/timer_util_aa90.c` (own file - its real ROM address,
-  `0x0803AA90`, isn't adjacent to `timer_util.c`'s functions; built
+- `lib/agb_eeprom/src/eeprom_timer_stop.c` (own file - its real ROM address,
+  `0x0803AA90`, isn't adjacent to `eeprom_timer.c`'s functions; built
   with -O1): `StopEepromTimer` (disarms the timer
   `StartEepromTimer` claims) and `DMA3Transfer` (the DMA3
   block-transfer helper used by the whole EEPROM cluster) - GitHub issue
   #69, see `docs/matching/eeprom-sdk-o1.md`.
-- `src/system/eeprom_util.c` (own file, built with -O1):
+- `lib/agb_eeprom/src/eeprom_read_write.c` (own file, built with -O1):
   `EEPROMRead`/`EEPROMWrite` (the DMA3
   bit-serial EEPROM read/write pair) - GitHub issue #69, see
   `docs/matching/eeprom-sdk-o1.md`.
-- `src/system/eeprom_verify.c` (own file, same reason - ROM
-  `0x0803ACE0`, between `EEPROMWrite` and `reg_trampolines.c`'s
+- `lib/agb_eeprom/src/eeprom_verify.c` (own file, same reason - ROM
+  `0x0803ACE0`, between `EEPROMWrite` and `lib1funcs.s`'s
   functions; built with -O1): `EEPROMCompare` (reads
   an EEPROM block back and compares it), `EEPROMWrite1_check`
   (write+verify with a 3-attempt retry) - GitHub
   issue #69, see `docs/matching/eeprom-sdk-o1.md`.
-- `src/system/reg_trampolines.c`: `_call_via_r0`, `_call_via_r1`,
+- `lib/libgcc/lib1funcs.s` (hand-written asm, excluded from progress): `_call_via_r0`, `_call_via_r1`,
   `_call_via_r2`, `_call_via_r3`, `_call_via_r4`, `_call_via_r5`,
   `_call_via_r6`, `_call_via_r7` (the `bx r0`..`sp` "call through whatever
   register" trampoline table, already referenced by name from `irq.c`'s
@@ -97,10 +97,10 @@ category page - see [game_loop.md](./game_loop.md).
   [early-rom-naked-retry-2.md](../matching/early-rom-naked-retry-2.md).)
 
 GitHub issue #70 (`0x0803ADB4`-`0x0803B060`, right after
-`reg_trampolines.c` above) was categorized `system` by the chunk
+`lib1funcs.s` above) was categorized `system` by the chunk
 generator, but every function in it turned out to be either a generic
 math primitive or an AABB/actor-table helper - the matched functions
-from it live in `docs/status/util.md` (`src/util/math_div_util.c`) and
+from it live in `docs/status/util.md` (`lib/libgcc/lib1funcs.s`) and
 [actor.md](./actor.md) (`src/graphics/actor_aabb_setup.c`) instead. See
 `docs/matching.md`'s issue #70 entry for the original writeup and
 `docs/matching/issue-69-eeprom-timer.md`'s "NAKED transcription pass"

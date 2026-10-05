@@ -44,7 +44,7 @@ before this one, has the same pin-shaped idioms.
 ### 2. Virtual calls are indirect calls through `_call_via_rN`
 
 `_call_via_r1`/`AD80`/`AD84`/`AD88` (`bx r1`..`bx r4`,
-`src/system/reg_trampolines.c`) are this ROM's copies of libgcc's
+`lib/libgcc/lib1funcs.s`) are this ROM's copies of libgcc's
 `_call_via_rN`. A C++ virtual call is really
 `((fn_t)m->fn)(this + m->thisOffset, args...)`, and gcc puts the function
 pointer in the first free argument register, which gives exactly the

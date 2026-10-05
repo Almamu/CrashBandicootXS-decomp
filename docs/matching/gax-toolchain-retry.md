@@ -30,14 +30,14 @@ built with a different compiler, flags or instruction set.
   source compiles to them byte-for-byte (`__divdi3`, `__udivdi3`,
   `__muldi3`; generic `longlong.h` macros, `UDIV_NEEDS_NORMALIZATION`,
   a static `__clz_tab` per object - the two tables are
-  `__clz_tab_divdi3`/`085A4D70`). `math_div64_util.o` is now built
+  `__clz_tab_divdi3`/`085A4D70`). `_divdi3.o/_udivdi3.o/_muldi3.o` is now built
   with `-mthumb-interwork` filtered out (Makefile `NO_INTERWORK_OBJS`);
   every function in that object matches with it (`__udivsi3` is
   NAKED, so unaffected), and `GaxZeroFill` - the one function in the
   old file with a normal interworking return - moved to
-  `src/audio/gax_zero_fill.c` (it's GAX2 code, called from
+  `lib/gax/src/gax_zero_fill.c` (it's GAX2 code, called from
   `GAX2_init`/`GaxChannelMix`). `__udivmoddi4` lives in
-  `include/libgcc2_udivmoddi4.h`, included once per division object
+  `lib/libgcc/libgcc2_udivmoddi4.h`, included once per division object
   with that object's `__clz_tab`; passing the table as a parameter
   instead hoists its address into a register.
 - **Hand-written asm.** `__udivsi3` is lib1funcs.asm's routine
@@ -60,7 +60,7 @@ Not the compiler. Two things:
                 "mov lr, r2\n\tbx r1\n\tnop" : : "m"(arg), "r"(fn)
                 : "r0", "r1", "r2", "lr")
    ```
-   (`GAX_CALL_ARM` in `include/audio.h`; `GaxChannelMix` uses a
+   (`GAX_CALL_ARM` in `lib/gax/src/gax_internal.h`; `GaxChannelMix` uses a
    register-operand variant, `GAX_CALL_ARM_R`). The "fused" labels
    `sub_803A318`/`sub_803A608`/`sub_8039E50` are just the `nop` the call
    returns to - not functions. `GaxMixerApplyEcho`'s work item is a struct with
@@ -70,7 +70,7 @@ Not the compiler. Two things:
 2. **Over-pinned drafts.** Almost every "many-register r8/sb/sl
    allocation ceiling" function matched outright once rewritten plainly
    against named structs with no register pins at all. The GAX2 object
-   model (all in `include/audio.h` now): a player is an array of
+   model (all in `lib/gax/src/gax_internal.h` now): a player is an array of
    handlers (`[0]` mixer, `[1]` Info, then channels, then SFX voices),
    each a `struct GaxHandler` header (`type`, `format`, `children`)
    followed by its own state; `struct GaxHandlerType` holds
@@ -116,10 +116,10 @@ Recurring details that mattered:
 |---|---|---|
 | `DrawLanguageSelect` | counter_selector_icons.c | **C** (direct trampoline call) |
 | `InitLanguageSelectGraphics` | counter_selector_icons.c | NAKED, draft (later: **C**, [late-rom-naked-retry.md](./late-rom-naked-retry.md)) |
-| `__divdi3` | math_div64_util.c | **C** (libgcc2 `__divdi3`, no-interwork) |
-| `__udivdi3` | math_div64_util.c | **C** (libgcc2 `__udivdi3`, no-interwork) |
-| `__udivsi3` | math_div64_util.c | NAKED - hand-written asm (final) |
-| `__muldi3` | math_div64_util.c | **C** (libgcc2 `__muldi3`, no-interwork) |
+| `__divdi3` | libgcc2.c | **C** (libgcc2 `__divdi3`, no-interwork) |
+| `__udivdi3` | libgcc2.c | **C** (libgcc2 `__udivdi3`, no-interwork) |
+| `__udivsi3` | libgcc2.c | NAKED - hand-written asm (final) |
+| `__muldi3` | libgcc2.c | **C** (libgcc2 `__muldi3`, no-interwork) |
 | `GAX2_estimate` | asm/code_3_2_20c.s | raw, see below (later: NAKED + draft in gax_work_size.c) |
 | `GaxCreateHandlers` | gax_channel_table_alloc.c | NAKED, draft |
 | `GAX2_init` | gax_playstart.c | NAKED, close draft |

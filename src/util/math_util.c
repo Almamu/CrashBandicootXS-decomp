@@ -1,4 +1,5 @@
 #include "core.h"
+#include <agb_syscall.h>
 
 /* Fixed-point helpers on the game's 24.8 coordinates (the s16 ones on
  * 8.8 values).
@@ -14,7 +15,6 @@ s32 FixedDistSq(s32 x1, s32 x2, s32 y1, s32 y2)
     return (dxSq + dySq) << 8;
 }
 
-extern s32 Sqrt(s32 arg0);
 
 /* Distance between (x1, y1) and (x2, y2): FixedDistSq's sum of squares
  * through the BIOS Sqrt, shifted back to 24.8. */

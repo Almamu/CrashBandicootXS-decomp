@@ -8,8 +8,6 @@
  * the constructor). */
 
 extern u32 gRoomFrameCount;
-extern s32 GAX_fx_ex(u32 handle, s32 channel, s32 pitchOffset, s32 priority);
-extern void GAX_set_fx_volume(s32 channel, u32 volume);
 
 /* Requests the ambient-sfx channel play `id` for `frameOffset` frames
  * (relative to `gRoomFrameCount`) at a volume derived from
@@ -69,12 +67,7 @@ void PlayAmbientSfx(struct AudioContext *self, u32 id, u32 frameOffset, s32 volu
     }
 }
 
-extern void GAX_set_music_volume(s32 channel, u32 volume);
-extern void GAX_stop(void);
 extern u8 gGaxIrqEnabled;
-extern void GAX_resume(void);
-extern void GAX_play(void);
-extern void GAX_pause(void);
 extern void WaitForVBlank(void);
 extern void IwramFree(u8 *address);
 extern void IrqRestoreHandler(s32 interruptIndex);

@@ -264,7 +264,7 @@ are named by the lower 5 hex digits of their first function's address
   DMA3-setup function in this codebase with the same
   `0x040000D4`/`0x0600D000` literal-pool shape (`actor_part26b.c`,
   `actor_part74.c`, `actor_part75.c`, `fade_screen_mode.c`,
-  `hud_digit_array.c`, `settings_menu8e.c`, `timer_util_aa90.c`) is
+  `hud_digit_array.c`, `settings_menu8e.c`, `eeprom_timer_stop.c`) is
   NAKED too - this compiler's register allocator never reproduces the
   ROM's specific three-high-register nested-loop allocation for this
   shape, and the two calls this project's usual register-pin idioms

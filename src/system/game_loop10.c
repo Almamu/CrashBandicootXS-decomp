@@ -1,6 +1,7 @@
 #include "core.h"
 #include "actor.h"
 #include "level_state.h"
+#include <agb_syscall.h>
 
 extern void *gPlayer;
 extern void *gEntityFlags;
@@ -16,7 +17,6 @@ extern u8 IsInGemPath(struct level_state *self);
 extern u8 IsInBonusRound(struct level_state *self);
 extern void ResetCrateCount(struct level_state *self);
 extern void *MemCopy32(void *dest, void *src, s32 size);
-extern void CpuSet(const void *src, void *dst, u32 cnt);
 extern void SetEntityPos(struct actor *self, s32 arg1, s32 arg2);
 extern void SetHudCrateTotal(void *state, s32 arg1);
 extern void SetCheckpointAtPlayer(void *self, u8 arg1);

@@ -23,7 +23,7 @@ still differs.
 ## Step 1: toolchain probe - negative
 
 Idea: GAX2 is a prebuilt third-party object, so it might have been
-built with other flags. Method: compile every `src/audio/gax_*.c` with
+built with other flags. Method: compile every `lib/gax/src/gax_*.c` with
 `-DNON_MATCHING=1` under each configuration. Count how many of the 50
 GAX functions that match today stay byte-exact, and measure how far the
 four drafts are from the ROM. Selected rows (full list: the scratch

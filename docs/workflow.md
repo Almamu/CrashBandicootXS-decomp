@@ -73,7 +73,9 @@ incomplete pass and should be finished before moving on.
    whichever of `src/graphics/`/`src/util/`/`src/system/`/`src/audio/`
    matches what the function actually *does* - that split is orthogonal
    to the ROM-contiguity one above (see `docs/status/README.md` for what
-   each directory covers).
+   each directory covers). Third-party/SDK library code (GAX2, AgbEeprom,
+   libgcc, the BIOS SWI wrappers) goes under its library in `lib/`
+   instead - see `docs/libraries.md`.
 5. Rename every remaining `bl <old_name>`/`.4byte <old_name>` reference
    to the function elsewhere in the still-asm files to match (the linker
    will fail with "undefined reference" if any are missed - a useful

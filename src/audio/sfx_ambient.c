@@ -5,8 +5,6 @@
  * music_player.c) and before the other functions this file holds. */
 
 extern u32 gSfxVoiceToggle;
-extern s32 GAX_fx_ex(u32 handle, s32 channel, s32 pitchOffset, s32 priority);
-extern void GAX_set_fx_volume(s32 channel, u32 volume);
 
 /* `PlaySfx(context, sfxId, volumeParam)` - see docs/audio.md's "Sound
  * effects" section (identified there as `sub_8001854`, called ~264
@@ -65,9 +63,6 @@ void PlaySfx(struct AudioContext *self, u32 id, u32 volumeParam)
 }
 
 extern u32 gRoomFrameCount;
-extern void GAX_set_fx_volume(s32 channel, u32 volume);
-extern void GAX_stop_fx(s32 channel);
-extern s32 GAX_fx_ex(u32 handle, s32 channel, s32 pitchOffset, s32 priority);
 
 /* Per-tick update of the "ambient" (looping/crossfaded, as opposed to
  * `PlaySfx`'s one-shot) sound-effect channel: ramps `ambientSfxVolume` (the

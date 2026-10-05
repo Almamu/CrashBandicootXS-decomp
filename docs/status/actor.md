@@ -350,7 +350,7 @@ from "core" graphics.
 
 - `src/graphics/actor_aabb_setup.c` (new file, GitHub issue #70, ROM
   `0x0803AFDC`-`0x0803B060` - right after the parked division/modulo
-  trio in `src/util/math_div_util.c`, see that file's `docs/matching.md`
+  trio in `lib/libgcc/lib1funcs.s`, see that file's `docs/matching.md`
   entry): `SetAabbSize`/`SetAabbPos` (the shared AABB set-size/
   set-position primitive already referenced by name from
   `actor_part.c`/`actor_part2.c`/`oam_count.c`), `GetLives` (a

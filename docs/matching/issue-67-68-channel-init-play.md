@@ -8,7 +8,7 @@ already matched in `gax_sound_handler_channel.c`). Both are NAKED asm
 transcriptions - byte-correct but not real decompiled C, tracked as parked,
 not matched - so issue #67/#68 stay open regardless of this pass.
 
-## `GaxChannelInit` (Channel type's init_fn) - `src/audio/gax_sound_handler_channel_init.c`
+## `GaxChannelInit` (Channel type's init_fn) - `lib/gax/src/gax_sound_handler_channel_init.c`
 
 Resets the same kind of field set `GaxFxChannelInit`'s per-channel voice
 constructor does (accumulator/envelope/priority/portamento defaults, plus
@@ -56,7 +56,7 @@ byte-verified transcription of the ROM's own instructions, not an inferred
 control-flow guess (every field offset and the loop bound were independently
 understood first, the same as this project's other NAKED transcriptions).
 
-## `GaxChannelPlay`/`GaxChannelDecodeRow` (Channel type's play_fn and its direct callee) - `src/audio/gax_sound_handler_channel_play.c`
+## `GaxChannelPlay`/`GaxChannelDecodeRow` (Channel type's play_fn and its direct callee) - `lib/gax/src/gax_sound_handler_channel_play.c`
 
 `GaxChannelPlay` (`self` = this channel's own handler, `info` =
 `*(void**)(self+8)`, the shared Info handler every channel's `children_ptr`
@@ -132,8 +132,8 @@ as raw offsets throughout.
 Full clean `make compare` verified `La suma coincide` after cutting all
 three functions out of `asm/code_3_2_20e_9518.s`/`asm/code_3_2_20e_95a4.s`
 (both files now empty and removed) and adding
-`src/audio/gax_sound_handler_channel_init.o`/
-`src/audio/gax_sound_handler_channel_play.o` to `ldscript.txt` in their
+`lib/gax/src/gax_sound_handler_channel_init.o`/
+`lib/gax/src/gax_sound_handler_channel_play.o` to `ldscript.txt` in their
 place.
 
 ## Later pass: GAX toolchain retry

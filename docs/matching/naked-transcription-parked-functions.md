@@ -12,7 +12,7 @@ respelling, reordering, or register-pinning the C source could close.
 Each was converted to a byte-verified NAKED asm transcription instead,
 the established pattern for this class of gap (see
 `src/system/link_cable.c`'s `MakeLinkHandshakeId`/`ResetLinkSessionState` and
-`src/util/math_div_util.c`'s `__div0` for the earliest examples).
+`lib/libgcc/lib1funcs.s`'s `__div0` for the earliest examples).
 
 **Tracking note**: byte-exact NAKED asm is not treated as "matched" in
 this project's `tools/report_units.py`/`docs/status/*.md` tracking -

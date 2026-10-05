@@ -49,8 +49,10 @@ separate data measure: see "Data progress" further down.
 ## One unit per matched file, not one merged blob
 
 `make report` (via `tools/report_units.py`) builds **one objdiff unit per
-matched `src/*.c` file**, each tagged with a category (`graphics`/`util`/
-`system`), plus one untagged unit per still-fully-raw stretch of ROM - not
+matched `src/*.c` or `lib/*/src/*.c` file**, each tagged with a category
+(`graphics`/`util`/`system`/..., and one per library: `gax`, `agb_eeprom`,
+`libgcc` - see [libraries.md](./libraries.md)), plus one untagged unit per
+still-fully-raw stretch of ROM - not
 a single unit covering the whole game. This is what makes decomp.dev's
 per-system progress bars possible: each unit's `metadata.progress_categories`
 tags it, and objdiff-cli's report aggregates matched/total *per category*
@@ -199,8 +201,9 @@ this address range." Genuinely untouched regions (nothing in
 
 Some of the ROM was never C: crt0.s's `start`, libgcc's `lib1funcs.asm`
 routines (`__udivsi3`, `__divsi3`, `__modsi3`, `__umodsi3`, `__div0` and
-the `_call_via_rN`/`_call_via_lr` trampolines), the BIOS SWI wrappers
-(each is just `svc #N; bx lr`) and `IntrMain`, the IWRAM image's
+the `_call_via_rN`/`_call_via_lr` trampolines, `lib/libgcc/lib1funcs.s`),
+the BIOS SWI wrappers (each is just `svc #N; bx lr`,
+`lib/libagbsyscall/libagbsyscall.s`) and `IntrMain`, the IWRAM image's
 interrupt dispatcher (`asm/intr_main.s`, first entry of `IWRAM_UNITS`,
 see "The IWRAM image" below). There is nothing to decompile there, so
 counting that code as unmatched (or as "matched", which is what happened
@@ -295,7 +298,7 @@ where each is handled:
   `mem_walk_heaps` and `EepromTimerIntr`, which the frozen sources only have as
   `.byte` blobs, and `resolve` for a base object that calls a function
   through a local `.set` alias and so has no relocation on those `bl`s
-  (math_div64_util.c's calls to `__udivsi3` were the one case, until the
+  (libgcc2.c's calls to `__udivsi3` were the one case, until the
   function got its libgcc name and the alias went away).
 
 After these fixes, every function in a matched unit scores 100%. Every

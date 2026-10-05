@@ -4,18 +4,22 @@ The game's music and sound effects are driven by [Shin'en Multimedia's GAX Sound
 Engine](https://www.shinen.com/) (GAX2 specifically), a third-party GBA audio
 driver — not Nintendo's M4A/Sappy engine. It was identified via the `"GAX2"`
 magic constant (`0x47415832`) embedded in the engine's own init code
-(`asm/code_3.s`, around `GAX2_init`, ROM `0x08038538`).
+(`GAX2_init`, ROM `0x08038538`, `lib/gax/src/gax_playstart.c`).
 
-The whole engine (mixer, timer IRQ handler, replay logic) lives in
-`asm/code_3.s` roughly between `0x08037110` and `0x0803A950` (narrowed
-from an earlier `0x0803B0C4` estimate — see
-[`docs/rom_map.md`](./rom_map.md#narrowing-the-gax2-boundary) for the
-evidence: `LZ77UnCompVram`/`RLUnCompVram`, confirmed non-audio, sit
-right at the old upper bound). **Be aware this range also contains generic
-compiler-runtime helpers** (a software 64-bit division routine, ARM/Thumb
-interworking trampolines, BIOS `svc` wrapper stubs) interleaved with
-genuine GAX2 code — don't assume every function in that address range is
-audio-related just because of where it sits.
+The whole engine (mixer, timer IRQ handler, replay logic) is matched C in
+[`lib/gax/`](../lib/gax), kept apart from the game as a library (see
+[`docs/libraries.md`](./libraries.md)): `lib/gax/src/*.c` (ROM
+`0x08037F3C`-`0x0803A944`, including the ARM mixer/DSP routines, which are
+inline in `gax_unknownc_play.c`), its strings and tables in
+`lib/gax/data/gax_tables_5a6100.c`, the public API in `<gax.h>`
+(`lib/gax/include/gax.h`) and the internal structures in
+`lib/gax/src/gax_internal.h`. The libgcc 64-bit helpers linked in with it
+(`__divdi3`/`__udivdi3`/`__udivsi3`/`__muldi3`, right before the engine)
+are in `lib/libgcc/`. The game's side of the audio (the `AudioContext`
+manager, the song and sound-effect tables) is in `src/audio/` and
+`include/audio.h` and calls the engine through `<gax.h>`. The songs and
+the sound-effect set below are the game's content in GAX2's format, so
+they stay with the game's assets (`sound/`).
 
 ## Data layout
 

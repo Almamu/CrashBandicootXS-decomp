@@ -61,7 +61,7 @@ old_agbcc or per-file flags.
    envOut : 0x100` loads `envOut` before the 0x100.
 6. **The call's argument in a register before the routine** (59 → 55),
    and **one variable walking state → routine** (48 → 46). Both are in
-   the `GAX_CALL_ARM_R` macro (include/audio.h), which now takes the
+   the `GAX_CALL_ARM_R` macro (lib/gax/src/gax_internal.h), which now takes the
    player state. The ROM's `mov r4, sp` comes first. It then does
    `ldr r3, [r3]; ldr r3, [r3, #0x44]`, which needs one pseudo for both
    loads. The asm inputs conflict with the clobbered r0-r2, so that

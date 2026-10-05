@@ -198,7 +198,7 @@ gGaxDefaultSong:
 	@ `default_song`); see docs/audio.md.
 	.incbin "build/crashbandicootxs/sound/gax_default_layout.bin"
 
-@ __clz_tab_divdi3..__clz_tab_udivdi3: src/data/clz_tab_5a4c70.c
+@ __clz_tab_divdi3..__clz_tab_udivdi3: lib/libgcc/data/clz_tab_5a4c70.c
 
 .section .rodata.085A4E70
 
@@ -212,9 +212,9 @@ gLargeFontTiles:
 	@ LZ77 tile graphics (4bpp) (9600 bytes decompressed)
 	.incbin "build/crashbandicootxs/graphics/intro/00_5a551c_tiles.4bpp.lz"
 
-@ 0x085A6100..gGaxVibratoTable (GAX2 strings and tables): src/data/gax_tables_5a6100.c
+@ 0x085A6100..gGaxVibratoTable (GAX2 strings and tables): lib/gax/data/gax_tables_5a6100.c
 
-@ 0x085A9EEC..0x085A9F70 (EEPROM library data): src/data/eeprom_5a9eec.c
+@ 0x085A9EEC..0x085A9F70 (EEPROM library data): lib/agb_eeprom/data/eeprom_5a9eec.c
 
 @ 0x085A9F70..0x0861BADC (the 24 cutscene pictures): src/data/cutscene_pictures_5a9f70.c
 

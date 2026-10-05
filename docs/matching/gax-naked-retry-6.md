@@ -2,7 +2,7 @@
 
 Sixth pass on the per-channel mixer, after
 [gax-naked-retry-5.md](./gax-naked-retry-5.md). **It closed.**
-`GaxChannelMix` is real C in `src/audio/gax_note_trigger.c`, built with
+`GaxChannelMix` is real C in `lib/gax/src/gax_note_trigger.c`, built with
 plain agbcc and the normal flags, and verified with a clean
 `make compare`. It was the last GAX function and the last NAKED function
 in issue #68's range.

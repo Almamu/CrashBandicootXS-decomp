@@ -3,7 +3,7 @@
 `GAX_play`/`GAX_fx`/`GAX_fx_ex` (issue #67's remaining
 `0x08038C88`-`0x08038F94` slice, `asm/code_3_2_20e_8c88.s`) are genuine
 GAX2 mixer-tick/voice-stealing internals - not the false-positive
-generic-helper situation issue #66's `math_div64_util.c` chunk turned
+generic-helper situation issue #66's `libgcc2.c` chunk turned
 out to be. All three walk the same nested, still only partly-modeled
 object chain the rest of this GAX2_SoundHandler cluster does
 (`gGaxPlayerState->channels[curChannelIdx]` -> a "handler" object at

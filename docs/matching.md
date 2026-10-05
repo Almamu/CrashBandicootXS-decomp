@@ -5134,7 +5134,7 @@ project's "one `.c` file per contiguous ROM region" rule):
     `self` argument - confirmed by the caller's `adds r0,r4,#0` before
     the `bl`) but left un-matched; see below.
 
-- **`src/audio/song_slot_lookup.c`** (`GaxFindMixRate`) - a 12-entry,
+- **`lib/gax/src/gax_find_mix_rate.c`** (`GaxFindMixRate`) - a 12-entry,
   8-byte-stride threshold-table lookup over `gGaxMixRates`
   (table contents/meaning not understood). The loop bound compare
   needed an explicitly `u32 i`, not `s32` - a signed loop variable
@@ -5143,7 +5143,7 @@ project's "one `.c` file per contiguous ROM region" rule):
   substitution that reads identically in this compiler's own `-fhex-asm`
   dump mnemonics unless the actual opcode bytes are checked.
 
-- **`src/audio/sound_object_init.c`** (`GAX2_new`) - a
+- **`lib/gax/src/gax_new.c`** (`GAX2_new`) - a
   SoundHandler/channel-object-shaped constructor: `self == NULL` takes
   a completely different 2-argument-call path into still-unread GAX2
   internals (`GaxFatalError`); otherwise zero-fills `self` (via
@@ -5499,7 +5499,7 @@ original file's unchanged remainder). See `ldscript.txt` and
 `tools/report_units.py`'s `hud` category entries, both updated to
 match. Verified via a full clean `make compare` (`La suma coincide`)
 and `make NON_MATCHING=1 report`.
-## `timer_util.c`/`reg_trampolines.c`: BIOS SWI wrappers, a timer-driven DMA subsystem, and the bx-register trampoline table (issue #69)
+## `eeprom_timer.c`/`lib1funcs.s`: BIOS SWI wrappers, a timer-driven DMA subsystem, and the bx-register trampoline table (issue #69)
 
 `0x0803A944`-`0x0803ADB0`, `asm/code_3_2_20e.s` (previously misfiled as
 `code_3_2_17.s`/`code_3_2_20e.s` boundary in the generated issue - the
@@ -5509,7 +5509,7 @@ raw division helper). `CpuSet` was *not* already matched despite
 - that comment describes `MemCopy32`'s *own* match, written in
 anticipation; the actual `CpuSet` definition was still raw here.
 
-**Matched (`src/system/timer_util.c`):**
+**Matched (`lib/agb_eeprom/src/eeprom_timer.c`):**
 
 - **`BgAffineSet`/`CpuFastSet`/`CpuSet`/`LZ77UnCompVram`/
   `ObjAffineSet`/`RLUnCompVram`/`Sqrt`/`VBlankIntrWait`** - eight
@@ -5520,7 +5520,7 @@ anticipation; the actual `CpuSet` definition was still raw here.
   from `src/system/asset_util.c`'s `extern` declarations; the rest stay
   `sub_XXXXXXXX`.
 - **`EEPROMConfigure`** - picks a 12-byte config table
-  (`struct EepromConfig`, in `timer_util.c`) by a "chip type" code (4 or
+  (`struct EepromConfig`, in `eeprom_timer.c`) by a "chip type" code (4 or
   0x40), falling back to the 4-table on any other code but reporting
   failure. Every access site downstream (`DMA3Transfer`'s `waitcntBits`
   merge into `WAITCNT`'s wait-state-2 field; the raw
@@ -5538,7 +5538,7 @@ anticipation; the actual `CpuSet` definition was still raw here.
   timer's IRQ vector.
 - **`_call_via_r0`/`_call_via_r1`/`_call_via_r2`/`_call_via_r3`/
   `_call_via_r4`/`_call_via_r5`/`_call_via_r6`/`_call_via_r7`**
-  (`src/system/reg_trampolines.c`) - the `bx r0`..`bx sp` "call through
+  (`lib/libgcc/lib1funcs.s`) - the `bx r0`..`bx sp` "call through
   whatever's already in this register" trampoline table already
   referenced by name from `src/system/irq.c`'s `VBlankHandler`
   (`_call_via_r0()`, relying on `r0` still holding a function pointer
@@ -5598,10 +5598,10 @@ anticipation; the actual `CpuSet` definition was still raw here.
   whoever picks up the rest of this chunk rather than guess.
 
 **File structure:** `asm/code_3_2_20e.s` (truncated right before
-`BgAffineSet`) is now followed, in ROM order, by `timer_util.o`,
+`BgAffineSet`) is now followed, in ROM order, by `eeprom_timer.o`,
 `code_3_2_20e_aa08.s` (raw `.if NON_MATCHING == 0` twin for the three
-parked `timer_util.c` functions), `code_3_2_20e_ab54.s` (raw, left
-untouched), `reg_trampolines.o`, and finally `code_3_2_20e_3adb4.s`
+parked `eeprom_timer.c` functions), `code_3_2_20e_ab54.s` (raw, left
+untouched), `_call_via_rX.o`, and finally `code_3_2_20e_3adb4.s`
 (the original file's unchanged remainder, from `__divsi3`'s division
 helper on) - see `ldscript.txt` and `tools/report_units.py`'s `system`
 category, both updated to match. Verified via a full clean `make
@@ -5755,11 +5755,11 @@ the 25 functions matched, across five small new files (non-contiguous,
 since the remaining 19 either resist matching or aren't understood well
 enough yet):
 
-- **`src/audio/gax_dma_control.c`** (`GAX_pause`, `GAX_resume`) - a
+- **`lib/gax/src/gax_dma_control.c`** (`GAX_pause`, `GAX_resume`) - a
   Direct Sound A output stop/start pair, gated on a shared `state` field
   (0 = stopped, 1 = starting, 2 = playing) on the runtime player-state
   object `gGaxPlayerState` points at - modeled as a new
-  `struct GaxPlayerState` in `include/audio.h` (only the handful of
+  `struct GaxPlayerState` in `lib/gax/src/gax_internal.h` (only the handful of
   fields this pass's functions actually touch are named; `channels[2]`
   at `+8` is a fixed-size embedded pointer array, its length pinned by
   `curChannelIdx` always sitting at `+0x10` right after it).
@@ -5771,7 +5771,7 @@ enough yet):
   `for (i = 7; i >= 0; i--) *(vu16 *)REG_ADDR_FIFO_A = 0;` directly
   compiles the counter's `movs r0,#7` first, but the ROM loads the FIFO
   address and the zero value into r2/r1 before touching r0 at all.
-- **`src/audio/gax_note_param.c`** (`GAX_fx_note`) - conditionally
+- **`lib/gax/src/gax_note_param.c`** (`GAX_fx_note`) - conditionally
   updates a currently-active channel voice's note-period-looking field
   (`+0x26`) by walking `gGaxPlayerState`'s current-channel chain two
   levels deep (`cur->0->0xc` gives a count added to the `channel`
@@ -5779,10 +5779,10 @@ enough yet):
   voice), gated on that voice's `+0x3c` field being non-zero. The
   chained objects past `GaxPlayerState` itself aren't understood yet -
   kept as raw offsets, same as `GAX2_new`'s constructor
-  (`sound_object_init.c`).
-- **`src/audio/gax_swi.c`** (`GaxHuffUnComp`) - a HuffUnComp (SWI 0x13)
+  (`gax_new.c`).
+- **`lib/gax/src/gax_swi.c`** (`GaxHuffUnComp`) - a HuffUnComp (SWI 0x13)
   wrapper. Unlike this project's other bare SWI wrappers
-  (`src/system/timer_util.c`, a straight `svc`+`bx lr`), this one
+  (`lib/agb_eeprom/src/eeprom_timer.c`, a straight `svc`+`bx lr`), this one
   explicitly preserves r0/r1 across the call via r7/r8, plus a
   `sub sp, #8` and two stack stores nothing ever reads back - reads like
   a hand-written asm stub, not compiler-generated C, so it's transcribed
@@ -5793,7 +5793,7 @@ enough yet):
   block, even though the exact same mnemonic assembles fine in a raw
   `asm/*.s` file - had to drop the `s` suffix (`add r7, r0, #0`) to get
   through `as`, same encoded bytes either way.
-- **`src/audio/gax_sound_handler_info.c`** (`GaxInfoResetPosition`, `GaxInfoInit`,
+- **`lib/gax/src/gax_sound_handler_info.c`** (`GaxInfoResetPosition`, `GaxInfoInit`,
   `sub_803941C`, `nullsub_39`) - the GAX2_SoundHandler "Info" type's
   init_fn/unknown_fn, resolving two more entries in docs/audio.md's
   per-type function-pointer table (`GaxInfoInit` = `0x080393FD`,
@@ -5811,7 +5811,7 @@ enough yet):
   set before the other stores" treatment (a plain `= 0;` inline compiles
   it into the same register as the adjacent `movs r0,#2`, not the ROM's
   separately pre-staged r1).
-- **`src/audio/gax_sound_handler_channel.c`** (`nullsub_40`) - the
+- **`lib/gax/src/gax_sound_handler_channel.c`** (`nullsub_40`) - the
   "Channel" type's unknown_fn (`0x080395A1`), a no-op stub like
   `nullsub_39` above; init_fn (`GaxChannelInit`) and play_fn
   (`GaxChannelPlay`) stay raw.
@@ -6152,13 +6152,13 @@ Issue #70's listed source file (`asm/code_3_2_17.s`) was stale - by the
 time this was picked up, the region had already been renamed/split (see
 issue #69's PR #195) to `asm/code_3_2_20e_3adb4.s`, sitting right after
 the now-matched `_call_via_lr`/`_call_via_r0`-family trampolines in
-`src/system/reg_trampolines.c`. The issue's `_call_via_lr` box was
+`lib/libgcc/lib1funcs.s`. The issue's `_call_via_lr` box was
 already checked off by that prior PR; the other 9 functions were still
 raw.
 
 **Matched (6):**
 
-- **`__div0`** (ROM `0x0803AE48`, new `src/util/math_div_util.c`) -
+- **`__div0`** (ROM `0x0803AE48`, new `lib/libgcc/lib1funcs.s`) -
   the shared divide-by-zero handler for all three division/modulo
   routines below. ROM bytes are `mov pc, lr` (not `bx lr`, which is
   what agbcc's plain-C codegen picks for a genuinely empty function
@@ -6198,7 +6198,7 @@ raw.
   in place.
 
 **Parked, not matched (3): `__divsi3`/`__modsi3`/`__umodsi3`**
-(ROM `0x0803ADB4`-`0x0803AFDC`, `src/util/math_div_util.c`, raw bytes
+(ROM `0x0803ADB4`-`0x0803AFDC`, `lib/libgcc/lib1funcs.s`, raw bytes
 in `asm/code_3_2_20e_3adb4.s`/`asm/code_3_2_20e_3ae4c.s`) - a trio of
 generic software division/modulo primitives (no hardware divide on this
 CPU): `__divsi3` is signed division (`a / b`, truncating toward
@@ -6261,7 +6261,7 @@ in `asm/code_3_2_20e_3adb4.s` (`__divsi3`) and the new
 **File structure:** the old single `asm/code_3_2_20e_3adb4.s` (all 9
 functions) is now four pieces in ROM order: the trimmed
 `asm/code_3_2_20e_3adb4.s` (parked `__divsi3` only, guarded),
-`src/util/math_div_util.o` (`__div0` unconditionally, plus all three
+`lib/libgcc/_divsi3.o/_dvmd_tls.o/_modsi3.o/_umodsi3.o` (`__div0` unconditionally, plus all three
 parked functions under `#if NON_MATCHING` - only `__div0` actually
 contributes bytes in a matching build), the new
 `asm/code_3_2_20e_3ae4c.s` (parked `__modsi3`/`__umodsi3`,

@@ -6,6 +6,11 @@ under `sound/` rebuilds `gGaxMusicData`), which is a separate,
 already-largely-solved problem from matching the **engine code** that
 plays it back, which is what this page tracks.
 
+The engine's code is a library now, `lib/gax/` (decomp.dev category
+`gax`; the game's audio manager in `src/audio/` keeps `audio`) - see
+[docs/libraries.md](../libraries.md). The per-file history below keeps
+its original wording.
+
 The Shin'en GAX2 sound engine itself is still mostly raw assembly,
 roughly `asm/code_3.s`'s `0x08037110`-`0x0803B0C4` range (interleaved
 with some generic compiler-runtime helpers that aren't actually
@@ -52,8 +57,8 @@ write-up):
 - `src/audio/counter_selector_setup.c` - `LoadLanguageSelectBg`, `LanguageSelectBlink`,
   `CommitLanguageSelectFrame`, `DestroyLanguageSelect`, `InitLanguageSelect`, `CloseLanguageSelect`,
   `OpenLanguageSelect`
-- `src/audio/song_slot_lookup.c` - `GaxFindMixRate`
-- `src/audio/sound_object_init.c` - `GAX2_new`
+- `lib/gax/src/gax_find_mix_rate.c` - `GaxFindMixRate`
+- `lib/gax/src/gax_new.c` - `GAX2_new`
 
 These six-through-one-function groups read like game/HUD-side code that
 merely *calls into* audio (`PlaySfx`) or is a SoundHandler-shaped object
@@ -66,30 +71,30 @@ pass) and
 [`docs/matching/issue-67-0x08038538-audio.md`](../matching/issue-67-0x08038538-audio.md)
 (second pass) for the full write-up, GitHub issue #67):
 
-- `src/audio/gax_dma_control.c` - `GAX_pause`/`GAX_resume` (Direct
+- `lib/gax/src/gax_dma_control.c` - `GAX_pause`/`GAX_resume` (Direct
   Sound A output stop/start pair)
-- `src/audio/gax_note_param.c` - `GAX_fx_note` (conditional per-voice
+- `lib/gax/src/gax_note_param.c` - `GAX_fx_note` (conditional per-voice
   note-period update)
-- `src/audio/gax_channel_mute_volume.c` - `GAX_stop_fx`/`GAX_set_music_volume`/
+- `lib/gax/src/gax_channel_mute_volume.c` - `GAX_stop_fx`/`GAX_set_music_volume`/
   `GAX_set_fx_volume` (per-channel mute/volume-set family - previously
   documented as a "confirmed many-register loop-allocation ceiling";
   matched by never caching the `gGaxPlayerState->channels[curChannelIdx]`
   chase into a local, reproducing the ROM's own r0-r3-only allocation -
   see [`docs/matching/issue-67-channel-mute-volume-dma-stop.md`](../matching/issue-67-channel-mute-volume-dma-stop.md))
-- `src/audio/gax_dma_stop.c` - `GAX_stop`/`GaxStopDma` (Direct Sound A/
+- `lib/gax/src/gax_dma_stop.c` - `GAX_stop`/`GaxStopDma` (Direct Sound A/
   Timer0 stop, the counterpart to `GAX_irq`'s start, plus a generic
   single-DMA-channel "off" helper; same writeup as above)
-- `src/audio/gax_swi.c` - `GaxHuffUnComp` (HuffUnComp SWI 0x13 wrapper,
+- `lib/gax/src/gax_swi.c` - `GaxHuffUnComp` (HuffUnComp SWI 0x13 wrapper,
   transcribed as NAKED asm)
-- `src/audio/gax_fatal_error.c` - `GaxFatalError` (the fatal-error
+- `lib/gax/src/gax_fatal_error.c` - `GaxFatalError` (the fatal-error
   display screen)
-- `src/audio/gax_sound_handler_info.c` - `GaxInfoResetPosition`/`GaxInfoInit`/
+- `lib/gax/src/gax_sound_handler_info.c` - `GaxInfoResetPosition`/`GaxInfoInit`/
   `sub_803941C`/`nullsub_39`/`GaxInfoPlay` (the GAX2_SoundHandler
   "Info" type's init_fn/unknown_fn/play_fn, per `docs/audio.md`'s
   per-type function-pointer table)
-- `src/audio/gax_sound_handler_channel.c` - `nullsub_40` (the "Channel"
+- `lib/gax/src/gax_sound_handler_channel.c` - `nullsub_40` (the "Channel"
   type's unknown_fn)
-- `src/audio/gax_text_render.c` - `GaxDrawText` (word-wrap text/
+- `lib/gax/src/gax_text_render.c` - `GaxDrawText` (word-wrap text/
   console-tile renderer, called by `GaxFatalError`) - see
   [docs/matching/issue-67-word-wrap-text-renderer.md](../matching/issue-67-word-wrap-text-renderer.md)
 
@@ -101,30 +106,30 @@ constructor.
 cluster - see
 [`docs/matching/issue-66-67-gax-playstart-cluster.md`](../matching/issue-66-67-gax-playstart-cluster.md)):
 
-- `src/audio/gax_work_size.c` - `GAX2_estimate` (the GAX2 work-RAM size
+- `lib/gax/src/gax_work_size.c` - `GAX2_estimate` (the GAX2 work-RAM size
   estimator; matched in the GAX NAKED retry 2, see
   [docs/matching/gax-naked-retry-2.md](../matching/gax-naked-retry-2.md))
-- `src/audio/gax_channel_table_alloc.c` - `GaxCreateHandlers` (instantiates
+- `lib/gax/src/gax_channel_table_alloc.c` - `GaxCreateHandlers` (instantiates
   and links a player's handlers; matched in the GAX NAKED retry 2)
-- `src/audio/gax_hw_reset.c` - `GaxResetSoundHardware` (hardware sound-register
+- `lib/gax/src/gax_hw_reset.c` - `GaxResetSoundHardware` (hardware sound-register
   reset: DMA1/SOUNDCNT_H/SOUNDBIAS)
-- `src/audio/gax_playback_ticker.c` - `GAX_irq` (per-frame DMA1/
+- `lib/gax/src/gax_playback_ticker.c` - `GAX_irq` (per-frame DMA1/
   Timer0 direct-sound-output follow-up to play-start)
 
 `src/audio/` (further in, at `0x08039818`-`0x0803A944` - see
 [`docs/matching/issue-68-0x08039818-audio.md`](../matching/issue-68-0x08039818-audio.md)
 for the full write-up, GitHub issue #68):
 
-- `src/audio/gax_channel_note_cut.c` - `GaxChannelSetNote` (per-channel note-
+- `lib/gax/src/gax_channel_note_cut.c` - `GaxChannelSetNote` (per-channel note-
   cut/note-on command dispatch)
-- `src/audio/gax_channel_effect_table.c` - `GaxChannelTickVibrato` (per-tick
+- `lib/gax/src/gax_channel_effect_table.c` - `GaxChannelTickVibrato` (per-tick
   vibrato/tremolo-style effect-table lookup)
-- `src/audio/gax_channel_init.c` - `GaxFxChannelInit` (per-channel voice
+- `lib/gax/src/gax_channel_init.c` - `GaxFxChannelInit` (per-channel voice
   object constructor)
-- `src/audio/gax_sound_handler_unknownc.c` - `nullsub_41` (UNUSED - no
+- `lib/gax/src/gax_sound_handler_unknownc.c` - `nullsub_41` (UNUSED - no
   caller anywhere in the ROM), `GaxMixerInit` (the "UnknownC" type's
   init_fn), `nullsub_42` (its unknown_fn)
-- `src/audio/gax_channel_bind_instrument.c` - `GaxChannelSetInstrument` (binds a new
+- `lib/gax/src/gax_channel_bind_instrument.c` - `GaxChannelSetInstrument` (binds a new
   instrument entry to a per-channel voice object and resets its
   envelope/state fields) - closed by pinning `self` to `ip` for the
   whole function, the same idiom that closed `sub_80259D4`; see the
@@ -142,7 +147,7 @@ matched most of them as real C - see the next section.
 GAX2 turned out to be ordinary current-agbcc output (not old_agbcc, not
 ARM); what had parked these functions was mostly heavily register-pinned
 drafts. Written plainly against the handler/channel structs now in
-`include/audio.h` they match outright. See
+`lib/gax/src/gax_internal.h` they match outright. See
 [`docs/matching/gax-toolchain-retry.md`](../matching/gax-toolchain-retry.md)
 for the per-function notes.
 
@@ -152,34 +157,34 @@ for the per-function notes.
   icon-manager steps as `static inline` helpers plus a shared `zero`
   local, see
   [`docs/matching/late-rom-naked-retry.md`](../matching/late-rom-naked-retry.md)
-- `src/audio/gax_zero_fill.c` - `GaxZeroFill` (split out of
-  `src/util/math_div64_util.c`, unchanged C)
-- `src/audio/gax_channel_pool_alloc.c` - `GAX2_jingle` (builds the SFX
+- `lib/gax/src/gax_zero_fill.c` - `GaxZeroFill` (split out of
+  `lib/libgcc/libgcc2.c`, unchanged C)
+- `lib/gax/src/gax_channel_pool_alloc.c` - `GAX2_jingle` (builds the SFX
   player out of the work buffer)
-- `src/audio/gax_voice_steal.c` - `GAX_play` (per-frame mixer tick),
+- `lib/gax/src/gax_voice_steal.c` - `GAX_play` (per-frame mixer tick),
   `GAX_fx` (UNUSED voice steal), `GAX_fx_ex` (SFX voice allocator)
-- `src/audio/gax_swi.c` - `GaxHuffUnComp` (HuffUnComp wrapper; the ROM's
+- `lib/gax/src/gax_swi.c` - `GaxHuffUnComp` (HuffUnComp wrapper; the ROM's
   missing r7 save is agbcc's own r7-pin bug, reproduced deliberately)
-- `src/audio/gax_sound_handler_channel_init.c` - `GaxChannelInit`
-- `src/audio/gax_sound_handler_channel_play.c` - `GaxChannelPlay`,
+- `lib/gax/src/gax_sound_handler_channel_init.c` - `GaxChannelInit`
+- `lib/gax/src/gax_sound_handler_channel_play.c` - `GaxChannelPlay`,
   `GaxChannelDecodeRow` (pattern-row decoder)
-- `src/audio/gax_channel_note_scheduler.c` - `GaxChannelStepInstrumentSeq` (instrument
+- `lib/gax/src/gax_channel_note_scheduler.c` - `GaxChannelStepInstrumentSeq` (instrument
   sequence stepper)
-- `src/audio/gax_channel_envelope_tick.c` - `GaxChannelTick`
-- `src/audio/gax_note_lookup.c` - `GaxEnvelopeTick`
-- `src/audio/gax_channel_pos_sweep.c` - `GaxChannelTickSweep`
-- `src/audio/gax_channel_note_cut_driver.c` - `GaxFxChannelPlay`
-- `src/audio/gax_unknownc_play.c` - `GaxMixerApplyEcho`, `sub_803A2C8`,
+- `lib/gax/src/gax_channel_envelope_tick.c` - `GaxChannelTick`
+- `lib/gax/src/gax_note_lookup.c` - `GaxEnvelopeTick`
+- `lib/gax/src/gax_channel_pos_sweep.c` - `GaxChannelTickSweep`
+- `lib/gax/src/gax_channel_note_cut_driver.c` - `GaxFxChannelPlay`
+- `lib/gax/src/gax_unknownc_play.c` - `GaxMixerApplyEcho`, `sub_803A2C8`,
   `GaxMixerPlay`, `GaxMixFrame` (the Thumb-to-ARM call is GAX2's own
   inline-asm idiom, `GAX_CALL_ARM`; `sub_803A318`/`sub_803A608` were
   only its return points, not functions)
-- `src/util/math_div64_util.c` - `__divdi3`/`__udivdi3`/
+- `lib/libgcc/libgcc2.c` - `__divdi3`/`__udivdi3`/
   `__muldi3` (libgcc2, category `util` -
   see [docs/status/util.md](./util.md))
-- `src/audio/gax_playstart.c` - `GAX2_init` (the play-start/init
+- `lib/gax/src/gax_playstart.c` - `GAX2_init` (the play-start/init
   entry point; was parked NAKED, matched in GAX retry 5 - see
   [docs/matching/gax-naked-retry-5.md](../matching/gax-naked-retry-5.md))
-- `src/audio/gax_note_trigger.c` - `GaxChannelMix` (the per-channel mixer;
+- `lib/gax/src/gax_note_trigger.c` - `GaxChannelMix` (the per-channel mixer;
   `sub_8039E50` is only the ARM call's return point inside it). Was
   parked NAKED through five passes, matched in GAX retry 6 - see
   [docs/matching/gax-naked-retry-6.md](../matching/gax-naked-retry-6.md)
@@ -188,7 +193,7 @@ for the per-function notes.
 
 No GAX function is parked any more.
 
-`__udivsi3` (`src/util/math_div64_util.c`) also stays
+`__udivsi3` (`lib/libgcc/libgcc2.c`) also stays
 NAKED - it's lib1funcs.asm's hand-written routine, not compiler output
 (see [docs/status/util.md](./util.md)).
 
@@ -212,13 +217,13 @@ from the `0x08037110`-`0x08038538` pass specifically:
 - `__divdi3`/`__udivdi3`/`__udivsi3`/`__muldi3` - GAX2's
   bundled libgcc helpers (`__divdi3`/`__udivdi3`/`__udivsi3`/
   `__muldi3`), matched/parked under category `util` in
-  `src/util/math_div64_util.c` (issue #66) rather than this page - see
+  `lib/libgcc/libgcc2.c` (issue #66) rather than this page - see
   [docs/status/util.md](./util.md). `GaxZeroFill` (GAX2's zero-fill
-  helper) now lives in `src/audio/gax_zero_fill.c`.
+  helper) now lives in `lib/gax/src/gax_zero_fill.c`.
 - `GAX2_estimate` - computes the work-RAM size a GAX2 song header needs
   (handler instances plus mix/echo buffers); was raw
   (`asm/code_3_2_20c.s`, issue #66), now matched real C in
-  `src/audio/gax_work_size.c`.
+  `lib/gax/src/gax_work_size.c`.
   `GaxCreateHandlers`/
   `GaxResetSoundHardware` (the rest of issue #66) are now matched/parked - see
   [docs/matching/issue-66-67-gax-playstart-cluster.md](../matching/issue-66-67-gax-playstart-cluster.md).
@@ -276,7 +281,7 @@ plus `GaxChannelTickSweep`, `GaxFxChannelPlay`, `GaxMixerApplyEcho`, `sub_803A2C
 `sub_803A318` (fused), `GaxMixerPlay`, `GaxMixFrame`/`sub_803A608`
 (fused) (see "Parked - NAKED asm transcription(s)" above), plus
 `GaxChannelMix`/`sub_8039E50` - one logical note-trigger routine split by
-a manual return-address trampoline, `src/audio/gax_note_trigger.c` -
+a manual return-address trampoline, `lib/gax/src/gax_note_trigger.c` -
 see
 [docs/matching/issue-68-note-trigger-trampoline.md](../matching/issue-68-note-trigger-trampoline.md).
 Nothing in this chunk is left raw any more; see
