@@ -10,7 +10,7 @@ extern struct bitmap_font *gSmallFont;
 
 /* Shows (`DrawSpriteWithOffset(icon, 0, 0)`) whichever of `icons8c[0..3]` has a
  * matching bit set in `self->field_10`'s byte at offset 2 (a flag byte
- * on the row-stats handle RefreshSaveSlotSummaries/SummarizeProgress - src/graphics/
+ * on the row-stats handle RefreshSaveSlotSummaries/SummarizeProgress - src/save/
  * save_menu_ui.c - already fill; bits 0x20/0x80/0x40/0x10, one per
  * slot). If *none* of the four bits were set, draws a fallback
  * centered label (text id 0x3a) at a fixed position instead. */

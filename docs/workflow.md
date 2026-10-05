@@ -70,10 +70,12 @@ incomplete pass and should be finished before moving on.
    address isn't adjacent to an existing matched file's functions needs
    its own new `.c` file instead (see `GetAnimFrameBaseOffset`'s entry
    in matching.md for a worked example). A new file still goes under
-   whichever of `src/graphics/`/`src/util/`/`src/system/`/`src/audio/`
-   matches what the function actually *does* - that split is orthogonal
-   to the ROM-contiguity one above (see `docs/status/README.md` for what
-   each directory covers). Third-party/SDK library code (GAX2, AgbEeprom,
+   whichever `src/<subsystem>/` directory matches what the function
+   actually *does*, and is named after what it holds
+   (`<subject>[_<role>].c`, never a number or a ROM address) - that split
+   is orthogonal to the ROM-contiguity one above (see
+   `docs/file_layout_plan.md` for what each directory covers and the
+   naming convention). Third-party/SDK library code (GAX2, AgbEeprom,
    libgcc, the BIOS SWI wrappers) goes under its library in `lib/`
    instead - see `docs/libraries.md`.
 5. Rename every remaining `bl <old_name>`/`.4byte <old_name>` reference

@@ -9,7 +9,7 @@
 
 /* BG0 cell animation A, gActorCategories[0..2].cellAnim
  * (cellAnimSize = its size, 0x75B94), played by InitCellAnim/
- * UploadCellAnimFrame (actor_part95.c): 19x13 cells, 60 frames. These are type-0
+ * UploadCellAnimFrame (cell_anim.c): 19x13 cells, 60 frames. These are type-0
  * categories, so each frame carries its cells' palette banks after the
  * tiles. Built from graphics/category_bg/03b8b0_cell_anim.png, all 60
  * frames stacked top to bottom (tools/grit_bg.py interleaves grit's tiles
@@ -36,7 +36,7 @@ const struct cell_anim_03b8b0 gCategoryFamily0CellAnim = {
 };
 
 /* Category 0's spawnTable (gActorCategories[0].spawnTable,
- * read by SelectActorCategory (actor_part102.c) and the sub_802A5xx accessors). Record 0's field_04 is the record count. */
+ * read by SelectActorCategory (actor_category_select.c) and the sub_802A5xx accessors). Record 0's field_04 is the record count. */
 const SUB_EFFECT_TABLE(164) gCategory0SpawnTable = {
     {
         { 4000, 164, 3, 3, 3, 0, -1, 54 },

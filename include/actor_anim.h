@@ -18,8 +18,8 @@
  */
 
 /* A box in the actors' 16-bit world units: position then size. The code
- * reads it through several local views (actor_part74.c's `struct box16`,
- * airship_touch.c's `struct box3`, actor_part126.c's `struct box12`,
+ * reads it through several local views (yeti_update.c's `struct box16`,
+ * airship_touch.c's `struct box3`, polar_objects.c's `struct box12`,
  * ...). The anim_table_record's box_14 and several small src/data tables
  * are this. */
 struct anim_box {
@@ -154,7 +154,7 @@ COMPILE_TIME_ASSERT(sizeof(struct sub_effect_table_end) == 0xC);
 #define SUB_EFFECT_TABLE(n) struct { struct sub_effect_record records[n]; struct sub_effect_table_end end; }
 
 /* The start of a BG0 cell animation (category_descriptor.cellAnim,
- * read by InitCellAnim/ResetCellAnimBg/UploadCellAnimFrame in actor_part95.c): a
+ * read by InitCellAnim/ResetCellAnimBg/UploadCellAnimFrame in cell_anim.c): a
  * 256-colour palette DMA'd whole to BG palette RAM, the grid size in 8x8
  * cells, then the frames, each `cols * rows` 4bpp tiles in row-major cell
  * order (plus, for type-0 categories, one 4-bit palette bank per cell
@@ -167,7 +167,7 @@ struct cell_anim_header {
 }; // 0x204, the frames follow
 
 /* The start of a BG1 picture (category_descriptor.bgPicture,
- * read by LoadBgPicture in actor_part45d.c): a 256-colour palette, the map
+ * read by LoadBgPicture in bg_picture.c): a 256-colour palette, the map
  * size, the tile count, then `u16 map[cols * rows]` (padded to a multiple
  * of 4 bytes), `tileCount` 4bpp tiles, and one 4-bit palette bank per map
  * entry, low nibble first. */

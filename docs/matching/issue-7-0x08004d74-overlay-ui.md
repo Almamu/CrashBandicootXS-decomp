@@ -324,8 +324,8 @@ The 12-function 0x08004D74-0x08005E5C sub-range this write-up focuses
 on is now fully matched (the 5 from the first pass plus all 7 parked
 ones from this pass). GitHub issue #7 itself tracks a wider 25-function
 range (`0x08004CB4`-`0x080060AC`) that also includes `InitPausePowersPage`/
-`InitPauseGemsPage`/`InitPauseRelicsPage`/`InitPauseTimeTrialPage` (`src/graphics/
-pause_menu_pages_init.c`) and `PauseMenuVolumeDown`/`PauseMenuVolumeUp` (`src/graphics/
+`InitPauseGemsPage`/`InitPauseRelicsPage`/`InitPauseTimeTrialPage` (`src/menus/
+pause_menu_pages_init.c`) and `PauseMenuVolumeDown`/`PauseMenuVolumeUp` (`src/menus/
 pause_menu_widgets.c`) - four settings-row icon-widget constructors and a
 per-row percentage inc/dec pair that were already checked off as
 "parked" on that issue's own checklist, and this same session's pass

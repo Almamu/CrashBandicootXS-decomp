@@ -6,7 +6,7 @@
  * asm/code_3_2_17_188d0.s (details in docs/matching/issue-23-graphics.md).
  *
  * Small method-table ("vtable" at self+0x0C) objects of the same C++-style
- * family as input_ctrl.c/actor_part27*.c: each class here is a
+ * family as input_ctrl.c/input_ctrl_queue.c/mega_mix.c: each class here is a
  * constructor (base InitCtrl/CreateBossCtrl/CreatePlatformMover, then its own
  * table pointer) plus a destructor (table pointer, then the base
  * destructor), and a handful of per-frame update methods that drive one

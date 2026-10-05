@@ -1,7 +1,7 @@
 #include "core.h"
 #include "actor_self.h"
 
-/* Continuation of actor_part19.c's player/action-object family, right
+/* Continuation of polar_player_actions.c's player/action-object family, right
  * after the still-raw `DetonateNearbyPolarNitros` (see docs/matching.md) - same
  * `self` object and conventions documented there. */
 
@@ -67,11 +67,11 @@ void UpdatePolarAkuAkuCrate(struct actor_self *self)
 
 asm(".align 2, 0");
 
-/* Sits right after actor_part19d.c's `UpdatePolarAkuAkuCrate` and before the
+/* Sits right after `UpdatePolarAkuAkuCrate` above and before the
  * still-raw remainder of `asm/code_3_2_20_28568_c99c.s` (starting at
- * `UpdatePolarElectricFence`) - directly adjacent to `actor_part19d.c` now, closing
+ * `UpdatePolarElectricFence`) - directly adjacent to it now, closing
  * part of GitHub issue #53's `0x0802C99C`-`0x0802D3A8` chunk. Same
- * `self` object (`struct actor_self`) and conventions documented in `actor_part19g.c` (the
+ * `self` object (`struct actor_self`) and conventions documented in `polar_pickups.c` (the
  * `animIndex` state field, the `+0x10`/`+0x12`/`+8` anim-reset idiom,
  * the `+0x30` type-byte indirection, and the `InitActorPart`-based
  * constructor family already matched throughout this ROM region). */
@@ -91,7 +91,7 @@ extern u8 gStaticData_087E4F54[];
 extern u8 gPolarBasicCrateVtable[];
 
 /* Extends the type-byte event dispatch family (`UpdateJetpackTimeCrate`/etc, per
- * docs/rom_map.md; the `UpdatePolarQuestionCrate` shape in actor_part19g.c) with
+ * docs/rom_map.md; the `UpdatePolarQuestionCrate` shape in polar_pickups.c) with
  * values `5`-`7`. On proximity (`IsTouchingPlayer`), plays a sound, ties the
  * lap counter, then dispatches `FreezeLevelClock` with a tier argument keyed
  * off `self+0x30`'s type byte (`5`->1, `6`->2, `7`->anything else
@@ -165,7 +165,7 @@ void sub_802CA28(void *selfArg)
 }
 
 /* Same proximity-gated "used" transition shape as `UpdatePolarQuestionCrate`/
- * `UpdatePolarLifeCrate` (actor_part19g.c), forwarding a fixed accumulator
+ * `UpdatePolarLifeCrate` (polar_pickups.c), forwarding a fixed accumulator
  * delta of `4` to `QueuePolarWumpa(gActorList, ...)`; tail-calls
  * `UpdatePolarCrate`. */
 void sub_802CA6C(void *selfArg)
@@ -223,7 +223,7 @@ void UpdatePolarBasicCrate(void *selfArg)
  * off `c`'s own range - selecting one of up to 18 per-kind anim
  * records from the part table (`self[0]`, stride `0xc`) to seed
  * `animTimer`/`animDone`/`self+8`, the same idiom as `CreatePolarBoostPad`
- * (`src/graphics/actor_part58.c`). */
+ * (`src/vehicle/polar_aku_aku.c`). */
 void *InitPolarCrate(void *selfArg, s32 a, s32 b, s32 c, s32 lastArg)
 {
     struct actor_self *self = selfArg;

@@ -1,4 +1,4 @@
-# Proposed source layout for #575, one row per src/ source file (see docs/file_layout_plan.md). The libraries are in lib/ since #573.
+# Source layout for #575, applied in #596-#600: one row per pre-move src/ source file, the permanent old-to-new name lookup (see docs/file_layout_plan.md). The libraries are in lib/ since #573.
 # merge_group is the merged file's path when several rows land in it, "-" otherwise.
 # Rows are in ldscript.txt (ROM) order. Flags in [] are the Makefile per-object lists the file is in.
 old_path	new_path	merge_group	reason

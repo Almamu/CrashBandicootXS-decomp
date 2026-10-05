@@ -689,7 +689,7 @@ the same wall four times.
 
 ### Build layout
 
-The four functions now live in three new files: `src/graphics/
+The four functions now live in three new files: `src/enemies/
 enemy_motion.c` (`UpdateEnemyPatrol`), `src/enemies/enemy_motion.c`
 (`UpdateEnemyHop`), and `src/enemies/enemy_ctrl.c` (`UpdateEnemyAttackCycle` +
 `UpdateEnemyTriggerBox`, contiguous in ROM with no gap). The single raw

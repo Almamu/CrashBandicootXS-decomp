@@ -12,7 +12,7 @@ extern void YetiStateStop();
 
 /* Per-state update functions of the gYeti gauge object,
  * called as `gYetiStateFuncs[gYetiState]()` by
- * UpdateYeti (actor_part74.c). */
+ * UpdateYeti (yeti_update.c). */
 void (*const gYetiStateFuncs[4])() = {
     YetiStateChase,
     YetiStateCharge,

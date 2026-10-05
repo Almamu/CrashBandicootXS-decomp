@@ -294,7 +294,7 @@ void ResolvePlatformCollision(struct gobj *self, void *unused);
 void MovePlayerWithPlatform(struct mover *self, struct gobj *obj);
 
 /* Branchless absolute value, updating `x` in place (same helper as
- * actor_part50.c) - the ROM's asr/eor/sub sequence. */
+ * actor.c) - the ROM's asr/eor/sub sequence. */
 #define ABS32(x, sign) do { (sign) = (x) >> 0x1f; (x) ^= (sign); (x) -= (sign); } while (0)
 
 #define MOVER_CALL3(obj, m, a, b)                                              \

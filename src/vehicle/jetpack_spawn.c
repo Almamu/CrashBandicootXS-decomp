@@ -2,8 +2,8 @@
 #include "actor_self.h"
 
 /* Covers the 0x0802E0A4-0x0802F0DC gap between issue #54's chunk
- * (`actor_part61.c`, ending at `YetiStateCaught`/`sub_802E0A0`) and issue
- * #56's chunk (`actor_part43.c`, starting at `FinishJetpackRun`). Two things
+ * (`yeti.c`, ending at `YetiStateCaught`/`sub_802E0A0`) and issue
+ * #56's chunk (`jetpack_run.c`, starting at `FinishJetpackRun`). Two things
  * live here:
  *
  * - The level's spawn dispatcher `CreateJetpackActor` (a 31-case `switch` over

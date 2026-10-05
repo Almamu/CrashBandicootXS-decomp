@@ -9,7 +9,7 @@ function was tried under both agbcc and old_agbcc.
 | Function | File | Compiler | What it took |
 |---|---|---|---|
 | `InitLanguageSelectGraphics` | `src/frontend/language_select.c` | both | The icon-manager steps as `static inline` helpers taking the manager (`IconSetBase`/`IconReserveVram`, the idiom from `InitCredits` in credits.c), plus one `u32 zero` local shared by the `field_8` and `field_108` stores. |
-| `FillBgPictureMap` | `src/graphics/actor_part45d.c` | old_agbcc (object joined `OLD_AGBCC_OBJS`) | Map entry read as `v = *map; v += base;`, high nibble masked as `(*nib >> 4) & 0xf`, and the function declared `inline` ahead of `LoadBgPicture`. |
+| `FillBgPictureMap` | `src/actor/bg_picture.c` | old_agbcc (object joined `OLD_AGBCC_OBJS`) | Map entry read as `v = *map; v += base;`, high nibble masked as `(*nib >> 4) & 0xf`, and the function declared `inline` ahead of `LoadBgPicture`. |
 
 ### `InitLanguageSelectGraphics`
 
@@ -46,7 +46,7 @@ down to spelling:
 
 ## Not closed
 
-- **`LoadBgPicture`** (actor_part45d.c, #56). The draft now inlines 8E8
+- **`LoadBgPicture`** (bg_picture.c, #56). The draft now inlines 8E8
   and has the ROM's exact instruction stream, but two priority ties go
   the other way (32 halfwords): the nibble pointer (13 refs over 56
   insns) narrowly outranks `dest` (9 over 40) for r5, and `cols`/row+1
@@ -118,7 +118,7 @@ A brute-force variant runner found both matches.
 | Function | File | Compiler | What it took |
 |---|---|---|---|
 | `ContinuePromptLoop` | `continue_prompt.c` (object joined `OLD_AGBCC_OBJS`) | old_agbcc | `asm("" : "+r"(k))` on the input copy between the `& 1` and `& 8` tests, and one extra reference to `audio` at the top of the loop in place of the r8 pin. |
-| `LoadBgPicture` | `actor_part45d.c` | old_agbcc | The DMA width fixed, one extra reference to `dest` after the loop, two to `cols` before the call, and 7B0 inlining its own `static inline` copy of the loop. |
+| `LoadBgPicture` | `bg_picture.c` | old_agbcc | The DMA width fixed, one extra reference to `dest` after the loop, two to `cols` before the call, and 7B0 inlining its own `static inline` copy of the loop. |
 
 ### `ContinuePromptLoop`
 

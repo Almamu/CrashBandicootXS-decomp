@@ -3,14 +3,14 @@
 #include "actor_self.h" /* struct anim_frame_record */
 
 /* Partial view of the same large per-instance "self" object documented
- * at length in actor_part19.c (state at +0x28, table-index at +0xc,
+ * at length in polar_player_actions.c (state at +0x28, table-index at +0xc,
  * anim-frame halfword/byte pair at +0x10/+0x12, +0x48/+0x4c circular
  * list, +0x50 trampoline record, etc.) - only the first 0x10 bytes this
  * file's functions actually touch are named here, per that file's own
  * "none of these objects' full shapes are pinned down yet" convention;
- * most other actor_part*.c files keep using raw offsets into the same
+ * most other actor files keep using raw offsets into the same
  * bigger object; include/actor_self.h's `struct actor_self` is the
- * fuller view used from actor_part_2fbf0.c on. */
+ * fuller view used from jetpack_plane.c on. */
 struct anim_part_instance {
     struct anim_frame_record *frameTable; // 0x00
     u32 *frameOffsets;                    // 0x04 - stride 4, indexed by frameTable[idx].frameIndex + GetAnimFrameBaseOffset()
@@ -132,7 +132,7 @@ extern void UpdateActor(void *self);
  * fires the `self+0x50` trampoline record (arg `3`) if `self+0x12` is
  * set, or tail-calls `UpdateActor(self)` otherwise - the same
  * `+0x50`-rooted `{s16 offset; void *fn}` trampoline convention
- * documented in actor_part19.c. */
+ * documented in polar_player_actions.c. */
 void UpdatePolarCheckpointText(void *selfArg)
 {
     u8 *self = selfArg;
@@ -394,7 +394,7 @@ extern void SetupSpriteFrameOam(u8 *frame, u32 arg1, u32 arg2, s32 priority);
  * the `self+0x18` priority-nibble unpack, and the final
  * `SetupSpriteFrameOam` argument shuffle) matches the ROM's own
  * register roles once pinned to match, the same techniques worked out
- * for the near-identical twin `DrawPolarCollectedWumpa` (`actor_part19b.c`). Note
+ * for the near-identical twin `DrawPolarCollectedWumpa` (`polar_pickups.c`). Note
  * `DrawJetpackCheckpointText`'s own priority constant is `0x100`, not
  * `DrawPolarCollectedWumpa`'s `0x140` - the two twins differ here. */
 void DrawJetpackCheckpointText(void *selfArg)

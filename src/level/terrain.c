@@ -11,7 +11,7 @@
  * return value, so it was never examined on its own until now.
  *
  * `GetTerrainFlagsAt(arg0, x, y)` is a small wrapper around the already-
- * matched terrain-tile-cache lookup `GetTerrainType` (`src/system/
+ * matched terrain-tile-cache lookup `GetTerrainType` (`src/level/
  * tile_cache.c`, GitHub issue #40): it takes `arg0+0x20`'s pointed-to
  * `struct tile_cache`, converts `x`/`y` into that cache's own lookup
  * units via a plain `>>3` (clamped to a minimum of 0 on each axis

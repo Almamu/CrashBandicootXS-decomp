@@ -142,7 +142,7 @@ void InitCellAnim(s32 arg0, s32 arg1, s32 arg2, s32 arg3)
     gCellAnimFrameStep = 0;
 }
 
-/* `FillCellAnimTilemap` (actor_part98.c), inlined here twice: fills screen
+/* `FillCellAnimTilemap` (below), inlined here twice: fills screen
  * block 0x0600E400 (or 0x0600F400 when `arg0` is set, numbering on
  * from `w * h + 1`) with consecutive tile numbers for a `w` x `h` cell
  * grid; columns past 31 go to the next screen block (+0x7c0 bytes).
@@ -200,7 +200,8 @@ void ResetCellAnimBg(void)
 }
 
 /* Genuine no-op stub - part of this file's small tilemap/scroll-effect
- * accessor cluster (see actor_part105.c/91.c/92.c/93.c), left as-is per
+ * accessor cluster (see actor_category_stats.c, the functions below and
+ * actor_bg.c), left as-is per
  * docs/naming.md's `nullsub_N` convention. */
 void nullsub_5(void)
 {
@@ -333,7 +334,7 @@ void SetCellAnimSpeed(s32 arg0)
 /* Fills screen block 28 from row 16 on (block 30 when `arg0` is set,
  * numbering on from `w * h + 1`) with consecutive tile numbers for a
  * `w` x `h` cell grid; columns past 31 go to the next screen block
- * (+0x7c0 bytes). actor_part95.c's `ResetCellAnimBg` inlines the same body
+ * (+0x7c0 bytes). `ResetCellAnimBg` above inlines the same body
  * twice.
  *
  * The old NAKED note blamed an unreachable register permutation. The

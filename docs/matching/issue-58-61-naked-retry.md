@@ -1,7 +1,7 @@
 # Retrying issues #58 and #61's NAKED functions
 
 Issue #58 (`0x08030334`-`0x08031784`, the boss-weapon cluster, one
-function per `src/graphics/actor_part2*.c` file) and issue #61
+function per file, now `src/bosses/airship*.c`) and issue #61
 (`0x08032890`-`0x08033804`, the `gHovercraft` singleton system in
 `src/bosses/hovercraft.c`) had 19 functions parked as NAKED. The
 first passes ([issue-58-0x08030574-actor.md](issue-58-0x08030574-actor.md),

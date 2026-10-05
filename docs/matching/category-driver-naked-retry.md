@@ -5,8 +5,8 @@ kept C draft. Both closed as real C under old_agbcc.
 
 | Function | File | Issue | Compiler | Result |
 | --- | --- | --- | --- | --- |
-| `InitActorCategory` | `actor_part101.c` | #48 | old_agbcc (object added to `OLD_AGBCC_OBJS`) | matched |
-| `RunActorCategoryFrame` | `actor_part103.c` | #49 | old_agbcc (file already on it) | matched |
+| `InitActorCategory` | `actor_category_init.c` | #48 | old_agbcc (object added to `OLD_AGBCC_OBJS`) | matched |
+| `RunActorCategoryFrame` | `actor_category_frame.c` | #49 | old_agbcc (file already on it) | matched |
 
 ## `RunActorCategoryFrame`
 

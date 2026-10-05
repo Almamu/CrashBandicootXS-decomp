@@ -51,7 +51,7 @@ struct aabb {
 
 /* Axis-aligned box overlap test, X-axis edges inclusive (touching
  * counts as overlap) - the `PlayerTouchesBox`-family collision checks in
- * actor_part*.c use the stricter `AabbOverlaps` below instead. */
+ * the sprite-object files use the stricter `AabbOverlaps` below instead. */
 u8 AabbOverlapsInclusiveX(struct aabb *a, struct aabb *b)
 {
     u8 result = 0;

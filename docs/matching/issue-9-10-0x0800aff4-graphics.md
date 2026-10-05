@@ -116,7 +116,7 @@ chain):
    *expired* (`self+0x8c <= gRoomFrameCount`, the "not armed"
    case): calls `SetMaskLevel(gLevelState, 2)` - a mode-transition
    call, the same "state close" convention `action_ctrl_update.c`/
-   `actor_part58.c` already establish for this function acting on
+   `polar_aku_aku.c` already establish for this function acting on
    `gLevelState`. Reads as: once the blink/stun period is over,
    transition the central game mode from `3` back to `2`.
 4. **Unconditionally** (any mode): pushes `self`'s own current

@@ -1,7 +1,7 @@
 #include "core.h"
 #include "level_state.h"
 
-/* Same `struct aabb` shape as src/util/aabb.c/actor_part*.c -
+/* Same `struct aabb` shape as src/util/aabb.c and the sprite-object files -
  * duplicated here rather than shared, matching this project's existing
  * per-file convention for this struct (see docs/workflow.md and
  * sprite.c etc). */
@@ -31,7 +31,7 @@ void SetAabbPos(struct aabb *dest, s32 x, s32 y)
 asm(".align 2, 0");
 
 /* Lives getter of the level state (`gLevelState`; read by
- * game_frame.c, hud_lives.c, actor_part101.c and
+ * game_frame.c, hud_lives.c, actor_category_init.c and
  * spawn_start_marker.c). */
 s32 GetLives(struct level_state *self)
 {

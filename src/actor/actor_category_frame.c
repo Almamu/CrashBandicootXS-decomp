@@ -9,7 +9,7 @@
  * object)'s and `self`'s own 12-byte `{s16 x,y,z,sizeX,sizeY,sizeZ}` AABB
  * record (`self+0x38`, world-translated by `self+0x1c/0x20/0x24 >>8`) into
  * two stack scratch boxes via `MemCopy32` (a real, byte-verified
- * `memcpy(dst,dst,0xc)` self-copy - see src/graphics/actor_part74.c's own
+ * `memcpy(dst,dst,0xc)` self-copy - see src/vehicle/yeti_update.c's own
  * definition/doc comment), then run the same 3-axis (Z,Y,X order) overlap
  * test already established throughout this ROM
  * (UpdateYeti/IsTouchingYeti/DetonateNearbyPolarNitros/IsTouchingAirship etc - see
@@ -17,10 +17,10 @@
  * issue-58-0x08030574-actor.md). `FindShotTarget` is the same test wrapped in
  * an outer walk of the whole `gActorList`-rooted circular list
  * (`self+0x4c`), gated by a `_call_via_r1` per-node visibility check first
- * (same shape as `DetonateNearbyPolarNitros`, actor_part19h.c).
+ * (same shape as `DetonateNearbyPolarNitros`, polar_nitro.c).
  *
  * All three share the `ActorsOverlap` inline below. Its three boxes are
- * members of one frame struct (the actor_part74.c/player_event.c
+ * members of one frame struct (the yeti_update.c/player_event.c
  * pattern), so every box address is a fresh `add rX, sp, #off`; only
  * the pointer to the middle box stays live across both `MemCopy32`
  * calls (that is the ROM's `r4`, or `r7` once `FindShotTarget`'s loop

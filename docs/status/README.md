@@ -18,7 +18,8 @@ behind every entry here, see [docs/matching.md](../matching.md).
 - [graphics.md](./graphics.md) - core OAM/sprite rendering, screen
   fades, palette blending, per-actor animation frames, text layout
 - [actor.md](./actor.md) - the per-instance actor "self" object family
-  (`src/graphics/actor_part*.c`)
+  (`src/actor/`, `src/vehicle/`, `src/bosses/`, and the side-view objects
+  and player in `src/objects/` and `src/player/`)
 - [hud.md](./hud.md) - the on-screen HUD stat-counter/icon widgets
   (`src/hud/*.c`)
 - [overlay_ui.md](./overlay_ui.md) - the pause/options screen and its

@@ -158,7 +158,7 @@ asm(".align 2, 0");
  *   4-frame parity - a standard hit-invincibility blink. Once that
  *   deadline is no longer armed while mode == 3, calls
  *   `SetMaskLevel(gLevelState, 2)` (matched pattern,
- *   `action_ctrl_update.c`/`actor_part58.c` - a mode-transition/"state
+ *   `action_ctrl_update.c`/`polar_aku_aku.c` - a mode-transition/"state
  *   close" call) - ends the stun state, transitioning mode 3 -> 2.
  *
  * - Unconditionally (any mode): pushes `self`'s own current `{x, y}`

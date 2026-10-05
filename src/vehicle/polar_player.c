@@ -2,15 +2,15 @@
 #include "actor_self.h"
 
 /* Continues the `InitActorPart`/`gUnknown_0300148x`-`gUnknown_030014Bx`
- * cluster already established in `src/graphics/actor_part107.c`
+ * cluster already established in `src/vehicle/polar_player_states.c`
  * (issue #50's leftover tail, `docs/matching/issue-50-actor-bc68.md`) -
  * same `self` object and global family (a countdown-timer/respawn
  * pair at `gPolarFinishTimer`/`gPolarInvulnTimer`, a "camera catch-up"
  * budget at `gPolarPlayerVelY`, and the shared reset/state-transition
  * idiom). Covers `0x0802B364`-`0x0802BC68`, right before
- * `actor_part107.c`'s own range - the start of this whole 40KB "actor
+ * `polar_player_states.c`'s own range - the start of this whole 40KB "actor
  * zone" a scoping investigation found still raw, before issue #52's
- * `actor_part19.c`. `docs/rom_map.md` had already read part of this
+ * `polar_player_actions.c`. `docs/rom_map.md` had already read part of this
  * cluster from disassembly alone.
  *
  * Built with old_agbcc: `PolarPlayerStateDash` (the `1` mask materialized before
@@ -101,7 +101,7 @@ static inline s32 Abs(s32 x)
  * pointer-to-member call), left/right steering while
  * `gPolarSteerEnabled` is set, then drives - or first spawns - the
  * companion object in `gPolarAkuAku`. Same shape as
- * `actor_part128.c`'s `UpdateJetpackPlayer`. */
+ * `jetpack_spawn.c`'s `UpdateJetpackPlayer`. */
 void UpdatePolarPlayer(struct actor_self *self)
 {
     DispensePolarWumpa(self);
@@ -190,7 +190,7 @@ static inline u8 *CurFrame(struct actor_self *self)
  * double-sized when drawn behind the camera's reference depth), culls
  * against the screen, uploads the frame's tiles into the other of the
  * two VRAM buffers when the frame changed, and queues the OAM entry.
- * The same code as `actor_part128.c`'s `DrawJetpackPlayer` with a different
+ * The same code as `jetpack_spawn.c`'s `DrawJetpackPlayer` with a different
  * projection constant. */
 void DrawPolarPlayer(struct actor_self *self)
 {
@@ -255,7 +255,7 @@ void DrawPolarPlayer(struct actor_self *self)
  * `gPolarSteerEnabled`/arms `gPolarPlayerInactive`, and fires
  * `SetCellAnimSpeed(0)`/`StopYeti()` - or, while a tier is already
  * active, arms a fixed `gPolarInvulnTimer` countdown and forwards to
- * `RemovePolarAkuAkuMask` (the "remove a mask" helper, `actor_part58.c`)
+ * `RemovePolarAkuAkuMask` (the "remove a mask" helper, `polar_aku_aku.c`)
  * instead. Either way reports "not yet used" (0).
  *
  * The ROM keeps the "already used" early return sharing the exact same
@@ -399,7 +399,7 @@ end:
  * keyframe-table byte-pair lookup (`self`'s part table, indexed by
  * `self+0xc`, offset by `self+8`'s frame accumulator, into a *second*
  * pointer array at `self+4`) already established for `AllocJetpackPlayerTiles`
- * (`actor_part43b.c`, `docs/matching/issue-56-0x0802f0dc-actor.md`);
+ * (`jetpack_run.c`, `docs/matching/issue-56-0x0802f0dc-actor.md`);
  * arms `gPolarPlayerTileBuffer`, clears `gPolarPlayerLastFrame`. The ROM's
  * "multiply into a copy, copy again, then shift" sequence is simply
  * old_agbcc's code for `h * w * 32` - no register forcing needed. */

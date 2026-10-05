@@ -8,18 +8,18 @@
  * (`CreatePolarCheckpointText`-`PolarPlayerStateCaught`) are still raw - this file only covers
  * the literal tail of that raw `.s` file, a self-contained run of
  * accumulator-drain/hazard-threshold helpers on the same `self` object
- * family documented in actor_part19.c/actor_part44.c, operating on the
+ * family documented in polar_player_actions.c/jetpack_player.c, operating on the
  * `gUnknown_0300148x`/`gUnknown_030014Ax` global cluster those files
  * already established (`gPolarQueuedWumpa`'s "reward" accumulator,
  * `gPolarPlayerInactive`-`030014A4`'s lock/hazard-latch quintet). See
  * docs/rom_map.md's "boss's BG2 spin/zoom effect..." section, which
  * already reads `DispensePolarWumpa` as one of a matched pair of accumulator-
  * drain/reward-dispenser functions (the other being `DispenseJetpackWumpa` in
- * actor_part44.c) and `SpawnPolarCollectedWumpa` as a "spawn effect type N" family
+ * jetpack_player.c) and `SpawnPolarCollectedWumpa` as a "spawn effect type N" family
  * member - both confirmed here by this function's own body.
  *
  * `self` is `struct actor_self`; the animation-reset blocks store
- * through `*(T *)&self->field` casts, as in actor_part19.c. */
+ * through `*(T *)&self->field` casts, as in polar_player_actions.c. */
 
 extern s32 gPolarQueuedWumpa;
 extern u8 gPolarPlayerInactive;
@@ -39,7 +39,7 @@ extern void SetCellAnimSpeed(s32 arg0);
  * `gPolarWumpaDispenseTimer` cooldown elapses, dispenses one of four tiers of
  * reward (via `SpawnPolarCollectedWumpa` at `self`'s position) sized by the
  * accumulator's own magnitude, and plays a cue. Exact structural twin
- * of `DispenseJetpackWumpa` (actor_part44.c) on a different accumulator/cooldown
+ * of `DispenseJetpackWumpa` (jetpack_player.c) on a different accumulator/cooldown
  * pair - see docs/rom_map.md. */
 void DispensePolarWumpa(void *selfArg)
 {
@@ -84,7 +84,7 @@ void DispensePolarWumpa(void *selfArg)
 
 extern u8 gPolarPauseLocked;
 
-/* Trivial byte getter - `PolarIsPauseLocked` (actor_part94.c) is a NAKED
+/* Trivial byte getter - `PolarIsPauseLocked` (actor_spawn.c) is a NAKED
  * trampoline that calls this through the player pointer. */
 u8 IsPolarPauseLocked(void)
 {
@@ -98,7 +98,7 @@ extern u8 gPolarSteerEnabled;
  * (`gPolarPlayerInactive`), and resets `self` to state 1/table-index 0 -
  * the same state/table-index/anim-frame reset idiom already documented
  * for the boss cluster's `DamageAirshipFireball`/`AirshipStateFall` and this family's
- * own `LaunchPolarPlayer` (actor_part19.c) - then fires `SetCellAnimSpeed(0x24)`. */
+ * own `LaunchPolarPlayer` (polar_player_actions.c) - then fires `SetCellAnimSpeed(0x24)`. */
 void sub_802BD24(void *selfArg)
 {
     register struct actor_self *self asm("r3") = selfArg;
@@ -136,7 +136,7 @@ extern void SetActorCategoryExitStatus(s32 arg0);
  * budget (`gPolarPlayerVelY`) into `y`, advances `z`
  * by a fixed step, and derives a camera-relative depth
  * (`depth`, via `GetCellAnimDistance`) - the same shape as `JetpackPlayerStateFall`/
- * `JetpackPlayerStateFinish` (actor_part44.c). Once that depth drops to/below the
+ * `JetpackPlayerStateFinish` (jetpack_player.c). Once that depth drops to/below the
  * far threshold, triggers a screen-flash (`FadeBrightness`) once (latched
  * via `gPolarFadeStarted`) and also latches `gPolarPauseLocked` (this
  * axis's own one-shot flag, see `IsPolarPauseLocked`); once it drops to/below

@@ -2,17 +2,29 @@
 
 This is the plan for #575: give every `src/` file a name that says what it
 holds, put the files in subsystem directories, and merge neighbours where that
-is provably byte-safe. **Nothing moves in the PR that adds this document.**
+is provably byte-safe.
+
+**Status: complete.** The plan landed in five PRs (#596-#600, see
+"Batching order" below). Every file has moved, all 66 merge groups landed,
+and none had to stay separate: the 367 game code files are now 241, as
+planned. `src/graphics/` and the numbered `actor_part*`, `game_loop*`,
+`settings_menu*` and `graphics_loading_*` names are gone. The sections
+below describe the plan as it was written, before the move; "today" means
+before #596.
+
 The per-file mapping is [`tools/file_layout_plan.tsv`](../tools/file_layout_plan.tsv):
-one row per current source file, in ROM (ldscript) order, with
+one row per pre-move source file, in ROM (ldscript) order, with
 `old_path`, `new_path`, `merge_group` and a `reason` that names the
-functions the file holds.
+functions the file holds. It stays in the tree as the permanent old-to-new
+lookup for older docs, issues and PRs that use the old names.
+`tools/apply_file_layout.py` is the script that applied it, one batch of
+directories at a time.
 
 The libraries (GAX2, AgbEeprom, libgcc and the BIOS SWI wrappers) already
 live in `lib/` since #573 (see [`docs/libraries.md`](./libraries.md)). This
 plan covers only what is left in `src/`.
 
-## Where the files are today
+## Where the files were before the move
 
 | | Files | Notes |
 |---|---:|---|
@@ -57,7 +69,7 @@ One directory level under `src/`, as now: the Makefile's
 | `src/data/` | ROM data. Names unchanged (see below). | 73 → 73 |
 
 If every merge below lands, 367 game code files become 241. With only the
-tier-1 merges, they become 290.
+tier-1 merges, they become 290. (All of them landed: 241.)
 
 `src/actor/` and `src/objects/` are separate on purpose. `actor` is this
 project's name for the pseudo-3D category engine (`struct actor_self`,
@@ -387,13 +399,13 @@ The move lands in PRs by subsystem, in ROM order where that helps
 reviewers. Each PR does its renames and tier-1 merges. Tier-2 merges go in
 a final commit of the same PR, or in their own PR if review prefers.
 
-| PR | Directories | Code files in → out |
-|---|---|---|
-| 1 | `system/`, `util/`, `text/`, `gfx/`, `audio/`, `link/`, plus the TSV-driven rename/rewrite script | 51 → 40 |
-| 2 | `save/`, `menus/`, `frontend/`, `hud/`, `cutscene/` | 60 → 40 |
-| 3 | `objects/`, `player/`, `enemies/`, `crates/`, `pickups/` | 103 → 71 |
-| 4 | `level/`, `bosses/` | 90 → 56 |
-| 5 | `actor/`, `vehicle/` | 61 → 32 |
+| PR | Directories | Code files in → out | Landed in |
+|---|---|---|---|
+| 1 | `system/`, `util/`, `text/`, `gfx/`, `audio/`, `link/`, plus the TSV-driven rename/rewrite script | 51 → 40 | #596 |
+| 2 | `save/`, `menus/`, `frontend/`, `hud/`, `cutscene/` | 60 → 40 | #597 |
+| 3 | `objects/`, `player/`, `enemies/`, `crates/`, `pickups/` | 103 → 71 | #598 |
+| 4 | `level/`, `bosses/` | 90 → 56 | #599 |
+| 5 | `actor/`, `vehicle/` | 61 → 32 | #600 |
 
 PR 1 also proves the script on the smallest directories. Every later PR is
 the same script run on the next directories, plus that batch's merges.

@@ -1,7 +1,7 @@
 # Status: graphics_loading
 
 Asset/graphics-package loading and the "trigger effect type N" dispatch
-family. Filed under `src/graphics/` on disk, tracked as its own
+family. Now in `src/gfx/` and `src/level/` (formerly `src/graphics/`), tracked as its own
 `graphics_loading` category since `docs/rom_map.md` and the
 `decomp-chunk` issue generator both treat it as a distinct system from
 "core" graphics.

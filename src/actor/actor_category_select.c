@@ -5,7 +5,7 @@
  * shared vtable, `type` being the first argument), `gUnknown_03001414`
  * = the 4th argument (a variant-selector byte), `gActorSpawnTable` =
  * the 2nd argument (the category's `spawnTable` array pointer,
- * see `struct sub_effect_record` in actor_part94.c/include/actor_anim.h),
+ * see `struct sub_effect_record` in actor_spawn.c/include/actor_anim.h),
  * resets `gActorSpawnIndex`/`gActorSpawnsPaused`/`gActorSpawnOffset` to
  * 0, draws the vtable's slot-0 function pointer via `_call_via_r3`
  * (arg2/arg3 as x/y - the 5th argument, stack-passed, per the ROM's own
@@ -32,7 +32,7 @@
  * emits no code; it just makes the pointer outrank `base`. The scan
  * loops still use the global directly, which gives the ROM's loop-local
  * copies of the address. Matches under both compilers.
- * NextThreshold is actor_part94.c's `sub_802A51C` address shape,
+ * NextThreshold is actor_spawn.c's `sub_802A51C` address shape,
  * returned as a pointer so the load lands after the limit. */
 #include "memory.h"
 #include "actor_anim.h"
@@ -48,7 +48,7 @@ extern s32 gActorCategoryFrameCount;
 extern s32 GetCellAnimDistance(void);
 
 /* `table[idx + 1].field_00`, with the record-boundary constant added
- * to the base before the index (same shape as actor_part94.c's
+ * to the base before the index (same shape as actor_spawn.c's
  * `sub_802A51C`). */
 static inline s32 *NextThreshold(struct sub_effect_record *table, s32 idx)
 {

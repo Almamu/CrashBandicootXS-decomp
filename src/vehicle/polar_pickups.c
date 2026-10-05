@@ -2,8 +2,8 @@
 #include "actor_self.h"
 #include "memory.h"
 
-/* Continuation of actor_part19.c's player/action-object family, right
- * after `RunPolarPlayerState` (matched C, see actor_part19e.c) - same `self`
+/* Continuation of polar_player_actions.c's player/action-object family, right
+ * after `RunPolarPlayerState` (matched C, see polar_player_dispatch.c) - same `self`
  * object and conventions documented there. */
 
 /* `self` with the velocity pair this class adds after the common
@@ -203,8 +203,8 @@ void DrawPolarCollectedWumpa(void *selfArg)
 
 asm(".align 2, 0");
 
-/* Continuation of actor_part19.c's player/action-object family, right
- * after the parked `DrawPolarCollectedWumpa` (see actor_part19b.c) - same `self`
+/* Continuation of polar_player_actions.c's player/action-object family, right
+ * after `DrawPolarCollectedWumpa` (above) - same `self`
  * object and conventions documented there. */
 
 /* The derived-class field `DestroyPolarCollectedWumpa` reads: how many fruit the
@@ -287,7 +287,7 @@ struct polar_collected_wumpa {
     struct actor_self base;
     s32 velX;           // 0x54
     s32 velY;           // 0x58
-    s32 count;          // 0x5C - the spawn parameter; DestroyPolarCollectedWumpa (actor_part19c.c)
+    s32 count;          // 0x5C - the spawn parameter; DestroyPolarCollectedWumpa (below)
                         // repeats its teardown drain this many times
 };
 
@@ -333,15 +333,15 @@ void *CreatePolarCollectedWumpa(void *selfArg, s32 a, s32 b, s32 c, s32 spawnPar
 
 asm(".align 2, 0");
 
-/* Continuation of actor_part19.c's player/action-object family, right
- * after the parked `CreatePolarCollectedWumpa` (see actor_part19c2.c) - same `self`
+/* Continuation of polar_player_actions.c's player/action-object family, right
+ * after `CreatePolarCollectedWumpa` (above) - same `self`
  * object (`struct actor_self`) and conventions documented there. The
  * animation-reset blocks (the `anim`/`zero1`/`zero2` register trios)
  * store through `*(T *)&self->field` casts: plain member stores let
  * gcc move the zero loads (docs/workflow.md step 7). */
 
-/* Anonymous 12-byte (3-word) copy unit - see actor_part19c.c's own
- * copy of this comment for why this shape (rather than three separate
+/* Anonymous 12-byte (3-word) copy unit - see the earlier copy of this
+ * comment in this file for why this shape (rather than three separate
  * `s32` field copies) is needed to reproduce the ROM's `ldm`/`stm`
  * lowering for `self+0x38`'s refresh from `gPolarNitroCrateBox`. */
 struct vec3_words {

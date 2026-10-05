@@ -11,7 +11,7 @@ now.
 
 ## Matched (24/25)
 
-All in `src/graphics/actor_anim.c`, in ROM order:
+All in `src/actor/actor_anim.c`, in ROM order:
 
 - **`GetAnimFrameAttr`** - reads the current keyframe record's `attr`
   halfword (`frameTable[frameIndex].attr`) and returns it pre-shifted
@@ -48,7 +48,7 @@ All in `src/graphics/actor_anim.c`, in ROM order:
   call, then either fires the `self+0x50` trampoline record (arg `3`)
   if `self+0x12` is set, or tail-calls `UpdateActor(self)` otherwise -
   the same `+0x50`-rooted `{s16 offset; void *fn}` trampoline
-  convention already documented in `actor_part19.c`.
+  convention already documented in `polar_player_actions.c`.
 
 ### Compiler-codegen notes
 
@@ -77,7 +77,7 @@ All in `src/graphics/actor_anim.c`, in ROM order:
   anim_frame_record`** (both in `actor_anim.c`) rather than keeping raw
   offsets for `self+0`/`self+4`/`self+0xc` - unlike the "big self"
   object's later fields (state at `+0x28`, `+0x48`/`+0x4c` list,
-  `+0x50` trampoline, all still raw per `actor_part19.c`'s own
+  `+0x50` trampoline, all still raw per `polar_player_actions.c`'s own
   precedent), these first three fields are exactly what
   `GetAnimFrameBaseOffset` already exposed a struct for (`field_08`),
   so extending that existing minimal struct - rather than reverting to
@@ -95,7 +95,7 @@ All in `src/graphics/actor_anim.c`, in ROM order:
   `GetAnimFrameAttr`'s attr flag, and a priority/palette nibble from
   `self+0x18`/`self+0x14`) and calls `SetupSpriteFrameOam`. This is the
   near-identical twin of the already-parked `DrawPolarCollectedWumpa`
-  (`src/graphics/actor_part19b.c`, self-relative position instead of a
+  (`src/vehicle/polar_pickups.c`, self-relative position instead of a
   fixed one) - and hits the exact same two gaps documented there:
   - A `| 0`-with-a-zero-valued term (`packed = ... | attr | flag` where
     `flag` is always 0 at this call site) that the ROM keeps as a real

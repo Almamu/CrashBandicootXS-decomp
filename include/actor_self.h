@@ -13,7 +13,7 @@
  * Only the common prefix (0x00-0x57) is described here - every derived
  * class lays out its own fields from +0x54 on, so those live in each
  * translation unit's own struct that embeds this one as its first
- * member. Most of the older actor_part*.c files still use raw offsets
+ * member. Most of the older actor files still use raw offsets
  * into the same object.
  */
 

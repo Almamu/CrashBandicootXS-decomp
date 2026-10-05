@@ -67,17 +67,17 @@ extern const u32 gJetpackExplosionFrames[10];
 extern const struct anim_frame_record gJetpackCheckpointTextKeyframes[1];
 extern const u32 gJetpackCheckpointTextFrames[3];
 
-/* The 16-colour gradient UpdateYetiPalette (actor_part74.c) DMAs to OBJ
+/* The 16-colour gradient UpdateYetiPalette (yeti_update.c) DMAs to OBJ
  * palette 15, or fades towards. */
 const u16 gYetiPalette[16] = {
     0x03E0, 0x3547, 0x24E5, 0x3DA9, 0x49EC, 0x1083, 0x0421, 0x522E,
     0x5A70, 0x62B2, 0x66D3, 0x6F15, 0x7757, 0x7FB9, 0x7FFC, 0x0000,
 };
 
-/* IsTouchingYeti's (actor_part75.c) hit box. */
+/* IsTouchingYeti's (yeti_graphics.c) hit box. */
 const struct anim_box gYetiBox = { -28, -24, -2, 56, 90, 4 };
 
-/* UpdateYeti's (actor_part74.c) hit box. */
+/* UpdateYeti's (yeti_update.c) hit box. */
 const struct anim_box gYetiCatchBox = { -80, -40, -14, 160, 110, 16 };
 
 /* The 256-colour OBJ palette InitActorCategory loads for these

@@ -19,7 +19,7 @@
  * plays first, then a `self+0x30`-relative type byte selects between
  * `FreezeLevelClock`/`QueueJetpackWumpa` calls - written as `goto`-chained `if`
  * blocks (not a plain `switch`) to match this family's already-matched
- * sibling `UpdatePolarQuestionCrate` (`actor_part19g.c`), whose last case does
+ * sibling `UpdatePolarQuestionCrate` (`polar_pickups.c`), whose last case does
  * something structurally different from the others and resists a plain
  * `switch`'s uniform codegen.
  *
@@ -68,7 +68,7 @@ extern u8 gJetpackBalloonCrateVtable[];
 extern u8 gJetpackParachuteNitroVtable[];
 extern u8 gJetpackRocketVtable[];
 
-/* Anonymous 12-byte (3-word) copy unit - see actor_part19g.c's own copy
+/* Anonymous 12-byte (3-word) copy unit - see polar_pickups.c's own copy
  * of this comment for why this shape (rather than three separate `s32`
  * field copies) is needed to reproduce the ROM's `ldm`/`stm` lowering. */
 struct vec3_words {

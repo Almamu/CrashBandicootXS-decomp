@@ -12,7 +12,7 @@ descriptive names; see `tools/file_layout_plan.tsv` for the mapping.)
 
 25-function `decomp-chunk` covering the `InitActorPart`/`gActorList`-
 rooted "self" object family already documented for
-`ctrl.c`/`action_ctrl_states.c`/`actor_part19.c`/`hovercraft_parts.c`/
+`ctrl.c`/`action_ctrl_states.c`/`polar_player_actions.c`/`hovercraft_parts.c`/
 `hovercraft_cannon.c`: a "part table" pointer at `self+0` (copied from the
 constructor's `part` argument's own `+4` field), a table-index/"kind"
 field at `self+0xc`, an anim-frame halfword/byte pair at `self+0x10`/
@@ -21,7 +21,7 @@ counter at `self+0x44`, a `+0x50`-rooted event/trampoline table fed
 through `_call_via_r2`, and the `+0x48`(prev)/`+0x4c`(next) circular
 doubly-linked list rooted at the player-pointer global
 `gActorList`. This chunk additionally pins down `InitActorPart`
-itself (the constructor every other `actor_part*.c` file already
+itself (the constructor every other actor file already
 forward-declares and calls) plus a handful of new fields it introduces:
 the constructor's raw `part`/`b`/`c`/`d` arguments cached at
 `self+0x30`/`self+0x1c`/`self+0x20`/`self+0x24`, a "movement" threshold
@@ -50,14 +50,14 @@ only the tail continuation `..._ac28.s` remains.
 ## Matched (25 of 25 functions)
 
 - **`JetpackReloadPlayerTiles`/`PolarReloadPlayerTiles`/`JetpackReachCourseEnd`/`PolarReachCourseEnd`**
-  (`src/graphics/actor_part50.c`) - four trivial forwarders, the same
-  shape as `GivePolarPlayerLife` in `actor_part19.c`: each ignores its own
+  (`src/actor/actor.c`) - four trivial forwarders, the same
+  shape as `GivePolarPlayerLife` in `polar_player_actions.c`: each ignores its own
   argument and calls a different function with the player pointer
   (`gActorList`), discarding the return value.
-- **`IsTouchingPlayer`** (`src/graphics/actor_part50.c`) - passes its own
+- **`IsTouchingPlayer`** (`src/actor/actor.c`) - passes its own
   `self` argument through to `_call_via_r1`, alongside a function pointer
   read from `gActorCategoryVtable`'s own `+0x24` field.
-- **`InitActorPart`** (`src/graphics/actor_part50.c`) - the constructor.
+- **`InitActorPart`** (`src/actor/actor.c`) - the constructor.
   Matching it byte-exact needed several of this project's established
   idioms stacked together: `part`/`b`/`c` pinned to `r4`/`r5`/`r6` and
   `self` left as a *plain* local (letting the allocator land it in `r7`
@@ -73,7 +73,7 @@ only the tail continuation `..._ac28.s` remains.
   final list-insertion re-ordered to store `self` into the head node's
   `+0x4c` *before* reading its `+0x48` (matching the ROM's literal
   instruction order, not just its final result).
-- **`UpdateActor`** (`src/graphics/actor_part50.c`) - the movement-
+- **`UpdateActor`** (`src/actor/actor.c`) - the movement-
   threshold recompute/frame-advance pair, sharing `InitActorPart`'s
   `ABS32`/`r2`-running-value idiom. Two additional gaps: the trampoline-
   fire call's `self + offset` argument had to be computed into its own
@@ -83,23 +83,23 @@ only the tail continuation `..._ac28.s` remains.
   `table` (not the more natural `table` first) plus the resulting
   `table + idx*0xc` address pinned to `r1` to reproduce the ROM's
   register choice for the shared record pointer.
-- **`UpdateActorDepth`** (`src/graphics/actor_part56.c`) - the same
+- **`UpdateActorDepth`** (`src/actor/actor.c`) - the same
   movement-threshold recompute as `UpdateActor`, with no trampoline-
   fire/frame-advance tail.
-- **`GetActorRecordIndex`** (`src/graphics/actor_part56.c`) - trivial getter:
+- **`GetActorRecordIndex`** (`src/actor/actor.c`) - trivial getter:
   the first byte of `self`'s part-table pointer.
-- **`SetActorState`** (`src/graphics/actor_part56.c`) - the state/table-
+- **`SetActorState`** (`src/actor/actor.c`) - the state/table-
   index/anim-frame reset idiom already documented for the boss
   cluster's `DamageAirshipFireball`/`AirshipStateFall`.
-- **`GetActorZ`/`GetActorY`/`GetActorX`** (`src/graphics/actor_part56.c`)
+- **`GetActorZ`/`GetActorY`/`GetActorX`** (`src/actor/actor.c`)
   - trivial `self+0x24`/`0x20`/`0x1c` getters.
-- **`IsActorVisible`** (`src/graphics/actor_part52.c`) - trivial `self+0x2c`
+- **`IsActorVisible`** (`src/actor/actor.c`) - trivial `self+0x2c`
   byte getter.
-- **`DestroyActor`** (`src/graphics/actor_part52.c`) - teardown: marks
+- **`DestroyActor`** (`src/actor/actor.c`) - teardown: marks
   `self` "dead", unlinks it from the circular list (the same shape as
-  `DestroyPolarPlayer`'s unlink sequence in `actor_part19.c`), and frees it
+  `DestroyPolarPlayer`'s unlink sequence in `polar_player_actions.c`), and frees it
   when requested.
-- **`IsSpawnCollected`/`MarkSpawnCollected`/`ClearCollectedSpawns`** (`src/graphics/actor_part52.c`)
+- **`IsSpawnCollected`/`MarkSpawnCollected`/`ClearCollectedSpawns`** (`src/actor/actor.c`)
   - the fixed 15-slot `gCollectedSpawns`/`gCollectedSpawnCount` registry's
   search/append/clear trio. Both search loops needed the counter/array-
   pointer pinned to `r2`/`r1` (`IsSpawnCollected`) or `self` pinned to `r3`
@@ -109,13 +109,13 @@ only the tail continuation `..._ac28.s` remains.
   *other* functions preceded it in the same translation unit, discovered
   only after the full link shifted these two functions by 4 bytes (see
   "A note on isolated-compile confidence" below).
-- **`RestoreActorPaletteCycle`/`SaveActorPaletteCycle`** (`src/graphics/actor_part52.c`) - the
+- **`RestoreActorPaletteCycle`/`SaveActorPaletteCycle`** (`src/actor/actor.c`) - the
   palette-cycle cursor/bound save/restore pair.
-- **`SetActorPaletteCycle`/`EnableActorPaletteCycle`** (`src/graphics/actor_part54.c`) - the
+- **`SetActorPaletteCycle`/`EnableActorPaletteCycle`** (`src/actor/actor.c`) - the
   palette-cycle cluster's remaining seed/arm-disarm pair, non-adjacent to
   `actor_part52.c` since `UpdateActorPaletteCycle`'s own object (`actor_part53.o`)
-  sits between them.
-- **`DrawActor`** (`src/graphics/actor_part55.c`) - the OAM
+  sat between them (all seven files are now `src/actor/actor.c`).
+- **`DrawActor`** (`src/actor/actor.c`) - the OAM
   draw/scale routine: computes an OBJ scale factor and on-screen X/Y
   from `self`'s movement-threshold metric, culls off-screen, and calls
   `SetupSpriteFrameOam`. Closed a later session's remaining gap: the
@@ -138,7 +138,7 @@ only the tail continuation `..._ac28.s` remains.
   writing out by hand (same technique as `DivMod`'s r2-across-SWI
   save/restore, see docs/matching.md), reloading right before its one
   remaining use to match the ROM's late `ldr r2, [sp]` placement.
-- **`sub_802AA0C`** (`src/graphics/actor_part51.c`) - a 12-byte
+- **`sub_802AA0C`** (`src/actor/actor.c`) - a 12-byte
   little-vector velocity integrator (the position block `InitActorPart`
   copies from `part+0x14..0x20`, see above). The residual gap was
   instruction *scheduling*: this compiler's own list scheduler always
@@ -161,7 +161,7 @@ only the tail continuation `..._ac28.s` remains.
   documented for `GetCompletionPercent`/`DrawWrappedTextInBox` in docs/matching.md. No
   caller of this function has been matched yet to confirm whether the
   return value is actually used.
-- **`UpdateActorPaletteCycle`** (`src/graphics/actor_part53.c`) - the palette-cycle
+- **`UpdateActorPaletteCycle`** (`src/actor/actor.c`) - the palette-cycle
   cursor-advance DMA step. Two gaps: the cursor-advance tail (no C
   phrasing tried - plain if/else-if/else, `goto`-linearized with an
   explicit `result` copy, cached-address locals, register-pinned address
@@ -200,7 +200,8 @@ padding gotcha as elsewhere in this project.
 the ROM when tested alone in an early combined file, then *silently*
 picked a different register (still correct, still the right size, just
 the wrong specific register) once later functions were split out of
-that file into `actor_part52.c`/`actor_part54.c` - shifting every
+that file into `actor_part52.c`/`actor_part54.c` (now all part of
+`actor.c`) - shifting every
 subsequent function's address by 4 bytes, caught only by the full-link
 `make compare` and the map-file address-shift diagnostic
 `docs/workflow.md` describes. This is the same failure mode already

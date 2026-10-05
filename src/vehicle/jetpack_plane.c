@@ -125,7 +125,7 @@ extern s32 __divsi3(s32 a, s32 b);
 extern s32 GetAnimFrameBaseOffset(void *self);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void InitActorPart(void *self, void *part, s32 b, s32 c, s32 d);
-/* Defined as a no-argument counter in actor_part44.c, but the ROM passes
+/* Defined as a no-argument counter in jetpack_player.c, but the ROM passes
  * the player object here (a C++ method ignoring its `this`). */
 extern s32 CountJetpackBomber(void *player);
 
@@ -528,7 +528,7 @@ void UpdateJetpackCannonball(struct jetpack_cannonball *self)
 }
 
 /* Constructor: 1 hit point and the given velocity - the same shape as
- * CreateJetpackShot (actor_part45c.c), matched with the same register
+ * CreateJetpackShot (jetpack_shot.c), matched with the same register
  * arrangement (the constant pinned to r5, the two stack arguments left
  * to the allocator). */
 void *CreateJetpackCannonball(struct jetpack_cannonball *self, void *part, s32 b, s32 c, s32 d, s32 velX, s32 velY)

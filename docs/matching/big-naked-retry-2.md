@@ -41,7 +41,7 @@ The first draft was 16 bytes short and 313 halfwords off.
   ROM's value-then-address order. State 18's volume is its own local.
   118 -> 27.
 - **The stack byte first.** State 18 passes a packed one-byte struct
-  by value to `PlayAmbientSfx`, as `actor_part128.c` does. Storing
+  by value to `PlayAmbientSfx`, as `jetpack_spawn.c` does. Storing
   `zero.v = 0` before the distance math, instead of right before the
   call, gave the ROM's register choice for the `0x100` constant (27 -> 0).
 - Smaller fixes along the way:

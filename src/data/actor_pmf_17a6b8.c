@@ -22,7 +22,7 @@ extern void PolarPlayerStateFinish();
 extern void PolarPlayerStateLand();
 
 /* Per-state handlers of the actor object dispatched by UpdatePolarPlayer
- * (actor_part127.c) and RunPolarPlayerState (actor_part19e.c). */
+ * (polar_player.c) and RunPolarPlayerState (polar_player_dispatch.c). */
 const struct actor_pmf gPolarPlayerStateFuncs[14] = {
     ACTOR_PMF(PolarPlayerStateMount),
     ACTOR_PMF(PolarPlayerStateRun),

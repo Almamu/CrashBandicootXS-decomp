@@ -86,7 +86,7 @@ extern s32 GetSpriteShapeSizeBits(void *self);
 extern void QueueSpriteFrameOam(u32 attr01, u16 attr2, s32 scale);
 
 /* The camera-ish object an actor part reads through `self+0x30`
- * (same shape as actor_part128.c's). */
+ * (same shape as jetpack_spawn.c's). */
 struct cam_ref {
     u8 unk_00[0x10];
     s32 depth;      // 0x10 - the depth at which sprites draw unscaled
@@ -513,7 +513,7 @@ struct actor_self *InitLogoActor(struct actor_self *self, void *a)
 
 /* One state (of at least 5, `self+0x28`) in an actor-part's own
  * animation-state machine (see `struct anim_part_instance`,
- * src/graphics/actor_anim.c): state 0 waits for a `self+0x12` flag then
+ * src/actor/actor_anim.c): state 0 waits for a `self+0x12` flag then
  * jumps to state 1 (resets the frame accumulator and reloads the
  * initial frame's duration from the part table's own header);
  * state 1 waits for frame id 0x12 then jumps to state 2 (loads a

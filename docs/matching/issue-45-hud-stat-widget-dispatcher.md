@@ -295,7 +295,7 @@ functions cut into `src/gfx/palette_cycle.c` and their
 
 ### Parked: `UpdateHudBoss`/`UpdateHudClock` (real gap, not a budget cut)
 
-Both fully understood and reconstructed as C (`src/graphics/
+Both fully understood and reconstructed as C (`src/hud/
 hud_boss_clock.c`, guarded by `#if NON_MATCHING`; real bytes stay in
 `asm/code_3_2_17_2757c.s`, now itself split into two
 `.if NON_MATCHING == 0` blocks, one per function) but not byte-matched:

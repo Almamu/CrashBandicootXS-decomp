@@ -16,8 +16,8 @@ original agbcc pass; where a workaround has since gone, it is marked.
 
 ## What the code is
 
-The same C++-style object family as `input_ctrl.c` and
-`actor_part27*.c`: small classes with a method table ("vtable") at
+The same C++-style object family as `input_ctrl.c`, `input_ctrl_queue.c`
+and the Mega Mix files (`mega_mix.c`, `mega_mix_update.c`): small classes with a method table ("vtable") at
 `self+0xc`, gcc 2.x `{s16 this-adjust, pad, fn}` method entries called
 through the `_call_via_r2`/`AD84`/`AD88` call-via-register trampolines.
 Every class has a constructor (base constructor `InitCtrl`,

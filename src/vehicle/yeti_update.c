@@ -1,15 +1,15 @@
 #include "core.h"
 #include "actor_self.h"
 
-/* Sits right after actor_part58.c's `CreatePolarCheckpointCrate` and before
- * actor_part59.c's `YetiStateChase`/`YetiStateCharge` - the whole contiguous
+/* Sits right after polar_aku_aku.c's `CreatePolarCheckpointCrate` and before
+ * yeti_states.c's `YetiStateChase`/`YetiStateCharge` - the whole contiguous
  * range that used to be `asm/code_3_2_20_28568_c99c_d7b0.s`. All three
  * functions here operate on the `gYeti`-rooted "position-
  * tracking object with tier-threshold sound cues" documented in
- * actor_part59.c's header comment and docs/matching/issue-54-actor-d3a8.md
+ * yeti_states.c's header comment and docs/matching/issue-54-actor-d3a8.md
  * (the "third RAM-struct family" from docs/rom_map.md). See that issue
  * doc's "Second pass" section for how the 12-byte AABB-record layout
- * used here and by `IsTouchingYeti` (actor_part75.c) was finally pinned
+ * used here and by `IsTouchingYeti` (yeti_graphics.c) was finally pinned
  * down.
  *
  * Built with old_agbcc: `UpdateYetiBg2` only matches under it, and

@@ -12,7 +12,7 @@
 #define ABS32(x, sign) do { (sign) = (x) >> 0x1f; (x) ^= (sign); (x) -= (sign); } while (0)
 
 /* The `InitActorPart`/`gActorList`-rooted "self" object family
- * already documented in ctrl.c/action_ctrl_states.c/actor_part19.c/
+ * already documented in ctrl.c/action_ctrl_states.c/polar_player_actions.c/
  * hovercraft_parts.c/hovercraft_cannon.c: a "part table" pointer at `self+0`
  * (copied from the constructor's `part` argument's own `+4` field), a
  * table-index/"kind" field at `self+0xc`, an anim-frame halfword/byte
@@ -21,7 +21,7 @@
  * trampoline table fed through `_call_via_r2`, and the `+0x48`(prev)/
  * `+0x4c`(next) circular doubly-linked list rooted at the player-pointer
  * global `gActorList`. This file additionally pins down
- * `InitActorPart` itself (the constructor every other actor_part*.c file
+ * `InitActorPart` itself (the constructor every other actor file
  * already forward-declares and calls) plus a handful of new fields it
  * introduces: the constructor's raw `part`/`b`/`c`/`d` arguments cached
  * at `self+0x30`/`self+0x1c`/`self+0x20`/`self+0x24`, a "movement"
@@ -43,7 +43,7 @@ extern void AllocJetpackPlayerTiles(void *arg0);
 
 /* Trivial forwarder - ignores its own argument and calls
  * `AllocJetpackPlayerTiles(gActorList)` (the player object), discarding its
- * return value. Same shape as `GivePolarPlayerLife` in actor_part19.c. */
+ * return value. Same shape as `GivePolarPlayerLife` in polar_player_actions.c. */
 void JetpackReloadPlayerTiles(void *arg0)
 {
     AllocJetpackPlayerTiles(gActorList);
@@ -68,7 +68,7 @@ void JetpackReachCourseEnd(void *arg0)
 extern void FinishPolarRun(void *arg0);
 
 /* Same forwarder shape as `JetpackReloadPlayerTiles`, calling `FinishPolarRun` (already
- * matched as a no-argument function in actor_part19.c) with the player
+ * matched as a no-argument function in polar_player_actions.c) with the player
  * pointer anyway - the callee simply ignores it. */
 void PolarReachCourseEnd(void *arg0)
 {
@@ -93,7 +93,7 @@ extern void SetActorAnim(void *self, s32 arg1);
 extern s32 GetCellAnimDistance(void);
 extern s32 sub_8029E40(void);
 
-/* The constructor every other `actor_part*.c` file already forward-
+/* The constructor every other actor file already forward-
  * declares: seeds `self`'s part-table pointer (`+0`/`+4`, copied from
  * `part+4`/`part+8`) and header byte (`+0x18`, from `part+0xc`), resets
  * it via `SetActorAnim`, marks it "dead" (`+0x50 = gActorVtable`)
@@ -271,7 +271,7 @@ void UpdateActor(void *selfArg)
 
 asm(".align 2, 0");
 
-/* Same "self" object family as wumpa.c - see that file's header
+/* Same "self" object family as above - see this file's header
  * comment and docs/matching/issue-50-actor-2a69c.md. */
 
 extern s32 gUnknown_030013C8;
@@ -445,13 +445,11 @@ void DrawActor(void *selfArg)
  * here; see the matching_decomp_alignment_fix precedent). */
 asm(".align 2, 0");
 
-/* Branchless absolute value - see wumpa.c's copy of this macro
- * for the full explanation. */
+/* Branchless absolute value: `ABS32`, defined at the top of this file. */
 
-/* Same "self" object family as wumpa.c - see that file's header
- * comment and docs/matching/issue-50-actor-2a69c.md. Non-adjacent to
- * wumpa.c since the parked `DrawActor`
- * (actor_part44.c) sits raw between them. */
+/* Same "self" object family as above - see this file's header
+ * comment and docs/matching/issue-50-actor-2a69c.md. (This was a
+ * separate file while `DrawActor`, above, was still raw.) */
 
 /* Same movement-threshold computation as `InitActorPart`/`UpdateActor`
  * (see this file's header comment), but with no trampoline-fire/frame-
@@ -540,8 +538,8 @@ s32 GetActorX(struct actor_self *self)
 
 asm(".align 2, 0");
 
-/* Same "self" object family as wumpa.c/actor_part41.c - see
- * wumpa.c's header comment and
+/* Same "self" object family as above - see this file's header
+ * comment and
  * docs/matching/issue-50-actor-2a69c.md. */
 
 /* A 12-byte little vector block: copies `self+0x38..0x44` into `*out`,
@@ -646,10 +644,9 @@ void *sub_802AA0C(void *outArg, void *selfArg)
  * here; see the matching_decomp_alignment_fix precedent). */
 asm(".align 2, 0");
 
-/* Same "self" object family as wumpa.c - see that file's header
- * comment and docs/matching/issue-50-actor-2a69c.md. Non-adjacent to
- * wumpa.c since the parked `sub_802AA0C` (actor_part40.c) sits
- * raw between them. */
+/* Same "self" object family as above - see this file's header
+ * comment and docs/matching/issue-50-actor-2a69c.md. (This was a
+ * separate file while `sub_802AA0C`, above, was still raw.) */
 
 /* Trivial getter: `self+0x2c` (the constructor's one-shot byte flag). */
 u8 IsActorVisible(void *selfArg)
@@ -660,7 +657,7 @@ u8 IsActorVisible(void *selfArg)
 /* Teardown: marks `self` "dead" (`+0x50 = gActorVtable`), unlinks
  * it from the circular `+0x48`(prev)/`+0x4c`(next) list, and frees it
  * when `flags & 1`. Same shape as `DestroyPolarPlayer`'s unlink sequence in
- * actor_part19.c. */
+ * polar_player_actions.c. */
 void DestroyActor(void *selfArg, s32 flags)
 {
     u8 *self = selfArg;
@@ -779,7 +776,7 @@ void SaveActorPaletteCycle(void)
 
 asm(".align 2, 0");
 
-/* Same palette-cycle cluster as actor_part41.c/actor_part43.c - see
+/* Same palette-cycle cluster as the functions around it - see
  * docs/matching/issue-50-actor-2a69c.md. */
 
 extern u8 gActorPaletteCycleFrames[];
@@ -875,10 +872,10 @@ void UpdateActorPaletteCycle(void)
  * here; see the matching_decomp_alignment_fix precedent). */
 asm(".align 2, 0");
 
-/* Same palette-cycle cluster as actor_part41.c - see that file's header
- * comment and docs/matching/issue-50-actor-2a69c.md. Non-adjacent to
- * actor_part41.c since the parked `UpdateActorPaletteCycle` (actor_part42.c) sits
- * raw between them. */
+/* Same palette-cycle cluster as `RestoreActorPaletteCycle`/
+ * `SaveActorPaletteCycle` above - see docs/matching/issue-50-actor-2a69c.md.
+ * (This was a separate file while `UpdateActorPaletteCycle`, above, was
+ * still raw.) */
 
 extern s32 gActorPaletteCycleStartFrames[];
 extern s32 gActorPaletteCycleTargetFrames[];

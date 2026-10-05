@@ -22,7 +22,7 @@ s32 sub_8029E40(void)
     return gUnknown_030013D8;
 }
 
-/* Genuine no-op stub - see nullsub_5 (actor_part106.c). */
+/* Genuine no-op stub - see nullsub_5 (cell_anim.c). */
 void nullsub_6(void)
 {
 }

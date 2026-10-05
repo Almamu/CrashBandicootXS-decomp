@@ -226,7 +226,7 @@ void UpdateHovercraftLauncher(struct actor_self *self)
 }
 
 /* Same `InitActorPart`-rooted per-instance "self" object family already
- * documented in hovercraft_parts.c/hovercraft_cannon.c/actor_part50.c: a "part
+ * documented in hovercraft_parts.c/hovercraft_cannon.c/actor.c: a "part
  * table" pointer at `self+0`, a table-index/"kind" field at `self+0xc`,
  * an anim-frame halfword/byte pair at `self+0x10`/`self+0x12`, an
  * accumulator at `self+8`, state at `self+0x28`, a frame counter at
@@ -358,7 +358,7 @@ void HovercraftLauncherStateWait(void *selfArg)
     }
 }
 
-/* Same "self" object family as action_ctrl.c (constructed by
+/* Same "self" object family as above (constructed by
  * `CreateHovercraftLauncher`) - see docs/matching/issue-63-0x08033ef4-actor.md. */
 
 /* Per-state member-pointer dispatch, `(this->*gHovercraftLauncherStateFuncs

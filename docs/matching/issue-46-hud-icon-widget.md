@@ -77,7 +77,8 @@ All eight are fully understood (semantics, field offsets, and call/branch
 topology confirmed against the ROM disassembly) but don't yet produce
 byte-identical output from `tools/agbcc`. Real bytes live in four raw
 fragments, each guarded `.if NON_MATCHING == 0`, with `#if NON_MATCHING`
-C reconstructions in four matching `hud_icon_widget_*.c` files:
+C reconstructions in four matching files (then `hud_icon_widget_*.c`, now
+`src/text/font_glyph.c`, `font_draw_text.c`, `font_measure.c` and `font.c`):
 
 - **`asm/code_3_2_20_85c4.s`** (`FontDrawGlyph`, `InitSmallFont`,
   `InitLargeFont`, `FontPutChar`) - reconstructions in

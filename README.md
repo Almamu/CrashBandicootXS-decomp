@@ -12,9 +12,13 @@ It builds the following ROM:
 
 ## Current state
 
-Main decomp efforts just started. `src/` is split into `graphics/`, `util/`,
-`system/`, and (once anything's matched there) `audio/`, mirroring how the
-game's code is actually organized. The third-party and SDK code linked
+Main decomp efforts just started. `src/` is split into one directory per
+subsystem (`system/`, `gfx/`, `text/`, `audio/`, `objects/`, `player/`,
+`crates/`, `enemies/`, `level/`, `bosses/`, `actor/`, `vehicle/`, `menus/`,
+`hud/`, ...), with ROM data tables in `src/data/`, and every file is named
+after what it holds - see [docs/file_layout_plan.md](./docs/file_layout_plan.md)
+for the directories, the naming convention, and the old-to-new file name
+mapping. The third-party and SDK code linked
 into the ROM (the GAX2 sound engine, Nintendo's AgbEeprom library, libgcc,
 the BIOS SWI wrappers) is under `lib/`, apart from the game - see
 [docs/libraries.md](./docs/libraries.md). See [docs/status/](./docs/status/) for

@@ -5,7 +5,7 @@
  * the tail of `asm/code_3_2_20_28568_c99c_31784_31a6c.s`) - see
  * docs/matching/issue-59-0x08031784-actor.md and
  * docs/matching/issue-60-61-gap-31a6c-part2.md for the full writeup. A
- * sibling pass (`src/graphics/actor_part129.c`) covers the first half
+ * sibling pass (`src/vehicle/jetpack_crates.c`) covers the first half
  * of the same file (`UpdateJetpackBalloonCrate`-`UpdateJetpackRing`).
  *
  * Two threads converge in this range:
@@ -251,7 +251,7 @@ void UpdateJetpackCollectedWumpa(void *selfArg)
 
 /* Draws `self`'s current anim frame at its Q8 position, centered on the
  * frame's width/height bytes, unless it is entirely off screen. Same
- * shape as DrawActor (actor_part55.c) with the scale
+ * shape as DrawActor (actor.c) with the scale
  * doubling fixed off: `scaled` starts at 0 (halving nothing) and becomes
  * the 0x100 OBJ-affine bit once the sprite is known to be visible. The
  * third OAM word takes `self->palette` as its priority nibble, plus 0x800
@@ -338,7 +338,7 @@ void DestroyJetpackCollectedWumpa(struct actor_283c *self, u32 flags)
 
 /* "Spawn effect type N" homing/seek-toward-point constructor - a
  * byte-for-byte twin of the already-matched `CreatePolarCollectedWumpa` (issue #52,
- * `actor_part19c2.c`/`actor_part19g.c`), per `docs/rom_map.md`'s
+ * `polar_pickups.c`), per `docs/rom_map.md`'s
  * "Two small follow-ups round out the picture further" finding. Field
  * offsets differ slightly from that twin: this object keeps a fixed
  * `self+0x54 = 1` health field separate from the computed velocity
@@ -395,7 +395,7 @@ s32 IsJetpackCollectedWumpaUnshootable(void *self)
 /* Damage/health countdown: subtracts `delta` from `self+0x54`, and once
  * it drops to zero (or below) plays the death sound and runs the full
  * state/accumulator/anim-frame reset idiom already matched for
- * `ReleaseJetpackBalloon` (issue #59, `actor_part125.c`)/`DamageHovercraftCannon` (issue
+ * `ReleaseJetpackBalloon` (issue #59, `jetpack_balloon.c`)/`DamageHovercraftCannon` (issue
  * #62, `hovercraft_cannon.c`). */
 void DamageHovercraftFireball(void *selfArg, s32 delta)
 {

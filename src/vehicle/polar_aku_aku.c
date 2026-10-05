@@ -4,7 +4,7 @@
 #include "actor_self.h"
 
 /* Continues the `InitActorPart`/`gActorList`-rooted "self" object
- * family documented in actor_part50.c/actor_part19.c: a "part table"
+ * family documented in actor.c/polar_player_actions.c: a "part table"
  * pointer at `self+0`, a table-index/"kind" field at `self+0xc`, an
  * anim-frame halfword/byte pair at `self+0x10`/`self+0x12`, an
  * accumulator at `self+8`, state at `self+0x28`, a frame counter at
@@ -54,7 +54,7 @@ struct actor_once {
 /* Passes its argument through to `SetMaskLevel(gLevelState, 0)`,
  * then `RefreshPolarAkuAku(self, 0)` - a trivial reset pair on a different,
  * `gPolarAkuAku`-rooted object family, unrelated to this file's
- * `self` (see `actor_part19.c`'s `CatchPolarPlayer`, which calls this with
+ * `self` (see `polar_player_actions.c`'s `CatchPolarPlayer`, which calls this with
  * `gPolarAkuAku`). */
 void ClearPolarAkuAkuMask(void *self)
 {
@@ -115,7 +115,7 @@ void *CreatePolarAkuAku(struct actor_self *self, void *part, s32 b, s32 c, s32 d
 /* Trivial forwarder: `SetMaskLevel(gLevelState, arg1)`, where
  * `arg1` is this function's own second parameter, passed straight
  * through in `r1` (the same "ignore my own first argument, forward my
- * second" shape as `FinishPolarRun` in actor_part50.c). */
+ * second" shape as `FinishPolarRun` in actor.c). */
 void SetPolarMaskLevel(void *arg0, s32 arg1)
 {
     SetMaskLevel(gLevelState, arg1);

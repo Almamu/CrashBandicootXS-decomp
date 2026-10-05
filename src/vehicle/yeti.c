@@ -2,7 +2,7 @@
 #include "memory.h"
 
 /* More of the `gYeti`-rooted object's lifecycle (see
- * actor_part58.c's header comment): a state-flag setter, its
+ * polar_aku_aku.c's header comment): a state-flag setter, its
  * destructor, and its constructor. */
 
 extern s32 gYetiState;
@@ -78,11 +78,11 @@ void CreateYeti(void *arg0)
 
 asm(".align 2, 0");
 
-/* Sits right after actor_part60.c's `CreateYeti` and before
- * actor_part61.c's `YetiStateCaught` - the whole contiguous range that used
+/* Sits right after `CreateYeti` above and before
+ * `YetiStateCaught` below - the whole contiguous range that used
  * to be `asm/code_3_2_20_28568_c99c_e058.s`. */
 
-/* A parameterized twin of `LoadYetiGraphics`'s (actor_part75.c) 16x16
+/* A parameterized twin of `LoadYetiGraphics`'s (yeti_graphics.c) 16x16
  * triangular-fill dot-pattern loop, taking the destination buffer
  * (`dst`) and seed byte (`seed`) as real parameters instead of the
  * fixed stack buffer/`0`-or-`0x80` seed constants `LoadYetiGraphics` uses for

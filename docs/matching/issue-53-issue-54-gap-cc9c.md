@@ -2,9 +2,9 @@
 
 A scoping investigation of the actor zone found this whole 1804-byte
 gap - the remainder of `asm/code_3_2_20_28568_c99c_cc9c.s`, right after
-issue #53's own matched batch (`CreatePolarBasicCrate`, `src/graphics/
-actor_part19i.c`) and right before issue #54's chunk (`MovePolarAkuAku`,
-`src/graphics/actor_part62.c`) - still completely raw.
+issue #53's own matched batch (`CreatePolarBasicCrate`, `src/vehicle/
+polar_crates.c`) and right before issue #54's chunk (`MovePolarAkuAku`,
+`src/vehicle/polar_objects.c`) - still completely raw.
 `docs/matching/issue-53-actor-c7a8.md`'s "What's left" section had
 already flagged `UpdatePolarElectricFence` onward as "a larger,
 `IsTouchingYeti`/`IsTouchingPlayer`/`ShockPolarPlayer`-calling state machine ... not
@@ -12,7 +12,7 @@ attempted this pass".
 
 13 functions total, all on the same `InitActorPart`/`gActorList`-
 rooted "self" object family documented throughout `ctrl.c`-
-`actor_part19i.c` (a "part table" pointer at `self+0`, a table-index/
+`polar_crates.c` (a "part table" pointer at `self+0`, a table-index/
 "kind" field at `self+0xc`, an anim-frame halfword/byte pair at
 `self+0x10`/`self+0x12`, an accumulator at `self+8`, state at
 `self+0x28`, a frame counter at `self+0x44`, the position triple at
@@ -21,7 +21,7 @@ trampoline table).
 
 ## Parked - NAKED transcription (byte-correct, not decompiled)
 
-- **`UpdatePolarElectricFence`** (`src/graphics/actor_part126.c`) - a per-frame
+- **`UpdatePolarElectricFence`** (`src/vehicle/polar_objects.c`) - a per-frame
   hazard/proximity state machine: latches `self+0x2c` once `self+0x34`
   (a cached depth) exceeds `0x15FF`. If not already "used" (`self+0xc
   == 0`), snapshots the owning part table's own `+0x14` 12-byte record
@@ -34,7 +34,7 @@ trampoline table).
   already "used" (`self+0xc != 0`), skips all of that and just fires the
   `self+0x50` trampoline (index 3) while `self+0x12` is set, or falls
   back to `UpdateActor` - the exact same "trampoline-or-`UpdateActor`"
-  tail idiom `UpdatePolarCrate` (`actor_part19g.c`) uses for the sibling
+  tail idiom `UpdatePolarCrate` (`polar_pickups.c`) uses for the sibling
   object family, just inlined here directly instead of shared via a
   helper call (this object's own "already used" sentinel is a plain `1`,
   not the `0x12` value `UpdatePolarCrate`'s family uses, so the two can't
@@ -60,7 +60,7 @@ trampoline table).
 
 ## Matched (12 of 13 functions)
 
-All in `src/graphics/actor_part126.c`.
+All in `src/vehicle/polar_objects.c`.
 
 - **`CreatePolarElectricFence`** - `InitActorPart`-based constructor: forwards
   `a`/`b`/`c`/`d` straight through, installs `self+0x50 =
@@ -209,7 +209,7 @@ Full clean rebuild confirmed (`rm -rf build crashbandicootxs.elf
 crashbandicootxs.gba crashbandicootxs.map && make compare`):
 `crashbandicootxs.gba: La suma coincide`. `rm -rf build && make
 NON_MATCHING=1 report` also ran clean, no warnings for
-`actor_part126.c`.
+`polar_objects.c`.
 
 See [docs/status/actor.md](../status/actor.md) for the running
 matched/parked list this entry feeds into.

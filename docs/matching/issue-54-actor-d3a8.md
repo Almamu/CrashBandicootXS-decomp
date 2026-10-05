@@ -16,7 +16,7 @@ families live in this chunk:
 
 - The `InitActorPart`/`gActorList`-rooted "self" object family
   already documented for `ctrl.c`/`action_ctrl_states.c`/
-  `actor_part19.c`/`actor_part50.c` and others: a "part table" pointer
+  `polar_player_actions.c`/`actor.c` and others: a "part table" pointer
   at `self+0`, a table-index/"kind" field at `self+0xc`, an anim-frame
   halfword/byte pair at `self+0x10`/`self+0x12`, an accumulator at
   `self+8`, state at `self+0x28`, a frame counter at `self+0x44`, the
@@ -46,15 +46,15 @@ function's address (`..._d3a8.s`, `..._d7b0.s`, `..._dd9c.s`,
 
 ## Matched (18 of 25 functions)
 
-- **`ClearPolarAkuAkuMask`** (`src/graphics/actor_part58.c`) - resets a
+- **`ClearPolarAkuAkuMask`** (`src/vehicle/polar_aku_aku.c`) - resets a
   different, `gPolarAkuAku`-rooted sibling object via
   `SetMaskLevel(gLevelState, 0)` then `RefreshPolarAkuAku(self, 0)`.
-- **`RemovePolarAkuAkuMask`/`AddPolarAkuAkuMask`** (`src/graphics/actor_part58.c`) - an
+- **`RemovePolarAkuAkuMask`/`AddPolarAkuAkuMask`** (`src/vehicle/polar_aku_aku.c`) - an
   Aku-Aku-mask-style add/remove pair on `gLevelState`'s `+0x78`
   counter (floored at 0 / capped at 3), each playing a sound and
   calling `RefreshPolarAkuAku`.
 - **`CreatePolarAkuAku`/`CreatePolarGoal`/`CreatePolarBoostPad`/`CreatePolarCheckpointCrate`**
-  (`src/graphics/actor_part58.c`) - `InitActorPart`-based constructor
+  (`src/vehicle/polar_aku_aku.c`) - `InitActorPart`-based constructor
   variants, each installing a different `self+0x50` event table
   (`gPolarAkuAkuVtable`/`5074`/`5094`/`50B4`) before a small amount of
   table-specific setup: `CreatePolarAkuAku` offsets its position args by
@@ -64,11 +64,11 @@ function's address (`..._d3a8.s`, `..._d7b0.s`, `..._dd9c.s`,
   which anim record seeds `self+0x10`/`0x12`; `CreatePolarCheckpointCrate` only
   transitions to kind 2 when `GetActorCheckpoint()` matches its own `d`
   argument.
-- **`SetPolarMaskLevel`/`GetPolarMaskLevel`** (`src/graphics/actor_part58.c`) -
+- **`SetPolarMaskLevel`/`GetPolarMaskLevel`** (`src/vehicle/polar_aku_aku.c`) -
   trivial: a pass-through-second-argument forwarder to `SetMaskLevel`,
   and a getter for `gLevelState`'s `+0x78` counter.
 - **`UpdatePolarGoal`/`UpdatePolarBoostPad`/`UpdatePolarCheckpointCrate`**
-  (`src/graphics/actor_part58.c`) - small state-machine steps gated on
+  (`src/vehicle/polar_aku_aku.c`) - small state-machine steps gated on
   `IsTouchingPlayer`'s trampoline-fire edge and/or `IsTouchingYeti`'s AABB
   overlap test, each ending in `UpdateActor`'s frame-advance.
   `UpdatePolarCheckpointCrate` needed a fresh, separately-pinned zero register
@@ -78,7 +78,7 @@ function's address (`..._d3a8.s`, `..._d7b0.s`, `..._dd9c.s`,
   silently dropping 2 bytes per occurrence (4 bytes total, caught only
   by the full-link `make compare`, see "A note on isolated-compile
   confidence" below).
-- **`YetiStateChase`/`YetiStateCharge`** (`src/graphics/actor_part59.c`) - the
+- **`YetiStateChase`/`YetiStateCharge`** (`src/vehicle/yeti_states.c`) - the
   `gYeti` object's accumulate/clamp/tier-cue/transition
   pair (see the chunk header above). Both needed the `dummyStack`/
   `stackPtr`-style local (a real `u8` whose address is taken and pinned
@@ -100,7 +100,7 @@ function's address (`..._d3a8.s`, `..._d7b0.s`, `..._dd9c.s`,
   pointer arithmetic statement, which this compiler instead compiles
   into a single pre-added literal-pool constant.
 - **`StopYeti`/`DestroyYeti`/`CreateYeti`**
-  (`src/graphics/actor_part60.c`) - the `gYeti` object's
+  (`src/vehicle/yeti.c`) - the `gYeti` object's
   state-flag setter, destructor (`mem_free`), and constructor
   (`mem_alloc` + part-table wiring + position-tracking reset +
   `LoadYetiGraphics`). `CreateYeti` needed the incoming-argument-register
@@ -114,13 +114,13 @@ function's address (`..._d3a8.s`, `..._d7b0.s`, `..._dd9c.s`,
   three stores, so all three loads happen before any store (this
   project's established "compute both loads before either use"
   technique, extended to three).
-- **`YetiStateCaught`** (`src/graphics/actor_part61.c`) - a genuine no-op
+- **`YetiStateCaught`** (`src/vehicle/yeti.c`) - a genuine no-op
   stub.
 
 ## Parked (1 of 25 functions, `NON_MATCHING`)
 
 - **`MovePolarAkuAku`** (`asm/code_3_2_20_28568_c99c_d3a8.s`, C in
-  `src/graphics/actor_part62.c`) - eases `self`'s cached position
+  `src/vehicle/polar_objects.c`) - eases `self`'s cached position
   (`self+0x1c`/`0x20`/`0x24`) toward a per-state target: state 0 eases
   toward a per-frame-counter table-scatter offset, state 1 snaps
   directly to a different table offset, any other state eases toward
@@ -208,7 +208,7 @@ function's own isolated compile looked byte-identical to the ROM at
 every instruction *position*, but reusing an already-zero local instead
 of loading a fresh zero silently drops instructions the ROM's real
 build keeps - caught only once this whole batch was cut into its real
-`src/graphics/actor_part58.c`/`59.c`/`60.c`/`61.c` files and fragment
+`src/vehicle/polar_aku_aku.c`/`yeti_states.c`/`yeti.c` files and fragment
 `.s` files, and the full-link `make compare`'s SHA1 mismatch was
 diagnosed via the file-offset → ROM-address → `crashbandicootxs.map`
 symbol-address method `docs/workflow.md` describes (a data-segment
@@ -247,7 +247,7 @@ as the ROM). Every instruction is a direct transcription, not an
 inferred reconstruction, so this carries none of the "guessed control
 flow" risk a low-confidence C attempt would. The raw `.s` fragment and
 its `ldscript.txt`/wildcard-`ASM_SRCS` entry were then removed -
-`src/graphics/actor_part62.c` links at the same address in its place -
+`src/vehicle/polar_objects.c` links at the same address in its place -
 confirmed by a full clean `make compare` ("La suma coincide").
 
 ## Second pass
@@ -279,7 +279,7 @@ never moves in Y. Box B is either the player's own `+0x38` vector
 (`UpdateYeti`, offset by the player's `+0x1c`/`0x20`/`0x24` position)
 or `self`'s own `+0x38` vector (`IsTouchingYeti`, offset by `self`'s own
 position at the same field offsets) - `self` being whatever
-`UpdatePolarCheckpointCrate` (actor_part58.c) passes when it calls `IsTouchingYeti`.
+`UpdatePolarCheckpointCrate` (polar_aku_aku.c) passes when it calls `IsTouchingYeti`.
 
 Both functions then run box B through `MemCopy32` before comparing -
 which turned out to be a real, confirmed `memcpy` (`MemCopy32`'s own
@@ -294,7 +294,7 @@ scratch source.
 ### Why NAKED transcription, not plain C, for all 6
 
 Every one of these 6 functions was fully understood on this pass (each
-one's doc comment in `src/graphics/actor_part74.c`/`75.c`/`76.c` walks
+one's doc comment in `src/vehicle/yeti_update.c`/`yeti_graphics.c`/`yeti.c` walks
 the whole thing), but all 6 share a family of problems this project has
 hit many times before and already has an established answer for
 (`docs/matching/issue-4-sio-settings-sync.md`'s "general strategy",
@@ -334,7 +334,8 @@ between `actor_part58.c` and `actor_part59.c`), `IsTouchingYeti`/
 `LoadYetiGraphics` (ROM 0x0802DD9C-0x0802E058, between `actor_part59.c` and
 `actor_part60.c`), and `sub_802E058` (ROM 0x0802E058, between
 `actor_part60.c` and `actor_part61.c`) each got their own new file -
-`src/graphics/actor_part74.c`/`75.c`/`76.c` - per `docs/workflow.md`
+`src/graphics/actor_part74.c`/`75.c`/`76.c` (now `src/vehicle/yeti_update.c`,
+`yeti_graphics.c` and part of `yeti.c`) - per `docs/workflow.md`
 step 4's "one `.c` file per contiguous ROM region" rule; numbered `74`-
 `76` rather than continuing this issue's own `58`-`62` run since
 `actor_part63.c`-`73.c` (issue #63's parallel PR) claimed those numbers

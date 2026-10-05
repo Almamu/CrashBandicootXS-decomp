@@ -1,8 +1,8 @@
 # Status: hud
 
 The on-screen HUD - the stat-counter widget, icon-slot draws, and the
-icon-blink animation timer. Filed under `src/graphics/` on disk (all
-draw code), tracked as its own `hud` category since `docs/rom_map.md`
+icon-blink animation timer. Now in `src/hud/` (formerly `src/graphics/`;
+all draw code), tracked as its own `hud` category since `docs/rom_map.md`
 and the `decomp-chunk` issue generator both treat it as a distinct
 system from "core" graphics.
 

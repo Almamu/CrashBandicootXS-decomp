@@ -184,7 +184,7 @@ still parked. This pass matched 4 of those 6 (`ClearSaveFlags`,
 `ReceiveSaveTransferChunk` stay parked for a reason explained below that no C-level
 technique gets around.
 
-- **`ClearSaveFlags`** (bitmask-clear accessor, `src/graphics/
+- **`ClearSaveFlags`** (bitmask-clear accessor, `src/save/
   save_data.c`) - the redundant register-to-register copy the
   first pass's every plain-C attempt collapsed away turned out to be
   forceable with a single `asm volatile("add %0, %1, #0" : "=r"(v) :
@@ -221,7 +221,7 @@ technique gets around.
   #0x8c` pair) rather than reusing the first one - a second named local
   (`handleAddr2`) rather than reusing `handleAddr` reproduces that.
 
-- **`DrawSaveMenuMain`** (state-select label list draw, `src/graphics/
+- **`DrawSaveMenuMain`** (state-select label list draw, `src/save/
   save_menu_input.c`) - this one resisted every plain-C register-pin
   combination tried across both passes: a loop-invariant constant
   (`mgr->record`'s `0x130` field offset, and separately
@@ -259,7 +259,7 @@ technique gets around.
   gets deferred all the way to the function's tail instead of landing
   in the ROM's early slot.
 
-- **`PollSaveTransfer`** (SIO pump per-frame poll, `src/graphics/
+- **`PollSaveTransfer`** (SIO pump per-frame poll, `src/save/
   save_transfer_poll.c`, new file) - matched the same way as
   `DrawSaveMenuMain` above, as one big `asm volatile` transcription of the
   ROM's instructions (this one genuinely doesn't need any real C
@@ -295,7 +295,7 @@ technique gets around.
   register (`r4`-`r6`, `r8`, `r9`) gets saved and restored correctly
   in the exact same setup, just never `r7`. This is the same
   categorical limitation already documented project-wide for
-  `CheckSpritePickup` (`sprite.c`), `MovePolarAkuAku` (`actor_part62.c`,
+  `CheckSpritePickup` (`sprite.c`), `MovePolarAkuAku` (`polar_objects.c`,
   `docs/matching/issue-54-actor-d3a8.md`) and others (see
   `matching_decomp_register_pinning` memory point 10) - parked rather
   than keep chasing a compiler bug with no known workaround. The

@@ -1,10 +1,10 @@
 #include "core.h"
 #include "actor_self.h"
 
-/* Sits right after actor_part19g.c's `UpdatePolarNitroCrate` and before
- * actor_part19d.c's `UpdatePolarAkuAkuCrate` - directly adjacent to both now,
+/* Sits right after polar_pickups.c's `UpdatePolarNitroCrate` and before
+ * polar_crates.c's `UpdatePolarAkuAkuCrate` - directly adjacent to both now,
  * closing the raw gap issue #53 tracked. Same `self` object and
- * conventions documented in actor_part19g.c/actor_part74.c: the
+ * conventions documented in polar_pickups.c/yeti_update.c: the
  * 12-byte `{s16 x, y, z, sizeX, sizeY, sizeZ}` AABB record (per
  * docs/matching/issue-54-actor-d3a8.md's "Pinning down the 12-byte
  * AABB-record layout" section) and the shared "used"-state transition
@@ -18,9 +18,9 @@ extern void *MemCopy32(void *dst, const void *src, u32 byteCount);
 extern void PlaySfx(void *arg0, s32 sfxId, s32 volume);
 extern void AddBrokenCrate(void *self);
 
-/* The actor_part103.c AABB helpers: the three scratch boxes live in
+/* The actor_category_frame.c AABB helpers: the three scratch boxes live in
  * one frame struct so each box address is rematerialized from `sp`
- * (see that file and actor_part74.c). */
+ * (see that file and yeti_update.c). */
 struct box16 {
     s16 x, y, z;
     s16 w, h, d;
@@ -72,7 +72,7 @@ static inline u8 ActorsOverlap(struct actor_self *pl, struct actor_self *self)
 #define ACTOR_NEXT(a) (*(struct actor_self **)&(a)->next)
 #define ACTOR_TYPE(a) (**(u8 **)&(a)->record)
 
-/* Called from `UpdatePolarNitroCrate` (actor_part19g.c) once `self` (a "used"
+/* Called from `UpdatePolarNitroCrate` (polar_pickups.c) once `self` (a "used"
  * pickup, state `0x12`) has stayed used for `self+0x44 == 0x14`
  * frames: walks the whole `self+0x4c`-rooted circular actor list
  * (rooted at `gActorList`, the same sentinel-head list every
@@ -90,7 +90,7 @@ static inline u8 ActorsOverlap(struct actor_self *pl, struct actor_self *self)
  * table `+0xd8`) on every type-4 node found overlapping, skipping
  * `self` itself and any node already in the used state. Every box's
  * `MemCopy32` call is the same confirmed no-op `memcpy(dst, dst,
- * 0xc)` self-copy documented in actor_part74.c - kept byte-faithful,
+ * 0xc)` self-copy documented in yeti_update.c - kept byte-faithful,
  * not simplified away.
  *
  * The old NAKED note blamed a function-lifetime `r7`; with the boxes

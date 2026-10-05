@@ -448,7 +448,7 @@ one sample read.
 | `0x080354E0`-`0x08035780`ish | ~0.7 KB | graphics loading | high | `InitTitleScreen`, `LoadTitleScreenBg`, `LoadTitleScreenObjTiles` |
 | `0x08037110`-~`0x0803A950` | ~14 KB | audio (GAX2) | medium, **narrowed this pass** | see "Narrowing the GAX2 boundary" below |
 | `0x0803A950`-`0x0803B058` | ~1.5 KB | `system` (asset loading) | high | `LZ77UnCompVram`/`RLUnCompVram`, confirmed called from the already-matched `src/system/asset.c` |
-| `0x0803B058`-`0x0803B060` | 8 B | `graphics` | **matched** | `src/graphics/actor_anim.c` |
+| `0x0803B058`-`0x0803B060` | 8 B | `graphics` | **matched** | `src/actor/actor_anim.c` |
 | `0x0803B060`-`0x0803B8B0` | ~2.1 KB | actor system | medium | `GetAnimFrameData`, 43 other still-unnamed neighbors in `code_3_3.s` |
 
 ## Two big unnamed systems
@@ -835,7 +835,7 @@ but backed by a RAM table rather than a `gStaticData_` ROM one.
 **`SpawnHovercraft`** is the clearest of the three: writes directly into
 `gHovercraftX`/`B8`/`BC` - the exact family `HovercraftStateCloseIn` used two
 rounds ago - and calls **`GetAnimFrameBaseOffset`** (already matched,
-`src/graphics/actor_anim.c`). This is **hard confirmation that
+`src/actor/actor_anim.c`). This is **hard confirmation that
 `gUnknown_030015xx` is a real, animation-system-wired object**, not
 just a coincidentally-similar camera computation - `SpawnHovercraft` reads
 as its constructor/init step (packs scaled position args into the

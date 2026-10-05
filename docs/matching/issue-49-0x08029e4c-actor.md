@@ -13,11 +13,11 @@ of this chunk hit.
 ## Matched (real C)
 
 - `nullsub_6`, `CommitActorBgScroll`, `GetActorBgCenterY`, `GetActorBgCenterX`
-  (`actor_part92.c`/`actor_part99.c`/`actor_part93.c`) - the tail of
+  (`actor_bg.c`) - the tail of
   the BG2-affine scroll/zoom subsystem: a no-op stub, committing the
   scroll accumulators to `REG_BG0*`/`REG_BG1*`, and two small target-
   field getters.
-- `GetActorCategoryFrameCount`-`UpdateActorCategoryBg2`/`SetActorCategoryExitStatus` (`actor_part94.c`) - the
+- `GetActorCategoryFrameCount`-`UpdateActorCategoryBg2`/`SetActorCategoryExitStatus` (`actor_spawn.c`) - the
   `gActorSpawnTable` `sub_effect_table` record accessor family
   (`struct sub_effect_record`, see `include/actor_anim.h`), a
   circular-list marker-drawing pass (`DestroyAllActors`), and several
@@ -25,7 +25,7 @@ of this chunk hit.
 
 ## Parked - NAKED transcription (byte-correct, not decompiled)
 
-- **`SelectActorCategory`** (`actor_part102.c`) - sets up the selected
+- **`SelectActorCategory`** (`actor_category_select.c`) - sets up the selected
   category's runtime state (`gActorCategoryVtable` vtable pointer,
   `gActorSpawnTable` `sub_effect_table` pointer, `gUnknown_03001414`
   variant byte), draws the vtable's slot-0 icon, then runs a two-pass
@@ -35,7 +35,7 @@ of this chunk hit.
   register (`r9`) than the ROM's own `sb`/`r8` pair to keep the vtable
   pointer, the table pointer, and the loop index simultaneously live.
   Verified byte-for-byte against `baserom.gba`, relocation-aware.
-- **`PolarIsTouchingPlayer`/`JetpackIsTouchingPlayer`/`FindShotTarget`** (`actor_part103.c`) -
+- **`PolarIsTouchingPlayer`/`JetpackIsTouchingPlayer`/`FindShotTarget`** (`actor_category_frame.c`) -
   translate `gActorList` (the player/list-sentinel) and `self`'s
   own 12-byte `{s16 x,y,z,sizeX,sizeY,sizeZ}` AABB record into stack
   scratch boxes via `MemCopy32`, then run the same 3-axis overlap
@@ -50,7 +50,7 @@ of this chunk hit.
   register-allocation bug** - the unforced allocator never reaches `r7`
   for the second scratch AABB box's address, no matter how the C is
   phrased.
-- **`RunActorCategoryFrame`** (`actor_part103.c`) - fires a scroll enter/exit
+- **`RunActorCategoryFrame`** (`actor_category_frame.c`) - fires a scroll enter/exit
   trampoline pair off the selected category's vtable, drives a
   `sub_effect_table` draw loop, then walks the whole circular actor
   list twice (once unconditionally drawing each node's own marker, once
@@ -61,9 +61,9 @@ of this chunk hit.
   needed one extra high register (`r9`) on top of the ROM's own single
   `r8` to hold the vtable/table-pointer/cached-scroll-value trio
   simultaneously live.
-- **`JetpackIsPauseLocked`/`PolarIsPauseLocked`** (`actor_part94.c`) - plain one-call
+- **`JetpackIsPauseLocked`/`PolarIsPauseLocked`** (`actor_spawn.c`) - plain one-call
   trampolines, identical in shape to already-matched siblings elsewhere
-  in this project (e.g. `actor_part50.c`'s `JetpackReloadPlayerTiles`). This
+  in this project (e.g. `actor.c`'s `JetpackReloadPlayerTiles`). This
   compiler's epilogue register allocator picks `r1` for these two
   specific functions' `pop`/`bx` pair instead of the usual `r0` - every
   plain-C phrasing tried (including register-pinning the call argument)
@@ -82,7 +82,7 @@ once linked).
 ## Later pass: NAKED retry
 
 `PolarIsTouchingPlayer`, `JetpackIsTouchingPlayer` and `FindShotTarget` are now plain C under
-old_agbcc (`actor_part103.c` moved). They share one inline that keeps
+old_agbcc (`actor_category_frame.c` moved). They share one inline that keeps
 the three boxes in one frame struct. `JetpackIsPauseLocked`/`PolarIsPauseLocked` are
 plain C: they return the callee's result. `SelectActorCategory` has a
 `NON_MATCHING` draft with the ROM's instruction sequence but two

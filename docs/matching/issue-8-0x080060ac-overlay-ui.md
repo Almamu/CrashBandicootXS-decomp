@@ -73,7 +73,7 @@ marks this file's end. 3 of the 9 functions matched, 4 parked
 ## Parked (`NON_MATCHING`, 4)
 
 All four hit the same class of gcc-2.9 register-allocation difficulty
-already documented at length for `DrawPowerDialog` (`src/graphics/
+already documented at length for `DrawPowerDialog` (`src/menus/
 power_dialog_draw.c`) and `InitPausePowersPage`/`InitPauseGemsPage`/`InitPauseRelicsPage`/`InitPauseTimeTrialPage`
 (`src/menus/pause_menu_pages_init.c`, GitHub issue #7): every load, store,
 branch, and call is semantically confirmed, but the loop/self pointer
@@ -148,7 +148,7 @@ the new raw `asm/code_3_1_10_14.s` (`DrawPauseTimeTrialPage`/`DrawPauseCrystalsP
 `DrawPauseMenuPageTitle`'s real bytes, wrapped), `src/menus/pause_menu_pages_draw.c`
 (their `NON_MATCHING` C reconstructions), `src/menus/pause_menu_pages_draw.c`
 (`CommitPauseMenuFrame`, matched), the new raw `asm/code_3_1_10_12.s`
-(`ShowPowerDialog`/`InitPowerDialog`, left untouched), `src/graphics/
+(`ShowPowerDialog`/`InitPowerDialog`, left untouched), `src/menus/
 power_dialog_loop.c` (`PowerDialogLoop`'s `NON_MATCHING` C reconstruction),
 the new raw `asm/code_3_1_10_13.s` (its real bytes, wrapped), and
 finally the trimmed `asm/code_3_1_10_11.s` (just the original file's
@@ -262,7 +262,7 @@ this pass** - one function's worth of register-allocation work remains.
 ## File structure (second pass)
 
 `asm/code_3_1_10_12.s` (previously holding both `ShowPowerDialog` and
-`InitPowerDialog` raw) is gone - split into the new `src/graphics/
+`InitPowerDialog` raw) is gone - split into the new `src/menus/
 power_dialog.c` (`ShowPowerDialog`'s `NON_MATCHING` C reconstruction),
 the new `asm/code_3_1_10_15.s` (`ShowPowerDialog`'s real bytes, wrapped),
 and the new `src/menus/power_dialog.c` (`InitPowerDialog`, matched,

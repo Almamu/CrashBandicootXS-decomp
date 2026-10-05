@@ -3,7 +3,7 @@
 25-function `decomp-chunk` covering a second boss-weapon "spawn/pre-
 attack" singleton and its "self" object - the same large per-instance
 object family already documented in `ctrl.c`/`action_ctrl_states.c`/
-`actor_part19.c`/`airship_fireball.c` (state at `self+0x28`, a table-index
+`polar_player_actions.c`/`airship_fireball.c` (state at `self+0x28`, a table-index
 at `self+0xc`, an anim-frame halfword/byte pair at `self+0x10`/
 `self+0x12`, an accumulator at `self+8`, a "part table" pointer at
 `self+0`, and here also an event/trampoline table pointer at
@@ -26,7 +26,7 @@ are named by the lower 5 hex digits of their first function's address
 
 ## Matched (22 of 25 functions)
 
-- **`AllocJetpackPlayerTiles`** (`src/graphics/actor_part43b.c`) - computes two
+- **`AllocJetpackPlayerTiles`** (`src/vehicle/jetpack_run.c`) - computes two
   keyframe-driven tile-cache sizes (`byte0*byte1`, scaled by 32) via
   `AllocVramTileBlock`, storing them into the `gJetpackPlayerTiles` pair;
   now fully matched as real C. The ROM's "materialize the multiply
@@ -47,7 +47,7 @@ are named by the lower 5 hex digits of their first function's address
   ROM's own `ldrb` register choices (which differ between the two
   otherwise-identical blocks). The old raw
   `asm/code_3_2_20_28568_c99c_2f338.s` is retired.
-- **`PassJetpackRing`** (`src/graphics/actor_part43.c`) - state-machine
+- **`PassJetpackRing`** (`src/vehicle/jetpack_run.c`) - state-machine
   update for the same singleton: while `self+0x28` is one of the
   "active" states (1/6/2/3), resets `self`'s table index/anim to the
   idle frame if it wasn't already, latches the target position at
@@ -65,7 +65,7 @@ are named by the lower 5 hex digits of their first function's address
   "materialize a fresh anim halfword/zero-byte/zero-word triple" idiom
   and two of the trailing global zero-stores needed the same
   register-pinned-block idiom already established throughout
-  `actor_part43.c`/`actor_part44.c` (explicit `r0`/`r1`/`r2`/`r3`/`r4`
+  `jetpack_run.c`/`jetpack_player.c` (explicit `r0`/`r1`/`r2`/`r3`/`r4`
   pins matching the ROM's own scratch-register choices, including a
   pinned pointer-typed pair - `r2`=`&gJetpackPlayerVelY`,
   `r1`=`&gJetpackPlayerVelX` - to get the ROM's specific "load both
@@ -76,7 +76,7 @@ are named by the lower 5 hex digits of their first function's address
   cap asm("r4") = *maxPtr;` declared after the store, not before) to
   match the ROM's own redundant post-call reload rather than reusing
   the pre-call value.
-- **`FinishJetpackRun`** (`src/graphics/actor_part43.c`) - constructor/
+- **`FinishJetpackRun`** (`src/vehicle/jetpack_run.c`) - constructor/
   reset: while the singleton flag (`gJetpackPlayerInactive`) is off, resets
   `self` to state 5/table-index 4, plays a cue, and conditionally
   fires an extra one-shot effect via `FreezeLevelClock`. Matched with the
@@ -84,7 +84,7 @@ are named by the lower 5 hex digits of their first function's address
   sibling constants before either store, reset the anim frame via a
   `register`-pinned halfword/byte pair" idioms already used throughout
   `airship_fireball.c`'s family - no new gotchas.
-- **`DispenseJetpackWumpa`** (`src/graphics/actor_part44.c`) - accumulator-
+- **`DispenseJetpackWumpa`** (`src/vehicle/jetpack_player.c`) - accumulator-
   drain/reward-dispenser for the `gJetpackQueuedWumpa` accumulator
   `QueueJetpackWumpa` fills: while the singleton flag is set, fully drains
   it via repeated `CollectWumpa` calls; otherwise, once a
@@ -94,58 +94,58 @@ are named by the lower 5 hex digits of their first function's address
   redundant `self`-into-`r5` copy at function entry (for the one
   tier-4 case only) that the ROM never has, since the ROM keeps `self`
   in `r1` uniformly across all four tiers.
-- **`CountJetpackBomber`** (`src/graphics/actor_part44.c`) - trivial
+- **`CountJetpackBomber`** (`src/vehicle/jetpack_player.c`) - trivial
   pre-increment counter accessor (`return ++gJetpackBomberCount;`).
-- **`GetJetpackPlayerHpPercent`** (`src/graphics/actor_part44.c`) - threshold check
+- **`GetJetpackPlayerHpPercent`** (`src/vehicle/jetpack_player.c`) - threshold check
   on `self+0x54`'s accumulator against `gJetpackPlayerMaxHp`'s cap.
   Needed the two-condition guard folded into one `if (r == 0 && v > 0)
   r = 1; return r;` rather than two early `return`s - the naive
   two-`return` form makes this compiler synthesize a spurious
   `mov r0, #0` for the "value already zero" fallthrough case that the
   ROM never emits (it just falls through with `r0` already zero).
-- **`SetJetpackCheckpoint`** (`src/graphics/actor_part44.c`) - forwards
+- **`SetJetpackCheckpoint`** (`src/vehicle/jetpack_player.c`) - forwards
   `self+0x24` (z position) plus a fixed offset to `SetActorCheckpoint`,
   discarding the result; declared `void` (not `s32`) so this compiler
   reuses `r0` for the `pop {r0}; bx r0` epilogue instead of preserving
   a return value the ROM itself discards the same way.
-- **`IsJetpackPauseLocked`** (`src/graphics/actor_part44.c`) - trivial byte
+- **`IsJetpackPauseLocked`** (`src/vehicle/jetpack_player.c`) - trivial byte
   getter for `gJetpackPauseLocked`.
-- **`AnimateJetpackPlayerPalette`** (`src/graphics/actor_part44.c`) - countdown timer
+- **`AnimateJetpackPlayerPalette`** (`src/vehicle/jetpack_player.c`) - countdown timer
   (`gJetpackFlashTimer`) driving a palette-strip animation refresh,
   ping-ponging the frame index via `__divsi3` the same way
   `AnimateAirshipPalette` (airship_graphics.c) does for its own strip.
-- **`HealJetpackPlayer`** (`src/graphics/actor_part44.c`) - advances
+- **`HealJetpackPlayer`** (`src/vehicle/jetpack_player.c`) - advances
   `self+0x54`'s accumulator by a scaled `delta`, clamped to
   `gJetpackPlayerMaxHp`'s cap. Needed the multiply written as
   `delta * max` (not `max * delta`) - the classic "which operand goes
   first" gap - to get this compiler to pre-load `delta` into the
   multiply's destination register the way the ROM does.
-- **`QueueJetpackWumpa`** (`src/graphics/actor_part44.c`) - feeds `delta`
+- **`QueueJetpackWumpa`** (`src/vehicle/jetpack_player.c`) - feeds `delta`
   into the `gJetpackQueuedWumpa` reward accumulator, arming its
   `gJetpackWumpaDispenseTimer` cooldown the first time it goes from zero. Its
   own `self` parameter is genuinely unused (dead) in the ROM.
-- **`JetpackPlayerStateResume`**/**`JetpackPlayerStateEnter`** (`src/graphics/actor_part44.c`)
+- **`JetpackPlayerStateResume`**/**`JetpackPlayerStateEnter`** (`src/vehicle/jetpack_player.c`)
   - twin "if a threshold/flag trips, reset `self` to an idle
     state-1/table-index-0 transition and arm the singleton's flags"
   idioms, matched with `self` pinned `r2` and the established
   register-pinned reset-block idiom.
-- **`JetpackPlayerStateBoost`** (`src/graphics/actor_part44.c`) - two independent
+- **`JetpackPlayerStateBoost`** (`src/vehicle/jetpack_player.c`) - two independent
   one-shot transitions on `self`: a table-index-5 idle reset gated on
   `self+0x12`, and a separate `self+0x44`-counter-driven state-1
   transition.
-- **`JetpackPlayerStateFall`** (`src/graphics/actor_part44.c`) - advances
+- **`JetpackPlayerStateFall`** (`src/vehicle/jetpack_player.c`) - advances
   `gJetpackPlayerVelY`'s bounded oscillator by 9 (clamped to +0x140 by
   absolute value via the standard `sign = v>>31; v ^= sign; v -=
   sign;` idiom, reusing `v`/`sign` in place rather than a separate
   `abs` local), then fires two one-shot threshold effects on
   `self+0x20`.
-- **`JetpackPlayerStateFinish`** (`src/graphics/actor_part44.c`) - advances
+- **`JetpackPlayerStateFinish`** (`src/vehicle/jetpack_player.c`) - advances
   `self+0x24` by a fixed step, derives `self+0x34` (a camera-relative
   depth) via `GetCellAnimDistance`, and fires the same one-shot threshold pair
   as `JetpackPlayerStateFall`. Needed `self+0x24` re-read fresh from memory after
   the `GetCellAnimDistance()` call (rather than keeping the pre-call value in
   a local) to match the ROM's own redundant reload.
-- **`DestroyJetpackPlayer`** (`src/graphics/actor_part44.c`) - teardown/
+- **`DestroyJetpackPlayer`** (`src/vehicle/jetpack_player.c`) - teardown/
   destructor: marks `self` "dying", drains the reward accumulator,
   frees the two keyframe-size tile allocations `AllocJetpackPlayerTiles` made,
   marks `self` fully "dead", unlinks it from its doubly-linked list
@@ -164,11 +164,11 @@ are named by the lower 5 hex digits of their first function's address
   `HovercraftLauncherStateLaunch`) - a real correctness gap this plain-local-copy form
   avoids by letting the compiler make its own (correct) callee-save
   decision.
-- **`IsJetpackPlayerInactive`** (`src/graphics/actor_part45.c`) - trivial byte
+- **`IsJetpackPlayerInactive`** (`src/vehicle/jetpack_player.c`) - trivial byte
   getter for the singleton's own flag.
-- **`IsJetpackShotUnshootable`** (`src/graphics/actor_part46.c`) - trivial
+- **`IsJetpackShotUnshootable`** (`src/vehicle/jetpack_shot.c`) - trivial
   constant-true predicate.
-- **`UpdateJetpackShot`** (`src/graphics/actor_part45b.c`) - a physics-step-
+- **`UpdateJetpackShot`** (`src/vehicle/jetpack_shot.c`) - a physics-step-
   and-collision-react updater: advances `self`'s position by its
   velocity pair plus a fixed gravity-like Y offset and a fixed Z step,
   then reacts to a `FindShotTarget` collision probe - firing a trampoline
@@ -201,7 +201,7 @@ are named by the lower 5 hex digits of their first function's address
   nothing calls `UpdateJetpackShot` by name (only indirectly through a
   `void *`-typed function-pointer table entry), the parameter's own
   type here doesn't need to match the project's usual convention.
-- **`CreateJetpackShot`** (`src/graphics/actor_part45c.c`) - an
+- **`CreateJetpackShot`** (`src/vehicle/jetpack_shot.c`) - an
   `InitActorPart`-based constructor for this cluster's `self` object:
   forwards its first three real arguments plus one stack argument
   straight to `InitActorPart`, then marks `self+0x54` = 1, sets
@@ -227,7 +227,7 @@ are named by the lower 5 hex digits of their first function's address
 
 ## NAKED transcription (byte-correct, not counted as matched)
 
-- **`RunJetpackPlayerState`** (`src/graphics/actor_part44b.c`) - a
+- **`RunJetpackPlayerState`** (`src/vehicle/jetpack_player.c`) - a
   `gJetpackPlayerStateFuncs` stride-8 trampoline-record dispatcher, same
   shape as `RunPolarPlayerState` (issue #52). Hits the same confirmed
   categorical gcc-2.9 r7-pin bug and is transcribed the same way - see
@@ -236,7 +236,7 @@ are named by the lower 5 hex digits of their first function's address
   transcription of a substantial function doesn't count as "matched"
   under this project's current tracking policy, so
   `tools/report_units.py` keeps this address's `base_object` as `None`.
-- **`UpdateJetpackPlane`** (`src/graphics/actor_part46b.c`) - a
+- **`UpdateJetpackPlane`** (`src/vehicle/jetpack_plane.c`) - a
   ~150-instruction function combining a position update (via
   `self+0x60`/`0x64`/`0x68` velocity-like fields), a `self+0x2c`
   threshold flag, a `gJetpackPlaneStateFuncs` stride-8 keyframe-table
@@ -254,7 +254,7 @@ are named by the lower 5 hex digits of their first function's address
   local-copy barriers, splitting into helper calls) reached this exact
   allocation without either losing the ROM's registers or
   reintroducing the r7 hazard.
-- **`LoadBgPicture`**/**`FillBgPictureMap`** (`src/graphics/actor_part45d.c`)
+- **`LoadBgPicture`**/**`FillBgPictureMap`** (`src/actor/bg_picture.c`)
   - a pair of ~130-170-instruction VRAM tile-remap loops (4-bit
   palette-index repacking into a `0x0600D000`-based tile buffer via
   raw `REG_DMA3SAD`/`DAD`/`CNT` pokes at `0x040000D4`), each with three
@@ -263,7 +263,7 @@ are named by the lower 5 hex digits of their first function's address
   transcribed is confirmed correct; parked because every other
   DMA3-setup function in this codebase with the same
   `0x040000D4`/`0x0600D000` literal-pool shape (`airship_load_graphics.c`,
-  `actor_part74.c`, `actor_part75.c`, `fade_to_black.c`,
+  `yeti_update.c`, `yeti_graphics.c`, `fade_to_black.c`,
   `hud_init.c`, `save_data.c`, `eeprom_timer_stop.c`) is
   NAKED too - this compiler's register allocator never reproduces the
   ROM's specific three-high-register nested-loop allocation for this
@@ -282,7 +282,7 @@ matched/parked list this entry feeds into.
 
 ## Later pass: member-pointer dispatch
 
-A later pass promoted `RunJetpackPlayerState` (`actor_part44b.c`) and `UpdateJetpackPlane` (`actor_part46b.c`; its damage block needed plain `/` for `__divsi3` instead of explicit calls, and no register pins) from NAKED to real C. The "r7 table-base"
+A later pass promoted `RunJetpackPlayerState` (`jetpack_player.c`) and `UpdateJetpackPlane` (`jetpack_plane.c`; its damage block needed plain `/` for `__divsi3` instead of explicit calls, and no register pins) from NAKED to real C. The "r7 table-base"
 shape was gcc 2.x's pointer-to-member-function call
 `(this->*table[this->state])()`, which `ACTOR_PMF_CALL` in
 `include/actor_self.h` reproduces with no register pins. See
@@ -290,7 +290,7 @@ shape was gcc 2.x's pointer-to-member-function call
 
 ## Later pass: late-ROM NAKED retry
 
-`FillBgPictureMap` is real C (old_agbcc; `actor_part45d.o` joined
+`FillBgPictureMap` is real C (old_agbcc; `bg_picture.o` joined
 `OLD_AGBCC_OBJS`). It is the shared loop: declared `inline` ahead of
 `LoadBgPicture`, which inlines it - the inlined copy is what gives 7B0 its
 separately strength-reduced `dest[c]`/`dest[c + 0x3e0]` pointers, and

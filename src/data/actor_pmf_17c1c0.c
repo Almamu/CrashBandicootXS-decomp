@@ -15,8 +15,8 @@ extern void JetpackPlayerStateFall();
 extern void JetpackPlayerStateFinish();
 extern void JetpackPlayerStateEnter();
 
-/* Per-state handlers dispatched by UpdateJetpackPlayer (actor_part128.c) and
- * RunJetpackPlayerState (actor_part44b.c). */
+/* Per-state handlers dispatched by UpdateJetpackPlayer (jetpack_spawn.c) and
+ * RunJetpackPlayerState (jetpack_player.c). */
 const struct actor_pmf gJetpackPlayerStateFuncs[8] = {
     ACTOR_PMF(JetpackPlayerStateEnter),
     ACTOR_PMF(JetpackPlayerStateFly),

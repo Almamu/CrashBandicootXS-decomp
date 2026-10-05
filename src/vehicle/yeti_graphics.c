@@ -1,21 +1,21 @@
 #include "core.h"
 #include "actor_self.h"
 
-/* Sits right after actor_part59.c's `YetiStateCharge` and before
- * actor_part60.c's `StopYeti` - the whole contiguous range that used
+/* Sits right after yeti_states.c's `YetiStateCharge` and before
+ * yeti.c's `StopYeti` - the whole contiguous range that used
  * to be `asm/code_3_2_20_28568_c99c_dd9c.s`. Both functions continue the
- * `gYeti`-rooted "gauge" object documented in actor_part59.c/
- * actor_part74.c's header comments. */
+ * `gYeti`-rooted "gauge" object documented in yeti_states.c/
+ * yeti_update.c's header comments. */
 
 extern u8 gYetiBox[];
 extern s32 gYetiX;
 extern s32 gYetiPosition;
 extern void *MemCopy32(void *dest, void *src, s32 size);
 
-/* `UpdateYeti`'s (actor_part74.c) shared AABB-overlap-test tail,
+/* `UpdateYeti`'s (yeti_update.c) shared AABB-overlap-test tail,
  * factored out as its own function taking `self` explicitly instead of
  * always reading the player global - used by `UpdatePolarCheckpointCrate`
- * (actor_part58.c, already matched, called as `IsTouchingYeti(self)`)
+ * (polar_aku_aku.c, already matched, called as `IsTouchingYeti(self)`)
  * among others. Same 12-byte `{s16 x, y, z, sizeX, sizeY, sizeZ}` record
  * shape and same self-copy-through-`MemCopy32` idiom as `UpdateYeti`
  * - see that function's doc comment for the full record-layout writeup.
@@ -81,7 +81,7 @@ extern void UpdateYetiBg2(void);
 extern void UpdateYetiPalette(void);
 
 /* The `gYeti` object's own initial VRAM-pattern/DMA setup
- * (called once from `CreateYeti`'s constructor, actor_part60.c): sets
+ * (called once from `CreateYeti`'s constructor, yeti.c): sets
  * `REG_DISPCNT`'s OBJ-window-enable bit (`DISPCNT_OBJWIN_ON`, bit 15),
  * then runs the same 16x16 triangular-fill dot-pattern loop twice into a
  * 0x100-byte stack buffer (`sub_802E058`'s own loop body, parameterized
@@ -93,7 +93,7 @@ extern void UpdateYetiPalette(void);
  * (`gYetiBg2Page = 1`), passes the object's current frame data
  * (past its 4-byte header) to the `gUnpackNibbleTilesFunc` hook, latches
  * `gYetiBg2PageFlip`, and
- * finally calls `UpdateYetiBg2`/`UpdateYetiPalette` (actor_part74.c) to prime
+ * finally calls `UpdateYetiBg2`/`UpdateYetiPalette` (yeti_update.c) to prime
  * the gauge's sound/palette state immediately.
  *
  * The frame pointer goes through the usual `CurFrame()` inline with the

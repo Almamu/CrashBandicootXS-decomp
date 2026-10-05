@@ -1,7 +1,8 @@
 # Issue #9: NAKED retry (0x08007634-0x0800B3F0)
 
 This pass retried the 21 NAKED functions in issue #9's range
-(`src/graphics/`, the early actor/collision core). 11 are now real C.
+(then `src/graphics/`, now `src/objects/` and `src/player/`: the early
+actor/collision core). 11 are now real C.
 
 ## The main finding: this code was built with old_agbcc
 

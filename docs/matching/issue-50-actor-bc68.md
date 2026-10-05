@@ -10,7 +10,7 @@ fully matched - see
 out of GitHub issue #50's chunk scope" - the raw `.s` file issue #50's
 chunk was carved out of (`asm/code_3_2_20_8b7c_ac28.s`) runs well past
 the chunk's own upper bound, all the way to 0x0802BED8 where the
-already-matched `actor_part19.c` (issue #52) begins. This entry covers
+already-matched `polar_player_actions.c` (issue #52) begins. This entry covers
 this raw file's own literal tail: `DispensePolarWumpa` through `PolarPlayerStateBoost`,
 the last 7 functions in the file (everything from that file's very end
 backwards to the start of `DispensePolarWumpa`), the cleanest possible cut
@@ -34,7 +34,7 @@ comment pointing at this entry for the now-matched tail.
 
 All 7 functions in this file share the same `self` object and global
 cluster (`gUnknown_0300148x`/`gUnknown_030014Ax`) already established
-by `actor_part19.c` (issue #52) and `actor_part44.c` (issue #56) - see
+by `polar_player_actions.c` (issue #52) and `jetpack_player.c` (issue #56) - see
 those files' own header comments for the wider family. `docs/rom_map.md`
 had already read part of this cluster from disassembly alone (its "boss's
 BG2 spin/zoom effect..." section); this pass confirms those reads with
@@ -48,23 +48,23 @@ real matched C.
   reward (via `SpawnPolarCollectedWumpa`, itself still raw but confirmed by
   docs/rom_map.md as a "spawn effect type N" family member) sized by the
   accumulator's own magnitude, and plays a cue. Docs/rom_map.md already
-  read this as a structural twin of `actor_part44.c`'s `DispenseJetpackWumpa` -
+  read this as a structural twin of `jetpack_player.c`'s `DispenseJetpackWumpa` -
   confirmed exactly: same `register u8 *self asm("r1")` pin, same
   branch/threshold shape, just a different accumulator/cooldown global
   pair.
 - **`IsPolarPauseLocked`** - trivial byte getter (`gPolarPauseLocked`). Called
-  by the NAKED `PolarIsPauseLocked` trampoline in `actor_part94.c`.
+  by the NAKED `PolarIsPauseLocked` trampoline in `actor_spawn.c`.
 - **`sub_802BD24`** - frame-counter-threshold (`self+0x44 > 0x13`)
   state-transition: latches `gPolarSteerEnabled`, clears the hazard lock
   `gPolarPlayerInactive`, and resets `self` to state 1/table-index 0 via
   the same state/table-index/anim-frame reset idiom already documented
   for the boss cluster's `DamageAirshipFireball`/`AirshipStateFall` and this family's
-  own `LaunchPolarPlayer` (`actor_part19.c`), then fires `SetCellAnimSpeed(0x24)`.
+  own `LaunchPolarPlayer` (`polar_player_actions.c`), then fires `SetCellAnimSpeed(0x24)`.
 - **`PolarPlayerStateFinishLeap`**/**`PolarPlayerStateCarriedOff`** - a per-axis hazard-threshold pair:
   drains a shared "camera catch-up" budget (`gPolarPlayerVelY`) into
   `self+0x20`, advances `self+0x24` by a fixed step, and derives a
   camera-relative depth (`self+0x34`, via `GetCellAnimDistance`) - the same
-  shape as `actor_part44.c`'s `JetpackPlayerStateFall`/`JetpackPlayerStateFinish`. Once that
+  shape as `jetpack_player.c`'s `JetpackPlayerStateFall`/`JetpackPlayerStateFinish`. Once that
   depth drops to/below a far threshold (`0x16FF`), triggers a one-shot
   screen-flash (`FadeBrightness(0, 2, 1)`, latched via `gPolarFadeStarted`)
   - `PolarPlayerStateFinishLeap` additionally latches its own one-shot flag

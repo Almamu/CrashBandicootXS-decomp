@@ -619,7 +619,7 @@ asm(".align 2, 0");
  * by `DoSuperBodySlamShockwave` here) is a small list object - `+4` a count, `+0xc`
  * a `struct actor **` array - not referenced by any already-matched
  * code yet, so it stays raw-offset rather than a guessed struct. This
- * file covers `DoSuperBodySlamShockwave` and `StartActionCtrlTornadoSpin` (both matched); the chunk continues in actor_part28b.c/c.c/d.c, split
+ * file covers `DoSuperBodySlamShockwave` and `StartActionCtrlTornadoSpin` (both matched); the chunk continues in action_ctrl_moves.c and action_ctrl.c, split
  * at each parked function's raw-asm gap - see docs/matching/
  * issue-18-0x08014f8c-actor.md for the full write-up. */
 

@@ -1,7 +1,7 @@
 # Issue #72: 0x0803B4EC-0x0803B884 (actor)
 
 19 labelled functions, ~0.9 KB, `asm/code_3_3.s` - the whole remaining
-file. Directly contiguous with `src/graphics/actor_anim.c`'s existing
+file. Directly contiguous with `src/actor/actor_anim.c`'s existing
 coverage (issue #71 ended exactly at `0x0803B4EC`, where this chunk
 starts), so all of it landed in that same file rather than a new one,
 keeping ROM contiguity per `docs/workflow.md` step 4. `asm/code_3_3.s`
@@ -62,7 +62,7 @@ dead, just unconfirmed-live.
 
 ## Matched (all 19 labelled + 7 hidden = 26 functions)
 
-All in `src/graphics/actor_anim.c`, in ROM order:
+All in `src/actor/actor_anim.c`, in ROM order:
 
 - **`UpdateJetpackCheckpointText`** - advances the animation frame accumulator, or
   fires the `+0x50` trampoline record instead when the "held" flag

@@ -7,7 +7,7 @@ this same chunk that got closed out later.
 
 ## Parked - NAKED transcription (byte-correct, not decompiled)
 
-- **`RunPolarPlayerState`** (`src/graphics/actor_part19e.c`) - a
+- **`RunPolarPlayerState`** (`src/vehicle/polar_player_dispatch.c`) - a
   `gPolarPlayerStateFuncs` stride-8 trampoline-record dispatcher (`{s16
   baseOff; s16 count; s16 subOffset}`, count-gated between an inline
   fallback pair and a per-instance list's last entry). Previously
@@ -35,7 +35,7 @@ this same chunk that got closed out later.
   The same r7 hazard and NAKED-transcription-but-not-matched status
   apply identically to this dispatcher's other four instances sharing
   this exact stride-8 shape: `RunJetpackPlayerState` (issue #56,
-  `src/graphics/actor_part44b.c`, `gJetpackPlayerStateFuncs`),
+  `src/vehicle/jetpack_player.c`, `gJetpackPlayerStateFuncs`),
   `UpdateHovercraftCannon`/`RunHovercraftCannonState`/`UpdateHovercraftLauncher` (issue #62,
   `src/bosses/hovercraft_cannon.c`/`hovercraft_launcher.c`,
   `gHovercraftCannonStateFuncs`/`gHovercraftLauncherStateFuncs`), and `RunHovercraftLauncherState`
@@ -49,7 +49,7 @@ recorded as matched - see the note above.
 
 ## Later pass: member-pointer dispatch
 
-A later pass promoted `RunPolarPlayerState` (`actor_part19e.c`) from NAKED to real C. The "r7 table-base"
+A later pass promoted `RunPolarPlayerState` (`polar_player_dispatch.c`) from NAKED to real C. The "r7 table-base"
 shape was gcc 2.x's pointer-to-member-function call
 `(this->*table[this->state])()`, which `ACTOR_PMF_CALL` in
 `include/actor_self.h` reproduces with no register pins. See

@@ -1,9 +1,9 @@
 #include "core.h"
 #include "action_obj.h"
 
-/* Continuation of actor_part28c.c (issue #18's chunk, the last one) -
+/* Continuation of action_ctrl_moves.c (issue #18's chunk, the last one) -
  * covers `nullsub_17` through `ActionCtrlSetTargetAnim` (all matched); non-adjacent
- * to actor_part28c.c since the parked `ActionCtrlStateBodySlamStart` sits raw between
+ * to action_ctrl_moves.c since the parked `ActionCtrlStateBodySlamStart` sits raw between
  * them (asm/code_3_2_17_156ec.s). Same "self" object family documented
  * at the top of action_ctrl_states.c/hovercraft_parts.c. */
 

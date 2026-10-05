@@ -35,8 +35,8 @@ label, with `regions` sub-lists for the composite blobs.
 - **Structure walkers** for the big blobs, written from the matched C:
   the sprite-bank walker (`GetSpriteTileBase`/`GetSpriteFrame`/`affine_sprite_pieces.c`),
   the level-descriptor walker (`level_layers.c`, `bg_layer.c`,
-  `collision_map.c`), the category-descriptor fields (`actor_part95.c`,
-  `actor_part45d.c`, `include/actor_anim.h`), and a `LoadTaggedAsset`
+  `collision_map.c`), the category-descriptor fields (`cell_anim.c`,
+  `bg_picture.c`, `include/actor_anim.h`), and a `LoadTaggedAsset`
   header test (tag `0x00`/`0x10`/`0x30`) at every pointer target.
 
 The helper scripts are not in the repo; the algorithms are described
@@ -143,7 +143,7 @@ Nothing references this label directly. It is reached through the
 category descriptors `gActorCategories[0..2]` (`include/actor_anim.h`):
 `cellAnim = 0x0803B8B0`, `cellAnimSize = 0x75B94`, and
 `sub_effect_table = 0x080B1444` for category 0. `InitActorCategory`
-passes the first two to `InitCellAnim` (`src/graphics/actor_part95.c`).
+passes the first two to `InitCellAnim` (`src/actor/cell_anim.c`).
 That function reads a "cell record": a 256-colour palette (DMA'd whole to
 `0x05000000` by `ResetCellAnimBg`), `s16` cols and rows at `+0x200`/`+0x202`,
 then frames of `cols*rows*32` bytes of 4bpp tiles. When the category type
@@ -189,7 +189,7 @@ and cell animation B, the category 3 picture and its table too
 built too: it is the zero padding gbagfx writes after the `.lz` stream
 (docs/data.md, "LZ77 stream padding").
 
-The **BG1 picture** format, from `LoadBgPicture` (`actor_part45d.c`):
+The **BG1 picture** format, from `LoadBgPicture` (`bg_picture.c`):
 `u16 palette[256]`, `s16 cols @0x200`, `s16 rows @0x202`,
 `u32 tiles @0x204`, `u16 map[cols*rows]` padded to 4 bytes (`((n+1)/2)*4`),
 `tiles*32` bytes of 4bpp tiles, then `(n+1)/2` bytes of palette-bank
@@ -206,7 +206,7 @@ pixels, the last windows ran past each region's end, and the tiles came
 out scrambled. The `0x30` byte is the clue: these frames are
 **compressed**, and they are never passed to `LoadSpriteFrameTiles`.
 
-The consumers (`actor_part127.c`, `actor_part128.c`,
+The consumers (`polar_player.c`, `jetpack_spawn.c`,
 `company_logos.c`) call `gUnpackRleSpriteFrameFunc(vramBlock, frame)`.
 That IWRAM variable is initialised by the `crt0` copy of the IWRAM image
 (`0x087E55E4 + 0x874`) to `0x03000634`, an ARM routine in the same image.

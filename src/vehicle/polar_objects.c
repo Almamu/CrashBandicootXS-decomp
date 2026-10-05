@@ -6,10 +6,10 @@
  * anim-frame halfword/byte pair at `self+0x10`/`self+0x12`, an
  * accumulator at `self+8`, a `self+0x50`-rooted event/trampoline
  * table, and the position triple at `self+0x1c`/`self+0x20`/`self+0x24`)
- * already documented for `ctrl.c`-`actor_part19i.c` and
- * `actor_part58.c`. Sits between `actor_part19i.c` (issue #53, ending
- * at `CreatePolarBasicCrate`) and `actor_part62.c` (issue #54, starting at
- * `MovePolarAkuAku`) - the whole `0x0802CC9C`-`0x0802D3A8` gap
+ * already documented for `ctrl.c`-`polar_crates.c` and
+ * `polar_aku_aku.c`. Sits between `polar_crates.c` (issue #53, ending
+ * at `CreatePolarBasicCrate`) and issue #54's code (starting at
+ * `MovePolarAkuAku`, at the end of this file) - the whole `0x0802CC9C`-`0x0802D3A8` gap
  * docs/matching/issue-53-actor-c7a8.md's "What's left" section
  * described as "a larger, IsTouchingYeti/IsTouchingPlayer/ShockPolarPlayer-calling
  * state machine ... not attempted this pass". */
@@ -75,7 +75,7 @@ struct spawn_arg {
     s32 target;         // 0x10 - AimPolarPenguin's homing target index
 };
 
-/* A 12-byte AABB record (the same shape actor_part19g.c copies as
+/* A 12-byte AABB record (the same shape polar_pickups.c copies as
  * `struct vec3_words`). */
 struct box12 {
     s32 a, b, c;
@@ -712,7 +712,7 @@ extern s16 gSineTable[];
 
 /* Eases `self`'s cached position (`self+0x1c`/`0x20`/`0x24`, the same
  * fields `InitActorPart` caches its `b`/`c`/`d` constructor arguments
- * into, per actor_part50.c) toward a caller-supplied target, with the
+ * into, per actor.c) toward a caller-supplied target, with the
  * exact target/mode selected by `self+0x28` ("state"):
  *   - state 0: eases toward `posX`/`posY` offset by a per-frame-counter
  *     (`self+0x44`) lookup into `gSineTable` (two different

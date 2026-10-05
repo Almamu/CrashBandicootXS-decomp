@@ -17,7 +17,7 @@ of those four functions.
 ## Category correction: `game_loop` -> `actor`
 
 Every function in this chunk sits directly between already-matched
-`src/graphics/actor_part*.c` files (`moving_sprite_collide.c`/`part_list.c`
+files (`moving_sprite_collide.c`/`part_list.c`
 before it, `ground_sprite.c`/`player_update.c` interleaved and after it)
 - the same "part" object family `docs/status/actor.md` has tracked
 since `sprite.c`. The chunk generator's `game_loop` label is
@@ -25,7 +25,7 @@ stale/inherited, not re-derived from the actual function content (the
 same mistake already documented for GitHub issue #12 in
 `docs/matching/issue-12-physics-collision.md`). `tools/report_units.py`
 already tracks this whole neighborhood as category `graphics` (the
-label this project's `actor_part*.c` family has used since
+label this project's sprite-object/player files have used since
 `sprite.c` - not a new choice made here), so this chunk's new
 units use that same category rather than `game_loop`.
 
@@ -278,7 +278,7 @@ documentation behind.
   issue's functions.
 - `tools/report_units.py` - `UNITS` list split for
   `0x0800A0FC`-`0x0800B324`, corrected from `game_loop` to `graphics`
-  to match the surrounding `actor_part*.c` family's existing category.
+  to match the surrounding sprite-object files' existing category.
 - `docs/matching.md` - the frozen historical log already discusses
   most of these functions from earlier sessions; see "Prior history"
   above for the specific entries.
