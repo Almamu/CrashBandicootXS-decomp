@@ -30,7 +30,7 @@ const u32 gDingodileMotionEntries[8][2] = {
     { 0, 2 },
 };
 
-/* The entry set DestroyPlatformMover (actor_part_1b208.c) stores in its
+/* The entry set CreatePlatformMover (actor_part_1b208.c) stores in its
  * object's `set`. */
 const struct entry_set gPlatformMoverMotionSet = {
     &gDingodileMotionEntries[4], 0x100,
