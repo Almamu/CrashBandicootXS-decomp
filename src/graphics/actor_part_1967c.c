@@ -31,7 +31,7 @@
  * this region's "constant before the byte it's combined with" ordering
  * without register pins. The code was C++: virtual calls are indirect
  * calls through libgcc's `_call_via_rN` helpers
- * (src/system/reg_trampolines.c), and the AABB builders return their box by value.
+ * (lib/libgcc/lib1funcs.s), and the AABB builders return their box by value.
  *
  * UNUSED - no `bl`/`.4byte` reference in asm/, data/ or src/, and no
  * Thumb pointer anywhere in the ROM: sub_8019718, GetDingodileHits. Matched

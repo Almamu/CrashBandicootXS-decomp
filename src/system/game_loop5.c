@@ -1,5 +1,6 @@
 #include "core.h"
 #include "level_data.h"
+#include <agb_syscall.h>
 
 extern void *gLevelLayers;
 
@@ -112,7 +113,6 @@ void ClearBitmapBit(void *self, s32 n)
     *word &= ~mask;
 }
 
-extern void CpuSet(void *src, void *dst, s32 control);
 
 /* Zero-fills 32 words (128 bytes) at `dst` via the BIOS `CpuSet`
  * wrapper, 32-bit fixed-source mode. */

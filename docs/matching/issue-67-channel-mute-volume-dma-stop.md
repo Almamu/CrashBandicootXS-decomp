@@ -21,7 +21,7 @@ clamped volume parameter itself), which only happens when the *source*
 never gives gcc-2.9 a single shared value to hoist in the first place -
 i.e. when every occurrence of the channel chase is its own fresh
 expression. A macro (`GAX_CHAN()`, re-expanded textually at each use, see
-`src/audio/gax_channel_mute_volume.c`'s header comment) reproduces this
+`lib/gax/src/gax_channel_mute_volume.c`'s header comment) reproduces this
 exactly: written this way, all three functions matched byte-for-byte in
 isolation on the first real attempt.
 

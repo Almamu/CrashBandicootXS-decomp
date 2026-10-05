@@ -1,6 +1,6 @@
 # `GaxChannelTickSweep` progress: 81.3% instruction match, still NAKED
 
-`GaxChannelTickSweep` (`src/audio/gax_channel_pos_sweep.c`, per-tick ping-pong
+`GaxChannelTickSweep` (`lib/gax/src/gax_channel_pos_sweep.c`, per-tick ping-pong
 position sweep) is still a byte-correct NAKED asm transcription for the
 default build - see
 [issue-68-0x08039818-audio.md](./issue-68-0x08039818-audio.md) for the

@@ -1,6 +1,6 @@
 # `0x08039214` - word-wrap text/console-tile renderer (issue #67)
 
-`GaxDrawText` (`src/audio/gax_text_render.c`) is the fatal-error screen's
+`GaxDrawText` (`lib/gax/src/gax_text_render.c`) is the fatal-error screen's
 (`GaxFatalError`) text renderer: it writes a NUL-terminated ASCII string as
 tile indices into BG screen block 0's tilemap, starting at a given
 `(col, row)` in 8x8-tile units, word-wrapping to the next tile row

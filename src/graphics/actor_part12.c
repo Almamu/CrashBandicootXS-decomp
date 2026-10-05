@@ -2,6 +2,7 @@
 #include "actor.h"
 #include "actor_self.h"
 #include "box_part.h"
+#include <agb_syscall.h>
 
 /* The fixed-slot object-pool manager struct `InitCrateList`
  * (`actor_part11.c`) initializes: `slotArray` holds the active
@@ -25,7 +26,6 @@ struct pool_manager {
 };
 
 extern void UnlinkCrateFromGrid(struct pool_manager *manager, void *item);
-extern void CpuSet(void *src, void *dst, s32 control);
 extern void *AddCrateGridNode(struct pool_manager *manager, void *data, s32 bucket, s32 extra);
 extern void LinkCrateInGrid(struct pool_manager *manager, void *obj);
 extern void OperatorDeleteArray(void *ptr);

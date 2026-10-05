@@ -22,23 +22,28 @@ helpers.
 - `src/util/time_util.c`: `FormatCentiseconds`
 - `src/util/word_util.c`: `GetWordLength`, `DrawWrappedTextInBox`
 - `src/util/line_util2.c`: `StepBresenhamLine`
-- `src/util/math_div_util.c` (new file, GitHub issue #70, ROM
-  `0x0803AE48`-`0x0803AE4C`): `__div0` (shared divide-by-zero
-  handler) - a genuinely trivial no-op stub with no real C logic to
-  express. (This file's `__divsi3`/`__modsi3`/`__umodsi3` are
-  NAKED transcriptions tracked as parked - see below.)
-- `src/util/math_div64_util.c` (GitHub issue #66, ROM
-  `0x08037648`-`0x08037F3C`): `__divdi3` (UNUSED),
-  `__udivdi3`, `__muldi3` - GAX2's
-  bundled libgcc2.c code. This object is built without
+### libgcc (`lib/libgcc/`, a library - see [docs/libraries.md](../libraries.md))
+
+- `lib/libgcc/libgcc2.c` (GitHub issue #66, ROM
+  `0x08037648`-`0x08037E54` and `0x08037ECC`-`0x08037F3C`), compiled once
+  per function (`_divdi3.o`, `_udivdi3.o`, `_muldi3.o`): `__divdi3`
+  (UNUSED), `__udivdi3`, `__muldi3` - linked in with GAX2. Built without
   `-mthumb-interwork` (the Makefile's `NO_INTERWORK_OBJS`): the ROM's
   combined `pop {r4-r7, pc}` returns are just agbcc's non-interworking
   epilogue, and with the flag dropped these are libgcc2.c's own source,
-  verbatim (`include/libgcc2_udivmoddi4.h` holds `__udivmoddi4`). See
+  verbatim (`lib/libgcc/libgcc2_udivmoddi4.h` holds `__udivmoddi4`). See
   `docs/matching/gax-toolchain-retry.md`. (`GaxZeroFill`, the zero-fill
-  helper that used to share this file, moved to
-  `src/audio/gax_zero_fill.c` - it's GAX2 engine code with a normal
-  interworking return.)
+  helper that used to share this file, is `lib/gax/src/gax_zero_fill.c` -
+  it's GAX2 engine code with a normal interworking return.)
+- `lib/libgcc/lib1funcs.s`: lib1funcs.asm's hand-written routines,
+  assembled once per routine - `__udivsi3` (ROM `0x08037E54`, between
+  `__udivdi3` and `__muldi3`), and `_call_via_r0`-`_call_via_r7`/
+  `_call_via_lr`, `__divsi3`, `__div0`, `__modsi3`, `__umodsi3` (ROM
+  `0x0803AD78`-`0x0803AFDC`). Never C (per-path register saves, `ror`,
+  `mov pc, lr` returns), so they are byte-verified transcriptions,
+  excluded from progress (`HANDWRITTEN`). They were NAKED functions in C
+  files before (GitHub issues #66/#69/#70, see
+  `docs/matching/issue-69-eeprom-timer.md`'s "NAKED transcription pass").
 
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
@@ -52,19 +57,7 @@ entire function body is hand-transcribed disassembly wrapped in inline
 `asm()` - the C-level matching attempt failed and the raw bytes got
 embedded as asm instead. They're tracked as parked, not matched.
 
-- **`__divsi3`** (`src/util/math_div_util.c`, signed division),
-  **`__modsi3`** (signed modulo), **`__umodsi3`** (unsigned
-  modulo) - the ROM's per-path prologue/epilogue register-save
-  minimization, and `__modsi3`/`__umodsi3`'s `ror` codegen, that
-  agbcc's plain-C codegen can't reproduce. GitHub issue #70, see
-  `docs/matching/issue-69-eeprom-timer.md`'s "NAKED transcription pass"
-  section.
-- **`__udivsi3`** (`src/util/math_div64_util.c`) -
-  lib1funcs.asm's hand-written Thumb routine (per-path `push {r4}` /
-  `push {lr}; bl __div0` shapes, `mov pc, lr` return), not compiler
-  output, so NAKED is its legitimate final state - the same situation
-  as `math_div_util.c`'s trio above. GitHub issue #66, see
-  `docs/matching/gax-toolchain-retry.md`.
+None in `src/util/` (libgcc's hand-written routines are `lib/libgcc/lib1funcs.s`, see above).
 
 ## Other notes
 

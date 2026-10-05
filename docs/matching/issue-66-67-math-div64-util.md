@@ -1,4 +1,4 @@
-# Issue #66: `0x08037648`-`0x08037FA0` (5 functions, `math_div64_util.c`)
+# Issue #66: `0x08037648`-`0x08037FA0` (5 functions, `libgcc2.c`)
 
 `__divdi3`/`__udivdi3`/`__udivsi3`/`__muldi3`/`GaxZeroFill` sit
 inside issue #66's nominally-`audio` chunk (`asm/code_3_2_20b.s`,
@@ -7,9 +7,9 @@ inside issue #66's nominally-`audio` chunk (`asm/code_3_2_20b.s`,
 range as "very likely not GAX2 code at all" - none of the five are
 actually GAX2 engine code. All five are generic compiler-runtime
 division/multiply helpers, the 64-bit-flavored siblings of
-`src/util/math_div_util.c`'s already-matched 32-bit trio
+`lib/libgcc/lib1funcs.s`'s already-matched 32-bit trio
 (`__divsi3`/`__modsi3`/`__umodsi3`, issue #70). They're filed
-under `src/util/math_div64_util.c` and category `util`, not `audio`,
+under `lib/libgcc/libgcc2.c` and category `util`, not `audio`,
 for the same reason that file is - see `docs/workflow.md`'s category
 convention ("about what a function does, not the ROM neighborhood it
 happens to ship in").
@@ -58,11 +58,11 @@ epilogue shape. Across this whole project's `expected/code_3.s`
 (~120k lines, the frozen original disassembly), that exact
 combined-pop-with-`pc` shape appears in only **7** places total, and
 *all 7* are inside this one division/multiply cluster (these four plus
-`math_div_util.c`'s own `__divsi3`/`__modsi3`/`__umodsi3`) -
+`lib1funcs.s`'s own `__divsi3`/`__modsi3`/`__umodsi3`) -
 strong, direct evidence this whole cluster was built without
 `-mthumb-interwork`, unlike the rest of this ROM.
 
-This isn't just precedent-following from `math_div_util.c` - it was
+This isn't just precedent-following from `lib1funcs.s` - it was
 independently re-confirmed this pass by direct experiment:
 `__muldi3` (no branches, no register-allocation ambiguity at all - a
 completely straight-line multiply) reproduces every single body
@@ -103,7 +103,7 @@ as real C:
   `docs/workflow.md` warns about).
 - The function needed a trailing `asm(".align 2, 0")` to reproduce two
   bytes of zero padding before the next matched unit
-  (`song_slot_lookup.o`) - `matching_decomp_alignment_fix`.
+  (`gax_find_mix_rate.o`) - `matching_decomp_alignment_fix`.
 
 ## Verification
 
@@ -113,4 +113,4 @@ crashbandicootxs.map && make compare` - `La suma coincide`.
 
 ## Later pass: GAX toolchain retry
 
-The non-interworking return was a build flag, not a C gap: built without `-mthumb-interwork` (Makefile `NO_INTERWORK_OBJS`), `__divdi3`/`__udivdi3`/`__muldi3` are gcc 2.x `libgcc2.c`'s own `__divdi3`/`__udivdi3`/`__muldi3` and now match as real C. `__udivsi3` is lib1funcs.asm hand-written asm and stays NAKED for good. `GaxZeroFill` moved to `src/audio/gax_zero_fill.c`. See [gax-toolchain-retry.md](./gax-toolchain-retry.md).
+The non-interworking return was a build flag, not a C gap: built without `-mthumb-interwork` (Makefile `NO_INTERWORK_OBJS`), `__divdi3`/`__udivdi3`/`__muldi3` are gcc 2.x `libgcc2.c`'s own `__divdi3`/`__udivdi3`/`__muldi3` and now match as real C. `__udivsi3` is lib1funcs.asm hand-written asm and stays NAKED for good. `GaxZeroFill` moved to `lib/gax/src/gax_zero_fill.c`. See [gax-toolchain-retry.md](./gax-toolchain-retry.md).

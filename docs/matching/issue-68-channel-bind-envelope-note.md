@@ -14,7 +14,7 @@ attempts and why each still needed a NAKED fallback.
 
 ## Parked - NAKED asm transcription
 
-- **`GaxChannelSetInstrument`** (`src/audio/gax_channel_bind_instrument.c`) - binds a
+- **`GaxChannelSetInstrument`** (`lib/gax/src/gax_channel_bind_instrument.c`) - binds a
   new instrument entry (`table->0x10[cmd]`) to a per-channel voice object
   and resets its envelope/state fields, clearing the binding back out if
   the entry's own first byte flags it invalid, then records `cmd` into
@@ -32,14 +32,14 @@ attempts and why each still needed a NAKED fallback.
   (`issue-67-channel-mute-volume-dma-stop.md`), still didn't close it,
   confirming it as a genuine register-choreography gap rather than an
   easy miss.
-- **`GaxChannelStepInstrumentSeq`** (`src/audio/gax_channel_note_scheduler.c`) - the
+- **`GaxChannelStepInstrumentSeq`** (`lib/gax/src/gax_channel_note_scheduler.c`) - the
   per-tick pattern-note/priority-steal scheduler with a 15-way command
   jump table. Not attempted as real C this pass - keeps `r8`/`sb` live as
   genuine scratch (a running "steal" candidate index/slot-array base
   pair) across the whole priority-steal block and the jump table, the
   same many-register gcc-2.9 allocation ceiling already documented
   throughout this ROM region.
-- **`GaxChannelTick`** (`src/audio/gax_channel_envelope_tick.c`) - per-tick
+- **`GaxChannelTick`** (`lib/gax/src/gax_channel_envelope_tick.c`) - per-tick
   envelope/portamento-pitch update. This one got very close: register-
   pinning `self` to `r4` and the two envelope-clamp temporaries landed
   everything except a handful of `ldrsh`-with-non-immediate-offset reads
@@ -56,7 +56,7 @@ attempts and why each still needed a NAKED fallback.
   rather than chase that ripple further within this pass's budget - a
   reasonable next target for a future pass with more room to iterate
   register-by-register.
-- **`GaxEnvelopeTick`** (`src/audio/gax_note_lookup.c`) - resolves a
+- **`GaxEnvelopeTick`** (`lib/gax/src/gax_note_lookup.c`) - resolves a
   pattern-note index into an interpolated pitch/volume byte from a sorted
   breakpoint table (called by `GaxChannelTick`). A real C reconstruction
   matched this function's full control flow (every branch and
@@ -103,7 +103,7 @@ file boundaries.
 
 ## Update: `GaxChannelSetInstrument` closed as real C
 
-A later pass closed `GaxChannelSetInstrument` (`src/audio/gax_channel_bind_instrument.c`)
+A later pass closed `GaxChannelSetInstrument` (`lib/gax/src/gax_channel_bind_instrument.c`)
 using the same "`self` lives in `ip` for the whole function, never spilled
 to a callee-saved register" idiom already established for `sub_80259D4`
 (`src/system/game_loop13.c`, see
@@ -134,12 +134,12 @@ documented in the register-pinning memory notes) fixed it. Full clean
 `rm -rf build crashbandicootxs.elf crashbandicootxs.gba
 crashbandicootxs.map && make compare` both pass (`La suma coincide`).
 `tools/report_units.py`'s entry for `0x0803985C` now points at
-`src/audio/gax_channel_bind_instrument.o`.
+`lib/gax/src/gax_channel_bind_instrument.o`.
 
 ## Update: `GaxEnvelopeTick` narrowed to a single instruction, still parked
 
 The same pass made substantial progress on `GaxEnvelopeTick`
-(`src/audio/gax_note_lookup.c`) without fully closing it - a near-
+(`lib/gax/src/gax_note_lookup.c`) without fully closing it - a near-
 matching C reconstruction is now kept in-tree under `#if NON_MATCHING`
 (the doc comment above the function has the full derivation). Every one
 of the techniques already established in this project closed a specific
@@ -249,4 +249,4 @@ parked (`base_object=None`).
 
 ## Later pass: GAX toolchain retry
 
-`GaxChannelStepInstrumentSeq`, `GaxChannelTick` and `GaxEnvelopeTick` now match as plain, unpinned C against the channel/instrument/envelope structs in `include/audio.h`. See [gax-toolchain-retry.md](./gax-toolchain-retry.md).
+`GaxChannelStepInstrumentSeq`, `GaxChannelTick` and `GaxEnvelopeTick` now match as plain, unpinned C against the channel/instrument/envelope structs in `lib/gax/src/gax_internal.h`. See [gax-toolchain-retry.md](./gax-toolchain-retry.md).

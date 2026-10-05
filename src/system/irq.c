@@ -1,5 +1,7 @@
 #include "core.h"
 #include "irq.h"
+#include <gax.h>
+#include <agb_syscall.h>
 
 /* The VBlank callback slots: AddVBlankCallback() fills a free one,
  * VBlankHandler() calls every non-zero one each VBlank. */
@@ -132,7 +134,6 @@ extern u8 gFrameLimitEnabled;
 extern u32 gVBlankCounter;
 extern u32 gFrameLimitTarget;
 extern u32 gFrameLimitInterval;
-extern void VBlankIntrWait(void);
 
 /* Waits for the next VBlank (BIOS VBlankIntrWait). With the frame limit
  * on (SetFrameLimit), keeps waiting until gVBlankCounter reaches
@@ -182,7 +183,6 @@ void SetFrameLimit(u32 arg0)
 }
 
 extern u8 gGaxIrqEnabled;
-extern void GAX_irq(void);
 extern void _call_via_r0(void);
 
 /* The VBlank IRQ handler: calls GAX_irq while gGaxIrqEnabled is set, calls every VBlank callback (through

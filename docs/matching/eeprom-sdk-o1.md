@@ -4,9 +4,9 @@ The three EEPROM helpers left NAKED in issue #69's range are now real C:
 
 | address | SDK name | file | before | now |
 |---|---|---|---|---|
-| `0x0803AAD4` | `DMA3Transfer` | `src/system/timer_util_aa90.c` | NAKED | real C, -O1 |
-| `0x0803AB54` | `EEPROMRead` | `src/system/eeprom_util.c` | NAKED | real C, -O1 |
-| `0x0803AC04` | `EEPROMWrite` (timer-watchdog version) | `src/system/eeprom_util.c` | NAKED | real C, -O1 |
+| `0x0803AAD4` | `DMA3Transfer` | `lib/agb_eeprom/src/eeprom_timer_stop.c` | NAKED | real C, -O1 |
+| `0x0803AB54` | `EEPROMRead` | `lib/agb_eeprom/src/eeprom_read_write.c` | NAKED | real C, -O1 |
+| `0x0803AC04` | `EEPROMWrite` (timer-watchdog version) | `lib/agb_eeprom/src/eeprom_read_write.c` | NAKED | real C, -O1 |
 
 `StopEepromTimer` (already matched with three register
 pins and a `vu16 * volatile` global) was rewritten as the SDK's plain C
@@ -74,19 +74,20 @@ coincidence of one sub-flag.
 
 ## Build change
 
-`Makefile` gets an `O1_OBJS` list (`timer_util_aa90.o`,
-`eeprom_util.o`) that swaps `-O2` for `-O1`. Both files match as a
+`Makefile` gets an `O1_OBJS` list (`eeprom_timer_stop.o`,
+`eeprom_read_write.o`) that swaps `-O2` for `-O1`. Both files match as a
 whole with it.
 
-The rest of the library (`timer_util.c`, `eeprom_verify.c`) moved to
+The rest of the library (`eeprom_timer.c`, `eeprom_verify.c`) moved to
 -O1 in a second pass, below.
 
 ## Issue #69 status
 
 Every compiler-generated function in `0x0803A944`-`0x0803ADB0` is now
 real C. What's left NAKED there is hand-written library code: the BIOS
-SWI wrappers in `timer_util.c` and the libgcc `_call_via_rN`
-trampolines in `reg_trampolines.c`.
+SWI wrappers (then in `timer_util.c`, now
+`lib/libagbsyscall/libagbsyscall.s`) and the libgcc `_call_via_rN`
+trampolines (now `lib/libgcc/lib1funcs.s`).
 
 ## Second pass: the rest of the library
 
@@ -98,19 +99,20 @@ that hold them joined `O1_OBJS`, so the whole library
 
 | address | SDK name | object | new C, agbcc -O2 | new C, agbcc -O1 | new C, old_agbcc -O1 |
 |---|---|---|---|---|---|
-| `0x0803A968` | `EEPROMConfigure` | `timer_util.o` | MATCH | **MATCH** | MATCH |
-| `0x0803A9AC` | `EepromTimerIntr`, the timer IRQ handler (`FlashTimerIntr` in agb_flash) | `timer_util.o` | 11 (size 32 vs 36) | **MATCH** | MATCH |
-| `0x0803A9D0` | `SetEepromTimerIntr` | `timer_util.o` | MATCH | **MATCH** | MATCH |
-| `0x0803AA08` | `StartEepromTimer` | `timer_util.o` | 47 (size 132 vs 136) | **MATCH** | MATCH |
+| `0x0803A968` | `EEPROMConfigure` | `eeprom_timer.o` | MATCH | **MATCH** | MATCH |
+| `0x0803A9AC` | `EepromTimerIntr`, the timer IRQ handler (`FlashTimerIntr` in agb_flash) | `eeprom_timer.o` | 11 (size 32 vs 36) | **MATCH** | MATCH |
+| `0x0803A9D0` | `SetEepromTimerIntr` | `eeprom_timer.o` | MATCH | **MATCH** | MATCH |
+| `0x0803AA08` | `StartEepromTimer` | `eeprom_timer.o` | 47 (size 132 vs 136) | **MATCH** | MATCH |
 | `0x0803ACE0` | `EEPROMCompare` | `eeprom_verify.o` | MATCH | **MATCH** | MATCH |
 | `0x0803AD38` | `EEPROMWrite1_check` | `eeprom_verify.o` | MATCH | **MATCH** | MATCH |
 
 (halfwords differing, relocations masked, whole file compiled; the
 whole `.text` of both objects is also byte-identical to the ROM at
--O1, including `timer_util.o`'s NAKED BIOS SWI wrappers, which are
-hand-written and unaffected by the flag.)
+-O1, including the NAKED BIOS SWI wrappers that object still held
+then, which are hand-written and unaffected by the flag; they are
+`lib/libagbsyscall/libagbsyscall.s` now.)
 
-`timer_util.c` did not need splitting: its only non-SDK code is the
+`eeprom_timer.c` did not need splitting: its only non-SDK code is the
 BIOS SWI wrappers (libagbsyscall-style, also Nintendo library code),
 which come out the same under any flag. `eeprom_verify.c` matches at
 both levels with the new C; it moved to -O1 so that the whole library
@@ -162,7 +164,7 @@ is built with the setting it was compiled with.
 
 The functions keep the project's `s32` return types, which the callers
 in `src/graphics/settings_menu8d.c` and the siblings in
-`eeprom_util.c` declare; the SDK returns `u16`, and the code is the
+`eeprom_read_write.c` declare; the SDK returns `u16`, and the code is the
 same either way because every result is a `u16` local.
 
 ## Other SDK code in the ROM
@@ -178,8 +180,8 @@ Searched for, and nothing else found:
   third-party library whose flags are covered by
   `docs/matching/gax-toolchain-retry.md`.
 - **Nintendo library code that isn't compiled C.** The BIOS SWI
-  wrappers (`timer_util.c`, `BgAffineSet`-`VBlankIntrWait`), the libgcc
-  `_call_via_rN` table (`reg_trampolines.c`), `__divsi3`/`__modsi3`/
+  wrappers (`lib/libagbsyscall/libagbsyscall.s`, `BgAffineSet`-`VBlankIntrWait`), the libgcc
+  `_call_via_rN` table (`lib1funcs.s`), `__divsi3`/`__modsi3`/
   `__umodsi3`/`__div0` and `crt0.s` are all hand-written asm. Compiler
   flags don't apply to them.
 - **Game code that looks like library code.** `irq.c` (IRQ table

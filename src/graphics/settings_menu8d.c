@@ -1,27 +1,11 @@
 #include "core.h"
 #include "audio.h"
 #include "settings_sync.h"
+#include <agb_eeprom.h>
 
 extern void MemCopy32(void *dst, void *src, s32 len);
 extern u8 gEepromNeedsInit;
-extern s32 EEPROMConfigure(u16 type);
-extern void *gIntrTableTimer2;
-extern s32 SetEepromTimerIntr(u8 index, void **out);
-extern s32 EEPROMRead(u16 index, void *buf);
-extern s32 EEPROMWrite1_check(u16 index, void *buf);
-
-/* Same shape as src/system/timer_util.c's own `struct EepromConfig`
- * (redeclared here per this project's convention - see
- * src/system/eeprom_util.c's own copy). */
-struct EepromConfig {
-    u32 size;
-    u16 maxCount;
-    u16 waitcntBits;
-    u8 addrBitCount;
-    u8 pad[3];
-};
-
-extern struct EepromConfig *gEepromConfig;
+extern void (*gIntrTableTimer2)(void);
 
 /* Reads the save data: `gEepromConfig->maxCount` 8-byte blocks from
  * the EEPROM chip (the SDK's `EEPROMRead`) into a stack
@@ -64,7 +48,7 @@ s32 ReadSaveData(void *self, s32 len)
     p = buf;
     i = 0;
     while (i < gEepromConfig->maxCount) {
-        if ((u16)EEPROMRead(i, p) != 0) {
+        if ((u16)EEPROMRead(i, (u16 *)p) != 0) {
             goto fail_restore;
         }
         p += 8;
@@ -123,7 +107,7 @@ s32 WriteSaveData(void *self, s32 len)
     p = buf;
     i = 0;
     while (i < gEepromConfig->maxCount) {
-        if ((u16)EEPROMWrite1_check(i, p) != 0) {
+        if ((u16)EEPROMWrite1_check(i, (u16 *)p) != 0) {
             goto fail_restore;
         }
         p += 8;

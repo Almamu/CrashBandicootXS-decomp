@@ -1,12 +1,12 @@
 #include "core.h"
 #include "bitmap_font.h"
+#include <agb_syscall.h>
 
 /* GitHub issue #46: the HUD icon/text widget's glyph drawer and its two
  * constructors. Built with old_agbcc: under agbcc, FontDrawGlyph derives
  * its bitfield masks differently. */
 extern s32 _call_via_r2(void *arg0, s32 arg1, void *arg2);
 
-extern void CpuSet(void *src, void *dst, s32 control);
 extern void AddOamEntry(void *arg0, void *arg1);
 extern struct oam_shadow_buffer *gOamBuffer;
 extern u8 gSmallFontChars[];

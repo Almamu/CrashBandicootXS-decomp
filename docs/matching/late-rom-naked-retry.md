@@ -79,11 +79,11 @@ down to spelling:
   in a register. None of these reproduced it: `sum += heights[k] = ...`,
   walking-pointer forms, `volatile` on one access, a volatile row store,
   or an inline helper with the N-row count as a parameter.
-- **`__udivsi3`** (math_div64_util.c, #66). This is
+- **`__udivsi3`** (libgcc2.c, #66). This is
   lib1funcs.asm's hand-written routine, not compiler output. It stays a
   NAKED transcription (a final state, as already recorded).
 - **`GAX2_estimate`** (#66). It was raw `asm/code_3_2_20c.s`. It is now
-  `src/audio/gax_work_size.c`, a NAKED transcription with a documented C
+  `lib/gax/src/gax_work_size.c`, a NAKED transcription with a documented C
   draft under `#if NON_MATCHING`: the ROM's control flow and most
   blocks, about 240 halfwords off. Reaching even that needed:
   - the two frame-buffer adds as separate statements (`size +=

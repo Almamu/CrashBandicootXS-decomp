@@ -1,5 +1,6 @@
 #include "core.h"
 #include "bitmap_font.h"
+#include <agb_syscall.h>
 
 /* GitHub issue #26: 0x0801B85C-0x0801CEE0, the whole of the former
  * asm/code_3_2_17_188d0_1b85c.s. Three objects, all gcc 2.x C++ classes
@@ -399,7 +400,6 @@ extern void UploadPaletteCache(void *p);
 extern void CommitOamBuffer(void *p);
 extern void ResetOamBuffer(void *p);
 extern void HideUnusedOamEntries(void *p);
-extern void CpuSet(void *src, void *dst, s32 size);
 extern void ResetObjVram(struct vram_cursor *self);
 extern s32 ReserveObjVram(struct vram_cursor *self, s32 size);
 extern void MarkObjVram(struct vram_cursor *self);

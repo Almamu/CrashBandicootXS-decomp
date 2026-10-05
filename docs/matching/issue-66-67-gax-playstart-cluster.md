@@ -7,11 +7,11 @@ open: `GAX2_estimate`/`GaxCreateHandlers`/`GaxResetSoundHardware` (issue #66) an
 play-start/init cluster). `GAX2_estimate` was read but not attempted this
 pass - see "Left raw" below. Of the other four:
 
-- **`GaxResetSoundHardware`** (`src/audio/gax_hw_reset.c`) and **`GAX_irq`**
-  (`src/audio/gax_playback_ticker.c`) - genuinely matched as real C.
-- **`GaxCreateHandlers`** (`src/audio/gax_channel_table_alloc.c`),
-  **`GAX2_init`** (`src/audio/gax_playstart.c`), and **`GAX2_jingle`**
-  (`src/audio/gax_channel_pool_alloc.c`) - NAKED transcriptions, byte-
+- **`GaxResetSoundHardware`** (`lib/gax/src/gax_hw_reset.c`) and **`GAX_irq`**
+  (`lib/gax/src/gax_playback_ticker.c`) - genuinely matched as real C.
+- **`GaxCreateHandlers`** (`lib/gax/src/gax_channel_table_alloc.c`),
+  **`GAX2_init`** (`lib/gax/src/gax_playstart.c`), and **`GAX2_jingle`**
+  (`lib/gax/src/gax_channel_pool_alloc.c`) - NAKED transcriptions, byte-
   correct but not real decompiled C, tracked as parked.
 
 ## Matched: `GaxResetSoundHardware` - hardware sound-register reset
@@ -140,7 +140,7 @@ relocation that the real link fixes), then again via the full clean
 
 ## Object shapes
 
-`gGaxPlayerState` (`struct GaxPlayerState *`, `include/audio.h`) still
+`gGaxPlayerState` (`struct GaxPlayerState *`, `lib/gax/src/gax_internal.h`) still
 only names `magic`/`songPtr`/`channels`/`curChannelIdx`/`state` - all
 five functions here touch many more fields (`+0x10`/`+0x14`/`+0x18`/
 `+0x1c`/`+0x24`/`+0x2c`/`+0x30`/`+0x34`/`+0x40`-`+0x44`/`+0x48`+/`+0x9c`+/
@@ -168,14 +168,14 @@ Full clean `make compare` (`rm -rf build crashbandicootxs.elf
 crashbandicootxs.gba crashbandicootxs.map && make compare`) printed
 `La suma coincide` after cutting all five functions out of
 `asm/code_3_2_20d.s`/`asm/code_3_2_20e.s` (both files now empty and
-removed) and adding `src/audio/gax_channel_table_alloc.o`/
+removed) and adding `lib/gax/src/gax_channel_table_alloc.o`/
 `gax_hw_reset.o`/`gax_playstart.o`/`gax_channel_pool_alloc.o`/
 `gax_playback_ticker.o` to `ldscript.txt` in their place. `make
 NON_MATCHING=1 report` also verified clean (356 units, 9 categories).
 
 ## Later pass: GAX toolchain retry
 
-`GAX2_jingle` now matches as plain C against the structs in `include/audio.h`. `GaxCreateHandlers` and `GAX2_init` stay NAKED with drafts under `#if NON_MATCHING` (register-assignment gaps, not an allocation "ceiling"). See [gax-toolchain-retry.md](./gax-toolchain-retry.md).
+`GAX2_jingle` now matches as plain C against the structs in `lib/gax/src/gax_internal.h`. `GaxCreateHandlers` and `GAX2_init` stay NAKED with drafts under `#if NON_MATCHING` (register-assignment gaps, not an allocation "ceiling"). See [gax-toolchain-retry.md](./gax-toolchain-retry.md).
 
 ## Later pass: GAX NAKED retry 2
 

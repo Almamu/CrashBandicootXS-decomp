@@ -6,7 +6,7 @@ one logical GAX2 per-channel note-trigger routine that the ROM's own
 compiler split across two disassembly labels, glued together by the
 same manual return-address-trampoline idiom already documented for
 `GaxMixerApplyEcho`/`sub_803A2C8`/`GaxMixerPlay`/`GaxMixFrame`
-(`src/audio/gax_unknownc_play.c`, see
+(`lib/gax/src/gax_unknownc_play.c`, see
 `docs/matching/issue-68-0x08039818-audio.md`).
 
 ## What it does
@@ -29,7 +29,7 @@ it into `gGaxPeriodTable`'s period-lookup table (capped at
 `0xEF3`), derives a per-voice volume by chaining `self+0x16`/`+0x17`/
 `+0x15`/`+0x18`/`info->0->0x18->8` multiplies (each `0xff`-sentineled
 to "skip"), calls `__muldi3` (the 64-bit-division-backed pitch/
-period helper, `src/util/math_div64_util.c`) on the result, then builds
+period helper, `lib/libgcc/libgcc2.c`) on the result, then builds
 a stack work-item and forwards it through `MemCopy32`.
 
 The remainder (from ROM label `0x08039CDE` onward, i.e. `sub_8039E50`'s
@@ -110,7 +110,7 @@ crashbandicootxs.map && make compare`) prints `La suma coincide`.
 
 **Parked, not matched** - byte-correct NAKED asm, not real decompiled
 C, per this project's NAKED-transcription policy. Both functions live
-in the new `src/audio/gax_note_trigger.c`. This finishes issue #68's
+in the new `lib/gax/src/gax_note_trigger.c`. This finishes issue #68's
 last raw pair; every function in `docs/matching/issue-68-0x08039818-
 audio.md`'s original `0x08039818`-`0x0803A944` range is now either
 matched or parked (none left completely raw). Issue #68 stays open,
@@ -120,7 +120,7 @@ parked breakdown.
 
 ## Later pass: GAX toolchain retry
 
-The trampoline is expressible after all (`GAX_CALL_ARM_R`, `include/audio.h`) and `sub_8039E50` is just its return point. `GaxChannelMix` stays NAKED, but a complete draft is now kept under `#if NON_MATCHING`; its remaining gap is register allocation. See [gax-toolchain-retry.md](./gax-toolchain-retry.md).
+The trampoline is expressible after all (`GAX_CALL_ARM_R`, `lib/gax/src/gax_internal.h`) and `sub_8039E50` is just its return point. `GaxChannelMix` stays NAKED, but a complete draft is now kept under `#if NON_MATCHING`; its remaining gap is register allocation. See [gax-toolchain-retry.md](./gax-toolchain-retry.md).
 
 ## Later pass: GAX retry 6 (matched)
 

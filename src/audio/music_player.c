@@ -11,12 +11,7 @@
  * src/audio/sfx_ambient.c's doc comment. */
 
 extern void TickAmbientSfx(struct AudioContext *self);
-extern void GAX_set_music_volume(s32 channel, u32 volume);
-extern void GAX_play(void);
-extern void GAX_stop(void);
 extern u8 gGaxIrqEnabled;
-extern void GAX2_new(void *gaxState);
-extern u8 GAX2_init(void *gaxState);
 extern void *gSongTable[19];
 extern u8 gGaxMusicData[];
 extern void FadeInMusic(struct AudioContext *self);
@@ -132,7 +127,7 @@ void StartSong(struct AudioContext *self, u32 songIndex)
             *(void **)((u8 *)self + 0x84) = gGaxMusicData;
             *((u8 *)self + 0x90) = zero2;
         }
-        if (GAX2_init(gaxState)) {
+        if (GAX2_init((struct GaxSongHeader *)gaxState)) {
             self->currentSong = songIndex;
             *((u8 *)self + 0x54) = 0;
             FadeInMusic(self);

@@ -513,13 +513,13 @@ Notable mid-size tables:
 - `0816A820`: `s16[256]` sine table. **Converted**
   (`src/data/boss_pictures_167ad4.c`).
 - `085A4C70`/`085A4D70`: two copies of libgcc's `__clz_tab` (`u8[256]`).
-  **Converted** (`src/data/clz_tab_5a4c70.c`).
+  **Converted** (`lib/libgcc/data/clz_tab_5a4c70.c`).
 - `085A60FF`...`085A62CC`: GAX2 version string (`"GAX Sound Engine 2.01D
   (Sep 28 2001) (c) Shin'en Multimedia. Code: B.Wodok"`) and error strings,
   the `RateEntry` table, and `085A62DC`, the GAX2 `u32` period table
   (0x3BD0; its `0x08xxxxxx` values are a smooth ramp, not pointers). **Converted**, with the vibrato wave
-  and the EEPROM library's data after it (`src/data/gax_tables_5a6100.c`,
-  `src/data/eeprom_5a9eec.c`).
+  and the EEPROM library's data after it (`lib/gax/data/gax_tables_5a6100.c`,
+  `lib/agb_eeprom/data/eeprom_5a9eec.c`).
 
 Every one of the 412 labels is listed in the appendix.
 
@@ -837,10 +837,10 @@ vtable shapes).
 | `0817E78C` | 0x326E74 | composite: level BG tile sets (raw tag-0x00 assets), per-room level data, sprite-bank tile pool | `InitLanguageSelectGraphics` | high | medium |
 | `084A5600` | 0xB66B4 | composite: sprite-bank (animation) table (**converted**, C) + GAX2 sound-effect bank (**converted**, `gax_audio.py --sfx`) | `RunPauseMenu`, `InitLevelState` | high | medium |
 | `085A4C5C` | 0x14 | the default song's GAX2_Song struct `{4, unknownc, info, unk_ptr, channel}` (the engine's default handler layout). **Built** by `tools/gax_audio.py` (`gax_default_layout.bin`) | `GAX2_estimate`, `GAX2_init` | high | done |
-| `085A4C70` | 0x100 | u8[256] count-leading-zeros table (libgcc `__clz_tab` of `__divdi3`). **Converted** (`src/data/clz_tab_5a4c70.c`) | `__divdi3` | high | done |
-| `085A4D70` | 0x100 | u8[256] count-leading-zeros table (the second copy, `__udivdi3`'s). **Converted** (`src/data/clz_tab_5a4c70.c`) | `__udivdi3` | high | done |
+| `085A4C70` | 0x100 | u8[256] count-leading-zeros table (libgcc `__clz_tab` of `__divdi3`). **Converted** (`lib/libgcc/data/clz_tab_5a4c70.c`) | `__divdi3` | high | done |
+| `085A4D70` | 0x100 | u8[256] count-leading-zeros table (the second copy, `__udivdi3`'s). **Converted** (`lib/libgcc/data/clz_tab_5a4c70.c`) | `__udivdi3` | high | done |
 | `085A5519` | 0x3 | padding (zero, aligns the next LZ77 blob to 4). **Built**: gbagfx's zero padding of the preceding `.lz` stream | - | high | done |
-| `085A60FF` | 0x4D | 1 B pad (gbagfx's padding of the `.lz` stream before it, now built) + GAX2 version string "GAX Sound Engine 2.01D (Sep 28 2001) (c) Shin'en Multimedia. Code: B.Wodok". **Converted** (`gGaxVersionString`, `src/data/gax_tables_5a6100.c`) | `GAX2_init (via gGaxVersionStringPtr)` | high | done |
+| `085A60FF` | 0x4D | 1 B pad (gbagfx's padding of the `.lz` stream before it, now built) + GAX2 version string "GAX Sound Engine 2.01D (Sep 28 2001) (c) Shin'en Multimedia. Code: B.Wodok". **Converted** (`gGaxVersionString`, `lib/gax/data/gax_tables_5a6100.c`) | `GAX2_init (via gGaxVersionStringPtr)` | high | done |
 | `085A614C` | 0x4 | pointer to the GAX2 version string. **Converted** (`gGaxVersionStringPtr = gGaxVersionString`) | `GAX2_init` | high | done |
 | `085A6150` | 0x60 | 12 `struct RateEntry` `{rate in Hz, timer reload}`. **Converted** | `GaxFindMixRate`, `GAX2_estimate`, `GAX2_init` | high | done |
 | `085A61B0` | 0xC | GAX2 error string "GAX2_NEW". **Converted** | `GAX2_new` | medium | done |
@@ -855,7 +855,7 @@ vtable shapes).
 | `085A62CC` | 0x10 | GAX2 halt-screen string "FUNCTION NAME:". **Converted** | `GaxFatalError` | medium | done |
 | `085A62DC` | 0x3BD0 | GAX2 u32 note period table (`u32` x 3828; its 0x08xxxxxx values are a smooth ramp, not pointers). **Converted** | `GaxChannelMix` | high | done |
 | `085A9EAC` | 0x4C | s8[64] vibrato sine wave, then the SDK's "EEPROM_V122" id string (`gEepromLibraryVersion`, `+0x40`). **Converted** (`gax_tables_5a6100.c`, `eeprom_5a9eec.c`) | `GaxChannelTickVibrato` | high | done |
-| `085A9EF8` | 0xC | `struct EepromConfig` of the 4 Kbit chip. **Converted** (`src/data/eeprom_5a9eec.c`) | `EEPROMConfigure` | high | done |
+| `085A9EF8` | 0xC | `struct EepromConfig` of the 4 Kbit chip. **Converted** (`lib/agb_eeprom/data/eeprom_5a9eec.c`) | `EEPROMConfigure` | high | done |
 | `085A9F04` | 0xC | `struct EepromConfig` of the 64 Kbit chip. **Converted** | `EEPROMConfigure` | high | done |
 | `085A9F10` | 0x260 | EEPROM write timeout `u16[3]` + pad, then the library's 22 address constants (`gEepromLibraryAddresses`, no reader), then the palette of cutscene picture 00. **Converted** (`eeprom_5a9eec.c`, `cutscene_pictures_5a9f70.c`) | `EEPROMWrite` | high | done |
 | `085ADBD1` | 0x203 | 3 B zero pad (alignment after the previous bitmap) + 256-colour palette of the next Mode 4 bitmap (cutscene picture 01), bit 15 set in many entries. **Converted** (`gCutscenePicture01`, `src/data/cutscene_pictures_5a9f70.c`) | `gCutscenes (slide packages)` | high | done |

@@ -11,7 +11,7 @@ follows: `AgbMain`, `LoadTaggedAsset`, `QueueVramDmaTransfer`,
 
 `LZ77UnCompVram`/`RLUnCompVram`/`VBlankIntrWait` look like they break
 this (`UnComp`, not `Uncomp`) but don't - the BIOS `swi` wrappers in
-`src/system/timer_util.c` are named exactly after the BIOS calls they make
+`lib/agb_eeprom/src/eeprom_timer.c` are named exactly after the BIOS calls they make
 (the libagbsyscall names other GBA decomps use). Library code we can
 identify keeps its library's names the same way: the AgbEeprom SDK's
 `EEPROMRead`/`EEPROMWrite1_check` (TMC's and pokeemerald's spelling) and

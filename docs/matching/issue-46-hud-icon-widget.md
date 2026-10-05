@@ -327,7 +327,7 @@ caller's r7 across the call). Rather than keep chasing plain-C
 workarounds around a confirmed compiler bug, this pass transcribed all
 five directly as `NAKED` asm functions instead - the same technique this
 project already uses elsewhere for this exact class of problem
-(`src/util/math_div_util.c`'s `__div0`, `src/audio/gax_swi.c`'s
+(`lib/libgcc/lib1funcs.s`'s `__div0`, `lib/gax/src/gax_swi.c`'s
 `GaxHuffUnComp`, `src/system/link_cable.c`'s `MakeLinkHandshakeId`/`UpdateLinkSession`).
 A NAKED function has no compiler-generated prologue/epilogue or
 register allocation at all, so the r7 bug (and any other codegen

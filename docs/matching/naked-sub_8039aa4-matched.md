@@ -1,6 +1,6 @@
 # `GaxChannelTick` progress: 99.7% instruction match, still NAKED
 
-`GaxChannelTick` (`src/audio/gax_channel_envelope_tick.c`, per-tick
+`GaxChannelTick` (`lib/gax/src/gax_channel_envelope_tick.c`, per-tick
 envelope/portamento-pitch update) is still a byte-correct NAKED asm
 transcription for the default build - see
 [issue-68-channel-bind-envelope-note.md](./issue-68-channel-bind-envelope-note.md)

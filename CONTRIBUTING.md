@@ -166,7 +166,7 @@ two kinds, both under the `cleanup` label:
   ```
   python3 tools/chunk_remaining_work.py --cleanup-scan --issues-dir /tmp/issues
   ```
-  This scans already-matched `src/**/*.c` files for raw
+  This scans already-matched `src/**/*.c` and `lib/**/*.c` files for raw
   pointer-arithmetic field access (`*(u32 *)((u8 *)base + 0x10)`-style
   casts) and raw hardware addresses that should be named structs/
   `REG_*` macros, and groups the results per file (claim, comment, PR -

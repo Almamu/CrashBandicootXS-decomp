@@ -1,7 +1,7 @@
 #include "core.h"
 #include "bitmap_font.h"
+#include <agb_syscall.h>
 
-extern void CpuSet(void *src, void *dst, s32 control);
 extern u8 gFontVtable[];
 
 /* Constructor variant used for a widget that's never assigned its own

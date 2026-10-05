@@ -1,4 +1,5 @@
 #include "core.h"
+#include <agb_syscall.h>
 
 /* Sits right after the permanent hand-written `start`/`init_vector`
  * boot stub in asm/crt0.s (never decompiled - it's the CPU-mode/stack
@@ -29,7 +30,6 @@ s32 DivMod(s32 number, s32 denom, s32 *remainderOut)
     return quotient;
 }
 
-extern void CpuSet(const void *src, void *dst, u32 cnt);
 
 /* `CpuSet` (the BIOS SWI wrapper) with swapped src/dst
  * argument order and `byteCount` converted to CpuSet's 32-bit-word

@@ -4,6 +4,7 @@
 #include "vram_pool.h"
 #include "audio.h"
 #include "gba/dma_macros.h"
+#include <agb_syscall.h>
 
 /* GitHub issue #64 (0x08034AA4-0x080354E0, 13 functions). Continues
  * straight on from issue #63's fade-overlay cluster (actor_part87.c/
@@ -447,7 +448,6 @@ struct popup_oam {
 
 extern s32 GetObjVramTile(struct vram_upload_cursor *self);
 extern s32 UploadObjVram(struct vram_upload_cursor *self, void *src, s32 size);
-extern void CpuSet(void *src, void *dst, s32 control);
 extern void AddOamEntry(struct oam_shadow_buffer *self, void *record);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 

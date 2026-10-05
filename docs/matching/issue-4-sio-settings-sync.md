@@ -28,7 +28,7 @@ compare` ("La suma coincide").
   (`ReadSaveData`/`WriteSaveData`) that turned out to be a **red herring**
   for SIO at first glance (stack buffer + polling loop looks like the
   SIO pump from issue #5's `settings_menu8a2.c`) but are actually
-  EEPROM save-chip primitives built on `src/system/timer_util.c`'s
+  EEPROM save-chip primitives built on `lib/agb_eeprom/src/eeprom_timer.c`'s
   `EepromConfig`/`EEPROMConfigure`/`EEPROMRead`/`EEPROMWrite1_check` - confirmed
   by `gEepromConfig->maxCount` (an `EepromConfig` field) driving
   their loop bound, not anything SIO-shaped.
@@ -177,7 +177,7 @@ the established pattern this project has hit many times before):
 None - all new code reuses `struct save_data`/
 `struct settings_sync_pump` from `include/settings_sync.h` (issue #5)
 without modification. `struct EepromConfig`/`gEepromConfig` from
-`src/system/timer_util.c` are referenced via a raw `u8 *` cast rather
+`lib/agb_eeprom/src/eeprom_timer.c` are referenced via a raw `u8 *` cast rather
 than importing that file-local struct definition, to avoid coupling
 two otherwise-independent translation units to one private type.
 
@@ -222,7 +222,7 @@ as a second small block, the *only* remaining gap was that same
 prologue `r7`/push-list interaction - at that point, converting the
 whole function to `NAKED` (this project's established escape hatch for
 exactly this class of problem, already used for
-`src/util/math_div_util.c`'s `__div0` and `src/audio/gax_swi.c`'s
+`lib/libgcc/lib1funcs.s`'s `__div0` and `lib/gax/src/gax_swi.c`'s
 `GaxHuffUnComp`) was both simpler and more honest than continuing to
 fight the compiler over one instruction's register.
 

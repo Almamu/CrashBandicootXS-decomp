@@ -237,7 +237,7 @@ struct orbit_part *DropWumpa(void *unused0, u32 x, u32 y, u32 p3, u32 p4, u32 fl
  * pointer, and tail-calls it as `fn(self, p1, p2, p3)`. On real
  * hardware this indirect call has to go through one of this ROM's
  * fixed per-register interworking trampolines
- * (`src/system/reg_trampolines.c`) rather than a direct `blx` - which
+ * (`lib/libgcc/lib1funcs.s`) rather than a direct `blx` - which
  * specific trampoline (here, `_call_via_r5`/"bx r5") depends purely on
  * which register this compiler's allocator happens to land the
  * function pointer in, hence the `register ... asm("r5")` pin plus the

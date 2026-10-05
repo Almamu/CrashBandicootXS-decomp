@@ -1,9 +1,9 @@
 #include "core.h"
 #include "actor.h"
 #include "box_part.h"
+#include <agb_syscall.h>
 
 extern void UnlinkCrateFromGrid(void *manager, void *item);
-extern void CpuSet(void *src, void *dst, s32 control);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *fn);
 extern void *_call_via_r1(void *arg0, void *fn);
 extern void *gLevelLayers;

@@ -333,7 +333,7 @@ player struct: `GetSpawnAtStart`/`GetDeaths`/`GetMaskAssistDeaths`/`GetLives`
 already matched in `actor_aabb_setup.c`) and `IsInBonusRound` (`+0xa4`,
 matched in `game_loop10.c`/`game_loop2.c`). `_call_via_r4` itself is not
 a normal function at all - it's the `bx r4` register-trampoline from
-`reg_trampolines.c` (`src/system/reg_trampolines.c`'s
+`lib1funcs.s` (`lib/libgcc/lib1funcs.s`'s
 `_call_via_r0`-`_call_via_r7` "call through register" family) - the ROM
 loads the real callee's address into `r4` right before the `bl`, and
 this project's established convention (`HitMovingSprite` in

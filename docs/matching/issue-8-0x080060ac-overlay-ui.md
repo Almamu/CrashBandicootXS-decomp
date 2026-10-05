@@ -14,7 +14,7 @@ marks this file's end. 3 of the 9 functions matched, 4 parked
   `dest`, NUL-terminated, returning the digit count. Builds digits
   least-significant-first into a small stack buffer via the existing
   `__modsi3`/`__divsi3` div/mod primitives
-  (`src/util/math_div_util.c`), then reverses them into `dest`. Shared
+  (`lib/libgcc/lib1funcs.s`), then reverses them into `dest`. Shared
   by every settings-row/results-widget number label already matched in
   `src/graphics/settings_menu6.c`/`settings_menu7.c` (both already call
   it as an `extern`).

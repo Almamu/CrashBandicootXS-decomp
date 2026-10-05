@@ -5,6 +5,7 @@
 #include "vram_pool.h"
 #include "pause_menu.h"
 #include "memory.h"
+#include <agb_syscall.h>
 
 extern void StopAmbientSfx(struct AudioContext *self);
 extern void WaitForVBlank(void);
@@ -18,7 +19,6 @@ extern u8 gPauseMenuPalette[];
 extern void SetPaletteCacheSource(struct palette_cache *self, u16 count, const u8 *records);
 extern s32 ClaimPaletteSlot(struct palette_cache *self, s32 index);
 extern void DestroyPaletteCache(struct palette_cache *self, u32 flags);
-extern void CpuSet(const void *src, void *dst, u32 cnt);
 extern void FontResetPalette(struct bitmap_font *self);
 extern void *_call_via_r1(void *arg0, void *fn);
 extern void ResetObjVram(struct vram_upload_cursor *self);

@@ -5185,8 +5185,8 @@
     "GAX2_init"
    ],
    "consumer_files": [
-    "audio/gax_playstart.c",
-    "audio/gax_work_size.c"
+    "lib/gax/src/gax_playstart.c",
+    "lib/gax/src/gax_work_size.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 4,
@@ -5211,7 +5211,7 @@
     "__divdi3"
    ],
    "consumer_files": [
-    "util/math_div64_util.c"
+    "lib/libgcc/libgcc2.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 32,
@@ -5226,7 +5226,7 @@
    "effort": "easy",
    "confidence": "high",
    "notes": "Byte-identical to libgcc's __clz_tab: the link could take it from tools/agbcc/lib/libgcc.a instead of data.s.",
-   "status": "converted: src/data/clz_tab_5a4c70.c"
+   "status": "converted: lib/libgcc/data/clz_tab_5a4c70.c"
   },
   {
    "address": "0x085A4D70",
@@ -5236,7 +5236,7 @@
     "__udivdi3"
    ],
    "consumer_files": [
-    "util/math_div64_util.c"
+    "lib/libgcc/libgcc2.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 32,
@@ -5251,7 +5251,7 @@
    "effort": "easy",
    "confidence": "high",
    "notes": "",
-   "status": "converted: src/data/clz_tab_5a4c70.c"
+   "status": "converted: lib/libgcc/data/clz_tab_5a4c70.c"
   },
   {
    "address": "0x085A5519",
@@ -5283,7 +5283,7 @@
    "consumers_indirect": [
     "GAX2_init (via gGaxVersionStringPtr)"
    ],
-   "status": "converted: src/data/gax_tables_5a6100.c (gGaxVersionString; the 1-byte pad is gbagfx padding of the .lz before it)"
+   "status": "converted: lib/gax/data/gax_tables_5a6100.c (gGaxVersionString; the 1-byte pad is gbagfx padding of the .lz before it)"
   },
   {
    "address": "0x085A614C",
@@ -5293,7 +5293,7 @@
     "GAX2_init"
    ],
    "consumer_files": [
-    "audio/gax_playstart.c"
+    "lib/gax/src/gax_playstart.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 1,
@@ -5307,7 +5307,7 @@
    "format": "pointer table (1 data pointers)",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/data/gax_tables_5a6100.c"
+   "status": "converted: lib/gax/data/gax_tables_5a6100.c"
   },
   {
    "address": "0x085A6150",
@@ -5319,9 +5319,9 @@
     "GAX2_init"
    ],
    "consumer_files": [
-    "audio/gax_playstart.c",
-    "audio/gax_work_size.c",
-    "audio/song_slot_lookup.c"
+    "lib/gax/src/gax_playstart.c",
+    "lib/gax/src/gax_work_size.c",
+    "lib/gax/src/gax_find_mix_rate.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -5336,7 +5336,7 @@
    "format": "table of struct RateEntry",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/data/gax_tables_5a6100.c"
+   "status": "converted: lib/gax/data/gax_tables_5a6100.c"
   },
   {
    "address": "0x085A61B0",
@@ -5346,7 +5346,7 @@
     "GAX2_new"
    ],
    "consumer_files": [
-    "audio/sound_object_init.c"
+    "lib/gax/src/gax_new.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -5357,7 +5357,7 @@
    "format": "table (element layout: see consumers)",
    "effort": "easy",
    "confidence": "medium",
-   "status": "converted: src/data/gax_tables_5a6100.c"
+   "status": "converted: lib/gax/data/gax_tables_5a6100.c"
   },
   {
    "address": "0x085A61BC",
@@ -5367,7 +5367,7 @@
     "GAX2_new"
    ],
    "consumer_files": [
-    "audio/sound_object_init.c"
+    "lib/gax/src/gax_new.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -5378,7 +5378,7 @@
    "format": "table (element layout: see consumers)",
    "effort": "easy",
    "confidence": "medium",
-   "status": "converted: src/data/gax_tables_5a6100.c"
+   "status": "converted: lib/gax/data/gax_tables_5a6100.c"
   },
   {
    "address": "0x085A61D0",
@@ -5389,8 +5389,8 @@
     "GAX2_jingle"
    ],
    "consumer_files": [
-    "audio/gax_channel_pool_alloc.c",
-    "audio/gax_playstart.c"
+    "lib/gax/src/gax_channel_pool_alloc.c",
+    "lib/gax/src/gax_playstart.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -5405,7 +5405,7 @@
    "effort": "easy",
    "confidence": "high",
    "notes": "",
-   "status": "converted: src/data/gax_tables_5a6100.c"
+   "status": "converted: lib/gax/data/gax_tables_5a6100.c"
   },
   {
    "address": "0x085A61DC",
@@ -5416,8 +5416,8 @@
     "GAX2_jingle"
    ],
    "consumer_files": [
-    "audio/gax_channel_pool_alloc.c",
-    "audio/gax_playstart.c"
+    "lib/gax/src/gax_channel_pool_alloc.c",
+    "lib/gax/src/gax_playstart.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -5432,7 +5432,7 @@
    "effort": "easy",
    "confidence": "high",
    "notes": "",
-   "status": "converted: src/data/gax_tables_5a6100.c"
+   "status": "converted: lib/gax/data/gax_tables_5a6100.c"
   },
   {
    "address": "0x085A61EC",
@@ -5442,7 +5442,7 @@
     "GAX2_jingle"
    ],
    "consumer_files": [
-    "audio/gax_channel_pool_alloc.c"
+    "lib/gax/src/gax_channel_pool_alloc.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -5457,7 +5457,7 @@
    "effort": "easy",
    "confidence": "high",
    "notes": "",
-   "status": "converted: src/data/gax_tables_5a6100.c"
+   "status": "converted: lib/gax/data/gax_tables_5a6100.c"
   },
   {
    "address": "0x085A61F8",
@@ -5467,7 +5467,7 @@
     "GAX2_jingle"
    ],
    "consumer_files": [
-    "audio/gax_channel_pool_alloc.c"
+    "lib/gax/src/gax_channel_pool_alloc.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -5482,7 +5482,7 @@
    "effort": "easy",
    "confidence": "high",
    "notes": "",
-   "status": "converted: src/data/gax_tables_5a6100.c"
+   "status": "converted: lib/gax/data/gax_tables_5a6100.c"
   },
   {
    "address": "0x085A6214",
@@ -5492,7 +5492,7 @@
     "GAX_irq"
    ],
    "consumer_files": [
-    "audio/gax_playback_ticker.c"
+    "lib/gax/src/gax_playback_ticker.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -5504,7 +5504,7 @@
    "effort": "easy",
    "confidence": "high",
    "notes": "",
-   "status": "converted: src/data/gax_tables_5a6100.c"
+   "status": "converted: lib/gax/data/gax_tables_5a6100.c"
   },
   {
    "address": "0x085A621C",
@@ -5514,7 +5514,7 @@
     "GAX_irq"
    ],
    "consumer_files": [
-    "audio/gax_playback_ticker.c"
+    "lib/gax/src/gax_playback_ticker.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -5526,7 +5526,7 @@
    "effort": "easy",
    "confidence": "high",
    "notes": "",
-   "status": "converted: src/data/gax_tables_5a6100.c"
+   "status": "converted: lib/gax/data/gax_tables_5a6100.c"
   },
   {
    "address": "0x085A62C8",
@@ -5536,7 +5536,7 @@
     "GaxFatalError"
    ],
    "consumer_files": [
-    "audio/gax_fatal_error.c"
+    "lib/gax/src/gax_fatal_error.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 1,
@@ -5550,7 +5550,7 @@
    "format": "pointer table (1 data pointers)",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/data/gax_tables_5a6100.c"
+   "status": "converted: lib/gax/data/gax_tables_5a6100.c"
   },
   {
    "address": "0x085A62CC",
@@ -5560,7 +5560,7 @@
     "GaxFatalError"
    ],
    "consumer_files": [
-    "audio/gax_fatal_error.c"
+    "lib/gax/src/gax_fatal_error.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -5571,7 +5571,7 @@
    "format": "table (element layout: see consumers)",
    "effort": "easy",
    "confidence": "medium",
-   "status": "converted: src/data/gax_tables_5a6100.c"
+   "status": "converted: lib/gax/data/gax_tables_5a6100.c"
   },
   {
    "address": "0x085A62DC",
@@ -5581,7 +5581,7 @@
     "GaxChannelMix"
    ],
    "consumer_files": [
-    "audio/gax_note_trigger.c"
+    "lib/gax/src/gax_note_trigger.c"
    ],
    "ptr_words_code": 1,
    "ptr_words_data": 33,
@@ -5596,7 +5596,7 @@
    "effort": "easy",
    "confidence": "high",
    "notes": "",
-   "status": "converted: src/data/gax_tables_5a6100.c"
+   "status": "converted: lib/gax/data/gax_tables_5a6100.c"
   },
   {
    "address": "0x085A9EAC",
@@ -5606,7 +5606,7 @@
     "GaxChannelTickVibrato"
    ],
    "consumer_files": [
-    "audio/gax_channel_effect_table.c"
+    "lib/gax/src/gax_channel_effect_table.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -5620,7 +5620,7 @@
    "format": "table of s8",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/data/gax_tables_5a6100.c (s8[64]) and src/data/eeprom_5a9eec.c (gEepromLibraryVersion at +0x40)"
+   "status": "converted: lib/gax/data/gax_tables_5a6100.c (s8[64]) and lib/agb_eeprom/data/eeprom_5a9eec.c (gEepromLibraryVersion at +0x40)"
   },
   {
    "address": "0x085A9EF8",
@@ -5630,7 +5630,7 @@
     "EEPROMConfigure"
    ],
    "consumer_files": [
-    "system/timer_util.c"
+    "lib/agb_eeprom/src/eeprom_timer.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -5644,7 +5644,7 @@
    "format": "table of struct EepromConfig",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/data/eeprom_5a9eec.c"
+   "status": "converted: lib/agb_eeprom/data/eeprom_5a9eec.c"
   },
   {
    "address": "0x085A9F04",
@@ -5654,7 +5654,7 @@
     "EEPROMConfigure"
    ],
    "consumer_files": [
-    "system/timer_util.c"
+    "lib/agb_eeprom/src/eeprom_timer.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -5668,7 +5668,7 @@
    "format": "table of struct EepromConfig",
    "effort": "easy",
    "confidence": "high",
-   "status": "converted: src/data/eeprom_5a9eec.c"
+   "status": "converted: lib/agb_eeprom/data/eeprom_5a9eec.c"
   },
   {
    "address": "0x085A9F10",
@@ -5678,7 +5678,7 @@
     "EEPROMWrite"
    ],
    "consumer_files": [
-    "system/eeprom_util.c"
+    "lib/agb_eeprom/src/eeprom_read_write.c"
    ],
    "ptr_words_code": 1,
    "ptr_words_data": 3,
@@ -5693,7 +5693,7 @@
    "effort": "easy",
    "confidence": "high",
    "notes": "",
-   "status": "converted: src/data/eeprom_5a9eec.c (u16[3] timeout + gEepromLibraryAddresses) and src/data/cutscene_pictures_5a9f70.c (palette)"
+   "status": "converted: lib/agb_eeprom/data/eeprom_5a9eec.c (u16[3] timeout + gEepromLibraryAddresses) and src/data/cutscene_pictures_5a9f70.c (palette)"
   },
   {
    "address": "0x085ADBD1",

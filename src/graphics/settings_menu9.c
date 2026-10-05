@@ -9,7 +9,7 @@ extern s32 __divsi3(s32 dividend, s32 divisor);
  * this ROM region (`src/graphics/settings_menu6.c`/`settings_menu7.c`
  * already call it as an `extern`). Builds the digits least-significant
  * first into a small stack buffer via the div/mod library primitives
- * (`src/util/math_div_util.c`), then reverses them into `dest`.
+ * (`lib/libgcc/lib1funcs.s`), then reverses them into `dest`.
  *
  * `val`'s explicit `r5` pin (initialized from the `value` parameter,
  * rather than just using `value` directly) is required to reproduce

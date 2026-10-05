@@ -1,9 +1,9 @@
 #include "core.h"
 #include "actor.h"
 #include "actor_self.h"
+#include <agb_syscall.h>
 
 extern void *_call_via_r1(void *arg0, void *fn);
-extern void CpuSet(void *src, void *dst, s32 control);
 extern void OperatorDeleteArray(void *ptr);
 extern void OperatorDelete(void *manager);
 extern void *OperatorNewArray(u32 size);

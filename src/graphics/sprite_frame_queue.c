@@ -407,7 +407,7 @@ extern void *_call_via_r1(void *arg0, void *fn);
  * returning its OBJ tile index (`GET_TILE_NUM`-shaped, ready to OR
  * into an OAM attr2). First tries an optional override hook
  * (`gLookupSpriteFrameCacheFunc`, called through the `_call_via_r1` trampoline
- * convention - see src/system/reg_trampolines.c); if that returns
+ * convention - see lib/libgcc/lib1funcs.s); if that returns
  * anything other than -1, that's used directly. Otherwise inserts a
  * fresh cache node at the head of the "this frame" MRU list
  * (`gSpriteFrameCacheCurrent`) and tries to `AllocVramTileBlock` the frame's

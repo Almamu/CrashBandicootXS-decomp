@@ -1,6 +1,7 @@
 #include "core.h"
 #include "line_util.h"
 #include "level_select_parts.h"
+#include <agb_syscall.h>
 
 /* GitHub issue #29: 0x0801DFEC-0x0801E578, the whole of the former
  * asm/code_3_2_17_188d0_1dfec.s.
@@ -93,7 +94,6 @@ extern u32 gLevelSelectCursorAnims[];
 extern u8 gLevelSelectCursorZoomTiles[];
 
 extern void AddOamEntry(struct oam_shadow_buffer *buf, struct oam_attrs *oam);
-extern void ObjAffineSet(void *src, void *dst, s32 count, s32 stride);
 
 void UpdateLevelSelectCursor(struct cursor_panel *self);
 void SetLevelSelectCursorMatrix(struct cursor_panel *self);

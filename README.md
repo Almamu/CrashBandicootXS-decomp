@@ -14,7 +14,10 @@ It builds the following ROM:
 
 Main decomp efforts just started. `src/` is split into `graphics/`, `util/`,
 `system/`, and (once anything's matched there) `audio/`, mirroring how the
-game's code is actually organized - see [docs/status/](./docs/status/) for
+game's code is actually organized. The third-party and SDK code linked
+into the ROM (the GAX2 sound engine, Nintendo's AgbEeprom library, libgcc,
+the BIOS SWI wrappers) is under `lib/`, apart from the game - see
+[docs/libraries.md](./docs/libraries.md). See [docs/status/](./docs/status/) for
 the full per-system breakdown of what's matched, what's parked and why, and
 what's still fully raw asm.
 
@@ -63,6 +66,7 @@ Please see follow [these instructions](./INSTALL.md)
 - [docs/workflow.md](./docs/workflow.md) - **the required per-function matching loop, must be followed for every function**
 - [docs/naming.md](./docs/naming.md) - **the function naming convention, must be followed whenever a function gets a real name**
 - [docs/data.md](./docs/data.md) - how ROM data tables become C `const` arrays in `src/data/`, linked in ROM order
+- [docs/libraries.md](./docs/libraries.md) - the third-party/SDK libraries under `lib/` (GAX2, AgbEeprom, libgcc, libagbsyscall): layout, headers, flags
 - [docs/audio.md](./docs/audio.md) - how the Shin'en GAX2 sound engine's data is laid out and rebuilt
 - [docs/graphics.md](./docs/graphics.md) - how graphics were extracted, and ongoing notes on the sprite/actor system
 - [docs/matching.md](./docs/matching.md) - byte-exact matching decompilation gotchas, and the per-function matching/parked log

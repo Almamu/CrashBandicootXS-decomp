@@ -2,6 +2,7 @@
 #include "actor.h"
 #include "actor_self.h"
 #include "box_part.h"
+#include <agb_syscall.h>
 
 extern void *GetSpriteFrame(void *part);
 
@@ -301,7 +302,6 @@ struct level_layers {
 extern struct level_layers *gLevelLayers;
 extern s32 _call_via_r2(void *self, void *arg, void *fn);
 extern s32 _call_via_r1(void *self, void *fn);
-extern void CpuSet(const void *src, void *dst, u32 cnt);
 
 /* `list` is the part list: each call compacts `items` (dropping parts
  * whose `gone` bit is set) and rebuilds `visible` from scratch. Builds
