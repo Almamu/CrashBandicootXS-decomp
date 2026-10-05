@@ -24,21 +24,21 @@ extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern s32 _call_via_r3(void *arg0, void *arg1, void *arg2, void *arg3);
 extern u8 sub_800AAEC(void *self, s32 action);
-extern void sub_801434C(void *self);
-extern void sub_8015508(void *self);
-extern void sub_8015780(void *self, s32 a, s32 b, s32 c, s32 d);
+extern void ActionCtrlStateCrawl(void *self);
+extern void StartActionCtrlHighJump(void *self);
+extern void SetActionCtrlModeAnim(void *self, s32 a, s32 b, s32 c, s32 d);
 
 /* Clears `part+0x38`'s "busy" flag by resetting the shared
  * flag/counter/table-index trio (`+0x31`/`+0x2f`/`+0x27` and
- * `+0x32`/`+0x30`/`+0x28`) via `sub_8015780`, but only while that flag
+ * `+0x32`/`+0x30`/`+0x28`) via `SetActionCtrlModeAnim`, but only while that flag
  * is actually set. */
-void sub_801426C(void *selfArg)
+void ActionCtrlStateStandUp(void *selfArg)
 {
     u8 *self = selfArg;
     u8 *part = *(u8 **)(self + 0x10);
 
     if (part[0x38] != 0) {
-        sub_8015780(self, 0, 0x12, 0, 0);
+        SetActionCtrlModeAnim(self, 0, 0x12, 0, 0);
         self[0x31] = 0;
         self[0x2f] = 1;
         self[0x27] = 0;
@@ -51,10 +51,10 @@ void sub_801426C(void *selfArg)
 /* On the "confirm" input edge (checked via `sub_800AAEC(part, 0xb)`),
  * plays a sound, clears two `part+0xd` bits (the runtime `& -2`/`& -3`
  * negation rather than a folded mask - see docs/matching.md), and hands
- * off to `sub_8015508`. Otherwise, while `part+0x38` is set, fires the
+ * off to `StartActionCtrlHighJump`. Otherwise, while `part+0x38` is set, fires the
  * usual base+offset+fn-pointer trampoline pair and tail-calls
- * `sub_801434C` (below). */
-void sub_80142B0(void *selfArg)
+ * `ActionCtrlStateCrawl` (below). */
+void ActionCtrlStateCrawlStart(void *selfArg)
 {
     struct act *self = selfArg;
     u32 snap = *(u32 *)&gKeys;
@@ -78,7 +78,7 @@ void sub_80142B0(void *selfArg)
             part[0xd] = mask;
         }
 
-        sub_8015508(self);
+        StartActionCtrlHighJump(self);
         return;
     }
 
@@ -91,12 +91,12 @@ void sub_80142B0(void *selfArg)
             _call_via_r3((u8 *)self + off->thisOffset, self->part,
                         (void *)0, off->fn);
         }
-        sub_801434C(self);
+        ActionCtrlStateCrawl(self);
     }
 }
 
 extern u8 GetDpadDirection(void *dummy);
-extern u8 sub_8012A7C(void *self);
+extern u8 CheckActionCtrlLeftGround(void *self);
 extern void UpdatePlayerFacing(void *self);
 extern void *gInput;
 
@@ -109,9 +109,9 @@ static inline void ActQueue27(struct act *self, s32 cur, s32 next)
     self->next27 = next;
 }
 
-/* The shared handler `sub_80142B0` tail-calls: same "confirm" edge check
- * (short-circuits before reaching `sub_8012A7C` when it fires), then
- * (once `sub_8012A7C(self)` is clear) dispatches on `GetDpadDirection`'s
+/* The shared handler `ActionCtrlStateCrawlStart` tail-calls: same "confirm" edge check
+ * (short-circuits before reaching `CheckActionCtrlLeftGround` when it fires), then
+ * (once `CheckActionCtrlLeftGround(self)` is clear) dispatches on `GetDpadDirection`'s
  * D-pad-remap result - `1` fires one trampoline pair, `0`/`2` fires
  * another - before falling into a shared tail that, when the input
  * snapshot's `0x180` bits are clear and `sub_800AAEC(part, 2)` just
@@ -125,7 +125,7 @@ static inline void ActQueue27(struct act *self, s32 cur, s32 next)
  * calls in the do/while ACT_VCALL form, so gcc cross-jumps the shared
  * `bl` of the second method call as the ROM does (the if/else ACT_CALL
  * form there changes the whole block). */
-void sub_801434C(void *selfArg)
+void ActionCtrlStateCrawl(void *selfArg)
 {
     struct act *self = selfArg;
     u32 in = gKeys;
@@ -139,10 +139,10 @@ void sub_801434C(void *selfArg)
         PlaySfx(gAudioContext, 0xC, 0x100);
         ActAndFlags0D(self->part, -2);
         ActAndFlags0D(self->part, -3);
-        sub_8015508(self);
+        StartActionCtrlHighJump(self);
         return;
     }
-    busy = sub_8012A7C(self);
+    busy = CheckActionCtrlLeftGround(self);
     if (busy != 0)
         return;
     dir = GetDpadDirection(gInput);

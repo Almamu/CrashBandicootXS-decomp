@@ -5,14 +5,14 @@
  * at length in actor_part17.c/actor_part18.c/actor_part38c.c/
  * actor_part38d.c - recategorized `graphics`->`actor` (see docs/matching/
  * issue-19-0x08015840-actor.md). Directly adjacent to actor_part38d.c's
- * matched span (which ends with the shared `sub_8015780` trampoline
+ * matched span (which ends with the shared `SetActionCtrlModeAnim` trampoline
  * helper this file's first function calls) and its parked `ActionCtrlSetTargetAnim`
  * right before this chunk starts. Non-adjacent to actor_part57b.c (this
  * chunk's other matched file) since the left-raw
  * `sub_80159F8`/`sub_8015C6C`/`sub_8015DF8` sit between them (see
  * asm/code_3_2_17_159f8.s). */
 
-extern void sub_8015780(void *selfArg, s32 a, s32 b, s32 c, s32 d);
+extern void SetActionCtrlModeAnim(void *selfArg, s32 a, s32 b, s32 c, s32 d);
 extern void DestroyCtrl(void *selfArg, s32 flags);
 extern void InitCtrl(void *selfArg);
 extern void ResetActionCtrl(void *selfArg);
@@ -22,13 +22,13 @@ extern void sub_8017264(void *selfArg, s32 a, s32 b, s32 c, s32 d);
 
 /* Fires the mgr trampoline pair (actions `0`/`0x12`), then resets the
  * `0x27`/`0x2f`/`0x31` and `0x28`/`0x30`/`0x32` state/counter/table-index
- * pairs (same trio shape as `sub_8015508`/`sub_8015558` in
+ * pairs (same trio shape as `StartActionCtrlHighJump`/`sub_8015558` in
  * actor_part38c.c). */
 void sub_8015840(void *selfArg)
 {
     u8 *self = selfArg;
 
-    sub_8015780(self, 0, 0x12, 0, 0);
+    SetActionCtrlModeAnim(self, 0, 0x12, 0, 0);
 
     self[0x31] = 0;
     self[0x2f] = 1;

@@ -23,7 +23,7 @@ extern s32 gAirshipHp;
 extern void *gUnknown_03001568;
 extern void *gAirship;
 extern s32 gUnknown_030013C0;
-extern void sub_8031A08(struct actor_self *self);
+extern void RunJetpackBalloonState(struct actor_self *self);
 extern void *gAudioContext;
 extern u8 gJetpackBalloonVtable[];
 extern struct actor_pmf gJetpackBalloonStateFuncs[];
@@ -84,7 +84,7 @@ void nullsub_31(void)
  * releases its pending linked object (`sub_8032138`) and destroys
  * itself, as it also does once the state-2 animation has played through
  * or state 1 has sunk past a height; otherwise runs the member-pointer
- * dispatch `sub_8031A08`. The shared destroy tail is a `goto` target, as
+ * dispatch `RunJetpackBalloonState`. The shared destroy tail is a `goto` target, as
  * the ROM's branch layout shares it between both paths. */
 void UpdateJetpackBalloon(struct jetpack_balloon *self)
 {
@@ -103,7 +103,7 @@ void UpdateJetpackBalloon(struct jetpack_balloon *self)
             ACTOR_VCALL(&self->base, destroy, 3);
         }
     } else {
-        sub_8031A08(&self->base);
+        RunJetpackBalloonState(&self->base);
     }
 }
 
@@ -253,7 +253,7 @@ void nullsub_32(void)
 
 /* Per-state member-pointer dispatch, `(this->*gJetpackBalloonStateFuncs
  * [this->state])()` (see `ACTOR_PMF_CALL`). */
-void sub_8031A08(struct actor_self *self)
+void RunJetpackBalloonState(struct actor_self *self)
 {
     ACTOR_PMF_CALL(self, gJetpackBalloonStateFuncs);
 }

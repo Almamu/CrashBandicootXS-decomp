@@ -62,11 +62,11 @@ gSfxTable:
 
 @ gEnemyCtrlMotionSet..gWumpaHopWidths: src/data/object_tables_16bb6c.c
 
-@ gActionCtrlStateTable..gStaticData_0816C070: src/data/action_table_16bf20.c
+@ gActionCtrlStateTable..gPlayerCtrlModeAnimRows: src/data/action_table_16bf20.c
 
-@ gStaticData_0816C090..gStaticData_0816C0B0: src/data/speed_table_16c090.c
+@ gStaticData_0816C090..gPlayerCtrlModeLevelAnims: src/data/speed_table_16c090.c
 
-@ gStaticData_0816C250..gStaticData_0816C2D0: src/data/player_pmf_16c250.c
+@ gPlayerCtrlStateFuncs..gStaticData_0816C2D0: src/data/player_pmf_16c250.c
 
 @ gStaticData_0816C2D8..gStaticData_0816C3F4: src/data/actor_tables_16c2d8.c
 

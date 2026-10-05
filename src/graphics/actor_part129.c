@@ -28,7 +28,7 @@
  * be a second, closely-related consumer of the same table feeding the
  * same `x`/`y` position pair.
  *
- * `UpdateJetpackBalloonCrate`/`sub_80322F4` are the per-state member-pointer
+ * `UpdateJetpackBalloonCrate`/`RunJetpackBalloonCrateState` are the per-state member-pointer
  * dispatches through `gJetpackBalloonCrateStateFuncs` (`ACTOR_PMF_CALL`,
  * include/actor_self.h) - once parked NAKED as an "r7 table-base-pin"
  * hazard, see docs/matching/pmf-dispatch-retry.md. */
@@ -825,7 +825,7 @@ void JetpackBalloonCrateStateHang(void *selfArg)
 
 /* `UpdateJetpackBalloonCrate`'s dispatch without its tail: `(this->*gStaticData_
  * 0817C42C[this->state])()` (see `ACTOR_PMF_CALL`). */
-void sub_80322F4(void *selfArg)
+void RunJetpackBalloonCrateState(void *selfArg)
 {
     struct actor_self *self = selfArg;
 

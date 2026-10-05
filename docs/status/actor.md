@@ -19,9 +19,9 @@ from "core" graphics.
   and `actor_part110.o` moved to old_agbcc (whole-file matches).
 
 - **Issues #15/#16/#17 second NAKED retry** ([docs/matching/issue-15-16-17-naked-retry-2.md](../matching/issue-15-16-17-naked-retry-2.md)):
-  the action-table handlers `sub_801434C` (`actor_part18.c`, file moved
-  to old_agbcc), `sub_80145E4` (`actor_part18b.c`, both compilers) and
-  `sub_8012694` (`actor_part84.c`, old_agbcc) - plain C on
+  the action-table handlers `ActionCtrlStateCrawl` (`actor_part18.c`, file moved
+  to old_agbcc), `ActionCtrlStateLand` (`actor_part18b.c`, both compilers) and
+  `TryActionCtrlDoubleJump` (`actor_part84.c`, old_agbcc) - plain C on
   `include/action_obj.h`'s `struct act`, no pins or barriers.
 - **Issues #48/#49/#52 NAKED retry** ([docs/matching/issue-48-49-52-aabb-naked-retry.md](../matching/issue-48-49-52-aabb-naked-retry.md)):
   the AABB-overlap group `PolarIsTouchingPlayer`, `JetpackIsTouchingPlayer`, `FindShotTarget`
@@ -44,7 +44,7 @@ from "core" graphics.
   register pins; they were NAKED. `actor_part23b.c`, `actor_part24b.c`,
   `actor_part75.c` and `actor_part130.c` moved to old_agbcc.
 
-- **`sub_8012D24`** (`src/graphics/actor_part83.c`) and **`sub_801283C`**
+- **`ActionCtrlStateIdle`** (`src/graphics/actor_part83.c`) and **`HandleActionCtrlAirInput`**
   (`src/graphics/actor_part84.c`) - issue #16: two
   `gActionCtrlStateTable` action-table helpers on the player/action object
   (`include/action_obj.h`). Plain C under old_agbcc (both files moved to
@@ -302,16 +302,16 @@ from "core" graphics.
   `InitCtrl`, `GetCtrlMode`
 
 - `src/graphics/actor_part18.c`/`actor_part18b.c` (new files, non-
-  adjacent since `sub_801434C` sits between them - see
-  `docs/matching.md`, issue #17): `sub_801426C`, `sub_80142B0`,
-  `sub_801434C`, `sub_80144E0`, `sub_8014524`, `sub_80145E4` - six
+  adjacent since `ActionCtrlStateCrawl` sits between them - see
+  `docs/matching.md`, issue #17): `ActionCtrlStateStandUp`, `ActionCtrlStateCrawlStart`,
+  `ActionCtrlStateCrawl`, `ActionCtrlStateCrawlStandUp`, `ActionCtrlStateBodySlamLand`, `ActionCtrlStateLand` - six
   entries of the `gActionCtrlStateTable` 42-slot action dispatch table
-  (`sub_801434C`/`sub_80145E4` were NAKED until the second issue
+  (`ActionCtrlStateCrawl`/`ActionCtrlStateLand` were NAKED until the second issue
   #15/#16/#17 retry)
 
 - `src/graphics/actor_part19.c`/`actor_part19c.c`/`actor_part19d.c`/
   `actor_part19f.c`/`actor_part19g.c` (new files, non-adjacent since
-  the now-matched `CreatePolarCollectedWumpa` (see below), `sub_802C208`
+  the now-matched `CreatePolarCollectedWumpa` (see below), `RunPolarPlayerState`
   (`actor_part19e.c`, now matched too - see below), and one left-raw function sit
   between them - `DrawPolarCollectedWumpa` (`actor_part19b.c`), previously also
   parked here, is now matched as real C (see below) - see
@@ -403,23 +403,23 @@ from "core" graphics.
   target picker and falling-hazard spawner; see
   `docs/matching/issue-22-0x08018008-hopper.md`.
 - `src/graphics/actor_part_13c60.c` (new file, GitHub issue #17, ROM
-  0x08013C60-0x08014084, built with old_agbcc): `sub_8013C60`,
-  `sub_8013D94`, `sub_8013EAC`, `sub_8013FD4` - four more
-  `gActionCtrlStateTable` action-table handlers (`sub_8014084`, in the
+  0x08013C60-0x08014084, built with old_agbcc): `ActionCtrlStateSpin`,
+  `ActionCtrlStateAirSpin`, `ActionCtrlStateTornadoSpin`, `ActionCtrlStateCrouchDown` - four more
+  `gActionCtrlStateTable` action-table handlers (`ActionCtrlStateCrouch`, in the
   same file, is parked below); see
   `docs/matching/issue-17-0x08012fbc-actor.md`, "Second pass".
 - `src/graphics/actor_part_14674.c` (new file, GitHub issue #17, ROM
-  0x08014674-0x08014F8C, built with old_agbcc): `sub_8014674` (since
+  0x08014674-0x08014F8C, built with old_agbcc): `ActionCtrlStateLeftGround` (since
   the mix NAKED retry 5, `docs/matching/mix-naked-retry-5.md`),
-  `sub_8014940`, `sub_80149BC`, `sub_8014A3C`, `sub_8014AEC`,
-  `sub_8014B54` (since the late NAKED retry 3,
-  `docs/matching/late-naked-retry-3.md`), `sub_8014BCC`, `sub_8014D18`,
-  `sub_8014EE0`; see `docs/matching/issue-17-0x08012fbc-actor.md`, "Second
+  `ActionCtrlStateDying`, `ActionCtrlStateWarpIn`, `ActionCtrlStateHang`, `sub_8014AEC`,
+  `ActionCtrlReleaseHang` (since the late NAKED retry 3,
+  `docs/matching/late-naked-retry-3.md`), `ActionCtrlStateHangMoveStart`, `ActionCtrlStateHangMove`,
+  `ActionCtrlStateHangStop`; see `docs/matching/issue-17-0x08012fbc-actor.md`, "Second
   pass" and "Third pass".
 - `src/graphics/actor_part_12fbc.c`, `actor_part_134b8.c`,
   `actor_part_138e8.c` (GitHub issue #17, ROM 0x08012FBC-0x08013C60, now
-  built with old_agbcc): `sub_8012FBC`, `sub_8013228`, `sub_80134B8`,
-  `sub_80138E8`, `sub_8013994` - the chunk's first five action-table
+  built with old_agbcc): `ActionCtrlStateRun`, `ActionCtrlStateJump`, `ActionCtrlStateAirborne`,
+  `ActionCtrlStateFlipBodySlamStart`, `ActionCtrlStateSlide` - the chunk's first five action-table
   handlers, formerly NAKED; see
   `docs/matching/issue-17-0x08012fbc-actor.md`, "Third pass".
 - `src/graphics/actor_part81.c` (GitHub issue #9/#10, ROM
@@ -448,34 +448,34 @@ from "core" graphics.
 - `src/graphics/actor_part38.c` (new file, GitHub issue #18, ROM
   0x08014F8C - numbered `38` rather than `28` since issue #62's
   parallel PR above independently claimed `actor_part28.c` first):
-  `sub_8014F8C` - a `gUnknown_030012F0`-list proximity-
+  `DoSuperBodySlamShockwave` - a `gUnknown_030012F0`-list proximity-
   trigger scan for the same "self" action-table object family as
-  `actor_part18.c`, and `sub_8015038` (matched in the strag4 retry,
+  `actor_part18.c`, and `StartActionCtrlTornadoSpin` (matched in the strag4 retry,
   see Matched); see
   `docs/matching/issue-18-0x08014f8c-actor.md`.
 - `src/graphics/actor_part38b.c` (new file, GitHub issue #18, ROM
-  0x080151C8, non-adjacent to `actor_part38.c` since `sub_8015038`
-  sits between them): `sub_80151C8`, `sub_8015238`, `sub_80152F0`
+  0x080151C8, non-adjacent to `actor_part38.c` since `StartActionCtrlTornadoSpin`
+  sits between them): `sub_80151C8`, `EndActionCtrlSpin`, `SteerActionCtrlSpin`
   (the last two matched in the strag2 retry); see
   `docs/matching/issue-18-0x08014f8c-actor.md`.
 - `src/graphics/actor_part38c.c` (new file, GitHub issue #18, ROM
   0x08015350-0x080156B4, non-adjacent to `actor_part38b.c` since
-  `sub_8015238`/`sub_80152F0` sit between them):
-  `SetActionCtrlMode`, `sub_8015398`, `sub_80153FC`, `sub_8015460`,
-  `sub_8015508`, `sub_8015558`, `AttachActionCtrl`, `sub_80155AC`,
-  `sub_80155B8`, `sub_80155F8`, `sub_8015650`, `sub_8015690`,
-  `sub_80156B4` - more of the same self+0xc/self+0x10 trampoline-pair
+  `EndActionCtrlSpin`/`SteerActionCtrlSpin` sit between them):
+  `SetActionCtrlMode`, `StartActionCtrlSpin`, `StartActionCtrlHangSpin`, `StartActionCtrlRun`,
+  `StartActionCtrlHighJump`, `sub_8015558`, `AttachActionCtrl`, `sub_80155AC`,
+  `sub_80155B8`, `ActionCtrlStateHangSpin`, `ActionCtrlStateHangGrab`, `ActionCtrlStateWarpOut`,
+  `ActionCtrlStateCrawlStop` - more of the same self+0xc/self+0x10 trampoline-pair
   family, including two near-identical self+0x29-keyed mgr-trampoline
-  arms (`sub_8015460`) and several part+0x38-gated trampoline firers
-  and `sub_80156EC` (matched in the strag2 retry); see
+  arms (`StartActionCtrlRun`) and several part+0x38-gated trampoline firers
+  and `ActionCtrlStateBodySlamStart` (matched in the strag2 retry); see
   `docs/matching/issue-18-0x08014f8c-actor.md`.
 - `src/graphics/actor_part38d.c` (new file, GitHub issue #18, ROM
   0x0801574C-0x08015840, non-adjacent to `actor_part38c.c` since
-  `sub_80156EC` sits between them): `nullsub_17`,
-  `sub_8015750`, `nullsub_18`, `sub_8015774`, `sub_8015780`,
+  `ActionCtrlStateBodySlamStart` sits between them): `nullsub_17`,
+  `ActionCtrlStateTurboRun`, `nullsub_18`, `sub_8015774`, `SetActionCtrlModeAnim`,
   `ActionCtrlSetTargetAnim` - two nullsubs, two tail-call wrappers, the shared
   trampoline-pair-plus-sentinel-store helper called by
-  `actor_part18.c`'s `sub_801426C`/`sub_80142B0`, and `ActionCtrlSetTargetAnim`
+  `actor_part18.c`'s `ActionCtrlStateStandUp`/`ActionCtrlStateCrawlStart`, and `ActionCtrlSetTargetAnim`
   (player's `+0x100`-flag-gated `mode` remapper tail-calling
   `SetCtrlTargetAnim`, reinterpreted through a `s32`-returning function-
   pointer cast to steer the epilogue's `pop`/`bx` scratch register
@@ -526,21 +526,21 @@ from "core" graphics.
   object" struct (`self+0xc`/`self+0x10` sub-record pointers, the
   `+0x27`-`+0x32` state/flag/table-index trio) `actor_part18.c`/
   `actor_part18b.c` already established conventions for. Not
-  ROM-adjacent to those files (the raw `UpdateActionCtrl`/`sub_8012694`/
-  `sub_801283C` and the still-raw `ActionCtrlHandleEvent` sit between them), so
+  ROM-adjacent to those files (the raw `UpdateActionCtrl`/`TryActionCtrlDoubleJump`/
+  `HandleActionCtrlAirInput` and the still-raw `ActionCtrlHandleEvent` sit between them), so
   a new file. See
   [docs/matching/issue-16-actor-12160.md](../matching/issue-16-actor-12160.md).
 - `src/graphics/actor_part80.c` (new file, GitHub issue #16, ROM
-  0x08012A7C-0x08012AF4): `sub_8012A7C` - another member of the same
+  0x08012A7C-0x08012AF4): `CheckActionCtrlLeftGround` - another member of the same
   action-dispatch-table family, not ROM-adjacent to `actor_part79.c`'s
-  functions either (the raw `UpdateActionCtrl`/`sub_8012694`/`sub_801283C`
+  functions either (the raw `UpdateActionCtrl`/`TryActionCtrlDoubleJump`/`HandleActionCtrlAirInput`
   sit in between). See
   [docs/matching/issue-16-actor-12160.md](../matching/issue-16-actor-12160.md).
 - `src/graphics/actor_part43.c`/`actor_part44.c`/`actor_part45.c`/
   `actor_part46.c` (new files, GitHub issue #56, ROM
   0x0802F0DC-0x0802FBF0 - a second boss-weapon "spawn/pre-attack"
   singleton and its `self` object, non-adjacent since the parked
-  `AllocJetpackPlayerTiles`/`CreateJetpackShot`, `sub_802F748`
+  `AllocJetpackPlayerTiles`/`CreateJetpackShot`, `RunJetpackPlayerState`
   (`actor_part44b.c`, now matched - see below), `LoadBgPicture`/
   `FillBgPictureMap` (`actor_part45d.c`: 8E8 matched, 7B0 still NAKED - see
   below) and `UpdateJetpackPlane`
@@ -562,10 +562,10 @@ from "core" graphics.
   (method tables `gJetpackPlaneVtable`/`087E51EC`/`087E5224`) and the
   orbiting-companion updaters - `AimJetpackPlane`, `DamageJetpackPlane`,
   `CreateJetpackPlane`, `JetpackPlaneStateFall`, `sub_802FE1C`, `sub_802FE58`,
-  `JetpackPlaneStateFly`, `sub_802FEA4`, `IsJetpackPlaneUnshootable`, `CreateJetpackBomber`,
+  `JetpackPlaneStateFly`, `RunJetpackPlaneState`, `IsJetpackPlaneUnshootable`, `CreateJetpackBomber`,
   `UpdateJetpackBomber`, `HomeJetpackBomber`, `nullsub_28`, `JetpackBomberStateDrop`,
   `JetpackBomberStateCircle`, `JetpackBomberStateSwingHorizontal`, `JetpackBomberStateBobVertical`, `JetpackBomberStateHome`,
-  `nullsub_29`, `DamageJetpackBomber`, `sub_8030234`, `IsJetpackBomberUnshootable`,
+  `nullsub_29`, `DamageJetpackBomber`, `RunJetpackBomberState`, `IsJetpackBomberUnshootable`,
   `UpdateJetpackCannonball`, `CreateJetpackCannonball`, `IsJetpackCannonballUnshootable`, `AirshipFireballStateOrbit`,
   `AirshipFireballStateSpiralIn` (all 27 real C, including the pointer-to-member
   dispatch shape parked NAKED elsewhere as the "r7 hazard"). First user
@@ -681,7 +681,7 @@ from "core" graphics.
   adjacent since `actor_part76.c` sits between it and `actor_part60.c`;
   see
   [docs/matching/issue-54-actor-d3a8.md](../matching/issue-54-actor-d3a8.md)):
-  `nullsub_27` - a genuine no-op stub.
+  `YetiStateCaught` - a genuine no-op stub.
 - `src/graphics/actor_part62.c`, `actor_part74.c`, `actor_part76.c`
   (GitHub issue #54, promoted from NAKED in the issue #51/#54 retry -
   see
@@ -898,16 +898,16 @@ from "core" graphics.
   ([docs/matching/size2-naked-retry.md](../matching/size2-naked-retry.md)) - see
   [docs/matching/issue-64-0x08034aa4-actor.md](../matching/issue-64-0x08034aa4-actor.md).
 
-- `src/graphics/actor_part19e.c` (`sub_802C208`),
-  `actor_part20b.c` (`UpdateAirshipFireball`), `actor_part21b.c` (`sub_8030648`),
+- `src/graphics/actor_part19e.c` (`RunPolarPlayerState`),
+  `actor_part20b.c` (`UpdateAirshipFireball`), `actor_part21b.c` (`RunAirshipFireballState`),
   `actor_part31.c` (`UpdateHovercraftCannon`), `actor_part33.c` (`RunHovercraftCannonState`),
-  `actor_part37.c` (`UpdateHovercraftLauncher`), `actor_part44b.c` (`sub_802F748`),
+  `actor_part37.c` (`UpdateHovercraftLauncher`), `actor_part44b.c` (`RunJetpackPlayerState`),
   `actor_part46b.c` (`UpdateJetpackPlane`), `actor_part64.c` (`RunHovercraftLauncherState`),
   all of `actor_part125.c` (`UpdateJetpackBalloon`, `DamageJetpackBalloon`,
-  `MoveJetpackBalloon`, `sub_8031954`, `sub_80319A0`, `sub_8031A08`),
-  `actor_part129.c`'s `UpdateJetpackBalloonCrate`/`sub_80322F4`, and
+  `MoveJetpackBalloon`, `sub_8031954`, `sub_80319A0`, `RunJetpackBalloonState`),
+  `actor_part129.c`'s `UpdateJetpackBalloonCrate`/`RunJetpackBalloonCrateState`, and
   `actor_part130.c`'s `UpdateJetpackCollectedWumpa`/`DestroyJetpackCollectedWumpa`/`UpdateHovercraftFireball`/
-  `sub_8032A94` - formerly NAKED as the "r7 table-base-pin hazard".
+  `RunHovercraftFireballState` - formerly NAKED as the "r7 table-base-pin hazard".
   That shape is gcc 2.x's pointer-to-member-function call
   `(this->*table[this->state])()`, reproduced by `ACTOR_PMF_CALL`
   (`include/actor_self.h`) with no register pins. The same pass closed
@@ -933,7 +933,7 @@ from "core" graphics.
 
 ### Matched in the strag4 retry (issue #18's last function)
 
-- `src/graphics/actor_part38.c` - `sub_8015038` (issue #18, formerly
+- `src/graphics/actor_part38.c` - `StartActionCtrlTornadoSpin` (issue #18, formerly
   NAKED), old_agbcc. The `self+0x24 != 0` arm tests `self[0x22]`
   directly instead of through a `u8` local, so the byte load lands
   after old_agbcc GCSE's end-of-block copy of `self + 0x22`, and one
@@ -951,14 +951,14 @@ See [docs/matching/strag4-naked-retry.md](../matching/strag4-naked-retry.md).
   divisions are plain `/` through the ROM's `__divsi3`, the new cooldown
   is stored at one shared label, and `u8` zero locals via `"=r"`/`"0"`
   escapes. Both compilers produce the same code; the objects stay on agbcc.
-- `src/graphics/actor_part38b.c` - `sub_8015238`, `sub_80152F0`, and
-  `src/graphics/actor_part38c.c` - `sub_80156EC` (issue #18, formerly
+- `src/graphics/actor_part38b.c` - `EndActionCtrlSpin`, `SteerActionCtrlSpin`, and
+  `src/graphics/actor_part38c.c` - `ActionCtrlStateBodySlamStart` (issue #18, formerly
   NAKED). The fixes were real `u8 *`/`u8` parameters, `u8` locals for the
-  table indices, and a constant-copy escape for `sub_8015238`'s `0x200`
+  table indices, and a constant-copy escape for `EndActionCtrlSpin`'s `0x200`
   test. `actor_part38.o`/`38b.o`/`38c.o` joined `OLD_AGBCC_OBJS`: their
   whole `.text` is identical under both compilers, and the range is
   confirmed old_agbcc territory.
-- Still NAKED at the time: `sub_8015038` (`actor_part38.c`), with a C
+- Still NAKED at the time: `StartActionCtrlTornadoSpin` (`actor_part38.c`), with a C
   draft that was 2 halfwords off (matched in the strag4 retry).
 
 See [docs/matching/strag2-naked-retry.md](../matching/strag2-naked-retry.md).
@@ -1018,7 +1018,7 @@ See [docs/matching/strag2-naked-retry.md](../matching/strag2-naked-retry.md).
 
 ### Matched in the late NAKED retry 3
 
-- `src/graphics/actor_part_14674.c` - `sub_8014B54` (the jump-start
+- `src/graphics/actor_part_14674.c` - `ActionCtrlReleaseHang` (the jump-start
   handler, issue #17), old_agbcc. The 0x600 is a reload; an r2
   register variable that only empty asms set and use keeps r2 live
   across the add, so reload spills r3 for it as the ROM does. See
@@ -1078,7 +1078,7 @@ See [docs/matching/category-driver-naked-retry.md](../matching/category-driver-n
   `ActQueue27`; the input mask is an opaque 0x100; the switch bodies are
   in ROM order. The PMF method record then gets its 8-byte stack slot
   (and the unused `r7` push) by itself.
-- `src/graphics/actor_part83.c` - `sub_8012AF4` (issue #16), old_agbcc
+- `src/graphics/actor_part83.c` - `ApplyActionCtrlMotion` (issue #16), old_agbcc
   (the file's compiler). No flag/tag pointer locals: `self->flag2F` and
   `self->next27` are read through `self` each time and old_agbcc's GCSE
   makes the ROM's address copies; the record lookup is
@@ -1089,7 +1089,7 @@ See [docs/matching/issue-15-16-naked-retry-3.md](../matching/issue-15-16-naked-r
 
 ### Matched in the third near-miss sweep
 
-- `src/graphics/actor_part_13c60.c` - `sub_8014084` (issue #17),
+- `src/graphics/actor_part_13c60.c` - `ActionCtrlStateCrouch` (issue #17),
   old_agbcc. The facing block's second branch writes through a scoped
   `volatile u8 *`, which keeps the `+0x28` address in the part copy's
   register ahead of the -0x11 mask.
@@ -1174,12 +1174,12 @@ plain C didn't converge.
   halfwords off, now sits under `#if NON_MATCHING` - see
   `docs/matching/fresh-naked-retry.md`). See
   `docs/matching/naked-spatial-grid-tail.md`.
-- **Now matched as real C (late NAKED retry 3, see Matched and docs/matching/late-naked-retry-3.md); entry kept for history.** **`sub_8014B54`** (`src/graphics/actor_part_14674.c`), GitHub issue
+- **Now matched as real C (late NAKED retry 3, see Matched and docs/matching/late-naked-retry-3.md); entry kept for history.** **`ActionCtrlReleaseHang`** (`src/graphics/actor_part_14674.c`), GitHub issue
   #17 - the jump-start handler, whose old_agbcc C (kept under
   `NON_MATCHING`) is 3 halfwords off: the reloaded 0x600 lands in r2
-  where the ROM uses r3. (`sub_8014674` from this entry is matched since
+  where the ROM uses r3. (`ActionCtrlStateLeftGround` from this entry is matched since
   the mix NAKED retry 5, `docs/matching/mix-naked-retry-5.md`, and
-  `sub_8014084` since the third near-miss sweep.) See
+  `ActionCtrlStateCrouch` since the third near-miss sweep.) See
   `docs/matching/issue-17-0x08012fbc-actor.md`, "Third pass".
 - **Now matched as real C (issue #9 NAKED retry, see Matched and docs/matching/issue-9-naked-retry.md); entry kept for history.** **`CollidePlayerWithCrates`** (`src/graphics/actor_part11d.c`) - another
   3-bucket-window grid pass, this one reading the player's state to
@@ -1228,20 +1228,20 @@ plain C didn't converge.
   at all, a structurally different solution rather than a near-miss).
   Transcribed directly as byte-exact NAKED asm instead. See
   [docs/matching/issue-9-0x0800a178-graphics.md](../matching/issue-9-0x0800a178-graphics.md).
-- **Now matched as real C (strag4 retry, see Matched); entry kept for history.** **`sub_8015038`** (`src/graphics/actor_part38.c`) - a three-arm
+- **Now matched as real C (strag4 retry, see Matched); entry kept for history.** **`StartActionCtrlTornadoSpin`** (`src/graphics/actor_part38.c`) - a three-arm
   mgr-trampoline handler keyed on `self+0x24`/`self+0x22`, picking one
   of three table-index fallbacks. The strag2 retry left a C draft under
   `#if NON_MATCHING` that is 2 halfwords off under both compilers (one
   pointer copy and load swapped). See
   `docs/matching/strag2-naked-retry.md`.
-- **Now matched as real C (strag2 retry, see Matched); entry kept for history.** **`sub_8015238`** (`src/graphics/actor_part38b.c`) -
+- **Now matched as real C (strag2 retry, see Matched); entry kept for history.** **`EndActionCtrlSpin`** (`src/graphics/actor_part38b.c`) -
   `self+0x26`/`mode`/`flags`-gated mgr-trampoline dispatcher. See
   `docs/matching/issue-18-0x08014f8c-actor.md`.
-- **Now matched as real C (strag2 retry, see Matched); entry kept for history.** **`sub_80152F0`** (`src/graphics/actor_part38b.c`) -
+- **Now matched as real C (strag2 retry, see Matched); entry kept for history.** **`SteerActionCtrlSpin`** (`src/graphics/actor_part38b.c`) -
   `self+0x27`/`self+0x2b`/`mode`-gated state/counter/table-index trio
   reset, tail-calling `UpdatePlayerFacing`. See
   `docs/matching/issue-18-0x08014f8c-actor.md`.
-- **Now matched as real C (strag2 retry, see Matched); entry kept for history.** **`sub_80156EC`** (`src/graphics/actor_part38c.c`) -
+- **Now matched as real C (strag2 retry, see Matched); entry kept for history.** **`ActionCtrlStateBodySlamStart`** (`src/graphics/actor_part38c.c`) -
   `part+0x38`/`HasSuperBodySlam`-gated mgr-trampoline dispatcher. See
   `docs/matching/issue-18-0x08014f8c-actor.md`.
 - **Now matched as real C (size2 NAKED retry, see Matched and docs/matching/size2-naked-retry.md); entry kept for history.** **`LoadCreditsLogos`** (`src/graphics/actor_part131.c`, GitHub issue #64) -

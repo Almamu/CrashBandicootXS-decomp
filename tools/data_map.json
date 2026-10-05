@@ -954,7 +954,7 @@
     "sub_80084C4",
     "CollidePlayer",
     "ActionCtrlHandleEvent",
-    "sub_8014D18"
+    "ActionCtrlStateHangMove"
    ],
    "consumer_files": [
     "graphics/actor_part6.c",
@@ -980,7 +980,7 @@
    "consumers": [
     "StartCtrlTargetMotionYFromSet",
     "StartCtrlTargetMotionXFromSet",
-    "sub_8012AF4"
+    "ApplyActionCtrlMotion"
    ],
    "consumer_files": [
     "graphics/actor_part17.c",
@@ -1758,7 +1758,7 @@
   {
    "address": "0x0816C070",
    "size": 32,
-   "name": "gStaticData_0816C070",
+   "name": "gPlayerCtrlModeAnimRows",
    "consumers": [
     "UpdatePlayerCtrl",
     "sub_8016DDC",
@@ -1809,7 +1809,7 @@
   {
    "address": "0x0816C250",
    "size": 64,
-   "name": "gStaticData_0816C250",
+   "name": "gPlayerCtrlStateFuncs",
    "consumers": [
     "UpdatePlayerCtrl"
    ],
@@ -1833,7 +1833,7 @@
   {
    "address": "0x0816C290",
    "size": 64,
-   "name": "gStaticData_0816C290",
+   "name": "gInputCtrlStateFuncs",
    "consumers": [
     "UpdateInputCtrl"
    ],
@@ -3498,7 +3498,7 @@
    "name": "gPolarPlayerStateFuncs",
    "consumers": [
     "UpdatePolarPlayer",
-    "sub_802C208"
+    "RunPolarPlayerState"
    ],
    "consumer_files": [
     "graphics/actor_part127.c",
@@ -3888,7 +3888,7 @@
    "name": "gJetpackPlayerStateFuncs",
    "consumers": [
     "UpdateJetpackPlayer",
-    "sub_802F748"
+    "RunJetpackPlayerState"
    ],
    "consumer_files": [
     "graphics/actor_part128.c",
@@ -3938,7 +3938,7 @@
    "name": "gJetpackPlaneStateFuncs",
    "consumers": [
     "UpdateJetpackPlane",
-    "sub_802FEA4"
+    "RunJetpackPlaneState"
    ],
    "consumer_files": [
     "graphics/actor_part46b.c",
@@ -3964,7 +3964,7 @@
    "name": "gJetpackBomberStateFuncs",
    "consumers": [
     "UpdateJetpackBomber",
-    "sub_8030234"
+    "RunJetpackBomberState"
    ],
    "consumer_files": [
     "graphics/actor_part_2fbf0.c"
@@ -3989,7 +3989,7 @@
    "name": "gAirshipFireballStateFuncs",
    "consumers": [
     "UpdateAirshipFireball",
-    "sub_8030648"
+    "RunAirshipFireballState"
    ],
    "consumer_files": [
     "graphics/actor_part20b.c",
@@ -4141,7 +4141,7 @@
    "size": 24,
    "name": "gJetpackBalloonStateFuncs",
    "consumers": [
-    "sub_8031A08"
+    "RunJetpackBalloonState"
    ],
    "consumer_files": [
     "graphics/actor_part125.c"
@@ -4166,7 +4166,7 @@
    "name": "gJetpackBalloonCrateStateFuncs",
    "consumers": [
     "UpdateJetpackBalloonCrate",
-    "sub_80322F4"
+    "RunJetpackBalloonCrateState"
    ],
    "consumer_files": [
     "graphics/actor_part129.c"
@@ -4212,7 +4212,7 @@
    "name": "gHovercraftFireballStateFuncs",
    "consumers": [
     "UpdateHovercraftFireball",
-    "sub_8032A94"
+    "RunHovercraftFireballState"
    ],
    "consumer_files": [
     "graphics/actor_part130.c"

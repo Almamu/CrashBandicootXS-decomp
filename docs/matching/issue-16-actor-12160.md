@@ -11,7 +11,7 @@ tractable with the same base+offset+fn-pointer trampoline and
 state/flag/table-index-trio conventions `actor_part18.c`/
 `actor_part18b.c` already established for other members of the same
 table; the other 6 (including the two hardest - `ActionCtrlHandleEvent`'s
-25-case/7-case nested jump table and `sub_8012AF4`'s stack-array/`r8`
+25-case/7-case nested jump table and `ApplyActionCtrlMotion`'s stack-array/`r8`
 usage) were left raw again, still out of scope.
 
 ## New files
@@ -20,13 +20,13 @@ usage) were left raw again, still out of scope.
 start address, 0x08011BD4-0x08012160). `KillPlayer`/`sub_8012238`/
 `UpdatePlayerFacing` (contiguous, 0x08012160-0x08012420) move to a new
 `src/graphics/actor_part79.c`. A new `asm/code_3_2_17_12420.s` picks up
-`UpdateActionCtrl`/`sub_8012694`/`sub_801283C` (0x08012420-0x08012A7C).
-`sub_8012A7C` alone (0x08012A7C-0x08012AF4, not ROM-adjacent to either
+`UpdateActionCtrl`/`TryActionCtrlDoubleJump`/`HandleActionCtrlAirInput` (0x08012420-0x08012A7C).
+`CheckActionCtrlLeftGround` alone (0x08012A7C-0x08012AF4, not ROM-adjacent to either
 matched group) moves to a new `src/graphics/actor_part80.c`. A final
-new `asm/code_3_2_17_12af4.s` picks up `sub_8012AF4` onward - this file
+new `asm/code_3_2_17_12af4.s` picks up `ApplyActionCtrlMotion` onward - this file
 is much wider than issue #16's own range, since `code_3_2_17_11bd4.s`
-already covered everything through `sub_801426C-1` before this pass
-started; only the portion up to `sub_8012FBC` (0x08012FBC) is actually
+already covered everything through `ActionCtrlStateStandUp-1` before this pass
+started; only the portion up to `ActionCtrlStateRun` (0x08012FBC) is actually
 issue #16's remaining scope, the rest already belonged to later,
 separately-tracked chunks. `ldscript.txt` and `tools/report_units.py`'s
 `UNITS` list were updated to place all five pieces in that exact link
@@ -39,7 +39,7 @@ order.
   "part" object, then the `+0x20`/`+0x24` pair (id `0x1d`), resets
   both halves of the state/flag/table-index trio via a single walked
   pointer (the `ResetActionCtrl`-style idiom from `actor_part39.c`), runs
-  `sub_8012AF4`, clears/sets a few more `self+0x10`-record bytes
+  `ApplyActionCtrlMotion`, clears/sets a few more `self+0x10`-record bytes
   (`+0x100`/`+0x102`/`+0x103`/`+0x104`, and two bits of `+0xc` via the
   established negative-constant-mask idiom), calls `LoseLife`, then
   looks up a byte through the 28-byte-record-array dereference chain
@@ -65,7 +65,7 @@ order.
   `0x25`/`0x26` and fire the standard `ResetSpriteFrameTimer`/`ResetSpriteFrameIndex`/
   `SetSpriteAnimDone(..., 0)` teardown trio; otherwise, while the flag is
   clear, a player type of `0x25`/`0x26` plays a sound and resets the
-  trio via `sub_8015780`. The `type > 0x12` branch needed an explicit
+  trio via `SetActionCtrlModeAnim`. The `type > 0x12` branch needed an explicit
   `goto check_18:` block (rather than a nested `if`) to keep the
   compiler from inverting it into the opposite branch/fallthrough pair,
   the same "goto forces exact fall-through shape" technique
@@ -94,7 +94,7 @@ order.
   each copy (`ldrb r3`/self+0x29 via `r2` in one, `ldrb r5`/self+0x29
   via `r1` in the other), and reproducing those exact register choices
   (not just the logic) was what kept the compiler from merging them.
-- **`sub_8012A7C`**: if `part+0x68` bit 3 is set, returns 0 (busy).
+- **`CheckActionCtrlLeftGround`**: if `part+0x68` bit 3 is set, returns 0 (busy).
   Otherwise, on `part+0x69 > 2`, fires the `+0x20`/`+0x24` trampoline
   pair (id `0x1a`) then the `+0x50`/`+0x54` pair (id `0x1b`); on
   `part+0x69 <= 2`, fires only the `+0x20`/`+0x24` pair (id `0x1c`).
@@ -111,8 +111,8 @@ order.
 
 ## Left raw (6/10)
 
-`ActionCtrlHandleEvent`, `UpdateActionCtrl`, `sub_8012694`, `sub_801283C`,
-`sub_8012AF4`, `sub_8012D24` stay exactly as
+`ActionCtrlHandleEvent`, `UpdateActionCtrl`, `TryActionCtrlDoubleJump`, `HandleActionCtrlAirInput`,
+`ApplyActionCtrlMotion`, `ActionCtrlStateIdle` stay exactly as
 [issue-16-actor-11b0c.md](./issue-16-actor-11b0c.md) already
 characterized them:
 
@@ -120,18 +120,18 @@ characterized them:
   further 7-case sub-dispatch, sharing the type-`0x1d` gate with
   `UpdatePlayerCtrl` (also still raw) - a substantial companion state
   machine, not attempted this pass.
-- `UpdateActionCtrl`/`sub_8012694`/`sub_801283C` are further members of the
+- `UpdateActionCtrl`/`TryActionCtrlDoubleJump`/`HandleActionCtrlAirInput` are further members of the
   42-slot action-dispatch table, real coverage in `docs/rom_map.md` but
   not read closely enough here to attempt byte-exact matching.
-- `sub_8012AF4` (284 B of ROM, the widest of the six by instruction
+- `ApplyActionCtrlMotion` (284 B of ROM, the widest of the six by instruction
   count) uses a `struct { s16; s16; s16 }`-shaped stack-local record
   copied via `ldm`/`stm` from `gCtrlMotionRecords`, plus `r8` for a
   cross-call-preserved value - a real step up in register-allocation
   complexity from the four matched functions above.
-- `sub_8012D24` is a further sibling/callee of the same family.
+- `ActionCtrlStateIdle` is a further sibling/callee of the same family.
 
 Given the two hardest members of this remainder (`ActionCtrlHandleEvent`,
-`sub_8012AF4`) are exactly the kind of function `docs/rom_map.md`
+`ApplyActionCtrlMotion`) are exactly the kind of function `docs/rom_map.md`
 already flagged as needing a dedicated pass, and this session's four
 matches already represent real, verified progress, these six stay raw
 rather than forcing a low-confidence match. Issue #16 stays open for

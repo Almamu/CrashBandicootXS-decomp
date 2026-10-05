@@ -5,12 +5,12 @@
  * gActionCtrlStateTable action-table helpers for the player/action object
  * (include/action_obj.h, the same object issue #17's actor_part_12fbc.c
  * handlers use). Not ROM-adjacent to actor_part80.c's matched
- * `sub_8012A7C` (this file starts right where that one ends, at
+ * `CheckActionCtrlLeftGround` (this file starts right where that one ends, at
  * 0x08012AF4).
  *
  * Built with old_agbcc (Makefile OLD_AGBCC_OBJS) since the issue #15/#16
- * NAKED retry (docs/matching/issue-15-16-naked-retry.md): `sub_8012D24`
- * matches as plain C under it, and `sub_8012AF4` followed in the
+ * NAKED retry (docs/matching/issue-15-16-naked-retry.md): `ActionCtrlStateIdle`
+ * matches as plain C under it, and `ApplyActionCtrlMotion` followed in the
  * issue #15/#16 NAKED retry 2 (docs/matching/issue-15-16-naked-retry.md). */
 
 /* One 12-byte gCtrlMotionRecords animation parameter record. */
@@ -32,10 +32,10 @@ extern void StopSfx(void *ctx, u32 id);
 extern s32 FixedMul(s32 a, s32 b);
 extern u8 GetDpadDirection(void *pad);
 extern void SetSpritePrevPos(struct act_part *p, s32 x, s32 y);
-extern u8 sub_8012A7C(struct act *self);
+extern u8 CheckActionCtrlLeftGround(struct act *self);
 extern void UpdatePlayerFacing(struct act *self);
-extern void sub_8015398(struct act *self);
-extern void sub_8015460(struct act *self);
+extern void StartActionCtrlSpin(struct act *self);
+extern void StartActionCtrlRun(struct act *self);
 extern u8 HasTurboRun(void *self);
 
 /* Trio stores as in actor_part_12fbc.c: as inline parameters, old_agbcc
@@ -88,7 +88,7 @@ static inline u8 PartByte(struct act_part *part, s32 offset)
  * the record index is added to the table base after it is computed
  * (`*(table + i)`), which loads the table address late like the ROM.
  */
-void sub_8012AF4(struct act *self)
+void ApplyActionCtrlMotion(struct act *self)
 {
     struct anim_rec rec;
     struct act_part *p;
@@ -176,14 +176,14 @@ skip:
  * of two thresholds (`0x708`, then a further gated pair keyed on a
  * `self+4`-relative negative-distance test), fires further `+0x50`/
  * `+0x54` trampoline calls with escalating ids and resets the counter,
- * setting `self+0x33`. Bails early if `sub_8012A7C(self)` reports busy.
+ * setting `self+0x33`. Bails early if `CheckActionCtrlLeftGround(self)` reports busy.
  * Otherwise dispatches the input snapshot's low bits: bit 0 plays a
  * fixed sound and fires two trampoline pairs, bit 1 tail-calls
- * `sub_8015398`, bit `0x80` (high byte) fires a different trampoline
+ * `StartActionCtrlSpin`, bit `0x80` (high byte) fires a different trampoline
  * pair - all converging on `UpdatePlayerFacing`. A further branch (input byte
  * unset, `self+0x25==0`) reads `self+8`'s snapshot value against `2`/
  * `8`-range checks to gate a `HasTurboRun`-confirmed trampoline call
- * (id `4`/`0x18`) or fall through to `sub_8015460`/a final `+0x20`/
+ * (id `4`/`0x18`) or fall through to `StartActionCtrlRun`/a final `+0x20`/
  * `+0x24` trampoline pair, each path ending in `UpdatePlayerFacing`.
  *
  * Matched under old_agbcc. The pad object is loaded before the input word
@@ -191,7 +191,7 @@ skip:
  * is what +0x29 is cleared with; the D-pad `else` part sits after the
  * first UpdatePlayerFacing tail, reached by a goto, as in the ROM's layout; and
  * the 3..8 range case comes before case 2. */
-void sub_8012D24(struct act *self)
+void ActionCtrlStateIdle(struct act *self)
 {
     void *pad = gInput;
     u32 in = gKeys;
@@ -228,7 +228,7 @@ void sub_8012D24(struct act *self)
     }
 skip:
     {
-        u8 busy = sub_8012A7C(self);
+        u8 busy = CheckActionCtrlLeftGround(self);
         u16 held;
 
         if (busy)
@@ -243,7 +243,7 @@ skip:
             u16 alt = INPUT_PRESSED(in) & 2;
 
             if (alt) {
-                sub_8015398(self);
+                StartActionCtrlSpin(self);
             } else {
                 if ((held = INPUT_HELD(in) & 0x100) == 0)
                     goto other;
@@ -274,7 +274,7 @@ skip:
                         ACT_CALL2(self, m50, self->part, 0x18);
                         ActTrio27(self, wait, 1, 0x1B);
                     } else {
-                        sub_8015460(self);
+                        StartActionCtrlRun(self);
                     }
                     break;
                 case 2:

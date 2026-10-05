@@ -9,11 +9,11 @@ sub-object; self+0x27-0x32 a shared state/flag/table-index trio) - filed
 under `docs/status/actor.md`, not `graphics.md`, matching the note in
 `docs/status/README.md` that several graphics-labeled chunks are
 actually `actor`. Two of this chunk's own functions
-(`sub_8015508`/`sub_8015780`) are called directly by `actor_part18.c`'s
-`sub_801426C`/`sub_80142B0`, confirming the same object family carries
+(`StartActionCtrlHighJump`/`SetActionCtrlModeAnim`) are called directly by `actor_part18.c`'s
+`ActionCtrlStateStandUp`/`ActionCtrlStateCrawlStart`, confirming the same object family carries
 straight through.
 
-`gUnknown_030012F0` (only touched by `sub_8014F8C` here) is a small list
+`gUnknown_030012F0` (only touched by `DoSuperBodySlamShockwave` here) is a small list
 object - `+4` a count, `+0xc` a `struct actor **` array - not referenced
 by any other already-matched code, so it stays raw-offset rather than a
 guessed struct.
@@ -29,16 +29,16 @@ function's raw bytes sit between it and the next matched run - the same
 "widen past the parked function's real end" convention as
 `actor_part18.c`. Four new raw `.s` splits carry the parked functions'
 real bytes: `asm/code_3_2_17_15038.s`, `code_3_2_17_15238.s` (covers
-both `sub_8015238` and `sub_80152F0`, since both ended up parked
+both `EndActionCtrlSpin` and `SteerActionCtrlSpin`, since both ended up parked
 back-to-back), `code_3_2_17_156ec.s`, `code_3_2_17_157c4.s`. The
 original `asm/code_3_2_17_14674.s` is truncated to end right before
-`sub_8014F8C` (0x08014F8C, unchanged name/start address), and a new
+`DoSuperBodySlamShockwave` (0x08014F8C, unchanged name/start address), and a new
 `asm/code_3_2_17_15840.s` picks up the still-raw remainder from
 `sub_8015840` onward (unexamined, out of scope for this pass).
 
 ## Matched (21/25)
 
-- **`sub_8014F8C`**: scans the `gUnknown_030012F0` list of
+- **`DoSuperBodySlamShockwave`**: scans the `gUnknown_030012F0` list of
   `struct actor *`; skips entries whose `+0x48` trampoline
   (`_call_via_r1`) reports a width of 4 or less, entries further than
   0x40 (Manhattan distance) from `self`'s own part, entries without
@@ -98,11 +98,11 @@ original `asm/code_3_2_17_14674.s` is truncated to end right before
   scheduling here, since it originally emitted the read first
   regardless - moving the store to a separate, earlier statement fixed
   it).
-- **`sub_8015398`**/**`sub_80153FC`**: same shape (fixed cue, reset
+- **`StartActionCtrlSpin`**/**`StartActionCtrlHangSpin`**: same shape (fixed cue, reset
   `self+0x18`/`0x1c`, mgr trampoline pair, clear `self+0x20`-`0x24`) -
   differ only in action codes and whether the field-clear runs before
   or after the trampoline pair.
-- **`sub_8015460`**: two near-identical arms keyed on `self+0x29`, both
+- **`StartActionCtrlRun`**: two near-identical arms keyed on `self+0x29`, both
   firing the mgr trampoline pair and setting the state/counter trio,
   then latching `self+0x31` again if `part+0x100` is set. Needed the
   shared `part` local *removed* (each of the three `self+0x10` derefs
@@ -115,46 +115,46 @@ original `asm/code_3_2_17_14674.s` is truncated to end right before
   constant right before its one use) compiled to a different
   instruction order/byte sequence even though the two are
   data-independent.
-- **`sub_8015508`**/**`sub_8015558`**: same shape (mgr trampoline pair
+- **`StartActionCtrlHighJump`**/**`sub_8015558`**: same shape (mgr trampoline pair
   with actions 0xb/0xb, reset `self+0x18`/state trio, clear
   `part+0x68`) - differ only in the final table-index constant (0xb vs
   7). Same "materialize the table-index constant early" pattern as
-  `sub_8015460` - it needed to be assigned right after the `self+0x18`
+  `StartActionCtrlRun` - it needed to be assigned right after the `self+0x18`
   reset (not lazily at its one use site) via a `register u8 idx
   asm("r2")` pin declared early and only *initialized* at the right
   point, plus an `asm volatile("" : "+r"(p28))` anti-fold barrier on
   the `self+0x28` pointer to stop the final `+6`-style offset folding
   into the `strb`'s own addressing mode.
 - **`AttachActionCtrl`**: single-instruction store, `self+0x10 = val`.
-- **`sub_80155AC`**: trivial tail-call to `sub_8014B54`.
-- **`sub_80155B8`**/**`sub_8015650`**: byte-identical ROM encoding at
+- **`sub_80155AC`**: trivial tail-call to `ActionCtrlReleaseHang`.
+- **`sub_80155B8`**/**`ActionCtrlStateHangGrab`**: byte-identical ROM encoding at
   two different addresses (no shared caller) - `part+0x38`-gated mgr
   trampoline pair, clear `self+0x18`/`0x1c`. Needed a
   `register s32 zero asm("r4")` pin (matching the ROM's persistent
   `r4`=0 register, avoiding the plain-C version materializing 0 lazily
   at each use with a fresh `movs r0,#0`).
-- **`sub_80155F8`**: bumps `self+0x18`; once it reaches `self+0x1c` (or
+- **`ActionCtrlStateHangSpin`**: bumps `self+0x18`; once it reaches `self+0x1c` (or
   `part+0x38` is already set), resets via the same mgr trampoline
   pair/state-clear as `sub_80155B8`, then tail-calls `UpdatePlayerFacing`.
   Needed the `self+0x26` pointer computed *before* the `zero` register
   materializes (opposite of the natural declaration order) to match
   the ROM's `adds r1,r5,#0x26` / `movs r4,#0` / `strb` sequence.
-- **`sub_8015690`**: `part+0x38`-gated; sets the player's `+0xc` bit
+- **`ActionCtrlStateWarpOut`**: `part+0x38`-gated; sets the player's `+0xc` bit
   0x80 and tail-calls `RequestRoomExit`. Needed
   `register u8 *player asm("r1")`/`register s32 bit asm("r0")`/
   `register u8 old asm("r2")` pins for the `orrs`/`strb` pair, same
   reason as `sub_80151C8`'s trailing `part[0xd] |= 1`.
-- **`sub_80156B4`**: `part+0x38`-gated mgr trampoline pair with actions
+- **`ActionCtrlStateCrawlStop`**: `part+0x38`-gated mgr trampoline pair with actions
   0x11/4 - matched with no register pins needed.
 - **`nullsub_17`**/**`nullsub_18`**: empty stubs.
-- **`sub_8015750`**: while `self+0x29` is clear, tail-calls
-  `sub_8015460` first; always tail-calls `sub_8012FBC` after. Needed
+- **`ActionCtrlStateTurboRun`**: while `self+0x29` is clear, tail-calls
+  `StartActionCtrlRun` first; always tail-calls `ActionCtrlStateRun` after. Needed
   `self` pinned to `register u8 *self asm("r4")` (the ROM keeps it in
   `r4` for the whole function; a plain local picked a two-instruction
   double-copy through an intermediate register instead of the ROM's
   single `adds r4,r0,#0`).
-- **`sub_8015774`**: trivial tail-call to `sub_8012D24`.
-- **`sub_8015780`**: fires the mgr trampoline pair with `a`/`b` as the
+- **`sub_8015774`**: trivial tail-call to `ActionCtrlStateIdle`.
+- **`SetActionCtrlModeAnim`**: fires the mgr trampoline pair with `a`/`b` as the
   two action arguments (note: `a` is a real, *used* parameter here,
   passed straight through as `_call_via_r2`'s action index - not the
   "unused" parameter it looked like from `actor_part18.c`'s call
@@ -189,9 +189,9 @@ a 25-function file, when first tried without explicit labels).
 ## Parked (5/25)
 
 See `docs/status/actor.md`'s "Parked" section for the one-line summary
-of each: `sub_8015038`, `sub_8015238`, `sub_80152F0`, `sub_80156EC`,
+of each: `StartActionCtrlTornadoSpin`, `EndActionCtrlSpin`, `SteerActionCtrlSpin`, `ActionCtrlStateBodySlamStart`,
 `ActionCtrlSetTargetAnim` - 20 matched, 5 parked, out of 25 total.
-`sub_8015238`/`sub_80152F0` share one raw file (`code_3_2_17_15238.s`)
+`EndActionCtrlSpin`/`SteerActionCtrlSpin` share one raw file (`code_3_2_17_15238.s`)
 since both ended up parked back-to-back, but each is still counted as
 its own parked function.
 
@@ -203,7 +203,7 @@ parked - the issue stays open for whoever picks up the remaining 5.
 
 ## Third pass: all 5 remaining parked functions matched via NAKED transcription
 
-`sub_8015038`, `sub_8015238`, `sub_80152F0`, `sub_80156EC` and
+`StartActionCtrlTornadoSpin`, `EndActionCtrlSpin`, `SteerActionCtrlSpin`, `ActionCtrlStateBodySlamStart` and
 `ActionCtrlSetTargetAnim` are now all byte-exact matched, confirmed by a full clean
 `make compare` ("La suma coincide") - all 25 functions in this issue's
 range are matched now (see "Closing this issue" below). Each was fully
@@ -217,7 +217,7 @@ instruction-for-instruction - the same escape hatch this project
 already established for `MakeLinkHandshakeId`/`ResetLinkSessionState`
 (`src/system/link_cable.c`, see
 `docs/matching/issue-4-sio-settings-sync.md`'s "The general strategy
-for the rest" section). `sub_8015038`, `sub_8015238` and `sub_80152F0`
+for the rest" section). `StartActionCtrlTornadoSpin`, `EndActionCtrlSpin` and `SteerActionCtrlSpin`
 became this project's first NAKED transcriptions with real branch
 targets renumbered to GNU-as local labels at real scale (7-11 distinct
 labels each, including mid-function literal pools placed exactly where
@@ -245,8 +245,8 @@ byte-exact matches.
 
 ## Full-build address-shift lessons
 
-Several of the fixes above (`sub_8015460`'s early constant, both
-`sub_8015508`/`sub_8015558`'s table-index pin, `sub_80155F8`'s
+Several of the fixes above (`StartActionCtrlRun`'s early constant, both
+`StartActionCtrlHighJump`/`sub_8015558`'s table-index pin, `ActionCtrlStateHangSpin`'s
 statement reorder) were only caught by the full clean `make compare`
 cycle, not by isolated per-function compiles - the isolated compiles
 for these all looked instruction-for-instruction correct in ROM address
@@ -259,19 +259,19 @@ warning `docs/workflow.md` calls out - it held true again here.
 ## Later pass: strag2 retry
 
 Three of the four NAKED transcriptions from the third pass are now real
-C: `sub_8015238`, `sub_80152F0` (`actor_part38b.c`) and `sub_80156EC`
+C: `EndActionCtrlSpin`, `SteerActionCtrlSpin` (`actor_part38b.c`) and `ActionCtrlStateBodySlamStart`
 (`actor_part38c.c`). The whole `.text` of `actor_part38.o`/`38b.o`/`38c.o`
 is identical under agbcc and old_agbcc, and this range is confirmed
 old_agbcc territory, so the three objects joined `OLD_AGBCC_OBJS`.
 
-- **`sub_80156EC`**: the extra `push {r5}`/`adds r5, r4, #0` was the
+- **`ActionCtrlStateBodySlamStart`**: the extra `push {r5}`/`adds r5, r4, #0` was the
   `u8 *self = selfArg;` copy. GCSE's copy propagation doesn't reach it
   in the `else` arm. Taking `u8 *self` as the parameter removes it.
-- **`sub_80152F0`**: the "addressing-mode fold" is not the problem
+- **`SteerActionCtrlSpin`**: the "addressing-mode fold" is not the problem
   (plain C keeps the `adds r0, #6`). The fix is to put the `0x17`/`0`
   table indices in `u8` locals so they are loaded before the stores.
   That also moves `mode` into `r4`, as in the ROM.
-- **`sub_8015238`**: with real `u8 *self, u8 mode` parameters, the entry
+- **`EndActionCtrlSpin`**: with real `u8 *self, u8 mode` parameters, the entry
   home-copy order is already right. The `0x200` test is built in `r1`
   and ANDed through a copy in `r0` into `flags`' own `r2`. This comes
   from `m = 0x200` and an `asm("" : "=r"(m2) : "0"(m))` copy. After the
@@ -280,7 +280,7 @@ old_agbcc territory, so the three objects joined `OLD_AGBCC_OBJS`.
   onto `m2`. `self[0x29]`'s `1` is stored through a pointer local, so
   the `movs r4, #1` comes after the address.
 
-`sub_8015038` is still NAKED. Its C draft under `#if NON_MATCHING` is 2
+`StartActionCtrlTornadoSpin` is still NAKED. Its C draft under `#if NON_MATCHING` is 2
 halfwords off under both compilers. At the top of the `self+0x24 != 0`
 arm the ROM copies `self+0x22` into `r5` before loading through the
 copy; the draft loads first. The draft needed `zero`/`wait` locals (for
@@ -288,7 +288,7 @@ the ROM's `sb`/`r4` constant pair), `off += 0x50` (to drop an extra
 copy) and three no-code holds for reload/register choices. See
 `docs/matching/strag2-naked-retry.md`.
 
-**Later pass (strag4 retry):** `sub_8015038` is matched as real C under
+**Later pass (strag4 retry):** `StartActionCtrlTornadoSpin` is matched as real C under
 old_agbcc. The `self+0x24 != 0` arm tests `self[0x22]` directly (no `u8
 v` local); a single no-code `r1` hold spans that test. This was the last
 function of issue #18. See `docs/matching/strag4-naked-retry.md`.

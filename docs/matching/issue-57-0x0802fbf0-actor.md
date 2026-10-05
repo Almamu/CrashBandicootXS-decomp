@@ -31,7 +31,7 @@ header.
   accelerations from the height difference and hop speed. `JetpackPlaneStateFly`
   integrates those accelerations and re-aims when the steps run out.
   `DamageJetpackPlane` is the damage handler, `CreateJetpackPlane` the constructor,
-  `sub_802FEA4` the per-state member-pointer dispatch, and
+  `RunJetpackPlaneState` the per-state member-pointer dispatch, and
   `JetpackPlaneStateFall`/`sub_802FE1C`/`sub_802FE58`/`IsJetpackPlaneUnshootable` small
   helpers.
 - **`gJetpackBomberVtable`** (`struct jetpack_bomber`): the constructor
@@ -52,10 +52,10 @@ header.
 ## Techniques that mattered
 
 - **The "r7 hazard" member-pointer dispatch is plain C.**
-  `sub_802FEA4`/`sub_8030234` and the middle of `UpdateJetpackBomber` have the
+  `RunJetpackPlaneState`/`RunJetpackBomberState` and the middle of `UpdateJetpackBomber` have the
   shape that has been parked NAKED across the project as a toolchain
-  hazard: `sub_802C208`, `sub_802F748`, `UpdateJetpackPlane`, `UpdateAirshipFireball`,
-  `sub_8030648`, `sub_8031A08`, `UpdateJetpackBalloonCrate`, `sub_80322F4`, and more
+  hazard: `RunPolarPlayerState`, `RunJetpackPlayerState`, `UpdateJetpackPlane`, `UpdateAirshipFireball`,
+  `RunAirshipFireballState`, `RunJetpackBalloonState`, `UpdateJetpackBalloonCrate`, `RunJetpackBalloonCrateState`, and more
   in `actor_part19e/31/33/37/64/125/129/130.c`. The shape is gcc 2.x's
   expansion of `(this->*table[this->state])()`, where each table entry
   is a `{s16 delta; s16 index; union {s16 vtableOffset; fn}}`

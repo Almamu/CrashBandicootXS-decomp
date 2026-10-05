@@ -227,9 +227,9 @@ are named by the lower 5 hex digits of their first function's address
 
 ## NAKED transcription (byte-correct, not counted as matched)
 
-- **`sub_802F748`** (`src/graphics/actor_part44b.c`) - a
+- **`RunJetpackPlayerState`** (`src/graphics/actor_part44b.c`) - a
   `gJetpackPlayerStateFuncs` stride-8 trampoline-record dispatcher, same
-  shape as `sub_802C208` (issue #52). Hits the same confirmed
+  shape as `RunPolarPlayerState` (issue #52). Hits the same confirmed
   categorical gcc-2.9 r7-pin bug and is transcribed the same way - see
   docs/matching/issue-52-0x0802bed8-actor.md for the full account. The
   built ROM is byte-identical at this address, but a NAKED
@@ -245,8 +245,8 @@ are named by the lower 5 hex digits of their first function's address
   a `self+0x7c`-gated `IsTouchingPlayer`/`_call_via_r2` trampoline pair.
   Fully understood and every load/store, branch and call transcribed
   is confirmed correct; parked because the keyframe-table lookup is
-  the exact same categorical r7-hazard shape as `sub_802C208`/
-  `sub_802F748`/`UpdateAirshipFireball` (the ROM keeps the table's base address
+  the exact same categorical r7-hazard shape as `RunPolarPlayerState`/
+  `RunJetpackPlayerState`/`UpdateAirshipFireball` (the ROM keeps the table's base address
   alive in `r7` for the whole function - see those entries), and the
   damage-calculation block that follows compounds this with `r8`/`sb`
   register pressure held live across two `__divsi3` calls and a
@@ -282,7 +282,7 @@ matched/parked list this entry feeds into.
 
 ## Later pass: member-pointer dispatch
 
-A later pass promoted `sub_802F748` (`actor_part44b.c`) and `UpdateJetpackPlane` (`actor_part46b.c`; its damage block needed plain `/` for `__divsi3` instead of explicit calls, and no register pins) from NAKED to real C. The "r7 table-base"
+A later pass promoted `RunJetpackPlayerState` (`actor_part44b.c`) and `UpdateJetpackPlane` (`actor_part46b.c`; its damage block needed plain `/` for `__divsi3` instead of explicit calls, and no register pins) from NAKED to real C. The "r7 table-base"
 shape was gcc 2.x's pointer-to-member-function call
 `(this->*table[this->state])()`, which `ACTOR_PMF_CALL` in
 `include/actor_self.h` reproduces with no register pins. See

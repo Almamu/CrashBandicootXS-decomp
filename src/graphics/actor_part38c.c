@@ -4,7 +4,7 @@
 #include "action_obj.h"
 
 /* Continuation of actor_part38b.c (issue #18's chunk) - covers
- * `SetActionCtrlMode` through `sub_80156EC`. Same "self" object family
+ * `SetActionCtrlMode` through `ActionCtrlStateBodySlamStart`. Same "self" object family
  * documented at the top of actor_part18.c/actor_part28.c. */
 
 extern void *gAudioContext;
@@ -13,7 +13,7 @@ extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern s32 _call_via_r3(void *arg0, void *arg1, void *arg2, void *arg3);
 extern void UpdatePlayerFacing(void *self);
-extern void sub_8014B54(void *self);
+extern void ActionCtrlReleaseHang(void *self);
 extern void RequestRoomExit(void);
 
 /* Clears `self+0x33`, saves `self+8`'s previous value (truncated) into
@@ -52,7 +52,7 @@ void SetActionCtrlMode(void *selfArg, s32 arg1)
 /* While `self+0x26` is clear: plays a fixed cue, resets `self+0x18`/
  * `0x1c` to `0`/`0x18`, fires the mgr trampoline pair (actions `0x10`
  * then `0xd`), and clears `self+0x20`-`self+0x24`. */
-void sub_8015398(void *selfArg)
+void StartActionCtrlSpin(void *selfArg)
 {
     u8 *self = selfArg;
 
@@ -78,10 +78,10 @@ void sub_8015398(void *selfArg)
     }
 }
 
-/* Same shape as `sub_8015398`, different action codes (`0x1e`/`0x21`)
+/* Same shape as `StartActionCtrlSpin`, different action codes (`0x1e`/`0x21`)
  * and the field-clear runs before the trampoline pair instead of
  * after. */
-void sub_80153FC(void *selfArg)
+void StartActionCtrlHangSpin(void *selfArg)
 {
     u8 *self = selfArg;
 
@@ -112,7 +112,7 @@ void sub_80153FC(void *selfArg)
  * latch `self+0x31` again if `part+0x100` is set - only the
  * trampoline actions and the table-index (`self+0x27`, `0x1b` vs `1`)
  * differ between the two arms. */
-void sub_8015460(void *selfArg)
+void StartActionCtrlRun(void *selfArg)
 {
     u8 *self = selfArg;
 
@@ -180,7 +180,7 @@ void sub_8015460(void *selfArg)
 /* Fires the mgr trampoline pair with actions `0xb`/`0xb`, clears
  * `self+0x18`, sets the state/counter/table-index trio to `0`/`1`/`0xb`,
  * and clears `part+0x68`. */
-void sub_8015508(void *selfArg)
+void StartActionCtrlHighJump(void *selfArg)
 {
     u8 *self = selfArg;
     register s32 zero asm("r5") = 0;
@@ -204,7 +204,7 @@ void sub_8015508(void *selfArg)
     (*(u8 **)(self + 0x10))[0x68] = zero;
 }
 
-/* Same shape as `sub_8015508`, table-index `7` instead of `0xb`. */
+/* Same shape as `StartActionCtrlHighJump`, table-index `7` instead of `0xb`. */
 void sub_8015558(void *selfArg)
 {
     u8 *self = selfArg;
@@ -238,7 +238,7 @@ void AttachActionCtrl(void *selfArg, void *val)
 /* Trivial tail-call. */
 void sub_80155AC(void *selfArg)
 {
-    sub_8014B54(selfArg);
+    ActionCtrlReleaseHang(selfArg);
 }
 
 /* While `part+0x38` is set: fires the mgr trampoline pair (actions
@@ -266,7 +266,7 @@ void sub_80155B8(void *selfArg)
  * already set), stamps `unk_26 = 0xc`, fires the `m20`/`m50` methods
  * (actions `0x20`/`0x1f`), and resets `frame`/`frames` to `0`.
  * Always tail-calls `UpdatePlayerFacing`. */
-void sub_80155F8(void *selfArg)
+void ActionCtrlStateHangSpin(void *selfArg)
 {
     struct act *self = selfArg;
 
@@ -294,7 +294,7 @@ void sub_80155F8(void *selfArg)
 /* Same shape as `sub_80155B8` - byte-identical ROM encoding at a
  * different address (no shared caller; kept as a separate copy rather
  * than a wrapper to match). */
-void sub_8015650(void *selfArg)
+void ActionCtrlStateHangGrab(void *selfArg)
 {
     u8 *self = selfArg;
 
@@ -315,7 +315,7 @@ void sub_8015650(void *selfArg)
 
 /* While `part+0x38` is set: sets the player's `+0xc` bit `0x80` and
  * tail-calls `RequestRoomExit`. */
-void sub_8015690(void *selfArg)
+void ActionCtrlStateWarpOut(void *selfArg)
 {
     u8 *self = selfArg;
 
@@ -332,7 +332,7 @@ void sub_8015690(void *selfArg)
 
 /* While `part+0x38` is set: fires the mgr trampoline pair with actions
  * `0x11`/`4`. */
-void sub_80156B4(void *selfArg)
+void ActionCtrlStateCrawlStop(void *selfArg)
 {
     u8 *self = selfArg;
 
@@ -358,7 +358,7 @@ extern void *gLevelState;
  * selfArg;` copy survived GCSE's copy propagation into the `else` arm,
  * which is what forced the extra `push {r5}`/`adds r5, r4, #0` - see
  * docs/matching/issue-18-0x08014f8c-actor.md, "Later pass: strag2 retry". */
-void sub_80156EC(u8 *self)
+void ActionCtrlStateBodySlamStart(u8 *self)
 {
     if (((u8 *)*(struct actor **)(self + 0x10) + 0x38)[0] != 0) {
         if ((u8)HasSuperBodySlam(gLevelState)) {

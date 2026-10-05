@@ -540,7 +540,7 @@ void sub_8032A24(void *selfArg)
 
 /* `UpdateHovercraftFireball`'s dispatch without its tail: `(this->*gStaticData_
  * 0817C450[this->state])()` (see `ACTOR_PMF_CALL`). */
-void sub_8032A94(void *selfArg)
+void RunHovercraftFireballState(void *selfArg)
 {
     struct actor_self *self = selfArg;
 

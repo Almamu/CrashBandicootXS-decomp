@@ -15,15 +15,15 @@ extern void sub_8016D5C();
 extern void sub_8016DDC();
 extern void sub_8017044();
 extern void sub_80170EC();
-extern void sub_8017184();
+extern void PlayerCtrlStateDead();
 extern void sub_8017600();
 extern void sub_80178EC();
 extern void sub_801793C();
 extern void sub_801796C();
 
-/* Per-state handlers dispatched by PlayerCtrlKillPlayer (actor_part_16048.c,
- * its `struct pmf` view). */
-const struct actor_pmf gStaticData_0816C250[8] = {
+/* Per-state handlers dispatched by UpdatePlayerCtrl (actor_part_16048.c,
+ * its `struct pmf` view); PlayerCtrlKillPlayer sets state 7. */
+const struct actor_pmf gPlayerCtrlStateFuncs[8] = {
     ACTOR_PMF(sub_8016B1C),
     ACTOR_PMF(sub_8016C08),
     ACTOR_PMF(sub_8016C94),
@@ -31,11 +31,11 @@ const struct actor_pmf gStaticData_0816C250[8] = {
     ACTOR_PMF(sub_8016DDC),
     ACTOR_PMF(sub_80170EC),
     ACTOR_PMF(sub_8017044),
-    ACTOR_PMF(sub_8017184),
+    ACTOR_PMF(PlayerCtrlStateDead),
 };
 
 /* Per-state handlers dispatched by UpdateInputCtrl (actor_part_17524.c). */
-const struct actor_pmf gStaticData_0816C290[4] = {
+const struct actor_pmf gInputCtrlStateFuncs[4] = {
     ACTOR_PMF(sub_8017600),
     ACTOR_PMF(sub_801796C),
     ACTOR_PMF(sub_801793C),

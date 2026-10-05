@@ -2,7 +2,7 @@
 
 A scoping investigation of the actor zone found this 4152-byte range -
 the whole of `asm/code_3_2_20_28568_c99c_e0a4.s` - sitting between
-issue #54's chunk (`actor_part61.c`, ending at `nullsub_27`/
+issue #54's chunk (`actor_part61.c`, ending at `YetiStateCaught`/
 `sub_802E0A0`) and issue #56's chunk (`actor_part43.c`, starting at
 `sub_802F0DC`) - still completely raw. `docs/rom_map.md` had already
 partly read this range from disassembly alone: `CreateJetpackActor` is "a
@@ -28,7 +28,7 @@ All four are the lowest-register-pressure members of the
 `CreateJetpackActor` constructor family - just `r4`-`r6`, no `r8`/`sb`/`sl` -
 in `src/graphics/actor_part128.c`:
 
-- **`sub_802E0A4`** - state-3 anim-frame edge reset: while `self`
+- **`YetiStateStop`** - state-3 anim-frame edge reset: while `self`
   (`gYeti`)'s table-index isn't already 3 and its anim-
   frame flag is set, resets it to table-index 3 (anim frame from the
   part table's `+0x24` field) - the same reset idiom used throughout

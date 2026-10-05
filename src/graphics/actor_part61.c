@@ -2,9 +2,9 @@
 #include "memory.h"
 
 /* Genuine no-op stub sitting between the still-raw `sub_802E058` (VRAM
- * pattern generator) and `sub_802E0A4` - see
+ * pattern generator) and `YetiStateStop` - see
  * docs/matching/issue-54-actor-d3a8.md. */
-void nullsub_27(void)
+void YetiStateCaught(void)
 {
 }
 

@@ -5,11 +5,11 @@
  * gActionCtrlStateTable action-table helpers for the player/action object
  * (include/action_obj.h). Not ROM-adjacent to actor_part79.c/
  * actor_part80.c (the still-NAKED `ActionCtrlHandleEvent` sits before it,
- * `sub_8012AF4` after) - see docs/matching/issue-16-actor-12420.md.
+ * `ApplyActionCtrlMotion` after) - see docs/matching/issue-16-actor-12420.md.
  *
  * Built with old_agbcc (Makefile OLD_AGBCC_OBJS) since the issue #15/#16
- * NAKED retry (docs/matching/issue-15-16-naked-retry.md): `sub_801283C`
- * matches as plain C under it, and `sub_8012694` since the second retry
+ * NAKED retry (docs/matching/issue-15-16-naked-retry.md): `HandleActionCtrlAirInput`
+ * matches as plain C under it, and `TryActionCtrlDoubleJump` since the second retry
  * (docs/matching/issue-15-16-17-naked-retry-2.md), and `UpdateActionCtrl` in a
  * later pass. */
 
@@ -50,8 +50,8 @@ extern struct act_pmf gActionCtrlStateTable[];
 extern void PlaySfx(void *ctx, s32 sfxId, s32 volume);
 extern u8 GetDpadDirection(void *pad);
 extern void sub_8012238(struct act *self);
-extern void sub_8012AF4(struct act *self);
-extern void sub_80138E8(struct act *self);
+extern void ApplyActionCtrlMotion(struct act *self);
+extern void ActionCtrlStateFlipBodySlamStart(struct act *self);
 extern void sub_80151C8(struct act *self);
 extern u8 HasDoubleJump(void *self);
 extern void SetMaskLevel(void *self, s32 arg);
@@ -138,7 +138,7 @@ static inline u8 *PartBytePtr(struct act_part *part, s32 offset)
  * s16 count; s16 recordOffset; s32 fallback}` record - to build the
  * arguments for one `_call_via_r3` trampoline call. If `part+0x68` bit 3
  * got cleared this call and `self+0x28` is `4`/`5`, resets the trio's
- * second half; either way calls `sub_8012AF4`, then (unless `part+0xc`
+ * second half; either way calls `ApplyActionCtrlMotion`, then (unless `part+0xc`
  * bit 7 is set) resets `part`'s `+0x48`/`+0x4c`/`+0x50`/`+0x60` fields
  * again. Finally writes a small fixed value into `part+0xa` from a
  * second, 22-case jump table on the same type. */
@@ -262,7 +262,7 @@ void UpdateActionCtrl(struct act *self)
             *slot = 0;
         }
     }
-    sub_8012AF4(self);
+    ApplyActionCtrlMotion(self);
     {
         struct act_part *part = self->part;
         u32 top = part->flags0C >> 7;
@@ -297,7 +297,7 @@ void UpdateActionCtrl(struct act *self)
     }
 }
 
-/* A helper of `sub_801283C` (below): if the input snapshot's D-pad bit
+/* A helper of `HandleActionCtrlAirInput` (below): if the input snapshot's D-pad bit
  * `1` is set, `self+0x18`'s counter is 0, `gLevelState` passes
  * `HasDoubleJump`, and a sub-object type of `6`/`0xb`/`0xc` (each with its
  * own extra `+0x30 >= 0` gate) matches, bumps `self+0x18`, fires the
@@ -310,7 +310,7 @@ void UpdateActionCtrl(struct act *self)
  * turns the reloads into the ROM's copy of the pointer in r2 - and the
  * `pressed & 1` test is folded into `pressed`'s assignment, which puts
  * the constant after `one` as in the ROM. */
-u8 sub_8012694(struct act *self)
+u8 TryActionCtrlDoubleJump(struct act *self)
 {
     u32 in = gKeys;
     u16 pressed;
@@ -357,14 +357,14 @@ u8 sub_8012694(struct act *self)
 }
 
 /* A proximity-triggered indicator: if `part->field_0x64` is within
- * `0x27f` (or, failing that, `sub_8012694` fires), dispatches on
+ * `0x27f` (or, failing that, `TryActionCtrlDoubleJump` fires), dispatches on
  * `self+8`'s type (`7`/`9`/`0xb`/`0xe`, each with its own distance
  * threshold against `part->field_0x64`/its negation) to set `part+0xd`
  * bit 0 and fire the `+0x20`/`+0x24` trampoline with a fixed id
  * (`0x1a`), or (type `0xe`) tail-call `sub_80151C8`. Then, unless the
  * type is `7`/`9`/`0xb`/`0xe`/`0x1a`, reads the D-pad and remaps
  * `self+0x27`'s table-index byte through a further small dispatch
- * (types `9`/`0x1c`-`0x1d` fire `_call_via_r2`/`sub_80138E8` variants,
+ * (types `9`/`0x1c`-`0x1d` fire `_call_via_r2`/`ActionCtrlStateFlipBodySlamStart` variants,
  * type `7` fires a `_call_via_r3` pair) before a shared tail that sets
  * `self+0x31` when the player's `+0x100` flag is set.
  *
@@ -372,14 +372,14 @@ u8 sub_8012694(struct act *self)
  * `||` gets folded into a single compare); the trio stores mix literal
  * stores with the parameter-passing inlines exactly where the ROM
  * materializes the constants early. */
-void sub_801283C(struct act *self)
+void HandleActionCtrlAirInput(struct act *self)
 {
     u8 near = 0;
     u32 in;
 
     if (self->part->speedY <= 0x27F) {
         near = 1;
-        if (sub_8012694(self))
+        if (TryActionCtrlDoubleJump(self))
             return;
     }
     in = gKeys;
@@ -437,7 +437,7 @@ done:
                 self->flag2F = 1;
                 self->next27 = busy;
                 ActTrio28(self, busy, 1, 0x16);
-                sub_80138E8(self);
+                ActionCtrlStateFlipBodySlamStart(self);
                 self->unk_2A[0] = busy;
                 return;
             }

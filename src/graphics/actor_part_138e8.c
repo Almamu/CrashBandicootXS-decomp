@@ -15,10 +15,10 @@ extern u8 GetDpadDirection(void *pad);
 extern u8 sub_800AAEC(struct act_part *part, s32 action);
 extern u8 HasSuperBodySlam(void *self);
 extern u8 HasTurboRun(void *self);
-extern void sub_8015508(struct act *self);
-extern void sub_8015398(struct act *self);
-extern void sub_801434C(struct act *self);
-extern void sub_8015460(struct act *self);
+extern void StartActionCtrlHighJump(struct act *self);
+extern void StartActionCtrlSpin(struct act *self);
+extern void ActionCtrlStateCrawl(struct act *self);
+extern void StartActionCtrlRun(struct act *self);
 
 /* Queues action `next` on the +0x31/+0x2F/+0x27 trio. As inline
  * parameters, old_agbcc materializes the values before the three stores;
@@ -40,7 +40,7 @@ static inline void ActTrio27(struct act *self, s32 cur, s32 flag, s32 next)
 /* Picks the part animation from its state: with tag 6, animation 9 on
  * frame 3 or 8 past it (or once finished); otherwise, once finished, 0x19
  * plus part animation 7 if HasSuperBodySlam allows it, else 0x18. */
-void sub_80138E8(struct act *self)
+void ActionCtrlStateFlipBodySlamStart(struct act *self)
 {
     struct act_part *part = self->part;
 
@@ -69,8 +69,8 @@ void sub_80138E8(struct act *self)
 
 /* The "player input/action handling" reader of docs/rom_map.md. Out of
  * contact it queues idle (5); otherwise the confirm edge
- * (sub_800AAEC(part, 0xB)) hands off to sub_8015508 and the alt edge
- * (sub_800AAEC(part, 0x10)) to sub_8015398. Then it counts the animation
+ * (sub_800AAEC(part, 0xB)) hands off to StartActionCtrlHighJump and the alt edge
+ * (sub_800AAEC(part, 0x10)) to StartActionCtrlSpin. Then it counts the animation
  * (holding the part on frame 3 until +0x18 reaches +0x1C) and, once the
  * part's animation is done, dispatches on contact, the 0x100/0x200 held
  * bits, the D-pad and sub_800AAEC(part, 2).
@@ -79,7 +79,7 @@ void sub_80138E8(struct act *self)
  * in a register (the `held & 1` test's, then +0x29's); the two final
  * VCALL2+trio tails are written out twice, as the ROM cross-jumps them
  * from the method call on. */
-void sub_8013994(struct act *self)
+void ActionCtrlStateSlide(struct act *self)
 {
     u32 in = gKeys;
 
@@ -97,7 +97,7 @@ void sub_8013994(struct act *self)
                 PlaySfx(gAudioContext, 0xC, 0x100);
                 ActAndFlags0D(self->part, -2);
                 ActAndFlags0D(self->part, -3);
-                sub_8015508(self);
+                StartActionCtrlHighJump(self);
                 return;
             }
         }
@@ -105,7 +105,7 @@ void sub_8013994(struct act *self)
         {
             if (sub_800AAEC(part, 0x10) == 1)
             {
-                sub_8015398(self);
+                StartActionCtrlSpin(self);
                 ActTrio27(self, 0, 1, 1);
                 return;
             }
@@ -152,7 +152,7 @@ void sub_8013994(struct act *self)
             ACT_VCALL2(self, m50, self->part, 0);
             self->frames = zero;
             ActQueue27(self, zero, 3);
-            sub_801434C(self);
+            ActionCtrlStateCrawl(self);
             return;
         }
         {
@@ -171,7 +171,7 @@ void sub_8013994(struct act *self)
                         ActTrio27(self, held, 1, 0x1B);
                         return;
                     }
-                    sub_8015460(self);
+                    StartActionCtrlRun(self);
                     return;
                 }
                 ACT_VCALL1(self, m20, 0x12);

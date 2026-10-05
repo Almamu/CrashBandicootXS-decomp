@@ -22,7 +22,7 @@ extern void sub_802BF30();
 extern void sub_802BFA0();
 
 /* Per-state handlers of the actor object dispatched by UpdatePolarPlayer
- * (actor_part127.c) and sub_802C208 (actor_part19e.c). */
+ * (actor_part127.c) and RunPolarPlayerState (actor_part19e.c). */
 const struct actor_pmf gPolarPlayerStateFuncs[14] = {
     ACTOR_PMF(sub_802B8E8),
     ACTOR_PMF(sub_802B990),

@@ -2,7 +2,7 @@
 #include "action_obj.h"
 
 /* Continuation of actor_part38.c (issue #18's chunk) - covers
- * `sub_80151C8`, `sub_8015238` and `sub_80152F0`. Same "self" object
+ * `sub_80151C8`, `EndActionCtrlSpin` and `SteerActionCtrlSpin`. Same "self" object
  * family documented at the top of actor_part18.c/actor_part28.c. */
 
 /* One-shot guard (`self+0x23`): the first time through, picks a value
@@ -31,7 +31,7 @@ void sub_80151C8(void *selfArg)
      * pulled its `static const` array into a discarded `.data`
      * section this ROM has no room for. Spelling the table out in raw
      * asm, using the same "hand-placed local labels shared across a
-     * single literal pool" idea as `sub_8014F8C`'s anti-CSE note in
+     * single literal pool" idea as `DoSuperBodySlamShockwave`'s anti-CSE note in
      * actor_part28.c, sidesteps both problems - `self` is pinned to
      * `r3` for the whole function so this block's hardcoded `r3` use
      * matches whatever the compiler already has it in. */
@@ -106,16 +106,16 @@ asm(".align 2, 0");
 extern void *gLevelState;
 extern s32 _call_via_r2(void *arg0, void *arg1, void *arg2);
 extern s32 _call_via_r3(void *arg0, void *arg1, void *arg2, void *arg3);
-extern void sub_8015460(void *selfArg);
-extern void sub_8015780(void *selfArg, s32 a, s32 b, s32 c, s32 d);
+extern void StartActionCtrlRun(void *selfArg);
+extern void SetActionCtrlModeAnim(void *selfArg, s32 a, s32 b, s32 c, s32 d);
 extern s32 HasTurboRun(void *self);
 
 /* Always sets `self+0x26 = 0xc`. For `mode` `3`/`4`: if `flags` bit
  * `0x200` is set and `HasTurboRun(gLevelState)` is true, latches
  * `self+0x29`, fires the mgr trampoline pair with actions `4`/`0x18`,
  * and sets the state/counter/table-index trio (`0x31`/`0x2f`/`0x27`) to
- * `0`/`1`/`0x1b` - otherwise falls back to `sub_8015460`. For every
- * other `mode`: resets via `sub_8015780(self, 0, 0x12, 0, 0)` and clears
+ * `0`/`1`/`0x1b` - otherwise falls back to `StartActionCtrlRun`. For every
+ * other `mode`: resets via `SetActionCtrlModeAnim(self, 0, 0x12, 0, 0)` and clears
  * both state/counter/table-index trios (`0x31`/`0x2f`/`0x27` and
  * `0x32`/`0x30`/`0x28`).
  *
@@ -123,7 +123,7 @@ extern s32 HasTurboRun(void *self);
  * "Later pass: strag2 retry"): `self`/`mode` as real `u8 *`/`u8` parameters fixed the
  * entry home-copy order the old draft got backwards; the `flags` test
  * needs the constant-copy escape below. */
-void sub_8015238(struct act *self, u8 mode, s32 flags)
+void EndActionCtrlSpin(struct act *self, u8 mode, s32 flags)
 {
     self->spinCooldown = 0xc;
     switch (mode) {
@@ -161,14 +161,14 @@ void sub_8015238(struct act *self, u8 mode, s32 flags)
                 self->next27 = idx;
             }
         } else {
-            sub_8015460(self);
+            StartActionCtrlRun(self);
         }
         break;
     }
     default: {
         u8 zero = 0;
 
-        sub_8015780(self, 0, 0x12, 0, zero);
+        SetActionCtrlModeAnim(self, 0, 0x12, 0, zero);
         self->next31 = zero;
         self->flag2F = 1;
         self->next27 = zero;
@@ -191,7 +191,7 @@ extern void UpdatePlayerFacing(void *self);
  * "Later pass: strag2 retry"): the `0x17`/`0` table indices go through `u8` locals
  * so they're materialized before the stores, which also moves `mode`
  * into `r4` as in the ROM. */
-void sub_80152F0(u8 *self, u8 mode)
+void SteerActionCtrlSpin(u8 *self, u8 mode)
 {
     if (self[0x27] == 0 && self[0x2b] == 0) {
         switch (mode) {

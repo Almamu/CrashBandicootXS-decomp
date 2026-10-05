@@ -22,9 +22,9 @@ struct level_anim
 
 const struct speed_table gStaticData_0816C090 = { { 528, 352, 176, -176, -352, -528, -704, -704 } };
 
-/* 8 modes x 13 levels; action_table_16bf20.c's gStaticData_0816C070
+/* 8 modes x 13 levels; action_table_16bf20.c's gPlayerCtrlModeAnimRows
  * points at each row. */
-const struct level_anim gStaticData_0816C0B0[8][13] = {
+const struct level_anim gPlayerCtrlModeLevelAnims[8][13] = {
     {
         { 0x1F, 0x00 }, { 0x1F, 0x00 }, { 0x1F, 0x00 }, { 0x1F, 0x00 }, { 0x1F, 0x00 }, { 0x1F, 0x00 }, { 0x1F, 0x00 },
         { 0x1F, 0x00 }, { 0x1F, 0x00 }, { 0x1F, 0x00 }, { 0x1F, 0x00 }, { 0x1F, 0x00 }, { 0x1F, 0x00 }

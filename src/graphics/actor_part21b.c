@@ -9,7 +9,7 @@ extern struct actor_pmf gAirshipFireballStateFuncs[];
 /* `UpdateAirshipFireball`'s (actor_part20b.c) per-state member-pointer dispatch
  * without its tail: `(this->*gAirshipFireballStateFuncs[this->state])()`
  * (see `ACTOR_PMF_CALL`). */
-void sub_8030648(struct actor_self *self)
+void RunAirshipFireballState(struct actor_self *self)
 {
     ACTOR_PMF_CALL(self, gAirshipFireballStateFuncs);
 }

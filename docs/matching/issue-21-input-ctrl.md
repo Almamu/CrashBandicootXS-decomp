@@ -45,7 +45,7 @@ channel through the method table using `gInputCtrlMotionRecords`'s 12-byte
 records.
 
 The state dispatch at the end of `UpdateInputCtrl` goes through
-`gStaticData_0816C290`, a table of gcc 2.x pointer-to-member-functions
+`gInputCtrlStateFuncs`, a table of gcc 2.x pointer-to-member-functions
 (`{s16 delta; s16 index; union {fn, s16 vtable offset}}`): state 0
 `sub_8017600` (reset the pairs, spawn the child), 1 `sub_801796C`,
 2 `sub_801793C`, 3 `sub_80178EC` (mark the target gone). That call
@@ -94,7 +94,7 @@ Thumb pointer scan): the six byte accessors and `sub_8017A20`-
 - **`InputCtrlKillPlayer`** loads `gPaletteCache` and computes the tag byte's
   address before loading the record table - done with explicit
   statements; `+0x29`'s slot is a 4-bit bitfield (`lsl #28/lsr #28`).
-- **`UpdateInputCtrl`'s PMF dispatch** re-indexes `gStaticData_0816C290[state]`
+- **`UpdateInputCtrl`'s PMF dispatch** re-indexes `gInputCtrlStateFuncs[state]`
   for each field and copies the virtual entry through a stack struct,
   which is what gives the ROM's `sub sp, #8` frame; the up/down `else if`
   chain is written with a pinned `dirState` read and a `goto` (the only

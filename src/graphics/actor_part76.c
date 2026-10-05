@@ -1,7 +1,7 @@
 #include "core.h"
 
 /* Sits right after actor_part60.c's `CreateYeti` and before
- * actor_part61.c's `nullsub_27` - the whole contiguous range that used
+ * actor_part61.c's `YetiStateCaught` - the whole contiguous range that used
  * to be `asm/code_3_2_20_28568_c99c_e058.s`. */
 
 /* A parameterized twin of `LoadYetiGraphics`'s (actor_part75.c) 16x16

@@ -186,11 +186,11 @@ elsewhere in this project, re-confirmed rather than re-derived here:
   (this compiler schedules the `#4`/`#6` `ldrsh` constant loads one
   instruction earlier than the ROM's own build), same as
   `MoveJetpackBalloon`/`sub_8031954`/`sub_80319A0` (issue #59).
-- **`UpdateHovercraftFireball`/`sub_8032A94`** - a `gHovercraftFireballStateFuncs` stride-8
+- **`UpdateHovercraftFireball`/`RunHovercraftFireballState`** - a `gHovercraftFireballStateFuncs` stride-8
   table lookup keeping the table's base address alive in `r7` across
   straight-line code with no call to piggyback a high-register relay
   on, the same categorical `r7`-never-self-allocated hazard as
-  `sub_8031A08` (issue #59)/`UpdateHovercraftCannon`/`RunHovercraftCannonState`/`UpdateHovercraftLauncher`
+  `RunJetpackBalloonState` (issue #59)/`UpdateHovercraftCannon`/`RunHovercraftCannonState`/`UpdateHovercraftLauncher`
   (issue #62).
 - **`DrawJetpackCollectedWumpa`** - a bounding-box-culled sprite draw with an
   `r8`-flag-across-calls shape, the same class of gap `DrawPowerDialog`/
@@ -236,7 +236,7 @@ matched/parked list this entry feeds into.
 
 ## Later pass: member-pointer dispatch
 
-A later pass promoted `UpdateJetpackCollectedWumpa`, `DestroyJetpackCollectedWumpa`, `UpdateHovercraftFireball` and `sub_8032A94` (`actor_part130.c`). `DestroyJetpackCollectedWumpa`'s parameter-copy order came out right from a plain C destructor with no barrier; `UpdateJetpackCollectedWumpa`'s anim idiom needed per-field `anims[animIndex]` indexing. The other NAKED functions here (many-high-register, DMA/tile, constructor cases) were not retried from NAKED to real C. The "r7 table-base"
+A later pass promoted `UpdateJetpackCollectedWumpa`, `DestroyJetpackCollectedWumpa`, `UpdateHovercraftFireball` and `RunHovercraftFireballState` (`actor_part130.c`). `DestroyJetpackCollectedWumpa`'s parameter-copy order came out right from a plain C destructor with no barrier; `UpdateJetpackCollectedWumpa`'s anim idiom needed per-field `anims[animIndex]` indexing. The other NAKED functions here (many-high-register, DMA/tile, constructor cases) were not retried from NAKED to real C. The "r7 table-base"
 shape was gcc 2.x's pointer-to-member-function call
 `(this->*table[this->state])()`, which `ACTOR_PMF_CALL` in
 `include/actor_self.h` reproduces with no register pins. See
