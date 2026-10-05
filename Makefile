@@ -189,30 +189,22 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
                   $(C_BUILDDIR)/enemies/enemy_patrol.o \
                   $(C_BUILDDIR)/enemies/enemy_ctrl_update.o \
                   $(C_BUILDDIR)/objects/ground_sprite_collide.o \
-                  $(C_BUILDDIR)/graphics/actor_part111.o \
                   $(C_BUILDDIR)/crates/crate_grid_unlink.o \
                   $(C_BUILDDIR)/crates/crate_list_update.o \
                   $(C_BUILDDIR)/crates/crate_player_collide.o \
-                  $(C_BUILDDIR)/graphics/actor_part11e.o \
                   $(C_BUILDDIR)/crates/crate_grid_collide.o \
                   $(C_BUILDDIR)/crates/crate_list.o \
                   $(C_BUILDDIR)/enemies/enemy_attack.o \
-                  $(C_BUILDDIR)/graphics/actor_part122.o \
                   $(C_BUILDDIR)/objects/effect_ctrl.o \
                   $(C_BUILDDIR)/graphics/actor_part127.o \
                   $(C_BUILDDIR)/graphics/actor_part128.o \
                   $(C_BUILDDIR)/graphics/actor_part130.o \
                   $(C_BUILDDIR)/frontend/credits.o \
-                  $(C_BUILDDIR)/graphics/actor_part18.o \
                   $(C_BUILDDIR)/graphics/actor_part19h.o \
                   $(C_BUILDDIR)/graphics/actor_part23b.o \
                   $(C_BUILDDIR)/graphics/actor_part24b.o \
                   $(C_BUILDDIR)/graphics/actor_part27a.o \
-                  $(C_BUILDDIR)/graphics/actor_part2.o \
-                  $(C_BUILDDIR)/graphics/actor_part3.o \
-                  $(C_BUILDDIR)/graphics/actor_part38.o \
                   $(C_BUILDDIR)/player/action_ctrl_moves.o \
-                  $(C_BUILDDIR)/graphics/actor_part38c.o \
                   $(C_BUILDDIR)/graphics/actor_part45d.o \
                   $(C_BUILDDIR)/objects/sprite_anim.o \
                   $(C_BUILDDIR)/graphics/actor_part74.o \
@@ -224,12 +216,9 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
                   $(C_BUILDDIR)/player/action_ctrl_idle.o \
                   $(C_BUILDDIR)/player/action_ctrl_update.o \
                   $(C_BUILDDIR)/player/swim_ctrl_stroke.o \
-                  $(C_BUILDDIR)/graphics/actor_part86b.o \
                   $(C_BUILDDIR)/menus/continue_prompt.o \
                   $(C_BUILDDIR)/player/action_ctrl_run_jump.o \
                   $(C_BUILDDIR)/player/action_ctrl_states.o \
-                  $(C_BUILDDIR)/graphics/actor_part_138e8.o \
-                  $(C_BUILDDIR)/graphics/actor_part_13c60.o \
                   $(C_BUILDDIR)/player/action_ctrl_hang.o \
                   $(C_BUILDDIR)/player/swim_ctrl.o \
                   $(C_BUILDDIR)/player/input_ctrl.o \
@@ -269,7 +258,6 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
                   $(C_BUILDDIR)/system/game_loop16.o \
                   $(C_BUILDDIR)/system/game_loop29.o \
                   $(C_BUILDDIR)/system/game_loop3.o \
-                  $(C_BUILDDIR)/system/game_loop32.o \
                   $(C_BUILDDIR)/crates/crate_create.o \
                   $(C_BUILDDIR)/cutscene/slideshow.o \
                   $(C_BUILDDIR)/system/game_loop4.o \
@@ -278,17 +266,12 @@ OLD_AGBCC_OBJS := $(C_BUILDDIR)/objects/sprite.o \
                   $(C_BUILDDIR)/crates/crate_hit.o \
                   $(C_BUILDDIR)/system/game_loop46.o \
                   $(C_BUILDDIR)/crates/crate_break.o \
-                  $(C_BUILDDIR)/system/game_loop48.o \
-                  $(C_BUILDDIR)/system/game_loop49.o \
                   $(C_BUILDDIR)/crates/crate_update.o \
-                  $(C_BUILDDIR)/system/game_loop52.o \
                   $(C_BUILDDIR)/pickups/wumpa_update.o \
                   $(C_BUILDDIR)/pickups/extra_life.o \
                   $(C_BUILDDIR)/system/game_loop55.o \
                   $(C_BUILDDIR)/system/game_loop56.o \
                   $(C_BUILDDIR)/cutscene/cutscene_player.o \
-                  $(C_BUILDDIR)/system/game_loop6.o \
-                  $(C_BUILDDIR)/system/game_loop7.o \
                   $(C_BUILDDIR)/system/game_loop8.o \
                   $(C_BUILDDIR)/link/link_handshake.o \
                   $(C_BUILDDIR)/link/link_session_reset.o \

@@ -1,5 +1,6 @@
 #include "core.h"
 #include "box_part.h"
+#include "actor_self.h"
 
 struct grid_node {
     struct box_part *data;
@@ -29,7 +30,7 @@ extern struct box_part *gPlayer;
 extern s32 _call_via_r2(void *self, void *arg, void *fn);
 extern s32 _call_via_r1(void *self, void *fn);
 extern void *MemCopy32(void *dst, const void *src, s32 size);
-extern void CollideCrateGridPartWithPlayer(struct pool_manager *m, struct part_aabb box, struct box_part *part);
+extern void CollideCrateGridPartWithPlayer(struct part_list *list, struct part_aabb box, struct box_part *part);
 extern void CollideCrateGridPartWithObject(struct pool_manager *m, struct part_aabb box, struct box_part *part, struct box_part *other);
 
 /* The spatial-hash-grid-cluster analog of `CollidePartList`: the same
@@ -54,9 +55,9 @@ extern void CollideCrateGridPartWithObject(struct pool_manager *m, struct part_a
  * temporary with MemCopy32 (memcpy) before each dispatch, exactly as
  * in CollidePartList. The duplicated per-node test is an inline helper;
  * `heads`/`last` (gridHead / &gridHead[255]) are computed up front, in
- * that order, as the ROM does. Kept in its own translation unit since
- * its ROM address, 0x08009528, sits between `DrawCrateList`
- * (`actor_part11h.c`) and `CollideCrateGridPartWithPlayer` (`actor_part11e.c`). */
+ * that order, as the ROM does. Its ROM address, 0x08009528, sits
+ * between `DrawCrateList` (`actor_part11h.c`) and
+ * `CollideCrateGridPartWithPlayer` (below). */
 static inline void CheckPart(struct pool_manager *m, struct box_part *part, struct part_aabb *screen,
                              struct part_aabb *box, struct part_aabb *tmp, struct box_part *other)
 {
@@ -69,7 +70,7 @@ static inline void CheckPart(struct pool_manager *m, struct box_part *part, stru
         if (_call_via_r1((u8 *)part + m2->thisOffset, m2->fn) > 4) {
             if (other == gPlayer) {
                 MemCopy32(tmp, box, sizeof(*tmp));
-                CollideCrateGridPartWithPlayer(m, *tmp, part);
+                CollideCrateGridPartWithPlayer((struct part_list *)m, *tmp, part);
             } else {
                 MemCopy32(tmp, box, sizeof(*tmp));
                 CollideCrateGridPartWithObject(m, *tmp, part, other);
@@ -116,5 +117,94 @@ void CollideCrateGrid(struct pool_manager *m, struct part_aabb box, s32 unused, 
     } while (i >= lo);
     for (node = *last; node != NULL; node = node->next)
         CheckPart(m, node->data, &screen, &box, &tmp, other);
+}
+asm(".align 2, 0");
+
+typedef void (*part_method3_fn)(void *self, s32 a, s32 b, s32 c);
+
+struct game_state {
+    u8 unk_00[0x78];
+    s32 maskLevel;      // 0x78 - the Aku Aku mask level (0-3)
+};
+
+extern struct game_state *gLevelState;
+extern void *gAudioContext;
+extern s32 ClassifySpriteContact(struct box_part *part, struct part_aabb *box);
+extern struct part_aabb GetSpriteHitbox(struct box_part *part);
+extern struct part_aabb GetSpriteBodyBox(struct box_part *part);
+extern u8 AabbOverlaps(struct part_aabb *a, struct part_aabb *b);
+extern void PlaySfx(void *arg0, s32 sfxId, s32 arg2);
+
+/* obj->vtable[0x68](a, b, c) - the part's "hit" method. */
+#define CALL_HIT(obj, a, b, c)                                                 \
+    if (1) {                                                                   \
+        struct part_method *_m = PART_METHOD(obj, 0x68);                       \
+        ((part_method3_fn)_m->fn)((u8 *)(obj) + _m->thisOffset, (a), (b), (c)); \
+    } else (void)0
+
+/* `CollidePartWithPlayer`'s twin, operating in this spatial-hash-grid cluster:
+ * byte-identical collision-hit resolution logic (mode dispatch via
+ * `gLevelState`, the AABB push-out via `GetSpriteHitbox`/
+ * `GetSpriteBodyBox`/`AabbOverlaps`, and the "hit" method calls) - see
+ * `CollidePartWithPlayer`'s own writeup in `actor_part7.c` for the branch-by-branch
+ * semantics, identical here. `list` itself is never read.
+ *
+ * Matches under old_agbcc with the box passed by value, the same C as
+ * CollidePartWithPlayer (see docs/matching/issue-9-naked-retry.md). Its
+ * ROM address, 0x080096C0, sits between `CollideCrateGrid` (above) and
+ * `CollidePlayerWithCrates` (`actor_part11d.c`) in ROM order. */
+void CollideCrateGridPartWithPlayer(struct part_list *list, struct part_aabb box, struct box_part *part)
+{
+    if (gLevelState->maskLevel == 3) {
+        if (!ClassifySpriteContact(part, &box))
+            return;
+        CALL_HIT(part, 1, gPlayer->kind, 0);
+    } else if ((part->flags2 >> 3) & 1) {
+        struct part_aabb a, b;
+        s32 px;
+
+        a = GetSpriteHitbox(gPlayer);
+        b = GetSpriteBodyBox(part);
+        if (!AabbOverlaps(&a, &b))
+            return;
+        px = part->x;
+        if (px < gPlayer->x) {
+            gPlayer->x = px + ((b.w + a.w) << 7);
+            CALL_HIT(gPlayer, 0, 0xc, 2);
+        } else {
+            gPlayer->x = px - ((b.w + a.w) << 7);
+            CALL_HIT(gPlayer, 0, 0xc, 1);
+        }
+    } else {
+        u8 kind;
+
+        switch (ClassifySpriteContact(part, &box)) {
+        case 0:
+            break;
+        case 1:
+        {
+            u8 *flags = &gPlayer->flags;
+            *flags |= 8;
+        }
+            kind = gPlayer->kind;
+            if (kind == 1) {
+                if (gPlayer->speedY > 0) {
+                    CALL_HIT(part, 1, 1, 0);
+                    CALL_HIT(gPlayer, 0, 0xd, 0);
+                    PlaySfx(gAudioContext, 0x21, 0x100);
+                }
+            } else {
+                CALL_HIT(part, 1, kind, 0);
+            }
+            break;
+        case 2:
+            part->flags |= 8;
+            if (gLevelState->maskLevel) {
+                CALL_HIT(part, 1, 1, 0);
+            }
+            CALL_HIT(gPlayer, 1, part->kind, 0);
+            break;
+        }
+    }
 }
 asm(".align 2, 0");

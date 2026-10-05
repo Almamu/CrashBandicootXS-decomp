@@ -1,6 +1,8 @@
 #include "core.h"
 #include "actor.h"
 #include "vram_pool.h"
+#include "gfx_part.h"
+#include "sprite_bank.h"
 
 struct aabb {
     s32 field_0;
@@ -416,5 +418,786 @@ bigtail:
     }
 end:
     return;
+}
+asm(".align 2, 0");
+
+extern s32 IsEntityInsideRect(struct actor *self, void *box);
+
+/* `part+0x25 == 1` is the same fast override seen in
+ * IsSpriteObjOnScreen/SpriteObjOverlapsRect; otherwise defers to `IsEntityInsideRect` (already
+ * matched in graphics.c), forwarding `box` straight through
+ * unmodified. */
+s32 IsSpriteObjInsideRect(struct actor *part, void *box)
+{
+    s32 result = 0;
+    register u8 *addr asm("r2") = (u8 *)part + 0x25;
+    register u8 byteVal asm("r2");
+
+    byteVal = *addr;
+    if (byteVal == 1) {
+        result = 1;
+    } else if ((u8)IsEntityInsideRect(part, box)) {
+        result = 1;
+    }
+    return result;
+}
+
+extern u8 IsEntityNearCamera(struct actor *self);
+
+/* Same `part+0x25` fast-override shape as `IsSpriteObjInsideRect` above,
+ * deferring to `IsEntityNearCamera` (already matched in `graphics.c`)
+ * instead - a single-argument sibling, so the address scratch
+ * naturally lands in `r1` instead of `r2` (no second call argument to
+ * keep out of the way). */
+s32 IsSpriteObjNearCamera(struct actor *part)
+{
+    s32 result = 0;
+    register u8 *addr asm("r1") = (u8 *)part + 0x25;
+    register u8 byteVal asm("r1");
+
+    byteVal = *addr;
+    if (byteVal == 1) {
+        result = 1;
+    } else if (IsEntityNearCamera(part)) {
+        result = 1;
+    }
+    return result;
+}
+
+/* Always-true stub. */
+s32 ApplySpriteObjVelocity(void)
+{
+    return 1;
+}
+
+extern void DrawSprite(void *self, void *part);
+extern void *gSpriteRenderer;
+
+/* Tail-calls `DrawSprite` (already matched in `actor_part.c`) with
+ * the global `gSpriteRenderer` as `self`. */
+void DrawSpriteObj(void *part)
+{
+    DrawSprite(gSpriteRenderer, part);
+}
+
+extern void AdvanceSpriteAnim(struct actor *part);
+extern void *_call_via_r1(void *arg0, void *arg1);
+
+/* Advances `part`'s animation timer (`AdvanceSpriteAnim`), then resolves two
+ * `table+N`/`table+N+4` offset/pointer slot pairs (the same convention
+ * documented for `IsEntityNearCamera`/`IsSpriteObjOnScreen`) into `_call_via_r1` calls
+ * - table+0x60/+0x64 first, then table+8/+0xc. */
+void UpdateSpriteObj(struct actor *part)
+{
+    AdvanceSpriteAnim(part);
+
+    {
+        void *table = part->table;
+        void *slot = (u8 *)table + 0x60;
+        s32 offset = *(s16 *)slot;
+        void *addr = (u8 *)part + offset;
+        void *ptr = *(void **)((u8 *)slot + 4);
+
+        _call_via_r1(addr, ptr);
+    }
+    {
+        void *table = part->table;
+        s32 offset = *(s16 *)((u8 *)table + 8);
+        void *addr = (u8 *)part + offset;
+        void *ptr = *(void **)((u8 *)table + 0xc);
+
+        _call_via_r1(addr, ptr);
+    }
+}
+
+/* Returns a pointer to `part`'s current keyframe record's `+4` field -
+ * the same keyframe-table lookup used throughout this ROM region. */
+void *GetSpriteObjHitbox(struct actor *part)
+{
+    register void **tablePtr asm("r2") = *(void ***)((u8 *)part + 0x20);
+    register u8 idx asm("r3") = *((u8 *)part + 0x2d);
+    s32 offset = idx * 0x1c;
+    void *table = *tablePtr;
+    void *rec = (u8 *)table + offset;
+    return (u8 *)rec + 4;
+}
+
+extern void *gSpriteBankSet;
+
+/* Ignores its `part` argument entirely (the ROM never reads r0 before
+ * overwriting it) - already declared with this signature at its
+ * `DrawSpritePieces` call site in graphics.c. Returns
+ * `(*(void **)gSpriteBankSet)+4`'s value. */
+s32 GetSpriteTileBase(void *part)
+{
+    void *p2 = *(void **)gSpriteBankSet;
+    return *(s32 *)((u8 *)p2 + 4);
+}
+
+/* Looks up `part`'s current keyframe record (same convention as
+ * elsewhere in this ROM region). If `part+0x38` ("done", set by
+ * `AdvanceSpriteAnim`) is set and the record's `+0x17` flags byte bit 1 is
+ * clear (not looping), clamps `part`'s frame index (`+0x30`) to the
+ * last frame (`record+0x16 - 1`) and resets the sub-counter
+ * (`+0x34`) to the record's duration (`record+0x15`). Either way,
+ * then resolves a final pointer: the record's own `+0` field is
+ * itself a pointer (`recPtr`) to a per-frame `u16` array, indexed by
+ * the (possibly just-clamped) frame index; that `u16` in turn indexes
+ * a pointer array at `table+4`, and the result is that array's
+ * pointer at the looked-up index.
+ *
+ * Matched in a later session than the original NAKED transcription -
+ * see docs/matching.md's "Parked, not matched: GetSpriteFrame" for the
+ * original account. Unlike `sub_8008188`/`sub_8008200`/`sub_8008278`'s
+ * shared-switch-case gap, this function's resistant
+ * `adds r0, r1, r0`-vs-`adds r0, r0, r1` add sits in genuinely
+ * straight-line code (no switch, no case merging to protect), so a
+ * plain inline-asm anchor on just that one instruction - the same
+ * technique that had backfired inside those functions' shared case
+ * blocks - works here with no caveats. Needed a trailing
+ * `asm(".align 2, 0")` since it's the last function in this file (the
+ * ROM has 2 bytes of zero padding here before `GetSpriteObjPriority` in
+ * `actor_part6.c`, and a plain compiled function's own natural
+ * alignment produces a `0x46c0` nop-fill instead - the standard
+ * `matching_decomp_alignment_fix` gotcha). */
+void *GetSpriteFrame(struct gfx_part *part)
+{
+    register void *rec asm("r1") = part->bank;
+    register u8 *idxAddr asm("r2") = &part->tag;
+    register u8 idx asm("r4") = *idxAddr;
+    s32 offset = idx * sizeof(struct sprite_anim);
+
+    rec = (void *)((struct sprite_bank *)rec)->anims;
+    rec = (u8 *)rec + offset; /* &bank->anims[part->tag] */
+
+    if (part->animDone != 0) {
+        register s32 mask asm("r0") = SPRITE_ANIM_LOOP;
+        register s32 flags asm("r2") = ((struct sprite_anim *)rec)->flags;
+        register s32 test asm("r0");
+
+        test = mask & flags;
+        if (!test) {
+            part->frame = ((struct sprite_anim *)rec)->frameCount - 1;
+            part->stepTimer = ((struct sprite_anim *)rec)->duration;
+        }
+    }
+
+    {
+        struct sprite_bank *bank = (struct sprite_bank *)part->bank;
+        s32 frameIdx = part->frame;
+        register void *recPtr asm("r1") = (void *)((struct sprite_anim *)rec)->seq;
+        register s32 byteOffset asm("r0") = frameIdx * 2;
+        register u16 *arr asm("r0");
+        register void **ptrArray asm("r1");
+        u16 idx2;
+
+        /* The ROM's `adds r0, r0, r1` (byteOffset-then-recPtr operand
+         * order) versus this compiler's always-canonicalized
+         * `adds r0, r1, r0` - see the doc comment above. */
+        asm volatile(
+            "add r0, r0, r1\n\t"
+            : "=r"(arr)
+            : "0"(byteOffset), "r"(recPtr)
+        );
+
+        ptrArray = (void **)bank->frames;
+        idx2 = *arr;
+        return ptrArray[idx2];
+    }
+}
+asm(".align 2, 0");
+
+extern void *gLevelLayers;
+
+/* If `gLevelLayers+0x2b` is nonzero, returns
+ * `(gLevelLayers's sub-object)+0x34`'s low 2 bits minus 1;
+ * otherwise returns those same low 2 bits unmodified. Same
+ * `gLevelLayers` sub-object convention used throughout this ROM
+ * region (see `IsSpriteObjOnScreen`/`IsEntityNearCamera`). */
+s32 GetSpriteObjPriority(void)
+{
+    if (*((u8 *)gLevelLayers + 0x2b) == 0) {
+        void *subObj = *(void **)((u8 *)gLevelLayers + 0x10);
+        u8 byte2 = *((u8 *)subObj + 0x34);
+        u32 result = ((u32)byte2 << 30) >> 30;
+        return result;
+    } else {
+        void *subObj = *(void **)((u8 *)gLevelLayers + 0x10);
+        u8 byte2 = *((u8 *)subObj + 0x34);
+        u32 result = ((u32)byte2 << 30) >> 30;
+        return result - 1;
+    }
+}
+
+extern void *OperatorNew(s32 size);
+extern struct actor *InitEntity(struct actor *self);
+extern void ResetSpriteObj(void *arg0);
+extern u8 gSpriteObjVtable[];
+
+/* Allocates a new `struct actor`-shaped object (`OperatorNew`),
+ * initializes it via `InitEntity` (already matched in graphics.c -
+ * wires up `gEntityVtable` and clears flags), then overwrites
+ * its table with `gSpriteObjVtable` instead and clears its
+ * part-object fields via `ResetSpriteObj` (already matched in
+ * actor_part.c). `arg0` becomes `field_08`, `arg1`/`arg2` become the
+ * Q8 `x`/`y` position. */
+struct actor *CreateSpriteObj(u16 arg0, u16 arg1, u16 arg2)
+{
+    struct actor *part = OperatorNew(0x40);
+
+    InitEntity(part);
+    part->table = gSpriteObjVtable;
+    ResetSpriteObj(part);
+    part->field_08 = arg0;
+    part->x = (s32)arg1 << 8;
+    part->y = (s32)arg2 << 8;
+    return part;
+}
+
+/* Always-true stub. */
+s32 GetSpriteObjClassId(void)
+{
+    return 1;
+}
+
+extern void OperatorDelete(void *arg0);
+extern u8 gEntityVtable[];
+
+/* Same `gEntityVtable`/conditional-`OperatorDelete` shape as
+ * `DestroyEntity` (already matched in `graphics.c`). */
+void DestroySpriteObj(struct actor *self, u32 arg1)
+{
+    self->table = gEntityVtable;
+    if (arg1 & 1) {
+        OperatorDelete(self);
+    }
+}
+
+/* Same `InitEntity`/table-swap/`ResetSpriteObj` shape as `CreateSpriteObj`
+ * above, but re-initializes an existing `self` instead of allocating
+ * a new one. */
+struct actor *InitSpriteObj(struct actor *self)
+{
+    InitEntity(self);
+    self->table = gSpriteObjVtable;
+    ResetSpriteObj(self);
+    return self;
+}
+
+extern u8 gEmptySpritePoint[];
+
+/* Looks up `part`'s keyframe record via `GetSpriteFrame` (already parked
+ * as `NON_MATCHING` in `actor_part5.c`), then picks a pointer off it
+ * per the record's `+4` byte's upper nibble: 0 -> `info+0x24`, 6 ->
+ * `info+0x14`, anything else (1-5, or above 6) -> the fixed fallback
+ * table `gEmptySpritePoint`. Needed the case labels scattered
+ * out of numeric order (rather than grouped into the obvious
+ * contiguous "0 / 1-5 / 6" ranges) to get gcc to emit a real jump
+ * table instead of a compare chain - this compiler only builds a
+ * jump table when the case-to-block mapping can't be expressed as a
+ * few simple range checks, so a source-level shape that *looks*
+ * needlessly scattered is what is needed to match the ROM's own
+ * jump table here. */
+void *GetSpriteFrameAnchor(void *part)
+{
+    void *info = GetSpriteFrame(part);
+    u8 type = *(u8 *)(*(void **)((u8 *)info + 4)) >> 4;
+    void *result;
+
+    switch (type) {
+    case 0:
+        result = (u8 *)info + 0x24;
+        break;
+    case 3:
+    case 4:
+        result = gEmptySpritePoint;
+        break;
+    case 1:
+    case 2:
+        result = gEmptySpritePoint;
+        break;
+    case 5:
+        result = gEmptySpritePoint;
+        break;
+    case 6:
+        result = (u8 *)info + 0x14;
+        break;
+    default:
+        result = gEmptySpritePoint;
+        break;
+    }
+    return result;
+}
+
+extern u8 gEmptySpriteBox[];
+
+/* Same `GetSpriteFrame`-derived-record-nibble-switch shape as
+ * `GetSpriteFrameAnchor` above, with a different result mapping: 0 and 4
+ * select `info+0x1c`, anything else falls back to
+ * `gEmptySpriteBox`. Unlike `GetSpriteFrameAnchor`, no case-scattering
+ * trick was needed here - 0 and 4 are already non-adjacent, which is
+ * enough on its own to make gcc emit a jump table instead of a
+ * compare chain. */
+void *GetSpriteFrameThirdBox(void *part)
+{
+    void *info = GetSpriteFrame(part);
+    u8 type = *(u8 *)(*(void **)((u8 *)info + 4)) >> 4;
+    void *result;
+
+    switch (type) {
+    case 0:
+        result = (u8 *)info + 0x1c;
+        break;
+    case 1:
+    case 2:
+    case 3:
+        result = gEmptySpriteBox;
+        break;
+    case 4:
+        result = (u8 *)info + 0x1c;
+        break;
+    case 5:
+    case 6:
+        result = gEmptySpriteBox;
+        break;
+    default:
+        result = gEmptySpriteBox;
+        break;
+    }
+    return result;
+}
+
+/* Same `GetSpriteFrame`-derived-record-nibble `switch` shape again, with
+ * the exact same case-to-block mapping as `GetSpriteAttackBox` (already
+ * matched in `actor_part2.c`) - 0/3/4 select `info+0x14`, 5 selects
+ * `info+0xc`, and 1/2/6/anything-above-6 fall back to
+ * `gEmptySpriteBox`. That mapping is non-contiguous on its own,
+ * so plain ascending case order was enough for a jump table here too,
+ * no scattering needed. */
+void *GetSpriteFrameAttackBox(void *part)
+{
+    void *info = GetSpriteFrame(part);
+    u8 type = *(u8 *)(*(void **)((u8 *)info + 4)) >> 4;
+    void *result;
+
+    switch (type) {
+    case 0:
+    case 3:
+    case 4:
+        result = (u8 *)info + 0x14;
+        break;
+    case 1:
+    case 2:
+    case 6:
+        result = gEmptySpriteBox;
+        break;
+    case 5:
+        result = (u8 *)info + 0xc;
+        break;
+    default:
+        result = gEmptySpriteBox;
+        break;
+    }
+    return result;
+}
+
+/* Same `GetSpriteFrame`-derived-record-nibble `switch` shape once more -
+ * 0/2/3/4/6 select `info+0xc`, 1/5/anything-above-6 fall back to
+ * `gEmptySpriteBox`. */
+void *GetSpriteFrameBodyBox(void *part)
+{
+    void *info = GetSpriteFrame(part);
+    u8 type = *(u8 *)(*(void **)((u8 *)info + 4)) >> 4;
+    void *result;
+
+    switch (type) {
+    case 0:
+        result = (u8 *)info + 0xc;
+        break;
+    case 1:
+        result = gEmptySpriteBox;
+        break;
+    case 2:
+    case 3:
+    case 4:
+        result = (u8 *)info + 0xc;
+        break;
+    case 5:
+        result = gEmptySpriteBox;
+        break;
+    case 6:
+        result = (u8 *)info + 0xc;
+        break;
+    default:
+        result = gEmptySpriteBox;
+        break;
+    }
+    return result;
+}
+
+/* Same keyframe-record lookup used throughout this ROM region (see
+ * `GetSpriteObjHitbox`) - `part`'s `+0x20` table pointer dereferenced twice,
+ * indexed by the `+0x2d` frame index, times the record size (0x1c). */
+void *GetSpriteAnimRecord(struct actor *part)
+{
+    register void **tablePtr asm("r2") = *(void ***)((u8 *)part + 0x20);
+    register u8 idx asm("r3") = *((u8 *)part + 0x2d);
+    s32 offset = idx * 0x1c;
+    void *table = *tablePtr;
+    return (u8 *)table + offset;
+}
+
+/* Clamps `frame` to `part`'s current keyframe record's duration
+ * (`+0x16`) minus one if it's out of range, then stores the result
+ * into `part+0x30` (the frame index also read/written by
+ * `GetSpriteFrame`). Needed explicit register pins on the whole
+ * tablePtr/idxAddr/table/idx chain to get the ROM's `r5` (rather than
+ * a tighter, naturally-reused register) - `idx` genuinely outlives
+ * `table`'s own register here. The final `rec = table + offset` add
+ * also hit the resistant "which operand goes first" canonicalization
+ * documented at length for `sub_8008188`/`sub_8008200`/
+ * `sub_8008278`/`GetSpriteFrame` - but unlike those (which were inside a
+ * `switch` and had to be parked to avoid breaking case-block merging),
+ * this function has no such constraint, so a one-instruction inline
+ * `asm` anchor for just this add gets a fully byte-exact match. */
+void SetSpriteFrameIndex(struct actor *part, s32 frame)
+{
+    register void **tablePtr asm("r0") = *(void ***)((u8 *)part + 0x20);
+    register u8 *idxAddr asm("r2") = (u8 *)part + 0x2d;
+    register void *table asm("r1") = *tablePtr;
+    register u8 idx asm("r5") = *idxAddr;
+    register s32 offset asm("r0") = idx * 0x1c;
+    void *rec;
+
+    asm("add %0, %0, %1" : "+r" (offset) : "r" (table));
+    rec = (void *)offset;
+
+    {
+        u8 duration = *((u8 *)rec + 0x16);
+
+        if (frame >= duration) {
+            frame = duration - 1;
+        }
+        *(s32 *)((u8 *)part + 0x30) = frame;
+    }
+}
+
+/* `part+0x25` accessor pair - plain byte get/set, no other logic. */
+u8 GetSpriteScreenSpace(void *part)
+{
+    return *((u8 *)part + 0x25);
+}
+
+void SetSpriteScreenSpace(void *part, u8 val)
+{
+    *((u8 *)part + 0x25) = val;
+}
+
+/* `part+0xd` bit-2 getter. */
+s32 IsSpriteHidden(void *part)
+{
+    return (*((u8 *)part + 0xd) >> 2) & 1;
+}
+
+/* Toggles `part+0xd` bit 2. Needed the bit-flip (`(byte>>2)^1)&1`)
+ * done via genuinely separate `eor`+`and` instructions instead of the
+ * single `bic` this compiler normally folds that pattern into -
+ * forced via a two-instruction inline `asm` block, whose "one" input
+ * also needed marking `+r` (read-write) even though its value never
+ * changes, purely to stop the compiler from constant-propagating its
+ * value 1 past the asm block and computing the later mask (`-5`) as
+ * `1 - 6` off of it instead of the ROM's fresh `movs r1, #5; negs r1,
+ * r1`. Also needed the shifted-bit computed before (not after) the
+ * mask, matching the ROM's own instruction order. */
+void ToggleSpriteHidden(void *part)
+{
+    register u32 byte asm("r3") = *((u8 *)part + 0xd);
+    register u32 shifted asm("r2") = byte >> 2;
+    register u32 one asm("r1") = 1;
+    register u32 bit asm("r2");
+    register u32 shiftedBit asm("r2");
+    register s32 mask asm("r1");
+    register s32 result asm("r1");
+
+    asm("eor %0, %0, %2\n\tand %0, %0, %2" : "=r" (bit), "+r" (one) : "1" (one), "0" (shifted));
+    shiftedBit = bit << 2;
+
+    mask = -5;
+    result = mask & byte;
+    result |= shiftedBit;
+    *((u8 *)part + 0xd) = result;
+}
+
+/* `part+0xd` bit-3 getter - same shape as `IsSpriteHidden` above, one
+ * bit over. */
+s32 IsPartSolid(void *part)
+{
+    return (*((u8 *)part + 0xd) >> 3) & 1;
+}
+
+/* Clears `part+0xd` bit 3. Needed the mask register-pinned to a
+ * literal `-9` (computed via `movs r1, #9; negs r1, r1`, same
+ * `-(N+1) == ~N` trick as `ToggleSpriteHidden`'s `-5` mask above) instead of
+ * `~8`, which this compiler folds directly into a single `mov #0xf7`
+ * immediate load. */
+void ClearPartSolid(void *part)
+{
+    register s32 mask asm("r1") = -9;
+    register s32 byte asm("r2") = *((u8 *)part + 0xd);
+    register s32 result asm("r1");
+
+    result = mask & byte;
+    *((u8 *)part + 0xd) = result;
+}
+
+/* Sets `part+0xd` bit 3. Needed the mask register-pinned and computed
+ * before the byte load (matching the ROM's own instruction order) -
+ * the natural allocation loads the byte first. Same accumulator-
+ * register pattern used for every AND/OR accessor below. */
+void SetPartSolid(void *part)
+{
+    register s32 mask asm("r1") = 8;
+    register s32 byte asm("r2") = *((u8 *)part + 0xd);
+    register s32 result asm("r1");
+
+    result = mask | byte;
+    *((u8 *)part + 0xd) = result;
+}
+
+/* `part->flags` bit-6 getter. */
+s32 IsSpriteObjVulnerable(struct actor *part)
+{
+    return (part->flags >> 6) & 1;
+}
+
+/* Clears `part->flags` bit 6. */
+void ClearSpriteObjVulnerable(struct actor *part)
+{
+    register s32 mask asm("r1") = -0x41;
+    register s32 byte asm("r2") = part->flags;
+    register s32 result asm("r1");
+
+    result = mask & byte;
+    part->flags = result;
+}
+
+/* Sets `part->flags` bit 6. */
+void SetSpriteObjVulnerable(struct actor *part)
+{
+    register s32 mask asm("r1") = 0x40;
+    register s32 byte asm("r2") = part->flags;
+    register s32 result asm("r1");
+
+    result = mask | byte;
+    part->flags = result;
+}
+
+/* Resets `part`'s frame index (`+0x2d`) to 0. */
+void ResetSpriteAnimIndex(void *part)
+{
+    *((u8 *)part + 0x2d) = 0;
+}
+
+/* `part->flags` bit-7 getter - no mask needed since the shift already
+ * leaves only that bit in position 0 of an 8-bit value. */
+s32 IsSpriteObjCollisionEnabled(struct actor *part)
+{
+    return part->flags >> 7;
+}
+
+/* Clears `part->flags` bit 7. */
+void DisableSpriteObjCollision(struct actor *part)
+{
+    register s32 mask asm("r1") = 0x7f;
+    register s32 byte asm("r2") = part->flags;
+    register s32 result asm("r1");
+
+    result = mask & byte;
+    part->flags = result;
+}
+
+/* Sets `part->flags` bit 7. */
+void EnableSpriteObjCollision(struct actor *part)
+{
+    register s32 mask asm("r1") = 0x80;
+    register s32 byte asm("r2") = part->flags;
+    register s32 result asm("r1");
+
+    result = mask | byte;
+    part->flags = result;
+}
+
+/* `part+0x2c` byte get/set pair. */
+u8 GetSpriteAnimating(void *part)
+{
+    return *((u8 *)part + 0x2c);
+}
+
+void SetSpriteAnimating(void *part, u8 val)
+{
+    *((u8 *)part + 0x2c) = val;
+}
+
+/* Sets `part+0x28` bit 4 to `value & 1`. Needed the low-bit extraction
+ * done via a two-instruction inline `asm` AND (rather than this
+ * compiler's own `& 1`, which produces the same result but as three
+ * instructions once the u8 parameter's mandatory entry truncation is
+ * folded in) - and, as with `ToggleSpriteHidden`, the "1" input needed
+ * marking `+r` to stop the mask constant `-0x11` from being computed
+ * relative to that leftover register value instead of freshly. */
+void SetSpriteFlipX(void *part, u8 value)
+{
+    register s32 truncVal asm("r1") = value;
+    register u8 *addr asm("r0") = (u8 *)part + 0x28;
+    register s32 one asm("r2") = 1;
+    register s32 shiftedBit asm("r1");
+    register s32 mask asm("r2");
+    register s32 byte asm("r3");
+    register s32 result asm("r2");
+
+    asm("and %0, %0, %1" : "+r" (truncVal), "+r" (one));
+    shiftedBit = truncVal << 4;
+    mask = -0x11;
+    byte = *addr;
+    result = mask & byte;
+    result |= shiftedBit;
+    *addr = result;
+}
+
+/* Same shape as `SetSpriteFlipX` immediately above, sets `part+0x28` bit
+ * 5 instead. */
+void SetSpriteFlipY(void *part, u8 value)
+{
+    register s32 truncVal asm("r1") = value;
+    register u8 *addr asm("r0") = (u8 *)part + 0x28;
+    register s32 one asm("r2") = 1;
+    register s32 shiftedBit asm("r1");
+    register s32 mask asm("r2");
+    register s32 byte asm("r3");
+    register s32 result asm("r2");
+
+    asm("and %0, %0, %1" : "+r" (truncVal), "+r" (one));
+    shiftedBit = truncVal << 5;
+    mask = -0x21;
+    byte = *addr;
+    result = mask & byte;
+    result |= shiftedBit;
+    *addr = result;
+}
+
+/* `part+0x38` ("done" flag, also read/written by `GetSpriteFrame`)
+ * setter. */
+void SetSpriteAnimDone(void *part, u8 val)
+{
+    *((u8 *)part + 0x38) = val;
+}
+
+/* Same keyframe-record lookup used throughout this ROM region (see
+ * `GetSpriteObjHitbox`/`GetSpriteAnimRecord`), returning the record's `+0x14` byte
+ * instead of the record pointer itself. The final `rec = table +
+ * offset` add hit the same resistant operand-order gap as
+ * `SetSpriteFrameIndex` - fixed the same way, with a one-instruction inline
+ * `asm` anchor. */
+u8 GetSpriteAnimPaletteId(struct actor *part)
+{
+    register void **tablePtr asm("r1") = *(void ***)((u8 *)part + 0x20);
+    register u8 *idxAddr asm("r0") = (u8 *)part + 0x2d;
+    register void *table asm("r2") = *tablePtr;
+    register u8 idx asm("r3") = *idxAddr;
+    register s32 offset asm("r1") = idx * 0x1c;
+    void *rec;
+
+    asm("add %0, %0, %1" : "+r" (offset) : "r" (table));
+    rec = (void *)offset;
+    return *((u8 *)rec + 0x14);
+}
+
+/* `part+0x29` low-nibble getter. */
+s32 GetSpritePalette(void *part)
+{
+    u32 byte = *((u8 *)part + 0x29);
+    return (byte << 0x1c) >> 0x1c;
+}
+
+/* Sets `part+0x29`'s low nibble to `value & 0xf`. Needed the
+ * parameter typed `s32` rather than `u8` - the `& 0xf` mask on a `u8`-
+ * typed parameter compiles to a much longer defensive shift-based
+ * sequence in this compiler (confirmed in isolation), which the ROM
+ * doesn't have. The mask constant also needed the same `+r`-on-the-
+ * other-operand fix as `ToggleSpriteHidden`/`SetSpriteFlipX` to stop it being
+ * computed relative to the leftover "0xf" register value. */
+void SetSpritePalette(void *part, s32 value)
+{
+    register u8 *addr asm("r0") = (u8 *)part + 0x29;
+    register s32 value_ asm("r1") = value;
+    register s32 fifteen asm("r2") = 0xf;
+    register s32 lowNibble asm("r1");
+    register s32 mask asm("r2");
+    register s32 byte asm("r3");
+    register s32 result asm("r2");
+
+    asm("and %0, %0, %1" : "+r" (value_), "+r" (fifteen));
+    lowNibble = value_;
+
+    mask = -0x10;
+    byte = *addr;
+    result = mask & byte;
+    result |= lowNibble;
+    *addr = result;
+}
+
+/* `part+0x20` table-pointer get/set pair. */
+void SetSpriteAnimTable(void *part, void *val)
+{
+    *(void **)((u8 *)part + 0x20) = val;
+}
+
+void *GetSpriteAnimTable(void *part)
+{
+    return *(void **)((u8 *)part + 0x20);
+}
+
+/* Same keyframe-record lookup as `GetSpriteAnimPaletteId` above, testing the
+ * record's `+0x17` flags bit 1 and returning it as a plain 0/1 value.
+ * Matched after the NAKED transcription this function briefly used
+ * (see git history and docs/matching.md's "Parked, not matched:
+ * IsSpriteAnimLooping" entry for that account): every instruction here
+ * matches the ROM up through the `ands r0, r1` on its own, but the
+ * ROM's two trailing byte-truncation instructions (`lsls r0, r0,
+ * #0x18; lsrs r0, r0, #0x18`, narrowing the AND result to the `u8`
+ * return type) got optimized away by this compiler every time it
+ * could prove the AND result (mask is the visible constant 2) already
+ * fits in a byte. Closed with an empty `asm volatile("" : "+r"(test))`
+ * barrier right after the `and`, making `test`'s value opaque to the
+ * optimizer so it can no longer prove the automatic `s32`-to-`u8`
+ * return-value truncation is redundant - the barrier itself emits no
+ * instructions, it just forces the *existing* implicit truncation
+ * back in. An explicit asm block emitting the shift pair directly was
+ * tried first and also produced byte-exact output up through those
+ * two instructions, but always duplicated them (the compiler still
+ * inserted its own separate return-value truncation afterward,
+ * regardless of whether the asm's output was typed `s32` or `u8`) -
+ * the empty-barrier form avoids that by leaving the actual truncation
+ * to the compiler's own return-conversion codegen. */
+u8 IsSpriteAnimLooping(struct actor *part)
+{
+    register void **tablePtr asm("r1") = *(void ***)((u8 *)part + 0x20);
+    register u8 *idxAddr asm("r0") = (u8 *)part + 0x2d;
+    register void *table asm("r2") = *tablePtr;
+    register u8 idx asm("r3") = *idxAddr;
+    register s32 offset asm("r1") = idx * 0x1c;
+    void *rec;
+    register s32 mask asm("r0");
+    register s32 flags asm("r1");
+    register s32 test asm("r0");
+
+    asm("add %0, %0, %1" : "+r" (offset) : "r" (table));
+    rec = (void *)offset;
+
+    mask = 2;
+    flags = *((u8 *)rec + 0x17);
+    test = mask & flags;
+    asm volatile("" : "+r" (test));
+    return test;
 }
 asm(".align 2, 0");
