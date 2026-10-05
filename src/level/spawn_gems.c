@@ -4,7 +4,7 @@
 /* 0x0801EA5C-0x0801EF0C (GitHub issue #30), formerly
  * asm/code_3_2_17_1e990.s: six of the "trigger effect type N" spawners
  * reached through the trigger dispatch table at gStaticData_0816C6C0
- * (SpawnCrateGem is also called directly by game_loop2.c). Each one
+ * (SpawnCrateGem is also called directly by level_state.c). Each one
  * spawns a CreateSpriteObj part with a fixed bank offset, tag and type byte
  * (+0x0A) and registers it with the gUnknown_030012EC manager, unless
  * the level's "already collected" bit for it is set:
@@ -14,13 +14,13 @@
  *   second (0x2B) effect through SpawnEffectPart.
  * - SpawnRedGem/SpawnGreenGem/SpawnYellowGem first ask GetBossIndex whether
  *   the level is in mode 1, and if so hand over to SpawnCortexBossGem
- *   (actor_part_188d0.c) with kind 0/1/2 instead; otherwise they test
+ *   (cortex.c) with kind 0/1/2 instead; otherwise they test
  *   bits 0/2/1 of gLevelState+2.
  *
  * Built with old_agbcc (Makefile OLD_AGBCC_OBJS): the ROM materializes
  * each bit mask before loading the byte it is ANDed with, old_agbcc's
  * tell. Under it all six are plain C with no pins (the current agbcc
- * misses all six - likely also what parked the trigger_effect.c
+ * misses all six - likely also what parked the spawn_gem_platforms.c
  * siblings, issue #31). See docs/matching/issue-30-graphics-loading.md,
  * "Tenth pass". */
 

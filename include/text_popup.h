@@ -2,9 +2,8 @@
 #define GUARD_TEXT_POPUP_H
 
 /* Shared by the enemy spawners in
- * src/graphics/graphics_loading_1ef0c.c, graphics_loading_1fdec.c,
- * graphics_loading_1feec.c, graphics_loading_21280.c and
- * graphics_loading_21668.c (ROM 0x0801EF0C-0x08021BFC; they were read as
+ * src/level/spawn_enemies.c, spawn_bosses.c and
+ * spawn_objects.c (ROM 0x0801EF0C-0x08021BFC; they were read as
  * "two-line text popup" spawners at first, hence the file name). Each
  * builds a sprite part with CreateMovingSprite, attaches a freshly constructed
  * enemy controller (CreateEnemyCtrl) to it, and fills the part's two "collected" bits
@@ -13,7 +12,7 @@
 
 #include "actor.h"
 
-/* The sprite part CreateMovingSprite returns. Same layout as actor_part_188d0.c's
+/* The sprite part CreateMovingSprite returns. Same layout as cortex.c's
  * `struct gfx_part`. The +0x28 bits are declared on a 32-bit base type:
  * with `u8` bitfields the shared `1` constant is a QImode pseudo that CSE
  * merges with `field_0A = 1`, and the allocator no longer matches. */

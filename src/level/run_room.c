@@ -2,12 +2,12 @@
 
 /* GitHub issue #37 follow-up to `docs/matching/issue-37-game-loop-2375c.md`
  * (which matched this function's only caller, `PlayRoom`, in
- * `game_loop39.c`, but left this one "not yet confidently understood
+ * `play_room.c`, but left this one "not yet confidently understood
  * branch-by-branch"). `self` (r7) is the level object `PlayRoom`
  * itself received; `gLevelState` is the separate "level" object
  * most of its own callees take. `gLevelTable` is the confirmed
  * 36-slot, 0x24-byte-stride per-level master table (see
- * `pause_menu_info.c`/`power_dialog_draw.c`/`game_loop17.c`'s own struct views
+ * `pause_menu_info.c`/`power_dialog_draw.c`/`level_query.c`'s own struct views
  * of it) - here indexed by `self+0`, reading its `+0x1c` `isBoss`
  * byte (calls `CheckAllCratesBroken` if clear), then
  * `+0x14`/`+0x18` (`maskAssistDeaths`/`crateAssistDeaths`, fed to `SetMaskAssistDeaths`/`SetCrateAssistDeaths`)
@@ -58,7 +58,7 @@
  * struct needed.
  *
  * **Shared tail**: calls `SetupRoomBlend(self)`/`ResetObjBuffers()` (the
- * latter already matched in `game_loop9.c`), then re-reads the
+ * latter already matched in `room.c`), then re-reads the
  * level-state record's (`self->0x18`) own `+8` "widget kind" field
  * (the same field `PlayRoom` dispatched its own widget-construction
  * switch on) - if it's `1`, re-stamps the player's `+0x2d` byte to
@@ -87,7 +87,7 @@
  * quartet, landing at the **wait loop** (`_08023E5A`/`_08023D7C`,
  * `docs/rom_map.md`'s "Traced the fade-to-black's trigger" section):
  * poll `IsRoomExitRequested` (the `gRoomExitRequested` readiness flag,
- * `game_loop9.c`) each iteration; while not ready and the player's
+ * `room.c`) each iteration; while not ready and the player's
  * `+0xc` bit 0 is clear, run one more "outstanding work" pass
  * (`ResetObjBuffers`/`UpdateRoomFrame`, a `RunPauseMenu` input-driven mini-
  * dispatch that can early-exit this whole function with return value
@@ -265,7 +265,7 @@ extern void *gUnknown_030012EC;
 extern void *gCollidableList;
 extern void *gDecorationList;
 /* Updated and cleared, but never culled or drawn: the invisible objects,
- * the entity type 0x55 room-exit zones (graphics_loading_21280.c) and
+ * the entity type 0x55 room-exit zones (spawn_bosses.c) and
  * SpawnSealSpawner's spawner. */
 extern void *gUpdateOnlyPartList;
 extern void *gInput;

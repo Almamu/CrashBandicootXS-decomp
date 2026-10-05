@@ -3,7 +3,7 @@
 #include "hud.h"
 
 /* Up to three palette colour cycles, at `gPaletteCycles`
- * (`OperatorNew(0x48)`, matching this struct's size). game_loop56.c
+ * (`OperatorNew(0x48)`, matching this struct's size). run_room.c
  * adds them with `targets` = BG palette RAM and `lists` = the palette
  * indices to cycle; every `periods[i]` = 60 / rate frames,
  * `TickPaletteCycles` shifts the colours at those indices by one

@@ -6,9 +6,9 @@ and `sub_8026C3C` were already matched before this pass. Of the remaining
 narrow inline-asm anchors, described below). Nothing parked, nothing left
 raw.
 
-- `src/system/level_layers.c` - 11 functions, the whole of the former
+- `src/level/level_layers.c` - 11 functions, the whole of the former
   `asm/code_3_2_17_266bc.s`.
-- `src/system/tile_slot_pool.c` - 8 functions, the former tail of
+- `src/level/tile_slot_pool.c` - 8 functions, the former tail of
   `asm/code_3_2_17_25fc8.s` (which now ends at `nullsub_26`, part of
   issue #42).
 
@@ -110,7 +110,7 @@ character base block `n` and a source.
   `& 0x7f` before `| 0x80` and derives the `-0xd` mask as `0x80 - 0x8d`
   from the same register; this compiler always folds both. Closed with a
   narrow inline-asm block, same as `InitBgLayer`'s own `+0x34`/`+0x35`
-  updates (`game_loop15.c`, docs/matching/naked-sub_8025d74-matched.md).
+  updates (`bg_layer_init.c`, docs/matching/naked-sub_8025d74-matched.md).
 - **Trailing `asm(".align 2, 0")`** on `tile_slot_pool.c` (caught by the
   full build as a 2-byte `46C0` vs `0000` pad at `0x08026626`).
 

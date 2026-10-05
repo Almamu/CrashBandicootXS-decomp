@@ -42,8 +42,8 @@ const struct actor_pmf gJetpackBomberStateFuncs[7] = {
     ACTOR_PMF(JetpackBomberStateDying),
 };
 
-/* Dispatched by UpdateAirshipFireball (actor_part20b.c) and RunAirshipFireballState
- * (actor_part21b.c). */
+/* Dispatched by UpdateAirshipFireball (airship_fireball.c) and RunAirshipFireballState
+ * (airship_fireball.c). */
 const struct actor_pmf gAirshipFireballStateFuncs[3] = {
     ACTOR_PMF(AirshipFireballStateOrbit),
     ACTOR_PMF(AirshipFireballStateSpiralIn),

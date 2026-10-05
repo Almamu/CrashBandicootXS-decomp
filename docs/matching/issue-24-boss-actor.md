@@ -1,7 +1,7 @@
 # Issue #24: 0x0801967C-0x0801A794, graphics - actor-part controller classes and a boss state machine
 
 All 25 functions of the former `asm/code_3_2_17_188d0_1967c.s` now live
-in the new `src/graphics/actor_part_1967c.c` (named by address, like
+in the new `src/bosses/dingodile.c` (named by address, like
 `input_ctrl.c`). **23 are real C; `SpawnDingodileShark` and `UpdateDingodileShield`
 are NAKED transcriptions** with complete C reconstructions kept under
 `#if NON_MATCHING`. Issue #24 stays open for those two.
@@ -30,7 +30,7 @@ The same holds for `|= 0x10`, for 4-bit bitfield inserts (`movs r1,#0x10;
 rsbs` before the `ldrb`), and for byte stores of a constant through an
 inline setter. Other files handled this pattern with per-site register
 pins (`input_ctrl.c`'s `register s32 m asm("r0") = 0x7F`,
-`graphics_loading_1fdec.c`'s inline-asm `mov r1, #0x10; neg r1, r1`).
+`spawn_enemies.c`'s inline-asm `mov r1, #0x10; neg r1, r1`).
 With `old_agbcc` the natural C gives these sequences with no pins.
 `SpawnDingodileStalactite`, for example, matches as plain C under `old_agbcc` and
 does not match at all under `agbcc`.

@@ -14,7 +14,7 @@ had already characterized most of the pieces from a read-only pass; this
 issue is where they got turned into (attempted) byte-exact C.
 
 - **`struct tile_cache`** (defined identically, but not shared via a
-  header, in `game_loop3.c`/`game_loop4.c`/`game_loop5.c`): 16
+  header, in `bg_layer_base.c`/`tile_cache.c`/`collision_map.c`): 16
   256-byte decode buffers at `+0x20`, 16 resident record-IDs at
   `+0x1020`, and a ring-buffer eviction cursor at `+0x1060`.
   `SetCollisionSource` constructs one from a small level/room descriptor;
@@ -34,7 +34,7 @@ issue is where they got turned into (attempted) byte-exact C.
 - **`ScrollBgLayerBase`/`ResetBgLayerBase`/`SetBgLayerSource`** are a small
   viewport/parallax-scroll-layer object built around the cache (own
   fields not given a struct here - see the doc comment at the top of
-  `game_loop3.c` for why: its full shape spans into still-raw neighbor
+  `bg_layer_base.c` for why: its full shape spans into still-raw neighbor
   functions `ScaleBgLayerScroll`/`StepBgLayerScroll`/`FillBgStreamer`/`SetBgStreamerSource`,
   out of scope for this issue).
 - **`DestroyTileCache`** is the exact same "`flags & 1` -> forward to
@@ -49,11 +49,11 @@ issue is where they got turned into (attempted) byte-exact C.
 
 ## Matched (20 functions, full clean `make compare` passing)
 
-`src/system/game_loop3.c`: `ScrollBgLayerBase`, `ResetBgLayerBase`, `SetBgLayerSource`,
+`src/level/bg_layer_base.c`: `ScrollBgLayerBase`, `ResetBgLayerBase`, `SetBgLayerSource`,
 `IsBgLayerEnabled`, `GetBgLayerY`, `GetBgLayerX`, `GetBgLayerHeightTiles`,
 `GetBgLayerWidthTiles`, `GetBgLayerHeight`, `GetBgLayerWidth`.
-`src/system/game_loop4.c`: `DestroyTileCache`, `nullsub_4`.
-`src/system/game_loop5.c`: `GetCollisionCell`, `SetCollisionSource`, `SetBitmapBit`,
+`src/level/tile_cache.c`: `DestroyTileCache`, `nullsub_4`.
+`src/level/collision_map.c`: `GetCollisionCell`, `SetCollisionSource`, `SetBitmapBit`,
 `ClearBitmapBit`, `ClearBitmap`, `InitBitmap`.
 
 ## Closed as NAKED - 6 functions
@@ -148,7 +148,7 @@ issue is where they got turned into (attempted) byte-exact C.
   `GetSolidTerrainHeights`/`sub_8025228` were closed, so once this one closed too
   the file's contents were empty and it (plus its `ldscript.txt` entry)
   were removed rather than kept as a zero-function husk.
-- **`GetTerrainType`** (`src/system/game_loop4.c`) - the last of
+- **`GetTerrainType`** (`src/level/tile_cache.c`) - the last of
   `GetCollisionChunk`'s `(x, y)`-tile-lookup consumers: returns the raw
   decoded halfword directly (no bounds check, no terrain-table lookup),
   while also writing the cell's top nibble out through `hiOut`. Same

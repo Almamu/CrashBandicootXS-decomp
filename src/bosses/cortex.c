@@ -452,7 +452,7 @@ void DestroyOneShotAnimCtrl(struct gfx_ctrl *self, s32 flags)
 }
 
 /* gUnusedOneShotAnimCtrlVtable's class does what gOneShotAnimCtrlVtable's
- * does (UpdateOneShotAnimCtrl, actor_part27c.c): once the part's animation
+ * does (UpdateOneShotAnimCtrl, tiny_hop_pad.c): once the part's animation
  * is done, mark it gone. Its constructor has no caller, so it is never
  * instantiated. */
 void UpdateUnusedOneShotAnimCtrl(struct gfx_ctrl *self, struct gfx_part *part)

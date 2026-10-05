@@ -123,7 +123,7 @@ right before the first, and `crate_player_collide.o`'s neighbor `CollidePlayerWi
 entry right before the second) - the same "NAKED function embedded in
 an otherwise-matched file still gets its own address-boundary report
 entry" convention already established for `AdvanceSpriteAnim`
-(`sprite.c`)/`UpdateHovercraftCannon`(`actor_part31.c`)-style cases.
+(`sprite.c`)/`UpdateHovercraftCannon`(`hovercraft_cannon.c`)-style cases.
 
 Full clean `rm -rf build crashbandicootxs.elf crashbandicootxs.gba
 crashbandicootxs.map && make compare` confirms `crashbandicootxs.gba:

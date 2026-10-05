@@ -1,7 +1,7 @@
 #include "core.h"
 
-/* Same boss-weapon subsystem as actor_part20.c/actor_part26b.c - see
- * actor_part20.c's header comment and
+/* Same boss-weapon subsystem as airship_fireball.c/airship_load_graphics.c - see
+ * airship_fireball.c's header comment and
  * docs/matching/issue-58-0x08030334-actor.md.
  *
  * Per docs/rom_map.md ("A new mechanism: a procedurally-generated VRAM
@@ -18,7 +18,7 @@
  * `gAirshipMapFrames`-indexed level data.
  *
  * Matched as plain C with the fixes that closed the one-row twin
- * `ConvertHovercraftTiles` (actor_part130.c, see
+ * `ConvertHovercraftTiles` (hovercraft.c, see
  * docs/matching/near-miss-polish-3.md). */
 extern s32 gAirshipMapCols;
 extern s32 gAirshipMapRows;
@@ -103,7 +103,7 @@ void ConvertAirshipTiles(void)
     }
 }
 
-/* Same boss-weapon subsystem as actor_part20.c - see that file's header
+/* Same boss-weapon subsystem as airship_fireball.c - see that file's header
  * comment and docs/matching/issue-58-0x08030334-actor.md. */
 
 extern s32 gAirshipStateTimer;

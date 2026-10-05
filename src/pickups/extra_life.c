@@ -306,7 +306,7 @@ void UpdateExtraLife(struct orbit_part *self)
 }
 
 /* `struct actor *CreateExtraLife(u16 arg0, u16 arg1, u16 arg2, s32 arg3)` -
- * spawns a part-object; extern already declared in `game_loop29.c`.
+ * spawns a part-object; extern already declared in `drop_extra_life.c`.
  * `arg3` is never actually read (the ROM hardcodes the field it would
  * feed - `self+0x29`/`+0x2a`/`+0x2b` - to a compile-time `0`
  * regardless), matching the extern's own always-`0` call sites.
@@ -351,7 +351,7 @@ struct orbit_part *CreateExtraLife(u16 id, u16 x, u16 y, s32 unused)
 }
 
 /* `void SendExtraLifeToHud(void *part)` - extern already declared in
- * `game_loop29.c`; the documented "mutually exclusive alternative" is
+ * `drop_extra_life.c`; the documented "mutually exclusive alternative" is
  * `SendWumpaToHud` (`wumpa_update.c`, already matched). Plays a hit SFX,
  * sets `self->0x48 = 1`, nudges `self->x -= self->0x4a<<8`, sets
  * `self->0x25 = 1`, calls `WorldToScreen(self, x>>8, y>>8, &outX, &outY)`
@@ -432,7 +432,7 @@ void SendExtraLifeToHud(void *selfArg)
  *                       `UpdateExtraLifeHop`
  *
  * Confirms this is a small "orbiting hazard" behavior mixed into the
- * same object type `CreateExtraLife`/`SendExtraLifeToHud` (game_loop29.c,
+ * same object type `CreateExtraLife`/`SendExtraLifeToHud` (drop_extra_life.c,
  * Phase 2's neighboring group) spawn/manage - `SetExtraLifePos` seeds an
  * orbit anchor+start position, `SetExtraLifeHop` (re)starts the orbit at a
  * given mode/phase 0, `SetExtraLifeCounter` sets an adjacent still-unexamined
@@ -465,7 +465,7 @@ extern s32 gExtraLifeHopWidths[3];
 /* Phase 2's neighboring group (not read/matched this pass) - the
  * randomized-position despawn picker `docs/rom_map.md` already
  * documents, called as `PickUpWumpa(entry, 1)`/`(other, 1)` elsewhere
- * (`game_loop40.c`/`crate_break.c`). */
+ * (`time_trial.c`/`crate_break.c`). */
 extern void PickUpWumpa(void *self, s32 mode);
 
 /* Per-frame orbit-position update. Reads the current orbit phase

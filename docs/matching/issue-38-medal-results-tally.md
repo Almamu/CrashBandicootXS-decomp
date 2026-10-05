@@ -31,11 +31,11 @@ Two loosely related families sharing the same ROM neighborhood:
 
 ## Matched (19 functions, full clean `make compare` passing)
 
-`src/system/game_loop17.c` (`sub_802425C`-`CountLevelCrates`, 3 fns):
+`src/level/level_query.c` (`sub_802425C`-`CountLevelCrates`, 3 fns):
 `sub_802425C` (bit-tested `OperatorDelete` teardown wrapper), `nullsub_25`
 (empty stub), `CountLevelCrates` (the medal-table per-level tally).
 
-`src/system/game_loop18.c` (`IsInGemPathRoom`-`SelectRoom`, 13 fns):
+`src/level/level_query.c` (`IsInGemPathRoom`-`SelectRoom`, 13 fns):
 `IsInGemPathRoom`/`IsInBonusRoom` (medal item-list `extra2`/`extra1`-matches-
 cached-value checks), `LevelHasYellowGemEntity`/`LevelHasBlueGemEntity`/`LevelHasGreenGemEntity`/
 `LevelHasRedGemEntity`/`LevelHasGemPathGemEntity` (thin wrappers over `LevelHasEntityType` with a

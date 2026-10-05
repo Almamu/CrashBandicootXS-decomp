@@ -1,9 +1,9 @@
 #include "core.h"
 #include "actor_self.h"
 
-/* Same boss-weapon subsystem as actor_part20.c - see that file's header
+/* Same boss-weapon subsystem as airship_fireball.c - see that file's header
  * comment and docs/matching/issue-58-0x08030334-actor.md.
- * `gAirship` is the same small tracker object actor_part23.c
+ * `gAirship` is the same small tracker object airship_fall.c
  * documents. */
 
 extern s32 GetAnimFrameBaseOffset(void *self);

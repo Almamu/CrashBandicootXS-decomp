@@ -185,7 +185,7 @@ struct fx_part *SpawnEffectPart(void *unused0, s32 anim, s32 tag, s32 x, s32 y, 
 }
 
 /* Same early-out and `+0x49`/`+0x4a`/`+0x4b` tagging shape as
- * `DropExtraLife` (game_loop29.c), but spawns via `CreateWumpa` with a
+ * `DropExtraLife` (drop_extra_life.c), but spawns via `CreateWumpa` with a
  * "special" 4th argument (`0xFFFF` when `p5` is set or `p4 == 0xff`,
  * `0` otherwise) and fires `StartWumpaPayout`/`SendWumpaToHud` instead of
  * `SendExtraLifeToHud`.

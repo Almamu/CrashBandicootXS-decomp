@@ -12,7 +12,7 @@ This chunk turned out to be two interleaved families:
    32-bit-word-per-row bitmap arrays living at `self+8`/`self+0x208`/
    `self+0x308`, using the exact same "floor-divide-by-32, adjust for
    negative n by `+0x1f` before the shift" idiom already proven in
-   `SetBitmapBit`/`ClearBitmapBit` (game_loop5.c, issue #40). Getting these
+   `SetBitmapBit`/`ClearBitmapBit` (collision_map.c, issue #40). Getting these
    byte-exact took real iteration on **statement order**, not register
    pins: this compiler folds a `base + fixedOffset + (index << 2)`
    pointer expression differently depending on whether the fixed
@@ -42,16 +42,16 @@ This chunk turned out to be two interleaved families:
    **table-indexed function-pointer dispatcher** (`SpawnEntity`) and a
    **jump-table list counter** (`CountCrateEntities`) - these reuse the
    `struct actor` + `gSpriteBankSet` triple-indirection convention
-   already established in `moving_sprite.c`/`trigger_effect.c`.
+   already established in `moving_sprite.c`/`spawn_gem_platforms.c`.
 
 ## Matched (16 of 25)
 
-`sub_8025944`, `sub_8025968`, `sub_802599C` (game_loop12.c),
+`sub_8025944`, `sub_8025968`, `sub_802599C` (entity_flags.c),
 `sub_8025A0C`, `sub_8025A3C`, `DestroyEntityFlags`, `InitEntityFlags`
-(game_loop13.c), `SpawnEntity`, `SetEntitySpawnerTable`, `sub_8025D54`,
-`InitEntitySpawner` (game_loop14.c), `GrowBgLayerRows`, `GrowBgLayerColumns`,
-`ClipBgLayerColumns`, `ClipBgLayerRows` (game_loop15.c), `CommitBgLayerScroll`
-(game_loop16.c). All confirmed via the full clean `make compare`
+(entity_flags.c), `SpawnEntity`, `SetEntitySpawnerTable`, `sub_8025D54`,
+`InitEntitySpawner` (entity_spawner.c), `GrowBgLayerRows`, `GrowBgLayerColumns`,
+`ClipBgLayerColumns`, `ClipBgLayerRows` (bg_layer_init.c), `CommitBgLayerScroll`
+(bg_layer.c). All confirmed via the full clean `make compare`
 cycle, not just isolated compiles.
 
 `SpawnEntity` is worth calling out: it's a table-indexed
@@ -85,23 +85,23 @@ branch and call confirmed) but not iterated to an exact register
 allocation within this issue's scope - each has its own `PARKED, NOT
 BYTE-MATCHING` doc comment at the definition explaining what was tried:
 
-- **`CountCrateEntities`** (game_loop12.c) - the group/item list counter.
+- **`CountCrateEntities`** (entity_flags.c) - the group/item list counter.
   Every operand matches; the remaining gap is that the ROM's
   `item->type == 0x1a` lookup branch does its whole four-load chain
   using only two scratch registers (`r0`/`r1`, aggressively reusing
   each as soon as it's dead), while every C shape tried here needs a
   third register that collides with the outer loop's `i` counter and
   forces an extra `r7` push/pop.
-- **`sub_80259D4`** (game_loop13.c) - the dual bit-grid setter. The
+- **`sub_80259D4`** (entity_flags.c) - the dual bit-grid setter. The
   ROM is a true leaf function (`self` pinned to `ip`/`r12` for the
   whole body, no `push`/`pop` at all); pinning `self` to `ip` here
   gets every operand right but this compiler still inserts an
   unnecessary `push {r4, lr}`/`pop {r4}` pair around the two address
   computations.
 - **`DropExtraLife`/`LaunchEffectPart`/`SpawnEffectPart`/`DropWumpa`**
-  (game_loop14.c) - four part-object spawn helpers, sharing the
+  (entity_spawner.c) - four part-object spawn helpers, sharing the
   `struct actor` + `gSpriteBankSet`-table + OAM/keyframe-trio
-  construction idiom already established in `trigger_effect.c`'s
+  construction idiom already established in `spawn_gem_platforms.c`'s
   parked `SpawnRedGemPlatform` family. Large, register-heavy functions; not
   iterated to an exact allocation within this chunk's scope.
   `SpawnEffectPart`'s two stack-passed parameters (`testY`/`mirrorFlag`)
@@ -111,12 +111,12 @@ BYTE-MATCHING` doc comment at the definition explaining what was tried:
   to hold at that point - an implicit stack-reuse coincidence not
   fully resolved here (passed as `0`/`0` in the C reconstruction,
   flagged with a `NOTE` at the call site).
-- **`InitBgLayer`** (game_loop15.c) - the BG-scroll-layer hardware-
+- **`InitBgLayer`** (bg_layer_init.c) - the BG-scroll-layer hardware-
   register/bitfield initializer. Every field/offset confirmed; two
   small gaps remain in the `& -0x20`/`& -0xd` bitfield masks and in
   hoisting `bgIndex+0x1c` into a register that stays live across the
   `InitBgLayerBase` call (see the function's own doc comment for detail).
-- **`ScrollBgLayer`/`DrawBgLayerColumn`** (game_loop16.c) - the screen-edge
+- **`ScrollBgLayer`/`DrawBgLayerColumn`** (bg_layer.c) - the screen-edge
   tile-coordinate computer/streaming driver, and the circular-buffer
   decoded-tile streaming loop. Both are large, register-heavy
   functions (`ScrollBgLayer` keeps `r8` live across most of its body);
@@ -145,7 +145,7 @@ the real (`NON_MATCHING=0`) build each `.c` file only contributes its
 matched functions' bytes (the guarded parked block compiles to
 nothing), so `ldscript.txt` still places the untouched raw asm
 fragment immediately after it at the correct address. `sub_8025944`'s
-own file (`game_loop12.c`) needed one addition beyond this: an
+own file (`entity_flags.c`) needed one addition beyond this: an
 explicit trailing `asm(".align 2, 0")` after its last matched
 function, reproducing the ROM's own 2-byte zero-fill between
 `sub_802599C`'s end and `sub_80259D4`'s start - without it, `ld`'s
@@ -196,8 +196,8 @@ progress on two of them without reaching a byte-exact match on either
   and still gets folded via a cheaper `subs`/`adds` off the
   previously-loaded constant.
 
-See each function's own updated doc comment (`src/system/game_loop13.c`,
-`src/system/game_loop15.c`) for the full before/after detail.
+See each function's own updated doc comment (`src/level/entity_flags.c`,
+`src/level/bg_layer_init.c`) for the full before/after detail.
 
 ## Update: all eight remaining parked functions converted to byte-exact NAKED transcriptions
 
@@ -207,7 +207,7 @@ of the confirmed-correct ROM disassembly rather than a real C match -
 each hit a genuine, already-catalogued gcc-2.9 codegen limit that plain
 C has no way to work around on this toolchain:
 
-- **`sub_80259D4`** (game_loop13.c) - unchanged from the earlier
+- **`sub_80259D4`** (entity_flags.c) - unchanged from the earlier
   finding above: the ROM's `mov ip, r0` / `adds r2, r1, #0` parameter-
   reload order can't be reproduced from C (tried again this pass with
   an inline-asm anchor forcing both moves in one instruction - see git
@@ -217,7 +217,7 @@ C has no way to work around on this toolchain:
   [naked-sub_80259d4-matched.md](./naked-sub_80259d4-matched.md); this
   entry is left as-is since it's a frozen historical record of why the
   function was originally parked.
-- **`DropExtraLife`** (moved to its own new file, `game_loop29.c`, since
+- **`DropExtraLife`** (moved to its own new file, `drop_extra_life.c`, since
   its address isn't adjacent to any other matched run once
   `LaunchEffectPart`/`SpawnEffectPart`/`DropWumpa` stayed parked) - a real C
   reconstruction (declaring `x`/`y`/`p3`/`p5`/`flag6` as plain
@@ -235,7 +235,7 @@ C has no way to work around on this toolchain:
   constant-folded into a cheaper derived `sub`, one instruction shorter
   than the ROM's genuine two-instruction `movs`/`rsbs` pair. Now
   `NAKED`.
-- **`LaunchEffectPart`/`SpawnEffectPart`/`DropWumpa`** (game_loop14.c, prepended
+- **`LaunchEffectPart`/`SpawnEffectPart`/`DropWumpa`** (entity_spawner.c, prepended
   ahead of the already-matched `SpawnEntity` run - their real addresses
   turned out to be exactly contiguous with it once split out of
   `asm/code_3_2_17_25b0c.s`, so no new file was needed) - `SpawnEffectPart`
@@ -246,14 +246,14 @@ C has no way to work around on this toolchain:
   `flag6`-in-`r7` shape (identical to `DropExtraLife`'s), that this pass
   transcribed all three directly rather than re-discovering the same
   wall three more times. Now `NAKED`.
-- **`InitBgLayer`** (game_loop15.c) - unchanged from the "Update:
+- **`InitBgLayer`** (bg_layer_init.c) - unchanged from the "Update:
   narrowed" finding above (the `& -0x20`/`& -0xd` mask-folding gap);
   now `NAKED` instead of left `NON_MATCHING`. **Since matched as real
   C** - see
   [naked-sub_8025d74-matched.md](./naked-sub_8025d74-matched.md); this
   entry is left as-is since it's a frozen historical record of why the
   function was originally parked.
-- **`ScrollBgLayer`/`DrawBgLayerColumn`** (game_loop16.c) - both large,
+- **`ScrollBgLayer`/`DrawBgLayerColumn`** (bg_layer.c) - both large,
   register-heavy functions (`ScrollBgLayer` keeps `r8` live for the
   screen-edge X-tile-max value computed early but not consumed until
   the very end; `DrawBgLayerColumn` keeps `r8` live across its whole streaming
@@ -287,17 +287,17 @@ off (renamed to start at the next still-genuinely-raw function's
 address):
 
 - `asm/code_3_2_17_259d4.s` - deleted (`sub_80259D4` is now `NAKED` in
-  `game_loop13.c`)
+  `entity_flags.c`)
 - `asm/code_3_2_17_25a64.s` - deleted; `DropExtraLife` is now `NAKED` in
-  the new `game_loop29.c`, `LaunchEffectPart`/`SpawnEffectPart`/`DropWumpa` are
-  now `NAKED` in `game_loop14.c` (prepended ahead of the already-matched
+  the new `drop_extra_life.c`, `LaunchEffectPart`/`SpawnEffectPart`/`DropWumpa` are
+  now `NAKED` in `entity_spawner.c` (prepended ahead of the already-matched
   `SpawnEntity` run, since the addresses turned out contiguous)
 - `asm/code_3_2_17_25d74.s` - deleted (`InitBgLayer` is now `NAKED` in
-  `game_loop15.c`, its file's only function)
+  `bg_layer_init.c`, its file's only function)
 - `asm/code_3_2_17_25e98.s` - deleted (`ScrollBgLayer` is now `NAKED` in
-  `game_loop16.c`, its file's only function)
+  `bg_layer.c`, its file's only function)
 - `asm/code_3_2_17_25f3c.s` - renamed to `asm/code_3_2_17_25fc8.s`
-  (`DrawBgLayerColumn` is now `NAKED` in `game_loop16.c`; the file's
+  (`DrawBgLayerColumn` is now `NAKED` in `bg_layer.c`; the file's
   remainder, `DrawBgLayerRow` onward, is still genuinely raw and out of
   this issue's scope)
 
@@ -375,12 +375,12 @@ With both fixed, the isolated-compile assembly is byte-identical to
 the ROM's raw fragment (previously `asm/code_3_2_17_255d4.s`), and full
 clean `rm -rf build && make NON_MATCHING=1 report` +
 `objdiff-cli report generate` confirm 100.0% fuzzy match for
-`CountCrateEntities` and the whole `game_loop12` unit. `CountCrateEntities` is folded
-into `src/system/game_loop12.o` in `tools/report_units.py` (it's the
+`CountCrateEntities` and the whole `game_loop12` unit (now part of `entity_flags.c`). `CountCrateEntities` is folded
+into `src/level/entity_flags.o` in `tools/report_units.py` (it's the
 first function in that unit now, immediately ahead of `sub_8025944`).
 `asm/code_3_2_17_255d4.s` - which held only `CountCrateEntities` by this
 point - is deleted, with its `ldscript.txt` line dropped (the linker
-now places `game_loop12.o` directly where the raw fragment used to
+now places `entity_flags.o` directly where the raw fragment used to
 sit). Full clean `rm -rf build crashbandicootxs.elf crashbandicootxs.gba
 crashbandicootxs.map && make compare` confirms
 `crashbandicootxs.gba: La suma coincide`.
@@ -395,5 +395,5 @@ been closed (see their own linked write-ups above).
 
 ## Later pass (strag1)
 
-`LaunchEffectPart` and `DropWumpa` (`src/system/game_loop14.c`) are now real
+`LaunchEffectPart` and `DropWumpa` (`src/level/entity_spawner.c`) are now real
 C (old_agbcc). See [strag1-naked-retry.md](strag1-naked-retry.md).

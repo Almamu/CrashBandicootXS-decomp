@@ -15,7 +15,7 @@ The range is split by address into five objects so that
 
 | file | functions | state |
 |---|---|---|
-| `src/graphics/actor_part_1a794.c` | `CreateDingodileShieldCtrl`-`SetDingodileNextState` (6) | matched |
+| `src/bosses/dingodile_create.c` | `CreateDingodileShieldCtrl`-`SetDingodileNextState` (6) | matched |
 | `src/objects/platform_create.c` | `CreatePlatform` | matched (old_agbcc) |
 | `src/objects/platform_contact.c` | `CheckPlatformContact` | matched |
 | `src/objects/platform_collide.c` | `ResolvePlatformCollision` | NAKED (C under NON_MATCHING) |
@@ -35,7 +35,7 @@ r1/r2/r3/r4" thunks), like issue #21's `input_ctrl`.
   bodies of two subclasses of the `CreateBossCtrl` object family
   (`input_ctrl_queue.c`), method tables `gDingodileShieldVtable` and
   `gDingodileVtable` (`DestroyDingodile` is the latter's +0x4C destructor).
-  `CreateDingodile` is called from `graphics_loading_21280.c`.
+  `CreateDingodile` is called from `spawn_bosses.c`.
   `StartDingodileMotion` is `SetMegaMixMotionXFromSet`'s mirror-gated velocity copy, but taking
   its record index straight from `gDingodileMotionEntries` (8-byte `{a, b}`
   pairs into the 12-byte `gDingodileMotionRecords` vectors).
@@ -46,8 +46,8 @@ r1/r2/r3/r4" thunks), like issue #21's `input_ctrl`.
   at +0xC), derives `type` (+0x78) from the record or forces it from `kind`
   (3/9-12 -> 4, 4 -> 2, 5 -> 3, 6 -> 6, 8 -> 7), and for types 1/5/6/7
   attaches a `struct mover` (type 6 uses `CreateCortexBossPlatformMover` instead when
-  `GetBossIndex(gLevelState) == 1`). Callers: `trigger_effect.c`,
-  `graphics_loading_21280.c`, `graphics_loading_21668.c`.
+  `GetBossIndex(gLevelState) == 1`). Callers: `spawn_gem_platforms.c`,
+  `spawn_bosses.c`, `spawn_objects.c`.
   - `CheckPlatformContact` (+0x0C) gates `ResolvePlatformCollision` on the player
     (`gPlayer`) being active and within 0x7FFF on both axes.
   - `ResolvePlatformCollision` resolves player-vs-object contact: two AABBs from
@@ -62,7 +62,7 @@ r1/r2/r3/r4" thunks), like issue #21's `input_ctrl`.
     overlap it only refreshes `carried` or clears the mover's `active`.
   - `UpdatePlatform` (+0x1C) steps or destroys the object and forwards to its
     mover; `sub_801B29C`/`sub_801B2A8` read/write bit 4 of +0x0D
-    (`sub_801B29C` is called from `game_loop56.c`); `sub_801B2D8` clears
+    (`sub_801B29C` is called from `run_room.c`); `sub_801B2D8` clears
     bit 6 of +0x0C; `DestroyPlatform` is the destructor.
 - **`struct mover`** (0x38 bytes, method table `gPlatformMoverVtable`,
   constructor `CreatePlatformMover`, destructor `DestroyPlatformMover`): an oscillating

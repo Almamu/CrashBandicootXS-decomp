@@ -101,7 +101,7 @@ and [graphics_loading.md](./graphics_loading.md).
   register pins and barriers.
   See [docs/matching/issue-21-input-ctrl.md](../matching/issue-21-input-ctrl.md).
 
-- `src/graphics/actor_part_188d0.c` (new file - GitHub issue #23):
+- `src/bosses/cortex.c` (new file - GitHub issue #23):
   all 25 functions in `CreateOneShotAnimCtrl`-`CreateCortexShotCtrl` as real C -
   method-table ("vtable" at `self+0xc`) constructor/destructor pairs
   (`CreateUnusedOneShotAnimCtrl` is UNUSED; `CreateCortexBossPlatformMover` base-constructs through
@@ -135,7 +135,7 @@ and [graphics_loading.md](./graphics_loading.md).
   the BG2 icon layer's constructor `InitZoomBg`. `CommitLevelSelectFrame` is
   UNUSED. Compiled with `old_agbcc`. See
   [docs/matching/issue-27-level-select-pages.md](../matching/issue-27-level-select-pages.md).
-- `src/graphics/actor_part_1967c.c` (new file - GitHub issue #24):
+- `src/bosses/dingodile.c` (new file - GitHub issue #24):
   `sub_801967C`-`DestroyDingodileShieldCtrl` except the two NAKED ones below (23 of 25
   functions) - six small C++ actor-part controller classes (method
   tables `gCortexTargetVtable`/`476C`/`47D4`/`483C`/`48A4`/`490C`:
@@ -147,7 +147,7 @@ and [graphics_loading.md](./graphics_loading.md).
   anywhere in the ROM). See
   [docs/matching/issue-24-boss-actor.md](../matching/issue-24-boss-actor.md).
 - GitHub issue #25 (0x0801A794-0x0801B85C, shared structs in
-  `include/gobj_1a794.h`): `src/graphics/actor_part_1a794.c`
+  `include/gobj_1a794.h`): `src/bosses/dingodile_create.c`
   (`CreateDingodileShieldCtrl`-`SetDingodileNextState`), `src/objects/platform_contact.c`
   (`CheckPlatformContact`) and `src/objects/platform.c`
   (`UpdatePlatform`-`ClearPlatformMoverActive`) - 23 functions: the level-object class
@@ -175,7 +175,7 @@ and [graphics_loading.md](./graphics_loading.md).
 - **Near-miss polish pass:** `LevelSelectLoop` (`level_select.c`,
   level-select main loop) promoted from NAKED to real C under old_agbcc.
   See [near-miss-polish.md](../matching/near-miss-polish.md).
-- **Issue #24/#26 NAKED retry:** `SpawnDingodileShark` (`actor_part_1967c.c`,
+- **Issue #24/#26 NAKED retry:** `SpawnDingodileShark` (`dingodile.c`,
   floor-part spawner) and `InitLevelSelect` (`level_select.c`,
   level-select constructor) promoted from NAKED to real C, both under
   old_agbcc. See
@@ -185,7 +185,7 @@ and [graphics_loading.md](./graphics_loading.md).
   old_agbcc: the ROM's stack-spilled second copy of the record pointer
   is a separate local that `info` copies. See
   [docs/matching/near-miss-polish-3.md](../matching/near-miss-polish-3.md).
-- **Hard-register hold pass:** `UpdateDingodileShield` (`actor_part_1967c.c`,
+- **Hard-register hold pass:** `UpdateDingodileShield` (`dingodile.c`,
   issue #24, the `gDingodileShieldVtable` controller's per-frame update)
   promoted from NAKED to real C under old_agbcc. r5/r6 held live across
   the box builders make global-alloc start the long-lived values at r7,

@@ -44,7 +44,7 @@ const struct actor_pmf gInputCtrlStateFuncs[4] = {
 
 /* An entry set as gobj_1a794.h's `struct mover` points at it (`set`,
  * +0x04): the {a, b} entries (`struct vec_pair`) and a word the code
- * doesn't read, 0x100 in every set in the ROM. actor_part27b.c stores
+ * doesn't read, 0x100 in every set in the ROM. mega_mix.c stores
  * gMegaMixMotionSet there. */
 struct entry_set
 {

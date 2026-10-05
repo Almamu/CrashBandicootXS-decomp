@@ -40,8 +40,8 @@ extern u8 gActionCtrlMotionSet[];
 extern u8 gPlayerCtrlMotionSet[];
 extern u8 gInputCtrlMotionSet[];
 
-/* PlayRoom's argument (game_loop55.c passes `&self->level`; the same
- * record game_loop56.c's RunRoom reads as `struct gl_self`). */
+/* PlayRoom's argument (game_frame.c passes `&self->level`; the same
+ * record run_room.c's RunRoom reads as `struct gl_self`). */
 struct level_start_args {
     s32 level;                      // 0x00
     u8 unk_04[0xC];

@@ -25,10 +25,10 @@ extern void ***gSpriteBankSet;
  * (`CreateSpriteObj(0, 0, 0, 0)`, the same allocator `sprite_obj.c`'s
  * `CreateSpriteObj` is - called here with an extra, unused 4th zero
  * argument, the same calling convention already used by
- * `graphics_loading_21d80.c`'s own callers of it) and hooks it up at
+ * `spawn_pickups.c`'s own callers of it) and hooks it up at
  * `self+0xb0`: points its own `+0x20` table-entry pointer at the
  * `gSpriteBankSet` shared table's `(0xcc << 1)` slot (the same
- * idiom `graphics_loading_21d80.c` uses throughout), clears its
+ * idiom `spawn_pickups.c` uses throughout), clears its
  * `+0x2d` byte, and builds it via the standard `ResetSpriteFrameTimer`/
  * `ResetSpriteFrameIndex`/`SetSpriteAnimDone` OAM trio. Clears `self+0xb4`, then
  * calls `ResetPlayer` (matched in `player_reset.c`) to finish resetting

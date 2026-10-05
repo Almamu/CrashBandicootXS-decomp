@@ -5,12 +5,12 @@
  * sections by ldscript.txt - see docs/data.md.
  */
 
-/* The terrain types of the level collision maps (game_loop3.c): a
+/* The terrain types of the level collision maps (bg_layer_base.c): a
  * cell's low byte picks one (0x24 and above are solid, 0 is empty, and
  * GetTerrainHeights stops at 0x23), `modeValue` is a value per collision mode
  * (sub_8025228) and `heights` the surface height of each of the cell's
  * 8 pixel columns per mode, 0-7, 0xFF where there is none (GetTerrainHeights,
- * GetSolidTerrainHeights). game_loop3.c's `struct terrain_type` names only
+ * GetSolidTerrainHeights). bg_layer_base.c's `struct terrain_type` names only
  * `modeValue`. */
 struct terrain_type
 {

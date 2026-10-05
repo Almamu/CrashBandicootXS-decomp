@@ -1,9 +1,9 @@
 #include "core.h"
 #include "actor_self.h"
 
-/* Same boss-weapon "self"/tracker object family as actor_part20.c/
- * actor_part21c.c/actor_part21d.c/actor_part21e.c - see
- * actor_part20.c's header comment and
+/* Same boss-weapon "self"/tracker object family as airship_fireball.c/
+ * airship_states.c - see
+ * airship_fireball.c's header comment and
  * docs/matching/issue-58-0x08030334-actor.md.
  *
  * Large weapon-kind projectile spawner: advances the position

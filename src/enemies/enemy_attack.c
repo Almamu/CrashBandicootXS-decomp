@@ -27,7 +27,7 @@
  * SFX `9`; then unconditionally, if `self->0x6c == 0x17` and
  * `owner->0x30 == 9` and `owner->0x34 == 0`, spawns a part via
  * `LaunchEffectPart(gEntitySpawner, 0x17, 4, -0x2d, 2, owner)` (the same
- * `LaunchEffectPart(pool, kind, ..., z, src)` shape `game_loop14.c`
+ * `LaunchEffectPart(pool, kind, ..., z, src)` shape `entity_spawner.c`
  * documents), tags the new part's `+0xc`/`+0xa` fields, and plays SFX
  * `0x1e`. Mode 5 mirrors mode 3's `owner->0x38` gate but triggers
  * `SetEnemyAnimMode(self,0)` and, only for `self->0x6c==0xf`, additionally

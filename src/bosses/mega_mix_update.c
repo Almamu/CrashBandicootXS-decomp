@@ -15,7 +15,7 @@
  * on frame 8 of anim 1).
  *
  * GitHub issue #22, ROM 0x08017AB0-0x08017ECC - the raw span between
- * input_ctrl_queue.c (ends 0x08017AAC) and actor_part27b.c (starts
+ * input_ctrl_queue.c (ends 0x08017AAC) and mega_mix.c (starts
  * 0x08017ECC) that docs/matching/issue-22-0x08017a44-actor.md's first
  * pass left completely untouched ("out of scope... given their size").
  * `self` (r4) is the same large per-level "player/action" object this
@@ -77,7 +77,7 @@
  *   modes 2/0/0 (the "deactivate" shape).
  *
  * Real C, built with old_agbcc (Makefile OLD_AGBCC_OBJS) - the same
- * compiler as actor_part_18008.c/actor_part_188d0.c after it. This used to
+ * compiler as tiny_update.c/cortex.c after it. This used to
  * be a NAKED transcription: the two "unclosable" agbcc gaps recorded for
  * it both close under old_agbcc - the list walk's per-iteration pointer
  * reload is a guarded do-while, and the CollidePartList stack-argument order

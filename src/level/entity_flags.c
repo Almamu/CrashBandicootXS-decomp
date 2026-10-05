@@ -86,11 +86,11 @@ s32 CountCrateEntities(void *self, void *list)
 asm(".align 2, 0");
 
 /* Sets bit `n` (floor-divided into a 32-bit-word row, same idiom as
- * `SetBitmapBit` in game_loop5.c) of the bitmap array that starts 8
+ * `SetBitmapBit` in collision_map.c) of the bitmap array that starts 8
  * bytes into `self` - the first of a family of three overlapping
  * bitmap arrays this ROM region reads/writes at `self+8`/`self+0x208`/
  * `self+0x308` (see `sub_8025968`/`sub_802599C`/`sub_80259D4`/
- * `sub_8025A0C` alongside it, and `game_loop13.c`). */
+ * `sub_8025A0C` alongside it, and the functions further down this file). */
 void sub_8025944(void *self, s32 n)
 {
     u8 *base = (u8 *)self;
@@ -164,7 +164,7 @@ s32 sub_802599C(void *self, s32 n)
 asm(".align 2, 0");
 
 /* Sets bit `n` in *both* the second (`self+0x208`) and third
- * (`self+0x308`) bitmap arrays at once - see game_loop12.c's header
+ * (`self+0x308`) bitmap arrays at once - see this file's header
  * comment on this bitmap-array family.
  *
  * Was NAKED asm, not plain C - see
@@ -213,7 +213,7 @@ void sub_80259D4(void *self, s32 n)
 }
 
 /* Sets bit `n` of the third bitmap array, at `self+0x308` - see
- * game_loop12.c's header comment on this bitmap-array family. */
+ * this file's header comment on this bitmap-array family. */
 void sub_8025A0C(void *self, s32 n)
 {
     u8 *base = (u8 *)self;
@@ -243,8 +243,8 @@ void sub_8025A3C(void *self, s32 val)
 extern void OperatorDelete(void *self);
 
 /* If bit 0 of `flags` is set, forwards to `OperatorDelete` - same
- * conditional-destroy shape as `sub_8025D54`/game_loop4.c's
- * near-identical function. */
+ * conditional-destroy shape as entity_spawner.c's
+ * near-identical `sub_8025D54`. */
 void DestroyEntityFlags(void *self, s32 flags)
 {
     if (flags & 1) {

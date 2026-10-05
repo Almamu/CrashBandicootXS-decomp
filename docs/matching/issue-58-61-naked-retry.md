@@ -3,7 +3,7 @@
 Issue #58 (`0x08030334`-`0x08031784`, the boss-weapon cluster, one
 function per `src/graphics/actor_part2*.c` file) and issue #61
 (`0x08032890`-`0x08033804`, the `gHovercraft` singleton system in
-`src/graphics/actor_part130.c`) had 19 functions parked as NAKED. The
+`src/bosses/hovercraft.c`) had 19 functions parked as NAKED. The
 first passes ([issue-58-0x08030574-actor.md](issue-58-0x08030574-actor.md),
 [issue-60-61-gap-31a6c-part2.md](issue-60-61-gap-31a6c-part2.md))
 blamed most of them on "many live high registers" or on a size gap
@@ -23,28 +23,28 @@ old_agbcc. The files stay on current agbcc, and no file was split.
 
 | Function | What it took |
 |---|---|
-| `AirshipStateFireballs` (`actor_part21d.c`) | The tracker's state transition (`gAirshipState = st; gAirshipStateTimer = 0; ...anim reset`) is a `static inline BossSetState(st, idx)`. With the state as a parameter, the constant is materialized right before its store. The first pass's "RHS address first" gap came from writing the store inline. |
-| `AirshipStateCannon` (`actor_part21e.c`) | The distances are written `a - (b - K)`. gcc's `fold` turns that into `(a + K) - b`, which is the ROM's order. Written as `(a + K) - b` directly, the compiler shares `b - K` with the spawn call's arguments instead. Also a branchless `Abs()`, and `/` going to the libcall `__divsi3`. |
-| `AirshipStateExplode` (`actor_part21f.c`) | The box table is `const s16[]`, so its jitter ranges stay in registers across the calls. The palette base is assigned right where the ROM loads it; declared with an initializer, it is hoisted into a callee-saved register. The RNG `RandRange` is read back as `u16`. `&gActorList` is taken before the last lock check. |
-| `CreateAirship` (`actor_part23d.c`) | An inlined C++ `gAirship = new Tracker(...)`. The destination's address is taken before the allocation. `mem_alloc` goes through an `AllocActor(size)` inline, so the size is loaded before the heap flags. The part-table setup is an inline constructor that takes its values as arguments, so all three are loaded before the stores. Then `BossSetState(0, 0)`. |
-| `SpawnAirship` (`actor_part23e.c`) | The zoom divide is an explicit `__divsi3(...)` call, not `/`. The libcall is treated as not clobbering memory, but the ROM reloads `gAirshipDistance` after it. The record lookup is `level * 28 - -(s32)&table[kind]`. Written as `a + b`, `fold` pulls the constant table base out of `&table[kind]`. The ROM adds the level offset to the finished record address. |
-| `UpdateAirship` (`actor_part23f.c`) | The same explicit divide. The re-blit tail reads the tracker through a fresh local, a separate pseudo from the head's `self`. Otherwise it is the usual anim advance written with `anims[animIndex]` indexing. |
-| `LoadAirshipGraphics` (`actor_part26b.c`) | No pins; the first pass abandoned an `r7` pin. The filler-tile clear walks an `s32` address downward, which gives the signed `bge`, with its zero hoisted into a local. The fill and copy are the stock `DmaFill16`/`DmaCopy16` macros. The palette is `vu16`, and the state-5 blackout is a chained assignment `pal[15] = pal[1] = pal[4] = pal[8] = 0`, whose volatile read-backs are the ROM's `ldrh`/`strh` ladder. |
-| `HovercraftStateCloseIn` (`actor_part130.c`) | Twin of `SteerAirship`. The player and camera reads are separate locals (`px = pl->x; cx = cam - 0x1200; px - cx - ...`) so `fold` can't reassociate them. The X velocity updates with `-=` and the Y velocity as `v = g - ...`. The orbit's destination and table pointers are taken before the angle is computed. |
-| `HovercraftStateFallBack` (`actor_part130.c`) | Straight C on the first try, with a shared `SingletonSetKind(kind, idx)` inline. |
-| `CreateHovercraft` (`actor_part130.c`) | Twin of `CreateAirship`, same recipe. The "two zero registers" come from the `SingletonSetKind` inline. `gHovercraftLevel` is a level index (`s32`), not an owner pointer. |
-| `SpawnHovercraft` (`actor_part130.c`) | Twin of `SpawnAirship`, same recipe (explicit divide, `- -` record lookup). |
-| `UpdateHovercraft` (`actor_part130.c`) | Twin of `UpdateAirship`. The earlier "4 extra bytes" was the tail reusing `self`. |
-| `LoadHovercraftGraphics` (`actor_part130.c`) | Twin of `LoadAirshipGraphics`. The earlier "24 bytes short" was the clear loop, not the DMA macros. |
+| `AirshipStateFireballs` (`airship_states.c`) | The tracker's state transition (`gAirshipState = st; gAirshipStateTimer = 0; ...anim reset`) is a `static inline BossSetState(st, idx)`. With the state as a parameter, the constant is materialized right before its store. The first pass's "RHS address first" gap came from writing the store inline. |
+| `AirshipStateCannon` (`airship_states.c`) | The distances are written `a - (b - K)`. gcc's `fold` turns that into `(a + K) - b`, which is the ROM's order. Written as `(a + K) - b` directly, the compiler shares `b - K` with the spawn call's arguments instead. Also a branchless `Abs()`, and `/` going to the libcall `__divsi3`. |
+| `AirshipStateExplode` (`airship_explode.c`) | The box table is `const s16[]`, so its jitter ranges stay in registers across the calls. The palette base is assigned right where the ROM loads it; declared with an initializer, it is hoisted into a callee-saved register. The RNG `RandRange` is read back as `u16`. `&gActorList` is taken before the last lock check. |
+| `CreateAirship` (`airship.c`) | An inlined C++ `gAirship = new Tracker(...)`. The destination's address is taken before the allocation. `mem_alloc` goes through an `AllocActor(size)` inline, so the size is loaded before the heap flags. The part-table setup is an inline constructor that takes its values as arguments, so all three are loaded before the stores. Then `BossSetState(0, 0)`. |
+| `SpawnAirship` (`airship.c`) | The zoom divide is an explicit `__divsi3(...)` call, not `/`. The libcall is treated as not clobbering memory, but the ROM reloads `gAirshipDistance` after it. The record lookup is `level * 28 - -(s32)&table[kind]`. Written as `a + b`, `fold` pulls the constant table base out of `&table[kind]`. The ROM adds the level offset to the finished record address. |
+| `UpdateAirship` (`airship.c`) | The same explicit divide. The re-blit tail reads the tracker through a fresh local, a separate pseudo from the head's `self`. Otherwise it is the usual anim advance written with `anims[animIndex]` indexing. |
+| `LoadAirshipGraphics` (`airship_load_graphics.c`) | No pins; the first pass abandoned an `r7` pin. The filler-tile clear walks an `s32` address downward, which gives the signed `bge`, with its zero hoisted into a local. The fill and copy are the stock `DmaFill16`/`DmaCopy16` macros. The palette is `vu16`, and the state-5 blackout is a chained assignment `pal[15] = pal[1] = pal[4] = pal[8] = 0`, whose volatile read-backs are the ROM's `ldrh`/`strh` ladder. |
+| `HovercraftStateCloseIn` (`hovercraft.c`) | Twin of `SteerAirship`. The player and camera reads are separate locals (`px = pl->x; cx = cam - 0x1200; px - cx - ...`) so `fold` can't reassociate them. The X velocity updates with `-=` and the Y velocity as `v = g - ...`. The orbit's destination and table pointers are taken before the angle is computed. |
+| `HovercraftStateFallBack` (`hovercraft.c`) | Straight C on the first try, with a shared `SingletonSetKind(kind, idx)` inline. |
+| `CreateHovercraft` (`hovercraft.c`) | Twin of `CreateAirship`, same recipe. The "two zero registers" come from the `SingletonSetKind` inline. `gHovercraftLevel` is a level index (`s32`), not an owner pointer. |
+| `SpawnHovercraft` (`hovercraft.c`) | Twin of `SpawnAirship`, same recipe (explicit divide, `- -` record lookup). |
+| `UpdateHovercraft` (`hovercraft.c`) | Twin of `UpdateAirship`. The earlier "4 extra bytes" was the tail reusing `self`. |
+| `LoadHovercraftGraphics` (`hovercraft.c`) | Twin of `LoadAirshipGraphics`. The earlier "24 bytes short" was the clear loop, not the DMA macros. |
 
 ## Still NAKED (6), each with a `#if NON_MATCHING` draft
 
 | Function | What's left |
 |---|---|
-| `DrawAirshipMap` (`actor_part23b.c`), `DrawHovercraftMap` (`actor_part130.c`) | 11 halfwords off under old_agbcc (35 under agbcc). The row setup and loops are right. The next-row pointer and the hoisted `&bias` copy get `r3`/`ip` swapped. No loop form, index-vs-pointer store, `register` hint or bias-access form moved it. |
-| `SteerAirship` (`actor_part23c.c`) | 19 halfwords off under both compilers, all of it the `&gAirshipVelX`/`&gAirshipVelY` copies landing in `r4`/`r6` swapped. Every instruction is otherwise right. The fixes that make the rest match are the `px`/`cx` split, a `goto` form for the Y nudge, and a `ClampHi`-style pointer for the first clamp store. |
-| `IsTouchingAirship` (`actor_part24b.c`) | About 50 halfwords off. The shape is right (inline `BoxOffset`, a struct-returning `SelfBox`, the self-`MemCopy32` copy), but `&c` gets hoisted into `r4` before the box copy and costs an extra `r6` push. |
-| `ConvertAirshipTiles` (`actor_part26c.c`), `ConvertHovercraftTiles` (`actor_part130.c`) | About 95-105 halfwords off. These are the 4-row and 1-row versions of the same meter builder, so a shared inline is likely. The ROM re-reads each height from the stack after the row-pointer store (`ldm r1!`), which suggests the store can alias the height array. It also allocates the nibble-expansion temporaries differently. |
+| `DrawAirshipMap` (`airship_map.c`), `DrawHovercraftMap` (`hovercraft.c`) | 11 halfwords off under old_agbcc (35 under agbcc). The row setup and loops are right. The next-row pointer and the hoisted `&bias` copy get `r3`/`ip` swapped. No loop form, index-vs-pointer store, `register` hint or bias-access form moved it. |
+| `SteerAirship` (`airship.c`) | 19 halfwords off under both compilers, all of it the `&gAirshipVelX`/`&gAirshipVelY` copies landing in `r4`/`r6` swapped. Every instruction is otherwise right. The fixes that make the rest match are the `px`/`cx` split, a `goto` form for the Y nudge, and a `ClampHi`-style pointer for the first clamp store. |
+| `IsTouchingAirship` (`airship_touch.c`) | About 50 halfwords off. The shape is right (inline `BoxOffset`, a struct-returning `SelfBox`, the self-`MemCopy32` copy), but `&c` gets hoisted into `r4` before the box copy and costs an extra `r6` push. |
+| `ConvertAirshipTiles` (`airship_graphics.c`), `ConvertHovercraftTiles` (`hovercraft.c`) | About 95-105 halfwords off. These are the 4-row and 1-row versions of the same meter builder, so a shared inline is likely. The ROM re-reads each height from the stack after the row-pointer store (`ldm r1!`), which suggests the store can alias the height array. It also allocates the nibble-expansion temporaries differently. |
 
 ### Later pass: four more closed
 
@@ -53,13 +53,13 @@ old_agbcc. The files stay on current agbcc, and no file was split.
 
 - The blit twins read the bias as `u8 bias = <s32 global>;` and declare
   `row` before `i`, which breaks the global-alloc tie between `row + 0x20`
-  and `i + 1` the ROM's way. `actor_part23b.c` and `actor_part130.c`
+  and `i + 1` the ROM's way. `airship_map.c` and `hovercraft.c`
   moved to old_agbcc.
 - `SteerAirship` stores the X step once and the Y step once per branch.
   The reference counts that global-alloc sees then give the Y velocity
   copy r4. It matches under both compilers.
 - `IsTouchingAirship` uses the frame-struct box layout from `IsTouchingYeti`
-  (old_agbcc; `actor_part24b.c` moved).
+  (old_agbcc; `airship_touch.c` moved).
 
 `ConvertAirshipTiles` and `ConvertHovercraftTiles` are still NAKED, so issues #58 and #61
 stay open.

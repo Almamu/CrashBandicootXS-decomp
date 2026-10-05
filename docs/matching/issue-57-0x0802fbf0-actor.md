@@ -65,7 +65,7 @@ header.
   1. A real indirect call `fn(self + d)` rather than an explicit
      `_call_via_r3(...)` call. Thumb gcc emits it as
      `bl _call_via_r3`, which resolves to the ROM's trampoline (then
-     through a `.set` alias, the `actor_part_1967c.c` technique). The explicit-call form forces
+     through a `.set` alias, the `dingodile.c` technique). The explicit-call form forces
      values into r1/r2 that the ROM leaves as garbage.
   2. Load the `index` field once into a local, but re-index
      `table[self->state]` for every other field.

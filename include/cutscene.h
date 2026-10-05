@@ -5,7 +5,7 @@
 
 /*
  * The cutscenes (src/data/cutscenes_16d1c8.c): PlayCutscene
- * (graphics_loading_22354.c) plays cutscene `idx` as a sequence of
+ * (level_cutscene.c) plays cutscene `idx` as a sequence of
  * slides, each a full-screen picture shown with its page of text in the
  * current language. The code reads the same records through its own
  * local views, named on each struct below.
@@ -30,7 +30,7 @@ struct cutscene_slide
     u32 sfx;                // 0x18 - sound effect, 99 = none
 };
 
-/* A cutscene's slides: `struct text_list` (graphics_loading_22354.c). */
+/* A cutscene's slides: `struct text_list` (level_cutscene.c). */
 struct cutscene_slides
 {
     const struct cutscene_slide *const *slides;

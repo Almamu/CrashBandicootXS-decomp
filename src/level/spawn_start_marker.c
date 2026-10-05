@@ -24,12 +24,12 @@ extern void PlaySfx(void *bank, s32 arg1, s32 sfxId);
  *    is set: looks up a per-`z` flags byte via the same
  *    `gEntityFlags -> *rec` entity parameter table
  *    (`paramOffsets[]`/`params`, the room's `struct level_entity_list`)
- *    `SpawnBasicCrate` (graphics_loading_21bfc.c) already reads, folds
+ *    `SpawnBasicCrate` (spawn_crates.c) already reads, folds
  *    its bit 1 into the player's `+0x28` bitfield's bit 4, then
  *    unconditionally writes the incoming `x`/`y` (Q8.8, shifted from
  *    the raw `u16` args) into the player's own `x`/`y` fields - the
  *    same unconditional write `sub_80221A4`/`sub_80221D4`
- *    (graphics_loading_21d80.c) already do elsewhere in this cluster.
+ *    (spawn_pickups.c) already do elsewhere in this cluster.
  *
  * 2. Unless the level state's `timeTrial` flag is set: fires the
  *    player's `table+0x68` trampoline (via `_call_via_r4`, action

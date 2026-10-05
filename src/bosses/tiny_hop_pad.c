@@ -1,11 +1,11 @@
 #include "core.h"
 
 /* GitHub issue #22, ROM 0x080187FC-0x08018884 - non-adjacent to
- * actor_part20b.c since the raw `UpdateTiny`/`SetTinyState`/
+ * airship_fireball.c since the raw `UpdateTiny`/`SetTinyState`/
  * `PickTinyHopTarget`/`SpawnTinyFallingLeaves` block sits between them (see
  * asm/code_3_2_17_18008.s). `obj`'s `+8` word is a small 0/1/2 state
  * counter and `+0xc` is the usual per-category table pointer (same
- * `self+0xc` convention as actor_part20.c/20b.c). `other`/`part`'s
+ * `self+0xc` convention as airship_fireball.c). `other`/`part`'s
  * `+0x38`/`+0xc`/`+8` fields match the same `struct actor`-shaped
  * header used by every other "part" object in this ROM region
  * (compare `CheckSpritePickup`'s `part->flags`/`part->field_08` bitmap-set

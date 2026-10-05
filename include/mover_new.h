@@ -3,7 +3,7 @@
 
 /* Constructing a `struct mover` (include/gobj_1a794.h) through
  * CreatePlatformMover. Shared by include/gobj_1a794.h (CreatePlatform) and
- * src/graphics/actor_part_188d0.c (CreateCortexBossPlatformMover, which base-constructs its
+ * src/bosses/cortex.c (CreateCortexBossPlatformMover, which base-constructs its
  * own mover subclass through it). */
 
 struct mover;

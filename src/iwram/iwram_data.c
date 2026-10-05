@@ -96,7 +96,7 @@ u32 gRoomFrameCount = 0;
 u8 gRoomExitRequested = 0;
 
 /* The cutscene text of each language, indexed by gLanguage
- * (src/data/cutscenes_16d1c8.c, graphics_loading_22354.c). */
+ * (src/data/cutscenes_16d1c8.c, level_cutscene.c). */
 extern const struct cutscene_page *const gCutsceneTextEnglish[11];
 extern const struct cutscene_page *const gCutsceneTextFrench[11];
 extern const struct cutscene_page *const gCutsceneTextGerman[11];
@@ -144,7 +144,7 @@ void (*gUnpackNibbleTilesFunc)(void *src, s32 lowBlock) = UnpackNibbleTiles;
 /* Speeds, indexed by sub_802A570 (actor_part_2fbf0.c). */
 s32 gUnknown_0300089C[6] = { 0x1555, 0x1155, 0xD55, 0x955, 0x555, 0x155 };
 
-/* Palette RAM addresses (actor_part130.c, actor_part28.c). */
+/* Palette RAM addresses (hovercraft.c, hovercraft_parts.c). */
 void *gFlashBgPalette = (void *)(PLTT + 0x20);
 void *gFlashObjPalette = (void *)(PLTT + 0x340);
 

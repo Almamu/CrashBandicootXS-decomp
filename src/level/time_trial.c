@@ -16,7 +16,7 @@ struct anim_table
     struct anim_record *records;
 };
 
-/* An OAM-backed part (same layout as actor_part_188d0.c's gfx_part). */
+/* An OAM-backed part (same layout as cortex.c's gfx_part). */
 struct slot_part
 {
     struct actor base;          // 0x00

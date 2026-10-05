@@ -139,7 +139,7 @@ struct pooled_layer *InitPooledBgLayer(struct pooled_layer *self, s32 bgIndex)
         /* bit7 = 1, bits2_3 = 0. This compiler folds both masks to
          * immediates; the ROM keeps the `& 0x7f` and derives `-0xd` from
          * the `0x80` register (`subs #0x8d`) - same class as
-         * InitBgLayer's +0x34/+0x35 updates (game_loop15.c). */
+         * InitBgLayer's +0x34/+0x35 updates (bg_layer_init.c). */
         register u8 *bits asm("r2") = (u8 *)self + 0x34;
         asm volatile(
             "mov r1, #0x80\n\t"

@@ -49,7 +49,7 @@ static inline void OrbitClampFrame(struct orbit_part *self)
 }
 
 /* PickUpWumpa: "randomized-position spawn/despawn picker" (docs/rom_map.md),
- * called as `PickUpWumpa(entry, 1)`/`(other, 1)` from game_loop40.c/
+ * called as `PickUpWumpa(entry, 1)`/`(other, 1)` from time_trial.c/
  * crate_break.c for despawn. PlaySfx(gAudioContext, 8, 0x100), then
  * either derives a randomized (dx,dy) offset pair from rand() (arg1
  * nonzero - self->0x48 = 2, self->0x49 tags which of three rand()-driven
@@ -133,7 +133,7 @@ void PickUpWumpa(struct orbit_part *self, u8 randomize)
  *  - mode 3: increments self->0x49 each frame; every 11th frame resets
  *    it and calls DropWumpa(gEntitySpawner, self->x>>8, self->y>>8,
  *    0, 1, 0) (a NAKED part-object spawner already matched in
- *    game_loop14.c) - then increments self->0x4b every frame too; every
+ *    entity_spawner.c) - then increments self->0x4b every frame too; every
  *    10th frame falls into the same collision-bitmap tail as modes 1/2.
  *  - mode 0 (default, self->0x4a-gated): increments self->0x49 or
  *    self->0x4b depending on self->0x4a, wrapping self->0x4a's own
@@ -309,11 +309,11 @@ void UpdateWumpa(struct orbit_part *self)
 
 /* CreateWumpa: the achievement/unlock-icon spawn helper (docs/rom_map.md),
  * extern-declared as `void CreateWumpa(u16 arg0)` in
- * src/graphics/graphics_loading_21d80.c (that call site only ever reads
+ * src/level/spawn_pickups.c (that call site only ever reads
  * `arg0`, per its own doc comment - the other three args below are real
  * per this function's own body, just unused/garbage at that particular
  * call site) and called with all four real arguments from
- * DropWumpa (game_loop14.c, NAKED, already matched): `CreateWumpa(id,
+ * DropWumpa (entity_spawner.c, NAKED, already matched): `CreateWumpa(id,
  * x, y, special)` where `special` is `0xFFFF` or `0` selecting which of
  * two dual_array_manager lists (`gUnknown_030012F4` vs `gUnknown_030012EC`)
  * the newly spawned part joins. Allocates a new 0x54-byte object
@@ -418,8 +418,8 @@ struct orbit_part *CreateWumpa(u16 id, u16 x, u16 y, u16 special)
     return p;
 }
 
-/* SendWumpaToHud: alternative to SendExtraLifeToHud (game_loop29.c), called from
- * game_loop14.c "instead of SendExtraLifeToHud" per that file's own doc
+/* SendWumpaToHud: alternative to SendExtraLifeToHud (drop_extra_life.c), called from
+ * entity_spawner.c "instead of SendExtraLifeToHud" per that file's own doc
  * comment. Same shape as SendExtraLifeToHud/PickUpWumpa's tail: PlaySfx(
  * gAudioContext, 8, 0x100), self->0x48 = 1, self->x -= self->0x4a<<8
  * (a fixed-offset nudge), self->0x3c = 0xa0, self->0x30 clamped from the

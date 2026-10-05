@@ -248,7 +248,7 @@ void ActionCtrlStateDying(struct act *self)
     {
         part->flags0C |= 1;
         {
-            /* the "mark part gone" bitmap set of actor_part_188d0.c's
+            /* the "mark part gone" bitmap set of cortex.c's
              * MARK_GONE_BITMAP, with the same load-bearing registers */
             register s32 none asm("r0") = 0xFFFF;
             register u32 cur asm("r4") = part->id;

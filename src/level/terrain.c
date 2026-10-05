@@ -12,7 +12,7 @@
  *
  * `GetTerrainFlagsAt(arg0, x, y)` is a small wrapper around the already-
  * matched terrain-tile-cache lookup `GetTerrainType` (`src/system/
- * game_loop4.c`, GitHub issue #40): it takes `arg0+0x20`'s pointed-to
+ * tile_cache.c`, GitHub issue #40): it takes `arg0+0x20`'s pointed-to
  * `struct tile_cache`, converts `x`/`y` into that cache's own lookup
  * units via a plain `>>3` (clamped to a minimum of 0 on each axis
  * independently - `ProbeTerrain`'s own bounds-clamp neighbors use the
@@ -35,8 +35,8 @@
  * (`+0x29`/`+0x2a`) for - not given its own named struct here since
  * this function only ever touches the one field, following the same
  * "duplicate only what's needed, no shared header" precedent
- * `struct tile_cache` itself already set between `game_loop3.c`/
- * `game_loop4.c`.
+ * `struct tile_cache` itself already set between `bg_layer_base.c`/
+ * `tile_cache.c`.
  *
  * Matched as real C on the first isolated-compile attempt - no
  * register pins or opaque asm needed, following `ProbeTerrain`'s own
@@ -83,11 +83,11 @@ s32 GetTerrainFlagsAt(void *arg0, s32 x, s32 y)
  * argument roles: `s32 fn(void *player, struct probe_pos *pos, s32
  * *outValue)`, computing `pos->x >> 3`/`pos->y >> 3` tile coords from
  * `player+0x20`'s terrain-data pointer (the same `struct tile_cache *`
- * field `GetTerrainFlagsAt` (`game_loop44.c`) already established that offset
+ * field `GetTerrainFlagsAt` (above) already established that offset
  * for on the same `player`/`arg0` global, `gLevelLayers`).
  *
  * `sub_8026BF8` looks the tile row up via the already-matched
- * `GetTerrainHeights` ("the raw terrain streamer" - `game_loop3.c`, GitHub
+ * `GetTerrainHeights` ("the raw terrain streamer" - `bg_layer_base.c`, GitHub
  * issue #40), returning a row pointer or `NULL` on a miss. On a hit,
  * reads a **signed byte** height sample at `row[pos->x & 7]`, computes
  * `((pos->y >> 3) << 3) + heightByte - pos->y`, shifts to Q8, and
@@ -98,18 +98,18 @@ s32 GetTerrainFlagsAt(void *arg0, s32 x, s32 y)
  * the already-matched `sub_8025228(terrainPtr, tileX, tileY, 0,
  * &scratch)` instead - the "CheckTerrainFlag"-style API
  * `ProbeTerrainY`/`ProbeTerrainX` already use via their own `GetSolidTerrainHeights`
- * calls (`game_loop3.c`, same issue #40). `scratch` is a caller-local
+ * calls (`bg_layer_base.c`, same issue #40). `scratch` is a caller-local
  * flag-nibble out-parameter nothing here ever reads back, the same
- * "discarded outValue" idiom `game_loop3.c`'s own siblings already
+ * "discarded outValue" idiom `bg_layer_base.c`'s own siblings already
  * established. Returns `0` if the returned signed byte is negative, `1`
  * otherwise, with the same `(tileY<<3)+byte-pos->y` delta accumulation.
  *
  * Both are Y-axis (floor-height) probes - matching how `ProbeGroundSpriteTerrain`
  * only ever uses them against `self.y`/`self->y`, never `self.x`.
- * `struct probe_pos` reuses `game_loop43.c`'s own plain-int (not Q8)
+ * `struct probe_pos` reuses `terrain_probe.c`'s own plain-int (not Q8)
  * probe-position layout unchanged (same "duplicate only what's needed,
  * no shared header" precedent `struct tile_cache` itself already set
- * between `game_loop3.c`/`game_loop4.c`).
+ * between `bg_layer_base.c`/`tile_cache.c`).
  *
  * Both reload `pos->x`/`pos->y` a second time from memory after their
  * respective lookup call rather than keeping the pre-shifted tile

@@ -2,7 +2,7 @@
 
 Follow-up to `docs/matching/issue-22-0x08017a44-actor.md`, which left
 this one function - the whole gap between `input_ctrl_queue.c` (ends
-0x08017AAC) and `actor_part27b.c` (starts 0x08017ECC) - completely
+0x08017AAC) and `mega_mix.c` (starts 0x08017ECC) - completely
 untouched ("out of scope... given their size"). `docs/rom_map.md`'s own
 whole-ROM pass had already read it at a high level: "1052 B, 3-state
 dispatch gated by `gPlayer[0x104]` and a bit test". This pass
@@ -142,7 +142,7 @@ case, this was recognized immediately and NAKED-transcribed rather than
 re-attempted from scratch.
 
 Transcribed mechanically from `asm/code_3_2_17_17ab0.s` (now retired -
-its one function moved to the new `src/graphics/actor_part27a.c`),
+its one function moved to the new `src/bosses/mega_mix_update.c`),
 keeping the ROM's own `_0XXXXXXX` hex-address labels verbatim as plain,
 file-local asm symbols (safe since each is a unique ROM address) - the
 same approach `action_ctrl_event.c`'s `ActionCtrlHandleEvent`, `action_ctrl_run_jump.c`'s

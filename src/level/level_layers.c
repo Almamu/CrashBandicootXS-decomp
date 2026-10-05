@@ -3,9 +3,9 @@
 
 /* GitHub issue #43: the level-layers singleton (`gLevelLayersSingleton`,
  * 0x2C bytes, created on first use by `GetLevelLayers`) - the object
- * `gLevelLayers` also points at: the camera (`camera_follow.c`)
+ * `gLevelLayers` also points at: the camera (`camera.c`)
  * clamps into its scroll fields via `SetLevelScroll`, and
- * `game_loop44.c`/`game_loop45.c` already reach its terrain tile cache
+ * `terrain.c` already reach its terrain tile cache
  * at `+0x20`.
  *
  * It owns BG layer 0 (`+0x10`, a 0x60-byte tile-slot-pooled layer, see

@@ -99,7 +99,7 @@ extern void _call_via_r2(void *arg0, s32 arg1, void *fn);
  * at a time, firing `self->0x30`'s `+0x30`-offset/`+0x34`-fn trampoline
  * (via `_call_via_r2`, an interworking veneer picked automatically by
  * the compiler for indirect calls - see `SpawnEntity` in
- * game_loop14.c) after every step - the streamed-tile-range grower
+ * entity_spawner.c) after every step - the streamed-tile-range grower
  * `ScrollBgLayer` drives for one axis; `GrowBgLayerColumns` is its twin for the
  * other axis's `+0x44`/`+0x48` fields. */
 void GrowBgLayerRows(struct bg_scroll_layer *self, s32 lo, s32 hi)

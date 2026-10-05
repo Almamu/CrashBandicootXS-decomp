@@ -1,7 +1,7 @@
 #include "core.h"
 #include "actor_self.h"
 
-/* Same "self" object family as actor_part28.c - see that file's header
+/* Same "self" object family as hovercraft_parts.c - see that file's header
  * comment and docs/matching/issue-62-0x08033804-actor.md. */
 
 extern s32 GetHovercraftX(void);
@@ -16,8 +16,8 @@ extern struct actor_self *gActorList;
 /* The singleton's per-spawner timing table (`GetHovercraftAttack`): after each
  * spawn a spawner waits `delay` frames, except every `burst`-th spawn,
  * which resets its count and waits `burstDelay` instead. One record per
- * spawner kind (actor_part67.c reads [0], actor_part29.c [1],
- * actor_part35.c [2]). */
+ * spawner kind (hovercraft_side_gun.c reads [0], hovercraft_cannon.c [1],
+ * this file [2]). */
 struct spawn_timing {
     s32 delay;
     s32 burst;
@@ -29,7 +29,7 @@ struct spawn_timing_table {
     struct spawn_timing timing[3];  // 0x04
 };
 
-/* A spawner object of the singleton system (actor_part28.c):
+/* A spawner object of the singleton system (hovercraft_parts.c):
  * `actor_self` plus a hit-point word, its spawn cooldown/count and a
  * "dead" flag. */
 struct spawner {
@@ -143,12 +143,12 @@ void HovercraftLauncherStateLaunch(struct spawner *self)
 
 asm(".align 2, 0");
 
-/* Same "self" object family as actor_part28.c - see that file's header
+/* Same "self" object family as hovercraft_parts.c - see that file's header
  * comment and docs/matching/issue-62-0x08033804-actor.md. */
 
 extern void *gAudioContext;
 
-/* A spawner object of the singleton system (actor_part28.c):
+/* A spawner object of the singleton system (hovercraft_parts.c):
  * `actor_self` plus a hit-point word, its spawn cooldown/count and a
  * "dead" flag. */
 extern void StartHovercraftHitFlash(void);
@@ -199,7 +199,7 @@ void DamageHovercraftLauncher(struct spawner *self, s32 dmg)
     }
 }
 
-/* Same "self" object family as actor_part28.c - see that file's header
+/* Same "self" object family as hovercraft_parts.c - see that file's header
  * comment and docs/matching/issue-62-0x08033804-actor.md. */
 
 extern struct actor_pmf gHovercraftLauncherStateFuncs[];
@@ -226,7 +226,7 @@ void UpdateHovercraftLauncher(struct actor_self *self)
 }
 
 /* Same `InitActorPart`-rooted per-instance "self" object family already
- * documented in actor_part28.c/actor_part32.c/actor_part50.c: a "part
+ * documented in hovercraft_parts.c/hovercraft_cannon.c/actor_part50.c: a "part
  * table" pointer at `self+0`, a table-index/"kind" field at `self+0xc`,
  * an anim-frame halfword/byte pair at `self+0x10`/`self+0x12`, an
  * accumulator at `self+8`, state at `self+0x28`, a frame counter at
@@ -240,7 +240,7 @@ void UpdateHovercraftLauncher(struct actor_self *self)
 extern void *InitActorPart(void *selfArg, void *part, s32 b, s32 c, s32 d);
 extern u8 gHovercraftLauncherVtable[];
 
-/* A spawner object of the singleton system (actor_part28.c):
+/* A spawner object of the singleton system (hovercraft_parts.c):
  * `actor_self` plus a hit-point word, its spawn cooldown/count and a
  * "dead" flag.
  *
@@ -293,7 +293,7 @@ extern s32 _call_via_r2(void *arg0, void *arg1, void *fn);
 /* Plays a fixed sound cue (`ShakeActorBg(0x400)`), then - if `self` is
  * non-NULL and its `+0x12` flag is set - fires the `self+0x50` event
  * table's slot-3 trampoline at `self` offset by the table's `+8`
- * halfword. Same shape as `HovercraftCannonStateDestroyed` (actor_part32.c). */
+ * halfword. Same shape as `HovercraftCannonStateDestroyed` (hovercraft_cannon.c). */
 void HovercraftLauncherStateDestroyed(void *selfArg)
 {
     struct actor_self *self = selfArg;
@@ -375,13 +375,13 @@ s32 RunHovercraftLauncherState(struct actor_self *self)
 }
 
 /* Same `InitActorPart`-rooted per-instance "self" object family
- * documented in action_ctrl.c/actor_part28.c/actor_part32.c. A second
+ * documented in action_ctrl.c/hovercraft_parts.c/hovercraft_cannon.c. A second
  * object kind (constructed by the parked `CreateHovercraftSideGun`, vtable
  * `gHovercraftSideGunVtable`) reuses a death/"dead" byte flag at
  * `self+0x6c`. See docs/matching/issue-63-0x08033ef4-actor.md. */
 
 /* Constant getter - returns `self`'s death flag (`self+0x6c`), the same
- * shape as `IsHovercraftCannonUnshootable` (actor_part34.c). */
+ * shape as `IsHovercraftCannonUnshootable` (hovercraft_cannon.c). */
 u8 IsHovercraftLauncherUnshootable(void *selfArg)
 {
     u8 *self = selfArg;

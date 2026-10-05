@@ -1,7 +1,7 @@
 #include "core.h"
 #include "actor_self.h"
 
-/* Same singleton system as actor_part28.c - see that file's header
+/* Same singleton system as hovercraft_parts.c - see that file's header
  * comment and docs/matching/issue-62-0x08033804-actor.md. */
 
 extern s32 GetHovercraftX(void);
@@ -15,8 +15,8 @@ extern struct actor_self *gActorList;
 /* The singleton's per-spawner timing table (`GetHovercraftAttack`): after each
  * spawn a spawner waits `delay` frames, except every `burst`-th spawn,
  * which resets its count and waits `burstDelay` instead. One record per
- * spawner kind (actor_part67.c reads [0], actor_part29.c [1],
- * actor_part35.c [2]). */
+ * spawner kind (hovercraft_side_gun.c reads [0], this file [1],
+ * hovercraft_launcher.c [2]). */
 struct spawn_timing {
     s32 delay;
     s32 burst;
@@ -28,7 +28,7 @@ struct spawn_timing_table {
     struct spawn_timing timing[3];  // 0x04
 };
 
-/* A spawner object of the singleton system (actor_part28.c):
+/* A spawner object of the singleton system (hovercraft_parts.c):
  * `actor_self` plus a hit-point word, its spawn cooldown/count and a
  * "dead" flag. */
 struct spawner {
@@ -127,12 +127,12 @@ void HovercraftCannonStateFire(struct spawner *self)
 
 asm(".align 2, 0");
 
-/* Same "self" object family as actor_part28.c - see that file's header
+/* Same "self" object family as hovercraft_parts.c - see that file's header
  * comment and docs/matching/issue-62-0x08033804-actor.md. */
 
 extern void *gAudioContext;
 
-/* A spawner object of the singleton system (actor_part28.c):
+/* A spawner object of the singleton system (hovercraft_parts.c):
  * `actor_self` plus a hit-point word, its spawn cooldown/count and a
  * "dead" flag. */
 extern void StartHovercraftHitFlash(void);
@@ -179,7 +179,7 @@ void DamageHovercraftCannon(struct spawner *self, s32 dmg)
     }
 }
 
-/* Same "self" object family as actor_part28.c - see that file's header
+/* Same "self" object family as hovercraft_parts.c - see that file's header
  * comment and docs/matching/issue-62-0x08033804-actor.md. */
 
 extern struct actor_pmf gHovercraftCannonStateFuncs[];
@@ -205,7 +205,7 @@ void UpdateHovercraftCannon(struct actor_self *self)
     }
 }
 
-/* Same "self" object family as actor_part28.c - see that file's header
+/* Same "self" object family as hovercraft_parts.c - see that file's header
  * comment and docs/matching/issue-62-0x08033804-actor.md. */
 
 /* This family's fields after the common `actor_self` prefix. The
@@ -319,7 +319,7 @@ void HovercraftCannonStateWait(void *selfArg)
     }
 }
 
-/* Same "self" object family as actor_part28.c - see that file's header
+/* Same "self" object family as hovercraft_parts.c - see that file's header
  * comment and docs/matching/issue-62-0x08033804-actor.md. */
 
 /* Per-state member-pointer dispatch, `(this->*gHovercraftCannonStateFuncs
@@ -335,7 +335,7 @@ s32 RunHovercraftCannonState(struct actor_self *self)
     return 1;
 }
 
-/* Same "self" object family as actor_part28.c - see that file's header
+/* Same "self" object family as hovercraft_parts.c - see that file's header
  * comment and docs/matching/issue-62-0x08033804-actor.md. */
 
 /* Constant getter - returns `self`'s death flag (`self+0x6c`). */

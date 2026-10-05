@@ -1,7 +1,7 @@
 #include "core.h"
 #include "actor_self.h"
 
-/* Same boss-weapon subsystem as actor_part20.c - see that file's header
+/* Same boss-weapon subsystem as airship_fireball.c - see that file's header
  * comment and docs/matching/issue-58-0x08030334-actor.md. Confirmed by
  * docs/rom_map.md as a `category_vtable` slot (`gActorCategoryVtables`,
  * type 1, slot 6) - part of this actor's per-frame dispatch table.

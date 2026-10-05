@@ -7,8 +7,8 @@
  * docs/matching.md). Called once per frame from `MainLoop`
  * (src/system/main_loop.c) with `self` = `gLevelState`, the
  * central per-level state object every other function in this
- * cluster (`EndBonusRound`/`SetCheckpointAtPlayer`, game_loop.c; the
- * `self+0x80`-`0xc4`/`+2` accessor family, game_loop2.c) also shares.
+ * cluster (`EndBonusRound`/`SetCheckpointAtPlayer`, bonus_round.c; the
+ * `self+0x80`-`0xc4`/`+2` accessor family, level_state.c) also shares.
  *
  * Shape: a level-load loop (`InitTitleScreen` / `RunTitleScreen`, the
  * map screen `RunCredits` on result 2), then the level loop. Each pass

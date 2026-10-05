@@ -3,16 +3,16 @@
 
 /*
  * The level/session state object `gLevelState` points at (0x1CC
- * bytes). Its accessor family is src/system/game_loop2.c
- * (FreezeLevelClock through CheckAllCratesBroken); game_loop55.c's level loop still carries
+ * bytes). Its accessor family is src/level/level_state.c
+ * (FreezeLevelClock through CheckAllCratesBroken); game_frame.c's level loop still carries
  * its own copy of the same layout (`struct level_state` there).
  *
  * The first 0x68 bytes are the per-attempt block the frame loop
- * snapshots into `checkpointData`/`saveData` and restores from (game_loop55.c).
+ * snapshots into `checkpointData`/`saveData` and restores from (game_frame.c).
  */
 
 /* The level's category record (level_state.cat) - one of the medal
- * table's list items (game_loop18.c's `struct MedalListItem`). */
+ * table's list items (level_query.c's `struct MedalListItem`). */
 struct level_category
 {
     u8 unk_00[8];
@@ -36,7 +36,7 @@ struct level_state
     s32 maskLevel;                  // 0x078 - 0-3; 3 plays the invincibility jingle (SetMaskLevel)
     s32 deaths;                     // 0x07C - maskless hits since the last checkpoint (AddDeath, ResetDeaths)
     s32 unk_80;                     // 0x080
-    s32 maskAssistDeaths;           // 0x084 - deaths after which the start marker hands out a mask (graphics_loading_1e990.c)
+    s32 maskAssistDeaths;           // 0x084 - deaths after which the start marker hands out a mask (spawn_start_marker.c)
     s32 crateAssistDeaths;          // 0x088 - from the level table (SetCrateAssistDeaths, 5 by default); once `deaths` reaches it outside a time trial, CreateCrate turns placement-flagged "?" crates (and kind 0xF) into Aku Aku, checkpoint or life crates
     u8 timeTrial;                   // 0x08C - nonzero: no lives lost, the clock runs (StartTimeTrial)
     u8 unk_8d[3];
@@ -58,7 +58,7 @@ struct level_state
     s32 savedLives;                 // 0x0B8 - same
     s32 crateTotal;                 // 0x0BC - the level's crate count (CountLevelCrates), crateCount's target
     s32 unk_c0;                     // 0x0C0 - bit mask (sub_802314C/sub_8023158)
-    s32 level;                      // 0x0C4 - also the head of the progress record (game_loop18.c's struct level_progress)
+    s32 level;                      // 0x0C4 - also the head of the progress record (level_query.c's struct level_progress)
     s32 unk_c8;                     // 0x0C8
     s32 checkpointCrateCount;       // 0x0CC - checkpoint copy of crateCount (SetCheckpoint/RestoreCheckpoint)
     u8 checkpointSwitchPressed;     // 0x0D0 - checkpoint copy of switchPressed

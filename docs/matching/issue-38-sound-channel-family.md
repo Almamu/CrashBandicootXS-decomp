@@ -8,7 +8,7 @@ the `BeginSlide`-`EndSlide` sound-channel-handle helper family.
 
 ## Matched (real C, full clean `make compare` passing)
 
-- **`LevelHasEntityType`** (`src/system/game_loop18.c`, prepended ahead of
+- **`LevelHasEntityType`** (`src/level/level_query.c`, prepended ahead of
   `IsInGemPathRoom`) - the medal item-list per-flag nonzero scan the earlier
   pass parked over an `ip`/r12 register-pinning gap for its `flagIdx`
   parameter. That pin (`register s32 fi asm("ip") = flagIdx;`) turned out
@@ -107,7 +107,7 @@ branch condition and call argument is confirmed correct against the ROM.
   `asm/code_3_2_17_24708.s`) - toggles `self`'s VRAM-bank flip-flop and
   streams `self->items[idx]`'s tile asset to whichever bank the new state
   selects, rebuilds `gSlideshowDispcnt`'s bit 4 (the same `& ~0x10 | bit`
-  shadow-byte idiom `ShowSlidePicture`'s cousin in game_loop18.c uses for a
+  shadow-byte idiom `ShowSlidePicture`'s cousin in level_query.c uses for a
   *different* global - see that file's own write-up), DMA3-copies the
   asset's first half into `BG_PLTT`, and commits `gSlideshowDispcnt`'s
   low halfword to `REG_DISPCNT`. Confirmed byte-identical everywhere

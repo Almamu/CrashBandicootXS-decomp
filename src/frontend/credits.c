@@ -41,7 +41,7 @@ struct continue_prompt {
 /* The credits screen (RunCredits; docs/rom_map.md read it as a
  * "between-level map/progress screen"): a starfield plus the credits
  * text (gCreditsText) as floating lines and logos, run from the title
- * menu and after the ending (game_loop55.c), allocated `OperatorNew(0x98)` by `RunCredits`. Only
+ * menu and after the ending (game_frame.c), allocated `OperatorNew(0x98)` by `RunCredits`. Only
  * the fields this file's functions actually touch are named. */
 
 /* One timed text-popup node (0x18 bytes, `OperatorNew`-allocated by

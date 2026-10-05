@@ -6,7 +6,7 @@
  * CreateDingodile are constructor/destructor bodies of a subclass of the
  * CreateBossCtrl object family (input_ctrl_queue.c), method tables
  * gDingodileShieldVtable / gDingodileVtable; StartDingodileMotion is the same
- * mirror-gated velocity-record copy as SetMegaMixMotionXFromSet (actor_part27b.c) but
+ * mirror-gated velocity-record copy as SetMegaMixMotionXFromSet (mega_mix.c) but
  * indexed straight into gDingodileMotionEntries.
  *
  * UNUSED - no caller anywhere in the ROM (checked asm/ .s files, src/ .c files

@@ -17,7 +17,7 @@ function at the very end:
   trampoline family, feeding the 93-entry `gStaticData_087Exxx` family
   with type constants `1`-`7`. `SpawnBasicCrate` additionally indexes a
   small per-record flags byte via `gEntityFlags`'s own table (same
-  shape as `UpdateStompedHopPad`'s table read in `actor_part27c.c`) and folds
+  shape as `UpdateStompedHopPad`'s table read in `tiny_hop_pad.c`) and folds
   two of its bits into the constructed object's `+0x28` bitfield.
 - **`SpawnBodySlamPower`/`SpawnTornadoSpinPower`/`SpawnDoubleJumpPower`/`SpawnTurboRunPower`/
   `SpawnBlueGem`/`SpawnStopwatch`/`sub_80220C4`**: the `gSpriteBankTable`
@@ -34,7 +34,7 @@ function at the very end:
   `param1*12` runtime-indexed access to the same array).
 - **`SpawnCrateGemMarker`**: a plain state-write slot - packs two args into a
   stack `{x, y}` pair and calls `SetCrateGemPos` (already matched in
-  `game_loop10.c`), storing them into `gLevelState->0x1c0`/
+  `level_state.c`), storing them into `gLevelState->0x1c0`/
   `->0x1c4`.
 - **`SpawnWumpa`**: conditionally calls `CreateWumpa` (the
   achievement/unlock-icon family spawner) when `gLevelState+0x8c`
@@ -66,10 +66,10 @@ function at the very end:
 
 ## Matched (24 functions, full clean `make compare` passing)
 
-`src/graphics/graphics_loading_21bfc.c` (`SpawnNitroSwitchCrate`-`SpawnCheckpointCrate`, 6
+`src/level/spawn_crates.c` (`SpawnNitroSwitchCrate`-`SpawnCheckpointCrate`, 6
 fns): the `CreateCrate` trampoline family, types `1`-`7`.
 
-`src/graphics/graphics_loading_21d80.c` (`SpawnBodySlamPower`-`InitLevelState`,
+`src/level/spawn_pickups.c` (`SpawnBodySlamPower`-`InitLevelState`,
 18 fns): the `gSpriteBankTable` spawner family, `SpawnCrateGemMarker`,
 `SpawnWumpa`, both `nullsub`s, the `SpawnStartMarker` trampolines, the
 `gPlayer` position writers, the descriptor pair, and
@@ -132,7 +132,7 @@ fns): the `CreateCrate` trampoline family, types `1`-`7`.
   writing `**gSpriteBankSet` reproduces the ROM's exact 4-load
   chain (address load, then three register-indirect dereferences) in
   one expression, cleaner than the two-step `void *`-typed alias used
-  in the still-parked `trigger_effect.c`.
+  in the still-parked `spawn_gem_platforms.c`.
 - **Pre-computing a global's address into a local *before* a call it's
   used after** (`InitLevelState`'s dozen `{addr = &global; ...; *addr =
   result;}` blocks): writing the assignment as `global = f(...);`
@@ -152,7 +152,7 @@ fns): the `CreateCrate` trampoline family, types `1`-`7`.
 
 ## Parked (`NON_MATCHING`) - 1 function
 
-- **`SpawnBasicCrate`** (`src/graphics/graphics_loading_21bfc.c`, real bytes
+- **`SpawnBasicCrate`** (`src/level/spawn_crates.c`, real bytes
   in `asm/code_3_2_17_21d04.s`) - every field/mask/branch is confirmed
   correct and the bit-test/mask-write tail matches the ROM
   byte-for-byte, but the middle "resolve the per-record flags byte"
@@ -165,7 +165,7 @@ fns): the `CreateCrate` trampoline family, types `1`-`7`.
   understood 120-byte function - parked rather than keep fighting gcc's
   CSE for it. Splitting this function out of the otherwise-contiguous
   `SpawnBodySlamPower`+ block required a second `.c` file
-  (`graphics_loading_21d80.c`) plus the small raw
+  (`spawn_pickups.c`) plus the small raw
   `asm/code_3_2_17_21d04.s`, following the established "matched
   functions on both sides of a parked one need to live in different
   translation units" pattern.
@@ -215,14 +215,14 @@ to r0 and the reloaded flags byte to r1/r3 respectively, matching which
 one the ROM computes first) closed the remaining two 2-byte ordering
 diffs. Now genuine matched C, not `NAKED` - `tools/report_units.py`'s
 entry for `0x08021D04` now points at
-`src/graphics/graphics_loading_21bfc.o` instead of `base_object=None`.
+`src/level/spawn_crates.o` instead of `base_object=None`.
 Full clean `rm -rf build crashbandicootxs.elf crashbandicootxs.gba
 crashbandicootxs.map && make compare` - `crashbandicootxs.gba: La suma
 coincide`.
 
 This doesn't yet extend to `SpawnStartMarker`'s own copy of this same
 `gEntityFlags -> *rec -> {+8, +0xc}` resolution shape
-(`src/graphics/graphics_loading_1e990.c`, issue #30) - that function's
+(`src/level/spawn_start_marker.c`, issue #30) - that function's
 residual is a different register-choice/mask-derivation gap (`byte` in
 r0, a `movs r0,#1`/`subs r0,#0x12` mask derivation rather than a
 negative-immediate one), not the copy-elimination gap closed here -

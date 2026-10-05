@@ -123,7 +123,7 @@ split 0x08028D94 GetFreeVramTileBytes
 # with no label of its own in the original disassembly.
 split 0x08010AF8 IsCrateBusy
 
-# src/system/bg_scroll_layer_25fc8.c: the original disassembly folded
+# src/level/bg_layer.c: the original disassembly folded
 # sub_802612C (and its padding) into sub_8026108, then labelled its
 # byte-identical twin sub_802613C two bytes late, mid-instruction, as
 # sub_802613E.

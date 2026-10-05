@@ -21,7 +21,7 @@ struct aabb {
 };
 
 /* GitHub issue #13: 0x0800FC70-0x08010A0C, continuing the physics/
- * collision subsystem (see game_loop17.c's header comment and
+ * collision subsystem (see crate_reset.c's header comment and
  * docs/matching/issue-13-graphics-fc70.md). `IsCrateInsideRect` prepended
  * ahead of the already-matched `ResolvePlayerCollisions` run below - it's
  * immediately ROM-adjacent (no gap), so it joins this file rather
@@ -185,7 +185,7 @@ void ResolvePlayerCollisions(void)
 }
 
 /* Neighbor-list "get prev" accessor - reads `self+0x60`, the field
- * `ResetCrate` (game_loop17.c) zeroes on reset. */
+ * `ResetCrate` (crate_reset.c) zeroes on reset. */
 void *GetCrateBelow(void *selfArg)
 {
     u8 *self = selfArg;
@@ -222,7 +222,7 @@ u32 GetCrateClassId(void)
 }
 
 /* GitHub issue #13: 0x0800FC70-0x08010A0C, continuing the physics/
- * collision subsystem (see game_loop17.c's header comment and
+ * collision subsystem (see crate_reset.c's header comment and
  * docs/matching/issue-13-graphics-fc70.md). */
 
 extern u8 gCrateVtable[];
@@ -267,8 +267,8 @@ struct actor *InitCrate(struct actor *self)
     return self;
 }
 
-/* Bresenham-line-style step algorithm (see `FindLineCrossing`,
- * game_loop29's neighbor file, for the general 4-octant version this
+/* Bresenham-line-style step algorithm (see `FindLineCrossing`
+ * in crate_reset.c for the general 4-octant version this
  * is a fixed single-octant variant of): walks `dy` steps, accumulating
  * `count`; whenever the running error term `err` is non-negative,
  * steps `y` by `yStep` and folds the error by `diff = 2*dx - 2*dy`

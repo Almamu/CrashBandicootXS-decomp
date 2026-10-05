@@ -1,6 +1,6 @@
 # `InitBgLayer` converted from NAKED transcription to real matched C
 
-`InitBgLayer` (`src/system/game_loop15.c`, a BG-scroll-layer hardware-
+`InitBgLayer` (`src/level/bg_layer_init.c`, a BG-scroll-layer hardware-
 register/bitfield initializer) had been parked as a byte-correct NAKED
 asm transcription - see
 [issue-41-game-loop-25894.md](./issue-41-game-loop-25894.md) for the
@@ -133,7 +133,7 @@ byte content difference - confirmed by direct `arm-none-eabi-objdump`
 comparison of the assembled instruction bytes). Full clean `rm -rf
 build crashbandicootxs.elf crashbandicootxs.gba crashbandicootxs.map
 && make compare` - `crashbandicootxs.gba: La suma coincide`.
-`InitBgLayer` is folded into the same `src/system/game_loop15.o` unit
+`InitBgLayer` is folded into the same `src/level/bg_layer_init.o` unit
 as the already-matched
 `GrowBgLayerRows`/`GrowBgLayerColumns`/`ClipBgLayerColumns`/`ClipBgLayerRows` in
 `tools/report_units.py`, since it's the same object file.

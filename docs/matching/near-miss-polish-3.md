@@ -19,9 +19,9 @@ Five now match as real C:
 | `ActionCtrlStateCrouch` | `src/player/action_ctrl_states.c` | old_agbcc | 1 insn | scoped `volatile u8 *` for the facing block's second read-modify-write |
 | `LoadLevelSelectRecord` | `src/menus/level_select.c` | old_agbcc | spill | a second local for the record pointer (the ROM's spilled copy) |
 | `UpdateExtraLife` | `src/pickups/extra_life.c` | old_agbcc | 22 | plain re-reads instead of `volatile` ones; two extra references per velocity |
-| `ConvertHovercraftTiles` | `src/graphics/actor_part130.c` | both | 29 | opaque 0xf mask (`asm("" : "=r"(m) : "0"(0xf))`) ANDed as `m & b`; own counter for the second loop; row header in ROM order |
+| `ConvertHovercraftTiles` | `src/bosses/hovercraft.c` | both | 29 | opaque 0xf mask (`asm("" : "=r"(m) : "0"(0xf))`) ANDed as `m & b`; own counter for the second loop; row header in ROM order |
 
-All four files were already on their compiler (`actor_part130.c` matches
+All four files were already on their compiler (`hovercraft.c` matches
 under both), so no Makefile change. Every empty `asm` has a comment at
 its use.
 
@@ -82,7 +82,7 @@ registers. Two more gaps in the loop headers:
   written as its own statement in the ROM's order: row pointer, height
   address, `d = dst`, `src = row + stride`, `n = *hp`.
 
-The twin `ConvertAirshipTiles` (`actor_part26c.c`, 56 halfwords off) wasn't in
+The twin `ConvertAirshipTiles` (`airship_graphics.c`, 56 halfwords off) wasn't in
 this pass's scope. Its draft has the same nibble loop and would probably
 take the same changes.
 

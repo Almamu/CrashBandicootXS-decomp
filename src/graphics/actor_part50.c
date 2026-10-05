@@ -13,7 +13,7 @@
 
 /* The `InitActorPart`/`gActorList`-rooted "self" object family
  * already documented in ctrl.c/action_ctrl_states.c/actor_part19.c/
- * actor_part28.c/actor_part32.c: a "part table" pointer at `self+0`
+ * hovercraft_parts.c/hovercraft_cannon.c: a "part table" pointer at `self+0`
  * (copied from the constructor's `part` argument's own `+4` field), a
  * table-index/"kind" field at `self+0xc`, an anim-frame halfword/byte
  * pair at `self+0x10`/`self+0x12`, an accumulator at `self+8`, state at

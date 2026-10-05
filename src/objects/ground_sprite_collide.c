@@ -27,7 +27,7 @@
  * also already flagged both functions as built on `sub_8008200`/
  * `ProbeTerrain`/`sub_8026C3C`/`sub_8026BF8` - two of those four
  * (`sub_8008200`, `ProbeTerrain`) are already matched this session
- * (`src/objects/sprite_obj.c`, `src/system/game_loop43.c`); this
+ * (`src/objects/sprite_obj.c`, `src/level/terrain_probe.c`); this
  * session additionally reads `sub_8026C3C`/`sub_8026BF8` (still raw,
  * `asm/code_3_2_17_266bc.s`) far enough to place them precisely.
  *
@@ -81,7 +81,7 @@
  *      on the "found ground" flag still being `0`: build a plain int
  *      `{x, y}` position via `sub_8008278(dest, mode, quad)`, probe it
  *      through the shared `ProbeTerrain(player, mode, pos, span,
- *      outValue)` API (already matched, `game_loop43.c`) with a
+ *      outValue)` API (already matched, `terrain_probe.c`) with a
  *      `span` derived from the quad's own `h`/`w` byte (`h - 16` for
  *      the first X-axis block, `w` for the Y-axis block, `h` for the
  *      second X-axis block - three deliberately different probe
@@ -104,7 +104,7 @@
  * ## `sub_8026C3C`/`sub_8026BF8` (still raw, understood only)
  *
  * Both are single-point collision-test siblings of the already-matched
- * `ProbeTerrainY`/`ProbeTerrainX` pair (`game_loop43.c`'s own "what's still
+ * `ProbeTerrainY`/`ProbeTerrainX` pair (`terrain_probe.c`'s own "what's still
  * open" section already predicted this) - `rom_map.md`'s "15 more
  * reads" pass (line ~2581) had already placed them as "single-point
  * collision-test siblings ... one via the raw terrain streamer and one

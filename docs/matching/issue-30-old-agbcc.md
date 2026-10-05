@@ -15,8 +15,8 @@ a function body and no NAKED.
 ## Result
 
 Every object in the region moves to `OLD_AGBCC_OBJS` whole. The files
-that were already matched (`graphics_package.c`, `_1e964.c` and
-`graphics_loading_1e990.c`) match under old_agbcc unchanged.
+that were already matched (`graphics_package.c` and
+`spawn_start_marker.c`) match under old_agbcc unchanged.
 
 | function | file | was |
 |---|---|---|

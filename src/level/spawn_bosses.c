@@ -50,7 +50,7 @@ extern void SetCrateGemPos(void *self, s32 *point);
  * The ROM computes the point's x/y into fresh registers
  * (`subs r2, r1, #2`; `adds r3, r0, #0; subs r3, #30`) where plain C
  * reuses their inputs (9 halfwords off), the same gap as SpawnCrateGemMarker
- * (graphics_loading_21d80.c). Pinning the four temporaries plus an empty
+ * (spawn_pickups.c). Pinning the four temporaries plus an empty
  * `asm("" : "+r" (x))` - which stops combine folding `x` back into its
  * input before `y` is loaded - reproduces it. */
 void SpawnRoomExit(u32 arg0, u16 arg1, u16 arg2, u16 arg3)

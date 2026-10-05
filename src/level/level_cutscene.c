@@ -4,9 +4,9 @@
 #include "bitmap_font.h"
 
 /* 0x08022354-0x080225A0, formerly asm/code_3_2_17_22354.s: the two
- * functions between issue #33's chunk (graphics_loading_21d80.c, which
+ * functions between issue #33's chunk (spawn_pickups.c, which
  * ends with the game-context constructor InitLevelState) and
- * UpdateGameFrame (game_loop55.c). See
+ * UpdateGameFrame (game_frame.c). See
  * docs/matching/gap-22354-game-context.md.
  *
  * - DestroyLevelState (UNUSED): the destructor matching InitLevelState - frees every
@@ -77,7 +77,7 @@ typedef void (*destroy_fn)(void *self, s32 flags);
  * and every word in baserom.gba for 0x08022355). Matched anyway.
  *
  * The game context's destructor: tears down every subsystem singleton
- * InitLevelState (graphics_loading_21d80.c) constructed, each with the
+ * InitLevelState (spawn_pickups.c) constructed, each with the
  * "delete" flags 3, clears the context pointer and - on bit 0 of
  * `flags`, gcc 2.x's deleting-destructor flag - frees `self`. The game
  * never leaves MainLoop, so it never runs. */

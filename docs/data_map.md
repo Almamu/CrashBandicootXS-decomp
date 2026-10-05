@@ -34,8 +34,8 @@ label, with `regions` sub-lists for the composite blobs.
   banks, the 41 level descriptors).
 - **Structure walkers** for the big blobs, written from the matched C:
   the sprite-bank walker (`GetSpriteTileBase`/`GetSpriteFrame`/`affine_sprite_pieces.c`),
-  the level-descriptor walker (`level_layers.c`, `bg_scroll_layer_25fc8.c`,
-  `game_loop5.c`), the category-descriptor fields (`actor_part95.c`,
+  the level-descriptor walker (`level_layers.c`, `bg_layer.c`,
+  `collision_map.c`), the category-descriptor fields (`actor_part95.c`,
   `actor_part45d.c`, `include/actor_anim.h`), and a `LoadTaggedAsset`
   header test (tag `0x00`/`0x10`/`0x30`) at every pointer target.
 
@@ -67,8 +67,8 @@ the appendix.
 | `0815A050`-`08167AD4` | 55,940 | compressed OBJ frame set C | `GetAnimFrameData` via table_B `0817BA44` | high | **converted** |
 | `08167AD4`-`0817E78C` | 92,180 | 200 small/mid tables: gameplay, menus, HUD, actors, text (the built sfx table sits in between) | direct, see appendix | mostly high | easy (a few medium) |
 | `0817E78C`-`0817E7AC` | 32 | `u16[16]` | `InitLanguageSelectGraphics` | high | **done** (C) |
-| `0817E7AC`-`0824B638` | 839,308 | level tile sets 1-3 (tag-0x00 raw 8bpp tiles) | `bg_scroll_layer_25fc8.c` via `bg_layer_desc.tileData` | high | **done** (grit) |
-| `0824B638`-`08270F08` | 153,808 | per-room level data, 33 rooms | `level_layers.c`, `game_loop5.c`, `cutscene_player.c`, `game_loop41.c` | high | **done** (C, [levels.md](./levels.md)) |
+| `0817E7AC`-`0824B638` | 839,308 | level tile sets 1-3 (tag-0x00 raw 8bpp tiles) | `bg_layer.c` via `bg_layer_desc.tileData` | high | **done** (grit) |
+| `0824B638`-`08270F08` | 153,808 | per-room level data, 33 rooms | `level_layers.c`, `collision_map.c`, `cutscene_player.c`, `room_entities.c` | high | **done** (C, [levels.md](./levels.md)) |
 | `08270F08`-`082B91D0` | 295,624 | level tile sets 4-5 | as tile sets 1-3 | high | **done** (grit) |
 | `082B91D0`-`082BF120` | 24,400 | per-room level data, 8 rooms | as block 1 | high | **done** (C) |
 | `082BF120`-`084A4660` | 1,987,904 | sprite tile pool for the 56 sprite banks | `affine_sprite_pieces.c`/`sprite_pieces.c` (`GetSpriteTileBase` + frame offset) | high | **done** (grit) |
@@ -266,8 +266,8 @@ is reached through two pointer graphs.
 them rooms: `{u16 (*palette)[256]; struct level_desc *desc; s32 kind;
 ...; u16 catIndex @0x10}` (now `struct level_room` in
 `src/data/level_table_16c814.c`). The same record is `struct level_load_args` in
-`level_layers.c` (first two fields), `gl_widget_kind` in `game_loop56.c`
-(`kind`), and `MedalListItem` in `game_loop18.c` (`linkedObj` is the
+`level_layers.c` (first two fields), `gl_widget_kind` in `run_room.c`
+(`kind`), and `MedalListItem` in `level_query.c` (`linkedObj` is the
 `desc`, and `linkedObj->0x1C` is the descriptor's object list). A room
 record is the `self->widget` that `RunRoom` hands to `LoadRoom`.
 Walking them:
@@ -276,9 +276,9 @@ Walking them:
   (all `bg_layer_desc *`), `asset`, `u8 assetPacked`, and the two object
   lists passed to `SpawnRoomEntities`. The 41 descriptors sit at `0824C400`
   ... `08270BCC` (33) and `082B9ED0` ... `082BEADC` (8).
-- `struct bg_layer_desc` (0x20, `bg_scroll_layer_25fc8.c`): `u16 *chunkGrid`,
+- `struct bg_layer_desc` (0x20, `bg_layer.c`): `u16 *chunkGrid`,
   `u32 assetOffset` (the streamers use `level asset + assetOffset` as
-  their decode base, `game_loop5.c`/`cutscene_player.c`), `tileData`,
+  their decode base, `collision_map.c`/`cutscene_player.c`), `tileData`,
   `scaleX`, `scaleY`, `cnt`, grid width/height in chunks
   (`+0x16`/`+0x18`), size in tiles (`+0x1A`/`+0x1C`).
 - `tileData` is either one of the built LZ77 tile sets

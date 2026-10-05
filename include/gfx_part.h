@@ -4,9 +4,9 @@
 /* A CreateMovingSprite/CreateSpriteObj-built on-screen "part" object and its
  * animation bank, as driven by the per-frame helpers
  * ResetSpriteFrameTimer/ResetSpriteFrameIndex/SetSpriteAnimDone/GetSpriteAnimPaletteSlot. First written for
- * src/graphics/actor_part_188d0.c (issue #23); also used by the
+ * src/bosses/cortex.c (issue #23); also used by the
  * "trigger effect type N" spawners in
- * src/graphics/graphics_loading_1ea5c.c. The same object is described
+ * src/level/spawn_gems.c. The same object is described
  * under other local names elsewhere (`struct gobj` in
  * include/gobj_1a794.h, `struct settings_icon_actor` in
  * include/pause_menu.h) - not merged yet. */

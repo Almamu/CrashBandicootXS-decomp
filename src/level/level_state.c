@@ -637,7 +637,7 @@ extern s32 LevelHasGemPathGemEntity(s32 idx);
 
 /* Five thin two-argument wrappers that drop `self` entirely and forward
  * straight to one of `LevelHasYellowGemEntity`/`34`/`40`/`4C`/`58` (the medal
- * "flag index" wrappers, `game_loop18.c`). */
+ * "flag index" wrappers, `level_query.c`). */
 s32 LevelHasYellowGem(void *self, s32 idx)
 {
     return LevelHasYellowGemEntity(idx);
@@ -667,7 +667,7 @@ extern s32 GetHovercraftPartsLeft(void);
 
 /* Dispatches on `self+0xc4`'s "current index" field: index `0x15` fires
  * the actor-part singleton lifetime counter (`GetHovercraftPartsLeft`,
- * `actor_part28.c`); indices `0x14`/`0x16`/`0x17` instead compute
+ * `hovercraft_parts.c`); indices `0x14`/`0x16`/`0x17` instead compute
  * `3 - (*(self+0x1c8))->0x10` (the fourth word-field `SetLevelBoss`
  * above sets, apparently itself a pointer to a small record); anything
  * else returns `0`. */
@@ -801,7 +801,7 @@ void AddLife(struct level_state *self)
  * counter/threshold pair, `IsInBonusRound`/`IsInGemPath` readiness checks,
  * then either OR a bit into `GetCurrentLevelFlags`'s slot or forward
  * `self+0x1c0`/`0x1c4` to `SpawnCrateGem`). Only caller is
- * `RunRoom`'s dispatch opener (`game_loop56.c`), which passes
+ * `RunRoom`'s dispatch opener (`run_room.c`), which passes
  * `*gLevelState` as `self`. */
 void CheckAllCratesBroken(void *selfArg)
 {
@@ -1128,7 +1128,7 @@ extern void *InitLevelState(void *arg0);
 
 /* Lazily allocates `gLevelStateSingleton` (0x1cc bytes) through
  * `InitLevelState` the first time it's needed, then returns it. Its own
- * file: ROM-adjacent to `PlayRoom` (now matched, `game_loop39.c`)
+ * file: ROM-adjacent to `PlayRoom` (now matched, `play_room.c`)
  * and the still-raw `RunRoom` on both sides
  * (asm/code_3_2_17_236ec.s before it, `PlayRoom`/
  * asm/code_3_2_17_23a1c.s after), so it can't share an object file

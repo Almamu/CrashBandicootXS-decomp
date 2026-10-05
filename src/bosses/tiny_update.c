@@ -3,11 +3,11 @@
 /* GitHub issue #22, ROM 0x08018008-0x080187FC, formerly
  * asm/code_3_2_17_18008.s (details in
  * docs/matching/issue-22-0x08018008-hopper.md). Built with old_agbcc
- * (Makefile OLD_AGBCC_OBJS), like actor_part_188d0.c right after it.
+ * (Makefile OLD_AGBCC_OBJS), like cortex.c right after it.
  *
  * UpdateTiny/SetTinyState are the per-frame update and "enter state"
  * methods of the gTinyVtable class (constructor CreateTiny,
- * actor_part_188d0.c): a boss that hops its `part` along parabolic arcs
+ * cortex.c): a boss that hops its `part` along parabolic arcs
  * (the 257-entry i*i>>8 table at +0x48) between the gUnknown_030012EC
  * list's anchor objects, stomping them. PickTinyHopTarget picks the next anchor
  * from a per-round table, SpawnTinyFallingLeaves spawns a falling hazard. */
@@ -135,7 +135,7 @@ struct tiny_tiger
 
 /* The ROM re-reads a just-filled box's `w` word from its stack slot rather
  * than through the register holding the box's address (see
- * actor_part_1967c.c). */
+ * dingodile.c). */
 #define BOX_VALID(bx) (*(vs32 *)&(bx).w)
 
 typedef void (*hop_fn1)(void *self, s32 a);
@@ -212,7 +212,7 @@ static inline void AndFlags(struct hop_part *part, s32 mask)
     PART_FLAGS(part) &= mask;
 }
 
-/* Sets the palette-slot nibble at +0x29 (actor_part_188d0.c's
+/* Sets the palette-slot nibble at +0x29 (cortex.c's
  * SetFrameNibble - the pinned registers are still needed under
  * old_agbcc). */
 static inline void SetSlot(struct hop_part *part, s32 v)
@@ -592,7 +592,7 @@ void SpawnTinyFallingLeaves(struct tiny_tiger *self, struct hop_part *part, s32 
         /* The ROM loads the tag (5, in r0) before its address, and
          * materializes the 0 it later stores to +0x64/+0x54 here, keeping
          * it in r8 across the calls (like the 0xF of SpawnCortexTarget,
-         * actor_part_188d0.c); no plain-C placement of that 0 does this. */
+         * cortex.c); no plain-C placement of that 0 does this. */
         register s32 t asm("r0") = 5;
         u8 *tp;
 

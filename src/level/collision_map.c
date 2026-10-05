@@ -4,7 +4,7 @@
 
 extern void *gLevelLayers;
 
-/* See game_loop3.c for the full `tile_cache` doc comment - duplicated
+/* See bg_layer_base.c for the full `tile_cache` doc comment - duplicated
  * here (not shared via a header) since it's only ever accessed through
  * a raw pointer parameter in this cluster of files. */
 struct tile_cache {

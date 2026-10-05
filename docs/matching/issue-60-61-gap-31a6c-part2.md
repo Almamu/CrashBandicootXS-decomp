@@ -7,7 +7,7 @@ pass closed `0x08031784`-`0x08031A6C`. That Phase 2 gap
 was split in half for parallel work: a sibling pass covers the first 30
 functions (`UpdateJetpackBalloonCrate`-`UpdateJetpackRing`, `src/graphics/actor_part129.c`);
 this pass covers the last 30 (`CreateJetpackRing`-`nullsub_35`, new file
-`src/graphics/actor_part130.c`).
+`src/bosses/hovercraft.c`).
 
 ## What this pass closed: 16 matched, 14 NAKED, 0 left raw
 
@@ -25,23 +25,23 @@ have entries for this pass, cross-referencing this document).
    fields (`gHovercraftX`-`030015EC`, ~9 live fields across a
    ~0x38-byte span with a few gaps, plus a separate small cluster at
    `030015FC`-`030015FF`). A **later** ROM region (issue #62,
-   `0x08033804`+, `src/graphics/actor_part28.c`-`actor_part37.c`,
+   `0x08033804`+, `src/bosses/hovercraft_parts.c`-`hovercraft_launcher.c`,
    already matched in an earlier pass) also touches this exact family
    and had *already* established the naming and, more importantly, the
    **representation convention**: flat, independently-linked `extern`
    globals (e.g. `extern s32 gHovercraftX;`), not fields of a
    struct reached through a common base pointer. This pass reuses that
    established convention verbatim (including the exact names already
-   assigned by `actor_part28.c`'s own extern block) for consistency,
+   assigned by `hovercraft_parts.c`'s own extern block) for consistency,
    rather than introducing a struct wrapper as originally guessed in
    `docs/rom_map.md`'s reconnaissance-era note ("a second RAM-struct
    family... define this as a proper named struct") - a struct wrapper
    doesn't fit how these bytes are actually laid out in the linked
    BSS (each one its own symbol, not one contiguous allocation reached
    via base+offset), and diverging from the already-merged
-   `actor_part28.c` convention for the exact same bytes would be a
+   `hovercraft_parts.c` convention for the exact same bytes would be a
    worse outcome than following the a-priori guess. New fields this
-   pass adds to the family (not touched by `actor_part28.c`):
+   pass adds to the family (not touched by `hovercraft_parts.c`):
    `gHovercraftMapCols`/`030015A4`/`030015A8` (P2-meter-shaped row/column
    counts and fill level, seeded by `CreateHovercraft` from
    `gHovercraftPicture`), `gHovercraftMapFrames` (the row-pointer array
@@ -80,7 +80,7 @@ rotation, matching `docs/rom_map.md`'s prior finding), and a top-level
 per-frame driver that DMA-clears/fills a blank BG3 tile exactly like
 `LoadAirshipGraphics` does before its own meter call. `ConvertHovercraftTiles` is the
 P2-side twin of the already-matched VRAM fill-level meter `ConvertAirshipTiles`
-(issue #58, `actor_part26c.c`), on this singleton's own per-level table
+(issue #58, `airship_graphics.c`), on this singleton's own per-level table
 (`gHovercraftPalette`) and row array (`gHovercraftMapFrames`) rather than
 the boss's (`gAirshipPalette`/`gAirshipMapFrames`).
 
@@ -218,7 +218,7 @@ elsewhere in this project, re-confirmed rather than re-derived here:
 ## Verification
 
 Verified via the mandatory full pipeline: `rm -rf build && make
-NON_MATCHING=1 report` (no warnings for `actor_part130.c`), then
+NON_MATCHING=1 report` (no warnings for `hovercraft.c`), then
 `rm -rf build crashbandicootxs.elf crashbandicootxs.gba
 crashbandicootxs.map && make compare` confirming `crashbandicootxs.gba:
 OK` (the project's `sha1sum -c checksum.sha1` success message).
@@ -236,7 +236,7 @@ matched/parked list this entry feeds into.
 
 ## Later pass: member-pointer dispatch
 
-A later pass promoted `UpdateJetpackCollectedWumpa`, `DestroyJetpackCollectedWumpa`, `UpdateHovercraftFireball` and `RunHovercraftFireballState` (`actor_part130.c`). `DestroyJetpackCollectedWumpa`'s parameter-copy order came out right from a plain C destructor with no barrier; `UpdateJetpackCollectedWumpa`'s anim idiom needed per-field `anims[animIndex]` indexing. The other NAKED functions here (many-high-register, DMA/tile, constructor cases) were not retried from NAKED to real C. The "r7 table-base"
+A later pass promoted `UpdateJetpackCollectedWumpa`, `DestroyJetpackCollectedWumpa`, `UpdateHovercraftFireball` and `RunHovercraftFireballState` (`hovercraft.c`). `DestroyJetpackCollectedWumpa`'s parameter-copy order came out right from a plain C destructor with no barrier; `UpdateJetpackCollectedWumpa`'s anim idiom needed per-field `anims[animIndex]` indexing. The other NAKED functions here (many-high-register, DMA/tile, constructor cases) were not retried from NAKED to real C. The "r7 table-base"
 shape was gcc 2.x's pointer-to-member-function call
 `(this->*table[this->state])()`, which `ACTOR_PMF_CALL` in
 `include/actor_self.h` reproduces with no register pins. See

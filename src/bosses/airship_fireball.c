@@ -52,8 +52,8 @@ void DamageAirshipFireball(void *selfArg, s32 delta)
     }
 }
 
-/* Same large per-instance "self" object family as actor_part20.c - see
- * that file's header comment and docs/matching/issue-58-0x08030334-actor.md. */
+/* Same large per-instance "self" object family as above - see
+ * this file's header comment and docs/matching/issue-58-0x08030334-actor.md. */
 
 extern struct actor_pmf gAirshipFireballStateFuncs[];
 extern void UpdateActor(void *self);
@@ -78,8 +78,7 @@ void UpdateAirshipFireball(struct actor_self *self)
 /* Pad to the next word with zeros, as the ROM does. */
 asm(".align 2, 0");
 
-/* Same large per-instance "self" object family as actor_part20.c/
- * actor_part20b.c - see actor_part20.c's header comment and
+/* Same large per-instance "self" object family as above - see this file's header comment and
  * docs/matching/issue-58-0x08030334-actor.md. */
 
 extern void InitActorPart(void *self, s32 a, s32 b, s32 c, s32 d);
@@ -91,7 +90,7 @@ extern u8 gAirshipFireballVtable[];
  * `gAirshipFireballVtable`, and stashes its own `b`/`c` arguments a
  * second time into `self+0x58`/`self+0x5c`, `self+0x64 = 0`,
  * `self+0x60 = 0x95`, `self+0x68 (byte) = 0`. Returns `self` - the same
- * shape as the already-matched `CreateHovercraftCannon` (actor_part32.c) and the
+ * shape as the already-matched `CreateHovercraftCannon` (hovercraft_cannon.c) and the
  * still-parked `CreateJetpackShot` (actor_part45c.c), except this one's `d`
  * argument is itself stack-passed (a 5th real argument total) rather
  * than the 4th register argument. Pinning `d` to `r0` *after* the other
@@ -122,7 +121,7 @@ void *CreateAirshipFireball(void *selfArg, s32 a, s32 b, s32 c, s32 d)
 
 asm(".align 2, 0");
 
-/* Same boss-weapon "self" object family as actor_part20.c - see that
+/* Same boss-weapon "self" object family as above - see this
  * file's header comment and docs/matching/issue-58-0x08030334-actor.md. */
 
 /* Trivial setter: marks `self+0x68` (a small state/flag byte, meaning
@@ -133,10 +132,10 @@ void AirshipFireballStateExplode(void *selfArg)
     self[0x68] = 1;
 }
 
-/* Same "self" object family as actor_part20b.c - see
+/* Same "self" object family as above - see
  * docs/matching/issue-58-0x08030334-actor.md. */
 
-/* `UpdateAirshipFireball`'s (actor_part20b.c) per-state member-pointer dispatch
+/* `UpdateAirshipFireball`'s (above) per-state member-pointer dispatch
  * without its tail: `(this->*gAirshipFireballStateFuncs[this->state])()`
  * (see `ACTOR_PMF_CALL`). */
 void RunAirshipFireballState(struct actor_self *self)
@@ -147,10 +146,10 @@ void RunAirshipFireballState(struct actor_self *self)
 /* Pad to the next word with zeros, as the ROM does. */
 asm(".align 2, 0");
 
-/* Same boss-weapon "self" object family as actor_part20.c - see that
+/* Same boss-weapon "self" object family as above - see this
  * file's header comment and docs/matching/issue-58-0x08030334-actor.md. */
 
-/* Trivial getter counterpart to `AirshipFireballStateExplode` (actor_part21.c): reads
+/* Trivial getter counterpart to `AirshipFireballStateExplode` (above): reads
  * `self+0x68`. */
 u8 IsAirshipFireballUnshootable(void *selfArg)
 {

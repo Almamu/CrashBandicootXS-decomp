@@ -624,7 +624,7 @@ void SpawnSquid(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 }
 
 /* "Two-line text popup" spawners, ROM 0x0801FEEC-0x08020E84 - the
- * continuation of graphics_loading_1ef0c.c. Built with old_agbcc; see
+ * continuation of the code above. Built with old_agbcc; see
  * include/text_popup.h. */
 
 extern u8 gFlamethrowerLabAssistantAnimMap[];

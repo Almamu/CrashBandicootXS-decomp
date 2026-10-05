@@ -18,7 +18,7 @@ extern void *_call_via_r1(void *arg0, void *fn);
 /* `other` (the second argument - `self`, the first, is never read)
  * shares `struct actor`'s leading header layout (id @8, flags @0xc,
  * table @0x18, same `other->table`-relative `{s16 offset, void *fn}`
- * pair at +0x28/+0x2c that `src/system/game_loop8.c`'s `UpdateRoomFrame`
+ * pair at +0x28/+0x2c that `src/level/room_frame.c`'s `UpdateRoomFrame`
  * already reads via an identical `_call_via_r1` hit-probe call), but
  * is read at +0x38 too - bigger than the 0x1c-byte `struct actor`, so
  * it gets its own `struct cbf4_other` below.
@@ -30,7 +30,7 @@ extern void *_call_via_r1(void *arg0, void *fn);
  * gated: once when the `_call_via_r1` hit-probe against `other->table`'s
  * own +0x28/+0x2c pair reports *no* hit, once when `other->0xc` bit 3
  * is already set, and once when `other->0x38` is nonzero. This is the
- * exact idiom `actor_part27c.c`'s `UpdateOneShotAnimCtrl` already matches as
+ * exact idiom `tiny_hop_pad.c`'s `UpdateOneShotAnimCtrl` already matches as
  * real C (its own doc comment: "needs several `register asm` pins ...
  * without them this compiler ... folds the ROM's shift-setup pair ...
  * and CSEs away the ROM's second, seemingly redundant reload") - here

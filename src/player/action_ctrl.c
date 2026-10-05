@@ -5,7 +5,7 @@
  * covers `nullsub_17` through `ActionCtrlSetTargetAnim` (all matched); non-adjacent
  * to actor_part28c.c since the parked `ActionCtrlStateBodySlamStart` sits raw between
  * them (asm/code_3_2_17_156ec.s). Same "self" object family documented
- * at the top of action_ctrl_states.c/actor_part28.c. */
+ * at the top of action_ctrl_states.c/hovercraft_parts.c. */
 
 extern void StartActionCtrlRun(void *selfArg);
 extern void ActionCtrlStateRun(void *self);

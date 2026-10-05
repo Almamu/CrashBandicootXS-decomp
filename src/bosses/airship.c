@@ -2,12 +2,12 @@
 #include "actor_self.h"
 #include "memory.h"
 
-/* Same boss-weapon "self"/tracker object family as actor_part20.c/
- * actor_part23.c - see actor_part20.c's header comment and
+/* Same boss-weapon "self"/tracker object family as airship_fireball.c/
+ * airship_fall.c - see airship_fireball.c's header comment and
  * docs/matching/issue-58-0x08030334-actor.md.
  *
  * Position-easing helper, called from `AirshipStateFireballs`/`AirshipStateCannon`
- * (actor_part21d.c/actor_part21e.c): advances the position
+ * (airship_states.c): advances the position
  * accumulators (`gAirshipX`/`gAirshipY`) by their
  * per-frame deltas (`gAirshipVelX`/`gAirshipVelY`), then
  * computes the player's (`gActorList`) signed distance from a
@@ -123,8 +123,8 @@ dy_done:
     }
 }
 
-/* Same boss-weapon "self"/tracker object family as actor_part20.c/
- * actor_part23.c - see actor_part20.c's header comment and
+/* Same boss-weapon "self"/tracker object family as airship_fireball.c/
+ * airship_fall.c - see airship_fireball.c's header comment and
  * docs/matching/issue-58-0x08030334-actor.md.
  *
  * Constructor for the small tracker object (`gAirship`):
@@ -140,7 +140,7 @@ dy_done:
  * (`gAirshipState`/`gAirshipStateTimer`) and fires the tracker's own
  * state-0/table-index-0 transition (anim frame from its own part-table
  * pointer at `+0`). Finishes by running `LoadAirshipGraphics` once (the DMA/
- * tile-cache setup + palette fade, actor_part26b.c) and clearing
+ * tile-cache setup + palette fade, airship_load_graphics.c) and clearing
  * `gAirshipBg2PageFlip`'s "apply now" latch.
  *
  * Matched as the inlined C++ `gAirship = new Tracker(...)`:
@@ -210,8 +210,8 @@ void CreateAirship(s32 level)
     gAirshipBg2PageFlip = 0;
 }
 
-/* Same boss-weapon "self"/tracker object family as actor_part20.c/
- * actor_part23.c - see actor_part20.c's header comment and
+/* Same boss-weapon "self"/tracker object family as airship_fireball.c/
+ * airship_fall.c - see airship_fireball.c's header comment and
  * docs/matching/issue-58-0x08030334-actor.md.
  *
  * A large "spawn/arm this weapon-kind instance" setup routine: resets
@@ -299,8 +299,8 @@ void SpawnAirship(s32 kind, s32 x, s32 y, s32 z)
     QueueVramDmaTransfer(gAirshipHitFlashPalettes, (void *)(BG_PLTT + 0x20), 0x20, 0x10);
 }
 
-/* Same boss-weapon "self"/tracker object family as actor_part20.c/
- * actor_part23.c - see actor_part20.c's header comment and
+/* Same boss-weapon "self"/tracker object family as airship_fireball.c/
+ * airship_fall.c - see airship_fireball.c's header comment and
  * docs/matching/issue-58-0x08030334-actor.md.
  *
  * A large per-frame "advance this weapon-kind instance" driver: fires
@@ -313,7 +313,7 @@ void SpawnAirship(s32 kind, s32 x, s32 y, s32 z)
  * the current keyframe-table entry's threshold, both re-arms the
  * accumulator against the *next* entry's own delta and sets the "loop"
  * flag (`+0x12`). Always recomputes the BG2 zoom scale/offset the same
- * way `SpawnAirship` (actor_part23e.c) does (`GetCellAnimDistance`/
+ * way `SpawnAirship` (above) does (`GetCellAnimDistance`/
  * `__divsi3`/`sub_8029E34`), and - only when the tracker's
  * accumulator (`+8`, `>>8`) actually crossed to a new keyframe-table
  * index this frame - re-blits its box via `DrawAirshipMap` and re-arms
@@ -363,8 +363,8 @@ void UpdateAirship(void)
     }
 }
 
-/* Same boss-weapon subsystem as actor_part20.c/actor_part23.c - see
- * actor_part20.c's header comment and
+/* Same boss-weapon subsystem as airship_fireball.c/airship_fall.c - see
+ * airship_fireball.c's header comment and
  * docs/matching/issue-58-0x08030334-actor.md. */
 
 extern s32 GetActorBgCenterX(void);

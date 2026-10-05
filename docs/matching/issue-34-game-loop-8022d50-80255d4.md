@@ -7,17 +7,17 @@ initially left raw in a first pass (see below), then picked up again in
 a second follow-up pass once its second half was fully traced - see the
 "NAKED transcription" section below.
 
-## `StartTimeTrial` - NAKED transcription, `src/system/game_loop40.c`
+## `StartTimeTrial` - NAKED transcription, `src/level/time_trial.c`
 
 Fully traced against the ROM: `self` (every caller passes
 `*gLevelState`, the same per-level state object
-`EndBonusRound`/`SetCheckpointAtPlayer`, game_loop.c, and the `self+0x80`/`0x84`/...
-accessor family, game_loop2.c, operate on) gets two fields cleared
+`EndBonusRound`/`SetCheckpointAtPlayer`, bonus_round.c, and the `self+0x80`/`0x84`/...
+accessor family, level_state.c, operate on) gets two fields cleared
 (`self+0x8c` as a byte, `self+0x90`-`0xa0` as five zeroed words), then -
 unless `self+0xdc`'s level object is already in state 3 - the two actor
 slots at `self+0x1b8`/`0x1bc` are torn down (`ResetSpriteFrameTimer`/
 `ResetSpriteFrameIndex`/`SetSpriteAnimDone(..., 0)`, the same OAM-trio teardown
-`PlayRoom`, game_loop39.c, already uses) when non-null. `self+0x1bc`'s
+`PlayRoom`, play_room.c, already uses) when non-null. `self+0x1bc`'s
 actor additionally feeds its own `+0x20`-table/`+0x2d`-tag hitbox record
 (the same convention `DrawCrate`, crate_draw.c, and `IsCrateInsideRect`,
 crate.c, already document) into `LoadPaletteSlot` (the tile-asset-cache
@@ -55,7 +55,7 @@ to live in r7 for the *entire* array walk. A `register s32 sentinel
 asm("r7")` pin hits a confirmed toolchain bug - this compiler never adds
 an inline-asm-clobbered r7 to the function's own push/pop list (the same
 gap already parked for `IsCrateInsideRect`'s `success` local, crate.c,
-and `DropExtraLife`, game_loop29.c - see `docs/status/game_loop.md`). A
+and `DropExtraLife`, drop_extra_life.c - see `docs/status/game_loop.md`). A
 *plain* (non-pinned) `s32 sentinel = 0xffff;` local dodges the bug and
 gets tracked correctly, but only in isolation - once every other quirk
 above is also anchored (needed to get the rest of the loop byte-exact),
@@ -71,15 +71,15 @@ Transcribed straight from the confirmed-correct ROM disassembly instead.
 Full clean `make compare` (`La suma coincide`) confirms the NAKED
 transcription byte-exact.
 
-## `SpawnRoomEntities` - NAKED transcription, `src/system/game_loop41.c`
+## `SpawnRoomEntities` - NAKED transcription, `src/level/room_entities.c`
 
 Follow-up pass on the entry directly above: the full instruction-level
 trace was finished this time (every field, offset, branch and call
 argument pinned down against the ROM), so this is now understood with
 byte-exact-reconstruction confidence rather than left raw. `self` here
 is `*gEntityFlags` (the same collision-bitmap base
-`sub_8025944`/`sub_8025968`/`sub_802599C`, game_loop12.c, and
-`sub_8025A0C`, game_loop13.c, already operate on).
+`sub_8025944`/`sub_8025968`/`sub_802599C`, entity_flags.c, and
+`sub_8025A0C`, entity_flags.c, already operate on).
 
 **First half** (DMA/`CpuSet` refresh + group/item walk): if `list` (a
 new "list" pointer) differs from `self`'s own cached copy at `+0`,
@@ -88,16 +88,16 @@ collision-bitmap arrays that family already documents) get
 DMA-zero-filled (64 bytes each, matching a plain `DmaFill32(3, 0, dest,
 64)`), then unconditionally `self+8`→`self+0x108` and
 `self+0x208`→`self+0x308` get `CpuSet`-copied (the same
-`CpuSet(src, dst, 0x04000040)` idiom `SetCheckpointAtPlayer`, game_loop.c,
+`CpuSet(src, dst, 0x04000040)` idiom `SetCheckpointAtPlayer`, bonus_round.c,
 already documents in the opposite direction). `self+4` is set from
 `posArg >> 8`. Then `list` itself is walked as a `{count:u16@2,
 groups:ptr@4}` header (the same shape `CountCrateEntities`'s own matched
-reconstruction, game_loop12.c, documents for a sibling
+reconstruction, entity_flags.c, documents for a sibling
 list) over `{count:u16@2, items:ptr@4}` 8-byte group records, each
 holding `{tableIdx:u16, p1:u16, p2:u16, p3:u16}` 8-byte item records; for
 each item not already flagged in the `self+8` bit-grid (`sub_8025968`),
 `SpawnEntity` (the table-indexed interworking-trampoline dispatcher,
-game_loop14.c) fires with a running, never-reset-per-group counter as
+entity_spawner.c) fires with a running, never-reset-per-group counter as
 its own `self` argument, indexing `gEntitySpawner`'s table.
 
 **Second half** (everything gated on `redirectInfo`, a count-prefixed
@@ -176,19 +176,19 @@ unmodified.
 Full clean `make compare` (`La suma coincide`) confirms the NAKED
 transcription byte-exact. `CountCrateEntities`, which used to share
 `asm/code_3_2_17_255d4.s` with `SpawnRoomEntities`, was unaffected by this
-pass and stayed parked `NON_MATCHING` in `src/system/game_loop12.c` at
+pass and stayed parked `NON_MATCHING` in `src/level/entity_flags.c` at
 the time - it has since been matched as real C (the whole raw file is
 now gone) - see
 [docs/matching/issue-41-game-loop-25894.md](issue-41-game-loop-25894.md).
 
-## `UpdateGameFrame` - NAKED transcription, `src/system/game_loop55.c`
+## `UpdateGameFrame` - NAKED transcription, `src/level/game_frame.c`
 
 Picked up the last big raw piece of the `UpdateGameFrame`-`MainLoop`
 cluster: `UpdateGameFrame` itself (ROM `0x080225A0`-`0x08022BF0`, ~730
 instructions), called once a frame from `MainLoop`
 (`src/system/main_loop.c`) with `self` = `gLevelState` - the same
-per-level state object `EndBonusRound`/`SetCheckpointAtPlayer` (`game_loop.c`) and
-the `self+0x80`-`0xc4`/`+2` accessor family (`game_loop2.c`) already
+per-level state object `EndBonusRound`/`SetCheckpointAtPlayer` (`bonus_round.c`) and
+the `self+0x80`-`0xc4`/`+2` accessor family (`level_state.c`) already
 operate on. `docs/matching.md`'s original entry for this chunk (search
 "GitHub issue #34: `0x080225A0`-`0x080231C4`") sketched the shape but
 flagged its own transition-target list as possibly loose transcription
@@ -242,7 +242,7 @@ one scratch halfword at `sp+0`, all now traced):
   fixed-source operand for the entry-time zero-fill below; dead after.
 - `sp+0x4`: a snapshot of `self->0x78` taken once, at the start of each
   fresh per-level dispatch round (`self->0x78` is a progress/lives-style
-  counter judging by `game_loop.c`'s `EndBonusRound`). Read back exactly
+  counter judging by `bonus_round.c`'s `EndBonusRound`). Read back exactly
   once, at the *top* of the outer state-dispatch loop (label reached
   only via the loop-back branches at the very end of the function):
   when the just-finished category loop's status flag (`r8`) was `2`
@@ -312,12 +312,12 @@ converted to this project's suffix-less-Thumb-mnemonic convention and
 every named label renumbered to GNU local numeric labels, with no
 semantic changes. Full clean `make compare` (`La suma coincide`)
 confirms the transcription byte-exact; `make NON_MATCHING=1 report`
-compiles the new `src/system/game_loop55.c` warning-free.
+compiles the new `src/level/game_frame.c` warning-free.
 
 ## Later pass: `SpawnRoomEntities` is real C
 
 The third big NAKED retry closed `SpawnRoomEntities` under old_agbcc
-(`game_loop41.o` is now on `OLD_AGBCC_OBJS`). The second pass's
+(`room_entities.o` is now on `OLD_AGBCC_OBJS`). The second pass's
 peeled, index-based searches came from old_agbcc's loop rotation, which
 takes a `break` inside a search loop as the loop's exit test; with the
 searches leaving through `goto` the ROM's layout comes out. The last

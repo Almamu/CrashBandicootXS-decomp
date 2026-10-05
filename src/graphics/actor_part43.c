@@ -2,7 +2,7 @@
 #include "actor_self.h"
 
 /* Same large per-instance "self" object family as ctrl.c/
- * action_ctrl_states.c/actor_part19.c/actor_part20.c (state at `self+0x28`,
+ * action_ctrl_states.c/actor_part19.c/airship_fireball.c (state at `self+0x28`,
  * table-index at `self+0xc`, an anim-frame halfword/byte pair at
  * `self+0x10`/`self+0x12`, an accumulator at `self+8`, a "part table"
  * pointer at `self+0`), part of a second boss-weapon "spawn/pre-

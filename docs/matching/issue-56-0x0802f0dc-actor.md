@@ -3,7 +3,7 @@
 25-function `decomp-chunk` covering a second boss-weapon "spawn/pre-
 attack" singleton and its "self" object - the same large per-instance
 object family already documented in `ctrl.c`/`action_ctrl_states.c`/
-`actor_part19.c`/`actor_part20.c` (state at `self+0x28`, a table-index
+`actor_part19.c`/`airship_fireball.c` (state at `self+0x28`, a table-index
 at `self+0xc`, an anim-frame halfword/byte pair at `self+0x10`/
 `self+0x12`, an accumulator at `self+8`, a "part table" pointer at
 `self+0`, and here also an event/trampoline table pointer at
@@ -83,7 +83,7 @@ are named by the lower 5 hex digits of their first function's address
   established "cache the known-zero value in a register, front-load
   sibling constants before either store, reset the anim frame via a
   `register`-pinned halfword/byte pair" idioms already used throughout
-  `actor_part20.c`'s family - no new gotchas.
+  `airship_fireball.c`'s family - no new gotchas.
 - **`DispenseJetpackWumpa`** (`src/graphics/actor_part44.c`) - accumulator-
   drain/reward-dispenser for the `gJetpackQueuedWumpa` accumulator
   `QueueJetpackWumpa` fills: while the singleton flag is set, fully drains
@@ -113,7 +113,7 @@ are named by the lower 5 hex digits of their first function's address
 - **`AnimateJetpackPlayerPalette`** (`src/graphics/actor_part44.c`) - countdown timer
   (`gJetpackFlashTimer`) driving a palette-strip animation refresh,
   ping-ponging the frame index via `__divsi3` the same way
-  `AnimateAirshipPalette` (actor_part26.c) does for its own strip.
+  `AnimateAirshipPalette` (airship_graphics.c) does for its own strip.
 - **`HealJetpackPlayer`** (`src/graphics/actor_part44.c`) - advances
   `self+0x54`'s accumulator by a scaled `delta`, clamped to
   `gJetpackPlayerMaxHp`'s cap. Needed the multiply written as
@@ -160,7 +160,7 @@ are named by the lower 5 hex digits of their first function's address
   compiles but silently drops `r7` from the prologue's `push`/`pop`
   list entirely (this compiler doesn't treat a plain low-register pin
   as needing callee-save unless another high register is also live in
-  the function, the same quirk documented in `actor_part35.c` for
+  the function, the same quirk documented in `hovercraft_launcher.c` for
   `HovercraftLauncherStateLaunch`) - a real correctness gap this plain-local-copy form
   avoids by letting the compiler make its own (correct) callee-save
   decision.
@@ -262,7 +262,7 @@ are named by the lower 5 hex digits of their first function's address
   loop. Fully understood and every load/store, branch and call
   transcribed is confirmed correct; parked because every other
   DMA3-setup function in this codebase with the same
-  `0x040000D4`/`0x0600D000` literal-pool shape (`actor_part26b.c`,
+  `0x040000D4`/`0x0600D000` literal-pool shape (`airship_load_graphics.c`,
   `actor_part74.c`, `actor_part75.c`, `fade_to_black.c`,
   `hud_init.c`, `save_data.c`, `eeprom_timer_stop.c`) is
   NAKED too - this compiler's register allocator never reproduces the

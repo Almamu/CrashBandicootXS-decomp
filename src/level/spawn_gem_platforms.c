@@ -5,7 +5,7 @@
  * type N" spawners reached through the 15-slot dispatch table at
  * gStaticData_0816C7D8 (docs/rom_map.md, "A family of 'trigger effect
  * type N' functions") - the same family as SpawnCrystal-SpawnYellowGem
- * (src/graphics/graphics_loading_1ea5c.c).
+ * (src/level/spawn_gems.c).
  *
  * Each one tests one "collected" bit of the level progress record
  * (gLevelState + 2). If it is set, the effect only plays a sound:

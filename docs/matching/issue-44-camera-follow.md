@@ -1,9 +1,9 @@
 # Issue #44: 0x08026C80-0x08026EEC, game_loop - the camera-follow block
 
-`sub_8026C80`/`sub_8026C8C` were already matched (`game_loop45.c`) before
+`sub_8026C80`/`sub_8026C8C` were already matched (`terrain.c`) before
 this pass. The remaining eight functions - the whole of the former
 `asm/code_3_2_17_26bf8.s` - are now all byte-exact matched in the new
-`src/system/camera_follow.c`. Nothing parked, nothing left raw.
+`src/level/camera.c`. Nothing parked, nothing left raw.
 
 ## What the block is
 
@@ -39,10 +39,10 @@ level bounds.
   same quarter-step easing.
 - **`SnapCamera`** - snap: copies the target position, seeds the mode-1
   look-ahead at its limit (zero for any other mode), adds it, publishes.
-  Callers: `ResumeRoomAfterPause` (`game_loop9.c`) and `PlayRoom`'s tail
-  (`game_loop56.c`).
+  Callers: `ResumeRoomAfterPause` (`room.c`) and `PlayRoom`'s tail
+  (`run_room.c`).
 - **`UpdateCamera`** - the per-frame update: dispatch on `mode`, then
-  publish. Caller: `UpdateRoomFrame` (`game_loop8.c`).
+  publish. Caller: `UpdateRoomFrame` (`room_frame.c`).
 - **`OperatorDeleteArray`/`OperatorDelete`** - `mem_free(ptr)` wrappers;
   **`OperatorNewArray`/`OperatorNew`** - `mem_alloc(size, MEM_HEAP_EWRAM)`
   wrappers. Two byte-identical pairs, each with its own set of callers.

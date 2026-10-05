@@ -65,7 +65,7 @@ straight into `info`'s own play_fn slot (`info->0->0x8`, the same
 three-function-pointer-per-type table this function itself is a member of)
 via the `_call_via_r3` "call through r3" trampoline - the established
 `_call_via_r3(addr, a1, a2, fn)` parameter order (see
-`src/objects/ctrl.c`/`src/system/game_loop16.c`) landed the
+`src/objects/ctrl.c`/`src/level/bg_layer.c`) landed the
 function-pointer argument in `r3` with zero extra effort, and this part of
 the reconstruction was byte-exact immediately. Then: if `info` armed a
 "retrigger" flag (`info->0x1b`), clears this channel's own `field_0x3c`; if

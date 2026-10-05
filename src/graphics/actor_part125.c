@@ -43,7 +43,7 @@ struct jetpack_balloon {
  * Otherwise scales the countdown `gAirshipHp` by 100 through
  * `__divsi3` against the weapon table's own first field
  * (`*gAirshipAttack`, a `void *` pointing at the small weapon-kind
- * table already characterized in actor_part21d.c), and reports "ready"
+ * table already characterized in airship_states.c), and reports "ready"
  * (1) once that scaled ratio is exactly zero and the countdown is still
  * running (`> 0`); otherwise passes the scaled ratio straight through. */
 s32 GetAirshipHpPercent(void)
@@ -65,7 +65,7 @@ s32 GetAirshipHpPercent(void)
 
 /* Destructor for the small tracker object (`gAirship`) -
  * `mem_free`'s it directly, the counterpart to its constructor
- * `CreateAirship` (actor_part23d.c). */
+ * `CreateAirship` (airship.c). */
 void DestroyAirship(void)
 {
     mem_free(gAirship);
@@ -119,7 +119,7 @@ void ClearJetpackBalloonCrate(void *selfArg)
 /* Damage handler: once hit points run out, marks `self` dying,
  * releases the pending linked object through its method table's `m38`
  * slot, plays the death cue and enters state 2 with animation 1. Same
- * overall shape as the boss cluster's `DamageAirshipFireball` (actor_part20.c). */
+ * overall shape as the boss cluster's `DamageAirshipFireball` (airship_fireball.c). */
 void DamageJetpackBalloon(struct jetpack_balloon *self, s32 damage)
 {
     if ((self->hp -= damage) > 0) {
@@ -140,7 +140,7 @@ void DamageJetpackBalloon(struct jetpack_balloon *self, s32 damage)
 /* Full reset idiom (state=1, counter/accumulator/table-index cleared,
  * anim frame re-synced from `self`'s own part table) - same shape as
  * the boss cluster's established reset blocks (`AirshipStateApproach`,
- * actor_part21c.c). */
+ * airship_states.c). */
 void ReleaseJetpackBalloon(void *selfArg)
 {
     u8 *self = selfArg;
@@ -192,7 +192,7 @@ void MoveJetpackBalloon(struct actor_self *self, s32 x, s32 y, s32 z)
  * then marks `self+0x54 = 2`, sets `self+0x50`'s event/trampoline table
  * to `gJetpackBalloonVtable`, stashes a 6th argument (`e`, also
  * stack-passed) into `self+0x58`, and clears `self+0x5c` (byte). Same
- * shape as the already-matched `CreateAirshipFireball` (actor_part20d.c), except
+ * shape as the already-matched `CreateAirshipFireball` (airship_fireball.c), except
  * with a 6th argument instead of a second stash of `c`. */
 void *CreateJetpackBalloon(void *selfArg, s32 a, s32 b, s32 c, s32 d, s32 e)
 {

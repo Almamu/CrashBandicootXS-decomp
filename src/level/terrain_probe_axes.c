@@ -1,7 +1,7 @@
 #include "core.h"
 
 /* GitHub issues #9/#10/#41's remaining piece of `ProbeTerrain`'s own
- * "umbrella 5-mode dispatcher" cluster (`game_loop43.c`,
+ * "umbrella 5-mode dispatcher" cluster (`terrain_probe.c`,
  * docs/matching/issue-9-10-41-0x08026628-game-loop.md): that pass fully
  * derived both of these axis resolvers' semantics from their own raw
  * bytes (see that doc's "`ProbeTerrainX`/`ProbeTerrainY`: which axis each
@@ -17,10 +17,10 @@
  *     0 if it computes to exactly -1 and the end index down by one if
  *     it lands exactly on `(*(struct tile_cache **)(self+0x20))+0x10`
  *     (that cache's own cached width-in-tiles field, `struct
- *     tile_cache::unk010` in `game_loop3.c` - confirmed genuinely read
+ *     tile_cache::unk010` in `bg_layer_base.c` - confirmed genuinely read
  *     here, unlike that struct's own comment there which predates this
  *     pass), calling `GetSolidTerrainHeights(self->0x20, tileX, tileY, submode,
- *     &scratch)` (matched, `game_loop3.c`) per tile until a hit or the
+ *     &scratch)` (matched, `bg_layer_base.c`) per tile until a hit or the
  *     range is exhausted. On a hit, accumulates into `*outValue` using
  *     `pos->y & 7`: `submode == 2` adds `(8-(y&7))<<8`, `submode == 0`
  *     subtracts `(y&7)<<8` (any other submode value leaves `*outValue`
@@ -51,7 +51,7 @@ struct probe_pos
     s32 y;
 };
 
-/* game_loop3.c's `struct tile_cache`, as far as these read it. */
+/* bg_layer_base.c's `struct tile_cache`, as far as these read it. */
 struct tile_cache
 {
     u8 unk_00[0x10];

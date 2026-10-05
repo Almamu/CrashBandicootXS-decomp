@@ -15,7 +15,7 @@ system from "core" system startup/init code.
   were NAKED. `effect_ctrl.o` and `crate_hit.o` moved to old_agbcc
   (whole-file matches).
 
-- `src/system/game_loop.c` (GitHub issue #34): `EndBonusRound`
+- `src/level/bonus_round.c` (GitHub issue #34): `EndBonusRound`
   (level-start/checkpoint-restore progress-total updater) and
   `SetCheckpointAtPlayer` (its cached-state/snapshot helper) - see
   [docs/matching/issue-37-game-loop-234e8.md](../matching/issue-37-game-loop-234e8.md)
@@ -26,7 +26,7 @@ system from "core" system startup/init code.
   once from `AgbMain`, sets up the central per-level state object and
   the on-screen counter widget, then runs `UpdateGameFrame` forever) -
   and `GetUiText`, the UI string lookup in the current language
-- `src/system/game_loop2.c`: `AddBrokenCrate`, `PressSwitchCrate`, `GetBonusPlatform`,
+- `src/level/level_state.c`: `AddBrokenCrate`, `PressSwitchCrate`, `GetBonusPlatform`,
   `SetCrateAssistDeaths`, `SetMaskAssistDeaths`, `sub_8023120`, `GetCrateAssistDeaths`,
   `GetMaskAssistDeaths`, `sub_8023138`, `AddPendingSwitchCrates`, `sub_802314C`,
   `sub_8023158`, `ClearPowers`, `GiveTornadoSpin`, `GiveSuperBodySlam`,
@@ -42,7 +42,7 @@ system from "core" system startup/init code.
   `0xa9` busy-flag bank, `self+0x7c`/`0x8c`/`0x90`/`0x94`/`0x98`/`0xc4`/
   `0xc8`/`0x1c8` fields, five thin `LevelHasYellowGemEntity`-family forwarders, two
   `self+0xc4` "current index" dispatchers, and `CheckAllCratesBroken` (the
-  counter-notification consumer `RunRoom`/`game_loop56.c` calls to
+  counter-notification consumer `RunRoom`/`run_room.c` calls to
   lazily initialize this object - GitHub issue #37's last standing
   gap) - all matched as real C, no `NAKED` fallbacks needed. See
   [docs/matching/issue-35-36-0x080231cc-game-loop.md](../matching/issue-35-36-0x080231cc-game-loop.md)
@@ -63,7 +63,7 @@ system from "core" system startup/init code.
   all matched as real C). All 25 are real C (built with old_agbcc, see
   [game-loop-old-agbcc.md](../matching/game-loop-old-agbcc.md)); `RunCutscenePlayer` and `DecodeLayerChunk`, the last two `NAKED` transcriptions, became real C last (see [strag1-naked-retry.md](../matching/strag1-naked-retry.md)). `asm/code_3_2_17_24810.s` is now fully retired. See
   [docs/matching/issue-39-0x08024810-game-loop.md](../matching/issue-39-0x08024810-game-loop.md)
-- `src/system/game_loop3.c` (GitHub issue #40): `ScrollBgLayerBase`,
+- `src/level/bg_layer_base.c` (GitHub issue #40): `ScrollBgLayerBase`,
   `ResetBgLayerBase`, `SetBgLayerSource` (a viewport/parallax-scroll-layer object)
   and `IsBgLayerEnabled`/`GetBgLayerY`/`GetBgLayerX`/`GetBgLayerHeightTiles`/
   `GetBgLayerWidthTiles`/`GetBgLayerHeight`/`GetBgLayerWidth` (its field accessors), and
@@ -71,15 +71,15 @@ system from "core" system startup/init code.
   `sub_8025228` (plain C, built with old_agbcc - see [game-loop-old-agbcc.md](../matching/game-loop-old-agbcc.md)),
   and `DecodeCollisionChunk`, the RLE/delta decoder (real C since the second
   near-miss sweep - see [near-miss-polish-2.md](../matching/near-miss-polish-2.md))
-- `src/system/game_loop4.c` (GitHub issue #40): `DestroyTileCache`,
+- `src/level/tile_cache.c` (GitHub issue #40): `DestroyTileCache`,
   `nullsub_4`, `GetTerrainType` (plain C, built with old_agbcc - see
   [game-loop-old-agbcc.md](../matching/game-loop-old-agbcc.md))
-- `src/system/game_loop5.c` (GitHub issue #40): `GetCollisionCell`,
+- `src/level/collision_map.c` (GitHub issue #40): `GetCollisionCell`,
   `SetCollisionSource`, `SetBitmapBit`, `ClearBitmapBit`, `ClearBitmap`,
   `InitBitmap` - the terrain tile-record decode cache's constructor,
   a raw-cell-lookup variant, a floor-div-by-32 bitmap set/clear pair,
   and a `CpuSet`-based palette-bank zero-fill wrapper pair
-- `src/system/game_loop10.c` (GitHub issue #37 - numbered `10` rather
+- `src/level/level_state.c` (GitHub issue #37 - numbered `10` rather
   than `6` since issue #12's parallel PR independently claimed
   `crate_hit.c`/`crate_break.c` first): `SetGemPlatform`,
   `SetBonusPlatform`, `SetCrateGemPos`, `RequestGemPath`, `RequestBonusRound`,
@@ -88,15 +88,15 @@ system from "core" system startup/init code.
   `UnpackSaveData`, `PackSaveData` - camera-position setters,
   checkpoint/level-transition snapshot helpers, the `PlayCutscene`
   mode-trampoline family, and a packed-bitfield unpacker/repacker pair
-- `src/system/game_loop11.c` (GitHub issue #37): `GetLevelState` - lazily
+- `src/level/level_state.c` (GitHub issue #37): `GetLevelState` - lazily
   allocates and returns `gLevelStateSingleton`
-- `src/system/game_loop8.c` (GitHub issue #37): `UpdateRoomFrame` - the
+- `src/level/room_frame.c` (GitHub issue #37): `UpdateRoomFrame` - the
   DMA3/VRAM refresh pass gated on `self+0x0 <= 0x1000` - and
   `SetupRoomBlend` - the `REG_BLDCNT`/`REG_BLDALPHA` shadow-word rebuild
   (plain C, built with old_agbcc - see [game-loop-old-agbcc.md](../matching/game-loop-old-agbcc.md)). See
   [docs/matching/issue-37-game-loop-234e8.md](../matching/issue-37-game-loop-234e8.md)
   for the details.
-- `src/system/game_loop39.c` (GitHub issue #37, follow-up pass):
+- `src/level/play_room.c` (GitHub issue #37, follow-up pass):
   `PlayRoom` - the level-start dispatcher that allocates the
   per-level HUD widget set, the player actor, and the text-box
   singleton, then dispatches on a widget-kind field to construct one of
@@ -105,11 +105,11 @@ system from "core" system startup/init code.
   [docs/matching/issue-37-game-loop-2375c.md](../matching/issue-37-game-loop-2375c.md)
   for the register-pinning/evaluation-order gotchas that closed this
   out.
-- `src/system/game_loop9.c` (GitHub issue #37): `ClearRoomExit`,
+- `src/level/room.c` (GitHub issue #37): `ClearRoomExit`,
   `RequestRoomExit`, `IsRoomExitRequested`, `ResumeRoomAfterPause`, `ResetObjBuffers` - a
   boolean flag clear/set/get trio, the level-end teardown, and the
   shared vram-upload-cursor/OAM-shadow flush tail
-- `src/system/game_loop12.c` (GitHub issue #41): `CountCrateEntities`
+- `src/level/entity_flags.c` (GitHub issue #41): `CountCrateEntities`
   (group/item list counter with a 19-entry jump table - previously
   `NON_MATCHING`, now matched as real C by materializing the
   `item->type == 0x1a` four-load lookup chain as one opaque
@@ -121,7 +121,7 @@ system from "core" system startup/init code.
   "closed" update), `sub_8025944`,
   `sub_8025968`, `sub_802599C` - the first two of three overlapping
   bit-grid accessors at `self+8`/`self+0x208`/`self+0x308`
-- `src/system/game_loop13.c` (GitHub issue #41): `sub_80259D4`
+- `src/level/entity_flags.c` (GitHub issue #41): `sub_80259D4`
   (sets a bit in both the `self+0x208` and `self+0x308` bit-grids at
   once - previously NAKED, now matched as real C via an
   inline-asm-materialized self-stash/n-copy pair plus a second local
@@ -132,13 +132,13 @@ system from "core" system startup/init code.
   (third bit-grid setter), `sub_8025A3C` (Q8-to-int store),
   `DestroyEntityFlags` (conditional `OperatorDelete` forward), `InitEntityFlags`
   (zero two Q8 words)
-- `src/system/game_loop14.c` (GitHub issue #41): `SpawnEntity`
+- `src/level/entity_spawner.c` (GitHub issue #41): `SpawnEntity`
   (table-indexed function-pointer dispatch via the interworking
   trampoline convention), `SetEntitySpawnerTable` (store two Q8 words),
   `sub_8025D54` (conditional `OperatorDelete` forward, dup of
   `DestroyEntityFlags`), `InitEntitySpawner` (zero two Q8 words, dup of
   `InitEntityFlags`)
-- `src/system/game_loop15.c` (GitHub issue #41): `InitBgLayer`
+- `src/level/bg_layer_init.c` (GitHub issue #41): `InitBgLayer`
   (BG-scroll-layer hardware-register/bitfield initializer - previously
   NAKED, now matched as real C via opaque inline-asm-materialized mask
   folds plus one function-owned literal pool for its three pointer-sized
@@ -148,13 +148,13 @@ system from "core" system startup/init code.
   `GrowBgLayerColumns` (streamed-tile-range growers firing a `self->0x30`-
   table trampoline per step), `ClipBgLayerColumns`, `ClipBgLayerRows` (their
   plain clamp-only counterparts)
-- `src/system/game_loop16.c` (GitHub issue #41): `CommitBgLayerScroll` -
+- `src/level/bg_layer.c` (GitHub issue #41): `CommitBgLayerScroll` -
   truncates the Q8 position to a tile-scroll halfword pair and writes
   it through the `self+0x58` hardware-register pointer
-- `src/system/game_loop17.c` (GitHub issue #38): `sub_802425C`,
+- `src/level/level_query.c` (GitHub issue #38): `sub_802425C`,
   `nullsub_25`, `CountLevelCrates` - a bit-tested `OperatorDelete` teardown
   wrapper, an empty stub, and the medal-table per-level tally
-- `src/system/game_loop18.c` (GitHub issue #38): `IsInGemPathRoom`,
+- `src/level/level_query.c` (GitHub issue #38): `IsInGemPathRoom`,
   `IsInBonusRoom`, `LevelHasYellowGemEntity`, `LevelHasBlueGemEntity`, `LevelHasGreenGemEntity`,
   `LevelHasRedGemEntity`, `LevelHasGemPathGemEntity`, `CountRoomCrates`, `PlayRoomMusic`,
   `NextRoom`, `EnterGemPathRoom`, `EnterBonusRoom`, `SelectRoom` -
@@ -188,7 +188,7 @@ system from "core" system startup/init code.
   trivial `gCrateKindBreakable[idx]` lookup
 - `src/crates/slot_crate.c` (GitHub issue #13): `GetSlotCrateStage` -
   `self+0x48` bits 6-7 sub-state extractor
-- `src/system/game_loop29.c` (GitHub issue #13, second pass): `OpenLifeCrate`
+- `src/level/drop_extra_life.c` (GitHub issue #13, second pass): `OpenLifeCrate`
   - cue-3 SFX plus a `gEntityFlags` bit-grid consume-if-clear and a
   `DropExtraLife` part-object spawn. See
   [docs/matching/issue-13-fc70-continuation.md](../matching/issue-13-fc70-continuation.md).
@@ -221,8 +221,8 @@ system from "core" system startup/init code.
 - `src/crates/crate_create.c` (GitHub issue #13, fourth pass, new file -
   replaces the trimmed `asm/code_3_2_17_e560_ff0c.s`, now deleted):
   `CreateCrate` - the `CreateCrate` entity-constructor trampoline
-  family's own target function (two whole files, `graphics_loading_21bfc.c`/
-  `graphics_loading_21668.c`, exist purely to call it with a fixed
+  family's own target function (two whole files, `spawn_crates.c`/
+  `spawn_objects.c`, exist purely to call it with a fixed
   `type` constant). Allocates a 0x64-byte object, sets `self+0x18` to
   `&gCrateVtable` (a `+0x18` outlier of the usual `+0xC`
   table-pointer convention), then dispatches on `type` (0-0x12,
@@ -250,9 +250,9 @@ system from "core" system startup/init code.
   hitbox-record convention `BreakCrateTouchedByPlayer` (crate_hit.c) also uses,
   then a tail call to `DrawSprite`. See
   [docs/matching/issue-13-fc70-second-continuation.md](../matching/issue-13-fc70-second-continuation.md).
-- `src/system/game_loop18.c` (GitHub issue #38, follow-up pass): `LevelHasEntityType`
+- `src/level/level_query.c` (GitHub issue #38, follow-up pass): `LevelHasEntityType`
   (medal item-list per-flag nonzero scan) - prepended ahead of
-  `IsInGemPathRoom`, contiguous with `game_loop17.c` in ROM. See
+  `IsInGemPathRoom`, contiguous with `level_query.c` in ROM. See
   [docs/matching/issue-38-sound-channel-family.md](../matching/issue-38-sound-channel-family.md)
   for the `ip`/r12 pin plus the pointer-arithmetic-canonicalization
   gotcha that closed this out.
@@ -284,7 +284,7 @@ system from "core" system startup/init code.
   pointers" were gcc's own loop strength reduction of
   `self->records[i].field`. See
   [issues-14-53-60-last-naked.md](../matching/issues-14-53-60-last-naked.md).
-- **`FreezeLevelClock`/`TickLevelClock`** (`src/system/game_loop2.c`, GitHub
+- **`FreezeLevelClock`/`TickLevelClock`** (`src/level/level_state.c`, GitHub
   issue #34) - record 47's periodic-trigger setter/decrementer; closed
   with a targeted register-pinning recipe after the ROM's cross-call
   `r4`/`r7` register map was reproduced by pinning only the two values
@@ -295,8 +295,8 @@ system from "core" system startup/init code.
   `addr`/`countdown`/`newCountdown` pin set plus true-branch-first
   digit-cascade rewrites for `TickLevelClock`'s front half and `else`
   branch). Real bytes formerly in `asm/code_3_2_17_22ea8.s` (now
-  removed, folded into `src/system/game_loop2.o`).
-- **`ProbeTerrain`** (`src/system/game_loop43.c`, new file - dedicated
+  removed, folded into `src/level/level_state.o`).
+- **`ProbeTerrain`** (`src/level/terrain_probe.c`, new file - dedicated
   deep investigation) - independently flagged "still unexamined" from
   two other closed call sites this session (`sub_8009BE0`'s physics/
   collision step-probe and `PlayerHasRoomForAnim`'s input-action-check gate) and
@@ -305,12 +305,12 @@ system from "core" system startup/init code.
   `switch` on `mode`, matched on the first isolated-compile attempt
   with no register pins needed - see
   [docs/matching/issue-9-10-41-0x08026628-game-loop.md](../matching/issue-9-10-41-0x08026628-game-loop.md).
-- **`ProbeTerrainY`**/**`ProbeTerrainX`** (`src/system/game_loop46.c`) -
+- **`ProbeTerrainY`**/**`ProbeTerrainX`** (`src/level/terrain_probe_axes.c`) -
   `ProbeTerrain`'s Y-axis (floor/ceiling) and X-axis (wall) tile-scan
   resolvers, 208/216 B. Plain C, built with old_agbcc - see [game-loop-old-agbcc.md](../matching/game-loop-old-agbcc.md) and
   [docs/matching/issue-9-10-41-0x08026628-game-loop.md](../matching/issue-9-10-41-0x08026628-game-loop.md).
 - **`DrawBgLayerRow`/`RedrawBgLayer`/`ResetBgLayer`/`LoadBgLayerTiles`/`LoadBgLayer`/`GetBgLayerScreenIndex`/`sub_802612C`/`sub_802613C`/`SetBgLayerScreenBase`/`SetBgLayerPriority`/`SetBgLayerColors256`/`GetBgLayerCharBase`/`SetBgLayerCharBase`/`WriteBgLayerOffsetRegs`/`WriteBgLayerCntReg`/`DestroyBgLayer`/`DrawPooledBgLayerColumn`/`ClampPooledBgLayerScrollStep`/`ReleasePooledBgLayerColumn`/`ReleasePooledBgLayerRow`/`ClipPooledBgLayerColumns`/`ClipPooledBgLayerRows`/`DrawPooledBgLayerRow`/`ResetPooledBgLayer`/`LoadPooledBgLayerTiles`/`nullsub_26`**
-  (`src/system/bg_scroll_layer_25fc8.c`, new file - GitHub issue #42,
+  (`src/level/bg_layer.c`, new file - GitHub issue #42,
   compiled with **old_agbcc**) - the BG-scroll layer's methods (base
   table `gBgLayerVtable`: destroy, reset, load tiles, draw row,
   draw all visible rows), its BGnCNT-shadow setters/getters, the
@@ -323,7 +323,7 @@ system from "core" system startup/init code.
   removed. See
   [docs/matching/issue-42-bg-scroll-layer.md](../matching/issue-42-bg-scroll-layer.md).
 - **`DestroyPooledBgLayer`/`InitPooledBgLayer`/`sub_8026480`/`ResetTileSlotPool`/`AcquireTileSlot`/`ReleaseTileSlot`/`UploadTileSlot`/`SetTileSlotPoolSource`**
-  (`src/system/tile_slot_pool.c`, new file - GitHub issue #43) - BG
+  (`src/level/tile_slot_pool.c`, new file - GitHub issue #43) - BG
   layer 0 of the level-layers singleton (constructor/destructor chaining
   to the `InitBgLayer` BG-scroll-layer base) and its reference-counted
   VRAM tile-slot pool (0x2000 source tiles onto 0x200 slots): reset,
@@ -334,18 +334,18 @@ system from "core" system startup/init code.
   three-instruction asm anchors (constant-before-load, refcount update). See
   [docs/matching/issue-43-level-layers.md](../matching/issue-43-level-layers.md).
 - **`LoadRoom`/`InitLevelLayers`/`DestroyLevelLayers`/`GetLevelLayers`/`SetLevelScroll`/`CommitLevelScroll`/`ScrollLevelLayers`/`ResetLevelLayers`/`sub_80269DC`/`sub_80269F8`/`sub_8026A14`**
-  (`src/system/level_layers.c`, new file - GitHub issue #43) - the
+  (`src/level/level_layers.c`, new file - GitHub issue #43) - the
   `gLevelLayersSingleton` level-layers singleton (also `gLevelLayers`):
   level load, constructor/get-or-create, destructor, the camera's
   scroll clamp (`SetLevelScroll`), per-layer method-table passes, and two
   identical predicates. All plain C; only `SetLevelScroll` needed separate
   per-axis temps. `asm/code_3_2_17_266bc.s` removed.
-- **`GetTerrainFlagsAt`** (`src/system/game_loop44.c`, new file - dedicated
+- **`GetTerrainFlagsAt`** (`src/level/terrain.c`, new file - dedicated
   deep investigation) - independently flagged "still raw" by two
   already-documented callers (`CollidePlayer`'s camera-probe tail and a
   jump-table dispatch context in `DrawAffineSpritePieces`'s own write-up). A
   56-byte wrapper around the already-matched terrain-tile-cache lookup
-  `GetTerrainType` (`game_loop4.c`, GitHub issue #40): converts `(x, y)`
+  `GetTerrainType` (`tile_cache.c`, GitHub issue #40): converts `(x, y)`
   to that cache's lookup units via a plain `>>3` clamped to `>= 0` on
   each axis independently, then calls `GetTerrainType` and returns only
   the flags byte it also returns directly (the `hi` out-param is
@@ -353,7 +353,7 @@ system from "core" system startup/init code.
   isolated-compile attempt with no register pins needed - see
   [docs/matching/issue-9-10-0x0800a884-graphics.md](../matching/issue-9-10-0x0800a884-graphics.md).
 - **`sub_8026BF8`/`sub_8026C3C`/`sub_8026C80`/`sub_8026C8C`**
-  (`src/system/game_loop45.c`, new file - GitHub issue #9/#10, matching
+  (`src/level/terrain.c`, new file - GitHub issue #9/#10, matching
   pass on functions already fully understood from
   `docs/matching/issue-9-0x0800a178-graphics.md`) - the single-point
   terrain-height ("floor") probes `ProbeGroundSpriteTerrain`/`ProbeGroundSpriteFloor`
@@ -371,7 +371,7 @@ system from "core" system startup/init code.
   project's usual practice. `asm/code_3_2_17_26bf8.s` trimmed to begin
   at `StepCameraDirectional`.
 - **`StepCameraDirectional`/`StepCameraFacing`/`SnapCamera`/`UpdateCamera`/`OperatorDeleteArray`/`OperatorNewArray`/`OperatorDelete`/`OperatorNew`**
-  (`src/system/camera_follow.c`, new file - GitHub issue #44) - the
+  (`src/level/camera.c`, new file - GitHub issue #44) - the
   `gCamera` camera follower: Q8 position eased a quarter-step
   per frame toward `target + look-ahead`, published centered on screen
   (`- (120 << 8)`, `- (80 << 8)`) through `SetLevelScroll`'s level-bounds
@@ -416,9 +416,9 @@ system from "core" system startup/init code.
 See [docs/workflow.md](../workflow.md) for the per-function loop, and
 [docs/matching.md](../matching.md) for gotchas encountered along the way.
 
-- **`StartTimeTrial`** (`game_loop40.c`), **`DropExtraLife`** (`game_loop29.c`),
-  **`SpawnEffectPart`** (`game_loop14.c`), **`ScrollBgLayer`**/**`DrawBgLayerColumn`**
-  (`game_loop16.c`), and the other functions above marked "built with
+- **`StartTimeTrial`** (`time_trial.c`), **`DropExtraLife`** (`drop_extra_life.c`),
+  **`SpawnEffectPart`** (`entity_spawner.c`), **`ScrollBgLayer`**/**`DrawBgLayerColumn`**
+  (`bg_layer.c`), and the other functions above marked "built with
   old_agbcc" - 17 former `NAKED` transcriptions in 0x08022D50-0x08026BC0,
   now plain C. This ROM region was built with old_agbcc; see [game-loop-old-agbcc.md](../matching/game-loop-old-agbcc.md).
 - **Issue #10 NAKED retry**: `UpdateEnemyHomingX`/`UpdateEnemyHomingY`
@@ -442,9 +442,9 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   `ApplyCrateCollision`, `UpdateSlotCrate` and `CreateCrate` stay NAKED with new
   C drafts under `#if NON_MATCHING`. See
   [docs/matching/issue-12-13-25-naked-retry.md](../matching/issue-12-13-25-naked-retry.md).
-- **Big NAKED retry:** `UpdateGameFrame` (`game_loop55.c`, GitHub issue
+- **Big NAKED retry:** `UpdateGameFrame` (`game_frame.c`, GitHub issue
   #34, ~730 instructions) promoted from NAKED to real C under old_agbcc
-  (`game_loop55.o` joined `OLD_AGBCC_OBJS`). The level loop and the
+  (`game_frame.o` joined `OLD_AGBCC_OBJS`). The level loop and the
   attempt loop are real `for (;;)` loops that gcc rotates, the restore
   step is a `goto` loop, and a `bitmap` pointer local set right before
   the attempt loop gives the ROM's `sb`. See
@@ -473,9 +473,9 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   left. See
   [docs/matching/late-naked-retry-3.md](../matching/late-naked-retry-3.md).
 
-- **Third big NAKED retry:** `SpawnRoomEntities` (`game_loop41.c`, GitHub
+- **Third big NAKED retry:** `SpawnRoomEntities` (`room_entities.c`, GitHub
   issue #40, 704 bytes, the collision-bitmap refresh + actor link pass)
-  promoted from NAKED to real C under old_agbcc (`game_loop41.o` joined
+  promoted from NAKED to real C under old_agbcc (`room_entities.o` joined
   `OLD_AGBCC_OBJS`). Most of it was loop shape: old_agbcc's loop
   rotation takes a `break` inside a search loop as the loop's exit
   test, so the searches leave with `goto`. See
@@ -488,9 +488,9 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   `asm("" : "+r")` copy so cse doesn't hold `sp+16` in a callee-saved
   register, and `px`/`py` are shared by both blocks. See
   [docs/matching/sp-box-retry.md](../matching/sp-box-retry.md).
-- **Hard-register hold pass:** `RunRoom` (`game_loop56.c`, issue
+- **Hard-register hold pass:** `RunRoom` (`run_room.c`, issue
   #37, the level-lifecycle state machine) promoted from NAKED to real C
-  under old_agbcc (`game_loop56.o` joined `OLD_AGBCC_OBJS`). The
+  under old_agbcc (`run_room.o` joined `OLD_AGBCC_OBJS`). The
   one-byte `direction` stack argument of `AddPaletteCycle` is a struct with
   a zero-length array member, which makes it BLKmode, so the compound
   literal is stored straight into the outgoing slot (address first, as
@@ -521,10 +521,10 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
 
 ## Parked - NAKED transcription (byte-correct, not decompiled)
 
-- **Now matched as real C (hard-register hold pass, see Matched); entry kept for history.** **`RunRoom`** (`src/system/game_loop56.c`, new file - GitHub
+- **Now matched as real C (hard-register hold pass, see Matched); entry kept for history.** **`RunRoom`** (`src/level/run_room.c`, new file - GitHub
   issue #37, ROM `0x08023A1C`-`0x0802400C`) - the ~650-instruction
   level-lifecycle state machine `PlayRoom` unconditionally hands off
-  to (`game_loop39.c`). Its 6-case jump table (state `1`/`6` share one
+  to (`play_room.c`). Its 6-case jump table (state `1`/`6` share one
   code block) fires `AddPaletteCycle` "fx queue" calls - a palette
   color-cycle animation (`(u16 *)0x05000000`, GBA palette RAM, passed
   as the queue's own `targets` argument) rather than the HUD-digit
@@ -535,7 +535,7 @@ See [docs/workflow.md](../workflow.md) for the per-function loop, and
   than per-level records with their own shape - closing that open
   question. Past the dispatch, a shared tail rebuilds the player's OAM
   entry and re-derives its `+0x29` low nibble, then a wait loop polls
-  `IsRoomExitRequested` (`gRoomExitRequested`, `game_loop9.c`) until ready before
+  `IsRoomExitRequested` (`gRoomExitRequested`, `room.c`) until ready before
   firing the fade (`FadePaletteToBlack`), and a post-fade tail counts
   `gCrateList` entries in physics state `0xA`
   (`gCrateHitResponse`'s own convention,
@@ -731,7 +731,7 @@ plain C didn't converge.
   (`src/objects/effect_ctrl.c`, new file - GitHub issue #9/#10, the
   final piece of the `0x0800B8DC`-cluster investigation, closing out
   the entire 43-function cluster). `UpdateEffectCtrl` (NAKED) inlines the
-  "flag active + bitmap-set" idiom (`actor_part27c.c`'s `UpdateOneShotAnimCtrl`)
+  "flag active + bitmap-set" idiom (`tiny_hop_pad.c`'s `UpdateOneShotAnimCtrl`)
   three times over, each independently gated (a `_call_via_r1` hit-probe
   reporting no hit, a flags-bit-3 test, and a `+0x38` byte test).
   `EffectCtrlHandleEvent`/`nullsub_3` are genuine empty stubs, matched as real C.
@@ -769,12 +769,12 @@ plain C didn't converge.
   retired from `ldscript.txt` entirely. See
   [docs/matching/issue-9-10-0x0800b8dc-graphics.md](../matching/issue-9-10-0x0800b8dc-graphics.md)'s
   "`UpdateEnemyShooter`" entry.
-- **Now matched as real C (see docs/matching/strag1-naked-retry.md); entry kept for history.** **`LaunchEffectPart`/`DropWumpa`** (`src/system/game_loop14.c`, GitHub
+- **Now matched as real C (see docs/matching/strag1-naked-retry.md); entry kept for history.** **`LaunchEffectPart`/`DropWumpa`** (`src/level/entity_spawner.c`, GitHub
   issue #41) - two part-object spawn helpers. Under old_agbcc, plain C
   is 61 and 5 halfwords off (register allocation, and one constant
   load's scheduling); their sibling `SpawnEffectPart` is matched. See
   [game-loop-old-agbcc.md](../matching/game-loop-old-agbcc.md).
-- **Now matched as real C (third big NAKED retry, see Matched and docs/matching/big-naked-retry-3.md); entry kept for history.** **`SpawnRoomEntities`** (`src/system/game_loop41.c`, GitHub issue #34/#40/
+- **Now matched as real C (third big NAKED retry, see Matched and docs/matching/big-naked-retry-3.md); entry kept for history.** **`SpawnRoomEntities`** (`src/level/room_entities.c`, GitHub issue #34/#40/
   #41) - `self` is `*gEntityFlags`: refreshes the collision
   bitmaps, spawns `list`'s unseen items through `SpawnEntity`, then
   links spawned actors by a `links` array. Plain C under old_agbcc is
@@ -783,7 +783,7 @@ plain C didn't converge.
   with a strength-reduced pointer and no peeled first iteration. See
   [docs/matching/issue-34-game-loop-8022d50-80255d4.md](../matching/issue-34-game-loop-8022d50-80255d4.md)
   and [game-loop-old-agbcc.md](../matching/game-loop-old-agbcc.md).
-- **Now matched as real C (big NAKED retry, see Matched and docs/matching/big-naked-retry.md); entry kept for history.** **`UpdateGameFrame`** (`src/system/game_loop55.c`, GitHub issue #34,
+- **Now matched as real C (big NAKED retry, see Matched and docs/matching/big-naked-retry.md); entry kept for history.** **`UpdateGameFrame`** (`src/level/game_frame.c`, GitHub issue #34,
   ROM `0x080225A0`-`0x08022BF0`) - the main per-frame game-loop driver,
   called once a frame from `MainLoop` with `self` =
   `gLevelState`. Traced branch-by-branch: a level-load loop
@@ -975,7 +975,7 @@ plain C didn't converge.
   duplicating its own "PlaySfx+`AddLife`+collision-bitmap" tail per
   mode with different register survivors each time (same shape as
   `UpdateWumpa`). `CreateExtraLife` (164B, NAKED) is the part-object spawn
-  helper extern-declared in `game_loop29.c`, needing the confirmed
+  helper extern-declared in `drop_extra_life.c`, needing the confirmed
   `r8`-sentinel-spill dance already documented for `CreateWumpa`/
   `UpdateWumpa`. Matched, confirmed by a full clean `make compare`
   ("La suma coincide"). `asm/code_3_2_17_e560_10d54.s` is now fully

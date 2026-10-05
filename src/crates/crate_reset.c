@@ -1,7 +1,7 @@
 #include "core.h"
 
 /* GitHub issue #13: 0x0800FC70-0x08010A0C, continuing the physics/
- * collision subsystem (see game_loop17.c's header comment and
+ * collision subsystem (see `ResetCrate`'s header comment below and
  * docs/matching/issue-13-graphics-fc70.md). */
 
 /* Full 4-octant Bresenham-line-style line-stepper: treats `(pos,
@@ -240,7 +240,7 @@ extern void *gPlayer;
  * zeroes the timer/list-link block `+0x44`-`+0x51`/`+0x58` and the two
  * neighbor-list pointers `+0x5c`/`+0x60`, and sets the `+0x54`
  * countdown to -1 (disabled). Matches the "get next"/"get prev" field
- * pair (`+0x5c`/`+0x60`) `GetCrateBelow`/`GetCrateAbove` in game_loop18.c
+ * pair (`+0x5c`/`+0x60`) `GetCrateBelow`/`GetCrateAbove` in crate.c
  * read/write. */
 void ResetCrate(void *selfArg)
 {

@@ -22,7 +22,8 @@ open; `Closes #22` not used.
 naturally) because issue #58's parallel PR independently claimed
 `actor_part20.c`-`actor_part26.c` for an unrelated, later-address boss-
 weapon object before this PR merged - resolved as a rename on merge to
-avoid an add/add filename collision.
+avoid an add/add filename collision. (#575 has since given these files
+descriptive names; see `tools/file_layout_plan.tsv` for the mapping.)
 
 ## Matched
 
@@ -32,7 +33,7 @@ avoid an add/add filename collision.
   `DestroyBossCtrl`/`CreateBossCtrl` table-pointer-reset pair (same
   `gBossCtrlVtable`/`DestroyCtrl`/`InitCtrl` double-set pattern
   seen throughout this object family).
-- `src/graphics/actor_part27b.c` (new file, ROM 0x08017ECC-0x08017FE8,
+- `src/bosses/mega_mix.c` (new file, ROM 0x08017ECC-0x08017FE8,
   non-adjacent to `input_ctrl_queue.c` since the raw `UpdateMegaMix` sits
   between them): `SetMegaMixMotionYFromSet`, `SetMegaMixMotionXFromSet`, `StartMegaMixMotionYFromSet`,
   `StartMegaMixMotionXFromSet`, `ResetMegaMixCtrl`, `DestroyMegaMixCtrl`, `CreateMegaMixCtrl` - a
@@ -41,8 +42,8 @@ avoid an add/add filename collision.
   `gMegaMixMotionRecords` per-vector-component trampoline table, with
   `part+0x28` bit 4/bit 5 mirror-flag X/Z negation exactly like
   `SetCtrlTargetMotionX`/`StartCtrlTargetMotionX`/`SetCtrlTargetMotionY`/`StartCtrlTargetMotionY`.
-- `src/graphics/actor_part27c.c` (new file, ROM 0x080187FC-0x08018884,
-  non-adjacent to `actor_part27b.c` since the raw `UpdateTiny`-
+- `src/bosses/tiny_hop_pad.c` (new file, ROM 0x080187FC-0x08018884,
+  non-adjacent to `mega_mix.c` since the raw `UpdateTiny`-
   `SpawnTinyFallingLeaves` block sits between them): `UpdateStompedHopPad` (a two-state
   "charge" handler), `DestroyStompedHopPadCtrl`/`CreateStompedHopPadCtrl` (another table-pointer
   reset pair, `gStompedHopPadVtable`), `UpdateOneShotAnimCtrl` (a struct-actor-

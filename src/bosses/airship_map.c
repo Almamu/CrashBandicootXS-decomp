@@ -1,7 +1,7 @@
 #include "core.h"
 
-/* Same boss-weapon "self"/tracker object family as actor_part20.c/
- * actor_part23.c - see actor_part20.c's header comment and
+/* Same boss-weapon "self"/tracker object family as airship_fireball.c/
+ * airship_fall.c - see airship_fireball.c's header comment and
  * docs/matching/issue-58-0x08030334-actor.md.
  *
  * Per docs/rom_map.md ("a rectangular BG-tilemap blit routine"):

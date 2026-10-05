@@ -124,7 +124,7 @@ s32 GetBgLayerWidth(struct bg_scroll_layer *self)
 }
 
 /* The 16-slot decode/LRU tile-record cache used throughout this cluster
- * of files (`game_loop3.c`/`game_loop4.c`/`game_loop5.c`; docs/rom_map.md's
+ * of files (`bg_layer_base.c`/`tile_cache.c`/`collision_map.c`; docs/rom_map.md's
  * "Collision/terrain-map streamer" / "`GetCollisionChunk` (16-slot LRU
  * cache/decode dispatcher)"). `id[N]` holds the record ID currently
  * decoded into the matching 256-byte `buf[N]` slot; `nextSlot` is the
@@ -132,10 +132,10 @@ s32 GetBgLayerWidth(struct bg_scroll_layer *self)
  * decodes a new record (evicting slot `(nextSlot - 1) & 0xf`, i.e. the
  * slot filled just before the current cursor position). The descriptor
  * this cache is built from (`source` below, populated by `SetCollisionSource`
- * in game_loop5.c) is kept as raw offsets rather than its own struct -
+ * in collision_map.c) is kept as raw offsets rather than its own struct -
  * it's never allocated by any function in this cluster, so its full
  * shape isn't confirmed enough to commit to one. This definition is
- * duplicated (not shared via a header) in game_loop4.c/game_loop5.c -
+ * duplicated (not shared via a header) in tile_cache.c/collision_map.c -
  * keep them in sync if this layout ever needs revising. */
 struct tile_cache {
     void *source;      /* 0x000 */

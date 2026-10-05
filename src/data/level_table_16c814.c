@@ -185,7 +185,7 @@ extern const struct level_room gLevelStage6;
 
 /*
  * Palette entries cycled by the level-start colour animations of
- * RunRoom (game_loop56.c), one list per theme case: each is the
+ * RunRoom (run_room.c), one list per theme case: each is the
  * `lists` argument of a AddPaletteCycle call on BG palette RAM.
  */
 const u16 gThemePaletteCycle2[5] = { 0xb1, 0xb2, 0xb3, 0xb4, 0xb5 };
@@ -202,8 +202,8 @@ const u16 gThemePaletteCycle5[5] = { 0x97, 0xb4, 0xf7, 0xf8, 0xff };
  * is the text id of the level's name). Read through local views all over
  * the game loop: `struct level_info` (level_select.c),
  * `threshold_table_entry` (pause_menu_pages_init.c, power_dialog_draw.c),
- * `MedalTableEntry` (game_loop17.c, game_loop18.c), `level_guard`
- * (graphics_loading_21280.c) and `gl_level_entry` (game_loop56.c).
+ * `MedalTableEntry` (level_query.c), `level_guard`
+ * (spawn_bosses.c) and `gl_level_entry` (run_room.c).
  */
 const struct level_info gLevelTable[25] = {
     { 1, 1, { 355, 275, 233 }, 4, 4, 0, &gLevelRoomLists[0] },
@@ -264,7 +264,7 @@ const struct level_room_list gLevelRoomLists[25] = {
 
 /*
  * The music cue of each level theme (`struct level_info.theme`), read by
- * PlayRoomMusic (game_loop18.c).
+ * PlayRoomMusic (level_query.c).
  */
 const u8 gThemeMusicCues[11] = { 2, 0, 3, 1, 5, 4, 7, 8, 9, 10, 10 };
 

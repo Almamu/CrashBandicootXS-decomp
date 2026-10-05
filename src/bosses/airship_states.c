@@ -1,8 +1,8 @@
 #include "core.h"
 #include "actor_self.h"
 
-/* Same boss-weapon "self"/tracker object family as actor_part20.c/
- * actor_part23.c/actor_part25.c - see actor_part20.c's header comment
+/* Same boss-weapon "self"/tracker object family as airship_fireball.c/
+ * airship_fall.c/airship_damage.c - see airship_fireball.c's header comment
  * and docs/matching/issue-58-0x08030334-actor.md. */
 
 extern s32 GetAnimFrameBaseOffset(void *self);
@@ -24,7 +24,7 @@ extern struct actor_self *gAirship;
  * on the small tracker object (`gAirship`, anim frame from
  * its own part-table pointer at `+0`), then always calls
  * `PauseActorSpawns`. Same "pin the zero constant so it's loaded before its
- * address" idiom as `AirshipStateFall` (actor_part23.c) - the value is
+ * address" idiom as `AirshipStateFall` (airship_fall.c) - the value is
  * reused across four stores that would otherwise get reordered ahead
  * of the address loads that consume them. The `*(T *)&self->...` stores keep
  * gcc from treating them as struct-member accesses, which would let the
@@ -78,11 +78,11 @@ void AirshipStateApproach(void)
     }
 }
 
-/* Same boss-weapon "self"/tracker object family as actor_part20.c/
- * actor_part21c.c - see actor_part20.c's header comment and
+/* Same boss-weapon "self"/tracker object family as airship_fireball.c
+ * and the code above - see airship_fireball.c's header comment and
  * docs/matching/issue-58-0x08030334-actor.md.
  *
- * `AirshipStateApproach`'s (actor_part21c.c) companion: advances
+ * `AirshipStateApproach`'s (above) companion: advances
  * `gAirshipZ` by its per-frame delta the same way, but also
  * ramps `gAirshipVelZ` itself toward a fixed target (`0x98`,
  * +-1/frame). Drives a small phase counter (`gAirshipFireTimer`) that,
@@ -154,8 +154,8 @@ void AirshipStateFireballs(void)
     UpdateAirshipFlashColor();
 }
 
-/* Same boss-weapon "self"/tracker object family as actor_part20.c/
- * actor_part21c.c/actor_part21d.c - see actor_part20.c's header
+/* Same boss-weapon "self"/tracker object family as airship_fireball.c
+ * and the code above - see airship_fireball.c's header
  * comment and docs/matching/issue-58-0x08030334-actor.md.
  *
  * `AirshipStateApproach`/`AirshipStateFireballs`'s third sibling: advances

@@ -2,8 +2,8 @@
 #include "vtable.h"
 
 /* GitHub issue #22, ROM 0x08017ECC-0x08017FE8 - non-adjacent to
- * actor_part20.c since `UpdateMegaMix` (NAKED-parked, see
- * actor_part27a.c) sits between them. `self` uses the same `self+4` double-
+ * airship_fireball.c since `UpdateMegaMix` (NAKED-parked, see
+ * mega_mix_update.c) sits between them. `self` uses the same `self+4` double-
  * pointer-chain record lookup as `StartCtrlTargetMotionYFromSet`/`StartCtrlTargetMotionXFromSet`
  * (ctrl.c): `self+4` is a manager pointer whose own first
  * word is an array of 8-byte records, indexed here by `index`. Each
@@ -14,7 +14,7 @@
  * per-action variant. `part+0x28` bit 4/bit 5 mirror flags negate the
  * X/Z components exactly like `SetCtrlTargetMotionX`/`StartCtrlTargetMotionX`/
  * `SetCtrlTargetMotionY`/`StartCtrlTargetMotionY`. `self+0xc`'s table convention and
- * `self+0x1c`/`self+0x20` also match actor_part20.c's group.
+ * `self+0x1c`/`self+0x20` also match airship_fireball.c's group.
  *
  * `SetMegaMixMotionYFromSet`/`SetMegaMixMotionXFromSet` pin `part`/`tableEntry` to r3/r2 and read
  * the table entry's Z component before Y - without this, this compiler

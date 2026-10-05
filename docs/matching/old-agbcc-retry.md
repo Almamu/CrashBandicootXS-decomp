@@ -12,8 +12,8 @@ compared it against the ROM.
 
 | function | file | result |
 |---|---|---|
-| `UpdateCortexBoss` | `actor_part_188d0.c` (#23) | **matched**, NON_MATCHING C unchanged |
-| `CreateCortexBossPlatformMover` | `actor_part_188d0.c` (#23) | **matched**, rewritten with the `CreatePlatform` stack-argument idiom |
+| `UpdateCortexBoss` | `cortex.c` (#23) | **matched**, NON_MATCHING C unchanged |
+| `CreateCortexBossPlatformMover` | `cortex.c` (#23) | **matched**, rewritten with the `CreatePlatform` stack-argument idiom |
 | `CreatePlatform` | `platform_create.c` (#25) | **matched**, after removing every register pin |
 | `ResolvePlatformCollision` | `platform_collide.c` (#25) | still NAKED |
 | `InitLevelSelect` | `level_select.c` (#26) | still NAKED here; real C since the #12/#24/#26 retry |
@@ -28,12 +28,12 @@ Issue #23 has no NAKED/NON_MATCHING functions left. Issue #25 still has
 The five functions that share a file with matched functions would have
 needed that file split around them (all of their boundaries are 4-byte
 aligned: `0x08018A30`/`0x08018BDC`, `0x0801961C`/`0x0801964C`). That
-turned out to be unnecessary. Every function in `actor_part_188d0.c` and
+turned out to be unnecessary. Every function in `cortex.c` and
 `level_select.c` also matches under old_agbcc. Most of them match with
 their agbcc-era C unchanged; a few needed a workaround *removed*. So both
 files moved to old_agbcc whole:
 
-- `actor_part_188d0.c`: under old_agbcc as-is, only three functions
+- `cortex.c`: under old_agbcc as-is, only three functions
   differed. `UpdateCortexTarget` and `UpdateCortexBossGem` each had an `asm("ldrsh ...")`
   with a pinned zero index. Plain `CALL3` gives the ROM's register there
   now. `UpdateCortexShot` had its `part` pinned to r8 and matches with the pin
@@ -42,8 +42,8 @@ files moved to old_agbcc whole:
   matches once its zero/id pins are dropped.
 - `platform_create.c` was already on its own.
 
-`OLD_AGBCC_OBJS` in the Makefile now lists `actor_part_188d0.o`,
-`platform_create.o` and `level_select.o` next to `actor_part_1967c.o`.
+`OLD_AGBCC_OBJS` in the Makefile now lists `cortex.o`,
+`platform_create.o` and `level_select.o` next to `dingodile.o`.
 `ldscript.txt` is unchanged, since no object was added or renamed.
 
 ## Workarounds that turned out to be unnecessary

@@ -11,7 +11,7 @@
  * Two threads converge in this range:
  *
  * 1. The same per-instance boss-weapon/tracker "self" object family
- *    documented since issue #58 (`actor_part20.c`-`actor_part26.c`):
+ *    documented since issue #58 (`airship_fireball.c`-`airship_graphics.c`):
  *    state at `self+0x28`, table-index/"kind" at `self+0xc`, an
  *    anim-frame halfword/byte pair at `self+0x10`/`self+0x12`, an
  *    accumulator at `self+8`, a "part table" pointer at `self+0`, and
@@ -21,14 +21,14 @@
  *
  * 2. The `gHovercraft` singleton system first constructed by
  *    `CreateHovercraft` (this file) and already partially characterized by
- *    the LATER `actor_part28.c`-`actor_part37.c` (issue #62,
+ *    the LATER `hovercraft_parts.c`-`hovercraft_launcher.c` (issue #62,
  *    `0x08033804`+): a second, independent "unique object" cluster,
  *    structurally parallel to the boss's own patrol/BG2-affine/tile
  *    machinery (issue #58) but on a completely separate global family
  *    (`0x030015A0`-`0x030015FF`, plus the P1/P2-mirror pair
  *    `gFlashBgPalette`/`030008B8` and the row-pointer array
  *    `gHovercraftMapFrames`). Every global in that family already has a
- *    real name from `actor_part28.c`'s own extern block where this
+ *    real name from `hovercraft_parts.c`'s own extern block where this
  *    file's functions are the ones that *first* reference it in ROM
  *    order - reused verbatim here for consistency rather than
  *    reinvented. Per that file's own precedent (flat, independently
@@ -79,7 +79,7 @@ extern u16 gHovercraftFlashSavedColor;
 extern s32 gHovercraftFlashColorSaved;
 
 /* The `gHovercraft` singleton system's own globals - names as
- * already established by `actor_part28.c` (issue #62) for the ones it
+ * already established by `hovercraft_parts.c` (issue #62) for the ones it
  * also touches; the rest are new (first referenced anywhere in ROM
  * order by this file's functions). */
 extern struct actor_self *gHovercraft;
@@ -194,7 +194,7 @@ struct actor_29d4 {
  * straight through (the 5th, `d`, is itself stack-passed), marks
  * `self+0x54 = 1` (health-like), sets `self+0x50`'s event/trampoline
  * table, and clears the `self+0x58` byte. Same shape as the
- * already-matched `CreateAirshipFireball` (issue #58, `actor_part20d.c`), minus
+ * already-matched `CreateAirshipFireball` (issue #58, `airship_fireball.c`), minus
  * that function's extra `b`/`c` re-stash into `self+0x58`/`self+0x5c`. */
 void *CreateJetpackRing(void *selfArg, s32 a, s32 b, s32 c, s32 d)
 {
@@ -396,7 +396,7 @@ s32 IsJetpackCollectedWumpaUnshootable(void *self)
  * it drops to zero (or below) plays the death sound and runs the full
  * state/accumulator/anim-frame reset idiom already matched for
  * `ReleaseJetpackBalloon` (issue #59, `actor_part125.c`)/`DamageHovercraftCannon` (issue
- * #62, `actor_part30.c`). */
+ * #62, `hovercraft_cannon.c`). */
 void DamageHovercraftFireball(void *selfArg, s32 delta)
 {
     struct actor_2890 *self = selfArg;
@@ -450,7 +450,7 @@ void UpdateHovercraftFireball(void *selfArg)
 }
 
 /* Same shared shape as `CreateHovercraftFireball`/`CreateHovercraftCannon` (issue #62,
- * `actor_part32.c`): forwards `a`/`b`/`c` (the last two re-stashed into
+ * `hovercraft_cannon.c`): forwards `a`/`b`/`c` (the last two re-stashed into
  * `self+0x58`/`self+0x5c`, `c` pinned to the high register `r8`
  * matching `CreateHovercraftCannon`'s own documented gap - this compiler's
  * allocator always prefers the low registers when they fit, so `c`
@@ -458,7 +458,7 @@ void UpdateHovercraftFireball(void *selfArg)
  * passed straight through to `InitActorPart`, plus the fixed
  * `self+0x54 = 2`/`self+0x50` event table/`self+0x64 = 0`/
  * `self+0x60 = 0x95`/`self+0x68 (byte) = 0` initialization already
- * matched verbatim for `CreateAirshipFireball` (issue #58, `actor_part20d.c`). */
+ * matched verbatim for `CreateAirshipFireball` (issue #58, `airship_fireball.c`). */
 void *CreateHovercraftFireball(void *selfArg, s32 a, s32 b, s32 c, s32 d)
 {
     struct actor_29d4 *self = selfArg;
@@ -555,7 +555,7 @@ u8 IsHovercraftFireballUnshootable(void *selfArg)
 }
 
 /* Palette blink/flash effect for the P2 VRAM fill-level meter, gated by
- * the one-shot latch `StartHovercraftHitFlash` (issue #62, `actor_part28.c`) arms
+ * the one-shot latch `StartHovercraftHitFlash` (issue #62, `hovercraft_parts.c`) arms
  * (`gHovercraftHitFlashTimer`/`030015FE`): once armed, advances the counter
  * every call, flips the toggle byte every 4th call, wraps the counter
  * past 0xb, then rewrites the meter's 16-halfword palette strip
@@ -611,7 +611,7 @@ void UpdateHovercraftHitFlash(void)
 
 /* A frame counter (`gHovercraftFrameCount`) drives the same P1/P2-mirrored
  * speed-override toggle already matched for `SetHovercraftFlashColor` (issue #62,
- * `actor_part28.c`) - inlined twice here (once forcing "max speed"
+ * `hovercraft_parts.c`) - inlined twice here (once forcing "max speed"
  * every 16th frame, once restoring the cached normal speed every
  * 8th-but-not-16th frame) rather than calling that function, matching
  * the ROM exactly (the ROM's own build never emits a `bl SetHovercraftFlashColor`
@@ -680,7 +680,7 @@ void RunHovercraftState(void)
 
 /* Opens the singleton's own camera-follow/scroll-velocity smoothing
  * computation (`gHovercraftX`-`030015EC`) - the twin of the boss
- * cluster's `SteerAirship` (actor_part23c.c). Ramps the Z velocity
+ * cluster's `SteerAirship` (airship.c). Ramps the Z velocity
  * toward a per-phase target, then by patrol phase: phase 0 steers the
  * X/Y velocities toward the player (`gActorList`) relative to a
  * camera-offset target box (`gHovercraftBox`), clamped to +-0x200
@@ -898,7 +898,7 @@ void HovercraftStateFall(void)
 
 /* The singleton's own BG-tilemap-blit tile consumer, confirmed by
  * `docs/rom_map.md` as the same mechanics as the boss cluster's
- * `DrawAirshipMap` (actor_part23b.c, issue #58) but on the singleton's own
+ * `DrawAirshipMap` (airship_map.c, issue #58) but on the singleton's own
  * separate global cluster (`gHovercraftMapCols`-family, not
  * `gAirshipBg2Page`-family). Same source as that twin: the bias is a
  * plain `u8` narrowing of the `s32` global, and `row` is declared before
@@ -935,7 +935,7 @@ void DrawHovercraftMap(void *tileRow)
  * lifetime counter `gHovercraftPartsLeft = 4` (the exact counter
  * `LoseHovercraftPart`, issue #62, decrements toward "dead").
  *
- * The boss tracker's constructor `CreateAirship` (actor_part23d.c) is its
+ * The boss tracker's constructor `CreateAirship` (airship.c) is its
  * twin and matched the same way: an inlined C++ `new` - destination
  * address taken before the allocation, an `operator new`-style size
  * wrapper, and an inlined base constructor taking its values as
@@ -960,7 +960,7 @@ void CreateHovercraft(s32 level)
 }
 
 /* The animation-system-wired spawn/init step for the singleton - the
- * twin of the boss cluster's `SpawnAirship` (actor_part23e.c): resets
+ * twin of the boss cluster's `SpawnAirship` (airship.c): resets
  * the patrol oscillator (`gHovercraftVelZ = 0x66`), selects animation
  * "kind" 1 with the standard anim-frame reset, seeds position from its
  * arguments, looks up the per-kind record (`gHovercraftAttacks`,
@@ -1018,7 +1018,7 @@ void SpawnHovercraft(s32 kind, s32 x, s32 y, s32 z)
 }
 
 /* Per-frame animate+project+tile-stream update driver, the singleton's
- * twin of the boss cluster's `UpdateAirship` (actor_part23f.c) and
+ * twin of the boss cluster's `UpdateAirship` (airship.c) and
  * matched the same way: runs the P1/P2 speed-toggle dispatcher
  * (`RunHovercraftState`), and while the singleton's animation "kind"
  * (`gHovercraftState`) is active, the usual anim-frame-advance-and-
@@ -1102,7 +1102,7 @@ void UpdateHovercraftBg2(void)
  * to. Copies the palette strip into BG palette bank 1, clears the tile
  * just before BG char block 3 and fills block 3 itself with a blank/
  * transparent tile (the exact same idiom the boss cluster's
- * `LoadAirshipGraphics`, actor_part26b.c, uses ahead of its own meter-generator
+ * `LoadAirshipGraphics`, airship_load_graphics.c, uses ahead of its own meter-generator
  * call), runs the P2 VRAM fill-level meter (`ConvertHovercraftTiles`), and - while
  * the singleton's animation "kind" is active - re-arms the "apply now"
  * BG2 latch, streams the current tile row through `DrawHovercraftMap`, sets
@@ -1140,10 +1140,10 @@ void LoadHovercraftGraphics(void)
 }
 
 /* The P2-side VRAM fill-level meter, a near-identical twin of
- * `ConvertAirshipTiles` (issue #58, `actor_part26c.c`), applied to this
+ * `ConvertAirshipTiles` (issue #58, `airship_graphics.c`), applied to this
  * cluster's own per-level table (`gHovercraftPalette`) and row-pointer
  * array (`gHovercraftMapFrames`). */
-/* The one-row twin of `ConvertAirshipTiles` (actor_part26c.c). The height is
+/* The one-row twin of `ConvertAirshipTiles` (airship_graphics.c). The height is
  * re-read after the row-pointer store (the `"+m"` asm) and the second
  * loop has its own counter (sharing `k` makes the first loop's reversed
  * counter start from a constant instead of `sum`'s zero register). The

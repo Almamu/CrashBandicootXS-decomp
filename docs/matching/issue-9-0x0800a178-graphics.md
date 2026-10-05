@@ -21,7 +21,7 @@ traced here." `docs/matching/issue-9-0x08007634-actor.md` (line ~206)
 had also already flagged both functions as built on `sub_8008200`/
 `ProbeTerrain`/`sub_8026C3C`/`sub_8026BF8` - two of those four
 (`sub_8008200`, `ProbeTerrain`) are already matched this session
-(`src/objects/sprite_obj.c`, `src/system/game_loop43.c`), leaving
+(`src/objects/sprite_obj.c`, `src/level/terrain_probe.c`), leaving
 only `sub_8026C3C`/`sub_8026BF8` genuinely unexamined.
 
 ## Reading the real bytes
@@ -72,7 +72,7 @@ A single Y-axis "floor" probe. Builds an int `{x, y}` position at the
 *bottom* of `quad` (`self.x`/`self.y + (quad->yOff + quad->h) << 8`,
 via the already-matched `sub_8008200(dest, 8, quad)`, nudged left/right
 by half the quad's width depending on `self+0x28` bit 4's mirror flag -
-the same established convention `game_loop43.c`/`crate_touch.c`
+the same established convention `terrain_probe.c`/`crate_touch.c`
 document), then probes it via `sub_8026BF8(*gLevelLayers, &pos,
 &origY)` where `origY` is `self.y`'s own original (unmodified) Q8
 value, kept aside as the probe's out-parameter target.
@@ -372,7 +372,7 @@ re-checks internally as its own second gate. Once past it:
    trampoline `ProbeGroundSpriteTerrain` itself uses (confirmed identical: table
    pointer read, signed-halfword offset at `+0x10`, function pointer at
    `+0x14`, `_call_via_r1(self+offset, fn)`), and runs a `mode == 8`
-   (Y-axis/floor, confirmed by `game_loop43.c`'s own `ProbeTerrain` mode
+   (Y-axis/floor, confirmed by `terrain_probe.c`'s own `ProbeTerrain` mode
    table) step-probe via `sub_8009BE0(self, 8, quad)`. If that
    step-probe does *not* report immediate success (either a full miss,
    or only succeeding via one of its own internal retries - see
@@ -644,29 +644,29 @@ is byte-identical with no exceptions.
 
 ### Build layout (second follow-up)
 
-New object `src/system/game_loop45.c` holds all four functions
+New object `src/level/terrain.c` holds all four functions
 (`sub_8026BF8`, `sub_8026C3C`, `sub_8026C80`, `sub_8026C8C`), following
-the `game_loop43.c`/`game_loop44.c` naming precedent already established
+the `terrain_probe.c`/`terrain.c` naming precedent already established
 for this exact ROM neighborhood (both matched in the same immediate
 area, both reusing `struct probe_pos`/`struct tile_cache` conventions
 this new file also reuses rather than redefining differently).
 `asm/code_3_2_17_26bf8.s` is trimmed to begin at `StepCameraDirectional` (the next
-still-raw function); `game_loop45.o` is inserted into `ldscript.txt`
-directly between `game_loop44.o` and the trimmed `code_3_2_17_26bf8.o`,
+still-raw function); `terrain.o` is inserted into `ldscript.txt`
+directly between `terrain.o` and the trimmed `code_3_2_17_26bf8.o`,
 exactly where these four functions' real bytes already sat.
 
 ### Cross-references (second follow-up)
 
 - `docs/status/game_loop.md` - new bullet in "Matched" for
   `sub_8026BF8`/`sub_8026C3C`/`sub_8026C80`/`sub_8026C8C`
-  (`src/system/game_loop45.c`).
+  (`src/level/terrain.c`).
 - `tools/report_units.py` - new unit at `0x08026BF8`
-  (`"src/system/game_loop45.o"`, category `game_loop`); the `0x0800A178`
+  (`"src/level/terrain.o"`, category `game_loop`); the `0x0800A178`
   unit's comment updated to note all four of `sub_8008200`/
   `ProbeTerrain`/`sub_8026C3C`/`sub_8026BF8` are now matched, not just
   the first two.
-- `ldscript.txt` - `build/crashbandicootxs/src/system/game_loop45.o(.text);`
-  line added, between `game_loop44.o` and `code_3_2_17_26bf8.o`.
+- `ldscript.txt` - `build/crashbandicootxs/src/level/terrain.o(.text);`
+  line added, between `terrain.o` and `code_3_2_17_26bf8.o`.
 
 ## Later pass (issue #9 NAKED retry)
 

@@ -67,8 +67,8 @@ prefers a fresh caller-saved-adjacent `r8` slot over reusing `r7` once
 The natural first fix - `register s32 *layout_addr asm("r7") = ...` -
 compiles *without* emitting `r7` in the function's `push`/`pop` list at
 all (a known bug in this `gcc 2.9` build when a `register ... asm("r7")`
-local is live across a `bl`: see `src/graphics/actor_part35.c`'s comment
-on the identical bug, and `src/system/game_loop3.c`'s note that even
+local is live across a `bl`: see `src/bosses/hovercraft_launcher.c`'s comment
+on the identical bug, and `src/level/bg_layer_base.c`'s note that even
 un-pinning both sides of a swapped `r7`/`r3` pair doesn't help there
 either). Shipping that version would silently corrupt the caller's `r7`.
 
@@ -281,7 +281,7 @@ documented for this same function family:
 - **Never pin `self` (or anything else) to `r7` when it's live across a
   `bl`.** Confirmed yet again (`docs/matching/
   issue-45-hud-stat-widget-dispatcher.md`'s own second-pass note, and
-  `src/graphics/actor_part35.c`): an explicit `register ... asm("r7")`
+  `src/bosses/hovercraft_launcher.c`): an explicit `register ... asm("r7")`
   parameter live across a call compiles *without* emitting r7's
   push/pop at all, silently corrupting the caller's r7. `self` reaches
   r7 here purely through natural allocation, arrived at only once every

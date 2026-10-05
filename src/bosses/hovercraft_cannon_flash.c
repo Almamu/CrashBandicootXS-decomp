@@ -56,7 +56,7 @@ void UpdateHovercraftCannonFlash(void *selfArg)
 asm(".align 2, 0");
 
 /* Same `InitActorPart`-rooted per-instance "self" object family
- * documented in action_ctrl.c/actor_part28.c/actor_part32.c. This is a
+ * documented in action_ctrl.c/hovercraft_parts.c/hovercraft_cannon.c. This is a
  * third, much smaller object kind (vtable `gHovercraftCannonFlashVtable`) that
  * reuses `self+0x58` as a plain one-shot flag rather than a health
  * countdown. See docs/matching/issue-63-0x08033ef4-actor.md. */
@@ -98,11 +98,11 @@ void *CreateHovercraftCannonFlash(void *selfArg, void *part, s32 b, s32 c, s32 d
 
 asm(".align 2, 0");
 
-/* Same "self" object family as actor_part63.c - see that file's header
+/* Same "self" object family as hovercraft_launcher.c - see that file's header
  * comment and docs/matching/issue-63-0x08033ef4-actor.md. */
 
 /* Same position-sync/flag/trampoline shape as `UpdateHovercraftCannonFlash`
- * (actor_part68.c), but returns the "should animate" boolean directly
+ * (above), but returns the "should animate" boolean directly
  * instead of calling `UpdateActor` itself - since the value only ever
  * needs to reach the return register (no re-check against zero the
  * way `UpdateHovercraftCannonFlash`'s own call-vs-no-call decision needs), the
@@ -137,7 +137,7 @@ s32 sub_8034314(void *selfArg)
 
 asm(".align 2, 0");
 
-/* Same "self" object family as actor_part63.c - see that file's header
+/* Same "self" object family as hovercraft_launcher.c - see that file's header
  * comment and docs/matching/issue-63-0x08033ef4-actor.md. */
 
 /* Constant getter - returns `self`'s one-shot flag (`self+0x58`). */

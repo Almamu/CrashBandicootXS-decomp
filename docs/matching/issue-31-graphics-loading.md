@@ -9,7 +9,7 @@ Continues the first pass (PR #202, recorded in `docs/matching.md` under
 "`graphics_loading` chunk `0x0801FA3C`-`0x08021668` (issue #31)"), which
 matched/parked the 4-function "trigger effect type N" twin family
 (`SpawnRedGemPlatform`/`SpawnYellowGemPlatform`/`SpawnGreenGemPlatform`/`SpawnBlueGemPlatform`,
-`src/graphics/trigger_effect.c`) and left the other 21 functions raw.
+`src/level/spawn_gem_platforms.c`) and left the other 21 functions raw.
 This pass picks one of those 21 back up: `SpawnSquid`.
 
 ## Semantics
@@ -63,7 +63,7 @@ first). Left untouched this pass - see "Left raw" below.
 
 ## Matched: `SpawnSquid`
 
-`src/graphics/graphics_loading_1fdec.c` - full clean `make compare`
+`src/level/spawn_enemies.c` - full clean `make compare`
 verified (`La suma coincide`). `arg0` has to stay `u32` (not `u16` like
 its siblings) for the same reason documented for the twin family in
 `docs/matching.md`: the ROM only truncates it at its single call site
@@ -131,7 +131,7 @@ uses elsewhere in the same function.
 File split: `SpawnSquid` sat alone between still-raw neighbors on both
 sides in `asm/code_3_2_17_1e990.s`, so it became three pieces in ROM
 order - the trimmed `asm/code_3_2_17_1e990.s` (unchanged content, just
-shorter), the new `src/graphics/graphics_loading_1fdec.c`, and the new
+shorter), the new `src/level/spawn_enemies.c`, and the new
 `asm/code_3_2_17_1feec.s` (everything from `SpawnJellyfish` onward that
 used to be in the same file) - see `ldscript.txt` and
 `tools/report_units.py`'s `graphics_loading` category, both updated to
@@ -170,7 +170,7 @@ Verified via a full clean `make compare` (`La suma coincide`) and
 ## Third pass: the "trigger effect type N" twin family matched via NAKED transcription
 
 `SpawnRedGemPlatform`/`SpawnYellowGemPlatform`/`SpawnGreenGemPlatform`/`SpawnBlueGemPlatform`
-(`src/graphics/trigger_effect.c`), parked since the first pass
+(`src/level/spawn_gem_platforms.c`), parked since the first pass
 referenced above, are now all byte-exact matched, confirmed by a full
 clean `make compare` ("La suma coincide"). Semantics were already fully
 understood and confirmed instruction-for-instruction against the ROM;
@@ -189,7 +189,7 @@ differ between them, plus `SpawnBlueGemPlatform` needing a third extra
 callee-saved register (`sl`/r10) since its tag constant (`8`) doesn't
 fit the same immediate-AND idiom the other three use.
 
-**`ldscript.txt` gotcha:** `trigger_effect.c` compiled to an empty
+**`ldscript.txt` gotcha:** `spawn_gem_platforms.c` compiled to an empty
 object file while these four functions were `#if NON_MATCHING`-guarded
 (no other code in that file), so it was never listed in `ldscript.txt`
 at all - nothing needed it there. Once the functions became real,
@@ -202,7 +202,7 @@ that needed filling, not just a line to delete - so
 `code_3_2_17_1feec.s` was split into two files at that point (the
 existing name keeps everything before `SpawnRedGemPlatform`; the new
 `code_3_2_17_21280.s` picks up at `SpawnRoomExit` and keeps everything
-after `SpawnBlueGemPlatform`, unchanged), with `trigger_effect.o` inserted
+after `SpawnBlueGemPlatform`, unchanged), with `spawn_gem_platforms.o` inserted
 between them in `ldscript.txt`. A first attempt that only deleted the
 guarded block in place (without this split) still built and linked
 without error, but silently shifted every ROM address from
@@ -222,11 +222,11 @@ needed), this pass started from the *other* end of
 be a much easier mix: one more popup-family instance with a different
 tail shape, a small `gSpriteBankTable`-record spawner family
 (registering into a manager global `SpawnBodySlamPower`'s family in
-`graphics_loading_21d80.c` doesn't use), a run of plain
+`spawn_pickups.c` doesn't use), a run of plain
 `CreatePlatform`/`SpawnLaunchPad` trampolines, one `CreatePeriodicSpawner`-based
 constructor, and - closing out the file - 12 more plain `CreateCrate`
 entity-constructor trampolines (types `0x12` down to `7`) continuing
-the family `graphics_loading_21bfc.c` already covers for types `1`-`7`
+the family `spawn_crates.c` already covers for types `1`-`7`
 at a different address. Every one of these 24 functions from
 `SpawnMegaMix` through `SpawnIronCrate` (the literal last function in the
 old `asm/code_3_2_17_21280.s`) is now real, matched C, plus one more
@@ -235,17 +235,17 @@ old `asm/code_3_2_17_21280.s`) is now real, matched C, plus one more
 (`SpawnRoomExit`-`SpawnCortexBoss`, the 4 remaining full popup-family
 instances - see "Left raw" below).
 
-New file: `src/graphics/graphics_loading_21668.c`, inserted in
+New file: `src/level/spawn_objects.c`, inserted in
 `ldscript.txt` right after `asm/code_3_2_17_21280.o` (which now ends
 at `SpawnCortexBoss`'s literal pool) and before
-`src/graphics/graphics_loading_21bfc.o`.
+`src/level/spawn_crates.o`.
 
 ### `SpawnMegaMix` - the popup family's OAM-trio tail variant
 
 Same `CreateMovingSprite` constructor and `+0x20` table-pointer setup as
 `SpawnSquid`, but a different tail: builds the part via the standard
 `ResetSpriteFrameTimer`/`ResetSpriteFrameIndex`/`SetSpriteAnimDone` OAM trio (like
-`graphics_loading_21d80.c`'s family, not the twin family's lookup-table
+`spawn_pickups.c`'s family, not the twin family's lookup-table
 pack), looks up a frame-nibble value through a *double* dereference of
 its own just-stored `+0x20` table pointer (`*(*(part->0x20)) + 0x14`,
 not `GetSpriteAnimPaletteSlot`) plus `gPaletteCache`'s tile-asset cache via
@@ -287,7 +287,7 @@ reload, in ways the ROM's own codegen never does.
 
 ### The `gSpriteBankTable`-record family: `SpawnSeaweed`/`sub_80217D0`/`SpawnFlame`
 
-Same overall shape as `graphics_loading_21d80.c`'s `SpawnBodySlamPower` family
+Same overall shape as `spawn_pickups.c`'s `SpawnBodySlamPower` family
 (`CreateSpriteObj` constructor, `+0x20` table offset, `GetSpriteAnimPaletteSlot`
 frame-nibble update), but two differences: they register into
 `gDecorationList`'s manager instead of `EC`, and (except
@@ -309,11 +309,11 @@ instance of.
 
 18 functions, no iteration needed beyond the established call-signature
 patterns: 5 plain `CreatePlatform(arg0, arg1, arg2, arg3, id)` calls (ids
-`8`/`6`/`2`/`1`/`0` - same callee the twin family in `trigger_effect.c`
+`8`/`6`/`2`/`1`/`0` - same callee the twin family in `spawn_gem_platforms.c`
 uses), one plain `SpawnLaunchPad(arg0, arg1, arg2, arg3)` tail call, and
 12 plain `CreateCrate(arg0, arg1, arg2, arg3, type)` calls (types `0x12`
 down to `7`) continuing the entity-constructor trampoline family
-`graphics_loading_21bfc.c` already covers for types `1`-`7`. Every one
+`spawn_crates.c` already covers for types `1`-`7`. Every one
 of these matched from the very first isolated compile - the 5-argument
 call shape (4 register args plus a stack-passed 5th) reliably puts the
 constant on the stack before the register args regardless of source
@@ -349,8 +349,8 @@ fixes were needed over the first plain-C draft:
 A gated `CreatePlatform`/`SetBonusPlatform` dispatcher: picks id `7` if
 `IsBonusRoundDone(gLevelState)` is true or `gLevelState+0x8c` is
 nonzero, else id `5` - the same OR-gated shape the twin family in
-`trigger_effect.c` uses for its own sound-id choice, just feeding
-`SetBonusPlatform` (`self->0x1b8` setter, `src/system/game_loop10.c`)
+`spawn_gem_platforms.c` uses for its own sound-id choice, just feeding
+`SetBonusPlatform` (`self->0x1b8` setter, `src/level/level_state.c`)
 instead of `SetGemPlatform`. Semantics are fully understood and every
 instruction's operation matches the ROM, but the `arg0`-`arg3`
 parameter-home registers (`r5`-`r8`, a mix of immediate and deferred
@@ -368,7 +368,7 @@ instruction-for-instruction from the ROM disassembly instead, the same
 escape hatch used throughout this project. Tracked as parked in
 `tools/report_units.py` with its own `base_object = None` entry,
 interleaved between two matched ranges of the same
-`graphics_loading_21668.o` (`tools/report_units.py`'s existing
+`spawn_objects.o` (`tools/report_units.py`'s existing
 `actor_anim.o` entries already establish that the same `base_object`
 path can appear in more than one `UNITS` row for non-contiguous address
 ranges within one real object file).
@@ -403,7 +403,7 @@ pass's writeup carried forward:
   neither `SpawnSquid` nor `SpawnMegaMix` have. `SpawnDingodile` got the
   furthest this pass: every instruction's *operation* matches the ROM
   (confirmed via isolated compile, using the same collected-bits-pack
-  `asm volatile` block as `SpawnSquid`/`graphics_loading_21668.c`), but
+  `asm volatile` block as `SpawnSquid`/`spawn_objects.c`), but
   the prologue's `arg1`/`arg2` truncation-into-`r8`/`sb` sequence has an
   extra ROM instruction pair (`mov r8, r1` / `mov sb, r2` computed from
   the *raw, untruncated* incoming values, immediately followed by a
@@ -427,7 +427,7 @@ Verified via a full clean `make compare` (`La suma coincide`) and
 Picked up the "Left raw (4)" list the fourth pass left behind - the last
 still-raw stretch of `asm/code_3_2_17_21280.s`. All four are now real,
 always-compiled code (2 matched, 2 NAKED), retiring the raw file entirely.
-New file: `src/graphics/graphics_loading_21280.c`, replacing
+New file: `src/level/spawn_bosses.c`, replacing
 `asm/code_3_2_17_21280.o` in `ldscript.txt` at the same point.
 
 ### Matched: `SpawnDingodile`, `SpawnCortexBoss`
@@ -573,7 +573,7 @@ several tail shapes this cluster's earlier passes already catalogued
 (a single header write, a "second `header->0x84` rewrite plus a
 struct-field or record-field copy", an OAM trio, a bit-27 re-test, or -
 for `SpawnSeal` alone - a `PlaySfx` call). New file:
-`src/graphics/graphics_loading_1ef0c.c`, replacing
+`src/level/spawn_enemies.c`, replacing
 `asm/code_3_2_17_1e990.o` at that point in `ldscript.txt` (the raw file
 itself shrinks to just `SpawnCrystal`-`SpawnYellowGem`, the still-raw
 "trigger effect type N" twin-family shape noted at the top of this
@@ -692,7 +692,7 @@ NAKED), tracked in `docs/status/graphics_loading.md`.
 
 Picked up the raw file `SpawnSquid` (second pass, above) was split out
 of - the whole `asm/code_3_2_17_1feec.s` that survived intact since the
-third pass carved `trigger_effect.c`'s twin family out of the *middle*
+third pass carved `spawn_gem_platforms.c`'s twin family out of the *middle*
 of the original larger raw file, leaving this 13-function stretch as its
 own still-raw remainder (`tools/report_units.py`'s own comment on this
 range called it "most of the rest of the chunk 31 range"). All 13 are
@@ -706,7 +706,7 @@ trampoline calls - varying only the embedded offsets/constants and tail
 shape (a header->0x84 double-rewrite plus a record-field/struct-field
 copy; the standard OAM trio; a plain record-relookup feeding
 `SetEnemyState`/`SetEnemyRangeX`; a bit-27 re-test). New file:
-`src/graphics/graphics_loading_1feec.c`, replacing
+`src/level/spawn_enemies.c`, replacing
 `asm/code_3_2_17_1feec.o` at the same point in `ldscript.txt` - this
 retires that raw file entirely.
 
@@ -715,7 +715,7 @@ retires that raw file entirely.
 The one function in this stretch whose ROM disassembly avoids the r7
 gap: `push {r4, r5, r6, lr}` plus a single lo-register copy of `r8` (no
 `sb`, no `r7` at all), same overall register footprint as
-`SpawnVulture`/`SpawnSeal` (`graphics_loading_1ef0c.c`) rather than the
+`SpawnVulture`/`SpawnSeal` (`spawn_enemies.c`) rather than the
 4-low-register-plus-extra-high-registers shape every other function in
 this file needs. Reconstructed as real C using exactly those two
 functions' established idioms: `part` pinned in `r5`, `hdr` pinned in
@@ -772,7 +772,7 @@ own allocator tracks as live across a wider span, which is the
 precondition every technique in this project's toolbox needs to get a
 register into the callee-saved set at all. No new technique was tried
 this pass beyond what `SpawnRoomExit`/`SpawnTiny`/`SpawnBonusPlatform` and the
-nine `graphics_loading_1ef0c.c` functions already exhausted for this
+nine `spawn_enemies.c` functions already exhausted for this
 exact wall - transcribed instruction-for-instruction from the ROM
 disassembly instead, per this project's established NAKED escape hatch.
 Every instruction's *operation* was confirmed matching via isolated
@@ -797,7 +797,7 @@ worth noting that hadn't appeared in quite this form before:
 
 Full clean `make compare` (`La suma coincide`) and `make NON_MATCHING=1
 report`, both passing. This retires `asm/code_3_2_17_1feec.s` entirely -
-the file no longer exists, replaced by `src/graphics/graphics_loading_1feec.c`
+the file no longer exists, replaced by `src/level/spawn_enemies.c`
 at the same point in `ldscript.txt`. 1 of the 13 functions in this file is
 real C, the other 12 are NAKED, tracked in `docs/status/graphics_loading.md`
 and `tools/report_units.py`. Issue #31 stays open - the remaining raw/parked
@@ -806,7 +806,7 @@ scope (the "trigger effect type N" twin-family shape at
 issue has accumulated across all seven passes) is unchanged by this pass
 beyond adding twelve more already-parked NAKED entries.
 
-## Later pass: `trigger_effect.c` under old_agbcc
+## Later pass: `spawn_gem_platforms.c` under old_agbcc
 
 `SpawnRedGemPlatform`/`SpawnYellowGemPlatform`/`SpawnGreenGemPlatform`/`SpawnBlueGemPlatform`, NAKED since the
 third pass, are now plain C built with old_agbcc (`OLD_AGBCC_OBJS`). There

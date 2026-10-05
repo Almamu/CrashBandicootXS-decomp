@@ -1,7 +1,7 @@
 #include "core.h"
 #include "gba/dma_macros.h"
 
-/* Same "self" object family as actor_part61.c/actor_part66.c/starfield.c - see docs/matching/issue-63-0x08033ef4-actor.md. This is
+/* Same "self" object family as actor_part61.c/hovercraft_side_gun.c/starfield.c - see docs/matching/issue-63-0x08033ef4-actor.md. This is
  * the 0x14-byte constructor (`InitStarfield`, called by `InitTitleScreen` as
  * `InitStarfield(OperatorNew(0x14))`, see `src/frontend/title_screen_init.c`) and
  * its companion per-frame updater (`DrawStarfield`, called by
@@ -510,7 +510,7 @@ void PlotStarfieldPixel(void *mgrArg, u32 x, s32 y, s32 valArg)
 
 asm(".align 2, 0");
 
-/* Same "self" object family as actor_part61.c/actor_part66.c - see
+/* Same "self" object family as actor_part61.c/hovercraft_side_gun.c - see
  * docs/matching/issue-63-0x08033ef4-actor.md. */
 
 extern void DrawStarfield(void *mgr);

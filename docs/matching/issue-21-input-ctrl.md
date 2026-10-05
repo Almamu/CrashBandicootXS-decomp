@@ -32,7 +32,7 @@ Found by scanning the ROM for Thumb pointers: the method table holds
 `AttachInputCtrl` (+0x1C, set target) and `DestroyInputCtrl` (+0x4C, destroy); the
 slots this code calls through (+0x24 ... +0x54) are all base-class
 `sub_800B6xx`/`sub_800B8xx` functions, and `CreateInputCtrl` (constructor,
-called from `game_loop39.c`) chains to the base constructor `InitCtrl`.
+called from `play_room.c`) chains to the base constructor `InitCtrl`.
 
 `UpdateInputCtrl` reads the held keys (`gKeys`): up/down pick
 channel B's pair (3/5, back to 0 when neither is held), left/right channel
@@ -74,7 +74,7 @@ Thumb pointer scan): the six byte accessors and `SetInputCtrlMotionYPending`-
   inlined body runs. The same idea as `tile_slot_pool.c`'s (#43) helpers.
 - **The "mark actor gone" sequence** (`MarkEntityGone`'s, inlined in
   `InputCtrlStateDead` and `UpdateInputCtrl`). Earlier matches of this sequence
-  (`actor_part27c.c`, `wumpa.c`, `enemy_ctrl.c`, ...) needed an
+  (`tiny_hop_pad.c`, `wumpa.c`, `enemy_ctrl.c`, ...) needed an
   inline-asm `add`/`asr` pair. Here it's plain C: the ROM's copy +
   `asr #5` + subtract is gcc's **signed** `/ 32` and `% 32` of the
   zero-extended id (the sign fix-up is then dropped as provably dead), so

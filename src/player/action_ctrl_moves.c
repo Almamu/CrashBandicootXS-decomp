@@ -5,7 +5,7 @@
 
 /* Continuation of action_ctrl_hang.c (issue #18's chunk) - covers
  * `sub_80151C8`, `EndActionCtrlSpin` and `SteerActionCtrlSpin`. Same "self" object
- * family documented at the top of action_ctrl_states.c/actor_part28.c. */
+ * family documented at the top of action_ctrl_states.c/hovercraft_parts.c. */
 
 /* One-shot guard (`self+0x23`): the first time through, picks a value
  * (`0x18`/`0x19`/`0x1a`) from `self+0x22` (a small jump table for
@@ -34,7 +34,7 @@ void sub_80151C8(void *selfArg)
      * section this ROM has no room for. Spelling the table out in raw
      * asm, using the same "hand-placed local labels shared across a
      * single literal pool" idea as `DoSuperBodySlamShockwave`'s anti-CSE note in
-     * actor_part28.c, sidesteps both problems - `self` is pinned to
+     * hovercraft_parts.c, sidesteps both problems - `self` is pinned to
      * `r3` for the whole function so this block's hardcoded `r3` use
      * matches whatever the compiler already has it in. */
     {
@@ -224,7 +224,7 @@ asm(".align 2, 0");
 
 /* Continuation of the code above (issue #18's chunk) - covers
  * `SetActionCtrlMode` through `ActionCtrlStateBodySlamStart`. Same "self" object family
- * documented at the top of action_ctrl_states.c/actor_part28.c. */
+ * documented at the top of action_ctrl_states.c/hovercraft_parts.c. */
 
 extern void *gAudioContext;
 extern void *gPlayer;

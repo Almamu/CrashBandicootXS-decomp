@@ -49,7 +49,7 @@ void ScrollBgLayer(struct bg_scroll_layer *self, void *vec2)
  * halfwords at self+0x54/self+0x56 (read back together as one 32-bit
  * word), then writes that packed pair through the pointer at
  * self+0x58 - the `BGnHOFS`/`BGnVOFS` register pair address
- * `InitBgLayer` (game_loop15.c) caches there. */
+ * `InitBgLayer` (bg_layer_init.c) caches there. */
 void CommitBgLayerScroll(void *self)
 {
     s32 x = *(s32 *)self;
@@ -83,7 +83,7 @@ void DrawBgLayerColumn(struct bg_scroll_layer *self, s32 col)
 }
 
 /* GitHub issue #42: the BG-scroll layer's own methods (`struct
- * bg_scroll_layer`, constructor `InitBgLayer` in game_loop15.c, method
+ * bg_scroll_layer`, constructor `InitBgLayer` in bg_layer_init.c, method
  * table `gBgLayerVtable`) and the overrides of its tile-slot-pooled
  * subclass used for BG layer 0 (`struct pooled_bg_layer`, constructor
  * `InitPooledBgLayer` in tile_slot_pool.c, table `gPooledBgLayerVtable`).

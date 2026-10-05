@@ -21,8 +21,8 @@ extern void AddToPartList(void *manager, void *value);
  * (src/menus/pause_menu_pages_init.c, confirmed matching for `InitPauseCrystalsPage`),
  * adapted for a raw-offset `struct actor *` instead of a named
  * `field_29`, since this object's tail past `struct actor`'s 0x1c
- * bytes isn't its own named struct here (see `trigger_effect.c`'s same
- * caveat). Same macro as src/graphics/graphics_loading_21bfc.c - not
+ * bytes isn't its own named struct here (see `spawn_gem_platforms.c`'s same
+ * caveat). Same macro as src/level/spawn_crates.c - not
  * shared via a header since both files only need it locally. */
 #define UPDATE_PART_FRAME_NIBBLE(partPtr) \
     do { \
@@ -192,7 +192,7 @@ extern void SetCrateGemPos(void *self, s32 *point);
  * plain state-write, no sound/spawn - never reads `arg0`/`arg3` at all
  * (matches the ROM, which never touches r0/r3), packs `arg1`/`arg2`
  * into a stack `{x, y}` pair and calls `SetCrateGemPos` (already matched
- * in game_loop10.c), which just stores them into
+ * in level_state.c), which just stores them into
  * `gLevelState->0x1c0`/`->0x1c4`. The ROM truncates both u16
  * args in one batch (`lsl r1,r1 / lsl r2,r2` then `lsr r3,r1 / lsr
  * r4,r2`) landing the truncated values in different registers (r1->r3,

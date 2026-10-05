@@ -16,7 +16,7 @@ struct entry_set
 };
 
 /* {a, b} vec3-table index pairs (`struct vec_pair`, gobj_1a794.h):
- * actor_part_1a794.c indexes gDingodileMotionRecords with entries 0-3;
+ * dingodile_create.c indexes gDingodileMotionRecords with entries 0-3;
  * entries 4-7 are gPlatformMoverMotionSet's, indexing gPlatformMoverMotionRecords
  * (platform.c). */
 const u32 gDingodileMotionEntries[8][2] = {

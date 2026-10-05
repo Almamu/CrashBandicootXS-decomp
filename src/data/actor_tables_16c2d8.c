@@ -6,7 +6,7 @@
  */
 
 /* The 12-byte vector records SetMegaMixMotionYFromSet and its siblings
- * (actor_part27b.c) look up by type id. */
+ * (mega_mix.c) look up by type id. */
 const s32 gMegaMixMotionRecords[4][3] = {
     { 0, 0, 0 },
     { 0, 32, 450 },
@@ -14,12 +14,12 @@ const s32 gMegaMixMotionRecords[4][3] = {
     { 450, 32, 750 },
 };
 
-/* UpdateTiny / SetTinyState (actor_part_18008.c): a value per round. */
+/* UpdateTiny / SetTinyState (tiny_update.c): a value per round. */
 const u8 gTinyRoundAnchors[3] = {
     4, 1, 0,
 };
 
-/* PickTinyHopTarget (actor_part_18008.c): a sequence of 0-4 values. */
+/* PickTinyHopTarget (tiny_update.c): a sequence of 0-4 values. */
 const u8 gTinyHopTargets[77] = {
     1, 1, 2, 1, 1, 0, 2, 0, 3, 3, 0, 0, 0, 3, 3, 1,
     1, 2, 4, 4, 3, 3, 3, 3, 3, 1, 1, 2, 1, 1, 0, 2,
@@ -29,13 +29,13 @@ const u8 gTinyHopTargets[77] = {
 };
 
 /* The Neo Cortex fight's crosshair (gCortexTargetVtable). SetCortexTargetDest
- * (actor_part_1967c.c) glides it to a new point in this many steps,
+ * (dingodile.c) glides it to a new point in this many steps,
  * indexed by the level config's index. */
 const u8 gCortexTargetHopSteps[4] = {
     0x10, 0xE, 0xA, 0x20,
 };
 
-/* UpdateCortexTarget (actor_part_188d0.c), per config index, while the
+/* UpdateCortexTarget (cortex.c), per config index, while the
  * crosshair chases the player (state 5): the glide step count, and the
  * countdown values at which it starts blinking (with sfx 0x5C) and stops
  * blinking on frame 1, before it fires. */
@@ -49,7 +49,7 @@ const u8 gCortexTargetBlinkStopTimes[3] = {
     2, 2, 2,
 };
 
-/* UpdateDingodile (actor_part_1967c.c): the X positions (Q8) at which
+/* UpdateDingodile (dingodile.c): the X positions (Q8) at which
  * Dingodile, walking left (`facing`) or right, stops (state 5, motion 0)
  * if the player is within 0x1FFF ahead; the Hurt tables replace the
  * others once he has been hit. */
@@ -67,7 +67,7 @@ const s32 gDingodileStopXRightHurt[6] = {
 };
 
 /* {x, y, z} vectors (gobj_1a794.h's `struct vec3`): UpdateDingodileShark
- * (actor_part_1967c.c), and StartDingodileMotion (actor_part_1a794.c) through the
+ * (dingodile.c), and StartDingodileMotion (dingodile_create.c) through the
  * entries of entry_set_16c418.c. */
 const s32 gDingodileMotionRecords[4][3] = {
     { 0, 0, 0 },
@@ -77,7 +77,7 @@ const s32 gDingodileMotionRecords[4][3] = {
 };
 
 /* The Y motion records (StartCtrlTargetMotionY, {speed, accel, limit})
- * UpdateDingodileProjectile (actor_part_1967c.c) starts: the rocket's rise
+ * UpdateDingodileProjectile (dingodile.c) starts: the rocket's rise
  * (state 0, until it reaches the top and drops the stalactite) and the
  * stalactite's fall (state 5). Only the first three words of the second
  * table are read. */

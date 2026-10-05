@@ -2,8 +2,8 @@
 
 This pass finishes issue #22. The last raw block, `asm/code_3_2_17_18008.s`
 (`UpdateTiny`, `SetTinyState`, `PickTinyHopTarget`, `SpawnTinyFallingLeaves`), is now
-`src/graphics/actor_part_18008.c`. `UpdateMegaMix`
-(`src/graphics/actor_part27a.c`), which was a NAKED transcription, is
+`src/bosses/tiny_update.c`. `UpdateMegaMix`
+(`src/bosses/mega_mix_update.c`), which was a NAKED transcription, is
 now real C too. All five match under the older compiler, old_agbcc, and
 both files are on the Makefile's `OLD_AGBCC_OBJS` list.
 
@@ -19,8 +19,8 @@ loaded before the byte it is combined with (`movs r0, #0x10; ldrb r3,
 [r4, #0xc]; orrs r0, r3` in `SpawnTinyFallingLeaves`, `movs r0, #0x7f; ldrb r1,
 [r1]; ands r0, r1` in `UpdateMegaMix`).
 
-The other #22 files (`input_ctrl_queue.c`, `actor_part27b.c`,
-`actor_part27c.c`) also match byte for byte under old_agbcc as they are,
+The other #22 files (`input_ctrl_queue.c`, `mega_mix.c`,
+`tiny_hop_pad.c`) also match byte for byte under old_agbcc as they are,
 pins included. They stay on the current agbcc, because switching them
 gains nothing without also dropping their pins.
 
@@ -28,13 +28,13 @@ gains nothing without also dropping their pins.
 
 `UpdateTiny`/`SetTinyState` are the per-frame update and "enter state"
 methods of the `gTinyVtable` class (constructor `CreateTiny`,
-`actor_part_188d0.c`). The class is a boss that hops its part along
+`cortex.c`). The class is a boss that hops its part along
 parabolic arcs between the anchor objects of the `gUnknown_030012EC`
 list:
 
 - A hop runs over `steps` of `total` frames. X is linear from the start
   point, and Y follows the 257-entry `i*i>>8` table at +0x48 (rising
-  arcs read it backwards). `StartTinyHop` (`actor_part_188d0.c`) sets up
+  arcs read it backwards). `StartTinyHop` (`cortex.c`) sets up
   the deltas.
 - `SetTinyState` (15 cases) sets the next hop's start point from the
   target anchor, the player's position or the level floor. It also fires
@@ -67,12 +67,12 @@ out-of-range exit goes to state 0's mirror-bit test, not to the
   that 0 and reuses it for a later zero store, which moves the zero's
   `movs` earlier. Where the ROM materializes the 0 late, two things fix
   it: the flag RMWs go through a raw byte pointer (`PART_FLAGS`, as in
-  `actor_part_188d0.c`), and a named `one` local is used for the 1-stores
+  `cortex.c`), and a named `one` local is used for the 1-stores
   in `UpdateTiny`'s case 0.
 - **Box builders by value.** `a = GetSpriteAttackBox(player)` gives the ROM's
   stack slots. `UpdateTiny`'s else branch writes `b = GetSpriteAttackBox(..);
   a = b;`, as `UpdateCortexShot` does. The `valid` word of `b` is read back
-  through a `volatile` (`BOX_VALID`, from `actor_part_1967c.c`).
+  through a `volatile` (`BOX_VALID`, from `dingodile.c`).
 - **`CollidePartList` takes the box by value.** The earlier NAKED note on
   `UpdateMegaMix` called its stack-argument order (6th, 7th, then 5th)
   unclosable from C. With the prototype

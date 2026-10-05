@@ -666,8 +666,8 @@ s32 GetCameraLeadOffset(struct follow_child *self)
  * constructor inlined): places it at (x, y) pixels with record id `id`,
  * registers it with gCollidableList, and starts animation 0 of the
  * table at `**gSpriteBankSet + 0x150`. Called from SpawnMegaMix's
- * family (graphics_loading_21668.c). The two mask constants are
- * materialized with `mov/neg` asm like graphics_loading_21668.c's
+ * family (spawn_objects.c). The two mask constants are
+ * materialized with `mov/neg` asm like spawn_objects.c's
  * SpawnMegaMix, since the compiler otherwise derives them from constants
  * already in registers. */
 struct sprite *SpawnLaunchPad(u16 id, u16 x, u16 y)
@@ -758,7 +758,7 @@ struct sprite *InitLaunchPad(struct sprite *self)
     return self;
 }
 
-/* The level-select screen, modal (called from game_loop55.c): resets the
+/* The level-select screen, modal (called from game_frame.c): resets the
  * display, palette, VRAM cursor and both text-icon managers (the same
  * setup as ShowPowerDialog), builds the menu for level `*arg`, runs it, stores
  * the chosen level back through `arg`, tears the menu down and returns

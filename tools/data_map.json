@@ -224,8 +224,8 @@
     "ConvertAirshipTiles"
    ],
    "consumer_files": [
-    "graphics/actor_part26b.c",
-    "graphics/actor_part26c.c"
+    "bosses/airship_load_graphics.c",
+    "bosses/airship_graphics.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -251,7 +251,7 @@
     "CreateAirship"
    ],
    "consumer_files": [
-    "graphics/actor_part23d.c"
+    "bosses/airship.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 1,
@@ -278,7 +278,7 @@
     "ConvertHovercraftTiles"
    ],
    "consumer_files": [
-    "graphics/actor_part130.c"
+    "bosses/hovercraft.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -303,7 +303,7 @@
     "CreateHovercraft"
    ],
    "consumer_files": [
-    "graphics/actor_part130.c"
+    "bosses/hovercraft.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -367,7 +367,7 @@
     "player/player_event.c",
     "enemies/enemy_ctrl.c",
     "graphics/actor_part129.c",
-    "graphics/actor_part130.c",
+    "bosses/hovercraft.c",
     "graphics/actor_part62.c",
     "frontend/starfield.c",
     "menus/level_select_widgets.c",
@@ -1056,7 +1056,7 @@
     "PlayRoom"
    ],
    "consumer_files": [
-    "system/game_loop39.c"
+    "level/play_room.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 1,
@@ -1076,7 +1076,7 @@
     "PlayRoom"
    ],
    "consumer_files": [
-    "system/game_loop39.c"
+    "level/play_room.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 1,
@@ -1096,7 +1096,7 @@
     "PlayRoom"
    ],
    "consumer_files": [
-    "system/game_loop39.c"
+    "level/play_room.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 1,
@@ -1141,8 +1141,7 @@
     "SpawnWoodenCrusher"
    ],
    "consumer_files": [
-    "graphics/graphics_loading_1ef0c.c",
-    "graphics/graphics_loading_1feec.c"
+    "level/spawn_enemies.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -1163,7 +1162,7 @@
     "SpawnPenguin"
    ],
    "consumer_files": [
-    "graphics/graphics_loading_1ef0c.c"
+    "level/spawn_enemies.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -1187,7 +1186,7 @@
     "SpawnPufferfish"
    ],
    "consumer_files": [
-    "graphics/graphics_loading_1ef0c.c"
+    "level/spawn_enemies.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -1211,7 +1210,7 @@
     "SpawnBlowgunTribesman"
    ],
    "consumer_files": [
-    "graphics/graphics_loading_1ef0c.c"
+    "level/spawn_enemies.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -1235,7 +1234,7 @@
     "SpawnVenusFlytrap"
    ],
    "consumer_files": [
-    "graphics/graphics_loading_1ef0c.c"
+    "level/spawn_enemies.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -1256,7 +1255,7 @@
     "SpawnVulture"
    ],
    "consumer_files": [
-    "graphics/graphics_loading_1ef0c.c"
+    "level/spawn_enemies.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -1277,7 +1276,7 @@
     "SpawnShark"
    ],
    "consumer_files": [
-    "graphics/graphics_loading_1ef0c.c"
+    "level/spawn_enemies.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -1298,7 +1297,7 @@
     "SpawnSquid"
    ],
    "consumer_files": [
-    "graphics/graphics_loading_1fdec.c"
+    "level/spawn_enemies.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -1319,7 +1318,7 @@
     "SpawnElectricEel"
    ],
    "consumer_files": [
-    "graphics/graphics_loading_1ef0c.c"
+    "level/spawn_enemies.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -1340,7 +1339,7 @@
     "SpawnFlamethrowerLabAssistant"
    ],
    "consumer_files": [
-    "graphics/graphics_loading_1feec.c"
+    "level/spawn_enemies.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -1364,7 +1363,7 @@
     "SpawnStationarySpaceEnemy"
    ],
    "consumer_files": [
-    "graphics/graphics_loading_1feec.c"
+    "level/spawn_enemies.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -1385,7 +1384,7 @@
     "SpawnPatrollingSpaceEnemy"
    ],
    "consumer_files": [
-    "graphics/graphics_loading_1feec.c"
+    "level/spawn_enemies.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -1410,7 +1409,7 @@
     "SpawnFrog"
    ],
    "consumer_files": [
-    "graphics/graphics_loading_1feec.c"
+    "level/spawn_enemies.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -1432,7 +1431,7 @@
     "SpawnWoodenCrusher"
    ],
    "consumer_files": [
-    "graphics/graphics_loading_1feec.c"
+    "level/spawn_enemies.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -1453,7 +1452,7 @@
     "SpawnSaucerLabAssistant"
    ],
    "consumer_files": [
-    "graphics/graphics_loading_1feec.c"
+    "level/spawn_enemies.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -1858,7 +1857,7 @@
     "ResetMegaMixCtrl"
    ],
    "consumer_files": [
-    "graphics/actor_part27b.c"
+    "bosses/mega_mix.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 1,
@@ -1881,7 +1880,7 @@
     "StartMegaMixMotionXFromSet"
    ],
    "consumer_files": [
-    "graphics/actor_part27b.c"
+    "bosses/mega_mix.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -1903,7 +1902,7 @@
     "SetTinyState"
    ],
    "consumer_files": [
-    "graphics/actor_part_18008.c"
+    "bosses/tiny_update.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -1924,7 +1923,7 @@
     "PickTinyHopTarget"
    ],
    "consumer_files": [
-    "graphics/actor_part_18008.c"
+    "bosses/tiny_update.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -1945,7 +1944,7 @@
     "SetCortexTargetDest"
    ],
    "consumer_files": [
-    "graphics/actor_part_1967c.c"
+    "bosses/dingodile.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -1966,7 +1965,7 @@
     "UpdateCortexTarget"
    ],
    "consumer_files": [
-    "graphics/actor_part_188d0.c"
+    "bosses/cortex.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -1987,7 +1986,7 @@
     "UpdateCortexTarget"
    ],
    "consumer_files": [
-    "graphics/actor_part_188d0.c"
+    "bosses/cortex.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2008,7 +2007,7 @@
     "UpdateCortexTarget"
    ],
    "consumer_files": [
-    "graphics/actor_part_188d0.c"
+    "bosses/cortex.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2029,7 +2028,7 @@
     "UpdateDingodile"
    ],
    "consumer_files": [
-    "graphics/actor_part_1967c.c"
+    "bosses/dingodile.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2053,7 +2052,7 @@
     "UpdateDingodile"
    ],
    "consumer_files": [
-    "graphics/actor_part_1967c.c"
+    "bosses/dingodile.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2077,7 +2076,7 @@
     "UpdateDingodile"
    ],
    "consumer_files": [
-    "graphics/actor_part_1967c.c"
+    "bosses/dingodile.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2101,7 +2100,7 @@
     "UpdateDingodile"
    ],
    "consumer_files": [
-    "graphics/actor_part_1967c.c"
+    "bosses/dingodile.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2126,8 +2125,8 @@
     "StartDingodileMotion"
    ],
    "consumer_files": [
-    "graphics/actor_part_1967c.c",
-    "graphics/actor_part_1a794.c"
+    "bosses/dingodile.c",
+    "bosses/dingodile_create.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2152,7 +2151,7 @@
     "UpdateDingodileProjectile"
    ],
    "consumer_files": [
-    "graphics/actor_part_1967c.c"
+    "bosses/dingodile.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2173,7 +2172,7 @@
     "UpdateDingodileProjectile"
    ],
    "consumer_files": [
-    "graphics/actor_part_1967c.c"
+    "bosses/dingodile.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2194,7 +2193,7 @@
     "StartDingodileMotion"
    ],
    "consumer_files": [
-    "graphics/actor_part_1a794.c"
+    "bosses/dingodile_create.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2819,7 +2818,7 @@
     "CreateEntitySpawner"
    ],
    "consumer_files": [
-    "graphics/graphics_loading_21d80.c"
+    "level/spawn_pickups.c"
    ],
    "ptr_words_code": 92,
    "ptr_words_data": 0,
@@ -2843,7 +2842,7 @@
     "RunRoom"
    ],
    "consumer_files": [
-    "system/game_loop56.c"
+    "level/run_room.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2867,7 +2866,7 @@
     "RunRoom"
    ],
    "consumer_files": [
-    "system/game_loop56.c"
+    "level/run_room.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2891,7 +2890,7 @@
     "RunRoom"
    ],
    "consumer_files": [
-    "system/game_loop56.c"
+    "level/run_room.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2915,7 +2914,7 @@
     "RunRoom"
    ],
    "consumer_files": [
-    "system/game_loop56.c"
+    "level/run_room.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2939,7 +2938,7 @@
     "RunRoom"
    ],
    "consumer_files": [
-    "system/game_loop56.c"
+    "level/run_room.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -2983,13 +2982,12 @@
    ],
    "consumer_files": [
     "menus/level_select.c",
-    "graphics/graphics_loading_21280.c",
+    "level/spawn_bosses.c",
     "menus/power_dialog_draw.c",
     "menus/pause_menu_info.c",
     "menus/pause_menu_pages_init.c",
-    "system/game_loop17.c",
-    "system/game_loop18.c",
-    "system/game_loop56.c"
+    "level/level_query.c",
+    "level/run_room.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 67,
@@ -3019,7 +3017,7 @@
     "PlayRoomMusic"
    ],
    "consumer_files": [
-    "system/game_loop18.c"
+    "level/level_query.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 125,
@@ -3041,7 +3039,7 @@
     "PlayCutscene"
    ],
    "consumer_files": [
-    "graphics/graphics_loading_22354.c"
+    "level/level_cutscene.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 444,
@@ -3066,7 +3064,7 @@
     "sub_8025228"
    ],
    "consumer_files": [
-    "system/game_loop3.c"
+    "level/bg_layer_base.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3091,7 +3089,7 @@
     "GetSolidTerrainHeights"
    ],
    "consumer_files": [
-    "system/game_loop3.c"
+    "level/bg_layer_base.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3112,7 +3110,7 @@
     "GetSolidTerrainHeights"
    ],
    "consumer_files": [
-    "system/game_loop3.c"
+    "level/bg_layer_base.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3133,7 +3131,7 @@
     "GetSolidTerrainHeights"
    ],
    "consumer_files": [
-    "system/game_loop3.c"
+    "level/bg_layer_base.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -3154,7 +3152,7 @@
     "GetSolidTerrainHeights"
    ],
    "consumer_files": [
-    "system/game_loop3.c"
+    "level/bg_layer_base.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 420,
@@ -3989,8 +3987,7 @@
     "RunAirshipFireballState"
    ],
    "consumer_files": [
-    "graphics/actor_part20b.c",
-    "graphics/actor_part21b.c"
+    "bosses/airship_fireball.c"
    ],
    "ptr_words_code": 3,
    "ptr_words_data": 0,
@@ -4014,7 +4011,7 @@
     "SpawnAirship"
    ],
    "consumer_files": [
-    "graphics/actor_part23e.c"
+    "bosses/airship.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -4039,8 +4036,8 @@
     "AnimateAirshipPalette"
    ],
    "consumer_files": [
-    "graphics/actor_part23e.c",
-    "graphics/actor_part26.c"
+    "bosses/airship.c",
+    "bosses/airship_graphics.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -4066,9 +4063,9 @@
     "IsTouchingAirship"
    ],
    "consumer_files": [
-    "graphics/actor_part21f.c",
-    "graphics/actor_part23c.c",
-    "graphics/actor_part24b.c"
+    "bosses/airship_explode.c",
+    "bosses/airship.c",
+    "bosses/airship_touch.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -4093,7 +4090,7 @@
     "CreateAirship"
    ],
    "consumer_files": [
-    "graphics/actor_part23d.c"
+    "bosses/airship.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -4117,7 +4114,7 @@
     "UpdateAirship"
    ],
    "consumer_files": [
-    "graphics/actor_part23f.c"
+    "bosses/airship.c"
    ],
    "ptr_words_code": 6,
    "ptr_words_data": 0,
@@ -4212,7 +4209,7 @@
     "RunHovercraftFireballState"
    ],
    "consumer_files": [
-    "graphics/actor_part130.c"
+    "bosses/hovercraft.c"
    ],
    "ptr_words_code": 2,
    "ptr_words_data": 0,
@@ -4236,7 +4233,7 @@
     "SpawnHovercraft"
    ],
    "consumer_files": [
-    "graphics/actor_part130.c"
+    "bosses/hovercraft.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -4260,7 +4257,7 @@
     "HovercraftStateCloseIn"
    ],
    "consumer_files": [
-    "graphics/actor_part130.c"
+    "bosses/hovercraft.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -4284,7 +4281,7 @@
     "CreateHovercraft"
    ],
    "consumer_files": [
-    "graphics/actor_part130.c"
+    "bosses/hovercraft.c"
    ],
    "ptr_words_code": 0,
    "ptr_words_data": 0,
@@ -4305,7 +4302,7 @@
     "RunHovercraftState"
    ],
    "consumer_files": [
-    "graphics/actor_part130.c"
+    "bosses/hovercraft.c"
    ],
    "ptr_words_code": 6,
    "ptr_words_data": 0,
@@ -4330,8 +4327,7 @@
     "RunHovercraftCannonState"
    ],
    "consumer_files": [
-    "graphics/actor_part31.c",
-    "graphics/actor_part33.c"
+    "bosses/hovercraft_cannon.c"
    ],
    "ptr_words_code": 3,
    "ptr_words_data": 0,
@@ -4356,8 +4352,7 @@
     "RunHovercraftLauncherState"
    ],
    "consumer_files": [
-    "graphics/actor_part37.c",
-    "graphics/actor_part64.c"
+    "bosses/hovercraft_launcher.c"
    ],
    "ptr_words_code": 3,
    "ptr_words_data": 0,
@@ -5077,7 +5072,7 @@
     "InitLevelState"
    ],
    "consumer_files": [
-    "graphics/graphics_loading_21d80.c",
+    "level/spawn_pickups.c",
     "menus/pause_menu.c"
    ],
    "ptr_words_code": 220,
@@ -7632,7 +7627,7 @@
     "CreateMegaMixCtrl"
    ],
    "consumer_files": [
-    "graphics/actor_part27b.c"
+    "bosses/mega_mix.c"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
@@ -7657,7 +7652,7 @@
     "CreateStompedHopPadCtrl"
    ],
    "consumer_files": [
-    "graphics/actor_part27c.c"
+    "bosses/tiny_hop_pad.c"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
@@ -7682,7 +7677,7 @@
     "DestroyOneShotAnimCtrl"
    ],
    "consumer_files": [
-    "graphics/actor_part_188d0.c"
+    "bosses/cortex.c"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
@@ -7707,7 +7702,7 @@
     "DestroyUnusedOneShotAnimCtrl"
    ],
    "consumer_files": [
-    "graphics/actor_part_188d0.c"
+    "bosses/cortex.c"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
@@ -7732,7 +7727,7 @@
     "CreateTiny"
    ],
    "consumer_files": [
-    "graphics/actor_part_188d0.c"
+    "bosses/cortex.c"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
@@ -7757,7 +7752,7 @@
     "CreateCortexBossGemCtrl"
    ],
    "consumer_files": [
-    "graphics/actor_part_188d0.c"
+    "bosses/cortex.c"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
@@ -7782,7 +7777,7 @@
     "CreateCortexBossPlatformMover"
    ],
    "consumer_files": [
-    "graphics/actor_part_188d0.c"
+    "bosses/cortex.c"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
@@ -7807,7 +7802,7 @@
     "CreateCortexShotCtrl"
    ],
    "consumer_files": [
-    "graphics/actor_part_188d0.c"
+    "bosses/cortex.c"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
@@ -7832,7 +7827,7 @@
     "CreateCortexTargetCtrl"
    ],
    "consumer_files": [
-    "graphics/actor_part_1967c.c"
+    "bosses/dingodile.c"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
@@ -7857,7 +7852,7 @@
     "CreateCortexCannonCtrl"
    ],
    "consumer_files": [
-    "graphics/actor_part_1967c.c"
+    "bosses/dingodile.c"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
@@ -7882,7 +7877,7 @@
     "CreateCortexBoss"
    ],
    "consumer_files": [
-    "graphics/actor_part_1967c.c"
+    "bosses/dingodile.c"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
@@ -7907,7 +7902,7 @@
     "DestroyDingodileSharkCtrl"
    ],
    "consumer_files": [
-    "graphics/actor_part_1967c.c"
+    "bosses/dingodile.c"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
@@ -7933,7 +7928,7 @@
     "CreateDingodileProjectileCtrl"
    ],
    "consumer_files": [
-    "graphics/actor_part_1967c.c"
+    "bosses/dingodile.c"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
@@ -7958,8 +7953,8 @@
     "CreateDingodileShieldCtrl"
    ],
    "consumer_files": [
-    "graphics/actor_part_1967c.c",
-    "graphics/actor_part_1a794.c"
+    "bosses/dingodile.c",
+    "bosses/dingodile_create.c"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
@@ -7984,7 +7979,7 @@
     "CreateDingodile"
    ],
    "consumer_files": [
-    "graphics/actor_part_1a794.c"
+    "bosses/dingodile_create.c"
    ],
    "ptr_words_code": 12,
    "ptr_words_data": 0,
@@ -8188,9 +8183,9 @@
     "DestroyPooledBgLayer"
    ],
    "consumer_files": [
-    "system/bg_scroll_layer_25fc8.c",
-    "system/game_loop15.c",
-    "system/tile_slot_pool.c"
+    "level/bg_layer.c",
+    "level/bg_layer_init.c",
+    "level/tile_slot_pool.c"
    ],
    "ptr_words_code": 9,
    "ptr_words_data": 0,
@@ -8215,7 +8210,7 @@
     "InitPooledBgLayer"
    ],
    "consumer_files": [
-    "system/tile_slot_pool.c"
+    "level/tile_slot_pool.c"
    ],
    "ptr_words_code": 9,
    "ptr_words_data": 0,
@@ -8393,7 +8388,7 @@
     "frontend/language_select.c",
     "graphics/actor_anim.c",
     "graphics/actor_part129.c",
-    "graphics/actor_part130.c",
+    "bosses/hovercraft.c",
     "graphics/actor_part19.c",
     "graphics/actor_part19c.c",
     "graphics/actor_part44.c",
@@ -9140,7 +9135,7 @@
     "CreateAirshipFireball"
    ],
    "consumer_files": [
-    "graphics/actor_part20d.c"
+    "bosses/airship_fireball.c"
    ],
    "ptr_words_code": 6,
    "ptr_words_data": 0,
@@ -9335,7 +9330,7 @@
     "CreateJetpackRing"
    ],
    "consumer_files": [
-    "graphics/actor_part130.c"
+    "bosses/hovercraft.c"
    ],
    "ptr_words_code": 6,
    "ptr_words_data": 0,
@@ -9360,7 +9355,7 @@
     "CreateJetpackCollectedWumpa"
    ],
    "consumer_files": [
-    "graphics/actor_part130.c"
+    "bosses/hovercraft.c"
    ],
    "ptr_words_code": 6,
    "ptr_words_data": 0,
@@ -9384,7 +9379,7 @@
     "CreateHovercraftFireball"
    ],
    "consumer_files": [
-    "graphics/actor_part130.c"
+    "bosses/hovercraft.c"
    ],
    "ptr_words_code": 6,
    "ptr_words_data": 0,
@@ -9408,7 +9403,7 @@
     "CreateHovercraftCannon"
    ],
    "consumer_files": [
-    "graphics/actor_part32.c"
+    "bosses/hovercraft_cannon.c"
    ],
    "ptr_words_code": 6,
    "ptr_words_data": 0,
@@ -9432,7 +9427,7 @@
     "CreateHovercraftLauncher"
    ],
    "consumer_files": [
-    "graphics/actor_part63.c"
+    "bosses/hovercraft_launcher.c"
    ],
    "ptr_words_code": 6,
    "ptr_words_data": 0,
@@ -9456,7 +9451,7 @@
     "CreateHovercraftSideGun"
    ],
    "consumer_files": [
-    "graphics/actor_part66.c"
+    "bosses/hovercraft_side_gun.c"
    ],
    "ptr_words_code": 6,
    "ptr_words_data": 0,
@@ -9480,7 +9475,7 @@
     "CreateHovercraftCannonFlash"
    ],
    "consumer_files": [
-    "graphics/actor_part69.c"
+    "bosses/hovercraft_cannon_flash.c"
    ],
    "ptr_words_code": 6,
    "ptr_words_data": 0,

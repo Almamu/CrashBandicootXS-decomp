@@ -4,29 +4,29 @@
 /* GitHub issue #34/#40/#41, `UpdateGameFrame`-`MainLoop` cluster: the
  * second of the two raw functions `docs/matching/issue-34-game-loop-
  * 8022d50-80255d4.md` left for a follow-up pass (the first,
- * `StartTimeTrial`, is `game_loop40.c`, now plain C).
+ * `StartTimeTrial`, is `time_trial.c`, now plain C).
  *
  * `self` is `*gEntityFlags` (the same collision-bitmap base
- * `sub_8025944`/`sub_8025968`/`sub_802599C`, game_loop12.c, and
- * `sub_8025A0C`, game_loop13.c, already operate on).
+ * `sub_8025944`/`sub_8025968`/`sub_802599C`, entity_flags.c, and
+ * `sub_8025A0C`, entity_flags.c, already operate on).
  *
  * First half (fully understood, matches the ROM's own idiom one for
  * one): if `list` differs from `self`'s cached copy at `self+0`,
  * `self+8`/`self+0x208` (the first two of the three overlapping
- * collision-bitmap arrays `game_loop12.c`'s header comment documents)
+ * collision-bitmap arrays `entity_flags.c`'s header comment documents)
  * are DMA3-zero-filled 64 bytes each (`DmaFill32(3, 0, dest, 64)`,
  * expanding to the exact same `REG_DMA3`-field-by-field store sequence
  * seen here); either way `self+8`->`self+0x108` and
  * `self+0x208`->`self+0x308` get unconditionally `CpuSet`-copied via
  * `CpuSet(src, dst, 0x04000040)` (the same idiom `SetCheckpointAtPlayer`,
- * game_loop.c, already documents in the opposite direction), and
+ * bonus_round.c, already documents in the opposite direction), and
  * `self+4` is set from `posArg >> 8` (a Q8-to-int truncation). `list`
  * is then walked as a `{count:u16 @2, groups:ptr @4}` header over
  * `{count:u16 @2, items:ptr @4}` 8-byte group records, each holding
  * `{tableIdx:u16, p1:u16, p2:u16, p3:u16}` 8-byte item records; for
  * each item not already flagged in the `self+8` bit-grid
  * (`sub_8025968`), `SpawnEntity` (the table-indexed interworking-
- * trampoline dispatcher, game_loop14.c) fires with a running,
+ * trampoline dispatcher, entity_spawner.c) fires with a running,
  * never-reset-per-group counter as its own `self` argument, indexing
  * `gEntitySpawner`'s table.
  *
@@ -38,7 +38,7 @@
  * and moves that actor's neighbour chain (`GetCrateAbove`/`SetEntityPos`)
  * up by its `+0x10` method's height.
  *
- * Built with old_agbcc (game_loop41.o is on OLD_AGBCC_OBJS; this file
+ * Built with old_agbcc (room_entities.o is on OLD_AGBCC_OBJS; this file
  * holds only this function). Earlier passes had it NAKED (153, then 219
  * halfwords off); the third pass (docs/matching/big-naked-retry-3.md)
  * closed it:

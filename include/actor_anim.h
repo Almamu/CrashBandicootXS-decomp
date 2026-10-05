@@ -19,7 +19,7 @@
 
 /* A box in the actors' 16-bit world units: position then size. The code
  * reads it through several local views (actor_part74.c's `struct box16`,
- * actor_part24b.c's `struct box3`, actor_part126.c's `struct box12`,
+ * airship_touch.c's `struct box3`, actor_part126.c's `struct box12`,
  * ...). The anim_table_record's box_14 and several small src/data tables
  * are this. */
 struct anim_box {

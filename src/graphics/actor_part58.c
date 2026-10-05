@@ -45,7 +45,7 @@ extern u8 gPolarCheckpointCrateVtable[];
  *
  * The `*(u8 *)&self->...animDone = zero` stores below are deliberate: as
  * plain struct-member stores gcc rebuilds the byte zero in r0 instead of
- * storing the register it was pinned to (same trick as actor_part20.c). */
+ * storing the register it was pinned to (same trick as airship_fireball.c). */
 struct actor_once {
     struct actor_self base;
     u8 once;            // 0x54

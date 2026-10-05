@@ -5,9 +5,9 @@
  * medal-results tally chain documented in docs/rom_map.md ("A per-level
  * completion-time cascade, and a medal-table tally chain") - see
  * docs/matching/issue-38-medal-results-tally.md for the full write-up
- * of this chunk (this file covers the front slice, up to but not
- * including LevelHasEntityType, which lives in game_loop18.c instead - it's
- * contiguous with both files in ROM, and ended up grouped with the
+ * of this chunk (this first part covers the front slice, up to but not
+ * including LevelHasEntityType, which follows further down this file - it's
+ * contiguous with both halves in ROM, and ended up grouped with the
  * wrapper functions that call it).
  *
  * `gLevelTable` is the confirmed 36-slot medal table (see
@@ -32,7 +32,7 @@ extern struct MedalTableEntry gLevelTable[];
 
 /* One entry of a `MedalTableEntry.itemList`. `linkedObj`'s own `+0x1c`
  * field is a pointer to a further nested structure (see CountCrateEntities's
- * `list` parameter in game_loop12.c) - not itself named here, since
+ * `list` parameter in entity_flags.c) - not itself named here, since
  * only this one offset into it is read anywhere in this file. */
 struct MedalListItem {
     u8 unused_00[4];
@@ -75,7 +75,7 @@ void nullsub_25(void)
  * `type == 3`, 0 otherwise (including `type < 0`). The same 4-branch
  * dispatch is inlined three times in the ROM (once per source: the
  * `items[]` array, `extra1`, `extra2`) rather than calling a shared
- * helper - `CountRoomCrates` (game_loop18.c) is a separate, standalone
+ * helper - `CountRoomCrates` (below) is a separate, standalone
  * instance of the same dispatch body, not something this function
  * reaches through. Each dispatch compiles as a genuine `switch` here
  * (rather than an if/else-if chain) - only that shape reproduces the
@@ -145,10 +145,10 @@ s32 CountLevelCrates(s32 idx)
 }
 
 /* GitHub issue #38: 0x0802425C-0x08024810 (game_loop), continued from
- * game_loop17.c - see that file's header comment and
+ * the code above - see this file's header comment and
  * docs/matching/issue-38-medal-results-tally.md for the full write-up.
- * This slice picks up with LevelHasEntityType (contiguous with game_loop17.c's
- * trailing CountLevelCrates in ROM, so it lives here instead of getting its
+ * This slice picks up with LevelHasEntityType (contiguous with the
+ * trailing CountLevelCrates above in ROM, so it lives here instead of getting its
  * own file - see docs/workflow.md's "one .c file per contiguous ROM
  * region" rule) and runs through SelectRoom, the last matched function
  * before the BeginSlide..ShowSlidePicture run (parked/left in
@@ -167,7 +167,7 @@ struct level_progress {
 struct AudioContext;
 
 /* Scans `gLevelTable[idx]`'s item list (`items[]`, plus the two
- * extra single-item slots, same shape CountLevelCrates in game_loop17.c
+ * extra single-item slots, same shape CountLevelCrates above
  * walks) for the first non-type-3 item whose `linkedObj->0x1c` nested
  * structure (see CountCrateEntities's `list` parameter) has a nonzero `u16` at
  * halfword index `flagIdx` in its own `+0x10` table pointer - i.e. "is
@@ -297,7 +297,7 @@ s32 LevelHasGemPathGemEntity(s32 idx)
     return LevelHasEntityType(idx, 8);
 }
 
-/* Standalone instance of CountLevelCrates's (game_loop17.c) per-item
+/* Standalone instance of CountLevelCrates's (above) per-item
  * dispatch body, taking the item pointer directly instead of resolving
  * it from the medal table - see CountLevelCrates's comment for the shared
  * semantics. */

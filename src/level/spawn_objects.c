@@ -63,7 +63,7 @@ static inline void SetFrameNibble(struct popup_part *part, s32 frame)
     part->frameNibble = frame;
 }
 
-/* Entity type 0x49, Mega-Mix (see actor_part27a.c). Popup-family variant:
+/* Entity type 0x49, Mega-Mix (see mega_mix_update.c). Popup-family variant:
  * builds a CreateMovingSprite part on animation table +0x168 at (arg1, arg2) in Q8, takes its frame from the tile cache
  * record of the first animation, clears the collected bits, attaches a
  * newly allocated CreateMegaMixCtrl header, then shows it (flags: clear bits 7/2/6, set
@@ -147,7 +147,7 @@ void SpawnFlame(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 }
 
 /* Plain `CreatePlatform` trampoline (docs/rom_map.md; same callee as
- * trigger_effect.c's twin family), id `8`. */
+ * spawn_gem_platforms.c's twin family), id `8`. */
 void SpawnRockPlatform(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
     CreatePlatform(arg0, arg1, arg2, arg3, 8);
@@ -226,7 +226,7 @@ void SpawnSealSpawner(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 }
 
 /* Plain `CreateCrate` entity-constructor trampoline (docs/rom_map.md;
- * same dispatch family as src/graphics/graphics_loading_21bfc.c's
+ * same dispatch family as src/level/spawn_crates.c's
  * types 1-7), type `0x12`. */
 void SpawnTimeCrate3(u32 arg0, u16 arg1, u16 arg2, u16 arg3)
 {
